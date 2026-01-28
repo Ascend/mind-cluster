@@ -53,6 +53,9 @@ func TestNotifyFaultInfoForJob(t *testing.T) {
 			},
 			currentFaults: make(map[string]map[string]bool),
 		}
+		patch := gomonkey.ApplyPrivateMethod(&EventController{}, "updateRestartProcessOrPodInfo",
+			func(*EventController, []constant.FaultRank) {})
+		defer patch.Reset()
 		convey.Convey("01-controller not exist, should not add event", func() {
 			mockJob := fakeJobID2
 			info := constant.JobFaultInfo{JobId: mockJob}
@@ -186,6 +189,9 @@ func TestRegister(t *testing.T) {
 func TestReportProcessFault(t *testing.T) {
 	convey.Convey("Test ReportProcessFault", t, func() {
 		ctx := context.Background()
+		patch := gomonkey.ApplyPrivateMethod(&EventController{}, "updateRestartProcessOrPodInfoBySoftFault",
+			func(*EventController, []*pb.FaultRank) {})
+		defer patch.Reset()
 		convey.Convey("case job not registered", func() {
 			s := fakeService()
 			info := fakeClientInfo()

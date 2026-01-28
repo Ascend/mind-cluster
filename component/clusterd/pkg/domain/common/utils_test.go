@@ -22,7 +22,6 @@ import (
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/pod"
-	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/grpc/recover"
 	"clusterd/pkg/interface/kube"
 )
@@ -825,49 +824,22 @@ func TestCalculatePodRank(t *testing.T) {
 	)
 	convey.Convey("Test CalculatePodRank", t, func() {
 		convey.Convey("01-deviceNumOfPod is less than equal to 0, should return -1", func() {
-			podRank := CalculateStringDivInt("", 0)
+			podRank, err := CalculateStringDivInt("", 0)
 			convey.So(podRank, convey.ShouldEqual, constant.InvalidResult)
+			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("02-covert cardRandStr failed, should return -1", func() {
-			podRank := CalculateStringDivInt("string", deviceNum)
+			podRank, err := CalculateStringDivInt("string", deviceNum)
 			convey.So(podRank, convey.ShouldEqual, constant.InvalidResult)
+			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("03-calculate success, should return valid pod rank", func() {
-			podRank := CalculateStringDivInt("1", deviceNum)
+			podRank, err := CalculateStringDivInt("1", deviceNum)
 			convey.So(podRank, convey.ShouldEqual, 0)
-			podRank = CalculateStringDivInt(deviceNpuStr, deviceNum)
+			convey.So(err, convey.ShouldBeNil)
+			podRank, err = CalculateStringDivInt(deviceNpuStr, deviceNum)
 			convey.So(podRank, convey.ShouldEqual, 1)
-		})
-	})
-}
-
-func TestCanRestartFaultProcess(t *testing.T) {
-	convey.Convey("Test CanRestartFaultProcess", t, func() {
-		convey.Convey("config not support recover-in-place, should return false", func() {
-			patch := gomonkey.ApplyFuncReturn(podgroup.JudgeRestartProcessByJobKey, false)
-			defer patch.Reset()
-			convey.So(CanRestartFaultProcess("", nil), convey.ShouldBeFalse)
-		})
-		patch := gomonkey.ApplyFuncReturn(podgroup.JudgeRestartProcessByJobKey, true)
-		defer patch.Reset()
-		convey.Convey("only have L2/L3 fault and DoRestartInPlace of all faults is true, should return true",
-			func() {
-				faultRank := []constant.FaultRank{
-					{FaultLevel: constant.RestartBusiness, DoRestartInPlace: true},
-					{FaultLevel: constant.RestartRequest, DoRestartInPlace: true}}
-				convey.So(CanRestartFaultProcess("", faultRank), convey.ShouldBeTrue)
-			})
-		convey.Convey("only have L2/L3 fault and DoRestartInPlace of some faults is not true, "+
-			"should return false", func() {
-			faultRank := []constant.FaultRank{
-				{FaultLevel: constant.RestartBusiness, DoRestartInPlace: true},
-				{FaultLevel: constant.RestartRequest, DoRestartInPlace: false}}
-			convey.So(CanRestartFaultProcess("", faultRank), convey.ShouldBeFalse)
-		})
-		convey.Convey("not only have L2/L3 fault, should return false", func() {
-			faultRank := []constant.FaultRank{
-				{FaultLevel: constant.RestartNPU, DoRestartInPlace: true}}
-			convey.So(CanRestartFaultProcess("", faultRank), convey.ShouldBeFalse)
+			convey.So(err, convey.ShouldBeNil)
 		})
 	})
 }
@@ -978,4 +950,21 @@ func TestGetNodeRankIdsByFaultRanksEmpty(t *testing.T) {
 	nodeRanks, err := GetNodeRankIdsByFaultRanks("job-123", []*pb.FaultRank{})
 	assert.NoError(t, err)
 	assert.Empty(t, nodeRanks)
+}
+
+func TestGetPodRankFaultBySoftFaultRank(t *testing.T) {
+	faultRanks := []*pb.FaultRank{{RankId: "0"}, {RankId: "8"}}
+	podRanks, err := GetPodRankFaultBySoftFaultRank(faultRanks, 0)
+	assert.Error(t, err)
+	assert.Empty(t, podRanks)
+	podRanks, err = GetPodRankFaultBySoftFaultRank(faultRanks, deviceNumPerNode)
+	expectedLen := 2
+	assert.NoError(t, err)
+	assert.Equal(t, expectedLen, len(podRanks))
+}
+
+func TestGetPodRankFaultByFaultRank(t *testing.T) {
+	faultRanks := []constant.FaultRank{{PodRank: "0", DoRestartInPlace: true}}
+	podRanks := GetPodRankFaultByFaultRank(faultRanks)
+	assert.Equal(t, 1, len(podRanks))
 }

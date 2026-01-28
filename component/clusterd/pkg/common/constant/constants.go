@@ -51,6 +51,12 @@ const (
 
 	// InvalidResult invalid result
 	InvalidResult = -1
+	// PodRankStrZero zero pod rank str
+	PodRankStrZero = "0"
+	// InvalidPodRankStr invalid pod rank str
+	InvalidPodRankStr = "-1"
+	// InvalidPodRank invalid pod rank number
+	InvalidPodRank = -1
 )
 
 // fault code const

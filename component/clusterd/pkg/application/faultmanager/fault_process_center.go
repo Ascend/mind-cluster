@@ -116,8 +116,8 @@ func CallbackForReportRetryInfo(infos []constant.ReportRecoverInfo) {
 }
 
 // CallbackForReportNoRetryInfo callback function to report no retry info
-func CallbackForReportNoRetryInfo(jobId string, reportFaultTime int64) {
-	collector.ReportInfoCollector.ReportNoRetryInfo(jobId, reportFaultTime)
+func CallbackForReportNoRetryInfo(jobId string, exitPodRank []string, reportFaultTime int64) {
+	collector.ReportInfoCollector.ReportNoRetryInfo(jobId, exitPodRank, reportFaultTime)
 	GlobalFaultProcessCenter.notifyFaultCenterProcess(constant.DeviceProcessType)
 }
 

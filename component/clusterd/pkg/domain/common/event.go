@@ -101,9 +101,6 @@ const (
 	// SwitchNicRecvContinueEvent receive continue event after switch nic
 	SwitchNicRecvContinueEvent = "switchNicRecvContinue"
 
-	// KillPodAfterRestartProcessEvent kill pod when cant not restart process
-	KillPodAfterRestartProcessEvent = "KillPodAfterRestartProcessEvent"
-
 	// StartStressTest start stress test
 	StartStressTest = "startStressTest"
 	// StressTestRecvPauseEvent receive pause event before stress test

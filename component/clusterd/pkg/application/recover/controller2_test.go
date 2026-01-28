@@ -1020,13 +1020,12 @@ func TestHandleRestartFaultProcess(t *testing.T) {
 			convey.So(code, convey.ShouldEqual, common.OK)
 			convey.So(signal.ChangeStrategy, convey.ShouldEqual, constant.ProcessRetryStrategyName)
 		})
-		convey.Convey("choose other strategy, should kill pod", func() {
-			ctl.restartFaultProcess = true
-			signal := &pb.ProcessManageSignal{ChangeStrategy: constant.ProcessRecoverStrategyName}
-			event, code, _ := ctl.handleRestartFaultProcess(signal)
-			convey.So(event, convey.ShouldEqual, common.KillPodAfterRestartProcessEvent)
-			convey.So(code, convey.ShouldEqual, common.ServerInnerError)
-			convey.So(ctl.restartFaultProcess, convey.ShouldBeFalse)
+		convey.Convey("choose dump strategy, should enqueue signal", func() {
+			signal := &pb.ProcessManageSignal{ChangeStrategy: constant.ProcessDumpStrategyName}
+			_, code, _ := ctl.handleRestartFaultProcess(signal)
+			convey.So(code, convey.ShouldEqual, common.OK)
+			convey.So(signal.ChangeStrategy, convey.ShouldEqual, constant.ProcessDumpStrategyName)
+			convey.So(signal.Actions, convey.ShouldContain, constant.FaultNodesExitAction)
 		})
 	})
 }
@@ -1039,14 +1038,16 @@ func TestWaitNormalFaultRecovery(t *testing.T) {
 		patches := gomonkey.ApplyFuncReturn(time.Sleep)
 		defer patches.Reset()
 		convey.Convey("job has no fault, should return nil", func() {
-			err := ctl.waitNormalFaultRecovery()
-			convey.So(err, convey.ShouldBeNil)
+			patches.ApplyPrivateMethod(recoverinplace.RecoverInplaceProcessor, "GetJobUnRecoverdPodRanks",
+				func(string, string) ([]string, bool) { return nil, false })
+			exitPodRanks := ctl.waitNormalFaultRecovery()
+			convey.So(len(exitPodRanks), convey.ShouldEqual, 0)
 		})
 		convey.Convey("job has fault, should return error", func() {
-			patches.ApplyPrivateMethod(recoverinplace.RecoverInplaceProcessor, "JobHasFault",
-				func(string) bool { return true })
-			err := ctl.waitNormalFaultRecovery()
-			convey.So(err, convey.ShouldNotBeNil)
+			patches.ApplyPrivateMethod(recoverinplace.RecoverInplaceProcessor, "GetJobUnRecoverdPodRanks",
+				func(string, string) ([]string, bool) { return nil, true })
+			exitPodRanks := ctl.waitNormalFaultRecovery()
+			convey.So(len(exitPodRanks), convey.ShouldEqual, 0)
 		})
 	})
 }
@@ -1695,5 +1696,135 @@ func TestFilterRecoverPodsNodeRankIds_PodUIDMatch(t *testing.T) {
 		ctl.filterRecoverPodsNodeRankIds(signal)
 		convey.So(len(signal.NodeRankIds), convey.ShouldEqual, 1)
 		convey.So(signal.NodeRankIds[0], convey.ShouldEqual, "rank-0")
+	})
+}
+
+func TestCheckWhetherExitPodChanged(t *testing.T) {
+	convey.Convey("Test checkWhetherRestartPodPodsChanged", t, func() {
+		jobId := "test-job-id"
+		originalPodUID1, originalPodUID2 := "pod-uid1", "pod-uid2"
+		rank0, rank1, rank2 := "rank0", "rank1", "rank2"
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId: jobId,
+			},
+			originPod: map[string]string{
+				rank0: originalPodUID1,
+				rank1: originalPodUID2,
+			},
+			recoverInPlacePodFaults: map[string]*constant.PodFaultInfo{
+				rank0: {ShouldExitPod: true},
+				rank1: {ShouldExitPod: true},
+				rank2: {ShouldExitPod: false},
+			},
+			restartFaultProcess: true,
+		}
+		mockGetPod := gomonkey.ApplyFunc(pod.GetPodByRankIndex, func(jobId, podRank string) v1.Pod {
+			rankMap := map[string]string{rank0: originalPodUID1, rank1: "changed-pod-uid1"}
+			return v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:        "test-pod",
+					UID:         types.UID(rankMap[podRank]),
+					Annotations: map[string]string{api.PodAnnotationAscendReal: "card1"},
+				},
+			}
+		})
+		defer mockGetPod.Reset()
+		convey.So(ctl.checkWhetherRestartPodPodsChanged(), convey.ShouldBeTrue)
+	})
+}
+
+func TestUpdateRestartProcessOrPodInfoBySoftFault(t *testing.T) {
+	convey.Convey("Test updateRestartProcessOrPodInfoBySoftFault", t, func() {
+		ctl := &EventController{
+			jobInfo:                 common.JobBaseInfo{JobId: "job1"},
+			recoverInPlacePodFaults: map[string]*constant.PodFaultInfo{},
+		}
+		mockFunc := gomonkey.ApplyFuncReturn(podgroup.JudgeRestartProcessByJobKey, true).
+			ApplyFuncReturn(pod.GetPodDeviceNumByJobId, 0)
+		defer mockFunc.Reset()
+		faultRanks := []*pb.FaultRank{{RankId: "0"}, {RankId: "8"}}
+		convey.Convey("GetPodRankFaultBySoftFaultRank error", func() {
+			ctl.updateRestartProcessOrPodInfoBySoftFault(faultRanks)
+			convey.So(len(ctl.recoverInPlacePodFaults), convey.ShouldEqual, 0)
+		})
+		devicePerNode := 8
+		mockFunc1 := gomonkey.ApplyFuncReturn(pod.GetPodDeviceNumByJobId, devicePerNode)
+		defer mockFunc1.Reset()
+		convey.Convey("updateRestartProcessOrPodInfo success", func() {
+			ctl.updateRestartProcessOrPodInfoBySoftFault(faultRanks)
+			podRank := 2
+			convey.So(len(ctl.recoverInPlacePodFaults), convey.ShouldEqual, podRank)
+			convey.So(ctl.recoverInPlacePodFaults["0"].FaultType, convey.ShouldEqual, constant.StatusHasSoftFault)
+			convey.So(ctl.recoverInPlacePodFaults["1"].FaultType, convey.ShouldEqual, constant.StatusHasSoftFault)
+		})
+	})
+}
+
+func TestUpdateRestartProcessOrPodInfoByHardwareFault(t *testing.T) {
+	convey.Convey("Test updateRestartProcessOrPodInfoByHardwareFault", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{JobId: "job1"},
+			recoverInPlacePodFaults: map[string]*constant.PodFaultInfo{
+				"0": {FaultType: constant.StatusHasSoftFault},
+			},
+		}
+		mockFunc := gomonkey.ApplyFuncReturn(podgroup.JudgeRestartProcessByJobKey, true)
+		defer mockFunc.Reset()
+		faultRanks := []constant.FaultRank{{PodRank: "0", DoRestartInPlace: true}}
+		convey.Convey("updateRestartProcessOrPodInfoByHardwareFault success", func() {
+			ctl.updateRestartProcessOrPodInfoByHardwareFault(faultRanks)
+			convey.So(len(ctl.recoverInPlacePodFaults), convey.ShouldEqual, 1)
+			expected := constant.StatusHasHardwareFault | constant.StatusHasSoftFault
+			convey.So(ctl.recoverInPlacePodFaults["0"].FaultType, convey.ShouldEqual, expected)
+		})
+	})
+}
+
+func TestUpdatePodRankFaultMapByExitPod(t *testing.T) {
+	convey.Convey("Test updateRecoverInPlaceInfoByRestartPods", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{JobId: "job1"},
+		}
+		convey.Convey("multi pod only have soft fault", func() {
+			ctl.recoverInPlacePodFaults = map[string]*constant.PodFaultInfo{
+				"0": {FaultType: constant.StatusHasSoftFault, DoRestartInPlace: true},
+				"1": {FaultType: constant.StatusHasSoftFault, DoRestartInPlace: true},
+			}
+			ctl.updateRecoverInPlaceInfoByRestartPods([]string{"0"})
+			convey.So(ctl.recoverInPlacePodFaults["0"].ShouldExitPod, convey.ShouldBeTrue)
+			convey.So(ctl.recoverInPlacePodFaults["1"].ShouldExitPod, convey.ShouldBeFalse)
+			convey.So(ctl.restartFaultProcess, convey.ShouldBeFalse)
+		})
+		convey.Convey("multi pod have soft and hardware fault", func() {
+			ctl.recoverInPlacePodFaults = map[string]*constant.PodFaultInfo{
+				"0": {FaultType: constant.StatusHasSoftFault, DoRestartInPlace: true},
+				"1": {FaultType: constant.StatusHasHardwareFault, DoRestartInPlace: true},
+			}
+			ctl.updateRecoverInPlaceInfoByRestartPods([]string{"0"})
+			convey.So(ctl.recoverInPlacePodFaults["0"].ShouldExitPod, convey.ShouldBeTrue)
+			convey.So(ctl.recoverInPlacePodFaults["1"].ShouldExitPod, convey.ShouldBeFalse)
+			convey.So(ctl.restartFaultProcess, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestNormalFaultAssociateSameNodeRankForExitPod(t *testing.T) {
+	convey.Convey("Test recoverInPlaceFaultAssociateSameNodeRank", t, func() {
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{JobId: "job1"},
+		}
+		convey.Convey("multi pod only have soft fault", func() {
+			ctl.recoverInPlacePodFaults = map[string]*constant.PodFaultInfo{
+				"0": {ShouldExitPod: true},
+				"1": {ShouldExitPod: false},
+			}
+			devicePerNode := 8
+			mockFunc := gomonkey.ApplyFuncReturn(pod.GetPodDeviceNumByJobId, devicePerNode)
+			defer mockFunc.Reset()
+			exitRanks, restartRanks := ctl.recoverInPlaceFaultAssociateSameNodeRank([]string{"1", "5", "8"})
+			convey.So(exitRanks, convey.ShouldResemble, []string{"1", "5"})
+			convey.So(restartRanks, convey.ShouldResemble, []string{"8"})
+		})
 	})
 }

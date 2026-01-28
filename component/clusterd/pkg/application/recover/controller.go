@@ -89,6 +89,7 @@ type EventController struct {
 	switchRankResult            chan *pb.SwitchResult
 	stressTestNotifyChan        chan *pb.StressTestRankParams
 	restartFaultProcess         bool
+	recoverInPlacePodFaults     map[string]*constant.PodFaultInfo
 	controllerContext           context.Context
 	ctxCancelFunc               context.CancelFunc
 	serviceContext              context.Context
@@ -145,6 +146,7 @@ func NewEventController(jobInfo common.JobBaseInfo, keepAlive int, serviceCtx co
 		switchRankResult:            make(chan *pb.SwitchResult, 1),
 		stressTestNotifyChan:        make(chan *pb.StressTestRankParams, 1),
 		restartFaultProcess:         false,
+		recoverInPlacePodFaults:     make(map[string]*constant.PodFaultInfo),
 		isChanClosed:                false,
 		serviceContext:              serviceCtx,
 		lock:                        sync.RWMutex{},
@@ -231,6 +233,7 @@ func (ctl *EventController) reset(stop bool) {
 	}
 	ctl.faultFlushing = false
 	ctl.restartFaultProcess = false
+	ctl.recoverInPlacePodFaults = make(map[string]*constant.PodFaultInfo)
 	ctl.uuid = ""
 	ctl.latestStrategy = ctl.latestStrategy[:0]
 	ctl.faultPod = make(map[string]string)
@@ -650,7 +653,6 @@ func (ctl *EventController) handleFinish() (string, common.RespCode, error) {
 }
 
 func (ctl *EventController) handleNotifyWaitFaultFlushing() (string, common.RespCode, error) {
-	hwlog.RunLog.Infof("fault occur, restart fault process: %v", ctl.restartFaultProcess)
 	if ctl.jobInfo.PlatFormMode {
 		hwlog.RunLog.Infof("start wait plat strategy ready, jobId=%s, pgName=%s",
 			ctl.jobInfo.JobId, ctl.jobInfo.PgName)
@@ -784,10 +786,12 @@ func (ctl *EventController) normalFaultAssociateSameNodeRank() ([]*pb.FaultRank,
 	for _, fault := range ctl.cacheNormalFault {
 		faultRankIds = append(faultRankIds, fault.RankId)
 	}
+	var restartRanks []string = nil
 	if ctl.restartFaultProcess {
-		return ctl.cacheNormalFault, faultRankIds
+		faultRankIds, restartRanks = ctl.recoverInPlaceFaultAssociateSameNodeRank(faultRankIds)
 	}
 	allFaultRankIds := common.GetFaultRankIdsInSameNode(faultRankIds, pod.GetPodDeviceNumByJobId(ctl.jobInfo.JobId))
+	allFaultRankIds = append(allFaultRankIds, restartRanks...)
 	removeSameRankIds := util.RemoveSliceDuplicateElement(allFaultRankIds)
 	var res []*pb.FaultRank
 	for _, rank := range removeSameRankIds {
@@ -945,26 +949,27 @@ func (ctl *EventController) notifyFaultForNormalFaultCase(uceFaults, normalFault
 		ChangeStrategy: "",
 	}
 	signal.FaultRanks = append(signal.FaultRanks, allFaults...)
-	if !ctl.restartFaultProcess {
-		hwlog.RunLog.Infof("jobId=%s write reset json, restartFaultProcess: %v, faultRanks: %v",
-			ctl.jobInfo.JobId, ctl.restartFaultProcess, allFaultRanks)
-		// Note: WriteResetInfoToCM is only used for exiting processes in elastic scenarios.
-		// The elastic component will be sunset in the future.
-		cm, err := common.WriteResetInfoToCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
-			allFaultRanks, ctl.restartFaultProcess, constant.NotifyFaultListOperation)
-		if err != nil {
-			hwlog.RunLog.Errorf("notify agent faultList error, err=%v", err)
-			return common.NotifyFailEvent, common.OperateConfigMapError, nil
-		}
-		hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[constant.ResetInfoCMDataKey])
-		signal.Actions = append(signal.Actions, constant.FaultNodesExitAction)
-		signal.NodeRankIds, err = common.GetNodeRankIdsByRankIds(ctl.jobInfo.JobId, allFaultRanks)
-		if err != nil {
-			hwlog.RunLog.Errorf("jobId=%s, GetNodeRankIdsByRankIds err:%v", ctl.jobInfo.JobId, err)
-			return common.NotifyFailEvent, common.OperateConfigMapError, nil
-		}
-		ctl.filterPodsNodeRankIds(signal)
+	hwlog.RunLog.Infof("jobId=%s write reset json, restartFaultProcess: %v, faultRanks: %v",
+		ctl.jobInfo.JobId, ctl.restartFaultProcess, allFaultRanks)
+	// Note: WriteResetInfoToCM is only used for exiting processes in elastic scenarios.
+	// The elastic component will be sunset in the future.
+	cm, err := common.WriteResetInfoToCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace,
+		allFaultRanks, ctl.restartFaultProcess, constant.NotifyFaultListOperation)
+	if err != nil {
+		hwlog.RunLog.Errorf("notify agent faultList error, err=%v", err)
+		return common.NotifyFailEvent, common.OperateConfigMapError, nil
 	}
+	hwlog.RunLog.Infof("write configmap faultList success, %s", cm.Data[constant.ResetInfoCMDataKey])
+	signal.Actions = append(signal.Actions, constant.FaultNodesExitAction)
+	signal.NodeRankIds, err = common.GetNodeRankIdsByRankIds(ctl.jobInfo.JobId, allFaultRanks)
+	if err != nil {
+		hwlog.RunLog.Errorf("jobId=%s, GetNodeRankIdsByRankIds err:%v", ctl.jobInfo.JobId, err)
+		return common.NotifyFailEvent, common.OperateConfigMapError, nil
+	}
+	if ctl.restartFaultProcess {
+		_, signal.NodeRankIds = ctl.splitRecoverInPlacePodInfoToRestartProcessOrRestartPodList()
+	}
+	ctl.filterPodsNodeRankIds(signal)
 	return ctl.signalEnqueue(signal)
 }
 
@@ -995,12 +1000,12 @@ func (ctl *EventController) handleNotifyGlobalFault() (string, common.RespCode, 
 	ctl.dealWithForceRelease()
 	// strategy includes recover-in-place and fault can be restored in place, then check if fault disappears.
 	// If fault does not disappear after 15 seconds, can not choose recover-in-place strategy
+	ctl.updateRestartFaultProcess()
 	if ctl.restartFaultProcess && ctl.hasRecoverInPlaceStrategy() {
-		if err := ctl.waitNormalFaultRecovery(); err != nil {
-			hwlog.RunLog.Warnf("jobId:%s wait fault recover timeout, err:%v", ctl.jobInfo.JobId, err)
-			ctl.restartFaultProcess = false
-			faultmanager.CallbackForReportNoRetryInfo(ctl.jobInfo.JobId, time.Now().UnixMilli())
-		}
+		restartPods := ctl.waitNormalFaultRecovery()
+		hwlog.RunLog.Warnf("jobId:%s restartPods:%v", ctl.jobInfo.JobId, restartPods)
+		ctl.updateRecoverInPlaceInfoByRestartPods(restartPods)
+		faultmanager.CallbackForReportNoRetryInfo(ctl.jobInfo.JobId, restartPods, time.Now().UnixMilli())
 	}
 	return ctl.notifyFaultForNormalFaultCase(retryFaults, normalFaults)
 }
@@ -1214,6 +1219,7 @@ func (ctl *EventController) handleRestartFaultProcess(signal *pb.ProcessManageSi
 	common.RespCode, error) {
 	hwlog.RunLog.Infof("jobId:%s, enter handleRestartFaultProcess func, choose strategy:%s",
 		ctl.jobInfo.JobId, signal.ChangeStrategy)
+	restartProcessPods, restartPodPods := ctl.splitRecoverInPlacePodInfoToRestartProcessOrRestartPodList()
 	if signal.ChangeStrategy == constant.ProcessRecoverInPlaceStrategyName {
 		allFaults, allFaultRanks, err := ctl.updateCacheFaultAndPod()
 		if err != nil {
@@ -1233,35 +1239,44 @@ func (ctl *EventController) handleRestartFaultProcess(signal *pb.ProcessManageSi
 		signal.ChangeStrategy = constant.ProcessRecoverStrategyName
 		signal.Actions = append(signal.Actions, constant.FaultNodesRestartAction)
 		signal.FaultRanks = allFaults
-		signal.NodeRankIds, err = common.GetNodeRankIdsByRankIds(ctl.jobInfo.JobId, allFaultRanks)
-		if err != nil {
-			hwlog.RunLog.Errorf("jobId=%s, GetNodeRankIdsByRankIds err:%v", ctl.jobInfo.JobId, err)
-			return common.NotifyFailEvent, common.OperateConfigMapError, nil
-		}
+		signal.NodeRankIds = restartProcessPods
 	} else if signal.ChangeStrategy != constant.ProcessRetryStrategyName {
 		hwlog.RunLog.Warnf("choose strategy: %s, not restart fault process", signal.ChangeStrategy)
+		restartPodPods = append(restartPodPods, restartProcessPods...)
+		ctl.updateRecoverInPlaceInfoByRestartPods(restartPodPods)
 		ctl.restartFaultProcess = false
-		faultmanager.CallbackForReportNoRetryInfo(ctl.jobInfo.JobId, time.Now().UnixMilli())
-		return common.KillPodAfterRestartProcessEvent, common.ServerInnerError, nil
+		allFaults, _, err := ctl.updateCacheFaultAndPod()
+		if err != nil {
+			hwlog.RunLog.Errorf("update cache info fail, jobId=%s err=%v", ctl.jobInfo.JobId, err)
+			return "", common.ServerInnerError, err
+		}
+		signal.FaultRanks = allFaults
+		signal.Actions = append(signal.Actions, constant.FaultNodesExitAction)
+		signal.NodeRankIds = restartPodPods
+		ctl.filterPodsNodeRankIds(signal)
+		faultmanager.CallbackForReportNoRetryInfo(ctl.jobInfo.JobId, restartPodPods, time.Now().UnixMilli())
 	}
 	return ctl.signalEnqueue(signal)
 }
 
-func (ctl *EventController) waitNormalFaultRecovery() error {
+func (ctl *EventController) waitNormalFaultRecovery() []string {
 	startTime := time.Now().Unix()
+	subHealthStrategy := podgroup.GetSubHealthStrategyByJobKey(ctl.jobInfo.JobId)
+	faultPodRanks, done := make([]string, 0), false
 	for i := 0; i < constant.JobFaultDisappearRetryTimes; i++ {
 		time.Sleep(constant.JobFaultCheckPeriod * time.Second)
-		if !recoverinplace.RecoverInplaceProcessor.JobHasFault(ctl.jobInfo.JobId) {
+		faultPodRanks, done = recoverinplace.RecoverInplaceProcessor.GetJobUnRecoverdPodRanks(ctl.jobInfo.JobId,
+			subHealthStrategy)
+		if done {
 			hwlog.RunLog.Infof("fault disappear, jobId:%s", ctl.jobInfo.JobId)
-			return nil
+			return faultPodRanks
 		}
 	}
 	timeUse := time.Now().Unix() - startTime
 	timeout := constant.JobFaultDisappearRetryTimes * constant.JobFaultCheckPeriod
 	hwlog.RunLog.Warnf("wait fault disappear timeout, jobId:%s timeUse=%d > %d second",
 		ctl.jobInfo.JobId, timeUse, timeout)
-	return fmt.Errorf("wait fault disappear timeout, jobId:%s timeUse=%d > %d second",
-		ctl.jobInfo.JobId, timeUse, timeout)
+	return faultPodRanks
 }
 
 func (ctl *EventController) getStrategyResult() ([]string, []*pb.RecoverStatusRequest) {
@@ -1593,7 +1608,7 @@ func (ctl *EventController) listenScheduleResult() {
 	pgRunning := true
 	start := time.Now().Unix()
 	hwlog.RunLog.Infof("job %s begin listenScheduleResult, timeout: %v", ctl.jobInfo.JobId, podReschedulingTimeout)
-	for !podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) ||
+	for !podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) || !ctl.checkWhetherRestartPodPodsChanged() ||
 		(!ctl.restartFaultProcess && !ctl.checkWhetherPodChanged()) {
 		time.Sleep(time.Second * constant.SleepSecondBeforeCheckPGRunning)
 		if ctl.jobCanceled {
@@ -1990,4 +2005,124 @@ func (ctl *EventController) ChangePodStatus(status corev1.PodPhase) {
 		return
 	}
 	newPodMonitorChan <- status
+}
+
+func (ctl *EventController) checkWhetherRestartPodPodsChanged() bool {
+	if !ctl.restartFaultProcess {
+		return true
+	}
+	_, restartPodPods := ctl.splitRecoverInPlacePodInfoToRestartProcessOrRestartPodList()
+	for _, podRank := range restartPodPods {
+		currentPod := pod.GetPodByRankIndex(ctl.jobInfo.JobId, podRank)
+		if currentPod.Name == "" {
+			return false
+		}
+		if realCard, ok := currentPod.Annotations[api.PodAnnotationAscendReal]; !ok || realCard == "" {
+			return false
+		}
+		prePodUID, exists := ctl.originPod[podRank]
+		if exists && string(currentPod.UID) != prePodUID {
+			hwlog.RunLog.Infof("jobId=%s, pod for rank %s has changed, original UID: %s, current UID: %s",
+				ctl.jobInfo.JobId, podRank, prePodUID, currentPod.UID)
+			continue
+		}
+	}
+	return true
+}
+
+func (ctl *EventController) updateRestartProcessOrPodInfoBySoftFault(faultRanks []*pb.FaultRank) {
+	if !podgroup.JudgeRestartProcessByJobKey(ctl.jobInfo.JobId) {
+		return
+	}
+	deviceNumPerPod := pod.GetPodDeviceNumByJobId(ctl.jobInfo.JobId)
+	podRankFaultList, err := common.GetPodRankFaultBySoftFaultRank(faultRanks, deviceNumPerPod)
+	if err != nil {
+		hwlog.RunLog.Errorf("get pod rank fault failed, err: %v", err)
+		ctl.restartFaultProcess = false
+		return
+	}
+	ctl.updateRestartProcessOrPodInfo(podRankFaultList)
+}
+
+func (ctl *EventController) updateRestartProcessOrPodInfoByHardwareFault(faultRanks []constant.FaultRank) {
+	if !podgroup.JudgeRestartProcessByJobKey(ctl.jobInfo.JobId) {
+		return
+	}
+	podRankFaultList := common.GetPodRankFaultByFaultRank(faultRanks)
+	ctl.updateRestartProcessOrPodInfo(podRankFaultList)
+}
+
+func (ctl *EventController) updateRestartProcessOrPodInfo(podRankFaultList []*constant.PodFaultInfo) {
+	ctl.lock.Lock()
+	defer ctl.lock.Unlock()
+	for _, fault := range podRankFaultList {
+		podRankFault, ok := ctl.recoverInPlacePodFaults[fault.PodRank]
+		if !ok {
+			ctl.recoverInPlacePodFaults[fault.PodRank] = fault
+			continue
+		}
+		podRankFault.DoRestartInPlace = podRankFault.DoRestartInPlace && fault.DoRestartInPlace
+		podRankFault.FaultType = podRankFault.FaultType | fault.FaultType
+	}
+}
+
+func (ctl *EventController) updateRestartFaultProcess() {
+	ctl.lock.Lock()
+	defer ctl.lock.Unlock()
+	jobFaultType := constant.StatusNone
+	for _, podRankFault := range ctl.recoverInPlacePodFaults {
+		jobFaultType = jobFaultType | podRankFault.FaultType
+		ctl.restartFaultProcess = ctl.restartFaultProcess || podRankFault.DoRestartInPlace
+	}
+	// strategy does not support recover-inplace or multi pods have software fault, can not do recover-inplace
+	if jobFaultType == constant.StatusHasSoftFault && len(ctl.recoverInPlacePodFaults) > 1 {
+		hwlog.RunLog.Infof("job %v all fault is software fault", ctl.jobInfo.JobId)
+		ctl.restartFaultProcess = false
+	}
+	hwlog.RunLog.Infof("job %v update restartFaultProcess %v", ctl.jobInfo.JobId, ctl.restartFaultProcess)
+}
+
+func (ctl *EventController) updateRecoverInPlaceInfoByRestartPods(restartPods []string) {
+	ctl.lock.Lock()
+	for _, podRank := range restartPods {
+		if podRankFault, ok := ctl.recoverInPlacePodFaults[podRank]; ok {
+			podRankFault.DoRestartInPlace = false
+			podRankFault.ShouldExitPod = true
+		}
+	}
+	ctl.lock.Unlock()
+	ctl.updateRestartFaultProcess()
+}
+
+func (ctl *EventController) splitRecoverInPlacePodInfoToRestartProcessOrRestartPodList() ([]string, []string) {
+	ctl.lock.RLock()
+	defer ctl.lock.RUnlock()
+	restartProcessPods, restartPodPods := make([]string, 0), make([]string, 0)
+	for podRank, podRankInfo := range ctl.recoverInPlacePodFaults {
+		if podRankInfo.ShouldExitPod {
+			restartPodPods = append(restartPodPods, podRank)
+			continue
+		}
+		restartProcessPods = append(restartProcessPods, podRank)
+	}
+	return restartProcessPods, restartPodPods
+}
+
+func (ctl *EventController) recoverInPlaceFaultAssociateSameNodeRank(faultRankIds []string) ([]string, []string) {
+	deviceNumPerNode := pod.GetPodDeviceNumByJobId(ctl.jobInfo.JobId)
+	if deviceNumPerNode == 0 || len(faultRankIds) == 0 {
+		return faultRankIds, nil
+	}
+	_, restartPodPods := ctl.splitRecoverInPlacePodInfoToRestartProcessOrRestartPodList()
+	restartPodPodSet := sets.NewString(restartPodPods...)
+	faultRanks := util.StringSliceToIntSlice(faultRankIds)
+	exitRanks, restartRanks := make([]string, 0), make([]string, 0)
+	for i, rankId := range faultRanks {
+		if restartPodPodSet.Has(strconv.Itoa(rankId / deviceNumPerNode)) {
+			exitRanks = append(exitRanks, faultRankIds[i])
+			continue
+		}
+		restartRanks = append(restartRanks, faultRankIds[i])
+	}
+	return exitRanks, restartRanks
 }

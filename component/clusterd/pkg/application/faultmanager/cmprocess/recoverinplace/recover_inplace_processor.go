@@ -5,6 +5,7 @@ package recoverinplace
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"ascend-common/common-utils/hwlog"
@@ -16,76 +17,80 @@ import (
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 var RecoverInplaceProcessor *recoverInplaceFaultProcessor
 
 type recoverInplaceFaultProcessor struct {
-	JobReportRecoverTimeout  int64
-	JobReportCompleteTimeout int64
-	DevicesOfJob             map[string]constant.SingleProcessJobInfo
-	normalFaultDetailOfJob   map[string]constant.DeviceFaultDetail
-	DeviceOfNode             map[string]constant.SingleProcessNodeInfo
-	jobServerInfoMap         constant.JobServerInfoMap
-	nodeDeviceCmMap          map[string]*constant.AdvanceDeviceFaultCm
+	DevicesOfJob     map[string]*constant.SingleProcessJobInfo    // job -> node -> device -> detail
+	faultDetailOfJob map[string]*constant.SingleProcessJobPodInfo // job-> podRank -> detail
+	DeviceOfNode     map[string]*constant.SingleProcessNodeInfo   // node -> device -> detail
+	jobServerInfoMap constant.JobServerInfoMap
+	nodeDeviceCmMap  map[string]*constant.AdvanceDeviceFaultCm
 }
 
 func init() {
 	RecoverInplaceProcessor = &recoverInplaceFaultProcessor{
-		JobReportRecoverTimeout:  constant.JobReportRecoverTimeout,
-		JobReportCompleteTimeout: constant.JobReportCompleteTimeout,
-		nodeDeviceCmMap:          make(map[string]*constant.AdvanceDeviceFaultCm),
+		nodeDeviceCmMap: make(map[string]*constant.AdvanceDeviceFaultCm),
 	}
 }
 
 func (processor *recoverInplaceFaultProcessor) initDeviceFromNodeAndReportInfo(jobId,
-	nodeName string) constant.SingleProcessNodeInfo {
+	nodeName string) *constant.SingleProcessNodeInfo {
 	managerPlaneFaultNode := processor.DeviceOfNode[nodeName]
+	if managerPlaneFaultNode == nil {
+		return nil
+	}
 	devicesOfJobOnNode := processor.jobServerInfoMap.InfoMap[jobId][nodeName]
 	deviceNumOfPod := pod.GetPodDeviceNumByJobId(jobId)
-	jobSingleProcessNodeInfo := constant.SingleProcessNodeInfo{NodeName: nodeName,
-		DeviceInfo: make(map[string]constant.SingleProcessDeviceInfo)}
-	reportTime := collector.ReportInfoCollector.GetSingleProcessFaultReportTime(jobId)
+	jobSingleProcessNodeInfo := &constant.SingleProcessNodeInfo{NodeName: nodeName,
+		DeviceInfo: make(map[string]*constant.SingleProcessDeviceInfo)}
 	for _, deviceOfJob := range devicesOfJobOnNode.DeviceList {
 		deviceName := processor.nodeDeviceCmMap[nodeName].DeviceType + "-" + deviceOfJob.DeviceID
-		jobDevice := constant.SingleProcessDeviceInfo{
-			DeviceName: deviceName, FaultDetail: constant.DeviceFaultDetail{}, FaultCodeLevel: make(map[string]string),
-		}
-		detailInfo := constant.DeviceFaultDetail{
-			FaultTime:  constant.DeviceNotFault,
-			ReportTime: reportTime,
-		}
 		if faultDevice, ok := managerPlaneFaultNode.DeviceInfo[deviceName]; ok {
-			jobDevice.FaultCodeLevel = faultDevice.FaultCodeLevel
-			faultDetail := faultDevice.FaultDetail
-			detailInfo.FaultTime = faultDetail.FaultTime
-			jobDevice.FaultDetail = detailInfo
-			jobSingleProcessNodeInfo.DeviceInfo[deviceName] = jobDevice
-			podRank := common.CalculateStringDivInt(deviceOfJob.RankID, deviceNumOfPod)
-			processor.updateNormalFaultDetailOfJob(jobId, &faultDetail, podRank, reportTime)
+			podRank, err := common.CalculateStringDivInt(deviceOfJob.RankID, deviceNumOfPod)
+			if err != nil {
+				hwlog.RunLog.Errorf("job %v calculate pod rank error, %v", jobId, err)
+				podRank = constant.InvalidPodRank
+			}
+			podRankStr := strconv.Itoa(podRank)
+			reportTime := collector.ReportInfoCollector.GetSingleProcessFaultReportTime(jobId, podRankStr)
+			faultDevice.FaultDetail.PodRankStr = podRankStr
+			faultDevice.FaultDetail.ReportTime = reportTime
+			jobSingleProcessNodeInfo.DeviceInfo[deviceName] = faultDevice
+			processor.updateNormalFaultDetailOfJob(jobId, podRankStr, faultDevice.FaultDetail)
 		}
 	}
 	return jobSingleProcessNodeInfo
 }
 
-func (processor *recoverInplaceFaultProcessor) updateNormalFaultDetailOfJob(jobId string, detail *constant.DeviceFaultDetail,
-	podRank int, reportTime int64) {
-	hasRank0Fault := podRank == 0
-	jobFaultDetail, ok := processor.normalFaultDetailOfJob[jobId]
+func (processor *recoverInplaceFaultProcessor) updateNormalFaultDetailOfJob(jobId, podRankStr string,
+	detail *constant.DeviceFaultDetail) {
+	podDetail, ok := processor.faultDetailOfJob[jobId]
 	if !ok {
-		processor.normalFaultDetailOfJob[jobId] = constant.DeviceFaultDetail{
-			FaultTime:       detail.FaultTime,
-			ReportTime:      reportTime,
-			HasFaultAboveL3: detail.HasFaultAboveL3,
-			HasRank0Fault:   hasRank0Fault,
+		podDetail = &constant.SingleProcessJobPodInfo{
+			JobId: jobId,
+			Pod:   make(map[string]*constant.DeviceFaultDetail),
 		}
+		processor.faultDetailOfJob[jobId] = podDetail
+	}
+	podRankFaultDetail, ok := podDetail.Pod[podRankStr]
+	if !ok {
+		podRankFaultDetail = &constant.DeviceFaultDetail{
+			FaultTime:      detail.FaultTime,
+			ReportTime:     detail.ReportTime,
+			FaultCodeLevel: make(map[string]string),
+			PodRankStr:     podRankStr,
+		}
+		util.MergeStringMapList[string](podRankFaultDetail.FaultCodeLevel, detail.FaultCodeLevel)
+		podDetail.Pod[podRankStr] = podRankFaultDetail
 		return
 	}
-	jobFaultDetail.FaultTime = util.MinInt(jobFaultDetail.FaultTime, detail.FaultTime)
-	jobFaultDetail.ReportTime = util.MinInt(jobFaultDetail.ReportTime, reportTime)
-	jobFaultDetail.HasFaultAboveL3 = jobFaultDetail.HasFaultAboveL3 || detail.HasFaultAboveL3
-	jobFaultDetail.HasRank0Fault = jobFaultDetail.HasRank0Fault || hasRank0Fault
-	processor.normalFaultDetailOfJob[jobId] = jobFaultDetail
+	podRankFaultDetail.FaultTime = util.MinInt(podRankFaultDetail.FaultTime, detail.FaultTime)
+	podRankFaultDetail.ReportTime = util.MinInt(podRankFaultDetail.ReportTime, detail.ReportTime)
+	util.MergeStringMapList[string](podRankFaultDetail.FaultCodeLevel, detail.FaultCodeLevel)
+	podRankFaultDetail.PodRankStr = podRankStr
 }
 
 // Process L2 and L3 fault
@@ -106,12 +111,12 @@ func (processor *recoverInplaceFaultProcessor) Process(info any) any {
 	currentTime := time.Now().UnixMilli()
 	hwlog.RunLog.Debugf("currentTime %d", currentTime)
 
-	processor.normalFaultDetailOfJob = make(map[string]constant.DeviceFaultDetail)
+	processor.faultDetailOfJob = make(map[string]*constant.SingleProcessJobPodInfo)
 	processor.DevicesOfJob = processor.getDevicesForTolerateJobs()
 	hwlog.RunLog.Debugf("current DevicesOfJob %v", processor.DevicesOfJob)
 
 	processor.processFaultInfo(currentTime)
-	hwlog.RunLog.Debugf("normalFaultDetailOfJob: %v", processor.normalFaultDetailOfJob)
+	hwlog.RunLog.Debugf("faultDetailOfJob: %v", processor.faultDetailOfJob)
 	hwlog.RunLog.Debugf("DevicesOfJob: %v", processor.DevicesOfJob)
 
 	hwlog.RunLog.Debugf("result deviceInfos %v", deviceContent.AllConfigmap)
@@ -129,18 +134,25 @@ func (processor *recoverInplaceFaultProcessor) processEachNodeFaultInfo(
 	nodeName string, deviceInfo *constant.AdvanceDeviceFaultCm, currentTime int64) *constant.AdvanceDeviceFaultCm {
 	modified := false
 	for jobId, faultJob := range processor.DevicesOfJob {
-		for deviceName, device := range faultJob.Node[nodeName].DeviceInfo {
-			log := fmt.Sprintf("device: %s on node %s, "+
-				"currentTime: %s, ", device.DeviceName, nodeName, util.ReadableMsTime(currentTime))
-			if podgroup.JudgeRestartProcessByJobKey(jobId) {
+		if podgroup.JudgeRestartProcessByJobKey(jobId) {
+			faultNode, ok := faultJob.Node[nodeName]
+			if !ok || faultNode == nil {
+				continue
+			}
+			subHealthStrategy := podgroup.GetSubHealthStrategyByJobKey(jobId)
+			for deviceName, device := range faultNode.DeviceInfo {
+				log := fmt.Sprintf("device: %s on node %s, "+
+					"currentTime: %s, ", device.DeviceName, nodeName, util.ReadableMsTime(currentTime))
 				detailInfo := device.FaultDetail
 				fullLog := log + fmt.Sprintf("faultTime: %s", util.ReadableMsTime(detailInfo.FaultTime))
-				if processor.canFilterNormalDeviceFaultInfo(jobId, device, currentTime) {
+				canFilter, reason := processor.canFilterNormalDeviceFaultInfo(jobId, detailInfo.PodRankStr,
+					currentTime, subHealthStrategy)
+				if canFilter {
 					hwlog.RunLog.Warn("Processor filter normal " + fullLog)
 					processor.filterNormalDeviceFaultInfo(deviceName, deviceInfo)
 					modified = true
 				} else {
-					hwlog.RunLog.Warn("Processor cannot filter normal " + fullLog)
+					hwlog.RunLog.Warn("Processor cannot filter normal " + fullLog + "," + reason)
 				}
 			}
 		}
@@ -161,24 +173,29 @@ func (processor *recoverInplaceFaultProcessor) filterNormalDeviceFaultInfo(
 	}
 }
 
-func (processor *recoverInplaceFaultProcessor) canFilterNormalDeviceFaultInfo(jobId string,
-	device constant.SingleProcessDeviceInfo,
-	currentTime int64) bool {
-	jobFaultDetail, ok := processor.normalFaultDetailOfJob[jobId]
-	if ok {
-		if jobFaultDetail.HasFaultAboveL3 || jobFaultDetail.HasRank0Fault ||
-			(jobFaultDetail.ReportTime != constant.JobShouldReportFault &&
-				jobFaultDetail.ReportTime >= jobFaultDetail.FaultTime) {
-			return false
-		}
-		return jobFaultDetail.FaultTime >= currentTime-constant.JobRestartInPlaceTimeout
+func (processor *recoverInplaceFaultProcessor) canFilterNormalDeviceFaultInfo(jobId, podRankStr string,
+	currentTime int64, subHealthStrategy string) (bool, string) {
+	jobFaultDetail, ok := processor.faultDetailOfJob[jobId]
+	if !ok {
+		return false, constant.FailedReasonJobNoFault
 	}
-	detailInfo := device.FaultDetail
-	return detailInfo.FaultTime >= currentTime-constant.JobRestartInPlaceTimeout
+	if _, exist := jobFaultDetail.Pod[constant.InvalidPodRankStr]; exist {
+		return false, constant.FailedReasonParseRankError
+	}
+	if podFaultDetail, exist := jobFaultDetail.Pod[constant.PodRankStrZero]; exist {
+		canFilter, reason := faultDetailCanDoRestartInPlace(podFaultDetail, currentTime, subHealthStrategy)
+		if !canFilter {
+			return false, fmt.Sprintf("podRank0 %v", reason)
+		}
+	}
+	if podFaultDetail, exist := jobFaultDetail.Pod[podRankStr]; exist {
+		return faultDetailCanDoRestartInPlace(podFaultDetail, currentTime, subHealthStrategy)
+	}
+	return false, constant.FailedReasonPodRankNoFault
 }
 
-func (processor *recoverInplaceFaultProcessor) handleDeviceOfNodes() map[string]constant.SingleProcessNodeInfo {
-	faultNodes := make(map[string]constant.SingleProcessNodeInfo)
+func (processor *recoverInplaceFaultProcessor) handleDeviceOfNodes() map[string]*constant.SingleProcessNodeInfo {
+	faultNodes := make(map[string]*constant.SingleProcessNodeInfo)
 	for nodeName, deviceInfo := range processor.nodeDeviceCmMap {
 		faultDevicesOnNode := processor.getFaultDevices(nodeName, deviceInfo)
 
@@ -190,18 +207,18 @@ func (processor *recoverInplaceFaultProcessor) handleDeviceOfNodes() map[string]
 	return faultNodes
 }
 
-func (processor *recoverInplaceFaultProcessor) getDevicesForTolerateJobs() map[string]constant.SingleProcessJobInfo {
+func (processor *recoverInplaceFaultProcessor) getDevicesForTolerateJobs() map[string]*constant.SingleProcessJobInfo {
 	nodeNameList := make([]string, 0)
 	for key, _ := range processor.nodeDeviceCmMap {
 		nodeNameList = append(nodeNameList, key)
 	}
-	faultJobs := make(map[string]constant.SingleProcessJobInfo)
+	faultJobs := make(map[string]*constant.SingleProcessJobInfo)
 	for jobUid, serverList := range processor.jobServerInfoMap.InfoMap {
 		if !podgroup.JudgeRestartProcessByJobKey(jobUid) {
 			continue
 		}
-		jobInfo := constant.SingleProcessJobInfo{
-			Node:  make(map[string]constant.SingleProcessNodeInfo),
+		jobInfo := &constant.SingleProcessJobInfo{
+			Node:  make(map[string]*constant.SingleProcessNodeInfo),
 			JobId: jobUid,
 		}
 		for _, nodeName := range nodeNameList {
@@ -209,7 +226,10 @@ func (processor *recoverInplaceFaultProcessor) getDevicesForTolerateJobs() map[s
 			if len(devicesOfJobOnNode.DeviceList) == 0 {
 				continue
 			}
-			jobInfo.Node[nodeName] = processor.initDeviceFromNodeAndReportInfo(jobUid, nodeName)
+			if nodeInfo := processor.initDeviceFromNodeAndReportInfo(jobUid, nodeName); nodeInfo != nil &&
+				len(nodeInfo.DeviceInfo) > 0 {
+				jobInfo.Node[nodeName] = nodeInfo
+			}
 		}
 		if len(jobInfo.Node) != 0 {
 			faultJobs[jobUid] = jobInfo
@@ -219,10 +239,10 @@ func (processor *recoverInplaceFaultProcessor) getDevicesForTolerateJobs() map[s
 }
 
 func (processor *recoverInplaceFaultProcessor) getFaultDevices(
-	nodeName string, deviceInfo *constant.AdvanceDeviceFaultCm) constant.SingleProcessNodeInfo {
-	nodeInfo := constant.SingleProcessNodeInfo{
+	nodeName string, deviceInfo *constant.AdvanceDeviceFaultCm) *constant.SingleProcessNodeInfo {
+	nodeInfo := &constant.SingleProcessNodeInfo{
 		NodeName:   nodeName,
-		DeviceInfo: make(map[string]constant.SingleProcessDeviceInfo),
+		DeviceInfo: make(map[string]*constant.SingleProcessDeviceInfo),
 	}
 	for _, deviceFaults := range deviceInfo.FaultDeviceList {
 		for _, fault := range deviceFaults {
@@ -234,22 +254,14 @@ func (processor *recoverInplaceFaultProcessor) getFaultDevices(
 			faultTime := faultdomain.GetFaultTime(fault, errorMsg)
 			faultDeviceInfo, ok := nodeInfo.DeviceInfo[fault.NPUName]
 			if !ok {
-				faultDeviceInfo = constant.SingleProcessDeviceInfo{
-					DeviceName:     fault.NPUName,
-					FaultDetail:    constant.DeviceFaultDetail{FaultTime: faultTime},
-					FaultCodeLevel: make(map[string]string),
+				faultDeviceInfo = &constant.SingleProcessDeviceInfo{
+					DeviceName: fault.NPUName,
+					FaultDetail: &constant.DeviceFaultDetail{FaultTime: faultTime,
+						FaultCodeLevel: make(map[string]string)},
 				}
 			}
-			detailInfo := constant.DeviceFaultDetail{
-				FaultTime: faultTime,
-				HasFaultAboveL3: !faultdomain.IsL2L3Fault(fault.FaultLevel) &&
-					!faultdomain.IsL1Fault(fault.FaultLevel),
-			}
-			oldDetailInfo := faultDeviceInfo.FaultDetail
-			detailInfo.FaultTime = util.MinInt(oldDetailInfo.FaultTime, detailInfo.FaultTime)
-			detailInfo.HasFaultAboveL3 = detailInfo.HasFaultAboveL3 || oldDetailInfo.HasFaultAboveL3
-			faultDeviceInfo.FaultDetail = detailInfo
-			faultDeviceInfo.FaultCodeLevel[fault.FaultCode] = fault.FaultLevel
+			faultDeviceInfo.FaultDetail.FaultTime = util.MinInt(faultDeviceInfo.FaultDetail.FaultTime, faultTime)
+			faultDeviceInfo.FaultDetail.FaultCodeLevel[fault.FaultCode] = fault.FaultLevel
 			nodeInfo.DeviceInfo[fault.NPUName] = faultDeviceInfo
 		}
 	}
@@ -257,47 +269,64 @@ func (processor *recoverInplaceFaultProcessor) getFaultDevices(
 }
 
 // CanDoRestartInPlace judge job can restart fault process in place
-func (processor *recoverInplaceFaultProcessor) CanDoRestartInPlace(jobId string) bool {
-	jobFaultDetail, ok := processor.normalFaultDetailOfJob[jobId]
-	if !ok {
-		return false
-	}
+func (processor *recoverInplaceFaultProcessor) CanDoRestartInPlace(jobId, podRankStr string) bool {
+	subHealthStrategy := podgroup.GetSubHealthStrategyByJobKey(jobId)
+	canFilter, _ := processor.canFilterNormalDeviceFaultInfo(jobId, podRankStr, time.Now().UnixMilli(), subHealthStrategy)
+	return canFilter
+}
+
+func faultDetailCanDoRestartInPlace(faultDetail *constant.DeviceFaultDetail, currentTime int64,
+	subHealthStrategy string) (bool, string) {
 	// Is it necessary to report the fault to volcano
-	if jobFaultDetail.HasFaultAboveL3 || jobFaultDetail.HasRank0Fault ||
-		(jobFaultDetail.ReportTime != constant.JobShouldReportFault &&
-			jobFaultDetail.ReportTime > jobFaultDetail.FaultTime) {
-		return false
+	faultLevels := sets.NewString(util.GetStringMapValueList[string](faultDetail.FaultCodeLevel)...)
+	if !faultdomain.IsRecoverInPlaceFaultLevels(faultLevels, subHealthStrategy) {
+		return false, constant.FailedReasonHasOtherFault
 	}
-	return jobFaultDetail.FaultTime >= time.Now().UnixMilli()-constant.JobRestartInPlaceTimeout
+	if faultDetail.ReportTime != constant.JobShouldReportFault && faultDetail.ReportTime > faultDetail.FaultTime {
+		return false, constant.FailedReasonShouldReport
+	}
+	if faultDetail.FaultTime < currentTime-constant.JobRestartInPlaceTimeout {
+		return false, constant.FailedReasonFaultTimeOut
+	}
+	return true, ""
 }
 
 // GetFilterFaultCodeAndLevel get filtered fault info
 func (processor *recoverInplaceFaultProcessor) GetFilterFaultCodeAndLevel(jobId, nodeName, deviceName string) map[string]string {
 	jobInfo, found := processor.DevicesOfJob[jobId]
-	if !found {
+	if !found || jobInfo == nil {
 		return nil
 	}
-	device, found := jobInfo.Node[nodeName].DeviceInfo[deviceName]
-	if !found {
+	nodeInfo, found := jobInfo.Node[nodeName]
+	if !found || nodeInfo == nil {
+		return nil
+	}
+	device, found := nodeInfo.DeviceInfo[deviceName]
+	if !found || device == nil || device.FaultDetail == nil {
 		hwlog.RunLog.Debugf("job %s's fault is not on node %s device %s", jobId, nodeName, deviceName)
 		return nil
 	}
-	return device.FaultCodeLevel
+	return device.FaultDetail.FaultCodeLevel
 }
 
-// JobHasFault judge job has fault
-func (processor *recoverInplaceFaultProcessor) JobHasFault(jobId string) bool {
-	filterJob, found := processor.DevicesOfJob[jobId]
+// GetJobUnRecoverdPodRanks get job unrecoverd pod ranks
+func (processor *recoverInplaceFaultProcessor) GetJobUnRecoverdPodRanks(jobId string, subHealthStrategy string) ([]string, bool) {
+	jobFault, found := processor.faultDetailOfJob[jobId]
 	if !found {
-		return false
+		return nil, true
 	}
-	subHealthStrategy := podgroup.GetSubHealthStrategyByJobKey(jobId)
-	for _, filterNode := range filterJob.Node {
-		for _, filterDevice := range filterNode.DeviceInfo {
-			if faultdomain.ContainCannotIgnoreFault(filterDevice.FaultCodeLevel, subHealthStrategy) {
-				return true
-			}
+	unRecoverdPod := make([]string, 0)
+	done := true
+	for podRank, podRankFault := range jobFault.Pod {
+		faultLevels := sets.NewString(util.GetStringMapValueList[string](podRankFault.FaultCodeLevel)...)
+		if faultdomain.IsRecoverInPlaceFaultLevels(faultLevels, subHealthStrategy) {
+			hwlog.RunLog.Infof("jobId %s have recoverable podRank fault, podRank %v, podRankFault %v", jobId, podRank, podRankFault)
+			done = false
+		}
+		if faultdomain.FaultLevelsHasNpuFault(faultLevels, subHealthStrategy) {
+			hwlog.RunLog.Infof("jobId %s have fault, podRank %v, podRankFault %v", jobId, podRank, podRankFault)
+			unRecoverdPod = append(unRecoverdPod, podRank)
 		}
 	}
-	return false
+	return unRecoverdPod, done
 }

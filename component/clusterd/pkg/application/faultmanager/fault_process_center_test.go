@@ -29,8 +29,8 @@ func TestCallbackForReportUceInfo(t *testing.T) {
 func TestCallbackForReportNoRetryInfo(t *testing.T) {
 	t.Run("CallbackForReportNoRetryInfo", func(t *testing.T) {
 		currentTime := time.Now().UnixMilli()
-		CallbackForReportNoRetryInfo("job1", currentTime)
-		reportTime := collector.ReportInfoCollector.GetSingleProcessFaultReportTime("job1")
+		CallbackForReportNoRetryInfo("job1", []string{"pod1"}, currentTime)
+		reportTime := collector.ReportInfoCollector.GetSingleProcessFaultReportTime("job1", "pod1")
 		if reportTime != currentTime {
 			t.Error("report no retry info failed")
 		}
