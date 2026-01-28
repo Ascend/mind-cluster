@@ -225,13 +225,13 @@ type JobServerInfoMap struct {
 
 // DeviceFaultDetail device fault detail
 type DeviceFaultDetail struct {
-	HasFaultAboveL3 bool
-	HasRank0Fault   bool // pod rank 0 has fault. effective when fault data is in the job dimension
-	FaultTime       int64
-	RecoverTime     int64
-	CompleteTime    int64
-	ReportTime      int64 // ReportTime: notify the data center to report the fault directly to cm
-	FaultType       string
+	FaultCodeLevel map[string]string
+	PodRankStr     string
+	FaultTime      int64
+	RecoverTime    int64
+	CompleteTime   int64
+	ReportTime     int64 // ReportTime: notify the data center to report the fault directly to cm
+	FaultType      string
 }
 
 // RetryDeviceInfo retry device info
@@ -258,21 +258,26 @@ type RetryJobInfo struct {
 // SingleProcessDeviceInfo single process fault info
 type SingleProcessDeviceInfo struct {
 	// DeviceName has prefix Ascend910
-	DeviceName     string
-	FaultDetail    DeviceFaultDetail // key is retry or normal
-	FaultCodeLevel map[string]string
+	DeviceName  string
+	FaultDetail *DeviceFaultDetail // key is retry or normal
 }
 
 // SingleProcessNodeInfo single process node info
 type SingleProcessNodeInfo struct {
 	NodeName string
 	// DeviceName->DeviceInfo
-	DeviceInfo map[string]SingleProcessDeviceInfo
+	DeviceInfo map[string]*SingleProcessDeviceInfo
 }
 
 // SingleProcessJobInfo single process job info
 type SingleProcessJobInfo struct {
-	Node  map[string]SingleProcessNodeInfo
+	Node  map[string]*SingleProcessNodeInfo
+	JobId string
+}
+
+// SingleProcessJobPodInfo single process job pod info
+type SingleProcessJobPodInfo struct {
+	Pod   map[string]*DeviceFaultDetail // key: pod rank
 	JobId string
 }
 
@@ -364,6 +369,14 @@ type FaultDevice struct {
 	SwitchChipId    string
 	SwitchPortId    string
 	SwitchFaultTime string
+}
+
+// PodFaultInfo simple pod rank fault
+type PodFaultInfo struct {
+	PodRank          string
+	DoRestartInPlace bool
+	FaultType        int
+	ShouldExitPod    bool
 }
 
 // FaultStrategy fault strategies

@@ -21,9 +21,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
-	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/pod"
-	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/grpc/recover"
 	"clusterd/pkg/interface/kube"
 )
@@ -476,19 +474,6 @@ func SortRecoverStrategies(strSlice []string) {
 	})
 }
 
-// CanRestartFaultProcess judge whether processes can be restarted in place
-func CanRestartFaultProcess(jobId string, faultRank []constant.FaultRank) bool {
-	if !podgroup.JudgeRestartProcessByJobKey(jobId) {
-		return false
-	}
-	for _, fault := range faultRank {
-		if !faultdomain.IsL2L3Fault(fault.FaultLevel) || !fault.DoRestartInPlace {
-			return false
-		}
-	}
-	return true
-}
-
 type StreamSender[T any] interface {
 	Send(*T) error
 }
@@ -507,17 +492,15 @@ func SendWithRetry[T any, S StreamSender[T]](stream S, signal *T, retryTimes int
 }
 
 // CalculateStringDivInt calculate div result, dividend is of type string
-func CalculateStringDivInt(dividendStr string, divisor int) int {
-	if divisor <= 0 {
-		hwlog.RunLog.Warnf("divisor is invalid, %v", divisor)
-		return constant.InvalidResult
+func CalculateStringDivInt(dividendStr string, divisor int) (int, error) {
+	if divisor == 0 {
+		return constant.InvalidResult, fmt.Errorf("divisor is invalid, %v", divisor)
 	}
 	dividend, err := strconv.Atoi(dividendStr)
 	if err != nil {
-		hwlog.RunLog.Errorf("convert %s err: %v", dividendStr, err)
-		return constant.InvalidResult
+		return constant.InvalidResult, err
 	}
-	return dividend / divisor
+	return dividend / divisor, nil
 }
 
 // GetPodRanks return a dict, key is fault pod rank, value ""
@@ -576,4 +559,37 @@ func GetNodeRankIdsByFaultRanks(jobId string, faultRanks []*pb.FaultRank) ([]str
 		rankIds = append(rankIds, faultRank.RankId)
 	}
 	return GetNodeRankIdsByRankIds(jobId, rankIds)
+}
+
+// GetPodRankFaultBySoftFaultRank get pod rank fault by soft fault rank
+func GetPodRankFaultBySoftFaultRank(faultRanks []*pb.FaultRank, deviceNumPerPod int) ([]*constant.PodFaultInfo, error) {
+	if deviceNumPerPod <= 0 {
+		return nil, fmt.Errorf("deviceNumPerPod is invalid, %v", deviceNumPerPod)
+	}
+	podRankFaultList := make([]*constant.PodFaultInfo, 0, len(faultRanks))
+	for _, fault := range faultRanks {
+		rank, err := strconv.Atoi(fault.RankId)
+		if err != nil {
+			return nil, err
+		}
+		podRankFaultList = append(podRankFaultList, &constant.PodFaultInfo{
+			PodRank:          strconv.Itoa(rank / deviceNumPerPod),
+			DoRestartInPlace: true,
+			FaultType:        constant.StatusHasSoftFault,
+		})
+	}
+	return podRankFaultList, nil
+}
+
+// GetPodRankFaultByFaultRank get pod rank by fault rank
+func GetPodRankFaultByFaultRank(faultRanks []constant.FaultRank) []*constant.PodFaultInfo {
+	podRankFaultList := make([]*constant.PodFaultInfo, 0, len(faultRanks))
+	for _, faultRank := range faultRanks {
+		podRankFaultList = append(podRankFaultList, &constant.PodFaultInfo{
+			PodRank:          faultRank.PodRank,
+			DoRestartInPlace: faultRank.DoRestartInPlace,
+			FaultType:        constant.StatusHasHardwareFault,
+		})
+	}
+	return podRankFaultList
 }

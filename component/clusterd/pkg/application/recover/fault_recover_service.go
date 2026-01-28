@@ -213,7 +213,7 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 	removeGrpcFault, faultNodes := s.getFaultAndFaultNodes(addedFaultRanks, controller)
 	controller.saveCacheFault(grpcFormatFaults)
 	controller.healthState = faultInfo.HealthyState
-	controller.restartFaultProcess = common.CanRestartFaultProcess(faultInfo.JobId, faultInfo.FaultList)
+	controller.updateRestartProcessOrPodInfoByHardwareFault(faultInfo.FaultList)
 	if subHealthyHotSwitch {
 		if len(grpcFormatFaults) > 0 {
 			controller.addEvent(common.BeginHotSwitchEvent)
@@ -782,10 +782,10 @@ func (s *FaultRecoverService) ReportProcessFault(ctx context.Context,
 		hwlog.RunLog.Errorf("failed to label soft fault label, err:%v, jobId=%s",
 			err, request.JobId)
 	}
+	controller.updateRestartProcessOrPodInfoBySoftFault(request.FaultRanks)
 	if !common.IsRetryFault(request.FaultRanks) {
 		// when config only support dump strategy, in order to be able to dump directly, set healthState to UnHealthy
 		controller.healthState = constant.UnHealthyState
-		controller.restartFaultProcess = common.CanRestartFaultProcess(request.JobId, nil)
 		controller.addEvent(common.FaultOccurEvent)
 	} else {
 		if faultmanager.GlobalFaultProcessCenter != nil {

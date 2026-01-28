@@ -490,20 +490,24 @@ func IsL1Fault(faultLevel string) bool {
 	return faultLevel == constant.NotHandleFault
 }
 
-// IsSubHealthFault check faultLevel is SubHealth
-func IsSubHealthFault(faultLevel string) bool {
-	return faultLevel == constant.SubHealthFault
+// FaultLevelsHasNpuFault contain fault above l1
+func FaultLevelsHasNpuFault(faultLevels sets.String, jobSubHealthStrategy string) bool {
+	hasL2L3Fault := faultLevels.Has(constant.RestartRequest) || faultLevels.Has(constant.RestartBusiness)
+	return hasL2L3Fault || IsUnRecoverInPlaceFaultLevels(faultLevels, jobSubHealthStrategy)
 }
 
-// ContainCannotIgnoreFault check whether contain can not ignore npu fault
-func ContainCannotIgnoreFault(faultLeveMap map[string]string, subHealthStrategy string) bool {
-	for _, faultLevel := range faultLeveMap {
-		if IsL1Fault(faultLevel) || (IsSubHealthFault(faultLevel) && subHealthStrategy == constant.SubHealthyIngore) {
-			continue
-		}
-		return true
-	}
-	return false
+// IsRecoverInPlaceFaultLevels only contain l2l3 fault
+func IsRecoverInPlaceFaultLevels(faultLevels sets.String, jobSubHealthStrategy string) bool {
+	hasL2L3Fault := faultLevels.Has(constant.RestartRequest) || faultLevels.Has(constant.RestartBusiness)
+	return hasL2L3Fault && !IsUnRecoverInPlaceFaultLevels(faultLevels, jobSubHealthStrategy)
+}
+
+// IsUnRecoverInPlaceFaultLevels has unRecovery fault level
+func IsUnRecoverInPlaceFaultLevels(faultLevel sets.String, jobSubHealthStrategy string) bool {
+	tmpSet := faultLevel.Clone()
+	tmpSet.Delete(constant.NotHandleFault, constant.RestartRequest, constant.RestartBusiness)
+	return (tmpSet.Has(constant.SubHealthFault) && jobSubHealthStrategy != constant.SubHealthyIngore) ||
+		(!tmpSet.Has(constant.SubHealthFault) && tmpSet.Len() > 0)
 }
 
 // IsDeviceFaultEqual check two DeviceFault is equal

@@ -24,15 +24,15 @@ const dataExpireTime = 60 * 1000
 type JobReportInfoCollector struct {
 	// JobId->node->device->report_info
 	RetryMap map[string]map[string]map[string]constant.ReportInfo
-	// JobId->reportFaultTime
-	SingleProcessMap map[string]int64
+	// JobId->podRank->reportFaultTime
+	SingleProcessMap map[string]map[string]int64
 	RwMutex          sync.RWMutex
 }
 
 func init() {
 	ReportInfoCollector = &JobReportInfoCollector{
 		RetryMap:         make(map[string]map[string]map[string]constant.ReportInfo),
-		SingleProcessMap: make(map[string]int64),
+		SingleProcessMap: make(map[string]map[string]int64),
 		RwMutex:          sync.RWMutex{},
 	}
 }
@@ -65,12 +65,14 @@ func (reportInfos *JobReportInfoCollector) deleteInfo(jobId string, nodeName str
 }
 
 // GetSingleProcessFaultReportTime get single process fault report time
-func (reportInfos *JobReportInfoCollector) GetSingleProcessFaultReportTime(jobId string) int64 {
+func (reportInfos *JobReportInfoCollector) GetSingleProcessFaultReportTime(jobId, podRankStr string) int64 {
 	reportTime := constant.JobShouldReportFault
 	reportInfos.RwMutex.RLock()
 	defer reportInfos.RwMutex.RUnlock()
-	if time, ok := reportInfos.SingleProcessMap[jobId]; ok {
-		return time
+	if podRankTime, ok := reportInfos.SingleProcessMap[jobId]; ok {
+		if t, ok1 := podRankTime[podRankStr]; ok1 {
+			return t
+		}
 	}
 	return reportTime
 }
@@ -137,15 +139,21 @@ func (reportInfos *JobReportInfoCollector) ReportRetryInfo(jobId string, rankId 
 }
 
 // ReportNoRetryInfo report no retry fault info
-func (reportInfos *JobReportInfoCollector) ReportNoRetryInfo(jobId string, reportFaultTime int64) {
+func (reportInfos *JobReportInfoCollector) ReportNoRetryInfo(jobId string, exitPodRanks []string, reportFaultTime int64) {
 	reportInfos.RwMutex.Lock()
 	defer reportInfos.RwMutex.Unlock()
 	noRetryMap := reportInfos.SingleProcessMap
 	if noRetryMap == nil {
-		noRetryMap = make(map[string]int64)
+		noRetryMap = make(map[string]map[string]int64)
 	}
-	noRetryMap[jobId] = reportFaultTime
+	if _, ok := noRetryMap[jobId]; !ok {
+		noRetryMap[jobId] = make(map[string]int64)
+	}
+	for _, exitPodRank := range exitPodRanks {
+		noRetryMap[jobId][exitPodRank] = reportFaultTime
+	}
 	reportInfos.SingleProcessMap = noRetryMap
-	hwlog.RunLog.Infof("callbackForReportNoRetryInfo receive report info(%s, %d)", jobId, reportFaultTime)
+	hwlog.RunLog.Infof("callbackForReportNoRetryInfo receive report info(%s, %v, %d)", jobId, exitPodRanks,
+		reportFaultTime)
 	hwlog.RunLog.Debugf("Current no retry reportInfo is %s", util.ObjToString(reportInfos.SingleProcessMap))
 }

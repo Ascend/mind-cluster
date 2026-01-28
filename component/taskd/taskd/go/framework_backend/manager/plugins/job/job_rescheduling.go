@@ -197,6 +197,11 @@ func (job *JobReschedulingPlugin) checktRank0Fault(shot storage.SnapShot) {
 	}
 	if agent0Info.Status[constant.ReportFaultRank] != "" {
 		hwlog.RunLog.Info("JobReschedulingPlugin checktRank0Fault agent 0 fault")
+		if shot.MgrInfos != nil && shot.MgrInfos.Status[constant.FaultRecover] != "" {
+			hwlog.RunLog.Infof("JobReschedulingPlugin fault recover %v, wait clusterD notify...",
+				shot.MgrInfos.Status[constant.FaultRecover])
+			return
+		}
 		job.killMaster = true
 	}
 }

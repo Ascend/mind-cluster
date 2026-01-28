@@ -817,22 +817,6 @@ func TestIsL1Fault(t *testing.T) {
 	})
 }
 
-func TestContainCannotIgnoreFault(t *testing.T) {
-	convey.Convey("Test ContainCannotIgnoreFault", t, func() {
-		faultLeveMap := map[string]string{"code1": constant.NotHandleFault, "code2": constant.SubHealthFault}
-		convey.Convey("only contain ignorable fault, should return false", func() {
-			convey.So(ContainCannotIgnoreFault(faultLeveMap, constant.SubHealthyIngore), convey.ShouldBeFalse)
-		})
-		convey.Convey("can not ignore subHealth fault, should return true", func() {
-			convey.So(ContainCannotIgnoreFault(faultLeveMap, constant.SubHealthyGraceExit), convey.ShouldBeTrue)
-		})
-		convey.Convey("contain cant ignore fault, should return true", func() {
-			faultLeveMap1 := map[string]string{"code1": constant.RestartNPU, "code2": constant.SubHealthFault}
-			convey.So(ContainCannotIgnoreFault(faultLeveMap1, constant.SubHealthyIngore), convey.ShouldBeTrue)
-		})
-	})
-}
-
 type testCase struct {
 	name          string
 	deviceName    string

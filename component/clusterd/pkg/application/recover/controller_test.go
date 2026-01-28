@@ -954,8 +954,9 @@ func TestHandleNotifyGlobalFault(t *testing.T) {
 func TestHandleNotifyGlobalFaultDefer(t *testing.T) {
 	convey.Convey("Test handleNotifyGlobalFault defer logic", t, func() {
 		ctl := &EventController{
-			jobInfo:  common.JobBaseInfo{JobId: "test-job"},
-			faultPod: map[string]string{"test-pod": "test"},
+			jobInfo:             common.JobBaseInfo{JobId: "test-job"},
+			faultPod:            map[string]string{"test-pod": "test"},
+			restartFaultProcess: true,
 		}
 
 		mockJobExists := gomonkey.ApplyFuncReturn(job.GetJobIsExists, true)
@@ -969,6 +970,10 @@ func TestHandleNotifyGlobalFaultDefer(t *testing.T) {
 
 		mockUpdateFaultInfo := gomonkey.ApplyFuncReturn(kube.CreateOrUpdateSuperPodFaultInfo)
 		defer mockUpdateFaultInfo.Reset()
+
+		patch := gomonkey.ApplyPrivateMethod(ctl, "hasRecoverInPlaceStrategy", func() bool { return true }).
+			ApplyPrivateMethod(ctl, "waitNormalFaultRecovery", func() []string { return nil })
+		defer patch.Reset()
 
 		convey.Convey("01-should update fault info when no retry faults", func() {
 			_, _, _ = ctl.handleNotifyGlobalFault()

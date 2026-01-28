@@ -23,6 +23,7 @@ const (
 	RankId     = "0"
 	DeviceId   = "0"
 	DeviceName = api.Ascend910 + "-" + DeviceId
+	podRank0   = "0"
 )
 
 func TestMain(m *testing.M) {
@@ -118,12 +119,12 @@ func TestGetInfoCollectTimeout(t *testing.T) {
 
 func TestReportAndGetNoRetryReportTime(t *testing.T) {
 	t.Run("get no retry report time success", func(t *testing.T) {
-		reportTime := ReportInfoCollector.GetSingleProcessFaultReportTime(JobId)
+		reportTime := ReportInfoCollector.GetSingleProcessFaultReportTime(JobId, podRank0)
 		if reportTime != constant.JobShouldReportFault {
 			t.Error("get no retry report time fail")
 		}
-		ReportInfoCollector.ReportNoRetryInfo(JobId, time.Now().UnixMilli())
-		reportTime = ReportInfoCollector.GetSingleProcessFaultReportTime(JobId)
+		ReportInfoCollector.ReportNoRetryInfo(JobId, []string{podRank0}, time.Now().UnixMilli())
+		reportTime = ReportInfoCollector.GetSingleProcessFaultReportTime(JobId, podRank0)
 		if reportTime == constant.JobShouldReportFault {
 			t.Error("get no retry report time fail")
 		}

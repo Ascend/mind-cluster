@@ -392,3 +392,27 @@ const (
 	// RequestNumPerSecondLimit is the max number of request per second
 	RequestNumPerSecondLimit = 20
 )
+
+const (
+	// StatusNone status none
+	StatusNone = 0
+	// StatusHasSoftFault fault status has tag of soft fault
+	StatusHasSoftFault = 1 << iota
+	// StatusHasHardwareFault fault status has tag of hardware fault
+	StatusHasHardwareFault
+)
+
+const (
+	// FailedReasonJobNoFault job has no fault
+	FailedReasonJobNoFault = "job no fault"
+	// FailedReasonParseRankError  parse rank error
+	FailedReasonParseRankError = "parse rank error"
+	// FailedReasonPodRankNoFault pod rank has no fault
+	FailedReasonPodRankNoFault = "pod rank no fault"
+	// FailedReasonHasOtherFault pod has other fault
+	FailedReasonHasOtherFault = "has other fault"
+	// FailedReasonShouldReport should report fault
+	FailedReasonShouldReport = "should report fault"
+	// FailedReasonFaultTimeOut fault timeout
+	FailedReasonFaultTimeOut = "fault time out"
+)

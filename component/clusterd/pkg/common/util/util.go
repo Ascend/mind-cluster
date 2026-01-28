@@ -199,3 +199,12 @@ func MergeStringMapList[T any](old, new map[string]T) {
 		old[k] = v
 	}
 }
+
+// GetStringMapValueList get value list of string map
+func GetStringMapValueList[T any](o map[string]T) []T {
+	ret := make([]T, 0, len(o))
+	for _, v := range o {
+		ret = append(ret, v)
+	}
+	return ret
+}

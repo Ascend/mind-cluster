@@ -144,13 +144,13 @@ func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(
 			hwlog.RunLog.Errorf("device %s's rank id is %s, getPodUidAndRankByCardRank err: %v",
 				deviceInfo.DeviceIP, deviceInfo.RankID, err)
 		}
+		restartInPlace := processor.canDoRestartInPlace(podInfo.jobId, podRankStr)
 		// scan management plane fault info. management plane may filter uce fault in uceProcessor、hcclProcessor
 		for _, fault := range faultList {
 			if !unHealthDevSet.Has(deviceName) && fault.FaultLevel == constant.FreeRestartNPU {
 				hwlog.RunLog.Debugf("Fault %v does not affect fault rank", fault)
 				continue
 			}
-			restartInPlace := faultdomain.IsL2L3Fault(fault.FaultLevel) && processor.canDoRestartInPlace(podInfo.jobId)
 			faultRank := constant.FaultRank{RankId: deviceInfo.RankID, PodUid: podUid, PodRank: podRankStr,
 				FaultCode: fault.FaultCode, FaultLevel: fault.FaultLevel, DoStepRetry: false,
 				DoRestartInPlace: restartInPlace, DeviceId: deviceInfo.DeviceID,
@@ -217,8 +217,8 @@ func (processor *jobRankFaultInfoProcessor) canDoStepRetry(jobId, nodeName, devi
 	return doStepRetry
 }
 
-func (processor *jobRankFaultInfoProcessor) canDoRestartInPlace(jobId string) bool {
-	return recoverinplace.RecoverInplaceProcessor.CanDoRestartInPlace(jobId)
+func (processor *jobRankFaultInfoProcessor) canDoRestartInPlace(jobId string, podRankStr string) bool {
+	return recoverinplace.RecoverInplaceProcessor.CanDoRestartInPlace(jobId, podRankStr)
 }
 
 func (processor *jobRankFaultInfoProcessor) retryInBusinessPlane(jobId, nodeName,
