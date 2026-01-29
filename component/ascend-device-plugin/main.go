@@ -267,6 +267,7 @@ func main() {
 	}
 	setUseAscendDocker()
 	go hdm.ListenDevice(ctx)
+	hwlog.RunLog.Infof("device plugin started.")
 	hdm.SignCatch(cancel)
 }
 

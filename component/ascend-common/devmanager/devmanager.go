@@ -72,6 +72,8 @@ type DeviceInterface interface {
 	RescanSoc(int32, int32) error
 	GetDeviceBootStatus(logicID int32) (int, error)
 	GetDeviceAllErrorCode(logicID int32) (int32, []int64, error)
+	// GetDeviceAllErrorCodeWithTimeOut get npu device all error code with timeout
+	GetDeviceAllErrorCodeWithTimeOut(logicID int32, timeout time.Duration) (int32, []int64, error)
 	SubscribeDeviceFaultEvent(logicID int32) error
 	SetFaultEventCallFunc(func(common.DevFaultInfo)) error
 	GetDieID(logicID int32, dcmiDieType dcmi.DieType) (string, error)
@@ -766,6 +768,22 @@ func (d *DeviceManager) GetDeviceAllErrorCode(logicID int32) (int32, []int64, er
 			logicID)
 	}
 	errCount, errCodes, err := d.DcMgr.DcGetDeviceAllErrorCode(cardID, deviceID)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return common.RetError, nil, fmt.Errorf("failed to get device error code by logicID(%d)", logicID)
+	}
+	return errCount, errCodes, nil
+}
+
+// GetDeviceAllErrorCodeWithTimeOut get npu device all error code with timeout
+func (d *DeviceManager) GetDeviceAllErrorCodeWithTimeOut(logicID int32, timeout time.Duration) (int32, []int64, error) {
+	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return common.RetError, nil, fmt.Errorf(
+			"failed to get cardID and deviceID in get device error code by logicID(%d)", logicID)
+	}
+	errCount, errCodes, err := d.DcMgr.DcGetDeviceAllErrorCodeWithTimeout(cardID, deviceID, timeout)
 	if err != nil {
 		hwlog.RunLog.Error(err)
 		return common.RetError, nil, fmt.Errorf("failed to get device error code by logicID(%d)", logicID)
