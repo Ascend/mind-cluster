@@ -186,8 +186,10 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 		hwlog.RunLog.Errorf("jobId=%s not exist", faultInfo.JobId)
 		return
 	}
-	hwlog.RunLog.Infof("get fault info from fault center,jobId:%s,faultList=%v", faultInfo.JobId, faultInfo.FaultList)
-	hwlog.RunLog.Infof("get fault info from fault center,jobId:%s,faultDevice=%v", faultInfo.JobId, faultInfo.FaultDevice)
+	if len(faultInfo.FaultList) > 0 || len(faultInfo.FaultDevice) > 0 {
+		hwlog.RunLog.Infof("get fault info from fault center,jobId:%s,faultList=%v", faultInfo.JobId, faultInfo.FaultList)
+		hwlog.RunLog.Infof("get fault info from fault center,jobId:%s,faultDevice=%v", faultInfo.JobId, faultInfo.FaultDevice)
+	}
 	if s.skipHandleSubHealthyFaults(controller, &faultInfo) {
 		hwlog.RunLog.ErrorfWithLimit(constant.SubHealthyState, controller.jobInfo.JobId+"SkipHandleSubHealthy",
 			"jobId=%s skip handle subHealthy faults", faultInfo.JobId)
