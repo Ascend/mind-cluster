@@ -138,6 +138,9 @@ const (
 
 	// MaxErrorCodeLen max length of error code for Prometheus
 	MaxErrorCodeLen = 10
+
+	// DcmiRetryInterval call dcmi retry interval
+	DcmiRetryInterval = 5
 )
 
 const (
