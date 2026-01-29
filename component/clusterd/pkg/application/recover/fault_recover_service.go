@@ -203,14 +203,6 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 	}
 	hwlog.RunLog.Infof("jobId=%s, fault center fault info change format to grpcFormat, faults=%s",
 		controller.jobInfo.JobId, common.Faults2String(grpcFormatFaults))
-	if len(addedFaults) == 0 {
-		hwlog.RunLog.Infof("jobId=%s, no new faults added, skip additional processing", faultInfo.JobId)
-		return
-	}
-	hwlog.RunLog.Infof("jobId=%s, new faults detected, enter additional processing, faultRanks=%v",
-		faultInfo.JobId, addedFaultRanks)
-	onlyRetryFault, supportRetry := s.getRetryStatus(addedFaults, controller)
-	removeGrpcFault, faultNodes := s.getFaultAndFaultNodes(addedFaultRanks, controller)
 	controller.saveCacheFault(grpcFormatFaults)
 	controller.healthState = faultInfo.HealthyState
 	controller.updateRestartProcessOrPodInfoByHardwareFault(faultInfo.FaultList)
@@ -220,6 +212,14 @@ func (s *FaultRecoverService) notifyFaultInfoForJob(faultInfo constant.JobFaultI
 		}
 		return
 	}
+	if len(addedFaults) == 0 {
+		hwlog.RunLog.Infof("jobId=%s, no new faults added, skip additional processing", faultInfo.JobId)
+		return
+	}
+	hwlog.RunLog.Infof("jobId=%s, new faults detected, enter additional processing, faultRanks=%v",
+		faultInfo.JobId, addedFaultRanks)
+	onlyRetryFault, supportRetry := s.getRetryStatus(addedFaults, controller)
+	removeGrpcFault, faultNodes := s.getFaultAndFaultNodes(addedFaultRanks, controller)
 	if !supportRetry || !onlyRetryFault && len(faultNodes) > 0 {
 		s.sendPreExitSignal(controller, removeGrpcFault, faultNodes)
 		return
@@ -346,6 +346,9 @@ func (s *FaultRecoverService) skipHandleSubHealthyFaults(ctl *EventController, f
 	}
 	// hotswitch and pytorch scene，cannot be skipped
 	if ctl.jobInfo.HotSwitch {
+		if len(faultInfo.FaultList) <= 0 {
+			return false
+		}
 		return skipHandleSubHealthyHotSwitch(ctl, faultInfo)
 	}
 	// sub health and not hotswitch scene , if graceExit is false, skip
@@ -432,9 +435,6 @@ func (s *FaultRecoverService) checkFault(allJobFaultInfo map[string]constant.Job
 			continue
 		}
 		s.preHandleFaultInfo(jobId, &jobFaultInfo)
-		if len(jobFaultInfo.FaultList) <= 0 {
-			continue
-		}
 		registeredJobInfo = append(registeredJobInfo, jobFaultInfo)
 	}
 	s.dealWithJobFaultInfo(registeredJobInfo)

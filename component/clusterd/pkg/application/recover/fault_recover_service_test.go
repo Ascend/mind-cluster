@@ -730,23 +730,21 @@ func buildTestCases1() []testSubHealthyCase {
 			controller: &EventController{
 				jobInfo: common.JobBaseInfo{RecoverConfig: common.RecoverConfig{HotSwitch: true}, Framework: "tensorflow"},
 			},
-			faultInfo:               constant.JobFaultInfo{HealthyState: constant.SubHealthyState},
+			faultInfo: constant.JobFaultInfo{HealthyState: constant.SubHealthyState,
+				FaultList: []constant.FaultRank{{RankId: "0", PodUid: "0", PodRank: "0"}}},
 			expectedResult:          true,
 			expectHotSwitchDisabled: true,
-		}, {
-			name: "hotswitch with only master fault",
+		}, {name: "hotswitch with only master fault",
 			controller: &EventController{
 				jobInfo: common.JobBaseInfo{
 					RecoverConfig: common.RecoverConfig{HotSwitch: true}, Framework: constant.PtFramework,
 				},
 			},
 			faultInfo: constant.JobFaultInfo{HealthyState: constant.SubHealthyState,
-				FaultList: []constant.FaultRank{
-					{RankId: "0", PodUid: "0", PodRank: "0"}}},
+				FaultList: []constant.FaultRank{{RankId: "0", PodUid: "0", PodRank: "0"}}},
 			expectedResult:          true,
 			expectHotSwitchDisabled: false,
-		}, {
-			name: "hotswitch with pytorch framework and normal fault pods count",
+		}, {name: "hotswitch with pytorch framework and normal fault pods count",
 			controller: &EventController{
 				jobInfo: common.JobBaseInfo{
 					RecoverConfig: common.RecoverConfig{HotSwitch: true}, Framework: constant.PtFramework,
@@ -756,8 +754,7 @@ func buildTestCases1() []testSubHealthyCase {
 				FaultList: []constant.FaultRank{{PodUid: "0", PodRank: "0"}, {PodUid: "1", PodRank: "1"}}},
 			expectedResult:          false,
 			expectHotSwitchDisabled: false,
-		}, {
-			name: "hotswitch with pytorch framework and normal fault pods count",
+		}, {name: "hotswitch with pytorch framework and normal fault pods count",
 			controller: &EventController{
 				jobInfo: common.JobBaseInfo{
 					RecoverConfig: common.RecoverConfig{HotSwitch: true}, Framework: constant.PtFramework,
