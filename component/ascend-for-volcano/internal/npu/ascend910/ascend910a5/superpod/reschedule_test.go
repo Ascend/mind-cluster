@@ -789,4 +789,17 @@ func TestIsPodLevelRescheduling(t *testing.T) {
 			t.Errorf("isPodLevelRescheduling() res = %v, wantRes is false", res)
 		}
 	})
+	t.Run("04-isPodLevelRescheduling return false when both labels are on, but isMasterFault", func(t *testing.T) {
+		module := &module910a5SuperPod{}
+		fJob := &rescheduling.FaultJob{JobUID: mockJobUID}
+		sJob := plugin.SchedulerJob{}
+		sJob.Label = map[string]string{util.SinglePodTag: util.EnableFunc, util.ProcessRecoverEnable: util.EnableFunc}
+		fJob.IsMasterFault = true
+		module.Jobs = map[api.JobID]plugin.SchedulerJob{
+			mockJobUID: sJob,
+		}
+		if res := module.isPodLevelRescheduling(fJob); res {
+			t.Errorf("isPodLevelRescheduling() res = %v, wantRes is false", res)
+		}
+	})
 }

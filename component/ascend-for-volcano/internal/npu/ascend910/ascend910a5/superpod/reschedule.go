@@ -262,7 +262,7 @@ func (tp *module910a5SuperPod) isPodLevelRescheduling(fJob *rescheduling.FaultJo
 	}
 	klog.V(util.LogInfoLev).Infof("label pod-rescheduling is: %s, label process_recover_enable is: %s",
 		job.Label[util.SinglePodTag], job.Label[util.ProcessRecoverEnable])
-	return fJob.IsJobSingleRescheduling(&job) || fJob.IsProcessReschedulingJob(&job) && !fJob.IsMasterFault
+	return (fJob.IsJobSingleRescheduling(&job) || fJob.IsProcessReschedulingJob(&job)) && !fJob.IsMasterFault
 }
 
 // select node for fault job from origin vSuperPod
