@@ -955,6 +955,7 @@ MindCluster组件使用的环境变量说明如[表1](#table1132513610543)所示
 |SSH_CLIENT|SSH 服务器设置的环境变量，它包含有关客户端连接的信息|是|当前客户端连接的信息|安装Ascend Docker Runtime时，记录该信息到操作日志中|
 |TASKD_LOG_PATH|-|否|字符串|表示TaskD组件运行日志的落盘路径|
 |MINDX_SERVER_IP|容器创建时由Ascend Operator写入|是|字符串|表示任务与ClusterD通信的IP地址，同时也是clusterd-grpc-svc的svc IP|
+|MINDX_SERVER_DOMAIN|容器创建时由Ascend Operator写入|是|字符串|表示任务与ClusterD通信的域名，默认值为“clusterd-grpc-svc.mindx-dl.svc.cluster.local”|
 |MINDX_TASK_ID|容器创建时Ascend Operator写入|否|MindIE推理任务场景下，取值为acjob任务中label字段下jobID字段的值|Elastic Agent/TaskD向ClusterD注册gRPC服务和TaskD profiling功能保存日志需要提供MINDX_TASK_ID信息|
 |GROUP_BASE_DIR|任务启动脚本中写入|否|文件夹路径|表示TaskD组件的并行域信息导出路径|
 |MINDIO_WAIT_MINDX_TIME|任务YAML中写入|否|数字字符串，取值范围为[1, 3600]|不开启进程级重调度，开启弹性训练时等待故障Pod调度的超时时间|
