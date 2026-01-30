@@ -178,9 +178,81 @@ func (ki *ClientK8s) GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoCMName, de
 	return phyIDs
 }
 
+// GetAndFixUpgradeFaultReasonMapFromDeviceInfo returns the ManuallySeparateNPU from device info
+func (ki *ClientK8s) GetAndFixUpgradeFaultReasonMapFromDeviceInfo(
+	deviceInfoCMName, deviceInfoCMNamespace string) (common.UpgradeFaultReasonMap[common.PhyId], error) {
+
+	deviceInfo, err := ki.GetConfigMap(deviceInfoCMName, deviceInfoCMNamespace)
+	if err != nil {
+		hwlog.RunLog.Warnf("get device info cm error: %v", err)
+		return nil, err
+	}
+
+	manuallySeparateNPUs, err := ki.getManuallySeparateNPUs(deviceInfo)
+	if err != nil {
+		return nil, err
+	}
+	reason, err := ki.getUpgradeFaultReasonFromDeviceInfo(deviceInfo)
+	if err != nil {
+		return nil, fmt.Errorf("GetAndFixManuallySeparateReasonInfoFromDeviceInfo err: %v", err)
+	}
+	err = reason.FixManuallySeparateReason(manuallySeparateNPUs)
+	if err != nil {
+		return nil, fmt.Errorf("GetAndFixManuallySeparateReasonInfoFromDeviceInfo err: %v", err)
+	}
+	return reason, nil
+}
+
+func (ki *ClientK8s) getManuallySeparateNPUs(deviceInfo *v1.ConfigMap) ([]string, error) {
+	manuallySeparateNPUData, err := getDeviceInfoManuallySeparateNPUData(deviceInfo)
+	deviceNames := make([]string, 0)
+	if err != nil {
+		err = fmt.Errorf("failed to get manually seperate NPU data, error: %v", err)
+		return nil, err
+	}
+
+	deviceRunMode, err := common.GetDeviceRunMode()
+	if err != nil {
+		err = fmt.Errorf("failed to get device run mode, error: %v", err)
+		return nil, err
+	}
+
+	manuallySeparateNPUs := strings.Split(manuallySeparateNPUData, ",")
+	if len(manuallySeparateNPUs) == 1 && manuallySeparateNPUs[0] == "" {
+		hwlog.RunLog.Debug("manually seperate NPU cache is empty, skip the lookup phase")
+		return deviceNames, nil
+	}
+	for _, manuallySeparateNPU := range manuallySeparateNPUs {
+		deviceNameCheck := common.CheckDeviceName(manuallySeparateNPU, deviceRunMode)
+		if !deviceNameCheck {
+			hwlog.RunLog.Warnf("in %v run mode, device name %s is illegal, it will be ignored",
+				deviceRunMode, manuallySeparateNPU)
+			continue
+		}
+
+		deviceNames = append(deviceNames, manuallySeparateNPU)
+	}
+	return deviceNames, nil
+}
+
+// getUpgradeFaultReasonFromDeviceInfo returns the UpgradeFaultReason from device info
+func (ki *ClientK8s) getUpgradeFaultReasonFromDeviceInfo(
+	deviceInfo *v1.ConfigMap) (common.UpgradeFaultReasonMap[common.PhyId], error) {
+	reasonStr, ok := deviceInfo.Data[common.UpgradeFaultReasonKey]
+	if !ok {
+		err := fmt.Errorf("get ManuallySeparateReasonCm from device info cm failed")
+		return nil, err
+	}
+	reasonCm, err := common.StringToReasonCm(reasonStr)
+	if err != nil {
+		return nil, fmt.Errorf("getUpgradeFaultReasonFromDeviceInfo err: %v", err)
+	}
+	return reasonCm, nil
+}
+
 // WriteDeviceInfoDataIntoCM write deviceinfo into config map
 func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(nodeDeviceData *common.NodeDeviceInfoCache, manuallySeparateNPU string,
-	switchInfo common.SwitchFaultInfo, dpuInfo common.DpuInfo) (*common.NodeDeviceInfoCache, error) {
+	switchInfo common.SwitchFaultInfo, dpuInfo common.DpuInfo, reasonCm string) (*common.NodeDeviceInfoCache, error) {
 	nodeDeviceData.CheckCode = common.MakeDataHash(nodeDeviceData.DeviceInfo)
 	var data, switchData, dpuData []byte
 	dpuOpen := !reflect.DeepEqual(dpuInfo, common.DpuInfo{})
@@ -202,6 +274,7 @@ func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(nodeDeviceData *common.NodeDevice
 		deviceInfoCM.Data = map[string]string{
 			api.DeviceInfoCMDataKey:                   string(data),
 			api.SwitchInfoCMDataKey:                   string(switchData),
+			common.UpgradeFaultReasonKey:              reasonCm,
 			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU}
 		if dpuOpen {
 			if dpuData = common.MarshalData(dpuInfo); len(dpuData) == 0 {
@@ -214,11 +287,13 @@ func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(nodeDeviceData *common.NodeDevice
 			api.DeviceInfoCMDataKey:                   string(data),
 			api.SwitchInfoCMDataKey:                   string(switchData),
 			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU,
+			common.UpgradeFaultReasonKey:              reasonCm,
 			common.DescriptionKey:                     common.DescriptionValue}
 	default:
 		deviceInfoCM.Data = map[string]string{
 			api.DeviceInfoCMDataKey:                   string(data),
 			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU,
+			common.UpgradeFaultReasonKey:              reasonCm,
 			common.DescriptionKey:                     common.DescriptionValue}
 	}
 

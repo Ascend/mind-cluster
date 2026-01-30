@@ -136,10 +136,10 @@ func ReplacePodAnnotation(resourceType string, annotation map[string]string) map
 }
 
 func ReplaceDeviceInfoPublicName(resourceType string, deviceList map[string]string,
-	deviceName string) (map[string]string, string) {
+	deviceName string, reasonCm string) (map[string]string, string, string) {
 	devName := devNameMap[resourceType]
 	if len(devName.DevicePublicNamePre) == 0 {
-		return deviceList, deviceName
+		return deviceList, deviceName, reasonCm
 	}
 	newDeviceList := make(map[string]string, len(deviceList))
 	for key, value := range deviceList {
@@ -148,7 +148,8 @@ func ReplaceDeviceInfoPublicName(resourceType string, deviceList map[string]stri
 		newDeviceList[newKey] = newValue
 	}
 	newDeviceName := strings.ReplaceAll(deviceName, devName.OldDevicePublicNamePre, devName.DevicePublicNamePre)
-	return newDeviceList, newDeviceName
+	newReasonCm := strings.ReplaceAll(reasonCm, devName.OldDevicePublicNamePre, devName.DevicePublicNamePre)
+	return newDeviceList, newDeviceName, newReasonCm
 }
 
 func checkName(devNames []DevName) bool {

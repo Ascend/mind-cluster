@@ -71,6 +71,8 @@ const (
 	DeviceInfoCMNamePrefix = "mindx-dl-deviceinfo-"
 	// DeviceInfoCMManuallySeparateNPUKey for deviceinfo configmap ManuallySeparateNPU key
 	DeviceInfoCMManuallySeparateNPUKey = "ManuallySeparateNPU"
+	// UpgradeFaultReasonKey for deviceinfo configmap ManuallySeparateReasonCm key
+	UpgradeFaultReasonKey = "UpgradeFaultReason"
 	// DescriptionKey for deviceinfo configmap Description key
 	DescriptionKey = "Description"
 	// DescriptionValue for deviceinfo configmap Description value

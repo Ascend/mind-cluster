@@ -241,9 +241,10 @@ type FaultFrequencyCache struct {
 
 // FaultFrequency is the base info of fault frequency
 type FaultFrequency struct {
-	TimeWindow    int64
-	Times         int64
-	FaultHandling string
+	TimeWindow        int64
+	Times             int64
+	FaultHandling     string
+	ReleaseTimeWindow int64
 }
 
 // FaultDurationCustomization is the customization info of fault duration
@@ -265,6 +266,7 @@ type FaultDurationData struct {
 	FaultEventQueue          []common.DevFaultInfo
 	FaultDurationTime        int64
 	FaultRecoverDurationTime int64
+	FaultAlarmTime           int64
 }
 
 // FaultDuration is the base info of fault duration
@@ -275,11 +277,12 @@ type FaultDuration struct {
 }
 
 type handleDurationInputPara struct {
-	logicID       int32
-	eventId       string
-	index         int
-	timeoutStatus bool
-	duration      int64
+	logicID        int32
+	eventId        string
+	index          int
+	timeoutStatus  bool
+	duration       int64
+	faultAlarmTime int64
 }
 
 // DevFaultInfoBasedTimeAscend sort fault queue based on alarmRaisedTime in ascending order
@@ -665,9 +668,10 @@ func loadFaultFrequencyCustomization(customizations []FaultFrequencyCustomizatio
 				faultFrequencyMap[id] = &FaultFrequencyCache{
 					Frequency: make(map[int32][]int64, common.MaxErrorCodeCount),
 					FaultFrequency: FaultFrequency{
-						TimeWindow:    cus.TimeWindow,
-						Times:         cus.Times,
-						FaultHandling: cus.FaultHandling,
+						TimeWindow:        cus.TimeWindow,
+						Times:             cus.Times,
+						FaultHandling:     cus.FaultHandling,
+						ReleaseTimeWindow: cus.ReleaseTimeWindow,
 					},
 				}
 				hwlog.RunLog.Debugf("insert FaultFrequency for event id %s success, TimeWindow: %d, "+
@@ -688,7 +692,7 @@ func loadFaultFrequencyCustomization(customizations []FaultFrequencyCustomizatio
 	}
 }
 
-func insertFaultFrequency(logicId int32, eventId int64) {
+func insertFaultFrequency(logicId int32, eventId int64, faultTime int64) {
 	faultFrequencyMapLock.Lock()
 	defer faultFrequencyMapLock.Unlock()
 	eventIdStr := strings.ToLower(strconv.FormatInt(eventId, Hex))
@@ -701,7 +705,10 @@ func insertFaultFrequency(logicId int32, eventId int64) {
 	if !ok {
 		frequencyCache.Frequency[logicId] = make([]int64, 0, frequencyCache.Times)
 	}
-	frequencyCache.Frequency[logicId] = append(frequencyCache.Frequency[logicId], time.Now().Unix())
+	if faultTime == 0 {
+		faultTime = time.Now().Unix()
+	}
+	frequencyCache.Frequency[logicId] = append(frequencyCache.Frequency[logicId], faultTime)
 	hwlog.RunLog.Infof("insert fault frequency success, event id: %s, logic id: %d, unix time: %d, "+
 		"occurrence times :%d", eventIdStr, logicId, time.Now().Unix(), len(frequencyCache.Frequency[logicId]))
 }
@@ -887,7 +894,8 @@ func GetFaultTypeFromFaultFrequency(logicId int32, mode string) string {
 			}
 		}
 		frequencyCache.Frequency[logicId] = frequencyCache.Frequency[logicId][index:]
-		if int64(len(frequencyCache.Frequency[logicId])) >= frequencyCache.Times {
+		lenFrequencyCache := len(frequencyCache.Frequency[logicId])
+		if int64(lenFrequencyCache) >= frequencyCache.Times {
 			hwlog.RunLog.Infof("FaultFrequency detected, event id: %s, logic id: %d, fault occurred times: %d, "+
 				"fault level: %s", eventId, logicId, len(frequencyCache.Frequency[logicId]), frequencyCache.FaultHandling)
 			if frequencyCache.FaultHandling == ManuallySeparateNPU {
@@ -897,6 +905,8 @@ func GetFaultTypeFromFaultFrequency(logicId int32, mode string) string {
 			faultTypes = append(faultTypes, frequencyCache.FaultHandling)
 			// every time when frequency fault detected, record frequency fault to be cleared in cache
 			recoverFaultFrequencyMap[logicId] = eventId
+			lastFaultTime := frequencyCache.Frequency[logicId][lenFrequencyCache-1]
+			UpdateUpgradeFaultCache(LogicId(logicId), lastFaultTime, eventId, frequencyCache.FaultHandling)
 		}
 	}
 	return getMostSeriousFaultType(faultTypes)
@@ -935,6 +945,8 @@ func GetFaultTypeFromFaultDuration(logicId int32, mode string) string {
 				float64(faultDurationData.FaultDurationTime)/SecondMagnificationFloat,
 				faultDurationCache.FaultHandling)
 			faultTypes = append(faultTypes, faultDurationCache.FaultHandling)
+			UpdateUpgradeFaultCache(LogicId(logicId), faultDurationData.FaultAlarmTime,
+				eventId, faultDurationCache.FaultHandling)
 		}
 	}
 	return getMostSeriousFaultType(faultTypes)
@@ -1062,7 +1074,7 @@ func SetNewFaultAndCacheOnceRecoverFault(logicID int32, faultInfos []common.DevF
 			updateDeviceFaultTimeMap(device, faultInfo, true)
 			eventIdStr := strings.ToLower(strconv.FormatInt(faultInfo.EventID, Hex))
 			if _, ok := faultDurationMap[eventIdStr]; !ok {
-				insertFaultFrequency(device.LogicID, faultInfo.EventID)
+				insertFaultFrequency(device.LogicID, faultInfo.EventID, faultInfo.AlarmRaisedTime)
 			}
 		}
 	}
@@ -1147,7 +1159,7 @@ func networkFaultOccurAndFaultOnceHandle(faultInfos []common.DevFaultInfo, devic
 			updateDeviceFaultTimeMap(device, faultInfo, true)
 			eventIdStr := strings.ToLower(strconv.FormatInt(faultInfo.EventID, Hex))
 			if _, ok := faultDurationMap[eventIdStr]; !ok {
-				insertFaultFrequency(device.LogicID, faultInfo.EventID)
+				insertFaultFrequency(device.LogicID, faultInfo.EventID, faultInfo.AlarmRaisedTime)
 			}
 		}
 	}
@@ -1488,7 +1500,7 @@ func handleFaultQueue(logicID int32, eventId string) {
 			hwlog.RunLog.Errorf(parseHexFailedMsg, eventId)
 			return
 		}
-		insertFaultFrequency(logicID, num)
+		insertFaultFrequency(logicID, num, faultDurationData.FaultAlarmTime)
 	}
 
 	var duration int64
@@ -1521,30 +1533,32 @@ func timeoutOrRecoveryAlgorithm(logicID int32, eventId string, timeoutStatus boo
 		"fault timeout status %v doesn't need to change, continue to perform %v judgment"
 	for i = 0; i < faultQueueLen/halfDivisor; i++ {
 		faultDurationData := faultDurationMap[eventId].Duration[logicID]
-		duration = faultDurationData.FaultEventQueue[i*halfDivisor+1].AlarmRaisedTime -
-			faultDurationData.FaultEventQueue[i*halfDivisor].AlarmRaisedTime
+		preAlarmTime := faultDurationData.FaultEventQueue[i*halfDivisor].AlarmRaisedTime
+		nextAlarmTime := faultDurationData.FaultEventQueue[i*halfDivisor+1].AlarmRaisedTime
+		duration = nextAlarmTime - preAlarmTime
 		if duration <= timeoutThreshold*SecondMagnification {
 			continue
 		}
-		hwlog.RunLog.Debugf(faultTimeoutMsg, logicID, process, process, float64(duration)/SecondMagnificationFloat,
+		hwlog.RunLog.Infof(faultTimeoutMsg, logicID, process, process, float64(duration)/SecondMagnificationFloat,
 			timeoutThreshold, eventId, timeoutStatus)
 		return handleTimeoutCondition(handleDurationInputPara{logicID: logicID, eventId: eventId, index: i,
-			timeoutStatus: timeoutStatus, duration: duration})
+			timeoutStatus: timeoutStatus, duration: duration, faultAlarmTime: preAlarmTime})
 	}
 	if i*halfDivisor+1 == faultQueueLen {
 		faultDurationData := faultDurationMap[eventId].Duration[logicID]
 		currentHostTime := time.Now().UnixMilli()
-		duration = currentHostTime - faultDurationData.FaultEventQueue[i*halfDivisor].AlarmRaisedTime
+		lastAlarmTime := faultDurationData.FaultEventQueue[i*halfDivisor].AlarmRaisedTime
+		duration = currentHostTime - lastAlarmTime
 		if duration <= timeoutThreshold*SecondMagnification {
 			hwlog.RunLog.Debugf(faultNotTimeoutMsg, logicID, process, process, float64(duration)/
 				SecondMagnificationFloat, timeoutThreshold, eventId, faultDurationData.TimeoutStatus, process)
 			return handleNotTimeoutCondition(handleDurationInputPara{logicID: logicID, eventId: eventId, index: i,
 				timeoutStatus: timeoutStatus, duration: duration})
 		}
-		hwlog.RunLog.Debugf(faultTimeoutMsg, logicID, process, process, float64(duration)/SecondMagnificationFloat,
+		hwlog.RunLog.Infof(faultTimeoutMsg, logicID, process, process, float64(duration)/SecondMagnificationFloat,
 			timeoutThreshold, eventId, timeoutStatus)
 		return handleTimeoutCondition(handleDurationInputPara{logicID: logicID, eventId: eventId, index: i,
-			timeoutStatus: timeoutStatus, duration: duration})
+			timeoutStatus: timeoutStatus, duration: duration, faultAlarmTime: lastAlarmTime})
 	}
 	if halfDivisor*i == faultQueueLen {
 		hwlog.RunLog.Debugf(faultNotTimeoutMsg, logicID, process, process, float64(duration)/SecondMagnificationFloat,
@@ -1579,11 +1593,13 @@ func handleTimeoutCondition(inputPara handleDurationInputPara) bool {
 	faultQueueMsg := "NPU logic id: %v, %v fault queue: %v"
 	if inputPara.timeoutStatus {
 		faultDurationData.FaultDurationTime = inputPara.duration
+		faultDurationData.FaultAlarmTime = inputPara.faultAlarmTime
 		faultDurationMap[inputPara.eventId].Duration[inputPara.logicID] = faultDurationData
 		hwlog.RunLog.Debugf(faultQueueMsg, inputPara.logicID, inputPara.eventId, faultDurationData.FaultEventQueue)
 		return true
 	}
 	faultDurationData.FaultRecoverDurationTime = inputPara.duration
+	faultDurationData.FaultAlarmTime = inputPara.faultAlarmTime
 	faultDurationData.FaultEventQueue = faultDurationData.FaultEventQueue[halfDivisor*inputPara.index+1:]
 	faultDurationMap[inputPara.eventId].Duration[inputPara.logicID] = faultDurationData
 	hwlog.RunLog.Debugf(faultQueueMsg, inputPara.logicID, inputPara.eventId, faultDurationData.FaultEventQueue)

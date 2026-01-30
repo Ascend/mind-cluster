@@ -473,6 +473,15 @@ func (hdm *HwDevManager) separateNPUIDFromDeviceInfoIntoCache() {
 	}
 }
 
+func (hdm *HwDevManager) loadUpgradeReasonFromCm() {
+	cache, err := hdm.manager.LoadUpgradeFaultReasonMapFromDeviceInfoCm()
+	if err != nil {
+		hwlog.RunLog.Errorf("loadUpgradeReasonFromCm error: %v", err)
+		return
+	}
+	common.SaveUpgradeFaultCache(cache)
+}
+
 func (hdm *HwDevManager) handleDeviceInfoUpdate(ctx context.Context, initTime *time.Time) {
 	common.LockAllDeviceInfo()
 	defer common.UnlockAllDeviceInfo()
@@ -510,6 +519,7 @@ func (hdm *HwDevManager) ListenDevice(ctx context.Context) {
 	// when device-plugin is started, the value of ManuallySeparateNPU in device info configmap needs to be written into
 	// cache to prevent manually separate npu IDs in cache from been lost
 	hdm.separateNPUIDFromDeviceInfoIntoCache()
+	hdm.loadUpgradeReasonFromCm()
 	go hdm.pollFaultCodeCM(ctx)
 	go hdm.Serve(ctx)
 	if common.ParamOption.CheckCachedPods {
