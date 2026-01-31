@@ -522,6 +522,7 @@ func (hdm *HwDevManager) ListenDevice(ctx context.Context) {
 	hdm.loadUpgradeReasonFromCm()
 	go hdm.pollFaultCodeCM(ctx)
 	go hdm.Serve(ctx)
+	hdm.constructNpuFaultByCm(ctx)
 	if common.ParamOption.CheckCachedPods {
 		go hdm.manager.GetKubeClient().PodInformerInspector(ctx)
 	}
