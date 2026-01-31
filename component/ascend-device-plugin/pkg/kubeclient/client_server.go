@@ -188,7 +188,7 @@ func (ki *ClientK8s) GetAndFixUpgradeFaultReasonMapFromDeviceInfo(
 		return nil, err
 	}
 
-	manuallySeparateNPUs, err := ki.getManuallySeparateNPUs(deviceInfo)
+	manuallySeparateNPUs, err := ki.GetManuallySeparateNPUs(deviceInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func (ki *ClientK8s) GetAndFixUpgradeFaultReasonMapFromDeviceInfo(
 	return reason, nil
 }
 
-func (ki *ClientK8s) getManuallySeparateNPUs(deviceInfo *v1.ConfigMap) ([]string, error) {
+func (ki *ClientK8s) GetManuallySeparateNPUs(deviceInfo *v1.ConfigMap) ([]string, error) {
 	manuallySeparateNPUData, err := getDeviceInfoManuallySeparateNPUData(deviceInfo)
 	deviceNames := make([]string, 0)
 	if err != nil {

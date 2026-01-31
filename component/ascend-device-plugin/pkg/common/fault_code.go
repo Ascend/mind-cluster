@@ -906,7 +906,7 @@ func GetFaultTypeFromFaultFrequency(logicId int32, mode string) string {
 			// every time when frequency fault detected, record frequency fault to be cleared in cache
 			recoverFaultFrequencyMap[logicId] = eventId
 			lastFaultTime := frequencyCache.Frequency[logicId][lenFrequencyCache-1]
-			UpdateUpgradeFaultCache(LogicId(logicId), lastFaultTime, eventId, frequencyCache.FaultHandling)
+			InsertUpgradeFaultCache(LogicId(logicId), lastFaultTime, eventId, frequencyCache.FaultHandling)
 		}
 	}
 	return getMostSeriousFaultType(faultTypes)
@@ -945,7 +945,7 @@ func GetFaultTypeFromFaultDuration(logicId int32, mode string) string {
 				float64(faultDurationData.FaultDurationTime)/SecondMagnificationFloat,
 				faultDurationCache.FaultHandling)
 			faultTypes = append(faultTypes, faultDurationCache.FaultHandling)
-			UpdateUpgradeFaultCache(LogicId(logicId), faultDurationData.FaultAlarmTime,
+			InsertUpgradeFaultCache(LogicId(logicId), faultDurationData.FaultAlarmTime,
 				eventId, faultDurationCache.FaultHandling)
 		}
 	}

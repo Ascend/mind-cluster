@@ -39,7 +39,7 @@ const (
 	maxListWatchPeriod = 1800
 	// minListWatchPeriod is the min listening device state's period
 	minListWatchPeriod = 3
-	maxLogLineLength   = 1024
+	maxLogLineLength   = 1024000
 
 	// defaultLinkdownTimeout is the default linkdown timeout duration
 	defaultLinkdownTimeout = 30

@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"ascend-common/common-utils/hwlog"
 )
 
 func init() {
@@ -22,17 +24,31 @@ type UpgradeFaultCacheManager struct {
 	lock  sync.Mutex
 }
 
+// SaveUpgradeFaultCache use when device-plugin boot, load reason from cm then save in cache
 func SaveUpgradeFaultCache(cache UpgradeFaultReasonMap[LogicId]) {
 	upgradeFaultCacheMgr.lock.Lock()
 	defer upgradeFaultCacheMgr.lock.Unlock()
 	upgradeFaultCacheMgr.cache = cache
 }
 
-// UpdateUpgradeFaultCache update upgrade fault cache
-func UpdateUpgradeFaultCache(logicId LogicId, faultTime int64, faultCode, faultLevel string) {
+// InsertUpgradeFaultCache update upgrade fault cache
+func InsertUpgradeFaultCache(logicId LogicId, faultTime int64, faultCode, faultLevel string) {
 	upgradeFaultCacheMgr.lock.Lock()
 	defer upgradeFaultCacheMgr.lock.Unlock()
+	hwlog.RunLog.Infof("UpdateUpgradeFaultCache logicId %v, faultTime %v, faultCode %v, faultLevel %v",
+		logicId, faultTime, faultCode, faultLevel)
 	upgradeFaultCacheMgr.cache.UpdateReason(logicId, faultTime, faultCode, faultLevel)
+}
+
+// RemoveManuallySeparateReasonCache when cm remove manually separate npu, the cache should remove reported npu
+// but the fault that has not been reported shouldn't be removed
+func RemoveManuallySeparateReasonCache(logicIds []LogicId) {
+	upgradeFaultCacheMgr.lock.Lock()
+	defer upgradeFaultCacheMgr.lock.Unlock()
+	for _, id := range logicIds {
+		upgradeFaultCacheMgr.cache[id].removeLevel(ManuallySeparateNPU)
+	}
+	hwlog.RunLog.Infof("RemoveManuallySeparateReasonCache logicIds %v", logicIds)
 }
 
 func CopyUpgradeFaultCache() UpgradeFaultReasonMap[LogicId] {
@@ -99,7 +115,6 @@ func (reasonSet UpgradeFaultReasonSet) checkLevel(faultLevel string) bool {
 	return false
 }
 
-// TODO safety?
 func (reasonSet UpgradeFaultReasonSet) removeLevel(faultLevel string) {
 	for reason := range reasonSet {
 		if reason.FaultLevel == faultLevel {
@@ -184,7 +199,7 @@ func (reasonMap UpgradeFaultReasonMap[PhyId]) ConvertCmToCache(
 func (reasonMap UpgradeFaultReasonMap[PhyId]) CmToString(deviceTypePrefix string) string {
 	cm := make(map[string][]UpgradeFaultReason)
 	phyIdToDeviceName := func(phyId PhyId) string {
-		return deviceTypePrefix + strconv.Itoa(int(phyId))
+		return deviceTypePrefix + "-" + strconv.Itoa(int(phyId))
 	}
 	for phyId, reasonSet := range reasonMap {
 		cm[phyIdToDeviceName(phyId)] = reasonSet.toList()
