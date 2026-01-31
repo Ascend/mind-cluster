@@ -6991,7 +6991,7 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
 -   Atlas 800I A2 推理服务器
 -   A200I A2 Box 异构组件
 -   Atlas 800I A3 超节点服务器
--   推理服务器（插Atlas 350 推理卡）
+-   推理服务器（插Atlas 350 标卡）
 
 **使用流程<a name="zh-cn_topic_0000001559979444_section246711128536"></a>**
 
