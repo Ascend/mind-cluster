@@ -12,8 +12,9 @@ import (
 
 func init() {
 	upgradeFaultCacheMgr = UpgradeFaultCacheManager{
-		cache:     make(UpgradeFaultReasonMap[LogicId]),
-		cacheLock: sync.Mutex{},
+		cache:        make(UpgradeFaultReasonMap[LogicId]),
+		cacheLock:    sync.Mutex{},
+		removedEvent: make(UpgradeFaultReasonMap[LogicId]),
 	}
 }
 
@@ -47,8 +48,8 @@ func RemoveManuallySeparateReasonCache(logicIds []LogicId) {
 	upgradeFaultCacheMgr.cacheLock.Lock()
 	defer upgradeFaultCacheMgr.cacheLock.Unlock()
 	for _, id := range logicIds {
-		removedReasons := upgradeFaultCacheMgr.cache[id].removeLevel(ManuallySeparateNPU)
-		upgradeFaultCacheMgr.removedEvent[id].add(removedReasons)
+		removedReasons := upgradeFaultCacheMgr.cache.removeFaultLevel(id, ManuallySeparateNPU)
+		upgradeFaultCacheMgr.removedEvent.addReasons(id, removedReasons)
 	}
 	hwlog.RunLog.Infof("RemoveManuallySeparateReasonCache logicIds %v", logicIds)
 }
@@ -57,22 +58,23 @@ func RemoveManuallySeparateReasonCache(logicIds []LogicId) {
 func RemoveTimeoutReasonCache(logic LogicId, faultCode string) {
 	upgradeFaultCacheMgr.cacheLock.Lock()
 	defer upgradeFaultCacheMgr.cacheLock.Unlock()
-	removedReasons := upgradeFaultCacheMgr.cache[logic].removeFaultCode(faultCode)
-	upgradeFaultCacheMgr.removedEvent[logic].add(removedReasons)
+	removedReasons := upgradeFaultCacheMgr.cache.removeFaultCode(logic, faultCode)
+	upgradeFaultCacheMgr.removedEvent.addReasons(logic, removedReasons)
 }
 
 // GetAndCleanRemovedReasonEvent get and clean removed reason when notify to k8s event
-func GetAndCleanRemovedReasonEvent(logic LogicId, faultCode string) {
+func GetAndCleanRemovedReasonEvent() UpgradeFaultReasonMap[LogicId] {
 	upgradeFaultCacheMgr.cacheLock.Lock()
 	defer upgradeFaultCacheMgr.cacheLock.Unlock()
-	removedReasons := upgradeFaultCacheMgr.cache[logic].removeFaultCode(faultCode)
-	upgradeFaultCacheMgr.removedEvent[logic].add(removedReasons)
+	res := upgradeFaultCacheMgr.removedEvent.copy()
+	upgradeFaultCacheMgr.removedEvent = make(UpgradeFaultReasonMap[LogicId])
+	return res
 }
 
 func CopyUpgradeFaultCache() UpgradeFaultReasonMap[LogicId] {
 	upgradeFaultCacheMgr.cacheLock.Lock()
 	defer upgradeFaultCacheMgr.cacheLock.Unlock()
-	return upgradeFaultCacheMgr.cache.DeepCopy()
+	return upgradeFaultCacheMgr.cache.copy()
 }
 
 // UpgradeFaultReason indicate the reason of card which is upgrade
@@ -187,6 +189,43 @@ func (reasonMap UpgradeFaultReasonMap[ReasonKey]) Equals(otherReasonMap UpgradeF
 	return true
 }
 
+func (reasonMap UpgradeFaultReasonMap[LogicId]) addReasons(logicId LogicId, otherReasons UpgradeFaultReasonSet) {
+	reasons, found := reasonMap[logicId]
+	if !found {
+		reasons = make(UpgradeFaultReasonSet)
+	}
+	reasons.add(otherReasons)
+	reasonMap[logicId] = reasons
+}
+
+func (reasonMap UpgradeFaultReasonMap[LogicId]) removeFaultLevel(
+	logicId LogicId, faultLevel string) UpgradeFaultReasonSet {
+	reasons, found := reasonMap[logicId]
+	removedReasons := make(UpgradeFaultReasonSet)
+	if !found {
+		return removedReasons
+	}
+	removedReasons = reasons.removeLevel(faultLevel)
+	if len(reasons) == 0 {
+		delete(reasonMap, logicId)
+	}
+	return removedReasons
+}
+
+func (reasonMap UpgradeFaultReasonMap[LogicId]) removeFaultCode(
+	logicId LogicId, faultCode string) UpgradeFaultReasonSet {
+	reasons, found := reasonMap[logicId]
+	removedReasons := make(UpgradeFaultReasonSet)
+	if !found {
+		return removedReasons
+	}
+	removedReasons = reasons.removeFaultCode(faultCode)
+	if len(reasons) == 0 {
+		delete(reasonMap, logicId)
+	}
+	return removedReasons
+}
+
 func (reasonMap UpgradeFaultReasonMap[ReasonKey]) GetKeys() []ReasonKey {
 	ReasonKeys := make([]ReasonKey, 0)
 	for deviceKey, _ := range reasonMap {
@@ -195,7 +234,7 @@ func (reasonMap UpgradeFaultReasonMap[ReasonKey]) GetKeys() []ReasonKey {
 	return ReasonKeys
 }
 
-func (reasonMap UpgradeFaultReasonMap[ReasonKey]) DeepCopy() UpgradeFaultReasonMap[ReasonKey] {
+func (reasonMap UpgradeFaultReasonMap[ReasonKey]) copy() UpgradeFaultReasonMap[ReasonKey] {
 	ret := make(UpgradeFaultReasonMap[ReasonKey])
 	for id, reason := range reasonMap {
 		ret[id] = reason.copy()
