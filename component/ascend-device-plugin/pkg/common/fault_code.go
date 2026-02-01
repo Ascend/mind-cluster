@@ -945,8 +945,6 @@ func GetFaultTypeFromFaultDuration(logicId int32, mode string) string {
 				float64(faultDurationData.FaultDurationTime)/SecondMagnificationFloat,
 				faultDurationCache.FaultHandling)
 			faultTypes = append(faultTypes, faultDurationCache.FaultHandling)
-			InsertUpgradeFaultCache(LogicId(logicId), faultDurationData.FaultAlarmTime,
-				eventId, faultDurationCache.FaultHandling)
 		}
 	}
 	return getMostSeriousFaultType(faultTypes)
@@ -1595,14 +1593,17 @@ func handleTimeoutCondition(inputPara handleDurationInputPara) bool {
 		faultDurationData.FaultDurationTime = inputPara.duration
 		faultDurationData.FaultAlarmTime = inputPara.faultAlarmTime
 		faultDurationMap[inputPara.eventId].Duration[inputPara.logicID] = faultDurationData
-		hwlog.RunLog.Debugf(faultQueueMsg, inputPara.logicID, inputPara.eventId, faultDurationData.FaultEventQueue)
+		InsertUpgradeFaultCache(LogicId(inputPara.logicID), faultDurationData.FaultAlarmTime,
+			inputPara.eventId, faultDurationMap[inputPara.eventId].FaultHandling)
+		hwlog.RunLog.Infof(faultQueueMsg, inputPara.logicID, inputPara.eventId, faultDurationData.FaultEventQueue)
 		return true
 	}
 	faultDurationData.FaultRecoverDurationTime = inputPara.duration
 	faultDurationData.FaultAlarmTime = inputPara.faultAlarmTime
 	faultDurationData.FaultEventQueue = faultDurationData.FaultEventQueue[halfDivisor*inputPara.index+1:]
+	RemoveTimeoutReasonCache(LogicId(inputPara.logicID), inputPara.eventId)
 	faultDurationMap[inputPara.eventId].Duration[inputPara.logicID] = faultDurationData
-	hwlog.RunLog.Debugf(faultQueueMsg, inputPara.logicID, inputPara.eventId, faultDurationData.FaultEventQueue)
+	hwlog.RunLog.Infof(faultQueueMsg, inputPara.logicID, inputPara.eventId, faultDurationData.FaultEventQueue)
 	return false
 }
 
@@ -1694,8 +1695,7 @@ func GetTimeoutFaultLevelAndCodes(mode string, logicId int32) map[int64]FaultTim
 
 		if faultDurationCache.Duration[logicId].TimeoutStatus {
 			result[num] = FaultTimeAndLevel{
-				// timeout fault use current time as `FaultTime`
-				FaultTime:  time.Now().UnixMilli(),
+				FaultTime:  faultDurationCache.Duration[logicId].FaultAlarmTime,
 				FaultLevel: faultDurationCache.FaultHandling,
 			}
 		}
@@ -1724,10 +1724,10 @@ func GetFrequencyFaultLevelAndCodes(mode string, logicId int32) map[int64]FaultT
 			continue
 		}
 
-		if int64(len(faultFrequencyCache.Frequency[logicId])) >= faultFrequencyCache.Times {
+		faultOccurLen := len(faultFrequencyCache.Frequency[logicId])
+		if int64(faultOccurLen) >= faultFrequencyCache.Times {
 			result[num] = FaultTimeAndLevel{
-				// frequency fault use timeWindowStart time as `FaultTime`
-				FaultTime:  time.Now().Unix() - faultFrequencyCache.TimeWindow,
+				FaultTime:  faultFrequencyCache.Frequency[logicId][faultOccurLen-1],
 				FaultLevel: faultFrequencyCache.FaultHandling,
 			}
 		}

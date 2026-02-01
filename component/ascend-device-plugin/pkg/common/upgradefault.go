@@ -12,29 +12,30 @@ import (
 
 func init() {
 	upgradeFaultCacheMgr = UpgradeFaultCacheManager{
-		cache: make(UpgradeFaultReasonMap[LogicId]),
-		lock:  sync.Mutex{},
+		cache:     make(UpgradeFaultReasonMap[LogicId]),
+		cacheLock: sync.Mutex{},
 	}
 }
 
 var upgradeFaultCacheMgr UpgradeFaultCacheManager
 
 type UpgradeFaultCacheManager struct {
-	cache UpgradeFaultReasonMap[LogicId]
-	lock  sync.Mutex
+	cache        UpgradeFaultReasonMap[LogicId]
+	cacheLock    sync.Mutex
+	removedEvent UpgradeFaultReasonMap[LogicId]
 }
 
 // SaveUpgradeFaultCache use when device-plugin boot, load reason from cm then save in cache
 func SaveUpgradeFaultCache(cache UpgradeFaultReasonMap[LogicId]) {
-	upgradeFaultCacheMgr.lock.Lock()
-	defer upgradeFaultCacheMgr.lock.Unlock()
+	upgradeFaultCacheMgr.cacheLock.Lock()
+	defer upgradeFaultCacheMgr.cacheLock.Unlock()
 	upgradeFaultCacheMgr.cache = cache
 }
 
 // InsertUpgradeFaultCache update upgrade fault cache
 func InsertUpgradeFaultCache(logicId LogicId, faultTime int64, faultCode, faultLevel string) {
-	upgradeFaultCacheMgr.lock.Lock()
-	defer upgradeFaultCacheMgr.lock.Unlock()
+	upgradeFaultCacheMgr.cacheLock.Lock()
+	defer upgradeFaultCacheMgr.cacheLock.Unlock()
 	hwlog.RunLog.Infof("UpdateUpgradeFaultCache logicId %v, faultTime %v, faultCode %v, faultLevel %v",
 		logicId, faultTime, faultCode, faultLevel)
 	upgradeFaultCacheMgr.cache.UpdateReason(logicId, faultTime, faultCode, faultLevel)
@@ -43,17 +44,34 @@ func InsertUpgradeFaultCache(logicId LogicId, faultTime int64, faultCode, faultL
 // RemoveManuallySeparateReasonCache when cm remove manually separate npu, the cache should remove reported npu
 // but the fault that has not been reported shouldn't be removed
 func RemoveManuallySeparateReasonCache(logicIds []LogicId) {
-	upgradeFaultCacheMgr.lock.Lock()
-	defer upgradeFaultCacheMgr.lock.Unlock()
+	upgradeFaultCacheMgr.cacheLock.Lock()
+	defer upgradeFaultCacheMgr.cacheLock.Unlock()
 	for _, id := range logicIds {
-		upgradeFaultCacheMgr.cache[id].removeLevel(ManuallySeparateNPU)
+		removedReasons := upgradeFaultCacheMgr.cache[id].removeLevel(ManuallySeparateNPU)
+		upgradeFaultCacheMgr.removedEvent[id].add(removedReasons)
 	}
 	hwlog.RunLog.Infof("RemoveManuallySeparateReasonCache logicIds %v", logicIds)
 }
 
+// RemoveTimeoutReasonCache when release timeout window reach then reach them from cache
+func RemoveTimeoutReasonCache(logic LogicId, faultCode string) {
+	upgradeFaultCacheMgr.cacheLock.Lock()
+	defer upgradeFaultCacheMgr.cacheLock.Unlock()
+	removedReasons := upgradeFaultCacheMgr.cache[logic].removeFaultCode(faultCode)
+	upgradeFaultCacheMgr.removedEvent[logic].add(removedReasons)
+}
+
+// GetAndCleanRemovedReasonEvent get and clean removed reason when notify to k8s event
+func GetAndCleanRemovedReasonEvent(logic LogicId, faultCode string) {
+	upgradeFaultCacheMgr.cacheLock.Lock()
+	defer upgradeFaultCacheMgr.cacheLock.Unlock()
+	removedReasons := upgradeFaultCacheMgr.cache[logic].removeFaultCode(faultCode)
+	upgradeFaultCacheMgr.removedEvent[logic].add(removedReasons)
+}
+
 func CopyUpgradeFaultCache() UpgradeFaultReasonMap[LogicId] {
-	upgradeFaultCacheMgr.lock.Lock()
-	defer upgradeFaultCacheMgr.lock.Unlock()
+	upgradeFaultCacheMgr.cacheLock.Lock()
+	defer upgradeFaultCacheMgr.cacheLock.Unlock()
 	return upgradeFaultCacheMgr.cache.DeepCopy()
 }
 
@@ -90,6 +108,12 @@ func (reasonSet UpgradeFaultReasonSet) equals(otherReasonSet UpgradeFaultReasonS
 	return true
 }
 
+func (reasonSet UpgradeFaultReasonSet) add(otherReasonSet UpgradeFaultReasonSet) {
+	for reason := range otherReasonSet {
+		reasonSet[reason] = struct{}{}
+	}
+}
+
 func (reasonSet UpgradeFaultReasonSet) toList() []UpgradeFaultReason {
 	lis := make([]UpgradeFaultReason, 0)
 	for reason := range reasonSet {
@@ -115,12 +139,26 @@ func (reasonSet UpgradeFaultReasonSet) checkLevel(faultLevel string) bool {
 	return false
 }
 
-func (reasonSet UpgradeFaultReasonSet) removeLevel(faultLevel string) {
+func (reasonSet UpgradeFaultReasonSet) removeLevel(faultLevel string) UpgradeFaultReasonSet {
+	removedReason := make(UpgradeFaultReasonSet)
 	for reason := range reasonSet {
 		if reason.FaultLevel == faultLevel {
 			delete(reasonSet, reason)
+			removedReason[reason] = struct{}{}
 		}
 	}
+	return removedReason
+}
+
+func (reasonSet UpgradeFaultReasonSet) removeFaultCode(faultCode string) UpgradeFaultReasonSet {
+	removedReason := make(UpgradeFaultReasonSet)
+	for reason := range reasonSet {
+		if reason.FaultCode == faultCode {
+			delete(reasonSet, reason)
+			removedReason[reason] = struct{}{}
+		}
+	}
+	return removedReason
 }
 
 func (reasonSet UpgradeFaultReasonSet) copy() UpgradeFaultReasonSet {
