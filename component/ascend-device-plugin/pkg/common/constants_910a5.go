@@ -28,6 +28,12 @@ const (
 	DevA5 = "A5"
 )
 
+// for DPU subHealth report
+const (
+	// exist one dpu fault for one npu
+	OneDpuFault = 1
+)
+
 const (
 	// NpuIdxCorrespDpuRangeMiddle npu index middle value
 	NpuIdxCorrespDpuRangeMiddle = 4

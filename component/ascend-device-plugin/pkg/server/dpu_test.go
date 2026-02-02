@@ -24,6 +24,7 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device/dpucontrol"
+	"ascend-common/api"
 	"ascend-common/common-utils/ethtool"
 )
 
@@ -49,8 +50,8 @@ func TestUpdateDpuHealthy(t *testing.T) {
 			})
 			hdm.updateDpuHealthy(groupDevice)
 			for i, dev := range tt.deviceList {
-				if got := dev.DpuHealth; got != tt.want[i] {
-					t.Errorf("DpuHealthy = %v, want %v, for dev %v", got, tt.want[i], dev.CardID)
+				if dpuHealthy := dev.DpuHealth; dpuHealthy != tt.wantDpuHealth[i] {
+					t.Errorf("DpuHealthy = %v, want %v, for dev %v", dpuHealthy, tt.wantDpuHealth[i], dev.CardID)
 				}
 			}
 			patchEth.Reset()
@@ -75,7 +76,7 @@ type npuFaultTestCase struct {
 	name            string
 	npuWithDpuInfos []dpucontrol.NpuWithDpuInfo
 	deviceList      []*common.NpuDevice
-	want            []string
+	wantDpuHealth   []string
 }
 
 func buildFilterDpuFaultTestCase1() npuFaultTestCase {
@@ -109,7 +110,7 @@ func buildFilterDpuFaultTestCase1() npuFaultTestCase {
 				DpuHealth:  "",
 			},
 		},
-		want: []string{v1beta1.Unhealthy, v1beta1.Unhealthy},
+		wantDpuHealth: []string{v1beta1.Unhealthy, v1beta1.Unhealthy},
 	}
 }
 
@@ -121,7 +122,7 @@ func buildFilterDpuFaultTestCase2() npuFaultTestCase {
 		DeviceName: "enps2", Operstate: "down", DeviceId: "0x1825", Vendor: "0x10b5",
 	}
 	return npuFaultTestCase{
-		name: "[UB type] If one of the two DPUs is in the up state, it is healthy.",
+		name: "[UB type] If one of the two DPUs is in the up state, it is Subhealthy.",
 		npuWithDpuInfos: []dpucontrol.NpuWithDpuInfo{
 			{
 				NpuId:   int32(0),
@@ -144,7 +145,7 @@ func buildFilterDpuFaultTestCase2() npuFaultTestCase {
 				DpuHealth:  "",
 			},
 		},
-		want: []string{v1beta1.Healthy, v1beta1.Healthy},
+		wantDpuHealth: []string{api.DpuSubHealthy, api.DpuSubHealthy},
 	}
 }
 
@@ -179,22 +180,22 @@ func buildFilterDpuFaultTestCase3() npuFaultTestCase {
 				DpuHealth:  "",
 			},
 		},
-		want: []string{v1beta1.Healthy, v1beta1.Unhealthy},
+		wantDpuHealth: []string{v1beta1.Healthy, v1beta1.Unhealthy},
 	}
 }
 
-func TestCheckIsNpuFaultByDpu(t *testing.T) {
+func TestGetDpuFaultInfoOfNpu(t *testing.T) {
 	tests := []npuFaultByDpuCase{
-		buildIsNpuFaultByDpuCase01(),
-		buildIsNpuFaultByDpuCase02(),
-		buildIsNpuFaultByDpuCase03(),
-		buildIsNpuFaultByDpuCase04(),
-		buildIsNpuFaultByDpuCase05(),
+		buildGetDpuFaultInfoOfNpuCase01(),
+		buildGetDpuFaultInfoOfNpuCase02(),
+		buildGetDpuFaultInfoOfNpuCase03(),
+		buildGetDpuFaultInfoOfNpuCase04(),
+		buildGetDpuFaultInfoOfNpuCase05(),
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := checkIsNpuFaultByDpu(tt.npuName, tt.npuToDpuMap, tt.dpuOperstateMap); got != tt.want {
-				t.Errorf("checkIsNpuFaultByDpu() = %v, want %v", got, tt.want)
+			if dpuHealth := getDpuFaultInfoOfNpu(tt.npuName, tt.npuToDpuMap, tt.dpuOperstateMap); dpuHealth != tt.want {
+				t.Errorf("getDpuFaultInfoOfNpu() = %v, want %v", dpuHealth, tt.want)
 			}
 		})
 	}
@@ -205,12 +206,12 @@ type npuFaultByDpuCase struct {
 	npuName         string
 	npuToDpuMap     map[string][]string
 	dpuOperstateMap map[string]string
-	want            bool
+	want            string
 }
 
-func buildIsNpuFaultByDpuCase01() npuFaultByDpuCase {
+func buildGetDpuFaultInfoOfNpuCase01() npuFaultByDpuCase {
 	return npuFaultByDpuCase{
-		name:    "[UB-type]the two DPUs is in up state, the result is false",
+		name:    "[UB-type]the two DPUs is in up state, the DpuUnhealth is Health",
 		npuName: "Ascend910-0",
 		npuToDpuMap: map[string][]string{
 			"0": {"enps0", "enps2"},
@@ -224,13 +225,13 @@ func buildIsNpuFaultByDpuCase01() npuFaultByDpuCase {
 			"enps2": "up",
 			"enps3": "up",
 		},
-		want: false,
+		want: "Healthy",
 	}
 }
 
-func buildIsNpuFaultByDpuCase02() npuFaultByDpuCase {
+func buildGetDpuFaultInfoOfNpuCase02() npuFaultByDpuCase {
 	return npuFaultByDpuCase{
-		name:    "[UB-type]one dpu of the two is in up state, the result is false",
+		name:    "[UB-type]one dpu of the two is in up state, the DpuUnhealth is SubHealth",
 		npuName: "Ascend910-8", // equal to the Ascend910-0
 		npuToDpuMap: map[string][]string{
 			"0": {"enps0", "enps2"},
@@ -244,13 +245,13 @@ func buildIsNpuFaultByDpuCase02() npuFaultByDpuCase {
 			"enps2": "down",
 			"enps3": "down",
 		},
-		want: false,
+		want: "SubHealthy",
 	}
 }
 
-func buildIsNpuFaultByDpuCase03() npuFaultByDpuCase {
+func buildGetDpuFaultInfoOfNpuCase03() npuFaultByDpuCase {
 	return npuFaultByDpuCase{
-		name:    "[UB-type]none of the two is in up state, the result is true",
+		name:    "[UB-type]none of the two is in up state, the DpuUnhealth is UnHealth",
 		npuName: "Ascend910-8", // equal to the Ascend910-0
 		npuToDpuMap: map[string][]string{
 			"0": {"enps0", "enps2"},
@@ -264,13 +265,13 @@ func buildIsNpuFaultByDpuCase03() npuFaultByDpuCase {
 			"enps2": "down",
 			"enps3": "down",
 		},
-		want: true,
+		want: "Unhealthy",
 	}
 }
 
-func buildIsNpuFaultByDpuCase04() npuFaultByDpuCase {
+func buildGetDpuFaultInfoOfNpuCase04() npuFaultByDpuCase {
 	return npuFaultByDpuCase{
-		name:    "[PCIe-type]none of the DPU is in up state, the result is true",
+		name:    "[PCIe-type]none of the DPU is in up state, the DpuUnhealth is UnHealth",
 		npuName: "Ascend910-8", // equal to the Ascend910-0
 		npuToDpuMap: map[string][]string{
 			"0": {"eth0"},
@@ -284,13 +285,13 @@ func buildIsNpuFaultByDpuCase04() npuFaultByDpuCase {
 			"eth4": "down",
 			"eth5": "down",
 		},
-		want: true,
+		want: "Unhealthy",
 	}
 }
 
-func buildIsNpuFaultByDpuCase05() npuFaultByDpuCase {
+func buildGetDpuFaultInfoOfNpuCase05() npuFaultByDpuCase {
 	return npuFaultByDpuCase{
-		name:    "[PCIe-type]the DPU is in up state, the result is false",
+		name:    "[PCIe-type]the DPU is in up state, the DpuUnhealth is Health",
 		npuName: "Ascend910-8", // equal to the Ascend910-0
 		npuToDpuMap: map[string][]string{
 			"0": {"eth0"},
@@ -304,7 +305,7 @@ func buildIsNpuFaultByDpuCase05() npuFaultByDpuCase {
 			"eth4": "down",
 			"eth5": "down",
 		},
-		want: false,
+		want: "Healthy",
 	}
 }
 

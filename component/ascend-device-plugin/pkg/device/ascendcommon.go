@@ -551,6 +551,9 @@ func (tool *AscendTools) groupDevsByStatus(subClassDevices []*common.NpuDevice, 
 	for _, device := range subClassDevices {
 		allDevices.Insert(device.DeviceName)
 		deviceFaults = append(deviceFaults, tool.getDeviceFaults(device)...)
+		if tool.dmgr.GetDevType() == api.Ascend910A5 && device.DpuHealth == api.DpuSubHealthy {
+			deviceFaults = append(deviceFaults, tool.getDpuFaults(device.DeviceName)...)
+		}
 		if device.NetworkHealth == v1beta1.Unhealthy {
 			totalNetworkUHDevices.Insert(device.DeviceName)
 		}
@@ -632,6 +635,29 @@ func (tool *AscendTools) combineFaultTimeMaps(timeoutFaultLevelAndTime,
 		combineMap[key] = value
 	}
 	return combineMap
+}
+
+// getDpuFaults get dpu fault info list
+func (tool *AscendTools) getDpuFaults(deviceName string) []common.DeviceFault {
+	deviceFaults := make([]common.DeviceFault, 0, common.MapSizeTwo)
+	eventId := int64(common.DpuSubHealthCode)
+	faultTimeAndLevel := common.FaultTimeAndLevel{
+		FaultTime:  time.Now().UnixMilli(),
+		FaultLevel: common.NotHandleFault,
+	}
+	faultTimeAndLevelMap := make(map[string]common.FaultTimeAndLevel)
+	faultCode := strings.ToUpper(strconv.FormatInt(eventId, common.BaseDec))
+	faultTimeAndLevelMap[faultCode] = faultTimeAndLevel
+	deviceFaults = append(deviceFaults, common.DeviceFault{
+		FaultType:            common.DpuSubHealth,
+		NPUName:              deviceName,
+		LargeModelFaultLevel: common.NotHandleFault,
+		FaultLevel:           common.NotHandleFault,
+		FaultHandling:        common.NotHandleFault,
+		FaultCode:            faultCode,
+		FaultTimeAndLevelMap: faultTimeAndLevelMap,
+	})
+	return deviceFaults
 }
 
 // getDeviceFaults get device fault list

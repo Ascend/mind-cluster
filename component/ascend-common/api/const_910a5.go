@@ -25,6 +25,8 @@ const (
 	DpuStatusDown = "down"
 	// DpuStatusUp dpu status up
 	DpuStatusUp = "up"
+	// DpuSubHealth status for Device
+	DpuSubHealthy = "SubHealthy"
 	// DpuInfoCMDataKey device-info-cm data key, record Dpu info
 	DpuInfoCMDataKey = "DpuInfoCfg"
 	// DpuInfoCMDpuListKey mindcluster-dpuinfo-cm data key, record dpuList
