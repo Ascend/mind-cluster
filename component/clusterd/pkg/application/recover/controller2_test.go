@@ -1540,6 +1540,8 @@ func TestDealWithForceRelease(t *testing.T) {
 			defer mockGetFaultPod.Reset()
 			mockGetFaultInfo := gomonkey.ApplyFuncReturn(job.GetJobFaultSdIdAndNodeName, nil)
 			defer mockGetFaultInfo.Reset()
+			mockSleep := gomonkey.ApplyFunc(time.Sleep, func(d time.Duration) {})
+			defer mockSleep.Reset()
 			ctl.dealWithForceRelease()
 		})
 

@@ -955,6 +955,8 @@ func TestHandleNotifyGlobalFault(t *testing.T) {
 		jobInfo := newJobInfoWithStrategy(nil)
 		serviceCtx := context.Background()
 		ctl := NewEventController(jobInfo, keepAliveSeconds, serviceCtx)
+		mockSleep := gomonkey.ApplyFunc(time.Sleep, func(d time.Duration) {})
+		defer mockSleep.Reset()
 		_, code, err := ctl.handleNotifyGlobalFault()
 		convey.So(code, convey.ShouldEqual, common.JobNotExist)
 		convey.So(err, convey.ShouldNotBeNil)
@@ -984,6 +986,9 @@ func TestHandleNotifyGlobalFaultDefer(t *testing.T) {
 		patch := gomonkey.ApplyPrivateMethod(ctl, "hasRecoverInPlaceStrategy", func() bool { return true }).
 			ApplyPrivateMethod(ctl, "waitNormalFaultRecovery", func() []string { return nil })
 		defer patch.Reset()
+
+		mockSleep := gomonkey.ApplyFunc(time.Sleep, func(d time.Duration) {})
+		defer mockSleep.Reset()
 
 		convey.Convey("01-should update fault info when no retry faults", func() {
 			_, _, _ = ctl.handleNotifyGlobalFault()

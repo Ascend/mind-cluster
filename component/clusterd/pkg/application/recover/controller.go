@@ -1003,7 +1003,11 @@ func (ctl *EventController) handleNotifyGlobalFault() (string, common.RespCode, 
 	if len(retryFaults) > 0 {
 		return ctl.notifyFaultForRetryFaultCase(retryFaults, normalFaults)
 	}
-	ctl.dealWithForceRelease()
+	if isReleased := ctl.dealWithForceRelease(); !isReleased {
+		// "sleep" is used to ensure that the time taken is consistent with the situation of resource release
+		time.Sleep(constant.NotReleaseSleepTime)
+		hwlog.RunLog.Infof("jobId=%s do not release sources", ctl.jobInfo.JobId)
+	}
 	// strategy includes recover-in-place and fault can be restored in place, then check if fault disappears.
 	// If fault does not disappear after 15 seconds, can not choose recover-in-place strategy
 	ctl.updateRestartFaultProcess()
@@ -1016,18 +1020,20 @@ func (ctl *EventController) handleNotifyGlobalFault() (string, common.RespCode, 
 	return ctl.notifyFaultForNormalFaultCase(retryFaults, normalFaults)
 }
 
-func (ctl *EventController) dealWithForceRelease() {
+func (ctl *EventController) dealWithForceRelease() bool {
 	hwlog.RunLog.Infof("jobId=%s force release", ctl.jobInfo.JobId)
 	faultPods := ctl.GetFaultPod()
 	hwlog.RunLog.Infof("jobId=%s force release nodes %v", ctl.jobInfo.JobId, faultPods)
 	faultInfos := job.GetJobFaultSdIdAndNodeName(ctl.jobInfo.JobId, faultPods)
 	if faultInfos == nil {
 		hwlog.RunLog.Warnf("jobId=%s force release faultInfos is nil ", ctl.jobInfo.JobId)
-		return
+		return false
 	}
 	kube.CreateOrUpdateSuperPodFaultInfo(ctl.jobInfo.JobId, faultInfos)
 	// wait noded force release ipc resource
 	time.Sleep(constant.ReleaseTimeOut)
+	hwlog.RunLog.Warnf("jobId=%s force release finish", ctl.jobInfo.JobId)
+	return true
 }
 
 func (ctl *EventController) firstChooseStrategy() string {
