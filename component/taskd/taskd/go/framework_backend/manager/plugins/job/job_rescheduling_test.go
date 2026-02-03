@@ -167,11 +167,11 @@ func TestCheckKillMaster(t *testing.T) {
 	})
 }
 
-func TestChecktRank0Fault(t *testing.T) {
+func TestCheckRank0Fault(t *testing.T) {
 	convey.Convey("check rank0 fault should set kill master when agent0 has fault", t, func() {
 		plugin := getJobReschedulingPlugin()
 		snapshot := getSnapshotWithAgent0Fault()
-		plugin.checktRank0Fault(snapshot)
+		plugin.checkRank0Fault(snapshot)
 		convey.ShouldBeTrue(plugin.killMaster)
 	})
 
@@ -179,7 +179,7 @@ func TestChecktRank0Fault(t *testing.T) {
 		plugin := getJobReschedulingPlugin()
 		snapshot := getDemoSnapshot()
 		delete(snapshot.AgentInfos.Agents, common.AgentRole+"0")
-		plugin.checktRank0Fault(snapshot)
+		plugin.checkRank0Fault(snapshot)
 		convey.ShouldBeFalse(plugin.killMaster)
 	})
 
@@ -187,7 +187,7 @@ func TestChecktRank0Fault(t *testing.T) {
 		plugin := getJobReschedulingPlugin()
 		snapshot := getDemoSnapshot()
 		snapshot.AgentInfos = nil
-		plugin.checktRank0Fault(snapshot)
+		plugin.checkRank0Fault(snapshot)
 		convey.ShouldBeFalse(plugin.killMaster)
 	})
 }

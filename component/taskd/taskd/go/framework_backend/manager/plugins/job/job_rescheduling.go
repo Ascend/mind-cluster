@@ -181,11 +181,11 @@ func (job *JobReschedulingPlugin) checkKillMaster(shot storage.SnapShot) bool {
 			job.killMaster = true
 		}
 	}
-	job.checktRank0Fault(shot)
+	job.checkRank0Fault(shot)
 	return true
 }
 
-func (job *JobReschedulingPlugin) checktRank0Fault(shot storage.SnapShot) {
+func (job *JobReschedulingPlugin) checkRank0Fault(shot storage.SnapShot) {
 	if shot.AgentInfos == nil {
 		hwlog.RunLog.Debug("agent info is empty")
 		return
@@ -196,9 +196,9 @@ func (job *JobReschedulingPlugin) checktRank0Fault(shot storage.SnapShot) {
 		return
 	}
 	if agent0Info.Status[constant.ReportFaultRank] != "" {
-		hwlog.RunLog.Info("JobReschedulingPlugin checktRank0Fault agent 0 fault")
+		hwlog.RunLog.Debug("JobReschedulingPlugin checkRank0Fault agent 0 fault")
 		if shot.MgrInfos != nil && shot.MgrInfos.Status[constant.FaultRecover] != "" {
-			hwlog.RunLog.Infof("JobReschedulingPlugin fault recover %v, wait clusterD notify...",
+			hwlog.RunLog.Debugf("JobReschedulingPlugin fault recover %v, wait clusterD notify...",
 				shot.MgrInfos.Status[constant.FaultRecover])
 			return
 		}
