@@ -959,6 +959,7 @@ MindCluster组件使用的环境变量说明如[表1](#table1132513610543)所示
 |MINDX_TASK_ID|容器创建时Ascend Operator写入|否|MindIE推理任务场景下，取值为acjob任务中label字段下jobID字段的值|Elastic Agent/TaskD向ClusterD注册gRPC服务和TaskD profiling功能保存日志需要提供MINDX_TASK_ID信息|
 |GROUP_BASE_DIR|任务启动脚本中写入|否|文件夹路径|表示TaskD组件的并行域信息导出路径|
 |MINDIO_WAIT_MINDX_TIME|任务YAML中写入|否|数字字符串，取值范围为[1, 3600]|不开启进程级重调度，开启弹性训练时等待故障Pod调度的超时时间|
+|RAS_NET_ROOT_PATH|用户配置|否|ClusterD和NodeD共享目录的根路径|在慢网络诊断场景下ClusterD和NodeD通过共享存储进行交互，详细请参见<a href="./usage/resumable_training.md#慢网络诊断">慢网络诊断</a>|
 
 **Ascend Operator环境变量说明<a name="section1272862810184"></a>**
 

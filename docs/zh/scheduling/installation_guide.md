@@ -4187,6 +4187,9 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
 -   使用整卡调度（推理）和推理卡故障重调度特性，下发acjob类型的分布式推理任务，必须安装Ascend Operator。
 -   仅使用容器化支持和资源监测、推理卡故障恢复或推理卡故障重调度（单机任务）的用户，可以不安装Ascend Operator，请直接跳过本章节。
 
+>[!NOTE] 说明 
+>Ascend Operator组件允许创建的单个AscendJob任务的最大副本数量为20000。
+
 **操作步骤<a name="section209273712583"></a>**
 
 1.  以root用户登录K8s管理节点，并执行以下命令，查看Ascend Operator镜像和版本号是否正确。
@@ -5210,7 +5213,7 @@ Container Manager组件直接在物理机上通过二进制方式运行。
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p140711477312"><a name="p140711477312"></a><a name="p140711477312"></a>docker</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p6407647193117"><a name="p6407647193117"></a><a name="p6407647193117"></a>容器运行时类型：</p>
-<a name="ul8283112164115"></a><a name="ul8283112164115"></a><ul id="ul8283112164115"><li>docker：容器运行时为docker。</li><li>containerd：容器运行时为containerd。<div class="note" id="note1244216377415"><a name="note1244216377415"></a><a name="note1244216377415"></a><span class="notetitle"> 说明： </span><div class="notebody"><a name="ul7130194664718"></a><a name="ul7130194664718"></a><ul id="ul7130194664718"><li><span id="ph14779959144911"><a name="ph14779959144911"></a><a name="ph14779959144911"></a>Container Manager</span>仅支持管理一种容器运行时启动的容器。</li><li>当容器运行时为containerd时，仅支持管理命名空间为k8s.io下的容器。</li></ul>
+<a name="ul8283112164115"></a><a name="ul8283112164115"></a><ul id="ul8283112164115"><li>docker：容器运行时为docker。</li><li>containerd：容器运行时为containerd。<div class="note" id="note1244216377415"><a name="note1244216377415"></a><a name="note1244216377415"></a><span class="notetitle"> 说明： </span><div class="notebody"><a name="ul7130194664718"></a><a name="ul7130194664718"></a><ul id="ul7130194664718"><li><span id="ph14779959144911"><a name="ph14779959144911"></a><a name="ph14779959144911"></a>Container Manager</span>仅支持管理一种容器运行时启动的容器。</li><li>当容器运行时为containerd时，仅支持管理命名空间不为moby的容器。当多个命名空间下有相同名称的容器，容器管理功能可能会出现异常。</li></ul>
 </div></div>
 </li></ul>
 </td>
@@ -5243,7 +5246,7 @@ Container Manager组件直接在物理机上通过二进制方式运行。
 </table>
 
 >[!NOTE] 说明 
->Container Manager服务已经启动后，若需要修改Container Manager的启动参数，请修改服务配置文件中的启动参数后，执行以下命令，重新启动Container Manager系统服务。
+>Container Manager服务已经启动后，若需要修改Container Manager的启动参数，请修改服务配置文件中的启动参数后，执行以下命令，重启Container Manager系统服务。
 >```
 >systemctl daemon-reload && systemctl restart container-manager
 >```
