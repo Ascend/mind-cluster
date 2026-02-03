@@ -386,7 +386,10 @@ func TestDeleteJobWithSubHealthyLabels(t *testing.T) {
 				},
 			},
 		}
-		err := fJob.deleteJobWithSubHealthyLabels(ssn, &plugin.SchedulerJob{}, env)
+		schedulerJob := &plugin.SchedulerJob{
+			SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{ReqNPUName: ""}},
+		}
+		err := fJob.deleteJobWithSubHealthyLabels(ssn, schedulerJob, env)
 		if err != nil {
 			t.Errorf("deleteJobWithSubHealthyLabels() err = %v, wantErr is nil", err)
 		}

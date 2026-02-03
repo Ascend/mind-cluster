@@ -154,6 +154,9 @@ func (nJob *NPUJob) IsVJob() bool {
 // static segmentation: huawei.com/Ascend910-Y.
 // no segmentation: huawei.com/Ascend910.
 func (nJob *NPUJob) IsNPUJob() bool {
+	if nJob == nil {
+		return false
+	}
 	return strings.Contains(nJob.ReqNPUName, HwPreName)
 }
 

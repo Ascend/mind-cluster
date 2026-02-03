@@ -207,7 +207,7 @@ func (fJob *FaultJob) ForceDeleteJob(schedulerJob *plugin.SchedulerJob,
 	}
 	var isMasterFault bool
 	for _, fTask := range fJob.FaultTasks {
-		if fTask.IsFaultTask && fTask.NodeRankIndex == util.Rank0 && fTask.IsNpuTask {
+		if fTask.IsFaultTask && fTask.NodeRankIndex == util.Rank0 && schedulerJob.NPUJob.IsNPUJob() {
 			isMasterFault = true
 		}
 	}
@@ -470,7 +470,7 @@ func (fJob *FaultJob) GraceDeleteJob(ssn *framework.Session, npuJob *plugin.Sche
 	if npuJob == nil {
 		return fmt.Errorf("schedulerJob does not exist")
 	}
-	reason, isMasterFault := fJob.getRestartInfos()
+	reason, isMasterFault := fJob.getRestartInfos(npuJob.NPUJob.IsNPUJob())
 	isSuperPod, ids := fJob.getFaultJobSuperPodInfo(npuJob)
 	fJob.updateSuperPodsReschdInfo(env)
 	dpi := &deletePodInfo{
@@ -519,11 +519,11 @@ func (fJob *FaultJob) graceDeletePods(ssn *framework.Session, npuJob *plugin.Sch
 }
 
 // GraceDeleteJob grace delete jobs labelled to be deleted gracefully
-func (fJob *FaultJob) getRestartInfos() (string, bool) {
+func (fJob *FaultJob) getRestartInfos(isNpuJob bool) (string, bool) {
 	var reasonList []FaultReasonList
 	var isMasterFault bool
 	for _, fTask := range fJob.FaultTasks {
-		if fTask.IsFaultTask && fTask.NodeRankIndex == util.Rank0 && fTask.IsNpuTask {
+		if fTask.IsFaultTask && fTask.NodeRankIndex == util.Rank0 && isNpuJob {
 			isMasterFault = true
 		}
 		if fTask.Reason != nil {
