@@ -40,6 +40,8 @@ type HuaWeiAIChip struct {
 	ChipInfo *common.ChipInfo `json:"chip_info"`
 	// BoardInfo board info of device, but not display
 	BoardInfo *common.BoardInfo
+	// ProductType product type info
+	ProductType string
 
 	// VDevActivityInfo the activity virtual device info
 	VDevActivityInfo *common.VDevActivityInfo `json:"v_dev_activity_info"`

@@ -139,4 +139,6 @@ const (
 	DomainForPcieBandwidth = "pcieBandwidth"
 	// DomainForContainerInfo domain for pcie container info
 	DomainForContainerInfo = "containerInfo"
+	// DomainForProductType domain for product type
+	DomainForProductType = "productType"
 )

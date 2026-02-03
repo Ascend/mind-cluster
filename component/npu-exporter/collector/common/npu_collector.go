@@ -17,6 +17,7 @@ package common
 
 import (
 	"context"
+	"strconv"
 	"sync"
 	"time"
 
@@ -46,6 +47,8 @@ var (
 	ChainForCustomPlugin []MetricsCollector
 
 	updateTimeForCardIds = time.Minute
+
+	npuInfoCache sync.Map
 )
 
 const (
@@ -294,6 +297,7 @@ func getNPUChipList(dmgr devmanager.DeviceInterface) (npuInfo []HuaWeiAIChip) {
 			assemblevNPUInfo(dmgr, logicID, &chip)
 			setPCIeBusInfo(logicID, dmgr, &chip)
 			setElabelInfo(&chip, dmgr, cardID)
+			setProductType(&chip, dmgr, cardID, deviceID)
 
 			chipList = append(chipList, chip)
 			chipListIDs = append(chipListIDs, logicID)
@@ -367,6 +371,33 @@ func setElabelInfo(chip *HuaWeiAIChip, dmgr devmanager.DeviceInterface, cardID i
 		SerialNumber: elabelInfo.SerialNumber,
 	}
 }
+func setProductType(chip *HuaWeiAIChip, dmgr devmanager.DeviceInterface, cardID int32, deviceID int32) {
+	if dmgr.GetDevType() != api.Ascend310P {
+		logger.LogfWithOptions(logger.WarnLevel, logger.LogOptions{
+			Domain:    "setProductType",
+			ID:        dmgr.GetDevType(),
+			MaxCounts: 1,
+		},
+			"%v does not support product type info", dmgr.GetDevType())
+		return
+	}
+	if productType, ok := getFromCache(DomainForProductType, cardID, deviceID).(string); ok {
+		chip.ProductType = productType
+		return
+	}
+
+	productType, err := dmgr.GetProductType(cardID, deviceID)
+	if err != nil {
+		logger.LogfWithOptions(logger.ErrorLevel, logger.LogOptions{
+			Domain: DomainForProductType,
+			ID:     cardID},
+			"get product type info of card: %v failed: %v", cardID, err)
+		return
+	}
+	chip.ProductType = productType
+	saveToCache(DomainForProductType, cardID, deviceID, productType)
+	hwlog.ResetErrCnt(DomainForProductType, cardID)
+}
 
 func assemblevNPUInfo(dmgr devmanager.DeviceInterface, logicID int32, baseChipInfo *HuaWeiAIChip) {
 	if dmgr.GetDevType() != api.Ascend310P {
@@ -431,4 +462,18 @@ func getChipListCache(n *NpuCollector) []HuaWeiAIChip {
 		return make([]HuaWeiAIChip, 0)
 	}
 	return chipList
+}
+
+func saveToCache(domain string, cardID int32, deviceID int32, value interface{}) {
+	key := domain + strconv.Itoa(int(cardID)) + strconv.Itoa(int(deviceID))
+	npuInfoCache.Store(key, value)
+}
+
+func getFromCache(domain string, cardID int32, deviceID int32) interface{} {
+	key := domain + strconv.Itoa(int(cardID)) + strconv.Itoa(int(deviceID))
+	value, ok := npuInfoCache.Load(key)
+	if !ok {
+		return nil
+	}
+	return value
 }

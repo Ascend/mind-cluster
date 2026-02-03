@@ -34,9 +34,10 @@ import (
 var (
 	errorCodeDescs        []*prometheus.Desc
 	cardLabelForProcess   = append(colcommon.CardLabel, "process_id", "container_id")
-	cardLabelForContainer []string
-	cardLabelForSN        []string
+	cardLabelForSN        = append(colcommon.CardLabel, "serial_number")
+	cardLabelForProduct   = append(colcommon.CardLabel, "product_type")
 	cardLabelForNpuName   = make([]string, len(colcommon.CardLabel))
+	cardLabelForContainer []string
 )
 
 var (
@@ -61,6 +62,12 @@ var (
 
 	// net status
 	descNetworkStatus = colcommon.BuildDesc("npu_chip_info_network_status", "the npu network health status")
+	// NPU serial number
+	descNPUSerialNumber = colcommon.BuildDescWithLabel("npu_chip_info_serial_number",
+		"the npu serial number information", cardLabelForSN)
+	// product type
+	descNPUProduct = colcommon.BuildDescWithLabel("npu_chip_info_product_type", "the npu product_type information",
+		cardLabelForProduct)
 
 	// container (vnpu not support this metrics), only report to prometheus
 	npuCtrUtilization = colcommon.BuildDesc("container_npu_utilization",
@@ -70,9 +77,8 @@ var (
 	npuCtrUsedMemory = colcommon.BuildDesc("container_npu_used_memory",
 		"the npu used memory in container, unit is 'MB'")
 
-	npuCtrInfo          *prometheus.Desc = nil
-	descNpuName         *prometheus.Desc = nil
-	descNPUSerialNumber *prometheus.Desc = nil
+	npuCtrInfo  *prometheus.Desc = nil
+	descNpuName *prometheus.Desc = nil
 )
 
 func init() {
@@ -86,11 +92,6 @@ func init() {
 	cardLabelForContainer[0] = "npuID"
 	npuCtrInfo = colcommon.BuildDescWithLabel("npu_container_info", "the container name and deviceID relationship",
 		cardLabelForContainer)
-
-	cardLabelForSN = append(colcommon.CardLabel, "serial_number")
-	// NPU SN related metrics
-	descNPUSerialNumber = colcommon.BuildDescWithLabel("npu_chip_info_serial_number",
-		"the npu serial number information", cardLabelForSN)
 
 	copy(cardLabelForNpuName, colcommon.CardLabel)
 	cardLabelForNpuName[1] = "name"
@@ -146,6 +147,7 @@ func (c *BaseInfoCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- descAICoreFreq
 	ch <- descNPUSerialNumber
 	ch <- descDevProcessInfo
+	ch <- descNPUProduct
 	// status
 	ch <- descNetworkStatus
 	// container
@@ -245,6 +247,9 @@ func (c *BaseInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *col
 			snLabel := append(cardLabel, cache.chip.ElabelInfo.SerialNumber)
 			doUpdateMetricWithValidateNum(ch, timestamp, 1, snLabel, descNPUSerialNumber)
 		}
+		if cache.chip.ProductType != "" {
+			doUpdateMetricWithValidateNum(ch, timestamp, 1, append(cardLabel, cache.chip.ProductType), descNPUProduct)
+		}
 	}
 	updateFrame[chipCache](colcommon.GetCacheKey(c), n, containerMap, chips, updateSingleChip)
 
@@ -341,7 +346,9 @@ func (c *BaseInfoCollector) UpdateTelegraf(fieldsMap map[string]map[string]inter
 		if cache.chip.ElabelInfo != nil {
 			doUpdateTelegraf(fieldMap, descNPUSerialNumber, cache.chip.ElabelInfo.SerialNumber, "")
 		}
-
+		if cache.chip.ProductType != "" {
+			doUpdateTelegraf(fieldMap, descNPUProduct, cache.chip.ProductType, "")
+		}
 	}
 
 	if fieldsMap[colcommon.GeneralDevTagKey] == nil {
