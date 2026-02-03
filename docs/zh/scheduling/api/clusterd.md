@@ -21,8 +21,8 @@ ClusterD启动后，会创建如下ConfigMap：
 |- DeviceType|故障设备类型。|
 |- DeviceId|故障设备ID。|
 |- FaultCode|故障码，由英文和数组拼接而成的字符串，字符串表示故障码的十六进制。|
-|- FaultLevel|故障处理等级。<li>NotHandleFault：无需处理。</li><li>PreSeparateFault：该节点上有任务则不处理，后续调度时不调度任务到该节点。</li><li>SeparateFault：任务重调度。</li>|
-|NodeStatus|节点健康状态，由本节点故障处理等级最严重的设备决定。<li>Healthy：该节点故障处理等级存在且不超过NotHandleFault，该节点为健康节点，可以正常训练。</li><li>PreSeparate：该节点故障处理等级存在且不超过PreSeparateFault，该节点为预隔离节点，暂时可能对任务无影响，待任务受到影响退出后，后续不会再调度任务到该节点。</li><li>UnHealthy：该节点故障处理等级存在SeparateFault，该节点为故障节点，将影响训练任务，立即将任务调离该节点。</li>|
+|- FaultLevel|故障处理等级。<ul><li>NotHandleFault：无需处理。</li><li>PreSeparateFault：该节点上有任务则不处理，后续调度时不调度任务到该节点。</li><li>SeparateFault：任务重调度。</li></ul>|
+|NodeStatus|节点健康状态，由本节点故障处理等级最严重的设备决定。<ul><li>Healthy：该节点故障处理等级存在且不超过NotHandleFault，该节点为健康节点，可以正常训练。若该节点故障处理等级为PreSeparateFault，且节点有NPU卡正在使用，则该节点为健康节点。任务执行完成后，该节点将变为故障节点。</li><li>UnHealthy：该节点故障处理等级存在SeparateFault，该节点为故障节点，将影响训练任务，立即将任务调离该节点。若该节点故障处理等级为PreSeparateFault，且节点无NPU卡正在使用，则该节点为故障节点，不可将任务调度到该节点。</li></ul>|
 
 
 **表 2** cluster-info-device-$\{m\}
@@ -35,11 +35,9 @@ ClusterD启动后，会创建如下ConfigMap：
 |huawei.com/Ascend910-NetworkUnhealthy|当前节点网络不健康的芯片名称信息，存在多个时用英文逗号拼接。|
 |huawei.com/Ascend910-Unhealthy|当前芯片不健康的芯片名称信息，存在多个时用英文逗号拼接。|
 |huawei.com/Ascend910-Fault|数组对象，对象包含fault_type、npu_name、large_model_fault_level、 fault_level、fault_handling、fault_code和fault_time_and_level_map字段。|
-|- fault_type|故障类型。<li>CardUnhealthy：芯片故障</li><li>CardNetworkUnhealthy：参数面网络故障（芯片网络相关故障）</li><li>NodeUnhealthy：节点故障</li><li>PublicFault：公共故障</li>|
+|- fault_type|故障类型。<ul><li>CardUnhealthy：芯片故障</li><li>CardNetworkUnhealthy：参数面网络故障（芯片网络相关故障）</li><li>NodeUnhealthy：节点故障</li><li>PublicFault：公共故障</li></ul>|
 |- npu_name|故障的芯片名称，节点故障时为空。|
-|- large_model_fault_level|故障处理类型，节点故障时取值为空。<li>NotHandleFault：不做处理</li><li>RestartRequest：推理场景需要重新执行推理请求，训练场景重新执行训练业务</li><li>RestartBusiness：需要重新执行业务</li><li>FreeRestartNPU：影响业务执行，待芯片空闲时需复位芯片</li><li>RestartNPU：直接复位芯片并重新执行业务</li><li>SeparateNPU：隔离芯片</li><li>PreSeparateNPU：预隔离芯片，会根据训练任务实际运行情况判断是否重调度</li><div class="note"><span>[!NOTE] 说明</span><div class="notebody"><li>large_model_fault_level、fault_handling和fault_level参数功能一致，推荐使用fault_handling。</li><li>若推理任务订阅了故障信息，任务使用的推理卡上发生RestartRequest故障且故障持续时间未超过60秒，则不执行任务重调度；若故障持续时间超过60秒仍未恢复，则隔离芯片，进行任务重调度。</li>|
-|- fault_level|
-|- fault_handling|
+|<p>- large_model_fault_level</p><p>- fault_level</p><p>- fault_handling</p>|故障处理类型，节点故障时取值为空。<ul><li>NotHandleFault：不做处理</li><li>RestartRequest：推理场景需要重新执行推理请求，训练场景重新执行训练业务</li><li>RestartBusiness：需要重新执行业务</li><li>FreeRestartNPU：影响业务执行，待芯片空闲时需复位芯片</li><li>RestartNPU：直接复位芯片并重新执行业务</li><li>SeparateNPU：隔离芯片</li><li>PreSeparateNPU：预隔离芯片，会根据训练任务实际运行情况判断是否重调度</li></ul><div class="note"><span>说明：</span><ul><li>large_model_fault_level、fault_handling和fault_level参数功能一致，推荐使用fault_handling。</li><li>若推理任务订阅了故障信息，任务使用的推理卡上发生RestartRequest故障且故障持续时间未超过60秒，则不执行任务重调度；若故障持续时间超过60秒仍未恢复，则隔离芯片，进行任务重调度。</li></ul>|
 |- fault_code|故障码，英文逗号拼接的字符串。|
 |- fault_time_and_level_map|故障码、故障发生时间及故障处理等级。|
 |SuperPodID|超节点ID。|
@@ -54,12 +52,12 @@ ClusterD启动后，会创建如下ConfigMap：
 |FaultCode|当前节点的灵衢总线设备故障码列表。数组对象包含EventType、AssembledFaultCode、PeerPortDevice、PeerPortId、SwitchChipId、SwitchPortId、Severity、Assertion、AlarmRaisedTime等字段。|
 |-EventType|告警ID。|
 |-AssembledFaultCode|故障码。|
-|-PeerPortDevice|对接设备类型。<li>0：CPU</li><li>1：NPU</li><li>2：SW</li><li>0xFFFF：NA</li>|
+|-PeerPortDevice|对接设备类型。<ul><li>0：CPU</li><li>1：NPU</li><li>2：SW</li><li>0xFFFF：NA</li></ul>|
 |-PeerPortId|对接设备ID。|
 |-SwitchChipId|灵衢故障芯片ID。从0开始编号。|
 |-SwitchPortId|灵衢故障端口ID。从0开始编号。|
-|-Severity|故障等级。<li>0：提示</li><li>1：次要</li><li>2：重要</li><li>3：紧急</li>|
-|-Assertion|事件类型。<li>0：故障恢复</li><li>1：故障产生</li><li>2：通知类事件</li>|
+|-Severity|故障等级。<ul><li>0：提示</li><li>1：次要</li><li>2：重要</li><li>3：紧急</li></ul>|
+|-Assertion|事件类型。<ul><li>0：故障恢复</li><li>1：故障产生</li><li>2：通知类事件</li></ul>|
 |-AlarmRaisedTime|故障/事件产生时间。|
 |FaultLevel|当前节点故障处理等级。<p>取FaultCode中所有故障中等级最高的故障等级，取值包含：NotHandle、SubHealthFault、Separate和RestartRequest。</p>|
 |UpdateTime|故障上报刷新时间。|
@@ -78,18 +76,18 @@ ClusterD启动后，会创建如下ConfigMap：
 |参数|说明|
 |--|--|
 |PublicFaults|公共故障详情。故障数量过大时，不再更新本字段内容。以下各字段的详细说明请参见<a href="#公共故障接口">故障信息说明表</a>。|
-|-*<node name>*|故障节点名称|
+|-<i>\<node name></i>|故障节点名称|
 |-resource|故障发送方<p>默认配置为CCAE、fd-online、pingmesh、Netmind。</p>|
 |-devIds|故障芯片物理ID|
 |-faultId|故障实例ID|
-|-type|故障类型<li>NPU：芯片故障。</li><li>Node：节点故障。</li><li>Network：网络故障。</li><li>Storage：存储故障。</li>|
+|-type|故障类型<ul><li>NPU：芯片故障。</li><li>Node：节点故障。</li><li>Network：网络故障。</li><li>Storage：存储故障。</li></ul>|
 |-faultCode|故障码|
-|-level|故障级别<li>NotHandleFault：暂不处理。</li><li>SubHealthFault：亚健康。</li><li>SeparateNPU：无法恢复，需要隔离芯片。</li><li>PreSeparateNPU：暂不影响业务，后续不再调度任务到该芯片。</li>|
+|-level|故障级别<ul><li>NotHandleFault：暂不处理。</li><li>SubHealthFault：亚健康。</li><li>SeparateNPU：无法恢复，需要隔离芯片。</li><li>PreSeparateNPU：暂不影响业务，后续不再调度任务到该芯片。</li></ul>|
 |-faultTime|故障产生时间|
 |FaultNum|故障数量|
 |-publicFaultNum|所有节点的公共故障数量之和。|
 |Description|公共故障数量过大时的提示信息。|
-|<div><span>[!NOTE] 说明</span><div><li>公共故障对外展示1M数据，大约4500条。</li><li>超过4500条时，部分数据不再对外展示，ConfigMap中会新增Description内容进行提示，内部缓存正常运行。</li>|
+|<p>说明：</p><ul><li>公共故障对外展示1M数据，大约4500条。</li><li>超过4500条时，部分数据不再对外展示，ConfigMap中会新增Description内容进行提示，内部缓存正常运行。</li></ul>|
 
 
 **cluster-system super-pod-<super-pod-id\><a name="section53741611135414"></a>**
@@ -131,17 +129,17 @@ ClusterD启动后，会创建如下ConfigMap：
 
 |参数|说明|取值|
 |--|--|--|
-|hccl.json|任务使用的芯片通信信息。可转义为JSON格式，字段说明如下：<li>status：任务RankTable是否已经生成。</li><ul><li>initializing：还在为任务分配设备，RankTable未生成。</li><li>complete：当RankTable生成后，状态会立即变为complete，同步出现server_list等其他字段。</li></ul><li>server_list：任务设备分配情况。</li><ul><li>device：记录NPU分配，NPU IP和rank_id信息。</li><li>server_id：AI Server标识，全局唯一。</li><li>server_name：节点名称。</li><li>server_sn：节点的SN号。需要保证设备的SN存在。若不存在，请联系华为技术支持。</li></ul><li>server_count：任务使用的节点数量。</li></ul><li>version：版本信息。</li></ul>|字符串|
+|hccl.json|任务使用的芯片通信信息。可转义为JSON格式，字段说明如下：<ul><li>status：任务RankTable是否已经生成。</li><ul><li>initializing：还在为任务分配设备，RankTable未生成。</li><li>complete：当RankTable生成后，状态会立即变为complete，同步出现server_list等其他字段。</li></ul><li>server_list：任务设备分配情况。</li><ul><li>device：记录NPU分配，NPU IP和rank_id信息。</li><li>server_id：AI Server标识，全局唯一。</li><li>server_name：节点名称。</li><li>server_sn：节点的SN号。需要保证设备的SN存在。若不存在，请联系华为技术支持。</li></ul><li>server_count：任务使用的节点数量。</li><li>version：版本信息。</li></ul>|字符串|
 |job_id|任务的K8s ID信息。|字符串|
-|operator|<li>add：接收到添加任务命令后状态更新为add。</li><li>delete：接收到删除任务命令后状态更新为delete。</li>|字符串|
+|operator|<ul><li>add：接收到添加任务命令后状态更新为add。</li><li>delete：接收到删除任务命令后状态更新为delete。</li></ul>|字符串|
 |deleteTime|任务被删除的时间。|字符串|
 |sharedTorIp|任务使用的共享交换机信息。|字符串|
 |masterAddr|PyTorch训练时指定的MASTER_ADDR值。|字符串|
 |total|ConfigMap的个数。|整数类型|
 |time|任务开始时间。|字符串|
 |framework|任务使用的框架。|字符串|
-|job_status|任务状态，存在以下几种状态。<li>Pending</li><li>Running</li><li>Complete</li><li>Failed</li>|字符串|
-|job_name|任务名称|字符串|
+|job_status|任务状态，存在以下几种状态。<ul><li>Pending</li><li>Running</li><li>Complete</li><li>Failed</li></ul>|字符串|
+|job_name|任务名称。|字符串|
 |cm_index|当前ConfigMap的序号。|字符串|
 
 
@@ -191,7 +189,7 @@ rpc Register(ClientInfo) returns (Status) {}
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<li>取值为0：表示注册成功。</li><li>其他值：表示注册失败。</li></p><p>**Status.info**：返回信息描述。</p>|
+|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<ul><li>取值为0：表示注册成功。</li><li>其他值：表示注册失败。</li></ul></p><p>**Status.info**：返回信息描述。</p>|
 
 
 
@@ -218,7 +216,7 @@ rpc Init(ClientInfo) returns (Status) {}
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<li>取值为0：表示注册成功。</li><li>其他值：表示注册失败。</li></p><p>**Status.info**：返回信息描述。</p>|
+|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<ul><li>取值为0：表示注册成功。</li><li>其他值：表示注册失败。</li></ul></p><p>**Status.info**：返回信息描述。</p>|
 
 
 
@@ -245,14 +243,14 @@ rpc Init(ClientInfo) returns (Status) {}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|ProcessManageSignal|<p>message FaultRank{<p>string rankId = 1;</p><p>string faultType = 2;</p>}</p><p>message ProcessManageSignal{<p>string uuid=1;</p><p>string jobId = 2;</p><p>string signalType = 3;</p><p>repeated string actions = 4;</p><p>repeated FaultRank faultRanks = 5;</p><p>string changeStrategy = 6;</p><p>int64 timeout = 7;</p>}</p>|<p>**rankId**：string类型，故障卡ID</p><p>**faultType**：string类型，故障类型</p><p>**uuid**：string类型，本次signal的uuid</p><p>**jobId**：string类型，训练的任务ID</p><p>**signalType** ：string类型，signal类型</p><p>**actions**：repeated string，要执行的动作</p><p>**faultRanks**：repeated FaultRank，故障卡信息</p><p>**changeStrategy**：string类型，要执行的恢复策略</p><p>**timeout**：int64类型，超时时间</p>|
+|ProcessManageSignal|<p>message FaultRank{<p>string rankId = 1;</p><p>string faultType = 2;</p>}</p><p>message ProcessManageSignal{<p>string uuid=1;</p><p>string jobId = 2;</p><p>string signalType = 3;</p><p>repeated string actions = 4;</p><p>repeated FaultRank faultRanks = 5;</p><p>string changeStrategy = 6;</p><p>int64 timeout = 7;</p>}</p>|<p>**rankId**：string类型，故障卡ID</p><p>**faultType**：string类型，故障类型</p><p>**uuid**：string类型，本次signal的uuid</p><p>**jobId**：string类型，训练的任务ID</p><p>**signalType**：string类型，signal类型</p><p>**actions**：repeated string，要执行的动作</p><p>**faultRanks**：repeated FaultRank，故障卡信息</p><p>**changeStrategy**：string类型，要执行的恢复策略</p><p>**timeout**：int64类型，超时时间</p>|
 
 
 **返回值说明<a name="section206103328174"></a>**
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|stream|grpc stream|<li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li>|
+|stream|grpc stream|<ul><li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li></ul>|
 |nodeRankIds|string数组|故障节点Node Rank ID。|
 |extraParams|string|以JSON字符串形式传递扩缩容具体策略信息，通过TaskD透传给MindIO，最终传递给callback回调函数进行解析。|
 
@@ -281,7 +279,7 @@ rpc ReportStopComplete(StopCompleteRequest) returns (Status){}
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|message Status{int32 code = 1;string info = 2;}|<p>**Status.code**：返回码。<li>取值为0：表示故障恢复流程正常</li><li>其他值：表示故障恢复流程异常，并触发重调度。</li></p><p>**Status.info**：返回信息描述。</p>|
+|Status|message Status{int32 code = 1;string info = 2;}|<p>**Status.code**：返回码。<ul><li>取值为0：表示故障恢复流程正常</li><li>其他值：表示故障恢复流程异常，并触发重调度。</li></ul></p><p>**Status.info**：返回信息描述。</p>|
 
 
 
@@ -308,7 +306,7 @@ rpc ReportStopComplete(StopCompleteRequest) returns (Status){}
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<li>0：表示故障恢复流程正常。</li><li>其他值：表示恢复流程异常，并触发重调度。</li></p><p>**Status.info**：返回信息描述。</p>|
+|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<ul><li>0：表示故障恢复流程正常。</li><li>其他值：表示恢复流程异常，并触发重调度。</li></ul></p><p>**Status.info**：返回信息描述。</p>|
 
 
 
@@ -328,14 +326,14 @@ rpc ReportRecoverStatus(RecoverStatusRequest) returns (Status) {}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|RecoverStatusRequest|message RecoverStatusRequest{<p>string jobId = 1;</p><p>Status status = 2;</p><p>string strategy = 3;</p><p>repeated string isolateRankIds = 4;</p>}|<p>**RecoverStatusRequest.jobId**：任务ID。</p><p>**RecoverStatusRequest.status.code**：任务恢复情况状态码。<li>0：表示任务恢复成功。</li><li>其他值：表示失败。</li></p><p>**RecoverStatusRequest.status.info**：任务恢复情况描述。</p><p>**RecoverStatusRequest.strategy**：恢复策略名称。</p><p>**RecoverStatusRequest.isolateRankIds**：MindIO上报缩容时需要隔离的Rank列表。</p>|
+|RecoverStatusRequest|message RecoverStatusRequest{<p>string jobId = 1;</p><p>Status status = 2;</p><p>string strategy = 3;</p><p>repeated string isolateRankIds = 4;</p>}|<p>**RecoverStatusRequest.jobId**：任务ID。</p><p>**RecoverStatusRequest.status.code**：任务恢复情况状态码。<ul><li>0：表示任务恢复成功。</li><li>其他值：表示失败。</li></ul></p><p>**RecoverStatusRequest.status.info**：任务恢复情况描述。</p><p>**RecoverStatusRequest.strategy**：恢复策略名称。</p><p>**RecoverStatusRequest.isolateRankIds**：MindIO上报缩容时需要隔离的Rank列表。</p>|
 
 
 **返回值说明<a name="section206103328174"></a>**
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<li>0：表示故障恢复流程正常。</li><li>其他值：表示恢复流程异常，并触发重调度。</li></p><p>**Status.info**：返回信息描述。</p>|
+|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<ul><li>0：表示故障恢复流程正常。</li><li>其他值：表示恢复流程异常，并触发重调度。</li></ul></p><p>**Status.info**：返回信息描述。</p>|
 
 
 
@@ -406,11 +404,11 @@ AI平台可通过Pod Group Annotation控制故障恢复的流程以及恢复策�
 
 |参数|取值|说明|
 |--|--|--|
-|ProcessRecoverStrategy|<li>retry</li><li>recover</li><li>dump</li><li>空或none</li><li>字段不存在</li>|<li>retry：平台启动恢复，策略为进程级在线恢复</li><li>recover：平台启动恢复，策略为在线恢复</li><li>dump：平台启动恢复，策略为保存临终遗言</li><li>空或none：等待平台决策</li><li>字段不存在：关闭进程级恢复</li>|
+|ProcessRecoverStrategy|<ul><li>retry</li><li>recover</li><li>dump</li><li>空或none</li><li>字段不存在</li></ul>|<ul><li>retry：平台启动恢复，策略为进程级在线恢复</li><li>recover：平台启动恢复，策略为在线恢复</li><li>dump：平台启动恢复，策略为保存临终遗言</li><li>空或none：等待平台决策</li><li>字段不存在：关闭进程级恢复</li></ul>|
 |ProcessConfirmFault|string|ClusterD刷新后的故障键值对列表，格式为“id1:type1,id2:type2”的字符串。id表示全局rankId，type表示故障类型。type为0表示故障卡只有片上内存故障，1表示至少有一个非片上内存故障。|
 |ProcessResultFault|string|平台确认的故障键值对列表，格式为“id1:type1,id2:type2”的字符串。id表示全局rankId，type表示故障类型。type为0表示故障卡只有片上内存故障，1表示至少有一个非片上内存故障。|
-|RankTableReady|<li>true</li><li>false或其他值</li><li>字段不存在</li>|<li>true：平台已生成完成RankTable</li><li>false或其他值：平台暂未生成完成RankTable</li><li>字段不存在：非RankTable模式</li>|
-|ProcessRecoverStatus|<li>retry-success</li><li>retry-failed</li><li>recover-success</li><li>recover-failed</li><li>dump-success</li><li>dump-failed</li><li>exit-completed</li><li>空值或其他值</li>|<li>retry-success：进程级在线恢复成功</li><li>retry-failed：进程级在线恢复失败</li><li>recover-success：在线恢复成功</li><li>recover-failed：在线恢复失败</li><li>dump-success：保存临终遗言成功</li><li>dump-failed：保存临终遗言失败</li><li>exit-completed</li><li>空值或其他值：未恢复完成</li>|
+|RankTableReady|<ul><li>true</li><li>false或其他值</li><li>字段不存在</li></ul>|<ul><li>true：平台已生成完成RankTable</li><li>false或其他值：平台暂未生成完成RankTable</li><li>字段不存在：非RankTable模式</li></ul>|
+|ProcessRecoverStatus|<ul><li>retry-success</li><li>retry-failed</li><li>recover-success</li><li>recover-failed</li><li>dump-success</li><li>dump-failed</li><li>exit-completed</li><li>空值或其他值</li></ul>|<ul><li>retry-success：进程级在线恢复成功</li><li>retry-failed：进程级在线恢复失败</li><li>recover-success：在线恢复成功</li><li>recover-failed：在线恢复失败</li><li>dump-success：保存临终遗言成功</li><li>dump-failed：保存临终遗言失败</li><li>exit-completed</li><li>空值或其他值：未恢复完成</li></ul>|
 
 
 
@@ -440,7 +438,7 @@ AI平台可通过Pod Group Annotation控制故障恢复的流程以及恢复策�
 |id|消息唯一标识|8到128个字符的字符串，支持大小写字母、数字、中划线（-）、下划线（_）和点（.），保证唯一性。|string|是|
 |timestamp|消息发送的时间戳|时间戳（单位：ms），13位数字，必须在2025-01-01T00:00:00Z之后。|int64|是|
 |version|消息版本号|取值为1.0。|string|是|
-|resource|故障发送方|默认配置为CCAE、fd-online、pingmesh、Netmind、dpcStorage。<li>公共故障的故障发送方，必须存在于故障配置文件的publicFaultResource中。</li><li>对于新增的故障发送方，需要将其手动配置到故障配置文件中。详细说明请参见<a href="../usage/resumable_training.md#可选配置公共故障的级别和发送方">（可选）配置公共故障的级别和发送方</a>。</li>|string|是|
+|resource|故障发送方|默认配置为CCAE、fd-online、pingmesh、Netmind、dpcStorage。<ul><li>公共故障的故障发送方，必须存在于故障配置文件的publicFaultResource中。</li><li>对于新增的故障发送方，需要将其手动配置到故障配置文件中。详细说明请参见<a href="../usage/resumable_training.md#可选配置公共故障的级别和发送方">（可选）配置公共故障的级别和发送方</a>。</li></ul>|string|是|
 |faults|故障内容|切片，长度>0且≤100。|[]object, fault|是|
 
 
@@ -449,10 +447,10 @@ AI平台可通过Pod Group Annotation控制故障恢复的流程以及恢复策�
 |参数名称|含义|取值|类型|是否必填|
 |--|--|--|--|--|
 |faultId|故障实例ID|8到128个字符的字符串，支持大小写字母、数字、中划线（-）、下划线（_）和点（.），保证唯一性。<p>同一个故障实例，faultId需要保证唯一性。</p>|string|是|
-|faultType|故障类型|取值为NPU、Node、Network或Storage。<li>NPU：芯片故障。</li><li>Node：节点故障。</li><li>Network：网络故障。</li><li>Storage：存储故障。</li>该字段在cluster-info-cm中展示为“PublicFault”。|string|是|
-|faultCode|故障码|用户可以自定义，9位唯一即可。<li>接入断点续训的故障码，必须存在于故障配置文件的publicFaultCode中。</li><li>对于新增的故障码，需要在故障配置文件配置其故障级别。详细说明请参见<a href="../usage/resumable_training.md#可选配置公共故障的级别和发送方">（可选）配置公共故障的级别和发送方</a>。</li><li>故障码建议遵循故障码说明表中的规则定义，方便后续维护。</li><li>若一张NPU先后出现两个相同的故障码，在cluster-info-cm中fault_code字段将同时记录2个相同的故障码。</li>|string|是|
-|faultTime|故障产生时间|时间戳（单位：ms），13位数字，必须在2025-01-01T00:00:00Z之后。<li>无论是故障产生还是故障消除，该字段均为故障产生时间。</li><li>该字段在cluster-info-cm中以秒为单位展示。</li>|int64|是|
-|assertion|故障状态|取值为occur、recover或once。<li>occur：故障产生。</li><li>recover：故障恢复。</li><li>once：一次性事件。</li><div class="note"><span>[!NOTE] 说明</span><div class="notebody"><li>公共故障消除需要将相应故障的recover事件写入ConfigMap中，不能通过删除ConfigMap的形式实现。</li><li>对于一次性事件，几秒钟之后故障会自动清除。</li>|string|是|
+|faultType|故障类型|取值为NPU、Node、Network或Storage。<ul><li>NPU：芯片故障。</li><li>Node：节点故障。</li><li>Network：网络故障。</li><li>Storage：存储故障。</li></ul>该字段在cluster-info-cm中展示为“PublicFault”。|string|是|
+|faultCode|故障码|用户可以自定义，9位唯一即可。<ul><li>接入断点续训的故障码，必须存在于故障配置文件的publicFaultCode中。</li><li>对于新增的故障码，需要在故障配置文件配置其故障级别。详细说明请参见<a href="../usage/resumable_training.md#可选配置公共故障的级别和发送方">（可选）配置公共故障的级别和发送方</a>。</li><li>故障码建议遵循故障码说明表中的规则定义，方便后续维护。</li><li>若一张NPU先后出现两个相同的故障码，在cluster-info-cm中fault_code字段将同时记录2个相同的故障码。</li></ul>|string|是|
+|faultTime|故障产生时间|时间戳（单位：ms），13位数字，必须在2025-01-01T00:00:00Z之后。<ul><li>无论是故障产生还是故障消除，该字段均为故障产生时间。</li><li>该字段在cluster-info-cm中以秒为单位展示。</li></ul>|int64|是|
+|assertion|故障状态|取值为occur、recover或once。<ul><li>occur：故障产生。</li><li>recover：故障恢复。</li><li>once：一次性事件。</li></ul><div class="note"><span>[!NOTE] 说明</span><div class="notebody"><ul><li>公共故障消除需要将相应故障的recover事件写入ConfigMap中，不能通过删除ConfigMap的形式实现。</li><li>对于一次性事件，几秒钟之后故障会自动清除。</li></ul>|string|是|
 |faultLocation|故障定位信息|故障源信息，长度≤10，map的key长度≤16，value长度≤128。eg. key: npuIp, value: ip|map[string]string|否|
 |influence|故障影响的范围|切片，长度>0且≤1000。|[]object, faultInfo|是|
 |description|故障描述|0~512个字符。包含非空白字符和空格。|string|否|
@@ -462,9 +460,9 @@ AI平台可通过Pod Group Annotation控制故障恢复的流程以及恢复策�
 
 |参数名称|含义|取值|类型|是否必填|
 |--|--|--|--|--|
-|nodeName|节点名称。可通过**kubectl get nodes -owide**命令查询。|1到253个字符的字符串，支持小写字母、数字、中划线（-）和点（.），必须以字母数字开头和结尾。该字段存在时，就不使用nodeSN。<p>如果节点名称不存在于K8s集群中，ClusterD不会提示节点名称错误，但是不会将该故障信息写入cluster-info-device-cm。</p>|string|二选一|
-|nodeSN|节点SN号|节点的SN号。取值为NodeD写入的节点annotation，key为product-serial-number。<p>若使用该字段而不使用nodeName，需要提前安装NodeD组件。</p>|string|
-|deviceIds|芯片物理ID|长度(0, 32]，每个元素的取值[0, 32)，且不允许重复。<li>如果无法准确找到故障的芯片，需要填入节点上的所有芯片物理ID。</li><li>如果传入一个节点上不存在的芯片物理ID，ClusterD也会将其展示在cluster-info-device-cm中。</li>|[]int32|是|
+|nodeName|节点名称。可通过**kubectl get nodes -owide**命令查询。|1到253个字符的字符串，支持小写字母、数字、中划线（-）和点（.），必须以字母数字开头和结尾。该字段存在时，就不使用nodeSN。<p>如果节点名称不存在于K8s集群中，ClusterD不会提示节点名称错误，但是不会将该故障信息写入cluster-info-device-cm。</p>|string|nodeName与nodeSN二选一|
+|nodeSN|节点SN号|节点的SN号。取值为NodeD写入的节点annotation，key为product-serial-number。<p>若使用该字段而不使用nodeName，需要提前安装NodeD组件。</p>|string|nodeName与nodeSN二选一|
+|deviceIds|芯片物理ID|长度(0, 32]，每个元素的取值[0, 32)，且不允许重复。<ul><li>如果无法准确找到故障的芯片，需要填入节点上的所有芯片物理ID。</li><li>如果传入一个节点上不存在的芯片物理ID，ClusterD也会将其展示在cluster-info-device-cm中。</li></ul>|[]int32|是|
 
 
 
@@ -496,7 +494,7 @@ rpc SendPublicFault(PublicFaultRequest) returns (RespStatus){}
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|RespStatus|message RespStatus{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**RespStatus.code：**返回码。<li>取值为0：表示故障发送成功。</li><li>其他值：表示故障发送失败。409表示请求参数有误，410表示消息发送频率超限。</li></p><p>**RespStatus.info：**返回信息描述。|
+|RespStatus|message RespStatus{<p>int32 code = 1;</p><p>string info = 2;</p>}|**RespStatus.code**：返回码。<ul><li>取值为0：表示故障发送成功。</li><li>其他值：表示故障发送失败。409表示请求参数有误，410表示消息发送频率超限。</li></ul>**RespStatus.info**：返回信息描述。|
 
 
 
@@ -522,14 +520,14 @@ rpc ModifyTrainingDataTraceSwitch (DataTypeReq) returns (DataTypeRes)
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|DataTypeReq|<p>message DataTypeReq{<p>string jobNsName = 1;</p><p>ProfilingSwitch profilingSwitch = 2;</p>}</p><p>message ProfilingSwitch{<p>string CommunicationOperator = 1;</p><p>string Step = 2;</p><p>string SaveCheckpoint = 3;</p><p>string FP =4;</p><p>string DataLoader =5;</p>}</p>|<p>**jobNsName：**所需修改的任务的命名空间和任务名称，以’/’拼接，如：default/test-pytorch。</p><p>**profilingSwitch：**各类开关详情。<li>**CommunicationOperator：**通信算子开关。</li><li>**Step：**Step时延开关。</li><li>**SaveCheckpoint：**SaveCheckpoint耗时开关。</li><li>**FP：**前向传播数据开关。</li><li>**DataLoader**：DataLoader耗时开关。</li>|
+|DataTypeReq|<p>message DataTypeReq{<p>string jobNsName = 1;</p><p>ProfilingSwitch profilingSwitch = 2;</p>}</p><p>message ProfilingSwitch{<p>string CommunicationOperator = 1;</p><p>string Step = 2;</p><p>string SaveCheckpoint = 3;</p><p>string FP =4;</p><p>string DataLoader =5;</p>}</p>|<p>**jobNsName**：所需修改的任务的命名空间和任务名称，以’/’拼接，如：default/test-pytorch。</p><p>**profilingSwitch**：各类开关详情。<ul><li>**CommunicationOperator**：通信算子开关。</li><li>**Step**：Step时延开关。</li><li>**SaveCheckpoint**：SaveCheckpoint耗时开关。</li><li>**FP**：前向传播数据开关。</li><li>**DataLoader**：DataLoader耗时开关。</li></ul>|
 
 
 **返回值说明<a name="section7920469381"></a>**
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|DataTypeRes|message DataTypeRes{<p>string message = 1;</p><p>int32 code = 2;</p>}|<p>**message：**接口调用结果信息。</p><p>**code：**接口调用返回码。</p><li>1：300，入参不合法。</li><li>2：404，无法查询ConfigMap。</li><li>3：500，服务端异常。</li><li>4：200，接口正常返回。</li>|
+|DataTypeRes|message DataTypeRes{<p>string message = 1;</p><p>int32 code = 2;</p>}|<p>**message**：接口调用结果信息。</p><p>**code**：接口调用返回码。</p><ul><li>1：300，入参不合法。</li><li>2：404，无法查询ConfigMap。</li><li>3：500，服务端异常。</li><li>4：200，接口正常返回。</li></ul>|
 
 
 
@@ -549,14 +547,14 @@ rpc GetTrainingDataTraceSwitch (DataStatusReq) returns (DataStatusRes)
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|DataStatusReq|message DataStatusReq{<p>string jobNsName = 1;</p>}|**jobNsName：**所需修改的任务的命名空间和任务名称，以’/’拼接，如：default/test-pytorch。|
+|DataStatusReq|message DataStatusReq{<p>string jobNsName = 1;</p>}|**jobNsName**：所需修改的任务的命名空间和任务名称，以’/’拼接，如：default/test-pytorch。|
 
 
 **返回值说明<a name="section93011951104217"></a>**
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|DataStatusRes|message DataStatusRes{<p>string message = 1;</p><p>ProfilingSwitch profilingSwitch = 2;</p><p>int32 code = 3;</p>}|<p>**message：**接口调用结果信息</p><p>**profilingSwitch：**各类开关详情</p><p>**CommunicationOperator：**通信算子开关</p><p>**Step：**Step时延开关</p><p>**SaveCheckpoint：**SaveCheckpoint耗时开关</p><p>**FP：**前向传播数据开关</p><p>**DataLoader：**DataLoader耗时开关</p><p>**code**：接口调用返回码。</p><li>1：300，入参不合法。</li><li>2：404，无法查询ConfigMap。</li><li>3：500，服务端异常。</li><li>4：200，接口正常返回。</li>|
+|DataStatusRes|message DataStatusRes{<p>string message = 1;</p><p>ProfilingSwitch profilingSwitch = 2;</p><p>int32 code = 3;</p>}|<p>**message**：接口调用结果信息。</p><p>**profilingSwitch**：各类开关详情。</p><ul><li>**CommunicationOperator**：通信算子开关。</li><li>**Step**：Step时延开关。</li><li>**SaveCheckpoint**：SaveCheckpoint耗时开关。</li><li>**FP**：前向传播数据开关。</li><li>**DataLoader**：DataLoader耗时开关。</li></ul>**code**：接口调用返回码。<ul><li>1：300，入参不合法。</li><li>2：404，无法查询ConfigMap。</li><li>3：500，服务端异常。</li><li>4：200，接口正常返回。</li></ul>|
 
 
 
@@ -576,14 +574,14 @@ rpc SubscribeDataTraceSwitch (ProfilingClientInfo) returns (stream DataStatusRes
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|ProfilingClientInfo|message ProfilingClientInfo{<p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**jobId**：任务id</p><p>**role**：客户端角色</p>|
+|ProfilingClientInfo|message ProfilingClientInfo{<p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**jobId**：任务ID。</p><p>**role**：客户端角色。</p>|
 
 
 **返回值说明<a name="section7920469381"></a>**
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|DataStatusRes|message DataStatusRes{<p>string message = 1;</p><p>ProfilingSwitch profilingSwitch = 2;</p><p>int32 code = 3;</p>}|<p>**message：**接口调用结果信息</p><p>**profilingSwitch：**各类开关详情</p><p>**CommunicationOperator：**通信算子开关</p><p>**Step：**Step时延开关</p><p>**SaveCheckpoint：**SaveCheckpoint耗时开关</p><p>**FP：**前向传播数据开关</p><p>**DataLoader：**DataLoader耗时开关</p><p>**code：**接口调用返回码。<li>1：300，入参不合法。</li><li>2：404，无法查询ConfigMap。</li><li>3：500，服务端异常。</li><li>4：200，接口正常返回。</li>|
+|DataStatusRes|message DataStatusRes{<p>string message = 1;</p><p>ProfilingSwitch profilingSwitch = 2;</p><p>int32 code = 3;</p>}|<p>**message**：接口调用结果信息。</p><p>**profilingSwitch**：各类开关详情。</p><ul><li>**CommunicationOperator**：通信算子开关。</li><li>**Step**：Step时延开关。</li><li>**SaveCheckpoint**：SaveCheckpoint耗时开关。</li><li>**FP**：前向传播数据开关。</li><li>**DataLoader**：DataLoader耗时开关。</li></ul>**code**：接口调用返回码。<ul><li>1：300，入参不合法。</li><li>2：404，无法查询ConfigMap。</li><li>3：500，服务端异常。</li><li>4：200，接口正常返回。</li></ul>|
 
 
 
@@ -606,14 +604,14 @@ rpc Register(ClientInfo) returns (Status) {}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|ClientInfo|message ClientInfo{<p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**ClientInfo.jobId：**任务ID</p><p>**ClientInfo.role：**客户端角色</p>|
+|ClientInfo|<p>message ClientInfo{</p><p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**ClientInfo.jobId**：任务ID。</p><p>**ClientInfo.role**：客户端角色。</p>|
 
 
 **返回值说明<a name="section206103328174"></a>**
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|message Status{<p>int32 code = 1;</p><p>string info =2;</p>}|<p>**Status.code：**返回码。<li>取值为0：表示注册成功。</li><li>其他值：表示注册失败。</li></p><p>**Status.info：**返回信息描述。</p>|
+|Status|<p>message Status{</p><p>int32 code = 1;</p><p>string info =2;</p>}|<p>**Status.code**：返回码。<ul><li>取值为0：表示注册成功。</li><li>其他值：表示注册失败。</li></ul></p><p>**Status.info**：返回信息描述。</p>|
 
 
 
@@ -633,21 +631,21 @@ rpc SubscribeRankTable(ClientInfo) returns (stream RankTableStream) {}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|ClientInfo|message ClientInfo{<p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**ClientInfo.jobId：**任务ID。</p><p>**ClientInfo.role：**客户端角色。</p>|
+|ClientInfo|<p>message ClientInfo{</p><p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**ClientInfo.jobId**：任务ID。</p><p>**ClientInfo.role**：客户端角色。</p>|
 
 
 **返回值说明<a name="section206103328174"></a>**
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|stream|grpc stream|<li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li>|
+|stream|grpc stream|<ul><li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li></ul>|
 
 
 **发送数据说明<a name="section8539121202217"></a>**
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|RankTableStream|message RankTableStream{<p>string jobId = 1;</p><p>string rankTable = 2;</p>}|<p>**RankTableStream.jobId：**任务ID。</p><p>**RankTableStream.rankTable：**RankTable信息，各字段的详细说明如<a href="#table5843145110294">表1</a>所示。</p>|
+|RankTableStream|<p>message RankTableStream{</p><p>string jobId = 1;</p><p>string rankTable = 2;</p>}|<p>**RankTableStream.jobId**：任务ID。</p><p>**RankTableStream.rankTable**：RankTable信息，各字段的详细说明如<a href="#table5843145110294">表1</a>所示。</p>|
 
 
 **global-ranktable文件说明<a name="section268935611912"></a>**
@@ -767,14 +765,14 @@ rpc Register(ClientInfo) returns (Status) {}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|ClientInfo|message ClientInfo{<p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**ClientInfo.jobId：**任务ID。</p><p>**ClientInfo.role：**客户端角色。</p><div class="note"><span>说明：</span><div class="notebody"><li>传入jobId为空时，表示注册集群所有任务。</li><li>传入jobId不为空时，表示注册指定任务。</li>|
+|ClientInfo|<p>message ClientInfo{</p><p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**ClientInfo.jobId**：任务ID。</p><p>**ClientInfo.role**：客户端角色。</p><span>说明：</span><ul><li>传入jobId为空时，表示注册集群所有任务。</li><li>传入jobId不为空时，表示注册指定任务。</li></ul>|
 
 
 **返回值说明<a name="section206103328174"></a>**
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|message Status{<p>int32 code = 1;</p><p>string info =2;</p>}|<p>**Status.code：**返回码。<li>取值为0：表示注册成功。</li><li>其他值：表示注册失败。</li></p><p>**Status.info：**返回信息描述。|
+|Status|<p>message Status{</p><p>int32 code = 1;</p><p>string info =2;</p>}|**Status.code**：返回码。<ul><li>取值为0：表示注册成功。</li><li>其他值：表示注册失败。</li></ul>**Status.info**：返回信息描述。|
 
 
 
@@ -798,21 +796,21 @@ rpc SubscribeFaultMsgSignal(ClientInfo) returns (stream FaultMsgSignal){}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|ClientInfo|message ClientInfo{<p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**ClientInfo.jobId：**任务ID。</p><p>**ClientInfo.role：**客户端角色。<div class="note"><span>说明：</span><div class="notebody"><li>传入jobId为空时，获取的结果为集群内所有job的故障。</li><li>传入jobId不为空时，获取的结果为任务所属节点的故障。</li>|
+|ClientInfo|<p>message ClientInfo{</p><p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**ClientInfo.jobId**：任务ID。</p><p>**ClientInfo.role**：客户端角色。<span>说明：</span><ul><li>传入jobId为空时，获取的结果为集群内所有job的故障。</li><li>传入jobId不为空时，获取的结果为任务所属节点的故障。</li></ul>|
 
 
 **返回值说明<a name="section206103328174"></a>**
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|stream|grpc stream|<li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li>|
+|stream|grpc stream|<ul><li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li></ul>|
 
 
 **发送数据说明<a name="section112224012419"></a>**
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|FaultMsgSignal|<p>message FaultMsgSignal{<p>string uuid = 1;</p><p>string jobId = 2;</p><p>string signalType = 3;</p><p>repeated NodeFaultInfo nodeFaultInfo = 4;</p>}</p><p>message NodeFaultInfo{<p>string nodeName = 1;</p><p>string nodeIP = 2;</p><p>string nodeSN = 3;</p><p>string faultLevel = 4;</p><p>repeated DeviceFaultInfo faultDevice = 5;</p>}</p><p>message DeviceFaultInfo{<p>string deviceId = 1;</p><p>string deviceType = 2;</p><p>repeated string faultCodes = 3;</p><p>string faultLevel = 4;</p><p>repeated string faultType = 5;</p><p>repeated string faultReason = 6;</p><p>repeated SwitchFaultInfo switchFaultInfos = 7;</p><p>repeated string faultLevels = 8;</p>}</p><p>message SwitchFaultInfo{<p>string faultCode = 1;</p><p>string switchChipId = 2;</p><p>string switchPortId = 3;</p><p>string faultTime = 4;</p><p>string faultLevel = 5;</p>}</p>|<p>**FaultMsgSignal.uuid：**消息ID</p><p>**FaultMsgSignal.jobId：**任务ID</p><p>**FaultMsgSignal.signalType：**消息类型，“fault”代表故障发生，“normal”代表无故障或故障恢复</p><p>**FaultMsgSignal.nodeFaultInfo：**节点故障信息</p><p>**NodeFaultInfo.nodeName：**故障节点名称</p><p>**NodeFaultInfo.nodeIP：**节点IP</p><p>**NodeFaultInfo.nodeSN：**节点SN号</p><p>**NodeFaultInfo.faultLevel：**故障类型，包括“Healthy”、“SubHealthy”和“UnHealthy”，设置为DeviceFaultInfo.faultLevel中最严重的级别</p><p>**NodeFaultInfo.faultDevice：**设备故障信息</p><p>**DeviceFaultInfo.deviceId：**设备ID。当节点发生总线设备故障和K8s状态异常故障时，deviceId为-1。</p><p>**DeviceFaultInfo.deviceType：**设备类型名，包括“Node”、“NPU”、“Storage”、“CPU”、“Network”等</p><p>**DeviceFaultInfo.faultCodes：**故障码列表</p><p>**DeviceFaultInfo.faultLevel：**故障类型，包括“Healthy”、“SubHealthy”和“UnHealthy”，严重级别依次递增</p><p>**DeviceFaultInfo.faultType：**故障子系统类型，预留字段</p><p>**DeviceFaultInfo.faultReason：**故障原因，预留字段</p><p>**DeviceFaultInfo.switchFaultInfos：**灵衢故障信息</p><p>**DeviceFaultInfo.faultLevels：**故障等级列表</p><p>**SwitchFaultInfo.faultCode：**灵衢故障码</p><p>**SwitchFaultInfo.switchChipId：**灵衢故障芯片ID</p><p>**SwitchFaultInfo.switchPortId：**灵衢故障端口ID</p><p>**SwitchFaultInfo.faultTime：**灵衢故障发生时间</p><p>**SwitchFaultInfo.faultLevel：**灵衢故障等级</p>|
+|FaultMsgSignal|<p>message FaultMsgSignal{</p><p>string uuid = 1;</p><p>string jobId = 2;</p><p>string signalType = 3;</p><p>repeated NodeFaultInfo nodeFaultInfo = 4;</p>}</p><p>message NodeFaultInfo{<p>string nodeName = 1;</p><p>string nodeIP = 2;</p><p>string nodeSN = 3;</p><p>string faultLevel = 4;</p><p>repeated DeviceFaultInfo faultDevice = 5;</p>}</p><p>message DeviceFaultInfo{<p>string deviceId = 1;</p><p>string deviceType = 2;</p><p>repeated string faultCodes = 3;</p><p>string faultLevel = 4;</p><p>repeated string faultType = 5;</p><p>repeated string faultReason = 6;</p><p>repeated SwitchFaultInfo switchFaultInfos = 7;</p><p>repeated string faultLevels = 8;</p>}</p><p>message SwitchFaultInfo{<p>string faultCode = 1;</p><p>string switchChipId = 2;</p><p>string switchPortId = 3;</p><p>string faultTime = 4;</p><p>string faultLevel = 5;</p>}</p>|<p>**FaultMsgSignal.uuid**：消息ID</p><p>**FaultMsgSignal.jobId**：任务ID</p><p>**FaultMsgSignal.signalType**：消息类型，“fault”代表故障发生，“normal”代表无故障或故障恢复</p><p>**FaultMsgSignal.nodeFaultInfo**：节点故障信息</p><p>**NodeFaultInfo.nodeName**：故障节点名称</p><p>**NodeFaultInfo.nodeIP**：节点IP</p><p>**NodeFaultInfo.nodeSN**：节点SN号</p><p>**NodeFaultInfo.faultLevel**：故障类型，包括“Healthy”、“SubHealthy”和“UnHealthy”，设置为DeviceFaultInfo.faultLevel中最严重的级别</p><p>**NodeFaultInfo.faultDevice**：设备故障信息</p><p>**DeviceFaultInfo.deviceId**：设备ID。当节点发生总线设备故障和K8s状态异常故障时，deviceId为-1</p><p>**DeviceFaultInfo.deviceType**：设备类型名，包括“Node”、“NPU”、“Storage”、“CPU”、“Network”等</p><p>**DeviceFaultInfo.faultCodes**：故障码列表</p><p>**DeviceFaultInfo.faultLevel**：故障类型，包括“Healthy”、“SubHealthy”和“UnHealthy”，严重级别依次递增</p><p>**DeviceFaultInfo.faultType**：故障子系统类型，预留字段</p><p>**DeviceFaultInfo.faultReason**：故障原因，预留字段</p><p>**DeviceFaultInfo.switchFaultInfos**：灵衢故障信息</p><p>**DeviceFaultInfo.faultLevels**：故障等级列表</p><p>**SwitchFaultInfo.faultCode**：灵衢故障码</p><p>**SwitchFaultInfo.switchChipId**：灵衢故障芯片ID</p><p>**SwitchFaultInfo.switchPortId**：灵衢故障端口ID</p><p>**SwitchFaultInfo.faultTime**：灵衢故障发生时间</p><p>**SwitchFaultInfo.faultLevel**：灵衢故障等级</p>|
 
 
 
@@ -835,14 +833,14 @@ rpc GetFaultMsgSignal(ClientInfo) returns(FaultQueryResult){}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|ClientInfo|message ClientInfo{<p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**ClientInfo.jobId：**任务ID。当jobId传入空值时返回集群范围内的故障信息。若jobId不传入空值，则jobId的合理长度为[8,128]个字符，且不能包含汉字字符。</p><p>**ClientInfo.role：**客户端角色。</p><div class="note"><span>说明：</span><div class="notebody"><li>传入jobId为空时，查询的结果为当前集群的全量故障。</li><li>传入jobId不为空时，查询的结果为任务所属节点的故障。</li>|
+|ClientInfo|message ClientInfo{<p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**ClientInfo.jobId**：任务ID。当jobId传入空值时返回集群范围内的故障信息。若jobId不传入空值，则jobId的合理长度为[8,128]个字符，且不能包含汉字字符。</p><p>**ClientInfo.role**：客户端角色。</p><span>说明：</span><ul><li>传入jobId为空时，查询的结果为当前集群的全量故障。</li><li>传入jobId不为空时，查询的结果为任务所属节点的故障。</li></ul>|
 
 
 **返回值说明<a name="section206103328174"></a>**
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|FaultQueryResult|message FaultQueryResult{<p>int32 code = 1;</p><p>string info = 2;</p><p>FaultMsgSignal faultSignal =3;</p>}|<p>**code：**本次查询的返回码。<li>200：查询正常返回。</li><li>429：服务端限流。</li><li>500：服务端错误。</li></p><p>**info：**本次查询结果的描述信息</p><p>**faultSignal：**故障信息结构体</p><p>**FaultMsgSignal.uuid：**消息id</p><p>**FaultMsgSignal.jobId：**任务id，-1代表集群</p><p>**FaultMsgSignal.signalType：**消息类型，“fault”代表故障发生，“normal”代表无故障或故障恢复。</p><p>**FaultMsgSignal.nodeFaultInfo：**节点故障信息</p><p>**NodeFaultInfo.nodeName：**故障节点名称</p><p>**NodeFaultInfo.nodeIP：**节点IP</p><p>**NodeFaultInfo.nodeSN：**节点SN号</p><p>**NodeFaultInfo.faultLevel：**故障类型，包括“Healthy”、“SubHealthy”和“UnHealthy”，设置为DeviceFaultInfo.faultLevel中最严重的级别</p><p>**NodeFaultInfo.faultDevice：**设备故障信息</p><p>**DeviceFaultInfo.deviceId：**设备ID</p><p>**DeviceFaultInfo.deviceType：**设备类型名，包括“Node”、“NPU”、“Storage”、“CPU”、“Network”等</p><p>**DeviceFaultInfo.faultCodes：**故障码列表</p><p>**DeviceFaultInfo.faultLevel：**故障类型，包括“Healthy”、“SubHealthy”和“UnHealthy”，严重级别依次递增</p><p>**DeviceFaultInfo.faultType：**故障子系统类型，预留字段</p><p>**DeviceFaultInfo.faultReason：**故障原因，预留字段</p><p>**DeviceFaultInfo.switchFaultInfos：**灵衢故障信息列表</p><p>**DeviceFaultInfo.faultLevels：**故障等级列表</p><p>**SwitchFaultInfo.faultCode：**灵衢故障码</p><p>**SwitchFaultInfo.switchChipId：**灵衢故障芯片ID</p><p>**SwitchFaultInfo.switchPortId：**灵衢故障端口ID</p><p>**SwitchFaultInfo.faultTime：**灵衢故障发生时间</p><p>**SwitchFaultInfo.faultLevel：**灵衢故障等级</p>|
+|FaultQueryResult|<p>message FaultQueryResult{</p><p>int32 code = 1;</p><p>string info = 2;</p><p>FaultMsgSignal faultSignal =3;</p>}|<p>**code**：本次查询的返回码。<ul><li>200：查询正常返回。</li><li>429：服务端限流。</li><li>500：服务端错误。</li></ul></p><p>**info**：本次查询结果的描述信息</p><p>**faultSignal**：故障信息结构体</p><p>**FaultMsgSignal.uuid**：消息id</p><p>**FaultMsgSignal.jobId**：任务id，-1代表集群</p><p>**FaultMsgSignal.signalType**：消息类型，“fault”代表故障发生，“normal”代表无故障或故障恢复</p><p>**FaultMsgSignal.nodeFaultInfo**：节点故障信息</p><p>**NodeFaultInfo.nodeName**：故障节点名称</p><p>**NodeFaultInfo.nodeIP**：节点IP</p><p>**NodeFaultInfo.nodeSN**：节点SN号</p><p>**NodeFaultInfo.faultLevel**：故障类型，包括“Healthy”、“SubHealthy”和“UnHealthy”，设置为DeviceFaultInfo.faultLevel中最严重的级别</p><p>**NodeFaultInfo.faultDevice**：设备故障信息</p><p>**DeviceFaultInfo.deviceId**：设备ID</p><p>**DeviceFaultInfo.deviceType**：设备类型名，包括“Node”、“NPU”、“Storage”、“CPU”、“Network”等</p><p>**DeviceFaultInfo.faultCodes**：故障码列表</p><p>**DeviceFaultInfo.faultLevel**：故障类型，包括“Healthy”、“SubHealthy”和“UnHealthy”，严重级别依次递增</p><p>**DeviceFaultInfo.faultType**：故障子系统类型，预留字段</p><p>**DeviceFaultInfo.faultReason**：故障原因，预留字段</p><p>**DeviceFaultInfo.switchFaultInfos**：灵衢故障信息列表</p><p>**DeviceFaultInfo.faultLevels**：故障等级列表</p><p>**SwitchFaultInfo.faultCode**：灵衢故障码</p><p>**SwitchFaultInfo.switchChipId**：灵衢故障芯片ID</p><p>**SwitchFaultInfo.switchPortId**：灵衢故障端口ID</p><p>**SwitchFaultInfo.faultTime**：灵衢故障发生时间</p><p>**SwitchFaultInfo.faultLevel**：灵衢故障等级</p>|
 
 
 
@@ -881,14 +879,14 @@ rpc Register(ClientInfo) returns (Status) {}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|ClientInfo|message ClientInfo{<p>string role = 1;</p><p>string clientId = 3;</p>}|<p>**ClientInfo.role：**客户端角色。当前仅支持以下几种客户端角色。如果传入其他值，会导致注册失败。<li>CCAgent</li><li>DefaultUser1</li><li>DefaultUser2</li><li>FdAgent</li></p><p>**ClientInfo.clientId：**客户端ID</p>|
+|ClientInfo|<p>message ClientInfo{</p><p>string role = 1;</p><p>string clientId = 3;</p>}|**ClientInfo.role**：客户端角色。当前仅支持以下几种客户端角色。如果传入其他值，会导致注册失败。<ul><li>CCAgent</li><li>DefaultUser1</li><li>DefaultUser2</li><li>FdAgent</li></ul>**ClientInfo.clientId**：客户端ID。|
 
 
 **返回值说明<a name="section4839929184717"></a>**
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p><p>string clientId = 3;</p>}|<p>**Status.code：**本次调用结果的状态码。目前分为以下几种：<li>200：查询正常返回。</li><li>429：服务端限流。</li><li>500：服务端错误。</li></p><p>**Status.info：**本次调用结果的描述信息</p><p>**Status.clientId：**注册接口返回的uuid</p>|
+|Status|<p>message Status{</p><p>int32 code = 1;</p><p>string info = 2;</p><p>string clientId = 3;</p>}|**Status.code**：本次调用结果的状态码。目前分为以下几种：<ul><li>200：查询正常返回。</li><li>429：服务端限流。</li><li>500：服务端错误。</li></ul><p>**Status.info**：本次调用结果的描述信息。</p><p>**Status.clientId**：注册接口返回的UUID。</p>|
 
 
 
@@ -911,21 +909,21 @@ rpc SubscribeJobSummarySignal(ClientInfo) returns (stream JobSummarySignal){}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|ClientInfo|message ClientInfo{<p>string role = 1;</p><p>string clientId = 3;</p>}|<p>**ClientInfo.role：**客户端角色</p><p>**ClientInfo.clientId：**客户端ID</p>|
+|ClientInfo|<p>message ClientInfo{</p><p>string role = 1;</p><p>string clientId = 3;</p>}|**ClientInfo.role**：客户端角色。当前仅支持以下几种客户端角色。如果传入其他值，会导致注册失败。<ul><li>CCAgent</li><li>DefaultUser1</li><li>DefaultUser2</li><li>FdAgent</li></ul>**ClientInfo.clientId**：客户端ID。|
 
 
 **返回值说明<a name="section1883821810542"></a>**
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|stream|grpc stream|<li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li>|
+|stream|grpc stream|<ul><li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li></ul>|
 
 
 **发送数据说明<a name="section10140143475520"></a>**
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|JobSummarySignal|message JobSummarySignal{<p>string uuid = 1;</p><p>string jobId = 2;</p><p>string jobName = 3;</p><p>string namespace =4;</p><p>string frameWork = 5;</p><p>string jobStatus = 6;</p><p>string time = 7;</p><p>string cmIndex = 8;</p><p>string total = 9;</p><p>string HcclJson = 10;</p><p>string deleteTime = 11;</p><p>string sharedTorIp = 12;</p><p>string masterAddr = 13;</p><p>string operator = 14;</p>}|<p>**uuid：**本条消息id</p><p>**jobId：**任务的K8s ID信息</p><p>**jobName：**当前任务的名称</p><p>**namespace：**任务所属命名空间</p><p>**frameWork：**任务框架</p>**jobStatus：**任务状态，存在以下几种状态：<ul><li>pending</li><li>running</li><li>complete</li><li>failed</li></ul><p>**time：**任务开始时间</p><p>**cmIndex：**序号</p><p>**total：**任务对应的jobsummary ConfigMap的数量总数</p><p>**HcclJson：**任务使用的芯片通信信息。若任务调度的NPU数量超过4万，客户端接收的上报信息中HcclJson会被设置为空。<p>可转义为JSON格式，字段说明如下：</p><ul><li>status：任务RankTable是否已经生成</li><li>initializing：还在为任务分配设备，RankTable未生成</li><li>complete：当RankTable生成后，状态会立即变为complete，同步出现server_list等其他字段</li><li>server_list：任务设备分配情况</li><li>device：记录NPU分配，NPU IP和rank_id信息</li><li>server_id：AI Server标识，全局唯一</li><li>server_name：节点名称</li><li>server_sn：节点的SN号。需要保证设备的SN存在。若不存在，请联系华为技术支持</li><li>server_count：任务使用的节点数量</li><li>version：版本信息</li></ul></p><p>**deleteTime：**任务被删除的时间</p><p>**sharedTorIp：**任务使用的共享交换机信息</p><p>**masterAddr：**PyTorch训练时指定的MASTER_ADDR值</p><p>**operator：**接收到添加任务命令后状态更新为add；接收到删除任务命令后状态更新为delete</p>|
+|JobSummarySignal|<p>message JobSummarySignal{</p><p>string uuid = 1;</p><p>string jobId = 2;</p><p>string jobName = 3;</p><p>string namespace =4;</p><p>string frameWork = 5;</p><p>string jobStatus = 6;</p><p>string time = 7;</p><p>string cmIndex = 8;</p><p>string total = 9;</p><p>string HcclJson = 10;</p><p>string deleteTime = 11;</p><p>string sharedTorIp = 12;</p><p>string masterAddr = 13;</p><p>string operator = 14;</p>}|<p>**uuid**：本条消息id</p><p>**jobId**：任务的K8s ID信息</p><p>**jobName**：当前任务的名称</p><p>**namespace**：任务所属命名空间</p><p>**frameWork**：任务框架</p>**jobStatus**：任务状态，存在以下几种状态：<ul><li>pending</li><li>running</li><li>complete</li><li>failed</li></ul><p>**time**：任务开始时间</p><p>**cmIndex**：序号</p><p>**total**：任务对应的jobsummary ConfigMap的数量总数</p><p>**HcclJson**：任务使用的芯片通信信息。若任务调度的NPU数量超过4万，客户端接收的上报信息中HcclJson会被设置为空。<p>可转义为JSON格式，字段说明如下：</p><ul><li>status：任务RankTable是否已经生成</li><li>initializing：还在为任务分配设备，RankTable未生成</li><li>complete：当RankTable生成后，状态会立即变为complete，同步出现server_list等其他字段</li><li>server_list：任务设备分配情况</li><li>device：记录NPU分配，NPU IP和rank_id信息</li><li>server_id：AI Server标识，全局唯一</li><li>server_name：节点名称</li><li>server_sn：节点的SN号。需要保证设备的SN存在。若不存在，请联系华为技术支持</li><li>server_count：任务使用的节点数量</li><li>version：版本信息</li></ul></p><p>**deleteTime**：任务被删除的时间</p><p>**sharedTorIp**：任务使用的共享交换机信息</p><p>**masterAddr**：PyTorch训练时指定的MASTER_ADDR值</p><p>**operator**：接收到添加任务命令后状态更新为add；接收到删除任务命令后状态更新为delete</p>|
 
 ### SubscribeJobSummarySignalList
 
@@ -946,7 +944,7 @@ rpc SubscribeJobSummarySignalList(ClientInfo) returns (stream JobSummarySignalLi
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|ClientInfo|message ClientInfo{<p>string role = 1;</p><p>string clientId = 3;</p>}|<p>**ClientInfo.role：**客户端角色</p><p>**ClientInfo.clientId：**客户端ID</p>|
+|ClientInfo|message ClientInfo{<p>string role = 1;</p><p>string clientId = 3;</p>}|**ClientInfo.role**：客户端角色。当前仅支持以下几种客户端角色。如果传入其他值，会导致注册失败。<ul><li>CCAgent</li><li>DefaultUser1</li><li>DefaultUser2</li><li>FdAgent</li></ul><p>**ClientInfo.clientId**：客户端ID。</p>|
 
 
 **返回值说明**
@@ -960,7 +958,7 @@ rpc SubscribeJobSummarySignalList(ClientInfo) returns (stream JobSummarySignalLi
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|JobSummarySignalList|<p>message JobSummarySignalList{<p>repeated JobSummarySignal jobSummarySignals = 1;</p><p>string ReportTime = 2;</p><p>int32 JobTotalNum = 3;</p>}</p><p>message JobSummarySignal{<p>string uuid = 1;</p><p>string jobId = 2;</p><p>string jobName = 3;</p><p>string namespace =4;</p><p>string frameWork = 5;</p><p>string jobStatus = 6;</p><p>string time = 7;</p><p>string cmIndex = 8;</p><p>string total = 9;</p><p>string HcclJson = 10;</p><p>string deleteTime = 11;</p><p>string sharedTorIp = 12;</p><p>string masterAddr = 13;</p><p>string operator = 14;</p>}</p>|<p>**jobSummarySignals**: 任务信息列表</p><p>**ReportTime**：当前批次上报的时间</p><p>**JobTotalNum**：相同批次上报的任务总数</p><p>**uuid：**本条消息id</p><p>**jobId：**任务的K8s ID信息</p><p>**jobName：**当前任务的名称</p><p>**namespace：**任务所属命名空间</p><p>**frameWork：**任务框架</p>**jobStatus：**任务状态，存在以下几种状态：<ul><li>pending</li><li>running</li><li>complete</li><li>failed</li></ul><p>**time：**任务开始时间</p><p>**cmIndex：**序号</p><p>**total：**任务对应的jobsummary ConfigMap的数量总数</p><p>**HcclJson：**任务使用的芯片通信信息。<p>可转义为JSON格式，字段说明如下：</p><ul><li>status：任务RankTable是否已经生成</li><li>initializing：还在为任务分配设备，RankTable未生成</li><li>complete：当RankTable生成后，状态会立即变为complete，同步出现server_list等其他字段</li><li>server_list：任务设备分配情况</li><li>device：记录NPU分配，NPU IP和rank_id信息</li><li>server_id：AI Server标识，全局唯一</li><li>server_name：节点名称</li><li>server_sn：节点的SN号。需要保证设备的SN存在。若不存在，请联系华为技术支持</li><li>server_count：任务使用的节点数量</li><li>version：版本信息</li></ul></p>[!NOTE] 说明<p><ul><li>若单个任务所使用的NPU数量超过4万，上报的任务信息中HcclJson会被设置为空。</li><li>客户端初次订阅接口时，若多个任务合计使用的NPU数量超过4万，会对上报信息进行分页上报，确保每条上报信息中任务总NPU数不超过4万。</li></ul></p><p>**deleteTime：**任务被删除的时间</p><p>**sharedTorIp：**任务使用的共享交换机信息</p><p>**masterAddr：**PyTorch训练时指定的MASTER_ADDR值</p><p>**operator：**接收到添加任务命令后状态更新为add；接收到删除任务命令后状态更新为delete</p>|
+|JobSummarySignalList|<p>message JobSummarySignalList{</p><p>repeated JobSummarySignal jobSummarySignals = 1;</p><p>string ReportTime = 2;</p><p>int32 JobTotalNum = 3;</p>}</p><p>message JobSummarySignal{<p>string uuid = 1;</p><p>string jobId = 2;</p><p>string jobName = 3;</p><p>string namespace =4;</p><p>string frameWork = 5;</p><p>string jobStatus = 6;</p><p>string time = 7;</p><p>string cmIndex = 8;</p><p>string total = 9;</p><p>string HcclJson = 10;</p><p>string deleteTime = 11;</p><p>string sharedTorIp = 12;</p><p>string masterAddr = 13;</p><p>string operator = 14;</p>}</p>|<p>**jobSummarySignals**: 任务信息列表</p><p>**ReportTime**：当前批次上报的时间</p><p>**JobTotalNum**：相同批次上报的任务总数</p><p>**uuid**：本条消息id</p><p>**jobId**：任务的K8s ID信息</p><p>**jobName**：当前任务的名称</p><p>**namespace**：任务所属命名空间</p><p>**frameWork**：任务框架</p>**jobStatus**：任务状态，存在以下几种状态：<ul><li>pending</li><li>running</li><li>complete</li><li>failed</li></ul><p>**time**：任务开始时间</p><p>**cmIndex**：序号</p><p>**total**：任务对应的jobsummary ConfigMap的数量总数</p><p>**HcclJson**：任务使用的芯片通信信息。可转义为JSON格式，字段说明如下：<ul><li>status：任务RankTable是否已经生成</li><li>initializing：还在为任务分配设备，RankTable未生成</li><li>complete：当RankTable生成后，状态会立即变为complete，同步出现server_list等其他字段</li><li>server_list：任务设备分配情况</li><li>device：记录NPU分配，NPU IP和rank_id信息</li><li>server_id：AI Server标识，全局唯一</li><li>server_name：节点名称</li><li>server_sn：节点的SN号。需要保证设备的SN存在。若不存在，请联系华为技术支持</li><li>server_count：任务使用的节点数量</li><li>version：版本信息</li></ul></p><p>说明：</p><ul><li>若单个任务所使用的NPU数量超过4万，上报的任务信息中HcclJson会被设置为空。</li><li>客户端初次订阅接口时，若多个任务合计使用的NPU数量超过4万，会对上报信息进行分页上报，确保每条上报信息中任务总NPU数不超过4万。</li></ul><p>**deleteTime**：任务被删除的时间</p><p>**sharedTorIp**：任务使用的共享交换机信息</p><p>**masterAddr**：PyTorch训练时指定的MASTER_ADDR值</p><p>**operator**：接收到添加任务命令后状态更新为add；接收到删除任务命令后状态更新为delete</p>|
 
 
 
@@ -985,14 +983,14 @@ rpc SwitchNicTrack(SwitchNics) returns (Status) {}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|SwitchNics|<p>message SwitchNics{<p>string jobID;</p><p>map<string, DeviceList> nicOps;</p>}</p><p>message DeviceList {<p>repeated string dev;</p><p>repeated bool op;</p>}</p>|<p>**SwitchNics.jobID**：任务ID</p><p>**SwitchNics.nicOps**：用户下发借轨/回切指令的设备与操作。key为node name，value为该节点要操作的Device。</p><p>**DeviceList.dev**：该节点上的DeviceID列表，与DeviceList.op数量保持一致。</p><p>**DeviceList.op**：该节点的DeviceID对应设备要执行的借轨操作列表。true表示切换到备用链路，false表示使用主链路。|
+|SwitchNics|<p>message SwitchNics{</p><p>string jobID;</p><p>map<string, DeviceList> nicOps;</p>}</p><p>message DeviceList {<p>repeated string dev;</p><p>repeated bool op;</p>}</p>|<p>**SwitchNics.jobID**：任务ID。</p><p>**SwitchNics.nicOps**：用户下发借轨/回切指令的设备与操作。key为node name，value为该节点要操作的Device。</p><p>**DeviceList.dev**：该节点上的DeviceID列表，与DeviceList.op数量保持一致。</p><p>**DeviceList.op**：该节点的DeviceID对应设备要执行的借轨操作列表。true表示切换到备用链路，false表示使用主链路。|
 
 
 **返回值说明<a name="section146221236193515"></a>**
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<li>取值为0：表示下发指令成功。</li><li>其他值：表示下发失败。</li></p><p>**Status.info**：返回信息描述。</p>|
+|Status|<p>message Status{</p><p>int32 code = 1;</p><p>string info = 2;</p>}|**Status.code**：返回码。<ul><li>取值为0：表示下发指令成功。</li><li>其他值：表示下发失败。</li></ul>**Status.info**：返回信息描述。|
 
 
 
@@ -1012,7 +1010,7 @@ rpc SubscribeSwitchNicSignal(SwitchNicRequest) returns (stream SwitchNicResponse
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|SwitchNicRequest|message SwitchNicRequest{<p>string jobID;</p>}|**SwitchNicRequest.jobID**：任务ID|
+|SwitchNicRequest|<p>message SwitchNicRequest{</p><p>string jobID;</p>}|**SwitchNicRequest.jobID**：任务ID|
 
 
 **返回值说明<a name="section146221236193515"></a>**
@@ -1039,21 +1037,21 @@ rpc SubscribeNotifySwitch(ClientInfo) returns (stream SwitchRankList) {}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|ClientInfo|message ClientInfo{<p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**ClientInfo.jobId**：任务ID。</p><p>**ClientInfo.role**：客户端角色。</p>|
+|ClientInfo|<p>message ClientInfo{</p><p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**ClientInfo.jobId**：任务ID。</p><p>**ClientInfo.role**：客户端角色。</p>|
 
 
 **发送数据说明<a name="section146221236193515"></a>**
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|SwitchRankList|message SwitchRankList{<p>repeated string rankID = 1;</p><p>repeated bool op = 2;</p><p>string jobId = 3;</p>}|<p>**SwitchRankList.rankID**：该节点上的DeviceID列表，与DeviceList.op数量保持一致。</p><p>**SwitchRankList.op**：该节点的DeviceID对应设备要执行的借轨操作列表。true表示切换到备用链路，false表示使用主链路。</p><p>**SwitchRankList.jobId**：任务ID</p>|
+|SwitchRankList|<p>message SwitchRankList{</p><p>repeated string rankID = 1;</p><p>repeated bool op = 2;</p><p>string jobId = 3;</p>}|<p>**SwitchRankList.rankID**：该节点上的DeviceID列表，与DeviceList.op数量保持一致。</p><p>**SwitchRankList.op**：该节点的DeviceID对应设备要执行的借轨操作列表。true表示切换到备用链路，false表示使用主链路。</p><p>**SwitchRankList.jobId**：任务ID</p>|
 
 
 **返回值说明<a name="section69806312314"></a>**
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|stream|grpc stream|<li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li>|
+|stream|grpc stream|<ul><li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li></ul>|
 
 
 
@@ -1073,14 +1071,14 @@ rpc ReplySwitchNicResult(SwitchResult) returns (Status) {}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|SwitchResult|message SwitchResult{<p>string jobId = 1;</p><p>bool result = 2;</p>}|<p>**SwitchResult.jobId**：任务ID</p><p>**SwitchResult.result**：指令执行的结果，true为成功，false为失败。</p>|
+|SwitchResult|message SwitchResult{<p>string jobId = 1;</p><p>bool result = 2;</p>}|<p>**SwitchResult.jobId**：任务ID。</p><p>**SwitchResult.result**：指令执行的结果，true为成功，false为失败。</p>|
 
 
 **返回值说明<a name="section69806312314"></a>**
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|message Status{<p>int32 code = 1;</p><p>string info =2;</p>}|<p>**Status.code**：返回码。<li>取值为0：表示流程正常</li><li>其他值：表示流程异常</li></p><p>**Status.info**：返回信息描述。</p>|
+|Status|<p>message Status{</p><p>int32 code = 1;</p><p>string info =2;</p>}|**Status.code**：返回码。<ul><li>取值为0：表示流程正常</li><li>其他值：表示流程异常</li></ul>**Status.info**：返回信息描述。|
 
 
 
@@ -1106,14 +1104,14 @@ rpc StressTest(StressTestParam) returns (Status) {}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|StressTest|<p>message StressTestParam {<p>string jobID = 1;</p><p>map<string, StressOpList> stressParam = 2;</p><p>repeated int64 allNodesOps = 3;</p>}</p><p>message StressOpList {<p>repeated int64 ops = 1;</p>}</p>|<p>**StressTestParam.jobID**：任务ID。</p><p>**StressTestParam.stressParam**：用户下发压测指令的节点与操作。key为node name，value为该节点要执行的压测操作。</p><p>**StressTestParam.allNodesOps**：若用户要对任务的所有节点进行压测，则该字段表示所有节点要执行的压测操作。allNodesOps字段优先级高于stressParam。其中，0表示“aic”压测；1表示“p2p”压测。</p><p>**StressOpList.ops**：该节点要执行的压测操作。0表示“aic”压测；1表示“p2p”压测。</p>|
+|StressTest|<p>message StressTestParam {</p><p>string jobID = 1;</p><p>map<string, StressOpList> stressParam = 2;</p><p>repeated int64 allNodesOps = 3;</p>}</p><p>message StressOpList {<p>repeated int64 ops = 1;</p>}</p>|<p>**StressTestParam.jobID**：任务ID。</p><p>**StressTestParam.stressParam**：用户下发压测指令的节点与操作。key为node name，value为该节点要执行的压测操作。</p><p>**StressTestParam.allNodesOps**：若用户要对任务的所有节点进行压测，则该字段表示所有节点要执行的压测操作。allNodesOps字段优先级高于stressParam。其中，0表示“aic”压测；1表示“p2p”压测。</p><p>**StressOpList.ops**：该节点要执行的压测操作。0表示“aic”压测；1表示“p2p”压测。</p>|
 
 
 **返回值说明<a name="section146221236193515"></a>**
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<li>取值为0：表示下发指令成功。</li><li>其他值：表示下发失败。</li></p><p>**Status.info**：返回信息描述。</p>|
+|Status|<p>message Status{</p><p>int32 code = 1;</p><p>string info = 2;</p>}|**Status.code**：返回码。<ul><li>取值为0：表示下发指令成功。</li><li>其他值：表示下发失败。</li></ul>**Status.info**：返回信息描述。|
 
 
 
@@ -1140,7 +1138,7 @@ rpc SubscribeStressTestResponse(StressTestRequest) returns (stream StressTestRes
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|StressTestResponse|message StressTestResponse {<p>string jobID;</p><p>string msg;</p>}|<p>**StressTestResponse.jobID**：任务ID。</p><p>**StressTestResponse.msg**：压测的执行结果。</p>|
+|StressTestResponse|<p>message StressTestResponse {</p><p>string jobID;</p><p>string msg;</p>}|<p>**StressTestResponse.jobID**：任务ID。</p><p>**StressTestResponse.msg**：压测的执行结果。</p>|
 
 
 
@@ -1160,21 +1158,21 @@ rpc SubscribeNotifyExecStressTest(ClientInfo) returns (stream StressTestRankPara
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|ClientInfo|message ClientInfo{<p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**ClientInfo.jobId**：任务ID。</p><p>**ClientInfo.role**：客户端角色。</p>|
+|ClientInfo|<p>message ClientInfo{</p><p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**ClientInfo.jobId**：任务ID。</p><p>**ClientInfo.role**：客户端角色。</p>|
 
 
 **发送数据说明<a name="section146221236193515"></a>**
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|StressTestRankParams|message StressTestRankParams {<p>map<string, StressOpList> stressParam = 1;</p><p>string jobId = 2;</p>}|<p>**StressTestRankParams.stressParam**：key为该节点上要执行压测的global RankID，value为对应的压测操作，0表示“aic”压测；1表示“p2p”压测。</p><p>**StressTestRankParams.jobId**：任务ID。</p>|
+|StressTestRankParams|<p>message StressTestRankParams {</p><p>map<string, StressOpList> stressParam = 1;</p><p>string jobId = 2;</p>}|<p>**StressTestRankParams.stressParam**：key为该节点上要执行压测的global RankID，value为对应的压测操作，0表示“aic”压测；1表示“p2p”压测。</p><p>**StressTestRankParams.jobId**：任务ID。</p>|
 
 
 **返回值说明<a name="section69806312314"></a>**
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|stream|grpc stream|<li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li>|
+|stream|grpc stream|<ul><li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li></ul>|
 
 
 
@@ -1194,14 +1192,14 @@ rpc ReplyStressTestResult(StressTestResult) returns (Status) {}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|StressTestResult|<p>message StressTestResult {<p>string jobId = 1;</p><p>map<string, StressTestRankResult> stressResult = 2;</p>}</p><p>message StressTestRankResult {<p>map<string, StressTestOpResult> rankResult= 1;</p>}</p><p>message StressTestOpResult {<p>string code = 1;</p><p>string result = 2;</p>}</p>|<p>**StressTestResult.jobId**：任务ID。</p><p>**StressTestResult.stressResult**：指令执行的结果。key为执行压测的global rankID；value为执行压测的结果。</p><p>**StressTestRankResult.rankResult**：某张卡执行压测的结果。key为压测的操作，0表示“aic”压测；1表示“p2p”压测。value为对应的结果。</p><p>**StressTestOpResult.code**：压测结果的错误码。<li>0表示执行成功，无故障</li><li>1表示压测失败，可正常恢复训练</li><li>2表示发现压测故障，需要隔离对应节点</li><li>3表示压测超时，该节点任务退出重启</li><li>4表示压测电压未恢复，该节点任务退出重启</li></p><p>**StressTestOpResult.result**：压测结果的描述信息。</p>|
+|StressTestResult|<p>message StressTestResult {</p><p>string jobId = 1;</p><p>map<string, StressTestRankResult> stressResult = 2;</p>}</p><p>message StressTestRankResult {<p>map<string, StressTestOpResult> rankResult= 1;</p>}</p><p>message StressTestOpResult {<p>string code = 1;</p><p>string result = 2;</p>}</p>|<p>**StressTestResult.jobId**：任务ID。</p><p>**StressTestResult.stressResult**：指令执行的结果。key为执行压测的global rankID；value为执行压测的结果。</p><p>**StressTestRankResult.rankResult**：某张卡执行压测的结果。key为压测的操作，0表示“aic”压测；1表示“p2p”压测。value为对应的结果。</p><p>**StressTestOpResult.code**：压测结果的错误码。<ul><li>0表示执行成功，无故障</li><li>1表示压测失败，可正常恢复训练</li><li>2表示发现压测故障，需要隔离对应节点</li><li>3表示压测超时，该节点任务退出重启</li><li>4表示压测电压未恢复，该节点任务退出重启</li></ul></p><p>**StressTestOpResult.result**：压测结果的描述信息。</p>|
 
 
 **返回值说明<a name="section69806312314"></a>**
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|message Status{<p>int32 code = 1;</p><p>string info =2;</p>}|<p>**Status.code**：返回码。<li>取值为0：表示流程正常</li><li>其他值：表示流程异常</li></p><p>**Status.info**：返回信息描述。</p>|
+|Status|<p>message Status{</p><p>int32 code = 1;</p><p>string info =2;</p>}|**Status.code**：返回码。<ul><li>取值为0：表示流程正常</li><li>其他值：表示流程异常</li></ul>**Status.info**：返回信息描述。|
 
 
 

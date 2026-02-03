@@ -735,56 +735,16 @@ ClusterD收集了内部的节点故障、芯片故障和灵衢总线设备故障
 **表 1**  节点故障参数说明
 
 <a name="table25031946405"></a>
-<table><thead align="left"><tr id="row750413415406"><th class="cellrowborder" valign="top" width="28.89%" id="mcps1.2.3.1.1"><p id="p869619233497"><a name="p869619233497"></a><a name="p869619233497"></a>参数名</p>
-</th>
-<th class="cellrowborder" valign="top" width="71.11%" id="mcps1.2.3.1.2"><p id="p769502313492"><a name="p769502313492"></a><a name="p769502313492"></a>描述</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row80103315216"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p6112331528"><a name="p6112331528"></a><a name="p6112331528"></a>mindx-dl-nodeinfo-<em id="i1563606111219"><a name="i1563606111219"></a><a name="i1563606111219"></a>&lt;kwok-node-0&gt;</em></p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p1111433115218"><a name="p1111433115218"></a><a name="p1111433115218"></a>前缀为固定的mindx-dl-nodeinfo，kwok-node-0是节点名称，方便定位故障的具体节点</p>
-</td>
-</tr>
-<tr id="row4504546400"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p9694152354918"><a name="p9694152354918"></a><a name="p9694152354918"></a>NodeInfo</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p126931223134919"><a name="p126931223134919"></a><a name="p126931223134919"></a>节点维度的故障信息。</p>
-</td>
-</tr>
-<tr id="row18504144184017"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p1158717446508"><a name="p1158717446508"></a><a name="p1158717446508"></a>FaultDevList</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p42300221515"><a name="p42300221515"></a><a name="p42300221515"></a>节点故障设备列表。</p>
-</td>
-</tr>
-<tr id="row1350419404014"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p15690323164917"><a name="p15690323164917"></a><a name="p15690323164917"></a>- DeviceType</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p11689123114911"><a name="p11689123114911"></a><a name="p11689123114911"></a>故障设备类型。</p>
-</td>
-</tr>
-<tr id="row1050415494018"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p106881223134914"><a name="p106881223134914"></a><a name="p106881223134914"></a>- DeviceId</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p20687152354910"><a name="p20687152354910"></a><a name="p20687152354910"></a>故障设备ID。</p>
-</td>
-</tr>
-<tr id="row650414114014"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p14686162311499"><a name="p14686162311499"></a><a name="p14686162311499"></a>- FaultCode</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p1168542317492"><a name="p1168542317492"></a><a name="p1168542317492"></a>故障码，由英文和数组拼接而成的字符串，字符串表示故障码的十六进制。</p>
-</td>
-</tr>
-<tr id="row175041743405"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p357194817512"><a name="p357194817512"></a><a name="p357194817512"></a>- FaultLevel</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p1768552205114"><a name="p1768552205114"></a><a name="p1768552205114"></a>故障处理等级。</p>
-<a name="ul15681952135114"></a><a name="ul15681952135114"></a><ul id="ul15681952135114"><li>NotHandleFault：无需处理。</li><li>PreSeparateFault：该节点上有任务则不处理，后续调度时不调度任务到该节点。</li><li>SeparateFault：任务重调度。</li></ul>
-</td>
-</tr>
-<tr id="row115051641408"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p6489183115213"><a name="p6489183115213"></a><a name="p6489183115213"></a>NodeStatus</p>
-</td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p566091418525"><a name="p566091418525"></a><a name="p566091418525"></a>节点健康状态，由本节点故障处理等级最严重的设备决定。</p>
-<a name="ul17660161415524"></a><a name="ul17660161415524"></a><ul id="ul17660161415524"><li>Healthy：该节点故障处理等级存在且不超过NotHandleFault，该节点为健康节点，可以正常训练。</li><li>PreSeparate：该节点故障处理等级存在且不超过PreSeparateFault，该节点为预隔离节点，暂时可能对任务无影响，待任务受到影响退出后，后续不会再调度任务到该节点。</li><li>UnHealthy：该节点故障处理等级存在SeparateFault，该节点为故障节点，将影响训练任务，立即将任务调离该节点。</li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+|参数|说明|
+|--|--|
+|mindx-dl-nodeinfo-\<kwok-node-0>|前缀为固定的mindx-dl-nodeinfo，kwok-node-0是节点名称，方便定位故障的具体节点。|
+|NodeInfo|节点维度的故障信息。|
+|FaultDevList|节点故障设备列表。|
+|- DeviceType|故障设备类型。|
+|- DeviceId|故障设备ID。|
+|- FaultCode|故障码，由英文和数组拼接而成的字符串，字符串表示故障码的十六进制。|
+|- FaultLevel|故障处理等级。<ul><li>NotHandleFault：无需处理。</li><li>PreSeparateFault：该节点上有任务则不处理，后续调度时不调度任务到该节点。</li><li>SeparateFault：任务重调度。</li></ul>|
+|NodeStatus|<p>节点健康状态，由本节点故障处理等级最严重的设备决定。</p><ul><li>Healthy：该节点故障处理等级存在且不超过NotHandleFault，该节点为健康节点，可以正常训练。若该节点故障处理等级为PreSeparateFault，且节点有NPU卡正在使用，则该节点为健康节点。任务执行完成后，该节点将变为故障节点。</li><li>UnHealthy：该节点故障处理等级存在SeparateFault，该节点为故障节点，将影响训练任务，立即将任务调离该节点。若该节点故障处理等级为PreSeparateFault，且节点无NPU卡正在使用，则该节点为故障节点，不可将任务调度到该节点。</li></ul>|
 
 **芯片故障<a name="section834865016504"></a>**
 
