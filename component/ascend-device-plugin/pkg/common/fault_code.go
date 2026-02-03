@@ -732,6 +732,12 @@ func validateFaultFrequencyCustomization(customization FaultFrequencyCustomizati
 			invalidMsg)
 		return false
 	}
+	if customization.ReleaseTimeWindow > MaxReleaseTimeWindow || customization.ReleaseTimeWindow < MinReleaseTimeWindow {
+		hwlog.RunLog.Warnf("EventIDs: %v, ReleaseTimeWindow(%d) in this FaultFrequency exceeds limit(%d~%d). %s",
+			customization.EventId, customization.ReleaseTimeWindow, MinReleaseTimeWindow, MaxReleaseTimeWindow,
+			invalidMsg)
+		return false
+	}
 	if customization.Times > MaxFaultFrequencyTimes || customization.Times < MinFaultFrequencyTimes {
 		hwlog.RunLog.Warnf("EventIDs: %v, Times(%d) in this FaultFrequency exceeds limit(%d~%d). %s",
 			customization.EventId, customization.Times, MinFaultFrequencyTimes, MaxFaultFrequencyTimes, invalidMsg)
@@ -913,7 +919,8 @@ func GetFaultTypeFromFaultFrequency(logicId int32, mode string) string {
 			faultTypes = append(faultTypes, frequencyCache.FaultHandling)
 			// every time when frequency fault detected, record frequency fault to be cleared in cache
 			recoverFaultFrequencyMap[logicId] = eventId
-			InsertUpgradeFaultCache(LogicId(logicId), lastFaultTime, eventId, frequencyCache.FaultHandling)
+			InsertUpgradeFaultCache(LogicId(logicId), lastFaultTime, eventId,
+				frequencyCache.FaultHandling, FrequencyUpgradeType)
 		} else {
 			if time.Now().UnixMilli()-lastFaultTime > frequencyCache.ReleaseTimeWindow*SecondMagnification {
 				RemoveTimeoutReasonCache(LogicId(logicId), eventId)
@@ -959,6 +966,12 @@ func GetFaultTypeFromFaultDuration(logicId int32, mode string) string {
 				float64(faultDurationData.FaultDurationTime)/SecondMagnificationFloat,
 				faultDurationCache.FaultHandling)
 			faultTypes = append(faultTypes, faultDurationCache.FaultHandling)
+			InsertUpgradeFaultCache(LogicId(logicId), faultDurationData.FaultAlarmTime, eventId,
+				faultDurationCache.FaultHandling, DurationUpgradeType)
+		} else {
+			if faultDurationData.FaultRecoverDurationTime > faultDurationCache.RecoverTimeout*SecondMagnification {
+				RemoveTimeoutReasonCache(LogicId(logicId), eventId)
+			}
 		}
 	}
 	return getMostSeriousFaultType(faultTypes)
@@ -1495,10 +1508,8 @@ func handleFaultQueue(logicID int32, eventId string) {
 	initTimeoutStatus := faultDurationData.TimeoutStatus
 	exitTag := false
 	for !exitTag {
-		hwlog.RunLog.Infof("timeoutOrRecoveryAlgorithm begin")
 		faultDurationData = faultDurationMap[eventId].Duration[logicID]
 		exitTag = timeoutOrRecoveryAlgorithm(logicID, eventId, !faultDurationData.TimeoutStatus)
-		hwlog.RunLog.Infof("timeoutOrRecoveryAlgorithm end")
 	}
 	faultDurationData = faultDurationMap[eventId].Duration[logicID]
 	hwlog.RunLog.Debugf("NPU logic id: %v, after timeout or recovery algorithm handling, %v fault timeout "+
@@ -1609,15 +1620,12 @@ func handleTimeoutCondition(inputPara handleDurationInputPara) bool {
 		faultDurationData.FaultDurationTime = inputPara.duration
 		faultDurationData.FaultAlarmTime = inputPara.faultAlarmTime
 		faultDurationMap[inputPara.eventId].Duration[inputPara.logicID] = faultDurationData
-		InsertUpgradeFaultCache(LogicId(inputPara.logicID), faultDurationData.FaultAlarmTime,
-			inputPara.eventId, faultDurationMap[inputPara.eventId].FaultHandling)
 		hwlog.RunLog.Infof(faultQueueMsg, inputPara.logicID, inputPara.eventId, faultDurationData.FaultEventQueue)
 		return true
 	}
 	faultDurationData.FaultRecoverDurationTime = inputPara.duration
 	faultDurationData.FaultAlarmTime = inputPara.faultAlarmTime
 	faultDurationData.FaultEventQueue = faultDurationData.FaultEventQueue[halfDivisor*inputPara.index+1:]
-	RemoveTimeoutReasonCache(LogicId(inputPara.logicID), inputPara.eventId)
 	faultDurationMap[inputPara.eventId].Duration[inputPara.logicID] = faultDurationData
 	hwlog.RunLog.Infof(faultQueueMsg, inputPara.logicID, inputPara.eventId, faultDurationData.FaultEventQueue)
 	return false

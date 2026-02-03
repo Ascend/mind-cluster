@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"ascend-common/common-utils/hwlog"
 )
@@ -34,12 +35,12 @@ func SaveUpgradeFaultCache(cache UpgradeFaultReasonMap[LogicId]) {
 }
 
 // InsertUpgradeFaultCache update upgrade fault cache
-func InsertUpgradeFaultCache(logicId LogicId, faultTime int64, faultCode, faultLevel string) {
+func InsertUpgradeFaultCache(logicId LogicId, faultTime int64, faultCode, faultLevel string, upgradeType UpgradeTypeEnum) {
 	upgradeFaultCacheMgr.cacheLock.Lock()
 	defer upgradeFaultCacheMgr.cacheLock.Unlock()
 	hwlog.RunLog.Infof("UpdateUpgradeFaultCache logicId %v, faultTime %v, faultCode %v, faultLevel %v",
 		logicId, faultTime, faultCode, faultLevel)
-	upgradeFaultCacheMgr.cache.UpdateReason(logicId, faultTime, faultCode, faultLevel)
+	upgradeFaultCacheMgr.cache.UpdateReason(logicId, faultTime, faultCode, faultLevel, upgradeType)
 }
 
 // RemoveManuallySeparateReasonCache when cm remove manually separate npu, the cache should remove reported npu
@@ -77,11 +78,20 @@ func CopyUpgradeFaultCache() UpgradeFaultReasonMap[LogicId] {
 	return upgradeFaultCacheMgr.cache.copy()
 }
 
+type UpgradeTypeEnum string
+
+const (
+	DurationUpgradeType  UpgradeTypeEnum = "FaultDuration"
+	FrequencyUpgradeType UpgradeTypeEnum = "FaultFrequency"
+	AutofillUpgradeType  UpgradeTypeEnum = "FaultAutofill"
+)
+
 // UpgradeFaultReason indicate the reason of card which is upgrade
 type UpgradeFaultReason struct {
-	UpgradeTime int64
-	FaultCode   string
-	FaultLevel  string
+	UpgradeTime int64           `json:"upgrade_time"`
+	FaultCode   string          `json:"fault_code"`
+	FaultLevel  string          `json:"fault_level"`
+	UpgradeType UpgradeTypeEnum `json:"upgrade_type"`
 }
 
 // LogicId used in cache
@@ -332,27 +342,35 @@ func (reasonMap UpgradeFaultReasonMap[PhyId]) generateManuallySeparateNPU(device
 
 // FixManuallySeparateReason fix the manually separate NPU reason according to the ManuallySeparateNPU value
 // When configmap ManuallySeparateNPU changed
-func (reasonMap UpgradeFaultReasonMap[PhyId]) FixManuallySeparateReason(manuallySeparateList []string) error {
+// 1. if Npu is in ManuallySeparateNPU not in UpgradeFaultReason, then UpgradeFaultReason should fill the reason
+// 2. if Npu is not in ManuallySeparateNPU but in UpgradeFaultReason, then UpgradeFaultReason should remove the reason
+func (reasonMap UpgradeFaultReasonMap[PhyId]) FixManuallySeparateReason(manuallySeparateNPU []PhyId) {
 	shouldManuallySeparateList := make(map[PhyId]struct{})
-	for _, deviceName := range manuallySeparateList {
-		phyId, err := deviceNameToPhyId(deviceName)
-		if err != nil {
-			return fmt.Errorf("FixManuallySeparateReason deviceNameToPhyId error: %v", err)
+	// 1. insert missing ManuallySeparateNPU
+	for _, phyId := range manuallySeparateNPU {
+		shouldManuallySeparateList[phyId] = struct{}{}
+		reasonSet, found := reasonMap[phyId]
+		if !found {
+			reasonMap.UpdateReason(phyId, time.Now().UnixMilli(), "", ManuallySeparateNPU, AutofillUpgradeType)
+			continue
 		}
-		shouldManuallySeparateList[PhyId(phyId)] = struct{}{}
+		exist := reasonSet.checkLevel(ManuallySeparateNPU)
+		if !exist {
+			reasonMap.UpdateReason(phyId, time.Now().UnixMilli(), "", ManuallySeparateNPU, AutofillUpgradeType)
+		}
 	}
+	// 2. remove redundant ManuallySeparateNPU
 	for phyId, reasonSet := range reasonMap {
 		if _, found := shouldManuallySeparateList[phyId]; !found {
 			reasonSet.removeLevel(ManuallySeparateNPU)
 		}
 	}
-	return nil
 }
 
 // UpdateReason update reason cache
-func (reasonMap UpgradeFaultReasonMap[LogicId]) UpdateReason(
-	logicId LogicId, faultTime int64, faultCode, faultLevel string) {
-	reasonSet, found := reasonMap[logicId]
+func (reasonMap UpgradeFaultReasonMap[ReasonKey]) UpdateReason(
+	key ReasonKey, faultTime int64, faultCode, faultLevel string, upgradeType UpgradeTypeEnum) {
+	reasonSet, found := reasonMap[key]
 	if !found {
 		reasonSet = make(UpgradeFaultReasonSet)
 	}
@@ -360,7 +378,8 @@ func (reasonMap UpgradeFaultReasonMap[LogicId]) UpdateReason(
 		UpgradeTime: faultTime,
 		FaultCode:   faultCode,
 		FaultLevel:  faultLevel,
+		UpgradeType: upgradeType,
 	}
 	reasonSet[reason] = struct{}{}
-	reasonMap[logicId] = reasonSet
+	reasonMap[key] = reasonSet
 }

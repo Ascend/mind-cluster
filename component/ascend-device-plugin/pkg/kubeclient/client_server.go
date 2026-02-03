@@ -125,17 +125,9 @@ func getDeviceInfoManuallySeparateNPUData(deviceInfo *v1.ConfigMap) (string, err
 	return data, nil
 }
 
-// GetManuallySeparateNPUIDFromDeviceInfo returns the ManuallySeparateNPU from device info
-func (ki *ClientK8s) GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoCMName, deviceInfoCMNamespace string) []int32 {
-	phyIDs := make([]int32, 0)
-
-	deviceInfo, err := ki.GetConfigMap(deviceInfoCMName, deviceInfoCMNamespace)
-	if err != nil {
-		hwlog.RunLog.Warnf("get device info cm error: %v", err)
-		return phyIDs
-	}
-
+func (ki *ClientK8s) GetManuallySeparateNPUFromDeviceInfo(deviceInfo *v1.ConfigMap) []common.PhyId {
 	manuallySeparateNPUData, err := getDeviceInfoManuallySeparateNPUData(deviceInfo)
+	phyIDs := make([]common.PhyId, 0)
 	if err != nil {
 		hwlog.RunLog.Warnf("failed to get manually seperate NPU data, error: %v", err)
 		return phyIDs
@@ -173,79 +165,22 @@ func (ki *ClientK8s) GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoCMName, de
 			return phyIDs
 		}
 
-		phyIDs = append(phyIDs, int32(phyID))
+		phyIDs = append(phyIDs, common.PhyId(phyID))
 	}
 	return phyIDs
 }
 
-// GetAndFixUpgradeFaultReasonMapFromDeviceInfo returns the ManuallySeparateNPU from device info
-func (ki *ClientK8s) GetAndFixUpgradeFaultReasonMapFromDeviceInfo(
-	deviceInfoCMName, deviceInfoCMNamespace string) (common.UpgradeFaultReasonMap[common.PhyId], error) {
-
-	deviceInfo, err := ki.GetConfigMap(deviceInfoCMName, deviceInfoCMNamespace)
-	if err != nil {
-		hwlog.RunLog.Warnf("get device info cm error: %v", err)
-		return nil, err
-	}
-
-	manuallySeparateNPUs, err := ki.GetManuallySeparateNPUs(deviceInfo)
-	if err != nil {
-		return nil, err
-	}
-	reason, err := ki.getUpgradeFaultReasonFromDeviceInfo(deviceInfo)
-	if err != nil {
-		return nil, fmt.Errorf("GetAndFixManuallySeparateReasonInfoFromDeviceInfo err: %v", err)
-	}
-	err = reason.FixManuallySeparateReason(manuallySeparateNPUs)
-	if err != nil {
-		return nil, fmt.Errorf("GetAndFixManuallySeparateReasonInfoFromDeviceInfo err: %v", err)
-	}
-	return reason, nil
-}
-
-func (ki *ClientK8s) GetManuallySeparateNPUs(deviceInfo *v1.ConfigMap) ([]string, error) {
-	manuallySeparateNPUData, err := getDeviceInfoManuallySeparateNPUData(deviceInfo)
-	deviceNames := make([]string, 0)
-	if err != nil {
-		err = fmt.Errorf("failed to get manually seperate NPU data, error: %v", err)
-		return nil, err
-	}
-
-	deviceRunMode, err := common.GetDeviceRunMode()
-	if err != nil {
-		err = fmt.Errorf("failed to get device run mode, error: %v", err)
-		return nil, err
-	}
-
-	manuallySeparateNPUs := strings.Split(manuallySeparateNPUData, ",")
-	if len(manuallySeparateNPUs) == 1 && manuallySeparateNPUs[0] == "" {
-		hwlog.RunLog.Debug("manually seperate NPU cache is empty, skip the lookup phase")
-		return deviceNames, nil
-	}
-	for _, manuallySeparateNPU := range manuallySeparateNPUs {
-		deviceNameCheck := common.CheckDeviceName(manuallySeparateNPU, deviceRunMode)
-		if !deviceNameCheck {
-			hwlog.RunLog.Warnf("in %v run mode, device name %s is illegal, it will be ignored",
-				deviceRunMode, manuallySeparateNPU)
-			continue
-		}
-
-		deviceNames = append(deviceNames, manuallySeparateNPU)
-	}
-	return deviceNames, nil
-}
-
-// getUpgradeFaultReasonFromDeviceInfo returns the UpgradeFaultReason from device info
-func (ki *ClientK8s) getUpgradeFaultReasonFromDeviceInfo(
+// GetUpgradeFaultReasonFromDeviceInfo returns the UpgradeFaultReason from device info
+func (ki *ClientK8s) GetUpgradeFaultReasonFromDeviceInfo(
 	deviceInfo *v1.ConfigMap) (common.UpgradeFaultReasonMap[common.PhyId], error) {
 	reasonStr, ok := deviceInfo.Data[common.UpgradeFaultReasonKey]
 	if !ok {
-		err := fmt.Errorf("get ManuallySeparateReasonCm from device info cm failed")
+		err := fmt.Errorf("GetUpgradeFaultReasonFromDeviceInfo failed")
 		return nil, err
 	}
 	reasonCm, err := common.StringToReasonCm(reasonStr)
 	if err != nil {
-		return nil, fmt.Errorf("getUpgradeFaultReasonFromDeviceInfo err: %v", err)
+		return nil, fmt.Errorf("GetUpgradeFaultReasonFromDeviceInfo failed err: %v", err)
 	}
 	return reasonCm, nil
 }

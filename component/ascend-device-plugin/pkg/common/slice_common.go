@@ -39,6 +39,15 @@ var Int64Tool int64Tool
 // StringTool slice for string tool
 var StringTool stringTool
 
+func Contains[T comparable](sources []T, target T) bool {
+	for _, sourceNum := range sources {
+		if sourceNum == target {
+			return true
+		}
+	}
+	return false
+}
+
 // Contains slice for int32 contains
 func (i int32Tool) Contains(sources []int32, target int32) bool {
 	for _, sourceNum := range sources {

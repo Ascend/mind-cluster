@@ -154,7 +154,7 @@ type DevManager interface {
 	WriteFaultToEvent(ctx context.Context)
 	GetAssociatedLogicIDs(logicID, cardID, deviceID int32) ([]int32, error)
 	SetDpu(string, []common.DpuCMData, map[string][]string)
-	LoadUpgradeFaultReasonMapFromDeviceInfoCm() (common.UpgradeFaultReasonMap[common.LogicId], error)
+	LoadDeviceInfoCm()
 }
 
 // SetDmgr set devmanager
@@ -218,7 +218,12 @@ func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() (string, []common.
 	}
 	logicIDsHandledFromCache := common.QueryManuallyFaultNPULogicIDsByHandleStatus(common.ManuallySeparateNpuHandled)
 	deviceInfoName := tool.client.DeviceInfoName
-	physicIDsFromDeviceInfo := tool.client.GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoName, api.KubeNS)
+	deviceInfo, err := tool.client.GetConfigMap(deviceInfoName, api.KubeNS)
+	if err != nil {
+		hwlog.RunLog.Errorf("get device info cm error: %v", err)
+		return "", make([]common.LogicId, 0)
+	}
+	physicIDsFromDeviceInfo := tool.client.GetManuallySeparateNPUFromDeviceInfo(deviceInfo)
 	removedManuallSeparate := make([]common.LogicId, 0)
 	for _, logicId := range logicIDsHandledFromCache {
 		physicId, err := tool.GetDmgr().GetPhysicIDFromLogicID(logicId)
@@ -228,7 +233,7 @@ func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() (string, []common.
 			removedManuallSeparate = append(removedManuallSeparate, common.LogicId(logicId))
 			continue
 		}
-		if !common.Int32Tool.Contains(physicIDsFromDeviceInfo, physicId) {
+		if !common.Contains[common.PhyId](physicIDsFromDeviceInfo, common.PhyId(physicId)) {
 			hwlog.RunLog.Infof("card %d is not in ManuallySeparateNPU of device info configmap, "+
 				"will be removed in cache", physicId)
 			common.DeleteManuallyFaultInfo(logicId)
@@ -240,7 +245,7 @@ func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() (string, []common.
 		return logicIDsAllFromCache[i] < logicIDsAllFromCache[j]
 	})
 	for _, physicId := range physicIDsFromDeviceInfo {
-		logicId, err := tool.GetDmgr().GetLogicIDFromPhysicID(physicId)
+		logicId, err := tool.GetDmgr().GetLogicIDFromPhysicID(int32(physicId))
 		if err != nil {
 			hwlog.RunLog.Warnf("get logic id failed, err: %v", err)
 			continue
@@ -255,18 +260,42 @@ func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() (string, []common.
 	return manuallySeparateNPU, removedManuallSeparate
 }
 
-func (tool *AscendTools) LoadUpgradeFaultReasonMapFromDeviceInfoCm() (common.UpgradeFaultReasonMap[common.LogicId], error) {
+func (tool *AscendTools) LoadDeviceInfoCm() {
 	deviceInfoName := tool.client.DeviceInfoName
-	upgradeFaultReasonCm, err := tool.client.GetAndFixUpgradeFaultReasonMapFromDeviceInfo(
-		deviceInfoName, api.KubeNS)
+	deviceInfo, err := tool.client.GetConfigMap(deviceInfoName, api.KubeNS)
 	if err != nil {
-		return nil, fmt.Errorf("handleUpgradeFaultReasonMap err: %v", err)
+		hwlog.RunLog.Errorf("get device info cm error: %v", err)
+		return
 	}
-	cache, err := upgradeFaultReasonCm.ConvertCmToCache(tool.GetDmgr().GetLogicIDFromPhysicID)
+	manuallySeparateNPUs := tool.client.GetManuallySeparateNPUFromDeviceInfo(deviceInfo)
 	if err != nil {
-		return nil, fmt.Errorf("handleUpgradeFaultReasonMap err: %v", err)
+		hwlog.RunLog.Errorf("get manuallySeparateNPUs from device info cm error: %v", err)
+		return
 	}
-	return cache, nil
+	// 1. load ManuallySeparateNPU
+	for _, physicId := range manuallySeparateNPUs {
+		logicId, err := tool.GetDmgr().GetLogicIDFromPhysicID(int32(physicId))
+		if err != nil {
+			hwlog.RunLog.Warnf("get logic id failed, err: %v", err)
+			continue
+		}
+		common.SaveManuallyFaultInfo(logicId)
+	}
+	reasonCm, err := tool.client.GetUpgradeFaultReasonFromDeviceInfo(deviceInfo)
+	if err != nil {
+		hwlog.RunLog.Errorf("get reason err: %v", err)
+		return
+	}
+	// 2. load upgrade fault reason
+	reasonCm.FixManuallySeparateReason(manuallySeparateNPUs)
+	// 3. convert cm to cache
+	cache, err := reasonCm.ConvertCmToCache(tool.GetDmgr().GetLogicIDFromPhysicID)
+	if err != nil {
+		hwlog.RunLog.Errorf("convert cm to cache err: %v", err)
+		return
+	}
+	// 4. save
+	common.SaveUpgradeFaultCache(cache)
 }
 
 // UpdateNodeDeviceInfo update device info
