@@ -5,6 +5,9 @@ MindCluster（AI集群系统软件）是支持NPU（昇腾AI处理器）构建�
 **图 1** MindCluster堆栈图<a name="fig163081328205916"></a>  
 ![](figures/scheduling/MindCluster堆栈图.png "MindCluster堆栈图")
 
+>[!NOTE] 说明 
+>Resilience Controller和Elastic Agent组件已经日落，Resilience Controller相关内容将于2026年的8.2.RC1版本删除；Elastic Agent相关内容将于2026年的8.3.0版本删除。
+
 **MindCluster特性说明<a name="section921922516408"></a>**
 
 |关键特性|特性介绍|链接|

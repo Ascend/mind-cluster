@@ -132,7 +132,7 @@ func TestJobServerSubscribe(t *testing.T) {
 		clientID := registerTestClient(server, ctx, constant.RoleFdAgent)
 		convey.Convey("When subscribing with normal stream", func() {
 			stream := &mockStream{ctx: ctx}
-			req := &job.ClientInfo{ClientId: clientID}
+			req := &job.ClientInfo{ClientId: clientID, Role: constant.RoleFdAgent}
 			go func() {
 				err := server.SubscribeJobSummarySignal(req, stream)
 				convey.ShouldBeNil(err)
@@ -190,6 +190,24 @@ func TestJobServerSubscribeFakeClient(t *testing.T) {
 	})
 }
 
+// TestJobServerSubscribeFakeRole tests job summary subscription with fake role
+func TestJobServerSubscribeFakeRole(t *testing.T) {
+	convey.Convey("Given a registered client", t, func() {
+		ctx := context.Background()
+		server := NewJobServer(ctx)
+		clientID := registerTestClient(server, ctx, CCAgentClientName)
+		convey.Convey("When subscribing", func() {
+			stream := &mockStream{ctx: ctx}
+			req := &job.ClientInfo{ClientId: clientID, Role: "fakeRole"}
+			go func() {
+				err := server.SubscribeJobSummarySignal(req, stream)
+				convey.ShouldNotBeNil(err)
+			}()
+			time.Sleep(time.Second)
+		})
+	})
+}
+
 // TestJobServerBroadcast tests message broadcasting
 func TestJobServerBroadcast(t *testing.T) {
 	convey.Convey("Given multiple clients", t, func() {
@@ -206,12 +224,13 @@ func TestJobServerBroadcast(t *testing.T) {
 		wg.Add(two)
 		go func() {
 			defer wg.Done()
-			err := server.SubscribeJobSummarySignal(&job.ClientInfo{ClientId: client1}, stream1)
+			err := server.SubscribeJobSummarySignal(
+				&job.ClientInfo{ClientId: client1, Role: CCAgentClientName}, stream1)
 			convey.ShouldBeNil(err)
 		}()
 		go func() {
 			defer wg.Done()
-			err := server.SubscribeJobSummarySignal(&job.ClientInfo{ClientId: client2}, stream2)
+			err := server.SubscribeJobSummarySignal(&job.ClientInfo{ClientId: client2, Role: "DefaultUser1"}, stream2)
 			convey.ShouldBeNil(err)
 		}()
 		time.Sleep(time.Second)
@@ -263,7 +282,7 @@ func TestSubscribeJobSummarySignalList(t *testing.T) {
 		ctx := context.Background()
 		server := NewJobServer(ctx)
 		clientID := registerTestClient(server, ctx, CCAgentClientName)
-		req := &job.ClientInfo{ClientId: clientID}
+		req := &job.ClientInfo{ClientId: clientID, Role: CCAgentClientName}
 		JobRankTable := constant.RankTable{
 			ServerList: []constant.ServerHccl{
 				{DeviceList: []constant.Device{{DeviceID: "0", RankID: "0"}, {DeviceID: "1", RankID: "1"}}},
@@ -280,6 +299,13 @@ func TestSubscribeJobSummarySignalList(t *testing.T) {
 			err := server.SubscribeJobSummarySignalList(invalidReq, mockSignalsStream)
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(err.Error(), convey.ShouldContainSubstring, "invalid clientId")
+		})
+		convey.Convey("When subscribe with invalid role", func() {
+			invalidReq := &job.ClientInfo{ClientId: clientID, Role: "fake-role"}
+			mockSignalsStream := NewMockJobSummarySignalListServer(ctx, nil)
+			err := server.SubscribeJobSummarySignalList(invalidReq, mockSignalsStream)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "invalid role")
 		})
 		convey.Convey("When rate limited", func() {
 			for i := 0; i < constant.RequestNumPerSecondLimit; i++ {

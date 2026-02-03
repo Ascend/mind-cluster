@@ -105,7 +105,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p1035711508917"><a name="p1035711508917"></a><a name="p1035711508917"></a>标识Atlas的<span id="ph13571150291"><a name="ph13571150291"></a><a name="ph13571150291"></a>Pod</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul835765011916"></a><a name="ul835765011916"></a><ul id="ul835765011916"><li>ascend-910</li><li>ascend-<span id="ph19358150597"><a name="ph19358150597"></a><a name="ph19358150597"></a><em id="zh-cn_topic_0000001519959665_i1489729141619"><a name="zh-cn_topic_0000001519959665_i1489729141619"></a><a name="zh-cn_topic_0000001519959665_i1489729141619"></a>{xxx}</em></span>b</li></ul>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul835765011916"></a><a name="ul835765011916"></a><ul id="ul835765011916"><li>ascend-910</li><li>ascend-<span id="ph19358150597"><a name="ph19358150597"></a><a name="ph19358150597"></a><em id="zh-cn_topic_0000001519959665_i1489729141619"><a name="zh-cn_topic_0000001519959665_i1489729141619"></a><a name="zh-cn_topic_0000001519959665_i1489729141619"></a>{xxx}</em></span>b</li><li>huawei.com/npu</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p10471193985417"><a name="p10471193985417"></a><a name="p10471193985417"></a><span id="ph1035865018915"><a name="ph1035865018915"></a><a name="ph1035865018915"></a>Ascend Device Plugin</span>、<span id="ph446593975417"><a name="ph446593975417"></a><a name="ph446593975417"></a>Ascend Operator</span>、<span id="ph635885012911"><a name="ph635885012911"></a><a name="ph635885012911"></a>Volcano</span></p>
 </td>
@@ -361,7 +361,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p1035711508917"><a name="p1035711508917"></a><a name="p1035711508917"></a>标识Atlas的<span id="ph13571150291"><a name="ph13571150291"></a><a name="ph13571150291"></a>Pod</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul835765011916"></a><a name="ul835765011916"></a><ul id="ul835765011916"><li>ascend-910</li><li>ascend-<span id="ph19358150597"><a name="ph19358150597"></a><a name="ph19358150597"></a><em id="zh-cn_topic_0000001519959665_i1489729141619"><a name="zh-cn_topic_0000001519959665_i1489729141619"></a><a name="zh-cn_topic_0000001519959665_i1489729141619"></a>{xxx}</em></span>b</li></ul>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul835765011916"></a><a name="ul835765011916"></a><ul id="ul835765011916"><li>ascend-910</li><li>ascend-<span id="ph19358150597"><a name="ph19358150597"></a><a name="ph19358150597"></a><em id="zh-cn_topic_0000001519959665_i1489729141619"><a name="zh-cn_topic_0000001519959665_i1489729141619"></a><a name="zh-cn_topic_0000001519959665_i1489729141619"></a>{xxx}</em></span>b</li><li>huawei.com/npu</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p10471193985417"><a name="p10471193985417"></a><a name="p10471193985417"></a><span id="ph1035865018915"><a name="ph1035865018915"></a><a name="ph1035865018915"></a>Ascend Device Plugin</span>、<span id="ph446593975417"><a name="ph446593975417"></a><a name="ph446593975417"></a>Ascend Operator</span>、<span id="ph635885012911"><a name="ph635885012911"></a><a name="ph635885012911"></a>Volcano</span></p>
 </td>

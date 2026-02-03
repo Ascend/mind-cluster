@@ -190,8 +190,9 @@ func (fJob *FaultJob) forceDeletePodsFor910A5(schedulerJob *plugin.SchedulerJob,
 	dpi *deletePodInfo) {
 	var waitDeleteTask = make([]FaultTask, 0)
 	for id, fTask := range fJob.FaultTasks {
-		klog.V(util.LogDebugLev).Infof("not masterFault is %v, job single rescheduling is %v, not fault task is %v",
-			!fJob.IsMasterFault, fJob.IsJobSingleRescheduling(schedulerJob), !fTask.IsFaultTask)
+		klog.V(util.LogDebugLev).Infof("not masterFault is %v, job single rescheduling is %v ,"+
+			"not fault task is %v, allow upgrade is %v", !fJob.IsMasterFault, fJob.IsJobSingleRescheduling(schedulerJob),
+			!fTask.IsFaultTask, fJob.allowUpgradePodRescheduling())
 		if fJob.skipThisTask(dpi, fTask, schedulerJob) {
 			klog.V(util.LogDebugLev).Infof(
 				"rescheduling: skip force delete task<%s> for job<%s/%s>", fTask.TaskName, fJob.JobNamespace,

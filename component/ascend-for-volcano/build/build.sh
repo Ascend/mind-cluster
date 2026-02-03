@@ -51,7 +51,7 @@ function parse_arch() {
 
 REL_VERSION=$(parse_version)
 REL_ARCH=$(parse_arch)
-REL_NPU_PLUGIN=volcano-npu_${REL_VERSION}_linux-${REL_ARCH}
+REL_NPU_PLUGIN=volcano-npu_${REL_VERSION}
 
 function clean() {
     rm -f "${BASE_PATH}"/output/vc-controller-manager

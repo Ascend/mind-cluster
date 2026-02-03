@@ -212,7 +212,7 @@ MindCluster提供Ascend Operator组件，输入集合通信所需的主进程IP�
 ## Resilience Controller<a name="ZH-CN_TOPIC_0000002511426827"></a>
 
 >[!NOTE] 说明 
->Resilience Controller组件已经日落，相关资料将于2026年的8.2.RC1版本删除。最新的弹性训练能力请参见[弹性训练](./usage/resumable_training.md#弹性训练)。
+>Resilience Controller组件已经日落，相关内容将于2026年的8.2.RC1版本删除。最新的弹性训练能力请参见[弹性训练](./usage/resumable_training.md#弹性训练)。
 
 **组件应用场景<a name="section15761025111720"></a>**
 
@@ -241,7 +241,7 @@ Resilience Controller组件属于Kubernetes插件，需要安装到K8s集群中�
 ## Elastic Agent<a name="ZH-CN_TOPIC_0000002479386918"></a>
 
 >[!NOTE] 说明 
->Elastic Agent组件已经日落，相关资料将于2026年的8.3.0版本删除。后续进程级恢复能力将使用TaskD组件承载。
+>Elastic Agent组件已经日落，相关内容将于2026年的8.3.0版本删除。后续进程级恢复能力将使用TaskD组件承载。
 
 **组件应用场景<a name="zh-cn_topic_0000002062230220_zh-cn_topic_0000002046307045_section15761025111720"></a>**
 
@@ -381,6 +381,8 @@ MindIO TFT包括临终Checkpoint保存、进程级在线恢复和优雅容错等
 ## 使用说明<a name="ZH-CN_TOPIC_0000002511346863"></a>
 
 本章节描述集群调度组件特性的使用说明，包括场景说明、特性介绍、组件和特性之间的支持关系，以及使用Volcano调度器和其他调度器时特性支持的产品列表。
+>[!NOTE] 说明 
+>不支持Volcano调度器和其他调度器管理相同的节点资源。
 
 **场景说明<a name="section186363476238"></a>**
 

@@ -1187,6 +1187,7 @@ func (hdm *HwDevManager) updateSpecTypePodAnnotation(deviceType, serverID string
 		hwlog.RunLog.Debugf("pods: %s, %s, %s", deviceInfo.Pod.Name, deviceInfo.Pod.Status.Phase, deviceInfo.Pod.UID)
 		_, existRealAlloc := deviceInfo.Pod.Annotations[api.PodAnnotationAscendReal]
 		if existRealAlloc {
+			hwlog.RunLog.Debug("The field AscendReal exists; device plugin skips writing the annotation")
 			continue
 		}
 		if len(deviceInfo.KltDevice) == 0 || len(deviceInfo.RealDevice) == 0 {
@@ -1195,6 +1196,7 @@ func (hdm *HwDevManager) updateSpecTypePodAnnotation(deviceType, serverID string
 			continue
 		}
 		hwlog.RunLog.Debugf("%s, %d, %v", deviceInfo.Pod.Name, len(deviceInfo.KltDevice), deviceInfo.RealDevice)
+		hwlog.RunLog.Debug("Write annotation via device plugin")
 		if err := hdm.manager.AddPodAnnotation(deviceInfo, deviceType, serverID, hdm.allInfo.AllDevs); err != nil {
 			hwlog.RunLog.Errorf("update pod %s_%s annotation failed, %v", deviceInfo.Pod.Namespace,
 				deviceInfo.Pod.Name, err)

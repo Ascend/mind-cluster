@@ -135,10 +135,54 @@ func buildSinglePodReschedulingUpgradeFor910A5Test4() SinglePodReschedulingUpgra
 	}
 }
 
+func buildSinglePodReschedulingUpgradeFor910A5Test5() SinglePodReschedulingUpgradeFor910A5TestCase {
+	return SinglePodReschedulingUpgradeFor910A5TestCase{
+		name: "Acjob upgrades to job rescheduling when set recover_policy_path != pod",
+		jobInfo: &api.JobInfo{
+			PodGroup: &api.PodGroup{
+				PodGroup: scheduling.PodGroup{
+					ObjectMeta: v1.ObjectMeta{
+						Labels: map[string]string{util.SinglePodTag: "on"},
+					},
+				},
+			},
+		},
+		fJob: &FaultJob{
+			PendingSessionNum: 0,
+			ReScheduleLimit:   "",
+		},
+		reScheduler: &ReScheduler{},
+		wantPending: 1,
+	}
+}
+
+func buildSinglePodReschedulingUpgradeFor910A5Test6() SinglePodReschedulingUpgradeFor910A5TestCase {
+	return SinglePodReschedulingUpgradeFor910A5TestCase{
+		name: "Deployment and statefulset upgrades to job rescheduling when set recover_policy_path != pod",
+		jobInfo: &api.JobInfo{
+			PodGroup: &api.PodGroup{
+				PodGroup: scheduling.PodGroup{
+					ObjectMeta: v1.ObjectMeta{
+						Labels: map[string]string{util.SinglePodTag: ""},
+					},
+				},
+			},
+		},
+		fJob: &FaultJob{
+			PendingSessionNum: 0,
+			ReScheduleLimit:   "",
+			Labels:            map[string]string{util.SinglePodTag: "on"},
+		},
+		reScheduler: &ReScheduler{},
+		wantPending: 1,
+	}
+}
+
 func TestSinglePodReschedulingUpgradeFor910A5(t *testing.T) {
 	tests := []SinglePodReschedulingUpgradeFor910A5TestCase{
 		buildSinglePodReschedulingUpgradeFor910A5Test1(), buildSinglePodReschedulingUpgradeFor910A5Test2(),
 		buildSinglePodReschedulingUpgradeFor910A5Test3(), buildSinglePodReschedulingUpgradeFor910A5Test4(),
+		buildSinglePodReschedulingUpgradeFor910A5Test5(), buildSinglePodReschedulingUpgradeFor910A5Test6(),
 	}
 
 	for _, tt := range tests {

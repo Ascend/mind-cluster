@@ -214,7 +214,8 @@ Container Manager从驱动获取到芯片故障码后，根据故障码对设备
     ```
 
 6.  修改完成后，按“Esc”键，输入:wq!保存并退出。
-7.  启动Container Manager。如果Container Manager服务已经安装完成，需要重启Container Manager服务使得配置生效。
+7.  确认自定义故障码配置文件的权限，确保其权限不高于640。
+8.  启动Container Manager。如果Container Manager服务已经安装完成，需要重启Container Manager服务使得配置生效。
 
     ```
     systemctl daemon-reload && systemctl restart container-manager.service # 重新加载服务配置，且重启已经安装完成的Container Manager服务
@@ -248,15 +249,15 @@ Container Manager在感知到芯片处于RestartRequest、RestartBusiness、Free
 
 容器启停过程中，会发生状态变化：
 
--   当容器正在停止时，容器状态为pausing。当容器状态为pausing，且状态持续时间超过20s时，通过status命令查询到的容器描述信息为"Container pause may fail. Please manually delete the container"。
+-   当容器正在停止时，容器状态为pausing。当容器状态为pausing，且状态持续时间超过30s时，通过status命令查询到的容器描述信息为"Container pause may fail. Please manually delete the container"。
 -   容器停止后，容器状态会变更为paused。当容器状态为paused，且状态持续时间超过400s时，通过status命令查询到的容器描述信息为"Device hot reset may fail. Please check of device status and recovery are required"。
--   当容器正在恢复时，容器状态为resuming。当容器状态为resuming，且状态持续时间超过20s时，通过status命令查询到的容器描述信息为"The device has been recovered, but the container failed to be resumed. Please manually pull up the container"。
+-   当容器正在恢复时，容器状态为resuming。当容器状态为resuming，且状态持续时间超过30s时，通过status命令查询到的容器描述信息为"The device has been recovered, but the container failed to be resumed. Please manually pull up the container"。
 -   其余时间，容器状态均为running，描述信息提示为“normal”，通过status命令查询到的容器状态开始时间为Container Manager感知到容器启动的时间或者容器恢复后的时间。
 
 >[!NOTE] 说明 
 >-   Container Manager仅恢复由它本身停止的容器。
 >-   上述涉及到的容器启停过程中的容器状态，仅为Container Manager自定义，非容器运行时给出的官方定义。
->-   当容器运行时为containerd时，针对没有task的容器，启停会报错。
+>-   在containerd场景下，如果容器的task不存在，则会停止失败。
 
 
 
@@ -405,7 +406,7 @@ Container Manager在感知到芯片处于RestartRequest、RestartBusiness、Free
         其中，modelWeightPath为挂载到容器中的模型权重路径。
 
         >[!NOTICE] 须知 
-        >若网络环境不安全，不开启HTTPS通信（即“httpsEnabled”=false时），会存在较高的网络安全风险；若开启HTTPS双向认证，需要提前准备好服务证书、服务器私钥、验签证书等，详情请参见《MindIE Motor开发指南》中的“集群服务部署 \> 单机（非分布式）服务部署  \> 安装部署 \> 使用Deployer部署服务示例 \> 部署Deployer服务端 \> 准备TLS证书”章节，自行准备TLS证书，并修改config.json相关TLS证书配置。
+        >"httpsEnabled"表示是否开启HTTPS协议。设为"true"表示开启HTTPS协议，此时需要配置双向认证证书；设为"false"表示不开启HTTPS协议。推荐开启HTTPS协议，并参见《MindIE Motor开发指南》中的“配套工具 \> MindIE Service Tools \> CertTools”章节，配置开启HTTPS通信所需服务证书、私钥等证书文件。
 
     3.  按“Esc”键，输入**:wq!**，按“Enter”保存并退出编辑。
 

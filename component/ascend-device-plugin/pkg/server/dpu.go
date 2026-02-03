@@ -128,35 +128,36 @@ func (hdm *HwDevManager) updateDpuHealthy(groupDevice map[string][]*common.NpuDe
 	}
 	for _, devices := range groupDevice {
 		for _, device := range devices {
-			if checkIsNpuFaultByDpu(device.DeviceName, npuToDpusMap, dpuOperstateMap) {
-				device.DpuHealth = v1beta1.Unhealthy
-			} else {
-				device.DpuHealth = v1beta1.Healthy
-			}
+			device.DpuHealth = getDpuFaultInfoOfNpu(device.DeviceName, npuToDpusMap, dpuOperstateMap)
 		}
 	}
 }
 
-func checkIsNpuFaultByDpu(npuName string, npuToDpuMap map[string][]string, dpuOperstateMap map[string]string) bool {
+// getDpuFaultInfoOfNpu get the dpu fault status of one npu
+func getDpuFaultInfoOfNpu(npuName string, npuToDpuMap map[string][]string,
+	dpuOperstateMap map[string]string) string {
+	dpuFaultCount := 0
 	for npu, dpus := range npuToDpuMap {
 		if !isNpuMatched(npuName, npu) {
 			continue
 		}
-		isNpuFault := true
 		// PCIe: One NPU has only one DPU, so the for loop only iterates once.
 		// UB: One NPU has two DPUs, but as long as one DPU is active, it's fine.
 		for _, dpu := range dpus {
-			if dpuOperstateMap[dpu] == api.DpuStatusUp {
-				isNpuFault = false
-				break
+			if dpuOperstateMap[dpu] != api.DpuStatusUp {
+				dpuFaultCount++
 			}
 		}
-		if isNpuFault {
+		if dpuFaultCount == len(dpus) {
 			hwlog.RunLog.Debugf("%s for npu<%s> dpu<%v> are faulty", api.DpuLogPrefix, npu, dpus)
-			return true
+			return v1beta1.Unhealthy
+		} else if dpuFaultCount == common.OneDpuFault {
+			hwlog.RunLog.Debugf("%s for npu<%s> one of its dpus<%v> is faulty", api.DpuLogPrefix, npu, dpus)
+			return api.DpuSubHealthy
 		}
+		return v1beta1.Healthy
 	}
-	return false
+	return v1beta1.Healthy
 }
 
 func isNpuMatched(npuName string, target string) bool {

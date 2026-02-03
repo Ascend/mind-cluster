@@ -136,6 +136,11 @@ func (s *JobServer) SubscribeJobSummarySignal(req *job.ClientInfo,
 		hwlog.RunLog.Errorf("invalid clientId: %s, please register first", req.ClientId)
 		return fmt.Errorf("invalid clientId: %s, please register first", req.ClientId)
 	}
+	if cltState.role != req.Role {
+		s.mu.Unlock()
+		hwlog.RunLog.Errorf("invalid role: %s, please check role first", req.Role)
+		return fmt.Errorf("invalid role: %s, please check role first", req.Role)
+	}
 	s.manageClientContext(cltState, stream.Context(), req.ClientId)
 	s.mu.Unlock()
 	defer s.cleanupClientContext(cltState, req.ClientId)
@@ -174,6 +179,11 @@ func (s *JobServer) SubscribeJobSummarySignalList(req *job.ClientInfo,
 		s.mu.Unlock()
 		hwlog.RunLog.Errorf("invalid clientId: %s, please register first", req.ClientId)
 		return fmt.Errorf("invalid clientId: %s, please register first", req.ClientId)
+	}
+	if cltState.role != req.Role {
+		s.mu.Unlock()
+		hwlog.RunLog.Errorf("invalid role: %s, please check role first", req.Role)
+		return fmt.Errorf("invalid role: %s, please check role first", req.Role)
 	}
 	s.manageClientContext(cltState, stream.Context(), req.ClientId)
 	s.mu.Unlock()

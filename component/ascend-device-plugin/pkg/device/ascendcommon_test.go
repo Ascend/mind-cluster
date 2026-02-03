@@ -1280,3 +1280,36 @@ func TestGetNodeDeviceInfoCache(t *testing.T) {
 		})
 	})
 }
+
+// the DpuHealth of a device is SubHealthy, `getDeviceFaults` should return the `DeviceFault`
+func TestAscendToolsGetDpuFaults(t *testing.T) {
+	t.Run("getDpuFaults", func(t *testing.T) {
+		tool := &AscendTools{}
+		device := &common.NpuDevice{
+			DpuHealth:  api.DpuSubHealthy,
+			DeviceName: "Ascend910-0",
+		}
+		eventId := int64(common.DpuSubHealthCode)
+		faultCode := strings.ToUpper(strconv.FormatInt(eventId, common.BaseDec))
+		faultTimeAndLevel := common.FaultTimeAndLevel{
+			FaultTime:  time.Now().UnixMilli(),
+			FaultLevel: common.NotHandleFault,
+		}
+		faultTimeAndLevelMap := make(map[string]common.FaultTimeAndLevel)
+		faultTimeAndLevelMap[faultCode] = faultTimeAndLevel
+		got := tool.getDpuFaults(device.DeviceName)
+		want := []common.DeviceFault{{
+			FaultType:            common.DpuSubHealth,
+			NPUName:              device.DeviceName,
+			LargeModelFaultLevel: common.NotHandleFault,
+			FaultLevel:           common.NotHandleFault,
+			FaultHandling:        common.NotHandleFault,
+			FaultCode:            faultCode,
+			FaultTimeAndLevelMap: faultTimeAndLevelMap,
+		},
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("getDeviceFaults() = %v, want %v", got, want)
+		}
+	})
+}

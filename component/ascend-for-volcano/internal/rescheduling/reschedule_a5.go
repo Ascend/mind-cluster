@@ -50,7 +50,8 @@ func (reScheduler *ReScheduler) updateFaultJobWhenGraceDeleteSuccess(jobInfo *ap
 
 func (reScheduler *ReScheduler) singlePodReschedulingUpgradeFor910A5(jobInfo *api.JobInfo, fJob *FaultJob) {
 	if jobInfo.PodGroup.Labels[util.SinglePodTag] != util.EnableFunc &&
-		jobInfo.PodGroup.Labels[util.ProcessRecoverEnable] != util.EnableFunc {
+		jobInfo.PodGroup.Labels[util.ProcessRecoverEnable] != util.EnableFunc &&
+		fJob.Labels[util.SinglePodTag] != util.EnableFunc {
 		return
 	}
 

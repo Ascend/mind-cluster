@@ -275,7 +275,8 @@ func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(nodeDeviceData *common.NodeDevice
 			api.DeviceInfoCMDataKey:                   string(data),
 			api.SwitchInfoCMDataKey:                   string(switchData),
 			common.UpgradeFaultReasonKey:              reasonCm,
-			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU}
+			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU,
+			common.DescriptionKey:                     common.DescriptionValue}
 		if dpuOpen {
 			if dpuData = common.MarshalData(dpuInfo); len(dpuData) == 0 {
 				return nil, fmt.Errorf("marshal DpuDeviceData failed")
