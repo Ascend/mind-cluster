@@ -15,6 +15,6 @@
 # limitations under the License.
 # ==============================================================================
 """
-Function: model init modules
+Function: switch init modules
 Modified Records: 2026-02-04
 """
