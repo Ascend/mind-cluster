@@ -220,23 +220,6 @@ class CheckpointHelper(CheckpointAsyncSaverMixin, CheckpointRapidLoaderMixin, Ch
         self.wait_d2h_checkpoint_finished()
 
     @time_used
-    def async_preload(self, load_path: str):
-        """ Preload checkpoint files from load_dir.
-
-        Arguments:
-            load_path(str): Checkpoint load path. It should include `latest_checkpointed_iteration.txt` file.
-
-        step1: (rank0) Obtain the iteration to be restored by reading the tracker file.
-        step2: Exchange iteration information through the store.
-        step3: Calculate the checkpoint file to be loaded and
-               invoke mindio_acp.preload() to load checkpoint files.
-        """
-        if len(load_path) > MAX_FILE_PATH_LENGTH:
-            raise ValueError(f"The load path length cannot exceed {MAX_FILE_PATH_LENGTH} characters")
-
-        self.async_preload_checkpoint(load_path)
-
-    @time_used
     def load_model_checkpoint(self, checkpoint_name: str, load_rank: int, process_group=None):
         """Load from a checkpoint file.
 

@@ -16,18 +16,6 @@
 from mindio_acp.acc_checkpoint.core.checkpoint_rapid_loader import CheckpointRapidLoaderMixin
 
 
-def test_async_preload_checkpoint(mocker, monkeypatch, tmpdir):
-    latest_checkpointed_iteration = str(tmpdir.join("latest_checkpointed_iteration.txt"))
-    with open(latest_checkpointed_iteration, "w") as file:
-        file.write(str(10))
-    tmpdir.mkdir("iter_{:07d}".format(10))
-
-    load_dir = str(tmpdir)
-    mocker.patch("mindio_acp.preload", return_value=None)
-
-    assert CheckpointRapidLoaderMixin(1).async_preload_checkpoint(load_dir) is None
-
-
 def test_rapid_load_model_checkpoint(mocker, monkeypatch, tmpdir):
     mocker.patch("mindio_acp.load", return_value={"data": 1})
 

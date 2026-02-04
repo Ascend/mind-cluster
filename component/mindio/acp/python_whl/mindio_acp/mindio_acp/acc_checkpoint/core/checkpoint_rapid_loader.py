@@ -70,38 +70,6 @@ class CheckpointRapidLoaderMixin(object):
         model_state_dict = model_params_load(buffer, broadcast)
         return model_state_dict
 
-    @staticmethod
-    @retry(wait_min=100, wait_max=800)
-    def __get_iteration_from_tracker_file(load_path: str):
-        """Get iteration code from tracker file."""
-        tracker_filename = os.path.join(load_path, 'latest_checkpointed_iteration.txt')
-        # If no tracker file, print log and raise exception
-        if not os.path.isfile(tracker_filename):
-            raise ValueError(f'could not find the metadata file {get_relative_path(tracker_filename)}')
-
-        # Otherwise, read the tracker file and get the iteration
-        with open(tracker_filename, 'r') as f:
-            iteration = int(f.read().strip())
-        return iteration
-
-    @staticmethod
-    def __preload_checkpoint(load_path: str, iteration: int):
-        """Get checkpoint file name and preload it into cache.
-        """
-        # generate checkpoint file name.
-        file_paths = []
-        directory = os.path.join(load_path, 'iter_{:07d}'.format(iteration))
-        for root, _, files in os.walk(directory):
-            for file in files:
-                file_path = os.path.join(root, file)
-                file_paths.append(file_path)
-
-        # Preload the checkpoint.
-        ret = mindio_acp.preload(*file_paths)
-        if ret != 0:
-            logging.warning('failed preload checkpoint from %s at iteration %d.',
-                            get_relative_path(load_path), iteration)
-
     @time_used
     def rapid_load_model_checkpoint(self, checkpoint_name: str, load_rank: int, process_group):
         """ Load the model parameters from the given checkpoint_name
@@ -128,14 +96,3 @@ class CheckpointRapidLoaderMixin(object):
 
         torch.npu.synchronize()
         return model_state_dict
-
-    @time_used
-    def async_preload_checkpoint(self, load_path: str):
-        # Read the tracker file and get the iteration.
-        iteration = self.__get_iteration_from_tracker_file(load_path)
-
-        if iteration is None:
-            logging.warning('rank=%d, failed to get iteration from tracker file', self.__rank)
-            return
-
-        self.__preload_checkpoint(load_path, iteration)

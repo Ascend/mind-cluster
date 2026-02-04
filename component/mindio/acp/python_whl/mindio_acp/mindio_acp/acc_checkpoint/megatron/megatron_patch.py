@@ -40,11 +40,11 @@ def patch_initialize():
 def patch_training():
     from .save_checkpoint_patch import save_checkpoint_wrapper
     from .load_checkpoint_patch import load_checkpoint_wrapper
-    from .preload_checkpoint_patch import initialize_model_parallel_wrapper
+    from .preload_checkpoint_patch import setup_logging_wrapper
     PatchManager.register_patch('megatron.training.checkpointing.save_checkpoint', save_checkpoint_wrapper)
     PatchManager.register_patch('megatron.training.checkpointing.load_checkpoint', load_checkpoint_wrapper)
-    PatchManager.register_patch('megatron.core.parallel_state.initialize_model_parallel',
-                                initialize_model_parallel_wrapper)
+    PatchManager.register_patch('megatron.training.initialize.setup_logging',
+                                setup_logging_wrapper)
 
 
 def patch_miscellaneous():
