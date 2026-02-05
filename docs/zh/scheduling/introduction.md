@@ -1352,12 +1352,22 @@ NPU Exporter
 <p id="p333261621717"><a name="p333261621717"></a><a name="p333261621717"></a></p>
 </td>
 </tr>
-<tr id="row89138123014"><td class="cellrowborder" rowspan="3" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p391138203014"><a name="p391138203014"></a><a name="p391138203014"></a>在物理机划分vNPU，挂载vNPU到容器</p>
+<tr id="row89138123014"><td class="cellrowborder" rowspan="2" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p391138203014"><a name="p391138203014"></a><a name="p391138203014"></a>在物理机划分vNPU，挂载vNPU到容器</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol4232523123116"></a><a name="ol4232523123116"></a><ol id="ol4232523123116"><li>在物理机划分vNPU的步骤请参见<a href="./usage/virtual_instance.md#创建vnpu">创建vNPU</a>。</li><li>挂载vNPU到容器的步骤请参见<a href="./usage/virtual_instance.md#挂载vnpu">挂载vNPU</a>。</li></ol>
+<td class="cellrowborder" rowspan="2" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol4232523123116"></a><a name="ol4232523123116"></a><ol id="ol4232523123116"><li>在物理机划分vNPU的步骤请参见<a href="./usage/virtual_instance.md#创建vnpu">创建vNPU</a>。</li><li>挂载vNPU到容器的步骤请参见<a href="./usage/virtual_instance.md#挂载vnpu">挂载vNPU</a>。</li></ol>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p04706138383"><a name="p04706138383"></a><a name="p04706138383"></a><span id="ph9232422123715"><a name="ph9232422123715"></a><a name="ph9232422123715"></a>Atlas 推理系列产品</span></p>
 <a name="ul20606165512016"></a><a name="ul20606165512016"></a><ul id="ul20606165512016"><li><span id="ph66061055192018"><a name="ph66061055192018"></a><a name="ph66061055192018"></a>Atlas 300I Pro 推理卡</span></li><li><span id="ph1060616557200"><a name="ph1060616557200"></a><a name="ph1060616557200"></a>Atlas 300V 视频解析卡</span></li><li><span id="ph8606655142015"><a name="ph8606655142015"></a><a name="ph8606655142015"></a>Atlas 300V Pro 视频解析卡</span></li><li><span id="ph960625515203"><a name="ph960625515203"></a><a name="ph960625515203"></a>Atlas 300I Duo 推理卡</span></li><li><span id="ph271718714435"><a name="ph271718714435"></a><a name="ph271718714435"></a>Atlas 200I SoC A1 核心板</span></li></ul>
+<p><span>Atlas A2 推理系列产品</span></p>
+<ul><li><span>Atlas 800I A2 推理服务器</span></li></ul>
+<p><span>Atlas A3 推理系列产品</span></p>
+<ul><li><span>Atlas 800I A3 超节点服务器</span></li></ul>
+<p id="p955711111389"><a name="p955711111389"></a><a name="p955711111389"></a><span id="ph1160255613617"><a name="ph1160255613617"></a><a name="ph1160255613617"></a>Atlas 训练系列产品</span></p>
+<a name="ul20127114712811"></a><a name="ul20127114712811"></a><ul id="ul20127114712811"><li><span id="ph1412724722816"><a name="ph1412724722816"></a><a name="ph1412724722816"></a>Atlas 300T 训练卡（型号 9000）</span></li><li><span id="ph1012754772811"><a name="ph1012754772811"></a><a name="ph1012754772811"></a>Atlas 300T Pro 训练卡（型号 9000）</span></li><li><span id="ph0127347172818"><a name="ph0127347172818"></a><a name="ph0127347172818"></a>Atlas 800 训练服务器（型号 9000）</span></li><li><span id="ph912713473289"><a name="ph912713473289"></a><a name="ph912713473289"></a>Atlas 800 训练服务器（型号 9010）</span></li><li><span id="ph012784742819"><a name="ph012784742819"></a><a name="ph012784742819"></a>Atlas 900 PoD（型号 9000）</span></li><li><span id="ph1012713477284"><a name="ph1012713477284"></a><a name="ph1012713477284"></a>Atlas 900T PoD Lite</span></li></ul>
+<p><span>Atlas A2 训练系列产品</span></p>
+<ul><li><span>Atlas 800T A2 训练服务器</span></li></ul>
+<p><span>Atlas A3 训练系列产品</span></p>
+<ul><li><span>Atlas 800T A3 超节点服务器</span></li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p671845534711"><a name="p671845534711"></a><a name="p671845534711"></a>静态虚拟化</p>
 </td>
@@ -1367,12 +1377,6 @@ NPU Exporter
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><div class="p" id="p879861715488"><a name="p879861715488"></a><a name="p879861715488"></a>动态虚拟化：<a name="ul1028016496477"></a><a name="ul1028016496477"></a><ul id="ul1028016496477"><li>使用<span id="ph112801498478"><a name="ph112801498478"></a><a name="ph112801498478"></a>Ascend Docker Runtime</span>挂载</li><li>使用<span id="ph828016490479"><a name="ph828016490479"></a><a name="ph828016490479"></a><span id="ph728054934716"><a name="ph728054934716"></a><a name="ph728054934716"></a>Kubernetes</span>挂载</span></li></ul>
 </div>
-</td>
-</tr>
-<tr id="row18969819380"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p955711111389"><a name="p955711111389"></a><a name="p955711111389"></a><span id="ph1160255613617"><a name="ph1160255613617"></a><a name="ph1160255613617"></a>Atlas 训练系列产品</span></p>
-<a name="ul20127114712811"></a><a name="ul20127114712811"></a><ul id="ul20127114712811"><li><span id="ph1412724722816"><a name="ph1412724722816"></a><a name="ph1412724722816"></a>Atlas 300T 训练卡（型号 9000）</span></li><li><span id="ph1012754772811"><a name="ph1012754772811"></a><a name="ph1012754772811"></a>Atlas 300T Pro 训练卡（型号 9000）</span></li><li><span id="ph0127347172818"><a name="ph0127347172818"></a><a name="ph0127347172818"></a>Atlas 800 训练服务器（型号 9000）</span></li><li><span id="ph912713473289"><a name="ph912713473289"></a><a name="ph912713473289"></a>Atlas 800 训练服务器（型号 9010）</span></li><li><span id="ph012784742819"><a name="ph012784742819"></a><a name="ph012784742819"></a>Atlas 900 PoD（型号 9000）</span></li><li><span id="ph1012713477284"><a name="ph1012713477284"></a><a name="ph1012713477284"></a>Atlas 900T PoD Lite</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p12119142253"><a name="p12119142253"></a><a name="p12119142253"></a>静态虚拟化</p>
 </td>
 </tr>
 <tr id="row131012387307"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1010133833013"><a name="p1010133833013"></a><a name="p1010133833013"></a>在物理机划分vNPU，挂载vNPU到虚拟机，在虚拟机内将vNPU挂载到容器</p>

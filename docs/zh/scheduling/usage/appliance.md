@@ -468,12 +468,6 @@ Container Manager在感知到芯片处于RestartRequest、RestartBusiness、Free
         --entrypoint /job/script/infer_start.sh  <mindie image:tag>  <restart_times>
         ```
 
-        >[!NOTE] 说明 
-        >-   <container-name\>表示容器名称。
-        >-   请用户将<mindie image:tag\>替换为实际镜像名和tag。
-        >-   <restart\_times\>作为参数传入infer\_start.sh中，表示服务重启次数，需替换为数字，不填默认为0。超过重启次数会退出容器。
-        >-   请用户按需自行修改环境变量ASCEND\_VISIBLE\_DEVICES的值，以挂载不同数量芯片。芯片ID需要与config.json中npuDeviceIds字段包含的芯片ID保持一致。
-
     -   不使用Ascend Docker Runtime挂载芯片和设备
 
         ```
@@ -491,9 +485,16 @@ Container Manager在感知到芯片处于RestartRequest、RestartBusiness、Free
         -v /data/atlas_dls/public/infer/model_weight/Qwen3-1.7B/:/job/model_weight/ \
         --entrypoint /job/script/infer_start.sh  <mindie image:tag>  <restart_times>
         ```
+       上述配置说明如下：
+      >-   <container-name\>表示容器名称。
+      >-   请用户将<mindie image:tag\>替换为实际镜像名和tag。
+      >-   <restart\_times\>作为参数传入infer\_start.sh中，表示服务重启次数，需替换为数字，不填默认为0。超过重启次数会退出容器。
+      >-   请用户按需自行修改环境变量ASCEND\_VISIBLE\_DEVICES的值，以挂载不同数量芯片。芯片ID需要与config.json中npuDeviceIds字段包含的芯片ID保持一致。
+      >-   请用户自行增删“--device”参数，以挂载不同数量芯片和设备。芯片ID需要与config.json中npuDeviceIds字段包含的芯片ID保持一致。
+     
 
-    >[!NOTE] 说明 
-    >请用户自行增删“--device”参数，以挂载不同数量芯片和设备。芯片ID需要与config.json中npuDeviceIds字段包含的芯片ID保持一致。
+>[!NOTE] 说明 
+>启动容器后，若报错"OpenBLAS blas_thread_int: pthread_create failed for thread 1 of 128: Operation not permitted"，即OpenBLAS尝试创建多线程失败，可能原因是seccomp阻止了pthread相关系统的调用，此时可以在Docker启动命令中增加“--security-opt seccomp=unconfined --security-opt no-new-privileges”参数解决。
 
 8.  查看容器日志。
 

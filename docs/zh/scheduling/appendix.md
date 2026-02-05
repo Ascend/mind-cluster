@@ -960,6 +960,7 @@ MindCluster组件使用的环境变量说明如[表1](#table1132513610543)所示
 |GROUP_BASE_DIR|任务启动脚本中写入|否|文件夹路径|表示TaskD组件的并行域信息导出路径|
 |MINDIO_WAIT_MINDX_TIME|任务YAML中写入|否|数字字符串，取值范围为[1, 3600]|不开启进程级重调度，开启弹性训练时等待故障Pod调度的超时时间|
 |RAS_NET_ROOT_PATH|用户配置|否|ClusterD和NodeD共享目录的根路径|在慢网络诊断场景下ClusterD和NodeD通过共享存储进行交互，详细请参见<a href="./usage/resumable_training.md#慢网络诊断">慢网络诊断</a>|
+|REPLICA_TYPE|容器创建时由Ascend Operator写入|是|Master、Scheduler、Chief或Worker|Pod副本类型|
 
 **Ascend Operator环境变量说明<a name="section1272862810184"></a>**
 
@@ -1042,7 +1043,7 @@ Ascend Operator为不同AI框架的分布式训练任务（acjob）提供相应�
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p688746194315"><a name="p688746194315"></a><a name="p688746194315"></a>根据Pod使用NPU数量进行配置，从0开始。例如，Pod使用4个NPU，则配置为{0,1,2,3}。</p>
 </td>
 </tr>
-<tr id="row16916943102412"><td class="cellrowborder" rowspan="2" valign="top" width="12.379999999999999%" headers="mcps1.2.6.1.1 "><p id="p9425933142120"><a name="p9425933142120"></a><a name="p9425933142120"></a><span id="ph3425633192112"><a name="ph3425633192112"></a><a name="ph3425633192112"></a>PyTorch</span>、MindSpore、<span id="ph1742583312216"><a name="ph1742583312216"></a><a name="ph1742583312216"></a>TensorFlow</span></p>
+<tr id="row16916943102412"><td class="cellrowborder" rowspan="6" valign="top" width="12.379999999999999%" headers="mcps1.2.6.1.1 "><p id="p9425933142120"><a name="p9425933142120"></a><a name="p9425933142120"></a><span id="ph3425633192112"><a name="ph3425633192112"></a><a name="ph3425633192112"></a>PyTorch</span>、MindSpore、<span id="ph1742583312216"><a name="ph1742583312216"></a><a name="ph1742583312216"></a>TensorFlow</span></p>
 <p id="p37048619498"><a name="p37048619498"></a><a name="p37048619498"></a></p>
 <p id="p7868336195017"><a name="p7868336195017"></a><a name="p7868336195017"></a></p>
 <p id="p18298181492719"><a name="p18298181492719"></a><a name="p18298181492719"></a></p>
@@ -1065,9 +1066,7 @@ Ascend Operator为不同AI框架的分布式训练任务（acjob）提供相应�
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p872210353431"><a name="p872210353431"></a><a name="p872210353431"></a>-</p>
 </td>
 </tr>
-<tr id="row99115919216"><td class="cellrowborder" valign="top" width="12.379999999999999%" headers="mcps1.2.6.1.1 "><p id="p1542874222714"><a name="p1542874222714"></a><a name="p1542874222714"></a><span id="ph04289425272"><a name="ph04289425272"></a><a name="ph04289425272"></a>PyTorch</span>、MindSpore、<span id="ph12428154272711"><a name="ph12428154272711"></a><a name="ph12428154272711"></a>TensorFlow</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="16.869999999999997%" headers="mcps1.2.6.1.2 "><p id="p1189132935"><a name="p1189132935"></a><a name="p1189132935"></a><span>HCCL_LOGIC_SUPERPOD_ID</span></p>
+<tr id="row99115919216"><td class="cellrowborder" valign="top" width="16.869999999999997%" headers="mcps1.2.6.1.2 "><p id="p1189132935"><a name="p1189132935"></a><a name="p1189132935"></a><span>HCCL_LOGIC_SUPERPOD_ID</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="27.77%" headers="mcps1.2.6.1.3 "><p id="p148917321033"><a name="p148917321033"></a><a name="p148917321033"></a>相同ID的芯片间使用灵衢网络通信，不同ID的芯片间使用RoCE网络通信。</p>
 </td>
@@ -1079,10 +1078,7 @@ Ascend Operator为不同AI框架的分布式训练任务（acjob）提供相应�
 </div></div>
 </td>
 </tr>
-<tr id="row0703116194918"><td class="cellrowborder" rowspan="2" valign="top" width="12.379999999999999%" headers="mcps1.2.6.1.1 "><p id="p1761245152714"><a name="p1761245152714"></a><a name="p1761245152714"></a><span id="ph361144510277"><a name="ph361144510277"></a><a name="ph361144510277"></a>PyTorch</span>、MindSpore、<span id="ph76117456272"><a name="ph76117456272"></a><a name="ph76117456272"></a>TensorFlow</span></p>
-<p id="p7298171492717"><a name="p7298171492717"></a><a name="p7298171492717"></a></p>
-</td>
-<td class="cellrowborder" valign="top" width="16.869999999999997%" headers="mcps1.2.6.1.2 "><p id="p1022716206493"><a name="p1022716206493"></a><a name="p1022716206493"></a>MINDX_TASK_ID</p>
+<tr id="row0703116194918"><td class="cellrowborder" valign="top" width="16.869999999999997%" headers="mcps1.2.6.1.2 "><p id="p1022716206493"><a name="p1022716206493"></a><a name="p1022716206493"></a>MINDX_TASK_ID</p>
 </td>
 <td class="cellrowborder" valign="top" width="27.77%" headers="mcps1.2.6.1.3 "><p id="p922752054917"><a name="p922752054917"></a><a name="p922752054917"></a><span id="ph159662220018"><a name="ph159662220018"></a><a name="ph159662220018"></a>Elastic Agent</span>/<span id="ph126107511246"><a name="ph126107511246"></a><a name="ph126107511246"></a>TaskD</span>向<span id="ph1722782017491"><a name="ph1722782017491"></a><a name="ph1722782017491"></a>ClusterD</span>注册gRPC服务需要提供MINDX_TASK_ID信息。</p>
 <p id="p11227154910536"><a name="p11227154910536"></a><a name="p11227154910536"></a>MindIE推理任务场景下，取值为acjob任务中label字段下jobID字段的值。</p>
@@ -1100,6 +1096,15 @@ Ascend Operator为不同AI框架的分布式训练任务（acjob）提供相应�
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p3868133612507"><a name="p3868133612507"></a><a name="p3868133612507"></a>字符串</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p3868173675015"><a name="p3868173675015"></a><a name="p3868173675015"></a>-</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p>REPLICA_TYPE</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p>Pod副本类型。</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p>字符串，取值为Master、Scheduler、Chief或Worker</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p>-</p>
 </td>
 </tr>
 <tr id="row8906345192017"><td class="cellrowborder" rowspan="8" valign="top" width="12.379999999999999%" headers="mcps1.2.6.1.1 "><p id="p687175715434"><a name="p687175715434"></a><a name="p687175715434"></a>MindSpore</p>

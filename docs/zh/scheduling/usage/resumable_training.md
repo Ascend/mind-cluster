@@ -1150,9 +1150,15 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
     1.  修改容器暴露端口，在所有的Pod下增加TaskD通信使用的端口9601。
 
         ```
-        ports:                         
-           - containerPort: 9601             
-             name: taskd-port 
+        ...
+              spec:
+        ...
+                containers:
+        ...
+                  ports:                          
+                   - containerPort: 9601              
+                     name: taskd-port
+        ...       
         ```
 
     2.  挂载文件。
@@ -5714,9 +5720,13 @@ metadata:
      pod-rescheduling: "on"
      fault-scheduling: "force"
 ...
-ports:                         
-   - containerPort: 9601             
-     name: taskd-port 
+        spec:
+...
+           containers:
+...
+             ports:                          
+               - containerPort: 9601              
+                 name: taskd-port 
 ...
 ```
 
@@ -5801,9 +5811,13 @@ RUN pip3 install $TASKD_WHL
 
 ```
 ...
-ports:                         
-   - containerPort: 9601             
-     name: taskd-port 
+        spec:
+...
+           containers:
+...
+             ports:                          
+               - containerPort: 9601              
+                 name: taskd-port 
 ...
 ```
 
@@ -5968,17 +5982,7 @@ RUN pip3 install $MINDIO_TTP_PKG
 
 **准备任务YAML<a name="zh-cn_topic_0000002134174097_section98717593512"></a>**
 
-在任务YAML中，修改容器端口，在所有的Pod下增加TaskD通信使用的端口9601。
-
-```
-...
-ports:                         
-   - containerPort: 9601             
-     name: taskd-port 
-...
-```
-
-在任务YAML中，新增以下字段，开启进程级别恢复。recover-strategy是训练进程恢复使用的策略，其中的retry代表开启进程级在线恢复。
+在任务YAML中，新增以下字段，开启进程级别恢复，并修改容器端口，在所有的Pod下增加TaskD通信使用的端口9601。
 
 ```
 ...  
@@ -6005,6 +6009,10 @@ spec:
                 ... 
                 bash scripts/train_start.sh /job/code /job/output pretrain_gpt.py \
                   ...
+            ports:                          
+               - containerPort: 9601              
+                 name: taskd-port
+...
     Worker:
       template:
         spec:
@@ -6016,6 +6024,9 @@ spec:
                 ...
                 bash scripts/train_start.sh /job/code /job/output pretrain_gpt.py \
                   ...
+            ports:                          
+               - containerPort: 9601              
+                 name: taskd-port
 ...
 ```
 
@@ -6221,54 +6232,55 @@ export HCCL_OP_RETRY_PARAMS="MaxCnt:3, HoldTime:5000, IntervalTime:1000"    # �
         ```
 
 3.  修改任务YAML。
-    1.  在任务YAML中修改容器端口，在所有的Pod下增加TaskD通信使用的端口9601。
 
-        ```
-        ports:                         
-           - containerPort: 9601             
-             name: taskd-port 
-        ```
 
-    2.  在任务YAML中新增以下加粗字段。
+    在任务YAML中新增以下字段，开启进程级在线恢复，并修改容器端口，在所有的Pod下增加TaskD通信使用的端口9601。
 
-        ```
-        ...  
-           labels:  
-             ...  
-             fault-scheduling: "force"
-         ... 
-        ...  
-           annotations:  
-             ...  
-             recover-strategy: "retry"    # 任务可用恢复策略，取值为retry，表示开启进程级在线恢复
-         ... 
-        ...
-        spec:
-          replicaSpecs:
-            Master:
-              template:
-                spec:
-                  containers:
-                  - name: ascend # do not modify
-                    ...
-                    args:
-                      - | 
-                        ... 
-                        bash scripts/train_start.sh /job/code /job/output pretrain_gpt.py \
-                          ...
-            Worker:
-              template:
-                spec:
-                  containers:
-                  - name: ascend # do not modify
-                    ...
-                    args:
-                      - |
-                        ...
-                        bash scripts/train_start.sh /job/code /job/output pretrain_gpt.py \
-                          ...
-        ...
-        ```
+      ```
+    ...  
+        labels:  
+          ...  
+          fault-scheduling: "force"
+       ... 
+    ...  
+        annotations:  
+          ...  
+          recover-strategy: "retry"    # 任务可用恢复策略，取值为retry，表示开启进程级在线恢复
+       ... 
+    ...
+    spec:
+       replicaSpecs:
+         Master:
+           template:
+             spec:
+               containers:
+               - name: ascend # do not modify
+                 ...
+                 args:
+                   - | 
+                     ... 
+                     bash scripts/train_start.sh /job/code /job/output pretrain_gpt.py \
+                       ...
+                 ports:                          
+                   - containerPort: 9601              
+                     name: taskd-port
+    ...
+         Worker:
+           template:
+             spec:
+               containers:
+               - name: ascend # do not modify
+                 ...
+                 args:
+                   - |
+                     ...
+                     bash scripts/train_start.sh /job/code /job/output pretrain_gpt.py \
+                       ...
+                 ports:                          
+                   - containerPort: 9601              
+                     name: taskd-port
+    ...
+      ```
 
 
 #### MindSpore场景（基于MindFormers）<a name="ZH-CN_TOPIC_0000002511346443"></a>
@@ -6368,54 +6380,54 @@ export HCCL_OP_RETRY_PARAMS="MaxCnt:3, HoldTime:5000, IntervalTime:1000"    # �
     >    ```
 
 3.  修改任务YAML。
-    1.  在任务YAML中修改容器端口，在所有的Pod下增加TaskD通信使用的端口9601。
 
-        ```
-        ports:                         
-           - containerPort: 9601             
-             name: taskd-port 
-        ```
+    在任务YAML中新增以下字段，开启进程级在线恢复，并修改容器端口，在所有的Pod下增加TaskD通信使用的端口9601。
 
-    2.  在任务YAML中新增以下加粗字段。
-
-        ```
-        ...  
-           labels:  
-             ...  
-             fault-scheduling: "force"
-         ... 
-        ...  
-           annotations:  
-             ...  
-             recover-strategy: "retry"    # 任务可用恢复策略，取值为retry，表示开启进程级在线恢复
-         ... 
-        ...
-        spec:
-          replicaSpecs:
-            Master:
-              template:
-                spec:
-                  containers:
-                  - name: ascend # do not modify
+    ```
+    ...  
+        labels:  
+          ...  
+          fault-scheduling: "force"
+      ... 
+    ...  
+        annotations:  
+          ...  
+          recover-strategy: "retry"    # 任务可用恢复策略，取值为retry，表示开启进程级在线恢复
+      ... 
+    ...
+    spec:
+      replicaSpecs:
+        Master:
+          template:
+            spec:
+              containers:
+              - name: ascend # do not modify
+                ...
+                args:
+                  - | 
+                    ... 
+                    bash scripts/train_start.sh /job/code /job/output pretrain_gpt.py \
+                      ...
+                ports:                          
+                  - containerPort: 9601              
+                    name: taskd-port
+    ...
+        Worker:
+          template:
+            spec:
+              containers:
+              - name: ascend # do not modify
+                ...
+                args:
+                  - |
                     ...
-                    args:
-                      - | 
-                        ... 
-                        bash scripts/train_start.sh /job/code /job/output pretrain_gpt.py \
-                          ...
-            Worker:
-              template:
-                spec:
-                  containers:
-                  - name: ascend # do not modify
-                    ...
-                    args:
-                      - |
-                        ...
-                        bash scripts/train_start.sh /job/code /job/output pretrain_gpt.py \
-                          ...
-        ...
-        ```
+                    bash scripts/train_start.sh /job/code /job/output pretrain_gpt.py \
+                      ...
+                ports:                          
+                  - containerPort: 9601              
+                    name: taskd-port
+    ...
+    ```
 
 
 
@@ -6562,17 +6574,10 @@ export MS_ENABLE_TFT='{RSC:1}'      # MindSpore场景下配置此字段开启优
     >    ```
 
 2.  修改任务YAML。
-    1.  在任务YAML中修改容器暴露端口，在所有的Pod下增加TaskD通信使用的端口9601。
 
-        ```
-        ports:                         
-           - containerPort: 9601             
-             name: taskd-port 
-        ```
+    在任务YAML中新增以下字段，开启进程级别重调度，并修改容器端口，在所有的Pod下增加TaskD通信使用的端口9601。
 
-    2.  在任务YAML中新增以下加粗字段。
-
-        ```
+      ```
         ...  
            labels:  
              ...  
@@ -6597,6 +6602,10 @@ export MS_ENABLE_TFT='{RSC:1}'      # MindSpore场景下配置此字段开启优
                         cd /job/code; 
                         chmod +x scripts/train_start.sh; 
                         bash scripts/train_start.sh
+                    ports:                          
+                      - containerPort: 9601              
+                        name: taskd-port
+        ...
             Worker:
               template:
                 spec:
@@ -6608,8 +6617,11 @@ export MS_ENABLE_TFT='{RSC:1}'      # MindSpore场景下配置此字段开启优
                         cd /job/code; 
                         chmod +x scripts/train_start.sh; 
                         bash scripts/train_start.sh
+                    ports:                          
+                      - containerPort: 9601              
+                        name: taskd-port
         ...
-        ```
+      ```
 
 
 #### MindSpore场景（基于MindFormers）<a name="ZH-CN_TOPIC_0000002479226554"></a>
@@ -6708,17 +6720,10 @@ export MS_ENABLE_TFT='{RSC:1}'      # MindSpore场景下配置此字段开启优
     >    ```
 
 3.  修改任务YAML。
-    1.  在任务YAML中修改容器暴露端口，在所有的Pod下增加TaskD通信使用的端口9601。
 
-        ```
-        ports:                         
-           - containerPort: 9601             
-             name: taskd-port 
-        ```
+    在任务YAML中新增以下字段，开启进程级别重调度，并修改容器端口，在所有的Pod下增加TaskD通信使用的端口9601。
 
-    2.  在任务YAML中新增以下加粗字段。
-
-        ```
+      ```
         ...  
            labels:  
              ...  
@@ -6743,6 +6748,10 @@ export MS_ENABLE_TFT='{RSC:1}'      # MindSpore场景下配置此字段开启优
                       - -c
                       - |
                        cd /job/code/;bash scripts/msrun_launcher.sh "run_mindformer.py --config configs/qwen3/pretrain_qwen3_32b_4k.yaml --auto_trans_ckpt False --use_parallel True --run_mode train"
+                    ports:                          
+                      - containerPort: 9601              
+                        name: taskd-port
+        ...
             Worker:
               template:
                 spec:
@@ -6754,8 +6763,11 @@ export MS_ENABLE_TFT='{RSC:1}'      # MindSpore场景下配置此字段开启优
                       - -c
                       - |
                        cd /job/code/;bash scripts/msrun_launcher.sh "run_mindformer.py --config configs/qwen3/pretrain_qwen3_32b_4k.yaml --auto_trans_ckpt False --use_parallel True --run_mode train"
+                    ports:                          
+                      - containerPort: 9601              
+                        name: taskd-port
         ...
-        ```
+      ```
 
 
 
@@ -6791,9 +6803,13 @@ metadata:
      ... 
      subHealthyStrategy: "hotSwitch"
 ...
-ports:                          
-   - containerPort: 9601              
-     name: taskd-port
+        spec:
+...
+           containers:
+...
+             ports:                          
+               - containerPort: 9601              
+                 name: taskd-port
 ...
 ```
 
@@ -6895,17 +6911,10 @@ ports:
         ```
 
 2.  修改任务YAML。
-    1.  在任务YAML中修改容器端口，在所有的Pod下增加TaskD通信使用的端口9601。
 
-        ```
-        ports:                         
-           - containerPort: 9601             
-             name: taskd-port 
-        ```
+    在任务YAML中新增以下字段，开启弹性训练，并修改容器端口，在所有的Pod下增加TaskD通信使用的端口9601。
 
-    2.  在任务YAML中新增以下加粗字段。
-
-        ```
+      ```
         ...  
            labels:  
              ...  
@@ -6933,6 +6942,10 @@ ports:
                         ...
                         bash scripts/train_start.sh /job/code /job/output pretrain_gpt.py \
                           ...
+                    ports:                          
+                      - containerPort: 9601              
+                        name: taskd-port
+        ...
             Worker:
               template:
                 spec:
@@ -6946,8 +6959,11 @@ ports:
                         ...
                         bash scripts/train_start.sh /job/code /job/output pretrain_gpt.py \
                           ...
+                    ports:                          
+                      - containerPort: 9601              
+                        name: taskd-port
         ...
-        ```
+      ```
 
 3.  修改训练框架代码。
 
@@ -8989,7 +9005,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 <p id="zh-cn_topic_0000002039339945_p1861353651"><a name="zh-cn_topic_0000002039339945_p1861353651"></a><a name="zh-cn_topic_0000002039339945_p1861353651"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p166105316515"><a name="zh-cn_topic_0000002039339945_p166105316515"></a><a name="zh-cn_topic_0000002039339945_p166105316515"></a>混合精度训练是在训练时混合使用单精度（float32）与半精度(float16)数据类型，将两者结合在一起，并使用相同的超参数实现了与float32几乎相同的精度。</p>
-<p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"></a>x表示10或11，当前可支持<span id="zh-cn_topic_0000002039339945_ph17691173812277"><a name="zh-cn_topic_0000002039339945_ph17691173812277"></a><a name="zh-cn_topic_0000002039339945_ph17691173812277"></a>Python</span> 3.10和<span id="zh-cn_topic_0000002039339945_ph1369143872716"><a name="zh-cn_topic_0000002039339945_ph1369143872716"></a><a name="zh-cn_topic_0000002039339945_ph1369143872716"></a>Python</span>3.11。</p>
+<p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"></a>软件包中的cp3x表示Python版本号，例如x为10表示Python 3.10，具体Python版本以MindSpeed-LLM版本说明为准。</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a>请参见<span id="zh-cn_topic_0000002039339945_ph156792413596"><a name="zh-cn_topic_0000002039339945_ph156792413596"></a><a name="zh-cn_topic_0000002039339945_ph156792413596"></a>《Ascend Extension for PyTorch 软件安装指南》中的“安装APEX模块”章节</span>，根据实际情况编译APEX软件包。</p>
 <p id="zh-cn_topic_0000002039339945_p1761531257"><a name="zh-cn_topic_0000002039339945_p1761531257"></a><a name="zh-cn_topic_0000002039339945_p1761531257"></a></p>
@@ -9001,7 +9017,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 <p id="zh-cn_topic_0000002039339945_p186653757"><a name="zh-cn_topic_0000002039339945_p186653757"></a><a name="zh-cn_topic_0000002039339945_p186653757"></a>MindSpeed-LLM依赖</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p15720535517"><a name="zh-cn_topic_0000002039339945_p15720535517"></a><a name="zh-cn_topic_0000002039339945_p15720535517"></a>Ascend Extension for PyTorch插件是基于昇腾的深度学习适配框架，使昇腾NPU可以支持PyTorch框架，为PyTorch框架的使用者提供昇腾AI处理器的超强算力。</p>
-<p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p849562217019"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p849562217019"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p849562217019"></a>x表示10或11，当前可支持<span id="zh-cn_topic_0000002039339945_ph1572718405287"><a name="zh-cn_topic_0000002039339945_ph1572718405287"></a><a name="zh-cn_topic_0000002039339945_ph1572718405287"></a>Python</span> 3.10和<span id="zh-cn_topic_0000002039339945_ph1727184012819"><a name="zh-cn_topic_0000002039339945_ph1727184012819"></a><a name="zh-cn_topic_0000002039339945_ph1727184012819"></a>Python</span>3.11。</p>
+<p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p849562217019"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p849562217019"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p849562217019"></a>软件包中的cp3x表示Python版本号，例如x为10表示Python 3.10，具体Python版本以MindSpeed-LLM版本说明为准。</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p10718533510"><a name="zh-cn_topic_0000002039339945_p10718533510"></a><a name="zh-cn_topic_0000002039339945_p10718533510"></a><a href="https://www.hiascend.com/document/detail/zh/Pytorch/720/configandinstg/instg/insg_0004.html" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 <div class="note" id="zh-cn_topic_0000002039339945_note1165115165020"><a name="zh-cn_topic_0000002039339945_note1165115165020"></a><a name="zh-cn_topic_0000002039339945_note1165115165020"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002039339945_p167047813263"><a name="zh-cn_topic_0000002039339945_p167047813263"></a><a name="zh-cn_topic_0000002039339945_p167047813263"></a>如果使用MindSpeed-LLM代码仓上的<span id="zh-cn_topic_0000002039339945_ph1987542822613"><a name="zh-cn_topic_0000002039339945_ph1987542822613"></a><a name="zh-cn_topic_0000002039339945_ph1987542822613"></a>PyTorch</span>模型，需要使用<span id="zh-cn_topic_0000002039339945_ph1412723132619"><a name="zh-cn_topic_0000002039339945_ph1412723132619"></a><a name="zh-cn_topic_0000002039339945_ph1412723132619"></a>Ascend Extension for PyTorch</span> 2.6.0及以上版本。</p>
@@ -9013,7 +9029,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 <td class="cellrowborder" valign="top" width="25.45%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002039339945_p871953357"><a name="zh-cn_topic_0000002039339945_p871953357"></a><a name="zh-cn_topic_0000002039339945_p871953357"></a>是</p>
 <p id="zh-cn_topic_0000002039339945_p17715531453"><a name="zh-cn_topic_0000002039339945_p17715531453"></a><a name="zh-cn_topic_0000002039339945_p17715531453"></a>MindSpeed-LLM依赖</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p11461347141013"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p11461347141013"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p11461347141013"></a>官方<span id="zh-cn_topic_0000002039339945_ph19355165113512"><a name="zh-cn_topic_0000002039339945_ph19355165113512"></a><a name="zh-cn_topic_0000002039339945_ph19355165113512"></a>PyTorch</span>包。x表示10或11，当前可支持<span id="zh-cn_topic_0000002039339945_ph184492055182714"><a name="zh-cn_topic_0000002039339945_ph184492055182714"></a><a name="zh-cn_topic_0000002039339945_ph184492055182714"></a>Python</span>3.10和<span id="zh-cn_topic_0000002039339945_ph94491255112719"><a name="zh-cn_topic_0000002039339945_ph94491255112719"></a><a name="zh-cn_topic_0000002039339945_ph94491255112719"></a>Python</span>3.11。</p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p11461347141013"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p11461347141013"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p11461347141013"></a>官方<span id="zh-cn_topic_0000002039339945_ph19355165113512"><a name="zh-cn_topic_0000002039339945_ph19355165113512"></a><a name="zh-cn_topic_0000002039339945_ph19355165113512"></a>PyTorch</span>包。</p><p>软件包中的cp3x表示Python版本号，例如x为10表示Python 3.10，具体Python版本以MindSpeed-LLM版本说明为准。</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p99745421447"><a name="zh-cn_topic_0000002039339945_p99745421447"></a><a name="zh-cn_topic_0000002039339945_p99745421447"></a><a href="https://download.pytorch.org/whl/torch/" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 <p id="zh-cn_topic_0000002039339945_p483943610920"><a name="zh-cn_topic_0000002039339945_p483943610920"></a><a name="zh-cn_topic_0000002039339945_p483943610920"></a></p>
@@ -9328,7 +9344,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002003180012_p73901313101718"><a name="zh-cn_topic_0000002003180012_p73901313101718"></a><a name="zh-cn_topic_0000002003180012_p73901313101718"></a>是</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002003180012_p1839181315178"><a name="zh-cn_topic_0000002003180012_p1839181315178"></a><a name="zh-cn_topic_0000002003180012_p1839181315178"></a>MindSpore whl包<span id="ph441575419329"><a name="ph441575419329"></a><a name="ph441575419329"></a>。</span></p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002003180012_p1839181315178"><a name="zh-cn_topic_0000002003180012_p1839181315178"></a><a name="zh-cn_topic_0000002003180012_p1839181315178"></a>MindSpore whl包<span id="ph441575419329"><a name="ph441575419329"></a><a name="ph441575419329"></a>。</span></p><p>软件包中的cp3x表示Python版本号，例如x为10表示Python 3.10，请根据实际情况选择对应软件包。</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002003180012_p6391181310177"><a name="zh-cn_topic_0000002003180012_p6391181310177"></a><a name="zh-cn_topic_0000002003180012_p6391181310177"></a><a href="https://www.mindspore.cn/install/" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
@@ -10047,9 +10063,13 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 
             ```
             ...
-            ports:                         
-               - containerPort: 9601             
-                 name: taskd-port 
+                    spec:
+            ...
+                      containers:
+            ...
+                        ports:                          
+                         - containerPort: 9601              
+                           name: taskd-port 
             ...
             ```
 
@@ -10157,9 +10177,13 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 
             ```
             ...
-            ports:                         
-               - containerPort: 9601             
-                 name: taskd-port 
+                    spec:
+            ...
+                      containers:
+            ...
+                        ports:                          
+                         - containerPort: 9601              
+                           name: taskd-port 
             ...
             ```
 

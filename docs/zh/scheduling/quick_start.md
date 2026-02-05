@@ -18,8 +18,8 @@
 
 -   所有节点已安装Kubernetes，支持的版本为1.17.x\~1.34.x。（如需安装Volcano组件，请安装1.19.x及以上版本的Kubernetes，具体Kubernetes版本请参见[Volcano官网中对应的Kubernetes版本](https://github.com/volcano-sh/volcano/blob/master/README.md#kubernetes-compatibility)）。如需获取软件包，请参见[Kubernetes社区](https://kubernetes.io/zh-cn/docs/setup/)。
 -   所有节点已安装Docker，支持的版本为18.09.x\~28.5.1。如需获取软件包，请参见[Docker社区或官网](https://docs.docker.com/engine/install/)。
--   所有节点已经安装配套的固件与驱动。Atlas 800T A2 训练服务器固件和驱动安装步骤请参见《[Atlas A2 中心推理和训练硬件 24.1.0 NPU驱动和固件安装指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100438838)》。
--   检查主机上[npu-smi](https://support.huawei.com/enterprise/zh/doc/EDOC1100388864/728b12f7?idPath=23710424|251366513|22892968|252764743)以及[hccn\_tool工具](https://support.huawei.com/enterprise/zh/doc/EDOC1100422625/2a488582?idPath=23710424|251366513|254884019|261408772|261457531)是否可正常运行。
+-   所有节点已经安装配套的固件与驱动。Atlas 800T A2 训练服务器固件和驱动安装步骤请参见《[Atlas A2 中心推理和训练硬件 25.5.0 NPU驱动和固件安装指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100540370)》。
+-   检查主机上[npu-smi](https://support.huawei.com/enterprise/zh/doc/EDOC1100540371/426cffd9?idPath=23710424|251366513|22892968|252309113|254184887)以及[hccn\_tool工具](https://support.huawei.com/enterprise/zh/doc/EDOC1100540101/426cffd9?idPath=23710424|251366513|254884019|261408772|261457531)是否可正常运行。
 
     >[!NOTE] 说明 
     >-   参见[《Ascend Training Solution 版本配套表》](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-training-solution-pid-258915853/software)，确认固件与驱动的版本与集群调度组件是否配套。

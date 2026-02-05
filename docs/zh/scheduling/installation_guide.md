@@ -3032,7 +3032,7 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
 |-useAscendDocker|bool|true|默认为true，容器引擎是否使用Ascend Docker Runtime。开启K8s的CPU绑核功能时，需要卸载Ascend Docker Runtime并重启容器引擎。取值说明如下：<ul><li>true：使用Ascend Docker Runtime。</li><li>false：不使用Ascend Docker Runtime。</li></ul><span> 说明： </span><p>MindCluster 5.0.RC1及以上版本只支持自动获取运行模式，不接受指定。</p>|
 |-use310PMixedInsert|bool|false|是否使用混插模式。<ul><li>true：使用混插模式。</li><li>false：不使用混插模式。</li></ul><span> 说明： </span><ul><li>仅支持服务器混插Atlas 300I Pro 推理卡、Atlas 300V 视频解析卡、Atlas 300V Pro 视频解析卡。</li><li>服务器混插模式下不支持Volcano调度模式。</li><li>服务器混插模式不支持虚拟化实例。</li><li>服务器混插模式不支持故障重调度场景。</li><li>服务器混插模式不支持Ascend Docker Runtime。</li><li>非混插模式下，上报给K8s资源名称不变。<ul><li>非混插模式上报的资源名称格式为huawei.com/Ascend310P。</li><li>混插模式上报的资源名称格式为：huawei.com/Ascend310P-V、huawei.com/Ascend310P-VPro和huawei.com/Ascend310P-IPro。</li></ul></li></ul>|
 |-volcanoType|bool|false|是否使用Volcano进行调度，当前已支持Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas 推理系列产品和推理服务器（插Atlas 300I 推理卡）芯片。<ul><li>true：使用Volcano。</li><li>false：不使用Volcano。</li></ul>|
-|-presetVirtualDevice|bool|true|虚拟化功能开关。<ul><li>设置为true时，表示使用静态虚拟化，目前支持Atlas 训练系列产品、Atlas 推理系列产品。</li><li>设置为false时，表示使用动态虚拟化。目前只支持Atlas 推理系列产品的动态虚拟化，需要同步开启Volcano，即设置-volcanoType参数为true。</li></ul>|
+|-presetVirtualDevice|bool|true|虚拟化功能开关。<ul><li>设置为true时，表示使用静态虚拟化。</li><li>设置为false时，表示使用动态虚拟化。需要同步开启Volcano，即设置-volcanoType参数为true。</li></ul>|
 |-version|bool|false|是否查看当前Ascend Device Plugin的版本号。<ul><li>true：查询。</li><li>false：不查询。</li></ul>|
 |-listWatchPeriod|int|5|<p>设置健康状态检查周期，取值范围为[3,1800]，单位为秒。</p><span> 说明： </span><p>每个周期内会进行如下检查，并将检查结果写入ConfigMap中。</p><ul><li>如果设备信息没有变化且距离上次更新ConfigMap未超过5min，则不会更新ConfigMap。</li><li>如果距离上次更新ConfigMap超过5min，则无论设备信息是否发生变化，都会更新ConfigMap。</li></ul>|
 |-autoStowing|bool|true|是否自动纳管已修复设备，volcanoType为true时生效。<ul><li>true：自动纳管。</li><li>false：不会自动纳管。</li></ul><span> 说明： </span><p>设备故障后，会自动从K8s里面隔离。如果设备恢复正常，默认会自动加入K8s集群资源池。如果设备不稳定，可以设置为false，此时需要手动纳管。</p><ul><li>用户可以使用以下命令，将健康状态由unhealthy恢复为healthy的芯片重新放入资源池。<p>kubectl label nodes *node_name* huawei.com/Ascend910-Recover-</p></li><li>用户可以使用以下命令，将参数面网络健康状态由unhealthy恢复为healthy的芯片重新放入资源池。<p>kubectl label nodes *node_name* huawei.com/Ascend910-NetworkRecover-</p></li></ul>|
@@ -6685,9 +6685,13 @@ Elastic Agent组件将会在后续版本日落，本章节提供使用TaskD替�
 
         ```
         ...
-        ports:                          
-           - containerPort: 9601              
-             name: taskd-port
+                spec:
+        ...
+                   containers:
+        ...
+                     ports:                          
+                       - containerPort: 9601              
+                         name: taskd-port
         ...
         ```
 

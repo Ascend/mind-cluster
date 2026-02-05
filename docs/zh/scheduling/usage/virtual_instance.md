@@ -97,30 +97,43 @@
 </td>
 </tr>
 <tr id="row32781215162311"><td class="cellrowborder" valign="top" width="31.78%" headers="mcps1.2.5.1.1 "><p id="p162786153239"><a name="p162786153239"></a><a name="p162786153239"></a><span id="ph151431757142112"><a name="ph151431757142112"></a><a name="ph151431757142112"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 训练系列产品</term></span></p>
+<ul><li><span>Atlas 800T A2 训练服务器</span></li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="33.339999999999996%" headers="mcps1.2.5.1.2 "><p id="p366920193216"><a name="p366920193216"></a><a name="p366920193216"></a>-</p>
+<td class="cellrowborder" valign="top" width="33.339999999999996%" headers="mcps1.2.5.1.2 "><p id="p366920193216"><a name="p366920193216"></a><a name="p366920193216"></a>在物理机划分vNPU，挂载vNPU到容器</p>
 </td>
-<td class="cellrowborder" valign="top" width="21.87%" headers="mcps1.2.5.1.3 "><p id="p42788151236"><a name="p42788151236"></a><a name="p42788151236"></a>-</p>
+<td class="cellrowborder" valign="top" width="21.87%" headers="mcps1.2.5.1.3 "><p id="p42788151236"><a name="p42788151236"></a><a name="p42788151236"></a>静态虚拟化</p>
 </td>
-<td class="cellrowborder" valign="top" width="13.01%" headers="mcps1.2.5.1.4 "><p id="p1154214466369"><a name="p1154214466369"></a><a name="p1154214466369"></a>否</p>
+<td class="cellrowborder" valign="top" width="13.01%" headers="mcps1.2.5.1.4 "><p id="p1154214466369"><a name="p1154214466369"></a><a name="p1154214466369"></a>是</p>
 </td>
 </tr>
 <tr id="row11243152011236"><td class="cellrowborder" valign="top" width="31.78%" headers="mcps1.2.5.1.1 "><p id="p18243192015230"><a name="p18243192015230"></a><a name="p18243192015230"></a><span id="ph18411121792018"><a name="ph18411121792018"></a><a name="ph18411121792018"></a><term id="zh-cn_topic_0000001519959665_term26764913715"><a name="zh-cn_topic_0000001519959665_term26764913715"></a><a name="zh-cn_topic_0000001519959665_term26764913715"></a>Atlas A3 训练系列产品</term></span></p>
+<ul><li><span>Atlas 800T A3 超节点服务器</span></li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="33.339999999999996%" headers="mcps1.2.5.1.2 "><p id="p82441020122317"><a name="p82441020122317"></a><a name="p82441020122317"></a>-</p>
+<td class="cellrowborder" valign="top" width="33.339999999999996%" headers="mcps1.2.5.1.2 "><p id="p82441020122317"><a name="p82441020122317"></a><a name="p82441020122317"></a>在物理机划分vNPU，挂载vNPU到容器</p>
 </td>
-<td class="cellrowborder" valign="top" width="21.87%" headers="mcps1.2.5.1.3 "><p id="p1724417204233"><a name="p1724417204233"></a><a name="p1724417204233"></a>-</p>
+<td class="cellrowborder" valign="top" width="21.87%" headers="mcps1.2.5.1.3 "><p id="p1724417204233"><a name="p1724417204233"></a><a name="p1724417204233"></a>静态虚拟化</p>
 </td>
-<td class="cellrowborder" valign="top" width="13.01%" headers="mcps1.2.5.1.4 "><p id="p2244122042319"><a name="p2244122042319"></a><a name="p2244122042319"></a>否</p>
+<td class="cellrowborder" valign="top" width="13.01%" headers="mcps1.2.5.1.4 "><p id="p2244122042319"><a name="p2244122042319"></a><a name="p2244122042319"></a>是</p>
 </td>
 </tr>
 <tr id="row18359185713363"><td class="cellrowborder" valign="top" width="31.78%" headers="mcps1.2.5.1.1 "><p id="p18176151918"><a name="p18176151918"></a><a name="p18176151918"></a><span id="ph996833614580"><a name="ph996833614580"></a><a name="ph996833614580"></a><term id="zh-cn_topic_0000001094307702_term99602034117"><a name="zh-cn_topic_0000001094307702_term99602034117"></a><a name="zh-cn_topic_0000001094307702_term99602034117"></a>Atlas A2 推理系列产品</term></span></p>
+<ul><li><span>Atlas 800I A2 推理服务器</span></li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="33.339999999999996%" headers="mcps1.2.5.1.2 "><p id="p1035910576364"><a name="p1035910576364"></a><a name="p1035910576364"></a>-</p>
+<td class="cellrowborder" valign="top" width="33.339999999999996%" headers="mcps1.2.5.1.2 "><p id="p1035910576364"><a name="p1035910576364"></a><a name="p1035910576364"></a>在物理机划分vNPU，挂载vNPU到容器</p>
 </td>
-<td class="cellrowborder" valign="top" width="21.87%" headers="mcps1.2.5.1.3 "><p id="p1535975773615"><a name="p1535975773615"></a><a name="p1535975773615"></a>-</p>
+<td class="cellrowborder" valign="top" width="21.87%" headers="mcps1.2.5.1.3 "><p id="p1535975773615"><a name="p1535975773615"></a><a name="p1535975773615"></a>静态虚拟化</p>
 </td>
-<td class="cellrowborder" valign="top" width="13.01%" headers="mcps1.2.5.1.4 "><p id="p143597578361"><a name="p143597578361"></a><a name="p143597578361"></a>否</p>
+<td class="cellrowborder" valign="top" width="13.01%" headers="mcps1.2.5.1.4 "><p id="p143597578361"><a name="p143597578361"></a><a name="p143597578361"></a>是</p>
+</td>
+</tr>
+<tr><td><p><span><term>Atlas A3 推理系列产品</term></span></p>
+<ul><li><span>Atlas 800I A3 超节点服务器</span></li></ul>
+</td>
+<td><p>在物理机划分vNPU，挂载vNPU到容器</p>
+</td>
+<td><p>静态虚拟化</p>
+</td>
+<td><p>是</p>
 </td>
 </tr>
 <tr id="row188952007382"><td class="cellrowborder" valign="top" width="31.78%" headers="mcps1.2.5.1.1 "><p id="p1746332773811"><a name="p1746332773811"></a><a name="p1746332773811"></a><span id="ph97104582114"><a name="ph97104582114"></a><a name="ph97104582114"></a><term id="zh-cn_topic_0000001519959665_term169221139190"><a name="zh-cn_topic_0000001519959665_term169221139190"></a><a name="zh-cn_topic_0000001519959665_term169221139190"></a>Atlas 200/300/500 推理产品</term></span></p>
@@ -170,98 +183,20 @@
 
 **虚拟化模板<a name="zh-cn_topic_0000002038226813_section13183017526"></a>**
 
-当前各处理器及型号包含的硬件资源如[表1](#zh-cn_topic_0000002038226813_table73599224238)所示。
+当前各产品型号支持的虚拟化实例模板如[表2](#zh-cn_topic_0000002038226813_table140421911260)所示。
 
-**表 1**  产品规格
+**表 2**  虚拟化实例模板
 
-<a name="zh-cn_topic_0000002038226813_table73599224238"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002038226813_row236016224231"><th class="cellrowborder" valign="top" width="19.000000000000007%" id="mcps1.2.11.1.1"><p id="zh-cn_topic_0000002038226813_p19360102282316"><a name="zh-cn_topic_0000002038226813_p19360102282316"></a><a name="zh-cn_topic_0000002038226813_p19360102282316"></a>处理器型号</p>
-</th>
-<th class="cellrowborder" valign="top" width="9.000000000000002%" id="mcps1.2.11.1.2"><p id="zh-cn_topic_0000002038226813_p5984105517236"><a name="zh-cn_topic_0000002038226813_p5984105517236"></a><a name="zh-cn_topic_0000002038226813_p5984105517236"></a>AI Core核数</p>
-</th>
-<th class="cellrowborder" valign="top" width="9.000000000000002%" id="mcps1.2.11.1.3"><p id="zh-cn_topic_0000002038226813_p139281363243"><a name="zh-cn_topic_0000002038226813_p139281363243"></a><a name="zh-cn_topic_0000002038226813_p139281363243"></a>内存</p>
-</th>
-<th class="cellrowborder" valign="top" width="9.000000000000002%" id="mcps1.2.11.1.4"><p id="zh-cn_topic_0000002038226813_p20360102292318"><a name="zh-cn_topic_0000002038226813_p20360102292318"></a><a name="zh-cn_topic_0000002038226813_p20360102292318"></a>AI CPU</p>
-</th>
-<th class="cellrowborder" valign="top" width="9.000000000000002%" id="mcps1.2.11.1.5"><p id="zh-cn_topic_0000002038226813_p1636032222317"><a name="zh-cn_topic_0000002038226813_p1636032222317"></a><a name="zh-cn_topic_0000002038226813_p1636032222317"></a>VPC总核数</p>
-</th>
-<th class="cellrowborder" valign="top" width="8.99%" id="mcps1.2.11.1.6"><p id="zh-cn_topic_0000002038226813_p14360142220233"><a name="zh-cn_topic_0000002038226813_p14360142220233"></a><a name="zh-cn_topic_0000002038226813_p14360142220233"></a>VDEC总核数</p>
-</th>
-<th class="cellrowborder" valign="top" width="9.010000000000002%" id="mcps1.2.11.1.7"><p id="zh-cn_topic_0000002038226813_p103601222132313"><a name="zh-cn_topic_0000002038226813_p103601222132313"></a><a name="zh-cn_topic_0000002038226813_p103601222132313"></a>JPEGD总核数</p>
-</th>
-<th class="cellrowborder" valign="top" width="9.000000000000002%" id="mcps1.2.11.1.8"><p id="zh-cn_topic_0000002038226813_p12360112214236"><a name="zh-cn_topic_0000002038226813_p12360112214236"></a><a name="zh-cn_topic_0000002038226813_p12360112214236"></a>PNGD总核数</p>
-</th>
-<th class="cellrowborder" valign="top" width="9.000000000000002%" id="mcps1.2.11.1.9"><p id="zh-cn_topic_0000002038226813_p193601322142310"><a name="zh-cn_topic_0000002038226813_p193601322142310"></a><a name="zh-cn_topic_0000002038226813_p193601322142310"></a>VENC总核数</p>
-</th>
-<th class="cellrowborder" valign="top" width="9.000000000000002%" id="mcps1.2.11.1.10"><p id="zh-cn_topic_0000002038226813_p20360102217230"><a name="zh-cn_topic_0000002038226813_p20360102217230"></a><a name="zh-cn_topic_0000002038226813_p20360102217230"></a>JPEGE总核数</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002038226813_row362310284565"><td class="cellrowborder" valign="top" width="19.000000000000007%" headers="mcps1.2.11.1.1 "><p id="zh-cn_topic_0000002038226813_p996185211470"><a name="zh-cn_topic_0000002038226813_p996185211470"></a><a name="zh-cn_topic_0000002038226813_p996185211470"></a><span id="zh-cn_topic_0000002038226813_ph19456121122413"><a name="zh-cn_topic_0000002038226813_ph19456121122413"></a><a name="zh-cn_topic_0000002038226813_ph19456121122413"></a>Atlas 训练系列产品</span>（30个AI Core）</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.2 "><p id="zh-cn_topic_0000002038226813_p39614520478"><a name="zh-cn_topic_0000002038226813_p39614520478"></a><a name="zh-cn_topic_0000002038226813_p39614520478"></a>30</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.3 "><p id="zh-cn_topic_0000002038226813_p12982141175918"><a name="zh-cn_topic_0000002038226813_p12982141175918"></a><a name="zh-cn_topic_0000002038226813_p12982141175918"></a>32G</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.4 "><p id="zh-cn_topic_0000002038226813_p159828116596"><a name="zh-cn_topic_0000002038226813_p159828116596"></a><a name="zh-cn_topic_0000002038226813_p159828116596"></a>14</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.5 "><p id="zh-cn_topic_0000002038226813_p9982111105917"><a name="zh-cn_topic_0000002038226813_p9982111105917"></a><a name="zh-cn_topic_0000002038226813_p9982111105917"></a>16</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.99%" headers="mcps1.2.11.1.6 "><p id="zh-cn_topic_0000002038226813_p1398291113591"><a name="zh-cn_topic_0000002038226813_p1398291113591"></a><a name="zh-cn_topic_0000002038226813_p1398291113591"></a>16</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.010000000000002%" headers="mcps1.2.11.1.7 "><p id="zh-cn_topic_0000002038226813_p179831311165916"><a name="zh-cn_topic_0000002038226813_p179831311165916"></a><a name="zh-cn_topic_0000002038226813_p179831311165916"></a>16</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.8 "><p id="zh-cn_topic_0000002038226813_p0983111135918"><a name="zh-cn_topic_0000002038226813_p0983111135918"></a><a name="zh-cn_topic_0000002038226813_p0983111135918"></a>24</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.9 "><p id="zh-cn_topic_0000002038226813_p179831011185919"><a name="zh-cn_topic_0000002038226813_p179831011185919"></a><a name="zh-cn_topic_0000002038226813_p179831011185919"></a>NA</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.10 "><p id="zh-cn_topic_0000002038226813_p12983201195918"><a name="zh-cn_topic_0000002038226813_p12983201195918"></a><a name="zh-cn_topic_0000002038226813_p12983201195918"></a>8</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002038226813_row9360102215232"><td class="cellrowborder" valign="top" width="19.000000000000007%" headers="mcps1.2.11.1.1 "><p id="zh-cn_topic_0000002038226813_p14162191585110"><a name="zh-cn_topic_0000002038226813_p14162191585110"></a><a name="zh-cn_topic_0000002038226813_p14162191585110"></a><span id="zh-cn_topic_0000002038226813_ph327965117217"><a name="zh-cn_topic_0000002038226813_ph327965117217"></a><a name="zh-cn_topic_0000002038226813_ph327965117217"></a>Atlas 训练系列产品</span>（32个AI Core）</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.2 "><p id="zh-cn_topic_0000002038226813_p23601222142312"><a name="zh-cn_topic_0000002038226813_p23601222142312"></a><a name="zh-cn_topic_0000002038226813_p23601222142312"></a>32</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.3 "><p id="zh-cn_topic_0000002038226813_p163601922172313"><a name="zh-cn_topic_0000002038226813_p163601922172313"></a><a name="zh-cn_topic_0000002038226813_p163601922172313"></a>32G</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.4 "><p id="zh-cn_topic_0000002038226813_p17361022142311"><a name="zh-cn_topic_0000002038226813_p17361022142311"></a><a name="zh-cn_topic_0000002038226813_p17361022142311"></a>14</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.5 "><p id="zh-cn_topic_0000002038226813_p431114795610"><a name="zh-cn_topic_0000002038226813_p431114795610"></a><a name="zh-cn_topic_0000002038226813_p431114795610"></a>16</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.99%" headers="mcps1.2.11.1.6 "><p id="zh-cn_topic_0000002038226813_p3311154714563"><a name="zh-cn_topic_0000002038226813_p3311154714563"></a><a name="zh-cn_topic_0000002038226813_p3311154714563"></a>16</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.010000000000002%" headers="mcps1.2.11.1.7 "><p id="zh-cn_topic_0000002038226813_p5311547185615"><a name="zh-cn_topic_0000002038226813_p5311547185615"></a><a name="zh-cn_topic_0000002038226813_p5311547185615"></a>16</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.8 "><p id="zh-cn_topic_0000002038226813_p1631184785614"><a name="zh-cn_topic_0000002038226813_p1631184785614"></a><a name="zh-cn_topic_0000002038226813_p1631184785614"></a>24</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.9 "><p id="zh-cn_topic_0000002038226813_p431164710566"><a name="zh-cn_topic_0000002038226813_p431164710566"></a><a name="zh-cn_topic_0000002038226813_p431164710566"></a>NA</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.10 "><p id="zh-cn_topic_0000002038226813_p93114474569"><a name="zh-cn_topic_0000002038226813_p93114474569"></a><a name="zh-cn_topic_0000002038226813_p93114474569"></a>8</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002038226813_row139061813161319"><td class="cellrowborder" valign="top" width="19.000000000000007%" headers="mcps1.2.11.1.1 "><p id="zh-cn_topic_0000002038226813_p10973233175616"><a name="zh-cn_topic_0000002038226813_p10973233175616"></a><a name="zh-cn_topic_0000002038226813_p10973233175616"></a><span id="zh-cn_topic_0000002038226813_ph1623844892113"><a name="zh-cn_topic_0000002038226813_ph1623844892113"></a><a name="zh-cn_topic_0000002038226813_ph1623844892113"></a>Atlas 推理系列产品</span>（8个AI Core）</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.2 "><p id="zh-cn_topic_0000002038226813_p897343317566"><a name="zh-cn_topic_0000002038226813_p897343317566"></a><a name="zh-cn_topic_0000002038226813_p897343317566"></a>8</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.3 "><p id="zh-cn_topic_0000002038226813_p17973163345614"><a name="zh-cn_topic_0000002038226813_p17973163345614"></a><a name="zh-cn_topic_0000002038226813_p17973163345614"></a>24G</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.4 "><p id="zh-cn_topic_0000002038226813_p189732033175610"><a name="zh-cn_topic_0000002038226813_p189732033175610"></a><a name="zh-cn_topic_0000002038226813_p189732033175610"></a>7</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.5 "><p id="zh-cn_topic_0000002038226813_p17973123319563"><a name="zh-cn_topic_0000002038226813_p17973123319563"></a><a name="zh-cn_topic_0000002038226813_p17973123319563"></a>12</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.99%" headers="mcps1.2.11.1.6 "><p id="zh-cn_topic_0000002038226813_p1297319334565"><a name="zh-cn_topic_0000002038226813_p1297319334565"></a><a name="zh-cn_topic_0000002038226813_p1297319334565"></a>12</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.010000000000002%" headers="mcps1.2.11.1.7 "><p id="zh-cn_topic_0000002038226813_p1597463315567"><a name="zh-cn_topic_0000002038226813_p1597463315567"></a><a name="zh-cn_topic_0000002038226813_p1597463315567"></a>16</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.8 "><p id="zh-cn_topic_0000002038226813_p99745330561"><a name="zh-cn_topic_0000002038226813_p99745330561"></a><a name="zh-cn_topic_0000002038226813_p99745330561"></a>NA</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.9 "><p id="zh-cn_topic_0000002038226813_p897483395613"><a name="zh-cn_topic_0000002038226813_p897483395613"></a><a name="zh-cn_topic_0000002038226813_p897483395613"></a>3</p>
-</td>
-<td class="cellrowborder" valign="top" width="9.000000000000002%" headers="mcps1.2.11.1.10 "><p id="zh-cn_topic_0000002038226813_p49749338561"><a name="zh-cn_topic_0000002038226813_p49749338561"></a><a name="zh-cn_topic_0000002038226813_p49749338561"></a>8</p>
-</td>
-</tr>
-</tbody>
-</table>
+<a name="zh-cn_topic_0000002038226813_table140421911260"></a>
+|产品型号|虚拟化实例模板|说明|
+|--|--|--|
+|Atlas 训练系列产品（30或32个AI Core）|虚拟化实例模板包括：vir02、vir04、vir08、vir16。|<ul><li>vir后面的数字表示AI Core数量。</li><li>c前面的数字表示AI CPU数量。</li><li>dvpp表示虚拟化时包含所有数字视觉预处理模块（即VPC，VDEC，JPEGD，PNGD，VENC，JPEGE）。</li><li>ndvpp表示虚拟化时没有数字视觉预处理硬件资源。</li></ul>|
+|Atlas 推理系列产品（8个AI Core）|虚拟化实例模板包括：vir01、vir02、vir04、vir02_1c、vir04_3c、vir04_3c_ndvpp、vir04_4c_dvpp。|<ul><li>vir后面的数字表示AI Core数量。</li><li>c前面的数字表示AI CPU数量。</li><li>dvpp表示虚拟化时包含所有数字视觉预处理模块（即VPC，VDEC，JPEGD，PNGD，VENC，JPEGE）。</li><li>ndvpp表示虚拟化时没有数字视觉预处理硬件资源。</li></ul>|
+|Atlas A2 训练系列产品（20或24或25个AI Core）|虚拟化实例模板包括：vir05_1c_16g、vir10_3c_32g、vir06_1c_16g、vir12_3c_32g。|<ul><li>vir后面的数字表示AI Core数量。</li><li>c前面的数字表示AI CPU数量。</li><li>g前面的数字表示内存数量。</li></ul>|
+|Atlas A2 推理系列产品（20个AI Core）|虚拟化实例模板包括：vir05_1c_8g、vir10_3c_16g_nm、vir10_4c_16g_m、vir10_3c_16g、vir10_3c_32g、vir05_1c_16g。|<ul><li>vir后面的数字表示AI Core数量。</li><li>c前面的数字表示AI CPU数量。</li><li>m同dvpp表示虚拟化时包含所有数字视觉预处理模块（即VPC，VDEC，JPEGD，PNGD，VENC，JPEGE）。</li><li>nm同ndvpp表示虚拟化时没有数字视觉预处理硬件资源。</li><li>g前面的数字表示内存数量。</li></ul>|
+|Atlas A3 训练系列产品（48个AI Core）|虚拟化实例模板包括：vir06_1c_16g、vir12_3c_32g。|<ul><li>vir后面的数字表示AI Core数量。</li><li>c前面的数字表示AI CPU数量。</li><li>g前面的数字表示内存数量。</li></ul>|
+|Atlas A3 推理系列产品（40个AI Core）|虚拟化实例模板包括：vir05_1c_16g、vir10_3c_32g。|<ul><li>vir后面的数字表示AI Core数量。</li><li>c前面的数字表示AI CPU数量。</li><li>g前面的数字表示内存数量。</li></ul>|
+|注：具体服务器支持的模板可通过**dmidecode -s system-product-name**命令查询。|
 
 >[!NOTE] 说明 
 >昇腾AI处理器包含AI Core、AI CPU、DVPP、内存等硬件资源，主要用途如下：
@@ -276,317 +211,6 @@
 >    -   VENC：视频编码器，提供对特定格式的视频进行编码的能力。
 >    -   JPEGE：JPEG图像编码器，提供对图像进行编码输出为JPEG格式的能力。
 
-**表 2**  虚拟化实例模板
-
-<a name="zh-cn_topic_0000002038226813_table140421911260"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002038226813_row44052019192619"><th class="cellrowborder" valign="top" width="20%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002038226813_p0405619192614"><a name="zh-cn_topic_0000002038226813_p0405619192614"></a><a name="zh-cn_topic_0000002038226813_p0405619192614"></a>产品型号</p>
-</th>
-<th class="cellrowborder" valign="top" width="40%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002038226813_p1405719182610"><a name="zh-cn_topic_0000002038226813_p1405719182610"></a><a name="zh-cn_topic_0000002038226813_p1405719182610"></a>虚拟化实例模板</p>
-</th>
-<th class="cellrowborder" valign="top" width="40%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002038226813_p656845723818"><a name="zh-cn_topic_0000002038226813_p656845723818"></a><a name="zh-cn_topic_0000002038226813_p656845723818"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row0927135124115"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002038226813_p440510194265"><a name="zh-cn_topic_0000002038226813_p440510194265"></a><a name="zh-cn_topic_0000002038226813_p440510194265"></a><span id="zh-cn_topic_0000002038226813_ph082215581414"><a name="zh-cn_topic_0000002038226813_ph082215581414"></a><a name="zh-cn_topic_0000002038226813_ph082215581414"></a>Atlas 训练系列产品</span>（30或32个AI Core）</p>
-</td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002038226813_p1911275193112"><a name="zh-cn_topic_0000002038226813_p1911275193112"></a><a name="zh-cn_topic_0000002038226813_p1911275193112"></a>虚拟化实例模板包括：vir02、vir04、vir08、vir16。</p>
-</td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.4.1.3 "><a name="ul1497517366417"></a><a name="ul1497517366417"></a><ul id="ul1497517366417"><li>vir后面的数字表示AI Core数量。</li><li>c前面的数字表示AI CPU数量。</li><li>dvpp表示虚拟化时包含所有数字视觉预处理模块（即VPC，VDEC，JPEGD，PNGD，VENC，JPEGE）。</li><li>ndvpp表示虚拟化时没有数字视觉预处理硬件资源。</li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002038226813_row8875174319569"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002038226813_p16751182616200"><a name="zh-cn_topic_0000002038226813_p16751182616200"></a><a name="zh-cn_topic_0000002038226813_p16751182616200"></a><span id="zh-cn_topic_0000002038226813_ph0201674116"><a name="zh-cn_topic_0000002038226813_ph0201674116"></a><a name="zh-cn_topic_0000002038226813_ph0201674116"></a>Atlas 推理系列产品</span>（8个AI Core）</p>
-</td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002038226813_p38351631163114"><a name="zh-cn_topic_0000002038226813_p38351631163114"></a><a name="zh-cn_topic_0000002038226813_p38351631163114"></a>虚拟化实例模板包括：vir01、vir02、vir04、vir02_1c、vir04_3c、vir04_3c_ndvpp、vir04_4c_dvpp。</p>
-</td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002038226813_ul13761191443910"></a><a name="zh-cn_topic_0000002038226813_ul13761191443910"></a><ul id="zh-cn_topic_0000002038226813_ul13761191443910"><li>vir后面的数字表示AI Core数量。</li><li>c前面的数字表示AI CPU数量。</li><li>dvpp表示虚拟化时包含所有数字视觉预处理模块（即VPC，VDEC，JPEGD，PNGD，VENC，JPEGE）。</li><li>ndvpp表示虚拟化时没有数字视觉预处理硬件资源。</li></ul>
-</td>
-</tr>
-</tbody>
-</table>
-
-**表 3**  各虚拟化实例模板对应的资源信息
-
-<a name="zh-cn_topic_0000002038226813_table11718174116410"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002038226813_row109681741134118"><th class="cellrowborder" valign="top" width="11.000000000000004%" id="mcps1.2.12.1.1"><p id="zh-cn_topic_0000002038226813_p19968104144113"><a name="zh-cn_topic_0000002038226813_p19968104144113"></a><a name="zh-cn_topic_0000002038226813_p19968104144113"></a>处理器型号</p>
-</th>
-<th class="cellrowborder" valign="top" width="11.000000000000004%" id="mcps1.2.12.1.2"><p id="zh-cn_topic_0000002038226813_p59688417412"><a name="zh-cn_topic_0000002038226813_p59688417412"></a><a name="zh-cn_topic_0000002038226813_p59688417412"></a>虚拟化实例模板</p>
-</th>
-<th class="cellrowborder" valign="top" width="11.000000000000004%" id="mcps1.2.12.1.3"><p id="zh-cn_topic_0000002038226813_p1796915413419"><a name="zh-cn_topic_0000002038226813_p1796915413419"></a><a name="zh-cn_topic_0000002038226813_p1796915413419"></a>AI Core核数</p>
-</th>
-<th class="cellrowborder" valign="top" width="11.000000000000004%" id="mcps1.2.12.1.4"><p id="zh-cn_topic_0000002038226813_p13969114164117"><a name="zh-cn_topic_0000002038226813_p13969114164117"></a><a name="zh-cn_topic_0000002038226813_p13969114164117"></a>内存</p>
-</th>
-<th class="cellrowborder" valign="top" width="8.000000000000002%" id="mcps1.2.12.1.5"><p id="zh-cn_topic_0000002038226813_p23332558528"><a name="zh-cn_topic_0000002038226813_p23332558528"></a><a name="zh-cn_topic_0000002038226813_p23332558528"></a>AI CPU</p>
-</th>
-<th class="cellrowborder" valign="top" width="7.990000000000001%" id="mcps1.2.12.1.6"><p id="zh-cn_topic_0000002038226813_p156933713614"><a name="zh-cn_topic_0000002038226813_p156933713614"></a><a name="zh-cn_topic_0000002038226813_p156933713614"></a>VPC</p>
-</th>
-<th class="cellrowborder" valign="top" width="8.010000000000002%" id="mcps1.2.12.1.7"><p id="zh-cn_topic_0000002038226813_p95693372615"><a name="zh-cn_topic_0000002038226813_p95693372615"></a><a name="zh-cn_topic_0000002038226813_p95693372615"></a>VDEC</p>
-</th>
-<th class="cellrowborder" valign="top" width="8.000000000000002%" id="mcps1.2.12.1.8"><p id="zh-cn_topic_0000002038226813_p1456916371067"><a name="zh-cn_topic_0000002038226813_p1456916371067"></a><a name="zh-cn_topic_0000002038226813_p1456916371067"></a>JPEGD</p>
-</th>
-<th class="cellrowborder" valign="top" width="8.000000000000002%" id="mcps1.2.12.1.9"><p id="zh-cn_topic_0000002038226813_p7569237168"><a name="zh-cn_topic_0000002038226813_p7569237168"></a><a name="zh-cn_topic_0000002038226813_p7569237168"></a>PNGD</p>
-</th>
-<th class="cellrowborder" valign="top" width="8.000000000000002%" id="mcps1.2.12.1.10"><p id="zh-cn_topic_0000002038226813_p17570133716620"><a name="zh-cn_topic_0000002038226813_p17570133716620"></a><a name="zh-cn_topic_0000002038226813_p17570133716620"></a>VENC</p>
-</th>
-<th class="cellrowborder" valign="top" width="8.000000000000002%" id="mcps1.2.12.1.11"><p id="zh-cn_topic_0000002038226813_p1457020371863"><a name="zh-cn_topic_0000002038226813_p1457020371863"></a><a name="zh-cn_topic_0000002038226813_p1457020371863"></a>JPEGE</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002038226813_row10970141144114"><td class="cellrowborder" rowspan="4" valign="top" width="11.000000000000004%" headers="mcps1.2.12.1.1 "><p id="zh-cn_topic_0000002038226813_p14970184144117"><a name="zh-cn_topic_0000002038226813_p14970184144117"></a><a name="zh-cn_topic_0000002038226813_p14970184144117"></a><span id="zh-cn_topic_0000002038226813_ph1634912122816"><a name="zh-cn_topic_0000002038226813_ph1634912122816"></a><a name="zh-cn_topic_0000002038226813_ph1634912122816"></a>Atlas 训练系列产品</span>（30或32个AI Core）</p>
-</td>
-<td class="cellrowborder" valign="top" width="11.000000000000004%" headers="mcps1.2.12.1.2 "><p id="zh-cn_topic_0000002038226813_p997044113415"><a name="zh-cn_topic_0000002038226813_p997044113415"></a><a name="zh-cn_topic_0000002038226813_p997044113415"></a>vir16</p>
-</td>
-<td class="cellrowborder" valign="top" width="11.000000000000004%" headers="mcps1.2.12.1.3 "><p id="zh-cn_topic_0000002038226813_p14970204111414"><a name="zh-cn_topic_0000002038226813_p14970204111414"></a><a name="zh-cn_topic_0000002038226813_p14970204111414"></a>16</p>
-</td>
-<td class="cellrowborder" valign="top" width="11.000000000000004%" headers="mcps1.2.12.1.4 "><p id="zh-cn_topic_0000002038226813_p397014113413"><a name="zh-cn_topic_0000002038226813_p397014113413"></a><a name="zh-cn_topic_0000002038226813_p397014113413"></a>16G</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.000000000000002%" headers="mcps1.2.12.1.5 "><p id="zh-cn_topic_0000002038226813_p1733365517529"><a name="zh-cn_topic_0000002038226813_p1733365517529"></a><a name="zh-cn_topic_0000002038226813_p1733365517529"></a>7</p>
-</td>
-<td class="cellrowborder" valign="top" width="7.990000000000001%" headers="mcps1.2.12.1.6 "><p id="zh-cn_topic_0000002038226813_p0971114144115"><a name="zh-cn_topic_0000002038226813_p0971114144115"></a><a name="zh-cn_topic_0000002038226813_p0971114144115"></a>8</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.010000000000002%" headers="mcps1.2.12.1.7 "><p id="zh-cn_topic_0000002038226813_p1797144184118"><a name="zh-cn_topic_0000002038226813_p1797144184118"></a><a name="zh-cn_topic_0000002038226813_p1797144184118"></a>8</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.000000000000002%" headers="mcps1.2.12.1.8 "><p id="zh-cn_topic_0000002038226813_p189711941194112"><a name="zh-cn_topic_0000002038226813_p189711941194112"></a><a name="zh-cn_topic_0000002038226813_p189711941194112"></a>8</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.000000000000002%" headers="mcps1.2.12.1.9 "><p id="zh-cn_topic_0000002038226813_p10971144154120"><a name="zh-cn_topic_0000002038226813_p10971144154120"></a><a name="zh-cn_topic_0000002038226813_p10971144154120"></a>12</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.000000000000002%" headers="mcps1.2.12.1.10 "><p id="zh-cn_topic_0000002038226813_p1097184115418"><a name="zh-cn_topic_0000002038226813_p1097184115418"></a><a name="zh-cn_topic_0000002038226813_p1097184115418"></a>NA</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.000000000000002%" headers="mcps1.2.12.1.11 "><p id="zh-cn_topic_0000002038226813_p1697112413416"><a name="zh-cn_topic_0000002038226813_p1697112413416"></a><a name="zh-cn_topic_0000002038226813_p1697112413416"></a>4</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002038226813_row39711841124112"><td class="cellrowborder" valign="top" headers="mcps1.2.12.1.1 "><p id="zh-cn_topic_0000002038226813_p14627519516"><a name="zh-cn_topic_0000002038226813_p14627519516"></a><a name="zh-cn_topic_0000002038226813_p14627519516"></a>vir08</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.2 "><p id="zh-cn_topic_0000002038226813_p13971941104113"><a name="zh-cn_topic_0000002038226813_p13971941104113"></a><a name="zh-cn_topic_0000002038226813_p13971941104113"></a>8</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.3 "><p id="zh-cn_topic_0000002038226813_p1797154120415"><a name="zh-cn_topic_0000002038226813_p1797154120415"></a><a name="zh-cn_topic_0000002038226813_p1797154120415"></a>8G</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.4 "><p id="zh-cn_topic_0000002038226813_p533313554527"><a name="zh-cn_topic_0000002038226813_p533313554527"></a><a name="zh-cn_topic_0000002038226813_p533313554527"></a>3</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.5 "><p id="zh-cn_topic_0000002038226813_p2097204164114"><a name="zh-cn_topic_0000002038226813_p2097204164114"></a><a name="zh-cn_topic_0000002038226813_p2097204164114"></a>4</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.6 "><p id="zh-cn_topic_0000002038226813_p1697214413413"><a name="zh-cn_topic_0000002038226813_p1697214413413"></a><a name="zh-cn_topic_0000002038226813_p1697214413413"></a>4</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.7 "><p id="zh-cn_topic_0000002038226813_p1197284154111"><a name="zh-cn_topic_0000002038226813_p1197284154111"></a><a name="zh-cn_topic_0000002038226813_p1197284154111"></a>4</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.8 "><p id="zh-cn_topic_0000002038226813_p18972124114114"><a name="zh-cn_topic_0000002038226813_p18972124114114"></a><a name="zh-cn_topic_0000002038226813_p18972124114114"></a>6</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.9 "><p id="zh-cn_topic_0000002038226813_p1497213416419"><a name="zh-cn_topic_0000002038226813_p1497213416419"></a><a name="zh-cn_topic_0000002038226813_p1497213416419"></a>NA</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.10 "><p id="zh-cn_topic_0000002038226813_p11972144194118"><a name="zh-cn_topic_0000002038226813_p11972144194118"></a><a name="zh-cn_topic_0000002038226813_p11972144194118"></a>2</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002038226813_row397284112416"><td class="cellrowborder" valign="top" headers="mcps1.2.12.1.1 "><p id="zh-cn_topic_0000002038226813_p1846212511558"><a name="zh-cn_topic_0000002038226813_p1846212511558"></a><a name="zh-cn_topic_0000002038226813_p1846212511558"></a>vir04</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.2 "><p id="zh-cn_topic_0000002038226813_p3972741114114"><a name="zh-cn_topic_0000002038226813_p3972741114114"></a><a name="zh-cn_topic_0000002038226813_p3972741114114"></a>4</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.3 "><p id="zh-cn_topic_0000002038226813_p99721341174110"><a name="zh-cn_topic_0000002038226813_p99721341174110"></a><a name="zh-cn_topic_0000002038226813_p99721341174110"></a>4G</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.4 "><p id="zh-cn_topic_0000002038226813_p7334155535217"><a name="zh-cn_topic_0000002038226813_p7334155535217"></a><a name="zh-cn_topic_0000002038226813_p7334155535217"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.5 "><p id="zh-cn_topic_0000002038226813_p1397310416412"><a name="zh-cn_topic_0000002038226813_p1397310416412"></a><a name="zh-cn_topic_0000002038226813_p1397310416412"></a>2</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.6 "><p id="zh-cn_topic_0000002038226813_p1297324117417"><a name="zh-cn_topic_0000002038226813_p1297324117417"></a><a name="zh-cn_topic_0000002038226813_p1297324117417"></a>2</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.7 "><p id="zh-cn_topic_0000002038226813_p597311417414"><a name="zh-cn_topic_0000002038226813_p597311417414"></a><a name="zh-cn_topic_0000002038226813_p597311417414"></a>2</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.8 "><p id="zh-cn_topic_0000002038226813_p697313419416"><a name="zh-cn_topic_0000002038226813_p697313419416"></a><a name="zh-cn_topic_0000002038226813_p697313419416"></a>3</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.9 "><p id="zh-cn_topic_0000002038226813_p1973241164116"><a name="zh-cn_topic_0000002038226813_p1973241164116"></a><a name="zh-cn_topic_0000002038226813_p1973241164116"></a>NA</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.10 "><p id="zh-cn_topic_0000002038226813_p1897374112415"><a name="zh-cn_topic_0000002038226813_p1897374112415"></a><a name="zh-cn_topic_0000002038226813_p1897374112415"></a>1</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002038226813_row0973841164111"><td class="cellrowborder" valign="top" headers="mcps1.2.12.1.1 "><p id="zh-cn_topic_0000002038226813_p1546225110515"><a name="zh-cn_topic_0000002038226813_p1546225110515"></a><a name="zh-cn_topic_0000002038226813_p1546225110515"></a>vir02</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.2 "><p id="zh-cn_topic_0000002038226813_p159731741134113"><a name="zh-cn_topic_0000002038226813_p159731741134113"></a><a name="zh-cn_topic_0000002038226813_p159731741134113"></a>2</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.3 "><p id="zh-cn_topic_0000002038226813_p89731441184115"><a name="zh-cn_topic_0000002038226813_p89731441184115"></a><a name="zh-cn_topic_0000002038226813_p89731441184115"></a>2G</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.4 "><p id="zh-cn_topic_0000002038226813_p2334155545214"><a name="zh-cn_topic_0000002038226813_p2334155545214"></a><a name="zh-cn_topic_0000002038226813_p2334155545214"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.5 "><p id="zh-cn_topic_0000002038226813_p20974941174117"><a name="zh-cn_topic_0000002038226813_p20974941174117"></a><a name="zh-cn_topic_0000002038226813_p20974941174117"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.6 "><p id="zh-cn_topic_0000002038226813_p1597444194118"><a name="zh-cn_topic_0000002038226813_p1597444194118"></a><a name="zh-cn_topic_0000002038226813_p1597444194118"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.7 "><p id="zh-cn_topic_0000002038226813_p29741941164118"><a name="zh-cn_topic_0000002038226813_p29741941164118"></a><a name="zh-cn_topic_0000002038226813_p29741941164118"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.8 "><p id="zh-cn_topic_0000002038226813_p397474154120"><a name="zh-cn_topic_0000002038226813_p397474154120"></a><a name="zh-cn_topic_0000002038226813_p397474154120"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.9 "><p id="zh-cn_topic_0000002038226813_p7974141194117"><a name="zh-cn_topic_0000002038226813_p7974141194117"></a><a name="zh-cn_topic_0000002038226813_p7974141194117"></a>NA</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.10 "><p id="zh-cn_topic_0000002038226813_p797414115410"><a name="zh-cn_topic_0000002038226813_p797414115410"></a><a name="zh-cn_topic_0000002038226813_p797414115410"></a>0</p>
-</td>
-</tr>
-<tr id="row1851805894710"><td class="cellrowborder" rowspan="7" valign="top" width="11.000000000000004%" headers="mcps1.2.12.1.1 "><p id="zh-cn_topic_0000002038226813_p958871912575"><a name="zh-cn_topic_0000002038226813_p958871912575"></a><a name="zh-cn_topic_0000002038226813_p958871912575"></a><span id="ph132981951194619"><a name="ph132981951194619"></a><a name="ph132981951194619"></a>Atlas 推理系列产品</span>（8个AI Core）</p>
-<p id="p1897448184819"><a name="p1897448184819"></a><a name="p1897448184819"></a></p>
-<p id="p896154815480"><a name="p896154815480"></a><a name="p896154815480"></a></p>
-<p id="p994114813487"><a name="p994114813487"></a><a name="p994114813487"></a></p>
-<p id="p1092104815484"><a name="p1092104815484"></a><a name="p1092104815484"></a></p>
-<p id="p1891164810484"><a name="p1891164810484"></a><a name="p1891164810484"></a></p>
-<p id="p9891748114811"><a name="p9891748114811"></a><a name="p9891748114811"></a></p>
-</td>
-<td class="cellrowborder" valign="top" width="11.000000000000004%" headers="mcps1.2.12.1.2 "><p id="zh-cn_topic_0000002038226813_p195881019205720"><a name="zh-cn_topic_0000002038226813_p195881019205720"></a><a name="zh-cn_topic_0000002038226813_p195881019205720"></a>vir04</p>
-</td>
-<td class="cellrowborder" valign="top" width="11.000000000000004%" headers="mcps1.2.12.1.3 "><p id="zh-cn_topic_0000002038226813_p18588119195716"><a name="zh-cn_topic_0000002038226813_p18588119195716"></a><a name="zh-cn_topic_0000002038226813_p18588119195716"></a>4</p>
-</td>
-<td class="cellrowborder" valign="top" width="11.000000000000004%" headers="mcps1.2.12.1.4 "><p id="zh-cn_topic_0000002038226813_p15588201955711"><a name="zh-cn_topic_0000002038226813_p15588201955711"></a><a name="zh-cn_topic_0000002038226813_p15588201955711"></a>12G</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.000000000000002%" headers="mcps1.2.12.1.5 "><p id="zh-cn_topic_0000002038226813_p125881919125720"><a name="zh-cn_topic_0000002038226813_p125881919125720"></a><a name="zh-cn_topic_0000002038226813_p125881919125720"></a>4</p>
-</td>
-<td class="cellrowborder" valign="top" width="7.990000000000001%" headers="mcps1.2.12.1.6 "><p id="zh-cn_topic_0000002038226813_p058816191577"><a name="zh-cn_topic_0000002038226813_p058816191577"></a><a name="zh-cn_topic_0000002038226813_p058816191577"></a>6</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.010000000000002%" headers="mcps1.2.12.1.7 "><p id="zh-cn_topic_0000002038226813_p1358831945718"><a name="zh-cn_topic_0000002038226813_p1358831945718"></a><a name="zh-cn_topic_0000002038226813_p1358831945718"></a>6</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.000000000000002%" headers="mcps1.2.12.1.8 "><p id="zh-cn_topic_0000002038226813_p1758818199574"><a name="zh-cn_topic_0000002038226813_p1758818199574"></a><a name="zh-cn_topic_0000002038226813_p1758818199574"></a>8</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.000000000000002%" headers="mcps1.2.12.1.9 "><p id="zh-cn_topic_0000002038226813_p5588819155714"><a name="zh-cn_topic_0000002038226813_p5588819155714"></a><a name="zh-cn_topic_0000002038226813_p5588819155714"></a>NA</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.000000000000002%" headers="mcps1.2.12.1.10 "><p id="zh-cn_topic_0000002038226813_p958801914572"><a name="zh-cn_topic_0000002038226813_p958801914572"></a><a name="zh-cn_topic_0000002038226813_p958801914572"></a>2</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.000000000000002%" headers="mcps1.2.12.1.11 "><p id="zh-cn_topic_0000002038226813_p75881619145718"><a name="zh-cn_topic_0000002038226813_p75881619145718"></a><a name="zh-cn_topic_0000002038226813_p75881619145718"></a>4</p>
-</td>
-</tr>
-<tr id="row14518105814711"><td class="cellrowborder" valign="top" headers="mcps1.2.12.1.1 "><p id="zh-cn_topic_0000002038226813_p1258921985710"><a name="zh-cn_topic_0000002038226813_p1258921985710"></a><a name="zh-cn_topic_0000002038226813_p1258921985710"></a>vir04_3c</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.2 "><p id="zh-cn_topic_0000002038226813_p55891319115710"><a name="zh-cn_topic_0000002038226813_p55891319115710"></a><a name="zh-cn_topic_0000002038226813_p55891319115710"></a>4</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.3 "><p id="zh-cn_topic_0000002038226813_p1058961915576"><a name="zh-cn_topic_0000002038226813_p1058961915576"></a><a name="zh-cn_topic_0000002038226813_p1058961915576"></a>12G</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.4 "><p id="zh-cn_topic_0000002038226813_p95892019185711"><a name="zh-cn_topic_0000002038226813_p95892019185711"></a><a name="zh-cn_topic_0000002038226813_p95892019185711"></a>3</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.5 "><p id="zh-cn_topic_0000002038226813_p1358901916576"><a name="zh-cn_topic_0000002038226813_p1358901916576"></a><a name="zh-cn_topic_0000002038226813_p1358901916576"></a>6</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.6 "><p id="zh-cn_topic_0000002038226813_p158917197571"><a name="zh-cn_topic_0000002038226813_p158917197571"></a><a name="zh-cn_topic_0000002038226813_p158917197571"></a>6</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.7 "><p id="zh-cn_topic_0000002038226813_p11589119145713"><a name="zh-cn_topic_0000002038226813_p11589119145713"></a><a name="zh-cn_topic_0000002038226813_p11589119145713"></a>8</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.8 "><p id="zh-cn_topic_0000002038226813_p7589219115716"><a name="zh-cn_topic_0000002038226813_p7589219115716"></a><a name="zh-cn_topic_0000002038226813_p7589219115716"></a>NA</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.9 "><p id="zh-cn_topic_0000002038226813_p9589161912573"><a name="zh-cn_topic_0000002038226813_p9589161912573"></a><a name="zh-cn_topic_0000002038226813_p9589161912573"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.10 "><p id="zh-cn_topic_0000002038226813_p18589819205720"><a name="zh-cn_topic_0000002038226813_p18589819205720"></a><a name="zh-cn_topic_0000002038226813_p18589819205720"></a>4</p>
-</td>
-</tr>
-<tr id="row09417713483"><td class="cellrowborder" valign="top" headers="mcps1.2.12.1.1 "><p id="zh-cn_topic_0000002038226813_p1589219145714"><a name="zh-cn_topic_0000002038226813_p1589219145714"></a><a name="zh-cn_topic_0000002038226813_p1589219145714"></a>vir02</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.2 "><p id="zh-cn_topic_0000002038226813_p155896195574"><a name="zh-cn_topic_0000002038226813_p155896195574"></a><a name="zh-cn_topic_0000002038226813_p155896195574"></a>2</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.3 "><p id="zh-cn_topic_0000002038226813_p1358912199579"><a name="zh-cn_topic_0000002038226813_p1358912199579"></a><a name="zh-cn_topic_0000002038226813_p1358912199579"></a>6G</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.4 "><p id="zh-cn_topic_0000002038226813_p19589151945718"><a name="zh-cn_topic_0000002038226813_p19589151945718"></a><a name="zh-cn_topic_0000002038226813_p19589151945718"></a>2</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.5 "><p id="zh-cn_topic_0000002038226813_p115891419115714"><a name="zh-cn_topic_0000002038226813_p115891419115714"></a><a name="zh-cn_topic_0000002038226813_p115891419115714"></a>3</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.6 "><p id="zh-cn_topic_0000002038226813_p45902199572"><a name="zh-cn_topic_0000002038226813_p45902199572"></a><a name="zh-cn_topic_0000002038226813_p45902199572"></a>3</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.7 "><p id="zh-cn_topic_0000002038226813_p159031935719"><a name="zh-cn_topic_0000002038226813_p159031935719"></a><a name="zh-cn_topic_0000002038226813_p159031935719"></a>4</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.8 "><p id="zh-cn_topic_0000002038226813_p159017190572"><a name="zh-cn_topic_0000002038226813_p159017190572"></a><a name="zh-cn_topic_0000002038226813_p159017190572"></a>NA</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.9 "><p id="zh-cn_topic_0000002038226813_p55901619165720"><a name="zh-cn_topic_0000002038226813_p55901619165720"></a><a name="zh-cn_topic_0000002038226813_p55901619165720"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.10 "><p id="zh-cn_topic_0000002038226813_p459061911577"><a name="zh-cn_topic_0000002038226813_p459061911577"></a><a name="zh-cn_topic_0000002038226813_p459061911577"></a>2</p>
-</td>
-</tr>
-<tr id="row69411326154819"><td class="cellrowborder" valign="top" headers="mcps1.2.12.1.1 "><p id="zh-cn_topic_0000002038226813_p95904195570"><a name="zh-cn_topic_0000002038226813_p95904195570"></a><a name="zh-cn_topic_0000002038226813_p95904195570"></a>vir02_1c</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.2 "><p id="zh-cn_topic_0000002038226813_p1459014197575"><a name="zh-cn_topic_0000002038226813_p1459014197575"></a><a name="zh-cn_topic_0000002038226813_p1459014197575"></a>2</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.3 "><p id="zh-cn_topic_0000002038226813_p9590121995716"><a name="zh-cn_topic_0000002038226813_p9590121995716"></a><a name="zh-cn_topic_0000002038226813_p9590121995716"></a>6G</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.4 "><p id="zh-cn_topic_0000002038226813_p959091985718"><a name="zh-cn_topic_0000002038226813_p959091985718"></a><a name="zh-cn_topic_0000002038226813_p959091985718"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.5 "><p id="zh-cn_topic_0000002038226813_p0590319155713"><a name="zh-cn_topic_0000002038226813_p0590319155713"></a><a name="zh-cn_topic_0000002038226813_p0590319155713"></a>3</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.6 "><p id="zh-cn_topic_0000002038226813_p359081910575"><a name="zh-cn_topic_0000002038226813_p359081910575"></a><a name="zh-cn_topic_0000002038226813_p359081910575"></a>3</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.7 "><p id="zh-cn_topic_0000002038226813_p35901119155715"><a name="zh-cn_topic_0000002038226813_p35901119155715"></a><a name="zh-cn_topic_0000002038226813_p35901119155715"></a>4</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.8 "><p id="zh-cn_topic_0000002038226813_p12590111916573"><a name="zh-cn_topic_0000002038226813_p12590111916573"></a><a name="zh-cn_topic_0000002038226813_p12590111916573"></a>NA</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.9 "><p id="zh-cn_topic_0000002038226813_p2590171910574"><a name="zh-cn_topic_0000002038226813_p2590171910574"></a><a name="zh-cn_topic_0000002038226813_p2590171910574"></a>0</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.10 "><p id="zh-cn_topic_0000002038226813_p17590101965718"><a name="zh-cn_topic_0000002038226813_p17590101965718"></a><a name="zh-cn_topic_0000002038226813_p17590101965718"></a>2</p>
-</td>
-</tr>
-<tr id="row1694222624818"><td class="cellrowborder" valign="top" headers="mcps1.2.12.1.1 "><p id="zh-cn_topic_0000002038226813_p7590119105710"><a name="zh-cn_topic_0000002038226813_p7590119105710"></a><a name="zh-cn_topic_0000002038226813_p7590119105710"></a>vir01</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.2 "><p id="zh-cn_topic_0000002038226813_p5591819155716"><a name="zh-cn_topic_0000002038226813_p5591819155716"></a><a name="zh-cn_topic_0000002038226813_p5591819155716"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.3 "><p id="zh-cn_topic_0000002038226813_p3591101914573"><a name="zh-cn_topic_0000002038226813_p3591101914573"></a><a name="zh-cn_topic_0000002038226813_p3591101914573"></a>3G</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.4 "><p id="zh-cn_topic_0000002038226813_p13591519165717"><a name="zh-cn_topic_0000002038226813_p13591519165717"></a><a name="zh-cn_topic_0000002038226813_p13591519165717"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.5 "><p id="zh-cn_topic_0000002038226813_p959118191571"><a name="zh-cn_topic_0000002038226813_p959118191571"></a><a name="zh-cn_topic_0000002038226813_p959118191571"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.6 "><p id="zh-cn_topic_0000002038226813_p1159121915711"><a name="zh-cn_topic_0000002038226813_p1159121915711"></a><a name="zh-cn_topic_0000002038226813_p1159121915711"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.7 "><p id="zh-cn_topic_0000002038226813_p17591111975718"><a name="zh-cn_topic_0000002038226813_p17591111975718"></a><a name="zh-cn_topic_0000002038226813_p17591111975718"></a>2</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.8 "><p id="zh-cn_topic_0000002038226813_p259171955719"><a name="zh-cn_topic_0000002038226813_p259171955719"></a><a name="zh-cn_topic_0000002038226813_p259171955719"></a>NA</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.9 "><p id="zh-cn_topic_0000002038226813_p155911119115714"><a name="zh-cn_topic_0000002038226813_p155911119115714"></a><a name="zh-cn_topic_0000002038226813_p155911119115714"></a>0</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.10 "><p id="zh-cn_topic_0000002038226813_p125911119135710"><a name="zh-cn_topic_0000002038226813_p125911119135710"></a><a name="zh-cn_topic_0000002038226813_p125911119135710"></a>1</p>
-</td>
-</tr>
-<tr id="row2942926164811"><td class="cellrowborder" valign="top" headers="mcps1.2.12.1.1 "><p id="zh-cn_topic_0000002038226813_p129441155533"><a name="zh-cn_topic_0000002038226813_p129441155533"></a><a name="zh-cn_topic_0000002038226813_p129441155533"></a>vir04_3c_ndvpp</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.2 "><p id="zh-cn_topic_0000002038226813_p199441755834"><a name="zh-cn_topic_0000002038226813_p199441755834"></a><a name="zh-cn_topic_0000002038226813_p199441755834"></a>4</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.3 "><p id="zh-cn_topic_0000002038226813_p7944125518313"><a name="zh-cn_topic_0000002038226813_p7944125518313"></a><a name="zh-cn_topic_0000002038226813_p7944125518313"></a>12G</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.4 "><p id="zh-cn_topic_0000002038226813_p1594435515316"><a name="zh-cn_topic_0000002038226813_p1594435515316"></a><a name="zh-cn_topic_0000002038226813_p1594435515316"></a>3</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.5 "><p id="zh-cn_topic_0000002038226813_p1694412551639"><a name="zh-cn_topic_0000002038226813_p1694412551639"></a><a name="zh-cn_topic_0000002038226813_p1694412551639"></a>0</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.6 "><p id="zh-cn_topic_0000002038226813_p159441355436"><a name="zh-cn_topic_0000002038226813_p159441355436"></a><a name="zh-cn_topic_0000002038226813_p159441355436"></a>0</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.7 "><p id="zh-cn_topic_0000002038226813_p17944165518318"><a name="zh-cn_topic_0000002038226813_p17944165518318"></a><a name="zh-cn_topic_0000002038226813_p17944165518318"></a>0</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.8 "><p id="zh-cn_topic_0000002038226813_p494445515317"><a name="zh-cn_topic_0000002038226813_p494445515317"></a><a name="zh-cn_topic_0000002038226813_p494445515317"></a>NA</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.9 "><p id="zh-cn_topic_0000002038226813_p19446551318"><a name="zh-cn_topic_0000002038226813_p19446551318"></a><a name="zh-cn_topic_0000002038226813_p19446551318"></a>0</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.10 "><p id="zh-cn_topic_0000002038226813_p1794513551839"><a name="zh-cn_topic_0000002038226813_p1794513551839"></a><a name="zh-cn_topic_0000002038226813_p1794513551839"></a>0</p>
-</td>
-</tr>
-<tr id="row14941575481"><td class="cellrowborder" valign="top" headers="mcps1.2.12.1.1 "><p id="zh-cn_topic_0000002038226813_p146031015416"><a name="zh-cn_topic_0000002038226813_p146031015416"></a><a name="zh-cn_topic_0000002038226813_p146031015416"></a>vir04_4c_dvpp</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.2 "><p id="zh-cn_topic_0000002038226813_p116031301849"><a name="zh-cn_topic_0000002038226813_p116031301849"></a><a name="zh-cn_topic_0000002038226813_p116031301849"></a>4</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.3 "><p id="zh-cn_topic_0000002038226813_p660319014418"><a name="zh-cn_topic_0000002038226813_p660319014418"></a><a name="zh-cn_topic_0000002038226813_p660319014418"></a>12G</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.4 "><p id="zh-cn_topic_0000002038226813_p14603501847"><a name="zh-cn_topic_0000002038226813_p14603501847"></a><a name="zh-cn_topic_0000002038226813_p14603501847"></a>4</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.5 "><p id="zh-cn_topic_0000002038226813_p196031901844"><a name="zh-cn_topic_0000002038226813_p196031901844"></a><a name="zh-cn_topic_0000002038226813_p196031901844"></a>12</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.6 "><p id="zh-cn_topic_0000002038226813_p9603140948"><a name="zh-cn_topic_0000002038226813_p9603140948"></a><a name="zh-cn_topic_0000002038226813_p9603140948"></a>12</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.7 "><p id="zh-cn_topic_0000002038226813_p56031801846"><a name="zh-cn_topic_0000002038226813_p56031801846"></a><a name="zh-cn_topic_0000002038226813_p56031801846"></a>16</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.8 "><p id="zh-cn_topic_0000002038226813_p1360317017418"><a name="zh-cn_topic_0000002038226813_p1360317017418"></a><a name="zh-cn_topic_0000002038226813_p1360317017418"></a>NA</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.9 "><p id="zh-cn_topic_0000002038226813_p17603401144"><a name="zh-cn_topic_0000002038226813_p17603401144"></a><a name="zh-cn_topic_0000002038226813_p17603401144"></a>3</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.12.1.10 "><p id="zh-cn_topic_0000002038226813_p46031801046"><a name="zh-cn_topic_0000002038226813_p46031801046"></a><a name="zh-cn_topic_0000002038226813_p46031801046"></a>8</p>
-</td>
-</tr>
-</tbody>
-</table>
-
-**虚拟化实例组合<a name="zh-cn_topic_0000002038226813_section17995312115215"></a>**
-
-Atlas 推理系列产品支持虚拟化实例组合如[图1](#zh-cn_topic_0000002038226813_fig36028506507)所示，1个昇腾AI处理器最大支持切分7个虚拟化实例，用户需要按照组合规格对NPU硬件资源进行虚拟化切分。
-
-由于Atlas 推理系列产品只配置7个AI CPU，因此导致对Atlas 推理系列产品进行虚拟化时，无法做到资源均衡的划分vNPU，vNPU支持的划分组合如[图1](#zh-cn_topic_0000002038226813_fig36028506507)所示，因此您在使用Atlas 推理系列产品进行虚拟化实例功能前，需要评估现场服务器上推理应用所需的资源要求，比如划分6个vir01后，无法再切分2个vir01，只能再划分一个vir02\_1c（或者一个vir01，但是会浪费一个AICore），所以建议您的推理应用正式使用vNPU前，可以先划分vNPU进行测试验证，找到最佳的切分策略。
-
-如果您需要了解典型模型在vNPU上推理的性能数据，您可以联系华为技术支持工程师获取信息。
-
-**图 1** Atlas 推理系列产品支持虚拟化实例组合<a name="zh-cn_topic_0000002038226813_fig36028506507"></a>  
-![](../../figures/scheduling/Atlas-推理系列产品支持虚拟化实例组合.png "Atlas-推理系列产品支持虚拟化实例组合")
-
-Atlas 训练系列产品的虚拟化实例组合不一一列举，虚拟化机制为在一个NPU上创建的虚拟实例包含的AICore数量达到了NPU实际AICore数量后就不能够继续切分，如昇腾AI处理器为30个AICore时，则不能切分两个vir16，只能切分一个vir16，剩余的14个AICore则可以按照vir08+vir04+vir02切分，而昇腾AI处理器为32个AICore时，则支持两个vir16。昇腾AI处理器为30个AICore时，最大支持切分15个虚拟化实例，昇腾AI处理器为32个AICore时，最大支持切分16个虚拟化实例。
 
 **虚拟化模式<a name="zh-cn_topic_0000002038226813_section13213194425210"></a>**
 
@@ -869,9 +493,8 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 </tr>
 <tr id="row18903338368"><td class="cellrowborder" valign="top" width="18.35183518351835%" headers="mcps1.2.4.1.1 "><p id="p390314314361"><a name="p390314314361"></a><a name="p390314314361"></a>ASCEND_VNPU_SPECS</p>
 </td>
-<td class="cellrowborder" valign="top" width="42.03420342034204%" headers="mcps1.2.4.1.2 "><p id="p270411825214"><a name="p270411825214"></a><a name="p270411825214"></a>从物理NPU设备中划分出一定数量的AI Core，指定为虚拟设备。支持的取值为（vir01，vir02，vir02_1c，vir04，vir04_3c，vir08，vir16、vir04_4c_dvpp、vir04_3c_ndvpp）。</p>
-<a name="ul2622192873516"></a><a name="ul2622192873516"></a><ul id="ul2622192873516"><li><span id="ph327965117217"><a name="ph327965117217"></a><a name="ph327965117217"></a>Atlas 训练系列产品</span>（30或32个AI Core）处理器支持vir02、vir04、vir08和vir16。</li><li><span id="ph1623844892113"><a name="ph1623844892113"></a><a name="ph1623844892113"></a>Atlas 推理系列产品</span>处理器支持vir01、vir02、vir02_1c、vir04、vir04_3c、vir04_4c_dvpp、vir04_3c_ndvpp。</li></ul>
-<p id="p1526142153915"><a name="p1526142153915"></a><a name="p1526142153915"></a>需配合参数“ASCEND_VISIBLE_DEVICES”一起使用，参数“ASCEND_VISIBLE_DEVICES”指定用于虚拟化的物理NPU设备。</p>
+<td class="cellrowborder" valign="top" width="42.03420342034204%" headers="mcps1.2.4.1.2 "><p id="p270411825214"><a name="p270411825214"></a><a name="p270411825214"></a>从物理NPU设备中划分出一定数量的AI Core，指定为虚拟设备。支持的取值请参见<a href="#虚拟化规则">表2</a>。
+<ul><li>只有支持动态虚拟化的产品形态，才能使用该参数。</li><li>需配合参数“ASCEND_VISIBLE_DEVICES”一起使用，参数“ASCEND_VISIBLE_DEVICES”指定用于虚拟化的物理NPU设备。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="39.613961396139615%" headers="mcps1.2.4.1.3 "><p id="p22341038133513"><a name="p22341038133513"></a><a name="p22341038133513"></a>ASCEND_VNPU_SPECS=vir04表示划分4个AI Core作为vNPU，挂载至容器。</p>
 </td>
@@ -884,67 +507,54 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 
 ##### 使用vNPU说明<a name="ZH-CN_TOPIC_0000002511426303"></a>
 
-在Kubernetes场景，当用户需要使用vNPU资源时，需要通过结合集群调度组件Ascend Device Plugin的使用，使Kubernetes可以管理昇腾处理器资源。使用方式又按照是否需要提前切分好vNPU，划分为静态虚拟化和动态虚拟化两种，且两种模式不能混用，也不能和之前章节提到的Ascend Docker Runtime使用方式混合使用。昇腾虚拟化实例特性支持的产品型号情况如下表所示：
+在Kubernetes场景，当用户需要使用vNPU资源时，需要通过结合集群调度组件Ascend Device Plugin的使用，使Kubernetes可以管理昇腾处理器资源。使用方式又按照是否需要提前切分好vNPU，划分为静态虚拟化和动态虚拟化两种，且两种模式不能混用，也不能和之前章节提到的Ascend Docker Runtime使用方式混合使用。昇腾虚拟化实例特性需要的集群调度组件如下表所示，支持的产品型号情况请参见[产品支持情况说明](#特性说明)。
 
-**表 1**  支持的硬件型号
+**表 1**  虚拟化需要的集群调度组件
 
 <a name="table19103194217329"></a>
 <table><thead align="left"><tr id="row5103242103213"><th class="cellrowborder" valign="top" width="11.677219849801206%" id="mcps1.2.5.1.1"><p id="p2103642143218"><a name="p2103642143218"></a><a name="p2103642143218"></a>特性</p>
 </th>
 <th class="cellrowborder" valign="top" width="24.82697688116625%" id="mcps1.2.5.1.2"><p id="p619110456115"><a name="p619110456115"></a><a name="p619110456115"></a>需要的集群调度组件</p>
 </th>
-<th class="cellrowborder" valign="top" width="27.978206449712857%" id="mcps1.2.5.1.3"><p id="p710324263216"><a name="p710324263216"></a><a name="p710324263216"></a><span id="ph15606535134417"><a name="ph15606535134417"></a><a name="ph15606535134417"></a>Atlas 训练系列产品</span>支持情况</p>
-</th>
-<th class="cellrowborder" valign="top" width="35.517596819319685%" id="mcps1.2.5.1.4"><p id="p9103442103218"><a name="p9103442103218"></a><a name="p9103442103218"></a><span id="ph1830655573718"><a name="ph1830655573718"></a><a name="ph1830655573718"></a>Atlas 推理系列产品</span>支持情况</p>
-</th>
-</tr>
 </thead>
-<tbody><tr id="row61035425322"><td class="cellrowborder" rowspan="3" valign="top" width="11.677219849801206%" headers="mcps1.2.5.1.1 "><p id="p310384263219"><a name="p310384263219"></a><a name="p310384263219"></a>静态虚拟化</p>
+<tbody><tr id="row61035425322"><td class="cellrowborder" rowspan="4" valign="top" width="11.677219849801206%" headers="mcps1.2.5.1.1 "><p id="p310384263219"><a name="p310384263219"></a><a name="p310384263219"></a>静态虚拟化</p>
 </td>
 <td class="cellrowborder" valign="top" width="24.82697688116625%" headers="mcps1.2.5.1.2 "><p id="p4191645116"><a name="p4191645116"></a><a name="p4191645116"></a><span id="ph1795411794410"><a name="ph1795411794410"></a><a name="ph1795411794410"></a>Ascend Device Plugin</span></p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="27.978206449712857%" headers="mcps1.2.5.1.3 "><p id="p010374219321"><a name="p010374219321"></a><a name="p010374219321"></a>支持全部<span id="ph46641640144418"><a name="ph46641640144418"></a><a name="ph46641640144418"></a>Atlas 训练系列产品</span></p>
-<p id="p1154693443"><a name="p1154693443"></a><a name="p1154693443"></a></p>
-<p id="p1115769184412"><a name="p1115769184412"></a><a name="p1115769184412"></a></p>
-</td>
-<td class="cellrowborder" valign="top" width="35.517596819319685%" headers="mcps1.2.5.1.4 "><p id="p479935573414"><a name="p479935573414"></a><a name="p479935573414"></a><span id="ph916315614437"><a name="ph916315614437"></a><a name="ph916315614437"></a>Atlas 300I Pro 推理卡</span></p>
+</tr>
+<tr id="row1844495022714"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p574771602812"><a name="p574771602812"></a><a name="p574771602812"></a>（可选）<span id="ph1610211588167">Volcano</span></p>
 </td>
 </tr>
-<tr id="row1844495022714"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p574771602812"><a name="p574771602812"></a><a name="p574771602812"></a>（可选）<span id="ph1610211588167"><a name="ph1610211588167"></a><a name="ph1610211588167"></a>Volcano</span></p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1529224582810"><a name="p1529224582810"></a><a name="p1529224582810"></a><span id="ph193309207439"><a name="ph193309207439"></a><a name="ph193309207439"></a>Atlas 300V Pro 视频解析卡</span></p>
+<tr id="row18230132874912"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p11381824102511"><a name="p11381824102511"></a><a name="p11381824102511"></a>（可选）<span id="ph1566531814589">Ascend Operator</span></p>
 </td>
 </tr>
-<tr id="row18230132874912"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p11381824102511"><a name="p11381824102511"></a><a name="p11381824102511"></a>（可选）<span id="ph1566531814589"><a name="ph1566531814589"></a><a name="ph1566531814589"></a>Ascend Operator</span></p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p17841125753817"><a name="p17841125753817"></a><a name="p17841125753817"></a><span id="ph1653016814441"><a name="ph1653016814441"></a><a name="ph1653016814441"></a>Atlas 300I Duo 推理卡</span></p>
+<tr><td><p>（可选）<span>ClusterD</span></p>
 </td>
 </tr>
-<tr id="row610314214324"><td class="cellrowborder" rowspan="3" valign="top" width="11.677219849801206%" headers="mcps1.2.5.1.1 "><p id="p11036426328"><a name="p11036426328"></a><a name="p11036426328"></a>动态虚拟化</p>
+<tr id="row610314214324"><td class="cellrowborder" rowspan="4" valign="top" width="11.677219849801206%" headers="mcps1.2.5.1.1 "><p id="p11036426328"><a name="p11036426328"></a><a name="p11036426328"></a>动态虚拟化</p>
 </td>
 <td class="cellrowborder" valign="top" width="24.82697688116625%" headers="mcps1.2.5.1.2 "><p id="p1219211451715"><a name="p1219211451715"></a><a name="p1219211451715"></a><span id="ph12922181924413"><a name="ph12922181924413"></a><a name="ph12922181924413"></a>Ascend Device Plugin</span></p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="27.978206449712857%" headers="mcps1.2.5.1.3 "><p id="p7104124218326"><a name="p7104124218326"></a><a name="p7104124218326"></a>不支持</p>
-</td>
-<td class="cellrowborder" valign="top" width="35.517596819319685%" headers="mcps1.2.5.1.4 "><p id="p072912459620"><a name="p072912459620"></a><a name="p072912459620"></a><span id="ph39973465617"><a name="ph39973465617"></a><a name="ph39973465617"></a>Atlas 300I Pro 推理卡</span></p>
+</tr>
+<tr><td><p><span>Volcano</span></p>
 </td>
 </tr>
-<tr id="row54985543224"><td class="cellrowborder" rowspan="2" valign="top" headers="mcps1.2.5.1.1 "><p id="p1919210451511"><a name="p1919210451511"></a><a name="p1919210451511"></a><span id="ph13691142411165"><a name="ph13691142411165"></a><a name="ph13691142411165"></a>Volcano</span></p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p9340611152714"><a name="p9340611152714"></a><a name="p9340611152714"></a><span id="ph1717141395"><a name="ph1717141395"></a><a name="ph1717141395"></a>Atlas 300V 视频解析卡</span></p>
+<tr><td><p>（可选）<span>Ascend Operator</span></p>
 </td>
 </tr>
-<tr id="row964515918503"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p186451459175010"><a name="p186451459175010"></a><a name="p186451459175010"></a><span id="ph159684381471"><a name="ph159684381471"></a><a name="ph159684381471"></a>Atlas 300V Pro 视频解析卡</span></p>
+<tr><td><p>（可选）<span>ClusterD</span></p>
 </td>
 </tr>
 </tbody>
 </table>
 
+
 >[!NOTE] 说明 
 >Ascend Device Plugin组件的安装请参见[Ascend Device Plugin](../installation_guide.md#ascend-device-plugin)。
 >在静态虚拟化场景下，组件的可选性说明如下。
 >-   Volcano：用户若使用自己的调度组件，需要进行参数配置，请参见[表2](#table1064314568229)；用户也可直接使用该组件进行任务调度。
->-   Ascend Operator：在使用Atlas 训练系列产品时才需要选择该组件；使用Atlas 推理系列产品时可不选择。
+>-   Ascend Operator：当使用训练系列产品时才需要选择该组件；使用推理系列产品时可不选择。
+>-   ClusterD：当使用Volcano时才需要选择该组件，详细请参见[安装Volcano](../installation_guide.md#安装volcano)。
 
 
 ##### 静态虚拟化<a name="ZH-CN_TOPIC_0000002479226392"></a>
@@ -1002,6 +612,52 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p188588202135"><a name="p188588202135"></a><a name="p188588202135"></a>Ascend910-16c-100-0</p>
 </td>
 </tr>
+<tr><td rowspan="4" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A2 训练系列产品</span>（20或24或25个AI Core）</p>
+</td>
+<td><p>vir10_3c_32g</p>
+</td>
+<td><p>Ascend910-10c.3cpu.32g</p>
+</td>
+<td><p>Ascend910-10c.3cpu.32g-100-0</p>
+</td>
+</tr>
+<tr><td><p>vir05_1c_16g</p>
+</td>
+<td><p>Ascend910-5c.1cpu.16g</p>
+</td>
+<td><p>Ascend910-5c.1cpu.16g-100-0</p>
+</td>
+</tr>
+<tr><td><p>vir12_3c_32g</p>
+</td>
+<td><p>Ascend910-12c.3cpu.32g</p>
+</td>
+<td><p>Ascend910-12c.3cpu.32g-100-0</p>
+</td>
+</tr>
+<tr><td><p>vir06_1c_16g</p>
+</td>
+<td><p>Ascend910-6c.1cpu.16g</p>
+</td>
+<td><p>Ascend910-6c.1cpu.16g-100-0</p>
+</td>
+</tr>
+<tr><td rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A3 训练系列产品</span>（48个AI Core）</p>
+</td>
+<td><p>vir12_3c_32g</p>
+</td>
+<td><p>Ascend910-12c.3cpu.32g</p>
+</td>
+<td><p>Ascend910-12c.3cpu.32g-100-0</p>
+</td>
+</tr>
+<tr><td><p>vir06_1c_16g</p>
+</td>
+<td><p>Ascend910-6c.1cpu.16g</p>
+</td>
+<td><p>Ascend910-6c.1cpu.16g-100-0</p>
+</td>
+</tr>
 <tr id="row84911853114212"><td class="cellrowborder" rowspan="7" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p1868751772016"><a name="p1868751772016"></a><a name="p1868751772016"></a><span id="ph1623844892113"><a name="ph1623844892113"></a><a name="ph1623844892113"></a>Atlas 推理系列产品</span>（8个AI Core）</p>
 <p id="p12827141603014"><a name="p12827141603014"></a><a name="p12827141603014"></a></p>
 </td>
@@ -1054,6 +710,66 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p9957636276"><a name="p9957636276"></a><a name="p9957636276"></a>Ascend310P-4c.4cpu.dvpp-100-0</p>
 </td>
 </tr>
+<tr><td rowspan="6" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A2 推理系列产品</span>（20个AI Core）</p>
+</td>
+<td><p>vir10_3c_16g</p>
+</td>
+<td><p>Ascend910-10c.3cpu.16g</p>
+</td>
+<td><p>Ascend910-10c.3cpu.16g-100-0</p>
+</td>
+</tr>
+<tr><td><p>vir10_3c_16g_nm</p>
+</td>
+<td><p>Ascend910-10c.3cpu.16g.ndvpp</p>
+</td>
+<td><p>Ascend910-10c.3cpu.16g.ndvpp-100-0</p>
+</td>
+</tr>
+<tr><td><p>vir10_4c_16g_m</p>
+</td>
+<td><p>Ascend910-10c.4cpu.16g.dvpp</p>
+</td>
+<td><p>Ascend910-10c.4cpu.16g.dvpp-100-0</p>
+</td>
+</tr>
+<tr><td><p>vir05_1c_8g</p>
+</td>
+<td><p>Ascend910-5c.1cpu.8g</p>
+</td>
+<td><p>Ascend910-5c.1cpu.8g-100-0</p>
+</td>
+</tr>
+<tr><td><p>vir10_3c_32g</p>
+</td>
+<td><p>Ascend910-10c.3cpu.32g</p>
+</td>
+<td><p>Ascend910-10c.3cpu.32g-100-0</p>
+</td>
+</tr>
+<tr><td><p>vir05_1c_16g</p>
+</td>
+<td><p>Ascend910-5c.1cpu.16g</p>
+</td>
+<td><p>Ascend910-5c.1cpu.16g-100-0</p>
+</td>
+</tr>
+<tr><td rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A3 推理系列产品</span>（40个AI Core）</p>
+</td>
+<td><p>vir10_3c_32g</p>
+</td>
+<td><p>Ascend910-10c.3cpu.32g</p>
+</td>
+<td><p>Ascend910-10c.3cpu.32g-100-0</p>
+</td>
+</tr>
+<tr><td><p>vir05_1c_16g</p>
+</td>
+<td><p>Ascend910-5c.1cpu.16g</p>
+</td>
+<td><p>Ascend910-5c.1cpu.16g-100-0</p>
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -1074,37 +790,10 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
         **表 2** Ascend Device Plugin启动参数
 
         <a name="table1064314568229"></a>
-        <table><thead align="left"><tr id="row1164315632218"><th class="cellrowborder" valign="top" width="20%" id="mcps1.2.5.1.1"><p id="p176431856192214"><a name="p176431856192214"></a><a name="p176431856192214"></a>参数</p>
-        </th>
-        <th class="cellrowborder" valign="top" width="15%" id="mcps1.2.5.1.2"><p id="p76431556122218"><a name="p76431556122218"></a><a name="p76431556122218"></a>类型</p>
-        </th>
-        <th class="cellrowborder" valign="top" width="15%" id="mcps1.2.5.1.3"><p id="p36431656182212"><a name="p36431656182212"></a><a name="p36431656182212"></a>默认值</p>
-        </th>
-        <th class="cellrowborder" valign="top" width="50%" id="mcps1.2.5.1.4"><p id="p14643165619226"><a name="p14643165619226"></a><a name="p14643165619226"></a>说明</p>
-        </th>
-        </tr>
-        </thead>
-        <tbody><tr id="row147967195431"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p13644556142217"><a name="p13644556142217"></a><a name="p13644556142217"></a>-volcanoType</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p1564425682216"><a name="p1564425682216"></a><a name="p1564425682216"></a>bool</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p76441056102218"><a name="p76441056102218"></a><a name="p76441056102218"></a>false</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.5.1.4 "><p id="p1164405622217"><a name="p1164405622217"></a><a name="p1164405622217"></a>是否使用<span id="ph2977131831719"><a name="ph2977131831719"></a><a name="ph2977131831719"></a>Volcano</span>进行调度，如使用动态虚拟化，需要设置为true。</p>
-        </td>
-        </tr>
-        <tr id="row89141810131416"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p1291431016147"><a name="p1291431016147"></a><a name="p1291431016147"></a>-presetVirtualDevice</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p591461020148"><a name="p591461020148"></a><a name="p591461020148"></a>bool</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p12914410141413"><a name="p12914410141413"></a><a name="p12914410141413"></a>true</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.5.1.4 "><p id="p73991313228"><a name="p73991313228"></a><a name="p73991313228"></a>静态虚拟化功能开关，目前支持<span id="ph127231857134413"><a name="ph127231857134413"></a><a name="ph127231857134413"></a>Atlas 训练系列产品</span>、<span id="ph196481326163812"><a name="ph196481326163812"></a><a name="ph196481326163812"></a>Atlas 推理系列产品</span>，且值只能为true。</p>
-        <p id="p199141410191410"><a name="p199141410191410"></a><a name="p199141410191410"></a>如使用动态虚拟化，需要设置为false。目前支持<span id="ph4338133473813"><a name="ph4338133473813"></a><a name="ph4338133473813"></a>Atlas 推理系列产品</span>的动态虚拟化，且需要同步开启<span id="ph106441921181719"><a name="ph106441921181719"></a><a name="ph106441921181719"></a>Volcano</span>使用，即设置<span class="parmname" id="parmname48693348182"><a name="parmname48693348182"></a><a name="parmname48693348182"></a>“-volcanoType”</span>参数为true。</p>
-        </td>
-        </tr>
-        </tbody>
-        </table>
+        |参数|类型|默认值|说明|
+        |--|--|--|--|
+        |-volcanoType|bool|false|是否使用Volcano进行调度，如使用动态虚拟化，需要设置为true。|
+        |-presetVirtualDevice|bool|true|静态虚拟化功能开关，值只能为true。<p>如使用动态虚拟化，需要设置为false，并需要同步开启Volcano，即设置“-volcanoType”参数为true。</p>|
 
         YAML启动说明如下：
 
@@ -1114,7 +803,7 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
             kubectl apply -f device-plugin-310P-v{version}.yaml
             ```
 
-        -   K8s集群中存在使用Atlas 训练系列产品节点（Ascend Device Plugin独立工作，不配合Volcano和Ascend Operator使用）。
+        -   K8s集群中存在使用Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品、Atlas A2 推理系列产品、Atlas A3 推理系列产品节点（Ascend Device Plugin独立工作，不配合Volcano和Ascend Operator使用）。
 
             ```
             kubectl apply -f device-plugin-910-v{version}.yaml
@@ -1126,7 +815,7 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
             kubectl apply -f device-plugin-310P-volcano-v{version}.yaml
             ```
 
-        -   K8s集群中存在使用Atlas 训练系列产品节点（配合Volcano和Ascend Operator使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
+        -   K8s集群中存在使用Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品、Atlas A2 推理系列产品、Atlas A3 推理系列产品节点（配合Volcano和Ascend Operator使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
 
             ```
             kubectl apply -f device-plugin-volcano-v{version}.yaml
@@ -1347,37 +1036,10 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
         **表 3** Ascend Device Plugin启动参数
 
         <a name="table1064314568229"></a>
-        <table><thead align="left"><tr id="row1164315632218"><th class="cellrowborder" valign="top" width="20%" id="mcps1.2.5.1.1"><p id="p176431856192214"><a name="p176431856192214"></a><a name="p176431856192214"></a>参数</p>
-        </th>
-        <th class="cellrowborder" valign="top" width="15%" id="mcps1.2.5.1.2"><p id="p76431556122218"><a name="p76431556122218"></a><a name="p76431556122218"></a>类型</p>
-        </th>
-        <th class="cellrowborder" valign="top" width="15%" id="mcps1.2.5.1.3"><p id="p36431656182212"><a name="p36431656182212"></a><a name="p36431656182212"></a>默认值</p>
-        </th>
-        <th class="cellrowborder" valign="top" width="50%" id="mcps1.2.5.1.4"><p id="p14643165619226"><a name="p14643165619226"></a><a name="p14643165619226"></a>说明</p>
-        </th>
-        </tr>
-        </thead>
-        <tbody><tr id="row147967195431"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p13644556142217"><a name="p13644556142217"></a><a name="p13644556142217"></a>-volcanoType</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p1564425682216"><a name="p1564425682216"></a><a name="p1564425682216"></a>bool</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p76441056102218"><a name="p76441056102218"></a><a name="p76441056102218"></a>false</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.5.1.4 "><p id="p1164405622217"><a name="p1164405622217"></a><a name="p1164405622217"></a>是否使用<span id="ph10322145911174"><a name="ph10322145911174"></a><a name="ph10322145911174"></a>Volcano</span>进行调度，如使用动态虚拟化，需要设置为true。</p>
-        </td>
-        </tr>
-        <tr id="row89141810131416"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p1291431016147"><a name="p1291431016147"></a><a name="p1291431016147"></a>-presetVirtualDevice</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p591461020148"><a name="p591461020148"></a><a name="p591461020148"></a>bool</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p12914410141413"><a name="p12914410141413"></a><a name="p12914410141413"></a>true</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.5.1.4 "><p id="p73991313228"><a name="p73991313228"></a><a name="p73991313228"></a>静态虚拟化功能开关，目前支持<span id="ph327965117217"><a name="ph327965117217"></a><a name="ph327965117217"></a>Atlas 训练系列产品</span>和<span id="ph194018535399"><a name="ph194018535399"></a><a name="ph194018535399"></a>Atlas 推理系列产品</span>，且值只能为true。</p>
-        <p id="p199141410191410"><a name="p199141410191410"></a><a name="p199141410191410"></a>如使用动态虚拟化，需要设置为false。目前支持<span id="ph136107004019"><a name="ph136107004019"></a><a name="ph136107004019"></a>Atlas 推理系列产品</span>的动态虚拟化，需要同步开启<span id="ph85138221820"><a name="ph85138221820"></a><a name="ph85138221820"></a>Volcano</span>使用。</p>
-        </td>
-        </tr>
-        </tbody>
-        </table>
+        |参数|类型|默认值|说明|
+        |--|--|--|--|
+        |-volcanoType|bool|false|是否使用Volcano进行调度，如使用动态虚拟化，需要设置为true。|
+        |-presetVirtualDevice|bool|true|静态虚拟化功能开关，值只能为true。<p>如使用动态虚拟化，需要设置为false，并需要同步开启Volcano，即设置“-volcanoType”参数为true。</p>|
 
         YAML启动说明如下：
 

@@ -19,9 +19,23 @@
 
 # 最新消息
 
-- [2025.10.25]: 🚀 MindCluster支持亚健康故障热迁移
-- [2025.10.25]: 🚀 MindCluster支持DP弹性扩缩容训练
-- [2025.10.25]: 🚀 MindCluster支持慢节点、慢网络检测
+- [2026.01.13]: 🚀 NPU Exporter支持输出SN序列号
+- [2026.01.13]: 🚀 支持基于AIBrix vLLM服务化实例级重调度
+- [2026.01.13]: 🚀 基于AIBrix定义的PD分离CRD一键部署vLLM推理服务
+- [2026.01.13]: 🚀 基于OME定义的PD分离CRD一键部署SGLang推理服务
+- [2026.01.13]: 🚀 支持SGLang OME部署与实例级重调度
+- [2026.01.13]: 🚀 调度与资源控制对象解耦
+- [2026.01.13]: 🚀 调度资源占用优化，任务入队一定时间后未调度则重新入队
+- [2026.01.13]: 🚀 支持公共故障预隔离
+- [2026.01.13]: 🚀 NPU Exporter支持自定义指标
+- [2026.01.13]: 🚀 支持A3推理多实例任务调度
+- [2026.01.13]: 🚀 A3兼容A2 accelerator-type资源类型
+- [2026.01.13]: 🚀 volcano1.10、1.11、1.12；k8s 1.31、1.32、1.34；docker 28.5.1、containerd 2.1.4兼容性验证
+- [2026.01.13]: 🚀 一体机推理任务容器守护进程参考设计
+- [2026.01.13]: 🚀 一体机的NPU故障检测与恢复
+- [2026.01.13]: 🚀 调度器支持StatefulSet功能
+- [2026.01.13]: 🚀 支持MindSpore框架下亚健康热切
+- [2026.01.13]: 🚀 训练快恢易用性增强
 
 # 简介
 
@@ -200,7 +214,7 @@
 
 # 版本说明
 
-MindCluster版本配套详情请参考：[版本配套详情](https://www.hiascend.com/developer/download/community)
+MindCluster版本配套详情请参考：[版本配套详情](/docs/zh/release_notes.md)
 
 # 兼容性信息
 
@@ -233,13 +247,11 @@ MindCluster基础调度特性与断点续训特性支持的框架：Pytorch、Mi
 
 ## 组件安装
 
-进入昇腾社区MindCluster产品界面，点击“查看文档”，再次点击页面上方横向导航栏“集群调度”，进入《MindCluster集群调度用户指南》。在安装和使用前，用户需要提前了解集群调度组件的特性，并根据具体特性选择安装相应的组件。
-
-        入口地址：https://www.hiascend.com/software/mindcluster
+在安装和使用集群调度组件前，用户需要提前了解[集群调度组件的特性](./docs/zh/scheduling/introduction.md)，并根据具体特性的特点和功能，选择需要使用的特性并[安装相应的组件](./docs/zh/scheduling/installation_guide.md#安装部署)。
 
 # 快速入门
 
-MindCluster将以单台Atlas 800T A2 训练服务器（同时作为管理节点和计算节点）为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。具体的操作请参考：[快速入门](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/clustersched/dlug/mxdlug_start_006.html)。
+MindCluster将以单台Atlas 800T A2 训练服务器（同时作为管理节点和计算节点）为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。具体的操作请参考：[快速入门](./docs/zh/scheduling/quick_start.md)。
 
 # 特性介绍
 
@@ -247,28 +259,31 @@ MindCluster组件提供资源调度功能，支持NPU集群作业调度、运维
 
 | 特性名称       | 介绍                                                                                                            | Released |
 |------------|---------------------------------------------------------------------------------------------------------------|----------|
-| 容器化支持特性    | [link](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/clustersched/dlug/dlruntime_ug_002.html) | ✅ |
-| 资源监测特性     | [link](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/clustersched/dlug/mxdlug_monit_001.html)                                                                                                 | ✅ |
-| 虚拟化实例特性    | [link](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/clustersched/dlug/cpaug_0010.html)                                                                                                  | ✅ |
-| 基础调度特性     | [link](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/clustersched/dlug/mxdlug_scheduling_001.html)                                                                                                    | ✅ |
-| 断点续训特性     |[link](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/clustersched/dlug/dl_resume_002.html)                                                                                                  | ✅ |
-| PD分离任务最佳实践 |[link](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/clustersched/dlug/dl_bestpractice_001.html)   | ✅ |
+| 容器化支持特性    | [link](./docs/zh/scheduling/usage/containerization.md) | ✅ |
+| 资源监测特性     | [link](./docs/zh/scheduling/usage/resource_monitoring.md)                                                                                                 | ✅ |
+| 虚拟化实例特性    | [link](./docs/zh/scheduling/usage/virtual_instance.md)                                                                                                  | ✅ |
+| 基础调度特性     | [link](./docs/zh/scheduling/usage/basic_scheduling.md)                                                                                                    | ✅ |
+| 断点续训特性     |[link](./docs/zh/scheduling/usage/resumable_training.md)                                                                                                  | ✅ |
+| 一体机特性     |[link](./docs/zh/scheduling/usage/appliance.md)                                                                                                  | ✅ |
+| MindIE Motor推理任务最佳实践 |[link](./docs/zh/scheduling/usage/mindie_motor_best_practice.md)   | ✅ |
+| SGLang推理任务最佳实践 |[link](./docs/zh/scheduling/usage/sglang_best_practice.md)   | ✅ |
+| vLLM推理任务最佳实践 |[link](./docs/zh/scheduling/usage/vllm_best_practice.md)   | ✅ |
 
 # API参考
 
-API参考详见：[API参考](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/clustersched/dlug/dlug_api_003.html)。
+API参考请参考：[API参考](./docs/zh/scheduling/api/npu_exporter.md)。
 
 # FAQ
 
-相关FAQ请参考：[FAQ](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/clustersched/dlug/dlug_installation_faq_002.html)。
+相关FAQ请参考：[FAQ](./docs/zh/scheduling/faq.md)。
 
 # 安全声明
 
-- 当前容器方式部署本组件，本组件的认证鉴权方式为ServiceAccount， 该认证鉴权方式为ServiceAccount的token明文显示，建议用户自行进行安全加强。
+- 当前容器方式部署本组件，本组件的认证鉴权方式为ServiceAccount，该认证鉴权方式为ServiceAccount的token明文显示，建议用户自行进行安全加强。
 - 当前特权容器方式部署，该容器权限具有一定风险，建议用户自行进行安全加强。
-- 其他安全声明详见：[安全声明](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/clustersched/dlug/mxdlug_com_012.html)
-- 通信矩阵详见：[通信矩阵](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/ref/commumatrix/commumatrix_02.html)
-- 公网地址详见：[公网地址](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/clustersched/dlug/mxdlug_appendices_014.html)
+- 其他安全声明详见：[安全声明](./docs/zh/scheduling/references.md#安全加固)
+- 通信矩阵详见：[通信矩阵](https://gitcode.com/Ascend/mind-cluster/wiki/Home.md)
+- 公网地址详见：[公网地址](./docs/zh/resource/MindCluster%207.3.0%20公网地址.xlsx)
 
 # 分支维护策略
 
@@ -305,7 +320,9 @@ API参考详见：[API参考](https://www.hiascend.com/document/detail/zh/mindcl
 
 # License
 
-MindCluster以Apache 2.0许可证许可，对应许可证文本可查阅[MindCluster根目录](https://gitcode.com/Ascend/mind-cluster/blob/master/LICENSE)。
+MindCluster以Apache 2.0许可证许可，对应许可证文本可查阅[LICENSE文件](https://gitcode.com/Ascend/mind-cluster/blob/master/LICENSE)。
+
+介绍MindCluster docs目录下的文档适用CC-BY 4.0许可证，具体请参见[LICENSE文件](./docs/LICENSE)。
 
 # 贡献声明
 
