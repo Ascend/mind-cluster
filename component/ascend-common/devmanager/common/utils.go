@@ -21,14 +21,33 @@ import (
 	"regexp"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/util/sets"
+
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 )
 
 var (
-	reg910A = regexp.MustCompile(api.Ascend910APattern)
-	reg910B = regexp.MustCompile(api.Ascend910BPattern)
-	reg310P = regexp.MustCompile(api.Ascend310PPattern)
+	reg910A           = regexp.MustCompile(api.Ascend910APattern)
+	reg910B           = regexp.MustCompile(api.Ascend910BPattern)
+	reg310P           = regexp.MustCompile(api.Ascend310PPattern)
+	templateNameLists = map[string]sets.String{
+		api.Ascend310P: sets.NewString(
+			"vir04", "vir02", "vir01", "vir04_3c",
+			"vir02_1c", "vir04_4c_dvpp", "vir04_3c_ndvpp",
+		),
+		api.Ascend910A: sets.NewString(
+			"vir16", "vir08", "vir04", "vir02", "vir01",
+		),
+		api.Ascend910B: sets.NewString(
+			"vir03_1c_8g", "vir05_1c_8g", "vir05_1c_16g",
+			"vir06_1c_16g", "vir10_3c_16g", "vir10_3c_16g_nm",
+			"vir10_3c_32g", "vir10_4c_16g_m", "vir12_3c_32g",
+		),
+		api.Ascend910A3: sets.NewString(
+			"vir12_3c_32g", "vir06_1c_16g", "vir05_1c_16g", "vir10_3c_32g",
+		),
+	}
 )
 
 // IsGreaterThanOrEqualInt32 check num range
@@ -157,33 +176,11 @@ func GetDeviceTypeByChipName(chipName string) string {
 	return ""
 }
 
-func get910TemplateNameList() map[string]struct{} {
-	return map[string]struct{}{"vir16": {}, "vir08": {}, "vir04": {}, "vir02": {}, "vir01": {}}
-}
-
-func get910BTemplateNameList() map[string]struct{} {
-	return map[string]struct{}{
-		"vir03_1c_8g": {}, "vir05_1c_8g": {}, "vir05_1c_16g": {},
-		"vir06_1c_16g": {}, "vir10_3c_16g": {}, "vir10_3c_16g_nm": {},
-		"vir10_3c_32g": {}, "vir10_4c_16g_m": {}, "vir12_3c_32g": {}}
-}
-
-func get310PTemplateNameList() map[string]struct{} {
-	return map[string]struct{}{"vir04": {}, "vir02": {}, "vir01": {}, "vir04_3c": {}, "vir02_1c": {},
-		"vir04_4c_dvpp": {}, "vir04_3c_ndvpp": {}}
-}
-
 // IsValidTemplateName check template name meet the requirement
 func IsValidTemplateName(devType, templateName string) bool {
 	isTemplateNameValid := false
-	switch devType {
-	case api.Ascend310P:
-		_, isTemplateNameValid = get310PTemplateNameList()[templateName]
-	case api.Ascend910A:
-		_, isTemplateNameValid = get910TemplateNameList()[templateName]
-	case api.Ascend910B:
-		_, isTemplateNameValid = get910BTemplateNameList()[templateName]
-	default:
+	if templateNames, ok := templateNameLists[devType]; ok {
+		_, isTemplateNameValid = templateNames[templateName]
 	}
 	return isTemplateNameValid
 }
