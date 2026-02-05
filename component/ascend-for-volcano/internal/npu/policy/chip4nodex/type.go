@@ -10,12 +10,12 @@
    limitations under the License.
 */
 
-// Package module300ia5 for any struct used in module300ia5
-package module300ia5
+// Package chip4nodex for any struct used in module300ia5
+package chip4nodex
 
 import "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a5"
 
-type ascend300IA5 struct {
+type chip4nodex struct {
 	ascend910a5.Base910A5
 	affScoreList [][]int
 }
@@ -23,14 +23,14 @@ type ascend300IA5 struct {
 const (
 	networkUnhealthyNPU = "huawei.com/Ascend910-NetworkUnhealthy"
 	unhealthyNPU        = "huawei.com/Ascend910-Unhealthy"
-	// Ascend300I4Px8Label the label 300I-A5-4p-8
-	Ascend300I4Px8Label = "300I-A5-4p-8"
-	// Ascend300I4Px16Label the label 300I-A5-4p-16
-	Ascend300I4Px16Label = "300I-A5-4p-16"
-	// Ascend300Ix8Label the label 300I-A5-8
-	Ascend300Ix8Label = "300I-A5-8"
-	// Ascend300Ix16Label the label 300I-A5-16
-	Ascend300Ix16Label = "300I-A5-16"
+	// SchedulePolicy4Px8 the label 4p-8
+	SchedulePolicy4Px8 = "4p-8"
+	// SchedulePolicy4Px16 the label 4p-16
+	SchedulePolicy4Px16 = "4p-16"
+	// SchedulePolicy1Px8 the label 1p-8
+	SchedulePolicy1Px8 = "1p-8"
+	// SchedulePolicy1Px16 the label 1p-16
+	SchedulePolicy1Px16 = "1p-16"
 	// maxNodeNPUNumX8  for the max cards num of one node is 8
 	maxNodeNPUNumX8 = 8
 	// maxNodeNPUNumX16 for the max cards num of one node is 16

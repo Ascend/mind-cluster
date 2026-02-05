@@ -165,7 +165,7 @@ func (tp *module800ia5stacking) getTheSameSuperPodIdNodeNpuNum(curNode plugin.NP
 
 // initSelectedCardCache get previously selected card information for the current job (scaling scenario), and collect all node information with tasks into the cache
 func (tp *module800ia5stacking) initSelectedCardCache(task *api.TaskInfo) {
-	if tp.NPUSelectedCache != nil && len(tp.NPUSelectedCache) != 0 {
+	if len(tp.NPUSelectedCache) != 0 {
 		return
 	}
 	vcJob, ok := tp.ScheduleEnv.Jobs[task.Job]
