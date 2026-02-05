@@ -59,6 +59,8 @@ const (
 	JobKind310PValue = "ascend-310P"
 	// JobKind910BValue 910B ring controller name
 	JobKind910BValue = "ascend-910b"
+	// JobKindDefaultValue default ring controller name
+	JobKindDefaultValue = "huawei.com/npu"
 	// Module910bx16AcceleratorType for module mode.
 	Module910bx16AcceleratorType = "module-910b-16"
 	// Module910bx8AcceleratorType for module mode.

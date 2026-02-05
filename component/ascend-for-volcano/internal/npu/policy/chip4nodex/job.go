@@ -11,8 +11,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package module300ia5 is using for 300I server affinity schedule.
-package module300ia5
+// Package chip4nodex is using for 300I server affinity schedule.
+package chip4nodex
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ import (
 )
 
 // judgeNodeAndTaskNPU Determine whether the task required NPU number can be met
-func (tp *ascend300IA5) judgeNodeAndTaskNPU(taskNPU int, nodeTop []int) error {
+func (tp *chip4nodex) judgeNodeAndTaskNPU(taskNPU int, nodeTop []int) error {
 	// need 4Pmesh affinity
 	if is4PmeshAffinity(taskNPU) {
 		if judgeNodeAndTaskNpuIn4Pmesh(taskNPU, nodeTop) {
@@ -40,8 +40,8 @@ func (tp *ascend300IA5) judgeNodeAndTaskNPU(taskNPU int, nodeTop []int) error {
 	return fmt.Errorf("node topo does not meet task require(%d), available %v", taskNPU, nodeTop)
 }
 
-// valid300ia5NPUJob check the job req npu num and mode
-func (tp *ascend300IA5) valid300ia5NPUJob() *api.ValidateResult {
+// validNPUJob check the job req npu num and mode
+func (tp *chip4nodex) validNPUJob() *api.ValidateResult {
 	vResult := &api.ValidateResult{}
 	var vErr error
 	defer func() {
@@ -74,7 +74,7 @@ func (tp *ascend300IA5) valid300ia5NPUJob() *api.ValidateResult {
 }
 
 // checkJobMode to check job mode:distribute and single.
-func (tp *ascend300IA5) checkJobMode() error {
+func (tp *chip4nodex) checkJobMode() error {
 	if tp.NPUTaskNum == 0 {
 		klog.V(util.LogErrorLev).Infof("GetVTaskNumInVJob %s has no npu tasks.", tp.Name)
 		return fmt.Errorf("%s no npu job", tp.Name)
@@ -89,7 +89,7 @@ func (tp *ascend300IA5) checkJobMode() error {
 
 // getNodeBestScore Based on the number of NPUs requested by the task and the number of NPUs actually available on the node,
 // look up the corresponding score from affScoreList.
-func (tp *ascend300IA5) getNodeBestScore(taskNPUNum int, npuTop []int) (int, error) {
+func (tp *chip4nodex) getNodeBestScore(taskNPUNum int, npuTop []int) (int, error) {
 	if taskNPUNum < 1 || taskNPUNum > tp.MaxNodeNPUNum {
 		return 0, fmt.Errorf("task req npu num<%d> is invalid", taskNPUNum)
 	}
@@ -160,7 +160,7 @@ func getAvailableMeshInNode(taskNPUNum int, nodeTop []int) (int, int) {
 
 // getNodeBestScoreIn4Pmesh Based on the number of NPUs requested by the task and the number of NPUs actually available on the node,
 // and considering the 4Pmesh affinity requirements, look up the corresponding score value in the affScoreList.
-func (tp *ascend300IA5) getNodeBestScoreIn4Pmesh(taskNPUNum int, npuTop []int) (int, error) {
+func (tp *chip4nodex) getNodeBestScoreIn4Pmesh(taskNPUNum int, npuTop []int) (int, error) {
 	if taskNPUNum < 1 || taskNPUNum > tp.MaxNodeNPUNum {
 		return 0, fmt.Errorf("task req npu num<%d> is invalid", taskNPUNum)
 	}
@@ -179,7 +179,7 @@ func (tp *ascend300IA5) getNodeBestScoreIn4Pmesh(taskNPUNum int, npuTop []int) (
 }
 
 // scoreNodeFor4Pmesh Scoring logic in scenarios where 4Pmesh && need Affinity
-func (tp *ascend300IA5) scoreNodeFor4Pmesh(taskNPUNum int, npuTop []int) float64 {
+func (tp *chip4nodex) scoreNodeFor4Pmesh(taskNPUNum int, npuTop []int) float64 {
 	klog.V(util.LogInfoLev).Info("begin to score node in 4Pmesh scenario")
 	bestScore, err := tp.getNodeBestScoreIn4Pmesh(taskNPUNum, npuTop)
 	if err != nil {
@@ -197,7 +197,7 @@ func (tp *ascend300IA5) scoreNodeFor4Pmesh(taskNPUNum int, npuTop []int) float64
 }
 
 // scoreNodeForGeneral Scoring logic for scenarios where not 4Pmesh or affinity does not need to be ensured
-func (tp *ascend300IA5) scoreNodeForGeneral(taskNPUNum int, npuTop []int) float64 {
+func (tp *chip4nodex) scoreNodeForGeneral(taskNPUNum int, npuTop []int) float64 {
 	klog.V(util.LogInfoLev).Info("begin to score node in general scenario")
 	bestScore, err := tp.getNodeBestScore(taskNPUNum, npuTop)
 	if err != nil {
@@ -208,7 +208,7 @@ func (tp *ascend300IA5) scoreNodeForGeneral(taskNPUNum int, npuTop []int) float6
 }
 
 // selectNPUIn4Pmesh NPU selection logic in 4Pmesh scenarios
-func (tp *ascend300IA5) selectNPUIn4Pmesh(taskNPUNum int, nodeTop []int) []int {
+func (tp *chip4nodex) selectNPUIn4Pmesh(taskNPUNum int, nodeTop []int) []int {
 	// select single mesh
 	if taskNPUNum < cardsNumPerMesh {
 		return selectNPUinSingleMesh(taskNPUNum, nodeTop)

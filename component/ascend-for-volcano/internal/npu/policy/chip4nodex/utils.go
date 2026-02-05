@@ -10,8 +10,8 @@
    limitations under the License.
 */
 
-// Package module300ia5 for any common functions used in module300ia5
-package module300ia5
+// Package chip4nodex for any common functions used in module300ia5
+package chip4nodex
 
 import (
 	"k8s.io/klog"
@@ -61,9 +61,9 @@ func createAffScoreList(maxCardNum int) [][]int {
 // getNPUNumByHandler split the name string return values
 func getNPUNumByHandler(name string) int {
 	switch name {
-	case Ascend300I4Px8Label:
+	case SchedulePolicy4Px8:
 		return maxNodeNPUNumX8
-	case Ascend300I4Px16Label:
+	case SchedulePolicy4Px16:
 		return maxNodeNPUNumX16
 	default:
 		klog.V(util.LogErrorLev).Infof("found an unsupported handler name %s", name)

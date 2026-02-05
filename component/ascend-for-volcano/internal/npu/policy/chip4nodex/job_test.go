@@ -11,8 +11,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package module300ia5 is using for HuaWei 300I A5 affinity schedule.
-package module300ia5
+// Package chip4nodex is using for HuaWei 300I A5 affinity schedule.
+package chip4nodex
 
 import (
 	"reflect"
@@ -29,7 +29,7 @@ const requiredNodesForTestFour = 4
 
 // TestJudgeNodeAndTaskNPU test JudgeNodeAndTaskNPU
 func TestJudgeNodeAndTaskNPU(t *testing.T) {
-	mod := &ascend300IA5{}
+	mod := &chip4nodex{}
 	if err := mod.judgeNodeAndTaskNPU(requiredNodesForTestThree, []int{0, 1, 2}); err != nil {
 		t.Errorf("expected no error when required=3 and nodeTop length is 3, got: %v", err)
 	}
@@ -42,7 +42,7 @@ func TestJudgeNodeAndTaskNPU(t *testing.T) {
 
 // TestCheckJobModeNoTasks checkJobMode: NPUTaskNum=0 / per-task invalid / per-task valid
 func TestCheckJobModeNoTasks(t *testing.T) {
-	tp := &ascend300IA5{
+	tp := &chip4nodex{
 		Base910A5: ascend910a5.Base910A5{NPUHandler: base.NPUHandler{
 			MaxNodeNPUNum:    8,
 			SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{}},
@@ -59,7 +59,7 @@ func TestCheckJobModeNoTasks(t *testing.T) {
 }
 
 func TestCheckJobModeValid(t *testing.T) {
-	tp := &ascend300IA5{
+	tp := &chip4nodex{
 		Base910A5: ascend910a5.Base910A5{NPUHandler: base.NPUHandler{
 			MaxNodeNPUNum:    8,
 			SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{}},
@@ -76,7 +76,7 @@ func TestCheckJobModeValid(t *testing.T) {
 
 // TestValid800ia5NPUJobWarningsAndModeError SpBlock/TpBlock warning + mode error
 func TestValid800ia5NPUJobWarningsAndModeError(t *testing.T) {
-	tp := &ascend300IA5{
+	tp := &chip4nodex{
 		Base910A5: ascend910a5.Base910A5{NPUHandler: base.NPUHandler{
 			MaxNodeNPUNum: 5,
 			SchedulerJobAttr: util.SchedulerJobAttr{
@@ -87,7 +87,7 @@ func TestValid800ia5NPUJobWarningsAndModeError(t *testing.T) {
 	tp.Name = "jobD"
 	tp.NPUTaskNum = 0
 	tp.ReqNPUNum = 0
-	res := tp.valid300ia5NPUJob()
+	res := tp.ValidNPUJob()
 	if res == nil {
 		t.Fatal("Expected to return ValidateResult, but actually nil")
 	}
@@ -101,7 +101,7 @@ func TestValid800ia5NPUJobWarningsAndModeError(t *testing.T) {
 
 // TestValid800ia5NPUJobSuccess Normal execution: no warnings, checkJobMode passed
 func TestValid800ia5NPUJobSuccess(t *testing.T) {
-	tp := &ascend300IA5{
+	tp := &chip4nodex{
 		Base910A5: ascend910a5.Base910A5{NPUHandler: base.NPUHandler{
 			MaxNodeNPUNum: 10,
 			SchedulerJobAttr: util.SchedulerJobAttr{
@@ -112,7 +112,7 @@ func TestValid800ia5NPUJobSuccess(t *testing.T) {
 	tp.Name = "jobE"
 	tp.NPUTaskNum = 2
 	tp.ReqNPUNum = 4
-	if got := tp.valid300ia5NPUJob(); got != nil {
+	if got := tp.ValidNPUJob(); got != nil {
 		t.Errorf("The normal path should return nil, but actually: %v", got)
 	}
 }
@@ -359,25 +359,25 @@ func TestIs4PmeshAffinity(t *testing.T) {
 	}{
 		{
 			name:     "single card should be true",
-			jobType:  Ascend300I4Px8Label,
+			jobType:  SchedulePolicy4Px8,
 			taskNPUs: 1,
 			want:     true,
 		},
 		{
 			name:     "valid label, task < CardsNumPerMesh",
-			jobType:  Ascend300I4Px16Label,
+			jobType:  SchedulePolicy4Px16,
 			taskNPUs: 2,
 			want:     true,
 		},
 		{
 			name:     "valid label, task divisible by CardsNumPerMesh",
-			jobType:  Ascend300I4Px8Label,
+			jobType:  SchedulePolicy4Px8,
 			taskNPUs: 8,
 			want:     true,
 		},
 		{
 			name:     "valid label, task not < mesh and not divisible",
-			jobType:  Ascend300I4Px8Label,
+			jobType:  SchedulePolicy4Px8,
 			taskNPUs: 5,
 			want:     false,
 		},
@@ -385,7 +385,7 @@ func TestIs4PmeshAffinity(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tp := ascend300IA5{}
+			tp := chip4nodex{}
 			tp.SetPluginName(tt.jobType)
 
 			got := is4PmeshAffinity(tt.taskNPUs)
@@ -398,7 +398,7 @@ func TestIs4PmeshAffinity(t *testing.T) {
 }
 
 func TestGetNodeBestScoreIn4Pmesh(t *testing.T) {
-	tp := &ascend300IA5{
+	tp := &chip4nodex{
 		Base910A5: ascend910a5.Base910A5{
 			NPUHandler: base.NPUHandler{MaxNodeNPUNum: 16},
 		},
@@ -456,7 +456,7 @@ func TestGetNodeBestScoreIn4Pmesh(t *testing.T) {
 }
 
 func TestScoreNodeFor4Pmesh(t *testing.T) {
-	tp := &ascend300IA5{
+	tp := &chip4nodex{
 		Base910A5: ascend910a5.Base910A5{
 			NPUHandler: base.NPUHandler{MaxNodeNPUNum: 16},
 		},

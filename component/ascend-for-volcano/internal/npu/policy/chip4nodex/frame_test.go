@@ -12,8 +12,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package module300ia5 is using for HuaWei 300I A5 affinity schedule.
-package module300ia5
+// Package chip4nodex is using for HuaWei 300I A5 affinity schedule.
+package chip4nodex
 
 import (
 	"fmt"
@@ -51,9 +51,9 @@ func createValidTask(name string) *api.TaskInfo {
 }
 
 func TestNew(t *testing.T) {
-	handler := New(Ascend300I4Px8Label)
-	if handler.GetPluginName() != Ascend300I4Px8Label {
-		t.Errorf("expected plugin name '300I-A5-4p-8', got %v", handler.GetPluginName())
+	handler := New(SchedulePolicy4Px8)
+	if handler.GetPluginName() != SchedulePolicy4Px8 {
+		t.Errorf("expected plugin name '4p-8', got %v", handler.GetPluginName())
 	}
 	if handler.GetAnnoName() != util.NPU910CardName {
 		t.Errorf("expected anno name '%v', got %v", util.NPU910CardName, handler.GetAnnoName())
@@ -64,7 +64,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestReleaseAnnotation(t *testing.T) {
-	handler := New(Ascend300I4Px8Label)
+	handler := New(SchedulePolicy4Px8)
 	task := createValidTask("task1")
 	node := plugin.NPUNode{
 		CommonNode: plugin.CommonNode{
@@ -139,7 +139,7 @@ func TestCheckNodeNPUByTaskInsufficientTopology(t *testing.T) {
 
 // TestScoreBestNPUNodesInvalidArgs ScoreBestNPUNodes Parameter check
 func TestScoreBestNPUNodesInvalidArgs(t *testing.T) {
-	h := &ascend300IA5{}
+	h := &chip4nodex{}
 	if err := h.ScoreBestNPUNodes(nil, nil, nil); err == nil ||
 		!strings.Contains(err.Error(), util.ArgumentError) {
 		t.Errorf("invalid args → expected ArgumentError, got %v", err)
@@ -148,7 +148,7 @@ func TestScoreBestNPUNodesInvalidArgs(t *testing.T) {
 
 // TestUseAnnotationInvalidArgs UseAnnotation Parameter check
 func TestUseAnnotationInvalidArgs(t *testing.T) {
-	h := &ascend300IA5{}
+	h := &chip4nodex{}
 	// nil task
 	if out := h.UseAnnotation(nil, makeNodeWithKChips(singleChip)); out != nil {
 		t.Errorf("nil task → expected nil, got %v", out)
@@ -163,7 +163,7 @@ func TestUseAnnotationInvalidArgs(t *testing.T) {
 
 // TestSelectNPUFromNodeError selectNPUFromNode Wrong path
 func TestSelectNPUFromNodeError(t *testing.T) {
-	h := &ascend300IA5{
+	h := &chip4nodex{
 		Base910A5: ascend910a5.Base910A5{
 			NPUHandler: base.NPUHandler{
 				SchedulerJobAttr: util.SchedulerJobAttr{
@@ -194,14 +194,14 @@ func makeTask(name string, reqCount int) *api.TaskInfo {
 	}
 }
 
-// newHandler creates a ascend300IA5 and injects a util.NPUJob with
+// newHandler creates a chip4nodex and injects a util.NPUJob with
 // SpBlockNPUNum=1 so that multi-card topology splits into k blocks.
-func newHandler(pluginName string, task *api.TaskInfo, reqCount int) *ascend300IA5 {
+func newHandler(pluginName string, task *api.TaskInfo, reqCount int) *chip4nodex {
 	baseObj := New(pluginName)
-	h, ok := baseObj.(*ascend300IA5)
+	h, ok := baseObj.(*chip4nodex)
 	if !ok {
-		klog.Error("Type assertion failed: expected *ascend300IA5, got ", reflect.TypeOf(baseObj))
-		return &ascend300IA5{}
+		klog.Error("Type assertion failed: expected *chip4nodex, got ", reflect.TypeOf(baseObj))
+		return &chip4nodex{}
 	}
 	if h.NPUHandler.Jobs == nil {
 		h.NPUHandler.Jobs = make(map[api.JobID]plugin.SchedulerJob)
@@ -240,7 +240,7 @@ func newHandler(pluginName string, task *api.TaskInfo, reqCount int) *ascend300I
 
 func TestGetTaskReqNPUNumSuccess(t *testing.T) {
 	task := makeTask("t1", threeChips)
-	h := newHandler(Ascend300I4Px8Label, task, threeChips)
+	h := newHandler(SchedulePolicy4Px8, task, threeChips)
 	got, err := h.GetTaskReqNPUNum(task)
 	if err != nil || got != threeChips {
 		t.Fatalf("want (3,nil); got (%d,%v)", got, err)
@@ -250,9 +250,9 @@ func TestGetTaskReqNPUNumSuccess(t *testing.T) {
 func TestGetTaskReqNPUNumNoJob(t *testing.T) {
 	task := makeTask("t2", singleChip)
 	baseObj := New("p")
-	h, ok := baseObj.(*ascend300IA5) // no jobs injected
+	h, ok := baseObj.(*chip4nodex) // no jobs injected
 	if !ok {
-		t.Fatalf("Type assertion failed: expected *ascend300IA5, got %T", baseObj)
+		t.Fatalf("Type assertion failed: expected *chip4nodex, got %T", baseObj)
 	}
 	_, err := h.GetTaskReqNPUNum(task)
 	if err == nil || !strings.Contains(err.Error(), "is not npu job") {
@@ -262,7 +262,7 @@ func TestGetTaskReqNPUNumNoJob(t *testing.T) {
 
 func TestGetTaskReqNPUNumNoTask(t *testing.T) {
 	task := makeTask("t3", twoChips)
-	h := newHandler(Ascend300I4Px8Label, task, twoChips)
+	h := newHandler(SchedulePolicy4Px8, task, twoChips)
 	// remove the registered UID to trigger “is not npu task”
 	delete(h.NPUHandler.Jobs[task.Job].SchedulerJobAttr.NPUJob.Tasks, task.UID)
 	_, err := h.GetTaskReqNPUNum(task)
@@ -273,7 +273,7 @@ func TestGetTaskReqNPUNumNoTask(t *testing.T) {
 
 func TestValidNPUJobDoesNotPanic(t *testing.T) {
 	task := makeTask("t8", singleChip)
-	h := newHandler(Ascend300I4Px8Label, task, singleChip)
+	h := newHandler(SchedulePolicy4Px8, task, singleChip)
 	_ = h.ValidNPUJob()
 }
 
@@ -302,7 +302,7 @@ func prepareNode(k int) plugin.NPUNode {
 
 func TestCheckNodeNPUByTaskSuccess(t *testing.T) {
 	task := makeTask("task-ok", twoChips)
-	h := newHandler(Ascend300I4Px8Label, task, twoChips)
+	h := newHandler(SchedulePolicy4Px8, task, twoChips)
 	node := prepareNode(twoChips)
 	// Mapping of the two nodes registered in the handler
 	h.Nodes = map[string]plugin.NPUNode{node.Name: node}
@@ -314,7 +314,7 @@ func TestCheckNodeNPUByTaskSuccess(t *testing.T) {
 
 func TestScoreBestNPUNodesSuccess(t *testing.T) {
 	task := makeTask("task-score", 1)
-	h := newHandler(Ascend300I4Px8Label, task, singleChip)
+	h := newHandler(SchedulePolicy4Px8, task, singleChip)
 	nodeA := prepareNode(singleChip)
 	nodeA.Name = "node-A"
 	nodeB := prepareNode(singleChip)
@@ -342,7 +342,7 @@ func TestScoreBestNPUNodesSuccess(t *testing.T) {
 
 func TestScoreBestNPUNodesSuccessNoMesh(t *testing.T) {
 	task := makeTask("task-score", 1)
-	h := newHandler(Ascend300I4Px8Label, task, fiveChips)
+	h := newHandler(SchedulePolicy4Px8, task, fiveChips)
 	nodeA := prepareNode(fiveChips)
 	nodeA.Name = "node-A"
 	nodeB := prepareNode(sixChips)
@@ -378,7 +378,7 @@ func TestScoreBestNPUNodesSuccessNoMesh(t *testing.T) {
 
 func TestSelectNPUFromNodeSuccess(t *testing.T) {
 	task := makeTask("task-sel", threeChips)
-	h := newHandler(Ascend300I4Px8Label, task, threeChips)
+	h := newHandler(SchedulePolicy4Px8, task, threeChips)
 	node := prepareNode(threeChips)
 	h.NPUHandler.ScheduleEnv.ClusterCache.Nodes = map[string]plugin.NPUNode{node.Name: node}
 	picked, err := h.selectNPUFromNode(task, node)
@@ -395,7 +395,7 @@ func TestSelectNPUFromNodeSuccess(t *testing.T) {
 
 func TestUseAnnotationDefault(t *testing.T) {
 	task := makeTask("task-use", twoChips)
-	h := newHandler(Ascend300I4Px8Label, task, twoChips)
+	h := newHandler(SchedulePolicy4Px8, task, twoChips)
 	node := prepareNode(twoChips)
 	node.Name = "node-use"
 	h.Nodes = map[string]plugin.NPUNode{node.Name: node}

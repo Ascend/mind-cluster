@@ -69,7 +69,7 @@ func (sJob SchedulerJobAttr) GetPluginNameByReq() string {
 			return ""
 		}
 		switch label {
-		case JobKind910Value, JobKind910BValue:
+		case JobKind910Value, JobKind910BValue, JobKindDefaultValue:
 			name = NPU910CardName
 		case JobKind310PValue:
 			name = NPU310PCardName

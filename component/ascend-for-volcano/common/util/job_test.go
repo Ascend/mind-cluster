@@ -236,7 +236,14 @@ func TestGetPluginNameByReq(t *testing.T) {
 			t.Errorf("GetPluginNameByReq() = %v, want %v", got, NPU910CardName)
 		}
 	})
-	t.Run("02 will return empty string when dynamic job and label is nil", func(t *testing.T) {
+	t.Run("03 will return huawei.com/Ascend910 when SchedulerJobAttr require it", func(t *testing.T) {
+		sJob := SchedulerJobAttr{NPUJob: &NPUJob{ReqNPUName: AscendNPUCore}}
+		sJob.Label = map[string]string{JobKindKey: JobKindDefaultValue}
+		if got := sJob.GetPluginNameByReq(); got != NPU910CardName {
+			t.Errorf("GetPluginNameByReq() = %v, want %v", got, NPU910CardName)
+		}
+	})
+	t.Run("04 will return empty string when dynamic job and label is nil", func(t *testing.T) {
 		sJob := SchedulerJobAttr{NPUJob: &NPUJob{ReqNPUName: AscendNPUCore}}
 		if got := sJob.GetPluginNameByReq(); got != "" {
 			t.Errorf("GetPluginNameByReq() = %v, want %v", got, "")

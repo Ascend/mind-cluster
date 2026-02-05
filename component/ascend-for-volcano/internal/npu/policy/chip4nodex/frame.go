@@ -1,17 +1,19 @@
-/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-   http://www.apache.org/licenses/LICENSE-2.0
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+/*
+Copyright(C)2025. Huawei Technologies Co.,Ltd. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
-// Package module300ia5 for 300I server scheduling
-package module300ia5
+// Package chip4nodex for 300I server scheduling
+package chip4nodex
 
 import (
 	"errors"
@@ -25,10 +27,10 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
-// New return npu plugin for ascend300IA5 including 300I-A5-4p-8 or 300I-A5-4p-16 with 4p mesh
+// New return npu plugin for chip4nodex including 300I-A5-4p-8 or 300I-A5-4p-16 with 4p mesh
 func New(name string) base.AscendHandler {
-	m := &ascend300IA5{}
-	klog.V(util.LogInfoLev).Infof("ascend300IA5 card type =%s", name)
+	m := &chip4nodex{}
+	klog.V(util.LogInfoLev).Infof("chip4nodex card type =%s", name)
 	num := getNPUNumByHandler(name)
 	m.SetMaxNodeNPUNum(num)
 	m.SetPluginName(name)
@@ -39,12 +41,12 @@ func New(name string) base.AscendHandler {
 }
 
 // ValidNPUJob Verify whether the NPU's request for the task is valid
-func (tp *ascend300IA5) ValidNPUJob() *api.ValidateResult {
-	return tp.valid300ia5NPUJob()
+func (tp *chip4nodex) ValidNPUJob() *api.ValidateResult {
+	return tp.validNPUJob()
 }
 
 // CheckNodeNPUByTask Check whether the current node can meet the task's NPU resource requirements
-func (tp *ascend300IA5) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode) error {
+func (tp *chip4nodex) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode) error {
 	if tp == nil || task == nil || len(node.Annotation) == 0 {
 		err := errors.New(util.ArgumentError)
 		klog.V(util.LogErrorLev).Infof("CheckNodeNPUByTask err: %s", err)
@@ -70,7 +72,7 @@ func (tp *ascend300IA5) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNo
 
 // ScoreBestNPUNodes According to the task requirements and the available NPU resources at each node,
 // score and rank the candidate nodes, with the scores stored in sMap.
-func (tp *ascend300IA5) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeInfo, sMap map[string]float64) error {
+func (tp *chip4nodex) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeInfo, sMap map[string]float64) error {
 	if tp == nil || task == nil || len(nodes) == 0 || len(sMap) == 0 {
 		err := errors.New(util.ArgumentError)
 		klog.V(util.LogErrorLev).Infof("ScoreBestNPUNodes %s.", err)
@@ -111,7 +113,7 @@ func (tp *ascend300IA5) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeI
 }
 
 // UseAnnotation Select NPU resources for the task from the specified node and update the node information
-func (tp *ascend300IA5) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
+func (tp *chip4nodex) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
 	if tp == nil || task == nil || len(node.Annotation) == 0 {
 		err := errors.New(util.ArgumentError)
 		klog.V(util.LogErrorLev).Infof("UseAnnotation %s.", err)
@@ -133,7 +135,7 @@ func (tp *ascend300IA5) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *
 }
 
 // selectNPUFromNode Select the NPU resources that meet the task requirements from the specified nodes
-func (tp *ascend300IA5) selectNPUFromNode(task *api.TaskInfo, node plugin.NPUNode) ([]int, error) {
+func (tp *chip4nodex) selectNPUFromNode(task *api.TaskInfo, node plugin.NPUNode) ([]int, error) {
 	// Get the number of NPUs required for the task
 	taskNPUNum, err := tp.GetTaskReqNPUNum(task)
 	if err != nil {
@@ -158,6 +160,6 @@ func (tp *ascend300IA5) selectNPUFromNode(task *api.TaskInfo, node plugin.NPUNod
 }
 
 // ReleaseAnnotation Used to release allocated resources
-func (tp *ascend300IA5) ReleaseAnnotation(_ *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
+func (tp *chip4nodex) ReleaseAnnotation(_ *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
 	return &node
 }

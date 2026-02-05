@@ -11,8 +11,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package module300ia5 is using for HuaWei 300I A5 affinity schedule.
-package module300ia5
+// Package chip4nodex is using for HuaWei 300I A5 affinity schedule.
+package chip4nodex
 
 import (
 	"reflect"
@@ -46,10 +46,10 @@ func TestCreateAffScoreList(t *testing.T) {
 }
 
 func TestGetNPUNumByHandler(t *testing.T) {
-	if n := getNPUNumByHandler(Ascend300I4Px8Label); n != maxNodeNPUNumX8 {
+	if n := getNPUNumByHandler(SchedulePolicy4Px8); n != maxNodeNPUNumX8 {
 		t.Errorf("getNPUNumByHandler The results do not match the expectations; the actual results: %d", n)
 	}
-	if n := getNPUNumByHandler(Ascend300I4Px16Label); n != maxNodeNPUNumX16 {
+	if n := getNPUNumByHandler(SchedulePolicy4Px16); n != maxNodeNPUNumX16 {
 		t.Errorf("getNPUNumByHandler The results do not match the expectations; the actual results: %d", n)
 	}
 	if n := getNPUNumByHandler("test"); n != 0 {
