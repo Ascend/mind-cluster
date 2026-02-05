@@ -608,7 +608,7 @@ func buildCheckNodeNPUByTaskTestCases03() CheckNodeNPUByTaskTest {
 	return CheckNodeNPUByTaskTest{
 		name:    "03 will return err when GetTaskReqNPUNum return err",
 		node:    node,
-		task:    &api.TaskInfo{},
+		task:    api.NewTaskInfo(&v1.Pod{}),
 		wantErr: true,
 	}
 }
@@ -619,7 +619,7 @@ func buildCheckNodeNPUByTaskTestCases04() CheckNodeNPUByTaskTest {
 	return CheckNodeNPUByTaskTest{
 		name: "04 will return err when GetUsableTopFromNode return err",
 		node: node,
-		task: &api.TaskInfo{},
+		task: api.NewTaskInfo(&v1.Pod{}),
 		setup: func() *gomonkey.Patches {
 			return gomonkey.ApplyMethod(reflect.TypeOf(&base.NPUHandler{}), "GetTaskReqNPUNum",
 				func(_ *base.NPUHandler, _ *api.TaskInfo) (int, error) { return util.NPUIndex8, nil })
@@ -634,7 +634,7 @@ func buildCheckNodeNPUByTaskTestCases05() CheckNodeNPUByTaskTest {
 	return CheckNodeNPUByTaskTest{
 		name: "05 will return err when JudgeNodeAndTaskNPU return err",
 		node: node,
-		task: &api.TaskInfo{},
+		task: api.NewTaskInfo(&v1.Pod{}),
 		setup: func() *gomonkey.Patches {
 			patches := gomonkey.NewPatches()
 			patches.ApplyMethod(reflect.TypeOf(&base.NPUHandler{}), "GetTaskReqNPUNum",
@@ -652,7 +652,7 @@ func buildCheckNodeNPUByTaskTestCases06() CheckNodeNPUByTaskTest {
 	return CheckNodeNPUByTaskTest{
 		name: "06 will return nil when node topo meet job require",
 		node: node,
-		task: &api.TaskInfo{Job: "job1"},
+		task: &api.TaskInfo{Job: "job1", Pod: &v1.Pod{}},
 		setup: func() *gomonkey.Patches {
 			patches := gomonkey.NewPatches()
 			patches.ApplyMethod(reflect.TypeOf(&base.NPUHandler{}), "GetTaskReqNPUNum",
