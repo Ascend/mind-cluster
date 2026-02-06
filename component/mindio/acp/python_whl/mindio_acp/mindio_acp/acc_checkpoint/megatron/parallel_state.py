@@ -113,6 +113,9 @@ class InitParallelPolicy(metaclass=SingletonMeta):
                         self._dp_modulo_exp_ranks = list(ranks)
         return self._dp_modulo_exp_ranks
 
+    def reset_optim_rank(self):
+        self._selected_optim_rank = None
+
     def init_parallel_policy(self, dp_group):
         """ partition data parallel group and return source rank to save model and optimizer state dict,
             group and global ranks list of partition dp group

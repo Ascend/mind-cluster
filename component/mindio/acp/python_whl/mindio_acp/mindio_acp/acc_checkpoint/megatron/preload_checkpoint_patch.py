@@ -108,7 +108,7 @@ def acp_preload_checkpoint():
     policy = InitParallelPolicy(replica_count, None, CKPTStage.PreLoad)
 
     if args.no_load_optim:
-        policy.selected_optim_rank = None
+        policy.reset_optim_rank()
 
     if rank == policy.selected_optim_rank and rank == policy.selected_model_rank:
         ret = preload(model_checkpoint_name, optim_checkpoint_name)
