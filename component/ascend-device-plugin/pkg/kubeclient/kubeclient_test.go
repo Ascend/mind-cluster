@@ -574,7 +574,7 @@ func TestResetDeviceInfo(t *testing.T) {
 	mock := gomonkey.ApplyMethod(reflect.TypeOf(new(ClientK8s)),
 		"WriteDeviceInfoDataIntoCM", func(_ *ClientK8s,
 			nodeDeviceData *common.NodeDeviceInfoCache, manuallySeparateNPU string,
-			_ common.SwitchFaultInfo, _ common.DpuInfo) (*common.NodeDeviceInfoCache, error) {
+			_ common.SwitchFaultInfo, _ common.DpuInfo, _ string) (*common.NodeDeviceInfoCache, error) {
 			return nodeDeviceData, nil
 		})
 	defer func() {

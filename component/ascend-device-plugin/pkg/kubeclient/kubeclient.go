@@ -293,7 +293,7 @@ func (ki *ClientK8s) ResetDeviceInfo() {
 		nodeDeviceData.RackID = &rackID
 	}
 	if err := ki.WriteDeviceInfoDataIntoCMCache(nodeDeviceData, "",
-		common.GetSwitchFaultInfo(), common.DpuInfo{}); err != nil {
+		common.GetSwitchFaultInfo(), common.DpuInfo{}, ""); err != nil {
 		hwlog.RunLog.Errorf("write device info failed, error is %v", err)
 	}
 }

@@ -125,16 +125,11 @@ func getDeviceInfoManuallySeparateNPUData(deviceInfo *v1.ConfigMap) (string, err
 	return data, nil
 }
 
-// GetManuallySeparateNPUIDFromDeviceInfo returns the ManuallySeparateNPU from device info
-func (ki *ClientK8s) GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoCMName, deviceInfoCMNamespace string) []int32 {
-	phyIDs := make([]int32, 0)
-
-	deviceInfo, err := ki.GetConfigMap(deviceInfoCMName, deviceInfoCMNamespace)
-	if err != nil {
-		hwlog.RunLog.Warnf("get device info cm error: %v", err)
+func (ki *ClientK8s) GetManuallySeparateNPUFromDeviceInfo(deviceInfo *v1.ConfigMap) []common.PhyId {
+	phyIDs := make([]common.PhyId, 0)
+	if deviceInfo == nil {
 		return phyIDs
 	}
-
 	manuallySeparateNPUData, err := getDeviceInfoManuallySeparateNPUData(deviceInfo)
 	if err != nil {
 		hwlog.RunLog.Warnf("failed to get manually seperate NPU data, error: %v", err)
@@ -173,14 +168,29 @@ func (ki *ClientK8s) GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoCMName, de
 			return phyIDs
 		}
 
-		phyIDs = append(phyIDs, int32(phyID))
+		phyIDs = append(phyIDs, common.PhyId(phyID))
 	}
 	return phyIDs
 }
 
+// GetUpgradeFaultReasonFromDeviceInfo returns the UpgradeFaultReason from device info
+func (ki *ClientK8s) GetUpgradeFaultReasonFromDeviceInfo(
+	deviceInfo *v1.ConfigMap) (common.UpgradeFaultReasonMap[common.PhyId], error) {
+	reasonStr, ok := deviceInfo.Data[common.DeviceInfoCmUpgradeFaultReasonKey]
+	if !ok {
+		err := fmt.Errorf("GetUpgradeFaultReasonFromDeviceInfo failed")
+		return nil, err
+	}
+	reasonCm, err := common.StringToReasonCm(reasonStr)
+	if err != nil {
+		return nil, fmt.Errorf("GetUpgradeFaultReasonFromDeviceInfo failed err: %v", err)
+	}
+	return reasonCm, nil
+}
+
 // WriteDeviceInfoDataIntoCM write deviceinfo into config map
 func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(nodeDeviceData *common.NodeDeviceInfoCache, manuallySeparateNPU string,
-	switchInfo common.SwitchFaultInfo, dpuInfo common.DpuInfo) (*common.NodeDeviceInfoCache, error) {
+	switchInfo common.SwitchFaultInfo, dpuInfo common.DpuInfo, reasonCm string) (*common.NodeDeviceInfoCache, error) {
 	nodeDeviceData.CheckCode = common.MakeDataHash(nodeDeviceData.DeviceInfo)
 	var data, switchData, dpuData []byte
 	dpuOpen := !reflect.DeepEqual(dpuInfo, common.DpuInfo{})
@@ -202,6 +212,7 @@ func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(nodeDeviceData *common.NodeDevice
 		deviceInfoCM.Data = map[string]string{
 			api.DeviceInfoCMDataKey:                   string(data),
 			api.SwitchInfoCMDataKey:                   string(switchData),
+			common.DeviceInfoCmUpgradeFaultReasonKey:  reasonCm,
 			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU,
 			common.DescriptionKey:                     common.DescriptionValue}
 		if dpuOpen {
@@ -215,11 +226,13 @@ func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(nodeDeviceData *common.NodeDevice
 			api.DeviceInfoCMDataKey:                   string(data),
 			api.SwitchInfoCMDataKey:                   string(switchData),
 			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU,
+			common.DeviceInfoCmUpgradeFaultReasonKey:  reasonCm,
 			common.DescriptionKey:                     common.DescriptionValue}
 	default:
 		deviceInfoCM.Data = map[string]string{
 			api.DeviceInfoCMDataKey:                   string(data),
 			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU,
+			common.DeviceInfoCmUpgradeFaultReasonKey:  reasonCm,
 			common.DescriptionKey:                     common.DescriptionValue}
 	}
 

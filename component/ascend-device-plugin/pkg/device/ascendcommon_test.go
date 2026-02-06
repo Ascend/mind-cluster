@@ -131,24 +131,32 @@ func TestHandleManuallySeparateNPUFaultInfo(t *testing.T) {
 	convey.Convey("test handleManuallySeparateNPUFaultInfo", t, func() {
 		convey.Convey("01-get device run mode fail, should return empty string", func() {
 			tool := mockAscendTools()
-			convey.So(tool.handleManuallySeparateNPUFaultInfo(), convey.ShouldEqual, "")
+			info, ids := tool.handleManuallySeparateNPUFaultInfo()
+			convey.So(info, convey.ShouldEqual, "")
+			convey.So(ids, convey.ShouldResemble, make([]common.LogicId, 0))
 		})
 		tool := mockAscendTools()
 		mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{RealCardType: api.Ascend910A3})
 		defer mockOption.Reset()
 		convey.Convey("02-manually fault cache is empty, should return empty string", func() {
-			convey.So(tool.handleManuallySeparateNPUFaultInfo(), convey.ShouldEqual, "")
+			info, ids := tool.handleManuallySeparateNPUFaultInfo()
+			convey.So(info, convey.ShouldEqual, "")
+			convey.So(ids, convey.ShouldResemble, make([]common.LogicId, 0))
 		})
 		mockStatus := gomonkey.ApplyFuncReturn(common.QueryManuallyFaultNPULogicIDsByHandleStatus, []int32{3})
 		defer mockStatus.Reset()
 		mockMethod := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-			"GetManuallySeparateNPUIDFromDeviceInfo",
-			func(_ *kubeclient.ClientK8s, deviceInfoCMName, deviceInfoCMNamespace string) []int32 {
-				return []int32{1}
+			"GetManuallySeparateNPUFromDeviceInfo",
+			func(_ *kubeclient.ClientK8s, _ *v1.ConfigMap) []common.PhyId {
+				return []common.PhyId{common.PhyId(1)}
+			}).ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
+			"GetConfigMap", func(_ *kubeclient.ClientK8s, _, _ string) (*v1.ConfigMap, error) {
+				return nil, nil
 			})
 		defer mockMethod.Reset()
 		convey.Convey("03-handle fault info success, manually separate npu 1, should return Ascend910-1", func() {
-			convey.So(tool.handleManuallySeparateNPUFaultInfo(), convey.ShouldEqual, api.Ascend910MinuxPrefix+"1")
+			info, _ := tool.handleManuallySeparateNPUFaultInfo()
+			convey.So(info, convey.ShouldEqual, api.Ascend910MinuxPrefix+"1")
 		})
 	})
 }

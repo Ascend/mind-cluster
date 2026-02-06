@@ -71,6 +71,10 @@ const (
 	DeviceInfoCMNamePrefix = "mindx-dl-deviceinfo-"
 	// DeviceInfoCMManuallySeparateNPUKey for deviceinfo configmap ManuallySeparateNPU key
 	DeviceInfoCMManuallySeparateNPUKey = "ManuallySeparateNPU"
+	// DeviceInfoCmUpgradeFaultReasonKey for deviceinfo configmap UpgradeFaultReason key
+	DeviceInfoCmUpgradeFaultReasonKey = "UpgradeFaultReason"
+	// EventReleaseUpgradeFault the event reason of release upgrade fault
+	EventReleaseUpgradeFault = "EventReleaseUpgradeFault"
 	// DescriptionKey for deviceinfo configmap Description key
 	DescriptionKey = "Description"
 	// DescriptionValue for deviceinfo configmap Description value
@@ -660,6 +664,10 @@ const (
 	MaxFaultFrequencyTimeWindow = 864000
 	// MinFaultFrequencyTimeWindow is the min time for the time window of fault frequency
 	MinFaultFrequencyTimeWindow = 60
+	// MaxReleaseTimeWindow is the max time for the time window of release upgrade fault
+	MaxReleaseTimeWindow = (1 << 63) - 1
+	// MinReleaseTimeWindow is the min time for the time window of release upgrade fault
+	MinReleaseTimeWindow = 60
 	// MaxFaultFrequencyTimes is the max count for the fault occurrence time of fault frequency
 	MaxFaultFrequencyTimes = 100
 	// MinFaultFrequencyTimes is the min count for the fault occurrence time of fault frequency

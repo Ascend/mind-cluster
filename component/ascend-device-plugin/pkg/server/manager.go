@@ -458,19 +458,8 @@ func (hdm *HwDevManager) updateAllInfo() error {
 	return nil
 }
 
-func (hdm *HwDevManager) separateNPUIDFromDeviceInfoIntoCache() {
-	deviceInfoName := hdm.manager.GetKubeClient().DeviceInfoName
-	physicIDsFromDeviceInfo := hdm.manager.GetKubeClient().GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoName,
-		api.KubeNS)
-
-	for _, physicId := range physicIDsFromDeviceInfo {
-		logicId, err := hdm.manager.GetDmgr().GetLogicIDFromPhysicID(physicId)
-		if err != nil {
-			hwlog.RunLog.Warnf("get logic id failed, err: %v", err)
-			continue
-		}
-		common.SaveManuallyFaultInfo(logicId)
-	}
+func (hdm *HwDevManager) loadDeviceInfoCm() {
+	hdm.manager.LoadDeviceInfoCm()
 }
 
 func (hdm *HwDevManager) handleDeviceInfoUpdate(ctx context.Context, initTime *time.Time) {
@@ -507,9 +496,9 @@ func (hdm *HwDevManager) ListenDevice(ctx context.Context) {
 		// will set a goroutine to query all switch faults every 5 min
 		go hdm.SwitchDevManager.GetSwitchFaultCodeByInterval(ctx, time.Second*common.GetSwitchFaultCodeInterval)
 	}
-	// when device-plugin is started, the value of ManuallySeparateNPU in device info configmap needs to be written into
-	// cache to prevent manually separate npu IDs in cache from been lost
-	hdm.separateNPUIDFromDeviceInfoIntoCache()
+	// when device-plugin is started, the value of ManuallySeparateNPU and upgrade fault reason in device info configmap
+	// needs to be written into cache to prevent manually separate npu IDs in cache from been lost
+	hdm.loadDeviceInfoCm()
 	go hdm.pollFaultCodeCM(ctx)
 	go hdm.Serve(ctx)
 	if common.ParamOption.CheckCachedPods {

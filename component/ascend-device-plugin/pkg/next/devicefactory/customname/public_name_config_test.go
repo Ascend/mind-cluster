@@ -137,6 +137,7 @@ func TestReplaceDeviceInfoPublicName(t *testing.T) {
 		"other-key":         "value2",
 	}
 	deviceName := api.Ascend310MinuxPrefix + "1"
+	reason := api.Ascend310MinuxPrefix + "1"
 
 	// Set up mock devNameMap
 	devNameMap[resourceType] = DevName{
@@ -147,10 +148,11 @@ func TestReplaceDeviceInfoPublicName(t *testing.T) {
 		OldDevicePublicNamePre: api.Ascend310MinuxPrefix,
 	}
 
-	newDeviceList, newDeviceName := ReplaceDeviceInfoPublicName(resourceType, deviceList, deviceName)
+	newDeviceList, newDeviceName, newReason := ReplaceDeviceInfoPublicName(resourceType, deviceList, deviceName, reason)
 
 	assert.Contains(t, newDeviceList, "CustomAscend310", "device type key should be replaced")
 	assert.Equal(t, "custom310-1", newDeviceName, "device name prefix should be replaced")
+	assert.Equal(t, "custom310-1", newReason, "reason should be replaced")
 }
 
 type checkNameTestCase struct {

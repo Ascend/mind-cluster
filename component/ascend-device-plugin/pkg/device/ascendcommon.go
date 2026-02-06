@@ -94,6 +94,7 @@ type AscendTools struct {
 	resetFailedTimesMap       map[int32]int
 	resetFailedTimesLock      sync.Mutex
 	lastUpdateTimeStamp       time.Time
+	lastUpgradeFaultReason    common.UpgradeFaultReasonMap[common.LogicId]
 	lastManuallySeparateNPU   string
 	lastSwitchFaultInfo       common.SwitchFaultInfo
 	lastUsedChipsByProcess    sets.String
@@ -153,6 +154,7 @@ type DevManager interface {
 	WriteFaultToEvent(ctx context.Context)
 	GetAssociatedLogicIDs(logicID, cardID, deviceID int32) ([]int32, error)
 	SetDpu(string, []common.DpuCMData, map[string][]string)
+	LoadDeviceInfoCm()
 }
 
 // SetDmgr set devmanager
@@ -207,27 +209,35 @@ func (tool *AscendTools) convertLogicIDsToDeviceNames(logicIds []int32) string {
 	return deviceNames
 }
 
-func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() string {
+func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() (string, []common.LogicId) {
 	if manuallyFaultCache := common.QueryManuallyFaultNPULogicIDsByHandleStatus(common.
 		ManuallySeparateNpuAll); len(manuallyFaultCache) == 0 {
 		hwlog.RunLog.Debug("manually separate npu cache is empty, no need to handle manually separate npu " +
 			"fault, the value of ManuallySeparateNPU field in device info configmap will be cleared")
-		return ""
+		return "", make([]common.LogicId, 0)
 	}
 	logicIDsHandledFromCache := common.QueryManuallyFaultNPULogicIDsByHandleStatus(common.ManuallySeparateNpuHandled)
 	deviceInfoName := tool.client.DeviceInfoName
-	physicIDsFromDeviceInfo := tool.client.GetManuallySeparateNPUIDFromDeviceInfo(deviceInfoName, api.KubeNS)
+	deviceInfo, err := tool.client.GetConfigMap(deviceInfoName, api.KubeNS)
+	if err != nil {
+		hwlog.RunLog.Errorf("get device info cm error: %v", err)
+		return "", make([]common.LogicId, 0)
+	}
+	physicIDsFromDeviceInfo := tool.client.GetManuallySeparateNPUFromDeviceInfo(deviceInfo)
+	removedManuallSeparate := make([]common.LogicId, 0)
 	for _, logicId := range logicIDsHandledFromCache {
 		physicId, err := tool.GetDmgr().GetPhysicIDFromLogicID(logicId)
 		if err != nil {
 			hwlog.RunLog.Warnf("get physic id failed, err: %v", err)
 			common.DeleteManuallyFaultInfo(logicId)
+			removedManuallSeparate = append(removedManuallSeparate, common.LogicId(logicId))
 			continue
 		}
-		if !common.Int32Tool.Contains(physicIDsFromDeviceInfo, physicId) {
+		if !common.Contains[common.PhyId](physicIDsFromDeviceInfo, common.PhyId(physicId)) {
 			hwlog.RunLog.Infof("card %d is not in ManuallySeparateNPU of device info configmap, "+
 				"will be removed in cache", physicId)
 			common.DeleteManuallyFaultInfo(logicId)
+			removedManuallSeparate = append(removedManuallSeparate, common.LogicId(logicId))
 		}
 	}
 	logicIDsAllFromCache := common.QueryManuallyFaultNPULogicIDsByHandleStatus(common.ManuallySeparateNpuAll)
@@ -235,7 +245,7 @@ func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() string {
 		return logicIDsAllFromCache[i] < logicIDsAllFromCache[j]
 	})
 	for _, physicId := range physicIDsFromDeviceInfo {
-		logicId, err := tool.GetDmgr().GetLogicIDFromPhysicID(physicId)
+		logicId, err := tool.GetDmgr().GetLogicIDFromPhysicID(int32(physicId))
 		if err != nil {
 			hwlog.RunLog.Warnf("get logic id failed, err: %v", err)
 			continue
@@ -247,7 +257,46 @@ func (tool *AscendTools) handleManuallySeparateNPUFaultInfo() string {
 	}
 	common.SetManuallyFaultNPUHandled()
 	manuallySeparateNPU := tool.convertLogicIDsToDeviceNames(logicIDsAllFromCache)
-	return manuallySeparateNPU
+	return manuallySeparateNPU, removedManuallSeparate
+}
+
+// LoadDeviceInfoCm load device info cm into cache
+func (tool *AscendTools) LoadDeviceInfoCm() {
+	deviceInfoName := tool.client.DeviceInfoName
+	deviceInfo, err := tool.client.GetConfigMap(deviceInfoName, api.KubeNS)
+	if err != nil {
+		hwlog.RunLog.Errorf("get device info cm error: %v", err)
+		return
+	}
+	manuallySeparateNPUs := tool.client.GetManuallySeparateNPUFromDeviceInfo(deviceInfo)
+	if err != nil {
+		hwlog.RunLog.Errorf("get manuallySeparateNPUs from device info cm error: %v", err)
+		return
+	}
+	// 1. load ManuallySeparateNPU
+	for _, physicId := range manuallySeparateNPUs {
+		logicId, err := tool.GetDmgr().GetLogicIDFromPhysicID(int32(physicId))
+		if err != nil {
+			hwlog.RunLog.Warnf("get logic id failed, err: %v", err)
+			continue
+		}
+		common.SaveManuallyFaultInfo(logicId)
+	}
+	reasonCm, err := tool.client.GetUpgradeFaultReasonFromDeviceInfo(deviceInfo)
+	if err != nil {
+		hwlog.RunLog.Warnf("get reason err: %v", err)
+		reasonCm = make(common.UpgradeFaultReasonMap[common.PhyId])
+	}
+	// 2. load upgrade fault reason
+	reasonCm.FixManuallySeparateReason(manuallySeparateNPUs)
+	// 3. convert cm to cache
+	cache, err := reasonCm.ConvertCmToCache(tool.GetDmgr().GetLogicIDFromPhysicID)
+	if err != nil {
+		hwlog.RunLog.Errorf("convert cm to cache err: %v", err)
+		return
+	}
+	// 4. save
+	common.SaveUpgradeFaultCache(cache)
 }
 
 // UpdateNodeDeviceInfo update device info
@@ -263,7 +312,9 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet, 
 			return false, nil
 		}
 		tool.delVirDevInfo(newDeviceList)
-		manuallySeparateNPU := tool.handleManuallySeparateNPUFaultInfo()
+		manuallySeparateNPU, removedManuallySeparateNPU := tool.handleManuallySeparateNPUFaultInfo()
+		common.RemoveManuallySeparateReasonCache(removedManuallySeparateNPU)
+
 		// if subscribe failed, will use get interface
 		if common.SwitchSubscribeFailed && common.ParamOption.EnableSwitchFault {
 			newFaults, err := deviceswitch.GetSwitchFaults()
@@ -276,31 +327,52 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet, 
 		if common.GetSyncMapLen(resetGoroutine) != 0 {
 			common.UpdateSwitchFaultInfoAndFaultLevel(&switchFaultInfo)
 		}
+		reasonCache := common.CopyUpgradeFaultCache()
+
 		dataSame := compareDeviceList(deviceList, newDeviceList) &&
 			common.DeepEqualSwitchFaultInfo(switchFaultInfo, tool.lastSwitchFaultInfo) &&
-			manuallySeparateNPU == tool.lastManuallySeparateNPU && common.DeepEqualDpuInfo(dpuInfo, tool.lastDpuInfo)
+			manuallySeparateNPU == tool.lastManuallySeparateNPU &&
+			reasonCache.Equals(tool.lastUpgradeFaultReason) &&
+			common.DeepEqualDpuInfo(dpuInfo, tool.lastDpuInfo)
 		timeDiff := time.Now().Sub(tool.lastUpdateTimeStamp)
 		if dataSame && timeDiff < defaultUpdateTimeInterval*time.Minute {
 			hwlog.RunLog.Debug("device info is not changed and timeDiff less than 5 minutes, no need to update")
 			return true, nil
 		}
-		if manuallySeparateNPU != "" {
-			hwlog.RunLog.Infof("configmap/ManuallySeparateNPU:[%v] are unhealthy", manuallySeparateNPU)
-		}
-		newDeviceList, manuallySeparateNPU = customname.ReplaceDeviceInfoPublicName(tool.name,
-			newDeviceList, manuallySeparateNPU)
-		nodeDeviceData := tool.getNodeDeviceInfoCache(newDeviceList)
-		if err := tool.client.WriteDeviceInfoDataIntoCMCache(nodeDeviceData, manuallySeparateNPU,
-			switchFaultInfo, dpuInfo); err != nil {
-			hwlog.RunLog.Errorf("write device info failed: %v", err)
-			return false, nil
-		}
-		tool.updateLastInfo(manuallySeparateNPU, switchFaultInfo, dpuInfo)
-		hwlog.RunLog.Infof("write deviceInfo into configMap cache success, time is %s",
-			tool.lastUpdateTimeStamp.Format(time.RFC3339))
-		return true, nil
+		return tool.writeDeviceInfoCm(manuallySeparateNPU, newDeviceList, reasonCache, switchFaultInfo, dpuInfo)
 	})
 	return waitErr
+}
+
+func (tool *AscendTools) writeDeviceInfoCm(manuallySeparateNPU string, newDeviceList map[string]string,
+	reasonCache common.UpgradeFaultReasonMap[common.LogicId], switchFaultInfo common.SwitchFaultInfo,
+	dpuInfo common.DpuInfo) (bool, error) {
+	if manuallySeparateNPU != "" {
+		hwlog.RunLog.Infof("configmap/ManuallySeparateNPU:[%v] are unhealthy", manuallySeparateNPU)
+	}
+	reasonCm, err := reasonCache.ConvertCacheToCm(tool.GetDmgr().GetPhysicIDFromLogicID)
+	if err != nil {
+		hwlog.RunLog.Infof("UpdateNodeDeviceInfo ConvertCacheToCm err:%v", err)
+		reasonCm = make(common.UpgradeFaultReasonMap[common.PhyId])
+	}
+	reasonCmStr := reasonCm.CmToString(tool.GetName())
+	newDeviceList, manuallySeparateNPU, reasonCmStr = customname.ReplaceDeviceInfoPublicName(tool.name,
+		newDeviceList, manuallySeparateNPU, reasonCmStr)
+	nodeDeviceData := tool.getNodeDeviceInfoCache(newDeviceList)
+	if err = tool.client.WriteDeviceInfoDataIntoCMCache(nodeDeviceData, manuallySeparateNPU,
+		switchFaultInfo, dpuInfo, reasonCmStr); err != nil {
+		hwlog.RunLog.Errorf("write device info failed: %v", err)
+		err = fmt.Errorf("write device info failed: %v", err)
+		return false, err
+	}
+	tool.updateLastInfo(manuallySeparateNPU, switchFaultInfo, dpuInfo, reasonCache)
+	hwlog.RunLog.Infof("write deviceInfo into configMap cache success, time is %s",
+		tool.lastUpdateTimeStamp.Format(time.RFC3339))
+	removedReasonEvent := common.GetAndCleanRemovedReasonEvent()
+	if len(removedReasonEvent) > 0 {
+		tool.WriteUpgradeReasonRemoveEvent(removedReasonEvent)
+	}
+	return true, nil
 }
 
 func (tool *AscendTools) getNodeDeviceInfoCache(newDeviceList map[string]string) *common.NodeDeviceInfoCache {
@@ -319,10 +391,12 @@ func (tool *AscendTools) getNodeDeviceInfoCache(newDeviceList map[string]string)
 	return nodeDeviceData
 }
 
-func (tool *AscendTools) updateLastInfo(manuallySeparateNPU string, switchFaultInfo common.SwitchFaultInfo, dpuInfo common.DpuInfo) {
+func (tool *AscendTools) updateLastInfo(manuallySeparateNPU string, switchFaultInfo common.SwitchFaultInfo,
+	dpuInfo common.DpuInfo, reasonCache common.UpgradeFaultReasonMap[common.LogicId]) {
 	tool.lastUpdateTimeStamp = time.Now()
 	tool.lastManuallySeparateNPU = manuallySeparateNPU
 	tool.lastSwitchFaultInfo = switchFaultInfo
+	tool.lastUpgradeFaultReason = reasonCache
 	tool.lastDpuInfo = dpuInfo
 }
 
@@ -1405,6 +1479,51 @@ func (tool *AscendTools) WriteFaultToEvent(ctx context.Context) {
 			}
 		}
 	}
+}
+
+func (tool *AscendTools) WriteUpgradeReasonRemoveEvent(reasonCache common.UpgradeFaultReasonMap[common.LogicId]) {
+	reasonCm, err := reasonCache.ConvertCacheToCm(tool.GetDmgr().GetPhysicIDFromLogicID)
+	if err != nil {
+		hwlog.RunLog.Errorf("convert reason event err: %v", err)
+		return
+	}
+	reasonStr := reasonCm.CmToString(tool.GetName())
+	if !limiter.Allow() {
+		hwlog.RunLog.Warn("write k8s event limiter overflowed")
+		hwlog.RunLog.Warnf("current event for upgrade reason:%v will be discard", reasonStr)
+		return
+	}
+	podName, err := common.GetPodNameFromEnv()
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to get pod name, %v", err)
+		return
+	}
+	nodeName, err := kubeclient.GetNodeNameFromEnv()
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to get node name, %v", err)
+		return
+	}
+	now := time.Now().UnixMilli()
+	name := fmt.Sprintf("%s.%v.%v", podName, common.EventReleaseUpgradeFault, now)
+	event := &v1.Event{
+		ObjectMeta: metav1.ObjectMeta{Namespace: api.KubeNS,
+			Name: name,
+		},
+		Type:      v1.EventTypeNormal,
+		Message:   reasonStr,
+		EventTime: metav1.MicroTime{Time: time.UnixMilli(now)},
+		Reason:    common.EventReleaseUpgradeFault, Action: common.EventReleaseUpgradeFault,
+		Source: v1.EventSource{Component: common.Component, Host: nodeName},
+		InvolvedObject: v1.ObjectReference{
+			Kind: common.ResourceKindPod, Namespace: api.KubeNS, Name: podName,
+		},
+		ReportingController: common.Component, ReportingInstance: podName,
+	}
+
+	if _, err := tool.client.CreateEvent(event); err != nil {
+		hwlog.RunLog.Errorf("failed to create release upgrade fault event %s, %v", reasonStr, err)
+	}
+	hwlog.RunLog.Infof("successfully create event for upgrade fault reason: %#v", reasonStr)
 }
 
 // doWriteFaultToEvent writing fault event to cache

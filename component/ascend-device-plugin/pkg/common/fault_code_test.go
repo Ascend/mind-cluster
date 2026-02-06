@@ -1178,11 +1178,15 @@ func TestLoadFaultFrequencyCustomizationCase1(t *testing.T) {
 				FaultHandling: ManuallySeparateNPU}}}
 		expectVal := map[string]*FaultFrequencyCache{
 			strings.ToLower(faultCode1): {Frequency: make(map[int32][]int64, common.MaxErrorCodeCount),
+				LastFaultTime:        map[int32]int64{},
+				LastFaultRecoverTime: make(map[int32]int64),
 				FaultFrequency: FaultFrequency{
 					TimeWindow:    86400,
 					Times:         2,
 					FaultHandling: ManuallySeparateNPU}},
 			strings.ToLower(faultCode2): {Frequency: make(map[int32][]int64, common.MaxErrorCodeCount),
+				LastFaultTime:        map[int32]int64{},
+				LastFaultRecoverTime: make(map[int32]int64),
 				FaultFrequency: FaultFrequency{
 					TimeWindow:    86400,
 					Times:         3,
@@ -1416,11 +1420,11 @@ func TestGetFaultTypeFromFaultFrequency(t *testing.T) {
 	convey.Convey("test GetFaultTypeFromFaultFrequency success case1", t, func() {
 		logicId := int32(0)
 		faultCode := "80E18005"
-		timeDiff := int64(2)
+		timeDiff := int64(2000)
 		faultFrequencyMap = map[string]*FaultFrequencyCache{
 			strings.ToLower(faultCode): {
 				Frequency: map[int32][]int64{
-					logicId: {time.Now().Unix() - timeDiff},
+					logicId: {time.Now().UnixMilli() - timeDiff},
 				},
 				FaultFrequency: FaultFrequency{
 					TimeWindow:    86400,
@@ -1435,12 +1439,12 @@ func TestGetFaultTypeFromFaultFrequency(t *testing.T) {
 	convey.Convey("test GetFaultTypeFromFaultFrequency success case2", t, func() {
 		logicId := int32(0)
 		faultCode := "80E18005"
-		firstTime, secondTime, thirdTime := int64(10), int64(8), int64(2)
+		firstTime, secondTime, thirdTime := int64(10000), int64(8000), int64(2000)
 		faultFrequencyMap = map[string]*FaultFrequencyCache{
 			strings.ToLower(faultCode): {
 				Frequency: map[int32][]int64{
-					logicId: {time.Now().Unix() - firstTime, time.Now().Unix() - secondTime,
-						time.Now().Unix() - thirdTime},
+					logicId: {time.Now().UnixMilli() - firstTime, time.Now().UnixMilli() - secondTime,
+						time.Now().UnixMilli() - thirdTime},
 				},
 				FaultFrequency: FaultFrequency{
 					TimeWindow:    86400,
@@ -1517,12 +1521,12 @@ func TestGetFaultType(t *testing.T) {
 		logicId := int32(0)
 		faultCode := "80E0180F"
 		faultCodes := []int64{0x80E0180F, 0x80C98002}
-		firstTime, secondTime, thirdTime := int64(10), int64(8), int64(2)
+		firstTime, secondTime, thirdTime := int64(10000), int64(8000), int64(2000)
 		faultFrequencyMap = map[string]*FaultFrequencyCache{
 			strings.ToLower(faultCode): {
 				Frequency: map[int32][]int64{
-					logicId: {time.Now().Unix() - firstTime, time.Now().Unix() - secondTime,
-						time.Now().Unix() - thirdTime},
+					logicId: {time.Now().UnixMilli() - firstTime, time.Now().UnixMilli() - secondTime,
+						time.Now().UnixMilli() - thirdTime},
 				},
 				FaultFrequency: FaultFrequency{
 					TimeWindow:    86400,
@@ -1804,11 +1808,11 @@ func TestLoadVaildSwitchFaultCode(t *testing.T) {
 func TestLoadSwitchFaultCode(t *testing.T) {
 	convey.Convey("test LoadSwitchFaultCode", t, func() {
 		switchFileInfo := SwitchFaultFileInfo{
-			NotHandleFaultCodes:   []string{generalFaultCode},
-			RestartRequestFaultCodes:   []string{generalFaultCode},
-			SubHealthFaultCodes:   []string{generalFaultCode},
-			SeparateFaultCodes:    []string{generalFaultCode},
-			PreSeparateFaultCodes: []string{generalFaultCode},
+			NotHandleFaultCodes:      []string{generalFaultCode},
+			RestartRequestFaultCodes: []string{generalFaultCode},
+			SubHealthFaultCodes:      []string{generalFaultCode},
+			SeparateFaultCodes:       []string{generalFaultCode},
+			PreSeparateFaultCodes:    []string{generalFaultCode},
 		}
 		bytes, err := json.Marshal(switchFileInfo)
 		convey.So(err, convey.ShouldBeNil)
