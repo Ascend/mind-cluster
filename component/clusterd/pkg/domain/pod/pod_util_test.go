@@ -425,3 +425,37 @@ func TestGetPodByRankIndexInPods(t *testing.T) {
 		})
 	})
 }
+
+func TestGetContainerIdsbyPod(t *testing.T) {
+	convey.Convey("test getContainerIdsbyPod", t, func() {
+		convey.Convey("when pod is nil, return empty map", func() {
+			containerIdsMap := getContainerIdsbyPod(nil)
+			convey.So(len(containerIdsMap), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("when pod has no container statuses, return empty map", func() {
+			podDemo := getDemoPod(podName1, podNameSpace1, podUid1)
+			podDemo.Status.ContainerStatuses = []v1.ContainerStatus{}
+			containerIdsMap := getContainerIdsbyPod(podDemo)
+			convey.So(len(containerIdsMap), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("when pod has container statuses, return map with container ids", func() {
+			podDemo := getDemoPod(podName1, podNameSpace1, podUid1)
+			podDemo.Status.ContainerStatuses = []v1.ContainerStatus{
+				{
+					Name:        "container1",
+					ContainerID: "docker://container1-id",
+				},
+				{
+					Name:        "container2",
+					ContainerID: "docker://container2-id",
+				},
+			}
+			containerIdsMap := getContainerIdsbyPod(podDemo)
+			convey.So(len(containerIdsMap), convey.ShouldEqual, len(podDemo.Status.ContainerStatuses))
+			convey.So(containerIdsMap["container1"], convey.ShouldEqual, "docker://container1-id")
+			convey.So(containerIdsMap["container2"], convey.ShouldEqual, "docker://container2-id")
+		})
+	})
+}

@@ -105,6 +105,41 @@ func InitCmAndCache(podGroup v1beta1.PodGroup, podsInJob map[string]v1.Pod) {
 	}
 }
 
+func getSidFromLabels(labels map[string]string) string {
+	if labels == nil {
+		return ""
+	}
+
+	customJobKeyVal, hasCustomJobKey := labels[constant.CustomJobKeyLabel]
+	if hasCustomJobKey && strings.TrimSpace(customJobKeyVal) != "" {
+		secondLevelVal, hasSecondLevelVal := labels[customJobKeyVal]
+		if hasSecondLevelVal && strings.TrimSpace(secondLevelVal) != "" {
+			return strings.TrimSpace(secondLevelVal)
+		}
+	}
+
+	customJobIdVal, hasCustomJobId := labels[constant.CustomJobIdLabel]
+	if hasCustomJobId && strings.TrimSpace(customJobIdVal) != "" {
+		return strings.TrimSpace(customJobIdVal)
+	}
+
+	return ""
+}
+
+func getSidForJobInfo(pgInfo v1beta1.PodGroup, podsInJob map[string]v1.Pod) string {
+	if sid := getSidFromLabels(pgInfo.Labels); sid != "" {
+		return sid
+	}
+	for _, p := range podsInJob {
+		if sid := getSidFromLabels(p.Labels); sid != "" {
+			return sid
+		}
+	}
+	sid := podgroup.GetJobKeyByPG(&pgInfo)
+	hwlog.RunLog.Debugf("no sid found in labels, use jobId:%s", sid)
+	return sid
+}
+
 func getJobBasicInfoByPG(pgInfo v1beta1.PodGroup, podsInJob map[string]v1.Pod) constant.JobInfo {
 	var jobInfo constant.JobInfo
 	key, name := podgroup.GetJobKeyAndNameByPG(&pgInfo)
@@ -120,6 +155,7 @@ func getJobBasicInfoByPG(pgInfo v1beta1.PodGroup, podsInJob map[string]v1.Pod) c
 	jobInfo.MultiInstanceJobId = pgInfo.Labels[constant.MindIeJobIdLabelKey]
 	jobInfo.AppType = pgInfo.Labels[constant.MindIeAppTypeLabelKey]
 	jobInfo.AddTime = time.Now().Unix()
+	jobInfo.Sid = getSidForJobInfo(pgInfo, podsInJob)
 	return jobInfo
 }
 
@@ -265,6 +301,8 @@ func buildJobServerInfoMap(jobInfo constant.JobInfo) map[string]constant.ServerH
 			PodNameSpace: server.PodNameSpace,
 			ServerName:   server.ServerName,
 			ServerSN:     server.ServerSN,
+			PodName:      server.PodName,
+			ContainerIds: server.ContainerIds,
 		}
 		for _, dev := range server.DeviceList {
 			copyDev := constant.Device{

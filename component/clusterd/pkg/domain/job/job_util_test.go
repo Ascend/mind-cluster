@@ -458,3 +458,88 @@ func TestDeepCopyJobInfo(t *testing.T) {
 		convey.So(jobDemo.JobRankTable.ServerList, convey.ShouldNotResemble, copyJobInfo.JobRankTable.ServerList)
 	})
 }
+
+func TestGetSidFromLabels(t *testing.T) {
+	convey.Convey("test getSidFromLabels", t, func() {
+		convey.Convey("nil labels", func() {
+			convey.So(getSidFromLabels(nil), convey.ShouldEqual, "")
+		})
+
+		convey.Convey("only CustomJobKeyLabel", func() {
+			convey.So(getSidFromLabels(map[string]string{constant.CustomJobKeyLabel: "custom-key"}), convey.ShouldEqual, "")
+		})
+
+		convey.Convey("CustomJobKeyLabel with value", func() {
+			labels := map[string]string{constant.CustomJobKeyLabel: "custom-key", "custom-key": "sid-value"}
+			convey.So(getSidFromLabels(labels), convey.ShouldEqual, "sid-value")
+		})
+
+		convey.Convey("only CustomJobIdLabel", func() {
+			convey.So(getSidFromLabels(map[string]string{constant.CustomJobIdLabel: "job-id-value"}), convey.ShouldEqual, "job-id-value")
+		})
+
+		convey.Convey("CustomJobIdLabel with spaces", func() {
+			convey.So(getSidFromLabels(map[string]string{constant.CustomJobIdLabel: "  job-id-value  "}), convey.ShouldEqual, "job-id-value")
+		})
+
+		convey.Convey("CustomJobKeyLabel with spaces in value", func() {
+			labels := map[string]string{constant.CustomJobKeyLabel: "custom-key", "custom-key": "  sid-value  "}
+			convey.So(getSidFromLabels(labels), convey.ShouldEqual, "sid-value")
+		})
+
+		convey.Convey("CustomJobIdLabel only spaces", func() {
+			convey.So(getSidFromLabels(map[string]string{constant.CustomJobIdLabel: "   "}), convey.ShouldEqual, "")
+		})
+
+		convey.Convey("both labels: CustomJobKeyLabel precedence", func() {
+			labels := map[string]string{constant.CustomJobKeyLabel: "custom-key", "custom-key": "sid-value", constant.CustomJobIdLabel: "job-id-value"}
+			convey.So(getSidFromLabels(labels), convey.ShouldEqual, "sid-value")
+		})
+
+		convey.Convey("no relevant labels", func() {
+			convey.So(getSidFromLabels(map[string]string{"other-label": "other-value"}), convey.ShouldEqual, "")
+		})
+	})
+}
+
+func TestGetSidForJobInfo(t *testing.T) {
+	convey.Convey("test getSidForJobInfo", t, func() {
+		pgInfo := *getDemoPodGroup(jobName1, jobNameSpace, jobUid1)
+		pod1 := *getDemoPod(podName1, jobNameSpace, podUid1)
+		pod2 := *getDemoPod(podName2, jobNameSpace, podUid2)
+		podsInJob := map[string]v1.Pod{podUid1: pod1, podUid2: pod2}
+
+		convey.Convey("podgroup has sid", func() {
+			pgInfo.Labels = map[string]string{constant.CustomJobIdLabel: "pg-sid"}
+			convey.So(getSidForJobInfo(pgInfo, podsInJob), convey.ShouldEqual, "pg-sid")
+		})
+
+		convey.Convey("podgroup no sid, first pod has sid", func() {
+			pgInfo.Labels = nil
+			pod1.Labels = map[string]string{constant.CustomJobIdLabel: "pod1-sid"}
+			pod2.Labels = nil
+			podsInJob[podUid1] = pod1
+			podsInJob[podUid2] = pod2
+			convey.So(getSidForJobInfo(pgInfo, podsInJob), convey.ShouldEqual, "pod1-sid")
+		})
+
+		convey.Convey("podgroup no sid, second pod has sid", func() {
+			pgInfo.Labels = nil
+			pod1.Labels = nil
+			pod2.Labels = map[string]string{constant.CustomJobIdLabel: "pod2-sid"}
+			podsInJob[podUid1] = pod1
+			podsInJob[podUid2] = pod2
+			convey.So(getSidForJobInfo(pgInfo, podsInJob), convey.ShouldEqual, "pod2-sid")
+		})
+
+		convey.Convey("neither has sid", func() {
+			pgInfo.Labels = nil
+			pod1.Labels = nil
+			pod2.Labels = nil
+			podsInJob[podUid1] = pod1
+			podsInJob[podUid2] = pod2
+			expectedJobKey := string(pgInfo.GetOwnerReferences()[0].UID)
+			convey.So(getSidForJobInfo(pgInfo, podsInJob), convey.ShouldEqual, expectedJobKey)
+		})
+	})
+}

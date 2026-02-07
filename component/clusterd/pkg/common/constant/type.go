@@ -177,6 +177,7 @@ type JobInfo struct {
 	// for multi-instance job, the value is controller coordinator or server
 	AppType   string
 	NodeNames map[string]string
+	Sid       string
 }
 
 // RankTable rank table info
@@ -189,14 +190,16 @@ type RankTable struct {
 
 // ServerHccl to hccl
 type ServerHccl struct {
-	DeviceList   []Device `json:"device"`
-	ServerID     string   `json:"server_id"` // host ip
-	HostIp       string   `json:"host_ip"`   // host ip
-	SuperPodId   int      `json:"super_pod_id"`
-	PodID        string   `json:"-"` // actual pod name
-	PodNameSpace string   `json:"-"`
-	ServerName   string   `json:"server_name"` // node name
-	ServerSN     string   `json:"server_sn"`   // node sn
+	DeviceList   []Device          `json:"device"`
+	ServerID     string            `json:"server_id"` // host ip
+	HostIp       string            `json:"host_ip"`   // host ip
+	SuperPodId   int               `json:"super_pod_id"`
+	PodID        string            `json:"-"` // actual pod name
+	PodNameSpace string            `json:"-"`
+	ServerName   string            `json:"server_name"` // node name
+	ServerSN     string            `json:"server_sn"`   // node sn
+	PodName      string            `json:"pod_name"`
+	ContainerIds map[string]string `json:"container_ids"`
 }
 
 // Device to hccl with rankId

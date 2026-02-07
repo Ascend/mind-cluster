@@ -69,6 +69,7 @@ func BuildJobSignalFromJobInfo(jobInfo constant.JobInfo, hccl, operator string) 
 		Operator:  operator,
 		Total:     strconv.Itoa(jobInfo.TotalCmNum),
 		HcclJson:  hccl,
+		Sid:       jobInfo.Sid,
 	}
 	if jobInfo.Framework == ptFramework {
 		jobSignal.SharedTorIp = jobInfo.SharedTorIp
