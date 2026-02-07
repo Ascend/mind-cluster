@@ -1292,6 +1292,18 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </div></div>
 </td>
 </tr>
+<tr id="rowcustomjobkey"><td class="cellrowborder" valign="top" width="27.21%" headers="mcps1.2.4.1.1 "><p id="pcustomjobkey"><a name="pcustomjobkey"></a><a name="pcustomjobkey"></a>customJobKey</p>
+</td>
+<td class="cellrowborder" valign="top" width="36.18%" headers="mcps1.2.4.1.2 "><p id="pcustomjobkeyvalue"><a name="pcustomjobkeyvalue"></a><a name="pcustomjobkeyvalue"></a>用户自定义标签，以二级跳转的方式设置作业唯一标识符，如：<br> customJobKey: tid<br> tid: "123456"</p>
+</td>
+<td class="cellrowborder" rowspan="2" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="pcustomjobkeydesc"><a name="pcustomjobkeydesc"></a><a name="pcustomjobkeydesc"></a>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息；<br> 在资源AscendJob的metadata.labels标签中设置。</p>
+</td>
+</tr>
+<tr id="rowcustomjobid"><td class="cellrowborder" valign="top" width="27.21%" headers="mcps1.2.4.1.1 "><p id="pcustomjobid"><a name="pcustomjobid"></a><a name="pcustomjobid"></a>custom-job-id</p>
+</td>
+<td class="cellrowborder" valign="top" width="36.18%" headers="mcps1.2.4.1.2 "><p id="pcustomjobidvalue"><a name="pcustomjobidvalue"></a><a name="pcustomjobidvalue"></a>用户自定义标签，直接设置作业唯一标识符，如：<br> custom-job-id："123456"</p>
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -1451,6 +1463,18 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><div class="note" id="note1031313718402"><a name="note1031313718402"></a><a name="note1031313718402"></a><div class="notebody"><p id="p2313117194012"><a name="p2313117194012"></a><a name="p2313117194012"></a>仅支持在<span id="ph133130710403"><a name="ph133130710403"></a><a name="ph133130710403"></a>Atlas 900 A3 SuperPoD 超节点</span>中使用本参数。</p>
 </div></div>
+</td>
+</tr>
+<tr id="rowcustomjobkey2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobkey2"><a name="pcustomjobkey2"></a><a name="pcustomjobkey2"></a>customJobKey</p>
+</td>
+<td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="pcustomjobkeyvalue2"><a name="pcustomjobkeyvalue2"></a><a name="pcustomjobkeyvalue2"></a>用户自定义标签，以二级跳转的方式设置作业唯一标识符，如：<br> customJobKey: tid<br> tid: "123456"</p>
+</td>
+<td class="cellrowborder" rowspan="2" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="pcustomjobkeydesc2"><a name="pcustomjobkeydesc2"></a><a name="pcustomjobkeydesc2"></a>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息；<br> <ul><li>vcjob任务在资源Job的metadata.labels标签中设置；<br></li> <li>deploy任务在资源Deployment的spec.template.metadata.labels标签中设置。</li></ul></p>
+</td>
+</tr>
+<tr id="rowcustomjobid2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobid2"><a name="pcustomjobid2"></a><a name="pcustomjobid2"></a>custom-job-id</p>
+</td>
+<td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="pcustomjobidvalue2"><a name="pcustomjobidvalue2"></a><a name="pcustomjobidvalue2"></a>用户自定义标签，直接设置作业唯一标识符，如：<br> custom-job-id："123456"</p>
 </td>
 </tr>
 </tbody>
