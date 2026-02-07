@@ -29,6 +29,7 @@ message JobSummarySignal {
   string sharedTorIp = 12;
   string masterAddr = 13;
   string operator = 14;
+  string sid = 15;
 }
 
 message JobSummarySignalList{

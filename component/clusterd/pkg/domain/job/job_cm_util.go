@@ -37,6 +37,7 @@ const (
 	ptFramework       = "pytorch"
 	torIpTag          = "sharedTorIp"
 	masterAddrKey     = "masterAddr"
+	sid               = "sid"
 )
 
 func initCM(jobInfo constant.JobInfo) bool {
@@ -50,6 +51,7 @@ func initCM(jobInfo constant.JobInfo) bool {
 	data[HcclJson] = constant.DefaultHcclJson
 	data[configmapOperator] = operatorAdd
 	data[addTime] = strconv.Itoa(int(jobInfo.AddTime))
+	data[sid] = jobInfo.Sid
 	cmName := fmt.Sprintf("%s-%s", configmapPrefix, jobInfo.Name)
 	if err := kube.CreateOrUpdateConfigMap(cmName, jobInfo.NameSpace, data, getDefaultLabel()); err != nil {
 		hwlog.RunLog.Errorf("initCM CreateOrUpdateConfigMap err: %s", err)
@@ -73,6 +75,7 @@ func updateCM(jobInfo constant.JobInfo, index int, hccl string) bool {
 	data[cmIndex] = strconv.Itoa(index)
 	data[cmCutNumKey] = strconv.Itoa(jobInfo.TotalCmNum)
 	data[HcclJson] = hccl
+	data[sid] = jobInfo.Sid
 	// deleteTime should be changed to updateTime next version
 	if jobInfo.Status == StatusJobFail || jobInfo.Status == StatusJobCompleted {
 		data[deleteTime] = strconv.Itoa(int(time.Now().Unix()))
@@ -101,6 +104,7 @@ func preDeleteCM(jobInfo constant.JobInfo, hccls []string) bool {
 	data[frameWorkKey] = jobInfo.Framework
 	data[jobStatus] = jobInfo.Status
 	data[jobId] = jobInfo.Key
+	data[sid] = jobInfo.Sid
 	data[HcclJson] = constant.DefaultHcclJson
 	data[configmapOperator] = operatorDelete
 	data[deleteTime] = strconv.Itoa(int(jobInfo.DeleteTime))

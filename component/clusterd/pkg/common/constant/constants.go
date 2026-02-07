@@ -155,6 +155,12 @@ const (
 	MaxFaultNum = 4500
 )
 
+// job unique identifier label
+const (
+	CustomJobKeyLabel = "customJobKey"
+	CustomJobIdLabel  = "custom-job-id"
+)
+
 const (
 	// MindIeJobIdLabelKey mindie job id label key
 	MindIeJobIdLabelKey = "jobID"

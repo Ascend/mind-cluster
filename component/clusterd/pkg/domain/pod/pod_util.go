@@ -194,6 +194,19 @@ func ConstructRankTableByPod(podsInJob map[string]v1.Pod, replicas int) (constan
 	return rankTable, completedPodNum
 }
 
+func getContainerIdsbyPod(pod *v1.Pod) map[string]string {
+	if pod == nil {
+		return nil
+	}
+	containerIds := make(map[string]string)
+	for _, containerStatus := range pod.Status.ContainerStatuses {
+		containerName := containerStatus.Name
+		containerId := containerStatus.ContainerID
+		containerIds[containerName] = containerId
+	}
+	return containerIds
+}
+
 func getServerInfo(podDev constant.PodDevice, pod v1.Pod, ipSnMap map[string]string, podRank int) constant.ServerHccl {
 	server := constant.ServerHccl{
 		ServerID:     podDev.ServerID,
@@ -203,6 +216,8 @@ func getServerInfo(podDev constant.PodDevice, pod v1.Pod, ipSnMap map[string]str
 		ServerName:   pod.Spec.NodeName,
 		SuperPodId:   podDev.SuperPodId,
 		ServerSN:     getSN(pod.Spec.NodeName, podDev.HostIp, ipSnMap),
+		PodName:      pod.Name,
+		ContainerIds: getContainerIdsbyPod(&pod),
 	}
 
 	podDevNum := len(podDev.Devices)
@@ -388,6 +403,8 @@ func ConstructServersByJobKey(jobKey string) map[string]constant.ServerHccl {
 			PodNameSpace: pod.Namespace,
 			ServerName:   nodeName,
 			ServerSN:     node.GetNodeSNByName(nodeName),
+			PodName:      pod.Name,
+			ContainerIds: getContainerIdsbyPod(&pod),
 		}
 	}
 	return servers
