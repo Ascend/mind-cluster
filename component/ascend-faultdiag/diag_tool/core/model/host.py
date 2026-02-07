@@ -372,11 +372,16 @@ class HCCNStatInfo(JsonObj):
 
 
 class UncorrCwCntInfo(JsonObj):
+    UNCORR_CW_THRESHOLD = 10
+
     def __init__(self, device_id="", die_id="", count="", date_time=""):
         self.device_id = device_id
         self.die_id = die_id
         self.count = count
         self.date_time = date_time
+
+    def count_check(self):
+        return not self.count or int(self.count) <= self.UNCORR_CW_THRESHOLD
 
 
 class RfLfPcsLinkInfo(JsonObj):

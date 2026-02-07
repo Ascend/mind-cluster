@@ -1,0 +1,17 @@
+display license esn
+
+dis cu | in sysname
+
+dis int b | no-more
+
+dis lldp nei b | n
+
+display interface transceiver verbose | no-more
+
+display alarm active | no-more
+
+display alarm history | no-more
+
+display interface | no-more
+
+display clock

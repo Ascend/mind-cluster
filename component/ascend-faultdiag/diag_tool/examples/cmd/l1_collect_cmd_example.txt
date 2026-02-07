@@ -1,0 +1,387 @@
+sys
+diag
+
+display license esn
+
+dis cu | in sysname
+
+dis int b | no-more
+
+dis lldp nei b | n
+
+display hccs port-invalid drop statistics | no-more
+
+display qos port-credit back-pressure statistics | no-more
+
+display hccs eid ub-instance 0 | no-more
+
+display hccs decode and map table | in MAP_TABLE | no-more
+
+dis int hilink snr | n
+
+display interface transceiver verbose | no-more
+
+display  interface information | no-more
+
+display alarm active | no-more
+
+display alarm history | no-more
+
+display interface | no-more
+
+display clock
+
+display hccs proxy response statistics | no-more
+
+display hccs route miss statistics | no-more
+
+display for info enp s 1 c 0 "get port link start 0 end 47" | no-more
+display for info enp s 1 c 1 "get port link start 0 end 47" | no-more
+display for info enp s 1 c 2 "get port link start 0 end 47" | no-more
+display for info enp s 1 c 3 "get port link start 0 end 47" | no-more
+display for info enp s 1 c 4 "get port link start 0 end 47" | no-more
+display for info enp s 1 c 5 "get port link start 0 end 47" | no-more
+display for info enp s 1 c 6 "get port link start 0 end 47" | no-more
+
+display hccs proxy response detail interface 200GHL1/1/1 | no-more
+display hccs proxy response detail interface 200GHL1/1/2 | no-more
+display hccs proxy response detail interface 200GHL1/1/3 | no-more
+display hccs proxy response detail interface 200GHL1/1/4 | no-more
+display hccs proxy response detail interface 200GHL1/1/5 | no-more
+display hccs proxy response detail interface 200GHL1/1/6 | no-more
+display hccs proxy response detail interface 200GHL1/1/7 | no-more
+display hccs proxy response detail interface 200GHL1/1/8 | no-more
+display hccs proxy response detail interface 200GHL1/1/9 | no-more
+display hccs proxy response detail interface 200GHL1/1/10 | no-more
+display hccs proxy response detail interface 200GHL1/1/11 | no-more
+display hccs proxy response detail interface 200GHL1/1/12 | no-more
+display hccs proxy response detail interface 200GHL1/1/13 | no-more
+display hccs proxy response detail interface 200GHL1/1/14 | no-more
+display hccs proxy response detail interface 200GHL1/1/15 | no-more
+display hccs proxy response detail interface 200GHL1/1/16 | no-more
+display hccs proxy response detail interface 200GHL1/1/17 | no-more
+display hccs proxy response detail interface 200GHL1/1/18 | no-more
+display hccs proxy response detail interface 200GHL1/1/19 | no-more
+display hccs proxy response detail interface 200GHL1/1/20 | no-more
+display hccs proxy response detail interface 200GHL1/2/1 | no-more
+display hccs proxy response detail interface 200GHL1/2/2 | no-more
+display hccs proxy response detail interface 200GHL1/2/3 | no-more
+display hccs proxy response detail interface 200GHL1/2/4 | no-more
+display hccs proxy response detail interface 200GHL1/2/5 | no-more
+display hccs proxy response detail interface 200GHL1/2/6 | no-more
+display hccs proxy response detail interface 200GHL1/2/7 | no-more
+display hccs proxy response detail interface 200GHL1/2/8 | no-more
+display hccs proxy response detail interface 200GHL1/2/9 | no-more
+display hccs proxy response detail interface 200GHL1/2/10 | no-more
+display hccs proxy response detail interface 200GHL1/2/11 | no-more
+display hccs proxy response detail interface 200GHL1/2/12 | no-more
+display hccs proxy response detail interface 200GHL1/2/13 | no-more
+display hccs proxy response detail interface 200GHL1/2/14 | no-more
+display hccs proxy response detail interface 200GHL1/2/15 | no-more
+display hccs proxy response detail interface 200GHL1/2/16 | no-more
+display hccs proxy response detail interface 200GHL1/3/1 | no-more
+display hccs proxy response detail interface 200GHL1/3/2 | no-more
+display hccs proxy response detail interface 200GHL1/3/3 | no-more
+display hccs proxy response detail interface 200GHL1/3/4 | no-more
+display hccs proxy response detail interface 200GHL1/3/5 | no-more
+display hccs proxy response detail interface 200GHL1/3/6 | no-more
+display hccs proxy response detail interface 200GHL1/3/7 | no-more
+display hccs proxy response detail interface 200GHL1/3/8 | no-more
+display hccs proxy response detail interface 200GHL1/3/9 | no-more
+display hccs proxy response detail interface 200GHL1/3/10 | no-more
+display hccs proxy response detail interface 200GHL1/3/11 | no-more
+display hccs proxy response detail interface 200GHL1/3/12 | no-more
+display hccs proxy response detail interface 200GHL1/3/13 | no-more
+display hccs proxy response detail interface 200GHL1/3/14 | no-more
+display hccs proxy response detail interface 200GHL1/3/15 | no-more
+display hccs proxy response detail interface 200GHL1/3/16 | no-more
+display hccs proxy response detail interface 200GHL1/3/17 | no-more
+display hccs proxy response detail interface 200GHL1/3/18 | no-more
+display hccs proxy response detail interface 200GHL1/3/19 | no-more
+display hccs proxy response detail interface 200GHL1/3/20 | no-more
+display hccs proxy response detail interface 200GHL1/4/1 | no-more
+display hccs proxy response detail interface 200GHL1/4/2 | no-more
+display hccs proxy response detail interface 200GHL1/4/3 | no-more
+display hccs proxy response detail interface 200GHL1/4/4 | no-more
+display hccs proxy response detail interface 200GHL1/4/5 | no-more
+display hccs proxy response detail interface 200GHL1/4/6 | no-more
+display hccs proxy response detail interface 200GHL1/4/7 | no-more
+display hccs proxy response detail interface 200GHL1/4/8 | no-more
+display hccs proxy response detail interface 200GHL1/4/9 | no-more
+display hccs proxy response detail interface 200GHL1/4/10 | no-more
+display hccs proxy response detail interface 200GHL1/4/11 | no-more
+display hccs proxy response detail interface 200GHL1/4/12 | no-more
+display hccs proxy response detail interface 200GHL1/4/13 | no-more
+display hccs proxy response detail interface 200GHL1/4/14 | no-more
+display hccs proxy response detail interface 200GHL1/4/15 | no-more
+display hccs proxy response detail interface 200GHL1/4/16 | no-more
+display hccs proxy response detail interface 200GHL1/4/17 | no-more
+display hccs proxy response detail interface 200GHL1/4/18 | no-more
+display hccs proxy response detail interface 200GHL1/4/19 | no-more
+display hccs proxy response detail interface 200GHL1/4/20 | no-more
+display hccs proxy response detail interface 200GHL1/5/1 | no-more
+display hccs proxy response detail interface 200GHL1/5/2 | no-more
+display hccs proxy response detail interface 200GHL1/5/3 | no-more
+display hccs proxy response detail interface 200GHL1/5/4 | no-more
+display hccs proxy response detail interface 200GHL1/5/5 | no-more
+display hccs proxy response detail interface 200GHL1/5/6 | no-more
+display hccs proxy response detail interface 200GHL1/5/7 | no-more
+display hccs proxy response detail interface 200GHL1/5/8 | no-more
+display hccs proxy response detail interface 200GHL1/5/9 | no-more
+display hccs proxy response detail interface 200GHL1/5/10 | no-more
+display hccs proxy response detail interface 200GHL1/5/11 | no-more
+display hccs proxy response detail interface 200GHL1/5/12 | no-more
+display hccs proxy response detail interface 200GHL1/5/13 | no-more
+display hccs proxy response detail interface 200GHL1/5/14 | no-more
+display hccs proxy response detail interface 200GHL1/5/15 | no-more
+display hccs proxy response detail interface 200GHL1/5/16 | no-more
+display hccs proxy response detail interface 200GHL1/5/17 | no-more
+display hccs proxy response detail interface 200GHL1/5/18 | no-more
+display hccs proxy response detail interface 200GHL1/5/19 | no-more
+display hccs proxy response detail interface 200GHL1/5/20 | no-more
+display hccs proxy response detail interface 200GHL1/6/1 | no-more
+display hccs proxy response detail interface 200GHL1/6/2 | no-more
+display hccs proxy response detail interface 200GHL1/6/3 | no-more
+display hccs proxy response detail interface 200GHL1/6/4 | no-more
+display hccs proxy response detail interface 200GHL1/6/5 | no-more
+display hccs proxy response detail interface 200GHL1/6/6 | no-more
+display hccs proxy response detail interface 200GHL1/6/7 | no-more
+display hccs proxy response detail interface 200GHL1/6/8 | no-more
+display hccs proxy response detail interface 200GHL1/6/9 | no-more
+display hccs proxy response detail interface 200GHL1/6/10 | no-more
+display hccs proxy response detail interface 200GHL1/6/11 | no-more
+display hccs proxy response detail interface 200GHL1/6/12 | no-more
+display hccs proxy response detail interface 200GHL1/6/13 | no-more
+display hccs proxy response detail interface 200GHL1/6/14 | no-more
+display hccs proxy response detail interface 200GHL1/6/15 | no-more
+display hccs proxy response detail interface 200GHL1/6/16 | no-more
+display hccs proxy response detail interface 200GHL1/6/17 | no-more
+display hccs proxy response detail interface 200GHL1/6/18 | no-more
+display hccs proxy response detail interface 200GHL1/6/19 | no-more
+display hccs proxy response detail interface 200GHL1/6/20 | no-more
+display hccs proxy response detail interface 200GHL1/7/1 | no-more
+display hccs proxy response detail interface 200GHL1/7/2 | no-more
+display hccs proxy response detail interface 200GHL1/7/3 | no-more
+display hccs proxy response detail interface 200GHL1/7/4 | no-more
+display hccs proxy response detail interface 200GHL1/7/5 | no-more
+display hccs proxy response detail interface 200GHL1/7/6 | no-more
+display hccs proxy response detail interface 200GHL1/7/7 | no-more
+display hccs proxy response detail interface 200GHL1/7/8 | no-more
+display hccs proxy response detail interface 200GHL1/7/9 | no-more
+display hccs proxy response detail interface 200GHL1/7/10 | no-more
+display hccs proxy response detail interface 200GHL1/7/11 | no-more
+display hccs proxy response detail interface 200GHL1/7/12 | no-more
+display hccs proxy response detail interface 200GHL1/7/13 | no-more
+display hccs proxy response detail interface 200GHL1/7/14 | no-more
+display hccs proxy response detail interface 200GHL1/7/15 | no-more
+display hccs proxy response detail interface 200GHL1/7/16 | no-more
+display hccs proxy response detail interface 400GHL1/1/1:1 | no-more
+display hccs proxy response detail interface 400GHL1/1/1:2 | no-more
+display hccs proxy response detail interface 400GHL1/1/2:1 | no-more
+display hccs proxy response detail interface 400GHL1/1/2:2 | no-more
+display hccs proxy response detail interface 400GHL1/1/3:1 | no-more
+display hccs proxy response detail interface 400GHL1/1/3:2 | no-more
+display hccs proxy response detail interface 400GHL1/1/4:1 | no-more
+display hccs proxy response detail interface 400GHL1/1/4:2 | no-more
+display hccs proxy response detail interface 400GHL1/1/5:1 | no-more
+display hccs proxy response detail interface 400GHL1/1/5:2 | no-more
+display hccs proxy response detail interface 400GHL1/1/6:1 | no-more
+display hccs proxy response detail interface 400GHL1/1/6:2 | no-more
+display hccs proxy response detail interface 400GHL1/1/7:1 | no-more
+display hccs proxy response detail interface 400GHL1/1/7:2 | no-more
+display hccs proxy response detail interface 400GHL1/1/8:1 | no-more
+display hccs proxy response detail interface 400GHL1/1/8:2 | no-more
+display hccs proxy response detail interface 400GHL1/2/1:1 | no-more
+display hccs proxy response detail interface 400GHL1/2/1:2 | no-more
+display hccs proxy response detail interface 400GHL1/2/2:1 | no-more
+display hccs proxy response detail interface 400GHL1/2/2:2 | no-more
+display hccs proxy response detail interface 400GHL1/2/3:1 | no-more
+display hccs proxy response detail interface 400GHL1/2/3:2 | no-more
+display hccs proxy response detail interface 400GHL1/2/4:1 | no-more
+display hccs proxy response detail interface 400GHL1/2/4:2 | no-more
+display hccs proxy response detail interface 400GHL1/2/5:1 | no-more
+display hccs proxy response detail interface 400GHL1/2/5:2 | no-more
+display hccs proxy response detail interface 400GHL1/2/6:1 | no-more
+display hccs proxy response detail interface 400GHL1/2/6:2 | no-more
+display hccs proxy response detail interface 400GHL1/2/7:1 | no-more
+display hccs proxy response detail interface 400GHL1/2/7:2 | no-more
+display hccs proxy response detail interface 400GHL1/2/8:1 | no-more
+display hccs proxy response detail interface 400GHL1/2/8:2 | no-more
+display hccs proxy response detail interface 400GHL1/3/1:1 | no-more
+display hccs proxy response detail interface 400GHL1/3/1:2 | no-more
+display hccs proxy response detail interface 400GHL1/3/2:1 | no-more
+display hccs proxy response detail interface 400GHL1/3/2:2 | no-more
+display hccs proxy response detail interface 400GHL1/3/3:1 | no-more
+display hccs proxy response detail interface 400GHL1/3/3:2 | no-more
+display hccs proxy response detail interface 400GHL1/3/4:1 | no-more
+display hccs proxy response detail interface 400GHL1/3/4:2 | no-more
+display hccs proxy response detail interface 400GHL1/3/5:1 | no-more
+display hccs proxy response detail interface 400GHL1/3/5:2 | no-more
+display hccs proxy response detail interface 400GHL1/3/6:1 | no-more
+display hccs proxy response detail interface 400GHL1/3/6:2 | no-more
+display hccs proxy response detail interface 400GHL1/3/7:1 | no-more
+display hccs proxy response detail interface 400GHL1/3/7:2 | no-more
+display hccs proxy response detail interface 400GHL1/3/8:1 | no-more
+display hccs proxy response detail interface 400GHL1/3/8:2 | no-more
+display hccs proxy response detail interface 400GHL1/4/1:1 | no-more
+display hccs proxy response detail interface 400GHL1/4/1:2 | no-more
+display hccs proxy response detail interface 400GHL1/4/2:1 | no-more
+display hccs proxy response detail interface 400GHL1/4/2:2 | no-more
+display hccs proxy response detail interface 400GHL1/4/3:1 | no-more
+display hccs proxy response detail interface 400GHL1/4/3:2 | no-more
+display hccs proxy response detail interface 400GHL1/4/4:1 | no-more
+display hccs proxy response detail interface 400GHL1/4/4:2 | no-more
+display hccs proxy response detail interface 400GHL1/4/5:1 | no-more
+display hccs proxy response detail interface 400GHL1/4/5:2 | no-more
+display hccs proxy response detail interface 400GHL1/4/6:1 | no-more
+display hccs proxy response detail interface 400GHL1/4/6:2 | no-more
+display hccs proxy response detail interface 400GHL1/4/7:1 | no-more
+display hccs proxy response detail interface 400GHL1/4/7:2 | no-more
+display hccs proxy response detail interface 400GHL1/4/8:1 | no-more
+display hccs proxy response detail interface 400GHL1/4/8:2 | no-more
+display hccs proxy response detail interface 400GHL1/5/1:1 | no-more
+display hccs proxy response detail interface 400GHL1/5/1:2 | no-more
+display hccs proxy response detail interface 400GHL1/5/2:1 | no-more
+display hccs proxy response detail interface 400GHL1/5/2:2 | no-more
+display hccs proxy response detail interface 400GHL1/5/3:1 | no-more
+display hccs proxy response detail interface 400GHL1/5/3:2 | no-more
+display hccs proxy response detail interface 400GHL1/5/4:1 | no-more
+display hccs proxy response detail interface 400GHL1/5/4:2 | no-more
+display hccs proxy response detail interface 400GHL1/5/5:1 | no-more
+display hccs proxy response detail interface 400GHL1/5/5:2 | no-more
+display hccs proxy response detail interface 400GHL1/5/6:1 | no-more
+display hccs proxy response detail interface 400GHL1/5/6:2 | no-more
+display hccs proxy response detail interface 400GHL1/5/7:1 | no-more
+display hccs proxy response detail interface 400GHL1/5/7:2 | no-more
+display hccs proxy response detail interface 400GHL1/5/8:1 | no-more
+display hccs proxy response detail interface 400GHL1/5/8:2 | no-more
+display hccs proxy response detail interface 400GHL1/6/1:1 | no-more
+display hccs proxy response detail interface 400GHL1/6/1:2 | no-more
+display hccs proxy response detail interface 400GHL1/6/2:1 | no-more
+display hccs proxy response detail interface 400GHL1/6/2:2 | no-more
+display hccs proxy response detail interface 400GHL1/6/3:1 | no-more
+display hccs proxy response detail interface 400GHL1/6/3:2 | no-more
+display hccs proxy response detail interface 400GHL1/6/4:1 | no-more
+display hccs proxy response detail interface 400GHL1/6/4:2 | no-more
+display hccs proxy response detail interface 400GHL1/6/5:1 | no-more
+display hccs proxy response detail interface 400GHL1/6/5:2 | no-more
+display hccs proxy response detail interface 400GHL1/6/6:1 | no-more
+display hccs proxy response detail interface 400GHL1/6/6:2 | no-more
+display hccs proxy response detail interface 400GHL1/6/7:1 | no-more
+display hccs proxy response detail interface 400GHL1/6/7:2 | no-more
+display hccs proxy response detail interface 400GHL1/6/8:1 | no-more
+display hccs proxy response detail interface 400GHL1/6/8:2 | no-more
+display hccs proxy response detail interface 400GHL1/7/1:1 | no-more
+display hccs proxy response detail interface 400GHL1/7/1:2 | no-more
+display hccs proxy response detail interface 400GHL1/7/2:1 | no-more
+display hccs proxy response detail interface 400GHL1/7/2:2 | no-more
+display hccs proxy response detail interface 400GHL1/7/3:1 | no-more
+display hccs proxy response detail interface 400GHL1/7/3:2 | no-more
+display hccs proxy response detail interface 400GHL1/7/4:1 | no-more
+display hccs proxy response detail interface 400GHL1/7/4:2 | no-more
+display hccs proxy response detail interface 400GHL1/7/5:1 | no-more
+display hccs proxy response detail interface 400GHL1/7/5:2 | no-more
+display hccs proxy response detail interface 400GHL1/7/6:1 | no-more
+display hccs proxy response detail interface 400GHL1/7/6:2 | no-more
+display hccs proxy response detail interface 400GHL1/7/7:1 | no-more
+display hccs proxy response detail interface 400GHL1/7/7:2 | no-more
+display hccs proxy response detail interface 400GHL1/7/8:1 | no-more
+display hccs proxy response detail interface 400GHL1/7/8:2 | no-more
+
+display for info enp s 1 c 0 "get port statistic count port 0 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 1 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 2 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 3 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 4 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 5 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 6 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 7 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 8 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 9 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 10 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 11 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 12 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 13 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 14 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 15 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 16 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 17 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 18 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 19 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 20 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 21 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 22 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 23 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 24 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 25 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 26 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 27 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 28 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 29 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 30 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 31 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 32 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 33 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 34 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 35 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 36 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 37 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 38 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 39 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 40 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 41 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 42 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 43 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 44 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 45 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 46 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 0 "get port statistic count port 47 module 10  type 0 path 2" | no-more
+
+display for info enp s 1 c 1 "get port statistic count port 0 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 1 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 2 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 3 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 4 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 5 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 6 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 7 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 8 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 9 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 10 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 11 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 12 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 13 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 14 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 15 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 16 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 17 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 18 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 19 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 20 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 21 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 22 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 23 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 24 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 25 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 26 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 27 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 28 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 29 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 30 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 31 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 32 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 33 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 34 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 35 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 36 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 37 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 38 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 39 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 40 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 41 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 42 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 43 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 44 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 45 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 46 module 10  type 0 path 2" | no-more
+display for info enp s 1 c 1 "get port statistic count port 47 module 10  type 0 path 2" | no-more
