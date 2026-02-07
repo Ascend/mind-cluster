@@ -147,3 +147,10 @@ const (
 	// InvalidSuperPodSize all f -> super pod / not super pod
 	InvalidSuperPodSize = 0xffffffff
 )
+
+const (
+	// PortIDSuffixLen the suffix length of portId
+	PortIDSuffixLen = 2
+	// DieIDOffset dieId's offset
+	DieIDOffset = 3
+)

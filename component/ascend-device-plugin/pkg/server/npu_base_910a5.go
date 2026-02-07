@@ -509,14 +509,14 @@ func (n *NpuBase) getPortsList(phyId int32, eid string, rLevel int) ([]string, e
 }
 
 func getDieIdAndPortId(eid string) (byte, byte, error) {
-	const portMinLimit, twoNum, threeNum, portMaxLimit = 1, 2, 3, 9
-	if len(eid) < threeNum {
-		return 0, 0, fmt.Errorf("eid:<%v> len is invalid, which should be greater equal than %d", eid, threeNum)
+	if len(eid) < common.DieIDOffset {
+		return 0, 0, fmt.Errorf("eid:<%v> len is invalid, which should be greater equal than %d",
+			eid, common.DieIDOffset)
 	}
 
 	var dieId, portId byte
-	dieIdStr := eid[len(eid)-threeNum : len(eid)-twoNum] // third-to-last character for dieId
-	portIdStr := eid[len(eid)-twoNum:]                   // last two characters for portId calculation
+	dieIdStr := eid[len(eid)-common.DieIDOffset : len(eid)-common.PortIDSuffixLen] // third-to-last character for dieId
+	portIdStr := eid[len(eid)-common.PortIDSuffixLen:]                             // last two characters for portId calculation
 	dieIdInt, err := strconv.ParseInt(dieIdStr, hexadecimal, 0)
 	if err != nil {
 		return 0, 0, fmt.Errorf("dieId:<%v> is invalid, parse to int failed, err: %v", dieIdInt, err)
@@ -539,12 +539,6 @@ func getDieIdAndPortId(eid string) (byte, byte, error) {
 	// 1. Masking: 0x28 & 0x7F -> 0010 1000
 	// 2. Shifting: 0010 1000 >> 3 -> 0000 0101 (Decimal: 5)
 	portId = byte((portInt & portIdMaskNum) >> rightShiftLen)
-	if portId <= 0 || portId > portMaxLimit {
-		return 0, 0, fmt.Errorf("portId:<%v> is out of range [%d-%d]", portId, portMinLimit, portMaxLimit)
-	}
-
-	// 3. PortId - 1
-	portId -= 1
 
 	return dieId, portId, nil
 }
