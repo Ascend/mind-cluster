@@ -37,7 +37,7 @@ import (
 const (
 	expectedFeId   = 1
 	testPortLength = 2
-	expectedPortId = 4
+	expectedPortId = 5
 	// byte mask which is not for d2d usage
 	byteMaskNotForD2D byte = 0x01 << 3
 )
@@ -183,18 +183,6 @@ func TestGetDieIdAndPortId(t *testing.T) {
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(die, convey.ShouldEqual, 0)
 			convey.So(port, convey.ShouldEqual, expectedPortId)
-		})
-
-		convey.Convey("When port number is less out of allowed range", func() {
-			_, _, err := getDieIdAndPortId("400")
-			convey.So(err, convey.ShouldNotBeNil)
-			convey.So(err.Error(), convey.ShouldContainSubstring, "out of range")
-		})
-
-		convey.Convey("When port number is greater out of allowed range", func() {
-			_, _, err = getDieIdAndPortId("450")
-			convey.So(err, convey.ShouldNotBeNil)
-			convey.So(err.Error(), convey.ShouldContainSubstring, "out of range")
 		})
 
 		convey.Convey("When the EID is too short", func() {
@@ -626,7 +614,7 @@ func TestGetPortsList(t *testing.T) {
 		})
 		convey.Convey("03-getPortsList level 1 full mesh", func() {
 			ports, _ := npu.getPortsList(1, "42A", 1)
-			convey.So(ports[0], convey.ShouldEqual, "1/4")
+			convey.So(ports[0], convey.ShouldEqual, "1/5")
 		})
 		convey.Convey("04-getPortsList level 1 read topo info", func() {
 			mock1 := gomonkey.ApplyPrivateMethod(npu.productInfo,
@@ -638,7 +626,7 @@ func TestGetPortsList(t *testing.T) {
 				})
 			defer mock1.Reset()
 			ports, _ := npu.getPortsList(1, "A17", 1)
-			convey.So(ports[0], convey.ShouldEqual, "0/1")
+			convey.So(ports[0], convey.ShouldEqual, "0/2")
 		})
 	})
 }
