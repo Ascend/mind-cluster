@@ -33,8 +33,9 @@ import (
 )
 
 const (
-	defaultLogFile       = "/var/log/mindx-dl/clusterd/clusterd.log"
-	grpcKeepAliveTimeOut = 5
+	defaultLogFile        = "/var/log/mindx-dl/clusterd/clusterd.log"
+	grpcKeepAliveTimeOut  = 5
+	grpcKeepAliveInterval = 3
 )
 
 var (
@@ -167,12 +168,18 @@ func initGrpcServer(ctx context.Context) {
 		Time:    time.Minute,
 		Timeout: grpcKeepAliveTimeOut * time.Second,
 	}
+	keepAlivePolicy := keepalive.EnforcementPolicy{
+		MinTime:             grpcKeepAliveInterval * time.Second,
+		PermitWithoutStream: true,
+	}
 	server = sv.NewClusterInfoMgrServer([]grpc.ServerOption{
 		grpc.MaxRecvMsgSize(constant.MaxGRPCRecvMsgSize),
 		grpc.MaxSendMsgSize(constant.MaxGRPCSendMsgSize),
 		grpc.MaxConcurrentStreams(constant.MaxGRPCConcurrentStreams),
 		grpc.UnaryInterceptor(limitQPS),
-		grpc.KeepaliveParams(keepAlive)})
+		grpc.KeepaliveParams(keepAlive),
+		grpc.KeepaliveEnforcementPolicy(keepAlivePolicy),
+	})
 	if err := server.Start(ctx, useProxy); err != nil {
 		hwlog.RunLog.Errorf("clusterd grpc server start failed, error: %v", err)
 	}
