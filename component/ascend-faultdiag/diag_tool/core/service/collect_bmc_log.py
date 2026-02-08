@@ -15,22 +15,24 @@
 # limitations under the License.
 # ==============================================================================
 
-from diag_tool.core.collect.collector.host_collector import HostCollector
+import asyncio
+
+from diag_tool.core.collect.collector.bmc_log_collector import BmcLogCollector
 from diag_tool.core.context.diag_ctx import DiagCtx
 from diag_tool.core.service.base import DiagService
+from diag_tool.utils.logger import DIAG_LOGGER
 
 
-class CollectHostsInfo(DiagService):
+class CollectBmcLogService(DiagService):
 
     def __init__(self, diag_ctx: DiagCtx):
         super().__init__(diag_ctx)
 
     async def run(self):
-        if not self.diag_ctx.host_fetchers:
+        if not self.diag_ctx.bmcs_fetchers:
             return
-        async_tasks = []
-        for fetcher in self.diag_ctx.host_fetchers.values():
-            async_tasks.append(HostCollector(fetcher).collect())
-        for task in async_tasks:
-            host_info = await task
-            self.diag_ctx.cache.hosts_info.update({host_info.host_id: host_info})
+        tasks = []
+        DIAG_LOGGER.info("收集BMC日志约耗时10分-15分钟, 请耐心等待")
+        for fetcher in self.diag_ctx.bmcs_fetchers.values():
+            tasks.append(BmcLogCollector(fetcher).collect())
+        await asyncio.gather(*tasks)

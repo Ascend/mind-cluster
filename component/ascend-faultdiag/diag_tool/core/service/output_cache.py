@@ -15,22 +15,30 @@
 # limitations under the License.
 # ==============================================================================
 
-from diag_tool.core.collect.collector.host_collector import HostCollector
+import os.path
+from typing import Dict
+
+from diag_tool.core.common.json_obj import JsonObj
+from diag_tool.core.common.path import CommonPath
 from diag_tool.core.context.diag_ctx import DiagCtx
 from diag_tool.core.service.base import DiagService
 
 
-class CollectHostsInfo(DiagService):
+class OutputCache(DiagService):
 
     def __init__(self, diag_ctx: DiagCtx):
         super().__init__(diag_ctx)
 
+    @staticmethod
+    def _output_cache(cache_dir: str, cache_obj_map: Dict[str, JsonObj]):
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir, exist_ok=True)
+        for name, cache_obj in cache_obj_map.items():
+            with open(os.path.join(cache_dir, f"{name}.json"), "w", encoding="utf-8") as fs:
+                fs.write(cache_obj.to_json())
+
     async def run(self):
-        if not self.diag_ctx.host_fetchers:
-            return
-        async_tasks = []
-        for fetcher in self.diag_ctx.host_fetchers.values():
-            async_tasks.append(HostCollector(fetcher).collect())
-        for task in async_tasks:
-            host_info = await task
-            self.diag_ctx.cache.hosts_info.update({host_info.host_id: host_info})
+        cache = self.diag_ctx.cache
+        self._output_cache(CommonPath.COLLECT_BMC_CACHE_DIR, cache.bmcs_info)
+        self._output_cache(CommonPath.COLLECT_SWITCH_CACHE_DIR, cache.swis_info)
+        self._output_cache(CommonPath.COLLECT_HOST_CACHE_DIR, cache.hosts_info)

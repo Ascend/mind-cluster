@@ -15,22 +15,17 @@
 # limitations under the License.
 # ==============================================================================
 
-from diag_tool.core.collect.collector.host_collector import HostCollector
+import abc
+from abc import ABC
+
 from diag_tool.core.context.diag_ctx import DiagCtx
-from diag_tool.core.service.base import DiagService
 
 
-class CollectHostsInfo(DiagService):
+class DiagService(ABC):
 
     def __init__(self, diag_ctx: DiagCtx):
-        super().__init__(diag_ctx)
+        self.diag_ctx = diag_ctx
 
+    @abc.abstractmethod
     async def run(self):
-        if not self.diag_ctx.host_fetchers:
-            return
-        async_tasks = []
-        for fetcher in self.diag_ctx.host_fetchers.values():
-            async_tasks.append(HostCollector(fetcher).collect())
-        for task in async_tasks:
-            host_info = await task
-            self.diag_ctx.cache.hosts_info.update({host_info.host_id: host_info})
+        pass
