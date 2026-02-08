@@ -14,9 +14,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""
-Function: fetcher init modules
-Modified Records: 2026-02-04
-"""
 
-int("XXX")
