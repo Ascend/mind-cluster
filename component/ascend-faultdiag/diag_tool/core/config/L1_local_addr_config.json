@@ -1,0 +1,22 @@
+{
+  "cpu-0-0": "0x000000000000-0x07ffffffffff",
+  "cpu-1-0": "0x080000000000-0x0fffffffffff",
+  "cpu-2-0": "0x100000000000-0x17ffffffffff",
+  "cpu-3-0": "0x180000000000-0x1fffffffffff",
+  "npu-0-0": "0x200040000000-0x20ffffffffff",
+  "npu-0-1": "0x210000000000-0x21ffffffffff",
+  "npu-1-0": "0x220040000000-0x22ffffffffff",
+  "npu-1-1": "0x230000000000-0x23ffffffffff",
+  "npu-2-0": "0x240040000000-0x24ffffffffff",
+  "npu-2-1": "0x250000000000-0x25ffffffffff",
+  "npu-3-0": "0x260040000000-0x26ffffffffff",
+  "npu-3-1": "0x270000000000-0x27ffffffffff",
+  "npu-4-0": "0x280040000000-0x28ffffffffff",
+  "npu-4-1": "0x290000000000-0x29ffffffffff",
+  "npu-5-0": "0x2a0040000000-0x2affffffffff",
+  "npu-5-1": "0x2b0000000000-0x2bffffffffff",
+  "npu-6-0": "0x2c0040000000-0x2cffffffffff",
+  "npu-6-1": "0x2d0000000000-0x2dffffffffff",
+  "npu-7-0": "0x2e0040000000-0x2effffffffff",
+  "npu-7-1": "0x2f0000000000-0x2fffffffffff"
+}
