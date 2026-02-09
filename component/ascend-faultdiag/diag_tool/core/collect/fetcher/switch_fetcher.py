@@ -18,10 +18,9 @@
 import abc
 from typing import List
 
-from diag_tool.core.log_parser.base import FindResult
-from diag_tool.core.model.hccs import ProxyTimeoutStatis, HccsMapTable, HccsChipPortSnr, HccsSerdesDumpInfo
-
 from diag_tool.core.collect.fetcher.base import Fetcher
+from diag_tool.core.log_parser.base import FindResult
+from diag_tool.core.model.hccs import ProxyTimeoutStatis, HccsChipPortSnr, HccsSerdesDumpInfo
 from diag_tool.core.model.switch import InterfaceBrief, PortDownStatus
 
 
@@ -138,10 +137,6 @@ class SwitchFetcher(Fetcher):
 
     @abc.abstractmethod
     async def fetch_serdes_dump_info(self, port_snr_list: List[HccsChipPortSnr]) -> List[HccsSerdesDumpInfo]:
-        return []
-
-    @abc.abstractmethod
-    async def fetch_diag_info_log(self) -> List[FindResult]:
         return []
 
     @abc.abstractmethod

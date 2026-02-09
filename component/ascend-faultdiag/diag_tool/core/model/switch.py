@@ -300,6 +300,36 @@ class PortMapping(JsonObj):
         self.port_id = port_id
 
 
+class PortDownStatusLaneInfo(JsonObj):
+
+    def __init__(self, lane_id="", snr="", data_rate="", tx_amp_ctl_en="", los_status=""):
+        self.lane_id = lane_id
+        self.snr = snr
+        self.data_rate = data_rate
+        self.tx_amp_ctl_en = tx_amp_ctl_en
+        self.los_status = los_status
+
+    @classmethod
+    def _parse_to_py_key(cls):
+        return True
+
+    @classmethod
+    def _mapping_rules(cls, src_dict):
+        return helpers.strip_keys_from_parentheses(src_dict)
+
+
+class PortDownStatus(JsonObj):
+
+    def __init__(self, swi_chip_id="", port_id="", date="", crc_error_cnt="", frc_error_cnt="",
+                 lane_infos: List[PortDownStatusLaneInfo] = None):
+        self.swi_chip_id = swi_chip_id
+        self.port_id = port_id
+        self.date = date
+        self.crc_error_cnt = crc_error_cnt
+        self.frc_error_cnt = frc_error_cnt
+        self.lane_infos = lane_infos
+
+
 class SwitchInfo(JsonObj):
     def __init__(self, name: str, swi_id: str, sn="", optical_models: List[SwiOpticalModel] = None,
                  interface_briefs: List[InterfaceBrief] = None,

@@ -223,9 +223,5 @@ class SwiSshFetcher(SshFetcher, SwitchFetcher):
                 results.append(result)
         return results
 
-    async def fetch_diag_info_log(self) -> List[FindResult]:
-        return []
-
     async def fetch_interface_port_mapping(self) -> str:
         return ""
-

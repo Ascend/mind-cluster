@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
 from diag_tool.core.context.diag_ctx import DiagCtx
 from diag_tool.core.fault_analyzer.host.host_loopback_analyzer import HostLoopbackAnalyzer
 from diag_tool.core.service.base import DiagService
