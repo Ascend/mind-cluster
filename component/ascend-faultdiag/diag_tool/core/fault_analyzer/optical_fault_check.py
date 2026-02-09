@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
 from typing import List
 
 from diag_tool.core.model.diag_result import Domain, DiagResult

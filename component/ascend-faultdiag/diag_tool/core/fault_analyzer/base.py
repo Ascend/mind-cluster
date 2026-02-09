@@ -14,3 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
+import abc
+from abc import ABC
+from typing import List
+
+from diag_tool.core.model.cluster_info_cache import ClusterInfoCache
+from diag_tool.core.model.diag_result import DiagResult
+
+
+class Analyzer(ABC):
+
+    def __init__(self, cluster_info: ClusterInfoCache):
+        self.cluster_info = cluster_info
+
+    @abc.abstractmethod
+    def analyse(self) -> List[DiagResult]:
+        pass
+
+

@@ -18,5 +18,3 @@
 Function: fetcher init modules
 Modified Records: 2026-02-04
 """
-
-int("XXX")

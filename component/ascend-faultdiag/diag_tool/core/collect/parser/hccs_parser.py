@@ -24,6 +24,7 @@ from diag_tool.core.log_parser.base import FindResult
 from diag_tool.core.model.hccs import ProxyTimeoutStatis, InterfaceProxyResponseDetail, HccsRouteMiss, \
     PortLinkStatusRecord, HccsPortStatistic, HccsPortInvalidDrop, PortCreditBackPressure, InterfaceSnr, LaneSnr, \
     LaneInfo, HccsMapTable, HccsChipPortSnr
+from diag_tool.core.model.switch import PortDownStatus
 from diag_tool.utils import helpers
 from diag_tool.utils.helpers import to_int
 from diag_tool.utils.logger import DIAG_LOGGER
@@ -270,30 +271,26 @@ class HccsParser:
         return res
 
     @classmethod
-    def parse_hccs_port_snr_line(cls, switch_log_info: List[FindResult]) -> List[HccsChipPortSnr]:
+    def parse_hccs_port_snr_line(cls, port_down_status_list: List[PortDownStatus]) -> List[HccsChipPortSnr]:
         res = []
-        titles_dict = {
-            "lane_id": "laneId", cls.SNR: cls.SNR, "cnt": "data-rate(MHz)", "fec": "tx-amp-ctl-en", "loss": "losStatus"
-        }
         port_mapping_config_instance = port_mapping_config.get_port_mapping_config_instance()
-        for log_info in switch_log_info:
-            info_dict = log_info.info_dict
-            if not info_dict or log_info.pattern_key != "link_snr":
+        for port_down_status in port_down_status_list:
+            swi_chip_id = str(to_int(port_down_status.swi_chip_id) - 1)
+            port_id = str(to_int(port_down_status.port_id) - 1)
+            port_mapping_instance = port_mapping_config_instance.find_swi_port(str(swi_chip_id), phy_id=str(port_id))
+            if port_mapping_instance:
+                swi_port = port_mapping_instance.swi_port
+                xpu = port_mapping_instance.xpu
+            else:
+                DIAG_LOGGER.warning(f"未找到chip: {swi_chip_id} port: {port_id}对应的端口")
                 continue
-            table_lane_info_list = TableParser.parse(log_info.logline, titles_dict, {},
-                                                     end_sign="-----------", both_strip=False)
-            for lane_info in table_lane_info_list:
+            for lane_info in port_down_status.lane_infos:
                 port_snr = HccsChipPortSnr()
-                port_snr.swi_chip_id = to_int(info_dict.get("swi_chip_id", "")) - 1
-                port_snr.port_id = to_int(info_dict.get("port_id", "")) - 1
-                port_mapping_instance = port_mapping_config_instance.find_swi_port(str(port_snr.swi_chip_id),
-                                                                                   phy_id=str(port_snr.port_id))
-                if port_mapping_instance:
-                    port_snr.swi_port = port_mapping_instance.swi_port
-                    port_snr.xpu = port_mapping_instance.xpu
-                else:
-                    DIAG_LOGGER.warning(f"未找到chip: {port_snr.swi_chip_id} port: {port_snr.port_id}对应的端口")
-                port_snr.lane_id = lane_info.get("lane_id", "")
-                port_snr.snr = lane_info.get(cls.SNR, "")
+                port_snr.swi_chip_id = swi_chip_id
+                port_snr.swi_port = swi_port
+                port_snr.xpu = xpu
+                port_snr.lane_id = lane_info.lane_id
+                port_snr.snr = lane_info.snr
                 res.append(port_snr)
         return res
+
