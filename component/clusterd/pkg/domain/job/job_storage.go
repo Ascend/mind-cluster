@@ -67,24 +67,25 @@ func GetAllJobCache() map[string]constant.JobInfo {
 // SaveJobCache save job cache info
 func SaveJobCache(jobKey string, jobInfo constant.JobInfo) {
 	if jobInfo.Sid != "" {
-		if _, exists := existingSids.Load(jobInfo.Sid); exists {
+		existingJobKey, exists := existingSids.Load(jobInfo.Sid)
+		if exists && existingJobKey.(string) != jobKey {
 			hwlog.RunLog.Warnf("Job sid conflict, jobId:%s, sid:%s", jobKey, jobInfo.Sid)
 		}
 	}
 
 	jobSummaryMap.Store(jobKey, jobInfo)
 	if jobInfo.Sid != "" {
-		existingSids.Store(jobInfo.Sid, struct{}{})
+		existingSids.Store(jobInfo.Sid, jobKey)
 	}
 }
 
 // DeleteJobCache delete job cache info
 func DeleteJobCache(jobKey string) {
-	hwlog.RunLog.Infof("delete job cache, jobKey: %v", jobKey)
-	jobSummaryMap.Delete(jobKey)
 	if jobInfo, ok := GetJobCache(jobKey); ok && jobInfo.Sid != "" {
 		existingSids.Delete(jobInfo.Sid)
 	}
+	hwlog.RunLog.Infof("delete job cache, jobKey: %v", jobKey)
+	jobSummaryMap.Delete(jobKey)
 }
 
 func findJobByFilter(filter func(constant.JobInfo) bool) constant.JobInfo {

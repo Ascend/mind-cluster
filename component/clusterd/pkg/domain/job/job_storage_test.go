@@ -179,9 +179,49 @@ func TestSaveJobCache(t *testing.T) {
 	})
 }
 
+func TestSaveJobCacheWithSid(t *testing.T) {
+	convey.Convey("test SaveJobCache with sid", t, func() {
+		jobSummaryMap = sync.Map{}
+		existingSids = sync.Map{}
+		convey.Convey("when sid conflict, should log warning", func() {
+			jobInfo := getDemoJob(jobName1, jobNameSpace, jobUid1)
+			jobInfo.Sid = "test-sid"
+			SaveJobCache(jobUid1, jobInfo)
+			defer DeleteJobCache(jobUid1)
+
+			jobInfo2 := getDemoJob(jobName2, jobNameSpace, jobUid2)
+			jobInfo2.Sid = "test-sid"
+			SaveJobCache(jobUid2, jobInfo2)
+			defer DeleteJobCache(jobUid2)
+
+			jobInfoMap := GetAllJobCache()
+			convey.So(len(jobInfoMap), convey.ShouldEqual, two)
+		})
+		convey.Convey("when update same job with same sid, should not log warning", func() {
+			jobInfo := getDemoJob(jobName1, jobNameSpace, jobUid1)
+			jobInfo.Sid = "test-sid"
+			SaveJobCache(jobUid1, jobInfo)
+			defer DeleteJobCache(jobUid1)
+
+			jobInfo2 := getDemoJob(jobName1, jobNameSpace, jobUid1)
+			jobInfo2.Sid = "test-sid"
+			jobInfo2.Name = "updated-name"
+			SaveJobCache(jobUid1, jobInfo2)
+			defer DeleteJobCache(jobUid1)
+
+			jobInfoMap := GetAllJobCache()
+			convey.So(len(jobInfoMap), convey.ShouldEqual, 1)
+			updatedJob, ok := jobInfoMap[jobUid1]
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(updatedJob.Name, convey.ShouldEqual, "updated-name")
+		})
+	})
+}
+
 func TestDeleteJobCache(t *testing.T) {
 	convey.Convey("test DeleteJobCache", t, func() {
 		jobSummaryMap = sync.Map{}
+		existingSids = sync.Map{}
 		convey.Convey("when job cache is empty, delete success", func() {
 			DeleteJobCache(jobUid1)
 			jobInfoMap := GetAllJobCache()
@@ -189,10 +229,13 @@ func TestDeleteJobCache(t *testing.T) {
 		})
 		convey.Convey("when job key is not empty, delete success", func() {
 			jobInfo := getDemoJob(jobName1, jobNameSpace, jobUid1)
+			jobInfo.Sid = "test-sid"
 			SaveJobCache(jobUid1, jobInfo)
 			DeleteJobCache(jobUid1)
 			jobInfoMap := GetAllJobCache()
 			convey.So(len(jobInfoMap), convey.ShouldEqual, 0)
+			_, exists := existingSids.Load("test-sid")
+			convey.So(exists, convey.ShouldBeFalse)
 		})
 	})
 }
