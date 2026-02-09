@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from ascend_fd.utils.i18n import get_fault_entity_details_by_code
+from ascend_fd.utils.i18n import get_fault_entity_details_by_code, LANG
 
 
 class FaultEntity:
@@ -23,11 +23,11 @@ class FaultEntity:
         cause, description, suggestion = get_fault_entity_details_by_code(code)
         self.attribute = {
             "code": code,
-            "cause_zh": cause,
-            "description_zh": description,
+            f"cause_{LANG}": cause,
+            f"description_{LANG}": description,
         }
         if suggestion:
-            self.update_attribute({"suggestion_zh": suggestion})
+            self.update_attribute({f"suggestion_{LANG}": suggestion})
 
     def update_attribute(self, attr_info: dict):
         """

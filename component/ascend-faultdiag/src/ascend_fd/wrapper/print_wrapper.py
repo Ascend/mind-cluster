@@ -341,9 +341,8 @@ class PrintWrapper:
         rows = [self._format_rows(lb.suspected_root_cause_fault
                                   if (not self.single_diag_flag and index == ROOT_CAUSE_EVENT_INDEX)
                                   else "", lb.status_code, fault_code)]
-        # if fault code is normal, only print description_zh field.
         if fault_code in NORMAL_CODE_LIST:
-            rows.append(self._format_rows("", lb.result_description, fault.get("description_zh")))
+            rows.append(self._format_rows("", lb.result_description, fault.get(f"description_{LANG}")))
             return rows
         # format fault categories to 184 faults by kg.
         if fault_code not in NODE_AND_NETWORK_CODE_LIST:

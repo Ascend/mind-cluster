@@ -248,9 +248,9 @@ class Fault:
             "key_info": self.key_info,
             "component": self.attribute.component,
             "module": self.attribute.module,
-            "cause": self.attribute.cause_zh,
-            "description": self.attribute.description_zh,
-            "suggestion": self.attribute.suggestion_zh
+            "cause": self.attribute.cause_zh or self.attribute.cause_en,
+            "description": self.attribute.description_zh or self.attribute.description_en,
+            "suggestion": self.attribute.suggestion_zh or self.attribute.suggestion_en,
         }
 
     def get_device_list(self):
