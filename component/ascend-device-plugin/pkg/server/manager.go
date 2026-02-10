@@ -459,6 +459,7 @@ func (hdm *HwDevManager) updateAllInfo() error {
 }
 
 func (hdm *HwDevManager) loadDeviceInfoCm(ctx context.Context) {
+	hdm.loadFaultCode()
 	hdm.manager.LoadDeviceInfoCm(ctx)
 }
 
@@ -1355,19 +1356,27 @@ func (hdm *HwDevManager) pollFaultCodeCM(ctx context.Context) {
 			hwlog.RunLog.Info("poll fault code cm stop")
 			return
 		default:
-			hwlog.RunLog.Debugf("polling '%s' configmap", common.FaultCodeCMName)
-			configMap, err := hdm.manager.GetKubeClient().GetConfigMap(common.FaultCodeCMName, api.KubeNS)
-			if err != nil {
-				hwlog.RunLog.Debugf("cannot find '%s' configmap, reason: %v", common.FaultCodeCMName, err)
-				initFaultInfoFromFile()
-				time.Sleep(time.Duration(interval) * time.Second)
-				continue
-			}
-			interval = getFaultCodeCMPollInterval(configMap)
-			updateFaultConfigFromCm(configMap)
 			time.Sleep(time.Duration(interval) * time.Second)
+			hwlog.RunLog.Debugf("polling '%s' configmap", common.FaultCodeCMName)
+			configMap, fromCm := hdm.loadFaultCode()
+			if fromCm {
+				interval = getFaultCodeCMPollInterval(configMap)
+			}
 		}
 	}
+}
+
+func (hdm *HwDevManager) loadFaultCode() (*v1.ConfigMap, bool) {
+	configMap, err := hdm.manager.GetKubeClient().GetConfigMap(common.FaultCodeCMName, api.KubeNS)
+	fromCm := false
+	if err != nil {
+		hwlog.RunLog.Debugf("cannot find '%s' configmap, reason: %v", common.FaultCodeCMName, err)
+		initFaultInfoFromFile()
+	} else {
+		updateFaultConfigFromCm(configMap)
+		fromCm = true
+	}
+	return configMap, fromCm
 }
 
 func updateFaultConfigFromCm(configMap *v1.ConfigMap) {
