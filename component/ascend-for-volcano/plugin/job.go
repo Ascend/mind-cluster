@@ -495,7 +495,6 @@ func (sJob *SchedulerJob) initByJobInfo(vcJob *api.JobInfo) error {
 	if sJob.Owner.Kind == ReplicaSetType && !ok {
 		num *= int(*sJob.Owner.Replicas)
 		sJob.MinAvailable = *sJob.Owner.Replicas
-		sJob.Annotation = sJob.Owner.Annotations
 	}
 	if ok && vcJob.MinAvailable == util.NPUIndex1 {
 		taskMinAvailable, err := strconv.Atoi(k)
