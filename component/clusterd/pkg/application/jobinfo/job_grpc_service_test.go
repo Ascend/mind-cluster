@@ -31,7 +31,6 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
-	"k8s.io/apimachinery/pkg/util/uuid"
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
@@ -105,21 +104,6 @@ func TestJobServerRegister(t *testing.T) {
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(resp.Code, convey.ShouldEqual, int32(common.UnRegistry))
 			convey.So(len(server.clients), convey.ShouldEqual, 0)
-		})
-
-		convey.Convey("When registering clients more than maxClientPerRole, it should fail", func() {
-			req := &job.ClientInfo{Role: CCAgentClientName}
-			mockClientMap := make(map[string]*clientState)
-			for i := 0; i < constant.MaxClientPerRole; i++ {
-				clientID := string(uuid.NewUUID())
-				mockClientMap[clientID] = &clientState{role: CCAgentClientName}
-			}
-			server.clients = mockClientMap
-			resp, err := server.Register(ctx, req)
-			convey.So(err, convey.ShouldNotBeNil)
-			convey.So(resp.Code, convey.ShouldEqual, int32(common.RateLimitedCode))
-			convey.So(resp.ClientId, convey.ShouldBeEmpty)
-			convey.So(len(server.clients), convey.ShouldEqual, constant.MaxClientPerRole)
 		})
 	})
 }
@@ -208,6 +192,37 @@ func TestJobServerSubscribeFakeRole(t *testing.T) {
 	})
 }
 
+// TestSubscribeJobSummarySignalExceedMaxClientPerRole tests job summary subscription exceed max client per role
+func TestSubscribeJobSummarySignalExceedMaxClientPerRole(t *testing.T) {
+	convey.Convey("Given a JobServer and max client per role is 20", t, func() {
+		ctx := context.Background()
+		server := NewJobServer(ctx)
+		testRole := "CCAgent"
+		maxLimit := constant.MaxClientPerRole
+		var wg sync.WaitGroup
+
+		convey.Convey("When register and start 20 active subscriptions", func() {
+			for i := 0; i < maxLimit; i++ {
+				clientID := registerTestClient(server, ctx, testRole)
+				wg.Add(1)
+				go mockActiveSubscription(server, ctx, clientID, testRole, &wg)
+			}
+			time.Sleep(time.Second * 1)
+
+			convey.Convey("Then subscribe 21st client should be rejected", func() {
+				client21ID := registerTestClient(server, ctx, testRole)
+				stream := &mockStream{ctx: ctx}
+				req := &job.ClientInfo{ClientId: client21ID, Role: testRole}
+				err := server.SubscribeJobSummarySignal(req, stream)
+				convey.So(err, convey.ShouldNotBeNil)
+				convey.So(err.Error(), convey.ShouldContainSubstring,
+					fmt.Sprintf("role %s exceeded max subscription limit: current %d, max %d",
+						testRole, maxLimit, maxLimit))
+			})
+		})
+	})
+}
+
 // TestJobServerBroadcast tests message broadcasting
 func TestJobServerBroadcast(t *testing.T) {
 	convey.Convey("Given multiple clients", t, func() {
@@ -292,21 +307,7 @@ func TestSubscribeJobSummarySignalList(t *testing.T) {
 			return mockJobMap
 		})
 		defer patch.Reset()
-		testSubscribeJobSummarySignalListWithValidClient(ctx, server, req)
-		convey.Convey("When subscribe with invalid clientId", func() {
-			invalidReq := &job.ClientInfo{ClientId: "fake-client"}
-			mockSignalsStream := NewMockJobSummarySignalListServer(ctx, nil)
-			err := server.SubscribeJobSummarySignalList(invalidReq, mockSignalsStream)
-			convey.So(err, convey.ShouldNotBeNil)
-			convey.So(err.Error(), convey.ShouldContainSubstring, "invalid clientId")
-		})
-		convey.Convey("When subscribe with invalid role", func() {
-			invalidReq := &job.ClientInfo{ClientId: clientID, Role: "fake-role"}
-			mockSignalsStream := NewMockJobSummarySignalListServer(ctx, nil)
-			err := server.SubscribeJobSummarySignalList(invalidReq, mockSignalsStream)
-			convey.So(err, convey.ShouldNotBeNil)
-			convey.So(err.Error(), convey.ShouldContainSubstring, "invalid role")
-		})
+		testSubscribeJobSummarySignalListWithValidClient(ctx, server, req, clientID)
 		convey.Convey("When rate limited", func() {
 			for i := 0; i < constant.RequestNumPerSecondLimit; i++ {
 				server.limiter.Allow()
@@ -325,7 +326,8 @@ func TestSubscribeJobSummarySignalList(t *testing.T) {
 	})
 }
 
-func testSubscribeJobSummarySignalListWithValidClient(ctx context.Context, server *JobServer, req *job.ClientInfo) {
+func testSubscribeJobSummarySignalListWithValidClient(
+	ctx context.Context, server *JobServer, req *job.ClientInfo, clientID string) {
 	convey.Convey("When subscribe with valid client", func() {
 		mockSignalsStream := NewMockJobSummarySignalListServer(ctx, nil)
 		go func() {
@@ -345,6 +347,50 @@ func testSubscribeJobSummarySignalListWithValidClient(ctx context.Context, serve
 		latestSignals := mockSignalsStream.GetSentSignals()[len(mockSignalsStream.GetSentSignals())-1]
 		convey.So(latestSignals.JobSummarySignals[0].JobId, convey.ShouldEqual, testJob2)
 		convey.So(latestSignals.JobSummarySignals[0].HcclJson, convey.ShouldBeEmpty)
+	})
+	convey.Convey("When subscribe with invalid clientId", func() {
+		invalidReq := &job.ClientInfo{ClientId: "fake-client"}
+		mockSignalsStream := NewMockJobSummarySignalListServer(ctx, nil)
+		err := server.SubscribeJobSummarySignalList(invalidReq, mockSignalsStream)
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "invalid clientId")
+	})
+	convey.Convey("When subscribe with invalid role", func() {
+		invalidReq := &job.ClientInfo{ClientId: clientID, Role: "fake-role"}
+		mockSignalsStream := NewMockJobSummarySignalListServer(ctx, nil)
+		err := server.SubscribeJobSummarySignalList(invalidReq, mockSignalsStream)
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "invalid role")
+	})
+}
+
+func TestSubscribeJobSummarySignalListExceedMaxClientPerRole(t *testing.T) {
+	convey.Convey("Given a JobServer and max client per role is 20", t, func() {
+		ctx := context.Background()
+		server := NewJobServer(ctx)
+		testRole := "CCAgent"
+		maxLimit := constant.MaxClientPerRole
+		var wg sync.WaitGroup
+
+		convey.Convey("When register and start 20 active subscriptions", func() {
+			for i := 0; i < maxLimit; i++ {
+				clientID := registerTestClient(server, ctx, testRole)
+				wg.Add(1)
+				go mockActiveSubscription(server, ctx, clientID, testRole, &wg)
+			}
+			time.Sleep(time.Second * 1)
+			convey.Convey("Then SubscribeJobSummarySignalList for 21st client should be rejected", func() {
+				client21ID := registerTestClient(server, ctx, testRole)
+				stream := &MockJobSummarySignalListServer{ctx: ctx}
+				req := &job.ClientInfo{ClientId: client21ID, Role: testRole}
+
+				err := server.SubscribeJobSummarySignalList(req, stream)
+				convey.So(err, convey.ShouldNotBeNil)
+				convey.So(err.Error(), convey.ShouldContainSubstring,
+					fmt.Sprintf("role %s exceeded max subscription limit: current %d, max %d",
+						testRole, maxLimit, maxLimit))
+			})
+		})
 	})
 }
 
@@ -712,4 +758,13 @@ func TestGetAllBatchJobSummarySignals(t *testing.T) {
 			})
 		}
 	})
+}
+
+func mockActiveSubscription(server *JobServer, ctx context.Context, clientID, role string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	stream := &mockStream{ctx: ctx}
+	req := &job.ClientInfo{ClientId: clientID, Role: role}
+	err := server.SubscribeJobSummarySignal(req, stream)
+	convey.So(err, convey.ShouldNotBeNil)
+	convey.So(err.Error(), convey.ShouldContainSubstring, "context canceled")
 }

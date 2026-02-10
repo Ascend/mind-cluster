@@ -37,7 +37,8 @@ import (
 )
 
 const (
-	ten = 10
+	ten             = 10
+	maxClientMapLen = 100000
 )
 
 var (
@@ -58,9 +59,10 @@ type clientState struct {
 // JobServer job info server
 type JobServer struct {
 	job.UnimplementedJobServer
-	clients map[string]*clientState
-	mu      sync.RWMutex
-	limiter *rate.Limiter
+	clients                 map[string]*clientState
+	roleActiveSubscriptions map[string]*atomic.Int32
+	mu                      sync.RWMutex
+	limiter                 *rate.Limiter
 }
 
 func init() {
@@ -70,7 +72,8 @@ func init() {
 // NewJobServer create a new job info server
 func NewJobServer(ctx context.Context) *JobServer {
 	jobserver := &JobServer{
-		clients: make(map[string]*clientState),
+		clients:                 make(map[string]*clientState, maxClientMapLen),
+		roleActiveSubscriptions: make(map[string]*atomic.Int32),
 		limiter: rate.NewLimiter(rate.Every(time.Second/constant.RequestNumPerSecondLimit),
 			constant.RequestNumPerSecondLimit),
 	}
@@ -91,23 +94,18 @@ func (s *JobServer) Register(ctx context.Context, req *job.ClientInfo) (*job.Sta
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	roleClientCount := 0
-	for _, client := range s.clients {
-		if client.role == req.Role {
-			roleClientCount++
-		}
+	if _, ok := s.roleActiveSubscriptions[req.Role]; !ok {
+		s.roleActiveSubscriptions[req.Role] = &atomic.Int32{}
+		hwlog.RunLog.Infof("init role %s active subscription count to 0", req.Role)
 	}
-	if roleClientCount >= constant.MaxClientPerRole {
-		errMsg := fmt.Sprintf("role %s has reached max client limit (%d), cannot register new client",
-			req.Role, constant.MaxClientPerRole)
-		hwlog.RunLog.Warnf(errMsg)
+	if len(s.clients) >= maxClientMapLen {
+		hwlog.RunLog.Errorf("client num limit, max client num is %d", maxClientMapLen)
 		return &job.Status{
 			Code:     int32(common.RateLimitedCode),
-			Info:     errMsg,
+			Info:     fmt.Sprintf("client num limit, max client num is %d", maxClientMapLen),
 			ClientId: "",
-		}, fmt.Errorf(errMsg)
+		}, fmt.Errorf("client num limit, max client num is %d", maxClientMapLen)
 	}
-
 	clientId := string(uuid.NewUUID())
 	s.clients[clientId] = &clientState{
 		clientChan: make(chan job.JobSummarySignal, constant.MsgCacheNumPerClient),
@@ -130,39 +128,31 @@ func (s *JobServer) SubscribeJobSummarySignal(req *job.ClientInfo,
 	stream job.Job_SubscribeJobSummarySignalServer) error {
 	hwlog.RunLog.Infof("role: %v call SubscribeJobSummarySignal, clientId: %s", req.Role, req.ClientId)
 	s.mu.Lock()
-	cltState, exists := s.clients[req.ClientId]
-	if !exists {
+	cltState, err := s.checkRequestValidityAndLimit(req)
+	if err != nil {
 		s.mu.Unlock()
-		hwlog.RunLog.Errorf("invalid clientId: %s, please register first", req.ClientId)
-		return fmt.Errorf("invalid clientId: %s, please register first", req.ClientId)
-	}
-	if cltState.role != req.Role {
-		s.mu.Unlock()
-		hwlog.RunLog.Errorf("invalid role: %s, please check role first", req.Role)
-		return fmt.Errorf("invalid role: %s, please check role first", req.Role)
+		hwlog.RunLog.Error(err)
+		return err
 	}
 	s.manageClientContext(cltState, stream.Context(), req.ClientId)
 	s.mu.Unlock()
 	defer s.cleanupClientContext(cltState, req.ClientId)
 	if !s.limiter.Allow() {
-		hwlog.RunLog.Errorf("rate limited, there is too many requests, please retry later")
-		return fmt.Errorf("rate limited, there is too many requests, please retry later")
+		return logAndReturnError("rate limited, there is too many requests, please retry later")
 	}
-
 	for {
 		select {
 		case <-cltState.ctx.Done():
 			return cltState.ctx.Err()
 		case jobInfo, ok := <-cltState.clientChan:
 			if !ok {
-				return fmt.Errorf("client channel closed")
+				return logAndReturnError("client channel closed")
 			}
 			if err := s.handleSingleJobInfo(&jobInfo); err != nil {
-				return fmt.Errorf("handle large npu job for client %s failed: %v", req.ClientId, err)
+				return logAndReturnError("handle large npu job for client %s failed: %v", req.ClientId, err)
 			}
 			if err := stream.Send(&jobInfo); err != nil {
-				hwlog.RunLog.Errorf("error sending to client %s: %v", req.ClientId, err)
-				return fmt.Errorf("error sending to client %s: %v", req.ClientId, err)
+				return logAndReturnError("error sending to client %s: %v", req.ClientId, err)
 			}
 			hwlog.RunLog.Debugf("sent job summary signal to client %s", req.ClientId)
 		}
@@ -174,23 +164,17 @@ func (s *JobServer) SubscribeJobSummarySignalList(req *job.ClientInfo,
 	stream job.Job_SubscribeJobSummarySignalListServer) error {
 	hwlog.RunLog.Infof("role: %v call SubscribeJobSummarySignalList, clientId: %s", req.Role, req.ClientId)
 	s.mu.Lock()
-	cltState, exists := s.clients[req.ClientId]
-	if !exists {
+	cltState, err := s.checkRequestValidityAndLimit(req)
+	if err != nil {
 		s.mu.Unlock()
-		hwlog.RunLog.Errorf("invalid clientId: %s, please register first", req.ClientId)
-		return fmt.Errorf("invalid clientId: %s, please register first", req.ClientId)
-	}
-	if cltState.role != req.Role {
-		s.mu.Unlock()
-		hwlog.RunLog.Errorf("invalid role: %s, please check role first", req.Role)
-		return fmt.Errorf("invalid role: %s, please check role first", req.Role)
+		hwlog.RunLog.Error(err)
+		return err
 	}
 	s.manageClientContext(cltState, stream.Context(), req.ClientId)
 	s.mu.Unlock()
 	defer s.cleanupClientContext(cltState, req.ClientId)
 	if !s.limiter.Allow() {
-		hwlog.RunLog.Errorf("rate limited, there is too many requests, please retry later")
-		return fmt.Errorf("rate limited, there is too many requests, please retry later")
+		return logAndReturnError("rate limited, there is too many requests, please retry later")
 	}
 	allBatchJobSummarySignals, allBatchJobIds, JobTotalNum := GetAllBatchJobSummarySignals()
 	reportTime := time.Now().UnixMilli()
@@ -210,6 +194,31 @@ func (s *JobServer) SubscribeJobSummarySignalList(req *job.ClientInfo,
 	return s.handleStreamJobSend(cltState, req, stream)
 }
 
+func (s *JobServer) checkRequestValidityAndLimit(req *job.ClientInfo) (*clientState, error) {
+	hwlog.RunLog.Infof("role: %v call subscribe method, clientId: %s", req.Role, req.ClientId)
+	cltState, exists := s.clients[req.ClientId]
+	if !exists {
+		errMsg := fmt.Sprintf("invalid clientId: %s, please register first", req.ClientId)
+		return nil, fmt.Errorf(errMsg)
+	}
+	if cltState.role != req.Role {
+		errMsg := fmt.Sprintf("invalid role: %s, please check role first", req.Role)
+		return nil, fmt.Errorf(errMsg)
+	}
+	activeCountPtr, ok := s.roleActiveSubscriptions[req.Role]
+	if !ok {
+		errMsg := fmt.Sprintf("role %s not in active subscription map", req.Role)
+		return nil, fmt.Errorf(errMsg)
+	}
+	activeCount := int(activeCountPtr.Load())
+	if activeCount >= constant.MaxClientPerRole && cltState.ctx == nil {
+		errMsg := fmt.Sprintf("role %s exceeded max subscription limit: current %d, max %d",
+			req.Role, activeCount, constant.MaxClientPerRole)
+		return nil, fmt.Errorf(errMsg)
+	}
+	return cltState, nil
+}
+
 func (s *JobServer) manageClientContext(cltState *clientState, streamCtx context.Context, clientId string) {
 	cltState.mu.Lock()
 	defer cltState.mu.Unlock()
@@ -221,12 +230,18 @@ func (s *JobServer) manageClientContext(cltState *clientState, streamCtx context
 	cltState.ctx = newCtx
 	cltState.cancelCtx = newCancel
 	atomic.AddInt32(&cltState.ctxCount, 1)
+	if activePtr, ok := s.roleActiveSubscriptions[cltState.role]; ok {
+		activePtr.Add(1)
+	}
 	hwlog.RunLog.Infof("client %s init new context, ctx count increase to %d",
 		clientId, atomic.LoadInt32(&cltState.ctxCount))
 }
 
 func (s *JobServer) cleanupClientContext(cltState *clientState, clientId string) {
 	currentCount := atomic.AddInt32(&cltState.ctxCount, -1)
+	if activePtr, ok := s.roleActiveSubscriptions[cltState.role]; ok {
+		activePtr.Add(-1)
+	}
 	hwlog.RunLog.Infof("client %s ctx count decrease to %d", clientId, currentCount)
 	if currentCount <= 0 {
 		s.mu.Lock()
@@ -245,10 +260,10 @@ func (s *JobServer) handleStreamJobSend(cltState *clientState, req *job.ClientIn
 			return cltState.ctx.Err()
 		case jobInfo, ok := <-cltState.clientChan:
 			if !ok {
-				return fmt.Errorf("client channel closed")
+				return logAndReturnError("client channel closed")
 			}
 			if err := s.handleSingleJobInfo(&jobInfo); err != nil {
-				return fmt.Errorf("handle large npu job failed: %v", err)
+				return logAndReturnError("handle large npu job failed: %v", err)
 			}
 			jobInfos := &job.JobSummarySignalList{
 				JobSummarySignals: []*job.JobSummarySignal{&jobInfo},
@@ -256,8 +271,7 @@ func (s *JobServer) handleStreamJobSend(cltState *clientState, req *job.ClientIn
 				JobTotalNum:       1,
 			}
 			if err := stream.Send(jobInfos); err != nil {
-				hwlog.RunLog.Errorf("error sending to client %s: %v", req.ClientId, err)
-				return fmt.Errorf("error sending to client %s: %v", req.ClientId, err)
+				return logAndReturnError("error sending to client %s: %v", req.ClientId, err)
 			}
 			hwlog.RunLog.Debugf("sent job summary signal to client %s", req.ClientId)
 			logs.JobEventLog.Infof("subscribeJobSummarySignalList report job, jobId: %v, "+
