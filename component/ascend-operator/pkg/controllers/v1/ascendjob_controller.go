@@ -753,17 +753,19 @@ func (r *ASJobReconciler) onPodUpdateFunc() func(event.UpdateEvent) bool {
 			hwlog.RunLog.Errorf("objectNew unable to convert object to Pod:%v", e.ObjectNew)
 			return false
 		}
+		if newPod.Annotations[api.NeedVolcanoOpeKey] == api.OpeTypeDelete {
+			// when add needVolcanoOpe[delete],wait for volcano to delete pod
+			return false
+		}
 		if newPod.Annotations[api.NeedOperatorOpeKey] == api.OpeTypeCreate &&
 			oldPod.Annotations[api.NeedOperatorOpeKey] != api.OpeTypeCreate {
 			hwlog.RunLog.Infof("detected needOperatorOpe[create],will create backup pod based on pod %v", newPod.Name)
-			return true
 		}
 		if newPod.Annotations[api.NeedOperatorOpeKey] == api.OpeTypeDelete {
 			hwlog.RunLog.Infof("detected needOperatorOpe[delete],will delete pod %v", newPod.Name)
 			r.deletePod(newPod)
-			return true
 		}
-		return false
+		return true
 	}
 }
 
