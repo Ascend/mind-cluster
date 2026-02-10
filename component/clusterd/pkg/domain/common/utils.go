@@ -291,28 +291,6 @@ func GetFaultRankIdsInSameNode(faultRankIds []string, deviceNumPerNode int) []st
 	return faultRankIdsResult
 }
 
-// GetFaultRankIdsInSameTp get all ranks in a tp-block which has fault ranks
-func GetFaultRankIdsInSameTp(faultRankIds []string, devicePerTp int) []string {
-	if devicePerTp <= 0 || len(faultRankIds) == 0 {
-		return faultRankIds
-	}
-	faultRanks := util.StringSliceToIntSlice(faultRankIds)
-	sort.Ints(faultRanks)
-	var faultRankIdsResult []string
-	rankIdMap := make(map[int]struct{})
-	for _, num := range faultRanks {
-		rankIndexStart := (num / devicePerTp) * devicePerTp
-		for i := rankIndexStart; i < rankIndexStart+devicePerTp; i++ {
-			if _, ok := rankIdMap[i]; ok {
-				break
-			}
-			rankIdMap[i] = struct{}{}
-			faultRankIdsResult = append(faultRankIdsResult, strconv.Itoa(i))
-		}
-	}
-	return faultRankIdsResult
-}
-
 // CheckProcessRecoverOpen check whether process recover mode open
 func CheckProcessRecoverOpen(name, nameSpace string) bool {
 	pg, err := kube.GetPodGroup(name, nameSpace)
@@ -592,4 +570,21 @@ func GetPodRankFaultByFaultRank(faultRanks []constant.FaultRank) []*constant.Pod
 		})
 	}
 	return podRankFaultList
+}
+
+// GetFaultRankIdsByPodRank get all ranks in the given pods
+func GetFaultRankIdsByPodRank(podRankIds []string, devicePerNode int) []string {
+	var faultRanksIds []string
+	if devicePerNode <= 0 {
+		return faultRanksIds
+	}
+	podRanks := util.StringSliceToIntSlice(podRankIds)
+	for _, podRank := range podRanks {
+		rankIndexStart := podRank * devicePerNode
+		rankIndexEnd := rankIndexStart + devicePerNode
+		for i := rankIndexStart; i < rankIndexEnd; i++ {
+			faultRanksIds = append(faultRanksIds, strconv.Itoa(i))
+		}
+	}
+	return faultRanksIds
 }

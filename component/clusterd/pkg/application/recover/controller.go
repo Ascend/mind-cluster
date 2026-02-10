@@ -39,6 +39,9 @@ const (
 	reportTimeoutMinutes = 15
 	faultFlushSeconds    = 1
 	eventChanLength      = 10
+	tpBlockStr16         = "16"
+	tpBlockStr32         = "32"
+	tpBlockStr64         = "64"
 )
 
 var (
@@ -63,6 +66,7 @@ var (
 		constant.ScaleOutStrategyName:       common.NotifyScaleOutStrategySuccessEvent,
 		constant.ProcessMigration:           common.NotifySuccessEvent,
 	}
+	validTpBlock = []string{tpBlockStr16, tpBlockStr32, tpBlockStr64}
 )
 
 // EventController is recover event controller
@@ -981,7 +985,10 @@ func (ctl *EventController) notifyFaultForNormalFaultCase(uceFaults, normalFault
 }
 
 func (ctl *EventController) updateCacheFaultAndPod() ([]*pb.FaultRank, []string, error) {
-	allFaults, allFaultRanks := ctl.normalFaultAssociateSameNodeRank()
+	allFaults, allFaultRanks, err := ctl.getAllFaultRanks()
+	if err != nil {
+		return allFaults, allFaultRanks, err
+	}
 	ctl.setCacheFault(nil, allFaults)
 	faultPod, err := common.GetPodMap(ctl.jobInfo.JobId, allFaultRanks)
 	if err != nil {
@@ -2165,4 +2172,47 @@ func (ctl *EventController) recoverInPlaceFaultAssociateSameNodeRank(faultRankId
 		restartRanks = append(restartRanks, faultRankIds[i])
 	}
 	return exitRanks, restartRanks
+}
+
+func (ctl *EventController) getAllFaultRanks() ([]*pb.FaultRank, []string, error) {
+	var allFaults []*pb.FaultRank
+	var allFaultRanks []string
+	if ctl.tpBlockRescheduleScene() {
+		allFaults, allFaultRanks = ctl.normalFaultAssociateRescheduledPods()
+	} else {
+		allFaults, allFaultRanks = ctl.normalFaultAssociateSameNodeRank()
+	}
+	return allFaults, allFaultRanks, nil
+}
+
+func (ctl *EventController) tpBlockRescheduleScene() bool {
+	pg, err := kube.RetryGetPodGroup(ctl.jobInfo.PgName, ctl.jobInfo.Namespace, constant.GetPodGroupTimes)
+	if err != nil {
+		hwlog.RunLog.Errorf("kube get pod group err, err=%v", err)
+		return false
+	}
+	tpBlock, ok := pg.Annotations[constant.TpBlock]
+	return ok && slices.Contains(validTpBlock, tpBlock) && !ctl.restartFaultProcess
+}
+
+// normalFaultAssociateRescheduledPods calculate fault ranks in rescheduled pods
+func (ctl *EventController) normalFaultAssociateRescheduledPods() ([]*pb.FaultRank, []string) {
+	var rescheduledPods []string
+	currentPods := pod.GetPodByJobId(ctl.jobInfo.JobId)
+	for uid, podInfo := range currentPods {
+		if ctl.originPod[podInfo.Annotations[constant.PodRankIndexAnno]] != uid {
+			rescheduledPods = append(rescheduledPods, podInfo.Annotations[constant.PodRankIndexAnno])
+		}
+	}
+	devicePerNode := pod.GetPodDeviceNumByJobId(ctl.jobInfo.JobId)
+	allFaultRankIds := common.GetFaultRankIdsByPodRank(rescheduledPods, devicePerNode)
+	removeSameRankIds := util.RemoveSliceDuplicateElement(allFaultRankIds)
+	var res []*pb.FaultRank
+	for _, rank := range removeSameRankIds {
+		res = append(res, &pb.FaultRank{
+			RankId:    rank,
+			FaultType: constant.NormalFaultType,
+		})
+	}
+	return res, removeSameRankIds
 }
