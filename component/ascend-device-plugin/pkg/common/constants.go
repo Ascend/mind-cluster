@@ -823,3 +823,10 @@ const (
 	// ResetFaultToleranceTimeInterval fault tolerance time interval
 	ResetFaultToleranceTimeInterval = 60
 )
+
+const (
+	// EveryNetWorkQueryDuration indicate query network info per five minute
+	EveryNetWorkQueryDuration = 5
+	// NetWorkQueryReteLimit upper limit rate of query network status per five minute
+	NetWorkQueryReteLimit = 1
+)

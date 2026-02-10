@@ -28,6 +28,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	"golang.org/x/time/rate"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -38,6 +39,7 @@ import (
 	"ascend-common/api"
 	"ascend-common/devmanager"
 	npuCommon "ascend-common/devmanager/common"
+	"ascend-common/devmanager/hccn"
 )
 
 const (
@@ -1130,6 +1132,222 @@ func TestAscendToolsGetDeviceFaults(t *testing.T) {
 			t.Errorf("getDeviceFaults() = %v, want %v", got, want)
 		}
 	})
+}
+
+// initTestObjects initializes test objects
+func initTestObjects() (*AscendTools, *common.NpuDevice) {
+	tool := &AscendTools{
+		dmgr: &devmanager.DeviceManager{},
+	}
+	device := &common.NpuDevice{
+		LogicID:           0,
+		DeviceID:          0,
+		NetworkHealth:     v1beta1.Healthy,
+		NetworkFaultCodes: []int64{},
+	}
+	return tool, device
+}
+
+func resetNetWorkLimiter() {
+	netWorkLimiterMap = make(map[int32]*rate.Limiter, common.GeneralMapSize)
+}
+
+// testGetDeviceFaultFailed returns closure for get device fault failed scenario
+func testGetDeviceFaultFailed(tool *AscendTools, device *common.NpuDevice) func() {
+	return func() {
+		defer resetNetWorkLimiter()
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyMethod(&devmanager.DeviceManager{}, "GetDeviceAllErrorCode",
+			func(_ *devmanager.DeviceManager, _ int32) (int32, []int64, error) {
+				return -1, nil, errors.New("get device fault failed")
+			})
+		tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
+	}
+}
+
+// testNetworkFaultCodesNotEmpty returns closure for network fault codes not empty scenario
+func testNetworkFaultCodesNotEmpty(tool *AscendTools, device *common.NpuDevice) func() {
+	return func() {
+		defer resetNetWorkLimiter()
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		mockFaultCode := int64(0x81078603)
+		patches.ApplyMethod(&devmanager.DeviceManager{}, "GetDeviceAllErrorCode",
+			func(_ *devmanager.DeviceManager, _ int32) (int32, []int64, error) {
+				return 1, []int64{mockFaultCode}, nil
+			})
+		oldNetworkFaultCodes := common.NetworkFaultCodes
+		common.NetworkFaultCodes = sets.NewInt64()
+		common.NetworkFaultCodes.Insert(mockFaultCode)
+		defer func() { common.NetworkFaultCodes = oldNetworkFaultCodes }()
+		saveCalled := false
+		patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {
+			saveCalled = true
+		})
+		tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
+		convey.So(saveCalled, convey.ShouldBeTrue)
+	}
+}
+
+// testNetworkFaultCodesEmptyLinkStatusFailed returns closure for link status failed scenario
+func testNetworkFaultCodesEmptyLinkStatusFailed(tool *AscendTools, device *common.NpuDevice) func() {
+	return func() {
+		defer resetNetWorkLimiter()
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyMethod(&devmanager.DeviceManager{}, "GetDeviceAllErrorCode",
+			func(_ *devmanager.DeviceManager, _ int32) (int32, []int64, error) {
+				return 0, []int64{}, nil
+			})
+		patches.ApplyFuncReturn(hccn.GetNPULinkStatus, "", errors.New("get link status failed"))
+		tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
+	}
+}
+
+// testNetworkFaultCodesEmptyHealthyLinkDown returns closure for healthy but link down scenario
+func testNetworkFaultCodesEmptyHealthyLinkDown(tool *AscendTools, device *common.NpuDevice) func() {
+	return func() {
+		defer resetNetWorkLimiter()
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyMethod(&devmanager.DeviceManager{}, "GetDeviceAllErrorCode",
+			func(_ *devmanager.DeviceManager, _ int32) (int32, []int64, error) {
+				return 0, []int64{}, nil
+			})
+		patches.ApplyFuncReturn(hccn.GetNPULinkStatus, npuCommon.NPUNetworkLinkDownStatus, nil)
+		saveCalled := false
+		patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {
+			saveCalled = true
+		})
+		tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
+		convey.So(saveCalled, convey.ShouldBeTrue)
+	}
+}
+
+// testNetworkFaultCodesEmptyUnhealthyLinkUp returns closure for unhealthy but link up scenario
+func testNetworkFaultCodesEmptyUnhealthyLinkUp(tool *AscendTools, device *common.NpuDevice) func() {
+	return func() {
+		defer resetNetWorkLimiter()
+		device.NetworkHealth = v1beta1.Unhealthy
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyMethod(&devmanager.DeviceManager{}, "GetDeviceAllErrorCode",
+			func(_ *devmanager.DeviceManager, _ int32) (int32, []int64, error) {
+				return 0, []int64{}, nil
+			})
+		patches.ApplyFuncReturn(hccn.GetNPULinkStatus, npuCommon.NPUNetworkLinkUpStatus, nil)
+		saveCalled := false
+		patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {
+			saveCalled = true
+		})
+		tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
+		convey.So(saveCalled, convey.ShouldBeTrue)
+	}
+}
+
+// testNetworkFaultCodesEmptyHealthMatchLink returns closure for health status matches link status scenario
+func testNetworkFaultCodesEmptyHealthMatchLink(tool *AscendTools, device *common.NpuDevice) func() {
+	return func() {
+		defer resetNetWorkLimiter()
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyMethod(&devmanager.DeviceManager{}, "GetDeviceAllErrorCode",
+			func(_ *devmanager.DeviceManager, _ int32) (int32, []int64, error) {
+				return 0, []int64{}, nil
+			})
+		patches.ApplyFuncReturn(hccn.GetNPULinkStatus, npuCommon.NPUNetworkLinkUpStatus, nil)
+		saveCalled := false
+		patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {
+			saveCalled = true
+		})
+		tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
+		convey.So(saveCalled, convey.ShouldBeFalse)
+	}
+}
+
+// TestGenerateNetworkFaultEventsBasedOnFaultCacheChange main test function
+func TestGenerateNetworkFaultEventsBasedOnFaultCacheChange(t *testing.T) {
+	convey.Convey("test generateNetworkFaultEventsBasedOnFaultCacheChange", t, func() {
+		tool, device := initTestObjects()
+
+		// Call sub-scenarios by passing closure to Convey
+		convey.Convey("get device fault failed",
+			testGetDeviceFaultFailed(tool, device))
+		convey.Convey("network fault codes is not empty",
+			testNetworkFaultCodesNotEmpty(tool, device))
+		convey.Convey("network fault codes is empty, get link status failed",
+			testNetworkFaultCodesEmptyLinkStatusFailed(tool, device))
+		convey.Convey("network fault codes is empty, device healthy but link down",
+			testNetworkFaultCodesEmptyHealthyLinkDown(tool, device))
+		convey.Convey("network fault codes is empty, device unhealthy but link up",
+			testNetworkFaultCodesEmptyUnhealthyLinkUp(tool, device))
+		convey.Convey("network fault codes is empty, device health status matches link status",
+			testNetworkFaultCodesEmptyHealthMatchLink(tool, device))
+		convey.Convey("network limiter initialization",
+			testNetworkLimiterInitialization(tool, device))
+		convey.Convey("network limiter rate limiting",
+			testNetworkLimiterRateLimiting(tool, device))
+		convey.Convey("network limiter multiple devices",
+			testNetworkLimiterMultipleDevices(tool,
+				&common.NpuDevice{LogicID: 0, DeviceID: 3,
+					NetworkHealth: v1beta1.Healthy, NetworkFaultCodes: []int64{}},
+				&common.NpuDevice{LogicID: 1, DeviceID: 4,
+					NetworkHealth: v1beta1.Healthy, NetworkFaultCodes: []int64{}}))
+	})
+}
+
+// testNetworkLimiterInitialization tests network limiter initialization
+func testNetworkLimiterInitialization(tool *AscendTools, device *common.NpuDevice) func() {
+	return func() {
+		defer resetNetWorkLimiter()
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyMethod(&devmanager.DeviceManager{}, "GetDeviceAllErrorCode",
+			func(_ *devmanager.DeviceManager, _ int32) (int32, []int64, error) {
+				return 0, []int64{}, nil
+			})
+		patches.ApplyFuncReturn(hccn.GetNPULinkStatus, npuCommon.NPUNetworkLinkUpStatus, nil)
+		patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {})
+
+		tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
+	}
+}
+
+// testNetworkLimiterRateLimiting tests network limiter rate limiting functionality
+func testNetworkLimiterRateLimiting(tool *AscendTools, device *common.NpuDevice) func() {
+	return func() {
+		defer resetNetWorkLimiter()
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyMethod(&devmanager.DeviceManager{}, "GetDeviceAllErrorCode",
+			func(_ *devmanager.DeviceManager, _ int32) (int32, []int64, error) {
+				return 0, []int64{}, nil
+			})
+		patches.ApplyFuncReturn(hccn.GetNPULinkStatus, npuCommon.NPUNetworkLinkUpStatus, nil)
+		patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {})
+
+		tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
+		tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
+	}
+}
+
+// testNetworkLimiterMultipleDevices tests network limiter with multiple devices
+func testNetworkLimiterMultipleDevices(tool *AscendTools, device1, device2 *common.NpuDevice) func() {
+	return func() {
+		defer resetNetWorkLimiter()
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyMethod(&devmanager.DeviceManager{}, "GetDeviceAllErrorCode",
+			func(_ *devmanager.DeviceManager, _ int32) (int32, []int64, error) {
+				return 0, []int64{}, nil
+			})
+		patches.ApplyFuncReturn(hccn.GetNPULinkStatus, npuCommon.NPUNetworkLinkUpStatus, nil)
+		patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {})
+
+		tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device1)
+		tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device2)
+	}
 }
 
 // TestCompareDeviceList for test compareDeviceList
