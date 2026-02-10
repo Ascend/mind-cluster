@@ -72,7 +72,7 @@ class HostAnalyzer(Analyzer):
         domain = self.get_npu_chip_domain(host_info.host_id, npu_chip_info.npu_id, npu_chip_info.chip_phy_id)
         if not optical_info.is_optical_present():
             return [
-                DiagResult(domain, f"光模块未在位, 状态: {optical_info.present}", "光模块可能松动，请重新插拔光模块")]
+                DiagResult(domain, f"光模块未在位, 状态: {optical_info.present or 'NA'}", "光模块可能松动，请重新插拔光模块")]
         if optical_info.control_link_unreachable:
             return [DiagResult(domain, "光模块Control link unreachable", "光模块可能故障，请联系技术支持人员")]
         if not optical_info.is_high_power_enable():

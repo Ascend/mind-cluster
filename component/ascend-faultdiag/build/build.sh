@@ -128,6 +128,16 @@ function compile_build() {
     cp -rf "${SRC_PATH}"/dist/alan_faultdiag*.whl "${OUTPUT_PATH}"
 }
 
+function diag_tool_build() {
+  log_info "Begin to build mindcluster_diag_tool package"
+  mkdir -p "${ROOT_PATH}/build_diag_tool"
+  cd "${ROOT_PATH}/build_diag_tool"
+  python3 "${ROOT_PATH}/setup.py" bdist_wheel
+  cp -r "${ROOT_PATH}/build_diag_tool/dist/mindcluster_diag_tool*.whl" "${OUTPUT_PATH}"
+  rm -rf "${ROOT_PATH}/build_diag_tool"
+  log_info "Success to build mindcluster_diag_tool package"
+}
+
 function main() {
     export PYTHONPATH=${ROOT_PATH}/src:$PYTHONPATH
     # Create the final output path
@@ -137,6 +147,7 @@ function main() {
     init_kg_engine_expr_parser
     check_version
     compile_build
+    diag_tool_build
     chmod 640 ${OUTPUT_PATH}/*.whl
     clear
 }

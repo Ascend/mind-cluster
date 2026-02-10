@@ -87,21 +87,18 @@ class DiagToolCLI:
 
 
 def run_parser(cli: DiagToolCLI, args):
-    result = []
-    idx = 0
-    for k in cli.cli_ctx.cli_model_map.keys():
-        for i in range(idx, len(args)):
-            if i >= len(args):
+    len_args = len(args)
+    for k, cli_model in cli.cli_ctx.cli_model_map.items():
+        for i, arg in enumerate(args):
+            if i >= len_args:
                 break
-            if args[i] != k:
+            if arg != k:
                 continue
             param = None
-            if i + 1 < len(args) and args[i + 1] not in cli.cli_ctx.cli_model_map:
+            if i + 1 < len_args and args[i + 1] not in cli.cli_ctx.cli_model_map:
                 param = args[i + 1]
-            result.append(cli.cli_ctx.cli_model_map[k].run(param))
-            idx = i
+            _CONSOLE_LOGGER.info(cli_model.run(param))
             break
-    return result
 
 
 def main():
@@ -116,8 +113,7 @@ def main():
     if len(parts) == 1:
         cli.run()
     else:
-        results = run_parser(cli, parts[1:])
-        _CONSOLE_LOGGER.info('\n'.join(results))
+        run_parser(cli, parts[1:])
 
 
 if sys.platform == "win32":

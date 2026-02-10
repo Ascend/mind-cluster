@@ -47,7 +47,7 @@ class HostOpticalStatusAnalyzer(Analyzer):
                         Domain(DeviceType.NPU, chip_info.npu_id),
                         Domain(DeviceType.CHIP, chip_info.chip_phy_id),
                     ]
-                    fault_desc = self._FAULT_DESC.format(chip_info.net_health, chip_info.link_status)
+                    fault_desc = self._FAULT_DESC.format(chip_info.net_health, chip_info.link_status or 'NA')
                     hccn_lldp_info = chip_info.hccn_lldp_info
                     if hccn_lldp_info and hccn_lldp_info.system_name_tlv:
                         fault_desc += self._PEER_PORT_INFO.format(hccn_lldp_info.system_name_tlv,

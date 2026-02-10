@@ -439,6 +439,8 @@ class ClearCacheCliModel(CliModel):
         try:
             if os.path.exists(CommonPath.COLLECT_CACHE):
                 shutil.rmtree(CommonPath.COLLECT_CACHE)
+            if os.path.isfile(CommonPath.ENCRYPTED_CONN_CONFIG_PATH):
+                os.remove(CommonPath.ENCRYPTED_CONN_CONFIG_PATH)
         except Exception as e:
             return f"清理{CommonPath.COLLECT_CACHE}异常: {e}"
         return "清理完成"

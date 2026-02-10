@@ -14,13 +14,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+import platform
 
 from setuptools import setup, find_packages
 
 from diag_tool.core.config.tool_config import ToolConfig
 
+
+def get_platform():
+    system_info = platform.machine() or 'unknown'
+    target_plat = {
+        'AMD64': 'x86_64'
+    }
+    res_plat = target_plat.get(system_info)
+    return res_plat or system_info
+
+
 setup(
-    name="mindcluster-diag_tool",
+    name="mindcluster_diag_tool",
     version=ToolConfig().version,
     description="MindCluster device link diagnostic tool",
     author="Huawei Technologies Co., Ltd",
@@ -33,8 +44,9 @@ setup(
     install_requires=[],
     entry_points={
         'console_scripts': [
-            'mind-diag=diag_tool.cli:main',
+            'mindcluster_diag_tool=diag_tool.cli:main',
         ],
     },
+    platforms=get_platform(),
     python_requires='>=3.7',
 )
