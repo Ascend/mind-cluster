@@ -273,3 +273,10 @@ const (
 	// DefaultTimeout is the default timeout
 	DefaultTimeout = 1
 )
+
+const (
+	// NPUNetworkLinkDownStatus indicate the network status of down
+	NPUNetworkLinkDownStatus = "DOWN"
+	// NPUNetworkLinkUpStatus indicate the network status of up
+	NPUNetworkLinkUpStatus = "UP"
+)
