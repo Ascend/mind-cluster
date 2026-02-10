@@ -34,6 +34,9 @@ const (
 	keepAliveSeconds = 10
 	sliceLength3     = 3
 	numInt2          = 2
+	errRank          = 40
+	deviceNumPerNode = 8
+	tp8              = 8
 )
 
 func init() {
@@ -2201,5 +2204,105 @@ func TestWhetherHasEnoughResource(t *testing.T) {
 			ret := ctl.whetherHasEnoughResource()
 			convey.So(ret, convey.ShouldEqual, true)
 		})
+	})
+}
+
+func generateGetAllRankByTPBlockSlice(tpBlock int) ([]*pb.FaultRank, []string) {
+	start := errRank / tpBlock * tpBlock
+	expectedFaults := make([]*pb.FaultRank, 0)
+	expectedRanks := make([]string, 0)
+	for i := 0; i < tpBlock; i++ {
+		expectedFaults = append(expectedFaults, &pb.FaultRank{
+			RankId:    strconv.Itoa(start + i),
+			FaultType: constant.NormalFaultType,
+		})
+		expectedRanks = append(expectedRanks, strconv.Itoa(start+i))
+	}
+	return expectedFaults, expectedRanks
+}
+
+func TestGetAllFaultRanks(t *testing.T) {
+	convey.Convey("TestGetAllFaultRanks", t, func() {
+		pg := &v1beta1.PodGroup{}
+		pg.Annotations = make(map[string]string)
+		patchGetPodGroup := gomonkey.ApplyFunc(kube.RetryGetPodGroup,
+			func(name, namespace string, retryTimes int) (*v1beta1.PodGroup, error) {
+				return pg, nil
+			})
+		defer patchGetPodGroup.Reset()
+
+		patchGetPodDevice := gomonkey.ApplyFunc(pod.GetPodDeviceNumByJobId,
+			func(jobKey string) int {
+				return deviceNumPerNode
+			})
+		defer patchGetPodDevice.Reset()
+
+		ctl := &EventController{
+			jobInfo: common.JobBaseInfo{
+				JobId:         "test-job-id",
+				JobName:       "test-job",
+				Namespace:     "test-namespace",
+				RecoverConfig: common.RecoverConfig{PlatFormMode: true, ProcessRecoverEnable: true},
+			},
+			faultPod: make(map[string]string),
+			uuid:     "test-uuid",
+			cacheNormalFault: []*pb.FaultRank{
+				{
+					RankId:    strconv.Itoa(errRank),
+					FaultType: constant.NormalFaultType,
+				},
+			},
+			restartFaultProcess: false,
+		}
+
+		testGetAllFaultRanksWithTpBlock(ctl, pg)
+		testGetAllFaultRanksWithUnknownTpBlock(ctl, pg)
+		testGetAllFaultRanksWithKubeError(ctl, pg)
+		testGetAllFaultRanksWithNoTpBlockAnnotation(ctl)
+	})
+}
+
+func testGetAllFaultRanksWithTpBlock(ctl *EventController, pg *v1beta1.PodGroup) {
+	convey.Convey("Test getAllRankByTPBlock with TpBlock=8", func() {
+		pg.Annotations[constant.TpBlock] = strconv.Itoa(tp8)
+		expectedFaults, expectedRanks := generateGetAllRankByTPBlockSlice(tp8)
+		faults, ranks, err := ctl.getAllFaultRanks()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(faults, convey.ShouldResemble, expectedFaults)
+		convey.So(ranks, convey.ShouldResemble, expectedRanks)
+	})
+}
+
+func testGetAllFaultRanksWithUnknownTpBlock(ctl *EventController, pg *v1beta1.PodGroup) {
+	convey.Convey("Test getAllRankByTPBlock with unknown TpBlock", func() {
+		pg.Annotations[constant.TpBlock] = "unknown"
+		expectedFaults, expectedRanks := generateGetAllRankByTPBlockSlice(tp8)
+		faults, ranks, err := ctl.getAllFaultRanks()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(faults, convey.ShouldResemble, expectedFaults)
+		convey.So(ranks, convey.ShouldResemble, expectedRanks)
+	})
+}
+func testGetAllFaultRanksWithKubeError(ctl *EventController, pg *v1beta1.PodGroup) {
+	convey.Convey("Test getAllRankByTPBlock with kube error", func() {
+		patchKube := gomonkey.ApplyFunc(kube.RetryGetPodGroup,
+			func(name, namespace string, retryTimes int) (*v1beta1.PodGroup, error) {
+				return pg, errors.New("kube error")
+			})
+		expectedFaults, expectedRanks := generateGetAllRankByTPBlockSlice(tp8)
+		defer patchKube.Reset()
+		faults, ranks, err := ctl.getAllFaultRanks()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(faults, convey.ShouldResemble, expectedFaults)
+		convey.So(ranks, convey.ShouldResemble, expectedRanks)
+	})
+}
+func testGetAllFaultRanksWithNoTpBlockAnnotation(ctl *EventController) {
+	convey.Convey("Test getAllRankByTPBlock with no TpBlock annotation", func() {
+		expectedFaults, expectedRanks := generateGetAllRankByTPBlockSlice(tp8)
+		faults, ranks, err := ctl.getAllFaultRanks()
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(faults, convey.ShouldResemble, expectedFaults)
+		convey.So(ranks, convey.ShouldResemble, expectedRanks)
 	})
 }
