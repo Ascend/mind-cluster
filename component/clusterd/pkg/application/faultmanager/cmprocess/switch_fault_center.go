@@ -4,7 +4,7 @@
 package cmprocess
 
 import (
-	"clusterd/pkg/application/faultmanager/cmprocess/l2fault"
+	"clusterd/pkg/application/faultmanager/cmprocess/custom"
 	"clusterd/pkg/application/faultmanager/cmprocess/preseparate"
 	"clusterd/pkg/application/faultmanager/cmprocess/retry"
 	"clusterd/pkg/common/constant"
@@ -20,7 +20,7 @@ func init() {
 		baseFaultCenter: newBaseFaultCenter(manager, constant.SwitchProcessType),
 	}
 	SwitchCenter.addProcessors([]constant.FaultProcessor{
-		l2fault.L2FaultProcessor,
+		custom.CustomProcessor,
 		retry.RetryProcessor,
 		preseparate.PreSeparateFaultProcessor, // this processor process the preSeparate faults.
 	})
