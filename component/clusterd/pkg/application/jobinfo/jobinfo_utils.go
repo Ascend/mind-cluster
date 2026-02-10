@@ -17,6 +17,7 @@
 package jobinfo
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -79,4 +80,10 @@ func BuildJobSignalFromJobInfo(jobInfo constant.JobInfo, hccl, operator string) 
 		jobSignal.DeleteTime = strconv.Itoa(int(time.Now().Unix()))
 	}
 	return jobSignal
+}
+
+func logAndReturnError(format string, args ...interface{}) error {
+	errMsg := fmt.Sprintf(format, args...)
+	hwlog.RunLog.Errorf(errMsg)
+	return fmt.Errorf(errMsg)
 }
