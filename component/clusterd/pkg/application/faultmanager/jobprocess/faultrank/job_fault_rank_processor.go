@@ -18,9 +18,9 @@ import (
 	"clusterd/pkg/application/faultmanager/jobprocess/relationfault"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/custom"
 	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/job"
-	"clusterd/pkg/domain/l2fault"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/kube"
@@ -252,8 +252,8 @@ func (processor *jobRankFaultInfoProcessor) Process(info any) any {
 	jobFaultInfos := make(map[string]constant.JobFaultInfo)
 	deletedJobFaultDeviceMap := make(map[string][]constant.FaultDevice)
 	jobServerInfoMap := job.GetJobServerInfoMap()
-	delDeviceCm := l2fault.L2FaultCache.GetDeletedDevL2FaultCmForNodeMap()
-	delSwitchCm := l2fault.L2FaultCache.GetDeletedSwitchL2FaultCmForNodeMap()
+	delDeviceCm := custom.FaultCache.GetDeletedDevFaultCmForNodeMap()
+	delSwitchCm := custom.FaultCache.GetDeletedSwitchFaultCmForNodeMap()
 	for jobId, serverList := range jobServerInfoMap.InfoMap {
 		jobFaultInfo := constant.JobFaultInfo{
 			JobId:        jobId,
@@ -287,7 +287,7 @@ func (processor *jobRankFaultInfoProcessor) Process(info any) any {
 		deletedJobFaultDeviceMap[jobId] = deletedFaultDeviceList
 	}
 	processor.setJobFaultRankInfos(jobFaultInfos)
-	l2fault.L2FaultCache.SetDeletedJobFaultDeviceMap(deletedJobFaultDeviceMap)
+	custom.FaultCache.SetDeletedJobFaultDeviceMap(deletedJobFaultDeviceMap)
 	return nil
 }
 

@@ -1,7 +1,8 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
 
-// Package l2fault test for l2 fault processor
-package l2fault
+// Package custom is used to filter custom faults defined in job yaml.
+// for the mindie server job, custom will automatically filter L2 faults, UCE error, and cqe error
+package custom
 
 import (
 	"context"
@@ -126,7 +127,7 @@ func mockDeviceFault() constant.DeviceFault {
 
 func TestProcessDeviceFaults(t *testing.T) {
 	convey.Convey("Test processDeviceFaults", t, func() {
-		processor := &l2FaultProcessor{}
+		processor := &customProcessor{}
 		deviceContent := mockDeviceContent()
 		jobInfoMap := mockNodeJobInfoMap()
 		jobUsedDeviceMap := mockNodeJobUsedDeviceMap()
@@ -156,7 +157,7 @@ func TestProcessDeviceFaults(t *testing.T) {
 
 func TestProcessSwitchFaults(t *testing.T) {
 	convey.Convey("Test processSwitchFaults", t, func() {
-		processor := &l2FaultProcessor{}
+		processor := &customProcessor{}
 		switchContent := mockSwitchContent()
 		jobInfoMap := mockNodeJobInfoMap()
 		convey.Convey("if node has no mindie server job info, return result is empty", func() {
@@ -171,7 +172,7 @@ func TestProcessSwitchFaults(t *testing.T) {
 		})
 		convey.Convey("if process switch faults success, return result is not empty", func() {
 			patch := gomonkey.ApplyFuncReturn(copySwitchInfo, &constant.SwitchInfo{}, nil).
-				ApplyFuncReturn(getDeletedSwitchL2Fault, []constant.SimpleSwitchFaultInfo{{}})
+				ApplyFuncReturn(getDeletedSwitchFault, []constant.SimpleSwitchFaultInfo{{}})
 			defer patch.Reset()
 			res := processor.processSwitchFaults(switchContent, jobInfoMap)
 			convey.So(len(res) == 1, convey.ShouldBeTrue)
@@ -217,14 +218,14 @@ func TestCopySwitchInfo(t *testing.T) {
 
 func TestCollectAndRemoveDeviceFaults(t *testing.T) {
 	convey.Convey("Test collectAndRemoveDeviceFaults", t, func() {
-		processor := &l2FaultProcessor{}
+		processor := &customProcessor{}
 		src := mockAdvanceDeviceFaultCm()
 		dst := &constant.AdvanceDeviceFaultCm{
 			FaultDeviceList: map[string][]constant.DeviceFault{},
 		}
 		jobInfoMap := map[string]constant.JobInfo{jobId1: {}}
 		usedDeviceInfoMap := map[string]sets.String{jobId1: sets.NewString(deviceName1)}
-		patch := gomonkey.ApplyFuncReturn(getDeletedDeviceL2Fault, src.FaultDeviceList[deviceName1])
+		patch := gomonkey.ApplyFuncReturn(getDeletedDeviceFault, src.FaultDeviceList[deviceName1])
 		defer patch.Reset()
 		processor.collectAndRemoveDeviceFaults(src, dst, jobInfoMap, usedDeviceInfoMap)
 		convey.So(len(src.FaultDeviceList[deviceName1]) == 0, convey.ShouldBeTrue)
@@ -232,49 +233,49 @@ func TestCollectAndRemoveDeviceFaults(t *testing.T) {
 	})
 }
 
-func TestGetDeletedDeviceL2Fault(t *testing.T) {
-	convey.Convey("test getDeletedDeviceL2Fault", t, func() {
+func TestGetDeletedDeviceFault(t *testing.T) {
+	convey.Convey("test getDeletedDeviceFault", t, func() {
 		faults := mockDeviceFaults()
 		jobInfoMap := mockJobInfoMap()
 		jobUsedDeviceMap := mockJobUsedDeviceMap()
 		convey.Convey("if job not use any device, remove fault from delete list", func() {
-			res := getDeletedDeviceL2Fault(faults, deviceName1, jobInfoMap, map[string]sets.String{})
+			res := getDeletedDeviceFault(faults, deviceName1, jobInfoMap, map[string]sets.String{})
 			convey.So(len(res) == 0, convey.ShouldBeTrue)
 		})
 		convey.Convey("if fault has no time and level info, remove fault from delete list", func() {
 			faultsWithoutTimeAndLevel := []constant.DeviceFault{{FaultCode: faultCode1}, {FaultCode: faultCode2}}
-			res := getDeletedDeviceL2Fault(faultsWithoutTimeAndLevel, deviceName1, jobInfoMap, jobUsedDeviceMap)
+			res := getDeletedDeviceFault(faultsWithoutTimeAndLevel, deviceName1, jobInfoMap, jobUsedDeviceMap)
 			convey.So(len(res) == 0, convey.ShouldBeTrue)
 		})
 		convey.Convey("if job does not use fault npu, remove fault from delete list", func() {
-			res := getDeletedDeviceL2Fault(faults, deviceName3, jobInfoMap, jobUsedDeviceMap)
+			res := getDeletedDeviceFault(faults, deviceName3, jobInfoMap, jobUsedDeviceMap)
 			convey.So(len(res) == 0, convey.ShouldBeTrue)
 		})
 		convey.Convey("if job use fault npu and should not report fault, add fault to delete list", func() {
 			patch := gomonkey.ApplyFuncReturn(shouldReportFault, false)
 			defer patch.Reset()
-			res := getDeletedDeviceL2Fault(faults, deviceName2, jobInfoMap, jobUsedDeviceMap)
+			res := getDeletedDeviceFault(faults, deviceName2, jobInfoMap, jobUsedDeviceMap)
 			convey.So(len(res) > 0, convey.ShouldBeTrue)
 		})
 	})
 }
 
-func TestGetDeletedSwitchL2Fault(t *testing.T) {
-	convey.Convey("test getDeletedSwitchL2Fault", t, func() {
+func TestGetDeletedSwitchFault(t *testing.T) {
+	convey.Convey("test getDeletedSwitchFault", t, func() {
 		switchInfo := mockSwitchInfo()
 		jobInfoMap := mockJobInfoMap()
 		convey.Convey("if switchInfo has no fault time and level for faultcode, remove fault from delete list",
 			func() {
 				switchWithoutTimeAndLevel := mockSwitchInfo()
 				switchWithoutTimeAndLevel.FaultTimeAndLevelMap = map[string]constant.FaultTimeAndLevel{}
-				res := getDeletedSwitchL2Fault(switchWithoutTimeAndLevel, jobInfoMap)
+				res := getDeletedSwitchFault(switchWithoutTimeAndLevel, jobInfoMap)
 				convey.So(len(res) == 0, convey.ShouldBeTrue)
 				convey.So(len(switchWithoutTimeAndLevel.FaultInfo) > 0, convey.ShouldBeTrue)
 			})
 		convey.Convey("if should report fault, remove fault from delete list", func() {
 			patch := gomonkey.ApplyFuncReturn(shouldReportFault, true)
 			defer patch.Reset()
-			res := getDeletedSwitchL2Fault(switchInfo, jobInfoMap)
+			res := getDeletedSwitchFault(switchInfo, jobInfoMap)
 			convey.So(len(res) == 0, convey.ShouldBeTrue)
 			convey.So(len(switchInfo.FaultInfo) > 0, convey.ShouldBeTrue)
 		})
@@ -282,7 +283,7 @@ func TestGetDeletedSwitchL2Fault(t *testing.T) {
 			delete(switchInfo.FaultTimeAndLevelMap, faultCode1+"_0_0")
 			patch := gomonkey.ApplyFuncReturn(shouldReportFault, false)
 			defer patch.Reset()
-			res := getDeletedSwitchL2Fault(switchInfo, jobInfoMap)
+			res := getDeletedSwitchFault(switchInfo, jobInfoMap)
 			convey.So(len(res) == 1, convey.ShouldBeTrue)
 			convey.So(len(switchInfo.FaultInfo) > 0, convey.ShouldBeTrue)
 			convey.So(switchInfo.FaultLevel == constant.NotHandleFault, convey.ShouldBeTrue)

@@ -1,7 +1,7 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
 
-// Package l2fault test for l2 fault cache util
-package l2fault
+// Package custom cache utils for fault filtered by custom_filter_fault_processor
+package custom
 
 import (
 	"reflect"
@@ -38,20 +38,20 @@ func getMockSwitchInfoForTest() *constant.SwitchInfo {
 	}
 }
 
-// TestGetDeletedDevL2FaultCmForNodeMap tests GetDeletedDevL2FaultCmForNodeMap method
-func TestGetDeletedDevL2FaultCmForNodeMap(t *testing.T) {
-	cache := &l2FaultCache{
-		deletedDevL2FaultCm:      make(map[string]*constant.AdvanceDeviceFaultCm),
+// TestGetDeletedDevFaultCmForNodeMap tests GetDeletedDevFaultCmForNodeMap method
+func TestGetDeletedDevFaultCmForNodeMap(t *testing.T) {
+	cache := &faultCache{
+		deletedDevFaultCm:        make(map[string]*constant.AdvanceDeviceFaultCm),
 		deletedJobFaultDeviceMap: make(map[string][]constant.FaultDevice),
 		rwMutex:                  sync.RWMutex{},
 	}
 	t.Run("get empty map", func(t *testing.T) {
-		result := cache.GetDeletedDevL2FaultCmForNodeMap()
+		result := cache.GetDeletedDevFaultCmForNodeMap()
 		if result == nil {
-			t.Errorf("GetDeletedDevL2FaultCmForNodeMap() = nil, want empty map")
+			t.Errorf("GetDeletedDevFaultCmForNodeMap() = nil, want empty map")
 		}
 		if len(result) != 0 {
-			t.Errorf("GetDeletedDevL2FaultCmForNodeMap() length = %v, want 0", len(result))
+			t.Errorf("GetDeletedDevFaultCmForNodeMap() length = %v, want 0", len(result))
 		}
 	})
 	t.Run("get map with data", func(t *testing.T) {
@@ -59,38 +59,38 @@ func TestGetDeletedDevL2FaultCmForNodeMap(t *testing.T) {
 		testData := map[string]*constant.AdvanceDeviceFaultCm{
 			node1: getMockAdvanceDeviceFaultCmForTest(),
 		}
-		cache.SetDeletedDevL2FaultCmForNodeMap(testData)
-		result := cache.GetDeletedDevL2FaultCmForNodeMap()
+		cache.SetDeletedDevFaultCmForNodeMap(testData)
+		result := cache.GetDeletedDevFaultCmForNodeMap()
 		if !reflect.DeepEqual(result, testData) {
-			t.Errorf("GetDeletedDevL2FaultCmForNodeMap() = %v, want %v", result, testData)
+			t.Errorf("GetDeletedDevFaultCmForNodeMap() = %v, want %v", result, testData)
 		}
 	})
 }
 
-// TestGetDeletedSwitchL2FaultCmForNodeMap tests GetDeletedSwitchL2FaultCmForNodeMap method
-func TestGetDeletedSwitchL2FaultCmForNodeMap(t *testing.T) {
-	cache := &l2FaultCache{
-		deletedSwitchL2FaultCm:   make(map[string]*constant.SwitchInfo),
+// TestGetDeletedSwitchFaultCmForNodeMap tests GetDeletedSwitchFaultCmForNodeMap method
+func TestGetDeletedSwitchFaultCmForNodeMap(t *testing.T) {
+	cache := &faultCache{
+		deletedSwitchFaultCm:     make(map[string]*constant.SwitchInfo),
 		deletedJobFaultDeviceMap: make(map[string][]constant.FaultDevice),
 		rwMutex:                  sync.RWMutex{},
 	}
 	t.Run("get empty map", func(t *testing.T) {
-		result := cache.GetDeletedSwitchL2FaultCmForNodeMap()
+		result := cache.GetDeletedSwitchFaultCmForNodeMap()
 		if result == nil {
-			t.Errorf("GetDeletedSwitchL2FaultCmForNodeMap() = nil, want empty map")
+			t.Errorf("GetDeletedSwitchFaultCmForNodeMap() = nil, want empty map")
 		}
 		if len(result) != 0 {
-			t.Errorf("GetDeletedSwitchL2FaultCmForNodeMap() length = %v, want 0", len(result))
+			t.Errorf("GetDeletedSwitchFaultCmForNodeMap() length = %v, want 0", len(result))
 		}
 	})
 	t.Run("get map with data", func(t *testing.T) {
 		testData := map[string]*constant.SwitchInfo{
 			node1: getMockSwitchInfoForTest(),
 		}
-		cache.SetDeletedSwitchL2FaultCmForNodeMap(testData)
-		result := cache.GetDeletedSwitchL2FaultCmForNodeMap()
+		cache.SetDeletedSwitchFaultCmForNodeMap(testData)
+		result := cache.GetDeletedSwitchFaultCmForNodeMap()
 		if !reflect.DeepEqual(result, testData) {
-			t.Errorf("GetDeletedSwitchL2FaultCmForNodeMap() = %v, want %v", result, testData)
+			t.Errorf("GetDeletedSwitchFaultCmForNodeMap() = %v, want %v", result, testData)
 		}
 	})
 }
@@ -116,8 +116,8 @@ func getMockFaultDeviceListForTest() []constant.FaultDevice {
 
 // TestGetDeletedJobFaultDeviceMap tests GetDeletedJobFaultDeviceMap method
 func TestGetDeletedJobFaultDeviceMap(t *testing.T) {
-	cache := &l2FaultCache{
-		deletedDevL2FaultCm:      make(map[string]*constant.AdvanceDeviceFaultCm),
+	cache := &faultCache{
+		deletedDevFaultCm:        make(map[string]*constant.AdvanceDeviceFaultCm),
 		deletedJobFaultDeviceMap: make(map[string][]constant.FaultDevice),
 		rwMutex:                  sync.RWMutex{},
 	}
@@ -142,10 +142,10 @@ func TestGetDeletedJobFaultDeviceMap(t *testing.T) {
 	})
 }
 
-// TestSetDeletedDevL2FaultCmForNodeMap tests SetDeletedDevL2FaultCmForNodeMap method
-func TestSetDeletedDevL2FaultCmForNodeMap(t *testing.T) {
-	cache := &l2FaultCache{
-		deletedDevL2FaultCm:      make(map[string]*constant.AdvanceDeviceFaultCm),
+// TestSetDeletedDevFaultCmForNodeMap tests SetDeletedDevFaultCmForNodeMap method
+func TestSetDeletedDevFaultCmForNodeMap(t *testing.T) {
+	cache := &faultCache{
+		deletedDevFaultCm:        make(map[string]*constant.AdvanceDeviceFaultCm),
 		deletedJobFaultDeviceMap: make(map[string][]constant.FaultDevice),
 		rwMutex:                  sync.RWMutex{},
 	}
@@ -153,25 +153,25 @@ func TestSetDeletedDevL2FaultCmForNodeMap(t *testing.T) {
 		testData := map[string]*constant.AdvanceDeviceFaultCm{
 			node1: getMockAdvanceDeviceFaultCmForTest(),
 		}
-		cache.SetDeletedDevL2FaultCmForNodeMap(testData)
-		result := cache.GetDeletedDevL2FaultCmForNodeMap()
+		cache.SetDeletedDevFaultCmForNodeMap(testData)
+		result := cache.GetDeletedDevFaultCmForNodeMap()
 		if !reflect.DeepEqual(result, testData) {
-			t.Errorf("SetDeletedDevL2FaultCmForNodeMap() failed, got %v, want %v", result, testData)
+			t.Errorf("SetDeletedDevFaultCmForNodeMap() failed, got %v, want %v", result, testData)
 		}
 	})
 	t.Run("set nil map", func(t *testing.T) {
-		cache.SetDeletedDevL2FaultCmForNodeMap(nil)
-		result := cache.GetDeletedDevL2FaultCmForNodeMap()
+		cache.SetDeletedDevFaultCmForNodeMap(nil)
+		result := cache.GetDeletedDevFaultCmForNodeMap()
 		if result != nil {
-			t.Errorf("SetDeletedDevL2FaultCmForNodeMap(nil) failed, got %v, want nil", result)
+			t.Errorf("SetDeletedDevFaultCmForNodeMap(nil) failed, got %v, want nil", result)
 		}
 	})
 }
 
-// TestSetDeletedSwitchL2FaultCmForNodeMap tests SetDeletedSwitchL2FaultCmForNodeMap method
-func TestSetDeletedSwitchL2FaultCmForNodeMap(t *testing.T) {
-	cache := &l2FaultCache{
-		deletedSwitchL2FaultCm:   make(map[string]*constant.SwitchInfo),
+// TestSetDeletedSwitchFaultCmForNodeMap tests SetDeletedSwitchFaultCmForNodeMap method
+func TestSetDeletedSwitchFaultCmForNodeMap(t *testing.T) {
+	cache := &faultCache{
+		deletedSwitchFaultCm:     make(map[string]*constant.SwitchInfo),
 		deletedJobFaultDeviceMap: make(map[string][]constant.FaultDevice),
 		rwMutex:                  sync.RWMutex{},
 	}
@@ -179,25 +179,25 @@ func TestSetDeletedSwitchL2FaultCmForNodeMap(t *testing.T) {
 		testData := map[string]*constant.SwitchInfo{
 			node1: getMockSwitchInfoForTest(),
 		}
-		cache.SetDeletedSwitchL2FaultCmForNodeMap(testData)
-		result := cache.GetDeletedSwitchL2FaultCmForNodeMap()
+		cache.SetDeletedSwitchFaultCmForNodeMap(testData)
+		result := cache.GetDeletedSwitchFaultCmForNodeMap()
 		if !reflect.DeepEqual(result, testData) {
-			t.Errorf("SetDeletedSwitchL2FaultCmForNodeMap() failed, got %v, want %v", result, testData)
+			t.Errorf("SetDeletedSwitchFaultCmForNodeMap() failed, got %v, want %v", result, testData)
 		}
 	})
 	t.Run("set nil map", func(t *testing.T) {
-		cache.SetDeletedSwitchL2FaultCmForNodeMap(nil)
-		result := cache.GetDeletedSwitchL2FaultCmForNodeMap()
+		cache.SetDeletedSwitchFaultCmForNodeMap(nil)
+		result := cache.GetDeletedSwitchFaultCmForNodeMap()
 		if result != nil {
-			t.Errorf("SetDeletedSwitchL2FaultCmForNodeMap(nil) failed, got %v, want nil", result)
+			t.Errorf("SetDeletedSwitchFaultCmForNodeMap(nil) failed, got %v, want nil", result)
 		}
 	})
 }
 
 // TestSetDeletedJobFaultDeviceMap tests SetDeletedJobFaultDeviceMap method
 func TestSetDeletedJobFaultDeviceMap(t *testing.T) {
-	cache := &l2FaultCache{
-		deletedDevL2FaultCm:      make(map[string]*constant.AdvanceDeviceFaultCm),
+	cache := &faultCache{
+		deletedDevFaultCm:        make(map[string]*constant.AdvanceDeviceFaultCm),
 		deletedJobFaultDeviceMap: make(map[string][]constant.FaultDevice),
 		rwMutex:                  sync.RWMutex{},
 	}

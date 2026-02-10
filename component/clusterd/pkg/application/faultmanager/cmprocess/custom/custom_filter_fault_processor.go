@@ -12,9 +12,9 @@
    limitations under the License.
 */
 
-// Package l2fault is used to process l2 faults, when subscribed fault interface mindie job subscribed fault interface and using l2 fault npu,
-// it will  l2 faults.
-package l2fault
+// Package custom is used to filter custom faults defined in job yaml.
+// for the mindie server job, custom will automatically filter L2 faults, UCE error, and cqe error
+package custom
 
 import (
 	"strconv"
@@ -26,8 +26,8 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
+	"clusterd/pkg/domain/custom"
 	"clusterd/pkg/domain/job"
-	"clusterd/pkg/domain/l2fault"
 	"clusterd/pkg/interface/common"
 )
 
@@ -35,72 +35,72 @@ const (
 	selfrecoverFaultTimeout = 60 * time.Second
 )
 
-// L2FaultProcessor is used to process l2 faults
-var L2FaultProcessor *l2FaultProcessor
+// CustomProcessor is used to filter custom faults defined in job yaml
+var CustomProcessor *customProcessor
 
-type l2FaultProcessor struct{}
+type customProcessor struct{}
 
 func init() {
-	L2FaultProcessor = &l2FaultProcessor{}
+	CustomProcessor = &customProcessor{}
 }
 
-// Process is used to process l2 faults
-func (processor *l2FaultProcessor) Process(info any) any {
+// Process is used to process filter custom faults
+func (processor *customProcessor) Process(info any) any {
 	mindIeServerJobInfoMap, mindIeServerJobUsedDeviceMap := job.GetMindIeServerJobAndUsedDeviceInfoMap()
 	if len(mindIeServerJobInfoMap) == 0 {
-		hwlog.RunLog.Debug("no mindie server job info, skip l2 fault process")
+		hwlog.RunLog.Debug("no mindie server job info, skip fault process")
 		return info
 	}
 	if deviceContent, deviceOk := info.(constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm]); deviceOk {
-		deletedL2FaultCmMap := processor.processDeviceFaults(deviceContent, mindIeServerJobInfoMap,
+		deletedFaultCmMap := processor.processDeviceFaults(deviceContent, mindIeServerJobInfoMap,
 			mindIeServerJobUsedDeviceMap)
-		l2fault.L2FaultCache.SetDeletedDevL2FaultCmForNodeMap(deletedL2FaultCmMap)
+		custom.FaultCache.SetDeletedDevFaultCmForNodeMap(deletedFaultCmMap)
 		return deviceContent
 	}
 	if switchContent, switchOK := info.(constant.OneConfigmapContent[*constant.SwitchInfo]); switchOK {
-		deletedL2FaultCmMap := processor.processSwitchFaults(switchContent, mindIeServerJobInfoMap)
-		l2fault.L2FaultCache.SetDeletedSwitchL2FaultCmForNodeMap(deletedL2FaultCmMap)
+		deletedFaultCmMap := processor.processSwitchFaults(switchContent, mindIeServerJobInfoMap)
+		custom.FaultCache.SetDeletedSwitchFaultCmForNodeMap(deletedFaultCmMap)
 		return switchContent
 	}
 	return info
 }
 
-func (processor *l2FaultProcessor) processDeviceFaults(
+func (processor *customProcessor) processDeviceFaults(
 	deviceContent constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm],
 	mindIeServerJobInfoMap map[string]map[string]constant.JobInfo,
 	mindIeServerJobUsedDeviceMap map[string]map[string]sets.String) map[string]*constant.AdvanceDeviceFaultCm {
-	deletedL2FaultCmMap := make(map[string]*constant.AdvanceDeviceFaultCm)
+	deletedFaultCmMap := make(map[string]*constant.AdvanceDeviceFaultCm)
 	for nodeName, advanceDeviceFaultCm := range deviceContent.AllConfigmap {
 		jobInfoMap, hasJobInfo := mindIeServerJobInfoMap[nodeName]
 		jobUsedDeviceInfoMap, hasUsedDeviceInfo := mindIeServerJobUsedDeviceMap[nodeName]
 		if !hasJobInfo || !hasUsedDeviceInfo {
 			hwlog.RunLog.Debugf("nodeName: %s has no mindie server job info or used device info, "+
-				"skip l2 fault process", nodeName)
+				"skip fault process", nodeName)
 			continue
 		}
 		hwlog.RunLog.Debugf("nodeName: %s current advanceDeviceFaultCm.FaultDeviceList: %v",
 			nodeName, advanceDeviceFaultCm.FaultDeviceList)
-		deletedL2FaultCm, err := copyAdvanceDeviceFaultCm(advanceDeviceFaultCm)
+		deletedFaultCm, err := copyAdvanceDeviceFaultCm(advanceDeviceFaultCm)
 		if err != nil {
 			continue
 		}
-		processor.collectAndRemoveDeviceFaults(advanceDeviceFaultCm, deletedL2FaultCm,
+		processor.collectAndRemoveDeviceFaults(advanceDeviceFaultCm, deletedFaultCm,
 			jobInfoMap, jobUsedDeviceInfoMap)
-		deletedL2FaultCmMap[nodeName] = deletedL2FaultCm
-		hwlog.RunLog.Debugf("set nodeName: %s and device deletedL2FaultCm: %v to deletedL2FaultCmMap",
-			nodeName, deletedL2FaultCm)
+		deletedFaultCmMap[nodeName] = deletedFaultCm
+		hwlog.RunLog.Debugf("set nodeName: %s and device deletedFaultCm: %v to deletedFaultCmMap",
+			nodeName, deletedFaultCm)
 	}
-	return deletedL2FaultCmMap
+	return deletedFaultCmMap
 }
 
-func (processor *l2FaultProcessor) processSwitchFaults(switchContent constant.OneConfigmapContent[*constant.SwitchInfo],
+func (processor *customProcessor) processSwitchFaults(switchContent constant.OneConfigmapContent[*constant.SwitchInfo],
 	mindIeServerJobInfoMap map[string]map[string]constant.JobInfo) map[string]*constant.SwitchInfo {
-	deletedL2FaultCmMap := make(map[string]*constant.SwitchInfo)
+	deletedFaultCmMap := make(map[string]*constant.SwitchInfo)
 	for cmName, switchInfo := range switchContent.AllConfigmap {
 		hwlog.RunLog.Debugf("cmName: %s current switchInfo: %v", cmName, switchInfo)
 		nodeName := strings.TrimPrefix(cmName, constant.SwitchInfoPrefix)
 		if _, hasJobInfo := mindIeServerJobInfoMap[nodeName]; !hasJobInfo {
-			hwlog.RunLog.Debugf("node %s (from cm %s) has no mindie server job info, skip l2 fault process",
+			hwlog.RunLog.Debugf("node %s (from cm %s) has no mindie server job info, skip fault process",
 				nodeName, cmName)
 			continue
 		}
@@ -108,14 +108,14 @@ func (processor *l2FaultProcessor) processSwitchFaults(switchContent constant.On
 		if err != nil {
 			continue
 		}
-		deleteFaults := getDeletedSwitchL2Fault(switchInfo, mindIeServerJobInfoMap[nodeName])
+		deleteFaults := getDeletedSwitchFault(switchInfo, mindIeServerJobInfoMap[nodeName])
 		deletedSwitchInfo.FaultInfo = deleteFaults
-		deletedL2FaultCmMap[cmName] = deletedSwitchInfo
-		hwlog.RunLog.Debugf("set cmName: %s and switch deleteFaults: %v to deletedL2FaultCmMap",
+		deletedFaultCmMap[cmName] = deletedSwitchInfo
+		hwlog.RunLog.Debugf("set cmName: %s and switch deleteFaults: %v to deletedFaultCmMap",
 			cmName, deleteFaults)
 	}
 
-	return deletedL2FaultCmMap
+	return deletedFaultCmMap
 }
 
 func copyAdvanceDeviceFaultCm(src *constant.AdvanceDeviceFaultCm) (*constant.AdvanceDeviceFaultCm, error) {
@@ -127,11 +127,11 @@ func copyAdvanceDeviceFaultCm(src *constant.AdvanceDeviceFaultCm) (*constant.Adv
 	return dst, nil
 }
 
-func (processor *l2FaultProcessor) collectAndRemoveDeviceFaults(src, dst *constant.AdvanceDeviceFaultCm,
+func (processor *customProcessor) collectAndRemoveDeviceFaults(src, dst *constant.AdvanceDeviceFaultCm,
 	jobInfoMap map[string]constant.JobInfo, usedDeviceMap map[string]sets.String) {
 	totalDeleteFaults := make([]constant.DeviceFault, 0)
 	for deviceName, faults := range src.FaultDeviceList {
-		deleteFaults := getDeletedDeviceL2Fault(faults, deviceName, jobInfoMap, usedDeviceMap)
+		deleteFaults := getDeletedDeviceFault(faults, deviceName, jobInfoMap, usedDeviceMap)
 		totalDeleteFaults = append(totalDeleteFaults, deleteFaults...)
 		dst.FaultDeviceList[deviceName] = make([]constant.DeviceFault, 0, len(deleteFaults))
 	}
@@ -161,7 +161,7 @@ func shouldReportFault(faultTimeAndLevel constant.FaultTimeAndLevel, jobInfo con
 		faultCode, time.UnixMilli(nowTime).Format("2006-01-02 15:04:05.000"),
 		time.UnixMilli(faultTimeAndLevel.FaultReceivedTime).Format("2006-01-02 15:04:05.000"))
 	if durationMs > selfrecoverFaultTimeout.Milliseconds() {
-		hwlog.RunLog.Debugf("L2 fault %s during %dms more than %ds, should report fault",
+		hwlog.RunLog.Debugf("fault %s during %dms more than %ds, should report fault",
 			faultCode, durationMs, int(selfrecoverFaultTimeout.Seconds()))
 		return true
 	}
@@ -172,13 +172,13 @@ func shouldReportFault(faultTimeAndLevel constant.FaultTimeAndLevel, jobInfo con
 		return true
 	}
 
-	hwlog.RunLog.Infof("L2 fault %s during less than %ds, mindie job: %s has subscribed grpc interface and "+
+	hwlog.RunLog.Infof("fault %s during less than %ds, mindie job: %s has subscribed grpc interface and "+
 		"using fault npu: %s, should not report fault", faultCode, int(selfrecoverFaultTimeout.Seconds()), jobInfo.Key,
 		deviceName)
 	return false
 }
 
-func getDeletedDeviceL2Fault(faults []constant.DeviceFault, deviceName string, jobInfoMap map[string]constant.JobInfo,
+func getDeletedDeviceFault(faults []constant.DeviceFault, deviceName string, jobInfoMap map[string]constant.JobInfo,
 	jobUsedDeviceInfoMap map[string]sets.String) []constant.DeviceFault {
 	deleteFaults := make([]constant.DeviceFault, 0, len(faults))
 	for jobId, jobInfo := range jobInfoMap {
@@ -206,8 +206,8 @@ func getDeletedDeviceL2Fault(faults []constant.DeviceFault, deviceName string, j
 	return deleteFaults
 }
 
-func getDeletedSwitchL2Fault(switchInfo *constant.SwitchInfo, jobInfoMap map[string]constant.JobInfo) []constant.
-SimpleSwitchFaultInfo {
+func getDeletedSwitchFault(switchInfo *constant.SwitchInfo, jobInfoMap map[string]constant.JobInfo) []constant.
+	SimpleSwitchFaultInfo {
 	filteredFaults := make([]constant.SimpleSwitchFaultInfo, 0, len(switchInfo.FaultInfo))
 	deletedFaults := make([]constant.SimpleSwitchFaultInfo, 0, len(switchInfo.FaultInfo))
 	for _, jobInfo := range jobInfoMap {

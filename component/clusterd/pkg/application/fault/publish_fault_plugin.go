@@ -14,9 +14,9 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/config"
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/custom"
 	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/job"
-	"clusterd/pkg/domain/l2fault"
 	"clusterd/pkg/interface/grpc/fault"
 )
 
@@ -38,7 +38,7 @@ func (s *FaultServer) checkFaultFromFaultCenter() {
 
 func (s *FaultServer) checkPublishFault(allJobFaultInfo map[string]constant.JobFaultInfo) {
 	jobFaultMap := make(map[string][]constant.FaultDevice, len(allJobFaultInfo))
-	deletedJobFaultDeviceMap := l2fault.L2FaultCache.GetDeletedJobFaultDeviceMap()
+	deletedJobFaultDeviceMap := custom.FaultCache.GetDeletedJobFaultDeviceMap()
 	for jobId, jobFaultInfo := range allJobFaultInfo {
 		jobInfo, ok := job.GetJobCache(jobId)
 		if !ok {

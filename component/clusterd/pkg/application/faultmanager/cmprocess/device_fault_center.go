@@ -4,7 +4,7 @@
 package cmprocess
 
 import (
-	"clusterd/pkg/application/faultmanager/cmprocess/l2fault"
+	"clusterd/pkg/application/faultmanager/cmprocess/custom"
 	"clusterd/pkg/application/faultmanager/cmprocess/preseparate"
 	"clusterd/pkg/application/faultmanager/cmprocess/publicfault"
 	"clusterd/pkg/application/faultmanager/cmprocess/recoverinplace"
@@ -31,7 +31,7 @@ func init() {
 
 	DeviceCenter.addProcessors([]constant.FaultProcessor{
 		publicfault.PubFaultProcessor,
-		l2fault.L2FaultProcessor,               // this processor process the l2 faults.
+		custom.CustomProcessor,                 // this processor process the faults defined in job yaml and l2 faults.
 		uceaccompany.UceAccompanyProcessor,     // this processor filter the uce accompany faults, before processorForUceFault
 		retry.RetryProcessor,                   // this processor filter the retry faults.
 		recoverinplace.RecoverInplaceProcessor, // this processor filter the single process faults.

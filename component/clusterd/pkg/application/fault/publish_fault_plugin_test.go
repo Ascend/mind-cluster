@@ -16,8 +16,8 @@ import (
 	"google.golang.org/grpc"
 
 	"clusterd/pkg/common/constant"
+	"clusterd/pkg/domain/custom"
 	"clusterd/pkg/domain/job"
-	"clusterd/pkg/domain/l2fault"
 	"clusterd/pkg/interface/grpc/fault"
 )
 
@@ -195,7 +195,7 @@ func getMockFaultMsgForTest2() *fault.FaultMsgSignal {
 // TestCheckPublishFault for test checkPublishFault
 func TestCheckPublishFault(t *testing.T) {
 	patch := gomonkey.ApplyFuncReturn(job.GetJobCache, constant.JobInfo{MultiInstanceJobId: fakeJobID1,
-		AppType: "controller"}, true).ApplyFuncReturn(l2fault.L2FaultCache.GetDeletedJobFaultDeviceMap,
+		AppType: "controller"}, true).ApplyFuncReturn(custom.FaultCache.GetDeletedJobFaultDeviceMap,
 		map[string][]constant.FaultDevice{fakeJobID2: getMockFaultDeviceListForTest2()})
 	defer patch.Reset()
 	allJobFaultInfo := map[string]constant.JobFaultInfo{
