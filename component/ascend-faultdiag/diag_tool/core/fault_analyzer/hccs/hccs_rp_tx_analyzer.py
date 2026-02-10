@@ -88,10 +88,12 @@ class HCCSCommonAnalyzer(Analyzer):
             lcne_info.link_status = swi_info.hccs_info.get_link_status_by_chip_port(lcne_info.chip_id,
                                                                                     lcne_info.port_id)
 
-            lcne_info.lp_id_using_cnt = swi_info.hccs_info.get_package_block_by_condition(
+            lp_id_using_cnt = swi_info.hccs_info.get_package_block_by_condition(
                 lcne_info.chip_id, lcne_info.port_id, HCCSProxyModule.LP.value, HccsPackErrorCnt.LP_PACK_STUACK.value)
-            lcne_info.rp_id_using_cnt = swi_info.hccs_info.get_package_block_by_condition(
+            rp_id_using_cnt = swi_info.hccs_info.get_package_block_by_condition(
                 lcne_info.chip_id, lcne_info.port_id, HCCSProxyModule.RP.value, HccsPackErrorCnt.RP_PACK_STUACK.value)
+            lcne_info.lp_id_using_cnt = lp_id_using_cnt if lp_id_using_cnt else 0
+            lcne_info.rp_id_using_cnt = rp_id_using_cnt if rp_id_using_cnt else 0
 
             lcne_info_list.append(lcne_info)
         self.lcne_infos.update({
@@ -214,6 +216,16 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
             return []
         diag_results = []
         for swi_info in self.swis_info.values():
+            for proxy_timeout in swi_info.hccs_info.proxy_timeout_statis:
+                if proxy_timeout.is_rp_tx_timeout_happend():
+                    domain = [
+                        Domain(DeviceType.SWITCH.value, swi_info.swi_id),
+                        Domain(DeviceType.SWI_PORT.value, proxy_timeout.interface)
+                    ]
+                    fault_info = f"HCCS RP TX超时，超时次数：{proxy_timeout.rp_tx}"
+                    suggestion = "交换机端口长期down、端口闪断、窝包或者路由miss"
+                    diag_results.append(DiagResult(domain, fault_info, suggestion))
+
             swi_server_info = self.chassis_mappings.find_mapping_by_l1_swi_ip(swi_info.swi_id)
             if not swi_server_info or not swi_server_info.server_super_pod_id:
                 continue

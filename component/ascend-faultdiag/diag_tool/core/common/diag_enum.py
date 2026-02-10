@@ -24,6 +24,7 @@ class DeviceType(Enum):
     SERVER = "服务器"
     BMC = "BMC"
     NPU = "NPU"
+    XPU = "XPU"
     SWITCH = "交换机"
     L1_SWITCH = "L1 交换机"
     L2_SWITCH = "L2 交换机"
