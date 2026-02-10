@@ -2290,3 +2290,28 @@ Worker Pod配置如下nodeSelector：
 1.  在逻辑超节点亲和性调度场景下，要求同一任务下所有Pod的调度参数，主要是nodeSelector，需要保持一致。
 2.  在非逻辑超节点亲和性调度场景下，建议调度参数保持一致。若实际场景中确实需要Pod有不同的nodeSelector，需达到互斥效果，即不同的Pod只能调度到对应的节点资源池中。例如，在上述问题中，可以在Worker Pod中增加一个nodeSelector，使其不能调度到Master Pod所需要的节点上。
 
+## gRPC客户端与ClusterD连接时报错"too_many_pings"<a name="ZH-CN_TOPIC_0000002494463046_001"></a>
+
+**问题现象描述**
+
+gRPC客户端与ClusterD连接时报错如下：
+
+```
+2026/02/09 15:25:22 ERROR: [transport] Client received GoAway with error code ENHANCE_YOUR_CALM and debug data equal to ASCII "too_many_pings".
+[2026/02/09 15:25:22.472833] [ERROR]   22  client/client_loop.go:85  jobId=eccc1db1-7733-4fed-a463-81b76f3ed72b recevice fault failed, err:=rpc error: code = Unavailable desc = closing transport due to: connection error: desc = "error reading from server: EOF", received prior goaway
+```
+
+**原因分析**
+
+gRPC客户端keepalive心跳发送时间间隔过短。
+
+**解决措施**
+
+用户创建gRPC客户端时，增加或修改以下配置，将gRPC客户端keepalive心跳时间间隔配置为5s。
+```
+keepaliveOpt := keepalive.ClientParameters{
+         Time:        5 * time.Second,
+         Timeout:       5 * time.Second,
+         PermitWithoutStream: true,
+         }
+```
