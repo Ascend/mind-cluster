@@ -1348,3 +1348,31 @@ func TestAscendToolsGetDpuFaults(t *testing.T) {
 		}
 	})
 }
+
+func TestSkipGetIPForA5(t *testing.T) {
+	convey.Convey("Given a list of NpuDevices", t, func() {
+		convey.Convey("levelList is empty", func() {
+			var allDevices []common.NpuDevice
+			result := skipGetIPForA5(allDevices)
+			convey.So(result, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("all levelList is empty", func() {
+			allDevices := []common.NpuDevice{
+				{LevelList: []api.RankLevel{}},
+				{LevelList: nil},
+			}
+			result := skipGetIPForA5(allDevices)
+			convey.So(result, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("skip for a5", func() {
+			allDevices := []common.NpuDevice{
+				{LevelList: []api.RankLevel{}},
+				{LevelList: []api.RankLevel{{Level: 1, Info: make(map[string]api.LevelElement)}}},
+			}
+			result := skipGetIPForA5(allDevices)
+			convey.So(result, convey.ShouldBeTrue)
+		})
+	})
+}

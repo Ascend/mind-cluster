@@ -33,7 +33,8 @@ func (hdm *HwDevManager) getCardType() (string, error) {
 		return "", err
 	}
 
-	if boardInfo.BoardId != npuCommon.A5300IBoardId && boardInfo.BoardId != npuCommon.A5300IBoardId2 {
+	if boardInfo.BoardId != npuCommon.A5300IBoardId && boardInfo.BoardId != npuCommon.A5300IBoardId2 &&
+		boardInfo.BoardId != npuCommon.A5300IBoardId3 {
 		return "", nil
 	}
 

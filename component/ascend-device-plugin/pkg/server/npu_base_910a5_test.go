@@ -614,7 +614,7 @@ func TestGetPortsList(t *testing.T) {
 		})
 		convey.Convey("03-getPortsList level 1 full mesh", func() {
 			ports, _ := npu.getPortsList(1, "42A", 1)
-			convey.So(ports[0], convey.ShouldEqual, "1/5")
+			convey.So(len(ports), convey.ShouldEqual, 0)
 		})
 		convey.Convey("04-getPortsList level 1 read topo info", func() {
 			mock1 := gomonkey.ApplyPrivateMethod(npu.productInfo,
@@ -626,7 +626,7 @@ func TestGetPortsList(t *testing.T) {
 				})
 			defer mock1.Reset()
 			ports, _ := npu.getPortsList(1, "A17", 1)
-			convey.So(ports[0], convey.ShouldEqual, "0/2")
+			convey.So(ports[0], convey.ShouldEqual, "0/1")
 		})
 	})
 }

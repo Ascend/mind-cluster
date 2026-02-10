@@ -153,4 +153,6 @@ const (
 	PortIDSuffixLen = 2
 	// DieIDOffset dieId's offset
 	DieIDOffset = 3
+	// PortIdLimit is the portId limit
+	PortIdLimit = 8
 )

@@ -29,4 +29,7 @@ const (
 
 	// A5300IBoardId2 board id of 300I A5 specification 2
 	A5300IBoardId2 = 0x1b
+
+	// A5300IBoardId3 board id of 300I A5 specification 3
+	A5300IBoardId3 = 0x1c
 )

@@ -490,7 +490,12 @@ func (n *NpuBase) getPortsList(phyId int32, eid string, rLevel int) ([]string, e
 		return ports, err
 	}
 
-	ports = append(ports, fmt.Sprintf("%d/%d", dieId, portId))
+	if n.productInfo.isStandCard() && rLevel == api.RankLevel0 {
+		if portId > common.PortIdLimit { // skip portId over 8 (pg port) append baseDeviceInfo
+			return ports, nil
+		}
+		ports = append(ports, fmt.Sprintf("%d/%d", dieId, portId))
+	}
 	// get topo path info
 	topoInfo, err := n.productInfo.getTopoFileInfo()
 	if err != nil {

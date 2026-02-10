@@ -931,7 +931,7 @@ func (tool *AscendTools) getConfigAnno(podDev *common.PodDeviceInfo, deviceType,
 		return "", errors.New("get device list id failed")
 	}
 	ascendVisibleDevices, err := tool.getDeviceListIP(podDev.RealDevice, deviceType)
-	if err != nil {
+	if !skipGetIPForA5(allDevices) && err != nil { // a5 machine get ip through dcmi return error, need skip
 		hwlog.RunLog.Errorf("get device list ip failed, error: %v", err)
 		return "", errors.New("get device list ip failed")
 	}
@@ -947,6 +947,15 @@ func (tool *AscendTools) getConfigAnno(podDev *common.PodDeviceInfo, deviceType,
 	configuration := common.GetPodConfiguration(phyDevMapVirtualDev, ascendVisibleDevices,
 		podDev.Pod.Name, info, allDevices)
 	return configuration, nil
+}
+
+func skipGetIPForA5(allDevices []common.NpuDevice) bool {
+	for _, device := range allDevices {
+		if len(device.LevelList) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 // AddPodAnnotation check and update pod annotations
