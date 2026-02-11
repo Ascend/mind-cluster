@@ -139,7 +139,7 @@ K8s基础调度仅能通过感知昇腾芯片的数量进行资源调度。为�
 **图 1**  组件上下游依赖<a name="fig1383773934815"></a>  
 ![](../figures/scheduling/组件上下游依赖-2.png "组件上下游依赖-2")
 
-1.  根据ClusterD上报的信息计算集群资源信息。（此为默认使用ClusterD的场景）
+1.  根据ClusterD上报的信息计算集群资源信息。此为默认使用ClusterD的场景。
 2.  接收第三方下发的任务拉起配置，根据集群资源信息，选择最优节点资源。
 3.  向计算节点的Ascend Device Plugin传递具体的资源选中信息，完成设备挂载。
 
@@ -1448,7 +1448,7 @@ NPU Exporter
 
 **安装说明<a name="section1350915844811"></a>**
 
--   驱动安装后会默认安装npu-smi工具，安装操作请参考《CANN 软件安装指南》中的“安装NPU驱动和固件”章节（商用版）或“安装NPU驱动和固件”章节（社区版）；安装成功后，npu-smi放置在“/usr/local/sbin/”和“/usr/local/bin/”路径下。
+-   驱动安装后会默认安装npu-smi工具，安装操作请参考《CANN 软件安装指南》中的“<a href="https://www.hiascend.com/document/detail/zh/canncommercial/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian">安装NPU驱动和固件</a>”章节（商用版）或“<a href="https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler">安装NPU驱动和固件</a>”章节（社区版）；安装成功后，npu-smi放置在“/usr/local/sbin/”和“/usr/local/bin/”路径下。
 -   安装MindCluster中的Ascend Docker Runtime、Ascend Device Plugin和Volcano组件，请参考[安装部署](./installation_guide.md#安装部署)章节进行操作。
 -   安装Docker，请参考[安装Docker](https://docs.docker.com/engine/install/)。
 -   安装Kubernetes，请参见[安装Kubernetes](https://kubernetes.io/zh/docs/setup/production-environment/tools/)。

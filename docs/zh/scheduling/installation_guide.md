@@ -270,12 +270,12 @@ Elastic Agent和TaskD组件需部署在容器内，详细安装步骤请参见[�
 **Ascend Docker Runtime<a name="section14779174114012"></a>**
 
 -   当前环境的Docker版本需要为18.09及以上版本。
--   宿主机已安装驱动和固件，详情请参见《CANN 软件安装指南》中的“安装NPU驱动和固件”章节（商用版）或“安装NPU驱动和固件”章节（社区版）。
+-   宿主机已安装驱动和固件，详情请参见《CANN 软件安装指南》中的“<a href="https://www.hiascend.com/document/detail/zh/canncommercial/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian">安装NPU驱动和固件</a>”章节（商用版）或“<a href="https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler">安装NPU驱动和固件</a>”章节（社区版）。
 -   Atlas 500 A2 智能小站安装Ascend Docker Runtime需要修改Docker配置。执行**vi /etc/sysconfig/docker**命令，将--config-file=""参数删除；并执行**systemctl restart docker**使配置生效。
--   Atlas 500 A2 智能小站预置的MEF服务会对Docker进行安全加固配置，Ascend Docker Runtime不支持在安全加固后的Docker环境下使用。若需要使用Ascend Docker Runtime，请手动卸载MEF服务，参考《MindEdge Framework  用户指南》中的“[卸载MEF Edge](https://www.hiascend.com/document/detail/zh/mindedge/70rc1/mef/mefug/mefug_0034.html)”章节进行操作。
+-   Atlas 500 A2 智能小站预置的MEF服务会对Docker进行安全加固配置，Ascend Docker Runtime不支持在安全加固后的Docker环境下使用。若需要使用Ascend Docker Runtime，请手动卸载MEF服务，参考《MindEdge Framework  用户指南》中的“[卸载MEF Edge](https://www.hiascend.com/document/detail/zh/mindedge/730/mef/mefug/mefug_0034.html)”章节进行操作。
 
     >[!NOTE] 说明 
-    >执行**systemctl status docker**命令，如果返回信息里包含“/docker\_entrypoint.sh“字段，则为MEF服务安全加固后的Docker。
+    >执行**systemctl status docker**命令，如果返回信息里包含“/docker\_entrypoint.sh”字段，则为MEF服务安全加固后的Docker。
 
 **其他集群调度组件<a name="section172351929104018"></a>**
 
@@ -290,7 +290,7 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 |（可选）Docker|18.09.x~28.5.1|所有节点|可从<a href="https://docs.docker.com/engine/install/">Docker社区或官网</a>获取。使用的Docker版本需要与Kubernetes配套，配套关系可参考Kubernetes的<a href="https://github.com/kubernetes/kubernetes/tree/master/CHANGELOG">说明</a>，或者从Kubernetes社区获取。建议选择最新的bugfix版本。|
 |（可选）Containerd|1.4.x~2.1.4（推荐使用1.6.x版本）|所有节点|可从Containerd的<a href="https://containerd.io/downloads/">官网</a>或者<a href="https://github.com/containerd/containerd/blob/main/docs/getting-started.md#installing-containerd">社区</a>获取，建议选择最新的bugfix版本。请关注配套Kubernetes使用的<a href="https://kubernetes.io/zh-cn/docs/setup/production-environment/container-runtimes/#cri-versions">CRI接口版本</a>。|
 |昇腾AI处理器驱动和固件|请参见<a href="https://support.huawei.com/enterprise/zh/ascend-computing/ascend-training-solution-pid-258915853/software">版本配套表</a>（训练）或<a href="https://support.huawei.com/enterprise/zh/ascend-computing/ascend-inference-solution-pid-258915651/software">版本配套表</a>（推理），根据实际硬件设备型号选择与MindCluster配套的驱动、固件。|计算节点|请参见各硬件产品中<a href="https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743">驱动和固件安装升级指南</a>获取对应的指导。<p>为保证NPU Exporter以二进制部署时可使用非root用户安装（如hwMindX），请在安装驱动时使用--install-for-all参数。示例如下。</p><pre class="screen">./Ascend-hdk-&lt;chip_type&gt;-npu-driver_&lt;version&gt;_linux-&lt;arch&gt;.run --full --install-for-all</pre>|
-|（可选）CANN|只安装集群调度组件的情况下可不安装CANN，用户可根据实际需要选择安装所需的CANN软件包，可参见版本配套表安装对应的软件包。|计算节点或者训练推理容器内|在宿主机上安装CANN软件包，请参见《CANN 软件安装指南》（商用版）或《CANN 软件安装指南》（社区版）。|
+|（可选）CANN|只安装集群调度组件的情况下可不安装CANN，用户可根据实际需要选择安装所需的CANN软件包，可参见版本配套表安装对应的软件包。|计算节点或者训练推理容器内|在宿主机上安装CANN软件包，请参见《<a href="https://www.hiascend.com/document/detail/zh/canncommercial/850/softwareinst/instg/instg_0000.html?Mode=PmIns&InstallType=netconda&OS=openEuler">CANN 软件安装指南</a>》（商用版）或《<a href="https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850/softwareinst/instg/instg_0000.html?Mode=PmIns&InstallType=netconda&OS=openEuler">CANN 软件安装指南件</a>》（社区版）。|
 |Python|3.8~3.12|训练或推理容器内|使用时Python版本请以具体AI框架为准。|
 
 >[!NOTE] 说明 
@@ -515,7 +515,7 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 下载本软件即表示您同意[华为企业业务最终用户许可协议（EULA）](https://e.huawei.com/cn/about/eula)的条款和条件。
 
 >[!NOTE] 说明 
->_\{version\}_表示软件版本号，_\{arch\}_表示CPU架构。
+><i>\{version\}</i>表示软件版本号，<i>\{arch\}</i>表示CPU架构。
 
 **表 1**  各组件软件包
 
@@ -790,7 +790,7 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 </tr>
 <tr id="row687220595818"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p088099175818"><a name="p088099175818"></a><a name="p088099175818"></a>noded-dpc-v<em id="i15881291587"><a name="i15881291587"></a><a name="i15881291587"></a>{version}</em>.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1988119185816"><a name="p1988119185816"></a><a name="p1988119185816"></a>如需使用<a href="zh-cn_topic_0000002479386528.md">dpc故障检测功能</a>，使用本配置文件启动<span id="ph143091154131112"><a name="ph143091154131112"></a><a name="ph143091154131112"></a>NodeD</span>。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1988119185816"><a name="p1988119185816"></a><a name="p1988119185816"></a>如需使用<a href="./usage/resumable_training.md#节点故障">dpc故障检测功能</a>，使用本配置文件启动<span id="ph143091154131112"><a name="ph143091154131112"></a><a name="ph143091154131112"></a>NodeD</span>。</p>
 </td>
 </tr>
 <tr id="row33201227121219"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p832011273124"><a name="p832011273124"></a><a name="p832011273124"></a>NodeDConfiguration.json</p>
@@ -971,7 +971,7 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
 **制作镜像<a name="section106851195114"></a>**
 
 1.  在[获取软件包](#获取软件包)章节，获取需要安装的集群调度组件软件包。
-2.  将软件包解压后，上传到制作镜像服务器的任意目录。以Ascend Operator为例，放到“/home/ascend-operator“目录，目录结构如下。
+2.  将软件包解压后，上传到制作镜像服务器的任意目录。以Ascend Operator为例，放到“/home/ascend-operator”目录，目录结构如下。
 
     ```
     root@node:/home/ascend-operator# ll
@@ -1007,33 +1007,10 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
     **表 1**  获取基础镜像命令
 
     <a name="table17241135718196"></a>
-    <table><thead align="left"><tr id="row182413572196"><th class="cellrowborder" valign="top" width="20%" id="mcps1.2.4.1.1"><p id="p1241205716198"><a name="p1241205716198"></a><a name="p1241205716198"></a>基础镜像</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="60%" id="mcps1.2.4.1.2"><p id="p82412572192"><a name="p82412572192"></a><a name="p82412572192"></a>拉取镜像命令</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="20%" id="mcps1.2.4.1.3"><p id="p2226124713235"><a name="p2226124713235"></a><a name="p2226124713235"></a>说明</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="row9241757191914"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p1524117573195"><a name="p1524117573195"></a><a name="p1524117573195"></a>ubuntu:22.04</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.2 "><pre class="screen" id="screen143771329171619"><a name="screen143771329171619"></a><a name="screen143771329171619"></a>docker pull ubuntu:22.04</pre>
-    </td>
-    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.3 "><p id="p12227124719238"><a name="p12227124719238"></a><a name="p12227124719238"></a>拉取时自动识别系统架构。</p>
-    </td>
-    </tr>
-    <tr id="row224265710198"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1 "><p id="p92426572197"><a name="p92426572197"></a><a name="p92426572197"></a>alpine:latest</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.2 "><a name="ul181602018182313"></a><a name="ul181602018182313"></a><ul id="ul181602018182313"><li><span id="ph19255134111352"><a name="ph19255134111352"></a><a name="ph19255134111352"></a>x86_64</span>架构<pre class="screen" id="screen793473318165"><a name="screen793473318165"></a><a name="screen793473318165"></a>docker pull alpine:latest</pre>
-    </li><li><span id="ph787414230398"><a name="ph787414230398"></a><a name="ph787414230398"></a>ARM</span>架构<pre class="screen" id="screen0733153721618"><a name="screen0733153721618"></a><a name="screen0733153721618"></a>docker pull arm64v8/alpine:latest
-    docker tag arm64v8/alpine:latest alpine:latest</pre>
-    </li></ul>
-    </td>
-    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.3 "><p id="p10227114752314"><a name="p10227114752314"></a><a name="p10227114752314"></a>-</p>
-    </td>
-    </tr>
-    </tbody>
-    </table>
+    |基础镜像|拉取镜像命令|说明|
+    |--|--|--|
+    |ubuntu:22.04|<pre class="screen">docker pull ubuntu:22.04</pre>|拉取时自动识别系统架构。|
+    |alpine:latest|<ul><li><span>x86_64</span>架构<pre class="screen">docker pull alpine:latest</pre></li><li><span>ARM</span>架构<pre class="screen"><p>docker pull arm64v8/alpine:latest</p><p>docker tag arm64v8/alpine:latest alpine:latest</p></pre></li></ul>|-|
 
 4.  进入组件解压目录，执行**docker build**命令制作镜像，命令参考如下[表2](#table998719467243)。
 
@@ -1116,7 +1093,7 @@ ARM架构和x86\_64架构对应的依赖不一样，请根据系统架构选择�
     </tbody>
     </table>
 
-    以Ascend Operator组件的镜像制作为例，执行**docker build --no-cache -t ascend-operator:v\{version\} .**命令进行制作，回显示例如下。
+    以Ascend Operator组件的镜像制作为例，执行<b>docker build --no-cache -t ascend-operator:v\{version\} .</b>命令进行制作，回显示例如下。
 
     ```
     DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
@@ -1332,7 +1309,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     kubectl label nodes 主机名称 标签
     ```
 
-    以主机名称“ubuntu“，标签“masterselector=dls-master-node“为例，命令参考如下。
+    以主机名称“ubuntu”，标签“masterselector=dls-master-node”为例，命令参考如下。
 
     ```
     kubectl label nodes ubuntu masterselector=dls-master-node
@@ -1496,8 +1473,8 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
 
 >[!NOTE] 说明 
 >-   其余操作系统创建用户：
->    -   基于Ubuntu操作系统开发的操作系统，参考[Ubuntu操作系统](#li1069651515405)。
->    -   基于CentOS操作系统开发的操作系统，参考[CentOS操作系统](#li19202165424015)。
+>     -   基于Ubuntu操作系统开发的操作系统，参考[Ubuntu操作系统](#li1069651515405)。
+>     -   基于CentOS操作系统开发的操作系统，参考[CentOS操作系统](#li19202165424015)。
 >-   HwHiAiUser是驱动或CANN软件包需要的软件运行用户。
 >-   执行**getent passwd**命令，查看所有物理机（存储节点、管理节点、计算节点）和容器内，HwHiAiUser的UID和GID是否一致，且都为1000。如果被占用可能会导致服务不可用，可以参见[用户UID或GID被占用](./faq.md#用户uid或gid被占用)章节进行处理。
 
@@ -1619,7 +1596,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen55735616314"><a name="screen55735616314"></a><a name="screen55735616314"></a>mkdir -m 750 /var/log/mindx-dl/elastic
     chown <em id="i15731661134"><a name="i15731661134"></a><a name="i15731661134"></a>由用户自行定义</em> /var/log/mindx-dl/elastic</pre>
-    <div class="note" id="note3573061032"><a name="note3573061032"></a><a name="note3573061032"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p2057310617318"><a name="p2057310617318"></a><a name="p2057310617318"></a>将<span id="ph1472342453512"><a name="ph1472342453512"></a><a name="ph1472342453512"></a>Elastic Agent</span>日志目录挂载到容器内，详见<a href="./usage/resumable_training.md#任务yaml配置示例">任务YAML配置示例</a>章节中"修改训练脚本、代码的挂载路径，并添加Elastic Agent日志挂载目录"步骤。</p>
+    <div class="note" id="note3573061032"><a name="note3573061032"></a><a name="note3573061032"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p2057310617318"><a name="p2057310617318"></a><a name="p2057310617318"></a>将<span id="ph1472342453512"><a name="ph1472342453512"></a><a name="ph1472342453512"></a>Elastic Agent</span>日志目录挂载到容器内，详见<a href="./usage/resumable_training.md#任务yaml配置示例">任务YAML配置示例</a>章节中"修改训练脚本、代码的挂载路径"步骤。</p>
     </div></div>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><a name="ul958614153510"></a><a name="ul958614153510"></a><ul id="ul958614153510"><li>目录属主由用户自定义。注意：安装<span id="ph67093892615"><a name="ph67093892615"></a><a name="ph67093892615"></a>Elastic Agent</span>的用户属组、调用<span id="ph1642075902418"><a name="ph1642075902418"></a><a name="ph1642075902418"></a>Elastic Agent</span>的运行用户属组、挂载宿主机的目录属组请保持一致。</li><li>用户可自定义<span id="ph1790811553279"><a name="ph1790811553279"></a><a name="ph1790811553279"></a>Elastic Agent</span>的运行日志的落盘路径，在该路径下，用户可查看<span id="ph1529820279122"><a name="ph1529820279122"></a><a name="ph1529820279122"></a>Elastic Agent</span>所有节点日志，无需逐一登录每个节点查看。</li></ul>
@@ -1780,7 +1757,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
         ./Ascend-docker-runtime_{version}_linux-{arch}.run --install
         ```
 
-    -   安装到指定路径下，执行以下命令，“--install-path“参数为指定的安装路径。
+    -   安装到指定路径下，执行以下命令，“--install-path”参数为指定的安装路径。
 
         ```
         ./Ascend-docker-runtime_{version}_linux-{arch}.run --install --install-path=<path>
@@ -1788,7 +1765,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
 
     >[!NOTE] 说明 
     >-   指定安装路径时必须使用绝对路径。
-    >-   Docker配置文件路径不是默认的“/etc/docker/daemon.json“时，需要新增--config-file-path参数，用于指定该配置文件路径。
+    >-   Docker配置文件路径不是默认的“/etc/docker/daemon.json”时，需要新增--config-file-path参数，用于指定该配置文件路径。
 
     回显示例如下，表示安装成功。
 
@@ -1844,7 +1821,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
         ./Ascend-docker-runtime_{version}_linux-{arch}.run --install --install-scene=containerd
         ```
 
-    -   安装到指定路径下，执行以下命令，“--install-path“参数为指定的安装路径。
+    -   安装到指定路径下，执行以下命令，“--install-path”参数为指定的安装路径。
 
         ```
         ./Ascend-docker-runtime_{version}_linux-{arch}.run --install --install-scene=containerd --install-path=<path>
@@ -1886,9 +1863,9 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
         ```
 
         -   若回显为tmpfs，表示当前为cgroup v1版本。
-        -   若回显为cgroup2fs，表示当前为cgroup v2版本
+        -   若回显为cgroup2fs，表示当前为cgroup v2版本。
 
-    3.  根据cgroup的版本修改runtime\_type字段，并修改Ascend Docker Runtime安装路径，示例如下加粗部分所示。
+    3.  根据cgroup的版本修改runtime\_type字段，并修改Ascend Docker Runtime安装路径，示例如下所示。
         -   cgroup v1
 
             >[!NOTE] 说明 
@@ -2003,7 +1980,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
         ./Ascend-docker-runtime_{version}_linux-{arch}.run --install --install-scene=containerd
         ```
 
-    -   安装到指定路径下，执行以下命令，“--install-path“参数为指定的安装路径。
+    -   安装到指定路径下，执行以下命令，“--install-path”参数为指定的安装路径。
 
         ```
         ./Ascend-docker-runtime_{version}_linux-{arch}.run --install --install-scene=containerd --install-path=<path>
@@ -2044,9 +2021,9 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
         ```
 
         -   若回显为tmpfs，表示当前为cgroup v1版本。
-        -   若回显为cgroup2fs，表示当前为cgroup v2版本
+        -   若回显为cgroup2fs，表示当前为cgroup v2版本。
 
-    3.  根据cgroup的版本修改runtime\_type字段，并修改Ascend Docker Runtime安装路径，示例如下加粗部分所示。
+    3.  根据cgroup的版本修改runtime\_type字段，并修改Ascend Docker Runtime安装路径，示例如下所示。
         -   cgroup v1
 
             >[!NOTE] 说明 
@@ -2359,7 +2336,7 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
         </tbody>
         </table>
 
-    6.  若进行了自定义指标插件开发，需重新构建编译二进制文件。
+    6.  若通过插件方式开发了自定义指标，需重新构建编译二进制文件。
     7.  参见[准备镜像](#准备镜像)，重新进行镜像制作和分发，然后执行[4](#li0640635114211)。
 
 3.  查看NPU Exporter镜像和版本号是否正确。
@@ -2392,7 +2369,7 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
 
 4.  <a name="li0640635114211"></a>将NPU Exporter软件包解压目录下的YAML文件，拷贝到K8s管理节点上任意目录。
 5.  请根据实际使用的容器化方式，选择执行以下步骤。
-    -   **Containerd场景**：需要将containerMode设置为containerd，并对以下加粗的代码进行修改。
+    -   **Containerd场景**：需要将containerMode设置为containerd，并对以下代码进行修改。
 
         如果使用默认的NPU Exporter启动参数“-containerMode=docker”时，可跳过本步骤。
 
@@ -2451,7 +2428,7 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
         ...
         ```
 
-    -   **Docker场景**：删除原有容器运行时的挂载文件，新增dockershim.sock文件的挂载目录，并对以下加粗的代码进行修改。
+    -   **Docker场景**：删除原有容器运行时的挂载文件，新增dockershim.sock文件的挂载目录，并对以下代码进行修改。
 
         如果使用的NPU Exporter启动参数“-containerMode=containerd”，可跳过本步骤。
 
@@ -2466,7 +2443,7 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
                   - name: sys
                     mountPath: /sys
                     readOnly: true
-                  - name: docker-shim                        # 删除以下加粗字段
+                  - name: docker-shim                        # 删除以下字段
                     mountPath: /var/run/dockershim.sock
                     readOnly: true
                   - name: docker 
@@ -2475,7 +2452,7 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
                   - name: cri-dockerd 
                     mountPath: /var/run/cri-dockerd.sock
                     readOnly: true
-                  - name: sock                   # 新增以下加粗字段
+                  - name: sock                   # 新增以下字段
                     mountPath: /var/run        # 以实际的dockershim.sock文件目录为准
                   - name: containerd  
                     mountPath: /run/containerd
@@ -2486,7 +2463,7 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
                 - name: sys
                   hostPath:
                     path: /sys
-                - name: docker-shim                    # 删除以下加粗字段
+                - name: docker-shim                    # 删除以下字段
                   hostPath:   
                     path: /var/run/dockershim.sock
                 - name: docker 
@@ -2495,7 +2472,7 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
                 - name: cri-dockerd 
                   hostPath:
                     path: /var/run/cri-dockerd.sock
-                - name: sock                 # 新增以下加粗字段
+                - name: sock                 # 新增以下字段
                   hostPath:
                     path: /var/run                    # 以实际的dockershim.sock文件目录为准
                 - name: containerd  
@@ -2504,7 +2481,7 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
          ...
         ```
 
-6.  如不修改组件的其他启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中NPU Exporter的启动参数。启动参数如[表2](#table872410431914)所示，也可执行**./npu-exporter -h**查看参数说明。
+6.  如不修改组件的其他启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中NPU Exporter的启动参数。启动参数如[表2](#table872410431914)所示，也可执行<b>./npu-exporter -h</b>查看参数说明。
 7.  在管理节点的YAML所在路径，执行以下命令，启动NPU Exporter。
 
     -   K8s集群中使用Atlas 200I SoC A1 核心板节点，执行以下命令。
@@ -2557,10 +2534,10 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
 >-   下文步骤中的用户均为hwMindX。
 
 1.  使用root用户登录服务器。
-2.  将NPU Exporter软件包上传至服务器的任意目录（如“/home/ascend-npu-exporter“）并进行解压操作。
-3.  将NPU Exporter软件包解压目录下的metricConfiguration.json和pluginConfiguration.json文件，拷贝到“/usr/local“目录下。
+2.  将NPU Exporter软件包上传至服务器的任意目录（如“/home/ascend-npu-exporter”）并进行解压操作。
+3.  将NPU Exporter软件包解压目录下的metricConfiguration.json和pluginConfiguration.json文件，拷贝到“/usr/local”目录下。
 4.  （可选）修改metricConfiguration.json或pluginConfiguration.json文件，配置默认指标组或自定义指标组采集和上报的开关。
-    1.  进入“/usr/local“目录。
+    1.  进入“/usr/local”目录。
     2.  <a name="li1445835411478"></a>打开metricConfiguration.json文件。
 
         ```
@@ -2615,7 +2592,7 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
         </tbody>
         </table>
 
-    6.  若进行了自定义指标插件开发，需重新构建编译二进制文件。
+    6.  若通过插件方式开发了自定义指标，需重新构建编译二进制文件。
 
 5.  创建并编辑npu-exporter.service文件。
     1.  执行以下命令，创建npu-exporter.service文件。
@@ -2672,7 +2649,7 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
 
     3.  按“Esc”键，输入:wq!保存并退出。
 
-7.  NPU Exporter默认情况只侦听127.0.0.1，可通过修改的启动参数“-ip“和“npu-exporter.service“文件的“ExecStart“字段修改需要侦听的IP地址。
+7.  NPU Exporter默认情况只侦听127.0.0.1，可通过修改的启动参数“-ip”和“npu-exporter.service”文件的“ExecStart”字段修改需要侦听的IP地址。
 
     ```
     ...
@@ -2838,7 +2815,7 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
     ```
 
     -   是，执行[步骤2](#zh-cn_topic_0000001497364849_li922154411117)。
-    -   否，请参见[准备镜像](准备镜像.md)，完成镜像制作和分发。
+    -   否，请参见[准备镜像](#准备镜像)，完成镜像制作和分发。
 
 2.  <a name="zh-cn_topic_0000001497364849_li922154411117"></a>将Ascend Device Plugin软件包解压目录下的YAML文件，拷贝到K8s管理节点上任意目录。请注意此处需使用适配具体处理器型号的YAML文件，并且为了避免自动识别Ascend Docker Runtime功能出现异常，请勿修改YAML文件中DaemonSet.metadata.name字段，详见下表。
 
