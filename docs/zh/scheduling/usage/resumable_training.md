@@ -7715,7 +7715,7 @@ Parallel Store多线程建链优化：PyTorch框架创建通信组时，使用TC
           volumeMounts:
           - name: ranktable
             mountPath: /user/mindx-dl/ranktable
-                     
+
            volumes:
            - name: ranktable
              hostPath:
@@ -9604,287 +9604,37 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 
 #### 制作强化学习后训练镜像（Verl框架）<a name="ZH-CN_TOPIC_0000002511426439"></a>
 
-[Verl](https://verl.readthedocs.io/en/latest/index.html)是一款专为大语言模型（LLM）后训练阶段设计的灵活、高效且具备生产就绪能力的强化学习训练框架。本章节基于Ubuntu 20.04来构建Verl的后训练镜像。
+[Verl](https://verl.readthedocs.io/en/latest/index.html)是一款专为大语言模型（LLM）后训练阶段设计的灵活、高效且具备生产就绪能力的强化学习训练框架。
 
-**准备软件包<a name="zh-cn_topic_0000002039339945_section18254161612586"></a>**
+镜像构建参考verl官网文档（vLLM和Megatron分别作为推理和训练后端）：
 
-请按照[表1](#zh-cn_topic_0000002039339945_table1172542119019)所示，获取对应操作系统的软件包，并准备镜像所需的Dockerfile文件与脚本文件。
+[Ascend Dockerfile Build Guidance](https://github.com/verl-project/verl/blob/main/docs/ascend_tutorial/dockerfile_build_guidance.rst)
 
-**表 1**  准备软件包
+手动安装软件参考指南：[Ascend Quickstart](https://github.com/verl-project/verl/blob/main/docs/ascend_tutorial/ascend_quick_start.rst)
 
-<a name="zh-cn_topic_0000002039339945_table1172542119019"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002039339945_row157251121508"><th class="cellrowborder" valign="top" width="21.150000000000002%" id="mcps1.2.5.1.1"><p id="zh-cn_topic_0000002039339945_p1441653254"><a name="zh-cn_topic_0000002039339945_p1441653254"></a><a name="zh-cn_topic_0000002039339945_p1441653254"></a>软件包</p>
-</th>
-<th class="cellrowborder" valign="top" width="13.750000000000004%" id="mcps1.2.5.1.2"><p id="zh-cn_topic_0000002039339945_p2052053751"><a name="zh-cn_topic_0000002039339945_p2052053751"></a><a name="zh-cn_topic_0000002039339945_p2052053751"></a>是否必选</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.730000000000004%" id="mcps1.2.5.1.3"><p id="zh-cn_topic_0000002039339945_p657531455"><a name="zh-cn_topic_0000002039339945_p657531455"></a><a name="zh-cn_topic_0000002039339945_p657531455"></a>说明</p>
-</th>
-<th class="cellrowborder" valign="top" width="31.370000000000005%" id="mcps1.2.5.1.4"><p id="zh-cn_topic_0000002039339945_p1859531759"><a name="zh-cn_topic_0000002039339945_p1859531759"></a><a name="zh-cn_topic_0000002039339945_p1859531759"></a>获取方法</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002039339945_row16726192116014"><td class="cellrowborder" valign="top" width="21.150000000000002%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002039339945_p1754534515"><a name="zh-cn_topic_0000002039339945_p1754534515"></a><a name="zh-cn_topic_0000002039339945_p1754534515"></a>Kernels</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.750000000000004%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002039339945_p155195316518"><a name="zh-cn_topic_0000002039339945_p155195316518"></a><a name="zh-cn_topic_0000002039339945_p155195316518"></a>是</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.730000000000004%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p205155310512"><a name="zh-cn_topic_0000002039339945_p205155310512"></a><a name="zh-cn_topic_0000002039339945_p205155310512"></a>CANN二进制算子包，arch可选aarch64或x86_64。示例使用8.2.RC1版本。</p>
-</td>
-<td class="cellrowborder" valign="top" width="31.370000000000005%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p19595310517"><a name="zh-cn_topic_0000002039339945_p19595310517"></a><a name="zh-cn_topic_0000002039339945_p19595310517"></a><a href="https://www.hiascend.com/zh/developer/download/community/result?module=cann" target="_blank" rel="noopener noreferrer">获取链接</a></p>
-<div class="note" id="zh-cn_topic_0000002039339945_note1386820525510"><a name="zh-cn_topic_0000002039339945_note1386820525510"></a><a name="zh-cn_topic_0000002039339945_note1386820525510"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002039339945_p12512532515"><a name="zh-cn_topic_0000002039339945_p12512532515"></a><a name="zh-cn_topic_0000002039339945_p12512532515"></a>请获取和服务器型号匹配的软件包。</p>
-</div></div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039339945_row572619211108"><td class="cellrowborder" valign="top" width="21.150000000000002%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002039339945_p1863531756"><a name="zh-cn_topic_0000002039339945_p1863531756"></a><a name="zh-cn_topic_0000002039339945_p1863531756"></a>CANN</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.750000000000004%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002039339945_p96553958"><a name="zh-cn_topic_0000002039339945_p96553958"></a><a name="zh-cn_topic_0000002039339945_p96553958"></a>是</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.730000000000004%" headers="mcps1.2.5.1.3 "><p id="p1245164917410"><a name="p1245164917410"></a><a name="p1245164917410"></a>CANN开发套件包，安装Toolkit和NNAL组件。示例使用8.2.RC1版本。</p>
-</td>
-<td class="cellrowborder" valign="top" width="31.370000000000005%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p1862053354"><a name="zh-cn_topic_0000002039339945_p1862053354"></a><a name="zh-cn_topic_0000002039339945_p1862053354"></a><a href="https://www.hiascend.com/zh/developer/download/community/result?module=cann" target="_blank" rel="noopener noreferrer">获取链接</a></p>
-<div class="note" id="note53215352"><a name="note53215352"></a><a name="note53215352"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p43218520515"><a name="p43218520515"></a><a name="p43218520515"></a>请获取和服务器型号匹配的软件包。</p>
-</div></div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039339945_row672652117018"><td class="cellrowborder" valign="top" width="21.150000000000002%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002039339945_p1468532510"><a name="zh-cn_topic_0000002039339945_p1468532510"></a><a name="zh-cn_topic_0000002039339945_p1468532510"></a>get-pip.py</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.750000000000004%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002039339945_p1869531256"><a name="zh-cn_topic_0000002039339945_p1869531256"></a><a name="zh-cn_topic_0000002039339945_p1869531256"></a>是</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.730000000000004%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"></a>用于安装pip模块。</p>
-</td>
-<td class="cellrowborder" valign="top" width="31.370000000000005%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a>curl -k https://bootstrap.pypa.io/get-pip.py -o get-pip.py</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039339945_row197268213011"><td class="cellrowborder" valign="top" width="21.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p1741916261997"><a name="p1741916261997"></a><a name="p1741916261997"></a>version.info</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.750000000000004%" headers="mcps1.2.5.1.2 "><p id="p64191226897"><a name="p64191226897"></a><a name="p64191226897"></a>是</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.730000000000004%" headers="mcps1.2.5.1.3 "><p id="p1541911261191"><a name="p1541911261191"></a><a name="p1541911261191"></a>驱动版本信息文件。</p>
-</td>
-<td class="cellrowborder" valign="top" width="31.370000000000005%" headers="mcps1.2.5.1.4 "><p id="p641914261992"><a name="p641914261992"></a><a name="p641914261992"></a>从host拷贝“/usr/local/Ascend/driver/version.info”文件。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039339945_row1412215399516"><td class="cellrowborder" valign="top" width="21.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p441932611914"><a name="p441932611914"></a><a name="p441932611914"></a>ascend_install.info</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.750000000000004%" headers="mcps1.2.5.1.2 "><p id="p1441912261994"><a name="p1441912261994"></a><a name="p1441912261994"></a>是</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.730000000000004%" headers="mcps1.2.5.1.3 "><p id="p241915261398"><a name="p241915261398"></a><a name="p241915261398"></a>驱动安装信息文件。</p>
-</td>
-<td class="cellrowborder" valign="top" width="31.370000000000005%" headers="mcps1.2.5.1.4 "><p id="p1419226997"><a name="p1419226997"></a><a name="p1419226997"></a>从host拷贝“/etc/ascend_install.info”文件。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039339945_row151232039750"><td class="cellrowborder" valign="top" width="21.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p1341915261691"><a name="p1341915261691"></a><a name="p1341915261691"></a>vLLM</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.750000000000004%" headers="mcps1.2.5.1.2 "><p id="p15419626298"><a name="p15419626298"></a><a name="p15419626298"></a>是</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.730000000000004%" headers="mcps1.2.5.1.3 "><p id="p1241919261392"><a name="p1241919261392"></a><a name="p1241919261392"></a>示例使用的推理引擎，使用v0.9.1分支。</p>
-</td>
-<td class="cellrowborder" valign="top" width="31.370000000000005%" headers="mcps1.2.5.1.4 "><p id="p194190261916"><a name="p194190261916"></a><a name="p194190261916"></a>git clone -b v0.9.1 https://github.com/vllm-project/vllm.git</p>
-<p id="p94197261593"><a name="p94197261593"></a><a name="p94197261593"></a>下载后，将<span class="filepath" id="filepath254119104122"><a name="filepath254119104122"></a><a name="filepath254119104122"></a>“vllm/requirements/build.txt”</span>中的torch版本修改为2.5.1。</p>
-</td>
-</tr>
-<tr id="row1173819266428"><td class="cellrowborder" valign="top" width="21.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p541912261292"><a name="p541912261292"></a><a name="p541912261292"></a>vllm-ascend</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.750000000000004%" headers="mcps1.2.5.1.2 "><p id="p9419326291"><a name="p9419326291"></a><a name="p9419326291"></a>是</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.730000000000004%" headers="mcps1.2.5.1.3 "><p id="p54194266916"><a name="p54194266916"></a><a name="p54194266916"></a>vLLM推理引擎在NPU上的适配插件，使用commitid：4014ad2a46e01c79fd8d98d6283404d0bc414dce。</p>
-</td>
-<td class="cellrowborder" valign="top" width="31.370000000000005%" headers="mcps1.2.5.1.4 "><p id="p1241912261913"><a name="p1241912261913"></a><a name="p1241912261913"></a>git clone -b v0.9.1-dev https://github.com/vllm-project/vllm-ascend.git</p>
-<p id="p174191826995"><a name="p174191826995"></a><a name="p174191826995"></a>cd vllm-ascend</p>
-<p id="p144191526194"><a name="p144191526194"></a><a name="p144191526194"></a>git checkout 4014ad2a46e01c79fd8d98d6283404d0bc414dce</p>
-<p id="p1498453811140"><a name="p1498453811140"></a><a name="p1498453811140"></a>然后修改requirements.txt中的torch-npu版本为2.5.1.post1。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039339945_row121231639952"><td class="cellrowborder" valign="top" width="21.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p164191026291"><a name="p164191026291"></a><a name="p164191026291"></a>Megatron-LM</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.750000000000004%" headers="mcps1.2.5.1.2 "><p id="p84199262919"><a name="p84199262919"></a><a name="p84199262919"></a>是</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.730000000000004%" headers="mcps1.2.5.1.3 "><p id="p1741911261398"><a name="p1741911261398"></a><a name="p1741911261398"></a>训练后端使用Megatron的v0.12.1版本。</p>
-</td>
-<td class="cellrowborder" valign="top" width="31.370000000000005%" headers="mcps1.2.5.1.4 "><p id="p5419326496"><a name="p5419326496"></a><a name="p5419326496"></a>git clone https://github.com/NVIDIA/Megatron-LM.git</p>
-<p id="p041910261494"><a name="p041910261494"></a><a name="p041910261494"></a>cd Megatron-LM</p>
-<p id="p641915267916"><a name="p641915267916"></a><a name="p641915267916"></a>git checkout core_v0.12.1</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039339945_row144125121466"><td class="cellrowborder" valign="top" width="21.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p64199261893"><a name="p64199261893"></a><a name="p64199261893"></a>MindSpeed</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.750000000000004%" headers="mcps1.2.5.1.2 "><p id="p1041919265911"><a name="p1041919265911"></a><a name="p1041919265911"></a>是</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.730000000000004%" headers="mcps1.2.5.1.3 "><p id="p14195261495"><a name="p14195261495"></a><a name="p14195261495"></a>训练后端使用MindSpeed，使用commitid：1f13e6fdbfd701ea7e045c8d6bb2469fab9775a7。</p>
-</td>
-<td class="cellrowborder" valign="top" width="31.370000000000005%" headers="mcps1.2.5.1.4 "><p id="p10419726392"><a name="p10419726392"></a><a name="p10419726392"></a>git clone https://gitcode.com/Ascend/MindSpeed.git</p>
-<p id="p204196261891"><a name="p204196261891"></a><a name="p204196261891"></a>cd MindSpeed</p>
-<p id="p184203267912"><a name="p184203267912"></a><a name="p184203267912"></a>git checkout 1f13e6fdbfd701ea7e045c8d6bb2469fab9775a7</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039339945_row17301171913614"><td class="cellrowborder" valign="top" width="21.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p104201226695"><a name="p104201226695"></a><a name="p104201226695"></a>Verl</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.750000000000004%" headers="mcps1.2.5.1.2 "><p id="p11420326694"><a name="p11420326694"></a><a name="p11420326694"></a>是</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.730000000000004%" headers="mcps1.2.5.1.3 "><p id="p5420122616912"><a name="p5420122616912"></a><a name="p5420122616912"></a>后训练框架，使用commitid：02f4386ae89c9a25863dca0bb8b6e119b2f01385。</p>
-</td>
-<td class="cellrowborder" valign="top" width="31.370000000000005%" headers="mcps1.2.5.1.4 "><p id="p1942015268915"><a name="p1942015268915"></a><a name="p1942015268915"></a>git clone https://github.com/volcengine/verl.git</p>
-<p id="p842011261918"><a name="p842011261918"></a><a name="p842011261918"></a>cd verl</p>
-<p id="p17420152614911"><a name="p17420152614911"></a><a name="p17420152614911"></a>git checkout 02f4386ae89c9a25863dca0bb8b6e119b2f01385</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039339945_row93022191368"><td class="cellrowborder" valign="top" width="21.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p194201026591"><a name="p194201026591"></a><a name="p194201026591"></a>rl-plugin</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.750000000000004%" headers="mcps1.2.5.1.2 "><p id="p742013268916"><a name="p742013268916"></a><a name="p742013268916"></a>是</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.730000000000004%" headers="mcps1.2.5.1.3 "><p id="p342010261294"><a name="p342010261294"></a><a name="p342010261294"></a>Verl在NPU上的适配插件，使用commitid：9a679fc3be95d162b78d42e9e3df569c30a89a5e。</p>
-</td>
-<td class="cellrowborder" valign="top" width="31.370000000000005%" headers="mcps1.2.5.1.4 "><p id="p12420162614917"><a name="p12420162614917"></a><a name="p12420162614917"></a>git clone https://gitcode.com/Ascend/MindSpeed-RL.git</p>
-<p id="p442017261493"><a name="p442017261493"></a><a name="p442017261493"></a>cd MindSpeed-RL/rl-plugin</p>
-<p id="p18420826699"><a name="p18420826699"></a><a name="p18420826699"></a>git checkout 9a679fc3be95d162b78d42e9e3df569c30a89a5e</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039339945_row33025197610"><td class="cellrowborder" valign="top" width="21.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p1742032612912"><a name="p1742032612912"></a><a name="p1742032612912"></a>Dockerfile</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.750000000000004%" headers="mcps1.2.5.1.2 "><p id="p10420426095"><a name="p10420426095"></a><a name="p10420426095"></a>是</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.730000000000004%" headers="mcps1.2.5.1.3 "><p id="p442032611911"><a name="p442032611911"></a><a name="p442032611911"></a>制作镜像需要。</p>
-</td>
-<td class="cellrowborder" valign="top" width="31.370000000000005%" headers="mcps1.2.5.1.4 "><p id="p64203261914"><a name="p64203261914"></a><a name="p64203261914"></a>-</p>
-</td>
-</tr>
-</tbody>
-</table>
+**备注：**
 
-为了防止软件包在传递过程中或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
+若要使用Pod重调度功能，建议MindSpeed版本不早于commit id为6390a8ee2f0e59ae237753cce51289a3fe490905的版本
 
-在软件包下载之后，请参考《[OpenPGP签名验证指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100209376)》，对从Support网站下载的软件包进行PGP数字签名校验。如果校验失败，请不要使用该软件包，先联系华为技术支持工程师解决。
+**安装 jemalloc (可选)：**
 
-使用软件包安装/升级之前，也需要按上述过程先验证软件包的数字签名，确保软件包未被篡改。
+制作镜像时可选择安装jemalloc以优化内存管理，源码获取链接：[jemalloc](https://github.com/jemalloc/jemalloc/release)
 
-运营商客户请访问：[https://support.huawei.com/carrier/digitalSignatureAction](https://support.huawei.com/carrier/digitalSignatureAction)
+安装步骤：
 
-企业客户请访问：[https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054)
+```shell
+    tar -xvf jemalloc-{version}.tar.bz2
+    cd jemalloc-{version}
+    ./configure --prefix=/usr/local
+    make
+    make install
+```
 
->[!NOTE] 说明 
->-   本章节以两台Atlas 900 A3 SuperPoD 超节点，配套Ubuntu 20.04、Python  3.10、CANN 8.2.RC1版本为例介绍后训练镜像的制作，使用过程中需根据实际情况修改相关步骤。
->-   详细操作步骤及版本配套关系请参见[相关文档](https://verl.readthedocs.io/en/latest/ascend_tutorial/ascend_quick_start.html)。
+安装完成后设置环境变量(假设安装路径为 `/usr/local/lib/libjemalloc.so.2`):
 
-**操作步骤<a name="section975144917188"></a>**
-
-1.  参照[表1](#zh-cn_topic_0000002039339945_table1172542119019)，在宿主机上完成软件包的准备工作。
-2.  编写如下Dockerfile。
-
-    ```
-    FROM ubuntu:20.04 
-    WORKDIR /root 
-    COPY . . 
-      
-    ARG HOST_ASCEND_BASE=/usr/local/Ascend 
-    
-    ARG TOOLKIT_PATH=/usr/local/Ascend/toolkit/latest 
-    ARG TOOLKIT=Ascend-cann-toolkit_8.2.RC1_linux-aarch64.run
-    ARG NNAL=Ascend-cann-nnal_8.2.RC1_linux-aarch64.run
-    ARG KERNEL=Atlas-A3-cann-kernels_8.2.RC1_linux-aarch64.run 
-     
-    RUN echo "nameserver 114.114.114.114" > /etc/resolv.conf 
-      
-    RUN echo "deb http://repo.huaweicloud.com/ubuntu-ports/ focal main restricted universe multiverse\n\ 
-    deb http://repo.huaweicloud.com/ubuntu-ports/ focal-updates main restricted universe multiverse\n\ 
-    deb http://repo.huaweicloud.com/ubuntu-ports/ focal-backports main restricted universe multiverse\n\ 
-    deb http://ports.ubuntu.com/ubuntu-ports/ focal-security main restricted universe multiverse" > /etc/apt/sources.list 
-     
-    RUN umask 0022 && apt update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends software-properties-common
-    RUN umask 0022 && add-apt-repository ppa:deadsnakes/ppa && apt update && apt autoremove -y python python3 && apt install -y python3.10 python3.10-dev vim patch gcc g++ make cmake build-essential libbz2-dev libreadline-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev liblzma-dev m4 dos2unix libopenblas-dev git libjemalloc2 libomp-dev net-tools
-     
-     
-    # 建立Python软链接
-    RUN ln -s /usr/bin/python3.10 /usr/bin/python
-    RUN unlink /usr/bin/python3
-    RUN ln -s /usr/bin/python3.10 /usr/bin/python3
-    RUN ln -s /usr/bin/python3.10-config /usr/bin/python-config
-    RUN ln -s /usr/bin/python3.10-config /usr/bin/python3-config
-      
-    RUN umask 0022 && python get-pip.py
-    
-    # 配置pip源 
-    RUN mkdir -p ~/.pip \ 
-    && echo '[global] \n\ 
-    index-url=https://mirrors.huaweicloud.com/repository/pypi/simple\n\ 
-    trusted-host=mirrors.huaweicloud.com' >> ~/.pip/pip.conf 
-     
-    # 时区 
-    RUN ln -sf /usr/share/zoneinfo/UTC /etc/localtime 
-      
-     
-    # 创建HwHiAiUser用户和属主，UID和GID请与物理机保持一致避免出现无属主文件。示例中会自动创建user和对应的group，UID和GID都为1000
-    RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser 
-      
-    # Ascend包 
-    # 构建之前把host的/usr/local/Ascend/driver/version.info拷贝一份到当前目录 
-    RUN umask 0022 &&  \ 
-        cp ascend_install.info /etc/ && \ 
-        mkdir -p /usr/local/Ascend/driver/ && \ 
-        cp version.info /usr/local/Ascend/driver/ && \ 
-        chmod +x $TOOLKIT && \ 
-        chmod +x $KERNEL && \
-        chmod +x $NNAL
-      
-    RUN umask 0022 && ./$TOOLKIT --install-path=/usr/local/Ascend/ --install --quiet 
-    RUN umask 0022 && . /usr/local/Ascend/ascend-toolkit/set_env.sh && ./$KERNEL --install --quiet 
-    RUN umask 0022 && . /usr/local/Ascend/ascend-toolkit/set_env.sh && ./$NNAL --install --quiet 
-     
-    ```
-
-3.  构建镜像。执行以下命令生成镜像**。注意不要遗漏命令结尾的**“.“。
-
-    ```
-    docker build -t verl-train:v1 .
-    ```
-
-4.  安装推理服务包。执行以下命令启动容器。
-
-    ```
-    docker run -it \
-    -v /usr/local/Ascend/driver:/usr/local/Ascend/driver \
-    verl-train:v1 /bin/bash
-    ```
-
-    然后在容器内执行以下命令：
-
-    ```
-    source /usr/local/Ascend/driver/bin/setenv.bash;
-    source /usr/local/Ascend/ascend-toolkit/set_env.sh;
-    source /usr/local/Ascend/nnal/atb/set_env.sh;
-    source /usr/local/Ascend/nnal/asdsip/set_env.sh;
-    # vLLM安装 
-    cd vllm && pip install -r requirements/build.txt -i https://mirrors.aliyun.com/pypi/simple/ && pip install -r requirements/common.txt -i https://mirrors.aliyun.com/pypi/simple/ && VLLM_TARGET_DEVICE=empty python setup.py develop && cd ..
-    # vllm-ascend安装 
-    cd vllm-ascend && pip install -v -e . && cd ..
-    # Megatron安装 
-    cd Megatron-LM && git checkout core_v0.12.1 && pip install -e .  && cd ..
-      
-    # MindSpeed安装 
-    cd MindSpeed && pip install -e . && cd ..
-      
-    # Verl安装 
-    cd verl && pip install -e . && cd ..
-      
-    # Verl插件安装 
-    cd MindSpeed-RL/rl-plugin && pip install -v -e . && cd ..
-    ```
-
-    -   如果在安装vllm-ascend过程中，出现找不到torch的cmake路径的报错，可以参考以下命令指定“CMAKE\_PREFIX\_PATH“进行安装：
-
-        ```
-        CMAKE_PREFIX_PATH=/usr/local/lib/python3.10/dist-packages/torch/share/cmake/Torch/ pip install -v -e .
-        ```
-
-    -   如果在安装Verl过程中，出现找不到README.md的报错，可以在“MindSpeed-RL/rl-plugin“创建README.md文件，内容不限。
-    -   安装完成后，如果发现torch版本不是2.5.1，torchvision版本不是0.20.1，则重新安装torch 2.5.1和torchvision 0.20.1。
-
-5.  在另一个窗口执行以下命令保存镜像。为了使Dockerfile更加安全，用户可以根据业务在其中定义HEALTHCHECK检查。通过在容器内部运行**HEALTHCHECK** _\[OPTIONS\]_ **CMD**命令来检查容器的运行状况。
-
-    ```
-    # 找到容器ID
-    docker ps | grep verl-train
-    # 保存容器为镜像，<container_id>替换为实际的容器ID
-    docker commit <container_id> verl-train:v1
-    ```
+```shell
+export LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
+```
 
 
 
@@ -10291,104 +10041,137 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 
 **强化学习后训练场景适配示例（基于Verl）<a name="section1335017512276"></a>**
 
-MindCluster仅支持Job级别重调度。Verl的训练任务被Ray集群所管理，为适配MindCluster的Ascend Job任务部署，每个Worker节点上部署一个Pod，Pod内承载该Ray集群上的所有进程。Ray集群的head节点根据Ascend Operator注入的环境变量RANK=0所在的节点决定。RANK=0节点的Pod启动Ray集群，提交Verl后训练任务，其他Worker节点的Pod加入Ray集群。最后所有节点都检测提交的训练任务是否存在异常。
-
--   若存在异常，则以非0退出，Volcano感知到业务异常触发Job级别重调度。
--   若没有异常且任务已结束，则以0退出。
-
->[!NOTE] 说明 
->-   以下所有步骤确保在每台Worker节点均执行。
->-   本示例使用[Qwen3 30B MoE](https://modelscope.cn/models/Qwen/Qwen3-30B-A3B-Instruct-2507)模型与[DAPO-Math-17k](https://modelscope.cn/datasets/AI-ModelScope/DAPO-Math-17k)数据集。
+MindCluster仅支持Verl框架Job级别和Pod级别重调度，其中Pod级别重调度仅支持GRPO算法。Verl的训练任务被Ray集群所管理，为适配MindCluster的Ascend 
+Job任务部署，每个Worker节点上部署一个Pod，Pod内承载该Ray集群上的所有进程。Ray集群的head节点为Master Pod，head节点启动Ray集群，其他Worker Pod启动后加入Ray集群，然后由head节点提交任务。
 
 下面以两台Atlas 900 A3 SuperPoD 超节点为例，说明具体操作步骤。
 
-1.  模型权重转换，将HuggingFace模型转换为Megatron模型，可参考[Verl模型转化脚本](https://verl.readthedocs.io/en/latest/advance/checkpoint.html#huggingface-to-megatron-distcheckpoint-details)。
+1. 准备Verl代码
 
-    ```
-    # 启动容器，具体模型路径根据实际情况修改
-    docker run -it \
-    -v /qwen30b/Qwen3-30B-A3B-Instruct-2507:/qwen30b/Qwen3-30B-A3B-Instruct-2507 \
-    -v /usr/local/Ascend/driver:/usr/local/Ascend/driver \
-    -e ASCEND_VISIBLE_DEVICES=0-15 \
-    verl:v1 /bin/bash
-     
-    # 执行权重转化
-    cd ~/verl
-    python scripts/converter_hf_to_mcore.py \
-    --hf_model_path /qwen30b/Qwen3-30B-A3B-Instruct-2507 \
-    --output_path /qwen30b/Qwen3-30B-A3B-Instruct-Mcore \
-    ```
+   ```shell
+   git clone https://github.com/volcengine/verl.git
+   cd verl
+   git checkout b97ebfd5062223337ae065c2250f8ab5c0e08e5e
+   rm -rf recipe
+   git clone https://github.com/verl-project/verl-recipe.git
+   cd verl-recipe
+   git checkout 474494acafc6482a7e16be2c82e957bd8ca11a3f
+   cd ..
+   mv verl-recipe recipe
+   ```
 
-    若出现如下错误，则先执行如下命令：
+2. 模型获取
 
-    ```
-    export LD_PRELOAD="/usr/local/lib/python3.10/dist-packages/sklearn/utils/../../scikit_learn.libs/libgomp-947d5fa1.so.1.0.0"
-    ```
+   - 模型名称：Qwen3-32B
+   - 获取链接：[Qwen/Qwen3-32B](https://huggingface.co/Qwen/Qwen3-32B/tree/main)
 
-    ![](figures/报错.png)
+3. 数据集获取及转换
 
-2.  构建Verl的Qwen3 30B MoE的训练脚本。其中推理后端为vLLM，训练后端为Megatron。
+   - 数据集名称：gsm8k
+   - 获取链接：[openai/gsm8k](https://huggingface.co/datasets/openai/gsm8k/tree/main/main)
 
-    获取脚本示例[run\_dapo\_qwen3\_30b\_a3b\_megatron.sh](https://gitcode.com/Ascend/mindxdl-deploy/blob/master/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/verl/run_dapo_qwen3_30b_a3b_megatron.sh)，并将其放置到verl路径中examples\_npu下。同时在“examples\_npu/config“路径下创建两个文件dapo\_trainer-megatron.yaml和runtime\_env.yaml，其内容如下：
+   操作步骤：
 
-    -   dapo\_trainer-megatron.yaml
+   1. 准备数据集目录
 
+      在某目录下（如`/data/dataset/`）创建`gsm8k/main`目录。
+      将下载的数据集`train-00000-of-00001.parquet`和`test-00000-of-00001.parquet`文件放入`/data/dataset/gsm8k/main`目录下。
+
+   2. 启动容器
+
+      注：具体挂载路径根据实际情况修改（以verl代码和数据集文件均在`/data`为例）
+
+      ```shell
+      docker run -it \
+      -v /data:/data \
+      -v /usr/local/Ascend/driver:/usr/local/Ascend/driver \
+      verl:v1 /bin/bash
+      ```
+
+   3. 进入代码目录，修改`gsm8k.py`脚本
+
+      ```shell
+      cd /data/code/verl
+      vi examples/data_preprocess/gsm8k.py
+      ```
+
+      找到以下代码段：
+
+      ```python
+      if local_dataset_path is not None:
+          dataset = datasets.load_dataset(local_dataset_path, "main")
+      else:
+          dataset = datasets.load_dataset(data_source, "main")
+      ```
+
+      修改为：
+
+      ```python
+      if local_dataset_path is not None:
+          dataset = datasets.load_dataset(local_dataset_path)
+      else:
+          dataset = datasets.load_dataset(data_source, "main")
+      ```
+
+   4. 执行预处理
+
+      ```shell
+       python3 examples/data_preprocess/gsm8k.py \
+       --local_save_dir /data/datasets/gsm8k \
+       --local_dataset_path /data/datasets/gsm8k
+       ```
+
+4. 准备训练脚本和配置文件
+
+   1. 获取训练脚本和配置文件
+
+      从[示例仓库](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/verl/grpo)获取示例训练脚本`start_grpo.sh`和`run_grpo_qwen3_32b_a3b_megatron.sh`放置到verl根目录下,获取配置文件`runtime_env.yaml`放置到`verl/recipe/fault_recover/config`目录下。
+
+   2. 修改训练脚本
+
+      - 修改`start_grpo.sh`关键配置：
+
+         ```shell
+         # 网卡配置（当hostNetwork=true时根据实际网卡信息修改）
+         export HCCL_SOCKET_IFNAME=eth0
+         export TP_SOCKET_IFNAME=eth0
+         export GLOO_SOCKET_IFNAME=eth0
+            
+         # 依赖路径（根据实际路径配置）
+         export PYTHONPATH=$PYTHONPATH:/data/code/Megatron-LM
+        
+         # 日志目录（根据实际路径配置）
+         export path_log_dir=/data/logs/$MINDX_TASK_ID/trainlog
+         export ASCEND_PROCESS_LOG_PATH=/data/logs/$MINDX_TASK_ID/plog
+        
+         # 内存优化库（根据实际路径配置）
+         export LD_PRELOAD=/usr/local/lib/libjemalloc.so.2:$LD_PRELOAD
+         ```
+      
+      - 修改`run_grpo_qwen3_32b_a3b_megatron.sh`配置：
+      
+         ```shell
+           MODEL_PATH=/data/models/Qwen3-32B                 # 模型路径，根据实际情况修改
+           CKPTS_DIR="/data/ckpt/Qwen3-32B-save/"            # 保存checkpoint路径，根据实际情况修改，推荐使用共享存储
+           TRAIN_FILE="/data/datasets/gsm8k/train.parquet"   # 数据集路径，根据实际情况修改
+           TEST_FILE="/data/datasets/gsm8k/test.parquet"     # 数据集路径，根据实际情况修改
         ```
-        # examples_npu/config/dapo_trainer-megatron.yaml
-        hydra:
-          searchpath:
-            - file://verl/trainer/config
-        defaults:
-          - ppo_megatron_trainer
-          - _self_
-        data:
-          gen_batch_size: ${data.train_batch_size}
-        reward_model:
-          reward_manager: dapo
-          overlong_buffer: 
-            enable: False # We try to avoid forgetting to set enable
-            len: 0
-            penalty_factor: 0.0
-            log: False
-        algorithm:
-          filter_groups:
-            _target_: verl.trainer.config.FilterGroupsConfig
-            enable: False # We try to avoid forgetting to set enable
-            metric: null # acc / score / seq_reward / seq_final_reward / ...
-            max_num_gen_batches: 0 # Non-positive values mean no upper limit
-        trainer:
-          project_name: verl-dapo
-        ```
 
-    -   runtime\_env.yaml
+5. 准备任务yaml，任务下发
 
-        ```
-        # examples_npu/config/runtime_env.yaml
-        working_dir: ./
-        excludes: ["/.git/"]
-        env_vars:
-          HCCL_EXEC_TIMEOUT: "7200"
-          HCCL_CONNECT_TIMEOUT: "7200"
-          VLLM_USE_V1: "1"
-          VLLM_VERSION: "0.9.1"
-          HCCL_IF_BASE_PORT: "23999"
-          HCCL_ASYNC_ERROR_HANDLING: "0"
-          P2P_HCCL_BUFFSIZE: "20"
-        ```
+      获取[verl-grpo.yaml](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/verl/grpo)（示例默认配置了Pod级和Job级重调度，可根据实际情况自行配置），执行启动命令：
 
-3.  构建适配MindCluster的Ray启动脚本。在每台Worker节点上准备好Ray启动脚本，放到两台Atlas 900 A3 SuperPoD 超节点上。其中的网卡信息需根据实际情况配置，其余脚本可以保持不变。
-
-    获取脚本示例[start.sh](https://gitcode.com/Ascend/mindxdl-deploy/blob/master/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/verl/start.sh)，并将脚本放置到verl目录下。
-
-4.  获取[准备任务YAML](#准备任务yaml)中的verl-resche.yaml，根据实际情况修改其中的参数，然后执行如下命令启动任务。
-
-    ```
-    kubectl apply -f verl-resche.yaml
+    ```shell
+       kubectl apply -f verl-grpo.yaml
     ```
 
-    启动任务后，会显示如下迭代信息：
+      启动后日志中可能出现类似如下错误信息，此为正常现象（因为Head节点通常未挂载NPU卡）：
 
-    ![](figures/迭代信息.png)
+    ```tex
+       [ERROR] RUNTIME(38734,python3): ... [driver.cc:64]38734 GetDeviceCount:Call drvGetDevNum, drvRetCode=7.
+       [ERROR] ASCENDCL(38734,python3): ... aclrtGetDeviceCountImpl:get device count failed, runtime result = 507899.
+       [ERROR] APP(38734,python3): ... "[PTA]:"get device count of NPU failed""
+    ```
 
 
 
