@@ -133,7 +133,7 @@ function diag_tool_build() {
   mkdir -p "${ROOT_PATH}/build_diag_tool"
   cd "${ROOT_PATH}/build_diag_tool"
   python3 "${ROOT_PATH}/setup.py" bdist_wheel
-  cp -r "${ROOT_PATH}/build_diag_tool/dist/mindcluster_diag_tool*.whl" "${OUTPUT_PATH}"
+  cp -r "${ROOT_PATH}"/build_diag_tool/dist/mindcluster_diag_tool*.whl "${OUTPUT_PATH}"
   rm -rf "${ROOT_PATH}/build_diag_tool"
   log_info "Success to build mindcluster_diag_tool package"
 }
