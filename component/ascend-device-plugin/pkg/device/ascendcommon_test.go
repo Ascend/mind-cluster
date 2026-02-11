@@ -1230,6 +1230,7 @@ func testNetworkFaultCodesEmptyUnhealthyLinkUp(tool *AscendTools, device *common
 	return func() {
 		defer resetNetWorkLimiter()
 		device.NetworkHealth = v1beta1.Unhealthy
+		device.NetworkFaultCodes = []int64{common.LinkDownFaultCode}
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
 		patches.ApplyMethod(&devmanager.DeviceManager{}, "GetDeviceAllErrorCode",

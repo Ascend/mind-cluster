@@ -57,7 +57,8 @@ var (
 	allFaultInfo           = make(chan npuCommon.DevFaultInfo, common.WriteEventChanLenLimit)
 	faultEventLimiter      = rate.NewLimiter(
 		rate.Every(time.Minute/common.WriteEventRateLimit), common.WriteEventRateLimit)
-	netWorkLimiterMap = make(map[int32]*rate.Limiter, common.GeneralMapSize)
+	netWorkLimiterMap  = make(map[int32]*rate.Limiter, common.GeneralMapSize)
+	netWorkStatusCache = make(map[int32]string, common.GeneralMapSize)
 )
 
 const (
@@ -1511,60 +1512,51 @@ func (tool *AscendTools) generateNetworkFaultEventsBasedOnFaultCacheChange(devic
 		networkFaultCodes = append(networkFaultCodes, faultCode)
 	}
 
+	networkFaultCodes = queryNetworkStatusWithoutFaultCode(networkFaultCodes, device)
+
 	networkFaultEvents := common.GetChangedDevFaultInfo(device, device.NetworkFaultCodes, networkFaultCodes)
-	defer func() {
-		for _, networkFaultEvent := range networkFaultEvents {
-			hwlog.RunLog.Info("generate network fault event based on network fault cache change")
-			common.DoSaveDevFaultInfo(networkFaultEvent, false)
-		}
-	}()
-	if networkFautEventsWithoutFaultCode :=
-		queryNetworkFautEventWithoutFaultCode(networkFaultCodes, device); len(networkFautEventsWithoutFaultCode) != 0 {
-		networkFaultEvents = append(networkFaultEvents, networkFautEventsWithoutFaultCode...)
+	for _, networkFaultEvent := range networkFaultEvents {
+		hwlog.RunLog.Infof("device %d generate network fault event %v based"+
+			" on network fault cache change", device.DeviceID, networkFaultEvent)
+		common.DoSaveDevFaultInfo(networkFaultEvent, false)
 	}
 }
 
-func queryNetworkFautEventWithoutFaultCode(faultCodes []int64, device *common.NpuDevice) []npuCommon.DevFaultInfo {
-	var networkFaultEvents []npuCommon.DevFaultInfo
+func queryNetworkStatusWithoutFaultCode(faultCodes []int64, device *common.NpuDevice) []int64 {
+	newFaultCodes := faultCodes
 	if len(faultCodes) != 0 {
-		return networkFaultEvents
+		return newFaultCodes
 	}
-	netWorkLimiter, ok := netWorkLimiterMap[device.DeviceID]
+	linkStatus := getNetworkStatusCache(device.DeviceID)
+	hwlog.RunLog.Debugf("device %d link status : %s, network healthy: %s",
+		device.DeviceID, linkStatus, device.NetworkHealth)
+	if linkStatus == npuCommon.NPUNetworkLinkDownStatus {
+		newFaultCodes = append(newFaultCodes, common.LinkDownFaultCode)
+		hwlog.RunLog.Debugf("device %d generate network fault code %d based on link down fault ,"+
+			"network health: %s", device.DeviceID, common.LinkDownFaultCode, device.NetworkHealth)
+	}
+	return newFaultCodes
+}
+
+func getNetworkStatusCache(deviceId int32) string {
+	netWorkLimiter, ok := netWorkLimiterMap[deviceId]
 	if !ok {
-		hwlog.RunLog.Infof("init device %d network limiter", device.DeviceID)
+		hwlog.RunLog.Infof("init device %d network limiter", deviceId)
 		netWorkLimiter = rate.NewLimiter(
 			rate.Every(common.EveryNetWorkQueryDuration*time.Minute/common.NetWorkQueryReteLimit),
 			common.NetWorkQueryReteLimit)
-		netWorkLimiterMap[device.DeviceID] = netWorkLimiter
+		netWorkLimiterMap[deviceId] = netWorkLimiter
 	}
-	if !netWorkLimiter.Allow() {
-		return networkFaultEvents
+	linkStatusCache, ok := netWorkStatusCache[deviceId]
+	if !netWorkLimiter.Allow() && ok {
+		return linkStatusCache
 	}
-	linkStatus, err := hccn.GetNPULinkStatus(device.DeviceID)
+	linkStatus, err := hccn.GetNPULinkStatus(deviceId)
 	if err != nil {
-		hwlog.RunLog.Errorf("get device %d link status failed, err: %v", device.DeviceID, err)
-		return networkFaultEvents
+		hwlog.RunLog.Errorf("get device %d link status failed, err: %v", deviceId, err)
+		netWorkStatusCache[deviceId] = npuCommon.NPUNetworkLinkDownStatus
+		return npuCommon.NPUNetworkLinkDownStatus
 	}
-	hwlog.RunLog.Infof("device %d link status : %v, network healthy: %s",
-		device.DeviceID, linkStatus, device.NetworkHealth)
-	if device.NetworkHealth == v1beta1.Healthy && linkStatus == npuCommon.NPUNetworkLinkDownStatus {
-		networkFaultEvents = append(networkFaultEvents, npuCommon.DevFaultInfo{
-			EventID:         common.LinkDownFaultCode,
-			LogicID:         device.LogicID,
-			Assertion:       npuCommon.FaultOccur,
-			AlarmRaisedTime: time.Now().UnixMilli(),
-		})
-		hwlog.RunLog.Infof("generate network fault event %v based on link down fault", networkFaultEvents)
-		return networkFaultEvents
-	}
-	if device.NetworkHealth == v1beta1.Unhealthy && linkStatus == npuCommon.NPUNetworkLinkUpStatus {
-		networkFaultEvents = append(networkFaultEvents, npuCommon.DevFaultInfo{
-			EventID:         common.LinkDownFaultCode,
-			LogicID:         device.LogicID,
-			Assertion:       npuCommon.FaultRecover,
-			AlarmRaisedTime: time.Now().UnixMilli(),
-		})
-		hwlog.RunLog.Infof("generate network fault event %v based on link up event", networkFaultEvents)
-	}
-	return networkFaultEvents
+	netWorkStatusCache[deviceId] = linkStatus
+	return linkStatus
 }
