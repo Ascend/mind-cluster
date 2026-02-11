@@ -42,6 +42,7 @@ type DeviceInterface interface {
 	GetDeviceHealth(logicID int32) (uint32, error)
 	GetDeviceNetWorkHealth(logicID int32) (uint32, error)
 	GetDeviceUtilizationRate(logicID int32, deviceType common.DeviceType) (uint32, error)
+	GetDeviceUtilizationRateV2(logicID int32) (common.NpuMultiUtilizationInfo, error)
 	GetDeviceTemperature(logicID int32) (int32, error)
 	GetDeviceVoltage(logicID int32) (float32, error)
 	GetDevicePowerInfo(logicID int32) (float32, error)
@@ -449,6 +450,21 @@ func (d *DeviceManager) GetDeviceUtilizationRate(logicID int32, deviceType commo
 	}
 
 	return uint32(rate), nil
+}
+
+// GetDeviceUtilizationRateV2 get npu device utilization v2
+func (d *DeviceManager) GetDeviceUtilizationRateV2(logicID int32) (common.NpuMultiUtilizationInfo, error) {
+	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return dcmi.BuildErrNpuMultiUtilizationInfo(), fmt.Errorf("failed to get multi utilization by logicID(%d)", logicID)
+	}
+	res, err := d.DcMgr.DcGetDeviceUtilizationRateV2(cardID, deviceID)
+	if err != nil {
+		return dcmi.BuildErrNpuMultiUtilizationInfo(), err
+	}
+
+	return res, nil
 }
 
 // GetDeviceTemperature get npu device temperature

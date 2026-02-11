@@ -202,10 +202,13 @@ func startCollectSingleGoroutine(group *sync.WaitGroup, ctx context.Context, n *
 				logger.Info("received the stop signal,stop npu base info collect")
 				return
 			default:
+				logger.Info("start to collect npu info by dcmi")
+				begin := time.Now()
 				chipList := getChipListCache(n)
 				for _, c := range ChainForSingleGoroutine {
 					c.CollectToCache(n, chipList)
 				}
+				logger.Infof("end to collect npu info by dcmi, time cost :%v", time.Since(begin))
 				if _, ok := <-ticker.C; !ok {
 					logger.Errorf(tickerFailedPattern, "handling all collectors")
 					return

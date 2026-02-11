@@ -133,7 +133,7 @@ func (c *HccsCollector) CollectToCache(n *colcommon.NpuCollector, chipList []col
 		} else {
 			hccsStatisticInfo = buildFailedHccsInfo()
 			err = fmt.Errorf("realGetStatisticInfoFunc is nil when get hccs info, " +
-				"maybe both GetHccsStatisticInfoInU64 and GetHccsStatisticInfo can't be unreached")
+				"maybe both GetHccsStatisticInfoInU64 and GetHccsStatisticInfo are unreachable")
 		}
 		handleErr(err, colcommon.DomainForHccs, logicID)
 

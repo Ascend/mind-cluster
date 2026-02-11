@@ -95,6 +95,16 @@ func (d *DeviceManagerMock) GetDeviceUtilizationRate(logicID int32, deviceType c
 	return 1, nil
 }
 
+// GetDeviceUtilizationRateV2 get npu device utilization by v2 api
+func (d *DeviceManagerMock) GetDeviceUtilizationRateV2(logicID int32) (common.NpuMultiUtilizationInfo, error) {
+	return common.NpuMultiUtilizationInfo{
+		AicAvgUtil: 1,
+		AicoreUtil: 1,
+		AivAvgUtil: 1,
+		NpuUtil:    1,
+	}, nil
+}
+
 // GetDeviceTemperature get npu device temperature
 func (d *DeviceManagerMock) GetDeviceTemperature(logicID int32) (int32, error) {
 	return 1, nil
@@ -176,7 +186,7 @@ func (d *DeviceManagerMock) GetDeviceIPAddress(logicID, ipType int32) (string, e
 
 // CreateVirtualDevice create virtual device
 func (d *DeviceManagerMock) CreateVirtualDevice(logicID int32, vDevInfo common.CgoCreateVDevRes) (common.
-	CgoCreateVDevOut, error) {
+CgoCreateVDevOut, error) {
 	return common.CgoCreateVDevOut{}, nil
 }
 

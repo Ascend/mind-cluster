@@ -94,6 +94,12 @@ struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info){
    	CALL_FUNC(dcmi_get_device_utilization_rate,card_id,device_id,input_type,utilization_rate)
    }
 
+   static int (*dcmi_get_device_utilization_rate_v2_func)(int card_id, int device_id,
+				struct npu_multi_utilization_info *util_info);
+   int dcmi_get_device_utilization_rate_v2(int card_id, int device_id, struct npu_multi_utilization_info *util_info){
+   	CALL_FUNC(dcmi_get_device_utilization_rate_v2,card_id,device_id,util_info)
+   }
+
    static int (*dcmi_get_device_temperature_func)(int card_id, int device_id, int *temperature);
    int dcmi_get_device_temperature(int card_id, int device_id, int *temperature){
     CALL_FUNC(dcmi_get_device_temperature,card_id,device_id,temperature)
@@ -409,6 +415,8 @@ unsigned int *state){
 
    	dcmi_get_device_utilization_rate_func = dlsym(dcmiHandle,"dcmi_get_device_utilization_rate");
 
+   	dcmi_get_device_utilization_rate_v2_func = dlsym(dcmiHandle,"dcmi_get_device_utilization_rate_v2");
+
    	dcmi_get_device_temperature_func = dlsym(dcmiHandle,"dcmi_get_device_temperature");
 
    	dcmi_get_device_voltage_func = dlsym(dcmiHandle,"dcmi_get_device_voltage");
@@ -556,6 +564,7 @@ type DcDriverInterface interface {
 	DcGetDeviceHealth(int32, int32) (int32, error)
 	DcGetDeviceNetWorkHealth(int32, int32) (uint32, error)
 	DcGetDeviceUtilizationRate(int32, int32, common.DeviceType) (int32, error)
+	DcGetDeviceUtilizationRateV2(int32, int32) (common.NpuMultiUtilizationInfo, error)
 	DcGetDeviceTemperature(int32, int32) (int32, error)
 	DcGetDeviceVoltage(int32, int32) (float32, error)
 	DcGetDevicePowerInfo(int32, int32) (float32, error)
@@ -1763,6 +1772,48 @@ func (d *DcManager) DcGetDeviceUtilizationRate(cardID, deviceID int32, devType c
 			"utilization (name: %v, code:%d): %d", cardID, deviceID, devType.Name, devType.Code, uint32(rate))
 	}
 	return int32(rate), nil
+}
+
+// DcGetDeviceUtilizationRateV2 get device utils rate by id
+func (d *DcManager) DcGetDeviceUtilizationRateV2(cardID, deviceID int32) (common.NpuMultiUtilizationInfo, error) {
+	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
+		return BuildErrNpuMultiUtilizationInfo(),
+			fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
+	}
+	var multiUtilizationInfo C.struct_npu_multi_utilization_info
+	if retCode := C.dcmi_get_device_utilization_rate_v2(C.int(cardID), C.int(deviceID),
+		&multiUtilizationInfo); int32(retCode) != common.Success {
+		return BuildErrNpuMultiUtilizationInfo(),
+			buildDcmiErr(cardID, deviceID, "npu multi utilization info", retCode)
+	}
+	return convertNpuMultiUtilizationInfo(multiUtilizationInfo), nil
+}
+
+// BuildErrNpuMultiUtilizationInfo build error npu multi utilization info
+func BuildErrNpuMultiUtilizationInfo() common.NpuMultiUtilizationInfo {
+	return common.NpuMultiUtilizationInfo{
+		AicAvgUtil: common.UnRetError,
+		AivAvgUtil: common.UnRetError,
+		AicoreUtil: common.UnRetError,
+		NpuUtil:    common.UnRetError,
+	}
+}
+
+func convertNpuMultiUtilizationInfo(info C.struct_npu_multi_utilization_info) common.NpuMultiUtilizationInfo {
+	return common.NpuMultiUtilizationInfo{
+		AicAvgUtil: checkAndConvertUtilizationInfo(info.aic_avg_util),
+		AivAvgUtil: checkAndConvertUtilizationInfo(info.aiv_avg_util),
+		AicoreUtil: checkAndConvertUtilizationInfo(info.aicore_util),
+		NpuUtil:    checkAndConvertUtilizationInfo(info.npu_util),
+	}
+}
+
+func checkAndConvertUtilizationInfo(utilization C.uchar) uint32 {
+	if !common.IsValidUtilizationRate(uint32(utilization)) {
+		hwlog.RunLog.Errorf("get wrong device utilization : %d", uint32(utilization))
+		return common.UnRetError
+	}
+	return uint32(utilization)
 }
 
 // DcGetDeviceTemperature get the device temperature

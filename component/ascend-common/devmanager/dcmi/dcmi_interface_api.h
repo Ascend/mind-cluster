@@ -487,6 +487,13 @@ struct dcmi_hccsping_mesh_info {
     int dest_num;
 };
 
+struct npu_multi_utilization_info {
+    unsigned char aic_avg_util;
+    unsigned char aiv_avg_util;
+    unsigned char aicore_util;
+    unsigned char npu_util;
+};
+
 // urma device API for A5 -- begin
 // A5 Unifiy BUS
 #define DCMI_URMA_EID_MAX_COUNT (32)      // 32 EID
@@ -557,6 +564,9 @@ DCMIDLLEXPORT int dcmi_get_device_memory_info_v3(int card_id, int device_id,
 
 DCMIDLLEXPORT int dcmi_get_device_utilization_rate(
     int card_id, int device_id, int input_type, unsigned int *utilization_rate);
+
+DCMIDLLEXPORT int dcmi_get_device_utilization_rate_v2(
+    int card_id, int device_id, struct npu_multi_utilization_info *util_info);
 
 DCMIDLLEXPORT int dcmi_get_device_info(
     int card_id, int device_id, enum dcmi_main_cmd main_cmd, unsigned int sub_cmd, void *buf, unsigned int *size);

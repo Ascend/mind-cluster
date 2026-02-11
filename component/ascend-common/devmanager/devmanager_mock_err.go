@@ -100,6 +100,11 @@ func (d *DeviceManagerMockErr) GetDeviceUtilizationRate(logicID int32, deviceTyp
 	return 1, errors.New(errorMsg)
 }
 
+// GetDeviceUtilizationRateV2 get npu device utilization by v2 api
+func (d *DeviceManagerMockErr) GetDeviceUtilizationRateV2(logicID int32) (common.NpuMultiUtilizationInfo, error) {
+	return dcmi.BuildErrNpuMultiUtilizationInfo(), errors.New(errorMsg)
+}
+
 // GetDeviceTemperature get npu device temperature
 func (d *DeviceManagerMockErr) GetDeviceTemperature(logicID int32) (int32, error) {
 	return 1, errors.New(errorMsg)
