@@ -443,3 +443,11 @@ type ElabelInfo struct {
 	ManufacturerDate string
 	SerialNumber     string
 }
+
+// NpuMultiUtilizationInfo npu multi utilization info
+type NpuMultiUtilizationInfo struct {
+	AicAvgUtil uint32
+	AivAvgUtil uint32
+	AicoreUtil uint32
+	NpuUtil    uint32
+}
