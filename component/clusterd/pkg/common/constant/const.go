@@ -181,8 +181,6 @@ const (
 	DumpExit = "dump_exit"
 	// TpBlock tp-block
 	TpBlock = "tp-block"
-	// IsJobRescheduling used in PodGroup annotation
-	IsJobRescheduling = "isJobRescheduling"
 )
 
 const (
