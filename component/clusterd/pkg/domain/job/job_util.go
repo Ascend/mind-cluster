@@ -17,7 +17,6 @@ import (
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
-	"clusterd/pkg/interface/kube"
 )
 
 const (
@@ -181,7 +180,6 @@ func UpdateCmAndCache(status string, jobKey string, podGroup v1beta1.PodGroup,
 	if completedPodNum == jobInfo.Replicas {
 		jobInfo.JobRankTable.Status = StatusRankTableComplete
 		jobInfo.PreServerList = jobInfo.JobRankTable.ServerList
-		removePGIsJobRescheduling(podGroup)
 		updateUseNodeNames(&jobInfo, podsInJob)
 		initJobShareTorInfo(&jobInfo, podsInJob)
 	} else {
@@ -200,20 +198,6 @@ func UpdateCmAndCache(status string, jobKey string, podGroup v1beta1.PodGroup,
 	if result {
 		hwlog.RunLog.Debugf("update job:%s success", jobInfo.Name)
 		SaveJobCache(jobInfo.Key, jobInfo)
-	}
-}
-
-func removePGIsJobRescheduling(podGroup v1beta1.PodGroup) {
-	if podGroup.Annotations[constant.IsJobRescheduling] == "true" {
-		isJobReschedulingAnnotation := map[string]interface{}{
-			constant.IsJobRescheduling: nil,
-		}
-		_, err := kube.RetryPatchPodGroupAnnotations(podGroup.Name, podGroup.Namespace, constant.PatchPodGroupTimes,
-			isJobReschedulingAnnotation)
-		if err != nil {
-			hwlog.RunLog.Errorf("failed to remove isJobRescheduling in pg annotation, err=%v, pgName=%s",
-				err, podGroup.Name)
-		}
 	}
 }
 
