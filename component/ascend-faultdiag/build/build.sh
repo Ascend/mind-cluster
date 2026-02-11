@@ -20,6 +20,7 @@ set -e
 CUR_PATH=$(cd "$(dirname "$0")" || exit; pwd)
 ROOT_PATH=$(readlink -f "$CUR_PATH"/..)
 SRC_PATH="${ROOT_PATH}/src"
+TOOLKIT_SRC_PATH="${ROOT_PATH}/toolkit_src"
 OUTPUT_PATH="${ROOT_PATH}/output/"
 ASCEND_CONF_MODEL_DIR="${SRC_PATH}/ascend_fd/configuration/model/"
 
@@ -126,16 +127,14 @@ function compile_build() {
 
 function diag_tool_build() {
   log_info "Begin to build ascend_faultdiag_toolkit package"
-  mkdir -p "${ROOT_PATH}/build_diag_tool"
-  cd "${ROOT_PATH}/build_diag_tool"
-  python3 "${ROOT_PATH}/toolkit_src/setup.py" --version $BUILD_VERSION bdist_wheel
-  cp -r "${ROOT_PATH}"/build_diag_tool/dist/ascend_faultdiag_toolkit*.whl "${OUTPUT_PATH}"
-  rm -rf "${ROOT_PATH}/build_diag_tool"
+  cd "${TOOLKIT_SRC_PATH}"
+  python3 setup.py --version $BUILD_VERSION bdist_wheel
+  cp -r "${TOOLKIT_SRC_PATH}"/dist/ascend_faultdiag_toolkit*.whl "${OUTPUT_PATH}"
   log_info "Success to build ascend_faultdiag_toolkit package"
 }
 
 function main() {
-    export PYTHONPATH=${ROOT_PATH}/src:$PYTHONPATH
+    export PYTHONPATH=${ROOT_PATH}/src:${ROOT_PATH}/toolkit_src:$PYTHONPATH
     # Create the final output path
     mkdir -p ${OUTPUT_PATH}
     train_net_model python3 "${NET_RF_LATEST_MODEL_PATH}"
