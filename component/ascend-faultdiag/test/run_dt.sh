@@ -80,16 +80,6 @@ function build_ascend_fd() {
 
   cd ${SRC_PATH} || exit 3
 
-  local lib_path="${ROOT_PATH}/src/ascend_fd/lib"
-  echo "Downloading Fault Diagnosis library..."
-  if [[ "$(uname -m)" == "x86_64" ]]; then
-    PLAT_FORM="linux_x86_64"
-    mkdir -p "$lib_path" && wget -O "${lib_path}/libfaultdiag.so" https://mindcluster.obs.cn-north-4.myhuaweicloud.com/ascend-repo/libfaultdiag_x86_64.so --no-check-certificate
-  else
-    PLAT_FORM="linux_aarch64"
-    mkdir -p "$lib_path" && wget -O "${lib_path}/libfaultdiag.so" https://mindcluster.obs.cn-north-4.myhuaweicloud.com/ascend-repo/libfaultdiag_aarch64.so --no-check-certificate
-  fi
-
   python3 setup_linux.py develop -i https://repo.huaweicloud.com/repository/pypi/simple/
 }
 

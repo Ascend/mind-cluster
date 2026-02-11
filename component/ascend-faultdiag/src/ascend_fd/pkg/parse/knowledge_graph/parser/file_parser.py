@@ -26,7 +26,6 @@ from ascend_fd.utils.status import ParamError
 from ascend_fd.utils.tool import PatternMatcher, PatternSingleOrMultiLineMatcher, LINE_NUM_OF_MULTILINE_MATCH, \
     safe_read_open, merge_occurrence
 from ascend_fd.pkg.parse.parser_saver import LogInfoSaver
-from ascend_fd.sdk.fd_tool import FDTool, AttrKey
 from ascend_fd.utils.regular_table import MIN_TIME, DEVICEPLUGIN_SOURCE, COMPOSITE_SWITCH_CHIP_SOURCE, LCNE_SOURCE
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
@@ -47,13 +46,14 @@ class FileParser(ABC):
         """
         super(FileParser, self).__init__()
         self.params = params
-        self.regex_conf = params.get("regex_conf", {})
-        self.parsers_conf = self.regex_conf.get(self.SOURCE_FILE, {})
+        self.regex_conf = params.get("default_conf", {})
+        self.default_conf = self.regex_conf.get(self.SOURCE_FILE, {})
+        self.regex_user = params.get("user_conf", {})
+        self.user_conf = self.regex_user.get(self.SOURCE_FILE, {})
         self.pattern_matcher = PatternMatcher()
         self.start_time = None
         self.end_time = None
         self.resuming_training_time = MIN_TIME
-        self.fd_tool = FDTool()
         self.is_sdk_input = False
         self.custom_config = get_config_info() if os.path.exists(CUSTOM_CONFIG_PATH) else ConfigInfo()
 
@@ -226,22 +226,8 @@ class FileParser(ABC):
             kg_logger.warning("No %s files found in the directory", self.TARGET_FILE_PATTERNS)
         return log_list
 
-    def parse_single_line(self, line: str, framework_name="") -> dict:
-        """
-        Parse singe line of log file, the log file type can be train log, NPU log, CANN log and OS log
-        :param line: the single line to be parsed
-        :param framework_name: the job AI framework_name, only use in trainLog
-        :return: event dict
-        """
-        return self.parse_from_user_repository(line) or self.parse_from_default_repository(line, framework_name)
-
-    def parse_from_user_repository(self, line):
-        """
-        Parse a single line of logs from the user knowledge-repository
-        :param line: the single line to be parsed
-        :return: event dict
-        """
-        for code, params in self.parsers_conf.items():
+    def parse_from_user_repository(self, line: str) -> dict[str, str]:
+        for code, params in self.user_conf.items():
             if self.pattern_matcher.compare(params, line):
                 key_info = self.pattern_matcher.key_info or line
                 event_dict = {EVENT_CODE: code, "key_info": key_info, CUSTOM_EVENT: True}
@@ -251,31 +237,43 @@ class FileParser(ABC):
                 return event_dict
         return {}
 
-    def parse_from_default_repository(self, line, framework_name=""):
+    def parse_from_default_repository(self, line):
+        log_data = line
+        if isinstance(self.pattern_matcher, PatternSingleOrMultiLineMatcher):
+            log_data = self.pattern_matcher.read_multi_line(LINE_NUM_OF_MULTILINE_MATCH, line)
+        event_dict = self.match_event_code(log_data, self.default_conf)
+        if not event_dict and (self.SOURCE_FILE == DEVICEPLUGIN_SOURCE or self.SOURCE_FILE == LCNE_SOURCE):
+            event_dict = self.match_event_code(log_data, self.regex_conf.get(COMPOSITE_SWITCH_CHIP_SOURCE, {}))
+        return event_dict
+
+    def parse_single_line(self, line: str, framework_name="") -> dict:
         """
-        Parse a single line of logs from the default knowledge-repository
+        Parse singe line of log file, the log file type can be train log, NPU log, CANN log and OS log
         :param line: the single line to be parsed
         :param framework_name: the job AI framework_name, only use in trainLog
         :return: event dict
         """
+        return self.parse_from_user_repository(line) or self.parse_from_default_repository(line)
+
+    def match_event_code(self, line, parser_conf):
         log_data = line
         if isinstance(self.pattern_matcher, PatternSingleOrMultiLineMatcher):
             log_data = self.pattern_matcher.read_multi_line(LINE_NUM_OF_MULTILINE_MATCH, line)
-        match_code, match_key_info = self.fd_tool.data_match(log_data, self.SOURCE_FILE, framework_name)
-        if not match_code and (self.SOURCE_FILE == DEVICEPLUGIN_SOURCE or self.SOURCE_FILE == LCNE_SOURCE):
-            match_code, match_key_info = self.fd_tool.data_match(log_data, COMPOSITE_SWITCH_CHIP_SOURCE, framework_name)
-        if not match_code:
-            return {}
-        event_dict = {EVENT_CODE: match_code, "key_info": match_key_info, CUSTOM_EVENT: False}
-        attr_regex = self.fd_tool.get_attr_value_str(match_code, AttrKey.EVENT_ATTR_REGEX)
-        if attr_regex:
-            attr_result = self.pattern_matcher.match_attr(attr_regex, match_key_info)
+        for code, params in parser_conf.items():
+            if not self.pattern_matcher.compare(params, log_data):
+                continue
+            key_info = self.pattern_matcher.key_info or log_data
+            event_dict = {EVENT_CODE: code, "key_info": key_info, CUSTOM_EVENT: True}
+            attr_result = self.pattern_matcher.match_attr(params.get("attr_regex", ""), key_info)
+            if not attr_result:
+                return event_dict
             # PTA故障通过ACL接口获取设备号，若获取失败则日志为缺省值-1，将-1转换为Unknown
             if attr_result.get("source_device") == "-1":
                 attr_result.update({"source_device": "Unknown"})
             event_dict.update(attr_result)
             event_dict.update(self.pattern_matcher.get_attr_info(attr_result, line, event_dict[EVENT_CODE]))
-        return event_dict
+            return event_dict
+        return {}
 
 
 class ParserFactory:

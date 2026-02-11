@@ -18,7 +18,6 @@ import string
 
 from ascend_fd.utils.comm_valid import char_check, PARA_WHITE_LIST, LINE_WHITE_LIST
 from ascend_fd.utils.tool import CODE_WHITE_LIST
-from ascend_fd.sdk.fd_tool import FDTool
 from ascend_fd.utils.i18n import LANG
 
 RULE_DST_NAME = "dst_code"
@@ -54,14 +53,14 @@ def paragraph_check(input_value):
     return False
 
 
-def rule_check(code, input_value, all_user_entities):
+def rule_check(code, input_value, all_entities):
     """
     Verify the validity of rule list.
     rule = [{'dst_code': 'xxxxx', 'expression': 'xxxxxx'}...]
     Used by [rule]
     :param code: customized entity code
     :param input_value: List[Dict[str, str]], rule list
-    :param all_user_entities: set, all entity codes set, contain origin_entity and user_entity
+    :param all_entities: set, all entity codes set, contain origin_entity and user_entity
     :return: Indicates whether the value is valid. bool value.
     """
     if not isinstance(input_value, list):
@@ -72,7 +71,7 @@ def rule_check(code, input_value, all_user_entities):
         if RULE_DST_NAME not in single_rule:
             return False
         dst_code = single_rule.get(RULE_DST_NAME)
-        if dst_code not in all_user_entities and not FDTool().is_code_exist(dst_code):
+        if dst_code not in all_entities:
             return False
         if dst_code == code:
             return False

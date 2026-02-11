@@ -21,7 +21,7 @@ from ascend_fd.model.parse_info import FilesParseInfo
 from ascend_fd.pkg.parse.knowledge_graph.parser.custom_log_parser import CustomLogParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.mindio_parser import MindIOLogParser
 from ascend_fd.utils.status import InnerError
-from ascend_fd.configuration.config import DEFAULT_USER_CONF
+from ascend_fd.configuration.config import DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF
 from ascend_fd.utils.load_kg_config import ParseRegexMap
 from ascend_fd.pkg.parse.knowledge_graph.utils.data_descriptor import DataDescriptor
 from ascend_fd.pkg.parse.knowledge_graph.parser.cann_log_parser import CANNPlogParser, CANNDeviceLogParser
@@ -63,8 +63,11 @@ class PackageParser(object):
         self.primary_parsers = list()
         self.other_parsers = list()
         self.desc = DataDescriptor()
-        self.params = {"regex_conf": ParseRegexMap([DEFAULT_USER_CONF]).get_parse_regex()} if parse_conf is None \
-            else {"regex_conf": ParseRegexMap(sdk_config_repo=parse_conf).get_parse_regex()}
+        self.params = {
+            "default_conf": ParseRegexMap([KNOWLEDGE_GRAPH_CONF]).get_parse_regex(),
+            "user_conf": ParseRegexMap([DEFAULT_USER_CONF]).get_parse_regex()
+            if parse_conf is None else ParseRegexMap([DEFAULT_USER_CONF], sdk_config_repo=parse_conf).get_parse_regex()
+        }
         self.add_primary_parsers(primary_parsers)
         self.add_other_parsers(other_parsers)
 

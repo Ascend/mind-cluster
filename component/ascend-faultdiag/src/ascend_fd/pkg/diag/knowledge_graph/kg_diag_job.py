@@ -34,7 +34,7 @@ from ascend_fd.utils.regular_table import SORT_RULES, LOWEST_PRIORITY_NUM, PRE_C
 from ascend_fd.utils.status import FileNotExistError, InfoNotFoundError, InnerError
 from ascend_fd.utils.tool import MultiProcessJob, get_version, load_json_data, get_component_version, \
     get_parse_json, collect_parse_results
-from ascend_fd.configuration.config import DEFAULT_USER_CONF
+from ascend_fd.configuration.config import DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF
 from ascend_fd.utils.i18n import LANG
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
@@ -442,7 +442,7 @@ def _kg_diag_job(worker_name, root_device_list, parsed_saver, job_name):
     if root_device_list:
         response = _single_device_kg_diag(root_device_list, package_data.event_map, job_name)
     else:
-        response = kg_engine_analyze([DEFAULT_USER_CONF], package_data)
+        response = kg_engine_analyze([DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF], package_data)
     _resp_check(response, worker_name)
     return {"worker_name": worker_name, "root_causes": response.root_causes}
 
@@ -460,7 +460,7 @@ def _single_device_kg_diag(root_device_list, all_event_map, job_name):
     for root_device in root_device_list:
         package_data = PackageData([root_device])
         package_data.load_single_device_events(all_event_map, root_device)
-        resp = kg_engine_analyze([DEFAULT_USER_CONF], package_data)
+        resp = kg_engine_analyze([DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF], package_data)
         analyze_success = resp.analyze_success
         analyze_flags.append(analyze_success)
         if not analyze_success:

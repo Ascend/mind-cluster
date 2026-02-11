@@ -110,8 +110,8 @@ class CustomLogParser(FileParser):
         results = []
         for source_file, log_item_list in log_map.items():
             for log_item in log_item_list:
-                self.parsers_conf = self.regex_conf.get(source_file, {})
-                if not self.parsers_conf:
+                self.user_conf = self.regex_user.get(source_file, {})
+                if not self.user_conf:
                     continue
                 results.extend(self._parse_log_item(log_item, fault_type=source_file))
         for event in results:
@@ -155,7 +155,7 @@ class CustomLogParser(FileParser):
                      time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(os.path.getmtime(file_path))))
 
         for source in file_info.source_file:
-            self.parsers_conf.update(self.regex_conf.get(source, {}))
+            self.user_conf.update(self.regex_user.get(source, {}))
 
         events_list = []
         for line in self._yield_log(file_path):

@@ -18,11 +18,10 @@ import abc
 import json
 import logging
 import os
-from typing import Dict, BinaryIO, List
+from typing import Dict, List
 
 from ascend_fd.utils.tool import safe_read_open
 from ascend_fd.utils.status import InfoIncorrectError, FileOpenError
-from ascend_fd.sdk.fd_tool import FDTool, AttrKey
 from ascend_fd.utils.i18n import LANG
 
 main_logger = logging.getLogger("FAULT_DIAG")
@@ -107,18 +106,9 @@ class KgConfigParser:
         :param config_path_list: path list of kg-config.json
         """
         self.entity_map: Dict[str, SchemaEntity] = {}
-        self.fd_tool = FDTool()
-        if config_path_list:
-            self.load_config(config_path_list)
+        self.load_config(config_path_list)
         if sdk_config_repo:
             self.add_single_config(sdk_config_repo)
-
-    @staticmethod
-    def read_json_obj(stream: BinaryIO):
-        json_obj = json.load(stream)
-        if not isinstance(json_obj, dict):
-            raise InfoIncorrectError()
-        return json_obj
 
     @abc.abstractmethod
     def add_single_config(self, json_obj):
@@ -147,7 +137,7 @@ class KgConfigParser:
                 continue
             with safe_read_open(config_path, 'rb') as file_stream:
                 try:
-                    self.add_single_config(self.read_json_obj(file_stream))
+                    self.add_single_config(json.load(file_stream))
                 except InfoIncorrectError as err:
                     main_logger.warning(
                         'The content obtained from the %s file is not a JSON.', os.path.basename(config_path))
@@ -224,13 +214,7 @@ class Schema(KgConfigParser):
         self.entity_map.update({entity_code: schema_entity})
 
     def get_schema_entity(self, entity_code):
-        if entity_code in self.entity_map:
-            return self.entity_map.get(entity_code)
-        event_attribute = self.fd_tool.get_attr_value_dict(entity_code, AttrKey.EVENT_ATTRIBUTE) or {}
-        rule_list = self.fd_tool.get_attr_value_dict(entity_code, AttrKey.EVENT_RULE) or []
-        if not event_attribute and not rule_list:
-            return None
-        return SchemaEntity(entity_code, event_attribute, rule_list)
+        return self.entity_map.get(entity_code)
 
     def _save_single_entity(self, entity_code, schema_entity):
         self.entity_map[entity_code] = schema_entity

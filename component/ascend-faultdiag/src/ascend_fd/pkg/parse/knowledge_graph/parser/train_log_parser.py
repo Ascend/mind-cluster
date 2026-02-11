@@ -95,14 +95,15 @@ class TrainLogParser(FileParser):
         TracebackInfoParser(self.occur_time, self._get_source_file(file_source))
         SegInfoParser(self.occur_time, self._get_source_file(file_source))
         self.train_framework = self._get_train_framework_type(file_source)
-        self._filter_parsers_conf_by_train_framework(self.train_framework)
+        self.default_conf = self._filter_parsers_conf_by_train_framework(self.train_framework, self.default_conf)
+        self.user_conf = self._filter_parsers_conf_by_train_framework(self.train_framework, self.user_conf)
         if self.is_sdk_input:
             self._parse_sdk_input(event_storage, file_source)
         else:
             self._parse_filestream(event_storage, file_source)
         return event_storage.generate_event_list() + TrainCallFaultParser.get_all_events()
 
-    def _determine_occur_time(self, file_source: [str, LogInfoSaver]):
+    def _determine_occur_time(self, file_source: Union[str, LogInfoSaver]):
         if isinstance(file_source, str):
             return self.params.get("end_time") or \
                 time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(os.path.getmtime(file_source))))
@@ -176,18 +177,18 @@ class TrainLogParser(FileParser):
             event_dict.update({"source_device": file_source.device_id_str})
         self.supplement_common_info(event_dict, file_source, self.occur_time)
 
-    def _filter_parsers_conf_by_train_framework(self, train_framework):
+    def _filter_parsers_conf_by_train_framework(self, train_framework, config):
         """
         Update parsers_conf, remove event code of other train framework
         :param train_framework:
         """
         parsers_conf = {}
         other_framework_code_keys = self.KEY_FOR_FILTER_OTHER_FRAMEWORK_CODE.get(train_framework, [])
-        for code, params in self.parsers_conf.items():
+        for code, params in config.items():
             if any(key in code.lower() for key in other_framework_code_keys):
                 continue
             parsers_conf.update({code: params})
-        self.parsers_conf = parsers_conf
+        return parsers_conf
 
     def _get_train_framework_type(self, file_source: Union[str, LogInfoSaver]):
         """

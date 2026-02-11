@@ -2,9 +2,7 @@ recursive-include ascend_fd/ *.so
 recursive-include ascend_fd/ *.pkl
 recursive-include ascend_fd/ *.info
 recursive-include ascend_fd/ *.pt
-include ascend_fd/configuration/aicore-error-code-config-en.json
-include ascend_fd/configuration/aicore-error-code-config-zh.json
-include ascend_fd/configuration/config.py
+recursive-include ascend_fd/configuration/ *
 prune tests/
 prune script/
 prune docker/

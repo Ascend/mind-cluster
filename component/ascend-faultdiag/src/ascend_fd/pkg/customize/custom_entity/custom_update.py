@@ -20,10 +20,8 @@ import logging
 
 from ascend_fd.utils.status import ParamError
 from ascend_fd.utils.tool import safe_read_json, safe_write_open
-from ascend_fd.configuration.config import DEFAULT_USER_CONF
+from ascend_fd.configuration.config import DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF
 from ascend_fd.pkg.customize.custom_entity.valid import CHECK_MAP, check_missing_attribute_when_add, code_check
-from ascend_fd.sdk.fd_tool import FDTool
-
 
 logger = logging.getLogger("FAULT_DIAG")
 echo = logging.getLogger("ECHO")
@@ -38,6 +36,10 @@ def update_entity(data_path: str = None, sdk_entity: dict = None, output_dict: d
     :param output_dict: output dict for updated results
     :return operation result
     """
+    origin_conf = safe_read_json(KNOWLEDGE_GRAPH_CONF)
+    origin_entities = origin_conf.setdefault("knowledge-re pository", {})
+    origin_entity_codes = set(origin_entities.keys())
+
     user_conf = safe_read_json(DEFAULT_USER_CONF) if os.path.exists(DEFAULT_USER_CONF) else {}
     user_entities = user_conf.setdefault("knowledge-repository", {})
 
@@ -53,7 +55,7 @@ def update_entity(data_path: str = None, sdk_entity: dict = None, output_dict: d
             echo.warning("A maximum of %s codes can be updated at a time. Extra codes will be ignored.", MAX_OP_NUM)
             logger.warning("A maximum of %s codes can be updated at a time. Extra codes will be ignored.", MAX_OP_NUM)
             break
-        if FDTool().is_code_exist(code):
+        if code in origin_entity_codes:
             logger.error("Entity(%s) already exists in the default fault entity set.", code)
             exist_failed_codes.append(code)
             continue

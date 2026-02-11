@@ -30,3 +30,4 @@ RC_PARSER_DUMP_NAME = "ascend-rc-parser.json"
 KG_PASER_DUMP_NAME = "ascend-kg-parser.json"
 KG_ANALYZER_DUMP_NAME = "ascend-kg-analyzer.json"
 AICORE_ERRCODE_CONFIG = "aicore-error-code-config-zh.json"
+KNOWLEDGE_GRAPH_CONF = os.path.join(os.path.dirname(os.path.realpath(__file__)), "kg-config.json")

@@ -18,8 +18,8 @@ import logging
 
 from ascend_fd.utils.status import FileOpenError
 from ascend_fd.utils.tool import safe_read_json
+from ascend_fd.configuration.config import KNOWLEDGE_GRAPH_CONF
 from ascend_fd.pkg.customize.custom_entity.valid import code_check, CHECK_MAP
-from ascend_fd.sdk.fd_tool import FDTool
 from ascend_fd.utils.i18n import LANG
 
 
@@ -41,7 +41,10 @@ def check_entity(conf_path):
     user_entities = user_entity_conf.setdefault("knowledge-repository", {})
     if not user_entities:
         echo.warning("Custom entity is empty. Please check whether the file content is correct.")
-    entity_checker = EntityChecker(user_entities)
+    origin_conf = safe_read_json(KNOWLEDGE_GRAPH_CONF)
+    origin_entities = origin_conf.setdefault("knowledge-repository", {})
+
+    entity_checker = EntityChecker(origin_entities, user_entities)
     if not entity_checker.check():
         return False
     echo.info("Custom entity verification passed.")
@@ -50,21 +53,22 @@ def check_entity(conf_path):
 
 
 class EntityChecker:
-    def __init__(self, user_entities):
+    def __init__(self, origin_entities, user_entities):
         """
         Init Entity Checker
         :param origin_entities: dict, original entities
         :param user_entities: dict, user-defined entities
         """
+        self.origin_entities = origin_entities
         self.user_entities = user_entities
-        self.all_user_entity_codes = set(user_entities.keys())
+        self.all_entity_codes = set(self.origin_entities.keys() | set(user_entities.keys()))
 
         self.current_entity_code = None
         self.required_attributes = None
 
     def check(self):
         for entity_code, entity_attr in self.user_entities.items():
-            if FDTool().is_code_exist(entity_code):
+            if entity_code in self.origin_entities:
                 echo.error("Entity(%s) already exists in the default fault entity set. Check failed.", entity_code)
                 logger.error("Entity(%s) already exists in the default fault entity set. Check failed.", entity_code)
                 return False
@@ -94,7 +98,7 @@ class EntityChecker:
                 return False
             if key == "source_file" and not self._source_file_check(value):
                 return False
-            if key == "rule" and not CHECK_MAP.get("rule")(self.current_entity_code, value, self.all_user_entity_codes):
+            if key == "rule" and not CHECK_MAP.get("rule")(self.current_entity_code, value, self.all_entity_codes):
                 echo.error("The 'rule' field of entity [%s] fails to be verified. Check failed.",
                            self.current_entity_code)
                 logger.error("The 'rule' field of entity [%s] fails to be verified. Check failed.",

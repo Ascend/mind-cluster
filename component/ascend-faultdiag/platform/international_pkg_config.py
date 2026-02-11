@@ -16,6 +16,7 @@
 # ==============================================================================
 
 import argparse
+import json
 import os
 
 
@@ -64,6 +65,21 @@ def keywords_in_line(line: str, keywords: list):
     return False
 
 
+def remove_chinese_config(path):
+    with open(path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    for attr in config["knowledge-repository"].values():
+        if "attribute" in attr:
+            attribute = attr["attribute"]
+            attribute.pop("cause_zh", None)
+            attribute.pop("description_zh", None)
+            attribute.pop("suggestion_zh", None)
+
+    with open(path, 'w', encoding='utf-8') as file:
+        json.dump(config, file, ensure_ascii=False, indent=4)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Replace import paths recursively.")
     parser.add_argument("--path", required=True)
@@ -98,6 +114,7 @@ if __name__ == "__main__":
     replace_keywords(manifest_path, {f"{args.old}/": f"{args.new}/"}, [["include", "aicore-error-code-config-zh"]])
 
     kg_config_path = os.path.join(args.path, args.old, "configuration", "kg-config.json")
+    remove_chinese_config(kg_config_path)
     kg_config_replacements = {
         "_Ascend": "",
         "_HW": "",

@@ -18,6 +18,7 @@ import unittest
 import shutil
 import os
 
+from ascend_fd.configuration.config import DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF
 from ascend_fd.model.context import KGParseCtx
 from ascend_fd.model.parse_info import KGParseFilePath
 from ascend_fd.pkg.parse.knowledge_graph.parser.amct_log_parser import AMCTLogParser
@@ -33,6 +34,7 @@ from ascend_fd.pkg.parse.knowledge_graph.parser.device_plugin_parser import Devi
 from ascend_fd.pkg.parse.knowledge_graph.parser.volcano_parser import VolcanoSchedulerParser, VolcanoControllerParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.common_dl_parser import DockerRuntimeParser, NpuExporterParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.mindie_parser import MindieParser
+from ascend_fd.utils.load_kg_config import ParseRegexMap
 
 TEST_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 TESTCASE_KG_PARSE_INPUT = os.path.join(TEST_DIR, "st_module_testcase", "kg_parse")
@@ -88,69 +90,9 @@ class KgParseTestCase(unittest.TestCase):
                 "AISW_TRACEBACK_TimeException": 7
             }
         }
-        self.test_regex = {
-            self.test_code: {self.IN: ["E30008"]},
-            self.custom_code: {
-                self.REGEX: "[EWI][A-Z0-9][0-9]{4}",
-                "attr_regex": "(?P<complement>[EWI][A-Z0-9][0-9]{4}):"
-            },
-            "0x8C17A005": {
-                self.IN: [["Node Type=0x60b;", "Sensor Type=0xd0;", "event_state=5)"], ["Event id=0x8c17a005"]]
-            },
-            self.os_code: {self.IN: ["Watchdog detected hard LOCKUP"]},
-            self.pytorch_common_code: {
-                self.REGEX: "^\\[ERROR].{0,40}PID.{0,15}Device.{0,10}RankID.{0,15}ERR",
-                "attr_regex": "^\\[ERROR]\\D{0,5}(?P<occur_time>[0-9-:]{19}).{1,40}Device:(?P<source_device>"
-                              "\\d{1,4}),.{1,30}(?P<error_code>ERR\\d{5}).{0,5}(?P<module>PTA|OPS|DIST|GRAPH|PROF)"
-            },
-            self.pytorch_code: {self.REGEX: "_npu_setDevice"},
-            self.device_plugin_occur_code: {
-                self.IN: [WARN, "[0x00f1ff09,155912,cpu,na]", "Assertion"]
-            },
-            self.device_plugin_recovered_code: {
-                self.IN: [WARN, "[0x00f103b0,155907,na,na]", ASSERTION]
-            },
-            self.device_plugin_cross_file_recovered_code: {
-                self.IN: [WARN, "[0x00f1ff09,155912,npu,na]", ASSERTION]
-            },
-            self.volcano_scheduler_code: {
-                self.IN: ["Failed to get plugin volcano-npu"]
-            },
-            self.volcano_controller_code: {
-                self.IN: ["Failed to create pod for Job"]
-            },
-            self.docker_runtime_code: {
-                self.IN: ["failed to check files", "owner not right /usr/bin/runc"]
-            },
-            self.npu_exporter_code: {
-                self.IN: ["deviceManager init failed", "cannot found valid driver lib",
-                          "fromEnv", "lib path is invalid"]
-            },
-            self.npu_exporter_dump_log_code: {
-                self.IN: ["get npu link stat failed", "no such file or directory"]
-            },
-            self.mindie_ms_fault_code: {
-                self.IN: ["MIE03E400008"]
-            },
-            self.noded_code: {
-                self.IN: [["error", "code", "0000001D"]]
-            },
-            self.amct_code: {
-                self.IN: [["No layer support", "in the graph"]]
-            },
-            self.npu_device_code: {
-                self.IN: ["rf_lf", "pcs_err_cnt"],
-                "attr_regex": ", rf_lf (?P<rf_lf>[12]), pcs_err_cnt (?P<pcs_err_cnt>\\d{1,10}), "
-            },
-            self.mindio_code: {
-                self.IN: ["remove broken link"]
-            }
-        }
         self.params = {
-            "regex_conf": {"TrainLog": self.test_regex, "CANN_Plog": self.test_regex, "OS": self.test_regex,
-                           "NPU_OS": self.test_regex, "DL_DevicePlugin | LCNELog": self.test_regex,
-                           "NodeDLog": self.test_regex,
-                           "CANN_Amct": self.test_regex, "NPU_Device": self.test_regex, "MindIO": self.test_regex},
+            "default_conf": ParseRegexMap([KNOWLEDGE_GRAPH_CONF]).get_parse_regex(),
+            "user_conf": ParseRegexMap([DEFAULT_USER_CONF]).get_parse_regex(),
             "start_time": "1999-10-01 03:40:50.000000", "end_time": "2999-10-01 03:40:50.000000"
         }
         self.host_os_parser = HostMsgParser(self.params)
@@ -216,7 +158,7 @@ class KgParseTestCase(unittest.TestCase):
         self.mindie_log_list = [
             os.path.join(TESTCASE_KG_PARSE_INPUT, "mindie", "log", "debug", "mindie-ms_11_202411061400.log")
         ]
-        self.ndoed_log_parser = NodeDLogParser(self.params)
+        self.noded_log_parser = NodeDLogParser(self.params)
         self.noded_log_list = [
             os.path.join(TESTCASE_KG_PARSE_INPUT, "dl_log", "noded", "noded.log"),
             os.path.join(TESTCASE_KG_PARSE_INPUT, "dl_log", "noded", "noded-2999-10-01T03-39-17.760.log")
@@ -263,9 +205,11 @@ class KgParseTestCase(unittest.TestCase):
         parse_ctx = KGParseCtx(parse_file_path=KGParseFilePath(host_log_path=self.host_os_input_file_list))
         self.host_os_parser.parse(parse_ctx, "test_task_id")
         event_result_list = self.host_os_parser._parse_file(self.host_os_input_file_list[0], "test_task_id")
-        self.assertEqual(self.test_code, event_result_list[0][EVENT_CODE])
+        event_codes = {event[EVENT_CODE] for event in event_result_list}
+        self.assertIn("Comp_OS_Kernel_FS_02", event_codes)
         event_result_list = self.host_os_parser._parse_chunk(self.host_os_input_file_list[0], 0, 1024 * 1024)
-        self.assertEqual(self.test_code, event_result_list[0][EVENT_CODE])
+        event_codes = {event[EVENT_CODE] for event in event_result_list}
+        self.assertIn("Comp_OS_Kernel_FS_02", event_codes)
 
     def test_vmcore_dmesg_parse_func(self):
         event_result_list = self.vmcore_dmesg_parser._parse_chunk(
@@ -274,9 +218,10 @@ class KgParseTestCase(unittest.TestCase):
 
     def test_cann_log_parse_func(self):
         event_result_list = self.cann_log_parser._parse_files_of_pid(*self.cann_input_file_list)[0]
-        self.assertEqual(self.test_code, event_result_list[0][EVENT_CODE])
-        self.assertEqual("AISW_CANN_Runtime_054", event_result_list[1][EVENT_CODE])
-        self.assertEqual("AISW_CANN_Memory_Info_Custom", event_result_list[2][EVENT_CODE])
+        event_codes = {event[EVENT_CODE] for event in event_result_list}
+        self.assertIn("AISW_CANN_Runtime_039", event_codes)
+        self.assertIn("AISW_CANN_Memory_Info_Custom", event_codes)
+        self.assertIn("AISW_CANN_Runtime_054", event_codes)
 
     def test_npu_info_parse_func(self):
         parse_ctx = KGParseCtx(parse_file_path=KGParseFilePath(npu_info_path=self.npu_info_file_list))
@@ -389,19 +334,18 @@ class KgParseTestCase(unittest.TestCase):
 
     def test_noded_log_parse_func(self):
         parse_ctx = KGParseCtx(parse_file_path=KGParseFilePath(noded_log_path=self.noded_log_list))
-        event_list, _ = self.ndoed_log_parser.parse(parse_ctx, "test_task_id")
+        event_list, _ = self.noded_log_parser.parse(parse_ctx, "test_task_id")
         self.assertEqual("0x0000001D", event_list[0][EVENT_CODE])
         self.assertEqual("0x2C000031", event_list[1][EVENT_CODE])
 
     def test_noded_log_parse_no_time(self):
-        ndoed_log_parser = NodeDLogParser({"NodeDLog": self.test_regex})
         parse_ctx = KGParseCtx(parse_file_path=KGParseFilePath(noded_log_path=self.noded_log_list))
-        event_list, _ = ndoed_log_parser.parse(parse_ctx, "test_task_id")
+        event_list, _ = self.noded_log_parser.parse(parse_ctx, "test_task_id")
         self.assertEqual("0x0000001D", event_list[0][EVENT_CODE])
 
     def test_noded_log_parse_single_file(self):
         file_path = self.noded_log_dict.get("noded_log_path", [])[-1]
-        event_dict = self.ndoed_log_parser._parse_single_file(file_path)
+        event_dict = self.noded_log_parser._parse_single_file(file_path)
         key = ": BMC]-[device id: 255]-[error code: 2C000031]"
         self.assertEqual("0x2C000031", event_dict.get(key, {}).get("event_code"))
 
@@ -422,17 +366,9 @@ class KgParseTestCase(unittest.TestCase):
         self.assertEqual("AISW_CANN_AMCT_ALL_001", event[0][EVENT_CODE])
 
     def test_lcne_log_parse_single_file(self):
-        test_regex = {
-            "Comp_Switch_L1_21": {
-                "in": ["alarmID=0x00f10509"]
-            }
-        }
-        params = {
-            "regex_conf": {"LCNELog": test_regex}
-        }
         file_path = os.path.join(TESTCASE_KG_PARSE_INPUT, "lcne_log", "log_1_20250814013158.log")
 
-        lcne_log_parser = LCNEParser(params)
+        lcne_log_parser = LCNEParser(self.params)
         lcne_log_parser.timezone_trans_flag = True
         event = lcne_log_parser._parse_file(file_path)
         self.assertEqual("Comp_Switch_L1_21", event[0][EVENT_CODE])

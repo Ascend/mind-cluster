@@ -20,7 +20,7 @@ from ascend_fd.pkg.parse.knowledge_graph.parser.file_parser import FileParser, E
 from ascend_fd.pkg.customize.custom_entity.valid import source_check
 from ascend_fd.utils.load_kg_config import ParseRegexMap
 from ascend_fd.utils.tool import MultiProcessJob, PatternSingleOrMultiLineMatcher, validate_type, init_sdk_task
-from ascend_fd.configuration.config import DEFAULT_USER_CONF
+from ascend_fd.configuration.config import DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF
 from ascend_fd.utils.load_kg_config import Schema, EntityAttribute
 from ascend_fd.utils.status import ParamError
 
@@ -128,7 +128,10 @@ def format_output(fault_map: dict):
 class LogItemParser(FileParser):
 
     def __init__(self, item_type: str, log_lines: list):
-        self.params = {"regex_conf": ParseRegexMap([DEFAULT_USER_CONF]).get_parse_regex()}
+        self.params = {
+            "default_conf": ParseRegexMap([KNOWLEDGE_GRAPH_CONF]).get_parse_regex(),
+            "user_conf": ParseRegexMap([DEFAULT_USER_CONF]).get_parse_regex()
+        }
         self.SOURCE_FILE = item_type
         super().__init__(self.params)
         self.log_lines = log_lines
@@ -159,7 +162,7 @@ class ParseDataPacker:
         self.server = server
         self.device = device
         self.data = []
-        self.schema = Schema([DEFAULT_USER_CONF])
+        self.schema = Schema([DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF])
 
     @staticmethod
     def _filter_parameters(items: list):

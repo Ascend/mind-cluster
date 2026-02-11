@@ -23,7 +23,7 @@ from ascend_fd.pkg.diag.knowledge_graph.kg_engine.model.package_data import Pack
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.model.response import Response
 from ascend_fd.utils.tool import safe_write_open, get_version, get_build_time, merge_occurrence, \
     safe_generate_or_merge_json_file
-from ascend_fd.configuration.config import DEFAULT_USER_CONF
+from ascend_fd.configuration.config import DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF
 from ascend_fd.utils.i18n import LANG
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
@@ -152,7 +152,8 @@ class DataDescriptor:
         package_data.load_events(self.data)
         if not package_data.event_map:
             return resp
-        schema = Schema([DEFAULT_USER_CONF]) if parse_conf is None else Schema(sdk_config_repo=parse_conf)
+        schema = Schema([DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF]) if parse_conf is None \
+            else Schema([DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF], sdk_config_repo=parse_conf)
         graph = GraphBuilder(schema, package_data).build_graph()
         return resp.get_information(graph)
 

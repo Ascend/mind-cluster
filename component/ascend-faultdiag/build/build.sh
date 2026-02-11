@@ -104,14 +104,10 @@ function train_res_model() {
 function compile_build() {
     log_info "Begin to build ascend_faultdiag package"
     cd ${SRC_PATH}
-    local lib_path="${ROOT_PATH}/src/ascend_fd/lib"
-    echo "Downloading Fault Diagnosis library..."
     if [[ "$(uname -m)" == "x86_64" ]]; then
       PLAT_FORM="linux_x86_64"
-      mkdir -p "$lib_path" && wget -O "${lib_path}/libfaultdiag.so" https://mindcluster.obs.cn-north-4.myhuaweicloud.com/ascend-repo/libfaultdiag_x86_64.so --no-check-certificate
     else
       PLAT_FORM="linux_aarch64"
-      mkdir -p "$lib_path" && wget -O "${lib_path}/libfaultdiag.so" https://mindcluster.obs.cn-north-4.myhuaweicloud.com/ascend-repo/libfaultdiag_aarch64.so --no-check-certificate
     fi
     chmod 640 ${ROOT_PATH}/src/ascend_fd/configuration/*.json
     python3 ./setup_linux.py --mode zh --version $BUILD_VERSION bdist_wheel --plat-name $PLAT_FORM
@@ -125,7 +121,7 @@ function compile_build() {
     python3 ./setup_linux.py --mode en --version $BUILD_VERSION bdist_wheel --plat-name $PLAT_FORM
     check_result "build alan_faultdiag package"
     log_info "Begin to mv alan_faultdiag.whl to ${OUTPUT_PATH}"
-    cp -rf "${SRC_PATH}"/dist/alan_faultdiag*.whl "${OUTPUT_PATH}"
+    cp -r "${SRC_PATH}"/dist/alan_faultdiag*.whl "${OUTPUT_PATH}"
 }
 
 function diag_tool_build() {
