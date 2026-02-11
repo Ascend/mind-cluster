@@ -125,13 +125,13 @@ function compile_build() {
 }
 
 function diag_tool_build() {
-  log_info "Begin to build mindcluster_diag_tool package"
+  log_info "Begin to build ascend_faultdiag_toolkit package"
   mkdir -p "${ROOT_PATH}/build_diag_tool"
   cd "${ROOT_PATH}/build_diag_tool"
-  python3 "${ROOT_PATH}/setup.py" bdist_wheel
-  cp -r "${ROOT_PATH}"/build_diag_tool/dist/mindcluster_diag_tool*.whl "${OUTPUT_PATH}"
+  python3 "${ROOT_PATH}/toolkit_src/setup.py" --version $BUILD_VERSION bdist_wheel
+  cp -r "${ROOT_PATH}"/build_diag_tool/dist/ascend_faultdiag_toolkit*.whl "${OUTPUT_PATH}"
   rm -rf "${ROOT_PATH}/build_diag_tool"
-  log_info "Success to build mindcluster_diag_tool package"
+  log_info "Success to build ascend_faultdiag_toolkit package"
 }
 
 function main() {
