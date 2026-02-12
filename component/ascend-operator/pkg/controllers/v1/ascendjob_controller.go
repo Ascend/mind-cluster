@@ -147,6 +147,10 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	if err := r.validateJob(ascendjob); err != nil {
 		hwlog.RunLog.Errorf("Job<%s> failed validation, err: %v", req.NamespacedName, err)
+		if err := util.UpdateJobConditions(&ascendjob.Status, commonv1.JobFailed, jobValidFailedReason,
+			fmt.Sprintf("%s: %s", err.reason, err.message)); err != nil {
+			return ctrl.Result{}, err
+		}
 		return ctrl.Result{}, r.UpdateJobStatusInApiServer(ascendjob, &ascendjob.Status)
 	}
 

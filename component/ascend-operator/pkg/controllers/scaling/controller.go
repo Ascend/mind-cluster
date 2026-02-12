@@ -56,12 +56,12 @@ func (c *Controller) ValidJob(job *apiv1.AscendJob) error {
 
 	_, ok = job.Labels[groupNameKey]
 	if !ok {
-		return fmt.Errorf("job %s has no group name", job.Name)
+		return fmt.Errorf("job %s has no group name, please set label of %s=<the group of job>", job.Name, groupNameKey)
 	}
 
 	_, ok = job.Labels[jobGroupNameKey]
 	if !ok {
-		return fmt.Errorf("job %s has no jobID", job.Name)
+		return fmt.Errorf("job %s has no jobID, please set label of %s=<the jobID of job>", job.Name, jobGroupNameKey)
 	}
 	return nil
 }

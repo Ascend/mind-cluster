@@ -136,7 +136,8 @@ func GetJobFramework(job *AscendJob) (string, error) {
 	}
 	frame, ok := job.Labels[FrameworkKey]
 	if !ok {
-		return "", fmt.Errorf("framework label is not set")
+		return "", fmt.Errorf("framework label is not set, " +
+			"please set label framework as one of <pytorch,mindspore,tensorflow>")
 	}
 	frames := DefaultFrames()
 	if _, exist := frames[frame]; !exist {

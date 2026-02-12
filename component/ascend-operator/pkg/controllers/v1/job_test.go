@@ -426,7 +426,8 @@ func TestIsPodGroupSyncedFalseScene(t *testing.T) {
 	convey.Convey("isPodGroupSynced", t, func() {
 		rc := newCommonReconciler()
 		ji := &jobInfo{
-			job: newCommonAscendJob(),
+			job:    newCommonAscendJob(),
+			status: &commonv1.JobStatus{},
 		}
 		convey.Convey("01-sync pod group failed, should return false", func() {
 			patch1 := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "newPodGroupSpec", func(_ *ASJobReconciler,

@@ -66,7 +66,7 @@ func TestReconcilePods(t *testing.T) {
 		})
 		convey.Convey("03-get job framework failed should return err", func() {
 			err := rc.ReconcilePods(job, jobStatus, pods, rtype, spec, replicas)
-			convey.So(err, convey.ShouldResemble, errors.New("framework label is not set"))
+			convey.So(err, convey.ShouldResemble, errors.New("framework label is not set, please set label framework as one of <pytorch,mindspore,tensorflow>"))
 		})
 	})
 }
@@ -219,7 +219,7 @@ func TestReconcilePodNeedCreateOrDelete(t *testing.T) {
 			})
 			defer patch.Reset()
 			err := rc.reconcilePods(si, pods, jobStatus, replicas)
-			convey.So(err, convey.ShouldResemble, errors.New("failed to create pods: [create pod failed]"))
+			convey.So(err, convey.ShouldResemble, errors.New("failed to create pods of type<>: create pod failed"))
 		})
 		convey.Convey("03-need delete pod and return nil", func() {
 			patch1 := gomonkey.ApplyMethod(new(ASJobReconciler), "GetPodSlices", func(_ *ASJobReconciler,

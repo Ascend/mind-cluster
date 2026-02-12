@@ -248,7 +248,7 @@ func TestGetRestartCondition(t *testing.T) {
 		conditions := make([]commonv1.JobCondition, 0, 2)
 		convey.Convey("01-nil conditions will return nil", func() {
 			res := getRestartCondition(nil)
-			convey.ShouldBeNil(res)
+			convey.So(res, convey.ShouldBeNil)
 		})
 		convey.Convey("02-conditions without restart condition will return nil", func() {
 			conditions = append(conditions, commonv1.JobCondition{

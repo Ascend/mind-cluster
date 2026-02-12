@@ -97,6 +97,7 @@ func (r *ASJobReconciler) newPodInfo(job *mindxdlv1.AscendJob, rtype commonv1.Re
 	frame string) (*podInfo, error) {
 	svcIp, svcPort, err := r.getMngSvcIpAndPort(job, frame, rtype)
 	if err != nil {
+		commonutil.UpdateJobConditions(&job.Status, commonv1.JobCreated, syncServiceFailedReason, err.Error())
 		return nil, err
 	}
 
@@ -144,8 +145,12 @@ func (r *ASJobReconciler) reconcilePods(pi *podInfo, pods []*corev1.Pod, jobStat
 			}
 		}
 	}
+	if err := r.createPods(podToCreate, replicas); err != nil {
+		commonutil.UpdateJobConditions(jobStatus, commonv1.JobCreated, podCreateFailedReason, err.Error())
+		return err
+	}
 
-	return r.createPods(podToCreate, replicas)
+	return nil
 }
 
 func (r *ASJobReconciler) updateRandIndex(allocatedPods []*corev1.Pod) {
@@ -442,7 +447,7 @@ func (r *ASJobReconciler) createPods(pods []*podInfo, replicas map[commonv1.Repl
 	wg.Wait()
 	hwlog.RunLog.Infof("create job all pods use time (%v)", time.Since(start))
 	if len(createErr) > 0 {
-		return fmt.Errorf("failed to create pods: %v", createErr)
+		return fmt.Errorf("failed to create pods of type<%s>: %v", pods[0].rtype, createErr[0])
 	}
 	return nil
 }
@@ -582,9 +587,7 @@ func (r *ASJobReconciler) createNewPod(pi *podInfo, replicas map[commonv1.Replic
 		// pod when the expectation expires.
 		return nil
 	} else if err != nil {
-		// Decrement the expected number of creates because the informer won't observe this pod
-		hwlog.RunLog.Debugf("Failed creation, decrementing expectations for Job %s/%s",
-			job.Namespace, job.Name)
+		hwlog.RunLog.Warnf("Failed create pod<%s/%s>, err: %v", job.Namespace, podTemplate.Name, err)
 		return err
 	}
 	hwlog.RunLog.Infof("create pod: %s/%s success", job.Namespace, podTemplate.Name)

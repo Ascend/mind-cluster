@@ -25,7 +25,7 @@ import (
 func (r *ASJobReconciler) validateJob(job *mindxdlv1.AscendJob) *validateError {
 	if r == nil {
 		return &validateError{
-			reason:  "ArgumentError",
+			reason:  argumentErrorReason,
 			message: "nil pointer",
 		}
 	}
@@ -39,7 +39,7 @@ func (r *ASJobReconciler) validateJob(job *mindxdlv1.AscendJob) *validateError {
 
 	if scaleError := r.scaler.ValidJob(job); scaleError != nil {
 		err = &validateError{
-			reason:  "invalid scaling config",
+			reason:  invalidScalingConfigReason,
 			message: scaleError.Error(),
 		}
 		return err
@@ -48,7 +48,7 @@ func (r *ASJobReconciler) validateJob(job *mindxdlv1.AscendJob) *validateError {
 	// 910a5 branch check the scaleout-type label
 	if scaleOutTypeError := utils.CheckAcJobScaleOutTypeLabel(job); scaleOutTypeError != nil {
 		return &validateError{
-			reason:  "invalid label config",
+			reason:  invalidScaleOutConfigReason,
 			message: scaleOutTypeError.Error(),
 		}
 	}
@@ -64,8 +64,8 @@ func (r *ASJobReconciler) validateJob(job *mindxdlv1.AscendJob) *validateError {
 func (r *ASJobReconciler) validateBasicInfo(job *mindxdlv1.AscendJob) *validateError {
 	if job.Spec.ReplicaSpecs == nil {
 		return &validateError{
-			reason:  "SpecsError",
-			message: "job spec is not valid",
+			reason:  invalidSpecsReason,
+			message: "replicaSpecs is not set, please modify your job",
 		}
 	}
 
@@ -73,7 +73,7 @@ func (r *ASJobReconciler) validateBasicInfo(job *mindxdlv1.AscendJob) *validateE
 		*job.Spec.SuccessPolicy != mindxdlv1.SuccessPolicyDefault &&
 		*job.Spec.SuccessPolicy != mindxdlv1.SuccessPolicyAllWorkers {
 		return &validateError{
-			reason:  "SuccessPolicyError",
+			reason:  invalidSuccessPolicyReason,
 			message: `job success policy is invalid, it must be one of <"", AllWorkers>`,
 		}
 	}
@@ -82,8 +82,8 @@ func (r *ASJobReconciler) validateBasicInfo(job *mindxdlv1.AscendJob) *validateE
 		queueName := job.Spec.RunPolicy.SchedulingPolicy.Queue
 		if _, err := r.getQueueFromApiserver(queueName); err != nil {
 			return &validateError{
-				reason:  "QueueGetFailed",
-				message: err.Error(),
+				reason:  invalidQueueReason,
+				message: fmt.Sprintf("check queue<%s> failed, err: %v, maybe it is not create", queueName, err),
 			}
 		}
 	}
@@ -100,7 +100,7 @@ func (r *ASJobReconciler) validateSpec(job *mindxdlv1.AscendJob,
 	frame, err := mindxdlv1.GetJobFramework(job)
 	if err != nil {
 		return &validateError{
-			reason:  "FrameworkLabelError",
+			reason:  invalidFrameworkReason,
 			message: err.Error(),
 		}
 	}
@@ -112,29 +112,29 @@ func (r *ASJobReconciler) validateSpec(job *mindxdlv1.AscendJob,
 func validContainerNum(rType commonv1.ReplicaType, spec *commonv1.ReplicaSpec) *validateError {
 	if spec == nil || len(spec.Template.Spec.Containers) == 0 {
 		return &validateError{
-			reason:  "ReplicaTypeError",
-			message: fmt.Sprintf("jobSpec is not valid: containers definition expected in %v", rType),
+			reason:  invalidReplicaSpecReason,
+			message: fmt.Sprintf("%s replicaSpec is not valid: containers is undefined", rType),
 		}
 	}
 	return nil
 }
 
-func validateReplicas(spec *commonv1.ReplicaSpec) *validateError {
+func validateReplicas(rtype commonv1.ReplicaType, spec *commonv1.ReplicaSpec) *validateError {
 	if spec.Replicas == nil {
 		return nil
 	}
 	if *spec.Replicas < 0 {
 		return &validateError{
-			reason: "ReplicaTypeError",
-			message: fmt.Sprintf("jobSpec is not valid: replicas can not be negative num, but got %d",
-				*spec.Replicas),
+			reason: invalidReplicaSpecReason,
+			message: fmt.Sprintf("%s replicaSpec is not valid: replicas can not be negative num, but got %d",
+				rtype, *spec.Replicas),
 		}
 	}
 	if *spec.Replicas > maxReplicas {
 		return &validateError{
-			reason: "ReplicaTypeError",
-			message: fmt.Sprintf("jobSpec is not valid: replicas can not be larger than %d, but got %d",
-				maxReplicas, *spec.Replicas),
+			reason: invalidReplicaSpecReason,
+			message: fmt.Sprintf("%s replicaSpec is not valid: replicas can not be larger than %d, but got %d",
+				rtype, maxReplicas, *spec.Replicas),
 		}
 	}
 	return nil
@@ -143,21 +143,22 @@ func validateReplicas(spec *commonv1.ReplicaSpec) *validateError {
 func checkReplicaSpecs(frame string, specs map[commonv1.ReplicaType]*commonv1.ReplicaSpec) *validateError {
 	hasLeader := false
 	for rType, value := range specs {
+		if ve := validateReplicaType(frame, rType); ve != nil {
+			return ve
+		}
+
 		if value == nil {
 			return &validateError{
-				reason:  "ReplicaTypeError",
-				message: "jobSpec is not valid: nil",
+				reason:  invalidReplicaSpecReason,
+				message: fmt.Sprintf("%s replicaSpec is not set, please modify your job", rType),
 			}
 		}
-		if ve := validateReplicas(value); ve != nil {
+
+		if ve := validateReplicas(rType, value); ve != nil {
 			return ve
 		}
 
 		if ve := validContainerNum(rType, value); ve != nil {
-			return ve
-		}
-
-		if ve := validateReplicaType(frame, rType); ve != nil {
 			return ve
 		}
 
@@ -176,15 +177,15 @@ func checkReplicaSpecs(frame string, specs map[commonv1.ReplicaType]*commonv1.Re
 	if !hasLeader {
 		if frame != mindxdlv1.MindSporeFrameworkName {
 			return &validateError{
-				reason:  "ReplicaTypeError",
-				message: fmt.Sprintf("ReplicaType is not valid: there need 1 leader replica-type"),
+				reason: invalidReplicaTypeReason,
+				message: "replicaType is not valid: there need 1 leader replicaType, Master for pytorch," +
+					" Chief of tensorflow",
 			}
 		}
 		if jobTotalRequest(specs) > 1 {
 			return &validateError{
-				reason: "ReplicaTypeError",
-				message: fmt.Sprintf("replicaType is not valid: schdeuler not found, " +
-					"but need 1 while req npu more than 1"),
+				reason:  invalidReplicaSpecReason,
+				message: "replicaSpec is not valid: when scheduler not found, the req num must be 1",
 			}
 		}
 	}
@@ -195,16 +196,17 @@ func checkReplicaSpecs(frame string, specs map[commonv1.ReplicaType]*commonv1.Re
 func validateContainer(rType commonv1.ReplicaType, spec *commonv1.ReplicaSpec) *validateError {
 	hasDefaultContainer := false
 	for _, container := range spec.Template.Spec.Containers {
-		if container.Image == "" {
-			return &validateError{
-				reason: "ContainerError",
-				message: fmt.Sprintf("replicaType is not valid: Image is undefined in the container of %v",
-					rType),
-			}
-		}
 		if container.Name != api.DefaultContainerName {
 			continue
 		}
+		if container.Image == "" {
+			return &validateError{
+				reason: invalidContainerReason,
+				message: fmt.Sprintf("%s replicaSpec is not valid: Image is undefined in the container of %s",
+					rType, api.DefaultContainerName),
+			}
+		}
+
 		hasDefaultContainer = true
 	}
 
@@ -213,9 +215,9 @@ func validateContainer(rType commonv1.ReplicaType, spec *commonv1.ReplicaSpec) *
 	}
 
 	return &validateError{
-		reason: "ContainerError",
-		message: fmt.Sprintf("replicaType is not valid: There is no container named %s in %v",
-			api.DefaultContainerName, rType),
+		reason: invalidContainerReason,
+		message: fmt.Sprintf("%s replicaSpec is not valid: There is no container named %s",
+			rType, api.DefaultContainerName),
 	}
 }
 
@@ -250,7 +252,7 @@ func validateReplicaType(frame string, rType commonv1.ReplicaType) *validateErro
 	}
 
 	return &validateError{
-		reason:  "ReplicaTypeError",
+		reason:  invalidReplicaTypeReason,
 		message: fmt.Sprintf("replicaType is %v but must be one of %v", rType, replicaTypes),
 	}
 }
@@ -258,8 +260,8 @@ func validateReplicaType(frame string, rType commonv1.ReplicaType) *validateErro
 func validateLeader(rtype commonv1.ReplicaType, spec *commonv1.ReplicaSpec) *validateError {
 	if spec.Replicas != nil && *spec.Replicas != 1 {
 		return &validateError{
-			reason:  "ReplicaTypeError",
-			message: fmt.Sprintf("replicaType<%v> replicas is invalid, it must be only 1", rtype),
+			reason:  invalidReplicaSpecReason,
+			message: fmt.Sprintf("%s replicaSpec is not valid, the replicas must be only 1", rtype),
 		}
 	}
 	return nil

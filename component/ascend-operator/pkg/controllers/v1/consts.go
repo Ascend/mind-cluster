@@ -140,3 +140,25 @@ const (
 	deployApiversion = "apps/v1"
 	acJobApiversion  = "mindxdl.gitee.com/v1"
 )
+
+const (
+	argumentErrorReason         = "ArgumentError"
+	invalidScalingConfigReason  = "InvalidScalingConfig"
+	invalidScaleOutConfigReason = "InvalidScaleOutConfig"
+	invalidSpecsReason          = "InvalidSpecs"
+	invalidReplicaTypeReason    = "InvalidReplicaType"
+	invalidSuccessPolicyReason  = "InvalidSuccessPolicy"
+	invalidQueueReason          = "InvalidQueue"
+	invalidFrameworkReason      = "InvalidFramework"
+	invalidReplicaSpecReason    = "InvalidReplicaSpec"
+	invalidContainerReason      = "InvalidContainer"
+)
+
+const (
+	jobValidFailedReason         = "JobValidFailed"
+	syncPodGroupFailedReason     = "SyncPodGroupFailed"
+	podGroupNotInitializedReason = "PodGroupNotInitialized"
+	podGroupPendingReason        = "PodGroupPending"
+	syncServiceFailedReason      = "SyncServiceFailed"
+	podCreateFailedReason        = "PodCreateFailed"
+)

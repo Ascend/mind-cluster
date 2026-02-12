@@ -67,7 +67,7 @@ func TestValidateReplicas(t *testing.T) {
 			spec := &commonv1.ReplicaSpec{
 				Replicas: nil,
 			}
-			err := validateReplicas(spec)
+			err := validateReplicas(mindxdlv1.ReplicaTypeWorker, spec)
 			convey.So(err, convey.ShouldBeNil)
 		})
 
@@ -77,11 +77,11 @@ func TestValidateReplicas(t *testing.T) {
 				Replicas: &replica,
 			}
 			expectedErr := &validateError{
-				reason:  "ReplicaTypeError",
-				message: "jobSpec is not valid: replicas can not be negative num, but got -1",
+				reason:  invalidReplicaSpecReason,
+				message: "Worker replicaSpec is not valid: replicas can not be negative num, but got -1",
 			}
 
-			err := validateReplicas(spec)
+			err := validateReplicas(mindxdlv1.ReplicaTypeWorker, spec)
 			convey.So(err, convey.ShouldResemble, expectedErr)
 		})
 
@@ -91,11 +91,11 @@ func TestValidateReplicas(t *testing.T) {
 				Replicas: &replica,
 			}
 			expectedErr := &validateError{
-				reason:  "ReplicaTypeError",
-				message: "jobSpec is not valid: replicas can not be larger than 20000, but got 20001",
+				reason:  invalidReplicaSpecReason,
+				message: "Worker replicaSpec is not valid: replicas can not be larger than 20000, but got 20001",
 			}
 
-			err := validateReplicas(spec)
+			err := validateReplicas(mindxdlv1.ReplicaTypeWorker, spec)
 			convey.So(err, convey.ShouldResemble, expectedErr)
 		})
 
@@ -104,7 +104,7 @@ func TestValidateReplicas(t *testing.T) {
 			spec := &commonv1.ReplicaSpec{
 				Replicas: &replica,
 			}
-			err := validateReplicas(spec)
+			err := validateReplicas(mindxdlv1.ReplicaTypeWorker, spec)
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})
@@ -118,8 +118,8 @@ func TestValidateBasicInfo(t *testing.T) {
 		convey.Convey("01-job ReplicaSpecs is nil, should return err", func() {
 			err := rc.validateBasicInfo(job)
 			convey.So(err, convey.ShouldResemble, &validateError{
-				reason:  "SpecsError",
-				message: "job spec is not valid",
+				reason:  invalidSpecsReason,
+				message: "replicaSpecs is not set, please modify your job",
 			})
 		})
 		job.Spec.ReplicaSpecs = map[commonv1.ReplicaType]*commonv1.ReplicaSpec{}
@@ -128,7 +128,7 @@ func TestValidateBasicInfo(t *testing.T) {
 			job.Spec.SuccessPolicy = &fakeSuccessPolicy
 			err := rc.validateBasicInfo(job)
 			convey.So(err, convey.ShouldResemble, &validateError{
-				reason:  "SuccessPolicyError",
+				reason:  invalidSuccessPolicyReason,
 				message: `job success policy is invalid, it must be one of <"", AllWorkers>`,
 			})
 		})
@@ -145,8 +145,8 @@ func TestValidateBasicInfo(t *testing.T) {
 			defer patch.Reset()
 			err := rc.validateBasicInfo(job)
 			convey.So(err, convey.ShouldResemble, &validateError{
-				reason:  "QueueGetFailed",
-				message: "not found",
+				reason:  invalidQueueReason,
+				message: "check queue<XXX> failed, err: not found, maybe it is not create",
 			})
 		})
 		convey.Convey("04-job queue is exist, should return nil", func() {
@@ -165,15 +165,16 @@ func TestValidateSpec(t *testing.T) {
 		convey.Convey("01-job framework label is not set, should return err", func() {
 			err := rc.validateSpec(job, spec)
 			convey.So(err, convey.ShouldResemble, &validateError{
-				reason:  "FrameworkLabelError",
-				message: "framework label is not set",
+				reason: invalidFrameworkReason,
+				message: "framework label is not set, " +
+					"please set label framework as one of <pytorch,mindspore,tensorflow>",
 			})
 		})
 		convey.Convey("02-job framework label is invalid, should return err", func() {
 			job.Labels = map[string]string{mindxdlv1.FrameworkKey: "xxx"}
 			err := rc.validateSpec(job, spec)
 			convey.So(err, convey.ShouldResemble, &validateError{
-				reason:  "FrameworkLabelError",
+				reason:  invalidFrameworkReason,
 				message: "framework label<xxx> is not in map[mindspore:{} pytorch:{} tensorflow:{}]",
 			})
 		})
@@ -224,8 +225,8 @@ func TestValidContainerNum(t *testing.T) {
 		convey.Convey("01-spec is nil will return err", func() {
 			err := validContainerNum(rtype, nil)
 			convey.So(err, convey.ShouldResemble, &validateError{
-				reason:  "ReplicaTypeError",
-				message: fmt.Sprintf("jobSpec is not valid: containers definition expected in %v", rtype),
+				reason:  invalidReplicaSpecReason,
+				message: fmt.Sprintf("%s replicaSpec is not valid: containers is undefined", rtype),
 			})
 		})
 		convey.Convey("02-spec's container will return err", func() {
@@ -233,8 +234,8 @@ func TestValidContainerNum(t *testing.T) {
 			spec.Template.Spec.Containers = []corev1.Container{}
 			err := validContainerNum(rtype, spec)
 			convey.So(err, convey.ShouldResemble, &validateError{
-				reason:  "ReplicaTypeError",
-				message: fmt.Sprintf("jobSpec is not valid: containers definition expected in %v", rtype),
+				reason:  invalidReplicaSpecReason,
+				message: fmt.Sprintf("%s replicaSpec is not valid: containers is undefined", rtype),
 			})
 		})
 		convey.Convey("03-spec's container is valid will return nil", func() {
@@ -256,9 +257,8 @@ func TestCheckReplicaSpecs01(t *testing.T) {
 			specs[mindxdlv1.ReplicaTypeWorker] = spec
 			err := checkReplicaSpecs(frame, specs)
 			convey.So(err, convey.ShouldResemble, &validateError{
-				reason: "ReplicaTypeError",
-				message: fmt.Sprintf("jobSpec is not valid: containers definition expected in %v",
-					mindxdlv1.ReplicaTypeWorker),
+				reason:  invalidReplicaSpecReason,
+				message: fmt.Sprintf("%s replicaSpec is not valid: containers is undefined", mindxdlv1.ReplicaTypeWorker),
 			})
 		})
 		convey.Convey("03-spec with invalid replica type should return error", func() {
@@ -269,7 +269,7 @@ func TestCheckReplicaSpecs01(t *testing.T) {
 			specs[fakeType] = spec
 			err := checkReplicaSpecs(frame, specs)
 			convey.So(err, convey.ShouldResemble, &validateError{
-				reason: "ReplicaTypeError",
+				reason: invalidReplicaTypeReason,
 				message: fmt.Sprintf("replicaType is %v but must be one of %v", fakeType, []commonv1.ReplicaType{
 					mindxdlv1.MindSporeReplicaTypeScheduler,
 					mindxdlv1.ReplicaTypeWorker,
@@ -289,8 +289,8 @@ func TestCheckReplicaSpecs02(t *testing.T) {
 			specs[mindxdlv1.PytorchReplicaTypeMaster] = spec
 			err := checkReplicaSpecs(frame, specs)
 			convey.So(err, convey.ShouldResemble, &validateError{
-				reason:  "ReplicaTypeError",
-				message: "replicaType<Master> replicas is invalid, it must be only 1",
+				reason:  invalidReplicaSpecReason,
+				message: fmt.Sprintf("%s replicaSpec is not valid, the replicas must be only 1", mindxdlv1.PytorchReplicaTypeMaster),
 			})
 		})
 		spec.Replicas = newReplicas(1)
@@ -300,8 +300,9 @@ func TestCheckReplicaSpecs02(t *testing.T) {
 		convey.Convey("06-pytorch  without leader replicas should return error", func() {
 			err := checkReplicaSpecs(frame, specs)
 			convey.So(err, convey.ShouldResemble, &validateError{
-				reason:  "ReplicaTypeError",
-				message: fmt.Sprintf("ReplicaType is not valid: there need 1 leader replica-type"),
+				reason: invalidReplicaTypeReason,
+				message: "replicaType is not valid: there need 1 leader replicaType, Master for pytorch," +
+					" Chief of tensorflow",
 			})
 		})
 	})
@@ -331,9 +332,8 @@ func TestCheckReplicaSpecs03(t *testing.T) {
 			}
 			err := checkReplicaSpecs(frame, specs)
 			convey.So(err, convey.ShouldResemble, &validateError{
-				reason: "ReplicaTypeError",
-				message: fmt.Sprintf("replicaType is not valid: schdeuler not found, " +
-					"but need 1 while req npu more than 1"),
+				reason:  invalidReplicaSpecReason,
+				message: "replicaSpec is not valid: when scheduler not found, the req num must be 1",
 			})
 		})
 	})
@@ -349,18 +349,18 @@ func TestValidateContainer(t *testing.T) {
 			spec.Template.Spec.Containers = []corev1.Container{}
 			err := validateContainer(rtype, spec)
 			convey.So(err, convey.ShouldResemble, &validateError{
-				reason: "ContainerError",
-				message: fmt.Sprintf("replicaType is not valid: There is no container named %s in %v",
-					api.DefaultContainerName, rtype),
+				reason: invalidContainerReason,
+				message: fmt.Sprintf("%s replicaSpec is not valid: There is no container named %s",
+					rtype, api.DefaultContainerName),
 			})
 		})
 		convey.Convey("02-container without setting image should return nil", func() {
 			spec.Template.Spec.Containers[0] = container
 			err := validateContainer(rtype, spec)
 			convey.So(err, convey.ShouldResemble, &validateError{
-				reason: "ContainerError",
-				message: fmt.Sprintf("replicaType is not valid: Image is undefined in the container of %v",
-					rtype),
+				reason: invalidContainerReason,
+				message: fmt.Sprintf("%s replicaSpec is not valid: There is no container named %s",
+					rtype, api.DefaultContainerName),
 			})
 		})
 		convey.Convey("03-spec without ascend container should return nil", func() {
@@ -368,9 +368,9 @@ func TestValidateContainer(t *testing.T) {
 			spec.Template.Spec.Containers[0] = container
 			err := validateContainer(rtype, spec)
 			convey.So(err, convey.ShouldResemble, &validateError{
-				reason: "ContainerError",
-				message: fmt.Sprintf("replicaType is not valid: There is no container named %s in %v",
-					api.DefaultContainerName, rtype),
+				reason: invalidContainerReason,
+				message: fmt.Sprintf("%s replicaSpec is not valid: There is no container named %s",
+					rtype, api.DefaultContainerName),
 			})
 		})
 	})
@@ -453,8 +453,8 @@ func TestValidateLeader(t *testing.T) {
 			spec.Replicas = newReplicas(mockReplicas)
 			res := validateLeader(rtype, spec)
 			convey.So(res, convey.ShouldResemble, &validateError{
-				reason:  "ReplicaTypeError",
-				message: fmt.Sprintf("replicaType<%v> replicas is invalid, it must be only 1", rtype),
+				reason:  invalidReplicaSpecReason,
+				message: fmt.Sprintf("%s replicaSpec is not valid, the replicas must be only 1", rtype),
 			})
 		})
 	})

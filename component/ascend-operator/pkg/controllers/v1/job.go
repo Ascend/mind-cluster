@@ -56,7 +56,7 @@ func (r *ASJobReconciler) reconcileJob(ji *jobInfo) error {
 	oldStatus := ji.status.DeepCopy()
 	var err error
 	defer func() {
-		if err == nil && !reflect.DeepEqual(*oldStatus, ji.status) {
+		if err == nil && !reflect.DeepEqual(oldStatus, ji.status) {
 			err = r.Controller.UpdateJobStatusInApiServer(ji.job, ji.status)
 		}
 	}()
@@ -305,12 +305,21 @@ func (r *ASJobReconciler) isPodGroupSynced(ji *jobInfo) bool {
 	pg, err := r.SyncPodGroup(ji.mtObj, r.newPodGroupSpec(ji))
 	if err != nil {
 		hwlog.RunLog.Warnf("Sync PodGroup %v: %v", ji.jobKey, err)
+		util.UpdateJobConditions(ji.status, commonv1.JobCreated, syncPodGroupFailedReason, err.Error())
 		return false
 	}
 
 	// Delay pods creation until podgroup status is inqueue
-	if pg == nil || pg.Status.Phase == "" || pg.Status.Phase == v1beta1.PodGroupPending {
+	if pg.Status.Phase == "" || pg.Status.Phase == v1beta1.PodGroupPending {
 		hwlog.RunLog.Warnf("PodGroup %v unschedulable", ji.jobKey)
+		if pg.Status.Phase == "" {
+			util.UpdateJobConditions(ji.status, commonv1.JobCreated, podGroupNotInitializedReason,
+				"volcano-scheduler is maybe not running, "+
+					"execute command to check the status: kubectl get pod -n volcano-system -l app=volcano-scheduler")
+		} else {
+			util.UpdateJobConditions(ji.status, commonv1.JobCreated, podGroupPendingReason,
+				"the cluster resource is not enough")
+		}
 		return false
 	}
 

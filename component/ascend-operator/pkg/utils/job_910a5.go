@@ -58,7 +58,8 @@ func CheckAcJobScaleOutTypeLabel(job *v1.AscendJob) error {
 	if IsScaleOutTypeValid(scaleOutType) {
 		return nil
 	}
-	return fmt.Errorf("the value of label %s is invalid", v1.ScaleOutTypeLabel)
+	return fmt.Errorf("the value of label %s is invalid, which should be %s or %s", v1.ScaleOutTypeLabel,
+		v1.ScaleOutTypeRoCE, v1.ScaleOutTypeUBoE)
 }
 
 // CheckAndUpdateAcJobScaleOutTypeLabel check the scaleout-type label of ascend job,

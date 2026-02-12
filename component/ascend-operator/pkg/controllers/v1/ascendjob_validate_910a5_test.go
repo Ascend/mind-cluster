@@ -25,8 +25,9 @@ func TestValidateJobForA5(t *testing.T) {
 		convey.Convey("01-valid basic info failed should return err when invalid scaleout-type label", func() {
 			job.Labels = map[string]string{mindxdlv1.ScaleOutTypeLabel: "xx"}
 			fakeErr := &validateError{
-				reason:  "invalid label config",
-				message: fmt.Sprintf("the value of label %s is invalid", mindxdlv1.ScaleOutTypeLabel),
+				reason: invalidScaleOutConfigReason,
+				message: fmt.Sprintf("the value of label %s is invalid, which should be %s or %s",
+					mindxdlv1.ScaleOutTypeLabel, mindxdlv1.ScaleOutTypeRoCE, mindxdlv1.ScaleOutTypeUBoE),
 			}
 			err := rc.validateJob(job)
 			convey.So(err, convey.ShouldResemble, fakeErr)
