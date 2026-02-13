@@ -925,6 +925,51 @@ hccl.json:
 }
 ```
 
+**Atlas 350 标卡系列产品<a name="section285395510348"></a>**
+
+hccl.json文件示例如下：
+
+```
+hccl.json:
+----
+{
+  "status": "completed", // Ascend Operator是否写入完成
+  "version": "2.0",
+  "rank_count": 1,     // 参与训练的rank个数
+  "rank_list": [       // rank信息列表
+    {
+      "rank_id": 0,    // 训练rank ID
+      "local_id": 0,   // 与拓扑文件中的ID关联
+      "device_id": 0,  // 物理ID
+      "level_list": [
+        {
+          "net_layer": 0,   // 通信层级
+          "net_instance_id": "xx.xx.xx.xx",
+          "net_type": "TOPO_FILE_DESC",     // 网络类型，值为TOPO_FILE_DESC和CLOS，TOPO_FILE_DESC代表从文件中查询网络类型，CLOS代表clos网络
+          "net_attr": "",                   // 组网层级
+          "rank_addr_list": [
+            {
+              "addr_type": "EID",           // 地址类型
+              "addr": "....",               // 地址值
+              "ports": ["x/x"],             // NPU端口列表
+              "plane_id": "1"               // 网络平面
+            },
+            ...
+            {
+              "addr_type": "EID",
+              "addr": "....",
+              "ports": ["x/x"],
+              "plane_id": "1"
+            },
+
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
 # 环境变量说明<a name="ZH-CN_TOPIC_0000002479226386"></a>
 
 **MindCluster组件使用的环境变量<a name="section1562121818463"></a>**
