@@ -131,9 +131,6 @@ cat res_xml/* | grep -v testsuites |grep -v "xml version" >> test_detail.xml
 echo '</testsuites>' >> test_detail.xml
 cp -rvf test_detail.xml ${GENERATE_DIR}/result/
 
-rm -rf /usr1/nginx/odfs/result/
-cp -r ${GENERATE_DIR}/result/ /usr1/nginx/odfs/
-
 if [ ! -e ${PROJECT_HOME}/build ]; then
     ln -s ${PROJECT_HOME}/Build/Debug ${PROJECT_HOME}/build
 fi
