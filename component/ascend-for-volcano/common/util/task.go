@@ -61,15 +61,16 @@ type VTask struct {
 
 // NPUTask for npu task need.
 type NPUTask struct {
-	Name       string
-	NameSpace  string
-	ReqNPUName string
-	ReqNPUNum  int
-	Annotation map[string]string
-	Label      map[string]string
-	NodeName   string
-	PodStatus  v1.PodPhase
-	Index      int
+	Name        string
+	NameSpace   string
+	ReqNPUName  string
+	ReqNPUNum   int
+	Annotation  map[string]string
+	Label       map[string]string
+	NodeName    string
+	PodStatus   v1.PodPhase
+	Index       int
+	TaskSpecKey api.TaskID
 	*VTask
 }
 

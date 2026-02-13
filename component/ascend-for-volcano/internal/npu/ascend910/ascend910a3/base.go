@@ -61,7 +61,7 @@ func (tp *Base910A3) JudgeNodeAndTaskNPU(taskNPU int, nodeNPUTopology []int) err
 		}
 	}
 	if fitDies < taskNPU {
-		return fmt.Errorf("top[%v] is not meet task req(%d)", nodeNPUTopology, taskNPU)
+		return fmt.Errorf("npu top[%v] is not meet task req(%d)", nodeNPUTopology, taskNPU)
 	}
 	return nil
 }

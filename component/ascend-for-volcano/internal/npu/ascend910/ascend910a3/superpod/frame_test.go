@@ -100,16 +100,17 @@ func buildTestCheckTaskNPU() []checkTestNPUCase {
 				"task1": {ReqNPUNum: 0, Annotation: map[string]string{}},
 			},
 			wantPass:   false,
-			wantErrMsg: "distributed job require npu 16, instead of 0",
+			wantErrMsg: "expected: distributed super-pod job require npu(0) should be equal to node npu(16), actual: task<> req npu: 0, ",
 		},
 		{
 			name: "03 Mixed valid and invalid tasks",
 			tasks: map[api.TaskID]util.NPUTask{
-				"task1": {ReqNPUNum: 16},
-				"task2": {ReqNPUNum: 8},
+				"task1": {ReqNPUNum: 16, TaskSpecKey: "task1"},
+				"task2": {ReqNPUNum: 8, TaskSpecKey: "task2"},
 			},
-			wantPass:   false,
-			wantErrMsg: "distributed job require npu 16, instead of 8",
+			wantPass: false,
+			wantErrMsg: "expected: distributed super-pod job require npu(0) should be equal to node npu(16), " +
+				"actual: task<task2> req npu: 8, ",
 		},
 		{
 			name: "04 Task with 0 NPUs and both annotations should pass",
@@ -302,7 +303,7 @@ var selectSuperPodForJobTestCases = []selectSuperPodForJobTestCase{
 		npuTaskNum: npuTaskNum4,
 		spBlock:    spBlockNum2,
 		want:       nil,
-		wantErr:    errors.New("select super pod failed, required 2, total 1"),
+		wantErr:    errors.New("select super pod failed, required 2, total 1, node top: super-pod-id: 0, node count: 2 detail: [node0 node1], "),
 	},
 
 	{

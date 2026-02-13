@@ -56,11 +56,12 @@ func (tp *card310px2) ValidNPUJob() *api.ValidateResult {
 		tp.GetPluginName(), tp.Name, len(tp.Tasks))
 	if tp.SchedulerJobAttr.Label[util.DistributedInferKey] == util.DistributedInferLabel &&
 		tp.NPUTaskNum > 1 {
-		err := fmt.Errorf("job <%s> task num <%d> is invalid", tp.Name, len(tp.Tasks))
+		err := fmt.Errorf("job <%s> task num <%d> is invalid, "+
+			"job with label of distributed=true should has only 1 npu pod ", tp.Name, len(tp.Tasks))
 		klog.V(util.LogErrorLev).Infof("%s ValidNPUJob err: %s", tp.GetPluginName(), err.Error())
 		return &api.ValidateResult{
 			Pass:    false,
-			Reason:  "job task num is invalid",
+			Reason:  util.InvalidResourceRequestReason,
 			Message: err.Error(),
 		}
 	}

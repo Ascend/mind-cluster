@@ -246,15 +246,16 @@ func InitJobNPUTasks(vcJob *api.JobInfo) map[api.TaskID]util.NPUTask {
 		initNormalJobIndex(taskInf, usedRanks)
 		name, num := getVCTaskReqNPUTypeFromTaskInfo(taskInf)
 		resultMap[taskID] = util.NPUTask{
-			Name:       taskInf.Name,
-			NameSpace:  taskInf.Namespace,
-			ReqNPUName: name,
-			ReqNPUNum:  num,
-			Label:      getTaskLabels(taskInf),
-			VTask:      &util.VTask{},
-			NodeName:   taskInf.NodeName,
-			Annotation: taskInf.Pod.Annotations,
-			PodStatus:  taskInf.Pod.Status.Phase,
+			Name:        taskInf.Name,
+			NameSpace:   taskInf.Namespace,
+			ReqNPUName:  name,
+			ReqNPUNum:   num,
+			Label:       getTaskLabels(taskInf),
+			VTask:       &util.VTask{},
+			NodeName:    taskInf.NodeName,
+			Annotation:  taskInf.Pod.Annotations,
+			PodStatus:   taskInf.Pod.Status.Phase,
+			TaskSpecKey: taskInf.GetTaskSpecKey(),
 		}
 		if taskInf.Pod.DeletionTimestamp != nil {
 			terminatingPodNum++
@@ -593,7 +594,7 @@ func (sJob SchedulerJob) validJobFn() *api.ValidateResult {
 		return &api.ValidateResult{
 			Message: fmt.Sprintf("job %s task num %d "+
 				"less than replicas %d", sJob.Name, len(sJob.Tasks), sJob.MinAvailable),
-			Reason: "job is not ready",
+			Reason: util.NotEnoughPodReason,
 			Pass:   false,
 		}
 	}
@@ -602,7 +603,7 @@ func (sJob SchedulerJob) validJobFn() *api.ValidateResult {
 		if err != nil {
 			return &api.ValidateResult{
 				Message: fmt.Sprintf("job %s task minAvailable %v is invalid", sJob.Name, k),
-				Reason:  "job is not ready",
+				Reason:  util.InvalidArgumentReason,
 				Pass:    false,
 			}
 		}
@@ -615,7 +616,7 @@ func (sJob SchedulerJob) validJobFn() *api.ValidateResult {
 				"job<%s> policyHandler is nil", PluginName, sJob.ComJob.Name)
 			return &api.ValidateResult{
 				Pass:    false,
-				Reason:  "policyHandler is nil",
+				Reason:  util.NotSupportPolicyReason,
 				Message: err.Error(),
 			}
 		}
@@ -763,22 +764,22 @@ func (sHandle *ScheduleHandler) JobValid(obj interface{}) *api.ValidateResult {
 		return &api.ValidateResult{Pass: false, Reason: reason,
 			Message: fmt.Sprintf("validJobFn [%#v] failed:%s", obj, reason)}
 	}
-
-	if !isJobInitial(job) {
-		reason := "job is not ready"
-		klog.V(util.LogWarningLev).Infof("%s job(%s) not ready:%s.", PluginName, job.Name,
-			job.PodGroup.Status.Phase)
-		return &api.ValidateResult{Pass: false, Reason: reason,
-			Message: fmt.Sprintf("validJobFn [%#v] failed:%s", obj, reason)}
-	}
 	var result *api.ValidateResult
 	defer func() {
 		if result != nil && !result.Pass {
-			if setErr := sHandle.SetJobPendingReason(job, result.Message); setErr != nil {
-				klog.V(util.LogErrorLev).Infof("%s setJobFailed err: %s.", PluginName, util.SafePrint(setErr))
-			}
+			sHandle.ValidResult[job.UID] = result
 		}
 	}()
+
+	if !isJobInitial(job) {
+		klog.V(util.LogWarningLev).Infof("%s job(%s) not ready:%s.", PluginName, job.Name,
+			job.PodGroup.Status.Phase)
+		result = &api.ValidateResult{Pass: false, Reason: util.NotEnoughPodReason,
+			Message: fmt.Sprintf("the pods of job is not enough, req: %d, actual: %d", job.MinAvailable,
+				job.ValidTaskNum())}
+		return result
+	}
+
 	if result = validVirtualDevJob(job); result != nil {
 		return result
 	}
@@ -861,7 +862,7 @@ func validVirtualDevJob(job *api.JobInfo) *api.ValidateResult {
 		err := fmt.Errorf("job %s task num is <%v> request <%v> more than 1 virtual device"+
 			"and 1 replicas , keep job pending ", job.Name, len(job.Tasks), rNpuNum)
 		klog.V(util.LogDebugLev).Infof(err.Error())
-		return &api.ValidateResult{Pass: false, Reason: err.Error(), Message: err.Error()}
+		return &api.ValidateResult{Pass: false, Reason: util.InvalidResourceRequestReason, Message: err.Error()}
 	}
 	return nil
 }

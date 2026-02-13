@@ -47,7 +47,7 @@ func (tp *chip4nodex) validNPUJob() *api.ValidateResult {
 	defer func() {
 		if vErr != nil {
 			vResult.Pass = false
-			vResult.Reason = vErr.Error()
+			vResult.Reason = util.InvalidResourceRequestReason
 			vResult.Message = vErr.Error()
 		}
 	}()
@@ -84,7 +84,8 @@ func (tp *chip4nodex) checkJobMode() error {
 	if nTaskReqNpuNum <= tp.MaxNodeNPUNum {
 		return nil
 	}
-	return fmt.Errorf("%s checkJobMode %s req npu is invalid", tp.GetPluginName(), tp.Name)
+	return fmt.Errorf("%s checkJobMode %s req npu is invalid, task require npu can not bigger than %d",
+		tp.GetPluginName(), tp.Name, tp.MaxNodeNPUNum)
 }
 
 // getNodeBestScore Based on the number of NPUs requested by the task and the number of NPUs actually available on the node,

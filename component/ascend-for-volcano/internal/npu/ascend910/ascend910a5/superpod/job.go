@@ -34,7 +34,7 @@ func (tp *module910a5SuperPod) checkSpBlock() *api.ValidateResult {
 	if tp.SpBlockNPUNum <= 0 {
 		return &api.ValidateResult{
 			Pass:    false,
-			Reason:  spBlockInvalidReason,
+			Reason:  util.InvalidArgumentReason,
 			Message: fmt.Sprintf("Parameter sp-block(%d) is invalid.", tp.SpBlockNPUNum),
 		}
 	}
@@ -45,7 +45,7 @@ func (tp *module910a5SuperPod) checkSpBlock() *api.ValidateResult {
 		if tp.SpBlockNPUNum%tp.MaxNodeNPUNum != 0 {
 			return &api.ValidateResult{
 				Pass:   false,
-				Reason: spBlockInvalidReason,
+				Reason: util.InvalidArgumentReason,
 				Message: fmt.Sprintf("Parameter sp-block(%d) is not multiple of node npu (%d)",
 					tp.SpBlockNPUNum, tp.MaxNodeNPUNum),
 			}
@@ -57,7 +57,7 @@ func (tp *module910a5SuperPod) checkSpBlock() *api.ValidateResult {
 	if tp.NPUTaskNum%tp.spBlock != 0 {
 		return &api.ValidateResult{
 			Pass:   false,
-			Reason: "job task num is invalid",
+			Reason: util.InvalidResourceRequestReason,
 			Message: fmt.Sprintf("job require total Pod(%d) should be multiple of a sp-block size %d",
 				tp.NPUTaskNum, tp.spBlock),
 		}
@@ -74,7 +74,7 @@ func (tp *module910a5SuperPod) checkSuperPodSizeValid() *api.ValidateResult {
 	if SuperPodSizeFromConf <= 0 || SuperPodSizeFromConf*tp.MaxNodeNPUNum > maxSuperPodNPUNum {
 		return &api.ValidateResult{
 			Pass:   false,
-			Reason: superPodSizeInvalidReason,
+			Reason: util.InvalidResourceRequestReason,
 			Message: fmt.Sprintf("Parameter super-pod-size(%d) in volcano.yaml is invalid "+
 				"which should be in range [1,1024]",
 				SuperPodSizeFromConf),
@@ -84,7 +84,7 @@ func (tp *module910a5SuperPod) checkSuperPodSizeValid() *api.ValidateResult {
 	if tp.spBlock > tp.FrameAttr.SuperPodSizeFromConf {
 		return &api.ValidateResult{
 			Pass:   false,
-			Reason: superPodSizeInvalidReason,
+			Reason: util.InvalidArgumentReason,
 			Message: fmt.Sprintf("Parameter spBlock(%d/8=%d) is bigger than size of super-pod-size(%d)",
 				tp.SpBlockNPUNum, tp.spBlock, tp.FrameAttr.SuperPodSizeFromConf),
 		}
@@ -98,7 +98,7 @@ func (tp *module910a5SuperPod) checkTpBlockNum() *api.ValidateResult {
 	if tp.TpBlockNPUNum > rackNPUNumber || tp.TpBlockNPUNum < miniTpBlockNum {
 		return &api.ValidateResult{
 			Pass:   false,
-			Reason: tpBlockInvalidReason,
+			Reason: util.InvalidArgumentReason,
 			Message: fmt.Sprintf("Parameter tp-block is invalid, it should be a number in the range "+
 				"from %d to %d", miniTpBlockNum, rackNPUNumber),
 		}
@@ -108,7 +108,7 @@ func (tp *module910a5SuperPod) checkTpBlockNum() *api.ValidateResult {
 	if (tp.TpBlockNPUNum & (tp.TpBlockNPUNum - 1)) != 0 {
 		return &api.ValidateResult{
 			Pass:    false,
-			Reason:  tpBlockInvalidReason,
+			Reason:  util.InvalidArgumentReason,
 			Message: fmt.Sprintf("Parameter tp-block(%d) must be the power of 2", tp.TpBlockNPUNum),
 		}
 	}
@@ -131,7 +131,7 @@ func (tp *module910a5SuperPod) calculateTpBlockAndCheck() *api.ValidateResult {
 	if tp.tpBlock > tp.spBlock {
 		return &api.ValidateResult{
 			Pass:   false,
-			Reason: tpBlockInvalidReason,
+			Reason: util.InvalidArgumentReason,
 			Message: fmt.Sprintf("Parameter tp-block(%d)/%d could not be bigger than sp-block(%d)/%d",
 				tp.TpBlockNPUNum, tp.MaxNodeNPUNum, tp.SpBlockNPUNum, tp.MaxNodeNPUNum),
 		}
@@ -140,7 +140,7 @@ func (tp *module910a5SuperPod) calculateTpBlockAndCheck() *api.ValidateResult {
 	if tp.NPUTaskNum%tp.tpBlock != 0 {
 		return &api.ValidateResult{
 			Pass:   false,
-			Reason: tpBlockInvalidReason,
+			Reason: util.InvalidResourceRequestReason,
 			Message: fmt.Sprintf("number of tasks(%d) must be multiple of "+
 				"nodes occupied by tp-block(%d)", tp.NPUTaskNum, tp.tpBlock),
 		}
@@ -149,7 +149,7 @@ func (tp *module910a5SuperPod) calculateTpBlockAndCheck() *api.ValidateResult {
 	if tp.spBlock%tp.tpBlock != 0 {
 		return &api.ValidateResult{
 			Pass:   false,
-			Reason: tpBlockInvalidReason,
+			Reason: util.InvalidArgumentReason,
 			Message: fmt.Sprintf("spBlock= %d / 8 must be multiple of tpBlock= %d / 8",
 				tp.SpBlockNPUNum, tp.TpBlockNPUNum),
 		}
@@ -166,7 +166,7 @@ func (tp *module910a5SuperPod) checkJobReqNpuNum() *api.ValidateResult {
 			if tp.ReqNPUNum != tp.SpBlockNPUNum {
 				return &api.ValidateResult{
 					Pass:    false,
-					Reason:  jobCheckFailedReason,
+					Reason:  util.InvalidResourceRequestReason,
 					Message: "single super-pod job sp-block annotation should equal require npu num",
 				}
 			}
@@ -174,7 +174,7 @@ func (tp *module910a5SuperPod) checkJobReqNpuNum() *api.ValidateResult {
 		}
 		return &api.ValidateResult{
 			Pass:    false,
-			Reason:  jobCheckFailedReason,
+			Reason:  util.InvalidResourceRequestReason,
 			Message: fmt.Sprintf("single super-pod job require npu [1, 8], instead of %d", tp.ReqNPUNum),
 		}
 	}
@@ -182,7 +182,7 @@ func (tp *module910a5SuperPod) checkJobReqNpuNum() *api.ValidateResult {
 	if tp.ReqNPUNum%tp.SpBlockNPUNum != 0 {
 		return &api.ValidateResult{
 			Pass:   false,
-			Reason: jobCheckFailedReason,
+			Reason: util.InvalidResourceRequestReason,
 			Message: fmt.Sprintf("distributed super-pod job require npu should be multiple of sp-block, instead of %d",
 				tp.ReqNPUNum),
 		}
@@ -191,7 +191,7 @@ func (tp *module910a5SuperPod) checkJobReqNpuNum() *api.ValidateResult {
 	if tp.ReqNPUNum%tp.TpBlockNPUNum != 0 {
 		return &api.ValidateResult{
 			Pass:   false,
-			Reason: jobCheckFailedReason,
+			Reason: util.InvalidResourceRequestReason,
 			Message: fmt.Sprintf("distributed super-pod job require npu(%d) should be multiple of tp-block",
 				tp.ReqNPUNum),
 		}
@@ -199,15 +199,15 @@ func (tp *module910a5SuperPod) checkJobReqNpuNum() *api.ValidateResult {
 	// check the distributed job require npu num must be equal to node npu num
 	for _, task := range tp.Tasks {
 		if task.ReqNPUNum == tp.MaxNodeNPUNum {
-			continue
+			return nil
 		}
-
 		return &api.ValidateResult{
 			Pass:   false,
-			Reason: jobCheckFailedReason,
-			Message: fmt.Sprintf("distributed job require npu %d, instead of %d",
-				tp.MaxNodeNPUNum, task.ReqNPUNum),
+			Reason: util.InvalidResourceRequestReason,
+			Message: fmt.Sprintf("distributed super-pod job require npu(%d) should be equal to node npu(%d)",
+				tp.ReqNPUNum, tp.MaxNodeNPUNum),
 		}
+
 	}
 	return nil
 }
@@ -224,7 +224,7 @@ func (tp *module910a5SuperPod) checkJobInUBMemScene() *api.ValidateResult {
 		if jobReqNPUNum > maxNpuNumInUBMemScene {
 			return &api.ValidateResult{
 				Pass:   false,
-				Reason: jobCheckFailedReason,
+				Reason: util.InvalidResourceRequestReason,
 				Message: fmt.Sprintf("in ubmem scene, task require npu nums should smaller than %d, but recevice %d",
 					maxNpuNumInUBMemScene, jobReqNPUNum),
 			}

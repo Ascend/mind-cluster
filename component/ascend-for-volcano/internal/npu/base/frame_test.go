@@ -159,9 +159,10 @@ func buildValidNPUJobTestCase01() []validNPUJobTestCase {
 			Name: "02-ValidNPUJob should return error when tasks request npu more than 64",
 			Attr: attr2,
 			WantErr: &api.ValidateResult{
-				Pass:    false,
-				Reason:  "task req npu num is invalid",
-				Message: "job<vcjob/job02>-task<pod0> req npu num<65> is invalid",
+				Pass:   false,
+				Reason: util.InvalidResourceRequestReason,
+				Message: "expected: job<vcjob/job02> req npu num should small than 64, and not in map[], " +
+					"actual: task<> req npu: 65, ",
 			},
 		},
 		{
@@ -249,7 +250,7 @@ func buildCheckNodeNPUByTaskTestCase4() checkNodeNPUByTaskTestCase {
 				Annotation: map[string]string{util.NPU310PCardName: "Ascend310P-0, Ascend310P-1"},
 			},
 		},
-		WantErr: fmt.Errorf("judgeNodeAndTaskNPU node don't have enough resource, req<2>, idle<0>"),
+		WantErr: fmt.Errorf("node don't have enough npu resource, req<2>, idle<0>"),
 	}
 }
 
@@ -263,7 +264,7 @@ func buildCheckNodeNPUByTaskTestCase5() checkNodeNPUByTaskTestCase {
 				Annotation: map[string]string{util.NPU310PCardName: "Ascend310P-0"},
 			},
 		},
-		WantErr: errors.New("judgeNodeAndTaskNPU node don't have enough resource, req<2>, idle<1>"),
+		WantErr: errors.New("node don't have enough npu resource, req<2>, idle<1>"),
 	}
 }
 
@@ -433,7 +434,7 @@ func buildJudgeNodeAndTaskNPUTestCases() []judgeNodeAndTaskNPUTestCase {
 			Name:    "03-JudgeNodeAndTaskNPU return err when node not meet task npu num",
 			TaskNPU: util.NPUIndex2,
 			NodeTop: []int{0},
-			WantErr: errors.New("judgeNodeAndTaskNPU node don't have enough resource, req<2>, idle<1>"),
+			WantErr: errors.New("node don't have enough npu resource, req<2>, idle<1>"),
 		},
 	}
 }
@@ -664,16 +665,18 @@ func TestValidNPUJobSimple(t *testing.T) {
 				ComJob: util.ComJob{Name: "test-job"},
 				NPUJob: buildNpuJob(util.NPU910CardName, 0),
 			}, MaxNodeNPUNum: 64}, &api.ValidateResult{
-			Pass: false, Reason: "task req npu num is invalid",
-			Message: "job<test-job>-task<task1> req npu num<0> is invalid",
+			Pass: false, Reason: util.InvalidResourceRequestReason,
+			Message: "expected: job<test-job> req npu num should small than 64, and not in map[], " +
+				"actual: task<> req npu: 0, ",
 		}),
 		buildTestCases("invalid npu job - request too many npu", &NPUHandler{
 			SchedulerJobAttr: util.SchedulerJobAttr{
 				ComJob: util.ComJob{Name: "test-job"},
 				NPUJob: buildNpuJob(util.NPU910CardName, cardNUm65),
 			}, MaxNodeNPUNum: 64}, &api.ValidateResult{
-			Pass: false, Reason: "task req npu num is invalid",
-			Message: "job<test-job>-task<task1> req npu num<65> is invalid",
+			Pass: false, Reason: util.InvalidResourceRequestReason,
+			Message: "expected: job<test-job> req npu num should small than 64, and not in map[], " +
+				"actual: task<> req npu: 65, ",
 		}),
 	}
 	for _, tt := range tests {

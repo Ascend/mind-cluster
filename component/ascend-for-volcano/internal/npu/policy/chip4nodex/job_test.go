@@ -94,8 +94,8 @@ func TestValid800ia5NPUJobWarningsAndModeError(t *testing.T) {
 	if res.Pass {
 		t.Error("When the mode is incorrect, Pass should be false")
 	}
-	if !strings.Contains(res.Reason, "no npu job") {
-		t.Errorf("Reason should include ‘no npu job’，actually: %q", res.Reason)
+	if !strings.Contains(res.Reason, "InvalidResourceReques") {
+		t.Errorf("Reason should include ‘InvalidResourceReques’，actually: %q", res.Reason)
 	}
 }
 

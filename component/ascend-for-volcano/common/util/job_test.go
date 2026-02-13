@@ -20,6 +20,7 @@ Package util is using for the total variable.
 package util
 
 import (
+	"fmt"
 	"testing"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -299,4 +300,35 @@ func TestIsSuperPodJob(t *testing.T) {
 				t.Errorf("isSuperPodJob() err, want true while return false")
 			}
 		})
+}
+
+func TestTaskValidResult(t *testing.T) {
+	helper := NewTaskValidateHelper()
+	expected := "valid expected message"
+
+	// Case 1: No invalid resource requests
+	result := helper.TaskValidResult(expected)
+	if result != nil {
+		t.Errorf("Expected nil result when there are no invalid resource requests")
+	}
+
+	// Case 2: Invalid resource requests exist
+	taskID := api.TaskID("test-task")
+	resourceRequest := NPUIndex10
+	helper.AddInvalidResourceRequest(taskID, resourceRequest)
+
+	result = helper.TaskValidResult(expected)
+	if result == nil {
+		t.Error("Expected non-nil result when there are invalid resource requests")
+	}
+	if result.Pass {
+		t.Error("Expected Pass to be false when there are invalid resource requests")
+	}
+	if result.Reason != InvalidResourceRequestReason {
+		t.Errorf("Expected reason %s, got %s", InvalidResourceRequestReason, result.Reason)
+	}
+	expectedMessage := fmt.Sprintf("expected: %s, actual: task<%s> req npu: %d, ", expected, taskID, resourceRequest)
+	if result.Message != expectedMessage {
+		t.Errorf("Expected message %s, got %s", expectedMessage, result.Message)
+	}
 }

@@ -110,22 +110,20 @@ func (tp *NPUHandler) ValidNPUJob() *api.ValidateResult {
 		return &api.ValidateResult{Pass: false, Reason: err.Error(), Message: err.Error()}
 	}
 	klog.V(util.LogDebugLev).Infof("%s ValidNPUJob job(%s).", tp.GetPluginName(), tp.Name)
+	helper := util.NewTaskValidateHelper()
 	for _, task := range tp.Tasks {
-		if !task.IsNPUTask() {
+		if !task.IsNPUTask() || helper.HasTask(task.TaskSpecKey) {
 			continue
 		}
 		taskNPU := task.ReqNPUNum
 		if taskNPU < 1 || taskNPU > tp.MaxNodeNPUNum || !tp.IsVaildNpuNum(taskNPU) {
-			err := fmt.Errorf("job<%s>-task<%s> req npu num<%d> is invalid", tp.Name, task.Name, taskNPU)
-			klog.V(util.LogErrorLev).Infof("%s ValidNPUJob err: %s", tp.GetPluginName(), err.Error())
-			return &api.ValidateResult{
-				Pass:    false,
-				Reason:  "task req npu num is invalid",
-				Message: err.Error(),
-			}
+			klog.V(util.LogDebugLev).Infof("%s ValidNPUJob err: job<%s>-task<%s> req npu num<%d> is invalid",
+				tp.GetPluginName(), tp.Name, task.Name, taskNPU)
+			helper.AddInvalidResourceRequest(task.TaskSpecKey, taskNPU)
 		}
 	}
-	return nil
+	return helper.TaskValidResult(fmt.Sprintf("job<%s> req npu num should small than %d, and not in %v", tp.Name,
+		tp.MaxNodeNPUNum, tp.NpuNumInvalidMap))
 }
 
 // CheckNodeNPUByTask check nod npu meet task req
@@ -267,7 +265,8 @@ func (tp *NPUHandler) JudgeNodeAndTaskNPU(taskNPU int, nodeNPUTopology []int) er
 	}
 
 	if len(nodeNPUTopology) < taskNPU {
-		return fmt.Errorf("judgeNodeAndTaskNPU node don't have enough resource, req<%d>, idle<%d>",
+		klog.V(util.LogWarningLev).Infof("judgeNodeAndTaskNPU node don't have enough resource, req<%d>, idle<%d>", taskNPU, len(nodeNPUTopology))
+		return fmt.Errorf("node don't have enough npu resource, req<%d>, idle<%d>",
 			taskNPU, len(nodeNPUTopology))
 	}
 

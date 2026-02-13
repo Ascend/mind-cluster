@@ -20,6 +20,7 @@ Package main is using for HuaWei Ascend pin affinity schedule.
 package main
 
 import (
+	"errors"
 	"reflect"
 	"strconv"
 	"testing"
@@ -27,6 +28,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"volcano.sh/apis/pkg/apis/scheduling"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -238,6 +240,9 @@ func buildJobEnqueueableTestCases02() []jobEnqueueableTestCase {
 			plugin: &huaweiNPUPlugin{
 				Scheduler: &plugin.ScheduleHandler{
 					NPUPlugins: sets.NewString("available-npu"),
+					CheckResult: plugin.CheckResult{
+						EnqueueError: map[api.JobID]error{},
+					},
 				},
 			},
 			expectedResult: util.JobNotEnqueue,
@@ -656,5 +661,175 @@ func TestExecJobDequeue(t *testing.T) {
 				t.Errorf("jobEnqueueable got %v, want %v", got, tt.expectedDequeueTimes)
 			}
 		})
+	}
+}
+
+type addPodGroupConditionCase struct {
+	name           string
+	job            *api.JobInfo
+	sessionID      types.UID
+	reason         string
+	message        string
+	expectedLength int
+	expectedReason string
+}
+
+func TestAddPodGroupCondition(t *testing.T) {
+	tests := []addPodGroupConditionCase{
+		{
+			name: "01-add new condition",
+			job: &api.JobInfo{
+				PodGroup: &api.PodGroup{},
+			},
+			sessionID:      "session-1",
+			reason:         "TestReason",
+			message:        "TestMessage",
+			expectedLength: 1,
+			expectedReason: "TestReason",
+		},
+		{
+			name: "02-refresh old condition",
+			job: &api.JobInfo{
+				PodGroup: &api.PodGroup{
+					PodGroup: scheduling.PodGroup{
+						Status: scheduling.PodGroupStatus{
+							Conditions: []scheduling.PodGroupCondition{
+								{Type: scheduling.PodGroupUnschedulableType, Reason: "OldReason"},
+							},
+						},
+					},
+				},
+			},
+			sessionID:      "session-1",
+			reason:         "OldReason",
+			message:        "UpdatedMessage",
+			expectedLength: 1,
+			expectedReason: "OldReason",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			addPodGroupCondition(tt.job, tt.sessionID, tt.reason, tt.message)
+			conditions := tt.job.PodGroup.Status.Conditions
+			if len(conditions) != tt.expectedLength {
+				t.Errorf("addPodGroupCondition expected: %d，actual: %d", tt.expectedLength, len(conditions))
+			}
+			if conditions[0].Reason != tt.expectedReason {
+				t.Errorf("addPodGroupCondition Reason not match，expected: %s，actual: %s", tt.expectedReason,
+					conditions[0].Reason)
+			}
+		})
+	}
+}
+
+func TestAddBatchOrderFailedCondition(t *testing.T) {
+	job := &api.JobInfo{
+		UID: "test-job",
+		PodGroup: &api.PodGroup{
+			PodGroup: scheduling.PodGroup{
+				Status: scheduling.PodGroupStatus{
+					Conditions: []scheduling.PodGroupCondition{},
+				},
+			},
+		},
+	}
+	ssn := &framework.Session{UID: "session-1"}
+	plugin := &huaweiNPUPlugin{
+		Scheduler: &plugin.ScheduleHandler{
+			CheckResult: plugin.CheckResult{
+				BatchOrderError: map[api.JobID]error{
+					"test-job": errors.New("batch order error"),
+				},
+			},
+		},
+	}
+
+	plugin.addBatchOrderFailedCondition(job, ssn)
+
+	conditions := job.PodGroup.Status.Conditions
+	if len(conditions) != 1 {
+		t.Fatalf("num of condition not match，expected: 1，asctual: %d", len(conditions))
+	}
+	if conditions[0].Reason != util.BatchOrderFailedReason {
+		t.Errorf("Reason not match，expected: %s，asctual: %s", util.BatchOrderFailedReason, conditions[0].Reason)
+	}
+}
+
+func TestAddNodePredicateFailedCondition(t *testing.T) {
+	job := &api.JobInfo{
+		UID: "test-job",
+		PodGroup: &api.PodGroup{
+			PodGroup: scheduling.PodGroup{
+				Status: scheduling.PodGroupStatus{
+					Conditions: []scheduling.PodGroupCondition{},
+				},
+			},
+		},
+		NodesFitErrors: map[api.TaskID]*api.FitErrors{
+			"task-1": {},
+		},
+	}
+	ssn := &framework.Session{UID: "session-1"}
+	plugin := &huaweiNPUPlugin{
+		Scheduler: &plugin.ScheduleHandler{
+			PredicatedNodes: map[api.JobID]sets.String{
+				"test-job": sets.NewString("node1", "node2"),
+			},
+			CheckResult: plugin.CheckResult{
+				NodePredicateErrors: &plugin.NodePredicateError{
+					NodeError: map[api.JobID]map[string]sets.String{
+						"test-job": {
+							"resource insufficient": {"node3": {}, "node4": {}},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	plugin.addNodePredicateFailedCondition(job, ssn)
+
+	conditions := job.PodGroup.Status.Conditions
+	if len(conditions) != 1 {
+		t.Fatalf("num of condition not match，expected: 1，asctual: %d", len(conditions))
+	}
+	if conditions[0].Reason != util.NodePredicateFailedReason {
+		t.Errorf("Reason not match，expected: %s，asctual: %s", util.NodePredicateFailedReason, conditions[0].Reason)
+	}
+}
+
+func TestAddJobValidAndEnqueueFailedCondition(t *testing.T) {
+	job := &api.JobInfo{
+		UID: "test-job",
+		PodGroup: &api.PodGroup{
+			PodGroup: scheduling.PodGroup{
+				Status: scheduling.PodGroupStatus{Conditions: []scheduling.PodGroupCondition{}},
+			},
+		},
+	}
+	ssn := &framework.Session{UID: "session-1"}
+	plg := &huaweiNPUPlugin{
+		Scheduler: &plugin.ScheduleHandler{
+			CheckResult: plugin.CheckResult{
+				ValidResult: map[api.JobID]*api.ValidateResult{
+					"test-job": {Pass: false, Reason: "invalid resource", Message: "resource not enough"},
+				},
+				EnqueueError: map[api.JobID]error{"test-job": errors.New("enqueue failed due to timeout")},
+			},
+		},
+	}
+
+	plg.addJobValidFailedCondition(job, ssn)
+	conditions := job.PodGroup.Status.Conditions
+	if len(conditions) != 1 || conditions[0].Reason != util.JobValidateFailedReason {
+		t.Errorf("JobValidFailed condition have not been added")
+	}
+
+	job.PodGroup.Status.Conditions = []scheduling.PodGroupCondition{} // 清空之前的结果
+	plg.addJobEnqueueFailedCondition(job, ssn)
+	conditions = job.PodGroup.Status.Conditions
+	if len(conditions) != 1 || conditions[0].Reason != util.JobEnqueueFailedReason {
+		t.Errorf("EnqueueFailed conditon have not been added")
 	}
 }

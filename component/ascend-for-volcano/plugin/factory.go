@@ -31,6 +31,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog"
 	"volcano.sh/apis/pkg/apis/scheduling"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -50,7 +51,13 @@ func (sHandle *ScheduleHandler) InitNPUSession(ssn *framework.Session) error {
 	}
 	klog.V(util.LogDebugLev).Infof("enter %s InitNPUSession.", PluginName)
 	defer klog.V(util.LogDebugLev).Infof("leave %s InitNPUSession.", PluginName)
-
+	sHandle.CheckResult = CheckResult{
+		ValidResult:         map[api.JobID]*api.ValidateResult{},
+		EnqueueError:        map[api.JobID]error{},
+		BatchOrderError:     map[api.JobID]error{},
+		NodePredicateErrors: &NodePredicateError{NodeError: map[api.JobID]map[string]sets.String{}},
+	}
+	sHandle.PredicatedNodes = make(map[api.JobID]sets.String)
 	sHandle.InitVolcanoFrameFromSsn(ssn)
 	sHandle.initCmInformer()
 	sHandle.InitNodesFromSsn(ssn)

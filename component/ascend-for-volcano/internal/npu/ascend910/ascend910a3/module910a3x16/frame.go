@@ -22,7 +22,6 @@ package module910a3x16
 import (
 	"errors"
 	"fmt"
-
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
@@ -65,7 +64,7 @@ func (tp *module910a3x16) ValidNPUJob() *api.ValidateResult {
 		if tp.NPUTaskNum != 1 {
 			return &api.ValidateResult{
 				Pass:    false,
-				Reason:  ascend910a3.JobCheckFailedReason,
+				Reason:  util.InvalidResourceRequestReason,
 				Message: fmt.Sprintf("only single task job can request single npu"),
 			}
 		}
@@ -74,9 +73,9 @@ func (tp *module910a3x16) ValidNPUJob() *api.ValidateResult {
 	if tp.ReqNPUNum%taskNPUMultiple != 0 {
 		return &api.ValidateResult{
 			Pass:   false,
-			Reason: ascend910a3.JobCheckFailedReason,
-			Message: fmt.Sprintf("except for single task job can request single npu, job require npu num "+
-				"[2, 4, 6, 8, 10, 12, 14, 16], instead of %d", tp.ReqNPUNum),
+			Reason: util.InvalidResourceRequestReason,
+			Message: fmt.Sprintf("except for single task job can request single npu, "+
+				"job require npu num should be even number, instead of %d", tp.ReqNPUNum),
 		}
 	}
 	return tp.CheckTaskNPU()
@@ -84,24 +83,27 @@ func (tp *module910a3x16) ValidNPUJob() *api.ValidateResult {
 
 // CheckTaskNPU check the job require npu num
 func (tp *module910a3x16) CheckTaskNPU() *api.ValidateResult {
+	helper := util.NewTaskValidateHelper()
 	for _, task := range tp.Tasks {
+		if helper.HasTask(task.TaskSpecKey) {
+			continue
+		}
+
 		// except for single task job can request single npu, npu num required by task in a3×16 job must be 2n, and <= 16
 		if task.ReqNPUNum != 0 && task.ReqNPUNum%taskNPUMultiple == 0 && task.ReqNPUNum <= tp.MaxNodeNPUNum {
+			helper.AddValidateTask(task.TaskSpecKey)
 			continue
 		}
 
 		if task.ReqNPUNum == 0 && (task.Annotation[ascend910a3.TaskSpecAnno] == ascend910a3.SchedulerType ||
 			task.Annotation[ascend910a3.SkipAscendPluginAnno] == ascend910a3.SkipEnabled) {
+			helper.AddValidateTask(task.TaskSpecKey)
 			continue
 		}
-		return &api.ValidateResult{
-			Pass:   false,
-			Reason: ascend910a3.JobCheckFailedReason,
-			Message: fmt.Sprintf("except for single task job can request single npu, npu num required "+
-				"by task in a3×16 job must be 2n, and <= %d, instead of %d", tp.MaxNodeNPUNum, task.ReqNPUNum),
-		}
+		helper.AddInvalidResourceRequest(task.TaskSpecKey, task.ReqNPUNum)
 	}
-	return nil
+	return helper.TaskValidResult(fmt.Sprintf("only standalone job can request single npu, npu num required "+
+		"by task in a3×16 job must be 2n, and <= %d", tp.MaxNodeNPUNum))
 }
 
 // CheckNodeNPUByTask check nod npu meet task req
@@ -123,7 +125,7 @@ func (tp *module910a3x16) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPU
 	}
 	if err = tp.JudgeNodeAndTaskNPU(taskNPUNum, nodeTop); err != nil {
 		klog.V(util.LogDebugLev).Infof("%s JudgeNodeAndTaskNPU err: %v", task.Name, err)
-		return fmt.Errorf("checkNodeNPUByTask %s err: %s", util.NodeNotMeetTopologyWarning, err)
+		return err
 	}
 	return nil
 }

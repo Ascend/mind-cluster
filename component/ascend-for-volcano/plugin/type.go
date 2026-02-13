@@ -110,10 +110,12 @@ var (
 type SchedulerJob struct {
 	util.SchedulerJobAttr
 	UnscheduledReason
-	policyHandler SchedulerPluginNeed
-	JobReadyTag   *bool
-	SuperPods     map[string][]SuperNode
-	Owner         OwnerInfo
+	policyHandler   SchedulerPluginNeed
+	JobReadyTag     *bool
+	SuperPods       map[string][]SuperNode
+	Owner           OwnerInfo
+	BatchOrderError error
+	EnqueueError    error
 	A5Fields
 }
 
@@ -222,10 +224,42 @@ type SuperPodInfo struct {
 
 // ScheduleHandler information for the current plugin
 type ScheduleHandler struct {
-	NPUPlugins    sets.String
-	PolicyBuilder PolicyBuilder
-	FaultHandle   FaultHandler
+	NPUPlugins      sets.String
+	PolicyBuilder   PolicyBuilder
+	FaultHandle     FaultHandler
+	PredicatedNodes map[api.JobID]sets.String
 	ScheduleEnv
+	CheckResult
+}
+
+type CheckResult struct {
+	ValidResult         map[api.JobID]*api.ValidateResult
+	EnqueueError        map[api.JobID]error
+	BatchOrderError     map[api.JobID]error
+	NodePredicateErrors *NodePredicateError
+}
+
+type NodePredicateError struct {
+	sync.Mutex
+	NodeError map[api.JobID]map[string]sets.String
+}
+
+func (npe *NodePredicateError) Add(jobUID api.JobID, nodeName string, err error) {
+	npe.Lock()
+	defer npe.Unlock()
+	if _, exist := npe.NodeError[jobUID]; !exist {
+		npe.NodeError[jobUID] = map[string]sets.String{}
+	}
+	if _, exist := npe.NodeError[jobUID][err.Error()]; !exist {
+		npe.NodeError[jobUID][err.Error()] = sets.NewString()
+	}
+	npe.NodeError[jobUID][err.Error()].Insert(nodeName)
+}
+
+func (npe *NodePredicateError) Get(jobUID api.JobID) map[string]sets.String {
+	npe.Lock()
+	defer npe.Unlock()
+	return npe.NodeError[jobUID]
 }
 
 // TaskResetInfo record task reset device information

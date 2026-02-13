@@ -132,3 +132,25 @@ const (
 	// SuperPodIdKey physic SuperPod id annotation key
 	SuperPodIdKey = "super-pod-id"
 )
+
+const (
+	// InvalidResourceRequestReason means the resource request is invalid
+	InvalidResourceRequestReason = "InvalidResourceRequest"
+	// InvalidArgumentReason means the argument is invalid
+	InvalidArgumentReason = "InvalidArgument"
+	// NotSupportPolicyReason means the schedule policy is not supported
+	NotSupportPolicyReason = "NotSupportPolicy"
+	// NotEnoughPodReason means the pod is not enough
+	NotEnoughPodReason = "NotEnoughPod"
+)
+
+const (
+	// JobEnqueueFailedReason means the job is enqueue failed
+	JobEnqueueFailedReason = "JobEnqueueFailed"
+	// JobValidateFailedReason means the job is validate failed
+	JobValidateFailedReason = "JobValidateFailed"
+	// NodePredicateFailedReason means the node predicate failed
+	NodePredicateFailedReason = "NodePredicateFailed"
+	// BatchOrderFailedReason means the batch order failed
+	BatchOrderFailedReason = "BatchOrderFailed"
+)

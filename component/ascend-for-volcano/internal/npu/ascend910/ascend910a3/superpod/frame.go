@@ -69,17 +69,18 @@ func (tp *module910SuperPod) checkRequireNPU() *api.ValidateResult {
 		if tp.ReqNPUNum == 1 || (tp.ReqNPUNum%tp.MaxCardNPUNum == 0 && tp.ReqNPUNum <= tp.MaxNodeNPUNum) {
 			if tp.ReqNPUNum != tp.SpBlockNPUNum {
 				return &api.ValidateResult{
-					Pass:    false,
-					Reason:  ascend910a3.JobCheckFailedReason,
-					Message: "single super-pod job sp-block annotation should equal require npu num",
+					Pass:   false,
+					Reason: util.InvalidResourceRequestReason,
+					Message: fmt.Sprintf("the sp-block<%d> in annotations of standalone super-pod job should equal"+
+						" to required npu num<%d>", tp.SpBlockNPUNum, tp.ReqNPUNum),
 				}
 			}
 			return nil
 		}
 		return &api.ValidateResult{
 			Pass:    false,
-			Reason:  ascend910a3.JobCheckFailedReason,
-			Message: fmt.Sprintf("single super-pod job require npu [1, 2*n], instead of %d", tp.ReqNPUNum),
+			Reason:  util.InvalidResourceRequestReason,
+			Message: fmt.Sprintf("standalone super-pod job require npu [1, 2*n], instead of %d", tp.ReqNPUNum),
 		}
 	}
 
@@ -87,7 +88,7 @@ func (tp *module910SuperPod) checkRequireNPU() *api.ValidateResult {
 	if tp.ReqNPUNum%tp.SpBlockNPUNum != 0 {
 		return &api.ValidateResult{
 			Pass:   false,
-			Reason: ascend910a3.JobCheckFailedReason,
+			Reason: util.InvalidResourceRequestReason,
 			Message: fmt.Sprintf("distributed super-pod job require npu(%d) should be multiple of sp-block",
 				tp.ReqNPUNum),
 		}
@@ -97,31 +98,31 @@ func (tp *module910SuperPod) checkRequireNPU() *api.ValidateResult {
 
 // CheckTaskNPU check the distributed job require npu num must equal node npu num
 func (tp *module910SuperPod) CheckTaskNPU() *api.ValidateResult {
+	helper := util.NewTaskValidateHelper()
 	for _, task := range tp.Tasks {
-		// npu num required by task in distributed job must be node npu num
-		if task.ReqNPUNum == tp.MaxNodeNPUNum {
+		if helper.HasTask(task.TaskSpecKey) {
 			continue
 		}
-
+		if task.ReqNPUNum == tp.MaxNodeNPUNum {
+			helper.AddValidateTask(task.TaskSpecKey)
+			continue
+		}
 		if task.ReqNPUNum == 0 && (task.Annotation[ascend910a3.TaskSpecAnno] == ascend910a3.SchedulerType ||
 			task.Annotation[ascend910a3.SkipAscendPluginAnno] == ascend910a3.SkipEnabled) {
+			helper.AddValidateTask(task.TaskSpecKey)
 			continue
 		}
-		return &api.ValidateResult{
-			Pass:   false,
-			Reason: ascend910a3.JobCheckFailedReason,
-			Message: fmt.Sprintf("distributed job require npu %d, instead of %d",
-				tp.MaxNodeNPUNum, task.ReqNPUNum),
-		}
+		helper.AddInvalidResourceRequest(task.TaskSpecKey, task.ReqNPUNum)
 	}
-	return nil
+	return helper.TaskValidResult(fmt.Sprintf("distributed super-pod job require npu(%d) should be equal to node npu(%d)",
+		tp.ReqNPUNum, tp.MaxNodeNPUNum))
 }
 
 func (tp *module910SuperPod) checkSpBlock() *api.ValidateResult {
 	if tp.SpBlockNPUNum == 0 {
 		return &api.ValidateResult{
 			Pass:    false,
-			Reason:  spBlockInvalidReason,
+			Reason:  util.InvalidArgumentReason,
 			Message: fmt.Sprintf("sp-block(%d) is invalid", tp.SpBlockNPUNum),
 		}
 	}
@@ -132,7 +133,7 @@ func (tp *module910SuperPod) checkSpBlock() *api.ValidateResult {
 		} else {
 			return &api.ValidateResult{
 				Pass:    false,
-				Reason:  spBlockInvalidReason,
+				Reason:  util.InvalidArgumentReason,
 				Message: fmt.Sprintf("sp-block(%d) is not mutiple of node npu (%d)", tp.SpBlockNPUNum, tp.MaxNodeNPUNum),
 			}
 		}
@@ -140,7 +141,7 @@ func (tp *module910SuperPod) checkSpBlock() *api.ValidateResult {
 		if tp.SpBlockNPUNum%tp.MaxNodeNPUNum != 0 {
 			return &api.ValidateResult{
 				Pass:    false,
-				Reason:  spBlockInvalidReason,
+				Reason:  util.InvalidArgumentReason,
 				Message: fmt.Sprintf("sp-block(%d) is not mutiple of node npu (%d)", tp.SpBlockNPUNum, tp.MaxNodeNPUNum),
 			}
 		}
@@ -150,7 +151,7 @@ func (tp *module910SuperPod) checkSpBlock() *api.ValidateResult {
 	if tp.spBlock > tp.FrameAttr.SuperPodSize {
 		return &api.ValidateResult{
 			Pass:   false,
-			Reason: spBlockInvalidReason,
+			Reason: util.InvalidResourceRequestReason,
 			Message: fmt.Sprintf("sp-block(%d/16=%d) is bigger than size of super-pod(%d)",
 				tp.SpBlockNPUNum, tp.spBlock, tp.FrameAttr.SuperPodSize),
 		}
@@ -188,7 +189,7 @@ func (tp *module910SuperPod) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.
 
 	if err = tp.JudgeNodeAndTaskNPU(taskNPUNum, nodeTop); err != nil {
 		klog.V(util.LogDebugLev).Infof("%s JudgeNodeAndTaskNPU err: %s", task.Name, err.Error())
-		return fmt.Errorf("checkNodeNPUByTask %s err: %s", util.NodeNotMeetTopologyWarning, err.Error())
+		return err
 	}
 	return nil
 }
@@ -481,7 +482,8 @@ func (tp *module910SuperPod) selectSuperPodForJob(task *api.TaskInfo, nodes []*a
 	isSuperPodRescheduling := tp.SchedulingTaskNum < len(tp.Tasks) && tp.SchedulingTaskNum > util.NPUIndex1
 
 	if spi.countVSuperPod < len(unReadyID) && (!isSoftRequire || (isSoftRequire && isSuperPodRescheduling)) {
-		return nil, fmt.Errorf("select super pod failed, required %d, total %d", len(unReadyID), spi.countVSuperPod)
+		return nil, fmt.Errorf("select super pod failed, required %d, total %d, node top: %v", len(unReadyID),
+			spi.countVSuperPod, printNodeTree(totalNodes))
 	}
 	util.SortByNumericValue(unReadyID)
 	tp.selectNodes(unReadyID, &spi, selectNodes, len(vSuperPodID))
@@ -504,10 +506,7 @@ func (tp *module910SuperPod) getSuperPodTop(nodes []*api.NodeInfo) map[int32]sup
 		}
 		totalNodes[nNode.SuperPodID][node.Name] = nNode
 	}
-	klog.V(util.LogInfoLev).Info("super pod top: ")
-	for id, sp := range totalNodes {
-		klog.V(util.LogInfoLev).Infof("super-pod-id: %d, node count: %d detail: %v", id, len(sp), sp.NodeNames())
-	}
+	klog.V(util.LogInfoLev).Infof("super pod top: %s", printNodeTree(totalNodes))
 	return totalNodes
 }
 
@@ -1224,4 +1223,12 @@ func logSelectedNodes(job plugin.SchedulerJob, selectedNodes map[string][]plugin
 		}
 	}
 	klog.V(util.LogInfoLev).Infof("Selected nodes for job %s: %s", job.Name, message)
+}
+
+func printNodeTree(totalNodes map[int32]superPod) string {
+	var message string
+	for id, sp := range totalNodes {
+		message += fmt.Sprintf("super-pod-id: %d, node count: %d detail: %v, ", id, len(sp), sp.NodeNames())
+	}
+	return message
 }

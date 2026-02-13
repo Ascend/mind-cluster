@@ -31,21 +31,27 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
-func (tp *virtual310NPU) checkDyVJobReq() error {
+func (tp *virtual310NPU) checkDyVJobReq() *api.ValidateResult {
 	if !tp.IsVJob() {
-		return fmt.Errorf("%s not VirtualNPU job", tp.Name)
+		return &api.ValidateResult{Pass: false, Reason: util.InvalidArgumentReason, Message: "not vnpu job"}
 	}
 	if tp.vHandle.StaticByConf {
-		return fmt.Errorf("volcano configuration %s true, only support static vnpu", util.SegmentEnable)
+		return &api.ValidateResult{Pass: false, Reason: util.InvalidArgumentReason, Message: fmt.Sprintf("volcano configuration %s true, only support static vnpu", util.SegmentEnable)}
 	}
+	helper := util.NewTaskValidateHelper()
 	for _, vT := range tp.Tasks {
-		if vT.ReqNPUNum == 1 || vT.ReqNPUNum == util.NPUIndex2 || vT.ReqNPUNum == util.NPUIndex4 ||
-			vT.ReqNPUNum%util.NPUIndex8 == 0 || vT.ReqNPUNum%util.NPUIndex10 == 0 {
+		if helper.HasTask(vT.TaskSpecKey) {
 			continue
 		}
-		return fmt.Errorf("%s req err %d", vT.Name, vT.ReqNPUNum)
+		if vT.ReqNPUNum == 1 || vT.ReqNPUNum == util.NPUIndex2 || vT.ReqNPUNum == util.NPUIndex4 ||
+			vT.ReqNPUNum%util.NPUIndex8 == 0 || vT.ReqNPUNum%util.NPUIndex10 == 0 {
+			helper.AddValidateTask(vT.TaskSpecKey)
+			continue
+		}
+		helper.AddInvalidResourceRequest(vT.TaskSpecKey, vT.ReqNPUNum)
 	}
-	return nil
+
+	return helper.TaskValidResult("task req npu should be [1,2,4,8,10]")
 }
 
 func (tp *virtual310NPU) validDyVNPUTaskDVPPLabel(vT util.NPUTask) error {
@@ -61,7 +67,7 @@ func (tp *virtual310NPU) validDyVNPUTaskDVPPLabel(vT util.NPUTask) error {
 	switch vT.ReqNPUNum {
 	case 1, util.NPUIndex2:
 		if dvppValue != plugin.AscendDVPPEnabledNull {
-			return fmt.Errorf("%s req %d ai-core, but dvpp label is:%s", vT.Name, vT.ReqNPUNum, dvppValue)
+			return fmt.Errorf("%s req %d ai-core, but dvpp label is:%s", vT.TaskSpecKey, vT.ReqNPUNum, dvppValue)
 		}
 	case util.NPUIndex4:
 		return nil
@@ -76,16 +82,21 @@ func (tp *virtual310NPU) validDyVNPUTaskDVPPLabel(vT util.NPUTask) error {
 // 2.vir02: no vpu-dvpp, if has error; vpu-level ignore.
 // 3.vir04: ignore vpu-level and vpu-dvpp.
 // 4.every task must be vNPU Task.
-func (tp *virtual310NPU) validDyVNPUJobLabel() error {
+func (tp *virtual310NPU) validDyVNPUJobLabel() *api.ValidateResult {
 	if !tp.IsVJob() {
-		return fmt.Errorf("%s not VirtualNPU job", tp.Name)
+		return &api.ValidateResult{Pass: false, Reason: util.InvalidArgumentReason, Message: "not vnpu job"}
 	}
+	helper := util.NewTaskValidateHelper()
 	for _, vT := range tp.Tasks {
+		if helper.HasTask(vT.TaskSpecKey) {
+			continue
+		}
 		if tErr := tp.validDyVNPUTaskDVPPLabel(vT); tErr != nil {
-			return tErr
+			helper.AddInvalidTask(vT.TaskSpecKey, tErr)
 		}
 	}
-	return nil
+
+	return helper.TaskValidResult("")
 }
 
 func (tp *virtual310NPU) validDyVNPUJob() *api.ValidateResult {
@@ -93,11 +104,8 @@ func (tp *virtual310NPU) validDyVNPUJob() *api.ValidateResult {
 		klog.V(util.LogDebugLev).Infof("virtual310NPU %s's pg is running", tp.ComJob.Name)
 		return nil
 	}
-	if reqErr := tp.checkDyVJobReq(); reqErr != nil {
-		return &api.ValidateResult{Pass: false, Reason: reqErr.Error(), Message: reqErr.Error()}
+	if reqErr := tp.checkDyVJobReq(); reqErr != nil && !reqErr.Pass {
+		return reqErr
 	}
-	if labelErr := tp.validDyVNPUJobLabel(); labelErr != nil {
-		return &api.ValidateResult{Pass: false, Reason: labelErr.Error(), Message: labelErr.Error()}
-	}
-	return nil
+	return tp.validDyVNPUJobLabel()
 }

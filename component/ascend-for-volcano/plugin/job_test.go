@@ -474,7 +474,7 @@ func buildJobValidTest() []jobValidTest {
 							NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{}}}},
 					}}}},
 			args: jobValidArgs{obj: tJob},
-			want: &api.ValidateResult{Pass: false, Reason: "job is not ready",
+			want: &api.ValidateResult{Pass: false, Reason: util.NotEnoughPodReason,
 				Message: "job  task num 0 less than replicas 1"},
 		},
 	}
@@ -489,6 +489,7 @@ func TestJobValid(t *testing.T) {
 				NPUPlugins:  tt.fields.NPUPlugins,
 				ScheduleEnv: tt.fields.ScheduleEnv,
 			}
+			sHandle.ValidResult = make(map[api.JobID]*api.ValidateResult)
 			sHandle.FrameAttr.IsFirstSession = util.PtrInit(false)
 			if got := sHandle.JobValid(tt.args.obj); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("JobValid() = %v, want %v", got, tt.want)

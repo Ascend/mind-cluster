@@ -158,7 +158,7 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 		// node doesn't have enough npu for the task
 		klog.V(util.LogDebugLev).Infof("checkNodeNPUByTask %s:%s ,cannot be selected.", vcNode.Name,
 			util.SafePrint(err))
-		return fmt.Errorf("checkNodeNPUByTask : %s", err)
+		return err
 	}
 	return nil
 }

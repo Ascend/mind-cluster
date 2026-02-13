@@ -20,6 +20,7 @@ Package util is using for the total variable.
 package util
 
 import (
+	"fmt"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/types"
@@ -189,4 +190,63 @@ func UuidOfJob(job *api.JobInfo) types.UID {
 		return job.PodGroup.OwnerReferences[0].UID
 	}
 	return ""
+}
+
+// TaskValidateHelper task validate helper
+type TaskValidateHelper struct {
+	ValidateTask           map[api.TaskID]struct{}
+	InvalidResourceRequest map[api.TaskID]int
+	InvalidTask            map[api.TaskID]error
+}
+
+// NewTaskValidateHelper create a new TaskValidateHelper
+func NewTaskValidateHelper() *TaskValidateHelper {
+	return &TaskValidateHelper{
+		ValidateTask:           make(map[api.TaskID]struct{}),
+		InvalidResourceRequest: make(map[api.TaskID]int),
+		InvalidTask:            make(map[api.TaskID]error),
+	}
+}
+
+// HasTask check taskID is in TaskValidateHelper
+func (h *TaskValidateHelper) HasTask(taskID api.TaskID) bool {
+	if _, ok := h.ValidateTask[taskID]; ok {
+		return true
+	}
+	_, ok := h.InvalidResourceRequest[taskID]
+	return ok
+}
+
+// AddValidateTask add taskID to TaskValidateHelper
+func (h *TaskValidateHelper) AddValidateTask(taskID api.TaskID) {
+	h.ValidateTask[taskID] = struct{}{}
+}
+
+// AddInvalidResourceRequest add taskID to TaskValidateHelper
+func (h *TaskValidateHelper) AddInvalidResourceRequest(taskID api.TaskID, resourceRequest int) {
+	h.InvalidResourceRequest[taskID] = resourceRequest
+}
+
+func (h *TaskValidateHelper) AddInvalidTask(taskID api.TaskID, err error) {
+	h.InvalidTask[taskID] = err
+}
+
+// TaskValidResult get task validate result
+func (h *TaskValidateHelper) TaskValidResult(expected string) *api.ValidateResult {
+	actual := ""
+	for taskID, resourceRequest := range h.InvalidResourceRequest {
+		actual += fmt.Sprintf("task<%s> req npu: %d", taskID, resourceRequest)
+	}
+	for taskID, err := range h.InvalidTask {
+		actual += fmt.Sprintf("task<%s> has error: %v", taskID, err)
+	}
+
+	if actual != "" {
+		return &api.ValidateResult{
+			Pass:    false,
+			Reason:  InvalidResourceRequestReason,
+			Message: fmt.Sprintf("expected: %s, actual: %s, ", expected, actual),
+		}
+	}
+	return nil
 }

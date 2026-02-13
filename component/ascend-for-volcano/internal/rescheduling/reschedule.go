@@ -844,7 +844,7 @@ func (reScheduler *ReScheduler) checkNodeCurNodeIsFault(vcNode *plugin.NPUNode, 
 	}
 	nodeHealthyStatusByNodeD := vcNode.Annotation[util.NodeHealthyStatusKey]
 	if nodeHealthyStatusByNodeD == util.PreSeparateFaultCode {
-		return fmt.Errorf("node %s health status is %s", vcNode.Name, nodeHealthyStatusByNodeD)
+		return fmt.Errorf("node health status is %s", nodeHealthyStatusByNodeD)
 	}
 	if !reScheduler.isJobCanAssignToSubHealthNode(schedulerJob.SubHealthyStrategy,
 		fNode.HasCardSubHealthFault || fNode.HasSwitchSubHealthFault) {

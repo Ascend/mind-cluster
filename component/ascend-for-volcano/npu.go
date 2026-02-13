@@ -27,8 +27,11 @@ import (
 	"time"
 
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog"
+	"volcano.sh/apis/pkg/apis/scheduling"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
@@ -132,12 +135,19 @@ func (tp *huaweiNPUPlugin) OnSessionClose(ssn *framework.Session) {
 	// 2、Update job statue;
 	// 3、Handle other post-dispatch issues.
 	for _, job := range ssn.Jobs {
-		// deal pending job
-		if job.PodGroup.Status.Phase == util.PodGroupInqueue ||
-			job.PodGroup.Status.Phase == util.PodGroupPending {
-			// if all nodes not meet job require failed
-			tp.Scheduler.SetJobPendReasonByNodesCase(job)
+		sjob, ok := tp.Scheduler.Jobs[job.UID]
+		if !ok {
+			continue
 		}
+		klog.V(util.LogInfoLev).Infof("job ReadyTaskNum %d, sjob.MinAvailable: %d", job.ReadyTaskNum(),
+			sjob.MinAvailable)
+		if job.ReadyTaskNum() >= sjob.MinAvailable {
+			continue
+		}
+		tp.addBatchOrderFailedCondition(job, ssn)
+		tp.addNodePredicateFailedCondition(job, ssn)
+		tp.addJobValidFailedCondition(job, ssn)
+		tp.addJobEnqueueFailedCondition(job, ssn)
 	}
 	tp.Scheduler.BeforeCloseHandler()
 }
@@ -147,13 +157,7 @@ func addPredicateFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 	ssn.AddPredicateFn(tp.Name(), func(taskInfo *api.TaskInfo, nodeInfo *api.NodeInfo) error {
 		predicateErr := tp.Scheduler.NodePredicate(taskInfo, nodeInfo)
 		if predicateErr != nil {
-			tp.Scheduler.Jobs[taskInfo.Job].Lock()
-			vcJob := tp.Scheduler.Jobs[taskInfo.Job]
-			vcJob.UpdateJobPendingMessage(predicateErr.Error(), nodeInfo.Name)
-			tp.Scheduler.Jobs[taskInfo.Job].Unlock()
-			klog.V(util.LogDebugLev).Infof("NodePredicate failed for task %s err:%s", taskInfo.Name, predicateErr)
-			predicateErr = fmt.Errorf("node check failed. for details,log by search keywords <%s> in volcano's log",
-				predicateErr.Error())
+			tp.Scheduler.NodePredicateErrors.Add(taskInfo.Job, nodeInfo.Name, predicateErr)
 		}
 		return predicateErr
 	})
@@ -178,11 +182,16 @@ func jobPipelined(obj interface{}, tp *huaweiNPUPlugin) int {
 
 func addBatchNodeOrderFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 	ssn.AddBatchNodeOrderFn(tp.Name(), func(task *api.TaskInfo, nodes []*api.NodeInfo) (map[string]float64, error) {
+		_, ok := tp.Scheduler.PredicatedNodes[task.Job]
+		if !ok {
+			tp.Scheduler.PredicatedNodes[task.Job] = sets.String{}
+		}
+		for _, node := range nodes {
+			tp.Scheduler.PredicatedNodes[task.Job].Insert(node.Name)
+		}
 		score, err := tp.Scheduler.BatchNodeOrderFn(task, nodes)
 		if err != nil {
-			if setErr := tp.Scheduler.SetJobPendingReason(ssn.Jobs[task.Job], err.Error()); setErr != nil {
-				klog.V(util.LogDebugLev).Infof("%s setJobFailed err:%s.", PluginName, util.SafePrint(setErr))
-			}
+			tp.Scheduler.BatchOrderError[task.Job] = err
 		}
 		return score, nil
 	})
@@ -238,6 +247,8 @@ func jobEnqueueable(job interface{}, ssn *framework.Session, tp *huaweiNPUPlugin
 	if tNpuNum < rNpuNum {
 		klog.V(util.LogWarningLev).Infof("job <%s> Add enqueue failed, require npu num is %v "+
 			"but cluster npu num is %v", vcjob.Name, rNpuNum, tNpuNum)
+		tp.Scheduler.EnqueueError[vcjob.UID] = fmt.Errorf("require npu num is %v, but cluster npu num is %v", rNpuNum,
+			tNpuNum)
 		return util.JobNotEnqueue
 	}
 	if tp.Scheduler.FrameAttr.ForceEnqueue {
@@ -394,4 +405,75 @@ func execJobDequeue(ssn *framework.Session, job *api.JobInfo) {
 	} else {
 		job.PodGroup.Annotations[util.DequeueFrequencyAnnoKey] = strconv.FormatInt(dequeueTimes+1, util.Base10)
 	}
+}
+
+func addPodGroupCondition(job *api.JobInfo, sessionID types.UID, reason, message string) {
+	jc := scheduling.PodGroupCondition{
+		Type:               scheduling.PodGroupUnschedulableType,
+		Status:             v1.ConditionTrue,
+		TransitionID:       string(sessionID),
+		LastTransitionTime: metav1.Time{Time: time.Now()},
+		Reason:             reason,
+		Message:            message,
+	}
+
+	index := -1
+	for i, cond := range job.PodGroup.Status.Conditions {
+		if cond.Type == scheduling.PodGroupUnschedulableType && cond.Reason == reason {
+			index = i
+			break
+		}
+	}
+
+	if index >= 0 {
+		job.PodGroup.Status.Conditions[index] = jc
+	} else {
+		job.PodGroup.Status.Conditions = append(job.PodGroup.Status.Conditions, jc)
+	}
+}
+
+func (tp *huaweiNPUPlugin) addBatchOrderFailedCondition(job *api.JobInfo, ssn *framework.Session) {
+	batchOrderError, ok := tp.Scheduler.BatchOrderError[job.UID]
+	if !ok {
+		return
+	}
+	addPodGroupCondition(job, ssn.UID, util.BatchOrderFailedReason, batchOrderError.Error())
+}
+
+func (tp *huaweiNPUPlugin) addNodePredicateFailedCondition(job *api.JobInfo, ssn *framework.Session) {
+	const maxPrint = 20
+	var message string
+	if nodes, ok := tp.Scheduler.PredicatedNodes[job.UID]; ok {
+		message += fmt.Sprintf("Predicated-Nodes count: %d, nodes: %v..., ", len(nodes), nodes.List()[:util.Min(nodes.Len(),
+			maxPrint)])
+	}
+	for _, fitError := range job.NodesFitErrors {
+		message += fitError.Error()
+	}
+	nodePredicateErr := tp.Scheduler.NodePredicateErrors.Get(job.UID)
+	if nodePredicateErr != nil {
+		for errStr, nodes := range nodePredicateErr {
+			message += fmt.Sprintf(" Reason: %s, such as: %v...", errStr, nodes.List()[:util.Min(nodes.Len(),
+				maxPrint)])
+		}
+	}
+
+	addPodGroupCondition(job, ssn.UID, util.NodePredicateFailedReason, message)
+}
+
+func (tp *huaweiNPUPlugin) addJobValidFailedCondition(job *api.JobInfo, ssn *framework.Session) {
+	result, ok := tp.Scheduler.ValidResult[job.UID]
+	if !ok {
+		return
+	}
+	addPodGroupCondition(job, ssn.UID, util.JobValidateFailedReason, fmt.Sprintf("%s: %s", result.Reason, result.Message))
+}
+
+func (tp *huaweiNPUPlugin) addJobEnqueueFailedCondition(job *api.JobInfo, ssn *framework.Session) {
+	enqueueError, ok := tp.Scheduler.EnqueueError[job.UID]
+	if !ok {
+		return
+	}
+
+	addPodGroupCondition(job, ssn.UID, util.JobEnqueueFailedReason, enqueueError.Error())
 }
