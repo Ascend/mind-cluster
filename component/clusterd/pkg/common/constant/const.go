@@ -439,9 +439,9 @@ const (
 
 const (
 	// CustomFilterFaultCodeAnnoKey custom filter fault code annotation key
-	CustomFilterFaultCodeAnnoKey = "huawei.com/schedule_filter_faultCode"
+	CustomFilterFaultCodeAnnoKey = "huawei.com/schedule.filter.faultCode"
 	// CustomFilterFaultLevelAnnoKey custom filter fault level annotation key
-	CustomFilterFaultLevelAnnoKey = "huawei.com/schedule_filter_faultLevel"
+	CustomFilterFaultLevelAnnoKey = "huawei.com/schedule.filter.faultLevel"
 	// CustomFilterFaultDefaultTimeout custom filter fault default time out
 	CustomFilterFaultDefaultTimeout = 60 * time.Second
 	// EachFaultFilterConfigMaxLen max length of each fault filter config
