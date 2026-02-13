@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -40,6 +41,7 @@ const (
 	expectedPortId = 5
 	// byte mask which is not for d2d usage
 	byteMaskNotForD2D byte = 0x01 << 3
+	byteForPgPort          = 0x51
 )
 
 var (
@@ -70,6 +72,21 @@ var (
 			{
 				EidIndex: 1,
 				Eid:      eid2,
+			},
+		},
+	}
+	eid3 = apiCommon.Eid{
+		Raw: [apiCommon.EidByteSize]byte{
+			0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, byteForPgPort,
+		},
+	}
+	urmaDevInfoNotForD2DWhenRankLavel1 = apiCommon.UrmaDeviceInfo{
+		EidCount: 1, // 至少包含一个 EID
+		EidInfos: []apiCommon.UrmaEidInfo{
+			{
+				EidIndex: 0,
+				Eid:      eid3,
 			},
 		},
 	}
@@ -328,6 +345,19 @@ func TestNpuBaseMethodGetEidListByFeIDAndRankLevel(t *testing.T) {
 		})
 		convey.Convey("04-should return empty when rankLevel=0 with not d2d usage", func() {
 			actual := npu.getEidListByFeIDAndRankLevel(expectedFeId, &urmaDevInfoNotForD2DWhenRankLavel0,
+				api.RankLevel0)
+			convey.So(actual, convey.ShouldBeEmpty)
+		})
+		convey.Convey("05-should return empty when rankLevel=0 with portId over portLimit in atlas 350", func() {
+			npu = &NpuBase{
+				productInfo: &ProductBase{
+					cardType: common.A54P300ICardName,
+				},
+				eidPortMap:     make(map[string][]string),
+				portMapMutex:   sync.RWMutex{},
+				urmaDevInfoMap: make(map[int32][]apiCommon.UrmaDeviceInfo),
+			}
+			actual := npu.getEidListByFeIDAndRankLevel(expectedFeId, &urmaDevInfoNotForD2DWhenRankLavel1,
 				api.RankLevel0)
 			convey.So(actual, convey.ShouldBeEmpty)
 		})

@@ -396,6 +396,14 @@ func (n *NpuBase) getEidListByFeIDAndRankLevel(feID uint, urmaDevInfo *apiCommon
 		if rankLevel == api.RankLevel0 && !n.checkEidIsUsedForD2D(&urmaDevInfo.EidInfos[i].Eid) {
 			continue
 		}
+		if rankLevel == api.RankLevel0 && n.productInfo.isStandCard() {
+			eidStr := hex.EncodeToString(urmaDevInfo.EidInfos[i].Eid.Raw[:])
+			portId, err := getPortIdBydEid(eidStr)
+			// when atlas 350 cluster the 0 layer rank level, skip append baseDeviceInfo with portId over 8 (pg port) eid
+			if err != nil || portId > common.PortIdLimit {
+				continue
+			}
+		}
 		eidList = append(eidList, urmaDevInfo.EidInfos[i])
 	}
 	return eidList
@@ -513,18 +521,12 @@ func (n *NpuBase) getPortsList(phyId int32, eid string, rLevel int) ([]string, e
 	return ports, nil
 }
 
-func getDieIdAndPortId(eid string) (byte, byte, error) {
-	if len(eid) < common.DieIDOffset {
-		return 0, 0, fmt.Errorf("eid:<%v> len is invalid, which should be greater equal than %d",
-			eid, common.DieIDOffset)
-	}
-
-	var dieId, portId byte
+func getDieIdByEid(eid string) (byte, error) {
+	var dieId byte
 	dieIdStr := eid[len(eid)-common.DieIDOffset : len(eid)-common.PortIDSuffixLen] // third-to-last character for dieId
-	portIdStr := eid[len(eid)-common.PortIDSuffixLen:]                             // last two characters for portId calculation
 	dieIdInt, err := strconv.ParseInt(dieIdStr, hexadecimal, 0)
 	if err != nil {
-		return 0, 0, fmt.Errorf("dieId:<%v> is invalid, parse to int failed, err: %v", dieIdInt, err)
+		return 0, fmt.Errorf("dieId:<%v> is invalid, parse to int failed, err: %v", dieIdInt, err)
 	}
 
 	// dieId & 0x04(0000 0100) to get the 3rd bit of dieId lower byte
@@ -534,9 +536,15 @@ func getDieIdAndPortId(eid string) (byte, byte, error) {
 		dieId = 0
 	}
 
+	return dieId, nil
+}
+
+func getPortIdBydEid(eid string) (byte, error) {
+	var portId byte
+	portIdStr := eid[len(eid)-common.PortIDSuffixLen:] // last two characters for portId calculation
 	portInt, err := strconv.ParseInt(portIdStr, hexadecimal, 0)
 	if err != nil {
-		return 0, 0, fmt.Errorf("portId:<%v> is invalid, parse to int failed, err: %v", portInt, err)
+		return 0, fmt.Errorf("portId:<%v> is invalid, parse to int failed, err: %v", portInt, err)
 	}
 
 	// Mask with 0x7F (0111 1111) to discard the MSB (Most Significant Bit), then right shift by 3 bits to drop the 3 least significant bits.
@@ -544,6 +552,24 @@ func getDieIdAndPortId(eid string) (byte, byte, error) {
 	// 1. Masking: 0x28 & 0x7F -> 0010 1000
 	// 2. Shifting: 0010 1000 >> 3 -> 0000 0101 (Decimal: 5)
 	portId = byte((portInt & portIdMaskNum) >> rightShiftLen)
+
+	return portId, nil
+}
+
+func getDieIdAndPortId(eid string) (byte, byte, error) {
+	if len(eid) < common.DieIDOffset {
+		return 0, 0, fmt.Errorf("eid:<%v> len is invalid, which should be greater equal than %d",
+			eid, common.DieIDOffset)
+	}
+
+	dieId, err := getDieIdByEid(eid)
+	if err != nil {
+		return 0, 0, err
+	}
+	portId, err := getPortIdBydEid(eid)
+	if err != nil {
+		return 0, 0, err
+	}
 
 	return dieId, portId, nil
 }
