@@ -104,7 +104,7 @@ func (s *JobServer) Register(ctx context.Context, req *job.ClientInfo) (*job.Sta
 			Code:     int32(common.RateLimitedCode),
 			Info:     fmt.Sprintf("client num limit, max client num is %d", maxClientMapLen),
 			ClientId: "",
-		}, fmt.Errorf("client num limit, max client num is %d", maxClientMapLen)
+		}, nil
 	}
 	clientId := string(uuid.NewUUID())
 	s.clients[clientId] = &clientState{
