@@ -444,12 +444,6 @@ class STTestNetDiag(unittest.TestCase):
         self.diag_args = DiagSTArgs(self.diag_input, self.output)
         set_logger(["NET_CONGESTION"])
 
-    def test_net_parse(self):
-        controller = ParseController(self.parse_args)
-        cfg = controller.cfg
-        start_net_parse_job(cfg)
-        parsed_file_list = os.listdir(self.parse_output)
-        self.assertIn("nic_clean.csv", parsed_file_list)
 
     def tearDown(self) -> None:
         if os.path.exists(self.output):

@@ -37,6 +37,10 @@ class ValidCase(unittest.TestCase):
     def test_rule_check(self):
         self.assertTrue(rule_check("", [{"dst_code": "12345"}], {"12345"}))
         self.assertFalse(rule_check("12345", [{"dst_code": "12345"}], {"12345"}))
+        self.assertFalse(rule_check("", [{"dst_code": "12345"}], {"12346"}))
+        self.assertTrue(rule_check("", [{"dst_code": "AbCd123_"}], {"AbCd123_"}))
+        self.assertFalse(rule_check("", [{"dst_code": "A" * 51}], {"A" * 50}))
+        self.assertFalse(rule_check("", [{}], {"12345"}))
 
     def test_paragraph_check(self):
         self.assertTrue(paragraph_check("这是一个测试的graph字段。"))

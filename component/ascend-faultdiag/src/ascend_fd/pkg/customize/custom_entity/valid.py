@@ -71,6 +71,8 @@ def rule_check(code, input_value, all_entities):
         if RULE_DST_NAME not in single_rule:
             return False
         dst_code = single_rule.get(RULE_DST_NAME)
+        if dst_code not in all_entities:
+            return False
         if dst_code == code:
             return False
         if RULE_EXP_NAME in single_rule and \

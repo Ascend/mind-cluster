@@ -60,9 +60,9 @@ def update_entity(data_path: str = None, sdk_entity: dict = None, output_dict: d
             exist_failed_codes.append(code)
             continue
         old_entity = user_entities.get(code, {})
-        if not old_entity and not _add_single_entity(code, entity, user_entities):
+        if not old_entity and not _add_single_entity(code, entity, user_entities, origin_entities):
             add_failed_codes.append(code)
-        if old_entity and not _update_single_entity(code, entity, user_entities):
+        if old_entity and not _update_single_entity(code, entity, user_entities, origin_entities):
             update_failed_codes.append(code)
     if data_path is not None:
         with safe_write_open(DEFAULT_USER_CONF, mode="w+", encoding="utf-8") as file_stream:
@@ -85,17 +85,18 @@ def update_entity(data_path: str = None, sdk_entity: dict = None, output_dict: d
         raise ParamError("All codes update failed, please check the input json file content.")
 
 
-def _update_single_entity(code, updated_entity, user_entities):
+def _update_single_entity(code, updated_entity, user_entities, origin_entities):
     """
     Update the existing fault entity
     :param code: str, the fault code that need to updated
     :param updated_entity: dict, the updated data
     :param user_entities: dict, user entities conf
+    :param origin_entities: dict, origin entities conf
     :return: indicates whether the update is successful. bool value.
     """
     entity = user_entities.get(code, {})
-    user_entity_codes = set(user_entities.keys())
-    if not _check_and_update_entity(code, updated_entity, entity, user_entity_codes):
+    all_entity_codes = set(user_entities.keys()).union(origin_entities.keys())
+    if not _check_and_update_entity(code, updated_entity, entity, all_entity_codes):
         logger.error("Update entity(%s) failed because some attribute fail to be verified.", code)
         return False
     user_entities.update({code: entity})
@@ -103,12 +104,13 @@ def _update_single_entity(code, updated_entity, user_entities):
     return True
 
 
-def _add_single_entity(code, add_entity, user_entities):
+def _add_single_entity(code, add_entity, user_entities, origin_entities):
     """
     Add a new fault entity
     :param code: str, the fault code that need to updated
     :param add_entity: dict, the add data
     :param user_entities: dict, user entities conf
+    :param origin_entities: dict, origin entities conf
     :return: indicates whether the adding is successful. bool value.
     """
     if not code_check(code):
@@ -119,8 +121,8 @@ def _add_single_entity(code, add_entity, user_entities):
         logger.error("Add entity(%s) failed because some required attribute %s are missing.", code, missing_attr)
         return False
     new_entity = {}
-    user_entity_codes = set(user_entities.keys())
-    if not _check_and_update_entity(code, add_entity, new_entity, user_entity_codes):
+    all_entity_codes = set(user_entities.keys()).union(origin_entities.keys())
+    if not _check_and_update_entity(code, add_entity, new_entity, all_entity_codes):
         logger.error("Add entity(%s) failed because some attribute fail to be verified.", code)
         return False
     user_entities[code] = new_entity
@@ -128,13 +130,13 @@ def _add_single_entity(code, add_entity, user_entities):
     return True
 
 
-def _check_and_update_entity(code, input_entity, new_entity, user_entity_codes):
+def _check_and_update_entity(code, input_entity, new_entity, all_entity_codes):
     """
     Check the input entity and update the data that passes the verification
     :param code: customized entity code
     :param input_entity: dict, input entity data from updated file
     :param new_entity: dict, the new entity after updating
-    :param user_entity_codes: set, user entity codes set, contain origin_entity and user_entity
+    :param all_entity_codes: set, user entity codes set, contain origin_entity and user_entity
     :return: indicates whether the verification is successful. bool value.
     """
     for key, value in input_entity.items():
@@ -142,7 +144,7 @@ def _check_and_update_entity(code, input_entity, new_entity, user_entity_codes):
             logger.warning("The key '%s' is invalid.", key)
             continue
         if key == "rule":
-            check_res = CHECK_MAP.get(key)(code, value, user_entity_codes)
+            check_res = CHECK_MAP.get(key)(code, value, all_entity_codes)
         else:
             check_res = CHECK_MAP.get(key)(value)
         if not check_res:

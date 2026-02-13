@@ -226,8 +226,8 @@ class FileParser(ABC):
             kg_logger.warning("No %s files found in the directory", self.TARGET_FILE_PATTERNS)
         return log_list
 
-    def parse_from_user_repository(self, line: str) -> Dict[str, str]:
-        for code, params in self.user_conf.items():
+    def single_line_parse(self, line: str, config):
+        for code, params in config.items():
             if self.pattern_matcher.compare(params, line):
                 key_info = self.pattern_matcher.key_info or line
                 event_dict = {EVENT_CODE: code, "key_info": key_info, CUSTOM_EVENT: True}
@@ -237,7 +237,14 @@ class FileParser(ABC):
                 return event_dict
         return {}
 
+    def parse_from_user_repository(self, line: str) -> Dict[str, str]:
+        return self.single_line_parse(line, self.user_conf)
+
     def parse_from_default_repository(self, line):
+        result = self.single_line_parse(line, self.default_conf)
+        if result:
+            return result
+
         log_data = line
         if isinstance(self.pattern_matcher, PatternSingleOrMultiLineMatcher):
             log_data = self.pattern_matcher.read_multi_line(LINE_NUM_OF_MULTILINE_MATCH, line)
