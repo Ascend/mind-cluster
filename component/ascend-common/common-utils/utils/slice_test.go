@@ -534,3 +534,114 @@ func TestCheckSliceSupport(t *testing.T) {
 		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
+
+// TestGetEleInANotInB tests the GetEleInANotInB function
+func TestGetEleInANotInB(t *testing.T) {
+	for _, tt := range append(buildTestCase1(), buildTestCase2()...) {
+		t.Run(tt.description, func(t *testing.T) {
+			got := GetItemInANotInB(tt.a, tt.b)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetEleInANotInB() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func buildTestCase1() []struct {
+	description string
+	a           map[string][]string
+	b           map[string][]string
+	want        map[string][]string
+} {
+	return []struct {
+		description string
+		a           map[string][]string
+		b           map[string][]string
+		want        map[string][]string
+	}{
+		{
+			description: "A is empty",
+			a:           map[string][]string{},
+			b:           map[string][]string{"node1": {"dev1", "dev2"}},
+			want:        map[string][]string{},
+		},
+		{
+			description: "B is empty",
+			a:           map[string][]string{"node1": {"dev1", "dev2"}},
+			b:           map[string][]string{},
+			want:        map[string][]string{"node1": {"dev1", "dev2"}},
+		},
+		{
+			description: "Both A and B are empty",
+			a:           map[string][]string{},
+			b:           map[string][]string{},
+			want:        map[string][]string{},
+		},
+		{
+			description: "Different keys",
+			a:           map[string][]string{"node1": {"dev1"}},
+			b:           map[string][]string{"node1": {"dev2"}},
+			want:        map[string][]string{"node1": {"dev1"}},
+		},
+		{
+			description: "Same key, same values",
+			a:           map[string][]string{"node1": {"val1", "val2"}},
+			b:           map[string][]string{"node1": {"val1", "val2"}},
+			want:        map[string][]string{},
+		},
+		{
+			description: "Same key, different values",
+			a:           map[string][]string{"node1": {"val1", "val2"}},
+			b:           map[string][]string{"node1": {"val2", "val3"}},
+			want:        map[string][]string{"node1": {"val1"}},
+		},
+	}
+}
+
+func buildTestCase2() []struct {
+	description string
+	a           map[string][]string
+	b           map[string][]string
+	want        map[string][]string
+} {
+	return []struct {
+		description string
+		a           map[string][]string
+		b           map[string][]string
+		want        map[string][]string
+	}{
+
+		{
+			description: "Multiple keys, some overlapping",
+			a: map[string][]string{
+				"node1": {"dev1", "dev2"},
+				"node2": {"dev3"},
+				"node3": {"dev4"},
+			},
+			b: map[string][]string{
+				"node1": {"dev2", "dev5"},
+				"node2": {"dev3", "dev6"},
+				"node4": {"dev7"},
+			},
+			want: map[string][]string{
+				"node1": {"dev1"},
+				"node3": {"dev4"},
+			},
+		},
+		{
+			description: "Complex case with multiple values",
+			a: map[string][]string{
+				"node1": {"dev1", "dev2", "dev3"},
+				"node2": {"dev4"},
+			},
+			b: map[string][]string{
+				"node1": {"dev2", "dev3", "dev5", "dev6"},
+				"node3": {"dev7", "dev8"},
+			},
+			want: map[string][]string{
+				"node1": {"dev1"},
+				"node2": {"dev4"},
+			},
+		},
+	}
+}

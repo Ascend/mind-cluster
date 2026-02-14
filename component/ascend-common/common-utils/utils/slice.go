@@ -127,3 +127,42 @@ func CheckSliceSupport(elements []int64, expects []int64) error {
 	}
 	return nil
 }
+
+// GetItemInANotInB get the items in mapA that are not in mapB
+func GetItemInANotInB(mapA, mapB map[string][]string) map[string][]string {
+	if len(mapA) == 0 {
+		return map[string][]string{}
+	}
+
+	result := make(map[string][]string)
+	for keyA, valuesA := range mapA {
+		valuesB, exists := mapB[keyA]
+		if exists {
+			diffValues := getDifference(valuesA, valuesB)
+			if len(diffValues) > 0 {
+				result[keyA] = diffValues
+			}
+		} else {
+			result[keyA] = valuesA
+		}
+	}
+
+	return result
+}
+
+// getDifference get the items in sliA that are not in sliB
+func getDifference(sliceA, sliceB []string) []string {
+	setB := make(map[string]bool)
+	for _, item := range sliceB {
+		setB[item] = true
+	}
+
+	var difference []string
+	for _, item := range sliceA {
+		if !setB[item] {
+			difference = append(difference, item)
+		}
+	}
+
+	return difference
+}
