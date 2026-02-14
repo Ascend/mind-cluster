@@ -444,10 +444,10 @@ type ElabelInfo struct {
 	SerialNumber     string
 }
 
-// NpuMultiUtilizationInfo npu multi utilization info
-type NpuMultiUtilizationInfo struct {
-	AicAvgUtil uint32
-	AivAvgUtil uint32
+// DcmiMultiUtilizationInfo npu multi utilization info
+type DcmiMultiUtilizationInfo struct {
+	AicUtil    uint32
+	AivUtil    uint32
 	AicoreUtil uint32
 	NpuUtil    uint32
 }

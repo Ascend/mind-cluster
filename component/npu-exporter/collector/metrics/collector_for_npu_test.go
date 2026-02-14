@@ -32,8 +32,8 @@ import (
 const (
 	testLogicID0     = int32(0)
 	defaultUtilValue = -1
-	testAicAvgUtil   = uint32(50)
-	testAivAvgUtil   = uint32(60)
+	testAicUtil      = uint32(50)
+	testAivUtil      = uint32(60)
 	testAicoreUtil   = uint32(70)
 	testNpuUtil      = uint32(80)
 	testAICoreUtil   = uint32(75)
@@ -121,7 +121,7 @@ func buildBaseInfoPreCollectV2SuccessTestCases() []baseInfoPreCollectTestCase {
 				patches := gomonkey.NewPatches()
 				patches.ApplyMethodReturn(dmgr, "GetDevType", common.Ascend910B)
 				patches.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRateV2",
-					common.NpuMultiUtilizationInfo{}, nil)
+					common.DcmiMultiUtilizationInfo{}, nil)
 				return patches
 			},
 			expectFunc: func(c *BaseInfoCollector) bool {
@@ -143,7 +143,7 @@ func buildBaseInfoPreCollectV1FallbackTestCases() []baseInfoPreCollectTestCase {
 				patches := gomonkey.NewPatches()
 				patches.ApplyMethodReturn(dmgr, "GetDevType", common.Ascend910B)
 				patches.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRateV2",
-					common.NpuMultiUtilizationInfo{}, errors.New(apiCallFailedMsg))
+					common.DcmiMultiUtilizationInfo{}, errors.New(apiCallFailedMsg))
 				patches.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRate", testAICoreUtil, nil)
 				return patches
 			},
@@ -166,7 +166,7 @@ func buildBaseInfoPreCollectBothFailTestCases() []baseInfoPreCollectTestCase {
 				patches := gomonkey.NewPatches()
 				patches.ApplyMethodReturn(dmgr, "GetDevType", common.Ascend910B)
 				patches.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRateV2",
-					common.NpuMultiUtilizationInfo{}, errors.New(apiCallFailedMsg))
+					common.DcmiMultiUtilizationInfo{}, errors.New(apiCallFailedMsg))
 				patches.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRate",
 					uint32(0), errors.New(apiCallFailedMsg))
 				return patches
@@ -215,17 +215,17 @@ func buildCollectUtilTestCases() []collectUtilTestCase {
 			setupPatches: func(c *BaseInfoCollector, dmgr *devmanager.DeviceManager) *gomonkey.Patches {
 				c.realGetDeviceUtilizationRateInfoFunc = collectUtilV2
 				return gomonkey.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRateV2",
-					common.NpuMultiUtilizationInfo{
-						AicAvgUtil: testAicAvgUtil,
-						AivAvgUtil: testAivAvgUtil,
+					common.DcmiMultiUtilizationInfo{
+						AicUtil:    testAicUtil,
+						AivUtil:    testAivUtil,
 						AicoreUtil: testAicoreUtil,
 						NpuUtil:    testNpuUtil,
 					}, nil)
 			},
 			expectUtil:    int(testAicoreUtil),
 			expectOverall: int(testNpuUtil),
-			expectVector:  int(testAivAvgUtil),
-			expectCube:    int(testAicAvgUtil),
+			expectVector:  int(testAivUtil),
+			expectCube:    int(testAicUtil),
 		},
 		{
 			name:    "should call buildDefaultMultiUtilInfo when func is nil",
@@ -362,17 +362,17 @@ func buildCollectUtilV2TestCases() []collectUtilV2TestCase {
 			logicID: testLogicID0,
 			setupPatches: func(dmgr *devmanager.DeviceManager) *gomonkey.Patches {
 				return gomonkey.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRateV2",
-					common.NpuMultiUtilizationInfo{
-						AicAvgUtil: testAicAvgUtil,
-						AivAvgUtil: testAivAvgUtil,
+					common.DcmiMultiUtilizationInfo{
+						AicUtil:    testAicUtil,
+						AivUtil:    testAivUtil,
 						AicoreUtil: testAicoreUtil,
 						NpuUtil:    testNpuUtil,
 					}, nil)
 			},
 			expectUtil:    int(testAicoreUtil),
 			expectOverall: int(testNpuUtil),
-			expectVector:  int(testAivAvgUtil),
-			expectCube:    int(testAicAvgUtil),
+			expectVector:  int(testAivUtil),
+			expectCube:    int(testAicUtil),
 			expectError:   false,
 		},
 		{
@@ -380,7 +380,7 @@ func buildCollectUtilV2TestCases() []collectUtilV2TestCase {
 			logicID: testLogicID0,
 			setupPatches: func(dmgr *devmanager.DeviceManager) *gomonkey.Patches {
 				return gomonkey.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRateV2",
-					common.NpuMultiUtilizationInfo{}, errors.New(apiCallFailedMsg))
+					common.DcmiMultiUtilizationInfo{}, errors.New(apiCallFailedMsg))
 			},
 			expectUtil:    0,
 			expectOverall: 0,

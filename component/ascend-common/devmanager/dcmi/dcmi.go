@@ -95,8 +95,8 @@ struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info){
    }
 
    static int (*dcmi_get_device_utilization_rate_v2_func)(int card_id, int device_id,
-				struct npu_multi_utilization_info *util_info);
-   int dcmi_get_device_utilization_rate_v2(int card_id, int device_id, struct npu_multi_utilization_info *util_info){
+				struct dcmi_multi_utilization_info *util_info);
+   int dcmi_get_device_utilization_rate_v2(int card_id, int device_id, struct dcmi_multi_utilization_info *util_info){
    	CALL_FUNC(dcmi_get_device_utilization_rate_v2,card_id,device_id,util_info)
    }
 
@@ -564,7 +564,7 @@ type DcDriverInterface interface {
 	DcGetDeviceHealth(int32, int32) (int32, error)
 	DcGetDeviceNetWorkHealth(int32, int32) (uint32, error)
 	DcGetDeviceUtilizationRate(int32, int32, common.DeviceType) (int32, error)
-	DcGetDeviceUtilizationRateV2(int32, int32) (common.NpuMultiUtilizationInfo, error)
+	DcGetDeviceUtilizationRateV2(int32, int32) (common.DcmiMultiUtilizationInfo, error)
 	DcGetDeviceTemperature(int32, int32) (int32, error)
 	DcGetDeviceVoltage(int32, int32) (float32, error)
 	DcGetDevicePowerInfo(int32, int32) (float32, error)
@@ -1775,12 +1775,12 @@ func (d *DcManager) DcGetDeviceUtilizationRate(cardID, deviceID int32, devType c
 }
 
 // DcGetDeviceUtilizationRateV2 get device utils rate by id
-func (d *DcManager) DcGetDeviceUtilizationRateV2(cardID, deviceID int32) (common.NpuMultiUtilizationInfo, error) {
+func (d *DcManager) DcGetDeviceUtilizationRateV2(cardID, deviceID int32) (common.DcmiMultiUtilizationInfo, error) {
 	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
 		return BuildErrNpuMultiUtilizationInfo(),
 			fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
 	}
-	var multiUtilizationInfo C.struct_npu_multi_utilization_info
+	var multiUtilizationInfo C.struct_dcmi_multi_utilization_info
 	if retCode := C.dcmi_get_device_utilization_rate_v2(C.int(cardID), C.int(deviceID),
 		&multiUtilizationInfo); int32(retCode) != common.Success {
 		return BuildErrNpuMultiUtilizationInfo(),
@@ -1790,25 +1790,25 @@ func (d *DcManager) DcGetDeviceUtilizationRateV2(cardID, deviceID int32) (common
 }
 
 // BuildErrNpuMultiUtilizationInfo build error npu multi utilization info
-func BuildErrNpuMultiUtilizationInfo() common.NpuMultiUtilizationInfo {
-	return common.NpuMultiUtilizationInfo{
-		AicAvgUtil: common.UnRetError,
-		AivAvgUtil: common.UnRetError,
+func BuildErrNpuMultiUtilizationInfo() common.DcmiMultiUtilizationInfo {
+	return common.DcmiMultiUtilizationInfo{
+		AicUtil:    common.UnRetError,
+		AivUtil:    common.UnRetError,
 		AicoreUtil: common.UnRetError,
 		NpuUtil:    common.UnRetError,
 	}
 }
 
-func convertNpuMultiUtilizationInfo(info C.struct_npu_multi_utilization_info) common.NpuMultiUtilizationInfo {
-	return common.NpuMultiUtilizationInfo{
-		AicAvgUtil: checkAndConvertUtilizationInfo(info.aic_avg_util),
-		AivAvgUtil: checkAndConvertUtilizationInfo(info.aiv_avg_util),
+func convertNpuMultiUtilizationInfo(info C.struct_dcmi_multi_utilization_info) common.DcmiMultiUtilizationInfo {
+	return common.DcmiMultiUtilizationInfo{
+		AicUtil:    checkAndConvertUtilizationInfo(info.aic_util),
+		AivUtil:    checkAndConvertUtilizationInfo(info.aiv_util),
 		AicoreUtil: checkAndConvertUtilizationInfo(info.aicore_util),
 		NpuUtil:    checkAndConvertUtilizationInfo(info.npu_util),
 	}
 }
 
-func checkAndConvertUtilizationInfo(utilization C.uchar) uint32 {
+func checkAndConvertUtilizationInfo(utilization C.uint) uint32 {
 	if !common.IsValidUtilizationRate(uint32(utilization)) {
 		hwlog.RunLog.Errorf("get wrong device utilization : %d", uint32(utilization))
 		return common.UnRetError

@@ -42,7 +42,7 @@ type DeviceInterface interface {
 	GetDeviceHealth(logicID int32) (uint32, error)
 	GetDeviceNetWorkHealth(logicID int32) (uint32, error)
 	GetDeviceUtilizationRate(logicID int32, deviceType common.DeviceType) (uint32, error)
-	GetDeviceUtilizationRateV2(logicID int32) (common.NpuMultiUtilizationInfo, error)
+	GetDeviceUtilizationRateV2(logicID int32) (common.DcmiMultiUtilizationInfo, error)
 	GetDeviceTemperature(logicID int32) (int32, error)
 	GetDeviceVoltage(logicID int32) (float32, error)
 	GetDevicePowerInfo(logicID int32) (float32, error)
@@ -453,7 +453,7 @@ func (d *DeviceManager) GetDeviceUtilizationRate(logicID int32, deviceType commo
 }
 
 // GetDeviceUtilizationRateV2 get npu device utilization v2
-func (d *DeviceManager) GetDeviceUtilizationRateV2(logicID int32) (common.NpuMultiUtilizationInfo, error) {
+func (d *DeviceManager) GetDeviceUtilizationRateV2(logicID int32) (common.DcmiMultiUtilizationInfo, error) {
 	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
 	if err != nil {
 		hwlog.RunLog.Error(err)

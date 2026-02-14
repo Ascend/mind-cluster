@@ -530,8 +530,8 @@ func collectUtilV2(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCac
 	handleErr(err, "multiUtilInfo", logicID)
 	chip.Utilization = int(multiUtilInfo.AicoreUtil)
 	chip.OverallUtilization = int(multiUtilInfo.NpuUtil)
-	chip.VectorUtilization = int(multiUtilInfo.AivAvgUtil)
-	chip.CubeUtilization = int(multiUtilInfo.AicAvgUtil)
+	chip.VectorUtilization = int(multiUtilInfo.AivUtil)
+	chip.CubeUtilization = int(multiUtilInfo.AicUtil)
 }
 
 func setNetHealthStatus(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCache) {

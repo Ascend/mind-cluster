@@ -96,11 +96,11 @@ func (d *DeviceManagerMock) GetDeviceUtilizationRate(logicID int32, deviceType c
 }
 
 // GetDeviceUtilizationRateV2 get npu device utilization by v2 api
-func (d *DeviceManagerMock) GetDeviceUtilizationRateV2(logicID int32) (common.NpuMultiUtilizationInfo, error) {
-	return common.NpuMultiUtilizationInfo{
-		AicAvgUtil: 1,
+func (d *DeviceManagerMock) GetDeviceUtilizationRateV2(logicID int32) (common.DcmiMultiUtilizationInfo, error) {
+	return common.DcmiMultiUtilizationInfo{
+		AicUtil:    1,
 		AicoreUtil: 1,
-		AivAvgUtil: 1,
+		AivUtil:    1,
 		NpuUtil:    1,
 	}, nil
 }

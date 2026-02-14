@@ -82,8 +82,8 @@ const (
 	testLogicID0   = int32(0)
 	testCardID0    = int32(0)
 	testDeviceID0  = int32(0)
-	testAicAvgUtil = uint32(50)
-	testAivAvgUtil = uint32(60)
+	testAicUtil    = uint32(50)
+	testAivUtil    = uint32(60)
 	testAicoreUtil = uint32(70)
 	testNpuUtil    = uint32(80)
 	getIdFailedMsg = "get id failed"
@@ -130,9 +130,9 @@ func buildDcGetDeviceUtilizationRateV2TestCases() []dcGetDeviceUtilizationRateV2
 							return testCardID0, testDeviceID0, nil
 						}).
 					ApplyMethodReturn(dm.DcMgr, "GetDeviceUtilizationRateV2",
-						common.NpuMultiUtilizationInfo{
-							AicAvgUtil: testAicAvgUtil,
-							AivAvgUtil: testAivAvgUtil,
+						common.DcmiMultiUtilizationInfo{
+							AicUtil:    testAicUtil,
+							AivUtil:    testAivUtil,
 							AicoreUtil: testAicoreUtil,
 							NpuUtil:    testNpuUtil,
 						}, nil)
@@ -157,8 +157,8 @@ func TestDcGetDeviceUtilizationRateV2(t *testing.T) {
 					convey.So(err, convey.ShouldNotBeNil)
 				} else {
 					convey.So(err, convey.ShouldBeNil)
-					convey.So(result.AicAvgUtil, convey.ShouldEqual, testAicAvgUtil)
-					convey.So(result.AivAvgUtil, convey.ShouldEqual, testAivAvgUtil)
+					convey.So(result.AicUtil, convey.ShouldEqual, testAicUtil)
+					convey.So(result.AivUtil, convey.ShouldEqual, testAivUtil)
 					convey.So(result.AicoreUtil, convey.ShouldEqual, testAicoreUtil)
 					convey.So(result.NpuUtil, convey.ShouldEqual, testNpuUtil)
 				}
