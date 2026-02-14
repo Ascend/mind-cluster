@@ -63,7 +63,7 @@ func (processor *preSeparateFaultProcessor) processDeviceFaultCm(
 	faultCm *constant.AdvanceDeviceFaultCm, nodeName string) {
 	for deviceName, faults := range faultCm.FaultDeviceList {
 		for _, faultInfo := range faults {
-			if faultInfo.FaultLevel != constant.PreSeparateNPU {
+			if faultInfo.FaultCode == constant.LinkDownFaultCode || faultInfo.FaultLevel != constant.PreSeparateNPU {
 				continue
 			}
 			processor.updateCardUnHealthy(faultCm, nodeName, deviceName)
