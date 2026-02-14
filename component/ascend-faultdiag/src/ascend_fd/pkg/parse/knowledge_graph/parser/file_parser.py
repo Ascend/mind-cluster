@@ -232,6 +232,9 @@ class FileParser(ABC):
                 key_info = self.pattern_matcher.key_info or line
                 event_dict = {EVENT_CODE: code, "key_info": key_info, CUSTOM_EVENT: True}
                 attr_result = self.pattern_matcher.match_attr(params.get("attr_regex", ""), key_info)
+                # PTA故障通过ACL接口获取设备号，若获取失败则日志为缺省值-1，将-1转换为Unknown
+                if attr_result.get("source_device") == "-1":
+                    attr_result.update({"source_device": "Unknown"})
                 event_dict.update(attr_result)
                 event_dict.update(self.pattern_matcher.get_attr_info(attr_result, line, event_dict[EVENT_CODE]))
                 return event_dict

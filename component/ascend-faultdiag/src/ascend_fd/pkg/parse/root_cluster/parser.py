@@ -23,6 +23,8 @@ from ascend_fd.model.parse_info import PlogBaseInfo, PlogPidParseInfo, PlogError
     TimeoutEvent
 from ascend_fd.utils import regular_table
 from ascend_fd.utils.constant.str_const import TRANSPORT_INIT_ERROR
+from ascend_fd.utils.regular_table import ERROR_CQE_LATEST, ERROR_CQE_LATEST_SPLIT, ERROR_CQE, ERROR_CQE_NEW, \
+    ERROR_CQE_SPLIT, ERROR_CQE_NEW_SPLIT
 from ascend_fd.utils.tool import safe_write_open, safe_read_open, SHOW_LINES_NUM, get_log_module_and_time
 from ascend_fd.pkg.parse.blacklist.blacklist_op import BlackListManager
 
@@ -506,11 +508,14 @@ class ErrorParser:
         :return:
         """
         for keyword, split_key in zip(
-                [regular_table.ERROR_CQE, regular_table.ERROR_CQE_NEW],
-                [regular_table.ERROR_CQE_SPLIT, regular_table.ERROR_CQE_NEW_SPLIT]
+                [ERROR_CQE, ERROR_CQE_NEW],
+                [ERROR_CQE_SPLIT, ERROR_CQE_NEW_SPLIT]
         ):
             if keyword in line:
                 cqe_ip = filter_single_rank_info(line, split_key)
+                if ERROR_CQE_LATEST in line:
+                    key_log = line.split(ERROR_CQE_LATEST)[-1]
+                    cqe_ip = filter_single_rank_info(key_log, ERROR_CQE_LATEST_SPLIT)
                 if not cqe_ip:
                     return
                 self.cqe_links.add(cqe_ip)

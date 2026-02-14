@@ -32,3 +32,5 @@
 [INFO] HCCL(1017,python):2024-08-01-14:45:28.498.861 [externalinput.cc:1472][1017]HCCL_RDMA_TIMEOUT set by default to [20]
 [INFO] HCCL(1017,python):2024-08-01-14:45:28.498.874 [externalinput.cc:1506][1017]HCCL_RDMA_RETRY_CNT set by default to [7]
 [INFO] HCCL(1017,python):2024-08-01-15:45:28.498.874 ReportTimeoutProc: report timeout
+[ERROR] HCCL(148,python):2024-03-28-10:25:51.077.845 [topoinfo_exchange_agent.cc:43][148] cqe error status[12] remoteIP:[1.1.1.1]
+[ERROR] HCCL(148,python):2024-03-28-10:25:51.077.858 [topoinfo_detect.cc:214][148] cqe error status[12] remoteIP{deviceId[6],deviceIp[2.2.2.2]}

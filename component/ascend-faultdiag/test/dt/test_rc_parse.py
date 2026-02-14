@@ -42,6 +42,8 @@ class RcParseTestCase(unittest.TestCase):
         self.assertEqual(base_result.server_id, "172.16.13.183")
         self.assertEqual("2024-03-28-10:25:48.427201", error_result.first_error_time)
         self.assertEqual("HCCL", error_result.first_error_module)
+        self.assertIn("1.1.1.1", error_result.cqe_links)
+        self.assertIn("2.2.2.2", error_result.cqe_links)
         for event_dict in error_result.timeout_error_events_list:
             if event_dict.get("error_type") == "Notify":
                 self.assertEqual("3", event_dict.get("remote_rank"))
