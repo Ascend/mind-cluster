@@ -49,18 +49,27 @@ func TestGetPodKey(t *testing.T) {
 
 func TestGetPGInfo(t *testing.T) {
 	convey.Convey("test GetPGInfo", t, func() {
-		podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
 		convey.Convey("when pod is nil, jobName should be nil", func() {
 			jobName, pgName, namespace := GetPGInfo(nil)
 			convey.So(jobName, convey.ShouldEqual, "")
 			convey.So(pgName, convey.ShouldEqual, "")
 			convey.So(namespace, convey.ShouldEqual, "")
 		})
-		convey.Convey("when pod exists, podKey should be exits", func() {
-			jobName, pgName, namespace := GetPGInfo(podDemo1)
-			convey.So(jobName, convey.ShouldEqual, jobName1)
-			convey.So(pgName, convey.ShouldEqual, pgName1)
-			convey.So(namespace, convey.ShouldEqual, podNameSpace1)
+		convey.Convey("get pg info failed, pg key does not exist", func() {
+			podDemo := getDemoPod(podName1, podNameSpace1, podUid1)
+			podDemo.Annotations = map[string]string{api.PodRankIndexAnno: defaultPodRankIndexKey}
+			jobName, pgName, namespace := GetPGInfo(podDemo)
+			convey.So(jobName, convey.ShouldEqual, "")
+			convey.So(pgName, convey.ShouldEqual, "")
+			convey.So(namespace, convey.ShouldEqual, "")
+		})
+		convey.Convey("get pg info failed, job name label does not exist", func() {
+			podDemo := getDemoPod(podName1, podNameSpace1, podUid1)
+			podDemo.Labels = map[string]string{"": ""}
+			jobName, pgName, namespace := GetPGInfo(podDemo)
+			convey.So(jobName, convey.ShouldEqual, "")
+			convey.So(pgName, convey.ShouldEqual, "")
+			convey.So(namespace, convey.ShouldEqual, "")
 		})
 	})
 }
@@ -456,6 +465,43 @@ func TestGetContainerIdsbyPod(t *testing.T) {
 			convey.So(len(containerIdsMap), convey.ShouldEqual, len(podDemo.Status.ContainerStatuses))
 			convey.So(containerIdsMap["container1"], convey.ShouldEqual, "docker://container1-id")
 			convey.So(containerIdsMap["container2"], convey.ShouldEqual, "docker://container2-id")
+		})
+	})
+}
+
+func TestGetPodUsedDev(t *testing.T) {
+	convey.Convey("test GetPodUsedDev", t, func() {
+		convey.Convey("when pod or annotation is nil, used devs is empty", func() {
+			nilPod := v1.Pod{}
+			usedDev := GetPodUsedDev(nilPod)
+			convey.So(len(usedDev), convey.ShouldEqual, 0)
+		})
+		convey.Convey("get pod used dev failed, annotation does not exist", func() {
+			podDemo := getDemoPod(podName1, podNameSpace1, podUid1)
+			podDemo.Annotations = map[string]string{podGroupKey: pgName1}
+			usedDev := GetPodUsedDev(*podDemo)
+			convey.So(len(usedDev), convey.ShouldEqual, 0)
+		})
+		convey.Convey("get pod used dev successfully", func() {
+			podDemo := getDemoPod(podName1, podNameSpace1, podUid1)
+			usedDev := GetPodUsedDev(*podDemo)
+			convey.So(len(usedDev), convey.ShouldEqual, 1)
+			convey.So(usedDev, convey.ShouldResemble, []string{"0"})
+		})
+		convey.Convey("get pod used dev successfully, pod has 3 devices", func() {
+			const podDeviceKey = `{"server_id":"127.0.0.1","devices":[{"device_id":"0"},{"device_id":"1"},{"device_id":"2"}]}`
+			podDemo := getDemoPod(podName1, podNameSpace1, podUid1)
+			podDemo.Annotations[api.Pod910DeviceAnno] = podDeviceKey
+			usedDev := GetPodUsedDev(*podDemo)
+			convey.So(len(usedDev), convey.ShouldEqual, len3)
+			convey.So(usedDev, convey.ShouldResemble, []string{"0", "1", "2"})
+		})
+		convey.Convey("get pod used dev failed, parse annotation failed", func() {
+			const podDeviceKey = `error device key`
+			podDemo := getDemoPod(podName1, podNameSpace1, podUid1)
+			podDemo.Annotations[api.Pod910DeviceAnno] = podDeviceKey
+			usedDev := GetPodUsedDev(*podDemo)
+			convey.So(len(usedDev), convey.ShouldEqual, 0)
 		})
 	})
 }

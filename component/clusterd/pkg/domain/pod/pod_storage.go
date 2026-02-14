@@ -139,6 +139,18 @@ func GetPodByPodId(podId string) (v1.Pod, bool) {
 	return pod, true
 }
 
+// GetPodsByNodeName get pods by node name
+func GetPodsByNodeName(nodeName string) (map[string]v1.Pod, bool) {
+	podManager.podMapMutex.RLock()
+	defer podManager.podMapMutex.RUnlock()
+	pods, exist := podManager.nodePodMap[nodeName]
+	if !exist {
+		hwlog.RunLog.Debugf("node %s is not exist in pod storage", nodeName)
+		return map[string]v1.Pod{}, false
+	}
+	return pods, true
+}
+
 // GetPodByJobIdAndPodName get pod by jobId and pod name
 func GetPodByJobIdAndPodName(jobKey, podName string) (v1.Pod, bool) {
 	podManager.podMapMutex.RLock()

@@ -81,6 +81,28 @@ func GetPGInfo(info *v1.Pod) (jobName, pgName, namespace string) {
 	return jobName, pgName, info.Namespace
 }
 
+// GetPodUsedDev get pod used device id list
+func GetPodUsedDev(pod v1.Pod) []string {
+	if pod.Annotations == nil {
+		return nil
+	}
+	devInfo, exist := pod.Annotations[api.Pod910DeviceAnno]
+	if !exist {
+		return nil
+	}
+	var podDev constant.PodDevice
+	if err := json.Unmarshal([]byte(devInfo), &podDev); err != nil {
+		hwlog.RunLog.Errorf("parse annotation %s of pod <%s/%s> failed, error: %v", api.Pod910DeviceAnno,
+			pod.Namespace, pod.Name, err)
+		return nil
+	}
+	devs := make([]string, 0)
+	for _, dev := range podDev.Devices {
+		devs = append(devs, dev.DeviceID)
+	}
+	return devs
+}
+
 // GetSharedTorIpByPod get shared tor ip by pod
 func GetSharedTorIpByPod(pods map[string]v1.Pod) string {
 	sharedTorIps := make([]string, 0)

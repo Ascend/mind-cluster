@@ -27,6 +27,7 @@ const (
 	podName2               = "pod2"
 	podNameSpace1          = "default"
 	podUid1                = "123"
+	podUid2                = "456"
 	defaultPodRankIndexKey = "0"
 	errorPodRankIndexKey   = "-1"
 	defaultPodDeviceKey    = `{"server_id":"127.0.0.1","devices":[{"device_id":"0"}]}`
@@ -35,6 +36,7 @@ const (
 	envValue               = "true"
 
 	jobUid1  = "123"
+	jobUid2  = "456"
 	jobName1 = "job1"
 	vcJobKey = "job"
 	pgName1  = "pg1"
@@ -44,6 +46,8 @@ const (
 	nodeName2 = "node2"
 	nodeIp1   = "192.168.1.1"
 	nodeSn1   = "sn1"
+
+	len3 = 3
 )
 
 func TestSavePod(t *testing.T) {
@@ -89,6 +93,7 @@ func getDemoPod(name, nameSpace, podUid string) *v1.Pod {
 	p.Name = name
 	p.Namespace = nameSpace
 	p.UID = types.UID(podUid)
+	p.Spec.NodeName = nodeName1
 	isControlle := true
 	owner := metav1.OwnerReference{
 		Name:       jobName1,
@@ -107,4 +112,64 @@ func getDemoPod(name, nameSpace, podUid string) *v1.Pod {
 	}
 	p.SetLabels(label)
 	return p
+}
+
+func TestGetPodsByNodeName(t *testing.T) {
+	convey.Convey("test GetPodsByNodeName", t, func() {
+		podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
+		convey.Convey("the pod exist on node", func() {
+			SavePod(podDemo1)
+			defer DeletePod(podDemo1)
+			pods, exist := GetPodsByNodeName(nodeName1)
+			convey.So(exist, convey.ShouldBeTrue)
+			convey.So(len(pods), convey.ShouldEqual, 1)
+		})
+		convey.Convey("the pod does not exist on node", func() {
+			SavePod(podDemo1)
+			defer DeletePod(podDemo1)
+			pods, exist := GetPodsByNodeName(nodeName2)
+			convey.So(exist, convey.ShouldBeFalse)
+			convey.So(len(pods), convey.ShouldEqual, 0)
+		})
+	})
+}
+
+func TestGetPodByPodId(t *testing.T) {
+	convey.Convey("test GetPodByPodId", t, func() {
+		podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
+		convey.Convey("the pod exist", func() {
+			SavePod(podDemo1)
+			defer DeletePod(podDemo1)
+			pod, exist := GetPodByPodId(podUid1)
+			convey.So(exist, convey.ShouldBeTrue)
+			convey.So(pod.Name, convey.ShouldEqual, podName1)
+		})
+		convey.Convey("the pod does not exist", func() {
+			SavePod(podDemo1)
+			defer DeletePod(podDemo1)
+			pod, exist := GetPodByPodId(podUid2)
+			convey.So(exist, convey.ShouldBeFalse)
+			convey.So(pod.Name, convey.ShouldEqual, "")
+		})
+	})
+}
+
+func TestGetPodByJobIdAndPodName(t *testing.T) {
+	convey.Convey("test GetPodByJobIdAndPodName", t, func() {
+		podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
+		convey.Convey("the pod exist", func() {
+			SavePod(podDemo1)
+			defer DeletePod(podDemo1)
+			pod, exist := GetPodByJobIdAndPodName(jobUid1, podName1)
+			convey.So(exist, convey.ShouldBeTrue)
+			convey.So(pod.UID, convey.ShouldEqual, podUid1)
+		})
+		convey.Convey("the pod does not exist", func() {
+			SavePod(podDemo1)
+			defer DeletePod(podDemo1)
+			pod, exist := GetPodByJobIdAndPodName(jobUid2, podName2)
+			convey.So(exist, convey.ShouldBeFalse)
+			convey.So(pod.UID, convey.ShouldEqual, "")
+		})
+	})
 }

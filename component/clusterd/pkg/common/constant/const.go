@@ -451,3 +451,16 @@ const (
 	// EachFaultFilterConfigMaxLen max length of each fault filter config
 	EachFaultFilterConfigMaxLen = 2
 )
+
+const (
+	// ConfigCmName the name of config cm
+	ConfigCmName = "clusterd-config-cm"
+	// ManuallySeparateNPUConfigKey the key of manually separate npu config in cm
+	ManuallySeparateNPUConfigKey = "manually_separate_policy.conf"
+	// HoursToMilliseconds hours to milliseconds
+	HoursToMilliseconds = 60 * 60 * 1000
+	// SecondsToMilliseconds seconds to milliseconds
+	SecondsToMilliseconds = 1000
+	// DefaultSlidingWindow default sliding window size
+	DefaultSlidingWindow = 30
+)
