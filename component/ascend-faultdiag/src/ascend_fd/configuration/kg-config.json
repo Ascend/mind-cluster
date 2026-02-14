@@ -7399,7 +7399,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x80A58003"
+                    "Event id=0x80a58003"
                 ]
             }
         },
@@ -7422,7 +7422,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x80E38009"
+                    "Event id=0x80e38009"
                 ]
             }
         },
@@ -7445,7 +7445,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x80E3A207"
+                    "Event id=0x80e3a207"
                 ]
             }
         },
@@ -7468,7 +7468,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x80B18009"
+                    "Event id=0x80b18009"
                 ]
             }
         },
@@ -7547,7 +7547,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x80B78009"
+                    "Event id=0x80b78009"
                 ]
             }
         },
@@ -7570,8 +7570,8 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    ["event_id:  [0x81AE4E00]"],
-                    ["Event id=0x81AE4E00"]
+                    ["event_id:  [0x81ae4e00]"],
+                    ["Event id=0x81ae4e00"]
                 ]
             }
         },
@@ -7594,7 +7594,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x81AF8004"
+                    "Event id=0x81af8004"
                 ]
             }
         },
@@ -7619,7 +7619,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x81AF8009"
+                    "Event id=0x81af8009"
                 ]
             }
         },
@@ -7642,7 +7642,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x81AF8000"
+                    "Event id=0x81af8000"
                 ]
             }
         },
@@ -7665,7 +7665,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x81AF8008"
+                    "Event id=0x81af8008"
                 ]
             }
         },
@@ -7690,7 +7690,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x81B18603"
+                    "Event id=0x81b18603"
                 ]
             }
         },
@@ -7713,7 +7713,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x81B1800D"
+                    "Event id=0x81b1800d"
                 ]
             }
         },
@@ -7736,7 +7736,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x81B18008"
+                    "Event id=0x81b18008"
                 ]
             }
         },
@@ -7783,7 +7783,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x80DD8007"
+                    "Event id=0x80dd8007"
                 ]
             }
         },
@@ -7806,7 +7806,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x8C464E00"
+                    "Event id=0x8c464e00"
                 ]
             }
         },
@@ -7829,7 +7829,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x81B78009"
+                    "Event id=0x81b78009"
                 ]
             }
         },
@@ -7898,7 +7898,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x813D8009"
+                    "Event id=0x813d8009"
                 ]
             }
         },
@@ -8019,7 +8019,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x81B38000"
+                    "Event id=0x81b38000"
                 ]
             }
         },
@@ -8044,7 +8044,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x81B38009"
+                    "Event id=0x81b38009"
                 ]
             }
         },
@@ -8067,7 +8067,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x81B38004"
+                    "Event id=0x81b38004"
                 ]
             }
         },
@@ -8090,7 +8090,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x81B38008"
+                    "Event id=0x81b38008"
                 ]
             }
         },
@@ -8113,7 +8113,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x81B58002"
+                    "Event id=0x81b58002"
                 ]
             }
         },
@@ -8136,7 +8136,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x81B58004"
+                    "Event id=0x81b58004"
                 ]
             }
         },
@@ -8159,7 +8159,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x816F8004"
+                    "Event id=0x816f8004"
                 ]
             }
         },
@@ -8182,7 +8182,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x816F8002"
+                    "Event id=0x816f8002"
                 ]
             }
         },
@@ -8205,7 +8205,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x815F8004"
+                    "Event id=0x815f8004"
                 ]
             }
         },
@@ -8251,7 +8251,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x813B8004"
+                    "Event id=0x813b8004"
                 ]
             }
         },
@@ -8321,7 +8321,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x80F38003"
+                    "Event id=0x80f38003"
                 ]
             }
         },
@@ -8344,7 +8344,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x80F38009"
+                    "Event id=0x80f38009"
                 ]
             }
         },
@@ -8367,7 +8367,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x80E44E00"
+                    "Event id=0x80e44e00"
                 ]
             }
         },
@@ -8390,7 +8390,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x80E58008"
+                    "Event id=0x80e58008"
                 ]
             }
         },
@@ -8436,7 +8436,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x80F7860C"
+                    "Event id=0x80f7860c"
                 ]
             }
         },
@@ -8531,7 +8531,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x80CD8003"
+                    "Event id=0x80cd8003"
                 ]
             }
         },
@@ -8554,7 +8554,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x80A38003"
+                    "Event id=0x80a38003"
                 ]
             }
         },
