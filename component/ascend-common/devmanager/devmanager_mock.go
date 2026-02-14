@@ -16,6 +16,8 @@
 package devmanager
 
 import (
+	"time"
+
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/dcmi"
 )
@@ -186,7 +188,7 @@ func (d *DeviceManagerMock) GetDeviceIPAddress(logicID, ipType int32) (string, e
 
 // CreateVirtualDevice create virtual device
 func (d *DeviceManagerMock) CreateVirtualDevice(logicID int32, vDevInfo common.CgoCreateVDevRes) (common.
-CgoCreateVDevOut, error) {
+	CgoCreateVDevOut, error) {
 	return common.CgoCreateVDevOut{}, nil
 }
 
@@ -237,6 +239,12 @@ func (d *DeviceManagerMock) GetDeviceBootStatus(logicID int32) (int, error) {
 
 // GetDeviceAllErrorCode get device all error code success
 func (d *DeviceManagerMock) GetDeviceAllErrorCode(logicID int32) (int32, []int64, error) {
+	return 0, []int64{}, nil
+}
+
+// GetDeviceAllErrorCodeWithTimeOut get device all error code with timeout success
+func (d *DeviceManagerMock) GetDeviceAllErrorCodeWithTimeOut(
+	logicID int32, timeout time.Duration) (int32, []int64, error) {
 	return 0, []int64{}, nil
 }
 

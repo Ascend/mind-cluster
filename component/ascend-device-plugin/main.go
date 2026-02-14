@@ -271,6 +271,7 @@ func main() {
 	go hdm.ListenDpu(ctx)
 	// start goroutine to dump topo of rack A5 for ras
 	go topology.RasTopoWriteTask(ctx, hdm)
+	hwlog.RunLog.Infof("device plugin started.")
 	hdm.SignCatch(cancel)
 }
 

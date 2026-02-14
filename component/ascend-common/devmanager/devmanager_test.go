@@ -20,6 +20,7 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
@@ -28,6 +29,109 @@ import (
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/dcmi"
 )
+
+const (
+	testCardID       = 2
+	testDeviceID     = 3
+	testErrCount     = 5
+	testRetError     = -1
+	errGetCardDevice = "failed to get cardID and deviceID in get device error code by logicID(%d)"
+	errGetErrorCode  = "failed to get device error code by logicID(%d)"
+	timeout          = 5 * time.Second
+)
+
+func TestDeviceManagerGetDeviceAllErrorCodeWithTimeOut(t *testing.T) {
+	testCases := []struct {
+		name           string
+		logicID        int32
+		timeout        time.Duration
+		mockCardID     int32
+		mockDeviceID   int32
+		mockGetIDErr   error
+		mockErrCount   int32
+		mockErrCodes   []int64
+		mockGetCodeErr error
+		expectedCount  int32
+		expectedCodes  []int64
+		expectedErr    error
+	}{
+		{
+			name:    "should return error codes successfully when get card and device id success",
+			logicID: testLogicID, timeout: timeout, mockCardID: testCardID,
+			mockDeviceID: testDeviceID, mockGetIDErr: nil, mockErrCount: testErrCount,
+			mockErrCodes: []int64{1, 2, 3}, mockGetCodeErr: nil, expectedCount: testErrCount,
+			expectedCodes: []int64{1, 2, 3}, expectedErr: nil,
+		},
+		{
+			name:    "should return error when get card and device id failed",
+			logicID: testLogicID, timeout: timeout, mockCardID: 0, mockDeviceID: 0,
+			mockGetIDErr: errors.New("get id failed"),
+			mockErrCount: 0, mockErrCodes: nil, mockGetCodeErr: nil, expectedCount: testRetError,
+			expectedCodes: nil, expectedErr: errors.New(errGetCardDevice),
+		},
+		{
+			name:    "should return error when get error code failed",
+			logicID: testLogicID, timeout: timeout, mockCardID: testCardID,
+			mockDeviceID: testDeviceID, mockGetIDErr: nil, mockErrCount: 0,
+			mockErrCodes: nil, mockGetCodeErr: errors.New("get code failed"),
+			expectedCount: testRetError, expectedCodes: nil,
+			expectedErr: errors.New(errGetErrorCode),
+		},
+	}
+
+	doTestGetDeviceAllErrorCodeWithTimeOut(t, testCases)
+}
+
+func doTestGetDeviceAllErrorCodeWithTimeOut(t *testing.T, testCases []struct {
+	name           string
+	logicID        int32
+	timeout        time.Duration
+	mockCardID     int32
+	mockDeviceID   int32
+	mockGetIDErr   error
+	mockErrCount   int32
+	mockErrCodes   []int64
+	mockGetCodeErr error
+	expectedCount  int32
+	expectedCodes  []int64
+	expectedErr    error
+}) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			dm := &DeviceManager{
+				DcMgr: &dcmi.DcManager{},
+			}
+
+			patches := gomonkey.NewPatches()
+			defer patches.Reset()
+
+			patches.ApplyPrivateMethod(dm, "getCardIdAndDeviceId",
+				func(*DeviceManager, int32) (int32, int32, error) {
+					return tc.mockCardID, tc.mockDeviceID, tc.mockGetIDErr
+				})
+
+			patches.ApplyMethodReturn(
+				dm.DcMgr,
+				"DcGetDeviceAllErrorCodeWithTimeout",
+				tc.mockErrCount,
+				tc.mockErrCodes,
+				tc.mockGetCodeErr,
+			)
+
+			count, codes, err := dm.GetDeviceAllErrorCodeWithTimeOut(tc.logicID, tc.timeout)
+
+			convey.Convey("", t, func() {
+				convey.So(count, convey.ShouldEqual, tc.expectedCount)
+				convey.So(codes, convey.ShouldResemble, tc.expectedCodes)
+				if tc.expectedErr != nil {
+					convey.So(err, convey.ShouldNotBeNil)
+				} else {
+					convey.So(err, convey.ShouldBeNil)
+				}
+			})
+		})
+	}
+}
 
 // TestGetCardIdAndDeviceId test the getCardIdAndDeviceId function
 func TestGetCardIdAndDeviceId(t *testing.T) {

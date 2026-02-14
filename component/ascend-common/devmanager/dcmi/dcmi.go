@@ -606,6 +606,7 @@ type DcDriverInterface interface {
 	DcGetSuperPodInfo(int32, int32) (common.CgoSuperPodInfo, error)
 
 	DcGetDeviceAllErrorCode(int32, int32) (int32, []int64, error)
+	DcGetDeviceAllErrorCodeWithTimeout(int32, int32, time.Duration) (int32, []int64, error)
 	DcSubscribeDeviceFaultEvent(int32, int32) error
 	DcSetFaultEventCallFunc(func(common.DevFaultInfo))
 	DcGetDevProcessInfo(int32, int32) (*common.DevProcessInfo, error)
@@ -2119,6 +2120,76 @@ func (d *DcManager) DcGetDeviceBootStatus(logicID int32) (int, error) {
 		return common.RetError, fmt.Errorf("device boot status errCode: %v", errCode)
 	}
 	return int(bootStatus), nil
+}
+
+// DcGetDeviceAllErrorCodeWithTimeout get the error count and all error codes of the device
+func (d *DcManager) DcGetDeviceAllErrorCodeWithTimeout(
+	cardID, deviceID int32, timeout time.Duration) (int32, []int64, error) {
+	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
+		return common.RetError, nil, fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID,
+			deviceID)
+	}
+	var errCount C.int
+	var errCodeArray [common.MaxErrorCodeCount]C.uint
+
+	retCode := C.dcmi_get_device_errorcode_v2(C.int(cardID), C.int(deviceID), &errCount, &errCodeArray[0],
+		common.MaxErrorCodeCount)
+	if int32(retCode) != common.Success {
+		return common.RetError, nil, fmt.Errorf("failed to obtain the device errorcode based on cardID("+
+			"%d) and deviceID(%d), error code: %d, error count: %d", cardID, deviceID, int32(retCode), int32(errCount))
+	}
+	startTime := time.Now()
+	healthRetCode := d.getDeviceHealthWithTimeout(cardID, deviceID, timeout)
+	if time.Since(startTime) >= time.Second*common.DcmiRetryInterval {
+		retCode = C.dcmi_get_device_errorcode_v2(C.int(cardID), C.int(deviceID), &errCount, &errCodeArray[0],
+			common.MaxErrorCodeCount)
+		if int32(retCode) != common.Success {
+			return common.RetError, nil, fmt.Errorf(
+				"failed to obtain the device errorcode after get device health based on cardID(%d) and "+
+					"deviceID(%d), error code: %d, error count: %d", cardID, deviceID, int32(retCode), int32(errCount))
+		}
+	}
+
+	errCodes := make([]int64, 0, len(errCodeArray))
+	for _, errCode := range errCodeArray {
+		if int64(errCode) != 0 {
+			errCodes = append(errCodes, int64(errCode))
+		}
+	}
+
+	if int32(healthRetCode) == common.DeviceNotReadyErrCode {
+		hwlog.RunLog.Errorf("device errorcode v2 ret code: %d, device health ret code: %d, device not ready, "+
+			"maybe a card drop fault occurred on cardID(%d) and deviceID(%d)", int32(retCode), int32(healthRetCode),
+			cardID, deviceID)
+		errCount += 1
+		errCodes = append(errCodes, common.CardDropFaultCode)
+	}
+
+	if int32(errCount) < 0 || int32(errCount) > common.MaxErrorCodeCount {
+		return common.RetError, nil, fmt.Errorf("get wrong errorcode count, "+
+			"cardID(%d) and deviceID(%d), errorcode count: %d", cardID, deviceID, int32(errCount))
+	}
+
+	return int32(errCount), errCodes, nil
+}
+
+func (d *DcManager) getDeviceHealthWithTimeout(cardID int32, deviceID int32, timeout time.Duration) C.int {
+	var healthRetCode C.int
+	startTime := time.Now()
+	for time.Since(startTime) < timeout {
+		var health C.uint
+		healthRetCode = C.dcmi_get_device_health(C.int(cardID), C.int(deviceID), &health)
+
+		if int32(healthRetCode) == common.DeviceNotReadyErrCode {
+			hwlog.RunLog.Infof("device health ret code: %d, device not ready, "+
+				"wait card ready on cardID(%d) and deviceID(%d), wait times(%v)", int32(healthRetCode),
+				cardID, deviceID, time.Since(startTime))
+			time.Sleep(time.Second * common.DcmiRetryInterval)
+			continue
+		}
+		break
+	}
+	return healthRetCode
 }
 
 // DcGetDeviceAllErrorCode get the error count and all error codes of the device

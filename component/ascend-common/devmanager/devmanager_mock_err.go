@@ -17,6 +17,7 @@ package devmanager
 
 import (
 	"errors"
+	"time"
 
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/dcmi"
@@ -234,6 +235,12 @@ func (d *DeviceManagerMockErr) GetDeviceBootStatus(logicID int32) (int, error) {
 
 // GetDeviceAllErrorCode get device all error code failed
 func (d *DeviceManagerMockErr) GetDeviceAllErrorCode(logicID int32) (int32, []int64, error) {
+	return common.RetError, nil, errors.New(errorMsg)
+}
+
+// GetDeviceAllErrorCodeWithTimeOut get device all error code with timeout success
+func (d *DeviceManagerMockErr) GetDeviceAllErrorCodeWithTimeOut(
+	logicID int32, timeout time.Duration) (int32, []int64, error) {
 	return common.RetError, nil, errors.New(errorMsg)
 }
 
