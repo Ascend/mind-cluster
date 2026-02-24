@@ -15,9 +15,9 @@ limitations under the License.
 */
 
 /*
-Package superpod is using for HuaWei Ascend pin affinity schedule.
+Package chip8node8ra64sp is using for HuaWei Ascend pin affinity schedule.
 */
-package superpod
+package chip8node8ra64sp
 
 import (
 	"errors"
@@ -31,7 +31,7 @@ import (
 )
 
 // acquire usable node top
-func (tp *module910a5SuperPod) getUsableTopFromNode(node plugin.NPUNode) ([]int, error) {
+func (tp *chip8node8ra64sp) getUsableTopFromNode(node plugin.NPUNode) ([]int, error) {
 	if tp == nil || len(node.Annotation) == 0 {
 		return nil, errors.New(util.ArgumentError)
 	}
@@ -71,7 +71,7 @@ func (tp *module910a5SuperPod) getUsableTopFromNode(node plugin.NPUNode) ([]int,
 	return nodeNPUTopology, nil
 }
 
-func (tp *module910a5SuperPod) checkNodeStaticParams(_ *api.TaskInfo, node plugin.NPUNode) error {
+func (tp *chip8node8ra64sp) checkNodeStaticParams(_ *api.TaskInfo, node plugin.NPUNode) error {
 	// node in super-pod has super-podID which is not less than 0
 	if node.SuperPodID < 0 {
 		klog.V(util.LogDebugLev).Infof("node super-pod-id is invalid for node=%s, id=%d", node.Name, node.SuperPodID)
@@ -86,7 +86,7 @@ func (tp *module910a5SuperPod) checkNodeStaticParams(_ *api.TaskInfo, node plugi
 	return nil
 }
 
-func (tp *module910a5SuperPod) checkNodeNPUNums(task *api.TaskInfo, node plugin.NPUNode) error {
+func (tp *chip8node8ra64sp) checkNodeNPUNums(task *api.TaskInfo, node plugin.NPUNode) error {
 	taskNPUNum, err := tp.GetTaskReqNPUNum(task)
 	if err != nil {
 		klog.V(util.LogDebugLev).Infof("%s GetTaskReqNPUNum err: %s", tp.GetPluginName(), err.Error())
@@ -107,7 +107,7 @@ func (tp *module910a5SuperPod) checkNodeNPUNums(task *api.TaskInfo, node plugin.
 }
 
 // get the [8][8]bool npu using top of one rack nodes
-func (tp *module910a5SuperPod) getRackNPUTop(nodes []nodeBaseInfo) rackNpuTopType {
+func (tp *chip8node8ra64sp) getRackNPUTop(nodes []nodeBaseInfo) rackNpuTopType {
 	var rackNPUTop rackNpuTopType
 	if len(nodes) < 1 {
 		return rackNPUTop

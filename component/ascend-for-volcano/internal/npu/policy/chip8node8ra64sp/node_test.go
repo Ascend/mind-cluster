@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package superpod for
-package superpod
+// Package chip8node8ra64sp for node test
+package chip8node8ra64sp
 
 import (
 	"errors"
@@ -111,7 +111,7 @@ func TestCheckNodeNPUByTask(t *testing.T) {
 			npu.SetSchedulerAttr(attr)
 			npu.SetSchedulerEnv(env)
 			npu.TpBlockNPUNum = tt.TpBlockNPUNum
-			npu.MaxNodeNPUNum = tt.MaxNodeNPUNum
+
 			if err := npu.CheckNodeNPUByTask(tt.Task, tt.Node); !reflect.DeepEqual(err, tt.WantErr) {
 				t.Errorf("CheckNodeNPUByTask() error = %v, wantErr %v", err, tt.WantErr)
 			}
@@ -175,8 +175,7 @@ func buildcheckNodeNPUByTaskTestCases02() []checkNodeNPUByTaskTestCase {
 					},
 				},
 			},
-			WantErr: errors.New("checkNodeNPUByTask the npus on this node don't satisfy the schedulable topology " +
-				"err: node don't have enough npu resource, req<8>, idle<2>"),
+			WantErr: errors.New("checkNodeNPUByTask the npus on this node don't satisfy the schedulable topology err: node don't have enough npu resource, req<8>, idle<2>"),
 		},
 		{
 			Name:          "05-CheckNodeNPUByTask return err when node has no req npu",
@@ -272,8 +271,7 @@ func buildcheckNodeNPUByTaskTestCases05() []checkNodeNPUByTaskTestCase {
 					},
 				},
 			},
-			WantErr: errors.New("checkNodeNPUByTask the npus on this node don't satisfy the schedulable topology " +
-				"err: node don't have enough npu resource, req<8>, idle<7>"),
+			WantErr: errors.New("checkNodeNPUByTask the npus on this node don't satisfy the schedulable topology err: node don't have enough npu resource, req<8>, idle<7>"),
 		},
 	}
 }

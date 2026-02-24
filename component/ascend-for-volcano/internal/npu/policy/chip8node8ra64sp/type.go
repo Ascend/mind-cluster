@@ -12,19 +12,19 @@
    limitations under the License.
 */
 
-// Package superpod for any struct used in a5
-package superpod
+// Package chip8node8ra64sp for any struct used in a5
+package chip8node8ra64sp
 
 import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a5"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
-type module910a5SuperPod struct {
-	ascend910a5.Base910A5
+type chip8node8ra64sp struct {
+	base.NPUHandler
 	jobParams
 	uBMemParams
 	isSoftSuperPodAffinity bool
@@ -47,12 +47,12 @@ const (
 )
 
 type jobParams struct {
-	spBlock                  int
-	tpBlock                  int
-	totalCount               int
-	netUnhealthyKey          string
-	dpuUnhealthyKey          string
-	faultNPUKey              string
+	spBlock         int
+	tpBlock         int
+	totalCount      int
+	netUnhealthyKey string
+	dpuUnhealthyKey string
+	faultNPUKey     string
 }
 
 type superPodsInfo struct {
@@ -89,7 +89,8 @@ const (
 	// SuperPodx8 the real label of a5 node
 	SuperPodx8 = "900SuperPod-A5-8"
 	// SuperPodx8SchedulerName maxNodeNPUNum is 8
-	SuperPodx8SchedulerName = util.HwPreName + util.Ascend910 + SuperPodx8
-	superPodAffinity        = "super-pod-affinity"
-	softRequire             = "soft"
+	SuperPodx8SchedulerName  = util.HwPreName + util.Ascend910 + SuperPodx8
+	superPodAffinity         = "super-pod-affinity"
+	softRequire              = "soft"
+	SchedulePolicy8Px8Ra64Sp = "8p-8-ra64-sp"
 )

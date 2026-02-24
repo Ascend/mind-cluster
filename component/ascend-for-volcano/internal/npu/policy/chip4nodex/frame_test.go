@@ -22,14 +22,13 @@ import (
 	"strings"
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
 
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a5"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
@@ -164,12 +163,10 @@ func TestUseAnnotationInvalidArgs(t *testing.T) {
 // TestSelectNPUFromNodeError selectNPUFromNode Wrong path
 func TestSelectNPUFromNodeError(t *testing.T) {
 	h := &chip4nodex{
-		Base910A5: ascend910a5.Base910A5{
-			NPUHandler: base.NPUHandler{
-				SchedulerJobAttr: util.SchedulerJobAttr{
-					NPUJob: &util.NPUJob{ReqNPUName: util.NPU910CardName}},
-				MaxNodeNPUNum: 5,
-			},
+		NPUHandler: base.NPUHandler{
+			SchedulerJobAttr: util.SchedulerJobAttr{
+				NPUJob: &util.NPUJob{ReqNPUName: util.NPU910CardName}},
+			MaxNodeNPUNum: 5,
 		},
 	}
 	// Pod.Annotations is null → error

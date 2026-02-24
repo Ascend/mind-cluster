@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package superpod for reschedule functions
-package superpod
+// Package chip8node8ra64sp for reschedule functions
+package chip8node8ra64sp
 
 import (
 	"errors"
@@ -28,7 +28,7 @@ import (
 )
 
 // initialize nodes and make selection
-func (tp *module910a5SuperPod) selectNodesForFaultJob(task *api.TaskInfo, totalNodes map[int32]superPod,
+func (tp *chip8node8ra64sp) selectNodesForFaultJob(task *api.TaskInfo, totalNodes map[int32]superPod,
 	spBlockIDs map[string]bool, selectNodes map[string][]plugin.SuperNode) error {
 	// get fault job, may be no exist
 	fJob := tp.getFaultJob(task)
@@ -64,7 +64,7 @@ func (tp *module910a5SuperPod) selectNodesForFaultJob(task *api.TaskInfo, totalN
 	return nil
 }
 
-func (tp *module910a5SuperPod) getFaultJob(task *api.TaskInfo) *rescheduling.FaultJob {
+func (tp *chip8node8ra64sp) getFaultJob(task *api.TaskInfo) *rescheduling.FaultJob {
 	rescheduleCache := rescheduling.GetReSchedulerCache()
 	if rescheduleCache == nil || rescheduleCache.FaultJobs == nil {
 		klog.V(util.LogInfoLev).Infof("getFaultJob faultJobs are empty")
@@ -76,7 +76,7 @@ func (tp *module910a5SuperPod) getFaultJob(task *api.TaskInfo) *rescheduling.Fau
 }
 
 // select node for the rest of fault job by rack
-func (tp *module910a5SuperPod) selectNodesByRack(fJob *rescheduling.FaultJob,
+func (tp *chip8node8ra64sp) selectNodesByRack(fJob *rescheduling.FaultJob,
 	notReadySuperPod map[string]struct{}, totalNodes map[int32]superPod,
 	spBlockIDs map[string]bool, selectNodes map[string][]plugin.SuperNode) error {
 	if selectNodes == nil || spBlockIDs == nil {
@@ -113,7 +113,7 @@ func (tp *module910a5SuperPod) selectNodesByRack(fJob *rescheduling.FaultJob,
 	return nil
 }
 
-func (tp *module910a5SuperPod) checkSelectedNodesValid(selectedNodes map[string][]plugin.SuperNode) bool {
+func (tp *chip8node8ra64sp) checkSelectedNodesValid(selectedNodes map[string][]plugin.SuperNode) bool {
 	for _, nodes := range selectedNodes {
 		if len(nodes) < tp.spBlock {
 			return false
@@ -158,7 +158,7 @@ func getAnotherRackNodes(faultNodeNameMap map[string]struct{},
 	return newNodes
 }
 
-func (tp *module910a5SuperPod) getRackId(superPodWithRackId map[int32][]nodeBaseInfo,
+func (tp *chip8node8ra64sp) getRackId(superPodWithRackId map[int32][]nodeBaseInfo,
 	faultNodeNameMap map[string]struct{}, vSuperPod []plugin.SuperNode, fJob *rescheduling.FaultJob) (int32, error) {
 	filterRackIdByTpBlock(superPodWithRackId, tp.tpBlock)
 	restRackLenMapId := getOriginRackId(superPodWithRackId, faultNodeNameMap, vSuperPod)
@@ -172,7 +172,7 @@ func (tp *module910a5SuperPod) getRackId(superPodWithRackId map[int32][]nodeBase
 	return restRackLenMapId, nil
 }
 
-func (tp *module910a5SuperPod) getRestRackId(rackIdOrder []int32, superPodWithRackId map[int32][]nodeBaseInfo) int32 {
+func (tp *chip8node8ra64sp) getRestRackId(rackIdOrder []int32, superPodWithRackId map[int32][]nodeBaseInfo) int32 {
 	for _, rackId := range rackIdOrder {
 		if len(superPodWithRackId[rackId]) >= tp.tpBlock {
 			return rackId
@@ -181,7 +181,7 @@ func (tp *module910a5SuperPod) getRestRackId(rackIdOrder []int32, superPodWithRa
 	return UninitializedRestRackLenMapId
 }
 
-func (tp *module910a5SuperPod) getRestRackLenMapId(restRackLenMap map[int][]int32) int32 {
+func (tp *chip8node8ra64sp) getRestRackLenMapId(restRackLenMap map[int][]int32) int32 {
 	for nodeNumOfRack := tp.tpBlock; nodeNumOfRack <= rackNodeNum; nodeNumOfRack++ {
 		if _, ok := restRackLenMap[nodeNumOfRack]; ok {
 			return restRackLenMap[nodeNumOfRack][0]
@@ -252,7 +252,7 @@ func updateSpNodeMaps(spNodeMaps map[string]nodeBaseInfo,
 }
 
 // judge whether using pod level reschedule
-func (tp *module910a5SuperPod) isPodLevelRescheduling(fJob *rescheduling.FaultJob) bool {
+func (tp *chip8node8ra64sp) isPodLevelRescheduling(fJob *rescheduling.FaultJob) bool {
 	job, ok := tp.Jobs[fJob.JobUID]
 	if !ok {
 		return false
@@ -266,7 +266,7 @@ func (tp *module910a5SuperPod) isPodLevelRescheduling(fJob *rescheduling.FaultJo
 }
 
 // select node for fault job from origin vSuperPod
-func (tp *module910a5SuperPod) selectNodeFromOriginSpBlock(fJob *rescheduling.FaultJob,
+func (tp *chip8node8ra64sp) selectNodeFromOriginSpBlock(fJob *rescheduling.FaultJob,
 	selectNodes map[string][]plugin.SuperNode, totalNodes map[int32]superPod,
 	spBlockIDs map[string]bool) map[string]struct{} {
 	if selectNodes == nil || spBlockIDs == nil || len(spBlockIDs) == 0 {

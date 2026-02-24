@@ -12,13 +12,14 @@
    limitations under the License.
 */
 
-// Package superpod for reschedule ut
-package superpod
+// Package chip8node8ra64sp for reschedule ut
+package chip8node8ra64sp
 
 import (
 	"fmt"
 	"reflect"
 	"testing"
+
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -186,7 +187,7 @@ type selectNodesByRackTestArgs struct {
 	totalNodes       map[int32]superPod
 	virtualIdArr     map[string]bool
 	selectNodes      map[string][]plugin.SuperNode
-	tp               module910a5SuperPod
+	tp               chip8node8ra64sp
 }
 
 type selectNodesByRackTestResult struct {
@@ -209,7 +210,7 @@ func buildSelectNodesByRackTest1() selectNodesByRackTest {
 			totalNodes:       nil,
 			virtualIdArr:     nil,
 			selectNodes:      nil,
-			tp:               module910a5SuperPod{},
+			tp:               chip8node8ra64sp{},
 		},
 
 		want: selectNodesByRackTestResult{
@@ -240,7 +241,7 @@ func buildSelectNodesByRackTest2() selectNodesByRackTest {
 			},
 			virtualIdArr: make(map[string]bool),
 			selectNodes:  make(map[string][]plugin.SuperNode),
-			tp:           module910a5SuperPod{},
+			tp:           chip8node8ra64sp{},
 		},
 		want: selectNodesByRackTestResult{
 			ret: nil,
@@ -274,7 +275,7 @@ func buildSelectNodesByRackTest3() selectNodesByRackTest {
 			},
 			virtualIdArr: make(map[string]bool),
 			selectNodes:  make(map[string][]plugin.SuperNode),
-			tp:           module910a5SuperPod{},
+			tp:           chip8node8ra64sp{},
 		},
 		want: selectNodesByRackTestResult{
 			ret:         fmt.Errorf("there is no enough nodes for whole rack schedule"),
@@ -375,7 +376,7 @@ func TestGetRestRackLenMapId(t *testing.T) {
 	tests := buildGetRestRackLenMapIdTests()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tp := &module910a5SuperPod{
+			tp := &chip8node8ra64sp{
 				jobParams: jobParams{
 					tpBlock: tt.args.tpBlock,
 				},
@@ -565,7 +566,7 @@ type selectNodeFromOriginSpBlockTestArgs struct {
 	selectNodes  map[string][]plugin.SuperNode
 	totalNodes   map[int32]superPod
 	virtualIdArr map[string]bool
-	tp           *module910a5SuperPod
+	tp           *chip8node8ra64sp
 }
 
 type selectNodeFromOriginSpBlockTest struct {
@@ -605,7 +606,7 @@ func buildSelectNodeFromOriginSpBlockTest1() selectNodeFromOriginSpBlockTest {
 			virtualIdArr: map[string]bool{
 				"vsp1": false,
 			},
-			tp: &module910a5SuperPod{
+			tp: &chip8node8ra64sp{
 				jobParams: jobParams{tpBlock: tpBlock2},
 			},
 		},
@@ -644,7 +645,7 @@ func buildSelectNodeFromOriginSpBlockTest2() selectNodeFromOriginSpBlockTest {
 			virtualIdArr: map[string]bool{
 				"vsp1": false,
 			},
-			tp: &module910a5SuperPod{
+			tp: &chip8node8ra64sp{
 				jobParams: jobParams{tpBlock: tpBlock2},
 			},
 		},
@@ -662,7 +663,7 @@ func buildSelectNodeFromOriginSpBlockTest3() selectNodeFromOriginSpBlockTest {
 			selectNodes:  nil,
 			totalNodes:   nil,
 			virtualIdArr: nil,
-			tp:           &module910a5SuperPod{},
+			tp:           &chip8node8ra64sp{},
 		},
 		want: nil,
 	}
@@ -737,7 +738,7 @@ func TestGetRestRackId(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			tp := &module910a5SuperPod{}
+			tp := &chip8node8ra64sp{}
 			tp.tpBlock = tt.tpBlock
 			superPodWithRackId := createSuperPodWithRackIdMap(tt.rackIdOrder, tt.nodeCounts)
 			restRackId := tp.getRestRackId(tt.rackIdOrder, superPodWithRackId)
@@ -754,7 +755,7 @@ const (
 
 func TestIsPodLevelRescheduling(t *testing.T) {
 	t.Run("01-isPodLevelRescheduling return true when pod-rescheduling label is on", func(t *testing.T) {
-		module := &module910a5SuperPod{}
+		module := &chip8node8ra64sp{}
 		fJob := &rescheduling.FaultJob{JobUID: mockJobUID}
 		sJob := plugin.SchedulerJob{}
 		sJob.Label = map[string]string{util.SinglePodTag: util.EnableFunc}
@@ -766,7 +767,7 @@ func TestIsPodLevelRescheduling(t *testing.T) {
 		}
 	})
 	t.Run("02-isPodLevelRescheduling return true when process-recover-enable label is on", func(t *testing.T) {
-		module := &module910a5SuperPod{}
+		module := &chip8node8ra64sp{}
 		fJob := &rescheduling.FaultJob{JobUID: mockJobUID}
 		sJob := plugin.SchedulerJob{}
 		sJob.Label = map[string]string{util.ProcessRecoverEnable: util.EnableFunc}
@@ -778,7 +779,7 @@ func TestIsPodLevelRescheduling(t *testing.T) {
 		}
 	})
 	t.Run("03-isPodLevelRescheduling return false when both labels are not on", func(t *testing.T) {
-		module := &module910a5SuperPod{}
+		module := &chip8node8ra64sp{}
 		fJob := &rescheduling.FaultJob{JobUID: mockJobUID}
 		sJob := plugin.SchedulerJob{}
 		sJob.Label = map[string]string{}
@@ -790,7 +791,7 @@ func TestIsPodLevelRescheduling(t *testing.T) {
 		}
 	})
 	t.Run("04-isPodLevelRescheduling return false when both labels are on, but isMasterFault", func(t *testing.T) {
-		module := &module910a5SuperPod{}
+		module := &chip8node8ra64sp{}
 		fJob := &rescheduling.FaultJob{JobUID: mockJobUID}
 		sJob := plugin.SchedulerJob{}
 		sJob.Label = map[string]string{util.SinglePodTag: util.EnableFunc, util.ProcessRecoverEnable: util.EnableFunc}

@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package superpod is using for Huawei Ascend pin affinity schedule
-package superpod
+// Package chip8node8ra64sp is using for Huawei Ascend pin affinity schedule
+package chip8node8ra64sp
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
-func (tp *module910a5SuperPod) filterDpuFault(npuCardIdList []int, node plugin.NPUNode) []int {
+func (tp *chip8node8ra64sp) filterDpuFault(npuCardIdList []int, node plugin.NPUNode) []int {
 	if len(node.Annotation) == 0 {
 		klog.V(util.LogDebugLev).Infof("%s cannot find dpu info, do not filter dpu devices for node<%s>",
 			util.DpuLogPrefix, node.Name)

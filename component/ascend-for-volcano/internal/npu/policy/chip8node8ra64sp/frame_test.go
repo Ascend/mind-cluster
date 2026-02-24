@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package superpod for base function ut
-package superpod
+// Package chip8node8ra64sp for base function ut
+package chip8node8ra64sp
 
 import (
 	"errors"

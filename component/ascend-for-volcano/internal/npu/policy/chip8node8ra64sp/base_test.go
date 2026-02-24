@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package superpod for base test function
-package superpod
+// Package chip8node8ra64sp for base test function
+package chip8node8ra64sp
 
 import (
 	"fmt"
@@ -131,9 +131,9 @@ func TestDoSelectForStrategy(t *testing.T) {
 				unReadyIds = append(unReadyIds, fmt.Sprintf("%d", i))
 			}
 			s := strategy{
-				module910a5SuperPod: scheduler,
-				selectedNodes:       selectNodes,
-				unReadyIds:          unReadyIds,
+				chip8node8ra64sp: scheduler,
+				selectedNodes:    selectNodes,
+				unReadyIds:       unReadyIds,
 			}
 			superPodWithRackId := transferSuperPodToRackIdMap(testCase.nodesInSuperPod)
 
@@ -293,7 +293,7 @@ func getTaskInfos(taskNum int, jobId string) []*api.TaskInfo {
 	return tasks
 }
 
-func superPodModelForTest(tasks []*api.TaskInfo, cs *selectScoreBestNPUNodesTestCase) *module910a5SuperPod {
+func superPodModelForTest(tasks []*api.TaskInfo, cs *selectScoreBestNPUNodesTestCase) *chip8node8ra64sp {
 	plg := New(SuperPodx8SchedulerName)
 	_ = plg.PreStartAction(nil)
 	jobs := make(map[api.JobID]plugin.SchedulerJob)
@@ -338,7 +338,7 @@ func superPodModelForTest(tasks []*api.TaskInfo, cs *selectScoreBestNPUNodesTest
 	return plg
 }
 
-func packageModuleSuperPod4Soft(tasks []*api.TaskInfo, cs *selectScoreBestNPUNodesTestCase) *module910a5SuperPod {
+func packageModuleSuperPod4Soft(tasks []*api.TaskInfo, cs *selectScoreBestNPUNodesTestCase) *chip8node8ra64sp {
 	plg := superPodModelForTest(tasks, cs)
 	jobs := make(map[api.JobID]plugin.SchedulerJob)
 	job := plugin.SchedulerJob{

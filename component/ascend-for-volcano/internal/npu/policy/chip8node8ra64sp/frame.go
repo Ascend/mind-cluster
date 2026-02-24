@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package superpod for a5 schedule handler
-package superpod
+// Package chip8node8ra64sp for a5 schedule handler
+package chip8node8ra64sp
 
 import (
 	"errors"
@@ -29,8 +29,8 @@ import (
 )
 
 // New return npu plugin
-func New(name string) *module910a5SuperPod {
-	m := &module910a5SuperPod{}
+func New(name string) *chip8node8ra64sp {
+	m := &chip8node8ra64sp{}
 	m.SetPluginName(name)
 	m.SetAnnoName(util.NPU910CardName)
 	m.SetAnnoPreVal(util.NPU910CardNamePre)
@@ -44,7 +44,7 @@ func New(name string) *module910a5SuperPod {
 	return m
 }
 
-func (tp *module910a5SuperPod) PreStartAction(_ *framework.Session) error {
+func (tp *chip8node8ra64sp) PreStartAction(_ *framework.Session) error {
 	tp.isUBMemScene = tp.Annotation[uBMemory] == uBMemoryRequire
 	tp.nextStrategyChain = map[strategyKey]strategyKey{
 		RackSchedule:     SuperPodSchedule,
@@ -55,7 +55,7 @@ func (tp *module910a5SuperPod) PreStartAction(_ *framework.Session) error {
 
 // ValidNPUJob check jobs' required NPU number and mode.
 // ssn.AddJobValidFn -> JobValid -> Job.ValidJobFn -> ValidNPUJob
-func (tp *module910a5SuperPod) ValidNPUJob() *api.ValidateResult {
+func (tp *chip8node8ra64sp) ValidNPUJob() *api.ValidateResult {
 	errStr := "check npu job failed"
 	if tp == nil {
 		err := errors.New(util.ArgumentError)
@@ -87,7 +87,7 @@ func (tp *module910a5SuperPod) ValidNPUJob() *api.ValidateResult {
 
 // CheckNodeNPUByTask to check node NPU for each task
 // ssn.AddPredicateFn -> NodePredicate -> CheckNodeNPUByTask -> filter node for score
-func (tp *module910a5SuperPod) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode) error {
+func (tp *chip8node8ra64sp) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode) error {
 	errStr := "check npu node by task failed"
 	// valid argument
 	if tp == nil || task == nil || len(node.Annotation) == 0 {
@@ -110,7 +110,7 @@ func (tp *module910a5SuperPod) CheckNodeNPUByTask(task *api.TaskInfo, node plugi
 }
 
 // choose one schedule strategy will use by NPUTaskNum
-func (tp *module910a5SuperPod) getStrategyNameByNPUTaskNum() strategyKey {
+func (tp *chip8node8ra64sp) getStrategyNameByNPUTaskNum() strategyKey {
 	if tp.NPUTaskNum <= npuTaskNum8 {
 		return RackSchedule
 	} else if tp.isUBMemScene {
@@ -124,7 +124,7 @@ func (tp *module910a5SuperPod) getStrategyNameByNPUTaskNum() strategyKey {
 }
 
 // ScoreBestNPUNodes to score the nodes for Jobs, we should know all nodes to get rack topo and superpod topo
-func (tp *module910a5SuperPod) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeInfo,
+func (tp *chip8node8ra64sp) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeInfo,
 	sMap map[string]float64) error {
 	if tp == nil || task == nil || len(nodes) == 0 || len(sMap) == 0 {
 		err := errors.New(util.ArgumentError)
@@ -171,7 +171,7 @@ func (tp *module910a5SuperPod) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*ap
 }
 
 // select nodes depending on network topology type
-func (tp *module910a5SuperPod) selectNodesForJob(task *api.TaskInfo,
+func (tp *chip8node8ra64sp) selectNodesForJob(task *api.TaskInfo,
 	nodes []*api.NodeInfo) (map[string][]plugin.SuperNode, error) {
 	if tp.spBlock == 0 {
 		return nil, errors.New("the spBlock value is zero")
@@ -216,7 +216,7 @@ func (tp *module910a5SuperPod) selectNodesForJob(task *api.TaskInfo,
 }
 
 // select nodes from original superpods
-func (tp *module910a5SuperPod) selectNodesFromSuperPods(superPodMap map[int32]superPod,
+func (tp *chip8node8ra64sp) selectNodesFromSuperPods(superPodMap map[int32]superPod,
 	unReadyIds []string, selectNodes map[string][]plugin.SuperNode) error {
 	klog.V(util.LogInfoLev).Infof("selectNodes after selectNodesForFaultJob:%v", selectNodes)
 
@@ -240,7 +240,7 @@ func (tp *module910a5SuperPod) selectNodesFromSuperPods(superPodMap map[int32]su
 	return scheduleErr
 }
 
-func (tp *module910a5SuperPod) selectNodesBySpecStrategy(
+func (tp *chip8node8ra64sp) selectNodesBySpecStrategy(
 	strategySpec scheduleStrategy, superPodTopoInfo *superPodsInfo) error {
 	if strategySpec == nil {
 		return errors.New("the scheduling strategy is nil")
@@ -269,7 +269,7 @@ func (tp *module910a5SuperPod) selectNodesBySpecStrategy(
 }
 
 // the real place where we score for nodes, and sMap should change
-func (tp *module910a5SuperPod) scoreNodesForJob(job *plugin.SchedulerJob, task *api.TaskInfo, sMap map[string]float64) {
+func (tp *chip8node8ra64sp) scoreNodesForJob(job *plugin.SchedulerJob, task *api.TaskInfo, sMap map[string]float64) {
 	if !*job.JobReadyTag {
 		klog.V(util.LogWarningLev).Infof("job %s has not been ready", job.Name)
 		return
@@ -282,7 +282,7 @@ func (tp *module910a5SuperPod) scoreNodesForJob(job *plugin.SchedulerJob, task *
 	tp.scoreNodeForReadyJob(task, job, sMap)
 }
 
-func (tp *module910a5SuperPod) addNewStrategyToChain(from strategyKey, dist strategyKey) {
+func (tp *chip8node8ra64sp) addNewStrategyToChain(from strategyKey, dist strategyKey) {
 	if tp.nextStrategyChain == nil {
 		tp.nextStrategyChain = make(map[strategyKey]strategyKey)
 	}

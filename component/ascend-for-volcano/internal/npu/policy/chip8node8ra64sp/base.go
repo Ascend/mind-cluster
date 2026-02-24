@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package superpod for base function
-package superpod
+// Package chip8node8ra64sp for base function
+package chip8node8ra64sp
 
 import (
 	"k8s.io/klog"
@@ -30,7 +30,7 @@ type scheduleStrategy interface {
 
 // strategy for basic and sp-block scheduling
 type strategy struct {
-	*module910a5SuperPod
+	*chip8node8ra64sp
 	selectedNodes map[string][]plugin.SuperNode
 	unReadyIds    []string
 }

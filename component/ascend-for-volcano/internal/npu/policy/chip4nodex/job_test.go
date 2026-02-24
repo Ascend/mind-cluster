@@ -20,7 +20,6 @@ import (
 	"testing"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a5"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 )
 
@@ -43,10 +42,10 @@ func TestJudgeNodeAndTaskNPU(t *testing.T) {
 // TestCheckJobModeNoTasks checkJobMode: NPUTaskNum=0 / per-task invalid / per-task valid
 func TestCheckJobModeNoTasks(t *testing.T) {
 	tp := &chip4nodex{
-		Base910A5: ascend910a5.Base910A5{NPUHandler: base.NPUHandler{
+		NPUHandler: base.NPUHandler{
 			MaxNodeNPUNum:    8,
 			SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{}},
-		}},
+		},
 	}
 	tp.Name = "jobA"
 	tp.NPUTaskNum = 0
@@ -60,10 +59,10 @@ func TestCheckJobModeNoTasks(t *testing.T) {
 
 func TestCheckJobModeValid(t *testing.T) {
 	tp := &chip4nodex{
-		Base910A5: ascend910a5.Base910A5{NPUHandler: base.NPUHandler{
+		NPUHandler: base.NPUHandler{
 			MaxNodeNPUNum:    8,
 			SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{}},
-		}},
+		},
 	}
 	tp.Name = "jobC"
 	tp.NPUTaskNum = 2
@@ -77,12 +76,12 @@ func TestCheckJobModeValid(t *testing.T) {
 // TestValid800ia5NPUJobWarningsAndModeError SpBlock/TpBlock warning + mode error
 func TestValid800ia5NPUJobWarningsAndModeError(t *testing.T) {
 	tp := &chip4nodex{
-		Base910A5: ascend910a5.Base910A5{NPUHandler: base.NPUHandler{
+		NPUHandler: base.NPUHandler{
 			MaxNodeNPUNum: 5,
 			SchedulerJobAttr: util.SchedulerJobAttr{
 				NPUJob: &util.NPUJob{
 					SpBlockNPUNum: 1,
-					TpBlockNPUNum: util.LeastTpBlock + 1}}}},
+					TpBlockNPUNum: util.LeastTpBlock + 1}}},
 	}
 	tp.Name = "jobD"
 	tp.NPUTaskNum = 0
@@ -102,12 +101,12 @@ func TestValid800ia5NPUJobWarningsAndModeError(t *testing.T) {
 // TestValid800ia5NPUJobSuccess Normal execution: no warnings, checkJobMode passed
 func TestValid800ia5NPUJobSuccess(t *testing.T) {
 	tp := &chip4nodex{
-		Base910A5: ascend910a5.Base910A5{NPUHandler: base.NPUHandler{
+		NPUHandler: base.NPUHandler{
 			MaxNodeNPUNum: 10,
 			SchedulerJobAttr: util.SchedulerJobAttr{
 				NPUJob: &util.NPUJob{
 					SpBlockNPUNum: 0,
-					TpBlockNPUNum: util.LeastTpBlock}}}},
+					TpBlockNPUNum: util.LeastTpBlock}}},
 	}
 	tp.Name = "jobE"
 	tp.NPUTaskNum = 2
@@ -399,9 +398,7 @@ func TestIs4PmeshAffinity(t *testing.T) {
 
 func TestGetNodeBestScoreIn4Pmesh(t *testing.T) {
 	tp := &chip4nodex{
-		Base910A5: ascend910a5.Base910A5{
-			NPUHandler: base.NPUHandler{MaxNodeNPUNum: 16},
-		},
+		NPUHandler:   base.NPUHandler{MaxNodeNPUNum: 16},
 		affScoreList: make([][]int, 16),
 	}
 
@@ -457,9 +454,7 @@ func TestGetNodeBestScoreIn4Pmesh(t *testing.T) {
 
 func TestScoreNodeFor4Pmesh(t *testing.T) {
 	tp := &chip4nodex{
-		Base910A5: ascend910a5.Base910A5{
-			NPUHandler: base.NPUHandler{MaxNodeNPUNum: 16},
-		},
+		NPUHandler:   base.NPUHandler{MaxNodeNPUNum: 16},
 		affScoreList: make([][]int, 16),
 	}
 

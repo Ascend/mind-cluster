@@ -13,10 +13,10 @@
 // Package chip4nodex for any struct used in module300ia5
 package chip4nodex
 
-import "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910a5"
+import "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 
 type chip4nodex struct {
-	ascend910a5.Base910A5
+	base.NPUHandler
 	affScoreList [][]int
 }
 

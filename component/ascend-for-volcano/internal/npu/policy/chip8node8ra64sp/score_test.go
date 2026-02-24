@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package superpod for test score functions
-package superpod
+// Package chip8node8ra64sp for test score functions
+package chip8node8ra64sp
 
 import (
 	"reflect"

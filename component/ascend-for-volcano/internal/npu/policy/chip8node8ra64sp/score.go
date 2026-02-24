@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package superpod for score nodes
-package superpod
+// Package chip8node8ra64sp for score nodes
+package chip8node8ra64sp
 
 import (
 	"errors"
@@ -28,7 +28,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
-func (tp *module910a5SuperPod) selectNodeForStandaloneJob(nodes []*api.NodeInfo) []*api.NodeInfo {
+func (tp *chip8node8ra64sp) selectNodeForStandaloneJob(nodes []*api.NodeInfo) []*api.NodeInfo {
 	if len(nodes) < 1 {
 		klog.V(util.LogWarningLev).Infof("%s there is not enough nodes for a standalone job", tp.GetPluginName())
 		return nodes
@@ -51,7 +51,7 @@ func (tp *module910a5SuperPod) selectNodeForStandaloneJob(nodes []*api.NodeInfo)
 	return suitableNodes
 }
 
-func (tp *module910a5SuperPod) scoreNodeForReadyJob(task *api.TaskInfo,
+func (tp *chip8node8ra64sp) scoreNodeForReadyJob(task *api.TaskInfo,
 	job *plugin.SchedulerJob, sMap map[string]float64) {
 	var rank int
 	var err error
@@ -101,7 +101,7 @@ func (tp *module910a5SuperPod) scoreNodeForReadyJob(task *api.TaskInfo,
 		"job superpods: %v, sMap: %v", node.Name, job.SuperPods, sMap)
 }
 
-func (tp *module910a5SuperPod) scoreNodeBatchForReadyJob(task *api.TaskInfo, job *plugin.SchedulerJob,
+func (tp *chip8node8ra64sp) scoreNodeBatchForReadyJob(task *api.TaskInfo, job *plugin.SchedulerJob,
 	sMap map[string]float64) {
 	if task == nil || job == nil || len(sMap) == 0 || tp.spBlock == 0 {
 		klog.V(util.LogErrorLev).Infof("scoreNodeBatchForReadyJob %s", errors.New(util.ArgumentError))
@@ -138,7 +138,7 @@ func (tp *module910a5SuperPod) scoreNodeBatchForReadyJob(task *api.TaskInfo, job
 	}
 }
 
-func (tp *module910a5SuperPod) obtainBatchScoreRank(task *api.TaskInfo, job *plugin.SchedulerJob) map[int]struct{} {
+func (tp *chip8node8ra64sp) obtainBatchScoreRank(task *api.TaskInfo, job *plugin.SchedulerJob) map[int]struct{} {
 	if task == nil || job == nil {
 		klog.V(util.LogErrorLev).Infof("obtainBatchScoreRank %s", errors.New(util.ArgumentError))
 		return nil

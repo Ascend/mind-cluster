@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package superpod for schedule strategy
-package superpod
+// Package chip8node8ra64sp for schedule strategy
+package chip8node8ra64sp
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ import (
 // all the strategies in this file we define
 var strategyMap map[strategyKey]scheduleStrategy
 
-type strategyFactoryCallBack func(*module910a5SuperPod, []string, map[string][]plugin.SuperNode)
+type strategyFactoryCallBack func(*chip8node8ra64sp, []string, map[string][]plugin.SuperNode)
 
 var strategyInitFactory strategyFactoryCallBack
 
@@ -59,9 +59,9 @@ func newScheduleStrategy() {
 		MulSuperPodsSchedule: mulSuperPodsSchedule,
 	}
 
-	strategyInitFactory = func(handler *module910a5SuperPod, unReadyIds []string,
+	strategyInitFactory = func(handler *chip8node8ra64sp, unReadyIds []string,
 		selectedNodes map[string][]plugin.SuperNode) {
-		schedule.module910a5SuperPod = handler
+		schedule.chip8node8ra64sp = handler
 		schedule.unReadyIds = unReadyIds
 		schedule.selectedNodes = selectedNodes
 	}

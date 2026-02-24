@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package superpod for utils functions ut cases
-package superpod
+// Package chip8node8ra64sp for utils functions ut cases
+package chip8node8ra64sp
 
 import (
 	"fmt"

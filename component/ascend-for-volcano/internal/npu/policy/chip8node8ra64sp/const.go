@@ -12,13 +12,13 @@
    limitations under the License.
 */
 
-// Package superpod for constants used by a5
-package superpod
+// Package chip8node8ra64sp for constants used by a5
+package chip8node8ra64sp
 
 // for business use
 const (
 	// UninitializedRestRackLenMapId not initialized RestRackLenMapId
-	UninitializedRestRackLenMapId int32 = -1
+	UninitializedRestRackLenMapId = -1
 	tpRescheduleStage                   = 3
 	spRescheduleStage                   = 6
 	backToJobRescheduleStage            = 12

@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package superpod is using for Huawei Ascend pin affinity schedule
-package superpod
+// Package chip8node8ra64sp is using for Huawei Ascend pin affinity schedule
+package chip8node8ra64sp
 
 import (
 	"reflect"

@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package superpod for
-package superpod
+// Package chip8node8ra64sp for
+package chip8node8ra64sp
 
 import (
 	"fmt"
@@ -182,7 +182,7 @@ func TestSelectNodesFromSuperPods(t *testing.T) {
 	for _, cs := range allCases {
 		t.Run(cs.name, func(t *testing.T) {
 			selectedNodes := make(map[string][]plugin.SuperNode)
-			// call New to init module910a5SuperPod
+			// call New to init chip8node8ra64sp
 			plg := superPodModelForTest(tasks, cs)
 			unReadyID := getUnReadyIDs(cs.npuTaskNum / plg.spBlock)
 			strategyInitFactory(plg, unReadyID, selectedNodes)

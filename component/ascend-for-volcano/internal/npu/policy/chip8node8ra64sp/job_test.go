@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package superpod for job test
-package superpod
+// Package chip8node8ra64sp for job test
+package chip8node8ra64sp
 
 import (
 	"reflect"
@@ -103,7 +103,7 @@ func buildCheckSpBlockValidCase() []ValidNPUJobTestCase {
 			},
 			WantErr: &api.ValidateResult{
 				Pass:    false,
-				Reason:  util.InvalidArgumentReason,
+				Reason:  spBlockInvalidReason,
 				Message: "Parameter sp-block(10) is not multiple of node npu (8)",
 			},
 		},
@@ -118,7 +118,7 @@ func buildCheckSpBlockValidCase() []ValidNPUJobTestCase {
 			},
 			WantErr: &api.ValidateResult{
 				Pass:    false,
-				Reason:  util.InvalidResourceRequestReason,
+				Reason:  "job task num is invalid",
 				Message: "job require total Pod(5) should be multiple of a sp-block size 4",
 			},
 		},
@@ -137,7 +137,7 @@ func buildCheckSuperPodSizeValidCase() []ValidNPUJobTestCase {
 			},
 			WantErr: &api.ValidateResult{
 				Pass:   false,
-				Reason: util.InvalidResourceRequestReason,
+				Reason: superPodSizeInvalidReason,
 				Message: "Parameter super-pod-size(0) in volcano.yaml is invalid " +
 					"which should be in range [1,1024]",
 			},
@@ -152,7 +152,7 @@ func buildCheckSuperPodSizeValidCase() []ValidNPUJobTestCase {
 			},
 			WantErr: &api.ValidateResult{
 				Pass:    false,
-				Reason:  util.InvalidArgumentReason,
+				Reason:  superPodSizeInvalidReason,
 				Message: "Parameter spBlock(32/8=4) is bigger than size of super-pod-size(2)",
 			},
 		},
@@ -171,7 +171,7 @@ func buildCheckTpBlockNumCase() []ValidNPUJobTestCase {
 			},
 			WantErr: &api.ValidateResult{
 				Pass:    false,
-				Reason:  util.InvalidArgumentReason,
+				Reason:  tpBlockInvalidReason,
 				Message: "Parameter tp-block is invalid, it should be a number in the range from 1 to 64",
 			},
 		},
@@ -185,7 +185,7 @@ func buildCheckTpBlockNumCase() []ValidNPUJobTestCase {
 			},
 			WantErr: &api.ValidateResult{
 				Pass:    false,
-				Reason:  util.InvalidArgumentReason,
+				Reason:  tpBlockInvalidReason,
 				Message: "Parameter tp-block(48) must be the power of 2",
 			},
 		},
@@ -204,7 +204,7 @@ func buildCalculateTpBlockAndCheckCase01() ValidNPUJobTestCase {
 		},
 		WantErr: &api.ValidateResult{
 			Pass:    false,
-			Reason:  util.InvalidArgumentReason,
+			Reason:  tpBlockInvalidReason,
 			Message: "Parameter tp-block(32)/8 could not be bigger than sp-block(16)/8",
 		},
 	}
@@ -222,7 +222,7 @@ func buildCalculateTpBlockAndCheckCase02() ValidNPUJobTestCase {
 		},
 		WantErr: &api.ValidateResult{
 			Pass:    false,
-			Reason:  util.InvalidResourceRequestReason,
+			Reason:  tpBlockInvalidReason,
 			Message: "number of tasks(3) must be multiple of nodes occupied by tp-block(2)",
 		},
 	}
@@ -240,7 +240,7 @@ func buildCalculateTpBlockAndCheckCase03() ValidNPUJobTestCase {
 		},
 		WantErr: &api.ValidateResult{
 			Pass:    false,
-			Reason:  util.InvalidArgumentReason,
+			Reason:  tpBlockInvalidReason,
 			Message: "spBlock= 24 / 8 must be multiple of tpBlock= 16 / 8",
 		},
 	}
@@ -266,7 +266,7 @@ func buildCheckJobReqNpuNumCase1() []ValidNPUJobTestCase {
 			},
 			WantErr: &api.ValidateResult{
 				Pass:    false,
-				Reason:  util.InvalidResourceRequestReason,
+				Reason:  jobCheckFailedReason,
 				Message: "single super-pod job require npu [1, 8], instead of 9",
 			},
 		},
@@ -280,7 +280,7 @@ func buildCheckJobReqNpuNumCase1() []ValidNPUJobTestCase {
 			},
 			WantErr: &api.ValidateResult{
 				Pass:    false,
-				Reason:  util.InvalidResourceRequestReason,
+				Reason:  jobCheckFailedReason,
 				Message: "distributed super-pod job require npu should be multiple of sp-block, instead of 16",
 			},
 		},
@@ -294,8 +294,8 @@ func buildCheckJobReqNpuNumCase1() []ValidNPUJobTestCase {
 			},
 			WantErr: &api.ValidateResult{
 				Pass:    false,
-				Reason:  util.InvalidResourceRequestReason,
-				Message: "distributed super-pod job require npu(18) should be equal to node npu(8)",
+				Reason:  jobCheckFailedReason,
+				Message: "distributed job require npu 8, instead of 6",
 			},
 		},
 	}
@@ -313,12 +313,12 @@ func buildCheckJobReqNpuNumCase2() []ValidNPUJobTestCase {
 			},
 			WantErr: &api.ValidateResult{
 				Pass:    false,
-				Reason:  util.InvalidResourceRequestReason,
+				Reason:  jobCheckFailedReason,
 				Message: "single super-pod job sp-block annotation should equal require npu num",
 			},
 		},
 		{
-			Name: "checkJobReqNpuNum-05: distributed super-pod job require npu(8) " +
+			Name: "checkJobReqNpuNum-05: distributed super-pod job require npu(10) " +
 				"should be multiple of tp-block",
 			Attr:       buildTestJobAttr(npuTaskNum2, "5"),
 			SpBlockNum: 2,
@@ -328,7 +328,7 @@ func buildCheckJobReqNpuNumCase2() []ValidNPUJobTestCase {
 			},
 			WantErr: &api.ValidateResult{
 				Pass:    false,
-				Reason:  util.InvalidResourceRequestReason,
+				Reason:  jobCheckFailedReason,
 				Message: "distributed super-pod job require npu(10) should be multiple of tp-block",
 			},
 		},
@@ -348,7 +348,7 @@ func buildCheckUBmemCase() []ValidNPUJobTestCase {
 			},
 			WantErr: &api.ValidateResult{
 				Pass:    false,
-				Reason:  util.InvalidResourceRequestReason,
+				Reason:  jobCheckFailedReason,
 				Message: "in ubmem scene, task require npu nums should smaller than 1024, but recevice 1032",
 			},
 		},
