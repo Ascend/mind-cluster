@@ -13,6 +13,7 @@ require (
 	google.golang.org/grpc v1.57.2
 	google.golang.org/protobuf v1.30.0
 	k8s.io/cri-api v0.25.13
+	k8s.io/utils v0.0.0-20230308161112-d77c459e9343
 )
 
 require (

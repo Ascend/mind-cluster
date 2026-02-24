@@ -21,6 +21,8 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+
+	net2 "k8s.io/utils/net"
 )
 
 const (
@@ -72,12 +74,21 @@ func CheckDomain(domain string, forLocalUsage bool) error {
 }
 
 // IsHostValid check if the host is valid
-func IsHostValid(host string) error {
+func IsHostValid(host string) (string, error) {
 	parsedIp := net.ParseIP(host)
 	if parsedIp != nil {
-		return IsIPValid(parsedIp)
+		err := IsIPValid(parsedIp)
+		if err == nil {
+			if net2.IsIPv6(parsedIp) {
+				return "[" + parsedIp.String() + "]", nil
+			} else {
+				return parsedIp.String(), nil
+			}
+		}
+		return "", err
+
 	}
-	return CheckDomain(host, false)
+	return host, CheckDomain(host, false)
 }
 
 // IsIPValid check ip valid

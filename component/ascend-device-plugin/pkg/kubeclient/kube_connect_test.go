@@ -55,6 +55,15 @@ func TestGetKltPodsURL(t *testing.T) {
 			convey.So(url, convey.ShouldNotBeEmpty)
 			convey.So(err, convey.ShouldBeNil)
 		})
+		convey.Convey("should return non-empty string and nil when env HOST_IP is valid ipv6", func() {
+			err := os.Setenv(HostIPEnv, "::1")
+			if err != nil {
+				t.Errorf("set env HOST_IP failed")
+			}
+			url, err := getKltPodsURL()
+			convey.So(url, convey.ShouldNotBeEmpty)
+			convey.So(err, convey.ShouldBeNil)
+		})
 	})
 }
 
