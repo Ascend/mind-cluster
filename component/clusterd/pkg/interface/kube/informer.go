@@ -11,6 +11,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
@@ -49,7 +50,58 @@ var (
 
 	// ping mesh configmap deal func
 	cmPingMeshCMFuncs = map[string][]func(constant.ConfigPingMesh, constant.ConfigPingMesh, string){}
+	indexers          = make(map[schema.GroupVersionKind]cache.Indexer)
 )
+
+// PodGVK pod groupVersionKind
+func PodGVK() schema.GroupVersionKind {
+	return v1.SchemeGroupVersion.WithKind("Pod")
+}
+
+// VcJobGVK volcano job groupVersionKind
+func VcJobGVK() schema.GroupVersionKind {
+	return v1alpha1.SchemeGroupVersion.WithKind("Job")
+}
+
+// PodGroupGVK pod groupVersionKind
+func PodGroupGVK() schema.GroupVersionKind {
+	return v1beta1.SchemeGroupVersion.WithKind("PodGroup")
+}
+
+// AcJobGVK ascend job groupVersionKind
+func AcJobGVK() schema.GroupVersionKind {
+	return ascendv1.SchemeGroupVersion.WithKind("AscendJob")
+}
+
+// ListObjects list objects from informer indexer
+func ListObjects(gvks ...schema.GroupVersionKind) map[schema.GroupVersionKind][]interface{} {
+	objects := make(map[schema.GroupVersionKind][]interface{})
+	for _, gvk := range gvks {
+		indexer, ok := indexers[gvk]
+		if !ok {
+			hwlog.RunLog.Warnf("get informer %s failed", gvk)
+			continue
+		}
+		objects[gvk] = indexer.List()
+	}
+
+	return objects
+}
+
+// GetObject get object from informer indexer
+func GetObject(gvk schema.GroupVersionKind, name string) (interface{}, error) {
+	if indexer, ok := indexers[gvk]; ok {
+		item, exist, err := indexer.GetByKey(name)
+		if err != nil {
+			return nil, err
+		}
+		if !exist {
+			return nil, fmt.Errorf("get %s %s failed", gvk, name)
+		}
+		return item, nil
+	}
+	return nil, fmt.Errorf("gvk %s not found", gvk)
+}
 
 // StopInformer stop informer when loss-leader
 func StopInformer() {
@@ -218,6 +270,7 @@ func InitPodAndNodeInformer() {
 			podHandler(nil, obj, constant.DeleteOperator)
 		},
 	})
+	indexers[PodGVK()] = podInformer.GetIndexer()
 
 	nodeInformer = factory.Core().V1().Nodes().Informer()
 	nodeInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -234,6 +287,7 @@ func InitPodAndNodeInformer() {
 		},
 	},
 	)
+	indexers[v1.SchemeGroupVersion.WithKind("Node")] = nodeInformer.GetIndexer()
 	factory.Start(informerCh)
 	factory.WaitForCacheSync(wait.NeverStop)
 	initClusterDevice()
@@ -699,9 +753,9 @@ func InitACJobInformer() {
 	hwlog.RunLog.Info("start to init ACjob informer")
 	opClient := GetOperatorClient().ClientSet
 	factory := ascendexternalversions.NewSharedInformerFactory(opClient, 0)
-	acJobInformer := factory.Batch().V1().Jobs()
+	acJobInformer := factory.Batch().V1().Jobs().Informer()
 
-	acJobInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+	acJobInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			acJobHandler(nil, obj, constant.AddOperator)
 		},
@@ -714,6 +768,7 @@ func InitACJobInformer() {
 			acJobHandler(nil, obj, constant.DeleteOperator)
 		},
 	})
+	indexers[AcJobGVK()] = acJobInformer.GetIndexer()
 	factory.Start(wait.NeverStop)
 	factory.WaitForCacheSync(wait.NeverStop)
 }
@@ -766,6 +821,7 @@ func InitVCJobInformer() {
 			vcJobHandler(nil, obj, constant.DeleteOperator)
 		},
 	})
+	indexers[VcJobGVK()] = vcJobInformer.Informer().GetIndexer()
 	factory.Start(wait.NeverStop)
 	factory.WaitForCacheSync(wait.NeverStop)
 }
@@ -803,12 +859,12 @@ func InitPodGroupInformer() {
 	hwlog.RunLog.Info("start to init PodGroup informer")
 	vcClient := GetClientVolcano().ClientSet
 	factory := externalversions.NewSharedInformerFactory(vcClient, 0)
-	PodGroupInformer := factory.Scheduling().V1beta1().PodGroups()
+	PodGroupInformer := factory.Scheduling().V1beta1().PodGroups().Informer()
 
-	PodGroupInformer.Informer().SetWatchErrorHandler(func(r *cache.Reflector, err error) {
+	PodGroupInformer.SetWatchErrorHandler(func(r *cache.Reflector, err error) {
 		hwlog.RunLog.Warnf("pg informer watcher err: %s", err.Error())
 	})
-	PodGroupInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+	PodGroupInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			podGroupHandler(nil, obj, constant.AddOperator)
 		},
@@ -821,6 +877,7 @@ func InitPodGroupInformer() {
 			podGroupHandler(nil, obj, constant.DeleteOperator)
 		},
 	})
+	indexers[PodGroupGVK()] = PodGroupInformer.GetIndexer()
 	factory.Start(wait.NeverStop)
 }
 

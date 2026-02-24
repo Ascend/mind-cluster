@@ -157,6 +157,7 @@ type JobInfo struct {
 	Framework         string
 	NameSpace         string
 	Name              string
+	PgName            string
 	Key               string
 	Replicas          int
 	Status            string

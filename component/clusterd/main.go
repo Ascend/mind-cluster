@@ -24,6 +24,7 @@ import (
 	"clusterd/pkg/application/pingmesh"
 	"clusterd/pkg/application/publicfault"
 	"clusterd/pkg/application/resource"
+	"clusterd/pkg/application/schedulingexception"
 	"clusterd/pkg/application/statistics"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/logs"
@@ -176,6 +177,7 @@ func initStatisticModule(ctx context.Context) {
 	// fault relation
 	go statistics.StatisticFault.UpdateFault(ctx)
 	statistics.StatisticFault.LoadFaultData()
+	schedulingexception.CheckSchedulingException(ctx, &schedulingexception.Config{})
 }
 
 func initGrpcServer(ctx context.Context) {

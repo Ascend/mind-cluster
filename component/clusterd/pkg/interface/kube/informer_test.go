@@ -12,7 +12,9 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/informers"
+	"k8s.io/client-go/tools/cache"
 	"volcano.sh/apis/pkg/apis/batch/v1alpha1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 	"volcano.sh/apis/pkg/client/informers/externalversions"
@@ -520,3 +522,91 @@ func TestCmPubFaultHandler(t *testing.T) {
 		})
 	})
 }
+
+func TestListObjects(t *testing.T) {
+	convey.Convey("Test ListObjects", t, func() {
+		convey.Convey("with no indexers", func() {
+			indexers = make(map[schema.GroupVersionKind]cache.Indexer)
+			result := ListObjects(PodGVK())
+			convey.So(len(result), convey.ShouldEqual, 0)
+		})
+		convey.Convey("with valid indexer", func() {
+			indexers = make(map[schema.GroupVersionKind]cache.Indexer)
+			mockIndexer := &mockIndexer{items: []interface{}{&v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "test-pod"}}}}
+			indexers[PodGVK()] = mockIndexer
+			result := ListObjects(PodGVK())
+			convey.So(len(result), convey.ShouldEqual, 1)
+		})
+	})
+}
+
+func TestGetObject(t *testing.T) {
+	convey.Convey("Test GetObject", t, func() {
+		convey.Convey("with no indexers", func() {
+			indexers = make(map[schema.GroupVersionKind]cache.Indexer)
+			_, err := GetObject(PodGVK(), "test-pod")
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldResemble, "gvk /v1, Kind=Pod not found")
+		})
+		convey.Convey("with key not exist", func() {
+			indexers = make(map[schema.GroupVersionKind]cache.Indexer)
+			mockIndexer := &mockIndexer{items: []interface{}{}}
+			indexers[PodGVK()] = mockIndexer
+			_, err := GetObject(PodGVK(), "test-pod")
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldResemble, "get /v1, Kind=Pod test-pod failed")
+		})
+		convey.Convey("with valid key", func() {
+			indexers = make(map[schema.GroupVersionKind]cache.Indexer)
+			testPod := &v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "test-pod", Namespace: "default"}}
+			mockIndexer := &mockIndexer{items: []interface{}{testPod}, keyFunc: func(obj interface{}) (string, error) {
+				return "default/test-pod", nil
+			}}
+			indexers[PodGVK()] = mockIndexer
+			result, err := GetObject(PodGVK(), "default/test-pod")
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(result, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+type mockIndexer struct {
+	items   []interface{}
+	keyFunc func(obj interface{}) (string, error)
+}
+
+func (m *mockIndexer) List() []interface{} { return m.items }
+func (m *mockIndexer) ListKeys() []string  { return nil }
+func (m *mockIndexer) Get(obj interface{}) (interface{}, bool, error) {
+	return nil, false, nil
+}
+func (m *mockIndexer) GetByKey(key string) (interface{}, bool, error) {
+	for _, item := range m.items {
+		itemKey, err := m.keyFunc(item)
+		if err != nil {
+			return nil, false, err
+		}
+		if itemKey == key {
+			return item, true, nil
+		}
+	}
+	return nil, false, nil
+}
+func (m *mockIndexer) Replace(items []interface{}, resourceVersion string) error { return nil }
+func (m *mockIndexer) ByIndex(indexName, indexedValue string) ([]interface{}, error) {
+	return nil, nil
+}
+func (m *mockIndexer) Index(indexName string, obj interface{}) ([]interface{}, error) {
+	return nil, nil
+}
+func (m *mockIndexer) IndexKeys(indexName, indexedValue string) ([]string, error) { return nil, nil }
+func (m *mockIndexer) ListIndexFuncValues(indexName string) []string              { return nil }
+func (m *mockIndexer) ByIndexKeys(indexName string, indexKeys ...string) ([]interface{}, error) {
+	return nil, nil
+}
+func (m *mockIndexer) Add(obj interface{}) error                 { return nil }
+func (m *mockIndexer) Update(obj interface{}) error              { return nil }
+func (m *mockIndexer) Delete(obj interface{}) error              { return nil }
+func (m *mockIndexer) AddIndexers(indexers cache.Indexers) error { return nil }
+func (m *mockIndexer) GetIndexers() cache.Indexers               { return nil }
+func (m *mockIndexer) Resync() error                             { return nil }
