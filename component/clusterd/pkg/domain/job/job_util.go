@@ -146,6 +146,7 @@ func getJobBasicInfoByPG(pgInfo v1beta1.PodGroup, podsInJob map[string]v1.Pod) c
 	key, name := podgroup.GetJobKeyAndNameByPG(&pgInfo)
 	jobInfo.Key = key
 	jobInfo.Name = name
+	jobInfo.PgName = pgInfo.Name
 	jobInfo.Replicas = max(int(pgInfo.Spec.MinMember), pod.GetMinMember(podsInJob))
 	jobInfo.TotalCmNum = (jobInfo.Replicas-1)/safeDeviceSize + 1
 	jobInfo.JobType = podgroup.GetJobTypeByPG(&pgInfo)
