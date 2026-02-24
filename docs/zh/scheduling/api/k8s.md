@@ -26,17 +26,26 @@
 |mind-cluster/group-name: group0|标记扩缩容规则中对应的group名称。|字符串|Ascend Operator|
 
 
+**Job annotation**
+
+**表 3**  集群调度对Job annotation使用说明
+
+|Job annotation名称|作用|取值|使用组件|
+|--|--|--|--|
+|huawei.com/schedule.filter.faultCode|<p>配置任务需要静默的故障码和时间窗。</p><ul><li>故障码仅支持配置芯片故障和灵衢总线设备故障的故障码。支持的故障码详细请参见faultCode.json和SwitchFaultCode.json文件。</li><li>支持配置多个故障码和时间窗，多个配置使用英文逗号分隔。</li><li>对于MindIE Service，若YAML文件中无此配置项，则默认静默以下故障码：<ul><li>8C1F8608静默60秒</li><li>4C1F8608静默60秒</li><li>80E01801静默60秒</li></ul></li></ul>|<p>取值示例："8C1F8608:30, 80E01801"，表示在30秒时间窗内，静默8C1F8608故障；在60秒时间窗内，静默80E01801故障。</p><p>若未配置时间窗，则默认为60，取值范围为0~86400，单位为秒。</p>|ClusterD|
+|huawei.com/schedule.filter.faultLevel|<p>配置任务需要静默的故障级别和时间窗。</p><ul><li>故障级别仅支持配置芯片故障和灵衢总线设备故障的级别。支持的故障级别详细请参见<a href="../usage/resumable_training.md#配置说明">配置说明</a>。</li><li>支持配置多个故障级别和时间窗，多个配置使用英文逗号分隔。</li><li>对于MindIE Service，若YAML文件中无此配置项，则默认所有RestartRequest级别的故障静默60秒。</li><li>huawei.com/schedule.filter.faultCode的优先级高于huawei.com/schedule.filter.faultLevel。</li></ul>|<p>取值示例："RestartRequest:30, RestartBusiness"，表示在30秒时间窗内，静默所有RestartRequest级别的故障；在60秒时间窗内，静默所有RestartBusiness级别的故障。</p><p>若未配置时间窗，则默认为60，取值范围为0~86400，单位为秒。</p>|ClusterD|
+
 **Node label<a name="section121401114162912"></a>**
 
-**表 3**  集群调度对Node label使用说明
+**表 4**  集群调度对Node label使用说明
 
 |node label名称|作用|取值|使用组件|
 |--|--|--|--|
 |accelerator|标识节点的处理芯片|huawei-Ascend910、huawei-Ascend310、huawei-Ascend310P|Ascend Device Plugin|
 |host-arch|标识节点的CPU架构|<ul><li>huawei-x86</li><li>huawei-arm</li></ul>|Volcano|
 |masterselector|标识MindCluster的管理节点|dls-master-node|Volcano、Ascend Operator、Resilience Controller、ClusterD|
-|node.kubernetes.io/npu.chip.name|上报当前芯片的具体类型|<ul><li>310</li><li>310P1</li><li>310P2</li><li>310P3</li><li>310P4</li><li>{xxx}A</li><li>910PremiumA</li><li>910ProA</li><li>910ProB</li><li>{xxx}Bx（x可取值为1、2、3、4）</li><li>Ascend950PR</li><li>Ascend950DT</li></ul>|Ascend Device Plugin<p><span>说明：</span></p>芯片型号的数值可通过**npu-smi info**命令查询，返回的“Name”字段对应信息为芯片型号，下文的{*xxx*}即取“910”字符作为芯片型号数值。|
-|nodeDEnable|NodeD节点启动的开关|on|Volcano、Resilience Controller<p><span>说明：</span></p><ul><li>nodeDEnable=on标签表示启用NodeD的节点状态监测功能，用于获取节点的状态信息并用于判断节点是否故障。</li><li>取值为off或无该参数表示仅上报节点信息，不判断节点是否故障。</li><li>使用**容器化支持**或者**资源监测**时，可以不配置该标签；其他特性必须配置该标签。</li></ul>|
+|node.kubernetes.io/npu.chip.name|上报当前芯片的具体类型|<ul><li>310</li><li>310P1</li><li>310P2</li><li>310P3</li><li>310P4</li><li>{xxx}A</li><li>910PremiumA</li><li>910ProA</li><li>910ProB</li><li>{xxx}Bx（x可取值为1、2、3、4）</li><li>Ascend950PR</li><li>Ascend950DT</li></ul>|Ascend Device Plugin<p></p>芯片型号的数值可通过**npu-smi info**命令查询，返回的“Name”字段对应信息为芯片型号，下文的{*xxx*}即取“910”字符作为芯片型号数值。|
+|nodeDEnable|NodeD节点启动的开关|on|Volcano、Resilience Controller<ul><li>nodeDEnable=on标签表示启用NodeD的节点状态监测功能，用于获取节点的状态信息并用于判断节点是否故障。</li><li>取值为off或无该参数表示仅上报节点信息，不判断节点是否故障。</li><li>使用**容器化支持**或者**资源监测**时，可以不配置该标签；其他特性必须配置该标签。</li></ul>|
 |workerselector|标识MindCluster的计算节点|dls-worker-node|Ascend Device Plugin、NodeD、NPU Exporter|
 |accelerator-type|标识Atlas服务器类型|<ul><li>card</li><li>module</li><li>half</li><li>module-{xxx}b-8</li><li>module-{xxx}b-16</li><li>card-{xxx}b-2</li><li>card-{xxx}b-infer</li><li>module-a3-16</li><li>module-a3-16-super-pod</li></ul>|Ascend Device Plugin、Volcano|
 |servertype|Atlas 200I SoC A1 核心板标识|<ul><li>soc</li><li>Ascend910-{aicore核数}</li><li>Ascend310P-{aicore核数}</li></ul>|Volcano、Ascend Device Plugin|
@@ -48,7 +57,7 @@
 
 **Pod  label<a name="section1019341142914"></a>**
 
-**表 4** 集群调度组件对Pod  label使用说明
+**表 5** 集群调度组件对Pod  label使用说明
 
 |名称|作用|取值|使用组件|
 |--|--|--|--|
@@ -76,7 +85,7 @@
 
 **Pod  annotation<a name="section16927154663513"></a>**
 
-**表 5** 集群调度组件对Pod  annotation使用说明
+**表 6** 集群调度组件对Pod  annotation使用说明
 
 |名称|作用|取值|使用组件|
 |--|--|--|--|
@@ -113,7 +122,7 @@
 
 **Node annotation<a name="section9144358124519"></a>**
 
-**表 6** 集群调度组件对Node annotation使用说明
+**表 7** 集群调度组件对Node annotation使用说明
 
 |名称|作用|取值|使用组件|
 |--|--|--|--|
@@ -150,7 +159,7 @@ ResetInfo的内容格式如下所示。
 
 **K8s的ServiceAccount<a name="section168254015405"></a>**
 
-**表 7**  组件在K8s中创建的ServiceAccount列表
+**表 8**  组件在K8s中创建的ServiceAccount列表
 
 |账号名|说明|
 |--|--|

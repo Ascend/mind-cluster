@@ -13,62 +13,18 @@
 **关键功能特性<a name="section15584171017252"></a>**
 
 <a name="table1866285218270"></a>
-<table><thead align="left"><tr id="row7663135222713"><th class="cellrowborder" valign="top" width="12.09120912091209%" id="mcps1.1.4.1.1"><p id="p266355252712"><a name="p266355252712"></a><a name="p266355252712"></a>功能名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="67.54675467546754%" id="mcps1.1.4.1.2"><p id="p066313523276"><a name="p066313523276"></a><a name="p066313523276"></a>说明</p>
-</th>
-<th class="cellrowborder" valign="top" width="20.362036203620363%" id="mcps1.1.4.1.3"><p id="p866385212720"><a name="p866385212720"></a><a name="p866385212720"></a>配置步骤</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row1466395215279"><td class="cellrowborder" valign="top" width="12.09120912091209%" headers="mcps1.1.4.1.1 "><p id="p16631352172718"><a name="p16631352172718"></a><a name="p16631352172718"></a><strong id="b10475175393015"><a name="b10475175393015"></a><a name="b10475175393015"></a>故障检测</strong></p>
-</td>
-<td class="cellrowborder" valign="top" width="67.54675467546754%" headers="mcps1.1.4.1.2 "><p id="p1376115912478"><a name="p1376115912478"></a><a name="p1376115912478"></a>断点续训具有故障检测功能，支持实时监测训练场景下的20+软件类故障及90+硬件类故障的故障检测。</p>
-<p id="p6269526143113"><a name="p6269526143113"></a><a name="p6269526143113"></a>详细功能及原理介绍请参见<a href="#故障检测">故障检测</a>。</p>
-</td>
-<td class="cellrowborder" valign="top" width="20.362036203620363%" headers="mcps1.1.4.1.3 "><p id="p3664115213274"><a name="p3664115213274"></a><a name="p3664115213274"></a><a href="#可选配置故障检测级别">（可选）配置故障检测级别</a></p>
-</td>
-</tr>
-<tr id="row8664195222715"><td class="cellrowborder" valign="top" width="12.09120912091209%" headers="mcps1.1.4.1.1 "><p id="p9664252172717"><a name="p9664252172717"></a><a name="p9664252172717"></a><strong id="b1847710538305"><a name="b1847710538305"></a><a name="b1847710538305"></a>故障处理</strong></p>
-</td>
-<td class="cellrowborder" valign="top" width="67.54675467546754%" headers="mcps1.1.4.1.2 "><p id="p1411817177434"><a name="p1411817177434"></a><a name="p1411817177434"></a>断点续训具有故障处理功能，出现故障后不需要人工介入就可自动隔离故障设备。</p>
-<p id="p2333154715317"><a name="p2333154715317"></a><a name="p2333154715317"></a>详细功能及原理介绍请参见<a href="#故障处理">故障处理</a>。</p>
-</td>
-<td class="cellrowborder" valign="top" width="20.362036203620363%" headers="mcps1.1.4.1.3 "><p id="p166425282717"><a name="p166425282717"></a><a name="p166425282717"></a><a href="#配置故障处理">配置故障处理</a></p>
-</td>
-</tr>
-<tr id="row1781918488293"><td class="cellrowborder" valign="top" width="12.09120912091209%" headers="mcps1.1.4.1.1 "><p id="p381964862916"><a name="p381964862916"></a><a name="p381964862916"></a><strong id="b18478195318307"><a name="b18478195318307"></a><a name="b18478195318307"></a>训练恢复</strong></p>
-</td>
-<td class="cellrowborder" valign="top" width="67.54675467546754%" headers="mcps1.1.4.1.2 "><p id="p10678103713430"><a name="p10678103713430"></a><a name="p10678103713430"></a>断点续训具有训练恢复功能，用户可自定义训练恢复的策略，以最小粒度恢复训练状态，降低训练拉起时间。</p>
-<p id="p1311063703219"><a name="p1311063703219"></a><a name="p1311063703219"></a>详细功能及原理介绍请参见<a href="#训练恢复">训练恢复</a>。</p>
-</td>
-<td class="cellrowborder" valign="top" width="20.362036203620363%" headers="mcps1.1.4.1.3 "><p id="p17819948202912"><a name="p17819948202912"></a><a name="p17819948202912"></a><a href="#配置训练恢复">配置训练恢复</a></p>
-</td>
-</tr>
-</tbody>
-</table>
+|功能名称|说明|配置步骤|
+|--|--|--|
+|故障检测|<p>断点续训具有故障检测功能，支持实时监测训练场景下的20+软件类故障及90+硬件类故障的故障检测。</p><p>详细功能及原理介绍请参见<a href="#故障检测">故障检测</a>。</p>|<a href="#可选配置故障检测级别">（可选）配置故障检测级别</a>|
+|故障处理|<p>断点续训具有故障处理功能，出现故障后不需要人工介入就可自动隔离故障设备。</p><p>详细功能及原理介绍请参见<a href="#故障处理">故障处理</a>。</p>|<a href="#配置故障处理">配置故障处理</a>|
+|训练恢复|<p>断点续训具有训练恢复功能，用户可自定义训练恢复的策略，以最小粒度恢复训练状态，降低训练拉起时间。</p><p>详细功能及原理介绍请参见<a href="#训练恢复">训练恢复</a>。</p>|<a href="#配置训练恢复">配置训练恢复</a>|
 
 **应用场景<a name="section1498618364358"></a>**
 
 <a name="table1716618439356"></a>
-<table><thead align="left"><tr id="row51662043153514"><th class="cellrowborder" valign="top" width="12.437810945273633%" id="mcps1.1.4.1.1"><p id="p19166143203512"><a name="p19166143203512"></a><a name="p19166143203512"></a>场景分类</p>
-</th>
-<th class="cellrowborder" valign="top" width="48.23319300931241%" id="mcps1.1.4.1.2"><p id="p1216754353516"><a name="p1216754353516"></a><a name="p1216754353516"></a>主要业务</p>
-</th>
-<th class="cellrowborder" valign="top" width="39.32899604541396%" id="mcps1.1.4.1.3"><p id="p16167134363516"><a name="p16167134363516"></a><a name="p16167134363516"></a>业务价值</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row121677433356"><td class="cellrowborder" valign="top" width="12.437810945273633%" headers="mcps1.1.4.1.1 "><p id="p316744312356"><a name="p316744312356"></a><a name="p316744312356"></a>AI训练场景</p>
-<p id="p1995614753618"><a name="p1995614753618"></a><a name="p1995614753618"></a></p>
-</td>
-<td class="cellrowborder" valign="top" width="48.23319300931241%" headers="mcps1.1.4.1.2 "><p id="p2016754317352"><a name="p2016754317352"></a><a name="p2016754317352"></a>支持对计算、网络和存储设备资源的监测，AI环境的健康检查和AI作业故障诊断。</p>
-</td>
-<td class="cellrowborder" valign="top" width="39.32899604541396%" headers="mcps1.1.4.1.3 "><a name="ul71678434353"></a><a name="ul71678434353"></a><ul id="ul71678434353"><li>整体监测集群环境资源。</li><li>提升AI训练业务的作业成功率。</li><li>减少AI作业训练故障的处理及恢复时间。</li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+|场景分类|主要业务|业务价值|
+|--|--|--|
+|AI训练场景|支持对计算、网络和存储设备资源的监测，AI环境的健康检查和AI作业故障诊断。|<ul><li>整体监测集群环境资源。</li><li>提升AI训练业务的作业成功率。</li><li>减少AI作业训练故障的处理及恢复时间。</li></ul>|
 
 >[!NOTE] 说明 
 >-   较小规模的模型任务训练用时较短（时长 < 1h），硬件出现故障的频率较低，不推荐用户使用断点续训特性。
@@ -77,7 +33,7 @@
 
 ### 整体架构<a name="ZH-CN_TOPIC_0000002479226568"></a>
 
-在K8s（Kubernetes）集群中训练任务出现故障时，断点续训特性使系统能够感知故障，将故障资源进行处理或隔离，并根据训练任务需要重新分配资源，通过周期性保存或临终保存的CKPT（CheckPoint）重新拉起训练任务，缩短损失时间。
+在K8s（Kubernetes）集群中训练任务出现故障时，断点续训特性使系统能够感知故障，将故障资源进行处理或隔离，并根据训练任务需要重新分配资源，通过周期性保存或临终保存的CKPT（Checkpoint）重新拉起训练任务，缩短损失时间。
 
 **断点续训整体架构<a name="section1483121685613"></a>**
 
@@ -206,64 +162,22 @@ MindCluster集群调度组件Ascend Device Plugin提供NPU芯片故障检测能�
 **表 1**  故障类型说明
 
 <a name="zh-cn_topic_0000002039699773_table9980135316395"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002039699773_row1980185311394"><th class="cellrowborder" valign="top" width="20%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000002039699773_p7980853183910"><a name="zh-cn_topic_0000002039699773_p7980853183910"></a><a name="zh-cn_topic_0000002039699773_p7980853183910"></a>故障类型</p>
-</th>
-<th class="cellrowborder" valign="top" width="80%" id="mcps1.2.3.1.2"><p id="zh-cn_topic_0000002039699773_p99801953193918"><a name="zh-cn_topic_0000002039699773_p99801953193918"></a><a name="zh-cn_topic_0000002039699773_p99801953193918"></a>故障说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002039699773_row139804539392"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002039699773_p1198014539399"><a name="zh-cn_topic_0000002039699773_p1198014539399"></a><a name="zh-cn_topic_0000002039699773_p1198014539399"></a>节点故障</p>
-</td>
-<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002039699773_p2960204381116"><a name="zh-cn_topic_0000002039699773_p2960204381116"></a><a name="zh-cn_topic_0000002039699773_p2960204381116"></a>包括节点健康状态、节点硬件故障和DPC共享存储故障。</p>
-<p id="p3883113092117"><a name="p3883113092117"></a><a name="p3883113092117"></a>故障码说明请参见<a href="../appendix.md#节点故障码参考文档">节点故障码参考文档</a>。</p>
-<div class="note" id="zh-cn_topic_0000002039699773_note113491120161019"><a name="zh-cn_topic_0000002039699773_note113491120161019"></a><a name="zh-cn_topic_0000002039699773_note113491120161019"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002039699773_p1634916206103"><a name="zh-cn_topic_0000002039699773_p1634916206103"></a><a name="zh-cn_topic_0000002039699773_p1634916206103"></a>若节点的硬件故障导致节点宕机或重启，则<span id="zh-cn_topic_0000002039699773_ph469218596150"><a name="zh-cn_topic_0000002039699773_ph469218596150"></a><a name="zh-cn_topic_0000002039699773_ph469218596150"></a>NodeD</span>无法检测到具体的故障类型并上报。</p>
-</div></div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039699773_row16980753123914"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002039699773_p2980553133917"><a name="zh-cn_topic_0000002039699773_p2980553133917"></a><a name="zh-cn_topic_0000002039699773_p2980553133917"></a>芯片故障</p>
-</td>
-<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.2 "><p id="p68031627162116"><a name="p68031627162116"></a><a name="p68031627162116"></a>DCMI接口上报的芯片故障和设备网络探测工具hccn_tool检测到的芯片网络故障。</p>
-<p id="zh-cn_topic_0000002039699773_p13762144301315"><a name="zh-cn_topic_0000002039699773_p13762144301315"></a><a name="zh-cn_topic_0000002039699773_p13762144301315"></a>故障码说明请参见<a href="../appendix.md#芯片故障码参考文档">芯片故障码参考文档</a>。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039699773_row9980165319394"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002039699773_p11981453103911"><a name="zh-cn_topic_0000002039699773_p11981453103911"></a><a name="zh-cn_topic_0000002039699773_p11981453103911"></a>参数面网络故障</p>
-</td>
-<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.2 "><div class="p" id="zh-cn_topic_0000002039699773_p1357910482138"><a name="zh-cn_topic_0000002039699773_p1357910482138"></a><a name="zh-cn_topic_0000002039699773_p1357910482138"></a>包括芯片网络相关故障和灵衢总线设备故障。<a name="zh-cn_topic_0000002039699773_ul823018522254"></a><a name="zh-cn_topic_0000002039699773_ul823018522254"></a><ul id="zh-cn_topic_0000002039699773_ul823018522254"><li>芯片网络相关故障：芯片之间进行参数交换的专用网络出现故障，如NPU网口故障。</li><li>灵衢总线设备故障：<span id="zh-cn_topic_0000002039699773_ph1893095102412"><a name="zh-cn_topic_0000002039699773_ph1893095102412"></a><a name="zh-cn_topic_0000002039699773_ph1893095102412"></a><term id="zh-cn_topic_0000001519959665_term26764913715"><a name="zh-cn_topic_0000001519959665_term26764913715"></a><a name="zh-cn_topic_0000001519959665_term26764913715"></a>Atlas A3 训练系列产品</term></span>的灵衢总线设备发生故障。</li></ul>
-</div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039699773_row11506155782216"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002039699773_p6383230124815"><a name="zh-cn_topic_0000002039699773_p6383230124815"></a><a name="zh-cn_topic_0000002039699773_p6383230124815"></a>业务面故障</p>
-</td>
-<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002039699773_p538343064810"><a name="zh-cn_topic_0000002039699773_p538343064810"></a><a name="zh-cn_topic_0000002039699773_p538343064810"></a>训练任务异常退出，导致Pod的Status变为Failed状态。</p>
-<div class="note" id="zh-cn_topic_0000002039699773_note113831617138"><a name="zh-cn_topic_0000002039699773_note113831617138"></a><a name="zh-cn_topic_0000002039699773_note113831617138"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><div class="p" id="zh-cn_topic_0000002039699773_p1938313171939"><a name="zh-cn_topic_0000002039699773_p1938313171939"></a><a name="zh-cn_topic_0000002039699773_p1938313171939"></a>可执行<strong id="zh-cn_topic_0000002039699773_b101591617517"><a name="zh-cn_topic_0000002039699773_b101591617517"></a><a name="zh-cn_topic_0000002039699773_b101591617517"></a>kubectl describe pod <em id="zh-cn_topic_0000002039699773_i135141149345"><a name="zh-cn_topic_0000002039699773_i135141149345"></a><a name="zh-cn_topic_0000002039699773_i135141149345"></a>{pod名称} </em>-n<em id="zh-cn_topic_0000002039699773_i137271056545"><a name="zh-cn_topic_0000002039699773_i137271056545"></a><a name="zh-cn_topic_0000002039699773_i137271056545"></a> {NAMESPACE}</em> |grep Status:</strong>命令，查看当前Pod的Status是否为Failed状态。回显示例如下：<pre class="screen" id="zh-cn_topic_0000002039699773_screen926115341054"><a name="zh-cn_topic_0000002039699773_screen926115341054"></a><a name="zh-cn_topic_0000002039699773_screen926115341054"></a><strong id="zh-cn_topic_0000002039699773_b11562201310616"><a name="zh-cn_topic_0000002039699773_b11562201310616"></a><a name="zh-cn_topic_0000002039699773_b11562201310616"></a>Status:       Failed</strong></pre>
-</div>
-</div></div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039699773_row4734144233211"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002039699773_p1173419427324"><a name="zh-cn_topic_0000002039699773_p1173419427324"></a><a name="zh-cn_topic_0000002039699773_p1173419427324"></a>公共故障</p>
-</td>
-<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002039699773_p75681253134114"><a name="zh-cn_topic_0000002039699773_p75681253134114"></a><a name="zh-cn_topic_0000002039699773_p75681253134114"></a>公共故障指的是其他故障发现者（非<span id="zh-cn_topic_0000002039699773_ph14169931153018"><a name="zh-cn_topic_0000002039699773_ph14169931153018"></a><a name="zh-cn_topic_0000002039699773_ph14169931153018"></a>MindCluster</span>组件）提供的故障，公共故障包括以下几种类型：NPU故障、节点故障、网络故障和存储故障。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039699773_row165491043113014"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002039699773_p2277188103115"><a name="zh-cn_topic_0000002039699773_p2277188103115"></a><a name="zh-cn_topic_0000002039699773_p2277188103115"></a>pingmesh灵衢网络故障</p>
-</td>
-<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002039699773_p8830914203219"><a name="zh-cn_topic_0000002039699773_p8830914203219"></a><a name="zh-cn_topic_0000002039699773_p8830914203219"></a>灵衢网络故障是针对超节点内部（包括节点内和节点间）的<span id="ph17233131243911"><a name="ph17233131243911"></a><a name="ph17233131243911"></a>HCCS</span>网络提供的NPU网络故障检测。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039699773_row1267815329323"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002039699773_p166788326323"><a name="zh-cn_topic_0000002039699773_p166788326323"></a><a name="zh-cn_topic_0000002039699773_p166788326323"></a>性能劣化故障</p>
-</td>
-<td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002039699773_p46391813195611"><a name="zh-cn_topic_0000002039699773_p46391813195611"></a><a name="zh-cn_topic_0000002039699773_p46391813195611"></a><span id="zh-cn_topic_0000002039699773_ph1669181417563"><a name="zh-cn_topic_0000002039699773_ph1669181417563"></a><a name="zh-cn_topic_0000002039699773_ph1669181417563"></a>MindCluster</span>结合MindStudio提供的profiling能力对集群中的性能劣化故障（慢节点）提供诊断功能。该功能提供动态使能打点和打点数据持久化功能、可动态启停，无需重启任务进行诊断，对训练无损耗。</p>
-</td>
-</tr>
-</tbody>
-</table>
+|故障类型|故障说明|
+|--|--|
+|节点故障|<p>包括节点健康状态、节点硬件故障和DPC共享存储故障。</p><p>故障码说明请参见<a href="../appendix.md#节点故障码参考文档">节点故障码参考文档</a>。</p><p>若节点的硬件故障导致节点宕机或重启，则NodeD无法检测到具体的故障类型并上报。</p>|
+|芯片故障|<p>DCMI接口上报的芯片故障和设备网络探测工具hccn_tool检测到的芯片网络故障。</p><p>故障码说明请参见<a href="../appendix.md#芯片故障码参考文档">芯片故障码参考文档</a>。</p>|
+|参数面网络故障|包括芯片网络相关故障和灵衢总线设备故障。<ul><li>芯片网络相关故障：芯片之间进行参数交换的专用网络出现故障，如NPU网口故障。</li><li>灵衢总线设备故障：<term>Atlas A3 训练系列产品</term>的灵衢总线设备发生故障。</li></ul>|
+|业务面故障|<p>训练任务异常退出，导致Pod的Status变为Failed状态。</p><p>可执行<strong>kubectl describe pod <em>{pod名称} </em>-n<em> {NAMESPACE}</em> \|grep Status:</strong>命令，查看当前Pod的Status是否为Failed状态。回显示例如下：<pre class="screen"><strong>Status:       Failed</strong></pre></p>|
+|公共故障|公共故障指的是其他故障发现者（非MindCluster组件）提供的故障，公共故障包括以下几种类型：NPU故障、节点故障、网络故障和存储故障。|
+|pingmesh灵衢网络故障|灵衢网络故障是针对超节点内部（包括节点内和节点间）的HCCS网络提供的NPU网络故障检测。|
+|性能劣化故障|MindCluster结合MindStudio提供的profiling能力对集群中的性能劣化故障（慢节点）提供诊断功能。该功能提供动态使能打点和打点数据持久化功能、可动态启停，无需重启任务进行诊断，对训练无损耗。|
 
 **ConfigMap说明<a name="zh-cn_topic_0000002039699773_section49901206282"></a>**
 
 -   每个计算节点的Ascend Device Plugin均会创建记录本节点NPU和灵衢总线设备信息的ConfigMap文件。该ConfigMap文件名为mindx-dl-deviceinfo-_<nodename\>_（以下简称device-info-cm），故障信息会通过该ConfigMap进行上报。该ConfigMap文件中各字段的说明，请参见[DeviceInfoCfg](../api/ascend_device_plugin.md#芯片资源)表。
 -   当节点上存在节点故障时，每个计算节点的NodeD会创建记录本节点设备信息的ConfigMap文件。该ConfigMap文件名为mindx-dl-nodeinfo-_<nodename\>_（以下简称node-info-cm），节点故障信息会通过该ConfigMap进行上报。该ConfigMap文件中各字段的说明，请参见[mindx-dl-nodeinfo-<nodename\>](../api/noded.md#节点资源)表。
 -   ClusterD会创建记录本集群设备信息的ConfigMap文件，该ConfigMap文件名为cluster-info-<device/switch\>-<\[0-5\]\>、cluster-info-node-cm（以下简称cluster-info-cm）。节点及芯片故障信息会通过[cluster-info-cm](../api/clusterd.md#集群资源)进行上报。
--   创建每个任务时，需要在YAML中配置ConfigMap文件，该ConfigMap文件名称为reset-config-_<job-name\>_（以下简称reset-info-cm）。该ConfigMap挂载到容器的“/user/restore/reset/config“路径下。Ascend Device Plugin会自动将ConfigMap挂载到本节点的“/user/restore/reset/<job-namespace\>.<job-name\>”路径下。
+-   创建每个任务时，需要在YAML中配置ConfigMap文件，该ConfigMap文件名称为reset-config-_<job-name\>_（以下简称reset-info-cm）。该ConfigMap挂载到容器的“/user/restore/reset/config”路径下。Ascend Device Plugin会自动将ConfigMap挂载到本节点的“/user/restore/reset/<job-namespace\>.<job-name\>”路径下。
 
     也可以将节点上/user/restore/reset/<job-namespace\>.<job-name\>替代ConfigMap，挂载到容器的“/user/restore/reset/config”路径下。该ConfigMap文件字段说明，请参见[reset-config-<job-name\>](../api/ascend_device_plugin.md#任务信息)表。
 
@@ -491,7 +405,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度
 
 **（可选）配置故障检测的级别和发送方<a name="zh-cn_topic_0000002216292813_section1343172016386"></a>**
 
-断点续训针对**公共故障**提供了默认的故障级别以及支持的故障发送方。若用户需要修改公共故障的级别及故障发送方，可参见[公共故障](#可选配置公共故障的级别和发送方)。若无特殊需求，请勿随意修改。
+断点续训针对**公共故障**提供了默认的故障级别以及支持的故障发送方。若用户需要修改公共故障的级别及故障发送方，可参见[公共故障](#公共故障-1)。若无特殊需求，请勿随意修改。
 
 
 #### pingmesh灵衢网络故障<a name="ZH-CN_TOPIC_0000002511426437"></a>
@@ -538,7 +452,7 @@ NodeD调用DCMI接口启动pingmesh任务，并周期性查询pingmesh结果，�
 
         ![](../../figures/scheduling/zh-cn_image_0000002511346583.png)
 
-    4.  执行**kubectl get pods -o -wide -A**命令出现如下示例，则表示已完成共享存储配置。
+    4.  执行**kubectl get pods -o wide -A**命令出现如下示例，则表示已完成共享存储配置。
 
         ![](../../figures/scheduling/zh-cn_image_0000002479226664.png)
 
@@ -568,51 +482,13 @@ NodeD调用DCMI接口启动pingmesh任务，并周期性查询pingmesh结果，�
             **表 1**  pingmesh-config cm
 
             <a name="zh-cn_topic_0000002193288232_table985012534578"></a>
-            <table><thead align="left"><tr id="zh-cn_topic_0000002193288232_row9850195355712"><th class="cellrowborder" valign="top" width="18.86188618861886%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002193288232_p38501532579"><a name="zh-cn_topic_0000002193288232_p38501532579"></a><a name="zh-cn_topic_0000002193288232_p38501532579"></a>参数</p>
-            </th>
-            <th class="cellrowborder" valign="top" width="67.65676567656766%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002193288232_p2850165315579"><a name="zh-cn_topic_0000002193288232_p2850165315579"></a><a name="zh-cn_topic_0000002193288232_p2850165315579"></a>说明</p>
-            </th>
-            <th class="cellrowborder" valign="top" width="13.481348134813482%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002193288232_p985065320578"><a name="zh-cn_topic_0000002193288232_p985065320578"></a><a name="zh-cn_topic_0000002193288232_p985065320578"></a>取值</p>
-            </th>
-            </tr>
-            </thead>
-            <tbody><tr id="zh-cn_topic_0000002193288232_row1885095315578"><td class="cellrowborder" valign="top" width="18.86188618861886%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p1785015355715"><a name="zh-cn_topic_0000002193288232_p1785015355715"></a><a name="zh-cn_topic_0000002193288232_p1785015355715"></a>app</p>
-            </td>
-            <td class="cellrowborder" valign="top" width="67.65676567656766%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p138501353195716"><a name="zh-cn_topic_0000002193288232_p138501353195716"></a><a name="zh-cn_topic_0000002193288232_p138501353195716"></a>ConfigMap其中一个label的key。</p>
-            </td>
-            <td class="cellrowborder" valign="top" width="13.481348134813482%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p138504535570"><a name="zh-cn_topic_0000002193288232_p138504535570"></a><a name="zh-cn_topic_0000002193288232_p138504535570"></a>pingmesh</p>
-            </td>
-            </tr>
-            <tr id="zh-cn_topic_0000002193288232_row68509536570"><td class="cellrowborder" valign="top" width="18.86188618861886%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p1185045317579"><a name="zh-cn_topic_0000002193288232_p1185045317579"></a><a name="zh-cn_topic_0000002193288232_p1185045317579"></a>global</p>
-            </td>
-            <td class="cellrowborder" valign="top" width="67.65676567656766%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p9850135314575"><a name="zh-cn_topic_0000002193288232_p9850135314575"></a><a name="zh-cn_topic_0000002193288232_p9850135314575"></a>集群配置信息</p>
-            </td>
-            <td class="cellrowborder" valign="top" width="13.481348134813482%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p3850165314571"><a name="zh-cn_topic_0000002193288232_p3850165314571"></a><a name="zh-cn_topic_0000002193288232_p3850165314571"></a>-</p>
-            </td>
-            </tr>
-            <tr id="zh-cn_topic_0000002193288232_row9850185313579"><td class="cellrowborder" valign="top" width="18.86188618861886%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p1585095395717"><a name="zh-cn_topic_0000002193288232_p1585095395717"></a><a name="zh-cn_topic_0000002193288232_p1585095395717"></a>"1"</p>
-            </td>
-            <td class="cellrowborder" valign="top" width="67.65676567656766%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p385045385710"><a name="zh-cn_topic_0000002193288232_p385045385710"></a><a name="zh-cn_topic_0000002193288232_p385045385710"></a>超节点ID为1的配置示例，用户可根据实际情况进行修改或新增。当配置了某个超节点后，NodeD会采用超节点的配置信息而忽略global配置信息。</p>
-            </td>
-            <td class="cellrowborder" valign="top" width="13.481348134813482%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p1085025315711"><a name="zh-cn_topic_0000002193288232_p1085025315711"></a><a name="zh-cn_topic_0000002193288232_p1085025315711"></a>超节点ID</p>
-            </td>
-            </tr>
-            <tr id="zh-cn_topic_0000002193288232_row1585014537573"><td class="cellrowborder" valign="top" width="18.86188618861886%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p12850165395719"><a name="zh-cn_topic_0000002193288232_p12850165395719"></a><a name="zh-cn_topic_0000002193288232_p12850165395719"></a>activate</p>
-            </td>
-            <td class="cellrowborder" valign="top" width="67.65676567656766%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p138500538571"><a name="zh-cn_topic_0000002193288232_p138500538571"></a><a name="zh-cn_topic_0000002193288232_p138500538571"></a>是否启用pingmesh功能。</p>
-            </td>
-            <td class="cellrowborder" valign="top" width="13.481348134813482%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p1850153195711"><a name="zh-cn_topic_0000002193288232_p1850153195711"></a><a name="zh-cn_topic_0000002193288232_p1850153195711"></a>on或off</p>
-            </td>
-            </tr>
-            <tr id="zh-cn_topic_0000002193288232_row28501353175710"><td class="cellrowborder" valign="top" width="18.86188618861886%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p5850953125712"><a name="zh-cn_topic_0000002193288232_p5850953125712"></a><a name="zh-cn_topic_0000002193288232_p5850953125712"></a>task_interval</p>
-            </td>
-            <td class="cellrowborder" valign="top" width="67.65676567656766%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p1585015310572"><a name="zh-cn_topic_0000002193288232_p1585015310572"></a><a name="zh-cn_topic_0000002193288232_p1585015310572"></a>pingmesh任务间隔。单位为秒。</p>
-            </td>
-            <td class="cellrowborder" valign="top" width="13.481348134813482%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p5850165335719"><a name="zh-cn_topic_0000002193288232_p5850165335719"></a><a name="zh-cn_topic_0000002193288232_p5850165335719"></a>[1~60]</p>
-            </td>
-            </tr>
-            </tbody>
-            </table>
+            |参数|说明|取值|
+            |--|--|--|
+            |app|ConfigMap其中一个label的key。|pingmesh|
+            |global|集群配置信息。|-|
+            |"1"|超节点ID为1的配置示例，用户可根据实际情况进行修改或新增。当配置了某个超节点后，NodeD会采用超节点的配置信息而忽略global配置信息。|超节点ID|
+            |activate|是否启用pingmesh功能。|on或off|
+            |task_interval|pingmesh任务间隔。单位为秒。|[1~60]|
 
     -   未安装Ascend Device Plugin和ClusterD
 
@@ -633,128 +509,30 @@ NodeD调用DCMI接口启动pingmesh任务，并周期性查询pingmesh结果，�
 **查看检测结果信息<a name="zh-cn_topic_0000002193288232_section772614207398"></a>**
 
 >[!NOTE] 说明 
->检测结果查询周期为配置参数“task\_interval“的10倍。
+>检测结果查询周期为配置参数“task\_interval”的10倍。
 
 灵衢网络检测的pingmesh结果写入文件<nodename\>.log中。该文件中各字段的详细说明如下表所示。
 
 **表 2**  <nodename\>.log
 
 <a name="zh-cn_topic_0000002193288232_table313985322113"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002193288232_row9139145315219"><th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002193288232_p814016532215"><a name="zh-cn_topic_0000002193288232_p814016532215"></a><a name="zh-cn_topic_0000002193288232_p814016532215"></a>参数</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002193288232_p5140165319210"><a name="zh-cn_topic_0000002193288232_p5140165319210"></a><a name="zh-cn_topic_0000002193288232_p5140165319210"></a>说明</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002193288232_p1140353102113"><a name="zh-cn_topic_0000002193288232_p1140353102113"></a><a name="zh-cn_topic_0000002193288232_p1140353102113"></a>取值</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002193288232_row111401453172110"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p1214065317213"><a name="zh-cn_topic_0000002193288232_p1214065317213"></a><a name="zh-cn_topic_0000002193288232_p1214065317213"></a>uid</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p9140175310211"><a name="zh-cn_topic_0000002193288232_p9140175310211"></a><a name="zh-cn_topic_0000002193288232_p9140175310211"></a>该次pingmesh任务的ID。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p1140353192111"><a name="zh-cn_topic_0000002193288232_p1140353192111"></a><a name="zh-cn_topic_0000002193288232_p1140353192111"></a>长度为64的字符串</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002193288232_row714035319219"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p181401253102117"><a name="zh-cn_topic_0000002193288232_p181401253102117"></a><a name="zh-cn_topic_0000002193288232_p181401253102117"></a>config</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p1914013539210"><a name="zh-cn_topic_0000002193288232_p1914013539210"></a><a name="zh-cn_topic_0000002193288232_p1914013539210"></a>该次pingmesh任务的用户配置。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p11405537216"><a name="zh-cn_topic_0000002193288232_p11405537216"></a><a name="zh-cn_topic_0000002193288232_p11405537216"></a>字符串</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002193288232_row814010533215"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p7140185332115"><a name="zh-cn_topic_0000002193288232_p7140185332115"></a><a name="zh-cn_topic_0000002193288232_p7140185332115"></a>physicID</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p1014015332114"><a name="zh-cn_topic_0000002193288232_p1014015332114"></a><a name="zh-cn_topic_0000002193288232_p1014015332114"></a>NPU卡物理ID。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p91401653122115"><a name="zh-cn_topic_0000002193288232_p91401653122115"></a><a name="zh-cn_topic_0000002193288232_p91401653122115"></a>[0~15]</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002193288232_row1092154019225"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p1092114406228"><a name="zh-cn_topic_0000002193288232_p1092114406228"></a><a name="zh-cn_topic_0000002193288232_p1092114406228"></a>taskID</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p179211740172215"><a name="zh-cn_topic_0000002193288232_p179211740172215"></a><a name="zh-cn_topic_0000002193288232_p179211740172215"></a>任务ID，0代表节点内部、1代表节点间。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p149211840132218"><a name="zh-cn_topic_0000002193288232_p149211840132218"></a><a name="zh-cn_topic_0000002193288232_p149211840132218"></a>0或1</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002193288232_row9947144615229"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p15947546152212"><a name="zh-cn_topic_0000002193288232_p15947546152212"></a><a name="zh-cn_topic_0000002193288232_p15947546152212"></a>DestNum</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p1694711467225"><a name="zh-cn_topic_0000002193288232_p1694711467225"></a><a name="zh-cn_topic_0000002193288232_p1694711467225"></a>本次pingmesh目标地址数量。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p16947646172215"><a name="zh-cn_topic_0000002193288232_p16947646172215"></a><a name="zh-cn_topic_0000002193288232_p16947646172215"></a>[0~47]</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002193288232_row22024432213"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p2202445229"><a name="zh-cn_topic_0000002193288232_p2202445229"></a><a name="zh-cn_topic_0000002193288232_p2202445229"></a>source_addr</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p102013447221"><a name="zh-cn_topic_0000002193288232_p102013447221"></a><a name="zh-cn_topic_0000002193288232_p102013447221"></a>源地址</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p4203446223"><a name="zh-cn_topic_0000002193288232_p4203446223"></a><a name="zh-cn_topic_0000002193288232_p4203446223"></a>IPv4网络地址</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002193288232_row66281311112311"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p36281111192311"><a name="zh-cn_topic_0000002193288232_p36281111192311"></a><a name="zh-cn_topic_0000002193288232_p36281111192311"></a>target_addr</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p15628311132314"><a name="zh-cn_topic_0000002193288232_p15628311132314"></a><a name="zh-cn_topic_0000002193288232_p15628311132314"></a>目标地址</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p176281611112319"><a name="zh-cn_topic_0000002193288232_p176281611112319"></a><a name="zh-cn_topic_0000002193288232_p176281611112319"></a>IPv4网络地址</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002193288232_row1246282342317"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p246218233238"><a name="zh-cn_topic_0000002193288232_p246218233238"></a><a name="zh-cn_topic_0000002193288232_p246218233238"></a>suc_pkt_num</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p194621623162317"><a name="zh-cn_topic_0000002193288232_p194621623162317"></a><a name="zh-cn_topic_0000002193288232_p194621623162317"></a>发送成功的包数量。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p13462112317238"><a name="zh-cn_topic_0000002193288232_p13462112317238"></a><a name="zh-cn_topic_0000002193288232_p13462112317238"></a>-</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002193288232_row19827635192318"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p582717356232"><a name="zh-cn_topic_0000002193288232_p582717356232"></a><a name="zh-cn_topic_0000002193288232_p582717356232"></a>fail_pkt_num</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p18827163511233"><a name="zh-cn_topic_0000002193288232_p18827163511233"></a><a name="zh-cn_topic_0000002193288232_p18827163511233"></a>发送失败的包数量。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p96135810315"><a name="zh-cn_topic_0000002193288232_p96135810315"></a><a name="zh-cn_topic_0000002193288232_p96135810315"></a>-</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002193288232_row1062174552313"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p19621154592319"><a name="zh-cn_topic_0000002193288232_p19621154592319"></a><a name="zh-cn_topic_0000002193288232_p19621154592319"></a>max_time</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p116211445162317"><a name="zh-cn_topic_0000002193288232_p116211445162317"></a><a name="zh-cn_topic_0000002193288232_p116211445162317"></a>最长响应时间</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><a name="ul123111616574"></a><a name="ul123111616574"></a><ul id="ul123111616574"><li>ping失败的时候，值为-1。</li><li>正常情况下为非负值。</li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002193288232_row13637135652312"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p116371556172312"><a name="zh-cn_topic_0000002193288232_p116371556172312"></a><a name="zh-cn_topic_0000002193288232_p116371556172312"></a>min_time</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p1183124763011"><a name="zh-cn_topic_0000002193288232_p1183124763011"></a><a name="zh-cn_topic_0000002193288232_p1183124763011"></a>最短响应时间</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><a name="ul8487153175715"></a><a name="ul8487153175715"></a><ul id="ul8487153175715"><li>ping失败的时候，值为-1。</li><li>正常情况下为非负值。</li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002193288232_row161362219246"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p101360210240"><a name="zh-cn_topic_0000002193288232_p101360210240"></a><a name="zh-cn_topic_0000002193288232_p101360210240"></a>avg_time</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p6522651103018"><a name="zh-cn_topic_0000002193288232_p6522651103018"></a><a name="zh-cn_topic_0000002193288232_p6522651103018"></a>平均响应时间</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><a name="ul1542252195912"></a><a name="ul1542252195912"></a><ul id="ul1542252195912"><li>ping失败的时候，值为-1。</li><li>正常情况下为非负值。</li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002193288232_row17545059142313"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p11545659192314"><a name="zh-cn_topic_0000002193288232_p11545659192314"></a><a name="zh-cn_topic_0000002193288232_p11545659192314"></a>tp95_time</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p1354555914234"><a name="zh-cn_topic_0000002193288232_p1354555914234"></a><a name="zh-cn_topic_0000002193288232_p1354555914234"></a>处于95%位置的响应时间。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><a name="ul1746711165919"></a><a name="ul1746711165919"></a><ul id="ul1746711165919"><li>ping失败的时候，值为-1。</li><li>正常情况下为非负值。</li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002193288232_row1951626122416"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p29542618248"><a name="zh-cn_topic_0000002193288232_p29542618248"></a><a name="zh-cn_topic_0000002193288232_p29542618248"></a>reply_stat_num</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p1495326202416"><a name="zh-cn_topic_0000002193288232_p1495326202416"></a><a name="zh-cn_topic_0000002193288232_p1495326202416"></a>本次查询到的响应数量。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p895192652413"><a name="zh-cn_topic_0000002193288232_p895192652413"></a><a name="zh-cn_topic_0000002193288232_p895192652413"></a>-</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002193288232_row62832386245"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p1628343810249"><a name="zh-cn_topic_0000002193288232_p1628343810249"></a><a name="zh-cn_topic_0000002193288232_p1628343810249"></a>ping_total_num</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p12831538122417"><a name="zh-cn_topic_0000002193288232_p12831538122417"></a><a name="zh-cn_topic_0000002193288232_p12831538122417"></a>本次任务累计的响应数量。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p928313842416"><a name="zh-cn_topic_0000002193288232_p928313842416"></a><a name="zh-cn_topic_0000002193288232_p928313842416"></a>-</p>
-</td>
-</tr>
-</tbody>
-</table>
+|参数|说明|取值|
+|--|--|--|
+|uid|该次pingmesh任务的ID。|长度为64的字符串|
+|config|该次pingmesh任务的用户配置。|字符串|
+|physicID|NPU卡物理ID。|[0~15]|
+|taskID|任务ID，0代表节点内部、1代表节点间。|0或1|
+|DestNum|本次pingmesh目标地址数量。|[0~47]|
+|source_addr|源地址|IPv4网络地址|
+|target_addr|目标地址|IPv4网络地址|
+|suc_pkt_num|发送成功的包数量。|-|
+|fail_pkt_num|发送失败的包数量。|-|
+|max_time|最长响应时间。|<ul><li>ping失败的时候，值为-1。</li><li>正常情况下为非负值。</li></ul>|
+|min_time|最短响应时间。|<ul><li>ping失败的时候，值为-1。</li><li>正常情况下为非负值。</li></ul>|
+|avg_time|平均响应时间。|<ul><li>ping失败的时候，值为-1。</li><li>正常情况下为非负值。</li></ul>|
+|tp95_time|处于95%位置的响应时间。|<ul><li>ping失败的时候，值为-1。</li><li>正常情况下为非负值。</li></ul>|
+|reply_stat_num|本次查询到的响应数量。|-|
+|ping_total_num|本次任务累计的响应数量。|-|
 
 **查看故障信息<a name="zh-cn_topic_0000002193288232_section7712929183110"></a>**
 
@@ -769,53 +547,17 @@ kubectl describe cm -n cluster-system  pingmesh-fault-<nodename>
 **表 3**  pingmesh-fault-<nodename\>
 
 <a name="zh-cn_topic_0000002193288232_table2371535113510"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002193288232_row10378359354"><th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002193288232_p23763516354"><a name="zh-cn_topic_0000002193288232_p23763516354"></a><a name="zh-cn_topic_0000002193288232_p23763516354"></a>参数</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002193288232_p0371335143511"><a name="zh-cn_topic_0000002193288232_p0371335143511"></a><a name="zh-cn_topic_0000002193288232_p0371335143511"></a>说明</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002193288232_p9371635163516"><a name="zh-cn_topic_0000002193288232_p9371635163516"></a><a name="zh-cn_topic_0000002193288232_p9371635163516"></a>取值</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002193288232_row237123519354"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p11375353357"><a name="zh-cn_topic_0000002193288232_p11375353357"></a><a name="zh-cn_topic_0000002193288232_p11375353357"></a>mc-consumer-publicfault</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p837335103515"><a name="zh-cn_topic_0000002193288232_p837335103515"></a><a name="zh-cn_topic_0000002193288232_p837335103515"></a><span id="zh-cn_topic_0000002193288232_ph9255132215122"><a name="zh-cn_topic_0000002193288232_ph9255132215122"></a><a name="zh-cn_topic_0000002193288232_ph9255132215122"></a>ClusterD</span>侦听所需的label key</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p73743563520"><a name="zh-cn_topic_0000002193288232_p73743563520"></a><a name="zh-cn_topic_0000002193288232_p73743563520"></a>true</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002193288232_row203793520353"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002193288232_p16371535143510"><a name="zh-cn_topic_0000002193288232_p16371535143510"></a><a name="zh-cn_topic_0000002193288232_p16371535143510"></a>PublicFault</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002193288232_p1937113573511"><a name="zh-cn_topic_0000002193288232_p1937113573511"></a><a name="zh-cn_topic_0000002193288232_p1937113573511"></a>公共故障信息key</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002193288232_p153833563511"><a name="zh-cn_topic_0000002193288232_p153833563511"></a><a name="zh-cn_topic_0000002193288232_p153833563511"></a>详细说明请参见<a href="../api/clusterd.md#configmap">fault字段说明</a>表。</p>
-</td>
-</tr>
-</tbody>
-</table>
+|参数|说明|取值|
+|--|--|--|
+|mc-consumer-publicfault|ClusterD侦听所需的label key|true|
+|PublicFault|公共故障信息key|详细说明请参见<a href="../api/clusterd.md#configmap">fault字段说明</a>表。|
 
 **已支持的灵衢网络故障<a name="zh-cn_topic_0000002193288232_section4960201383813"></a>**
 
 <a name="zh-cn_topic_0000002193288232_table31451934163811"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002193288232_row514523493819"><th class="cellrowborder" valign="top" width="12.26122612261226%" id="mcps1.1.4.1.1"><p id="zh-cn_topic_0000002193288232_p1114523420389"><a name="zh-cn_topic_0000002193288232_p1114523420389"></a><a name="zh-cn_topic_0000002193288232_p1114523420389"></a>故障码</p>
-</th>
-<th class="cellrowborder" valign="top" width="18.651865186518652%" id="mcps1.1.4.1.2"><p id="zh-cn_topic_0000002193288232_p9145143412387"><a name="zh-cn_topic_0000002193288232_p9145143412387"></a><a name="zh-cn_topic_0000002193288232_p9145143412387"></a>故障说明</p>
-</th>
-<th class="cellrowborder" valign="top" width="69.08690869086908%" id="mcps1.1.4.1.3"><p id="zh-cn_topic_0000002193288232_p15145193413388"><a name="zh-cn_topic_0000002193288232_p15145193413388"></a><a name="zh-cn_topic_0000002193288232_p15145193413388"></a>故障级别</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002193288232_row131782214434"><td class="cellrowborder" valign="top" width="12.26122612261226%" headers="mcps1.1.4.1.1 "><p id="zh-cn_topic_0000002193288232_p41752216438"><a name="zh-cn_topic_0000002193288232_p41752216438"></a><a name="zh-cn_topic_0000002193288232_p41752216438"></a>220001001</p>
-</td>
-<td class="cellrowborder" valign="top" width="18.651865186518652%" headers="mcps1.1.4.1.2 "><p id="zh-cn_topic_0000002193288232_p1171822134316"><a name="zh-cn_topic_0000002193288232_p1171822134316"></a><a name="zh-cn_topic_0000002193288232_p1171822134316"></a>NPU卡<span id="ph612871931615"><a name="ph612871931615"></a><a name="ph612871931615"></a>HCCS</span>网络故障</p>
-</td>
-<td class="cellrowborder" valign="top" width="69.08690869086908%" headers="mcps1.1.4.1.3 "><p id="zh-cn_topic_0000002193288232_p1566710511444"><a name="zh-cn_topic_0000002193288232_p1566710511444"></a><a name="zh-cn_topic_0000002193288232_p1566710511444"></a>SeparateNPU</p>
-<div class="note" id="zh-cn_topic_0000002193288232_note13181172251512"><a name="zh-cn_topic_0000002193288232_note13181172251512"></a><a name="zh-cn_topic_0000002193288232_note13181172251512"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002193288232_p17181722121510"><a name="zh-cn_topic_0000002193288232_p17181722121510"></a><a name="zh-cn_topic_0000002193288232_p17181722121510"></a>该故障级别不支持自行配置。</p>
-</div></div>
-</td>
-</tr>
-</tbody>
-</table>
+|故障码|故障说明|故障级别|
+|--|--|--|
+|220001001|NPU卡HCCS网络故障|<p>SeparateNPU</p><p>该故障级别不支持自行配置。</p>|
 
 
 #### 性能劣化故障<a name="ZH-CN_TOPIC_0000002479386488"></a>
@@ -829,60 +571,13 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
 **表 1**  打点数据说明
 
 <a name="zh-cn_topic_0000002194466236_table5530103025919"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002194466236_row105301830105911"><th class="cellrowborder" valign="top" width="21.12%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002194466236_p7530133018591"><a name="zh-cn_topic_0000002194466236_p7530133018591"></a><a name="zh-cn_topic_0000002194466236_p7530133018591"></a>打点数据的类型</p>
-</th>
-<th class="cellrowborder" valign="top" width="26.540000000000003%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002194466236_p165301308591"><a name="zh-cn_topic_0000002194466236_p165301308591"></a><a name="zh-cn_topic_0000002194466236_p165301308591"></a>支持的AI框架</p>
-</th>
-<th class="cellrowborder" valign="top" width="52.339999999999996%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002194466236_p153043055911"><a name="zh-cn_topic_0000002194466236_p153043055911"></a><a name="zh-cn_topic_0000002194466236_p153043055911"></a>提供支持的组件</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002194466236_row1753023011598"><td class="cellrowborder" valign="top" width="21.12%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002194466236_p1692418239310"><a name="zh-cn_topic_0000002194466236_p1692418239310"></a><a name="zh-cn_topic_0000002194466236_p1692418239310"></a>FP</p>
-<p id="zh-cn_topic_0000002194466236_p195301030165916"><a name="zh-cn_topic_0000002194466236_p195301030165916"></a><a name="zh-cn_topic_0000002194466236_p195301030165916"></a>（标识前向传播数据）</p>
-</td>
-<td class="cellrowborder" valign="top" width="26.540000000000003%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002194466236_p1353016307593"><a name="zh-cn_topic_0000002194466236_p1353016307593"></a><a name="zh-cn_topic_0000002194466236_p1353016307593"></a>PyTorch</p>
-<div class="note" id="zh-cn_topic_0000002194466236_note8765349888"><a name="zh-cn_topic_0000002194466236_note8765349888"></a><a name="zh-cn_topic_0000002194466236_note8765349888"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="zh-cn_topic_0000002194466236_p1276511491787"><a name="zh-cn_topic_0000002194466236_p1276511491787"></a><a name="zh-cn_topic_0000002194466236_p1276511491787"></a>仅支持单算子场景。</p>
-</div></div>
-</td>
-<td class="cellrowborder" valign="top" width="52.339999999999996%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002194466236_p5530630205914"><a name="zh-cn_topic_0000002194466236_p5530630205914"></a><a name="zh-cn_topic_0000002194466236_p5530630205914"></a>mstx_torch_plugin</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002194466236_row13415176111"><td class="cellrowborder" valign="top" width="21.12%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002194466236_p3788646727"><a name="zh-cn_topic_0000002194466236_p3788646727"></a><a name="zh-cn_topic_0000002194466236_p3788646727"></a>Step</p>
-<p id="zh-cn_topic_0000002194466236_p2341175120"><a name="zh-cn_topic_0000002194466236_p2341175120"></a><a name="zh-cn_topic_0000002194466236_p2341175120"></a>（标识Step时延）</p>
-</td>
-<td class="cellrowborder" valign="top" width="26.540000000000003%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002194466236_p834517411"><a name="zh-cn_topic_0000002194466236_p834517411"></a><a name="zh-cn_topic_0000002194466236_p834517411"></a>PyTorch、MindSpore</p>
-</td>
-<td class="cellrowborder" valign="top" width="52.339999999999996%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002194466236_ul17713185812916"></a><a name="zh-cn_topic_0000002194466236_ul17713185812916"></a><ul id="zh-cn_topic_0000002194466236_ul17713185812916"><li>PyTorch<a name="ul144271853105714"></a><a name="ul144271853105714"></a><ul id="ul144271853105714"><li>原生优化器场景：若torch_npu为7.1.RC1版本，需使用mstx_torch_plugin；若torch_npu为7.1.RC1以上版本，无需使用mstx_torch_plugin，torch_npu自带Step打点。</li><li>自定义优化器场景：手动增加打点数据。</li></ul>
-</li><li>MindSpore<a name="zh-cn_topic_0000002194466236_ul4814121617106"></a><a name="zh-cn_topic_0000002194466236_ul4814121617106"></a><ul id="zh-cn_topic_0000002194466236_ul4814121617106"><li>MindFormers场景：Step打点数据由MindFormers提供。</li><li>MindSpeed场景：不提供Step打点数据。</li></ul>
-</li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002194466236_row9530630195919"><td class="cellrowborder" valign="top" width="21.12%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002194466236_p169247495217"><a name="zh-cn_topic_0000002194466236_p169247495217"></a><a name="zh-cn_topic_0000002194466236_p169247495217"></a>Communication</p>
-<p id="zh-cn_topic_0000002194466236_p1753012305591"><a name="zh-cn_topic_0000002194466236_p1753012305591"></a><a name="zh-cn_topic_0000002194466236_p1753012305591"></a>（标识通信算子）</p>
-</td>
-<td class="cellrowborder" valign="top" width="26.540000000000003%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002194466236_p2401691783"><a name="zh-cn_topic_0000002194466236_p2401691783"></a><a name="zh-cn_topic_0000002194466236_p2401691783"></a>PyTorch、MindSpore</p>
-</td>
-<td class="cellrowborder" valign="top" width="52.339999999999996%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002194466236_ul18432034131111"></a><a name="zh-cn_topic_0000002194466236_ul18432034131111"></a><ul id="zh-cn_topic_0000002194466236_ul18432034131111"><li>PyTorch：torch_npu</li><li>MindSpore：MindSpore框架。</li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002194466236_row953063010598"><td class="cellrowborder" valign="top" width="21.12%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002194466236_p112455417213"><a name="zh-cn_topic_0000002194466236_p112455417213"></a><a name="zh-cn_topic_0000002194466236_p112455417213"></a>SaveCheckpoint</p>
-<p id="zh-cn_topic_0000002194466236_p353043014592"><a name="zh-cn_topic_0000002194466236_p353043014592"></a><a name="zh-cn_topic_0000002194466236_p353043014592"></a>（标识SaveCheckpoint耗时）</p>
-</td>
-<td class="cellrowborder" valign="top" width="26.540000000000003%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002194466236_p20176311281"><a name="zh-cn_topic_0000002194466236_p20176311281"></a><a name="zh-cn_topic_0000002194466236_p20176311281"></a>PyTorch、MindSpore</p>
-</td>
-<td class="cellrowborder" valign="top" width="52.339999999999996%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002194466236_ul1450711814124"></a><a name="zh-cn_topic_0000002194466236_ul1450711814124"></a><ul id="zh-cn_topic_0000002194466236_ul1450711814124"><li>PyTorch：torch_npu</li><li>MindSpore：MindSpore框架。</li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002194466236_row1234614241805"><td class="cellrowborder" valign="top" width="21.12%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002194466236_p1271312516318"><a name="zh-cn_topic_0000002194466236_p1271312516318"></a><a name="zh-cn_topic_0000002194466236_p1271312516318"></a>DataLoader</p>
-<p id="zh-cn_topic_0000002194466236_p834615241902"><a name="zh-cn_topic_0000002194466236_p834615241902"></a><a name="zh-cn_topic_0000002194466236_p834615241902"></a>（标识DataLoader耗时）</p>
-</td>
-<td class="cellrowborder" valign="top" width="26.540000000000003%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002194466236_p459471310811"><a name="zh-cn_topic_0000002194466236_p459471310811"></a><a name="zh-cn_topic_0000002194466236_p459471310811"></a>PyTorch、MindSpore</p>
-</td>
-<td class="cellrowborder" valign="top" width="52.339999999999996%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002194466236_ul827633418123"></a><a name="zh-cn_topic_0000002194466236_ul827633418123"></a><ul id="zh-cn_topic_0000002194466236_ul827633418123"><li>PyTorch：torch_npu</li><li>MindSpore：MindSpore框架。</li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+|打点数据的类型|支持的AI框架|提供支持的组件|
+|--|--|--|
+|<p>FP</p><p>（标识前向传播数据）</p>|<p>PyTorch</p><p>仅支持单算子场景。</p>|mstx_torch_plugin|
+|<p>Step</p><p>（标识Step时延）</p>|PyTorch、MindSpore|<ul><li>PyTorch<ul><li>原生优化器场景：若torch_npu为7.1.RC1版本，需使用mstx_torch_plugin；若torch_npu为7.1.RC1以上版本，无需使用mstx_torch_plugin，torch_npu自带Step打点。</li><li>自定义优化器场景：手动增加打点数据。</li></ul></li><li>MindSpore<ul><li>MindFormers场景：Step打点数据由MindFormers提供。</li><li>MindSpeed场景：不提供Step打点数据。</li></ul></li></ul>|
+|<p>Communication</p><p>（标识通信算子）</p>|PyTorch、MindSpore|<ul><li>PyTorch：torch_npu</li><li>MindSpore：MindSpore框架</li></ul>|
+|<p>SaveCheckpoint</p><p>（标识SaveCheckpoint耗时）</p>|PyTorch、MindSpore|<ul><li>PyTorch：torch_npu</li><li>MindSpore：MindSpore框架</li></ul>|
+|<p>DataLoader</p><p>（标识DataLoader耗时）</p>|PyTorch、MindSpore|<ul><li>PyTorch：torch_npu</li><li>MindSpore：MindSpore框架</li></ul>|
 
 **使用约束<a name="zh-cn_topic_0000002194466236_section487603614"></a>**
 
@@ -900,33 +595,9 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
 **表 2**  准备软件包
 
 <a name="zh-cn_topic_0000002194466236_table232305471415"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002194466236_row33231354121420"><th class="cellrowborder" valign="top" width="14.08%" id="mcps1.2.6.1.1"><p id="zh-cn_topic_0000002194466236_p1441653254"><a name="zh-cn_topic_0000002194466236_p1441653254"></a><a name="zh-cn_topic_0000002194466236_p1441653254"></a>软件包</p>
-</th>
-<th class="cellrowborder" valign="top" width="6.74%" id="mcps1.2.6.1.2"><p id="zh-cn_topic_0000002194466236_p2052053751"><a name="zh-cn_topic_0000002194466236_p2052053751"></a><a name="zh-cn_topic_0000002194466236_p2052053751"></a>是否必选</p>
-</th>
-<th class="cellrowborder" valign="top" width="60.75000000000001%" id="mcps1.2.6.1.3"><p id="zh-cn_topic_0000002194466236_p657531455"><a name="zh-cn_topic_0000002194466236_p657531455"></a><a name="zh-cn_topic_0000002194466236_p657531455"></a>说明</p>
-</th>
-<th class="cellrowborder" valign="top" width="8.58%" id="mcps1.2.6.1.4"><p id="zh-cn_topic_0000002194466236_p1859531759"><a name="zh-cn_topic_0000002194466236_p1859531759"></a><a name="zh-cn_topic_0000002194466236_p1859531759"></a>获取方法</p>
-</th>
-<th class="cellrowborder" valign="top" width="9.85%" id="mcps1.2.6.1.5"><p id="zh-cn_topic_0000002194466236_p1444313132617"><a name="zh-cn_topic_0000002194466236_p1444313132617"></a><a name="zh-cn_topic_0000002194466236_p1444313132617"></a>使用场景</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002194466236_row1715722244511"><td class="cellrowborder" valign="top" width="14.08%" headers="mcps1.2.6.1.1 "><p id="zh-cn_topic_0000002194466236_p19157182244515"><a name="zh-cn_topic_0000002194466236_p19157182244515"></a><a name="zh-cn_topic_0000002194466236_p19157182244515"></a>mstx_torch_plugin</p>
-</td>
-<td class="cellrowborder" valign="top" width="6.74%" headers="mcps1.2.6.1.2 "><p id="zh-cn_topic_0000002194466236_p31576228454"><a name="zh-cn_topic_0000002194466236_p31576228454"></a><a name="zh-cn_topic_0000002194466236_p31576228454"></a>否</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.75000000000001%" headers="mcps1.2.6.1.3 "><p id="zh-cn_topic_0000002194466236_p15157192234518"><a name="zh-cn_topic_0000002194466236_p15157192234518"></a><a name="zh-cn_topic_0000002194466236_p15157192234518"></a><span>Ascend PyTorch Profiler中的</span><a href="https://www.hiascend.com/document/detail/zh/canncommercial/800/devaids/devtools/profiling/atlasprofiling_16_0033.html" target="_blank" rel="noopener noreferrer">采集并解析msproftx数据</a><span>功能已经内置了通信算子的打点。为了方便用户在不修改业务代码的基础上获取更多关键阶段的耗时数据，mstx_torch_plugin在Ascend PyTorch Profiler内置了</span><span>dataloader</span><span>、</span><span>forward</span><span>、</span><span>step</span><span>、</span><span>save_checkpoint</span><span>这四个关键阶段函数的打点。</span></p>
-<div class="note" id="zh-cn_topic_0000002194466236_note179451154301"><a name="zh-cn_topic_0000002194466236_note179451154301"></a><a name="zh-cn_topic_0000002194466236_note179451154301"></a><span class="notetitle"> 说明： </span><div class="notebody"><a name="zh-cn_topic_0000002194466236_ul17791934115613"></a><a name="zh-cn_topic_0000002194466236_ul17791934115613"></a><ul id="zh-cn_topic_0000002194466236_ul17791934115613"><li>如需使用FP打点数据，需安装mstx_torch_plugin。其他场景下无需安装。</li><li>需使用1.0及以上版本的mstx_torch_plugin。</li></ul>
-</div></div>
-</td>
-<td class="cellrowborder" valign="top" width="8.58%" headers="mcps1.2.6.1.4 "><p id="zh-cn_topic_0000002194466236_p5157162210453"><a name="zh-cn_topic_0000002194466236_p5157162210453"></a><a name="zh-cn_topic_0000002194466236_p5157162210453"></a><a href="https://gitee.com/link?target=https://ptdbg.obs.myhuaweicloud.com/profiler/example/1.0/mstx_torch_plugin-1.0-py3-none-any.whl" target="_blank" rel="noopener noreferrer">获取链接</a></p>
-</td>
-<td class="cellrowborder" valign="top" width="9.85%" headers="mcps1.2.6.1.5 "><p id="zh-cn_topic_0000002194466236_p1244314111268"><a name="zh-cn_topic_0000002194466236_p1244314111268"></a><a name="zh-cn_topic_0000002194466236_p1244314111268"></a>PyTorch</p>
-</td>
-</tr>
-</tbody>
-</table>
+|软件包|是否必选|说明|获取方法|使用场景|
+|--|--|--|--|--|
+|mstx_torch_plugin|否|<p>Ascend PyTorch Profiler中的<a href="https://www.hiascend.com/document/detail/zh/canncommercial/800/devaids/devtools/profiling/atlasprofiling_16_0033.html">采集并解析msproftx数据</a>功能已经内置了通信算子的打点。为了方便用户在不修改业务代码的基础上获取更多关键阶段的耗时数据，mstx_torch_plugin在Ascend PyTorch Profiler内置了dataloader、forward、step、save_checkpoint这四个关键阶段函数的打点。</p><ul><li>如需使用FP打点数据，需安装mstx_torch_plugin。其他场景下无需安装。</li><li>需使用1.0及以上版本的mstx_torch_plugin。</li></ul>|<a href="https://gitee.com/link?target=https://ptdbg.obs.myhuaweicloud.com/profiler/example/1.0/mstx_torch_plugin-1.0-py3-none-any.whl">获取链接</a>|PyTorch|
 
 **配置性能劣化故障检测<a name="section1831691464111"></a>**
 
@@ -953,7 +624,7 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
 
     -   在PyTorch场景下，非原生优化器或不使用mstx\_torch\_plugin的情况下，为获取训练的Step耗时数据需修改训练脚本中的训练迭代循环，需增加Step打点代码。
 
-        以下示例为PyTorch-MindSpeed场景，需修改./mindspeed\_llm/training/training.py文件增加如下加粗字段。MindSpore场景请根据实际情况修改。
+        以下示例为PyTorch-MindSpeed场景，需修改./mindspeed\_llm/training/training.py文件增加如下字段。MindSpore场景请根据实际情况修改。
 
         ```
         def train(forward_step_func, model, optimizer, opt_param_scheduler,
@@ -981,7 +652,7 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
                 torch.npu.mstx.range_end(range_id) # 标识当前训练step的结束
         ```
 
-2.  在容器内，以CANN软件包的运行用户登录环境，执行**source $\{install\_path\}/set\_env.sh**命令设置环境变量。其中$\{install\_path\}为CANN软件的安装目录。示例如下。
+2.  在容器内，以CANN软件包的运行用户登录环境，执行source $\{install\_path\}/set\_env.sh命令设置环境变量。其中$\{install\_path\}为CANN软件的安装目录。示例如下。
 
     ```
     source /usr/local/Ascend/cann/set_env.sh
@@ -1087,8 +758,8 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
                 ...
                 ```
 
-    2.  拉起TaskD  Worker。
-        -   **PyTorch-MindSpeed场景：**修改QWEN3\_for\_PyTorch\_2.7\_code/mindspeed\_llm/training/training.py文件，在代码中增加如下加粗字段。
+    2.  <a name="li23023"></a>拉起TaskD  Worker。
+        -   **PyTorch-MindSpeed场景**：修改QWEN3\_for\_PyTorch\_2.7\_code/mindspeed\_llm/training/training.py文件，在代码中增加如下字段。
 
             ```
             def pretrain(train_valid_test_dataset_provider,
@@ -1112,7 +783,7 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
                 one_logger_utils.on_pretrain_start()
             ```
 
-        -   **MindSpore-MindFormers场景**：修改./mindformers/trainer/base\_trainer.py文件，在代码中增加如下加粗字段。
+        -   **MindSpore-MindFormers场景**：修改./mindformers/trainer/base\_trainer.py文件，在代码中增加如下字段。
 
             ```
                 def training_process(
@@ -1145,9 +816,11 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
                                 sink_size=config.runner_config.sink_size,
                                 initial_epoch=config.runner_config.initial_epoch)
             ```
+            >[!NOTE] 说明 
+            >以上代码init_taskd_worker(rank,5000)中的入参5000为/user/cluster-info/profiling的上限大小，详细说明请参见[def init\_taskd\_worker\(rank\_id: int, upper\_limit\_of\_disk\_in\_mb: int = 5000, framework: str = "pt"\) -\> bool](../api/taskd.md#def-init_taskd_workerrank_id-int-upper_limit_of_disk_in_mb-int--5000-framework-str--pt---bool)中“upper\_limit\_of\_disk\_in\_mb”参数。
 
 5.  修改任务YAML。
-    1.  修改容器暴露端口，在所有的Pod下增加TaskD通信使用的端口9601。
+    1.  修改容器端口，在所有的Pod下增加TaskD通信使用的端口9601。
 
         ```
         ...
@@ -1187,14 +860,14 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
                 ```
 
 6.  开启轻量profiling获取落盘数据。支持如下两种方式：
-    -   修改ClusterD提供的gRPC接口：若配置了[4.a](#li399811541)，需要使用该方式开启。详细接口信息请参见[ModifyTrainingDataTraceSwitch](../api/clusterd.md#modifytrainingdatatraceswitch)。
+    -   修改ClusterD提供的gRPC接口：若配置了[4.1](#li399811541)，需要使用该方式开启。详细接口信息请参见[ModifyTrainingDataTraceSwitch](../api/clusterd.md#modifytrainingdatatraceswitch)。
 
         >[!NOTE] 说明 
         >通过ClusterD提供的gRPC接口开启或修改轻量profiling获取落盘数据，创建的data-trace-<任务名称\> ConfigMap的生命周期会随着任务的删除而删除。当任务不存在时，该接口会调用失败。
 
-    -   修改任务对应的data-trace ConfigMap：若未配置[4.a](#li399811541)，需要使用该方式开启。具体操作步骤如下：
+    -   修改任务对应的data-trace ConfigMap：若未配置[4.1](#li399811541)，需要使用该方式开启。具体操作步骤如下：
 
-        以default命名空间下的名为_default-test-pytorch-fault-mixtral_的任务为例，以编辑ConfigMap的方式开启轻量profiling获取落盘数据，示例如下。
+        以default命名空间下的名为default-test-pytorch-fault-mixtral的任务为例，以编辑ConfigMap的方式开启轻量profiling获取落盘数据，示例如下。
 
         1.  在master节点执行以下命令查询该任务对应的配置ConfigMap。
 
@@ -1202,7 +875,7 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
             kubectl get cm
             ```
 
-            -   如果data-trace-default-test-pytorch-fault-mixtral cm已经存在，执行步骤[3](#zh-cn_topic_0000002194466236_li4751182133418)编辑该文件。
+            -   如果data-trace-default-test-pytorch-fault-mixtral cm已经存在，执行[步骤3](#zh-cn_topic_0000002194466236_li4751182133418)编辑该文件。
 
                 回显示例如下。
 
@@ -1211,7 +884,7 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
                 data-trace-default-test-pytorch-fault-mixtral     1      18h
                 ```
 
-            -   如果data-trace-default-test-pytorch-fault-mixtral cm不存在，执行步骤[2](#zh-cn_topic_0000002194466236_li1633768104412)创建该文件。
+            -   如果data-trace-default-test-pytorch-fault-mixtral cm不存在，执行[步骤2](#zh-cn_topic_0000002194466236_li1633768104412)创建该文件。
 
         2.  <a name="zh-cn_topic_0000002194466236_li1633768104412"></a>执行以下命令，创建配置轻量profiling获取落盘数据所需ConfigMap文件。
             1.  将以下内容写入datacm.yaml。
@@ -1265,8 +938,8 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
 -   对于存在环境变量[MINDX\_TASK\_ID](../appendix.md#环境变量说明)的Pod，rank 0数据在容器内的路径为/user/cluster-info/profiling/$MINDX\_TASK\_ID/0。
 
     >[!NOTE] 说明 
-    >-   如无该环境变量，默认会落盘到名为default\_task\_id\__时间戳_的文件夹内。
-    >-   /user/cluster-info/profiling达到配置的上限大小（[def init\_taskd\_worker\(rank\_id: int, upper\_limit\_of\_disk\_in\_mb: int = 5000, framework: str = "pt"\) -\> bool](../api/taskd.md#def-init_taskd_workerrank_id-int-upper_limit_of_disk_in_mb-int--5000-framework-str--pt---bool)中“upper\_limit\_of\_disk\_in\_mb”参数配置值）后，将进行文件老化，默认每次删除修改时间最早的20%个文件。老化过程中仅删除profiling目录下rank文件夹中的以数字命名的文件，建议不手动添加其他文件到profiling文件夹下。如果用户手动添加其他文件，TaskD不会将该文件删除，但该文件会占用空间。
+    >-   如无该环境变量，默认会落盘到名为default\_task\_id\_<i>时间戳</i>的文件夹内。
+    >-   /user/cluster-info/profiling达到[4.2](#li23023)配置的上限大小后，将进行文件老化，默认每次删除修改时间最早的20%个文件。老化过程中仅删除profiling目录下rank文件夹中的以数字命名的文件，建议不手动添加其他文件到profiling文件夹下。如果用户手动添加其他文件，TaskD不会将该文件删除，但该文件会占用空间。
     >-   轻量profiling文件以时间戳命名，各条记录以换行分割，每次追加写入rank下最新文件。最新文件大小超过10MB时，TaskD会新建profiling文件。如果使用NFS等网络存储方式，当数据同步较慢时，可能存在文件大小未达到10MB即创建新文件的情况。
 
 
@@ -1279,60 +952,13 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
 **表 1**  打点数据说明
 
 <a name="zh-cn_topic_0000002194466236_table5530103025919"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002194466236_row105301830105911"><th class="cellrowborder" valign="top" width="21.12%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002194466236_p7530133018591"><a name="zh-cn_topic_0000002194466236_p7530133018591"></a><a name="zh-cn_topic_0000002194466236_p7530133018591"></a>打点数据的类型</p>
-</th>
-<th class="cellrowborder" valign="top" width="26.540000000000003%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002194466236_p165301308591"><a name="zh-cn_topic_0000002194466236_p165301308591"></a><a name="zh-cn_topic_0000002194466236_p165301308591"></a>支持的AI框架</p>
-</th>
-<th class="cellrowborder" valign="top" width="52.339999999999996%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002194466236_p153043055911"><a name="zh-cn_topic_0000002194466236_p153043055911"></a><a name="zh-cn_topic_0000002194466236_p153043055911"></a>提供支持的组件</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002194466236_row1753023011598"><td class="cellrowborder" valign="top" width="21.12%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002194466236_p1692418239310"><a name="zh-cn_topic_0000002194466236_p1692418239310"></a><a name="zh-cn_topic_0000002194466236_p1692418239310"></a>FP</p>
-<p id="zh-cn_topic_0000002194466236_p195301030165916"><a name="zh-cn_topic_0000002194466236_p195301030165916"></a><a name="zh-cn_topic_0000002194466236_p195301030165916"></a>（标识前向传播数据）</p>
-</td>
-<td class="cellrowborder" valign="top" width="26.540000000000003%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002194466236_p1353016307593"><a name="zh-cn_topic_0000002194466236_p1353016307593"></a><a name="zh-cn_topic_0000002194466236_p1353016307593"></a>PyTorch</p>
-<div class="note" id="zh-cn_topic_0000002194466236_note8765349888"><a name="zh-cn_topic_0000002194466236_note8765349888"></a><a name="zh-cn_topic_0000002194466236_note8765349888"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="zh-cn_topic_0000002194466236_p1276511491787"><a name="zh-cn_topic_0000002194466236_p1276511491787"></a><a name="zh-cn_topic_0000002194466236_p1276511491787"></a>仅支持单算子场景。</p>
-</div></div>
-</td>
-<td class="cellrowborder" valign="top" width="52.339999999999996%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002194466236_p5530630205914"><a name="zh-cn_topic_0000002194466236_p5530630205914"></a><a name="zh-cn_topic_0000002194466236_p5530630205914"></a>mstx_torch_plugin</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002194466236_row13415176111"><td class="cellrowborder" valign="top" width="21.12%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002194466236_p3788646727"><a name="zh-cn_topic_0000002194466236_p3788646727"></a><a name="zh-cn_topic_0000002194466236_p3788646727"></a>Step</p>
-<p id="zh-cn_topic_0000002194466236_p2341175120"><a name="zh-cn_topic_0000002194466236_p2341175120"></a><a name="zh-cn_topic_0000002194466236_p2341175120"></a>（标识Step时延）</p>
-</td>
-<td class="cellrowborder" valign="top" width="26.540000000000003%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002194466236_p834517411"><a name="zh-cn_topic_0000002194466236_p834517411"></a><a name="zh-cn_topic_0000002194466236_p834517411"></a>PyTorch、MindSpore</p>
-</td>
-<td class="cellrowborder" valign="top" width="52.339999999999996%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002194466236_ul17713185812916"></a><a name="zh-cn_topic_0000002194466236_ul17713185812916"></a><ul id="zh-cn_topic_0000002194466236_ul17713185812916"><li>PyTorch<a name="ul144271853105714"></a><a name="ul144271853105714"></a><ul id="ul144271853105714"><li>原生优化器场景：若torch_npu为7.1.RC1及以下版本，需使用mstx_torch_plugin；若torch_npu为7.1.RC1以上版本，无需使用mstx_torch_plugin，torch_npu自带Step打点。</li><li>自定义优化器场景：手动增加打点数据。</li></ul>
-</li><li>MindSpore<a name="zh-cn_topic_0000002194466236_ul4814121617106"></a><a name="zh-cn_topic_0000002194466236_ul4814121617106"></a><ul id="zh-cn_topic_0000002194466236_ul4814121617106"><li>MindFormers场景：Step打点数据由MindFormers提供。</li><li>MindSpeed场景：不提供Step打点数据。</li></ul>
-</li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002194466236_row9530630195919"><td class="cellrowborder" valign="top" width="21.12%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002194466236_p169247495217"><a name="zh-cn_topic_0000002194466236_p169247495217"></a><a name="zh-cn_topic_0000002194466236_p169247495217"></a>Communication</p>
-<p id="zh-cn_topic_0000002194466236_p1753012305591"><a name="zh-cn_topic_0000002194466236_p1753012305591"></a><a name="zh-cn_topic_0000002194466236_p1753012305591"></a>（标识通信算子）</p>
-</td>
-<td class="cellrowborder" valign="top" width="26.540000000000003%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002194466236_p2401691783"><a name="zh-cn_topic_0000002194466236_p2401691783"></a><a name="zh-cn_topic_0000002194466236_p2401691783"></a>PyTorch、MindSpore</p>
-</td>
-<td class="cellrowborder" valign="top" width="52.339999999999996%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002194466236_ul18432034131111"></a><a name="zh-cn_topic_0000002194466236_ul18432034131111"></a><ul id="zh-cn_topic_0000002194466236_ul18432034131111"><li>PyTorch：torch_npu</li><li>MindSpore：MindSpore框架。</li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002194466236_row953063010598"><td class="cellrowborder" valign="top" width="21.12%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002194466236_p112455417213"><a name="zh-cn_topic_0000002194466236_p112455417213"></a><a name="zh-cn_topic_0000002194466236_p112455417213"></a>SaveCheckpoint</p>
-<p id="zh-cn_topic_0000002194466236_p353043014592"><a name="zh-cn_topic_0000002194466236_p353043014592"></a><a name="zh-cn_topic_0000002194466236_p353043014592"></a>（标识SaveCheckpoint耗时）</p>
-</td>
-<td class="cellrowborder" valign="top" width="26.540000000000003%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002194466236_p20176311281"><a name="zh-cn_topic_0000002194466236_p20176311281"></a><a name="zh-cn_topic_0000002194466236_p20176311281"></a>PyTorch、MindSpore</p>
-</td>
-<td class="cellrowborder" valign="top" width="52.339999999999996%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002194466236_ul1450711814124"></a><a name="zh-cn_topic_0000002194466236_ul1450711814124"></a><ul id="zh-cn_topic_0000002194466236_ul1450711814124"><li>PyTorch：torch_npu</li><li>MindSpore：MindSpore框架。</li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002194466236_row1234614241805"><td class="cellrowborder" valign="top" width="21.12%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002194466236_p1271312516318"><a name="zh-cn_topic_0000002194466236_p1271312516318"></a><a name="zh-cn_topic_0000002194466236_p1271312516318"></a>DataLoader</p>
-<p id="zh-cn_topic_0000002194466236_p834615241902"><a name="zh-cn_topic_0000002194466236_p834615241902"></a><a name="zh-cn_topic_0000002194466236_p834615241902"></a>（标识DataLoader耗时）</p>
-</td>
-<td class="cellrowborder" valign="top" width="26.540000000000003%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002194466236_p459471310811"><a name="zh-cn_topic_0000002194466236_p459471310811"></a><a name="zh-cn_topic_0000002194466236_p459471310811"></a>PyTorch、MindSpore</p>
-</td>
-<td class="cellrowborder" valign="top" width="52.339999999999996%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002194466236_ul827633418123"></a><a name="zh-cn_topic_0000002194466236_ul827633418123"></a><ul id="zh-cn_topic_0000002194466236_ul827633418123"><li>PyTorch：torch_npu</li><li>MindSpore：MindSpore框架。</li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+|打点数据的类型|支持的AI框架|提供支持的组件|
+|--|--|--|
+|<p>FP</p><p>（标识前向传播数据）</p>|<p>PyTorch</p><p>仅支持单算子场景。</p>|mstx_torch_plugin|
+|<p>Step</p><p>（标识Step时延）</p>|PyTorch、MindSpore|<ul><li>PyTorch<ul><li>原生优化器场景：若torch_npu为7.1.RC1及以下版本，需使用mstx_torch_plugin；若torch_npu为7.1.RC1以上版本，无需使用mstx_torch_plugin，torch_npu自带Step打点。</li><li>自定义优化器场景：手动增加打点数据。</li></ul></li><li>MindSpore<ul><li>MindFormers场景：Step打点数据由MindFormers提供。</li><li>MindSpeed场景：不提供Step打点数据。</li></ul></li></ul>|
+|<p>Communication</p><p>（标识通信算子）</p>|PyTorch、MindSpore|<ul><li>PyTorch：torch_npu</li><li>MindSpore：MindSpore框架</li></ul>|
+|<p>SaveCheckpoint</p><p>（标识SaveCheckpoint耗时）</p>|PyTorch、MindSpore|<ul><li>PyTorch：torch_npu</li><li>MindSpore：MindSpore框架</li></ul>|
+|<p>DataLoader</p><p>（标识DataLoader耗时）</p>|PyTorch、MindSpore|<ul><li>PyTorch：torch_npu</li><li>MindSpore：MindSpore框架</li></ul>|
 
 **使用约束<a name="zh-cn_topic_0000002194466236_section487603614"></a>**
 
@@ -1350,33 +976,9 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
 **表 2**  准备软件包
 
 <a name="zh-cn_topic_0000002194466236_table232305471415"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002194466236_row33231354121420"><th class="cellrowborder" valign="top" width="14.08%" id="mcps1.2.6.1.1"><p id="zh-cn_topic_0000002194466236_p1441653254"><a name="zh-cn_topic_0000002194466236_p1441653254"></a><a name="zh-cn_topic_0000002194466236_p1441653254"></a>软件包</p>
-</th>
-<th class="cellrowborder" valign="top" width="6.74%" id="mcps1.2.6.1.2"><p id="zh-cn_topic_0000002194466236_p2052053751"><a name="zh-cn_topic_0000002194466236_p2052053751"></a><a name="zh-cn_topic_0000002194466236_p2052053751"></a>是否必选</p>
-</th>
-<th class="cellrowborder" valign="top" width="60.75000000000001%" id="mcps1.2.6.1.3"><p id="zh-cn_topic_0000002194466236_p657531455"><a name="zh-cn_topic_0000002194466236_p657531455"></a><a name="zh-cn_topic_0000002194466236_p657531455"></a>说明</p>
-</th>
-<th class="cellrowborder" valign="top" width="8.58%" id="mcps1.2.6.1.4"><p id="zh-cn_topic_0000002194466236_p1859531759"><a name="zh-cn_topic_0000002194466236_p1859531759"></a><a name="zh-cn_topic_0000002194466236_p1859531759"></a>获取方法</p>
-</th>
-<th class="cellrowborder" valign="top" width="9.85%" id="mcps1.2.6.1.5"><p id="zh-cn_topic_0000002194466236_p1444313132617"><a name="zh-cn_topic_0000002194466236_p1444313132617"></a><a name="zh-cn_topic_0000002194466236_p1444313132617"></a>使用场景</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002194466236_row1715722244511"><td class="cellrowborder" valign="top" width="14.08%" headers="mcps1.2.6.1.1 "><p id="zh-cn_topic_0000002194466236_p19157182244515"><a name="zh-cn_topic_0000002194466236_p19157182244515"></a><a name="zh-cn_topic_0000002194466236_p19157182244515"></a>mstx_torch_plugin</p>
-</td>
-<td class="cellrowborder" valign="top" width="6.74%" headers="mcps1.2.6.1.2 "><p id="zh-cn_topic_0000002194466236_p31576228454"><a name="zh-cn_topic_0000002194466236_p31576228454"></a><a name="zh-cn_topic_0000002194466236_p31576228454"></a>否</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.75000000000001%" headers="mcps1.2.6.1.3 "><p id="zh-cn_topic_0000002194466236_p15157192234518"><a name="zh-cn_topic_0000002194466236_p15157192234518"></a><a name="zh-cn_topic_0000002194466236_p15157192234518"></a><span>Ascend PyTorch Profiler中的</span><a href="https://www.hiascend.com/document/detail/zh/canncommercial/800/devaids/devtools/profiling/atlasprofiling_16_0033.html" target="_blank" rel="noopener noreferrer">采集并解析msproftx数据</a><span>功能已经内置了通信算子的打点。为了方便用户在不修改业务代码的基础上获取更多关键阶段的耗时数据，mstx_torch_plugin在Ascend PyTorch Profiler内置了</span><span>dataloader</span><span>、</span><span>forward</span><span>、</span><span>step</span><span>、</span><span>save_checkpoint</span><span>这四个关键阶段函数的打点。</span></p>
-<div class="note" id="zh-cn_topic_0000002194466236_note179451154301"><a name="zh-cn_topic_0000002194466236_note179451154301"></a><a name="zh-cn_topic_0000002194466236_note179451154301"></a><span class="notetitle"> 说明： </span><div class="notebody"><a name="zh-cn_topic_0000002194466236_ul17791934115613"></a><a name="zh-cn_topic_0000002194466236_ul17791934115613"></a><ul id="zh-cn_topic_0000002194466236_ul17791934115613"><li>如需使用FP打点数据，需安装mstx_torch_plugin。其他场景下无需安装。</li><li>需使用1.0及以上版本的mstx_torch_plugin。</li></ul>
-</div></div>
-</td>
-<td class="cellrowborder" valign="top" width="8.58%" headers="mcps1.2.6.1.4 "><p id="zh-cn_topic_0000002194466236_p5157162210453"><a name="zh-cn_topic_0000002194466236_p5157162210453"></a><a name="zh-cn_topic_0000002194466236_p5157162210453"></a><a href="https://gitee.com/link?target=https://ptdbg.obs.myhuaweicloud.com/profiler/example/1.0/mstx_torch_plugin-1.0-py3-none-any.whl" target="_blank" rel="noopener noreferrer">获取链接</a></p>
-</td>
-<td class="cellrowborder" valign="top" width="9.85%" headers="mcps1.2.6.1.5 "><p id="zh-cn_topic_0000002194466236_p1244314111268"><a name="zh-cn_topic_0000002194466236_p1244314111268"></a><a name="zh-cn_topic_0000002194466236_p1244314111268"></a>PyTorch</p>
-</td>
-</tr>
-</tbody>
-</table>
+|软件包|是否必选|说明|获取方法|使用场景|
+|--|--|--|--|--|
+|mstx_torch_plugin|否|<p>Ascend PyTorch Profiler中的<a href="https://www.hiascend.com/document/detail/zh/canncommercial/800/devaids/devtools/profiling/atlasprofiling_16_0033.html">采集并解析msproftx数据</a>功能已经内置了通信算子的打点。为了方便用户在不修改业务代码的基础上获取更多关键阶段的耗时数据，mstx_torch_plugin在Ascend PyTorch Profiler内置了dataloader、forward、step、save_checkpoint这四个关键阶段函数的打点。</p><ul><li>如需使用FP打点数据，需安装mstx_torch_plugin。其他场景下无需安装。</li><li>需使用1.0及以上版本的mstx_torch_plugin。</li></ul>|<a href="https://gitee.com/link?target=https://ptdbg.obs.myhuaweicloud.com/profiler/example/1.0/mstx_torch_plugin-1.0-py3-none-any.whl">获取链接</a>|PyTorch|
 
 **配置性能劣化故障检测<a name="section167141313174510"></a>**
 
@@ -1402,7 +1004,7 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
 
 2.  （可选）在PyTorch场景下，非原生优化器或不使用mstx\_torch\_plugin的情况下，为获取训练的Step耗时数据需修改训练脚本中的训练迭代循环，需增加Step打点代码。
 
-    以下示例为PyTorch-MindSpeed场景，需修改./mindspeed\_llm/training/training.py文件增加如下加粗字段。MindSpore场景请根据实际情况修改。
+    以下示例为PyTorch-MindSpeed场景，需修改./mindspeed\_llm/training/training.py文件增加如下字段。MindSpore场景请根据实际情况修改。
 
     ```
     def train(forward_step_func, model, optimizer, opt_param_scheduler,
@@ -1430,7 +1032,7 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
             torch.npu.mstx.range_end(range_id) # 标识当前训练step的结束
     ```
 
-3.  在容器内，以CANN软件包的运行用户登录环境，执行**source $\{install\_path\}/set\_env.sh**命令设置环境变量。其中$\{install\_path\}为CANN软件的安装目录。示例如下。
+3.  在容器内，以CANN软件包的运行用户登录环境，执行source $\{install\_path\}/set\_env.sh命令设置环境变量。其中$\{install\_path\}为CANN软件的安装目录。示例如下。
 
     ```
     source /usr/local/Ascend/cann/set_env.sh
@@ -1452,10 +1054,10 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
         pip show taskd
         ```
 
-5.  在分布式环境初始化完成，能够获取到全局rank之后，修改训练脚本，在训练进程内部拉起TaskD  Worker。
+5.  <a name="li230238965"></a>在分布式环境初始化完成，能够获取到全局rank之后，修改训练脚本，在训练进程内部拉起TaskD  Worker。
     -   **PyTorch-MindSpeed场景**
 
-        修改QWEN3\_for\_PyTorch\_2.7\_code/mindspeed\_llm/training/training.py文件，在代码中增加如下加粗字段。
+        修改QWEN3\_for\_PyTorch\_2.7\_code/mindspeed\_llm/training/training.py文件，在代码中增加如下字段。
 
         ```
         def pretrain(train_valid_test_dataset_provider,
@@ -1481,7 +1083,7 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
 
     -   **MindSpore-MindFormers场景**
 
-        修改./mindformers/trainer/base\_trainer.py文件，在代码中增加如下加粗字段。
+        修改./mindformers/trainer/base\_trainer.py文件，在代码中增加如下字段。
 
         ```
             def training_process(
@@ -1514,6 +1116,9 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
                             sink_size=config.runner_config.sink_size,
                             initial_epoch=config.runner_config.initial_epoch)
         ```
+        >[!NOTE] 说明 
+        >以上代码init_taskd_worker(rank,5000)中的入参5000为/user/cluster-info/profiling的上限大小，详细说明请参见[def init\_taskd\_worker\(rank\_id: int, upper\_limit\_of\_disk\_in\_mb: int = 5000, framework: str = "pt"\) -\> bool](../api/taskd.md#def-init_taskd_workerrank_id-int-upper_limit_of_disk_in_mb-int--5000-framework-str--pt---bool)中“upper\_limit\_of\_disk\_in\_mb”参数。
+
 
 6.  修改任务YAML。
     1.  挂载轻量profiling配置文件：需将宿主机上任务对应的data-trace ConfigMap落盘到/user/cluster-info/datatrace-config/命名空间.data-trace-任务名称/文件夹下。将名为profilingSwitch的文件挂载到容器指定路径：/user/cluster-info/datatrace-config/。
@@ -1542,7 +1147,7 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
 
 7.  开启轻量profiling获取落盘数据。修改任务对应的data-trace ConfigMap或ClusterD提供的gRPC接口，接口信息见[ModifyTrainingDataTraceSwitch](../api/clusterd.md#modifytrainingdatatraceswitch)，动态开启或关闭轻量profiling能力。
 
-    以default命名空间下的名为_default-test-pytorch-fault-mixtral_的任务为例，以编辑ConfigMap的方式开启轻量profiling获取落盘数据，示例如下。
+    以default命名空间下的名为default-test-pytorch-fault-mixtral的任务为例，以编辑ConfigMap的方式开启轻量profiling获取落盘数据，示例如下。
 
     1.  在master节点执行以下命令查询该任务对应的配置ConfigMap。
 
@@ -1550,7 +1155,7 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
         kubectl get cm
         ```
 
-        -   如果data-trace-default-test-pytorch-fault-mixtral cm已经存在，执行步骤[3](#zh-cn_topic_0000002194466236_li4751182133418)编辑该文件。
+        -   如果data-trace-default-test-pytorch-fault-mixtral cm已经存在，执行[步骤3](#zh-cn_topic_0000002194466236_li47511821334189)编辑该文件。
 
             回显示例如下。
 
@@ -1559,9 +1164,9 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
             data-trace-default-test-pytorch-fault-mixtral     1      18h
             ```
 
-        -   如果data-trace-default-test-pytorch-fault-mixtral cm不存在，执行步骤[2](#zh-cn_topic_0000002194466236_li1633768104412)创建该文件。
+        -   如果data-trace-default-test-pytorch-fault-mixtral cm不存在，执行[步骤2](#zh-cn_topic_0000002194466236_li16337681044126)创建该文件。
 
-    2.  <a name="zh-cn_topic_0000002194466236_li1633768104412"></a>执行以下命令，创建配置轻量profiling获取落盘数据所需ConfigMap文件。
+    2.  <a name="zh-cn_topic_0000002194466236_li16337681044126"></a>执行以下命令，创建配置轻量profiling获取落盘数据所需ConfigMap文件。
         1.  将以下内容写入datacm.yaml。
 
             ```
@@ -1588,7 +1193,7 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
             configmap/data-trace-default-test-pytorch-fault-mixtral created
             ```
 
-    3.  <a name="zh-cn_topic_0000002194466236_li4751182133418"></a>执行以下命令编辑ConfigMap文件。
+    3.  <a name="zh-cn_topic_0000002194466236_li47511821334189"></a>执行以下命令编辑ConfigMap文件。
 
         ```
         kubectl edit cm data-trace-default-test-pytorch-fault-mixtral
@@ -1613,8 +1218,8 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
 -   对于存在环境变量[MINDX\_TASK\_ID](../appendix.md#环境变量说明)的Pod，rank 0数据在容器内的路径为/user/cluster-info/profiling/$MINDX\_TASK\_ID/0。
 
     >[!NOTE] 说明 
-    >-   如无该环境变量，默认会落盘到名为default\_task\_id\__时间戳_的文件夹内。
-    >-   /user/cluster-info/profiling达到配置的上限大小（[def init\_taskd\_worker\(rank\_id: int, upper\_limit\_of\_disk\_in\_mb: int = 5000, framework: str = "pt"\) -\> bool](../api/taskd.md#def-init_taskd_workerrank_id-int-upper_limit_of_disk_in_mb-int--5000-framework-str--pt---bool)中“upper\_limit\_of\_disk\_in\_mb”参数配置值）后，将进行文件老化，默认每次删除修改时间最早的20%个文件。老化过程中仅删除profiling目录下rank文件夹中的以数字命名的文件，建议不手动添加其他文件到profiling文件夹下。如果用户手动添加其他文件，TaskD不会将该文件删除，但该文件会占用空间。
+    >-   如无该环境变量，默认会落盘到名为default\_task\_id\_<i>时间戳</i>的文件夹内。
+    >-   /user/cluster-info/profiling达到[步骤5](#li230238965)配置的上限大小后，将进行文件老化，默认每次删除修改时间最早的20%个文件。老化过程中仅删除profiling目录下rank文件夹中的以数字命名的文件，建议不手动添加其他文件到profiling文件夹下。如果用户手动添加其他文件，TaskD不会将该文件删除，但该文件会占用空间。
     >-   轻量profiling文件以时间戳命名，各条记录以换行分割，每次追加写入rank下最新文件。最新文件大小超过10MB时，TaskD会新建profiling文件。如果使用NFS等网络存储方式，当数据同步较慢时，可能存在文件大小未达到10MB即创建新文件的情况。
 
 
@@ -1674,7 +1279,7 @@ ClusterD与FD-OL（Fault Diagnose Online）框架在同一进程中，都部署�
 
 启动慢节点诊断任务。
 
-1.  为获取并行域信息，需在训练脚本的训练迭代循环中增加获取并行域信息的函数调用。以下示例为PyTorch-MindSpeed场景，需在./mindspeed\_llm/training/training.py文件增加如下加粗字段。
+1.  为获取并行域信息，需在训练脚本的训练迭代循环中增加获取并行域信息的函数调用。以下示例为PyTorch-MindSpeed场景，需在./mindspeed\_llm/training/training.py文件增加如下字段。
 
     ```
     def train(forward_step_func, model, optimizer, opt_param_scheduler,
@@ -1734,87 +1339,18 @@ ClusterD与FD-OL（Fault Diagnose Online）框架在同一进程中，都部署�
     **表 1**  YAML文件回显说明
 
     <a name="zh-cn_topic_0000002278667326_table1834456175114"></a>
-    <table><thead align="left"><tr id="zh-cn_topic_0000002278667326_row53355612518"><th class="cellrowborder" valign="top" width="33.29332933293329%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002278667326_p173385615518"><a name="zh-cn_topic_0000002278667326_p173385615518"></a><a name="zh-cn_topic_0000002278667326_p173385615518"></a>字段名</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="33.373337333733375%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002278667326_p3331256105116"><a name="zh-cn_topic_0000002278667326_p3331256105116"></a><a name="zh-cn_topic_0000002278667326_p3331256105116"></a>默认值</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002278667326_p533256115114"><a name="zh-cn_topic_0000002278667326_p533256115114"></a><a name="zh-cn_topic_0000002278667326_p533256115114"></a>说明</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="zh-cn_topic_0000002278667326_row103315695115"><td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002278667326_p9335560512"><a name="zh-cn_topic_0000002278667326_p9335560512"></a><a name="zh-cn_topic_0000002278667326_p9335560512"></a>jobNamespace</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002278667326_p933205615511"><a name="zh-cn_topic_0000002278667326_p933205615511"></a><a name="zh-cn_topic_0000002278667326_p933205615511"></a>default</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002278667326_p9331156155112"><a name="zh-cn_topic_0000002278667326_p9331156155112"></a><a name="zh-cn_topic_0000002278667326_p9331156155112"></a>任务所在的namespace。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002278667326_row183318567511"><td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002278667326_p83345616518"><a name="zh-cn_topic_0000002278667326_p83345616518"></a><a name="zh-cn_topic_0000002278667326_p83345616518"></a>jobName</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002278667326_p7331456165110"><a name="zh-cn_topic_0000002278667326_p7331456165110"></a><a name="zh-cn_topic_0000002278667326_p7331456165110"></a>-</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002278667326_p13318567516"><a name="zh-cn_topic_0000002278667326_p13318567516"></a><a name="zh-cn_topic_0000002278667326_p13318567516"></a>任务名。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002278667326_row123375613510"><td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002278667326_p1933185614515"><a name="zh-cn_topic_0000002278667326_p1933185614515"></a><a name="zh-cn_topic_0000002278667326_p1933185614515"></a>normalNumber</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002278667326_p733175616519"><a name="zh-cn_topic_0000002278667326_p733175616519"></a><a name="zh-cn_topic_0000002278667326_p733175616519"></a>20</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002278667326_p113365613511"><a name="zh-cn_topic_0000002278667326_p113365613511"></a><a name="zh-cn_topic_0000002278667326_p113365613511"></a>计算初始阈值（正常数量）。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002278667326_row1633135619514"><td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002278667326_p43325618514"><a name="zh-cn_topic_0000002278667326_p43325618514"></a><a name="zh-cn_topic_0000002278667326_p43325618514"></a>nSigma</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002278667326_p933155635114"><a name="zh-cn_topic_0000002278667326_p933155635114"></a><a name="zh-cn_topic_0000002278667326_p933155635114"></a>3个</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002278667326_p1433175635115"><a name="zh-cn_topic_0000002278667326_p1433175635115"></a><a name="zh-cn_topic_0000002278667326_p1433175635115"></a>设置σ的个数以计算其上下界。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002278667326_row1033155665119"><td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002278667326_p23325625112"><a name="zh-cn_topic_0000002278667326_p23325625112"></a><a name="zh-cn_topic_0000002278667326_p23325625112"></a>degradationPercentage</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002278667326_p23319569517"><a name="zh-cn_topic_0000002278667326_p23319569517"></a><a name="zh-cn_topic_0000002278667326_p23319569517"></a>0.3</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002278667326_p133156155116"><a name="zh-cn_topic_0000002278667326_p133156155116"></a><a name="zh-cn_topic_0000002278667326_p133156155116"></a>阈值，劣化的百分比，0.3表示劣化30%。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002278667326_row11331956135114"><td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002278667326_p933155695120"><a name="zh-cn_topic_0000002278667326_p933155695120"></a><a name="zh-cn_topic_0000002278667326_p933155695120"></a>nConsecAnomaliesSignifySlow</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002278667326_p93305614511"><a name="zh-cn_topic_0000002278667326_p93305614511"></a><a name="zh-cn_topic_0000002278667326_p93305614511"></a>3次</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002278667326_p733165645112"><a name="zh-cn_topic_0000002278667326_p733165645112"></a><a name="zh-cn_topic_0000002278667326_p733165645112"></a>设置异常次数，连续出现多次异常后才进行检测。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002278667326_row933135610517"><td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002278667326_p113325655119"><a name="zh-cn_topic_0000002278667326_p113325655119"></a><a name="zh-cn_topic_0000002278667326_p113325655119"></a>nSecondsDoOneDetection</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002278667326_p83325685114"><a name="zh-cn_topic_0000002278667326_p83325685114"></a><a name="zh-cn_topic_0000002278667326_p83325685114"></a>30秒</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002278667326_p18330569519"><a name="zh-cn_topic_0000002278667326_p18330569519"></a><a name="zh-cn_topic_0000002278667326_p18330569519"></a>设置间隔时长，进行检测，单位为秒。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002278667326_row733155614517"><td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002278667326_p143335655111"><a name="zh-cn_topic_0000002278667326_p143335655111"></a><a name="zh-cn_topic_0000002278667326_p143335655111"></a>clusterMeanDistance</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002278667326_p1633125613516"><a name="zh-cn_topic_0000002278667326_p1633125613516"></a><a name="zh-cn_topic_0000002278667326_p1633125613516"></a>1.3</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002278667326_p1433155612517"><a name="zh-cn_topic_0000002278667326_p1433155612517"></a><a name="zh-cn_topic_0000002278667326_p1433155612517"></a>聚类后，两个类别之间的阈值距离（mean1、mean2）。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002278667326_row7341056115120"><td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002278667326_p433185612512"><a name="zh-cn_topic_0000002278667326_p433185612512"></a><a name="zh-cn_topic_0000002278667326_p433185612512"></a>cardOneNode</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002278667326_p1433125655117"><a name="zh-cn_topic_0000002278667326_p1433125655117"></a><a name="zh-cn_topic_0000002278667326_p1433125655117"></a>16张卡</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002278667326_p1433145625116"><a name="zh-cn_topic_0000002278667326_p1433145625116"></a><a name="zh-cn_topic_0000002278667326_p1433145625116"></a>一个节点的卡片数量。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002278667326_row534105613515"><td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002278667326_p1734125613512"><a name="zh-cn_topic_0000002278667326_p1734125613512"></a><a name="zh-cn_topic_0000002278667326_p1734125613512"></a>slowNode</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002278667326_p034256155110"><a name="zh-cn_topic_0000002278667326_p034256155110"></a><a name="zh-cn_topic_0000002278667326_p034256155110"></a>默认为1，开启任务。</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002278667326_p1534175616518"><a name="zh-cn_topic_0000002278667326_p1534175616518"></a><a name="zh-cn_topic_0000002278667326_p1534175616518"></a>是否开启任务。</p>
-    <a name="zh-cn_topic_0000002278667326_ul11341756165115"></a><a name="zh-cn_topic_0000002278667326_ul11341756165115"></a><ul id="zh-cn_topic_0000002278667326_ul11341756165115"><li>1：开启任务。</li><li>0：关闭任务。</li></ul>
-    </td>
-    </tr>
-    </tbody>
-    </table>
+    |字段名|默认值|说明|
+    |--|--|--|
+    |jobNamespace|default|任务所在的namespace。|
+    |jobName|-|任务名。|
+    |normalNumber|20|计算初始阈值（正常数量）。|
+    |nSigma|3个|设置σ的个数以计算其上下界。|
+    |degradationPercentage|0.3|阈值，劣化的百分比，0.3表示劣化30%。|
+    |nConsecAnomaliesSignifySlow|3次|设置异常次数，连续出现多次异常后才进行检测。|
+    |nSecondsDoOneDetection|30秒|设置间隔时长，进行检测，单位为秒。|
+    |clusterMeanDistance|1.3|聚类后，两个类别之间的阈值距离（mean1、mean2）。|
+    |cardOneNode|16张卡|一个节点的卡片数量。|
+    |slowNode|默认为1，开启任务。|<p>是否开启任务。</p><ul><li>1：开启任务。</li><li>0：关闭任务。</li></ul>|
 
 **查询慢节点诊断结果<a name="zh-cn_topic_0000002278667326_section208199121010"></a>**
 
@@ -1826,51 +1362,31 @@ ClusterD与FD-OL（Fault Diagnose Online）框架在同一进程中，都部署�
 
     ![](../../figures/scheduling/zh-cn_image_0000002477523808.png)
 
-2.  再使用**kubectl logs -n mindx-dl clusterd-7d5db546d8-kdslz | grep "got degradation, slow rank"**查询日志数据。
+2.  再使用<b>kubectl logs -n mindx-dl clusterd-7d5db546d8-kdslz | grep "got degradation, slow rank"</b>查询日志数据。
 3.  若日志中出现如下图所示，则表明出现节点劣化。
 
     ![](../../figures/scheduling/zh-cn_image_0000002457147010.png)
 
 **方式二：通过落盘日志查询集群侧慢节点诊断日志**
 
-1.  使用**cat /var/log/mindx-dl.clusterd.clusterd.log | grep "got degradation, slow rank"**命令查询日志数据。
+1.  使用<b>cat /var/log/mindx-dl.clusterd.clusterd.log | grep "got degradation, slow rank"</b>命令查询日志数据。
 2.  若日志中出现如下图所示，则表明出现节点劣化。
 
     ![](../../figures/scheduling/zh-cn_image_0000002490267057.png)
 
 **方式三：查询节点侧的慢节点诊断日志。**
 
-使用**kubectl logs -n mindx-dl node-9ld8k | grep "is degradation"**命令进行查询，若日志中出现如下图所示数据，则表明出现节点劣化。
+使用<b>kubectl logs -n mindx-dl node-9ld8k | grep "is degradation"</b>命令进行查询，若日志中出现如下图所示数据，则表明出现节点劣化。
 
 ![](../../figures/scheduling/zh-cn_image_0000002457149146.png)
 
 **已支持的慢节点网络故障<a name="zh-cn_topic_0000002278667326_section10496211245"></a>**
 
 <a name="zh-cn_topic_0000002278667326_table4804164084414"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002278667326_row1680414018449"><th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.1.4.1.1"><p id="zh-cn_topic_0000002278667326_p1680411405446"><a name="zh-cn_topic_0000002278667326_p1680411405446"></a><a name="zh-cn_topic_0000002278667326_p1680411405446"></a>故障码</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.1.4.1.2"><p id="zh-cn_topic_0000002278667326_p280464074412"><a name="zh-cn_topic_0000002278667326_p280464074412"></a><a name="zh-cn_topic_0000002278667326_p280464074412"></a>故障说明</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.1.4.1.3"><p id="zh-cn_topic_0000002278667326_p3804114018440"><a name="zh-cn_topic_0000002278667326_p3804114018440"></a><a name="zh-cn_topic_0000002278667326_p3804114018440"></a>故障级别</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002278667326_row1080414409444"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.1 "><p id="zh-cn_topic_0000002278667326_p17804114034413"><a name="zh-cn_topic_0000002278667326_p17804114034413"></a><a name="zh-cn_topic_0000002278667326_p17804114034413"></a>110001010</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.2 "><p id="zh-cn_topic_0000002278667326_p1780424011445"><a name="zh-cn_topic_0000002278667326_p1780424011445"></a><a name="zh-cn_topic_0000002278667326_p1780424011445"></a>慢节点故障，一次性消息上报。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.3 "><p id="zh-cn_topic_0000002278667326_p15804114074414"><a name="zh-cn_topic_0000002278667326_p15804114074414"></a><a name="zh-cn_topic_0000002278667326_p15804114074414"></a>SubHealthFault：亚健康故障。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002278667326_row4804140134413"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.1 "><p id="zh-cn_topic_0000002278667326_p11804340204417"><a name="zh-cn_topic_0000002278667326_p11804340204417"></a><a name="zh-cn_topic_0000002278667326_p11804340204417"></a>100001011</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.2 "><p id="zh-cn_topic_0000002278667326_p5804154074418"><a name="zh-cn_topic_0000002278667326_p5804154074418"></a><a name="zh-cn_topic_0000002278667326_p5804154074418"></a>故障劣化已恢复。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.3 "><p id="zh-cn_topic_0000002278667326_p171970401993"><a name="zh-cn_topic_0000002278667326_p171970401993"></a><a name="zh-cn_topic_0000002278667326_p171970401993"></a>NotHandleFault：暂不处理故障。</p>
-</td>
-</tr>
-</tbody>
-</table>
+|故障码|故障说明|故障级别|
+|--|--|--|
+|110001010|慢节点故障，一次性消息上报。|SubHealthFault：亚健康故障。|
+|100001011|故障劣化已恢复。|NotHandleFault：暂不处理故障。|
 
 
 ##### 慢网络诊断<a name="ZH-CN_TOPIC_0000002500720860"></a>
@@ -1929,51 +1445,13 @@ ClusterD与FD-OL（Fault Diagnose Online）框架在同一进程中，都部署�
         **表 1**  pingmesh-config文件参数说明
 
         <a name="zh-cn_topic_0000002313236861_table15591134151811"></a>
-        <table><thead align="left"><tr id="zh-cn_topic_0000002313236861_row8591133431815"><th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002313236861_p10591534121814"><a name="zh-cn_topic_0000002313236861_p10591534121814"></a><a name="zh-cn_topic_0000002313236861_p10591534121814"></a>参数</p>
-        </th>
-        <th class="cellrowborder" valign="top" width="33.3033303330333%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002313236861_p185915343188"><a name="zh-cn_topic_0000002313236861_p185915343188"></a><a name="zh-cn_topic_0000002313236861_p185915343188"></a>取值</p>
-        </th>
-        <th class="cellrowborder" valign="top" width="33.36333633363336%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002313236861_p16591934171818"><a name="zh-cn_topic_0000002313236861_p16591934171818"></a><a name="zh-cn_topic_0000002313236861_p16591934171818"></a>说明</p>
-        </th>
-        </tr>
-        </thead>
-        <tbody><tr id="zh-cn_topic_0000002313236861_row759112347182"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p125919340187"><a name="zh-cn_topic_0000002313236861_p125919340187"></a><a name="zh-cn_topic_0000002313236861_p125919340187"></a>app</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="33.3033303330333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002313236861_p459193419186"><a name="zh-cn_topic_0000002313236861_p459193419186"></a><a name="zh-cn_topic_0000002313236861_p459193419186"></a>pingmesh</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="33.36333633363336%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p3591153418181"><a name="zh-cn_topic_0000002313236861_p3591153418181"></a><a name="zh-cn_topic_0000002313236861_p3591153418181"></a>ConfigMap其中一个label的key。</p>
-        </td>
-        </tr>
-        <tr id="zh-cn_topic_0000002313236861_row8591183414183"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p185912034201811"><a name="zh-cn_topic_0000002313236861_p185912034201811"></a><a name="zh-cn_topic_0000002313236861_p185912034201811"></a>global</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="33.3033303330333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002313236861_p9591434121818"><a name="zh-cn_topic_0000002313236861_p9591434121818"></a><a name="zh-cn_topic_0000002313236861_p9591434121818"></a>-</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="33.36333633363336%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p1159143411186"><a name="zh-cn_topic_0000002313236861_p1159143411186"></a><a name="zh-cn_topic_0000002313236861_p1159143411186"></a>集群配置信息。</p>
-        </td>
-        </tr>
-        <tr id="zh-cn_topic_0000002313236861_row2059133481816"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p13591193461817"><a name="zh-cn_topic_0000002313236861_p13591193461817"></a><a name="zh-cn_topic_0000002313236861_p13591193461817"></a>"1"</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="33.3033303330333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002313236861_p459113412187"><a name="zh-cn_topic_0000002313236861_p459113412187"></a><a name="zh-cn_topic_0000002313236861_p459113412187"></a>超节点ID</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="33.36333633363336%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p1159120349189"><a name="zh-cn_topic_0000002313236861_p1159120349189"></a><a name="zh-cn_topic_0000002313236861_p1159120349189"></a>超节点ID为1的配置示例，用户可根据实际情况进行修改或新增。当配置了某个超节点后，NodeD会采用超节点的配置信息而忽略global配置信息。</p>
-        </td>
-        </tr>
-        <tr id="zh-cn_topic_0000002313236861_row11955391011"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p149125351019"><a name="zh-cn_topic_0000002313236861_p149125351019"></a><a name="zh-cn_topic_0000002313236861_p149125351019"></a>activate</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="33.3033303330333%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002313236861_ul16388568116"></a><a name="zh-cn_topic_0000002313236861_ul16388568116"></a><ul id="zh-cn_topic_0000002313236861_ul16388568116"><li>on：开启</li><li>off：关闭</li></ul>
-        </td>
-        <td class="cellrowborder" valign="top" width="33.36333633363336%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p61005311016"><a name="zh-cn_topic_0000002313236861_p61005311016"></a><a name="zh-cn_topic_0000002313236861_p61005311016"></a>是否启用pingmesh功能。</p>
-        </td>
-        </tr>
-        <tr id="zh-cn_topic_0000002313236861_row175911434111820"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p6591193431816"><a name="zh-cn_topic_0000002313236861_p6591193431816"></a><a name="zh-cn_topic_0000002313236861_p6591193431816"></a>task_interval</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="33.3033303330333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002313236861_p1259111345187"><a name="zh-cn_topic_0000002313236861_p1259111345187"></a><a name="zh-cn_topic_0000002313236861_p1259111345187"></a>[1~60]</p>
-        </td>
-        <td class="cellrowborder" valign="top" width="33.36333633363336%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p5591634201811"><a name="zh-cn_topic_0000002313236861_p5591634201811"></a><a name="zh-cn_topic_0000002313236861_p5591634201811"></a>pingmesh任务间隔时间，单位为秒。</p>
-        </td>
-        </tr>
-        </tbody>
-        </table>
+        |参数|取值|说明|
+        |--|--|--|
+        |app|pingmesh|ConfigMap其中一个label的key。|
+        |global|-|集群配置信息。|
+        |"1"|超节点ID|超节点ID为1的配置示例，用户可根据实际情况进行修改或新增。当配置了某个超节点后，NodeD会采用超节点的配置信息而忽略global配置信息。|
+        |activate|<ul><li>on：开启</li><li>off：关闭</li></ul>|是否启用pingmesh功能。|
+        |task_interval|[1~60]|pingmesh任务间隔时间。单位为秒。|
 
 **查看检测结果<a name="zh-cn_topic_0000002313236861_section74321914202214"></a>**
 
@@ -1982,121 +1460,23 @@ ClusterD与FD-OL（Fault Diagnose Online）框架在同一进程中，都部署�
 **表 2**  <nodename\>.log文件参数说明
 
 <a name="zh-cn_topic_0000002313236861_table1485915561131"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002313236861_row1786015564131"><th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002313236861_p1686085661319"><a name="zh-cn_topic_0000002313236861_p1686085661319"></a><a name="zh-cn_topic_0000002313236861_p1686085661319"></a>参数</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002313236861_p48601656141315"><a name="zh-cn_topic_0000002313236861_p48601656141315"></a><a name="zh-cn_topic_0000002313236861_p48601656141315"></a>取值范围</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002313236861_p6860145611312"><a name="zh-cn_topic_0000002313236861_p6860145611312"></a><a name="zh-cn_topic_0000002313236861_p6860145611312"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002313236861_row16860175615131"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p1286075615138"><a name="zh-cn_topic_0000002313236861_p1286075615138"></a><a name="zh-cn_topic_0000002313236861_p1286075615138"></a>uid</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002313236861_p48601956101317"><a name="zh-cn_topic_0000002313236861_p48601956101317"></a><a name="zh-cn_topic_0000002313236861_p48601956101317"></a>长度为64的字符串。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p2860135601311"><a name="zh-cn_topic_0000002313236861_p2860135601311"></a><a name="zh-cn_topic_0000002313236861_p2860135601311"></a>本次pingmesh任务的ID。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002313236861_row686012562133"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p1086045610132"><a name="zh-cn_topic_0000002313236861_p1086045610132"></a><a name="zh-cn_topic_0000002313236861_p1086045610132"></a>config</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002313236861_p15860956121314"><a name="zh-cn_topic_0000002313236861_p15860956121314"></a><a name="zh-cn_topic_0000002313236861_p15860956121314"></a>字符串</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p16860195691318"><a name="zh-cn_topic_0000002313236861_p16860195691318"></a><a name="zh-cn_topic_0000002313236861_p16860195691318"></a>本次pingmesh任务的用户配置。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002313236861_row78601956191317"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p1486065681312"><a name="zh-cn_topic_0000002313236861_p1486065681312"></a><a name="zh-cn_topic_0000002313236861_p1486065681312"></a>physicID</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002313236861_p6860125616138"><a name="zh-cn_topic_0000002313236861_p6860125616138"></a><a name="zh-cn_topic_0000002313236861_p6860125616138"></a>[0~15]</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p986085620136"><a name="zh-cn_topic_0000002313236861_p986085620136"></a><a name="zh-cn_topic_0000002313236861_p986085620136"></a>NPU卡物理ID。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002313236861_row8938512181616"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p14938612121611"><a name="zh-cn_topic_0000002313236861_p14938612121611"></a><a name="zh-cn_topic_0000002313236861_p14938612121611"></a>taskID</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002313236861_ul1816692919182"></a><a name="zh-cn_topic_0000002313236861_ul1816692919182"></a><ul id="zh-cn_topic_0000002313236861_ul1816692919182"><li>节点内部的任务：0</li><li>节点间的任务：1</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p1893918126167"><a name="zh-cn_topic_0000002313236861_p1893918126167"></a><a name="zh-cn_topic_0000002313236861_p1893918126167"></a>任务ID。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002313236861_row111821021619"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p20185100166"><a name="zh-cn_topic_0000002313236861_p20185100166"></a><a name="zh-cn_topic_0000002313236861_p20185100166"></a>DestNum</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002313236861_p71816107161"><a name="zh-cn_topic_0000002313236861_p71816107161"></a><a name="zh-cn_topic_0000002313236861_p71816107161"></a>[0~47]</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p518121014165"><a name="zh-cn_topic_0000002313236861_p518121014165"></a><a name="zh-cn_topic_0000002313236861_p518121014165"></a>本次pingmesh目标地址数量。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002313236861_row1744217771618"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p114431271166"><a name="zh-cn_topic_0000002313236861_p114431271166"></a><a name="zh-cn_topic_0000002313236861_p114431271166"></a>source_addr</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002313236861_p1244397151614"><a name="zh-cn_topic_0000002313236861_p1244397151614"></a><a name="zh-cn_topic_0000002313236861_p1244397151614"></a>ipv4网络地址。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p194431775168"><a name="zh-cn_topic_0000002313236861_p194431775168"></a><a name="zh-cn_topic_0000002313236861_p194431775168"></a>源地址。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002313236861_row9675175214190"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p46751527193"><a name="zh-cn_topic_0000002313236861_p46751527193"></a><a name="zh-cn_topic_0000002313236861_p46751527193"></a>target_addr</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002313236861_p196751452151912"><a name="zh-cn_topic_0000002313236861_p196751452151912"></a><a name="zh-cn_topic_0000002313236861_p196751452151912"></a>ipv4网络地址。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p18675105212199"><a name="zh-cn_topic_0000002313236861_p18675105212199"></a><a name="zh-cn_topic_0000002313236861_p18675105212199"></a>目标地址。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002313236861_row27685011196"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p10761750121920"><a name="zh-cn_topic_0000002313236861_p10761750121920"></a><a name="zh-cn_topic_0000002313236861_p10761750121920"></a>suc_pkt_num</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002313236861_p1176105011199"><a name="zh-cn_topic_0000002313236861_p1176105011199"></a><a name="zh-cn_topic_0000002313236861_p1176105011199"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p12761750131912"><a name="zh-cn_topic_0000002313236861_p12761750131912"></a><a name="zh-cn_topic_0000002313236861_p12761750131912"></a>发送成功的包数量。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002313236861_row109393284209"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p593982816204"><a name="zh-cn_topic_0000002313236861_p593982816204"></a><a name="zh-cn_topic_0000002313236861_p593982816204"></a>fail_pkt_num</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002313236861_p59391128182012"><a name="zh-cn_topic_0000002313236861_p59391128182012"></a><a name="zh-cn_topic_0000002313236861_p59391128182012"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p39392028102015"><a name="zh-cn_topic_0000002313236861_p39392028102015"></a><a name="zh-cn_topic_0000002313236861_p39392028102015"></a>发送失败的包数量。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002313236861_row1531531162018"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p5531153117202"><a name="zh-cn_topic_0000002313236861_p5531153117202"></a><a name="zh-cn_topic_0000002313236861_p5531153117202"></a>max_time</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002313236861_ul12976155462213"></a><a name="zh-cn_topic_0000002313236861_ul12976155462213"></a><ul id="zh-cn_topic_0000002313236861_ul12976155462213"><li>正常情况：非负值</li><li>ping失败：-1</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p175311431142013"><a name="zh-cn_topic_0000002313236861_p175311431142013"></a><a name="zh-cn_topic_0000002313236861_p175311431142013"></a>最长响应时间。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002313236861_row776203442013"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p117683417207"><a name="zh-cn_topic_0000002313236861_p117683417207"></a><a name="zh-cn_topic_0000002313236861_p117683417207"></a>min_time</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002313236861_ul157185718227"></a><a name="zh-cn_topic_0000002313236861_ul157185718227"></a><ul id="zh-cn_topic_0000002313236861_ul157185718227"><li>正常情况：非负值</li><li>ping失败：-1</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p107643412205"><a name="zh-cn_topic_0000002313236861_p107643412205"></a><a name="zh-cn_topic_0000002313236861_p107643412205"></a>最短响应时间。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002313236861_row1586065661317"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p38609563137"><a name="zh-cn_topic_0000002313236861_p38609563137"></a><a name="zh-cn_topic_0000002313236861_p38609563137"></a>avg_time</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002313236861_ul1162483112311"></a><a name="zh-cn_topic_0000002313236861_ul1162483112311"></a><ul id="zh-cn_topic_0000002313236861_ul1162483112311"><li>正常情况：非负值</li><li>ping失败：-1</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p158601156141317"><a name="zh-cn_topic_0000002313236861_p158601156141317"></a><a name="zh-cn_topic_0000002313236861_p158601156141317"></a>平均响应时间。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002313236861_row0324102320222"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p1632422316225"><a name="zh-cn_topic_0000002313236861_p1632422316225"></a><a name="zh-cn_topic_0000002313236861_p1632422316225"></a>tp95_time</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002313236861_ul157411422316"></a><a name="zh-cn_topic_0000002313236861_ul157411422316"></a><ul id="zh-cn_topic_0000002313236861_ul157411422316"><li>正常情况：非负值</li><li>ping失败：-1</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p13324162382219"><a name="zh-cn_topic_0000002313236861_p13324162382219"></a><a name="zh-cn_topic_0000002313236861_p13324162382219"></a>处于95%位置时的响应时间。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002313236861_row11875172510222"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p13875192515228"><a name="zh-cn_topic_0000002313236861_p13875192515228"></a><a name="zh-cn_topic_0000002313236861_p13875192515228"></a>reply_stat_num</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002313236861_p487511257221"><a name="zh-cn_topic_0000002313236861_p487511257221"></a><a name="zh-cn_topic_0000002313236861_p487511257221"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p9875192512213"><a name="zh-cn_topic_0000002313236861_p9875192512213"></a><a name="zh-cn_topic_0000002313236861_p9875192512213"></a>本次查询到的响应数量。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002313236861_row19747191113231"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002313236861_p1874715117236"><a name="zh-cn_topic_0000002313236861_p1874715117236"></a><a name="zh-cn_topic_0000002313236861_p1874715117236"></a>ping_total_num</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002313236861_p1074721111230"><a name="zh-cn_topic_0000002313236861_p1074721111230"></a><a name="zh-cn_topic_0000002313236861_p1074721111230"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002313236861_p2747511152312"><a name="zh-cn_topic_0000002313236861_p2747511152312"></a><a name="zh-cn_topic_0000002313236861_p2747511152312"></a>本次任务累计的响应数量。</p>
-</td>
-</tr>
-</tbody>
-</table>
+|参数|取值|说明|
+|--|--|--|
+|uid|长度为64的字符串|本次pingmesh任务的ID。|
+|config|字符串|本次pingmesh任务的用户配置。|
+|physicID|[0~15]|NPU卡物理ID。|
+|taskID|<ul><li>节点内部的任务：0</li><li>节点间的任务：1</li></ul>|任务ID。|
+|DestNum|[0~47]|本次pingmesh目标地址数量。|
+|source_addr|IPv4网络地址|源地址。|
+|target_addr|IPv4网络地址|目标地址。|
+|suc_pkt_num|-|发送成功的包数量。|
+|fail_pkt_num|-|发送失败的包数量。|
+|max_time|<ul><li>正常情况：非负值</li><li>ping失败：-1</li></ul>|最长响应时间。|
+|min_time|<ul><li>正常情况：非负值</li><li>ping失败：-1</li></ul>|最短响应时间。|
+|avg_time|<ul><li>正常情况：非负值</li><li>ping失败：-1</li></ul>|平均响应时间。|
+|tp95_time|<ul><li>正常情况：非负值</li><li>ping失败：-1</li></ul>|处于95%位置时的响应时间。|
+|reply_stat_num|-|本次查询到的响应数量。|
+|ping_total_num|-|本次任务累计的响应数量。|
 
 **查看gRPC上报结果<a name="zh-cn_topic_0000002313236861_section28851054410"></a>**
 
@@ -2109,37 +1489,11 @@ ConfigMap文件会显示相关信息，5秒钟之后自动清除。
 **已支持的慢网络故障<a name="zh-cn_topic_0000002313236861_section19919834124518"></a>**
 
 <a name="zh-cn_topic_0000002313236861_table4804164084414"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002313236861_row1680414018449"><th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.1.4.1.1"><p id="zh-cn_topic_0000002313236861_p1680411405446"><a name="zh-cn_topic_0000002313236861_p1680411405446"></a><a name="zh-cn_topic_0000002313236861_p1680411405446"></a>故障码</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.1.4.1.2"><p id="zh-cn_topic_0000002313236861_p280464074412"><a name="zh-cn_topic_0000002313236861_p280464074412"></a><a name="zh-cn_topic_0000002313236861_p280464074412"></a>故障说明</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.1.4.1.3"><p id="zh-cn_topic_0000002313236861_p3804114018440"><a name="zh-cn_topic_0000002313236861_p3804114018440"></a><a name="zh-cn_topic_0000002313236861_p3804114018440"></a>故障级别</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002313236861_row1080414409444"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.1 "><p id="zh-cn_topic_0000002313236861_p17804114034413"><a name="zh-cn_topic_0000002313236861_p17804114034413"></a><a name="zh-cn_topic_0000002313236861_p17804114034413"></a>200001010</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.2 "><p id="zh-cn_topic_0000002313236861_p1780424011445"><a name="zh-cn_topic_0000002313236861_p1780424011445"></a><a name="zh-cn_topic_0000002313236861_p1780424011445"></a>某节点中产生/恢复慢网络。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.3 "><p id="zh-cn_topic_0000002313236861_p15804114074414"><a name="zh-cn_topic_0000002313236861_p15804114074414"></a><a name="zh-cn_topic_0000002313236861_p15804114074414"></a>NotHandleFault：暂不处理故障。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002313236861_row4804140134413"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.1 "><p id="zh-cn_topic_0000002313236861_p11804340204417"><a name="zh-cn_topic_0000002313236861_p11804340204417"></a><a name="zh-cn_topic_0000002313236861_p11804340204417"></a>200001011</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.2 "><p id="zh-cn_topic_0000002313236861_p5804154074418"><a name="zh-cn_topic_0000002313236861_p5804154074418"></a><a name="zh-cn_topic_0000002313236861_p5804154074418"></a>超节点内的节点间产生/恢复慢网络。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.3 "><p id="zh-cn_topic_0000002313236861_p1680412409449"><a name="zh-cn_topic_0000002313236861_p1680412409449"></a><a name="zh-cn_topic_0000002313236861_p1680412409449"></a>NotHandleFault：暂不处理故障。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002313236861_row1640781094918"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.1 "><p id="zh-cn_topic_0000002313236861_p8407101016493"><a name="zh-cn_topic_0000002313236861_p8407101016493"></a><a name="zh-cn_topic_0000002313236861_p8407101016493"></a>200001012</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.2 "><p id="zh-cn_topic_0000002313236861_p194071110134917"><a name="zh-cn_topic_0000002313236861_p194071110134917"></a><a name="zh-cn_topic_0000002313236861_p194071110134917"></a>未收敛到卡。</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.1.4.1.3 "><p id="zh-cn_topic_0000002313236861_p1176073411918"><a name="zh-cn_topic_0000002313236861_p1176073411918"></a><a name="zh-cn_topic_0000002313236861_p1176073411918"></a>NotHandleFault：暂不处理故障。</p>
-</td>
-</tr>
-</tbody>
-</table>
+|故障码|故障说明|故障级别|
+|--|--|--|
+|200001010|某节点中产生/恢复慢网络。|NotHandleFault：暂不处理故障。|
+|200001011|超节点内的节点间产生/恢复慢网络。|NotHandleFault：暂不处理故障。|
+|200001012|未收敛到卡。|NotHandleFault：暂不处理故障。|
 
 
 
@@ -2170,67 +1524,13 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
     **表 1**  各种重调度级别的差异
 
     <a name="zh-cn_topic_0000002198051753_table18771108163419"></a>
-    <table><thead align="left"><tr id="zh-cn_topic_0000002198051753_row1677218810341"><th class="cellrowborder" valign="top" width="18.3%" id="mcps1.2.5.1.1"><p id="zh-cn_topic_0000002198051753_p121383187176"><a name="zh-cn_topic_0000002198051753_p121383187176"></a><a name="zh-cn_topic_0000002198051753_p121383187176"></a>重调度的级别</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="31.7%" id="mcps1.2.5.1.2"><p id="zh-cn_topic_0000002198051753_p17773983341"><a name="zh-cn_topic_0000002198051753_p17773983341"></a><a name="zh-cn_topic_0000002198051753_p17773983341"></a>恢复训练耗时</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="25%" id="mcps1.2.5.1.3"><p id="zh-cn_topic_0000002198051753_p1077316873410"><a name="zh-cn_topic_0000002198051753_p1077316873410"></a><a name="zh-cn_topic_0000002198051753_p1077316873410"></a>配置步骤</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="25%" id="mcps1.2.5.1.4"><p id="zh-cn_topic_0000002198051753_p7773082347"><a name="zh-cn_topic_0000002198051753_p7773082347"></a><a name="zh-cn_topic_0000002198051753_p7773082347"></a>说明</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="zh-cn_topic_0000002198051753_row6773118193410"><td class="cellrowborder" valign="top" width="18.3%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002198051753_p2138131821719"><a name="zh-cn_topic_0000002198051753_p2138131821719"></a><a name="zh-cn_topic_0000002198051753_p2138131821719"></a>Job级别重调度</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="31.7%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002198051753_p12773128133419"><a name="zh-cn_topic_0000002198051753_p12773128133419"></a><a name="zh-cn_topic_0000002198051753_p12773128133419"></a>Job级重调度的恢复时间较长，随着任务规模增加恢复时间超线性劣化。</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002198051753_p17773684341"><a name="zh-cn_topic_0000002198051753_p17773684341"></a><a name="zh-cn_topic_0000002198051753_p17773684341"></a>Job级重调度操作步骤简单，使用MindCluster的用户仅打开配置开关即可使用。</p>
-    <p id="zh-cn_topic_0000002198051753_p6932163394014"><a name="zh-cn_topic_0000002198051753_p6932163394014"></a><a name="zh-cn_topic_0000002198051753_p6932163394014"></a>关键配置步骤请参见<a href="#配置job级别重调度">配置Job级别重调度</a>。</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002198051753_p17353194312415"><a name="zh-cn_topic_0000002198051753_p17353194312415"></a><a name="zh-cn_topic_0000002198051753_p17353194312415"></a>为了进一步降低恢复中资源调度时间，用户可以选择在Job级重调度上开启Pod级重调度能力。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002198051753_row6773198163411"><td class="cellrowborder" valign="top" width="18.3%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002198051753_p151382018151714"><a name="zh-cn_topic_0000002198051753_p151382018151714"></a><a name="zh-cn_topic_0000002198051753_p151382018151714"></a>Pod级别重调度</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="31.7%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002198051753_p15773581345"><a name="zh-cn_topic_0000002198051753_p15773581345"></a><a name="zh-cn_topic_0000002198051753_p15773581345"></a>Pod级重调度可以将资源调度时间缩短，且与任务规模无关。但是，Pod级重调度并不能优化训练初始化过程中的时间开销，整体恢复时间仍然会随着任务规模增加而超线性劣化。</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002198051753_p87735823415"><a name="zh-cn_topic_0000002198051753_p87735823415"></a><a name="zh-cn_topic_0000002198051753_p87735823415"></a>Pod级重调度用户需要额外在训练容器中集成训练进程管理能力，使用MindCluster的用户具备对应进程管理能力后即可使用。</p>
-    <p id="zh-cn_topic_0000002198051753_p128503416618"><a name="zh-cn_topic_0000002198051753_p128503416618"></a><a name="zh-cn_topic_0000002198051753_p128503416618"></a>关键配置步骤请参见<a href="#配置pod级别重调度">配置Pod级别重调度</a>。</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002198051753_p12146019184418"><a name="zh-cn_topic_0000002198051753_p12146019184418"></a><a name="zh-cn_topic_0000002198051753_p12146019184418"></a>为了进一步降低训练初始化中的恢复时间，用户可以选择在Pod级重调度上开启进程级重调度能力。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002198051753_row127749818346"><td class="cellrowborder" valign="top" width="18.3%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002198051753_p161385189177"><a name="zh-cn_topic_0000002198051753_p161385189177"></a><a name="zh-cn_topic_0000002198051753_p161385189177"></a>进程级别重调度（进程级恢复）</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="31.7%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002198051753_p7774168103418"><a name="zh-cn_topic_0000002198051753_p7774168103418"></a><a name="zh-cn_topic_0000002198051753_p7774168103418"></a>进程级重调度可以减少训练初始化时间，将整体恢复时间缩短，且与任务规模无关或者弱相关。</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002198051753_p977468113412"><a name="zh-cn_topic_0000002198051753_p977468113412"></a><a name="zh-cn_topic_0000002198051753_p977468113412"></a>相比Pod级重调度，进程级重调度用户需要额外在训练框架中集成高可用训练能力，使用MindCluster的用户需要修改训练脚本，并开启对应配置开关后使用。</p>
-    <p id="zh-cn_topic_0000002198051753_p13754195013114"><a name="zh-cn_topic_0000002198051753_p13754195013114"></a><a name="zh-cn_topic_0000002198051753_p13754195013114"></a>关键配置步骤请参见<a href="#配置进程级别重调度">配置进程级别重调度</a>。</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002198051753_p19902018144519"><a name="zh-cn_topic_0000002198051753_p19902018144519"></a><a name="zh-cn_topic_0000002198051753_p19902018144519"></a>为了解决大规模场景下MTBF时间较短的问题，进一步降低整体恢复时间，用户可以选择在进程级重调度上开启进程级在线恢复能力。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002198051753_row54527214384"><td class="cellrowborder" valign="top" width="18.3%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002198051753_p103941343197"><a name="zh-cn_topic_0000002198051753_p103941343197"></a><a name="zh-cn_topic_0000002198051753_p103941343197"></a>进程级在线恢复</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="31.7%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002198051753_p14536218388"><a name="zh-cn_topic_0000002198051753_p14536218388"></a><a name="zh-cn_topic_0000002198051753_p14536218388"></a>进程级在线恢复比起进程级重调度，恢复训练耗时更低。</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002198051753_p194531243818"><a name="zh-cn_topic_0000002198051753_p194531243818"></a><a name="zh-cn_topic_0000002198051753_p194531243818"></a>相比进程级重调度，进程级在线恢复用户需要配置对应的配置开关后使用。</p>
-    <p id="zh-cn_topic_0000002198051753_p1471913721316"><a name="zh-cn_topic_0000002198051753_p1471913721316"></a><a name="zh-cn_topic_0000002198051753_p1471913721316"></a>关键配置步骤请参见<a href="#配置进程级在线恢复">配置进程级在线恢复</a>。</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002198051753_p24533216388"><a name="zh-cn_topic_0000002198051753_p24533216388"></a><a name="zh-cn_topic_0000002198051753_p24533216388"></a>当前进程级在线恢复支持<span id="ph1024411844215"><a name="ph1024411844215"></a><a name="ph1024411844215"></a>片上内存</span>故障和网络故障，其余故障场景将回退其他处理方式。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002198051753_row04530223810"><td class="cellrowborder" valign="top" width="18.3%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002198051753_p51079323718"><a name="zh-cn_topic_0000002198051753_p51079323718"></a><a name="zh-cn_topic_0000002198051753_p51079323718"></a>算子级在线恢复</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="31.7%" headers="mcps1.2.5.1.2 "><p id="p18195195524"><a name="p18195195524"></a><a name="p18195195524"></a>--</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p14207044175119"><a name="p14207044175119"></a><a name="p14207044175119"></a>关键配置步骤请参见<a href="#配置算子级在线恢复">配置算子级在线恢复</a>。</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p364851219509"><a name="p364851219509"></a><a name="p364851219509"></a>--</p>
-    </td>
-    </tr>
-    </tbody>
-    </table>
+    |重调度的级别|恢复训练耗时|配置步骤|说明|
+    |--|--|--|--|
+    |Job级别重调度|Job级重调度的恢复时间较长，随着任务规模增加恢复时间超线性劣化。|<p>Job级重调度操作步骤简单，使用MindCluster的用户仅打开配置开关即可使用。</p><p>关键配置步骤请参见<a href="#配置job级别重调度">配置Job级别重调度</a>。</p>|为了进一步降低恢复中资源调度时间，用户可以选择在Job级重调度上开启Pod级重调度能力。|
+    |Pod级别重调度|Pod级重调度可以将资源调度时间缩短，且与任务规模无关。但是，Pod级重调度并不能优化训练初始化过程中的时间开销，整体恢复时间仍然会随着任务规模增加而超线性劣化。|<p>Pod级重调度用户需要额外在训练容器中集成训练进程管理能力，使用MindCluster的用户具备对应进程管理能力后即可使用。</p><p>关键配置步骤请参见<a href="#配置pod级别重调度">配置Pod级别重调度</a>。</p>|为了进一步降低训练初始化中的恢复时间，用户可以选择在Pod级重调度上开启进程级重调度能力。|
+    |进程级别重调度（进程级恢复）|进程级重调度可以减少训练初始化时间，将整体恢复时间缩短，且与任务规模无关或者弱相关。|<p>相比Pod级重调度，进程级重调度用户需要额外在训练框架中集成高可用训练能力，使用MindCluster的用户需要修改训练脚本，并开启对应配置开关后使用。</p><p>关键配置步骤请参见<a href="#配置进程级别重调度">配置进程级别重调度</a>。</p>|为了解决大规模场景下MTBF时间较短的问题，进一步降低整体恢复时间，用户可以选择在进程级重调度上开启进程级在线恢复能力。|
+    |进程级在线恢复|进程级在线恢复比起进程级重调度，恢复训练耗时更低。|<p>相比进程级重调度，进程级在线恢复用户需要配置对应的配置开关后使用。</p><p>关键配置步骤请参见<a href="#配置进程级在线恢复">配置进程级在线恢复</a>。</p>|当前进程级在线恢复支持片上内存故障和网络故障，其余故障场景将回退其他处理方式。|
+    |算子级在线恢复|-|关键配置步骤请参见<a href="#配置算子级在线恢复">配置算子级在线恢复</a>。|-|
 
 2.  重调度模式存在以下两种重调度策略。
 
@@ -2240,33 +1540,10 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
     **表 2**  重调度策略说明
 
     <a name="zh-cn_topic_0000002198051753_table37727194382"></a>
-    <table><thead align="left"><tr id="zh-cn_topic_0000002198051753_row17721919153816"><th class="cellrowborder" valign="top" width="12.22%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002198051753_p47721719203817"><a name="zh-cn_topic_0000002198051753_p47721719203817"></a><a name="zh-cn_topic_0000002198051753_p47721719203817"></a>重调度策略</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="63.68000000000001%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002198051753_p177371918382"><a name="zh-cn_topic_0000002198051753_p177371918382"></a><a name="zh-cn_topic_0000002198051753_p177371918382"></a>说明</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="24.099999999999998%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002198051753_p13773111983816"><a name="zh-cn_topic_0000002198051753_p13773111983816"></a><a name="zh-cn_topic_0000002198051753_p13773111983816"></a>支持的故障类型</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="zh-cn_topic_0000002198051753_row477315199387"><td class="cellrowborder" valign="top" width="12.22%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002198051753_p107731019113818"><a name="zh-cn_topic_0000002198051753_p107731019113818"></a><a name="zh-cn_topic_0000002198051753_p107731019113818"></a>直接重调度</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="63.68000000000001%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002198051753_p18773131915387"><a name="zh-cn_topic_0000002198051753_p18773131915387"></a><a name="zh-cn_topic_0000002198051753_p18773131915387"></a>系统将故障的节点或芯片进行隔离，然后直接对任务进行重调度。</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="24.099999999999998%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002198051753_p877331915384"><a name="zh-cn_topic_0000002198051753_p877331915384"></a><a name="zh-cn_topic_0000002198051753_p877331915384"></a>已知的节点故障或重调度处理级别芯片故障。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002198051753_row277331919383"><td class="cellrowborder" valign="top" width="12.22%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002198051753_p1773519123817"><a name="zh-cn_topic_0000002198051753_p1773519123817"></a><a name="zh-cn_topic_0000002198051753_p1773519123817"></a>无条件重试</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="63.68000000000001%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002198051753_p7773131963816"><a name="zh-cn_topic_0000002198051753_p7773131963816"></a><a name="zh-cn_topic_0000002198051753_p7773131963816"></a>系统对配置了无条件重试次数的任务，进行指定次数内的重调度。</p>
-    <p id="zh-cn_topic_0000002198051753_p127739195385"><a name="zh-cn_topic_0000002198051753_p127739195385"></a><a name="zh-cn_topic_0000002198051753_p127739195385"></a>成功重调度后，任务可重试次数将减1，当可重试次数为0时无法再次触发重调度。</p>
-    <div class="note" id="zh-cn_topic_0000002198051753_note1878524412312"><a name="zh-cn_topic_0000002198051753_note1878524412312"></a><div class="notebody"><p id="zh-cn_topic_0000002198051753_p1178574452313"><a name="zh-cn_topic_0000002198051753_p1178574452313"></a><a name="zh-cn_topic_0000002198051753_p1178574452313"></a>如需使用无条件重试功能，需在YAML中配置fault-retry-times参数，详细参数说明请参见<a href="#yaml参数说明">YAML参数说明</a>。</p>
-    </div></div>
-    </td>
-    <td class="cellrowborder" valign="top" width="24.099999999999998%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002198051753_p977341963818"><a name="zh-cn_topic_0000002198051753_p977341963818"></a><a name="zh-cn_topic_0000002198051753_p977341963818"></a>由于参数面网络故障或者训练相关软件故障等，导致任务异常退出，Pod的Status变为Failed状态的相关故障。</p>
-    </td>
-    </tr>
-    </tbody>
-    </table>
+    |重调度策略|说明|支持的故障类型|
+    |--|--|--|
+    |直接重调度|系统将故障的节点或芯片进行隔离，然后直接对任务进行重调度。|已知的节点故障或重调度处理级别芯片故障。|
+    |无条件重试|<p>系统对配置了无条件重试次数的任务，进行指定次数内的重调度。</p><p>成功重调度后，任务可重试次数将减1，当可重试次数为0时无法再次触发重调度。</p><p>如需使用无条件重试功能，需在YAML中配置fault-retry-times参数，详细参数说明请参见<a href="#yaml参数说明">YAML参数说明</a>。</p>|由于参数面网络故障或者训练相关软件故障等，导致任务异常退出，Pod的Status变为Failed状态的相关故障。|
 
 
 #### Job级别重调度<a name="ZH-CN_TOPIC_0000002479226586"></a>
@@ -2282,50 +1559,15 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 **支持的产品型号和AI框架<a name="zh-cn_topic_0000002039194017_section140112935318"></a>**
 
-**表 1**  job级别重调度支持的产品和框架
+**表 1**  Job级别重调度支持的产品和框架
 
 <a name="zh-cn_topic_0000002039194017_table6198201175416"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002039194017_row111997118547"><th class="cellrowborder" valign="top" width="17.691769176917692%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002039194017_p91998117543"><a name="zh-cn_topic_0000002039194017_p91998117543"></a><a name="zh-cn_topic_0000002039194017_p91998117543"></a>产品类型</p>
-</th>
-<th class="cellrowborder" valign="top" width="67.3067306730673%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002039194017_p3199161115419"><a name="zh-cn_topic_0000002039194017_p3199161115419"></a><a name="zh-cn_topic_0000002039194017_p3199161115419"></a>硬件形态</p>
-</th>
-<th class="cellrowborder" valign="top" width="15.001500150014998%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002039194017_p5199011125416"><a name="zh-cn_topic_0000002039194017_p5199011125416"></a><a name="zh-cn_topic_0000002039194017_p5199011125416"></a>训练框架</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002039194017_row15199711175415"><td class="cellrowborder" valign="top" width="17.691769176917692%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002039194017_p1119914117545"><a name="zh-cn_topic_0000002039194017_p1119914117545"></a><a name="zh-cn_topic_0000002039194017_p1119914117545"></a><span id="zh-cn_topic_0000002039194017_ph7199711155420"><a name="zh-cn_topic_0000002039194017_ph7199711155420"></a><a name="zh-cn_topic_0000002039194017_ph7199711155420"></a>Atlas 训练系列产品</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="67.3067306730673%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002039194017_ul11991811125414"></a><a name="zh-cn_topic_0000002039194017_ul11991811125414"></a><ul id="zh-cn_topic_0000002039194017_ul11991811125414"><li><span id="zh-cn_topic_0000002039194017_ph13085521289"><a name="zh-cn_topic_0000002039194017_ph13085521289"></a><a name="zh-cn_topic_0000002039194017_ph13085521289"></a>Atlas 800 训练服务器（型号 9000）</span></li><li><span id="zh-cn_topic_0000002039194017_ph1627888115712"><a name="zh-cn_topic_0000002039194017_ph1627888115712"></a><a name="zh-cn_topic_0000002039194017_ph1627888115712"></a>Atlas 800 训练服务器（型号 9010）</span><div class="note" id="zh-cn_topic_0000002039194017_note11304039162817"><a name="zh-cn_topic_0000002039194017_note11304039162817"></a><a name="zh-cn_topic_0000002039194017_note11304039162817"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002039194017_p1030415395282"><a name="zh-cn_topic_0000002039194017_p1030415395282"></a><a name="zh-cn_topic_0000002039194017_p1030415395282"></a>若<span id="zh-cn_topic_0000002039194017_ph143042039102813"><a name="zh-cn_topic_0000002039194017_ph143042039102813"></a><a name="zh-cn_topic_0000002039194017_ph143042039102813"></a>Atlas 800 训练服务器</span>的芯片工作模式为SMP模式，且每个Pod申请的NPU数量为1、2时，不支持使用重调度模式。查询和设置NPU芯片工作模式的详细介绍请参见<span id="zh-cn_topic_0000002039194017_ph4304193972810"><a name="zh-cn_topic_0000002039194017_ph4304193972810"></a><a name="zh-cn_topic_0000002039194017_ph4304193972810"></a>《Atlas 800 训练服务器 iBMC用户指南（型号 9000）》中的“<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a" target="_blank" rel="noopener noreferrer">查询和设置NPU芯片工作模式（npuworkmode）</a>”</span>章节。</p>
-</div></div>
-</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="15.001500150014998%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002039194017_ul102005117544"></a><a name="zh-cn_topic_0000002039194017_ul102005117544"></a><ul id="zh-cn_topic_0000002039194017_ul102005117544"><li><span id="zh-cn_topic_0000002039194017_ph102009114549"><a name="zh-cn_topic_0000002039194017_ph102009114549"></a><a name="zh-cn_topic_0000002039194017_ph102009114549"></a>MindSpore</span></li><li><span id="zh-cn_topic_0000002039194017_ph1200131111547"><a name="zh-cn_topic_0000002039194017_ph1200131111547"></a><a name="zh-cn_topic_0000002039194017_ph1200131111547"></a>TensorFlow</span></li><li><span id="zh-cn_topic_0000002039194017_ph9200511185413"><a name="zh-cn_topic_0000002039194017_ph9200511185413"></a><a name="zh-cn_topic_0000002039194017_ph9200511185413"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039194017_row920001115417"><td class="cellrowborder" valign="top" width="17.691769176917692%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002039194017_p192011311155411"><a name="zh-cn_topic_0000002039194017_p192011311155411"></a><a name="zh-cn_topic_0000002039194017_p192011311155411"></a><span id="zh-cn_topic_0000002039194017_ph72011311155419"><a name="zh-cn_topic_0000002039194017_ph72011311155419"></a><a name="zh-cn_topic_0000002039194017_ph72011311155419"></a>Atlas A2 训练系列产品</span></p>
-<p id="p773278122616"><a name="p773278122616"></a><a name="p773278122616"></a></p>
-</td>
-<td class="cellrowborder" valign="top" width="67.3067306730673%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002039194017_ul1720110113545"></a><a name="zh-cn_topic_0000002039194017_ul1720110113545"></a><ul id="zh-cn_topic_0000002039194017_ul1720110113545"><li>Atlas 800T A2 训练服务器</li><li><span id="zh-cn_topic_0000002039194017_ph32011711115415"><a name="zh-cn_topic_0000002039194017_ph32011711115415"></a><a name="zh-cn_topic_0000002039194017_ph32011711115415"></a>Atlas 200T A2 Box16 异构子框</span></li><li><span id="zh-cn_topic_0000002039194017_ph19201511175411"><a name="zh-cn_topic_0000002039194017_ph19201511175411"></a><a name="zh-cn_topic_0000002039194017_ph19201511175411"></a>Atlas 900 A2 PoD 集群基础单元</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="15.001500150014998%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002039194017_ul7201511105411"></a><a name="zh-cn_topic_0000002039194017_ul7201511105411"></a><ul id="zh-cn_topic_0000002039194017_ul7201511105411"><li><span id="zh-cn_topic_0000002039194017_ph52034113546"><a name="zh-cn_topic_0000002039194017_ph52034113546"></a><a name="zh-cn_topic_0000002039194017_ph52034113546"></a>MindSpore</span></li><li><span id="zh-cn_topic_0000002039194017_ph13203811195412"><a name="zh-cn_topic_0000002039194017_ph13203811195412"></a><a name="zh-cn_topic_0000002039194017_ph13203811195412"></a>TensorFlow</span></li><li><span id="zh-cn_topic_0000002039194017_ph620418118547"><a name="zh-cn_topic_0000002039194017_ph620418118547"></a><a name="zh-cn_topic_0000002039194017_ph620418118547"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002039194017_row13204101125410"><td class="cellrowborder" valign="top" width="17.691769176917692%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002039194017_p172044116542"><a name="zh-cn_topic_0000002039194017_p172044116542"></a><a name="zh-cn_topic_0000002039194017_p172044116542"></a><span id="zh-cn_topic_0000002039194017_ph1020491175416"><a name="zh-cn_topic_0000002039194017_ph1020491175416"></a><a name="zh-cn_topic_0000002039194017_ph1020491175416"></a>Atlas A3 训练系列产品</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="67.3067306730673%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002039194017_ul2592123411423"></a><a name="zh-cn_topic_0000002039194017_ul2592123411423"></a><ul id="zh-cn_topic_0000002039194017_ul2592123411423"><li><span id="ph077885871817"><a name="ph077885871817"></a><a name="ph077885871817"></a>Atlas 900 A3 SuperPoD 超节点</span></li><li><span id="ph10355115144111"><a name="ph10355115144111"></a><a name="ph10355115144111"></a>Atlas 800T A3 超节点服务器</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="15.001500150014998%" headers="mcps1.2.4.1.3 "><a name="ul989793310113"></a><a name="ul989793310113"></a><ul id="ul989793310113"><li><span id="ph15897173313113"><a name="ph15897173313113"></a><a name="ph15897173313113"></a>MindSpore</span></li><li><span id="ph9897153311119"><a name="ph9897153311119"></a><a name="ph9897153311119"></a>TensorFlow</span></li><li><span id="ph3897123341117"><a name="ph3897123341117"></a><a name="ph3897123341117"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-<tr id="row32411310161716"><td class="cellrowborder" valign="top" width="17.691769176917692%" headers="mcps1.2.4.1.1 "><p id="p27061515111717"><a name="p27061515111717"></a><a name="p27061515111717"></a><span id="ph126247155413"><a name="ph126247155413"></a><a name="ph126247155413"></a>A200T A3 Box8 超节点服务器</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="67.3067306730673%" headers="mcps1.2.4.1.2 "><p id="p1653852019211"><a name="p1653852019211"></a><a name="p1653852019211"></a><span id="ph15531211214"><a name="ph15531211214"></a><a name="ph15531211214"></a>A200T A3 Box8 超节点服务器</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="15.001500150014998%" headers="mcps1.2.4.1.3 "><a name="ul866972191811"></a><a name="ul866972191811"></a><ul id="ul866972191811"><li><span id="ph66691921201815"><a name="ph66691921201815"></a><a name="ph66691921201815"></a>MindSpore</span></li><li><span id="ph126691021121818"><a name="ph126691021121818"></a><a name="ph126691021121818"></a>TensorFlow</span></li><li><span id="ph16692216187"><a name="ph16692216187"></a><a name="ph16692216187"></a>PyTorch</span></li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+|产品类型|硬件形态|训练框架|
+|--|--|--|
+|Atlas 训练系列产品|<ul><li>Atlas 800 训练服务器（型号 9000）</li><li>Atlas 800 训练服务器（型号 9010）</li></ul><p>若Atlas 800 训练服务器的芯片工作模式为SMP模式，且每个Pod申请的NPU数量为1、2时，不支持使用重调度模式。查询和设置NPU芯片工作模式的详细介绍请参见《Atlas 800 训练服务器 iBMC用户指南（型号 9000）》中的“<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a">查询和设置NPU芯片工作模式（npuworkmode）</a>”章节。</p>|<ul><li>MindSpore</li><li>TensorFlow</li><li>PyTorch</li></ul>|
+|Atlas A2 训练系列产品|<ul><li>Atlas 800T A2 训练服务器</li><li>Atlas 200T A2 Box16 异构子框</li><li>Atlas 900 A2 PoD 集群基础单元</li></ul>|<ul><li>MindSpore</li><li>TensorFlow</li><li>PyTorch</li></ul>|
+|Atlas A3 训练系列产品|<ul><li>Atlas 900 A3 SuperPoD 超节点</li><li>Atlas 800T A3 超节点服务器</li></ul>|<ul><li>MindSpore</li><li>TensorFlow</li><li>PyTorch</li></ul>|
+|A200T A3 Box8 超节点服务器|A200T A3 Box8 超节点服务器|<ul><li>MindSpore</li><li>TensorFlow</li><li>PyTorch</li></ul>|
 
 **重调度原理<a name="zh-cn_topic_0000002039194017_section57901137171110"></a>**
 
@@ -2524,7 +1766,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 </td>
 <td class="cellrowborder" rowspan="9" valign="top" width="18.13181318131813%" headers="mcps1.2.5.1.3 "><p id="p5119132211596"><a name="p5119132211596"></a><a name="p5119132211596"></a>分布式训练框架</p>
 </td>
-<td class="cellrowborder" rowspan="9" valign="top" width="21.862186218621858%" headers="mcps1.2.5.1.4 "><p id="p252632095917"><a name="p252632095917"></a><a name="p252632095917"></a><a href="../references.md#非mindspeed-llm用户对接指导">对接非MindSpeed-LLM用户</a></p>
+<td class="cellrowborder" rowspan="9" valign="top" width="21.862186218621858%" headers="mcps1.2.5.1.4 "><p id="p252632095917"><a name="p252632095917"></a><a name="p252632095917"></a><a href="../references.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
 </td>
 </tr>
 <tr id="row1793717157396"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1122104645414"><a name="p1122104645414"></a><a name="p1122104645414"></a>上报优化器更新状态</p>
@@ -2705,7 +1947,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 
 **表 3**  进程级在线恢复针对网络故障框架适配功能点
 
-<a name="table1995514113610"></a>
+<a name="table19955141136101"></a>
 <table><thead align="left"><tr id="row169591493619"><th class="cellrowborder" valign="top" width="18.61186118611861%" id="mcps1.2.5.1.1"><p id="p46603387387"><a name="p46603387387"></a><a name="p46603387387"></a>适配功能点</p>
 </th>
 <th class="cellrowborder" valign="top" width="36.72367236723672%" id="mcps1.2.5.1.2"><p id="p176601638153816"><a name="p176601638153816"></a><a name="p176601638153816"></a>功能简述</p>
@@ -2722,7 +1964,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 </td>
 <td class="cellrowborder" rowspan="5" valign="top" width="17.981798179817982%" headers="mcps1.2.5.1.3 "><p id="p12303135518715"><a name="p12303135518715"></a><a name="p12303135518715"></a>分布式训练框架</p>
 </td>
-<td class="cellrowborder" rowspan="5" valign="top" width="26.68266826682668%" headers="mcps1.2.5.1.4 "><p id="p1878873515913"><a name="p1878873515913"></a><a name="p1878873515913"></a><a href="../references.md#非mindspeed-llm用户对接指导">对接非MindSpeed-LLM用户</a></p>
+<td class="cellrowborder" rowspan="5" valign="top" width="26.68266826682668%" headers="mcps1.2.5.1.4 "><p id="p1878873515913"><a name="p1878873515913"></a><a name="p1878873515913"></a><a href="../references.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
 </td>
 </tr>
 <tr id="row149661916713"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1947943212711"><a name="p1947943212711"></a><a name="p1947943212711"></a>上报优化器更新状态</p>
@@ -2783,7 +2025,7 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 </td>
 <td class="cellrowborder" rowspan="9" valign="top" width="17.43%" headers="mcps1.2.5.1.3 "><p id="p9527145711216"><a name="p9527145711216"></a><a name="p9527145711216"></a>分布式训练框架</p>
 </td>
-<td class="cellrowborder" rowspan="9" valign="top" width="26.68%" headers="mcps1.2.5.1.4 "><p id="p7146223174212"><a name="p7146223174212"></a><a name="p7146223174212"></a><a href="../references.md#非mindspeed-llm用户对接指导">对接非MindSpeed-LLM用户</a></p>
+<td class="cellrowborder" rowspan="9" valign="top" width="26.68%" headers="mcps1.2.5.1.4 "><p id="p7146223174212"><a name="p7146223174212"></a><a name="p7146223174212"></a><a href="../references.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
 </td>
 </tr>
 <tr id="row566215364551"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p23923716123"><a name="p23923716123"></a><a name="p23923716123"></a>上报优化器更新状态</p>
@@ -2908,21 +2150,21 @@ Atlas A3 训练系列产品支持在发生参数面网络故障时，HCCL会执�
 
 Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练任务借轨通信的暂停与回切功能。即在训练过程中，使用主动借轨回切接口，可自由切换NPU芯片使用的RoCE网口。
 
-使用借轨回切功能时，NPU芯片的组网关系可参考《Ascend Training Solution 25.1.RC1 组网指南（Atlas A3训练产品）》中的“网络平面介绍 \> 参数面网络 \> 端口对接策略”章节。
+使用借轨回切功能时，NPU芯片的组网关系可参考《Ascend Training Solution 25.1.RC1 组网指南（Atlas A3训练产品）》中的“网络平面介绍 \> 参数面网络 \> <a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100494585/3e6a1479?idPath=23710424|251366513|22892968|252309113|258915853">端口对接策略</a>”章节。
 
 了解借轨通信任务暂停与回切功能的详细配置方法，请参见[配置借轨通信任务暂停与回切](#配置借轨通信任务暂停与回切)。
 
->[!NOTE] 说明 
->-   调用[借轨回切接口](../api/clusterd.md#借轨回切接口)执行借轨回切动作前，请先了解NPU芯片组网关系，保证目标NPU的网络链路正常，如果目标NPU为linkdown状态会导致操作失败。
->-   以上述组网指南中的接口对接关系为例，对于以下几种情况，调用SwitchNicTrack接口时，指定的dev与op如下：
->    1.  若将device0，device8从QDD8借轨切到QDD7，传参dev为\[device0 ，device8\]，op为\[true，true\]
->    2.  若将device0，device8从QDD7回切到QDD8，传参dev为\[device0 ，device8\]，op为\[false，false\]
->    3.  如果单独将device0从QDD8的PortA借轨切到QDD7的PortA，传参dev为\[device0\]，op为\[true\]
->    4.  如果单独将device0从QDD7的PortA回切到QDD8的PortA，传参dev为\[device0\]，op为\[false\]
->    5.  如果将Leaf1下的全部device借轨切到Leaf2下，传参dev为\[device0，device8，device2，device10，device4，device12，device6，device14 \]，op为\[true，true，true，true，true，true，true，true\]
->    6.  如果将Leaf2下的全部device回切到Leaf1下，传参dev为\[device0，device8，device2，device10，device4，device12，device6，device14 \]，op为\[false，false，false，false，false，false，false，false\]
->    **图 1**  接口对接关系<a name="fig111354543222"></a>  
->    ![](../../figures/scheduling/接口对接关系.png "接口对接关系")
+-   调用[借轨回切接口](../api/clusterd.md#借轨回切接口)执行借轨回切动作前，请先了解NPU芯片组网关系，保证目标NPU的网络链路正常，如果目标NPU为linkdown状态会导致操作失败。
+-   以上述组网指南中的接口对接关系为例，对于以下几种情况，调用SwitchNicTrack接口时，指定的dev与op如下：
+    1.  若将device0，device8从QDD8借轨切到QDD7，传参dev为\[device0 ，device8\]，op为\[true，true\]
+    2.  若将device0，device8从QDD7回切到QDD8，传参dev为\[device0 ，device8\]，op为\[false，false\]
+    3.  如果单独将device0从QDD8的PortA借轨切到QDD7的PortA，传参dev为\[device0\]，op为\[true\]
+    4.  如果单独将device0从QDD7的PortA回切到QDD8的PortA，传参dev为\[device0\]，op为\[false\]
+    5.  如果将Leaf1下的全部device借轨切到Leaf2下，传参dev为\[device0，device8，device2，device10，device4，device12，device6，device14 \]，op为\[true，true，true，true，true，true，true，true\]
+    6.  如果将Leaf2下的全部device回切到Leaf1下，传参dev为\[device0，device8，device2，device10，device4，device12，device6，device14 \]，op为\[false，false，false，false，false，false，false，false\]
+
+    **图 1**  接口对接关系<a name="fig111354543222"></a>  
+    ![](../../figures/scheduling/接口对接关系.png "接口对接关系")
 
 **使用场景<a name="section14336140104818"></a>**
 
@@ -2978,11 +2220,11 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 
 在借轨通信任务暂停与回切中，框架首先初始化MindIO服务，启动服务后优化器更新时会上报对应状态到MindIO。通过主动调用优雅暂停机制，完成当前卡上任务暂停和任务切换。集群大脑需提供对外接口，接受切换指令并管理借轨通信流程。
 
-对于非MindSpeed-LLM、MindCluster平台用户，需在框架侧完成[表2](#table1995514113610)的功能适配。
+对于非MindSpeed-LLM、MindCluster平台用户，需在框架侧完成[表2](#table19955141136102)的功能适配。
 
 **表 2**  借轨通信任务暂停与回切框架适配功能点
 
-<a name="table1995514113610"></a>
+<a name="table19955141136102"></a>
 <table><thead align="left"><tr id="row169591493619"><th class="cellrowborder" valign="top" width="18.87%" id="mcps1.2.5.1.1"><p id="p46603387387"><a name="p46603387387"></a><a name="p46603387387"></a>适配功能点</p>
 </th>
 <th class="cellrowborder" valign="top" width="43.419999999999995%" id="mcps1.2.5.1.2"><p id="p176601638153816"><a name="p176601638153816"></a><a name="p176601638153816"></a>功能简述</p>
@@ -2999,7 +2241,7 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 </td>
 <td class="cellrowborder" rowspan="3" valign="top" width="14.719999999999999%" headers="mcps1.2.5.1.3 "><p id="p922524114255"><a name="p922524114255"></a><a name="p922524114255"></a>分布式训练框架</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="22.99%" headers="mcps1.2.5.1.4 "><p id="p7146223174212"><a name="p7146223174212"></a><a name="p7146223174212"></a><a href="../references.md#非mindspeed-llm用户对接指导">对接非MindSpeed-LLM用户</a></p>
+<td class="cellrowborder" rowspan="3" valign="top" width="22.99%" headers="mcps1.2.5.1.4 "><p id="p7146223174212"><a name="p7146223174212"></a><a name="p7146223174212"></a><a href="../references.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
 </td>
 </tr>
 <tr id="row1793717157396"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p9871924102517"><a name="p9871924102517"></a><a name="p9871924102517"></a>上报优化器更新状态</p>
@@ -3165,11 +2407,11 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 
 在在线压测中，框架首先初始化MindIO服务，启动服务后优化器更新时会上报对应状态到MindIO。通过主动调用优雅暂停机制，完成当前卡上任务暂停，暂停后进行硬件压力测试，测试完成后继续训练。集群大脑需提供对外接口，接受压测指令并管理压测流程。
 
-对于非MindSpeed-LLM、MindCluster平台用户，需在框架侧完成[表2](#table1995514113610)的功能适配。
+对于非MindSpeed-LLM、MindCluster平台用户，需在框架侧完成[表2](#table19955141136103)的功能适配。
 
 **表 2**  在线压测框架适配功能点
 
-<a name="table1995514113610"></a>
+<a name="table19955141136103"></a>
 <table><thead align="left"><tr id="row169591493619"><th class="cellrowborder" valign="top" width="18.98%" id="mcps1.2.5.1.1"><p id="p46603387387"><a name="p46603387387"></a><a name="p46603387387"></a>适配功能点</p>
 </th>
 <th class="cellrowborder" valign="top" width="39.26%" id="mcps1.2.5.1.2"><p id="p176601638153816"><a name="p176601638153816"></a><a name="p176601638153816"></a>功能简述</p>
@@ -3186,7 +2428,7 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 </td>
 <td class="cellrowborder" rowspan="3" valign="top" width="18.01%" headers="mcps1.2.5.1.3 "><p id="p1855311819317"><a name="p1855311819317"></a><a name="p1855311819317"></a>分布式训练框架</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="23.75%" headers="mcps1.2.5.1.4 "><p id="p10701822403"><a name="p10701822403"></a><a name="p10701822403"></a><a href="../references.md#非mindspeed-llm用户对接指导">对接非MindSpeed-LLM用户</a></p>
+<td class="cellrowborder" rowspan="3" valign="top" width="23.75%" headers="mcps1.2.5.1.4 "><p id="p10701822403"><a name="p10701822403"></a><a name="p10701822403"></a><a href="../references.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
 </td>
 </tr>
 <tr id="row1793717157396"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1960918515317"><a name="p1960918515317"></a><a name="p1960918515317"></a>上报优化器更新状态</p>
@@ -3288,11 +2530,11 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 
 在亚健康热切中，集群大脑根据亚健康故障信息，为故障Pod设置注解，拉起并调度备份Pod，通知热切策略到MindIO，训练切换到备份Pod后恢复训练。在训练容器中，框架首先初始化MindIO服务，启动服务后优化器更新时会上报对应状态到MindIO。在异常发生时，通过异常捕获装饰器捕获故障模式。在新节点启动后，正常节点暂停训练，之后重建通信域，完成新节点参数面恢复，训练状态完成后完成节点热切换。
 
-对于非MindSpeed-LLM、MindCluster平台用户，需在框架侧完成[表2](#table1995514113610)的功能适配。
+对于非MindSpeed-LLM、MindCluster平台用户，需在框架侧完成[表2](#table19955141136104)的功能适配。
 
 **表 2**  亚健康热切框架适配功能点
 
-<a name="table1995514113610"></a>
+<a name="table19955141136104"></a>
 <table><thead align="left"><tr id="row169591493619"><th class="cellrowborder" valign="top" width="18.200000000000003%" id="mcps1.2.5.1.1"><p id="p46603387387"><a name="p46603387387"></a><a name="p46603387387"></a>适配功能点</p>
 </th>
 <th class="cellrowborder" valign="top" width="39.330000000000005%" id="mcps1.2.5.1.2"><p id="p176601638153816"><a name="p176601638153816"></a><a name="p176601638153816"></a>功能简述</p>
@@ -3309,7 +2551,7 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 </td>
 <td class="cellrowborder" rowspan="9" valign="top" width="19.670000000000005%" headers="mcps1.2.5.1.3 "><p id="p444112643720"><a name="p444112643720"></a><a name="p444112643720"></a>分布式训练框架</p>
 </td>
-<td class="cellrowborder" rowspan="9" valign="top" width="22.800000000000004%" headers="mcps1.2.5.1.4 "><p id="p7146223174212"><a name="p7146223174212"></a><a name="p7146223174212"></a><a href="../references.md#非mindspeed-llm用户对接指导">对接非MindSpeed-LLM用户</a></p>
+<td class="cellrowborder" rowspan="9" valign="top" width="22.800000000000004%" headers="mcps1.2.5.1.4 "><p id="p7146223174212"><a name="p7146223174212"></a><a name="p7146223174212"></a><a href="../references.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
 </td>
 </tr>
 <tr id="row1793717157396"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1598625612366"><a name="p1598625612366"></a><a name="p1598625612366"></a>上报优化器更新状态</p>
@@ -3387,7 +2629,7 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 -   不支持开启watchdog功能。
 -   由于弹性训练会额外创建新的通信组，因此可能会导致片上内存占用增加。
 
-    增加内存大小计算公式：增加内存最大值（MB） = HCCL\_BUFFSIZE \* 2 \* 9，其中，HCCL\_BUFFSIZE默认为200MB，HCCL\_BUFFSIZE的说明详细请参见[CANN环境变量参考](https://www.hiascend.com/document/detail/zh/canncommercial/82RC1/maintenref/envvar/envref_07_0080.html)。
+    增加内存大小计算公式：增加内存最大值（MB） = HCCL\_BUFFSIZE \* 2 \* 9，其中，HCCL\_BUFFSIZE默认为200MB，HCCL\_BUFFSIZE的说明详细请参见《CANN 环境变量参考》中的“<a href="https://www.hiascend.com/document/detail/zh/canncommercial/850/maintenref/envvar/envref_07_0080.html">HCCL_BUFFSIZE</a>”章节。
 
 更多使用约束可参考[MindSpeed-LLM弹性训练功能使用约束](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/docs/pytorch/features/high_availability.md)。
 
@@ -3456,11 +2698,11 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 -   当集群大脑检测到故障，且无冗余备份资源时，下发缩容策略到MindIO，执行算子资源清理、缩容重建，以缩容状态继续训练。
 -   当集群大脑检测到有可用资源且新节点成功拉起时，下发扩容策略到MindIO，执行算子资源清理、扩容通信重建、扩容参数面恢复和扩容状态回滚，完成弹性扩容恢复原有规模继续训练。
 
-对于非MindSpeed-LLM和MindCluster平台用户，需在框架侧完成[表2](#table1995514113610)的功能适配。
+对于非MindSpeed-LLM和MindCluster平台用户，需在框架侧完成[表2](#table19955141136107)的功能适配。
 
 **表 2**  弹性训练框架适配功能点
 
-<a name="table1995514113610"></a>
+<a name="table19955141136107"></a>
 <table><thead align="left"><tr id="row169591493619"><th class="cellrowborder" valign="top" width="7.520000000000001%" id="mcps1.2.6.1.1"><p id="p4637165993110"><a name="p4637165993110"></a><a name="p4637165993110"></a>序号</p>
 </th>
 <th class="cellrowborder" valign="top" width="18.810000000000002%" id="mcps1.2.6.1.2"><p id="p46603387387"><a name="p46603387387"></a><a name="p46603387387"></a>适配功能点</p>
@@ -3629,7 +2871,7 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 </tbody>
 </table>
 
-[表2](#table1995514113610)中序号为1-6的适配项为MindIO TFT（MindCluster MindIO Training Fault Tolerance）公共逻辑，序号为17-18的适配项为断点续训公共逻辑，本章节不再详细描述。以下针对弹性训练特有功能点，基于Megatron 0.12.1版本进行简要介绍。
+[表2](#table19955141136107)中序号为1-6的适配项为MindIO TFT（MindCluster MindIO Training Fault Tolerance）公共逻辑，序号为17-18的适配项为断点续训公共逻辑，本章节不再详细描述。以下针对弹性训练特有功能点，基于Megatron 0.12.1版本进行简要介绍。
 
 -   弹性训练回调注册
 
@@ -3691,7 +2933,7 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 
 #### 训练恢复原理说明<a name="ZH-CN_TOPIC_0000002479226500"></a>
 
-在完成故障处理后，训练进程会被重新拉起，拉起的训练进程需要完成模型权重的保存和加载，才能回到任务中断时的训练状态。在正常训练中，每隔一段时间保存训练模型权重的CKPT（CheckPoint）文件，在任务中断后，新拉起的进程可以加载之前保存的CKPT文件，从而恢复到之前保存点的模型权重状态，减少训练时间。对于不同框架，保存和加载CKPT的方法不一样，以下给出了TensorFlow、PyTorch、MindSpore保存和加载CKPT的示例，用户需按照示例修改自己的**训练模型脚本**。
+在完成故障处理后，训练进程会被重新拉起，拉起的训练进程需要完成模型权重的保存和加载，才能回到任务中断时的训练状态。在正常训练中，每隔一段时间保存训练模型权重的CKPT（Checkpoint）文件，在任务中断后，新拉起的进程可以加载之前保存的CKPT文件，从而恢复到之前保存点的模型权重状态，减少训练时间。对于不同框架，保存和加载CKPT的方法不一样，以下给出了TensorFlow、PyTorch、MindSpore保存和加载CKPT的示例，用户需按照示例修改自己的**训练模型脚本**。
 
 **PyTorch<a name="section77915151121"></a>**
 
@@ -3760,7 +3002,7 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 
 #### 周期性CKPT保存<a name="ZH-CN_TOPIC_0000002479386434"></a>
 
-现有大规模集群训练主要通过CKPT（CheckPoint）机制，即在训练过程中周期性保存训练过程数据（模型参数等）作为CKPT。当业务平台检测到故障发生后，可退出当前训练任务，通过重新加载CKPT数据，从CKPT保存时刻开始恢复训练，避免从头开始重新进行训练。
+现有大规模集群训练主要通过CKPT（Checkpoint）机制，即在训练过程中周期性保存训练过程数据（模型参数等）作为CKPT。当业务平台检测到故障发生后，可退出当前训练任务，通过重新加载CKPT数据，从CKPT保存时刻开始恢复训练，避免从头开始重新进行训练。
 
 周期性CKPT保存分为2个部分：异步CKPT保存以及内存CKPT加载。
 
@@ -3790,7 +3032,7 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 
 MindCluster MindIO Try To Persist（下文简称MindIO TTP）提供临终CKPT能力，帮助用户在故障时刻保存临终时刻CKPT。
 
-了解临终CKPT保存的详细介绍，请参见[故障恢复与加速](../references.md#故障恢复加速)。
+了解临终CKPT保存的详细介绍，请参见[故障恢复加速](../references.md#故障恢复加速)。
 
 了解临终CKPT保存的配置步骤，请参见[配置临终CKPT保存](#配置临终ckpt保存)。
 
@@ -3798,11 +3040,11 @@ MindCluster MindIO Try To Persist（下文简称MindIO TTP）提供临终CKPT能
 
 在临终CKPT中，框架首先初始化MindIO服务，启动服务后优化器更新时会上报对应状态到MindIO。随后，创建DP副本组和优化器副本，以保障模型参数的冗余备份。在异常发生时，通过异常捕获装饰器捕获故障模式，之后执行算子资源清理，基于副本完成临终CKPT保存。
 
-对于非MindSpeed-LLM用户，需在框架侧完成[表1](#table1995514113610)的功能适配。
+对于非MindSpeed-LLM用户，需在框架侧完成[表1](#table19955141136109)的功能适配。
 
 **表 1**  临终CKPT保存框架适配功能点
 
-<a name="table1995514113610"></a>
+<a name="table19955141136109"></a>
 <table><thead align="left"><tr id="row169591493619"><th class="cellrowborder" valign="top" width="20.632063206320634%" id="mcps1.2.4.1.1"><p id="p46603387387"><a name="p46603387387"></a><a name="p46603387387"></a>适配功能点</p>
 </th>
 <th class="cellrowborder" valign="top" width="50.51505150515051%" id="mcps1.2.4.1.2"><p id="p176601638153816"><a name="p176601638153816"></a><a name="p176601638153816"></a>功能简述</p>
@@ -3815,7 +3057,7 @@ MindCluster MindIO Try To Persist（下文简称MindIO TTP）提供临终CKPT能
 </td>
 <td class="cellrowborder" valign="top" width="50.51505150515051%" headers="mcps1.2.4.1.2 "><p id="p5821185419518"><a name="p5821185419518"></a><a name="p5821185419518"></a>训练框架初始化时拉起MindIO服务。</p>
 </td>
-<td class="cellrowborder" rowspan="7" valign="top" width="28.852885288528853%" headers="mcps1.2.4.1.3 "><p id="p7146223174212"><a name="p7146223174212"></a><a name="p7146223174212"></a><a href="../references.md#非mindspeed-llm用户对接指导">对接非MindSpeed-LLM用户</a></p>
+<td class="cellrowborder" rowspan="7" valign="top" width="28.852885288528853%" headers="mcps1.2.4.1.3 "><p id="p7146223174212"><a name="p7146223174212"></a><a name="p7146223174212"></a><a href="../references.md#对接非mindspeed-llm框架">对接非MindSpeed-LLM框架</a></p>
 </td>
 </tr>
 <tr id="row1793717157396"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p6821754125118"><a name="p6821754125118"></a><a name="p6821754125118"></a>上报优化器更新状态</p>
@@ -4040,8 +3282,7 @@ MindCluster MindIO Try To Persist（下文简称MindIO TTP）提供临终CKPT能
 <td class="cellrowborder" valign="top" width="35.74%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p1354813311915"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p1354813311915"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p1354813311915"></a>根据任务YAML中配置的subHealthyStrategy参数取值进行处理，详细请参见<a href="#yaml参数说明">YAML参数说明</a>。</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.39%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p3352524125220"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p3352524125220"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p3352524125220"></a>当芯片出现亚健康故障时，需根据<a href="#任务yaml配置示例">配置YAML</a>策略进行处理。</p>
-<div class="note" id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_note7936204710536"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_note7936204710536"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_note7936204710536"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p15222114115810"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p15222114115810"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p15222114115810"></a>如果后续芯片出现其他级别故障，此时SubHealthFault</p>
-<p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p109369476532"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p109369476532"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p109369476532"></a>处理策略不影响其他级别的故障处理。</p>
+<div class="note" id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_note7936204710536"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_note7936204710536"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_note7936204710536"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p15222114115810"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p15222114115810"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p15222114115810"></a>如果后续芯片出现其他级别故障，此时SubHealthFault处理策略不影响其他级别的故障处理。</p>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" width="21.81%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p8352172425218"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p8352172425218"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p8352172425218"></a>根据策略进行处理。</p>
@@ -4359,8 +3600,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 <td class="cellrowborder" valign="top" width="35.78%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002171521445_p1354813311915"><a name="zh-cn_topic_0000002171521445_p1354813311915"></a><a name="zh-cn_topic_0000002171521445_p1354813311915"></a>根据任务YAML中配置的subHealthyStrategy参数取值进行处理，详细请参见<a href="#yaml参数说明">YAML参数说明</a>。</p>
 </td>
 <td class="cellrowborder" valign="top" width="20.01%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002171521445_p3352524125220"><a name="zh-cn_topic_0000002171521445_p3352524125220"></a><a name="zh-cn_topic_0000002171521445_p3352524125220"></a>当芯片出现亚健康故障时，需根据<a href="#任务yaml配置示例">配置YAML</a>策略进行处理。</p>
-<div class="note" id="zh-cn_topic_0000002171521445_note7936204710536"><a name="zh-cn_topic_0000002171521445_note7936204710536"></a><a name="zh-cn_topic_0000002171521445_note7936204710536"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002171521445_p15222114115810"><a name="zh-cn_topic_0000002171521445_p15222114115810"></a><a name="zh-cn_topic_0000002171521445_p15222114115810"></a>如果后续芯片出现其他级别故障，此时SubHealthFault</p>
-<p id="zh-cn_topic_0000002171521445_p109369476532"><a name="zh-cn_topic_0000002171521445_p109369476532"></a><a name="zh-cn_topic_0000002171521445_p109369476532"></a>处理策略不影响其他级别的故障处理。</p>
+<div class="note" id="zh-cn_topic_0000002171521445_note7936204710536"><a name="zh-cn_topic_0000002171521445_note7936204710536"></a><a name="zh-cn_topic_0000002171521445_note7936204710536"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002171521445_p15222114115810"><a name="zh-cn_topic_0000002171521445_p15222114115810"></a><a name="zh-cn_topic_0000002171521445_p15222114115810"></a>如果后续芯片出现其他级别故障，此时SubHealthFault处理策略不影响其他级别的故障处理。</p>
 </div></div>
 </td>
 <td class="cellrowborder" valign="top" width="25.15%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002171521445_p8352172425218"><a name="zh-cn_topic_0000002171521445_p8352172425218"></a><a name="zh-cn_topic_0000002171521445_p8352172425218"></a>根据策略进行处理。</p>
@@ -4415,9 +3655,9 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 >[!NOTE] 说明 
 >-   故障的处理策略为ManuallySeparateNPU时，即使故障恢复也仍然隔离芯片，需要手动恢复强制隔离的芯片，可以参见[（可选）配置芯片故障频率及时长](#可选配置芯片故障频率及时长)中"手动恢复强制隔离的芯片"步骤进行处理。
 >-   除可以识别的硬件故障外，faultCustomization.json文件中还包含以下几类故障。
->    -   无需处理的故障：该类故障出现不影响训练任务及设备，不提供提升故障级别的初始化配置。
->    -   无法识别出是硬件还是软件类故障：该类故障无法准确识别是硬件还是软件故障，且会影响训练任务。该类故障不提供提升故障级别的初始化配置，建议用户根据实际情况手动配置任务支持的断点续训最大次数和达到最大次数后故障的处理策略，可以参见[（可选）配置芯片故障频率及时长](#可选配置芯片故障频率及时长)进行配置。
->    -   软件配置类故障：该类故障为软件配置类问题，正常情况下不会出现。该类故障不提供提升故障级别的初始化配置，建议用户检查软件版本是否配套。
+>     -   无需处理的故障：该类故障出现不影响训练任务及设备，不提供提升故障级别的初始化配置。
+>     -   无法识别出是硬件还是软件类故障：该类故障无法准确识别是硬件还是软件故障，且会影响训练任务。该类故障不提供提升故障级别的初始化配置，建议用户根据实际情况手动配置任务支持的断点续训最大次数和达到最大次数后故障的处理策略，可以参见[（可选）配置芯片故障频率及时长](#可选配置芯片故障频率及时长)进行配置。
+>     -   软件配置类故障：该类故障为软件配置类问题，正常情况下不会出现。该类故障不提供提升故障级别的初始化配置，建议用户检查软件版本是否配套。
 
 **faultCustomization.json参数说明<a name="zh-cn_topic_0000002171521445_section33036167576"></a>**
 
@@ -4426,136 +3666,24 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 **表 2**  faultCustomization.json文件参数说明
 
 <a name="zh-cn_topic_0000002171521445_table1519814413572"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002171521445_row51981644195714"><th class="cellrowborder" valign="top" width="17.27172717271727%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002171521445_p319813443571"><a name="zh-cn_topic_0000002171521445_p319813443571"></a><a name="zh-cn_topic_0000002171521445_p319813443571"></a>一级参数名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="22.082208220822082%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002171521445_p6198194414574"><a name="zh-cn_topic_0000002171521445_p6198194414574"></a><a name="zh-cn_topic_0000002171521445_p6198194414574"></a>二级参数名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="60.64606460646065%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002171521445_p19198204485718"><a name="zh-cn_topic_0000002171521445_p19198204485718"></a><a name="zh-cn_topic_0000002171521445_p19198204485718"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002171521445_row31983444574"><td class="cellrowborder" valign="top" width="17.27172717271727%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p2019934445711"><a name="zh-cn_topic_0000002171521445_p2019934445711"></a><a name="zh-cn_topic_0000002171521445_p2019934445711"></a>GraceTolerance</p>
-</td>
-<td class="cellrowborder" valign="top" width="22.082208220822082%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002171521445_p17199114414575"><a name="zh-cn_topic_0000002171521445_p17199114414575"></a><a name="zh-cn_topic_0000002171521445_p17199114414575"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.64606460646065%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002171521445_p11991944185713"><a name="zh-cn_topic_0000002171521445_p11991944185713"></a><a name="zh-cn_topic_0000002171521445_p11991944185713"></a>优雅容错相关配置。</p>
-<div class="note" id="zh-cn_topic_0000002171521445_note1946012577292"><a name="zh-cn_topic_0000002171521445_note1946012577292"></a><a name="zh-cn_topic_0000002171521445_note1946012577292"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002171521445_p1746035792910"><a name="zh-cn_topic_0000002171521445_p1746035792910"></a><a name="zh-cn_topic_0000002171521445_p1746035792910"></a>GraceTolerance及其子参数不存在或者超出取值范围，则使用默认值。</p>
-</div></div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002171521445_row141991044175720"><td class="cellrowborder" valign="top" width="17.27172717271727%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p919911442577"><a name="zh-cn_topic_0000002171521445_p919911442577"></a><a name="zh-cn_topic_0000002171521445_p919911442577"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="22.082208220822082%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002171521445_p0199194414578"><a name="zh-cn_topic_0000002171521445_p0199194414578"></a><a name="zh-cn_topic_0000002171521445_p0199194414578"></a>WaitProcessReadCMTime</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.64606460646065%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002171521445_p111991844115710"><a name="zh-cn_topic_0000002171521445_p111991844115710"></a><a name="zh-cn_topic_0000002171521445_p111991844115710"></a>使用优雅容错模式时，等待管理进程读取<span id="zh-cn_topic_0000002171521445_ph1919924435715"><a name="zh-cn_topic_0000002171521445_ph1919924435715"></a><a name="zh-cn_topic_0000002171521445_ph1919924435715"></a>ConfigMap</span>文件的时间，单位为秒，取值范围为5~90，默认值为30。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002171521445_row15199644205714"><td class="cellrowborder" valign="top" width="17.27172717271727%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p191995444575"><a name="zh-cn_topic_0000002171521445_p191995444575"></a><a name="zh-cn_topic_0000002171521445_p191995444575"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="22.082208220822082%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002171521445_p419914442579"><a name="zh-cn_topic_0000002171521445_p419914442579"></a><a name="zh-cn_topic_0000002171521445_p419914442579"></a>WaitDeviceResetTime</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.64606460646065%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002171521445_p9199144415575"><a name="zh-cn_topic_0000002171521445_p9199144415575"></a><a name="zh-cn_topic_0000002171521445_p9199144415575"></a>使用优雅容错模式时，等待芯片重启的最大时长，单位为秒，取值范围为60~180，默认值为150。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002171521445_row7199444155712"><td class="cellrowborder" valign="top" width="17.27172717271727%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p12199164435718"><a name="zh-cn_topic_0000002171521445_p12199164435718"></a><a name="zh-cn_topic_0000002171521445_p12199164435718"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="22.082208220822082%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002171521445_p419974419571"><a name="zh-cn_topic_0000002171521445_p419974419571"></a><a name="zh-cn_topic_0000002171521445_p419974419571"></a>WaitFaultSelfHealingTime</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.64606460646065%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002171521445_p4199124416579"><a name="zh-cn_topic_0000002171521445_p4199124416579"></a><a name="zh-cn_topic_0000002171521445_p4199124416579"></a>使用优雅容错模式时，等待RestartBusiness级别故障恢复时间，单位为秒，取值范围为1~30，默认值为15。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002171521445_row7199184485717"><td class="cellrowborder" valign="top" width="17.27172717271727%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p21991544155716"><a name="zh-cn_topic_0000002171521445_p21991544155716"></a><a name="zh-cn_topic_0000002171521445_p21991544155716"></a>FaultFrequency</p>
-</td>
-<td class="cellrowborder" valign="top" width="22.082208220822082%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002171521445_p220024425711"><a name="zh-cn_topic_0000002171521445_p220024425711"></a><a name="zh-cn_topic_0000002171521445_p220024425711"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.64606460646065%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002171521445_p15200044195710"><a name="zh-cn_topic_0000002171521445_p15200044195710"></a><a name="zh-cn_topic_0000002171521445_p15200044195710"></a>自定义故障频率，即某一故障在时间窗口内出现次数达到次数上限时，根据配置的故障处理策略进行处理。</p>
-<div class="note" id="zh-cn_topic_0000002171521445_note7518141620301"><a name="zh-cn_topic_0000002171521445_note7518141620301"></a><div class="notebody"><a name="zh-cn_topic_0000002171521445_ul7689137141019"></a><a name="zh-cn_topic_0000002171521445_ul7689137141019"></a><ul id="zh-cn_topic_0000002171521445_ul7689137141019"><li>FaultFrequency及其子参数取值范围不正确，则忽略该条配置。</li><li>FaultFrequency及其子参数数据格式不正确，则会使用默认配置。</li></ul>
-</div></div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002171521445_row12200204495711"><td class="cellrowborder" valign="top" width="17.27172717271727%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p1520012443576"><a name="zh-cn_topic_0000002171521445_p1520012443576"></a><a name="zh-cn_topic_0000002171521445_p1520012443576"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="22.082208220822082%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002171521445_p1820084455716"><a name="zh-cn_topic_0000002171521445_p1820084455716"></a><a name="zh-cn_topic_0000002171521445_p1820084455716"></a>EventId</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.64606460646065%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002171521445_p02008448576"><a name="zh-cn_topic_0000002171521445_p02008448576"></a><a name="zh-cn_topic_0000002171521445_p02008448576"></a>故障码ID。</p>
-<div class="note" id="zh-cn_topic_0000002171521445_note4302258102812"><a name="zh-cn_topic_0000002171521445_note4302258102812"></a><a name="zh-cn_topic_0000002171521445_note4302258102812"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002171521445_p16462113290"><a name="zh-cn_topic_0000002171521445_p16462113290"></a><a name="zh-cn_topic_0000002171521445_p16462113290"></a>每个故障码（EventId）只允许配置一个FaultFrequency参数，如果配置了多个，则只有第一条正确的会生效。</p>
-</div></div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002171521445_row11200114414572"><td class="cellrowborder" valign="top" width="17.27172717271727%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p13200644195716"><a name="zh-cn_topic_0000002171521445_p13200644195716"></a><a name="zh-cn_topic_0000002171521445_p13200644195716"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="22.082208220822082%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002171521445_p132001044175717"><a name="zh-cn_topic_0000002171521445_p132001044175717"></a><a name="zh-cn_topic_0000002171521445_p132001044175717"></a>TimeWindow</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.64606460646065%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002171521445_p1620084410575"><a name="zh-cn_topic_0000002171521445_p1620084410575"></a><a name="zh-cn_topic_0000002171521445_p1620084410575"></a>时间窗口，即统计当前时间减去TimeWindow的时间至当前时间，这段时间范围内的故障次数，单位为秒，取值范围为60~864000。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002171521445_row1620016445577"><td class="cellrowborder" valign="top" width="17.27172717271727%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p9200744115710"><a name="zh-cn_topic_0000002171521445_p9200744115710"></a><a name="zh-cn_topic_0000002171521445_p9200744115710"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="22.082208220822082%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002171521445_p8200194411570"><a name="zh-cn_topic_0000002171521445_p8200194411570"></a><a name="zh-cn_topic_0000002171521445_p8200194411570"></a>Times</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.64606460646065%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002171521445_p320074415716"><a name="zh-cn_topic_0000002171521445_p320074415716"></a><a name="zh-cn_topic_0000002171521445_p320074415716"></a>任务支持的断点续训最大次数，即同一个故障出现的次数上限，取值范围为1~100。如果在时间窗口内该故障出现次数大于或等于该值，则按照FaultHandling中定义的策略处理和上报。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002171521445_row7200154435714"><td class="cellrowborder" valign="top" width="17.27172717271727%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p7200944135719"><a name="zh-cn_topic_0000002171521445_p7200944135719"></a><a name="zh-cn_topic_0000002171521445_p7200944135719"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="22.082208220822082%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002171521445_p122001344155715"><a name="zh-cn_topic_0000002171521445_p122001344155715"></a><a name="zh-cn_topic_0000002171521445_p122001344155715"></a>FaultHandling</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.64606460646065%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002171521445_p620084413572"><a name="zh-cn_topic_0000002171521445_p620084413572"></a><a name="zh-cn_topic_0000002171521445_p620084413572"></a>达到断点续训最大次数后故障的处理策略，支持配置不同级别的故障处理策略。</p>
-<div class="note" id="zh-cn_topic_0000002171521445_note1120011443576"><a name="zh-cn_topic_0000002171521445_note1120011443576"></a><div class="notebody"><a name="zh-cn_topic_0000002171521445_ul5201124425715"></a><a name="zh-cn_topic_0000002171521445_ul5201124425715"></a><ul id="zh-cn_topic_0000002171521445_ul5201124425715"><li>PreSeparateNPU：大模型的故障处理策略。该故障处理模式为预隔离芯片，根据训练任务实际运行情况判断是否重调度。</li><li>ManuallySeparateNPU：需人工干预的故障处理策略。<a name="zh-cn_topic_0000002171521445_ul1020184411575"></a><a name="zh-cn_topic_0000002171521445_ul1020184411575"></a><ul id="zh-cn_topic_0000002171521445_ul1020184411575"><li>出现该策略时，将直接上报<span id="zh-cn_topic_0000002171521445_ph1920110440571"><a name="zh-cn_topic_0000002171521445_ph1920110440571"></a><a name="zh-cn_topic_0000002171521445_ph1920110440571"></a>K8s</span>该芯片不健康并将芯片名字写入<span id="zh-cn_topic_0000002171521445_ph10507145912293"><a name="zh-cn_topic_0000002171521445_ph10507145912293"></a><a name="zh-cn_topic_0000002171521445_ph10507145912293"></a>device-info-cm</span>。</li><li>芯片名称只要保存于该字段中，即使故障恢复也仍然隔离芯片，直到运维人员手动在该字段中删除芯片名称。可以参见<a href="#可选配置芯片故障频率及时长">（可选）配置芯片故障频率及时长</a>中"手动恢复强制隔离的芯片"步骤进行处理。</li><li>该字段只允许<span id="zh-cn_topic_0000002171521445_ph32011444155712"><a name="zh-cn_topic_0000002171521445_ph32011444155712"></a><a name="zh-cn_topic_0000002171521445_ph32011444155712"></a>Ascend Device Plugin</span>新增或修改，维护人员只能删除该字段中的芯片名称。</li><li>faultCode.json暂不支持该策略。</li></ul>
-</li></ul>
-</div></div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002171521445_row320118444575"><td class="cellrowborder" valign="top" width="17.27172717271727%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p12201104413579"><a name="zh-cn_topic_0000002171521445_p12201104413579"></a><a name="zh-cn_topic_0000002171521445_p12201104413579"></a>FaultDuration</p>
-</td>
-<td class="cellrowborder" valign="top" width="22.082208220822082%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002171521445_p202015445572"><a name="zh-cn_topic_0000002171521445_p202015445572"></a><a name="zh-cn_topic_0000002171521445_p202015445572"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.64606460646065%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002171521445_p920174425716"><a name="zh-cn_topic_0000002171521445_p920174425716"></a><a name="zh-cn_topic_0000002171521445_p920174425716"></a>自定义故障超时策略，当某一故障持续时间达到配置上限时，该故障会按照指定的故障处理策略进行处理。</p>
-<div class="note" id="zh-cn_topic_0000002171521445_note471793673013"><a name="zh-cn_topic_0000002171521445_note471793673013"></a><div class="notebody"><a name="zh-cn_topic_0000002171521445_ul13183103116309"></a><a name="zh-cn_topic_0000002171521445_ul13183103116309"></a><ul id="zh-cn_topic_0000002171521445_ul13183103116309"><li>FaultDuration及其子参数取值范围不正确，则忽略该条配置。</li><li>FaultDuration及其子参数数据格式不正确，则会使用默认配置。</li></ul>
-</div></div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002171521445_row172021244205714"><td class="cellrowborder" valign="top" width="17.27172717271727%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p12202164415575"><a name="zh-cn_topic_0000002171521445_p12202164415575"></a><a name="zh-cn_topic_0000002171521445_p12202164415575"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="22.082208220822082%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002171521445_p19202544195715"><a name="zh-cn_topic_0000002171521445_p19202544195715"></a><a name="zh-cn_topic_0000002171521445_p19202544195715"></a>EventId</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.64606460646065%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002171521445_p122021244155715"><a name="zh-cn_topic_0000002171521445_p122021244155715"></a><a name="zh-cn_topic_0000002171521445_p122021244155715"></a>故障ID。</p>
-<div class="note" id="zh-cn_topic_0000002171521445_note199919401295"><a name="zh-cn_topic_0000002171521445_note199919401295"></a><a name="zh-cn_topic_0000002171521445_note199919401295"></a><span class="notetitle"> [!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002171521445_p0875204382911"><a name="zh-cn_topic_0000002171521445_p0875204382911"></a><a name="zh-cn_topic_0000002171521445_p0875204382911"></a>每个故障码（EventId）只允许配置一个FaultDuration参数，如果配置了多个，则只有第一条正确的会生效。</p>
-</div></div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002171521445_row15202154415571"><td class="cellrowborder" valign="top" width="17.27172717271727%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p4202144495711"><a name="zh-cn_topic_0000002171521445_p4202144495711"></a><a name="zh-cn_topic_0000002171521445_p4202144495711"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="22.082208220822082%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002171521445_p120234475717"><a name="zh-cn_topic_0000002171521445_p120234475717"></a><a name="zh-cn_topic_0000002171521445_p120234475717"></a>FaultTimeout</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.64606460646065%" headers="mcps1.2.4.1.3 "><div class="p" id="zh-cn_topic_0000002171521445_p2202444155717"><a name="zh-cn_topic_0000002171521445_p2202444155717"></a><a name="zh-cn_topic_0000002171521445_p2202444155717"></a>故障持续时间超过该值，则按照FaultHandling中定义的故障处理策略进行处理，单位为秒，取值范围为0~600，默认值说明如下。<a name="zh-cn_topic_0000002171521445_ul156251327007"></a><a name="zh-cn_topic_0000002171521445_ul156251327007"></a><ul id="zh-cn_topic_0000002171521445_ul156251327007"><li>故障ID为81078603的参数面网络故障默认值为20。<p id="zh-cn_topic_0000002171521445_p653165701211"><a name="zh-cn_topic_0000002171521445_p653165701211"></a><a name="zh-cn_topic_0000002171521445_p653165701211"></a></p>
-</li><li>其余故障默认值为0。</li></ul>
-</div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002171521445_row4202134413572"><td class="cellrowborder" valign="top" width="17.27172717271727%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p142023446570"><a name="zh-cn_topic_0000002171521445_p142023446570"></a><a name="zh-cn_topic_0000002171521445_p142023446570"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="22.082208220822082%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002171521445_p320244415574"><a name="zh-cn_topic_0000002171521445_p320244415574"></a><a name="zh-cn_topic_0000002171521445_p320244415574"></a>RecoverTimeout</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.64606460646065%" headers="mcps1.2.4.1.3 "><div class="p" id="zh-cn_topic_0000002171521445_p11202124411571"><a name="zh-cn_topic_0000002171521445_p11202124411571"></a><a name="zh-cn_topic_0000002171521445_p11202124411571"></a>故障恢复时间超过该值，则上报故障恢复，单位为秒，取值范围为0~86400，默认值说明如下。<a name="zh-cn_topic_0000002171521445_ul55713519410"></a><a name="zh-cn_topic_0000002171521445_ul55713519410"></a><ul id="zh-cn_topic_0000002171521445_ul55713519410"><li>故障ID为81078603的参数面网络故障默认值为60。</li><li>其余故障默认值为0。</li></ul>
-</div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002171521445_row32027446576"><td class="cellrowborder" valign="top" width="17.27172717271727%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p1620214417579"><a name="zh-cn_topic_0000002171521445_p1620214417579"></a><a name="zh-cn_topic_0000002171521445_p1620214417579"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="22.082208220822082%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002171521445_p520254435718"><a name="zh-cn_topic_0000002171521445_p520254435718"></a><a name="zh-cn_topic_0000002171521445_p520254435718"></a>FaultHandling</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.64606460646065%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002171521445_p11180846751"><a name="zh-cn_topic_0000002171521445_p11180846751"></a><a name="zh-cn_topic_0000002171521445_p11180846751"></a>超过故障持续时间后的故障处理策略，支持配置不同级别的故障处理策略。</p>
-<div class="note" id="zh-cn_topic_0000002171521445_note19791226361"><a name="zh-cn_topic_0000002171521445_note19791226361"></a><div class="notebody"><p id="zh-cn_topic_0000002171521445_p179116261168"><a name="zh-cn_topic_0000002171521445_p179116261168"></a><a name="zh-cn_topic_0000002171521445_p179116261168"></a>超过故障持续时间后的故障处理策略，建议高于故障本身的故障处理策略，否则配置不生效。</p>
-</div></div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002171521445_row1297682783618"><td class="cellrowborder" colspan="3" valign="top" headers="mcps1.2.4.1.1 mcps1.2.4.1.2 mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002171521445_p1496743143619"><a name="zh-cn_topic_0000002171521445_p1496743143619"></a><a name="zh-cn_topic_0000002171521445_p1496743143619"></a>注</p>
-<a name="zh-cn_topic_0000002171521445_ul181621184612"></a><a name="zh-cn_topic_0000002171521445_ul181621184612"></a><ul id="zh-cn_topic_0000002171521445_ul181621184612"><li>如果一个故障码同时配置了故障频率（FaultFrequency）和故障超时策略（FaultDuration），该故障码在TimeWindow时间窗口中超时次数达到任务支持的最大次数时，则采用以下三者中最严重的等级进行处理。这三者分别为：故障本身的故障处理策略、FaultFrequency和FaultDuration中配置的故障处理策略。</li><li>如果一个故障码同时配置了故障频率和故障超时策略，只有当故障超时后，故障频次才会增加一次。</li><li>故障ID为81078603的网络故障只支持配置为NotHandleFault、PreSeparateNPU或SeparateNPU三种故障处理策略，若配置为其他策略则使用默认配置NotHandleFault。</li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+|一级参数名称|二级参数名称|说明|
+|--|--|--|
+|GraceTolerance|-|优雅容错相关配置。<p>GraceTolerance及其子参数不存在或者超出取值范围，则使用默认值。</p>|
+|-|WaitProcessReadCMTime|使用优雅容错模式时，等待管理进程读取ConfigMap文件的时间，单位为秒，取值范围为5~90，默认值为30。|
+|-|WaitDeviceResetTime|使用优雅容错模式时，等待芯片重启的最大时长，单位为秒，取值范围为60~180，默认值为150。|
+|-|WaitFaultSelfHealingTime|使用优雅容错模式时，等待RestartBusiness级别故障恢复时间，单位为秒，取值范围为1~30，默认值为15。|
+|FaultFrequency|-|自定义故障频率，即某一故障在时间窗口内出现次数达到次数上限时，根据配置的故障处理策略进行处理。<ul><li>FaultFrequency及其子参数取值范围不正确，则忽略该条配置。</li><li>FaultFrequency及其子参数数据格式不正确，则会使用默认配置。</li></ul>|
+|-|EventId|故障码ID。<p>每个故障码（EventId）只允许配置一个FaultFrequency参数，如果配置了多个，则只有第一条正确的会生效。</p>|
+|-|TimeWindow|时间窗口，即统计当前时间减去TimeWindow的时间至当前时间，这段时间范围内的故障次数，单位为秒，取值范围为60~864000。|
+|-|Times|任务支持的断点续训最大次数，即同一个故障出现的次数上限，取值范围为1~100。如果在时间窗口内该故障出现次数大于或等于该值，则按照FaultHandling中定义的策略处理和上报。|
+|-|FaultHandling|<p>达到断点续训最大次数后故障的处理策略，支持配置不同级别的故障处理策略。其中只有ManuallySeparateNPU级别会持续维持，若配置了ReleaseTimeWindow，则可达到条件后自动释放。其他故障处理级别只会升级处理一次，然后自动降级为故障原级别。</p><ul><li>PreSeparateNPU：大模型的故障处理策略。该故障处理模式为预隔离芯片，根据训练任务实际运行情况判断是否重调度。</li><li>ManuallySeparateNPU：需人工干预的故障处理策略。<ul><li>出现该策略时，将直接上报K8s该芯片不健康并将芯片名字写入device-info-cm。</li><li>芯片名称只要保存于该字段中，即使故障恢复也仍然隔离芯片，直到运维人员手动在该字段中删除芯片名称。可以参见<a href="#可选配置芯片故障频率及时长">（可选）配置芯片故障频率及时长</a>中"手动恢复强制隔离的芯片"步骤进行处理。</li><li>该字段只允许Ascend Device Plugin新增或修改，维护人员只能删除该字段中的芯片名称。</li><li>faultCode.json暂不支持该策略。</li></ul></li></ul>|
+|-|ReleaseTimeWindow|当频率型故障处理策略为ManuallySeparateNPU时，若故障已经恢复，并持续超过ReleaseTimeWindow的时间窗没有再发送该故障，则ManuallySeparateNPU自动降级。该参数的取值范围为60~int32最大值，单位为秒。若不配置该参数，则表示策略升级为ManuallySeparateNPU后不降级。|
+|FaultDuration|-|自定义故障超时策略，当某一故障持续时间达到配置上限时，该故障会按照指定的故障处理策略进行处理。<ul><li>FaultDuration及其子参数取值范围不正确，则忽略该条配置。</li><li>FaultDuration及其子参数数据格式不正确，则会使用默认配置。</li></ul>|
+|-|EventId|故障ID。<p>每个故障码（EventId）只允许配置一个FaultDuration参数，如果配置了多个，则只有第一条正确的会生效。</p>|
+|-|FaultTimeout|故障持续时间超过该值，则按照FaultHandling中定义的故障处理策略进行处理，单位为秒，取值范围为0~600，默认值说明如下。<ul><li>故障ID为81078603的参数面网络故障默认值为20。</li><li>其余故障默认值为0。</li></ul>|
+|-|RecoverTimeout|故障恢复时间超过该值，则上报故障恢复，单位为秒，取值范围为0~86400，默认值说明如下。<ul><li>故障ID为81078603的参数面网络故障默认值为60。</li><li>其余故障默认值为0。</li></ul>|
+|-|FaultHandling|<p>超过故障持续时间后的故障处理策略，支持配置不同级别的故障处理策略。</p><p>超过故障持续时间后的故障处理策略，建议高于故障本身的故障处理策略，否则配置不生效。</p><p>不支持配置ManuallySeparateNPU策略，配置不生效。</p>|
+|注：<ul><li>如果一个故障码同时配置了故障频率（FaultFrequency）和故障超时策略（FaultDuration），该故障码在TimeWindow时间窗口中超时次数达到任务支持的最大次数，则采用以下三者中最严重的等级进行处理。这三者分别为：故障本身的故障处理策略、FaultFrequency和FaultDuration中配置的故障处理策略。</li><li>如果一个故障码同时配置了故障频率和故障超时策略，只有当故障超时后，故障频次才会增加一次。故障超过RecoverTimeout才算恢复，恢复后再次故障超时才能累积下一次的计数。</li><li>故障ID为81078603的网络故障只支持配置为NotHandleFault、PreSeparateNPU或SeparateNPU三种故障处理策略，若配置为其他策略则使用默认配置NotHandleFault。</li><li>当Ascend Device Plugin从26.0.0之前版本升级到26.0.0及之后版本时，若Ascend Device Plugin的ConfigMap中已经包含了ManuallySeparateNPU键值，则其降级的时间窗为faultCustomization.json中最大的ReleaseTimeWindow值，若没有任何故障码配置ReleaseTimeWindow，则ConfigMap已有的ManuallySeparateNPU不降级。</li></ul>|
 
 
 #### （可选）配置芯片故障级别<a name="ZH-CN_TOPIC_0000002479226532"></a>
@@ -4648,7 +3776,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
     >[!NOTE] 说明 
     >同一故障码配置在多个故障级别中，会显示设置成功，但默认按照高等级故障处理。
 
-5.  将故障码80E21007在（NotHandleFaultCodes）中删除，并添加到（RestartNPUCodes）中。
+5.  将故障码80E21007从NotHandleFaultCodes中删除，并添加到RestartNPUCodes中。
 
     ```
     "NotHandleFaultCodes":[ 
@@ -4873,7 +4001,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 
         >[!NOTE] 说明 
         >-   若日志出现“load fault customization from configmap complete”，表示手动配置故障频率操作成功。
-        >-   若日志出现“modify  _xxx_  success”，表示ConfigMap中faultCustomization.json里的_xxx_参数设置成功。
+        >-   若日志出现“modify  _xxx_  success”，表示ConfigMap中faultCustomization.json里的<i>xxx</i>参数设置成功。
         >-   若日志出现“insert fault frequency success”，表示记录了一次频率故障发生时间，在频率窗口内，该卡的该故障记录次数达到频率故障触发次数以后，就会上报频率故障对应的故障级别。
 
 8.  （可选）手动恢复强制隔离的芯片。故障的处理策略为ManuallySeparateNPU时，故障恢复后该芯片也处于隔离状态，需要手动恢复强制隔离的芯片。
@@ -4920,7 +4048,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 针对**总线设备**故障的**不同级别**进行分级处理时，Ascend Device Plugin组件会获取到当前故障的故障码，根据**SwitchFaultCode.json**中故障码配置的故障级别，对故障进行相应处理。SwitchFaultCode.json为系统配置文件，若用户无特殊需求，请勿随意修改。若用户需要修改故障码对应的故障级别，可以通过由faultCode.json和SwitchFaultCode.json创建的**mindx-dl-fault-config**文件实现。
 
 >[!NOTE] 说明 
->只有Atlas A3 训练系列产品存在**总线设备**，该设备的故障码可以查看SwitchFaultCode.json文件**。**
+>只有Atlas A3 训练系列产品存在**总线设备**，该设备的故障码可以查看SwitchFaultCode.json文件。
 
 **SwitchFaultCode.json中的故障级别<a name="section681495612012"></a>**
 
@@ -4951,8 +4079,7 @@ Ascend Device Plugin从驱动获取到故障码后，将根据故障码对设备
 <td class="cellrowborder" valign="top" width="44.81551844815518%" headers="mcps1.2.4.1.2 "><p id="p169108334372"><a name="p169108334372"></a><a name="p169108334372"></a>根据任务YAML中配置的subHealthyStrategy参数取值进行处理，详细请参见<a href="#yaml参数说明">YAML参数说明</a>。</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.036396360363966%" headers="mcps1.2.4.1.3 "><p id="p6792114863712"><a name="p6792114863712"></a><a name="p6792114863712"></a>当芯片出现亚健康故障时，需根据<a href="#任务yaml配置示例">任务YAML配置示例</a>策略进行处理。</p>
-<div class="note" id="note379214817373"><a name="note379214817373"></a><div class="notebody"><p id="p117921248133718"><a name="p117921248133718"></a><a name="p117921248133718"></a>如果后续芯片出现其他级别故障，此时</p>
-<p id="p879214843715"><a name="p879214843715"></a><a name="p879214843715"></a>SubHealthFault处理策略不影响其他级别的故障处理。</p>
+<div class="note" id="note379214817373"><a name="note379214817373"></a><div class="notebody"><p id="p117921248133718"><a name="p117921248133718"></a><a name="p117921248133718"></a>如果后续芯片出现其他级别故障，此时SubHealthFault处理策略不影响其他级别的故障处理。</p>
 </div></div>
 </td>
 </tr>
@@ -5080,7 +4207,7 @@ Ascend Device Plugin从驱动获取到故障码后，将根据故障码对设备
     ...
     ```
 
-6.  将故障码在（NotHandleFaultCodes）中删除，并添加到（SeparateFaultCodes）中。
+6.  将故障码从NotHandleFaultCodes中删除，并添加到SeparateFaultCodes中。
 
     ```
     Data
@@ -5213,16 +4340,16 @@ relationFaultCustomization.json、faultDuration.json为系统配置文件，若�
 
 **操作步骤<a name="zh-cn_topic_0000002157048501_section2086912531189"></a>**
 
-_以RelationFaults为故障码81078603，TriggerFault为故障码8C1F8609为例。如果发生了芯片81078603的故障码，需要在后面60s内出现8C1F8609故障时忽略8C1F8609故障，并且隔离发生的81078603故障的任务。可以手动配置关联故障的处理策略为Separate。_
+以RelationFaults为故障码81078603，TriggerFault为故障码8C1F8609为例。如果发生了芯片81078603的故障码，需要在后面60s内出现8C1F8609故障时忽略8C1F8609故障，并且隔离发生的81078603故障的任务。可以手动配置关联故障的处理策略为Separate。
 
 1.  登录环境，进入ClusterD解压后的目录。
-2.  执行**vi relationFaultCustomization.json**命令编辑**配置文件**。
+2.  执行**vi relationFaultCustomization.json**命令编辑配置文件。
 
     ```
     vi relationFaultCustomization.json
     ```
 
-    将2个故障进行关联。修改完成后，按“Esc”键，输入**:wq!**保存并退出。
+    将2个故障进行关联。修改完成后，按“Esc”键，输入:wq!保存并退出。
 
     ```
     …
@@ -5236,13 +4363,13 @@ _以RelationFaults为故障码81078603，TriggerFault为故障码8C1F8609为例�
     …
     ```
 
-3.  执行**vi faultDuration.json命令编辑**配置文件。
+3.  执行**vi faultDuration.json**命令编辑配置文件。
 
     ```
     vi faultDuration.json
     ```
 
-    配置故障类型、故障关联时间等。修改完成后，按“Esc”键，输入**:wq!**保存并退出。
+    配置故障类型、故障关联时间等。修改完成后，按“Esc”键，输入:wq!保存并退出。
 
     ```
     …
@@ -5732,7 +4859,7 @@ metadata:
 
 **适配训练脚本<a name="zh-cn_topic_0000002098654822_section17330181621710"></a>**
 
-1.  在启动脚本（例如train\_start.sh）中，新增以下加粗字段，示例如下。
+1.  在启动脚本（例如train\_start.sh）中，新增以下字段，示例如下。
 
     ```
     ...
@@ -5767,7 +4894,7 @@ metadata:
     2.  在训练脚本（例如train\_start.sh）中增加以下代码，拉起TaskD Manager。在以下代码中：
 
         -   TASKD\_SO\_PATH和export LD\_PRELOAD两条语句的作用是将安装TaskD后libtaskd.so的路径配置到环境变量LD\_PRELOAD中。如果这两条语句配置不成功，可通过手动执行pip show taskd命令获取Location的值拼接上/taskd/python/cython\_api/libs/libtaskd.so，然后通过export设置。
-        -   TASKD\_PROCESS\_ENABLE环境变量配置说明：若任务YAML中“recover-strategy“未配置恢复策略且未使能亚健康热切，需要配置**export TASKD\_PROCESS\_ENABLE="off"**；若“recover-strategy“配置了恢复策略或使能了亚健康热切，则无需配置**export TASKD\_PROCESS\_ENABLE="off"**。
+        -   TASKD\_PROCESS\_ENABLE环境变量配置说明：若任务YAML中“recover-strategy”未配置恢复策略且未使能亚健康热切，需要配置**export TASKD\_PROCESS\_ENABLE="off"**；若“recover-strategy”配置了恢复策略或使能了亚健康热切，则无需配置**export TASKD\_PROCESS\_ENABLE="off"**。
 
         ```
         TASKD_SO_PATH="$(pip show taskd | awk '/^Location: / {print $2"/taskd/python/cython_api/libs/libtaskd.so"}')"
@@ -6030,7 +5157,14 @@ spec:
 ...
 ```
 
-MindSpore场景下，用户需修改模型参数配置YAML。打开QWEN3\_for\_MS\_code/configs/qwen3/pretrain\_qwen3\_32b\_4k.yaml文件，在代码中增加以下加粗字段。
+MindSpore场景下，用户需修改模型参数配置YAML。打开QWEN3\_for\_MS\_code/configs/qwen3/pretrain\_qwen3\_32b\_4k.yaml文件，在代码中增加以下字段。
+
+```
+  ascend_config:
+    hccl_watchdog: False
+```
+
+增加位置如下：
 
 ```
 # mindspore context init config
@@ -6099,14 +5233,14 @@ context:
     ```
         其中，--max_restarts表示配置容器内最大允许触发的故障次数，取值为整数。超出次数后PyTorch训练进程会直接退出训练，不配置该参数时默认为32767次。
 
-    -   MindSpeed场景下，用户需修改训练启动脚本train\_start.sh，在代码中增加如下加粗字段，示例如下。
+    -   MindSpeed场景下，用户需修改训练启动脚本train\_start.sh，在代码中增加如下字段，示例如下。
 
         ```
         export HCCL_OP_RETRY_ENABLE="L0:0, L1:1, L2:1"   # 开启HCCL算子的重执行特性（算子级在线恢复）。重执行是指当执行通信算子时报SDMA或者RDMA CQE类型的错误，HCCL会尝试重新执行此通信算子。
         export HCCL_ASYNC_ERROR_HANDLING=0
         ```
 
-    -   MindFormers场景下，用户需修改训练启动脚本msrun\_launcher.sh文件，在代码中增加如下加粗字段，示例如下。
+    -   MindFormers场景下，用户需修改训练启动脚本msrun\_launcher.sh文件，在代码中增加如下字段，示例如下。
 
         ```
         export MS_ENABLE_TFT='{UCE:1, HCCE:1}'     # 分别开启片上内存故障进程级在线恢复和网络故障进程级在线恢复
@@ -6123,7 +5257,7 @@ context:
 
 **配置环境变量<a name="section12610013287"></a>**
 
-使用算子级在线恢复前，用户需在启动训练的脚本中配置环境变量HCCL\_OP\_RETRY\_ENABLE和HCCL\_OP\_RETRY\_PARAMS。关于该环境变量的详细说明请参见《CANN 环境变量参考》。配置示例如下。
+使用算子级在线恢复前，用户需在启动训练的脚本中配置环境变量HCCL\_OP\_RETRY\_ENABLE和HCCL\_OP\_RETRY\_PARAMS。关于该环境变量的详细说明请参见《<a href="https://www.hiascend.com/document/detail/zh/canncommercial/850/maintenref/envvar/envref_07_0001.html">CANN 环境变量参考</a>》。配置示例如下。
 
 ```
 export HCCL_OP_RETRY_ENABLE="L0:0, L1:1, L2:1"     # 是否开启HCCL算子的重执行特性
@@ -6179,7 +5313,7 @@ export HCCL_OP_RETRY_PARAMS="MaxCnt:3, HoldTime:5000, IntervalTime:1000"    # �
 
     2.  拉起TaskD  Worker。
 
-        修改QWEN3\_for\_PyTorch\_2.7\_code/mindspeed\_llm/training/training.py文件，在代码中增加如下加粗字段。
+        修改QWEN3\_for\_PyTorch\_2.7\_code/mindspeed\_llm/training/training.py文件，增加从import torch.distributed as dist到start_taskd_worker()这段代码。
 
         ```
         def pretrain(train_valid_test_dataset_provider,
@@ -6209,14 +5343,13 @@ export HCCL_OP_RETRY_PARAMS="MaxCnt:3, HoldTime:5000, IntervalTime:1000"    # �
     >export LD_PRELOAD=/usr/local/Ascend/cann/lib64/libmspti.so:/usr/local/lib/python3.10/dist-packages/taskd/python/cython_api/libs/libtaskd.so
     >```
     >-   libmspti.so：该so由MindStudio提供，集成在CANN包内。当使用默认安装路径时，路径为：/usr/local/Ascend/cann/lib64/libmspti.so。
-    >-   libtaskd.so：该so由TaskD组件提供，安装该whl包后，路径为：  TaskD所在路径/taskd/python/cython\_api/libs/libtaskd.so。
-    >    TaskD所在路径可通过以下命令进行查询。回显中的Location字段即为TaskD所在路径。
-    >    ```
-    >    pip show taskd
-    >    ```
+    >-   libtaskd.so：该so由TaskD组件提供，安装该whl包后，路径为：TaskD所在路径/taskd/python/cython\_api/libs/libtaskd.so。TaskD所在路径可通过以下命令进行查询。回显中的Location字段即为TaskD所在路径。
+    >     ```
+    >     pip show taskd
+    >     ```
 
 2.  修改训练框架代码。
-    1.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3“目录下的train\_start.sh文件，在管理节点构造成如下的目录结构。
+    1.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3”目录下的train\_start.sh文件，在管理节点构造成如下的目录结构。
 
         ```
         root@ubuntu:/data/atlas_dls/public/code/QWEN3_for_PyTorch_2.7_code/scripts#
@@ -6224,7 +5357,7 @@ export HCCL_OP_RETRY_PARAMS="MaxCnt:3, HoldTime:5000, IntervalTime:1000"    # �
         └── train_start.sh
         ```
 
-    2.  配置训练启动脚本train\_start.sh，在代码中增加如下加粗字段。
+    2.  配置训练启动脚本train\_start.sh，在代码中增加如下字段。
 
         ```
         # 开启HCCL算子的重执行特性。重执行是指当执行通信算子时报SDMA或者RDMA CQE类型的错误，HCCL会尝试重新执行此通信算子。
@@ -6324,7 +5457,7 @@ export HCCL_OP_RETRY_PARAMS="MaxCnt:3, HoldTime:5000, IntervalTime:1000"    # �
             msrun ...
             ```
 
-    2.  拉起TaskD  Worker。修改./mindformers/trainer/base\_trainer.py文件，在代码中增加如下加粗字段。
+    2.  拉起TaskD  Worker。修改./mindformers/trainer/base\_trainer.py文件，增加从try到print("failed to call mindcluster taskd")这段代码。
 
         ```
             def training_process(
@@ -6360,7 +5493,7 @@ export HCCL_OP_RETRY_PARAMS="MaxCnt:3, HoldTime:5000, IntervalTime:1000"    # �
 
 2.  修改训练框架代码，打开借轨开关。
 
-    编辑启动脚本QWEN3\_for\_MS\_code/scripts/msrun\_launcher.sh文件，在代码中增加如下加粗字段。
+    编辑启动脚本QWEN3\_for\_MS\_code/scripts/msrun\_launcher.sh文件，在代码中增加如下字段。
 
     ```
     export MS_ENABLE_TFT='{TTP:1,TSP:1}'           # 开启临终遗言和借轨回切
@@ -6373,11 +5506,10 @@ export HCCL_OP_RETRY_PARAMS="MaxCnt:3, HoldTime:5000, IntervalTime:1000"    # �
     >export LD_PRELOAD=/usr/local/Ascend/cann/lib64/libmspti.so:/usr/local/python3.10.5/lib/python3.10/site-packages/taskd/python/cython_api/libs/libtaskd.so
     >```
     >-   libmspti.so：该so由MindStudio提供，集成在CANN包内。当使用默认安装路径时，路径为：/usr/local/Ascend/cann/lib64/libmspti.so。
-    >-   libtaskd.so：该so由TaskD组件提供，安装该whl包后，路径为：  TaskD所在路径/taskd/python/cython\_api/libs/libtaskd.so。
-    >    TaskD所在路径可通过以下命令进行查询。回显中的Location字段即为TaskD所在路径。
-    >    ```
-    >    pip show taskd
-    >    ```
+    >-   libtaskd.so：该so由TaskD组件提供，安装该whl包后，路径为：  TaskD所在路径/taskd/python/cython\_api/libs/libtaskd.so。TaskD所在路径可通过以下命令进行查询。回显中的Location字段即为TaskD所在路径。
+    >     ```
+    >     pip show taskd
+    >     ```
 
 3.  修改任务YAML。
 
@@ -6449,7 +5581,7 @@ RUN pip3 install $MINDIO_TTP_PKG
 
 **适配训练脚本<a name="section731511818483"></a>**
 
-在启动脚本（例如train\_start.sh）中，新增以下加粗字段，示例如下。
+在启动脚本（例如train\_start.sh）中，新增以下字段，示例如下。
 
 ```
 ...
@@ -6537,7 +5669,7 @@ export MS_ENABLE_TFT='{RSC:1}'      # MindSpore场景下配置此字段开启优
 
     2.  拉起TaskD  Worker。
 
-        修改QWEN3\_for\_PyTorch\_2.7\_code/mindspeed\_llm/training/training.py文件，在代码中增加如下加粗字段。
+        修改QWEN3\_for\_PyTorch\_2.7\_code/mindspeed\_llm/training/training.py文件，增加从import torch.distributed as dist到start_taskd_worker()这段代码。
 
         ```
         def pretrain(train_valid_test_dataset_provider,
@@ -6567,11 +5699,10 @@ export MS_ENABLE_TFT='{RSC:1}'      # MindSpore场景下配置此字段开启优
     >export LD_PRELOAD=/usr/local/Ascend/cann/lib64/libmspti.so:/usr/local/lib/python3.10/dist-packages/taskd/python/cython_api/libs/libtaskd.so
     >```
     >-   libmspti.so：该so由MindStudio提供，集成在CANN包内。当使用默认安装路径时，路径为：/usr/local/Ascend/cann/lib64/libmspti.so。
-    >-   libtaskd.so：该so由TaskD组件提供，安装该whl包后，路径为：  TaskD所在路径/taskd/python/cython\_api/libs/libtaskd.so。
-    >    TaskD所在路径可通过以下命令进行查询。回显中的Location字段即为TaskD所在路径。
-    >    ```
-    >    pip show taskd
-    >    ```
+    >-   libtaskd.so：该so由TaskD组件提供，安装该whl包后，路径为：  TaskD所在路径/taskd/python/cython\_api/libs/libtaskd.so。TaskD所在路径可通过以下命令进行查询。回显中的Location字段即为TaskD所在路径。
+    >     ```
+    >     pip show taskd
+    >     ```
 
 2.  修改任务YAML。
 
@@ -6665,7 +5796,7 @@ export MS_ENABLE_TFT='{RSC:1}'      # MindSpore场景下配置此字段开启优
             msrun ...
             ```
 
-    2.  拉起TaskD  Worker。修改./mindformers/trainer/base\_trainer.py文件，在代码中增加如下加粗字段。
+    2.  拉起TaskD  Worker。修改./mindformers/trainer/base\_trainer.py文件，增加从try到print("failed to call mindcluster taskd")这段代码。
 
         ```
             def training_process(
@@ -6701,7 +5832,7 @@ export MS_ENABLE_TFT='{RSC:1}'      # MindSpore场景下配置此字段开启优
 
 2.  修改训练框架代码，打开在线压测开关。
 
-    编辑启动脚本QWEN3\_for\_MS\_code/scripts/msrun\_launcher.sh文件，在代码中增加如下加粗字段。
+    编辑启动脚本QWEN3\_for\_MS\_code/scripts/msrun\_launcher.sh文件，在代码中增加如下字段。
 
     ```
     export MS_ENABLE_TFT='{TTP:1,TSP:1}'           # 开启临终遗言和在线压测
@@ -6713,11 +5844,10 @@ export MS_ENABLE_TFT='{RSC:1}'      # MindSpore场景下配置此字段开启优
     >export LD_PRELOAD=/usr/local/Ascend/cann/lib64/libmspti.so:/usr/local/python3.10.5/lib/python3.10/site-packages/taskd/python/cython_api/libs/libtaskd.so
     >```
     >-   libmspti.so：该so由MindStudio提供，集成在CANN包内。当使用默认安装路径时，路径为：/usr/local/Ascend/cann/lib64/libmspti.so。
-    >-   libtaskd.so：该so由TaskD组件提供，安装该whl包后，路径为：  TaskD所在路径/taskd/python/cython\_api/libs/libtaskd.so。
-    >    TaskD所在路径可通过以下命令进行查询。回显中的Location字段即为TaskD所在路径。
-    >    ```
-    >    pip show taskd
-    >    ```
+    >-   libtaskd.so：该so由TaskD组件提供，安装该whl包后，路径为：  TaskD所在路径/taskd/python/cython\_api/libs/libtaskd.so。TaskD所在路径可通过以下命令进行查询。回显中的Location字段即为TaskD所在路径。
+    >     ```
+    >     pip show taskd
+    >     ```
 
 3.  修改任务YAML。
 
@@ -6863,9 +5993,9 @@ metadata:
     >-   libmspti.so：该so由MindStudio提供，集成在CANN包内。当使用默认安装路径时，路径为：/usr/local/Ascend/cann/lib64/libmspti.so。
     >-   libtaskd.so：该so由TaskD组件提供，安装该whl包后，路径为：TaskD所在路径/taskd/python/cython\_api/libs/libtaskd.so。
     >    TaskD所在路径可通过以下命令进行查询。回显中的Location字段即为TaskD所在路径。
-    >    ```
-    >    pip show taskd
-    >    ```
+    >     ```
+    >     pip show taskd
+    >     ```
 
 
 ### 配置弹性训练<a name="ZH-CN_TOPIC_0000002511346471"></a>
@@ -6967,7 +6097,7 @@ metadata:
 
 3.  修改训练框架代码。
 
-    进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3“目录下的train\_start.sh文件，在管理节点构造成如下的目录结构。
+    进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3”目录下的train\_start.sh文件，在管理节点构造成如下的目录结构。
 
     ```
     root@ubuntu:/data/atlas_dls/public/code/QWEN3_for_PyTorch_2.7_code/scripts#
@@ -7355,7 +6485,7 @@ metadata:
 
 从存储加载CKPT可基于AI框架提供的加载接口进行加载，用户需要传入需要加载的文件路径到AI框架中。以MindSpeed-LLM框架为例，用户如果需要配置从存储加载CKPT功能，可参考以下示例。
 
-在任务YAML中，新增以下加粗字段，开启存储CKPT加载。其中“--load“是训练进程恢复的统一开关，打开后训练进程恢复才生效。
+在任务YAML中，新增--load /data/ckpt/XXX \字段，开启存储CKPT加载。其中“--load”是训练进程恢复的统一开关，打开后训练进程恢复才生效。
 
 ```
 ...
@@ -7512,9 +6642,9 @@ spec:
 >-   libmspti.so：该so由MindStudio提供，集成在CANN包内。当使用默认安装路径时，路径为：/usr/local/Ascend/cann/lib64/libmspti.so。
 >-   libtaskd.so：该so由TaskD组件提供，安装该whl包后，路径为：TaskD所在路径/taskd/python/cython\_api/libs/libtaskd.so。
 >    TaskD所在路径可通过以下命令进行查询。回显中的Location字段即为TaskD所在路径。
->    ```
->    pip show taskd
->    ```
+>     ```
+>     pip show taskd
+>     ```
 
 
 ### 配置参数面传参恢复<a name="ZH-CN_TOPIC_0000002479386502"></a>
@@ -7576,11 +6706,11 @@ spec:
 
 #### 恢复时间优化（PyTorch）<a name="ZH-CN_TOPIC_0000002479386516"></a>
 
-本章节介绍在PyTorch框架上使用断点续训特性时，用户可以选择使用的缩短断点续训时间的相关功能，包括[故障检测时间优化](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_section195202179141)、[集合通信初始化时间优化](#zh-cn_topic_0000002163883997_section725312412292)、[训练回滚及加载CheckPoint时间优化](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_section71731855173720)和[算子编译时间优化](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_section14599171031417)。
+本章节介绍在PyTorch框架上使用断点续训特性时，用户可以选择使用的缩短断点续训时间的相关功能，包括[故障检测时间优化](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_section195202179141)、[集合通信初始化时间优化](#zh-cn_topic_0000002163883997_section725312412292)、[训练回滚及加载Checkpoint时间优化](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_section71731855173720)和[算子编译时间优化](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_section14599171031417)。
 
 **故障检测时间优化<a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_section195202179141"></a>**
 
-由于集群中出现的参数面网络故障不一定会影响训练任务，因此集群调度组件不会强制中断任务；当参数面网络故障影响训练任务时，会触发集合通信的网络超时等待机制，在等待时间（通常默认为30分钟）后，集群调度组件才能感知到该故障，从而触发断点续训。针对该问题，PyTorch  Adapter插件（torch\_npu）提供**watchdog故障检测**功能，可用于检测训练任务是否受到影响，缩短故障检测时间，该功能的详细说明请参考[表1](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table4822175901415)。
+由于集群中出现的参数面网络故障不一定会影响训练任务，因此集群调度组件不会强制中断任务；当参数面网络故障影响训练任务时，会触发集合通信的网络超时等待机制，在等待时间（默认为30分钟）后，集群调度组件才能感知到该故障，从而触发断点续训。针对该问题，PyTorch  Adapter插件（torch\_npu）提供**watchdog故障检测**功能，可用于检测训练任务是否受到影响，缩短故障检测时间，该功能的详细说明请参考[表1](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table4822175901415)。
 
 **表 1** watchdog故障检测功能说明
 
@@ -7719,28 +6849,28 @@ Parallel Store多线程建链优化：PyTorch框架创建通信组时，使用TC
            volumes:
            - name: ranktable
              hostPath:
-               path: /user/mindx-dl/ranktable/任务运行的命名空间.任务名称  # 宿主机目录下hccl.json文件的实际路径</pre>
+               path: /user/mindx-dl/ranktable/任务运行的命名空间.任务名称  # 宿主机目录下hccl.json文件的实际路径
     </li></ol>
     </td>
     </tr>
     </tbody>
     </table>
 
-**训练回滚及加载CheckPoint时间优化<a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_section71731855173720"></a>**
+**训练回滚及加载Checkpoint时间优化<a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_section71731855173720"></a>**
 
--   异步保存CheckPoint：训练任务会定期保存CheckPoint文件，用于保存参数信息，故障恢复需要从上一次保存的CheckPoint回滚恢复训练。由于每次保存CheckPoint文件均会浪费一定的训练时间，为了保证训练效率，保存CheckPoint的时间间隔通常较大，而保存间隔越大，每次故障时训练回滚浪费的时间就会越长。针对该问题，集群调度组件支持通过MindIO ACP异步保存CheckPoint，详细说明请参考[表5](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table5173115519372)。
+-   异步保存Checkpoint：训练任务会定期保存Checkpoint文件，用于保存参数信息，故障恢复需要从上一次保存的Checkpoint回滚恢复训练。由于每次保存Checkpoint文件均会浪费一定的训练时间，为了保证训练效率，保存Checkpoint的时间间隔通常较大，而保存间隔越大，每次故障时训练回滚浪费的时间就会越长。针对该问题，集群调度组件支持通过MindIO ACP异步保存Checkpoint，详细说明请参考[表5](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table5173115519372)。
 
-    **表 5**  异步保存CheckPoint功能说明
+    **表 5**  异步保存Checkpoint功能说明
 
     <a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table5173115519372"></a>
     <table><tbody><tr id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_row717435514373"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p31749558370"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p31749558370"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p31749558370"></a>功能名称</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1417445523712"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1417445523712"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1417445523712"></a><span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph197701281571"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph197701281571"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph197701281571"></a>MindIO ACP</span>异步保存CheckPoint。</p>
+    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1417445523712"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1417445523712"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1417445523712"></a><span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph197701281571"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph197701281571"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph197701281571"></a>MindIO ACP</span>异步保存Checkpoint。</p>
     </td>
     </tr>
     <tr id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_row10174115583714"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.2.1"><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p6174105513720"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p6174105513720"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p6174105513720"></a>功能特点</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.2.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1017415503717"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1017415503717"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1017415503717"></a>从NPU中获取CheckPoint后，异步写入存储中，降低每次保存CheckPoint的训练损失和保存周期，从而降低训练回滚时间。</p>
+    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.2.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1017415503717"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1017415503717"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1017415503717"></a>从NPU中获取Checkpoint后，异步写入存储中，降低每次保存Checkpoint的训练损失和保存周期，从而降低训练回滚时间。</p>
     </td>
     </tr>
     <tr id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_row6174655153715"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.3.1"><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1174115513711"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1174115513711"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1174115513711"></a>使用说明</p>
@@ -7750,25 +6880,25 @@ Parallel Store多线程建链优化：PyTorch框架创建通信组时，使用TC
     </tr>
     <tr id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_row171741155133719"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.4.1"><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p131751155143719"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p131751155143719"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p131751155143719"></a>关键操作</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p14233123161113"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p14233123161113"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p14233123161113"></a>安装和使用<span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph7901201365813"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph7901201365813"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph7901201365813"></a>MindIO</span>组件，请参考<span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph12306119151316"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph12306119151316"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph12306119151316"></a><a href="../references.md#checkpoint保存与加载优化">CheckPoint保存与加载优化</a></span>。</p>
+    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p14233123161113"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p14233123161113"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p14233123161113"></a>安装和使用<span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph7901201365813"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph7901201365813"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph7901201365813"></a>MindIO</span>组件，请参考<span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph12306119151316"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph12306119151316"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph12306119151316"></a><a href="../references.md#checkpoint保存与加载优化">Checkpoint保存与加载优化</a></span>。</p>
     </td>
     </tr>
     </tbody>
     </table>
 
--   高效恢复CheckPoint：回滚恢复训练时，通常需要从存储中加载保存的CheckPoint，由于CheckPoint数据量较大，直接从存储读取加载CheckPoint的耗时较长。针对该问题，集群调度组件支持通过MindIO ACP进行CheckPoint高效恢复，详细说明请参考[表6](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table1163115196618)。
+-   高效恢复Checkpoint：回滚恢复训练时，通常需要从存储中加载保存的Checkpoint，由于Checkpoint数据量较大，直接从存储读取加载Checkpoint的耗时较长。针对该问题，集群调度组件支持通过MindIO ACP进行Checkpoint高效恢复，详细说明请参考[表6](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table1163115196618)。
 
-    **表 6**  CheckPoint高效恢复功能说明
+    **表 6**  Checkpoint高效恢复功能说明
 
     <a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table1163115196618"></a>
     <table><tbody><tr id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_row763114191366"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1763113190615"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1763113190615"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1763113190615"></a>功能名称</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p8488163331214"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p8488163331214"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p8488163331214"></a><span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph10665545175814"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph10665545175814"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph10665545175814"></a>MindIO</span> CheckPoint高效恢复。</p>
+    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p8488163331214"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p8488163331214"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p8488163331214"></a><span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph10665545175814"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph10665545175814"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph10665545175814"></a>MindIO</span> Checkpoint高效恢复。</p>
     </td>
     </tr>
     <tr id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_row14631191914615"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.2.1"><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p963119191369"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p963119191369"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p963119191369"></a>功能特点</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.2.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p206311198612"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p206311198612"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p206311198612"></a><span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph185951849175817"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph185951849175817"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph185951849175817"></a>MindIO</span>将最新的CheckPoint存储到内存中，故障恢复时可直接从内存中读取CheckPoint，降低CheckPoint读取时间。</p>
+    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.2.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p206311198612"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p206311198612"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p206311198612"></a><span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph185951849175817"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph185951849175817"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph185951849175817"></a>MindIO</span>将最新的Checkpoint存储到内存中，故障恢复时可直接从内存中读取Checkpoint，降低Checkpoint读取时间。</p>
     </td>
     </tr>
     <tr id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_row26321219766"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.3.1"><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p10632619164"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p10632619164"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p10632619164"></a>使用说明</p>
@@ -7778,7 +6908,7 @@ Parallel Store多线程建链优化：PyTorch框架创建通信组时，使用TC
     </tr>
     <tr id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_row9632219868"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.4.1"><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1763218197619"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1763218197619"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1763218197619"></a>关键操作</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1223164710116"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1223164710116"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1223164710116"></a>安装和使用<span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph648515775810"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph648515775810"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph648515775810"></a>MindIO</span>组件，请参考<span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph758864121412"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph758864121412"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph758864121412"></a><a href="../references.md#checkpoint保存与加载优化">CheckPoint保存与加载优化</a></span>。</p>
+    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1223164710116"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1223164710116"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1223164710116"></a>安装和使用<span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph648515775810"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph648515775810"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph648515775810"></a>MindIO</span>组件，请参考<span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph758864121412"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph758864121412"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph758864121412"></a><a href="../references.md#checkpoint保存与加载优化">Checkpoint保存与加载优化</a></span>。</p>
     </td>
     </tr>
     </tbody>
@@ -7850,11 +6980,11 @@ export ASCEND_MAX_OP_CACHE_SIZE=-1    # 使用共享存储时建议开启，可�
 
 #### 恢复时间优化（MindSpore）<a name="ZH-CN_TOPIC_0000002511346499"></a>
 
-断点续训特性在使用MindSpore框架场景时，可以使用以下功能，缩短断点续训整体恢复时间，包括[故障检测时间优化](#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_section517194154019)、[训练回滚及加载CheckPoint时间优化](#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_section2743164217401)和[编译缓存时间优化](#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_section1139444324019)。
+断点续训特性在使用MindSpore框架场景时，可以使用以下功能，缩短断点续训整体恢复时间，包括[故障检测时间优化](#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_section517194154019)、[训练回滚及加载Checkpoint时间优化](#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_section2743164217401)和[编译缓存时间优化](#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_section1139444324019)。
 
 **故障检测时间优化<a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_section517194154019"></a>**
 
-由于集群中出现的参数面网络故障不一定会影响训练任务，因此集群调度组件不会强制中断任务；当参数面网络故障影响训练任务时，会触发集合通信的网络超时等待机制，在等待时间（通常默认为30分钟）后，集群调度组件才能感知到该故障，从而触发断点续训。针对该问题，MindSpore提供**watchdog故障检测**功能，可用于检测训练任务是否受到影响，缩短故障检测时间，该功能的详细说明请参考[表1](#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_table17897155873217)。
+由于集群中出现的参数面网络故障不一定会影响训练任务，因此集群调度组件不会强制中断任务；当参数面网络故障影响训练任务时，会触发集合通信的网络超时等待机制，在等待时间（默认为30分钟）后，集群调度组件才能感知到该故障，从而触发断点续训。针对该问题，MindSpore提供**watchdog故障检测**功能，可用于检测训练任务是否受到影响，缩短故障检测时间，该功能的详细说明请参考[表1](#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_table17897155873217)。
 
 **表 1** watchdog故障检测功能说明
 
@@ -7887,21 +7017,21 @@ context:
 </tbody>
 </table>
 
-**训练回滚及加载CheckPoint时间优化<a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_section2743164217401"></a>**
+**训练回滚及加载Checkpoint时间优化<a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_section2743164217401"></a>**
 
--   异步保存CheckPoint：训练任务会定期保存CheckPoint文件，用于保存参数信息，故障恢复需要从上一次保存的CheckPoint回滚恢复训练。由于每次保存CheckPoint文件均会浪费一定的训练时间，为了保证训练效率，保存CheckPoint的时间间隔通常较大，而保存间隔越大，每次故障时训练回滚浪费的时间就会越长。针对该问题，集群调度组件支持通过MindIO ACP异步保存CheckPoint，详细说明请参考[表2](#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_table56063271212)。
+-   异步保存Checkpoint：训练任务会定期保存Checkpoint文件，用于保存参数信息，故障恢复需要从上一次保存的Checkpoint回滚恢复训练。由于每次保存Checkpoint文件均会浪费一定的训练时间，为了保证训练效率，保存Checkpoint的时间间隔通常较大，而保存间隔越大，每次故障时训练回滚浪费的时间就会越长。针对该问题，集群调度组件支持通过MindIO ACP异步保存Checkpoint，详细说明请参考[表2](#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_table56063271212)。
 
-    **表 2**  异步保存CheckPoint功能说明
+    **表 2**  异步保存Checkpoint功能说明
 
     <a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_table56063271212"></a>
     <table><tbody><tr id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_row4606162713214"><th class="firstcol" valign="top" width="19.98%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p1960610272217"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p1960610272217"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p1960610272217"></a>功能名称</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p76068273210"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p76068273210"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p76068273210"></a><span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph036712110595"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph036712110595"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph036712110595"></a>MindIO ACP</span>异步保存CheckPoint。</p>
+    <td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p76068273210"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p76068273210"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p76068273210"></a><span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph036712110595"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph036712110595"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph036712110595"></a>MindIO ACP</span>异步保存Checkpoint。</p>
     </td>
     </tr>
     <tr id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_row260619272216"><th class="firstcol" valign="top" width="19.98%" id="mcps1.2.3.2.1"><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p12606112716213"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p12606112716213"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p12606112716213"></a>功能特点</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.2.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p146061227102118"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p146061227102118"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p146061227102118"></a>从NPU中获取CheckPoint后，异步写入存储中，降低每次保存CheckPoint的训练损失和保存周期，从而降低训练回滚时间。</p>
+    <td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.2.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p146061227102118"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p146061227102118"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p146061227102118"></a>从NPU中获取Checkpoint后，异步写入存储中，降低每次保存Checkpoint的训练损失和保存周期，从而降低训练回滚时间。</p>
     </td>
     </tr>
     <tr id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_row126061827152113"><th class="firstcol" valign="top" width="19.98%" id="mcps1.2.3.3.1"><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p2060672782119"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p2060672782119"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p2060672782119"></a>使用说明</p>
@@ -7911,25 +7041,25 @@ context:
     </tr>
     <tr id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_row136069278219"><th class="firstcol" valign="top" width="19.98%" id="mcps1.2.3.4.1"><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p5606527102113"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p5606527102113"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p5606527102113"></a>关键操作</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18606182742112"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18606182742112"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18606182742112"></a>安装和使用<span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph9523194885915"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph9523194885915"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph9523194885915"></a>MindIO</span>组件，请参考<span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph12306119151316"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph12306119151316"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph12306119151316"></a><a href="../references.md#checkpoint保存与加载优化">CheckPoint保存与加载优化</a></span>。</p>
+    <td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18606182742112"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18606182742112"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18606182742112"></a>安装和使用<span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph9523194885915"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph9523194885915"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph9523194885915"></a>MindIO</span>组件，请参考<span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph12306119151316"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph12306119151316"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph12306119151316"></a><a href="../references.md#checkpoint保存与加载优化">Checkpoint保存与加载优化</a></span>。</p>
     </td>
     </tr>
     </tbody>
     </table>
 
--   高效恢复CheckPoint：回滚恢复训练时，通常需要从存储中加载保存的CheckPoint，由于CheckPoint数据量较大，直接从存储读取加载CheckPoint的耗时较长。针对该问题，集群调度组件支持通过MindIO ACP进行CheckPoint高效恢复，详细说明请参考[表3](#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_table66066274216)。
+-   高效恢复Checkpoint：回滚恢复训练时，通常需要从存储中加载保存的Checkpoint，由于Checkpoint数据量较大，直接从存储读取加载Checkpoint的耗时较长。针对该问题，集群调度组件支持通过MindIO ACP进行Checkpoint高效恢复，详细说明请参考[表3](#zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_table66066274216)。
 
-    **表 3**  CheckPoint高效恢复功能说明
+    **表 3**  Checkpoint高效恢复功能说明
 
     <a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_table66066274216"></a>
     <table><tbody><tr id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_row106071271216"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p6607327132112"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p6607327132112"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p6607327132112"></a>功能名称</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p76071727152117"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p76071727152117"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p76071727152117"></a><span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph141313012210"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph141313012210"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph141313012210"></a>MindIO</span> CheckPoint高效恢复。</p>
+    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p76071727152117"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p76071727152117"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p76071727152117"></a><span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph141313012210"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph141313012210"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph141313012210"></a>MindIO</span> Checkpoint高效恢复。</p>
     </td>
     </tr>
     <tr id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_row360715276216"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.2.1"><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p760712772111"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p760712772111"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p760712772111"></a>功能特点</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.2.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p9607627182111"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p9607627182111"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p9607627182111"></a>将最新的CheckPoint存储到内存中，故障恢复时可直接从内存中读取CheckPoint，降低CheckPoint读取时间。</p>
+    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.2.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p9607627182111"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p9607627182111"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p9607627182111"></a>将最新的Checkpoint存储到内存中，故障恢复时可直接从内存中读取Checkpoint，降低Checkpoint读取时间。</p>
     </td>
     </tr>
     <tr id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_row1860772716217"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.3.1"><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p1760715273215"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p1760715273215"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p1760715273215"></a>使用说明</p>
@@ -7939,7 +7069,7 @@ context:
     </tr>
     <tr id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_row196071127102110"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.4.1"><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p7607327172119"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p7607327172119"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p7607327172119"></a>关键操作</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"></a>安装和使用<span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"></a>MindIO</span>组件，请参考<span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"></a><a href="../references.md#checkpoint保存与加载优化">CheckPoint保存与加载优化</a></span>。</p>
+    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"></a>安装和使用<span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"></a>MindIO</span>组件，请参考<span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"></a><a href="../references.md#checkpoint保存与加载优化">Checkpoint保存与加载优化</a></span>。</p>
     </td>
     </tr>
     </tbody>
@@ -8037,7 +7167,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 </td>
 <td class="cellrowborder" valign="top" width="24.76247624762476%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001951418201_p5524103317257"><a name="zh-cn_topic_0000001951418201_p5524103317257"></a><a name="zh-cn_topic_0000001951418201_p5524103317257"></a>表明MindIE Motor任务在Ascend Job中的角色，取值包括mindie-ms-controller、mindie-ms-coordinator、mindie-ms-server。</p>
 </td>
-<td class="cellrowborder" valign="top" width="50.1950195019502%" headers="mcps1.2.4.1.3 "><div class="note" id="zh-cn_topic_0000001951418201_note4367125713295"><a name="zh-cn_topic_0000001951418201_note4367125713295"></a><div class="notebody"><a name="ul139591420161415"></a><a name="ul139591420161415"></a><ul id="ul139591420161415"><li>acjob的任务YAML同时包含jobID和app这2个字段时，<span id="zh-cn_topic_0000001951418201_ph1566531814589"><a name="zh-cn_topic_0000001951418201_ph1566531814589"></a><a name="zh-cn_topic_0000001951418201_ph1566531814589"></a>Ascend Operator</span>组件会自动传入环境变量MINDX_TASK_ID、APP_TYPE及MINDX_SERVICE_IP，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见<a href="../appendix.md#环境变量说明">表2</a>。</li><li>该参数仅支持在<span id="ph1493312176292"><a name="ph1493312176292"></a><a name="ph1493312176292"></a>Atlas 800I A3 超节点服务器</span>和<span id="ph1893331752914"><a name="ph1893331752914"></a><a name="ph1893331752914"></a>Atlas 800I A2 推理服务器</span>上使用。</li></ul>
+<td class="cellrowborder" valign="top" width="50.1950195019502%" headers="mcps1.2.4.1.3 "><div class="note" id="zh-cn_topic_0000001951418201_note4367125713295"><a name="zh-cn_topic_0000001951418201_note4367125713295"></a><div class="notebody"><a name="ul139591420161415"></a><a name="ul139591420161415"></a><ul id="ul139591420161415"><li>acjob的任务YAML同时包含jobID和app这2个字段时，<span id="zh-cn_topic_0000001951418201_ph1566531814589"><a name="zh-cn_topic_0000001951418201_ph1566531814589"></a><a name="zh-cn_topic_0000001951418201_ph1566531814589"></a>Ascend Operator</span>组件会自动传入环境变量MINDX_TASK_ID、APP_TYPE及MINDX_SERVICE_IP，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见<a href="../appendix.md#环境变量说明">Ascend Operator注入的训练环境变量</a>。</li><li>该参数仅支持在<span id="ph1493312176292"><a name="ph1493312176292"></a><a name="ph1493312176292"></a>Atlas 800I A3 超节点服务器</span>和<span id="ph1893331752914"><a name="ph1893331752914"></a><a name="ph1893331752914"></a>Atlas 800I A2 推理服务器</span>上使用。</li></ul>
 </div></div>
 </td>
 </tr>
@@ -8336,64 +7466,18 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 **表 2**  huawei.com/schedule\_policy配置说明
 
 <a name="table1120511613153"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002511347099_row192066612155"><th class="cellrowborder" valign="top" width="22.3%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000002511347099_p132062614153"><a name="zh-cn_topic_0000002511347099_p132062614153"></a><a name="zh-cn_topic_0000002511347099_p132062614153"></a>配置</p>
-</th>
-<th class="cellrowborder" valign="top" width="77.7%" id="mcps1.2.3.1.2"><p id="zh-cn_topic_0000002511347099_p5206126181520"><a name="zh-cn_topic_0000002511347099_p5206126181520"></a><a name="zh-cn_topic_0000002511347099_p5206126181520"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002511347099_row201261346162"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p457945418181"><a name="zh-cn_topic_0000002511347099_p457945418181"></a><a name="zh-cn_topic_0000002511347099_p457945418181"></a>chip4-node8</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p7579105411817"><a name="zh-cn_topic_0000002511347099_p7579105411817"></a><a name="zh-cn_topic_0000002511347099_p7579105411817"></a>1个节点8张芯片，每4个芯片形成1个互联环。例如，<span id="zh-cn_topic_0000002511347099_ph18314192319429"><a name="zh-cn_topic_0000002511347099_ph18314192319429"></a><a name="zh-cn_topic_0000002511347099_ph18314192319429"></a>Atlas 800 训练服务器（型号 9000）</span>/<span id="zh-cn_topic_0000002511347099_ph631452384213"><a name="zh-cn_topic_0000002511347099_ph631452384213"></a><a name="zh-cn_topic_0000002511347099_ph631452384213"></a>Atlas 800 训练服务器（型号 9010）</span>芯片的整模块场景 /Atlas 350 推理卡内部共8张卡，每4张卡通过UB扣板连接。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row102574171610"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p205801254151810"><a name="zh-cn_topic_0000002511347099_p205801254151810"></a><a name="zh-cn_topic_0000002511347099_p205801254151810"></a>chip1-node2</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p65801354101816"><a name="zh-cn_topic_0000002511347099_p65801354101816"></a><a name="zh-cn_topic_0000002511347099_p65801354101816"></a>1个节点2张芯片。例如，<span id="zh-cn_topic_0000002511347099_ph97657495514"><a name="zh-cn_topic_0000002511347099_ph97657495514"></a><a name="zh-cn_topic_0000002511347099_ph97657495514"></a>Atlas 300T 训练卡</span>的插卡场景，1张卡最多插1个芯片，1个节点最多插2张卡。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row825811151619"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p17580854201815"><a name="zh-cn_topic_0000002511347099_p17580854201815"></a><a name="zh-cn_topic_0000002511347099_p17580854201815"></a>chip4-node4</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p858019546184"><a name="zh-cn_topic_0000002511347099_p858019546184"></a><a name="zh-cn_topic_0000002511347099_p858019546184"></a>1个节点4张芯片，形成1个互联环。例如，<span id="zh-cn_topic_0000002511347099_ph1165491719811"><a name="zh-cn_topic_0000002511347099_ph1165491719811"></a><a name="zh-cn_topic_0000002511347099_ph1165491719811"></a>Atlas 800 训练服务器（型号 9000）</span>/<span id="zh-cn_topic_0000002511347099_ph15654111712815"><a name="zh-cn_topic_0000002511347099_ph15654111712815"></a><a name="zh-cn_topic_0000002511347099_ph15654111712815"></a>Atlas 800 训练服务器（型号 9010）</span>芯片的半配场景。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p2580654131819"><a name="zh-cn_topic_0000002511347099_p2580654131819"></a><a name="zh-cn_topic_0000002511347099_p2580654131819"></a>chip8-node8</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p85801654181818"><a name="zh-cn_topic_0000002511347099_p85801654181818"></a><a name="zh-cn_topic_0000002511347099_p85801654181818"></a>1个节点8张卡，8张卡都在1个互联环上。例如，<span id="zh-cn_topic_0000002511347099_ph14314162316427"><a name="zh-cn_topic_0000002511347099_ph14314162316427"></a><a name="zh-cn_topic_0000002511347099_ph14314162316427"></a>Atlas 800T A2 训练服务器</span>。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row1820613612158"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p1358111544185"><a name="zh-cn_topic_0000002511347099_p1358111544185"></a><a name="zh-cn_topic_0000002511347099_p1358111544185"></a>chip8-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p9581135461815"><a name="zh-cn_topic_0000002511347099_p9581135461815"></a><a name="zh-cn_topic_0000002511347099_p9581135461815"></a>1个节点16张卡，每8张卡在1个互联环上。例如，<span id="zh-cn_topic_0000002511347099_ph1831422311424"><a name="zh-cn_topic_0000002511347099_ph1831422311424"></a><a name="zh-cn_topic_0000002511347099_ph1831422311424"></a>Atlas 200T A2 Box16 异构子框</span>。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row2020613616154"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p2581854121811"><a name="zh-cn_topic_0000002511347099_p2581854121811"></a><a name="zh-cn_topic_0000002511347099_p2581854121811"></a>chip2-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p758125481813"><a name="zh-cn_topic_0000002511347099_p758125481813"></a><a name="zh-cn_topic_0000002511347099_p758125481813"></a>1个节点16张卡，每2张卡在1个互联环上。例如，<span id="zh-cn_topic_0000002511347099_ph855133261011"><a name="zh-cn_topic_0000002511347099_ph855133261011"></a><a name="zh-cn_topic_0000002511347099_ph855133261011"></a>Atlas 800T A3 超节点服务器</span>。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row22064621511"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p558111549188"><a name="zh-cn_topic_0000002511347099_p558111549188"></a><a name="zh-cn_topic_0000002511347099_p558111549188"></a>chip2-node16-sp</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p258115548187"><a name="zh-cn_topic_0000002511347099_p258115548187"></a><a name="zh-cn_topic_0000002511347099_p258115548187"></a>1个节点16张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，<span id="zh-cn_topic_0000002511347099_ph1990844161011"><a name="zh-cn_topic_0000002511347099_ph1990844161011"></a><a name="zh-cn_topic_0000002511347099_ph1990844161011"></a>Atlas 900 A3 SuperPoD 超节点</span>。</p>
-</td>
-</tr>
-<tr id="row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p2580654131819"><a name="p2580654131819"></a><a name="p2580654131819"></a>chip4-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p85801654181818"><a name="p85801654181818"></a><a name="p85801654181818"></a>1个节点16张卡，每4张卡都在1个互联环上。例如，<span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 350 推理卡内部共16张卡，每4张卡通过UB扣板连接</span>。</p>
-</td>
-</tr>
-<tr id="row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p2580654131819"><a name="p2580654131819"></a><a name="p2580654131819"></a>chip1-node8</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p85801654181818"><a name="p85801654181818"></a><a name="p85801654181818"></a>1个节点8张卡，每张卡之间无互联。例如，<span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 350 推理卡内部共8张卡，每张卡之间无互联</span>。</p>
-</td>
-</tr>
-<tr id="row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p2580654131819"><a name="p2580654131819"></a><a name="p2580654131819"></a>chip1-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p85801654181818"><a name="p85801654181818"></a><a name="p85801654181818"></a>1个节点16张卡，每张卡之间无互联。例如，<span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 350 推理卡内部共16张卡，每张卡之间无互联</span>。</p>
-</td>
-</tr>
-</tbody>
-</table>
+|配置|说明|
+|--|--|
+|chip4-node8|1个节点8张芯片，每4个芯片形成1个互联环。例如，Atlas 800 训练服务器（型号 9000）/Atlas 800 训练服务器（型号 9010）芯片的整模块场景/Atlas 350 标卡共8张卡，每4张卡通过UB扣板连接。|
+|chip1-node2|1个节点2张芯片。例如，Atlas 300T 训练卡的插卡场景，1张卡最多插1个芯片，1个节点最多插2张卡。|
+|chip4-node4|1个节点4张芯片，形成1个互联环。例如，Atlas 800 训练服务器（型号 9000）/Atlas 800 训练服务器（型号 9010）芯片的半配场景。|
+|chip8-node8|1个节点8张卡，8张卡都在1个互联环上。例如，Atlas 800T A2 训练服务器。|
+|chip8-node16|1个节点16张卡，每8张卡在1个互联环上。例如，Atlas 200T A2 Box16 异构子框。|
+|chip2-node16|1个节点16张卡，每2张卡在1个互联环上。例如，Atlas 800T A3 超节点服务器。|
+|chip2-node16-sp|1个节点16张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，Atlas 900 A3 SuperPoD 超节点。|
+|chip4-node16|1个节点16张卡，每4张卡都在1个互联环上。例如，Atlas 350 标卡共16张卡，每4张卡通过UB扣板连接。|
+|chip1-node8|1个节点8张卡，每张卡之间无互联。例如，Atlas 350 标卡共8张卡，每张卡之间无互联。|
+|chip1-node16|1个节点16张卡，每张卡之间无互联。例如，Atlas 350 标卡共16张卡，每张卡之间无互联。|
 
 
 ### 任务YAML配置示例<a name="ZH-CN_TOPIC_0000002511346461"></a>
@@ -8407,7 +7491,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 **操作步骤<a name="zh-cn_topic_0000002202737289_zh-cn_topic_0000001951258657_section18181655154219"></a>**
 
 1.  将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
-    -   以a800\_AscendJob\__\{xxx\}_b.yaml为例，在一台Atlas 200T A2 Box16 异构子框节点创建**分布式训练**任务，任务使用2\*4个芯片，修改示例如下。
+    -   以a800\_AscendJob\_<i>\{xxx\}</i>b.yaml为例，在一台Atlas 200T A2 Box16 异构子框节点创建**分布式训练**任务，任务使用2\*4个芯片，修改示例如下。
 
         ```
         apiVersion: mindxdl.gitee.com/v1
@@ -8547,7 +7631,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
                 restartPolicy: Never   # 容器重启策略
         ```
 
-2.  配置MindIO的通信地址。在代码中新增以下加粗内容。
+2.  配置MindIO的通信地址。在代码中新增以下内容。
 
     ```
     ...
@@ -8560,7 +7644,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
                         fieldPath: status.podIP             # 用于MindIO通信，如果不配置此参数会影响训练任务的正常拉起。
     ```
 
-3.  （可选）如果开启了临终遗言，需要在训练YAML中增加临终遗言通信的端口信息，以pytorch\_multinodes\_acjob\__\{xxx\}_b.yaml为例，新增以下加粗内容。
+3.  （可选）如果开启了临终遗言，需要在训练YAML中增加临终遗言通信的端口信息，以pytorch\_multinodes\_acjob\_<i>\{xxx\}</i>b.yaml为例，新增以下内容。
 
     ```
     ...
@@ -8595,7 +7679,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
     ...
     ```
 
-4.  （可选）如果使用临终遗言和进程级恢复，需要在训练YAML中增加临终遗言通信的端口信息和进程级恢复开关等信息，以pytorch\_multinodes\_acjob\__\{xxx\}_b.yaml为例，新增以下加粗内容。
+4.  （可选）如果使用临终遗言和进程级恢复，需要在训练YAML中增加临终遗言通信的端口信息和进程级恢复开关等信息，以pytorch\_multinodes\_acjob\_<i>\{xxx\}</i>b.yaml为例，新增以下内容。
 
     ```
     ...
@@ -8679,7 +7763,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
     ...
     ```
 
-6.  若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu“和“memory“参数和对应的参数值，具体数值请根据实际情况配置。
+6.  若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu”和“memory”参数和对应的参数值，具体数值请根据实际情况配置。
 
     ```
     ...
@@ -8711,7 +7795,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
                 mountPath: /job/output                    # 容器中训练输出路径        
     ```
 
-8.  **（可选）**如下所示，YAML中训练命令**bash train\_start.sh**后跟的三个参数依次为容器内训练代码目录、输出目录（其中包括生成日志重定向文件以及TensorFlow框架模型文件）、启动脚本相对代码目录的路径（PyTorch命令参数不涉及启动脚本）。之后的以“--”开头的参数为训练脚本需要的参数。单机和分布式训练脚本、脚本参数可参考模型脚本来源处的模型说明修改。
+8.  （可选）如下所示，YAML中训练命令**bash train\_start.sh**后跟的三个参数依次为容器内训练代码目录、输出目录（其中包括生成日志重定向文件以及TensorFlow框架模型文件）、启动脚本相对代码目录的路径（PyTorch命令参数不涉及启动脚本）。之后的以“--”开头的参数为训练脚本需要的参数。单机和分布式训练脚本、脚本参数可参考模型脚本来源处的模型说明修改。
 
     >[!NOTE] 说明 
     >使用**优雅容错模式**可跳过该步骤。
@@ -8736,7 +7820,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
         ...
         ```
 
-    -   使用**MindSpore架构**的模型**，**包括ResNet50模型和Pangu\_alpha模型需要跳过此步骤。
+    -   使用**MindSpore架构**的模型，包括ResNet50模型和Pangu\_alpha模型需要跳过此步骤。
 
 9.  选择存储方式。
     -   （可选）NFS场景需要指定NFS服务器地址、训练数据集路径、脚本路径和训练输出路径，请根据实际修改。如果不使用NFS请根据K8s相关指导自行修改。
@@ -8756,7 +7840,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
                   - name: output
                     mountPath: /job/output                    # 容器中训练输出路径
         ...
-                   # 可选，使用Ascend Operator组件为训练任务生成RankTable文件，需要新增以下加粗字段，设置容器中hccl.json文件保存路径，该路径不可修改。
+                   # 可选，使用Ascend Operator组件为训练任务生成RankTable文件，需要新增以下字段，设置容器中hccl.json文件保存路径，该路径不可修改。
                   - name: ranktable        
                     mountPath: /user/serverid/devindex/config
         ...
@@ -8775,10 +7859,10 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
                     server: 127.0.0.1
                     path: "xxxxxx"           # 设置脚本相关模型的保存路径
         ...
-                   # 可选，使用组件为PyTorch框架生成RankTable文件，需要新增以下加粗字段，设置hccl.json文件保存路径
+                   # 可选，使用组件为PyTorch框架生成RankTable文件，需要新增以下字段，设置hccl.json文件保存路径
                 - name: ranktable         #请勿修改此参数的默认值，Ascend Operator会用于检查是否开启文件挂载hccl.json。
                   hostPath:                    #请使用hostpath挂载或NFS挂载
-                    path: /user/mindx-dl/ranktable/default.default-test-pytorch   # 共享存储或者本地存储路径，/user/mindx-dl/ranktable/为前缀路径，必须和[Ascend Operator挂载的Ranktable根目录](zh-cn_topic_0000002479386414.md#li488612012223)保持一致。default.default-test-pytorch为后缀路径，建议改为:namespace.job-name。
+                    path: /user/mindx-dl/ranktable/default.default-test-pytorch   # 共享存储或者本地存储路径，/user/mindx-dl/ranktable/为前缀路径，必须和Ascend Operator挂载的Ranktable根目录保持一致。default.default-test-pytorch为后缀路径，建议改为:namespace.job-name。
         ...
         ```
 
@@ -8808,7 +7892,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 
 **（可选）修改训练脚本<a name="zh-cn_topic_0000002202737289_zh-cn_topic_0000001951258657_section1048332432310"></a>**
 
-如果开启了graceExit策略，需修改任务YAML，配置故障恢复策略为“dump“，确保TaskD和ClusterD可以正常使用。
+如果开启了graceExit策略，需修改任务YAML，配置故障恢复策略为“dump”，确保TaskD和ClusterD可以正常使用。
 
 ```
 ...  
@@ -8834,7 +7918,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 
 只支持以容器化方式启动Ascend Device Plugin。
 
-1.  根据所使用的故障处理模式，修改Ascend Device Plugin组件的启动YAML，修改如下所示加粗部分。
+1.  根据所使用的故障处理模式，修改Ascend Device Plugin组件的启动YAML，修改如下所示内容。
     1.  重调度模式
 
         >[!NOTE] 说明 
@@ -8866,11 +7950,11 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
         ...
         ```
 
-    2.  （可选）优雅容错模式：在重调度配置的基础上，新增“-hotReset“字段。
+    2.  （可选）优雅容错模式：在重调度配置的基础上，新增“-hotReset”字段。
 
         >[!NOTE] 说明 
         >-   优雅容错功能已经日落。PyTorch框架在7.2.RC1之后的版本不再支持；MindSpore框架在7.1.RC1之后的版本不再支持。
-        >-   “-hotReset“字段取值为1对应的功能已经日落。
+        >-   “-hotReset”字段取值为1对应的功能已经日落。
 
         ```
         ...
@@ -8952,7 +8036,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 
 [MindSpeed-LLM](https://gitcode.com/Ascend/MindSpeed-LLM/tree/2.3.0)作为昇腾大模型训练框架，旨在为昇腾芯片提供端到端的大语言模型训练方案，包含分布式预训练、分布式指令微调、分布式偏好对齐以及对应的开发工具链。[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/1.0.0/docs/USER_GUIDE.md)包括了仓库拉取、环境搭建与大模型训练等章节，制作MindSpeed-LLM训练框架镜像可以结合本章节和[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/1.0.0/docs/USER_GUIDE.md)。
 
-断点续训可以基于**基础训练镜像**制作，**基础训练镜像**的制作可参考[使用Dockerfile构建容器镜像（PyTorch）](../common_operations.md#使用dockerfile构建容器镜像pytorch)章节进行操作。
+断点续训可以基于基础训练镜像制作，基础训练镜像的制作可参考[使用Dockerfile构建容器镜像（PyTorch）](../common_operations.md#使用dockerfile构建容器镜像pytorch)章节进行操作。
 
 本章节结合基础训练镜像的制作步骤，展示基于Ubuntu 20.04来构建训练镜像。
 
@@ -9007,7 +8091,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p166105316515"><a name="zh-cn_topic_0000002039339945_p166105316515"></a><a name="zh-cn_topic_0000002039339945_p166105316515"></a>混合精度训练是在训练时混合使用单精度（float32）与半精度(float16)数据类型，将两者结合在一起，并使用相同的超参数实现了与float32几乎相同的精度。</p>
 <p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"></a>软件包中的cp3x表示Python版本号，例如x为10表示Python 3.10，具体Python版本以MindSpeed-LLM版本说明为准。</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a>请参见<span id="zh-cn_topic_0000002039339945_ph156792413596"><a name="zh-cn_topic_0000002039339945_ph156792413596"></a><a name="zh-cn_topic_0000002039339945_ph156792413596"></a>《Ascend Extension for PyTorch 软件安装指南》中的“安装APEX模块”章节</span>，根据实际情况编译APEX软件包。</p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a>请参见<span id="zh-cn_topic_0000002039339945_ph156792413596"><a name="zh-cn_topic_0000002039339945_ph156792413596"></a><a name="zh-cn_topic_0000002039339945_ph156792413596"></a>《Ascend Extension for PyTorch 软件安装指南》中的“<a href="https://www.hiascend.com/document/detail/zh/Pytorch/730/configandinstg/instg/docs/installing_apex.md">安装APEX模块</a>”章节</span>，根据实际情况编译APEX软件包。</p>
 <p id="zh-cn_topic_0000002039339945_p1761531257"><a name="zh-cn_topic_0000002039339945_p1761531257"></a><a name="zh-cn_topic_0000002039339945_p1761531257"></a></p>
 </td>
 </tr>
@@ -9284,7 +8368,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
     >[!NOTE] 说明 
     >Python 3.10若无法通过PPA直接安装成功，或者deadsnakes PPA不提供Python 3.10版本的镜像源，则可下载源码手动编译安装。
 
-3.  构建镜像。执行以下命令生成镜像。为了使Dockerfile更加安全，用户可以根据业务在其中定义HEALTHCHECK检查。通过在容器内部运行**HEALTHCHECK** _\[OPTIONS\]_ **CMD**命令来检查容器的运行状况。**注意不要遗漏命令结尾的**“.“。
+3.  构建镜像。执行以下命令生成镜像。为了使Dockerfile更加安全，用户可以根据业务在其中定义HEALTHCHECK检查。通过在容器内部运行**HEALTHCHECK** _\[OPTIONS\]_ **CMD**命令来检查容器的运行状况。**注意不要遗漏命令结尾的**“.”。
 
     ```
     docker build -t mindspeed-dl:v1 .
@@ -9297,7 +8381,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 
 [MindSpore Transformers文档](https://www.mindspore.cn/mindformers/docs/zh-CN/r1.3.0/start/overview.html)的快速入门包括了安装与快速启动章节，可以在镜像制作时参考。
 
-训练镜像可以基于**基础训练镜像，**结合MindFormers**文档自行制作，基础训练镜像**的制作可参考[使用Dockerfile构建容器镜像（MindSpore）](../common_operations.md#使用dockerfile构建容器镜像mindspore)章节进行操作。
+训练镜像可以基于基础训练镜像，结合MindFormers文档自行制作，基础训练镜像的制作可参考[使用Dockerfile构建容器镜像（MindSpore）](../common_operations.md#使用dockerfile构建容器镜像mindspore)章节进行操作。
 
 本章节结合基础训练镜像的制作步骤，展示基于Ubuntu 20.04来构建训练镜像。
 
@@ -9595,7 +8679,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
     ## 最后打包成镜像mindformers-dl:v1
     ```
 
-3.  构建镜像。执行以下命令生成镜像**。**为了使Dockerfile更加安全，用户可以根据业务在其中定义HEALTHCHECK检查。通过在容器内部运行**HEALTHCHECK** _\[OPTIONS\]_ **CMD**命令来检查容器的运行状况。**注意不要遗漏命令结尾的**“.“。
+3.  构建镜像。执行以下命令生成镜像**。**为了使Dockerfile更加安全，用户可以根据业务在其中定义HEALTHCHECK检查。通过在容器内部运行**HEALTHCHECK** _\[OPTIONS\]_ **CMD**命令来检查容器的运行状况。**注意不要遗漏命令结尾的**“.”。
 
     ```
     docker build -t mindformers-dl:v1 .
@@ -9642,7 +8726,7 @@ export LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
 
 #### 流程说明<a name="ZH-CN_TOPIC_0000002511346469"></a>
 
-模型脚本需要适配CKPT之后才可以使用断点续训功能，脚本适配大致流程和逻辑如[图1](#fig88341718121515)所示。整体示例可参考[图1](#fig88341718121515)。
+模型脚本需要适配CKPT之后才可以使用断点续训功能，脚本适配大致流程和逻辑如[图1](#fig88341718121515)所示。
 
 **图 1**  脚本适配流程<a name="fig88341718121515"></a>  
 ![](../../figures/scheduling/脚本适配流程.png "脚本适配流程")
@@ -9661,10 +8745,10 @@ export LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
 >-   断点续训展示的组件代码为开源代码，其中涉及到相关安全说明请参见[安全说明](../appendix.md#安全说明)。
 >-   下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
 >-   模型的参数配置，根据模型仓的模型配置以实际情况来写。若修改不当，可能会引发不可预知的问题。
->-   若训练过程中出现“Failed to bind the IP port. Reason: The IP address and port have been bound already”报错，可以按照如下进行配置，详情请参见《CANN 环境变量参考》中的“HCCL_HOST_SOCKET_PORT_RANGE”章节。
+>-   若训练过程中出现“Failed to bind the IP port. Reason: The IP address and port have been bound already”报错，可以按照如下进行配置，详情请参见《CANN 环境变量参考》中的“<a href="https://www.hiascend.com/document/detail/zh/canncommercial/850/maintenref/envvar/envref_07_0143.html">HCCL_HOST_SOCKET_PORT_RANGE</a>”章节。
 
-       export HCCL_HOST_SOCKET_PORT_RANGE="60000-60050"
-       export HCCL_NPU_SOCKET_PORT_RANGE="61000-61050"
+ >        export HCCL_HOST_SOCKET_PORT_RANGE="60000-60050"
+ >        export HCCL_NPU_SOCKET_PORT_RANGE="61000-61050"
 
 **PyTorch场景适配示例（基于MindSpeed-LLM）<a name="zh-cn_topic_0000002003180016_section412442472511"></a>**
 
@@ -9690,11 +8774,11 @@ export LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
 
 2.  获取模型权重。
 
-    请用户自行从[Qwen3](https://huggingface.co/Qwen/Qwen3-8B/tree/main)下载模型权重放到服务器某目录下，如“/data/atlas\_dls/public/dataset/qwen3-8b-hf“。
+    请用户自行从[Qwen3](https://huggingface.co/Qwen/Qwen3-8B/tree/main)下载模型权重放到服务器某目录下，如“/data/atlas\_dls/public/dataset/qwen3-8b-hf”。
 
 3.  获取数据集。
 
-    请用户自行从[Alpaca](https://huggingface.co/datasets/tatsu-lab/alpaca/blob/main/data/train-00000-of-00001-a09b74b3ef9c3b56.parquet)下载数据集（以Alpaca数据集为例）放到服务器某目录下，如“/data/atlas\_dls/public/dataset/qwen3-alpaca“。
+    请用户自行从[Alpaca](https://huggingface.co/datasets/tatsu-lab/alpaca/blob/main/data/train-00000-of-00001-a09b74b3ef9c3b56.parquet)下载数据集（以Alpaca数据集为例）放到服务器某目录下，如“/data/atlas\_dls/public/dataset/qwen3-alpaca”。
 
 4.  处理数据集。
     1.  启动容器。
@@ -9741,7 +8825,7 @@ export LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
         >export LD_PRELOAD="/usr/local/lib/python3.10/dist-packages/scikit_learn.libs/libgomp-947d5fa1.so.1.0.0"
         >```
 
-5.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3“目录下的train\_start.sh文件，在管理节点构造成如下的目录结构。
+5.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3”目录下的train\_start.sh文件，在管理节点构造成如下的目录结构。
 
     ```
     root@ubuntu:/data/atlas_dls/public/code/QWEN3_for_PyTorch_2.7_code/scripts#
@@ -9842,16 +8926,16 @@ export LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
 
 2.  准备数据集。
 
-    请用户自行从[DagsHub](https://dagshub.com/DagsHub/WIkiText-103/src/main/dataset/tokens/wiki.train.tokens)下载数据集并放到服务器某目录下，如“/data/atlas\_dls/public/code/QWEN3\_for\_MS\_code/dataset“。
+    请用户自行从[DagsHub](https://dagshub.com/DagsHub/WIkiText-103/src/main/dataset/tokens/wiki.train.tokens)下载数据集并放到服务器某目录下，如“/data/atlas\_dls/public/code/QWEN3\_for\_MS\_code/dataset”。
 
 3.  转换数据集。
     1.  下载数据集转换脚本。
 
-        从[数据集转换](https://gitee.com/mindspore/mindformers/issues/ICOKGY)下载数据集转换脚本并放到服务器某目录下，如“/data/atlas\_dls/public/code/QWEN3\_for\_MS\_code/dataset/gen\_wiki\_json.py“。
+        从[数据集转换](https://gitee.com/mindspore/mindformers/issues/ICOKGY)下载数据集转换脚本并放到服务器某目录下，如“/data/atlas\_dls/public/code/QWEN3\_for\_MS\_code/dataset/gen\_wiki\_json.py”。
 
     2.  下载tokenizer文件。
 
-        从[Qwen3-32B](https://huggingface.co/Qwen/Qwen3-32B/tree/main)下载tokenizer文件并放到服务器某目录下，如“/data/atlas\_dls/public/code/QWEN3\_for\_MS\_code/dataset/Qwen3-32B-tokenizer“。
+        从[Qwen3-32B](https://huggingface.co/Qwen/Qwen3-32B/tree/main)下载tokenizer文件并放到服务器某目录下，如“/data/atlas\_dls/public/code/QWEN3\_for\_MS\_code/dataset/Qwen3-32B-tokenizer”。
 
     3.  转换数据集。
         1.  启动容器并挂载所需文件。
@@ -9880,10 +8964,10 @@ export LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
               --tokenizer-dir /data/atlas_dls/public/code/QWEN3_for_MS_code/dataset/Qwen3-32B-tokenizer # 其他规格的模型可以调整为对应的tokenizer路径
             ```
 
-            运行完成后，“/data/atlas\_dls/public/code/QWEN3\_for\_MS\_code/dataset“目录下会生成“wiki103-megatron\_text\_document.bin“和“wiki103-megatron\_text\_document.idx“文件。 填写数据集路径时，需要使用“/data/atlas\_dls/public/code/QWEN3\_for\_MS\_code/dataset/wiki103-megatron\_text\_document“，不需要带后缀名。
+            运行完成后，“/data/atlas\_dls/public/code/QWEN3\_for\_MS\_code/dataset”目录下会生成“wiki103-megatron\_text\_document.bin”和“wiki103-megatron\_text\_document.idx”文件。 填写数据集路径时，需要使用“/data/atlas\_dls/public/code/QWEN3\_for\_MS\_code/dataset/wiki103-megatron\_text\_document”，不需要带后缀名。
 
 4.  获取[训练任务YAML](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/train/resumable-training/fault-tolerance/ranktable/mindspore/Qwen3/yamls/ms_multinodes_acjob_superpod.yaml)和[训练启动脚本](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/train/resumable-training/fault-tolerance/ranktable/mindspore/Qwen3/msrun_launcher.sh)，并进行修改。
-    1.  若训练任务YAML中“hostNetwork“参数值为“false“，则需要将启动脚本中“GLOO\_SOCKET\_IFNAME“的值设置为“eth0“。示例如下：
+    1.  若训练任务YAML中“hostNetwork”参数值为“false”，则需要将启动脚本中“GLOO\_SOCKET\_IFNAME”的值设置为“eth0”。示例如下：
 
         ```
         export GLOO_SOCKET_IFNAME=eth0  #eth0是容器内可以通信的网口
@@ -9938,14 +9022,14 @@ export LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
             ```
 
 5.  修改参数模型配置文件。
-    1.  打开代码目录下“configs/qwen3/pretrain\_qwen3\_32b\_4k.yaml“文件。
+    1.  打开代码目录下“configs/qwen3/pretrain\_qwen3\_32b\_4k.yaml”文件。
 
         ```
         vi configs/qwen3/pretrain_qwen3_32b_4k.yaml
         ```
 
     2.  按“i”进入编辑模式，修改参数模型配置文件。
-        1.  修改如下加粗配置，包括数据集路径、分布式并行参数、模型参数等。以下模型参数仅供参考，如有需要请自行修改。
+        1.  修改如下配置，包括数据集路径、分布式并行参数、模型参数等。以下模型参数仅供参考，如有需要请自行修改。
 
             ```
             train_dataset: &train_dataset
@@ -10029,7 +9113,7 @@ export LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
 
         2.  （可选）使用临终CKPT的场景，在保存CKPT后通过Pod级别重调度加载CKPT，需修改如下配置字段。
 
-            首次拉起必须保证“load\_checkpoint“参数值的目录下存在正常可用的CKPT或该目录为空，否则可能导致训练无法正常拉起。
+            首次拉起必须保证“load\_checkpoint”参数值的目录下存在正常可用的CKPT或该目录为空，否则可能导致训练无法正常拉起。
 
             ```
             resume_training: True 
@@ -10037,7 +9121,7 @@ export LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
             load_checkpoint: './output/checkpoint'
             ```
 
-    3.  按“Esc”键，输入**:wq!**，按“Enter”保存并退出编辑。
+    3.  按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
 
 **强化学习后训练场景适配示例（基于Verl）<a name="section1335017512276"></a>**
 
@@ -10060,17 +9144,15 @@ Job任务部署，每个Worker节点上部署一个Pod，Pod内承载该Ray集�
    mv verl-recipe recipe
    ```
 
-2. 模型获取
+2. 获取模型
 
    - 模型名称：Qwen3-32B
    - 获取链接：[Qwen/Qwen3-32B](https://huggingface.co/Qwen/Qwen3-32B/tree/main)
 
-3. 数据集获取及转换
+3. 获取及转换数据集
 
    - 数据集名称：gsm8k
    - 获取链接：[openai/gsm8k](https://huggingface.co/datasets/openai/gsm8k/tree/main/main)
-
-   操作步骤：
 
    1. 准备数据集目录
 
@@ -10079,7 +9161,7 @@ Job任务部署，每个Worker节点上部署一个Pod，Pod内承载该Ray集�
 
    2. 启动容器
 
-      注：具体挂载路径根据实际情况修改（以verl代码和数据集文件均在`/data`为例）
+      具体挂载路径根据实际情况修改（以verl代码和数据集文件均在`/data`为例）。
 
       ```shell
       docker run -it \
@@ -10157,9 +9239,9 @@ Job任务部署，每个Worker节点上部署一个Pod，Pod内承载该Ray集�
            TEST_FILE="/data/datasets/gsm8k/test.parquet"     # 数据集路径，根据实际情况修改
         ```
 
-5. 准备任务yaml，任务下发
+5. 准备任务YAML，下发任务
 
-      获取[verl-grpo.yaml](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/verl/grpo)（示例默认配置了Pod级和Job级重调度，可根据实际情况自行配置），执行启动命令：
+      获取[verl-grpo.yaml](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/verl/grpo)（示例默认配置了Pod级别和Job级别重调度，可根据实际情况自行配置），执行如下启动命令：
 
     ```shell
        kubectl apply -f verl-grpo.yaml
@@ -10208,7 +9290,7 @@ Job任务部署，每个Worker节点上部署一个Pod，Pod内承载该Ray集�
 </td>
 <td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.5 "><p id="p893610293406"><a name="p893610293406"></a><a name="p893610293406"></a>pytorch_multinodes_acjob_910b.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1987716427402"><a name="p1987716427402"></a><a name="p1987716427402"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3/yamls/pytorch_multinodes_acjob_910b.yaml" target="_blank" rel="noopener noreferrer">pytorch_multinodes_acjob_910b.yaml</a></p>
+<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1987716427402"><a name="p1987716427402"></a><a name="p1987716427402"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v7.3.0/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3/yamls/pytorch_multinodes_acjob_910b.yaml" target="_blank" rel="noopener noreferrer">pytorch_multinodes_acjob_910b.yaml</a></p>
 </td>
 <td class="cellrowborder" valign="top" width="15.413082616523303%" headers="mcps1.2.8.1.7 "><p id="p8936152964011"><a name="p8936152964011"></a><a name="p8936152964011"></a>示例默认使用2*8卡任务</p>
 </td>
@@ -10223,7 +9305,7 @@ Job任务部署，每个Worker节点上部署一个Pod，Pod内承载该Ray集�
 </td>
 <td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.5 "><p id="p1493742904013"><a name="p1493742904013"></a><a name="p1493742904013"></a><span id="ph153229411739"><a name="ph153229411739"></a><a name="ph153229411739"></a>ms_multinodes_acjob_superpod.yaml</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1637217494110"><a name="p1637217494110"></a><a name="p1637217494110"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/train/resumable-training/fault-tolerance/ranktable/mindspore/Qwen3/yamls/ms_multinodes_acjob_superpod.yaml" target="_blank" rel="noopener noreferrer">ms_multinodes_acjob_superpod.yaml</a></p>
+<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1637217494110"><a name="p1637217494110"></a><a name="p1637217494110"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v7.3.0/samples/train/resumable-training/fault-tolerance/ranktable/mindspore/Qwen3/yamls/ms_multinodes_acjob_superpod.yaml" target="_blank" rel="noopener noreferrer">ms_multinodes_acjob_superpod.yaml</a></p>
 </td>
 <td class="cellrowborder" valign="top" width="15.413082616523303%" headers="mcps1.2.8.1.7 "><p id="p79373296408"><a name="p79373296408"></a><a name="p79373296408"></a>示例默认使用2*16卡任务</p>
 </td>
@@ -10253,7 +9335,7 @@ Job任务部署，每个Worker节点上部署一个Pod，Pod内承载该Ray集�
 >  labels: 
 >...
 >  annotations:
->    sp-block: "32"   # 逻辑超节点芯片数量，sp-block字段的详细说明，可以参见[YAML参数说明](YAML参数说明-58.md)。
+>    sp-block: "32"   # 逻辑超节点芯片数量，sp-block字段的详细说明，可以参见YAML参数说明。
 >...
 >```
 
@@ -10323,7 +9405,7 @@ kubectl logs default-test-pytorch-worker-0 -n default -f
 
 **查看是否存在CKPT文件<a name="section979416428371"></a>**
 
-故障恢复功能是通过参考CKPT文件实现的，用户需要查看**存储节点**上是否存在CKPT文件。
+故障恢复功能是通过参考CKPT文件实现的，用户需要查看存储节点上是否存在CKPT文件。
 
 用户可以等待训练任务运行时间超过用户设置的保存CKPT文件的时间后，查看设置的保存CKPT文件的路径下是否存在周期性CKPT文件，操作步骤如下。
 
@@ -10396,7 +9478,7 @@ kubectl logs default-test-pytorch-worker-0 -n default -f
     kubectl logs -n 命名空间名称 Pod名称
     ```
 
-    回显示例如下，表示发生故障时，使用最近保存的第9步的CheckPoint文件恢复，实现训练任务第10个iteration开始继续训练。
+    回显示例如下，表示发生故障时，使用最近保存的第9步的Checkpoint文件恢复，实现训练任务第10个iteration开始继续训练。
 
     ```
     [2025-06-22 14:47:00] iteration       10/    5000 | consumed samples:          640 | elapsed time per iteration (ms): 1932.5 | learning rate: 2.500000E-07 | global batch size:    64 | lm loss: 1.053084E+01 | loss scale: 1.0 | g      rad norm: 56.739 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
@@ -10416,7 +9498,7 @@ kubectl logs default-test-pytorch-worker-0 -n default -f
     ```
 
     >[!NOTE] 说明 
-    >_device\_id_为NPU的ID，可以通过npu-smi info命令查看NPU的ID。
+    >device\_id为NPU的ID，可以通过npu-smi info命令查看NPU的ID。
 
 3.  执行以下命令，查看NPU链路状态。
 
@@ -10444,7 +9526,7 @@ kubectl logs default-test-pytorch-worker-0 -n default -f
     kubectl logs -n 命名空间名称 Pod名称
     ```
 
-    回显示例如下，表示发生故障时，使用最近保存的第9步的CheckPoint文件恢复，实现训练任务第10个iteration开始继续训练。
+    回显示例如下，表示发生故障时，使用最近保存的第9步的Checkpoint文件恢复，实现训练任务第10个iteration开始继续训练。
 
     ```
     [2025-06-22 14:47:00] iteration       10/    5000 | consumed samples:          640 | elapsed time per iteration (ms): 1932.5 | learning rate: 2.500000E-07 | global batch size:    64 | lm loss: 1.053084E+01 | loss scale: 1.0 | g      rad norm: 56.739 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
@@ -10501,7 +9583,7 @@ kubectl logs default-test-pytorch-worker-0 -n default -f
     kubectl logs -n 命名空间名称 Pod名称
     ```
 
-    回显示例如下，表示发生故障时，使用最近保存的第9步的CheckPoint文件恢复，实现训练任务第10个iteration开始继续训练。
+    回显示例如下，表示发生故障时，使用最近保存的第9步的Checkpoint文件恢复，实现训练任务第10个iteration开始继续训练。
 
     ```
     [2025-06-22 14:47:00] iteration       10/    5000 | consumed samples:          640 | elapsed time per iteration (ms): 1932.5 | learning rate: 2.500000E-07 | global batch size:    64 | lm loss: 1.053084E+01 | loss scale: 1.0 | g      rad norm: 56.739 | num zeros: 0 | number of skipped iterations:   0 | number of nan iterations:   0 |
@@ -10540,7 +9622,7 @@ default          default-test-pytorch-worker-0              1/1     Running   0 
 kubectl logs default-test-pytorch-worker-0 -n default -f
 ```
 
-回显如下表示发生故障时，使用最近保存的第9步的CheckPoint文件恢复，实现训练任务第10个iteration开始继续训练。
+回显如下表示发生故障时，使用最近保存的第9步的Checkpoint文件恢复，实现训练任务第10个iteration开始继续训练。
 
 ```
 2025-09-08 11:34:00.400331 warn 1900637 [77840][PYH tft_replica_optimizer.py:659] Replica optimizer increase Memory On Chip Usage by:0.6572 GB!
@@ -10599,10 +9681,10 @@ Events:  <none>
 
 **日志说明<a name="section83075820188"></a>**
 
-重新拉起的训练进程的训练日志在“_训练脚本路径_/newlog“中，具体说明如下。
+重新拉起的训练进程的训练日志在“_训练脚本路径_/newlog”中，具体说明如下。
 
--   QWEN3（PyTorch）训练日志：“/data/atlas\_dls/public/code/QWEN3\_for\_PyTorch\_2.7\_code/alllogs“。
--   QWEN3（MindSpore）训练日志：“/data/atlas\_dls/public/code/QWEN3\_for\_MS\_code/alllogs“。
+-   QWEN3（PyTorch）训练日志：“/data/atlas\_dls/public/code/QWEN3\_for\_PyTorch\_2.7\_code/alllogs”。
+-   QWEN3（MindSpore）训练日志：“/data/atlas\_dls/public/code/QWEN3\_for\_MS\_code/alllogs”。
 
 **操作步骤<a name="section25042117188"></a>**
 

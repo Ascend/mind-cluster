@@ -2499,8 +2499,8 @@ NPU Exporter支持两种安装方式，用户可根据实际情况选择其中�
     启动示例如下：
 
     ```
-    namespace/npu-exporter unchanged
-    networkpolicy.networking.K8s.io/exporter-network-policy unchanged
+    namespace/npu-exporter created
+    networkpolicy.networking.K8s.io/exporter-network-policy created
     daemonset.apps/npu-exporter created
     ```
 
@@ -2623,6 +2623,7 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
         [Install]
         WantedBy=multi-user.target
         ```
+        NPU Exporter默认情况只侦听127.0.0.1，可通过修改的启动参数“-ip”和“npu-exporter.service”文件的“ExecStart”字段修改需要侦听的IP地址。
 
     3.  按“Esc”键，输入:wq!保存并退出。
 
@@ -2649,25 +2650,14 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
 
     3.  按“Esc”键，输入:wq!保存并退出。
 
-7.  NPU Exporter默认情况只侦听127.0.0.1，可通过修改的启动参数“-ip”和“npu-exporter.service”文件的“ExecStart”字段修改需要侦听的IP地址。
-
-    ```
-    ...
-    [Service]
-    ExecStart=/bin/bash -c "/usr/local/bin/npu-exporter -ip=127.0.0.1 -port=8082 -logFile=/var/log/mindx-dl/npu-exporter/npu-exporter.log &"
-    Restart=always
-    RestartSec=2
-    ...
-    ```
-
-8.  若部署节点为Atlas 200I SoC A1 核心板，请依次执行以下命令，在节点上将hwMindX用户加入到HwBaseUser、HwDmUser用户组中。非Atlas 200I SoC A1 核心板用户，可跳过本步骤。
+7.  若部署节点为Atlas 200I SoC A1 核心板，请依次执行以下命令，在节点上将hwMindX用户加入到HwBaseUser、HwDmUser用户组中。非Atlas 200I SoC A1 核心板用户，可跳过本步骤。
 
     ```
     usermod -a -G HwBaseUser hwMindX
     usermod -a -G HwDmUser hwMindX
     ```
 
-9.  依次执行以下命令，启用NPU Exporter服务。
+8.  依次执行以下命令，启用NPU Exporter服务。
 
     ```
     cd /home/ascend-npu-exporter
@@ -2833,11 +2823,11 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
     |device-plugin-910-v*{version}*.yaml|Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件上不使用Volcano的配置文件。|
     |device-plugin-volcano-*v{version}*.yaml|Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件上使用Volcano的配置文件。|
 
-3.  如不修改组件启动参数，可跳过本步骤。否则，根据实际情况修改Ascend Device Plugin的启动参数。启动参数请参见[表3](#table1064314568229)，可执行**./device-plugin** **-h**查看参数说明。
-    -   在Atlas 200I SoC A1 核心板节点上，修改启动脚本“run\_for\_310P\_1usoc.sh“中Ascend Device Plugin的启动参数。修改完后需在所有Atlas 200I SoC A1 核心板节点上重新制作镜像，或者将本节点镜像重新制作后分发到其余所有Atlas 200I SoC A1 核心板节点。
+3.  如不修改组件启动参数，可跳过本步骤。否则，根据实际情况修改Ascend Device Plugin的启动参数。启动参数请参见[表3](#table1064314568229)，可执行<b>./device-plugin -h</b>查看参数说明。
+    -   在Atlas 200I SoC A1 核心板节点上，修改启动脚本“run\_for\_310P\_1usoc.sh”中Ascend Device Plugin的启动参数。修改完后需在所有Atlas 200I SoC A1 核心板节点上重新制作镜像，或者将本节点镜像重新制作后分发到其余所有Atlas 200I SoC A1 核心板节点。
 
         >[!NOTE] 说明 
-        >如果不使用Volcano作为调度器，在启动Ascend Device Plugin的时候，需要修改“run\_for\_310P\_1usoc.sh“中Ascend Device Plugin的启动参数，将“-volcanoType“参数设置为false。
+        >如果不使用Volcano作为调度器，在启动Ascend Device Plugin的时候，需要修改“run\_for\_310P\_1usoc.sh”中Ascend Device Plugin的启动参数，将“-volcanoType”参数设置为false。
 
     -   其他类型节点，修改对应启动YAML文件中Ascend Device Plugin的启动参数。
 
@@ -3066,9 +3056,9 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
 3.  如不修改组件启动参数，可跳过本步骤。否则，请根据实际情况修改对应启动YAML文件中Volcano的启动参数。常用启动参数请参见[表4](#table5305150122116)和[表5](#table203077022111)。
 4.  配置Volcano日志转储。
 
-    安装过程中，Volcano日志将挂载到磁盘空间（“/var/log/mindx-dl“）。默认情况下单日日志写入达到1.8G后，Volcano将清空日志文件。为防止空间被占满，请为Volcano配置日志转储，配置项信息参见[表1](#table1123141112311)，或选择更频繁的日志转储策略，避免日志丢失。
+    安装过程中，Volcano日志将挂载到磁盘空间（“/var/log/mindx-dl”）。默认情况下单日日志写入达到1.8G后，Volcano将清空日志文件。为防止空间被占满，请为Volcano配置日志转储，配置项信息参见[表1](#table1123141112311)，或选择更频繁的日志转储策略，避免日志丢失。
 
-    1.  在管理节点“/etc/logrotate.d“目录下，执行以下命令，创建日志转储配置文件。
+    1.  在管理节点“/etc/logrotate.d”目录下，执行以下命令，创建日志转储配置文件。
 
         ```
         vi /etc/logrotate.d/文件名
@@ -3080,7 +3070,7 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
         vi /etc/logrotate.d/volcano
         ```
 
-        写入以下内容，然后执行**:wq**命令保存。
+        写入以下内容，然后执行<b>:wq</b>命令保存。
 
         ```
         /var/log/mindx-dl/volcano-*/*.log{    
@@ -3171,7 +3161,7 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
     </tbody>
     </table>
 
-5.  （可选）在“volcano-v_\{version\}_.yaml“中，配置Volcano所需的CPU和内存。CPU和内存推荐值可以参见[开源Volcano官方文档](https://support.huaweicloud.com/usermanual-cce/cce_10_0193.html)中volcano-controller和volcano-scheduler表格的建议值。
+5.  （可选）在“volcano-v<i>\{version\}</i>.yaml“中，配置Volcano所需的CPU和内存。CPU和内存推荐值可以参见[开源Volcano官方文档](https://support.huaweicloud.com/usermanual-cce/cce_10_0193.html)中volcano-controller和volcano-scheduler表格的建议值。
 
     ```
     ...
@@ -3211,7 +3201,7 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
     ...
     ```
 
-6.  （可选）调度时间性能调优。支持在“volcano-v_\{version\}_.yaml“中，配置Volcano所使用的插件。请参见[开源Volcano官方文档](https://support.huaweicloud.com/usermanual-cce/cce_10_0193.html)中Volcano高级配置参数说明和支持的Plugins列表的表格说明进行操作。
+6.  （可选）调度时间性能调优。支持在“volcano-v<i>\{version\}</i>.yaml“中，配置Volcano所使用的插件。请参见[开源Volcano官方文档](https://support.huaweicloud.com/usermanual-cce/cce_10_0193.html)中Volcano高级配置参数说明和支持的Plugins列表的表格说明进行操作。
 
     ```
     ...
@@ -3318,7 +3308,7 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
     </tbody>
     </table>
 
-8.  （可选）在“volcano-v_\{version\}_.yaml“中，配置Volcano使用的集群调度组件为用户提供的重调度时删除Pod的模式、虚拟化方式、交换机亲和性调度、是否自维护可用芯片状态等。
+8.  （可选）在“volcano-v<i>\{version\}</i>.yaml“中，配置Volcano使用的集群调度组件为用户提供的重调度时删除Pod的模式、虚拟化方式、交换机亲和性调度、是否自维护可用芯片状态等。
 
     ```
     ...
@@ -3425,7 +3415,7 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
     >-   更多关于开源Volcano的配置，可以参见[开源Volcano官方文档](https://support.huaweicloud.com/usermanual-cce/cce_10_0193.html)进行操作。
     >-   K8s支持使用nodeAffinity字段进行节点亲和性调度，该字段的详细说明请参见[Kubernetes官方文档](https://kubernetes.io/zh-cn/docs/tasks/configure-pod-container/assign-pods-nodes-using-node-affinity/)；Volcano也支持使用该字段，操作指导请参见[调度配置](./common_operations.md#调度配置)章节。
 
-9.  （可选）调度时间性能调优。支持Volcano将单任务（训练的vcjob或acjob任务）的4000或5000个Pod调度到4000或5000个节点上的调度时间优化到5分钟左右，若用户想要使用该调度性能，需要在“volcano-v_\{version\}_.yaml“上做如下修改。
+9.  （可选）调度时间性能调优。支持Volcano将单任务（训练的vcjob或acjob任务）的4000或5000个Pod调度到4000或5000个节点上的调度时间优化到5分钟左右，若用户想要使用该调度性能，需要在“volcano-v<i>\{version\}</i>.yaml”上做如下修改。
  
     -   若要达到5分钟左右的参考时间，需要保证CPU的频率至少为2.60GHz，APIServer时延不超过80毫秒。
     -   如果不使用K8s原生的nodeAffinity和podAntiAffinity进行调度，可以关闭nodeorder插件，进一步减少调度时间。
@@ -3715,16 +3705,16 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
 
 **操作步骤<a name="section7172163412209"></a>**
 
-1.  <a name="li6319161364017"></a>准备部署环境的网络设计LLD文档，将其上传到K8s管理节点的任意目录（以“/home/tor-affinity“为例）。
+1.  <a name="li6319161364017"></a>准备部署环境的网络设计LLD文档，将其上传到K8s管理节点的任意目录（以“/home/tor-affinity”为例）。
 
     >[!NOTE] 说明 
     >LLD文件名需要是lld.xlsx。
 
 2.  获取LLD文档解析脚本。
 
-    进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](./appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。下载“samples/utils“目录中的lld\_to\_cm.py文件，将该文件上传到管理节点[步骤1](#li6319161364017)中的目录下。
+    进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](./appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。下载“samples/utils”目录中的lld\_to\_cm.py文件，将该文件上传到管理节点[步骤1](#li6319161364017)中的目录下。
 
-3.  执行以下命令，启动“lld\_to\_cm.py“脚本。
+3.  执行以下命令，启动“lld\_to\_cm.py”脚本。
 
     ```
     python ./lld_to_cm.py --num 32
@@ -3757,27 +3747,9 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
 **表 1**  YAML参数说明
 
 <a name="table325141716575"></a>
-<table><thead align="left"><tr id="row225117179575"><th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.1"><p id="p199750359270"><a name="p199750359270"></a><a name="p199750359270"></a>参数</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.2"><p id="p99751135152710"><a name="p99751135152710"></a><a name="p99751135152710"></a>取值</p>
-</th>
-<th class="cellrowborder" valign="top" width="33.33333333333333%" id="mcps1.2.4.1.3"><p id="p39754354276"><a name="p39754354276"></a><a name="p39754354276"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row15251817125711"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p8451174482214"><a name="p8451174482214"></a><a name="p8451174482214"></a>(.kind=="AscendJob").metadata.labels.tor-affinity</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><a name="ul27201023195719"></a><a name="ul27201023195719"></a><ul id="ul27201023195719"><li>large-model-schema：大模型任务或填充任务</li><li>normal-schema：普通任务</li><li>null：不使用交换机亲和性调度<div class="note" id="note3720152325712"><a name="note3720152325712"></a><a name="note3720152325712"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p172142315716"><a name="p172142315716"></a><a name="p172142315716"></a>用户需要根据任务副本数，选择任务类型。任务副本数小于4为填充任务。任务副本数大于或等于4为大模型任务。普通任务不限制任务副本数。</p>
-</div></div>
-</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p2721112311575"><a name="p2721112311575"></a><a name="p2721112311575"></a>默认值为null，表示不使用交换机亲和性调度。用户需要根据任务类型进行配置。</p>
-<div class="note" id="note137212239571"><a name="note137212239571"></a><a name="note137212239571"></a><div class="notebody"><a name="ul20721172355715"></a><a name="ul20721172355715"></a><ul id="ul20721172355715"><li>交换机亲和性调度1.0版本支持<span id="ph177211236573"><a name="ph177211236573"></a><a name="ph177211236573"></a>Atlas 训练系列产品</span>和<span id="ph12721223175717"><a name="ph12721223175717"></a><a name="ph12721223175717"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph572182313579"><a name="ph572182313579"></a><a name="ph572182313579"></a>PyTorch</span>和<span id="ph6721152365714"><a name="ph6721152365714"></a><a name="ph6721152365714"></a>MindSpore</span>框架。</li><li>交换机亲和性调度2.0版本支持<span id="ph14721132318576"><a name="ph14721132318576"></a><a name="ph14721132318576"></a><term id="zh-cn_topic_0000001519959665_term57208119917_1"><a name="zh-cn_topic_0000001519959665_term57208119917_1"></a><a name="zh-cn_topic_0000001519959665_term57208119917_1"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph1472119239576"><a name="ph1472119239576"></a><a name="ph1472119239576"></a>PyTorch</span>框架。</li><li>只支持整卡进行交换机亲和性调度，不支持静态vNPU进行交换机亲和性调度。</li></ul>
-</div></div>
-</td>
-</tr>
-</tbody>
-</table>
+|参数|取值|说明|
+|--|--|--|
+|(.kind=="AscendJob").metadata.labels.tor-affinity|<ul><li>large-model-schema：大模型任务或填充任务</li><li>normal-schema：普通任务</li><li>null：不使用交换机亲和性调度<div class="note"><span class="notetitle"> 说明： </span><div class="notebody"><p>用户需要根据任务副本数，选择任务类型。任务副本数小于4为填充任务。任务副本数大于或等于4为大模型任务。普通任务不限制任务副本数。</p></div></div></li></ul>|<p>默认值为null，表示不使用交换机亲和性调度。用户需要根据任务类型进行配置。</p><ul><li>交换机亲和性调度1.0版本支持Atlas 训练系列产品和<term>Atlas A2 训练系列产品</term>；支持PyTorch和MindSpore框架。</li><li>交换机亲和性调度2.0版本支持<term>Atlas A2 训练系列产品</term>；支持PyTorch框架。</li><li>只支持整卡进行交换机亲和性调度，不支持静态vNPU进行交换机亲和性调度。</li></ul>|
 
 #### （可选）集成昇腾插件扩展开源Volcano<a name="ZH-CN_TOPIC_0000002511426365"></a>
 
@@ -3788,7 +3760,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
 
 **操作步骤<a name="section2672154791712"></a>**
 
-1.  依次执行以下命令，在“$GOPATH/src/volcano.sh/“目录下拉取Volcano版本（以v1.7为例）官方开源代码。
+1.  依次执行以下命令，在“$GOPATH/src/volcano.sh/”目录下拉取Volcano版本（以v1.7为例）官方开源代码。
 
     ```
     mkdir -p $GOPATH/src/volcano.sh/
@@ -3796,7 +3768,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
     git clone -b release-1.7 https://github.com/volcano-sh/volcano.git
     ```
 
-2.  将获取的[ascend-for-volcano](https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-for-volcano)源码重命名为ascend-volcano-plugin，并上传至开源Volcano官方开源代码的插件路径下（“_$GOPATH_/src/volcano.sh/volcano/pkg/scheduler/plugins/“）。
+2.  将获取的[ascend-for-volcano](https://gitcode.com/Ascend/mind-cluster/tree/master/component/ascend-for-volcano)源码重命名为ascend-volcano-plugin，并上传至开源Volcano官方开源代码的插件路径下（“_$GOPATH_/src/volcano.sh/volcano/pkg/scheduler/plugins/”）。
 3.  <a name="li627818212613"></a>依次执行以下命令，编译开源Volcano二进制文件和华为NPU调度插件so文件。根据开源代码版本，为build.sh脚本选择对应的参数，如v1.7.0。
 
     ```
@@ -3806,51 +3778,21 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
     ```
 
     >[!NOTE] 说明 
-    >编译出的二进制文件和动态链接库文件在“$GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output“目录下。
+    >编译出的二进制文件和动态链接库文件在“$GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/output”目录下。
 
     编译后的文件列表见[表1](#table5623201371819)。
 
     **表 1**  output路径下的文件
 
     <a name="table5623201371819"></a>
-    <table><thead align="left"><tr id="row762311381817"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="p77442110188"><a name="p77442110188"></a><a name="p77442110188"></a>文件名</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.2"><p id="p197402113183"><a name="p197402113183"></a><a name="p197402113183"></a>说明</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="row17623101318182"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p474112112189"><a name="p474112112189"></a><a name="p474112112189"></a>volcano-npu-<em id="i117417217181"><a name="i117417217181"></a><a name="i117417217181"></a>{version}</em>.so</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p274162114181"><a name="p274162114181"></a><a name="p274162114181"></a>华为NPU调度插件动态链接库</p>
-    </td>
-    </tr>
-    <tr id="row7623171351818"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p107432118188"><a name="p107432118188"></a><a name="p107432118188"></a>Dockerfile-scheduler</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p174821141810"><a name="p174821141810"></a><a name="p174821141810"></a>volcano-scheduler镜像构建文本文件</p>
-    </td>
-    </tr>
-    <tr id="row8623213101817"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p147472161814"><a name="p147472161814"></a><a name="p147472161814"></a>Dockerfile-controller</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p87417219181"><a name="p87417219181"></a><a name="p87417219181"></a>volcano-controller镜像构建文本文件</p>
-    </td>
-    </tr>
-    <tr id="row462481316183"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p574521141810"><a name="p574521141810"></a><a name="p574521141810"></a>volcano-<em id="i374132117184"><a name="i374132117184"></a><a name="i374132117184"></a>v{version}</em>.yaml</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p47420213181"><a name="p47420213181"></a><a name="p47420213181"></a><span id="ph525518226126"><a name="ph525518226126"></a><a name="ph525518226126"></a>Volcano</span>的启动配置文件</p>
-    </td>
-    </tr>
-    <tr id="row462411341815"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p774202191816"><a name="p774202191816"></a><a name="p774202191816"></a>vc-scheduler</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1749211186"><a name="p1749211186"></a><a name="p1749211186"></a>volcano-scheduler组件二进制文件</p>
-    </td>
-    </tr>
-    <tr id="row15624181331820"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p19745213181"><a name="p19745213181"></a><a name="p19745213181"></a>vc-controller-manager</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p77419213180"><a name="p77419213180"></a><a name="p77419213180"></a>volcano-controller组件二进制文件</p>
-    </td>
-    </tr>
-    </tbody>
-    </table>
+    |文件名|说明|
+    |--|--|
+    |volcano-npu-<em>{version}</em>.so|华为NPU调度插件动态链接库|
+    |Dockerfile-scheduler|volcano-scheduler镜像构建文本文件|
+    |Dockerfile-controller|volcano-controller镜像构建文本文件|
+    |volcano-<em>v{version}</em>.yaml|Volcano的启动配置文件|
+    |vc-scheduler|volcano-scheduler组件二进制文件|
+    |vc-controller-manager|volcano-controller组件二进制文件|
 
 4.  选择以下两种方式之一，启动volcano-scheduler组件。
     -   使用集群调度组件提供的启动YAML，启动volcano-scheduler组件。
@@ -3885,7 +3827,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
             ```
 
     -   使用开源Volcano的启动YAML，启动volcano-scheduler组件。
-        1.  将步骤[3](#li627818212613)中编译出的volcano-npu-_\{version\}_.so文件拷贝到开源Volcano的“$GOPATH/src/volcano.sh/volcano“目录下；在开源Volcano的Dockerfile（路径为“$GOPATH/src/volcano.sh/volcano/installer/dockerfile/scheduler/Dockerfile“）中添加如下命令。
+        1.  将步骤[3](#li627818212613)中编译出的volcano-npu-_\{version\}_.so文件拷贝到开源Volcano的“$GOPATH/src/volcano.sh/volcano”目录下；在开源Volcano的Dockerfile（路径为“$GOPATH/src/volcano.sh/volcano/installer/dockerfile/scheduler/Dockerfile”）中添加如下命令。
 
             ```
             FROM golang:1.19.1 AS builder
@@ -3905,7 +3847,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
             docker build --no-cache -t volcanosh/vc-scheduler:v1.7.0 ./ -f installer/dockerfile/scheduler/Dockerfile
             ```
 
-        3.  修改volcano-development.yaml，该文件路径为“$GOPATH/src/volcano.sh/volcano/installer/volcano-development.yaml“。
+        3.  修改volcano-development.yaml，该文件路径为“$GOPATH/src/volcano.sh/volcano/installer/volcano-development.yaml”。
 
             ```
             apiVersion: v1
@@ -3931,7 +3873,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
                    - name: proportion
                    - name: nodeorder
                    - name: binpack
-                configurations:           # 新增以下加粗字段，该字段为Volcano配置字段
+                configurations:           # 新增以下字段，该字段为Volcano配置字段
                   - name: init-params
                     arguments: {"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2","useClusterInfoManager":"false","super-pod-size": "48","reserve-nodes": "2"}
             ...
@@ -4017,7 +3959,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
 -   使用整卡调度、静态vNPU调度、动态vNPU调度、断点续训、弹性训练、推理卡故障恢复或推理卡故障重调度的用户，必须安装ClusterD。集群中同时存在Ascend Device Plugin和NodeD组件时，ClusterD才能提供全量的信息收集服务。
 -   在安装ClusterD时，建议提前安装Volcano。若ClusterD先于Volcano安装，ClusterD所在的Pod可能会CrashLoopBackOff，需等待Volcano的Pod启动后，ClusterD才会恢复正常。
 -   仅使用容器化支持和资源监测的用户，可以不安装ClusterD，请直接跳过本章节。
--   使用慢节点&慢网络故障功能前，需安装ClusterD，详细说明请参见《MindCluster 故障诊断用户指南》中的“在线故障诊断”章节。
+-   使用慢节点&慢网络故障功能前，需安装ClusterD，详细说明请参见[慢节点&慢网络故障](./usage/resumable_training.md#慢节点慢网络故障)。
 
 **操作步骤<a name="section20114193212615"></a>**
 
@@ -4037,7 +3979,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
     -   否，请参见[准备镜像](#准备镜像)，完成镜像制作和分发。
 
 2.  <a name="li615118054419"></a>将ClusterD软件包解压目录下的YAML文件，拷贝到K8s管理节点上任意目录。
-3.  如不修改组件启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中ClusterD的启动参数。启动参数请参见[表1](#table11614104894617)，可以在ClusterD二进制包的目录下执行**./clusterd** **-h**查看参数说明。
+3.  如不修改组件启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中ClusterD的启动参数。启动参数请参见[表1](#table11614104894617)，可以在ClusterD二进制包的目录下执行<b>./clusterd -h</b>查看参数说明。
 4.  在管理节点的YAML所在路径，执行以下命令，启动ClusterD。
 
     ```
@@ -4141,7 +4083,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
 <td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="p13748141013205"><a name="p13748141013205"></a><a name="p13748141013205"></a>false</p>
 </td>
 <td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p2748131042020"><a name="p2748131042020"></a><a name="p2748131042020"></a>是否使用代理转发gRPC请求。</p>
-<a name="ul71770166215"></a><a name="ul71770166215"></a><ul id="ul71770166215"><li>true：是</li><li>false：否<div class="note" id="note12300045132119"><a name="note12300045132119"></a><a name="note12300045132119"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p17300245162118"><a name="p17300245162118"></a><a name="p17300245162118"></a>建议在启动YAML中将本参数取值配置为“true”，并对ClusterD进行安全加固，详细说明请参见<a href="zh-cn_topic_0000002479226456.md">ClusterD安全加固</a>章节。</p>
+<a name="ul71770166215"></a><a name="ul71770166215"></a><ul id="ul71770166215"><li>true：是</li><li>false：否<div class="note" id="note12300045132119"><a name="note12300045132119"></a><a name="note12300045132119"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p17300245162118"><a name="p17300245162118"></a><a name="p17300245162118"></a>建议在启动YAML中将本参数取值配置为“true”，并对ClusterD进行安全加固，详细说明请参见<a href="./references.md#clusterd安全加固">ClusterD安全加固</a>章节。</p>
 </div></div>
 </li></ul>
 </td>
@@ -4181,11 +4123,11 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
     ascend-operator                      v7.3.0              c532e9d0889c        About an hour ago         137MB
     ```
 
-    -   是，执行[步骤2](Ascend-Operator.md#li19793191914420)。
+    -   是，执行[步骤2](#li19793191914420)。
     -   否，请参见[准备镜像](#准备镜像)，完成镜像制作和分发。
 
-2.  将Ascend Operator软件包解压目录下的YAML文件，拷贝到K8s管理节点上任意目录。
-3.  如不修改组件启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中Ascend Operator的启动参数。启动参数请参见[表1](#table11614104894617)，可执行**./ascend-operator** **-h**查看参数说明。
+2.  <a name="li19793191914420"></a>将Ascend Operator软件包解压目录下的YAML文件，拷贝到K8s管理节点上任意目录。
+3.  如不修改组件启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中Ascend Operator的启动参数。启动参数请参见[表1](#table11614104894617)，可执行<b>./ascend-operator -h</b>查看参数说明。
 4.  （可选）使用Ascend Operator为PyTorch和MindSpore框架下的训练任务生成集合通信配置文件（RankTable File，也叫[hccl.json](./appendix.md#hccljson文件说明)文件），缩短集群通信建链时间。使用其他框架的用户，可跳过本步骤。
     1.  启动YAML中已经默认挂载了hccl.json文件的父目录，用户可以根据实际情况进行修改。
 
@@ -4381,7 +4323,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
 
 -   使用整卡调度、静态vNPU调度、动态vNPU调度、推理卡故障恢复、推理卡故障重调度、断点续训或弹性训练时，必须安装NodeD。
 -   仅使用容器化支持和资源监测的用户，可以不安装NodeD，请直接跳过本章节。
--   使用慢节点&慢网络故障功能前，需安装NodeD，详细说明请参见《MindCluster 故障诊断用户指南》中的“在线故障诊断”章节。
+-   使用慢节点&慢网络故障功能前，需安装NodeD，详细说明请参见[慢节点&慢网络故障](./usage/resumable_training.md#慢节点慢网络故障)。
 
 **操作步骤<a name="section135381552125414"></a>**
 
@@ -4400,8 +4342,8 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
     -   是，执行[步骤2](#li26221447455)。
     -   否，请参见[准备镜像](#准备镜像)，完成镜像制作和分发。
 
-2.  将NodeD软件包解压目录下的YAML文件，拷贝到K8s管理节点上任意目录。
-3.  如不修改组件启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中NodeD的启动参数。启动参数请参见[表1](#table1862682843614)，可执行**./noded** **-h**查看参数说明。
+2.  <a name="li26221447455"></a>将NodeD软件包解压目录下的YAML文件，拷贝到K8s管理节点上任意目录。
+3.  如不修改组件启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中NodeD的启动参数。启动参数请参见[表1](#table1862682843614)，可执行<b>./noded -h</b>查看参数说明。
 4.  （可选）使用**断点续训**或者**弹性训练**时，需要配置节点状态上报间隔。在NodeD启动YAML文件的“args”行增加“-reportInterval”参数，如下所示：
 
     ```
@@ -4652,9 +4594,9 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
     </tbody>
     </table>
 
--   默认情况下，导入成功后，工具会自动删除KubeConfig授权文件，用户可通过**-n**参数停用自动删除功能。如果不自动删除，用户应妥善保管相关配置文件，如果决定不再使用相关文件，请立即删除，防止意外泄露。
--   导入的文件会被重新加密并存入“/etc/mindx-dl“目录中，具体参考[表3](#table252713572507)。
--   如果从3.0.RC3及以后版本降级到3.0.RC3之前的旧版本，需在手动删除“/etc/mindx-dl/“目录下的文件后，重新使用旧版cert-importer工具导入。
+-   默认情况下，导入成功后，工具会自动删除KubeConfig授权文件，用户可通过<b>-n</b>参数停用自动删除功能。如果不自动删除，用户应妥善保管相关配置文件，如果决定不再使用相关文件，请立即删除，防止意外泄露。
+-   导入的文件会被重新加密并存入“/etc/mindx-dl”目录中，具体参考[表3](#table252713572507)。
+-   如果从3.0.RC3及以后版本降级到3.0.RC3之前的旧版本，需在手动删除“/etc/mindx-dl/”目录下的文件后，重新使用旧版cert-importer工具导入。
 -   导入工具加密需要系统有足够的熵池（random pool）。如果熵池不够，程序可能阻塞，可以安装haveged组件来进行补熵。
 
     安装命令可参考：
@@ -4665,7 +4607,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
 **导入KubeConfig文件<a name="section1538945217341"></a>**
 
 1.  登录K8s管理节点。
-2.  创建“/etc/kubernetes/mindxdl“文件夹，权限设置为750。
+2.  创建“/etc/kubernetes/mindxdl”文件夹，权限设置为750。
 
     ```
     rm -rf /etc/kubernetes/mindxdl
@@ -4673,7 +4615,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
     chmod 750 /etc/kubernetes/mindxdl
     ```
 
-3.  参考[Kubernetes相关指导](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/)自行创建名为resilience-controller-cfg.conf的KubeConfig文件，其中KubeConfig文件中的“user“字段为“resilience-controller“。将KubeConfig文件放到“/etc/kubernetes/mindxdl/“路径下。
+3.  参考[Kubernetes相关指导](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/)自行创建名为resilience-controller-cfg.conf的KubeConfig文件，其中KubeConfig文件中的“user”字段为“resilience-controller”。将KubeConfig文件放到“/etc/kubernetes/mindxdl/”路径下。
 4.  进入Resilience Controller安装包解压路径，将lib文件夹设置到当前窗口的环境变量LD\_LIBRARY\_PATH中，不需要持久化或继承给其他用户（证书导入工具需要配置自带的加密组件相关的so包路径）。
     1.  执行以下命令，将环境变量进行备份。
 
@@ -4704,7 +4646,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
 
     >[!NOTE] 说明 
     >-   已经导入了KubeConfig配置文件，但是组件还是出现连接K8s异常的场景，可以参见[集群调度组件连接K8s异常](./faq.md#集群调度组件连接k8s异常)章节进行处理。
-    >-   导入证书时，导入工具cert-importer会自动创建“/var/log/mindx-dl/cert-importer“目录，目录权限750，属主为root:root。
+    >-   导入证书时，导入工具cert-importer会自动创建“/var/log/mindx-dl/cert-importer”目录，目录权限750，属主为root:root。
 
 6.  执行以下命令，将备份的环境变量还原。
 
@@ -4871,11 +4813,11 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
     resilience-controller                      v7.3.0              c532e9d0889c        About an hour ago         142MB
     ```
 
-    -   是，执行[步骤2](安装Resilience-Controller.md#li1074319247454)。
+    -   是，执行[步骤2](#li10743192474541)。
     -   否，请参见[准备镜像](#准备镜像)，完成镜像制作和分发。
 
-2.  将Resilience Controller软件包解压目录下的YAML文件，拷贝到K8s管理节点上任意目录。
-3.  如不修改组件启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中Resilience Controller的启动参数。启动参数的说明请参见[表1](#table195504370194)，也可执行**./resilience-controller** **-h**查看参数说明。
+2.  <a name="li10743192474541"></a>将Resilience Controller软件包解压目录下的YAML文件，拷贝到K8s管理节点上任意目录。
+3.  如不修改组件启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中Resilience Controller的启动参数。启动参数的说明请参见[表1](#table195504370194)，也可执行<b>./resilience-controller -h</b>查看参数说明。
 4.  在管理节点的YAML所在路径，执行以下命令，启动Resilience Controller。
 
     -   如果没有导入KubeConfig证书，执行如下命令。
@@ -4999,15 +4941,15 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
 Container Manager组件直接在物理机上通过二进制方式运行。
 
 1.  使用root用户登录服务器。
-2.  将获取到的Container Manager软件包上传至服务器的任意目录（以下以“/home/container-manager“目录为例）。
-3.  进入“/home/container-manager“目录并进行解压操作。
+2.  将获取到的Container Manager软件包上传至服务器的任意目录（以下以“/home/container-manager”目录为例）。
+3.  进入“/home/container-manager”目录并进行解压操作。
 
     ```
     unzip Ascend-mindxdl-container-manager_{version}_linux-{arch}.zip
     ```
 
     >[!NOTE] 说明 
-    >_<version\>_为软件包的版本号；_<arch\>_为CPU架构。
+    ><i><version\></i>为软件包的版本号；<i><arch\></i>为CPU架构。
 
 4.  （可选）创建自定义故障码配置文件，自定义故障码处理级别。配置及使用详情请参见[（可选）配置芯片故障级别](./usage/appliance.md#可选配置芯片故障级别)，以下步骤不体现该文件。
 5.  创建并编辑container-manager.service文件。
@@ -5017,7 +4959,7 @@ Container Manager组件直接在物理机上通过二进制方式运行。
         vi container-manager.service
         ```
 
-    2.  参考如下内容，写入container-manager.service文件中。“ExecStart“字段中加粗的内容为启动命令，启动参数说明请参见[表1](#table872410431914)，用户可以根据实际需要进行修改。
+    2.  参考如下内容，写入container-manager.service文件中。“ExecStart”字段中加粗的内容为启动命令，启动参数说明请参见[表1](#table872410431914)，用户可以根据实际需要进行修改。
 
         ```
         [Unit]
@@ -5232,9 +5174,9 @@ Container Manager组件直接在物理机上通过二进制方式运行。
 
 借助Ascend Deployer工具可以批量安装集群调度组件，大幅度简化手动安装过程中繁琐的配置操作，简化安装流程，适用于集群场景下批量安装组件。
 
-Ascend Deployer工具现支持的硬件产品、OS清单、安装场景请参见《MindCluster Ascend Deployer 用户指南》中的“支持的产品和OS清单”章节，请根据**“支持部署”**列的支持情况，选择是否使用Ascend Deployer工具。
+Ascend Deployer工具现支持的硬件产品、OS清单、安装场景请参见《MindCluster Ascend Deployer 用户指南》中的“<a href="https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/zh/introduction.md#%E6%94%AF%E6%8C%81%E7%9A%84%E4%BA%A7%E5%93%81%E5%92%8Cos%E6%B8%85%E5%8D%95">支持的产品和OS清单</a>”章节，请根据“支持部署”列的支持情况，选择是否使用Ascend Deployer工具。
 
-如需使用Ascend Deployer工具安装，请参考《MindCluster Ascend Deployer 用户指南》中的“安装昇腾软件”章节。
+如需使用Ascend Deployer工具安装，请参考《MindCluster Ascend Deployer 用户指南》中的“<a href="https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/zh/installation_guide.md#%E5%AE%89%E8%A3%85%E6%98%87%E8%85%BE%E8%BD%AF%E4%BB%B6">安装昇腾软件</a>”章节。
 
 >[!NOTE] 说明 
 >-   建议用户在使用工具安装前先了解[手动安装](#手动安装)章节中相应组件的使用约束和启动参数，可以更好地帮助用户理解组件的使用场景和功能。
@@ -5411,33 +5353,13 @@ Ascend Deployer工具现支持的硬件产品、OS清单、安装场景请参见
     ...
     ```
 
-    如果持续出现如下打印信息，表示组件运行正常。
-
-    ```
-    ...
-    [INFO]     2023/12/08 07:39:01.744739 157     collector/npu_collector.go:476    update cache,key is npu-exporter-network-info
-    [INFO]     2023/12/08 07:39:01.852413 158     collector/npu_collector.go:499    update cache,key is npu-exporter-containers-devices
-    [INFO]     2023/12/08 07:39:05.055247 148     collector/npu_collector.go:442    update cache,key is npu-exporter-npu-list
-    ...
-    ```
-
-    此时如果发现之前的日志中有如下内容可忽略。
-
-    ```
-    [WARN]     2023/12/08 07:38:56.684424 1       npu-exporter/main.go:339    enable unsafe http server
-    [WARN]     2023/12/08 07:39:01.686205 98      container/runtime_ops.go:150    failed to get OCI connection: context deadline exceeded
-    [WARN]     2023/12/08 07:39:01.686311 98      container/runtime_ops.go:152    use backup address to try again
-    ...
-    [WARN]     2023/12/08 07:39:01.688039 157     collector/npu_collector.go:463    get info of npu-exporter-network-info failed: no value found, so use initial net info
-    ```
-
 ## Ascend Device Plugin<a name="ZH-CN_TOPIC_0000002511426319"></a>
 
 请在任意节点执行以下步骤验证Ascend Device Plugin的安装状态。
 
 **操作步骤<a name="zh-cn_topic_0000001497205413_section197491249115016"></a>**
 
-1.  通过如下命令查看K8s集群中Ascend Device Plugin的Pod，需要满足Pod的“STATUS“为Running，READY为1/1。如果集群中有多个节点安装了Ascend Device Plugin，每一个节点都需要确认。
+1.  通过如下命令查看K8s集群中Ascend Device Plugin的Pod，需要满足Pod的“STATUS”为Running，READY为1/1。如果集群中有多个节点安装了Ascend Device Plugin，每一个节点都需要确认。
 
     ```
     kubectl get pods -n kube-system -o wide | grep device-plugin
@@ -5476,7 +5398,7 @@ Ascend Deployer工具现支持的硬件产品、OS清单、安装场景请参见
     ...
     ```
 
-3.  通过如下命令查看K8s中节点的详细情况。如果节点详情中的“Capacity“字段和“Allocatable“字段出现了昇腾AI处理器的相关信息，表示Ascend Device Plugin给K8s上报芯片正常，组件运行正常。
+3.  通过如下命令查看K8s中节点的详细情况。如果节点详情中的“Capacity”字段和“Allocatable”字段出现了昇腾AI处理器的相关信息，表示Ascend Device Plugin给K8s上报芯片正常，组件运行正常。
 
     ```
     kubectl describe node K8s中的节点名
@@ -5735,7 +5657,6 @@ Ascend Deployer工具现支持的硬件产品、OS清单、安装场景请参见
     回显示例如下，表示组件正常运行。
 
     ```
-    [root@***** clusterD]# kubectl logs -f -n mindx-dl         noded-ncdk4
     [INFO] 2025/05/25 15:24:19.897280 1 hwlog/api.go:108 noded.log's logger init success
     [INFO] 2025/05/25 15:24:19.897392 1 noded/main.go:93 noded starting and the version is v7.3.0_linux-x86_64
     W0525 15:24:19.897410 1 client_config.go:617] Neither --kubeconfig nor --master was specified. Using the inClusterConfig. This might not work.
@@ -6111,15 +6032,15 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 在物理机上直接替换Container Manager二进制升级组件。
 
 1.  以root用户登录Container Manager组件部署的节点。
-2.  将获取到的Container Manager软件包上传至服务器的任意目录（如“/tmp/container-manager“）。
-3.  进入“/tmp/container-manager“目录并进行解压操作。
+2.  将获取到的Container Manager软件包上传至服务器的任意目录（如“/tmp/container-manager”）。
+3.  进入“/tmp/container-manager”目录并进行解压操作。
 
     ```
     unzip Ascend-mindxdl-container-manager_{version}_linux-{arch}.zip
     ```
 
     >[!NOTE] 说明 
-    >_<version\>_为软件包的版本号；_<arch\>_为CPU架构。
+    ><i><version\></i>为软件包的版本号；<i><arch\></i>为CPU架构。
 
 4.  依次执行以下命令，升级Container Manager组件。
 
@@ -6208,7 +6129,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
     参考[准备镜像](#准备镜像)章节，从昇腾镜像仓库拉取新版本镜像或者制作新版本镜像。注意新版本组件镜像tag要与旧版本组件镜像tag不一致，避免覆盖旧版本组件镜像。
 
 4.  <a name="li147194506333"></a>请根据要升级的组件，重新执行手动安装步骤。详细步骤请参见[安装MindCluster新版本组件](#npu-exporter)。
-5.  （可选）如需回退老版本，依次执行[卸载](#卸载)中"卸载其他组件"中卸载组件步骤和[4](#li147194506333)，卸载新版本组件后安装旧版本组件即可。
+5.  （可选）如需回退老版本，依次执行[卸载](#卸载)中"卸载其他组件"中卸载组件步骤和[步骤4](#li147194506333)，卸载新版本组件后安装旧版本组件即可。
 
 ## 升级镜像<a name="ZH-CN_TOPIC_0000002511346311"></a>
 
@@ -6314,7 +6235,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 -   情况一：使用不同安装路径。
 
-    用户在卸载Ascend Docker Runtime时需要针对不同容器引擎，根据[步骤2](#li345320287225)进行两次卸载操作，每次卸载需要指定相应的安装路径，即**--install-path**参数。
+    用户在卸载Ascend Docker Runtime时需要针对不同容器引擎，根据[步骤2](#li345320287225)进行两次卸载操作，每次卸载需要指定相应的安装路径，即--install-path参数。
 
 -   情况二：使用相同安装路径。
 
@@ -6359,9 +6280,9 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
                 ```
 
             >[!NOTE] 说明 
-            >-   Docker配置文件路径不是默认的“/etc/docker/daemon.json“时，需要新增“--config-file-path“参数，用于指定该配置文件路径。
-            >-   Containerd的配置文件路径不是默认的“/etc/containerd/config.toml“时，需要新增“--config-file-path“参数，用于指定该配置文件路径。
-            >-   如需要卸载指定安装路径下的Ascend Docker Runtime，需要在卸载命令中新增“--install-path=<path\>“参数。
+            >-   Docker配置文件路径不是默认的“/etc/docker/daemon.json”时，需要新增“--config-file-path”参数，用于指定该配置文件路径。
+            >-   Containerd的配置文件路径不是默认的“/etc/containerd/config.toml”时，需要新增“--config-file-path”参数，用于指定该配置文件路径。
+            >-   如需要卸载指定安装路径下的Ascend Docker Runtime，需要在卸载命令中新增“--install-path=<path\>”参数。
 
             回显示例如下，表示卸载成功。
 
@@ -6373,7 +6294,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
     -   方式二：使用脚本卸载
 
-        1.  首先进入Ascend Docker Runtime的安装路径下的“script“目录（默认安装路径为：“/usr/local/Ascend/Ascend-Docker-Runtime“）：
+        1.  首先进入Ascend Docker Runtime的安装路径下的“script”目录（默认安装路径为：“/usr/local/Ascend/Ascend-Docker-Runtime”）：
 
             ```
             cd /usr/local/Ascend/Ascend-Docker-Runtime/script
@@ -6394,8 +6315,8 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
                 ```
 
             >[!NOTE] 说明 
-            >-   可以不指定Docker的配置文件daemon.json路径，不指定时默认使用“/etc/docker/daemon.json“。
-            >-   可以不指定Containerd的配置文件config.toml路径，不指定时默认使用“/etc/containerd/config.toml“。
+            >-   可以不指定Docker的配置文件daemon.json路径，不指定时默认使用“/etc/docker/daemon.json”。
+            >-   可以不指定Containerd的配置文件config.toml路径，不指定时默认使用“/etc/containerd/config.toml”。
 
         回显示例如下，表示卸载成功。
 
@@ -6470,7 +6391,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
     -   通过容器方式卸载。各组件卸载方法类似，均为进入该组件配置文件YAML所在目录，并执行删除操作实现，此操作需要在K8s的管理节点操作。以卸载Ascend Device Plugin为例说明，请用户自行完成其余组件卸载。
 
         1.  以root用户登录管理节点。
-        2.  进入Ascend Device PluginYAML配置文件所在目录（如：“/home/ascend-_device-plugin_”）。
+        2.  进入Ascend Device PluginYAML配置文件所在目录（如：“/home/ascend-device-plugin”）。
 
             ```
             cd /home/ascend-device-plugin

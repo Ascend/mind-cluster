@@ -40,69 +40,16 @@ Volcano在多任务或者单任务场景下，在Atlas 800T A2 训练服务器�
     **表 1**  单任务多Pod调度说明
 
     <a name="table18378013481"></a>
-    <table><thead align="left"><tr id="row2083715012487"><th class="cellrowborder" valign="top" width="29.81%" id="mcps1.2.4.1.1"><p id="p883712024819"><a name="p883712024819"></a><a name="p883712024819"></a>集群节点数</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="23.93%" id="mcps1.2.4.1.2"><p id="p767633115568"><a name="p767633115568"></a><a name="p767633115568"></a>Pod数量</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="46.26%" id="mcps1.2.4.1.3"><p id="p18389064813"><a name="p18389064813"></a><a name="p18389064813"></a>调度时间</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="row2435111731111"><td class="cellrowborder" valign="top" width="29.81%" headers="mcps1.2.4.1.1 "><p id="p5435417191115"><a name="p5435417191115"></a><a name="p5435417191115"></a>100</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="23.93%" headers="mcps1.2.4.1.2 "><p id="p1951444875619"><a name="p1951444875619"></a><a name="p1951444875619"></a>100</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="46.26%" headers="mcps1.2.4.1.3 "><p id="p54368172115"><a name="p54368172115"></a><a name="p54368172115"></a>14秒</p>
-    </td>
-    </tr>
-    <tr id="row1783811034814"><td class="cellrowborder" valign="top" width="29.81%" headers="mcps1.2.4.1.1 "><p id="p9838180184817"><a name="p9838180184817"></a><a name="p9838180184817"></a>500</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="23.93%" headers="mcps1.2.4.1.2 "><p id="p8514104855614"><a name="p8514104855614"></a><a name="p8514104855614"></a>500</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="46.26%" headers="mcps1.2.4.1.3 "><p id="p12838509482"><a name="p12838509482"></a><a name="p12838509482"></a>57秒</p>
-    </td>
-    </tr>
-    <tr id="row13838801481"><td class="cellrowborder" valign="top" width="29.81%" headers="mcps1.2.4.1.1 "><p id="p283840194818"><a name="p283840194818"></a><a name="p283840194818"></a>1000</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="23.93%" headers="mcps1.2.4.1.2 "><p id="p0514164875617"><a name="p0514164875617"></a><a name="p0514164875617"></a>1000</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="46.26%" headers="mcps1.2.4.1.3 "><p id="p683830204819"><a name="p683830204819"></a><a name="p683830204819"></a>114秒</p>
-    </td>
-    </tr>
-    <tr id="row1583813013482"><td class="cellrowborder" valign="top" width="29.81%" headers="mcps1.2.4.1.1 "><p id="p983811012482"><a name="p983811012482"></a><a name="p983811012482"></a>2000</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="23.93%" headers="mcps1.2.4.1.2 "><p id="p051418481560"><a name="p051418481560"></a><a name="p051418481560"></a>2000</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="46.26%" headers="mcps1.2.4.1.3 "><p id="p17838110174818"><a name="p17838110174818"></a><a name="p17838110174818"></a>228秒</p>
-    </td>
-    </tr>
-    <tr id="row1883860174816"><td class="cellrowborder" valign="top" width="29.81%" headers="mcps1.2.4.1.1 "><p id="p198381504486"><a name="p198381504486"></a><a name="p198381504486"></a>3000</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="23.93%" headers="mcps1.2.4.1.2 "><p id="p16514134835618"><a name="p16514134835618"></a><a name="p16514134835618"></a>3000</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="46.26%" headers="mcps1.2.4.1.3 "><p id="p138388012486"><a name="p138388012486"></a><a name="p138388012486"></a>269秒</p>
-    </td>
-    </tr>
-    <tr id="row108384024817"><td class="cellrowborder" valign="top" width="29.81%" headers="mcps1.2.4.1.1 "><p id="p10838160124814"><a name="p10838160124814"></a><a name="p10838160124814"></a>4000</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="23.93%" headers="mcps1.2.4.1.2 "><p id="p7514248135611"><a name="p7514248135611"></a><a name="p7514248135611"></a>4000</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="46.26%" headers="mcps1.2.4.1.3 "><p id="p583817016489"><a name="p583817016489"></a><a name="p583817016489"></a>300秒</p>
-    </td>
-    </tr>
-    <tr id="row09919300814"><td class="cellrowborder" valign="top" width="29.81%" headers="mcps1.2.4.1.1 "><p id="p191005301585"><a name="p191005301585"></a><a name="p191005301585"></a>5000</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="23.93%" headers="mcps1.2.4.1.2 "><p id="p3515248195612"><a name="p3515248195612"></a><a name="p3515248195612"></a>5000</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="46.26%" headers="mcps1.2.4.1.3 "><p id="p2010020302814"><a name="p2010020302814"></a><a name="p2010020302814"></a>400秒</p>
-    </td>
-    </tr>
-    <tr id="row1725016321888"><td class="cellrowborder" colspan="3" valign="top" headers="mcps1.2.4.1.1 mcps1.2.4.1.2 mcps1.2.4.1.3 "><p id="p118004408812"><a name="p118004408812"></a><a name="p118004408812"></a>注：</p>
-    <a name="ul4483154173211"></a><a name="ul4483154173211"></a><ul id="ul4483154173211"><li>单任务多Pod场景即用1个任务YAML创建多个Pod，比如1个任务YAML创建100个Pod，这100个Pod分别调度到100个节点上的调度时间为14秒。</li><li>若想要达到4000或5000节点的优化调度参考时间，需要参见<a href="../installation_guide.md#安装volcano">安装Volcano</a>中调度时间性能调优步骤进行相应修改。</li><li>当前vcjob任务的调度规格最大支持1000节点。</li></ul>
-    </td>
-    </tr>
-    </tbody>
-    </table>
+    |集群节点数|Pod数量|调度时间|
+    |--|--|--|
+    |100|100|14秒|
+    |500|500|57秒|
+    |1000|1000|114秒|
+    |2000|2000|228秒|
+    |3000|3000|269秒|
+    |4000|4000|300秒|
+    |5000|5000|400秒|
+    |<p>注：</p><ul><li>单任务多Pod场景即用1个任务YAML创建多个Pod，比如1个任务YAML创建100个Pod，这100个Pod分别调度到100个节点上的调度时间为14秒。</li><li>若想要达到4000或5000节点的优化调度参考时间，需要参见<a href="../installation_guide.md#安装volcano">安装Volcano</a>中调度时间性能调优步骤进行相应修改。</li><li>当前vcjob任务的调度规格最大支持1000节点。</li></ul>|
 
 
 ## 昇腾AI处理器的调度流程<a name="ZH-CN_TOPIC_0000002511427051"></a>
@@ -134,17 +81,17 @@ Volcano在多任务或者单任务场景下，在Atlas 800T A2 训练服务器�
     如果Volcano启动YAML中的self-maintain-available-card参数的值配置为false，昇腾AI处理器的调度流程如下所示：
 
     1.  Ascend Device Plugin组件上报昇腾AI处理器健康状态。
-    2.  Ascend Device Plugin通过kube-apiserver将当前空闲的昇腾AI处理器（健康昇腾AI处理器  - 已使用的昇腾AI处理器）信息写到ConfigMap“mindx-dl-deviceinfo-\{_nodeName_\}”的“DeviceInfo“字段中。
+    2.  Ascend Device Plugin通过kube-apiserver将当前空闲的昇腾AI处理器（健康昇腾AI处理器  - 已使用的昇腾AI处理器）信息写到ConfigMap“mindx-dl-deviceinfo-\{_nodeName_\}”的“DeviceInfo”字段中。
     3.  用户调用kube-apiserver创建使用NPU的业务容器，如vcjob。
-    4.  Volcano组件通过“DeviceInfo“获取当前可用的昇腾AI处理器。
-    5.  Volcano组件根据亲和性调度原则，将昇腾AI处理器分配的情况写入Pod的“Annotations“字段中，同时写入分配时的时间戳。Volcano组件写入资源信息后向Kubernetes提交绑定Pod申请。
+    4.  Volcano组件通过“DeviceInfo”获取当前可用的昇腾AI处理器。
+    5.  Volcano组件根据亲和性调度原则，将昇腾AI处理器分配的情况写入Pod的“Annotations”字段中，同时写入分配时的时间戳。Volcano组件写入资源信息后向Kubernetes提交绑定Pod申请。
     6.  kubelet监测到有Pod调度到自己所在节点，调用Ascend Device Plugin的Allocate函数挂载NPU设备。同时也支持使用Ascend Docker Runtime挂载NPU设备。
-    7.  Ascend Device Plugin查询当前所在的Node中处于Pending状态的Pod列表，得到亲和性调度后、时间戳最小的Pod，获取挂载的device ID，反馈给kubelet进行设备挂载。
-    8.  Ascend Device Plugin更新“DeviceInfo“字段中的可分配昇腾AI处理器。
+    7.  Ascend Device Plugin查询当前所在的Node中处于Pending状态的Pod列表，得到亲和性调度后时间戳最小的Pod，获取挂载的device ID，反馈给kubelet进行设备挂载。
+    8.  Ascend Device Plugin更新“DeviceInfo”字段中的可分配昇腾AI处理器。
 
 **具体交互字段说明<a name="section154080418522"></a>**
 
-1.  Ascend Device Plugin（开源代码版本）以ConfigMap形式上报节点资源，上报资源的形式为“huawei.com/资源名：资源名+物理ID”。格式如[图3](#fig83207421331)所示。图中标出部分表示可用昇腾AI处理器列表，是全部的健康昇腾AI处理器减去被Volcano分配的昇腾AI处理器。全部的健康昇腾AI处理器信息通过调用NPU驱动接口获取，而被Volcano分配的芯片是通过遍历当前Node上所有满足条件的Pod，即Pod的状态为非Failed或者Succeeded，且Pod的“Annotations“字段上有Volcano分配的昇腾AI处理器信息。
+1.  Ascend Device Plugin（开源代码版本）以ConfigMap形式上报节点资源，上报资源的形式为“huawei.com/资源名：资源名+物理ID”。格式如[图3](#fig83207421331)所示。图中标出部分表示可用昇腾AI处理器列表，是全部的健康昇腾AI处理器减去被Volcano分配的昇腾AI处理器。全部的健康昇腾AI处理器信息通过调用NPU驱动接口获取，而被Volcano分配的芯片是通过遍历当前Node上所有满足条件的Pod，即Pod的状态为非Failed或者Succeeded，且Pod的“Annotations”字段上有Volcano分配的昇腾AI处理器信息。
 
     >[!NOTE] 说明 
     >-   用户可通过登录后台环境，执行**kubectl describe cm mindx-dl-deviceinfo-_\{__nodeName__\}_  -n kube-system**命令获取上报的资源信息。
@@ -153,16 +100,16 @@ Volcano在多任务或者单任务场景下，在Atlas 800T A2 训练服务器�
     **图 3**  节点NPU资源信息<a name="fig83207421331"></a>  
     ![](../../figures/scheduling/节点NPU资源信息.png "节点NPU资源信息")
 
-2.  Volcano组件通过节点信息和ConfigMap信息计算当前可用的昇腾AI处理器。（如果Volcano配置开关self-maintain-available-card关闭，Volcano会以“huawei.com/资源名”为key，读取“DeviceInfo“字段信息作为可用昇腾AI处理器的依据。）根据亲和性调度策略，判断出任务需要的符合亲和性规则的昇腾AI处理器后（即分配给任务的昇腾AI处理器）。Volcano会将分配芯片信息写入任务Pod的“Annotations“，如[图4](#fig29119551778)标出的第一个部分所示；第二个需要写入的字段为“predicate-time“，表示为任务分配资源的当前时间，不需要向可读时间格式做转换，可比较大小即可。kubelet监测到有Pod调度到自己所在节点，调用Device-plugin的Allocate函数挂载NPU设备。
+2.  Volcano组件通过节点信息和ConfigMap信息计算当前可用的昇腾AI处理器。（如果Volcano配置开关self-maintain-available-card关闭，Volcano会以“huawei.com/资源名”为key，读取“DeviceInfo”字段信息作为可用昇腾AI处理器的依据。）根据亲和性调度策略，判断出任务需要的符合亲和性规则的昇腾AI处理器后（即分配给任务的昇腾AI处理器）。Volcano会将分配芯片信息写入任务Pod的“Annotations”，如[图4](#fig29119551778)标出的第一个部分所示；第二个需要写入的字段为“predicate-time”，表示为任务分配资源的当前时间，不需要向可读时间格式做转换，可比较大小即可。kubelet监测到有Pod调度到自己所在节点，调用Device-plugin的Allocate函数挂载NPU设备。
 
     **图 4**  分配给Pod的NPU信息<a name="fig29119551778"></a>  
     ![](../../figures/scheduling/分配给Pod的NPU信息.png "分配给Pod的NPU信息")
 
-3.  Ascend Device Plugin在收到Allocate请求时（以2卡任务为例），因为Allocate输入的参数是kubelet随机分配的，如[图4](#fig29119551778)中的“huawei.com/kltDev“字段所示，可能是不符合亲和性规则的昇腾AI处理器ID，例如Ascend910-7和Ascend910-0。
+3.  Ascend Device Plugin在收到Allocate请求时（以2卡任务为例），因为Allocate输入的参数是kubelet随机分配的，如[图4](#fig29119551778)中的“huawei.com/kltDev”字段所示，可能是不符合亲和性规则的昇腾AI处理器ID，例如Ascend910-7和Ascend910-0。
 
-    此时Ascend Device Plugin会找到当前Node上所有的满足条件的Pod（Pod的状态为非Failed或者Succeeded），且Pod的“Annotations“字段中存在Volcano写入的分配的昇腾AI处理器ID，昇腾AI处理器数量和kubelet分配昇腾AI处理器数量要一致。
+    此时Ascend Device Plugin会找到当前Node上所有的满足条件的Pod（Pod的状态为非Failed或者Succeeded），且Pod的“Annotations”字段中存在Volcano写入的分配的昇腾AI处理器ID，昇腾AI处理器数量和kubelet分配昇腾AI处理器数量要一致。
 
-    再从满足条件的Pod中，选择“predicate-time“最小的Pod，并把这个Pod的“predicate-time“改为最大的Uint值（避免下次再选到）。解析Pod的“Annotations“字段，得到Volcano分配的昇腾AI处理器信息，例如Ascend910-0和Ascend910-1，把它们对应的挂载路径等信息返回，并且将真正分配的昇腾AI处理器信息写入到Pod的“Annotations“中的“huawei.com/AscendReal“字段中。
+    再从满足条件的Pod中，选择“predicate-time”最小的Pod，并把这个Pod的“predicate-time”改为最大的Uint值（避免下次再选到）。解析Pod的“Annotations”字段，得到Volcano分配的昇腾AI处理器信息，例如Ascend910-0和Ascend910-1，把它们对应的挂载路径等信息返回，并且将真正分配的昇腾AI处理器信息写入到Pod的“Annotations”中的“huawei.com/AscendReal”字段中。
 
 
 ## 整卡调度或静态vNPU调度（训练）<a name="ZH-CN_TOPIC_0000002479387138"></a>
@@ -338,7 +285,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 -   [MindSpore](#zh-cn_topic_0000001558834814_section868111733711)
 
     >[!NOTE] 说明 
-    >-   本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。TensorFlow框架请参考**数据集准备**部分内容进行数据集预处理，详情请参见《TensorFlow 1.15模型迁移指南》的“样例参考\>训练前准备”章节。
+    >-   本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。TensorFlow框架请参考**数据集准备**部分内容进行数据集预处理，详情请参见《TensorFlow 1.15模型迁移指南》的“样例参考\><a href="https://www.hiascend.com/document/detail/zh/TensorFlowCommercial/850/migration/tfmigr1/tfmigr1_000101.html">训练前准备</a>”章节。
     >-   下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
     >-   以下TensorFlow和MindSpore示例需使用CANN 8.5.0之前版本。   
 
@@ -346,7 +293,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 1.  <a name="zh-cn_topic_0000001558834814_li1040412108620"></a>下载[TensorFlow代码仓](https://gitee.com/ascend/ModelZoo-TensorFlow/tree/master/TensorFlow2/built-in/cv/image_classification/ResNet50_ID0360_for_TensorFlow2.X)中master分支中的“ResNet50\_ID0360\_for\_TensorFlow2.X”作为训练代码，请根据该模型代码TensorFlow版本选择训练镜像中的TensorFlow版本包。
 2.  管理员用户上传数据集到存储节点。
-    1.  进入“/data/atlas\_dls/public“目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/resnet50/imagenet\_TF“。
+    1.  进入“/data/atlas\_dls/public”目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/resnet50/imagenet\_TF”。
 
         ```
         root@ubuntu:/data/atlas_dls/public/dataset/resnet50/imagenet_TF# pwd
@@ -370,9 +317,9 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         42G
         ```
 
-3.  <a name="zh-cn_topic_0000001558834814_li1630573712375"></a>在本地解压[1](#zh-cn_topic_0000001558834814_li1040412108620)中下载的训练代码，将“ModelZoo-TensorFlow-master/TensorFlow2/built-in/cv/image\_classification/“下的“ResNet50\_ID0360\_for\_TensorFlow2.X“目录重命名为“ResNet50\_for\_TensorFlow\_2.6\_code/“目录。
-4.  将ResNet50\_for\_TensorFlow\_2.6\_code文件上传至环境的“/data/atlas\_dls/public/code/“路径下。
-5.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/without-ranktable/tensorflow“目录中的“train\_start.sh“文件，结合[3](#zh-cn_topic_0000001558834814_li1630573712375)中的“ResNet50\_for\_TensorFlow\_2.6\_code“目录，在host的“/data/atlas\_dls/public/code“路径下，构造如下的目录结构。
+3.  <a name="zh-cn_topic_0000001558834814_li1630573712375"></a>在本地解压[1](#zh-cn_topic_0000001558834814_li1040412108620)中下载的训练代码，将“ModelZoo-TensorFlow-master/TensorFlow2/built-in/cv/image\_classification/”下的“ResNet50\_ID0360\_for\_TensorFlow2.X”目录重命名为“ResNet50\_for\_TensorFlow\_2.6\_code/”目录。
+4.  将ResNet50\_for\_TensorFlow\_2.6\_code文件上传至环境的“/data/atlas\_dls/public/code/”路径下。
+5.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/without-ranktable/tensorflow”目录中的“train\_start.sh”文件，结合[3](#zh-cn_topic_0000001558834814_li1630573712375)中的“ResNet50\_for\_TensorFlow\_2.6\_code”目录，在host的“/data/atlas\_dls/public/code”路径下，构造如下的目录结构。
 
     ```
     /data/atlas_dls/public/code/ResNet50_for_TensorFlow_2.6_code/
@@ -397,7 +344,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 1.  <a name="zh-cn_topic_0000001558834814_li1298552813512"></a>下载[PyTorch代码仓](https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/cv/classification/ResNet50_ID4149_for_PyTorch)中master分支的“ResNet50\_ID4149\_for\_PyTorch”作为训练代码。
 2.  自行准备ResNet50对应的数据集，使用时请遵守对应规范。
 3.  管理员用户上传数据集到存储节点。
-    1.  进入“/data/atlas\_dls/public“目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/resnet50/imagenet“。
+    1.  进入“/data/atlas\_dls/public”目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/resnet50/imagenet”。
 
         ```
         root@ubuntu:/data/atlas_dls/public/dataset/resnet50/imagenet# pwd
@@ -421,8 +368,8 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         11G
         ```
 
-4.  将[1](#zh-cn_topic_0000001558834814_li1298552813512)中下载的训练代码解压到本地，将解压后的训练代码中“ModelZoo-PyTorch/PyTorch/built-in/cv/classification/ResNet50\_ID4149\_for\_PyTorch“目录上传至环境，如“/data/atlas\_dls/public/code/“路径下。
-5.  在“/data/atlas\_dls/public/code/ResNet50\_ID4149\_for\_PyTorch“路径下，注释或删除main.py文件中的加粗字段。
+4.  将[1](#zh-cn_topic_0000001558834814_li1298552813512)中下载的训练代码解压到本地，将解压后的训练代码中“ModelZoo-PyTorch/PyTorch/built-in/cv/classification/ResNet50\_ID4149\_for\_PyTorch”目录上传至环境，如“/data/atlas\_dls/public/code/”路径下。
+5.  在“/data/atlas\_dls/public/code/ResNet50\_ID4149\_for\_PyTorch”路径下，注释或删除main.py文件中的加粗字段。
 
     ```
     def main():
@@ -438,7 +385,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
             torch.npu.matmul.allow_hf32 = False
     ```
 
-6.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/without-ranktable/pytorch“目录中的train\_start.sh，在“/data/atlas\_dls/public/code/ResNet50\_ID4149\_for\_PyTorch/scripts“路径下，构造如下的目录结构。
+6.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/without-ranktable/pytorch”目录中的train\_start.sh，在“/data/atlas\_dls/public/code/ResNet50\_ID4149\_for\_PyTorch/scripts”路径下，构造如下的目录结构。
 
     ```
     root@ubuntu:/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts#
@@ -451,7 +398,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 1.  <a name="zh-cn_topic_0000001558834814_li1141932513379"></a>下载[MindSpore代码仓](https://gitee.com/mindspore/models/tree/master/official/cv/ResNet)中master分支的“ResNet”代码作为训练代码。
 2.  自行准备ResNet50对应的数据集，使用时请遵守对应规范。
 3.  管理员用户上传数据集到存储节点。
-    1.  进入“/data/atlas\_dls/public“目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/imagenet“。
+    1.  进入“/data/atlas\_dls/public”目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/imagenet”。
 
         ```
         root@ubuntu:/data/atlas_dls/public/dataset/imagenet# pwd
@@ -475,9 +422,9 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         11G
         ```
 
-4.  在本地解压[1](#zh-cn_topic_0000001558834814_li1141932513379)中下载的训练代码，将“models/official/cv/“下的“ResNet”目录重命名为“ResNet50\_for\_MindSpore\_2.0\_code“。后续步骤以“ResNet50\_for\_MindSpore\_2.0\_code“目录为例。
-5.  将ResNet50\_for\_MindSpore\_2.0\_code文件上传至环境“/data/atlas\_dls/public/code/“路径下。
-6.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/without-ranktable/mindspore“目录中的“train\_start.sh“文件，结合训练代码中“scripts“目录，在host上构造如下的目录结构。
+4.  在本地解压[1](#zh-cn_topic_0000001558834814_li1141932513379)中下载的训练代码，将“models/official/cv/”下的“ResNet”目录重命名为“ResNet50\_for\_MindSpore\_2.0\_code”。后续步骤以“ResNet50\_for\_MindSpore\_2.0\_code”目录为例。
+5.  将ResNet50\_for\_MindSpore\_2.0\_code文件上传至环境“/data/atlas\_dls/public/code/”路径下。
+6.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/without-ranktable/mindspore”目录中的“train\_start.sh”文件，结合训练代码中“scripts”目录，在host上构造如下的目录结构。
 
     ```
     root@ubuntu:/data/atlas_dls/public/code/ResNet50_for_MindSpore_2.0_code/scripts/#
@@ -489,7 +436,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     └── train_start.sh
     ```
 
-7.  进入“/data/atlas\_dls/public/code/ResNet50\_for\_MindSpore\_2.0\_code/train.py“目录下，修改train.py对应部分，如下所示。
+7.  进入“/data/atlas\_dls/public/code/ResNet50\_for\_MindSpore\_2.0\_code/train.py”目录下，修改train.py对应部分，如下所示。
 
     ```
      ...
@@ -520,7 +467,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 -   [MindSpore](#zh-cn_topic_0000001558834798_section868111733711)
 
 >[!NOTE] 说明 
->-   本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。TensorFlow框架请参考**数据集准备**部分内容进行数据集预处理，详情请参见《TensorFlow 1.15模型迁移指南》的“样例参考\>训练前准备”章节。
+>-   本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。TensorFlow框架请参考**数据集准备**部分内容进行数据集预处理，详情请参见《TensorFlow 1.15模型迁移指南》的“样例参考\><a href="https://www.hiascend.com/document/detail/zh/TensorFlowCommercial/850/migration/tfmigr1/tfmigr1_000101.html">训练前准备</a>”章节。
 >-   下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
 >-   以下TensorFlow和MindSpore示例需使用CANN 8.5.0之前版本。
 
@@ -528,7 +475,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 1.  <a name="zh-cn_topic_0000001558834798_li360413424258"></a>下载[TensorFlow代码仓](https://gitee.com/ascend/ModelZoo-TensorFlow/tree/master/TensorFlow2/built-in/cv/image_classification/ResNet50_ID0360_for_TensorFlow2.X)中master分支中的“ResNet50\_ID0360\_for\_TensorFlow2.X”作为训练代码，请根据该模型代码TensorFlow版本选择训练镜像中的TensorFlow版本包。
 2.  管理员用户上传数据集到存储节点。
-    1.  进入“/data/atlas\_dls/public“目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/resnet50/imagenet\_TF“。
+    1.  进入“/data/atlas\_dls/public”目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/resnet50/imagenet\_TF”。
 
         ```
         root@ubuntu:/data/atlas_dls/public/dataset/resnet50/imagenet_TF# pwd
@@ -552,9 +499,9 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         42G
         ```
 
-3.  <a name="zh-cn_topic_0000001558834798_li1630573712375"></a>在本地解压[1](#zh-cn_topic_0000001558834798_li360413424258)中下载的训练代码，将“ModelZoo-TensorFlow-master/TensorFlow2/built-in/cv/image\_classification/“下的“ResNet50\_ID0360\_for\_TensorFlow2.X“目录重命名为“ResNet50\_for\_TensorFlow\_2.6\_code/“目录。
-4.  将“ResNet50\_for\_TensorFlow\_2.6\_code“上传至环境的“/data/atlas\_dls/public/code/“路径下。
-5.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/ranktable“目录中的“train\_start.sh“、“rank\_table.sh“和“utils.sh“文件，结合[3](#zh-cn_topic_0000001558834798_li1630573712375)中的“ResNet50\_for\_TensorFlow\_2.6\_code“目录，在host的“/data/atlas\_dls/public/code“路径下，构造如下的目录结构。
+3.  <a name="zh-cn_topic_0000001558834798_li1630573712375"></a>在本地解压[1](#zh-cn_topic_0000001558834798_li360413424258)中下载的训练代码，将“ModelZoo-TensorFlow-master/TensorFlow2/built-in/cv/image\_classification/”下的“ResNet50\_ID0360\_for\_TensorFlow2.X”目录重命名为“ResNet50\_for\_TensorFlow\_2.6\_code/”目录。
+4.  将“ResNet50\_for\_TensorFlow\_2.6\_code”上传至环境的“/data/atlas\_dls/public/code/”路径下。
+5.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/ranktable”目录中的“train\_start.sh”、“rank\_table.sh”和“utils.sh”文件，结合[3](#zh-cn_topic_0000001558834798_li1630573712375)中的“ResNet50\_for\_TensorFlow\_2.6\_code”目录，在host的“/data/atlas\_dls/public/code”路径下，构造如下的目录结构。
 
     ```
     /data/atlas_dls/public/code/ResNet50_for_TensorFlow_2.6_code/
@@ -581,7 +528,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 1.  <a name="zh-cn_topic_0000001558834798_li1298552813512"></a>下载[PyTorch代码仓](https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/cv/classification/ResNet50_ID4149_for_PyTorch)中master分支的“ResNet50\_ID4149\_for\_PyTorch”作为训练代码。
 2.  自行准备ResNet50对应的数据集，使用时请遵守对应规范。
 3.  管理员用户上传数据集到存储节点。
-    1.  进入“/data/atlas\_dls/public“目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/resnet50/imagenet“。
+    1.  进入“/data/atlas\_dls/public”目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/resnet50/imagenet”。
 
         ```
         root@ubuntu:/data/atlas_dls/public/dataset/resnet50/imagenet# pwd
@@ -605,8 +552,8 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         11G
         ```
 
-4.  将[1](#zh-cn_topic_0000001558834798_li1298552813512)中下载的训练代码解压到本地，将解压后的训练代码中“ModelZoo-PyTorch/PyTorch/built-in/cv/classification/ResNet50\_ID4149\_for\_PyTorch“目录上传至环境，如“/data/atlas\_dls/public/code/”路径下。
-5.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/ranktable“目录中的train\_start.sh、rank\_table.sh和utils.sh文件，在“/data/atlas\_dls/public/code/ResNet50\_ID4149\_for\_PyTorch/scripts“路径下，构造如下的目录结构。
+4.  将[1](#zh-cn_topic_0000001558834798_li1298552813512)中下载的训练代码解压到本地，将解压后的训练代码中“ModelZoo-PyTorch/PyTorch/built-in/cv/classification/ResNet50\_ID4149\_for\_PyTorch”目录上传至环境，如“/data/atlas\_dls/public/code/”路径下。
+5.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/ranktable”目录中的train\_start.sh、rank\_table.sh和utils.sh文件，在“/data/atlas\_dls/public/code/ResNet50\_ID4149\_for\_PyTorch/scripts”路径下，构造如下的目录结构。
 
     ```
     root@ubuntu:/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts#
@@ -621,7 +568,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 1.  <a name="zh-cn_topic_0000001558834798_li1141932513379"></a>下载[MindSpore代码仓](https://gitee.com/mindspore/models/tree/master/official/cv/ResNet)中master分支的“ResNet”代码作为训练代码。
 2.  自行准备ResNet50对应的数据集，使用时请遵守对应规范。
 3.  管理员用户上传数据集到存储节点。
-    1.  进入“/data/atlas\_dls/public“目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/imagenet“。
+    1.  进入“/data/atlas\_dls/public”目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/imagenet”。
 
         ```
         root@ubuntu:/data/atlas_dls/public/dataset/imagenet# pwd
@@ -645,9 +592,9 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         11G
         ```
 
-4.  在本地解压[1](#zh-cn_topic_0000001558834798_li1141932513379)中下载的训练代码，将“models/official/cv/“下的“ResNet“目录重命名为“ResNet50\_for\_MindSpore\_2.0\_code“。后续步骤以“ResNet50\_for\_MindSpore\_2.0\_code“目录为例。
-5.  将ResNet50\_for\_MindSpore\_2.0\_code文件上传至环境“/data/atlas\_dls/public/code/“路径下。
-6.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/ranktable“目录中的“train\_start.sh“、“utils.sh“和“rank\_table.sh“文件，结合训练代码中“scripts“目录，在host上构造如下的目录结构。
+4.  在本地解压[1](#zh-cn_topic_0000001558834798_li1141932513379)中下载的训练代码，将“models/official/cv/”下的“ResNet”目录重命名为“ResNet50\_for\_MindSpore\_2.0\_code”。后续步骤以“ResNet50\_for\_MindSpore\_2.0\_code”目录为例。
+5.  将ResNet50\_for\_MindSpore\_2.0\_code文件上传至环境“/data/atlas\_dls/public/code/”路径下。
+6.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/ranktable”目录中的“train\_start.sh”、“utils.sh”和“rank\_table.sh”文件，结合训练代码中“scripts”目录，在host上构造如下的目录结构。
 
     ```
     root@ubuntu:/data/atlas_dls/public/code/ResNet50_for_MindSpore_2.0_code/scripts/#
@@ -710,7 +657,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </td>
 <td class="cellrowborder" valign="top" width="18.810000000000002%" headers="mcps1.2.7.1.5 "><p id="p1729235703814"><a name="p1729235703814"></a><a name="p1729235703814"></a>示例默认为双机2卡任务。</p>
 </td>
-<td class="cellrowborder" rowspan="7" valign="top" width="15.000000000000002%" headers="mcps1.2.7.1.6 "><p id="p17292357133814"><a name="p17292357133814"></a><a name="p17292357133814"></a>选择相应的训练框架后，<a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.2.RC1/samples/train/basic-training/without-ranktable" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+<td class="cellrowborder" rowspan="7" valign="top" width="15.000000000000002%" headers="mcps1.2.7.1.6 "><p id="p17292357133814"><a name="p17292357133814"></a><a name="p17292357133814"></a>选择相应的训练框架后，<a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.3.0/samples/train/basic-training/without-ranktable" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
 <div class="note" id="note14933145219586"><a name="note14933145219586"></a><a name="note14933145219586"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p1027616512420"><a name="p1027616512420"></a><a name="p1027616512420"></a><span id="ph9014016509"><a name="ph9014016509"></a><a name="ph9014016509"></a>芯片型号的数值可通过<strong id="zh-cn_topic_0000001519959665_b168254314713"><a name="zh-cn_topic_0000001519959665_b168254314713"></a><a name="zh-cn_topic_0000001519959665_b168254314713"></a>npu-smi info</strong>命令查询，返回的“Name”字段对应信息为芯片型号，下文的{<em id="zh-cn_topic_0000001519959665_i1914312018209"><a name="zh-cn_topic_0000001519959665_i1914312018209"></a><a name="zh-cn_topic_0000001519959665_i1914312018209"></a>xxx</em>}即取“910”字符作为芯片型号数值。</span></p>
 </div></div>
 </td>
@@ -784,7 +731,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </td>
 <td class="cellrowborder" valign="top" width="20.000000000000004%" headers="mcps1.2.7.1.5 "><p id="p369954932614"><a name="p369954932614"></a><a name="p369954932614"></a>示例默认为双机8卡任务。</p>
 </td>
-<td class="cellrowborder" rowspan="6" valign="top" width="13.000000000000004%" headers="mcps1.2.7.1.6 "><p id="p369974917262"><a name="p369974917262"></a><a name="p369974917262"></a>选择相应的训练框架后，<a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.2.RC1/samples/train/basic-training/without-ranktable" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+<td class="cellrowborder" rowspan="6" valign="top" width="13.000000000000004%" headers="mcps1.2.7.1.6 "><p id="p369974917262"><a name="p369974917262"></a><a name="p369974917262"></a>选择相应的训练框架后，<a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.3.0/samples/train/basic-training/without-ranktable" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
 </td>
 </tr>
 <tr id="row669964932617"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p146994498265"><a name="p146994498265"></a><a name="p146994498265"></a><span id="ph3699154922611"><a name="ph3699154922611"></a><a name="ph3699154922611"></a>PyTorch</span></p>
@@ -851,7 +798,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </td>
 <td class="cellrowborder" valign="top" width="10.280000000000001%" headers="mcps1.2.7.1.5 "><p id="p3707749162616"><a name="p3707749162616"></a><a name="p3707749162616"></a>示例默认为单机单卡任务。</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="15%" headers="mcps1.2.7.1.6 "><p id="p1670794911264"><a name="p1670794911264"></a><a name="p1670794911264"></a>选择相应的训练框架后，<a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.2.RC1/samples/train/basic-training/without-ranktable" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+<td class="cellrowborder" rowspan="3" valign="top" width="15%" headers="mcps1.2.7.1.6 "><p id="p1670794911264"><a name="p1670794911264"></a><a name="p1670794911264"></a>选择相应的训练框架后，<a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.3.0/samples/train/basic-training/without-ranktable" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
 <p id="p1770716492268"><a name="p1770716492268"></a><a name="p1770716492268"></a></p>
 </td>
 </tr>
@@ -911,7 +858,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 <p id="p8271715184013"><a name="p8271715184013"></a><a name="p8271715184013"></a></p>
 <p id="p7271115194015"><a name="p7271115194015"></a><a name="p7271115194015"></a></p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="15.02%" headers="mcps1.2.7.1.6 "><p id="p142781511408"><a name="p142781511408"></a><a name="p142781511408"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.2.RC1/samples/train/basic-training/ranktable/yaml/910b" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+<td class="cellrowborder" rowspan="3" valign="top" width="15.02%" headers="mcps1.2.7.1.6 "><p id="p142781511408"><a name="p142781511408"></a><a name="p142781511408"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.3.0/samples/train/basic-training/ranktable/yaml/910b" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
 <p id="p71901195499"><a name="p71901195499"></a><a name="p71901195499"></a></p>
 <p id="p151911091496"><a name="p151911091496"></a><a name="p151911091496"></a></p>
 </td>
@@ -938,7 +885,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </td>
 <td class="cellrowborder" rowspan="3" valign="top" width="12.26%" headers="mcps1.2.7.1.5 "><p id="p142910157401"><a name="p142910157401"></a><a name="p142910157401"></a>示例默认为单机16卡任务。</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="15.02%" headers="mcps1.2.7.1.6 "><p id="p7243709503"><a name="p7243709503"></a><a name="p7243709503"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.2.RC1/samples/train/basic-training/ranktable/yaml/910b" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+<td class="cellrowborder" rowspan="3" valign="top" width="15.02%" headers="mcps1.2.7.1.6 "><p id="p7243709503"><a name="p7243709503"></a><a name="p7243709503"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.3.0/samples/train/basic-training/ranktable/yaml/910b" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
 </td>
 </tr>
 <tr id="row12914156400"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p172910152406"><a name="p172910152406"></a><a name="p172910152406"></a><span id="ph1029181516406"><a name="ph1029181516406"></a><a name="ph1029181516406"></a>PyTorch</span></p>
@@ -981,7 +928,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </td>
 <td class="cellrowborder" rowspan="3" valign="top" width="12.280000000000001%" headers="mcps1.2.7.1.5 "><p id="p16627332172713"><a name="p16627332172713"></a><a name="p16627332172713"></a>示例默认为单机8卡任务。</p>
 </td>
-<td class="cellrowborder" rowspan="12" valign="top" width="15%" headers="mcps1.2.7.1.6 "><p id="p6510121394114"><a name="p6510121394114"></a><a name="p6510121394114"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.2.RC1/samples/train/basic-training/ranktable/yaml/910" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+<td class="cellrowborder" rowspan="12" valign="top" width="15%" headers="mcps1.2.7.1.6 "><p id="p6510121394114"><a name="p6510121394114"></a><a name="p6510121394114"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.3.0/samples/train/basic-training/ranktable/yaml/910" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
 </td>
 </tr>
 <tr id="row1598044745910"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="zh-cn_topic_0000001609074269_p208651518105919"><a name="zh-cn_topic_0000001609074269_p208651518105919"></a><a name="zh-cn_topic_0000001609074269_p208651518105919"></a><span id="ph19355165113512"><a name="ph19355165113512"></a><a name="ph19355165113512"></a>PyTorch</span></p>
@@ -1217,15 +1164,13 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </div></div>
 </li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="p2983173572716"><a name="p2983173572716"></a><a name="p2983173572716"></a>默认值为null，表示不使用交换机亲和性调度。用户需要根据任务类型进行配置。</p>
-<div class="note" id="note179831235202712"><a name="note179831235202712"></a><a name="note179831235202712"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="ul59831535122714"></a><a name="ul59831535122714"></a><ul id="ul59831535122714"><li>交换机亲和性调度1.0版本支持<span id="ph1157665817140"><a name="ph1157665817140"></a><a name="ph1157665817140"></a>Atlas 训练系列产品</span>和<span id="ph168598363399"><a name="ph168598363399"></a><a name="ph168598363399"></a><term id="zh-cn_topic_0000001519959665_term57208119917_2"><a name="zh-cn_topic_0000001519959665_term57208119917_2"></a><a name="zh-cn_topic_0000001519959665_term57208119917_2"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph4181625925"><a name="ph4181625925"></a><a name="ph4181625925"></a>PyTorch</span>和<span id="ph61882510210"><a name="ph61882510210"></a><a name="ph61882510210"></a>MindSpore</span>框架。</li><li>交换机亲和性调度2.0版本支持<span id="ph311717506401"><a name="ph311717506401"></a><a name="ph311717506401"></a><term id="zh-cn_topic_0000001519959665_term57208119917_3"><a name="zh-cn_topic_0000001519959665_term57208119917_3"></a><a name="zh-cn_topic_0000001519959665_term57208119917_3"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph619244413568"><a name="ph619244413568"></a><a name="ph619244413568"></a>PyTorch</span>框架。</li><li>只支持整卡进行交换机亲和性调度，不支持静态vNPU进行交换机亲和性调度。</li></ul>
-</div></div>
+<td class="cellrowborder" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="p2983173572716"><a name="p2983173572716"></a><a name="p2983173572716"></a>默认值为null，表示不使用交换机亲和性调度。用户需要根据任务类型进行配置。</p><ul id="ul59831535122714"><li>交换机亲和性调度1.0版本支持<span id="ph1157665817140"><a name="ph1157665817140"></a><a name="ph1157665817140"></a>Atlas 训练系列产品</span>和<span id="ph168598363399"><a name="ph168598363399"></a><a name="ph168598363399"></a><term id="zh-cn_topic_0000001519959665_term57208119917_2"><a name="zh-cn_topic_0000001519959665_term57208119917_2"></a><a name="zh-cn_topic_0000001519959665_term57208119917_2"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph4181625925"><a name="ph4181625925"></a><a name="ph4181625925"></a>PyTorch</span>和<span id="ph61882510210"><a name="ph61882510210"></a><a name="ph61882510210"></a>MindSpore</span>框架。</li><li>交换机亲和性调度2.0版本支持<span id="ph311717506401"><a name="ph311717506401"></a><a name="ph311717506401"></a><term id="zh-cn_topic_0000001519959665_term57208119917_3"><a name="zh-cn_topic_0000001519959665_term57208119917_3"></a><a name="zh-cn_topic_0000001519959665_term57208119917_3"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph619244413568"><a name="ph619244413568"></a><a name="ph619244413568"></a>PyTorch</span>框架。</li><li>只支持整卡进行交换机亲和性调度，不支持静态vNPU进行交换机亲和性调度。</li></ul>
 </td>
 </tr>
 <tr id="row9984235132714"><td class="cellrowborder" valign="top" width="27.21%" headers="mcps1.2.4.1.1 "><p id="p18984535132720"><a name="p18984535132720"></a><a name="p18984535132720"></a>accelerator-type</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.18%" headers="mcps1.2.4.1.2 "><p id="p16729326173616"><a name="p16729326173616"></a><a name="p16729326173616"></a>根据所使用芯片类型不同，取值如下：</p>
-<a name="ul139845353279"></a><a name="ul139845353279"></a><ul id="ul139845353279"><li><span id="ph169841935102711"><a name="ph169841935102711"></a><a name="ph169841935102711"></a>Atlas 800 训练服务器（NPU满配）</span>：module</li><li><span id="ph10984193517273"><a name="ph10984193517273"></a><a name="ph10984193517273"></a>Atlas 800 训练服务器（NPU半配）</span>：half</li><li>服务器（插<span id="ph169855357273"><a name="ph169855357273"></a><a name="ph169855357273"></a>Atlas 300T 训练卡</span>）：card</li><li><span id="ph157633217501"><a name="ph157633217501"></a><a name="ph157633217501"></a>Atlas 800T A2 训练服务器</span>和<span id="ph14985135162710"><a name="ph14985135162710"></a><a name="ph14985135162710"></a>Atlas 900 A2 PoD 集群基础单元</span>：module-<span id="ph1898523510277"><a name="ph1898523510277"></a><a name="ph1898523510277"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_1"><a name="zh-cn_topic_0000001519959665_i1489729141619_1"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_1"></a>{xxx}</em></span>b-8</li><li><span id="ph19985163514279"><a name="ph19985163514279"></a><a name="ph19985163514279"></a>Atlas 200T A2 Box16 异构子框</span>：module-<span id="ph4985183516277"><a name="ph4985183516277"></a><a name="ph4985183516277"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_2"><a name="zh-cn_topic_0000001519959665_i1489729141619_2"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_2"></a>{xxx}</em></span>b-16</li><li><span id="ph1514953013253"><a name="ph1514953013253"></a><a name="ph1514953013253"></a>A200T A3 Box8 超节点服务器</span>：module-a3-16</li><li>（可选）<span id="ph8619174411286"><a name="ph8619174411286"></a><a name="ph8619174411286"></a>Atlas 800 训练服务器（NPU满配）</span>可以省略该标签。</li><li><span id="ph261924414289"><a name="ph261924414289"></a><a name="ph261924414289"></a>Atlas 900 A3 SuperPoD 超节点</span>：module-a3-16-super-pod</li><li><span id="ph1973065563912"><a name="ph1973065563912"></a><a name="ph1973065563912"></a>Atlas 350 标卡</span>：（可选）与node的accelerator-type标签保持一致即可。</li></ul>
+<a name="ul139845353279"></a><a name="ul139845353279"></a><ul id="ul139845353279"><li><span id="ph169841935102711"><a name="ph169841935102711"></a><a name="ph169841935102711"></a>Atlas 800 训练服务器（NPU满配）</span>：module</li><li><span id="ph10984193517273"><a name="ph10984193517273"></a><a name="ph10984193517273"></a>Atlas 800 训练服务器（NPU半配）</span>：half</li><li>服务器（插<span id="ph169855357273"><a name="ph169855357273"></a><a name="ph169855357273"></a>Atlas 300T 训练卡</span>）：card</li><li><span id="ph157633217501"><a name="ph157633217501"></a><a name="ph157633217501"></a>Atlas 800T A2 训练服务器</span>和<span id="ph14985135162710"><a name="ph14985135162710"></a><a name="ph14985135162710"></a>Atlas 900 A2 PoD 集群基础单元</span>：module-<span id="ph1898523510277"><a name="ph1898523510277"></a><a name="ph1898523510277"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_1"><a name="zh-cn_topic_0000001519959665_i1489729141619_1"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_1"></a>{xxx}</em></span>b-8</li><li><span id="ph19985163514279"><a name="ph19985163514279"></a><a name="ph19985163514279"></a>Atlas 200T A2 Box16 异构子框</span>：module-<span id="ph4985183516277"><a name="ph4985183516277"></a><a name="ph4985183516277"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_2"><a name="zh-cn_topic_0000001519959665_i1489729141619_2"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_2"></a>{xxx}</em></span>b-16</li><li><span id="ph1514953013253"><a name="ph1514953013253"></a><a name="ph1514953013253"></a>A200T A3 Box8 超节点服务器</span>：module-a3-16</li><li>（可选）<span id="ph8619174411286"><a name="ph8619174411286"></a><a name="ph8619174411286"></a>Atlas 800 训练服务器（NPU满配）</span>可以省略该标签。</li><li><span id="ph261924414289"><a name="ph261924414289"></a><a name="ph261924414289"></a>Atlas 900 A3 SuperPoD 超节点</span>：module-a3-16-super-pod</li><li><span id="ph1973065563912"><a name="ph1973065563912"></a><a name="ph1973065563912"></a>Atlas 350 标卡</span>：与node的accelerator-type标签保持一致即可。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="p5986235142714"><a name="p5986235142714"></a><a name="p5986235142714"></a>根据需要运行训练任务的节点类型，选取不同的值。</p>
 <div class="note" id="note898773512719"><a name="note898773512719"></a><a name="note898773512719"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p1027616512420"><a name="p1027616512420"></a><a name="p1027616512420"></a><span id="ph9014016509"><a name="ph9014016509"></a><a name="ph9014016509"></a>芯片型号的数值可通过<strong id="zh-cn_topic_0000001519959665_b168254314713"><a name="zh-cn_topic_0000001519959665_b168254314713"></a><a name="zh-cn_topic_0000001519959665_b168254314713"></a>npu-smi info</strong>命令查询，返回的“Name”字段对应信息为芯片型号，下文的{<em id="zh-cn_topic_0000001519959665_i1914312018209"><a name="zh-cn_topic_0000001519959665_i1914312018209"></a><a name="zh-cn_topic_0000001519959665_i1914312018209"></a>xxx</em>}即取“910”字符作为芯片型号数值。</span></p>
@@ -1296,7 +1241,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </td>
 <td class="cellrowborder" valign="top" width="36.18%" headers="mcps1.2.4.1.2 "><p id="pcustomjobkeyvalue"><a name="pcustomjobkeyvalue"></a><a name="pcustomjobkeyvalue"></a>用户自定义标签，以二级跳转的方式设置作业唯一标识符，如：<br> customJobKey: tid<br> tid: "123456"</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="pcustomjobkeydesc"><a name="pcustomjobkeydesc"></a><a name="pcustomjobkeydesc"></a>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息；<br> 在资源AscendJob的metadata.labels标签中设置。</p>
+<td class="cellrowborder" rowspan="2" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="pcustomjobkeydesc"><a name="pcustomjobkeydesc"></a><a name="pcustomjobkeydesc"></a>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息。<br> 在资源AscendJob的metadata.labels标签中设置。</p>
 </td>
 </tr>
 <tr id="rowcustomjobid"><td class="cellrowborder" valign="top" width="27.21%" headers="mcps1.2.4.1.1 "><p id="pcustomjobid"><a name="pcustomjobid"></a><a name="pcustomjobid"></a>custom-job-id</p>
@@ -1392,15 +1337,13 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </div></div>
 </li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p32732087577"><a name="p32732087577"></a><a name="p32732087577"></a>默认值为null，表示不使用交换机亲和性调度。用户需要根据任务类型进行配置。</p>
-<div class="note" id="note13620817512"><a name="note13620817512"></a><a name="note13620817512"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="ul961424647"></a><a name="ul961424647"></a><ul id="ul961424647"><li>交换机亲和性调度1.0版本支持<span id="ph63831524184110"><a name="ph63831524184110"></a><a name="ph63831524184110"></a>Atlas 训练系列产品</span>和<span id="ph138318245414"><a name="ph138318245414"></a><a name="ph138318245414"></a><term id="zh-cn_topic_0000001519959665_term57208119917_4"><a name="zh-cn_topic_0000001519959665_term57208119917_4"></a><a name="zh-cn_topic_0000001519959665_term57208119917_4"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph17383182419412"><a name="ph17383182419412"></a><a name="ph17383182419412"></a>PyTorch</span>和<span id="ph1383224134120"><a name="ph1383224134120"></a><a name="ph1383224134120"></a>MindSpore</span>框架。</li><li>交换机亲和性调度2.0版本支持<span id="ph438320243412"><a name="ph438320243412"></a><a name="ph438320243412"></a><term id="zh-cn_topic_0000001519959665_term57208119917_5"><a name="zh-cn_topic_0000001519959665_term57208119917_5"></a><a name="zh-cn_topic_0000001519959665_term57208119917_5"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph134821711841"><a name="ph134821711841"></a><a name="ph134821711841"></a>PyTorch</span>框架。</li><li>只支持整卡进行交换机亲和性调度，不支持静态vNPU进行交换机亲和性调度。</li></ul>
-</div></div>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p32732087577"><a name="p32732087577"></a><a name="p32732087577"></a>默认值为null，表示不使用交换机亲和性调度。用户需要根据任务类型进行配置。</p><ul id="ul961424647"><li>交换机亲和性调度1.0版本支持<span id="ph63831524184110"><a name="ph63831524184110"></a><a name="ph63831524184110"></a>Atlas 训练系列产品</span>和<span id="ph138318245414"><a name="ph138318245414"></a><a name="ph138318245414"></a><term id="zh-cn_topic_0000001519959665_term57208119917_4"><a name="zh-cn_topic_0000001519959665_term57208119917_4"></a><a name="zh-cn_topic_0000001519959665_term57208119917_4"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph17383182419412"><a name="ph17383182419412"></a><a name="ph17383182419412"></a>PyTorch</span>和<span id="ph1383224134120"><a name="ph1383224134120"></a><a name="ph1383224134120"></a>MindSpore</span>框架。</li><li>交换机亲和性调度2.0版本支持<span id="ph438320243412"><a name="ph438320243412"></a><a name="ph438320243412"></a><term id="zh-cn_topic_0000001519959665_term57208119917_5"><a name="zh-cn_topic_0000001519959665_term57208119917_5"></a><a name="zh-cn_topic_0000001519959665_term57208119917_5"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph134821711841"><a name="ph134821711841"></a><a name="ph134821711841"></a>PyTorch</span>框架。</li><li>只支持整卡进行交换机亲和性调度，不支持静态vNPU进行交换机亲和性调度。</li></ul>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000001609074269_row15494422131"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001609074269_p1449413229314"><a name="zh-cn_topic_0000001609074269_p1449413229314"></a><a name="zh-cn_topic_0000001609074269_p1449413229314"></a>accelerator-type</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p7665323173618"><a name="p7665323173618"></a><a name="p7665323173618"></a>根据所使用芯片类型不同，取值如下：</p>
-<a name="ul14200073713"></a><a name="ul14200073713"></a><ul id="ul14200073713"><li><span id="zh-cn_topic_0000001609074269_ph1881218064513"><a name="zh-cn_topic_0000001609074269_ph1881218064513"></a><a name="zh-cn_topic_0000001609074269_ph1881218064513"></a>Atlas 800 训练服务器（NPU满配）</span>：module</li><li><span id="zh-cn_topic_0000001609074269_ph1284164912438"><a name="zh-cn_topic_0000001609074269_ph1284164912438"></a><a name="zh-cn_topic_0000001609074269_ph1284164912438"></a>Atlas 800 训练服务器（NPU半配）</span>：half</li><li>服务器（插<span id="zh-cn_topic_0000001609074269_ph4528511506"><a name="zh-cn_topic_0000001609074269_ph4528511506"></a><a name="zh-cn_topic_0000001609074269_ph4528511506"></a>Atlas 300T 训练卡</span>）：card</li><li><span id="ph486033685311"><a name="ph486033685311"></a><a name="ph486033685311"></a>Atlas 800T A2 训练服务器</span>和<span id="ph1296712308221"><a name="ph1296712308221"></a><a name="ph1296712308221"></a>Atlas 900 A2 PoD 集群基础单元</span>：module-<span id="ph4487202241512"><a name="ph4487202241512"></a><a name="ph4487202241512"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_3"><a name="zh-cn_topic_0000001519959665_i1489729141619_3"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_3"></a>{xxx}</em></span>b-8</li><li><span id="ph1114211211203"><a name="ph1114211211203"></a><a name="ph1114211211203"></a>Atlas 200T A2 Box16 异构子框</span>：module-<span id="ph5811017182112"><a name="ph5811017182112"></a><a name="ph5811017182112"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_4"><a name="zh-cn_topic_0000001519959665_i1489729141619_4"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_4"></a>{xxx}</em></span>b-16</li><li><span id="ph115277505269"><a name="ph115277505269"></a><a name="ph115277505269"></a>A200T A3 Box8 超节点服务器</span>：module-a3-16</li><li>（可选）<span id="ph7730165573912"><a name="ph7730165573912"></a><a name="ph7730165573912"></a>Atlas 800 训练服务器（NPU满配）</span>可以省略该标签。</li><li><span id="ph1973065563912"><a name="ph1973065563912"></a><a name="ph1973065563912"></a>Atlas 900 A3 SuperPoD 超节点</span>：module-a3-16-super-pod</li><li><span id="ph1973065563912"><a name="ph1973065563912"></a><a name="ph1973065563912"></a>Atlas 350 标卡</span>：（可选）与node的accelerator-type标签保持一致即可。</li></ul>
+<a name="ul14200073713"></a><a name="ul14200073713"></a><ul id="ul14200073713"><li><span id="zh-cn_topic_0000001609074269_ph1881218064513"><a name="zh-cn_topic_0000001609074269_ph1881218064513"></a><a name="zh-cn_topic_0000001609074269_ph1881218064513"></a>Atlas 800 训练服务器（NPU满配）</span>：module</li><li><span id="zh-cn_topic_0000001609074269_ph1284164912438"><a name="zh-cn_topic_0000001609074269_ph1284164912438"></a><a name="zh-cn_topic_0000001609074269_ph1284164912438"></a>Atlas 800 训练服务器（NPU半配）</span>：half</li><li>服务器（插<span id="zh-cn_topic_0000001609074269_ph4528511506"><a name="zh-cn_topic_0000001609074269_ph4528511506"></a><a name="zh-cn_topic_0000001609074269_ph4528511506"></a>Atlas 300T 训练卡</span>）：card</li><li><span id="ph486033685311"><a name="ph486033685311"></a><a name="ph486033685311"></a>Atlas 800T A2 训练服务器</span>和<span id="ph1296712308221"><a name="ph1296712308221"></a><a name="ph1296712308221"></a>Atlas 900 A2 PoD 集群基础单元</span>：module-<span id="ph4487202241512"><a name="ph4487202241512"></a><a name="ph4487202241512"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_3"><a name="zh-cn_topic_0000001519959665_i1489729141619_3"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_3"></a>{xxx}</em></span>b-8</li><li><span id="ph1114211211203"><a name="ph1114211211203"></a><a name="ph1114211211203"></a>Atlas 200T A2 Box16 异构子框</span>：module-<span id="ph5811017182112"><a name="ph5811017182112"></a><a name="ph5811017182112"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_4"><a name="zh-cn_topic_0000001519959665_i1489729141619_4"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_4"></a>{xxx}</em></span>b-16</li><li><span id="ph115277505269"><a name="ph115277505269"></a><a name="ph115277505269"></a>A200T A3 Box8 超节点服务器</span>：module-a3-16</li><li>（可选）<span id="ph7730165573912"><a name="ph7730165573912"></a><a name="ph7730165573912"></a>Atlas 800 训练服务器（NPU满配）</span>可以省略该标签。</li><li><span id="ph1973065563912"><a name="ph1973065563912"></a><a name="ph1973065563912"></a>Atlas 900 A3 SuperPoD 超节点</span>：module-a3-16-super-pod</li><li><span id="ph1973065563912"><a name="ph1973065563912"></a><a name="ph1973065563912"></a>Atlas 350 标卡</span>：与node的accelerator-type标签保持一致即可。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p1954213851616"><a name="p1954213851616"></a><a name="p1954213851616"></a>根据需要运行训练任务的节点类型，选取不同的值。</p>
 <div class="note" id="note19666163011214"><a name="note19666163011214"></a><a name="note19666163011214"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p1105153313533"><a name="p1105153313533"></a><a name="p1105153313533"></a><span id="ph710573305319"><a name="ph710573305319"></a><a name="ph710573305319"></a>芯片型号的数值可通过<strong id="zh-cn_topic_0000001519959665_b168254314713_1"><a name="zh-cn_topic_0000001519959665_b168254314713_1"></a><a name="zh-cn_topic_0000001519959665_b168254314713_1"></a>npu-smi info</strong>命令查询，返回的“Name”字段对应信息为芯片型号，下文的{<em id="zh-cn_topic_0000001519959665_i1914312018209_1"><a name="zh-cn_topic_0000001519959665_i1914312018209_1"></a><a name="zh-cn_topic_0000001519959665_i1914312018209_1"></a>xxx</em>}即取“910”字符作为芯片型号数值。</span></p>
@@ -1469,7 +1412,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="pcustomjobkeyvalue2"><a name="pcustomjobkeyvalue2"></a><a name="pcustomjobkeyvalue2"></a>用户自定义标签，以二级跳转的方式设置作业唯一标识符，如：<br> customJobKey: tid<br> tid: "123456"</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="pcustomjobkeydesc2"><a name="pcustomjobkeydesc2"></a><a name="pcustomjobkeydesc2"></a>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息；<br> <ul><li>vcjob任务在资源Job的metadata.labels标签中设置；<br></li> <li>deploy任务在资源Deployment的spec.template.metadata.labels标签中设置。</li></ul></p>
+<td class="cellrowborder" rowspan="2" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="pcustomjobkeydesc2"><a name="pcustomjobkeydesc2"></a><a name="pcustomjobkeydesc2"></a>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息。<br> <ul><li>vcjob任务在资源Job的metadata.labels标签中设置。<br></li> <li>deploy任务在资源Deployment的spec.template.metadata.labels标签中设置。</li></ul></p>
 </td>
 </tr>
 <tr id="rowcustomjobid2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobid2"><a name="pcustomjobid2"></a><a name="pcustomjobid2"></a>custom-job-id</p>
@@ -1483,64 +1426,18 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 **表 3**  huawei.com/schedule\_policy配置说明
 
 <a name="table1120511613153"></a>
-<table><thead align="left"><tr id="row192066612155"><th class="cellrowborder" valign="top" width="22.3%" id="mcps1.2.3.1.1"><p id="p132062614153"><a name="p132062614153"></a><a name="p132062614153"></a>配置</p>
-</th>
-<th class="cellrowborder" valign="top" width="77.7%" id="mcps1.2.3.1.2"><p id="p5206126181520"><a name="p5206126181520"></a><a name="p5206126181520"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row201261346162"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p457945418181"><a name="p457945418181"></a><a name="p457945418181"></a>chip4-node8</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p7579105411817"><a name="p7579105411817"></a><a name="p7579105411817"></a>1个节点8张芯片，每4个芯片形成1个互联环。例如，<span id="ph18314192319429"><a name="ph18314192319429"></a><a name="ph18314192319429"></a>Atlas 800 训练服务器（型号 9000）</span>/<span id="ph631452384213"><a name="ph631452384213"></a><a name="ph631452384213"></a>Atlas 800 训练服务器（型号 9010）</span>芯片的整模块场景 /Atlas 350 推理卡内部共8张卡，每4张卡通过UB扣板连接。</p>
-</td>
-</tr>
-<tr id="row102574171610"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p205801254151810"><a name="p205801254151810"></a><a name="p205801254151810"></a>chip1-node2</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p65801354101816"><a name="p65801354101816"></a><a name="p65801354101816"></a>1个节点2张芯片。例如，<span id="ph97657495514"><a name="ph97657495514"></a><a name="ph97657495514"></a>Atlas 300T 训练卡</span>的插卡场景，1张卡最多插1个芯片，1个节点最多插2张卡。</p>
-</td>
-</tr>
-<tr id="row825811151619"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p17580854201815"><a name="p17580854201815"></a><a name="p17580854201815"></a>chip4-node4</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p858019546184"><a name="p858019546184"></a><a name="p858019546184"></a>1个节点4张芯片，形成1个互联环。例如，<span id="ph1165491719811"><a name="ph1165491719811"></a><a name="ph1165491719811"></a>Atlas 800 训练服务器（型号 9000）</span>/<span id="ph15654111712815"><a name="ph15654111712815"></a><a name="ph15654111712815"></a>Atlas 800 训练服务器（型号 9010）</span>芯片的半配场景。</p>
-</td>
-</tr>
-<tr id="row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p2580654131819"><a name="p2580654131819"></a><a name="p2580654131819"></a>chip8-node8</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p85801654181818"><a name="p85801654181818"></a><a name="p85801654181818"></a>1个节点8张卡，8张卡都在1个互联环上。例如，<span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 800T A2 训练服务器</span>。</p>
-</td>
-</tr>
-<tr id="row1820613612158"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p1358111544185"><a name="p1358111544185"></a><a name="p1358111544185"></a>chip8-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p9581135461815"><a name="p9581135461815"></a><a name="p9581135461815"></a>1个节点16张卡，每8张卡在1个互联环上。例如，<span id="ph1831422311424"><a name="ph1831422311424"></a><a name="ph1831422311424"></a>Atlas 200T A2 Box16 异构子框</span>。</p>
-</td>
-</tr>
-<tr id="row2020613616154"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p2581854121811"><a name="p2581854121811"></a><a name="p2581854121811"></a>chip2-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p758125481813"><a name="p758125481813"></a><a name="p758125481813"></a>1个节点16张卡，每2张卡在1个互联环上。例如，<span id="ph855133261011"><a name="ph855133261011"></a><a name="ph855133261011"></a>Atlas 800T A3 超节点服务器</span>。</p>
-</td>
-</tr>
-<tr id="row22064621511"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p558111549188"><a name="p558111549188"></a><a name="p558111549188"></a>chip2-node16-sp</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p258115548187"><a name="p258115548187"></a><a name="p258115548187"></a>1个节点16张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，<span id="ph1990844161011"><a name="ph1990844161011"></a><a name="ph1990844161011"></a>Atlas 900 A3 SuperPoD 超节点</span>。</p>
-</td>
-</tr>
-<tr id="row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p2580654131819"><a name="p2580654131819"></a><a name="p2580654131819"></a>chip4-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p85801654181818"><a name="p85801654181818"></a><a name="p85801654181818"></a>1个节点16张卡，每4张卡都在1个互联环上。例如，<span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 350 推理卡内部共16张卡，每4张卡通过UB扣板连接</span>。</p>
-</td>
-</tr>
-<tr id="row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p2580654131819"><a name="p2580654131819"></a><a name="p2580654131819"></a>chip1-node8</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p85801654181818"><a name="p85801654181818"></a><a name="p85801654181818"></a>1个节点8张卡，每张卡之间无互联。例如，<span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 350 推理卡内部共8张卡，每张卡之间无互联</span>。</p>
-</td>
-</tr>
-<tr id="row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p2580654131819"><a name="p2580654131819"></a><a name="p2580654131819"></a>chip1-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p85801654181818"><a name="p85801654181818"></a><a name="p85801654181818"></a>1个节点16张卡，每张卡之间无互联。例如，<span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 350 推理卡内部共16张卡，每张卡之间无互联</span>。</p>
-</td>
-</tr>
-</tbody>
-</table>
+|配置|说明|
+|--|--|
+|chip4-node8|1个节点8张芯片，每4个芯片形成1个互联环。例如，Atlas 800 训练服务器（型号 9000）/Atlas 800 训练服务器（型号 9010）芯片的整模块场景/Atlas 350 标卡共8张卡，每4张卡通过UB扣板连接。|
+|chip1-node2|1个节点2张芯片。例如，Atlas 300T 训练卡的插卡场景，1张卡最多插1个芯片，1个节点最多插2张卡。|
+|chip4-node4|1个节点4张芯片，形成1个互联环。例如，Atlas 800 训练服务器（型号 9000）/Atlas 800 训练服务器（型号 9010）芯片的半配场景。|
+|chip8-node8|1个节点8张卡，8张卡都在1个互联环上。例如，Atlas 800T A2 训练服务器。|
+|chip8-node16|1个节点16张卡，每8张卡在1个互联环上。例如，Atlas 200T A2 Box16 异构子框。|
+|chip2-node16|1个节点16张卡，每2张卡在1个互联环上。例如，Atlas 800T A3 超节点服务器。|
+|chip2-node16-sp|1个节点16张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，Atlas 900 A3 SuperPoD 超节点。|
+|chip4-node16|1个节点16张卡，每4张卡都在1个互联环上。例如，Atlas 350 标卡共16张卡，每4张卡通过UB扣板连接。|
+|chip1-node8|1个节点8张卡，每张卡之间无互联。例如，Atlas 350 标卡共8张卡，每张卡之间无互联。|
+|chip1-node16|1个节点16张卡，每张卡之间无互联。例如，Atlas 350 标卡共16张卡，每张卡之间无互联。|
 
 
 ##### 配置YAML<a name="ZH-CN_TOPIC_0000002511347101"></a>
@@ -1569,9 +1466,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     <p id="p1783141615287"><a name="p1783141615287"></a><a name="p1783141615287"></a></p>
     <p id="p53986186431"><a name="p53986186431"></a><a name="p53986186431"></a></p>
     </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1083151622813"><a name="p1083151622813"></a><a name="p1083151622813"></a><a href="#li28347161281">在Atlas 800 训练服务器上创建单机任务</a></p>
-    <div class="note" id="note19832191615281"><a name="note19832191615281"></a><a name="note19832191615281"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p128321216132812"><a name="p128321216132812"></a><a name="p128321216132812"></a>若需要使用<span id="ph1183219160285"><a name="ph1183219160285"></a><a name="ph1183219160285"></a>PyTorch</span>或<span id="ph8832121614281"><a name="ph8832121614281"></a><a name="ph8832121614281"></a>MindSpore</span>框架支持的交换机亲和性调度，配置示例请参见<a href="#li583911163280">配置交换机亲和性调度参考示例</a>。</p>
-    </div></div>
+    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1083151622813"><a name="p1083151622813"></a><a name="p1083151622813"></a><a href="#li28347161281">在Atlas 800 训练服务器上创建单机任务</a></p><p id="p128321216132812"><a name="p128321216132812"></a><a name="p128321216132812"></a>若需要使用<span id="ph1183219160285"><a name="ph1183219160285"></a><a name="ph1183219160285"></a>PyTorch</span>或<span id="ph8832121614281"><a name="ph8832121614281"></a><a name="ph8832121614281"></a>MindSpore</span>框架支持的交换机亲和性调度，配置示例请参见<a href="#li583911163280">配置交换机亲和性调度参考示例</a>。</p>
     </td>
     </tr>
     <tr id="row0832171652816"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p178320163285"><a name="p178320163285"></a><a name="p178320163285"></a><a href="#li1731218243100">在Atlas 800T A2 训练服务器上创建分布式任务</a></p>
@@ -1697,7 +1592,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         >[!NOTE] 说明 
         >TensorFlow、PyTorch、MindSpore框架中对应的Chief、Master、Scheduler的“replicas”字段不能超过1。单机任务时，TensorFlow、PyTorch框架不需要Worker。单卡任务时，MindSpore框架不需要Scheduler。
 
-    -   使用**整卡调度**特性，参考本配置。tensorflow\_multinodes\_acjob\__\{xxx\}_b.yaml为例，在两台Atlas 800T A2 训练服务器节点创建**分布式训练**任务，执行2\*8芯片训练任务，修改示例如下，分布式任务的每个Pod只能调度到不同节点。
+    -   <a name="li1731218243100"></a>使用**整卡调度**特性，参考本配置。tensorflow\_multinodes\_acjob\_\{xxx\}b.yaml为例，在两台Atlas 800T A2 训练服务器节点创建**分布式训练**任务，执行2\*8芯片训练任务，修改示例如下，分布式任务的每个Pod只能调度到不同节点。
 
         ```
         apiVersion: mindxdl.gitee.com/v1
@@ -2023,7 +1918,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     >[!NOTE] 说明 
     >整卡调度或静态vNPU调度特性配置YAML的操作只在步骤1中有区别，整卡调度和静态vNPU调度特性在步骤1之后的操作相同。
 
-2.  <a name="li118885168281"></a>若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu“和“memory“参数和对应的参数值，具体数值请根据实际情况配置。
+2.  <a name="li118885168281"></a>若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu”和“memory”参数和对应的参数值，具体数值请根据实际情况配置。
 
     ```
     ...
@@ -2039,7 +1934,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     ...
     ```
 
-3.  修改训练脚本、代码的挂载路径。
+3.  <a name="li0303"></a>修改训练脚本、代码的挂载路径。
 
     从昇腾镜像仓库拉取的基础镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
 
@@ -2088,8 +1983,8 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
         >[!NOTE] 说明 
         >以TensorFlow命令参数为例。
-        >-   /job/code/：为步骤[3](#li112747151117)中用户自定义的容器中训练脚本路径。
-        >-   /job/output/：步骤[3](#li112747151117)中用户自定义的容器中训练数据集路径。
+        >-   /job/code/：[步骤3](#li0303)中用户自定义的容器中训练脚本路径。
+        >-   /job/output/：[步骤3](#li0303)中用户自定义的容器中训练数据集路径。
         >-   tensorflow/resnet\_ctl\_imagenet\_main.py：启动训练脚本路径。
 
 5.  YAML为使用NFS场景，需要指定NFS服务器地址、训练数据集路径、脚本路径和训练输出路径，请根据实际修改。如果不使用NFS请根据K8s相关指导自行修改。
@@ -2156,9 +2051,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     </tr>
     <tr id="row173101655202217"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1366503795516"><a name="p1366503795516"></a><a name="p1366503795516"></a>整卡调度</p>
     </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p133113557220"><a name="p133113557220"></a><a name="p133113557220"></a><a href="#li1487005712813">在Atlas 800T A2 训练服务器上创建分布式任务</a></p>
-    <div class="note" id="note1836416491472"><a name="note1836416491472"></a><a name="note1836416491472"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p918205224718"><a name="p918205224718"></a><a name="p918205224718"></a>若需要使用<span id="ph181814524472"><a name="ph181814524472"></a><a name="ph181814524472"></a>PyTorch</span>或<span id="ph318155294712"><a name="ph318155294712"></a><a name="ph318155294712"></a>MindSpore</span>框架支持的交换机亲和性调度，配置示例请参见<a href="#li1460553372">配置交换机亲和性调度参考示例</a>。</p>
-    </div></div>
+    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p133113557220"><a name="p133113557220"></a><a name="p133113557220"></a><a href="#li1487005712813">在Atlas 800T A2 训练服务器上创建分布式任务</a></p><p id="p918205224718"><a name="p918205224718"></a><a name="p918205224718"></a>若需要使用<span id="ph181814524472"><a name="ph181814524472"></a><a name="ph181814524472"></a>PyTorch</span>或<span id="ph318155294712"><a name="ph318155294712"></a><a name="ph318155294712"></a>MindSpore</span>框架支持的交换机亲和性调度，配置示例请参见<a href="#li1460553372">配置交换机亲和性调度参考示例</a>。</p>
     </td>
     </tr>
     <tr id="row1140175742214"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p24055715225"><a name="p24055715225"></a><a name="p24055715225"></a>静态vNPU调度</p>
@@ -2334,7 +2227,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                         fieldPath: status.hostIP
                   - name: framework
                     value: "Tensorflow"          # 根据实际框架变化进行修改
-                  - name: ASCEND_VISIBLE_DEVICES                       # 会使用该字段
+                  - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime会使用该字段
                     valueFrom:
                       fieldRef:
                         fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
@@ -2432,7 +2325,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         ```
 
         >[!NOTE] 说明 
-        >其余示例可参考[表5](#选择yaml示例)和[表4](#选择yaml示例)，以及YAML对应的参数说明[表2](#yaml参数说明)进行适配修改。修改完成后执行[步骤2](#li832632419711)，继续配置yaml的其他字段。
+        >其余示例可参考[选择YAML示例](#选择yaml示例)中表4和表5，以及YAML对应的参数说明[表2](#yaml参数说明)进行适配修改。修改完成后执行[步骤2](#li832632419711)，继续配置YAML的其他字段。
 
     -   <a name="li1328115394814"></a>使用**静态vNPU调度**特性，参考本配置。以a800\_tensorflow\_vcjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，申请2个AI Core的任务为例，修改示例如下。静态vNPU调度特性只支持**单机训练**任务。
 
@@ -2489,7 +2382,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     >[!NOTE] 说明 
     >整卡调度或静态vNPU调度特性配置YAML的操作只在步骤1中有区别，整卡调度和静态vNPU调度特性在步骤1之后的操作相同。
 
-2.  <a name="li832632419711"></a>若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu“和“memory“参数和对应的参数值，具体数值请根据实际情况配置。
+2.  <a name="li832632419711"></a>若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu”和“memory”参数和对应的参数值，具体数值请根据实际情况配置。
 
     ```
     ...
@@ -2554,8 +2447,8 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
         >[!NOTE] 说明 
         >以TensorFlow命令参数为例。
-        >-   /job/code/：步骤[3](#li112747151117)中用户自定义的容器中训练脚本路径。
-        >-   /job/output/：步骤[3](#li112747151117)中用户自定义的容器中训练数据集路径。
+        >-   /job/code/：[步骤3](#li112747151117)中用户自定义的容器中训练脚本路径。
+        >-   /job/output/：[步骤3](#li112747151117)中用户自定义的容器中训练数据集路径。
         >-   tensorflow/resnet\_ctl\_imagenet\_main.py：启动训练脚本路径。
 
 5.  YAML为使用NFS场景，需要指定NFS服务器地址、训练数据集路径、脚本路径和训练输出路径，请根据实际修改。如果不使用NFS请根据K8s相关指导自行修改。
@@ -2608,7 +2501,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     ```
 
     >[!NOTE] 说明 
-    >如果下发任务成功后，又修改了任务YAML，需要先执行kubectl delete -f** **_XXX__.yaml_命令删除原任务，再重新下发任务。
+    >如果下发任务成功后，又修改了任务YAML，需要先执行kubectl delete -f <i>XXX.yaml</i>命令删除原任务，再重新下发任务。
 
     -   通过环境变量配置资源信息场景的示例如下：
 
@@ -2745,7 +2638,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
     本例中使用**kubectl describe pod mindx-dls-test-default-test-0 -n vcjob**命令查看运行Pod的情况。
 
-    -   单机单芯片训练任务示例，有如下加粗的内容表示正常。
+    -   单机单芯片训练任务示例，显示如下内容表示正常。
 
         ```
         root@ubuntu:/home/test/yaml# kubectl describe pod mindx-dls-test-default-test-0 -n vcjob
@@ -2773,7 +2666,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         Status:       Running
         ```
 
-    -   两个训练节点，执行2\*8芯片分布式训练任务示例，有如下加粗的内容表示正常。
+    -   两个训练节点，执行2\*8芯片分布式训练任务示例，显示如下内容表示正常。
 
         ```
         root@ubuntu:/home/test/yaml# kubectl describe pod mindx-dls-test-default-test-0 -n vcjob
@@ -3053,22 +2946,15 @@ kubectl delete -f XXX.yaml
     ...
                 env:
     ...
-             # 使用其他调度器暂不支持ASCEND_VISIBLE_DEVICES相关字段，需要删除以下加粗字段
+             # 使用其他调度器暂不支持ASCEND_VISIBLE_DEVICES相关字段，需要删除以下字段
               - name: ASCEND_VISIBLE_DEVICES                       
                 valueFrom:
                   fieldRef:
                     fieldPath: metadata.annotations['huawei.com/Ascend910']               
     ...
-                resources:
-                  limits:
-                    huawei.com/Ascend910: 8
-                  requests:
-                    huawei.com/Ascend910: 8
-                volumeMounts:
-    ...
     ```
 
-2.  若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu“和“memory“参数和对应的参数值，具体数值请根据实际情况配置。
+2.  若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu”和“memory”参数和对应的参数值，具体数值请根据实际情况配置。
 
     ```
     ...
@@ -3084,7 +2970,7 @@ kubectl delete -f XXX.yaml
     ...
     ```
 
-3.  <a name="li112747151117"></a>修改训练脚本、代码的挂载路径。
+3.  <a name="li1127471511178"></a>修改训练脚本、代码的挂载路径。
 
     从昇腾镜像仓库拉取的基础镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
 
@@ -3134,8 +3020,8 @@ kubectl delete -f XXX.yaml
 
     >[!NOTE] 说明 
     >以TensorFlow命令参数为例。
-    >-   /job/code/：为步骤[3](#li112747151117)中用户自定义的容器中训练脚本路径。
-    >-   /job/output/：步骤[3](#li112747151117)中用户自定义的容器中训练数据集路径。
+    >-   /job/code/：[步骤3](#li1127471511178)中用户自定义的容器中训练脚本路径。
+    >-   /job/output/：[步骤3](#li1127471511178)中用户自定义的容器中训练数据集路径。
     >-   tensorflow/resnet\_ctl\_imagenet\_main.py：启动训练脚本路径。
 
 5.  YAML为使用NFS场景，需要指定NFS服务器地址、训练数据集路径、脚本路径和训练输出路径，请根据实际修改。如果不使用NFS请根据K8s相关指导自行修改。
@@ -3209,7 +3095,7 @@ kubectl delete -f XXX.yaml
     >NewForConfig\(cfg\)的函数原型为**NewForConfig\(c \*rest.Config\)\(\*Clientset, error\)。**
     >参数说明如下：
     >-   **\*rest.Config**：客户端配置文件，由K8s提供的接口生成；包括cluster host、证书等信息。
-    >-   **\*Clientset：**Client集合，包括AscendJob client（或VolcanoJob client）和discovery client。
+    >-   **\*Clientset**：Client集合，包括AscendJob client（或VolcanoJob client）和discovery client。
     >-   **error**：错误信息。
 
 3.  创建Job对象。通过环境变量配置资源信息的用户需要创建Ascend Job对象；通过文件配置资源信息的用户需要创建Volcano Job对象。
@@ -3663,7 +3549,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
 #### 准备任务YAML<a name="ZH-CN_TOPIC_0000002479387148"></a>
 
 >[!NOTE] 说明 
->如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载“/dev“目录下的设备。其他目录（如“/usr“）用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
+>如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载“/dev”目录下的设备。其他目录（如“/usr”）用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
 >因为Atlas 200I SoC A1 核心板场景不支持Ascend Docker Runtime，用户也无需修改YAML文件。
 
 **操作步骤<a name="zh-cn_topic_0000001609074213_section14665181617334"></a>**
@@ -3689,7 +3575,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     </td>
     <td class="cellrowborder" valign="top" width="42.59%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000001609074213_p1116971091915"><a name="zh-cn_topic_0000001609074213_p1116971091915"></a><a name="zh-cn_topic_0000001609074213_p1116971091915"></a>infer-deploy-310p-1usoc.yaml</p>
     </td>
-    <td class="cellrowborder" valign="top" width="12.45%" headers="mcps1.2.5.1.4 "><p id="p784716567219"><a name="p784716567219"></a><a name="p784716567219"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.2.RC1/samples/inference/volcano/infer-deploy-310p-1usoc.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+    <td class="cellrowborder" valign="top" width="12.45%" headers="mcps1.2.5.1.4 "><p id="p784716567219"><a name="p784716567219"></a><a name="p784716567219"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/infer-deploy-310p-1usoc.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
     </tr>
     <tr id="zh-cn_topic_0000001609074213_row17169201091917"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000001609074213_p14853125832110"><a name="zh-cn_topic_0000001609074213_p14853125832110"></a><a name="zh-cn_topic_0000001609074213_p14853125832110"></a>其他类型推理节点</p>
@@ -3697,7 +3583,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000001609074213_p51692100191"><a name="zh-cn_topic_0000001609074213_p51692100191"></a><a name="zh-cn_topic_0000001609074213_p51692100191"></a>infer-deploy.yaml</p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p74352718168"><a name="p74352718168"></a><a name="p74352718168"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.2.RC1/samples/inference/volcano/infer-deploy.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p74352718168"><a name="p74352718168"></a><a name="p74352718168"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/infer-deploy.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
     </tr>
     <tr id="row114428221610"><td class="cellrowborder" valign="top" width="18.48%" headers="mcps1.2.5.1.1 "><p id="p9442102131620"><a name="p9442102131620"></a><a name="p9442102131620"></a>Volcano Job任务</p>
@@ -3708,7 +3594,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     </td>
     <td class="cellrowborder" valign="top" width="42.59%" headers="mcps1.2.5.1.3 "><p id="p8442112171619"><a name="p8442112171619"></a><a name="p8442112171619"></a>infer-vcjob-910.yaml</p>
     </td>
-    <td class="cellrowborder" valign="top" width="12.45%" headers="mcps1.2.5.1.4 "><p id="p15442424164"><a name="p15442424164"></a><a name="p15442424164"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.2.RC1/samples/inference/volcano/infer-vcjob-910.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+    <td class="cellrowborder" valign="top" width="12.45%" headers="mcps1.2.5.1.4 "><p id="p15442424164"><a name="p15442424164"></a><a name="p15442424164"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/infer-vcjob-910.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
     </tr>
     <tr id="row16861151313547"><td class="cellrowborder" rowspan="2" valign="top" width="18.48%" headers="mcps1.2.5.1.1 "><p id="p6861171325411"><a name="p6861171325411"></a><a name="p6861171325411"></a>Ascend Job任务</p>
@@ -3718,7 +3604,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     </td>
     <td class="cellrowborder" valign="top" width="42.59%" headers="mcps1.2.5.1.3 "><p id="p10861813135419"><a name="p10861813135419"></a><a name="p10861813135419"></a>pytorch_acjob_infer_310p_with_ranktable.yaml</p>
     </td>
-    <td class="cellrowborder" valign="top" width="12.45%" headers="mcps1.2.5.1.4 "><p id="p1986116136544"><a name="p1986116136544"></a><a name="p1986116136544"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.2.RC1/samples/inference/volcano/pytorch_acjob_infer_310p_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+    <td class="cellrowborder" valign="top" width="12.45%" headers="mcps1.2.5.1.4 "><p id="p1986116136544"><a name="p1986116136544"></a><a name="p1986116136544"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/pytorch_acjob_infer_310p_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
     </tr>
     <tr id="row18446115212811"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1611216221297"><a name="p1611216221297"></a><a name="p1611216221297"></a><span id="ph10342125017508"><a name="ph10342125017508"></a><a name="ph10342125017508"></a>Atlas 800I A2 推理服务器</span></p>
@@ -3727,7 +3613,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p4446185212815"><a name="p4446185212815"></a><a name="p4446185212815"></a>pytorch_multinodes_acjob_infer_<em id="i232224205019"><a name="i232224205019"></a><a name="i232224205019"></a>{</em><em id="i133214249507"><a name="i133214249507"></a><a name="i133214249507"></a>xxx}</em>b_with_ranktable.yaml</p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p962512301913"><a name="p962512301913"></a><a name="p962512301913"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.2.RC1/samples/inference/volcano/pytorch_multinodes_acjob_infer_910b_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p962512301913"><a name="p962512301913"></a><a name="p962512301913"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_910b_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
     </tr>
     </tbody>
@@ -3774,10 +3660,8 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     <a name="ul1257013663114"></a><a name="ul1257013663114"></a>
     <p id="p444515595295"><a name="p444515595295"></a><a name="p444515595295"></a>如<em id="i154056256459"><a name="i154056256459"></a><a name="i154056256459"></a>huawei.com/Ascend310P-4c.3cpu</em>: 1</p>
     </td>
-    <td class="cellrowborder" valign="top" width="37.71377137713771%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001609074213_p11590211155219"><a name="zh-cn_topic_0000001609074213_p11590211155219"></a><a name="zh-cn_topic_0000001609074213_p11590211155219"></a>请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。requests和limits下，芯片的名字和数量需保持一致。</p>
-    <div class="note" id="note1648201912419"><a name="note1648201912419"></a><a name="note1648201912419"></a><span class="notetitle"> 说明： </span><div class="notebody"><a name="ul10782193418818"></a><a name="ul10782193418818"></a><ul id="ul10782193418818"><li>仅<span id="ph1038285416813"><a name="ph1038285416813"></a><a name="ph1038285416813"></a>Atlas 推理系列产品</span>非混插模式支持静态vNPU调度。</li><li>推理服务器（插<span id="ph1990710374611"><a name="ph1990710374611"></a><a name="ph1990710374611"></a>Atlas 300I 推理卡</span>）和<span id="ph629210161695"><a name="ph629210161695"></a><a name="ph629210161695"></a>Atlas 推理系列产品</span>混插模式不支持静态vNPU调度。</li><li><strong id="b179331118122318"><a name="b179331118122318"></a><a name="b179331118122318"></a><em id="i14933131862318"><a name="i14933131862318"></a><a name="i14933131862318"></a>Y</em></strong>取值可参考<a href="./virtual_instance.md#静态虚拟化">静态虚拟化</a>章节中的虚拟化实例模板与虚拟设备类型关系表的对应产品的“vNPU类型”列。<p id="p208621211164518"><a name="p208621211164518"></a><a name="p208621211164518"></a>以vNPU类型<em id="i412654718449"><a name="i412654718449"></a><a name="i412654718449"></a>Ascend310P-4c.3cpu</em>为例，<strong id="b1835616104433"><a name="b1835616104433"></a><a name="b1835616104433"></a><em id="i135681014319"><a name="i135681014319"></a><a name="i135681014319"></a>Y</em></strong>取值为4c.3cpu，不包括前面的Ascend310P。</p>
+    <td class="cellrowborder" valign="top" width="37.71377137713771%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001609074213_p11590211155219"><a name="zh-cn_topic_0000001609074213_p11590211155219"></a><a name="zh-cn_topic_0000001609074213_p11590211155219"></a>请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。requests和limits下，芯片的名字和数量需保持一致。</p><ul id="ul10782193418818"><li>仅<span id="ph1038285416813"><a name="ph1038285416813"></a><a name="ph1038285416813"></a>Atlas 推理系列产品</span>非混插模式支持静态vNPU调度。</li><li>推理服务器（插<span id="ph1990710374611"><a name="ph1990710374611"></a><a name="ph1990710374611"></a>Atlas 300I 推理卡</span>）和<span id="ph629210161695"><a name="ph629210161695"></a><a name="ph629210161695"></a>Atlas 推理系列产品</span>混插模式不支持静态vNPU调度。</li><li><strong id="b179331118122318"><a name="b179331118122318"></a><a name="b179331118122318"></a><em id="i14933131862318"><a name="i14933131862318"></a><a name="i14933131862318"></a>Y</em></strong>取值可参考<a href="./virtual_instance.md#静态虚拟化">静态虚拟化</a>章节中的虚拟化实例模板与虚拟设备类型关系表的对应产品的“vNPU类型”列。<p id="p208621211164518"><a name="p208621211164518"></a><a name="p208621211164518"></a>以vNPU类型<em id="i412654718449"><a name="i412654718449"></a><a name="i412654718449"></a>Ascend310P-4c.3cpu</em>为例，<strong id="b1835616104433"><a name="b1835616104433"></a><a name="b1835616104433"></a><em id="i135681014319"><a name="i135681014319"></a><a name="i135681014319"></a>Y</em></strong>取值为4c.3cpu，不包括前面的Ascend310P。</p>
     </li></ul>
-    </div></div>
     </td>
     </tr>
     <tr id="zh-cn_topic_0000001609074213_row114301545157"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001609074213_p16864941511"><a name="zh-cn_topic_0000001609074213_p16864941511"></a><a name="zh-cn_topic_0000001609074213_p16864941511"></a>limits</p>
@@ -3944,67 +3828,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     </tbody>
     </table>
 
-    **表 3**  huawei.com/schedule\_policy配置说明
-
-    <a name="table1120511613153"></a>
-    <table><thead align="left"><tr id="zh-cn_topic_0000002511347099_row192066612155"><th class="cellrowborder" valign="top" width="22.3%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000002511347099_p132062614153"><a name="zh-cn_topic_0000002511347099_p132062614153"></a><a name="zh-cn_topic_0000002511347099_p132062614153"></a>配置</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="77.7%" id="mcps1.2.3.1.2"><p id="zh-cn_topic_0000002511347099_p5206126181520"><a name="zh-cn_topic_0000002511347099_p5206126181520"></a><a name="zh-cn_topic_0000002511347099_p5206126181520"></a>说明</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="zh-cn_topic_0000002511347099_row201261346162"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p457945418181"><a name="zh-cn_topic_0000002511347099_p457945418181"></a><a name="zh-cn_topic_0000002511347099_p457945418181"></a>chip4-node8</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p7579105411817"><a name="zh-cn_topic_0000002511347099_p7579105411817"></a><a name="zh-cn_topic_0000002511347099_p7579105411817"></a>1个节点8张芯片，每4个芯片形成1个互联环。例如，<span id="zh-cn_topic_0000002511347099_ph18314192319429"><a name="zh-cn_topic_0000002511347099_ph18314192319429"></a><a name="zh-cn_topic_0000002511347099_ph18314192319429"></a>Atlas 800 训练服务器（型号 9000）</span>/<span id="zh-cn_topic_0000002511347099_ph631452384213"><a name="zh-cn_topic_0000002511347099_ph631452384213"></a><a name="zh-cn_topic_0000002511347099_ph631452384213"></a>Atlas 800 训练服务器（型号 9010）</span>芯片的整模块场景</span>/<span id="ph631452384213"><a name="ph631452384213"></a><a name="ph631452384213"></a>Atlas 350 推理卡内部共8张卡，每4张卡通过UB扣板连接。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002511347099_row102574171610"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p205801254151810"><a name="zh-cn_topic_0000002511347099_p205801254151810"></a><a name="zh-cn_topic_0000002511347099_p205801254151810"></a>chip1-node2</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p65801354101816"><a name="zh-cn_topic_0000002511347099_p65801354101816"></a><a name="zh-cn_topic_0000002511347099_p65801354101816"></a>1个节点2张芯片。例如，<span id="zh-cn_topic_0000002511347099_ph97657495514"><a name="zh-cn_topic_0000002511347099_ph97657495514"></a><a name="zh-cn_topic_0000002511347099_ph97657495514"></a>Atlas 300T 训练卡</span>的插卡场景，1张卡最多插1个芯片，1个节点最多插2张卡。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002511347099_row825811151619"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p17580854201815"><a name="zh-cn_topic_0000002511347099_p17580854201815"></a><a name="zh-cn_topic_0000002511347099_p17580854201815"></a>chip4-node4</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p858019546184"><a name="zh-cn_topic_0000002511347099_p858019546184"></a><a name="zh-cn_topic_0000002511347099_p858019546184"></a>1个节点4张芯片，形成1个互联环。例如，<span id="zh-cn_topic_0000002511347099_ph1165491719811"><a name="zh-cn_topic_0000002511347099_ph1165491719811"></a><a name="zh-cn_topic_0000002511347099_ph1165491719811"></a>Atlas 800 训练服务器（型号 9000）</span>/<span id="zh-cn_topic_0000002511347099_ph15654111712815"><a name="zh-cn_topic_0000002511347099_ph15654111712815"></a><a name="zh-cn_topic_0000002511347099_ph15654111712815"></a>Atlas 800 训练服务器（型号 9010）</span>芯片的半配场景。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002511347099_row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p2580654131819"><a name="zh-cn_topic_0000002511347099_p2580654131819"></a><a name="zh-cn_topic_0000002511347099_p2580654131819"></a>chip8-node8</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p85801654181818"><a name="zh-cn_topic_0000002511347099_p85801654181818"></a><a name="zh-cn_topic_0000002511347099_p85801654181818"></a>1个节点8张卡，8张卡都在1个互联环上。例如，<span id="zh-cn_topic_0000002511347099_ph14314162316427"><a name="zh-cn_topic_0000002511347099_ph14314162316427"></a><a name="zh-cn_topic_0000002511347099_ph14314162316427"></a>Atlas 800T A2 训练服务器</span>。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002511347099_row1820613612158"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p1358111544185"><a name="zh-cn_topic_0000002511347099_p1358111544185"></a><a name="zh-cn_topic_0000002511347099_p1358111544185"></a>chip8-node16</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p9581135461815"><a name="zh-cn_topic_0000002511347099_p9581135461815"></a><a name="zh-cn_topic_0000002511347099_p9581135461815"></a>1个节点16张卡，每8张卡在1个互联环上。例如，<span id="zh-cn_topic_0000002511347099_ph1831422311424"><a name="zh-cn_topic_0000002511347099_ph1831422311424"></a><a name="zh-cn_topic_0000002511347099_ph1831422311424"></a>Atlas 200T A2 Box16 异构子框</span>。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002511347099_row2020613616154"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p2581854121811"><a name="zh-cn_topic_0000002511347099_p2581854121811"></a><a name="zh-cn_topic_0000002511347099_p2581854121811"></a>chip2-node16</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p758125481813"><a name="zh-cn_topic_0000002511347099_p758125481813"></a><a name="zh-cn_topic_0000002511347099_p758125481813"></a>1个节点16张卡，每2张卡在1个互联环上。例如，<span id="zh-cn_topic_0000002511347099_ph855133261011"><a name="zh-cn_topic_0000002511347099_ph855133261011"></a><a name="zh-cn_topic_0000002511347099_ph855133261011"></a>Atlas 800T A3 超节点服务器</span>。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000002511347099_row22064621511"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p558111549188"><a name="zh-cn_topic_0000002511347099_p558111549188"></a><a name="zh-cn_topic_0000002511347099_p558111549188"></a>chip2-node16-sp</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p258115548187"><a name="zh-cn_topic_0000002511347099_p258115548187"></a><a name="zh-cn_topic_0000002511347099_p258115548187"></a>1个节点16张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，<span id="zh-cn_topic_0000002511347099_ph1990844161011"><a name="zh-cn_topic_0000002511347099_ph1990844161011"></a><a name="zh-cn_topic_0000002511347099_ph1990844161011"></a>Atlas 900 A3 SuperPoD 超节点</span>。</p>
-    </td>
-    </tr>
-    <tr id="row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p2580654131819"><a name="p2580654131819"></a><a name="p2580654131819"></a>chip4-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p85801654181818"><a name="p85801654181818"></a><a name="p85801654181818"></a>1个节点16张卡，每4张卡都在1个互联环上。例如，<span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 350 推理卡内部共16张卡，每4张卡通过UB扣板连接</span>。</p>
-</td>
-</tr>
-<tr id="row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p2580654131819"><a name="p2580654131819"></a><a name="p2580654131819"></a>chip1-node8</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p85801654181818"><a name="p85801654181818"></a><a name="p85801654181818"></a>1个节点8张卡，每张卡之间无互联。例如，<span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 350 推理卡内部共8张卡，每张卡之间无互联</span>。</p>
-</td>
-</tr>
-<tr id="row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p2580654131819"><a name="p2580654131819"></a><a name="p2580654131819"></a>chip1-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p85801654181818"><a name="p85801654181818"></a><a name="p85801654181818"></a>1个节点16张卡，每张卡之间无互联。例如，<span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 350 推理卡内部共16张卡，每张卡之间无互联</span>。</p>
-</td>
-</tr>
-    </tbody>
-    </table>
+  
 
 3.  根据实际需求，选择YAML示例并进行如下修改。
 
@@ -4025,7 +3849,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     <tr id="row42351537182719"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p11235173717273"><a name="p11235173717273"></a><a name="p11235173717273"></a><a href="#li108651415102917">在推理服务器（插Atlas 300I Duo 推理卡）上创建分布式任务</a></p>
     </td>
     </tr>
-    <tr id="row59097587338"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p99091858183320"><a name="p99091858183320"></a><a name="p99091858183320"></a><a href="#li727503931310">在Atlas 推理系列产品（非Atlas 200I SoC A1 核心板和Atlas 300I Duo 推理卡）上创建单卡任务</a></p>
+    <tr id="row59097587338"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p99091858183320"><a name="p99091858183320"></a><a name="p99091858183320"></a><a href="#li7275039313101">在Atlas 推理系列产品（非Atlas 200I SoC A1 核心板和Atlas 300I Duo 推理卡）上创建单卡任务</a></p>
     </td>
     </tr>
     <tr id="row1890917580338"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p149091958123319"><a name="p149091958123319"></a><a name="p149091958123319"></a><a href="#li132621943121411">在Atlas 200I SoC A1 核心板上创建单卡任务</a></p>
@@ -4042,7 +3866,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     </tbody>
     </table>
 
-    -   <a name="li1888133815128"></a>使用**整卡调度**特性，参考本配置。以infer-deploy.yaml为例，在推理服务器（插Atlas 300I 推理卡）节点创建一个单卡推理任务，并且启用了调度策略，示例如下。修改完成后直接执行[步骤4](#li59320351213)。
+    -   <a name="li1888133815128"></a>使用**整卡调度**特性，参考本配置。以infer-deploy.yaml为例，在推理服务器（插Atlas 300I 推理卡）节点创建一个单卡推理任务，并且启用了调度策略，示例如下。
 
         ```
         apiVersion: apps/v1
@@ -4077,7 +3901,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
         ...
         ```
 
-    -   使用**整卡调度**特性，参考本配置。以pytorch\_acjob\_infer\_310p\_with\_ranktable.yaml为例，在推理服务器（插Atlas 300I Duo 推理卡）节点创建一个分布式推理任务，并且启用了调度策略，示例如下。修改完成后直接执行[步骤4](#li59320351213)。
+    -   <a name="li108651415102917"></a>使用**整卡调度**特性，参考本配置。以pytorch\_acjob\_infer\_310p\_with\_ranktable.yaml为例，在推理服务器（插Atlas 300I Duo 推理卡）节点创建一个分布式推理任务，并且启用了调度策略，示例如下。
 
         ```
         apiVersion: mindxdl.gitee.com/v1
@@ -4158,20 +3982,20 @@ deploy任务原理图如[图3](#fig178781320593)所示。
                           huawei.com/Ascend310P: 1   #与limits取值一致
                       volumeMounts:
         ...
-                          # 可选，使用Ascend Operator组件为PyTorch和MindSpore框架生成RankTable文件，需要新增以下加粗字段，设置容器中hccl.json文件保存路径
+                          # 可选，使用Ascend Operator组件为PyTorch和MindSpore框架生成RankTable文件，需要新增以下字段，设置容器中hccl.json文件保存路径
                         - name: ranktable                  
                           mountPath: /user/serverid/devindex/config
         ...
                   volumes:
         ...
-                    # 可选，使用Ascend Operator组件为PyTorch框架生成RankTable文件，需要新增以下加粗字段，设置hccl.json文件保存路径
+                    # 可选，使用Ascend Operator组件为PyTorch框架生成RankTable文件，需要新增以下字段，设置hccl.json文件保存路径
                     - name: ranktable
                       hostPath:
                         path: /user/mindx-dl/ranktable/default.default-infer-test  # 共享存储或者本地存储路径，请根据实际情况修改
         ...
         ```
 
-    -   使用**整卡调度**特性，参考本配置。以infer-deploy.yaml为例，在Atlas 推理系列产品节点（非Atlas 200I SoC A1 核心板和Atlas 300I Duo 推理卡节点）创建一个不使用混插模式的单卡推理任务，示例如下。修改完成后直接执行[步骤4](#li59320351213)。
+    -   <a name="li7275039313101"></a>使用**整卡调度**特性，参考本配置。以infer-deploy.yaml为例，在Atlas 推理系列产品节点（非Atlas 200I SoC A1 核心板和Atlas 300I Duo 推理卡节点）创建一个不使用混插模式的单卡推理任务，示例如下。
 
         ```
         apiVersion: apps/v1
@@ -4215,9 +4039,9 @@ deploy任务原理图如[图3](#fig178781320593)所示。
         ```
 
         >[!NOTE] 说明 
-        >因为Atlas 200I SoC A1 核心板节点需要挂载的目录和文件与其他类型节点不一致，为了避免推理失败，如果需要使用Atlas 推理系列产品芯片，且集群中有Atlas 200I SoC A1 核心板节点但是不希望调度到这类节点上，请在示例的YAML中增加“affinity“字段，表示不调度到有“servertype=soc“标签的节点上。
+        >因为Atlas 200I SoC A1 核心板节点需要挂载的目录和文件与其他类型节点不一致，为了避免推理失败，如果需要使用Atlas 推理系列产品芯片，且集群中有Atlas 200I SoC A1 核心板节点但是不希望调度到这类节点上，请在示例的YAML中增加“affinity”字段，表示不调度到有“servertype=soc”标签的节点上。
 
-    -   <a name="li132621943121411"></a>使用**整卡调度**特性，参考本配置。以infer-deploy-310p-1usoc.yaml为例，在Atlas 200I SoC A1 核心板节点（不支持混插模式）创建一个单卡推理任务，示例如下。修改完成后直接执行[步骤4](#li59320351213)。
+    -   <a name="li132621943121411"></a>使用**整卡调度**特性，参考本配置。以infer-deploy-310p-1usoc.yaml为例，在Atlas 200I SoC A1 核心板节点（不支持混插模式）创建一个单卡推理任务，示例如下。
 
         ```
         apiVersion: apps/v1
@@ -4252,7 +4076,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
         ...
         ```
 
-    -   <a name="li1134113548015"></a>使用**整卡调度**特性，参考本配置。以infer-vcjob-910.yaml为例，在Atlas 800I A2 推理服务器上创建一个单卡推理任务，示例如下。修改完成后直接执行[步骤4](#li59320351213)。
+    -   <a name="li1134113548015"></a>使用**整卡调度**特性，参考本配置。以infer-vcjob-910.yaml为例，在Atlas 800I A2 推理服务器上创建一个单卡推理任务，示例如下。
 
         ```
         apiVersion: batch.volcano.sh/v1alpha1
@@ -4296,7 +4120,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
                 restartPolicy: OnFailure
         ```
 
-    -   使用**静态vNPU调度**特性，参考本配置。以infer-deploy.yaml为例，在Atlas 推理系列产品节点（非Atlas 200I SoC A1 核心板节点）创建一个使用vNPU的推理任务，示例如下。修改完成后直接执行[步骤4](#li59320351213)。
+    -   <a name="li21860112612"></a>使用**静态vNPU调度**特性，参考本配置。以infer-deploy.yaml为例，在Atlas 推理系列产品节点（非Atlas 200I SoC A1 核心板节点）创建一个使用vNPU的推理任务，示例如下。
 
         ```
         apiVersion: apps/v1
@@ -4316,7 +4140,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
               containers:
               - image: ubuntu-infer:v1
         ...
-        # 静态vNPU调度暂不支持ASCEND_VISIBLE_DEVICES相关字段，需要删除以下加粗字段
+        # 静态vNPU调度暂不支持ASCEND_VISIBLE_DEVICES相关字段，需要删除以下字段
                 env:
                 - name: ASCEND_VISIBLE_DEVICES
                   valueFrom:
@@ -4361,7 +4185,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     >-   /path-to-weights为模型权重，需要用户自行准备。mindie镜像可以参考镜像中$ATB\_SPEED\_HOME\_PATH/examples/models/llama3/README.md文件中的说明进行下载。
     >-   ATB_SPEED_HOME_PATH默认路径为“/usr/local/Ascend/atb-models”，在source模型仓中set_env.sh脚本时已配置，用户无需自行配置。
 
-5.  <a name="li59320351213"></a>修改示例YAML中容器启动命令，如下加粗部分所示，如果没有则添加“command”字段。
+5.  修改示例YAML中容器启动命令，即“command”字段内容，如果没有则需添加。
 
     ```
     ...
@@ -4396,14 +4220,14 @@ job.batch/resnetinfer1-2 created
 ```
 
 >[!NOTE] 说明 
->如果下发任务成功后，又修改了任务YAML，需要先执行kubectl delete -f** **_XXX__.yaml_命令删除原任务，再重新下发任务。
+>如果下发任务成功后，又修改了任务YAML，需要先执行kubectl delete -f _XXX_.yaml命令删除原任务，再重新下发任务。
 
 
 #### 查看任务进程<a name="ZH-CN_TOPIC_0000002511347103"></a>
 
 **操作步骤<a name="zh-cn_topic_0000001609474293_section96791230183711"></a>**
 
-1.  执行以下命令，查看Pod运行状况。
+1.  <a name="ZH-CN_TOPIC_0000002511347103_li96791230183711"></a>执行以下命令，查看Pod运行状况。
 
     ```
     kubectl get pod --all-namespaces
@@ -4449,7 +4273,7 @@ job.batch/resnetinfer1-2 created
         ...
         ```
 
-        在显示的信息中，找到“Allocated resources“下的**huawei.com/Ascend310P**，该参数取值在执行推理任务之后会增加，增加数量为推理任务使用的NPU芯片个数。
+        在显示的信息中，找到“Allocated resources”下的**huawei.com/Ascend310P**，该参数取值在执行推理任务之后会增加，增加数量为推理任务使用的NPU芯片个数。
 
     -   **静态vNPU调度**回显示例如下：
 
@@ -4470,7 +4294,7 @@ job.batch/resnetinfer1-2 created
         ...
         ```
 
-        在显示的信息中，找到“Allocated resources“下的**Ascend310P-2c**，该参数取值在执行推理任务之后会增加，增加数量为推理任务使用的vNPU芯片个数。
+        在显示的信息中，找到“Allocated resources”下的**Ascend310P-2c**，该参数取值在执行推理任务之后会增加，增加数量为推理任务使用的vNPU芯片个数。
 
     >[!NOTE] 说明 
     >-   如果使用的是Atlas 推理系列产品非混插模式，则上述字段显示为**Ascend310P，Ascend310P-2c**。
@@ -4495,12 +4319,12 @@ kubectl logs -f resnetinfer1-2-scpr5
 ```
 
 >[!NOTE] 说明 
->_resnetinfer1-2-scpr5_为[1](查看任务进程-11.md#zh-cn_topic_0000001609474293_li251162355411)中创建任务对应的Pod名称。
+><i>resnetinfer1-2-scpr5</i>为[步骤1](#查看任务进程-1)中创建任务对应的Pod名称。
 
 
 #### （可选）查看推理卡故障恢复结果<a name="ZH-CN_TOPIC_0000002511427061"></a>
 
-当NPU故障时，Volcano组件会自动将该NPU上运行的推理任务调度到其他节点上（其他调度器不支持该功能，需要用户自行实现）；再由Ascend Device Plugin组件实现NPU的复位操作，使NPU恢复健康。用户可以通过**npu-smi info**命令查看NPU信息，若故障的NPU当前“health“字段显示的信息为“OK“，表示NPU已经恢复健康。
+当NPU故障时，Volcano组件会自动将该NPU上运行的推理任务调度到其他节点上（其他调度器不支持该功能，需要用户自行实现）；再由Ascend Device Plugin组件实现NPU的复位操作，使NPU恢复健康。用户可以通过**npu-smi info**命令查看NPU信息，若故障的NPU当前“health”字段显示的信息为“OK”，表示NPU已经恢复健康。
 
 >[!NOTE] 说明 
 >Ascend Device Plugin组件实现NPU的复位功能，需要确保当前故障NPU上没有推理任务或者推理任务已经被调走。若用户使用其他调度器且该调度器没有实现重调度功能，可以手动删除该NPU上的推理任务。
@@ -4556,7 +4380,7 @@ job "resnetinfer1-2" deleted
     </td>
     <td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000001609074213_p17169210171914"><a name="zh-cn_topic_0000001609074213_p17169210171914"></a><a name="zh-cn_topic_0000001609074213_p17169210171914"></a>infer-310p-1usoc.yaml</p>
     </td>
-    <td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.4 "><p id="p63731221566"><a name="p63731221566"></a><a name="p63731221566"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.2.RC1/samples/inference/without-volcano" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+    <td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.4 "><p id="p63731221566"><a name="p63731221566"></a><a name="p63731221566"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.3.0/samples/inference/without-volcano" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
     </tr>
     <tr id="zh-cn_topic_0000001609074213_row63291517182014"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000001609074213_p13330817142010"><a name="zh-cn_topic_0000001609074213_p13330817142010"></a><a name="zh-cn_topic_0000001609074213_p13330817142010"></a>其他类型推理节点</p>
@@ -4643,13 +4467,13 @@ job "resnetinfer1-2" deleted
     </thead>
     <tbody><tr id="row19193152915372"><td class="cellrowborder" rowspan="3" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1619313291370"><a name="p1619313291370"></a><a name="p1619313291370"></a>整卡调度</p>
     </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1719312293376"><a name="p1719312293376"></a><a name="p1719312293376"></a><a href="#li1888133815128">在Atlas推理系列产品节点（非Atlas 200I SoC A1 核心板）上创建单卡任务</a></p>
+    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1719312293376"><a name="p1719312293376"></a><a name="p1719312293376"></a><a href="#li18881338151288">在Atlas推理系列产品节点（非Atlas 200I SoC A1 核心板）上创建单卡任务</a></p>
     </td>
     </tr>
     <tr id="row18193142910374"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p161931629153719"><a name="p161931629153719"></a><a name="p161931629153719"></a><a href="#li727503931310">在Atlas 200I SoC A1 核心板上创建单卡任务</a></p>
     </td>
     </tr>
-    <tr id="row119193361316"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p4432729124818"><a name="p4432729124818"></a><a name="p4432729124818"></a><a href="#li1134113548015">在Atlas 800I A2 推理服务器上创建单卡任务</a></p>
+    <tr id="row119193361316"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p4432729124818"><a name="p4432729124818"></a><a name="p4432729124818"></a><a href="#li11341135480159">在Atlas 800I A2 推理服务器上创建单卡任务</a></p>
     </td>
     </tr>
     <tr id="row1319312910372"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1019310298378"><a name="p1019310298378"></a><a name="p1019310298378"></a>静态vNPU</p>
@@ -4660,7 +4484,7 @@ job "resnetinfer1-2" deleted
     </tbody>
     </table>
 
-    -   <a name="li1888133815128"></a>以infer.yaml为例，在Atlas 推理系列产品节点（非Atlas 200I SoC A1 核心板节点）创建一个不使用混插模式的单卡推理任务，示例如下。
+    -   <a name="li18881338151288"></a>以infer.yaml为例，在Atlas 推理系列产品节点（非Atlas 200I SoC A1 核心板节点）创建一个不使用混插模式的单卡推理任务，示例如下。
 
         ```
         apiVersion: batch/v1
@@ -4717,9 +4541,9 @@ job "resnetinfer1-2" deleted
         ```
 
         >[!NOTE] 说明 
-        >因为Atlas 200I SoC A1 核心板节点需要挂载的目录和文件与其他类型节点不一致，为了避免推理失败，如果需要使用Atlas 推理系列产品，且集群中有Atlas 200I SoC A1 核心板节点但是不希望调度到这类节点上，请在示例的YAML中增加“affinity“字段，表示不调度到有“servertype=soc“标签的节点上。
+        >因为Atlas 200I SoC A1 核心板节点需要挂载的目录和文件与其他类型节点不一致，为了避免推理失败，如果需要使用Atlas 推理系列产品，且集群中有Atlas 200I SoC A1 核心板节点但是不希望调度到这类节点上，请在示例的YAML中增加“affinity”字段，表示不调度到有“servertype=soc”标签的节点上。
 
-    -   <a name="li1134113548015"></a>使用**整卡调度**特性，参考本配置。以infer.yaml为例，在Atlas 800I A2 推理服务器上创建一个单卡推理任务，示例如下。
+    -   <a name="li11341135480159"></a>使用**整卡调度**特性，参考本配置。以infer.yaml为例，在Atlas 800I A2 推理服务器上创建一个单卡推理任务，示例如下。
 
         ```
         apiVersion: batch/v1
@@ -4743,7 +4567,7 @@ job "resnetinfer1-2" deleted
         ...
         ```
 
-    -   以infer.yaml为例，在Atlas 推理系列产品节点（非Atlas 200I SoC A1 核心板节点）创建一个使用vNPU的推理任务，示例如下。
+    -   <a name="li11239121841616"></a>以infer.yaml为例，在Atlas 推理系列产品节点（非Atlas 200I SoC A1 核心板节点）创建一个使用vNPU的推理任务，示例如下。
 
         ```
         apiVersion: batch/v1
@@ -4772,7 +4596,7 @@ job "resnetinfer1-2" deleted
 本章节需要用户熟悉编程开发，以及对K8s有一定了解。如果用户已有AI平台或者想基于集群调度组件开发AI平台，需要完成以下内容：
 
 1.  根据编程语言找到对应的K8s的[官方API库](https://github.com/kubernetes-client)。
-2.  根据K8s官方提供的API库，来对任务进行创建、查询、删除等操作。
+2.  根据K8s官方提供的API库，对任务进行创建、查询、删除等操作。
 3.  创建、查询或删除操作任务时，用户需要将[示例YAML](#准备任务yaml-1)的内容转换成K8s官方API中定义的对象，通过官方库里面提供的API发送给K8s的API Server或者将YAML内容转换为JSON格式直接发送给K8s的API Server。
 
 
@@ -4904,7 +4728,7 @@ deploy任务原理图如[图2](#fig349112913199)所示。
 #### 准备任务YAML<a name="ZH-CN_TOPIC_0000002479387122"></a>
 
 >[!NOTE] 说明 
->如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载“/dev“目录下的设备。其他目录（如“/usr“）用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
+>如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载“/dev”目录下的设备。其他目录（如“/usr”）用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
 >因为Atlas 200I SoC A1 核心板场景不支持Ascend Docker Runtime，用户也无需修改YAML文件。
 
 **操作步骤<a name="zh-cn_topic_0000001558853680_zh-cn_topic_0000001609074213_section14665181617334"></a>**
@@ -4930,14 +4754,14 @@ deploy任务原理图如[图2](#fig349112913199)所示。
     </td>
     <td class="cellrowborder" valign="top" width="37.769999999999996%" headers="mcps1.2.5.1.3 "><p id="p142651427103519"><a name="p142651427103519"></a><a name="p142651427103519"></a>infer-deploy-dynamic.yaml</p>
     </td>
-    <td class="cellrowborder" valign="top" width="28.67%" headers="mcps1.2.5.1.4 "><p id="p1826522718352"><a name="p1826522718352"></a><a name="p1826522718352"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.2.RC1/samples/inference/volcano/infer-deploy-dynamic.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+    <td class="cellrowborder" valign="top" width="28.67%" headers="mcps1.2.5.1.4 "><p id="p1826522718352"><a name="p1826522718352"></a><a name="p1826522718352"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/infer-deploy-dynamic.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
     </tr>
     <tr id="row9265727173515"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p191941452171418"><a name="p191941452171418"></a><a name="p191941452171418"></a>Volcano Job</p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p15629131423715"><a name="p15629131423715"></a><a name="p15629131423715"></a>infer-vcjob-dynamic.yaml</p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1626592713355"><a name="p1626592713355"></a><a name="p1626592713355"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.2.RC1/samples/inference/volcano/infer-vcjob-dynamic.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1626592713355"><a name="p1626592713355"></a><a name="p1626592713355"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/infer-vcjob-dynamic.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
     </tr>
     </tbody>
@@ -5186,7 +5010,7 @@ deploy任务原理图如[图2](#fig349112913199)所示。
     >-   /path-to-weights为模型权重，需要用户自行准备。mindie镜像可以参考镜像中$ATB\_SPEED\_HOME\_PATH/examples/models/llama3/README.md文件中的说明进行下载。
     >-   ATB_SPEED_HOME_PATH默认路径为“/usr/local/Ascend/atb-models”，在source模型仓中set_env.sh脚本时已配置，用户无需自行配置。
 
-4.  修改所选YAML中的容器启动命令，如下加粗部分，如果没有则添加“command”字段。
+4.  修改所选YAML中的容器启动命令，即“command”字段内容，如果没有则需添加。
 
     ```
     ...
@@ -5221,7 +5045,7 @@ job.batch/resnetinfer1-2 created
 ```
 
 >[!NOTE] 说明 
->如果下发任务成功后，又修改了任务YAML，需要先执行kubectl delete -f** **_XXX__.yaml_命令删除原任务，再重新下发任务。
+>如果下发任务成功后，又修改了任务YAML，需要先执行kubectl delete -f _XXX_.yaml命令删除原任务，再重新下发任务。
 
 
 #### 查看任务进程<a name="ZH-CN_TOPIC_0000002511347071"></a>
@@ -5275,7 +5099,7 @@ job.batch/resnetinfer1-2 created
         ...
         ```
 
-        在显示的信息中，找到“Allocated resources“下的**huawei.com/npu-core**，该参数取值在执行推理任务之后会增加，增加数量为推理任务使用的NPU芯片个数。
+        在显示的信息中，找到“Allocated resources”下的**huawei.com/npu-core**，该参数取值在执行推理任务之后会增加，增加数量为推理任务使用的NPU芯片个数。
 
 
 #### 查看动态vNPU调度结果<a name="ZH-CN_TOPIC_0000002479387120"></a>
@@ -5337,7 +5161,7 @@ job "resnetinfer1-1" deleted
 ### 使用前必读<a name="ZH-CN_TOPIC_0000002479227148"></a>
 
 >[!NOTE] 说明 
->本章节描述的是基于Resilience Controller组件的弹性训练，该组件已经日落，相关资料将于8.2.RC1版本删除。最新的弹性训练能力请参见[弹性训练](./resumable_training.md#弹性训练)。
+>本章节描述的是基于Resilience Controller组件的弹性训练，该组件已经日落，相关资料将于2026年的8.2.RC1版本删除。最新的弹性训练能力请参见[弹性训练](./resumable_training.md#弹性训练)。
 
 当出现硬件故障，且无备用设备时，集群调度组件将对故障节点进行隔离，并根据任务预设的规模和当前集群中可用的节点数，重新设置任务副本数，然后进行重调度和重训练（需进行脚本适配）。
 
@@ -5415,7 +5239,7 @@ job "resnetinfer1-1" deleted
     </td>
     </tr>
     <tr id="row16951221172311"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p1993291632412"><a name="p1993291632412"></a><a name="p1993291632412"></a>本特性仅支持设备故障和服务器网络故障检测，说明如下：</p>
-    <a name="ul175182082413"></a><a name="ul175182082413"></a><ul id="ul175182082413"><li>设备故障支持<span id="ph1914015620494"><a name="ph1914015620494"></a><a name="ph1914015620494"></a>《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100469490" target="_blank" rel="noopener noreferrer">Atlas 中心训练服务器 25.0.RC1 健康管理故障定义</a>》</span>中DCMI接口上报的<span class="parmvalue" id="parmvalue11232151011244"><a name="parmvalue11232151011244"></a><a name="parmvalue11232151011244"></a>“重执行业务”</span>、<span class="parmvalue" id="parmvalue112321310182410"><a name="parmvalue112321310182410"></a><a name="parmvalue112321310182410"></a>“热复位芯片”</span>和<span class="parmvalue" id="parmvalue1423217104248"><a name="parmvalue1423217104248"></a><a name="parmvalue1423217104248"></a>“隔离芯片”</span>类型的错误。</li><li>设备网络探测工具hccn_tool检测到的设备网络故障；服务器网络故障依赖于<span id="ph1523271015245"><a name="ph1523271015245"></a><a name="ph1523271015245"></a>NodeD</span>组件的节点状态上报机制，<span id="ph1123281019246"><a name="ph1123281019246"></a><a name="ph1123281019246"></a>NodeD</span>未正确安装或者节点间网络不通都会影响该故障检测功能。</li></ul>
+    <a name="ul175182082413"></a><a name="ul175182082413"></a><ul id="ul175182082413"><li>设备故障支持<span id="ph1914015620494"><a name="ph1914015620494"></a><a name="ph1914015620494"></a>《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540096" target="_blank" rel="noopener noreferrer">Atlas 中心训练服务器 25.5.0 健康管理故障定义</a>》</span>中DCMI接口上报的<span class="parmvalue" id="parmvalue11232151011244"><a name="parmvalue11232151011244"></a><a name="parmvalue11232151011244"></a>“重执行业务”</span>、<span class="parmvalue" id="parmvalue112321310182410"><a name="parmvalue112321310182410"></a><a name="parmvalue112321310182410"></a>“热复位芯片”</span>和<span class="parmvalue" id="parmvalue1423217104248"><a name="parmvalue1423217104248"></a><a name="parmvalue1423217104248"></a>“隔离芯片”</span>类型的错误。</li><li>设备网络探测工具hccn_tool检测到的设备网络故障；服务器网络故障依赖于<span id="ph1523271015245"><a name="ph1523271015245"></a><a name="ph1523271015245"></a>NodeD</span>组件的节点状态上报机制，<span id="ph1123281019246"><a name="ph1123281019246"></a><a name="ph1123281019246"></a>NodeD</span>未正确安装或者节点间网络不通都会影响该故障检测功能。</li></ul>
     </td>
     </tr>
     </tbody>
@@ -5443,7 +5267,7 @@ job "resnetinfer1-1" deleted
 
 在重调度策略开启的情况下，Ascend Device Plugin的异常也会触发故障重调度。
 
-1.  修改Ascend Device Plugin组件的启动YAML，修改如下所示加粗部分。
+1.  修改Ascend Device Plugin组件的启动YAML，修改如下所示内容。
 
     ```
     ...
@@ -5536,36 +5360,10 @@ job "resnetinfer1-1" deleted
 **表 1**  所需软件
 
 <a name="zh-cn_topic_0272789326_table13971125465512"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0272789326_row19971185414551"><th class="cellrowborder" valign="top" width="28.88%" id="mcps1.2.5.1.1"><p id="zh-cn_topic_0272789326_p0971105411555"><a name="zh-cn_topic_0272789326_p0971105411555"></a><a name="zh-cn_topic_0272789326_p0971105411555"></a>软件包</p>
-</th>
-<th class="cellrowborder" valign="top" width="13.96%" id="mcps1.2.5.1.2"><p id="p326921620610"><a name="p326921620610"></a><a name="p326921620610"></a>是否必选</p>
-</th>
-<th class="cellrowborder" valign="top" width="30.42%" id="mcps1.2.5.1.3"><p id="zh-cn_topic_0272789326_p1097165410558"><a name="zh-cn_topic_0272789326_p1097165410558"></a><a name="zh-cn_topic_0272789326_p1097165410558"></a>说明</p>
-</th>
-<th class="cellrowborder" valign="top" width="26.740000000000002%" id="mcps1.2.5.1.4"><p id="zh-cn_topic_0272789326_p39711454155520"><a name="zh-cn_topic_0272789326_p39711454155520"></a><a name="zh-cn_topic_0272789326_p39711454155520"></a>获取方法</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row4288175712492"><td class="cellrowborder" valign="top" width="28.88%" headers="mcps1.2.5.1.1 "><p id="p5857163214118"><a name="p5857163214118"></a><a name="p5857163214118"></a>mindformers-<em id="i979747912"><a name="i979747912"></a><a name="i979747912"></a>{version}</em>-py3-none-any.whl</p>
-</td>
-<td class="cellrowborder" valign="top" width="13.96%" headers="mcps1.2.5.1.2 "><p id="p72691016660"><a name="p72691016660"></a><a name="p72691016660"></a>是</p>
-</td>
-<td class="cellrowborder" valign="top" width="30.42%" headers="mcps1.2.5.1.3 "><p id="p8288195784912"><a name="p8288195784912"></a><a name="p8288195784912"></a><span id="ph560917053119"><a name="ph560917053119"></a><a name="ph560917053119"></a>MindSpore</span> Transformers套件，构建大模型训练、微调、评估、推理、部署的全流程开发套件。<span id="ph13894758121219"><a name="ph13894758121219"></a><a name="ph13894758121219"></a>MindSpore</span>的master版本请使用r0.3分支代码版本。</p>
-</td>
-<td class="cellrowborder" valign="top" width="26.740000000000002%" headers="mcps1.2.5.1.4 "><p id="p528965710494"><a name="p528965710494"></a><a name="p528965710494"></a><a href="https://gitee.com/mindspore/mindformers/tree/r0.3/" target="_blank" rel="noopener noreferrer">获取链接</a></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0272789326_row1997115417555"><td class="cellrowborder" valign="top" width="28.88%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0272789326_p897155412550"><a name="zh-cn_topic_0272789326_p897155412550"></a><a name="zh-cn_topic_0272789326_p897155412550"></a><span id="ph5948195051914"><a name="ph5948195051914"></a><a name="ph5948195051914"></a>Dockerfile</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="13.96%" headers="mcps1.2.5.1.2 "><p id="p13269191612612"><a name="p13269191612612"></a><a name="p13269191612612"></a>是</p>
-</td>
-<td class="cellrowborder" valign="top" width="30.42%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0272789326_p19971115435517"><a name="zh-cn_topic_0272789326_p19971115435517"></a><a name="zh-cn_topic_0272789326_p19971115435517"></a>制作镜像需要。</p>
-</td>
-<td class="cellrowborder" valign="top" width="26.740000000000002%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0272789326_p179726546557"><a name="zh-cn_topic_0272789326_p179726546557"></a><a name="zh-cn_topic_0272789326_p179726546557"></a>用户根据业务自行准备。</p>
-</td>
-</tr>
-</tbody>
-</table>
+|软件包|是否必选|说明|获取方法|
+|--|--|--|--|
+|mindformers-<em>{version}</em>-py3-none-any.whl|是|MindSpore Transformers套件，构建大模型训练、微调、评估、推理、部署的全流程开发套件。MindSpore的master版本请使用r0.3分支代码版本。|<a href="https://gitee.com/mindspore/mindformers/tree/r0.3/">获取链接</a>|
+|Dockerfile|是|制作镜像需要。|用户根据业务自行准备。|
 
 为了防止软件包在传递过程中或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
 
@@ -5583,17 +5381,17 @@ job "resnetinfer1-1" deleted
 **操作步骤<a name="section173381914413"></a>**
 
 1.  以**root**用户登录服务器。
-2.  将准备的软件包MindFormers源码上传到服务器任意目录（如“/home/test“）。
+2.  将准备的软件包MindFormers源码上传到服务器任意目录（如“/home/test”）。
 3.  执行以下步骤准备Dockerfile文件。
-    1.  进入软件包所在目录，执行以下命令创建Dockerfile文件（文件名示例“Dockerfile“）。
+    1.  进入软件包所在目录，执行以下命令创建Dockerfile文件（文件名示例“Dockerfile”）。
 
         ```
         vi Dockerfile
         ```
 
-    2.  请参见[Dockerfile](#zh-cn_topic_0272789326_li104026527188)编写示例，将内容写入Dockerfile文件后执行**:wq**命令保存内容。
+    2.  请参见[Dockerfile](#zh-cn_topic_0272789326_li104026527188)编写示例，将内容写入Dockerfile文件后执行:wq命令保存内容。
 
-4.  进入软件包所在目录，执行以下命令，构建容器镜像，**注意不要遗漏命令结尾的**“.“。
+4.  进入软件包所在目录，执行以下命令，构建容器镜像，**注意不要遗漏命令结尾的**“.”。
 
     ```
     docker build -t  [OPTIONS] 镜像名_系统架构:镜像tag .
@@ -5610,31 +5408,13 @@ job "resnetinfer1-1" deleted
     **表 2**  命令参数说明
 
     <a name="zh-cn_topic_0272789326_zh-cn_topic_0256378845_table47051919193111"></a>
-    <table><thead align="left"><tr id="zh-cn_topic_0272789326_zh-cn_topic_0256378845_row77069193317"><th class="cellrowborder" valign="top" width="40%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p17061819143111"><a name="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p17061819143111"></a><a name="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p17061819143111"></a>参数</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="60%" id="mcps1.2.3.1.2"><p id="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p127066198319"><a name="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p127066198319"></a><a name="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p127066198319"></a>说明</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="zh-cn_topic_0272789326_zh-cn_topic_0256378845_row370601913312"><td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p5706161915311"><a name="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p5706161915311"></a><a name="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p5706161915311"></a>-t</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p8706119153115"><a name="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p8706119153115"></a><a name="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p8706119153115"></a>指定镜像名称。</p>
-    </td>
-    </tr>
-    <tr id="row829312195610"><td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.3.1.1 "><p id="p9595273564"><a name="p9595273564"></a><a name="p9595273564"></a><em id="i17523236244"><a name="i17523236244"></a><a name="i17523236244"></a>OPTIONS</em></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.3.1.2 "><p id="p1265113317560"><a name="p1265113317560"></a><a name="p1265113317560"></a><span class="parmvalue" id="parmvalue07316106516"><a name="parmvalue07316106516"></a><a name="parmvalue07316106516"></a>“--disable-content-trust”</span>选项：忽略校验，默认开启。出于安全考虑，这里推荐设置关闭。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0272789326_zh-cn_topic_0256378845_row15532335367"><td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p18119431094"><a name="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p18119431094"></a><a name="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p18119431094"></a><em id="i611144218574"><a name="i611144218574"></a><a name="i611144218574"></a>镜像名</em><em id="i1311164225713"><a name="i1311164225713"></a><a name="i1311164225713"></a>_系统架构:</em><em id="i1711113429571"><a name="i1711113429571"></a><a name="i1711113429571"></a>镜像tag</em></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p115321037368"><a name="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p115321037368"></a><a name="zh-cn_topic_0272789326_zh-cn_topic_0256378845_p115321037368"></a>镜像名称与标签，请用户根据实际情况写入。</p>
-    </td>
-    </tr>
-    </tbody>
-    </table>
+    |参数|说明|
+    |--|--|
+    |-t|指定镜像名称。|
+    |<em>OPTIONS</em>|“--disable-content-trust”选项：忽略校验，默认开启。出于安全考虑，这里推荐设置关闭。|
+    |<em>镜像名</em><em>_系统架构:</em><em>镜像tag</em>|镜像名称与标签，请用户根据实际情况写入。|
 
-    当出现“Successfully built xxx“表示镜像构建成功。
+    当出现“Successfully built xxx”表示镜像构建成功。
 
 5.  构建完成后，执行以下命令查看镜像信息。
 
@@ -5733,7 +5513,7 @@ job "resnetinfer1-1" deleted
 1.  <a name="li14102111234717"></a>下载[PyTorch代码仓](https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/cv/classification/ResNet50_ID4149_for_PyTorch)中master分支的“ResNet50\_ID4149\_for\_PyTorch”作为训练代码。
 2.  自行准备ResNet50对应的数据集，使用时请遵守对应规范。
 3.  管理员用户上传数据集到存储节点。
-    1.  进入“/data/atlas\_dls/public“目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/resnet50/imagenet“。
+    1.  进入“/data/atlas\_dls/public”目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/resnet50/imagenet”。
 
         ```
         root@ubuntu:/data/atlas_dls/public/dataset/resnet50/imagenet# pwd
@@ -5757,8 +5537,8 @@ job "resnetinfer1-1" deleted
         11G
         ```
 
-4.  将[1](#li14102111234717)中下载的训练代码解压到本地，将解压后的训练代码中“ModelZoo-PyTorch/PyTorch/built-in/cv/classification/ResNet50\_ID4149\_for\_PyTorch“目录上传至环境，如“/data/atlas\_dls/public/code/”目录。
-5.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-rescheduling/withRanktable/pytorch/resnet50“目录中的train\_start.sh、utils.sh和rank\_table.sh文件，在训练代码中创建“scripts“目录，在管理节点构造如下的目录结构。
+4.  将[1](#li14102111234717)中下载的训练代码解压到本地，将解压后的训练代码中“ModelZoo-PyTorch/PyTorch/built-in/cv/classification/ResNet50\_ID4149\_for\_PyTorch”目录上传至环境，如“/data/atlas\_dls/public/code/”目录。
+5.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-rescheduling/withRanktable/pytorch/resnet50”目录中的train\_start.sh、utils.sh和rank\_table.sh文件，在训练代码中创建“scripts”目录，在管理节点构造如下的目录结构。
 
     ```
     root@ubuntu:/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts/#
@@ -5768,7 +5548,7 @@ job "resnetinfer1-1" deleted
     └── train_start.sh
     ```
 
-6.  在“/data/atlas\_dls/public/code/ResNet50\_ID4149\_for\_PyTorch“路径下修改main.py代码，修改以下加粗内容，改动内容涉及模型保存和加载的逻辑调整。
+6.  在“/data/atlas\_dls/public/code/ResNet50\_ID4149\_for\_PyTorch”路径下修改main.py代码，修改以下内容，改动内容涉及模型保存和加载的逻辑调整。
 
     ```
     import argparse
@@ -5819,14 +5599,14 @@ job "resnetinfer1-1" deleted
 
 **MindSpore的故障恢复示例<a name="section127532091511"></a>**
 
-1.  下载[MindSpore代码仓](https://gitee.com/mindspore/models/tree/master/official/cv/ResNet)中master分支代码，将“models/official/cv/ResNet“目录重命名为“resnet”并作为训练代码。
+1.  下载[MindSpore代码仓](https://gitee.com/mindspore/models/tree/master/official/cv/ResNet)中master分支代码，将“models/official/cv/ResNet”目录重命名为“resnet”并作为训练代码。
 2.  执行以下命令，在管理节点创建代码目录，并上传训练代码到该目录。
 
     ```
     mkdir /data/atlas_dls/code
     ```
 
-3.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-rescheduling/withRanktable/mindspore/resnet50“目录中的“train\_start.sh“和“main.sh“文件，结合训练代码中“resnet/scripts“目录，在管理节点构造如下的目录结构。
+3.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-rescheduling/withRanktable/mindspore/resnet50”目录中的“train\_start.sh”和“main.sh”文件，结合训练代码中“resnet/scripts”目录，在管理节点构造如下的目录结构。
 
     ```
     root@ubuntu:/data/atlas_dls/public/code/resnet/scripts/#
@@ -5838,10 +5618,10 @@ job "resnetinfer1-1" deleted
     └── train_start.sh
     ```
 
-4.  修改“/data/atlas\_dls/public/code/resnet/scripts“目录下的“train\_start.sh“文件。
+4.  修改“/data/atlas\_dls/public/code/resnet/scripts”目录下的“train\_start.sh”文件。
 
-    1.  将“dataset\_path“修改为容器内实际的数据集目录。
-    2.  “config\_yaml\_path“修改为容器内实际的配置文件路径。
+    1.  将“dataset\_path”修改为容器内实际的数据集目录。
+    2.  “config\_yaml\_path”修改为容器内实际的配置文件路径。
 
     ```
     根据实际情况进行修改，全局配置参数：数据集路径，配置参数文件路径；其他模型适配，请根据实际情况增删参数。
@@ -5859,7 +5639,7 @@ job "resnetinfer1-1" deleted
     python ${ROOT_PATH}/../train.py --run_distribute=True --device_num=${RANK_SIZE} --data_path=${DATA_PATH} --config_path=${CONFIG_PATH} 
     ```
 
-5.  修改“/data/atlas\_dls/public/code/resnet/config/“目录的配置文件“resnet50\_imagenet2012\_config.yaml“。模型保存和加载设置，图编译保存和加载设置。
+5.  修改“/data/atlas\_dls/public/code/resnet/config/”目录的配置文件“resnet50\_imagenet2012\_config.yaml”。模型保存和加载设置，图编译保存和加载设置。
 
     ```
     ...
@@ -5903,10 +5683,10 @@ job "resnetinfer1-1" deleted
     save_graphs_path: "Path to save graphs."
     ```
 
-6.  resnet代码的启动脚本为“train.py“，检查“train.py“中是否存在保存CheckPoint的代码，示例代码如下。
+6.  resnet代码的启动脚本为“train.py”，检查“train.py”中是否存在保存Checkpoint的代码，示例代码如下。
 
     -   如果存在，则跳过本步骤。
-    -   如果不存在，则补充以下保存CheckPoint的代码样例，其中所用参数需要用户在配置文件中定义和设置。其他模型适配，请参考如下片段，根据启动脚本具体内容，添加保存CheckPoint的代码。如有需要，请参考[MindSpore官网](https://www.mindspore.cn/)教程进行修改。
+    -   如果不存在，则补充以下保存Checkpoint的代码样例，其中所用参数需要用户在配置文件中定义和设置。其他模型适配，请参考如下片段，根据启动脚本具体内容，添加保存Checkpoint的代码。如有需要，请参考[MindSpore官网](https://www.mindspore.cn/)教程进行修改。
 
     ```
     ...
@@ -5921,9 +5701,9 @@ job "resnetinfer1-1" deleted
     ...
     ```
 
-7.  resnet代码的启动脚本为train.py，检查train.py中是否存在加载checkpoint的代码，如果存在，则执行配置完成，进行下一章节操作；否则执行[8](#li1621315181018)。
-8.  <a name="li1621315181018"></a>在train.py中补充加载checkpoint的代码。以下为checkpoint加载样例，其中所用参数需要用户在配置文件中定义和设置。其他模型适配，请参考如下片段，根据启动脚本具体内容，添加加载checkpoint的代码。如有需要，请参考[MindSpore官网](https://www.mindspore.cn/)教程进行修改。
-    1.  修改“src/utils.py“，添加读取epoch代码，加载CKPT后，训练日志中将从CKPT保存时刻所处的epoch开始打印。
+7.  resnet代码的启动脚本为train.py，检查train.py中是否存在加载Checkpoint的代码，如果存在，则执行配置完成，进行下一章节操作；否则执行[8](#li1621315181018)。
+8.  <a name="li1621315181018"></a>在train.py中补充加载Checkpoint的代码。以下为Checkpoint加载样例，其中所用参数需要用户在配置文件中定义和设置。其他模型适配，请参考如下片段，根据启动脚本具体内容，添加加载Checkpoint的代码。如有需要，请参考[MindSpore官网](https://www.mindspore.cn/)教程进行修改。
+    1.  修改“src/utils.py”，添加读取epoch代码，加载CKPT后，训练日志中将从CKPT保存时刻所处的epoch开始打印。
 
         ```
         ...
@@ -6014,7 +5794,7 @@ job "resnetinfer1-1" deleted
 
 1.  <a name="li360413424258"></a>下载[TensorFlow代码仓](https://gitee.com/ascend/ModelZoo-TensorFlow/tree/master/TensorFlow2/built-in/cv/image_classification/ResNet50_ID0360_for_TensorFlow2.X)中master分支中的“ResNet50\_ID0360\_for\_TensorFlow2.X”作为训练代码，请根据该模型代码TensorFlow版本选择训练镜像中的TensorFlow版本包。
 2.  管理员用户上传数据集到存储节点。
-    1.  进入“/data/atlas\_dls/public“目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/resnet50/imagenet\_TF“。
+    1.  进入“/data/atlas\_dls/public”目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/resnet50/imagenet\_TF”。
 
         ```
         root@ubuntu:/data/atlas_dls/public/dataset/resnet50/imagenet_TF# pwd
@@ -6028,8 +5808,8 @@ job "resnetinfer1-1" deleted
         42G
         ```
 
-3.  在本地解压[1](#li360413424258)中下载的训练代码，将“ModelZoo-TensorFlow-master/TensorFlow2/built-in/cv/image\_classification/“下的“ResNet50\_ID0360\_for\_TensorFlow2.X“目录重命名为“ResNet50\_for\_TensorFlow\_2.6\_code/“目录。
-4.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/basic-training/ranktable“目录中的train\_start.sh、utils.sh和rank\_table.sh文件，在训练代码中创建“scripts“目录，在管理节点构造如下的目录结构。
+3.  在本地解压[1](#li360413424258)中下载的训练代码，将“ModelZoo-TensorFlow-master/TensorFlow2/built-in/cv/image\_classification/”下的“ResNet50\_ID0360\_for\_TensorFlow2.X”目录重命名为“ResNet50\_for\_TensorFlow\_2.6\_code/”目录。
+4.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/basic-training/ranktable”目录中的train\_start.sh、utils.sh和rank\_table.sh文件，在训练代码中创建“scripts”目录，在管理节点构造如下的目录结构。
 
     ```
     /data/atlas_dls/public/code/ResNet50_for_TensorFlow_2.6_code/
@@ -6064,14 +5844,14 @@ job "resnetinfer1-1" deleted
 
 **Pangu\_alpha模型适配示例<a name="section1844516123710"></a>**
 
-1.  下载[MindSpore代码仓](https://gitee.com/mindspore/models/tree/master/official/nlp/Pangu_alpha)中master分支代码，将“models/official/nlp/Pangu\_alpha“目录重命名为“pangu\_alpha”并作为训练代码，使用该版本模型脚本需保证在镜像中安装的MindSpore版本不低于2.0.0，并且安装mindformers组件。
+1.  下载[MindSpore代码仓](https://gitee.com/mindspore/models/tree/master/official/nlp/Pangu_alpha)中master分支代码，将“models/official/nlp/Pangu\_alpha”目录重命名为“pangu\_alpha”并作为训练代码，使用该版本模型脚本需保证在镜像中安装的MindSpore版本不低于2.0.0，并且安装mindformers组件。
 2.  执行以下命令，在管理节点创建代码目录。
 
     ```
     mkdir /data/atlas_dls/code
     ```
 
-3.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-rescheduling/withRanktable/mindspore/pangu\_alpha“目录中的“train\_start.sh“和“main.sh“文件，结合训练代码中“pangu\_alpha/scripts“目录，在管理节点构造如下的目录结构。对于盘古百亿模型，使用“samples/train/resumable-training/fault-rescheduling/withRanktable/mindspore/pangu\_alpha\_13B“目录中的对应文件。
+3.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-rescheduling/withRanktable/mindspore/pangu\_alpha”目录中的“train\_start.sh”和“main.sh”文件，结合训练代码中“pangu\_alpha/scripts”目录，在管理节点构造如下的目录结构。对于盘古百亿模型，使用“samples/train/resumable-training/fault-rescheduling/withRanktable/mindspore/pangu\_alpha\_13B”目录中的对应文件。
 
     ```
     root@ubuntu:/data/atlas_dls/code/pangu_alpha/scripts/# 
@@ -6088,7 +5868,7 @@ job "resnetinfer1-1" deleted
     └── train_start.sh
     ```
 
-4.  修改“/data/atlas\_dls/code/pangu\_alpha/scripts“目录下的“train\_start.sh“文件，将“dataset“修改为容器内实际的数据集目录。
+4.  修改“/data/atlas\_dls/code/pangu\_alpha/scripts”目录下的“train\_start.sh”文件，将“dataset”修改为容器内实际的数据集目录。
 
     ```
     ...
@@ -6122,7 +5902,7 @@ job "resnetinfer1-1" deleted
     ```
 
 5.  百亿及以下模型可跳过该步骤。训练千亿模型时，期望恢复时间小于5min，需要进行额外脚本适配。下文以[MindSpore代码仓](https://gitee.com/mindspore/models/tree/master/official/nlp/Pangu_alpha)中pangu\_alpha的master分支为例（**已完成弹性训练任务配置和脚本适配**）。
-    1.  修改“src/pangu\_alpha\_config.py“文件，主要涉及三个参数的更改：args\_opt.num\_layers、args\_opt.stage\_num、args\_opt.micro\_size。
+    1.  修改“src/pangu\_alpha\_config.py”文件，主要涉及三个参数的更改：args\_opt.num\_layers、args\_opt.stage\_num、args\_opt.micro\_size。
 
         ```
         def set_parse_200B(args_opt):
@@ -6151,20 +5931,20 @@ job "resnetinfer1-1" deleted
                     args_opt.op_level_model_parallel_num = 8
         ```
 
-    2.  此外，需要指定或者直接修改“src/utils.py“中的“micro\_batch\_interleaved“参数为“1“（请参考“train.py“脚本的“run\_train\_pipeline”函数中“stage\_device\_num”、“data\_parallel\_num”、“batch\_size”、“micro\_batch\_interleaved”之间的计算关系。最终结果需要满足“PanguAlphaConfig”的“batch\_size”值是“TransformerOpParallelConfig”的“data\_parallel”的倍数）。
+    2.  此外，需要指定或者直接修改“src/utils.py”中的“micro\_batch\_interleaved”参数为“1”（请参考“train.py”脚本的“run\_train\_pipeline”函数中“stage\_device\_num”、“data\_parallel\_num”、“batch\_size”、“micro\_batch\_interleaved”之间的计算关系。最终结果需要满足“PanguAlphaConfig”的“batch\_size”值是“TransformerOpParallelConfig”的“data\_parallel”的倍数）。
 
-6.  pangu代码的启动脚本为train.py，检查train.py中是否存在保存CheckPoint的代码，代码示例如下。
+6.  pangu代码的启动脚本为train.py，检查train.py中是否存在保存Checkpoint的代码，代码示例如下。
 
     -   如果存在，则跳过本步骤。
-    -   如果不存在，则补充以下保存CheckPoint的代码样例，其中所用参数可参照[9](#li13178638874)在配置文件“src/utils.py“中定义和设置。
+    -   如果不存在，则补充以下保存Checkpoint的代码样例，其中所用参数可参照[9](#li13178638874)在配置文件“src/utils.py”中定义和设置。
 
     ```
     ...
     
-        # 保存CheckPoint的代码调用
+        # 保存Checkpoint的代码调用
         add_checkpoint_callback_policy(args_opt, callback, rank)
     ...
-    # 保存checkpoint代码定义
+    # 保存Checkpoint代码定义
     def add_checkpoint_callback_policy(args_param, callback, rank_id):
         r"""
         Add checkpoint policy to callback.
@@ -6189,8 +5969,8 @@ job "resnetinfer1-1" deleted
     ...
     ```
 
-7.  pangu代码的启动脚本为train.py，检查train.py中是否存在加载checkpoint的代码，如果存在，则执行[10](#li6181138370)；否则执行[8](#li12175938673)。
-8.  <a name="li12175938673"></a>在train.py中补充加载checkpoint的代码。以下为checkpoint加载样例，存在部分加载checkpoint的代码，需要添加弹性训练特性相关checkpoint加载代码，其中所用参数可参照[9](#li13178638874)在配置文件“src/utils.py“中定义和设置。
+7.  pangu代码的启动脚本为train.py，检查train.py中是否存在加载Checkpoint的代码，如果存在，则执行[10](#li6181138370)；否则执行[8](#li12175938673)。
+8.  <a name="li12175938673"></a>在train.py中补充加载checkpoint的代码。以下为Checkpoint加载样例，存在部分加载Checkpoint的代码，需要添加弹性训练特性相关Checkpoint加载代码，其中所用参数可参照[9](#li13178638874)在配置文件“src/utils.py”中定义和设置。
 
     ```
     ...
@@ -6271,7 +6051,7 @@ job "resnetinfer1-1" deleted
     ...
     ```
 
-9.  <a name="li13178638874"></a>修改“src/utils.py“文件中的参数。
+9.  <a name="li13178638874"></a>修改“src/utils.py”文件中的参数。
 
     ```
     ...
@@ -6325,7 +6105,7 @@ job "resnetinfer1-1" deleted
     ...
     ```
 
-10. <a name="li6181138370"></a>在“/data/atlas\_dls/code/pangu\_alpha“目录下构建空文件“group\_info\_env“。
+10. <a name="li6181138370"></a>在“/data/atlas\_dls/code/pangu\_alpha”目录下构建空文件“group\_info\_env”。
 
     ```
     root@ubuntu:/data/atlas_dls/code/pangu_alpha/# 
@@ -6341,7 +6121,7 @@ job "resnetinfer1-1" deleted
     └── train.py
     ```
 
-11. 修改train.py文件中的“group\_info\_env“路径。
+11. 修改train.py文件中的“group\_info\_env”路径。
 
     ```
     ...
@@ -6381,7 +6161,7 @@ job "resnetinfer1-1" deleted
 </td>
 <td class="cellrowborder" valign="top" width="21.754350870174033%" headers="mcps1.2.6.1.3 "><p id="p10942152013510"><a name="p10942152013510"></a><a name="p10942152013510"></a>a800_tensorflow_vcjob.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" width="21.754350870174033%" headers="mcps1.2.6.1.4 "><p id="p9942102010518"><a name="p9942102010518"></a><a name="p9942102010518"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.2.RC1/samples/train/basic-training/ranktable/yaml/910" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+<td class="cellrowborder" valign="top" width="21.754350870174033%" headers="mcps1.2.6.1.4 "><p id="p9942102010518"><a name="p9942102010518"></a><a name="p9942102010518"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.3.0/samples/train/basic-training/ranktable/yaml/910" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
 </td>
 <td class="cellrowborder" rowspan="2" valign="top" width="21.754350870174033%" headers="mcps1.2.6.1.5 "><p id="p1694222015119"><a name="p1694222015119"></a><a name="p1694222015119"></a>示例默认为单机8卡任务</p>
 <p id="p1161014614466"><a name="p1161014614466"></a><a name="p1161014614466"></a></p>
@@ -6389,12 +6169,12 @@ job "resnetinfer1-1" deleted
 </tr>
 <tr id="row20488131310512"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p92173245117"><a name="p92173245117"></a><a name="p92173245117"></a>a800_pytorch_vcjob.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p191773377514"><a name="p191773377514"></a><a name="p191773377514"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.2.RC1/samples/train/resumable-training/fault-rescheduling/withRanktable/pytorch/resnet50/yamls/910/a800_pytorch_vcjob.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p191773377514"><a name="p191773377514"></a><a name="p191773377514"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/train/resumable-training/fault-rescheduling/withRanktable/pytorch/resnet50/yamls/910/a800_pytorch_vcjob.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
 </td>
 </tr>
 <tr id="row348851319516"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p32203210515"><a name="p32203210515"></a><a name="p32203210515"></a>a800_vcjob.yaml（MindSpore架构）</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p5177173765117"><a name="p5177173765117"></a><a name="p5177173765117"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.2.RC1/samples/train/resumable-training/fault-rescheduling/withRanktable/mindspore/resnet50/yamls/a800_vcjob.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p5177173765117"><a name="p5177173765117"></a><a name="p5177173765117"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/train/resumable-training/fault-rescheduling/withRanktable/mindspore/resnet50/yamls/a800_vcjob.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p1561116674613"><a name="p1561116674613"></a><a name="p1561116674613"></a>示例默认为单机单卡任务</p>
 </td>
@@ -6403,7 +6183,7 @@ job "resnetinfer1-1" deleted
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p19293215114"><a name="p19293215114"></a><a name="p19293215114"></a>a800_vcjob.yaml（MindSpore架构）</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p317719373516"><a name="p317719373516"></a><a name="p317719373516"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.2.RC1/samples/train/resumable-training/fault-rescheduling/withRanktable/mindspore/pangu_alpha/yamls/a800_vcjob.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p317719373516"><a name="p317719373516"></a><a name="p317719373516"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/train/resumable-training/fault-rescheduling/withRanktable/mindspore/pangu_alpha/yamls/a800_vcjob.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p156115614615"><a name="p156115614615"></a><a name="p156115614615"></a>示例默认为2*8卡任务</p>
 </td>
@@ -6469,8 +6249,7 @@ job "resnetinfer1-1" deleted
 <tr id="row6949124320594"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001570873348_p2032819617590"><a name="zh-cn_topic_0000001570873348_p2032819617590"></a><a name="zh-cn_topic_0000001570873348_p2032819617590"></a>force</p>
 </td>
 <td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.4.1.2 "><p id="p4784925400"><a name="p4784925400"></a><a name="p4784925400"></a>暂不支持。</p>
-<div class="note" id="note65068564019"><a name="note65068564019"></a><a name="note65068564019"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p85061256401"><a name="p85061256401"></a><a name="p85061256401"></a>当前仅支持grace模式。</p>
-</div></div>
+<p id="p85061256401"><a name="p85061256401"></a><a name="p85061256401"></a>当前仅支持grace模式。</p>
 </td>
 </tr>
 <tr id="row69001145205918"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001570873348_p153287615911"><a name="zh-cn_topic_0000001570873348_p153287615911"></a><a name="zh-cn_topic_0000001570873348_p153287615911"></a>off</p>
@@ -6627,7 +6406,7 @@ job "resnetinfer1-1" deleted
     ...
     ```
 
-3.  若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu“和“memory“参数和对应的参数值，具体数值请根据实际情况配置。
+3.  若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu”和“memory”参数和对应的参数值，具体数值请根据实际情况配置。
 
     ```
     ...
@@ -6742,7 +6521,7 @@ job "resnetinfer1-1" deleted
     ```
 
     >[!NOTE] 说明 
-    >如果下发任务成功后，又修改了任务YAML，需要先执行kubectl delete -f** **_XXX__.yaml_命令删除原任务，再重新下发任务。
+    >如果下发任务成功后，又修改了任务YAML，需要先执行kubectl delete -f _XXX_.yaml命令删除原任务，再重新下发任务。
 
 
 #### 查看任务进程<a name="ZH-CN_TOPIC_0000002479227140"></a>
@@ -6788,7 +6567,7 @@ job "resnetinfer1-1" deleted
     ```
 
     >[!NOTE] 说明 
-    >_device\_id_为NPU的ID，可以通过npu-smi info命令查看NPU的ID。
+    >device\_id为NPU的ID，可以通过npu-smi info命令查看NPU的ID。
 
 3.  执行以下命令，查看NPU链路状态。
 
@@ -6882,7 +6661,7 @@ job "resnetinfer1-1" deleted
 kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
 ```
 
--   回显示例如下表示发生故障时，使用最近保存的第39步的checkpoint文件恢复，实现训练任务第40个epoch开始继续训练。
+-   回显示例如下表示发生故障时，使用最近保存的第39步的Checkpoint文件恢复，实现训练任务第40个epoch开始继续训练。
 
     ```
     ...
@@ -6968,7 +6747,7 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
 本章节需要用户熟悉编程开发，以及对K8s有一定了解。如果用户已有AI平台或者想基于集群调度组件开发AI平台，需要完成以下内容：
 
 1.  根据编程语言找到对应的K8s的[官方API库](https://github.com/kubernetes-client)。
-2.  根据K8s官方提供的API库，来对任务进行创建、查询、删除等操作。
+2.  根据K8s官方提供的API库，对任务进行创建、查询、删除等操作。
 3.  创建、查询或删除操作任务时，用户需要将[示例YAML](#准备任务yaml-3)的内容转换成K8s官方API中定义的对象，通过官方库中提供的API发送给K8s的API Server或者将YAML内容转换为JSON格式直接发送给K8s的API Server。
 
 
@@ -7066,7 +6845,7 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
 #### 准备任务YAML<a name="ZH-CN_TOPIC_0000002511427029"></a>
 
 >[!NOTE] 说明 
->-   如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载“/dev“目录下的设备。其他目录（如“/usr“）用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
+>-   如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载“/dev”目录下的设备。其他目录（如“/usr”）用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
 >-   因为Atlas 200I SoC A1 核心板场景不支持Ascend Docker Runtime，用户也无需修改YAML文件。
 
 **操作步骤<a name="zh-cn_topic_0000001558853680_zh-cn_topic_0000001609074213_section14665181617334"></a>**
@@ -7092,7 +6871,7 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
     </td>
     <td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000001609074213_p1116971091915"><a name="zh-cn_topic_0000001609074213_p1116971091915"></a><a name="zh-cn_topic_0000001609074213_p1116971091915"></a>infer-deploy-310p-1usoc.yaml</p>
     </td>
-    <td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.4 "><p id="p784716567219"><a name="p784716567219"></a><a name="p784716567219"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.2.RC1/samples/inference/volcano" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+    <td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.4 "><p id="p784716567219"><a name="p784716567219"></a><a name="p784716567219"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.3.0/samples/inference/volcano" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
     </tr>
     <tr id="zh-cn_topic_0000001609074213_row17169201091917"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000001609074213_p14853125832110"><a name="zh-cn_topic_0000001609074213_p14853125832110"></a><a name="zh-cn_topic_0000001609074213_p14853125832110"></a>其他类型推理节点</p>
@@ -7108,7 +6887,7 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
     </td>
     <td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.3 "><p id="p8442112171619"><a name="p8442112171619"></a><a name="p8442112171619"></a>infer-vcjob-910.yaml</p>
     </td>
-    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.4 "><p id="p15442424164"><a name="p15442424164"></a><a name="p15442424164"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.2.RC1/samples/inference/volcano/infer-vcjob-910.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.4 "><p id="p15442424164"><a name="p15442424164"></a><a name="p15442424164"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/infer-vcjob-910.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
     </tr>
     <tr id="row3552077269"><td class="cellrowborder" rowspan="2" valign="top" width="19.97%" headers="mcps1.2.5.1.1 "><p id="p6861171325411"><a name="p6861171325411"></a><a name="p6861171325411"></a>Ascend Job任务</p>
@@ -7119,7 +6898,7 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
     </td>
     <td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.3 "><p id="p10861813135419"><a name="p10861813135419"></a><a name="p10861813135419"></a>pytorch_acjob_infer_310p_with_ranktable.yaml</p>
     </td>
-    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.4 "><p id="p1986116136544"><a name="p1986116136544"></a><a name="p1986116136544"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.2.RC1/samples/inference/volcano/pytorch_acjob_infer_310p_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.4 "><p id="p1986116136544"><a name="p1986116136544"></a><a name="p1986116136544"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/pytorch_acjob_infer_310p_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
     </tr>
     <tr id="row512231072611"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1611216221297"><a name="p1611216221297"></a><a name="p1611216221297"></a><span id="ph10342125017508"><a name="ph10342125017508"></a><a name="ph10342125017508"></a>Atlas 800I A2 推理服务器</span></p>
@@ -7128,7 +6907,7 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p4446185212815"><a name="p4446185212815"></a><a name="p4446185212815"></a>pytorch_multinodes_acjob_infer_{xxx}b_with_ranktable.yaml</p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p962512301913"><a name="p962512301913"></a><a name="p962512301913"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.2.RC1/samples/inference/volcano/pytorch_multinodes_acjob_infer_910b_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p962512301913"><a name="p962512301913"></a><a name="p962512301913"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_910b_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
     </tr>
     </tbody>
@@ -7137,7 +6916,7 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
     >[!NOTE] 说明 
     >Volcano支持Job类型任务，但是Job类型任务的YAML需要用户自行根据示例YAML修改适配。
 
-2.  在[整卡调度](#准备任务yaml-1)或者[动态vNPU调度](#准备任务yaml-2)的YAML配置基础上，增加如下加粗字段启用重调度功能，以整卡调度的infer-deploy.yaml为例。
+2.  在[整卡调度](#准备任务yaml-1)或者[动态vNPU调度](#准备任务yaml-2)的YAML配置基础上，增加如下字段启用重调度功能，以整卡调度的infer-deploy.yaml为例。
 
     ```
     apiVersion: apps/v1
@@ -7230,7 +7009,7 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
     >-   /path-to-weights为模型权重，需要用户自行准备。mindie镜像可以参考镜像中$ATB\_SPEED\_HOME\_PATH/examples/models/llama3/README.md文件中的说明进行下载。
     >-   ATB_SPEED_HOME_PATH默认路径为“/usr/local/Ascend/atb-models”，在source模型仓中set_env.sh脚本时已配置，用户无需自行配置。
 
-4.  修改所选YAML中的容器启动命令，即“command”字段内容，如果没有则添加“command”字段。
+4.  修改所选YAML中的容器启动命令，即“command”字段内容，如果没有则需添加。
 
     ```
     ...
@@ -7351,7 +7130,7 @@ job "resnetinfer1-2" deleted
 本章节需要用户熟悉编程开发，以及对K8s有一定了解。如果用户已有AI平台或者想基于集群调度组件开发AI平台，需要完成以下内容：
 
 1.  根据编程语言找到对应的K8s的[官方API库](https://github.com/kubernetes-client)。
-2.  根据K8s官方提供的API库，来对任务进行创建、查询、删除等操作。
+2.  根据K8s官方提供的API库，对任务进行创建、查询、删除等操作。
 3.  创建、查询或删除操作任务时，用户需要将[示例YAML](#准备任务yaml-4)的内容转换成K8s官方API中定义的对象，通过官方库里面提供的API发送给K8s的API Server或者将YAML内容转换为JSON格式直接发送给K8s的API Server。
 
 
@@ -7360,7 +7139,7 @@ job "resnetinfer1-2" deleted
 
 **推理卡故障恢复特性**需要搭配**整卡调度特性**一起使用，开启推理卡故障恢复特性只需要将Ascend Device Plugin的启动参数“-hotReset”取值设置为“0”或“2”（默认为“-1”，不支持故障恢复功能）。具体使用方式请参考[整卡调度或静态vNPU调度（推理）](#整卡调度或静态vnpu调度推理)。
 
-Atlas 800I A2 推理服务器、A200I A2 Box 异构组件使用**推理卡故障恢复特性**，仅支持下发单机单卡任务，不支持分布式任务，且需要单独使用[infer-vcjob-910-hotreset.yaml](https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.2.RC1/samples/inference/volcano/infer-vcjob-910-hotreset.yaml)示例下发任务。
+Atlas 800I A2 推理服务器、A200I A2 Box 异构组件使用**推理卡故障恢复特性**，仅支持下发单机单卡任务，不支持分布式任务，且需要单独使用[infer-vcjob-910-hotreset.yaml](https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/infer-vcjob-910-hotreset.yaml)示例下发任务。
 
 >[!NOTE] 说明 
 >Atlas 800I A2 推理服务器存在以下两种故障恢复方式，一台Atlas 800I A2 推理服务器只能使用一种故障恢复方式，由集群调度组件自动识别使用哪种故障恢复方式。

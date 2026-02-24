@@ -45,7 +45,7 @@ taskd.__version__
 
 |返回值类型|说明|
 |--|--|
-|bool|表明初始化是否成功。<li>True：初始化成功。</li><li>False：初始化失败。</li>|
+|bool|表明初始化是否成功。<ul><li>True：初始化成功。</li><li>False：初始化失败。</li></ul>|
 
 
 
@@ -63,7 +63,7 @@ taskd.__version__
 
 |参数|说明|
 |--|--|
-|bool|表明初始化是否成功。<li>True：初始化成功。</li><li>False：初始化失败。</li>|
+|bool|表明初始化是否成功。<ul><li>True：初始化成功。</li><li>False：初始化失败。</li></ul>|
 
 
 
@@ -71,7 +71,7 @@ taskd.__version__
 
 **功能说明<a name="section3468140175411"></a>**
 
-用户侧调用此函数，销毁TaskD worker通信资源。此函数需要在[init\_taskd\_worker](#def%20init_taskd_worker(rank_id:%20int,%20upper_limit_of_disk_in_mb:%20int%20=%205000,%20framework:%20str%20=%20"pt")%20->%20bool)接口后使用。
+用户侧调用此函数，销毁TaskD worker通信资源。此函数需要在[init\_taskd\_worker](#def-init_taskd_workerrank_id-int-upper_limit_of_disk_in_mb-int--5000-framework-str--pt---bool)接口后使用。
 
 **输入参数说明<a name="section1177311115553"></a>**
 
@@ -83,7 +83,7 @@ taskd.__version__
 
 |返回值类型|说明|
 |--|--|
-|bool|表明销毁是否成功。<li>True：销毁成功。</li><li>False：销毁失败。</li>|
+|bool|表明销毁是否成功。<ul><li>True：销毁成功。</li><li>False：销毁失败。</li></ul>|
 
 
 
@@ -102,7 +102,7 @@ taskd.__version__
 
 |参数|类型|说明|
 |--|--|--|
-|config|dict:{str : str}|Agent配置信息，包括Agent配置与网络配置。其中键包括：<li>Framework：Agent框架，当前支持PyTorch和MindSpore</li><li>UpstreamAddr：网络侧上游IP地址</li><li>UpstreamPort：网络侧上游端口</li><li>ServerRank：Agent rank号</li>|
+|config|dict:{str : str}|Agent配置信息，包括Agent配置与网络配置。其中键包括：<ul><li>Framework：Agent框架，当前支持PyTorch和MindSpore</li><li>UpstreamAddr：网络侧上游IP地址</li><li>UpstreamPort：网络侧上游端口</li><li>ServerRank：Agent rank号</li></ul>|
 |cls|具体实例类型|该入参在PyTorch框架下使用，为SimpleElasticAgent实例。其他框架无需传入。|
 
 
@@ -112,7 +112,7 @@ taskd.__version__
 
 |返回值类型|说明|
 |--|--|
-|bool|表明初始化是否成功。<li>True：初始化成功。</li><li>False：初始化失败。</li>|
+|bool|表明初始化是否成功。<ul><li>True：初始化成功。</li><li>False：初始化失败。</li></ul>|
 
 
 
@@ -158,7 +158,7 @@ taskd.__version__
 
 |返回值类型|说明|
 |--|--|
-|bool|表明注册是否成功。<li>True：注册成功。</li><li>False：注册失败。</li>|
+|bool|表明注册是否成功。<ul><li>True：注册成功。</li><li>False：注册失败。</li></ul>|
 
 
 
@@ -177,7 +177,7 @@ taskd.__version__
 
 |参数|类型|说明|
 |--|--|--|
-|config|dict:{str : str}|TaskD Proxy配置信息，包括TaskD Proxy配置及网络配置。<li>ListenAddr：TaskD Proxy侦听IP</li><li>ListenPort：TaskD Proxy侦听端口</li><li>UpstreamAddr：网络侧上游IP地址</li><li>UpstreamPort：网络侧上游端口</li><li>ServerRank：TaskD Proxy rank号</li>|
+|config|dict:{str : str}|TaskD Proxy配置信息，包括TaskD Proxy配置及网络配置。<ul><li>ListenAddr：TaskD Proxy侦听IP</li><li>ListenPort：TaskD Proxy侦听端口</li><li>UpstreamAddr：网络侧上游IP地址</li><li>UpstreamPort：网络侧上游端口</li><li>ServerRank：TaskD Proxy rank号</li></ul>|
 
 
 **返回值说明<a name="section4468173015517"></a>**
@@ -186,7 +186,7 @@ taskd.__version__
 
 |返回值类型|说明|
 |--|--|
-|bool|表明初始化是否成功。<li>True：初始化成功。</li><li>False：初始化失败。</li>|
+|bool|表明初始化是否成功。<ul><li>True：初始化成功。</li><li>False：初始化失败。</li></ul>|
 
 
 
@@ -194,7 +194,7 @@ taskd.__version__
 
 **功能说明<a name="section3468140175411"></a>**
 
-用户侧调用此函数，销毁TaskD Proxy。此函数需要在[init\_taskd\_proxy](#def%20init_taskd_proxy(config%20:%20dict)%20->%20bool:)接口后使用。
+用户侧调用此函数，销毁TaskD Proxy。此函数需要在[init\_taskd\_proxy](#def-init_taskd_proxyconfig--dict---bool)接口后使用。
 
 **输入参数说明<a name="section1177311115553"></a>**
 
@@ -206,7 +206,7 @@ taskd.__version__
 
 |返回值类型|说明|
 |--|--|
-|bool|表明销毁是否成功。<li>True：销毁成功。</li><li>False：销毁失败。</li>|
+|bool|表明销毁是否成功。<ul><li>True：销毁成功。</li><li>False：销毁失败。</li></ul>|
 
 
 
@@ -225,7 +225,7 @@ taskd.__version__
 
 |参数|类型|说明|
 |--|--|--|
-|config|dict:{str : str}|TaskD Manager配置信息，以键值对形式传入。其中键包括：<li>job_id：string类型，表示任务ID。</li><li>node_nums：int类型，表示节点数量。</li><li>proc_per_node：int类型，表示每节点进程数量。</li><li>plugin_dir：string类型，表示插件目录。</li><li>fault_recover：string类型，表示故障恢复策略。</li><li>taskd_enable：string类型，表示TaskD进程级恢复功能开关。</li><li>cluster_infos：dict类型，表示集群信息。cluster_infos的key分别为ip（当前节点的IP地址）、port（服务器端口）、name（服务器名称）、role（服务器角色），均为string类型。</li>|
+|config|dict:{str : str}|TaskD Manager配置信息，以键值对形式传入。其中键包括：<ul><li>job_id：string类型，表示任务ID。</li><li>node_nums：int类型，表示节点数量。</li><li>proc_per_node：int类型，表示每节点进程数量。</li><li>plugin_dir：string类型，表示插件目录。</li><li>fault_recover：string类型，表示故障恢复策略。</li><li>taskd_enable：string类型，表示TaskD进程级恢复功能开关。</li><li>cluster_infos：dict类型，表示集群信息。cluster_infos的key分别为ip（当前节点的IP地址）、port（服务器端口）、name（服务器名称）、role（服务器角色），均为string类型。</li></ul>|
 
 
 **返回值说明<a name="section4468173015517"></a>**
@@ -234,7 +234,7 @@ taskd.__version__
 
 |返回值类型|说明|
 |--|--|
-|bool|表明初始化是否成功。<li>True：初始化成功。</li><li>False：初始化失败。</li>|
+|bool|表明初始化是否成功。<ul><li>True：初始化成功。</li><li>False：初始化失败。</li></ul>|
 
 
 
@@ -254,7 +254,7 @@ taskd.__version__
 
 |返回值类型|说明|
 |--|--|
-|bool|表明启动是否成功。<li>True：启动成功。</li><li>False：启动失败。</li>|
+|bool|表明启动是否成功。<ul><li>True：启动成功。</li><li>False：启动失败。</li></ul>|
 
 
 
@@ -439,7 +439,7 @@ MSRunPlugin类提供MindSpore进程管理功能，由MindSpore调用，集成到
 
 |参数|类型|说明|
 |--|--|--|
-|operator|string|当前注入的回调类型。<li>KILL_WORKER：注册MindSpore进程的停止方法，停止特定训练进程。</li><li>START_ALL_WORKER：注册MindSpore进程的启动方法，启动当前节点所有的进程。</li><li>MONITOR：注册MindSpore进程的监测方法，返回当前本节点各rank进程信息。</li><li>START_WORKER_LIST：注册MindSpore进程的启动方法，启动当前节点的部分进程。</li>|
+|operator|string|当前注入的回调类型。<ul><li>KILL_WORKER：注册MindSpore进程的停止方法，停止特定训练进程。</li><li>START_ALL_WORKER：注册MindSpore进程的启动方法，启动当前节点所有的进程。</li><li>MONITOR：注册MindSpore进程的监测方法，返回当前本节点各rank进程信息。</li><li>START_WORKER_LIST：注册MindSpore进程的启动方法，启动当前节点的部分进程。</li></ul>|
 |func|函数|当前注册的功能的函数回调|
 
 
@@ -515,7 +515,7 @@ rpc PathDiscovery(PathDiscoveryReq) returns (Ack)
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|Ack|message Ack {<p>string uuid = 1;</p><p>uint32 code = 2;</p><p>Position src = 3;</p>}|<p>**uuid**：与PathDiscovery消息UUID一致</p><p>**code**：返回码<li>取值为0：PathDiscovery接口调用成功</li><li>其他值：PathDiscovery接口调用失败</li></p><p>**src**：Ack确认消息返回方角色位置信息|
+|Ack|message Ack {<p>string uuid = 1;</p><p>uint32 code = 2;</p><p>Position src = 3;</p>}|<p>**uuid**：与PathDiscovery消息UUID一致</p><p>**code**：返回码<ul><li>取值为0：PathDiscovery接口调用成功</li><li>其他值：PathDiscovery接口调用失败</li></ul></p><p>**src**：Ack确认消息返回方角色位置信息|
 
 
 
@@ -546,7 +546,7 @@ rpc TransferMessage(Message) returns (Ack)
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|Ack|message Ack {<p>string uuid = 1;</p><p>uint32 code = 2;</p><p>Position src = 3;</p>}|<p>**uuid**：与MessageHeader中的消息UUID一致</p><p>**code**：返回码<li>取值为0：消息发送成功</li><li>其他值：消息发送失败</li></p><p>**src**：Ack确认消息返回方角色位置信息</p>|
+|Ack|message Ack {<p>string uuid = 1;</p><p>uint32 code = 2;</p><p>Position src = 3;</p>}|<p>**uuid**：与MessageHeader中的消息UUID一致</p><p>**code**：返回码<ul><li>取值为0：消息发送成功</li><li>其他值：消息发送失败</li></ul></p><p>**src**：Ack确认消息返回方角色位置信息</p>|
 
 
 
@@ -577,7 +577,7 @@ rpc InitServerDownStream(stream Ack) returns (stream Message)
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|stream Message|message Ack {<p>string uuid = 1;</p><p>uint32 code = 2;</p><p>Position src = 3;</p>}|<p>**uuid**：与Message.uuid一致</p><p>**code**：返回码<li>取值为0：消息发送成功</li><li>其他值：消息发送失败</li></p><p>**src**：Ack确认消息返回方角色位置信息</p>|
+|stream Message|message Ack {<p>string uuid = 1;</p><p>uint32 code = 2;</p><p>Position src = 3;</p>}|<p>**uuid**：与Message.uuid一致</p><p>**code**：返回码<ul><li>取值为0：消息发送成功</li><li>其他值：消息发送失败</li></ul></p><p>**src**：Ack确认消息返回方角色位置信息</p>|
 
 
 

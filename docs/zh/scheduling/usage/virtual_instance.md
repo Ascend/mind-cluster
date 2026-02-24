@@ -162,7 +162,7 @@
 -   如果使用动态虚拟化功能，请直接参见[动态虚拟化](#动态虚拟化)章节，不需要提前使用npu-smi命令创建vNPU。
 -   如果使用静态虚拟化功能，需要先参见[创建vNPU](#创建vnpu)，再进行挂载到容器操作。
 -   Atlas 推理系列产品的物理NPU虚拟化出vNPU后，模型在使用vNPU进行推理时可能会出现性能下降。如果出现性能下降的情况，建议使用vir04+vir04\_3c或者vir04+vir02+vir02\_1c的组合（对应的硬件资源可参见[虚拟化规则](#虚拟化规则)章节中的“虚拟化模板”）划分vNPU。
--   用户使用vNPU训练模型时，可以使用AOE调优工具进一步优化模型性能，详情请参见《CANN AOE调优工具用户指南》。
+-   用户使用vNPU训练模型时，可以使用AOE调优工具进一步优化模型性能，详情请参见《<a href="https://www.hiascend.com/document/detail/zh/canncommercial/850/devaids/aoe/auxiliarydevtool_aoe_0001.html">CANN AOE调优工具用户指南</a>》。
 
 **使用约束<a name="section911013420264"></a>**
 
@@ -183,9 +183,9 @@
 
 **虚拟化模板<a name="zh-cn_topic_0000002038226813_section13183017526"></a>**
 
-当前各产品型号支持的虚拟化实例模板如[表2](#zh-cn_topic_0000002038226813_table140421911260)所示。
+当前各产品型号支持的虚拟化实例模板如[表1](#zh-cn_topic_0000002038226813_table140421911260)所示。
 
-**表 2**  虚拟化实例模板
+**表 1**  虚拟化实例模板
 
 <a name="zh-cn_topic_0000002038226813_table140421911260"></a>
 |产品型号|虚拟化实例模板|说明|
@@ -224,10 +224,10 @@ Atlas 训练系列产品只支持软件虚拟化方式，而Atlas 推理系列�
 Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 
 -   vGroup是指虚拟化时NPU根据用户指定的虚拟化模板划分出虚拟资源组vGroup，每个vGroup包含若干AICore、AICPU、片上内存、DVPP资源；
--   如果用户使用模板vir04、vir04\_3c、vir02、vir02\_1c、vir04\_3c\_ndvpp、vir04\_4c\_dvpp，那么系统就会创建一个对应资源的vGroup，该vGroup包含与虚拟化实例模板匹配的AICore和其他硬件资源，vGroup再将资源提供给vNPU使用，虚拟化实例模板组合和vGroup的分配关系如[图2](#zh-cn_topic_0000002038226813_fig1059652844919)所示；
+-   如果用户使用模板vir04、vir04\_3c、vir02、vir02\_1c、vir04\_3c\_ndvpp、vir04\_4c\_dvpp，那么系统就会创建一个对应资源的vGroup，该vGroup包含与虚拟化实例模板匹配的AICore和其他硬件资源，vGroup再将资源提供给vNPU使用，虚拟化实例模板组合和vGroup的分配关系如[图1](#zh-cn_topic_0000002038226813_fig1059652844919)所示；
 -   Atlas 推理系列产品最多支持划分4个vGroup，vGroup至少包含2个AICore，如果用户使用模板vir01（无论是1个vir01还是2个vir01），NPU分配的vGroup同样包含2个AICore，vNPU通过分时复用的方式使用vGroup资源，比如通过2个vir01模板切分的2个vNPU，那么每个vNPU会通过串行的方式轮流使用vGroup的资源（如vNPU1使用1毫秒，然后vNPU2使用1毫秒）。
 
-**图 2**  vGroup和虚拟化实例模板组合的对应关系<a name="zh-cn_topic_0000002038226813_fig1059652844919"></a>  
+**图 1**  vGroup和虚拟化实例模板组合的对应关系<a name="zh-cn_topic_0000002038226813_fig1059652844919"></a>  
 ![](../../figures/scheduling/vGroup和虚拟化实例模板组合的对应关系.png "vGroup和虚拟化实例模板组合的对应关系")
 
 
@@ -248,65 +248,22 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
     **表 1**  参数说明
 
     <a name="table11489191211336"></a>
-    <table><thead align="left"><tr id="row9490191233316"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="p858383112334"><a name="p858383112334"></a><a name="p858383112334"></a>类型</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.2"><p id="p9583531183318"><a name="p9583531183318"></a><a name="p9583531183318"></a>描述</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="row7490191211335"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p9583131163313"><a name="p9583131163313"></a><a name="p9583131163313"></a><em id="i1958303112333"><a name="i1958303112333"></a><a name="i1958303112333"></a>mode</em></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1058315311336"><a name="p1058315311336"></a><a name="p1058315311336"></a>虚拟化实例模式。取值为0或1：</p>
-    <a name="ul6583103113316"></a><a name="ul6583103113316"></a><ul id="ul6583103113316"><li>0：虚拟化实例容器模式</li><li>1：虚拟化实例虚拟机模式</li></ul>
-    </td>
-    </tr>
-    </tbody>
-    </table>
+    |类型|描述|
+    |--|--|
+    |mode|<p>虚拟化实例模式。取值为0或1：</p><ul><li>0：虚拟化实例容器模式</li><li>1：虚拟化实例虚拟机模式</li></ul>|
 
 -   创建vNPU。命令格式如下：
 
     **npu-smi set -t create-vnpu -i** _id_ **-c** _chip\_id_ **-f** _vnpu\_config_  \[**-v** _vnpu\_id_\] \[**-g** _vgroup\_id_\]
 
     <a name="table1654283920393"></a>
-    <table><thead align="left"><tr id="row1257933983913"><th class="cellrowborder" valign="top" width="15.879999999999999%" id="mcps1.1.3.1.1"><p id="p6579539143910"><a name="p6579539143910"></a><a name="p6579539143910"></a>类型</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="84.11999999999999%" id="mcps1.1.3.1.2"><p id="p057943915394"><a name="p057943915394"></a><a name="p057943915394"></a>描述</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="row157953914395"><td class="cellrowborder" valign="top" width="15.879999999999999%" headers="mcps1.1.3.1.1 "><p id="p8579103993910"><a name="p8579103993910"></a><a name="p8579103993910"></a><em id="i16579173917391"><a name="i16579173917391"></a><a name="i16579173917391"></a>id</em></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="84.11999999999999%" headers="mcps1.1.3.1.2 "><p id="p13579739143918"><a name="p13579739143918"></a><a name="p13579739143918"></a>设备id。通过<strong id="zh-cn_topic_0000002027367297_zh-cn_topic_0000001220576470_b17974719418"><a name="zh-cn_topic_0000002027367297_zh-cn_topic_0000001220576470_b17974719418"></a><a name="zh-cn_topic_0000002027367297_zh-cn_topic_0000001220576470_b17974719418"></a>npu-smi info -l</strong>命令查出的NPU ID即为设备id。</p>
-    </td>
-    </tr>
-    <tr id="row5580539113920"><td class="cellrowborder" valign="top" width="15.879999999999999%" headers="mcps1.1.3.1.1 "><p id="p12580123915398"><a name="p12580123915398"></a><a name="p12580123915398"></a><em id="i55801539193917"><a name="i55801539193917"></a><a name="i55801539193917"></a>chip_id</em></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="84.11999999999999%" headers="mcps1.1.3.1.2 "><p id="p1858023943917"><a name="p1858023943917"></a><a name="p1858023943917"></a>芯片id。通过<strong id="zh-cn_topic_0000002027367297_zh-cn_topic_0000001220576470_b109740194113"><a name="zh-cn_topic_0000002027367297_zh-cn_topic_0000001220576470_b109740194113"></a><a name="zh-cn_topic_0000002027367297_zh-cn_topic_0000001220576470_b109740194113"></a>npu-smi info -m</strong>命令查出的Chip ID即为芯片id。</p>
-    </td>
-    </tr>
-    <tr id="row10580193983918"><td class="cellrowborder" valign="top" width="15.879999999999999%" headers="mcps1.1.3.1.1 "><p id="p155801839193919"><a name="p155801839193919"></a><a name="p155801839193919"></a><em id="i758010392398"><a name="i758010392398"></a><a name="i758010392398"></a>vnpu_config</em></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="84.11999999999999%" headers="mcps1.1.3.1.2 "><p id="p1558013919399"><a name="p1558013919399"></a><a name="p1558013919399"></a>虚拟化实例模板名称，可参见<a href="#虚拟化规则">虚拟化规则</a>章节中的“虚拟化模板”。</p>
-    </td>
-    </tr>
-    <tr id="row058063919393"><td class="cellrowborder" valign="top" width="15.879999999999999%" headers="mcps1.1.3.1.1 "><p id="p1258073915392"><a name="p1258073915392"></a><a name="p1258073915392"></a><em id="i11580839153914"><a name="i11580839153914"></a><a name="i11580839153914"></a>vnpu_id</em></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="84.11999999999999%" headers="mcps1.1.3.1.2 "><p id="p1758012395391"><a name="p1758012395391"></a><a name="p1758012395391"></a>指定需要创建的vNPU的id。</p>
-    <a name="ul189644316519"></a><a name="ul189644316519"></a><ul id="ul189644316519"><li>首次创建可以不指定该参数，由系统默认分配。若重启后业务需要使用重启前的vnpu_id，可以使用-v参数指定重启前的vnpu_id进行恢复。</li><li>取值范围。<a name="ul16405125810516"></a><a name="ul16405125810516"></a><ul id="ul16405125810516"><li><span id="ph174815428012"><a name="ph174815428012"></a><a name="ph174815428012"></a>Atlas 推理系列产品</span><p id="p99171343201"><a name="p99171343201"></a><a name="p99171343201"></a><em id="zh-cn_topic_0000002027362421_i12588517806"><a name="zh-cn_topic_0000002027362421_i12588517806"></a><a name="zh-cn_topic_0000002027362421_i12588517806"></a>vnpu_id</em>的取值范围为[<em id="zh-cn_topic_0000002027362421_i1742542315514"><a name="zh-cn_topic_0000002027362421_i1742542315514"></a><a name="zh-cn_topic_0000002027362421_i1742542315514"></a>phy_id</em>*16 + 100, <em id="zh-cn_topic_0000002027362421_i137304339514"><a name="zh-cn_topic_0000002027362421_i137304339514"></a><a name="zh-cn_topic_0000002027362421_i137304339514"></a>phy_id </em>* 16+107]。</p>
-    </li><li><span id="ph131281531709"><a name="ph131281531709"></a><a name="ph131281531709"></a>Atlas 训练系列产品</span><p id="p168119552003"><a name="p168119552003"></a><a name="p168119552003"></a><em id="zh-cn_topic_0000002027367297_i12579165151"><a name="zh-cn_topic_0000002027367297_i12579165151"></a><a name="zh-cn_topic_0000002027367297_i12579165151"></a>vnpu_id</em>的取值范围为[<em id="zh-cn_topic_0000002027367297_i1957842812517"><a name="zh-cn_topic_0000002027367297_i1957842812517"></a><a name="zh-cn_topic_0000002027367297_i1957842812517"></a>phy_id</em>*16 + 100, <em id="zh-cn_topic_0000002027367297_i58641736654"><a name="zh-cn_topic_0000002027367297_i58641736654"></a><a name="zh-cn_topic_0000002027367297_i58641736654"></a>phy_id</em> * 16+115]。</p>
-    </li></ul>
-    <div class="note" id="note11481165845313"><a name="note11481165845313"></a><a name="note11481165845313"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p1148111585535"><a name="p1148111585535"></a><a name="p1148111585535"></a>phy_id表示芯片物理ID，可通过执行<strong id="b9486163384911"><a name="b9486163384911"></a><a name="b9486163384911"></a>ls /dev/davinci*</strong>命令获取芯片的物理ID。例如/dev/davinci0，表示芯片的物理ID为0。</p>
-    </div></div>
-    </li><li>vnpu_id传入4294967295时表示不指定虚拟设备号。</li><li>同一台服务器内不可重复创建相同vnpu_id的vNPU。</li></ul>
-    </td>
-    </tr>
-    <tr id="row858023916393"><td class="cellrowborder" valign="top" width="15.879999999999999%" headers="mcps1.1.3.1.1 "><p id="p95803397394"><a name="p95803397394"></a><a name="p95803397394"></a><em id="i8580193993911"><a name="i8580193993911"></a><a name="i8580193993911"></a>vgroup_id</em></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="84.11999999999999%" headers="mcps1.1.3.1.2 "><p id="p158133915399"><a name="p158133915399"></a><a name="p158133915399"></a>虚拟资源组vGroup的id，取值范围0~3。vGroup的概念可以参见<a href="#虚拟化规则">虚拟化规则</a>章节中的“虚拟化模式”，仅<span id="ph14347102111377"><a name="ph14347102111377"></a><a name="ph14347102111377"></a>Atlas 推理系列产品</span>支持本参数。</p>
-    </td>
-    </tr>
-    </tbody>
-    </table>
+    |类型|描述|
+    |--|--|
+    |id|设备ID。通过<b>npu-smi info -l</b>命令查出的NPU ID即为设备ID。|
+    |chip_id|芯片ID。通过<b>npu-smi info -m</b>命令查出的Chip ID即为芯片ID。|
+    |vnpu_config|虚拟化实例模板名称，可参见<a href="#虚拟化规则">虚拟化规则</a>章节中的“虚拟化模板”。|
+    |vnpu_id|<p>指定需要创建的vNPU的id。</p><ul><li>首次创建可以不指定该参数，由系统默认分配。若重启后业务需要使用重启前的vnpu_id，可以使用-v参数指定重启前的vnpu_id进行恢复。</li><li>取值范围。<ul><li>Atlas 推理系列产品<p>vnpu_id的取值范围为[phy_id * 16 + 100, phy_id * 16+107]。</p></li><li>Atlas 训练系列产品<p>vnpu_id的取值范围为[phy_id * 16 + 100, phy_id * 16+115]。</p></li></ul><div class="note"><span class="notetitle"> 说明： </span><div class="notebody"><p>phy_id表示芯片物理ID，可通过执行<strong>ls /dev/davinci*</strong>命令获取芯片的物理ID。例如/dev/davinci0，表示芯片的物理ID为0。</p></div></div></li><li>vnpu_id传入4294967295时表示不指定虚拟设备号。</li><li>同一台服务器内不可重复创建相同vnpu_id的vNPU。</li></ul>|
+    |vgroup_id|虚拟资源组vGroup的id，取值范围0~3。vGroup的概念可以参见<a href="#虚拟化规则">虚拟化规则</a>章节中的“虚拟化模式”，仅<span>Atlas 推理系列产品</span>支持本参数。|
 
     使用示例如下：
 
@@ -335,7 +292,7 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 
     **npu-smi set -t vnpu-cfg-recover -d** _mode_
 
-    _mode_表示vNPU的配置恢复使能状态，“1“表示开启状态，“0“表示关闭状态，默认为使能状态。
+    mode表示vNPU的配置恢复使能状态，“1”表示开启状态，“0”表示关闭状态，默认为使能状态。
 
     执行如下命令设置vNPU的配置恢复状态，以下命令表示将vNPU的配置恢复状态设置为使能状态。
 
@@ -361,24 +318,10 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
     **npu-smi info -t info-vnpu -i** _id_ **-c** _chip\_id_
 
     <a name="table1585213289319"></a>
-    <table><thead align="left"><tr id="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_row57216019"><th class="cellrowborder" valign="top" width="30%" id="mcps1.1.3.1.1"><p id="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p3985976"><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p3985976"></a><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p3985976"></a>类型</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="70%" id="mcps1.1.3.1.2"><p id="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p54428625"><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p54428625"></a><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p54428625"></a>描述</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_row20095581"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.1.3.1.1 "><p id="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p57396781"><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p57396781"></a><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p57396781"></a><em id="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_i162411212177"><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_i162411212177"></a><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_i162411212177"></a>id</em></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="70%" headers="mcps1.1.3.1.2 "><p id="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p45299595"><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p45299595"></a><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p45299595"></a>设备id。通过<strong id="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_zh-cn_topic_0159185044_b380865519132"><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_zh-cn_topic_0159185044_b380865519132"></a><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_zh-cn_topic_0159185044_b380865519132"></a>npu-smi info -l</strong>命令查出的NPU ID即为设备id。</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_row11151504449"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.1.3.1.1 "><p id="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p1171850174418"><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p1171850174418"></a><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p1171850174418"></a><em id="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_i455981174512"><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_i455981174512"></a><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_i455981174512"></a>chip_id</em></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="70%" headers="mcps1.1.3.1.2 "><p id="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p1438614481266"><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p1438614481266"></a><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_p1438614481266"></a>芯片id。通过<strong id="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_b543721419403"><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_b543721419403"></a><a name="zh-cn_topic_0000001991007846_zh-cn_topic_0000001220416486_zh-cn_topic_0000001168070435_b543721419403"></a>npu-smi info -m</strong>命令查出的Chip ID即为芯片id。</p>
-    </td>
-    </tr>
-    </tbody>
-    </table>
+    |类型|描述|
+    |--|--|
+    |id|设备ID。通过<b>npu-smi info -l</b>命令查出的NPU ID即为设备ID。|
+    |chip_id|芯片ID。通过<b>npu-smi info -m</b>命令查出的Chip ID即为芯片ID。|
 
     执行如下命令查询vNPU信息。以下命令表示查询设备0中编号为0的芯片的vNPU信息。
 
@@ -396,11 +339,11 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 
 **命令格式<a name="section397122431219"></a>**
 
-**npu-smi set -t destroy-vnpu -i **_id _**-c** _chip\_id_ **-v** _vnpu\_id_
+**npu-smi set -t destroy-vnpu -i** _id_ **-c** _chip\_id_ **-v** _vnpu\_id_
 
 **使用示例<a name="section198531444111215"></a>**
 
-执行**npu-smi set -t destroy-vnpu -i  0  -c 0 -v 103**销毁设备0编号0的芯片中编号为103的vNPU设备。回显以下信息表示销毁成功。
+执行**npu-smi set -t destroy-vnpu -i  0  -c 0 -v 103**销毁设备0编号0的芯片中编号为103的vNPU设备。显示以下信息表示销毁成功。
 
 ```
        Status : OK
@@ -415,7 +358,7 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 
 ### 基于原生Docker挂载vNPU<a name="ZH-CN_TOPIC_0000002479226416"></a>
 
-原生Docker场景下（未部署MindCluster集群调度组件），需要使用npu-smi工具创建vNPU后，将vNPU挂载到容器。具体操作请参见《Atlas 中心训练服务器 25.0.RC1 NPU驱动和固件安装指南》的“算力切分容器场景下的安装与卸载\>[多容器场景下安装](https://support.huawei.com/enterprise/zh/doc/EDOC1100468904/5b32515a)”章节，该章节指导用户安装Docker和将vNPU挂载进容器。
+原生Docker场景下（未部署MindCluster集群调度组件），需要使用npu-smi工具创建vNPU后，将vNPU挂载到容器。具体操作请参见《Atlas 中心训练服务器 25.5.0 NPU驱动和固件安装指南》的“昇腾虚拟化实例（AVI）容器场景下的安装与卸载\>[多容器场景下安装](https://support.huawei.com/enterprise/zh/doc/EDOC1100540363/5b32515a)”章节，该章节指导用户安装Docker和将vNPU挂载进容器。
 
 
 ### 基于MindCluster组件挂载vNPU<a name="ZH-CN_TOPIC_0000002511346329"></a>
@@ -445,62 +388,27 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
     ```
 
 >[!NOTE] 说明 
->-   使用动态虚拟化时，需要关闭vNPU的恢复使能功能，该功能的详细说明和操作指导请参考《Atlas 中心推理卡  25.0.RC1 npu-smi 命令参考》中的“算力切分相关命令\>[设置vNPU的配置恢复使能状态](https://support.huawei.com/enterprise/zh/doc/EDOC1100468892/149c9c)”章节。
+>-   使用动态虚拟化时，需要关闭vNPU的恢复使能功能，该功能的详细说明和操作指导请参考《Atlas 中心推理卡  25.5.0 npu-smi 命令参考》中的“算力切分相关命令\>[设置vNPU的配置恢复使能状态](https://support.huawei.com/enterprise/zh/doc/EDOC1100540373/fa2a6907)”章节。
 >-   可用的芯片ID可通过如下方式查询确认：
->    -   物理芯片ID：
->        ```
->        ls /dev/davinci*
->        ```
->    -   虚拟芯片ID：
->        ```
->        ls /dev/vdavinci*
->        ```
+>        -   物理芯片ID：
+>            ```
+>            ls /dev/davinci*
+>            ```
+>        -   虚拟芯片ID：
+>             ```
+>             ls /dev/vdavinci*
+>             ```
 >-   image-name:tag：镜像名称与标签，请根据实际情况修改。如“ascend-tensorflow:tensorflow\_TAG”。
 >-   用户在使用过程中，请勿重复定义和在容器镜像中固定ASCEND\_VISIBLE\_DEVICES、ASCEND\_RUNTIME\_OPTIONS和ASCEND\_VNPU\_SPECS环境变量。
 
 **表 1**  参数解释
 
 <a name="zh-cn_topic_0000001136053188_table19948947144812"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000001136053188_row294944704812"><th class="cellrowborder" valign="top" width="18.35183518351835%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000001136053188_p1094984717488"><a name="zh-cn_topic_0000001136053188_p1094984717488"></a><a name="zh-cn_topic_0000001136053188_p1094984717488"></a>参数</p>
-</th>
-<th class="cellrowborder" valign="top" width="42.03420342034204%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000001136053188_p19949194711486"><a name="zh-cn_topic_0000001136053188_p19949194711486"></a><a name="zh-cn_topic_0000001136053188_p19949194711486"></a>说明</p>
-</th>
-<th class="cellrowborder" valign="top" width="39.613961396139615%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000001136053188_p09492047124817"><a name="zh-cn_topic_0000001136053188_p09492047124817"></a><a name="zh-cn_topic_0000001136053188_p09492047124817"></a>举例</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000001136053188_row222813801116"><td class="cellrowborder" valign="top" width="18.35183518351835%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001136053188_p19424814155713"><a name="zh-cn_topic_0000001136053188_p19424814155713"></a><a name="zh-cn_topic_0000001136053188_p19424814155713"></a>ASCEND_VISIBLE_DEVICES</p>
-</td>
-<td class="cellrowborder" valign="top" width="42.03420342034204%" headers="mcps1.2.4.1.2 "><p id="p868055016598"><a name="p868055016598"></a><a name="p868055016598"></a>必须使用ASCEND_VISIBLE_DEVICES环境变量指定被挂载至容器中的NPU设备，否则挂载NPU设备失败；使用NPU设备序号指定设备，支持单个和范围指定且支持混用；使用NPU名称指定设备，支持同时指定多个同类型的NPU名称。</p>
-</td>
-<td class="cellrowborder" valign="top" width="39.613961396139615%" headers="mcps1.2.4.1.3 "><a name="ul16489101673214"></a><a name="ul16489101673214"></a><ul id="ul16489101673214"><li><strong id="b1732984817485"><a name="b1732984817485"></a><a name="b1732984817485"></a>静态虚拟化</strong>：<a name="ul1067211202110"></a><a name="ul1067211202110"></a><ul id="ul1067211202110"><li>ASCEND_VISIBLE_DEVICES=100表示将100号vNPU挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=101,103表示将101、103号vNPU挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=100-102表示将100号至102号vNPU（包含100号和102号）挂载入容器中，效果同ASCEND_VISIBLE_DEVICES=100,101,102。</li><li>ASCEND_VISIBLE_DEVICES=100-102,104表示将100号至102号以及104号vNPU挂载入容器，效果同ASCEND_VISIBLE_DEVICES=100,101,102,104。</li><li>ASCEND_VISIBLE_DEVICES=AscendXXX-Y，其中XXX表示NPU的型号，支持的取值为910，310和310P；Y表示vNPU的ID。<a name="ul520820512375"></a><a name="ul520820512375"></a><ul id="ul520820512375"><li>ASCEND_VISIBLE_DEVICES=Ascend910-101，表示把101号vNPU挂载进容器。</li><li>ASCEND_VISIBLE_DEVICES=Ascend910-101,Ascend910-103，表示把101号vNPU和103号vNPU挂载进容器。</li></ul>
-<div class="note" id="note915954711277"><a name="note915954711277"></a><a name="note915954711277"></a><span class="notetitle"> 说明： </span><div class="notebody"><a name="ul5360941163914"></a><a name="ul5360941163914"></a><ul id="ul5360941163914"><li>NPU类型需要和实际环境的芯片类型保持一致，否则将会挂载失败。</li><li>不支持在一个参数里既指定vNPU设备序号又指定vNPU名称，即不支持ASCEND_VISIBLE_DEVICES=100，Ascend910-101。</li><li>必须搭配ASCEND_RUNTIME_OPTIONS，取值必须包含VIRTUAL，表示挂载的是vNPU。</li></ul>
-</div></div>
-</li></ul>
-</li><li><strong id="b1988854124810"><a name="b1988854124810"></a><a name="b1988854124810"></a>动态虚拟化</strong>：<div class="p" id="p1393919203"><a name="p1393919203"></a><a name="p1393919203"></a>ASCEND_VISIBLE_DEVICES=0表示从0号NPU设备中划分出一定数量的AI Core。<div class="note" id="note16111143591319"><a name="note16111143591319"></a><a name="note16111143591319"></a><span class="notetitle"> 说明： </span><div class="notebody"><a name="ul1423334182912"></a><a name="ul1423334182912"></a><ul id="ul1423334182912"><li>一条动态虚拟化的命令只能指定一个物理NPU的ID进行动态虚拟化。</li><li>必须搭配ASCEND_VNPU_SPECS，表示在指定的NPU上划分出的AI Core数量。</li><li>可以搭配ASCEND_RUNTIME_OPTIONS，但是只能取值为NODRV，表示不挂载驱动相关目录。</li></ul>
-</div></div>
-</div>
-</li></ul>
-</td>
-</tr>
-<tr id="row10222841163014"><td class="cellrowborder" valign="top" width="18.35183518351835%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001136053188_p9949124720488"><a name="zh-cn_topic_0000001136053188_p9949124720488"></a><a name="zh-cn_topic_0000001136053188_p9949124720488"></a>ASCEND_RUNTIME_OPTIONS</p>
-</td>
-<td class="cellrowborder" valign="top" width="42.03420342034204%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001136053188_p16949147204819"><a name="zh-cn_topic_0000001136053188_p16949147204819"></a><a name="zh-cn_topic_0000001136053188_p16949147204819"></a>对参数ASCEND_VISIBLE_DEVICES中指定的芯片ID作出限制：</p>
-<a name="zh-cn_topic_0000001136053188_ul39715143537"></a><a name="zh-cn_topic_0000001136053188_ul39715143537"></a><ul id="zh-cn_topic_0000001136053188_ul39715143537"><li>NODRV：表示不挂载驱动相关目录。</li><li>VIRTUAL：表示挂载的是虚拟芯片。</li><li>NODRV,VIRTUAL：表示挂载的是虚拟芯片，并且不挂载驱动相关目录。</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="39.613961396139615%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000001136053188_ul14996184635618"></a><a name="zh-cn_topic_0000001136053188_ul14996184635618"></a><ul id="zh-cn_topic_0000001136053188_ul14996184635618"><li>ASCEND_RUNTIME_OPTIONS=NODRV</li><li>ASCEND_RUNTIME_OPTIONS=VIRTUAL</li><li>ASCEND_RUNTIME_OPTIONS=NODRV,VIRTUAL</li></ul>
-</td>
-</tr>
-<tr id="row18903338368"><td class="cellrowborder" valign="top" width="18.35183518351835%" headers="mcps1.2.4.1.1 "><p id="p390314314361"><a name="p390314314361"></a><a name="p390314314361"></a>ASCEND_VNPU_SPECS</p>
-</td>
-<td class="cellrowborder" valign="top" width="42.03420342034204%" headers="mcps1.2.4.1.2 "><p id="p270411825214"><a name="p270411825214"></a><a name="p270411825214"></a>从物理NPU设备中划分出一定数量的AI Core，指定为虚拟设备。支持的取值请参见<a href="#虚拟化规则">表2</a>。
-<ul><li>只有支持动态虚拟化的产品形态，才能使用该参数。</li><li>需配合参数“ASCEND_VISIBLE_DEVICES”一起使用，参数“ASCEND_VISIBLE_DEVICES”指定用于虚拟化的物理NPU设备。</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="39.613961396139615%" headers="mcps1.2.4.1.3 "><p id="p22341038133513"><a name="p22341038133513"></a><a name="p22341038133513"></a>ASCEND_VNPU_SPECS=vir04表示划分4个AI Core作为vNPU，挂载至容器。</p>
-</td>
-</tr>
-</tbody>
-</table>
+|参数|说明|举例|
+|--|--|--|
+|ASCEND_VISIBLE_DEVICES|必须使用ASCEND_VISIBLE_DEVICES环境变量指定被挂载至容器中的NPU设备，否则挂载NPU设备失败；使用NPU设备序号指定设备，支持单个和范围指定且支持混用；使用NPU名称指定设备，支持同时指定多个同类型的NPU名称。|<ul><li>静态虚拟化：<ul><li>ASCEND_VISIBLE_DEVICES=100表示将100号vNPU挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=101,103表示将101、103号vNPU挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=100-102表示将100号至102号vNPU（包含100号和102号）挂载入容器中，效果同ASCEND_VISIBLE_DEVICES=100,101,102。</li><li>ASCEND_VISIBLE_DEVICES=100-102,104表示将100号至102号以及104号vNPU挂载入容器，效果同ASCEND_VISIBLE_DEVICES=100,101,102,104。</li><li>ASCEND_VISIBLE_DEVICES=AscendXXX-Y，其中XXX表示NPU的型号，支持的取值为910，310和310P；Y表示vNPU的ID。<ul><li>ASCEND_VISIBLE_DEVICES=Ascend910-101，表示把101号vNPU挂载进容器。</li><li>ASCEND_VISIBLE_DEVICES=Ascend910-101,Ascend910-103，表示把101号vNPU和103号vNPU挂载进容器。</li></ul><div class="note"><span class="notetitle"> 说明： </span><div class="notebody"><ul><li>NPU类型需要和实际环境的芯片类型保持一致，否则将会挂载失败。</li><li>不支持在一个参数里既指定vNPU设备序号又指定vNPU名称，即不支持ASCEND_VISIBLE_DEVICES=100，Ascend910-101。</li><li>必须搭配ASCEND_RUNTIME_OPTIONS，取值必须包含VIRTUAL，表示挂载的是vNPU。</li></ul></div></div></li></ul></li><li>动态虚拟化：<div class="p">ASCEND_VISIBLE_DEVICES=0表示从0号NPU设备中划分出一定数量的AI Core。<div class="note"><span class="notetitle"> 说明： </span><div class="notebody"><ul><li>一条动态虚拟化的命令只能指定一个物理NPU的ID进行动态虚拟化。</li><li>必须搭配ASCEND_VNPU_SPECS，表示在指定的NPU上划分出的AI Core数量。</li><li>可以搭配ASCEND_RUNTIME_OPTIONS，但是只能取值为NODRV，表示不挂载驱动相关目录。</li></ul></div></div></div></li></ul>|
+|ASCEND_RUNTIME_OPTIONS|<p>对参数ASCEND_VISIBLE_DEVICES中指定的芯片ID作出限制：</p><ul><li>NODRV：表示不挂载驱动相关目录。</li><li>VIRTUAL：表示挂载的是虚拟芯片。</li><li>NODRV,VIRTUAL：表示挂载的是虚拟芯片，并且不挂载驱动相关目录。</li></ul>|<ul><li>ASCEND_RUNTIME_OPTIONS=NODRV</li><li>ASCEND_RUNTIME_OPTIONS=VIRTUAL</li><li>ASCEND_RUNTIME_OPTIONS=NODRV,VIRTUAL</li></ul>|
+|ASCEND_VNPU_SPECS|从物理NPU设备中划分出一定数量的AI Core，指定为虚拟设备。支持的取值请参见<a href="#虚拟化规则">表1</a>。<ul><li>只有支持动态虚拟化的产品形态，才能使用该参数。</li><li>需配合参数“ASCEND_VISIBLE_DEVICES”一起使用，参数“ASCEND_VISIBLE_DEVICES”指定用于虚拟化的物理NPU设备。</li></ul>|ASCEND_VNPU_SPECS=vir04表示划分4个AI Core作为vNPU，挂载至容器。|
 
 
 #### 方式二：Kubernetes挂载vNPU<a name="ZH-CN_TOPIC_0000002511346321"></a>
@@ -775,7 +683,7 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 
 **前提条件<a name="section18128140645"></a>**
 
-1.  需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run“，安装容器引擎插件。
+1.  需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run”，安装容器引擎插件。
 2.  参见[安装部署](../installation_guide.md#安装部署)章节，完成各组件的安装。
 
     虚拟化实例涉及到需要修改相关参数的集群调度组件为Volcano和Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署。
@@ -825,7 +733,7 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 
     2.  Volcano参数修改及启动说明：
 
-        在Volcano部署文件“volcano-v\{version\}.yaml“中，需要配置“presetVirtualDevice”且值只能为“true”。
+        在Volcano部署文件“volcano-v\{version\}.yaml”中，需要配置“presetVirtualDevice”且值只能为“true”。
 
         ```
         ...
@@ -855,7 +763,7 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 
 -   创建训练任务时，需要在创建YAML文件时，修改如下配置。以Atlas 训练系列产品使用为例。
 
-    resources中设定的requests和limits资源类型，应修改为huawei.com/Ascend910-**_Y_**，其中**_Y_**值和vNPU类型相关，具体取值参考[表 虚拟化实例模板与虚拟设备类型关系表](#table47415104403)中的虚拟类型。
+    resources中设定的requests和limits资源类型，应修改为huawei.com/Ascend910-_Y_，其中<i>Y</i>值和vNPU类型相关，具体取值参考[表 虚拟化实例模板与虚拟设备类型关系表](#table47415104403)中的虚拟类型。
 
     ```
     ...
@@ -869,7 +777,7 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 
 -   创建推理任务时，需要在创建YAML文件时，修改如下配置。以Atlas 推理系列产品使用为例。
 
-    resources中设定的requests和limits资源类型，应修改为huawei.com/Ascend310P-**_Y_**，其中**_Y_**值和vNPU类型相关，具体取值参考[表 虚拟化实例模板与虚拟设备类型关系表](#table47415104403)中的虚拟类型。
+    resources中设定的requests和limits资源类型，应修改为huawei.com/Ascend310P-_Y_，其中<i>Y</i>值和vNPU类型相关，具体取值参考[表 虚拟化实例模板与虚拟设备类型关系表](#table47415104403)中的虚拟类型。
 
     ```
     ...
@@ -937,7 +845,7 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 <tr id="row1854910515540"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p12256108124616"><a name="p12256108124616"></a><a name="p12256108124616"></a>K8s场景会自动创建与销毁vNPU，不能与Docker场景的操作混用。</p>
 </td>
 </tr>
-<tr id="row151011624135113"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18102182414515"><a name="p18102182414515"></a><a name="p18102182414515"></a>进行动态虚拟化的节点不能对芯片的CPU进行设置。详情请参考<span id="ph373734654014"><a name="ph373734654014"></a><a name="ph373734654014"></a>《Atlas 中心推理卡  25.0.RC1 npu-smi 命令参考》中的“信息查询&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100468892/e8cb36b3" target="_blank" rel="noopener noreferrer">查询所有芯片的AI CPU、control CPU和data CPU数量</a>”</span>章节。</p>
+<tr id="row151011624135113"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18102182414515"><a name="p18102182414515"></a><a name="p18102182414515"></a>进行动态虚拟化的节点不能对芯片的CPU进行设置。详情请参考<span id="ph373734654014"><a name="ph373734654014"></a><a name="ph373734654014"></a>《Atlas 中心推理卡  25.5.0 npu-smi 命令参考》中的“信息查询&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540373/6faea171" target="_blank" rel="noopener noreferrer">查询所有芯片的AI CPU、control CPU和data CPU数量</a>”</span>章节。</p>
 </td>
 </tr>
 <tr id="row192561854613"><td class="cellrowborder" rowspan="3" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p id="p1125610854611"><a name="p1125610854611"></a><a name="p1125610854611"></a><span id="ph10445185418466"><a name="ph10445185418466"></a><a name="ph10445185418466"></a>Atlas 推理系列产品</span>（8个AI Core）使用说明</p>
@@ -1024,7 +932,7 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 
 **前提条件<a name="section18128140645"></a>**
 
-1.  需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run“，安装容器引擎插件。
+1.  需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run”，安装容器引擎插件。
 2.  参见[安装部署](../installation_guide.md#安装部署)章节，完成各组件的安装。
 
     虚拟化实例涉及到需要修改相关参数的集群调度组件为Volcano和Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署。
@@ -1043,7 +951,7 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 
         YAML启动说明如下：
 
-        K8s集群中存在使用Atlas 推理系列产品的节点，需要在device-plugin-310P-volcano-v\{version\}中将“presetVirtualDevice“字段修改为“false“（协同Volcano使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
+        K8s集群中存在使用Atlas 推理系列产品的节点，需要在device-plugin-310P-volcano-v\{version\}中将“presetVirtualDevice”字段修改为“false”（协同Volcano使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
 
         ```
         ...
@@ -1054,7 +962,7 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 
     2.  Volcano参数修改及启动说明。
 
-        在Volcano部署文件“volcano-v_\{version\}_.yaml“中，需要配置“presetVirtualDevice”的值为“false“。
+        在Volcano部署文件“volcano-v_\{version\}_.yaml”中，需要配置“presetVirtualDevice”的值为“false”。
 
         ```
         ...
@@ -1103,10 +1011,10 @@ spec:
     metadata:
       labels:
         app: tf
-        ring-controller.atlas: ascend-310P  # 参见[表4](#table1084325844716)
+        ring-controller.atlas: ascend-310P  # 参见表4
         fault-scheduling: "grace"           # 重调度所使用的label
-        vnpu-dvpp: "yes"                    # 参见[表4](#table1084325844716)
-        vnpu-level: "low"                   # 参见[表4](#table1084325844716)
+        vnpu-dvpp: "yes"                    # 参见表4
+        vnpu-level: "low"                   # 参见表4
     spec:
       schedulerName: volcano  # 需要使用MindCluster的调度器Volcano
       nodeSelector:
@@ -1182,8 +1090,8 @@ spec:
 >[!NOTE] 说明 
 >vnpu-level和vnpu-dvpp的选择结果，具体请参见[表5](#table83781115185619)。
 >-   表中“降级”表示AI Core满足的情况下，其他资源不够（如AI CPU）时，模板会选择同AI Core下的其他满足资源要求的模板。如在只剩一颗芯片上只有2个AI Core，1个AI CPU时，vir02模板会降级为vir02\_1c。
->-   表中“选择模板“中的值来源于<a href="#虚拟化规则">虚拟化规则</a>的“虚拟化模板”中Atlas 推理系列产品、“虚拟化实例模板“列的取值。
->-   表中“vnpu-level“列的“其他值“表示除去“low“和“high“后的任意取值。
+>-   表中“选择模板”中的值来源于<a href="#虚拟化规则">虚拟化规则</a>的“虚拟化模板”中Atlas 推理系列产品、“虚拟化实例模板”列的取值。
+>-   表中“vnpu-level”列的“其他值”表示除去“low”和“high”后的任意取值。
 >-   整卡（core的请求数量为8的倍数）场景下vnpu-dvpp与vnpu-level可以取任意值。
 
 **表 5**  dvpp和level作用结果表

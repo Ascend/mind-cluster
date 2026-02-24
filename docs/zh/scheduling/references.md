@@ -1,11 +1,5 @@
 # 亲和性调度<a name="ZH-CN_TOPIC_0000002525583145"></a>
 
-
-
-
-
-
-
 ## 方案介绍<a name="ZH-CN_TOPIC_0000002479386900"></a>
 
 Volcano可实现以下2个方面的亲和性调度：基于昇腾AI处理器的亲和性、基于节点的亲和性。
@@ -210,7 +204,7 @@ A200T A3 Box8 超节点服务器、Atlas 800I A3 超节点服务器和Atlas 800T
 
 #### 推理服务器（插Atlas 300I 推理卡）<a name="ZH-CN_TOPIC_0000002511426841"></a>
 
-推理服务器（插Atlas 300I 推理卡）存在亲和性调度，如一台Atlas 800 推理服务器（型号 3000）最多支持插8张Atlas 300I 推理卡，每张Atlas 300I 推理卡存在4个昇腾AI处理器。使用推理服务器（插Atlas 300I 推理卡）的用户可以在下发任务YAML时，通过“npu-310-strategy“参数指定调度策略，只有指定按推理卡调度时，才可以实现亲和性调度。
+推理服务器（插Atlas 300I 推理卡）存在亲和性调度，如一台Atlas 800 推理服务器（型号 3000）最多支持插8张Atlas 300I 推理卡，每张Atlas 300I 推理卡存在4个昇腾AI处理器。使用推理服务器（插Atlas 300I 推理卡）的用户可以在下发任务YAML时，通过“npu-310-strategy”参数指定调度策略，只有指定按推理卡调度时，才可以实现亲和性调度。
 
 npu-310-strategy参数取值说明如下：
 
@@ -219,10 +213,11 @@ npu-310-strategy参数取值说明如下：
 
 #### 推理服务器（插Atlas 300I Duo 推理卡）<a name="ZH-CN_TOPIC_0000002511426809"></a>
 
-推理服务器（插Atlas 300I Duo 推理卡）存在亲和性调度，如一台Atlas 800 推理服务器（型号 3000）最多支持插4张Atlas 300I Duo 推理卡，每张Atlas 300I Duo 推理卡存在2个昇腾AI处理器。使用推理服务器（插Atlas 300I Duo 推理卡）的用户可以在下发任务YAML时，首先通过“duo“参数指定使用Atlas 300I Duo 推理卡，再通过“npu-310-strategy“参数指定调度模式，最后通过“distributed“参数指定调度策略。各参数的详细说明见[表1](#table65039365119)。
+推理服务器（插Atlas 300I Duo 推理卡）存在亲和性调度，如一台Atlas 800 推理服务器（型号 3000）最多支持插4张Atlas 300I Duo 推理卡，每张Atlas 300I Duo 推理卡存在2个昇腾AI处理器。使用推理服务器（插Atlas 300I Duo 推理卡）的用户可以在下发任务YAML时，首先通过“duo”参数指定使用Atlas 300I Duo 推理卡，再通过“npu-310-strategy”参数指定调度模式，最后通过“distributed”参数指定调度策略。各参数的详细说明见[表1](#table65039365119)。
 
 **表 1**  参数说明
 
+<a name="table65039365119"></a>
 |参数名|默认值|取值说明|
 |--|--|--|
 |duo|false|<ul><li>true：使用Atlas 300I Duo 推理卡。</li><li>false：不使用Atlas 300I Duo 推理卡。</li></ul>|
@@ -249,6 +244,7 @@ Atlas 训练系列产品的昇腾AI处理器的特征和资源利用的规则如
 
 **表 1** Atlas 训练系列产品的AI处理器亲和性策略
 
+<a name="table1436611225137"></a>
 |**优先级**|**策略名称**|**详细内容**|
 |--|--|--|
 |1|HCCS亲和性调度原则|选择同一HCCS内的昇腾AI处理器，提升通信性能。<ul><li>如果申请昇腾AI处理器个数为1，则选择同一HCCS，且当前可用的昇腾AI处理器数量为1个的节点为最佳，3个次佳、其次是2个、4个。</li><li>如果申请昇腾AI处理器个数为2，则选择同一HCCS，且可用的昇腾AI处理器数量为2个的节点为最佳，4个次佳，其次是3个。</li><li>如果申请昇腾AI处理器个数为4，则选择同一HCCS，且可用的昇腾AI处理器数量为4个的节点。</li><li>如果申请昇腾AI处理器个数为8，则会选择申请节点的8个昇腾AI处理器。</li></ul>|
@@ -274,6 +270,7 @@ Atlas 训练系列产品的昇腾AI处理器的特征和资源利用的规则如
 
 **表 1** Atlas 训练系列产品亲和性策略场景
 
+<a name="table1226225517318"></a>
 |**任务申请数**|**A**|**B**|**C**|**D**|
 |--|--|--|--|--|
 |1|1~[0,1,2,3,4]|3~[0,2,3,4]|2~[0,2,4]|4~[0,4]|
@@ -296,6 +293,7 @@ Atlas 200T A2 Box16 异构子框和Atlas 200I A2 Box16 异构子框的特征和�
 
 **表 1** Atlas 200T A2 Box16 异构子框和Atlas 200I A2 Box16 异构子框亲和性策略
 
+<a name="table768417221315"></a>
 |优先级|策略名称|策略描述|
 |--|--|--|
 |1|HCCS互联分配原则|如果申请昇腾AI处理器的个数为1~8，则需要调度到同一个HCCS互联。如果申请昇腾AI处理器的个数为10、12、14，需要将所需的昇腾AI处理器平均分配到两个环，相对的物理地址也一致。|
@@ -325,6 +323,7 @@ Atlas 900 A3 SuperPoD 超节点的资源利用规则如[表1](#table42428468401)
 
 **表 1** Atlas 900 A3 SuperPoD 超节点亲和性策略
 
+<a name="table42428468401"></a>
 |优先级|策略名称|策略描述|
 |--|--|--|
 |1|优先占满节点|节点芯片数量越少，优先级越高。<p>下发单机任务时，任务存在未按照优先占满调度原则占满某个节点。说明如下：</p><ul><li>现象说明：如在Atlas 900 A3 SuperPoD 超节点中，同时下发2卡、14卡任务，存在2卡和14卡任务未调度到同一个节点。</li><li>原因分析：因为Volcano调度完一个任务后，Ascend Device Plugin上报调度后的昇腾AI处理器的拓扑结构到mindx-dl-deviceinfo-${node_name}存在时延，导致Volcano校验该节点昇腾AI处理器数量失败，将任务调度到其他节点上。</li></ul>|
@@ -346,10 +345,11 @@ Atlas 900 A3 SuperPoD 超节点的资源利用规则如[表1](#table42428468401)
 
 ##### 亲和性调度策略<a name="ZH-CN_TOPIC_0000002479226920"></a>
 
-Atlas 800I A3 超节点服务器和Atlas 800T A3 超节点服务器的资源利用规则如[表1](#table42428468401)所示。
+Atlas 800I A3 超节点服务器和Atlas 800T A3 超节点服务器的资源利用规则如[表1](#table424284684011)所示。
 
 **表 1** Atlas 800I A3 超节点服务器和Atlas 800T A3 超节点服务器亲和性策略
 
+<a name="table424284684011"></a>
 |优先级|策略名称|策略描述|
 |--|--|--|
 |1|优先占满节点|节点芯片数量越少，优先级越高。<p>下发单机任务时，任务存在未按照优先占满调度原则占满某个节点。说明如下：</p><ul><li>现象说明：如在Atlas 800I A3 超节点服务器和Atlas 800T A3 超节点服务器中，同时下发2卡、14卡任务，存在2卡和14卡任务未调度到同一个节点。</li><li>原因分析：因为Volcano调度完一个任务后，Ascend Device Plugin上报调度后的昇腾AI处理器的拓扑结构到mindx-dl-deviceinfo-${node_name}存在时延，导致Volcano校验该节点昇腾AI处理器数量失败，将任务调度到其他节点上。</li></ul>|
@@ -369,10 +369,11 @@ Atlas 800I A3 超节点服务器和Atlas 800T A3 超节点服务器的资源利�
 
 ##### 亲和性调度策略<a name="ZH-CN_TOPIC_0000002511426851"></a>
 
-A200T A3 Box8 超节点服务器的资源利用规则如[表1 A200T A3 Box8 异构子框亲和性策略](#table42428468401)所示。
+A200T A3 Box8 超节点服务器的资源利用规则如[表1](#table424284684013)所示。
 
 **表 1** A200T A3 Box8 超节点服务器亲和性策略
 
+<a name="table424284684013"></a>
 |优先级|策略名称|策略描述|
 |--|--|--|
 |1|优先占满节点|节点芯片数量越少，优先级越高。<p>下发分布式任务时，任务存在未按照优先占满调度原则占满某个节点。说明如下：</p><ul><li>现象说明：如在A200T A3 Box8 超节点服务器中，同时下发2卡、14卡任务，存在2卡和14卡任务未调度到同一个节点。</li><li>原因分析：因为Volcano调度完一个任务后，Ascend Device Plugin上报调度后的昇腾AI处理器的拓扑结构到mindx-dl-deviceinfo-${node_name}存在时延，导致Volcano校验该节点昇腾AI处理器数量失败，将任务调度到其他节点上。</li></ul>|
@@ -396,6 +397,7 @@ A200T A3 Box8 超节点服务器的资源利用规则如[表1 A200T A3 Box8 异�
 
 **表 1**  推理服务器（插Atlas 300I 推理卡）亲和性策略
 
+<a name="table768417221315"></a>
 |策略名称|策略描述|
 |--|--|
 |按推理卡亲和性调度原则|优先选择同一张Atlas 300I 推理卡的昇腾AI处理器。<p>申请昇腾AI处理器个数为1~4，则选择同一张Atlas 300I 推理卡，且当前可用的Atlas 300I 推理卡数量为1个的节点为最佳，3个次佳、其次是2个、4个。</p>|
@@ -496,7 +498,7 @@ A200T A3 Box8 超节点服务器的资源利用规则如[表1 A200T A3 Box8 异�
 
     Atlas 900 A3 SuperPoD 超节点产品存在超节点，集群调度组件在下发训练任务时会对其物理超节点根据切分策略划分出逻辑超节点，用于训练产品的亲和性调度。
 
->> [!NOTE] 说明 
+>[!NOTE] 说明 
 >-   当前只支持训练和推理任务进行整卡的交换机亲和性调度，不支持静态或动态vNPU调度。
 >-   使用交换机亲和性调度2.0前，请先参见《[Ascend Training Solution 24.0.0 组网指南（Atlas A2训练产品）](https://support.huawei.com/enterprise/zh/doc/EDOC1100437043)》中的“参数面网络配置示例 \> 网络配置说明 \> NSLB配置策略”和“配置示例”章节，了解相关参数面组网的原理说明和操作指导。
 
@@ -526,7 +528,7 @@ A200T A3 Box8 超节点服务器的资源利用规则如[表1 A200T A3 Box8 异�
 2.  用户从深度学习平台或命令行下发训练任务。
 3.  Volcano根据从basic-tor-node-cm中获取的信息，将任务Pod调度到合适的计算节点上；并在任务Pod的annotation中写入该Pod调度时当前节点的交换机状态。
 4.  ClusterD通过informer机制感知到任务调度到合适的计算节点，并且汇集任务所有Pod的信息。
-5.  ClusterD将任务信息写到job-summary-<JobName\> ConfigMap中。
+5.  ClusterD将任务信息写到job-summary-_<JobName\>_ ConfigMap中。
 6.  iMaster NCE-Fabric通过job-summary-_<JobName\>_ ConfigMap文件读取任务的信息，动态计算训练任务通信时的网络通路。
 
 **任务说明<a name="section1853122363817"></a>**
@@ -578,7 +580,7 @@ A200T A3 Box8 超节点服务器的资源利用规则如[表1 A200T A3 Box8 异�
 -   跨交换机任务是指一个任务的Pod可以部署在多个交换机的节点下。
 -   交换机存在以下几种状态，用户可以通过**kubectl describe cm -n volcano-system tor-share-cm**命令查询集群中的交换机状态。
 
-    > [!NOTE] 说明 
+    >[!NOTE] 说明 
     >ConfigMap中关键字段取值说明如下。
     >-   IsSharedTor：取值为0表示空闲交换机；取值为1表示共享交换机；取值为2表示独占交换机。
     >-   IsHealthy：取值为0表示健康共享交换机；取值为1表示非健康共享交换机。
@@ -692,7 +694,7 @@ MindIE Service推理任务中，新增如下亲和性调度策略。如需了解
 
 **具体实现<a name="section158817331130"></a>**
 
-具体代码实现请参考开源代码中[ValidNPUJob](https://gitcode.com/Ascend/mind-cluster/blob/branch_v7.2.RC1/component/ascend-for-volcano/internal/npu/base/frame.go)方法。ValidNPUJob用于校验用户下发配置的合理性，此时不会校验集群环境上的真实资源是否充足，而是单纯校验任务的关键字段是否完整，字段的值域是否正确，字段之间是否匹配。
+具体代码实现请参考开源代码中[ValidNPUJob](https://gitcode.com/Ascend/mind-cluster/blob/branch_v7.3.0/component/ascend-for-volcano/internal/npu/base/frame.go)方法。ValidNPUJob用于校验用户下发配置的合理性，此时不会校验集群环境上的真实资源是否充足，而是单纯校验任务的关键字段是否完整，字段的值域是否正确，字段之间是否匹配。
 
 ### 节点预选<a name="ZH-CN_TOPIC_0000002479386932"></a>
 
@@ -704,7 +706,7 @@ MindIE Service推理任务中，新增如下亲和性调度策略。如需了解
 
 **具体实现<a name="section185864321413"></a>**
 
-具体代码实现请参考开源代码中[CheckNodeNPUByTask](https://gitcode.com/Ascend/mind-cluster/blob/branch_v7.2.RC1/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go)方法。其中通过GetTaskReqNPUNum方法获取到训练任务请求的昇腾AI处理器数量，再通过GetUsableTopFromNode方法获取到节点可用NPU资源。JudgeNodeAndTaskNPU方法实现了判断节点NPU资源是否满足任务需求的功能。
+具体代码实现请参考开源代码中[CheckNodeNPUByTask](https://gitcode.com/Ascend/mind-cluster/blob/branch_v7.3.0/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go)方法。其中通过GetTaskReqNPUNum方法获取到训练任务请求的昇腾AI处理器数量，再通过GetUsableTopFromNode方法获取到节点可用NPU资源。JudgeNodeAndTaskNPU方法实现了判断节点NPU资源是否满足任务需求的功能。
 
 ### 节点优选<a name="ZH-CN_TOPIC_0000002479226940"></a>
 
@@ -716,7 +718,7 @@ MindIE Service推理任务中，新增如下亲和性调度策略。如需了解
 
 **具体实现<a name="section15355114514519"></a>**
 
-具体代码实现请参考开源代码中[ScoreBestNPUNodes](https://gitcode.com/Ascend/mind-cluster/blob/branch_v7.2.RC1/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go)方法，其中getNodeBestScore方法实现了根据亲和性确定节点优先级。在选择节点时，优先检测是否配置了交换机亲和性调度和逻辑超节点亲和性调度。既没有配置交换机亲和性调度，又没有逻辑超节点亲和性调度，则使用普通节点优选原则。
+具体代码实现请参考开源代码中[ScoreBestNPUNodes](https://gitcode.com/Ascend/mind-cluster/blob/branch_v7.3.0/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go)方法，其中getNodeBestScore方法实现了根据亲和性确定节点优先级。在选择节点时，优先检测是否配置了交换机亲和性调度和逻辑超节点亲和性调度。既没有配置交换机亲和性调度，又没有逻辑超节点亲和性调度，则使用普通节点优选原则。
 
 **普通节点优选原则<a name="section1797111616358"></a>**
 
@@ -756,7 +758,7 @@ affScoreList\[3\] = \[\]int\{8,8,8,0,1,2,3,4\}
 **逻辑超节点亲和性调度<a name="section941034517442"></a>**
 
 1.  根据任务的逻辑超节点大小，将剩余超节点分成3个队列。队列1是大于或等于逻辑超节点+备用节点数的超节点；队列2是大于或等于逻辑超节点大小，小于逻辑超节点+备用节点数大小的超节点；队列3是小于逻辑超节点数大小的节点。
-2.  优先使用队列1的数据，将队列1拆分成一个三维数组。以逻辑超节点大小为16，所需逻辑超节点个数为2，预留节点数为2为例。首先按照超节点可用节点数，将其放入一个二维数组中，每个二维数组中，放置的是相同节点数的多个超节点，因此整体是一个三维数组。此时超节点选取的先后顺序如[图2](节点优选.md#fig0751121511273)所示，即优先使用可用节点数为18的超节点，不满足的话，就按照超节点可用节点18、26、19、27，一直到33的顺序，查找可用超节点。如果还找不到，后续需要按照超节点可用节点数34、35、36、37.....46、47、48的顺序优选超节点。
+2.  优先使用队列1的数据，将队列1拆分成一个三维数组。以逻辑超节点大小为16，所需逻辑超节点个数为2，预留节点数为2为例。首先按照超节点可用节点数，将其放入一个二维数组中，每个二维数组中，放置的是相同节点数的多个超节点，因此整体是一个三维数组。此时超节点选取的先后顺序如[图2](#fig0751121511273)所示，即优先使用可用节点数为18的超节点，不满足的话，就按照超节点可用节点18、26、19、27，一直到33的顺序，查找可用超节点。如果还找不到，后续需要按照超节点可用节点数34、35、36、37.....46、47、48的顺序优选超节点。
 
     **图 2**  超节点优选顺序<a name="fig0751121511273"></a>  
     ![](../figures/scheduling/超节点优选顺序.png "超节点优选顺序")
@@ -774,7 +776,7 @@ Volcano框架根据节点优选得到分数后为Pod任务选择最优的节点�
 
 **具体实现<a name="section94176351465"></a>**
 
-具体代码实现请参考开源代码中[UseAnnotation](https://gitcode.com/Ascend/mind-cluster/blob/branch_v7.2.RC1/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go)方法，其中SelectNPUFromNode方法实现了根据亲和性从node上选取昇腾AI处理器的功能。
+具体代码实现请参考开源代码中[UseAnnotation](https://gitcode.com/Ascend/mind-cluster/blob/branch_v7.3.0/component/ascend-for-volcano/internal/npu/ascend910/ascend910old/module910x8/frame.go)方法，其中SelectNPUFromNode方法实现了根据亲和性从node上选取昇腾AI处理器的功能。
 
 # Checkpoint保存与加载优化
 
@@ -4596,17 +4598,17 @@ chage -M 90 test
 
 ### 设置umask<a name="ZH-CN_TOPIC_0000002511426335"></a>
 
-建议用户将宿主机和容器中的umask设置为027及其以上，提高文件权限。
+建议用户将宿主机和容器中的umask设置为027及以上，提高文件权限。
 
 以设置umask为027为例，具体操作如下所示。
 
-1.  以root用户登录服务器，编辑“/etc/profile“文件。
+1.  以root用户登录服务器，编辑“/etc/profile”文件。
 
     ```
     vim /etc/profile
     ```
 
-2.  在“/etc/profile“文件末尾加上**umask 027**，保存并退出。
+2.  在“/etc/profile”文件末尾加上**umask 027**，保存并退出。
 3.  执行如下命令使配置生效。
 
     ```
@@ -4631,17 +4633,17 @@ chage -M 90 test
 
 -   将**sudo命令**中targetpw选项设置为默认要求输入目标用户的密码；防止增加sudo规则后，所有用户不需要输入root密码，就可以提权root账号执行系统命令，导致普通用户越权执行命令。该选项默认不添加，建议添加该选项。
 
-    执行**cat** **/etc/sudoers | grep -E "^\[^\#\]\*Defaults\[\[:space:\]\]+targetpw"**命令检查是否存在“Defaults targetpw“或“Defaults rootpw“配置项。如果不存在，请在“/etc/sudoers“文件的“\#Defaults specification”下添加“Defaults targetpw“或者“Defaults rootpw“配置项。
+    执行<b>cat /etc/sudoers | grep -E "^\[^\#\]\*Defaults\[\[:space:\]\]+targetpw"</b>命令检查是否存在“Defaults targetpw”或“Defaults rootpw”配置项。如果不存在，请在“/etc/sudoers”文件的“\#Defaults specification”下添加“Defaults targetpw”或者“Defaults rootpw”配置项。
 
 -   禁止普通用户或组通过所有命令提权到root用户。
 
-    执行**cat /etc/sudoers**命令检查“/etc/sudoers“文件中是否存在“root   ALL=\(ALL:ALL\) ALL“和“root   ALL=\(ALL\) ALL“之外的其他用户或组的\(ALL\) ALL和\(ALL:ALL\) ALL。如果存在，请根据实际业务场景确认是否需要，如果确认不需要，请删除。例如user ALL=\(ALL\) ALL、%admin ALL=\(ALL\) ALL或%sudo ALL=\(ALL:ALL\) ALL。
+    执行**cat /etc/sudoers**命令检查“/etc/sudoers”文件中是否存在“root   ALL=\(ALL:ALL\) ALL”和“root   ALL=\(ALL\) ALL”之外的其他用户或组的\(ALL\) ALL和\(ALL:ALL\) ALL。如果存在，请根据实际业务场景确认是否需要，如果确认不需要，请删除。例如user ALL=\(ALL\) ALL、%admin ALL=\(ALL\) ALL或%sudo ALL=\(ALL:ALL\) ALL。
 
 ### 增强抵抗漏洞攻击的能力<a name="ZH-CN_TOPIC_0000002479386454"></a>
 
 使用Linux自带的ASLR（Address Space Layout Randomization）功能，增强漏洞攻击防护能力。
 
-在“/proc/sys/kernel/randomize\_va\_space“文件中写入2。
+在“/proc/sys/kernel/randomize\_va\_space”文件中写入2。
 
 ## 对Docker进行安全加固<a name="ZH-CN_TOPIC_0000002479386408"></a>
 
@@ -4684,7 +4686,7 @@ chage -M 90 test
 >[!NOTE] 说明 
 >开启审计机制需要安装auditd软件，如Ubuntu可使用**apt install -y auditd**命令进行安装。
 
-1.  在文件“/etc/audit/audit.rules“中添加规则，每个规则为一行，规则的格式如下。
+1.  在文件“/etc/audit/audit.rules”中添加规则，每个规则为一行，规则的格式如下。
 
     ```
     -w file_path -k docker
@@ -4692,15 +4694,15 @@ chage -M 90 test
 
     **表 1**  参数说明
 
-|参数|说明|
-|--|--|
-|**-w**|筛选文件路径。|
-|*file_path*|开启审计规则的文件路径，如：<li>file_path为/usr/bin/docker时，表示开启主机对Docker守护进程的审计。</li><li>file_path为/etc/docker时，表示开启主机对Docker相关目录和关键文件审计。</li>|
-|**-k**|筛选字符串，用于按照规定的关键字筛选。|
+    |参数|说明|
+    |--|--|
+    |-w|筛选文件路径。|
+    |*file_path*|开启审计规则的文件路径，如：<ul><li>file_path为/usr/bin/docker时，表示开启主机对Docker守护进程的审计。</li><li>file_path为/etc/docker时，表示开启主机对Docker相关目录和关键文件审计。</li></ul>|
+    |-k|筛选字符串，用于按照规定的关键字筛选。|
 
 
->[!NOTE] 说明 
->如果“/etc/audit/audit.rules“文件中有“This file is automatically generated from /etc/audit/rules.d”，此时修改“/etc/audit/audit.rules“文件无效，需要修改“/etc/audit/rules.d/audit.rules“文件才能生效。如在Ubuntu系统中需要修改“/etc/audit/rules.d/audit.rules“文件。
+    >[!NOTE] 说明 
+    >如果“/etc/audit/audit.rules”文件中有“This file is automatically generated from /etc/audit/rules.d”，此时修改“/etc/audit/audit.rules”文件无效，需要修改“/etc/audit/rules.d/audit.rules”文件才能生效。如在Ubuntu系统中需要修改“/etc/audit/rules.d/audit.rules”文件。
 
 2.  配置完成后需要重启日志守护进程。
 
@@ -4714,7 +4716,7 @@ chage -M 90 test
 
 -   TLS CA证书文件属主和属组设为root:root，权限设为400。
 
-    保护TLS CA证书文件（用参数**--tlscacert**指定CA证书文件的路径），防止其被篡改。证书文件用于指定的CA证书认证Docker服务器。因此，其属主和属组必须是root，权限必须为400，才能保证CA证书的完整性。
+    保护TLS CA证书文件（用参数<b>--tlscacert</b>指定CA证书文件的路径），防止其被篡改。证书文件用于指定的CA证书认证Docker服务器。因此，其属主和属组必须是root，权限必须为400，才能保证CA证书的完整性。
 
     可以通过以下方式设置。
 
@@ -4725,7 +4727,7 @@ chage -M 90 test
         ```
 
         >[!NOTE] 说明 
-        >_path to TLS CA certificate file_路径一般为“/usr/local/share/ca-certificates“。
+        ><i>path to TLS CA certificate file</i>路径一般为“/usr/local/share/ca-certificates”。
 
     2.  将文件权限设为400。
 
@@ -4735,17 +4737,17 @@ chage -M 90 test
 
 **“/etc/docker/daemon.json“文件权限配置<a name="zh-cn_topic_0000001497205397_section2824195145813"></a>**
 
--   “daemon.json“文件属主和属组设为root:root，文件权限设为600。
+-   “daemon.json”文件属主和属组设为root:root，文件权限设为600。
 
-    “daemon.json“文件包含更改Docker守护进程的敏感参数，是重要的全局配置文件，其属主和属组必须是root，且只对root可写，以保证文件的完整性，该文件并不是默认存在的。
+    “daemon.json”文件包含更改Docker守护进程的敏感参数，是重要的全局配置文件，其属主和属组必须是root，且只对root可写，以保证文件的完整性，该文件并不是默认存在的。
 
-    -   如果“daemon.json“文件默认不存在，说明产品没有使用该文件进行配置，那么可以执行以下命令，在启动参数中将配置文件设置为空，不使用该文件作为默认配置文件，避免被攻击者恶意创建并修改配置。
+    -   如果“daemon.json”文件默认不存在，说明产品没有使用该文件进行配置，那么可以执行以下命令，在启动参数中将配置文件设置为空，不使用该文件作为默认配置文件，避免被攻击者恶意创建并修改配置。
 
         ```
         docker --config-file=""
         ```
 
-    -   如果产品环境存在“daemon.json“文件，说明已经使用了该文件进行配置操作，需要设置相应权限，防止被恶意修改。
+    -   如果产品环境存在“daemon.json”文件，说明已经使用了该文件进行配置操作，需要设置相应权限，防止被恶意修改。
         1.  执行以下命令，将文件的属主和属组设为root。
 
             ```
@@ -4785,9 +4787,9 @@ chage -M 90 test
 
 ### 为Docker创建单独分区<a name="ZH-CN_TOPIC_0000002511426363"></a>
 
-Docker安装后默认目录是“/var/lib/docker“，用于存放Docker相关的文件，包括镜像、容器等。当该目录存储已满时，Docker和主机可能无法使用。因此，建议创建一个单独的分区（逻辑卷），用来存放Docker文件。
+Docker安装后默认目录是“/var/lib/docker”，用于存放Docker相关的文件，包括镜像、容器等。当该目录存储已满时，Docker和主机可能无法使用。因此，建议创建一个单独的分区（逻辑卷），用来存放Docker文件。
 
--   新安装的设备，创建一个单独的分区，用于挂载“/var/lib/docker“目录，请参见[操作系统磁盘分区](./installation_guide.md#软硬件规格要求)。
+-   新安装的设备，创建一个单独的分区，用于挂载“/var/lib/docker”目录，请参见[操作系统磁盘分区](./installation_guide.md#软硬件规格要求)。
 -   已完成安装的系统，请使用逻辑卷管理器（LVM）创建分区。
 
 ### 限制容器的文件句柄和fork进程数<a name="ZH-CN_TOPIC_0000002479386446"></a>
@@ -4795,12 +4797,12 @@ Docker安装后默认目录是“/var/lib/docker“，用于存放Docker相关�
 为避免攻击者在容器内使用命令启动fork炸弹，造成拒绝服务，建议用户设置全局默认的ulimit，对创建的文件句柄、进程数进行限制。
 
 1.  打开配置文件。
-    -   CentOS  7.6默认为“/usr/lib/systemd/system/docker.service“文件。
-    -   Ubuntu  22.04默认为“/lib/systemd/system/docker.service“文件。
+    -   CentOS  7.6默认为“/usr/lib/systemd/system/docker.service”文件。
+    -   Ubuntu  22.04默认为“/lib/systemd/system/docker.service”文件。
 
 2.  修改配置文件。
 
-    在配置文件中找到“/usr/bin/dockerd“所在行，并在该行后面增加nofile（创建的文件句柄）参数和nproc（进程）参数的限制。
+    在配置文件中找到“/usr/bin/dockerd”所在行，并在该行后面增加nofile（创建的文件句柄）参数和nproc（进程）参数的限制。
 
     修改示例如下，请根据实际情况设置对应的值。
 
@@ -4885,7 +4887,7 @@ Restart=always
 
 seccomp配置可约束容器的系统调用，减少容器对系统的影响面，具体参见[seccomp.md](https://github.com/kubernetes/design-proposals-archive/blob/main/node/seccomp.md)。
 
-在Kubernetes的1.19以下的版本中，seccomp使用的是annotations\[seccomp.security.alpha.kubernetes.io/pod\]注解方式。在1.19及以上的版本，seccomp特性已经GA。1.19及以上版本推荐使用securityContext.seccompProfile进行配置，并且1.27版本开始注解方式不再生效，具体参见：**[Kubernetes Removals and Major Changes In v1.27](https://kubernetes.io/blog/2023/03/17/upcoming-changes-in-kubernetes-v1-27/#support-for-deprecated-seccomp-annotations)**  。所以用户需要根据不同的Kubernetes版本与容器安全需求，自行修改seccomp配置。
+在Kubernetes的1.19以下的版本中，seccomp使用的是annotations\[seccomp.security.alpha.kubernetes.io/pod\]注解方式。在1.19及以上的版本，seccomp特性已经GA。1.19及以上版本推荐使用securityContext.seccompProfile进行配置，并且1.27版本开始注解方式不再生效，具体参见：[Kubernetes Removals and Major Changes In v1.27](https://kubernetes.io/blog/2023/03/17/upcoming-changes-in-kubernetes-v1-27/#support-for-deprecated-seccomp-annotations)。所以用户需要根据不同的Kubernetes版本与容器安全需求，自行修改seccomp配置。
 
 需要修改启动配置文件的MindCluster组件中已经提供了两种不同的配置方式。以下是Resilience Controller的seccomp配置，其他组件都预留了相关的配置。
 
@@ -4913,18 +4915,18 @@ seccomp配置可约束容器的系统调用，减少容器对系统的影响面�
 Kubernetes需要进行如下加固：
 
 -   kube-apiserver加强：
-    -   修改启动参数“--profiling“的值设置为“false“，防止用户动态修改kube-apiserver日志级别。
-    -   修改或增加启动参数“--tls-cipher-suites“，设置它的值如下，避免使用不安全的TLS加密套件带来风险。
+    -   修改启动参数“--profiling”的值设置为“false”，防止用户动态修改kube-apiserver日志级别。
+    -   修改或增加启动参数“--tls-cipher-suites”，设置它的值如下，避免使用不安全的TLS加密套件带来风险。
 
         ```
         --tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
         ```
 
-    -   修改或增加启动参数“--audit-policy-file“，配置K8s的审计策略，具体配置可参考[Kubernetes官方文档](https://kubernetes.io/zh-cn/docs/tasks/debug/debug-cluster/audit/)。
+    -   修改或增加启动参数“--audit-policy-file”，配置K8s的审计策略，具体配置可参考[Kubernetes官方文档](https://kubernetes.io/zh-cn/docs/tasks/debug/debug-cluster/audit/)。
 
 -   kubelet加强：
-    -   为防止单Pod占用过多进程数，可以开启SupportPodPidsLimit，并设置**--pod-max-pids**。在kubelet配置文件的KUBELET\_KUBEADM\_ARGS项增加--feature-gates=SupportPodPidsLimit=true --pod-max-pids=<max pid number\>，配置修改后，重启生效。具体可参考[Kubernetes官方文档](https://kubernetes.io/zh-cn/docs/concepts/policy/pid-limiting/)。
-    -   修改或增加启动参数“--tls-cipher-suites“，设置它的值如下，避免使用不安全的TLS加密套件带来风险。
+    -   为防止单Pod占用过多进程数，可以开启SupportPodPidsLimit，并设置--pod-max-pids。在kubelet配置文件的KUBELET\_KUBEADM\_ARGS项增加--feature-gates=SupportPodPidsLimit=true --pod-max-pids=<max pid number\>，配置修改后，重启生效。具体可参考[Kubernetes官方文档](https://kubernetes.io/zh-cn/docs/concepts/policy/pid-limiting/)。
+    -   修改或增加启动参数“--tls-cipher-suites”，设置它的值如下，避免使用不安全的TLS加密套件带来风险。
 
         ```
         --tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
@@ -5034,7 +5036,7 @@ ClusterD运行后，会启动gRPC服务端侦听训练容器内gRPC客户端的�
        }
     ```
 
-4.  在ClusterD启动YAML文件中修改或新增以下加粗字段。
+4.  在ClusterD启动YAML文件中修改或新增以下字段。
 
     ```
        # ClusterD启动命令中配置-useProxy=true，使能本地代理
@@ -5054,10 +5056,10 @@ ClusterD运行后，会启动gRPC服务端侦听训练容器内gRPC客户端的�
        # Deployment中的volumes项增加
                - name: nginx-cert
                  hostPath:
-                   path: /{路径A}/cert           # x509证书、私钥目录路径，请将路径A替换成[步骤2](#li188871536105918)中的文件路径
+                   path: /{路径A}/cert           # x509证书、私钥目录路径，请将路径A替换成步骤2中的文件路径
                - name: nginx-conf
                  hostPath:
-                   path: /{路径A}/config       # nginx启动配置文件，请将路径A替换成[步骤2](#li188871536105918)中的文件路径
+                   path: /{路径A}/config       # nginx启动配置文件，请将路径A替换成步骤2中的文件路径
     
     
        # Service中的ports项改为如下
@@ -5147,7 +5149,7 @@ ClusterD运行后，会启动gRPC服务端侦听训练容器内gRPC客户端的�
            }
         ```
 
-    3.  在NodeD的启动YAML文件中新增以下加粗字段。
+    3.  在NodeD的启动YAML文件中新增以下字段。
 
         ```
            # 新增启动参数 sleep 150  
@@ -5204,7 +5206,7 @@ TaskD运行后，会启动gRPC客户端与ClusterD进行gRPC通信，同时TaskD
 
 下面将以nginx为例，指导用户通过本地网络代理对TaskD跨节点的通信进行加密认证。
 
-**前提条件<a name="section10669832105619"></a>**
+**前提条件<a name="section106698321056192"></a>**
 
 在进行双向认证前，用户需准备好以下证书文件。
 
@@ -5222,7 +5224,7 @@ TaskD运行后，会启动gRPC客户端与ClusterD进行gRPC通信，同时TaskD
     docker pull nginx
     ```
 
-2.  <a name="li115126401711"></a>将[前提条件](#section10669832105619)中的全部证书文件放入路径A下。
+2.  <a name="li115126401711"></a>将[前提条件](#section106698321056192)中的全部证书文件放入路径A下。
 3.  准备master Pod的nginx代理配置文件。在路径A下新建一个文件夹conf，在该文件夹下新建一个名为master\_nginx.conf的文件，并将以下内容写入文件中：
 
     ```
@@ -5311,7 +5313,7 @@ TaskD运行后，会启动gRPC客户端与ClusterD进行gRPC通信，同时TaskD
                     value: "on"          # 使用本地代理通信的开关
     ```
 
-6.  在任务Pod中新增如下加粗字段。
+6.  在任务Pod中新增如下字段。
 
     ```
         # Deployment中的containers项增加
@@ -5327,7 +5329,7 @@ TaskD运行后，会启动gRPC客户端与ClusterD进行gRPC通信，同时TaskD
        # Deployment中的volumes项增加
                - name: nginx-conf
                  hostPath:
-                   path: /{路径A}/       # nginx启动配置文件和证书密钥文件所在路径，请将路径A替换成[步骤2](#li115126401711)中的文件路径
+                   path: /{路径A}/       # nginx启动配置文件和证书密钥文件所在路径，请将路径A替换成步骤2中的文件路径
     
     ```
 
@@ -5343,7 +5345,7 @@ TaskD运行后，会启动gRPC客户端与ClusterD进行gRPC通信，同时TaskD
 ## Elastic Agent安全加固<a name="ZH-CN_TOPIC_0000002511346397"></a>
 
 >[!NOTE] 说明 
->Elastic Agent组件已经日落，相关资料将于8.3.0版本删除。
+>Elastic Agent组件已经日落，相关资料将于2026年的8.3.0版本删除。
 
 Elastic Agent的安全加固请参见[TaskD安全加固](#taskd安全加固)章节。
 
@@ -5353,9 +5355,9 @@ Elastic Agent的安全加固请参见[TaskD安全加固](#taskd安全加固)章�
 
 **查看执行命令的历史记录<a name="section1220492120526"></a>**
 
-当安装、升级、卸载Container Manager，或者通过Container Manager查询容器恢复进度等时，会将history中的历史命令记录保存到“\~/.bash\_history“文件中。所以，可以直接查看.bash\_history文件就能找到命令行的记录。
+当安装、升级、卸载Container Manager，或者通过Container Manager查询容器恢复进度等时，会将history中的历史命令记录保存到“\~/.bash\_history”文件中。所以，可以直接查看.bash\_history文件就能找到命令行的记录。
 
-历史命令会先缓存在内存中，只有当终端正常退出时才会写入“\~/.bash\_history“文件。执行以下命令可立即将内存中的历史记录写入.bash\_history文件：
+历史命令会先缓存在内存中，只有当终端正常退出时才会写入“\~/.bash\_history”文件。执行以下命令可立即将内存中的历史记录写入.bash\_history文件：
 
 ```
 history -a
@@ -5363,12 +5365,12 @@ history -a
 
 **修改历史记录的保存数量<a name="section56389529527"></a>**
 
-在Linux系统中，history命令一般默认保存最新的1000条命令。如果需要修改保存的命令数量，比如只保留200条历史命令，则可以在“/etc/profile“文件中修改HISTSIZE环境变量。修改方法如下：
+在Linux系统中，history命令一般默认保存最新的1000条命令。如果需要修改保存的命令数量，比如只保留200条历史命令，则可以在“/etc/profile”文件中修改HISTSIZE环境变量。修改方法如下：
 
 -   使用编辑器（如vim编辑器）修改。
 -   使用sed直接修改，命令如下：
 
-    **sed -i 's/^HISTSIZE=**_number_**/HISTSIZE=**_newNumber_**/' /etc/profile**，_number_表示修改前的命令数量，_newNumber_表示修改后的命令数量。以保存的命令数量从1000改为200为例：
+    **sed -i 's/^HISTSIZE=**_number_**/HISTSIZE=**_newNumber_**/' /etc/profile**，<i>number</i>表示修改前的命令数量，<i>newNumber</i>表示修改后的命令数量。以保存的命令数量从1000改为200为例：
 
     ```
     sed -i 's/^HISTSIZE=1000/HISTSIZE=200/' /etc/profile
@@ -5378,7 +5380,7 @@ history -a
 
 **修改历史命令文件时间戳<a name="section18178420544"></a>**
 
-如果需要在历史命令文件中有时间戳记录（搭配用户、IP 这些自定义信息），可以在“/etc/profile“中添加如下配置：
+如果需要在历史命令文件中有时间戳记录（搭配用户、IP 这些自定义信息），可以在“/etc/profile”中添加如下配置：
 
 **export HISTTIMEFORMAT="%F %T $USER\_IP:\`whoami\` "**
 
@@ -5392,7 +5394,7 @@ history -a
 2025-12-02 20:44:34 50.38.66.66:root systemctl status container-manager.service
 ```
 
-此外，如果需要将历史命令记录在自定义文件中，可以在“/etc/profile“中设置HISTFILE环境变量，设置完成之后执行**source /etc/profile**命令使环境变量生效。比如：
+此外，如果需要将历史命令记录在自定义文件中，可以在“/etc/profile”中设置HISTFILE环境变量，设置完成之后执行**source /etc/profile**命令使环境变量生效。比如：
 
 ```
 HISTDIR=~/log/container-manager   # 配置历史命令记录保存文件
@@ -5410,5 +5412,5 @@ export HISTTIMEFORMAT="%F %T $USER_IP:`whoami` "    # history命令显示格式�
 PROMPT_COMMAND=' { date "+%Y-%m-%d %T - $(history 1 | { read x cmd; echo "$cmd"; })"; } >> $HISTFILE'    # 实时将history命令写到配置的文件里
 ```
 
-其中日志文件路径为“\~/log/container-manager“，请保证磁盘空间足够，日志文件设置权限为640。
+其中日志文件路径为“\~/log/container-manager”，请保证磁盘空间足够，日志文件设置权限为640。
 

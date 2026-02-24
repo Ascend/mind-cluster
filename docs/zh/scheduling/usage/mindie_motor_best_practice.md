@@ -4,7 +4,7 @@
 
 MindCluster集群调度组件支持用户通过生成acjob推理任务的方式进行MindIE Motor的容器化部署、故障重调度和弹性扩缩容。
 
-本章节仅说明相关特性原理及对应配置示例，所提供的YAML示例不足以完成MindIE任务的部署。了解MindIE Motor的详细部署流程请参见《MindIE Motor开发指南》。
+本章节仅说明相关特性原理及对应配置示例，所提供的YAML示例不足以完成MindIE任务的部署。了解MindIE Motor的详细部署流程请参见《<a href="https://www.hiascend.com/document/detail/zh/mindie/230/mindiemotor/motordev/mindie_service0001.html">MindIE Motor开发指南</a>》。
 
 **前提条件<a name="zh-cn_topic_0000002322062116_section52051339787"></a>**
 
@@ -64,7 +64,7 @@ MindIE Motor包含两个部分，MindIE MS（MindIE Management Service）和Mind
 
 MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Server组件分别运行在独立的Pod内。使用MindCluster集群调度组件进行MindIE Motor任务部署时，MS Controller、MS Coordinator以及MindIE Server中的每个实例分别以一个AscendJob进行部署，例如一个推理任务包含2个Prefill实例和1个Decode实例，则需要部署5个AscendJob。
 
-了解PD分离服务部署的详细说明可参考《MindIE Motor开发指南》中的“集群服务部署 \> PD分离服务部署”章节。
+了解PD分离服务部署的详细说明可参考《MindIE Motor开发指南》中的“集群服务部署 \> <a href="https://www.hiascend.com/document/detail/zh/mindie/230/mindiemotor/motordev/mindie_service0049.html">PD分离服务部署</a>”章节。
 
 **使用流程<a name="zh-cn_topic_0000002328850238_section5640184231810"></a>**
 
@@ -87,50 +87,12 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
 集群调度为用户提供YAML示例，用户需要根据使用的组件、芯片类型和任务类型等，选择相应的YAML示例并根据需求进行相应修改后才可使用。
 
 <a name="zh-cn_topic_0000002362848597_table74058394335"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002362848597_row7405103918334"><th class="cellrowborder" valign="top" width="25%" id="mcps1.1.5.1.1"><p id="zh-cn_topic_0000002362848597_p134051339113317"><a name="zh-cn_topic_0000002362848597_p134051339113317"></a><a name="zh-cn_topic_0000002362848597_p134051339113317"></a>类型</p>
-</th>
-<th class="cellrowborder" valign="top" width="25%" id="mcps1.1.5.1.2"><p id="zh-cn_topic_0000002362848597_p4405183916339"><a name="zh-cn_topic_0000002362848597_p4405183916339"></a><a name="zh-cn_topic_0000002362848597_p4405183916339"></a>硬件型号</p>
-</th>
-<th class="cellrowborder" valign="top" width="25%" id="mcps1.1.5.1.3"><p id="zh-cn_topic_0000002362848597_p6405739173310"><a name="zh-cn_topic_0000002362848597_p6405739173310"></a><a name="zh-cn_topic_0000002362848597_p6405739173310"></a>YAML名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="25%" id="mcps1.1.5.1.4"><p id="zh-cn_topic_0000002362848597_p164065398332"><a name="zh-cn_topic_0000002362848597_p164065398332"></a><a name="zh-cn_topic_0000002362848597_p164065398332"></a>获取链接</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002362848597_row134069396332"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.1.5.1.1 "><p id="zh-cn_topic_0000002362848597_p14406113953311"><a name="zh-cn_topic_0000002362848597_p14406113953311"></a><a name="zh-cn_topic_0000002362848597_p14406113953311"></a>ms_controller</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.1.5.1.2 "><p id="p17788101185113"><a name="p17788101185113"></a><a name="p17788101185113"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.1.5.1.3 "><p id="zh-cn_topic_0000002362848597_p104061739133311"><a name="zh-cn_topic_0000002362848597_p104061739133311"></a><a name="zh-cn_topic_0000002362848597_p104061739133311"></a>controller.yaml</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.1.5.1.4 "><p id="zh-cn_topic_0000002362848597_p17406183943314"><a name="zh-cn_topic_0000002362848597_p17406183943314"></a><a name="zh-cn_topic_0000002362848597_p17406183943314"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002362848597_row1040673913313"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.1.5.1.1 "><p id="zh-cn_topic_0000002362848597_p174061239103316"><a name="zh-cn_topic_0000002362848597_p174061239103316"></a><a name="zh-cn_topic_0000002362848597_p174061239103316"></a>ms_coordinator</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.1.5.1.2 "><p id="p4523165915019"><a name="p4523165915019"></a><a name="p4523165915019"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.1.5.1.3 "><p id="zh-cn_topic_0000002362848597_p204064390338"><a name="zh-cn_topic_0000002362848597_p204064390338"></a><a name="zh-cn_topic_0000002362848597_p204064390338"></a>coordinator.yaml</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.1.5.1.4 "><p id="zh-cn_topic_0000002362848597_p7406539113313"><a name="zh-cn_topic_0000002362848597_p7406539113313"></a><a name="zh-cn_topic_0000002362848597_p7406539113313"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002362848597_row64061839113315"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.1.5.1.1 "><p id="zh-cn_topic_0000002362848597_p14406163963313"><a name="zh-cn_topic_0000002362848597_p14406163963313"></a><a name="zh-cn_topic_0000002362848597_p14406163963313"></a>mindie_server</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.1.5.1.2 "><p id="zh-cn_topic_0000002362848597_p740643963318"><a name="zh-cn_topic_0000002362848597_p740643963318"></a><a name="zh-cn_topic_0000002362848597_p740643963318"></a><span id="ph128611545112214"><a name="ph128611545112214"></a><a name="ph128611545112214"></a>Atlas 800I A2 推理服务器</span></p>
-<p id="p17937184521616"><a name="p17937184521616"></a><a name="p17937184521616"></a><span id="ph2385246171619"><a name="ph2385246171619"></a><a name="ph2385246171619"></a>Atlas 800I A3 超节点服务器</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.1.5.1.3 "><p id="zh-cn_topic_0000002362848597_p0406113919330"><a name="zh-cn_topic_0000002362848597_p0406113919330"></a><a name="zh-cn_topic_0000002362848597_p0406113919330"></a>server.yaml</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.1.5.1.4 "><p id="zh-cn_topic_0000002362848597_p104061839173312"><a name="zh-cn_topic_0000002362848597_p104061839173312"></a><a name="zh-cn_topic_0000002362848597_p104061839173312"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
-</td>
-</tr>
-<tr id="row64621112176"><td class="cellrowborder" colspan="4" valign="top" headers="mcps1.1.5.1.1 mcps1.1.5.1.2 mcps1.1.5.1.3 mcps1.1.5.1.4 "><p id="p182218182712"><a name="p182218182712"></a><a name="p182218182712"></a>注：</p>
-<p id="p174461115111710"><a name="p174461115111710"></a><a name="p174461115111710"></a>如使用的设备为<span id="ph92491827191717"><a name="ph92491827191717"></a><a name="ph92491827191717"></a>Atlas 800I A3 超节点服务器</span>，请在获取YAML后，参考<a href="#li7390175311918">以下的示例</a>对部分参数进行修改。</p>
-</td>
-</tr>
-</tbody>
-</table>
+|类型|硬件型号|YAML名称|获取链接|
+|--|--|--|--|
+|ms_controller|-|controller.yaml|<a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms">获取YAML</a>|
+|ms_coordinator|-|coordinator.yaml|<a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms">获取YAML</a>|
+|mindie_server|<p>Atlas 800I A2 推理服务器</p><p>Atlas 800I A3 超节点服务器</p>|server.yaml|<a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms">获取YAML</a>|
+|<p>注：</p><p>如使用的设备为Atlas 800I A3 超节点服务器，请在获取YAML后，参考<a href="#li7390175311918">以下的示例</a>对部分参数进行修改。</p>|
 
 **任务YAML说明<a name="zh-cn_topic_0000002362848597_section1870105118125"></a>**
 
@@ -186,6 +148,10 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
         jobID: mindie-ms-test
         ring-controller.atlas: ascend-910b
         mx-consumer-cim: "true"
+      annotations:
+        sp-block: "16"         # 增加该annotation，配置方法请参见YAML参数说明
+        huawei.com/schedule.filter.faultCode: "8C1F8608:60, 80E01801"
+        huawei.com/schedule.filter.faultLevel: "RestartRequest"
     data:
       hccl.json: |
         {
@@ -229,6 +195,8 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
         fault-scheduling: force
       annotations:
         sp-block: "16"         # 增加该annotation，配置方法请参见YAML参数说明
+        huawei.com/schedule.filter.faultCode: "8C1F8608:60, 80E01801"
+        huawei.com/schedule.filter.faultLevel: "RestartRequest"
     spec:
       schedulerName: volcano   # Ascend Operator启用“gang”调度时所选择的调度器
       runPolicy:
@@ -578,8 +546,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p76249141830"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p76249141830"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p76249141830"></a>0 &lt; fault-retry-times</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p9624101418314"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p9624101418314"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p9624101418314"></a>处理业务面故障，必须配置业务面无条件重试的次数。</p>
-<div class="note" id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note136241514039"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note136241514039"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note136241514039"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul13624161415314"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul13624161415314"></a><ul id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul13624161415314"><li>使用无条件重试功能需保证训练进程异常时会导致容器异常退出，若容器未异常退出则无法成功重试。</li><li>当前仅<span id="ph121662039143413"><a name="ph121662039143413"></a><a name="ph121662039143413"></a>Atlas 800T A2 训练服务器</span>和<span id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph166251314730"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph166251314730"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph166251314730"></a>Atlas 900 A2 PoD 集群基础单元</span>支持无条件重试功能。</li><li>进行进程级恢复时，将会触发业务面故障，如需使用进程级恢复，必须配置此参数。</li></ul>
-</div></div>
+<ul id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul13624161415314"><li>使用无条件重试功能需保证训练进程异常时会导致容器异常退出，若容器未异常退出则无法成功重试。</li><li>当前仅<span id="ph121662039143413"><a name="ph121662039143413"></a><a name="ph121662039143413"></a>Atlas 800T A2 训练服务器</span>和<span id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph166251314730"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph166251314730"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph166251314730"></a>Atlas 900 A2 PoD 集群基础单元</span>支持无条件重试功能。</li><li>进行进程级恢复时，将会触发业务面故障，如需使用进程级恢复，必须配置此参数。</li></ul>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row06256141536"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1462511141837"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1462511141837"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1462511141837"></a>无（无fault-retry-times）或0</p>
@@ -602,8 +569,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 <tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row662614145317"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1062612142315"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1062612142315"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1062612142315"></a>无（无backoffLimit）或backoffLimit ≤ 0</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p46267141139"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p46267141139"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p46267141139"></a>不限制总重调度次数。</p>
-<div class="note" id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note7627191419311"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note7627191419311"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note7627191419311"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p962712140314"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p962712140314"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p962712140314"></a>若不配置backoffLimit，但是配置了fault-retry-times参数，则使用fault-retry-times的重调度次数。</p>
-</div></div>
+<p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p962712140314"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p962712140314"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p962712140314"></a>若不配置backoffLimit，但是配置了fault-retry-times参数，则使用fault-retry-times的重调度次数。</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row1662711144310"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p462713149315"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p462713149315"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p462713149315"></a>restartPolicy</p>
@@ -628,9 +594,21 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 </td>
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul960434424111"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul960434424111"></a><ul id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul960434424111"><li>true：使用HostIP创建Pod。</li><li>false：不使用HostIP创建Pod。</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul14611159182815"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul14611159182815"></a><ul id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul14611159182815"><li>当集群规模较大（节点数量&gt;1000时），推荐使用HostIP创建Pod。</li><li>不传入此参数时，默认不使用HostIP创建Pod。<div class="note" id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note1423653119592"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note1423653119592"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note1423653119592"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p461933317584"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p461933317584"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p461933317584"></a>当HostNetwork取值为true时，若当前任务YAML挂载了RankTable文件路径，则可以通过在训练脚本中解析RankTable文件获取Pod的hostIP来实现建链。若任务YAML未挂载RankTable文件路径，则与原始保持一致，使用serviceIP来实现建链。</p>
-</div></div>
-</li></ul>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul14611159182815"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul14611159182815"></a><ul id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul14611159182815"><li>当集群规模较大（节点数量&gt;1000时），推荐使用HostIP创建Pod。</li><li>不传入此参数时，默认不使用HostIP创建Pod。</li></ul><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p461933317584"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p461933317584"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p461933317584"></a>当HostNetwork取值为true时，若当前任务YAML挂载了RankTable文件路径，则可以通过在训练脚本中解析RankTable文件获取Pod的hostIP来实现建链。若任务YAML未挂载RankTable文件路径，则与原始保持一致，使用serviceIP来实现建链。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p>huawei.com/schedule.filter.faultCode</p>
+</td>
+<td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p>取值示例："8C1F8608:30, 80E01801"，表示在30秒时间窗内，静默8C1F8608故障；在60秒时间窗内，静默80E01801故障。</p><p>若未配置时间窗，则默认为60，取值范围为0~86400，单位为秒。</p>
+</td>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p>配置任务需要静默的故障码和时间窗。</p><ul><li>故障码仅支持配置芯片故障和灵衢总线设备故障的故障码。支持的故障码详细请参见faultCode.json和SwitchFaultCode.json文件。</li><li>支持配置多个故障码和时间窗，多个配置使用英文逗号分隔。</li><li>对于MindIE Service，若YAML文件中无此配置项，则默认静默以下故障码：<ul><li>8C1F8608静默60秒</li><li>4C1F8608静默60秒</li><li>80E01801静默60秒</li></ul></li></ul>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p>huawei.com/schedule.filter.faultLevel</p>
+</td>
+<td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p>取值示例："RestartRequest:30, RestartBusiness"，表示在30秒时间窗内，静默所有RestartRequest级别的故障；在60秒时间窗内，静默所有RestartBusiness级别的故障。</p><p>若未配置时间窗，则默认为60，取值范围为0~86400，单位为秒。</p>
+</td>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p>配置任务需要静默的故障级别和时间窗。</p><ul><li>故障级别仅支持配置芯片故障和灵衢总线设备故障的级别。支持的故障级别详细请参见<a href="./resumable_training.md#配置说明">配置说明</a>。</li><li>支持配置多个故障级别和时间窗，多个配置使用英文逗号分隔。</li><li>对于MindIE Service，若YAML文件中无此配置项，则默认所有RestartRequest级别的故障静默60秒。</li><li>huawei.com/schedule.filter.faultCode的优先级高于huawei.com/schedule.filter.faultLevel。</li></ul>
 </td>
 </tr>
 </tbody>
@@ -646,7 +624,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 3.  查看推理任务运行情况
 4.  （可选）删除任务
 
-了解以上步骤的详细说明，请参见《MindIE Motor开发指南》中的“集群服务部署 \> PD分离服务部署 \> 安装部署 \> 使用kubectl部署单机PD分离服务示例”章节。
+了解以上步骤的详细说明，请参见《MindIE Motor开发指南》中的“集群服务部署 \> PD分离服务部署 \> 安装部署 \> <a href="https://www.hiascend.com/document/detail/zh/mindie/230/mindiemotor/motordev/mindie_service0318.html">使用kubectl部署单机PD分离服务示例</a>”章节。
 
 
 #### global-ranktable说明<a name="ZH-CN_TOPIC_0000002479226414"></a>
@@ -727,90 +705,23 @@ ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json
 **表 1**  global-ranktable字段说明
 
 <a name="zh-cn_topic_0000002324328268_table5843145110294"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002324328268_row68431251112916"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000002324328268_p18843145113296"><a name="zh-cn_topic_0000002324328268_p18843145113296"></a><a name="zh-cn_topic_0000002324328268_p18843145113296"></a>字段</p>
-</th>
-<th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.2"><p id="zh-cn_topic_0000002324328268_p138431551132910"><a name="zh-cn_topic_0000002324328268_p138431551132910"></a><a name="zh-cn_topic_0000002324328268_p138431551132910"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002324328268_row12843125114296"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002324328268_p1784320512297"><a name="zh-cn_topic_0000002324328268_p1784320512297"></a><a name="zh-cn_topic_0000002324328268_p1784320512297"></a>version</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002324328268_p11843155116292"><a name="zh-cn_topic_0000002324328268_p11843155116292"></a><a name="zh-cn_topic_0000002324328268_p11843155116292"></a>版本</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002324328268_row1484345115297"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002324328268_p188431151172913"><a name="zh-cn_topic_0000002324328268_p188431151172913"></a><a name="zh-cn_topic_0000002324328268_p188431151172913"></a>status</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002324328268_p1684345172913"><a name="zh-cn_topic_0000002324328268_p1684345172913"></a><a name="zh-cn_topic_0000002324328268_p1684345172913"></a>状态</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002324328268_row58431251132910"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002324328268_p12843155117297"><a name="zh-cn_topic_0000002324328268_p12843155117297"></a><a name="zh-cn_topic_0000002324328268_p12843155117297"></a>server_group_list</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002324328268_p1584355142920"><a name="zh-cn_topic_0000002324328268_p1584355142920"></a><a name="zh-cn_topic_0000002324328268_p1584355142920"></a>服务组列表</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002324328268_row18431651162920"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002324328268_p1284315114291"><a name="zh-cn_topic_0000002324328268_p1284315114291"></a><a name="zh-cn_topic_0000002324328268_p1284315114291"></a>group_id</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002324328268_p138436515294"><a name="zh-cn_topic_0000002324328268_p138436515294"></a><a name="zh-cn_topic_0000002324328268_p138436515294"></a>任务组编号</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002324328268_row1184385192917"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002324328268_p1084325172914"><a name="zh-cn_topic_0000002324328268_p1084325172914"></a><a name="zh-cn_topic_0000002324328268_p1084325172914"></a>server_count</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002324328268_p484314518297"><a name="zh-cn_topic_0000002324328268_p484314518297"></a><a name="zh-cn_topic_0000002324328268_p484314518297"></a>服务器数量</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002324328268_row0843151132919"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002324328268_p14843165192913"><a name="zh-cn_topic_0000002324328268_p14843165192913"></a><a name="zh-cn_topic_0000002324328268_p14843165192913"></a>server_list</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002324328268_p128431514297"><a name="zh-cn_topic_0000002324328268_p128431514297"></a><a name="zh-cn_topic_0000002324328268_p128431514297"></a>服务器列表</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002324328268_row15843165142915"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002324328268_p48431151132913"><a name="zh-cn_topic_0000002324328268_p48431151132913"></a><a name="zh-cn_topic_0000002324328268_p48431151132913"></a>server_id</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002324328268_p17843135111296"><a name="zh-cn_topic_0000002324328268_p17843135111296"></a><a name="zh-cn_topic_0000002324328268_p17843135111296"></a><span id="ph179711100519"><a name="ph179711100519"></a><a name="ph179711100519"></a>AI Server标识，全局唯一</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002324328268_row1084375110299"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002324328268_p584316519291"><a name="zh-cn_topic_0000002324328268_p584316519291"></a><a name="zh-cn_topic_0000002324328268_p584316519291"></a>server_ip</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002324328268_p1784325172918"><a name="zh-cn_topic_0000002324328268_p1784325172918"></a><a name="zh-cn_topic_0000002324328268_p1784325172918"></a>Pod IP</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002324328268_row6843135119293"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002324328268_p384385152917"><a name="zh-cn_topic_0000002324328268_p384385152917"></a><a name="zh-cn_topic_0000002324328268_p384385152917"></a>device_id</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002324328268_p18431451142918"><a name="zh-cn_topic_0000002324328268_p18431451142918"></a><a name="zh-cn_topic_0000002324328268_p18431451142918"></a>NPU的设备ID</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002324328268_row1984316511295"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002324328268_p20843185116295"><a name="zh-cn_topic_0000002324328268_p20843185116295"></a><a name="zh-cn_topic_0000002324328268_p20843185116295"></a>device_ip</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002324328268_p1184313518299"><a name="zh-cn_topic_0000002324328268_p1184313518299"></a><a name="zh-cn_topic_0000002324328268_p1184313518299"></a>NPU的设备IP</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002324328268_row178431651112915"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002324328268_p48444513295"><a name="zh-cn_topic_0000002324328268_p48444513295"></a><a name="zh-cn_topic_0000002324328268_p48444513295"></a>super_device_id</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002324328268_p684415514296"><a name="zh-cn_topic_0000002324328268_p684415514296"></a><a name="zh-cn_topic_0000002324328268_p684415514296"></a><span id="zh-cn_topic_0000002324328268_ph28441951152917"><a name="zh-cn_topic_0000002324328268_ph28441951152917"></a><a name="zh-cn_topic_0000002324328268_ph28441951152917"></a><term id="zh-cn_topic_0000001519959665_term26764913715_1"><a name="zh-cn_topic_0000001519959665_term26764913715_1"></a><a name="zh-cn_topic_0000001519959665_term26764913715_1"></a>Atlas A3 训练系列产品</term></span>超节点内NPU的唯一标识</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002324328268_row28441451162919"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002324328268_p78446510298"><a name="zh-cn_topic_0000002324328268_p78446510298"></a><a name="zh-cn_topic_0000002324328268_p78446510298"></a>rank_id</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002324328268_p684455119295"><a name="zh-cn_topic_0000002324328268_p684455119295"></a><a name="zh-cn_topic_0000002324328268_p684455119295"></a>NPU对应的训练Rank ID</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002324328268_row284495112912"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002324328268_p784445119290"><a name="zh-cn_topic_0000002324328268_p784445119290"></a><a name="zh-cn_topic_0000002324328268_p784445119290"></a>device_logical_id</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002324328268_p5844451172918"><a name="zh-cn_topic_0000002324328268_p5844451172918"></a><a name="zh-cn_topic_0000002324328268_p5844451172918"></a>NPU的逻辑ID</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002324328268_row88449519292"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002324328268_p1984415110297"><a name="zh-cn_topic_0000002324328268_p1984415110297"></a><a name="zh-cn_topic_0000002324328268_p1984415110297"></a>super_pod_list</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002324328268_p10844105111298"><a name="zh-cn_topic_0000002324328268_p10844105111298"></a><a name="zh-cn_topic_0000002324328268_p10844105111298"></a>超节点列表</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002324328268_row15844185113298"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002324328268_p58441251132910"><a name="zh-cn_topic_0000002324328268_p58441251132910"></a><a name="zh-cn_topic_0000002324328268_p58441251132910"></a>super_pod_id</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002324328268_p9844125117295"><a name="zh-cn_topic_0000002324328268_p9844125117295"></a><a name="zh-cn_topic_0000002324328268_p9844125117295"></a>逻辑超节点ID</p>
-</td>
-</tr>
-</tbody>
-</table>
-
+|字段|说明|
+|--|--|
+|version|版本|
+|status|状态|
+|server_group_list|服务组列表|
+|group_id|任务组编号|
+|server_count|服务器数量|
+|server_list|服务器列表|
+|server_id|AI Server标识，全局唯一|
+|server_ip|Pod IP|
+|device_id|NPU的设备ID|
+|device_ip|NPU的设备IP|
+|super_device_id|<span><term>Atlas A3 训练系列产品</term></span>超节点内NPU的唯一标识|
+|rank_id|NPU对应的训练Rank ID|
+|device_logical_id|NPU的逻辑ID|
+|super_pod_list|超节点列表|
+|super_pod_id|逻辑超节点ID|
 
 
 
@@ -923,27 +834,8 @@ MindIE Motor推理任务中，用户可通过配置Job级别弹性扩缩容功�
 
 **支持的产品型号<a name="zh-cn_topic_0000002356673977_section618313391397"></a>**
 
-**表 1**  支持的产品和框架
-
-<a name="zh-cn_topic_0000002356673977_zh-cn_topic_0000002003034876_table1991711954417"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002356673977_zh-cn_topic_0000002003034876_row1091711912447"><th class="cellrowborder" valign="top" width="24.490000000000002%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000002356673977_zh-cn_topic_0000002003034876_p199171819164417"><a name="zh-cn_topic_0000002356673977_zh-cn_topic_0000002003034876_p199171819164417"></a><a name="zh-cn_topic_0000002356673977_zh-cn_topic_0000002003034876_p199171819164417"></a>产品类型</p>
-</th>
-<th class="cellrowborder" valign="top" width="75.51%" id="mcps1.2.3.1.2"><p id="zh-cn_topic_0000002356673977_zh-cn_topic_0000002003034876_p2917819114420"><a name="zh-cn_topic_0000002356673977_zh-cn_topic_0000002003034876_p2917819114420"></a><a name="zh-cn_topic_0000002356673977_zh-cn_topic_0000002003034876_p2917819114420"></a>硬件形态</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002356673977_zh-cn_topic_0000002003034876_row12917151994410"><td class="cellrowborder" valign="top" width="24.490000000000002%" headers="mcps1.2.3.1.1 "><p id="p272631203718"><a name="p272631203718"></a><a name="p272631203718"></a><span id="ph16267162611508"><a name="ph16267162611508"></a><a name="ph16267162611508"></a>Atlas 800I A2 推理服务器</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="75.51%" headers="mcps1.2.3.1.2 "><p id="p442746203716"><a name="p442746203716"></a><a name="p442746203716"></a><span id="ph789618683719"><a name="ph789618683719"></a><a name="ph789618683719"></a>Atlas 800I A2 推理服务器</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002356673977_row527394212512"><td class="cellrowborder" valign="top" width="24.490000000000002%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002356673977_p7273164265111"><a name="zh-cn_topic_0000002356673977_p7273164265111"></a><a name="zh-cn_topic_0000002356673977_p7273164265111"></a><span id="zh-cn_topic_0000002356673977_ph12174764117"><a name="zh-cn_topic_0000002356673977_ph12174764117"></a><a name="zh-cn_topic_0000002356673977_ph12174764117"></a>Atlas 800I A3 超节点服务器</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="75.51%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002356673977_p327314215515"><a name="zh-cn_topic_0000002356673977_p327314215515"></a><a name="zh-cn_topic_0000002356673977_p327314215515"></a><span id="zh-cn_topic_0000002356673977_ph1996514745115"><a name="zh-cn_topic_0000002356673977_ph1996514745115"></a><a name="zh-cn_topic_0000002356673977_ph1996514745115"></a>Atlas 800I A3 超节点服务器</span></p>
-</td>
-</tr>
-</tbody>
-</table>
+- Atlas 800I A2 推理服务器
+- Atlas 800I A3 超节点服务器
 
 **原理说明<a name="zh-cn_topic_0000002356673977_section1445672111019"></a>**
 
