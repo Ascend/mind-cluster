@@ -163,9 +163,10 @@ func limitQPS(ctx context.Context, req interface{},
 
 // startServer starts the gRPC server for the downstream endpoint.
 func (de *downStreamEndpoint) startServer() (*downStreamEndpoint, error) {
-	if err := utils.IsHostValid(common.GetHostFromAddr(de.netInstance.config.ListenAddr)); err != nil {
+	if _, err := utils.IsHostValid(common.GetHostFromAddr(de.netInstance.config.ListenAddr)); err != nil {
 		return nil, err
 	}
+	hwlog.RunLog.Infof("listen on: %s", de.netInstance.config.ListenAddr)
 	listen, err := net.Listen("tcp", de.netInstance.config.ListenAddr)
 	if err != nil {
 		return nil, err

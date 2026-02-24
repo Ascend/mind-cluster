@@ -105,7 +105,8 @@ func (mhd *MsgHandler) initManagerGrpc() (error, *net.NetInstance) {
 	if ip == "" {
 		ip = constant.DefaultIP
 	}
-	if err := utils.IsHostValid(ip); err != nil {
+	ip, err := utils.IsHostValid(ip)
+	if err != nil {
 		return err, nil
 	}
 	proxyIp := os.Getenv(constant.LocalProxyEnableEnv)

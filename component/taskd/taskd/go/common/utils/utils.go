@@ -265,7 +265,8 @@ func GetClusterdAddr() (string, error) {
 		return constant.LocalProxyIP + constant.ClusterdPort, nil
 	}
 	ipFromEnv := os.Getenv(constant.MindxServerIp)
-	if err := utils.IsHostValid(ipFromEnv); err != nil {
+	ipFromEnv, err := utils.IsHostValid(ipFromEnv)
+	if err != nil {
 		return "", err
 	}
 	return ipFromEnv + constant.ClusterdPort, nil

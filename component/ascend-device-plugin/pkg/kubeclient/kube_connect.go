@@ -28,6 +28,7 @@ import (
 
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
+	net2 "k8s.io/utils/net"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/limiter"
@@ -76,6 +77,9 @@ func getKltPodsURL() (string, error) {
 		kubeletPort = DefaultKubeletPort
 	}
 
+	if net2.IsIPv6(parseIP) {
+		hostIP = "[" + hostIP + "]"
+	}
 	host := fmt.Sprintf("%s:%s", hostIP, kubeletPort)
 	kltPodsURL := &url.URL{
 		Scheme: "https",
@@ -92,6 +96,7 @@ func createKltPodsReqWithToken() (*http.Request, error) {
 		hwlog.RunLog.Errorf("get klt pods url failed: %v", err)
 		return nil, err
 	}
+	hwlog.RunLog.Info("get kubelet pods url: ", kltPodsURL)
 	req, err := http.NewRequest("GET", kltPodsURL, nil)
 	if err != nil {
 		hwlog.RunLog.Errorf("create http request failed: %v", err)

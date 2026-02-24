@@ -545,6 +545,7 @@ k8s.io/klog v1.0.0 h1:Pt+yjF5aB1xDSVbau4VsWe+dQNzA0qv1LlXdC2dF6Q8=
 k8s.io/klog/v2 v2.90.1 h1:m4bYOKall2MmOiRaR1J+We67Do7vm9KiQVlT96lnHUw=
 k8s.io/kube-openapi v0.0.0-20230303024457-afdc3dddf62d h1:VcFq5n7wCJB2FQMCIHfC+f+jNcGgNMar1uKd6rVlifU=
 k8s.io/utils v0.0.0-20230308161112-d77c459e9343 h1:m7tbIjXGcGIAtpmQr7/NAi7RsWoW3E7Zcm4jI1HicTc=
+k8s.io/utils v0.0.0-20230308161112-d77c459e9343/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
 layeh.com/radius v0.0.0-20221205141417-e7fbddd11d68 h1:2NDro2Jzkrqfngy/sA5GVnChs7fx8EzcQKFi/lI2cfg=
 lukechampine.com/uint128 v1.2.0 h1:mBi/5l91vocEN8otkC5bDLhi2KdCticRiwbdB0O+rjI=
 modernc.org/cc/v3 v3.40.0 h1:P3g79IUS/93SYhtoeaHW+kRCIrYaxJ27MFPv+7kaTOw=

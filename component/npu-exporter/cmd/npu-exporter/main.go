@@ -33,6 +33,7 @@ import (
 	"github.com/influxdata/telegraf/plugins/common/shim"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	net2 "k8s.io/utils/net"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
@@ -224,6 +225,7 @@ func newServerAndListener(conf *limiter.HandlerConfig) (*http.Server, net.Listen
 		MaxHeaderBytes: maxHeaderBytes,
 		ErrorLog:       log.New(&hwlog.SelfLogWriter{}, "", log.Lshortfile),
 	}
+	logger.Infof("listen on: %s", s.Addr)
 	ln, err := net.Listen("tcp", s.Addr)
 	if err != nil {
 		logger.Errorf("listen ip and port error: %v", err)
@@ -278,7 +280,9 @@ func checkIPAndPortInPrometheus() error {
 		return errors.New("the listen ip is invalid")
 	}
 	ip = parsedIP.String()
-	logger.Infof("listen on: %s", ip)
+	if net2.IsIPv6(parsedIP) {
+		ip = "[" + ip + "]"
+	}
 	return nil
 }
 

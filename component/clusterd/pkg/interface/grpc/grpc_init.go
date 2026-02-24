@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	net2 "k8s.io/utils/net"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/limiter"
@@ -46,21 +47,25 @@ func NewClusterInfoMgrServer(opts []grpc.ServerOption) *ClusterInfoMgrServer {
 	return server
 }
 
-func isIPValid(ipStr string) error {
+func isIPValid(ipStr string) (string, error) {
 	parsedIp := net.ParseIP(ipStr)
 	if parsedIp == nil {
-		return errors.New("parse to ip failed")
+		return "", errors.New("parse to ip failed")
 	}
-	if parsedIp.To4() == nil {
-		return errors.New("not a valid ipv4 ip")
+	if parsedIp.To4() == nil && parsedIp.To16() == nil {
+		return "", errors.New("not a valid ipv4 or ipv6 ip")
 	}
 	if parsedIp.Equal(net.IPv4bcast) {
-		return errors.New("cannot be broadcast ip")
+		return "", errors.New("cannot be broadcast ip")
 	}
 	if parsedIp.IsUnspecified() {
-		return errors.New("is all zeros ip")
+		return "", errors.New("is all zeros ip")
 	}
-	return nil
+	if net2.IsIPv6(parsedIp) {
+		return "[" + parsedIp.String() + "]", nil
+	} else {
+		return parsedIp.String(), nil
+	}
 }
 
 // Start the grpc server
@@ -76,10 +81,12 @@ func (server *ClusterInfoMgrServer) Start(ctx context.Context, useProxy bool) er
 		ipStr = "127.0.0.1"
 		hwlog.RunLog.Info("use local proxy")
 	}
-	if err := isIPValid(ipStr); err != nil {
+	ipStr, err := isIPValid(ipStr)
+	if err != nil {
 		return err
 	}
 	listenAddress := ipStr + constant.GrpcPort
+	hwlog.RunLog.Infof("listen on: %s", listenAddress)
 	listen, err := net.Listen("tcp", listenAddress)
 	if err != nil {
 		hwlog.RunLog.Errorf("cluster info server listen failed, err: %#v", err)
