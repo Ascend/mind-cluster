@@ -204,8 +204,7 @@ spec:
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p1670155202912"><a name="p1670155202912"></a><a name="p1670155202912"></a>指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度。<span id="zh-cn_topic_0000002511347099_ph521204025916"><a name="zh-cn_topic_0000002511347099_ph521204025916"></a><a name="zh-cn_topic_0000002511347099_ph521204025916"></a>若用户未指定该字段，</span><span id="zh-cn_topic_0000002511347099_ph172121408590"><a name="zh-cn_topic_0000002511347099_ph172121408590"></a><a name="zh-cn_topic_0000002511347099_ph172121408590"></a>Volcano</span><span id="zh-cn_topic_0000002511347099_ph192121140135911"><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a>调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。</span></p>
 <p id="p19701652112917"><a name="p19701652112917"></a><a name="p19701652112917"></a>了解详细说明请参见<a href="../references.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a>。</p>
-<div class="note" id="note47015215291"><a name="note47015215291"></a><a name="note47015215291"></a><span class="notetitle">[!NOTE] 说明 </span><div class="notebody"><p id="p12461828061"><a name="p12461828061"></a><a name="p12461828061"></a>仅支持在<span id="ph914694014812"><a name="ph914694014812"></a><a name="ph914694014812"></a>Atlas 900 A3 SuperPoD 超节点</span>中使用该字段。</p>
-</div></div>
+<p id="p12461828061"><a name="p12461828061"></a><a name="p12461828061"></a>仅支持在<span id="ph914694014812"><a name="ph914694014812"></a><a name="ph914694014812"></a>Atlas 900 A3 SuperPoD 超节点</span>中使用该字段。</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row46101144312"><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1861010140316"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1861010140316"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1861010140316"></a>pod-rescheduling</p>
@@ -213,8 +212,7 @@ spec:
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul186101614131"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul186101614131"></a><ul id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul186101614131"><li>on：开启<span id="ph164712399403"><a name="ph164712399403"></a><a name="ph164712399403"></a>Pod</span>级别重调度。</li><li>其他值或不使用该字段：关闭<span id="ph126431540134014"><a name="ph126431540134014"></a><a name="ph126431540134014"></a>Pod</span>级别重调度。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p661016141437"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p661016141437"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p661016141437"></a><span id="ph4287194517407"><a name="ph4287194517407"></a><a name="ph4287194517407"></a>Pod</span>级重调度，表示任务发生故障后，不会删除PodGroup内的所有任务<span id="ph1595595534015"><a name="ph1595595534015"></a><a name="ph1595595534015"></a>Pod</span>，而是将发生故障的<span id="ph750524344015"><a name="ph750524344015"></a><a name="ph750524344015"></a>Pod</span>进行删除，由控制器重新创建新<span id="ph1521154416407"><a name="ph1521154416407"></a><a name="ph1521154416407"></a>Pod</span>后进行重调度。</p>
-<div class="note" id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note1561010145316"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note1561010145316"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note1561010145316"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p1745415523710"><a name="p1745415523710"></a><a name="p1745415523710"></a>如果podGroupSize为1，pod-rescheduling需要配置为"on"；podGroupSize大于1时，不配置该参数。</p>
-</div></div>
+<p id="p1745415523710"><a name="p1745415523710"></a><a name="p1745415523710"></a>如果podGroupSize为1，pod-rescheduling需要配置为"on"；podGroupSize大于1时，不配置该参数。</p>
 </td>
 </tr>
 <tr id="row1350395294311"><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="p1950335234319"><a name="p1950335234319"></a><a name="p1950335234319"></a>huawei.com/schedule_minAvailable</p>
@@ -252,8 +250,7 @@ spec:
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p7622914235"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p7622914235"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p7622914235"></a>取值为metadata.annotations['huawei.com/Ascend910']，和环境上实际的芯片类型保持一致。</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p136226142031"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p136226142031"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p136226142031"></a><span id="zh-cn_topic_0000002362968521_ph230432885618"><a name="zh-cn_topic_0000002362968521_ph230432885618"></a><a name="zh-cn_topic_0000002362968521_ph230432885618"></a>Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>
-<div class="note" id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note462214141730"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note462214141730"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note462214141730"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"></a>该参数只支持使用<span id="ph123731542141613"><a name="ph123731542141613"></a><a name="ph123731542141613"></a>Volcano</span>调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
-</div></div>
+<p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"></a>该参数只支持使用<span id="ph123731542141613"><a name="ph123731542141613"></a><a name="ph123731542141613"></a>Volcano</span>调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row662216141939"><td class="cellrowborder" rowspan="5" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p106221514533"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p106221514533"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p106221514533"></a>fault-scheduling</p>
@@ -293,8 +290,7 @@ spec:
 </tr>
 <tr id="row125252918159"><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p462713149315"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p462713149315"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p462713149315"></a>restartPolicy</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul36271614531"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul36271614531"></a><ul id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul36271614531"><li>Never：从不重启</li><li>Always：总是重启</li><li>OnFailure：失败时重启</li><li>ExitCode：根据进程退出码决定是否重启Pod，错误码是1~127时不重启，128~255时重启Pod。<div class="note" id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note156280141037"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note156280141037"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note156280141037"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p17628131415316"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p17628131415316"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p17628131415316"></a>vcjob类型的训练任务不支持ExitCode。</p>
-</div></div>
+<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul36271614531"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul36271614531"></a><ul id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul36271614531"><li>Never：从不重启</li><li>Always：总是重启</li><li>OnFailure：失败时重启</li><li>ExitCode：根据进程退出码决定是否重启Pod，错误码是1~127时不重启，128~255时重启Pod。<p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p17628131415316"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p17628131415316"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p17628131415316"></a>vcjob类型的训练任务不支持ExitCode。</p>
 </li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p762813148318"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p762813148318"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p762813148318"></a>容器重启策略。当配置业务面故障无条件重试时，容器重启策略取值必须为<span class="parmvalue" id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_parmvalue18628191413311"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_parmvalue18628191413311"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_parmvalue18628191413311"></a>“Never”</span>。</p>
@@ -331,7 +327,7 @@ spec:
 
 **操作步骤<a name="section582414444317"></a>**
 
-1.  从mindcluster-deploy仓库获取源码，进入“k8s-deploy-tool“目录。
+1.  从mindcluster-deploy仓库获取源码，进入“k8s-deploy-tool”目录。
 
     ```
     git clone https://gitcode.com/Ascend/mindcluster-deploy.git && cd mindcluster-deploy/k8s-deploy-tool
@@ -359,7 +355,7 @@ spec:
         ```
 
     2.  按“i”进入编辑模式，根据模型实际情况，修改vLLM进程启动命令，例如max-model-len、max-num-batched-tokens等。
-    3.  按“Esc”键，输入**:wq!**，按“Enter”保存并退出编辑。
+    3.  按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
 
 5.  （可选）复制启动脚本到主机其他目录或集群其他节点。如果用户环境为单机环境，可以跳过该步骤。如果用户环境包含共享存储，也可以将脚本文件复制到共享存储，并将共享存储挂载给推理服务。
 
@@ -372,7 +368,7 @@ spec:
     ```
 
 6.  （可选）编辑YAML模板，配置模型、脚本挂载路径。用户可以根据模型和脚本实际路径配置YAML模板。
-    1.  打开“src/templates/aibrix/stormservice.yaml.j2“文件。
+    1.  打开“src/templates/aibrix/stormservice.yaml.j2”文件。
 
         ```
         vi src/templates/aibrix/stormservice.yaml.j2
@@ -393,24 +389,24 @@ spec:
         path: /scripts
         ```
 
-    3.  按“Esc”键，输入**:wq!**，按“Enter”保存并退出编辑。
+    3.  按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
 
-7.  编辑用户配置文件“config/stormservice-config.yaml“。
+7.  编辑用户配置文件“config/stormservice-config.yaml”。
 
-    1.  打开“config/stormservice-config.yaml“文件。
+    1.  打开“config/stormservice-config.yaml”文件。
 
         ```
         vi config/stormservice-config.yaml
         ```
 
     2.  按“i”进入编辑模式，按实际情况修改文件中的字段。
-    3.  按“Esc”键，输入**:wq!**，按“Enter”保存并退出编辑。
+    3.  按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
 
     >[!NOTE] 说明 
-    >-   “dp\_size“需要为“podGroupSize“的整数倍。
-    >-   当“dp\_size“设置为“1“时，“distributed\_dp“只能为“false“，大于“1“时才能设置为“true“。
+    >-   “dp\_size”需要为“podGroupSize”的整数倍。
+    >-   当“dp\_size”设置为“1”时，“distributed\_dp”只能为“false”，大于“1”时才能设置为“true”。
 
-8.  （可选）创建任务名称空间，vllm-test为“config/stormservice-config.yaml“设置的“app\_namespace“。如果“app\_namespace“为“default“或未设置，可以不创建名称空间。
+8.  （可选）创建任务名称空间，vllm-test为“config/stormservice-config.yaml”设置的“app\_namespace”。如果“app\_namespace”为“default”或未设置，可以不创建名称空间。
 
     ```
     kubectl create ns vllm-test
@@ -498,7 +494,7 @@ AIBrix根据任务YAML中的role实例生成PodGroup，对应实例发生故障�
 
 **配置实例级重调度<a name="section86725515019"></a>**
 
-以StormService YAML为例配置实例级重调度，添加以下加粗部分配置。
+以StormService YAML为例配置实例级重调度，添加以下配置。
 
 ```
 apiVersion: orchestration.aibrix.ai/v1alpha1

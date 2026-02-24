@@ -411,7 +411,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p621891154618"><a name="p621891154618"></a><a name="p621891154618"></a>单位：MB</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><ul><li>Atlas 训练系列产品</li><li>Atlas A2 训练系列产品</li><li>Atlas A3 训练系列产品</li><li><span>A200I A2 Box 异构组件</span></li><li><span>Atlas 800I A2 推理服务器</span></li></ul><ul><li><span>推理服务器（插Atlas 350 标卡）</span></li></ul>
+<td class="cellrowborder" rowspan="2" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><ul><li>Atlas 训练系列产品</li><li>Atlas A2 训练系列产品</li><li>Atlas A3 训练系列产品</li><li>A200I A2 Box 异构组件</li><li>Atlas 800I A2 推理服务器</li><li>推理服务器（插Atlas 350 标卡）</li></ul>
 <p id="p1858910113463"><a name="p1858910113463"></a><a name="p1858910113463"></a></p>
 </td>
 </tr>
@@ -441,6 +441,19 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td><p>1：占位字符，无实际含义</p>
 </td>
 <td><p>Atlas 推理系列产品</p>
+</td>
+</tr>
+<tr><td><p>NPU</p>
+</td>
+<td><p>npu_chip_info_cube_utilization</p>
+</td>
+<td><p>昇腾AI处理器AI Cube利用率</p>
+</td>
+<td><p><a href="#table191895615241">标签1</a></p>
+</td>
+<td><p>单位：%</p>
+</td>
+<td><ul><li>Atlas A2 训练系列产品</li><li>Atlas A3 训练系列产品</li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li></ul>
 </td>
 </tr>
 </tbody>
@@ -1788,7 +1801,7 @@ NPU Exporter是通过调用底层的HDK接口，获取相应的信息。数据�
 1.  登录[昇腾计算文档](https://support.huawei.com/enterprise/zh/category/ascend-computing-pid-1557196528909?submodel=doc)中心，选择单击对应产品名称，进入文档界面。例如Atlas 800I A2 推理服务器产品的用户，单击“Atlas 800I A2”。
 2.  在左侧导航栏找到“二次开发”，根据接口的类型选择对应文档。
     -   DCMI接口选择“API参考”，单击进入《[DCMI API参考](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=developer-documents&subcategory=api-reference)》。
-    -   HCCN Tool接口选择“接口参考”，单击进入《[Atlas A2 中心推理和训练硬件 24.1.0 HCCN Tool 接口参考](https://support.huawei.com/enterprise/zh/doc/EDOC1100439047)》。
+    -   HCCN Tool接口选择“接口参考”，单击进入《[Atlas A2 中心推理和训练硬件 25.5.0 HCCN Tool 接口参考](https://support.huawei.com/enterprise/zh/doc/EDOC1100540101/426cffd9)》。
 
 3.  在文档首页搜索栏中，直接搜索对应的接口名称或者关键词，获取接口的相关信息。
 
@@ -1797,29 +1810,11 @@ NPU Exporter是通过调用底层的HDK接口，获取相应的信息。数据�
 **表 12**  状态码
 
 <a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_table10702170191419"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_row177031805141"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p1670312010149"><a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p1670312010149"></a><a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p1670312010149"></a>状态码</p>
-</th>
-<th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.2"><p id="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p97035021417"><a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p97035021417"></a><a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p97035021417"></a>含义</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_row157030016149"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p8703804149"><a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p8703804149"></a><a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p8703804149"></a>200</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p770311019147"><a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p770311019147"></a><a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p770311019147"></a>正常状态。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_row147038019148"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p570350141419"><a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p570350141419"></a><a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p570350141419"></a>307</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p1670318051419"><a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p1670318051419"></a><a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p1670318051419"></a>临时跳转。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_row17038010147"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p1170311016142"><a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p1170311016142"></a><a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p1170311016142"></a>500</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p127030010145"><a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p127030010145"></a><a name="zh-cn_topic_0000001446964912_zh-cn_topic_0000001104815128_p127030010145"></a>服务器内部错误。</p>
-</td>
-</tr>
-</tbody>
-</table>
+|状态码|含义|
+|--|--|
+|200|正常状态。|
+|307|临时跳转。|
+|500|服务器内部错误。|
 
 
 ## Telegraf数据信息说明<a name="ZH-CN_TOPIC_0000002511426775"></a>
@@ -1833,23 +1828,23 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 
 本接口支持查询默认指标组和自定义指标组。自定义指标组的方法详细请参见[自定义指标开发](../appendix.md#自定义指标开发)；默认指标组包含如下几个部分。指标组的采集和上报由配置文件中的开关控制，若开关配置为开启，则对应的指标组会进行采集和上报；若开关配置为关闭，则对应的指标组不会进行采集和上报。
 
--   [版本数据信息](#section17031652143614)
+-   [版本数据信息](#section170316521436141)
 -   [NPU数据信息](#section1442282202316)
--   [vNPU数据信息](#section81411161343)
+-   [vNPU数据信息](#section814111613432)
 -   [Network数据信息](#section1358881214551)
 -   [片上内存数据信息](#section177232045203114)
 -   [HCCS数据信息](#section039816240252)
--   [PCIe数据信息](#section124052024182413)
+-   [PCIe数据信息](#section1240520241824136)
 -   [RoCE数据信息](#section184516450323)
 -   [SIO数据信息](#section7109037161515)
 -   [光模块数据信息](#section1517163183510)
--   [DDR数据信息](#section11460736193116)
+-   [DDR数据信息](#section114607361931169)
 
 >[!NOTE] 说明 
 >-   NPU Exporter是通过调用底层的HDK接口，获取相应的信息。数据信息调用的HDK接口请参考[调用的HDK接口](#section345820153363)。
 >-   若查询某个数据信息时，NPU Exporter组件不支持该设备形态或调用HDK接口失败，则不会上报该数据信息。
 
-**版本数据信息<a name="section17031652143614"></a>**
+**版本数据信息<a name="section170316521436141"></a>**
 
 **表 1**  版本数据信息
 
@@ -1911,7 +1906,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </td>
 <td class="cellrowborder" valign="top" width="19.68%" headers="mcps1.2.6.1.4 "><p id="p19999944144617"><a name="p19999944144617"></a><a name="p19999944144617"></a>单位：个</p>
 </td>
-<td class="cellrowborder" rowspan="13" valign="top" width="23.94%" headers="mcps1.2.6.1.5 "><a name="ul1142611144613"></a><a name="ul1142611144613"></a><ul id="ul1142611144613"><li>Atlas 训练系列产品</li><li>Atlas A2 训练系列产品</li><li>Atlas A3 训练系列产品</li><li>推理服务器（插Atlas 300I 推理卡）</li><li>Atlas 推理系列产品</li><li><span id="ph279972618380"><a name="ph279972618380"></a><a name="ph279972618380"></a>Atlas 800I A2 推理服务器</span></li><li><span id="ph1823654413571"><a name="ph1823654413571"></a><a name="ph1823654413571"></a>A200I A2 Box 异构组件</span></li></ul><ul><li><span>推理服务器（插Atlas 350 标卡）</span></li></ul>
+<td class="cellrowborder" rowspan="13" valign="top" width="23.94%" headers="mcps1.2.6.1.5 "><a name="ul1142611144613"></a><a name="ul1142611144613"></a><ul id="ul1142611144613"><li>Atlas 训练系列产品</li><li>Atlas A2 训练系列产品</li><li>Atlas A3 训练系列产品</li><li>推理服务器（插Atlas 300I 推理卡）</li><li>Atlas 推理系列产品</li><li><span id="ph279972618380"><a name="ph279972618380"></a><a name="ph279972618380"></a>Atlas 800I A2 推理服务器</span></li><li><span id="ph1823654413571"><a name="ph1823654413571"></a><a name="ph1823654413571"></a>A200I A2 Box 异构组件</span></li><li><span>推理服务器（插Atlas 350 标卡）</span></li></ul>
 <p id="p72006546535"><a name="p72006546535"></a><a name="p72006546535"></a></p>
 <p id="p4385659175311"><a name="p4385659175311"></a><a name="p4385659175311"></a></p>
 <p id="p11457148195318"><a name="p11457148195318"></a><a name="p11457148195318"></a></p>
@@ -2070,7 +2065,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 <td class="cellrowborder" valign="top" width="23.94%" headers="mcps1.2.6.1.5 "><a name="ul11480102917516"></a><a name="ul11480102917516"></a><ul id="ul11480102917516"><li>Atlas A2 训练系列产品</li></ul>
 <a name="ul0480112918517"></a><a name="ul0480112918517"></a><ul id="ul0480112918517"><li>Atlas A3 训练系列产品</li></ul>
 <a name="ul648022945116"></a><a name="ul648022945116"></a><ul id="ul648022945116"><li><span id="ph178711115212"><a name="ph178711115212"></a><a name="ph178711115212"></a>Atlas 800I A2 推理服务器</span></li></ul>
-<a name="ul148152911516"></a><a name="ul148152911516"></a><ul id="ul148152911516"><li><span id="ph1848152919517"><a name="ph1848152919517"></a><a name="ph1848152919517"></a>A200I A2 Box 异构组件</span></li></ul><ul><li><span>推理服务器（插Atlas 350 标卡）</span></li></ul>
+<a name="ul148152911516"></a><a name="ul148152911516"></a><ul id="ul148152911516"><li><span id="ph1848152919517"><a name="ph1848152919517"></a><a name="ph1848152919517"></a>A200I A2 Box 异构组件</span></li><li><span>推理服务器（插Atlas 350 标卡）</span></li></ul>
 </td>
 </tr>
 <tr id="row0457848145313"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p122885821014"><a name="p122885821014"></a><a name="p122885821014"></a>NPU</p>
@@ -2084,7 +2079,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 <td><ul><li>Atlas A2 训练系列产品</li></ul>
 <ul><li>Atlas A3 训练系列产品</li><li>推理服务器（插Atlas 300I 推理卡）</li></ul>
 <ul><li>Atlas 推理系列产品</li><li><span>Atlas 800I A2 推理服务器</span></li></ul>
-<ul><li><span>A200I A2 Box 异构组件</span></li></ul><ul><li><span>推理服务器（插Atlas 350 标卡）</span></li></ul>
+<ul><li><span>A200I A2 Box 异构组件</span></li><li><span>推理服务器（插Atlas 350 标卡）</span></li></ul>
 </td>
 </tr>
 <tr><td><p>NPU</p>
@@ -2098,10 +2093,21 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 <td><p>Atlas 推理系列产品</p>
 </td>
 </tr>
+<tr><td><p>NPU</p>
+</td>
+<td><p>npu_chip_info_cube_utilization</p>
+</td>
+<td><p>昇腾AI处理器AI Cube利用率</p>
+</td>
+<td><p>单位：%</p>
+</td>
+<td><ul><li>Atlas A2 训练系列产品</li><li>Atlas A3 训练系列产品</li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li></ul>
+</td>
+</tr>
 </tbody>
 </table>
 
-**vNPU数据信息<a name="section81411161343"></a>**
+**vNPU数据信息<a name="section814111613432"></a>**
 
 **表 3**  vNPU数据信息
 
@@ -2492,7 +2498,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </tbody>
 </table>
 
-**PCIe数据信息<a name="section124052024182413"></a>**
+**PCIe数据信息<a name="section1240520241824136"></a>**
 
 **表 7**  PCIe数据信息
 
@@ -2807,7 +2813,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </td>
 <td class="cellrowborder" valign="top" width="17.509999999999998%" headers="mcps1.2.6.1.4 "><p id="p10113449181711"><a name="p10113449181711"></a><a name="p10113449181711"></a>-</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="23.309999999999995%" headers="mcps1.2.6.1.5 "><ul><li>Atlas A3 训练系列产品</p></li><li>推理服务器（插Atlas 350 标卡）</li></ul>
+<td class="cellrowborder" rowspan="2" valign="top" width="23.309999999999995%" headers="mcps1.2.6.1.5 "><ul><li>Atlas A3 训练系列产品</li><li>推理服务器（插Atlas 350 标卡）</li></ul>
 </td>
 </tr>
 <tr id="row1111082310171"><td class="cellrowborder" valign="top" width="9.509999999999998%" headers="mcps1.2.6.1.1 "><p id="p10114204910174"><a name="p10114204910174"></a><a name="p10114204910174"></a>SIO</p>
@@ -2890,7 +2896,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </tbody>
 </table>
 
-**DDR数据信息<a name="section11460736193116"></a>**
+**DDR数据信息<a name="section114607361931169"></a>**
 
 **表 11**  DDR数据信息
 
@@ -2940,7 +2946,7 @@ NPU Exporter是通过调用底层的HDK接口，获取相应的信息。数据�
 1.  登录[昇腾计算文档](https://support.huawei.com/enterprise/zh/category/ascend-computing-pid-1557196528909?submodel=doc)中心，选择单击对应产品名称，进入文档界面。例如Atlas 800I A2 推理服务器产品的用户，单击“Atlas 800I A2”。
 2.  在左侧导航栏找到“二次开发”，根据接口的类型选择对应文档。
     -   DCMI接口选择“API参考”，单击进入《[DCMI API参考](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=developer-documents&subcategory=api-reference)》。
-    -   HCCN Tool接口选择“接口参考”，单击进入《[Atlas A2 中心推理和训练硬件 24.1.0 HCCN Tool 接口参考](https://support.huawei.com/enterprise/zh/doc/EDOC1100439047)》。
+    -   HCCN Tool接口选择“接口参考”，单击进入《[Atlas A2 中心推理和训练硬件 25.5.0 HCCN Tool 接口参考](https://support.huawei.com/enterprise/zh/doc/EDOC1100540101/426cffd9)》。
 
 3.  在文档首页搜索栏中，直接搜索对应的接口名称或者关键词，获取接口的相关信息。
 

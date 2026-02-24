@@ -66,13 +66,13 @@ Ascend Job简称acjob，是MindCluster自定义的一种任务类型，当前支
 
 **容器控制台标准输出方式<a name="zh-cn_topic_0000001589264561_section8645749571"></a>**
 
-在这种方式下，应用将容器的日志输出到标准输出。缺省情况下，Docker引擎捕捉所有容器的标准输出，使用JSON格式写入到文件里，该文件会保存到主机的/var/lib/docker/containers/_\{containerid\}_目录下，如[图1](#zh-cn_topic_0000001589264561_zh-cn_topic_0000001182332559_zh-cn_topic_0000001092717454_fig167489420139)所示。
+在这种方式下，应用将容器的日志输出到标准输出。缺省情况下，Docker引擎捕捉所有容器的标准输出，使用JSON格式写入到文件里，该文件会保存到主机的/var/lib/docker/containers/<i>\{containerid\}</i>目录下，如[图1](#zh-cn_topic_0000001589264561_zh-cn_topic_0000001182332559_zh-cn_topic_0000001092717454_fig167489420139)所示。
 
 **图 1** _\{containerid\}_-json.log文件所在路径示例<a name="zh-cn_topic_0000001589264561_zh-cn_topic_0000001182332559_zh-cn_topic_0000001092717454_fig167489420139"></a>  
 ![](../figures/scheduling/containerid--json-log文件所在路径示例.png "containerid--json-log文件所在路径示例")
 
 >[!NOTE] 说明 
->如果边缘管理平台不支持该目录下日志文件的绕接或日志绕接配置错误，会导致**/var/lib/docker**被占满，从而影响新容器的部署及其他容器业务的正常运行。故不建议采用该方式。
+>如果边缘管理平台不支持该目录下日志文件的绕接或日志绕接配置错误，会导致<b>/var/lib/docker</b>被占满，从而影响新容器的部署及其他容器业务的正常运行。故不建议采用该方式。
 
 **（推荐）挂载到主机目录方式<a name="zh-cn_topic_0000001589264561_section139871046185718"></a>**
 
@@ -854,8 +854,8 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 
 Ascend Operator将在训练启动时，为训练任务生成集合通信所需的RankTable文件。集合通信根据RankTable文件中的设备ID以及IP构建集合通信域，完成集合通信的信息交换。
 
--   使用Ascend Operator ConfigMap挂载RankTable时，需要在创建任务时，同时在训练YAML中创建名称为rings-config-_<任务名\>_的ConfigMap，并将该ConfigMap挂载进训练容器的“/user/serverid/devindex/config“路径下。Ascend Operator将根据Ascend Device Plugin在任务Pod中写的Annotation信息，构建出任务的集合通信文件RankTable File，并将其内容写入ConfigMap中，在训练容器中映射为“/user/serverid/devindex/config/hccl.json“文件。
--   使用共享存储的方式挂载RankTable时，需要在创建任务时，同时在训练YAML中挂载共享存储或者本地存储的目录，并将该目录挂载进训练容器的“/user/serverid/devindex/config“路径下。Ascend Operator将根据Ascend Device Plugin或volcano-scheduler在任务Pod中写的Annotation信息，构建出任务的集合通信文件RankTable File，并将其内容写入_“/共享存储或者本地存储目录_/hccl.json”文件中，在训练容器中映射为“/user/serverid/devindex/config/hccl.json“文件。
+-   使用Ascend Operator ConfigMap挂载RankTable时，需要在创建任务时，同时在训练YAML中创建名称为rings-config-<任务名\>的ConfigMap，并将该ConfigMap挂载进训练容器的“/user/serverid/devindex/config”路径下。Ascend Operator将根据Ascend Device Plugin在任务Pod中写的Annotation信息，构建出任务的集合通信文件RankTable File，并将其内容写入ConfigMap中，在训练容器中映射为“/user/serverid/devindex/config/hccl.json”文件。
+-   使用共享存储的方式挂载RankTable时，需要在创建任务时，同时在训练YAML中挂载共享存储或者本地存储的目录，并将该目录挂载进训练容器的“/user/serverid/devindex/config”路径下。Ascend Operator将根据Ascend Device Plugin或volcano-scheduler在任务Pod中写的Annotation信息，构建出任务的集合通信文件RankTable File，并将其内容写入“/共享存储或者本地存储目录/hccl.json”文件中，在训练容器中映射为“/user/serverid/devindex/config/hccl.json”文件。
 -   不同产品型号的hccl.json有不同的文件内容，详细说明如下所示。
 
 **Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas 800I A2 推理服务器、A200I A2 Box 异构组件<a name="section19616113871318"></a>**
@@ -1576,70 +1576,26 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
 **表 1**  产品故障码参考文档
 
 <a name="table87909405314"></a>
-<table><thead align="left"><tr id="row177908401835"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="p11791124010310"><a name="p11791124010310"></a><a name="p11791124010310"></a>产品形态</p>
-</th>
-<th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.2"><p id="p197917401435"><a name="p197917401435"></a><a name="p197917401435"></a>参考文档</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row17911840332"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p127918404313"><a name="p127918404313"></a><a name="p127918404313"></a><span id="ph195502416419"><a name="ph195502416419"></a><a name="ph195502416419"></a>Atlas 训练系列产品</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><a name="ul122352309412"></a><a name="ul122352309412"></a><ul id="ul122352309412"><li><span id="ph21041132154417"><a name="ph21041132154417"></a><a name="ph21041132154417"></a><a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100438308?idPath=23710424|251366513|254884019|261408772|252764743" target="_blank" rel="noopener noreferrer">《Atlas 中心训练服务器 24.1.0 健康管理故障定义》</a></span></li><li><span id="ph1448102114444"><a name="ph1448102114444"></a><a name="ph1448102114444"></a><a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100438309?idPath=23710424|251366513|254884019|261408772|252764743" target="_blank" rel="noopener noreferrer">《Atlas 中心训练服务器 24.1.0 黑匣子错误码信息列表》</a></span></li></ul>
-</td>
-</tr>
-<tr id="row37919401233"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p107915401532"><a name="p107915401532"></a><a name="p107915401532"></a><span id="ph1497953519417"><a name="ph1497953519417"></a><a name="ph1497953519417"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 训练系列产品</term></span></p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><a name="ul2031010401645"></a><a name="ul2031010401645"></a><ul id="ul2031010401645"><li><span id="ph1330013519464"><a name="ph1330013519464"></a><a name="ph1330013519464"></a><a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100438307?idPath=23710424|251366513|254884019|261408772|252764743" target="_blank" rel="noopener noreferrer">《Atlas A2 中心推理和训练硬件 24.1.0 健康管理故障定义》</a></span></li><li><span id="ph12996512465"><a name="ph12996512465"></a><a name="ph12996512465"></a><a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100438301?idPath=23710424|251366513|254884019|261408772|252764743" target="_blank" rel="noopener noreferrer">《Atlas A2 中心推理和训练硬件 24.1.0 黑匣子错误码信息列表》</a></span></li></ul>
-</td>
-</tr>
-<tr id="row579110401237"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p9791540637"><a name="p9791540637"></a><a name="p9791540637"></a><span id="ph16273462411"><a name="ph16273462411"></a><a name="ph16273462411"></a><term id="zh-cn_topic_0000001519959665_term26764913715"><a name="zh-cn_topic_0000001519959665_term26764913715"></a><a name="zh-cn_topic_0000001519959665_term26764913715"></a>Atlas A3 训练系列产品</term></span></p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><a name="ul16528044134114"></a><a name="ul16528044134114"></a><ul id="ul16528044134114"><li><span id="zh-cn_topic_0000002122971381_ph58131040151411"><a name="zh-cn_topic_0000002122971381_ph58131040151411"></a><a name="zh-cn_topic_0000002122971381_ph58131040151411"></a>《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100431906" target="_blank" rel="noopener noreferrer">Atlas A3 中心推理和训练硬件 24.1.RC3 健康管理故障定义</a>》</span></li><li><span id="ph20429191554712"><a name="ph20429191554712"></a><a name="ph20429191554712"></a>《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100431909" target="_blank" rel="noopener noreferrer">Atlas A3 中心推理和训练硬件 24.1.RC3 黑匣子错误码信息列表</a>》</span></li></ul>
-</td>
-</tr>
-<tr id="row107914401933"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p67916409316"><a name="p67916409316"></a><a name="p67916409316"></a>推理服务器（插<span id="ph5719594410"><a name="ph5719594410"></a><a name="ph5719594410"></a>Atlas 300I 推理卡</span>）</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p960810310434"><a name="p960810310434"></a><a name="p960810310434"></a><span id="ph3881647174217"><a name="ph3881647174217"></a><a name="ph3881647174217"></a><a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100438311?idPath=23710424|251366513|254884019|261408772|252764743" target="_blank" rel="noopener noreferrer">《Atlas 300I 推理卡 24.1.0 黑匣子错误码信息列表（型号 3000, 3010）》</a></span></p>
-</td>
-</tr>
-<tr id="row1279217401637"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p6792240534"><a name="p6792240534"></a><a name="p6792240534"></a><span id="ph1770121112515"><a name="ph1770121112515"></a><a name="ph1770121112515"></a>Atlas 200I SoC A1 核心板</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><a name="ul4965171342118"></a><a name="ul4965171342118"></a><ul id="ul4965171342118"><li><span id="ph4226172494317"><a name="ph4226172494317"></a><a name="ph4226172494317"></a><a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100441355?idPath=23710424|251366513|254884019|261408772|252764743" target="_blank" rel="noopener noreferrer">《Atlas 200I SoC A1核心板 24.1.0 健康管理故障定义》</a></span></li><li><span id="ph22264249438"><a name="ph22264249438"></a><a name="ph22264249438"></a><a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100441356?idPath=23710424|251366513|254884019|261408772|252764743" target="_blank" rel="noopener noreferrer">《Atlas 200I SoC A1核心板 24.1.0 黑匣子错误码信息列表》</a></span></li></ul>
-</td>
-</tr>
-<tr id="row165711616751"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p457131614514"><a name="p457131614514"></a><a name="p457131614514"></a><span id="ph3876635959"><a name="ph3876635959"></a><a name="ph3876635959"></a>Atlas 推理系列产品</span>（不包含<span id="ph087614351958"><a name="ph087614351958"></a><a name="ph087614351958"></a>Atlas 200I SoC A1 核心板</span>）</p>
-</td>
-<td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><a name="ul141494117518"></a><a name="ul141494117518"></a><ul id="ul141494117518"><li><span id="ph19425185844312"><a name="ph19425185844312"></a><a name="ph19425185844312"></a><a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100441357?idPath=23710424|251366513|254884019|261408772|252764743" target="_blank" rel="noopener noreferrer">《Atlas 中心推理卡 24.1.0 健康管理故障定义》</a></span></li><li><span id="ph8733205154316"><a name="ph8733205154316"></a><a name="ph8733205154316"></a><a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100441354?idPath=23710424|251366513|254884019|261408772|252764743" target="_blank" rel="noopener noreferrer">《Atlas 中心推理卡 24.1.0 黑匣子错误码信息列表》</a></span></li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+|产品形态|参考文档|
+|--|--|
+|Atlas 训练系列产品|<ul><li><span>《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540096">Atlas 中心训练服务器 25.5.0 健康管理故障定义</a>》</span></li><li><span>《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540113">Atlas 中心训练服务器 25.5.0 黑匣子错误码信息列表</a>》</span></li></ul>|
+|<term>Atlas A2 训练系列产品</term>|<ul><li><span>《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540097">Atlas A2 中心推理和训练硬件 25.5.0 健康管理故障定义</a>》</span></li><li><span>《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540117">Atlas A2 中心推理和训练硬件 25.5.0 黑匣子错误码信息列表</a>》</span></li></ul>|
+|<term>Atlas A3 训练系列产品</term>|<ul><li><span>《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540107">Atlas A3 中心推理和训练硬件 25.5.0 健康管理故障定义</a>》</span></li><li><span>《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540120">Atlas A3 中心推理和训练硬件 25.5.0 黑匣子错误码信息列表</a>》</span></li></ul>|
+|推理服务器（插Atlas 300I 推理卡）|<span>《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100438311">Atlas 300I 推理卡 24.1.0 黑匣子错误码信息列表（型号 3000, 3010）</a>》</span>|
+|Atlas 200I SoC A1 核心板|<ul><li><span>《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100493983">Atlas 200I SoC A1核心板 25.2.0 健康管理故障定义</a>》</span></li><li><span>《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100493985">Atlas 200I SoC A1核心板 25.2.0 黑匣子错误码信息列表</a>》</span></li></ul>|
+|Atlas 推理系列产品（不包含Atlas 200I SoC A1 核心板）|<ul><li><span>《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540102">Atlas 中心推理卡 25.5.0 健康管理故障定义</a>》</span></li><li><span>《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540099">Atlas 中心推理卡 25.5.0 黑匣子错误码信息列表</a>》</span></li></ul>|
 
 # 节点故障码参考文档<a name="ZH-CN_TOPIC_0000002479386430"></a>
 
-各个产品节点故障码的详细说明，可以参见[表1](#table87909405314)。
+各个产品节点故障码的详细说明，可以参见[表1](#table879094053145)。
 
 **表 1**  节点故障码参考文档
 
-<a name="table87909405314"></a>
-<table><thead align="left"><tr id="row177908401835"><th class="cellrowborder" valign="top" width="50.05%" id="mcps1.2.3.1.1"><p id="p11791124010310"><a name="p11791124010310"></a><a name="p11791124010310"></a>产品形态</p>
-</th>
-<th class="cellrowborder" valign="top" width="49.95%" id="mcps1.2.3.1.2"><p id="p197917401435"><a name="p197917401435"></a><a name="p197917401435"></a>参考文档</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row17911840332"><td class="cellrowborder" valign="top" width="50.05%" headers="mcps1.2.3.1.1 "><p id="p48753291657"><a name="p48753291657"></a><a name="p48753291657"></a><span id="ph157633217501"><a name="ph157633217501"></a><a name="ph157633217501"></a>Atlas 800T A2 训练服务器</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="49.95%" headers="mcps1.2.3.1.2 "><p id="p1270525931711"><a name="p1270525931711"></a><a name="p1270525931711"></a><span id="ph5706259151718"><a name="ph5706259151718"></a><a name="ph5706259151718"></a>《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100317321" target="_blank" rel="noopener noreferrer">Atlas 800T A2 训练服务器 iBMC 告警处理</a>》</span></p>
-</td>
-</tr>
-<tr id="row37919401233"><td class="cellrowborder" valign="top" width="50.05%" headers="mcps1.2.3.1.1 "><p id="p2087402912515"><a name="p2087402912515"></a><a name="p2087402912515"></a><span id="ph1584468101616"><a name="ph1584468101616"></a><a name="ph1584468101616"></a>Atlas 900 A2 PoD 集群基础单元</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="49.95%" headers="mcps1.2.3.1.2 "><p id="p2088110123121"><a name="p2088110123121"></a><a name="p2088110123121"></a><a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100313926?idPath=23710424|251366513|22892968|252309113|254184911" target="_blank" rel="noopener noreferrer">《Atlas 900 RCK A2 计算节点 iBMC 告警处理》</a></p>
-</td>
-</tr>
-</tbody>
-</table>
+<a name="table879094053145"></a>
+|产品形态|参考文档|
+|--|--|
+|Atlas 800T A2 训练服务器|《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100317321">Atlas 800T A2 训练服务器 iBMC 告警处理</a>》|
+|Atlas 900 A2 PoD 集群基础单元|《<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100313926">Atlas 900 RCK A2 计算节点 iBMC 告警处理</a>》|
 
 # 名词说明<a name="ZH-CN_TOPIC_0000002511426337"></a>
 
@@ -1657,7 +1613,7 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
 
 # 公网地址<a name="ZH-CN_TOPIC_0000002511346387"></a>
 
-包含的公网地址请参见[MindCluster 7.3.0 公网地址.xlsx](resource/MindCluster 7.3.0 公网地址.xlsx)。
+包含的公网地址请参见[MindCluster 7.3.0 公网地址.xlsx](/docs/zh/resource/MindCluster%207.3.0%20公网地址.xlsx)。
 
 **表 1** 集群调度组件代码非公网地址说明
 
@@ -1856,7 +1812,7 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
         vi pkg/application/faultmanager/jobprocess/faultrank/job_fault_rank_processor.go
         ```
 
-    2.  按“i”进入编辑模式，添加如下加粗代码。
+    2.  按“i”进入编辑模式，添加如下代码。
 
         ```
         package faultrank
@@ -1881,7 +1837,7 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
         …
         ```
 
-    3.  按“Esc”键，输入**:wq!**，按“Enter”保存并退出编辑。
+    3.  按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
 
 3.  <a name="li114977117517"></a>编译ClusterD。
 
@@ -1893,7 +1849,7 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
     ./build.sh # 编译ClusterD，需要go 1.21及以上版本，建议使用1.21版本
     ```
 
-    编译成功后，会在“../output/“目录下生成相关文件，可执行如下命令进行查看：
+    编译成功后，会在“../output/”目录下生成相关文件，可执行如下命令进行查看：
 
     ```
     ll ../output/
@@ -1940,7 +1896,7 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
 
 1.  搭建训练环境，拉起训练，详细请参见[PyTorch场景适配示例（基于MindSpeed-LLM）](./usage/resumable_training.md#适配示例)。
 2.  开启进程级在线恢复，详细请参见[配置进程级在线恢复](./usage/resumable_training.md#配置进程级在线恢复)。
-3.  在“QWEN3\_for\_PyTorch\_2.7\_code/mindspeed\_llm/training/training.py“代码中增加如下加粗内容，打桩注入故障，新增代码根据环境变量“RAISE\_UCE\_ERROR\_STEP\_AND\_RANK“获取注入故障迭代位置和故障rank信息。
+3.  在“QWEN3\_for\_PyTorch\_2.7\_code/mindspeed\_llm/training/training.py”代码中增加如下加粗内容，打桩注入故障，新增代码根据环境变量“RAISE\_UCE\_ERROR\_STEP\_AND\_RANK”获取注入故障迭代位置和故障rank信息。
 
     ```
     import os
@@ -1973,7 +1929,7 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
             …
     ```
 
-4.  修改启动脚本“QWEN3\_for\_PyTorch\_2.7\_code/scripts/train\_start.sh“。
+4.  修改启动脚本“QWEN3\_for\_PyTorch\_2.7\_code/scripts/train\_start.sh”。
 
     ```
     …
@@ -1986,7 +1942,7 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
 
 1.  搭建训练环境，拉起训练，详细请参见[MindSpore场景适配示例（基于MindFormers）](./usage/resumable_training.md#适配示例)。
 2.  开启进程级在线恢复，详细请参见[配置进程级在线恢复](./usage/resumable_training.md#配置进程级在线恢复)。
-3.  在“QWEN3\_for\_MS\_code/mindformers/core/callback/callback.py“代码中增加如下加粗内容，打桩注入故障。
+3.  在“QWEN3\_for\_MS\_code/mindformers/core/callback/callback.py”代码中增加如下内容，打桩注入故障。
 
     ```
     import json
@@ -2018,7 +1974,7 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
                 ...
     ```
 
-4.  修改启动脚本“QWEN3\_for\_MS\_code/scripts/msrun\_launcher.sh“。
+4.  修改启动脚本“QWEN3\_for\_MS\_code/scripts/msrun\_launcher.sh”。
 
     ```
     …
@@ -2142,7 +2098,7 @@ MindCluster集群调度组件是基于K8s生态的功能组件，因此训练任
 
 -   通过文件方式开发自定义指标
 
-    用户根据[自定义指标文件](./api/npu_exporter.md#自定义指标文件)，创建符合要求的自定义指标文件。启动NPU Exporter时，配置“-textMetricsFilePath“参数，指定该自定义指标文件的路径。详情请参见[NPU Exporter](./installation_guide.md#npu-exporter)中“NPU Exporter启动参数”表。NPU Exporter会在每个数据采集周期读取自定义指标文件，并将文件内容上报给Prometheus或Telegraf。
+    用户根据[自定义指标文件](./api/npu_exporter.md#自定义指标文件)，创建符合要求的自定义指标文件。启动NPU Exporter时，配置“-textMetricsFilePath”参数，指定该自定义指标文件的路径。详情请参见[NPU Exporter](./installation_guide.md#npu-exporter)中“NPU Exporter启动参数”表。NPU Exporter会在每个数据采集周期读取自定义指标文件，并将文件内容上报给Prometheus或Telegraf。
 
     开发示例如下：
 

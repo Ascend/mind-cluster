@@ -54,7 +54,7 @@ NPU Exporter组件通过gRPC服务调用K8s中的标准化接口CRI，获取容�
 
 **直接对接Prometheus<a name="zh-cn_topic_0000001447284876_section875071183215"></a>**
 
-1.  进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/utils/prometheus/base“目录下的prometheus.yaml文件。
+1.  进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/utils/prometheus/base”目录下的prometheus.yaml文件。
 2.  <a name="zh-cn_topic_0000001447284876_li127175170321"></a>在管理节点执行以下命令获取镜像。
 
     ```
@@ -101,8 +101,8 @@ NPU Exporter组件通过gRPC服务调用K8s中的标准化接口CRI，获取容�
     kubectl label nodes <管理节点Hostname> masterselector=dls-master-node --overwrite=true
     ```
 
-5.  将“prometheus.yaml“上传至[2](#zh-cn_topic_0000001447284876_li127175170321)节点的任意路径下。
-6.  在“prometheus.yaml“存放路径，执行以下命令，安装Prometheus服务。
+5.  将“prometheus.yaml”上传至[步骤2](#zh-cn_topic_0000001447284876_li127175170321)节点的任意路径下。
+6.  在“prometheus.yaml”存放路径，执行以下命令，安装Prometheus服务。
 
     ```
     kubectl apply -f prometheus.yaml
@@ -182,9 +182,9 @@ NPU Exporter组件通过gRPC服务调用K8s中的标准化接口CRI，获取容�
         ```
 
 3.  安装Prometheus。
-    1.  <a name="li601241164212"></a>进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/utils/prometheus/base“目录下的prometheus.yaml文件。
-    2.  将步骤[1](#li601241164212)中获取到的prometheus.yaml上传至环境任意路径。
-    3.  在“prometheus.yaml“存放路径，执行以下命令，安装Prometheus。
+    1.  <a name="li601241164212"></a>进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/utils/prometheus/base”目录下的prometheus.yaml文件。
+    2.  将[步骤1](#li601241164212)中获取到的prometheus.yaml上传至环境任意路径。
+    3.  在“prometheus.yaml”存放路径，执行以下命令，安装Prometheus。
 
         ```
         kubectl apply -f prometheus.yaml
@@ -214,7 +214,7 @@ NPU Exporter组件通过gRPC服务调用K8s中的标准化接口CRI，获取容�
         ```
 
 4.  <a name="li15822115020428"></a>NPU Exporter通过Prometheus Operator对接Prometheus。
-    1.  获取[npu-exporter-svc.yaml](https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.2.RC1/samples/utils/prometheus/prometheus_operator/npu-exporter-svc.yaml)和[servicemonitor.yaml](https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.2.RC1/samples/utils/prometheus/prometheus_operator/servicemonitor.yaml)。
+    1.  获取[npu-exporter-svc.yaml](https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/utils/prometheus/prometheus_operator/npu-exporter-svc.yaml)和[servicemonitor.yaml](https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/utils/prometheus/prometheus_operator/servicemonitor.yaml)。
 
         >[!NOTE] 说明 
         >若已经提前安装Prometheus，需要确保servicemonitor.yaml的以下字段，和已经部署的Prometheus中serviceMonitorSelector配置的matchLabels标签一致。
@@ -321,7 +321,7 @@ NPU Exporter组件通过gRPC服务调用K8s中的标准化接口CRI，获取容�
     chown hwMindX:hwMindX /var/log/mindx-dl/npu-exporter
     ```
 
-2.  从[昇腾社区](https://www.hiascend.com/zh/developer/download/community/result?module=dl+cann)获取NPU Exporter软件包，并从中解压出NPU Exporter二进制文件npu-exporter，并上传至环境任意路径（如“/home/npu\_plugin“）。
+2.  从[昇腾社区](https://www.hiascend.com/zh/developer/download/community/result?module=dl+cann)获取NPU Exporter软件包，并从中解压出NPU Exporter二进制文件npu-exporter，并上传至环境任意路径（如“/home/npu\_plugin”）。
 3.  执行以下命令，创建npu\_plugin.conf文件。
 
     ```
@@ -342,11 +342,11 @@ NPU Exporter组件通过gRPC服务调用K8s中的标准化接口CRI，获取容�
 
     **表 1**  参数说明
 
-|参数名|类型|默认值|取值说明|是否必选|
-|--|--|--|--|--|
-|-platform|string|Prometheus|指定对接平台，取值如下：<ul><li>Prometheus：对接Prometheus</li><li>Telegraf：对接Telegraf</li></ul>|是|
-|-poll_interval|duration(int)|1s|Telegraf数据上报的间隔时间，此参数在对接Telegraf平台时才起作用，即需要指定-platform=Telegraf时才生效，否则该参数不生效。|否|
-|-hccsBWProfilingTime|int|200|HCCS链路带宽采样时长，取值范围[1，1000]，单位为ms。|否|
+    |参数名|类型|默认值|取值说明|是否必选|
+    |--|--|--|--|--|
+    |-platform|string|Prometheus|指定对接平台，取值如下：<ul><li>Prometheus：对接Prometheus</li><li>Telegraf：对接Telegraf</li></ul>|是|
+    |-poll_interval|duration(int)|1s|Telegraf数据上报的间隔时间，此参数在对接Telegraf平台时才起作用，即需要指定-platform=Telegraf时才生效，否则该参数不生效。|否|
+    |-hccsBWProfilingTime|int|200|HCCS链路带宽采样时长，取值范围[1，1000]，单位为ms。|否|
 
 
 4.  （可选）如果没有安装Telegraf，需执行以下步骤安装Telegraf。

@@ -7,80 +7,21 @@
     **表 1**  Annotations参数说明
 
     <a name="table177621954014"></a>
-    <table><thead align="left"><tr id="row1577601924020"><th class="cellrowborder" valign="top" width="17.85178517851785%" id="mcps1.2.4.1.1"><p id="p5776119134011"><a name="p5776119134011"></a><a name="p5776119134011"></a>参数名称</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="66.05660566056606%" id="mcps1.2.4.1.2"><p id="p16776119164019"><a name="p16776119164019"></a><a name="p16776119164019"></a>说明</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="16.09160916091609%" id="mcps1.2.4.1.3"><p id="p18776121934012"><a name="p18776121934012"></a><a name="p18776121934012"></a>取值</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="row4776111944019"><td class="cellrowborder" valign="top" width="17.85178517851785%" headers="mcps1.2.4.1.1 "><p id="p167761919104014"><a name="p167761919104014"></a><a name="p167761919104014"></a>distributed</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="66.05660566056606%" headers="mcps1.2.4.1.2 "><p id="p1429543818494"><a name="p1429543818494"></a><a name="p1429543818494"></a>由<span id="ph829115811272"><a name="ph829115811272"></a><a name="ph829115811272"></a>Resilience Controller</span>写入和使用，标记job是否为分布式任务。</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="16.09160916091609%" headers="mcps1.2.4.1.3 "><p id="p11776101954011"><a name="p11776101954011"></a><a name="p11776101954011"></a>True</p>
-    </td>
-    </tr>
-    </tbody>
-    </table>
+    |参数名称|说明|取值|
+    |--|--|--|
+    |distributed|由Resilience Controller写入和使用，标记job是否为分布式任务。|True|
 
 -   对于volcano-scheduler和volcano-controller组件Pod开放的接口（开源组件本身定义），做出如下说明。
 
     **表 2** 集群调度Volcano组件开放接口列表
 
     <a name="zh-cn_topic_0000001446965056_table173071368477"></a>
-    <table><thead align="left"><tr id="zh-cn_topic_0000001446965056_row153077618473"><th class="cellrowborder" valign="top" width="34.68346834683469%" id="mcps1.2.6.1.1"><p id="zh-cn_topic_0000001446965056_p3307116134715"><a name="zh-cn_topic_0000001446965056_p3307116134715"></a><a name="zh-cn_topic_0000001446965056_p3307116134715"></a>访问方式</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="6.0906090609060906%" id="mcps1.2.6.1.2"><p id="zh-cn_topic_0000001446965056_p1525244211493"><a name="zh-cn_topic_0000001446965056_p1525244211493"></a><a name="zh-cn_topic_0000001446965056_p1525244211493"></a>协议</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="11.741174117411742%" id="mcps1.2.6.1.3"><p id="zh-cn_topic_0000001446965056_p04543391867"><a name="zh-cn_topic_0000001446965056_p04543391867"></a><a name="zh-cn_topic_0000001446965056_p04543391867"></a>方法</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="16.89168916891689%" id="mcps1.2.6.1.4"><p id="zh-cn_topic_0000001446965056_p23071468473"><a name="zh-cn_topic_0000001446965056_p23071468473"></a><a name="zh-cn_topic_0000001446965056_p23071468473"></a>作用</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="30.59305930593059%" id="mcps1.2.6.1.5"><p id="zh-cn_topic_0000001446965056_p730796134713"><a name="zh-cn_topic_0000001446965056_p730796134713"></a><a name="zh-cn_topic_0000001446965056_p730796134713"></a>所属组件</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="zh-cn_topic_0000001446965056_row23070613479"><td class="cellrowborder" valign="top" width="34.68346834683469%" headers="mcps1.2.6.1.1 "><p id="zh-cn_topic_0000001446965056_p1730717615477"><a name="zh-cn_topic_0000001446965056_p1730717615477"></a><a name="zh-cn_topic_0000001446965056_p1730717615477"></a>http://podIP:11251/healthz</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="6.0906090609060906%" headers="mcps1.2.6.1.2 "><p id="zh-cn_topic_0000001446965056_p10252142154917"><a name="zh-cn_topic_0000001446965056_p10252142154917"></a><a name="zh-cn_topic_0000001446965056_p10252142154917"></a>http</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="11.741174117411742%" headers="mcps1.2.6.1.3 "><p id="zh-cn_topic_0000001446965056_p64546391612"><a name="zh-cn_topic_0000001446965056_p64546391612"></a><a name="zh-cn_topic_0000001446965056_p64546391612"></a>Get</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="16.89168916891689%" headers="mcps1.2.6.1.4 "><p id="zh-cn_topic_0000001446965056_p151727316530"><a name="zh-cn_topic_0000001446965056_p151727316530"></a><a name="zh-cn_topic_0000001446965056_p151727316530"></a>健康检查端口</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="30.59305930593059%" headers="mcps1.2.6.1.5 "><p id="zh-cn_topic_0000001446965056_p103089610475"><a name="zh-cn_topic_0000001446965056_p103089610475"></a><a name="zh-cn_topic_0000001446965056_p103089610475"></a>volcano-controller</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000001446965056_row1308176144715"><td class="cellrowborder" valign="top" width="34.68346834683469%" headers="mcps1.2.6.1.1 "><p id="zh-cn_topic_0000001446965056_p2308865475"><a name="zh-cn_topic_0000001446965056_p2308865475"></a><a name="zh-cn_topic_0000001446965056_p2308865475"></a>http://podIP:11251/healthz</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="6.0906090609060906%" headers="mcps1.2.6.1.2 "><p id="zh-cn_topic_0000001446965056_p162523428499"><a name="zh-cn_topic_0000001446965056_p162523428499"></a><a name="zh-cn_topic_0000001446965056_p162523428499"></a>http</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="11.741174117411742%" headers="mcps1.2.6.1.3 "><p id="zh-cn_topic_0000001446965056_p245433916610"><a name="zh-cn_topic_0000001446965056_p245433916610"></a><a name="zh-cn_topic_0000001446965056_p245433916610"></a>Get</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="16.89168916891689%" headers="mcps1.2.6.1.4 "><p id="zh-cn_topic_0000001446965056_p53084617475"><a name="zh-cn_topic_0000001446965056_p53084617475"></a><a name="zh-cn_topic_0000001446965056_p53084617475"></a>健康检查端口</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="30.59305930593059%" headers="mcps1.2.6.1.5 "><p id="zh-cn_topic_0000001446965056_p14308176104718"><a name="zh-cn_topic_0000001446965056_p14308176104718"></a><a name="zh-cn_topic_0000001446965056_p14308176104718"></a>volcano-scheduler</p>
-    </td>
-    </tr>
-    <tr id="zh-cn_topic_0000001446965056_row830812614472"><td class="cellrowborder" valign="top" width="34.68346834683469%" headers="mcps1.2.6.1.1 "><p id="zh-cn_topic_0000001446965056_p19308116104714"><a name="zh-cn_topic_0000001446965056_p19308116104714"></a><a name="zh-cn_topic_0000001446965056_p19308116104714"></a>http://volcano-scheduler-serviceIP:8080/metrics</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="6.0906090609060906%" headers="mcps1.2.6.1.2 "><p id="zh-cn_topic_0000001446965056_p10252104224912"><a name="zh-cn_topic_0000001446965056_p10252104224912"></a><a name="zh-cn_topic_0000001446965056_p10252104224912"></a>http</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="11.741174117411742%" headers="mcps1.2.6.1.3 "><p id="zh-cn_topic_0000001446965056_p134543391765"><a name="zh-cn_topic_0000001446965056_p134543391765"></a><a name="zh-cn_topic_0000001446965056_p134543391765"></a>Get</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="16.89168916891689%" headers="mcps1.2.6.1.4 "><p id="zh-cn_topic_0000001446965056_p193087624718"><a name="zh-cn_topic_0000001446965056_p193087624718"></a><a name="zh-cn_topic_0000001446965056_p193087624718"></a>Prometheus信息收集端口</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="30.59305930593059%" headers="mcps1.2.6.1.5 "><p id="zh-cn_topic_0000001446965056_p3308166154716"><a name="zh-cn_topic_0000001446965056_p3308166154716"></a><a name="zh-cn_topic_0000001446965056_p3308166154716"></a>volcano-scheduler</p>
-    </td>
-    </tr>
-    <tr id="row92108376505"><td class="cellrowborder" colspan="5" valign="top" headers="mcps1.2.6.1.1 mcps1.2.6.1.2 mcps1.2.6.1.3 mcps1.2.6.1.4 mcps1.2.6.1.5 "><p id="p57959426507"><a name="p57959426507"></a><a name="p57959426507"></a>注：</p>
-    <p id="p142394495508"><a name="p142394495508"></a><a name="p142394495508"></a>为保证Volcano健康检查端口和Prometheus信息收集端口的正常访问，请在安装<span id="ph175881448132716"><a name="ph175881448132716"></a><a name="ph175881448132716"></a>Volcano</span>时，将YAML中的--enable-healthz参数和--enable-metrics参数的值设置为“true”，详细修改方法可参见<a href="../installation_guide.md#安装volcano">步骤7</a>。</p>
-    </td>
-    </tr>
-    </tbody>
-    </table>
+    |访问方式|协议|方法|作用|所属组件|
+    |--|--|--|--|--|
+    |http://podIP:11251/healthz|http|Get|健康检查端口|volcano-controller|
+    |http://podIP:11251/healthz|http|Get|健康检查端口|volcano-scheduler|
+    |http://volcano-scheduler-serviceIP:8080/metrics|http|Get|Prometheus信息收集端口|volcano-scheduler|
+    |<p>注：</p><p>为保证Volcano健康检查端口和Prometheus信息收集端口的正常访问，请在安装Volcano时，将YAML中的--enable-healthz参数和--enable-metrics参数的值设置为“true”，详细修改方法可参见<a href="../installation_guide.md#安装volcano">步骤7</a>。</p>|
 
     >[!NOTE] 说明 
     >华为云的CCI服务提供了更为详细的VolcanoJob说明，可参见《云容器实例 API参考》中“[创建Volcano Job](https://support.huaweicloud.com/api-cci/createBatchVolcanoShV1alpha1NamespacedJob.html)”章节了解相关内容。
@@ -282,64 +223,18 @@
 **表 3**  huawei.com/schedule\_policy配置说明
 
 <a name="table1120511613153"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002511347099_row192066612155"><th class="cellrowborder" valign="top" width="22.3%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000002511347099_p132062614153"><a name="zh-cn_topic_0000002511347099_p132062614153"></a><a name="zh-cn_topic_0000002511347099_p132062614153"></a>配置</p>
-</th>
-<th class="cellrowborder" valign="top" width="77.7%" id="mcps1.2.3.1.2"><p id="zh-cn_topic_0000002511347099_p5206126181520"><a name="zh-cn_topic_0000002511347099_p5206126181520"></a><a name="zh-cn_topic_0000002511347099_p5206126181520"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002511347099_row201261346162"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p457945418181"><a name="zh-cn_topic_0000002511347099_p457945418181"></a><a name="zh-cn_topic_0000002511347099_p457945418181"></a>chip4-node8</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p7579105411817"><a name="zh-cn_topic_0000002511347099_p7579105411817"></a><a name="zh-cn_topic_0000002511347099_p7579105411817"></a>1个节点8张芯片，每4个芯片形成1个互联环。例如，<span id="zh-cn_topic_0000002511347099_ph18314192319429"><a name="zh-cn_topic_0000002511347099_ph18314192319429"></a><a name="zh-cn_topic_0000002511347099_ph18314192319429"></a>Atlas 800 训练服务器（型号 9000）</span>/<span id="zh-cn_topic_0000002511347099_ph631452384213"><a name="zh-cn_topic_0000002511347099_ph631452384213"></a><a name="zh-cn_topic_0000002511347099_ph631452384213"></a>Atlas 800 训练服务器（型号 9010）</span>芯片的整模块场景 /Atlas 350 推理卡内部共8张卡，每4张卡通过UB扣板连接。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row102574171610"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p205801254151810"><a name="zh-cn_topic_0000002511347099_p205801254151810"></a><a name="zh-cn_topic_0000002511347099_p205801254151810"></a>chip1-node2</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p65801354101816"><a name="zh-cn_topic_0000002511347099_p65801354101816"></a><a name="zh-cn_topic_0000002511347099_p65801354101816"></a>1个节点2张芯片。例如，<span id="zh-cn_topic_0000002511347099_ph97657495514"><a name="zh-cn_topic_0000002511347099_ph97657495514"></a><a name="zh-cn_topic_0000002511347099_ph97657495514"></a>Atlas 300T 训练卡</span>的插卡场景，1张卡最多插1个芯片，1个节点最多插2张卡。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row825811151619"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p17580854201815"><a name="zh-cn_topic_0000002511347099_p17580854201815"></a><a name="zh-cn_topic_0000002511347099_p17580854201815"></a>chip4-node4</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p858019546184"><a name="zh-cn_topic_0000002511347099_p858019546184"></a><a name="zh-cn_topic_0000002511347099_p858019546184"></a>1个节点4张芯片，形成1个互联环。例如，<span id="zh-cn_topic_0000002511347099_ph1165491719811"><a name="zh-cn_topic_0000002511347099_ph1165491719811"></a><a name="zh-cn_topic_0000002511347099_ph1165491719811"></a>Atlas 800 训练服务器（型号 9000）</span>/<span id="zh-cn_topic_0000002511347099_ph15654111712815"><a name="zh-cn_topic_0000002511347099_ph15654111712815"></a><a name="zh-cn_topic_0000002511347099_ph15654111712815"></a>Atlas 800 训练服务器（型号 9010）</span>芯片的半配场景。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p2580654131819"><a name="zh-cn_topic_0000002511347099_p2580654131819"></a><a name="zh-cn_topic_0000002511347099_p2580654131819"></a>chip8-node8</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p85801654181818"><a name="zh-cn_topic_0000002511347099_p85801654181818"></a><a name="zh-cn_topic_0000002511347099_p85801654181818"></a>1个节点8张卡，8张卡都在1个互联环上。例如，<span id="zh-cn_topic_0000002511347099_ph14314162316427"><a name="zh-cn_topic_0000002511347099_ph14314162316427"></a><a name="zh-cn_topic_0000002511347099_ph14314162316427"></a>Atlas 800T A2 训练服务器</span>。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row1820613612158"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p1358111544185"><a name="zh-cn_topic_0000002511347099_p1358111544185"></a><a name="zh-cn_topic_0000002511347099_p1358111544185"></a>chip8-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p9581135461815"><a name="zh-cn_topic_0000002511347099_p9581135461815"></a><a name="zh-cn_topic_0000002511347099_p9581135461815"></a>1个节点16张卡，每8张卡在1个互联环上。例如，<span id="zh-cn_topic_0000002511347099_ph1831422311424"><a name="zh-cn_topic_0000002511347099_ph1831422311424"></a><a name="zh-cn_topic_0000002511347099_ph1831422311424"></a>Atlas 200T A2 Box16 异构子框</span>。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row2020613616154"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p2581854121811"><a name="zh-cn_topic_0000002511347099_p2581854121811"></a><a name="zh-cn_topic_0000002511347099_p2581854121811"></a>chip2-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p758125481813"><a name="zh-cn_topic_0000002511347099_p758125481813"></a><a name="zh-cn_topic_0000002511347099_p758125481813"></a>1个节点16张卡，每2张卡在1个互联环上。例如，<span id="zh-cn_topic_0000002511347099_ph855133261011"><a name="zh-cn_topic_0000002511347099_ph855133261011"></a><a name="zh-cn_topic_0000002511347099_ph855133261011"></a>Atlas 800T A3 超节点服务器</span>。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row22064621511"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p558111549188"><a name="zh-cn_topic_0000002511347099_p558111549188"></a><a name="zh-cn_topic_0000002511347099_p558111549188"></a>chip2-node16-sp</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p258115548187"><a name="zh-cn_topic_0000002511347099_p258115548187"></a><a name="zh-cn_topic_0000002511347099_p258115548187"></a>1个节点16张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，<span id="zh-cn_topic_0000002511347099_ph1990844161011"><a name="zh-cn_topic_0000002511347099_ph1990844161011"></a><a name="zh-cn_topic_0000002511347099_ph1990844161011"></a>Atlas 900 A3 SuperPoD 超节点</span>。</p>
-</td>
-</tr>
-<tr id="row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p2580654131819"><a name="p2580654131819"></a><a name="p2580654131819"></a>chip4-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p85801654181818"><a name="p85801654181818"></a><a name="p85801654181818"></a>1个节点16张卡，每4张卡都在1个互联环上。例如，<span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 350 推理卡内部共16张卡，每4张卡通过UB扣板连接</span>。</p>
-</td>
-</tr>
-<tr id="row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p2580654131819"><a name="p2580654131819"></a><a name="p2580654131819"></a>chip1-node8</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p85801654181818"><a name="p85801654181818"></a><a name="p85801654181818"></a>1个节点8张卡，每张卡之间无互联。例如，<span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 350 推理卡内部共8张卡，每张卡之间无互联</span>。</p>
-</td>
-</tr>
-<tr id="row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p2580654131819"><a name="p2580654131819"></a><a name="p2580654131819"></a>chip1-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p85801654181818"><a name="p85801654181818"></a><a name="p85801654181818"></a>1个节点16张卡，每张卡之间无互联。例如，<span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 350 推理卡内部共16张卡，每张卡之间无互联</span>。</p>
-</td>
-</tr>
-</tbody>
-</table>
+|配置|说明|
+|--|--|
+|chip4-node8|1个节点8张芯片，每4个芯片形成1个互联环。例如，Atlas 800 训练服务器（型号 9000）/Atlas 800 训练服务器（型号 9010）芯片的整模块场景/Atlas 350 标卡共8张卡，每4张卡通过UB扣板连接。|
+|chip1-node2|1个节点2张芯片。例如，Atlas 300T 训练卡的插卡场景，1张卡最多插1个芯片，1个节点最多插2张卡。|
+|chip4-node4|1个节点4张芯片，形成1个互联环。例如，Atlas 800 训练服务器（型号 9000）/Atlas 800 训练服务器（型号 9010）芯片的半配场景。|
+|chip8-node8|1个节点8张卡，8张卡都在1个互联环上。例如，Atlas 800T A2 训练服务器。|
+|chip8-node16|1个节点16张卡，每8张卡在1个互联环上。例如，Atlas 200T A2 Box16 异构子框。|
+|chip2-node16|1个节点16张卡，每2张卡在1个互联环上。例如，Atlas 800T A3 超节点服务器。|
+|chip2-node16-sp|1个节点16张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，Atlas 900 A3 SuperPoD 超节点。|
+|chip4-node16|1个节点16张卡，每4张卡都在1个互联环上。例如，Atlas 350 标卡共16张卡，每4张卡通过UB扣板连接。|
+|chip1-node8|1个节点8张卡，每张卡之间无互联。例如，Atlas 350 标卡共8张卡，每张卡之间无互联。|
+|chip1-node16|1个节点16张卡，每张卡之间无互联。例如，Atlas 350 标卡共16张卡，每张卡之间无互联。|
 
 
 ## Pod<a name="ZH-CN_TOPIC_0000002484428552"></a>
@@ -502,67 +397,6 @@
 </tbody>
 </table>
 
-**表 3**  huawei.com/schedule\_policy配置说明
-
-<a name="table1120511613153"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002511347099_row192066612155"><th class="cellrowborder" valign="top" width="22.3%" id="mcps1.2.3.1.1"><p id="zh-cn_topic_0000002511347099_p132062614153"><a name="zh-cn_topic_0000002511347099_p132062614153"></a><a name="zh-cn_topic_0000002511347099_p132062614153"></a>配置</p>
-</th>
-<th class="cellrowborder" valign="top" width="77.7%" id="mcps1.2.3.1.2"><p id="zh-cn_topic_0000002511347099_p5206126181520"><a name="zh-cn_topic_0000002511347099_p5206126181520"></a><a name="zh-cn_topic_0000002511347099_p5206126181520"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002511347099_row201261346162"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p457945418181"><a name="zh-cn_topic_0000002511347099_p457945418181"></a><a name="zh-cn_topic_0000002511347099_p457945418181"></a>chip4-node8</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p7579105411817"><a name="zh-cn_topic_0000002511347099_p7579105411817"></a><a name="zh-cn_topic_0000002511347099_p7579105411817"></a>1个节点8张芯片，每4个芯片形成1个互联环。例如，<span id="zh-cn_topic_0000002511347099_ph18314192319429"><a name="zh-cn_topic_0000002511347099_ph18314192319429"></a><a name="zh-cn_topic_0000002511347099_ph18314192319429"></a>Atlas 800 训练服务器（型号 9000）</span>/<span id="zh-cn_topic_0000002511347099_ph631452384213"><a name="zh-cn_topic_0000002511347099_ph631452384213"></a><a name="zh-cn_topic_0000002511347099_ph631452384213"></a>Atlas 800 训练服务器（型号 9010）</span>芯片的整模块场景 /Atlas 350 推理卡内部共8张卡，每4张卡通过UB扣板连接。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row102574171610"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p205801254151810"><a name="zh-cn_topic_0000002511347099_p205801254151810"></a><a name="zh-cn_topic_0000002511347099_p205801254151810"></a>chip1-node2</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p65801354101816"><a name="zh-cn_topic_0000002511347099_p65801354101816"></a><a name="zh-cn_topic_0000002511347099_p65801354101816"></a>1个节点2张芯片。例如，<span id="zh-cn_topic_0000002511347099_ph97657495514"><a name="zh-cn_topic_0000002511347099_ph97657495514"></a><a name="zh-cn_topic_0000002511347099_ph97657495514"></a>Atlas 300T 训练卡</span>的插卡场景，1张卡最多插1个芯片，1个节点最多插2张卡。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row825811151619"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p17580854201815"><a name="zh-cn_topic_0000002511347099_p17580854201815"></a><a name="zh-cn_topic_0000002511347099_p17580854201815"></a>chip4-node4</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p858019546184"><a name="zh-cn_topic_0000002511347099_p858019546184"></a><a name="zh-cn_topic_0000002511347099_p858019546184"></a>1个节点4张芯片，形成1个互联环。例如，<span id="zh-cn_topic_0000002511347099_ph1165491719811"><a name="zh-cn_topic_0000002511347099_ph1165491719811"></a><a name="zh-cn_topic_0000002511347099_ph1165491719811"></a>Atlas 800 训练服务器（型号 9000）</span>/<span id="zh-cn_topic_0000002511347099_ph15654111712815"><a name="zh-cn_topic_0000002511347099_ph15654111712815"></a><a name="zh-cn_topic_0000002511347099_ph15654111712815"></a>Atlas 800 训练服务器（型号 9010）</span>芯片的半配场景。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p2580654131819"><a name="zh-cn_topic_0000002511347099_p2580654131819"></a><a name="zh-cn_topic_0000002511347099_p2580654131819"></a>chip8-node8</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p85801654181818"><a name="zh-cn_topic_0000002511347099_p85801654181818"></a><a name="zh-cn_topic_0000002511347099_p85801654181818"></a>1个节点8张卡，8张卡都在1个互联环上。例如，<span id="zh-cn_topic_0000002511347099_ph14314162316427"><a name="zh-cn_topic_0000002511347099_ph14314162316427"></a><a name="zh-cn_topic_0000002511347099_ph14314162316427"></a>Atlas 800T A2 训练服务器</span>。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row1820613612158"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p1358111544185"><a name="zh-cn_topic_0000002511347099_p1358111544185"></a><a name="zh-cn_topic_0000002511347099_p1358111544185"></a>chip8-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p9581135461815"><a name="zh-cn_topic_0000002511347099_p9581135461815"></a><a name="zh-cn_topic_0000002511347099_p9581135461815"></a>1个节点16张卡，每8张卡在1个互联环上。例如，<span id="zh-cn_topic_0000002511347099_ph1831422311424"><a name="zh-cn_topic_0000002511347099_ph1831422311424"></a><a name="zh-cn_topic_0000002511347099_ph1831422311424"></a>Atlas 200T A2 Box16 异构子框</span>。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row2020613616154"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p2581854121811"><a name="zh-cn_topic_0000002511347099_p2581854121811"></a><a name="zh-cn_topic_0000002511347099_p2581854121811"></a>chip2-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p758125481813"><a name="zh-cn_topic_0000002511347099_p758125481813"></a><a name="zh-cn_topic_0000002511347099_p758125481813"></a>1个节点16张卡，每2张卡在1个互联环上。例如，<span id="zh-cn_topic_0000002511347099_ph855133261011"><a name="zh-cn_topic_0000002511347099_ph855133261011"></a><a name="zh-cn_topic_0000002511347099_ph855133261011"></a>Atlas 800T A3 超节点服务器</span>。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002511347099_row22064621511"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511347099_p558111549188"><a name="zh-cn_topic_0000002511347099_p558111549188"></a><a name="zh-cn_topic_0000002511347099_p558111549188"></a>chip2-node16-sp</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511347099_p258115548187"><a name="zh-cn_topic_0000002511347099_p258115548187"></a><a name="zh-cn_topic_0000002511347099_p258115548187"></a>1个节点16张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，<span id="zh-cn_topic_0000002511347099_ph1990844161011"><a name="zh-cn_topic_0000002511347099_ph1990844161011"></a><a name="zh-cn_topic_0000002511347099_ph1990844161011"></a>Atlas 900 A3 SuperPoD 超节点</span>。</p>
-</td>
-</tr>
-<tr id="row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p2580654131819"><a name="p2580654131819"></a><a name="p2580654131819"></a>chip4-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p85801654181818"><a name="p85801654181818"></a><a name="p85801654181818"></a>1个节点16张卡，每4张卡都在1个互联环上。例如，<span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 350 推理卡内部共16张卡，每4张卡通过UB扣板连接</span>。</p>
-</td>
-</tr>
-<tr id="row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p2580654131819"><a name="p2580654131819"></a><a name="p2580654131819"></a>chip1-node8</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p85801654181818"><a name="p85801654181818"></a><a name="p85801654181818"></a>1个节点8张卡，每张卡之间无互联。例如，<span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 350 推理卡内部共8张卡，每张卡之间无互联</span>。</p>
-</td>
-</tr>
-<tr id="row1925831181613"><td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.3.1.1 "><p id="p2580654131819"><a name="p2580654131819"></a><a name="p2580654131819"></a>chip1-node16</p>
-</td>
-<td class="cellrowborder" valign="top" width="77.7%" headers="mcps1.2.3.1.2 "><p id="p85801654181818"><a name="p85801654181818"></a><a name="p85801654181818"></a>1个节点16张卡，每张卡之间无互联。例如，<span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 350 推理卡内部共16张卡，每张卡之间无互联</span>。</p>
-</td>
-</tr>
-</tbody>
-</table>
 
 
 ## 任务信息<a name="ZH-CN_TOPIC_0000002479386798"></a>

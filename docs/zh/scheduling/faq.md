@@ -30,7 +30,7 @@
 
 **问题描述<a name="section89018461129"></a>**
 
-Kubernetes  1.25.10及以上版本，集群调度组件不支持vNPU的恢复使能功能。该功能的详细说明和操作指导请参见《Atlas 中心推理卡  24.1.0 npu-smi 命令参考》中的“算力切分相关命令 \>  [设置vNPU的配置恢复使能状态](https://support.huawei.com/enterprise/zh/doc/EDOC1100438700/bcaf9ef9?idPath=23710424|251366513|254884019|261408772|252764743)”章节。
+Kubernetes  1.25.10及以上版本，集群调度组件不支持vNPU的恢复使能功能。该功能的详细说明和操作指导请参见《Atlas 中心推理卡  25.5.0 npu-smi 命令参考》中的“算力切分相关命令 \>  [设置vNPU的配置恢复使能状态](https://support.huawei.com/enterprise/zh/doc/EDOC1100540373/fa2a6907)”章节。
 
 **原因分析<a name="section1175235326"></a>**
 
@@ -268,9 +268,10 @@ NPU Exporter启动参数“-containerd”和“-endpoint”默认配置的socket
 
 **表 1**  containerd和endpoint参数配置
 
+<a name="zh-cn_topic_0000001447124820_table248215493284"></a>
 |启动参数|容器模式|修改默认值|
 |--|--|--|
-|-containerd|<ul><li>若containerMode=docker，默认配置的socket文件路径为/var/run/docker/containerd/docker-containerd.sock；连接失败后，自动尝试连接：unix:///run/containerd/containerd.sock。</li><li>若containerMode=containerd，默认配置的socket文件路径为/run/containerd/containerd.sock。</li></ul>|一般情况下该参数保持默认即可，除非用户自行修改了Containerd的sock文件路径，可通过**ps aux \| grep "containerd.sock"**命令查询。|
+|-containerd|<ul><li>若containerMode=docker，默认配置的socket文件路径为/var/run/docker/containerd/docker-containerd.sock；连接失败后，自动尝试连接：unix:///run/containerd/containerd.sock。</li><li>若containerMode=containerd，默认配置的socket文件路径为/run/containerd/containerd.sock。</li></ul>|一般情况下该参数保持默认即可，除非用户自行修改了Containerd的sock文件路径，可通过<b>ps aux \| grep "containerd.sock"</b>命令查询。|
 |-endpoint|<ul><li>若containerMode=docker，将连接到Dockershim获取容器列表，默认配置的socket文件路径为/var/run/dockershim.sock；</li><li>若containerMode=containerd，默认配置的socket文件路径为/run/containerd/containerd.sock。</li></ul>|一般情况下该参数保持默认即可，除非用户自行修改了Dockershim或者Containerd的sock文件路径。|
 
 
@@ -405,7 +406,7 @@ E1024 19:45:09.464318       6 reflector.go:127] K8s.io/client-go@v1.19.4-h4/tool
     npu-exporter     npu-exporter-rtgpg                         0/1     CrashLoopBackOff   2          39s
     ```
 
-2.  执行**kubectl logs -f -n npu-exporter npu-exporter-rtgpg**查看报错信息，日志显示信息如下**。**
+2.  执行**kubectl logs -f -n npu-exporter npu-exporter-rtgpg**查看报错信息，日志显示信息如下。
 
     ```
     [INFO]     2023/10/24 09:55:04.454169 1       hwlog/api.go:108    npu-exporter.log's logger init success
@@ -419,7 +420,7 @@ E1024 19:45:09.464318       6 reflector.go:127] K8s.io/client-go@v1.19.4-h4/tool
 
 **原因分析<a name="zh-cn_topic_0000001497364825_section165111851172717"></a>**
 
-容器镜像内“/usr/local“目录权限不正确。
+容器镜像内“/usr/local”目录权限不正确。
 
 **解决措施<a name="zh-cn_topic_0000001497364825_section16920131712816"></a>**
 
@@ -694,7 +695,7 @@ kubelet重启后会重新创建新dockershim.sock文件，但是NPU Exporter获�
 
 当启动一个训练任务后，训练任务容器内部hccl.json文件处于initializing状态（文件默认路径：“/user/serverid/devindex/config/hccl.json”）。
 
-执行**kubectl exec -it** _XXX_ **bash**命令进入容器，若Pod不在default命名空间，则需要加**-n** _XXX_指明命名空间，如：**kubectl exec -it** _XXX_ **-n **_XXX_** bash**。
+执行**kubectl exec -it** _XXX_ **bash**命令进入容器，若Pod不在default命名空间，则需要加<b>-n</b> <i>XXX</i>指明命名空间，如：**kubectl exec -it** _XXX_ **-n** _XXX_ **bash**。
 
 ![](../figures/scheduling/zh-cn_image_0000002511426463.png)
 
@@ -719,7 +720,7 @@ kubelet重启后会重新创建新dockershim.sock文件，但是NPU Exporter获�
 
 针对原因二：参考[Ascend Device Plugin](./installation_guide.md#ascend-device-plugin)章节，修改Ascend Device Plugin的启动参数“-volcanoType=true”之后再重新apply对应的YAML文件。
 
-针对原因三：正确配置device ip，请参见《MindCluster Ascend Deployer用户指南》中的“使用HCCN Tool工具配置”章节。
+针对原因三：正确配置device ip，请参见《MindCluster Ascend Deployer用户指南》中的“<a href="https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/zh/installation_guide.md#%E4%BD%BF%E7%94%A8hccn-tool%E5%B7%A5%E5%85%B7%E9%85%8D%E7%BD%AE">使用HCCN Tool工具配置</a>”章节。
 
 ## K8s配置CPU绑核后无法使用npu-smi info<a name="ZH-CN_TOPIC_0000002479226454"></a>
 
@@ -752,7 +753,7 @@ Ascend Device Plugin插件自身可以进行（/dev/davinciX  /dev/davinci\_mana
 
     ![](../figures/scheduling/faq-1.png)
 
-2.  执行**kubectl describe pod sasa-resnet1-acc-default-test-0**_ _**-n vcjob**命令，查看Pod的详情。在event字段中报：all nodes are unavailable: 1 node annotations\(7\) not same node idle\(8\)。
+2.  执行**kubectl describe pod sasa-resnet1-acc-default-test-0** **-n vcjob**命令，查看Pod的详情。在event字段中报：all nodes are unavailable: 1 node annotations\(7\) not same node idle\(8\)。
 
     ![](../figures/scheduling/faq-2.png)
 
@@ -850,7 +851,7 @@ Ascend Device Plugin插件自身可以进行（/dev/davinciX  /dev/davinci\_mana
     **图 1**  查询结果<a name="zh-cn_topic_0000001497364913_fig1050042718447"></a>  
     ![](../figures/scheduling/查询结果.png "查询结果")
 
-    如图，“xxx.xxx.xxx.xxx:/data/k8s/run“和“xxx.xxx.xxx.xxx:/data/k8s/dls\_data/public/dataset/resnet50“即为该Pod的NFS挂载路径。
+    如图，“xxx.xxx.xxx.xxx:/data/k8s/run”和“xxx.xxx.xxx.xxx:/data/k8s/dls\_data/public/dataset/resnet50”即为该Pod的NFS挂载路径。
 
 2.  执行以下命令，卸载该Pod的所有NFS挂载路径。
 
@@ -982,7 +983,7 @@ Events:                    <none>
 **解决措施<a name="zh-cn_topic_0000001447284728_section1755294417536"></a>**
 
 1.  在调用前请确保资源充足。
-2.  若任务已经下发，并且处于Pending状态，可使用**kubectl get vcjob -n **_**namespace**_找到任务。
+2.  若任务已经下发，并且处于Pending状态，可使用**kubectl get vcjob -n** <i>namespace</i>找到任务。
 
     ```
     root@ubuntu:/home/yaml# kubectl get vcjob -n mindx-test
@@ -990,7 +991,7 @@ Events:                    <none>
     mindx-dls-npu-16p   6m10s
     ```
 
-3.  执行**kubectl delete vcjob** _mindx-dls-npu-16p__ _**-n** _namespace_命令，删除该vcjob。
+3.  执行**kubectl delete vcjob** _mindx-dls-npu-16p_ **-n** <i>namespace</i>命令，删除该vcjob。
 
     ```
     root@ubuntu:/home/yaml# kubectl delete vcjob mindx-dls-npu-16p -n mindx-test
@@ -1050,7 +1051,7 @@ Default Runtime: ascend
 
 该问题出现的概率较低，若出现有如下处理方法：
 
-方法一：手动删除Pod。进入系统后台，使用命令**kubectl delete pod -n  _pod所在namespace pod名称_**即可删除Pod。
+方法一：手动删除Pod。进入系统后台，使用命令**kubectl delete pod -n** <i>pod所在namespace pod名称</i>即可删除Pod。
 
 方法二：重新下发任务。
 
@@ -1089,12 +1090,12 @@ Default Runtime: ascend
 
 推理任务容器使用普通用户运行，会出现以下问题，最终导致普通用户访问root属组的vNPU设备失败，从而导致推理业务容器运行失败。
 
--   物理机上通过特权容器调用接口创建的vNPU为root属组，该vNPU在特权容器内“/dev“目录下不可见。
+-   物理机上通过特权容器调用接口创建的vNPU为root属组，该vNPU在特权容器内“/dev”目录下不可见。
 -   驱动接口创建vNPU后默认为root属组，特权容器内就无法修改新创建的vNPU属组为非root。
 
 **解决措施<a name="section51910589213"></a>**
 
-在Ascend Device Plugin组件的启动YAML中挂载“/dev“，示例如下。
+在Ascend Device Plugin组件的启动YAML中挂载“/dev”，示例如下。
 
 ```
 command: [ "/bin/bash", "-c", "--"]
@@ -1157,8 +1158,8 @@ command: [ "/bin/bash", "-c", "--"]
     ```
 
     >[!NOTE] 说明 
-    >-   若“STATUS“字段显示为“Inqueue“状态时，表示此时Pod已经创建，可以查询Pod状态。
-    >-   若“STATUS“字段显示为“Pending“，表示当前Pod创建失败，需要执行[步骤2](#li969719487913)进一步确认具体问题。
+    >-   若“STATUS”字段显示为“Inqueue”状态时，表示此时Pod已经创建，可以查询Pod状态。
+    >-   若“STATUS”字段显示为“Pending”，表示当前Pod创建失败，需要执行[步骤2](#li969719487913)进一步确认具体问题。
 
 2.  <a name="li969719487913"></a>执行以下命令，查询对应PodGroup的详细信息。
 
@@ -1166,7 +1167,7 @@ command: [ "/bin/bash", "-c", "--"]
     kubectl describe pg -n <namespace> <podgroup-name>
     ```
 
-    _<namespace\>和__<podgroup-name\>_需要用实际的命名空间和PodGroup名称进行替换。
+    <i><namespace\></i>和<i><podgroup-name\></i>需要用实际的命名空间和PodGroup名称进行替换。
 
     示例命令如下。
 
@@ -1232,7 +1233,7 @@ command: [ "/bin/bash", "-c", "--"]
 
 **原因分析<a name="zh-cn_topic_0000001497124765_section3798104023112"></a>**
 
-Windows操作系统下的换行符为\\r\\n，Linux下的换行符是\\n。如果.sh脚本中有换行符在Windows操作系统上编写后，直接上传到Linux操作系统执行，由于Linux无法识别\\r命令，就会报$’\\r’: command not found异常。
+Windows操作系统下的换行符为\\r\\n，Linux下的换行符是\\n。如果.sh脚本中有换行符在Windows操作系统上编写后，直接上传到Linux操作系统执行，由于Linux无法识别\\r字符，就会报$’\\r’: command not found异常。
 
 **解决措施<a name="section1160894516313"></a>**
 
@@ -1252,7 +1253,7 @@ Windows操作系统下的换行符为\\r\\n，Linux下的换行符是\\n。如�
 
 用户可自行修改Volcano源码和任务YAML，在所有Pod的Status全部转变为Failed后会发生无条件重试故障重调度。
 
-1.  修改开源Volcano源代码“pkg/controllers/job/state/running.go“，增加“IgnoreAction“。
+1.  修改开源Volcano源代码“pkg/controllers/job/state/running.go”，增加“IgnoreAction”。
 
     ```
     func (ps *runningState) Execute(action v1alpha1.Action) error {
@@ -1283,7 +1284,7 @@ Windows操作系统下的换行符为\\r\\n，Linux下的换行符是\\n。如�
     default:
     ```
 
-2.  修改开源Volcano源代码“vendor/volcano.sh/apis/pkg/apis/bus/v1alpha1/actions.go“，增加“IgnoreAction“。
+2.  修改开源Volcano源代码“vendor/volcano.sh/apis/pkg/apis/bus/v1alpha1/actions.go”，增加“IgnoreAction”。
 
     ```
     IgnoreAction Action = "Ignore"
@@ -1301,7 +1302,7 @@ PYTHONPATH的路径可能存在错误。
 
 **解决措施<a name="zh-cn_topic_0000001951418177_section1160894516313"></a>**
 
-如果已有安装包找不到依赖，检查PYTHONPATH是否正确，如**Python**3.7的路径为“/usr/local/python3.7.5/lib/python3.7/site-packages“。
+如果已有安装包找不到依赖，检查PYTHONPATH是否正确，如Python3.7的路径为“/usr/local/python3.7.5/lib/python3.7/site-packages”。
 
 ## 执行盘古模型的训练任务时，报错提示No module named '\_sqlite3'<a name="ZH-CN_TOPIC_0000002479386418"></a>
 
@@ -1359,7 +1360,7 @@ PYTHONPATH的路径可能存在错误。
 
 **解决措施<a name="zh-cn_topic_0000001783889885_section1160894516313"></a>**
 
-在train\_start.sh中新增以下加粗的环境变量，设置megatron\_npu在Python中的环境变量。
+在train\_start.sh中新增PYTHONPATH环境变量，设置megatron\_npu在Python中的环境变量。
 
 ```
 ...
@@ -1548,13 +1549,13 @@ kubectl apply -f clusterd-v{version}.yaml
 
 当定位到该被访问的Tensor对象时，首先判断其对训练过程的影响：
 
--   场景一：若其与训练迭代无依赖关系，**则可在rollback阶段对其重新初始化，将其释放**。
--   场景二：若其与训练迭代有依赖关系**，且与副本优化器映射关系一致时，则需要在repair阶段对其进行重建并通过点对点通信修复该Tensor的数据**。
+-   场景一：若其与训练迭代无依赖关系，则可在rollback阶段对其重新初始化，将其释放。
+-   场景二：若其与训练迭代有依赖关系，且与副本优化器映射关系一致时，则需要在repair阶段对其进行重建并通过点对点通信修复该Tensor的数据。
 
     >[!NOTE] 说明 
     >进程级别重调度及进程级在线恢复通过寻找有效的副本，拼凑出一份完整的优化器状态数据，当训练集群故障较多，通过副本仍然无法拼凑出一个完整副本时，则会无法完成重调度。
 
-此外还应注意在重建或重新初始化之前**避免访问该Tensor对象**。为预防全局变量中存在被标记为unsafe data的Tensor没有被故障修复框架修复而导致修复失败，建议排查训练框架中所使用的全局Tensor，确保其被故障修复框架跟踪并正确修复。
+此外还应注意在重建或重新初始化之前避免访问该Tensor对象。为预防全局变量中存在被标记为unsafe data的Tensor没有被故障修复框架修复而导致修复失败，建议排查训练框架中所使用的全局Tensor，确保其被故障修复框架跟踪并正确修复。
 
 **处理案例**
 
@@ -1612,7 +1613,7 @@ MindSpore图编译失败，可能是修改模型参数后，从缓存中加载�
 
 如发生以上错误，可参考以下步骤进行错误排查。
 
-1.  <a name="li1648841855512"></a>执行以下命令查看日志报错。或查看日志**/var/log/mindx-dl/npu-exporter/npu-exporter.log**报deviceManager初始化错误，表示找不到NPU设备。
+1.  <a name="li1648841855512"></a>执行以下命令查看日志报错。或查看日志/var/log/mindx-dl/npu-exporter/npu-exporter.log报deviceManager初始化错误，表示找不到NPU设备。
 
     ```
     kubectl logs -f -n npu-exporter npu-exporter-8l7w2
@@ -1725,7 +1726,7 @@ vcjob命名空间未创建。
     kubectl describe pg -n <namespace> <podgroup-name>
     ```
 
-    _<namespace\>和__<podgroup-name\>_需要用实际的命名空间和PodGroup名称进行替换。
+    <i><namespace\></i>和<i><podgroup-name\></i>需要用实际的命名空间和PodGroup名称进行替换。
 
     示例命令如下。mindx-dl-deviceinfo-worker-1为[步骤1](#li17475121917314)中查询到的PodGroup名称。
 
@@ -1783,7 +1784,7 @@ vcjob命名空间未创建。
       Normal   Unschedulable  93s (x280 over 6m34s)   volcano  queue resource quota insufficient   # queue资源配额不足
     ```
 
-3.  通过如下命令查看K8s中节点的详细情况。如果节点详情中的“Capacity“字段和“Allocatable“字段出现了昇腾AI处理器的相关信息，表示Ascend Device Plugin给K8s上报芯片正常，组件运行正常。
+3.  通过如下命令查看K8s中节点的详细情况。如果节点详情中的“Capacity”字段和“Allocatable”字段出现了昇腾AI处理器的相关信息，表示Ascend Device Plugin给K8s上报芯片正常，组件运行正常。
 
     ```
     kubectl describe node K8s中的节点名
@@ -1821,9 +1822,9 @@ vcjob命名空间未创建。
 
     **表 1**  故障详细信息
 
-|EventID|所属一级模块|所属二级模块|通知类型|故障事件名称|故障解释/可能原因|故障影响|故障自处理模式|
-|--|--|--|--|--|--|--|--|
-|0x80CD8008|芯片故障|L2BUFF|故障事件|L2BUFF多bit ECC错误|片内SRAM软失败，导致L2BUFF多bit错误。|系统停止响应，数据错误或可能出现一致性错误。|<ul><li>上报故障事件到设备</li><li>记录错误日志</li></ul>|
+    |EventID|所属一级模块|所属二级模块|通知类型|故障事件名称|故障解释/可能原因|故障影响|故障自处理模式|
+    |--|--|--|--|--|--|--|--|
+    |0x80CD8008|芯片故障|L2BUFF|故障事件|L2BUFF多bit ECC错误|片内SRAM软失败，导致L2BUFF多bit错误。|系统停止响应，数据错误或可能出现一致性错误。|<ul><li>上报故障事件到设备</li><li>记录错误日志</li></ul>|
 
 
 8.  重启服务器。
@@ -1855,29 +1856,29 @@ vcjob命名空间未创建。
 
 -   方案一（推荐）：停止挂载NPU的容器。
 
-1.  执行以下命令查询全部运行中的容器。
+    1.  执行以下命令查询全部运行中的容器。
 
-    ```
-    docker ps
-    ```
+        ```
+        docker ps
+        ```
 
-2.  执行以下命令查看指定容器是否已经正常挂载NPU。
+    2.  执行以下命令查看指定容器是否已经正常挂载NPU。
 
-    ```
-    docker inspect 容器ID | grep davinci
-    ```
+        ```
+        docker inspect 容器ID | grep davinci
+        ```
 
-3.  如果该指定的容器已挂载NPU，执行以下命令停止容器。
+    3.  如果该指定的容器已挂载NPU，执行以下命令停止容器。
 
-    ```
-    docker stop 容器ID
-    ```
+        ```
+        docker stop 容器ID
+        ```
 
 -   方案二：YAML文件中指定为特权模式，此方法适用于其他容器没有实际使用NPU但是只是挂载了NPU的场景。
 
-在任务YAML中添加以下字段，示例如下。
+    在任务YAML中添加以下字段，示例如下。
 
-![](../figures/scheduling/zh-cn_image_0000002479386630.png)
+    ![](../figures/scheduling/zh-cn_image_0000002479386630.png)
 
 ## 公共故障的恢复消息丢失，导致故障芯片一直处于隔离状态<a name="ZH-CN_TOPIC_0000002511346343"></a>
 
@@ -2127,7 +2128,7 @@ vcjob命名空间未创建。
 
 **解决措施<a name="section11536549173514"></a>**
 
-修改训练脚本（train\_start.sh）中日志创建部分，使用date获取时间戳，在每次重调度之后生成带有时间戳的日志路径。以训练日志路径_TRAIN\_LOG\_PATH_为例：
+修改训练脚本（train\_start.sh）中日志创建部分，使用date获取时间戳，在每次重调度之后生成带有时间戳的日志路径。以训练日志路径TRAIN\_LOG\_PATH为例：
 
 ```
 timestamp=$(date +"%Y%m%d%H%M%S")
@@ -2176,7 +2177,7 @@ train\_start.sh脚本内容存在差异，以下仅为示例，请根据实际�
 
     ![](../figures/scheduling/zh-cn_image_0000002479226598.png)
 
-    发现调用Python程序后面有加管道（|），执行打印和保存日志的动作，$?接收的其实是tee命令的执行结果，tee命令执行没有报错，所以$?接收到的返回码为0，进程就以0退出码退出了，导致训练进程报错退出后，Pod状态为Completed，非Error，无法触发业务面重调度。
+    发现调用Python程序后面有加管道（|），执行打印和保存日志的动作，\$?接收的其实是tee命令的执行结果，tee命令执行没有报错，所以\$?接收到的返回码为0，进程就以0退出码退出了，导致训练进程报错退出后，Pod状态为Completed，非Error，无法触发业务面重调度。
 
 2.  修改接收Python程序退出码处的代码，使用PIPESTATUS\[0\]获取管道（|）前命令的执行结果，即Python程序本身的退出码。修改如下：
 
@@ -2186,7 +2187,7 @@ train\_start.sh脚本内容存在差异，以下仅为示例，请根据实际�
 
 **问题现象描述<a name="section108351133133518"></a>**
 
-通过**kubectl describe node** _\{node name\}_命令查看Node信息，Allocatable.huawei.com/Ascend910对应的芯片数量为8，下发8卡任务，任务处于Pending状态。
+通过**kubectl describe node** <i>\{node name\}</i>命令查看Node信息，Allocatable.huawei.com/Ascend910对应的芯片数量为8，下发8卡任务，任务处于Pending状态。
 
 ```
 Capacity:

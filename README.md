@@ -45,6 +45,7 @@
 - [2026.01.13]: 🚀 调度器支持StatefulSet功能
 - [2026.01.13]: 🚀 支持MindSpore框架下亚健康热切
 - [2026.01.13]: 🚀 训练快恢易用性增强
+- [2026.01.13]: 🚀 新增A3 AI服务器故障模式
 
 # 简介
 
@@ -130,6 +131,54 @@
    │   └─prometheus
    │       ├─base
    │       └─prometheus_operator
+   ├─ ascend-faultdiag
+   │  ├─build
+   │  ├─platform
+   │  ├─src
+   │  │  ├─ascend_fd
+   │  │  │  ├─configuration
+   │  │  │  ├─controller
+   │  │  │  ├─lib
+   │  │  │  ├─model
+   │  │  │  ├─module
+   │  │  │  │  └─mindie_trace_parser
+   │  │  │  ├─pkg
+   │  │  │  │  ├─customize
+   │  │  │  │  │  ├─custom_config
+   │  │  │  │  │  └─custom_entity
+   │  │  │  │  ├─diag
+   │  │  │  │  │  ├─knowledge_graph
+   │  │  │  │  │  │  ├─kg_engine
+   │  │  │  │  │  │  │  ├─graph
+   │  │  │  │  │  │  │  └─model
+   │  │  │  │  │  ├─network_congestion
+   │  │  │  │  │  ├─node_anomaly
+   │  │  │  │  │  │  ├─npu_anomaly
+   │  │  │  │  │  │  └─resource_preemption
+   │  │  │  │  │  │      └─utils
+   │  │  │  │  │  └─root_cluster
+   │  │  │  │  ├─parse
+   │  │  │  │  │  ├─blacklist
+   │  │  │  │  │  ├─knowledge_graph
+   │  │  │  │  │  │  ├─parser
+   │  │  │  │  │  │  └─utils
+   │  │  │  │  │  ├─network_congestion
+   │  │  │  │  │  ├─node_anomaly
+   │  │  │  │  │  └─root_cluster
+   │  │  │  ├─sdk
+   │  │  │  ├─utils
+   │  │  │  │  ├─constant
+   │  │  │  │  ├─fast_parser
+   │  │  │  │  └─timehub
+   │  │  │  └─wrapper
+   │  ├─test
+   │  │  ├─custom_operation
+   │  │  ├─dt
+   │  │  └─st
+   │  └─toolkits
+   │      ├─exp_covert
+   │      │  └─exp_lib_dir
+   │      └─local_diag
    ├─ ascend-for-volcano
    │  ├─ build           
    │  ├─ common
@@ -233,7 +282,9 @@ MindCluster基础调度特性与断点续训特性支持的框架：Pytorch、Mi
 
 介绍MindCluster的编译及安装方式。
 
-## 编译
+## MindCluster集群调度
+
+### 编译
 
 1.  拉取mind-cluster整体源码，例如放在/home目录下。
 
@@ -254,17 +305,52 @@ MindCluster基础调度特性与断点续训特性支持的框架：Pytorch、Mi
 5.  此处使用的go版本为1.21。
 
 
-## 组件安装
+### 组件安装
 
 在安装和使用集群调度组件前，用户需要提前了解[集群调度组件的特性](./docs/zh/scheduling/introduction.md)，并根据具体特性的特点和功能，选择需要使用的特性并[安装相应的组件](./docs/zh/scheduling/installation_guide.md#安装部署)。
 
+## MindCluster Ascend FaultDiag
+
+MindCluster Ascend FaultDiag支持的Python版本需≥3.7。在安装MindCluster Ascend FaultDiag前，请检查依赖的Python版本是否满足要求。
+
+### 编译与构建
+
+#### 环境要求
+- Python版本≥3.7.5
+- scikit-learn>=1.3.0
+- pandas>=1.3.5
+- numpy>=1.21.6,<2.0.0
+- joblib>=1.2.0,<1.5.0
+- ply>=3.11
+
+#### 构建
+请先克隆仓库，然后在项目根目录执行构建脚本：
+```shell
+git clone https://gitcode.com/Ascend/mind-cluster.git
+cd mind-cluster/component/ascend-faultdiag
+./build/build.sh
+```
+
+### 组件安装
+
+详细请参见[安装MindCluster Ascend FaultDiag](./docs/zh/faultdiag/installation_guide.md)。
+
 # 快速入门
 
-MindCluster将以单台Atlas 800T A2 训练服务器（同时作为管理节点和计算节点）为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。具体的操作请参考：[快速入门](./docs/zh/scheduling/quick_start.md)。
+## MindCluster集群调度
+
+MindCluster将以单台Atlas 800T A2 训练服务器（同时作为管理节点和计算节点）为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。具体操作请参考：[快速入门](./docs/zh/scheduling/quick_start.md)。
+
+## MindCluster Ascend FaultDiag
+
+具体操作请参考：[使用指导](./docs/zh/faultdiag/user_guide.md)。
 
 # 特性介绍
 
-MindCluster组件提供资源调度功能，支持NPU集群作业调度、运维监测、故障恢复等功能。具体特性介绍如下：
+MindCluster提供资源调度功能，支持NPU集群作业调度、运维监测、故障恢复等功能。具体特性介绍如下：
+
+## MindCluster集群调度
+
 
 | 特性名称       | 介绍                                                                                                            | Released |
 |------------|---------------------------------------------------------------------------------------------------------------|----------|
@@ -278,21 +364,48 @@ MindCluster组件提供资源调度功能，支持NPU集群作业调度、运维
 | SGLang推理任务最佳实践 |[link](./docs/zh/scheduling/usage/sglang_best_practice.md)   | ✅ |
 | vLLM推理任务最佳实践 |[link](./docs/zh/scheduling/usage/vllm_best_practice.md)   | ✅ |
 
+## MindCluster Ascend FaultDiag
+
+
+| 特性名称      | 介绍                                                                                                              | Released |
+|-----------|-----------------------------------------------------------------------------------------------------------------|----------|
+| 日志清洗与转储   | [link](./docs/zh/faultdiag/user_guide.md#日志清洗与转储) | ✅        |
+| 故障诊断      | [link](./docs/zh/faultdiag/user_guide.md#故障诊断) | ✅        |
+| 单机故障诊断    | [link](./docs/zh/faultdiag/user_guide.md#单机故障诊断) | ✅        |
+| 超节点故障诊断   | [link](./docs/zh/faultdiag/user_guide.md#超节点故障诊断) | ✅        |
+| 清洗业务流日志   | [link](./docs/zh/faultdiag/user_guide.md#清洗业务流日志) | ✅        |
+| 根因节点清洗及诊断 | [link](./docs/zh/faultdiag/user_guide.md#根因节点清洗及诊断) | ✅        |
+| 故障事件清洗及诊断 | [link](./docs/zh/faultdiag/user_guide.md#故障事件清洗及诊断) | ✅        |
+| 自定义配置文件   | [link](./docs/zh/faultdiag/user_guide.md#可选自定义配置文件) | ✅        |
+
 # API参考
 
-API参考请参考：[API参考](./docs/zh/scheduling/api/npu_exporter.md)。
+MindCluster集群调度API参考请参见：[API参考](./docs/zh/scheduling/api/npu_exporter.md)。
+
+MindCluster Ascend FaultDiag API参考请参见：[API参考](./docs/zh/faultdiag/api/README.md)。
+
 
 # FAQ
 
-相关FAQ请参考：[FAQ](./docs/zh/scheduling/faq.md)。
+MindCluster集群调度相关FAQ请参见：[FAQ](./docs/zh/scheduling/faq.md)。
+
+MindCluster Ascend FaultDiag相关FAQ请参见：[FAQ](./docs/zh/faultdiag/faq.md)。
+
 
 # 安全声明
+
+## MindCluster集群调度
 
 - 当前容器方式部署本组件，本组件的认证鉴权方式为ServiceAccount，该认证鉴权方式为ServiceAccount的token明文显示，建议用户自行进行安全加强。
 - 当前特权容器方式部署，该容器权限具有一定风险，建议用户自行进行安全加强。
 - 其他安全声明详见：[安全声明](./docs/zh/scheduling/references.md#安全加固)
 - 通信矩阵详见：[通信矩阵](https://gitcode.com/Ascend/mind-cluster/wiki/Home.md)
 - 公网地址详见：[公网地址](./docs/zh/resource/MindCluster%207.3.0%20公网地址.xlsx)
+
+## MindCluster Ascend FaultDiag
+
+- 安全声明详见：[安全声明](./docs/zh/faultdiag/security_hardening.md)
+- 公网地址详见：[公网地址](./docs/zh/resource/MindCluster%207.3.0%20Ascend%20FaultDiag公网地址.xlsx)
 
 # 分支维护策略
 

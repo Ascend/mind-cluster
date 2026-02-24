@@ -79,41 +79,12 @@ MindCluster集群调度组件支持用户通过以下方式进行SGLang推理服
 集群调度为用户提供OME任务的ClusterServingRuntime资源的YAML示例，用户需要根据使用的组件、芯片类型和任务类型等，选择相应的YAML示例并根据需求进行相应修改后才可使用。
 
 <a name="zh-cn_topic_0000002362848597_table74058394335"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002362848597_row7405103918334"><th class="cellrowborder" valign="top" width="25%" id="mcps1.1.5.1.1"><p id="zh-cn_topic_0000002362848597_p134051339113317"><a name="zh-cn_topic_0000002362848597_p134051339113317"></a><a name="zh-cn_topic_0000002362848597_p134051339113317"></a>类型</p>
-</th>
-<th class="cellrowborder" valign="top" width="25%" id="mcps1.1.5.1.2"><p id="zh-cn_topic_0000002362848597_p4405183916339"><a name="zh-cn_topic_0000002362848597_p4405183916339"></a><a name="zh-cn_topic_0000002362848597_p4405183916339"></a>硬件型号</p>
-</th>
-<th class="cellrowborder" valign="top" width="32.2%" id="mcps1.1.5.1.3"><p id="zh-cn_topic_0000002362848597_p6405739173310"><a name="zh-cn_topic_0000002362848597_p6405739173310"></a><a name="zh-cn_topic_0000002362848597_p6405739173310"></a>YAML名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="17.8%" id="mcps1.1.5.1.4"><p id="zh-cn_topic_0000002362848597_p164065398332"><a name="zh-cn_topic_0000002362848597_p164065398332"></a><a name="zh-cn_topic_0000002362848597_p164065398332"></a>获取链接</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002362848597_row134069396332"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.1.5.1.1 "><p id="zh-cn_topic_0000002362848597_p14406113953311"><a name="zh-cn_topic_0000002362848597_p14406113953311"></a><a name="zh-cn_topic_0000002362848597_p14406113953311"></a>实例不跨机（Deployment场景）</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.1.5.1.2 "><p id="p137844511212"><a name="p137844511212"></a><a name="p137844511212"></a><span id="ph1778515111217"><a name="ph1778515111217"></a><a name="ph1778515111217"></a>Atlas 800I A2 推理服务器</span></p>
-<p id="p1978517501218"><a name="p1978517501218"></a><a name="p1978517501218"></a><span id="ph1178575201216"><a name="ph1178575201216"></a><a name="ph1178575201216"></a>Atlas 800I A3 超节点服务器</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="32.2%" headers="mcps1.1.5.1.3 "><p id="p9712185121310"><a name="p9712185121310"></a><a name="p9712185121310"></a><span>llama-3-2-1b-instruct-rt-pd-standalone.yaml</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="17.8%" headers="mcps1.1.5.1.4 "><p id="zh-cn_topic_0000002362848597_p17406183943314"><a name="zh-cn_topic_0000002362848597_p17406183943314"></a><a name="zh-cn_topic_0000002362848597_p17406183943314"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/master/k8s-deploy-tool/example/ome-runtimes/llama-3-2-1b-instruct-rt-pd-standalone.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002362848597_row1040673913313"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.1.5.1.1 "><p id="zh-cn_topic_0000002362848597_p174061239103316"><a name="zh-cn_topic_0000002362848597_p174061239103316"></a><a name="zh-cn_topic_0000002362848597_p174061239103316"></a>实例跨机（LeaderWorkerSet场景）</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.1.5.1.2 "><p id="p1154910592111"><a name="p1154910592111"></a><a name="p1154910592111"></a><span id="ph35491059141113"><a name="ph35491059141113"></a><a name="ph35491059141113"></a>Atlas 800I A2 推理服务器</span></p>
-<p id="p9549159101115"><a name="p9549159101115"></a><a name="p9549159101115"></a><span id="ph25496599117"><a name="ph25496599117"></a><a name="ph25496599117"></a>Atlas 800I A3 超节点服务器</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="32.2%" headers="mcps1.1.5.1.3 "><p id="p89454201131"><a name="p89454201131"></a><a name="p89454201131"></a><span>llama-3-2-1b-instruct-rt-pd-distributed.yaml</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="17.8%" headers="mcps1.1.5.1.4 "><p id="zh-cn_topic_0000002362848597_p7406539113313"><a name="zh-cn_topic_0000002362848597_p7406539113313"></a><a name="zh-cn_topic_0000002362848597_p7406539113313"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/master/k8s-deploy-tool/example/ome-runtimes/llama-3-2-1b-instruct-rt-pd-distributed.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
-</td>
-</tr>
-<tr id="row64621112176"><td class="cellrowborder" colspan="4" valign="top" headers="mcps1.1.5.1.1 mcps1.1.5.1.2 mcps1.1.5.1.3 mcps1.1.5.1.4 "><p id="p891416421715"><a name="p891416421715"></a><a name="p891416421715"></a>注：当前示例仅供测试使用，用户可根据模型实际情况进行修改。</p>
-</td>
-</tr>
-</tbody>
-</table>
+|类型|硬件型号|YAML名称|获取链接|
+|--|--|--|--|
+|实例不跨机（Deployment场景）|<p>Atlas 800I A2 推理服务器</p><p>Atlas 800I A3 超节点服务器</p>|llama-3-2-1b-instruct-rt-pd-standalone.yaml|<a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/master/k8s-deploy-tool/example/ome-runtimes/llama-3-2-1b-instruct-rt-pd-standalone.yaml">获取YAML</a>|
+|实例跨机（LeaderWorkerSet场景）|<p>Atlas 800I A2 推理服务器</p><p>Atlas 800I A3 超节点服务器</p>|llama-3-2-1b-instruct-rt-pd-distributed.yaml|<a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/master/k8s-deploy-tool/example/ome-runtimes/llama-3-2-1b-instruct-rt-pd-distributed.yaml">获取YAML</a>|
+|注：当前示例仅供测试使用，用户可根据模型实际情况进行修改。|
+
 
 用户根据OME框架的部署方式依此完成Base Model、Serving Runtime和Inference Service三个YAML修改之后，由OME及其依赖组件负责拉起子工作负载（Deployment或LeaderWorkerSet）和对应的Pod，并由OME及其依赖组件管理推理服务Pod的生命周期，在推理服务对应的Pod创建完成之后，MindCluster负责对Pod进行调度。
 
@@ -200,8 +171,7 @@ spec:
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p1670155202912"><a name="p1670155202912"></a><a name="p1670155202912"></a>指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度。<span id="zh-cn_topic_0000002511347099_ph521204025916"><a name="zh-cn_topic_0000002511347099_ph521204025916"></a><a name="zh-cn_topic_0000002511347099_ph521204025916"></a>若用户未指定该字段，</span><span id="zh-cn_topic_0000002511347099_ph172121408590"><a name="zh-cn_topic_0000002511347099_ph172121408590"></a><a name="zh-cn_topic_0000002511347099_ph172121408590"></a>Volcano</span><span id="zh-cn_topic_0000002511347099_ph192121140135911"><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a>调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。</span></p>
 <p id="p19701652112917"><a name="p19701652112917"></a><a name="p19701652112917"></a>了解详细说明请参见<a href="../references.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a>。</p>
-<div class="note" id="note47015215291"><a name="note47015215291"></a><a name="note47015215291"></a><span class="notetitle">[!NOTE] 说明 </span><div class="notebody"><p id="p12461828061"><a name="p12461828061"></a><a name="p12461828061"></a>仅支持在<span id="ph914694014812"><a name="ph914694014812"></a><a name="ph914694014812"></a>Atlas 900 A3 SuperPoD 超节点</span>中使用该字段。</p>
-</div></div>
+<p id="p12461828061"><a name="p12461828061"></a><a name="p12461828061"></a>仅支持在<span id="ph914694014812"><a name="ph914694014812"></a><a name="ph914694014812"></a>Atlas 900 A3 SuperPoD 超节点</span>中使用该字段。</p>
 </td>
 </tr>
 <tr id="row656523055610"><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="p7566193012561"><a name="p7566193012561"></a><a name="p7566193012561"></a>huawei.com/schedule_minAvailable</p>
@@ -216,8 +186,7 @@ spec:
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul186101614131"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul186101614131"></a><ul id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul186101614131"><li>on：开启<span id="ph164712399403"><a name="ph164712399403"></a><a name="ph164712399403"></a>Pod</span>级别重调度</li><li>其他值或不使用该字段：关闭<span id="ph126431540134014"><a name="ph126431540134014"></a><a name="ph126431540134014"></a>Pod</span>级别重调度</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p661016141437"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p661016141437"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p661016141437"></a><span id="ph4287194517407"><a name="ph4287194517407"></a><a name="ph4287194517407"></a>Pod</span>级重调度，表示任务发生故障后，不会删除PodGroup内的所有任务<span id="ph1595595534015"><a name="ph1595595534015"></a><a name="ph1595595534015"></a>Pod</span>，而是将发生故障的<span id="ph750524344015"><a name="ph750524344015"></a><a name="ph750524344015"></a>Pod</span>进行删除，由控制器重新创建新<span id="ph1521154416407"><a name="ph1521154416407"></a><a name="ph1521154416407"></a>Pod</span>后进行重调度。</p>
-<div class="note" id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note1561010145316"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note1561010145316"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note1561010145316"></a><span class="notetitle">[!NOTE] 说明 </span><div class="notebody"><p id="p1745415523710"><a name="p1745415523710"></a><a name="p1745415523710"></a>OME推理任务需要将此字段配置为<span class="uicontrol" id="uicontrol172211234283"><a name="uicontrol172211234283"></a><a name="uicontrol172211234283"></a>“on”</span>，<span id="ph19262113954410"><a name="ph19262113954410"></a><a name="ph19262113954410"></a>MindCluster</span>对发生故障的P/D实例进行重调度。</p>
-</div></div>
+<p id="p1745415523710"><a name="p1745415523710"></a><a name="p1745415523710"></a>OME推理任务需要将此字段配置为<span class="uicontrol" id="uicontrol172211234283"><a name="uicontrol172211234283"></a><a name="uicontrol172211234283"></a>“on”</span>，<span id="ph19262113954410"><a name="ph19262113954410"></a><a name="ph19262113954410"></a>MindCluster</span>对发生故障的P/D实例进行重调度。</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row36114148312"><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1461116146318"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1461116146318"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1461116146318"></a>accelerator-type</p>
@@ -239,8 +208,7 @@ spec:
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p7622914235"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p7622914235"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p7622914235"></a>取值为metadata.annotations['huawei.com/Ascend910']，和环境上实际的芯片类型保持一致。</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p136226142031"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p136226142031"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p136226142031"></a><span id="zh-cn_topic_0000002362968521_ph230432885618"><a name="zh-cn_topic_0000002362968521_ph230432885618"></a><a name="zh-cn_topic_0000002362968521_ph230432885618"></a>Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>
-<div class="note" id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note462214141730"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note462214141730"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note462214141730"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"></a>该参数只支持使用<span id="ph123731542141613"><a name="ph123731542141613"></a><a name="ph123731542141613"></a>Volcano</span>调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
-</div></div>
+<p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"></a>该参数只支持使用<span id="ph123731542141613"><a name="ph123731542141613"></a><a name="ph123731542141613"></a>Volcano</span>调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row662216141939"><td class="cellrowborder" rowspan="5" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p106221514533"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p106221514533"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p106221514533"></a>fault-scheduling</p>
@@ -310,7 +278,7 @@ spec:
 
 **操作步骤<a name="section116575516299"></a>**
 
-1.  从mindcluster-deploy仓库获取源码，进入“k8s-deploy-tool“目录。
+1.  从mindcluster-deploy仓库获取源码，进入“k8s-deploy-tool”目录。
 
     ```
     git clone https://gitcode.com/Ascend/mindcluster-deploy.git && cd mindcluster-deploy/k8s-deploy-tool
@@ -336,17 +304,17 @@ spec:
     kubectl apply -f example/ome-runtimes/
     ```
 
-5.  编辑用户配置文件“config/isvc-config.yaml“。
-    1.  打开“config/isvc-config.yaml“文件。
+5.  编辑用户配置文件“config/isvc-config.yaml”。
+    1.  打开“config/isvc-config.yaml”文件。
 
         ```
         vi config/isvc-config.yaml
         ```
 
     2.  按“i”进入编辑模式，按实际情况修改文件中的字段。
-    3.  按“Esc”键，输入**:wq!**，按“Enter”保存并退出编辑。
+    3.  按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
 
-6.  （可选）创建任务名称空间。"xxx"为“config/isvc-config.yaml“设置的“app\_namespace“。如果“app\_namespace“为“default“或未设置，可以不创建名称空间。
+6.  （可选）创建任务名称空间。"xxx"为“config/isvc-config.yaml”设置的“app\_namespace”。如果“app\_namespace”为“default”或未设置，可以不创建名称空间。
 
     ```
     kubectl create ns xxx
@@ -378,7 +346,7 @@ spec:
 
     参数说明如下：
 
-    -   -n, --app-name：应用名称，必填。my-test为“config/isvc-config.yaml”中设置的“app\_name“。
+    -   -n, --app-name：应用名称，必填。my-test为“config/isvc-config.yaml”中设置的“app\_name”。
     -   -ns, --namespace：应用命名空间，选填。默认值为"default" 。
     -   -k, --kubeconfig：KubeConfig文件路径，选填。默认值为\~/.kube/config。
 

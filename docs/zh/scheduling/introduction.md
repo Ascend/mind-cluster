@@ -1626,7 +1626,7 @@ NPU Exporter
 2.  特性使用指导请参考[断点续训](./usage/resumable_training.md)章节进行操作。
 3.  TaskD需安装在容器内，详见[制作镜像](./usage/resumable_training.md#制作镜像)章节。
 4.  MindIO ACP的详细介绍及安装步骤请参见[Checkpoint保存与加载优化](./references.md#checkpoint保存与加载优化)章节。
-5.  MindIO TFT的详细介绍及安装步骤请参见[故障恢复与加速](./references.md#故障恢复加速)。
+5.  MindIO TFT的详细介绍及安装步骤请参见[故障恢复加速](./references.md#故障恢复加速)。
 
 ## 容器恢复<a name="ZH-CN_TOPIC_0000002492192948"></a>
 

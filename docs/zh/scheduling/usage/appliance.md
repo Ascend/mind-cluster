@@ -7,37 +7,11 @@
 ### 特性说明<a name="ZH-CN_TOPIC_0000002486738074"></a>
 
 <a name="table1866285218270"></a>
-<table><thead align="left"><tr id="row7663135222713"><th class="cellrowborder" valign="top" width="14.931493149314932%" id="mcps1.1.4.1.1"><p id="p266355252712"><a name="p266355252712"></a><a name="p266355252712"></a>功能名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="60.14601460146015%" id="mcps1.1.4.1.2"><p id="p066313523276"><a name="p066313523276"></a><a name="p066313523276"></a>说明</p>
-</th>
-<th class="cellrowborder" valign="top" width="24.922492249224923%" id="mcps1.1.4.1.3"><p id="p866385212720"><a name="p866385212720"></a><a name="p866385212720"></a>原理介绍及配置步骤</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row1466395215279"><td class="cellrowborder" valign="top" width="14.931493149314932%" headers="mcps1.1.4.1.1 "><p id="p16631352172718"><a name="p16631352172718"></a><a name="p16631352172718"></a>故障检测</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.14601460146015%" headers="mcps1.1.4.1.2 "><p id="p1376115912478"><a name="p1376115912478"></a><a name="p1376115912478"></a>该特性具有故障检测功能，支持实时监测350+硬件类故障的故障检测。</p>
-</td>
-<td class="cellrowborder" valign="top" width="24.922492249224923%" headers="mcps1.1.4.1.3 "><p id="p3664115213274"><a name="p3664115213274"></a><a name="p3664115213274"></a><a href="#故障检测">故障检测</a></p>
-</td>
-</tr>
-<tr id="row8664195222715"><td class="cellrowborder" valign="top" width="14.931493149314932%" headers="mcps1.1.4.1.1 "><p id="p9664252172717"><a name="p9664252172717"></a><a name="p9664252172717"></a>故障处理</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.14601460146015%" headers="mcps1.1.4.1.2 "><p id="p1411817177434"><a name="p1411817177434"></a><a name="p1411817177434"></a>该特性具有故障处理功能，针对故障级别配置为RestartRequestCodes、RestartBusinessCodes、FreeRestartNPUCodes和RestartNPUCodes的故障，故障发生后不需要人工介入就可自动恢复故障设备。</p>
-</td>
-<td class="cellrowborder" valign="top" width="24.922492249224923%" headers="mcps1.1.4.1.3 "><p id="p166425282717"><a name="p166425282717"></a><a name="p166425282717"></a><a href="#故障处理">故障处理</a></p>
-</td>
-</tr>
-<tr id="row1781918488293"><td class="cellrowborder" valign="top" width="14.931493149314932%" headers="mcps1.1.4.1.1 "><p id="p381964862916"><a name="p381964862916"></a><a name="p381964862916"></a>容器恢复</p>
-</td>
-<td class="cellrowborder" valign="top" width="60.14601460146015%" headers="mcps1.1.4.1.2 "><p id="p16958101123713"><a name="p16958101123713"></a><a name="p16958101123713"></a>该特性具有容器恢复功能，用户可配置容器启停的策略，针对故障级别配置为RestartRequestCodes、RestartBusinessCodes、FreeRestartNPUCodes和RestartNPUCodes的故障，故障发生时将容器停止，故障恢复后重新将容器拉起。</p>
-</td>
-<td class="cellrowborder" valign="top" width="24.922492249224923%" headers="mcps1.1.4.1.3 "><p id="p17819948202912"><a name="p17819948202912"></a><a name="p17819948202912"></a><a href="#容器恢复">容器恢复</a></p>
-</td>
-</tr>
-</tbody>
-</table>
+|功能名称|说明|原理介绍及配置步骤|
+|--|--|--|
+|故障检测|该特性具有故障检测功能，支持实时监测350+硬件类故障的故障检测。|<a href="#故障检测">故障检测</a>|
+|故障处理|该特性具有故障处理功能，针对故障级别配置为RestartRequestCodes、RestartBusinessCodes、FreeRestartNPUCodes和RestartNPUCodes的故障，故障发生后不需要人工介入就可自动恢复故障设备。|<a href="#故障处理">故障处理</a>|
+|容器恢复|该特性具有容器恢复功能，用户可配置容器启停的策略，针对故障级别配置为RestartRequestCodes、RestartBusinessCodes、FreeRestartNPUCodes和RestartNPUCodes的故障，故障发生时将容器停止，故障恢复后重新将容器拉起。|<a href="#容器恢复">容器恢复</a>|
 
 >[!NOTE] 说明 
 >本特性不适用于算力虚拟化场景，不支持共享设备特性及混插模式。
@@ -176,9 +150,9 @@ Container Manager从驱动获取到芯片故障码后，根据故障码对设备
 
 ##### （可选）配置芯片故障级别<a name="ZH-CN_TOPIC_0000002486737872"></a>
 
-如果用户想要自定义故障级别，可以创建自定义故障码配置文件，启动Container Manager组件时，作为“-faultConfigPath“参数的值传入即可。以故障名称dmp\_daemon节点状态检测异常，对应故障码80E21007为例。将当前故障的处理策略NotHandleFault修改为RestartNPU的操作示例如下。
+如果用户想要自定义故障级别，可以创建自定义故障码配置文件，启动Container Manager组件时，作为“-faultConfigPath”参数的值传入即可。以故障名称dmp\_daemon节点状态检测异常，对应故障码80E21007为例。将当前故障的处理策略NotHandleFault修改为RestartNPU的操作示例如下。
 
-1.  登录环境，进入任意目录（以下以“/home/container-manager“目录为例）。
+1.  登录环境，进入任意目录（以下以“/home/container-manager”目录为例）。
 2.  创建自定义故障码配置文件，以文件名为faultCode.json为例。
 
     ```
@@ -199,7 +173,7 @@ Container Manager从驱动获取到芯片故障码后，根据故障码对设备
     >[!NOTE] 说明 
     >同一故障码配置在多个故障级别中，会显示设置成功，但默认按照高等级故障处理。
 
-5.  将故障码80E21007在**NotHandleFaultCodes**中删除，并添加到**RestartNPUCodes**中。
+5.  将故障码80E21007从**NotHandleFaultCodes**中删除，并添加到**RestartNPUCodes**中。
 
     ```
     "NotHandleFaultCodes":[ 
@@ -245,7 +219,7 @@ Container Manager在RestartRequest和RestartBusiness故障持续60秒，或者�
 
 ### 容器恢复<a name="ZH-CN_TOPIC_0000002486578214"></a>
 
-Container Manager在感知到芯片处于RestartRequest、RestartBusiness、FreeRestartNPU和RestartNPU类型故障时，会按照命令run的启动参数“-ctrStrategy“配置的重启策略，进行容器停止与恢复。具体的容器停止与恢复的范围请参见<a href="../installation_guide.md#container-manager">安装Container Manager</a>中"Container Manager启动参数"表。
+Container Manager在感知到芯片处于RestartRequest、RestartBusiness、FreeRestartNPU和RestartNPU类型故障时，会按照命令run的启动参数“-ctrStrategy”配置的重启策略，进行容器停止与恢复。具体的容器停止与恢复的范围请参见<a href="../installation_guide.md#container-manager">安装Container Manager</a>中"Container Manager启动参数"表。
 
 容器启停过程中，会发生状态变化：
 
@@ -274,7 +248,7 @@ Container Manager在感知到芯片处于RestartRequest、RestartBusiness、Free
 
 1.  获取MindIE容器镜像。
     -   方式一：进入昇腾镜像仓库的[MindIE镜像下载](https://www.hiascend.com/developer/ascendhub/detail/af85b724a7e5469ebd7ea13c3439d48f)页面，下载MindIE镜像。
-    -   方式二：参考《MindIE安装指南》中的“安装MindIE \> 方式三：容器安装方式”章节，自行准备镜像。
+    -   方式二：参考《MindIE安装指南》中的“安装MindIE \> <a href="https://www.hiascend.com/document/detail/zh/mindie/230/envdeployment/instg/mindie_instg_0022.html">方式三：容器安装方式</a>”章节，自行准备镜像。
 
 2.  在节点上查看MindIE镜像。
 
@@ -318,7 +292,7 @@ Container Manager在感知到芯片处于RestartRequest、RestartBusiness、Free
         mkdir -p /data/atlas_dls/public/infer/script/Qwen3-1.7B
         ```
 
-    2.  启动容器，将目录“/data/atlas\_dls/public/infer/script/Qwen3-1.7B“挂载到容器中。
+    2.  启动容器，将目录“/data/atlas\_dls/public/infer/script/Qwen3-1.7B”挂载到容器中。
 
         ```
         docker run --rm -it \
@@ -328,13 +302,13 @@ Container Manager在感知到芯片处于RestartRequest、RestartBusiness、Free
 
         请用户将<mindie image:tag\>替换为实际镜像名和tag。
 
-    3.  在容器内，将config.json复制到“/data/atlas\_dls/public/infer/script/Qwen3-1.7B“中。
+    3.  在容器内，将config.json复制到“/data/atlas\_dls/public/infer/script/Qwen3-1.7B”中。
 
         ```
         cp  $MIES_INSTALL_PATH/conf/config.json /data/atlas_dls/public/infer/script/Qwen3-1.7B/
         ```
 
-        容器内环境变量MIES\_INSTALL\_PATH为MindIE Server的安装路径，默认为“/usr/local/Ascend/mindie/latest/mindie-service“，请用户替换为实际安装路径。
+        容器内环境变量MIES\_INSTALL\_PATH为MindIE Server的安装路径，默认为“/usr/local/Ascend/mindie/latest/mindie-service”，请用户替换为实际安装路径。
 
     4.  退出容器。
 
@@ -342,7 +316,7 @@ Container Manager在感知到芯片处于RestartRequest、RestartBusiness、Free
         exit
         ```
 
-    5.  在节点的“/data/atlas\_dls/public/infer/script/Qwen3-1.7B“目录中查看config.json文件。
+    5.  在节点的“/data/atlas\_dls/public/infer/script/Qwen3-1.7B”目录中查看config.json文件。
 
         ```
         ll
@@ -363,7 +337,7 @@ Container Manager在感知到芯片处于RestartRequest、RestartBusiness、Free
         vi /data/atlas_dls/public/infer/script/Qwen3-1.7B/config.json
         ```
 
-    2.  按“i”进入编辑模式，按实际使用情况修改如下参数。参数说明详细请参见《MindIE LLM开发指南》中的“核心概念与配置 \> 配置参数说明（服务化）”章节。
+    2.  按“i”进入编辑模式，按实际使用情况修改如下参数。参数说明详细请参见《MindIE LLM开发指南》中的“核心概念与配置 \> <a href="https://www.hiascend.com/document/detail/zh/mindie/230/mindiellm/llmdev/mindie_service0285.html">配置参数说明（服务化）</a>”章节。
 
         ```
         {
@@ -406,11 +380,11 @@ Container Manager在感知到芯片处于RestartRequest、RestartBusiness、Free
         其中，modelWeightPath为挂载到容器中的模型权重路径。
 
         >[!NOTICE] 须知 
-        >"httpsEnabled"表示是否开启HTTPS协议。设为"true"表示开启HTTPS协议，此时需要配置双向认证证书；设为"false"表示不开启HTTPS协议。推荐开启HTTPS协议，并参见《MindIE Motor开发指南》中的“配套工具 \> MindIE Service Tools \> CertTools”章节，配置开启HTTPS通信所需服务证书、私钥等证书文件。
+        >"httpsEnabled"表示是否开启HTTPS协议。设为"true"表示开启HTTPS协议，此时需要配置双向认证证书；设为"false"表示不开启HTTPS协议。推荐开启HTTPS协议，并参见《MindIE Motor开发指南》中的“配套工具 \> MindIE Service Tools \> <a href="https://www.hiascend.com/document/detail/zh/mindie/230/mindiemotor/motordev/mindie_service0312.html">CertTools</a>”章节，配置开启HTTPS通信所需服务证书、私钥等证书文件。
 
-    3.  按“Esc”键，输入**:wq!**，按“Enter”保存并退出编辑。
+    3.  按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
 
-6.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/inference/without-k8s/“目录下的启动脚本infer\_start.sh，放在节点目录“/data/atlas\_dls/public/infer/script/Qwen3-1.7B/“下，并对infer\_start.sh脚本进行编辑。
+6.  进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/inference/without-k8s/”目录下的启动脚本infer\_start.sh，放在节点目录“/data/atlas\_dls/public/infer/script/Qwen3-1.7B/”下，并对infer\_start.sh脚本进行编辑。
 
     1.  打开infer\_start.sh脚本。
 
@@ -435,7 +409,7 @@ Container Manager在感知到芯片处于RestartRequest、RestartBusiness、Free
         …
         ```
 
-    3.  按“Esc”键，输入**:wq!**，按“Enter”保存并退出编辑。
+    3.  按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
     4.  增加脚本可执行权限。
 
         ```

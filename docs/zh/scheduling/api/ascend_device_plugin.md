@@ -48,21 +48,44 @@ Ascend Device Plugin上报的灵衢总线设备故障信息如[表2](#table13455
 |-fault_time|故障发生时间。|-|
 |-fault_level|故障处理等级。|-|
 
-Ascend Device Plugin的ConfigMap中的描述信息如[表3](#table97108314503)所示。
+Ascend Device Plugin的ConfigMap上报的人工干预的故障级别芯片信息如[表3](#table9710232)所示。
 
-**表 3**  Description说明
+**表 3**  ManuallySeparateNPU说明
+
+<a name="table9710232"></a>
+|名称|含义|说明|
+|--|--|--|
+|ManuallySeparateNPU|因芯片多次故障，触发频率型故障升级策略，被ConfigMap记录到此键中。|多个芯片名称使用英文逗号分隔。|
+
+Ascend Device Plugin的ConfigMap上报的故障策略升级原因如[表4](#table9710233)所示。
+
+**表 4**  UpgradeFaultReason说明
+
+<a name="table9710233"></a>
+|名称|含义|说明|
+|--|--|--|
+|UpgradeFaultReason|故障码配置了频率型策略和持续型策略后，当触发故障升级时，记录故障升级原因和升级时间。|JSON的Map形式，键为芯片名称，值为导致该芯片故障升级的原因。|
+|-fault_code|芯片故障升级的故障码。|-|
+|-fault_level|升级后的故障级别。|-|
+|-upgrade_type|故障升级类型。|<ul><li>频率型升级：FaultFrequency</li><li>持续型升级：FaultDuration</li><li>自动填充型升级：FaultAutofill</li></ul>|
+|-upgrade_time|故障升级的时间点。|-|
+|<p>注：</p><ul><li>当Ascend Device Plugin从26.0.0之前版本升级到26.0.0及之后版本时，若Ascend Device Plugin的ConfigMap中已有的芯片故障升级到ManuallySeparateNPU，则会为该芯片隔离自动填充原因。其中-fault_code值为AutofillFaultCode，-upgrade_type为FaultAutofill。</li><li>故障升级原因会随着故障降级而删除，同时删除事件会记录到K8s的kube-system命名空间下的event事件中。</li></ul>|
+
+Ascend Device Plugin的ConfigMap中的描述信息如[表5](#table97108314503)所示。
+
+**表 5**  Description说明
 
 <a name="table97108314503"></a>
 |名称|含义|说明|
 |--|--|--|
 |Description|描述信息。|此ConfigMap中的节点的可用芯片信息正在日落。默认情况下，节点的可用芯片由Volcano维护，此ConfigMap中维护的不生效。如果需要生效，可以修改Volcano的配置参数“self-maintain-available-card”值为false。|
 
-Ascend Device Plugin上报的NPU设备故障信息如[表4](#table68216761214)所示。对象名称是<device-plugin-pod-name\>.<上报时间\><故障芯片ID\>，对象类型为Event。
+Ascend Device Plugin上报的NPU设备故障信息如[表6](#table68216761214)所示。对象名称是<device-plugin-pod-name\>.<上报时间\><故障芯片ID\>，对象类型为Event。
 
 >[!NOTE] 说明 
 >下表仅展示与MindCluster业务相关的字段说明，更多字段的说明详细请参见[Event core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#event-v1-core)。
 
-**表 4**  NPU设备故障信息
+**表 6**  NPU设备故障信息
 
 <a name="table68216761214"></a>
 |名称|含义|说明|
@@ -81,9 +104,9 @@ Ascend Device Plugin上报的NPU设备故障信息如[表4](#table68216761214)�
 
 deviceNameCustomization.json支持自定义设备名称。编译Ascend Device Plugin镜像时，将该文件放在二进制包的同级目录下，即可将Ascend Device Plugin对外展示的资源类型、资源名称修改为自定义的名称。
 
-**表 5**  deviceNameCustomization.json支持自定义设备名称
+**表 7**  deviceNameCustomization.json支持自定义设备名称
 
-<a name="table7618951152212"></a>
+<a name="table76189511522121"></a>
 |名称|含义|说明|
 |--|--|--|
 |ResourceType|设备的初始名称，必填。|仅支持Ascend910、Ascend310和Ascend310P中的一种。|
@@ -94,7 +117,7 @@ deviceNameCustomization.json支持自定义设备名称。编译Ascend Device Pl
 
 ## 任务信息<a name="ZH-CN_TOPIC_0000002479226860"></a>
 
-**fault-config-_<_任务名称\><a name="section1786481083812"></a>**
+**fault-config-<任务名称\><a name="section1786481083812"></a>**
 
 **表 1**  fault-config-任务名称
 
@@ -416,18 +439,19 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 |-|EventId|故障码ID。<p>每个故障码（EventId）只允许配置一个FaultFrequency参数，如果配置了多个，则只有第一条正确的会生效。</p>|
 |-|TimeWindow|时间窗口，即统计当前时间减去TimeWindow的时间至当前时间，这段时间范围内的故障次数，单位为秒，取值范围为60~864000。|
 |-|Times|任务支持的断点续训最大次数，即同一个故障出现的次数上限，取值范围为1~100。如果在时间窗口内该故障出现次数大于或等于该值，则按照FaultHandling中定义的策略处理和上报。|
-|-|FaultHandling|<p>达到断点续训最大次数后故障的处理策略，支持配置不同级别的故障处理策略，同时还支持配置PreSeparateNPU以及ManuallySeparateNPU故障处理策略。</p><ul><li>PreSeparateNPU：大模型的故障处理策略。该故障处理模式为预隔离芯片，根据训练任务实际运行情况判断是否重调度。</li><li>ManuallySeparateNPU：需人工干预的故障处理策略。<ul><li>出现该策略时，将直接上报K8s该芯片不健康并将芯片名字写入device-info-cm。</li><li>芯片名称只要保存于该字段中，即使故障恢复也仍然隔离芯片，直到运维人员手动在该字段中删除芯片名称。</li><li>该字段只允许Ascend Device Plugin新增或修改，维护人员只能删除该字段中的芯片名称。</li><li>faultCode.json暂不支持该策略。</li></ul></li></ul>|
+|-|FaultHandling|<p>达到断点续训最大次数后故障的处理策略，支持配置不同级别的故障处理策略。其中只有ManuallySeparateNPU级别会持续维持，若配置了ReleaseTimeWindow，则可达到条件后自动释放。其他故障处理级别只会升级处理一次，然后自动降级为故障原级别。</p><ul><li>PreSeparateNPU：大模型的故障处理策略。该故障处理模式为预隔离芯片，根据训练任务实际运行情况判断是否重调度。</li><li>ManuallySeparateNPU：需人工干预的故障处理策略。<ul><li>出现该策略时，将直接上报K8s该芯片不健康并将芯片名字写入device-info-cm。</li><li>芯片名称只要保存于该字段中，即使故障恢复也仍然隔离芯片，直到运维人员手动在该字段中删除芯片名称。</li><li>该字段只允许Ascend Device Plugin新增或修改，维护人员只能删除该字段中的芯片名称。</li><li>faultCode.json暂不支持该策略。</li></ul></li></ul>|
+|-|ReleaseTimeWindow|当频率型故障处理策略为ManuallySeparateNPU时，若故障已经恢复，并持续超过ReleaseTimeWindow的时间窗没有再发送该故障，则ManuallySeparateNPU自动降级。该参数的取值范围为60~int32最大值，单位为秒。若不配置该参数，则表示策略升级为ManuallySeparateNPU后不降级。|
 |FaultDuration|-|自定义故障超时策略，当某一故障持续时间达到配置上限时，该故障会按照指定的故障处理策略进行处理。<ul><li>FaultDuration及其子参数取值范围不正确，则忽略该条配置。</li><li>FaultDuration及其子参数数据格式不正确，则会使用默认配置。</li></ul>|
 |-|EventId|故障ID。<p>每个故障码（EventId）只允许配置一个FaultDuration参数，如果配置了多个，则只有第一条正确的会生效。</p>|
 |-|FaultTimeout|故障持续时间超过该值，则按照FaultHandling中定义的故障处理策略进行处理，单位为秒，取值范围为0~600，默认值说明如下。<ul><li>故障ID为81078603的参数面网络故障默认值为20。</li><li>故障ID为80E01801的片上内存多Bit故障默认值为30。</li><li>其余故障默认值为0。</li></ul>|
 |-|RecoverTimeout|故障恢复时间超过该值，则上报故障恢复，单位为秒，取值范围为0~86400，默认值说明如下。<ul><li>故障ID为81078603的参数面网络故障默认值为60。不建议设置为0，建议大于listWatchPeriod健康状态检查周期。关于listWatchPeriod的详细说明请参见<a href="../installation_guide.md#ascend-device-plugin">Ascend Device Plugin</a>中"Ascend Device Plugin启动参数"表。</li><li>其余故障默认值为0。</li></ul>|
-|-|FaultHandling|<p>超过故障持续时间后的故障处理策略，支持配置不同级别的故障处理策略，同时还支持配置PreSeparateNPU故障处理策略。</p><p>超过故障持续时间后的故障处理策略，建议高于故障本身的故障处理策略，否则配置不生效。</p>|
-|注：<ul><li>如果一个故障码同时配置了故障频率（FaultFrequency）和故障超时策略（FaultDuration），该故障码在TimeWindow时间窗口中超时次数达到任务支持的最大次数，则采用以下三者中最严重的等级进行处理。这三者分别为：故障本身的故障处理策略、FaultFrequency和FaultDuration中配置的故障处理策略。</li><li>如果一个故障码同时配置了故障频率和故障超时策略，只有当故障超时后，故障频次才会增加一次。</li><li>故障ID为81078603的网络故障只支持配置为NotHandleFault、PreSeparateNPU或SeparateNPU三种故障处理策略，若配置为其他策略则使用默认配置NotHandleFault。</li></ul>|
+|-|FaultHandling|<p>超过故障持续时间后的故障处理策略，支持配置不同级别的故障处理策略，同时还支持配置PreSeparateNPU故障处理策略。</p><p>超过故障持续时间后的故障处理策略，建议高于故障本身的故障处理策略，否则配置不生效。</p><p>不支持配置ManuallySeparateNPU策略，配置不生效。</p>|
+|注：<ul><li>如果一个故障码同时配置了故障频率（FaultFrequency）和故障超时策略（FaultDuration），该故障码在TimeWindow时间窗口中超时次数达到任务支持的最大次数，则采用以下三者中最严重的等级进行处理。这三者分别为：故障本身的故障处理策略、FaultFrequency和FaultDuration中配置的故障处理策略。</li><li>如果一个故障码同时配置了故障频率和故障超时策略，只有当故障超时后，故障频次才会增加一次。故障恢复超过RecoverTimeout才算恢复，恢复后再次故障超时才能累积下一次计数。</li><li>故障ID为81078603的网络故障只支持配置为NotHandleFault、PreSeparateNPU或SeparateNPU三种故障处理策略，若配置为其他策略则使用默认配置NotHandleFault。</li><li>当Ascend Device Plugin从26.0.0之前版本升级到26.0.0及之后版本时，若Ascend Device Plugin的ConfigMap中已经包含了ManuallySeparateNPU键值，则其降级的时间窗为faultCustomization.json中最大的ReleaseTimeWindow值，若没有任何故障码配置ReleaseTimeWindow，则ConfigMap已有的ManuallySeparateNPU不降级。</li></ul>|
 
 
 ## 自定义灵衢设备故障<a name="ZH-CN_TOPIC_0000002511426735"></a>
 
-断点续训针对**灵衢总线设备**故障的不同级别进行分级处理。若用户需要修改故障码的故障级别，操作指导请参见[（可选）配置总线设备故障级别](../usage/resumable_training.md#可选配置总线设备故障级别)。
+断点续训针对灵衢总线设备故障的不同级别进行分级处理。若用户需要修改故障码的故障级别，操作指导请参见[（可选）配置总线设备故障级别](../usage/resumable_training.md#可选配置总线设备故障级别)。
 
 Ascend Device Plugin从驱动获取到故障码后，将根据故障码对设备及业务的影响将故障划分为以下五种级别并进行相应的重调度处理，详细说明请参见[表1](#table212253274720)。
 
