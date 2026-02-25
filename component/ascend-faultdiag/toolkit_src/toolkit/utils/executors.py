@@ -51,7 +51,8 @@ CALLABLE_PARAM = Optional[Callable[[CommandResult], None]]
 
 
 def default_error_callback(result: CommandResult):
-    msg = f"Command {result.cmd} failed with return code {result.returncode}, stdout: {result.stdout}, stderr: {result.stderr}"
+    msg = (f"Command {result.cmd} failed with return code {result.returncode}, stdout: {result.stdout}, "
+           f"stderr: {result.stderr}")
     DIAG_LOGGER.error(msg)
 
 
@@ -234,13 +235,6 @@ class AsyncSSHExecutor(AsyncExecutor):
         self.shell_channel: Optional[paramiko.Channel] = None
         self._lock = threading.Lock()
         self.last_prompt = ""  # 记录上次命令提示符
-
-    def __del__(self):
-        try:
-            if not asyncio.get_event_loop().is_closed():
-                asyncio.run_coroutine_threadsafe(self.close(), asyncio.get_event_loop())
-        except Exception as e:
-            DIAG_LOGGER.error(f"del失败: {str(e)}")
 
     @staticmethod
     def _load_private_key(private_key, passphrase):
@@ -571,7 +565,6 @@ class AsyncSSHExecutor(AsyncExecutor):
 
                 # 检查命令是否完成（通过提示符判断）
                 full_output = ''.join(all_stdout)
-                # TODO 若end_sign未获取到，只能等超时时间退出，timeout不能设置太大，根据命令时间情况设置
                 if end_sign and end_sign in full_output and full_output.endswith(end_sign):
                     # 更新最后提示符
                     self.last_prompt = full_output.splitlines()[-1]

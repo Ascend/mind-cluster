@@ -25,7 +25,6 @@ class SwiCliOutputTxtParser(SwitchOutputParser):
     _NAME_PATTERN = re.compile(r"<([^>]+)>")
     _SPLIT_PATTERN = re.compile(r"[\[<]")
 
-
     def __init__(self, file_content: str):
         super().__init__()
         self.file_content = file_content

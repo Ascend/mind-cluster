@@ -24,6 +24,7 @@ import sys
 from pathlib import Path
 from typing import List, Tuple, Dict, Generator
 
+
 def convert_log_path(input_path: str) -> str:
     os_name = platform.system().lower()
     abs_input_path = os.path.abspath(input_path)

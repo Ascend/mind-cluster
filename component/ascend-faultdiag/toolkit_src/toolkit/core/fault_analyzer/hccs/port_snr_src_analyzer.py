@@ -41,7 +41,6 @@ class PortSnrSrcAnalyzer(Analyzer):
                     Domain(diag_enum.DeviceType.SWI_PORT.value, f"{port_snr.interface_name}"),
                 ]
                 for abnormal_lane_snr in port_snr.abnormal_lane_snr:
-                    # TODO 确认SNR类型
                     check_res = self.cluster_info.get_threshold().CDR_HOST_SNR_LINE.check_value_str(
                         abnormal_lane_snr.snr_value)
                     if not check_res:

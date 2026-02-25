@@ -70,8 +70,8 @@ class HostLoopbackCollector(HostCollector):
             await self.collect_optical_loopback_enable(npu_id, OpticalLoopbackMode.NO_LOOPBACK.value)
 
         host_info = HostInfo(host_id, sn_num, server_superpod_id=server_superpod_id, server_index=server_index,
-                             loopback_info=[loopback_info for sublist in self.same_npu_loopback_map.values() for
-                                            loopback_info in sublist])
+                             loopback_info_list=[loopback_info for sublist in self.same_npu_loopback_map.values() for
+                                                 loopback_info in sublist])
         return host_info
 
     async def enable_optical_loopback(self, same_sn_npu_ids: List[str]):

@@ -48,7 +48,6 @@ class PortSnrDestAnalyzer(Analyzer):
                     Domain(DeviceType.SWITCH.value, f"{swi.name} {swi.swi_id}"),
                     Domain(DeviceType.SWI_PORT.value, f"{port_mapping.swi_port}"),
                 ]
-                # TODO 确认SNR类型
                 check_res = self.cluster_info.get_threshold().CDR_HOST_SNR_LINE.check_value_str(port_snr.snr)
                 if not check_res:
                     continue

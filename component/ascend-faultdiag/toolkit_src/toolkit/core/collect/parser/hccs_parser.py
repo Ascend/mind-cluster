@@ -292,4 +292,3 @@ class HccsParser:
                 port_snr.snr = lane_info.snr
                 res.append(port_snr)
         return res
-

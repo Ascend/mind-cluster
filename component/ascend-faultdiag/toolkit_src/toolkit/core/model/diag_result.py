@@ -32,7 +32,7 @@ class Domain(JsonObj):
 
 class DiagResult(JsonObj):
 
-    def __init__(self, domain: List[Domain], fault_info: str="", suggestion: str="", err_code=""):
+    def __init__(self, domain: List[Domain], fault_info: str = "", suggestion: str = "", err_code=""):
         self.domain = domain
         self.fault_info = fault_info
         self.suggestion = suggestion

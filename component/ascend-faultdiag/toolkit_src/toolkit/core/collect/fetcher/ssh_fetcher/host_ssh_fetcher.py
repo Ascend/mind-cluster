@@ -46,17 +46,14 @@ class HostSshFetcher(SshFetcher, HostFetcher):
 
     async def fetch_npu_mapping(self) -> dict:
         """
-                获取NPU映射信息
-
-                通过执行npu-smi命令获取NPU芯片的映射关系，解析命令输出并构建成字典结构
-
-                Args:
-                    self: 类实例
-
-                Returns:
-                    dict: NPU映射字典，格式为 {npu_id: {chip_id: chip_phy_id}}
-                          其中npu_id为NPU编号，chip_id为芯片ID，chip_phy_id为芯片物理ID
-                """
+        获取NPU映射信息
+        通过执行npu-smi命令获取NPU芯片的映射关系，解析命令输出并构建成字典结构
+        Args:
+            self: 类实例
+        Returns:
+            dict: NPU映射字典，格式为 {npu_id: {chip_id: chip_phy_id}}
+                  其中npu_id为NPU编号，chip_id为芯片ID，chip_phy_id为芯片物理ID
+        """
         command_stdout = ""
         try:
             command_res = await self.executor.run_cmd(CmdTask("npu-smi info -m"))

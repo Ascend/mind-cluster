@@ -50,7 +50,7 @@ class LaneReductionAnalyzer(Analyzer):
                 if not if_info:
                     continue
                 fault_desc = self._LANE_REDUCTION_DESC_TEMPLATE.format(if_name)
-                _ , peer_info = self.cluster_info.find_peer_swi_interface_info_by_if_info(if_info)
+                _, peer_info = self.cluster_info.find_peer_swi_interface_info_by_if_info(if_info)
                 if peer_info:
                     fault_desc += f", 对端端口信息: {peer_info.get_inspection_interface_info()}"
                 res = DiagResult([Domain(DeviceType.SWITCH, swi_info.swi_id), Domain(DeviceType.SWI_PORT, if_name)],

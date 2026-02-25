@@ -76,7 +76,7 @@ class HccsCollector(Collector):
 
     async def coll_hccs_proxy_response_detail_interfaces(
             self, proxy_response_error_records: List[ProxyTimeoutStatis]
-    ) -> list[InterfaceProxyResponseDetail]:
+    ) -> List[InterfaceProxyResponseDetail]:
         cmd_res = await self.fetcher.fetch_hccs_proxy_response_detail_interfaces(proxy_response_error_records)
         return self.parser.parse_hccs_proxy_response_detail_interfaces(cmd_res, proxy_response_error_records)
 
@@ -112,6 +112,6 @@ class HccsCollector(Collector):
         cmd_res = await self.fetcher.fetch_port_snr()
         port_snr_table_list = self.parser.parse_hccs_port_snr_table(cmd_res)
 
-        switch_log_info = await self.fetcher.fetch_switch_log_info()
+        switch_log_info = await self.fetcher.fetch_port_down_status()
         port_snr_line_list = self.parser.parse_hccs_port_snr_line(switch_log_info)
         return port_snr_table_list + port_snr_line_list

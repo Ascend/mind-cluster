@@ -56,8 +56,9 @@ class FindResult(JsonObj):
 class LogParser(abc.ABC):
 
     @staticmethod
-    def fill_search_info(find_results: List[FindResult], log_pattern_map: Dict[str, LogParsePattern]) -> List[
-        FindResult]:
+    def fill_search_info(
+            find_results: List[FindResult], log_pattern_map: Dict[str, LogParsePattern]
+    ) -> List[FindResult]:
         results = []
         for find_result in find_results:
             info_dict_pattern = log_pattern_map[find_result.pattern_key].info_dict_pattern

@@ -44,22 +44,21 @@ class HostLoopbackAnalyzer(Analyzer):
 
     def host_loopback_diag(self, host_info: HostInfo):
         results = []
-        if not host_info or not host_info.loopback_info:
+        if not host_info or not host_info.loopback_info_list:
             return results
-        for chip_loopback_info in host_info.loopback_info:
-            if not chip_loopback_info.host_input_enable:
+        for loopback_info in host_info.loopback_info_list:
+            if not loopback_info.host_input_enable:
                 return results
-            if not chip_loopback_info.host_input_link_stat.is_first_record_up():
+            if not loopback_info.host_input_link_stat.is_first_record_up():
                 results.append(DiagResult(
-                    self.get_npu_chip_domain(host_info.host_id, chip_loopback_info.npu_id, chip_loopback_info.chip_phy_id),
+                    self.get_npu_chip_domain(host_info.host_id, loopback_info.npu_id, loopback_info.chip_phy_id),
                     "本端环回类型1后端口down，诊断为本端故障",
                     "建议交叉模组、线缆，如果有CDR板需要做CDR环回"
                 ))
-            if chip_loopback_info.media_output_enable and chip_loopback_info.media_output_link_stat.is_first_record_up():
+            if loopback_info.media_output_enable and loopback_info.media_output_link_stat.is_first_record_up():
                 results.append(DiagResult(
-                    self.get_npu_chip_domain(host_info.host_id, chip_loopback_info.npu_id, chip_loopback_info.chip_phy_id),
+                    self.get_npu_chip_domain(host_info.host_id, loopback_info.npu_id, loopback_info.chip_phy_id),
                     "本端环回类型1后端口up，环回类型2后端口down，诊断为本端端口光模块故障/赃污",
                     "建议排查本端端口光模块故障/赃污"
                 ))
         return results
-

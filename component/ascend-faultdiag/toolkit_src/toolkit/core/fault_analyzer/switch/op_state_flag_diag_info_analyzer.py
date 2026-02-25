@@ -65,7 +65,8 @@ class OpStateFlagDiagInfoAnalyzer(Analyzer):
                                 check_state = str(check_state).strip()
                                 if check_state != check_item.normal_value:
                                     lane_info = f"{('lane' + str(idx) + ' ') if check_item.is_multi_lane else ''}"
-                                    lane_fault_info = f"{lane_info}{check_item.desc} {diag_info.items}值异常: {check_state}, 预期为: {check_item.normal_value}"
+                                    lane_fault_info = (f"{lane_info}{check_item.desc} {diag_info.items}"
+                                                       f"值异常：{check_state}，预期为：{check_item.normal_value}")
                                     cur_fault_info.append(lane_fault_info)
                             fault_info_list.extend(cur_fault_info)
                             break

@@ -34,6 +34,5 @@ class MayiInspection:
         self.diag_ctx.close()
 
 
-
 if __name__ == '__main__':
     asyncio.run(MayiInspection().main())

@@ -29,6 +29,7 @@ class L1SwiServerMapping(JsonObj):
         self.server_ip = server_ip
         self.bmc_ip = bmc_ip
 
+
 # 机框映射关系 l1->服务器->bmc
 class ChassisMapping(JsonObj):
 

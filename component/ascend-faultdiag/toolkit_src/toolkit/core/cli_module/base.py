@@ -16,7 +16,7 @@
 # ==============================================================================
 
 import abc
-from typing import Dict, List, final
+from typing import Dict, List
 
 from toolkit.core.context.diag_ctx import DiagCtx
 
@@ -75,7 +75,6 @@ class CliModel(abc.ABC):
         parser.add_argument("action", metavar='actions', nargs='?', choices=['?', '？'], default=None,
                             help=f"?(？)=查看{self.get_key()}详细信息；无参数={self.get_help()}")
 
-    @final
     def run(self, *args) -> str:
         args = list(filter(bool, args))
         if args and args[0] in ("?", "？"):

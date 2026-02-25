@@ -87,8 +87,9 @@ class SwiCliOutputFetcher(SwitchFetcher):
     async def fetch_hccs_proxy_response_statistics(self) -> str:
         return self.parsed_data.fetch_data_by_name(SwiCliOutputDataType.HCCS_PROXY_RESP_STATISTIC.name)
 
-    async def fetch_hccs_proxy_response_detail_interfaces(self, proxy_response_error_records: List[
-        ProxyTimeoutStatis]) -> str:
+    async def fetch_hccs_proxy_response_detail_interfaces(
+            self, proxy_response_error_records: List[ProxyTimeoutStatis]
+    ) -> str:
         return self.parsed_data.fetch_data_by_name(SwiCliOutputDataType.HCCS_PROXY_RESP_DETAIL.name)
 
     async def fetch_hccs_route_miss(self) -> str:

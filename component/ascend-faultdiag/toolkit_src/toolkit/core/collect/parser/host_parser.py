@@ -26,7 +26,7 @@ from toolkit.utils.form_parser import FormParser
 class HostParser:
     _NET_HEALTH_PATTERN = re.compile(r"net health status: (.+?)$")
     _LINK_STATUS_PATTERN = re.compile(r"link status: (.+?)$")
-    _RECORD_PATTERN = re.compile(r'\[devid \d+\]\s+(\w+\s+\w+\s+\d+\s+\d+:\d+:\d+\s+\d+)\s+(LINK UP|LINK DOWN)')
+    _RECORD_PATTERN = re.compile(r'\[devid \d+]\s+(\w+\s+\w+\s+\d+\s+\d+:\d+:\d+\s+\d+)\s+(LINK UP|LINK DOWN)')
 
     @classmethod
     def parse_optical_info(cls, cmd_res: str) -> HCCNOpticalInfo:

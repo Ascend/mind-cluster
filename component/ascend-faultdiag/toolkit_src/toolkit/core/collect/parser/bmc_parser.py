@@ -57,4 +57,3 @@ class BmcParser:
         for data in parse_data_list:
             health_events.append(BmcHealthEvents.from_dict(data))
         return health_events
-

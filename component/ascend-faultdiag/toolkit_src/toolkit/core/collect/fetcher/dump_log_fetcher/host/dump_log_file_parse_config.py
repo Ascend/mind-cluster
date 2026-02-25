@@ -39,6 +39,7 @@ class ParseConfigCollection(abc.ABC):
     def get_configs(cls) -> List[ParseConfig]:
         pass
 
+
 class ParseConfigCollectionV1(ParseConfigCollection):
     _HCCN_TOOL_PATH = "hccn_tool.log"
     _NPU_CARD_INFO = "npu_card_info.log"
@@ -83,6 +84,7 @@ class ParseConfigCollectionV1(ParseConfigCollection):
                         cls._VERSION_INFO_PATH)
         ]
 
+
 class ParseConfigCollectionV2(ParseConfigCollection):
     _NET_CONF_PATH = os.path.join("hccn_log", "net_conf.log")
     _OPTICAL_PATH = os.path.join("hccn_log", "optical.log")
@@ -118,6 +120,7 @@ class ParseConfigCollectionV2(ParseConfigCollection):
             # pcie_log/pcie.log
             ParseConfig(ToolLogCollectionDataType.NPU_TYPE, ToolLogCollectionSplitType.NONE, "pcie", cls._PCIE_PATH)
         ]
+
 
 class ParseConfigCollectionV3(ParseConfigCollection):
     _LLDP_LOG = "lldp.log"

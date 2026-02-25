@@ -28,7 +28,8 @@ class InspectionInterfaceInfo(JsonObj):
         self.interface_sn = interface_sn
 
     def __str__(self):
-        return f"设备名：{self.device_name}，设备id：{self.device_id}，设备sn：{self.device_sn}，端口：{self.interface}，端口sn：{self.interface_sn}"
+        return (f"设备名：{self.device_name}，设备id：{self.device_id}，设备sn：{self.device_sn}，端口：{self.interface}，"
+                f"端口sn：{self.interface_sn}")
 
 
 class InspectionErrorItem(JsonObj):

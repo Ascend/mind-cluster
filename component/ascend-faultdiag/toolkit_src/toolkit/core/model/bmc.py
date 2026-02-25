@@ -181,7 +181,7 @@ class BmcInfo(JsonObj):
         self.health_events = health_events or []
         self.link_down_optical_module_history_logs = link_down_optical_module_history_logs or []
         self.bmc_date = bmc_date
-        self._bmc_npu_infos: List[BmcNpuInfo] = None
+        self._bmc_npu_infos: List[BmcNpuInfo] = []
 
     def get_bmc_npu_infos(self) -> List[BmcNpuInfo]:
         if self._bmc_npu_infos:

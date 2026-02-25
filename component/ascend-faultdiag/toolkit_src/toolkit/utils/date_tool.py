@@ -19,6 +19,7 @@
 import time
 from datetime import datetime
 
+
 class DateObj:
 
     def __init__(self, date_str: str, date_fmt: str):
@@ -40,5 +41,3 @@ class DateObj:
         返回值为负数表示self的时间早于other的时间
         """
         return self.timestamp - other.timestamp
-
-    

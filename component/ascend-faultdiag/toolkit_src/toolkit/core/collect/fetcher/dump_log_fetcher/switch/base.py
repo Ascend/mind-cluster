@@ -54,4 +54,3 @@ class SwitchOutputParser(abc.ABC):
                                                        self._IP_PATTERN)
         if search:
             self.parse_data.add_data([SwiCliOutputDataType.SWI_IP.name], search.group(1))
-

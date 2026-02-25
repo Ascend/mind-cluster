@@ -520,7 +520,7 @@ class HostInfo(JsonObj):
     def __init__(self, host_id: str, sn_num: str, hostname="", server_superpod_id="", server_index="",
                  msnpureport_log: List[FindResult] = None,
                  npu_chip_info: Dict[str, NpuChipInfo] = None,
-                 loopback_info: List[NpuChipLoopBackInfo] = None):
+                 loopback_info_list: List[NpuChipLoopBackInfo] = None):
         self.host_id = host_id
         self.sn_num = sn_num
         self.hostname = hostname
@@ -528,7 +528,7 @@ class HostInfo(JsonObj):
         self.server_index = server_index
         self.msnpureport_log = msnpureport_log
         self.npu_chip_info = npu_chip_info
-        self.loopback_info = loopback_info
+        self.loopback_info_list = loopback_info_list
 
     def get_msn_logs_by_type(self, type_key: str) -> List[FindResult]:
         if not type_key:

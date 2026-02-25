@@ -16,6 +16,7 @@
 # ==============================================================================
 
 import abc
+import asyncio
 import collections
 import os.path
 import re
@@ -24,9 +25,8 @@ from typing import List, Dict, Tuple
 from toolkit.core.collect.collect_config import ToolLogCollectionDataType, ToolLogCollectionSplitType
 from toolkit.core.collect.fetcher.dump_log_fetcher.base import DumpLogDirParser
 from toolkit.core.collect.fetcher.dump_log_fetcher.cli_output_parsed_data import CliOutputParsedData
-from toolkit.core.collect.fetcher.dump_log_fetcher.host.dump_log_file_parse_config import \
-    ParseConfig, ParseConfigCollectionV1, ParseConfigCollectionV2, \
-    ParseConfigCollectionV3
+from toolkit.core.collect.fetcher.dump_log_fetcher.host.dump_log_file_parse_config import ParseConfig, \
+    ParseConfigCollectionV1, ParseConfigCollectionV2, ParseConfigCollectionV3
 from toolkit.core.log_parser.base import FindResult
 from toolkit.core.log_parser.local_log_parser import LocalLogParser
 from toolkit.core.log_parser.parse_config import msnpureport_log_config
@@ -131,7 +131,7 @@ class HostDumpLogParser(DumpLogDirParser, abc.ABC):
             log_dir = os.path.join(self.parse_dir, file)
             if not os.path.isdir(log_dir):
                 continue
-            result.extend(LocalLogParser().find(log_dir, pattern_map))
+            result.extend(asyncio.run(LocalLogParser().find(log_dir, pattern_map)))
         return result
 
 

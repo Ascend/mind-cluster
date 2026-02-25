@@ -19,8 +19,7 @@ import abc
 from typing import List
 
 from toolkit.core.collect.fetcher.base import Fetcher
-from toolkit.core.model.bmc import BmcSensorInfo, BmcSelInfo, BmcHealthEvents, \
-    LinkDownOpticalModuleHistoryLog
+from toolkit.core.model.bmc import BmcSensorInfo, BmcSelInfo, BmcHealthEvents, LinkDownOpticalModuleHistoryLog
 
 
 class BmcFetcher(Fetcher):

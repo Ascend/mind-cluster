@@ -22,15 +22,11 @@ from typing import Dict, Type, List, Tuple
 
 from toolkit.core.collect.collect_config import SwiCliOutputDataType
 from toolkit.core.collect.fetcher.dump_log_fetcher.base import DumpLogDirParser
-from toolkit.core.collect.fetcher.dump_log_fetcher.bmc.bmc_dump_log_fetcher import \
-    BmcDumpLogFetcher
-from toolkit.core.collect.fetcher.dump_log_fetcher.bmc.bmc_dump_log_parser import \
-    BmcDumpLogParser
+from toolkit.core.collect.fetcher.dump_log_fetcher.bmc.bmc_dump_log_fetcher import BmcDumpLogFetcher
+from toolkit.core.collect.fetcher.dump_log_fetcher.bmc.bmc_dump_log_parser import BmcDumpLogParser
 from toolkit.core.collect.fetcher.dump_log_fetcher.cli_output_parsed_data import CliOutputParsedData
-from toolkit.core.collect.fetcher.dump_log_fetcher.host.host_dump_log_fetcher import \
-    HostDumpLogFetcher
-from toolkit.core.collect.fetcher.dump_log_fetcher.host.host_log_parser_builder import \
-    HostLogParserBuilder
+from toolkit.core.collect.fetcher.dump_log_fetcher.host.host_dump_log_fetcher import HostDumpLogFetcher
+from toolkit.core.collect.fetcher.dump_log_fetcher.host.host_log_parser_builder import HostLogParserBuilder
 from toolkit.core.collect.fetcher.dump_log_fetcher.switch.diag_info_output.collect_diag_info_log_parser import \
     CollectDiagInfoLogParser, DiagInfoParseResult
 from toolkit.core.collect.fetcher.dump_log_fetcher.switch.swi_cli_output_parser import SwiCliOutputParser
@@ -213,8 +209,9 @@ class InitFetcher(DiagService):
             except Exception as e:
                 DIAG_LOGGER.error(f"unzip zip failed: {e}")
 
-    async def _parse_cli_and_log(self, switch_dump_log_dir: str) -> Tuple[
-        List[asyncio.Future[dict]], List[asyncio.Future[DiagInfoParseResult]]]:
+    async def _parse_cli_and_log(
+            self, switch_dump_log_dir: str
+    ) -> Tuple[List[asyncio.Future[dict]], List[asyncio.Future[DiagInfoParseResult]]]:
         diag_info_dirs, cli_output_txt_paths = SwitchLogPathFinder.find(switch_dump_log_dir)
         # 解析回显
         cli_output_futures = []

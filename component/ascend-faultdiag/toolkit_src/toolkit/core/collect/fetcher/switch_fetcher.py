@@ -87,8 +87,9 @@ class SwitchFetcher(Fetcher):
         return ""
 
     @abc.abstractmethod
-    async def fetch_hccs_proxy_response_detail_interfaces(self, proxy_response_error_records: List[
-        ProxyTimeoutStatis]) -> str:
+    async def fetch_hccs_proxy_response_detail_interfaces(
+            self, proxy_response_error_records: List[ProxyTimeoutStatis]
+    ) -> str:
         return ""
 
     @abc.abstractmethod
@@ -113,7 +114,7 @@ class SwitchFetcher(Fetcher):
 
     @abc.abstractmethod
     async def has_hccs(self) -> bool:
-        return ""
+        pass
 
     @abc.abstractmethod
     async def fetch_port_snr(self) -> str:

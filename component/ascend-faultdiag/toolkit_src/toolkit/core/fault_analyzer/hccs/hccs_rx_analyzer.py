@@ -23,8 +23,7 @@ from toolkit.core.model.cluster_info_cache import ClusterInfoCache
 from toolkit.core.model.diag_result import DiagResult, Domain
 from toolkit.core.model.switch import SwitchInfo
 from toolkit.utils.logger import DIAG_LOGGER
-
-from core.model.hccs import ProxyTimeoutStatis
+from toolkit.core.model.hccs import ProxyTimeoutStatis
 
 
 @register_analyzer

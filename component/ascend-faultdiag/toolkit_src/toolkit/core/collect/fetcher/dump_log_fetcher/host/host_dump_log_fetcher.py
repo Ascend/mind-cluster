@@ -91,4 +91,3 @@ class HostDumpLogFetcher(HostFetcher):
 
     async def fetch_hccn_tool_link_status(self, chip_phy_id) -> str:
         return self.parsed_data.fetch_data_by_chip_phy_id(ToolLogCollectionDataType.HCCN_LINK_STATUS, chip_phy_id)
-

@@ -13393,7 +13393,8 @@
             "regex": {
                 "in": [
                     ["[Heartbeat]cqe err status"],
-                    ["[Heartbeat]cqe error status"]
+                    ["[Heartbeat]cqe error status"],
+                    ["cqe error status[12]"]
                 ]
             }
         },

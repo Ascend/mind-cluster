@@ -25,7 +25,7 @@ from toolkit.core.service.load_cache import LoadCache
 
 class Inspection:
 
-    def __init__(self, diag_ctx=DiagCtx(), customer: Customer=Customer.Mayi):
+    def __init__(self, diag_ctx=DiagCtx(), customer: Customer = Customer.Mayi):
         self.diag_ctx = diag_ctx
         self.customer = customer
 
@@ -33,7 +33,6 @@ class Inspection:
         await LoadCache(self.diag_ctx).run()
         await AutoInspection(self.diag_ctx, self.customer).run()
         self.diag_ctx.close()
-
 
 
 if __name__ == '__main__':

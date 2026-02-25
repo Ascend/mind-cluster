@@ -15,7 +15,6 @@
 # limitations under the License.
 # ==============================================================================
 
-import gzip
 import tarfile
 import zipfile
 from pathlib import Path
@@ -119,7 +118,7 @@ class CompressTool:
                 try:
                     # 递归解压（深度+1）
                     inner_zips = CompressTool.extract_zip_recursive(
-                        item, item.parent, max_depth, current_depth + 1, remove_original_zip
+                        str(item), str(item.parent), max_depth, current_depth + 1, remove_original_zip
                     )
                     zip_files_found += inner_zips
 
@@ -148,20 +147,19 @@ class CompressTool:
             if extract_folder.exists():
                 return True
 
-            # 使用gzip和tarfile解压.tar.gz文件到指定文件夹
-            with gzip.open(tar_gz_path, 'rb') as gz_file:
-                with tarfile.open(fileobj=gz_file, mode='r') as tar:
-                    # 遍历压缩包内的所有成员
-                    for member in tar.getmembers():
-                        # 检查成员名称是否包含特殊字符并替换
-                        sanitized_name = cls._sanitize_filename(member.name)
-                        # 如果名称被修改，则更新成员名称
-                        if sanitized_name != member.name:
-                            member.name = sanitized_name
-                        # 特别处理链接目标名称
-                        if member.issym() or member.islnk():
-                            continue
-                        tar.extract(member, path=str(extract_folder))
+            # 使用tarfile直接解压.tar.gz文件到指定文件夹
+            with tarfile.open(tar_gz_path, 'r:gz') as tar:
+                # 遍历压缩包内的所有成员
+                for member in tar.getmembers():
+                    # 检查成员名称是否包含特殊字符并替换
+                    sanitized_name = cls._sanitize_filename(member.name)
+                    # 如果名称被修改，则更新成员名称
+                    if sanitized_name != member.name:
+                        member.name = sanitized_name
+                    # 特别处理链接目标名称
+                    if member.issym() or member.islnk():
+                        continue
+                    tar.extract(member, path=str(extract_folder))
             DIAG_LOGGER.info(f"成功解压: {tar_gz_path} 到 {extract_folder}")
             return True
         except Exception as e:

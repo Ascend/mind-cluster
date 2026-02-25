@@ -37,8 +37,9 @@ class LoopbackCollect:
         )
         await OutputCache(self.diag_ctx).run()
 
+
 if __name__ == '__main__':
-    confirm = input(f"现在将对配置文件中的[host]进行光模块环回，光模块环回对环境会有影响，请确认是否继续执行 (y/n): {os.linesep}")
+    confirm = input(
+        f"现在将对配置文件中的[host]进行光模块环回，光模块环回对环境会有影响，请确认是否继续执行 (y/n): {os.linesep}")
     if confirm.lower() == "y":
         asyncio.run(LoopbackCollect().main())
-

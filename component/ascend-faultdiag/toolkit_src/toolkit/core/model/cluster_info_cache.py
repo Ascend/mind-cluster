@@ -78,16 +78,18 @@ class ClusterInfoCache(JsonObj):
         return self._swi_info_name_map.get(peer_device)
 
     # 找对端端口信息
-    def find_peer_swi_interface_info(self, peer_device: str, peer_interface: str) -> Tuple[
-        SwitchInfo, InterfaceFullInfo]:
+    def find_peer_swi_interface_info(
+            self, peer_device: str, peer_interface: str
+    ) -> Tuple[SwitchInfo, InterfaceFullInfo]:
         peer_device_info = self.find_peer_swi(peer_device)
         if not peer_device_info:
             return None, None
         return peer_device_info, peer_device_info.interface_full_infos.get(peer_interface)
 
     # 根据接口全量信息找对端端口
-    def find_peer_swi_interface_info_by_if_info(self, interface_full_info: InterfaceFullInfo) -> Tuple[
-        SwitchInfo, InterfaceFullInfo]:
+    def find_peer_swi_interface_info_by_if_info(
+            self, interface_full_info: InterfaceFullInfo
+    ) -> Tuple[SwitchInfo, InterfaceFullInfo]:
         if not interface_full_info.interface_mapping:
             return None, None
         remote_device_interface = interface_full_info.interface_mapping.remote_device_interface

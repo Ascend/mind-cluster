@@ -32,7 +32,8 @@ class RemoteLogPyScriptParser(LogParser):
 
     def __init__(self, executor: AsyncExecutor):
         self.executor = executor
-        self.local_parse_result_path = os.path.join(CommonPath.PARSE_CACHE_DIR, f"{self.executor.host}_parse_result.json")
+        self.local_parse_result_path = os.path.join(CommonPath.PARSE_CACHE_DIR,
+                                                    f"{self.executor.host}_parse_result.json")
 
     async def find(self, parse_dir="", log_pattern_map: Dict[str, LogParsePattern] = None) -> List[FindResult]:
         if os.path.exists(self.local_parse_result_path):

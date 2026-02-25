@@ -42,4 +42,3 @@ class AutoLoopbackDiag:
 
 if __name__ == '__main__':
     asyncio.run(AutoLoopbackDiag().main())
-
