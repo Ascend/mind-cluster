@@ -48,6 +48,7 @@ const (
 var (
 	kubeConfig     *rest.Config = nil
 	kubeConfigOnce sync.Once
+	logUrlOnce     sync.Once
 )
 
 func isValidPort(port string) error {
@@ -96,7 +97,9 @@ func createKltPodsReqWithToken() (*http.Request, error) {
 		hwlog.RunLog.Errorf("get klt pods url failed: %v", err)
 		return nil, err
 	}
-	hwlog.RunLog.Info("get kubelet pods url: ", kltPodsURL)
+	logUrlOnce.Do(func() {
+		hwlog.RunLog.Info("get kubelet pods url: ", kltPodsURL)
+	})
 	req, err := http.NewRequest("GET", kltPodsURL, nil)
 	if err != nil {
 		hwlog.RunLog.Errorf("create http request failed: %v", err)
