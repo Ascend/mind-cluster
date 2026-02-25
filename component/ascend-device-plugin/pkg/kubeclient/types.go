@@ -45,3 +45,8 @@ const (
 	// CMResource is used when the event is related to a configmap
 	CMResource ResourceType = "configmap"
 )
+
+const (
+	DockerRuntime     = "docker"
+	ContainerdRuntime = "containerd"
+)

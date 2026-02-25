@@ -6,6 +6,7 @@ require (
 	github.com/agiledragon/gomonkey/v2 v2.8.0
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/kubeflow/common v0.4.3
+	github.com/containerd/containerd v1.7.20
 	github.com/smartystreets/goconvey v1.6.4
 	k8s.io/api v0.25.3
 	k8s.io/apimachinery v0.25.3
