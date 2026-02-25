@@ -224,10 +224,52 @@ const (
 )
 
 const (
+	// SoftShareDeviceCount is the number of soft share device
+	SoftShareDeviceCount = 100
+	// SoftShareDeviceMaxAICoreQuota is the max aicore quota of soft share device
+	SoftShareDeviceMaxAICoreQuota = 100
+	// SoftShareDeviceConfigDir is the directory containing the config file of soft share device
+	SoftShareDeviceConfigDir = "/etc/enpu/"
+	// SoftShareDeviceConfigFileName is the name of soft share device config file
+	SoftShareDeviceConfigFileName = "npu_info.config"
+
 	// SchedulerSoftShareDevAicoreQuotaKey key for aicore quota of soft share device task
 	SchedulerSoftShareDevAicoreQuotaKey = "huawei.com/scheduler.softShareDev.aicoreQuota"
 	// SchedulerSoftShareDevHbmQuotaKey key for hbm quota of soft share device task
 	SchedulerSoftShareDevHbmQuotaKey = "huawei.com/scheduler.softShareDev.hbmQuota"
-	// SchedulerSoftShareDevPolicyKey key for scheduling policy of soft share device task
+	// SchedulerSoftShareDevPolicyKey key for policy of soft share device task
 	SchedulerSoftShareDevPolicyKey = "huawei.com/scheduler.softShareDev.policy"
+	// SchedulerSoftShareDevVNPUIdKey key for vnpu id of soft share device task
+	SchedulerSoftShareDevVNPUIdKey = "huawei.com/scheduler.softShareDev.vnpuId"
+
+	// SoftShareDeviceConfigPhysicalNPUId decide soft share device config physical npu id
+	SoftShareDeviceConfigPhysicalNPUId = "physical-npu-id"
+	// SoftShareDeviceConfigVirtualNPUId decide soft share device config virtual npu id
+	SoftShareDeviceConfigVirtualNPUId = "virtual-npu-id"
+	// SoftShareDeviceConfigAICoreQuota decide soft share device config aicore quota
+	SoftShareDeviceConfigAICoreQuota = "aicore-quota"
+	// SoftShareDeviceConfigHbmQuota decide soft share device config hbm quota
+	SoftShareDeviceConfigHbmQuota = "memory-quota"
+	// SoftShareDeviceConfigShmId decide soft share device config shm id
+	SoftShareDeviceConfigShmId = "shm-id"
+	// ShareDeviceConfigSchedulingPolicy decide soft share device config scheduling policy
+	ShareDeviceConfigSchedulingPolicy = "scheduling-policy"
+
+	// DefaultSoftShareDeviceConfigPerm default perm for soft share device config
+	DefaultSoftShareDeviceConfigPerm = 0644
+	// DefaultSoftShareDeviceConfigDirPerm default perm for soft share device config dir
+	DefaultSoftShareDeviceConfigDirPerm = 0755
+
+	// SoftShareDeviceSchedulingPolicyFixedShare scheduling policy for fixed share
+	SoftShareDeviceSchedulingPolicyFixedShare = "fixed-share"
+	// SoftShareDeviceSchedulingPolicyElastic scheduling policy for elastic share
+	SoftShareDeviceSchedulingPolicyElastic = "elastic"
+	// SoftShareDeviceSchedulingPolicyBestEffort scheduling policy for best effort
+	SoftShareDeviceSchedulingPolicyBestEffort = "best-effort"
+	// SoftShareDeviceSchedulingPolicyFixedShareInt scheduling policy for fixed share
+	SoftShareDeviceSchedulingPolicyFixedShareInt = "1"
+	// SoftShareDeviceSchedulingPolicyElasticInt scheduling policy for elastic share
+	SoftShareDeviceSchedulingPolicyElasticInt = "2"
+	// SoftShareDeviceSchedulingPolicyBestEffortInt scheduling policy for best effort
+	SoftShareDeviceSchedulingPolicyBestEffortInt = "3"
 )

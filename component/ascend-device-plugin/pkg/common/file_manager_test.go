@@ -16,6 +16,7 @@
 package common
 
 import (
+	"ascend-common/api"
 	"errors"
 	"os"
 	"path/filepath"
@@ -118,6 +119,67 @@ func TestRemoveDataTraceFileAndDir(t *testing.T) {
 				ApplyFuncReturn(utils.CheckPath, "", errors.New("soft link check failed"))
 			defer patch.Reset()
 			err := RemoveDataTraceFileAndDir(namespace, jobName)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+// TestWriteToFileWithPerm test of WriteToFileWithPerm
+func TestWriteToFileWithPerm(t *testing.T) {
+	convey.Convey("Test WriteToFileWithPerm", t, func() {
+		convey.Convey("Test WriteToFileWithPerm success", func() {
+			absPath := api.SoftShareDeviceConfigDir + "/test.namespace/test.job/softShareDevConfig.json"
+			crErr := WriteToFileWithPerm("test config", absPath, api.DefaultSoftShareDeviceConfigDirPerm,
+				api.DefaultSoftShareDeviceConfigPerm)
+			convey.So(crErr, convey.ShouldBeNil)
+			relativePath := "./test.namespace/test.job/softShareDevConfig.json"
+			crErr2 := WriteToFileWithPerm("test config", relativePath, api.DefaultSoftShareDeviceConfigDirPerm,
+				api.DefaultSoftShareDeviceConfigPerm)
+			convey.So(crErr2, convey.ShouldNotBeNil)
+			patch := gomonkey.ApplyFuncReturn(utils.CheckPath, "", errors.New("soft link check failed"))
+			defer patch.Reset()
+			crErr3 := WriteToFileWithPerm("test config", absPath, api.DefaultSoftShareDeviceConfigDirPerm,
+				api.DefaultSoftShareDeviceConfigPerm)
+			convey.So(crErr3, convey.ShouldNotBeNil)
+			rmErr := RemoveResetFileAndDir("test.namespace", "test.job")
+			convey.So(rmErr, convey.ShouldBeNil)
+		})
+	})
+}
+
+// TestRemoveSoftShareDeviceFileAndDir test RemoveSoftShareDeviceFileAndDir
+func TestRemoveSoftShareDeviceFileAndDir(t *testing.T) {
+	convey.Convey("Given a namespace and job name", t, func() {
+		namespace := "test_namespace"
+		jobName := "test_job"
+
+		convey.Convey("When the directory exists, the directory should be removed successfully", func() {
+			dir := filepath.Join(api.SoftShareDeviceConfigDir, namespace+"."+jobName)
+			err := os.MkdirAll(dir, FilePerm)
+			convey.ShouldBeNil(err)
+			err = RemoveSoftShareDeviceFileAndDir(namespace, jobName)
+			convey.ShouldBeNil(err)
+			_, err = os.Stat(dir)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("When the directory does not exist, should return nil", func() {
+			err := RemoveSoftShareDeviceFileAndDir(namespace, jobName)
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("When the directory is not absolute path, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(filepath.IsAbs, false)
+			defer patch.Reset()
+			err := RemoveSoftShareDeviceFileAndDir(namespace, jobName)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("When the directory check path failed, should return error", func() {
+			patch := gomonkey.ApplyFuncReturn(filepath.IsAbs, true).
+				ApplyFuncReturn(utils.CheckPath, "", errors.New("soft link check failed"))
+			defer patch.Reset()
+			err := RemoveSoftShareDeviceFileAndDir(namespace, jobName)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})

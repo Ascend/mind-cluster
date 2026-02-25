@@ -635,6 +635,8 @@ func deepCopyGroupDevice(groupDevice map[string][]*common.NpuDevice) map[string]
 				CardID:                 npuDevice.CardID,
 				Status:                 npuDevice.Status,
 				PodUsed:                npuDevice.PodUsed,
+				UsedAicoreQuota:        npuDevice.UsedAicoreQuota,
+				UsedHbmQuota:           npuDevice.UsedHbmQuota,
 			}
 			newNpuDevices = append(newNpuDevices, newNpuDevice)
 		}

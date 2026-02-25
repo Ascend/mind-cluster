@@ -849,3 +849,14 @@ const (
 	// DefaultServerIndex default server index -1
 	DefaultServerIndex = -1
 )
+
+const (
+	// MBPerGB is the number of MB in a GB
+	MBPerGB = 1024
+	// SoftShareDevConfigDirContainerPath soft share device config dir in container
+	SoftShareDevConfigDirContainerPath = "/dev/shm/"
+	// SoftShareDevNPUInfoConfigParentDirPath soft share device npu info config parent dir
+	SoftShareDevNPUInfoConfigParentDirPath = "/etc/enpu/"
+	// SoftShareDevNPUInfoConfigDirContainerPath soft share device npu info config dir in container
+	SoftShareDevNPUInfoConfigDirContainerPath = "/etc/enpu/vcann-rt/"
+)

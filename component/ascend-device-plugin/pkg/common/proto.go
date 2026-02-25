@@ -118,6 +118,8 @@ type NpuDevice struct {
 	Status                 string
 	PodUsed                bool            // PodUsed indicates whether this chip is used by kubelet
 	LevelList              []api.RankLevel // rank level info in rank table for A5
+	UsedAicoreQuota        int             // used aicore quota
+	UsedHbmQuota           int             // used hbm quota
 }
 
 // DavinCiDev davinci device
@@ -152,28 +154,29 @@ type Instance struct { // Instance
 
 // Option option
 type Option struct {
-	GetFdFlag           bool     // to describe FdFlag
-	UseAscendDocker     bool     // UseAscendDocker to choose docker type
-	UseVolcanoType      bool     // use volcano mode
-	AutoStowingDevs     bool     // auto stowing fixes devices or not
-	PresetVDevice       bool     // preset virtual device
-	Use310PMixedInsert  bool     // chose 310P mixed insert mode
-	GraceToleranceOn    bool     // check if grace tolerance is on
-	ListAndWatchPeriod  int      // set listening device state period
-	HotReset            int      // unhealthy chip hot reset
-	ShareCount          uint     // share device count
-	AiCoreCount         int32    // found by dcmi interface
-	BuildScene          string   // build scene judge device-plugin start scene
-	ProductTypes        []string // all product types
-	RealCardType        string   // real card type
-	CardType            string   // standard card type
-	LinkdownTimeout     int64    // linkdown timeout duration
-	DealWatchHandler    bool     // update pod cache when receiving pod informer watch errors
-	EnableSwitchFault   bool     // if enable switch fault
-	CheckCachedPods     bool     // check cached pods periodically
-	EnableSlowNode      bool     // switch of set slow node notice environment
-	ThirdPartyScanDelay int      // delay time (seconds) for scanning devices when third party resetting
-	DeviceResetTimeout  int      // device reset timeout
+	GetFdFlag             bool     // to describe FdFlag
+	UseAscendDocker       bool     // UseAscendDocker to choose docker type
+	UseVolcanoType        bool     // use volcano mode
+	AutoStowingDevs       bool     // auto stowing fixes devices or not
+	PresetVDevice         bool     // preset virtual device
+	Use310PMixedInsert    bool     // chose 310P mixed insert mode
+	GraceToleranceOn      bool     // check if grace tolerance is on
+	ListAndWatchPeriod    int      // set listening device state period
+	HotReset              int      // unhealthy chip hot reset
+	ShareCount            uint     // share device count
+	AiCoreCount           int32    // found by dcmi interface
+	BuildScene            string   // build scene judge device-plugin start scene
+	ProductTypes          []string // all product types
+	RealCardType          string   // real card type
+	CardType              string   // standard card type
+	LinkdownTimeout       int64    // linkdown timeout duration
+	DealWatchHandler      bool     // update pod cache when receiving pod informer watch errors
+	EnableSwitchFault     bool     // if enable switch fault
+	CheckCachedPods       bool     // check cached pods periodically
+	EnableSlowNode        bool     // switch of set slow node notice environment
+	ThirdPartyScanDelay   int      // delay time (seconds) for scanning devices when third party resetting
+	DeviceResetTimeout    int      // device reset timeout
+	SoftShareDevConfigDir string   // soft share device config dir
 }
 
 // GetAllDeviceInfoTypeList Get All Device Info Type List

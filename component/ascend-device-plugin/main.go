@@ -20,6 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/next/devicefactory"
@@ -90,6 +91,7 @@ var (
 	deviceResetTimeout = flag.Int(api.DeviceResetTimeout, api.DefaultDeviceResetTimeout,
 		"when device-plugin starts, if the number of chips is insufficient, the maximum duration to wait for "+
 			"the driver to report all chips, unit second, range [10, 600]")
+	softShareDevConfigDir = flag.String("softShareDevConfigDir", "", "soft share device config dir")
 )
 
 var (
@@ -131,13 +133,13 @@ func checkParam() bool {
 		checkUse310PMixedInsertWithVolcano,
 		checkUse310PMixedInsertWithShareDevCount,
 		checkPresetWithShareDevCount,
-		checkVolcanoWithShareDevCount,
 		checkHotResetMode,
 		checkBuildScene,
 		checkLinkdownTimeout,
 		checkThirdPartyScanDelay,
 		checkDeviceResetTimeout,
 		checkShareDevCount,
+		checkSoftShareDevConfigDir,
 	}
 	for _, check := range checks {
 		if !check() {
@@ -187,9 +189,9 @@ func checkPresetWithShareDevCount() bool {
 	return true
 }
 
-func checkVolcanoWithShareDevCount() bool {
-	if *volcanoType && *shareDevCount > 1 {
-		hwlog.RunLog.Error("volcanoType is true, shareDevCount should be 1")
+func checkSoftShareDevConfigDir() bool {
+	if *softShareDevConfigDir != "" && !filepath.IsAbs(*softShareDevConfigDir) {
+		hwlog.RunLog.Errorf("softShareDevConfigDir: %s is not absolute path", *softShareDevConfigDir)
 		return false
 	}
 	return true
@@ -277,22 +279,23 @@ func main() {
 
 func setParameters() {
 	common.ParamOption = common.Option{
-		GetFdFlag:           *fdFlag,
-		UseAscendDocker:     *useAscendDocker,
-		UseVolcanoType:      *volcanoType,
-		AutoStowingDevs:     *autoStowing,
-		ListAndWatchPeriod:  *listWatchPeriod,
-		PresetVDevice:       *presetVirtualDevice,
-		Use310PMixedInsert:  *use310PMixedInsert,
-		HotReset:            *hotReset,
-		BuildScene:          BuildScene,
-		ShareCount:          *shareDevCount,
-		LinkdownTimeout:     *linkdownTimeout,
-		DealWatchHandler:    *dealWatchHandler,
-		CheckCachedPods:     *checkCachedPods,
-		EnableSlowNode:      *enableSlowNode,
-		ThirdPartyScanDelay: *thirdPartyScanDelay,
-		DeviceResetTimeout:  *deviceResetTimeout,
+		GetFdFlag:             *fdFlag,
+		UseAscendDocker:       *useAscendDocker,
+		UseVolcanoType:        *volcanoType,
+		AutoStowingDevs:       *autoStowing,
+		ListAndWatchPeriod:    *listWatchPeriod,
+		PresetVDevice:         *presetVirtualDevice,
+		Use310PMixedInsert:    *use310PMixedInsert,
+		HotReset:              *hotReset,
+		BuildScene:            BuildScene,
+		ShareCount:            *shareDevCount,
+		LinkdownTimeout:       *linkdownTimeout,
+		DealWatchHandler:      *dealWatchHandler,
+		CheckCachedPods:       *checkCachedPods,
+		EnableSlowNode:        *enableSlowNode,
+		ThirdPartyScanDelay:   *thirdPartyScanDelay,
+		DeviceResetTimeout:    *deviceResetTimeout,
+		SoftShareDevConfigDir: *softShareDevConfigDir,
 	}
 }
 

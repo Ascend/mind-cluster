@@ -16,6 +16,7 @@
 package common
 
 import (
+	"ascend-common/api"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -26,16 +27,21 @@ import (
 
 // WriteToFile write data to file
 func WriteToFile(info, path string) error {
+	return WriteToFileWithPerm(info, path, DefaultPerm, DefaultPerm)
+}
+
+// WriteToFileWithPerm write data to file with permission
+func WriteToFileWithPerm(info, path string, dirPerm, filePerm os.FileMode) error {
 	if !filepath.IsAbs(path) {
 		return fmt.Errorf("the path %s is not an absolute path", path)
 	}
 	dirPath := filepath.Dir(path)
-	err := os.MkdirAll(dirPath, DefaultPerm)
+	err := os.MkdirAll(dirPath, dirPerm)
 	if err != nil {
 		return err
 	}
 	hwlog.RunLog.Infof("start write info into file: %s", path)
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, DefaultPerm)
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, filePerm)
 	if err != nil {
 		return err
 	}
@@ -82,6 +88,19 @@ func RemoveDataTraceFileAndDir(namespace, jobName string) error {
 	}
 	hwlog.RunLog.Infof("will delete data trace file: %s", dataTraceDirName)
 	return os.RemoveAll(dataTraceDirName)
+}
+
+// RemoveSoftShareDeviceFileAndDir remove soft share device file and dir
+func RemoveSoftShareDeviceFileAndDir(namespace, jobName string) error {
+	softShareDeviceDirName := fmt.Sprintf("%s%s", api.SoftShareDeviceConfigDir, namespace+"."+jobName)
+	if !filepath.IsAbs(softShareDeviceDirName) {
+		return fmt.Errorf("the path %s is not an absolute path", softShareDeviceDirName)
+	}
+	if _, err := utils.CheckPath(softShareDeviceDirName); err != nil {
+		return fmt.Errorf("the path %s is invalid, err: %v", softShareDeviceDirName, err)
+	}
+	hwlog.RunLog.Infof("will delete share device file: %s", softShareDeviceDirName)
+	return os.RemoveAll(softShareDeviceDirName)
 }
 
 // GenResetDirName generate reset cm dir name

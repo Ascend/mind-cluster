@@ -729,3 +729,38 @@ func TriggerUpdate(msg string) {
 func GetUpdateChan() chan struct{} {
 	return updateTriggerChan
 }
+
+// IsSoftShareDevJob check if pod is soft share device job pod
+func IsSoftShareDevJob(pod *v1.Pod) bool {
+	if pod == nil {
+		return false
+	}
+	_, hasSchedulingPolicy := pod.Annotations[api.SchedulerSoftShareDevPolicyKey]
+	_, hasAicoreQuota := pod.Annotations[api.SchedulerSoftShareDevAicoreQuotaKey]
+	_, hasHbmQuota := pod.Annotations[api.SchedulerSoftShareDevHbmQuotaKey]
+	return hasSchedulingPolicy && hasAicoreQuota && hasHbmQuota
+}
+
+// IsSupportSoftShareDevice check if support soft share device
+func IsSupportSoftShareDevice() bool {
+	return ParamOption.ShareCount == api.SoftShareDeviceCount && ParamOption.SoftShareDevConfigDir != ""
+}
+
+// ConvertSchedulingPolicyToIntStr convert scheduling policy to int string
+func ConvertSchedulingPolicyToIntStr(schedulingPolicy string) string {
+	var schedulingPolicyMap = map[string]string{
+		api.SoftShareDeviceSchedulingPolicyFixedShare: api.SoftShareDeviceSchedulingPolicyFixedShareInt,
+		api.SoftShareDeviceSchedulingPolicyElastic:    api.SoftShareDeviceSchedulingPolicyElasticInt,
+		api.SoftShareDeviceSchedulingPolicyBestEffort: api.SoftShareDeviceSchedulingPolicyBestEffortInt,
+	}
+	if schedulingPolicy == "" {
+		hwlog.RunLog.Warn("scheduling policy is empty, use unknown policy")
+		return ""
+	}
+	if val, exist := schedulingPolicyMap[schedulingPolicy]; exist {
+		return val
+	}
+
+	hwlog.RunLog.Warnf("unknown scheduling policy: %s, return empty string", schedulingPolicy)
+	return ""
+}

@@ -1012,3 +1012,107 @@ func TestGetPodAnnotationByDeviceType(t *testing.T) {
 		}
 	})
 }
+
+type isSoftShareDevJobTestCase struct {
+	name     string
+	pod      *v1.Pod
+	expected bool
+}
+
+func createIsSoftShareDevJobTestCase() []isSoftShareDevJobTestCase {
+	return []isSoftShareDevJobTestCase{
+		{
+			name:     "Pod is nil",
+			pod:      nil,
+			expected: false,
+		},
+		{
+			name: "Pod.Annotations is nil",
+			pod: &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: nil,
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "Missing SchedulerSoftShareDevPolicyKey",
+			pod: &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						api.SchedulerSoftShareDevAicoreQuotaKey: "10",
+						api.SchedulerSoftShareDevHbmQuotaKey:    "20",
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "All required keys present",
+			pod: &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						api.SchedulerSoftShareDevPolicyKey:      "policy-value",
+						api.SchedulerSoftShareDevAicoreQuotaKey: "10",
+						api.SchedulerSoftShareDevHbmQuotaKey:    "20",
+					},
+				},
+			},
+			expected: true,
+		},
+	}
+}
+
+func TestIsSoftShareDevJob(t *testing.T) {
+	tests := createIsSoftShareDevJobTestCase()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := IsSoftShareDevJob(tt.pod)
+			if result != tt.expected {
+				t.Errorf("IsSoftShareDevJob() = %v, want %v", result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestConvertSchedulingPolicyToIntStr(t *testing.T) {
+	convey.Convey("Testing ConvertSchedulingPolicyToIntStr function", t, func() {
+		testCases := []struct {
+			name           string
+			input          string
+			expectedOutput string
+		}{
+			{
+				name:           "TC001 - Empty input",
+				input:          "",
+				expectedOutput: "",
+			},
+			{
+				name:           "TC002 - Valid input 'fixed-share'",
+				input:          "fixed-share",
+				expectedOutput: "1",
+			},
+			{
+				name:           "TC003 - Valid input 'elastic'",
+				input:          "elastic",
+				expectedOutput: "2",
+			},
+			{
+				name:           "TC004 - Valid input 'best-effort'",
+				input:          "best-effort",
+				expectedOutput: "3",
+			},
+			{
+				name:           "TC005 - Invalid input 'unknown-policy'",
+				input:          "unknown-policy",
+				expectedOutput: "",
+			},
+		}
+		for _, tc := range testCases {
+			convey.Convey(tc.name, func() {
+				result := ConvertSchedulingPolicyToIntStr(tc.input)
+				convey.So(tc.expectedOutput, convey.ShouldEqual, result)
+			})
+		}
+	})
+}
