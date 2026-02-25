@@ -34,9 +34,9 @@ const (
 	// dcmiHccsMaxPcsNum max pcs number for hccs
 	dcmiHccsMaxPcsNum = 16
 
-	maxChipNameLen = 32
+	MaxChipNameLen = 32
 	productTypeLen = 64
-	dcmiVersionLen = 32
+	DcmiVersionLen = 32
 
 	// MainCmdChipInf main cmd chip inf
 	MainCmdChipInf MainCmd = 12

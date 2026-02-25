@@ -1836,7 +1836,7 @@ func (d *DcManager) DcGetDeviceTemperature(cardID, deviceID int32) (int32, error
 	return parsedTemp, nil
 }
 
-func convertUCharToCharArr(cgoArr [maxChipNameLen]C.uchar) []byte {
+func convertUCharToCharArr(cgoArr [MaxChipNameLen]C.uchar) []byte {
 	var charArr []byte
 	for _, v := range cgoArr {
 		if v == 0 {
@@ -2426,9 +2426,9 @@ func (d *DcManager) convertPcieBw(pcieBwArr [agentdrvProfDataNum]C.uint) common.
 
 // DcGetDcmiVersion return dcmi version
 func (d *DcManager) DcGetDcmiVersion() (string, error) {
-	cDcmiVer := C.CString(string(make([]byte, dcmiVersionLen)))
+	cDcmiVer := C.CString(string(make([]byte, DcmiVersionLen)))
 	defer C.free(unsafe.Pointer(cDcmiVer))
-	if retCode := C.dcmi_get_dcmi_version((*C.char)(cDcmiVer), dcmiVersionLen+1); int32(retCode) != common.Success {
+	if retCode := C.dcmi_get_dcmi_version((*C.char)(cDcmiVer), DcmiVersionLen+1); int32(retCode) != common.Success {
 		return "", fmt.Errorf("get dcmi version failed, errCode: %d", int32(retCode))
 	}
 	return C.GoString(cDcmiVer), nil
