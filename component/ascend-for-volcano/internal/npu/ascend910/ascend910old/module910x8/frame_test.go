@@ -40,12 +40,12 @@ func TestNew(t *testing.T) {
 		if npu.GetPluginName() != SchedulerName {
 			t.Errorf("New() npu Name: %s, wantName: %s.", npu.GetPluginName(), SchedulerName)
 		}
-		if npu.GetAnnoName() != util.NPU910CardName {
-			t.Errorf("New() npu annoName: %s, wantAnnoName: %s.", npu.GetPluginName(), util.NPU910CardName)
+		if npu.GetAnnoName(util.NPU910CardName) != util.NPU910CardName {
+			t.Errorf("New() npu annoName: %s, wantAnnoName: %s.", npu.GetAnnoName(util.NPU910CardName), util.NPU910CardName)
 		}
-		if npu.GetAnnoPreVal() != util.NPU910CardNamePre {
+		if npu.GetAnnoPreVal(util.NPU910CardName) != util.NPU910CardNamePre {
 			t.Errorf("New() npu annoNamePre: %s, wantAnnoNamePre: %s.",
-				npu.GetPluginName(), util.NPU910CardNamePre)
+				npu.GetAnnoPreVal(util.NPU910CardName), util.NPU910CardNamePre)
 		}
 	})
 }

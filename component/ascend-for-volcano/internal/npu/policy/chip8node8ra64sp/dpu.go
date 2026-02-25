@@ -39,7 +39,8 @@ func (tp *chip8node8ra64sp) filterDpuFault(npuCardIdList []int, node plugin.NPUN
 		klog.V(util.LogErrorLev).Infof(getNPUFromPodFailedPattern, tp.GetPluginName(), err.Error())
 		return npuCardIdList
 	}
-	dpuUnhealthyTop := util.ChangeTopToIntArray(dpuUnhealthyTopStr, tp.GetAnnoPreVal())
+	// Use a default value directly instead of relying on tp.ReqNPUName
+	dpuUnhealthyTop := util.ChangeTopToIntArray(dpuUnhealthyTopStr, tp.GetAnnoPreVal(tp.ReqNPUName))
 	if len(dpuUnhealthyTop) > tp.MaxNodeNPUNum {
 		err := fmt.Errorf("node<%s> npu dpuUnhealthy top<%v> is invalid", node.Name, dpuUnhealthyTop)
 		klog.V(util.LogErrorLev).Infof(getNPUFromPodFailedPattern, tp.GetPluginName(), err.Error())

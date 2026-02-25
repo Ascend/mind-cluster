@@ -1149,7 +1149,7 @@ func (tp *module910SuperPod) UseAnnotation(task *api.TaskInfo, node plugin.NPUNo
 		return nil
 	}
 	klog.V(util.LogDebugLev).Infof("%s UseAnnotation task<%s> node<%s> resource<%s> Annotation: %#v",
-		tp.GetPluginName(), task.Name, node.Name, tp.GetAnnoName(), node.Annotation)
+		tp.GetPluginName(), task.Name, node.Name, tp.GetAnnoName(tp.ReqNPUName), node.Annotation)
 	selectedNPU, err := tp.SelectNPUFromNode(task, node, tp.NPUTaskNum/tp.spBlock > 1)
 	if err != nil {
 		klog.V(util.LogErrorLev).Infof("%s UseAnnotation err:%s.", tp.GetPluginName(), err)

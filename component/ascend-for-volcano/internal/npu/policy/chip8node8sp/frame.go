@@ -1135,7 +1135,7 @@ func (tp *chip8node8sp) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *
 		return nil
 	}
 	klog.V(util.LogDebugLev).Infof("%s UseAnnotation task<%s> node<%s> resource<%s> Annotation: %#v",
-		tp.GetPluginName(), task.Name, node.Name, tp.GetAnnoName(), node.Annotation)
+		tp.GetPluginName(), task.Name, node.Name, tp.GetAnnoName(tp.ReqNPUName), node.Annotation)
 	selectedNPU, err := tp.selectNPUFromNode(task, node)
 	if err != nil {
 		klog.V(util.LogErrorLev).Infof("%s UseAnnotation err:%s.", tp.GetPluginName(), err)

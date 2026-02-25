@@ -136,7 +136,7 @@ func (tp *module910bx16) setNodeScore(task *api.TaskInfo, nodes []*api.NodeInfo,
 			klog.V(util.LogDebugLev).Infof("%s ScoreBestNPUNodes getErr: %s", tp.GetPluginName(), err)
 			continue
 		}
-		healthyNPUNum, ok := nNode.Allocate[v1.ResourceName(tp.GetAnnoName())]
+		healthyNPUNum, ok := nNode.Allocate[v1.ResourceName(tp.GetAnnoName(tp.ReqNPUName))]
 		if !ok {
 			klog.V(util.LogDebugLev).Infof("%s ScoreBestNPUNodes node<%s> get allocate npu failed",
 				tp.GetPluginName(), node.Name)
@@ -159,7 +159,7 @@ func (tp *module910bx16) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) 
 		return nil
 	}
 	klog.V(util.LogDebugLev).Infof("%s UseAnnotation task<%s> node<%s> resource<%s> Annotation: %s",
-		tp.GetPluginName(), task.Name, node.Name, tp.GetAnnoName(), util.SafePrint(node.Annotation))
+		tp.GetPluginName(), task.Name, node.Name, tp.GetAnnoName(tp.ReqNPUName), util.SafePrint(node.Annotation))
 	selectedNPU, err := tp.selectNPUFromNode(task, node)
 	if err != nil {
 		klog.V(util.LogErrorLev).Infof("task %s UseAnnotation err:%s.", task.Name, err)

@@ -1,4 +1,4 @@
-/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+﻿/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -19,6 +19,7 @@ import (
 	"reflect"
 	"testing"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
@@ -27,6 +28,12 @@ func TestFilterDpuFault(t *testing.T) {
 		buildFilterDpuFaultTestCase1(), buildFilterDpuFaultTestCase2(),
 	}
 	tp := New(SuperPodx8SchedulerName)
+	// Set up NPUJob with ReqNPUName to avoid nil pointer
+	tp.SetSchedulerAttr(util.SchedulerJobAttr{
+		NPUJob: &util.NPUJob{
+			ReqNPUName: util.NPU910CardName,
+		},
+	})
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tp.filterDpuFault(tt.npuCardIdList, tt.node)

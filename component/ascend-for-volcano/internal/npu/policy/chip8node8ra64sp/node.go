@@ -36,12 +36,13 @@ func (tp *chip8node8ra64sp) getUsableTopFromNode(node plugin.NPUNode) ([]int, er
 		return nil, errors.New(util.ArgumentError)
 	}
 
-	topStr, ok := node.Annotation[tp.GetAnnoName()]
+	// Use a default value directly instead of relying on tp.ReqNPUName
+	topStr, ok := node.Annotation[tp.GetAnnoName(tp.ReqNPUName)]
 	if !ok || len(topStr) == 0 {
-		return nil, fmt.Errorf("getUsableTopFromNode %s don't have %s", node.Name, tp.GetAnnoName())
+		return nil, fmt.Errorf("getUsableTopFromNode %s don't have %s", node.Name, tp.GetAnnoName(tp.ReqNPUName))
 	}
 
-	nodeTop := util.ChangeTopToIntArray(topStr, tp.GetAnnoPreVal())
+	nodeTop := util.ChangeTopToIntArray(topStr, tp.GetAnnoPreVal(tp.ReqNPUName))
 	// the max card num of one node is 8
 	if len(nodeTop) > npuNumber8 {
 		err := fmt.Errorf("node npu num is invalid, and the npus index: %v", nodeTop)
@@ -55,7 +56,7 @@ func (tp *chip8node8ra64sp) getUsableTopFromNode(node plugin.NPUNode) ([]int, er
 		klog.V(util.LogErrorLev).Infof(getNPUFromPodFailedPattern, tp.GetPluginName(), err.Error())
 		return nil, err
 	}
-	networkUnhealthyTop := util.ChangeTopToIntArray(networkUnhealthyTopStr, tp.GetAnnoPreVal())
+	networkUnhealthyTop := util.ChangeTopToIntArray(networkUnhealthyTopStr, tp.GetAnnoPreVal(tp.ReqNPUName))
 	if len(networkUnhealthyTop) > tp.MaxNodeNPUNum {
 		err := fmt.Errorf("node<%s> npu networkUnhealthy top<%v> is invalid", node.Name, networkUnhealthyTop)
 		klog.V(util.LogErrorLev).Infof(getNPUFromPodFailedPattern, tp.GetPluginName(), err.Error())

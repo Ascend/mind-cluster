@@ -34,9 +34,9 @@ type PolicyBuilder = func() SchedulerPluginNeed
 type SchedulerPluginBase interface {
 	GetPluginName() string
 	SetPluginName(string)
-	GetAnnoPreVal() string
+	GetAnnoPreVal(string) string
 	SetAnnoPreVal(string)
-	GetAnnoName() string
+	GetAnnoName(string) string
 	SetAnnoName(string)
 }
 
@@ -92,7 +92,11 @@ func (sp *SchedulerBaseAttr) SetPluginName(name string) {
 }
 
 // GetAnnoPreVal get AnnoPreVal.
-func (sp SchedulerBaseAttr) GetAnnoPreVal() string {
+func (sp SchedulerBaseAttr) GetAnnoPreVal(reqNPUName string) string {
+	klog.V(util.LogDebugLev).Infof("GetAnnoPreVal reqNPUName: %s.", reqNPUName)
+	if reqNPUName == NPUResourceName {
+		return NPUResourceNamePre
+	}
 	return sp.annoPreVal
 }
 
@@ -106,7 +110,11 @@ func (sp *SchedulerBaseAttr) SetAnnoPreVal(value string) {
 }
 
 // GetAnnoName get AnnoName.
-func (sp SchedulerBaseAttr) GetAnnoName() string {
+func (sp SchedulerBaseAttr) GetAnnoName(reqNPUName string) string {
+	klog.V(util.LogDebugLev).Infof("GetAnnoName reqNPUName: %s.", reqNPUName)
+	if reqNPUName == NPUResourceName {
+		return NPUResourceName
+	}
 	return sp.annoName
 }
 

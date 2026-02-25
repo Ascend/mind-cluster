@@ -74,6 +74,12 @@ func TestGetRackLengthInOneSuperPod(t *testing.T) {
 
 func TestGetRackNPUTop(t *testing.T) {
 	tp := New(util.SuperPodx8SchedulerName)
+	// Set up NPUJob with ReqNPUName to avoid nil pointer
+	tp.SetSchedulerAttr(util.SchedulerJobAttr{
+		NPUJob: &util.NPUJob{
+			ReqNPUName: util.NPU910CardName,
+		},
+	})
 	tp.Nodes = getNPUNodes(nodeInfoIdx0, nodeInfoIdx185, superPodSize32, rackOsNum)
 	t.Run("test getRackNPUTop err getting empty top", func(t *testing.T) {
 		res := tp.getRackNPUTop(buildNodeBaseInfoArr(nodeInfoIdx9))

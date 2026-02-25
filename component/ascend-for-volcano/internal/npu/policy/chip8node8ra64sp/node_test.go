@@ -1,4 +1,4 @@
-/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+﻿/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -406,6 +406,12 @@ func buildGetUsableTopFromNodeTest2() []getUsableTopFromNode {
 
 func TestGetUsableTopFromNode(t *testing.T) {
 	npu := New(SuperPodx8SchedulerName)
+	// Set up NPUJob with ReqNPUName to avoid nil pointer
+	npu.SetSchedulerAttr(util.SchedulerJobAttr{
+		NPUJob: &util.NPUJob{
+			ReqNPUName: util.NPU910CardName,
+		},
+	})
 	testCases := buildGetUsableTopFromNodeTest1()
 	testCases = append(testCases, buildGetUsableTopFromNodeTest2()...)
 	for _, tt := range testCases {

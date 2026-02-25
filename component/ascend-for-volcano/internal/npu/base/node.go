@@ -35,12 +35,12 @@ func (tp *NPUHandler) GetUsableTopFromNode(node plugin.NPUNode, disFlag bool) ([
 	if tp == nil || len(node.Annotation) == 0 {
 		return nil, errors.New(util.ArgumentError)
 	}
-	topStr, ok := node.Annotation[tp.GetAnnoName()]
+	topStr, ok := node.Annotation[tp.GetAnnoName(tp.ReqNPUName)]
 	if !ok || len(topStr) == 0 {
-		return nil, fmt.Errorf("getUsableTopFromNode don't have %s", tp.GetAnnoName())
+		return nil, fmt.Errorf("getUsableTopFromNode don't have %s", tp.GetAnnoName(tp.ReqNPUName))
 	}
 
-	nodeTop := util.ChangeTopToIntArray(topStr, tp.GetAnnoPreVal())
+	nodeTop := util.ChangeTopToIntArray(topStr, tp.GetAnnoPreVal(tp.ReqNPUName))
 	if len(nodeTop) > tp.MaxNodeNPUNum {
 		err := fmt.Errorf("node npu top<%v> is invalid", nodeTop)
 		klog.V(util.LogDebugLev).Infof("%s GetUsableTopFromNode err: %s", tp.GetPluginName(), err.Error())
@@ -69,7 +69,7 @@ func (tp *NPUHandler) getNetUnhealthyNPU(node plugin.NPUNode) ([]int, error) {
 		klog.V(util.LogWarningLev).Infof("%s getUsableTopFromNode err: %s", tp.GetPluginName(), err.Error())
 		return nil, err
 	}
-	netUnhealthyTop := util.ChangeTopToIntArray(networkUnhealthyTopStr, tp.GetAnnoPreVal())
+	netUnhealthyTop := util.ChangeTopToIntArray(networkUnhealthyTopStr, tp.GetAnnoPreVal(tp.ReqNPUName))
 	return netUnhealthyTop, nil
 }
 
@@ -79,7 +79,7 @@ func (tp *NPUHandler) getUnhealthyNPU(node plugin.NPUNode) []int {
 		klog.V(util.LogDebugLev).Infof("node<%s> don't have resource<%s>", node.Name, unHealthyNPU)
 		return make([]int, 0)
 	}
-	unhealthyTop := util.ChangeTopToIntArray(unhealthyTopStr, tp.GetAnnoPreVal())
+	unhealthyTop := util.ChangeTopToIntArray(unhealthyTopStr, tp.GetAnnoPreVal(tp.ReqNPUName))
 	return unhealthyTop
 }
 
@@ -112,12 +112,12 @@ func (tp *NPUHandler) UpdateNodeInfo(node plugin.NPUNode, usedTop []int) *plugin
 	}
 	klog.V(util.LogDebugLev).Infof("%s before UpdateNodeInfo node<%s> Annotation: %s",
 		tp.GetPluginName(), node.Name, util.SafePrint(node.Annotation))
-	healthyAnno, err := node.GetNewNPUNodeAnnotation(usedTop, tp.GetAnnoName(), tp.GetAnnoPreVal())
+	healthyAnno, err := node.GetNewNPUNodeAnnotation(usedTop, tp.GetAnnoName(tp.ReqNPUName), tp.GetAnnoPreVal(tp.ReqNPUName))
 	if err != nil {
 		klog.V(util.LogErrorLev).Infof("%s UpdateNodeInfo err: %s", tp.GetPluginName(), err.Error())
 		return nil
 	}
-	node.Annotation[tp.GetAnnoName()] = healthyAnno
+	node.Annotation[tp.GetAnnoName(tp.ReqNPUName)] = healthyAnno
 	klog.V(util.LogDebugLev).Infof("%s after UpdateNodeInfo node<%s> Annotation: %s",
 		tp.GetPluginName(), node.Name, util.SafePrint(node.Annotation))
 	return &node

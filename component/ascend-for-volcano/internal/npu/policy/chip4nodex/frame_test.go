@@ -54,11 +54,11 @@ func TestNew(t *testing.T) {
 	if handler.GetPluginName() != SchedulePolicy4Px8 {
 		t.Errorf("expected plugin name '4p-8', got %v", handler.GetPluginName())
 	}
-	if handler.GetAnnoName() != util.NPU910CardName {
-		t.Errorf("expected anno name '%v', got %v", util.NPU910CardName, handler.GetAnnoName())
+	if handler.GetAnnoName(util.NPU910CardName) != util.NPU910CardName {
+		t.Errorf("expected anno name '%v', got %v", util.NPU910CardName, handler.GetAnnoName(util.NPU910CardName))
 	}
-	if handler.GetAnnoPreVal() != util.NPU910CardNamePre {
-		t.Errorf("expected anno pre value '%v', got %v", util.NPU910CardNamePre, handler.GetAnnoPreVal())
+	if handler.GetAnnoPreVal(util.NPU910CardName) != util.NPU910CardNamePre {
+		t.Errorf("expected anno pre value '%v', got %v", util.NPU910CardNamePre, handler.GetAnnoPreVal(util.NPU910CardName))
 	}
 }
 

@@ -75,10 +75,10 @@ func TestNew(t *testing.T) {
 			if npu.GetPluginName() != tt.PluginName {
 				t.Errorf("New() npu Name: %s, wantName: %s.", npu.GetPluginName(), tt.PluginName)
 			}
-			if npu.GetAnnoName() != tt.AnnoName {
+			if npu.GetAnnoName(util.NPU910CardName) != tt.AnnoName {
 				t.Errorf("New() npu annoName: %s, wantAnnoName: %s.", npu.GetPluginName(), tt.AnnoName)
 			}
-			if npu.GetAnnoPreVal() != tt.AnnoPreValue {
+			if npu.GetAnnoPreVal(util.NPU910CardName) != tt.AnnoPreValue {
 				t.Errorf("New() npu annoNamePre: %s, wantAnnoNamePre: %s.",
 					npu.GetPluginName(), tt.AnnoPreValue)
 			}

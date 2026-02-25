@@ -22,6 +22,7 @@ package module910a3x16
 import (
 	"errors"
 	"fmt"
+
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
@@ -223,7 +224,7 @@ func (tp *module910a3x16) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode)
 		return nil
 	}
 	klog.V(util.LogDebugLev).Infof("%s UseAnnotation task<%s> node<%s> resource<%s> Annotation: %#v",
-		tp.GetPluginName(), task.Name, node.Name, tp.GetAnnoName(), node.Annotation)
+		tp.GetPluginName(), task.Name, node.Name, tp.GetAnnoName(tp.ReqNPUName), node.Annotation)
 	selectedNPU, err := tp.SelectNPUFromNode(task, node, tp.NPUTaskNum > 1)
 	if err != nil {
 		klog.V(util.LogErrorLev).Infof("%s UseAnnotation err:%v.", task.Name, err)

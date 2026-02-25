@@ -61,8 +61,8 @@ func (tp *NPUHandler) SetNPUTopologyToPodFn(task *api.TaskInfo, top []int, node 
 	if tp == nil || task == nil || task.Pod == nil || task.Pod.Annotations == nil || len(top) == 0 {
 		return
 	}
-	topologyStr := util.ChangeIntArrToStr(top, tp.GetAnnoPreVal())
-	task.Pod.Annotations[tp.GetAnnoName()] = topologyStr
+	topologyStr := util.ChangeIntArrToStr(top, tp.GetAnnoPreVal(tp.ReqNPUName))
+	task.Pod.Annotations[tp.GetAnnoName(tp.ReqNPUName)] = topologyStr
 	// to device-plugin judge pending pod.
 	tmp := strconv.FormatInt(time.Now().UnixNano(), util.Base10)
 	task.Pod.Annotations[util.PodPredicateTime] = tmp
@@ -105,7 +105,7 @@ func (tp *NPUHandler) setHardwareTypeToPod(task *api.TaskInfo, node plugin.NPUNo
 }
 
 func (tp *NPUHandler) setRealUsedNpuToPod(task *api.TaskInfo, top []int, topologyStr string, node plugin.NPUNode) {
-	nodeAllocNum := node.Allocate[v1.ResourceName(tp.GetAnnoName())] / util.NPUHexKilo
+	nodeAllocNum := node.Allocate[v1.ResourceName(tp.GetAnnoName(tp.ReqNPUName))] / util.NPUHexKilo
 
 	if _, ok := task.Pod.Labels[util.OperatorNameLabelKey]; !ok &&
 		(len(top) != int(nodeAllocNum) || len(node.BaseDeviceInfo) == 0) {
@@ -134,7 +134,7 @@ func (tp *NPUHandler) setRealUsedNpuToPod(task *api.TaskInfo, top []int, topolog
 	}
 	sort.Ints(top)
 	for _, v := range top {
-		deviceName := fmt.Sprintf("%s%d", tp.GetAnnoPreVal(), v)
+		deviceName := fmt.Sprintf("%s%d", tp.GetAnnoPreVal(tp.ReqNPUName), v)
 		inst.Devices = append(inst.Devices, util.Device{
 			DeviceID:      strconv.Itoa(v),
 			DeviceIP:      ipMap[deviceName].IP,
