@@ -206,6 +206,27 @@ func (ki *ClientK8s) getPodListByCondition(selector fields.Selector) (*v1.PodLis
 	return newPodList, err
 }
 
+// GetContainerRuntime get container runtime by node status info
+func (ki *ClientK8s) GetContainerRuntime() (string, error) {
+	node, err := ki.GetNode()
+	if err != nil {
+		return "", fmt.Errorf("failed to get node: %w", err)
+	}
+
+	runtimeVersion := node.Status.NodeInfo.ContainerRuntimeVersion
+	if runtimeVersion == "" {
+		return "", fmt.Errorf("container runtime version not found in node status")
+	}
+	if strings.HasPrefix(runtimeVersion, "docker://") {
+		return DockerRuntime, nil
+	}
+	if strings.HasPrefix(runtimeVersion, "containerd://") {
+		return ContainerdRuntime, nil
+	}
+
+	return "", fmt.Errorf("unknown container runtime: %s", runtimeVersion)
+}
+
 // checkPodList check each pod and return podList
 func checkPodList(podList *v1.PodList) ([]v1.Pod, error) {
 	if podList == nil {

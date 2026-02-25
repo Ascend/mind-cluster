@@ -67,6 +67,7 @@ type HwDevManager struct {
 	baseNPUInfo      map[string]*common.NpuBaseInfo
 	dpuManager       *dpucontrol.DpuFilter
 	ManagerLock      sync.Mutex
+	ContainerRuntime string
 }
 
 // NewHwDevManager function is used to new a dev manager.
@@ -94,6 +95,9 @@ func NewHwDevManager(devM devmanager.DeviceInterface) *HwDevManager {
 	if err := hdm.initPluginServer(); err != nil {
 		hwlog.RunLog.Errorf("init plugin server failed, err: %v", err)
 		return nil
+	}
+	if runtime, err := hdm.manager.GetKubeClient().GetContainerRuntime(); err == nil {
+		hdm.ContainerRuntime = runtime
 	}
 	return &hdm
 }
