@@ -181,8 +181,8 @@ const (
 	MaxEventChanLen = 100
 	// DumpExit dump exit
 	DumpExit = "dump_exit"
-	// TpBlock tp-block
-	TpBlock = "tp-block"
+	// TpBlock ra-block,Changed from "tp-block" to "ra-block"
+	TpBlock = "ra-block"
 )
 
 const (

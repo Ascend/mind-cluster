@@ -35,8 +35,8 @@ const (
 	Ascend800ta5x8 = "800T-A5-8"
 	// TrainSchedulerName name of train server scheduler
 	Ascend800ta5x8TrainSchedulerName = NPU910CardName + Ascend800ta5x8
-	// TpBlockAnnoKey annotation key of tp-block
-	TpBlockAnnoKey = "tp-block"
+	// TpBlockAnnoKey annotation key of ra-block, changed from "tp-block" to "ra-block"
+	TpBlockAnnoKey = "ra-block"
 	// InvalidTpBlock is the result value of invalid tp-block
 	InvalidTpBlock = -1
 	// LeastTpBlock is the least value of tp-block
