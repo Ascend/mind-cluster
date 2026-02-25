@@ -222,3 +222,12 @@ const (
 	// MinAvailableKey decide minAvailable of task
 	MinAvailableKey = "huawei.com/schedule_minAvailable"
 )
+
+const (
+	// SchedulerSoftShareDevAicoreQuotaKey key for aicore quota of soft share device task
+	SchedulerSoftShareDevAicoreQuotaKey = "huawei.com/scheduler.softShareDev.aicoreQuota"
+	// SchedulerSoftShareDevHbmQuotaKey key for hbm quota of soft share device task
+	SchedulerSoftShareDevHbmQuotaKey = "huawei.com/scheduler.softShareDev.hbmQuota"
+	// SchedulerSoftShareDevPolicyKey key for scheduling policy of soft share device task
+	SchedulerSoftShareDevPolicyKey = "huawei.com/scheduler.softShareDev.policy"
+)

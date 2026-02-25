@@ -189,36 +189,38 @@ type specInfo struct {
 }
 
 type podInfo struct {
-	frame           string
-	job             *mindxdlv1.AscendJob
-	clusterdSvcIp   string
-	status          *commonv1.ReplicaStatus
-	rtype           commonv1.ReplicaType
-	isDynamicCutJob bool
-	index           int
-	spec            *commonv1.ReplicaSpec
-	isMaster        bool
-	ip              string
-	port            string
-	ctReq           int
-	npuReplicas     int
-	rank            int
-	backupPodName   string
+	frame             string
+	job               *mindxdlv1.AscendJob
+	clusterdSvcIp     string
+	status            *commonv1.ReplicaStatus
+	rtype             commonv1.ReplicaType
+	isDynamicCutJob   bool
+	isSoftShareDevJob bool
+	index             int
+	spec              *commonv1.ReplicaSpec
+	isMaster          bool
+	ip                string
+	port              string
+	ctReq             int
+	npuReplicas       int
+	rank              int
+	backupPodName     string
 }
 
 func (pi *podInfo) DeepCopy() *podInfo {
 	return &podInfo{
-		isDynamicCutJob: pi.isDynamicCutJob,
-		frame:           pi.frame,
-		job:             pi.job,
-		status:          pi.status,
-		rtype:           pi.rtype,
-		spec:            pi.spec,
-		ip:              pi.ip,
-		port:            pi.port,
-		ctReq:           pi.ctReq,
-		npuReplicas:     pi.npuReplicas,
-		clusterdSvcIp:   pi.clusterdSvcIp,
+		isDynamicCutJob:   pi.isDynamicCutJob,
+		isSoftShareDevJob: pi.isSoftShareDevJob,
+		frame:             pi.frame,
+		job:               pi.job,
+		status:            pi.status,
+		rtype:             pi.rtype,
+		spec:              pi.spec,
+		ip:                pi.ip,
+		port:              pi.port,
+		ctReq:             pi.ctReq,
+		npuReplicas:       pi.npuReplicas,
+		clusterdSvcIp:     pi.clusterdSvcIp,
 	}
 }
 
@@ -312,4 +314,14 @@ func (bcm *batchCreateManager) updateUnavailableStatus() {
 	defer bcm.stateMutex.Unlock()
 	bcm.failedFlag = true
 	bcm.lastFailureTime = time.Now()
+}
+
+func isSoftShareDevJob(job *mindxdlv1.AscendJob) bool {
+	if job == nil {
+		return false
+	}
+	_, hasAicoreQuota := job.Labels[api.SchedulerSoftShareDevAicoreQuotaKey]
+	_, hasHbmQuota := job.Labels[api.SchedulerSoftShareDevHbmQuotaKey]
+	_, hasSchedulingPolicy := job.Labels[api.SchedulerSoftShareDevPolicyKey]
+	return hasAicoreQuota && hasHbmQuota && hasSchedulingPolicy
 }
