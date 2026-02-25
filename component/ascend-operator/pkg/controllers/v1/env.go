@@ -183,7 +183,7 @@ func (r *ASJobReconciler) setCommonEnv(pi *podInfo, podTemplate *corev1.PodTempl
 			if len(podTemplate.Spec.Containers[i].Env) == 0 {
 				podTemplate.Spec.Containers[i].Env = make([]corev1.EnvVar, 0)
 			}
-			if !r.isVirtualResourceReq(&podTemplate.Spec.Containers[i].Resources.Requests) {
+			if !r.isVirtualResourceReq(&podTemplate.Spec.Containers[i].Resources.Requests) && !isSoftShareDevJob(pi.job) {
 				r.setAscendVisibleDevicesEnv(&podTemplate.Spec.Containers[i])
 			}
 			addEnvValue(podTemplate, taskIDEnvKey, string(pi.job.UID), i)
@@ -235,9 +235,13 @@ func (r *ASJobReconciler) setMindSporeEnv(pi *podInfo, podTemplate *corev1.PodTe
 			} else {
 				addEnvValue(podTemplate, msSchedHost, pi.ip, i)
 			}
-			if !pi.isDynamicCutJob {
+			if pi.isSoftShareDevJob {
+				addEnvValue(podTemplate, api.MsLocalWorkerEnv, strconv.Itoa(1), i)
+				addEnvValue(podTemplate, api.MsWorkerNumEnv, strconv.Itoa(pi.npuReplicas), i)
+			} else if !pi.isDynamicCutJob {
 				addEnvValue(podTemplate, api.MsLocalWorkerEnv, strconv.Itoa(pi.ctReq), i)
 				addEnvValue(podTemplate, api.MsWorkerNumEnv, strconv.Itoa(pi.ctReq*pi.npuReplicas), i)
+
 			}
 			addEnvValue(podTemplate, msNodeRank, strconv.Itoa(pi.rank), i)
 			addEnvValue(podTemplate, msSchedPort, pi.port, i)
@@ -260,7 +264,11 @@ func (r *ASJobReconciler) setPytorchEnv(pi *podInfo, podTemplate *corev1.PodTemp
 			if len(podTemplate.Spec.Containers[i].Env) == 0 {
 				podTemplate.Spec.Containers[i].Env = make([]corev1.EnvVar, 0)
 			}
-			if !pi.isDynamicCutJob {
+			if pi.isSoftShareDevJob {
+				addEnvValue(podTemplate, api.PtLocalWorldSizeEnv, strconv.Itoa(1), i)
+				addEnvValue(podTemplate, api.PtWorldSizeEnv, strconv.Itoa(pi.npuReplicas), i)
+				addEnvValue(podTemplate, api.PtLocalRankEnv, localRankStr(1), i)
+			} else if !pi.isDynamicCutJob {
 				addEnvValue(podTemplate, api.PtLocalWorldSizeEnv, strconv.Itoa(pi.ctReq), i)
 				addEnvValue(podTemplate, api.PtWorldSizeEnv, strconv.Itoa(pi.ctReq*pi.npuReplicas), i)
 				addEnvValue(podTemplate, api.PtLocalRankEnv, localRankStr(pi.ctReq), i)
@@ -293,7 +301,10 @@ func (r *ASJobReconciler) setTensorflowEnv(pi *podInfo, podTemplate *corev1.PodT
 			} else {
 				addEnvValue(podTemplate, tfChiefIP, pi.ip, i)
 			}
-			if !pi.isDynamicCutJob {
+			if pi.isSoftShareDevJob {
+				addEnvValue(podTemplate, api.TfLocalWorkerEnv, strconv.Itoa(1), i)
+				addEnvValue(podTemplate, api.TfWorkerSizeEnv, strconv.Itoa(pi.npuReplicas), i)
+			} else if !pi.isDynamicCutJob {
 				addEnvValue(podTemplate, api.TfLocalWorkerEnv, strconv.Itoa(pi.ctReq), i)
 				addEnvValue(podTemplate, api.TfWorkerSizeEnv, strconv.Itoa(pi.ctReq*pi.npuReplicas), i)
 			}

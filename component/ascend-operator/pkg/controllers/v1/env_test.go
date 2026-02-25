@@ -30,7 +30,8 @@ const (
 	fakeTaskID          = "123456"
 	fakeJobIdLabelValue = "jobIdLabelValue"
 	fakeAppLabelValue   = "appLabelValue"
-	msRoleIndex         = 6
+	indexTwo            = 2
+	indexSix            = 6
 
 	ascend910            = "huawei.com/Ascend910"
 	ascend910vir2c       = "huawei.com/Ascend910-2c"
@@ -163,6 +164,16 @@ func TestSetCommonEnv(t *testing.T) {
 			rc.setCommonEnv(ei, podTemp)
 			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldResemble, expectEnvs)
 		})
+		convey.Convey("04-pod request soft share device resource, "+
+			"no need set ascendVisibleDevicesEnv", func() {
+			expectEnvs := fakeExpectEnvsForSetCommonEnv02()
+			ei.job.SetLabels(map[string]string{
+				api.SchedulerSoftShareDevAicoreQuotaKey: "1",
+				api.SchedulerSoftShareDevHbmQuotaKey:    "1",
+				api.SchedulerSoftShareDevPolicyKey:      "1"})
+			rc.setCommonEnv(ei, podTemp)
+			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldResemble, expectEnvs)
+		})
 	})
 }
 
@@ -203,13 +214,17 @@ func TestSetMindSporeEnv(t *testing.T) {
 			rc.setMindSporeEnv(ei, podTemp)
 			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldResemble, expectEnvs)
 		})
-		convey.Convey("03-rType is Scheduler, scheduler host equal ei.ip", func() {
+		convey.Convey("03-rType is worker and job is soft share device, pod info ctReq equal 1", func() {
+			ei.isSoftShareDevJob = true
+			expectEnvs[1] = corev1.EnvVar{Name: api.MsLocalWorkerEnv, Value: "1"}
+			expectEnvs[indexTwo] = corev1.EnvVar{Name: api.MsWorkerNumEnv, Value: strconv.Itoa(ei.npuReplicas)}
+			rc.setMindSporeEnv(ei, podTemp)
+			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldResemble, expectEnvs)
+		})
+		convey.Convey("04-rType is Scheduler, scheduler host equal ei.ip", func() {
 			ei.rtype = mindxdlv1.MindSporeReplicaTypeScheduler
 			expectEnvs[0] = fakeRefEnv(msSchedHost, statusPodIPDownwardAPI)
-			expectEnvs[msRoleIndex] = corev1.EnvVar{
-				Name:  msRole,
-				Value: msRoleMap[ei.rtype],
-			}
+			expectEnvs[indexSix] = corev1.EnvVar{Name: msRole, Value: msRoleMap[ei.rtype]}
 			rc.setMindSporeEnv(ei, podTemp)
 			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldResemble, expectEnvs)
 		})
@@ -248,7 +263,15 @@ func TestSetPytorchEnv(t *testing.T) {
 			rc.setPytorchEnv(ei, podTemp)
 			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldResemble, expectEnvs)
 		})
-		convey.Convey("03-rType is master, scheduler host equal ei.ip", func() {
+		convey.Convey("03-rType is worker and job is soft share device,  pod info ctReq equal 1", func() {
+			ei.isSoftShareDevJob = true
+			expectEnvs[0] = corev1.EnvVar{Name: api.PtLocalWorldSizeEnv, Value: "1"}
+			expectEnvs[1] = corev1.EnvVar{Name: api.PtWorldSizeEnv, Value: strconv.Itoa(ei.npuReplicas)}
+			expectEnvs[indexTwo] = corev1.EnvVar{Name: api.PtLocalRankEnv, Value: localRankStr(1)}
+			rc.setPytorchEnv(ei, podTemp)
+			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldResemble, expectEnvs)
+		})
+		convey.Convey("04-rType is master, scheduler host equal ei.ip", func() {
 			ei.rtype = mindxdlv1.PytorchReplicaTypeMaster
 			rc.setPytorchEnv(ei, podTemp)
 			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldResemble, expectEnvs)
@@ -286,6 +309,13 @@ func TestSetTensorflowEnv(t *testing.T) {
 			},
 		}
 		convey.Convey("02-rType is worker, scheduler host equal ei.ip", func() {
+			rc.setTensorflowEnv(ei, podTemp)
+			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldResemble, expectEnvs)
+		})
+		convey.Convey("03-rType is worker and job is soft share device,  pod info ctReq equal 1", func() {
+			ei.isSoftShareDevJob = true
+			expectEnvs[1] = corev1.EnvVar{Name: api.TfLocalWorkerEnv, Value: "1"}
+			expectEnvs[indexTwo] = corev1.EnvVar{Name: api.TfWorkerSizeEnv, Value: strconv.Itoa(ei.npuReplicas)}
 			rc.setTensorflowEnv(ei, podTemp)
 			convey.So(podTemp.Spec.Containers[0].Env, convey.ShouldResemble, expectEnvs)
 		})

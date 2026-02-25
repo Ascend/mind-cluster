@@ -106,16 +106,17 @@ func (r *ASJobReconciler) newPodInfo(job *mindxdlv1.AscendJob, rtype commonv1.Re
 	npuReplicas := getTotalNpuReplicas(job)
 
 	return &podInfo{
-		isDynamicCutJob: npuName == npuCoreName,
-		frame:           frame,
-		job:             job,
-		spec:            spec,
-		ip:              svcIp,
-		port:            svcPort,
-		ctReq:           ctReq,
-		npuReplicas:     npuReplicas,
-		rtype:           rtype,
-		clusterdSvcIp:   r.getClusterDSvcIp(),
+		isDynamicCutJob:   npuName == npuCoreName,
+		isSoftShareDevJob: isSoftShareDevJob(job),
+		frame:             frame,
+		job:               job,
+		spec:              spec,
+		ip:                svcIp,
+		port:              svcPort,
+		ctReq:             ctReq,
+		npuReplicas:       npuReplicas,
+		rtype:             rtype,
+		clusterdSvcIp:     r.getClusterDSvcIp(),
 	}, nil
 }
 
