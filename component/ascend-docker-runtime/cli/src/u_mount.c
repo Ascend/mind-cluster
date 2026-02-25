@@ -141,13 +141,19 @@ int MountDir(const char *rootfs, const char *src)
 
     ret = MakeDirWithParent(dst, DEFAULT_DIR_MODE);
     if (ret < 0) {
-        Logger("failed to make dir.", LEVEL_ERROR, SCREEN_YES);
+        char* str = FormatLogMessage("failed to make dir: %s.", dst);
+        Logger(str, LEVEL_ERROR, SCREEN_YES);
+        free(str);
+        str = NULL;
         return -1;
     }
 
     ret = Mount(src, dst);
     if (ret < 0) {
-        Logger("failed to mount dir", LEVEL_ERROR, SCREEN_YES);
+        char* str = FormatLogMessage("failed to mount src dir: %s to dst dir: %s.", src, dst);
+        Logger(str, LEVEL_ERROR, SCREEN_YES);
+        free(str);
+        str = NULL;
         return -1;
     }
 
