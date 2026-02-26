@@ -22,17 +22,17 @@ package util
 // for a5 basic scheduling
 const (
 	// SuperPodA5Prefix the prefix value of superpod a5 handler name
-	SuperPodA5Prefix = "900SuperPod-A5"
+	SuperPodA5Prefix = "900SuperPod-npu"
 	// SuperPodx8 value of accelerator-type is 900SuperPod-A5 which will be changed to superpod-910a5-8
-	SuperPodx8 = "900SuperPod-A5-8"
+	SuperPodx8 = "950-SuperPod-Atlas-8"
 	// SuperPodx8SchedulerName maxNodeNPUNum is 8
 	SuperPodx8SchedulerName = NPU910CardName + SuperPodx8
 	// Ascend800ia5x8 value of accelerator-type is 800I-A5 which will be changed to ascend-800ia5-8
-	Ascend800ia5x8 = "800I-A5-8"
+	Ascend800ia5x8 = "850-Atlas-8p-8"
 	// Ascend800ia5x8SchedulerName maxNodeNPUNum is 8
 	Ascend800ia5x8SchedulerName = NPU910CardName + Ascend800ia5x8
-	// Ascend800ta5x8 value of accelerator-type is 800T-A5-8
-	Ascend800ta5x8 = "800T-A5-8"
+	// Ascend800ta5x8 value of accelerator-type is 800T-npu-8
+	Ascend800ta5x8 = "850-Atlas-8p-8"
 	// TrainSchedulerName name of train server scheduler
 	Ascend800ta5x8TrainSchedulerName = NPU910CardName + Ascend800ta5x8
 	// TpBlockAnnoKey annotation key of ra-block, changed from "tp-block" to "ra-block"
@@ -43,6 +43,8 @@ const (
 	LeastTpBlock = 1
 	// DefaultTpBlockNum is the default value of 900SuperPod-A5-8
 	DefaultTpBlockNum = 8
+	// NPULowerCase npu
+	NPULowerCase = "npu"
 )
 
 // for a5 rescheduling

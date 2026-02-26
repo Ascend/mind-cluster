@@ -19,7 +19,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
-// createAffScoreList for 300I-A5-8 or 300I-A5-16
+// createAffScoreList for 300I-npu-8 or 300I-npu-16
 /*
 	The horizontal axis represents the number of available cards, and the vertical axis represents the number of required cards.
 	The scoring sheet is generated as follows:

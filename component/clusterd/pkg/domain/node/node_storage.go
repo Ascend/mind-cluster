@@ -65,13 +65,15 @@ func SaveNodeToCache(node *v1.Node) {
 	baseDevInfos := getBaseDevInfos(node)
 	devType := getDeviceType(node)
 	spIndex := getServerID(node)
-	nodeDeviceInfo := getNodeDevice(baseDevInfos, nodeName, devType, spIndex)
+	var nodeDeviceInfo *api.NodeDevice
 	if api.CheckIsVersionA5(devType) {
 		acceleratorType := getNodeAcceleratorType(node)
 		nodeDeviceInfo = getNodeDeviceA5(baseDevInfos, nodeName, devType, spIndex, acceleratorType)
 		if nodeDeviceInfo != nil {
 			nodeDeviceInfo.RackID = getRackID(node)
 		}
+	} else {
+		nodeDeviceInfo = getNodeDevice(baseDevInfos, nodeName, devType, spIndex)
 	}
 	cache.mutex.Lock()
 	defer cache.mutex.Unlock()

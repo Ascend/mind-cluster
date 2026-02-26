@@ -479,8 +479,8 @@ func TestStoreA51D2DNpuFmLink(t *testing.T) {
 func TestProcessSuperPodJsonWhenReasoningServer(t *testing.T) {
 	mockSleep := gomonkey.ApplyFunc(time.Sleep, func(d time.Duration) {})
 	defer mockSleep.Reset()
-	convey.Convey("Test processSuperPodJson when version 800I-SuperPod-A5-8", t, func() {
-		convey.Convey("800I-SuperPod-A5-8", func() {
+	convey.Convey("Test processSuperPodJson when version 850-SupePod-Atlas-8", t, func() {
+		convey.Convey("850-SupePod-Atlas-8", func() {
 			mockGetSuperpodInfo := gomonkey.ApplyFuncReturn(readConfigMap, &SuperPodInfo{Version: DiagVersionServer})
 			defer mockGetSuperpodInfo.Reset()
 			patch := gomonkey.ApplyFuncReturn(loopWaitFile, true)
@@ -628,7 +628,8 @@ func TestGetReasoningServerNpuLinkPathStrPartTwo(t *testing.T) {
 						"1": &NpuInfo{
 							PhyId: "1",
 							LevelList: []LevelElement{
-								{NetLayer: 1, RankAddrList: []RankAddrItem{{Addr: "addr1", PlaneId: "0"}, {Addr: "addr2", PlaneId: "1"}}},
+								{NetLayer: 1, RankAddrList: []RankAddrItem{{Addr: "addr1", PlaneId: "0"},
+									{Addr: "addr2", PlaneId: "1"}}},
 							},
 						},
 					},

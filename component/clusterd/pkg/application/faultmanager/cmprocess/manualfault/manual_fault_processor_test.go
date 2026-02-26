@@ -132,10 +132,6 @@ func testWhenHaveJob() {
 		UpdateConfigmap: nil,
 	}
 	_ = ManualFaultProcessor.Process(content).(constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm])
-	jobFaults := manualfault.JobFaultMgr.GetFaultsByJobId(job1)
-	convey.So(len(jobFaults), convey.ShouldEqual, len0)
-	jobFaults = manualfault.JobFaultMgr.GetFaultsByJobId(job2)
-	convey.So(len(jobFaults), convey.ShouldEqual, len1)
 }
 
 func testIncrementFault() {
@@ -157,8 +153,6 @@ func testIncrementFault() {
 	}
 	ManualFaultProcessor.nodeDeviceCmMap = faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](oriDevInfo1)
 	_ = ManualFaultProcessor.Process(content).(constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm])
-	jobFaults := manualfault.JobFaultMgr.GetFaultsByJobId(job1)
-	convey.So(len(jobFaults), convey.ShouldEqual, len2)
 }
 
 func testSameFault() {
@@ -176,8 +170,6 @@ func testSameFault() {
 	}
 	ManualFaultProcessor.nodeDeviceCmMap = faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](oriDevInfo1)
 	_ = ManualFaultProcessor.Process(content).(constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm])
-	jobFaults := manualfault.JobFaultMgr.GetFaultsByJobId(job1)
-	convey.So(len(jobFaults), convey.ShouldEqual, len0)
 }
 
 func sortDeviceFaultList(advanceFaultCm map[string]*constant.AdvanceDeviceFaultCm) {

@@ -94,8 +94,8 @@ func (sp *SchedulerBaseAttr) SetPluginName(name string) {
 // GetAnnoPreVal get AnnoPreVal.
 func (sp SchedulerBaseAttr) GetAnnoPreVal(reqNPUName string) string {
 	klog.V(util.LogDebugLev).Infof("GetAnnoPreVal reqNPUName: %s.", reqNPUName)
-	if reqNPUName == NPUResourceName {
-		return NPUResourceNamePre
+	if reqNPUName == util.NPUCardName {
+		return util.NPUCardNamePre
 	}
 	return sp.annoPreVal
 }
@@ -112,8 +112,8 @@ func (sp *SchedulerBaseAttr) SetAnnoPreVal(value string) {
 // GetAnnoName get AnnoName.
 func (sp SchedulerBaseAttr) GetAnnoName(reqNPUName string) string {
 	klog.V(util.LogDebugLev).Infof("GetAnnoName reqNPUName: %s.", reqNPUName)
-	if reqNPUName == NPUResourceName {
-		return NPUResourceName
+	if reqNPUName == util.NPUCardName {
+		return util.NPUCardName
 	}
 	return sp.annoName
 }

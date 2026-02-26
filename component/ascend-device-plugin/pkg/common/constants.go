@@ -231,23 +231,14 @@ const (
 
 	// HuaweiNetworkUnHealthAscend910 910 network unhealthy
 	HuaweiNetworkUnHealthAscend910 = api.HuaweiAscend910 + "-NetworkUnhealthy"
-	// HuaweiDpuUnHealthAscend910 910 DPU unhealthy
-	HuaweiDpuUnHealthAscend910 = api.HuaweiAscend910 + "-DPUUnhealthy"
 	// HuaweiUnHealthAscend910 unhealthy
 	HuaweiUnHealthAscend910 = api.HuaweiAscend910 + "-Unhealthy"
-	// HuaweiRecoveringAscend910 recovering
-	HuaweiRecoveringAscend910 = api.HuaweiAscend910 + "-Recovering"
+
 	// HuaweiUnHealthAscend310P 310p unhealthy
 	HuaweiUnHealthAscend310P = api.HuaweiAscend310P + "-Unhealthy"
 	// HuaweiUnHealthAscend310 310 unhealthy
 	HuaweiUnHealthAscend310 = api.HuaweiAscend310 + "-Unhealthy"
-	// HuaweiNetworkRecoverAscend910 910 network recover
-	HuaweiNetworkRecoverAscend910 = api.HuaweiAscend910 + "-NetworkRecover"
-	// HuaweiRecoverAscend910 910 recover
-	HuaweiRecoverAscend910 = api.HuaweiAscend910 + "-Recover"
 
-	// HuaweiFaultCodeAscend910 910 fault code
-	HuaweiFaultCodeAscend910 = api.HuaweiAscend910 + "-Fault"
 	// HuaweiFaultCodeAscend310P 310p fault code
 	HuaweiFaultCodeAscend310P = api.HuaweiAscend310P + "-Fault"
 	// HuaweiFaultCodeAscend310 310 fault code

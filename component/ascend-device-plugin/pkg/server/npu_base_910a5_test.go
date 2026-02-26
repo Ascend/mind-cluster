@@ -230,7 +230,8 @@ func TestGetPortListByEid(t *testing.T) {
 			npu := NewNpuBase()
 			npu.productInfo = &ProductBase{superPodType: 2}
 			_, err := npu.GetPortListByEid(1, "1", 1)
-			convey.So(err.Error(), convey.ShouldEqual, "get port list by eid error, device type is not A5")
+			convey.So(err.Error(), convey.ShouldEqual,
+				fmt.Sprintf("get port list by eid error, device type is not %s", api.HuaweiNPU))
 		})
 		oldRealType := common.ParamOption.RealCardType
 		common.ParamOption.RealCardType = api.Ascend910A5

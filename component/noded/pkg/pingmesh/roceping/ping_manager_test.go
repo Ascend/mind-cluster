@@ -30,6 +30,7 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
+	"ascend-common/api"
 	"ascend-common/api/slownet"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
@@ -43,8 +44,8 @@ const (
 	serverIndex   = 1
 	rackID        = 1
 	devType       = ""
-	label800IA5x8 = "800I-A5-8"
-	label900POD   = "900SuperPod-A5-8"
+	label800IA5x8 = "850-SuperPod-Atlas-8"
+	label900POD   = "950-SuperPod-Atlas-8"
 )
 
 func TestCalcAvgLossRate(t *testing.T) {
@@ -331,7 +332,7 @@ func TestNewPingManager(t *testing.T) {
 			patch := gomonkey.ApplyMethod(testK8sClient, "GetNodeWithCache",
 				func(ck *kubeclient.ClientK8s) (*v1.Node, error) {
 					node := &v1.Node{}
-					node.Labels = map[string]string{acceleratorTypeKey: label800IA5x8}
+					node.Labels = map[string]string{api.AcceleratorTypeKey: label800IA5x8}
 					return node, nil
 				})
 			defer patch.Reset()
@@ -342,7 +343,7 @@ func TestNewPingManager(t *testing.T) {
 			patch := gomonkey.ApplyMethod(testK8sClient, "GetNodeWithCache",
 				func(ck *kubeclient.ClientK8s) (*v1.Node, error) {
 					node := &v1.Node{}
-					node.Labels = map[string]string{acceleratorTypeKey: label900POD}
+					node.Labels = map[string]string{api.AcceleratorTypeKey: label900POD}
 					return node, nil
 				})
 			defer patch.Reset()
@@ -452,7 +453,7 @@ func testCheckNodeLabelSupportedWithLabelCase(testK8sClient *kubeclient.ClientK8
 		patch := gomonkey.ApplyMethod(testK8sClient, "GetNodeWithCache",
 			func(ck *kubeclient.ClientK8s) (*v1.Node, error) {
 				node := &v1.Node{}
-				node.Labels = map[string]string{acceleratorTypeKey: label800IA5x8}
+				node.Labels = map[string]string{api.AcceleratorTypeKey: label800IA5x8}
 				return node, nil
 			})
 		defer patch.Reset()
@@ -467,7 +468,7 @@ func testCheckNodeLabelSupportedWithLabelCase(testK8sClient *kubeclient.ClientK8
 		patch := gomonkey.ApplyMethod(testK8sClient, "GetNodeWithCache",
 			func(ck *kubeclient.ClientK8s) (*v1.Node, error) {
 				node := &v1.Node{}
-				node.Labels = map[string]string{acceleratorTypeKey: label900POD}
+				node.Labels = map[string]string{api.AcceleratorTypeKey: label900POD}
 				return node, nil
 			})
 		defer patch.Reset()
@@ -533,10 +534,11 @@ func TestStartCollectCase02(t *testing.T) {
 			e := NewIcmpPingExecutor(stopCh, 0, NewOperator("a", "b", 1))
 			m.executors = []*IcmpPingExecutor{e}
 			data := statisticData{result: "json data", record: []string{"csv", "record", "data"}}
-			patchResult := gomonkey.ApplyPrivateMethod(e, "getPingResultInfo", func(wg *sync.WaitGroup, sendCh chan statisticData) {
-				defer m.wg.Done()
-				m.recordChan <- data
-			})
+			patchResult := gomonkey.ApplyPrivateMethod(e, "getPingResultInfo",
+				func(wg *sync.WaitGroup, sendCh chan statisticData) {
+					defer m.wg.Done()
+					m.recordChan <- data
+				})
 			defer patchResult.Reset()
 			m.wg.Add(1)
 			go m.startCollect(stopCh)

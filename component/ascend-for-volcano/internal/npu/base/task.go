@@ -159,7 +159,11 @@ func (tp *NPUHandler) setRealUsedNpuToPod(task *api.TaskInfo, top []int, topolog
 		return
 	}
 	task.Pod.Annotations[util.AscendNPUPodRealUse] = topologyStr
-	task.Pod.Annotations[util.Pod910DeviceKey] = string(marshedInst)
+	configKey := util.Pod910DeviceKey
+	if tp.GetAnnoName("") == util.NPUCardName {
+		configKey = util.PodNPUDeviceKey
+	}
+	task.Pod.Annotations[configKey] = string(marshedInst)
 }
 
 func (tp *NPUHandler) setRankIndex(task *api.TaskInfo) {

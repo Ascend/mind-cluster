@@ -27,15 +27,15 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
-// New return npu plugin for chip4nodex including 300I-A5-4p-8 or 300I-A5-4p-16 with 4p mesh
+// New return npu plugin for chip4nodex including 300I-npu-4p-8 or 300I-npu-4p-16 with 4p mesh
 func New(name string) base.AscendHandler {
 	m := &chip4nodex{}
 	klog.V(util.LogInfoLev).Infof("chip4nodex card type =%s", name)
 	num := getNPUNumByHandler(name)
 	m.SetMaxNodeNPUNum(num)
 	m.SetPluginName(name)
-	m.SetAnnoName(util.NPU910CardName)
-	m.SetAnnoPreVal(util.NPU910CardNamePre)
+	m.SetAnnoName(util.NPUCardName)
+	m.SetAnnoPreVal(util.NPUCardNamePre)
 	m.affScoreList = createAffScoreList(m.MaxNodeNPUNum)
 	return m
 }

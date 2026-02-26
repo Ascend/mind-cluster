@@ -241,7 +241,7 @@ func (cm *AdvanceDeviceFaultCm) GetRecoveringKey() string {
 		hwlog.RunLog.Error("cm is nil")
 		return ""
 	}
-	return api.ResourceNamePrefix + cm.DeviceType + CmRecoveringSuffix
+	return api.ResourceNamePrefix + cm.DeviceType + api.CmRecoveringSuffix
 }
 
 // GetCardUnHealthyKey return cm CardUnHealthyKey
@@ -250,7 +250,7 @@ func (cm *AdvanceDeviceFaultCm) GetCardUnHealthyKey() string {
 		hwlog.RunLog.Error("cm is nil")
 		return ""
 	}
-	return api.ResourceNamePrefix + cm.DeviceType + CmCardUnhealthySuffix
+	return api.ResourceNamePrefix + cm.DeviceType + api.CmCardUnhealthySuffix
 }
 
 // GetNetworkUnhealthyKey return cm NetworkUnhealthyKey
@@ -259,7 +259,7 @@ func (cm *AdvanceDeviceFaultCm) GetNetworkUnhealthyKey() string {
 		hwlog.RunLog.Error("cm is nil")
 		return ""
 	}
-	return api.ResourceNamePrefix + cm.DeviceType + CmCardNetworkUnhealthySuffix
+	return api.ResourceNamePrefix + cm.DeviceType + api.CmCardNetworkUnhealthySuffix
 }
 
 // GetDPUUnhealthyKey return cm DPUUnhealthyKey
@@ -268,7 +268,7 @@ func (cm *AdvanceDeviceFaultCm) GetDPUUnhealthyKey() string {
 		hwlog.RunLog.Error("cm is nil")
 		return ""
 	}
-	return api.ResourceNamePrefix + cm.DeviceType + CmCardDPUUnhealthySuffix
+	return api.ResourceNamePrefix + cm.DeviceType + api.CmCardDPUUnhealthySuffix
 }
 
 // GetFaultDeviceListKey return cm FaultDeviceListKey
@@ -277,7 +277,7 @@ func (cm *AdvanceDeviceFaultCm) GetFaultDeviceListKey() string {
 		hwlog.RunLog.Error("cm is nil")
 		return ""
 	}
-	return api.ResourceNamePrefix + cm.DeviceType + CmFaultListSuffix
+	return api.ResourceNamePrefix + cm.DeviceType + api.CmFaultListSuffix
 }
 
 // GetAvailableDeviceListKey return cm AvailableDeviceListKey

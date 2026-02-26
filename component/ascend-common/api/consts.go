@@ -87,12 +87,6 @@ const (
 	MasterPodRank = "0"
 )
 
-// PodGroup
-const (
-	// AtlasTaskLabel label value task kind, eg. ascend-910, ascend-{xxx}b
-	AtlasTaskLabel = "ring-controller.atlas"
-)
-
 // ConfigMap
 const (
 	// DeviceInfoCMDataKey device-info-cm data key, record device info
@@ -221,6 +215,28 @@ const (
 const (
 	// MinAvailableKey decide minAvailable of task
 	MinAvailableKey = "huawei.com/schedule_minAvailable"
+)
+
+// for cm
+const (
+	// CmRecoveringSuffix Recovering Suffix
+	CmRecoveringSuffix = "-Recovering"
+	// CmCardUnhealthySuffix CardUnhealthy Suffix
+	CmCardUnhealthySuffix = "-Unhealthy"
+	// CmCardNetworkUnhealthySuffix NetworkUnhealthy Suffix
+	CmCardNetworkUnhealthySuffix = "-NetworkUnhealthy"
+	// CmCardDPUUnhealthySuffix DPUUnhealthy Suffix
+	CmCardDPUUnhealthySuffix = "-DPUUnhealthy"
+	// CmFaultListSuffix FaultList Suffix
+	CmFaultListSuffix = "-Fault"
+)
+
+// node labels
+const (
+	// NodeLabelRecoverSuffix "-Recover"
+	NodeLabelRecoverSuffix = "-Recover"
+	// NodeLabelNetworkRecoverSuffix "-NetworkRecover"
+	NodeLabelNetworkRecoverSuffix = "-NetworkRecover"
 )
 
 const (

@@ -31,7 +31,7 @@ func TestNodeCollectorInvalidNode(t *testing.T) {
 	convey.Convey("Testing NodeCollector with Invalid node", t, func() {
 		nodeDevice := &api.NodeDevice{
 			NodeName:        testNodeName,
-			ServerType:      api.VersionA5,
+			ServerType:      api.VersionNPU,
 			AcceleratorType: api.Ascend800ia5Stacking,
 			DeviceMap: map[string]string{
 				"device1": "superDevice1",
@@ -46,7 +46,7 @@ func TestNodeCollectorValidNode(t *testing.T) {
 	convey.Convey("Testing NodeCollector with Valid node", t, func() {
 		nodeDevice := &api.NodeDevice{
 			NodeName:        testNodeName,
-			ServerType:      api.VersionA5,
+			ServerType:      api.VersionNPU,
 			AcceleratorType: api.Ascend800ia5SuperPod,
 			DeviceMap: map[string]string{
 				"device1": "superDevice1",

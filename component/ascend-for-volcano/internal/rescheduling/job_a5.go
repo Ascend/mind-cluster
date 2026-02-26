@@ -30,17 +30,14 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
-func is910A5Job(schedulerJob *plugin.SchedulerJob) bool {
+func is910A5SuperPodJob(schedulerJob *plugin.SchedulerJob) bool {
 	if schedulerJob == nil {
 		return false
 	}
-	if v, ok := schedulerJob.Selector[util.AcceleratorType]; ok {
-		return util.CheckA5Label(v)
-	}
-	return false
+	return schedulerJob.Annotation[util.SchedulePolicyAnnoKey] == util.Chip8Node8Ra64Sp
 }
 
-// GraceDeleteJobFor910A5 grace delete jobs labelled to be deleted gracefully
+// GraceDeleteJobFor910A5 grace delete jobs labeled to be deleted gracefully
 func (fJob *FaultJob) GraceDeleteJobFor910A5(ssn *framework.Session, npuJob *plugin.SchedulerJob,
 	env plugin.ScheduleEnv) error {
 	if fJob == nil {
@@ -191,7 +188,8 @@ func (fJob *FaultJob) forceDeletePodsFor910A5(schedulerJob *plugin.SchedulerJob,
 	var waitDeleteTask = make([]FaultTask, 0)
 	for id, fTask := range fJob.FaultTasks {
 		klog.V(util.LogDebugLev).Infof("not masterFault is %v, job single rescheduling is %v ,"+
-			"not fault task is %v, allow upgrade is %v", !fJob.IsMasterFault, fJob.IsJobSingleRescheduling(schedulerJob),
+			"not fault task is %v, allow upgrade is %v", !fJob.IsMasterFault,
+			fJob.IsJobSingleRescheduling(schedulerJob),
 			!fTask.IsFaultTask, fJob.allowUpgradePodRescheduling())
 		if fJob.skipThisTask(dpi, fTask, schedulerJob) {
 			klog.V(util.LogDebugLev).Infof(

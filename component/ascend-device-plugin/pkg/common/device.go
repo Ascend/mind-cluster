@@ -525,3 +525,11 @@ func convertToSwitchLevelStr(level int) string {
 	}
 	return faultLevelStr
 }
+
+// GetAscend910Key Dynamically obtain the device CM key
+func GetAscend910Key(attr string) string {
+	if ParamOption.RealCardType == api.Ascend910A5 {
+		return api.HuaweiNPU + attr
+	}
+	return api.HuaweiAscend910 + attr
+}

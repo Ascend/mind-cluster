@@ -44,15 +44,15 @@ type chip8node8sp struct {
 
 const (
 	// AcceleratorType super pod accelerator type
-	AcceleratorType = "800I-SuperPod-A5-8"
+	AcceleratorType = "850-SupePod-Atlas-8"
 	// AcceleratorTypeTrain super pod accelerator type for train server
-	AcceleratorTypeTrain = "800T-SuperPod-A5-8"
+	AcceleratorTypeTrain = "850-SupePod-Atlas-8"
 	// InferSchedulerName name of infer server scheduler
 	InferSchedulerName = "huawei.com/Ascend910" + AcceleratorType
 	// TrainSchedulerName name of train scheduler
 	TrainSchedulerName  = "huawei.com/Ascend910" + AcceleratorTypeTrain
 	nodeNPUNumber       = 8
-	networkUnhealthyNPU = "huawei.com/Ascend910-NetworkUnhealthy"
+	networkUnhealthyNPU = "huawei.com/npu-NetworkUnhealthy"
 
 	jobCheckFailedReason       = "npu num is invalid"
 	spBlockInvalidReason       = "sp-block is invalid"

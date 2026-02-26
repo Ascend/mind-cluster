@@ -26,7 +26,7 @@ import (
 // setHcclTopoFilePathEnv set hccl topo file path env
 func (ps *PluginServer) setHcclTopoFilePathEnv(resp *v1beta1.ContainerAllocateResponse, allNPUInfo common.NpuAllInfo) {
 	if common.ParamOption.RealCardType != api.Ascend910A5 {
-		hwlog.RunLog.Debug("set hccl topo file path failed, card type not a5")
+		hwlog.RunLog.Debugf("set hccl topo file path failed, card type not %s", api.HuaweiNPU)
 		return
 	}
 	if len(allNPUInfo.AllDevs) == 0 {

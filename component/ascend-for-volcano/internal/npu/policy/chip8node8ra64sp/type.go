@@ -87,7 +87,7 @@ const (
 	// SuperPodAnnoKey the key of sp-block
 	SuperPodAnnoKey = "sp-block"
 	// SuperPodx8 the real label of a5 node
-	SuperPodx8 = "900SuperPod-A5-8"
+	SuperPodx8 = "900SuperPod-npu-8"
 	// SuperPodx8SchedulerName maxNodeNPUNum is 8
 	SuperPodx8SchedulerName  = util.HwPreName + util.Ascend910 + SuperPodx8
 	superPodAffinity         = "super-pod-affinity"

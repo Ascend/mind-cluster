@@ -95,13 +95,15 @@ func NewManager(config *Config) *Manager {
 	gen := fullmesh.New(c.nodeName, c.superPodId, c.serverIndex)
 	c.policyFactory = policygenerator.NewFactory().Register(fullmesh.Rule, gen)
 
-	hwlog.RunLog.Infof("current devType is %s", devExecutor.GetDeviceType())
 	if devExecutor.GetDeviceType() == common.Ascend910A5 {
+		hwlog.RunLog.Infof("current devType is npu")
 		c.pingManager = roceping.NewPingManager(devExecutor.SuperPodId, devExecutor.RackId,
 			devExecutor.ServerIndex, config.KubeClient, devExecutor.GetDeviceType())
 		roceGen := roceping.NewGenerator(config.KubeClient.NodeName, strconv.Itoa(int(devExecutor.SuperPodId)),
 			strconv.Itoa(int(devExecutor.ServerIndex)))
 		c.policyFactory = c.policyFactory.Register(roceping.Rule, roceGen)
+	} else {
+		hwlog.RunLog.Infof("current devType is %s", devExecutor.GetDeviceType())
 	}
 
 	c.initWatcher(config)

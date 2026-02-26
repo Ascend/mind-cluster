@@ -365,7 +365,8 @@ func TestEventControllerUpdateFixResultSuccess(t *testing.T) {
 		}
 		result := make(map[string]interface{})
 		patchRetryPatchPodGroupAnnotations := gomonkey.ApplyFunc(kube.RetryPatchPodGroupAnnotations,
-			func(pgName, namespace string, retryTimes int, annotations map[string]interface{}) (*v1beta1.PodGroup, error) {
+			func(pgName, namespace string, retryTimes int, annotations map[string]interface{}) (*v1beta1.PodGroup,
+				error) {
 				for k, v := range annotations {
 					result[k] = v
 				}
@@ -388,7 +389,8 @@ func TestEventControllerUpdateFixResultFailure(t *testing.T) {
 		}
 		result := make(map[string]string)
 		patchRetryPatchPodGroupAnnotations := gomonkey.ApplyFunc(kube.RetryPatchPodGroupAnnotations,
-			func(pgName, namespace string, retryTimes int, annotations map[string]interface{}) (*v1beta1.PodGroup, error) {
+			func(pgName, namespace string, retryTimes int, annotations map[string]interface{}) (*v1beta1.PodGroup,
+				error) {
 				return nil, errors.New("patch error")
 			})
 		defer patchRetryPatchPodGroupAnnotations.Reset()
@@ -1137,7 +1139,8 @@ func TestEventController_supportTargetStrategy(t *testing.T) {
 			ctl := &EventController{
 				jobInfo:               tt.fields.jobInfo,
 				agentReportStrategies: tt.fields.agentReportStrategies}
-			assert.Equalf(t, tt.want, ctl.supportTargetStrategy(tt.args.recoverStrategy), "supportTargetStrategy(%v)", tt.args.recoverStrategy)
+			assert.Equalf(t, tt.want, ctl.supportTargetStrategy(tt.args.recoverStrategy), "supportTargetStrategy(%v)",
+				tt.args.recoverStrategy)
 		})
 	}
 }
@@ -1584,8 +1587,8 @@ func TestWaitScaleOutJobObjectNil(t *testing.T) {
 			state: common.NewStateMachine(common.ScaleInRunningState, []common.TransRule{
 				{Src: common.ScaleInRunningState, Event: common.FinishEvent,
 					Dst: common.InitState, Handler: func() (nextEvent string, code common.RespCode, err error) {
-					return "", 0, err
-				}},
+						return "", 0, err
+					}},
 			}),
 			events:            make(chan string, 1),
 			controllerContext: context.Background(),
@@ -1606,8 +1609,8 @@ func TestWaitScaleOutJobSucceeded(t *testing.T) {
 			state: common.NewStateMachine(common.ScaleInRunningState, []common.TransRule{
 				{Src: common.ScaleInRunningState, Event: common.FinishEvent,
 					Dst: common.InitState, Handler: func() (nextEvent string, code common.RespCode, err error) {
-					return "", 0, err
-				}},
+						return "", 0, err
+					}},
 			}),
 			events:            make(chan string, 1),
 			controllerContext: context.Background(),
@@ -1841,7 +1844,7 @@ func TestIsA5JobReturnTrue(t *testing.T) {
 		patch := gomonkey.ApplyFunc(pod.GetPodByJobId, func(jobKey string) map[string]v1.Pod {
 			return map[string]v1.Pod{"pod-1": {Spec: v1.PodSpec{NodeName: "node-1"}}}
 		}).ApplyFunc(superpod.ListClusterDevice, func() []*api.SuperPodDevice {
-			return []*api.SuperPodDevice{{NodeDeviceMap: map[string]*api.NodeDevice{"node-1": {ServerType: api.VersionA5}}}}
+			return []*api.SuperPodDevice{{NodeDeviceMap: map[string]*api.NodeDevice{"node-1": {ServerType: api.VersionNPU}}}}
 		})
 		defer patch.Reset()
 		convey.So(ctl.isA5Job(), convey.ShouldBeTrue)

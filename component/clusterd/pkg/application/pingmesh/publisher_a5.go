@@ -32,7 +32,7 @@ func handlerSuperPodRoce(res map[int]string) {
 	// 0.get all the A5 Super Pod id list
 	superPodIds := filterA5SuperPodIDFromMap(res)
 	if len(superPodIds) == 0 {
-		hwlog.RunLog.Info("no A5 Super Pod in this cluster, can't create super-pod-roce dir")
+		hwlog.RunLog.Info("no Super Pod Npu in this cluster, can't create super-pod-roce dir")
 		return
 	}
 	listData := &constant.CrossSuperPodListData{
@@ -63,7 +63,7 @@ func handlerSuperPodRoce(res map[int]string) {
 		hwlog.RunLog.Errorf("write json data to file failed, err: %v", errWrite)
 		return
 	}
-	
+
 	// 5.create .conf file or update
 	err = saveConfigToFile(constant.RasRoceKey, cfg)
 	if err != nil {
@@ -77,7 +77,7 @@ func filterA5SuperPodIDFromMap(resMap map[int]string) []int {
 	res := make([]int, 0, len(resMap))
 	for id, acceleratorType := range resMap {
 		if acceleratorType != api.A5PodType {
-			hwlog.RunLog.Infof("the superPodID<%d> is not A5 Super Pod and do not append to list", id)
+			hwlog.RunLog.Infof("the superPodID<%d> is not NPU Super Pod and do not append to list", id)
 			continue
 		}
 		res = append(res, id)

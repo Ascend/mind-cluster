@@ -15,6 +15,10 @@
 // Package chip8node8ra64sp for constants used by a5
 package chip8node8ra64sp
 
+import (
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+)
+
 // for business use
 const (
 	// UninitializedRestRackLenMapId not initialized RestRackLenMapId
@@ -30,9 +34,9 @@ const (
 
 	npuNumber8 = 8
 
-	networkUnhealthyNPU = "huawei.com/Ascend910-NetworkUnhealthy"
-	dpuUnhealthyNPU     = "huawei.com/Ascend910-DPUUnhealthy"
-	faultNPU            = "huawei.com/Ascend910-Fault"
+	networkUnhealthyNPU = util.NPUCardName + "-NetworkUnhealthy"
+	dpuUnhealthyNPU     = util.NPUCardName + "-DPUUnhealthy"
+	faultNPU            = util.NPUCardName + "-Fault"
 	nodeNum1            = 1
 
 	tpBlock1 = 1

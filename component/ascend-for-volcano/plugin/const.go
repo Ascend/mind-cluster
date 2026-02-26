@@ -61,10 +61,6 @@ const (
 	PodGroupScheduleKey = "podgroup-sched-enable"
 	// PodGroupScheduleValue podgroup schedule the enable value
 	PodGroupScheduleValue = "true"
-	// NPUResourceName npu resource name
-	NPUResourceName = "huawei.com/npu"
-	// NPUResourceNamePre npu resource name prefix
-	NPUResourceNamePre = "npu-"
 
 	Ascend950Prefix = "Ascend950"
 	SplitedLength   = 2

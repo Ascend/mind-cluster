@@ -54,8 +54,3 @@ func HasCommonElement(s1, s2 []int) ([]int, bool) {
 	klog.V(LogDebugLev).Infof("HasCommonElement s1->%v  s2->%v, result->%v", s1, s2, result)
 	return result, len(result) != 0
 }
-
-// CheckA5Label the input v is the value of label selector from ComJob Selector
-func CheckA5Label(v string) bool {
-	return v == SuperPodx8
-}

@@ -41,7 +41,8 @@ func (sJob *SchedulerJob) setTpBlock() {
 
 func (sJob *SchedulerJob) updateSchedulerForA5Fields(oldFields A5Fields) {
 	if sJob == nil {
-		klog.V(util.LogErrorLev).Infof("update scheduler job for a5 fields failed: %s.", util.ArgumentError)
+		klog.V(util.LogErrorLev).Infof("update scheduler job for %s fields failed: %s.", util.NPUCardName,
+			util.ArgumentError)
 		return
 	}
 	sJob.TpBlock = oldFields.TpBlock

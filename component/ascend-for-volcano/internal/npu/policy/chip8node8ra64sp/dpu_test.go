@@ -1,4 +1,4 @@
-﻿/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -31,7 +31,7 @@ func TestFilterDpuFault(t *testing.T) {
 	// Set up NPUJob with ReqNPUName to avoid nil pointer
 	tp.SetSchedulerAttr(util.SchedulerJobAttr{
 		NPUJob: &util.NPUJob{
-			ReqNPUName: util.NPU910CardName,
+			ReqNPUName: util.NPUCardName,
 		},
 	})
 	for _, tt := range tests {
@@ -73,7 +73,7 @@ func buildFilterDpuFaultTestCase2() filterDpuFaultTestCase {
 			CommonNode: plugin.CommonNode{
 				Name: "work2",
 				Annotation: map[string]string{
-					dpuUnhealthyNPU: "Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7",
+					dpuUnhealthyNPU: "npu-2,npu-3,npu-4,npu-5,npu-6,npu-7",
 				},
 			},
 		},

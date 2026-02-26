@@ -25,6 +25,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 
+	"Ascend-device-plugin/pkg/common"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
@@ -38,6 +39,23 @@ func init() {
 	if err != nil {
 		fmt.Printf("log init failed, error is %v\n", err)
 	}
+}
+
+// TestGetResourceName tests getResourceName
+func TestGetResourceName(t *testing.T) {
+	originalRealCardType := common.ParamOption.RealCardType
+	defer func() { common.ParamOption.RealCardType = originalRealCardType }()
+
+	common.ParamOption.RealCardType = api.Ascend910A5
+	result := getResourceName("huawei.com/Ascend910")
+	assert.Equal(t, result, "huawei.com/npu", "when RealCardType is A5 should return huawei.com/npu, but got %s",
+		result)
+
+	common.ParamOption.RealCardType = api.Ascend910A
+	result = getResourceName("huawei.com/Ascend910")
+	assert.Equal(t, result, "huawei.com/Ascend910",
+		"when RealCardType is Ascend910A should return original name, but got %s",
+		result)
 }
 
 // TestReplaceDevicePublicName tests ReplaceDevicePublicName
@@ -59,6 +77,7 @@ func TestReplaceDevicePublicName(t *testing.T) {
 	assert.Equal(t, "custom910-1", newName,
 		"when OldDevicePublicNamePre in devNameMap matches oldName, replaced name should be returned")
 	delete(devNameMap, resourceType)
+	common.ParamOption.RealCardType = api.Ascend910
 	newName = ReplaceDevicePublicName(resourceType, oldName)
 	assert.Equal(t, oldName, newName,
 		"when corresponding resourceType does not exist in devNameMap, original name should be returned")
@@ -102,6 +121,7 @@ func TestReplaceDevicePublicType(t *testing.T) {
 		"when OldDevicePublicType in devNameMap matches oldName, replaced type should be returned")
 
 	delete(devNameMap, resourceType)
+	common.ParamOption.RealCardType = api.Ascend910
 	newName = ReplaceDevicePublicType(resourceType, oldName)
 	assert.Equal(t, oldName, newName,
 		"when corresponding resourceType does not exist in devNameMap, original type should be returned")
@@ -153,6 +173,33 @@ func TestReplaceDeviceInfoPublicName(t *testing.T) {
 	assert.Contains(t, newDeviceList, "CustomAscend310", "device type key should be replaced")
 	assert.Equal(t, "custom310-1", newDeviceName, "device name prefix should be replaced")
 	assert.Equal(t, "custom310-1", newReason, "reason should be replaced")
+}
+
+// TestGetPodAnnotationWithPublicName tests getPodAnnotationWithPublicName
+func TestGetPodAnnotationWithPublicName(t *testing.T) {
+	originalRealCardType := common.ParamOption.RealCardType
+	defer func() { common.ParamOption.RealCardType = originalRealCardType }()
+
+	common.ParamOption.RealCardType = api.Ascend910A5
+
+	resourceType := api.Ascend910
+	annotation := map[string]string{
+		api.HuaweiAscend910: "value1",
+		"other-key":         "value3",
+	}
+
+	devNameMap[resourceType] = DevName{
+		ResourceType:           resourceType,
+		DevicePublicType:       "CustomAscend910",
+		OldDevicePublicType:    api.HuaweiAscend910,
+		DevicePublicNamePre:    "custom910-",
+		OldDevicePublicNamePre: api.Ascend910MinuxPrefix,
+	}
+
+	newAnnotation := getPodAnnotationWithPublicName(annotation, devNameMap[resourceType])
+
+	assert.Contains(t, newAnnotation, api.HuaweiNPU, "device type key should be replaced")
+	assert.Contains(t, newAnnotation, "other-key", "other keys should not be modified")
 }
 
 type checkNameTestCase struct {
@@ -405,4 +452,46 @@ func TestLoadFaultCodeFromFile(t *testing.T) {
 			convey.So(result, convey.ShouldBeNil)
 		})
 	})
+}
+
+// TestIsOldDeviceType tests IsOldDeviceType
+func TestIsOldDeviceType(t *testing.T) {
+	// Test old device types
+	assert.True(t, IsOldDeviceType(api.Ascend310), "Ascend310 should be old device type")
+	assert.True(t, IsOldDeviceType(api.Ascend310P), "Ascend310P should be old device type")
+	assert.True(t, IsOldDeviceType(api.Ascend310B), "Ascend310B should be old device type")
+	assert.True(t, IsOldDeviceType(api.Ascend910A), "Ascend910A should be old device type")
+	assert.True(t, IsOldDeviceType(api.Ascend910B), "Ascend910B should be old device type")
+	assert.True(t, IsOldDeviceType(api.Ascend910A3), "Ascend910A3 should be old device type")
+
+	assert.False(t, IsOldDeviceType(api.Ascend910A5), "Ascend910A5 should not be old device type")
+	assert.False(t, IsOldDeviceType("unknown"), "unknown device type should not be old device type")
+}
+
+// TestGetResourceNamePrefix tests getResourceNamePrefix
+func TestGetResourceNamePrefix(t *testing.T) {
+	originalRealCardType := common.ParamOption.RealCardType
+	defer func() { common.ParamOption.RealCardType = originalRealCardType }()
+
+	common.ParamOption.RealCardType = api.Ascend910A5
+	result := getResourceNamePrefix(api.Ascend910MinuxPrefix)
+	assert.Equal(t, api.AscendMinuxPrefix, result, "for new device type, prefix should be replaced to AscendMinuxPrefix")
+
+	common.ParamOption.RealCardType = api.Ascend910A
+	result = getResourceNamePrefix(api.Ascend910MinuxPrefix)
+	assert.Equal(t, api.Ascend910MinuxPrefix, result, "for old device type, prefix should remain unchanged")
+}
+
+// TestGetResourceNamePrefixInner tests getResourceNamePrefixInner
+func TestGetResourceNamePrefixInner(t *testing.T) {
+	originalRealCardType := common.ParamOption.RealCardType
+	defer func() { common.ParamOption.RealCardType = originalRealCardType }()
+
+	common.ParamOption.RealCardType = api.Ascend910A5
+	result := getResourceNamePrefixInner(api.AscendMinuxPrefix)
+	assert.Equal(t, api.Ascend910MinuxPrefix, result, "for new device type, prefix should be replaced to Ascend910MinuxPrefix")
+
+	common.ParamOption.RealCardType = api.Ascend910A
+	result = getResourceNamePrefixInner(api.AscendMinuxPrefix)
+	assert.Equal(t, api.AscendMinuxPrefix, result, "for old device type, prefix should remain unchanged")
 }

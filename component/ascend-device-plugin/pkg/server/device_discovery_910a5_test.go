@@ -120,7 +120,8 @@ func TestDeviceDiscovery(t *testing.T) {
 	defer dcmiPatch.Reset()
 	k8sPatch := setK8sPatch()
 	defer k8sPatch.Reset()
-
+	patch := gomonkey.ApplyMethodReturn(&kubeclient.ClientK8s{}, "RemoveOldResource", nil)
+	defer patch.Reset()
 	convey.Convey("test auto init", t, testAutoInit)
 	convey.Convey("test new hw device manager", t, testNewHwDevManager)
 	convey.Convey("test label node", t, testLabelNode)
@@ -147,7 +148,7 @@ func testAutoInit() {
 
 func testNewHwDevManager() {
 	testHdm = NewHwDevManager(testDevM)
-	convey.So(testHdm.allInfo.AllDevTypes, convey.ShouldResemble, []string{api.Ascend910})
+	convey.So(testHdm.allInfo.AllDevTypes, convey.ShouldResemble, []string{api.NPULowerCase})
 	convey.So(testHdm.RunMode, convey.ShouldEqual, api.Ascend910)
 	convey.So(testHdm.WorkMode, convey.ShouldEqual, devcommon.AMPMode)
 }
@@ -168,7 +169,7 @@ func testLabelNode() {
 }
 
 func testListAndWatch() {
-	pluginServer := testHdm.ServerMap[api.Ascend910]
+	pluginServer := testHdm.ServerMap[api.NPULowerCase]
 	ps, ok := pluginServer.(*PluginServer)
 	if !ok {
 		panic("get plugin server Failed")

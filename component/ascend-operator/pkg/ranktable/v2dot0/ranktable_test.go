@@ -8,6 +8,7 @@ Package v2dot0 is used to test generate ranktable in v2.0
 package v2dot0
 
 import (
+	"context"
 	"encoding/json"
 	"sync"
 	"testing"
@@ -17,9 +18,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"ascend-common/api"
+	"ascend-common/common-utils/hwlog"
 	"ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/ranktable/common"
 )
+
+func init() {
+	hwLogConfig := hwlog.LogConfig{
+		OnlyToStdout: true,
+	}
+	hwlog.InitRunLogger(&hwLogConfig, context.Background())
+}
 
 // TestGetNetInfoByDefault test case for GetNetInfoByDefault
 func TestGetNetInfoByDefault(t *testing.T) {

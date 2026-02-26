@@ -32,8 +32,8 @@ import (
 func New(name string) *chip8node8ra64sp {
 	m := &chip8node8ra64sp{}
 	m.SetPluginName(name)
-	m.SetAnnoName(util.NPU910CardName)
-	m.SetAnnoPreVal(util.NPU910CardNamePre)
+	m.SetAnnoName(util.NPUCardName)
+	m.SetAnnoPreVal(util.NPUCardNamePre)
 	m.SetMaxNodeNPUNum(nodeNPUNum)
 	m.netUnhealthyKey = networkUnhealthyNPU
 	m.dpuUnhealthyKey = dpuUnhealthyNPU

@@ -55,8 +55,9 @@ func getRackIdFromNode(node *v1.Node) (string, error) {
 }
 
 func getRackID(node *v1.Node) string {
-	if getNodeAcceleratorType(node) == api.Ascend800ia5SuperPod {
-		hwlog.RunLog.Debugf("getRackID is 0 for acceleratorType= %s", getNodeAcceleratorType(node))
+	acceleratorType := getNodeAcceleratorType(node)
+	if acceleratorType == api.Ascend800ia5SuperPod {
+		hwlog.RunLog.Debugf("getRackID is 0 for acceleratorType= %s", acceleratorType)
 		return "0"
 	}
 	rackID, err := getRackIdFromNode(node)
@@ -66,11 +67,11 @@ func getRackID(node *v1.Node) string {
 	}
 
 	if !api.CheckIsVersionA5(getDeviceType(node)) {
-		hwlog.RunLog.Debug("version is not A5")
+		hwlog.RunLog.Debug("version is not npu")
 		return ""
 	}
 
-	if api.IsA5InferServer(getNodeAcceleratorType(node)) { // A5 infer server return origin get rackID
+	if api.IsA5InferServer(acceleratorType) { // A5 infer server return origin get rackID
 		hwlog.RunLog.Debugf("rack id is: %s", rackID)
 		return rackID
 	}
@@ -102,7 +103,7 @@ func getNodeDeviceA5(
 		AcceleratorType: acceleratorType,
 	}
 	for device, info := range baseDevInfos {
-		physicID := strings.TrimPrefix(device, api.Ascend910MinuxPrefix)
+		physicID := strings.TrimPrefix(device, api.AscendMinuxPrefix)
 		_, err := strconv.Atoi(physicID)
 		if err != nil {
 			hwlog.RunLog.Warnf("illegal device name, deviceName=%s, nodeName=%s",

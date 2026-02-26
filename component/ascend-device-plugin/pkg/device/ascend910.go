@@ -81,10 +81,14 @@ func getResetTime(logicId int32) int64 {
 
 // NewHwAscend910Manager is used to create ascend 910 manager
 func NewHwAscend910Manager() *HwAscend910Manager {
+	name := api.Ascend910
+	if common.ParamOption.RealCardType == api.Ascend910A5 {
+		name = api.NPULowerCase
+	}
 	return &HwAscend910Manager{
 		AscendTools: AscendTools{
-			name:                      api.Ascend910,
-			unHealthyKey:              common.HuaweiUnHealthAscend910,
+			name:                      name,
+			unHealthyKey:              common.GetAscend910Key(api.CmCardUnhealthySuffix),
 			devCount:                  common.MaxDevicesNum,
 			cardInResetMap:            make(map[int32]bool, common.GeneralMapSize),
 			resetFailedTimesMap:       make(map[int32]int, common.GeneralMapSize),
@@ -659,12 +663,15 @@ func (hnm *HwAscend910Manager) updateDeviceInfo(oldDevInfo, newDevInfo map[strin
 	}
 	nodeFmtDevRecover, nodeFmtDevNetRecover := sets.String{}, sets.String{}
 	newDevRecoverLabel, newAscend910 := hnm.getHealthAndRecoverDev(devStatusSet, nodeFmtDevRecover,
-		common.ConvertDevListToSets(oldDevInfo[common.HuaweiUnHealthAscend910], common.CommaSepDev))
+		common.ConvertDevListToSets(oldDevInfo[common.GetAscend910Key(api.CmCardUnhealthySuffix)],
+			common.CommaSepDev))
 	newNetRecoverSets, newNetUHDevSets := hnm.getNewNetworkRecoverDev(devStatusSet.NetUnHealthyDevice,
-		common.ConvertDevListToSets(oldDevInfo[common.HuaweiNetworkUnHealthAscend910], common.CommaSepDev),
+		common.ConvertDevListToSets(oldDevInfo[common.GetAscend910Key(api.CmCardNetworkUnhealthySuffix)],
+			common.CommaSepDev),
 		nodeFmtDevNetRecover)
-	newDevInfo[api.HuaweiAscend910] = newAscend910
-	newDevInfo[common.HuaweiRecoveringAscend910] = common.ToString(devStatusSet.RecoveringDevices, common.CommaSepDev)
+	newDevInfo[common.GetAscend910Key("")] = newAscend910
+	newDevInfo[common.GetAscend910Key(api.CmRecoveringSuffix)] = common.ToString(devStatusSet.RecoveringDevices,
+		common.CommaSepDev)
 	// hnm.isNeedBlockAllDevice: server is A800IA2 with hccs and there are fault devices or is already in resetting,
 	// no more pod should be scheduled to this node cause all npu resetting is on the way
 	// if reset failed more than ResetRetryTimes times, will no longer try to reset server
@@ -672,19 +679,23 @@ func (hnm *HwAscend910Manager) updateDeviceInfo(oldDevInfo, newDevInfo map[strin
 		hnm.GetResetFailedTimes(common.FirstDevice) <= common.MaxResetTimes &&
 		hnm.isNeedBlockAllDevice(devStatusSet.DeviceFault) {
 
-		newDevInfo[api.HuaweiAscend910] = ""
-		newDevInfo[common.HuaweiRecoveringAscend910] = common.ToString(devStatusSet.AllDevices, common.CommaSepDev)
+		newDevInfo[common.GetAscend910Key("")] = ""
+		newDevInfo[common.GetAscend910Key(api.CmRecoveringSuffix)] = common.ToString(devStatusSet.AllDevices,
+			common.CommaSepDev)
 		hwlog.RunLog.Warnf("all device on node have been cleared, due to resetting all devices in process")
 	}
 
-	newDevInfo[common.HuaweiUnHealthAscend910] = common.ToString(devStatusSet.UnHealthyDevice, common.CommaSepDev)
-	newDevInfo[common.HuaweiNetworkUnHealthAscend910] = common.ToString(newNetUHDevSets, common.CommaSepDev)
-	newDevInfo[common.HuaweiDpuUnHealthAscend910] = common.ToString(devStatusSet.DpuUnHealthyDevice, common.CommaSepDev)
+	newDevInfo[common.GetAscend910Key(api.CmCardUnhealthySuffix)] = common.ToString(devStatusSet.UnHealthyDevice,
+		common.CommaSepDev)
+	newDevInfo[common.GetAscend910Key(api.CmCardNetworkUnhealthySuffix)] = common.ToString(newNetUHDevSets,
+		common.CommaSepDev)
+	newDevInfo[common.GetAscend910Key(api.CmCardDPUUnhealthySuffix)] = common.ToString(devStatusSet.DpuUnHealthyDevice,
+		common.CommaSepDev)
 	var data []byte
 	if data = common.MarshalData(devStatusSet.DeviceFault); len(data) == 0 {
 		return fmt.Errorf("device fault code marshal failed")
 	}
-	newDevInfo[common.HuaweiFaultCodeAscend910] = string(data)
+	newDevInfo[common.GetAscend910Key(api.CmFaultListSuffix)] = string(data)
 	if common.ParamOption.AutoStowingDevs {
 		return nil
 	}
@@ -728,8 +739,8 @@ func (hnm *HwAscend910Manager) isNeedBlockAllDevice(faultDevices []common.Device
 
 func (hnm *HwAscend910Manager) update910NodeLabel(curNode *v1.Node, devRecoverLabel, netRecoverLabel string) error {
 	newNode := curNode.DeepCopy()
-	newNode.Labels[common.HuaweiRecoverAscend910] = devRecoverLabel
-	newNode.Labels[common.HuaweiNetworkRecoverAscend910] = netRecoverLabel
+	newNode.Labels[common.GetAscend910Key(api.NodeLabelRecoverSuffix)] = devRecoverLabel
+	newNode.Labels[common.GetAscend910Key(api.NodeLabelNetworkRecoverSuffix)] = netRecoverLabel
 	hwlog.RunLog.Debugf("newNode.Labels: %#v", newNode.Labels)
 	updatedNode, _, err := hnm.client.PatchNodeState(curNode, newNode)
 	if err != nil {
@@ -807,10 +818,10 @@ func (hnm *HwAscend910Manager) getRecoverLabelFromNodeSets(devRecoverLabel, netR
 	}
 	// devRecoverLabel like Ascend910-0,Ascend910-2,Ascend910-3, means dev healthy exception
 	*devRecoverLabel = hnm.toStandardDeviceFmt(common.ConvertDevListToSets(
-		curNode.Labels[common.HuaweiRecoverAscend910], common.DotSepDev))
+		curNode.Labels[common.GetAscend910Key(api.NodeLabelRecoverSuffix)], common.DotSepDev))
 	// netRecoverLabel like Ascend910-0,Ascend910-2,Ascend910-3, means dev network exception
 	*netRecoverLabel = hnm.toStandardDeviceFmt(common.ConvertDevListToSets(
-		curNode.Labels[common.HuaweiNetworkRecoverAscend910], common.DotSepDev))
+		curNode.Labels[common.GetAscend910Key(api.NodeLabelNetworkRecoverSuffix)], common.DotSepDev))
 	return curNode, nil
 }
 
@@ -1209,7 +1220,8 @@ func (hnm *HwAscend910Manager) checkDevErrorCode(taskName string, devFaultInfo [
 	for {
 		select {
 		case <-timeOut:
-			return "", true, fmt.Errorf("after %d second, there still has error code on device", common.WaitErrorCodeCleanTime)
+			return "", true, fmt.Errorf("after %d second, there still has error code on device",
+				common.WaitErrorCodeCleanTime)
 		default:
 			if err := hnm.refreshDevFaultInfo(devFaultInfo, classifyDevs); err != nil {
 				return "", false, err
@@ -1240,7 +1252,8 @@ func (hnm *HwAscend910Manager) restartProcess(taskName string, resetInfo *common
 	devFaultInfoList, err := hnm.hotResetManager.GetTaskDevFaultInfoList(taskName)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to get task device fault info list, err %v", err)
-		if err := hnm.updateResetCMStatus(taskName, common.IsolateError, common.RestartError, common.RecoverFailedStatus,
+		if err := hnm.updateResetCMStatus(taskName, common.IsolateError, common.RestartError,
+			common.RecoverFailedStatus,
 			devFaultInfoList); err != nil {
 			hwlog.RunLog.Errorf(failedToUpdateCmPattern, err)
 		}
@@ -1261,7 +1274,8 @@ func (hnm *HwAscend910Manager) restartProcess(taskName string, resetInfo *common
 	currentPolicy, err := hnm.upgradeRestartProcess(taskName, devFaultInfoList, classifyDevs)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to exec upgrade restart process, err: %v", err)
-		if err := hnm.updateResetCMStatus(taskName, common.IsolateError, common.RestartError, common.RecoverFailedStatus,
+		if err := hnm.updateResetCMStatus(taskName, common.IsolateError, common.RestartError,
+			common.RecoverFailedStatus,
 			devFaultInfoList); err != nil {
 			hwlog.RunLog.Errorf(failedToUpdateCmPattern, err)
 		}
@@ -1487,7 +1501,8 @@ func (hnm *HwAscend910Manager) waitForAllFaultyDeviceProcessesToZero(taskName st
 				"fault device logicId and current number of remaining processes is %+v",
 				int(common.WaitProcessesToZeroTime), taskName, faultDeviceLogicIdMap)
 			if err = hnm.updateResetCMStatusToIsolate(taskName, devFaultInfoList); err != nil {
-				hwlog.RunLog.Errorf("failed to update status of reset configmap to isolate, taskName: %v, err: %v", taskName, err)
+				hwlog.RunLog.Errorf("failed to update status of reset configmap to isolate, taskName: %v, err: %v",
+					taskName, err)
 				return err
 			}
 			return fmt.Errorf("check the number of remaining processes on the faulty chips timeout")
@@ -1583,7 +1598,8 @@ func (hnm *HwAscend910Manager) getNeedResetDeviceLogicIdMap(devFaultInfoList []*
 		return nil, err
 	}
 	for resetStartLogicId := range resetFaultInfoMap {
-		if err = hnm.addAllLogicIdsToFaultMap(resetStartLogicId, int32(resetDevNumOnce), faultDeviceLogicIdMap); err != nil {
+		if err = hnm.addAllLogicIdsToFaultMap(resetStartLogicId, int32(resetDevNumOnce),
+			faultDeviceLogicIdMap); err != nil {
 			hwlog.RunLog.Errorf("failed to add logic_ids to faultDeviceLogicIdMap in the same SMP system, err: %v", err)
 			return nil, err
 		}
@@ -1664,7 +1680,8 @@ func (hnm *HwAscend910Manager) preProcess(taskName, policy string) (*common.Task
 		return nil, err
 	}
 	needAddRetryTime := hnm.hotResetManager.IsCurNodeTaskInReset(taskName)
-	if _, err := hnm.client.WriteResetInfoDataIntoCM(taskName, pod.Namespace, resetInfo, !needAddRetryTime); err != nil {
+	if _, err := hnm.client.WriteResetInfoDataIntoCM(taskName, pod.Namespace, resetInfo,
+		!needAddRetryTime); err != nil {
 		hwlog.RunLog.Errorf("failed to write reset info to cm, err: %v", err)
 		return nil, err
 	}

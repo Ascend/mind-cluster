@@ -370,7 +370,7 @@ func (n *NpuBase) GetPortListByEid(phyId int32, eid string, rLevel int) ([]strin
 	n.portMapMutex.Lock()
 	defer n.portMapMutex.Unlock()
 	if common.ParamOption.RealCardType != api.Ascend910A5 {
-		return nil, fmt.Errorf("get port list by eid error, device type is not A5")
+		return nil, fmt.Errorf("get port list by eid error, device type is not %s", api.HuaweiNPU)
 	}
 	// hit cache
 	eidPortMapKey := getEidPortMapKey(phyId, eid)

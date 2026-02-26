@@ -138,7 +138,7 @@ func (c *Manager) updateRoCEConfig() {
 		return
 	}
 	if c.pingManager.GetDevType() != common.Ascend910A5 {
-		hwlog.RunLog.Info("current is not A5, no need start ping manager")
+		hwlog.RunLog.Info("current is not NPU, no need start ping manager")
 		return
 	}
 	if c.currentRoCE.Config.Activate == types.ActivateOn {

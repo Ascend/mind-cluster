@@ -269,6 +269,9 @@ func getSN(serverName, nodeIp string, ipSnMap map[string]string) string {
 func getPodDevice(pod v1.Pod) (constant.PodDevice, bool) {
 	devInfo, exist := pod.Annotations[api.Pod910DeviceAnno]
 	if !exist {
+		devInfo, exist = pod.Annotations[api.PodNPUDeviceAnno]
+	}
+	if !exist {
 		return constant.PodDevice{}, shouldAllocated(pod.Spec.Containers)
 	}
 	var podDev constant.PodDevice
@@ -369,7 +372,8 @@ func DeviceAllocateIsCompleted(p v1.Pod) bool {
 	}
 	// pod already been allocated
 	_, exist := p.Annotations[api.Pod910DeviceAnno]
-	return exist
+	_, existNpu := p.Annotations[api.PodNPUDeviceAnno]
+	return exist || existNpu
 }
 
 func shouldAllocated(containers []v1.Container) bool {

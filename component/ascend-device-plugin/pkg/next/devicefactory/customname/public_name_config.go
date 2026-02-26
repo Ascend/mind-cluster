@@ -21,6 +21,7 @@ import (
 	"regexp"
 	"strings"
 
+	"Ascend-device-plugin/pkg/common"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
@@ -33,6 +34,16 @@ var deviceNamePattern = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9-]{1,15}$`)
 var podConfigurationPattern = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9./-]{8,61}[a-zA-Z0-9]$`)
 
 var devNameMap = map[string]DevName{}
+
+// oldDeviceTypes old device type list
+var oldDeviceTypes = map[string]bool{
+	api.Ascend310:   true,
+	api.Ascend310P:  true,
+	api.Ascend310B:  true,
+	api.Ascend910A:  true,
+	api.Ascend910B:  true,
+	api.Ascend910A3: true,
+}
 
 // DevName dev public struct
 type DevName struct {
@@ -65,6 +76,7 @@ func InitPublicNameConfig() {
 	hwlog.RunLog.Infof("the custom name takes effect: %v", devNameMap)
 }
 
+// setDefaultName set default name for old device type
 func setDefaultName(devName DevName) DevName {
 	switch devName.ResourceType {
 	case api.Ascend910:
@@ -83,11 +95,64 @@ func setDefaultName(devName DevName) DevName {
 	return devName
 }
 
+// IsOldDeviceType check if the device type belongs to old device type
+func IsOldDeviceType(deviceType string) bool {
+	return oldDeviceTypes[deviceType]
+}
+
+// getResourceName get resource name by device type
+func getResourceName(oldName string) string {
+	if oldDeviceTypes[common.ParamOption.RealCardType] {
+		return oldName
+	}
+	return api.HuaweiNPU
+}
+
+// getResourceNamePrefix get resource name prefix by device type
+func getResourceNamePrefix(oldName string) string {
+	if oldDeviceTypes[common.ParamOption.RealCardType] {
+		return oldName
+	}
+	return strings.ReplaceAll(oldName, api.Ascend910MinuxPrefix, api.AscendMinuxPrefix)
+}
+
+// getResourceNamePrefixInner get resource name prefix by device type for inner use
+func getResourceNamePrefixInner(oldName string) string {
+	if oldDeviceTypes[common.ParamOption.RealCardType] {
+		return oldName
+	}
+	return strings.ReplaceAll(oldName, api.AscendMinuxPrefix, api.Ascend910MinuxPrefix)
+}
+
+// getPodAnnotationWithPublicName get pod annotation with public name
+func getPodAnnotationWithPublicName(annotation map[string]string, devName DevName) map[string]string {
+	newAnnotation := make(map[string]string, len(annotation))
+	for key, value := range annotation {
+		if key == devName.OldDevicePublicType {
+			if oldDeviceTypes[common.ParamOption.RealCardType] {
+				key = devName.OldDevicePublicType
+			} else {
+				key = api.HuaweiNPU
+			}
+		}
+		if key == devName.OldPodConfigurationName {
+			if oldDeviceTypes[common.ParamOption.RealCardType] {
+				key = devName.PodConfigurationName
+			} else {
+				key = api.PodNPUDeviceAnno
+			}
+		}
+		value = getResourceNamePrefix(value)
+		newAnnotation[key] = value
+	}
+	return newAnnotation
+}
+
 // ReplaceDevicePublicName replace device name with public name
 func ReplaceDevicePublicName(resourceType string, oldName string) string {
 	devName := devNameMap[resourceType]
 	if len(devName.DevicePublicNamePre) == 0 {
-		return oldName
+		return getResourceNamePrefix(oldName)
 	}
 	return strings.ReplaceAll(oldName, devName.OldDevicePublicNamePre, devName.DevicePublicNamePre)
 }
@@ -95,8 +160,13 @@ func ReplaceDevicePublicName(resourceType string, oldName string) string {
 // ReplaceDeviceInnerName replace device name with inner name
 func ReplaceDeviceInnerName(resourceType string, oldNames []string) []string {
 	devName := devNameMap[resourceType]
-	if len(devName.DevicePublicNamePre) == 0 {
-		return oldNames
+	if len(devName.DevicePublicNamePre) == 0 || common.ParamOption.RealCardType == api.Ascend910A5 {
+		newNames := make([]string, 0, len(oldNames))
+		for _, oldName := range oldNames {
+			newName := getResourceNamePrefixInner(oldName)
+			newNames = append(newNames, newName)
+		}
+		return newNames
 	}
 	newNames := make([]string, 0, len(oldNames))
 	for _, oldName := range oldNames {
@@ -110,7 +180,7 @@ func ReplaceDeviceInnerName(resourceType string, oldNames []string) []string {
 func ReplaceDevicePublicType(resourceType string, oldName string) string {
 	devName := devNameMap[resourceType]
 	if len(devName.DevicePublicType) == 0 {
-		return oldName
+		return getResourceName(oldName)
 	}
 	return strings.ReplaceAll(oldName, devName.OldDevicePublicType, devName.DevicePublicType)
 }
@@ -119,7 +189,7 @@ func ReplaceDevicePublicType(resourceType string, oldName string) string {
 func ReplacePodAnnotation(resourceType string, annotation map[string]string) map[string]string {
 	devName := devNameMap[resourceType]
 	if len(devName.DevicePublicNamePre) == 0 {
-		return annotation
+		return getPodAnnotationWithPublicName(annotation, devName)
 	}
 	newAnnotation := make(map[string]string, len(annotation))
 	for key, value := range annotation {
@@ -129,12 +199,13 @@ func ReplacePodAnnotation(resourceType string, annotation map[string]string) map
 		if key == devName.OldPodConfigurationName {
 			key = devName.PodConfigurationName
 		}
-		strings.ReplaceAll(value, devName.OldDevicePublicNamePre, devName.DevicePublicNamePre)
+		value = strings.ReplaceAll(value, devName.OldDevicePublicNamePre, devName.DevicePublicNamePre)
 		newAnnotation[key] = value
 	}
 	return newAnnotation
 }
 
+// ReplaceDeviceInfoPublicName replace device name in device info with public name
 func ReplaceDeviceInfoPublicName(resourceType string, deviceList map[string]string,
 	deviceName string, reasonCm string) (map[string]string, string, string) {
 	devName := devNameMap[resourceType]
@@ -152,6 +223,7 @@ func ReplaceDeviceInfoPublicName(resourceType string, deviceList map[string]stri
 	return newDeviceList, newDeviceName, newReasonCm
 }
 
+// checkName check the name configuration is valid
 func checkName(devNames []DevName) bool {
 	for _, devName := range devNames {
 		if len(devName.DevicePublicNamePre) == 0 || len(devName.ResourceType) == 0 ||
@@ -182,6 +254,7 @@ func checkName(devNames []DevName) bool {
 	return true
 }
 
+// loadFaultCodeFromFile load name configuration from file
 func loadFaultCodeFromFile() ([]DevName, error) {
 	faultCodeBytes, err := utils.LoadFile(nameConfigFilePath)
 	if err != nil {

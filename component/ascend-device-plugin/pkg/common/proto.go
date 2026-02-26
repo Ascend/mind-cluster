@@ -181,7 +181,11 @@ type Option struct {
 
 // GetAllDeviceInfoTypeList Get All Device Info Type List
 func GetAllDeviceInfoTypeList() map[string]struct{} {
-	return map[string]struct{}{HuaweiUnHealthAscend910: {}, HuaweiNetworkUnHealthAscend910: {},
+	return map[string]struct{}{
+		GetAscend910Key(""):                               {},
+		GetAscend910Key(api.CmCardUnhealthySuffix):        {},
+		GetAscend910Key(api.CmCardNetworkUnhealthySuffix): {},
+		HuaweiUnHealthAscend910:                           {}, HuaweiNetworkUnHealthAscend910: {},
 		api.ResourceNamePrefix + api.Ascend910: {}, api.ResourceNamePrefix + Ascend910vir2: {},
 		api.ResourceNamePrefix + Ascend910vir4: {}, api.ResourceNamePrefix + Ascend910vir8: {},
 		api.ResourceNamePrefix + Ascend910vir16: {}, api.ResourceNamePrefix + Ascend910vir5Cpu1Gb8: {},

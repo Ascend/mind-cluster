@@ -285,7 +285,10 @@ func PtrInit[T any](v T) *T { return &v }
 
 // GetDeviceType get device type from dev list
 func GetDeviceType(devList map[string]string) string {
-	for key, _ := range devList {
+	for key := range devList {
+		if strings.HasPrefix(key, NPUCardName) {
+			return NPULowerCase
+		}
 		if strings.Contains(key, Ascend910) {
 			return Ascend910
 		}

@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ascend-device-plugin-sa-910
+  name: ascend-device-plugin-sa-npu
   namespace: kube-system
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: pods-node-ascend-device-plugin-role-910
+  name: pods-node-ascend-device-plugin-role-npu
 rules:
   - apiGroups: [""]
     resources: ["pods"]
@@ -31,20 +31,20 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: pods-node-ascend-device-plugin-rolebinding-910
+  name: pods-node-ascend-device-plugin-rolebinding-npu
 subjects:
   - kind: ServiceAccount
-    name: ascend-device-plugin-sa-910
+    name: ascend-device-plugin-sa-npu
     namespace: kube-system
 roleRef:
   kind: ClusterRole
-  name: pods-node-ascend-device-plugin-role-910
+  name: pods-node-ascend-device-plugin-role-npu
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: ascend-device-plugin-daemonset-910
+  name: ascend-device-plugin-daemonset-npu
   namespace: kube-system
 spec:
   selector:
@@ -62,13 +62,13 @@ spec:
         name: ascend-device-plugin-ds
     spec:
       ##### For Kubernetes version 1.19 and above, seccomp is used with securityContext:seccompProfile
-#      securityContext:
-#        seccompProfile:
-#          type: RuntimeDefault
+      #      securityContext:
+      #        seccompProfile:
+      #          type: RuntimeDefault
       tolerations:
         - key: CriticalAddonsOnly
           operator: Exists
-        - key: huawei.com/Ascend910
+        - key: huawei.com/npu
           operator: Exists
           effect: NoSchedule
         - key: "device-plugin"
@@ -77,70 +77,62 @@ spec:
           effect: NoSchedule
       priorityClassName: "system-node-critical"
       nodeSelector:
-        accelerator: huawei-Ascend910
-      serviceAccountName: ascend-device-plugin-sa-910
+        accelerator: huawei-npu
+      serviceAccountName: ascend-device-plugin-sa-npu
       containers:
-      - image: ascend-k8sdeviceplugin:v3.0.0
-        name: device-plugin-01
-        resources:
-          requests:
-            memory: 500Mi
-            cpu: 500m
-          limits:
-            memory: 500Mi
-            cpu: 500m
-        command: [ "/bin/bash", "-c", "--"]
-        args: [ "device-plugin  -useAscendDocker=true -volcanoType=true -presetVirtualDevice=true
+        - image: ascend-k8sdeviceplugin:v3.0.0
+          name: device-plugin-01
+          resources:
+            requests:
+              memory: 500Mi
+              cpu: 500m
+            limits:
+              memory: 500Mi
+              cpu: 500m
+          command: [ "/bin/bash", "-c", "--"]
+          args: [ "device-plugin  -useAscendDocker=true -volcanoType=true -presetVirtualDevice=true
                  -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0" ]
-        securityContext:
-          privileged: true
-          readOnlyRootFilesystem: true
-        imagePullPolicy: Never
-        volumeMounts:
-          - name: device-plugin
-            mountPath: /var/lib/kubelet/device-plugins
-          - name: vnpucfg
-            mountPath: /etc/vnpu.cfg
-          - name: vnpu-cut
-            mountPath: /run/vnpu_cfg_lock
-          - name: pod-resource
-            mountPath: /var/lib/kubelet/pod-resources
-          - name: hiai-driver
-            mountPath: /usr/local/Ascend/driver
-            readOnly: true
-          - name: log-path
-            mountPath: /var/log/mindx-dl/devicePlugin
-          - name: tmp
-            mountPath: /tmp
-          - name: reset-config-dir
-            mountPath: /user/restore/reset
-          - name: lingqu-log
-            mountPath: /var/log/lingqu
-          - name: data-trace-file-dir
-            mountPath: /user/cluster-info/datatrace-config
-          - name: dpu-config
-            mountPath: /user/mindx-dl/dpu
-          - name: localtime
-            mountPath: /etc/localtime
-            readOnly: true
-          - name: docker-sock
-            mountPath: /run/docker.sock
-            readOnly: true
-          - name: docker-dir
-            mountPath: /run/docker
-            readOnly: true
-          - name: containerd
-            mountPath: /run/containerd
-            readOnly: true
-        env:
-          - name: NODE_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
-          - name: HOST_IP
-            valueFrom:
-              fieldRef:
-                fieldPath: status.hostIP
+          securityContext:
+            privileged: true
+            readOnlyRootFilesystem: true
+          imagePullPolicy: Never
+          volumeMounts:
+            - name: device-plugin
+              mountPath: /var/lib/kubelet/device-plugins
+            - name: vnpucfg
+              mountPath: /etc/vnpu.cfg
+            - name: vnpu-cut
+              mountPath: /run/vnpu_cfg_lock
+            - name: pod-resource
+              mountPath: /var/lib/kubelet/pod-resources
+            - name: hiai-driver
+              mountPath: /usr/local/Ascend/driver
+              readOnly: true
+            - name: log-path
+              mountPath: /var/log/mindx-dl/devicePlugin
+            - name: tmp
+              mountPath: /tmp
+            - name: reset-config-dir
+              mountPath: /user/restore/reset
+            - name: lingqu-log
+              mountPath: /var/log/lingqu
+            - name: data-trace-file-dir
+              mountPath: /user/cluster-info/datatrace-config
+            - name: dpu-config
+              mountPath: /user/mindx-dl/dpu
+            - name: localtime
+              mountPath: /etc/localtime
+              readOnly: true
+
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
       volumes:
         - name: device-plugin
           hostPath:
@@ -185,12 +177,3 @@ spec:
         - name: localtime
           hostPath:
             path: /etc/localtime
-        - name: docker-sock
-          hostPath:
-            path: /run/docker.sock
-        - name: docker-dir
-          hostPath:
-            path: /run/docker
-        - name: containerd
-          hostPath:
-            path: /run/containerd

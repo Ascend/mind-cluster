@@ -449,7 +449,7 @@ func getMockNode(ascendType, ascendValue string) *v1.Node {
 	annotations := make(map[string]string, 1)
 	annotations[ascendType] = ascendValue
 	labels := make(map[string]string, 1)
-	labels[common.HuaweiRecoverAscend910] = "0"
+	labels[common.GetAscend910Key(api.NodeLabelRecoverSuffix)] = "0"
 	return &v1.Node{
 		Status: v1.NodeStatus{
 			Allocatable: v1.ResourceList{

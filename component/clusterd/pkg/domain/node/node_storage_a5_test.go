@@ -104,7 +104,7 @@ func TestGetRackID(t *testing.T) {
 				return "1", nil
 			})
 			patches.ApplyFunc(getDeviceType, func(*v1.Node) string {
-				return "A5"
+				return api.VersionNPU
 			})
 			result := getRackID(testNode)
 			convey.So(result, convey.ShouldEqual, "1")

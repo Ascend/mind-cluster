@@ -191,18 +191,41 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 		return
 	}
 
+	allocatedPods := getAllocatedPods(ji)
+	hwlog.RunLog.Infof("allocatedPods: %d, total replicas: %d, total pods: %d",
+		len(allocatedPods), ji.totalReplicas, len(ji.pods))
+	if int(ji.totalReplicas) == 0 || len(allocatedPods) != int(ji.totalReplicas) {
+		return
+	}
+
+	r.updateRandIndex(allocatedPods)
+	if err := r.cachePods(rtg, allocatedPods); err != nil {
+		hwlog.RunLog.Errorf("%v", err)
+		return
+	}
+
+	rtg.SetStatus(utils.CompletedRTStatus)
+	rtg.GatherServerList()
+	// Check whether ranktable file needs to be generated for A5
+	if !rtg.GetNeedGenerate() {
+		return
+	}
+	r.saveRankTable(rtg, ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID())
+}
+
+// getAllocatedPods filters pods that have been allocated from the job's pod list.
+func getAllocatedPods(ji *jobInfo) []*corev1.Pod {
 	var allocatedPods []*corev1.Pod
 	for _, p := range ji.pods {
 		if utils.PodHasAllocated(p) {
 			allocatedPods = append(allocatedPods, p)
 		}
 	}
-	hwlog.RunLog.Infof("allocatedPods: %d, total replicas: %d, total pods: %d",
-		len(allocatedPods), ji.totalReplicas, len(ji.pods))
-	if int(ji.totalReplicas) == 0 || len(allocatedPods) != int(ji.totalReplicas) {
-		return
-	}
-	r.updateRandIndex(allocatedPods)
+	return allocatedPods
+}
+
+// cachePods concurrently adds all allocated pods to the rank table generator.
+func (r *ASJobReconciler) cachePods(rtg generator.RankTableGenerator, allocatedPods []*corev1.Pod) error {
 	rtg.DeletePod()
 	errs := &sync.Map{}
 	errCount := int32(0)
@@ -220,16 +243,14 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 	wg.Wait()
 
 	if errCount > 0 {
-		hwlog.RunLog.Errorf("failed to cache %d pods, err: %v", errCount, errs)
-		return
+		var errMsgs []string
+		errs.Range(func(key, value interface{}) bool {
+			errMsgs = append(errMsgs, fmt.Sprintf("%v: %v", key, value))
+			return true
+		})
+		return fmt.Errorf("failed to cache %d pods, err: [%s]", errCount, strings.Join(errMsgs, "; "))
 	}
-	rtg.SetStatus(utils.CompletedRTStatus)
-	rtg.GatherServerList()
-	// Check whether ranktable file needs to be generated for A5
-	if !rtg.GetNeedGenerate() {
-		return
-	}
-	r.saveRankTable(rtg, ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID())
+	return nil
 }
 
 func (r *ASJobReconciler) setOnePodOneNode(allocatedPods []*corev1.Pod) {

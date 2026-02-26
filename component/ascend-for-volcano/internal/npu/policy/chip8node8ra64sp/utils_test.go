@@ -77,7 +77,7 @@ func TestGetRackNPUTop(t *testing.T) {
 	// Set up NPUJob with ReqNPUName to avoid nil pointer
 	tp.SetSchedulerAttr(util.SchedulerJobAttr{
 		NPUJob: &util.NPUJob{
-			ReqNPUName: util.NPU910CardName,
+			ReqNPUName: util.NPUCardName,
 		},
 	})
 	tp.Nodes = getNPUNodes(nodeInfoIdx0, nodeInfoIdx185, superPodSize32, rackOsNum)

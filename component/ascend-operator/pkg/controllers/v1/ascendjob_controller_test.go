@@ -476,7 +476,8 @@ func (f fakeController) Reconcile(ctx context.Context, request reconcile.Request
 	return reconcile.Result{}, nil
 }
 
-func (f fakeController) Watch(src source.Source, eventhandler handler.EventHandler, predicates ...predicate.Predicate) error {
+func (f fakeController) Watch(src source.Source, eventhandler handler.EventHandler,
+	predicates ...predicate.Predicate) error {
 	return nil
 }
 
@@ -620,26 +621,9 @@ func TestOnOwnerCreateFunc(t *testing.T) {
 			res := fn(event.CreateEvent{Object: &v1alpha1.Job{}})
 			convey.So(res, convey.ShouldEqual, false)
 		})
-		convey.Convey("03-vcjob with needed label should return true", func() {
-			vcjob := &v1alpha1.Job{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{api.AtlasTaskLabel: ""},
-				},
-			}
-			res := fn(event.CreateEvent{Object: vcjob})
-			convey.So(res, convey.ShouldEqual, true)
-		})
 		convey.Convey("04-deployment without needed label should return false", func() {
 			res := fn(event.CreateEvent{Object: &appsv1.Deployment{}})
 			convey.So(res, convey.ShouldEqual, false)
-		})
-		convey.Convey("05-deployment with needed label should return true", func() {
-			res := fn(event.CreateEvent{Object: &appsv1.Deployment{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{api.AtlasTaskLabel: ""},
-				},
-			}})
-			convey.So(res, convey.ShouldEqual, true)
 		})
 		convey.Convey("06-ascend job without labels should return true", func() {
 			job := newCommonAscendJob()

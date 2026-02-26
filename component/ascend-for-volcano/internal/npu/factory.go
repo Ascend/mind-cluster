@@ -151,11 +151,11 @@ func initCard910ByBaseHandler() {
 	}
 	card910Factory[chip4nodex.SchedulePolicy1Px8] = func() base.AscendHandler {
 		return base.New(chip4nodex.SchedulePolicy1Px8, base.WithAnnoPreVal(util.NPU910CardNamePre),
-			base.WithMaxNodeNum(util.NPUIndex8), base.WithAnnoName(util.NPU910CardName))
+			base.WithMaxNodeNum(util.NPUIndex8), base.WithAnnoName(util.NPUCardName))
 	}
 	card910Factory[chip4nodex.SchedulePolicy1Px16] = func() base.AscendHandler {
 		return base.New(chip4nodex.SchedulePolicy1Px16, base.WithAnnoPreVal(util.NPU910CardNamePre),
-			base.WithMaxNodeNum(util.NPUIndex16), base.WithAnnoName(util.NPU910CardName))
+			base.WithMaxNodeNum(util.NPUIndex16), base.WithAnnoName(util.NPUCardName))
 	}
 	card910Factory[chip1softsharedev.SchedulePolicySoftShareDev] = func() base.AscendHandler {
 		return base.New(chip1softsharedev.SchedulePolicySoftShareDev, base.WithAnnoPreVal(util.NPU910CardNamePre),
@@ -167,6 +167,8 @@ func initCard910ByBaseHandler() {
 func InitPolicyHandler(attr util.SchedulerJobAttr, env plugin.ScheduleEnv) (plugin.SchedulerPluginNeed, bool) {
 	pluginName := attr.GetPluginNameByReq()
 	switch pluginName {
+	case util.NPUCardName:
+		return init910CardPolicyHandler(attr)
 	case util.NPU910CardName:
 		return init910CardPolicyHandler(attr)
 	case util.NPU310CardName:
@@ -195,6 +197,10 @@ func init910CardPolicyHandler(attr util.SchedulerJobAttr) (plugin.SchedulerPlugi
 		return vnpu2.New(util.NPU910CardName), true
 	}
 	handlerName := get910CardHandlerName(attr)
+	if handlerName == "" {
+		klog.V(util.LogErrorLev).Info("cannot get card handler name")
+		return nil, false
+	}
 	handlerFunc, ok := card910Factory[handlerName]
 	if !ok {
 		klog.V(util.LogErrorLev).Infof("Handler %s not found in card910Factory", handlerName)
@@ -205,6 +211,9 @@ func init910CardPolicyHandler(attr util.SchedulerJobAttr) (plugin.SchedulerPlugi
 
 func get910CardHandlerName(attr util.SchedulerJobAttr) string {
 	policy, ok := attr.Annotation[util.SchedulePolicyAnnoKey]
+	if attr.ReqNPUName == util.NPUCardName && !ok {
+		return ""
+	}
 	if ok {
 		handlerName, ok := policy910HandlerMap[policy]
 		if ok {

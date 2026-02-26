@@ -40,8 +40,8 @@ import (
 func New(name string) base.AscendHandler {
 	m := &chip8node8sp{}
 	m.SetPluginName(name)
-	m.SetAnnoName(util.NPU910CardName)
-	m.SetAnnoPreVal(util.NPU910CardNamePre)
+	m.SetAnnoName(util.NPUCardName)
+	m.SetAnnoPreVal(util.NPUCardNamePre)
 	m.SetMaxNodeNPUNum(nodeNPUNumber)
 	m.netUnhealthyKey = networkUnhealthyNPU
 	m.nodeVPodId = map[string]string{}

@@ -67,8 +67,8 @@ var (
 	hookDefaultFile = hookDefaultFilePath
 	dockerRuncName  = dockerRuncFile
 	runcName        = runcFile
-	deviceRegx      = fmt.Sprintf(`^%s(%s|%s|%s|%s)-(\d+)$`, api.Ascend, api.Ascend910No,
-		api.Ascend310BNo, api.Ascend310PNo, api.Ascend310No)
+	deviceRegx      = fmt.Sprintf(`^(?:%s(%s|%s|%s|%s)|%s)-(\d+)$`, api.Ascend, api.Ascend910No,
+		api.Ascend310BNo, api.Ascend310PNo, api.Ascend310No, api.NPULowerCase)
 
 	// Device lists for different chip types
 	ascend910A5ManagerDevices = []string{hisiHdc}
@@ -96,6 +96,7 @@ const (
 	// Ascend910A5 asecnd 910a5 chip
 	Ascend910A5 = api.Ascend910A5
 	ascend      = api.Ascend
+	npu         = api.NPULowerCase
 
 	devicePath           = "/dev/"
 	davinciName          = "davinci"
@@ -513,7 +514,11 @@ func addManagerDevice(w dcmi.WorkerInterface, spec *specs.Spec) error {
 		return fmt.Errorf("get chip name error: %v", err)
 	}
 	devType := GetDeviceTypeByChipName(chipName)
-	hwlog.RunLog.Infof("device type is: %s", devType)
+	if devType == Ascend910A5 {
+		hwlog.RunLog.Info("device type is npu")
+	} else {
+		hwlog.RunLog.Infof("device type is: %s", devType)
+	}
 	if devType != "" && devType != Ascend910A5 {
 		dPath := devicePath + dvppCmdList
 		if err := addDeviceToSpec(spec, dPath, dPath); err != nil {
@@ -592,7 +597,7 @@ func checkVisibleDevice(spec *specs.Spec) ([]int, error) {
 		return nil, nil
 	}
 
-	if strings.Contains(visibleDevices, ascend) {
+	if strings.Contains(visibleDevices, ascend) || strings.Contains(visibleDevices, npu) {
 		devices, err := parseAscendDevices(visibleDevices)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse ascend device : %v", err)

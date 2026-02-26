@@ -7,7 +7,8 @@ package api
 const (
 	// Pod910DeviceAnno annotation value is for generating 910 hccl rank table
 	Pod910DeviceAnno = "ascend.kubectl.kubernetes.io/ascend-910-configuration"
-
+	// PodNPUDeviceAnno annotation value is for generating npu hccl rank table
+	PodNPUDeviceAnno = "ascend.kubectl.kubernetes.io/ascend-npu-configuration"
 	// ResourceNamePrefix pre resource name
 	ResourceNamePrefix = "huawei.com/"
 	// PodRealAlloc pod annotation key, means pod real mount device
@@ -25,6 +26,13 @@ const (
 
 	// AscendOperator ascend-Operator
 	AscendOperator = "ascend-Operator"
+
+	// HuaweiNPU huawei npu resource name
+	HuaweiNPU = "huawei.com/npu"
+	// NPULowerCase npu
+	NPULowerCase = "npu"
+	// AscendMinuxPrefix name prefix of ascend chip
+	AscendMinuxPrefix = "npu-"
 )
 
 // common 910
@@ -113,7 +121,7 @@ const (
 	A300IA2Label = "card-910b-infer"
 	// A300IDuoLabel the value of the A300I Duo node label
 	A300IDuoLabel = "card-300i-duo"
-	//UseAscendDocker UseAscendDocker parameter
+	// UseAscendDocker UseAscendDocker parameter
 	UseAscendDocker = "useAscendDocker"
 )
 

@@ -82,7 +82,9 @@ func PodHasAllocated(pod *corev1.Pod) bool {
 	if !podUseNpu(pod) {
 		return true
 	}
-	if _, ok := pod.Annotations[api.Pod910DeviceAnno]; !ok {
+	_, is910Anno := pod.Annotations[api.Pod910DeviceAnno]
+	_, isNPUAnno := pod.Annotations[api.PodNPUDeviceAnno]
+	if !isNPUAnno && !is910Anno {
 		hwlog.RunLog.Debugf("Pod %s has not allocated device", pod.Name)
 		return false
 	}

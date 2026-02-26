@@ -28,6 +28,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
+
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
@@ -48,17 +49,17 @@ func Test_is910A5Job(t *testing.T) {
 			name: "selector has key but not A5",
 			job: &plugin.SchedulerJob{
 				SchedulerJobAttr: util.SchedulerJobAttr{
-					ComJob: util.ComJob{Selector: map[string]string{
-						util.AcceleratorType: "910B",
+					ComJob: util.ComJob{Annotation: map[string]string{
+						util.SchedulePolicyAnnoKey: util.Chip1Node2,
 					}}}},
-			want: false, // 假设CheckA5Label("910B") == false
+			want: false,
 		},
 		{
 			name: "selector has A5",
 			job: &plugin.SchedulerJob{
 				SchedulerJobAttr: util.SchedulerJobAttr{
-					ComJob: util.ComJob{Selector: map[string]string{
-						util.AcceleratorType: "900SuperPod-A5-8",
+					ComJob: util.ComJob{Annotation: map[string]string{
+						util.SchedulePolicyAnnoKey: util.Chip8Node8Ra64Sp,
 					}}}},
 			want: true,
 		},
@@ -66,8 +67,8 @@ func Test_is910A5Job(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := is910A5Job(tt.job); got != tt.want {
-				t.Errorf("is910A5Job() = %v, want %v", got, tt.want)
+			if got := is910A5SuperPodJob(tt.job); got != tt.want {
+				t.Errorf("is910A5SuperPodJob() = %v, want %v", got, tt.want)
 			}
 		})
 	}

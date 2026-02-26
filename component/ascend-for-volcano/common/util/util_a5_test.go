@@ -48,15 +48,3 @@ func TestHasCommonElement(t *testing.T) {
 		}
 	})
 }
-
-func TestCheckA5Label(t *testing.T) {
-	var labelTrue = "900SuperPod-A5-8"
-	var labelFalse = "900SuperPod-A5-9"
-	t.Run("test func CheckA5Label success", func(t *testing.T) {
-		result1 := CheckA5Label(labelTrue)
-		result2 := CheckA5Label(labelFalse)
-		if !reflect.DeepEqual(result1, true) || !reflect.DeepEqual(result2, false) {
-			t.Errorf("test CheckA5Label fail ,result1:%v,result2:%v", result1, result2)
-		}
-	})
-}

@@ -91,6 +91,7 @@ function modify_version() {
     sed -i "s/ascend-k8sdeviceplugin:.*/ascend-k8sdeviceplugin:${build_version}/" "$CUR_DIR"/ascendplugin-310P-volcano.yaml
     sed -i "s/ascend-k8sdeviceplugin:.*/ascend-k8sdeviceplugin:${build_version}/" "$CUR_DIR"/ascendplugin-310P-1usoc-volcano.yaml
     sed -i "s/ascend-k8sdeviceplugin:.*/ascend-k8sdeviceplugin:${build_version}/" "$CUR_DIR"/ascendplugin-310P-1usoc.yaml
+    sed -i "s/ascend-k8sdeviceplugin:.*/ascend-k8sdeviceplugin:${build_version}/" "$CUR_DIR"/ascendplugin-npu-volcano.yaml
     cp "$CUR_DIR"/Dockerfile "$TOP_DIR"/output/
     cp "$CUR_DIR"/Dockerfile-310P-1usoc "$TOP_DIR"/output/Dockerfile-310P-1usoc
     cp "$CUR_DIR"/run_for_310P_1usoc.sh "$TOP_DIR"/output/run_for_310P_1usoc.sh
@@ -102,6 +103,7 @@ function modify_version() {
     cp "$CUR_DIR"/ascendplugin-310P-volcano.yaml "$TOP_DIR"/output/device-plugin-310P-volcano-"${build_version}".yaml
     cp "$CUR_DIR"/ascendplugin-310P-1usoc.yaml "$TOP_DIR"/output/device-plugin-310P-1usoc-"${build_version}".yaml
     cp "$CUR_DIR"/ascendplugin-310P-1usoc-volcano.yaml "$TOP_DIR"/output/device-plugin-310P-1usoc-volcano-"${build_version}".yaml
+    cp "$CUR_DIR"/ascendplugin-npu-volcano.yaml "$TOP_DIR"/output/device-plugin-npu-volcano"${build_version}".yaml
 
     cp "$CUR_DIR"/faultCode.json "$TOP_DIR"/output/faultCode.json
     cp "$CUR_DIR"/faultCustomization.json "$TOP_DIR"/output/faultCustomization.json

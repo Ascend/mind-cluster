@@ -115,6 +115,9 @@ func TestInit910CardPolicyHandler(t *testing.T) {
 			config, policy910HandlerMap[config])
 		t.Run(name, func(t *testing.T) {
 			attr := util.SchedulerJobAttr{
+				NPUJob: &util.NPUJob{
+					ReqNPUName: util.NPU910CardName,
+				},
 				ComJob: util.ComJob{
 					Annotation: map[string]string{
 						util.SchedulePolicyAnnoKey: config,

@@ -1461,6 +1461,12 @@ func TestParseAscendDevices(t *testing.T) {
 			want:           []int{0},
 			wantErr:        false,
 		},
+		{
+			name:           "parseAscendDevices success case 2",
+			visibleDevices: "npu-0",
+			want:           []int{0},
+			wantErr:        false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1506,6 +1512,14 @@ func TestParseAscendDevicesPatch1(t *testing.T) {
 	})
 }
 
+func specWithEnv(envValue string) *specs.Spec {
+	return &specs.Spec{
+		Process: &specs.Process{
+			Env: []string{envValue},
+		},
+	}
+}
+
 // TestCheckVisibleDevice tests the function checkVisibleDevice
 func TestCheckVisibleDevice(t *testing.T) {
 	patchGetChipName := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetChipName", func(f *dcmi.NpuV1Worker) (string, error) {
@@ -1518,26 +1532,9 @@ func TestCheckVisibleDevice(t *testing.T) {
 		want    []int
 		wantErr bool
 	}{
-		{
-			name: "checkVisibleDevice success case 1",
-			spec: &specs.Spec{
-				Process: &specs.Process{
-					Env: []string{ascendVisibleDevices + "=Ascend910-0"},
-				},
-			},
-			wantErr: false,
-			want:    []int{0},
-		},
-		{
-			name: "checkVisibleDevice success case 2",
-			spec: &specs.Spec{
-				Process: &specs.Process{
-					Env: []string{ascendVisibleDevices + "=0"},
-				},
-			},
-			wantErr: false,
-			want:    []int{0},
-		},
+		{"success with Ascend910-0", specWithEnv(ascendVisibleDevices + "=Ascend910-0"), []int{0}, false},
+		{"success with 0", specWithEnv(ascendVisibleDevices + "=0"), []int{0}, false},
+		{"success with npu-0", specWithEnv(ascendVisibleDevices + "=npu-0"), []int{0}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -86,6 +86,11 @@ func TestPodHasAllocated(t *testing.T) {
 			res := PodHasAllocated(pod)
 			convey.So(res, convey.ShouldEqual, true)
 		})
+		convey.Convey("04-pod with npu request and with PodNPUDeviceAnno should return true", func() {
+			pod.Annotations = map[string]string{api.PodNPUDeviceAnno: "fake-device"}
+			res := PodHasAllocated(pod)
+			convey.So(res, convey.ShouldEqual, true)
+		})
 	})
 }
 

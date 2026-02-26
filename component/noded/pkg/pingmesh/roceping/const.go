@@ -38,6 +38,5 @@ const (
 
 	maxIcmpSequenceId = (1 << 16) - 1
 
-	acceleratorTypeKey       = "accelerator-type" // acceleratorTypeKey 加速标签
-	labelPrefix900SuperPodA5 = "900superpod-a5"   // A5超节点形态加速标签前缀小写格式
+	labelPrefix900SuperPodA5 = "950-superpod-atlas-8" // label prefix for a5 super pod
 )

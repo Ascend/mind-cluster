@@ -116,6 +116,12 @@ const (
 	defaultRetryDelay = 10
 )
 
+var devTypeMap = map[string]string{
+	api.Ascend910B:  api.Ascend910B,
+	api.Ascend910A3: api.Ascend910A3,
+	api.Ascend910A5: api.VersionNPU,
+}
+
 var (
 	devManager     *DeviceManager = nil
 	devManagerOnce sync.Once
@@ -236,7 +242,12 @@ func AutoInit(dType string, resetTimeout int) (*DeviceManager, error) {
 	default:
 		return nil, fmt.Errorf("unsupport device type (%s)", devType)
 	}
-	hwlog.RunLog.Infof("chipName: %v, devType: %v", chipInfo.Name, devType)
+	if devType == api.Ascend910A5 {
+		hwlog.RunLog.Infof("chipName: %v, devType: npu", chipInfo.Name)
+	} else {
+		hwlog.RunLog.Infof("chipName: %v, devType: %v", chipInfo.Name, devType)
+	}
+
 	if dType != "" && devType != dType {
 		return nil, fmt.Errorf("the value of dType(%s) is inconsistent with the actual chip type(%s)",
 			dType, devType)
@@ -368,7 +379,8 @@ func getValidMainBoardInfo(dcMgr dcmi.DcDriverInterface) (uint32, error) {
 				continue
 			}
 			if !common.IsValidMainBoardInfo(mainBoardId) {
-				hwlog.RunLog.Warnf("invalid mainBoardId info by cardID(%d), deviceID(%d), error: %v", cardID, devID, err)
+				hwlog.RunLog.Warnf("invalid mainBoardId info by cardID(%d), deviceID(%d), error: %v", cardID, devID,
+					err)
 				continue
 			}
 			return mainBoardId, nil
@@ -543,7 +555,8 @@ func (d *DeviceManager) GetDeviceMemoryInfo(logicID int32) (*common.MemoryInfo, 
 
 	// 910B and 910A3 and 910A5 don't have DDR module. Therefore, DDR information cannot be queried.
 	if d.DevType == api.Ascend910B || d.DevType == api.Ascend910A3 || d.DevType == api.Ascend910A5 {
-		hwlog.RunLog.Debugf("%v doesn't have DDR module. Therefore, DDR information cannot be queried", d.DevType)
+		hwlog.RunLog.Debugf("%s doesn't have DDR module. Therefore, DDR information cannot be queried",
+			devTypeMap[d.DevType])
 		return nil, nil
 	}
 
@@ -1018,7 +1031,8 @@ func (d *DeviceManager) GetSioInfo(logicID int32) (*common.SioCrcErrStatisticInf
 	}
 	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get cardID and deviceID by logicID(%d) when get sio info , error: %v", logicID, err)
+		return nil, fmt.Errorf("failed to get cardID and deviceID by logicID(%d) when get sio info , error: %v",
+			logicID, err)
 	}
 	cgoSPodSioInfo, err := d.DcMgr.DcGetSioInfo(cardID, deviceID)
 	if err != nil {

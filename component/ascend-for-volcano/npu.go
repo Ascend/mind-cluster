@@ -50,7 +50,7 @@ func init() {
 // HandlerStart HuaWei NPU plugin start by frame.
 func HandlerStart() *plugin.ScheduleHandler {
 	scheduleHandler := &plugin.ScheduleHandler{
-		NPUPlugins:  sets.String{util.NPU910CardName: {}, util.NPU310CardName: {}, util.NPU310PCardName: {}},
+		NPUPlugins:  sets.String{util.NPUCardName: {}, util.NPU910CardName: {}, util.NPU310CardName: {}, util.NPU310PCardName: {}},
 		FaultHandle: rescheduling.NewHandler(),
 		ScheduleEnv: plugin.ScheduleEnv{
 			FrameAttr:               plugin.NewVolcanoFrame(),

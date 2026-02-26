@@ -139,6 +139,9 @@ func GetResourceType(info *v1beta1.PodGroup) string {
 	}
 
 	for key, _ := range info.Spec.MinResources.DeepCopy() {
+		if key == api.HuaweiNPU {
+			return api.NPULowerCase
+		}
 		if strings.Contains(string(key), api.Ascend910) {
 			return api.Ascend910
 		}

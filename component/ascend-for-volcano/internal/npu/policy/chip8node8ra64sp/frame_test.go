@@ -47,11 +47,11 @@ type NewPluginTestCase struct {
 func buildNewTestCase() []NewPluginTestCase {
 	return []NewPluginTestCase{
 		{
-			Name:          "01-NewTest should return nil when Schedule Name is huawei.com/Ascend910900SuperPod-A5-8",
+			Name:          "01-NewTest should return nil when Schedule Name is huawei.com/Ascend910900SuperPod-npu-8",
 			ScheduleName:  util.SuperPodx8SchedulerName,
 			PluginName:    util.SuperPodx8SchedulerName,
-			AnnoName:      util.NPU910CardName,
-			AnnoPreValue:  util.NPU910CardNamePre,
+			AnnoName:      util.NPUCardName,
+			AnnoPreValue:  util.NPUCardNamePre,
 			MaxNodeNPUNum: npuNumber8,
 			WantErr:       nil,
 		},
@@ -59,8 +59,8 @@ func buildNewTestCase() []NewPluginTestCase {
 			Name:          "02-NewTest should return nil when Schedule Name is test",
 			ScheduleName:  testSchedulerName,
 			PluginName:    testSchedulerName,
-			AnnoName:      util.NPU910CardName,
-			AnnoPreValue:  util.NPU910CardNamePre,
+			AnnoName:      util.NPUCardName,
+			AnnoPreValue:  util.NPUCardNamePre,
 			MaxNodeNPUNum: npuNumber8,
 			WantErr:       nil,
 		},
@@ -75,10 +75,10 @@ func TestNew(t *testing.T) {
 			if npu.GetPluginName() != tt.PluginName {
 				t.Errorf("New() npu Name: %s, wantName: %s.", npu.GetPluginName(), tt.PluginName)
 			}
-			if npu.GetAnnoName(util.NPU910CardName) != tt.AnnoName {
+			if npu.GetAnnoName(util.NPUCardName) != tt.AnnoName {
 				t.Errorf("New() npu annoName: %s, wantAnnoName: %s.", npu.GetPluginName(), tt.AnnoName)
 			}
-			if npu.GetAnnoPreVal(util.NPU910CardName) != tt.AnnoPreValue {
+			if npu.GetAnnoPreVal(util.NPUCardName) != tt.AnnoPreValue {
 				t.Errorf("New() npu annoNamePre: %s, wantAnnoNamePre: %s.",
 					npu.GetPluginName(), tt.AnnoPreValue)
 			}

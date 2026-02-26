@@ -93,7 +93,7 @@ func TestSaveRackInfo(t *testing.T) {
 		})
 		convey.Convey("When adding new rack to empty superPod", func() {
 			superPod := &api.SuperPodDevice{
-				Version:    "A5",
+				Version:    api.VersionNPU,
 				RackMap:    make(map[string]*api.RackInfo),
 				SuperPodID: "pod-1",
 			}
@@ -118,7 +118,7 @@ func TestSaveRackInfo(t *testing.T) {
 
 func testGetRackInfo1() {
 	superPod := &api.SuperPodDevice{
-		Version:    "A5",
+		Version:    "npu",
 		RackMap:    make(map[string]*api.RackInfo),
 		SuperPodID: "pod-1",
 	}
@@ -136,7 +136,7 @@ func testGetRackInfo1() {
 
 func testGetRackInfo2() {
 	superPod := &api.SuperPodDevice{
-		Version: "A5",
+		Version: api.VersionNPU,
 		RackMap: map[string]*api.RackInfo{
 			"rack-1": {
 				RackID:    "rack-1",
@@ -162,7 +162,7 @@ func TestCanAddNodeToSuperPod(t *testing.T) {
 	convey.Convey("Test canAddNodeToSuperPod", t, func() {
 		convey.Convey("When versions don't match", func() {
 			superPod := &api.SuperPodDevice{
-				Version:    "A5",
+				Version:    api.VersionNPU,
 				SuperPodID: "pod-1",
 			}
 			node := &api.NodeDevice{
@@ -174,7 +174,7 @@ func TestCanAddNodeToSuperPod(t *testing.T) {
 		})
 		convey.Convey("When A5 version and exceeds max node number", func() {
 			superPod := &api.SuperPodDevice{
-				Version:       "A5",
+				Version:       api.VersionNPU,
 				SuperPodID:    "pod-1",
 				NodeDeviceMap: make(map[string]*api.NodeDevice),
 			}
@@ -194,11 +194,11 @@ func TestCanAddNodeToSuperPod(t *testing.T) {
 
 func testCanAddNodeToSuperPod1() {
 	superPod := &api.SuperPodDevice{
-		Version:       "A5",
+		Version:       api.VersionNPU,
 		NodeDeviceMap: make(map[string]*api.NodeDevice),
 	}
 	node := &api.NodeDevice{
-		ServerType: "A5",
+		ServerType: api.VersionNPU,
 		NodeName:   "node-1",
 	}
 	result := canAddNodeToSuperPod(superPod, node)

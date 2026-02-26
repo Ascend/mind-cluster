@@ -255,6 +255,9 @@ func (r *BaseGenerator) AddPod(pod *corev1.Pod) error {
 func (r *BaseGenerator) parseDeviceInfo(pod *corev1.Pod) (*Instance, error) {
 	deviceInfo, ok := pod.Annotations[api.Pod910DeviceAnno]
 	if !ok {
+		deviceInfo, ok = pod.Annotations[api.PodNPUDeviceAnno]
+	}
+	if !ok {
 		return nil, nil
 	}
 	var instance Instance

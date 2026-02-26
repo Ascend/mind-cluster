@@ -257,7 +257,8 @@ func (r *ASJobReconciler) watchAscendJobRelatedResource(c controller.Controller,
 		return err
 	}
 	resourceOptions := []*resourceOption{
-		{kind: &source.Kind{Type: &corev1.Pod{}}, predicateFunc: predicate.Funcs{DeleteFunc: r.onPodDeleteFunc(), UpdateFunc: r.onPodUpdateFunc()}},
+		{kind: &source.Kind{Type: &corev1.Pod{}},
+			predicateFunc: predicate.Funcs{DeleteFunc: r.onPodDeleteFunc(), UpdateFunc: r.onPodUpdateFunc()}},
 		{kind: &source.Kind{Type: &corev1.Service{}}},
 	}
 
@@ -337,12 +338,30 @@ func (r *ASJobReconciler) watchStatefulSetRelatedResource(c controller.Controlle
 	})
 }
 
+func hasRankTableMountInVcJob(job *v1alpha1.Job) bool {
+	for _, task := range job.Spec.Tasks {
+		if hasRankTableMount(&task.Template) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasRankTableMount(template *corev1.PodTemplateSpec) bool {
+	for _, volume := range template.Spec.Volumes {
+		if volume.Name == rankTableName {
+			return true
+		}
+	}
+	return false
+}
+
 func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 	return func(e event.CreateEvent) bool {
 		switch e.Object.(type) {
 		case *v1alpha1.Job:
 			vcjob := e.Object.(*v1alpha1.Job)
-			if _, ok := vcjob.Labels[api.AtlasTaskLabel]; !ok {
+			if !hasRankTableMountInVcJob(vcjob) {
 				return false
 			}
 			r.rtGenerators[vcjob.UID] = ranktable.NewGenerator(decorateVcjob(vcjob))
@@ -350,7 +369,7 @@ func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 			return true
 		case *appv1.Deployment:
 			deploy := e.Object.(*appv1.Deployment)
-			if _, ok := deploy.Labels[api.AtlasTaskLabel]; !ok {
+			if !hasRankTableMount(&deploy.Spec.Template) {
 				return false
 			}
 			r.rtGenerators[deploy.UID] = ranktable.NewGenerator(decorateDeploy(deploy))
@@ -358,7 +377,7 @@ func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 			return true
 		case *appv1.StatefulSet:
 			statefulSet := e.Object.(*appv1.StatefulSet)
-			if _, ok := statefulSet.Labels[api.AtlasTaskLabel]; !ok {
+			if !hasRankTableMount(&statefulSet.Spec.Template) {
 				return false
 			}
 			r.rtGenerators[statefulSet.UID] = ranktable.NewGenerator(decorateStatefulSet(statefulSet))

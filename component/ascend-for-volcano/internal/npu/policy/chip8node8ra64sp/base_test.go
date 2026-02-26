@@ -254,9 +254,9 @@ func newNPUNodeWithNPUNum(nodeName string, superPodID int32, rackID int32,
 			SuperPodID: superPodID,
 			RackID:     rackID,
 			Annotation: map[string]string{
-				"huawei.com/Ascend910": newNodeAnnotation(npuList),
-				networkUnhealthyNPU:    "",
-				faultNPU:               "",
+				util.NPUCardName:    newNodeAnnotation(npuList),
+				networkUnhealthyNPU: "",
+				faultNPU:            "",
 			},
 			Label: map[string]string{
 				util.AcceleratorType: SuperPodx8,
@@ -269,9 +269,9 @@ func newNodeAnnotation(npuList []int) string {
 	var str string
 	for index, npu := range npuList {
 		if index == 0 {
-			str = fmt.Sprintf("%s%d", util.NPU910CardNamePre, npu)
+			str = fmt.Sprintf("%s%d", util.NPUCardNamePre, npu)
 		} else {
-			str = fmt.Sprintf("%s,%s%d", str, util.NPU910CardNamePre, npu)
+			str = fmt.Sprintf("%s,%s%d", str, util.NPUCardNamePre, npu)
 		}
 	}
 	return str

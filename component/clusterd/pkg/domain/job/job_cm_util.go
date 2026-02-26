@@ -153,7 +153,6 @@ func deleteCm(jobInfo constant.JobInfo) bool {
 
 func getDefaultLabel() map[string]string {
 	label := make(map[string]string)
-	label[api.AtlasTaskLabel] = val910
 	label[configmapLabel] = "true"
 	return label
 }

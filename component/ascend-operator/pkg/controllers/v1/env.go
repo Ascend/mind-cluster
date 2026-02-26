@@ -30,19 +30,6 @@ const (
 	appTypeEnvKey = "APP_TYPE"
 )
 
-var deviceTypeMap = map[string]bool{ // check task use A5 chip
-	"900SuperPod-A5-8":   true,
-	"800I-A5-8":          true,
-	"800T-A5-8":          true,
-	"800I-Stacking-A5-8": true,
-	"800I-SuperPod-A5-8": true,
-	"800T-SuperPod-A5-8": true,
-	"300I-A5-4p-8":       true,
-	"300I-A5-4p-16":      true,
-	"300I-A5-8":          true,
-	"300I-A5-16":         true,
-}
-
 func addEnvValue(pod *corev1.PodTemplateSpec, envKey, envValue string, index int) {
 	pod.Spec.Containers[index].Env = append(pod.Spec.Containers[index].Env, corev1.EnvVar{
 		Name:  envKey,
@@ -148,6 +135,7 @@ func (r *ASJobReconciler) isVirtualResourceReq(requests *corev1.ResourceList) bo
 		return false
 	}
 	nonVirtualResources := map[corev1.ResourceName]struct{}{
+		api.HuaweiNPU:        {},
 		api.HuaweiAscend310:  {},
 		api.HuaweiAscend310P: {},
 		api.HuaweiAscend910:  {},
@@ -336,7 +324,7 @@ func addHcclSuperPodIdEnv(pi *podInfo, pod *corev1.PodTemplateSpec, index int) {
 				addEnvValue(pod, hcclSuperPodLogicId, superPodId, index)
 				break
 			}
-			if deviceTypeMap[pod.Spec.NodeSelector[acceleratorType]] {
+			if string(name) == api.HuaweiNPU {
 				addEnvValue(pod, hcclSuperPodLogicId, superPodId, index)
 			} else {
 				addEnvValueForSoftStrategy(pod, hcclSuperPodLogicId, index)
@@ -384,7 +372,8 @@ func addProcessRecoverEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerInd
 	doAddProcessRecoverEnv(pi, pod, containerIndex, framework, strategies)
 }
 
-func doAddProcessRecoverEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerIndex int, framework string, strategies string) {
+func doAddProcessRecoverEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerIndex int, framework string,
+	strategies string) {
 	env := make(map[string]string)
 	trainEnv := make(sets.String)
 	for _, strategy := range strings.Split(strategies, ",") {

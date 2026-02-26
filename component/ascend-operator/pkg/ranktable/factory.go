@@ -8,7 +8,7 @@ Package ranktable is using for reconcile AscendJob.
 package ranktable
 
 import (
-	"k8s.io/utils/strings/slices"
+	corev1 "k8s.io/api/core/v1"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
@@ -20,20 +20,6 @@ import (
 	"ascend-operator/pkg/ranktable/v2dot0"
 	"ascend-operator/pkg/utils"
 )
-
-// list all accelerator-type labels for ranktable2.0
-var v2dot0AcceleratorTypeList = []string{
-	api.Ascend800ia5x8,
-	api.Ascend800ta5x8,
-	api.Ascend800ia5Stacking,
-	api.Ascend800ia5SuperPod,
-	api.Ascend800ta5SuperPod,
-	api.A5PodType,
-	api.Ascend300I4Px8Label,
-	api.Ascend300I4Px16Label,
-	api.Ascend300Ix8Label,
-	api.Ascend300Ix16Label,
-}
 
 // NewGenerator create ranktable generator
 func NewGenerator(job *mindxdlv1.AscendJob) generator.RankTableGenerator {
@@ -54,12 +40,16 @@ func NewGenerator(job *mindxdlv1.AscendJob) generator.RankTableGenerator {
 
 func useV2dot0(job *mindxdlv1.AscendJob) bool {
 	for _, replicaSpec := range job.Spec.ReplicaSpecs {
-		if replicaSpec.Template.Spec.NodeSelector == nil {
-			continue
+		if containsNPURequest(replicaSpec.Template.Spec.Containers) {
+			return true
 		}
-		value, ok := replicaSpec.Template.Spec.NodeSelector[api.AcceleratorTypeKey]
-		hwlog.RunLog.Infof("accelerator-type of job<%s> is %v", job.Name, value)
-		if ok && slices.Contains(v2dot0AcceleratorTypeList, value) {
+	}
+	return false
+}
+
+func containsNPURequest(containers []corev1.Container) bool {
+	for _, container := range containers {
+		if _, ok := container.Resources.Requests[api.HuaweiNPU]; ok {
 			return true
 		}
 	}

@@ -173,6 +173,9 @@ func getRecoveringDevList(devInfo *constant.DeviceInfo) []string {
 // GetDeviceType get device type from device info
 func GetDeviceType(devInfo *constant.DeviceInfo) string {
 	for key, _ := range devInfo.DeviceList {
+		if key == api.HuaweiNPU {
+			return api.NPULowerCase
+		}
 		if strings.Contains(key, api.Ascend910) {
 			return api.Ascend910
 		}
@@ -184,7 +187,7 @@ func GetDeviceType(devInfo *constant.DeviceInfo) string {
 		}
 	}
 	hwlog.RunLog.Warn("cannot decide server type")
-	return api.Ascend910
+	return api.NPULowerCase
 }
 
 // device plugin may merge multiple fault codes in one string
@@ -382,27 +385,27 @@ func mergeCode(advanceDeviceCm *constant.AdvanceDeviceFaultCm) {
 }
 
 func getNetworkUnhealthyString(devInfo *constant.DeviceInfo) (string, string) {
-	key := api.ResourceNamePrefix + GetDeviceType(devInfo) + constant.CmCardNetworkUnhealthySuffix
+	key := api.ResourceNamePrefix + GetDeviceType(devInfo) + api.CmCardNetworkUnhealthySuffix
 	return key, devInfo.DeviceList[key]
 }
 
 func getDPUUnhealthyString(devInfo *constant.DeviceInfo) (string, string) {
-	key := api.ResourceNamePrefix + GetDeviceType(devInfo) + constant.CmCardDPUUnhealthySuffix
+	key := api.ResourceNamePrefix + GetDeviceType(devInfo) + api.CmCardDPUUnhealthySuffix
 	return key, devInfo.DeviceList[key]
 }
 
 func getCardUnhealthyString(devInfo *constant.DeviceInfo) (string, string) {
-	key := api.ResourceNamePrefix + GetDeviceType(devInfo) + constant.CmCardUnhealthySuffix
+	key := api.ResourceNamePrefix + GetDeviceType(devInfo) + api.CmCardUnhealthySuffix
 	return key, devInfo.DeviceList[key]
 }
 
 func getRecoveringString(devInfo *constant.DeviceInfo) (string, string) {
-	key := api.ResourceNamePrefix + GetDeviceType(devInfo) + constant.CmRecoveringSuffix
+	key := api.ResourceNamePrefix + GetDeviceType(devInfo) + api.CmRecoveringSuffix
 	return key, devInfo.DeviceList[key]
 }
 
 func getFaultListString(devInfo *constant.DeviceInfo) (string, string) {
-	key := api.ResourceNamePrefix + GetDeviceType(devInfo) + constant.CmFaultListSuffix
+	key := api.ResourceNamePrefix + GetDeviceType(devInfo) + api.CmFaultListSuffix
 	return key, devInfo.DeviceList[key]
 }
 

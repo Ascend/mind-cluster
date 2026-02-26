@@ -344,7 +344,7 @@ func (reScheduler *ReScheduler) synCacheFaultJobWithSession(ssn *framework.Sessi
 		}
 		sJob := reScheduler.Jobs[faultJob.JobUID]
 		// 2. cache Jobs turned normal in session should be deleted ,meaning it has been restarted
-		is910A5 := is910A5Job(&sJob)
+		is910A5 := is910A5SuperPodJob(&sJob)
 		if faultJob.isJobGraceDeleteSuccess(jobInfo, is910A5) {
 			reScheduler.updateFaultJobWhenGraceDeleteSuccess(jobInfo, faultJob, is910A5)
 			if plugin.GetJobInfoAllocatedTaskNum(jobInfo) >= faultJob.MinAvailable {
@@ -546,7 +546,7 @@ func (reScheduler *ReScheduler) RestartNeedForceDeleteJobs(ssn *framework.Sessio
 
 func forceDeleteJob(schedulerJob plugin.SchedulerJob, faultJob *FaultJob, ssn *framework.Session,
 	env plugin.ScheduleEnv) {
-	if is910A5Job(&schedulerJob) {
+	if is910A5SuperPodJob(&schedulerJob) {
 		if deleteErr := faultJob.ForceDeleteJobFor910A5(&schedulerJob, env); deleteErr != nil {
 			klog.V(util.LogErrorLev).Infof("%s ForceDeleteJob: %s", schedulerJob.Name, util.SafePrint(deleteErr))
 		}

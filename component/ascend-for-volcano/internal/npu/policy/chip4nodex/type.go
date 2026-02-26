@@ -37,8 +37,8 @@ const (
 	maxNodeNPUNumX16 = 16
 	// cardsNumPerMesh for the cards num in per mesh is 4
 	cardsNumPerMesh = 4
-	// scoreWeightX16 for the score weight in 300I-A5-4p-8 is 16
+	// scoreWeightX16 for the score weight in 300I-npu-4p-8 is 16
 	scoreWeightX16 = 16
-	// scoreWeightX64 for the score weight in 300I-A5-4p-16 is 64
+	// scoreWeightX64 for the score weight in 300I-npu-4p-16 is 64
 	scoreWeightX64 = 64
 )

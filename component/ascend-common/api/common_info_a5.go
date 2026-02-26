@@ -21,13 +21,13 @@ package api
 
 // CheckIsVersionA5 check card type is A5
 func CheckIsVersionA5(cardTypeVersion string) bool {
-	return cardTypeVersion == VersionA5
+	return cardTypeVersion == VersionNPU
 }
 
 // IsA5InferServer check device is A5InferServer
 func IsA5InferServer(acceleratorType string) bool {
 	switch acceleratorType {
-	case Ascend800ia5x8, Ascend800ta5x8, Ascend800ia5SuperPod, Ascend800ta5SuperPod, Ascend800ia5Stacking:
+	case Ascend800ia5x8, Ascend800ia5SuperPod, Ascend800ia5Stacking:
 		return true
 	default:
 		return false

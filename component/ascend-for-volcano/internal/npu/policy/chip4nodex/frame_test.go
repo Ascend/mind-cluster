@@ -54,11 +54,11 @@ func TestNew(t *testing.T) {
 	if handler.GetPluginName() != SchedulePolicy4Px8 {
 		t.Errorf("expected plugin name '4p-8', got %v", handler.GetPluginName())
 	}
-	if handler.GetAnnoName(util.NPU910CardName) != util.NPU910CardName {
-		t.Errorf("expected anno name '%v', got %v", util.NPU910CardName, handler.GetAnnoName(util.NPU910CardName))
+	if handler.GetAnnoName(util.NPUCardName) != util.NPUCardName {
+		t.Errorf("expected anno name '%v', got %v", util.NPUCardName, handler.GetAnnoName(util.NPUCardName))
 	}
-	if handler.GetAnnoPreVal(util.NPU910CardName) != util.NPU910CardNamePre {
-		t.Errorf("expected anno pre value '%v', got %v", util.NPU910CardNamePre, handler.GetAnnoPreVal(util.NPU910CardName))
+	if handler.GetAnnoPreVal(util.NPUCardName) != util.NPUCardNamePre {
+		t.Errorf("expected anno pre value '%v', got %v", util.NPUCardNamePre, handler.GetAnnoPreVal(util.NPUCardName))
 	}
 }
 
@@ -87,7 +87,7 @@ func makeTaskWithNPUCount(name, count string) *api.TaskInfo {
 		Pod:  &v1.Pod{},
 	}
 	ti.Pod.Annotations = map[string]string{
-		util.NPU910CardName: count,
+		util.NPUCardName: count,
 	}
 	return ti
 }
@@ -96,16 +96,16 @@ func makeTaskWithNPUCount(name, count string) *api.TaskInfo {
 func makeNodeWithKChips(k int) plugin.NPUNode {
 	anno := map[string]string{}
 	for i := 0; i < k; i++ {
-		key := util.NPU910CardNamePre + strconv.Itoa(i)
+		key := util.NPUCardNamePre + strconv.Itoa(i)
 		anno[key] = "healthy"
 	}
 	return plugin.NPUNode{
 		CommonNode: plugin.CommonNode{
 			Name:       "node-x",
 			Annotation: anno,
-			Label:      map[string]string{util.AcceleratorType: util.NPU910CardName},
+			Label:      map[string]string{},
 			Allocate: map[v1.ResourceName]float64{
-				util.NPU910CardName: float64(k * npuHexKilo),
+				util.NPUCardName: float64(k * npuHexKilo),
 			},
 		},
 	}
@@ -165,7 +165,7 @@ func TestSelectNPUFromNodeError(t *testing.T) {
 	h := &chip4nodex{
 		NPUHandler: base.NPUHandler{
 			SchedulerJobAttr: util.SchedulerJobAttr{
-				NPUJob: &util.NPUJob{ReqNPUName: util.NPU910CardName}},
+				NPUJob: &util.NPUJob{ReqNPUName: util.NPUCardName}},
 			MaxNodeNPUNum: 5,
 		},
 	}
@@ -177,7 +177,7 @@ func TestSelectNPUFromNodeError(t *testing.T) {
 	}
 }
 
-// makeTask returns a TaskInfo whose Pod.Annotations[util.NPU910CardName]
+// makeTask returns a TaskInfo whose Pod.Annotations[util.NPUCardName]
 // is set to reqCount.
 func makeTask(name string, reqCount int) *api.TaskInfo {
 	return &api.TaskInfo{
@@ -187,7 +187,7 @@ func makeTask(name string, reqCount int) *api.TaskInfo {
 		Pod: &v1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
-					util.NPU910CardName: strconv.Itoa(reqCount)}}},
+					util.NPUCardName: strconv.Itoa(reqCount)}}},
 	}
 }
 
@@ -213,14 +213,14 @@ func newHandler(pluginName string, task *api.TaskInfo, reqCount int) *chip4nodex
 		h.Nodes = make(map[string]plugin.NPUNode)
 	}
 	nJob := &util.NPUJob{
-		ReqNPUName:    util.NPU910CardName,
+		ReqNPUName:    util.NPUCardName,
 		ReqNPUNum:     reqCount,
 		SpBlockNPUNum: 1,
 		TpBlockNPUNum: util.LeastTpBlock,
 		Tasks:         make(map[api.TaskID]util.NPUTask),
 	}
 	nJob.Tasks[task.UID] = util.NPUTask{
-		ReqNPUName: util.NPU910CardName,
+		ReqNPUName: util.NPUCardName,
 		ReqNPUNum:  reqCount,
 	}
 	h.SchedulerJobAttr.NPUJob = nJob
@@ -293,7 +293,7 @@ func prepareNode(k int) plugin.NPUNode {
 	if node.Annotation == nil {
 		node.Annotation = make(map[string]string, 1)
 	}
-	node.Annotation[util.NPU910CardName] = sb.String()
+	node.Annotation[util.NPUCardName] = sb.String()
 	return node
 }
 

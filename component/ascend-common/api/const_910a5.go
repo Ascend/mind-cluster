@@ -25,7 +25,7 @@ const (
 	DpuStatusDown = "down"
 	// DpuStatusUp dpu status up
 	DpuStatusUp = "up"
-	// DpuSubHealth status for Device
+	// DpuSubHealthy status for Device
 	DpuSubHealthy = "SubHealthy"
 	// DpuInfoCMDataKey device-info-cm data key, record Dpu info
 	DpuInfoCMDataKey = "DpuInfoCfg"
@@ -40,25 +40,25 @@ const (
 // Device Type
 const (
 	// A5PodType a5 pod type
-	A5PodType = "900SuperPod-A5-8"
+	A5PodType = "950-SuperPod-Atlas-8"
 	// Ascend800ia5x8 normal inference server label
-	Ascend800ia5x8 = "800I-A5-8"
+	Ascend800ia5x8 = "850-Atlas-8p-8"
 	// Ascend800ta5x8 normal training server label
-	Ascend800ta5x8 = "800T-A5-8"
+	Ascend800ta5x8 = "850-Atlas-8p-8"
 	// Ascend800ia5Stacking stacking server label
-	Ascend800ia5Stacking = "800I-Stacking-A5-8"
+	Ascend800ia5Stacking = "850-Stacking-Atlas-8"
 	// Ascend800ia5SuperPod superpod inference server label
-	Ascend800ia5SuperPod = "800I-SuperPod-A5-8"
+	Ascend800ia5SuperPod = "850-SuperPod-Atlas-8"
 	// Ascend800ta5SuperPod superpod training server label
-	Ascend800ta5SuperPod = "800T-SuperPod-A5-8"
-	// Ascend300I4Px8Label the label 300I-A5-4p-8
-	Ascend300I4Px8Label = "300I-A5-4p-8"
-	// Ascend300I4Px16Label the label 300I-A5-4p-16
-	Ascend300I4Px16Label = "300I-A5-4p-16"
-	// Ascend300Ix8Label the label 300I-A5-8
-	Ascend300Ix8Label = "300I-A5-8"
-	// Ascend300Ix16Label the label 300I-A5-16
-	Ascend300Ix16Label = "300I-A5-16"
+	Ascend800ta5SuperPod = "850-SuperPod-Atlas-8"
+	// Ascend300I4Px8Label the label 300I-npu-4p-8
+	Ascend300I4Px8Label = "350-Atlas-4p-8"
+	// Ascend300I4Px16Label the label 300I-npu-4p-16
+	Ascend300I4Px16Label = "350-Atlas-4p-16"
+	// Ascend300Ix8Label the label 300I-npu-8
+	Ascend300Ix8Label = "350-Atlas-8"
+	// Ascend300Ix16Label the label 300I-npu-16
+	Ascend300Ix16Label = "350-Atlas-16"
 )
 
 const (
@@ -69,8 +69,8 @@ const (
 const (
 	// RackIDKey rack id in a super pod
 	RackIDKey = "rackID"
-	// VersionA5 Type for RAS Net Fault Detection in A5
-	VersionA5 = "A5"
+	// VersionNPU Type for RAS Net Fault Detection in A5
+	VersionNPU = "npu"
 	// VersionA3 Type for RAS Net Fault Detection in A3
 	VersionA3 = "A3"
 )

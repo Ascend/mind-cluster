@@ -1,4 +1,4 @@
-﻿/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -59,8 +59,7 @@ var (
 		{true, true, true, true, true, true, true, true},
 	}
 	testAnnoName         = "test"
-	invalidTestAnnoValue = "Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4," +
-		"Ascend910-5,Ascend910-6,Ascend910-7,Ascend910-8"
+	invalidTestAnnoValue = "npu-0,npu-1,npu-2,npu-3,npu-4,npu-5,npu-6,npu-7,npu-8"
 )
 
 // checkNodeNPUByTaskTestCase CheckNodeNPUByTask test case
@@ -79,9 +78,9 @@ func buildCardAnnotationStr(npuList []int) string {
 	var str string
 	for index, npu := range npuList {
 		if index == 0 {
-			str = fmt.Sprintf("%s%d", util.NPU910CardNamePre, npu)
+			str = fmt.Sprintf("%s%d", util.NPUCardNamePre, npu)
 		} else {
-			str = fmt.Sprintf("%s,%s%d", str, util.NPU910CardNamePre, npu)
+			str = fmt.Sprintf("%s,%s%d", str, util.NPUCardNamePre, npu)
 		}
 	}
 	return str
@@ -123,7 +122,7 @@ func buildcheckNodeNPUByTaskTestCases01() []checkNodeNPUByTaskTestCase {
 	return []checkNodeNPUByTaskTestCase{
 		{
 			Name:          "01-CheckNodeNPUByTask return nil when node npu meet task req",
-			Task:          test.FakeTaskWithResReq("pod0", util.NPU910CardName, util.NPUIndex8),
+			Task:          test.FakeTaskWithResReq("pod0", util.NPUCardName, util.NPUIndex8),
 			TpBlockNPUNum: 1,
 			MaxNodeNPUNum: npuNum8,
 			TaskNodeNPU:   "8",
@@ -131,7 +130,7 @@ func buildcheckNodeNPUByTaskTestCases01() []checkNodeNPUByTaskTestCase {
 				CommonNode: plugin.CommonNode{
 					Name: "node1",
 					Annotation: map[string]string{
-						util.NPU910CardName: buildCardAnnotationStr(npuList8),
+						util.NPUCardName:    buildCardAnnotationStr(npuList8),
 						networkUnhealthyNPU: "",
 					},
 				},
@@ -140,7 +139,7 @@ func buildcheckNodeNPUByTaskTestCases01() []checkNodeNPUByTaskTestCase {
 		},
 		{
 			Name:          "02-CheckNodeNPUByTask return err when task is not npu task",
-			Task:          test.FakeTaskWithResReq("pod1", util.NPU910CardName, util.NPUIndex8),
+			Task:          test.FakeTaskWithResReq("pod1", util.NPUCardName, util.NPUIndex8),
 			TpBlockNPUNum: 1,
 			MaxNodeNPUNum: npuNum8,
 			TaskNodeNPU:   "8",
@@ -148,7 +147,7 @@ func buildcheckNodeNPUByTaskTestCases01() []checkNodeNPUByTaskTestCase {
 				CommonNode: plugin.CommonNode{
 					Name: "node1",
 					Annotation: map[string]string{
-						util.NPU910CardName: buildCardAnnotationStr(npuList8),
+						util.NPUCardName:    buildCardAnnotationStr(npuList8),
 						networkUnhealthyNPU: "",
 					},
 				},
@@ -162,7 +161,7 @@ func buildcheckNodeNPUByTaskTestCases02() []checkNodeNPUByTaskTestCase {
 	return []checkNodeNPUByTaskTestCase{
 		{
 			Name:          "04-CheckNodeNPUByTask return err when node has no req npu",
-			Task:          test.FakeTaskWithResReq("pod0", util.NPU910CardName, util.NPUIndex8),
+			Task:          test.FakeTaskWithResReq("pod0", util.NPUCardName, util.NPUIndex8),
 			TpBlockNPUNum: 1,
 			MaxNodeNPUNum: npuNum8,
 			TaskNodeNPU:   "8",
@@ -170,7 +169,7 @@ func buildcheckNodeNPUByTaskTestCases02() []checkNodeNPUByTaskTestCase {
 				CommonNode: plugin.CommonNode{
 					Name: "node1",
 					Annotation: map[string]string{
-						util.NPU910CardName: buildCardAnnotationStr(npuList2),
+						util.NPUCardName:    buildCardAnnotationStr(npuList2),
 						networkUnhealthyNPU: "",
 					},
 				},
@@ -179,7 +178,7 @@ func buildcheckNodeNPUByTaskTestCases02() []checkNodeNPUByTaskTestCase {
 		},
 		{
 			Name:          "05-CheckNodeNPUByTask return err when node has no req npu",
-			Task:          test.FakeTaskWithResReq("pod0", util.NPU910CardName, util.NPUIndex8),
+			Task:          test.FakeTaskWithResReq("pod0", util.NPUCardName, util.NPUIndex8),
 			TpBlockNPUNum: 1,
 			MaxNodeNPUNum: npuNum8,
 			TaskNodeNPU:   "8",
@@ -187,11 +186,11 @@ func buildcheckNodeNPUByTaskTestCases02() []checkNodeNPUByTaskTestCase {
 				CommonNode: plugin.CommonNode{
 					Name: "node1",
 					Annotation: map[string]string{
-						util.NPU910CardName: "Ascend910-0,Ascend910-1,Ascend910-4",
+						util.NPUCardName: "npu-0,npu-1,npu-4",
 					},
 				},
 			},
-			WantErr: errors.New("node<node1> don't have resource<huawei.com/Ascend910-NetworkUnhealthy>"),
+			WantErr: errors.New("node<node1> don't have resource<huawei.com/npu-NetworkUnhealthy>"),
 		},
 	}
 }
@@ -242,7 +241,7 @@ func buildcheckNodeNPUByTaskTestCases04() []checkNodeNPUByTaskTestCase {
 				CommonNode: plugin.CommonNode{
 					Name: "node1",
 					Annotation: map[string]string{
-						util.NPU910CardName: buildCardAnnotationStr(npuList8),
+						util.NPUCardName:    buildCardAnnotationStr(npuList8),
 						networkUnhealthyNPU: "",
 					},
 				},
@@ -265,9 +264,8 @@ func buildcheckNodeNPUByTaskTestCases05() []checkNodeNPUByTaskTestCase {
 				CommonNode: plugin.CommonNode{
 					Name: "node1",
 					Annotation: map[string]string{
-						util.NPU910CardName: "Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5," +
-							"Ascend910-6,Ascend910-7",
-						networkUnhealthyNPU: "Ascend910-5",
+						util.NPUCardName:    "npu-0,npu-1,npu-2,npu-3,npu-4,npu-5,npu-6,npu-7",
+						networkUnhealthyNPU: "npu-5",
 					},
 				},
 			},
@@ -289,8 +287,7 @@ func buildcheckNodeNPUByTaskTestCases06() []checkNodeNPUByTaskTestCase {
 				CommonNode: plugin.CommonNode{
 					Name: "node1",
 					Annotation: map[string]string{
-						util.NPU910CardName: "Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5," +
-							"Ascend910-6,Ascend910-7",
+						util.NPUCardName: "npu-0,npu-1,npu-2,npu-3,npu-4,npu-5,npu-6,npu-7",
 					},
 					RackID: -1,
 				},
@@ -307,8 +304,7 @@ func buildcheckNodeNPUByTaskTestCases06() []checkNodeNPUByTaskTestCase {
 				CommonNode: plugin.CommonNode{
 					Name: "node1",
 					Annotation: map[string]string{
-						util.NPU910CardName: "Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5," +
-							"Ascend910-6,Ascend910-7",
+						util.NPUCardName: "npu-0,npu-1,npu-2,npu-3,npu-4,npu-5,npu-6,npu-7",
 					},
 					SuperPodID: -1,
 				},
@@ -348,13 +344,13 @@ func buildGetUsableTopFromNodeTest1() []getUsableTopFromNode {
 			},
 		},
 		{
-			Name:    "Case2-annotation without the key of huawei.com/Ascend910",
-			WantErr: fmt.Errorf("getUsableTopFromNode node1 don't have %s", util.NPU910CardName),
+			Name:    "Case2-annotation without the key of huawei.com/npu",
+			WantErr: fmt.Errorf("getUsableTopFromNode node1 don't have %s", util.NPUCardName),
 			Node: plugin.NPUNode{
 				CommonNode: plugin.CommonNode{
 					Name: "node1",
 					Annotation: map[string]string{
-						testAnnoName: "Ascend910-0,Ascend910-1",
+						testAnnoName: "npu-0,npu-1",
 					},
 				},
 			},
@@ -366,7 +362,7 @@ func buildGetUsableTopFromNodeTest1() []getUsableTopFromNode {
 				CommonNode: plugin.CommonNode{
 					Name: "node1",
 					Annotation: map[string]string{
-						util.NPU910CardName: invalidTestAnnoValue,
+						util.NPUCardName: invalidTestAnnoValue,
 					},
 				},
 			},
@@ -383,7 +379,7 @@ func buildGetUsableTopFromNodeTest2() []getUsableTopFromNode {
 				CommonNode: plugin.CommonNode{
 					Name: "node1",
 					Annotation: map[string]string{
-						util.NPU910CardName: "Ascend910-0,Ascend910-1",
+						util.NPUCardName: "npu-0,npu-1",
 					},
 				},
 			},
@@ -395,7 +391,7 @@ func buildGetUsableTopFromNodeTest2() []getUsableTopFromNode {
 				CommonNode: plugin.CommonNode{
 					Name: "node1",
 					Annotation: map[string]string{
-						util.NPU910CardName: "Ascend910-0,Ascend910-1",
+						util.NPUCardName:    "npu-0,npu-1",
 						networkUnhealthyNPU: invalidTestAnnoValue,
 					},
 				},
@@ -409,7 +405,7 @@ func TestGetUsableTopFromNode(t *testing.T) {
 	// Set up NPUJob with ReqNPUName to avoid nil pointer
 	npu.SetSchedulerAttr(util.SchedulerJobAttr{
 		NPUJob: &util.NPUJob{
-			ReqNPUName: util.NPU910CardName,
+			ReqNPUName: util.NPUCardName,
 		},
 	})
 	testCases := buildGetUsableTopFromNodeTest1()

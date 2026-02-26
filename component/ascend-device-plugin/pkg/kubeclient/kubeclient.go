@@ -19,6 +19,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -297,8 +298,8 @@ func (ki *ClientK8s) resetNodeAnnotations(node *v1.Node) {
 	}
 
 	if common.ParamOption.AutoStowingDevs {
-		delete(node.Labels, common.HuaweiRecoverAscend910)
-		delete(node.Labels, common.HuaweiNetworkRecoverAscend910)
+		delete(node.Labels, common.GetAscend910Key(api.NodeLabelRecoverSuffix))
+		delete(node.Labels, common.GetAscend910Key(api.NodeLabelNetworkRecoverSuffix))
 	}
 }
 
@@ -403,4 +404,49 @@ func (ki *ClientK8s) ResourceEventHandler(res ResourceType, filter func(obj inte
 // FlushPodCacheNextQuerying next time querying pod, flush cache
 func (ki *ClientK8s) FlushPodCacheNextQuerying() {
 	ki.IsApiErr = true
+}
+
+// RemoveOldResource remove old resource which is not used after device type changed
+func (c *ClientK8s) RemoveOldResource(oldResourceName string) error {
+	node, err := c.Clientset.CoreV1().Nodes().Get(
+		context.TODO(),
+		c.NodeName,
+		metav1.GetOptions{ResourceVersion: "0"},
+	)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to get node status when removing old resource: %v", err)
+		return fmt.Errorf("get node failed: %v", err)
+	}
+
+	if _, exists := node.Status.Capacity[v1.ResourceName(oldResourceName)]; !exists {
+		hwlog.RunLog.Infof("old resource not found in node %s capacity, skip remove", c.NodeName)
+		return nil
+	}
+
+	// Remove the resource from capacity and allocatable
+	delete(node.Status.Capacity, v1.ResourceName(oldResourceName))
+	delete(node.Status.Allocatable, v1.ResourceName(oldResourceName))
+
+	updatedNode, err := c.Clientset.CoreV1().Nodes().UpdateStatus(
+		context.TODO(),
+		node,
+		metav1.UpdateOptions{},
+	)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to update node status when removing old resource: %v", err)
+		return fmt.Errorf("update node status failed: %v", err)
+	}
+
+	if _, exists := updatedNode.Status.Capacity[v1.ResourceName(oldResourceName)]; exists {
+		hwlog.RunLog.Errorf("failed to remove orphaned resource from node %s capacity", c.NodeName)
+		return errors.New("failed to remove resource from capacity")
+	}
+
+	if _, exists := updatedNode.Status.Allocatable[v1.ResourceName(oldResourceName)]; exists {
+		hwlog.RunLog.Errorf("failed to remove orphaned resource from node %s allocatable", c.NodeName)
+		return errors.New("failed to remove resource from allocatable")
+	}
+
+	hwlog.RunLog.Infof("remove old resource from node %s success", c.NodeName)
+	return nil
 }

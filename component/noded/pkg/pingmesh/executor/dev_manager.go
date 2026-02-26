@@ -83,9 +83,12 @@ func New() (*DevManager, error) {
 		}
 		superPodId = superPodInfo.SuperPodId
 		serverIndex = superPodInfo.ServerId
-		hwlog.RunLog.Infof("new devManager get devType %s", dm.DevType)
+
 		if dm.DevType == common.Ascend910A5 {
+			hwlog.RunLog.Infof("new devManager get devType npu")
 			rackId = superPodInfo.RackId
+		} else {
+			hwlog.RunLog.Infof("new devManager get devType %s", dm.DevType)
 		}
 		break
 	}

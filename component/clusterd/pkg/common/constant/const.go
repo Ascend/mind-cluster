@@ -277,20 +277,6 @@ const (
 	RestartRequestFaultStr = "RestartRequestFault"
 )
 
-// About cm keys
-const (
-	// CmRecoveringSuffix Recovering Suffix
-	CmRecoveringSuffix = "-Recovering"
-	// CmCardUnhealthySuffix CardUnhealthy Suffix
-	CmCardUnhealthySuffix = "-Unhealthy"
-	// CmCardNetworkUnhealthySuffix NetworkUnhealthy Suffix
-	CmCardNetworkUnhealthySuffix = "-NetworkUnhealthy"
-	// CmCardDPUUnhealthySuffix DPUUnhealthy Suffix
-	CmCardDPUUnhealthySuffix = "-DPUUnhealthy"
-	// CmFaultListSuffix FaultList Suffix
-	CmFaultListSuffix = "-Fault"
-)
-
 // support device type
 const (
 	UnknownResourceType = "unknown"

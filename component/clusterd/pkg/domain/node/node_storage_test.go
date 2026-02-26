@@ -33,6 +33,9 @@ const (
 	superPodID     = 0
 	invalidDevName = "invalid device name"
 	serverID2      = "2"
+
+	a5DevName0 = "npu-0"
+	a5DevName1 = "npu-1"
 )
 
 var (
@@ -151,7 +154,8 @@ func TestGetNodeDeviceAndSuperPodID(t *testing.T) {
 	convey.Convey("test func GetNodeDeviceAndSuperPodID success, node info is not in cache but can get normally",
 		t, testGetNodeDevAndSpIDNotInCache)
 	convey.Convey("test func GetNodeDeviceAndSuperPodID failed, node is nil", t, testGetNodeDevAndSpIDNilNode)
-	convey.Convey("test func GetNodeDeviceAndSuperPodID failed, node name does not exist", t, testGetNodeDevAndSpIDNotExist)
+	convey.Convey("test func GetNodeDeviceAndSuperPodID failed, node name does not exist", t,
+		testGetNodeDevAndSpIDNotExist)
 	convey.Convey("test func GetNodeDeviceAndSuperPodID failed, dev is nil", t, testGetNodeDevAndSpIDNilDev)
 	convey.Convey("test func GetNodeDeviceAndSuperPodID failed, deep copy error", t, testGetNodeDevAndSpIDErrDeepCp)
 	convey.Convey("test func GetNodeDeviceAndSuperPodIDA5", t, testGetNodeDevAndSpIDNotInCacheA5)
@@ -198,6 +202,16 @@ func testGetNodeDevAndSpIDNotInCache() {
 }
 
 func testGetNodeDevAndSpIDNotInCacheA5() {
+	baseDeviceMap = map[string]*api.NpuBaseInfo{
+		a5DevName0: {
+			IP:            ip0,
+			SuperDeviceID: superPodID,
+		},
+		a5DevName1: {
+			IP:            ip1,
+			SuperDeviceID: superPodID,
+		},
+	}
 	baseDevInfo, err := json.Marshal(baseDeviceMap)
 	if err != nil {
 		return
@@ -209,14 +223,14 @@ func testGetNodeDevAndSpIDNotInCacheA5() {
 				api.NodeSNAnnotation: nodeSN1,
 				superPodIDKey:        superPodIDStr,
 				baseDevInfoAnno:      string(baseDevInfo),
-				serverTypeKey:        api.VersionA5,
+				serverTypeKey:        api.VersionNPU,
 			},
 		},
 	}
 	nodeDev, spID := GetNodeDeviceAndSuperPodID(node2)
 	expDev := &api.NodeDevice{
 		NodeName:   nodeName2,
-		ServerType: api.VersionA5,
+		ServerType: api.VersionNPU,
 		DeviceMap:  map[string]string{devPhyID0: superPodIDStr, devPhyID1: superPodIDStr},
 		NpuInfoMap: map[string]*api.NpuInfo{
 			devPhyID0: {

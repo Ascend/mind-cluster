@@ -641,7 +641,8 @@ func (ctl *EventController) signalEnqueue(signal *pb.ProcessManageSignal) (strin
 	select {
 	case sendChan <- signal:
 		hwlog.RunLog.Infof("signal enqueue, jobId=%s, uuid=%s, signalType=%s, strategy=%s, faults=%s",
-			signal.JobId, signal.Uuid, signal.SignalType, signal.ChangeStrategy, common.Faults2String(signal.FaultRanks))
+			signal.JobId, signal.Uuid, signal.SignalType, signal.ChangeStrategy,
+			common.Faults2String(signal.FaultRanks))
 		return "", common.OK, nil
 	case <-ctx.Done():
 		hwlog.RunLog.Warnf("controller context canceled, jobId=%s, uuid=%s", ctl.jobInfo.JobId, ctl.uuid)
@@ -1030,7 +1031,7 @@ func (ctl *EventController) handleNotifyGlobalFault() (string, common.RespCode, 
 
 func (ctl *EventController) dealWithForceRelease() bool {
 	if ctl.isA5Job() {
-		hwlog.RunLog.Infof("jobId=%s is A5 job, skip SDID-based force release", ctl.jobInfo.JobId)
+		hwlog.RunLog.Infof("jobId=%s is npu job, skip SDID-based force release", ctl.jobInfo.JobId)
 		return true
 	}
 	hwlog.RunLog.Infof("jobId=%s force release", ctl.jobInfo.JobId)
@@ -1064,7 +1065,7 @@ func (ctl *EventController) isA5Job() bool {
 func isNodeDeviceA5(nodeName string, clusterDevices []*api.SuperPodDevice) bool {
 	for _, superPodDevice := range clusterDevices {
 		if nodeDevice, exists := superPodDevice.NodeDeviceMap[nodeName]; exists {
-			return nodeDevice.ServerType == api.VersionA5
+			return nodeDevice.ServerType == api.VersionNPU
 		}
 	}
 	return false
@@ -1438,7 +1439,8 @@ func (ctl *EventController) handleCheckRecoverResult() (string, common.RespCode,
 	}
 }
 
-func (ctl *EventController) handleCheckScaleStrategyRecoverResult(result common.RecoverResult) (string, common.RespCode, error) {
+func (ctl *EventController) handleCheckScaleStrategyRecoverResult(result common.RecoverResult) (string, common.RespCode,
+	error) {
 	switch result.Strategy {
 	case constant.ScaleInStrategyName:
 		if !result.RecoverSuccess && result.Code == common.ExitIsolateRanksCode {
@@ -1649,7 +1651,8 @@ func (ctl *EventController) listenScheduleResult() {
 			DefaultWaitRescheduleTimeout && timeout >= constant.MinWaitRescheduleTimeout {
 			podReschedulingTimeout = timeout
 		} else {
-			hwlog.RunLog.Warnf("failed to convert wait_reschedule_timeout to int, value is %s", pgInfo.Annotations[constant.WaitRescheduleTimeoutKey])
+			hwlog.RunLog.Warnf("failed to convert wait_reschedule_timeout to int, value is %s",
+				pgInfo.Annotations[constant.WaitRescheduleTimeoutKey])
 		}
 	}
 	pgRunning := true
@@ -1752,11 +1755,13 @@ func (ctl *EventController) handleDecideRecoverStrategy() (string, common.RespCo
 			_, err := common.RetryWriteResetCM(ctl.jobInfo.JobName, ctl.jobInfo.Namespace, nil, false,
 				constant.ClearOperation)
 			if err != nil {
-				hwlog.RunLog.Errorf("clear reset configMap error, err=%v, jobId=%s, uuid=%s", err, ctl.jobInfo.JobId, ctl.uuid)
+				hwlog.RunLog.Errorf("clear reset configMap error, err=%v, jobId=%s, uuid=%s", err, ctl.jobInfo.JobId,
+					ctl.uuid)
 				return common.ClearConfigMapFaultFailEvent, common.OperateConfigMapError, nil
 			}
 		case req := <-resultCh:
-			hwlog.RunLog.Infof("cur state is %s, strategy=%s, code=%d", ctl.state.GetState(), req.Strategy, req.Status.Code)
+			hwlog.RunLog.Infof("cur state is %s, strategy=%s, code=%d", ctl.state.GetState(), req.Strategy,
+				req.Status.Code)
 			ctl.appendRecoverResult(req)
 			return common.ReceiveReportEvent, common.OK, nil
 		case <-ctx.Done():
@@ -1967,8 +1972,9 @@ func (ctl *EventController) waitScaleOut() {
 		}
 		if acJobInfo, ok := jobObject.(*v1.AscendJob); ok && (kubeflowutil.IsSucceeded(acJobInfo.
 			Status) || kubeflowutil.IsFailed(acJobInfo.Status)) {
-			hwlog.RunLog.Infof("job[%s] is succeeded or failed, IsSucceed: %v", ctl.jobInfo.JobId, kubeflowutil.IsSucceeded(acJobInfo.
-				Status))
+			hwlog.RunLog.Infof("job[%s] is succeeded or failed, IsSucceed: %v", ctl.jobInfo.JobId,
+				kubeflowutil.IsSucceeded(acJobInfo.
+					Status))
 			ctl.addEvent(common.FinishEvent)
 			return
 		}
@@ -2036,7 +2042,8 @@ func (ctl *EventController) checkWhetherPodChanged() bool {
 		if realCard, ok := pod.Annotations[api.PodAnnotationAscendReal]; !ok || realCard == "" {
 			continue
 		}
-		hwlog.RunLog.Debugf("node rank %s prePod id %s now pod id %s", podRank, ctl.prePodForScale[podRank], string(pod.UID))
+		hwlog.RunLog.Debugf("node rank %s prePod id %s now pod id %s", podRank, ctl.prePodForScale[podRank],
+			string(pod.UID))
 		if ctl.prePodForScale[podRank] != string(pod.UID) {
 			hasChanged = true
 			ctl.prePodForScale[podRank] = string(pod.UID)

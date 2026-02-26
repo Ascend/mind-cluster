@@ -131,7 +131,7 @@ func (fJob *FaultJob) deleteJobWithSubHealthyLabels(ssn *framework.Session, sche
 		fJob.SubHealthyStrategy)
 
 	if fJob.SubHealthyStrategy == util.SubHealthyForceExit || fJob.SubHealthyStrategy == util.SubHealthyHotSwitch {
-		if is910A5Job(schedulerJob) {
+		if is910A5SuperPodJob(schedulerJob) {
 			return fJob.ForceDeleteJobFor910A5(schedulerJob, env)
 		}
 		return fJob.ForceDeleteJob(schedulerJob, env)
@@ -141,7 +141,7 @@ func (fJob *FaultJob) deleteJobWithSubHealthyLabels(ssn *framework.Session, sche
 		updateResetConfigMapWithGraceExit(env.FrameAttr.KubeClient, plugin.ResetInfoCMNamePrefix+
 			schedulerJob.ReferenceName, schedulerJob.NameSpace, plugin.GraceExitValue)
 	}
-	if is910A5Job(schedulerJob) {
+	if is910A5SuperPodJob(schedulerJob) {
 		return fJob.GraceDeleteJobFor910A5(ssn, schedulerJob, env)
 	}
 	return fJob.GraceDeleteJob(ssn, schedulerJob, env)
@@ -153,12 +153,12 @@ func (fJob *FaultJob) deleteJobWithFaultLabels(ssn *framework.Session, reschedul
 	klog.V(util.LogWarningLev).Infof("delete job %s ReScheduleKey %s", fJob.JobName,
 		fJob.ReScheduleKey)
 	if fJob.ReScheduleKey == JobForceRescheduleLabelValue {
-		if is910A5Job(schedulerJob) {
+		if is910A5SuperPodJob(schedulerJob) {
 			return fJob.ForceDeleteJobFor910A5(schedulerJob, env)
 		}
 		return fJob.ForceDeleteJob(schedulerJob, env)
 	}
-	if is910A5Job(schedulerJob) {
+	if is910A5SuperPodJob(schedulerJob) {
 		return fJob.GraceDeleteJobFor910A5(ssn, schedulerJob, env)
 	}
 	return fJob.GraceDeleteJob(ssn, schedulerJob, env)

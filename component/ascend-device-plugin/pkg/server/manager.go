@@ -98,6 +98,21 @@ func NewHwDevManager(devM devmanager.DeviceInterface) *HwDevManager {
 		hwlog.RunLog.Errorf("update node label failed, err: %v", err)
 		return nil
 	}
+
+	kubeClient := hdm.manager.GetKubeClient()
+	if kubeClient != nil {
+		deviceType := hdm.manager.GetDmgr().GetDevType()
+		if !customname.IsOldDeviceType(deviceType) {
+			hwlog.RunLog.Info("current device type changes to Huawei.com/npu, delete old resource name")
+			err := kubeClient.RemoveOldResource(api.HuaweiAscend910)
+			if err != nil {
+				hwlog.RunLog.Errorf("failed to delete old resource name: %v", err)
+				return nil
+			}
+			hwlog.RunLog.Info("delete old resource name success")
+		}
+	}
+
 	if err := hdm.initPluginServer(); err != nil {
 		hwlog.RunLog.Errorf("init plugin server failed, err: %v", err)
 		return nil
@@ -113,6 +128,7 @@ func (hdm *HwDevManager) setAscendManager(dmgr devmanager.DeviceInterface) error
 	if !common.ParamOption.PresetVDevice && devType != api.Ascend310P && devType != api.Ascend910B {
 		return fmt.Errorf("only 310p and 910b support to set presetVirtualDevice false")
 	}
+	common.ParamOption.RealCardType = devType
 	switch devType {
 	case api.Ascend310, api.Ascend310B:
 		hdm.RunMode = api.Ascend310
@@ -128,7 +144,6 @@ func (hdm *HwDevManager) setAscendManager(dmgr devmanager.DeviceInterface) error
 		hwlog.RunLog.Error("found an unsupported device type")
 		return fmt.Errorf("an unsupported device type")
 	}
-	common.ParamOption.RealCardType = devType
 	hdm.manager.SetDmgr(dmgr)
 	productTypes, err := hdm.manager.GetDmgr().GetAllProductType()
 	if err != nil {
@@ -162,14 +177,15 @@ func (hdm *HwDevManager) UpdateNode() error {
 	return hdm.updateNode()
 }
 
+// getDevType get device type for node annotation
 func getDevType(cardType string) string {
-	if strings.Contains(cardType, common.DevA3) {
-		return common.DevA3
+	if customname.IsOldDeviceType(cardType) {
+		if strings.Contains(cardType, common.DevA3) {
+			return common.DevA3
+		}
+		return ""
 	}
-	if strings.Contains(cardType, common.DevA5) {
-		return common.DevA5
-	}
-	return ""
+	return api.NPULowerCase
 }
 
 func (hdm *HwDevManager) updateNode() error {
@@ -243,11 +259,15 @@ func (hdm *HwDevManager) getNewNodeLabel(node *v1.Node) (map[string]string, erro
 	if err != nil {
 		return nil, err
 	}
-	if _, ok := node.Labels[common.ServerTypeLabelKey]; !ok {
-		cardType := common.ParamOption.RealCardType + common.MiddelLine +
+	cardType := common.ParamOption.RealCardType + common.MiddelLine +
+		strconv.Itoa(int(common.ParamOption.AiCoreCount))
+	if !customname.IsOldDeviceType(common.ParamOption.RealCardType) {
+		newLabelMap[common.ServerTypeLabelKey] = api.AscendMinuxPrefix +
 			strconv.Itoa(int(common.ParamOption.AiCoreCount))
-		newLabelMap[common.ServerTypeLabelKey] = customname.ReplaceDevicePublicName(hdm.RunMode, cardType)
-
+	} else {
+		if _, ok := node.Labels[common.ServerTypeLabelKey]; !ok {
+			newLabelMap[common.ServerTypeLabelKey] = customname.ReplaceDevicePublicName(hdm.RunMode, cardType)
+		}
 	}
 	if len(hdm.allInfo.AllDevs) <= common.FirstDevice {
 		return nil, fmt.Errorf("index(%d) exceeds the range of alldevs", common.FirstDevice)

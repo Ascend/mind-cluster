@@ -30,7 +30,7 @@ func initDevManager() (*devmanager.DeviceManager, *deviceswitch.SwitchDevManager
 		return nil, nil, err
 	}
 	if devM.GetDevType() == api.Ascend910A5 {
-		hwlog.RunLog.Infof("current devType is %s, switch device manager not supported.", api.Ascend910A5)
+		hwlog.RunLog.Infof("current devType is %s, switch device manager not supported.", api.HuaweiNPU)
 		return devM, nil, nil
 	}
 	switchDevMgr := deviceswitch.NewSwitchDevManager()

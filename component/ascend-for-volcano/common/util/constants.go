@@ -24,8 +24,12 @@ const (
 	ChipKind = "910"
 	// HwPreName is the prefix of npu resource.
 	HwPreName = "huawei.com/"
+	// NPUCardName for judge npu resource.
+	NPUCardName = "huawei.com/npu"
 	// NPU910CardName for judge 910 npu resource.
 	NPU910CardName = "huawei.com/Ascend910"
+	// NPUCarNamePre for getting card number.
+	NPUCardNamePre = "npu-"
 	// NPU910CardNamePre for getting card number.
 	NPU910CardNamePre = "Ascend910-"
 	// NPU310PCardName for judge 310P npu resource.
@@ -51,6 +55,8 @@ const (
 	Ascend910 = "Ascend910"
 	// Pod910DeviceKey pod annotation key, for generate 910 hccl rank table
 	Pod910DeviceKey = "ascend.kubectl.kubernetes.io/ascend-910-configuration"
+	// PodNPUDeviceKey pod annotation key, for generate npu hccl rank table
+	PodNPUDeviceKey = "ascend.kubectl.kubernetes.io/ascend-npu-configuration"
 	// JobKind910Value in ring-controller.atlas.
 	JobKind910Value = "ascend-910"
 	// JobKind310Value in ring-controller.atlas.
@@ -60,7 +66,7 @@ const (
 	// JobKind910BValue 910B ring controller name
 	JobKind910BValue = "ascend-910b"
 	// JobKindDefaultValue default ring controller name
-	JobKindDefaultValue = "huawei.com/npu"
+	JobKindDefaultValue = "huawei.com.npu"
 	// Module910bx16AcceleratorType for module mode.
 	Module910bx16AcceleratorType = "module-910b-16"
 	// Module910bx8AcceleratorType for module mode.

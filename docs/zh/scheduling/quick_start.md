@@ -140,7 +140,7 @@
         kubectl label nodes worker01 node-role.kubernetes.io/worker=worker
         kubectl label nodes worker01 workerselector=dls-worker-node
         kubectl label nodes worker01 host-arch=huawei-arm
-        kubectl label nodes worker01 accelerator=huawei-Ascend910
+        kubectl label nodes worker01 accelerator=huawei-npu
         kubectl label nodes worker01 accelerator-type=module-{xxx}b-8     #填写芯片型号数值         
         kubectl label nodes worker01 nodeDEnable=on
         ```

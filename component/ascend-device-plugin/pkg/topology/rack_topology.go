@@ -24,6 +24,7 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/server"
+	"ascend-common/api"
 	"ascend-common/api/slownet"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
@@ -60,7 +61,7 @@ func GetTopoFileAndWrite(topoJsonFile string) {
 // RasTopoWriteTask write topology of rack to ras file path
 func RasTopoWriteTask(ctx context.Context, hdm *server.HwDevManager) {
 	if common.ParamOption.RealCardType != common.Ascend910A5 {
-		hwlog.RunLog.Info("current is not a5, no need start RasTopoWriteTask")
+		hwlog.RunLog.Infof("current is not %s, no need start RasTopoWriteTask", api.HuaweiNPU)
 		return
 	}
 	if hdm == nil {
