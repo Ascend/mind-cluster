@@ -34,6 +34,7 @@
 |MindIE组件日志|MindIE Server、MindIE LLM、MindIE SD、MindIE RT、MindIE Torch、MindIE MS、MindIE Benchmark、MindIE Client|6.0.0及以上|-|
 |AMCT组件日志|AMCT模型压缩组件|7.0.RC1及以上|AMCT集成在CANN包中进行发布。更多相关信息请参见《AMCT模型压缩工具用户指南》。|
 |MindIE Pod控制台日志|MindIE Pod控制台日志|-|-|
+|MindIO组件日志|MindIO组件日志|-|-|
 
 
 
@@ -78,6 +79,7 @@
     -   MindIE组件日志
     -   MindIE Pod控制台日志
     -   AMCT组件日志
+    -   MindIO组件日志
     -   BMC日志
     -   LCNE日志
 
@@ -308,6 +310,7 @@ ascend-fd diag -i /ascend_cluster_log/job202405181309/faultdiag_work_tmp/parse_o
 >-   Volcano组件中volcano-scheduler与volcano-controller触发转储后以gzip压缩的转储日志将不会被读取，采集时需确保相关日志都已在未转储的volcano-scheduler.log与volcano-controller.log中。
 >-   MindIE Pod控制台日志可在k8s集群主节点收集所有Pod的控制台日志，可将所有MindIE Pod控制台日志放在某个节点指定目录下即可，无需分开存放。
 >-   MindIE Pod控制台日志存在老化机制，若采集的MindIE Pod控制台日志缺失实例节点信息，组件将不支持多实例故障诊断。
+>-   MindIO日志采集后转储目录在/dl_log目录下，后续会适配转储在采集目录下。
 
 -   用户可将所有日志汇总至同一采集目录下进行清洗，待清洗相关文件目录结构示例如下。
     -   主机Host侧日志目录结构如下所示。
@@ -333,6 +336,7 @@ ascend-fd diag -i /ascend_cluster_log/job202405181309/faultdiag_work_tmp/parse_o
             |-- volcano-scheduler            # Volcano中的volcano-scheduler组件日志
             |-- volcano-controller           # Volcano中的volcano-controller组件日志
             |-- npu-exporter                 # NPU Exporter组件日志
+            |-- ttp_log                      # MindIO组件日志
         |-- mindie               # MindIE组件日志
             |-- log
                 |-- debug        # MindIE组件运行日志
@@ -635,6 +639,15 @@ ascend-fd diag -i /ascend_cluster_log/job202405181309/faultdiag_work_tmp/parse_o
         <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p119371222125315"><a name="p119371222125315"></a><a name="p119371222125315"></a>采集目录/mindie/log/mindie_cluster_log/<em id="i793712229536"><a name="i793712229536"></a><a name="i793712229536"></a>{podname}</em>.log</p>
         </td>
         </tr>
+        <tr><td class="cellrowborder" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p>MindIO组件日志</p>
+        </td>
+        <td class="cellrowborder" valign="top" width="21.26%" headers="mcps1.2.5.1.2 "><p>ttp_log.log.*</p>
+        </td>
+        <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p>MindIO组件日志</p>
+        </td>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>采集目录/dl_log/ttp_log/ttp_log.log.*</p>
+        </td>
+        </tr>
         </tbody>
         </table>
 
@@ -689,6 +702,7 @@ ascend-fd diag -i /ascend_cluster_log/job202405181309/faultdiag_work_tmp/parse_o
            |-- volcano-controller/volcano-controller*.log
     
            |-- npu-exporter/npu-exporter*.log
+           |-- ttp_log/ttp_log.log.*
     
     |-- ${--mindie_log参数指定路径} 
            |-- log/debug/mindie-{module}_{pid}_{datetime}.log
@@ -925,6 +939,15 @@ ascend-fd diag -i /ascend_cluster_log/job202405181309/faultdiag_work_tmp/parse_o
     <td class="cellrowborder" valign="top" width="42.230000000000004%" headers="mcps1.1.5.1.4 "><p id="p101808238218"><a name="p101808238218"></a><a name="p101808238218"></a>${--amct_log}/amct_{framework}.log</p>
     </td>
     </tr>
+    <tr><td class="cellrowborder" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p>MindIO组件日志</p>
+        </td>
+        <td class="cellrowborder" valign="top" width="21.26%" headers="mcps1.2.5.1.2 "><p>ttp_log.log.*</p>
+        </td>
+        <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p>MindIO组件日志</p>
+        </td>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>${--dl_log}/ttp_log/ttp_log.log.*</p>
+        </td>
+        </tr>
     </tbody>
     </table>
 
@@ -2829,6 +2852,23 @@ cp ~/mindie 采集目录
 cp ~/amct_log 采集目录/amct_log
 ```
 
+#### MindIO组件日志<a name="ZH-CN_TOPIC_0000002107731865_01"></a>
+
+**文件说明**
+
+-   文件说明：MindIO组件运行产生的日志。
+-   命名约束：ttp_log.log.*
+-   存放路径约束：存储到“采集目录/dl_log/ttp_log/”下。
+
+**采集方式说明**
+
+MindIO组件运行时，每个进程会产生一个ttp_log.log.*日志文件。本特性要求将MindIO组件日志转储至“采集目录/dl_log/ttp_log/”下。
+
+进入控制台日志同级存储目录，拷贝相关组件日志。
+
+```
+cp ~/ttp_log 采集目录/dl_log/ttp_log
+```
 
 
 
@@ -3265,6 +3305,7 @@ cp ~/amct_log 采集目录/amct_log
             |-- volcano-controller              # Volcano中的volcano-controller组件日志
         
             |-- npu-exporter              # NPU Exporter组件日志
+            |-- ttp_log                   # MindIO组件日志
         |-- mindie               # MindIE组件日志
             |-- log
                 |-- debug        # MindIE组件运行日志
