@@ -28,7 +28,7 @@ from toolkit.core.collect.fetcher.dump_log_fetcher.cli_output_parsed_data import
 from toolkit.core.collect.fetcher.dump_log_fetcher.host.host_dump_log_fetcher import HostDumpLogFetcher
 from toolkit.core.collect.fetcher.dump_log_fetcher.host.host_log_parser_builder import HostLogParserBuilder
 from toolkit.core.collect.fetcher.dump_log_fetcher.switch.diag_info_output.collect_diag_info_log_parser import \
-    CollectDiagInfoLogParser, DiagInfoParseResult
+    CollectDiagInfoLogParser
 from toolkit.core.collect.fetcher.dump_log_fetcher.switch.swi_cli_output_parser import SwiCliOutputParser
 from toolkit.core.collect.fetcher.dump_log_fetcher.switch.swi_cli_output_fetcher import SwiCliOutputFetcher
 from toolkit.core.collect.fetcher.dump_log_fetcher.switch.switch_log_path_finder import SwitchLogPathFinder
@@ -209,9 +209,7 @@ class InitFetcher(DiagService):
             except Exception as e:
                 DIAG_LOGGER.error(f"unzip zip failed: {e}")
 
-    async def _parse_cli_and_log(
-            self, switch_dump_log_dir: str
-    ) -> Tuple[List[asyncio.Future[dict]], List[asyncio.Future[DiagInfoParseResult]]]:
+    async def _parse_cli_and_log(self, switch_dump_log_dir: str) -> Tuple[List[asyncio.Future], List[asyncio.Future]]:
         diag_info_dirs, cli_output_txt_paths = SwitchLogPathFinder.find(switch_dump_log_dir)
         # 解析回显
         cli_output_futures = []
@@ -225,8 +223,8 @@ class InitFetcher(DiagService):
             diag_info_futures.append(future)
         return cli_output_futures, diag_info_futures
 
-    async def _add_swi_file_fetcher_by_future(self, cli_output_futures: List[asyncio.Future[dict]],
-                                              diag_info_futures: List[asyncio.Future[DiagInfoParseResult]]):
+    async def _add_swi_file_fetcher_by_future(self, cli_output_futures: List[asyncio.Future],
+                                              diag_info_futures: List[asyncio.Future]):
         # 获取回显fetcher
         local_fetchers: Dict[str, SwiCliOutputFetcher] = {}
         for future in cli_output_futures:
