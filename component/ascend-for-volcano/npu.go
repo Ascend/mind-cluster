@@ -280,13 +280,14 @@ func getNpuNum(ssn *framework.Session, tp *huaweiNPUPlugin, npuName string) int 
 		klog.V(util.LogDebugLev).Infof("Add enqueue node %s deviceList is: %#v", vcNode.Name, deviceList)
 		npuNum, ok := vcNode.Idle[v1.ResourceName(npuName)]
 		shareDevCount := 1
+		softShareDevEnableExist := false
 		if node.Node != nil {
-			softShareDevEnable, exist := node.Node.Labels[util.SchedulerSoftShareDevEnableNodeLabel]
-			if exist && softShareDevEnable == "true" {
+			softShareDevEnable, softShareDevEnableExist := node.Node.Labels[util.SchedulerSoftShareDevEnableNodeLabel]
+			if softShareDevEnableExist && softShareDevEnable == "true" {
 				shareDevCount = util.SoftShareDevCount
 			}
 		}
-		if !ok || len(deviceList)*shareDevCount > int(npuNum/util.NPUHexKilo) {
+		if !softShareDevEnableExist && (!ok || len(deviceList) > int(npuNum/util.NPUHexKilo)) {
 			klog.V(util.LogDebugLev).Infof("Add enqueue node %s device info is %v and k8s is %v", vcNode.Name,
 				len(deviceList), int(npuNum/util.NPUHexKilo))
 			errs.Add(node.Name, fmt.Errorf("node resource is not stable, device info is %v and k8s is %v",
