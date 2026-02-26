@@ -129,10 +129,10 @@ func (c *FaultCounter) dealFrequencyFault(fault FaultInfo) {
 
 func (c *FaultCounter) printCountInfo() {
 	if len(c.faults) == 0 {
-		hwlog.RunLog.Info("no faults")
+		hwlog.RunLog.Info("faults count is empty")
 		return
 	}
-	hwlog.RunLog.Info("begin record faults")
+	hwlog.RunLog.Info("begin record faults count")
 	for node, nodeInfo := range c.faults {
 		for dev, devInfo := range nodeInfo {
 			for code, times := range devInfo.fault {
@@ -140,7 +140,7 @@ func (c *FaultCounter) printCountInfo() {
 			}
 		}
 	}
-	hwlog.RunLog.Info("record faults end")
+	hwlog.RunLog.Info("record faults count end")
 }
 
 // ClearDevFault safe clear dev fault
