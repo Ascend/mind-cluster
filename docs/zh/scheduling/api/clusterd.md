@@ -37,7 +37,7 @@ ClusterD启动后，会创建如下ConfigMap：
 |huawei.com/Ascend910-Fault|数组对象，对象包含fault_type、npu_name、large_model_fault_level、 fault_level、fault_handling、fault_code和fault_time_and_level_map字段。|
 |- fault_type|故障类型。<ul><li>CardUnhealthy：芯片故障</li><li>CardNetworkUnhealthy：参数面网络故障（芯片网络相关故障）</li><li>NodeUnhealthy：节点故障</li><li>PublicFault：公共故障</li></ul>|
 |- npu_name|故障的芯片名称，节点故障时为空。|
-|<p>- large_model_fault_level</p><p>- fault_level</p><p>- fault_handling</p>|故障处理类型，节点故障时取值为空。<ul><li>NotHandleFault：不做处理</li><li>RestartRequest：推理场景需要重新执行推理请求，训练场景重新执行训练业务</li><li>RestartBusiness：需要重新执行业务</li><li>FreeRestartNPU：影响业务执行，待芯片空闲时需复位芯片</li><li>RestartNPU：直接复位芯片并重新执行业务</li><li>SeparateNPU：隔离芯片</li><li>PreSeparateNPU：预隔离芯片，会根据训练任务实际运行情况判断是否重调度</li></ul><div class="note"><span>说明：</span><ul><li>large_model_fault_level、fault_handling和fault_level参数功能一致，推荐使用fault_handling。</li><li>若推理任务订阅了故障信息，任务使用的推理卡上发生RestartRequest故障且故障持续时间未超过60秒，则不执行任务重调度；若故障持续时间超过60秒仍未恢复，则隔离芯片，进行任务重调度。</li></ul>|
+|<p>- large_model_fault_level</p><p>- fault_level</p><p>- fault_handling</p>|故障处理类型，节点故障时取值为空。<ul><li>NotHandleFault：不做处理</li><li>RestartRequest：推理场景需要重新执行推理请求，训练场景重新执行训练业务</li><li>RestartBusiness：需要重新执行业务</li><li>FreeRestartNPU：影响业务执行，待芯片空闲时需复位芯片</li><li>RestartNPU：直接复位芯片并重新执行业务</li><li>SeparateNPU：隔离芯片</li><li>PreSeparateNPU：预隔离芯片，会根据训练任务实际运行情况判断是否重调度</li><li>ManuallySeparateNPU：人工隔离芯片。当达到Ascend Device Plugin和ClusterD各自的故障频率，Ascend Device Plugin和ClusterD会将故障芯片进行人工隔离。</li></ul><div class="note"><span>说明：</span><ul><li>large_model_fault_level、fault_handling和fault_level参数功能一致，推荐使用fault_handling。</li><li>若推理任务订阅了故障信息，任务使用的推理卡上发生RestartRequest故障且故障持续时间未超过60秒，则不执行任务重调度；若故障持续时间超过60秒仍未恢复，则隔离芯片，进行任务重调度。</li></ul>|
 |- fault_code|故障码，英文逗号拼接的字符串。|
 |- fault_time_and_level_map|故障码、故障发生时间及故障处理等级。|
 |SuperPodID|超节点ID。|
@@ -118,6 +118,38 @@ ClusterD启动后，会创建如下ConfigMap：
 |NodeNames|需要强制释放资源的节点名。|字符串序列|
 |FaultTimes|发生故障的时间。|64位整数类型|
 |JobId|任务的UID。|字符串|
+
+**clusterd-manual-info-cm<a name="section15483421165190"></a>**
+
+该ConfigMap位于用户创建的cluster-system命名空间下。用于展示集群中人工隔离的芯片及故障信息。
+
+示例如下：
+```
+Name:         clusterd-manual-info-cm
+Namespace:    cluster-system
+Labels:       <none>
+Annotations:  <none>
+         
+Data
+====
+localhost.localdomain:
+----
+{"Total":["Ascend910-0","Ascend910-2","Ascend910-3"],"Detail":{"Ascend910-0":[{"FaultCode":"8C084E00","FaultLevel":"ManuallySeparateNPU","LastSeparateTime":1770811685650}],"Ascend910-2":[{"FaultCode":"8C084E00","FaultLevel":"ManuallySeparateNPU","LastSeparateTime":1770811685650}],"Ascend910-3":[{"FaultCode":"8C084E00","FaultLevel":"ManuallySeparateNPU","LastSeparateTime":1770811685650}]}}
+         
+Events:  <none> 
+```
+
+**表 7**  clusterd-manual-info-cm
+
+|参数|说明|
+|--|--|
+|<i>localhost.localdomain</i>|节点名称，例如示例中的localhost.localdomain。|
+|Total|故障的芯片名称。|
+|Detail|芯片故障信息。|
+|-<i>Ascend910-0</i>|芯片名称，例如示例中的Ascend910-0。|
+|-FaultCode|故障码。|
+|-FaultLevel|故障级别。|
+|-LastSeparateTime|达到人工隔离频率时的最后一次故障时间。如果已经触发人工隔离芯片的故障，再一次达到了人工隔离频率，将刷新该时间。|
 
 
 
