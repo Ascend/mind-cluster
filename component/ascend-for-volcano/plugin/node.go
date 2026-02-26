@@ -42,6 +42,11 @@ type NPUNode struct {
 	VNode
 }
 
+type softShareDevResourceQuota struct {
+	aicoreQuota int
+	hbmQuota    int
+}
+
 // CommonNode common npu node properties
 type CommonNode struct {
 	Name           string
@@ -230,6 +235,50 @@ func getNPUNodeAddress(npuNode *api.NodeInfo) string {
 	return ""
 }
 
+func (n *NPUNode) getUsedResourceQuotaMap(topStrArray []string) map[string]softShareDevResourceQuota {
+	topUsedResourceQuotaMap := make(map[string]softShareDevResourceQuota)
+	for _, cardStr := range topStrArray {
+		topUsedResourceQuotaMap[cardStr] = softShareDevResourceQuota{aicoreQuota: 0, hbmQuota: 0}
+	}
+	for _, taskInfo := range n.Tasks {
+		aicoreQuotaAnno, existAicoreQuotaAnno := taskInfo.Pod.Annotations[util.SchedulerSoftShareDevAicoreQuotaKey]
+		hbmQuotaAnno, existHbmQuotaAnno := taskInfo.Pod.Annotations[util.SchedulerSoftShareDevHbmQuotaKey]
+		ascendReal, existAscendReal := taskInfo.Pod.Annotations[util.AscendNPUPodRealUse]
+		if !existAicoreQuotaAnno || !existHbmQuotaAnno || !existAscendReal {
+			continue
+		}
+		aicoreQuota, err := strconv.Atoi(aicoreQuotaAnno)
+		if err != nil {
+			klog.V(util.LogErrorLev).Infof("GetNewNPUNodeAnnotation err: %s.", err.Error())
+			continue
+		}
+		hbmQuota, err := strconv.Atoi(hbmQuotaAnno)
+		if err != nil {
+			klog.V(util.LogErrorLev).Infof("GetNewNPUNodeAnnotation err: %s.", err.Error())
+			continue
+		}
+		tmpUsedResourceQuota := topUsedResourceQuotaMap[ascendReal]
+		topUsedResourceQuotaMap[ascendReal] = softShareDevResourceQuota{
+			aicoreQuota: tmpUsedResourceQuota.aicoreQuota + aicoreQuota,
+			hbmQuota:    tmpUsedResourceQuota.hbmQuota + hbmQuota}
+	}
+	return topUsedResourceQuotaMap
+}
+
+func (n *NPUNode) getChipMemoryFromNodeLabel() int {
+	chipMemory, ok := n.Label[util.NPUChipMemoryLabelKey]
+	if !ok {
+		return 0
+	}
+	npuChipMemoryLabel := strings.Replace(chipMemory, "G", "", -1)
+	npuChipMemory, err := strconv.Atoi(npuChipMemoryLabel)
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("GetNewNPUNodeAnnotation err: %s.", err.Error())
+		return 0
+	}
+	return npuChipMemory
+}
+
 // GetNewNPUNodeAnnotation get new annotation after allocate
 func (n *NPUNode) GetNewNPUNodeAnnotation(usedTop []int, resourceName, resourceNamePre string) (string, error) {
 	if n == nil || len(usedTop) == 0 || resourceName == "" || resourceNamePre == "" {
@@ -247,6 +296,8 @@ func (n *NPUNode) GetNewNPUNodeAnnotation(usedTop []int, resourceName, resourceN
 	}
 	usedSet := sets.NewInt(usedTop...)
 	topStrArray := strings.Split(annotation, ",")
+	topUsedResourceQuotaMap := n.getUsedResourceQuotaMap(topStrArray)
+	npuChipMemory := n.getChipMemoryFromNodeLabel()
 	var newTopStrArray []string
 	for _, cardStr := range topStrArray {
 		v := strings.TrimPrefix(cardStr, resourceNamePre)
@@ -255,8 +306,18 @@ func (n *NPUNode) GetNewNPUNodeAnnotation(usedTop []int, resourceName, resourceN
 			klog.V(util.LogErrorLev).Infof("ChangeTopToIntArray conv failed %v.", err)
 			return "", err
 		}
-
 		if !usedSet.Has(cardInt) {
+			newTopStrArray = append(newTopStrArray, cardStr)
+		} else {
+			softShareDevEnable, ok := n.Label[util.SchedulerSoftShareDevEnableNodeLabel]
+			if !ok || softShareDevEnable != "true" {
+				continue
+			}
+			if topUsedResourceQuota, exists := topUsedResourceQuotaMap[cardStr]; exists &&
+				(topUsedResourceQuota.aicoreQuota >= util.MaxAicoreQuota ||
+					topUsedResourceQuota.hbmQuota >= npuChipMemory*util.MBPerGB) {
+				continue
+			}
 			newTopStrArray = append(newTopStrArray, cardStr)
 		}
 	}

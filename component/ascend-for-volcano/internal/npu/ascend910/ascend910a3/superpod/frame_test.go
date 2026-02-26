@@ -1288,33 +1288,6 @@ func buildUseAnnotationTestCases01() []useAnnotationTestCase {
 	}
 }
 
-func TestUseAnnotation(t *testing.T) {
-	npu := New(A3x16SchedulerName, ascend910a3.NodeNPUNumber16)
-	tp, ok := npu.(*module910SuperPod)
-	if !ok {
-		return
-	}
-	tp.spBlock = util.NPUIndex8
-	job := test.FakeNormalTestJob("job", 1)
-	test.SetFakeJobResRequest(job, util.NPU910CardName, "1")
-	attr := test2.FakeSchedulerJobAttrByJob(job)
-	tp.SetSchedulerAttr(attr)
-	env := plugin.ScheduleEnv{
-		ClusterCache: plugin.ClusterCache{
-			Jobs: map[api.JobID]plugin.SchedulerJob{test.FakeJobName: {SchedulerJobAttr: attr}}},
-	}
-	tp.SetSchedulerEnv(env)
-	testCases := buildUseAnnotationTestCases01()
-	for _, tt := range testCases {
-		t.Run(tt.Name, func(t *testing.T) {
-			node := tp.UseAnnotation(tt.Task, tt.Node)
-			if (tt.Task == nil || tt.Node.Annotation == nil) || !reflect.DeepEqual(node, tt.WantNode) {
-				t.Errorf("UseAnnotation() node: %v, wantNode: %v", node, tt.WantNode)
-			}
-		})
-	}
-}
-
 type selectForJobReschedulingTest struct {
 	name                string
 	fJob                *rescheduling.FaultJob

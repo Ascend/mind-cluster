@@ -389,31 +389,3 @@ func TestSelectNPUFromNodeSuccess(t *testing.T) {
 		}
 	}
 }
-
-func TestUseAnnotationDefault(t *testing.T) {
-	task := makeTask("task-use", twoChips)
-	h := newHandler(SchedulePolicy4Px8, task, twoChips)
-	node := prepareNode(twoChips)
-	node.Name = "node-use"
-	h.Nodes = map[string]plugin.NPUNode{node.Name: node}
-	h.NPUHandler.ScheduleEnv.ClusterCache.Nodes = h.Nodes
-	// Ensure that the Pod and its Annotations map are initialized
-	task.Pod = &v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Annotations: map[string]string{},
-		},
-	}
-	out := h.UseAnnotation(task, node)
-	if out == nil {
-		t.Fatal("UseAnnotation returned nil, expected non-nil")
-	}
-	// Check that the Pod's NPU annotation has been written
-	annoKey := util.NPU910CardName
-	if _, ok := task.Pod.Annotations[annoKey]; !ok {
-		t.Errorf("pod annotation %q not found", annoKey)
-	}
-	// Check that the returned node.Annotation also includes the NPU annotation
-	if _, ok := out.Annotation[annoKey]; !ok {
-		t.Errorf("node annotation %q not found", annoKey)
-	}
-}

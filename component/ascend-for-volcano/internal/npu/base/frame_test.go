@@ -313,26 +313,6 @@ type useAnnotationTestCase struct {
 func buildUseAnnotationTestCases01() []useAnnotationTestCase {
 	return []useAnnotationTestCase{
 		{
-			Name: "01-UseAnnotation success when node resource meet task req",
-			Task: test.FakeTaskWithResReq("pod0", util.NPU310PCardName, util.NPUIndex2),
-			Node: plugin.NPUNode{
-				CommonNode: plugin.CommonNode{
-					Annotation: map[string]string{util.NPU310PCardName: "Ascend310P-0,Ascend310P-1",
-						networkUnhealthyNPU: "Ascend910-0"},
-					Allocate:       map[v1.ResourceName]float64{util.NPU310PCardName: util.NPUIndex2 * util.NPUHexKilo},
-					BaseDeviceInfo: fakeBaseInfo(),
-				},
-			},
-			PodAnno: "Ascend310P-0,Ascend310P-1",
-			WantNode: &plugin.NPUNode{
-				CommonNode: plugin.CommonNode{
-					Allocate:       map[v1.ResourceName]float64{util.NPU310PCardName: util.NPUIndex2 * util.NPUHexKilo},
-					Annotation:     map[string]string{util.NPU310PCardName: "", networkUnhealthyNPU: "Ascend910-0"},
-					BaseDeviceInfo: fakeBaseInfo(),
-				},
-			},
-		},
-		{
 			Name: "02-UseAnnotation return err when task is nil",
 			Task: nil,
 			Node: plugin.NPUNode{

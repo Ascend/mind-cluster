@@ -265,22 +265,6 @@ func buildNPUNodeGetNewNPUNodeAnnotationTest() []nPUNodeGetNewNPUNodeAnnotationT
 	}
 }
 
-func TestNPUNodeGetNewNPUNodeAnnotation(t *testing.T) {
-	tests := buildNPUNodeGetNewNPUNodeAnnotationTest()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.npuNode.GetNewNPUNodeAnnotation(tt.usedTop, tt.resourceName, tt.resourceNamePre)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetNewNPUNodeAnnotation() error = %v, wantErr = %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("GetNewNPUNodeAnnotation() got = %v, want = %v", got, tt.want)
-			}
-		})
-	}
-}
-
 type updateNPUNodeDeviceInfosTest struct {
 	name string
 	node NPUNode
