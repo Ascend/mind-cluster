@@ -940,7 +940,8 @@ hccl.json:
 }
 ```
 
-**Atlas 350 标卡系列产品<a name="section285395510348"></a>**
+**Atlas A5 系列产品<a name="section285395510348"></a>**
+产品包括：Atlas 950 训练系列产品、Atlas 850 服务器系列产品、Atlas 350 标卡系列产品
 
 hccl.json文件示例如下：
 
@@ -959,7 +960,7 @@ hccl.json:
       "level_list": [
         {
           "net_layer": 0,   // 通信层级
-          "net_instance_id": "xx.xx.xx.xx",
+          "net_instance_id": "xx",
           "net_type": "TOPO_FILE_DESC",     // 网络类型，值为TOPO_FILE_DESC和CLOS，TOPO_FILE_DESC代表从文件中查询网络类型，CLOS代表clos网络
           "net_attr": "",                   // 组网层级
           "rank_addr_list": [
