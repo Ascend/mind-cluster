@@ -101,6 +101,7 @@ MindCluster Ascend FaultDiag的使用流程如下表所示。
 |MindIE组件日志|MindIE的组件MindIE Server、MindIE LLM、MindIE SD、MindIE RT、MindIE Torch、MindIE MS、MindIE Benchmark、MindIE Client产生的日志|推理任务|用于故障事件分析|
 |AMCT组件日志|AMCT进行模型压缩流程产生的日志|模型压缩|用于AMCT工具故障事件分析|
 |MindIE Pod控制台日志|MindIE Pod控制台日志|推理任务|用于根因节点分析|
+|MindIO组件日志|MindIO组件产生的日志|训练&推理任务|用于故障事件分析|
 
 
 >[!NOTE] 说明 
