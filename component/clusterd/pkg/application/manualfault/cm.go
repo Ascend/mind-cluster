@@ -99,6 +99,8 @@ func release() {
 func doRelease(nodeName, dev string, devInfo []manualfault.DevCmInfo) {
 	for _, cmInfo := range devInfo {
 		if time.Now().UnixMilli()-cmInfo.LastSeparateTime >= conf.GetReleaseDuration() {
+			hwlog.RunLog.Infof("node: %s, dev: %s, code: %s has been reached release time, released it",
+				nodeName, dev, cmInfo.FaultCode)
 			manualfault.Counter.ClearDevFault(nodeName, dev, cmInfo.FaultCode)
 			manualfault.FaultCmInfo.DeleteDevCode(nodeName, dev, cmInfo.FaultCode)
 			continue

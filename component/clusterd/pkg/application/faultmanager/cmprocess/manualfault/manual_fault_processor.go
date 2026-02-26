@@ -93,6 +93,7 @@ func (p *manualFaultProcessor) loadManualSepToClusterInfoCm(devInfos map[string]
 	}
 	for nodeName, devFaults := range nodeInfo {
 		for _, devName := range devFaults.Total {
+			hwlog.RunLog.Debugf("node: %s, dev: %s has already been manually separated", nodeName, devName)
 			devCmInfo, ok := devInfos[nodeName]
 			if !ok {
 				continue
@@ -117,8 +118,11 @@ func (p *manualFaultProcessor) dealIncrementFaultForNode(nodeName string,
 		jobId := getJobIdByDev(devNameJobMap, devName)
 		for _, fault := range faults {
 			for code, level := range fault.FaultTimeAndLevelMap {
+				// for dp isolated faults, clusterd counts normally.
+				// dp isolated fault: code is fault code, level is ManuallySeparateNPU
+				// clusterd isolated fault: code and level are both ManuallySeparateNPU
 				if level.FaultLevel == constant.NotHandleFault || level.FaultLevel == constant.SubHealthFault ||
-					level.FaultLevel == constant.ManuallySeparateNPU {
+					(level.FaultLevel == constant.ManuallySeparateNPU && code == constant.ManuallySeparateNPU) {
 					continue
 				}
 				faultInfo := &manualfault.Fault{

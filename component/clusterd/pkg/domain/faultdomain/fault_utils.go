@@ -245,7 +245,7 @@ func mergeDeviceFault(notGroupDeviceFaults []constant.DeviceFault) ([]constant.D
 					"they belongs to multiple devices: %s, %s", deviceName, fault.NPUName)
 			}
 			fautLevels = append(fautLevels, fault.FaultLevel)
-			if fault.FaultCode != constant.ManuallySeparateNPU {
+			if fault.FaultLevel != constant.ManuallySeparateNPU {
 				faultCodeList = append(faultCodeList, fault.FaultCode)
 				newTimeAndLevelMap[fault.FaultCode] = fault.FaultTimeAndLevelMap[fault.FaultCode]
 			}
