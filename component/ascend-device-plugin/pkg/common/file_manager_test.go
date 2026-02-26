@@ -16,7 +16,6 @@
 package common
 
 import (
-	"ascend-common/api"
 	"errors"
 	"os"
 	"path/filepath"
@@ -25,6 +24,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/utils"
 )
 

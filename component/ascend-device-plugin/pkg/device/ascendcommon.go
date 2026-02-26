@@ -105,7 +105,7 @@ type AscendTools struct {
 // DevManager interface for manager device
 type DevManager interface {
 	GetNPUs() (common.NpuAllInfo, error)
-	DoWithVolcanoListAndWatch(map[string][]*common.NpuDevice)
+	DoWithVolcanoListAndWatch(map[string][]*common.NpuDevice, int)
 	GraceTolerance(context.Context, map[string][]*common.NpuDevice)
 	SetDmgr(devmanager.DeviceInterface)
 	GetDmgr() devmanager.DeviceInterface
@@ -600,7 +600,31 @@ func (tool *AscendTools) getRealUsedDevices() sets.String {
 	return usedDevice
 }
 
-func (tool *AscendTools) getDevStatesDevSet(classifyDevs map[string][]*common.NpuDevice) common.DevStatusSet {
+// filterSoftShareDevices  filter soft share devices that still have available resources
+func (tool *AscendTools) filterSoftShareDevices(
+	kltUsedDevices sets.String,
+	classifyDev []*common.NpuDevice,
+	npuChipMemory int,
+) sets.String {
+	if !common.IsSupportSoftShareDevice() {
+		return kltUsedDevices
+	}
+	if npuChipMemory == 0 {
+		hwlog.RunLog.Error("support soft share device, but npuChipMemory is 0")
+		return kltUsedDevices
+	}
+	availableDevices := sets.NewString()
+	for _, device := range classifyDev {
+		if device.UsedAicoreQuota < api.SoftShareDeviceMaxAICoreQuota &&
+			device.UsedHbmQuota < npuChipMemory {
+			availableDevices.Insert(device.DeviceName)
+		}
+	}
+	return kltUsedDevices.Difference(availableDevices)
+}
+
+func (tool *AscendTools) getDevStatesDevSet(classifyDevs map[string][]*common.NpuDevice,
+	chipMemory int) common.DevStatusSet {
 	totalFreeDevices := make(map[string]sets.String, len(classifyDevs))
 	totalUHDevices, totalNetUHDevices, totalDpuUHDevices, podUsedDev, totalRCDevices :=
 		sets.String{}, sets.String{}, sets.String{}, sets.String{}, sets.String{}
@@ -613,10 +637,12 @@ func (tool *AscendTools) getDevStatesDevSet(classifyDevs map[string][]*common.Np
 		partDevStatusSet := tool.groupDevsByStatus(classifyDev, tool.name)
 		allDevices = allDevices.Union(partDevStatusSet.AllDevices)
 		kltUsedDevices := tool.getUsedDevices(classifyDev)
-		totalFreeDevices[devType] = partDevStatusSet.HealthDevices.Difference(kltUsedDevices)
+		kltUsedDevices = tool.filterSoftShareDevices(kltUsedDevices, classifyDev, chipMemory)
+		freeDevs := partDevStatusSet.HealthDevices.Difference(kltUsedDevices)
 		if !common.ParamOption.PresetVDevice {
-			totalFreeDevices[devType] = totalFreeDevices[devType].Difference(podUsedDev)
+			freeDevs = freeDevs.Difference(podUsedDev)
 		}
+		totalFreeDevices[devType] = freeDevs
 		totalUHDevices = totalUHDevices.Union(partDevStatusSet.UnHealthyDevice)
 		totalNetUHDevices = totalNetUHDevices.Union(partDevStatusSet.NetUnHealthyDevice)
 		totalDpuUHDevices = totalDpuUHDevices.Union(partDevStatusSet.DpuUnHealthyDevice)
@@ -1748,4 +1774,33 @@ func (tool *AscendTools) generateNetworkFaultEventsBasedOnFaultCacheChange(devic
 		hwlog.RunLog.Info("generate network fault event based on network fault cache change")
 		common.DoSaveDevFaultInfo(networkFaultEvent, false)
 	}
+}
+
+// parseNPUChipMemoryGBToMB parse npu chip memory from GB to MB
+func (tool *AscendTools) parseNPUChipMemoryGBToMB(nodeInfo *v1.Node) (int, error) {
+	if nodeInfo == nil {
+		return 0, fmt.Errorf("node info is nil")
+	}
+	if nodeInfo.Labels == nil {
+		return 0, fmt.Errorf("node %s labels is nil", nodeInfo.Name)
+	}
+	memoryLabelValue, exists := nodeInfo.Labels[api.NPUChipMemoryLabel]
+	if !exists {
+		return 0, fmt.Errorf("node %s missing label %s", nodeInfo.Name, api.NPUChipMemoryLabel)
+	}
+	memoryStr := strings.TrimSuffix(strings.ToUpper(memoryLabelValue), "G")
+	if memoryStr == "" {
+		return 0, fmt.Errorf("node %s label %s value %s is invalid (empty after removing G)",
+			nodeInfo.Name, api.NPUChipMemoryLabel, memoryLabelValue)
+	}
+	memoryGB, err := strconv.Atoi(memoryStr)
+	if err != nil {
+		return 0, fmt.Errorf("node %s parse label %s value %s to int failed: %w",
+			nodeInfo.Name, api.NPUChipMemoryLabel, memoryLabelValue, err)
+	}
+	if memoryGB <= 0 {
+		return 0, fmt.Errorf("node %s label %s value %d GB is invalid (must be positive)",
+			nodeInfo.Name, api.NPUChipMemoryLabel, memoryGB)
+	}
+	return memoryGB * common.MBPerGB, nil
 }

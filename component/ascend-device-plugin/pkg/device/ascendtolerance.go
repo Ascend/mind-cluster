@@ -325,7 +325,9 @@ func (hrt *HotResetTools) handlePodDeleteEvent(obj interface{}) {
 	if rmErr := common.RemoveDataTraceFileAndDir(namespace, jobName); rmErr != nil {
 		hwlog.RunLog.Errorf("failed to remove file: %v", rmErr)
 	}
-
+	if rmErr := common.RemoveSoftShareDeviceFileAndDir(namespace, jobName); rmErr != nil {
+		hwlog.RunLog.Errorf("failed to remove file: %v", rmErr)
+	}
 	delete(hrt.jobs, event.Key)
 	hrt.queue.Forget(obj)
 }

@@ -645,8 +645,8 @@ func (hnm *HwAscend910Manager) getBusyChipListFromPod(podList *v1.PodList) []str
 }
 
 // DoWithVolcanoListAndWatch ascend910 affinity scheduling
-func (hnm *HwAscend910Manager) DoWithVolcanoListAndWatch(classifyDevs map[string][]*common.NpuDevice) {
-	devStatusSet := hnm.getDevStatesDevSet(classifyDevs)
+func (hnm *HwAscend910Manager) DoWithVolcanoListAndWatch(classifyDevs map[string][]*common.NpuDevice, chipMemory int) {
+	devStatusSet := hnm.getDevStatesDevSet(classifyDevs, chipMemory)
 	if err := hnm.UpdateNodeDeviceInfo(devStatusSet, hnm.dpu, hnm.updateDeviceInfo); err != nil {
 		hwlog.RunLog.Errorf("update device info failed, err: %v", err)
 	}

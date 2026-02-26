@@ -60,6 +60,6 @@ func TestDoWithVolcanoListAndWatch310p(t *testing.T) {
 			mockCreateConfigMap.Reset()
 		}()
 		manager.client.SetNodeDeviceInfoCache(createFakeDeviceInfo())
-		manager.DoWithVolcanoListAndWatch(groupDevice)
+		manager.DoWithVolcanoListAndWatch(groupDevice, 0)
 	})
 }

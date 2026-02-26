@@ -598,7 +598,7 @@ func TestDoWithVolcanoSchedule(t *testing.T) {
 	defer mockActivePodList.Reset()
 	convey.Convey("test DoWithVolcanoSchedule", t, func() {
 		convey.Convey("DoWithVolcanoSchedule success", func() {
-			_, err := ps.useVolcano(devicesIDs)
+			_, _, err := ps.useVolcano(devicesIDs)
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})
