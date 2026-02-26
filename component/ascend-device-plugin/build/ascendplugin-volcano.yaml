@@ -123,8 +123,11 @@ spec:
           - name: localtime
             mountPath: /etc/localtime
             readOnly: true
-          - name: docker
-            mountPath: /var/run/docker
+          - name: docker-sock
+            mountPath: /run/docker.sock
+            readOnly: true
+          - name: docker-dir
+            mountPath: /run/docker
             readOnly: true
           - name: containerd
             mountPath: /run/containerd
@@ -182,9 +185,12 @@ spec:
         - name: localtime
           hostPath:
             path: /etc/localtime
-        - name: docker
+        - name: docker-sock
           hostPath:
-            path: /var/run/docker
+            path: /run/docker.sock
+        - name: docker-dir
+          hostPath:
+            path: /run/docker
         - name: containerd
           hostPath:
             path: /run/containerd

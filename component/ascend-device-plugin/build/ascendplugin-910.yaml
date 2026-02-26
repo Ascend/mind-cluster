@@ -115,7 +115,10 @@ spec:
             readOnly: true
           - name: data-trace-file-dir
             mountPath: /user/cluster-info/datatrace-config
-          - name: docker
+          - name: docker-sock
+            mountPath: /run/docker.sock
+            readOnly: true
+          - name: docker-dir
             mountPath: /var/run/docker
             readOnly: true
           - name: containerd
@@ -158,7 +161,10 @@ spec:
         - name: localtime
           hostPath:
             path: /etc/localtime
-        - name: docker
+        - name: docker-sock
+          hostPath:
+            path: /run/docker.sock
+        - name: docker-dir
           hostPath:
             path: /var/run/docker
         - name: containerd

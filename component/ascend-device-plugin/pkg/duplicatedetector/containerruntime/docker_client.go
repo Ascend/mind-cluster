@@ -37,7 +37,7 @@ type dockerClient struct {
 }
 
 const (
-	defaultDockerAddress = "unix:///var/run/docker.sock"
+	defaultDockerAddress = "unix:///run/docker.sock"
 	dockerNamespace      = "moby"
 	excludePermissions   = 0002
 	unixPre              = "unix://"
@@ -57,10 +57,10 @@ func NewDockerClient(criEndpoint string, ociEndpoint string) (*dockerClient, err
 		criEndpoint = defaultDockerAddress
 	}
 	if err := checkSockFile(criEndpoint); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid cri endpoint(%s): %v", criEndpoint, err)
 	}
 	if err := checkSockFile(ociEndpoint); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid oci endpoint(%s): %v", ociEndpoint, err)
 	}
 
 	cli, err := client.NewClientWithOpts(client.WithHost(criEndpoint), client.WithAPIVersionNegotiation())

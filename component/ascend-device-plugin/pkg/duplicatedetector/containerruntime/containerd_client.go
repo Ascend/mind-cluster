@@ -87,8 +87,8 @@ func (c *containerdClient) ParseSingleContainer(ctx context.Context, containerID
 
 func (c *containerdClient) WatchContainerEvents(ctx context.Context, handler types.EventHandler) {
 	eventChan, errChan := c.client.EventService().Subscribe(ctx,
-		`topic~="/containers/create"`,
-		`topic~="/containers/delete"`,
+		`topic~="/tasks/start"`,
+		`topic~="/tasks/exit"`,
 	)
 	for {
 		select {
@@ -107,17 +107,17 @@ func (c *containerdClient) WatchContainerEvents(ctx context.Context, handler typ
 				continue
 			}
 			switch event := v.(type) {
-			case *events.ContainerCreate:
+			case *events.TaskStart:
 				handler(types.ContainerEvent{
 					Type:        types.ContainerEventCreate,
-					ContainerID: event.ID,
+					ContainerID: event.ContainerID,
 					Namespace:   envelope.Namespace,
 					Timestamp:   time.Now(),
 				})
-			case *events.ContainerDelete:
+			case *events.TaskExit:
 				handler(types.ContainerEvent{
 					Type:        types.ContainerEventDestroy,
-					ContainerID: event.ID,
+					ContainerID: event.ContainerID,
 					Namespace:   envelope.Namespace,
 					Timestamp:   time.Now(),
 				})

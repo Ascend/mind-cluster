@@ -40,8 +40,8 @@ type Client interface {
 }
 
 const (
-	defaultContainerdAddr = "unix:///run/containerd/containerd.sock"
-	dockerContainerdAddr  = "unix:///run/docker/containerd/containerd.sock"
+	defaultContainerdAddr = "/run/containerd/containerd.sock"
+	dockerContainerdAddr  = "/run/docker/containerd/containerd.sock"
 )
 
 type ociClient struct {
@@ -105,10 +105,12 @@ func NewClient(config *types.DetectorConfig) (Client, error) {
 		return nil, err
 	}
 	if config.RuntimeType == kubeclient.DockerRuntime {
+		hwlog.RunLog.Info("using docker runtime")
 		return NewDockerClient(config.CriEndpoint, ociEndpoint)
 
 	}
 	if config.RuntimeType == kubeclient.ContainerdRuntime {
+		hwlog.RunLog.Info("using containerd runtime")
 		return NewContainerdClient(config.CriEndpoint, ociEndpoint)
 	}
 	return nil, fmt.Errorf("runtime type %s is not supported", config.RuntimeType)
