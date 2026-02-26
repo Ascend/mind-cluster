@@ -3979,8 +3979,36 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
     -   否，请参见[准备镜像](#准备镜像)，完成镜像制作和分发。
 
 2.  <a name="li615118054419"></a>将ClusterD软件包解压目录下的YAML文件，拷贝到K8s管理节点上任意目录。
-3.  如不修改组件启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中ClusterD的启动参数。启动参数请参见[表1](#table11614104894617)，可以在ClusterD二进制包的目录下执行<b>./clusterd -h</b>查看参数说明。
-4.  在管理节点的YAML所在路径，执行以下命令，启动ClusterD。
+3.  如不修改组件启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中ClusterD的启动参数。启动参数请参见[表2](#table11614104894617)，可以在ClusterD二进制包的目录下执行<b>./clusterd -h</b>查看参数说明。
+4.  （可选）在“clusterd-v<i>\{version\}</i>.yaml”中，配置人工隔离芯片检测开关及故障频率、解除隔离时间等。
+
+    ```
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: clusterd-config-cm
+      namespace: cluster-system
+    data:
+      manually_separate_policy.conf: |
+        enabled: true
+        separate:
+          fault_window_hours: 24
+          fault_threshold: 3
+        release:
+          fault_free_hours: 48
+
+    ```
+
+    **表 1**  manually_separate_policy.conf的参数说明
+
+    <a name="table208901"></a>
+    |一级参数|二级参数|类型|说明|
+    |--|--|--|--|
+    |enabled|-|bool|人工隔离芯片的检测开关。取值包括：<ul><li>true：开启人工隔离芯片检测功能。</li><li>false：关闭人工隔离芯片检测功能。</li></ul><p>默认值为true。若关闭该开关，会将所有ClusterD人工隔离的芯片及相关缓存都清除。</p>|
+    |separate|fault_window_hours|int|人工隔离芯片的时间。在该时间内，同一个故障码的故障次数达到fault_threshold取值，ClusterD会将故障芯片进行人工隔离。取值范围为[1, 720]，默认值为24，单位为h（小时）。|
+    |-|fault_threshold|int|人工隔离芯片的阈值。取值范围为[1, 50]，默认值为3，单位为次。|
+    |release|fault_free_hours|int|解除隔离的时间，表示距离最后一次达到频率进行隔离的时间，超过该时间会解除隔离。取值范围为[1, 240]或-1，默认值为48，单位为h（小时）。<ul><li>最后一次达到频率的时间即为clusterd-manual-info-cm中的LastSeparateTime。clusterd-manual-info-cm的说明请参见[clusterd-manual-info-cm](./api/clusterd.md#集群资源)。</li><li>配置为-1，表示关闭解除隔离功能。</li><li>达到解除隔离时间进行自动解除隔离时，无论故障是否恢复，都会解除。</li></ul>|
+5.  在管理节点的YAML所在路径，执行以下命令，启动ClusterD。
 
     ```
     kubectl apply -f clusterd-v{version}.yaml
@@ -3995,7 +4023,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
     service/clusterd-grpc-svc created
     ```
 
-5.  执行以下命令，查看组件是否启动成功。
+6.  执行以下命令，查看组件是否启动成功。
 
     ```
     kubectl get pod -n mindx-dl
@@ -4016,7 +4044,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
 
 **参数说明<a name="section1250239182212"></a>**
 
-**表 1** ClusterD启动参数
+**表 2** ClusterD启动参数
 
 <a name="table11614104894617"></a>
 <table><thead align="left"><tr id="row2614114884616"><th class="cellrowborder" valign="top" width="30%" id="mcps1.2.5.1.1"><p id="p961416489463"><a name="p961416489463"></a><a name="p961416489463"></a>参数</p>

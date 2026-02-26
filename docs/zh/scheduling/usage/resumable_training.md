@@ -264,7 +264,7 @@ Ascend Device Plugin获取到芯片故障信息后，通过ConfigMap的形式上
 
 **（可选）配置故障检测的级别<a name="section1343172016386"></a>**
 
-断点续训针对**芯片故障**提供了默认的故障频率、时长、故障级别以及对应级别的故障处理策略。若用户需要修改故障处理策略，可参见[芯片故障](#芯片故障-1)。若无特殊需求，请勿随意修改。
+断点续训针对**芯片故障**提供了默认的故障频率、时长、故障级别以及对应级别的故障处理策略。若用户需要修改故障处理策略，可参见[概述](#ZH-CN_TOPIC_0000002511346521_0101)。若无特殊需求，请勿随意修改。
 
 **支持的故障处理类型<a name="section099935818571"></a>**
 
@@ -3505,7 +3505,22 @@ NodeD组件的配置文件NodeDConfiguration.json为系统配置文件，若用�
 
 ### 芯片故障<a name="ZH-CN_TOPIC_0000002479226466"></a>
 
-#### 配置文件说明<a name="ZH-CN_TOPIC_0000002511346521"></a>
+#### 概述<a name="ZH-CN_TOPIC_0000002511346521_0101"></a>
+
+Ascend Device Plugin和ClusterD均提供了按照故障频率进行人工隔离芯片的能力，两者功能差异如下：
+-   Ascend Device Plugin基于节点维度进行故障判定，根据实际发生的故障进行频率计数。
+-   ClusterD基于任务维度进行故障判定。
+    - 若一个任务下30s内多张卡同时出现同一个故障，则认为不是硬件故障导致，不会进行故障频率计数。该判断规则适用于大多数场景。对于Pod被删除但是有残留进程等场景，故障频率计数可能存在偏差。
+    - 只有新故障才能触发人工隔离芯片的故障频率是否达到上限的判断。如果将配置的阈值调整为当前的计数，无法立刻触发隔离，需要等下一次故障发生时触发判断逻辑。
+    - ClusterD重启后，频率计数信息会丢失，人工隔离芯片的故障频率会从零开始计数。
+
+Ascend Device Plugin和ClusterD的人工隔离芯片功能，理论上涉及的故障码不需要重复。若不想使用Ascend Device Plugin的隔离功能，请参见[（可选）配置芯片故障频率及时长](#可选配置芯片故障频率及时长)章节，将faultCustomization.json文件中的人工隔离芯片相关的配置删除；若不想使用ClusterD的隔离功能，请参见[（可选）配置芯片故障频率](#可选配置芯片故障频率)章节，将人工隔离芯片功能开关关闭。
+
+若Ascend Device Plugin和ClusterD对同一张芯片都进行了人工隔离，需要各自解除隔离。Ascend Device Plugin解除隔离的方法请参见[（可选）配置芯片故障频率及时长](#可选配置芯片故障频率及时长)中"手动恢复强制隔离的芯片"步骤；ClusterD解除隔离的方法请参见[（可选）配置芯片故障频率](#可选配置芯片故障频率)中"手动恢复人工隔离的芯片"步骤。
+
+#### Ascend Device Plugin<a name="ZH-CN_TOPIC_0000002511346521_02"></a>
+
+##### 配置文件说明<a name="ZH-CN_TOPIC_0000002511346521"></a>
 
 断点续训针对**芯片故障**，支持按故障级别、故障频率和故障时长的配置进行处理。
 
@@ -3686,7 +3701,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 |注：<ul><li>如果一个故障码同时配置了故障频率（FaultFrequency）和故障超时策略（FaultDuration），该故障码在TimeWindow时间窗口中超时次数达到任务支持的最大次数，则采用以下三者中最严重的等级进行处理。这三者分别为：故障本身的故障处理策略、FaultFrequency和FaultDuration中配置的故障处理策略。</li><li>如果一个故障码同时配置了故障频率和故障超时策略，只有当故障超时后，故障频次才会增加一次。故障超过RecoverTimeout才算恢复，恢复后再次故障超时才能累积下一次的计数。</li><li>故障ID为81078603的网络故障只支持配置为NotHandleFault、PreSeparateNPU或SeparateNPU三种故障处理策略，若配置为其他策略则使用默认配置NotHandleFault。</li><li>当Ascend Device Plugin从26.0.0之前版本升级到26.0.0及之后版本时，若Ascend Device Plugin的ConfigMap中已经包含了ManuallySeparateNPU键值，则其降级的时间窗为faultCustomization.json中最大的ReleaseTimeWindow值，若没有任何故障码配置ReleaseTimeWindow，则ConfigMap已有的ManuallySeparateNPU不降级。</li></ul>|
 
 
-#### （可选）配置芯片故障级别<a name="ZH-CN_TOPIC_0000002479226532"></a>
+##### （可选）配置芯片故障级别<a name="ZH-CN_TOPIC_0000002479226532"></a>
 
 在制作Ascend Device Plugin镜像时，会将faultCode.json和faultCustomization.json配置文件内置在镜像中，启动Ascend Device Plugin时会读取这两个文件的默认配置，作为当前故障处理依据。faultCode.json和faultCustomization.json的说明请参见[配置文件说明](#配置文件说明-1)。
 
@@ -3813,7 +3828,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
         若日志出现“load fault code from configmap success”，表示手动配置故障码操作成功。
 
 
-#### （可选）配置芯片故障频率及时长<a name="ZH-CN_TOPIC_0000002511426473"></a>
+##### （可选）配置芯片故障频率及时长<a name="ZH-CN_TOPIC_0000002511426473"></a>
 
 在制作Ascend Device Plugin镜像时，会将faultCode.json和faultCustomization.json配置文件内置在镜像中，启动Ascend Device Plugin时会读取这两个文件的默认配置，作为当前故障处理依据。faultCode.json和faultCustomization.json的说明请参见[配置文件说明](#配置文件说明-1)。
 
@@ -3822,6 +3837,9 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 -   如果Ascend Device Plugin启动时，集群中已经存在mindx-dl-fault-config，Ascend Device Plugin会优先按照已存在的mindx-dl-fault-config中配置的内容，作为当前故障处理依据。
 -   如果重新安装Ascend Device Plugin后，集群中已经存在mindx-dl-fault-config，Ascend Device Plugin的默认faultCustomization.json将不会生效，使用集群中已经存在的mindx-dl-fault-config。若想要使用faultCustomization.json的默认配置，可以删除mindx-dl-fault-config，使Ascend Device Plugin读取默认faultCustomization.json文件。
 -   如果ConfigMap文件内容存在格式错误等问题，Ascend Device Plugin会默认读取镜像中内置的ConfigMap文件的内容，作为当前故障处理依据。
+
+>[!CAUTION]注意 
+>修改故障频率为高危操作，如果修改不当，会导致芯片被误隔离。例如，由于任务发生错误导致的软件故障，会短时间内反复大量出现，使Ascend Device Plugin侧感知到该故障达到了故障频率，将大量芯片置为人工隔离状态，导致大量节点无法调度。
 
 **操作步骤<a name="section141902103110"></a>**
 
@@ -4037,6 +4055,169 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
         kubectl describe cm -n kube-system {configMapName}
         ```
 
+#### ClusterD<a name="ZH-CN_TOPIC_0000002511346521_03"></a>
+
+##### 配置说明<a name="ZH-CN_TOPIC_0000002511346521_04"></a>
+
+断点续训针对芯片故障，支持按故障频率的配置进行处理。
+
+针对芯片故障的不同级别进行分级处理时，ClusterD组件会获取到当前故障的故障码和故障级别，对于除了NotHandleFault和SubHealthFault级别之外的故障，根据ConfigMap（clusterd-config-cm）中配置的故障频率，将芯片状态置为人工隔离。该ConfigMap的参数说明请参见[表1](../installation_guide.md#clusterd)。
+
+>[!NOTE] 说明 
+>- ConfigMap（clusterd-config-cm）为系统配置，若用户无特殊需求，请勿随意修改。若用户需要修改人工隔离芯片检测开关及故障频率、解除隔离时间等，可以通过修改该ConfigMap实现，修改方法请参见[（可选）配置芯片故障频率](#可选配置芯片故障频率)。
+>- 不支持配置故障码检测范围，ClusterD会基于Ascend Device Plugin上报的故障级别进行判断。对于除了NotHandleFault和SubHealthFault级别之外的故障，都会进入人工隔离芯片检测流程。
+
+##### （可选）配置芯片故障频率<a name="ZH-CN_TOPIC_0000002511426473_01"></a>
+
+在安装ClusterD时，会自动创建ConfigMap（clusterd-config-cm），作为当前人工隔离芯片的检测依据。该ConfigMap的参数说明请参见[表1](../installation_guide.md#clusterd)。
+
+如果用户想要自定义芯片故障频率，可以通过修改该ConfigMap实现。如果修改后的ConfigMap内容存在格式错误等问题，ClusterD会保留上一次读取成功的配置作为当前人工隔离芯片的检测依据。若ClusterD启动时，读取到的ConfigMap内容错误，则人工隔离芯片检测机制会默认关闭，直到格式和内容正确。
+
+**操作步骤<a name="section14190101"></a>**
+
+以人工隔离芯片的阈值由默认的24小时内出现3次调整为24小时内出现5次为例。
+
+1.  登录环境，执行以下命令，查询当前配置。
+    ```
+    kubectl describe cm -n cluster-system clusterd-config-cm
+    ```
+
+    -   如果存在clusterd-config-cm，则执行[步骤3](#li01010203)进行编辑。
+    -   如果不存在clusterd-config-cm，则执行[步骤2](#li010102)进行创建。
+
+    >[!NOTE] 说明 
+    >正常情况下存在clusterd-config-cm。若不存在，需确认ClusterD的安装过程是否存在错误。
+    
+2.  <a name="li010102"></a>创建人工隔离芯片检测所需的ConfigMap（clusterd-config-cm）。
+    
+    将以下内容保存为文件cm.yaml：
+
+    ```
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: clusterd-config-cm
+          namespace: cluster-system
+        data:
+          manually_separate_policy.conf: |
+            enabled: true
+            separate:
+              fault_window_hours: 24
+              fault_threshold: 3
+            release:
+              fault_free_hours: 48
+
+    ```
+    执行以下命令：
+
+    ```
+    kubectl apply -f cm.yaml
+    ```
+
+    回显示例如下，说明创建成功。
+
+    ```
+    configmap/clusterd-config-cm created
+    ```
+
+3.  <a name="li01010203"></a>执行以下命令，编辑clusterd-config-cm。
+
+    ```
+    kubectl edit cm -n cluster-system clusterd-config-cm
+    ```
+
+    根据实际情况，修改人工隔离芯片的故障频率。参数说明请参见[表1](../installation_guide.md#clusterd)。
+
+    ```
+    # Please edit the object below. Lines beginning with a '#' will be ignored,
+    # and an empty file will abort the edit. If an error occurs while saving this file will be
+    # reopened with the relevant failures.
+    #
+    apiVersion: v1
+    data:
+      manually_separate_policy.conf: |
+        # 修改人工隔离芯片检测开关
+        enabled: true
+        separate:
+          # 修改人工隔离芯片的故障频率
+          fault_window_hours: 24
+          fault_threshold: 5   # 由3修改为5
+        release:
+          # 修改解除隔离时间
+          fault_free_hours: 48
+    kind: ConfigMap
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/last-applied-configuration: |
+          {"apiVersion":"v1","data":{"manually_separate_policy.conf":"enabled: true\nseparate:\n  fault_window_hours: 24\n  fault_threshold: 3\nrelease:\n  fault_free_hours: 48\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"clusterd-config-cm","namespace":"cluster-system"}}
+      creationTimestamp: "2026-02-24T11:25:19Z"
+      name: clusterd-config-cm
+      namespace: cluster-system
+      resourceVersion: "3344125"
+      selfLink: /api/v1/namespaces/cluster-system/configmaps/clusterd-config-cm
+      uid: 68210bfc-f742-4765-a497-b61e9cc6b1a6
+    ```
+4.  修改完成后，按“Esc”键，输入:wq!保存并退出。
+5.  等clusterd-config-cm更新生效（ClusterD的检测周期为300s）后，查看操作是否成功。
+    1.  执行以下命令，查询ClusterD组件日志名称。
+
+        ```
+        kubectl get pods -A | grep clusterd
+        ```
+
+        回显示例如下：
+
+        ```
+        mindx-dl      clusterd-559bf4bd6-z9hv4   1/1     Running   0             4m23s
+        ```
+
+    2.  通过查询到的组件日志名称，查询ClusterD的组件日志信息。
+
+        ```
+        kubectl logs -f -n mindx-dl clusterd-559bf4bd6-z9hv4
+        ```
+
+        >[!NOTE] 说明 
+        >-   若日志出现“load manually separate policy config success”，表示手动修改人工隔离芯片的故障频率操作成功。
+        >-   若日志出现“node: xx, dev: xx, code: xx is not found in manual fault cache, add”，表示该故障触发人工隔离。
+        >-   若日志出现“node: xx, dev: xx, code: xx is found in manual fault cache, update last separate time”，表示已经触发人工隔离芯片的故障，再一次达到了人工隔离的故障频率，会刷新clusterd-manual-info-cm中的LastSeparateTime。clusterd-manual-info-cm的说明请参见[clusterd-manual-info-cm](../api/clusterd.md#集群资源)。
+
+6.  （可选）手动恢复人工隔离的芯片。故障的处理策略为ManuallySeparateNPU时，故障恢复后该芯片也处于隔离状态，可以手动恢复人工隔离的芯片。
+
+    1.  执行以下命令，编辑ConfigMap clusterd-manual-info-cm。
+
+        ```
+        kubectl edit cm -n cluster-system clusterd-manual-info-cm
+        ```
+
+    2.  将Data下面的Total字段后面需要解除人工隔离的芯片名称删除。例如：Ascend910-2。
+
+        ```
+        Name:         clusterd-manual-info-cm
+        Namespace:    cluster-system
+        Labels:       <none>
+        Annotations:  <none>
+         
+        Data
+        ====
+        localhost.localdomain:
+        ----
+        {"Total":["Ascend910-0","Ascend910-2","Ascend910-3"],"Detail":{"Ascend910-0":[{"FaultCode":"8C084E00","FaultLevel":"ManuallySeparateNPU","LastSeparateTime":1770811685650}],"Ascend910-2":[{"FaultCode":"8C084E00","FaultLevel":"ManuallySeparateNPU","LastSeparateTime":1770811685650}],"Ascend910-3":[{"FaultCode":"8C084E00","FaultLevel":"ManuallySeparateNPU","LastSeparateTime":1770811685650}]}}
+         
+        Events:  <none> 
+        ```
+
+
+    3.  修改完成后，按“Esc”键，输入:wq!保存并退出。
+    4.  等待15s后，执行以下命令，查看clusterd-manual-info-cm中Ascend910-2是否还存在于Total和Detail字段中。同时，需要查看该芯片的ManuallySeparateNPU故障是否存在于cluster-info-device-\${m}中。若不存在，则芯片解除人工隔离成功，可继续正常使用该芯片。
+
+        ```
+        kubectl describe cm -n cluster-system clusterd-manual-info-cm
+        ```
+        >[!NOTE] 说明 
+        >- 仅支持删除Total字段中的芯片，不支持手动添加。其他内容不支持修改。
+        >- 手动恢复人工隔离的芯片后，该芯片的故障计数会清零，再次达到频率时才会再次触发人工隔离。
+        >- 若需要删除节点上所有的人工隔离芯片，则需删除Total字段后面的所有芯片名称，并将取值设置为空[""]。如果想一次性解除所有的人工隔离芯片，可以直接将clusterd-manual-info-cm删除。
 
 
 ### 参数面网络故障<a name="ZH-CN_TOPIC_0000002479226486"></a>
