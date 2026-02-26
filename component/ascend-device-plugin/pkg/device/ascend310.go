@@ -79,8 +79,8 @@ func (hnm *HwAscend310Manager) getNPUsByNormalMode(davinCiDev common.DavinCiDev)
 }
 
 // DoWithVolcanoListAndWatch ascend310 watch device
-func (hnm *HwAscend310Manager) DoWithVolcanoListAndWatch(classifyDevs map[string][]*common.NpuDevice) {
-	devStatusSet := hnm.getDevStatesDevSet(classifyDevs)
+func (hnm *HwAscend310Manager) DoWithVolcanoListAndWatch(classifyDevs map[string][]*common.NpuDevice, chipMemory int) {
+	devStatusSet := hnm.getDevStatesDevSet(classifyDevs, chipMemory)
 	if err := hnm.UpdateNodeDeviceInfo(devStatusSet, common.DpuInfo{}, hnm.updateDeviceInfo); err != nil {
 		hwlog.RunLog.Errorf("update device info failed, err: %v", err)
 	}

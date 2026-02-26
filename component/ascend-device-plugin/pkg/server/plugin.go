@@ -38,6 +38,8 @@ import (
 	"Ascend-device-plugin/pkg/next/devicefactory/customname"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
+	"ascend-common/devmanager/dcmi"
 )
 
 func (ps *PluginServer) stopListAndWatch() {
@@ -179,6 +181,15 @@ func sendToKubelet(stream v1beta1.DevicePlugin_ListAndWatchServer, resp *v1beta1
 	return stream.Send(resp)
 }
 
+func (ps *PluginServer) addSoftShareDev(resp *v1beta1.ListAndWatchResponse, newDeviceName string,
+	device common.NpuDevice) {
+	hwlog.RunLog.Infof("%s add soft share device to kubelet", newDeviceName)
+	for i := 0; i < int(common.ParamOption.ShareCount); i++ {
+		resp.Devices = append(resp.Devices,
+			&v1beta1.Device{ID: newDeviceName + fmt.Sprintf("-%d", i), Health: device.Health})
+	}
+}
+
 func (ps *PluginServer) responseToKubelet() *v1beta1.ListAndWatchResponse {
 	resp := new(v1beta1.ListAndWatchResponse)
 	ps.cachedLock.RLock()
@@ -205,6 +216,10 @@ func (ps *PluginServer) responseToKubelet() *v1beta1.ListAndWatchResponse {
 			hwlog.RunLog.Infof("ListAndWatch resp devices: inner device: %s %s, real device: %s %s, ",
 				d, device.Health, device.DeviceName, device.Health)
 			newDeviceName := customname.ReplaceDevicePublicName(ps.deviceType, d)
+			if common.IsSupportSoftShareDevice() {
+				ps.addSoftShareDev(resp, newDeviceName, device)
+				continue
+			}
 			resp.Devices = append(resp.Devices, &v1beta1.Device{ID: newDeviceName, Health: device.Health})
 		}
 	} else {
@@ -357,6 +372,10 @@ func (ps *PluginServer) checkAllocateRequest(requests *v1beta1.AllocateRequest) 
 			if len(deviceName) > common.MaxDeviceNameLen {
 				return fmt.Errorf("length of device name %d is invalid", len(deviceName))
 			}
+			if common.IsSupportSoftShareDevice() && strings.Count(deviceName, common.MiddelLine) > 1 {
+				deviceNameSlice := strings.Split(deviceName, common.MiddelLine)
+				deviceName = deviceNameSlice[0] + common.MiddelLine + deviceNameSlice[1]
+			}
 			if !ps.deviceExists(deviceName) {
 				return fmt.Errorf("plugin doesn't have device %s", deviceName)
 			}
@@ -475,6 +494,23 @@ func (ps *PluginServer) updateDynamicAllocMap(realAlloc, kltAlloc []string) {
 }
 
 func (ps *PluginServer) updatePresetAllocMap(realAlloc, kltAlloc []string) {
+	if common.IsSupportSoftShareDevice() {
+		ps.allocMapLock.Lock()
+		for _, id := range kltAlloc {
+			if _, exist := ps.klt2RealDevMap[id]; exist {
+				delete(ps.klt2RealDevMap, id)
+			}
+		}
+		if len(realAlloc) == 0 {
+			hwlog.RunLog.Error("number of devices of real allocate is 0")
+			return
+		}
+		for _, id := range kltAlloc {
+			ps.klt2RealDevMap[id] = realAlloc[0]
+		}
+		ps.allocMapLock.Unlock()
+		return
+	}
 	if len(realAlloc) != len(kltAlloc) {
 		hwlog.RunLog.Error("number of devices of klt allocate not equal real allocate")
 		return
@@ -681,6 +717,19 @@ func checkAnnotationAllocateValid(requestDevices []string, deviceType string, po
 		if err != nil {
 			return false
 		}
+		if common.IsSupportSoftShareDevice() {
+			aicoreQuotaStr, hasAicoreQuota := pod.Annotations[api.SchedulerSoftShareDevAicoreQuotaKey]
+			if !hasAicoreQuota {
+				hwlog.RunLog.Warnf("pod %s has no aicore quota", pod.Name)
+				return false
+			}
+			aicoreQuota, err := strconv.Atoi(aicoreQuotaStr)
+			if err != nil {
+				hwlog.RunLog.Warnf("pod %s has invalid aicore quota", pod.Name)
+				return false
+			}
+			return aicoreQuota == len(requestDevices)
+		}
 		return len(allocateDevice) == len(requestDevices)
 	}
 	// for dynamic segment
@@ -770,7 +819,7 @@ func (ps *PluginServer) isValidPhyID(phyID string) bool {
 	return false
 }
 
-func (ps *PluginServer) doWithVolcanoSchedule(requestDevices []string) ([]string, error) {
+func (ps *PluginServer) doWithVolcanoSchedule(requestDevices []string) ([]string, string, error) {
 	ps.podLock.Lock()
 	conditionFunc := func(pod *v1.Pod) bool {
 		return checkAnnotationAllocateValid(requestDevices, ps.deviceType, pod, ps.manager.GetChipAICore())
@@ -784,7 +833,7 @@ func (ps *PluginServer) doWithVolcanoSchedule(requestDevices []string) ([]string
 			if err != nil {
 				hwlog.RunLog.Errorf("get active pod from api server failed")
 				ps.podLock.Unlock()
-				return nil, err
+				return nil, "", err
 			}
 			allPods = noneCachedPod
 		} else {
@@ -800,7 +849,7 @@ func (ps *PluginServer) doWithVolcanoSchedule(requestDevices []string) ([]string
 	oldestPod := ps.getOldestPod(filteredPods)
 	ps.podLock.Unlock()
 	if oldestPod == nil {
-		return nil, fmt.Errorf("not get valid pod")
+		return nil, "", fmt.Errorf("not get valid pod")
 	}
 	var allocateDevices []string
 	var err error
@@ -812,17 +861,162 @@ func (ps *PluginServer) doWithVolcanoSchedule(requestDevices []string) ([]string
 		allocateDevices, err = common.GetDeviceFromPodAnnotation(oldestPod, ps.deviceType)
 	}
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	hwlog.RunLog.Infof("vol found: %#v", allocateDevices)
 	ps.updateAllocMap(allocateDevices, requestDevices)
-	return allocateDevices, nil
+	npuInfoConfigDir := ps.getNPUInfoConfigDirFromPod(oldestPod, allocateDevices)
+	return allocateDevices, npuInfoConfigDir, nil
 }
 
-func (ps *PluginServer) useVolcano(requestDevices []string) ([]string, error) {
+func (ps *PluginServer) getValidLogicDeviceID(devices []string) (int, error) {
+	_, ascendVisibleDevices, err := common.GetDeviceListID(devices, ps.ascendRuntimeOptions)
+	if err != nil {
+		return 0, fmt.Errorf("get device list ID failed: %w", err)
+	}
+	if len(ascendVisibleDevices) != 1 {
+		return 0, fmt.Errorf("visible devices length %d is not 1 (expected 1)", len(ascendVisibleDevices))
+	}
+	return ascendVisibleDevices[0], nil
+}
+
+// SoftShareDevAnnotations soft share device config annotations
+type SoftShareDevAnnotations struct {
+	vNPUId           string
+	aicoreQuota      string
+	hbmQuota         string
+	schedulingPolicy string
+}
+
+func (ps *PluginServer) extractPodAnnotations(pod *v1.Pod) (SoftShareDevAnnotations, error) {
+	var annotations SoftShareDevAnnotations
+	var missingKeys []string
+
+	annotationChecks := []struct {
+		key          string
+		valuePointer *string
+	}{
+		{api.SchedulerSoftShareDevVNPUIdKey, &annotations.vNPUId},
+		{api.SchedulerSoftShareDevAicoreQuotaKey, &annotations.aicoreQuota},
+		{api.SchedulerSoftShareDevHbmQuotaKey, &annotations.hbmQuota},
+		{api.SchedulerSoftShareDevPolicyKey, &annotations.schedulingPolicy},
+	}
+
+	for _, check := range annotationChecks {
+		val, ok := pod.Annotations[check.key]
+		if !ok || val == "" {
+			missingKeys = append(missingKeys, check.key)
+			continue
+		}
+		if check.key == api.SchedulerSoftShareDevPolicyKey {
+			val = common.ConvertSchedulingPolicyToIntStr(val)
+		}
+		*check.valuePointer = val
+	}
+
+	if len(missingKeys) > 0 {
+		return SoftShareDevAnnotations{}, fmt.Errorf("missing or empty annotations: %v", missingKeys)
+	}
+
+	return annotations, nil
+}
+
+func (ps *PluginServer) buildConfigDirPath(pod *v1.Pod, jobName string, logicID int, vNPUId string) string {
+	if jobName == "" || vNPUId == "" {
+		hwlog.RunLog.Error("invalid job name or vNPU ID")
+		return ""
+	}
+	return fmt.Sprintf("%s/%s.%s/%d_%s",
+		common.SoftShareDevNPUInfoConfigParentDirPath,
+		pod.Namespace,
+		jobName,
+		logicID,
+		vNPUId)
+}
+
+func (ps *PluginServer) writeNPUConfigFile(configDir string, physicalID int, dieId string,
+	annotations SoftShareDevAnnotations) error {
+	configItems := []struct {
+		configKey string
+		value     string
+	}{
+		{api.SoftShareDeviceConfigPhysicalNPUId, fmt.Sprintf("%d", physicalID)},
+		{api.SoftShareDeviceConfigVirtualNPUId, annotations.vNPUId},
+		{api.SoftShareDeviceConfigAICoreQuota, annotations.aicoreQuota},
+		{api.SoftShareDeviceConfigHbmQuota, annotations.hbmQuota},
+		{api.SoftShareDeviceConfigShmId, dieId},
+		{api.SoftShareDeviceConfigSchedulingPolicy, annotations.schedulingPolicy},
+	}
+
+	var configLines []string
+	for _, item := range configItems {
+		if item.value == "" {
+			hwlog.RunLog.Warnf("config key %s has empty value, skip", item.configKey)
+			continue
+		}
+		configLines = append(configLines, fmt.Sprintf("%s=%s", item.configKey, item.value))
+	}
+
+	if len(configLines) == 0 {
+		return fmt.Errorf("no valid config items to write")
+	}
+
+	configData := strings.Join(configLines, "\n")
+	fileFullName := fmt.Sprintf("%s/%s", configDir, api.SoftShareDeviceConfigFileName)
+	if err := common.WriteToFileWithPerm(configData, fileFullName, api.DefaultSoftShareDeviceConfigDirPerm,
+		api.DefaultSoftShareDeviceConfigPerm); err != nil {
+		return fmt.Errorf("write config to file %s failed: %w", fileFullName, err)
+	}
+
+	hwlog.RunLog.Infof("successfully wrote NPU config to %s", fileFullName)
+	return nil
+}
+
+func (ps *PluginServer) getNPUInfoConfigDirFromPod(pod *v1.Pod, devices []string) string {
+	if pod == nil {
+		hwlog.RunLog.Error("pod is nil")
+		return ""
+	}
+	if !common.IsSoftShareDevJob(pod) {
+		hwlog.RunLog.Warn("pod is not share device job")
+		return ""
+	}
+	annotations, err := ps.extractPodAnnotations(pod)
+	if err != nil {
+		hwlog.RunLog.Errorf("extract pod annotations failed: %v", err)
+		return ""
+	}
+	physicalID, err := ps.getValidLogicDeviceID(devices)
+	if err != nil {
+		hwlog.RunLog.Errorf("get valid logic device ID failed: %v", err)
+		return ""
+	}
+	jobName := common.GetJobNameOfPod(pod)
+	npuInfoConfigDir := ps.buildConfigDirPath(pod, jobName, physicalID, annotations.vNPUId)
+	if npuInfoConfigDir == "" {
+		return ""
+	}
+	logicID, err := ps.manager.GetDmgr().GetLogicIDFromPhysicID(int32(physicalID))
+	if err != nil {
+		hwlog.RunLog.Errorf("get logic id failed, physical id: %d err: %v", physicalID, err)
+		return ""
+	}
+	dieId, err := ps.manager.GetDmgr().GetDieID(logicID, dcmi.VDIE)
+	if err != nil {
+		hwlog.RunLog.Errorf("get die id failed, logic id: %d err: %v", logicID, err)
+		return ""
+	}
+	if err := ps.writeNPUConfigFile(npuInfoConfigDir, physicalID, dieId, annotations); err != nil {
+		hwlog.RunLog.Errorf("write NPU config file failed: %v", err)
+		return ""
+	}
+	return npuInfoConfigDir
+}
+
+func (ps *PluginServer) useVolcano(requestDevices []string) ([]string, string, error) {
 	// if virtual device, allocate by k8s
 	if common.IsVirtualDev(ps.deviceType) {
-		return requestDevices, nil
+		return requestDevices, "", nil
 	}
 	return ps.doWithVolcanoSchedule(requestDevices)
 }
@@ -910,6 +1104,55 @@ func getDeviceContainerPath(hostPath string) string {
 	return hostPath
 }
 
+func (ps *PluginServer) setNPUDeviceMount(resp *v1beta1.ContainerAllocateResponse, ascendVisibleDevices []int) {
+	if !common.ParamOption.UseAscendDocker {
+		hwlog.RunLog.Info("device-plugin will use origin mount way")
+		mountDefaultDevice(resp, ps.defaultDevs)
+		mountDevice(resp, ascendVisibleDevices, ps.ascendRuntimeOptions)
+		return
+	}
+	common.SetAscendRuntimeEnv(ascendVisibleDevices, ps.ascendRuntimeOptions, resp)
+	hwlog.RunLog.Info("device-plugin will use ascend-docker to mount")
+}
+
+func mountShareDeviceConfig(resp *v1beta1.ContainerAllocateResponse, devices []int, npuInfoConfigDir string) {
+	if !common.IsSupportSoftShareDevice() {
+		hwlog.RunLog.Warnf("not support soft share device plugin")
+		return
+	}
+	if len(devices) != 1 {
+		hwlog.RunLog.Error("deviceIDs length is not equal to 1")
+		return
+	}
+	deviceID := devices[0]
+	dirPath := fmt.Sprintf("%s/%d", common.ParamOption.SoftShareDevConfigDir, deviceID)
+	if !utils.IsDir(dirPath) {
+		hwlog.RunLog.Warnf("dirPath %s not exists, will create it", dirPath)
+		err := os.MkdirAll(dirPath, common.DefaultPerm)
+		if err != nil {
+			hwlog.RunLog.Errorf("mkdir %s failed: %v", dirPath, err)
+			return
+		}
+	}
+	safeDirPath, err := utils.CheckPath(dirPath)
+	if err != nil {
+		hwlog.RunLog.Errorf("check path %s failed: %v", dirPath, err)
+		return
+	}
+	resp.Mounts = append(resp.Mounts, &v1beta1.Mount{
+		ContainerPath: common.SoftShareDevConfigDirContainerPath,
+		HostPath:      safeDirPath,
+		ReadOnly:      false,
+	})
+	if npuInfoConfigDir != "" {
+		resp.Mounts = append(resp.Mounts, &v1beta1.Mount{
+			ContainerPath: common.SoftShareDevNPUInfoConfigDirContainerPath,
+			HostPath:      npuInfoConfigDir,
+			ReadOnly:      true,
+		})
+	}
+}
+
 // Allocate is called by kubelet to mount device to k8s pod.
 func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.AllocateRequest) (*v1beta1.AllocateResponse,
 	error) {
@@ -928,14 +1171,17 @@ func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.Allocate
 		allocateDevices := customname.ReplaceDeviceInnerName(ps.deviceType, rqt.DevicesIDs)
 		if !common.ParamOption.PresetVDevice {
 			hwlog.RunLog.Infof("request num: %d", len(rqt.DevicesIDs))
+		} else if common.IsSupportSoftShareDevice() {
+			hwlog.RunLog.Infof("request aicore quota: %d", len(rqt.DevicesIDs))
 		} else {
 			hwlog.RunLog.Infof("request: %#v", rqt.DevicesIDs)
 		}
 		hwlog.RunLog.Debugf("len(allocateDevices)=%d, len(allNPUInfo.AllDevs)=%d",
 			len(allocateDevices), len(allNPUInfo.AllDevs))
+		var npuInfoConfigDir string
 		if (len(allocateDevices) != len(allNPUInfo.AllDevs) || !common.ParamOption.PresetVDevice) &&
 			common.ParamOption.UseVolcanoType {
-			allocateDevices, err = ps.useVolcano(rqt.DevicesIDs)
+			allocateDevices, npuInfoConfigDir, err = ps.useVolcano(rqt.DevicesIDs)
 			if err != nil {
 				hwlog.RunLog.Error(err)
 				return nil, err
@@ -948,14 +1194,8 @@ func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.Allocate
 		}
 
 		resp := new(v1beta1.ContainerAllocateResponse)
-		if !common.ParamOption.UseAscendDocker {
-			hwlog.RunLog.Info("device-plugin will use origin mount way")
-			mountDefaultDevice(resp, ps.defaultDevs)
-			mountDevice(resp, ascendVisibleDevices, ps.ascendRuntimeOptions)
-		} else {
-			common.SetAscendRuntimeEnv(ascendVisibleDevices, ps.ascendRuntimeOptions, resp)
-			hwlog.RunLog.Info("device-plugin will use ascend-docker to mount")
-		}
+		mountShareDeviceConfig(resp, ascendVisibleDevices, npuInfoConfigDir)
+		ps.setNPUDeviceMount(resp, ascendVisibleDevices)
 		ps.setHcclTopoFilePathEnv(resp, allNPUInfo)
 		ps.SetSlowNodeNoticeEnv(resp)
 		resps.ContainerResponses = append(resps.ContainerResponses, resp)

@@ -252,8 +252,8 @@ const (
 	SoftShareDeviceConfigHbmQuota = "memory-quota"
 	// SoftShareDeviceConfigShmId decide soft share device config shm id
 	SoftShareDeviceConfigShmId = "shm-id"
-	// ShareDeviceConfigSchedulingPolicy decide soft share device config scheduling policy
-	ShareDeviceConfigSchedulingPolicy = "scheduling-policy"
+	// SoftShareDeviceConfigSchedulingPolicy decide soft share device config scheduling policy
+	SoftShareDeviceConfigSchedulingPolicy = "scheduling-policy"
 
 	// DefaultSoftShareDeviceConfigPerm default perm for soft share device config
 	DefaultSoftShareDeviceConfigPerm = 0644

@@ -29,6 +29,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -52,10 +53,11 @@ const (
 	NoneFault       = 0
 	routineWaitTime = 50 * time.Millisecond
 
-	atlas300VPro     = "Atlas 300V Pro"
-	ascend910FakeID0 = "Ascend910-0"
-	ascend910FakeID1 = "Ascend910-1"
-	ascend910FakeID2 = "Ascend910-2"
+	atlas300VPro = "Atlas 300V Pro"
+
+	numTwo        = 2
+	numFifty      = 50
+	numOneHundred = 100
 )
 
 func TestAsyncReleaseAutoFill(t *testing.T) {
@@ -1103,7 +1105,7 @@ func TestGetDevStatesDevSet(t *testing.T) {
 		}()
 		mockClassifyDevs := map[string][]*common.NpuDevice{api.Ascend910: {{Health: v1beta1.Healthy}}}
 		common.ParamOption.PresetVDevice = true
-		res := tool.getDevStatesDevSet(mockClassifyDevs)
+		res := tool.getDevStatesDevSet(mockClassifyDevs, 0)
 		convey.So(len(res.FreeHealthyDevice), convey.ShouldEqual, 1)
 		convey.So(len(res.UnHealthyDevice), convey.ShouldEqual, 0)
 		convey.So(len(res.NetUnHealthyDevice), convey.ShouldEqual, 0)
@@ -1375,4 +1377,63 @@ func TestSkipGetIPForA5(t *testing.T) {
 			convey.So(result, convey.ShouldBeTrue)
 		})
 	})
+}
+
+type filterSoftShareDevicesTestCase struct {
+	name            string
+	mockSupportSoft bool
+	npuChipMemory   int
+	kltUsedDevices  sets.String
+	classifyDev     []*common.NpuDevice
+	expected        sets.String
+}
+
+func TestFilterSoftShareDevices(t *testing.T) {
+	tests := []filterSoftShareDevicesTestCase{
+		{
+			name:            "Not supporting soft shared devices, directly return the original set",
+			mockSupportSoft: false,
+			npuChipMemory:   common.MBPerGB,
+			kltUsedDevices:  sets.NewString("npu0", "npu1"),
+			classifyDev:     []*common.NpuDevice{},
+			expected:        sets.NewString("npu0", "npu1"),
+		},
+		{
+			name:            "Supporting soft shared devices but memory is 0, directly return the original set",
+			mockSupportSoft: true,
+			npuChipMemory:   0,
+			kltUsedDevices:  sets.NewString("npu2"),
+			classifyDev:     []*common.NpuDevice{},
+			expected:        sets.NewString("npu2"),
+		},
+		{
+			name:            "sufficient device resources filter available devices",
+			mockSupportSoft: true,
+			npuChipMemory:   numTwo * common.MBPerGB,
+			kltUsedDevices:  sets.NewString("npu0", "npu1", "npu2"),
+			classifyDev: []*common.NpuDevice{
+				{
+					DeviceName:      "npu0",
+					UsedAicoreQuota: numFifty,
+					UsedHbmQuota:    common.MBPerGB,
+				},
+				{
+					DeviceName:      "npu1",
+					UsedAicoreQuota: numOneHundred,
+					UsedHbmQuota:    numTwo * common.MBPerGB,
+				},
+			},
+			expected: sets.NewString("npu1", "npu2"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			patch := gomonkey.ApplyFuncReturn(common.IsSupportSoftShareDevice, tt.mockSupportSoft)
+			defer patch.Reset()
+			tool := &AscendTools{}
+			result := tool.filterSoftShareDevices(tt.kltUsedDevices, tt.classifyDev, tt.npuChipMemory)
+			assert.True(t, tt.expected.Equal(result), "expected %v, got %v",
+				tt.expected.List(), result.List())
+		})
+	}
 }

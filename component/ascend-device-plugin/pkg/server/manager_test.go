@@ -49,6 +49,10 @@ import (
 const (
 	serverNum  = 2
 	rqtTaskNum = 4
+	numTwo     = 2
+	numThree   = 3
+	numTen     = 10
+	numThirty  = 30
 )
 
 var testErr = errors.New("test")
@@ -1697,4 +1701,234 @@ func TestHwDevManagerCheckNoProc(t *testing.T) {
 			checkNoProc := hdm.checkNoProc(0)
 			convey.So(checkNoProc, convey.ShouldBeTrue)
 		})
+}
+
+type parseAnnotationIntValueTestCase struct {
+	name        string
+	pod         v1.Pod
+	annoKey     string
+	desc        string
+	expectedVal int
+	expectError bool
+}
+
+func buildParseAnnotationIntValueTestCases() []parseAnnotationIntValueTestCase {
+	return []parseAnnotationIntValueTestCase{
+		{
+			name:        "TC1 - Annotations is nil",
+			pod:         v1.Pod{ObjectMeta: metav1.ObjectMeta{}},
+			annoKey:     "test-key",
+			desc:        "test description",
+			expectedVal: 0,
+			expectError: true,
+		},
+		{
+			name:        "TC2 - Annotation key not found",
+			pod:         v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{"other-key": "value"}}},
+			annoKey:     "test-key",
+			desc:        "test description",
+			expectedVal: 0,
+			expectError: true,
+		},
+		{
+			name: "TC3 - Special key with valid value",
+			pod: v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				api.SchedulerSoftShareDevPolicyKey: api.SoftShareDeviceSchedulingPolicyFixedShare}}},
+			annoKey:     api.SchedulerSoftShareDevPolicyKey,
+			desc:        "scheduler policy",
+			expectedVal: 1,
+			expectError: false,
+		},
+		{
+			name: "TC4 - Normal key with invalid value",
+			pod: v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				api.SchedulerSoftShareDevAicoreQuotaKey: "aa"}}},
+			annoKey:     "normal-key",
+			desc:        "normal annotation",
+			expectedVal: 0,
+			expectError: true,
+		},
+	}
+}
+
+func TestParseAnnotationIntValue(t *testing.T) {
+	convey.Convey("Testing parseAnnotationIntValue function", t, func() {
+		hdm := &HwDevManager{
+			manager: device.NewHwAscend910Manager(),
+		}
+		testCases := buildParseAnnotationIntValueTestCases()
+		for _, tc := range testCases {
+			convey.Convey(tc.name, func() {
+				result, err := hdm.parseAnnotationIntValue(tc.pod, tc.annoKey, tc.desc)
+				if tc.expectError {
+					convey.So(err, convey.ShouldNotBeNil)
+					convey.So(tc.expectedVal, convey.ShouldEqual, result)
+				} else {
+					convey.So(err, convey.ShouldBeNil)
+					convey.So(tc.expectedVal, convey.ShouldEqual, result)
+				}
+			})
+		}
+	})
+}
+
+func TestCalculateCardUsedResourceQuota1(t *testing.T) {
+	hdm := &HwDevManager{
+		manager: device.NewHwAscend910Manager(),
+	}
+	convey.Convey("Test calculateCardUsedResourceQuota", t, func() {
+		convey.Convey("Empty podDeviceInfoList returns empty map", func() {
+			var emptyList []*common.PodDeviceInfo
+			result, err := hdm.calculateCardUsedResourceQuota(emptyList)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(len(result), convey.ShouldEqual, 0)
+		})
+		convey.Convey("Single pod with valid annotations returns correct quota", func() {
+			pod := &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod-1",
+					Namespace: "test-ns",
+					Annotations: map[string]string{
+						api.PodAnnotationAscendReal:             "card-0",
+						api.SchedulerSoftShareDevAicoreQuotaKey: "10",
+						api.SchedulerSoftShareDevHbmQuotaKey:    "1024",
+						api.SchedulerSoftShareDevPolicyKey:      api.SoftShareDeviceSchedulingPolicyFixedShare,
+					},
+				},
+				Status: v1.PodStatus{Phase: v1.PodRunning},
+			}
+			podDeviceInfoList := []*common.PodDeviceInfo{{Pod: *pod}}
+			result, err := hdm.calculateCardUsedResourceQuota(podDeviceInfoList)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(len(result), convey.ShouldEqual, 1)
+			convey.So(result["card-0"].aicoreQuota, convey.ShouldEqual, numTen)
+			convey.So(result["card-0"].hbmQuota, convey.ShouldEqual, common.MBPerGB)
+			convey.So(result["card-0"].schedulingPolicy, convey.ShouldEqual, 1)
+		})
+	})
+}
+
+func TestCalculateCardUsedResourceQuota2(t *testing.T) {
+	hdm := &HwDevManager{
+		manager: device.NewHwAscend910Manager(),
+	}
+	convey.Convey("Test calculateCardUsedResourceQuota", t, func() {
+		convey.Convey("Multiple pods for same card sum up quota", func() {
+			pod1 := &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod-1",
+					Namespace: "test-ns",
+					Annotations: map[string]string{
+						api.PodAnnotationAscendReal:             "card-0",
+						api.SchedulerSoftShareDevAicoreQuotaKey: "10",
+						api.SchedulerSoftShareDevHbmQuotaKey:    "1024",
+						api.SchedulerSoftShareDevPolicyKey:      api.SoftShareDeviceSchedulingPolicyFixedShare,
+					},
+				},
+			}
+			pod2 := &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod-2",
+					Namespace: "test-ns",
+					Annotations: map[string]string{
+						api.PodAnnotationAscendReal:             "card-0",
+						api.SchedulerSoftShareDevAicoreQuotaKey: "20",
+						api.SchedulerSoftShareDevHbmQuotaKey:    "2048",
+						api.SchedulerSoftShareDevPolicyKey:      api.SoftShareDeviceSchedulingPolicyFixedShare,
+					},
+				},
+			}
+			podDeviceInfoList := []*common.PodDeviceInfo{{Pod: *pod1}, {Pod: *pod2}}
+			result, err := hdm.calculateCardUsedResourceQuota(podDeviceInfoList)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(result["card-0"].aicoreQuota, convey.ShouldEqual, numThirty)            // 10+20
+			convey.So(result["card-0"].hbmQuota, convey.ShouldEqual, numThree*common.MBPerGB) // 1024+2048
+			convey.So(result["card-0"].schedulingPolicy, convey.ShouldEqual, 1)
+		})
+	})
+}
+
+func TestCalculateCardUsedResourceQuota3(t *testing.T) {
+	hdm := &HwDevManager{
+		manager: device.NewHwAscend910Manager(),
+	}
+	convey.Convey("Test calculateCardUsedResourceQuota", t, func() {
+		convey.Convey("Pod missing AscendReal annotation is skipped", func() {
+			pod := &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod-1",
+					Namespace: "test-ns",
+					Annotations: map[string]string{
+						api.SchedulerSoftShareDevAicoreQuotaKey: "10",
+					},
+				},
+			}
+			podDeviceInfoList := []*common.PodDeviceInfo{{Pod: *pod}}
+			result, err := hdm.calculateCardUsedResourceQuota(podDeviceInfoList)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(len(result), convey.ShouldEqual, 0)
+		})
+		convey.Convey("Pod with invalid annotation value is skipped", func() {
+			pod := &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod-1",
+					Namespace: "test-ns",
+					Annotations: map[string]string{
+						api.PodAnnotationAscendReal:             "card-0",
+						api.SchedulerSoftShareDevAicoreQuotaKey: "invalid",
+						api.SchedulerSoftShareDevHbmQuotaKey:    "1024",
+						api.SchedulerSoftShareDevPolicyKey:      api.SoftShareDeviceSchedulingPolicyFixedShare,
+					},
+				},
+			}
+			podDeviceInfoList := []*common.PodDeviceInfo{{Pod: *pod}}
+			result, err := hdm.calculateCardUsedResourceQuota(podDeviceInfoList)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(len(result), convey.ShouldEqual, 0)
+		})
+	})
+}
+
+func TestCalculateCardUsedResourceQuota4(t *testing.T) {
+	hdm := &HwDevManager{
+		manager: device.NewHwAscend910Manager(),
+	}
+	convey.Convey("Test calculateCardUsedResourceQuota", t, func() {
+		convey.Convey("Multiple pods for different cards calculate quota independently", func() {
+			pod1 := &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod-1",
+					Namespace: "test-ns",
+					Annotations: map[string]string{
+						api.PodAnnotationAscendReal:             "card-0",
+						api.SchedulerSoftShareDevAicoreQuotaKey: "10",
+						api.SchedulerSoftShareDevHbmQuotaKey:    "1024",
+						api.SchedulerSoftShareDevPolicyKey:      api.SoftShareDeviceSchedulingPolicyFixedShare,
+					},
+				},
+			}
+			pod2 := &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod-2",
+					Namespace: "test-ns",
+					Annotations: map[string]string{
+						api.PodAnnotationAscendReal:             "card-1",
+						api.SchedulerSoftShareDevAicoreQuotaKey: "30",
+						api.SchedulerSoftShareDevHbmQuotaKey:    "3072",
+						api.SchedulerSoftShareDevPolicyKey:      api.SoftShareDeviceSchedulingPolicyElastic,
+					},
+				},
+			}
+			podDeviceInfoList := []*common.PodDeviceInfo{{Pod: *pod1}, {Pod: *pod2}}
+			result, err := hdm.calculateCardUsedResourceQuota(podDeviceInfoList)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(len(result), convey.ShouldEqual, numTwo)
+			convey.So(result["card-0"].aicoreQuota, convey.ShouldEqual, numTen)
+			convey.So(result["card-0"].hbmQuota, convey.ShouldEqual, common.MBPerGB)
+			convey.So(result["card-0"].schedulingPolicy, convey.ShouldEqual, 1)
+			convey.So(result["card-1"].aicoreQuota, convey.ShouldEqual, numThirty)
+			convey.So(result["card-1"].hbmQuota, convey.ShouldEqual, numThree*common.MBPerGB)
+			convey.So(result["card-1"].schedulingPolicy, convey.ShouldEqual, numTwo)
+		})
+	})
 }

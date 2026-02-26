@@ -70,6 +70,12 @@ type HwDevManager struct {
 	ContainerRuntime string
 }
 
+type shareDevResourceQuota struct {
+	aicoreQuota      int
+	hbmQuota         int
+	schedulingPolicy int
+}
+
 // NewHwDevManager function is used to new a dev manager.
 func NewHwDevManager(devM devmanager.DeviceInterface) *HwDevManager {
 	var hdm HwDevManager
@@ -952,6 +958,20 @@ func (hdm *HwDevManager) isDuoCardChipHealthy(deviceChip []*common.NpuDevice) bo
 	return true
 }
 
+func (hdm *HwDevManager) getChipMemory() int {
+	chipMemory := 0
+	if common.HasOnChipMemory() {
+		hwlog.RunLog.Debug("get node on-chip-memory info")
+		hbmInfo, err := hdm.manager.GetDmgr().GetDeviceHbmInfo(hdm.allInfo.AllDevs[common.FirstDevice].LogicID)
+		if err != nil {
+			hwlog.RunLog.Warnf("failed to get node on-chip-memory info, err: %s", err)
+		} else {
+			chipMemory = int(hbmInfo.MemorySize)
+		}
+	}
+	return chipMemory
+}
+
 func (hdm *HwDevManager) useVolcanoNotify() {
 	if common.ParamOption.BuildScene == common.EdgeScene {
 		return
@@ -965,7 +985,8 @@ func (hdm *HwDevManager) useVolcanoNotify() {
 			hwlog.RunLog.Warn("device plugin first reset annotation and config map error")
 		}
 	})
-	hdm.manager.DoWithVolcanoListAndWatch(hdm.groupDevice)
+	chipMemory := hdm.getChipMemory()
+	hdm.manager.DoWithVolcanoListAndWatch(hdm.groupDevice, chipMemory)
 }
 
 // SignCatch stop system sign catch
@@ -1155,19 +1176,16 @@ func (hdm *HwDevManager) tryToClearResetInfoCM(pod v1.Pod) error {
 // updateSpecTypePodAnnotation will update annotation of pod and
 // try to clear reset info config map which may not be initialized after rescheduling
 func (hdm *HwDevManager) updateSpecTypePodAnnotation(deviceType, serverID string) error {
-	element, exist := hdm.ServerMap[deviceType]
-	if !exist {
-		return fmt.Errorf("not found %s plugin server", deviceType)
-	}
-	pluginServer, ok := element.(*PluginServer)
-	if !ok {
-		return fmt.Errorf("serverMap convert %s failed", deviceType)
+	pluginServer, err := hdm.getPluginServer(deviceType)
+	if err != nil {
+		return fmt.Errorf("failed to get plugin server for device type %s: %s", deviceType, err)
 	}
 	podList := hdm.manager.GetKubeClient().GetActivePodListCache()
 	podDeviceInfo, err := pluginServer.GetKltAndRealAllocateDev(podList)
 	if err != nil {
 		return err
 	}
+	hdm.updateQuota(podDeviceInfo)
 	for _, deviceInfo := range podDeviceInfo {
 		hwlog.RunLog.Debugf("pods: %s, %s, %s", deviceInfo.Pod.Name, deviceInfo.Pod.Status.Phase, deviceInfo.Pod.UID)
 		_, existRealAlloc := deviceInfo.Pod.Annotations[api.PodAnnotationAscendReal]
@@ -1197,6 +1215,93 @@ func (hdm *HwDevManager) updateSpecTypePodAnnotation(deviceType, serverID string
 		}
 	}
 	return nil
+}
+
+func (hdm *HwDevManager) getPluginServer(deviceType string) (*PluginServer, error) {
+	element, exist := hdm.ServerMap[deviceType]
+	if !exist {
+		return nil, fmt.Errorf("plugin server for device type %s not found in ServerMap", deviceType)
+	}
+	pluginServer, ok := element.(*PluginServer)
+	if !ok {
+		return nil, fmt.Errorf("failed to convert ServerMap element to *PluginServer for device type %s", deviceType)
+	}
+	return pluginServer, nil
+}
+
+func (hdm *HwDevManager) calculateCardUsedResourceQuota(
+	podDeviceInfoList []*common.PodDeviceInfo) (map[string]shareDevResourceQuota, error) {
+	cardUsedResourceQuotaMap := make(map[string]shareDevResourceQuota)
+	if len(podDeviceInfoList) == 0 {
+		return cardUsedResourceQuotaMap, nil
+	}
+	for _, deviceInfo := range podDeviceInfoList {
+		hwlog.RunLog.Debugf("pods: %s, %s, %s", deviceInfo.Pod.Name, deviceInfo.Pod.Status.Phase, deviceInfo.Pod.UID)
+		ascendReal, existRealAlloc := deviceInfo.Pod.Annotations[api.PodAnnotationAscendReal]
+		if !existRealAlloc {
+			continue
+		}
+		aicoreQuota, err := hdm.parseAnnotationIntValue(
+			deviceInfo.Pod, api.SchedulerSoftShareDevAicoreQuotaKey, "AI Core quota")
+		if err != nil {
+			hwlog.RunLog.Warnf("pod %s/%s: %v", deviceInfo.Pod.Namespace, deviceInfo.Pod.Name, err)
+			continue
+		}
+		hbmQuota, err := hdm.parseAnnotationIntValue(
+			deviceInfo.Pod, api.SchedulerSoftShareDevHbmQuotaKey, "HBM quota")
+		if err != nil {
+			hwlog.RunLog.Warnf("pod %s/%s: %v", deviceInfo.Pod.Namespace, deviceInfo.Pod.Name, err)
+			continue
+		}
+		policy, err := hdm.parseAnnotationIntValue(deviceInfo.Pod, api.SchedulerSoftShareDevPolicyKey, "policy")
+		if err != nil {
+			hwlog.RunLog.Warnf("pod %s/%s: %v", deviceInfo.Pod.Namespace, deviceInfo.Pod.Name, err)
+			continue
+		}
+		existingQuota := cardUsedResourceQuotaMap[ascendReal]
+		cardUsedResourceQuotaMap[ascendReal] = shareDevResourceQuota{
+			aicoreQuota:      existingQuota.aicoreQuota + aicoreQuota,
+			hbmQuota:         existingQuota.hbmQuota + hbmQuota,
+			schedulingPolicy: policy,
+		}
+	}
+	return cardUsedResourceQuotaMap, nil
+}
+
+func (hdm *HwDevManager) parseAnnotationIntValue(pod v1.Pod, annoKey, desc string) (int, error) {
+	if pod.Annotations == nil {
+		return 0, fmt.Errorf("pod annotations is nil, cannot get %s", desc)
+	}
+	annoValue, exist := pod.Annotations[annoKey]
+	if !exist {
+		return 0, fmt.Errorf("%s annotation %s not found", desc, annoKey)
+	}
+	if annoKey == api.SchedulerSoftShareDevPolicyKey {
+		annoValue = common.ConvertSchedulingPolicyToIntStr(annoValue)
+	}
+	intValue, err := strconv.Atoi(annoValue)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse %s from annotation %s (value: %s): %w",
+			desc, annoKey, annoValue, err)
+	}
+	return intValue, nil
+}
+
+func (hdm *HwDevManager) updateQuota(podDeviceInfo []*common.PodDeviceInfo) {
+	cardUsedResourceQuotaMap, err := hdm.calculateCardUsedResourceQuota(podDeviceInfo)
+	if err != nil {
+		hwlog.RunLog.Warnf("failed to calculate card used resource quota: %v", err)
+		return
+	}
+	for i, dev := range hdm.allInfo.AllDevs {
+		UsedResourceQuota, ok := cardUsedResourceQuotaMap[dev.DeviceName]
+		if !ok {
+			continue
+		}
+		hdm.allInfo.AllDevs[i].UsedAicoreQuota = UsedResourceQuota.aicoreQuota
+		hdm.allInfo.AllDevs[i].UsedHbmQuota = UsedResourceQuota.hbmQuota
+	}
+	return
 }
 
 func (hdm *HwDevManager) hotReset(device *common.NpuDevice, devices []*common.NpuDevice) {
