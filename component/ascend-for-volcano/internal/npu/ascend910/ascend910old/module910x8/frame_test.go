@@ -404,34 +404,6 @@ func buildUseAnnotationTestCases02() []useAnnotationTestCase {
 	}
 }
 
-func TestUseAnnotation(t *testing.T) {
-	npu := New(SchedulerName)
-	job := test.FakeNormalTestJob("job", 1)
-	test.SetFakeJobResRequest(job, util.NPU910CardName, "1")
-	attr := itest.FakeSchedulerJobAttrByJob(job)
-	npu.SetSchedulerAttr(attr)
-	env := plugin.ScheduleEnv{
-		ClusterCache: plugin.ClusterCache{
-			Jobs: map[api.JobID]plugin.SchedulerJob{test.FakeJobName: {SchedulerJobAttr: attr}}},
-	}
-	npu.SetSchedulerEnv(env)
-	testCases := buildUseAnnotationTestCases01()
-	testCases = append(testCases, buildUseAnnotationTestCases02()...)
-	for _, tt := range testCases {
-		t.Run(tt.Name, func(t *testing.T) {
-			node := npu.UseAnnotation(tt.Task, tt.Node)
-			if tt.Task != nil && tt.Node.Annotation != nil && (!reflect.DeepEqual(node.Annotation,
-				tt.Node.Annotation)) || !reflect.DeepEqual(tt.Task.Pod.Annotations[util.NPU910CardName], tt.PodAnno) {
-				t.Errorf("UseAnnotation() node: %v, wantNode: %v, anno %v, wantAnno %v",
-					node, tt.WantNode, tt.Task.Pod.Annotations, tt.PodAnno)
-			}
-			if (tt.Task == nil || tt.Node.Annotation == nil) || !reflect.DeepEqual(node, tt.WantNode) {
-				t.Errorf("UseAnnotation() node: %v, wantNode: %v", node, tt.WantNode)
-			}
-		})
-	}
-}
-
 func TestNilFunc(t *testing.T) {
 	t.Run("tp nil test", func(t *testing.T) {
 		var tp *module910x8

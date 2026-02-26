@@ -37,6 +37,7 @@ import (
 	vnpu2 "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910b/vnpu"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910old/module910x8"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/policy/chip1softsharedev"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/policy/chip4nodex"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/policy/chip8node8ra64sp"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/policy/chip8node8sp"
@@ -60,6 +61,7 @@ var policy910HandlerMap = map[string]string{
 	util.Chip1Node16:         chip4nodex.SchedulePolicy1Px16,
 	util.Chip8Node8Sp:        chip8node8sp.SchedulePolicy8Px8Sp,
 	util.Chip8Node8Ra64Sp:    chip8node8ra64sp.SchedulePolicy8Px8Ra64Sp,
+	util.Chip1ShareShareDev:  chip1softsharedev.SchedulePolicySoftShareDev,
 }
 
 var (
@@ -120,6 +122,7 @@ func initCard910Factory() {
 	card910Factory[chip4nodex.SchedulePolicy4Px16] = func() base.AscendHandler { return chip4nodex.New(chip4nodex.SchedulePolicy4Px16) }
 	card910Factory[chip8node8sp.SchedulePolicy8Px8Sp] = func() base.AscendHandler { return chip8node8sp.New(chip8node8sp.SchedulePolicy8Px8Sp) }
 	card910Factory[chip8node8ra64sp.SchedulePolicy8Px8Ra64Sp] = func() base.AscendHandler { return chip8node8ra64sp.New(chip8node8ra64sp.SchedulePolicy8Px8Ra64Sp) }
+	card910Factory[chip1softsharedev.SchedulePolicySoftShareDev] = func() base.AscendHandler { return chip1softsharedev.New(chip1softsharedev.SchedulePolicySoftShareDev) }
 }
 
 func initCard910ByBaseHandler() {
@@ -152,6 +155,10 @@ func initCard910ByBaseHandler() {
 	}
 	card910Factory[chip4nodex.SchedulePolicy1Px16] = func() base.AscendHandler {
 		return base.New(chip4nodex.SchedulePolicy1Px16, base.WithAnnoPreVal(util.NPU910CardNamePre),
+			base.WithMaxNodeNum(util.NPUIndex16), base.WithAnnoName(util.NPU910CardName))
+	}
+	card910Factory[chip1softsharedev.SchedulePolicySoftShareDev] = func() base.AscendHandler {
+		return base.New(chip1softsharedev.SchedulePolicySoftShareDev, base.WithAnnoPreVal(util.NPU910CardNamePre),
 			base.WithMaxNodeNum(util.NPUIndex16), base.WithAnnoName(util.NPU910CardName))
 	}
 }

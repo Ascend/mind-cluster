@@ -367,6 +367,14 @@ func GetSwitchInfos(nodeList []*api.NodeInfo) map[string]SwitchFaultInfo {
 	return switchInfos
 }
 
+func getSoftShareDevEnableByNode(nodeInfo *api.NodeInfo) bool {
+	if nodeInfo == nil || nodeInfo.Node == nil {
+		return false
+	}
+	softShareDevEnable, ok := nodeInfo.Node.Labels[util.SchedulerSoftShareDevEnableNodeLabel]
+	return ok && softShareDevEnable == "true"
+}
+
 func initNodeDeviceInfoByCmMgr(nodeInfo *api.NodeInfo, deviceInfo NodeDeviceInfoWithID,
 	selfMaintainAvailCard bool) NodeDeviceInfoWithID {
 	tmpDeviceInfo := NodeDeviceInfoWithID{
@@ -379,8 +387,9 @@ func initNodeDeviceInfoByCmMgr(nodeInfo *api.NodeInfo, deviceInfo NodeDeviceInfo
 		CacheUpdateTime: deviceInfo.CacheUpdateTime,
 	}
 	availableDevKey, _ := util.GetAvailableDevInfo(deviceInfo.DeviceList)
+	softShareDevEnable := getSoftShareDevEnableByNode(nodeInfo)
 	for devListKey, devListValue := range deviceInfo.DeviceList {
-		if devListKey == availableDevKey && selfMaintainAvailCard {
+		if devListKey == availableDevKey && selfMaintainAvailCard && !softShareDevEnable {
 			devType := util.GetDeviceType(deviceInfo.DeviceList)
 			nodeDevList, err := util.GetNodeDevListFromAnno(nodeInfo)
 			if err != nil {
