@@ -1,4 +1,4 @@
-apiVersion: v1 #指定api版本，此值必须在kubectl apiversion中
+apiVersion: v1 #指定api版本，此值必须在kubectl apiversion里
 kind: Pod #指定创建资源的角色/类型
 metadata:
   name: ubuntu-ascend-02  #资源的名字，在同一个namespace中必须唯一
