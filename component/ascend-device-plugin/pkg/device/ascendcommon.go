@@ -1768,7 +1768,7 @@ func (tool *AscendTools) generateNetworkFaultEventsBasedOnFaultCacheChange(devic
 		}
 		networkFaultCodes = append(networkFaultCodes, faultCode)
 	}
-
+	
 	networkFaultEvents := common.GetChangedDevFaultInfo(device, device.NetworkFaultCodes, networkFaultCodes)
 	for _, networkFaultEvent := range networkFaultEvents {
 		hwlog.RunLog.Info("generate network fault event based on network fault cache change")
