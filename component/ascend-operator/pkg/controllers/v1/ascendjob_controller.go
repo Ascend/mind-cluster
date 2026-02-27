@@ -361,7 +361,7 @@ func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 		switch e.Object.(type) {
 		case *v1alpha1.Job:
 			vcjob := e.Object.(*v1alpha1.Job)
-			if !hasRankTableMountInVcJob(vcjob) {
+			if _, ok := vcjob.Labels[api.AtlasTaskLabel]; !(ok || hasRankTableMountInVcJob(vcjob)) {
 				return false
 			}
 			r.rtGenerators[vcjob.UID] = ranktable.NewGenerator(decorateVcjob(vcjob))
@@ -369,7 +369,7 @@ func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 			return true
 		case *appv1.Deployment:
 			deploy := e.Object.(*appv1.Deployment)
-			if !hasRankTableMount(&deploy.Spec.Template) {
+			if _, ok := deploy.Labels[api.AtlasTaskLabel]; !(ok || hasRankTableMount(&deploy.Spec.Template)) {
 				return false
 			}
 			r.rtGenerators[deploy.UID] = ranktable.NewGenerator(decorateDeploy(deploy))
@@ -377,7 +377,7 @@ func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 			return true
 		case *appv1.StatefulSet:
 			statefulSet := e.Object.(*appv1.StatefulSet)
-			if !hasRankTableMount(&statefulSet.Spec.Template) {
+			if _, ok := statefulSet.Labels[api.AtlasTaskLabel]; !(ok || hasRankTableMount(&statefulSet.Spec.Template)) {
 				return false
 			}
 			r.rtGenerators[statefulSet.UID] = ranktable.NewGenerator(decorateStatefulSet(statefulSet))
@@ -685,7 +685,7 @@ func decorateVcjob(vcjob *v1alpha1.Job) *mindxdlv1.AscendJob {
 
 func decorateStatefulSet(statefulSet *appv1.StatefulSet) *mindxdlv1.AscendJob {
 	repSpec := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
-		"StatefulSet": &commonv1.ReplicaSpec{
+		"StatefulSet": {
 			Template: statefulSet.Spec.Template,
 			Replicas: statefulSet.Spec.Replicas,
 		},
@@ -711,7 +711,7 @@ func decorateStatefulSet(statefulSet *appv1.StatefulSet) *mindxdlv1.AscendJob {
 
 func decorateDeploy(deploy *appv1.Deployment) *mindxdlv1.AscendJob {
 	repSpec := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
-		"Deploy": &commonv1.ReplicaSpec{
+		"Deploy": {
 			Template: deploy.Spec.Template,
 			Replicas: deploy.Spec.Replicas,
 		},
