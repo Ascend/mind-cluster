@@ -193,6 +193,24 @@ Events:  <none>
 |totalJob|当前集群中的总任务数。|
 
 
+**scheduling-exception-report<a name="section_scheduling_exception_report"></a>**
+
+该ConfigMap位于cluster-system命名空间下。用于展示集群中调度异常的任务信息，帮助用户快速定位任务调度失败的原因。
+
+**表 7**  scheduling-exception-report ConfigMap字段说明
+
+|参数|说明|取值|
+|--|--|--|
+|\<jobName\>.\<jobUID\>|任务异常信息的key，由任务名称和任务UID组成。|字符串|
+|- jobName|任务名称。|字符串|
+|- jobType|任务类型，例如vcjob、acjob等。|字符串|
+|- nameSpace|任务所在的命名空间。|字符串|
+|- conditions|任务异常条件详情。|对象|
+|-- status|任务状态。<ul><li>JobEmptyStatus：任务状态为空。</li><li>JobInitialized：任务已初始化。</li><li>JobFailed：任务失败。</li><li>PodGroupCreated：PodGroup已创建。</li><li>PodGroupPending：PodGroup处于Pending状态。</li><li>PodGroupInqueue：PodGroup处于Inqueue状态。</li><li>PodGroupUnknown：PodGroup状态未知。</li><li>PodGroupRunning：PodGroup处于Running状态。</li></ul>|字符串|
+|-- reason|异常原因，例如JobEnqueueFailed、JobValidateFailed、NodePredicateFailed、BatchOrderFailed、NotEnoughResources、PodPending、PodFailed、PgNotInitialized、JobNoInitialized等。|字符串|
+|-- message|异常详细信息，包含故障描述和排查建议。|字符串|
+
+
 
 ## 进程级恢复接口<a name="ZH-CN_TOPIC_0000002511346765"></a>
 

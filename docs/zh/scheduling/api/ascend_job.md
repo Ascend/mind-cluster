@@ -269,4 +269,83 @@ spec:
 |Succeeded|Job的所有子资源(Pod/Service)处于成功终止阶段。|
 |Failed|Job的一个或多个子资源(Pod/Service)运行失败。|
 
+**任务异常条件说明<a name="zh-cn_topic_0000002377698613_section177175313295"></a>**
+
+当任务出现异常时，AscendJob 的 status.conditions 字段会记录详细的异常信息。每个 condition 包含以下字段：
+
+|字段|类型|说明|
+|--|--|--|
+|type|字符串|条件类型，如 Failed、Restarting、Running、Succeeded、Created|
+|status|字符串|条件状态：True、False、Unknown|
+|lastTransitionTime|字符串|条件状态转换的时间（RFC3339格式）|
+|lastUpdateTime|字符串|条件更新后的最终时间（RFC3339格式）|
+|message|字符串|条件的详细描述信息|
+|reason|字符串|条件转换的原因代码|
+
+**常见异常原因（reason）说明**
+
+|原因代码|说明|
+|--|--|
+|JobFailed|任务失败，通常是因为有 Pod 失败|
+|jobRestarting|任务正在重启，根据重启策略重新启动失败的 Pod|
+|ExitedWithCode|任务以非零退出码退出|
+|FailedDeleteJob|删除任务失败|
+|SuccessfulDeleteJob|删除任务成功|
+|SyncPodGroupFailed|同步 PodGroup 失败|
+|PodGroupNotInitialized|PodGroup 未初始化，通常是因为 volcano-scheduler 未运行|
+|PodGroupPending|PodGroup 处于等待状态，通常是因为集群资源不足|
+|SyncServiceFailed|同步 Service 失败|
+|PodCreateFailed|创建 Pod 失败|
+|ArgumentError|参数错误|
+|InvalidScalingConfig|无效的扩缩容配置|
+|InvalidScaleOutConfig|无效的扩容配置|
+|InvalidSpecs|无效的规格配置|
+|InvalidReplicaType|无效的副本类型|
+|InvalidSuccessPolicy|无效的成功策略|
+|InvalidQueue|无效的队列配置|
+|InvalidFramework|无效的框架配置|
+|InvalidReplicaSpec|无效的副本规格配置|
+|InvalidContainer|无效的容器配置|
+|JobValidFailed|任务验证失败|
+
+**异常条件示例**
+
+```yaml
+status:
+  conditions:
+  - type: Failed
+    status: "True"
+    lastTransitionTime: "2024-01-01T10:00:00Z"
+    lastUpdateTime: "2024-01-01T10:00:00Z"
+    message: "Job default/test-job has failed because has pod failed."
+    reason: "JobFailed"
+  - type: Restarting
+    status: "True"
+    lastTransitionTime: "2024-01-01T10:00:00Z"
+    lastUpdateTime: "2024-01-01T10:00:00Z"
+    message: "Job default/test-job is unconditional retry job and remain retry times is <3>."
+    reason: "jobRestarting"
+  - type: Failed
+    status: "True"
+    lastTransitionTime: "2024-01-01T10:00:00Z"
+    lastUpdateTime: "2024-01-01T10:00:00Z"
+    message: "Job test-job has failed because it has reached the specified backoff limit"
+    reason: "JobFailed"
+```
+
+**查看任务异常信息**
+
+使用以下命令查看任务的详细状态和异常信息：
+
+```bash
+# 查看 AscendJob 的状态
+kubectl get acjob <job-name> -o yaml
+
+# 查看 AscendJob 的状态摘要
+kubectl get acjob <job-name> -o jsonpath='{.status.conditions}'
+
+# 查看 AscendJob 的最新状态
+kubectl get acjob <job-name> -o jsonpath='{.status.conditions[-1]}'
+```
+
 

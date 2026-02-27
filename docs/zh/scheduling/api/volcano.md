@@ -397,7 +397,56 @@
 </tbody>
 </table>
 
+**表 3** 集群调度组件对PodGroup Status.Conditions使用说明
 
+<a name="table_podgroup_conditions"></a>
+<table><thead align="left"><tr id="row_podgroup_conditions_header"><th class="cellrowborder" valign="top" width="20%" id="mcps1.2.5.1.1"><p id="p_podgroup_conditions_type"><a name="p_podgroup_conditions_type"></a><a name="p_podgroup_conditions_type"></a>Type</p>
+</th>
+<th class="cellrowborder" valign="top" width="20%" id="mcps1.2.5.1.2"><p id="p_podgroup_conditions_status"><a name="p_podgroup_conditions_status"></a><a name="p_podgroup_conditions_status"></a>Status</p>
+</th>
+<th class="cellrowborder" valign="top" width="20%" id="mcps1.2.5.1.3"><p id="p_podgroup_conditions_reason"><a name="p_podgroup_conditions_reason"></a><a name="p_podgroup_conditions_reason"></a>Reason</p>
+</th>
+<th class="cellrowborder" valign="top" width="40%" id="mcps1.2.5.1.4"><p id="p_podgroup_conditions_message"><a name="p_podgroup_conditions_message"></a><a name="p_podgroup_conditions_message"></a>Message</p>
+</th>
+</tr>
+</thead>
+<tr id="row_podgroup_conditions_5"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p_podgroup_conditions_type_5"><a name="p_podgroup_conditions_type_5"></a><a name="p_podgroup_conditions_type_5"></a>Unschedulable</p>
+</td>
+<td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.2 "><p id="p_podgroup_conditions_status_5"><a name="p_podgroup_conditions_status_5"></a><a name="p_podgroup_conditions_status_5"></a>True</p>
+</td>
+<td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.3 "><p id="p_podgroup_conditions_reason_5"><a name="p_podgroup_conditions_reason_5"></a><a name="p_podgroup_conditions_reason_5"></a>JobEnqueueFailed</p>
+</td>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p_podgroup_conditions_message_5"><a name="p_podgroup_conditions_message_5"></a><a name="p_podgroup_conditions_message_5"></a>任务由于集群NPU资源不足，导致入队失败</p>
+</td>
+</tr>
+<tr id="row_podgroup_conditions_6"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p_podgroup_conditions_type_6"><a name="p_podgroup_conditions_type_6"></a><a name="p_podgroup_conditions_type_6"></a>Unschedulable</p>
+</td>
+<td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.2 "><p id="p_podgroup_conditions_status_6"><a name="p_podgroup_conditions_status_6"></a><a name="p_podgroup_conditions_status_6"></a>True</p>
+</td>
+<td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.3 "><p id="p_podgroup_conditions_reason_6"><a name="p_podgroup_conditions_reason_6"></a><a name="p_podgroup_conditions_reason_6"></a>JobValidateFailed</p>
+</td>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p_podgroup_conditions_message_6"><a name="p_podgroup_conditions_message_6"></a><a name="p_podgroup_conditions_message_6"></a>任务校验失败，通常包含pod数量不足、请求资源不合规范、或者是不支持的任务类型</p>
+</td>
+</tr>
+<tr id="row_podgroup_conditions_7"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p_podgroup_conditions_type_7"><a name="p_podgroup_conditions_type_7"></a><a name="p_podgroup_conditions_type_7"></a>Unschedulable</p>
+</td>
+<td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.2 "><p id="p_podgroup_conditions_status_7"><a name="p_podgroup_conditions_status_7"></a><a name="p_podgroup_conditions_status_7"></a>True</p>
+</td>
+<td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.3 "><p id="p_podgroup_conditions_reason_7"><a name="p_podgroup_conditions_reason_7"></a><a name="p_podgroup_conditions_reason_7"></a>NodePredicateFailed</p>
+</td>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p_podgroup_conditions_message_7"><a name="p_podgroup_conditions_message_7"></a><a name="p_podgroup_conditions_message_7"></a>节点过滤失败，包含详细的节点过滤错误信息</p>
+</td>
+</tr>
+<tr id="row_podgroup_conditions_8"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p_podgroup_conditions_type_8"><a name="p_podgroup_conditions_type_8"></a><a name="p_podgroup_conditions_type_8"></a>Unschedulable</p>
+</td>
+<td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.2 "><p id="p_podgroup_conditions_status_8"><a name="p_podgroup_conditions_status_8"></a><a name="p_podgroup_conditions_status_8"></a>True</p>
+</td>
+<td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.3 "><p id="p_podgroup_conditions_reason_8"><a name="p_podgroup_conditions_reason_8"></a><a name="p_podgroup_conditions_reason_8"></a>BatchOrderFailed</p>
+</td>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p_podgroup_conditions_message_8"><a name="p_podgroup_conditions_message_8"></a><a name="p_podgroup_conditions_message_8"></a>批量节点排序失败，包含详细的排序错误信息</p>
+</td>
+</tr>
+</table>
 
 ## 任务信息<a name="ZH-CN_TOPIC_0000002479386798"></a>
 

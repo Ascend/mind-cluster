@@ -2903,7 +2903,55 @@ NPU Exporter组件以容器化方式运行时需使用特权容器、root用户�
     ...
     ```
 
-7.  在K8s管理节点上各YAML对应路径下执行以下命令，启动Ascend Device Plugin。
+7.  （可选）根据容器运行时类型，修改Ascend Device Plugin组件的启动YAML中的挂载配置。
+
+    -   如果容器运行时为Docker，保留docker-sock和docker-dir挂载配置，示例如下：
+
+        ```
+        volumeMounts:
+          ...
+          - name: docker-sock
+            mountPath: /run/docker.sock
+            readOnly: true
+          - name: docker-dir
+            mountPath: /run/docker
+            readOnly: true
+          - name: containerd
+            mountPath: /run/containerd
+            readOnly: true
+        volumes:
+          ...
+          - name: docker-sock
+            hostPath:
+              path: /run/docker.sock
+          - name: docker-dir
+            hostPath:
+              path: /run/docker
+          - name: containerd
+            hostPath:
+              path: /run/containerd
+        ```
+    -   如果容器运行时为containerd，删除docker-sock和docker-dir挂载配置，保留containerd挂载配置。示例如下：
+
+        ```
+        volumeMounts:
+            ...
+            - name: containerd
+            mountPath: /run/containerd
+            readOnly: true
+        volumes:
+            ...
+            - name: containerd
+            hostPath:
+                path: /run/containerd
+        ```
+
+    >[!NOTE] 说明 
+    >-   如果docker.sock文件路径不是/run/docker.sock，请在volumes中修改为实际路径，不支持使用符号链接。
+    >-   如果docker目录不是/var/run/docker，请在volumes中修改为实际路径，不支持使用符号链接。
+    >-   如果containerd目录不是/run/containerd，请在volumes中修改为实际路径，不支持使用符号链接。
+
+8.  在K8s管理节点上各YAML对应路径下执行以下命令，启动Ascend Device Plugin。
 
     -   K8s集群中存在使用Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件的节点（配合Volcano使用，支持虚拟化实例，YAML默认开启静态虚拟化）。
 
