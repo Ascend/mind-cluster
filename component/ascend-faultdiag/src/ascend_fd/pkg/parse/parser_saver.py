@@ -794,6 +794,12 @@ class DevLogSaver(BaseLogSaver):
     LOG_TYPE = "device log"
     CENTRALIZED_STORAGE_DIRECTORY = "device_log"
     CMD_ARG_KEYS = ["device_log"]
+    HISI_DIR_TS_PATTERN = re.compile(r'^\d{14}-\d{9}$')
+    HISI_LOG_WHITELIST = (
+        ('log', 'kernel.log'),
+        ('bbox', 'os', 'os_info.txt'),
+        ('mntn', 'hbm.txt'),
+    )
 
     def __init__(self):
         """
@@ -864,6 +870,23 @@ class DevLogSaver(BaseLogSaver):
             history_path = os.path.join(hisi_logs_path, device_dir, regular_table.DEV_NPU_HISI_HISTORY_ORIGIN)
             if os.path.exists(history_path) and os.path.isfile(history_path):
                 self.hisi_logs_list.append(history_path)
+            self._filter_hisi_logs_in_device_dir(os.path.join(hisi_logs_path, device_dir))
+
+    def _filter_hisi_logs_in_device_dir(self, device_dir):
+        """
+        Filter the hisi_logs in device_dir
+        :param device_dir:  device dir in the hisi logs path
+        """
+        if not device_dir or not os.path.isdir(device_dir):
+            return
+        for sub_dir in safe_list_dir(device_dir):
+            if not self.HISI_DIR_TS_PATTERN.match(sub_dir):
+                continue
+            ts_path = os.path.join(device_dir, sub_dir)
+            for whitelist_path in self.HISI_LOG_WHITELIST:
+                target_path = os.path.join(ts_path, *whitelist_path)
+                if os.path.exists(target_path) and os.path.isfile(target_path):
+                    self.hisi_logs_list.append(target_path)
 
     def _filter_slog(self, slog_path):
         """

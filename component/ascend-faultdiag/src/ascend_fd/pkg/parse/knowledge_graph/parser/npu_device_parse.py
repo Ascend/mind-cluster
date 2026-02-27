@@ -18,7 +18,8 @@ import os
 import logging
 import bisect
 import re
-from typing import Union
+from pathlib import Path
+from typing import Union, Optional
 
 from ascend_fd.model.context import KGParseCtx
 from ascend_fd.pkg.parse.knowledge_graph.parser.file_parser import FileParser, EventStorage
@@ -33,6 +34,7 @@ DEVICE_ID_PATTERN = re.compile(f"{regular_table.DEVICE_ID}|{regular_table.DEV_OS
 LOCAL_FAULT_FLAG = "1"
 PCS_NORMAL_TH = "0"
 NEGATIVE_ONE = "-1"
+TS_PATTERN = re.compile(r'^(\d{14})-\d{9}$')
 
 
 class BaseNpuLogParser(FileParser):
@@ -44,7 +46,7 @@ class BaseNpuLogParser(FileParser):
         super().__init__(params)
 
     @staticmethod
-    def _get_occur_time(line) -> str:
+    def _get_occur_time(line, dir_name) -> str:
         pass
 
     @staticmethod
@@ -106,9 +108,10 @@ class BaseNpuLogParser(FileParser):
         if not self.is_sdk_input and not os.path.isfile(file_source):
             return []
         device_id = self._determine_device_id(file_source)
+        dir_name = os.path.dirname(file_source.path) if self.is_sdk_input else os.path.dirname(file_source)
         event_storage = EventStorage()
         for line in self._yield_log(file_source):
-            occur_time = self._get_occur_time(line)
+            occur_time = self._get_occur_time(line, dir_name)
             if not occur_time or occur_time < self.resuming_training_time:
                 continue  # when cannot get time or this line is before resuming training, ignore this line
             # not in the Training Time Range, ignore it
@@ -154,7 +157,7 @@ class NpuHistoryLogParser(BaseNpuLogParser):
     DIR_ERR_NUM = 100
 
     @staticmethod
-    def _get_occur_time(line):
+    def _get_occur_time(line, dir_name):
         """
         Get the time info.
         history.log e.g: [yyyy-mm-dd-hh:mm:ss.******] *****
@@ -162,7 +165,31 @@ class NpuHistoryLogParser(BaseNpuLogParser):
         :return: time info
         """
         time_str = line[line.find("[") + 1: line.find("]")]
-        return check_and_format_time_str(time_str.strip())
+        occur_time = check_and_format_time_str(time_str.strip())
+        if not occur_time:
+            time_str = NpuHistoryLogParser._extract_timestamp_from_dir(dir_name)
+            occur_time = check_and_format_time_str(time_str.strip())
+        return occur_time
+
+    @staticmethod
+    def _extract_timestamp_from_dir(path: str) -> Optional[str]:
+        """
+        Extract the timestamp from log dir path.
+        path e.g: /hisi_logs/device-0/yyyymmddhhmmss-xxxxxxxxx/log/kernel.log
+        :param path: dir path of log
+        :return: timestamp string
+        """
+        p = Path(path)
+        parts = p.parts
+        try:
+            idx = parts.index("hisi_logs")
+        except ValueError:
+            return ""
+        for segment in parts[idx + 1:]:
+            match = TS_PATTERN.match(segment)
+            if match:
+                return match.group(1)
+        return ""
 
     def parse(self, parse_ctx: KGParseCtx, task_id):
         """
@@ -181,7 +208,7 @@ class NpuHistoryLogParser(BaseNpuLogParser):
 class NpuSlogParser(BaseNpuLogParser):
 
     @staticmethod
-    def _get_occur_time(line):
+    def _get_occur_time(line, dir_name):
         """
         Get the time info.
         e.g:

@@ -25,7 +25,8 @@ from ascend_fd.pkg.parse.knowledge_graph.parser.amct_log_parser import AMCTLogPa
 from ascend_fd.pkg.parse.knowledge_graph.parser.lcne_parser import LCNEParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.mindio_parser import MindIOLogParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.noded_log_parser import NodeDLogParser
-from ascend_fd.pkg.parse.knowledge_graph.parser.npu_device_parse import NpuOsLogParser, NpuDeviceLogParser
+from ascend_fd.pkg.parse.knowledge_graph.parser.npu_device_parse import NpuOsLogParser, NpuDeviceLogParser, \
+    NpuHistoryLogParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.train_log_parser import TrainLogParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.cann_log_parser import CANNPlogParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.host_os_parser import HostMsgParser, HostVmCoreParser
@@ -38,6 +39,7 @@ from ascend_fd.utils.load_kg_config import ParseRegexMap
 
 TEST_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 TESTCASE_KG_PARSE_INPUT = os.path.join(TEST_DIR, "st_module_testcase", "kg_parse")
+TEST_USER_CONF = os.path.join(TEST_DIR, "custom_operation", "test_kg_config.json")
 EVENT_CODE = "event_code"
 OCCUR_TIME = "occur_time"
 SOURCE_DEVICE = "source_device"
@@ -92,7 +94,8 @@ class KgParseTestCase(unittest.TestCase):
         }
         self.params = {
             "default_conf": ParseRegexMap([KNOWLEDGE_GRAPH_CONF]).get_parse_regex(),
-            "user_conf": ParseRegexMap([DEFAULT_USER_CONF]).get_parse_regex(),
+            "user_conf": {**ParseRegexMap([DEFAULT_USER_CONF]).get_parse_regex(),
+                          **ParseRegexMap([TEST_USER_CONF]).get_parse_regex()},
             "start_time": "1999-10-01 03:40:50.000000", "end_time": "2999-10-01 03:40:50.000000"
         }
         self.host_os_parser = HostMsgParser(self.params)
@@ -131,6 +134,12 @@ class KgParseTestCase(unittest.TestCase):
         self.npu_device_input_file_dict = {
             TESTCASE_KG_PARSE_INPUT: [
                 os.path.join(TESTCASE_KG_PARSE_INPUT, "device-1", "device-1_20241204162140159.log")]
+        }
+        self.npu_history_parser = NpuHistoryLogParser(self.params)
+        self.npu_history_input_file_dict = {
+            TESTCASE_KG_PARSE_INPUT: [
+                os.path.join(TESTCASE_KG_PARSE_INPUT, "hisi_logs", "device-1", "20241204162140-590391000", "log",
+                             "kernel.log")]
         }
         self.device_plugin_parser = DevicePluginParser(self.params)
         self.device_plugin_file_list = [
@@ -269,6 +278,11 @@ class KgParseTestCase(unittest.TestCase):
         event_result_list = self.npu_device_parser._parse_single_file(file_path)
         self.assertEqual("Comp_Network_Custom_11", event_result_list[0][EVENT_CODE])
         self.assertEqual("1", event_result_list[0][SOURCE_DEVICE])
+
+    def test_npu_history_parse_single_file(self):
+        file_path = self.npu_history_input_file_dict.get(TESTCASE_KG_PARSE_INPUT, [])[0]
+        event_result_list = self.npu_history_parser._parse_single_file(file_path)
+        self.assertEqual("Test_NPU_History_Code_1", event_result_list[0][EVENT_CODE])
 
     def test_npu_0x40f84e00(self):
         parse_ctx = KGParseCtx(parse_file_path=KGParseFilePath(

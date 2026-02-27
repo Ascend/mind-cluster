@@ -1,0 +1,22 @@
+{
+    "knowledge-repository": {
+        "Test_NPU_History_Code_1": {
+            "attribute": {
+                "class": "Software",
+                "component": "NPU",
+                "module": "OS",
+                "cause_zh": "cause_zh",
+                "description_zh": "description_zh",
+                "suggestion_zh": [
+                    "suggestion_zh"
+                ]
+            },
+            "source_file": "NPU_History",
+            "regex": {
+                "in": [
+                    "core LOCKUP"
+                ]
+            }
+        }
+    }
+}
