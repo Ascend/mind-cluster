@@ -244,6 +244,8 @@ const (
 const (
 	// ErrMsgInitCardListFailed is used where initialization of the card list fails
 	ErrMsgInitCardListFailed = "get card list failed for init"
+	// ErrMsgInitDeviceListFailed is used where initialization of the device list fails
+	ErrMsgInitDeviceListFailed = "get device list failed for init"
 	// ErrMsgGetBoardInfoFailed is used where there is a failure in getting board info
 	ErrMsgGetBoardInfoFailed = "get board info failed, no card found"
 )
