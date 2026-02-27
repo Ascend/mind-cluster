@@ -104,8 +104,21 @@ func (d *dockerClient) ParseAllContainers(ctx context.Context) (map[string]*dtyp
 
 // ParseSingleContainer returns a single container
 func (d *dockerClient) ParseSingleContainer(ctx context.Context, containerID string) (*dtypes.ContainerNPUInfo, error) {
-	return d.parseSingleContainer(ctx, containerID)
+	containerJson, err := d.client.ContainerInspect(ctx, containerID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to inspect container %s: %w", containerID, err)
+	}
+	labels := containerJson.Config.Labels
 
+	info, err := d.parseSingleContainer(ctx, containerID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse single container %s: %w", containerID, err)
+	}
+	info.PodName = labels["io.kubernetes.pod.name"]
+	info.PodNS = labels["io.kubernetes.pod.namespace"]
+	info.Namespace = dockerNamespace
+	info.Name = labels["io.kubernetes.container.name"]
+	return info, nil
 }
 
 // WatchContainerEvents watches container events

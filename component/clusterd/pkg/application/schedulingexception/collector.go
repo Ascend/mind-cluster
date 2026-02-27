@@ -116,6 +116,16 @@ func (c *Collector) checkJobs() {
 		if cond == nil {
 			continue
 		}
+		if _, exist := c.jobExceptions[jobKey]; !exist {
+			hwlog.RunLog.Infof("job %s has scheduling exception", jobKey)
+			c.jobExceptions[jobKey] = &jobExceptionInfo{
+				JobName:   jobInfo.Name,
+				JobType:   jobInfo.JobType,
+				NameSpace: jobInfo.NameSpace,
+				Condition: *cond,
+			}
+		}
+
 		hwlog.RunLog.Infof("pgname: %v, cond: %v, pre cond: %v", jobInfo.PgName, cond, c.jobExceptions[jobKey].Condition)
 		key := jobInfo.Name + "." + jobKey
 		if cond.Equal(c.jobExceptions[jobKey].Condition) {
@@ -158,17 +168,6 @@ func (c *Collector) processPodGroup(jobKey string, jobInfo constant.JobInfo) *co
 	pods := pod.GetPodByJobId(jobKey)
 	indices := c.analyzePodGroupConditions(pg)
 	cond := c.analyzePodGroupPhase(pg, pods, indices, jobInfo)
-
-	if _, exist := c.jobExceptions[jobKey]; !exist {
-		hwlog.RunLog.Infof("job %s has scheduling exception", jobKey)
-		c.jobExceptions[jobKey] = &jobExceptionInfo{
-			JobName:   jobInfo.Name,
-			JobType:   jobInfo.JobType,
-			NameSpace: jobInfo.NameSpace,
-			Condition: *cond,
-		}
-	}
-
 	return cond
 }
 
@@ -371,7 +370,7 @@ func (c *Collector) processPodFailed(p corev1.Pod) *conditionDetail {
 
 func (c *Collector) processJobs(exceptionJobs map[string]*jobExceptionInfo, pgInfos map[string]constant.JobInfo) map[string]metav1.Object {
 	allMetaObjs := make(map[string]metav1.Object, 0)
-	for _, jobs := range kube.ListObjects(kube.AcJobGVK(), kube.VcJobGVK()) {
+	for gvk, jobs := range kube.ListObjects(kube.AcJobGVK(), kube.VcJobGVK()) {
 		for _, jobObj := range jobs {
 			metaObj, ok := jobObj.(metav1.Object)
 			if !ok {
@@ -388,10 +387,17 @@ func (c *Collector) processJobs(exceptionJobs map[string]*jobExceptionInfo, pgIn
 			if cond == nil {
 				continue
 			}
-
 			jobKey := string(metaObj.GetUID())
-			key := metaObj.GetName() + "." + jobKey
+			if _, exist := c.jobExceptions[jobKey]; !exist {
+				c.jobExceptions[jobKey] = &jobExceptionInfo{
+					NameSpace: metaObj.GetNamespace(),
+					JobName:   metaObj.GetName(),
+					JobType:   gvk.String(),
+					Condition: *cond,
+				}
+			}
 
+			key := metaObj.GetName() + "." + jobKey
 			if cond.Equal(c.jobExceptions[jobKey].Condition) {
 				exceptionJobs[key] = c.jobExceptions[jobKey]
 			}
@@ -405,27 +411,14 @@ func (c *Collector) processJobs(exceptionJobs map[string]*jobExceptionInfo, pgIn
 
 func (c *Collector) processJobObject(jobObj interface{}, metaObj metav1.Object) *conditionDetail {
 	var cond *conditionDetail
-	var jobType string
 	switch j := jobObj.(type) {
 	case *v1alpha1.Job:
 		cond = c.processVcJob(j)
-		jobType = kube.VcJobGVK().String()
 	case *batchv1.AscendJob:
 		cond = c.processAscendJob(j)
-		jobType = kube.AcJobGVK().String()
 	default:
 		hwlog.RunLog.Warn("unknown job type")
 		return nil
-	}
-
-	jobKey := string(metaObj.GetUID())
-	if _, exist := c.jobExceptions[jobKey]; !exist {
-		c.jobExceptions[jobKey] = &jobExceptionInfo{
-			NameSpace: metaObj.GetNamespace(),
-			JobName:   metaObj.GetName(),
-			JobType:   jobType,
-			Condition: *cond,
-		}
 	}
 
 	return cond

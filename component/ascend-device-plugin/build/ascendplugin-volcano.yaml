@@ -123,10 +123,10 @@ spec:
           - name: localtime
             mountPath: /etc/localtime
             readOnly: true
-          - name: docker-sock
+          - name: docker-sock   # if container runtime is containerd, delete this volumeMount, else do not modify
             mountPath: /run/docker.sock
             readOnly: true
-          - name: docker-dir
+          - name: docker-dir    # if container runtime is containerd, delete this volumeMount, else do not modify
             mountPath: /run/docker
             readOnly: true
           - name: containerd
@@ -185,11 +185,11 @@ spec:
         - name: localtime
           hostPath:
             path: /etc/localtime
-        - name: docker-sock
-          hostPath:
+        - name: docker-sock         # if container runtime is containerd, delete this volume, else do not modify
+          hostPath:                 # if your sock file is not in /run/docker.sock, please modify it, not support symbolic link
             path: /run/docker.sock
-        - name: docker-dir
-          hostPath:
+        - name: docker-dir          # if container runtime is containerd, delete this volume, else do not modify
+          hostPath:                 # if your docker dir is not in /run/docker, please modify it, not support symbolic link
             path: /run/docker
         - name: containerd
           hostPath:
