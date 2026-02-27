@@ -247,12 +247,12 @@ func GetSeparateNPU(nodeInfo map[string]NodeCmInfo) map[string][]string {
 
 // ParseManualCm parse manually separate npu info from configmap
 func ParseManualCm(cm *v1.ConfigMap) (map[string]NodeCmInfo, error) {
-	nodeInfo := NodeCmInfo{}
 	manualCmInfo := map[string]NodeCmInfo{}
 	if cm.Data == nil {
 		return nil, fmt.Errorf("cm has no data")
 	}
 	for node, info := range cm.Data {
+		nodeInfo := NodeCmInfo{}
 		if err := json.Unmarshal([]byte(info), &nodeInfo); err != nil {
 			return nil, fmt.Errorf("unmarshal configmap <%s/%s> key %s failed: %v", cm.Namespace, cm.Name, node, err)
 		}

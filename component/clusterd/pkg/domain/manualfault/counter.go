@@ -143,6 +143,20 @@ func (c *FaultCounter) printCountInfo() {
 	hwlog.RunLog.Info("record faults count end")
 }
 
+// ClearDevFaults safe clear dev faults
+func (c *FaultCounter) ClearDevFaults(node, devId string) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	_, ok := c.faults[node]
+	if !ok {
+		return
+	}
+	delete(c.faults[node], devId)
+	if len(c.faults[node]) == 0 {
+		delete(c.faults, node)
+	}
+}
+
 // ClearDevFault safe clear dev fault
 func (c *FaultCounter) ClearDevFault(node, devId, code string) {
 	c.mutex.Lock()

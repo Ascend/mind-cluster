@@ -436,3 +436,70 @@ func TestIsReachFrequency(t *testing.T) {
 		convey.So(res, convey.ShouldBeTrue)
 	})
 }
+
+func TestClearFaults(t *testing.T) {
+	conf.SetManualSeparatePolicy(validPolicy)
+	convey.Convey("test func ClearDevFaults, clear not exits item", t, testClearDevNotExist)
+	convey.Convey("test func ClearDevFaults, clear dev only", t, testClearOnlyDev)
+	convey.Convey("test func ClearDevFaults, clear dev -> clear node", t, testClearDevAndNode)
+	convey.Convey("test func ClearDevFaults, clear all nodes", t, testClearNodes)
+}
+
+func testClearDevNotExist() {
+	testPrepare()
+	// node not exist
+	convey.So(len(Counter.faults), convey.ShouldEqual, len2)
+	Counter.ClearDevFaults(node3, dev1)
+	convey.So(len(Counter.faults), convey.ShouldEqual, len2)
+
+	// dev not exist
+	info, ok := Counter.faults[node1]
+	convey.So(ok, convey.ShouldBeTrue)
+	convey.So(len(info), convey.ShouldEqual, len2)
+	Counter.ClearDevFaults(node1, dev3)
+	info, ok = Counter.faults[node1]
+	convey.So(ok, convey.ShouldBeTrue)
+	convey.So(len(info), convey.ShouldEqual, len2)
+}
+
+func testClearOnlyDev() {
+	testPrepare()
+	info, ok := Counter.faults[node1]
+	convey.So(ok, convey.ShouldBeTrue)
+	convey.So(len(info), convey.ShouldEqual, len2)
+	Counter.ClearDevFaults(node1, dev1)
+	info, ok = Counter.faults[node1]
+	convey.So(ok, convey.ShouldBeTrue)
+	convey.So(len(info), convey.ShouldEqual, len1)
+}
+
+func testClearDevAndNode() {
+	testPrepare()
+	info, ok := Counter.faults[node1]
+	convey.So(ok, convey.ShouldBeTrue)
+	convey.So(len(info), convey.ShouldEqual, len2)
+	Counter.ClearDevFaults(node1, dev1)
+	Counter.ClearDevFaults(node1, dev2)
+	info, ok = Counter.faults[node1]
+	convey.So(ok, convey.ShouldBeFalse)
+}
+
+func testClearNodes() {
+	testPrepare()
+	info, ok := Counter.faults[node1]
+	convey.So(ok, convey.ShouldBeTrue)
+	convey.So(len(info), convey.ShouldEqual, len2)
+	Counter.ClearDevFaults(node1, dev1)
+	Counter.ClearDevFaults(node1, dev2)
+	info, ok = Counter.faults[node1]
+	convey.So(ok, convey.ShouldBeFalse)
+
+	info, ok = Counter.faults[node2]
+	convey.So(ok, convey.ShouldBeTrue)
+	convey.So(len(info), convey.ShouldEqual, len1)
+	Counter.ClearDevFaults(node2, dev3)
+	info, ok = Counter.faults[node2]
+	convey.So(ok, convey.ShouldBeFalse)
+
+	convey.So(len(info), convey.ShouldEqual, len0)
+}

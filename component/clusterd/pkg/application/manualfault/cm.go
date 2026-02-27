@@ -67,6 +67,7 @@ func checkDiffAndDelete() {
 		for _, devId := range info {
 			hwlog.RunLog.Errorf("node: %s, dev: %s is manually delete from cm, so delete from cache synchronously",
 				nodeName, devId)
+			manualfault.Counter.ClearDevFaults(nodeName, devId)
 			manualfault.FaultCmInfo.DeleteSeparateDev(nodeName, devId)
 		}
 	}
