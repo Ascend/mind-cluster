@@ -26,6 +26,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/conf"
+	"clusterd/pkg/domain/manualfault"
 	"clusterd/pkg/interface/kube"
 )
 
@@ -71,6 +72,11 @@ func loadGlobalConfig(cm *v1.ConfigMap) {
 		return
 	}
 	conf.SetManualSeparatePolicy(policy)
+	if !conf.GetManualEnabled() {
+		manualfault.InitJobFaultManager(constant.DefaultSlidingWindow)
+		manualfault.InitCounter()
+		manualfault.InitFaultCmInfo()
+	}
 	hwlog.RunLog.Info("load manually separate policy config success")
 }
 

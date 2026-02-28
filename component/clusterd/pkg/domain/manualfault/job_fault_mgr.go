@@ -19,6 +19,7 @@ import (
 	"sync"
 	"time"
 
+	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/podgroup"
 )
@@ -79,6 +80,7 @@ func (m *JobFaultManager) AddFault(newFault *Fault) {
 		return
 	}
 
+	hwlog.RunLog.Infof("fault enters the process of determining software fault: %+v", newFault)
 	m.mutex.Lock()
 	fault, ok := m.jobFault[newFault.JobId]
 	if !ok || fault == nil {
@@ -159,6 +161,7 @@ func (m *JobFaultManager) deleteSameWithFirstFault(faults []*Fault, isSftFault b
 			}
 			// within 30 seconds, dev 1 occur faults 1 for 2 times, and no other devs occur fault 1, which is a hardware fault
 			if fault.NodeName == fault0.NodeName && fault.DevName == fault0.DevName {
+				hwlog.RunLog.Infof("fault: %+v, is not software fault", fault)
 				Counter.AddFault(fault)
 				continue
 			}
@@ -169,7 +172,7 @@ func (m *JobFaultManager) deleteSameWithFirstFault(faults []*Fault, isSftFault b
 }
 
 func firstItemIsSfwFault(faults []*Fault) bool {
-	if len(faults) <= 1 {
+	if len(faults) == 0 {
 		return false
 	}
 	fault0 := faults[0]
@@ -178,8 +181,10 @@ func firstItemIsSfwFault(faults []*Fault) bool {
 			continue
 		}
 		if fault.Code == fault0.Code && (fault.NodeName != fault0.NodeName || fault.DevName != fault0.DevName) {
+			hwlog.RunLog.Infof("fault: %+v, is software fault", fault0)
 			return true
 		}
 	}
+	hwlog.RunLog.Infof("fault: %+v, is not software fault", fault0)
 	return false
 }

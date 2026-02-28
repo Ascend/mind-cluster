@@ -121,7 +121,7 @@ func (c *FaultCounter) AddFault(input *Fault) {
 }
 
 func (c *FaultCounter) dealFrequencyFault(fault FaultInfo) {
-	hwlog.RunLog.Errorf("node: %s, dev: %s, code: %s, reach frequency threshold, set to manually separate",
+	hwlog.RunLog.Infof("node: %s, dev: %s, code: %s, reach frequency threshold, set to manually separate",
 		fault.NodeName, fault.DevName, fault.FaultCode)
 	c.clearDevFault(fault.NodeName, fault.DevName, fault.FaultCode)
 	FaultCmInfo.AddSeparateDev(fault)

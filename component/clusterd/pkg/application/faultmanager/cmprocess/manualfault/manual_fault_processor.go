@@ -42,9 +42,6 @@ func init() {
 // Process is used to process manually separate faults
 func (p *manualFaultProcessor) Process(info any) any {
 	if !conf.GetManualEnabled() {
-		manualfault.InitJobFaultManager(constant.DefaultSlidingWindow)
-		manualfault.InitCounter()
-		manualfault.InitFaultCmInfo()
 		return info
 	}
 
