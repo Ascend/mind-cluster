@@ -79,15 +79,20 @@ func getResetTime(logicId int32) int64 {
 	return resetTime
 }
 
+// getAscend910Name returns the device name based on the real card type.
+// For Ascend910A5, it returns api.NPULowerCase; otherwise, it returns api.Ascend910.
+func getAscend910Name() string {
+	if common.ParamOption.RealCardType == api.Ascend910A5 {
+		return api.NPULowerCase
+	}
+	return api.Ascend910
+}
+
 // NewHwAscend910Manager is used to create ascend 910 manager
 func NewHwAscend910Manager() *HwAscend910Manager {
-	name := api.Ascend910
-	if common.ParamOption.RealCardType == api.Ascend910A5 {
-		name = api.NPULowerCase
-	}
 	return &HwAscend910Manager{
 		AscendTools: AscendTools{
-			name:                      name,
+			name:                      getAscend910Name(),
 			unHealthyKey:              common.GetAscend910Key(api.CmCardUnhealthySuffix),
 			devCount:                  common.MaxDevicesNum,
 			cardInResetMap:            make(map[int32]bool, common.GeneralMapSize),
@@ -752,7 +757,7 @@ func (hnm *HwAscend910Manager) update910NodeLabel(curNode *v1.Node, devRecoverLa
 
 func (hnm *HwAscend910Manager) getHealthAndRecoverDev(curDevStatusSet common.DevStatusSet, devRecoverDev,
 	recordUHDev sets.String) (string, string) {
-	device910 := curDevStatusSet.FreeHealthyDevice[api.Ascend910]
+	device910 := curDevStatusSet.FreeHealthyDevice[getAscend910Name()]
 	if common.ParamOption.AutoStowingDevs {
 		return "", common.ToString(device910, common.CommaSepDev)
 	}
@@ -871,7 +876,7 @@ func (hnm *HwAscend910Manager) updateUpgradeErrorInfo(classifyDevs map[string][]
 	}
 	for _, dev := range deviceList {
 		index := -1
-		for i, _ := range isolateDevList {
+		for i := range isolateDevList {
 			if isolateDevList[i] != dev.LogicID {
 				continue
 			}
@@ -1079,7 +1084,7 @@ func (hnm *HwAscend910Manager) filterDevStatusForA3(devStatusList []*common.NpuD
 			devToBeSet[id] = struct{}{}
 		}
 	}
-	for idx, _ := range devToBeSet {
+	for idx := range devToBeSet {
 		if int(idx) >= len(devStatusList) {
 			hwlog.RunLog.Errorf("device logicID %v is greater than device list length %v",
 				idx, len(devStatusList))
