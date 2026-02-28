@@ -22,6 +22,8 @@ import (
 	"io/fs"
 	"os"
 	"reflect"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -37,6 +39,8 @@ import (
 	"Ascend-device-plugin/pkg/kubeclient"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/devmanager"
+	"ascend-common/devmanager/dcmi"
 )
 
 var (
@@ -86,6 +90,16 @@ const (
 	slowNodeStepTimeEnvNum = 2
 	intNum10               = 10
 	intNum2                = 2
+	mockValidVNPUId        = "vnpu-001"
+	mockValidAicoreQuota   = "50"
+	mockValidHbmQuota      = "2048"
+	mockValidPolicyStr     = "Elastic"
+	mockConvertedPolicy    = "2"
+	testPhysicalID         = 0
+	testJobName            = "test-job"
+	testConfigDir          = "/etc/ascend/config/test-job/0_vnpu-001"
+	testLogicID            = int32(0)
+	testDieId              = "die-001"
 )
 
 func init() {
@@ -990,5 +1004,695 @@ func TestIsValidRequestID(t *testing.T) {
 		}
 		ids := []string{"1"}
 		convey.So(len(ps.isValidRequestID(ids)), convey.ShouldEqual, 1)
+	})
+}
+
+func TestAddSoftShareDev(t *testing.T) {
+	convey.Convey("Test addSoftShareDev", t, func() {
+		ps := &PluginServer{}
+		mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{ShareCount: intNum10})
+		defer mockOption.Reset()
+		resp := &v1beta1.ListAndWatchResponse{
+			Devices: []*v1beta1.Device{},
+		}
+		ps.addSoftShareDev(resp, ascend910LogicID0, common.NpuDevice{Health: v1beta1.Healthy})
+		convey.So(len(resp.Devices), convey.ShouldEqual, intNum10)
+	})
+}
+
+type updatePresetAllocMapTestCase struct {
+	name                string
+	supportSoftShare    bool
+	realAlloc           []string
+	kltAlloc            []string
+	preKlt2RealDevMap   map[string]string
+	expectedKlt2RealDev map[string]string
+}
+
+func buildUpdatePresetAllocMapTestCases() []updatePresetAllocMapTestCase {
+	return []updatePresetAllocMapTestCase{
+		{
+			name:                "soft share enabled, realAlloc non-empty, kltAlloc non-empty",
+			supportSoftShare:    true,
+			realAlloc:           []string{"npu0"},
+			kltAlloc:            []string{"npu0-0", "npu0-1"},
+			preKlt2RealDevMap:   map[string]string{"npu0-0": "old-npu", "other": "npu1"},
+			expectedKlt2RealDev: map[string]string{"other": "npu1", "npu0-0": "npu0", "npu0-1": "npu0"},
+		},
+		{
+			name:                "soft share enabled, realAlloc empty",
+			supportSoftShare:    true,
+			realAlloc:           []string{},
+			kltAlloc:            []string{"npu0-0"},
+			preKlt2RealDevMap:   map[string]string{"npu0-0": "old-npu"},
+			expectedKlt2RealDev: map[string]string{},
+		},
+		{
+			name:                "soft share disabled, len(realAlloc) == len(kltAlloc)",
+			supportSoftShare:    false,
+			realAlloc:           []string{"npu0", "npu1"},
+			kltAlloc:            []string{"klt0", "klt1"},
+			preKlt2RealDevMap:   map[string]string{"klt0": "old", "klt2": "npu2"},
+			expectedKlt2RealDev: map[string]string{"klt2": "npu2", "klt0": "npu0", "klt1": "npu1"},
+		},
+		{
+			name:                "soft share disabled, len(realAlloc) != len(kltAlloc)",
+			supportSoftShare:    false,
+			realAlloc:           []string{"npu0"},
+			kltAlloc:            []string{"klt0", "klt1"},
+			preKlt2RealDevMap:   map[string]string{"klt0": "old"},
+			expectedKlt2RealDev: map[string]string{"klt0": "old"},
+		},
+	}
+}
+
+func TestUpdatePresetAllocMap(t *testing.T) {
+	convey.Convey("Test updatePresetAllocMap", t, func() {
+		ps := &PluginServer{
+			klt2RealDevMap: make(map[string]string),
+			allocMapLock:   sync.RWMutex{},
+		}
+		tests := buildUpdatePresetAllocMapTestCases()
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				ps.klt2RealDevMap = make(map[string]string)
+				for k, v := range tt.preKlt2RealDevMap {
+					ps.klt2RealDevMap[k] = v
+				}
+				patchSoftShare := gomonkey.ApplyFuncReturn(common.IsSupportSoftShareDevice, tt.supportSoftShare)
+				defer patchSoftShare.Reset()
+				ps.updatePresetAllocMap(tt.realAlloc, tt.kltAlloc)
+				convey.So(ps.klt2RealDevMap, convey.ShouldResemble, tt.expectedKlt2RealDev)
+			})
+		}
+	})
+}
+
+type getValidLogicDeviceIDTestCase struct {
+	name                string
+	devices             []string
+	mockGetDeviceListID func() (map[int]int, []int, error)
+	expectedID          int
+	expectedErr         bool
+}
+
+func buildGetValidLogicDeviceIDTestCases() []getValidLogicDeviceIDTestCase {
+	return []getValidLogicDeviceIDTestCase{
+		{
+			name:    "GetDeviceListID returns error",
+			devices: []string{"npu0"},
+			mockGetDeviceListID: func() (map[int]int, []int, error) {
+				return nil, nil, errors.New("device list fetch failed")
+			},
+			expectedID:  0,
+			expectedErr: true,
+		},
+		{
+			name:    "visible devices length is 0",
+			devices: []string{"npu0"},
+			mockGetDeviceListID: func() (map[int]int, []int, error) {
+				return map[int]int{}, []int{}, nil
+			},
+			expectedID:  0,
+			expectedErr: true,
+		},
+		{
+			name:    "visible devices length is 2",
+			devices: []string{"npu0", "npu1"},
+			mockGetDeviceListID: func() (map[int]int, []int, error) {
+				return map[int]int{}, []int{0, 1}, nil
+			},
+			expectedID:  0,
+			expectedErr: true,
+		},
+		{
+			name:    "visible devices length is 1, return correct ID",
+			devices: []string{"npu0"},
+			mockGetDeviceListID: func() (map[int]int, []int, error) {
+				return map[int]int{}, []int{intNum2}, nil
+			},
+			expectedID:  intNum2,
+			expectedErr: false,
+		},
+	}
+}
+
+func TestGetValidLogicDeviceID(t *testing.T) {
+	convey.Convey("Test getValidLogicDeviceID", t, func() {
+		ps := &PluginServer{}
+		tests := buildGetValidLogicDeviceIDTestCases()
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				patch := gomonkey.ApplyFunc(common.GetDeviceListID,
+					func(devices []string, opts string) (map[int]int, []int, error) {
+						return tt.mockGetDeviceListID()
+					})
+				defer patch.Reset()
+				gotID, err := ps.getValidLogicDeviceID(tt.devices)
+				convey.So(gotID, convey.ShouldEqual, tt.expectedID)
+				if tt.expectedErr {
+					convey.So(err, convey.ShouldNotBeNil)
+				} else {
+					convey.So(err, convey.ShouldBeNil)
+				}
+			})
+		}
+	})
+}
+
+type extractPodAnnotationsTestCase struct {
+	name                string
+	pod                 *v1.Pod
+	mockConvertPolicy   func() string
+	expectedAnnotations softShareDevAnnotations
+	expectedErr         bool
+}
+
+func buildExtractPodAnnotationsTestCases1() []extractPodAnnotationsTestCase {
+	return []extractPodAnnotationsTestCase{
+		{
+			name: "all annotations exist and non-empty, policy converted",
+			pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				api.SchedulerSoftShareDevVNPUIdKey:      mockValidVNPUId,
+				api.SchedulerSoftShareDevAicoreQuotaKey: mockValidAicoreQuota,
+				api.SchedulerSoftShareDevHbmQuotaKey:    mockValidHbmQuota,
+				api.SchedulerSoftShareDevPolicyKey:      mockValidPolicyStr,
+			}}},
+			mockConvertPolicy: func() string {
+				return mockConvertedPolicy
+			},
+			expectedAnnotations: softShareDevAnnotations{
+				vNPUId:           mockValidVNPUId,
+				aicoreQuota:      mockValidAicoreQuota,
+				hbmQuota:         mockValidHbmQuota,
+				schedulingPolicy: mockConvertedPolicy,
+			},
+			expectedErr: false,
+		},
+		{
+			name: "missing single annotation (vNPUId)",
+			pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				api.SchedulerSoftShareDevAicoreQuotaKey: mockValidAicoreQuota,
+				api.SchedulerSoftShareDevHbmQuotaKey:    mockValidHbmQuota,
+				api.SchedulerSoftShareDevPolicyKey:      mockValidPolicyStr,
+			}}},
+			mockConvertPolicy: func() string {
+				return mockConvertedPolicy
+			},
+			expectedAnnotations: softShareDevAnnotations{},
+			expectedErr:         true,
+		},
+		{
+			name: "multiple annotations value empty",
+			pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				api.SchedulerSoftShareDevVNPUIdKey:      mockValidVNPUId,
+				api.SchedulerSoftShareDevAicoreQuotaKey: "",
+				api.SchedulerSoftShareDevHbmQuotaKey:    "",
+				api.SchedulerSoftShareDevPolicyKey:      mockValidPolicyStr,
+			}}},
+			mockConvertPolicy: func() string {
+				return mockConvertedPolicy
+			},
+			expectedAnnotations: softShareDevAnnotations{},
+			expectedErr:         true,
+		},
+	}
+}
+
+func buildExtractPodAnnotationsTestCases2() []extractPodAnnotationsTestCase {
+	return []extractPodAnnotationsTestCase{
+		{
+			name: "pod has no annotations",
+			pod: &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: nil,
+				},
+			},
+			mockConvertPolicy: func() string {
+				return mockConvertedPolicy
+			},
+			expectedAnnotations: softShareDevAnnotations{},
+			expectedErr:         true,
+		},
+		{
+			name:                "pod is nil",
+			pod:                 nil,
+			mockConvertPolicy:   func() string { return "" },
+			expectedAnnotations: softShareDevAnnotations{},
+			expectedErr:         true,
+		},
+		{
+			name: "policy annotation value empty",
+			pod: &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						api.SchedulerSoftShareDevVNPUIdKey:      mockValidVNPUId,
+						api.SchedulerSoftShareDevAicoreQuotaKey: mockValidAicoreQuota,
+						api.SchedulerSoftShareDevHbmQuotaKey:    mockValidHbmQuota,
+						api.SchedulerSoftShareDevPolicyKey:      "",
+					},
+				},
+			},
+			mockConvertPolicy: func() string {
+				return mockConvertedPolicy
+			},
+			expectedAnnotations: softShareDevAnnotations{},
+			expectedErr:         true,
+		},
+	}
+}
+
+func TestExtractPodAnnotations(t *testing.T) {
+	convey.Convey("Test extractPodAnnotations", t, func() {
+		ps := &PluginServer{}
+		tests := append(buildExtractPodAnnotationsTestCases1(), buildExtractPodAnnotationsTestCases2()...)
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				if tt.pod == nil {
+					convey.So(func() {
+						_, _ = ps.extractPodAnnotations(tt.pod)
+					}, convey.ShouldPanic)
+					return
+				}
+				patch := gomonkey.ApplyFunc(common.ConvertSchedulingPolicyToIntStr,
+					func(policy string) string {
+						return tt.mockConvertPolicy()
+					})
+				defer patch.Reset()
+
+				gotAnnotations, err := ps.extractPodAnnotations(tt.pod)
+				if tt.expectedErr {
+					convey.So(err, convey.ShouldNotBeNil)
+				} else {
+					convey.So(err, convey.ShouldBeNil)
+				}
+				convey.So(gotAnnotations.vNPUId, convey.ShouldEqual, tt.expectedAnnotations.vNPUId)
+				convey.So(gotAnnotations.aicoreQuota, convey.ShouldEqual, tt.expectedAnnotations.aicoreQuota)
+				convey.So(gotAnnotations.hbmQuota, convey.ShouldEqual, tt.expectedAnnotations.hbmQuota)
+				convey.So(gotAnnotations.schedulingPolicy, convey.ShouldEqual, tt.expectedAnnotations.schedulingPolicy)
+			})
+		}
+	})
+}
+
+type configDirPathTestCase struct {
+	name          string
+	pod           *v1.Pod
+	jobName       string
+	logicID       int
+	vNPUId        string
+	mockParentDir string
+	expectedPath  string
+}
+
+func buildConfigDirPathTestCases() []configDirPathTestCase {
+	testNamespace := "default"
+	testJobName := "test-job"
+	return []configDirPathTestCase{
+		{
+			name: "all parameters valid, return correct path",
+			pod: &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: testNamespace,
+				},
+			},
+			jobName:      testJobName,
+			logicID:      0,
+			vNPUId:       "1",
+			expectedPath: common.SoftShareDevNPUInfoConfigParentDirPath + "default.test-job/0_1",
+		},
+		{
+			name: "jobName is empty, return empty string and log error",
+			pod: &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: testNamespace,
+				},
+			},
+			jobName:      "",
+			logicID:      0,
+			vNPUId:       "1",
+			expectedPath: "",
+		},
+		{
+			name:         "pod is nil, access Namespace panic",
+			pod:          nil,
+			jobName:      testJobName,
+			logicID:      0,
+			vNPUId:       "1",
+			expectedPath: "",
+		},
+	}
+}
+
+func TestBuildConfigDirPath(t *testing.T) {
+	convey.Convey("Test buildConfigDirPath", t, func() {
+		ps := &PluginServer{}
+		tests := buildConfigDirPathTestCases()
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				gotPath := ps.buildConfigDirPath(tt.pod, tt.jobName, tt.logicID, tt.vNPUId)
+				convey.So(gotPath, convey.ShouldEqual, tt.expectedPath)
+			})
+		}
+	})
+}
+
+type npuConfigFileTestCase struct {
+	name               string
+	configDir          string
+	physicalID         int
+	dieId              string
+	annotations        softShareDevAnnotations
+	mockWriteFileErr   error
+	expectedErr        bool
+	expectedConfigData string
+}
+
+func getTestBaseConfig() (string, int, string) {
+	configDir := "/etc/ascend/config"
+	physicalID := 0
+	dieId := "die-001"
+	return configDir, physicalID, dieId
+}
+
+func buildValidAnnotations() softShareDevAnnotations {
+	return softShareDevAnnotations{
+		vNPUId:           "vnpu-001",
+		aicoreQuota:      "50",
+		hbmQuota:         "2048",
+		schedulingPolicy: "2",
+	}
+}
+
+func buildPartialEmptyAnnotations() softShareDevAnnotations {
+	return softShareDevAnnotations{
+		vNPUId:           "",
+		aicoreQuota:      "50",
+		hbmQuota:         "",
+		schedulingPolicy: "2",
+	}
+}
+
+func buildValidConfigData() string {
+	return strings.Join([]string{
+		api.SoftShareDeviceConfigPhysicalNPUId + "=0",
+		api.SoftShareDeviceConfigVirtualNPUId + "=vnpu-001",
+		api.SoftShareDeviceConfigAICoreQuota + "=50",
+		api.SoftShareDeviceConfigHbmQuota + "=2048",
+		api.SoftShareDeviceConfigShmId + "=die-001",
+		api.SoftShareDeviceConfigSchedulingPolicy + "=2",
+	}, "\n")
+}
+
+func buildPartialEmptyConfigData() string {
+	return strings.Join([]string{
+		api.SoftShareDeviceConfigPhysicalNPUId + "=0",
+		api.SoftShareDeviceConfigAICoreQuota + "=50",
+		api.SoftShareDeviceConfigShmId + "=die-001",
+		api.SoftShareDeviceConfigSchedulingPolicy + "=2",
+	}, "\n")
+}
+
+func buildNpuConfigFileTestCases() []npuConfigFileTestCase {
+	configDir := "/etc/ascend/config"
+	physicalID := 0
+	dieId := "die-001"
+	validAnnot := buildValidAnnotations()
+	partialEmptyAnnot := buildPartialEmptyAnnotations()
+	validConfigData := buildValidConfigData()
+	partialEmptyConfigData := buildPartialEmptyConfigData()
+	return []npuConfigFileTestCase{
+		{
+			name:               "all config items non-empty, write file success",
+			configDir:          configDir,
+			physicalID:         physicalID,
+			dieId:              dieId,
+			annotations:        validAnnot,
+			mockWriteFileErr:   nil,
+			expectedErr:        false,
+			expectedConfigData: validConfigData,
+		},
+		{
+			name:               "partial config items empty, skip empty and write valid",
+			configDir:          configDir,
+			physicalID:         physicalID,
+			dieId:              dieId,
+			annotations:        partialEmptyAnnot,
+			mockWriteFileErr:   nil,
+			expectedErr:        false,
+			expectedConfigData: partialEmptyConfigData,
+		},
+		{
+			name:               "write file failed, return wrapped error",
+			configDir:          configDir,
+			physicalID:         physicalID,
+			dieId:              dieId,
+			annotations:        validAnnot,
+			mockWriteFileErr:   errors.New("permission denied"),
+			expectedErr:        true,
+			expectedConfigData: validConfigData,
+		},
+	}
+}
+
+func TestWriteNPUConfigFile(t *testing.T) {
+	convey.Convey("Test writeNPUConfigFile", t, func() {
+		ps := &PluginServer{}
+		tests := buildNpuConfigFileTestCases()
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				var actualConfigData string
+				var actualFileFullName string
+				patchWriteFile := gomonkey.ApplyFunc(common.WriteToFileWithPerm,
+					func(data, filename string, dirPerm, filePerm os.FileMode) error {
+						actualConfigData = data
+						actualFileFullName = filename
+						return tt.mockWriteFileErr
+					})
+				defer patchWriteFile.Reset()
+				err := ps.writeNPUConfigFile(tt.configDir, tt.physicalID, tt.dieId, tt.annotations)
+				if tt.expectedErr {
+					convey.So(err, convey.ShouldNotBeNil)
+				} else {
+					convey.So(err, convey.ShouldBeNil)
+				}
+				if len(tt.expectedConfigData) > 0 {
+					convey.So(actualConfigData, convey.ShouldEqual, tt.expectedConfigData)
+					convey.So(actualFileFullName, convey.ShouldEqual,
+						tt.configDir+"/"+api.SoftShareDeviceConfigFileName)
+				}
+			})
+		}
+	})
+}
+
+type getNPUInfoConfigDirTestCase struct {
+	name                string
+	pod                 *v1.Pod
+	devices             []string
+	mockIsSoftShareDev  bool
+	mockExtractAnnot    func() (softShareDevAnnotations, error)
+	mockGetValidLogicID func() (int, error)
+	mockGetJobName      string
+	mockBuildConfigDir  string
+	mockGetLogicID      func() (int32, error)
+	mockGetDieID        func() (string, error)
+	mockWriteConfigFile error
+	expectedDir         string
+}
+
+func buildGetNPUInfoConfigDirTestCases1() []getNPUInfoConfigDirTestCase {
+	testPod := &v1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test-pod"}}
+	testDevices := []string{"npu0"}
+	testAnnotations := softShareDevAnnotations{vNPUId: "vnpu-001"}
+	return []getNPUInfoConfigDirTestCase{
+		{
+			name:                "pod is nil",
+			pod:                 nil,
+			devices:             testDevices,
+			mockIsSoftShareDev:  true,
+			mockExtractAnnot:    func() (softShareDevAnnotations, error) { return testAnnotations, nil },
+			mockGetValidLogicID: func() (int, error) { return testPhysicalID, nil },
+			mockGetJobName:      testJobName,
+			mockBuildConfigDir:  testConfigDir,
+			mockGetLogicID:      func() (int32, error) { return testLogicID, nil },
+			mockGetDieID:        func() (string, error) { return testDieId, nil },
+			mockWriteConfigFile: nil,
+			expectedDir:         "",
+		},
+		{
+			name:                "pod is not soft share job",
+			pod:                 testPod,
+			devices:             testDevices,
+			mockIsSoftShareDev:  false,
+			mockExtractAnnot:    func() (softShareDevAnnotations, error) { return testAnnotations, nil },
+			mockGetValidLogicID: func() (int, error) { return testPhysicalID, nil },
+			mockGetJobName:      testJobName,
+			mockBuildConfigDir:  testConfigDir,
+			mockGetLogicID:      func() (int32, error) { return testLogicID, nil },
+			mockGetDieID:        func() (string, error) { return testDieId, nil },
+			mockWriteConfigFile: nil,
+			expectedDir:         "",
+		},
+		{
+			name:                "extract annotations failed",
+			pod:                 testPod,
+			devices:             testDevices,
+			mockIsSoftShareDev:  true,
+			mockExtractAnnot:    func() (softShareDevAnnotations, error) { return softShareDevAnnotations{}, errors.New("missing annot") },
+			mockGetValidLogicID: func() (int, error) { return testPhysicalID, nil },
+			mockGetJobName:      testJobName,
+			mockBuildConfigDir:  testConfigDir,
+			mockGetLogicID:      func() (int32, error) { return testLogicID, nil },
+			mockGetDieID:        func() (string, error) { return testDieId, nil },
+			mockWriteConfigFile: nil,
+			expectedDir:         "",
+		},
+	}
+}
+
+func buildGetNPUInfoConfigDirTestCases2() []getNPUInfoConfigDirTestCase {
+	testPod := &v1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test-pod"}}
+	testDevices := []string{"npu0"}
+	testAnnotations := softShareDevAnnotations{vNPUId: "vnpu-001"}
+	return []getNPUInfoConfigDirTestCase{
+		{
+			name:                "get valid logic device ID failed",
+			pod:                 testPod,
+			devices:             testDevices,
+			mockIsSoftShareDev:  true,
+			mockExtractAnnot:    func() (softShareDevAnnotations, error) { return testAnnotations, nil },
+			mockGetValidLogicID: func() (int, error) { return 0, errors.New("device not found") },
+			mockGetJobName:      testJobName,
+			mockBuildConfigDir:  testConfigDir,
+			mockGetLogicID:      func() (int32, error) { return testLogicID, nil },
+			mockGetDieID:        func() (string, error) { return testDieId, nil },
+			mockWriteConfigFile: nil,
+			expectedDir:         "",
+		},
+		{
+			name:                "build config dir failed",
+			pod:                 testPod,
+			devices:             testDevices,
+			mockIsSoftShareDev:  true,
+			mockExtractAnnot:    func() (softShareDevAnnotations, error) { return testAnnotations, nil },
+			mockGetValidLogicID: func() (int, error) { return testPhysicalID, nil },
+			mockGetJobName:      testJobName,
+			mockBuildConfigDir:  "",
+			mockGetLogicID:      func() (int32, error) { return testLogicID, nil },
+			mockGetDieID:        func() (string, error) { return testDieId, nil },
+			mockWriteConfigFile: nil,
+			expectedDir:         "",
+		},
+		{
+			name:                "get logic ID from physical ID failed",
+			pod:                 testPod,
+			devices:             testDevices,
+			mockIsSoftShareDev:  true,
+			mockExtractAnnot:    func() (softShareDevAnnotations, error) { return testAnnotations, nil },
+			mockGetValidLogicID: func() (int, error) { return testPhysicalID, nil },
+			mockGetJobName:      testJobName,
+			mockBuildConfigDir:  testConfigDir,
+			mockGetLogicID:      func() (int32, error) { return 0, errors.New("logic ID not found") },
+			mockGetDieID:        func() (string, error) { return testDieId, nil },
+			mockWriteConfigFile: nil,
+			expectedDir:         "",
+		},
+	}
+}
+
+func buildGetNPUInfoConfigDirTestCases3() []getNPUInfoConfigDirTestCase {
+	testPod := &v1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test-pod"}}
+	testDevices := []string{"npu0"}
+	testAnnotations := softShareDevAnnotations{vNPUId: "vnpu-001"}
+	return []getNPUInfoConfigDirTestCase{
+		{
+			name:                "get die ID failed",
+			pod:                 testPod,
+			devices:             testDevices,
+			mockIsSoftShareDev:  true,
+			mockExtractAnnot:    func() (softShareDevAnnotations, error) { return testAnnotations, nil },
+			mockGetValidLogicID: func() (int, error) { return testPhysicalID, nil },
+			mockGetJobName:      testJobName,
+			mockBuildConfigDir:  testConfigDir,
+			mockGetLogicID:      func() (int32, error) { return testLogicID, nil },
+			mockGetDieID:        func() (string, error) { return "", errors.New("die ID not found") },
+			mockWriteConfigFile: nil,
+			expectedDir:         "",
+		},
+		{
+			name:                "write NPU config file failed",
+			pod:                 testPod,
+			devices:             testDevices,
+			mockIsSoftShareDev:  true,
+			mockExtractAnnot:    func() (softShareDevAnnotations, error) { return testAnnotations, nil },
+			mockGetValidLogicID: func() (int, error) { return testPhysicalID, nil },
+			mockGetJobName:      testJobName,
+			mockBuildConfigDir:  testConfigDir,
+			mockGetLogicID:      func() (int32, error) { return testLogicID, nil },
+			mockGetDieID:        func() (string, error) { return testDieId, nil },
+			mockWriteConfigFile: errors.New("write failed"),
+			expectedDir:         "",
+		},
+		{
+			name:                "all steps success",
+			pod:                 testPod,
+			devices:             testDevices,
+			mockIsSoftShareDev:  true,
+			mockExtractAnnot:    func() (softShareDevAnnotations, error) { return testAnnotations, nil },
+			mockGetValidLogicID: func() (int, error) { return testPhysicalID, nil },
+			mockGetJobName:      testJobName,
+			mockBuildConfigDir:  testConfigDir,
+			mockGetLogicID:      func() (int32, error) { return testLogicID, nil },
+			mockGetDieID:        func() (string, error) { return testDieId, nil },
+			mockWriteConfigFile: nil,
+			expectedDir:         testConfigDir,
+		},
+	}
+}
+
+func TestGetNPUInfoConfigDirFromPod(t *testing.T) {
+	convey.Convey("Test getNPUInfoConfigDirFromPod", t, func() {
+		ps := &PluginServer{manager: device.NewHwAscend910Manager()}
+		tests := append(buildGetNPUInfoConfigDirTestCases1(), append(buildGetNPUInfoConfigDirTestCases2(),
+			buildGetNPUInfoConfigDirTestCases3()...)...)
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				patchIsSoftShare := gomonkey.ApplyFuncReturn(common.IsSoftShareDevJob, tt.mockIsSoftShareDev)
+				defer patchIsSoftShare.Reset()
+				patchExtractAnnot := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ps), "extractPodAnnotations",
+					func(_ *PluginServer, pod *v1.Pod) (softShareDevAnnotations, error) { return tt.mockExtractAnnot() })
+				defer patchExtractAnnot.Reset()
+				patchGetValidLogicID := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ps), "getValidLogicDeviceID",
+					func(_ *PluginServer, devices []string) (int, error) { return tt.mockGetValidLogicID() })
+				defer patchGetValidLogicID.Reset()
+				patchGetJobName := gomonkey.ApplyFuncReturn(common.GetJobNameOfPod, tt.mockGetJobName)
+				defer patchGetJobName.Reset()
+				patchBuildConfigDir := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ps), "buildConfigDirPath",
+					func(_ *PluginServer, pod *v1.Pod, jobName string, logicID int, vNPUId string) string {
+						return tt.mockBuildConfigDir
+					})
+				defer patchBuildConfigDir.Reset()
+				mockGetDmgr := gomonkey.ApplyMethod(ps.manager, "GetDmgr",
+					func(_ *device.HwAscend910Manager) devmanager.DeviceInterface { return &devmanager.DeviceManagerMock{} })
+				defer mockGetDmgr.Reset()
+				patchGetLogicID := gomonkey.ApplyMethod(ps.manager.GetDmgr(), "GetLogicIDFromPhysicID",
+					func(_ *devmanager.DeviceManagerMock, physicID int32) (int32, error) { return tt.mockGetLogicID() })
+				defer patchGetLogicID.Reset()
+				patchGetDieID := gomonkey.ApplyMethod(ps.manager.GetDmgr(), "GetDieID",
+					func(_ *devmanager.DeviceManagerMock, logicID int32, dieType dcmi.DieType) (string, error) {
+						return tt.mockGetDieID()
+					})
+				defer patchGetDieID.Reset()
+				patchWriteConfigFile := gomonkey.ApplyPrivateMethod(reflect.TypeOf(ps), "writeNPUConfigFile",
+					func(_ *PluginServer, configDir string, physicalID int, dieId string,
+						annotations softShareDevAnnotations) error {
+						return tt.mockWriteConfigFile
+					})
+				defer patchWriteConfigFile.Reset()
+				gotDir := ps.getNPUInfoConfigDirFromPod(tt.pod, tt.devices)
+				convey.So(gotDir, convey.ShouldEqual, tt.expectedDir)
+			})
+		}
 	})
 }
