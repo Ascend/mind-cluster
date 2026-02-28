@@ -123,7 +123,7 @@ class TrainLogParser(FileParser):
             TrainCallFaultParser.parse_all(line)
             # update matcher index for multiline parsing
             self._update_matcher_by_locator(multi_line_locator)
-            event_dict = self.parse_single_line(line, framework_name=self.train_framework)
+            event_dict = self.parse_single_line(line)
         if not event_dict:
             return {}
         # 如果PTA通用故障事件未解析出相关属性，则不记录该故障事件

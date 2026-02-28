@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-import os
 import re
 import logging
 from typing import Union, List
@@ -23,7 +22,7 @@ from ascend_fd.model.context import KGParseCtx
 from ascend_fd.model.parse_info import KGParseFilePath
 from ascend_fd.pkg.parse.knowledge_graph.parser.file_parser import FileParser, EventStorage
 from ascend_fd.pkg.parse.parser_saver import LogInfoSaver
-from ascend_fd.utils.regular_table import DEVICEPLUGIN_SOURCE
+from ascend_fd.utils.regular_table import DEVICEPLUGIN_SOURCE, COMPOSITE_SWITCH_CHIP_SOURCE
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
 
@@ -41,6 +40,8 @@ class DevicePluginParser(FileParser):
         Device plugin log parser
         """
         super().__init__(params)
+        self.default_conf.update(self.regex_conf.get(COMPOSITE_SWITCH_CHIP_SOURCE, {}))
+        self.user_conf.update(self.regex_conf.get(COMPOSITE_SWITCH_CHIP_SOURCE, {}))
 
     def parse(self, parse_ctx: KGParseCtx, task_id):
         """

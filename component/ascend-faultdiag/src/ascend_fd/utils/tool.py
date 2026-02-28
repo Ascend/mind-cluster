@@ -304,8 +304,7 @@ class PatternMatcher(BaseMatcher):
         """
         if not pattern:
             return False
-        first_line = text.splitlines()[0]
-        return re.search(pattern, first_line) is not None
+        return re.search(pattern, text) is not None
 
     def compare(self, conf: dict, text: str) -> bool:
         """
@@ -317,7 +316,7 @@ class PatternMatcher(BaseMatcher):
         if self.max_len and len(text) > self.max_len:
             raise InnerError("The compare original text is too long, exceeds %s" % self.max_len)
         conf = conf or {}  # default conf dict
-        return self._match_regex(conf.get("regex", ""), text) or self._match_in(conf.get("in", []), text)
+        return self._match_in(conf.get("in", []), text) or self._match_regex(conf.get("regex", ""), text)
 
     def get_attr_info(self, attr_result: dict, line: str, event_code: str) -> dict:
         """

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-import os
 import logging
 import re
 from datetime import datetime
@@ -23,6 +22,7 @@ from itertools import chain
 from ascend_fd.model.context import KGParseCtx
 from ascend_fd.utils.tool import MultiProcessJob, check_and_format_time_str
 from ascend_fd.pkg.parse.knowledge_graph.parser.file_parser import FileParser, EventStorage
+from ascend_fd.utils.regular_table import COMPOSITE_SWITCH_CHIP_SOURCE
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
 
@@ -44,6 +44,8 @@ class LCNEParser(FileParser):
 
     def __init__(self, params):
         super().__init__(params)
+        self.default_conf.update(self.regex_conf.get(COMPOSITE_SWITCH_CHIP_SOURCE, {}))
+        self.user_conf.update(self.regex_conf.get(COMPOSITE_SWITCH_CHIP_SOURCE, {}))
         self.timezone_trans_flag = self.get_timezone_trans_flag()
 
     def parse(self, parse_ctx: KGParseCtx, task_id: str):
