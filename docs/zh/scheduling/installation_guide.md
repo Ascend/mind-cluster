@@ -4052,7 +4052,7 @@ Volcano组件支持交换机的亲和性调度。使用该功能需要上传交�
     <a name="table208901"></a>
     |一级参数|二级参数|类型|说明|
     |--|--|--|--|
-    |enabled|-|bool|人工隔离芯片的检测开关。取值包括：<ul><li>true：开启人工隔离芯片检测功能。</li><li>false：关闭人工隔离芯片检测功能。</li></ul><p>默认值为true。若关闭该开关，会将所有ClusterD人工隔离的芯片及相关缓存都清除。</p>|
+    |enabled|-|bool|人工隔离芯片的检测开关。取值包括：<ul><li>true：开启人工隔离芯片检测功能。</li><li>false：关闭人工隔离芯片检测功能。</li></ul><p>默认值为true。若关闭该开关，会将所有ClusterD人工隔离的芯片及相关缓存都清除。</p><p>[!NOTE] 说明：</p><p>YAML规范支持多种布尔值的写法（含大小写变体），但不同解析器（如K8s、Go、Python）的兼容度不同，不是所有写法都支持。推荐统一使用小写true/false。</p>|
     |separate|fault_window_hours|int|人工隔离芯片的时间。在该时间内，同一个故障码的故障次数达到fault_threshold取值，ClusterD会将故障芯片进行人工隔离。取值范围为[1, 720]，默认值为24，单位为h（小时）。|
     |-|fault_threshold|int|人工隔离芯片的阈值。取值范围为[1, 50]，默认值为3，单位为次。|
     |release|fault_free_hours|int|解除隔离的时间，表示距离最后一次达到频率进行隔离的时间，超过该时间会解除隔离。取值范围为[1, 240]或-1，默认值为48，单位为h（小时）。<ul><li>最后一次达到频率的时间即为clusterd-manual-info-cm中的LastSeparateTime。clusterd-manual-info-cm的说明请参见[clusterd-manual-info-cm](./api/clusterd.md#集群资源)。</li><li>配置为-1，表示关闭解除隔离功能。</li><li>达到解除隔离时间进行自动解除隔离时，无论故障是否恢复，都会解除。</li></ul>|
