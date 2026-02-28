@@ -42,6 +42,13 @@ import (
 	"ascend-common/devmanager/dcmi"
 )
 
+type softShareDevAnnotations struct {
+	vNPUId           string
+	aicoreQuota      string
+	hbmQuota         string
+	schedulingPolicy string
+}
+
 func (ps *PluginServer) stopListAndWatch() {
 	if ps.isRunning.Load() {
 		ps.isRunning.Store(false)
@@ -880,16 +887,8 @@ func (ps *PluginServer) getValidLogicDeviceID(devices []string) (int, error) {
 	return ascendVisibleDevices[0], nil
 }
 
-// SoftShareDevAnnotations soft share device config annotations
-type SoftShareDevAnnotations struct {
-	vNPUId           string
-	aicoreQuota      string
-	hbmQuota         string
-	schedulingPolicy string
-}
-
-func (ps *PluginServer) extractPodAnnotations(pod *v1.Pod) (SoftShareDevAnnotations, error) {
-	var annotations SoftShareDevAnnotations
+func (ps *PluginServer) extractPodAnnotations(pod *v1.Pod) (softShareDevAnnotations, error) {
+	var annotations softShareDevAnnotations
 	var missingKeys []string
 
 	annotationChecks := []struct {
@@ -915,27 +914,28 @@ func (ps *PluginServer) extractPodAnnotations(pod *v1.Pod) (SoftShareDevAnnotati
 	}
 
 	if len(missingKeys) > 0 {
-		return SoftShareDevAnnotations{}, fmt.Errorf("missing or empty annotations: %v", missingKeys)
+		return softShareDevAnnotations{}, fmt.Errorf("missing or empty annotations: %v", missingKeys)
 	}
 
 	return annotations, nil
 }
 
 func (ps *PluginServer) buildConfigDirPath(pod *v1.Pod, jobName string, logicID int, vNPUId string) string {
-	if jobName == "" || vNPUId == "" {
+	if jobName == "" || vNPUId == "" || pod == nil {
 		hwlog.RunLog.Error("invalid job name or vNPU ID")
 		return ""
 	}
-	return fmt.Sprintf("%s/%s.%s/%d_%s",
+	namespaceJobPart := fmt.Sprintf("%s.%s", pod.Namespace, jobName)
+	logicIdVNPUIdPart := fmt.Sprintf("%d_%s", logicID, vNPUId)
+	return filepath.Join(
 		common.SoftShareDevNPUInfoConfigParentDirPath,
-		pod.Namespace,
-		jobName,
-		logicID,
-		vNPUId)
+		namespaceJobPart,
+		logicIdVNPUIdPart,
+	)
 }
 
 func (ps *PluginServer) writeNPUConfigFile(configDir string, physicalID int, dieId string,
-	annotations SoftShareDevAnnotations) error {
+	annotations softShareDevAnnotations) error {
 	configItems := []struct {
 		configKey string
 		value     string

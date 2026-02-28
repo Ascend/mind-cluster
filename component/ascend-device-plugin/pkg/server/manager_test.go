@@ -47,12 +47,15 @@ import (
 )
 
 const (
-	serverNum  = 2
-	rqtTaskNum = 4
-	numTwo     = 2
-	numThree   = 3
-	numTen     = 10
-	numThirty  = 30
+	serverNum         = 2
+	rqtTaskNum        = 4
+	numTwo            = 2
+	numThree          = 3
+	numTen            = 10
+	numThirty         = 30
+	expectedMemory    = 32768
+	ascend910LogicID0 = api.Ascend910MinuxPrefix + "0"
+	ascend910LogicID1 = api.Ascend910MinuxPrefix + "1"
 )
 
 var testErr = errors.New("test")
@@ -1929,6 +1932,145 @@ func TestCalculateCardUsedResourceQuota4(t *testing.T) {
 			convey.So(result["card-1"].aicoreQuota, convey.ShouldEqual, numThirty)
 			convey.So(result["card-1"].hbmQuota, convey.ShouldEqual, numThree*common.MBPerGB)
 			convey.So(result["card-1"].schedulingPolicy, convey.ShouldEqual, numTwo)
+		})
+	})
+}
+
+func TestGetChipMemory(t *testing.T) {
+	hdm := &HwDevManager{manager: device.NewHwAscend910Manager(), allInfo: common.NpuAllInfo{
+		AllDevs: []common.NpuDevice{{LogicID: 0}}}}
+	convey.Convey("Test getChipMemory", t, func() {
+		convey.Convey("On-chip memory not enabled, return 0", func() {
+			patchHasOnChip := gomonkey.ApplyFuncReturn(common.HasOnChipMemory, false)
+			defer patchHasOnChip.Reset()
+			result := hdm.getChipMemory()
+			convey.So(result, convey.ShouldEqual, 0)
+		})
+		patchHasOnChip := gomonkey.ApplyFuncReturn(common.HasOnChipMemory, true)
+		defer patchHasOnChip.Reset()
+		mockDmgr := gomonkey.ApplyMethodReturn(hdm.manager, "GetDmgr", &devmanager.DeviceManager{})
+		defer mockDmgr.Reset()
+		convey.Convey("On-chip memory enabled but get HBM info failed, return 0", func() {
+			patchGetHbmInfo := gomonkey.ApplyMethodReturn(hdm.manager.GetDmgr(), "GetDeviceHbmInfo",
+				nil, errors.New("get HBM info failed"))
+			defer patchGetHbmInfo.Reset()
+			result := hdm.getChipMemory()
+			convey.So(result, convey.ShouldEqual, 0)
+		})
+		convey.Convey("On-chip memory enabled and get HBM info success, return correct memory size", func() {
+			patchGetHbmInfo := gomonkey.ApplyMethodReturn(hdm.manager.GetDmgr(), "GetDeviceHbmInfo",
+				&npuCommon.HbmInfo{MemorySize: uint64(expectedMemory)}, nil)
+			defer patchGetHbmInfo.Reset()
+			result := hdm.getChipMemory()
+			convey.So(result, convey.ShouldEqual, expectedMemory)
+		})
+	})
+}
+
+type getPluginServerTestCase struct {
+	name       string
+	hdm        *HwDevManager
+	deviceType string
+	wantServer *PluginServer
+	wantErr    bool
+}
+
+func buildGetPluginServerTestCases() []getPluginServerTestCase {
+	return []getPluginServerTestCase{
+		{
+			name: "device type exists and element is *PluginServer",
+			hdm: &HwDevManager{
+				ServerMap: map[string]InterfaceServer{api.Ascend910: &PluginServer{}},
+			},
+			deviceType: api.Ascend910,
+			wantServer: &PluginServer{},
+			wantErr:    false,
+		},
+		{
+			name: "device type not found in ServerMap",
+			hdm: &HwDevManager{
+				ServerMap: map[string]InterfaceServer{api.Ascend310: &PluginServer{}},
+			},
+			deviceType: api.Ascend910,
+			wantServer: nil,
+			wantErr:    true,
+		},
+		{
+			name: "element type is not *PluginServer",
+			hdm: &HwDevManager{
+				ServerMap: map[string]InterfaceServer{api.Ascend910: nil},
+			},
+			deviceType: api.Ascend910,
+			wantServer: nil,
+			wantErr:    true,
+		},
+		{
+			name: "ServerMap is nil",
+			hdm: &HwDevManager{
+				ServerMap: nil,
+			},
+			deviceType: api.Ascend910,
+			wantServer: nil,
+			wantErr:    true,
+		},
+	}
+}
+
+func TestGetPluginServer(t *testing.T) {
+	tests := buildGetPluginServerTestCases()
+	convey.Convey("Test getPluginServer", t, func() {
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				gotServer, err := tt.hdm.getPluginServer(tt.deviceType)
+				if tt.wantErr {
+					convey.So(err, convey.ShouldNotBeNil)
+				} else {
+					convey.So(err, convey.ShouldBeNil)
+				}
+				convey.So(gotServer, convey.ShouldResemble, tt.wantServer)
+			})
+		}
+	})
+}
+
+func TestUpdateQuota(t *testing.T) {
+	convey.Convey("Test updateQuota", t, func() {
+		errorMsg := "calculate quota failed"
+		successQuotaMap := map[string]shareDevResourceQuota{
+			ascend910LogicID0: {aicoreQuota: api.SoftShareDeviceMaxAICoreQuota, hbmQuota: common.MBPerGB},
+		}
+		convey.Convey("calculateCardUsedResourceQuota returns error, no quota update", func() {
+			hdm := &HwDevManager{
+				allInfo: common.NpuAllInfo{
+					AllDevs: []common.NpuDevice{{DeviceName: ascend910LogicID0}},
+				},
+			}
+			patchCalc := gomonkey.ApplyPrivateMethod(reflect.TypeOf(hdm), "calculateCardUsedResourceQuota",
+				func(_ *HwDevManager, _ []*common.PodDeviceInfo) (map[string]shareDevResourceQuota, error) {
+					return nil, errors.New(errorMsg)
+				})
+			defer patchCalc.Reset()
+			hdm.updateQuota(nil)
+
+			convey.So(hdm.allInfo.AllDevs[0].UsedAicoreQuota, convey.ShouldEqual, 0)
+			convey.So(hdm.allInfo.AllDevs[0].UsedHbmQuota, convey.ShouldEqual, 0)
+		})
+		convey.Convey("calculate success, update quota for matched devices only", func() {
+			hdm := &HwDevManager{
+				allInfo: common.NpuAllInfo{
+					AllDevs: []common.NpuDevice{{DeviceName: ascend910LogicID0}, {DeviceName: ascend910LogicID1}},
+				},
+			}
+			patchCalc := gomonkey.ApplyPrivateMethod(reflect.TypeOf(hdm), "calculateCardUsedResourceQuota",
+				func(_ *HwDevManager, _ []*common.PodDeviceInfo) (map[string]shareDevResourceQuota, error) {
+					return successQuotaMap, nil
+				})
+			defer patchCalc.Reset()
+			hdm.updateQuota(nil)
+			convey.So(hdm.allInfo.AllDevs[0].UsedAicoreQuota, convey.ShouldEqual, api.SoftShareDeviceMaxAICoreQuota)
+			convey.So(hdm.allInfo.AllDevs[0].UsedHbmQuota, convey.ShouldEqual, common.MBPerGB)
+			convey.So(hdm.allInfo.AllDevs[1].UsedAicoreQuota, convey.ShouldEqual, 0)
+			convey.So(hdm.allInfo.AllDevs[1].UsedHbmQuota, convey.ShouldEqual, 0)
 		})
 	})
 }
