@@ -70,7 +70,7 @@ spec:
          deploy-name: mindx-dls-test # 生成rankTable必须增加该标签，取值和任务名称保持一致
       annotations:
         sp-block: "128"         # 逻辑超节点亲和性调度开关
-        huawei.com/recover_policy_path: pod    # Pod级别重调度不升级为Job级开关
+        huawei.com/recover_policy_path: pod    # Pod级别重调度不升级为Job级开关（当使用vcjob时，需要配置该策略：policies: -event:PodFailed -action:RestartTask）
         huawei.com/schedule_minAvailable: "16"  # 任务调度的最小副本数，建议与任务副本数保持一致
     spec:
       schedulerName: volcano         # Use the Volcano scheduler to schedule jobs.
