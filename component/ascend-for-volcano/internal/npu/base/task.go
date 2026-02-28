@@ -26,6 +26,7 @@ import (
 	"math"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"k8s.io/api/core/v1"
@@ -61,6 +62,14 @@ func (tp *NPUHandler) GetTaskReqNPUNum(task *api.TaskInfo) (int, error) {
 func (tp *NPUHandler) SetNPUTopologyToPodFn(task *api.TaskInfo, top []int, node plugin.NPUNode) {
 	if tp == nil || task == nil || task.Pod == nil || task.Pod.Annotations == nil || len(top) == 0 {
 		return
+	}
+	chipName, ok := node.Label[plugin.ChipTypeKey]
+	if ok && strings.HasPrefix(chipName, plugin.Ascend950Prefix) {
+		if node.PhyIDToDeviceIDMap != nil && len(node.PhyIDToDeviceIDMap) > 0 {
+			for i, phyID := range top {
+				top[i] = int(node.PhyIDToDeviceIDMap[int32(phyID)])
+			}
+		}
 	}
 	topologyStr := util.ChangeIntArrToStr(top, tp.GetAnnoPreVal(tp.ReqNPUName))
 	task.Pod.Annotations[tp.GetAnnoName(tp.ReqNPUName)] = topologyStr

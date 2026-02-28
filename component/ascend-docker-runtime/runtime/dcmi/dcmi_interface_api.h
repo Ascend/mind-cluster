@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (c) Huawei Technologies Co., Ltd. 2020-2022. All rights reserved.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020-2025. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -66,10 +66,22 @@ static int DcmiInit(void)
     CALL_FUNC(g_dcmiInitFunc);
 }
 
+static int (*g_dcmiV2InitFunc)(void);
+static int DcmiV2Init(void)
+{
+    CALL_FUNC(g_dcmiV2InitFunc);
+}
+
 static int (*g_dcmiGetCardNumListFunc)(int *cardNum, int *cardList, int listLength);
 static int DcmiGetCardNumList(int *cardNum, int *cardList, int listLength)
 {
     CALL_FUNC(g_dcmiGetCardNumListFunc, cardNum, cardList, listLength);
+}
+
+static int (*g_dcmiV2GetDeviceListFunc)(int *deviceList, int *deviceNum, int listLength);
+static int DcmiV2GetDeviceList(int *deviceList, int *deviceNum, int listLength)
+{
+    CALL_FUNC(g_dcmiV2GetDeviceListFunc, deviceList, deviceNum, listLength);
 }
 
 static int (*g_dcmiGetDeviceNumInCardFunc)(int cardId, int *deviceNum);
@@ -118,6 +130,12 @@ static int DcmiGetDeviceChipInfo(int cardId, int deviceId, struct DcmiChipInfo *
     CALL_FUNC(g_dcmiGetDeviceChipInfoFunc, cardId, deviceId, chipInfo);
 }
 
+static int (*g_dcmiV2GetDeviceChipInfoFunc)(int deviceId, struct DcmiChipInfo *chipInfo);
+static int DcmiV2GetDeviceChipInfo(int deviceId, struct DcmiChipInfo *chipInfo)
+{
+    CALL_FUNC(g_dcmiV2GetDeviceChipInfoFunc, deviceId, chipInfo);
+}
+
 // load .so files and functions
 static int DcmiInitDl(char *dlPath)
 {
@@ -140,7 +158,11 @@ static int DcmiInitDl(char *dlPath)
 
     g_dcmiInitFunc = dlsym(g_dcmiHandle, "dcmi_init");
 
+    g_dcmiV2InitFunc = dlsym(g_dcmiHandle, "dcmiv2_init");
+
     g_dcmiGetCardNumListFunc = dlsym(g_dcmiHandle, "dcmi_get_card_num_list");
+
+    g_dcmiV2GetDeviceListFunc = dlsym(g_dcmiHandle, "dcmiv2_get_device_list");
 
     g_dcmiGetDeviceNumInCardFunc = dlsym(g_dcmiHandle, "dcmi_get_device_num_in_card");
 
@@ -155,6 +177,8 @@ static int DcmiInitDl(char *dlPath)
     g_dcmiGetProductTypeFunc = dlsym(g_dcmiHandle, "dcmi_get_product_type");
 
     g_dcmiGetDeviceChipInfoFunc = dlsym(g_dcmiHandle, "dcmi_get_device_chip_info");
+
+    g_dcmiV2GetDeviceChipInfoFunc = dlsym(g_dcmiHandle, "dcmiv2_get_device_chip_info");
 
     return SUCCESS;
 }

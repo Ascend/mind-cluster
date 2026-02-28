@@ -1,4 +1,4 @@
-/* Copyright(C) 2022. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -15,15 +15,12 @@
 // Package dcmi
 package dcmi
 
-// #cgo LDFLAGS: -ldl
-// #include "dcmi_interface_api.h"
 import "C"
 import (
 	"fmt"
 	"math"
-	"unsafe"
 
-	"ascend-docker-runtime/mindxcheckutils"
+	"ascend-common/common-utils/hwlog"
 )
 
 const (
@@ -32,7 +29,8 @@ const (
 	// hiAIMaxCardNum is the max number of cards
 	hiAIMaxCardNum = 64
 	// hiAIMaxCardID max card id for Ascend chip
-	hiAIMaxCardID = math.MaxInt32
+	hiAIMaxCardID   = math.MaxInt32
+	hiAIMaxDeviceID = math.MaxInt32
 	// hiAIMaxDeviceNum is the max number of devices in a card
 	hiAIMaxDeviceNum = 4
 	maxChipNameLen   = 32
@@ -40,8 +38,17 @@ const (
 	notSupportCode   = -8255
 
 	coreNumLen = 32
-	vfgID      = 4294967295 // vfg_id表示指定虚拟设备所属的虚拟分组ID，默认自动分配，默认值为0xFFFFFFFF，转换成10进制为4294967295。
+	// vfg_id indicates the virtual group ID to which the specified virtual device belongs.
+	// It is automatically assigned by default, with a default value of 0xFFFFFFFF, which converts to 4294967295 in decimal.
+	vfgID            = 4294967295
+	notSupportString = "[not support]"
 )
+
+// Calling the V1 version of the initialization function on the Ascend950 generation (V2) will fail.
+var managerList = []WorkerInterface{
+	&NpuV1Worker{DcMgr: &DcV1Manager{}},
+	&NpuV2Worker{DcMgr: &DcV2Manager{}},
+}
 
 // ChipInfo chip info
 type ChipInfo struct {
@@ -50,8 +57,38 @@ type ChipInfo struct {
 	Version string `json:"chip_version"`
 }
 
-// NpuWorker Dcmi worker
-type NpuWorker struct {
+// DcDriverV1Interface dcmi v1 interface
+type DcDriverV1Interface interface {
+	DcInitialize() error
+	DcShutDown()
+	DcGetCardList() (int32, []int32, error)
+	DcGetDeviceNumInCard(cardID int32) (int32, error)
+	DcGetDeviceLogicID(cardID, deviceID int32) (int32, error)
+	DcGetProductType(cardID, deviceID int32) (string, error)
+	DcCreateVDevice(cardID, deviceID int32, coreNum string) (int32, error)
+	DcDestroyVDevice(cardID, deviceID int32, vDevID int32) error
+	DcGetChipInfo(cardID, deviceID int32) (*ChipInfo, error)
+	DcGetDeviceLogicidFromPhyid(phyID int32) (int32, error)
+}
+
+// DcDriverV1Interface dcmi v2 interface
+type DcDriverV2Interface interface {
+	DcInitialize() error
+	DcShutDown()
+	DcCreateVDevice(deviceID int32, coreNum string) (int32, error)
+	DcDestroyVDevice(deviceID int32, vDevID int32) error
+	DcGetChipInfo(deviceID int32) (*ChipInfo, error)
+	DcGetDeviceList() (int32, []int32, error)
+}
+
+// NpuV1Worker Dcmi V1 worker
+type NpuV1Worker struct {
+	DcMgr DcDriverV1Interface
+}
+
+// NpuV2Worker Dcmi V2 worker
+type NpuV2Worker struct {
+	DcMgr DcDriverV2Interface
 }
 
 // isValidCardID valid card id
@@ -70,9 +107,30 @@ func isValidCardIDAndDeviceID(cardID, deviceID int32) bool {
 	return isValidCardID(cardID) && isValidDeviceID(deviceID)
 }
 
+// isValidA950DeviceID valid device id at ascend 950
+func isValidA950DeviceID(deviceID int32) bool {
+	return deviceID >= 0 && deviceID < hiAIMaxDeviceID
+}
+
 // isValidChipInfo valid chip info is or not empty
 func isValidChipInfo(chip *ChipInfo) bool {
+	if chip == nil {
+		return false
+	}
 	return chip.Name != "" || chip.Type != "" || chip.Version != ""
+}
+
+// GetMatchingNpuWorker Obtain the NPU worker that matches the generation.
+func GetMatchingNpuWorker() (WorkerInterface, error) {
+	for _, manager := range managerList {
+		err := manager.Initialize()
+		if err == nil {
+			manager.ShutDown()
+			hwlog.RunLog.Infof("worker type: %T", manager)
+			return manager, nil
+		}
+	}
+	return nil, fmt.Errorf("failed to find a valid manager")
 }
 
 func convertUCharToCharArr(cgoArr [maxChipNameLen]C.uchar) []byte {
@@ -87,152 +145,65 @@ func convertUCharToCharArr(cgoArr [maxChipNameLen]C.uchar) []byte {
 }
 
 // Initialize dcmi lib init
-func (w *NpuWorker) Initialize() error {
-	cDlPath := C.CString(string(make([]byte, int32(C.PATH_MAX))))
-	defer C.free(unsafe.Pointer(cDlPath))
-	if err := C.DcmiInitDl(cDlPath); err != C.SUCCESS {
-		errInfo := fmt.Errorf("dcmi lib load failed, , error code: %d", int32(err))
-		return errInfo
-	}
-	dlPath := C.GoString(cDlPath)
-	if _, err := mindxcheckutils.RealFileChecker(dlPath, true, false, mindxcheckutils.DefaultSize); err != nil {
-		return err
-	}
-	if err := C.DcmiInit(); err != C.SUCCESS {
-		errInfo := fmt.Errorf("dcmi init failed, , error code: %d", int32(err))
-		return errInfo
-	}
-	return nil
+func (w *NpuV1Worker) Initialize() error {
+	return w.DcMgr.DcInitialize()
 }
 
 // ShutDown shutdown dcmi lib
-func (w *NpuWorker) ShutDown() {
-	if err := C.DcmiShutDown(); err != C.SUCCESS {
-		println(fmt.Errorf("dcmi shut down failed, error code: %d", int32(err)))
-	}
-}
-
-// GetCardList  list all cards on system
-func GetCardList() (int32, []int32, error) {
-	var ids [hiAIMaxCardNum]C.int
-	var cNum C.int
-	if err := C.DcmiGetCardNumList(&cNum, &ids[0], hiAIMaxCardNum); err != 0 {
-		errInfo := fmt.Errorf("get card list failed, error code: %d", int32(err))
-		return retError, nil, errInfo
-	}
-	// checking card's quantity
-	if cNum <= 0 || cNum > hiAIMaxCardNum {
-		errInfo := fmt.Errorf("get error card quantity: %d", int32(cNum))
-		return retError, nil, errInfo
-	}
-	var cardNum = int32(cNum)
-	var cardIDList []int32
-	for i := int32(0); i < cardNum; i++ {
-		cardID := int32(ids[i])
-		if cardID < 0 {
-			continue
-		}
-		cardIDList = append(cardIDList, cardID)
-	}
-	return cardNum, cardIDList, nil
-}
-
-// GetDeviceNumInCard get device number in the npu card
-func GetDeviceNumInCard(cardID int32) (int32, error) {
-	var deviceNum C.int
-	if err := C.DcmiGetDeviceNumInCard(C.int(cardID), &deviceNum); err != 0 {
-		errInfo := fmt.Errorf("get device count on the card failed, error code: %d", int32(err))
-		return retError, errInfo
-	}
-	if deviceNum <= 0 || deviceNum > hiAIMaxDeviceNum {
-		errInfo := fmt.Errorf("the number of chips obtained is invalid, the number is: %d", int32(deviceNum))
-		return retError, errInfo
-	}
-	return int32(deviceNum), nil
-}
-
-// GetDeviceLogicID get device logicID
-func GetDeviceLogicID(cardID, deviceID int32) (int32, error) {
-	var logicID C.int
-	if err := C.DcmiGetDeviceLogicId(&logicID, C.int(cardID), C.int(deviceID)); err != 0 {
-		errInfo := fmt.Errorf("get logicID failed, error code: %d", int32(err))
-		return retError, errInfo
-	}
-
-	// check whether phyID is too big
-	if logicID < 0 || uint32(logicID) > uint32(math.MaxInt8) {
-		errInfo := fmt.Errorf("the logicID value is invalid, logicID is: %d", logicID)
-		return retError, errInfo
-	}
-	return int32(logicID), nil
+func (w *NpuV1Worker) ShutDown() {
+	w.DcMgr.DcShutDown()
 }
 
 // CreateVDevice create virtual device
-func (w *NpuWorker) CreateVDevice(cardID, deviceID int32, coreNum string) (int32, error) {
-	var createInfo C.struct_DcmiCreateVdevOut
-	createInfo.vdevId = C.uint(math.MaxUint32)
-	var deviceCreateStr C.struct_DcmiCreateVdevResStru
-	deviceCreateStr = C.struct_DcmiCreateVdevResStru{
-		vdevId: C.uint(vfgID),
-		vfgId:  C.uint(vfgID),
+func (w *NpuV1Worker) CreateVDevice(uniqueID int32, coreNum string) (VDeviceInfo, error) {
+	deviceID, cardID, err := w.FindDevice(uniqueID)
+	if err != nil {
+		return VDeviceInfo{CardID: -1, DeviceID: -1, VdeviceID: -1}, err
 	}
-	deviceCreateStrArr := [coreNumLen]C.char{0}
-	for i := 0; i < len(coreNum); i++ {
-		if i >= coreNumLen {
-			return math.MaxInt32, fmt.Errorf("wrong template")
-		}
-		deviceCreateStrArr[i] = C.char(coreNum[i])
+	vdevId, err := w.DcMgr.DcCreateVDevice(cardID, deviceID, coreNum)
+	if err != nil {
+		return VDeviceInfo{CardID: -1, DeviceID: -1, VdeviceID: math.MaxInt32}, err
 	}
-	deviceCreateStr.templateName = deviceCreateStrArr
-	err := C.DcmiCreateVdevice(C.int(cardID), C.int(deviceID), &deviceCreateStr, &createInfo)
-	if err != 0 {
-		errInfo := fmt.Errorf("create virtual device failed, error code: %d", int32(err))
-		return math.MaxInt32, errInfo
+	if vdevId > math.MaxInt32 {
+		return VDeviceInfo{CardID: cardID, DeviceID: deviceID, VdeviceID: math.MaxInt32}, fmt.Errorf("create virtual device failed, vdeviceId too large")
 	}
-	if createInfo.vdevId > math.MaxInt32 {
-		return math.MaxInt32, fmt.Errorf("create virtual device failed, vdeviceId too large")
-	}
-	return int32(createInfo.vdevId), nil
+	return VDeviceInfo{CardID: cardID, DeviceID: deviceID, VdeviceID: int32(vdevId)}, nil
 }
 
 // DestroyVDevice destroy virtual device
-func (w *NpuWorker) DestroyVDevice(cardID, deviceID int32, vDevID int32) error {
+func (w *NpuV1Worker) DestroyVDevice(uniqueID int32, vDevID int32) error {
 	if vDevID < 0 {
 		return fmt.Errorf("param error on vDevID")
 	}
-	if err := C.DcmiSetDestroyVdevice(C.int(cardID), C.int(deviceID), C.uint(vDevID)); err != 0 {
-		errInfo := fmt.Errorf("destroy virtual device failed, error code: %d", int32(err))
-		return errInfo
+	deviceID, cardID, err := w.FindDevice(uniqueID)
+	if err != nil {
+		return err
 	}
-	return nil
+	return w.DcMgr.DcDestroyVDevice(cardID, deviceID, vDevID)
 }
 
 // FindDevice find device by phyical id
-func (w *NpuWorker) FindDevice(visibleDevice int32) (int32, int32, error) {
-	var dcmiLogicID C.uint
-	if err := C.DcmiGetDeviceLogicidFromPhyid(C.uint(visibleDevice), &dcmiLogicID); err != 0 {
-		return 0, 0, fmt.Errorf("phy id can not be converted to logic id : %v", err)
+func (w *NpuV1Worker) FindDevice(visibleDevice int32) (int32, int32, error) {
+	targetLogicID, err := w.DcMgr.DcGetDeviceLogicidFromPhyid(visibleDevice)
+	if err != nil {
+		return 0, 0, fmt.Errorf("cannot convert phy id to logic id, err: %v", err)
 	}
-	if int32(dcmiLogicID) < 0 || int32(dcmiLogicID) >= hiAIMaxCardNum*hiAIMaxDeviceNum {
-		return 0, 0, fmt.Errorf("logic id too large")
-	}
-	targetLogicID := int32(dcmiLogicID)
-	_, cardList, err := GetCardList()
+	_, cardList, err := w.DcMgr.DcGetCardList()
 	if err != nil {
 		return 0, 0, fmt.Errorf("get card list err : %v", err)
 	}
 	targetDeviceID, targetCardID := int32(math.MaxInt32), int32(math.MaxInt32)
 	for _, cardID := range cardList {
-		deviceCount, err := GetDeviceNumInCard(cardID)
+		deviceCount, err := w.DcMgr.DcGetDeviceNumInCard(cardID)
 		if err != nil {
 			return 0, 0, fmt.Errorf("cannot get device num in card : %v", err)
 		}
 		for deviceID := int32(0); deviceID < deviceCount; deviceID++ {
-			logicID, err := GetDeviceLogicID(cardID, deviceID)
+			logicID, err := w.DcMgr.DcGetDeviceLogicID(cardID, deviceID)
 			if err != nil {
 				return 0, 0, fmt.Errorf("cannot get logic id : %v", err)
 			}
-			if logicID == int32(targetLogicID) {
+			if logicID == targetLogicID {
 				targetCardID, targetDeviceID = cardID, deviceID
 			}
 		}
@@ -240,45 +211,150 @@ func (w *NpuWorker) FindDevice(visibleDevice int32) (int32, int32, error) {
 	return targetDeviceID, targetCardID, nil
 }
 
-// GetProductType get type of product by dcmi interface
-func (w *NpuWorker) GetProductType(cardID, deviceID int32) (string, error) {
-	cProductType := C.CString(string(make([]byte, productTypeLen)))
-	defer C.free(unsafe.Pointer(cProductType))
-	if err := C.DcmiGetProductType(C.int(cardID), C.int(deviceID),
-		(*C.char)(cProductType), productTypeLen+1); err != 0 {
-		if err == notSupportCode {
-			// device which does not support querying product, such as Ascend 910A/B
-			return "not support", nil
-		}
-		return "", fmt.Errorf("get product type failed, errCode: %d", err)
+// GetProductType get type of product
+func (w *NpuV1Worker) GetProductType() (string, error) {
+	invalidType := ""
+	if err := w.Initialize(); err != nil {
+		return invalidType, fmt.Errorf("cannot init dcmi : %v", err)
 	}
-	return C.GoString(cProductType), nil
+	defer w.ShutDown()
+
+	cardNum, cardList, err := w.DcMgr.DcGetCardList()
+	if cardNum == 0 || err != nil {
+		hwlog.RunLog.Errorf("failed to get card list, err: %#v", err)
+		return invalidType, err
+	}
+	for _, cardID := range cardList {
+		devNum, err := w.DcMgr.DcGetDeviceNumInCard(cardID)
+		if err != nil {
+			hwlog.RunLog.Debugf("get device num by cardID(%d) failed, error: %#v", cardID, err)
+			continue
+		}
+		if devNum == 0 {
+			hwlog.RunLog.Debugf("not found device on card %d", cardID)
+			continue
+		}
+		for devID := int32(0); devID < devNum; devID++ {
+			productType, err := w.DcMgr.DcGetProductType(cardID, devID)
+			if err != nil {
+				hwlog.RunLog.Debugf("get product type by card %d deviceID %d failed, err: %#v", cardID, devID, err)
+				continue
+			}
+			return productType, nil
+		}
+	}
+	return invalidType, nil
 }
 
-// GetChipInfo get the chip info by cardID and deviceID
-func (w *NpuWorker) GetChipInfo(cardID, deviceID int32) (*ChipInfo, error) {
-	if !isValidCardIDAndDeviceID(cardID, deviceID) {
-		return nil, fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
+// GetChipName get name of chip
+func (w *NpuV1Worker) GetChipName() (string, error) {
+	invalidName := ""
+
+	if err := w.Initialize(); err != nil {
+		return invalidName, fmt.Errorf("cannot init dcmi : %v", err)
 	}
-	var chipInfo C.struct_DcmiChipInfo
-	if rCode := C.DcmiGetDeviceChipInfo(C.int(cardID), C.int(deviceID), &chipInfo); int32(rCode) != 0 {
-		return nil, fmt.Errorf("get device ChipInfo information failed, cardID(%d), deviceID(%d),"+
-			" error code: %d", cardID, deviceID, int32(rCode))
+	defer w.ShutDown()
+
+	cardNum, cardList, err := w.DcMgr.DcGetCardList()
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to get card list, err: %#v", err)
+		return invalidName, err
+	}
+	if cardNum == 0 {
+		return invalidName, fmt.Errorf("get chip info failed, no card found")
 	}
 
-	name := convertUCharToCharArr(chipInfo.chipName)
-	cType := convertUCharToCharArr(chipInfo.chipType)
-	ver := convertUCharToCharArr(chipInfo.chipVer)
-
-	chip := &ChipInfo{
-		Name:    string(name),
-		Type:    string(cType),
-		Version: string(ver),
+	// get device in card, then get chip info by cardID and deviceID
+	for _, cardID := range cardList {
+		devNum, err := w.DcMgr.DcGetDeviceNumInCard(cardID)
+		if err != nil || devNum == 0 {
+			hwlog.RunLog.Warnf("get device num by cardID(%d) failed, error: %#v", cardID, err)
+			continue
+		}
+		for devID := int32(0); devID < devNum; devID++ {
+			chipInfo, err := w.DcMgr.DcGetChipInfo(cardID, devID)
+			if err != nil {
+				hwlog.RunLog.Warnf("get chip info failed by cardID(%d), deviceID(%d), error: %#v", cardID, devID,
+					err)
+				continue
+			}
+			if !isValidChipInfo(chipInfo) {
+				hwlog.RunLog.Warnf("invalid chip info by cardID(%d), deviceID(%d), error: %#v", cardID, devID,
+					err)
+				continue
+			}
+			return (*chipInfo).Name, nil
+		}
 	}
-	if !isValidChipInfo(chip) {
-		return nil, fmt.Errorf("get device ChipInfo information failed, chip info is empty,"+
-			" cardID(%d), deviceID(%d)", cardID, deviceID)
+
+	return invalidName, fmt.Errorf("cannot get valid chip info")
+}
+
+// Initialize dcmi lib init via DcMgr
+func (a *NpuV2Worker) Initialize() error {
+	return a.DcMgr.DcInitialize()
+}
+
+// ShutDown shutdown dcmi lib via DcMgr
+func (a *NpuV2Worker) ShutDown() {
+	a.DcMgr.DcShutDown()
+}
+
+// CreateVDevice create virtual device
+func (a *NpuV2Worker) CreateVDevice(uniqueID int32, coreNum string) (VDeviceInfo, error) {
+	vdevId, err := a.DcMgr.DcCreateVDevice(uniqueID, coreNum)
+	if err != nil {
+		return VDeviceInfo{
+			CardID:    -1,
+			DeviceID:  -1,
+			VdeviceID: -1,
+		}, err
+	}
+	// can not reach here now
+	return VDeviceInfo{VdeviceID: vdevId}, nil
+}
+
+// DestroyVDevice destroy virtual device
+func (a *NpuV2Worker) DestroyVDevice(uniqueID int32, vDevID int32) error {
+	return a.DcMgr.DcDestroyVDevice(uniqueID, vDevID)
+}
+
+// GetProductType get type of product
+func (a *NpuV2Worker) GetProductType() (string, error) {
+	hwlog.RunLog.Infof("dcmi v2 not support GetProductType")
+	return notSupportString, nil
+}
+
+// GetChipName get name of chip
+func (a *NpuV2Worker) GetChipName() (string, error) {
+	invalidName := ""
+
+	if err := a.Initialize(); err != nil {
+		return invalidName, fmt.Errorf("cannot init dcmi : %v", err)
+	}
+	defer a.ShutDown()
+
+	deviceNum, deviceList, err := a.DcMgr.DcGetDeviceList()
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to get device list, err: %#v", err)
+		return invalidName, err
+	}
+	if deviceNum == 0 {
+		return invalidName, fmt.Errorf("get chip info failed, no card found")
 	}
 
-	return chip, nil
+	// get device in card, then get chip info by cardID and deviceID
+	for _, devID := range deviceList {
+		chipInfo, err := a.DcMgr.DcGetChipInfo(devID)
+		if err != nil {
+			hwlog.RunLog.Warnf("get chip info failed by deviceID(%d), error: %#v", devID, err)
+			continue
+		}
+		if !isValidChipInfo(chipInfo) {
+			hwlog.RunLog.Warnf("invalid chip info by deviceID(%d), error: %#v", devID, err)
+			continue
+		}
+		return (*chipInfo).Name, nil
+	}
+	return invalidName, fmt.Errorf("cannot get valid chip info")
 }

@@ -1,4 +1,4 @@
-/* Copyright(C) 2022. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -523,7 +523,7 @@ func TestAddHookCase1(t *testing.T) {
 	stub := gomonkey.ApplyGlobalVar(&hookCliPath, ".")
 	defer stub.Reset()
 
-	err := addHook(specArgs, &deviceList)
+	err := addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, specArgs, &deviceList)
 	assert.NotNil(t, err)
 }
 
@@ -533,7 +533,7 @@ func TestAddHookCase2(t *testing.T) {
 	stub := gomonkey.ApplyGlobalVar(&hookCliPath, ".")
 	defer stub.Reset()
 	stub.ApplyGlobalVar(&hookDefaultFile, ".")
-	err := addHook(specArgs, &deviceList)
+	err := addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, specArgs, &deviceList)
 	assert.NotNil(t, err)
 }
 
@@ -546,7 +546,7 @@ func TestAddHookCase3(t *testing.T) {
 		t.Log("rename ", file)
 	}
 	var specArgs = &specs.Spec{}
-	err := addHook(specArgs, &deviceList)
+	err := addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, specArgs, &deviceList)
 	assert.NotNil(t, err)
 
 	if err := os.Rename(filenew, file); err != nil {
@@ -1075,15 +1075,15 @@ func TestAddManagerDevice(t *testing.T) {
 	})
 	defer statStub.Reset()
 
-	dcmiStub := gomonkey.ApplyFunc(dcmi.GetChipName, func() (string, error) {
+	patchGetChipName := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetChipName", func(f *dcmi.NpuV1Worker) (string, error) {
 		return chipName, nil
 	})
-	defer dcmiStub.Reset()
+	defer patchGetChipName.Reset()
 
-	productStub := gomonkey.ApplyFunc(dcmi.GetProductType, func(w dcmi.WorkerInterface) (string, error) {
+	patchGetProductType := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetProductType", func(f *dcmi.NpuV1Worker) (string, error) {
 		return "", nil
 	})
-	defer productStub.Reset()
+	defer patchGetProductType.Reset()
 
 	spec := specs.Spec{
 		Linux: &specs.Linux{
@@ -1096,7 +1096,7 @@ func TestAddManagerDevice(t *testing.T) {
 	ctx, _ := context.WithCancel(context.Background())
 	err := InitLogModule(ctx)
 	assert.Nil(t, err)
-	err = addManagerDevice(&spec)
+	err = addManagerDevice(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &spec)
 	assert.Nil(t, err)
 }
 
@@ -1276,7 +1276,7 @@ func TestAddDevice(t *testing.T) {
 	})
 	defer statStub.Reset()
 
-	manageDeviceStub := gomonkey.ApplyFunc(addManagerDevice, func(spec *specs.Spec) error {
+	manageDeviceStub := gomonkey.ApplyFunc(addManagerDevice, func(w dcmi.WorkerInterface, spec *specs.Spec) error {
 		return nil
 	})
 	defer manageDeviceStub.Reset()
@@ -1299,7 +1299,7 @@ func TestAddDevice(t *testing.T) {
 	ctx, _ := context.WithCancel(context.Background())
 	err := InitLogModule(ctx)
 	assert.Nil(t, err)
-	err = addDevice(&spec, deviceList)
+	err = addDevice(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &spec, deviceList)
 	assert.Nil(t, err)
 	assert.Contains(t, spec.Linux.Devices[0].Path, devPath)
 }
@@ -1318,13 +1318,13 @@ func TestAddDevicePatch1(t *testing.T) {
 			patch := gomonkey.ApplyFuncReturn(strings.Contains, true).
 				ApplyFuncReturn(addDeviceToSpec, testError)
 			defer patch.Reset()
-			convey.So(addDevice(testSp, make([]int, 0)), convey.ShouldBeError)
+			convey.So(addDevice(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, testSp, make([]int, 0)), convey.ShouldBeError)
 		})
 		convey.Convey("02-addManagerDevice error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(addDeviceToSpec, nil).
 				ApplyFuncReturn(addManagerDevice, testError)
 			defer patch.Reset()
-			convey.So(addDevice(testSp, make([]int, 0)), convey.ShouldBeError)
+			convey.So(addDevice(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, testSp, make([]int, 0)), convey.ShouldBeError)
 		})
 	})
 }
@@ -1359,7 +1359,7 @@ func TestAddHook(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := addHook(tt.spec, tt.deviceIdList); (err != nil) != tt.wantErr {
+			if err := addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, tt.spec, tt.deviceIdList); (err != nil) != tt.wantErr {
 				t.Errorf("addHook() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1370,13 +1370,13 @@ func TestAddHook(t *testing.T) {
 func TestAddHookPatch1(t *testing.T) {
 	convey.Convey("test addHook patch1", t, func() {
 		convey.Convey("01-deviceList is nil, should return nil", func() {
-			convey.So(addHook(&specs.Spec{}, nil), convey.ShouldBeNil)
+			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &specs.Spec{}, nil), convey.ShouldBeNil)
 		})
 		testIn := make([]int, 1)
 		convey.Convey("02-Executable error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(os.Executable, testStr, testError)
 			defer patch.Reset()
-			convey.So(addHook(&specs.Spec{}, &testIn), convey.ShouldBeError)
+			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &specs.Spec{}, &testIn), convey.ShouldBeError)
 		})
 		patches := gomonkey.ApplyFuncReturn(os.Executable, testStr, nil).
 			ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, nil)
@@ -1384,7 +1384,7 @@ func TestAddHookPatch1(t *testing.T) {
 		convey.Convey("03-Stat error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, testError)
 			defer patch.Reset()
-			convey.So(addHook(&specs.Spec{}, &testIn), convey.ShouldBeError)
+			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &specs.Spec{}, &testIn), convey.ShouldBeError)
 		})
 		patches.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil)
 		convey.Convey("04-over MaxCommandLength, should return error", func() {
@@ -1393,7 +1393,7 @@ func TestAddHookPatch1(t *testing.T) {
 					Prestart: make([]specs.Hook, MaxCommandLength+1),
 				},
 			}
-			convey.So(addHook(&testSp, &testIn), convey.ShouldBeError)
+			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &testSp, &testIn), convey.ShouldBeError)
 		})
 		convey.Convey("05-hook path contains hookCli, should return error", func() {
 			testSp := specs.Spec{
@@ -1406,7 +1406,7 @@ func TestAddHookPatch1(t *testing.T) {
 					Env: make([]string, MaxCommandLength+1),
 				},
 			}
-			convey.So(addHook(&testSp, &testIn), convey.ShouldBeError)
+			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &testSp, &testIn), convey.ShouldBeError)
 		})
 	})
 }
@@ -1432,23 +1432,23 @@ func TestAddHookPatch2(t *testing.T) {
 		convey.Convey("06-CreateVDevice error, return error", func() {
 			patch := gomonkey.ApplyFuncReturn(dcmi.CreateVDevice, dcmi.VDeviceInfo{}, testError)
 			defer patch.Reset()
-			convey.So(addHook(&testSp, &testIn), convey.ShouldBeError)
+			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &testSp, &testIn), convey.ShouldBeError)
 		})
 		patches.ApplyFuncReturn(dcmi.CreateVDevice, dcmi.VDeviceInfo{VdeviceID: 0}, nil)
 		convey.Convey("07-success, should return nil", func() {
 			patch := gomonkey.ApplyFuncReturn(updateEnvAndPostHook, nil)
 			defer patch.Reset()
-			convey.So(addHook(&testSp, &testIn), convey.ShouldBeNil)
+			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &testSp, &testIn), convey.ShouldBeNil)
 		})
 	})
 }
 
 // TestParseAscendDevices tests the function parseAscendDevices
 func TestParseAscendDevices(t *testing.T) {
-	patchRealFileCheck := gomonkey.ApplyFunc(dcmi.GetChipName, func() (string, error) {
+	patchGetChipName := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetChipName", func(f *dcmi.NpuV1Worker) (string, error) {
 		return chipName, nil
 	})
-	defer patchRealFileCheck.Reset()
+	defer patchGetChipName.Reset()
 	tests := []struct {
 		name           string
 		visibleDevices string
@@ -1482,6 +1482,10 @@ func TestParseAscendDevices(t *testing.T) {
 
 // TestParseAscendDevicesPatch1 tests the function parseAscendDevices
 func TestParseAscendDevicesPatch1(t *testing.T) {
+	patchGetChipName := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetChipName", func(f *dcmi.NpuV1Worker) (string, error) {
+		return testStr, nil
+	})
+	defer patchGetChipName.Reset()
 	convey.Convey("test parseAscendDevices patch1", t, func() {
 		convey.Convey("01-matchGroups is nil, should return error", func() {
 			devs := "test,"
@@ -1497,16 +1501,11 @@ func TestParseAscendDevicesPatch1(t *testing.T) {
 		})
 		convey.Convey("03-GetChipName error, should return error", func() {
 			devs := testStr
-			patch := gomonkey.ApplyFuncReturn(dcmi.GetChipName, testStr, testError)
-			defer patch.Reset()
 			_, err := parseAscendDevices(devs)
 			convey.So(err, convey.ShouldBeError)
 		})
 		convey.Convey("04-GetDeviceTypeByChipName error, should return error", func() {
 			devs := testStr
-			patch := gomonkey.ApplyFuncReturn(dcmi.GetChipName, testStr, nil).
-				ApplyFuncReturn(GetDeviceTypeByChipName, testStr)
-			defer patch.Reset()
 			_, err := parseAscendDevices(devs)
 			convey.So(err, convey.ShouldBeError)
 		})
@@ -1523,10 +1522,10 @@ func specWithEnv(envValue string) *specs.Spec {
 
 // TestCheckVisibleDevice tests the function checkVisibleDevice
 func TestCheckVisibleDevice(t *testing.T) {
-	patchRealFileCheck := gomonkey.ApplyFunc(dcmi.GetChipName, func() (string, error) {
+	patchGetChipName := gomonkey.ApplyMethod(reflect.TypeOf(&dcmi.NpuV1Worker{}), "GetChipName", func(f *dcmi.NpuV1Worker) (string, error) {
 		return chipName, nil
 	})
-	defer patchRealFileCheck.Reset()
+	defer patchGetChipName.Reset()
 	tests := []struct {
 		name    string
 		spec    *specs.Spec

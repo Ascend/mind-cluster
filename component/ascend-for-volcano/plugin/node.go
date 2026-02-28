@@ -20,6 +20,7 @@ Package plugin is using for HuaWei Ascend pin affinity schedule frame.
 package plugin
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -55,6 +56,8 @@ type CommonNode struct {
 	Idle           map[v1.ResourceName]float64
 	Tasks          map[api.TaskID]*api.TaskInfo
 	BaseDeviceInfo string
+	// convert phy id to device id at ascend950
+	PhyIDToDeviceIDMap map[int32]int32
 	// node annotation and device info + switch info + node info
 	Annotation        map[string]string
 	Label             map[string]string
@@ -168,6 +171,37 @@ func (sHandle *ScheduleHandler) NodePredicate(taskInfo *api.TaskInfo, nodeInfo *
 	return nil
 }
 
+// build PhyIDToDeviceIDMap that convert phy id to device id
+func (n *NPUNode) buildPhyIdToDeviceIdMap() error {
+	deviceInfoMap := make(map[string]*util.NpuBaseInfo)
+	err := json.Unmarshal([]byte(n.BaseDeviceInfo), &deviceInfoMap)
+	if err != nil {
+		klog.Infof("buildPhyIdToDeviceIdMap unmarshal err, origin value: %v", n.BaseDeviceInfo)
+		return fmt.Errorf("unmarshal annotation baseDeviceInfos failed")
+	}
+	n.PhyIDToDeviceIDMap = make(map[int32]int32)
+	for device, deviceInfo := range deviceInfoMap {
+		if deviceInfo.DeviceID == nil {
+			return fmt.Errorf("lack device id in baseDeviceInfos at node %v", n.Name)
+		}
+		parts := strings.Split(device, "-")
+		if len(parts) != SplitedLength {
+			continue
+		}
+		phyID, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return fmt.Errorf("parse phy id failed: %s", parts[1])
+		}
+		n.PhyIDToDeviceIDMap[int32(phyID)] = *deviceInfo.DeviceID
+	}
+	if len(n.PhyIDToDeviceIDMap) != len(deviceInfoMap) {
+		// clear
+		n.PhyIDToDeviceIDMap = make(map[int32]int32)
+		return fmt.Errorf("phyIDToDeviceIDMap length not equal deviceInfoMap length")
+	}
+	return nil
+}
+
 // initNPUNodeByNodeInf init NPU node from node info and cm.
 func (n *NPUNode) initNPUNodeByNodeInf(npuNode *api.NodeInfo, deviceInfo k8s.NodeDeviceInfoWithID,
 	nodeInfoOfNodeD k8s.NodeDNodeInfo, switchInfo k8s.SwitchFaultInfo,
@@ -193,6 +227,13 @@ func (n *NPUNode) initNPUNodeByNodeInf(npuNode *api.NodeInfo, deviceInfo k8s.Nod
 	n.Capability = capability
 	if !util.IsMapHasNPUResource(capability, util.HwPreName) {
 		return fmt.Errorf("node %s npu resource is not enable", npuNode.Name)
+	}
+	chipName, ok := n.Label[ChipTypeKey]
+	// build PhyIdToDeviceIdMap in Ascend 950
+	if ok && strings.HasPrefix(chipName, Ascend950Prefix) {
+		if err := n.buildPhyIdToDeviceIdMap(); err != nil {
+			return fmt.Errorf("build phyIdToDeviceIdMap failed: %s", err.Error())
+		}
 	}
 	if deviceInfo.DeviceList == nil {
 		return fmt.Errorf("node %s device info or clusterd info is not enable", npuNode.Name)

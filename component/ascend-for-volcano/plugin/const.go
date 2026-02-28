@@ -65,6 +65,9 @@ const (
 	NPUResourceName = "huawei.com/npu"
 	// NPUResourceNamePre npu resource name prefix
 	NPUResourceNamePre = "npu-"
+
+	Ascend950Prefix = "Ascend950"
+	SplitedLength   = 2
 )
 
 const (
@@ -90,7 +93,7 @@ const (
 )
 
 const (
-	chipTypeKey = "node.kubernetes.io/npu.chip.name"
+	ChipTypeKey = "node.kubernetes.io/npu.chip.name"
 	// ChipTypeB1 chip type 910B1
 	ChipTypeB1 = util.ChipKind + "B1"
 	// ChipTypeB2C chip type 910B2C

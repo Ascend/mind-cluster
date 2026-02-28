@@ -1,4 +1,4 @@
-/* Copyright(C) 2022. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -220,7 +220,7 @@ func addAscendDockerEnv(spec *specs.Spec) {
 	spec.Process.Env = append(spec.Process.Env, useAscendDocker)
 }
 
-func addHook(spec *specs.Spec, deviceIdList *[]int) error {
+func addHook(w dcmi.WorkerInterface, spec *specs.Spec, deviceIdList *[]int) error {
 	if deviceIdList == nil {
 		return nil
 	}
@@ -266,7 +266,7 @@ func addHook(spec *specs.Spec, deviceIdList *[]int) error {
 		return nil
 	}
 
-	vdevice, err := dcmi.CreateVDevice(&dcmi.NpuWorker{}, spec, *deviceIdList)
+	vdevice, err := dcmi.CreateVDevice(w, spec, *deviceIdList)
 	if err != nil {
 		return err
 	}
@@ -508,8 +508,8 @@ func addCommonManagerDevice(spec *specs.Spec, devType string) error {
 	return nil
 }
 
-func addManagerDevice(spec *specs.Spec) error {
-	chipName, err := dcmi.GetChipName()
+func addManagerDevice(w dcmi.WorkerInterface, spec *specs.Spec) error {
+	chipName, err := w.GetChipName()
 	if err != nil {
 		return fmt.Errorf("get chip name error: %v", err)
 	}
@@ -533,7 +533,7 @@ func addManagerDevice(spec *specs.Spec) error {
 		return fmt.Errorf("add davinci_manager to spec error: %v", err)
 	}
 
-	productType, err := dcmi.GetProductType(&dcmi.NpuWorker{})
+	productType, err := w.GetProductType()
 	if err != nil {
 		return fmt.Errorf("parse product type error: %v", err)
 	}
@@ -613,7 +613,7 @@ func checkVisibleDevice(spec *specs.Spec) ([]int, error) {
 	return devices, err
 }
 
-func addDevice(spec *specs.Spec, deviceIdList []int) error {
+func addDevice(w dcmi.WorkerInterface, spec *specs.Spec, deviceIdList []int) error {
 	deviceName := davinciName
 	if strings.Contains(getValueByKey(spec.Process.Env, ascendRuntimeOptions), "VIRTUAL") {
 		deviceName = virtualDavinciName
@@ -634,7 +634,7 @@ func addDevice(spec *specs.Spec, deviceIdList []int) error {
 		return fmt.Errorf("failed to add ub device to spec: %v", err)
 	}
 
-	if err := addManagerDevice(spec); err != nil {
+	if err := addManagerDevice(w, spec); err != nil {
 		hwlog.RunLog.Errorf("failed to add manager device, error: %v", err)
 		return fmt.Errorf("failed to add Manager device to spec: %v", err)
 	}
@@ -738,10 +738,14 @@ func processDevicesAndHooks(spec *specs.Spec) error {
 	}
 
 	if len(devices) != 0 {
-		if err = addHook(spec, &devices); err != nil {
+		npuWorker, err := dcmi.GetMatchingNpuWorker()
+		if err != nil {
+			return err
+		}
+		if err = addHook(npuWorker, spec, &devices); err != nil {
 			return fmt.Errorf("failed to inject hook, err: %v", err)
 		}
-		if err = addDevice(spec, devices); err != nil {
+		if err = addDevice(npuWorker, spec, devices); err != nil {
 			return fmt.Errorf("failed to add device to env: %v", err)
 		}
 	}

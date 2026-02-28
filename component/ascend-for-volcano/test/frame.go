@@ -80,6 +80,7 @@ func FakeNormalSSN(confs []conf.Configuration) *framework.Session {
 		node.Node.Labels[serverTypeKey] = fake910ServerType
 		node.Node.Labels[chipTypeKey] = fakeChipName + fakeChipType
 		node.Node.Annotations[NPU910CardName] = annoCards
+		node.Node.Annotations[BaseDeviceInfoKey] = fakeBaseDeviceInfo
 		schedulerCache.AddNode(node.Node)
 	}
 
