@@ -16,6 +16,9 @@
 package jobrescheduling
 
 import (
+	"strconv"
+	"time"
+
 	"ascend-common/common-utils/hwlog"
 	clusterd_constant "clusterd/pkg/common/constant"
 	"taskd/common/constant"
@@ -197,11 +200,27 @@ func (job *JobReschedulingPlugin) checkRank0Fault(shot storage.SnapShot) {
 	}
 	if agent0Info.Status[constant.ReportFaultRank] != "" {
 		hwlog.RunLog.Debug("JobReschedulingPlugin checkRank0Fault agent 0 fault")
-		if shot.MgrInfos != nil && shot.MgrInfos.Status[constant.FaultRecover] != "" {
+		if shot.MgrInfos != nil && shot.MgrInfos.Status[constant.FaultRecover] != "" &&
+			skipRank0FaultForNow(agent0Info) {
 			hwlog.RunLog.Debugf("JobReschedulingPlugin fault recover %v, wait clusterD notify...",
 				shot.MgrInfos.Status[constant.FaultRecover])
 			return
 		}
 		job.killMaster = true
 	}
+}
+
+func skipRank0FaultForNow(agent0Info *storage.AgentInfo) bool {
+	reportFaultTimeStr, ok := agent0Info.Status[constant.ReportFaultTime]
+	if !ok {
+		hwlog.RunLog.Infof("report fault time is empty")
+		return false
+	}
+	faultTime, err := strconv.ParseInt(reportFaultTimeStr, constant.Base, constant.BitSize)
+	if err != nil {
+		hwlog.RunLog.Infof("report fault time parse failed: %v", err)
+		return false
+	}
+	diffDuration := time.Now().Unix() - faultTime
+	return diffDuration < int64(constant.Rank0FaultTimeout.Seconds())
 }

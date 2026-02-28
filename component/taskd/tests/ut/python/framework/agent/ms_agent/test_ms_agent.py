@@ -115,16 +115,19 @@ class TestMsAgent(unittest.TestCase):
         self.assertEqual(self.agent.rank_status, MsAgent.RANK_STATUS_UNHEALTHY)
         self.assertEqual(fault_ranks, [1])
 
+    @patch('time.time')
     @patch.object(MsAgent, 'check_new_fault')
     @patch.object(MsAgent, 'send_message_to_manager')
-    def test_report_fault_rank_new_fault(self, mock_send, mock_check_new):
+    def test_report_fault_rank_new_fault(self, mock_send, mock_check_new, mock_time):
+        mock_time.return_value = 1
         mock_check_new.return_value = True
         fault_ranks = [1, 2]
         
         self.agent.report_fault_rank(fault_ranks)
         
         mock_check_new.assert_called_once_with(fault_ranks)
-        mock_send.assert_called_once_with('STATUS', constants.REPORT_CODE, AgentReportInfo(fault_ranks=fault_ranks))
+        mock_send.assert_called_once_with('STATUS', constants.REPORT_CODE, AgentReportInfo(fault_ranks=fault_ranks),
+        {"REPORT_FAULT_TIME": "1"})
         self.assertEqual(self.agent.local_fault_rank, fault_ranks)
 
     @patch.object(MsAgent, 'check_new_fault')

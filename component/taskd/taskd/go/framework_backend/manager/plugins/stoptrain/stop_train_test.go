@@ -88,6 +88,7 @@ type fieldsTestStopTrainingPluginPredicate struct {
 	shot            storage.SnapShot
 	signalInfo      *pluginutils.SignalInfo
 	HasSendMessages map[string]string
+	lastUuid        string
 }
 type argsTestStopTrainingPluginPredicate struct {
 	shot storage.SnapShot
@@ -102,46 +103,15 @@ type testsTestStopTrainingPluginPredicate struct {
 }
 
 func TestStopTrainingPluginPredicate(t *testing.T) {
-	tests := []testsTestStopTrainingPluginPredicate{
-		{
-			name:   "case 1: has token",
-			fields: fieldsTestStopTrainingPluginPredicate{hasToken: true},
-			want: infrastructure.PredicateResult{
-				PluginName:      constant.StopTrainPluginName,
-				CandidateStatus: constant.CandidateStatus,
-				PredicateStream: map[string]string{constant.ResumeTrainingAfterFaultStream: ""}},
-			wantErr: false},
-		{
-			name: "case 2: getSignalInfo error",
-			want: infrastructure.PredicateResult{
-				PluginName:      constant.StopTrainPluginName,
-				CandidateStatus: constant.UnselectStatus},
-			wantErr: false},
-		{
-			name:   "case 3: apply token",
-			fields: fieldsTestStopTrainingPluginPredicate{HasSendMessages: make(map[string]string)},
-			args: argsTestStopTrainingPluginPredicate{
-				shot: storage.SnapShot{
-					ClusterInfos: &storage.ClusterInfos{
-						Clusters: map[string]*storage.ClusterInfo{
-							constant.ClusterDRank: {
-								Command: map[string]string{
-									constant.SignalType:  clusterdconstant.StopTrainSignalType,
-									constant.Timeout:     "0",
-									constant.Actions:     utils.ObjToString([]string{}),
-									constant.FaultRanks:  utils.ObjToString(map[int]int{}),
-									constant.NodeRankIds: utils.ObjToString([]string{})}}}}}},
-			want: infrastructure.PredicateResult{
-				PluginName:      constant.StopTrainPluginName,
-				CandidateStatus: constant.CandidateStatus,
-				PredicateStream: map[string]string{constant.ResumeTrainingAfterFaultStream: ""}},
-			wantErr: false}}
+	tests := getArgsTestStopTrainingPluginPredicateTestCases()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &stopTrainingPlugin{
 				hasToken:        tt.fields.hasToken,
 				shot:            tt.fields.shot,
-				HasSendMessages: tt.fields.HasSendMessages}
+				HasSendMessages: tt.fields.HasSendMessages,
+				lastUuid:        tt.fields.lastUuid,
+			}
 			got, err := s.Predicate(tt.args.shot)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("stopTrainingPlugin.Predicate() error = %v, wantErr %v", err, tt.wantErr)
@@ -152,6 +122,59 @@ func TestStopTrainingPluginPredicate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func getArgsTestStopTrainingPluginPredicateTestCases() []testsTestStopTrainingPluginPredicate {
+	candidateResult := infrastructure.PredicateResult{
+		PluginName:      constant.StopTrainPluginName,
+		CandidateStatus: constant.CandidateStatus,
+		PredicateStream: map[string]string{constant.ResumeTrainingAfterFaultStream: ""},
+	}
+	return []testsTestStopTrainingPluginPredicate{
+		{
+			name:    "case 1: has token",
+			fields:  fieldsTestStopTrainingPluginPredicate{hasToken: true},
+			want:    candidateResult,
+			wantErr: false},
+		{
+			name: "case 2: getSignalInfo error",
+			want: infrastructure.PredicateResult{
+				PluginName:      constant.StopTrainPluginName,
+				CandidateStatus: constant.UnselectStatus},
+			wantErr: false},
+		{
+			name:    "case 3: apply token for stop_train signal",
+			fields:  fieldsTestStopTrainingPluginPredicate{HasSendMessages: make(map[string]string)},
+			args:    getArgsTestStopTrainingPluginPredicate(clusterdconstant.StopTrainSignalType),
+			want:    candidateResult,
+			wantErr: false},
+		{
+			name:    "case 4: apply token for global_fault signal",
+			fields:  fieldsTestStopTrainingPluginPredicate{HasSendMessages: make(map[string]string)},
+			args:    getArgsTestStopTrainingPluginPredicate(clusterdconstant.GlobalFaultSignalType),
+			want:    candidateResult,
+			wantErr: false},
+		{
+			name: "case 5: apply token for pre_exit_process signal",
+			fields: fieldsTestStopTrainingPluginPredicate{HasSendMessages: make(map[string]string),
+				lastUuid: "randomUuid"},
+			args:    getArgsTestStopTrainingPluginPredicate(clusterdconstant.PreExitProcessSignalType),
+			want:    candidateResult,
+			wantErr: false}}
+}
+
+func getArgsTestStopTrainingPluginPredicate(signalType string) argsTestStopTrainingPluginPredicate {
+	return argsTestStopTrainingPluginPredicate{
+		shot: storage.SnapShot{
+			ClusterInfos: &storage.ClusterInfos{
+				Clusters: map[string]*storage.ClusterInfo{
+					constant.ClusterDRank: {
+						Command: map[string]string{
+							constant.SignalType:  signalType,
+							constant.Timeout:     "0",
+							constant.Actions:     utils.ObjToString([]string{}),
+							constant.FaultRanks:  utils.ObjToString(map[int]int{}),
+							constant.NodeRankIds: utils.ObjToString([]string{})}}}}}}
 }
 
 func TestStopTrainingPluginRelease(t *testing.T) {

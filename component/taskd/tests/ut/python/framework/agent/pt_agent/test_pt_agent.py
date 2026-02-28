@@ -106,16 +106,19 @@ class TestPtAgent(unittest.TestCase):
         self.assertEqual(self.agent.pids, {0: 12345})
         self.assertEqual(self.agent.local_fault_rank, [])
 
+    @patch('time.time')
     @patch.object(PtAgent, 'send_message_to_manager')
     @patch.object(PtAgent, 'check_new_fault')
-    def test_report_fault_rank_new_fault(self, mock_check_new, mock_send):
+    def test_report_fault_rank_new_fault(self, mock_check_new, mock_send, mock_time):
+        mock_time.return_value = 1
         mock_check_new.return_value = True
         self.mock_run_result.failures = {0: 'error'}
         
         self.agent.report_fault_rank(self.mock_run_result)
         
         mock_check_new.assert_called_once_with([0])
-        mock_send.assert_called_once_with('STATUS', constants.REPORT_CODE, AgentReportInfo(fault_ranks=[0]))
+        mock_send.assert_called_once_with('STATUS', constants.REPORT_CODE, AgentReportInfo(fault_ranks=[0]),
+        {"REPORT_FAULT_TIME": "1"})
         self.assertEqual(self.agent.local_fault_rank, [0])
 
     @patch.object(PtAgent, 'send_message_to_manager')

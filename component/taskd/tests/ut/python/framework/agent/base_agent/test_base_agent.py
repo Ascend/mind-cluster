@@ -117,9 +117,11 @@ class TestBaseAgent(unittest.TestCase):
             mock_error_log.assert_called_once_with('grace_exit encountered an exception: Test exception')
             mock_stop.assert_called_once_with({"test_pid": 12345})
 
+    @patch('time.time')
     @patch('uuid.uuid4')
     @patch('taskd.python.framework.agent.base_agent.base_agent.network_send_message')
-    def test_send_message_to_manager(self, mock_send, mock_uuid4):
+    def test_send_message_to_manager(self, mock_send, mock_uuid4, mock_time):
+        mock_time.return_value = 1
         mock_uuid4.return_value = uuid.UUID('12345678-1234-5678-1234-567812345678')
         test_report_info = AgentReportInfo(restart_times=0)
 

@@ -93,8 +93,7 @@ class BaseAgent:
         finally:
             stop_pids(self.pids)
             
-    
-    def send_message_to_manager(self, command, code, report_info):
+    def send_message_to_manager(self, command, code, report_info, extension: dict = None):
         if isinstance(report_info, str):
             report_json = report_info
         else:
@@ -103,7 +102,7 @@ class BaseAgent:
             msg_type=command,
             code=code,
             message=report_json,
-            extension={},
+            extension=extension if extension is not None else {},
         )
         body_json = json.dumps(asdict(msg_body))
         msg_info = MessageInfo(

@@ -180,6 +180,20 @@ const (
 	StressTest = "STRESS_TEST"
 )
 
+const (
+	// ReportFaultTime is the time when fault rank is reported
+	ReportFaultTime = "REPORT_FAULT_TIME"
+	// Rank0FaultTimeout is the timeout for rank0 fault
+	Rank0FaultTimeout = 5 * time.Minute
+)
+
+const (
+	// Base is the base number for parsing int from string
+	Base = 10
+	// BitSize is the bit size for parsing int from string
+	BitSize = 64
+)
+
 // All num const must be defined here
 const (
 	Ten     = 10

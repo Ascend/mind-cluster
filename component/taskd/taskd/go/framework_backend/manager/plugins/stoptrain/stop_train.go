@@ -65,8 +65,9 @@ func (s *stopTrainingPlugin) Predicate(shot storage.SnapShot) (infrastructure.Pr
 		hwlog.RunLog.Debugf("getSignalInfo error: %v", err)
 		return infrastructure.PredicateResult{PluginName: s.Name(), CandidateStatus: constant.UnselectStatus}, nil
 	}
-	if s.signalInfo.SignalType == clusterdconstant.StopTrainSignalType {
-		hwlog.RunLog.Info("get stop_train signal, apply for the token")
+	if s.signalInfo.SignalType == clusterdconstant.StopTrainSignalType ||
+		s.signalInfo.SignalType == clusterdconstant.GlobalFaultSignalType {
+		hwlog.RunLog.Infof("get %s signal, apply for the token", s.signalInfo.SignalType)
 		return infrastructure.PredicateResult{
 			PluginName:      s.Name(),
 			CandidateStatus: constant.CandidateStatus,

@@ -65,6 +65,7 @@ func (mpc *MsgProcessor) agentStatus(dataPool *storage.DataPool, data storage.Ba
 		agentInfo.Status[constant.ReportRestartTime] = data.Body.Message
 	case constant.FaultRankCode:
 		agentInfo.Status[constant.ReportFaultRank] = data.Body.Message
+		agentInfo.Status[constant.ReportFaultTime] = data.Body.Extension[constant.ReportFaultTime]
 		dataPool.Snapshot.AgentInfos.AllStatus[agentName] = data.Body.Message
 	case constant.ExitAgentCode:
 		agentInfo.Status[constant.Exit] = data.Body.Message

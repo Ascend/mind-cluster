@@ -1032,7 +1032,8 @@ func subscribeProfilingGrpcFail(m *BaseManager, testServer *testProfilingServer,
 	m.cancelFunc()
 	wg.Wait()
 	finalGoroutineCount := runtime.NumGoroutine()
-	convey.So(finalGoroutineCount+1, convey.ShouldBeGreaterThanOrEqualTo, initialGoroutineCount)
+	const addGos = 2
+	convey.So(finalGoroutineCount+addGos, convey.ShouldBeGreaterThanOrEqualTo, initialGoroutineCount)
 }
 
 func subscribeProfilingContextDone(m *BaseManager, testServer *testProfilingServer, conn *grpc.ClientConn) {

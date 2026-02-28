@@ -144,7 +144,7 @@ class MsAgent(BaseAgent):
             run_log.info(f'no additional fault process, fault_rank: {fault_ranks}')
             return
         report_info = AgentReportInfo(fault_ranks=fault_ranks)
-        self.send_message_to_manager('STATUS', constants.REPORT_CODE, report_info)
+        self.send_message_to_manager('STATUS', constants.REPORT_CODE, report_info, {"REPORT_FAULT_TIME": str(int(time.time()))})
         self.local_fault_rank = fault_ranks
         run_log.info(f'New fault process detected, fault_rank: {fault_ranks}')
         return

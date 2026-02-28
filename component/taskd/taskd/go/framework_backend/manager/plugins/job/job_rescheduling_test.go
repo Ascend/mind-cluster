@@ -18,7 +18,9 @@ package jobrescheduling
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
@@ -32,8 +34,10 @@ import (
 )
 
 const (
-	agent0Name = "agent0"
-	agent1Name = "agent1"
+	agent0Name   = "agent0"
+	agent1Name   = "agent1"
+	threeMinutes = 3 * time.Minute
+	sixMinutes   = 6 * time.Minute
 )
 
 func getJobReschedulingPlugin() *JobReschedulingPlugin {
@@ -297,4 +301,54 @@ func TestRelease(t *testing.T) {
 		err := plugin.Release()
 		convey.ShouldBeNil(err)
 	})
+}
+
+func TestIsRank0FaultTimeout(t *testing.T) {
+	tests := []struct {
+		name       string
+		agent0Info *storage.AgentInfo
+		want       bool
+	}{
+		{
+			name: "report_fault_time_not_exist",
+			agent0Info: &storage.AgentInfo{
+				Status: map[string]string{},
+			},
+			want: false,
+		},
+		{
+			name: "report_fault_time_parse_error",
+			agent0Info: &storage.AgentInfo{
+				Status: map[string]string{
+					constant.ReportFaultTime: "invalid_time",
+				},
+			},
+			want: false,
+		},
+		{
+			name: "fault_time_within_timeout",
+			agent0Info: &storage.AgentInfo{
+				Status: map[string]string{
+					constant.ReportFaultTime: strconv.FormatInt(time.Now().Add(-threeMinutes).Unix(), constant.Base),
+				},
+			},
+			want: true,
+		},
+		{
+			name: "fault_time_exceed_timeout",
+			agent0Info: &storage.AgentInfo{
+				Status: map[string]string{
+					constant.ReportFaultTime: strconv.FormatInt(time.Now().Add(-sixMinutes).Unix(), constant.Base),
+				},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := skipRank0FaultForNow(tt.agent0Info); got != tt.want {
+				t.Errorf("isRank0FaultTimeout() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
