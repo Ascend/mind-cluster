@@ -45,7 +45,7 @@ setup(
     install_requires=[],
     entry_points={
         'console_scripts': [
-            'ascend-fd-tk=toolkit.cli:main',
+            'ascend-fd-tk=ascend_fd_tk.cli:main',
         ],
     },
     python_requires='>=3.8',
