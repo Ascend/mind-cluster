@@ -1,8 +1,5 @@
 # 版本配套说明<a name="ZH-CN_TOPIC_0000002492283212"></a>
 
-
-
-
 ## 产品版本信息<a name="ZH-CN_TOPIC_0000002524562895"></a>
 
 <a name="zh-cn_topic_0000001935094108__Ref249955742"></a>
@@ -39,7 +36,6 @@
 |Ascend HDK|25.5.0|
 |CANN|8.5.0|
 
-
 ## 病毒扫描结果<a name="ZH-CN_TOPIC_0000002492443186"></a>
 
 病毒扫描通过，详细请参见[MindCluster 7.3.0 virus scan report.docx](./resource/MindCluster%207.3.0%20virus%20scan%20report.docx)。
@@ -54,34 +50,27 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 |--|--|--|--|
 |MindCluster 7.3.0|<ul><li>MindCluster 6.0.0及6.0.0.x</li><li>MindCluster 7.0.RC1及7.0.RC1.x</li><li>MindCluster 7.1.RC1及7.1.RC1.x</li><li>MindCluster 7.2.RC1及7.2.RC1.x</li><li>MindCluster 7.3.0及7.3.0.x</li></ul>|<ul><li>CANN 8.1.RC1及8.1.RC1.x</li><li>CANN 8.2.RC1及8.2.RC1.x</li><li>CANN 8.3.RC1及8.3.RC1.x</li><li>CANN 8.5.0及8.5.0.x</li></ul>|<ul><li>Ascend HDK 25.0.RC1及25.0.RC1.x</li><li>Ascend HDK 25.2.0及25.2.0.x</li><li>Ascend HDK 25.3.RC1及25.3.RC1.x</li><li>Ascend HDK 25.5.0及25.5.0.x</li></ul>|
 
-
 # 版本使用注意事项<a name="ZH-CN_TOPIC_0000002492283210"></a>
 
 无。
 
 # 7.3.0更新说明<a name="ZH-CN_TOPIC_0000002492443184"></a>
 
-
-
-
-
-
 ## 新增特性<a name="ZH-CN_TOPIC_0000002524442919"></a>
 
 |特性名称|特性描述|
 |--|--|
 |MindIO ACP|MindIO ACP蓝区开源。|
-|MindIO TFT|<ul><li>MindIO TFT支持MindSpore场景亚健康热切。</li><li>MindIO TFT蓝区开源。|
-|MindCluster ToolBox|<ul><li>新增A3 A+X PCIE全眼图测试、HBM压测耗时和算法优化。</li><li>新增310P功耗压力。</li><li>新增DSA随机数算子压测。|
+|MindIO TFT|<ul><li>MindIO TFT支持MindSpore场景亚健康热切。</li><li>MindIO TFT蓝区开源。</li></ul>|
+|MindCluster ToolBox|<ul><li>新增A3 A+X PCIE全眼图测试、片上内存压测耗时和算法优化。</li><li>新增Atlas 推理系列产品功耗压力。</li><li>新增DSA随机数算子压测。</li></ul>|
 |MindCluster Ascend FaultDiag|新增A3 AI服务器故障事件。|
 |MindCluster Ascend Deployer|无|
 |MindCluster基础组件|<ul><li>关闭算子重执行下支持灵衢L1-L2链路故障的进程级在线恢复。</li><li>支持基于AIBrix vLLM部署NPU的故障实例流量隔离。</li><li>NPU Exporter支持输出SN序列号。</li><li>支持基于AIBrix vLLM服务化实例级重调度。</li><li>基于AIBrix社区CRD定义，支持一键式脚本生成对应YAML，支持一键式配置和下发。</li><li>基于社区原生CRD定义，支持一键式脚本生成对应YAML，支持一键式配置和下发。</li><li>支持SGLang OME部署与实例级重调度。</li><li>支持灵衢故障上报可靠性增强。</li><li>Volcano新增适配层，隔离不同任务控制器的差异，支持所有满足格式要求的podGroup下的亲和性调度。</li><li>调度资源占用优化，未完成调度时，任务通过一定时间重新入队。</li><li>公共故障支持预隔离处理级别。</li><li>NPU Exporter支持自定义指标。</li><li>支持A3推理多实例任务调度。</li><li>支持A3兼容A2 accelerator-type资源类型。</li><li>生态组件兼容验证。</li><li>新增推理任务守护进程参考设计。</li><li>支持一体机NPU故障检测与恢复。</li><li>Volcano调度支持StatefulSet。</li><li>支持MindSpore框架下的亚健康热切。</li><li>训练快恢易用性增强。</li></ul>|
 
-
 ## 关键特性变更<a name="ZH-CN_TOPIC_0000002524562891"></a>
 
--   MindCluster ToolBox：新增A3 A+X PCIE全眼图测试；新增DSA随机数算子压测。
--   MindCluster基础组件：支持SGLang和vLLM的推理框架部署与重调度，一键式的任务下发；支持一体机NPU故障检测与恢复。
+- MindCluster ToolBox：新增A3 A+X PCIE全眼图测试；新增DSA随机数算子压测。
+- MindCluster基础组件：支持SGLang和vLLM的推理框架部署与重调度，一键式的任务下发；支持一体机NPU故障检测与恢复。
 
 ## 业务接口变更<a name="ZH-CN_TOPIC_0000002492443182"></a>
 
@@ -94,7 +83,6 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 |MindCluster Ascend Deployer|无|
 |MindCluster基础组件|新增一体机NPU故障检测与恢复操作相关参数，ranktable相关的键值定位遵循HCCL的定义。|
 
-
 ## 已解决的问题<a name="ZH-CN_TOPIC_0000002492283206"></a>
 
 无。
@@ -104,8 +92,6 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 无。
 
 # 升级影响<a name="ZH-CN_TOPIC_0000002492283208"></a>
-
-
 
 ## 升级过程对现行系统的影响<a name="ZH-CN_TOPIC_0000002524442911"></a>
 
@@ -123,8 +109,6 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 |<a href="https://www.hiascend.com/document/detail/zh/mindcluster/730/toolbox/toolboxug/toolboxug_0002.html">《MindCluster Toolbox用户指南》</a>|提供带宽测试、算力测试、功耗测试、日志收集和软件包签名校验等功能的使用指导。|新增DSA压测命令，其他变更详见<a href="https://www.hiascend.com/document/detail/zh/mindcluster/730/toolbox/toolboxug/toolboxug_0002.html">《MindCluster Toolbox用户指南》</a>。|
 |<a href="./faultdiag/installation_guide.md">《MindCluster 故障诊断用户指南》</a>|提供日志采集、日志清洗与转储、故障诊断等功能的使用指导。|新增LCN、BMC日志清洗分析、推理模型/实例级分析、清洗/诊断SDK接口等，其他变更详见<a href="./faultdiag/installation_guide.md">《MindCluster 故障诊断用户指南》</a>。|
 
-
 # 漏洞修补列表<a name="ZH-CN_TOPIC_0000002524442913"></a>
 
 请参见[MindCluster 7.3.0 漏洞修补列表.xlsx](./resource/MindCluster%207.3.0%20漏洞修补列表.xlsx)。
-
