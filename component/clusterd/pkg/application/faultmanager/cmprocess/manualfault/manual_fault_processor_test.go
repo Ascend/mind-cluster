@@ -199,3 +199,81 @@ func preparePodStorage() {
 	podDemo3 = getDemoPod(node1, podName3, dev6, job1)
 	podDemo4 = getDemoPod(node2, podName4, dev2, job1)
 }
+
+func TestIsContainFault(t *testing.T) {
+	oldFaults := []constant.DeviceFault{
+		{
+			FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
+				code1: {
+					FaultLevel:        constant.NotHandleFault,
+					FaultReceivedTime: receiveTime1,
+				},
+				code0: {
+					FaultLevel:        constant.NotHandleFault,
+					FaultReceivedTime: receiveTime1,
+				},
+			},
+		},
+	}
+	convey.Convey("test func 'isContainFault', contain new fault", t, func() {
+		res := isContainFault(getNewFault1(), oldFaults)
+		convey.So(res, convey.ShouldBeTrue)
+	})
+	convey.Convey("test func 'isContainFault', not contain new fault", t, func() {
+		// fault received time is different
+		res := isContainFault(getNewFault2(), oldFaults)
+		convey.So(res, convey.ShouldBeFalse)
+
+		// fault level is different
+		res = isContainFault(getNewFault3(), oldFaults)
+		convey.So(res, convey.ShouldBeFalse)
+
+		// not contain fault code
+		res = isContainFault(getNewFault4(), oldFaults)
+		convey.So(res, convey.ShouldBeFalse)
+	})
+}
+
+func getNewFault1() constant.DeviceFault {
+	return constant.DeviceFault{
+		FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
+			code1: {
+				FaultLevel:        constant.NotHandleFault,
+				FaultReceivedTime: receiveTime1,
+			},
+		},
+	}
+}
+
+func getNewFault2() constant.DeviceFault {
+	return constant.DeviceFault{
+		FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
+			code1: {
+				FaultLevel:        constant.NotHandleFault,
+				FaultReceivedTime: receiveTime1 + 1,
+			},
+		},
+	}
+}
+
+func getNewFault3() constant.DeviceFault {
+	return constant.DeviceFault{
+		FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
+			code1: {
+				FaultLevel:        constant.RestartRequest,
+				FaultReceivedTime: receiveTime1,
+			},
+		},
+	}
+}
+
+func getNewFault4() constant.DeviceFault {
+	return constant.DeviceFault{
+		FaultTimeAndLevelMap: map[string]constant.FaultTimeAndLevel{
+			code2: {
+				FaultLevel:        constant.NotHandleFault,
+				FaultReceivedTime: receiveTime1,
+			},
+		},
+	}
+}

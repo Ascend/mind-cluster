@@ -202,7 +202,7 @@ func isContainFault(newFault constant.DeviceFault, oldFaults []constant.DeviceFa
 	for _, oldFault := range oldFaults {
 		for code, level := range oldFault.FaultTimeAndLevelMap {
 			newLevel, ok := newFault.FaultTimeAndLevelMap[code]
-			if ok && newLevel.FaultReceivedTime == level.FaultReceivedTime {
+			if ok && newLevel.FaultReceivedTime == level.FaultReceivedTime && newLevel.FaultLevel == level.FaultLevel {
 				isContain = true
 				break
 			}
