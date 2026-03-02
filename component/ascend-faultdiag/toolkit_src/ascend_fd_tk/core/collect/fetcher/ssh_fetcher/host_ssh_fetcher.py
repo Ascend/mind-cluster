@@ -162,7 +162,7 @@ class HostSshFetcher(SshFetcher, HostFetcher):
         return ""
 
     async def fetch_hccn_tool_link_status(self, chip_phy_id) -> str:
-        cmd_res = await self.executor.run_cmd(CmdTask(f"hccn_tool -i {chip_phy_id} -link_status -g"))
+        cmd_res = await self.executor.run_cmd(CmdTask(f"hccn_tool -i {chip_phy_id} -link -g"))
         if cmd_res.is_success():
             return cmd_res.stdout
         return ""

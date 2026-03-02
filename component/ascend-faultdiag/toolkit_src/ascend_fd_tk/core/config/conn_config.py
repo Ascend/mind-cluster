@@ -92,7 +92,7 @@ class DeviceConfigParser:
 
         return groups
 
-    def _parse_line(self, line: str) -> List[Conn]:
+    def _parse_line(self, line: str) -> Dict[str, Conn]:
         """解析单行配置：IP username=xxx password=xxx [port=xxx]"""
         parts = line.split()
         if len(parts) < 2:
@@ -122,16 +122,18 @@ class DeviceConfigParser:
         if "username" not in params:
             raise ValueError(f"缺少参数: {line}（必须包含username）")
 
-        conn_list = []
+        conn_dict = {}
         for ip in self._generate_ips_from_range(line, ip_range, params[step_str]):
-            conn_list.append(Conn(
-                host=ip,
-                port=params[port_str],
-                username=params["username"],
-                password=params.get("password", ""),
-                private_key=params.get("private_key", "") or self._comm_config.get("private_key", "")
-            ))
-        return conn_list
+            conn_dict.update({
+                ip: Conn(
+                    host=ip,
+                    port=params[port_str],
+                    username=params["username"],
+                    password=params.get("password", ""),
+                    private_key=params.get("private_key", "") or self._comm_config.get("private_key", "")
+                )
+            })
+        return conn_dict
 
     def _generate_ips_from_range(self, line: str, ip_range: str, step: int = 1) -> List[str]:
         """
@@ -162,10 +164,10 @@ class DeviceConfigParser:
         return ip_list
 
     def _get_group_conns(self, type_group: str) -> List[Conn]:
-        conn_list = []
+        conn_dict = {}
         for line in self._groups.get(type_group, []):
-            conn_list.extend(self._parse_line(line))
-        return conn_list
+            conn_dict.update(self._parse_line(line))
+        return list(conn_dict.values())
 
     def _parse_comm_config(self):
         for line in self._groups.get("config", []):

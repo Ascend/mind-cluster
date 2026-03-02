@@ -18,8 +18,8 @@
 import re
 
 from ascend_fd_tk.core.common.constants import CMD_EXEC_SUCCESS
-from ascend_fd_tk.core.model.host import HCCNOpticalInfo, HCCNLinkStatInfo, HCCNLinkHistory, HCCNStatInfo, HCCNLLDPInfo, \
-    HccnPortHccsInfo, SpodInfo, CdrSnrInfo, HCCNDfxCfgInfo
+from ascend_fd_tk.core.model.host import HCCNOpticalInfo, HCCNLinkStatInfo, HCCNLinkHistory, HCCNStatInfo, \
+    HCCNLLDPInfo, HccnPortHccsInfo, SpodInfo, CdrSnrInfo, HCCNDfxCfgInfo
 from ascend_fd_tk.utils.form_parser import FormParser
 
 
