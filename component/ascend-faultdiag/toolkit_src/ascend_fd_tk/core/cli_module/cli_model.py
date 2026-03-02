@@ -142,6 +142,10 @@ class SetConnConfigCliModel(DetailedCliModel):
     def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
         super().__init__(diag_ctx, cli_ctx)
 
+    @staticmethod
+    def is_support_param():
+        return True
+
     @classmethod
     def get_key(cls) -> str:
         return "set_conn_config"
@@ -198,6 +202,10 @@ class SetHostDumpLogDirCliModel(DetailedCliModel):
     def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
         super().__init__(diag_ctx, cli_ctx)
 
+    @staticmethod
+    def is_support_param():
+        return True
+
     @classmethod
     def get_key(cls) -> str:
         return "set_host_dump_log"
@@ -235,6 +243,10 @@ class SetBmcDumpLogDirCliModel(DetailedCliModel):
     def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
         super().__init__(diag_ctx, cli_ctx)
 
+    @staticmethod
+    def is_support_param():
+        return True
+
     @classmethod
     def get_key(cls) -> str:
         return "set_bmc_dump_log"
@@ -270,6 +282,10 @@ class SetSwiDumpLogDirCliModel(DetailedCliModel):
 
     def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
         super().__init__(diag_ctx, cli_ctx)
+
+    @staticmethod
+    def is_support_param():
+        return True
 
     @classmethod
     def get_key(cls) -> str:

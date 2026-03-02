@@ -32,13 +32,19 @@ class CliCtx:
         self.cli_model_map.update({cli_model.get_key(): cli_model for cli_model in cli_models})
 
     def is_cmd_valid(self, cmd: str) -> bool:
-        return cmd.strip().lower() in self.cli_model_map
+        return cmd.strip() in self.cli_model_map
 
     def run_cmd(self, cmd: str, *args) -> str:
-        cmd = cmd.strip().lower()
+        cmd = cmd.strip()
         cli_model = self.cli_model_map.get(cmd)
         if not cli_model:
             return ""
+        if cli_model.is_support_param():
+            if len(args) > 1:
+                return f"Unsupported arguments: {', '.join(args[1:])}"
+        else:
+            if args and args[0] not in ("?", "？"):
+                return f"Unsupported arguments: {', '.join(args)}"
         return cli_model.run(*args)
 
     def show_help(self) -> str:
@@ -53,6 +59,10 @@ class CliModel(abc.ABC):
     def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
         self.diag_ctx = diag_ctx
         self.cli_ctx = cli_ctx
+
+    @staticmethod
+    def is_support_param():
+        return False
 
     # 命令需要的key
     @classmethod

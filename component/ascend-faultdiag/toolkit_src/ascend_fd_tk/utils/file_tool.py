@@ -29,7 +29,7 @@ _CONSOLE_LOGGER = logger.CONSOLE_LOGGER
 
 
 def safe_read_open(file_path: str, *args, **kwargs):
-    if not os.path.islink(file_path):
+    if os.path.islink(file_path):
         raise Exception(f"The {os.path.basename(file_path)} should not be a symbolic link file.")
     file_real_path = os.path.realpath(file_path)
     file_stream = open(file_real_path, *args, **kwargs)
