@@ -292,14 +292,9 @@ func execDeviceReset(faultPhyId int32) error {
 	const execHotResetMaxRetryTimes = 4
 	var errorInfo error
 	for i := 0; i < execHotResetMaxRetryTimes; i++ {
-		cardID, deviceID, err := devmgr.DevMgr.GetDmgr().GetCardIDDeviceID(devmgr.DevMgr.GetLogicIdByPhyId(faultPhyId))
-		if err != nil {
-			hwlog.RunLog.Errorf("failed to get cardID and deviceID by logicID(%d)", faultPhyId)
-			errorInfo = err
-			continue
-		}
-		hwlog.RunLog.Infof("start device card(%d) and deviceID(%d) reset...", cardID, deviceID)
-		if err := devmgr.DevMgr.GetDmgr().SetDeviceReset(cardID, deviceID); err != nil {
+		logicID := devmgr.DevMgr.GetLogicIdByPhyId(faultPhyId)
+		hwlog.RunLog.Infof("start device logicID(%d) faultPhyId(%d) reset...", logicID, faultPhyId)
+		if err := devmgr.DevMgr.GetDmgr().SetDeviceReset(logicID); err != nil {
 			errorInfo = err
 			continue
 		}

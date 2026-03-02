@@ -113,13 +113,12 @@ func (hdm *HwDevMgr) setRingInfo() error {
 // GetPhyIdOnRing get phy ids on ring
 func (hdm *HwDevMgr) GetPhyIdOnRing(phyId int32) ([]int32, error) {
 	// 300I Duo case need to handle separately
-	cardId, deviceId, err := hdm.GetDmgr().GetCardIDDeviceID(hdm.GetLogicIdByPhyId(phyId))
+	logicId, err := hdm.GetDmgr().GetLogicIDFromPhysicID(hdm.GetLogicIdByPhyId(phyId))
 	if err != nil {
-		hwlog.RunLog.Errorf("get brother card failed, cardID %v deviceID %v, err: %v",
-			cardId, deviceId, err)
+		hwlog.RunLog.Errorf("get brother card failed, logicId %v, err: %v", logicId, err)
 		return nil, err
 	}
-	if hdm.isAtlas300IDuo(cardId, deviceId) {
+	if hdm.isAtlas300IDuo(logicId) {
 		hwlog.RunLog.Debugf("product type of physic ID [%v] is <%v>", phyId, common.ProductTypeAtlas300IDuo)
 		return hdm.getCoupledPhyIdsFrom310pDuo(phyId)
 	}
@@ -138,7 +137,7 @@ func (hdm *HwDevMgr) GetPhyIdOnRing(phyId int32) ([]int32, error) {
 
 	// 910A3 case
 	if hdm.dmgr.GetDevType() == api.Ascend910A3 {
-		return hdm.getPhyIdOn910A3Ring(phyId, cardId, deviceId)
+		return hdm.getPhyIdOn910A3Ring(phyId, logicId)
 	}
 	// 910 or 910A2 with hccs ring
 	return hdm.getPhyIdOn910Ring(phyId, devNumPerRing)
@@ -176,10 +175,10 @@ func (hdm *HwDevMgr) setBoardId(logicId int32) error {
 	return nil
 }
 
-func (hdm *HwDevMgr) isAtlas300IDuo(cardId, deviceId int32) bool {
-	productType, err := hdm.GetDmgr().GetProductType(cardId, deviceId)
+func (hdm *HwDevMgr) isAtlas300IDuo(logicID int32) bool {
+	productType, err := hdm.GetDmgr().GetProductType(logicID)
 	if err != nil {
-		hwlog.RunLog.Debugf("get product type failed, cardID %v deviceID %v, err: %v", cardId, deviceId, err)
+		hwlog.RunLog.Debugf("get product type failed, logicID %v, err: %v", logicID, err)
 		return false
 	}
 	return productType == common.ProductTypeAtlas300IDuo
@@ -200,11 +199,10 @@ func (hdm *HwDevMgr) getCoupledPhyIdsFrom310pDuo(phyId int32) ([]int32, error) {
 	return coupledIds, nil
 }
 
-func (hdm *HwDevMgr) getPhyIdOn910A3Ring(phyId, cardId, deviceId int32) ([]int32, error) {
-	associatedCardID, err := hdm.GetDmgr().GetBrotherCardID(cardId, deviceId)
+func (hdm *HwDevMgr) getPhyIdOn910A3Ring(phyId, logicID int32) ([]int32, error) {
+	associatedCardID, err := hdm.GetDmgr().GetBrotherCardID(logicID)
 	if err != nil {
-		hwlog.RunLog.Errorf("get brother card failed, cardID %v deviceID %v, err: %v",
-			cardId, deviceId, err)
+		hwlog.RunLog.Errorf("get brother card failed, logicID %v, err: %v", logicID, err)
 		return nil, err
 	}
 	logicID0, err := hdm.GetDmgr().GetDeviceLogicID(associatedCardID, common.Device910A3Id0)
@@ -217,6 +215,11 @@ func (hdm *HwDevMgr) getPhyIdOn910A3Ring(phyId, cardId, deviceId int32) ([]int32
 	if err != nil {
 		hwlog.RunLog.Errorf("get logicID faild by cardID %v deviceID %v, err: %v",
 			associatedCardID, common.Device910A3Id1, err)
+		return nil, err
+	}
+	cardId, deviceId, err := hdm.GetDmgr().GetCardIDDeviceID(logicID)
+	if err != nil {
+		hwlog.RunLog.Errorf("get cardID and deviceID failed by logicId %v, err: %v", logicID, err)
 		return nil, err
 	}
 	// get the other device id in a ring
@@ -270,7 +273,7 @@ func (hdm *HwDevMgr) constructNPUInfo(logicID int32) (common.NPUInfo, error) {
 		return common.NPUInfo{}, err
 	}
 	cardID, deviceID, err := hdm.dmgr.GetCardIDDeviceID(logicID)
-	if err != nil {
+	if err != nil && hdm.GetDevType() != api.Ascend910A5 {
 		return common.NPUInfo{}, err
 	}
 	ip, err := hdm.getDeviceIP(logicID)

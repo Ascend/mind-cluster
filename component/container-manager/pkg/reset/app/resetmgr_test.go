@@ -609,10 +609,7 @@ func TestExecDeviceReset_SuccessAfterRetry(t *testing.T) {
 		const testCallTimes = 3
 		patches := gomonkey.ApplyMethodFunc(devmgr.DevMgr, "GetLogicIdByPhyId", mockGetLogicIdByPhyId).
 			ApplyMethodReturn(devmgr.DevMgr, "GetDmgr", &devmanager.DeviceManager{}).
-			ApplyMethodFunc(devmgr.DevMgr.GetDmgr(), "GetCardIDDeviceID", func(logicId int32) (int32, int32, error) {
-				return 1, 1, nil
-			}).
-			ApplyMethodFunc(devmgr.DevMgr.GetDmgr(), "SetDeviceReset", func(cardID, deviceID int32) error {
+			ApplyMethodFunc(devmgr.DevMgr.GetDmgr(), "SetDeviceReset", func(logicID int32) error {
 				callCount++
 				if callCount < testCallTimes {
 					return errors.New("mock error")
@@ -632,26 +629,8 @@ func TestExecDeviceReset_FailsAfterAllRetries(t *testing.T) {
 	convey.Convey("When execDeviceReset fails after all retries", t, func() {
 		patches := gomonkey.ApplyMethodFunc(devmgr.DevMgr, "GetLogicIdByPhyId", mockGetLogicIdByPhyId).
 			ApplyMethodReturn(devmgr.DevMgr, "GetDmgr", &devmanager.DeviceManager{}).
-			ApplyMethodFunc(devmgr.DevMgr.GetDmgr(), "GetCardIDDeviceID", func(logicId int32) (int32, int32, error) {
-				return 1, 1, nil
-			}).
-			ApplyMethodFunc(devmgr.DevMgr.GetDmgr(), "SetDeviceReset", func(cardID, deviceID int32) error {
+			ApplyMethodFunc(devmgr.DevMgr.GetDmgr(), "SetDeviceReset", func(logicID int32) error {
 				return errors.New("mock error")
-			})
-		defer patches.Reset()
-
-		err := execDeviceReset(1)
-		convey.So(err, convey.ShouldNotBeNil)
-	})
-}
-
-// TestExecDeviceReset_GetCardIDDeviceIDFails tests failure when GetCardIDDeviceID fails
-func TestExecDeviceReset_GetCardIDDeviceIDFails(t *testing.T) {
-	convey.Convey("When GetCardIDDeviceID fails", t, func() {
-		patches := gomonkey.ApplyMethodFunc(devmgr.DevMgr, "GetLogicIdByPhyId", mockGetLogicIdByPhyId).
-			ApplyMethodReturn(devmgr.DevMgr, "GetDmgr", &devmanager.DeviceManager{}).
-			ApplyMethodFunc(devmgr.DevMgr.GetDmgr(), "GetCardIDDeviceID", func(logicId int32) (int32, int32, error) {
-				return 0, 0, errors.New("mock error")
 			})
 		defer patches.Reset()
 

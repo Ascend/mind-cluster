@@ -600,7 +600,7 @@ func TestCheckDeviceStatus(t *testing.T) {
 	convey.Convey("test checkDeviceStatus", t, func() {
 		const id1, id2, id3 = 1, 2, 3
 		convey.Convey("01-status change, should return true", func() {
-			patch := gomonkey.ApplyFunc(device.FreeBusyDev, func(cardID, deviceID int32) {
+			patch := gomonkey.ApplyFunc(device.FreeBusyDev, func(logicID int32) {
 				return
 			})
 			defer patch.Reset()
@@ -1064,23 +1064,14 @@ func TestExecResetChip(t *testing.T) {
 	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}}
 	isResetExec := false
 	convey.Convey("Test execResetChip", t, func() {
-		patch := gomonkey.ApplyMethodReturn(hdm.manager, "GetDmgr", &devmanager.DeviceManager{}).ApplyFuncReturn(
-			common.IsContainAtlas300IDuo, true)
+		patch := gomonkey.ApplyMethodReturn(hdm.manager, "GetDmgr", &devmanager.DeviceManager{})
 		defer patch.Reset()
 		convey.Convey("When isResetExec is true, return nil", func() {
 			isResetExec := true
 			err := hdm.execResetChip(int32(0), &isResetExec)
 			convey.So(err, convey.ShouldBeNil)
 		})
-		convey.Convey("When GetCardIDDeviceID fails, log error and return", func() {
-			patch1 := gomonkey.ApplyMethodReturn(hdm.manager.GetDmgr(), "GetCardIDDeviceID",
-				int32(0), int32(0), errors.New("getCardIDDeviceID error"))
-			defer patch1.Reset()
-			err := hdm.execResetChip(int32(0), &isResetExec)
-			convey.So(err.Error(), convey.ShouldEqual, "getCardIDDeviceID error")
-		})
-		patch1 := gomonkey.ApplyMethodReturn(hdm.manager.GetDmgr(), "GetCardIDDeviceID", int32(0), int32(0),
-			nil).ApplyMethodReturn(hdm.manager.GetDmgr(), "SetDeviceReset", nil)
+		patch1 := gomonkey.ApplyMethodReturn(hdm.manager.GetDmgr(), "SetDeviceReset", nil)
 		defer patch1.Reset()
 		convey.Convey("When SetDeviceReset fails, log error and return", func() {
 			patch2 := gomonkey.ApplyMethodReturn(hdm.manager.GetDmgr(), "SetDeviceReset",

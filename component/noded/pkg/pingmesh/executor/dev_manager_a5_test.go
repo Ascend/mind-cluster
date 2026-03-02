@@ -35,12 +35,9 @@ import (
 )
 
 const (
-	testCardID0   = 0
-	testCardID1   = 1
-	testCardID2   = 2
-	testDeviceID0 = 0
-	testDeviceID1 = 1
-	testDeviceID2 = 2
+	testLogicID0 = 0
+	testLogicID1 = 1
+	testLogicID2 = 2
 )
 
 type TestCaseBuildUb struct {
@@ -196,8 +193,8 @@ func TestDevManagerRestartUbPingMesh(t *testing.T) {
 		convey.Convey("01-should restart successfully when all conditions are met", func() {
 			d = &DevManager{
 				chips: map[string]*common.ChipBaseInfo{
-					"physicID1": {CardID: 1, DeviceID: 1},
-					"phtsicID2": {CardID: 2, DeviceID: 2},
+					"physicID1": {CardID: -1, DeviceID: -1, LogicID: testLogicID1},
+					"phtsicID2": {CardID: -1, DeviceID: -1, LogicID: testLogicID2},
 				},
 				currentPolicy: &types.HccspingMeshPolicy{
 					DestAddrMap: map[string][]types.PingItem{
@@ -218,11 +215,11 @@ func TestDevManagerRestartUbPingMesh(t *testing.T) {
 				return map[string][]string{}
 			})
 			defer patch.Reset()
-			d.restartUbPingMesh(testCardID0, testDeviceID0)
+			d.restartUbPingMesh(testLogicID0)
 			convey.So(count, convey.ShouldEqual, 0)
-			d.restartUbPingMesh(testCardID1, testDeviceID1)
+			d.restartUbPingMesh(testLogicID1)
 			convey.So(count, convey.ShouldEqual, 1)
-			d.restartUbPingMesh(testCardID2, testDeviceID2)
+			d.restartUbPingMesh(testLogicID2)
 			convey.So(count, convey.ShouldEqual, 1)
 		})
 	})

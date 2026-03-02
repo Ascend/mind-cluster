@@ -130,29 +130,29 @@ func ReadResetInfo() ResetInfo {
 }
 
 // IsDevBusy check whether one device is busy, for example in reset, wait third party reset or wait manually reset
-func IsDevBusy(cardID, deviceID int32) bool {
-	_, exist := mgr.busyDevs.Load(combineToString(cardID, deviceID))
+func IsDevBusy(logicID int32) bool {
+	_, exist := mgr.busyDevs.Load(strconv.Itoa(int(logicID)))
 	return exist
 }
 
 // AddBusyDev add a new busy device
-func AddBusyDev(cardID, deviceID int32) {
-	mgr.busyDevs.Store(combineToString(cardID, deviceID), struct{}{})
+func AddBusyDev(logicID int32) {
+	mgr.busyDevs.Store(strconv.Itoa(int(logicID)), struct{}{})
 }
 
 // FreeBusyDev remove a device from busy map
-func FreeBusyDev(cardID, deviceID int32) {
-	key := combineToString(cardID, deviceID)
+func FreeBusyDev(logicID int32) {
+	key := strconv.Itoa(int(logicID))
 	if _, exist := mgr.busyDevs.Load(key); !exist {
 		return
 	}
-	hwlog.RunLog.Infof("free busy device cardID %v, deviceID %v", cardID, deviceID)
+	hwlog.RunLog.Infof("free busy device logicID %v", logicID)
 	mgr.busyDevs.Delete(key)
 }
 
 // GetResetCnt get device reset count by physic ID
-func GetResetCnt(cardID, deviceID int32) int {
-	cnt, exist := mgr.resetCnt.Load(combineToString(cardID, deviceID))
+func GetResetCnt(logicID int32) int {
+	cnt, exist := mgr.resetCnt.Load(strconv.Itoa(int(logicID)))
 	if !exist {
 		return 0
 	}
@@ -160,21 +160,21 @@ func GetResetCnt(cardID, deviceID int32) int {
 	ret, ok := cnt.(int)
 	if !ok {
 		hwlog.RunLog.Warnf("reset cnt map invalid value, val: %v", cnt)
-		mgr.resetCnt.Store(combineToString(cardID, deviceID), 0)
+		mgr.resetCnt.Store(strconv.Itoa(int(logicID)), 0)
 		return 0
 	}
 	return ret
 }
 
 // AddResetCnt add device reset count
-func AddResetCnt(cardID, deviceID int32) {
-	cnt := GetResetCnt(cardID, deviceID)
-	SetResetCnt(cardID, deviceID, cnt+1)
+func AddResetCnt(logicID int32) {
+	cnt := GetResetCnt(logicID)
+	SetResetCnt(logicID, cnt+1)
 }
 
 // SetResetCnt set device reset count
-func SetResetCnt(cardID, deviceID int32, cnt int) {
-	mgr.resetCnt.Store(combineToString(cardID, deviceID), cnt)
+func SetResetCnt(logicID int32, cnt int) {
+	mgr.resetCnt.Store(strconv.Itoa(int(logicID)), cnt)
 }
 
 func writeNodeAnnotation(resetStr string) {

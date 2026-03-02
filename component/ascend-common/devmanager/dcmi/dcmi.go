@@ -582,6 +582,7 @@ type DcDriverInterface interface {
 	DcGetPCIeBusInfo(int32, int32) (string, error)
 
 	DcGetCardList() (int32, []int32, error)
+	DcGetDeviceList() (int32, []int32, error)
 	DcGetDeviceNumInCard(int32) (int32, error)
 	DcSetDestroyVirtualDevice(int32, int32, uint32) error
 	DcCreateVirtualDevice(int32, int32, common.CgoCreateVDevRes) (common.CgoCreateVDevOut, error)
@@ -683,8 +684,15 @@ var (
 
 const maxCArraySize = 1 << 30 // 1 Gi elements; practical upper bound for C array mapping for A5
 
+var _ DcDriverInterface = &DcManager{}
+
 // DcManager for manager dcmi interface
 type DcManager struct{}
+
+// DcGetDeviceList get device logic id list
+func (d *DcManager) DcGetDeviceList() (int32, []int32, error) {
+	return d.DcGetLogicIDList()
+}
 
 // DcGetUrmaDeviceCount get urma device count for A5
 func (d *DcManager) DcGetUrmaDeviceCount(cardID int32, deviceID int32) (int32, error) {

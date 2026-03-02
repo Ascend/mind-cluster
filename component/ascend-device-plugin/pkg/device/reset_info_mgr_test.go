@@ -33,9 +33,9 @@ import (
 )
 
 const (
-	testCardId, testDeviceId = 0, 0
-	id1, id2, id3            = 1, 2, 3
-	zeroVal                  = 0
+	testLogicID   = 0
+	id1, id2, id3 = 1, 2, 3
+	zeroVal       = 0
 )
 
 var resettoolTestErr = errors.New("test")
@@ -70,8 +70,8 @@ func TestWriteResetInfo(t *testing.T) {
 
 // TestIsDevBusy test the function IsDevBusy
 func TestIsDevBusy(t *testing.T) {
-	AddBusyDev(testCardId, testDeviceId)
-	ret := IsDevBusy(testCardId, testDeviceId)
+	AddBusyDev(testLogicID)
+	ret := IsDevBusy(testLogicID)
 	if !ret {
 		t.Errorf("expected true, got false")
 	}
@@ -79,9 +79,9 @@ func TestIsDevBusy(t *testing.T) {
 
 // TestFreeBusyDev test the function FreeBusyDev
 func TestFreeBusyDev(t *testing.T) {
-	AddBusyDev(testCardId, testDeviceId)
-	FreeBusyDev(testCardId, testDeviceId)
-	ret := IsDevBusy(testCardId, testDeviceId)
+	AddBusyDev(testLogicID)
+	FreeBusyDev(testLogicID)
+	ret := IsDevBusy(testLogicID)
 	if ret {
 		t.Errorf("expected false, got true")
 	}
@@ -92,13 +92,13 @@ func TestGetResetCnt(t *testing.T) {
 	const testNum = 1
 	convey.Convey("test GetResetCnt", t, func() {
 		convey.Convey("01-not exist, should return 0", func() {
-			SetResetCnt(testCardId, testDeviceId, zeroVal)
-			cnt := GetResetCnt(testCardId, testDeviceId)
+			SetResetCnt(testLogicID, zeroVal)
+			cnt := GetResetCnt(testLogicID)
 			convey.So(cnt, convey.ShouldEqual, zeroVal)
 		})
 		convey.Convey("02-set to 1, should return 1", func() {
-			SetResetCnt(testCardId, testDeviceId, testNum)
-			cnt := GetResetCnt(testCardId, testDeviceId)
+			SetResetCnt(testLogicID, testNum)
+			cnt := GetResetCnt(testLogicID)
 			convey.So(cnt, convey.ShouldEqual, testNum)
 		})
 	})
@@ -106,9 +106,9 @@ func TestGetResetCnt(t *testing.T) {
 
 // TestAddResetCnt test the function AddResetCnt
 func TestAddResetCnt(t *testing.T) {
-	SetResetCnt(testCardId, testDeviceId, zeroVal)
-	AddResetCnt(testCardId, testDeviceId)
-	ret := GetResetCnt(testCardId, testDeviceId)
+	SetResetCnt(testLogicID, zeroVal)
+	AddResetCnt(testLogicID)
+	ret := GetResetCnt(testLogicID)
 	const expectVal = 1
 	if ret != expectVal {
 		t.Errorf("expect %v, got %v", expectVal, ret)
@@ -118,8 +118,8 @@ func TestAddResetCnt(t *testing.T) {
 // TestSetResetCnt test the function SetResetCnt
 func TestSetResetCnt(t *testing.T) {
 	const testVal = 1
-	SetResetCnt(testCardId, testDeviceId, testVal)
-	ret := GetResetCnt(testCardId, testDeviceId)
+	SetResetCnt(testLogicID, testVal)
+	ret := GetResetCnt(testLogicID)
 	if ret != testVal {
 		t.Errorf("expect %v, got %v", testVal, ret)
 	}

@@ -23,11 +23,11 @@ import (
 	"ascend-common/devmanager"
 )
 
-func initDevManager() (*devmanager.DeviceManager, *deviceswitch.SwitchDevManager, error) {
+func initDevManager() (devmanager.DeviceInterface, *deviceswitch.SwitchDevManager, error) {
 	devM, err := devmanager.AutoInit("", common.ParamOption.DeviceResetTimeout)
 	if err != nil {
 		hwlog.RunLog.Errorf("init devmanager failed, err: %v", err)
-		return nil, nil, err
+		return devM, nil, err
 	}
 	if devM.GetDevType() == api.Ascend910A5 {
 		hwlog.RunLog.Infof("current devType is %s, switch device manager not supported.", api.HuaweiNPU)

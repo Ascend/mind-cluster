@@ -41,7 +41,7 @@ func patchGetDeviceManager(m *devmanager.DeviceManager, err error) *gomonkey.Pat
 }
 
 func patchGetDeviceManagerByAutoInit(m *devmanager.DeviceManager, err error) *gomonkey.Patches {
-	return gomonkey.ApplyFunc(devmanager.AutoInit, func(dType string, resetTimeout int) (*devmanager.DeviceManager, error) {
+	return gomonkey.ApplyFunc(devmanager.AutoInit, func(dType string, resetTimeout int) (devmanager.DeviceInterface, error) {
 		return m, err
 	})
 }
@@ -53,9 +53,9 @@ func patchGetChipBaseInfos(chips []*common.ChipBaseInfo, err error) *gomonkey.Pa
 		})
 }
 
-func patchDcGetHccsPingMeshState(state int, err error) *gomonkey.Patches {
-	return gomonkey.ApplyMethod(new(devmanager.DeviceManager), "DcGetHccsPingMeshState", func(
-		*devmanager.DeviceManager, int32, int32, int, uint) (int, error) {
+func patchGetHccsPingMeshState(state int, err error) *gomonkey.Patches {
+	return gomonkey.ApplyMethod(new(devmanager.DeviceManager), "GetHccsPingMeshState", func(
+		*devmanager.DeviceManager, int32, int, uint) (int, error) {
 		return state, err
 	})
 }
@@ -88,13 +88,13 @@ func TestNew(t *testing.T) {
 		})
 		patch1 := patchGetChipBaseInfos([]*common.ChipBaseInfo{{}}, nil)
 		defer patch1.Reset()
-		convey.Convey("03-DcGetHccsPingMeshState failed should return error", func() {
-			patch2 := patchDcGetHccsPingMeshState(0, errors.New("gcGetHccsPingMeshState failed, error code: -99998"))
+		convey.Convey("03-GetHccsPingMeshState failed should return error", func() {
+			patch2 := patchGetHccsPingMeshState(0, errors.New("getHccsPingMeshState failed, error code: -99998"))
 			defer patch2.Reset()
 			_, err := New()
 			convey.So(err, convey.ShouldNotBeNil)
 		})
-		patch2 := patchDcGetHccsPingMeshState(0, nil)
+		patch2 := patchGetHccsPingMeshState(0, nil)
 		defer patch2.Reset()
 		convey.Convey("04-GetSuperPodInfo failed should return error", func() {
 			patch3 := patchGetSuperPodInfo(common.CgoSuperPodInfo{}, errors.New("getSuperPodInfo failed"))
@@ -172,9 +172,9 @@ func TestStopLastTasks(t *testing.T) {
 			chips: map[string]*common.ChipBaseInfo{"0": {}},
 		}
 		flag := false
-		convey.Convey("01-when destAddr is valid, DcStopHccsPingMesh should be execute ", func() {
-			patch := gomonkey.ApplyMethod(executor.devManager, "DcStopHccsPingMesh",
-				func(_ *devmanager.DeviceManager, _ int32, _ int32, _ int, _ uint) error {
+		convey.Convey("01-when destAddr is valid, StopHccsPingMesh should be execute ", func() {
+			patch := gomonkey.ApplyMethod(executor.devManager, "StopHccsPingMesh",
+				func(_ *devmanager.DeviceManager, _ int32, _ int, _ uint) error {
 					flag = true
 					return nil
 				})

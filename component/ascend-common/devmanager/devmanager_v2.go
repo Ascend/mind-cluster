@@ -16,6 +16,9 @@ import (
 	"ascend-common/devmanager/dcmiv2"
 )
 
+// check if the struct DeviceManagerV2 implements the DeviceInterface interface not not in build stage
+var _ DeviceInterface = &DeviceManagerV2{}
+
 // DeviceManagerV2 common device manager by dcmiv2 api
 type DeviceManagerV2 struct {
 	// DcMgr for common dev manager
@@ -30,16 +33,22 @@ type DeviceManagerV2 struct {
 	dcmiVersion string
 	// dcmiApiVersion dcmi interface api version, v1 or empty for dcmi_xxx, v2 for dcmiv2_xxx api
 	dcmiApiVersion string
-	// mainBoardId used to distinguish between A900A3SuperPod and A9000A3SuperPod
+	// mainBoardId used to distinguish different products
 	mainBoardId uint32
 }
 
 const (
-	errNotSupportedInDcmiV2 = "is not supported in dcmiv2"
+	// SoNotFound so file not found error, which should be kept same with cgo definition
+	SoNotFound = "-99999"
+	// FunctionNotFound function symbol not found error, which should be kept same with cgo definition
+	FunctionNotFound = "-99998"
+	// ApiNotSupported function api not supported by libdcmi.so error, which should be kept same with libdcmi.so definition
+	ApiNotSupported = "-8255"
 	// DcmiApiV1 for the dcmi_xxx api
 	DcmiApiV1 = "dcmi"
 	// DcmiApiV2 for the dcmiv2_xxx api
-	DcmiApiV2 = "dcmiv2"
+	DcmiApiV2               = "dcmiv2"
+	errNotSupportedInDcmiV2 = "is not supported in dcmiv2"
 )
 
 var (
@@ -50,6 +59,89 @@ var (
 	// isContainAtlas300IDuo for reset scene
 	isContainAtlas300IDuo = false
 )
+
+// GetDcmiApiVersionFromLib get dcmi api version from libdcmi.so lib
+func GetDcmiApiVersionFromLib() string {
+	if len(dcmiApiVersion) != 0 {
+		return dcmiApiVersion
+	}
+	ver, err := DetectDcmiApiVersion()
+	if err != nil {
+		hwlog.RunLog.Warnf("detect dcmi api version failed, err: %v", err)
+		// ignore the error, continue work flow
+	}
+	hwlog.RunLog.Infof("dcmi api version is: %s", ver)
+	dcmiApiVersion = ver
+	return dcmiApiVersion
+}
+
+// DetectDcmiApiVersion for detect dcmi dynamic library interface api version, such as dcmi_xxx or dcmiv2_xxx
+func DetectDcmiApiVersion() (string, error) {
+	mgrv1 := DeviceManager{
+		DcMgr: &dcmi.DcManager{},
+	}
+	var err error
+	if err = mgrv1.Init(); err == nil {
+		if err := mgrv1.ShutDown(); err != nil {
+			hwlog.RunLog.Warnf("dcmi shutdown failed, err: %v", err)
+			// ignore error
+		}
+		return DcmiApiV1, nil
+	}
+
+	if !strings.Contains(err.Error(), SoNotFound) && strings.Contains(err.Error(),
+		FunctionNotFound) && !strings.Contains(err.Error(), ApiNotSupported) {
+		hwlog.RunLog.Errorf("dcmi_init failed, err: %v", err)
+		return "", err
+	}
+
+	hwlog.RunLog.Warnf("dcmi_init failed, will try dcmiv2_init, msg: %v", err)
+	if err := mgrv1.ShutDown(); err != nil {
+		hwlog.RunLog.Warnf("dcmi shutdown failed, err: %v", err)
+		// ignore error
+	}
+
+	mgrv2 := DeviceManagerV2{
+		DcMgr: &dcmiv2.DcManager{},
+	}
+	if err = mgrv2.Init(); err == nil {
+		if err := mgrv2.ShutDown(); err != nil {
+			hwlog.RunLog.Warnf("dcmiv2 shutdown failed, err: %v", err)
+			// ignore error
+		}
+		return DcmiApiV2, nil
+	}
+	if err := mgrv2.ShutDown(); err != nil {
+		hwlog.RunLog.Warnf("dcmiv2 shutdown failed, err: %v", err)
+		// ignore error
+	}
+	hwlog.RunLog.Errorf("dcmiv2_init failed, err: %v", err)
+	return DcmiApiV1, err
+}
+
+// DeviceManagerInit initializes the DeviceManagerV2 singleton instance
+func DeviceManagerInit(dType string, resetTimeout int) (DeviceInterface, error) {
+	devManagerV2Once.Do(func() {
+		mgr := DeviceManagerV2{
+			DcMgr: &dcmiv2.DcManager{},
+		}
+		if !initDeviceManager(&mgr) {
+			return
+		}
+		if !retryGetDeviceList(&mgr, resetTimeout) {
+			return
+		}
+		if !setupDeviceInfo(&mgr, dType) {
+			return
+		}
+		devManagerV2 = &mgr
+	})
+	if devManagerV2 == nil {
+		return nil, errors.New("device Manager V2 is nil, may encounter an exception during initialization. " +
+			"You can check the system log to confirm")
+	}
+	return devManagerV2, nil
+}
 
 func initDeviceManager(mgr *DeviceManagerV2) bool {
 	if mgr == nil {
@@ -657,7 +749,7 @@ func (d *DeviceManagerV2) GetDeviceEccInfo(logicID int32, dcmiDeviceType common.
 	return d.DcMgr.DcGetDeviceEccInfo(logicID, dcmiDeviceType)
 }
 
-// GetSuperPodInfo  get 910A3 super pod info
+// GetSuperPodInfo get super pod info
 func (d *DeviceManagerV2) GetSuperPodInfo(logicID int32) (common.CgoSuperPodInfo, error) {
 	if !common.IsValidLogicIDOrPhyID(logicID) {
 		return common.CgoSuperPodInfo{}, fmt.Errorf("input invalid logicID: %d", logicID)

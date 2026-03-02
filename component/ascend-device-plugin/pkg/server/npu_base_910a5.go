@@ -258,7 +258,7 @@ func (n *NpuBase) SetUrmaDeviceInfoByHdm(hdm *HwDevManager, dev *common.NpuDevic
 	if dmgr == nil {
 		return errors.New("input parameter dmgr is nil")
 	}
-	urmaDevInfoAll, err := dmgr.GetUrmaDevEidListAll(dev.CardID, dev.DeviceID)
+	urmaDevInfoAll, err := dmgr.GetUrmaDevEidListAll(dev.LogicID)
 	if err != nil {
 		hwlog.RunLog.Errorf("get urma device info failed, err: %v", err)
 		return err

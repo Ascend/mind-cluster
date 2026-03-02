@@ -537,13 +537,9 @@ func (tool *AscendTools) assembleSpecVirtualDevice(phyID int32, vDevInfo npuComm
 
 func (tool *AscendTools) assemble310PMixedPhyDevices(davinCiDev common.DavinCiDev, devices *[]common.NpuDevice,
 	deviceTypes *[]string) error {
-	cardID, deviceID, err := tool.dmgr.GetCardIDDeviceID(davinCiDev.LogicID)
+	productType, err := tool.dmgr.GetProductType(davinCiDev.LogicID)
 	if err != nil {
-		return fmt.Errorf("get cardID and deviceID failed: LogicID[%v]", davinCiDev.LogicID)
-	}
-	productType, err := tool.dmgr.GetProductType(cardID, deviceID)
-	if err != nil {
-		return fmt.Errorf("get product type failed:cardID[%v] deviceID[%v]", cardID, deviceID)
+		return fmt.Errorf("get product type failed:logicID[%v]", davinCiDev.LogicID)
 	}
 	ProductTypeMap := common.Get310PProductType()
 	if _, ok := ProductTypeMap[productType]; !ok {
@@ -850,7 +846,7 @@ func (tool *AscendTools) getDavinCiDev(logicID int32) (common.DavinCiDev, error)
 		return common.DavinCiDev{}, err
 	}
 	cardID, deviceID, err := tool.dmgr.GetCardIDDeviceID(logicID)
-	if err != nil {
+	if err != nil && tool.dmgr.GetDevType() != api.Ascend910A5 {
 		return common.DavinCiDev{}, err
 	}
 	ip, err := tool.GetDeviceIP("", int(phyID))

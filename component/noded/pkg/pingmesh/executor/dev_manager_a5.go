@@ -32,9 +32,8 @@ func (d *DevManager) startUbPingMesh() {
 		grouped := groupPingItemsBySrcAddr(pingItems)
 		ubOperateList := buildUbOperateList(grouped, d.currentPolicy.Config.TaskInterval)
 
-		hwlog.RunLog.Infof("starting ubpingmesh, cardID: %d, deviceID: %d, physicID: %s",
-			chip.CardID, chip.DeviceID, physicID)
-		if err := d.devManager.DcStartHccsPingMesh(chip.CardID, chip.DeviceID, 0, common.HccspingMeshOperate{
+		hwlog.RunLog.Infof("starting ubpingmesh, logicID: %d, physicID: %s", chip.LogicID, physicID)
+		if err := d.devManager.StartHccsPingMesh(chip.LogicID, 0, common.HccspingMeshOperate{
 			UBPingMeshOperateList: ubOperateList,
 		}); err != nil {
 			hwlog.RunLog.Errorf("start ub pingmesh failed, err: %v", err)
@@ -42,11 +41,11 @@ func (d *DevManager) startUbPingMesh() {
 	}
 }
 
-func (d *DevManager) restartUbPingMesh(cardID, deviceID int32) {
-	hwlog.RunLog.Infof("hccspingmesh task stopped, ready to restart, cardID: %d, "+"deviceID: %d", cardID, deviceID)
-	physicID := findPhysicID(d.chips, cardID, deviceID)
+func (d *DevManager) restartUbPingMesh(logicID int32) {
+	hwlog.RunLog.Infof("hccspingmesh task stopped, ready to restart, logicID: %d", logicID)
+	physicID := findPhysicID(d.chips, logicID)
 	if physicID == "" {
-		hwlog.RunLog.Warnf("cannot find physicID for cardID: %d, deviceID: %d", cardID, deviceID)
+		hwlog.RunLog.Warnf("cannot find physicID for logicID: %d", logicID)
 		return
 	}
 
@@ -59,20 +58,20 @@ func (d *DevManager) restartUbPingMesh(cardID, deviceID int32) {
 	grouped := groupPingItemsBySrcAddr(pingItems)
 	ubOperateList := buildUbOperateList(grouped, d.currentPolicy.Config.TaskInterval)
 
-	hwlog.RunLog.Infof("start pingmesh cardID: %d, deviceID: %d", cardID, deviceID)
-	err := d.devManager.DcStartHccsPingMesh(cardID, deviceID, 0, common.HccspingMeshOperate{
+	hwlog.RunLog.Infof("start pingmesh logicID: %d", logicID)
+	err := d.devManager.StartHccsPingMesh(logicID, 0, common.HccspingMeshOperate{
 		UBPingMeshOperateList: ubOperateList,
 	})
 	if err != nil {
-		hwlog.RunLog.Errorf("restart ub pingmesh failed, cardID: %d, deviceID: %d, err: %v", cardID, deviceID, err)
+		hwlog.RunLog.Errorf("restart ub pingmesh failed, logicID: %d, err: %v", logicID, err)
 		return
 	}
-	hwlog.RunLog.Infof("restart ub pingmesh success, cardID: %d, deviceID: %d", cardID, deviceID)
+	hwlog.RunLog.Infof("restart ub pingmesh success, logicID: %d", logicID)
 }
 
-func findPhysicID(chips map[string]*common.ChipBaseInfo, cardID, deviceID int32) string {
+func findPhysicID(chips map[string]*common.ChipBaseInfo, logicID int32) string {
 	for pid, chip := range chips {
-		if chip.CardID == cardID && chip.DeviceID == deviceID {
+		if chip.LogicID == logicID {
 			return pid
 		}
 	}

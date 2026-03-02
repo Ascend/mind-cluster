@@ -22,28 +22,40 @@ import (
 	"ascend-common/devmanager/dcmi"
 )
 
+var _ DeviceInterface = &DeviceManagerMock{}
+
 // DeviceManagerMock common device manager mock for Ascend910/310P/310
 type DeviceManagerMock struct {
 	DevType string // Add this field
 }
 
-// DcStartHccsPingMesh start hccs ping mesh
-func (d *DeviceManagerMock) DcStartHccsPingMesh(i int32, i2 int32, i3 int, operate common.HccspingMeshOperate) error {
+// GetValidBoardInfo find a valid board info from all devices
+func (d *DeviceManagerMock) GetValidBoardInfo() (common.BoardInfo, error) {
+	return common.BoardInfo{}, nil
+}
+
+// GetValidMainBoardInfo find a valid main board info from all devices
+func (d *DeviceManagerMock) GetValidMainBoardInfo() (uint32, error) {
+	return 0, nil
+}
+
+// StartHccsPingMesh start hccs ping mesh
+func (d *DeviceManagerMock) StartHccsPingMesh(logicID int32, portID int, operate common.HccspingMeshOperate) error {
 	return nil
 }
 
-// DcStopHccsPingMesh stop hccs ping mesh
-func (d *DeviceManagerMock) DcStopHccsPingMesh(i int32, i2 int32, i3 int, u uint) error {
+// StopHccsPingMesh stop hccs ping mesh
+func (d *DeviceManagerMock) StopHccsPingMesh(logicID int32, portID int, taskID uint) error {
 	return nil
 }
 
-// DcGetHccsPingMeshInfo get hccs ping mesh info
-func (d *DeviceManagerMock) DcGetHccsPingMeshInfo(i int32, i2 int32, i3 int, u uint) (*common.HccspingMeshInfo, error) {
+// GetHccsPingMeshInfo get hccs ping mesh info
+func (d *DeviceManagerMock) GetHccsPingMeshInfo(logicID int32, portID int, taskID uint) (*common.HccspingMeshInfo, error) {
 	return &common.HccspingMeshInfo{}, nil
 }
 
-// DcGetHccsPingMeshState get hccs ping mesh state
-func (d *DeviceManagerMock) DcGetHccsPingMeshState(i int32, i2 int32, i3 int, u uint) (int, error) {
+// GetHccsPingMeshState get hccs ping mesh state
+func (d *DeviceManagerMock) GetHccsPingMeshState(logicID int32, portID int, taskID uint) (int, error) {
 	return 0, nil
 }
 
@@ -213,7 +225,7 @@ func (d *DeviceManagerMock) GetCardIDDeviceID(logicID int32) (int32, int32, erro
 }
 
 // GetProductType get product type success
-func (d *DeviceManagerMock) GetProductType(cardID, deviceID int32) (string, error) {
+func (d *DeviceManagerMock) GetProductType(logicID int32) (string, error) {
 	return "", nil
 }
 
@@ -228,7 +240,7 @@ func (d *DeviceManagerMock) GetNpuWorkMode() string {
 }
 
 // SetDeviceReset set device reset success
-func (d *DeviceManagerMock) SetDeviceReset(cardID, deviceID int32) error {
+func (d *DeviceManagerMock) SetDeviceReset(logicID int32) error {
 	return nil
 }
 
@@ -353,28 +365,28 @@ func (d *DeviceManagerMock) GetHccsBandwidthInfo(logicID int32) (*common.HccsBan
 }
 
 // GetBrotherCardID get brother card id
-func (d *DeviceManagerMock) GetBrotherCardID(cardID, deviceID int32) (int32, error) {
+func (d *DeviceManagerMock) GetBrotherCardID(logicID int32) (int32, error) {
 	const noneBroCard = -1
 	return noneBroCard, nil
 }
 
 // GetOutBandChannelState get out band channel state
-func (d *DeviceManagerMock) GetOutBandChannelState(cardID, deviceID int32) error {
+func (d *DeviceManagerMock) GetOutBandChannelState(logicID int32) error {
 	return nil
 }
 
 // PreResetSoc pre reset soc, used before reset out band
-func (d *DeviceManagerMock) PreResetSoc(cardID, deviceID int32) error {
+func (d *DeviceManagerMock) PreResetSoc(logicID int32) error {
 	return nil
 }
 
 // SetDeviceResetOutBand reset spec device out band
-func (d *DeviceManagerMock) SetDeviceResetOutBand(cardID, deviceID int32) error {
+func (d *DeviceManagerMock) SetDeviceResetOutBand(logicID int32) error {
 	return nil
 }
 
 // RescanSoc trigger soc rescan, non-blocking
-func (d *DeviceManagerMock) RescanSoc(cardID, deviceID int32) error {
+func (d *DeviceManagerMock) RescanSoc(logicID int32) error {
 	return nil
 }
 
@@ -383,6 +395,8 @@ func (d *DeviceManagerMock) GetChipBaseInfos() ([]*common.ChipBaseInfo, error) {
 	return nil, nil
 }
 
-func (d *DeviceManagerMock) DcGetSuperPodStatus(int32, int32, uint32) (int, error) { return 0, nil }
+// GetSuperPodStatus get super pod status
+func (d *DeviceManagerMock) GetSuperPodStatus(int32, uint32) (int, error) { return 0, nil }
 
-func (d *DeviceManagerMock) DcSetSuperPodStatus(int32, int32, uint32, uint32) error { return nil }
+// SetSuperPodStatus set super pod status
+func (d *DeviceManagerMock) SetSuperPodStatus(int32, uint32, uint32) error { return nil }

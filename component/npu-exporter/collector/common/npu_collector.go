@@ -69,12 +69,12 @@ type NpuCollector struct {
 	devicesParser *container.DevicesParser
 	updateTime    time.Duration
 	cacheTime     time.Duration
-	Dmgr          *devmanager.DeviceManager
+	Dmgr          devmanager.DeviceInterface
 }
 
 // NewNpuCollector create a new collector
 func NewNpuCollector(cacheTime time.Duration, updateTime time.Duration,
-	deviceParser *container.DevicesParser, dmgr *devmanager.DeviceManager) *NpuCollector {
+	deviceParser *container.DevicesParser, dmgr devmanager.DeviceInterface) *NpuCollector {
 	CommonCollector := &NpuCollector{
 		cache:         cache.New(cacheSize),
 		cacheTime:     cacheTime,
@@ -389,7 +389,7 @@ func setProductType(chip *HuaWeiAIChip, dmgr devmanager.DeviceInterface, cardID 
 		return
 	}
 
-	productType, err := dmgr.GetProductType(cardID, deviceID)
+	productType, err := dmgr.GetProductType(chip.LogicID)
 	if err != nil {
 		logger.LogfWithOptions(logger.ErrorLevel, logger.LogOptions{
 			Domain: DomainForProductType,

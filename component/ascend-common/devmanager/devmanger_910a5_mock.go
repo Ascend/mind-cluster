@@ -18,18 +18,18 @@ package devmanager
 import "ascend-common/devmanager/common"
 
 // GetUrmaDeviceCount get urma device count for A5
-func (d *DeviceManagerMock) GetUrmaDeviceCount(cardID int32, deviceID int32) (int32, error) {
+func (d *DeviceManagerMock) GetUrmaDeviceCount(logicID int32) (int32, error) {
 	return 0, nil
 }
 
 // GetUrmaDevEidList get urma device index EID info for A5
-func (d *DeviceManagerMock) GetUrmaDevEidList(cardID int32, deviceID int32, index int32) (*common.UrmaDeviceInfo,
+func (d *DeviceManagerMock) GetUrmaDevEidList(logicID int32, index int32) (*common.UrmaDeviceInfo,
 	error) {
 	return &common.UrmaDeviceInfo{}, nil
 }
 
 // GetUrmaDevEidListAll get urma device EID info for A5
-func (d *DeviceManagerMock) GetUrmaDevEidListAll(cardID int32, deviceID int32) ([]common.UrmaDeviceInfo, error) {
+func (d *DeviceManagerMock) GetUrmaDevEidListAll(deviceID int32) ([]common.UrmaDeviceInfo, error) {
 	return []common.UrmaDeviceInfo{
 		{
 			EidCount: 1,

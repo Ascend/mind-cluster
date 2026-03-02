@@ -18,7 +18,6 @@ package server
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"strconv"
 	"testing"
@@ -35,21 +34,19 @@ import (
 	"ascend-common/api"
 	"ascend-common/devmanager"
 	devcommon "ascend-common/devmanager/common"
-	"ascend-common/devmanager/dcmi"
+	"ascend-common/devmanager/dcmiv2"
 )
 
 var (
-	testDevM *devmanager.DeviceManager
+	testDevM devmanager.DeviceInterface
 	testHdm  *HwDevManager
 	err      error
 
-	mockDcmiVersion           = "24.0.rc2"
-	mockCardNum         int32 = 16
-	mockDeviceNumInCard int32 = 1
-	mockCardList              = []int32{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
-	mockProductType           = ""
-	mockErr                   = errors.New("test error")
-	mockChipInfo              = &devcommon.ChipInfo{
+	mockDcmiVersion       = "24.0.rc2"
+	mockDeviceNum   int32 = 8
+	mockDeviceList        = []int32{0, 1, 2, 3, 4, 5, 6, 7}
+	mockErr               = errors.New("test error")
+	mockChipInfo          = &devcommon.ChipInfo{
 		Type:    "Ascend",
 		Name:    "Ascend950PR",
 		Version: "V1",
@@ -57,6 +54,7 @@ var (
 	mockBoardInfo = devcommon.BoardInfo{
 		BoardId: 0x28,
 	}
+	mockMainBoardId            = uint32(0x3)
 	mockChipAICore     float32 = 25
 	mockVirtualDevInfo         = devcommon.VirtualDevInfo{
 		TotalResource: devcommon.CgoSocTotalResource{
@@ -85,24 +83,19 @@ func setK8sPatch() *gomonkey.Patches {
 }
 
 func setDcmiPatch() *gomonkey.Patches {
-	patch := gomonkey.ApplyMethodReturn(&dcmi.DcManager{}, "DcInit", nil).
-		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDcmiVersion", mockDcmiVersion, nil).
-		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetCardList", mockCardNum, mockCardList, nil).
-		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceNumInCard", mockDeviceNumInCard, nil).
-		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetChipInfo", mockChipInfo, nil).
-		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceBoardInfo", mockBoardInfo, nil).
-		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetProductType", mockProductType, nil).
-		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetLogicIDList", mockCardNum, mockCardList, nil).
-		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetVDeviceInfo", mockVirtualDevInfo, nil).
-		ApplyMethod(&dcmi.DcManager{}, "DcGetPhysicIDFromLogicID",
-			func(d *dcmi.DcManager, logicID int32) (int32, error) {
+	patch := gomonkey.ApplyFuncReturn(devmanager.DetectDcmiApiVersion, devmanager.DcmiApiV2, nil).
+		ApplyMethodReturn(&dcmiv2.DcManager{}, "DcInit", nil).
+		ApplyMethodReturn(&dcmiv2.DcManager{}, "DcGetDcmiVersion", mockDcmiVersion, nil).
+		ApplyMethodReturn(&dcmiv2.DcManager{}, "DcGetDeviceList", mockDeviceNum, mockDeviceList, nil).
+		ApplyMethodReturn(&dcmiv2.DcManager{}, "DcGetChipInfo", mockChipInfo, nil).
+		ApplyMethodReturn(&dcmiv2.DcManager{}, "DcGetDeviceBoardInfo", mockBoardInfo, nil).
+		ApplyMethodReturn(&dcmiv2.DcManager{}, "DcGetDeviceMainBoardInfo", mockMainBoardId, nil).
+		ApplyMethodReturn(&dcmiv2.DcManager{}, "DcGetVDeviceInfo", mockVirtualDevInfo, nil).
+		ApplyMethod(&dcmiv2.DcManager{}, "DcGetPhysicIDFromLogicID",
+			func(d *dcmiv2.DcManager, logicID int32) (int32, error) {
 				return logicID, nil
 			}).
-		ApplyMethod(&dcmi.DcManager{}, "DcGetCardIDDeviceID",
-			func(d *dcmi.DcManager, logicID int32) (int32, int32, error) {
-				return logicID, 0, nil
-			}).
-		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetSuperPodInfo", devcommon.CgoSuperPodInfo{}, mockErr)
+		ApplyMethodReturn(&dcmiv2.DcManager{}, "DcGetSuperPodInfo", devcommon.CgoSuperPodInfo{}, mockErr)
 	return patch
 }
 
@@ -132,17 +125,6 @@ func testAutoInit() {
 	convey.Convey("test auto init success", func() {
 		testDevM, err = devmanager.AutoInit("", api.DefaultDeviceResetTimeout)
 		convey.So(err, convey.ShouldBeNil)
-	})
-
-	convey.Convey("test auto init failed, get card list failed", func() {
-		patch := gomonkey.ApplyMethodReturn(&dcmi.DcManager{}, "DcGetCardList", mockCardNum, mockCardList, mockErr)
-		defer patch.Reset()
-
-		expectErr := fmt.Errorf("get card list failed for init")
-		expectErr2 := fmt.Errorf("auto init failed, err: %v", expectErr)
-		errDevM, err := devmanager.AutoInit("", api.DefaultDeviceResetTimeout)
-		convey.So(err, convey.ShouldResemble, expectErr2)
-		convey.So(errDevM, convey.ShouldBeNil)
 	})
 }
 

@@ -957,7 +957,7 @@ func TestAssemble310PMixedPhyDevices(t *testing.T) {
 		}
 		mockProductType := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
 			"GetProductType",
-			func(_ *devmanager.DeviceManagerMock, cardID int32, deviceID int32) (string, error) {
+			func(_ *devmanager.DeviceManagerMock, logicID int32) (string, error) {
 				return atlas300VPro, nil
 			})
 		defer mockProductType.Reset()
@@ -1328,13 +1328,14 @@ func TestAscendToolsGetDpuFaults(t *testing.T) {
 		}
 		eventId := int64(common.DpuSubHealthCode)
 		faultCode := strings.ToUpper(strconv.FormatInt(eventId, common.BaseDec))
+		// For FaultTime compare, should be placed together
+		got := tool.getDpuFaults(device.DeviceName)
 		faultTimeAndLevel := common.FaultTimeAndLevel{
 			FaultTime:  time.Now().UnixMilli(),
 			FaultLevel: common.NotHandleFault,
 		}
 		faultTimeAndLevelMap := make(map[string]common.FaultTimeAndLevel)
 		faultTimeAndLevelMap[faultCode] = faultTimeAndLevel
-		got := tool.getDpuFaults(device.DeviceName)
 		want := []common.DeviceFault{{
 			FaultType:            common.DpuSubHealth,
 			NPUName:              device.DeviceName,

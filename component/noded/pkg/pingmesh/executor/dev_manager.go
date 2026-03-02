@@ -69,7 +69,7 @@ func New() (*DevManager, error) {
 	var serverIndex uint32 = 0
 	var rackId uint32 = 0
 	for _, chip := range chips {
-		_, err = dm.DcGetHccsPingMeshState(chip.CardID, chip.DeviceID, 0, common.InternalPingMeshTaskID)
+		_, err = dm.GetHccsPingMeshState(chip.LogicID, 0, common.InternalPingMeshTaskID)
 		if err != nil {
 			hwlog.RunLog.Warnf("deviceManager get hccsPingMeshState failed, err: %v", err)
 			if strings.Contains(err.Error(), notSupportErrCode) ||
@@ -84,11 +84,11 @@ func New() (*DevManager, error) {
 		superPodId = superPodInfo.SuperPodId
 		serverIndex = superPodInfo.ServerId
 
-		if dm.DevType == common.Ascend910A5 {
+		if dm.GetDevType() == common.Ascend910A5 {
 			hwlog.RunLog.Infof("new devManager get devType npu")
 			rackId = superPodInfo.RackId
 		} else {
-			hwlog.RunLog.Infof("new devManager get devType %s", dm.DevType)
+			hwlog.RunLog.Infof("new devManager get devType %s", dm.GetDevType())
 		}
 		break
 	}
@@ -186,9 +186,9 @@ func (d *DevManager) startHccspingMesh() {
 
 		for taskID := range addrs {
 
-			hwlog.RunLog.Infof("execute starting hccspingmesh, cardID: %d, deviceID: %d, taskID: %d, "+
-				"destination address: %v", chip.CardID, chip.DeviceID, taskID, addrs[taskID])
-			if err := d.devManager.DcStartHccsPingMesh(chip.CardID, chip.DeviceID, 0, common.HccspingMeshOperate{
+			hwlog.RunLog.Infof("execute starting hccspingmesh, cardID: %d, deviceID: %d, logicID: %d, taskID: %d, "+
+				"destination address: %v", chip.CardID, chip.DeviceID, chip.LogicID, taskID, addrs[taskID])
+			if err := d.devManager.StartHccsPingMesh(chip.LogicID, 0, common.HccspingMeshOperate{
 				DstAddr:      addrs[taskID],
 				PktSize:      common.DefaultPktSize,
 				PktSendNum:   common.DefaultPktSendNum,
@@ -221,13 +221,13 @@ func (d *DevManager) stopAllTasks() {
 		}
 
 		for _, taskID := range taskIDs {
-			if err := d.devManager.DcStopHccsPingMesh(chip.CardID, chip.DeviceID, 0, taskID); err != nil {
+			if err := d.devManager.StopHccsPingMesh(chip.LogicID, 0, taskID); err != nil {
 				hwlog.RunLog.Errorf("stop hccspingmesh failed, err: %v", err)
 				continue
 			}
 
-			hwlog.RunLog.Infof("stop hccspingmesh success, cardID: %d, deviceID: %d, taskID: %d",
-				chip.CardID, chip.DeviceID, taskID)
+			hwlog.RunLog.Infof("stop hccspingmesh success, cardID: %d, deviceID: %d, logicID: %d, taskID: %d",
+				chip.CardID, chip.DeviceID, chip.LogicID, taskID)
 		}
 	}
 }
@@ -239,12 +239,12 @@ func (d *DevManager) stopLastTasks() {
 			continue
 		}
 		for taskID := range address {
-			if err := d.devManager.DcStopHccsPingMesh(chip.CardID, chip.DeviceID, 0, taskID); err != nil {
+			if err := d.devManager.StopHccsPingMesh(chip.LogicID, 0, taskID); err != nil {
 				hwlog.RunLog.Errorf("deviceManager stop hccspingmesh failed, err: %v", err)
 				continue
 			}
-			hwlog.RunLog.Infof("deviceManager stop hccspingmesh success, cardID: %d, deviceID: %d, taskID: %d",
-				chip.CardID, chip.DeviceID, taskID)
+			hwlog.RunLog.Infof("deviceManager stop hccspingmesh success, cardID: %d, deviceID: %d, logicID: %d, "+
+				"taskID: %d", chip.CardID, chip.DeviceID, chip.LogicID, taskID)
 		}
 	}
 }
@@ -275,10 +275,10 @@ func (d *DevManager) getHccspingMeshInfo() {
 		}
 		infos := make(map[uint]*common.HccspingMeshInfo, len(tasks))
 		for taskID := range tasks {
-			d.checkPingMeshTaskState(chip.CardID, chip.DeviceID, taskID)
-			hwlog.RunLog.Infof("get HccspingMeshInfo info, cardID: %d, deviceID: %d, physicID: %s, taskID: %d",
-				chip.CardID, chip.DeviceID, physicID, taskID)
-			info, err := d.devManager.DcGetHccsPingMeshInfo(chip.CardID, chip.DeviceID, 0, taskID) // 超时时间是30s
+			d.checkPingMeshTaskState(chip.LogicID, taskID)
+			hwlog.RunLog.Infof("get HccspingMeshInfo info, cardID: %d, deviceID: %d, logicID: %d, physicID: %s, taskID: %d",
+				chip.CardID, chip.DeviceID, chip.LogicID, physicID, taskID)
+			info, err := d.devManager.GetHccsPingMeshInfo(chip.LogicID, 0, taskID) // 超时时间是30s
 			if err != nil {
 				hwlog.RunLog.Errorf("deviceManager get hccspingmesh info failed, err: %v", err)
 				continue
@@ -289,10 +289,10 @@ func (d *DevManager) getHccspingMeshInfo() {
 			}
 			// when reset chip, pingmesh task will be stopped, so we should restart pingmesh task
 			if d.GetDeviceType() == common.Ascend910A5 && len(info.UBPingMeshInfoList) == 0 {
-				d.restartStoppedPingMeshTask(chip.CardID, chip.DeviceID, taskID, tasks[taskID])
+				d.restartStoppedPingMeshTask(chip.LogicID, taskID, tasks[taskID])
 				continue
 			} else if d.GetDeviceType() != common.Ascend910A5 && info.DestNum == 0 {
-				d.restartStoppedPingMeshTask(chip.CardID, chip.DeviceID, taskID, tasks[taskID])
+				d.restartStoppedPingMeshTask(chip.LogicID, taskID, tasks[taskID])
 				continue
 			}
 			infos[taskID] = info
@@ -309,11 +309,11 @@ func (d *DevManager) getHccspingMeshInfo() {
 	}
 }
 
-func (d *DevManager) restartStoppedPingMeshTask(cardID, deviceID int32, taskID uint, addr string) {
-	state, err := d.devManager.DcGetHccsPingMeshState(cardID, deviceID, 0, taskID)
+func (d *DevManager) restartStoppedPingMeshTask(logicID int32, taskID uint, addr string) {
+	state, err := d.devManager.GetHccsPingMeshState(logicID, 0, taskID)
 	if err != nil {
-		hwlog.RunLog.Errorf("deviceManager get hccspingmesh state failed, cardID: %d, "+
-			"deviceID: %d, taskID: %d, err:%v", cardID, deviceID, taskID, err)
+		hwlog.RunLog.Errorf("deviceManager get hccspingmesh state failed, logicID: %d, "+
+			"taskID: %d, err:%v", logicID, taskID, err)
 		return
 	}
 	if state != pingMeshTaskStopped {
@@ -321,16 +321,15 @@ func (d *DevManager) restartStoppedPingMeshTask(cardID, deviceID int32, taskID u
 	}
 
 	if d.devManager.GetDevType() == common.Ascend910A5 {
-		d.restartUbPingMesh(cardID, deviceID)
+		d.restartUbPingMesh(logicID)
 	} else {
-		d.restartHccsPingMesh(cardID, deviceID, taskID, addr)
+		d.restartHccsPingMesh(logicID, taskID, addr)
 	}
 }
 
-func (d *DevManager) restartHccsPingMesh(cardID, deviceID int32, taskID uint, addr string) {
-	hwlog.RunLog.Infof("hccspingmesh task stopped, ready to restart, cardID: %d, "+
-		"deviceID: %d, taskID: %d", cardID, deviceID, taskID)
-	err := d.devManager.DcStartHccsPingMesh(cardID, deviceID, 0, common.HccspingMeshOperate{
+func (d *DevManager) restartHccsPingMesh(logicID int32, taskID uint, addr string) {
+	hwlog.RunLog.Infof("hccspingmesh task stopped, ready to restart, logicID: %d, taskID: %d", logicID, taskID)
+	err := d.devManager.StartHccsPingMesh(logicID, 0, common.HccspingMeshOperate{
 		DstAddr:      addr,
 		PktSize:      common.DefaultPktSize,
 		PktSendNum:   common.DefaultPktSendNum,
@@ -340,27 +339,24 @@ func (d *DevManager) restartHccsPingMesh(cardID, deviceID int32, taskID uint, ad
 		TaskId:       int(taskID),
 	})
 	if err != nil {
-		hwlog.RunLog.Errorf("restart hccspingmesh failed, cardID: %d, deviceID: %d, taskID: %d err: %v",
-			cardID, deviceID, taskID, err)
+		hwlog.RunLog.Errorf("restart hccspingmesh failed, logicID: %d, taskID: %d err: %v", logicID, taskID, err)
 		return
 	}
-	hwlog.RunLog.Infof("restart hccspingmesh success, cardID: %d, deviceID: %d, taskID: %d",
-		cardID, deviceID, taskID)
+	hwlog.RunLog.Infof("restart hccspingmesh success, logicID: %d, taskID: %d", logicID, taskID)
 }
 
-func (d *DevManager) checkPingMeshTaskState(cardID, deviceID int32, taskID uint) {
-	state, err := d.devManager.DcGetHccsPingMeshState(cardID, deviceID, 0, taskID)
+func (d *DevManager) checkPingMeshTaskState(logicID int32, taskID uint) {
+	state, err := d.devManager.GetHccsPingMeshState(logicID, 0, taskID)
 	if err != nil {
-		hwlog.RunLog.Errorf("deviceManager get pingmesh state failed, cardID: %d, deviceID: %d, taskID: %d, err:%v",
-			cardID, deviceID, taskID, err)
+		hwlog.RunLog.Errorf("deviceManager get pingmesh state failed, logicID: %d, taskID: %d, err:%v",
+			logicID, taskID, err)
 		return
 	}
 	hwlog.RunLog.Infof("get pingmesh state %d", state)
 	if state != pingMeshTaskStopped {
 		return
 	}
-	hwlog.RunLog.Infof("pingmesh task stopped, ready to restart, cardID: %d, deviceID: %d, taskID: %d",
-		cardID, deviceID, taskID)
+	hwlog.RunLog.Infof("pingmesh task stopped, ready to restart, logicID: %d, taskID: %d", logicID, taskID)
 }
 
 // GetDeviceType call devManager devType

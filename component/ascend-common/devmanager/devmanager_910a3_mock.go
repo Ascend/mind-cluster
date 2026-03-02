@@ -19,6 +19,8 @@ import (
 	"ascend-common/api"
 )
 
+var _ DeviceInterface = &DeviceManager910A3Mock{}
+
 // DeviceManager910A3Mock common device manager mock for Ascend910A3
 type DeviceManager910A3Mock struct {
 	DeviceManagerMock

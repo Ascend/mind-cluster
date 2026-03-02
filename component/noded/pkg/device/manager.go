@@ -21,12 +21,12 @@ import (
 	"nodeD/pkg/common"
 )
 
-var dm *devmanager.DeviceManager
+var dm devmanager.DeviceInterface
 
 // InitDeviceManager init device manager
 func InitDeviceManager() error {
 	var err error
-	dm, err = devmanager.GetDeviceManager(common.ParamOption.DeviceResetTimeout)
+	dm, err = devmanager.AutoInit("", common.ParamOption.DeviceResetTimeout)
 	if err != nil {
 		hwlog.RunLog.Errorf("init device manager failed:%v", err)
 	}
@@ -34,6 +34,6 @@ func InitDeviceManager() error {
 }
 
 // GetDeviceManager get device manager
-func GetDeviceManager() *devmanager.DeviceManager {
+func GetDeviceManager() devmanager.DeviceInterface {
 	return dm
 }

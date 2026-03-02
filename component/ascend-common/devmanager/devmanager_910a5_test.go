@@ -69,7 +69,7 @@ func init() {
 func TestAutoInit(t *testing.T) {
 	p := gomonkey.ApplyMethodReturn(&dcmi.DcManager{}, "DcInit", nil).
 		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDcmiVersion", mockDcmiVersion, nil).
-		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetCardList", mockCardNum, mockCardList, nil).
+		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceList", mockCardNum, mockCardList, nil).
 		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceNumInCard", mockDeviceNumInCard, nil).
 		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetChipInfo", mockChipInfo, nil).
 		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceBoardInfo", mockBoardInfo, nil).
@@ -83,7 +83,9 @@ func TestAutoInit(t *testing.T) {
 }
 
 func testAutoInitSuccess() {
-	devM, err := AutoInit("", api.DefaultDeviceResetTimeout)
+	devm, err := AutoInit("", api.DefaultDeviceResetTimeout)
+	devM, ok := devm.(*DeviceManager)
+	convey.So(ok, convey.ShouldBeTrue)
 	convey.So(err, convey.ShouldBeNil)
 	convey.So(devM.DevType, convey.ShouldEqual, api.Ascend910A5)
 	convey.So(devM.dcmiVersion, convey.ShouldEqual, mockDcmiVersion)
@@ -93,7 +95,7 @@ func testAutoInitSuccess() {
 }
 
 func testGetCardListFailed() {
-	patch := gomonkey.ApplyMethodReturn(&dcmi.DcManager{}, "DcGetCardList", mockCardNum, mockCardList, mockErr)
+	patch := gomonkey.ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceList", mockCardNum, mockCardList, mockErr)
 	defer patch.Reset()
 
 	expectErr := errors.New("auto init failed, err: get card list failed for init")

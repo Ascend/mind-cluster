@@ -22,6 +22,8 @@ import (
 	"ascend-common/devmanager/common"
 )
 
+var _ DeviceInterface = &DeviceManager910A3MockErr{}
+
 // DeviceManager910A3MockErr common device manager mock error for Ascend910A3
 type DeviceManager910A3MockErr struct {
 	DeviceManagerMockErr

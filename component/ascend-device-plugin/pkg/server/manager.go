@@ -1386,21 +1386,13 @@ func (hdm *HwDevManager) execResetChip(logicID int32, isResetExec *bool) error {
 	if *isResetExec {
 		return nil
 	}
-	cardID, deviceID, err := hdm.manager.GetDmgr().GetCardIDDeviceID(logicID)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get cardID and deviceID by logicID(%d)", logicID)
-		return err
-	}
-	if common.IsContainAtlas300IDuo() {
-		deviceID = 0
-	}
-	hwlog.RunLog.Infof("start device card(%d) and deviceID(%d) reset...", cardID, deviceID)
-	if err := hdm.manager.GetDmgr().SetDeviceReset(cardID, deviceID); err != nil {
+	hwlog.RunLog.Infof("start device logicID(%d) reset...", logicID)
+	if err := hdm.manager.GetDmgr().SetDeviceReset(logicID); err != nil {
 		hwlog.RunLog.Errorf("hot reset failed, err: %v", err)
 		return err
 	}
 	*isResetExec = true
-	hwlog.RunLog.Infof("card(%d) and deviceID(%d) exec set device reset function success", cardID, deviceID)
+	hwlog.RunLog.Infof("logicID(%d) exec set device reset function success", logicID)
 	return nil
 }
 
@@ -1692,9 +1684,9 @@ func checkDeviceStatus(failDevs []device.ResetDevice,
 			continue
 		}
 		devMap[dev.PhyID] = dev
-		device.FreeBusyDev(dev.CardID, dev.DeviceID)
+		device.FreeBusyDev(dev.LogicID)
 		// device recovered, set reset times to 0, then that device could be reset again
-		device.SetResetCnt(dev.CardID, dev.DeviceID, 0)
+		device.SetResetCnt(dev.LogicID, 0)
 	}
 	for _, failDev := range failDevs {
 		if _, exist := devMap[failDev.PhyID]; !exist {
@@ -1713,7 +1705,7 @@ func checkOverRetryDev(info device.ResetInfo) device.ResetInfo {
 		ManualResetDevs:     info.ManualResetDevs,
 	}
 	for _, dev := range info.ThirdPartyResetDevs {
-		if device.GetResetCnt(dev.CardId, dev.DeviceId) <= common.MaxResetTimes {
+		if device.GetResetCnt(dev.LogicID) <= common.MaxResetTimes {
 			ret.ThirdPartyResetDevs = append(ret.ThirdPartyResetDevs, dev)
 			continue
 		}

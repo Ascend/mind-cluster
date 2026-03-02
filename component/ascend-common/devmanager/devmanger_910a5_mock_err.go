@@ -22,17 +22,17 @@ import (
 )
 
 // GetUrmaDeviceCount get urma device count for A5
-func (d *DeviceManagerMockErr) GetUrmaDeviceCount(cardID int32, deviceID int32) (int32, error) {
+func (d *DeviceManagerMockErr) GetUrmaDeviceCount(logicID int32) (int32, error) {
 	return 0, errors.New("get urma device count failed")
 }
 
 // GetUrmaDevEidList get urma device index EID info for A5
-func (d *DeviceManagerMockErr) GetUrmaDevEidList(cardID int32, deviceID int32, index int32) (*common.UrmaDeviceInfo,
+func (d *DeviceManagerMockErr) GetUrmaDevEidList(logicID int32, index int32) (*common.UrmaDeviceInfo,
 	error) {
 	return nil, errors.New("get urma device info failed")
 }
 
 // GetUrmaDevEidListAll get urma device EID info for A5
-func (d *DeviceManagerMockErr) GetUrmaDevEidListAll(cardID int32, deviceID int32) ([]common.UrmaDeviceInfo, error) {
+func (d *DeviceManagerMockErr) GetUrmaDevEidListAll(logicID int32) ([]common.UrmaDeviceInfo, error) {
 	return nil, errors.New("get urma device info all failed")
 }

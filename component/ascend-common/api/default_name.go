@@ -119,6 +119,8 @@ const (
 	Ascend310PMix = "ascend310P-V, ascend310P-VPro, ascend310P-IPro"
 	// A300IA2Label the value of the A300I A2 node label
 	A300IA2Label = "card-910b-infer"
+	// Atlas300IDuo for hot reset function, sync chip healthy state
+	Atlas300IDuo = "Atlas 300I Duo"
 	// A300IDuoLabel the value of the A300I Duo node label
 	A300IDuoLabel = "card-300i-duo"
 	// UseAscendDocker UseAscendDocker parameter

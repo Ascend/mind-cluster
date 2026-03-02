@@ -586,15 +586,15 @@ func TestGetAssociatedLogicIDs(t *testing.T) {
 // TestTryResetDevice an ut for function tryResetDevice
 func TestTryResetDevice(t *testing.T) {
 	manager := createFake910Manager()
-	patch := gomonkey.ApplyFunc(AddBusyDev, func(cardID, deviceID int32) {
+	patch := gomonkey.ApplyFunc(AddBusyDev, func(logicID int32) {
 		return
 	})
-	patch.ApplyFunc(AddResetCnt, func(cardID, deviceID int32) {
+	patch.ApplyFunc(AddResetCnt, func(logicID int32) {
 		return
 	})
 	defer patch.Reset()
 	convey.Convey("exec ut function tryResetDevice", t, func() {
-		err := manager.tryResetDevice(0, 0)
+		err := manager.tryResetDevice(0)
 		convey.So(err, convey.ShouldBeNil)
 	})
 }
@@ -1049,7 +1049,7 @@ func TestExecRescan(t *testing.T) {
 		return
 	})
 	flag := false
-	patch.ApplyFunc(FreeBusyDev, func(cardID, deviceID int32) {
+	patch.ApplyFunc(FreeBusyDev, func(logicID int32) {
 		flag = true
 	})
 	defer patch.Reset()
@@ -2488,18 +2488,18 @@ func TestCanResetDevice(t *testing.T) {
 		convey.Convey("01-dev busy, should return false", func() {
 			patch1 := gomonkey.ApplyFuncReturn(IsDevBusy, true)
 			defer patch1.Reset()
-			convey.So(manager.canResetDevice(id1, id1), convey.ShouldBeFalse)
+			convey.So(manager.canResetDevice(id1), convey.ShouldBeFalse)
 		})
 		patch := gomonkey.ApplyFuncReturn(IsDevBusy, false)
 		defer patch.Reset()
 		convey.Convey("02-reset cnt over, should return false", func() {
 			patch1 := gomonkey.ApplyFuncReturn(GetResetCnt, common.MaxResetTimes+id1)
 			defer patch1.Reset()
-			convey.So(manager.canResetDevice(id1, id1), convey.ShouldBeFalse)
+			convey.So(manager.canResetDevice(id1), convey.ShouldBeFalse)
 		})
 		patch.ApplyFuncReturn(GetResetCnt, common.MaxResetTimes-id1)
 		convey.Convey("03-success, should return true", func() {
-			convey.So(manager.canResetDevice(id1, id1), convey.ShouldBeTrue)
+			convey.So(manager.canResetDevice(id1), convey.ShouldBeTrue)
 		})
 	})
 }
@@ -2594,12 +2594,12 @@ func TestUpdateResetInfo(t *testing.T) {
 func TestResetDeviceOutBand(t *testing.T) {
 	manager := createFake910Manager()
 	convey.Convey("test resetDeviceOutBand", t, func() {
-		const testCardID, testDeviceID = 0, 0
+		const testLogicID = 0
 		convey.Convey("01-out band channel error, should return error", func() {
 			patch1 := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
 				"GetOutBandChannelState", ascend910testErr)
 			defer patch1.Reset()
-			err := manager.resetDeviceOutBand(testCardID, testDeviceID)
+			err := manager.resetDeviceOutBand(testLogicID)
 			convey.So(err, convey.ShouldBeError)
 		})
 		patch := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
@@ -2609,7 +2609,7 @@ func TestResetDeviceOutBand(t *testing.T) {
 			patch1 := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
 				"PreResetSoc", ascend910testErr)
 			defer patch1.Reset()
-			err := manager.resetDeviceOutBand(testCardID, testDeviceID)
+			err := manager.resetDeviceOutBand(testLogicID)
 			convey.So(err, convey.ShouldBeError)
 		})
 		patch.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
@@ -2618,7 +2618,7 @@ func TestResetDeviceOutBand(t *testing.T) {
 			patch1 := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
 				"SetDeviceResetOutBand", ascend910testErr)
 			defer patch1.Reset()
-			err := manager.resetDeviceOutBand(testCardID, testDeviceID)
+			err := manager.resetDeviceOutBand(testLogicID)
 			convey.So(err, convey.ShouldBeError)
 		})
 		patch.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
@@ -2627,13 +2627,13 @@ func TestResetDeviceOutBand(t *testing.T) {
 			patch1 := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
 				"RescanSoc", ascend910testErr)
 			defer patch1.Reset()
-			err := manager.resetDeviceOutBand(testCardID, testDeviceID)
+			err := manager.resetDeviceOutBand(testLogicID)
 			convey.So(err, convey.ShouldBeError)
 		})
 		patch.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
 			"RescanSoc", nil)
 		convey.Convey("05-success, should return nil", func() {
-			err := manager.resetDeviceOutBand(testCardID, testDeviceID)
+			err := manager.resetDeviceOutBand(testLogicID)
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})
@@ -2864,19 +2864,13 @@ func TestFillResetDevs(t *testing.T) {
 func TestCanResetDeviceByLogicID(t *testing.T) {
 	convey.Convey("test canResetDeviceByLogicID", t, func() {
 		manager := createFake910Manager()
-		patch := gomonkey.ApplyPrivateMethod(manager, "canResetDevice", func(cardID, deviceID int32) bool {
-			return true
-		})
-		defer patch.Reset()
-		convey.Convey("01-get card id error, should return false", func() {
-			patch1 := gomonkey.ApplyMethodReturn(manager.GetDmgr(), "GetCardIDDeviceID", int32(id1),
-				int32(id1), ascend910testErr)
+		convey.Convey("01-IsDevBusy is true, should return false", func() {
+			patch1 := gomonkey.ApplyFuncReturn(IsDevBusy, true)
 			defer patch1.Reset()
 			convey.So(manager.canResetDeviceByLogicID(int32(id1)), convey.ShouldBeFalse)
 		})
-		convey.Convey("02-success, should return true", func() {
-			patch1 := gomonkey.ApplyMethodReturn(manager.GetDmgr(), "GetCardIDDeviceID", int32(id1),
-				int32(id1), nil)
+		convey.Convey("02-IsDevBusy is false, should return true", func() {
+			patch1 := gomonkey.ApplyFuncReturn(IsDevBusy, false)
 			defer patch1.Reset()
 			convey.So(manager.canResetDeviceByLogicID(int32(id1)), convey.ShouldBeTrue)
 		})
@@ -3130,7 +3124,7 @@ func TestTryResetDeviceOffline(t *testing.T) {
 	convey.Convey("Test tryResetDeviceOffline", t, func() {
 		manager := createFake910Manager()
 		manager.hotResetManager = &HotResetTools{}
-		cardId, deviceId, logicId := int32(0), int32(0), int32(0)
+		logicId := int32(0)
 		classifyDevs := map[string][]*common.NpuDevice{api.Ascend910: {{LogicID: 0}, {LogicID: 1}}}
 		convey.Convey("01-First fault exists, second fault disappears, should return nil", func() {
 			callCount := 0
@@ -3148,18 +3142,18 @@ func TestTryResetDeviceOffline(t *testing.T) {
 			patch2 := gomonkey.ApplyMethodReturn(manager, "GetDmgr", manager.dmgr)
 			defer patch2.Reset()
 			patch3 := gomonkey.ApplyMethod(manager.dmgr, "SetDeviceReset",
-				func(_ *devmanager.DeviceManagerMock, cardID, deviceID int32) error {
+				func(_ *devmanager.DeviceManagerMock, logicID int32) error {
 					if callCount == 1 {
 						return errors.New("fakeError") // First call - fault exists
 					}
 					return nil // Second call - fault disappears
 				})
 			defer patch3.Reset()
-			patch4 := gomonkey.ApplyFunc(AddResetCnt, func(cardID, deviceID int32) {})
+			patch4 := gomonkey.ApplyFunc(AddResetCnt, func(logicID int32) {})
 			defer patch4.Reset()
-			patch5 := gomonkey.ApplyFunc(AddBusyDev, func(cardID, deviceID int32) {})
+			patch5 := gomonkey.ApplyFunc(AddBusyDev, func(logicID int32) {})
 			defer patch5.Reset()
-			err := manager.tryResetDeviceOffline(classifyDevs, cardId, deviceId, logicId)
+			err := manager.tryResetDeviceOffline(classifyDevs, logicId)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(callCount, convey.ShouldEqual, common.MapSizeTwo)
 		})
@@ -3171,7 +3165,7 @@ func TestTryResetDeviceOffline2(t *testing.T) {
 	convey.Convey("Test tryResetDeviceOffline", t, func() {
 		manager := createFake910Manager()
 		manager.hotResetManager = &HotResetTools{}
-		cardId, deviceId, logicId := int32(0), int32(0), int32(0)
+		logicId := int32(0)
 		classifyDevs := map[string][]*common.NpuDevice{api.Ascend910: {{LogicID: 0}, {LogicID: 1}}}
 		convey.Convey("02-First fault does not exist, should return immediately", func() {
 			// Mock checkFaultIsExist to return false on first call
@@ -3180,11 +3174,11 @@ func TestTryResetDeviceOffline2(t *testing.T) {
 					return false
 				})
 			defer patch1.Reset()
-			patch2 := gomonkey.ApplyFunc(AddResetCnt, func(cardID, deviceID int32) {})
+			patch2 := gomonkey.ApplyFunc(AddResetCnt, func(logicID int32) {})
 			defer patch2.Reset()
-			patch3 := gomonkey.ApplyFunc(AddBusyDev, func(cardID, deviceID int32) {})
+			patch3 := gomonkey.ApplyFunc(AddBusyDev, func(logicID int32) {})
 			defer patch3.Reset()
-			err := manager.tryResetDeviceOffline(classifyDevs, cardId, deviceId, logicId)
+			err := manager.tryResetDeviceOffline(classifyDevs, logicId)
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})

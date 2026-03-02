@@ -187,10 +187,10 @@ func TestGetDpuWithNpuPcieSwitch(t *testing.T) {
 	df := &DpuFilter{}
 	dmgr := &devmanager.DeviceManagerMock{}
 	convey.Convey("TestGetDpuWithNpuPcieSwitch", t, func() {
-		convey.Convey("TestGetCardListFailed", func() {
+		convey.Convey("TestGetDeviceListFailed", func() {
 			patches := gomonkey.NewPatches()
 			defer patches.Reset()
-			patches.ApplyMethodReturn(dmgr, "GetCardList", nil, nil, errors.New("func failed"))
+			patches.ApplyMethodReturn(dmgr, "GetDeviceList", nil, nil, errors.New("func failed"))
 			err := df.getDpuWithNpuPcieSwitch(dmgr)
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(err.Error(), convey.ShouldContainSubstring, "func failed")
@@ -199,7 +199,7 @@ func TestGetDpuWithNpuPcieSwitch(t *testing.T) {
 			const cardNum = int32(8)
 			patches := gomonkey.NewPatches()
 			defer patches.Reset()
-			patches.ApplyMethodReturn(dmgr, "GetCardList", cardNum, []int32{0, 1, 2, 3, 4, 5, 6, 7}, nil)
+			patches.ApplyMethodReturn(dmgr, "GetDeviceList", cardNum, []int32{0, 1, 2, 3, 4, 5, 6, 7}, nil)
 			patches.ApplyMethodReturn(dmgr, "GetPCIeBusInfo", nil, errors.New("func failed"))
 			err := df.getDpuWithNpuPcieSwitch(dmgr)
 			convey.So(err.Error(), convey.ShouldContainSubstring, "func failed")
@@ -726,34 +726,34 @@ func TestPrivateGetDpuPair(t *testing.T) {
 
 	convey.Convey("TestGetDpuPair2", t, func() {
 		const OneNpuCorresTwoDpu = 2
-		patch := gomonkey.ApplyPrivateMethod(&DpuFilter{}, "getSlotId",
-			func(_ DpuFilter, ifaceName string) (string, error) {
-				return "slot1", nil
-			})
-		defer patch.Reset()
 		df := DpuFilter{
 			dpuInfos: []BaseDpuInfo{
 				{DeviceName: "eth0"},
 				{DeviceName: "eth1"},
 			},
 		}
+		patch := gomonkey.ApplyPrivateMethod(&df, "getSlotId",
+			func(_ *DpuFilter, ifaceName string) (string, error) {
+				return "slot1", nil
+			})
+		defer patch.Reset()
 		dpus := df.getDpuPair("slot1", "slot2")
 		convey.So(len(dpus), convey.ShouldEqual, OneNpuCorresTwoDpu)
 		convey.So(dpus[0].DeviceName, convey.ShouldEqual, "eth0")
 	})
 
 	convey.Convey("TestGetDpuPair3", t, func() {
-		patch := gomonkey.ApplyPrivateMethod(&DpuFilter{}, "getSlotId",
-			func(_ DpuFilter, DeviceName string) (string, error) {
-				return "slot9", nil
-			})
-		defer patch.Reset()
 		df := DpuFilter{
 			dpuInfos: []BaseDpuInfo{
 				{DeviceName: "eth0"},
 				{DeviceName: "eth1"},
 			},
 		}
+		patch := gomonkey.ApplyPrivateMethod(&df, "getSlotId",
+			func(_ *DpuFilter, DeviceName string) (string, error) {
+				return "slot9", nil
+			})
+		defer patch.Reset()
 		dpus := df.getDpuPair("slot1", "slot2")
 		convey.So(len(dpus), convey.ShouldEqual, 0)
 	})
@@ -761,27 +761,27 @@ func TestPrivateGetDpuPair(t *testing.T) {
 
 func TestGetNpuCorrespondDpuInfo(t *testing.T) {
 	convey.Convey("TestGetNpuCorrespDpuInfo1", t, func() {
-		patch := gomonkey.ApplyPrivateMethod(&DpuFilter{}, "getDpuPair", func(_ DpuFilter, _, _ string) []BaseDpuInfo {
+		df := DpuFilter{}
+		patch := gomonkey.ApplyPrivateMethod(&df, "getDpuPair", func(_ *DpuFilter, _, _ string) []BaseDpuInfo {
 			return []BaseDpuInfo{
 				{DeviceName: "eth0"},
 				{DeviceName: "eth1"},
 			}
 		})
 		defer patch.Reset()
-		df := DpuFilter{}
 		err := df.getNpuCorrespDpuInfo()
 		convey.So(err, convey.ShouldBeNil)
 		convey.So(len(df.NpuWithDpuInfos), convey.ShouldEqual, api.NpuCountPerNode)
 	})
 
 	convey.Convey("TestGetNpuCorrespDpuInfo2", t, func() {
-		patch := gomonkey.ApplyPrivateMethod(&DpuFilter{}, "getDpuPair", func(_ DpuFilter, _, _ string) []BaseDpuInfo {
+		df := DpuFilter{}
+		patch := gomonkey.ApplyPrivateMethod(&df, "getDpuPair", func(_ *DpuFilter, _, _ string) []BaseDpuInfo {
 			return []BaseDpuInfo{
 				{DeviceName: "eth0"},
 			}
 		})
 		defer patch.Reset()
-		df := DpuFilter{}
 		err := df.getNpuCorrespDpuInfo()
 		convey.So(err, convey.ShouldBeError)
 		convey.So(err.Error(), convey.ShouldEqual, "get npu 0 correspond dpuinfos error")

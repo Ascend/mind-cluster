@@ -30,6 +30,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
+	"nodeD/pkg/device"
 	"nodeD/pkg/kubeclient"
 	"nodeD/pkg/watcher/configmap"
 )
@@ -70,6 +71,8 @@ func TestHandleNodeStatusChange(t *testing.T) {
 		if err := hwlog.InitRunLogger(&hwlog.LogConfig{}, context.TODO()); err != nil {
 			fmt.Printf("hwlog init failed, error is %v\n", err)
 		}
+		patch := gomonkey.ApplyFuncReturn(device.GetDeviceManager, &devmanager.DeviceManager{})
+		defer patch.Reset()
 		patch1 := gomonkey.ApplyMethodReturn(&devmanager.DeviceManager{}, "GetChipBaseInfos",
 			[]*common.ChipBaseInfo{{CardID: 0, DeviceID: 0, LogicID: 0}}, nil)
 		defer patch1.Reset()
@@ -78,10 +81,10 @@ func TestHandleNodeStatusChange(t *testing.T) {
 		InitReleaser()
 		r := releaser
 		// Mock devManager
-		mockDevManager := gomonkey.ApplyMethodReturn(r.devManager, "DcGetSuperPodStatus", 0, nil)
+		mockDevManager := gomonkey.ApplyMethodReturn(r.devManager, "GetSuperPodStatus", 0, nil)
 		defer mockDevManager.Reset()
 
-		mockSetStatus := gomonkey.ApplyMethodReturn(r.devManager, "DcSetSuperPodStatus", nil)
+		mockSetStatus := gomonkey.ApplyMethodReturn(r.devManager, "SetSuperPodStatus", nil)
 		defer mockSetStatus.Reset()
 
 		sdids := sets.NewString("123")
@@ -92,7 +95,7 @@ func TestHandleNodeStatusChange(t *testing.T) {
 
 		convey.Convey("02-should skip when status already match", func() {
 			mockDevManager.Reset()
-			gomonkey.ApplyMethodReturn(r.devManager, "DcGetSuperPodStatus", 1, nil)
+			gomonkey.ApplyMethodReturn(r.devManager, "GetSuperPodStatus", 1, nil)
 			r.handleNodeStatusChange(sdids, 1)
 		})
 
@@ -107,6 +110,8 @@ func TestHandleFaultJobEvent(t *testing.T) {
 		if err := hwlog.InitRunLogger(&hwlog.LogConfig{}, context.TODO()); err != nil {
 			fmt.Printf("hwlog init failed, error is %v\n", err)
 		}
+		patch := gomonkey.ApplyFuncReturn(device.GetDeviceManager, &devmanager.DeviceManager{})
+		defer patch.Reset()
 		patch1 := gomonkey.ApplyMethodReturn(&devmanager.DeviceManager{}, "GetChipBaseInfos",
 			[]*common.ChipBaseInfo{{CardID: 0, DeviceID: 0, LogicID: 0}}, nil)
 		defer patch1.Reset()

@@ -75,43 +75,51 @@ func (df *DpuFilter) SaveDpuConfToNode(dmgr devmanager.DeviceInterface) error {
 }
 
 func (df *DpuFilter) getDpuWithNpuPcieSwitch(dcMgr devmanager.DeviceInterface) error {
-	cardNum, cardIDList, err := dcMgr.GetCardList()
-	if err != nil || cardNum == 0 {
-		return fmt.Errorf("get card list error: %v", err)
+	// Get all LogicID list
+	devNum, logicIDList, err := dcMgr.GetDeviceList()
+	if err != nil || devNum == 0 {
+		return fmt.Errorf("get device list error: %v", err)
 	}
+
 	pcieSwIds := make(map[string]struct{})
-	for _, cardID := range cardIDList {
-		pcieBusInfo, err := dcMgr.GetPCIeBusInfo(cardID)
-		hwlog.RunLog.Infof("%s pcie bus info:%v", api.DpuLogPrefix, pcieBusInfo)
+
+	for _, logicID := range logicIDList {
+		// Use LogicID to get PCIe bus information
+		pcieBusInfo, err := dcMgr.GetPCIeBusInfo(logicID)
+		hwlog.RunLog.Infof("%s logicID %v pcie bus info:%v", api.DpuLogPrefix, logicID, pcieBusInfo)
 		if err != nil {
-			return err
+			return fmt.Errorf("get pcie bus info of logicID %v failed: %v", logicID, err)
 		}
+
+		// Find corresponding DPU based on PCIe bus information
 		pcieSwId, dpuInfo, err := df.getDpuByPcieBusInfo(pcieBusInfo)
 		if err != nil {
-			hwlog.RunLog.Errorf("%s npu %v get dpu by busId err :%v", api.DpuLogPrefix, cardID, err)
+			hwlog.RunLog.Errorf("%s logicID %v get dpu by busId err :%v", api.DpuLogPrefix, logicID, err)
 			continue
 		}
+
+		// Deduplicate based on PCIe Switch ID, decide whether to mount the first or second DPU
 		if _, ok := pcieSwIds[pcieSwId]; !ok {
 			pcieSwIds[pcieSwId] = struct{}{}
-			df.addDpuByNpuId(cardID, dpuIndexFir, dpuInfo)
+			df.addDpuByNpuId(logicID, dpuIndexFir, dpuInfo)
 			continue
 		}
-		df.addDpuByNpuId(cardID, dpuIndexSec, dpuInfo)
+		df.addDpuByNpuId(logicID, dpuIndexSec, dpuInfo)
 	}
 	return nil
 }
 
-func (df *DpuFilter) addDpuByNpuId(cardID int32, dpuIndex int, dpuInfo []BaseDpuInfo) {
+func (df *DpuFilter) addDpuByNpuId(logicID int32, dpuIndex int, dpuInfo []BaseDpuInfo) {
 	if len(dpuInfo) == onlyOneDpu {
 		df.NpuWithDpuInfos = append(df.NpuWithDpuInfos, NpuWithDpuInfo{
-			NpuId:   cardID,
+			NpuId:   logicID,
 			DpuInfo: dpuInfo,
 		})
 		return
 	}
 	if dpuIndex >= 0 && dpuIndex < len(dpuInfo) {
 		df.NpuWithDpuInfos = append(df.NpuWithDpuInfos, NpuWithDpuInfo{
-			NpuId:   cardID,
+			NpuId:   logicID,
 			DpuInfo: []BaseDpuInfo{dpuInfo[dpuIndex]},
 		})
 	} else {

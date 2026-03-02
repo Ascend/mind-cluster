@@ -382,7 +382,7 @@ func (hnm *HwAscend910Manager) setUnhealthyForA3(devStatusList []*common.NpuDevi
 }
 
 func (hnm *HwAscend910Manager) GetAssociatedLogicIDs(logicID, cardID, deviceID int32) ([]int32, error) {
-	associatedCardID, err := hnm.GetDmgr().GetBrotherCardID(cardID, deviceID)
+	associatedCardID, err := hnm.GetDmgr().GetBrotherCardID(logicID)
 	if err != nil {
 		hwlog.RunLog.Debugf("get brother card failed, cardID %v deviceID %v, err: %v",
 			cardID, deviceID, err)
@@ -527,16 +527,12 @@ func (hnm *HwAscend910Manager) refreshDevFaultInfoForResetProcess(devInfo *commo
 func (hnm *HwAscend910Manager) execHotReset(classifyDevs map[string][]*common.NpuDevice,
 	devInfo *common.DevFaultInfo) error {
 	logicID := devInfo.LogicId
-	cardId, deviceId, err := hnm.GetDmgr().GetCardIDDeviceID(logicID)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get reset device card id and device id, err %v", err)
-		return err
-	}
+
 	shouldCheckNet := hnm.isShouldCheckNet(logicID)
-	if err := hnm.tryResetDeviceOffline(classifyDevs, cardId, deviceId, logicID); err != nil {
+	if err := hnm.tryResetDeviceOffline(classifyDevs, logicID); err != nil {
 		offlineInBandFailLogicId.Store(logicID, struct{}{})
 		hwlog.RunLog.Errorf("failed to reset device, err %v", err)
-		FreeBusyDev(cardId, deviceId)
+		FreeBusyDev(logicID)
 		return err
 	}
 	if err := hnm.isRingResetComplete(logicID, shouldCheckNet); err != nil {
@@ -544,8 +540,8 @@ func (hnm *HwAscend910Manager) execHotReset(classifyDevs map[string][]*common.Np
 		return err
 	}
 	resetTimeMap.Delete(logicID)
-	FreeBusyDev(cardId, deviceId)
-	hwlog.RunLog.Infof("hot reset complete, cardId: %d, logicId: %d", cardId, logicID)
+	FreeBusyDev(logicID)
+	hwlog.RunLog.Infof("hot reset complete, logicId: %d", logicID)
 	return nil
 }
 
@@ -1837,26 +1833,20 @@ func (hnm *HwAscend910Manager) resetDeviceOnce(devFaultInfoList []*common.TaskDe
 }
 
 func (hnm *HwAscend910Manager) canResetDeviceByLogicID(logicID int32) bool {
-	cardID, deviceID, err := hnm.GetDmgr().GetCardIDDeviceID(logicID)
-	if err != nil {
-		hwlog.RunLog.Errorf("get cardID deviceID by logicID %v failed: %v", logicID, err)
-		return false
-	}
-
-	return hnm.canResetDevice(cardID, deviceID)
+	return hnm.canResetDevice(logicID)
 }
 
-func (hnm *HwAscend910Manager) canResetDevice(cardID, deviceID int32) bool {
-	if IsDevBusy(cardID, deviceID) {
-		hwlog.RunLog.Infof("device is busy, can not reset, cardID %v, deviceID %v", cardID, deviceID)
+func (hnm *HwAscend910Manager) canResetDevice(logicID int32) bool {
+	if IsDevBusy(logicID) {
+		hwlog.RunLog.Infof("device is busy, can not reset, logicID %v", logicID)
 		return false
 	}
-	if GetResetCnt(cardID, deviceID) > common.MaxResetTimes {
-		hwlog.RunLog.Infof("device reset count %v over limit %v, can not reset, cardID %v, deviceID %v",
-			GetResetCnt(cardID, deviceID), common.MaxResetTimes, cardID, deviceID)
+	if GetResetCnt(logicID) > common.MaxResetTimes {
+		hwlog.RunLog.Infof("device reset count %v over limit %v, can not reset, logicID %v",
+			GetResetCnt(logicID), common.MaxResetTimes, logicID)
 		return false
 	}
-	hwlog.RunLog.Debugf("device can be reset, cardID %v, deviceID %v", cardID, deviceID)
+	hwlog.RunLog.Debugf("device can be reset, logicID %v", logicID)
 	return true
 }
 
@@ -1865,32 +1855,24 @@ func (hnm *HwAscend910Manager) execResetDevice(devMap map[int32]int32) error {
 	resetFailDevs := make([]ResetDevice, 0)
 	resetSuccDevs := make([]ResetDevice, 0)
 	for resetLogicId, faultLogicId := range devMap {
-		cardId, deviceId, err := hnm.GetDmgr().GetCardIDDeviceID(resetLogicId)
-		if err != nil {
-			hwlog.RunLog.Errorf("failed to get reset device card id and device id, err %v", err)
-			return err
-		}
-		if !hnm.canResetDevice(cardId, deviceId) {
+		if !hnm.canResetDevice(resetLogicId) {
 			continue
 		}
 		shouldCheckNet := hnm.isShouldCheckNet(faultLogicId)
-		if err := hnm.tryResetDevice(cardId, deviceId); err != nil {
+		if err := hnm.tryResetDevice(resetLogicId); err != nil {
 			errList = append(errList, err)
-			resetFailDevs = append(resetFailDevs, ResetDevice{CardId: cardId, DeviceId: deviceId,
-				LogicID: resetLogicId, shouldCheckNet: shouldCheckNet})
+			resetFailDevs = append(resetFailDevs, ResetDevice{LogicID: resetLogicId, shouldCheckNet: shouldCheckNet})
 			continue
 		}
 		// wait for the device to reset completely
 		if err := hnm.isRingResetComplete(resetLogicId, shouldCheckNet); err != nil {
 			errList = append(errList, err)
-			resetFailDevs = append(resetFailDevs, ResetDevice{CardId: cardId, DeviceId: deviceId,
-				LogicID: resetLogicId})
+			resetFailDevs = append(resetFailDevs, ResetDevice{LogicID: resetLogicId})
 			continue
 		}
-		FreeBusyDev(cardId, deviceId)
-		resetSuccDevs = append(resetSuccDevs, ResetDevice{CardId: cardId, DeviceId: deviceId,
-			LogicID: resetLogicId})
-		hwlog.RunLog.Infof("hot reset complete, cardId: %d, logicId: %d", cardId, resetLogicId)
+		FreeBusyDev(resetLogicId)
+		resetSuccDevs = append(resetSuccDevs, ResetDevice{LogicID: resetLogicId})
+		hwlog.RunLog.Infof("hot reset complete, logicId: %d", resetLogicId)
 	}
 	if len(errList) == 0 {
 		hnm.updateResetInfo(resetFailDevs, resetSuccDevs)
@@ -1910,7 +1892,7 @@ func (hnm *HwAscend910Manager) execOutBandReset(inBandFailDevs, sucDevs []ResetD
 	newSucDevs = append(newSucDevs, sucDevs...)
 	var resetError error
 	for _, dev := range inBandFailDevs {
-		if err := hnm.resetDeviceOutBand(dev.CardId, dev.DeviceId); err != nil {
+		if err := hnm.resetDeviceOutBand(dev.LogicID); err != nil {
 			resetError = err
 			failDevs = append(failDevs, dev)
 			continue
@@ -1949,13 +1931,12 @@ func (hnm *HwAscend910Manager) execRescan(failDevs []ResetDevice) {
 	scanFailDevs := make([]ResetDevice, 0, len(failDevs))
 	sucDevs := make([]ResetDevice, 0, len(failDevs))
 	for _, dev := range failDevs {
-		if err := hnm.GetDmgr().RescanSoc(dev.CardId, dev.DeviceId); err != nil {
-			hwlog.RunLog.Errorf("fail to rescan cardID %v deviceID %v, error: %v",
-				dev.CardId, dev.DeviceId, err)
+		if err := hnm.GetDmgr().RescanSoc(dev.LogicID); err != nil {
+			hwlog.RunLog.Errorf("fail to rescan logicID %v, error: %v", dev.LogicID, err)
 			scanFailDevs = append(scanFailDevs, dev)
 			continue
 		}
-		FreeBusyDev(dev.CardId, dev.DeviceId)
+		FreeBusyDev(dev.LogicID)
 		sucDevs = append(sucDevs, dev)
 	}
 	WriteResetInfo(ResetInfo{ThirdPartyResetDevs: failDevs}, WMDelete, false)
@@ -1979,14 +1960,13 @@ func (hnm *HwAscend910Manager) fillResetDevs(devs []ResetDevice) ([]ResetDevice,
 		if exist {
 			devCopy[i].PhyID = phyId
 		} else {
-			return nil, fmt.Errorf("logicId %v can found, cardID: %v, deviceID: %v",
-				devCopy[i].LogicID, devCopy[i].CardId, devCopy[i].DeviceId)
+			return nil, fmt.Errorf("logicId %v can found", devCopy[i].LogicID)
 		}
 		devCopy[i].AssociatedCardId = errorId
 		if common.ParamOption.RealCardType != api.Ascend910A3 {
 			continue
 		}
-		associatedCardId, err := hnm.GetDmgr().GetBrotherCardID(devCopy[i].CardId, devCopy[i].DeviceId)
+		associatedCardId, err := hnm.GetDmgr().GetBrotherCardID(devCopy[i].LogicID)
 		if err == nil {
 			devCopy[i].AssociatedCardId = associatedCardId
 		}
@@ -2014,25 +1994,25 @@ func (hnm *HwAscend910Manager) updateResetInfo(failDevs, sucDevs []ResetDevice) 
 	WriteResetInfo(resetInfo, WMOverwrite, true)
 }
 
-func (hnm *HwAscend910Manager) resetDeviceOutBand(cardId, deviceId int32) error {
-	if err := hnm.dmgr.GetOutBandChannelState(cardId, deviceId); err != nil {
+func (hnm *HwAscend910Manager) resetDeviceOutBand(logicID int32) error {
+	if err := hnm.dmgr.GetOutBandChannelState(logicID); err != nil {
 		hwlog.RunLog.Warnf("out band channel state error: %v", err)
 		return err
 	}
-	if err := hnm.dmgr.PreResetSoc(cardId, deviceId); err != nil {
+	if err := hnm.dmgr.PreResetSoc(logicID); err != nil {
 		hwlog.RunLog.Errorf("pre reset failed: %v", err)
 		return err
 	}
-	if err := hnm.dmgr.SetDeviceResetOutBand(cardId, deviceId); err != nil {
+	if err := hnm.dmgr.SetDeviceResetOutBand(logicID); err != nil {
 		hwlog.RunLog.Errorf("reset out band failed: %v", err)
 		return err
 	}
 	time.Sleep(beforeRescanDelay * time.Second)
-	if err := hnm.dmgr.RescanSoc(cardId, deviceId); err != nil {
+	if err := hnm.dmgr.RescanSoc(logicID); err != nil {
 		hwlog.RunLog.Errorf("rescan device failed: %v", err)
 		return err
 	}
-	hwlog.RunLog.Infof("out band reset success, card id: %v, device id: %v", cardId, deviceId)
+	hwlog.RunLog.Infof("out band reset success, logic id: %v", logicID)
 	return nil
 }
 
@@ -2124,18 +2104,18 @@ func (hnm *HwAscend910Manager) isRingResetComplete(oriLogicID int32, shouldCheck
 	return nil
 }
 
-func (hnm *HwAscend910Manager) tryResetDevice(cardId, deviceId int32) error {
-	AddResetCnt(cardId, deviceId)
-	AddBusyDev(cardId, deviceId)
+func (hnm *HwAscend910Manager) tryResetDevice(logicID int32) error {
+	AddResetCnt(logicID)
+	AddBusyDev(logicID)
 	var realError error
 	for i := 0; i < common.ResetRetryTimes; i++ {
-		hwlog.RunLog.Infof("start to execute cardId %d reset", cardId)
-		err := hnm.GetDmgr().SetDeviceReset(cardId, deviceId)
+		hwlog.RunLog.Infof("start to execute logicID %d reset", logicID)
+		err := hnm.GetDmgr().SetDeviceReset(logicID)
 		if err == nil {
-			hwlog.RunLog.Infof("execute reset cardId %d success", cardId)
+			hwlog.RunLog.Infof("execute reset logicID %d success", logicID)
 			return nil
 		}
-		hwlog.RunLog.Errorf("cardId(%d) failed to reset device, err: %v", cardId, err)
+		hwlog.RunLog.Errorf("logicID(%d) failed to reset device, err: %v", logicID, err)
 		realError = err
 		if i != common.ResetRetryTimes-1 {
 			time.Sleep(time.Duration(i+1) * common.ResetInterVal * time.Second)
@@ -2144,23 +2124,22 @@ func (hnm *HwAscend910Manager) tryResetDevice(cardId, deviceId int32) error {
 	return realError
 }
 
-func (hnm *HwAscend910Manager) tryResetDeviceOffline(classifyDevs map[string][]*common.NpuDevice,
-	cardId, deviceId, logicId int32) error {
-	AddResetCnt(cardId, deviceId)
-	AddBusyDev(cardId, deviceId)
+func (hnm *HwAscend910Manager) tryResetDeviceOffline(classifyDevs map[string][]*common.NpuDevice, logicId int32) error {
+	AddResetCnt(logicId)
+	AddBusyDev(logicId)
 	var realError error = nil
 	for i := 0; i < common.ResetRetryTimes; i++ {
 		if !hnm.checkFaultIsExist(classifyDevs, logicId) {
 			hwlog.RunLog.Infof("device id <%v> fault is not exist, stop reset device", logicId)
 			return nil
 		}
-		hwlog.RunLog.Infof("start to execute cardId %d reset", cardId)
-		err := hnm.GetDmgr().SetDeviceReset(cardId, deviceId)
+		hwlog.RunLog.Infof("start to execute logicId %d reset", logicId)
+		err := hnm.GetDmgr().SetDeviceReset(logicId)
 		if err == nil {
-			hwlog.RunLog.Infof("execute reset cardId %d success", cardId)
+			hwlog.RunLog.Infof("execute reset logicId %d success", logicId)
 			return nil
 		}
-		hwlog.RunLog.Errorf("cardId(%d) failed to reset device, err: %v", cardId, err)
+		hwlog.RunLog.Errorf("logicId(%d) failed to reset device, err: %v", logicId, err)
 		realError = err
 		if i != common.ResetRetryTimes-1 {
 			time.Sleep(time.Duration(i+1) * common.ResetInterVal * time.Second)

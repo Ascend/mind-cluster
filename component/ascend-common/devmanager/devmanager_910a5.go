@@ -16,20 +16,54 @@
 package devmanager
 
 import (
+	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 )
 
 // GetUrmaDeviceCount for A5
-func (d *DeviceManager) GetUrmaDeviceCount(cardID int32, deviceID int32) (int32, error) {
+func (d *DeviceManager) GetUrmaDeviceCount(logicID int32) (int32, error) {
+	cardID, deviceID, err := d.DcMgr.DcGetCardIDDeviceID(logicID)
+	if err != nil {
+		hwlog.RunLog.ErrorfWithLimit(common.DomainForLogicIdErr, logicID,
+			"failed to get cardId and deviceId by logicID(%d), error: %v", logicID, err)
+		return common.RetError, err
+	}
 	return d.DcMgr.DcGetUrmaDeviceCount(cardID, deviceID)
 }
 
 // GetUrmaDevEidList for A5
-func (d *DeviceManager) GetUrmaDevEidList(cardID int32, deviceID int32, index int32) (*common.UrmaDeviceInfo, error) {
+func (d *DeviceManager) GetUrmaDevEidList(logicID int32, index int32) (*common.UrmaDeviceInfo, error) {
+	cardID, deviceID, err := d.DcMgr.DcGetCardIDDeviceID(logicID)
+	if err != nil {
+		hwlog.RunLog.ErrorfWithLimit(common.DomainForLogicIdErr, logicID,
+			"failed to get cardId and deviceId by logicID(%d), error: %v", logicID, err)
+		return nil, err
+	}
 	return d.DcMgr.DcGetUrmaDevEidList(cardID, deviceID, index)
 }
 
 // GetUrmaDevEidListAll for A5
-func (d *DeviceManager) GetUrmaDevEidListAll(cardID int32, deviceID int32) ([]common.UrmaDeviceInfo, error) {
+func (d *DeviceManager) GetUrmaDevEidListAll(logicID int32) ([]common.UrmaDeviceInfo, error) {
+	cardID, deviceID, err := d.DcMgr.DcGetCardIDDeviceID(logicID)
+	if err != nil {
+		hwlog.RunLog.ErrorfWithLimit(common.DomainForLogicIdErr, logicID,
+			"failed to get cardId and deviceId by logicID(%d), error: %v", logicID, err)
+		return nil, err
+	}
 	return d.DcMgr.DcGetUrmaDevEidListAll(cardID, deviceID)
+}
+
+// GetUrmaDeviceCount get urma device count by dcmiv2
+func (d *DeviceManagerV2) GetUrmaDeviceCount(logicID int32) (int32, error) {
+	return d.DcMgr.DcGetUrmaDeviceCount(logicID)
+}
+
+// GetUrmaDevEidList get urma device eid list with index by dcmiv2
+func (d *DeviceManagerV2) GetUrmaDevEidList(logicID int32, index int32) (*common.UrmaDeviceInfo, error) {
+	return d.DcMgr.DcGetUrmaDevEidList(logicID, index)
+}
+
+// GetUrmaDevEidListAll get urma device eid list all by dcmiv2
+func (d *DeviceManagerV2) GetUrmaDevEidListAll(logicID int32) ([]common.UrmaDeviceInfo, error) {
+	return d.DcMgr.DcGetUrmaDevEidListAll(logicID)
 }

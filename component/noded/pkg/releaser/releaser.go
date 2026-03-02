@@ -34,7 +34,7 @@ import (
 
 // Releaser the device fault releaser
 type Releaser struct {
-	devManager *devmanager.DeviceManager
+	devManager devmanager.DeviceInterface
 	chips      []*devcom.ChipBaseInfo
 }
 
@@ -96,21 +96,21 @@ func (r *Releaser) handleNodeStatusChange(sdids sets.String, nodeStatus int) {
 			continue
 		}
 		for _, dev := range r.chips {
-			status, err := r.devManager.DcGetSuperPodStatus(dev.CardID, dev.DeviceID, uint32(tmpSdId))
+			status, err := r.devManager.GetSuperPodStatus(dev.LogicID, uint32(tmpSdId))
 			if err != nil {
 				hwlog.RunLog.Errorf("get super pod status failed, err: %v", err)
 				continue
 			}
 
 			if status == nodeStatus {
-				hwlog.RunLog.Warnf("super pod status is normal, skip status <%v> resource cardId:%v,"+
-					"devicei:%v,sdid:%v", nodeStatus, dev.CardID, dev.DeviceID, tmpSdId)
+				hwlog.RunLog.Warnf("super pod status is normal, skip status <%v> resource cardID:%v,"+
+					"deviceID:%v,logicID:%v,sdid:%v", nodeStatus, dev.CardID, dev.DeviceID, dev.LogicID, tmpSdId)
 				continue
 			}
-			hwlog.RunLog.Infof("start exec fault job resource status <%v> cardId:%v,devicei:%v,"+
-				"sdid:%v", nodeStatus, dev.CardID, dev.DeviceID, tmpSdId)
+			hwlog.RunLog.Infof("start exec fault job resource status <%v> cardID:%v,deviceID:%v,"+
+				"logicID:%v,sdid:%v", nodeStatus, dev.CardID, dev.DeviceID, dev.LogicID, tmpSdId)
 
-			if err := r.devManager.DcSetSuperPodStatus(dev.CardID, dev.DeviceID, uint32(tmpSdId),
+			if err := r.devManager.SetSuperPodStatus(dev.LogicID, uint32(tmpSdId),
 				uint32(nodeStatus)); err != nil {
 				hwlog.RunLog.Errorf("set super pod status failed, err: %v", err)
 				continue
