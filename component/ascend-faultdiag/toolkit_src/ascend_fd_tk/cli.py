@@ -18,8 +18,9 @@
 import multiprocessing
 import shlex
 import sys
-from typing import List
+from typing import List, Optional
 
+from ascend_fd_tk.core.cli_module.base import CliModel
 from ascend_fd_tk.core.cli_module.cli_model import build_cli_ctx
 from ascend_fd_tk.core.context.diag_ctx import DiagCtx
 from ascend_fd_tk.utils import logger
@@ -86,19 +87,39 @@ class DiagToolCLI:
                 continue
 
 
+class ExecutorCLI:
+    def __init__(self, cli_model: CliModel, param: Optional[str]):
+        self.cli_model = cli_model
+        self.param = param
+
+    def execute_task(self) -> str:
+        return self.cli_model.run(self.param)
+
+
 def run_parser(cli: DiagToolCLI, args):
+    executor_list = []
     len_args = len(args)
+    not_support_arges = {i: arg for i, arg in enumerate(args)}
     for k, cli_model in cli.cli_ctx.cli_model_map.items():
         for i, arg in enumerate(args):
-            if i >= len_args:
-                break
             if arg != k:
                 continue
+            not_support_arges.pop(i)
             param = None
-            if i + 1 < len_args and args[i + 1] not in cli.cli_ctx.cli_model_map:
+            next_arg = args[i + 1] if i + 1 < len_args else ""
+            if not next_arg or next_arg in cli.cli_ctx.cli_model_map:
+                executor_list.append(ExecutorCLI(cli_model=cli_model, param=param))
+                break
+            if cli_model.is_support_param() or next_arg in ("?", "？"):
                 param = args[i + 1]
-            _CONSOLE_LOGGER.info(cli_model.run(param))
+                not_support_arges.pop(i + 1)
+            executor_list.append(ExecutorCLI(cli_model=cli_model, param=param))
             break
+    if not_support_arges:
+        _CONSOLE_LOGGER.info(f"Unsupported arguments: {', '.join(list(not_support_arges.values()))}")
+    else:
+        for executor in executor_list:
+            _CONSOLE_LOGGER.info(executor.execute_task())
 
 
 def main():

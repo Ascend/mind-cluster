@@ -78,7 +78,6 @@ class InitFetcher(DiagService):
 
     async def add_ssh_fetchers(self):
         if not os.path.exists(CommonPath.ENCRYPTED_CONN_CONFIG_PATH):
-            DIAG_LOGGER.warning("加密配置文件不存在，从默认路径获取配置信息")
             self.diag_ctx.encrypt_conn_config()
         res = self.diag_ctx.load_conn_config()
         if res:
