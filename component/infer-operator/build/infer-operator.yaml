@@ -127,6 +127,8 @@ spec:
     listKind: InferServiceSetList
     plural: inferservicesets
     singular: inferserviceset
+    shortNames:
+    - iss
   scope: Namespaced
   versions:
   - name: v1
@@ -651,6 +653,8 @@ spec:
     listKind: InferServiceList
     plural: inferservices
     singular: inferservice
+    shortNames:
+    - is
   scope: Namespaced
   versions:
   - name: v1
@@ -1168,6 +1172,8 @@ spec:
     listKind: InstanceSetList
     plural: instancesets
     singular: instanceset
+    shortNames:
+    - ist
   scope: Namespaced
   versions:
   - name: v1
@@ -1666,3 +1672,5 @@ spec:
         type: object
     served: true
     storage: true
+    subresources:
+      status: {}
