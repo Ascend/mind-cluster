@@ -61,9 +61,9 @@ const (
 	// A5300I4PMainBoardId board id of 300I A5 4P MainBoard
 	A5300I4PMainBoardId = 0x6c
 	// A5300ICardName 300I A5 card name
-	A5300ICardName = "300I-A5"
+	A5300ICardName = "300I-Atlas350"
 	// A54P300ICardName 300I A5 4P card name
-	A54P300ICardName = "300I-A5-4p"
+	A54P300ICardName = "300I-Atlas350-4p"
 )
 
 const (

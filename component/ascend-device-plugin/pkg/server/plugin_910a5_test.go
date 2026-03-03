@@ -136,7 +136,7 @@ func TestSetCardHcclTopoFilePathEnv(t *testing.T) {
 	}()
 	allDevs := []common.NpuDevice{{LogicID: 0}}
 	allNPUInfo := common.NpuAllInfo{AllDevs: allDevs}
-	convey.Convey("test setHcclTopoFilePathEnv case 6 standard card 300I-A5", t, func() {
+	convey.Convey("test setHcclTopoFilePathEnv case 6 standard card 300I-Atlas350", t, func() {
 		cardType := common.ParamOption.CardType
 		common.ParamOption.CardType = common.A5300ICardName
 		defer func() {
@@ -148,7 +148,7 @@ func TestSetCardHcclTopoFilePathEnv(t *testing.T) {
 		convey.So(resp.Envs[common.HcclTopoFilePathKey], convey.ShouldNotBeEmpty)
 	})
 
-	convey.Convey("test setHcclTopoFilePathEnv case 7 standard card 300I-A5-4p", t, func() {
+	convey.Convey("test setHcclTopoFilePathEnv case 7 standard card 300I-Atlas350-4p", t, func() {
 		cardType := common.ParamOption.CardType
 		common.ParamOption.CardType = common.A54P300ICardName
 		defer func() {
