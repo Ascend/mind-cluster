@@ -14,17 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-import os
 import ctypes
+import os
 import threading
 
-from taskd.python.cython_api import cython_api
-from taskd.python.utils.log import run_log
 from taskd.api.taskd_proxy_api import init_taskd_proxy
+from taskd.python.cython_api import cython_api
 from taskd.python.framework.common.type import CONFIG_SERVERRANK_KEY, Position, NetworkConfig, LOCAL_HOST, \
-     DEFAULT_AGENT_ROLE, DEFAULT_SERVERRANK, DEFAULT_PROCESSRANK, CONFIG_UPSTREAMIP_KEY, \
-     CONFIG_UPSTREAMPORT_KEY, CONFIG_FRAMEWORK_KEY, DEFAULT_AGENT_UPSTREAMPORT
-
+    DEFAULT_AGENT_ROLE, DEFAULT_SERVERRANK, DEFAULT_PROCESSRANK, CONFIG_UPSTREAMIP_KEY, \
+    CONFIG_UPSTREAMPORT_KEY, CONFIG_FRAMEWORK_KEY, DEFAULT_AGENT_UPSTREAMPORT
+from taskd.python.utils.ip import pre_handle_ip
+from taskd.python.utils.log import run_log
 
 taskd_agent = None
 framework = None
@@ -53,17 +53,23 @@ def init_taskd_agent(config: dict, cls=None) -> bool:
     config_values = {}
     for key, default in default_values.items():
         config_values[key] = config.get(key, default)
+
+    upstream_ip, err = pre_handle_ip(config_values.get(CONFIG_UPSTREAMIP_KEY))
+    if err is not None:
+        run_log.error(f"init_taskd_agent: pre_handle_ip failed: {err}")
+        return False
+
     network_config = NetworkConfig(
-            pos=Position(
-                role=DEFAULT_AGENT_ROLE,
-                server_rank=config_values.get(CONFIG_SERVERRANK_KEY),
-                process_rank=DEFAULT_PROCESSRANK
-            ),
-            upstream_addr=config_values.get(CONFIG_UPSTREAMIP_KEY) + ":" + config_values.get(CONFIG_UPSTREAMPORT_KEY),
-            listen_addr='',
-            enable_tls=False,
-            tls_conf=None
-        )
+        pos=Position(
+            role=DEFAULT_AGENT_ROLE,
+            server_rank=config_values.get(CONFIG_SERVERRANK_KEY),
+            process_rank=DEFAULT_PROCESSRANK
+        ),
+        upstream_addr=upstream_ip + ":" + config_values.get(CONFIG_UPSTREAMPORT_KEY),
+        listen_addr='',
+        enable_tls=False,
+        tls_conf=None
+    )
     log_name = "agent-" + config_values.get(CONFIG_SERVERRANK_KEY) + ".log"
     create_taskd_log_func = cython_api.lib.CreateTaskdLog
     if create_taskd_log_func is None:
@@ -80,8 +86,9 @@ def init_taskd_agent(config: dict, cls=None) -> bool:
         taskd_agent = PtAgent(cls, network_config, logger)
     if framework == "MindSpore":
         from taskd.python.framework.agent.ms_agent.ms_agent import MsAgent
-        proxy = threading.Thread(target=init_taskd_proxy, args=({CONFIG_UPSTREAMIP_KEY: os.getenv("MS_SCHED_HOST", LOCAL_HOST),
-                                                                 CONFIG_SERVERRANK_KEY: os.getenv("MS_NODE_RANK", DEFAULT_SERVERRANK)},))
+        proxy = threading.Thread(target=init_taskd_proxy,
+                                 args=({CONFIG_UPSTREAMIP_KEY: os.getenv("MS_SCHED_HOST", LOCAL_HOST),
+                                        CONFIG_SERVERRANK_KEY: os.getenv("MS_NODE_RANK", DEFAULT_SERVERRANK)},))
         proxy.daemon = True
         proxy.start()
         taskd_agent = MsAgent(network_config, logger)

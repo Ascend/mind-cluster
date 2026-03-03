@@ -153,3 +153,5 @@ SWITCH_OFF = "off"
 MONITOR_INTERVAL = 1
 # RELEASE_INTERVAL wait for device release resources
 RELEASE_INTERVAL = 15
+
+IPVERSION_6 = 6

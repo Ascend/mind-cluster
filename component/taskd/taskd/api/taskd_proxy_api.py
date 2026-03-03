@@ -18,12 +18,15 @@ import json
 import os
 import time
 from dataclasses import asdict
+
 from taskd.python.cython_api import cython_api
-from taskd.python.utils.log import run_log
-from taskd.python.framework.common.type import CONFIG_SERVERRANK_KEY, Position, NetworkConfig, LOCAL_HOST, DEFAULT_PROXY_UPSTREAMPORT, \
-     DEFAULT_PRXOY_LISTENPORT, DEFAULT_PROXY_ROLE, DEFAULT_SERVERRANK, DEFAULT_PROCESSRANK, CONFIG_UPSTREAMIP_KEY, \
-     CONFIG_LISTENIP_KEY, CONFIG_UPSTREAMPORT_KEY, CONFIG_LISTENPORT_KEY
+from taskd.python.framework.common.type import CONFIG_SERVERRANK_KEY, Position, NetworkConfig, LOCAL_HOST, \
+    DEFAULT_PROXY_UPSTREAMPORT, \
+    DEFAULT_PRXOY_LISTENPORT, DEFAULT_PROXY_ROLE, DEFAULT_SERVERRANK, CONFIG_UPSTREAMIP_KEY, \
+    CONFIG_LISTENIP_KEY, CONFIG_UPSTREAMPORT_KEY, CONFIG_LISTENPORT_KEY
 from taskd.python.toolkit.constants import constants
+from taskd.python.utils.ip import pre_handle_ip
+from taskd.python.utils.log import run_log
 
 
 def init_taskd_proxy(config: dict) -> bool:
@@ -43,14 +46,24 @@ def init_taskd_proxy(config: dict) -> bool:
     for key, default in default_values.items():
         config_values[key] = config.get(key, default)
 
+    upstream_ip, err = pre_handle_ip(config_values.get(CONFIG_UPSTREAMIP_KEY))
+    if err is not None:
+        run_log.error(f"init_taskd_proxy: pre handle upstream_ip failed: {err}")
+        return False
+
+    listen_ip, err = pre_handle_ip(config_values.get(CONFIG_LISTENIP_KEY))
+    if err is not None:
+        run_log.error(f"init_taskd_proxy: pre handle listen_ip failed: {err}")
+        return False
+
     configs = NetworkConfig(
         pos=Position(
             role=DEFAULT_PROXY_ROLE,
             server_rank=config_values.get(CONFIG_SERVERRANK_KEY),
             process_rank=str(int(time.time()))
         ),
-        upstream_addr=config_values.get(CONFIG_UPSTREAMIP_KEY) + ":" + config_values.get(CONFIG_UPSTREAMPORT_KEY),
-        listen_addr=config_values.get(CONFIG_LISTENIP_KEY) + ":" + config_values.get(CONFIG_LISTENPORT_KEY),
+        upstream_addr=upstream_ip + ":" + config_values.get(CONFIG_UPSTREAMPORT_KEY),
+        listen_addr=listen_ip + ":" + config_values.get(CONFIG_LISTENPORT_KEY),
         enable_tls=False,
         tls_conf=None
     )
