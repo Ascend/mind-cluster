@@ -109,7 +109,7 @@ func (r *InferServiceSetReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 func (r *InferServiceSetReconciler) getInferServiceSet(ctx context.Context, req ctrl.Request) (*apiv1.InferServiceSet, error) {
 	iss := &apiv1.InferServiceSet{}
 	if err := r.client.Get(ctx, req.NamespacedName, iss); err != nil {
-		hwlog.RunLog.Errorf("unable to get InferServiceSet %s: %v", req.NamespacedName, err)
+		hwlog.RunLog.Warnf("unable to get InferServiceSet %s: %v, may be deleted", req.NamespacedName, err)
 		if errors.IsNotFound(err) {
 			hwlog.RunLog.Infof("InferServiceSet %s not found, skip reconcile", req.NamespacedName)
 			return nil, nil
