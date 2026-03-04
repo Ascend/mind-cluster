@@ -145,7 +145,7 @@ func (r *InferServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 func (r *InferServiceReconciler) getInferService(ctx context.Context, req ctrl.Request) (*apiv1.InferService, error) {
 	is := &apiv1.InferService{}
 	if err := r.client.Get(ctx, req.NamespacedName, is); err != nil {
-		hwlog.RunLog.Errorf("unable to get InferService %s: %v", req.NamespacedName, err)
+		hwlog.RunLog.Warnf("unable to get InferService %s: %v, may be deleted", req.NamespacedName, err)
 		if errors.IsNotFound(err) {
 			hwlog.RunLog.Infof("InferService %s not found, skip reconcile", req.NamespacedName)
 			return nil, nil
