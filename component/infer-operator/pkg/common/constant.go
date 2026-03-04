@@ -123,6 +123,24 @@ const (
 )
 
 const (
+	// DeleteOperator informer operator
+	DeleteOperator = "delete"
+	// AddOperator informer operator
+	AddOperator = "add"
+	// UpdateOperator informer operator
+	UpdateOperator = "update"
+)
+
+const (
+	// NamespacePath is the path of the namespace file in the service account directory
+	NamespacePath = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
+	// DefaultNamespace is the default namespace when unable to get namespace from service account file
+	DefaultNamespace = "mindx-dl"
+	// InferOperatorCfgName is the name of infer-operator-configmap
+	InferOperatorCfgName = "infer-operator-config"
+)
+
+const (
 	// MaxInferServiceReplicas is the max replicas of the infer service
 	MaxInferServiceReplicas = 64
 	// MaxRoleTypeCount is the max role type count of the infer service

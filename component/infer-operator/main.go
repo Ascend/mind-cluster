@@ -42,7 +42,9 @@ import (
 	"ascend-common/common-utils/hwlog"
 	v1 "infer-operator/pkg/api/v1"
 	"infer-operator/pkg/common"
+	util "infer-operator/pkg/common/client-go"
 	"infer-operator/pkg/common/utils"
+	"infer-operator/pkg/configManager"
 	clusterctrlv1 "infer-operator/pkg/controller/v1"
 	"infer-operator/pkg/controller/workload"
 )
@@ -89,6 +91,9 @@ func createCacheOptions() (cache.Options, error) {
 			&corev1.Pod{}: {
 				Label: keyExistsSelector,
 			},
+			&corev1.ConfigMap{}: {
+				Label: keyExistsSelector,
+			},
 			&volcanov1beta1.PodGroup{}: {
 				Label: keyExistsSelector,
 			},
@@ -96,8 +101,8 @@ func createCacheOptions() (cache.Options, error) {
 	}, nil
 }
 
-func main() {
-
+// parseFlags parses command line flags
+func parseFlags() {
 	flag.IntVar(&hwLogConfig.LogLevel, "logLevel", 0,
 		"Log level, -1-debug, 0-info, 1-warning, 2-error, 3-critical(default 0)")
 	flag.IntVar(&hwLogConfig.MaxAge, "maxAge", hwlog.DefaultMinSaveAge,
@@ -108,16 +113,19 @@ func main() {
 		"/var/log/mindx-dl/infer-operator/infer-operator.log", "Log file path")
 	flag.IntVar(&hwLogConfig.MaxBackups, "maxBackups", hwlog.DefaultMaxBackups,
 		"Maximum number of backup log files")
-
 	flag.Parse()
+}
 
+func main() {
+	parseFlags()
 	ctx, cancel := context.WithCancel(context.Background())
 	if err := hwlog.InitRunLogger(hwLogConfig, ctx); err != nil {
 		fmt.Printf("unable to init run logger: %v\n", err)
 		os.Exit(1)
 	}
 	go signalCatch(cancel)
-
+	configMgr := configManager.NewConfigManager()
+	configMgr.Start()
 	cacheOption, err := createCacheOptions()
 	if err != nil {
 		hwlog.RunLog.Errorf("unable to create cache options: %v", err)
@@ -131,25 +139,24 @@ func main() {
 		hwlog.RunLog.Errorf("unable to start manager: %v", err)
 		os.Exit(1)
 	}
-
+	if err := util.InitInformers(ctx, mgr); err != nil {
+		hwlog.RunLog.Errorf("unable to init informers: %v", err)
+	}
 	inferServiceSetReconciler := clusterctrlv1.NewInferServiceSetReconciler(mgr)
 	if err := inferServiceSetReconciler.SetupWithManager(mgr); err != nil {
 		hwlog.RunLog.Errorf("unable to setup infer service set reconciler: %v", err)
 		os.Exit(1)
 	}
-
 	instanceSetReconciler := clusterctrlv1.NewInstanceSetReconciler(mgr, registerWorkLoadHandlersFunc())
 	if err := instanceSetReconciler.SetupWithManager(ctx, mgr); err != nil {
 		hwlog.RunLog.Errorf("unable to setup instance set reconciler: %v", err)
 		os.Exit(1)
 	}
-
 	inferServiceReconciler := clusterctrlv1.NewInferServiceReconciler(mgr)
 	if err := inferServiceReconciler.SetupWithManager(mgr); err != nil {
 		hwlog.RunLog.Errorf("unable to setup infer service reconciler: %v", err)
 		os.Exit(1)
 	}
-
 	hwlog.RunLog.Info("starting infer-controller manager")
 	if err := mgr.Start(ctx); err != nil {
 		hwlog.RunLog.Errorf("failed to start infer-controller manager: %v", err)

@@ -1,3 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: infer-operator-config
+  namespace: mindx-dl
+  labels:
+    infer.huawei.com/ascend-infer-operator: xxx
+data:
+  fault_handling: "true"
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -96,6 +106,9 @@ rules:
     verbs: [ "list", "watch", "create", "patch", "delete" ]
   - apiGroups: [ "" ]
     resources: [ "services" ]
+    verbs: [ "create", "list", "watch", "delete", "get", "patch", "update" ]
+  - apiGroups: [ "" ]
+    resources: [ "configmaps" ]
     verbs: [ "create", "list", "watch", "delete", "get", "patch", "update" ]
   - apiGroups: [ "apps" ]
     resources: [ "deployments", "statefulsets" ]
