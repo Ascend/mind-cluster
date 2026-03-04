@@ -75,7 +75,10 @@ func (tp *chip1softsharedev) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.
 	for _, cardIdx := range nodeTop {
 		used, exists := nodeUsedResourceMap[cardIdx]
 		if !exists {
-			return nil
+			if reqResource.aicoreQuota <= util.MaxAicoreQuota && reqResource.hbmQuota <= chipMemory {
+				return nil
+			}
+			continue
 		}
 		if used.aicoreQuota+reqResource.aicoreQuota <= util.MaxAicoreQuota &&
 			used.hbmQuota+reqResource.hbmQuota <= chipMemory &&
