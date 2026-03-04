@@ -28,7 +28,7 @@ arch=$(arch 2>&1)
 echo "Build Architecture is" "${arch}"
 
 OUTPUT_NAME="infer-operator"
-sed -i "s/infer-operator:.*/infer-operator:${build_version}/" "${TOP_DIR}"/build/deploy/manager/${OUTPUT_NAME}.yaml
+sed -i "s/infer-operator:.*/infer-operator:${build_version}/" "${TOP_DIR}"/build/${OUTPUT_NAME}.yaml
 
 DOCKER_FILE_NAME="Dockerfile"
 
@@ -55,7 +55,7 @@ function build() {
 function mv_file() {
   mv "${TOP_DIR}/${OUTPUT_NAME}" "${TOP_DIR}/output"
   cp "${TOP_DIR}"/build/${DOCKER_FILE_NAME} "${TOP_DIR}"/output
-  cp -r "${TOP_DIR}"/build/infer-operator.yaml "${TOP_DIR}"/output/infer-operator-${build_version}
+  cp "${TOP_DIR}"/build/infer-operator.yaml "${TOP_DIR}"/output/infer-operator-"${build_version}".yaml
 }
 
 function change_mod() {
