@@ -14,7 +14,7 @@
     ascend-fd single-diag --host_log 主机侧操作系统日志采集目录 --device_log Device侧日志采集目录 --train_log 用户训练及推理日志采集目录 --process_log CANN应用类日志采集目录 --env_check NPU网口、状态信息、资源信息采集目录 --dl_log MindCluster组件日志采集目录 --mindie_log MindIE组件日志采集目录 --amct_log AMCT组件日志采集目录 -o 清洗输出目录 
     ```
 
->[!NOTE] 说明 
+>[!NOTE] 
 >-   同时共用-i与详细日志采集目录参数时，会优先读取详细日志采集目录参数的输入值，再根据-i参数读取剩余日志采集目录。
 >-   若-i参数与8个详细日志采集目录参数同时配置时，-i参数不生效。
 >-   至少需要指定--input\_path、--host\_log、--device\_log、--train\_log、--process\_log、--env\_check、--dl\_log、--mindie\_log、--amct\_log其中一个参数，否则清洗命令会执行失败。

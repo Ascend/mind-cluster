@@ -12,8 +12,6 @@
 export ASCEND_FD_HOME_PATH=/自定义路径
 ```
 
->[!NOTE] 说明 
->-   当未设置该环境变量时，MindCluster Ascend FaultDiag家目录默认为“$HOME/.ascend\_faultdiag/”。
->-   当设置该环境变量时，所设置路径需要存在且为目录，且不支持指定“/tmp”路径为家目录。目录属主需要为root或程序执行者，且在该目录下程序执行者具有创建文件、读写文件的权限。
-
-
+>[!NOTE] 
+>- 当未设置该环境变量时，MindCluster Ascend FaultDiag家目录默认为“$HOME/.ascend\_faultdiag/”。
+>- 当设置该环境变量时，所设置路径需要存在且为目录，且不支持指定“/tmp”路径为家目录。目录属主需要为root或程序执行者，且在该目录下程序执行者具有创建文件、读写文件的权限。

@@ -38,7 +38,7 @@
     ascend-fd parse --lcne_log  "lcne/worker-111" -o "auto_diag_combine/lcne/worker-111"
     ```
 
->[!NOTE] 说明 
+>[!NOTE]
 >-   同时共用-i与详细日志采集目录参数时，会优先读取详细日志采集目录参数的输入值，再根据-i参数读取剩余日志采集目录。
 >-   若-i参数与8个详细日志采集目录参数同时配置时，-i参数不生效。
 >-   至少需要指定--input\_path、--host\_log、--device\_log、--train\_log、--process\_log、--env\_check、--dl\_log、--mindie\_log、--amct\_log、--custom\_log其中一个参数，否则清洗命令会执行失败。

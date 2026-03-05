@@ -4,15 +4,14 @@
 
 ### 安装前必读<a name="ZH-CN_TOPIC_0000002054156561"></a>
 
--   请保证MindCluster Ascend FaultDiag工具独立部署在各服务器产品中使用，若部署在共享目录中供多台服务器共同访问使用，可能会导致功能执行失败或性能不符合预期等不可预测情况。
--   建议使用同一用户进行安装和使用MindCluster Ascend FaultDiag。
--   MindCluster Ascend FaultDiag支持的Python版本需≥3.7。在安装MindCluster Ascend FaultDiag前，请检查依赖的Python版本是否满足要求。
+- 请保证MindCluster Ascend FaultDiag工具独立部署在各服务器产品中使用，若部署在共享目录中供多台服务器共同访问使用，可能会导致功能执行失败或性能不符合预期等不可预测情况。
+- 建议使用同一用户进行安装和使用MindCluster Ascend FaultDiag。
+- MindCluster Ascend FaultDiag支持的Python版本需≥3.7。在安装MindCluster Ascend FaultDiag前，请检查依赖的Python版本是否满足要求。
 
-    >[!NOTE] 说明 
-    >-   本文档中提及的所有软件和服务均为最低支持版本，非推荐使用版本，请用户选择符合所在组织安全要求的Python、操作系统、服务、软件和相关三方依赖库及其版本。
-    >-   建议用户及时合入安全补丁或升级至最新版本。
-    >-   安装过程声明了相关的三方库依赖，并验证了最低兼容版本，后续使用如果三方库升级导致不兼容可单独降级安装指定版本三方包。
-
+    >[!NOTE]
+    >- 本文档中提及的所有软件和服务均为最低支持版本，非推荐使用版本，请用户选择符合所在组织安全要求的Python、操作系统、服务、软件和相关三方依赖库及其版本。
+    >- 建议用户及时合入安全补丁或升级至最新版本。
+    >- 安装过程声明了相关的三方库依赖，并验证了最低兼容版本，后续使用如果三方库升级导致不兼容可单独降级安装指定版本三方包。
 
 ### 获取软件包<a name="ZH-CN_TOPIC_0000001592508717"></a>
 
@@ -56,8 +55,8 @@
 </tbody>
 </table>
 
->[!NOTE] 说明 
-> _\{version\}_为软件包的版本号，请用户根据实际情况需要获取对应的软件包。
+>[!NOTE] 
+><i>\{version\}</i>为软件包的版本号，请用户根据实际情况需要获取对应的软件包。
 
 **软件数字签名验证<a name="zh-cn_topic_0000001511594161_section199643813528"></a>**
 
@@ -71,40 +70,39 @@
 
 企业客户请访问：[https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054)
 
-
 ### 命令行方式安装<a name="ZH-CN_TOPIC_0000001541629190"></a>
 
 本章节仅指导用户通过命令行方式安装故障诊断组件。5.0.0.2及以上版本的故障诊断组件可通过工具进行安装，详细安装说明请参考[使用MindCluster Ascend Deployer安装](#使用mindcluster-ascend-deployer安装)。
 
 **前提条件<a name="section1944341425710"></a>**
 
--   安装前请确保网络可用。
--   install日志不会转储，安装前请注意磁盘空间剩余容量。
+- 安装前请确保网络可用。
+- install日志不会转储，安装前请注意磁盘空间剩余容量。
 
 **操作步骤<a name="section552311587439"></a>**
 
-1.  修改umask为027，详细操作步骤可参考[设置umask](./security_hardening.md#设置umask)。
-2.  将[获取软件包](#获取软件包)获取到的软件包上传到环境的任意目录下（如“\~/software”）。
-3.  在软件包所在目录执行如下命令解压。
+1. 修改umask为027，详细操作步骤可参考[设置umask](./security_hardening.md#设置umask)。
+2. 将[获取软件包](#获取软件包)获取到的软件包上传到环境的任意目录下（如“\~/software”）。
+3. 在软件包所在目录执行如下命令解压。
 
     ```
     unzip Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip
     ```
 
-4.  执行如下命令进行安装。
+4. 执行如下命令进行安装。
 
     ```
     pip3 install ascend_faultdiag-{version}-py3-none-linux_{arch}.whl --log ~/.ascend_faultdiag/install.log          
     ```
 
-5.  修改目录权限。
+5. 修改目录权限。
 
     ```
     chmod 700 ~/.ascend_faultdiag
     chmod 600 ~/.ascend_faultdiag/*.log
     ```
 
-6.  执行以下命令验证软件是否安装成功。
+6. 执行以下命令验证软件是否安装成功。
 
     ```
     ascend-fd version
@@ -116,13 +114,12 @@
     ascend-fd ${版本号}
     ```
 
->[!NOTE] 说明 
->-   MindCluster Ascend FaultDiag的运行日志文件默认路径为“$\(HOME\)/.ascend\_faultdiag/RUN\_LOG/“目录下。每次执行ascend-fd parse或diag命令，会生成一个时间戳+随机数的文件夹，文件夹内部按PID分别落盘运行日志。RUN\_LOG目录下的文件夹数量若超过100个，将会按照时间先后删除20个文件夹；如果文件夹数量未超过100个，但是文件总内存大小超过100M，也会按时间先后删除旧日志并保留最大80M的文件。
->-   MindCluster Ascend FaultDiag的操作日志文件默认路径为“$\{HOME\}/.ascend\_faultdiag/ascend\_faultdiag\_operation.log“。
->-   日志文件大小不超过10M，超过限制大小后将自动转储另一个日志文件，同PID日志文件数量不超过10个，超过限制个数时将自动覆盖最早创建的日志。
->-   如果需要自定义日志文件路径，可以参考[自定义MindCluster Ascend FaultDiag家目录](./common_operations.md#自定义mindcluster-ascend-faultdiag家目录)章节进行操作。
->-   MindCluster Ascend FaultDiag的设备资源分析与网络拥塞分析模块依赖于scikit-learn、pandas、numpy与joblib三方库。若需使用这部分功能，请保证按照以下版本要求安装相应依赖库：scikit-learn\>=1.3.0、pandas\>=1.3.5、numpy\>=1.21.6、1.5.0\>joblib\>=1.2.0。
-
+>[!NOTE]
+>- MindCluster Ascend FaultDiag的运行日志文件默认路径为“$\(HOME\)/.ascend\_faultdiag/RUN\_LOG/”目录下。每次执行ascend-fd parse或diag命令，会生成一个时间戳+随机数的文件夹，文件夹内部按PID分别落盘运行日志。RUN\_LOG目录下的文件夹数量若超过100个，将会按照时间先后删除20个文件夹；如果文件夹数量未超过100个，但是文件总内存大小超过100M，也会按时间先后删除旧日志并保留最大80M的文件。
+>- MindCluster Ascend FaultDiag的操作日志文件默认路径为“$\{HOME\}/.ascend\_faultdiag/ascend\_faultdiag\_operation.log”。
+>- 日志文件大小不超过10M，超过限制大小后将自动转储另一个日志文件，同PID日志文件数量不超过10个，超过限制个数时将自动覆盖最早创建的日志。
+>- 如果需要自定义日志文件路径，可以参考[自定义MindCluster Ascend FaultDiag家目录](./common_operations.md#自定义mindcluster-ascend-faultdiag家目录)章节进行操作。
+>- MindCluster Ascend FaultDiag的设备资源分析与网络拥塞分析模块依赖于scikit-learn、pandas、numpy与joblib三方库。若需使用这部分功能，请保证按照以下版本要求安装相应依赖库：scikit-learn\>=1.3.0、pandas\>=1.3.5、numpy\>=1.21.6、1.5.0\>joblib\>=1.2.0。
 
 ### 使用MindCluster Ascend Deployer安装<a name="ZH-CN_TOPIC_0000001987237125"></a>
 
@@ -130,7 +127,7 @@ MindCluster Ascend Deployer支持5.0.0.2及以上版本的MindCluster Ascend Fau
 
 **单机安装MindCluster Ascend FaultDiag<a name="section16724191613286"></a>**
 
-单台设备安装MindCluster Ascend FaultDiag组件，请参见《MindCluster Ascend Deployer 用户指南》中的“安装昇腾软件”章节。
+单台设备安装MindCluster Ascend FaultDiag组件，请参见《MindCluster Ascend Deployer 用户指南》中的“<a href="https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/zh/installation_guide.md#%E5%AE%89%E8%A3%85%E6%98%87%E8%85%BE%E8%BD%AF%E4%BB%B6">安装昇腾软件</a>”章节。
 
 安装命令如下：
 
@@ -140,23 +137,21 @@ bash install.sh --install=fault-diag                                            
 
 **批量安装MindCluster Ascend FaultDiag<a name="section207590522915"></a>**
 
-批量安装MindCluster Ascend FaultDiag组件，请参见《MindCluster Ascend Deployer 用户指南》中的“安装昇腾软件”章节。
+批量安装MindCluster Ascend FaultDiag组件，请参见《MindCluster Ascend Deployer 用户指南》中的“<a href="https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/zh/installation_guide.md#%E5%AE%89%E8%A3%85%E6%98%87%E8%85%BE%E8%BD%AF%E4%BB%B6">安装昇腾软件</a>”章节。
 
 详细安装流程如[图1](#fig56301358747)所示：
 
 **图 1**  使用MindCluster Ascend Deployer批量安装MindCluster Ascend FaultDiag组件<a name="fig56301358747"></a>  
 ![](../figures/faultdiag/使用MindCluster-Ascend-Deployer批量安装MindCluster-Ascend-FaultDiag组件.png "使用MindCluster-Ascend-Deployer批量安装MindCluster-Ascend-FaultDiag组件")
 
-
-
 ## 升级组件<a name="ZH-CN_TOPIC_0000001592268721"></a>
 
 **升级步骤<a name="section232278155416"></a>**
 
-1.  根据[获取软件包](#获取软件包)，准备新的软件包。
-2.  升级前请先卸载当前版本MindCluster Ascend FaultDiag，卸载步骤参考[卸载组件](#卸载组件)。
-3.  参考[命令行方式安装](#命令行方式安装)，完成软件包的安装。
-4.  执行以下命令验证软件是否升级安装成功。
+1. 根据[获取软件包](#获取软件包)，准备新的软件包。
+2. 升级前请先卸载当前版本MindCluster Ascend FaultDiag，卸载步骤参考[卸载组件](#卸载组件)。
+3. 参考[命令行方式安装](#命令行方式安装)，完成软件包的安装。
+4. 执行以下命令验证软件是否升级安装成功。
 
     ```
     ascend-fd version
@@ -167,7 +162,6 @@ bash install.sh --install=fault-diag                                            
     ```
     ascend-fd ${版本号}
     ```
-
 
 ## 卸载组件<a name="ZH-CN_TOPIC_0000001592628957"></a>
 
@@ -183,7 +177,5 @@ pip3 uninstall ascend-faultdiag -y --log ~/.ascend_faultdiag/uninstall.log
 rm /usr/local/bin/ascend-fd
 ```
 
->[!NOTE] 说明 
+>[!NOTE] 
 >“\~/.ascend\_faultdiag”目录保存了日志等信息，不会随着卸载自动删除，请手动删除。
-
-

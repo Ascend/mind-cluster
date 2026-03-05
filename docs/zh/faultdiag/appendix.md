@@ -17,18 +17,10 @@
 |508 FileTooLarge|文件数量过多。|
 |200 SuccessRet|操作成功。|
 
-
-
 ## MindCluster Ascend FaultDiag已支持的故障<a name="ZH-CN_TOPIC_0000001724088177"></a>
 
 本章节介绍MindCluster Ascend FaultDiag组件诊断分析出的已经支持的故障类型及相关信息，请参考[MindCluster 7.3.0 故障诊断类型.xlsx](../resource/MindCluster%207.3.0%20故障诊断类型.xlsx)。
 
-
 ## 公网地址<a name="ZH-CN_TOPIC_0000001592268725"></a>
 
 软件中包含的公网地址具体请参考[MindCluster 7.3.0 Ascend FaultDiag公网地址.xlsx](../resource/MindCluster%207.3.0%20Ascend%20FaultDiag公网地址.xlsx)。
-
-
-
-
-
