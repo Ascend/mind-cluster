@@ -41,6 +41,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/policy/chip4nodex"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/policy/chip8node8ra64sp"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/policy/chip8node8sp"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/policy/multilevelscheduling"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
@@ -62,6 +63,7 @@ var policy910HandlerMap = map[string]string{
 	util.Chip8Node8Sp:        chip8node8sp.SchedulePolicy8Px8Sp,
 	util.Chip8Node8Ra64Sp:    chip8node8ra64sp.SchedulePolicy8Px8Ra64Sp,
 	util.Chip1ShareShareDev:  chip1softsharedev.SchedulePolicySoftShareDev,
+	util.MultiLevel:          multilevelscheduling.MultiLevelHandlerName,
 }
 
 var (
@@ -123,6 +125,9 @@ func initCard910Factory() {
 	card910Factory[chip8node8sp.SchedulePolicy8Px8Sp] = func() base.AscendHandler { return chip8node8sp.New(chip8node8sp.SchedulePolicy8Px8Sp) }
 	card910Factory[chip8node8ra64sp.SchedulePolicy8Px8Ra64Sp] = func() base.AscendHandler { return chip8node8ra64sp.New(chip8node8ra64sp.SchedulePolicy8Px8Ra64Sp) }
 	card910Factory[chip1softsharedev.SchedulePolicySoftShareDev] = func() base.AscendHandler { return chip1softsharedev.New(chip1softsharedev.SchedulePolicySoftShareDev) }
+	card910Factory[multilevelscheduling.MultiLevelHandlerName] = func() base.AscendHandler {
+		return multilevelscheduling.New(multilevelscheduling.MultiLevelHandlerName)
+	}
 }
 
 func initCard910ByBaseHandler() {
