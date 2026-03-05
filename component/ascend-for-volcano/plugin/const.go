@@ -153,3 +153,8 @@ const (
 	reserveNodesKey   = "reserve-nodes"
 	sizeOfSuperPodKey = "super-pod-size"
 )
+
+const (
+	// configResourceLevelConfig multilevel resource tree config
+	configResourceLevelConfig = "resource-level-config"
+)

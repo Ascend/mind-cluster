@@ -263,6 +263,66 @@ func (sHandle *ScheduleHandler) initDynamicParameters(configs map[string]string)
 	sHandle.FrameAttr.ReservePodSize = getReserveNodes(configs, sHandle.FrameAttr.SuperPodSize)
 	sHandle.FrameAttr.GraceDeleteTime = getGraceDeleteTime(configs)
 	sHandle.FrameAttr.PresetVirtualDevice = getPresetVirtualDeviceConfig(configs)
+	sHandle.FrameAttr.ResourceLevelsInfo = initResourceLevels(configs)
+
+}
+
+func initResourceLevels(configs map[string]string) map[string][]util.ResourceTreeLevel {
+	levels, err := getConfigLevels(configs)
+	if err != nil {
+		levels = map[string][]util.ResourceTreeLevel{}
+		klog.V(util.LogInfoLev).Infof("init resource levels failed: %v, set resource-level-config to empty", err)
+	}
+	klog.V(util.LogDebugLev).Infof("init resourceLevels, effected levels: %v", levels)
+	return levels
+}
+
+func getConfigLevels(configurations map[string]string) (map[string][]util.ResourceTreeLevel, error) {
+	confStr, ok := configurations[configResourceLevelConfig]
+	if !ok {
+		return nil, errors.New("resource-level-config doesn't exist")
+	}
+
+	var levelConfigs map[string]map[string]util.ResourceTreeLevel
+	if err := json.Unmarshal([]byte(confStr), &levelConfigs); err != nil {
+		return nil, fmt.Errorf("ummarshal config failed, %v", err)
+	}
+
+	var resourceTreeLevels map[string][]util.ResourceTreeLevel
+	for topoKey, levelConfig := range levelConfigs {
+		if len(levelConfigs) == 0 {
+			klog.V(util.LogErrorLev).Infof("get %v resource level config failed, config is empty", topoKey)
+			continue
+		}
+		level, err := getConfigLevel(levelConfig)
+		if err != nil {
+			klog.V(util.LogErrorLev).Infof("get %v resource level config failed, %v", topoKey, err)
+			continue
+		}
+		resourceTreeLevels[topoKey] = level
+	}
+	if len(resourceTreeLevels) == 0 {
+		return nil, errors.New("no valid resource config exist")
+	}
+	return resourceTreeLevels, nil
+}
+
+func getConfigLevel(levelConfig map[string]util.ResourceTreeLevel) ([]util.ResourceTreeLevel, error) {
+	singleTopoTree := []util.ResourceTreeLevel{{Type: util.LevelTypeTree, Label: util.TopoTreeLabel}}
+	for i := len(levelConfig); i >= util.Level1Number; i-- {
+		treeLevel, ok := levelConfig[util.TopoLevelPrefix+strconv.Itoa(i)]
+		if !ok {
+			return nil, errors.New("topo-level config is not continuous")
+		}
+		level := util.ResourceTreeLevel{Label: treeLevel.Label, Type: util.LevelTypeMiddle}
+		if i == util.Level1Number {
+			level.ReservedNode = treeLevel.ReservedNode
+		}
+		singleTopoTree = append(singleTopoTree, level)
+	}
+	singleTopoTree = append(singleTopoTree, util.ResourceTreeLevel{Type: util.LevelTypeNode})
+
+	return singleTopoTree, nil
 }
 
 // initConfsFromSsn init confs from session

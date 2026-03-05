@@ -134,9 +134,10 @@ type UnscheduledReason struct {
 
 // SuperNode node with SuperPodID
 type SuperNode struct {
-	Name       string
-	SuperPodID int32
-	RackID     int32
+	Name         string
+	SuperPodID   int32
+	RackID       int32
+	TopoTreeName string // TopoTreeName when using multilevel-scheduling
 }
 
 // VolcanoFrame passed in by the volcano frame.
@@ -171,6 +172,10 @@ type DynamicParameters struct {
 	GraceDeleteTime     int64
 	SuperPodSize        int
 	ReservePodSize      int
+	// ResourceLevelsInfo stores resource hierarchy information for multi-level scheduling
+	// key is topo tree name, value is the hierarchical level definitions for that topo tree.
+	ResourceLevelsInfo map[string][]util.ResourceTreeLevel
+
 	// check the original value from configuration when schedule in a5
 	SuperPodSizeFromConf int
 }

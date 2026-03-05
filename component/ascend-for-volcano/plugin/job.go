@@ -515,6 +515,7 @@ func (sJob *SchedulerJob) initNPUJob(vcJob *api.JobInfo, npuName string, npuNum 
 	sJob.setTpBlock()
 	sJob.setNPUTaskNumInJob()
 	sJob.setSchedulingTaskNum(vcJob)
+	sJob.setMultiLevelTaskSchedulingConfig(vcJob)
 	sJob.initVTasks(vcJob)
 }
 
@@ -573,6 +574,45 @@ func (sJob *SchedulerJob) setSchedulingTaskNum(vcJob *api.JobInfo) {
 		return
 	}
 	sJob.SchedulingTaskNum = sJob.GetSchedulingTaskNum()
+}
+
+func (sJob *SchedulerJob) setMultiLevelTaskSchedulingConfig(jobInfo *api.JobInfo) {
+	affinityBlocks, err := GetAffinityBlocks(sJob.Annotation)
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("get job %s affinity-config failed: %v", jobInfo.UID, err)
+		return
+	}
+	sJob.AffinityBlocks = affinityBlocks
+}
+
+// GetAffinityBlocks get affinity blocks from annotation map
+func GetAffinityBlocks(annotation map[string]string) (map[string]int, error) {
+	if annotation == nil {
+		return nil, nil
+	}
+	policy, ok := annotation[util.SchedulePolicyAnnoKey]
+	if !ok || policy != util.MultiLevel {
+		return nil, nil
+	}
+	affinityConfigStr, ok := annotation[util.AffinityConfig]
+	if !ok {
+		return nil, errors.New("job is not multilevel job")
+	}
+	splits := strings.Split(affinityConfigStr, ",")
+	affinityBlocks := make(map[string]int, len(splits))
+	const kvPairNum = 2
+	for _, split := range splits {
+		configPair := strings.Split(split, "=")
+		if len(configPair) != kvPairNum {
+			return nil, errors.New("config pair is not correct")
+		}
+		num, err := strconv.Atoi(configPair[1])
+		if err != nil {
+			return nil, errors.New("value of pair is not integer")
+		}
+		affinityBlocks[configPair[0]] = num
+	}
+	return affinityBlocks, nil
 }
 
 // UpdateJobPendingMessage update job pending message

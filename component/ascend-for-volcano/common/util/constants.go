@@ -118,6 +118,7 @@ const (
 	Chip8Node8Sp       = "chip8-node8-sp"      // 850-SuperPod-Atlas-8
 	Chip8Node8Ra64Sp   = "chip8-node8-ra64-sp" // 950-SuperPod-Atlas-8
 	Chip1ShareShareDev = "chip1-softShareDev"  // soft share dev
+	MultiLevel         = "multilevel"          // multiple topology network
 )
 
 const (
@@ -195,4 +196,32 @@ const (
 	SoftShareDevPolicyElastic = "elastic"
 	// SoftShareDevPolicyBestEffort best effort
 	SoftShareDevPolicyBestEffort = "best-effort"
+)
+
+// multi-level scheduling constants
+const (
+	// AffinityConfig annotation key of multilevel scheduling task-level config
+	AffinityConfig = "huawei.com/affinity-config"
+	// NodeLevelName resource level for node
+	NodeLevelName = "node"
+	// JobLevelName task level for job
+	JobLevelName = "job"
+	// TopoLevelPrefix prefix of task levels
+	TopoLevelPrefix = "level"
+	// Level1Number task level1 number
+	Level1Number = 1
+	// MaxLevel max levels for resource tree or task tree
+	MaxLevel = 10
+	// TopoTreeLabel label key of topotree name
+	TopoTreeLabel = "huawei.com/topotree"
+	// DefaultTopoTree default topo tree name
+	DefaultTopoTree = "default"
+	// TaskSpecAnno used in pod annotation when EnableGangScheduling is true
+	TaskSpecAnno = "volcano.sh/task-spec"
+	// SchedulerType the type of Scheduler for mindspore
+	SchedulerType = "scheduler"
+	// SkipAscendPluginAnno if the annotation value is enabled, will skip the ascend plugin
+	SkipAscendPluginAnno = "huawei.com/skip-ascend-plugin"
+	// SkipEnabled is the value of SkipAscendPluginAnno, skip the ascend plugin
+	SkipEnabled = "enabled"
 )

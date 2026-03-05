@@ -39,6 +39,8 @@ type NPUJob struct {
 	SpBlockNPUNum      int
 	TpBlockNPUNum      int
 	SubHealthyStrategy string
+
+	AffinityBlocks map[string]int
 }
 
 // ComJob all vcJob has.
@@ -134,6 +136,18 @@ func (sJob *SchedulerJobAttr) IsSuperPodJob() bool {
 		}
 	}
 	return false
+}
+
+// IsMultiLevelJob check if the job uses multilevel affinity
+func (sJob *SchedulerJobAttr) IsMultiLevelJob() bool {
+	if sJob == nil || sJob.ComJob.Annotation == nil {
+		return false
+	}
+	policy, ok := sJob.ComJob.Annotation[SchedulePolicyAnnoKey]
+	if !ok || policy != MultiLevel {
+		return false
+	}
+	return true
 }
 
 // IsVJob Determine whether is the NPU virtual job.

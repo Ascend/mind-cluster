@@ -206,6 +206,8 @@ const (
 	ArgumentError = "invalid argument"
 	// RankIdNotExistError rank id does not exist
 	RankIdNotExistError = "rank id does not exist"
+	// TopoTreeLabelError topology label does not match config
+	TopoTreeLabelError = "topology label does not match config"
 	// JobKindKey for define the Job kind:ascend-310P, ascend-910
 	JobKindKey = "ring-controller.atlas"
 	// DistributedJobKey flag for distributed job
