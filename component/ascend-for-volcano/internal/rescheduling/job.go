@@ -21,6 +21,7 @@ package rescheduling
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"sync"
@@ -197,6 +198,100 @@ func (fJob *FaultJob) isContainTask(ids []string, nodeName string, env plugin.Sc
 	return false
 }
 
+func (fJob *FaultJob) getDeletePodInfo(
+	schedulerJob *plugin.SchedulerJob, env plugin.ScheduleEnv) (*deletePodInfo, error) {
+	if schedulerJob.IsMultiLevelJob() {
+		return fJob.getMultiLevelJobDeletePodInfo(schedulerJob, env)
+	}
+	return fJob.getNormalJobDeletePodInfo(schedulerJob)
+}
+
+func (fJob *FaultJob) getMultiLevelJobDeletePodInfo(schedulerJob *plugin.SchedulerJob,
+	env plugin.ScheduleEnv) (*deletePodInfo, error) {
+	needRescheduleNodes, err := fJob.getNeedReschedulePods(schedulerJob, env)
+	if err != nil {
+		return &deletePodInfo{}, err
+	}
+	return &deletePodInfo{
+		needRescheduleNodes: needRescheduleNodes,
+	}, nil
+}
+
+func (fJob *FaultJob) getNormalJobDeletePodInfo(schedulerJob *plugin.SchedulerJob) (*deletePodInfo, error) {
+	isSuperPod := false
+	ids := make([]string, 0)
+	isSuperPod, ids = fJob.getFaultJobSuperPodInfo(schedulerJob)
+	return &deletePodInfo{
+		isSuperPod: isSuperPod,
+		ids:        ids,
+	}, nil
+}
+
+func (fJob *FaultJob) getNeedReschedulePods(
+	schedulerJob *plugin.SchedulerJob, env plugin.ScheduleEnv) (map[string]struct{}, error) {
+	treeLevels, err := util.GetTaskTreeLevels(schedulerJob.AffinityBlocks, schedulerJob.NPUTaskNum)
+	if err != nil {
+		return nil, fmt.Errorf("getTaskTreeLevels failed: %v", err)
+	}
+	resourceLevel, err := fJob.getResourceLevels(fJob.SuperPods, env)
+	if err != nil {
+		return nil, fmt.Errorf("getResourceLevels failed: %v", err)
+	}
+
+	taskTree, err := plugin.GetTaskTreeFromSuperNodeMap(fJob.SuperPods, treeLevels, resourceLevel, env.Nodes)
+	if err != nil {
+		return nil, fmt.Errorf("getTaskTreeFromSuperNodeMap failed: %v", err)
+	}
+
+	faultNodeMap := make(map[string]struct{})
+	for _, task := range fJob.FaultTasks {
+		if !task.IsFaultTask {
+			continue
+		}
+		faultNodeMap[task.NodeName] = struct{}{}
+	}
+	reschedulingLevel := fJob.PendingSessionNum / spPendingTimes
+	if reschedulingLevel > len(taskTree.Levels)-1 {
+		reschedulingLevel = len(taskTree.Levels) - 1
+	}
+	needRescheduleBlocks := make(map[*util.TaskNode]struct{})
+	for _, task := range taskTree.GetAllBaseTasks() {
+		if _, ok := faultNodeMap[task.ResourceNodeName]; !ok {
+			continue
+		}
+		for i := 0; i < reschedulingLevel; i++ {
+			task = task.Parent
+		}
+		needRescheduleBlocks[task] = struct{}{}
+	}
+
+	needRescheduleNodes := make(map[string]struct{})
+	for block := range needRescheduleBlocks {
+		blockSubTree, err := taskTree.GetSubTree(block)
+		if err != nil {
+			return nil, fmt.Errorf("cannot find subtree for block %d, %v", block.Index, err)
+		}
+		for _, task := range blockSubTree.GetAllBaseTasks() {
+			needRescheduleNodes[task.ResourceNodeName] = struct{}{}
+		}
+	}
+	return needRescheduleNodes, nil
+}
+
+func (fJob *FaultJob) getResourceLevels(superPod map[string][]plugin.SuperNode, env plugin.ScheduleEnv) ([]util.ResourceTreeLevel, error) {
+	for _, nodes := range superPod {
+		for _, node := range nodes {
+			levels, ok := env.FrameAttr.ResourceLevelsInfo[node.TopoTreeName]
+			if !ok {
+				continue
+			}
+			return levels, nil
+		}
+	}
+	return nil, errors.New("no match resource levels found")
+
+}
+
 // ForceDeleteJob force delete jobs includes labelled force delete ones and grace delete failed ones
 func (fJob *FaultJob) ForceDeleteJob(schedulerJob *plugin.SchedulerJob,
 	env plugin.ScheduleEnv) error {
@@ -218,13 +313,12 @@ func (fJob *FaultJob) ForceDeleteJob(schedulerJob *plugin.SchedulerJob,
 			break
 		}
 	}
-	isSuperPod, ids := fJob.getFaultJobSuperPodInfo(schedulerJob)
-	fJob.updateSuperPodsReschdInfo(env)
-	dpi := &deletePodInfo{
-		isMasterFault: isMasterFault,
-		isSuperPod:    isSuperPod,
-		ids:           ids,
+	dpi, err := fJob.getDeletePodInfo(schedulerJob, env)
+	if err != nil {
+		return fmt.Errorf("unable to find the pods to delete, %v", err)
 	}
+	fJob.updateSuperPodsReschdInfo(env)
+	dpi.isMasterFault = isMasterFault
 	fJob.forceDeletePods(schedulerJob, env, dpi)
 	return nil
 }
@@ -275,6 +369,10 @@ func (fJob *FaultJob) isNormalTaskCanBeDelete(fTask FaultTask, schedulerJob *plu
 	// super pod, first delete fault task, when first task pending 6 session, try super pod rescheduling
 	// super pod, when pod pending 12 session, try job rescheduling
 	if fJob.IsJobSingleRescheduling(schedulerJob) && !fTask.IsFaultTask {
+		// needRescheduleNodes only used by multilevel job
+		if _, ok := dpi.needRescheduleNodes[fTask.NodeName]; ok {
+			return true
+		}
 		if !dpi.isSuperPod {
 			return false
 		}
@@ -481,15 +579,13 @@ func (fJob *FaultJob) GraceDeleteJob(ssn *framework.Session, npuJob *plugin.Sche
 	if isMasterFault {
 		klog.V(util.LogInfoLev).Infof("job %v is master fault", npuJob.Name)
 	}
-	isSuperPod, ids := fJob.getFaultJobSuperPodInfo(npuJob)
-	fJob.updateSuperPodsReschdInfo(env)
-	dpi := &deletePodInfo{
-		isMasterFault: isMasterFault,
-		isSuperPod:    isSuperPod,
-		ids:           ids,
-		reason:        reason,
+	dpi, err := fJob.getDeletePodInfo(npuJob, env)
+	if err != nil {
+		return fmt.Errorf("unable to find the pods to delete, %v", err)
 	}
-	err := fJob.graceDeletePods(ssn, npuJob, env, dpi)
+	fJob.updateSuperPodsReschdInfo(env)
+	dpi.reason, dpi.isMasterFault = reason, isMasterFault
+	err = fJob.graceDeletePods(ssn, npuJob, env, dpi)
 	if err != nil {
 		return err
 	}
@@ -743,22 +839,25 @@ func getRealFaultJobForCache(fJobs map[api.JobID]*FaultJob) map[api.JobID]*Fault
 	return realFaultJobs
 }
 
-func rebuildScheduledSuperPods(jobInfo *api.JobInfo) map[string][]plugin.SuperNode {
-	superPods := map[string][]plugin.SuperNode{}
-	if jobInfo == nil {
-		klog.V(util.LogErrorLev).Infof("rebuild scheduled super pod failed, job info is nil.")
-		return superPods
+func rebuildScheduledSuperPods(sJob plugin.SchedulerJob, env plugin.ScheduleEnv) map[string][]plugin.SuperNode {
+	klog.V(util.LogWarningLev).Infof("rebuild scheduled super pod, job: %v/%v.", sJob.NameSpace, sJob.Name)
+	if sJob.IsMultiLevelJob() {
+		return reBuildMultiLevelSchedulingCache(sJob, env)
 	}
-	klog.V(util.LogWarningLev).Infof("rebuild scheduled super pod, job: %v/%v.", jobInfo.Namespace, jobInfo.Name)
-	for _, task := range jobInfo.Tasks {
-		if task.Pod == nil || task.Pod.Annotations == nil || task.Pod.Spec.NodeName == "" {
+	return reNormalJobSchedulingCache(sJob)
+}
+
+func reNormalJobSchedulingCache(sJob plugin.SchedulerJob) map[string][]plugin.SuperNode {
+	superPods := map[string][]plugin.SuperNode{}
+	for _, task := range sJob.Tasks {
+		if task.Annotation == nil || task.NodeName == "" {
 			continue
 		}
-		logicSpId, logicSpIdExist := task.Pod.Annotations[util.SuperPodRankKey]
+		logicSpId, logicSpIdExist := task.Annotation[util.SuperPodRankKey]
 		if !logicSpIdExist || logicSpId == "" {
 			continue
 		}
-		superPodId, superPodIdExist := task.Pod.Annotations[util.SuperPodIdKey]
+		superPodId, superPodIdExist := task.Annotation[util.SuperPodIdKey]
 		if !superPodIdExist {
 			continue
 		}
@@ -770,13 +869,91 @@ func rebuildScheduledSuperPods(jobInfo *api.JobInfo) map[string][]plugin.SuperNo
 		}
 		superNodes, ok := superPods[logicSpId]
 		if !ok {
-			superPods[logicSpId] = []plugin.SuperNode{{SuperPodID: int32(superPodID), Name: task.Pod.Spec.NodeName}}
+			superPods[logicSpId] = []plugin.SuperNode{{SuperPodID: int32(superPodID), Name: task.NodeName}}
 		} else {
 			superPods[logicSpId] = append(superNodes,
-				plugin.SuperNode{SuperPodID: int32(superPodID), Name: task.Pod.Spec.NodeName})
+				plugin.SuperNode{SuperPodID: int32(superPodID), Name: task.NodeName})
 		}
 	}
-
 	klog.V(util.LogWarningLev).Infof("rebuild scheduled super pod, %v.", string(util.MarshalData(superPods)))
+	sJob.SuperPods = superPods
 	return superPods
+}
+
+func reBuildMultiLevelSchedulingCache(sJob plugin.SchedulerJob, env plugin.ScheduleEnv) map[string][]plugin.SuperNode {
+	klog.V(util.LogWarningLev).Infof("start to rebuild multiLevel scheduling cache...")
+
+	superPods := map[string][]plugin.SuperNode{}
+	taskLevels, err := getMultiLevelAffinityConfig(sJob)
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("getMultiLevelAffinityConfig failed: %v", err)
+		return superPods
+	}
+	var nodeTopoTreeName string
+	for _, task := range sJob.Tasks {
+		if task.Annotation == nil || task.NodeName == "" {
+			continue
+		}
+		if nodeTopoTreeName == "" {
+			nodeTopoTreeName, err = getNodeTopoTreeName(task.NodeName, env)
+			if err != nil {
+				klog.V(util.LogErrorLev).Infof("getNodeTopoTreeName failed: %v", err)
+				continue
+			}
+			klog.V(util.LogInfoLev).Infof("rebuild nodeTopoTreeName: %v", nodeTopoTreeName)
+		}
+
+		hcclRankStr, rankExist := task.Annotation[plugin.PodRankIndexKey]
+		if !rankExist || hcclRankStr == "" {
+			continue
+		}
+		rankId, err := strconv.Atoi(hcclRankStr)
+		if err != nil {
+			klog.V(util.LogErrorLev).Infof("getMultiLevelAffinityConfig failed: %v", err)
+			continue
+		}
+		nodeDepth := len(taskLevels) - 1
+		level1Depth := nodeDepth - util.Level1Number
+		logicL1Rank := rankId / taskLevels[level1Depth].ReqNode
+		localRank := rankId % taskLevels[level1Depth].ReqNode
+		superNodes, ok := superPods[strconv.Itoa(logicL1Rank)]
+		if !ok {
+			superNodes = make([]plugin.SuperNode, taskLevels[level1Depth].ReqNode)
+			superNodes[localRank] = plugin.SuperNode{Name: task.NodeName, TopoTreeName: nodeTopoTreeName}
+		} else {
+			superNodes[localRank] = plugin.SuperNode{Name: task.NodeName, TopoTreeName: nodeTopoTreeName}
+		}
+		superPods[strconv.Itoa(logicL1Rank)] = superNodes
+	}
+	klog.V(util.LogWarningLev).Infof("rebuild scheduled MultiLevel SchedulingCache, %v.", string(util.MarshalData(superPods)))
+	sJob.SuperPods = superPods
+
+	return superPods
+}
+
+func getMultiLevelAffinityConfig(sJob plugin.SchedulerJob) ([]util.TaskTreeLevel, error) {
+	blocks, err := plugin.GetAffinityBlocks(sJob.Annotation)
+	if err != nil {
+		return nil, err
+	}
+	levels, err := util.GetTaskTreeLevels(blocks, sJob.NPUTaskNum)
+	if err != nil {
+		return nil, err
+	}
+	return levels, nil
+}
+
+func getNodeTopoTreeName(nodeName string, env plugin.ScheduleEnv) (string, error) {
+	node, ok := env.Nodes[nodeName]
+	if !ok {
+		return "", fmt.Errorf("node %v not exist in env cache", nodeName)
+	}
+	if node.Label == nil {
+		return "", fmt.Errorf("node %v don't have label", nodeName)
+	}
+	treeName, treeExist := node.Label[util.TopoTreeLabel]
+	if !treeExist {
+		treeName = util.DefaultTopoTree
+	}
+	return treeName, nil
 }

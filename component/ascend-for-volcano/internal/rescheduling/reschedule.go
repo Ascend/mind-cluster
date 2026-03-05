@@ -133,7 +133,7 @@ func (reScheduler *ReScheduler) updateNewFaultJobAttr(
 	klog.V(util.LogDebugLev).Infof("job %s if fault job: %v", faultJob.JobName, tmpIsFaultJob)
 	faultJob.setIsFaultJob(tmpIsFaultJob)
 	// 6. update FaultTypes of the job by status of FaultTasks bound on the job
-	faultJob.updateFaultJobInfo(npuJob, reScheduler, jobInfo)
+	faultJob.updateFaultJobInfo(npuJob, reScheduler, env)
 	faultJob.setIsSubHealthFault()
 	klog.V(util.LogDebugLev).Infof("job %s fault types: %v", faultJob.JobName, faultJob.FaultTypes)
 	_, ok := reScheduler.JobRemainRetryTimes[faultJob.JobUID]
@@ -149,12 +149,13 @@ func (reScheduler *ReScheduler) updateNewFaultJobAttr(
 	return faultJob
 }
 
-func (fJob *FaultJob) updateFaultJobInfo(npuJob plugin.SchedulerJob, reScheduler *ReScheduler, jobInfo *api.JobInfo) {
-	if npuJob.SuperPods != nil {
-		fJob.SuperPods = npuJob.SuperPods
-	} else {
-		fJob.SuperPods = rebuildScheduledSuperPods(jobInfo)
+func (fJob *FaultJob) updateFaultJobInfo(npuJob plugin.SchedulerJob, reScheduler *ReScheduler, env plugin.ScheduleEnv) {
+	if npuJob.SuperPods == nil {
+		npuJob.SuperPods = rebuildScheduledSuperPods(npuJob, env)
+		reScheduler.Jobs[fJob.JobUID] = npuJob
 	}
+	fJob.SuperPods = npuJob.SuperPods
+
 	if !fJob.IsFaultJob {
 		return
 	}
@@ -415,7 +416,7 @@ func (reScheduler *ReScheduler) singlePodReschedulingUpgrade(fJob *FaultJob) {
 	fJob.PendingSessionNum++
 
 	job, ok := reScheduler.Jobs[fJob.JobUID]
-	if ok && job.IsSuperPodJob() && fJob.PendingSessionNum == spPendingTimes {
+	if ok && (job.IsSuperPodJob() || job.IsMultiLevelJob()) && fJob.PendingSessionNum == spPendingTimes {
 		fJob.DeleteExecutedFlag = false
 	}
 

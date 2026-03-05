@@ -371,8 +371,9 @@ type FaultJobA5Field struct {
 }
 
 type deletePodInfo struct {
-	isMasterFault bool
-	isSuperPod    bool
-	ids           []string
-	reason        string
+	isMasterFault       bool
+	isSuperPod          bool
+	needRescheduleNodes map[string]struct{}
+	ids                 []string
+	reason              string
 }
