@@ -199,6 +199,7 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 	}
 
 	r.updateRandIndex(allocatedPods)
+	r.setOnePodOneNode(allocatedPods)
 	if err := r.cachePods(rtg, allocatedPods); err != nil {
 		hwlog.RunLog.Errorf("%v", err)
 		return
