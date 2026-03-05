@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -205,7 +206,12 @@ func (hdm *HwDevManager) updateNode() error {
 		return nil
 	}
 	newNode := oldNode.DeepCopy()
+	labelRegex := regexp.MustCompile(common.LabelValueRegex)
 	for key, value := range newLabelMap {
+		if !labelRegex.MatchString(value) {
+			hwlog.RunLog.Errorf("skip invalid label value %v, key: %v,", value, key)
+			continue
+		}
 		newNode.Labels[key] = value
 	}
 
@@ -308,15 +314,22 @@ func (hdm *HwDevManager) addTopologyLabel(newLabelMap map[string]string) {
 	}
 	if common.ParamOption.RealCardType == api.Ascend910A3 {
 		superPodId := hdm.manager.GetSuperPodID()
-		newLabelMap[npuCommon.TopoLabelSuperPodId] = strconv.Itoa(int(superPodId))
-		hwlog.RunLog.Infof("A3 device add superid label: %d", superPodId)
+		if int(superPodId) >= 0 {
+			hwlog.RunLog.Infof("A3 device add superid label: %d", superPodId)
+			newLabelMap[npuCommon.TopoLabelSuperPodId] = strconv.Itoa(int(superPodId))
+		}
 	}
 	if common.ParamOption.RealCardType == api.Ascend910A5 {
 		superPodId := hdm.manager.GetSuperPodID()
+		if int(superPodId) >= 0 {
+			hwlog.RunLog.Infof("A5 device add superid label: %d", superPodId)
+			newLabelMap[npuCommon.TopoLabelSuperPodId] = strconv.Itoa(int(superPodId))
+		}
 		rackId := hdm.manager.GetRackID()
-		newLabelMap[npuCommon.TopoLabelSuperPodId] = strconv.Itoa(int(superPodId))
-		newLabelMap[npuCommon.TopoLabelRackId] = strconv.Itoa(int(rackId))
-		hwlog.RunLog.Infof("A5 device add superpodid label: %d, rackid label: %d", superPodId, rackId)
+		if int(rackId) >= 0 {
+			hwlog.RunLog.Infof("A5 device add rackid label: %d", superPodId)
+			newLabelMap[npuCommon.TopoLabelRackId] = strconv.Itoa(int(rackId))
+		}
 	}
 }
 
