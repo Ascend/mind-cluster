@@ -25,7 +25,7 @@ import (
 	"sync"
 	"testing"
 
-    "github.com/agiledragon/gomonkey/v2"
+	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
@@ -191,6 +191,136 @@ func TestIsContainTask(t *testing.T) {
 			t.Errorf("return true when name == node1 result = %v, want %v", result, true)
 		}
 	})
+}
+
+// testGetRestartInfosTestCase defines the test case structure for getRestartInfos
+type testGetRestartInfosTestCase struct {
+	name              string
+	isNpuJob          bool
+	faultTasks        []FaultTask
+	wantReason        string
+	wantIsMasterFault bool
+}
+
+// buildBasicRestartInfosTests builds basic test cases for getRestartInfos
+func buildBasicRestartInfosTests() []testGetRestartInfosTestCase {
+	return []testGetRestartInfosTestCase{
+		{
+			name:     "Non-NPU job with Rank0 fault task",
+			isNpuJob: false,
+			faultTasks: []FaultTask{{
+				IsFaultTask:   true,
+				NodeRankIndex: util.Rank0,
+				Labels:        map[string]string{},
+			}},
+			wantReason:        "null",
+			wantIsMasterFault: false,
+		},
+		{
+			name:     "NPU job with Rank0 fault task, no replica-type label",
+			isNpuJob: true,
+			faultTasks: []FaultTask{{
+				IsFaultTask:   true,
+				NodeRankIndex: util.Rank0,
+				Labels:        map[string]string{},
+			}},
+			wantReason:        "null",
+			wantIsMasterFault: true,
+		},
+		{
+			name:     "NPU job with Rank0 fault task, replica-type not worker",
+			isNpuJob: true,
+			faultTasks: []FaultTask{{
+				IsFaultTask:   true,
+				NodeRankIndex: util.Rank0,
+				Labels: map[string]string{
+					util.ReplicaTypeKey: "master"},
+			}},
+			wantReason:        "null",
+			wantIsMasterFault: true,
+		},
+		{
+			name:     "NPU job with Rank0 fault task, replica-type is worker",
+			isNpuJob: true,
+			faultTasks: []FaultTask{{
+				IsFaultTask:   true,
+				NodeRankIndex: util.Rank0,
+				Labels: map[string]string{
+					util.ReplicaTypeKey: util.ReplicaTypeValueWorker},
+			}},
+			wantReason:        "null",
+			wantIsMasterFault: false,
+		}}
+}
+
+// buildAdvancedRestartInfosTests builds advanced test cases for getRestartInfos
+func buildAdvancedRestartInfosTests() []testGetRestartInfosTestCase {
+	return []testGetRestartInfosTestCase{
+		{
+			name:     "NPU job with non-Rank0 fault task",
+			isNpuJob: true,
+			faultTasks: []FaultTask{{
+				IsFaultTask:   true,
+				NodeRankIndex: "1",
+				Labels:        map[string]string{},
+			}},
+			wantReason:        "null",
+			wantIsMasterFault: false,
+		},
+		{
+			name:     "NPU job with Rank0 non-fault task",
+			isNpuJob: true,
+			faultTasks: []FaultTask{{
+				IsFaultTask:   false,
+				NodeRankIndex: util.Rank0,
+				Labels:        map[string]string{},
+			}},
+			wantReason:        "null",
+			wantIsMasterFault: false,
+		},
+		{
+			name:     "Multiple tasks, one Rank0 fault task",
+			isNpuJob: true,
+			faultTasks: []FaultTask{
+				{
+					IsFaultTask:   true,
+					NodeRankIndex: util.Rank0,
+					Labels:        map[string]string{},
+				},
+				{
+					IsFaultTask:   true,
+					NodeRankIndex: "1",
+					Labels:        map[string]string{},
+				},
+			},
+			wantReason:        "null",
+			wantIsMasterFault: true,
+		},
+	}
+}
+
+// buildGetRestartInfosTests builds all test cases for getRestartInfos
+func buildGetRestartInfosTests() []testGetRestartInfosTestCase {
+	return append(buildBasicRestartInfosTests(), buildAdvancedRestartInfosTests()...)
+}
+
+// TestGetRestartInfos tests the getRestartInfos function, focusing on isMasterFault value
+func TestGetRestartInfos(t *testing.T) {
+	tests := buildGetRestartInfosTests()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fJob := &FaultJob{FaultTasks: tt.faultTasks}
+
+			gotReason, gotIsMasterFault := fJob.getRestartInfos(tt.isNpuJob)
+			if gotReason != tt.wantReason {
+				t.Errorf("getRestartInfos() gotReason = %v, want %v", gotReason, tt.wantReason)
+			}
+			if gotIsMasterFault != tt.wantIsMasterFault {
+				t.Errorf("getRestartInfos() gotIsMasterFault = %v, want %v", gotIsMasterFault, tt.wantIsMasterFault)
+			}
+		})
+	}
 }
 
 func TestGetJobFaultRescheduleLabel(t *testing.T) {

@@ -478,6 +478,9 @@ func (fJob *FaultJob) GraceDeleteJob(ssn *framework.Session, npuJob *plugin.Sche
 		return fmt.Errorf("schedulerJob does not exist")
 	}
 	reason, isMasterFault := fJob.getRestartInfos(npuJob.NPUJob.IsNPUJob())
+	if isMasterFault {
+		klog.V(util.LogInfoLev).Infof("job %v is master fault", npuJob.Name)
+	}
 	isSuperPod, ids := fJob.getFaultJobSuperPodInfo(npuJob)
 	fJob.updateSuperPodsReschdInfo(env)
 	dpi := &deletePodInfo{
@@ -530,11 +533,17 @@ func (fJob *FaultJob) getRestartInfos(isNpuJob bool) (string, bool) {
 	var reasonList []FaultReasonList
 	var isMasterFault bool
 	for _, fTask := range fJob.FaultTasks {
+		if fTask.Reason != nil {
+			reasonList = append(reasonList, fTask.Reason...)
+		}
+		if isMasterFault {
+			continue
+		}
 		if fTask.IsFaultTask && fTask.NodeRankIndex == util.Rank0 && isNpuJob {
 			isMasterFault = true
 		}
-		if fTask.Reason != nil {
-			reasonList = append(reasonList, fTask.Reason...)
+		if replicaType, ok := fTask.Labels[util.ReplicaTypeKey]; ok {
+			isMasterFault = isMasterFault && replicaType != util.ReplicaTypeValueWorker
 		}
 	}
 	reason := GetTaskRestartReason(reasonList)

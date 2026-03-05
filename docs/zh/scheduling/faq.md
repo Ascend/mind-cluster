@@ -2316,3 +2316,23 @@ keepaliveOpt := keepalive.ClientParameters{
          PermitWithoutStream: true,
          }
 ```
+
+## MindSpore断点续训场景报错重复注册
+
+**问题现象描述**
+
+MindSpore断点续训过程中重新拉起的训练进程报错类似如下重复注册问题：
+
+```
+RuntimeError: Failed to register the compute graph node: 4. Reason: Repeated registration node: 4 to the scheduler. Please check if there's another scheduler process with port:2222 still running, or this is an extra node for distributed job. You can run command: 'netstat -anp|grep 2222' to check residual scheduler process. If another residual scheduler's still running, please kill it or change '--master_port' to a unoccupied port number of 'msrun' command and retry.
+```
+
+**原因分析**
+
+MindSpore的Scheduler不支持重复注册。
+
+**解决措施**
+
+方法一：断点续训时将Scheduler一并重启。
+
+方法二（推荐）：在启动脚本中配置export MS_ENABLE_RECOVERY=1，可参考[MindSpore文档](https://www.mindspore.cn/docs/zh-CN/master/api_python/env_var_list.html)。
