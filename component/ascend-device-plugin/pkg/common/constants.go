@@ -358,6 +358,8 @@ const (
 	ServerUsageLabelKey = "server-usage"
 	// InferCardKey the node label key of infer card
 	InferCardKey = "infer-card-type"
+	// LabelValueRegex k8s label value regex (max 63 characters)
+	LabelValueRegex = "(([A-Za-z0-9][-A-Za-z0-9_.]{0,61})?[A-Za-z0-9])?"
 )
 
 const (
