@@ -369,6 +369,27 @@ MindIO TFT包括临终Checkpoint保存、进程级在线恢复和优雅容错等
 3.  从容器运行时Docker或者Containerd中获取当前运行中的容器和芯片挂载信息。
 4.  向容器运行时下发容器停止、启动命令。
 
+## Infer Operator
+
+**应用场景**
+
+MindCluster提供Infer Operator组件，根据推理服务的实例配置，拉起推理服务，并支持推理实例的手动扩缩容。
+
+**组件功能**
+
+- 创建推理实例Workload与Service。
+- 推理实例的手动扩缩容。
+
+**组件上下游依赖**
+
+**图 1**  组件上下游依赖<a name="fig107831859288"></a>  
+![](../figures/scheduling/组件上下游依赖-8.png "组件上下游依赖-8")
+
+1. 基于用户配置的任务yaml创建推理实例Workload。
+2. Workload Controller创建Pod后，Volcano进行资源的最终选定。
+3. 若Workload申请占用NPU卡，Ascend Device Plugin获取NPU信息，完成设备的挂载。
+
+
 # 特性介绍<a name="ZH-CN_TOPIC_0000002511426839"></a>
 
 
@@ -1475,6 +1496,7 @@ NPU Exporter
 -   Ascend Device Plugin
 -   Ascend Docker Runtime
 -   Ascend Operator
+-   Infer Operator
 -   ClusterD
 -   NodeD
 
@@ -1501,6 +1523,7 @@ NPU Exporter
 -   Ascend Device Plugin
 -   Ascend Docker Runtime
 -   Ascend Operator
+-   Infer Operator
 -   ClusterD
 -   NodeD
 
@@ -1586,6 +1609,7 @@ NPU Exporter
 -   Ascend Device Plugin
 -   Ascend Docker Runtime
 -   Ascend Operator
+-   Infer Operator
 -   Volcano
 -   ClusterD
 -   NodeD
