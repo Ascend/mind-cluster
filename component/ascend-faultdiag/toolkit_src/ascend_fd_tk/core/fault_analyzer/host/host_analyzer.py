@@ -70,7 +70,7 @@ class HostAnalyzer(Analyzer):
         domain = self.get_npu_chip_domain(host_info.host_id, npu_chip_info.npu_id, npu_chip_info.chip_phy_id)
         if not optical_info.is_optical_present():
             return [
-                DiagResult(domain, f"光模块未在位, 状态: {optical_info.present or 'NA'}", "光模块可能松动，请重新插拔光模块")]
+                DiagResult(domain, f"光模块未在位，状态：{optical_info.present or 'NA'}", "光模块可能松动，请重新插拔光模块")]
         if optical_info.control_link_unreachable:
             return [DiagResult(domain, "光模块Control link unreachable", "光模块可能故障，请联系技术支持人员")]
         if not optical_info.is_high_power_enable():
@@ -188,6 +188,6 @@ class HostAnalyzer(Analyzer):
             device_id = iic_error_info.info_dict.get('device_id', '')
             die_id = iic_error_info.info_dict.get('die_id', '')
             domain = self.get_npu_chip_domain(host_info.host_id, device_id, die_id)
-            fault_info = "检测到IIC异常: trans status[0x40], error status[0x10], NPU板载光模块转接器可能存在故障"
+            fault_info = "检测到IIC异常：trans status[0x40]，error status[0x10]，NPU板载光模块转接器可能存在故障"
             diag_results.append(DiagResult(domain, fault_info, "建议更换NPU板载光模块转接器"))
         return diag_results

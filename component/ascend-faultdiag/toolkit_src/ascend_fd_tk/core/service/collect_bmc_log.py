@@ -30,9 +30,10 @@ class CollectBmcLogService(DiagService):
 
     async def run(self):
         if not self.diag_ctx.bmcs_fetchers:
+            DIAG_LOGGER.err("收集BMC日志时，未获取到有用的设备信息")
             return
         tasks = []
-        DIAG_LOGGER.info("收集BMC日志约耗时10分-15分钟, 请耐心等待")
+        DIAG_LOGGER.info("收集BMC日志约耗时10分-15分钟，请耐心等待")
         for fetcher in self.diag_ctx.bmcs_fetchers.values():
             tasks.append(BmcLogCollector(fetcher).collect())
         await asyncio.gather(*tasks)

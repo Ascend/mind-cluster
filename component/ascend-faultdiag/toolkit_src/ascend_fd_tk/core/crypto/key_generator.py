@@ -40,7 +40,6 @@ class KeyGenerator:
     def generate_complex_password(self, length: int = 16) -> str:
         """
         生成复杂密码
-
         参数:
             length: 密码长度
             use_*: 使用的字符集

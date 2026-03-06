@@ -49,7 +49,7 @@ class MultiLevelDict:
         # 遍历除最后一个key外的中间层级，自动创建空字典
         for key in keys[:-1]:
             if not isinstance(current, dict):
-                raise TypeError(f"中间层级必须是字典（当前key: {key}，实际类型: {type(current)}）")
+                raise TypeError(f"中间层级必须是字典（当前key：{key}，实际类型：{type(current)}）")
             # 不存在的key自动初始化空字典
             if key not in current:
                 current[key] = {}
@@ -58,7 +58,7 @@ class MultiLevelDict:
         # 写入最终值（强制覆盖）
         final_key = keys[-1]
         if not isinstance(current, dict):
-            raise TypeError(f"最终写入层级必须是字典（当前key: {final_key}，实际类型: {type(current)}）")
+            raise TypeError(f"最终写入层级必须是字典（当前key：{final_key}，实际类型：{type(current)}）")
         current[final_key] = value
 
     def read(self, keys: Sequence[str], default: Optional[Any] = None) -> Any:

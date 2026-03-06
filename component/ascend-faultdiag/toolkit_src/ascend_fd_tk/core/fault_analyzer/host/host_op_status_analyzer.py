@@ -30,9 +30,9 @@ _DIAG_LOGGER = logger.DIAG_LOGGER
 class HostOpticalStatusAnalyzer(Analyzer):
     _NET_HEALTH_STATUS = "Success"
     _UP_STATUS = "UP"
-    _FAULT_DESC = "端口光模块状态异常, 网络健康状态: {}, 连接状态: {}."
-    _PEER_PORT_INFO = " 对端交换机: {}, 对端端口: {}."
-    _SUGGESTION = "请检查NPU端口, 或对端端口状态"
+    _FAULT_DESC = "端口光模块状态异常，网络健康状态：{}，连接状态：{}。"
+    _PEER_PORT_INFO = " 对端交换机：{}，对端端口：{}。"
+    _SUGGESTION = "请检查NPU端口，或对端端口状态"
 
     def analyse(self) -> List[DiagResult]:
         result = []

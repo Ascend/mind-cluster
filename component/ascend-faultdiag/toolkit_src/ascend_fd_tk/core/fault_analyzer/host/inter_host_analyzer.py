@@ -74,7 +74,7 @@ class InterHostFaultAnalyzer(Analyzer):
         port_name = lldp_info.port_id_tlv
         if not lldp_info or not switch_name or not port_name:
             _DIAG_LOGGER.warning(
-                f"未收集到{host_id}, npu_id: {chip_info.npu_id}, chip_id: {chip_info.chip_id}的对端信息")
+                f"未收集到{host_id}，npu_id：{chip_info.npu_id}，chip_id：{chip_info.chip_id}的对端信息")
             return None, []
         remote_domain = [Domain(diag_enum.DeviceType.ROCE_SWITCH, switch_name),
                          Domain(diag_enum.DeviceType.SWI_PORT, port_name)]

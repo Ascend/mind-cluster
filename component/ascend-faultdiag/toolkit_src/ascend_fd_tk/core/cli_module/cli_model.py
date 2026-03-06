@@ -85,7 +85,7 @@ class AboutCliModel(CliModel):
 
     def run_task(self, *args) -> str:
         return f"""
-        MindCluster ascend-faultdiag-toolkit诊断工具版本: {self.diag_ctx.tool_config.version}
+        MindCluster ascend-faultdiag-toolkit诊断工具版本：{self.diag_ctx.tool_config.version}
         """
 
 
@@ -104,20 +104,20 @@ class GuideCliModel(CliModel):
     def run_task(self, *args) -> str:
         return f"""
         一. 采集内容准备
-        请根据故障设备自行按需选择要采集的设备信息或需要导入的日志, 可以不导入全量设备信息或日志. 按需设置以下在线或离线采集分析的任意地址.
+        请根据故障设备自行按需选择要采集的设备信息或需要导入的日志，可以不导入全量设备信息或日志。按需设置以下在线或离线采集分析的任意地址。
         
         1. 在线采集准备
-        若需要在线采集设备信息, 请使用 " {SetConnConfigCliModel.get_key()} " 命令设置设备信息, 具体配置可使用" {SetConnConfigCliModel.get_key()} ? "查看详情
+        若需要在线采集设备信息，请使用 " {SetConnConfigCliModel.get_key()} " 命令设置设备信息，具体配置可使用" {SetConnConfigCliModel.get_key()} ? "查看详情
         
         2. 离线日志解析准备
         2.1 设置服务器日志目录地址
-        请使用 " {SetHostDumpLogDirCliModel.get_key()} " 命令设置设备信息, 具体配置可使用" {SetHostDumpLogDirCliModel.get_key()} ? "查看详情
+        请使用 " {SetHostDumpLogDirCliModel.get_key()} " 命令设置设备信息，具体配置可使用" {SetHostDumpLogDirCliModel.get_key()} ? "查看详情
         
         2.2 设置BMC日志目录地址
-        请使用 " {SetBmcDumpLogDirCliModel.get_key()} " 命令设置设备信息, 具体配置可使用" {SetBmcDumpLogDirCliModel.get_key()} ? "查看详情
+        请使用 " {SetBmcDumpLogDirCliModel.get_key()} " 命令设置设备信息，具体配置可使用" {SetBmcDumpLogDirCliModel.get_key()} ? "查看详情
         
         2.2 设置交换机回显文本目录地址
-        请使用 " {SetSwiDumpLogDirCliModel.get_key()} " 命令设置设备信息, 具体配置可使用"{SetSwiDumpLogDirCliModel.get_key()} ? "查看详情
+        请使用 " {SetSwiDumpLogDirCliModel.get_key()} " 命令设置设备信息，具体配置可使用"{SetSwiDumpLogDirCliModel.get_key()} ? "查看详情
         
         3. 默认读取路径
         当未手动设置以上文件或目录时,工具会自动读取执行路径下的以下默认文件或目录
@@ -130,10 +130,10 @@ class GuideCliModel(CliModel):
         执行 " {AutoCollectDiagCliModel.get_key()} " 启动在线采集/离线分析并诊断
         
         三. 清理缓存
-        本工具支持分批采集统一诊断, 所以会单次诊断完后会留有缓存, 若已完成诊断任务, 请使用 " {ClearCacheCliModel.get_key()} " 清理缓存(若无法有效清理, 请使用管理员模式打开工具), 避免影响下次诊断结果
+        本工具支持分批采集统一诊断，所以会单次诊断完后会留有缓存，若已完成诊断任务，请使用 " {ClearCacheCliModel.get_key()} " 清理缓存(若无法有效清理，请使用管理员模式打开工具)，避免影响下次诊断结果
  
         总结: 
-        1. 先用 " {SetConnConfigCliModel.get_key()} " 设置要访问的设备ip配置文件或用 " {SetBmcDumpLogDirCliModel.get_key()} ", " {SetSwiDumpLogDirCliModel.get_key()} ", " {SetSwiDumpLogDirCliModel.get_key()} "设置离线日志目录, 或直接将日志放到默认目录下
+        1. 先用 " {SetConnConfigCliModel.get_key()} " 设置要访问的设备ip配置文件或用 " {SetBmcDumpLogDirCliModel.get_key()} "，" {SetHostDumpLogDirCliModel.get_key()} "，" {SetSwiDumpLogDirCliModel.get_key()} "设置离线日志目录，或直接将日志放到默认目录下
         2. 以上至少有一项设置存在即可使用 " {AutoCollectDiagCliModel.get_key()} " 采集/分析并诊断输出报告        
         """
 
@@ -151,7 +151,7 @@ class SetConnConfigCliModel(DetailedCliModel):
         return "set_conn_config"
 
     def get_help(self) -> str:
-        return f'设置连接文件地址, 支持 " {self.get_key()} <文件地址> " 设置, 或 " {self.get_key()} ? " 查看详情'
+        return f'设置连接文件地址，支持 " {self.get_key()} <文件地址> " 设置，或 " {self.get_key()} ? " 查看详情'
 
     def get_detail(self) -> str:
         return f"""
@@ -159,7 +159,7 @@ class SetConnConfigCliModel(DetailedCliModel):
         ============== 样例开始 ============== 
         
         [host]
-        # port指定端口,不写默认为22, username指定用户名, password指定密码, private_key指定私钥文件
+        # port指定端口，不写默认为22，username指定用户名，password指定密码，private_key指定私钥文件
         1.1.1.1 port="22" username="root" private_key="~/.shh/your_private_key"
         1.1.2.1 port="22" username="root" password="321" 
         
@@ -167,7 +167,7 @@ class SetConnConfigCliModel(DetailedCliModel):
         1.1.1.2 username="Administrator" password="123"
         
         [switch]
-        # 支持ip1-ip2 ip段方式填写(需保证账号密码相同), 通过step设置步长, 如1.1.1.1-1.1.1.5 step=2 则得到1.1.1.1, 1.1.1.3, 1.1.1.5
+        # 支持ip1-ip2 ip段方式填写(需保证账号密码相同)，通过step设置步长，如1.1.1.1-1.1.1.5 step=2 则得到1.1.1.1, 1.1.1.3, 1.1.1.5
         1.1.1.3-1.1.1.10 step=1 username="root" password="123"
         
         [config]
@@ -176,7 +176,7 @@ class SetConnConfigCliModel(DetailedCliModel):
         
         ============== 样例结束 ==============
         
-        请在本机根据以上文件内容结构, 编写需要远程连接的设备信息, 保存到文件中. 通过 " {self.get_key()} <文件地址> " 设置该文件后, 工具会在 " {AutoCollectDiagCliModel.get_key()} " 命令下自动登录设备在线采集信息
+        请在本机根据以上文件内容结构，编写需要远程连接的设备信息，保存到文件中。通过 " {self.get_key()} <文件地址> " 设置该文件后，工具会在 " {AutoCollectDiagCliModel.get_key()} " 命令下自动登录设备在线采集信息
         """
 
     def add_arguments(self, parser):
@@ -185,16 +185,16 @@ class SetConnConfigCliModel(DetailedCliModel):
 
     def run_task(self, *args) -> str:
         if not args:
-            return "地址为空, 请重新设置"
+            return "地址为空，请重新设置"
         if not os.path.exists(args[0]):
-            return f"地址{args[0]}不存在, 请重新设置"
+            return f"地址{args[0]}不存在，请重新设置"
         # 加密配置文件内容
         self.diag_ctx.encrypt_conn_config(args[0])
         # 加载配置
         res = self.diag_ctx.load_conn_config()
         if res:
-            return f"设置地址失败, 异常: {res}"
-        return "设置成功, 请尽快删除包含明文密码的配置文件"
+            return f"设置地址失败，异常：{res}"
+        return "设置成功，请尽快删除包含明文密码的配置文件"
 
 
 class SetHostDumpLogDirCliModel(DetailedCliModel):
@@ -211,7 +211,7 @@ class SetHostDumpLogDirCliModel(DetailedCliModel):
         return "set_host_dump_log"
 
     def get_help(self) -> str:
-        return f'设置服务器导出日志目录, 支持 " {self.get_key()} <目录> " 设置目录, 或 " {self.get_key()} ? " 查看详情'
+        return f'设置服务器导出日志目录，支持 " {self.get_key()} <目录> " 设置目录，或 " {self.get_key()} ? " 查看详情'
 
     def add_arguments(self, parser):
         parser.add_argument("action", nargs='?', metavar='actions',
@@ -219,21 +219,21 @@ class SetHostDumpLogDirCliModel(DetailedCliModel):
 
     def get_detail(self) -> str:
         return f"""
-        设置服务器导出日志目录, 支持以下几类脚本采集的日志:
+        设置服务器导出日志目录，支持以下几类脚本采集的日志:
         1. A3device日志一键采集脚本<version>.sh
         2. link_down_collect_<version>.sh
-        3. tool_log_collection_out_version_all_<version>.sh (以上脚本获取请联系昇腾维护, 或@wang-ruiju)
+        3. tool_log_collection_out_version_all_<version>.sh (以上脚本获取请联系昇腾维护，或@wang-ruiju)
                 
-        通过以上方式采集的日志压缩包, 统一放到一个目录中, 通过此命令 " {self.get_key()} <目录> " 设置目录, 工具会在 " {AutoCollectDiagCliModel.get_key()} " 命令下自动解压分析日志信息
+        通过以上方式采集的日志压缩包，统一放到一个目录中，通过此命令 " {self.get_key()} <目录> " 设置目录，工具会在 " {AutoCollectDiagCliModel.get_key()} " 命令下自动解压分析日志信息
         """
 
     def run_task(self, *args) -> str:
         if not args:
-            return "地址为空, 请重新设置"
+            return "地址为空，请重新设置"
         if not os.path.exists(args[0]):
-            return f"地址{args[0]}不存在, 请重新设置"
+            return f"地址{args[0]}不存在，请重新设置"
         if not os.path.isdir(args[0]):
-            return f"地址{args[0]}非文件夹, 请重新设置"
+            return f"地址{args[0]}非文件夹，请重新设置"
         self.diag_ctx.dump_log_dir_config.host_dump_log_dir = args[0]
         return "设置成功"
 
@@ -252,7 +252,7 @@ class SetBmcDumpLogDirCliModel(DetailedCliModel):
         return "set_bmc_dump_log"
 
     def get_help(self) -> str:
-        return f'设置BMC导出日志目录, 支持 " {self.get_key()} <目录> " 设置目录, 或 " {self.get_key()} ? " 查看详情'
+        return f'设置BMC导出日志目录，支持 " {self.get_key()} <目录> " 设置目录，或 " {self.get_key()} ? " 查看详情'
 
     def add_arguments(self, parser):
         parser.add_argument("action", nargs='?', metavar='actions',
@@ -260,20 +260,20 @@ class SetBmcDumpLogDirCliModel(DetailedCliModel):
 
     def get_detail(self) -> str:
         return f"""
-        设置BMC导出日志目录, 支持以下方式导出的日志tar.gz包
+        设置BMC导出日志目录，支持以下方式导出的日志tar.gz包
         1. 手动通过bmc网页 '一键收集' 按钮下载
         2. 通过命令 `ipmcget -d diaginfo` 采集的日志
         
-        通过以上方式采集的日志压缩包, 统一放到一个目录中, 通过此命令 " {self.get_key()} <目录> " 设置目录, 工具会在 " {AutoCollectDiagCliModel.get_key()} " 命令下自动解压分析日志信息
+        通过以上方式采集的日志压缩包，统一放到一个目录中，通过此命令 " {self.get_key()} <目录> " 设置目录，工具会在 " {AutoCollectDiagCliModel.get_key()} " 命令下自动解压分析日志信息
         """
 
     def run_task(self, *args) -> str:
         if not args:
-            return "地址为空, 请重新设置"
+            return "地址为空，请重新设置"
         if not os.path.exists(args[0]):
-            return f"地址{args[0]}不存在, 请重新设置"
+            return f"地址{args[0]}不存在，请重新设置"
         if not os.path.isdir(args[0]):
-            return f"地址{args[0]}非文件夹, 请重新设置"
+            return f"地址{args[0]}非文件夹，请重新设置"
         self.diag_ctx.dump_log_dir_config.bmc_dump_log_dir = args[0]
         return "设置成功"
 
@@ -292,7 +292,7 @@ class SetSwiDumpLogDirCliModel(DetailedCliModel):
         return "set_switch_dump_log"
 
     def get_help(self) -> str:
-        return f'设置交换机命令回显导出目录, 支持 " {self.get_key()} <目录> " 设置目录, 或 " {self.get_key()} ? " 查看详情'
+        return f'设置交换机命令回显导出目录，支持 " {self.get_key()} <目录> " 设置目录，或 " {self.get_key()} ? " 查看详情'
 
     def add_arguments(self, parser):
         parser.add_argument("action", nargs='?', metavar='actions',
@@ -300,20 +300,20 @@ class SetSwiDumpLogDirCliModel(DetailedCliModel):
 
     def get_detail(self) -> str:
         return f"""
-        设置交换机命令回显/日志导出目录, 支持以下方式导出的信息(当前仅支持华为交换机)
-        1. 使用交换机 ' display diagnostic-information <filename> ' 命令导出命令回显结果集(推荐, 信息较全)
-        2. 查询关键命令后直接复制shell回显页面, 导出文本文件(必须执行display current-configuration获取交换机信息, 否则工具无法匹配)
+        设置交换机命令回显/日志导出目录，支持以下方式导出的信息(当前仅支持华为交换机)
+        1. 使用交换机 ' display diagnostic-information <filename> ' 命令导出命令回显结果集(推荐，信息较全)
+        2. 查询关键命令后直接复制shell回显页面，导出文本文件(必须执行display current-configuration获取交换机信息，否则工具无法匹配)
         3. 使用交换机 ' collect diagnostic-information ' 命令导出的日志zip包 
-        将以上方式采集的文本文件统一放到一个目录中, 通过此命令 " {self.get_key()} <目录> " 设置目录, 工具会在 " {AutoCollectDiagCliModel.get_key()} " 命令下自动分析文本信息
+        将以上方式采集的文本文件统一放到一个目录中，通过此命令 " {self.get_key()} <目录> " 设置目录，工具会在 " {AutoCollectDiagCliModel.get_key()} " 命令下自动分析文本信息
         """
 
     def run_task(self, *args) -> str:
         if not args:
             return "地址为空, 请重新设置"
         if not os.path.exists(args[0]):
-            return f"地址{args[0]}不存在, 请重新设置"
+            return f"地址{args[0]}不存在，请重新设置"
         if not os.path.isdir(args[0]):
-            return f"地址{args[0]}非文件夹, 请重新设置"
+            return f"地址{args[0]}非文件夹，请重新设置"
         self.diag_ctx.dump_log_dir_config.switch_dump_log_dir = args[0]
         return "设置成功"
 
@@ -332,7 +332,7 @@ class CollectBmcDumpInfoLog(CliModel):
 
     def run_task(self, *args) -> str:
         asyncio.run(CollectBmcLog(self.diag_ctx).main())
-        return f"收集完成, 日志位于{CommonPath.TOOL_HOME_BMC_DUMP_CACHE_DIR}"
+        return f"收集完成，请查看日志路径{CommonPath.TOOL_HOME_BMC_DUMP_CACHE_DIR}"
 
 
 class AutoCollectCliModel(DetailedCliModel):
@@ -345,14 +345,14 @@ class AutoCollectCliModel(DetailedCliModel):
         return "auto_collect"
 
     def get_help(self) -> str:
-        return "启动自动信息采集, 支持离线、在线采集, 适用于不同网络平面分批收集"
+        return "启动自动信息采集，支持离线、在线采集，适用于不同网络平面分批收集"
 
     def get_detail(self) -> str:
         return super().get_detail()
 
     def run_task(self, *args) -> str:
         asyncio.run(AutoCollect(self.diag_ctx).main())
-        return f'收集完成, 若完成全部收集请使用 " {AutoDiagCliModel.get_key()} " 进行诊断'
+        return f'收集完成，若完成全部收集请使用 " {AutoDiagCliModel.get_key()} " 进行诊断'
 
 
 class AutoInspection(DetailedCliModel):
@@ -365,13 +365,13 @@ class AutoInspection(DetailedCliModel):
         return "auto_inspection"
 
     def get_help(self) -> str:
-        return "启动巡检结果诊断, 适用于分批收集后统一诊断"
+        return "启动巡检结果诊断，适用于分批收集后统一诊断"
 
     def get_detail(self) -> str:
         all_customer_types = "\n".join(customer.value for customer in list(Customer))
         return f"""
-        使用 " auto_collect " 完成后, 启动该命令进行巡检结果诊断. 
-        支持以下客户类型: 
+        使用 " auto_collect " 完成后，启动该命令进行巡检结果诊断。
+        支持以下客户类型：
         {all_customer_types}
         使用 " {self.get_key()} <客户类型> " 启动诊断
         """
@@ -383,12 +383,12 @@ class AutoInspection(DetailedCliModel):
 
     def run_task(self, *args) -> str:
         if not args:
-            _CONSOLE_LOGGER.info("未输入巡检类型, 默认使用mayi客户巡检")
+            _CONSOLE_LOGGER.info("未输入巡检类型，默认使用mayi客户巡检")
             customer = Customer.Mayi
         else:
             customer = diag_enum.get_enum(Customer, "", args[0])
             if not customer:
-                return f"{args[0]}为不支持的客户类型, 请使用 ' {self.get_key()} ? ' 查看支持的客户类型"
+                return f"{args[0]}为不支持的客户类型，请使用 ' {self.get_key()} ? ' 查看支持的客户类型"
         asyncio.run(Inspection(self.diag_ctx, customer).main())
         return "诊断完成"
 
@@ -403,7 +403,7 @@ class AutoDiagCliModel(DetailedCliModel):
         return "auto_diag"
 
     def get_help(self) -> str:
-        return "启动自动诊断, 适用于分批收集后统一诊断"
+        return "启动自动诊断，适用于分批收集后统一诊断"
 
     def get_detail(self) -> str:
         return super().get_detail()
@@ -414,7 +414,7 @@ class AutoDiagCliModel(DetailedCliModel):
             return "诊断完成"
         except GenerateCsvPermissionErr as e:
             _CONSOLE_LOGGER.info(e)
-            return "生成csv失败, 解除占用后, 可使用 ' auto_diag ' 重新生成报告."
+            return "生成csv失败，解除占用后，可使用 ' auto_diag ' 重新生成报告。"
 
 
 class AutoCollectDiagCliModel(CliModel):
@@ -436,7 +436,7 @@ class AutoCollectDiagCliModel(CliModel):
             return "诊断完成"
         except GenerateCsvPermissionErr as e:
             _CONSOLE_LOGGER.info(e)
-            return "生成csv失败, 解除占用后, 可使用 ' auto_diag ' 重新生成报告."
+            return "生成csv失败，解除占用后，可使用 ' auto_diag ' 重新生成报告。"
 
 
 class ClearCacheCliModel(CliModel):
@@ -449,16 +449,16 @@ class ClearCacheCliModel(CliModel):
         return "clear_cache"
 
     def get_help(self) -> str:
-        return "清理缓存, 请在执行新诊断任务前务必执行! 避免干扰诊断结果(若清理未生效请用管理员模式打开工具)"
+        return "清理缓存，请在执行新诊断任务前务必执行！避免干扰诊断结果(若清理未生效请用管理员模式打开工具)"
 
     def run_task(self, *args) -> str:
         try:
-            if os.path.exists(CommonPath.COLLECT_CACHE):
-                shutil.rmtree(CommonPath.COLLECT_CACHE)
+            if os.path.exists(CommonPath.TOOL_HOME_CACHE_DIR):
+                shutil.rmtree(CommonPath.TOOL_HOME_CACHE_DIR)
             if os.path.isfile(CommonPath.ENCRYPTED_CONN_CONFIG_PATH):
                 os.remove(CommonPath.ENCRYPTED_CONN_CONFIG_PATH)
         except Exception as e:
-            return f"清理{CommonPath.COLLECT_CACHE}异常: {e}"
+            return f"清理{CommonPath.COLLECT_CACHE}异常：{e}"
         return "清理完成"
 
 

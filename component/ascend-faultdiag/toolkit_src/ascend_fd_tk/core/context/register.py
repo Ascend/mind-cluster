@@ -82,4 +82,4 @@ def recursive_scan_and_register(root_module: str) -> None:
             # 导入模块（触发模块内类的定义和注册）
             importlib.import_module(module_info.name)
         except ImportError as e:
-            _CONSOLE_LOGGER.info(f"导入模块 {module_info.name} 失败: {e}")
+            _CONSOLE_LOGGER.info(f"导入模块 {module_info.name} 失败：{e}")

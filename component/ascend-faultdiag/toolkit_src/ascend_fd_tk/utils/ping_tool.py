@@ -40,7 +40,7 @@ class PingTool:
             # Linux/macOS: ping -c 次数 -W 超时秒数
             param = ['ping', '-c', str(count), '-W', str(timeout), host]
         else:
-            return False, f"不支持的操作系统: {os_name}"
+            return False, f"不支持的操作系统：{os_name}"
 
         try:
             # 执行 ping 命令，捕获输出
@@ -69,4 +69,4 @@ class PingTool:
         except subprocess.TimeoutExpired:
             return False, f"超时（{timeout}秒）"
         except Exception as e:
-            return False, f"执行失败: {str(e)}"
+            return False, f"执行失败：{str(e)}"

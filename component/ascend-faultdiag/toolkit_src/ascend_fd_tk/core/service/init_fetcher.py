@@ -126,24 +126,25 @@ class InitFetcher(DiagService):
         return futures
 
     async def _uncompress_and_add_host_file_fetchers(self, host_dump_log_dir):
-        if not os.path.exists(host_dump_log_dir):
+        host_dump_log_dir = convert_log_path(host_dump_log_dir)
+        if not host_dump_log_dir:
             return
         await self._uncompress_log_pkgs(host_dump_log_dir)
         await self._add_host_fetchers(host_dump_log_dir)
 
     async def _uncompress_and_add_bmc_file_fetchers(self, bmc_dump_log_dir):
-        if not os.path.exists(bmc_dump_log_dir):
+        bmc_dump_log_dir = convert_log_path(bmc_dump_log_dir)
+        if not bmc_dump_log_dir:
             return
         await self._uncompress_log_pkgs(bmc_dump_log_dir)
         await self._add_bmc_fetchers(bmc_dump_log_dir)
 
     async def _uncompress_log_pkgs(self, root_dir):
-        root_path = convert_log_path(root_dir)
-        if not root_path:
+        if not root_dir:
             return
         futures = []
         # 解压不超过3层的压缩包
-        file_paths = file_tool.find_all_sub_paths(str(root_path), "*.tar.gz", self._FIND_DEPTH)
+        file_paths = file_tool.find_all_sub_paths(root_dir, "*.tar.gz", self._FIND_DEPTH)
         for file_path in file_paths:
             # file_path: 压缩包的完整 Path 对象（如 /data/subdir/file.tar.gz）
             file_path = Path(file_path)
@@ -184,8 +185,8 @@ class InitFetcher(DiagService):
                 DIAG_LOGGER.error(f"parse dir {log_collect_dir} failed: {e}")
 
     async def _add_swi_file_fetchers(self, switch_dump_log_dir: str):
-        root_dir = Path(switch_dump_log_dir)
-        if not root_dir.exists() or not root_dir.is_dir():
+        switch_dump_log_dir = convert_log_path(switch_dump_log_dir)
+        if not switch_dump_log_dir:
             return
         await self._unzip_diag_info_zip(switch_dump_log_dir)
         cli_output_futures, diag_info_futures = await self._parse_cli_and_log(switch_dump_log_dir)

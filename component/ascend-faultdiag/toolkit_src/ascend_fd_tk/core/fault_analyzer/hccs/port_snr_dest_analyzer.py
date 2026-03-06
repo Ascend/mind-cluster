@@ -53,7 +53,7 @@ class PortSnrDestAnalyzer(Analyzer):
                     continue
                 peer_port = ""
                 if port_snr.xpu and port_mapping.xpu_id:
-                    peer_port = f"对端{port_snr.xpu}{port_mapping.xpu_id}端口, "
+                    peer_port = f"对端{port_snr.xpu}{port_mapping.xpu_id}端口，"
 
                 diag_res = DiagResult(domain,
                                       f"{peer_port}lane {port_snr.lane_id} {check_res}",

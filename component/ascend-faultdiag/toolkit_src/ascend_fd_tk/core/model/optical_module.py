@@ -67,7 +67,7 @@ class OpticalModuleInfo(JsonObj):
             j = i + 1
             if (abs(float(self.lane_power_infos[i].media_snr) - float(self.lane_power_infos[j].media_snr))
                     < SNR_LANE_DIFF_THRESHOLD):
-                diff_value_desc = f"{diff_value_desc},lane{i}与lane{j}间snr差值>{SNR_LANE_DIFF_THRESHOLD}"
+                diff_value_desc = f"{diff_value_desc}，lane{i}与lane{j}间snr差值>{SNR_LANE_DIFF_THRESHOLD}"
         return diff_value_desc
 
     def get_abnormal_snr_infos(self, host_th: Threshold, media_th: Threshold):

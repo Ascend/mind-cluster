@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CACHE_DIR="${SCRIPT_DIR}/../../cache"
 
 if [ -d "$CACHE_DIR" ]; then
-    echo "正在清理缓存目录: $CACHE_DIR"
+    echo "正在清理缓存目录：$CACHE_DIR"
     
     # 删除cache目录下的所有文件和目录
     for item in "$CACHE_DIR"/*; do
@@ -22,5 +22,5 @@ if [ -d "$CACHE_DIR" ]; then
     
     echo "缓存目录清理完成，已重新创建空文件夹"
 else
-    echo "缓存目录不存在: $CACHE_DIR"
+    echo "缓存目录不存在：$CACHE_DIR"
 fi

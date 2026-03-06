@@ -32,7 +32,7 @@ class PortLanePowerDiffAnalyzer(Analyzer):
     """
     端口lane间power差检查, 不得大于3db
     """
-    _LANE_POWER_DIFF_FAULT = "{}端口Lane最大值和最小值差值大于{}db, 实际最大值lane{}: {}{}, 最小值lane{}: {}{}"
+    _LANE_POWER_DIFF_FAULT = "{}端口Lane最大值和最小值差值大于{}db，实际最大值lane{}：{}{}，最小值lane{}：{}{}"
     _NA_POWER = "NA"
 
     def __init__(self, cluster_info: ClusterInfoCache):

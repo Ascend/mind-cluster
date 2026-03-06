@@ -50,7 +50,7 @@ class HostOpticalLosLoLAnalyzer(Analyzer):
                 }
                 for k, v in flag_map.items():
                     if v and helpers.parse_hex(v) > 0:
-                        diag_res = DiagResult(local_domain, f"光模块{k}指标异常, 状态: {v}",
+                        diag_res = DiagResult(local_domain, f"光模块{k}指标异常，状态：{v}",
                                               "请检查光模块相关指标")
                         results.append(diag_res)
         return results

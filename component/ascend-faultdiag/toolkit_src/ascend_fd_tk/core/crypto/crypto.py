@@ -15,7 +15,6 @@ class RootKeyCrypto:
     def __init__(self, master_key, salt=None, iterations=100000):
         """
         初始化加解密器
-
         参数:
             master_key: 固定根密钥（字符串或字节）
             salt: 盐值（可选，默认随机生成）
@@ -46,10 +45,8 @@ class RootKeyCrypto:
     def encrypt(self, plaintext):
         """
         加密数据
-
         参数:
             plaintext: 要加密的文本（字符串）
-
         返回:
             包含随机部分、IV和密文的base64编码字符串
         """
@@ -89,10 +86,8 @@ class RootKeyCrypto:
     def decrypt(self, encrypted_data):
         """
         解密数据
-
         参数:
             encrypted_data: 加密后的base64编码字符串
-
         返回:
             解密后的文本（字符串）
         """

@@ -39,7 +39,7 @@ class AutoInspection(DiagService):
             try:
                 os.startfile(file_path)
             except Exception as e:
-                DIAG_LOGGER.error(f"打开文件失败: {e}")
+                DIAG_LOGGER.error(f"打开文件失败：{e}")
 
     async def run(self):
         recursive_scan_and_register("ascend_fd_tk.core.inspection")
@@ -47,7 +47,7 @@ class AutoInspection(DiagService):
             self.diag_ctx.inspection_result.extend(cls(self.diag_ctx.cache, self.customer).check())
         result = [inspection_result.to_csv_dict() for inspection_result in self.diag_ctx.inspection_result]
         if not result:
-            DIAG_LOGGER.error("诊断数据为空, 请确认是否进行信息采集")
+            DIAG_LOGGER.error("诊断数据为空，请确认是否进行信息采集")
             return
         os.makedirs(CommonPath.REPORT_DIR, exist_ok=True)
         columns = ["A端设备名称", "A端IP", "A端接口", "A端SN", "A端光模块SN", "B端设备名称", "B端IP", "B端接口",

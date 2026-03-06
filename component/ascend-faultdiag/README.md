@@ -77,10 +77,11 @@ ascend-faultdiag
 │  ├─custom_operation
 │  ├─dt
 │  └─st
-└─toolkits
-    ├─exp_covert
-    │  └─exp_lib_dir
-    └─local_diag
+├─scripts
+│   ├─exp_covert
+│   │  └─exp_lib_dir
+│   └─local_diag
+└─toolkit_src
 ```
 
 # 版本说明

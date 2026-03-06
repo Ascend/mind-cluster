@@ -42,8 +42,8 @@ _HARDWARE_PATTERN = re.compile(r"NPU Board(?P<npu>\d{1,2})( NPU\d-(?P<chip>\d{1,
 
 _ERR_CODE_EVENT_LIST = [
     BmcErrCodeEvent(0x80e01801, "发生多Bit ECC故障", "请对该NPU HBM进行压测", _HARDWARE_PATTERN),
-    BmcErrCodeEvent(0x80e18402, "多Bit ECC故障, 隔离行已满64", "请立即更换NPU备件", _HARDWARE_PATTERN),
-    BmcErrCodeEvent(0x80cb800a, "AIV算子超时, NPU热复位", "建议对硬件做AICode压测", _HARDWARE_PATTERN),
+    BmcErrCodeEvent(0x80e18402, "多Bit ECC故障，隔离行已满64", "请立即更换NPU备件", _HARDWARE_PATTERN),
+    BmcErrCodeEvent(0x80cb800a, "AIV算子超时，NPU热复位", "建议对硬件做AICode压测", _HARDWARE_PATTERN),
     BmcErrCodeEvent(0x80cb8009, "AIV总线访问错误", "建议对硬件做AICode压测", _HARDWARE_PATTERN),
 
     # 掉卡故障

@@ -68,7 +68,7 @@ class HccsLinkDegradedAnalyzer(Analyzer):
         for bmc_info in self.cluster_info.bmcs_info.values():
             host_error_event_infos = self._find_hccs_link_degrade_events(bmc_info)
             chassis_mapping = self.cluster_info.get_chassis_mappings().find_mapping_by_bmc_ip(bmc_info.bmc_id)
-            if not host_error_event_infos:
+            if not host_error_event_infos or not chassis_mapping:
                 continue
             result.extend(self._port_fault_analyse(chassis_mapping, host_error_event_infos))
         return result

@@ -55,7 +55,7 @@ class OpticalInvalidAnalyzer(Analyzer):
                 Domain(DeviceType.SWITCH, switch_info.swi_id),
                 Domain(DeviceType.SWI_PORT, ifname),
             ]
-            res = DiagResult(domain, f"光模块链路Los告警, 原因: {reason}", "请检查光模块",
+            res = DiagResult(domain, f"光模块链路Los告警，原因：{reason}", "请检查光模块",
                              err_code=alarm_info.alarm_id)
             results.append(res)
         return results

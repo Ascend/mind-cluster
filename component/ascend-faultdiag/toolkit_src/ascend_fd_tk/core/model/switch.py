@@ -328,7 +328,7 @@ class PortDownStatus(JsonObj):
         self.date = date
         self.crc_error_cnt = crc_error_cnt
         self.frc_error_cnt = frc_error_cnt
-        self.lane_infos = lane_infos
+        self.lane_infos = lane_infos or []
 
 
 class SwitchInfo(JsonObj):
@@ -350,7 +350,7 @@ class SwitchInfo(JsonObj):
         self.interface_mapping = interface_mapping or []
         self.active_alarm_info = active_alarm_info or []
         self.history_alarm_info = history_alarm_info or []
-        self.interface_info = interface_info
+        self.interface_info = interface_info or []
         self.hccs_info = hccs_info
         self.date_time = date_time
         self.bit_error_rate = bit_error_rate or []

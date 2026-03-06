@@ -41,12 +41,12 @@ class HccsSerdesAnalyzer(Analyzer):
                 if info.cdr_los == "1":
                     fault_desc_list.append("存在CDR失锁")
                 if info.csr119_data.startswith(self._POWER_ERR_CODE_PREFIX):
-                    fault_desc_list.append(f"存在电源故障, 故障码: {info.csr119_data}")
+                    fault_desc_list.append(f"存在电源故障，故障码：{info.csr119_data}")
                 if not fault_desc_list:
                     continue
-                fault_desc = f"交换芯片: {info.chip_id}, 端口: {info.port_id}" + ",".join(fault_desc_list)
+                fault_desc = f"交换芯片：{info.chip_id}，端口：{info.port_id}" + ",".join(fault_desc_list)
                 domains = [Domain(diag_enum.DeviceType.SWITCH.value, swi_info.swi_id),
                            Domain(diag_enum.DeviceType.SWI_PORT.value, info.swi_port_id)]
-                res = DiagResult(domains, fault_desc, "请检查端口故障.")
+                res = DiagResult(domains, fault_desc, "请检查端口故障")
                 results.append(res)
         return results

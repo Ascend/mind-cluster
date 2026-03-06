@@ -43,6 +43,8 @@ class BmcSshFetcher(SshFetcher, BmcFetcher):
 
     async def fetch_bmc_sn(self) -> str:
         cmd_res = await self.executor.run_cmd(CmdTask("ipmcget -d serialnumber", timeout=10))
+        if "System SN is:" not in cmd_res.stdout:
+            return "NA"
         return cmd_res.stdout.replace("ipmcget -d serialnumber\r\nSystem SN is:", "").strip()
 
     async def fetch_bmc_date(self) -> str:

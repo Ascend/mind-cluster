@@ -71,8 +71,8 @@ def find_all_valid_intervals(time_list: List[datetime], target_time: str,
 class LinkStatCheckItem(InspectionCheckItem):
     _LINK_DOWN_ERR_CODE = 0x8520003
     _LINK_DOWN_PATTERN = re.compile(r"ifName=([^,]+)")
-    _LINK_DOWN_DESC_TEMPLATE = "端口{} down, 事件时间{}"
-    _LINK_FLAPPING_DESC_TEMPLATE = "端口{}闪断, 周期{}-{}内闪断{}次"
+    _LINK_DOWN_DESC_TEMPLATE = "端口{} down，事件时间{}"
+    _LINK_FLAPPING_DESC_TEMPLATE = "端口{}闪断，周期{}-{}内闪断{}次"
 
     def __init__(self, cluster_info: ClusterInfoCache, customer: Customer):
         super().__init__(cluster_info, customer)

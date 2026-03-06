@@ -78,6 +78,6 @@ class BmcErrCodeAnalyzer(Analyzer):
         host_info = self.cluster_info.find_host_info_by_sn_num(sn_num)
         if host_info:
             fault_info_list.append(f"{DeviceType.SERVER.value}{host_info.host_id}:")
-        fault_info_list.append(f"{err_code_event.err_desc},\n原始故障描述: {bmc_sel.event_description},"
-                               f"\n故障发生时间: {bmc_sel.generation_time}")
+        fault_info_list.append(f"{err_code_event.err_desc}，\n原始故障描述：{bmc_sel.event_description}，"
+                               f"\n故障发生时间：{bmc_sel.generation_time}")
         return "".join(fault_info_list)

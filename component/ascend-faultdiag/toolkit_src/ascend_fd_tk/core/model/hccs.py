@@ -173,7 +173,7 @@ class LCNEInfo(JsonObj):
         self.server_id = server_id
         self.xpu = xpu
         # 端口状态信息
-        self.link_status: List[PortLinkStatusRecord] = link_status
+        self.link_status: List[PortLinkStatusRecord] = link_status or []
         # 路由miss
         self.rp_direction_miss = rp_direction_miss
         self.lp_direction_miss = lp_direction_miss

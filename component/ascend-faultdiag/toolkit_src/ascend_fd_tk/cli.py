@@ -49,13 +49,13 @@ class DiagToolCLI:
         cmd = parts[0].lower()
         args = parts[1:] if len(parts) > 1 else []
         if not self.cli_ctx.is_cmd_valid(cmd):
-            _CONSOLE_LOGGER.info(f"未知命令: {cmd}")
+            _CONSOLE_LOGGER.info(f"未知命令：{cmd}")
             _CONSOLE_LOGGER.info("使用 'help' 查看可用命令")
             return
         try:
             _CONSOLE_LOGGER.info(self.cli_ctx.run_cmd(cmd, *args))
         except Exception as e:
-            _CONSOLE_LOGGER.info(f"执行异常: {e}")
+            _CONSOLE_LOGGER.info(f"执行异常：{e}")
             import traceback
             traceback.print_exc()
 
@@ -63,7 +63,7 @@ class DiagToolCLI:
         """运行主循环"""
         _CONSOLE_LOGGER.info("=== MindCluster ascend-faultdiag-toolkit诊断工具 ===")
         _CONSOLE_LOGGER.info("-- 交互式命令行模式 --")
-        _CONSOLE_LOGGER.info("具体使用细节可以执行 ' guide ' 命令查看使用向导(首次使用请务必查看!!)")
+        _CONSOLE_LOGGER.info("具体使用细节可以执行 ' guide ' 命令查看使用向导(首次使用请务必查看！！)")
         _CONSOLE_LOGGER.info("")
         _CONSOLE_LOGGER.info(self.cli_ctx.show_help())
 
@@ -79,11 +79,11 @@ class DiagToolCLI:
             except KeyboardInterrupt:
                 # 处理Ctrl+C
                 _CONSOLE_LOGGER.info("\n中断程序")
-                choice = input("确定要退出吗？(y/n): ").lower()
+                choice = input("确定要退出吗？(y/n)：").lower()
                 if choice == 'y':
                     break
             except Exception as e:
-                _CONSOLE_LOGGER.info(f"程序错误: {e}")
+                _CONSOLE_LOGGER.info(f"程序错误：{e}")
                 continue
 
 

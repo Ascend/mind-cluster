@@ -32,10 +32,10 @@ class ThresholdStatus(Enum):
 
 class Threshold(JsonObj):
     _STR_MAPPING = {
-        ThresholdStatus.HIGH_THRESHOLD_WARN: "{}实际值: {}，高于告警阈值: {}",
-        ThresholdStatus.HIGH_THRESHOLD_ALARM: "{}实际值: {}，高于故障阈值: {}",
-        ThresholdStatus.LOW_THRESHOLD_WARN: "{}实际值: {}，低于告警阈值: {}",
-        ThresholdStatus.LOW_THRESHOLD_ALARM: "{}实际值: {}，低于故障阈值: {}",
+        ThresholdStatus.HIGH_THRESHOLD_WARN: "{}实际值：{}，高于告警阈值：{}",
+        ThresholdStatus.HIGH_THRESHOLD_ALARM: "{}实际值：{}，高于故障阈值：{}",
+        ThresholdStatus.LOW_THRESHOLD_WARN: "{}实际值：{}，低于告警阈值：{}",
+        ThresholdStatus.LOW_THRESHOLD_ALARM: "{}实际值：{}，低于故障阈值：{}",
     }
 
     def __init__(self, low_threshold_alarm: str = "", high_threshold_alarm: str = "", low_threshold_warn: str = "",

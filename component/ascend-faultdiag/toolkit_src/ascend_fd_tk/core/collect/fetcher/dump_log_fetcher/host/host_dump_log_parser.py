@@ -153,8 +153,8 @@ class HostDumpLogParserV1(HostDumpLogParser):
 
 class HostDumpLogParserV2(HostDumpLogParser):
     _PATTERN_MAP = {
-        ToolLogCollectionSplitType.DEVICE_ID: re.compile(r"device_id=(\d{1,2})"),
-        ToolLogCollectionSplitType.DEVICE_CHIP_ID: re.compile(r"device_id=(\d{1,2})_c(\d{1,2})")
+        ToolLogCollectionSplitType.DEVICE_ID: re.compile(r"(?:device_)?id=(\d{1,2})"),
+        ToolLogCollectionSplitType.DEVICE_CHIP_ID: re.compile(r"(?:device_)?id=(\d{1,2})_c(\d{1,2})")
     }
 
     def get_name_dir(self) -> str:

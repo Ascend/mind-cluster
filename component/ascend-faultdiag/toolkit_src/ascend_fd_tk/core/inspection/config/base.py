@@ -53,6 +53,6 @@ class InspectionConfig(JsonObj):
 
 
 class FaultDescTemplate(enum.Enum):
-    MEDIA_SNR_WARN = "链路亚健康, A端模块lane{} SNR值{}db小于告警值{}db"
-    LOW_POWER_WARN = "链路亚健康, A端光模块lane{} {}光功率{}db较低, 低于{}db"
-    LANE_POWER_DIFF_FAULT = "{}端口Lane最大值和最小值差值大于{}db, 实际最大值lane{}: {}db, 最小值lane{}: {}db"
+    MEDIA_SNR_WARN = "链路亚健康，A端模块lane{} SNR值{}db小于告警值{}db"
+    LOW_POWER_WARN = "链路亚健康，A端光模块lane{} {}光功率{}db较低，低于{}db"
+    LANE_POWER_DIFF_FAULT = "{}端口Lane最大值和最小值差值大于{}db，实际最大值lane{}：{}db，最小值lane{}：{}db"

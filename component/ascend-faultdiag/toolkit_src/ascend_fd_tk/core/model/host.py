@@ -504,10 +504,10 @@ class NpuInfo(JsonObj):
                  hccs_info: Dict[str, HccnPortHccsInfo] = None,
                  spod_info: Dict[str, SpodInfo] = None,
                  npu_type="", npu_id="", speed="", duplex=""):
-        self.hccn_lldp_info = hccn_lldp_info
-        self.hccn_optical_info = hccn_optical_info
-        self.hccn_link_stat_info = hccn_link_stat_info
-        self.hccn_stat_info = hccn_stat_info
+        self.hccn_lldp_info = hccn_lldp_info or {}
+        self.hccn_optical_info = hccn_optical_info or {}
+        self.hccn_link_stat_info = hccn_link_stat_info or {}
+        self.hccn_stat_info = hccn_stat_info or {}
         self.hccs_info = hccs_info or {}
         self.spod_info = spod_info or {}
         self.npu_type = npu_type
@@ -526,9 +526,9 @@ class HostInfo(JsonObj):
         self.hostname = hostname
         self.server_superpod_id = server_superpod_id
         self.server_index = server_index
-        self.msnpureport_log = msnpureport_log
-        self.npu_chip_info = npu_chip_info
-        self.loopback_info_list = loopback_info_list
+        self.msnpureport_log = msnpureport_log or []
+        self.npu_chip_info = npu_chip_info or []
+        self.loopback_info_list = loopback_info_list or []
 
     def get_msn_logs_by_type(self, type_key: str) -> List[FindResult]:
         if not type_key:

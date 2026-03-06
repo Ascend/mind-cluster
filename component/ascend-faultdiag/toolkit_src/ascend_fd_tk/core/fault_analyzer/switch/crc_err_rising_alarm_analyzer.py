@@ -42,7 +42,7 @@ class CrcRisingCheckItem(Analyzer):
                                        r"hwIfMonitorCrcErrorThreshold=(?P<crc_threshold>\d+), *"
                                        r"hwIfMonitorCrcErrorInterval=(?P<crc_interval>\d+), *"
                                        r"(hwIfMonitorName|EthPhysicalName|InterfaceName)=(?P<if_name>[^ ,)]+)")
-    _ERR_DESC_TEMPLATE = "端口{} CRC快速增长告警统计次数{}, 阈值{}"
+    _ERR_DESC_TEMPLATE = "端口{} CRC快速增长告警统计次数{}，阈值{}"
 
     def __init__(self, cluster_info: ClusterInfoCache):
         super().__init__(cluster_info)
@@ -66,7 +66,7 @@ class CrcRisingCheckItem(Analyzer):
                                                             crc_err_info.crc_threshold)
                 _, peer_interface_info = self.cluster_info.find_peer_swi_interface_info_by_if_info(if_info)
                 if peer_interface_info:
-                    fault_info += f", 对端设备{peer_interface_info.device_name}, 对端端口{peer_interface_info.interface}"
+                    fault_info += f"，对端设备{peer_interface_info.device_name}，对端端口{peer_interface_info.interface}"
                 domain = [
                     Domain(DeviceType.SWITCH, local_if_info.device_name),
                     Domain(DeviceType.SWI_PORT, local_if_info.interface)

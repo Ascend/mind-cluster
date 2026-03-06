@@ -41,10 +41,8 @@ SCRIPT_PATH = str(os.path.abspath(__file__)).rstrip("c")
 def convert_path_regex(linux_style_regex):
     """
     将Linux风格的路径正则表达式转换为当前操作系统对应的风格
-
     参数:
         linux_style_regex: 包含Linux风格(/)分隔符的路径正则表达式
-
     返回:
         转换后适配当前系统的路径正则表达式
     """
@@ -89,7 +87,7 @@ def search_keywords_in_file(file_path: str, keyword_patterns: List[Tuple[str, st
                         matches.append((pattern[0], line.strip()))
                         break
     except Exception as e:
-        print(f"处理文件 {file_path} 错误: {str(e)}", file=sys.stderr)
+        print(f"处理文件 {file_path} 错误：{str(e)}", file=sys.stderr)
     return matches
 
 
@@ -120,7 +118,7 @@ def load_patterns_from_config(config_path: str) -> List[Tuple[str, str, str]]:
         # 配置文件格式：[{"pattern_key": "pattern key", "keyword": "正则", "filepath": "正则"}, ...]
         return [(item["pattern_key"], item["keyword_pattern"], item["filepath_pattern"]) for item in config]
     except Exception as e:
-        print(f"加载配置文件失败: {str(e)}", file=sys.stderr)
+        print(f"加载配置文件失败：{str(e)}", file=sys.stderr)
         sys.exit(1)
 
 
@@ -150,9 +148,9 @@ def main():
     try:
         with open(args.output, 'w', encoding='utf-8') as f:
             json.dump(results, f, ensure_ascii=False, indent=2)
-        print(f"清洗完成，结果已保存到: {args.output}")
+        print(f"清洗完成，结果已保存到：{args.output}")
     except Exception as e:
-        print(f"写入结果文件失败: {str(e)}", file=sys.stderr)
+        print(f"写入结果文件失败：{str(e)}", file=sys.stderr)
         sys.exit(1)
 
 

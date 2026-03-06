@@ -126,7 +126,7 @@ def dict_list_to_csv(
 
         _CONSOLE_LOGGER.info(f"CSV 文件已生成：{output_path}（共 {len(dict_list)} 行，{len(columns)} 列）")
     except Exception as e:
-        raise GenerateCsvPermissionErr(f"生成CSV文件到: {output_path} 失败, 可能是已打开文件占用, 异常: {e}") from e
+        raise GenerateCsvPermissionErr(f"生成CSV文件到：{output_path} 失败，可能是已打开文件占用，异常：{e}") from e
 
 
 # 便捷工具函数：从 CSV 读取回 list[dict]（可选功能）
@@ -193,5 +193,5 @@ def csv_to_list_of_lists(filepath: str, delimiter: str = ',',
         _CONSOLE_LOGGER.info(f"错误：找不到文件 {filepath}")
         return []
     except Exception as e:
-        _CONSOLE_LOGGER.info(f"读取CSV文件时出错: {e}")
+        _CONSOLE_LOGGER.info(f"读取CSV文件时出错：{e}")
         return []

@@ -77,9 +77,9 @@ class CompressTool:
                 # print(f"{'  ' * (current_depth - 1)}已删除原始ZIP: {zip_path.name}")
 
         except zipfile.BadZipFile as e:
-            DIAG_LOGGER.error(f"{'  ' * (current_depth - 1)}错误: {zip_path.name} 不是有效的ZIP文件 - {e}")
+            DIAG_LOGGER.error(f"{'  ' * (current_depth - 1)}错误：{zip_path.name} 不是有效的ZIP文件 - {e}")
         except Exception as e:
-            DIAG_LOGGER.error(f"{'  ' * (current_depth - 1)}解压错误: {zip_path.name} - {e}")
+            DIAG_LOGGER.error(f"{'  ' * (current_depth - 1)}解压错误：{zip_path.name} - {e}")
 
         return zip_files_found
 
@@ -123,7 +123,7 @@ class CompressTool:
                     zip_files_found += inner_zips
 
                 except Exception as e:
-                    DIAG_LOGGER.error(f"{'  ' * current_depth}解压错误: {item.name} - {e}")
+                    DIAG_LOGGER.error(f"{'  ' * current_depth}解压错误：{item.name} - {e}")
 
         return zip_files_found
 
@@ -134,7 +134,7 @@ class CompressTool:
         :param tar_gz_path: .tar.gz文件路径
         :param extract_to: 解压目标目录
         """
-        DIAG_LOGGER.info(f"开始解压: {tar_gz_path} 到 {extract_to}")
+        DIAG_LOGGER.info(f"开始解压：{tar_gz_path} 到 {extract_to}")
         try:
             # 创建不含.tar.gz后缀的同名文件夹
             tar_path = Path(tar_gz_path)
@@ -160,8 +160,8 @@ class CompressTool:
                     if member.issym() or member.islnk():
                         continue
                     tar.extract(member, path=str(extract_folder))
-            DIAG_LOGGER.info(f"成功解压: {tar_gz_path} 到 {extract_folder}")
+            DIAG_LOGGER.info(f"成功解压：{tar_gz_path} 到 {extract_folder}")
             return True
         except Exception as e:
-            DIAG_LOGGER.error(f"解压失败 {tar_gz_path}: {e}")
+            DIAG_LOGGER.error(f"解压失败 {tar_gz_path}：{e}")
             return False

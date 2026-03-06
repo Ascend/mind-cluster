@@ -474,7 +474,7 @@ class AsyncSSHExecutor(AsyncExecutor):
         except NoValidConnectionsError:
             DIAG_LOGGER.warning(f"密钥方式登录：无法连接到 {self.host}:{self.port}")
         except SSHException as e:
-            DIAG_LOGGER.warning(f"密钥方式登录：SSH连接 {self.host}:{self.port} 失败: {str(e)}")
+            DIAG_LOGGER.warning(f"密钥方式登录：SSH连接 {self.host}:{self.port} 失败：{str(e)}")
         return None
 
     def _connect_with_password(self) -> paramiko.SSHClient:
@@ -494,7 +494,7 @@ class AsyncSSHExecutor(AsyncExecutor):
         except NoValidConnectionsError:
             DIAG_LOGGER.warning(f"密码方式登录：无法连接到 {self.host}:{self.port}")
         except SSHException as e:
-            DIAG_LOGGER.warning(f"密码方式登录：SSH连接 {self.host}:{self.port} 失败: {str(e)}")
+            DIAG_LOGGER.warning(f"密码方式登录：SSH连接 {self.host}:{self.port} 失败：{str(e)}")
         return None
 
     def _create_shell_channel(self, ssh: paramiko.SSHClient) -> paramiko.Channel:

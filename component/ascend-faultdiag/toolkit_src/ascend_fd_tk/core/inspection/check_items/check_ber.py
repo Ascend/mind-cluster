@@ -27,9 +27,9 @@ from ascend_fd_tk.core.model.inspection import InspectionErrorItem
 
 @register_inspection_check_item
 class BerCheckItem(InspectionCheckItem):
-    _OPERATIONS_PHASE_ERR = "运维阶段故障, 误码率(BER): {}异常, 高于阶段阈值: {}"
-    _OPERATIONS_PHASE_WARN = "运维阶段告警, 误码率(BER): {}异常, 高于阶段阈值: {}"
-    _DELIVERY_PHASE_ERR = "交付阶段故障, 误码率(BER): {}异常, 高于阶段阈值: {}"
+    _OPERATIONS_PHASE_ERR = "运维阶段故障，误码率(BER)：{}异常，高于阶段阈值：{}"
+    _OPERATIONS_PHASE_WARN = "运维阶段告警，误码率(BER)：{}异常，高于阶段阈值：{}"
+    _DELIVERY_PHASE_ERR = "交付阶段故障，误码率(BER)：{}异常，高于阶段阈值：{}"
 
     def __init__(self, cluster_info: ClusterInfoCache, customer: Customer):
         super().__init__(cluster_info, customer)

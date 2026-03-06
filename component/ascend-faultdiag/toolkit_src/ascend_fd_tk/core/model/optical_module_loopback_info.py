@@ -44,4 +44,4 @@ class HostOpticalModuleLoopbackInfo(JsonObj):
 
     def __init__(self, host_ip="", optical_module_info: Dict[str, OpticalModuleLoopbackInfo] = None):
         self.host_ip = host_ip
-        self.optical_module_info = optical_module_info
+        self.optical_module_info = optical_module_info or {}

@@ -35,13 +35,13 @@ class GenerateDiagReport(DiagService):
             try:
                 os.startfile(file_path)
             except Exception as e:
-                DIAG_LOGGER.error(f"打开文件失败: {e}")
+                DIAG_LOGGER.error(f"打开文件失败：{e}")
 
     async def run(self):
         result = [diag_result.to_dict() for diag_result in self.diag_ctx.diag_result]
         result.sort(key=lambda x: x["故障域"])
         if not result:
-            DIAG_LOGGER.warning("诊断数据为空, 请确认是否使用auto_collect进行信息采集")
+            DIAG_LOGGER.warning("诊断数据为空，请确认是否使用auto_collect进行信息采集")
             return
         os.makedirs(CommonPath.REPORT_DIR, exist_ok=True)
         csv_tool.dict_list_to_csv(result, CommonPath.REPORT_FILE, columns=["故障域", "故障码", "故障信息", "处理建议"])

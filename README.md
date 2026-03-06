@@ -127,10 +127,15 @@
    │     ├─ dcmi     
    │     └─ process     
    ├─ ascend-faultdiag-online
-   │   ├─env_validation
-   │   └─prometheus
-   │       ├─base
-   │       └─prometheus_operator
+   │   └─ pkg
+   │       ├─algo_src
+   │       │  ├─ netfault
+   │       │  └─ slownode
+   │       ├─ core
+   │       ├─ model
+   │       ├─ register
+   │       ├─ service
+   │       └─ utils
    ├─ ascend-faultdiag
    │  ├─build
    │  ├─platform
@@ -175,10 +180,11 @@
    │  │  ├─custom_operation
    │  │  ├─dt
    │  │  └─st
-   │  └─toolkits
-   │      ├─exp_covert
-   │      │  └─exp_lib_dir
-   │      └─local_diag
+   │  ├─scripts
+   │  │   ├─exp_covert
+   │  │   │  └─exp_lib_dir
+   │  │   └─local_diag
+   │  └─toolkit_src
    ├─ ascend-for-volcano
    │  ├─ build           
    │  ├─ common

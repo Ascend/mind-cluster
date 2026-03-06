@@ -14,22 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from ascend_fd_tk.core.collect.base import Collector, log_collect_async_event
-from ascend_fd_tk.core.collect.fetcher.bmc_fetcher import BmcFetcher
-from ascend_fd_tk.core.common.json_obj import JsonObj
-from ascend_fd_tk.utils import logger
 
-LOGGER = logger.DIAG_LOGGER
+# 对.sh脚本：强制仓库中存储为LF，检出时也保持LF（Linux/Mac/Windows工作区均为LF）
+*.sh text eol=lf
 
+# 对.bat脚本：强制仓库中存储为LF（Git默认存储规范），检出到工作区时转换为CRLF（仅Windows生效，Linux/Mac仍为LF）
+*.bat text eol=crlf
 
-class BmcLogCollector(Collector):
+# 二进制文件（如图片、二进制可执行文件）禁止转换行尾符
+*.png binary
+*.jpg binary
+*.zip binary
 
-    def __init__(self, fetcher: BmcFetcher):
-        self.fetcher = fetcher
-
-    @log_collect_async_event(error_msg="收集bmc日志失败", raise_exception=False)
-    async def collect(self) -> JsonObj:
-        return await self.fetcher.fetch_bmc_diag_info_log()
-
-    async def get_id(self) -> str:
-        return await self.fetcher.fetch_id()
+# 其他文本文件的默认规则
+# * text=auto  # Git自动检测文件类型，文本文件按core.autocrlf规则处理

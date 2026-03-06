@@ -42,7 +42,7 @@ class CrcRisingCheckItem(InspectionCheckItem):
                                        r"hwIfMonitorCrcErrorThreshold=(?P<crc_threshold>\d+), *"
                                        r"hwIfMonitorCrcErrorInterval=(?P<crc_interval>\d+), *"
                                        r"(hwIfMonitorName|EthPhysicalName|InterfaceName)=(?P<if_name>[^ ,)]+)")
-    _ERR_DESC_TEMPLATE = "端口{} CRC快速增长告警统计次数{}, 阈值{}"
+    _ERR_DESC_TEMPLATE = "端口{} CRC快速增长告警统计次数{}，阈值{}"
 
     def __init__(self, cluster_info: ClusterInfoCache, customer: Customer):
         super().__init__(cluster_info, customer)

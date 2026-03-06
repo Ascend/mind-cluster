@@ -1,5 +1,5 @@
 # 简介
-Mindcluster_diag_tool通过在线采集或离线日志分析设备链路故障，包含服务器、交换设备（L1/L2 灵衢交换机、 RoCE交换机）、BMC管理。
+Ascend-faultdiag-toolkit通过在线采集或离线日志分析设备链路故障，包含服务器、交换设备（L1/L2 灵衢交换机、 RoCE交换机）、BMC管理。
 
 * **在线采集**
 
@@ -104,9 +104,9 @@ private_key="~/.shh/your_private_key"
 - `<目录>`：服务器日志目录路径
 
 **支持的日志类型**：
-- A3device日志一键采集脚本<version>.sh
-- link_down_collect_<version>.sh
-- tool_log_collection_out_version_all_<version>.sh
+- `A3device日志一键采集脚本<version>.sh`收集的日志
+- `link_down_collect_<version>.sh`收集的日志
+- `tool_log_collection_out_version_all_<version>.sh`收集的日志
 
 #### set_bmc_dump_log
 设置BMC日志目录
@@ -137,8 +137,7 @@ private_key="~/.shh/your_private_key"
 - `<目录>`：交换机日志目录路径
 
 **支持的日志类型**：
-- 使用交换机 `display diagnostic-information <filename>` 命令导出的结果
-- 查询关键命令后复制的shell回显文本
+- 使用交换机 `display diagnostic-information <filename>` 命令导出的结果或者查询关键命令后复制的shell回显文本
 - 使用交换机 `collect diagnostic-information` 命令导出的日志zip包
 
 ### 采集命令
