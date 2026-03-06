@@ -233,6 +233,7 @@ func (ttc *taskTreeConverter) buildTaskTree() (*util.TaskTree, error) {
 				return nil, fmt.Errorf("job topotree %v don't not match resource level %v",
 					node.TopoTreeName, ttc.resourceLevels)
 			}
+			rootNode.ResourceNodeName = topotreeName
 		}
 	}
 	return &util.TaskTree{
