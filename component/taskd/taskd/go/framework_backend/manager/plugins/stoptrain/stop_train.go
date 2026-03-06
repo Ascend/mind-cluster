@@ -65,17 +65,17 @@ func (s *stopTrainingPlugin) Predicate(shot storage.SnapShot) (infrastructure.Pr
 		hwlog.RunLog.Debugf("getSignalInfo error: %v", err)
 		return infrastructure.PredicateResult{PluginName: s.Name(), CandidateStatus: constant.UnselectStatus}, nil
 	}
-	if s.signalInfo.SignalType == clusterdconstant.StopTrainSignalType ||
-		s.signalInfo.SignalType == clusterdconstant.GlobalFaultSignalType {
-		hwlog.RunLog.Infof("get %s signal, apply for the token", s.signalInfo.SignalType)
+	if s.signalInfo.SignalType == clusterdconstant.StopTrainSignalType {
+		hwlog.RunLog.Info("get stop_train signal, apply for the token")
 		return infrastructure.PredicateResult{
 			PluginName:      s.Name(),
 			CandidateStatus: constant.CandidateStatus,
 			PredicateStream: map[string]string{constant.ResumeTrainingAfterFaultStream: ""},
 		}, nil
 	}
-	if s.signalInfo.SignalType == clusterdconstant.PreExitProcessSignalType && s.signalInfo.Uuid != s.lastUuid {
-		hwlog.RunLog.Info("get pre_exit_process signal, apply for the token")
+	if (s.signalInfo.SignalType == clusterdconstant.PreExitProcessSignalType ||
+		s.signalInfo.SignalType == clusterdconstant.GlobalFaultSignalType) && s.signalInfo.Uuid != s.lastUuid {
+		hwlog.RunLog.Infof("get %s signal, apply for the token", s.signalInfo.SignalType)
 		return infrastructure.PredicateResult{
 			PluginName:      s.Name(),
 			CandidateStatus: constant.CandidateStatus,
@@ -103,6 +103,7 @@ func (s *stopTrainingPlugin) Handle() (infrastructure.HandleResult, error) {
 	}
 	if s.signalInfo.SignalType == clusterdconstant.GlobalFaultSignalType ||
 		s.signalInfo.SignalType == clusterdconstant.ChangeStrategySignalType {
+		s.lastUuid = s.signalInfo.Uuid
 		hwlog.RunLog.Info("get release token signal, need to release token")
 		s.hasToken = false
 		s.HasSendMessages = make(map[string]string)

@@ -149,8 +149,9 @@ func getArgsTestStopTrainingPluginPredicateTestCases() []testsTestStopTrainingPl
 			want:    candidateResult,
 			wantErr: false},
 		{
-			name:    "case 4: apply token for global_fault signal",
-			fields:  fieldsTestStopTrainingPluginPredicate{HasSendMessages: make(map[string]string)},
+			name: "case 4: apply token for global_fault signal",
+			fields: fieldsTestStopTrainingPluginPredicate{HasSendMessages: make(map[string]string),
+				lastUuid: "randomUuid"},
 			args:    getArgsTestStopTrainingPluginPredicate(clusterdconstant.GlobalFaultSignalType),
 			want:    candidateResult,
 			wantErr: false},
