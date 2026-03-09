@@ -22,6 +22,7 @@ from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.common.path import CommonPath
 from ascend_fd_tk.core.context.diag_ctx import DiagCtx
 from ascend_fd_tk.core.service.base import DiagService
+from ascend_fd_tk.utils.file_tool import convert_log_path
 
 
 class OutputCache(DiagService):
@@ -33,6 +34,9 @@ class OutputCache(DiagService):
     def _output_cache(cache_dir: str, cache_obj_map: Dict[str, JsonObj]):
         if not os.path.exists(cache_dir):
             os.makedirs(cache_dir, exist_ok=True)
+        cache_dir = convert_log_path(cache_dir)
+        if not cache_dir:
+            return
         for name, cache_obj in cache_obj_map.items():
             with open(os.path.join(cache_dir, f"{name}.json"), "w", encoding="utf-8") as fs:
                 fs.write(cache_obj.to_json())

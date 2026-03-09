@@ -35,6 +35,7 @@ from ascend_fd_tk.core.log_parser.base import LogParsePattern
 from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
 from ascend_fd_tk.core.model.diag_result import DiagResult
 from ascend_fd_tk.core.model.inspection import InspectionErrorItem
+from ascend_fd_tk.utils.file_tool import convert_log_path
 
 
 class DiagCtx:
@@ -60,12 +61,10 @@ class DiagCtx:
     def submit_multi_process_task(self, task: Callable, *args, **kwargs):
         return asyncio.wrap_future(self.process_pool.submit(task, *args, **kwargs))
 
-    def encrypt_conn_config(self, config_path=ConfigPath.CONN_CONFIG_DEFAULT_PATH):
-        if not os.path.exists(config_path):
-            config_path = CommonPath.CUR_PATH_CONN_CONFIG_PATH
-
+    def encrypt_conn_config(self, config_path=CommonPath.CUR_PATH_CONN_CONFIG_PATH):
+        config_abs_path = convert_log_path(config_path) or convert_log_path(ConfigPath.CONN_CONFIG_DEFAULT_PATH)
         # 读取配置文件内容
-        with open(config_path, 'r') as f:
+        with open(config_abs_path, 'r') as f:
             config_content = f.read()
 
         # 加密配置文件内容
@@ -80,11 +79,12 @@ class DiagCtx:
             f.write(encrypted_content)
 
     def load_conn_config(self):
-        if not os.path.exists(CommonPath.ENCRYPTED_CONN_CONFIG_PATH):
+        conn_config_abs_path = convert_log_path(CommonPath.ENCRYPTED_CONN_CONFIG_PATH)
+        if not conn_config_abs_path:
             return "加密配置文件不存在"
         try:
             # 从加密缓存加载
-            with open(CommonPath.ENCRYPTED_CONN_CONFIG_PATH, 'r') as f:
+            with open(conn_config_abs_path, 'r') as f:
                 encrypted_data = f.read()
             # 解密数据
             decrypted_data = self.crypto.decrypt_with_salt(encrypted_data)

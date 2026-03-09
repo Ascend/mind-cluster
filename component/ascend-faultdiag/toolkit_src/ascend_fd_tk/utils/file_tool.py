@@ -105,6 +105,4 @@ def convert_log_path(input_path: str) -> str:
     os_name = platform.system().lower()
     abs_input_path = os.path.abspath(input_path)
     output_path = Path(f"\\\\?\\{abs_input_path}") if os_name == "windows" else Path(abs_input_path)
-    if not output_path.exists() or not output_path.is_dir():
-        return ""
-    return str(output_path)
+    return str(output_path) if output_path.exists() else ""

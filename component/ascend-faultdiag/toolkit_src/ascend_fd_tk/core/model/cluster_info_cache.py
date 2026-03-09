@@ -33,7 +33,7 @@ class ClusterInfoCache(JsonObj):
         self.hosts_info: Dict[str, HostInfo] = hosts_info or {}
         self.bmcs_info: Dict[str, BmcInfo] = bmcs_info or {}
         self.swis_info: Dict[str, SwitchInfo] = swis_info or {}
-        self._swi_info_name_map = {swi_info.name: swi_info for swi_id, swi_info in self.swis_info.items()}
+        self._swi_info_name_map = {swi_info.name: swi_info for swi_info in self.swis_info.values()}
         self._chassis_mappings: ChassisMapping = None
         # 后续通过客户类型修改阈值
         self._threshold: Type[OpticalModuleThreshold] = OpticalModuleThreshold
@@ -46,7 +46,7 @@ class ClusterInfoCache(JsonObj):
     def init_diag_data(self):
         l1_swi_server_mappings = self._build_l1_swi_server_mappings()
         self._chassis_mappings = ChassisMapping(l1_swi_server_mappings)
-        self._swi_info_name_map = {swi_info.name: swi_info for swi_id, swi_info in self.swis_info.items()}
+        self._swi_info_name_map = {swi_info.name: swi_info for swi_info in self.swis_info.values()}
 
     def get_threshold(self):
         return self._threshold

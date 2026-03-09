@@ -25,6 +25,7 @@ from ascend_fd_tk.core.model.bmc import BmcInfo
 from ascend_fd_tk.core.model.host import HostInfo
 from ascend_fd_tk.core.model.switch import SwitchInfo
 from ascend_fd_tk.core.service.base import DiagService
+from ascend_fd_tk.utils.file_tool import convert_log_path
 
 
 class LoadCache(DiagService):
@@ -34,7 +35,8 @@ class LoadCache(DiagService):
 
     @staticmethod
     def _load_cache(cache_dir: str, cache_type_class: Type[JsonObj], cache_obj_map: Dict):
-        if not os.path.exists(cache_dir):
+        cache_dir = convert_log_path(cache_dir)
+        if not cache_dir:
             return
         # 遍历cache_dir下所有.json文件
         for filename in os.listdir(cache_dir):

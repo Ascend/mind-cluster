@@ -1,3 +1,20 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright 2026 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+
 import asyncio
 import inspect
 import os.path
@@ -14,6 +31,7 @@ from ascend_fd_tk.examples.auto_diag.auto_diag import AutoDiagCluster
 from ascend_fd_tk.examples.auto_diag.collect_bmc_log import CollectBmcLog
 from ascend_fd_tk.examples.inspection.inspection import Inspection
 from ascend_fd_tk.utils import logger
+from ascend_fd_tk.utils.file_tool import convert_log_path
 
 _CONSOLE_LOGGER = logger.CONSOLE_LOGGER
 
@@ -146,6 +164,17 @@ class SetConnConfigCliModel(DetailedCliModel):
     def is_support_param():
         return True
 
+    @staticmethod
+    def check_input_path(*args) -> str:
+        if not args:
+            return "地址为空，请重新设置"
+        file_path = convert_log_path(args[0])
+        if not file_path:
+            return f"地址{args[0]}不存在，请重新设置"
+        if not os.path.isfile(file_path):
+            return f"地址{args[0]}不是文件，请重新设置"
+        return ""
+
     @classmethod
     def get_key(cls) -> str:
         return "set_conn_config"
@@ -184,10 +213,9 @@ class SetConnConfigCliModel(DetailedCliModel):
                             help=f"?(？)=查看{self.get_key()}详细信息；文件路径=设置连接配置文件路径")
 
     def run_task(self, *args) -> str:
-        if not args:
-            return "地址为空，请重新设置"
-        if not os.path.exists(args[0]):
-            return f"地址{args[0]}不存在，请重新设置"
+        check_res = self.check_input_path(*args)
+        if check_res:
+            return check_res
         # 加密配置文件内容
         self.diag_ctx.encrypt_conn_config(args[0])
         # 加载配置
@@ -228,12 +256,9 @@ class SetHostDumpLogDirCliModel(DetailedCliModel):
         """
 
     def run_task(self, *args) -> str:
-        if not args:
-            return "地址为空，请重新设置"
-        if not os.path.exists(args[0]):
-            return f"地址{args[0]}不存在，请重新设置"
-        if not os.path.isdir(args[0]):
-            return f"地址{args[0]}非文件夹，请重新设置"
+        check_res = self.check_input_path(*args)
+        if check_res:
+            return check_res
         self.diag_ctx.dump_log_dir_config.host_dump_log_dir = args[0]
         return "设置成功"
 
@@ -268,12 +293,9 @@ class SetBmcDumpLogDirCliModel(DetailedCliModel):
         """
 
     def run_task(self, *args) -> str:
-        if not args:
-            return "地址为空，请重新设置"
-        if not os.path.exists(args[0]):
-            return f"地址{args[0]}不存在，请重新设置"
-        if not os.path.isdir(args[0]):
-            return f"地址{args[0]}非文件夹，请重新设置"
+        check_res = self.check_input_path(*args)
+        if check_res:
+            return check_res
         self.diag_ctx.dump_log_dir_config.bmc_dump_log_dir = args[0]
         return "设置成功"
 
@@ -308,12 +330,9 @@ class SetSwiDumpLogDirCliModel(DetailedCliModel):
         """
 
     def run_task(self, *args) -> str:
-        if not args:
-            return "地址为空, 请重新设置"
-        if not os.path.exists(args[0]):
-            return f"地址{args[0]}不存在，请重新设置"
-        if not os.path.isdir(args[0]):
-            return f"地址{args[0]}非文件夹，请重新设置"
+        check_res = self.check_input_path(*args)
+        if check_res:
+            return check_res
         self.diag_ctx.dump_log_dir_config.switch_dump_log_dir = args[0]
         return "设置成功"
 

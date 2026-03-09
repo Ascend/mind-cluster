@@ -96,7 +96,7 @@ class HccsLinkDegradedAnalyzer(Analyzer):
             cpu_port_set = set(cpu_port_list)
             for port_mapping in port_mappings:
                 if port_mapping.swi_chip_id == str(swi_chip_id):
-                    swi_chip_err_ports.add(port_mappings)
+                    swi_chip_err_ports.add(port_mapping)
             if cpu_port_set == swi_chip_err_ports:
                 diag_result = DiagResult(
                     [

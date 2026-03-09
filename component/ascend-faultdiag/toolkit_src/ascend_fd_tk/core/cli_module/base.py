@@ -16,9 +16,11 @@
 # ==============================================================================
 
 import abc
+import os
 from typing import Dict, List
 
 from ascend_fd_tk.core.context.diag_ctx import DiagCtx
+from ascend_fd_tk.utils.file_tool import convert_log_path
 
 
 class CliCtx:
@@ -63,6 +65,17 @@ class CliModel(abc.ABC):
     @staticmethod
     def is_support_param():
         return False
+
+    @staticmethod
+    def check_input_path(*args) -> str:
+        if not args:
+            return "地址为空，请重新设置"
+        input_path = convert_log_path(args[0])
+        if not input_path:
+            return f"地址{args[0]}不存在，请重新设置"
+        if not os.path.isdir(input_path):
+            return f"地址{args[0]}非文件夹，请重新设置"
+        return ""
 
     # 命令需要的key
     @classmethod

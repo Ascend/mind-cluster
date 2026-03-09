@@ -18,21 +18,9 @@
 import argparse
 import json
 import os
-import platform
 import re
 import sys
-from pathlib import Path
 from typing import List, Tuple, Dict, Generator
-
-
-def convert_log_path(input_path: str) -> str:
-    os_name = platform.system().lower()
-    abs_input_path = os.path.abspath(input_path)
-    output_path = Path(f"\\\\?\\{abs_input_path}") if os_name == "windows" else Path(abs_input_path)
-    if not output_path.exists() or output_path.is_dir():
-        return ""
-    return str(output_path)
-
 
 # 找对应的py文件
 SCRIPT_PATH = str(os.path.abspath(__file__)).rstrip("c")
@@ -75,12 +63,11 @@ def find_matching_files(parse_dir: str, filepath_pattern: str) -> Generator[str,
 def search_keywords_in_file(file_path: str, keyword_patterns: List[Tuple[str, str]]) -> List[Tuple[str, str]]:
     """在文件中搜索匹配关键字的行"""
     matches = []
-    patterns = [(pattern[0], re.compile(pattern[1])) for pattern in keyword_patterns]
-    abs_file_path = convert_log_path(file_path)
-    if not abs_file_path:
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
         return matches
+    patterns = [(pattern[0], re.compile(pattern[1])) for pattern in keyword_patterns]
     try:
-        with open(abs_file_path, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             for _, line in enumerate(f, 1):
                 for pattern in patterns:
                     if pattern[1].search(line):
