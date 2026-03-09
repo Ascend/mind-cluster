@@ -87,3 +87,21 @@ func TestGetPodGroup(t *testing.T) {
 		convey.So(GetPodGroup(jobKey).Name, convey.ShouldEqual, "")
 	})
 }
+
+func TestGetAllJobFromPodGroup(t *testing.T) {
+	convey.Convey("Test GetAllJobFromPodGroup", t, func() {
+		convey.Convey("When pgMap is empty", func() {
+			jobMap := GetAllJobFromPodGroup()
+			convey.So(len(jobMap), convey.ShouldEqual, 0)
+		})
+		convey.Convey("When pgMap has jobs", func() {
+			pg1 := getDemoPodGroup("pg1", "default", "job1")
+			SavePodGroup(pg1)
+			defer DeletePodGroup(pg1)
+
+			jobMap := GetAllJobFromPodGroup()
+			convey.So(len(jobMap), convey.ShouldEqual, 1)
+			convey.So(jobMap, convey.ShouldContainKey, "job1")
+		})
+	})
+}

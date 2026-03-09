@@ -67,3 +67,15 @@ func CheckPodGroupExist(jobKey string) bool {
 	pgManager.pgMapMutex.RUnlock()
 	return exist
 }
+
+// GetAllJobFromPodGroup get all job key from podGroup with lock, Please do not add time-consuming code
+func GetAllJobFromPodGroup() map[string]struct{} {
+	pgManager.pgMapMutex.RLock()
+	defer pgManager.pgMapMutex.RUnlock()
+
+	jobIds := make(map[string]struct{}, len(pgManager.pgMap))
+	for jobId := range pgManager.pgMap {
+		jobIds[jobId] = struct{}{}
+	}
+	return jobIds
+}

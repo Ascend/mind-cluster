@@ -22,6 +22,7 @@ import (
 	"clusterd/pkg/common/logs"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/job"
+	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/kube"
 )
 
@@ -102,6 +103,7 @@ func (j *JobStcMgr) LoadConfigMapToCache(namespace, cmName string) {
 		hwlog.RunLog.Errorf("failed loaded ConfigMap %s in namespace %s into cache", cmName, namespace)
 		return
 	}
+	j.version++
 	hwlog.RunLog.Infof("successfully loaded ConfigMap %s in namespace %s into cache", cmName, namespace)
 	hwlog.RunLog.Debugf("successfully loaded ConfigMap data: %s", cmData)
 }
@@ -157,13 +159,22 @@ func (j *JobStcMgr) parseCMData(cmData *v1.ConfigMap) bool {
 		return false
 	}
 	tmpSlice := make([]constant.JobStatistic, 0)
+	jobIds := podgroup.GetAllJobFromPodGroup()
 	err := json.Unmarshal([]byte(oldJobDetails), &tmpSlice)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to unmarshal job statistic info:%s , err: %v", oldJobDetails, err)
 		return false
 	}
+	invalidJobCount := 0
 	for _, v := range tmpSlice {
-		j.data.JobStatistic[v.K8sJobID] = v
+		if _, exist := jobIds[v.K8sJobID]; exist {
+			j.data.JobStatistic[v.K8sJobID] = v
+		} else {
+			invalidJobCount++
+		}
+	}
+	if invalidJobCount > 0 {
+		hwlog.RunLog.Warnf("invalid job count: %d", invalidJobCount)
 	}
 	return true
 }

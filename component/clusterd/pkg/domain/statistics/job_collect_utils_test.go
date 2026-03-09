@@ -21,6 +21,7 @@ import (
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/job"
+	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/interface/kube"
 )
 
@@ -30,15 +31,23 @@ func TestLoadConfigMapToCache(t *testing.T) {
 	t.Run("cm successful load, Data length is 1", func(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
+		testJobID := "test-job-key"
 		patches.ApplyFunc(kube.GetConfigMap, func(name, namespace string) (*v1.ConfigMap, error) {
 			return &v1.ConfigMap{
 				Data: map[string]string{
-					JobDataCmKey:   `[{"Name":"test-job"}]`,
+					JobDataCmKey:   `[{"Name":"test-job","K8sJobID":"test-job-key"}]`,
 					TotalJobsCmKey: "1",
 				},
 			}, nil
 		})
-
+		patches.ApplyPrivateMethod(JobStcMgrInst, "parseCMData", func(j *JobStcMgr, _ *v1.ConfigMap) bool {
+			j.data.JobStatistic[testJobID] = constant.JobStatistic{
+				Name:     "test-job",
+				K8sJobID: testJobID,
+			}
+			return true
+		})
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
 		JobStcMgrInst.LoadConfigMapToCache("ns", "cm")
 		assert.Equal(t, 1, len(JobStcMgrInst.data.JobStatistic))
 	})
@@ -53,7 +62,9 @@ func TestLoadConfigMapToCache(t *testing.T) {
 		JobStcMgrInst.LoadConfigMapToCache("ns", "cm")
 		assert.Equal(t, 0, len(JobStcMgrInst.data.JobStatistic))
 	})
+}
 
+func TestLoadConfigMapToCache1(t *testing.T) {
 	t.Run("when get cm  failed, Data length is 0", func(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
@@ -69,12 +80,15 @@ func TestLoadConfigMapToCache(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
 		tmpSlice := make([]constant.JobStatistic, 0)
-		tmpSlice = append(tmpSlice, constant.JobStatistic{})
+		tmpSlice = append(tmpSlice, constant.JobStatistic{K8sJobID: "test-job-key"})
 		cmData := &v1.ConfigMap{
 			Data: map[string]string{JobDataCmKey: util.ObjToString(tmpSlice)},
 		}
 		patches.ApplyFunc(kube.GetConfigMap, func(name, namespace string) (*v1.ConfigMap, error) {
 			return cmData, nil
+		})
+		patches.ApplyFunc(podgroup.GetAllJobFromPodGroup, func() map[string]struct{} {
+			return map[string]struct{}{"test-job-key": struct{}{}}
 		})
 
 		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
@@ -87,10 +101,15 @@ func TestParseCMData(t *testing.T) {
 	t.Run("valid data, Data length is 2", func(t *testing.T) {
 		cm := &v1.ConfigMap{
 			Data: map[string]string{
-				JobDataCmKey:   `[{"Name":"job1","StopTime":0},{"Name":"job2","StopTime":1}]`,
+				JobDataCmKey:   `[{"Name":"job1","K8sJobID":"test-job-key1","StopTime":0},{"Name":"job2","K8sJobID":"test-job-key2","StopTime":1}]`,
 				TotalJobsCmKey: "2",
 			},
 		}
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		patches.ApplyFunc(podgroup.GetAllJobFromPodGroup, func() map[string]struct{} {
+			return map[string]struct{}{"test-job-key1": struct{}{}, "test-job-key2": struct{}{}}
+		})
 		result := JobStcMgrInst.parseCMData(cm)
 		assert.True(t, result)
 		assert.Equal(t, 1, len(JobStcMgrInst.data.JobStatistic))
