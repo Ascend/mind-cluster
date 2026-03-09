@@ -44,6 +44,14 @@ type handlerStartTest struct {
 	want *plugin.ScheduleHandler
 }
 
+const (
+	jobReqNpu2    = 2
+	jobReqNpu10   = 10
+	clusterNpuNum = 5
+
+	fakeNpuName = "huawei.com/Ascend910"
+)
+
 func buildTestHandlerStartTestCases() []handlerStartTest {
 	testCases := []handlerStartTest{
 		{
@@ -172,8 +180,8 @@ func buildOnSessionCloseTestCases() []onSessionCloseTest {
 
 type jobEnqueueableTestCase struct {
 	name           string
-	mocks          func() *gomonkey.Patches
 	job            interface{}
+	reqNpu         int
 	plugin         *huaweiNPUPlugin
 	expectedResult int
 }
@@ -187,9 +195,10 @@ func buildJobEnqueueableTestCases01() []jobEnqueueableTestCase {
 			NPUPlugins: sets.NewString(),
 		},
 	}
+	mockPlugin.Scheduler.Jobs = map[api.JobID]plugin.SchedulerJob{}
 	tests := []jobEnqueueableTestCase{
 		{
-			name: "01-when npu-plusgins is bil should return skip",
+			name: "01-when npu-plugins is nil should return skip",
 			job:  mockJobInfo,
 			plugin: &huaweiNPUPlugin{
 				Scheduler: &plugin.ScheduleHandler{},
@@ -203,13 +212,7 @@ func buildJobEnqueueableTestCases01() []jobEnqueueableTestCase {
 			expectedResult: util.JobEnqueueSkip,
 		},
 		{
-			name: "03-when req npu name is not in supported should return skip",
-			mocks: func() *gomonkey.Patches {
-				return gomonkey.ApplyFunc(plugin.GetVCJobReqNPUTypeFromJobInfo,
-					func(job *api.JobInfo) (string, int, error) {
-						return "non-existent-npu", 2, nil
-					})
-			},
+			name:           "03-when req npu name is not in supported should return skip",
 			job:            mockJobInfo,
 			plugin:         mockPlugin,
 			expectedResult: util.JobEnqueueSkip,
@@ -218,44 +221,34 @@ func buildJobEnqueueableTestCases01() []jobEnqueueableTestCase {
 	return tests
 }
 
-func patchWithArgs(jobNpu, clusterNpu int) *gomonkey.Patches {
-	return gomonkey.ApplyFunc(plugin.GetVCJobReqNPUTypeFromJobInfo, func(job *api.JobInfo) (string,
-		int, error) {
-		return "available-npu", jobNpu, nil
-	}).ApplyFunc(getNpuNum, func(ssn *framework.Session, tp *huaweiNPUPlugin, npuName string) int {
-		return clusterNpu
-	})
-}
-
 func buildJobEnqueueableTestCases02() []jobEnqueueableTestCase {
 	mockJobInfo := &api.JobInfo{
+		UID:  "mockUid",
 		Name: "test-job",
 	}
-
 	tests := []jobEnqueueableTestCase{
 		{
-			name:  "04-when req npu num is not satisfied should return not-enqueue",
-			mocks: func() *gomonkey.Patches { return patchWithArgs(5, 2) },
-			job:   mockJobInfo,
-			plugin: &huaweiNPUPlugin{
-				Scheduler: &plugin.ScheduleHandler{
-					NPUPlugins: sets.NewString("available-npu"),
-					CheckResult: plugin.CheckResult{
-						EnqueueError: map[api.JobID]error{},
-					},
-				},
-			},
-			expectedResult: util.JobNotEnqueue,
-		},
-		{
-			name:  "05-when req npu num is satisfied and enqueue is force should return enqueue",
-			mocks: func() *gomonkey.Patches { return patchWithArgs(2, 5) },
-			job:   mockJobInfo,
+			name:   "04-when req npu num is not satisfied should return not-enqueue",
+			job:    mockJobInfo,
+			reqNpu: jobReqNpu10,
 			plugin: func() *huaweiNPUPlugin {
 				plg := &huaweiNPUPlugin{
 					Scheduler: &plugin.ScheduleHandler{
-						NPUPlugins: sets.NewString("available-npu"),
+						NPUPlugins:  sets.NewString(fakeNpuName),
+						CheckResult: plugin.CheckResult{EnqueueError: map[api.JobID]error{}},
 					},
+				}
+				return plg
+			}(),
+			expectedResult: util.JobNotEnqueue,
+		},
+		{
+			name:   "05-when req npu num is satisfied and enqueue is force should return enqueue",
+			job:    mockJobInfo,
+			reqNpu: jobReqNpu2,
+			plugin: func() *huaweiNPUPlugin {
+				plg := &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{
+					NPUPlugins: sets.NewString(fakeNpuName)},
 				}
 				plg.Scheduler.FrameAttr.ForceEnqueue = true
 				return plg
@@ -263,13 +256,12 @@ func buildJobEnqueueableTestCases02() []jobEnqueueableTestCase {
 			expectedResult: util.JobEnqueue,
 		},
 		{
-			name:  "06-when req npu num is satisfied and enqueue is not force should return skip",
-			mocks: func() *gomonkey.Patches { return patchWithArgs(2, 5) },
-			job:   mockJobInfo,
+			name: "06-when req npu num is satisfied and enqueue is not force should return skip",
+			job:  mockJobInfo,
 			plugin: func() *huaweiNPUPlugin {
 				plg := &huaweiNPUPlugin{
 					Scheduler: &plugin.ScheduleHandler{
-						NPUPlugins: sets.NewString("available-npu"),
+						NPUPlugins: sets.NewString(fakeNpuName),
 					},
 				}
 				plg.Scheduler.FrameAttr.ForceEnqueue = false
@@ -283,12 +275,24 @@ func buildJobEnqueueableTestCases02() []jobEnqueueableTestCase {
 
 func TestJobEnqueueable(t *testing.T) {
 	tests := append(buildJobEnqueueableTestCases01(), buildJobEnqueueableTestCases02()...)
+	patch := gomonkey.ApplyFunc(getNpuNum, func(ssn *framework.Session, tp *huaweiNPUPlugin,
+		npuName string) int {
+		return clusterNpuNum
+	})
+	defer patch.Reset()
+	mockUID := "mockUid"
+	mockJob := plugin.SchedulerJob{}
+	mockJob.NPUJob = &util.NPUJob{
+		ReqNPUName: fakeNpuName,
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.mocks != nil {
-				patch := tt.mocks()
-				defer patch.Reset()
+			mockJob.ReqNPUNum = tt.reqNpu
+			if tt.plugin.Scheduler.Jobs == nil {
+				tt.plugin.Scheduler.Jobs = map[api.JobID]plugin.SchedulerJob{}
 			}
+			tt.plugin.Scheduler.Jobs[api.JobID(mockUID)] = mockJob
 			if result := jobEnqueueable(tt.job, &framework.Session{}, tt.plugin); result != tt.expectedResult {
 				t.Errorf("jobEnqueueable() = %v, want %v", result, tt.expectedResult)
 			}
@@ -314,13 +318,13 @@ func newNPUNode(name string, anno, idle int) plugin.NPUNode {
 		CommonNode: plugin.CommonNode{
 			Name: name,
 			Idle: map[v1.ResourceName]float64{
-				"huawei.com/Ascend910": float64(idle * 1000),
+				fakeNpuName: float64(idle * util.NPUHexKilo),
 			},
 			Capability: map[v1.ResourceName]float64{
-				"huawei.com/Ascend910": float64(idle * 1000),
+				fakeNpuName: float64(idle * util.NPUHexKilo),
 			},
 			Annotation: map[string]string{
-				"huawei.com/Ascend910": func() string {
+				fakeNpuName: func() string {
 					annoStr := ""
 					for i := 0; i < anno; i++ {
 						annoStr += strconv.Itoa(i)
@@ -356,7 +360,7 @@ func TestGetNpuNum(t *testing.T) {
 	}
 	expectedResult := 5
 	t.Run("test GetNpuNum", func(t *testing.T) {
-		if result := getNpuNum(ssn, plg, "huawei.com/Ascend910"); result != expectedResult {
+		if result := getNpuNum(ssn, plg, fakeNpuName); result != expectedResult {
 			t.Errorf("getNpuNum() = %v, want %v", result, expectedResult)
 		}
 	})

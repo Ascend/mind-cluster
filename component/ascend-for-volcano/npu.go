@@ -239,21 +239,24 @@ func jobEnqueueable(job interface{}, ssn *framework.Session, tp *huaweiNPUPlugin
 		return util.JobEnqueueSkip
 	}
 	jobDequeueForTimeout(vcjob, ssn)
-	npuName, rNpuNum, _ := plugin.GetVCJobReqNPUTypeFromJobInfo(vcjob)
-	if !tp.Scheduler.NPUPlugins.Has(npuName) {
+	jobInfo, exist := tp.Scheduler.Jobs[vcjob.UID]
+	if !exist {
 		return util.JobEnqueueSkip
 	}
-	tNpuNum := getNpuNum(ssn, tp, npuName)
-	if tNpuNum < rNpuNum {
+	if !tp.Scheduler.NPUPlugins.Has(jobInfo.ReqNPUName) {
+		return util.JobEnqueueSkip
+	}
+	tNpuNum := getNpuNum(ssn, tp, jobInfo.ReqNPUName)
+	if tNpuNum < jobInfo.ReqNPUNum {
 		klog.V(util.LogWarningLev).Infof("job <%s> Add enqueue failed, require npu num is %v "+
-			"but cluster npu num is %v", vcjob.Name, rNpuNum, tNpuNum)
-		tp.Scheduler.EnqueueError[vcjob.UID] = fmt.Errorf("require npu num is %v, but cluster npu num is %v", rNpuNum,
+			"but cluster npu num is %v", vcjob.Name, jobInfo.ReqNPUNum, tNpuNum)
+		tp.Scheduler.EnqueueError[vcjob.UID] = fmt.Errorf("require npu num is %v, but cluster npu num is %v", jobInfo.ReqNPUNum,
 			tNpuNum)
 		return util.JobNotEnqueue
 	}
 	if tp.Scheduler.FrameAttr.ForceEnqueue {
 		klog.V(util.LogWarningLev).Infof("job <%s> Add enqueue success will start schedule, require npu num is <%v> "+
-			"and cluster npu num is <%v>.", vcjob.Name, rNpuNum, tNpuNum)
+			"and cluster npu num is <%v>.", vcjob.Name, jobInfo.ReqNPUNum, tNpuNum)
 		return util.JobEnqueue
 	}
 	return util.JobEnqueueSkip
