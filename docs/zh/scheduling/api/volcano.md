@@ -32,99 +32,20 @@
 **表 1** 集群调度组件对PodGroup label使用说明
 
 <a name="table143562050699"></a>
-<table><thead align="left"><tr id="row23564507918"><th class="cellrowborder" valign="top" width="25%" id="mcps1.2.5.1.1"><p id="p1535615011914"><a name="p1535615011914"></a><a name="p1535615011914"></a>名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="25%" id="mcps1.2.5.1.2"><p id="p83576501093"><a name="p83576501093"></a><a name="p83576501093"></a>作用</p>
-</th>
-<th class="cellrowborder" valign="top" width="25%" id="mcps1.2.5.1.3"><p id="p235719501097"><a name="p235719501097"></a><a name="p235719501097"></a>取值</p>
-</th>
-<th class="cellrowborder" valign="top" width="25%" id="mcps1.2.5.1.4"><p id="p435716507913"><a name="p435716507913"></a><a name="p435716507913"></a>使用组件</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row7357125010917"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p0357155019917"><a name="p0357155019917"></a><a name="p0357155019917"></a>ring-controller.atlas</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p1035711508917"><a name="p1035711508917"></a><a name="p1035711508917"></a>标识Atlas的<span id="ph13571150291"><a name="ph13571150291"></a><a name="ph13571150291"></a>Pod</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul835765011916"></a><a name="ul835765011916"></a><ul id="ul835765011916"><li>ascend-910</li><li>ascend-<span id="ph19358150597"><a name="ph19358150597"></a><a name="ph19358150597"></a><em id="zh-cn_topic_0000001519959665_i1489729141619"><a name="zh-cn_topic_0000001519959665_i1489729141619"></a><a name="zh-cn_topic_0000001519959665_i1489729141619"></a>{xxx}</em></span>b</li><li>huawei.com/npu</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p10471193985417"><a name="p10471193985417"></a><a name="p10471193985417"></a><span id="ph1035865018915"><a name="ph1035865018915"></a><a name="ph1035865018915"></a>Ascend Device Plugin</span>、<span id="ph446593975417"><a name="ph446593975417"></a><a name="ph446593975417"></a>Ascend Operator</span>、<span id="ph635885012911"><a name="ph635885012911"></a><a name="ph635885012911"></a>Volcano</span></p>
-</td>
-</tr>
-<tr id="row135825013910"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p203581150493"><a name="p203581150493"></a><a name="p203581150493"></a>fault-scheduling</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p935815502914"><a name="p935815502914"></a><a name="p935815502914"></a>任务故障重调度开关</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p5358950291"><a name="p5358950291"></a><a name="p5358950291"></a>grace、force、off</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p10358105012913"><a name="p10358105012913"></a><a name="p10358105012913"></a><span id="ph635812501497"><a name="ph635812501497"></a><a name="ph635812501497"></a>Volcano</span>、<span id="ph183581350898"><a name="ph183581350898"></a><a name="ph183581350898"></a>Resilience Controller</span></p>
-</td>
-</tr>
-<tr id="row03591501297"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p143599501394"><a name="p143599501394"></a><a name="p143599501394"></a>elastic-scheduling</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p1235917508916"><a name="p1235917508916"></a><a name="p1235917508916"></a>任务弹性调度开关</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p1135910503918"><a name="p1135910503918"></a><a name="p1135910503918"></a>on</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p1735916501991"><a name="p1735916501991"></a><a name="p1735916501991"></a><span id="ph93613501992"><a name="ph93613501992"></a><a name="ph93613501992"></a>Resilience Controller</span>、<span id="ph53614501198"><a name="ph53614501198"></a><a name="ph53614501198"></a>Volcano</span></p>
-</td>
-</tr>
-<tr id="row103614504912"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p6361950695"><a name="p6361950695"></a><a name="p6361950695"></a>fault-retry-times</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p183613501791"><a name="p183613501791"></a><a name="p183613501791"></a>任务发生业务面故障可以重调度的次数</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p1836115501693"><a name="p1836115501693"></a><a name="p1836115501693"></a>0-100</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p636212501391"><a name="p636212501391"></a><a name="p636212501391"></a><span id="ph1036213501896"><a name="ph1036213501896"></a><a name="ph1036213501896"></a>Volcano</span>、<span id="ph436285014913"><a name="ph436285014913"></a><a name="ph436285014913"></a>Ascend Operator</span></p>
-</td>
-</tr>
-<tr id="row1336212502091"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p103625502094"><a name="p103625502094"></a><a name="p103625502094"></a>tor-affinity</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p43628508911"><a name="p43628508911"></a><a name="p43628508911"></a>交换机亲和性策略</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul143629507913"></a><a name="ul143629507913"></a><ul id="ul143629507913"><li>normal-schema</li><li>large-model-schema</li><li>null</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p436310506914"><a name="p436310506914"></a><a name="p436310506914"></a><span id="ph73631050690"><a name="ph73631050690"></a><a name="ph73631050690"></a>Volcano</span></p>
-</td>
-</tr>
-<tr id="row1136411501898"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p0364135010913"><a name="p0364135010913"></a><a name="p0364135010913"></a>npu-310-strategy</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p636425010918"><a name="p636425010918"></a><a name="p636425010918"></a>标记推理服务器（插<span id="ph1436410501390"><a name="ph1436410501390"></a><a name="ph1436410501390"></a>Atlas 300I 推理卡</span>）调度策略</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul73644501797"></a><a name="ul73644501797"></a><ul id="ul73644501797"><li>card</li><li>chip</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p1636419501398"><a name="p1636419501398"></a><a name="p1636419501398"></a><span id="ph163652501393"><a name="ph163652501393"></a><a name="ph163652501393"></a>Volcano</span></p>
-</td>
-</tr>
-<tr id="row7970125593620"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p65914912716"><a name="p65914912716"></a><a name="p65914912716"></a>pod-rescheduling</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p3591694276"><a name="p3591694276"></a><a name="p3591694276"></a>是否启用Pod级别重调度。</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul186101614131"></a><a name="ul186101614131"></a><ul id="ul186101614131"><li>on：开启Pod级别重调度</li><li>其他值或不使用该字段：关闭Pod级别重调度</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p1372045172812"><a name="p1372045172812"></a><a name="p1372045172812"></a><span id="ph2072005192818"><a name="ph2072005192818"></a><a name="ph2072005192818"></a>Volcano</span></p>
-</td>
-</tr>
-<tr id="row209101813153710"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p2417162275410"><a name="p2417162275410"></a><a name="p2417162275410"></a>process-recover-enable</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p131172319273"><a name="p131172319273"></a><a name="p131172319273"></a>是否启用进程级别重调度。</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul71592205015"></a><a name="ul71592205015"></a><ul id="ul71592205015"><li>on：开启进程级别重调度</li><li>其他值或不使用该字段：关闭进程级别重调度</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p181177342718"><a name="p181177342718"></a><a name="p181177342718"></a><span id="ph102814152910"><a name="ph102814152910"></a><a name="ph102814152910"></a>Volcano</span></p>
-</td>
-</tr>
-<tr id="row8889122663714"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p172891224132816"><a name="p172891224132816"></a><a name="p172891224132816"></a>subHealthyStrategy</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p728915247282"><a name="p728915247282"></a><a name="p728915247282"></a>亚健康处理策略</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><a name="ul18716519102210"></a><a name="ul18716519102210"></a><ul id="ul18716519102210"><li>ignore：忽略该亚健康节点，后续任务在亲和性调度上不优先调度该节点。</li><li>graceExit：不使用亚健康节点，并保存临终CKPT文件后，进行重调度，后续任务不会调度到该节点。</li><li>forceExit：不使用亚健康节点，不保存任务直接退出，进行重调度，后续任务不会调度到该节点。</li><li>hotSwitch：执行亚健康热切，拉起备份Pod后，暂停训练任务，并使用新节点重新拉起训练。</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p929902143119"><a name="p929902143119"></a><a name="p929902143119"></a><span id="ph6299326312"><a name="ph6299326312"></a><a name="ph6299326312"></a>Volcano</span></p>
-</td>
-</tr>
-</tbody>
-</table>
+|名称|作用|取值|使用组件|
+|--|--|--|--|
+|ring-controller.atlas|标识Atlas的Pod|<ul><li>ascend-910</li><li>ascend-<span><em>{xxx}</em></span>b</li><li>huawei.com/npu</li></ul>|Ascend Device Plugin、Ascend Operator、Volcano|
+|fault-scheduling|任务故障重调度开关|grace、force、off|Volcano、Resilience Controller|
+|elastic-scheduling|任务弹性调度开关|on|Volcano、Resilience Controller|
+|fault-retry-times|任务发生业务面故障可以重调度的次数|0-100|Volcano、Ascend Operator|
+|tor-affinity|交换机亲和性策略|<ul><li>normal-schema</li><li>large-model-schema</li><li>null</li></ul>|Volcano|
+|npu-310-strategy|标记推理服务器（插Atlas 300I 推理卡）调度策略|<ul><li>card</li><li>chip</li></ul>|Volcano|
+|pod-rescheduling|是否启用Pod级别重调度。|<ul><li>on：开启Pod级别重调度</li><li>其他值或不使用该字段：关闭Pod级别重调度</li></ul>|Volcano|
+|process-recover-enable|是否启用进程级别重调度。|<ul><li>on：开启进程级别重调度</li><li>其他值或不使用该字段：关闭进程级别重调度</li></ul>|Volcano|
+|subHealthyStrategy|亚健康处理策略。|<ul><li>ignore：忽略该亚健康节点，后续任务在亲和性调度上不优先调度该节点。</li><li>graceExit：不使用亚健康节点，并保存临终CKPT文件后，进行重调度，后续任务不会调度到该节点。</li><li>forceExit：不使用亚健康节点，不保存任务直接退出，进行重调度，后续任务不会调度到该节点。</li><li>hotSwitch：执行亚健康热切，拉起备份Pod后，暂停训练任务，并使用新节点重新拉起训练。</li></ul>|Volcano|
+|huawei.com/scheduler.softShareDev.aicoreQuota|软切分任务请求的AI Core百分比。|[1, 100]|Volcano|
+|huawei.com/scheduler.softShareDev.hbmQuota|软切分任务请求的高带宽内存量。|<p>[1, maxHBM]</p><p>maxHBM为通过<b>npu-smi info</b>命令查询出的HBM-Usage(MB)中HBM的值。</p>|Volcano|
+|huawei.com/scheduler.softShareDev.policy|软切分任务的策略。|<ul><li>fixed-share</li><li>elastic</li><li>best-effort</li></ul>|Volcano|
 
 **表 2** 集群调度组件对PodGroup annotations使用说明
 
@@ -237,6 +158,7 @@
 |chip1-node16|1个节点16张卡，每张卡之间无互联。例如，Atlas 350 标卡共16张卡，每张卡之间无互联。|
 |chip8-node8-sp|1个节点8张卡，8张卡都在1个互联环上，多个服务器形成超节点。例如，Atlas 850 超节点服务器。|
 |chip8-node8-ra64-sp|1个节点8张卡，8张卡都在1个互联环上，64个节点组成一个计算框，多个框形成超节点。例如，Atlas 950 PoD 超节点集群。|
+|chip1-softShareDev|软切分虚拟化专用调度策略。|
 
 
 ## Pod<a name="ZH-CN_TOPIC_0000002484428552"></a>

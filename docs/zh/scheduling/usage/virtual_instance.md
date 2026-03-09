@@ -1,12 +1,19 @@
 # 虚拟化实例特性指南<a name="ZH-CN_TOPIC_0000002511426957"></a>
 
-## 特性说明<a name="ZH-CN_TOPIC_0000002511426281"></a>
+## 基于HDK的虚拟化实例<a name="ZH-CN_TOPIC_00000025113463hdk"></a>
 
-虚拟化实例功能是指通过资源虚拟化的方式将物理机或虚拟机配置的NPU切分成若干份vNPU（虚拟NPU）挂载到容器中使用，虚拟化管理能够实现统一不同规格资源的分配和回收处理，满足多用户反复申请/释放资源的操作请求。
+### 特性说明<a name="ZH-CN_TOPIC_0000002511426281"></a>
 
-昇腾虚拟化实例功能的优点是可实现多个用户按需申请共同使用一台服务器，降低了用户使用NPU算力的门槛和成本。多个用户共同使用一台服务器的NPU，并借助容器进行资源隔离，资源隔离性好，保证运行环境的平稳和安全，且资源分配，资源回收过程统一，方便多租户管理。
+基于HDK的虚拟化实例功能是指通过资源虚拟化的方式将物理机或虚拟机配置的NPU切分成若干份vNPU（虚拟NPU）挂载到容器中使用，虚拟化管理能够实现统一不同规格资源的分配和回收处理，满足多用户反复申请/释放资源的操作请求。
 
-关于虚拟化实例特性的详细介绍请参见[虚拟化实例](../introduction.md#虚拟化实例)章节。
+昇腾基于HDK的虚拟化实例功能的优点是可实现多个用户按需申请共同使用一台服务器，降低了用户使用NPU算力的门槛和成本。多个用户共同使用一台服务器的NPU，并借助容器进行资源隔离，资源隔离性好，保证运行环境的平稳和安全，且资源分配，资源回收过程统一，方便多租户管理。
+
+**原理介绍<a name="section154002962818"></a>**
+
+昇腾NPU硬件资源主要包括AICore（用于AI模型的计算）、AICPU、内存等，昇腾虚拟化实例功能主要原理是将上述硬件资源根据用户指定的资源需求划分出vNPU，每个vNPU对应若干AICore、AICPU、内存资源。比如用户只需要使用4个AICore的算力，那么系统就会创建一个vNPU，通过vNPU向NPU芯片获取4个AICore提供给容器使用，整体昇腾虚拟化实例方案如[图1 虚拟化实例方案](#fig987114711574)所示。
+
+**图 1**  虚拟化实例方案<a name="fig987114711574"></a>  
+![](../../figures/scheduling/虚拟化实例方案.png "虚拟化实例方案")
 
 **产品支持说明<a name="section17326115542216"></a>**
 
@@ -159,27 +166,107 @@
 
 **使用说明<a name="section1296713336303"></a>**
 
--   如果使用动态虚拟化功能，请直接参见[动态虚拟化](#动态虚拟化)章节，不需要提前使用npu-smi命令创建vNPU。
--   如果使用静态虚拟化功能，需要先参见[创建vNPU](#创建vnpu)，再进行挂载到容器操作。
--   Atlas 推理系列产品的物理NPU虚拟化出vNPU后，模型在使用vNPU进行推理时可能会出现性能下降。如果出现性能下降的情况，建议使用vir04+vir04\_3c或者vir04+vir02+vir02\_1c的组合（对应的硬件资源可参见[虚拟化规则](#虚拟化规则)章节中的“虚拟化模板”）划分vNPU。
--   用户使用vNPU训练模型时，可以使用AOE调优工具进一步优化模型性能，详情请参见《<a href="https://www.hiascend.com/document/detail/zh/canncommercial/850/devaids/aoe/auxiliarydevtool_aoe_0001.html">CANN AOE调优工具用户指南</a>》。
+- 静态虚拟化、动态虚拟化基于HDK实现，通过HDK接口将芯片切分成vNPU后，挂载到容器中使用。
+- 如果使用动态虚拟化功能，请直接参见[动态虚拟化](#动态虚拟化)章节，不需要提前使用npu-smi命令创建vNPU。
+- 如果使用静态虚拟化功能，需要先参见[创建vNPU](#创建vnpu)，再进行挂载到容器操作。
 
 **使用约束<a name="section911013420264"></a>**
 
--   物理NPU虚拟化出vNPU后，不支持再将该物理NPU挂载到容器使用，也不支持再将该物理NPU直通到虚拟机使用。
--   一个vNPU只能被一个任务容器使用，不支持多个任务容器使用同一个vNPU。
--   Atlas 300I Duo 推理卡上两个芯片的工作模式必须一致。即均使用虚拟化实例功能，或均整卡使用。请根据业务自行规划。
--   虚拟化实例模板是用于对整台服务器上所有NPU进行资源切分，不支持不同规格的标卡混插。如Atlas 300V Pro 视频解析卡支持24G和48G内存规格，不支持这两种内存规格的卡混插进行虚拟化；不支持30个AICore的Atlas 训练系列产品和32个AICore的Atlas 训练系列产品混插。
--   当服务器为Atlas 训练系列产品时，仅NPU芯片工作在AMP模式时支持虚拟化功能，不支持SMP模式。查询和设置NPU芯片工作模式操作步骤如下（确保服务器操作系统处于下电状态）。
+- 物理NPU虚拟化出vNPU后，不支持再将该物理NPU挂载到容器使用，也不支持再将该物理NPU直通到虚拟机使用。
+- 一个vNPU只能被一个任务容器使用，不支持多个任务容器使用同一个vNPU。
+- Atlas 300I Duo 推理卡上两个芯片的工作模式必须一致。即均使用虚拟化实例功能，或均整卡使用。请根据业务自行规划。
+- 虚拟化实例模板是用于对整台服务器上所有NPU进行资源切分，不支持不同规格的标卡混插。如Atlas 300V Pro 视频解析卡支持24G和48G内存规格，不支持这两种内存规格的卡混插进行虚拟化；不支持30个AICore的Atlas 训练系列产品和32个AICore的Atlas 训练系列产品混插。
+- 当服务器为Atlas 训练系列产品时，仅NPU芯片工作在AMP模式时支持虚拟化功能，不支持SMP模式。查询和设置NPU芯片工作模式操作步骤如下（确保服务器操作系统处于下电状态）。
 
-    1.  登录iBMC命令行。
-    2.  执行**ipmcget -d npuworkmode**命令查询NPU芯片的工作模式，若为AMP模式，则无需切换。
-    3.  执行**ipmcset -d npuworkmode -v 0**命令设置NPU芯片的工作模式为AMP模式。
+    1. 登录iBMC命令行。
+    2. 执行**ipmcget -d npuworkmode**命令查询NPU芯片的工作模式，若为AMP模式，则无需切换。
+    3. 执行**ipmcset -d npuworkmode -v 0**命令设置NPU芯片的工作模式为AMP模式。
 
     查询和设置NPU芯片工作模式的详细介绍请参见《[Atlas 800 训练服务器 iBMC用户指南（型号 9000）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583)》中的“命令行介绍 \> 服务器命令 \>  [查询和设置NPU芯片工作模式（npuworkmode）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a)”章节。
 
+### 应用场景及方案<a name="ZH-CN_TOPIC_0000002511426823"></a>
 
-## 虚拟化规则<a name="ZH-CN_TOPIC_0000002511346345"></a>
+**应用场景<a name="section198715461917"></a>**
+
+基于HDK的虚拟化实例功能适用于多用户多任务并行，且每个任务算力需求较小的场景。对算力需求较大的大模型任务，不支持使用昇腾虚拟化实例。
+
+**虚拟化场景<a name="section1618382307"></a>**
+
+昇腾虚拟化实例功能在物理机或虚拟机使用时，支持以下虚拟化场景，如[表1](#table197838103018)所示。本文主要介绍在昇腾设备划分vNPU支持的场景和方法，如果涉及虚拟机相关的配置，需要结合另一本文档《Atlas 系列硬件产品 24.1.0 虚拟机配置指南》的“安装虚拟机\>配置NPU直通虚拟机\>[NPU直通虚拟机](https://support.huawei.com/enterprise/zh/doc/EDOC1100438515/2689d3e6?idPath=23710424|251366513|254884019|261408772|252764743)”章节一起使用。
+
+划分vNPU有以下两种方式。
+
+-   静态虚拟化：通过npu-smi工具**手动**创建多个vNPU。物理机和虚拟机场景均支持静态虚拟化。
+-   动态虚拟化：通过软件配置，在收到虚拟化任务请求后，动态地**自动**创建vNPU、挂载任务、回收vNPU。
+
+**表 1**  使用场景
+
+<a name="table197838103018"></a>
+<table><thead align="left"><tr id="row16723873015"><th class="cellrowborder" valign="top" width="25%" id="mcps1.2.5.1.1"><p id="p871338103019"><a name="p871338103019"></a><a name="p871338103019"></a>昇腾虚拟化实例功能支持场景</p>
+</th>
+<th class="cellrowborder" valign="top" width="25%" id="mcps1.2.5.1.2"><p id="p14014521402"><a name="p14014521402"></a><a name="p14014521402"></a>操作流程</p>
+</th>
+<th class="cellrowborder" valign="top" width="25%" id="mcps1.2.5.1.4"><p id="p18893873015"><a name="p18893873015"></a><a name="p18893873015"></a>支持的虚拟化方式</p>
+</th>
+</tr>
+</thead>
+<tbody><tr id="row158123818304"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1819384303"><a name="p1819384303"></a><a name="p1819384303"></a>在物理机划分vNPU，挂载vNPU到虚拟机</p>
+</td>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p1290518155817"><a name="p1290518155817"></a><a name="p1290518155817"></a>在物理机划分vNPU和挂载vNPU到虚拟机的步骤请参见<span id="ph15232948195013"><a name="ph15232948195013"></a><a name="ph15232948195013"></a>《Atlas 系列硬件产品 24.1.0 虚拟机配置指南》的“安装虚拟机&gt;配置NPU直通虚拟机&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100438515/bf80825c" target="_blank" rel="noopener noreferrer">vNPU直通虚拟机</a>”章节</span>。</p>
+<p id="p134351910131711"><a name="p134351910131711"></a><a name="p134351910131711"></a></p>
+</td>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p10921030123711"><a name="p10921030123711"></a><a name="p10921030123711"></a>静态虚拟化</p>
+<p id="p333261621717"><a name="p333261621717"></a><a name="p333261621717"></a></p>
+</td>
+</tr>
+<tr id="row89138123014"><td class="cellrowborder" rowspan="2" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p391138203014"><a name="p391138203014"></a><a name="p391138203014"></a>在物理机划分vNPU，挂载vNPU到容器</p>
+</td>
+<td class="cellrowborder" rowspan="2" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol4232523123116"></a><a name="ol4232523123116"></a><ol id="ol4232523123116"><li>在物理机划分vNPU的步骤请参见<a href="#创建vnpu">创建vNPU</a>。</li><li>挂载vNPU到容器的步骤请参见<a href="#挂载vnpu">挂载vNPU</a>。</li></ol>
+</td>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p671845534711"><a name="p671845534711"></a><a name="p671845534711"></a>静态虚拟化</p>
+</td>
+</tr>
+<tr id="row174318393462"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><div class="p" id="p879861715488"><a name="p879861715488"></a><a name="p879861715488"></a>动态虚拟化：<a name="ul1028016496477"></a><a name="ul1028016496477"></a><ul id="ul1028016496477"><li>使用<span id="ph112801498478"><a name="ph112801498478"></a><a name="ph112801498478"></a>Ascend Docker Runtime</span>挂载</li><li>使用<span id="ph828016490479"><a name="ph828016490479"></a><a name="ph828016490479"></a><span id="ph728054934716"><a name="ph728054934716"></a><a name="ph728054934716"></a>Kubernetes</span>挂载</span></li></ul>
+</div>
+</td>
+</tr>
+<tr id="row131012387307"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1010133833013"><a name="p1010133833013"></a><a name="p1010133833013"></a>在物理机划分vNPU，挂载vNPU到虚拟机，在虚拟机内将vNPU挂载到容器</p>
+</td>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol14307634103119"></a><a name="ol14307634103119"></a><ol id="ol14307634103119"><li>在物理机划分vNPU和挂载vNPU到虚拟机的步骤请参见<span id="ph452785715619"><a name="ph452785715619"></a><a name="ph452785715619"></a>《Atlas 系列硬件产品 24.1.0 虚拟机配置指南》的“安装虚拟机&gt;配置NPU直通虚拟机&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100438515/bf80825c" target="_blank" rel="noopener noreferrer">vNPU直通虚拟机</a>”章节</span>。</li><li>在虚拟机内挂载vNPU到容器的步骤请参见<a href="#挂载vnpu">挂载vNPU</a>。</li></ol>
+</td>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p13911193234713"><a name="p13911193234713"></a><a name="p13911193234713"></a>静态虚拟化</p>
+</td>
+</tr>
+<tr id="row3124381309"><td class="cellrowborder" rowspan="2" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p20127385307"><a name="p20127385307"></a><a name="p20127385307"></a>在物理机直通NPU到虚拟机，在虚拟机内划分vNPU，再将vNPU挂载到虚拟机内的容器</p>
+</td>
+<td class="cellrowborder" rowspan="2" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol441318447318"></a><a name="ol441318447318"></a><ol id="ol441318447318"><li>在物理机直通NPU到虚拟机的步骤请参见<span id="ph970622925815"><a name="ph970622925815"></a><a name="ph970622925815"></a>《Atlas 系列硬件产品 24.1.0 虚拟机配置指南》的“安装虚拟机&gt;配置NPU直通虚拟机&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100438515/2689d3e6?idPath=23710424|251366513|254884019|261408772|252764743" target="_blank" rel="noopener noreferrer">NPU直通虚拟机</a>”章节</span>。</li><li>在虚拟机内划分vNPU步骤请参见<a href="#创建vnpu">创建vNPU</a>。</li><li>将vNPU挂载到虚拟机内的容器的步骤请参见<a href="#挂载vnpu">挂载vNPU</a>。</li></ol>
+</td>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p1486613195014"><a name="p1486613195014"></a><a name="p1486613195014"></a>静态虚拟化</p>
+</td>
+</tr>
+<tr id="row8918450194820"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><div class="p" id="p14998206105010"><a name="p14998206105010"></a><a name="p14998206105010"></a>动态虚拟化：<a name="ul55138515017"></a><a name="ul55138515017"></a><ul id="ul55138515017"><li>使用<span id="ph1051325105019"><a name="ph1051325105019"></a><a name="ph1051325105019"></a>Ascend Docker Runtime</span>挂载</li><li>使用<span id="ph1951314565011"><a name="ph1951314565011"></a><a name="ph1951314565011"></a><span id="ph1251318575010"><a name="ph1251318575010"></a><a name="ph1251318575010"></a>Kubernetes</span>挂载</span></li></ul>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+
+**vNPU挂载到容器方案<a name="section84114107544"></a>**
+
+将vNPU挂载到容器有以下方案：
+
+-   原生Docker：结合原生Docker使用。仅支持静态虚拟化（通过npu-smi工具创建多个vNPU），通过Docker拉起容器时将vNPU挂载到容器。
+
+    >[!NOTE] 说明 
+    >不支持通过原生Containerd拉起容器时将vNPU挂载到容器。
+
+-   结合MindCluster组件：
+    -   Ascend Docker Runtime：单独基于Ascend Docker Runtime（容器引擎插件）使用。支持静态虚拟化和动态虚拟化，通过Ascend Docker Runtime拉起容器时将vNPU挂载到容器。
+    -   Kubernetes：结合MindCluster组件Ascend Device Plugin、Volcano，通过Kubernetes拉起容器时将vNPU挂载到容器。支持静态虚拟化和动态虚拟化。
+        -   静态虚拟化：通过npu-smi工具提前创建多个vNPU，当用户需要使用vNPU资源时，基于Ascend Device Plugin组件的设备发现、设备分配、设备健康状态上报功能，分配vNPU资源提供给上层用户使用，此方案下，集群调度组件的Volcano组件为可选。
+        -   动态虚拟化：Ascend Device Plugin组件上报其所在机器的可用AICore数目。虚拟化任务上报后，Volcano经过计算将该任务调度到满足其要求的节点。该节点的Ascend Device Plugin在收到请求后自动切分出vNPU设备并挂载该任务，从而完成整个动态虚拟化过程。该过程不需要用户提前切分vNPU，在任务使用完成后又能自动回收，很好地支持用户算力需求不断变化的场景。
+
+### 虚拟化规则<a name="ZH-CN_TOPIC_0000002511346345"></a>
 
 **虚拟化模板<a name="zh-cn_topic_0000002038226813_section13183017526"></a>**
 
@@ -211,27 +298,7 @@
 >    -   VENC：视频编码器，提供对特定格式的视频进行编码的能力。
 >    -   JPEGE：JPEG图像编码器，提供对图像进行编码输出为JPEG格式的能力。
 
-
-**虚拟化模式<a name="zh-cn_topic_0000002038226813_section13213194425210"></a>**
-
-虚拟化模式包含硬件虚拟化和软件虚拟化两种模式，两种模式说明如下：
-
--   硬件虚拟化是指NPU虚拟化为vNPU后，该vNPU对应的AICore、AICPU、内存等硬件资源和其他vNPU相互隔离，为AI任务分配一个vNPU后，该任务可单独使用为其分配的硬件资源，互不影响。
--   软件虚拟化是指用户创建vNPU时，相当于创建一个虚拟实例，而NPU的硬件资源相当于一个资源池，虚拟实例分配给AI任务使用时，该虚拟实例从资源池调用对应的硬件资源。
-
-Atlas 训练系列产品只支持软件虚拟化方式，而Atlas 推理系列产品中vir04、vir04\_3c、vir02、vir02\_1c、vir04\_3c\_ndvpp、vir04\_4c\_dvpp模板为硬件虚拟化模式，vir01模板为软件虚拟化模式。
-
-Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
-
--   vGroup是指虚拟化时NPU根据用户指定的虚拟化模板划分出虚拟资源组vGroup，每个vGroup包含若干AICore、AICPU、片上内存、DVPP资源；
--   如果用户使用模板vir04、vir04\_3c、vir02、vir02\_1c、vir04\_3c\_ndvpp、vir04\_4c\_dvpp，那么系统就会创建一个对应资源的vGroup，该vGroup包含与虚拟化实例模板匹配的AICore和其他硬件资源，vGroup再将资源提供给vNPU使用，虚拟化实例模板组合和vGroup的分配关系如[图1](#zh-cn_topic_0000002038226813_fig1059652844919)所示；
--   Atlas 推理系列产品最多支持划分4个vGroup，vGroup至少包含2个AICore，如果用户使用模板vir01（无论是1个vir01还是2个vir01），NPU分配的vGroup同样包含2个AICore，vNPU通过分时复用的方式使用vGroup资源，比如通过2个vir01模板切分的2个vNPU，那么每个vNPU会通过串行的方式轮流使用vGroup的资源（如vNPU1使用1毫秒，然后vNPU2使用1毫秒）。
-
-**图 1**  vGroup和虚拟化实例模板组合的对应关系<a name="zh-cn_topic_0000002038226813_fig1059652844919"></a>  
-![](../../figures/scheduling/vGroup和虚拟化实例模板组合的对应关系.png "vGroup和虚拟化实例模板组合的对应关系")
-
-
-## 创建vNPU<a name="ZH-CN_TOPIC_0000002479226382"></a>
+### 创建vNPU<a name="ZH-CN_TOPIC_0000002479226382"></a>
 
 -   在物理机和虚拟机使用npu-smi工具创建vNPU的命令基本相同，所以本节命令可以适用于物理机和虚拟机，其中只有Atlas 推理系列产品支持在虚拟机创建vNPU。
 -   当使用**静态虚拟化**创建vNPU并挂载到容器时，需要使用**npu-smi**命令创建vNPU，再参考[挂载vNPU](#挂载vnpu)。
@@ -332,8 +399,7 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
     >[!NOTE] 说明 
     >Atlas 推理系列产品支持返回AICPU，Vgroup ID信息，Atlas 训练系列产品不支持返回AICPU，Vgroup ID信息。
 
-
-## 销毁vNPU<a name="ZH-CN_TOPIC_0000002479386366"></a>
+### 销毁vNPU<a name="ZH-CN_TOPIC_0000002479386366"></a>
 
 销毁指定vNPU。
 
@@ -354,16 +420,16 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 >在销毁指定vNPU之前，请确保此设备未被使用。
 
 
-## 挂载vNPU<a name="ZH-CN_TOPIC_0000002479386388"></a>
+### 挂载vNPU<a name="ZH-CN_TOPIC_0000002479386388"></a>
 
-### 基于原生Docker挂载vNPU<a name="ZH-CN_TOPIC_0000002479226416"></a>
+#### 基于原生Docker挂载vNPU<a name="ZH-CN_TOPIC_0000002479226416"></a>
 
 原生Docker场景下（未部署MindCluster集群调度组件），需要使用npu-smi工具创建vNPU后，将vNPU挂载到容器。具体操作请参见《Atlas 中心训练服务器 25.5.0 NPU驱动和固件安装指南》的“昇腾虚拟化实例（AVI）容器场景下的安装与卸载\>[多容器场景下安装](https://support.huawei.com/enterprise/zh/doc/EDOC1100540363/5b32515a)”章节，该章节指导用户安装Docker和将vNPU挂载进容器。
 
 
-### 基于MindCluster组件挂载vNPU<a name="ZH-CN_TOPIC_0000002511346329"></a>
+#### 基于MindCluster组件挂载vNPU<a name="ZH-CN_TOPIC_0000002511346329"></a>
 
-#### 方式一：Ascend Docker Runtime挂载vNPU<a name="ZH-CN_TOPIC_0000002479386376"></a>
+##### 方式一：Ascend Docker Runtime挂载vNPU<a name="ZH-CN_TOPIC_0000002479386376"></a>
 
 单独结合Ascend Docker Runtime（容器引擎插件）使用，将vNPU挂载到容器。
 
@@ -411,9 +477,9 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 |ASCEND_VNPU_SPECS|从物理NPU设备中划分出一定数量的AI Core，指定为虚拟设备。支持的取值请参见<a href="#虚拟化规则">表1</a>。<ul><li>只有支持动态虚拟化的产品形态，才能使用该参数。</li><li>需配合参数“ASCEND_VISIBLE_DEVICES”一起使用，参数“ASCEND_VISIBLE_DEVICES”指定用于虚拟化的物理NPU设备。</li></ul>|ASCEND_VNPU_SPECS=vir04表示划分4个AI Core作为vNPU，挂载至容器。|
 
 
-#### 方式二：Kubernetes挂载vNPU<a name="ZH-CN_TOPIC_0000002511346321"></a>
+##### 方式二：Kubernetes挂载vNPU<a name="ZH-CN_TOPIC_0000002511346321"></a>
 
-##### 使用vNPU说明<a name="ZH-CN_TOPIC_0000002511426303"></a>
+###### 使用vNPU说明<a name="ZH-CN_TOPIC_0000002511426303"></a>
 
 在Kubernetes场景，当用户需要使用vNPU资源时，需要通过结合集群调度组件Ascend Device Plugin的使用，使Kubernetes可以管理昇腾处理器资源。使用方式又按照是否需要提前切分好vNPU，划分为静态虚拟化和动态虚拟化两种，且两种模式不能混用，也不能和之前章节提到的Ascend Docker Runtime使用方式混合使用。昇腾虚拟化实例特性需要的集群调度组件如下表所示，支持的产品型号情况请参见[产品支持情况说明](#特性说明)。
 
@@ -465,7 +531,7 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
 >-   ClusterD：当使用Volcano时才需要选择该组件，详细请参见[安装Volcano](../installation_guide.md#安装volcano)。
 
 
-##### 静态虚拟化<a name="ZH-CN_TOPIC_0000002479226392"></a>
+###### 静态虚拟化<a name="ZH-CN_TOPIC_0000002479226392"></a>
 
 **使用限制<a name="section785220396317"></a>**
 
@@ -790,7 +856,7 @@ Atlas 推理系列产品虚拟化实例还涉及vGroup的概念：
     ```
 
 
-##### 动态虚拟化<a name="ZH-CN_TOPIC_0000002511426291"></a>
+###### 动态虚拟化<a name="ZH-CN_TOPIC_0000002511426291"></a>
 
 使用动态虚拟化前，需要提前了解[表1](#table625511844619)中的相关使用说明。
 
@@ -1239,7 +1305,136 @@ spec:
 >[!NOTICE] 须知 
 >上表中对于芯片虚拟化（非整卡），vnpu-dvpp的值只能为表中对应的值，其他值会导致任务不能下发。
 
+## 基于VCANN的虚拟化实例<a name="ZH-CN_TOPIC_000000251196876vcann"></a>
 
+### 特性说明<a name="ZH-CN_TOPIC_0000002511426281vcann"></a>
 
+基于VCANN的虚拟化功能是指通过向VCANN提供软切分配置文件的方式将物理机配置的NPU（昇腾AI处理器）挂载到容器中使用，虚拟化管理方式能够实现统一不同规格资源的分配和回收处理，满足多用户反复申请/释放资源的操作请求。
 
+昇腾基于VCANN的虚拟化实例功能的优点是可实现多个用户共同使用一台服务器，用户可以按需申请NPU的资源，降低了用户使用NPU算力的门槛和成本。多个用户共同使用一台服务器的NPU，并借助容器进行资源隔离，资源隔离性好，保证运行环境的平稳和安全，且资源分配与回收过程统一，从而方便多租户管理。
 
+**产品支持说明<a name="section17326115542216vcann"></a>**
+
+**表 1**  产品支持情况说明
+
+<a name="table32786155236vcann"></a>
+|产品系列|支持的场景|虚拟化方式|是否支持|
+|--|--|--|--|
+|<term>Atlas A2 推理系列产品</term><ul><li>Atlas 800I A2 推理服务器</li></ul>|在物理机生成软切分配置文件，挂载NPU和位置文件到容器|软切分虚拟化|是|
+|<term>Atlas A3 推理系列产品</term><ul><li>Atlas 800I A3 超节点服务器</li></ul>|在物理机生成软切分配置文件，挂载NPU和位置文件到容器|软切分虚拟化|是|
+
+**使用说明<a name="section1296713336303vcann"></a>**
+
+- 软切分虚拟化基于[VCANN](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md)实现，直接将NPU重复挂载到多个容器，容器内的CANN按照配置好的比例使用NPU资源。
+- 如果使用软切分虚拟化功能，需要先参见[软切分虚拟化](#软切分虚拟化)，再进行挂载到容器操作。
+
+**使用约束<a name="section911013420264vcann"></a>**
+
+- 在软切分虚拟化场景下，一个容器只能挂载一个NPU。
+- 任务YAML中requests对应的数据表示请求的NPU的AI Core百分比，不是真实NPU卡数。
+- Atlas A3 推理系列产品使用软切分功能时，必须先调用驱动接口开启单die直通模式。
+- 物理NPU软切分虚拟化后，仅支持将物理NPU挂载到容器，不支持将该物理NPU直通到虚拟机。
+- 在软切分虚拟化场景下，如果所有容器都挂载了相同的物理NPU，则该物理NPU必须采用相同的软切分策略。
+
+### 软切分虚拟化<a name="ZH-CN_TOPIC_000000968vcann"></a>
+
+**使用软切分NPU说明<a name="ZH-CN_TOPIC_00000025113463450356vcann"></a>**
+
+在Kubernetes场景，当用户需要使用NPU资源时，需要通过结合集群调度组件Ascend Device Plugin和Volcano的使用，使Kubernetes可以管理并调度昇腾处理器资源。昇腾软切分虚拟化实例特性需要的集群调度组件包括	Ascend Device Plugin、Volcano、Ascend Operator和ClusterD。支持的产品型号情况请参见[产品支持情况说明](#特性说明-1)。
+
+**场景说明<a name="section1576110260450vcann"></a>**
+
+使用软切分虚拟化前，需要提前了解[表1](#table62551184461989657)中的场景说明。
+
+**表 1**  场景说明
+
+<a name="table62551184461989657"></a>
+<table><thead align="left"><tr><th class="cellrowborder" valign="top" width="19.98%" id="mcps1.2.3.1.1"><p>场景</p>
+</th>
+<th class="cellrowborder" valign="top" width="80.02%" id="mcps1.2.3.1.2"><p>说明</p>
+</th>
+</tr>
+</thead>
+<tbody><tr><td class="cellrowborder" rowspan="4" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p>通用说明</p>
+</td>
+<td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 "><p>分配的芯片信息会在PodGroup的label中体现出来，关于PodGroup label的详细说明请参见<a href="../api/volcano.md#podgroup">PodGroup label</a>中的如下参数：<ul><li>huawei.com/scheduler.softShareDev.aicoreQuota</li><li>huawei.com/scheduler.softShareDev.hbmQuota</li><li>huawei.com/scheduler.softShareDev.policy</li></ul></p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>软切分功能必须配合VCANN使用。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>分配软切分NPU时，经MindCluster调度，将优先占满剩余算力最少的物理NPU。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>目前任务的每个Pod请求的NPU数量为1个。物理上使用的NPU数量为1，但任务YAML中请求的NPU数量需要与huawei.com/scheduler.softShareDev.aicoreQuota配置保持一致。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" rowspan="3" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p>特性支持的场景</p>
+</td>
+<td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 "><p>支持多副本，但多副本中的每个Pod所使用的NPU软切分策略必须一致。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>支持K8s的机制，如亲和性等。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>支持芯片故障和节点故障的重调度。具体参考<a href="./basic_scheduling.md#推理卡故障恢复">推理卡故障恢复</a>和<a href="./basic_scheduling.md#推理卡故障重调度">推理卡故障重调度</a>章节。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" rowspan="3" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p>特性不支持的场景</p>
+</td>
+<td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 "><p>不支持不同芯片在一个任务内混用。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>任务运行过程中，不支持卸载Volcano。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>K8s场景会自动创建与销毁vNPU，不能与Docker场景的操作混用。</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+**前提条件**
+
+1.  需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run”，安装容器引擎插件。
+2.  参见[安装部署](../installation_guide.md#安装部署)章节，完成各组件的安装。
+
+    虚拟化实例涉及修改相关参数的集群调度组件为Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署。
+
+    软切分虚拟化实例启动参数说明如下：
+
+    **表 3** Ascend Device Plugin启动参数
+
+    <a name="table1064314568229"></a>
+    |参数|类型|默认值|说明|
+    |--|--|--|--|
+    |-shareDevCount|uint|1|使用软切分虚拟化时，值只能为100。|
+    |-softShareDevConfigDir|string|""|软切分虚拟化场景配置目录。|
+
+    YAML启动说明如下：
+
+    K8s集群中存在使用Atlas A2 推理系列产品、Atlas A3 推理系列产品的节点，需要在device-plugin-volcano-v\{version\}.yaml中添加-shareDevCount=100 -softShareDevConfigDir=/share_device/，其中/share_device/由用户手动创建。
+
+    ```
+    ...
+    args: [ "device-plugin  -useAscendDocker=true -volcanoType=true -presetVirtualDevice=true
+                -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0 -shareDevCount=100 -softShareDevConfigDir=/share_device/" ]
+    ...
+    volumeMounts:
+            ...
+            - name: enpu-config-dir                                       
+              mountPath: /etc/enpu/
+            - name: share-device-config-dir                                       
+              mountPath: /share_device/
+
+          ...
+          volumes:
+            ...
+            - name: enpu-config-dir                             
+              hostPath:
+                path: /etc/enpu/
+            - name: share-device-config-dir
+              hostPath:
+                path: /share_device/  
+                type: DirectoryOrCreate                
+    ```

@@ -475,7 +475,7 @@ rpc Register(RegisterReq) returns (Ack)
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|RegisterReq|<p>message RegisterReq {<p>string  uuid = 1;</p><p>Position pos = 2;}</p><p>message Position {<p>string role = 1;</p><p>string serverRank = 2;</p><p>string processRank = 3;</p>}</p>|<p>**uuid**：注册消息UUID</p><p>**pos**：注册消息来源</p><p>**role**：注册的角色：如Proxy，Worker，Agent，Mgr</p><p>**serverRank**：角色所在server Rank信息</p><p>**processRank**：角色所在进程Rank信息，包含如下几种类型：Proxy、Agent、Mgr不涉及此信息。这三类角色该字段统一填-1</p>|
+|RegisterReq|<p>message RegisterReq {<p>string  uuid = 1;</p><p>Position pos = 2;}</p><p>message Position {<p>string role = 1;</p><p>string serverRank = 2;</p><p>string processRank = 3;</p>}</p>|<p>**uuid**：注册消息UUID</p><p>**pos**：注册消息来源</p><p>**role**：注册的角色：如Proxy，Worker，Agent，Mgr</p><p>**serverRank**：角色所在server Rank信息</p><p>**processRank**：角色所在进程Rank信息。Worker角色需要填写；Proxy、Agent、Mgr角色不涉及此信息，统一填写-1</p>|
 
 
 **返回值说明<a name="section4468173015517"></a>**

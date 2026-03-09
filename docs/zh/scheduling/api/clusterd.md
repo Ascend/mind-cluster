@@ -15,7 +15,7 @@ ClusterD启动后，会创建如下ConfigMap：
 <a name="table25031946405"></a>
 |参数|说明|
 |--|--|
-|mindx-dl-nodeinfo-*<kwok-node-0>*|前缀为固定的mindx-dl-nodeinfo，kwok-node-0是节点名称，方便定位故障的具体节点。|
+|mindx-dl-nodeinfo-*\<kwok-node-0\>*|前缀为固定的mindx-dl-nodeinfo，kwok-node-0是节点名称，方便定位故障的具体节点。|
 |NodeInfo|节点维度的故障信息。|
 |FaultDevList|节点故障设备列表。|
 |- DeviceType|故障设备类型。|
@@ -30,14 +30,14 @@ ClusterD启动后，会创建如下ConfigMap：
 <a name="table915714719368"></a>
 |参数|说明|
 |--|--|
-|mindx-dl-deviceinfo-*<kwok-node-0>*|前缀为固定的mindx-dl-deviceinfo，kwok-node-0是节点名称，用于定位故障的具体节点。|
+|mindx-dl-deviceinfo-*\<kwok-node-0\>*|前缀为固定的mindx-dl-deviceinfo，kwok-node-0是节点名称，用于定位故障的具体节点。|
 |huawei.com/Ascend910|当前节点可用的芯片名称信息，存在多个时用英文逗号拼接。|
 |huawei.com/Ascend910-NetworkUnhealthy|当前节点网络不健康的芯片名称信息，存在多个时用英文逗号拼接。|
 |huawei.com/Ascend910-Unhealthy|当前芯片不健康的芯片名称信息，存在多个时用英文逗号拼接。|
 |huawei.com/Ascend910-Fault|数组对象，对象包含fault_type、npu_name、large_model_fault_level、 fault_level、fault_handling、fault_code和fault_time_and_level_map字段。|
 |- fault_type|故障类型。<ul><li>CardUnhealthy：芯片故障</li><li>CardNetworkUnhealthy：参数面网络故障（芯片网络相关故障）</li><li>NodeUnhealthy：节点故障</li><li>PublicFault：公共故障</li></ul>|
 |- npu_name|故障的芯片名称，节点故障时为空。|
-|<p>- large_model_fault_level</p><p>- fault_level</p><p>- fault_handling</p>|故障处理类型，节点故障时取值为空。<ul><li>NotHandleFault：不做处理</li><li>RestartRequest：推理场景需要重新执行推理请求，训练场景重新执行训练业务</li><li>RestartBusiness：需要重新执行业务</li><li>FreeRestartNPU：影响业务执行，待芯片空闲时需复位芯片</li><li>RestartNPU：直接复位芯片并重新执行业务</li><li>SeparateNPU：隔离芯片</li><li>PreSeparateNPU：预隔离芯片，会根据训练任务实际运行情况判断是否重调度</li><li>ManuallySeparateNPU：人工隔离芯片。当达到Ascend Device Plugin和ClusterD各自的故障频率，Ascend Device Plugin和ClusterD会将故障芯片进行人工隔离。</li></ul><div class="note"><span>说明：</span><ul><li>large_model_fault_level、fault_handling和fault_level参数功能一致，推荐使用fault_handling。</li><li>若推理任务订阅了故障信息，任务使用的推理卡上发生RestartRequest故障且故障持续时间未超过60秒，则不执行任务重调度；若故障持续时间超过60秒仍未恢复，则隔离芯片，进行任务重调度。</li></ul>|
+|<p>- large_model_fault_level</p><p>- fault_level</p><p>- fault_handling</p>|故障处理类型，节点故障时取值为空。<ul><li>NotHandleFault：不做处理</li><li>RestartRequest：推理场景需要重新执行推理请求，训练场景重新执行训练业务</li><li>RestartBusiness：需要重新执行业务</li><li>FreeRestartNPU：影响业务执行，待芯片空闲时需复位芯片</li><li>RestartNPU：直接复位芯片并重新执行业务</li><li>SeparateNPU：隔离芯片</li><li>PreSeparateNPU：预隔离芯片，会根据训练任务实际运行情况判断是否重调度</li><li>ManuallySeparateNPU：人工隔离芯片。当达到Ascend Device Plugin和ClusterD各自的故障频率，Ascend Device Plugin和ClusterD会将故障芯片进行人工隔离。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>large_model_fault_level、fault_handling和fault_level参数功能一致，推荐使用fault_handling。</li><li>若推理任务订阅了故障信息，任务使用的推理卡上发生RestartRequest故障且故障持续时间未超过60秒，则不执行任务重调度；若故障持续时间超过60秒仍未恢复，则隔离芯片，进行任务重调度。</li></ul></div></div>|
 |- fault_code|故障码，英文逗号拼接的字符串。|
 |- fault_time_and_level_map|故障码、故障发生时间及故障处理等级。|
 |SuperPodID|超节点ID。|
@@ -700,7 +700,7 @@ rpc SubscribeRankTable(ClientInfo) returns (stream RankTableStream) {}
 
 **global-ranktable文件说明<a name="section268935611912"></a>**
 
-ClusterD会生成global-ranktable在RankTable字段作为返回消息。global-ranktable中部分字段来自于hccl.json文件，关于hccl.json文件的详细说明请参见[hccl.json文件说明](../appendix.md#hccljson文件说明)。
+ClusterD会生成global-ranktable在RankTable字段作为返回消息。global-ranktable中部分字段来自于hccl.json文件，关于hccl.json文件的详细说明请参见[hccl.json文件说明](../api/hccl.json_file_description.md)。
 
 -   示例如下。
 
