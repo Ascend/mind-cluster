@@ -284,6 +284,7 @@ func main() {
 	if err != nil {
 		return
 	}
+	hdm.DoSetMultiDiePolicyForA3(common.SingleDieMode)
 	setUseAscendDocker()
 	go hdm.ListenDevice(ctx)
 	go hdm.ListenDpu(ctx)

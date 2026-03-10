@@ -391,3 +391,13 @@ func (d *DeviceManagerMockErr) SetSuperPodStatus(int32, uint32, uint32) error { 
 func (d *DeviceManagerMockErr) GetCardElabelV2(cardID int32) (common.ElabelInfo, error) {
 	return common.ElabelInfo{}, nil
 }
+
+// GetMultiDiePolicy get multi die policy
+func (d *DeviceManagerMockErr) GetMultiDiePolicy() (uint32, error) {
+	return 0, errors.New(errorMsg)
+}
+
+// SetMultiDiePolicy set multi die policy
+func (d *DeviceManagerMockErr) SetMultiDiePolicy(policy uint32) error {
+	return errors.New(errorMsg)
+}

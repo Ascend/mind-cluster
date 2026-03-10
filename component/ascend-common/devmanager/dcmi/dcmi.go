@@ -332,6 +332,15 @@ unsigned int *state);
 unsigned int *state){
 		CALL_FUNC(dcmi_get_hccsping_mesh_state,card_id,device_id,port_id,task_id,state)
 }
+    static int (*dcmi_get_multi_die_policy_func)(unsigned int *policy);
+    int dcmi_get_multi_die_policy(unsigned int *policy){
+    CALL_FUNC(dcmi_get_multi_die_policy,policy)
+    }
+
+	static int (*dcmi_set_multi_die_policy_func)(unsigned int policy);
+    int dcmi_set_multi_die_policy(unsigned int policy){
+    CALL_FUNC(dcmi_set_multi_die_policy,policy)
+    }
 
     // ub ping mesh functions for A5 -- start
 	static int (*dcmi_start_ub_ping_mesh_func)(int card_id, int device_id, int count,
@@ -501,6 +510,10 @@ unsigned int *state){
 
 	dcmi_get_hccsping_mesh_state_func = dlsym(dcmiHandle,"dcmi_get_hccsping_mesh_state");
 
+	dcmi_get_multi_die_policy_func = dlsym(dcmiHandle,"dcmi_get_multi_die_policy");
+
+	dcmi_set_multi_die_policy_func = dlsym(dcmiHandle,"dcmi_set_multi_die_policy");
+
 	dcmi_get_spod_node_status_func = dlsym(dcmiHandle,"dcmi_get_spod_node_status");
 
 	dcmi_set_spod_node_status_func = dlsym(dcmiHandle,"dcmi_set_spod_node_status");
@@ -627,6 +640,8 @@ type DcDriverInterface interface {
 	DcGetSuperPodStatus(int32, int32, uint32) (int, error)
 	DcSetSuperPodStatus(int32, int32, uint32, uint32) error
 	DcGetCardElabelV2(int32) (common.ElabelInfo, error)
+	DcGetMultiDiePolicy() (uint32, error)
+	DcSetMultiDiePolicy(uint32) error
 
 	// DcGetUrmaDeviceCount for A5
 	DcGetUrmaDeviceCount(int32, int32) (int32, error)
@@ -1181,7 +1196,7 @@ func convertCreateVDevOut(cCreateVDevOut C.struct_dcmi_create_vdev_out) common.C
 
 // DcCreateVirtualDevice create virtual device
 func (d *DcManager) DcCreateVirtualDevice(cardID, deviceID int32, vDevInfo common.CgoCreateVDevRes) (common.
-	CgoCreateVDevOut, error) {
+CgoCreateVDevOut, error) {
 	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
 		return common.CgoCreateVDevOut{}, fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
 	}
@@ -1512,7 +1527,7 @@ func (d *DcManager) DcGetCardIDDeviceID(logicID int32) (int32, int32, error) {
 
 // DcCreateVDevice create virtual device by logic id
 func (d *DcManager) DcCreateVDevice(logicID int32, vDevInfo common.CgoCreateVDevRes) (common.
-	CgoCreateVDevOut, error) {
+CgoCreateVDevOut, error) {
 	if !common.IsValidLogicIDOrPhyID(logicID) {
 		return common.CgoCreateVDevOut{}, fmt.Errorf("input invalid logicID: %d", logicID)
 	}
@@ -2687,4 +2702,21 @@ func (d *DcManager) DcGetDeviceIdInCard(cardID int32) (int32, error) {
 		return 0, fmt.Errorf("cardID(%d):get DeviceId info failed,error code: %v", cardID, retCode)
 	}
 	return int32(cDeviceIdMax), nil
+}
+
+// DcGetMultiDiePolicy get multi die policy
+func (d *DcManager) DcGetMultiDiePolicy() (uint32, error) {
+	var policy C.uint
+	if retCode := C.dcmi_get_multi_die_policy(&policy); int32(retCode) != common.Success {
+		return 0, fmt.Errorf("get multi die policy failed, error code: %v", retCode)
+	}
+	return uint32(policy), nil
+}
+
+// DcSetMultiDiePolicy set multi die policy
+func (d *DcManager) DcSetMultiDiePolicy(policy uint32) error {
+	if retCode := C.dcmi_set_multi_die_policy(C.uint(policy)); int32(retCode) != common.Success {
+		return fmt.Errorf("set multi die policy failed, error code: %v", retCode)
+	}
+	return nil
 }

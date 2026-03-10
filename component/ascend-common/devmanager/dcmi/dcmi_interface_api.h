@@ -640,6 +640,10 @@ DCMIDLLEXPORT int dcmi_get_spod_node_status(int card_id, int device_id, unsigned
 
 DCMIDLLEXPORT int dcmi_set_spod_node_status(int card_id, int device_id, unsigned int sdid, unsigned int status);
 
+DCMIDLLEXPORT int dcmi_get_multi_die_policy(unsigned int *policy);
+
+DCMIDLLEXPORT int dcmi_set_multi_die_policy(unsigned int policy);
+
 // UB Ping Mesh API for A5 -- start
 DCMIDLLEXPORT int dcmi_start_ub_ping_mesh(int card_id, int device_id, int count,
     struct dcmi_ub_ping_mesh_operate *ubping_mesh);
