@@ -29,7 +29,7 @@ class CommonPath:
     # 用户目录
     USER_HOME = os.path.expanduser("~")
 
-    # 临时目录(windows下用户路径可能无法删除
+    # 临时目录（windows下用户路径可能无法删除）
     TEMP_DIR = CUR_PATH if platform.system().lower() == "windows" else USER_HOME
 
     # 用户路径工具根目录
