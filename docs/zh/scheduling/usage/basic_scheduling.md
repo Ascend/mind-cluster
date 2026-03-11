@@ -5694,7 +5694,7 @@ ascendjob.mindxdl.gitee.com "default-infer-test-pytorch-910b" deleted
 <a name="zh-cn_topic_0272789326_table13971125465512"></a>
 |软件包|是否必选|说明|获取方法|
 |--|--|--|--|
-|mindformers-<em>{version}</em>-py3-none-any.whl|是|MindSpore Transformers套件，构建大模型训练、微调、评估、推理、部署的全流程开发套件。MindSpore的master版本请使用r0.3分支代码版本。|<a href="https://gitee.com/mindspore/mindformers/tree/r0.3/">获取链接</a>|
+|mindformers-<em>{version}</em>-py3-none-any.whl|是|MindSpore Transformers套件，构建大模型训练、微调、评估、推理、部署的全流程开发套件。MindSpore的master版本请使用r0.3分支代码版本。|<a href="https://gitcode.com/mindspore/mindformers/tree/r0.3/">获取链接</a>|
 |Dockerfile|是|制作镜像需要。|用户根据业务自行准备。|
 
 为了防止软件包在传递过程中或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。

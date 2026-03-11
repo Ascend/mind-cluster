@@ -2352,7 +2352,7 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 **使用约束<a name="zh-cn_topic_0000002039194017_section1178044918127"></a>**
 
 -   对于PyTorch训练框架，需配合MindSpeed-LLM  2.3.0版本使用，版本配套请参见[MindSpeed-LLM](https://gitcode.com/Ascend/MindSpeed-LLM/tree/2.3.0)。
--   对于MindSpore训练框架，需配合MindFormers master版本使用，版本配套请参见[MindSpore MindFormers](https://gitee.com/mindspore/mindformers/tree/r0.3/)。
+-   对于MindSpore训练框架，需配合MindFormers master版本使用，版本配套请参见[MindSpore MindFormers](https://gitcode.com/mindspore/mindformers/tree/r0.3/)。
 -   请在训练正常迭代后，再进行在线压测指令的下发。
 -   确保已开启进程级恢复相关功能特性。
 -   压测过程中不支持重启ClusterD，如果ClusterD异常重启，需要重启训练下发压测任务。
@@ -2464,7 +2464,7 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 **使用约束<a name="zh-cn_topic_0000002039194017_section1178044918127"></a>**
 
 -   对于PyTorch训练框架，需配合MindSpeed-LLM 2.3.0版本使用，版本配套请参见[MindSpeed-LLM](https://gitcode.com/Ascend/MindSpeed-LLM/tree/2.3.0)。
--   对于MindSpore训练框架，需配合MindFormers master版本使用，版本配套请参见[MindSpore MindFormers](https://gitee.com/mindspore/mindformers/tree/r0.3/)。
+-   对于MindSpore训练框架，需配合MindFormers master版本使用，版本配套请参见[MindSpore MindFormers](https://gitcode.com/mindspore/mindformers/tree/r0.3/)。
 -   只支持PyTorch单算子模式、基于Megatron框架的模型以及acjob类型训练任务。
 -   MindSpore场景下，为保证本功能的正常使用，请将MindSpore和MindIO安装在同一路径下。
 -   不支持多模态模型。
@@ -8569,7 +8569,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 
 #### 制作MindFormers训练镜像（MindSpore框架）<a name="ZH-CN_TOPIC_0000002511426451"></a>
 
-[MindSpore Transformers套件](https://gitee.com/mindspore/mindformers)（以下简称MindFormers）的目标是构建一个大模型训练、微调、评估、推理、部署的全流程开发套件，提供业内主流的Transformer类预训练模型和SOTA下游任务应用，涵盖丰富的并行特性。期望帮助用户轻松地实现大模型训练和创新研发。
+[MindSpore Transformers套件](https://gitcode.com/mindspore/mindformers)（以下简称MindFormers）的目标是构建一个大模型训练、微调、评估、推理、部署的全流程开发套件，提供业内主流的Transformer类预训练模型和SOTA下游任务应用，涵盖丰富的并行特性。期望帮助用户轻松地实现大模型训练和创新研发。
 
 [MindSpore Transformers文档](https://www.mindspore.cn/mindformers/docs/zh-CN/r1.3.0/start/overview.html)的快速入门包括了安装与快速启动章节，可以在镜像制作时参考。
 
@@ -8600,9 +8600,9 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002003180012_p153901913131711"><a name="zh-cn_topic_0000002003180012_p153901913131711"></a><a name="zh-cn_topic_0000002003180012_p153901913131711"></a>构建一个大模型训练、微调、评估、推理、部署的全流程开发套件，提供业内主流的Transformer类预训练模型和SOTA下游任务应用，涵盖丰富的并行特性<span id="ph19351335211"><a name="ph19351335211"></a><a name="ph19351335211"></a>。</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002003180012_p3390131316172"><a name="zh-cn_topic_0000002003180012_p3390131316172"></a><a name="zh-cn_topic_0000002003180012_p3390131316172"></a>git clone https://gitee.com/mindspore/mindformers.git</p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002003180012_p3390131316172"><a name="zh-cn_topic_0000002003180012_p3390131316172"></a><a name="zh-cn_topic_0000002003180012_p3390131316172"></a>git clone https://gitcode.com/mindspore/mindformers.git</p>
 <p id="zh-cn_topic_0000002003180012_p5390101317175"><a name="zh-cn_topic_0000002003180012_p5390101317175"></a><a name="zh-cn_topic_0000002003180012_p5390101317175"></a>cd mindformers</p>
-<p id="zh-cn_topic_0000002003180012_p9390151318171"><a name="zh-cn_topic_0000002003180012_p9390151318171"></a><a name="zh-cn_topic_0000002003180012_p9390151318171"></a>git checkout f06a946af29c8c7e002a6c49458f513d47b642e5</p>
+<p id="zh-cn_topic_0000002003180012_p9390151318171"><a name="zh-cn_topic_0000002003180012_p9390151318171"></a><a name="zh-cn_topic_0000002003180012_p9390151318171"></a>git checkout 15ff59dd55b84b4dfc7de03f7f20f6e2be3669ec</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002003180012_row14237113817167"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002003180012_p133901013201717"><a name="zh-cn_topic_0000002003180012_p133901013201717"></a><a name="zh-cn_topic_0000002003180012_p133901013201717"></a>requirements.txt文件</p>
@@ -8611,7 +8611,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002003180012_p439011371714"><a name="zh-cn_topic_0000002003180012_p439011371714"></a><a name="zh-cn_topic_0000002003180012_p439011371714"></a>由于通过pip安装MindSpore时，可能出现依赖的组件安装报错，故可以先安装依赖。</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002003180012_p6390121315177"><a name="zh-cn_topic_0000002003180012_p6390121315177"></a><a name="zh-cn_topic_0000002003180012_p6390121315177"></a>wget https://gitee.com/mindspore/mindspore/raw/r2.4.1/requirements.txt</p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002003180012_p6390121315177"><a name="zh-cn_topic_0000002003180012_p6390121315177"></a><a name="zh-cn_topic_0000002003180012_p6390121315177"></a>wget https://gitcode.com/mindspore/mindspore/raw/r2.4.1/requirements.txt</p>
 <div class="note" id="zh-cn_topic_0000002003180012_note14449193224617"><a name="zh-cn_topic_0000002003180012_note14449193224617"></a><a name="zh-cn_topic_0000002003180012_note14449193224617"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002003180012_p15449133274617"><a name="zh-cn_topic_0000002003180012_p15449133274617"></a><a name="zh-cn_topic_0000002003180012_p15449133274617"></a>MindSpore软件包与<span id="zh-cn_topic_0000002003180012_ph327965117217"><a name="zh-cn_topic_0000002003180012_ph327965117217"></a><a name="zh-cn_topic_0000002003180012_ph327965117217"></a>Atlas 训练系列产品</span>需配套使用，请参见MindSpore<a href="https://www.mindspore.cn/install" target="_blank" rel="noopener noreferrer">安装指南</a>查看对应关系。</p>
 </div></div>
 </td>
@@ -9101,16 +9101,16 @@ export LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
 
 **MindSpore场景适配示例（基于MindFormers）<a name="zh-cn_topic_0000002003180016_section718243883518"></a>**
 
-训练代码与数据集准备，可以参考[MindFormers文档](https://gitee.com/mindspore/mindformers/tree/master/configs/qwen3)。下面以两台Atlas 900 A3 SuperPoD 超节点为例，说明具体操作步骤。
+训练代码与数据集准备，可以参考[MindFormers文档](https://gitcode.com/mindspore/mindformers/tree/master/configs/qwen3)。下面以两台Atlas 900 A3 SuperPoD 超节点为例，说明具体操作步骤。
 
 1.  准备代码。
 
     ```
     mkdir -p /data/atlas_dls/public/code
     cd /data/atlas_dls/public/code
-    git clone https://gitee.com/mindspore/mindformers.git
+    git clone https://gitcode.com/mindspore/mindformers.git
     cd mindformers
-    git checkout f06a946af29c8c7e002a6c49458f513d47b642e5
+    git checkout 15ff59dd55b84b4dfc7de03f7f20f6e2be3669ec
     # 将mindformers重命名为QWEN3_for_MS_code
     cd ..
     mv mindformers QWEN3_for_MS_code
