@@ -20,17 +20,23 @@ from ascend_fd_tk.core.log_parser.base import LogParsePattern
 MS_NPU_REPORT_PARSE_CONFIG = [
     LogParsePattern.build("slog_device_error_status", r"error status.*fifo state",
                           r"slog/dev-os-\d+/debug/device-\d+/device-\d+.*\.log",
-                          r"device_id:(?P<device_id>\d+) die_id:(?P<die_id>\d+).*error status\[(?P<error_status>.*?)\]"),
+                          r"device_id:(?P<device_id>\d+) die_id:(?P<die_id>\d+).*"
+                          r"error status\[(?P<error_status>.*?)\]"),
 
     # 添加 uncorr_cw_cnt 的配置
-    LogParsePattern.build("uncorr_cw_cnt_check", r"uncorr_cw_cnt\s+(\d+)",
+    LogParsePattern.build("uncorr_cw_cnt_check", r"uncorr_cw_cnt\s+(\d+)|uncorr_cw_cnt_l\s+(\d+)",
                           r"slog/dev-os-\d+/.*\.log",
-                          r"\[EVENT\].*?(?P<timestamp>\d{4}-\d{2}-\d{2}-\d{2}:\d{2}:\d{2})\..*?device_id:(?P<device_id>\d+).*die_id:(?P<die_id>\d+).*?uncorr_cw_cnt\s+(?P<count>\d+)"),
+                          r"\[EVENT\].*?(?P<date_time>\d{4}-\d{2}-\d{2}-\d{2}:\d{2}:\d{2}.\d{3}.\d{3}).*?"
+                          r"device_id:(?P<device_id>\d+).*"
+                          r"die_id:(?P<die_id>\d+).*?"
+                          r"(uncorr_cw_cnt\s+(?P<count>\d+)|"
+                          r"uncorr_cw_cnt_h\s+(?P<count_h>\d+), uncorr_cw_cnt_l\s+(?P<count_l>\d+))"),
 
     # 添加 IIC 故障的配置
     LogParsePattern.build("iic_error_check", r"trans status\[0x40\].*error status\[0x10\]",
                           r"slog/dev-os-\d+/.*\.log",
-                          r"device_id:(?P<device_id>\d+).*die_id:(?P<die_id>\d+).*trans status\[0x40\].*error status\[0x10\]"),
+                          r"device_id:(?P<device_id>\d+).*die_id:(?P<die_id>\d+).*trans status\[0x40\].*"
+                          r"error status\[0x10\]"),
 
     # 添加 rf_lf 和 pcs_link 的配置
     LogParsePattern.build("rf_lf_check", r"rf_lf\s+(\d+)",

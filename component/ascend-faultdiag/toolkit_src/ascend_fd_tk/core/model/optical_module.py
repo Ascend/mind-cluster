@@ -57,18 +57,21 @@ class OpticalModuleInfo(JsonObj):
         self.log_time = log_time
 
     def get_lane_diff_desc(self) -> str:
-        diff_value_desc = ""
-        if not self.lane_power_infos:
-            return diff_value_desc
-        lane_len = len(self.lane_power_infos)
-        if lane_len < 1:
-            return diff_value_desc
-        for i in range(lane_len):
-            j = i + 1
-            if (abs(float(self.lane_power_infos[i].media_snr) - float(self.lane_power_infos[j].media_snr))
-                    < SNR_LANE_DIFF_THRESHOLD):
-                diff_value_desc = f"{diff_value_desc}，lane{i}与lane{j}间snr差值>{SNR_LANE_DIFF_THRESHOLD}"
-        return diff_value_desc
+        check_snr_list = []
+        for info in self.lane_power_infos:
+            success, media_snr_float = helpers.to_float(info.media_snr)
+            if success:
+                check_snr_list.append([info.lane_id, media_snr_float])
+        if len(check_snr_list) <= 1:
+            return ""
+        check_snr_list.sort(key=lambda x: x[1])
+        min_lane_id, min_media_snr = check_snr_list[0]
+        max_lane_id, max_media_snr = check_snr_list[-1]
+        if max_media_snr - min_media_snr > SNR_LANE_DIFF_THRESHOLD:
+            return (f"Lane最大值和最小值差值大于{SNR_LANE_DIFF_THRESHOLD}db，"
+                    f"实际最大值lane{max_lane_id}：{max_media_snr}db，"
+                    f"最小值lane{min_lane_id}：{min_media_snr}db")
+        return ""
 
     def get_abnormal_snr_infos(self, host_th: Threshold, media_th: Threshold):
         abnormal_snr_list = []

@@ -138,7 +138,7 @@ class FaultLevel(Enum):
 
 
 class Customer(Enum):
-    Mayi = "mayi"
+    DEFAULT = "default"
 
 
 class CollectType(Enum):

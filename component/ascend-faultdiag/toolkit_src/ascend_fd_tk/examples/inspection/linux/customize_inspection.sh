@@ -4,7 +4,7 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="${SCRIPT_DIR}/../../../.."
 export PYTHONPATH="${PROJECT_ROOT}:${PYTHONPATH}"
-PYTHON_SCRIPT="${SCRIPT_DIR}/../mayi_inspection.py"
+PYTHON_SCRIPT="${SCRIPT_DIR}/../customize_inspection.py"
 
 if [ ! -f "$PYTHON_SCRIPT" ]; then
     echo "错误：找不到对应的 Python 脚本 $PYTHON_SCRIPT" >&2

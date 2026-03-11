@@ -185,7 +185,7 @@ private_key="~/.shh/your_private_key"
 - `<客户类型>`：支持的客户类型枚举值
 
 **支持的客户类型**：
-- Mayi
+- default
 
 #### auto_diag
 启动自动诊断

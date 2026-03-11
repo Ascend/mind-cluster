@@ -160,3 +160,15 @@ def strip_keys_from_parentheses(src_dict: Dict[str, Any]) -> Dict[str, Any]:
         key = re.sub(r"\W.*\W", "", key)
         new_dict[key] = value
     return new_dict
+
+
+def combine_32_to_64(high32: str, low32: str) -> str:
+    """
+    把 高32位(十进制) + 低32位(十进制) 合并成真实的 64位无符号整数
+    :param high32: 高32位（十进制整数）
+    :param low32: 低32位（十进制整数）
+    :return: 合并后的真实 u64 数值
+    """
+    if not high32 or not low32:
+        return ""
+    return str((int(high32) << 32) | (int(low32) & 0xFFFFFFFF))

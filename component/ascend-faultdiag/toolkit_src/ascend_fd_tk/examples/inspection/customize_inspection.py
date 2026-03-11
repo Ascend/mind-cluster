@@ -23,16 +23,16 @@ from ascend_fd_tk.core.service.auto_inspection import AutoInspection
 from ascend_fd_tk.core.service.load_cache import LoadCache
 
 
-class MayiInspection:
+class CustomizeInspection:
 
     def __init__(self, diag_ctx=DiagCtx()):
         self.diag_ctx = diag_ctx
 
     async def main(self):
         await LoadCache(self.diag_ctx).run()
-        await AutoInspection(self.diag_ctx, Customer.Mayi).run()
+        await AutoInspection(self.diag_ctx, Customer.DEFAULT).run()
         self.diag_ctx.close()
 
 
 if __name__ == '__main__':
-    asyncio.run(MayiInspection().main())
+    asyncio.run(CustomizeInspection().main())

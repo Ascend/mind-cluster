@@ -32,11 +32,11 @@
 
 ## 4. 执行统一诊断
 
-所有网络平面的信息收集完成后，执行脚本进行统一诊断(以mayi为例)：
+所有网络平面的信息收集完成后，执行脚本进行统一诊断(以默认客户类型为例)：
 
-- Linux系统：[mayi_inspection.sh](linux/mayi_inspection.sh)
+- Linux系统：[customize_inspection.sh](linux/customize_inspection.sh)
 
-- Windows系统：[mayi_inspection.bat](windows/mayi_inspection.bat)
+- Windows系统：[customize_inspection.bat](windows/customize_inspection.bat)
 
 ## 6. 查看诊断报告
 

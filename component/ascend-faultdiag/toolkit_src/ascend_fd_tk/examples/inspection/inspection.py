@@ -25,7 +25,7 @@ from ascend_fd_tk.core.service.load_cache import LoadCache
 
 class Inspection:
 
-    def __init__(self, diag_ctx=DiagCtx(), customer: Customer = Customer.Mayi):
+    def __init__(self, diag_ctx=DiagCtx(), customer: Customer = Customer.DEFAULT):
         self.diag_ctx = diag_ctx
         self.customer = customer
 

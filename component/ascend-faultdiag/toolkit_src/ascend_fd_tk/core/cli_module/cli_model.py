@@ -402,8 +402,8 @@ class AutoInspection(DetailedCliModel):
 
     def run_task(self, *args) -> str:
         if not args:
-            _CONSOLE_LOGGER.info("未输入巡检类型，默认使用mayi客户巡检")
-            customer = Customer.Mayi
+            _CONSOLE_LOGGER.info("未输入巡检类型，使用默认客户巡检")
+            customer = Customer.DEFAULT
         else:
             customer = diag_enum.get_enum(Customer, "", args[0])
             if not customer:

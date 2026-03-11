@@ -17,7 +17,7 @@
 
 from ascend_fd_tk.core.inspection.config.base import OpticalThreshold, InspectionConfig, BerThreshold
 
-MayiConfig = InspectionConfig(
+DefaultConfig = InspectionConfig(
     hccs_swi_optical_threshold=OpticalThreshold(
         media_snr_error_threshold=20,
         txrx_power_threshold=-3.2,

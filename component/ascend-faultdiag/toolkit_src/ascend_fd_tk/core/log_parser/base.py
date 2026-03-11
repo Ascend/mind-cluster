@@ -50,7 +50,7 @@ class FindResult(JsonObj):
         self.pattern_key = pattern_key
         self.logline = logline
         self.log_path = log_path
-        self.info_dict = info_dict
+        self.info_dict = info_dict or {}
 
 
 class LogParser(abc.ABC):

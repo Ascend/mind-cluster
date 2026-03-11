@@ -82,8 +82,7 @@ class PeriodicRecordingOpticalModuleHistoryLog(OpticalModuleHistoryLog):
 
     def __init__(self, log_time="", location="", optical_module_id="", tx_power_current_max="", tx_power_current_min="",
                  rx_power_current_max="", rx_power_current_min="", tx_bias_current_max="", tx_bias_current_min="",
-                 tx_los="", rx_los="", host_snr_max="",
-                 host_snr_min="", media_snr_max="", media_snr_min=""):
+                 tx_los="", rx_los="", host_snr_max="", host_snr_min="", media_snr_max="", media_snr_min=""):
         self.log_time = log_time
         self.location = location
         self.optical_module_id = optical_module_id

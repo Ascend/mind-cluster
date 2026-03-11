@@ -16,13 +16,13 @@
 # ==============================================================================
 
 from ascend_fd_tk.core.common import diag_enum
-from ascend_fd_tk.core.inspection.config import mayi_config
+from ascend_fd_tk.core.inspection.config import default_inspect_config
 from ascend_fd_tk.core.inspection.config.base import InspectionConfig
 
 
 class InspectionConfigFactory:
     _CONFIG_MAPPING = {
-        diag_enum.Customer.Mayi: mayi_config.MayiConfig,
+        diag_enum.Customer.DEFAULT: default_inspect_config.DefaultConfig,
     }
 
     @classmethod

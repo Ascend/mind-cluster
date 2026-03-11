@@ -25,6 +25,7 @@ from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.log_parser.base import FindResult
 from ascend_fd_tk.core.model.optical_module import OpticalModule, OpticalModuleInfo, LanePowerInfo, Threshold
 from ascend_fd_tk.utils.date_tool import DateObj
+from ascend_fd_tk.utils.helpers import combine_32_to_64
 
 NUMERIC_PATTERN = re.compile(r'([+-]?\d*\.?\d+)')
 
@@ -294,8 +295,7 @@ class HCCNStatExtraInfo(JsonObj):
 
     def __init__(self, cw_total_cnt="", cw_before_correct_cnt="", cw_correct_cnt="", cw_uncorrect_cnt="", cw_bad_cnt="",
                  trans_total_bit="", cw_total_correct_bit="", rx_full_drop_cnt="", pcs_err_cnt="",
-                 rx_send_app_good_pkts="",
-                 rx_send_app_bad_pkts="", correcting_bit_rate=""):
+                 rx_send_app_good_pkts="", rx_send_app_bad_pkts="", correcting_bit_rate=""):
         self.cw_total_cnt = cw_total_cnt
         self.cw_before_correct_cnt = cw_before_correct_cnt
         self.cw_correct_cnt = cw_correct_cnt
@@ -391,11 +391,17 @@ class HCCNStatInfo(JsonObj):
 class UncorrCwCntInfo(JsonObj):
     UNCORR_CW_THRESHOLD = 10
 
-    def __init__(self, device_id="", die_id="", count="", date_time=""):
-        self.device_id = device_id
-        self.die_id = die_id
-        self.count = count
-        self.date_time = date_time
+    def __init__(self, device_id="", die_id="", count="", count_h="", count_l="", date_time=""):
+        self.device_id = device_id  # 0-15
+        self.die_id = die_id  # 0-1
+        self.count = count or combine_32_to_64(count_h, count_l)
+        self.count_h = count_h
+        self.count_l = count_l
+        self.date_time = self.convert_date_time(date_time)
+
+    @staticmethod
+    def convert_date_time(date_time):
+        return "".join(date_time.rsplit(".", 1))
 
     def count_check(self):
         return not self.count or int(self.count) <= self.UNCORR_CW_THRESHOLD
@@ -438,9 +444,9 @@ class NpuChipInfo(JsonObj, OpticalModule):
         self._optical_module_info: OpticalModuleInfo = None
         # 关系属性
         self.npu_type = npu_type
-        self.npu_id = npu_id
-        self.chip_id = chip_id
-        self.chip_phy_id = chip_phy_id
+        self.npu_id = npu_id  # 0-7
+        self.chip_id = chip_id  # 0-1
+        self.chip_phy_id = chip_phy_id  # 0-15
 
     def get_optical_module_info(self) -> OpticalModuleInfo:
         if self._optical_module_info:

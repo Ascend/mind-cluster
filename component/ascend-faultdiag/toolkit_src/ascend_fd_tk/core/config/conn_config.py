@@ -32,9 +32,9 @@ class Conn(JsonObj):
 
 class ConnConfig(JsonObj):
     def __init__(self, host_conn: List[Conn], bmc_conn: List[Conn], switch_conn: List[Conn]):
-        self.host_conn = host_conn
-        self.bmc_conn = bmc_conn
-        self.switch_conn = switch_conn
+        self.host_conn = host_conn or []
+        self.bmc_conn = bmc_conn or []
+        self.switch_conn = switch_conn or []
 
 
 class DeviceConfigParser:

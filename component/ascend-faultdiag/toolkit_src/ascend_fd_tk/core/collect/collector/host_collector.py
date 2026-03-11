@@ -39,6 +39,7 @@ class HostCollector(Collector):
         npu_chip_info = {}
         server_superpod_id = None
         server_index = None
+        # 取值范围说明：npu_id: 0-7; chip_id: 0-1; chip_phy_id: 0-15
         for npu_id, chips in npu_mapping.items():
             for chip_id, chip_phy_id in chips.items():
                 hccn_optical_info = await self.collect_optical_info(chip_phy_id)

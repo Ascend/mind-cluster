@@ -21,7 +21,7 @@ set SCRIPT_DIR=%~dp0
 for %%I in ("%SCRIPT_DIR%\..\..\..\..") do set PROJECT_ROOT=%%~fI
 set PORTABLE_PYTHON=%USERPROFILE%\python_portable\python.exe
 set PTH_FILE=%USERPROFILE%\python_portable\python310._pth
-set PYTHON_SCRIPT=%SCRIPT_DIR%..\mayi_inspection.py
+set PYTHON_SCRIPT=%SCRIPT_DIR%..\customize_inspection.py
 
 :: 有免安装python则优先使用，无则使用原来python
 if exist "%PORTABLE_PYTHON%" (
