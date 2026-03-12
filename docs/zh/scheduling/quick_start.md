@@ -1,6 +1,6 @@
 # 快速入门<a name="ZH-CN_TOPIC_0000002511346939"></a>
 
-本章节以待安装设备为单台Atlas 800T A2 训练服务器（同时作为管理节点和计算节点）为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。
+本章节以待安装设备为两台Atlas 800T A2 训练服务器（一台作为管理节点、一台作为计算节点）为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。
 
 **操作说明<a name="section17940333114314"></a>**
 
@@ -121,6 +121,9 @@
         ```
 
 4.  创建节点标签。
+    >[!NOTE]
+    >
+    >若执行创建节点标签命令时提示"already has a value ... and --overwrite is false"，说明该标签已存在，可使用--overwrite覆盖。
     1.  在K8s管理节点执行以下命令，查询节点名称。
 
         ```
@@ -152,6 +155,9 @@
         ```
 
 5.  创建用户。
+    >[!NOTE]
+    >
+    >创建用户时需要sudo权限。
     1.  依次执行以下命令，在**计算节点**创建用户名。
 
         ```
@@ -166,6 +172,9 @@
         ```
 
 6.  创建日志目录。不支持用户自定义日志目录。
+    >[!NOTE]
+    >
+    >创建日志目录时需要sudo权限。
     1.  依次执行以下命令，在**计算节点**创建日志目录。
 
         ```

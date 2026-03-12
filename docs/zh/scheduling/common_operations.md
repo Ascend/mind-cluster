@@ -2257,7 +2257,7 @@ Events:  <none>
 
 企业客户请访问：[https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054)
 
-本章节以Ubuntu  x86\_64操作系统为例，以下操作步骤中的代码为示例代码，用户可参考示例进行定制化修改，并且建议用户对示例代码和镜像做安全加固，可参考[容器安全加固](./references.md#容器安全加固)。
+本章节以Ubuntu  x86\_64操作系统为例，以下操作步骤中的代码为示例代码，用户可参考示例进行定制化修改，并且建议用户对示例代码和镜像做安全加固，可参考[容器安全加固](./security_hardening.md#容器安全加固)。
 
 **操作步骤<a name="zh-cn_topic_0000001497364777_section9307172524312"></a>**
 

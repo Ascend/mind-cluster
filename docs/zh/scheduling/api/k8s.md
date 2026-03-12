@@ -15,7 +15,6 @@
 |training.kubeflow.org/replica-index|标记Pod序号|[0-{Pod数量-1}]|Ascend Operator|
 |training.kubeflow.org/replica-type|标记Pod类型|<ul><li>master</li><li>chief</li><li>scheduler</li><li>worker</li></ul>|Ascend Operator|
 
-
 **Job label<a name="section3960559173617"></a>**
 
 **表 2**  集群调度对Job label使用说明
@@ -24,7 +23,6 @@
 |--|--|--|--|
 |mind-cluster/scaling-rule: scaling-rule|标记扩缩容规则对应的ConfigMap名称。|字符串|Ascend Operator|
 |mind-cluster/group-name: group0|标记扩缩容规则中对应的group名称。|字符串|Ascend Operator|
-
 
 **Job annotation**
 
@@ -53,7 +51,7 @@
 |huawei.com/Ascend910-NetworkRecover|Atlas 训练系列产品网络故障恢复标识|故障芯片ID|Ascend Device Plugin|
 |infer-card-type|由Ascend Device Plugin写入，表明节点推理卡类型。|card-300i-duo|Volcano|
 |mind-cluster/npu-chip-memory|芯片片上内存|mind-cluster/npu-chip-memory=64G|Volcano、Ascend Device Plugin|
-
+|huawei.com/scheduler.chip1softsharedev.enable|表示节点是否支持软切分虚拟化功能|<ul><li>true</li><li>false</li></ul>|Volcano、Ascend Device Plugin<ul><li>huawei.com/scheduler.chip1softsharedev.enable=true标签表示节点支持软切分虚拟化功能。</li><li>huawei.com/scheduler.chip1softsharedev.enable=false标签表示节点不支持软切分虚拟化功能。</li></ul>|
 
 **Pod  label<a name="section1019341142914"></a>**
 
@@ -81,7 +79,6 @@
 |training.kubeflow.org/replica-index|标记Pod序号|[0-{Pod数量-1}]|Ascend Operator|
 |training.kubeflow.org/replica-type|标记Pod类型|masterchiefschedulerworker|Ascend Operator|
 |super-pod-affinity|超节点任务使用的亲和性调度策略|softhard|Ascend Operator、Volcano|
-
 
 **Pod  annotation<a name="section16927154663513"></a>**
 
@@ -118,7 +115,9 @@
 |needOperatorOpe|标记当前Pod需要Ascend Operator进行处理|<ul><li>create：需要Ascend Operator基于当前Pod创建备份Pod</li><li>delete：需要Ascend Operator删除当前Pod</li></ul>|ClusterD、Ascend Operator|
 |needVolcanoOpe|标记当前Pod需要Volcano进行处理|delete：需要Volcano删除当前Pod|ClusterD、Volcano|
 |podType|标记当前Pod是备份Pod|backup|ClusterD、Ascend Operator|
-
+|huawei.com/scheduler.softShareDev.aicoreQuota|标记当前Pod需要的AI Core百分比。|[1, 100]|Volcano、Ascend Device Plugin|
+|huawei.com/scheduler.softShareDev.hbmQuota|标记当前Pod需要的高带宽内存量。|<p>[1, maxHBM]</p><p>maxHBM为通过<b>npu-smi info</b>命令查询出的HBM-Usage(MB)中HBM的值。</p>|Volcano、Ascend Device Plugin|
+|huawei.com/scheduler.softShareDev.policy|标记当前Pod执行的软切分任务的策略。|<ul><li>fixed-share</li><li>elastic</li><li>best-effort</li></ul>|Volcano、Ascend Device Plugin|
 
 **Node annotation<a name="section9144358124519"></a>**
 
@@ -130,7 +129,6 @@
 |product-serial-number|NodeD通过IPMI接口获取节点SN号并写入annotation，供ClusterD接收公共故障时使用。|字符串|ClusterD|
 |superPodID|表示该节点所属的超节点的ID。|字符串|ClusterD|
 |ResetInfo|展示Ascend Device Plugin自动复位失败的芯片信息，如芯片的物理ID、Card ID等。|字符串|Ascend Device Plugin|
-
 
 ResetInfo的内容格式如下所示。
 
@@ -171,5 +169,3 @@ ResetInfo的内容格式如下所示。
 |noded|使用YAML启动服务，将会在K8s中创建该用户，如：noded-v{version}.yaml。|
 |clusterd|使用YAML启动服务，将会在K8s中创建该用户，如：clusterd-v{version}.yaml。|
 |default|MindCluster组件或开源Volcano部署时会在K8s中自动创建的用户。|
-
-

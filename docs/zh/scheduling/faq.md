@@ -1,20 +1,5 @@
 # 安装时出现的故障<a name="ZH-CN_TOPIC_0000002479226502"></a>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## 初始化Kubernetes失败<a name="ZH-CN_TOPIC_0000002511426377"></a>
 
 -   Kubernetes集群初始化失败，检查是否完成[前置条件](https://kubernetes.io/zh-cn/docs/setup/production-environment/container-runtimes/#install-and-configure-prerequisites)的处理，[cgroup是否配置正确](https://kubernetes.io/zh-cn/docs/setup/production-environment/container-runtimes/#cgroup-drivers)，环境变量中是否配置了代理地址。

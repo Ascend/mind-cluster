@@ -4,7 +4,7 @@
 
 如果是acjob任务，在配置YAML前，请先了解相关YAML参数说明，详细说明如下表所示。
 
-每个acjob任务YAML中包含一些固定字段，例如apiVersion、kind等，如果想了解这些字段的详细说明请参见[acjob关键字段说明](../appendix.md#acjob关键字段说明)。
+每个acjob任务YAML中包含一些固定字段，例如apiVersion、kind等，如果想了解这些字段的详细说明请参见[acjob关键字段说明](./ascend_job.md)。
 
 **表 1**  YAML参数说明
 
@@ -35,7 +35,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001951418201_p5524103317257"><a name="zh-cn_topic_0000001951418201_p5524103317257"></a><a name="zh-cn_topic_0000001951418201_p5524103317257"></a>表示当前MindIE Motor在Ascend Job任务中的角色，取值包括mindie-ms-controller、mindie-ms-coordinator、mindie-ms-server。</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><div class="note" id="zh-cn_topic_0000001951418201_note4367125713295"><a name="zh-cn_topic_0000001951418201_note4367125713295"></a><div class="notebody"><a name="ul139591420161415"></a><a name="ul139591420161415"></a><ul id="ul139591420161415"><li>acjob的任务YAML同时包含jobID和app这2个字段时，<span id="zh-cn_topic_0000001951418201_ph1566531814589"><a name="zh-cn_topic_0000001951418201_ph1566531814589"></a><a name="zh-cn_topic_0000001951418201_ph1566531814589"></a>Ascend Operator</span>组件会自动传入环境变量MINDX_TASK_ID、APP_TYPE及MINDX_SERVICE_IP，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见<a href="../appendix.md#环境变量说明">环境变量说明</a>中"Ascend Operator注入的训练环境变量"表。</li><li>该参数仅支持在<span id="ph249120134413"><a name="ph249120134413"></a><a name="ph249120134413"></a>Atlas 800I A2 推理服务器</span>、<span id="ph2790182618303"><a name="ph2790182618303"></a><a name="ph2790182618303"></a>Atlas 800I A3 超节点服务器</span>上使用。</li></ul>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><div class="note" id="zh-cn_topic_0000001951418201_note4367125713295"><a name="zh-cn_topic_0000001951418201_note4367125713295"></a><div class="notebody"><a name="ul139591420161415"></a><a name="ul139591420161415"></a><ul id="ul139591420161415"><li>acjob的任务YAML同时包含jobID和app这2个字段时，<span id="zh-cn_topic_0000001951418201_ph1566531814589"><a name="zh-cn_topic_0000001951418201_ph1566531814589"></a><a name="zh-cn_topic_0000001951418201_ph1566531814589"></a>Ascend Operator</span>组件会自动传入环境变量MINDX_TASK_ID、APP_TYPE及MINDX_SERVICE_IP，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见<a href="./environment_variable_description.md">环境变量说明</a>中"Ascend Operator注入的训练环境变量"表。</li><li>该参数仅支持在<span id="ph249120134413"><a name="ph249120134413"></a><a name="ph249120134413"></a>Atlas 800I A2 推理服务器</span>、<span id="ph2790182618303"><a name="ph2790182618303"></a><a name="ph2790182618303"></a>Atlas 800I A3 超节点服务器</span>上使用。</li></ul>
 </div></div>
 </td>
 </tr>
@@ -157,7 +157,7 @@
 <a name="zh-cn_topic_0000002039339953_ul10451144414619"></a><a name="zh-cn_topic_0000002039339953_ul10451144414619"></a><ul id="zh-cn_topic_0000002039339953_ul10451144414619"><li>单机时需要和任务请求的芯片数量一致。</li><li>分布式时需要是节点芯片数量的整数倍，且任务总芯片数量是其整数倍。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p1670155202912"><a name="p1670155202912"></a><a name="p1670155202912"></a>指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度。<span id="zh-cn_topic_0000002511347099_ph521204025916"><a name="zh-cn_topic_0000002511347099_ph521204025916"></a><a name="zh-cn_topic_0000002511347099_ph521204025916"></a>若用户未指定该字段，</span><span id="zh-cn_topic_0000002511347099_ph172121408590"><a name="zh-cn_topic_0000002511347099_ph172121408590"></a><a name="zh-cn_topic_0000002511347099_ph172121408590"></a>Volcano</span><span id="zh-cn_topic_0000002511347099_ph192121140135911"><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a>调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。</span></p>
-<p id="p19701652112917"><a name="p19701652112917"></a><a name="p19701652112917"></a>了解详细说明请参见<a href="../references.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a>。</p>
+<p id="p19701652112917"><a name="p19701652112917"></a><a name="p19701652112917"></a>了解详细说明请参见<a href="../usage/basic_scheduling.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a>。</p>
 <div class="note" id="note47015215291"><a name="note47015215291"></a><a name="note47015215291"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><ul id="zh-cn_topic_0000002511347099_ul546892712569"><li>仅支持在<span id="zh-cn_topic_0000002511347099_ph34244153594"><a name="zh-cn_topic_0000002511347099_ph34244153594"></a><a name="zh-cn_topic_0000002511347099_ph34244153594"></a>Atlas 900 A3 SuperPoD 超节点</span>中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：<a href="../faq.md#任务申请的总芯片数量为32sp-block设置为32可以正常训练sp-block设置为16无法完成训练训练容器报错提示初始化连接失败">任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败</a></li></ul>
 </div></div>
 </td>
@@ -397,7 +397,7 @@
 <a name="ul1514518315442"></a><a name="ul1514518315442"></a><ul id="ul1514518315442"><li>单机时需要和任务请求的芯片数量一致。</li><li>分布式时需要是节点芯片数量的整数倍，且任务总芯片数量是其整数倍。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p131459314416"><a name="p131459314416"></a><a name="p131459314416"></a>指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度。<span id="zh-cn_topic_0000002511347099_ph521204025916_1"><a name="zh-cn_topic_0000002511347099_ph521204025916_1"></a><a name="zh-cn_topic_0000002511347099_ph521204025916_1"></a>若用户未指定该字段，</span><span id="zh-cn_topic_0000002511347099_ph172121408590_1"><a name="zh-cn_topic_0000002511347099_ph172121408590_1"></a><a name="zh-cn_topic_0000002511347099_ph172121408590_1"></a>Volcano</span><span id="zh-cn_topic_0000002511347099_ph192121140135911_1"><a name="zh-cn_topic_0000002511347099_ph192121140135911_1"></a><a name="zh-cn_topic_0000002511347099_ph192121140135911_1"></a>调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。</span></p>
-<p id="p9145037441"><a name="p9145037441"></a><a name="p9145037441"></a>了解详细说明请参见<a href="../references.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a>。</p>
+<p id="p9145037441"><a name="p9145037441"></a><a name="p9145037441"></a>了解详细说明请参见<a href="../usage/basic_scheduling.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a>。</p>
 <div class="note" id="note191456316446"><a name="note191456316446"></a><a name="note191456316446"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569_1"></a><a name="zh-cn_topic_0000002511347099_ul546892712569_1"></a><ul id="zh-cn_topic_0000002511347099_ul546892712569_1"><li>仅支持在<span id="zh-cn_topic_0000002511347099_ph34244153594_1"><a name="zh-cn_topic_0000002511347099_ph34244153594_1"></a><a name="zh-cn_topic_0000002511347099_ph34244153594_1"></a>Atlas 900 A3 SuperPoD 超节点</span>中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：<a href="../faq.md#任务申请的总芯片数量为32sp-block设置为32可以正常训练sp-block设置为16无法完成训练训练容器报错提示初始化连接失败">任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败</a></li></ul>
 </div></div>
 </td>

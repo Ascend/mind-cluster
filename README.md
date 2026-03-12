@@ -7,7 +7,6 @@
  	  	 
 </div>
 
-
 -   [最新消息](#最新消息)
 -   [简介](#简介)
 -   [目录结构](#目录结构)
@@ -16,13 +15,13 @@
 -   [环境部署](#环境部署)
 -   [快速入门](#快速入门)
 -   [特性介绍](#特性介绍)
--   [API参考](#API参考)
--   [FAQ](#FAQ)
+-   [API参考](#api参考)
+-   [FAQ](#faq)
 -   [安全声明](#安全声明)
 -   [分支维护策略](#分支维护策略)
 -   [版本维护策略](#版本维护策略)
 -   [免责声明](#免责声明)
--   [License](#License)
+-   [License](#license)
 -   [贡献声明](#贡献声明)
 -   [建议与交流](#建议与交流)
 
@@ -404,7 +403,7 @@ MindCluster Ascend FaultDiag相关FAQ请参见：[FAQ](./docs/zh/faultdiag/faq.m
 
 - 当前容器方式部署本组件，本组件的认证鉴权方式为ServiceAccount，该认证鉴权方式为ServiceAccount的token明文显示，建议用户自行进行安全加强。
 - 当前特权容器方式部署，该容器权限具有一定风险，建议用户自行进行安全加强。
-- 其他安全声明详见：[安全声明](./docs/zh/scheduling/references.md#安全加固)
+- 其他安全声明详见：[安全声明](./docs/zh/scheduling/security_hardening.md)
 - 通信矩阵详见：[通信矩阵](https://gitcode.com/Ascend/mind-cluster/wiki/Home.md)
 - 公网地址详见：[公网地址](./docs/zh/resource/MindCluster%207.3.0%20公网地址.xlsx)
 

@@ -318,6 +318,7 @@ deviceNameCustomization.json支持自定义设备名称。编译Ascend Device Pl
 |DataLoader|标识DataLoader耗时。|on/off|string|
 
 >[!NOTE] 说明 
+>
 >- 该ConfigMap需要和训练任务在同一命名空间，且命名为data-trace-<任务名称\>，包括标签reset=true。
 >- 该ConfigMap由Ascend Device Plugin挂载到训练节点的/user/cluster-info/datatrace-config/命名空间.data-trace-任务名称/\*的文件夹下，文件名为profilingSwitch。
 >- 如用户未创建该ConfigMap，在首次调用gRPC接口ModifyTrainingDataTraceSwitch时，ClusterD将尝试自动创建该ConfigMap。
