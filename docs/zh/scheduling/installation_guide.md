@@ -1486,7 +1486,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
 **前提条件<a name="section137058405153"></a>**
 
 - 安装前，请确保runc文件的用户ID为0。
-- 安装前，请确保“/etc/containerd/config.toml”文件的用户为root。
+- 安装前，containerd场景下请确保"/etc/containerd/config.toml"文件的用户及用户组为root；docker场景或isula场景下请确保"/etc/docker/daemon.json"文件的用户及用户组为root。
 
 **确认安装场景<a name="zh-cn_topic_0000001930317932_section1235447163310"></a>**
 
