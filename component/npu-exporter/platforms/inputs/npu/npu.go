@@ -53,8 +53,10 @@ func (npu *WatchNPU) Gather(acc telegraf.Accumulator) error {
 
 	devTagValue := ""
 	if cardType := npu.collector.Dmgr.GetDevType(); cardType == api.Ascend910A3 || cardType == api.Ascend910B ||
-		cardType == api.Ascend910A || cardType == api.Ascend910A5 {
+		cardType == api.Ascend910A {
 		devTagValue = strings.ToLower(api.Ascend910)
+	} else if cardType == api.Ascend910A5 {
+		devTagValue = api.NPULowerCase
 	} else {
 		devTagValue = strings.ToLower(cardType)
 	}

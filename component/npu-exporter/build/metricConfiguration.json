@@ -10,5 +10,6 @@
   {"metricsGroup": "vnpu", "state": "ON"},
   {"metricsGroup": "version", "state": "ON"},
   {"metricsGroup": "optical", "state": "ON"},
-  {"metricsGroup": "hbm", "state": "ON"}
+  {"metricsGroup": "hbm", "state": "ON"},
+  {"metricsGroup": "ub", "state": "ON"}
 ]

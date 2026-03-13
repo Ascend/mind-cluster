@@ -413,7 +413,8 @@ func GetNPUInterfaceTrafficA5(logicID, udieID, portID, durationTime int32) (floa
 
 // GetNPULinkSpeedA5 exec "hccn_tool -g -speed -i phy_id -u udie_id -p port_id" to get link speed
 func GetNPULinkSpeedA5(logicID, udieID, portID int32) (int, error) {
-	args := []string{"-g", "-speed", "-i", strconv.Itoa(int(logicID)), "-u", strconv.Itoa(int(udieID)), "-p", strconv.Itoa(int(portID))}
+	args := []string{"-g", "-speed", "-i", strconv.Itoa(int(logicID)), "-u", strconv.Itoa(int(udieID)),
+		"-p", strconv.Itoa(int(portID))}
 	// command example: hccn_tool -g -speed -i 56 -u 0 -p 4
 	outStr, err := getInfoFromHccnTool(args...)
 	if err != nil {
@@ -451,4 +452,40 @@ func getSpeedFromStrA5(str string) (int, error) {
 
 func buildHccnErrA5(msg string, err error) error {
 	return fmt.Errorf("get npu %s info failed,error is :%v", msg, err)
+}
+
+// GetNPUUbStatInfo  get npu ub stat information
+func GetNPUUbStatInfo(logicID, udieID, portID int32) (map[string]string, error) {
+	args := []string{"-g", "-stat", "-i", strconv.Itoa(int(logicID)), "-u", strconv.Itoa(int(udieID)),
+		"-p", strconv.Itoa(int(portID))}
+	// command example: hccn_tool -g -stat -i 0 -u 0 -p 4
+	outStr, err := getInfoFromHccnTool(args...)
+	if err != nil {
+		return nil, buildHccnErrA5("ub stat info", err)
+	}
+	lines := strings.Split(outStr, newLine)
+	ubStatInfoMap := make(map[string]string)
+	for _, line := range lines {
+		ubParts := strings.Split(line, colon)
+		if len(ubParts) != opticalPartLen {
+			continue
+		}
+		ubKey := strings.TrimSpace(ubParts[0])
+		ubValue := strings.TrimSpace(ubParts[1])
+		ubStatInfoMap[ubKey] = ubValue
+	}
+	return ubStatInfoMap, nil
+}
+
+// GetIntDataFromStr get int data from string with space
+func GetIntDataFromStr(str, dataType string) int {
+	if str == "" || strings.Contains(str, naValue) || strings.Contains(str, notSupport) {
+		return common.RetError
+	}
+	intData, err := strconv.Atoi(str)
+	if err != nil {
+		hwlog.RunLog.Errorf("convert %v ub data type: %v to an int number failed, err: %v", str, dataType, err)
+		return common.RetError
+	}
+	return intData
 }

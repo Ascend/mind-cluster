@@ -45,6 +45,7 @@ var (
 		groupNetworkA5: &metrics.NetworkA5Collector{},
 		groupRoce:      &metrics.RoceCollector{},
 		groupOptical:   &metrics.OpticalCollector{},
+		groupUb:        &metrics.UbCollector{},
 	}
 	// pluginCollectorMap metrics in this map will be collected in plugin goroutine
 	pluginCollectorMap = map[string]common.MetricsCollector{}
@@ -64,6 +65,7 @@ var (
 		{metricsGroup: groupVersion, state: stateOn},
 		{metricsGroup: groupOptical, state: stateOn},
 		{metricsGroup: groupHbm, state: stateOn},
+		{metricsGroup: groupUb, state: stateOn},
 	}
 	defaultPluginConfigs = []map[string]string{
 		{metricsGroup: groupText, state: stateOn},
@@ -88,6 +90,7 @@ const (
 	// groupText represents text-based metrics collected by plugin collectors
 	groupText      = "text"
 	groupNetworkA5 = "network-a5"
+	groupUb        = "ub"
 
 	stateOn  = "ON"
 	stateOFF = "OFF"

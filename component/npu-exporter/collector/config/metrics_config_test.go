@@ -138,6 +138,7 @@ func TestRegister(t *testing.T) {
 		patches.ApplyMethodReturn(&metrics.NetworkA5Collector{}, "IsSupported", true)
 		patches.ApplyMethodReturn(&metrics.RoceCollector{}, "IsSupported", true)
 		patches.ApplyMethodReturn(&metrics.OpticalCollector{}, "IsSupported", true)
+		patches.ApplyMethodReturn(&metrics.UbCollector{}, "IsSupported", true)
 		patches.ApplyFunc(loadConfiguration, func() {
 			initConfiguration(loadFromFile("../../build/metricConfiguration.json"), &presetConfigs)
 			initConfiguration(loadFromFile("../../build/pluginConfiguration.json"), &pluginConfigs)

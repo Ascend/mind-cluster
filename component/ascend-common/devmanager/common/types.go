@@ -451,3 +451,65 @@ type DcmiMultiUtilizationInfo struct {
 	AicoreUtil uint32
 	NpuUtil    uint32
 }
+
+// UBInfo ub information structure
+type UBInfo struct {
+	UBCommonStats  *UBCommonStats
+	UboeExtensions *UBOEExtensions
+}
+
+// UBOEExtensions represents the UBOE-specific extension statistics for UB
+type UBOEExtensions struct {
+	CoreMibRxPausePkts int
+	CoreMibTxPausePkts int
+	CoreMibRxPfcPkts   int
+	CoreMibTxPfcPkts   int
+	CoreMibRxBadPkts   int
+	CoreMibTxBadPkts   int
+	CoreMibRxBadOctets int
+	CoreMibTxBadOctets int
+}
+
+// UBCommonStats represents the common statistics for the Unified Bus (UB)
+type UBCommonStats struct {
+	UbIpv4PktCntRx    int
+	UbIpv6PktCntRx    int
+	UnicIpv4PktCntRx  int
+	UnicIpv6PktCntRx  int
+	UbCompactPktCntRx int
+	UbUmocCtphCntRx   int
+	UbUmocNtphCntRx   int
+	UbMemPktCntRx     int
+	UnknownPktCntRx   int
+	DropIndCntRx      int
+	ErrIndCntRx       int
+	ToHostPktCntRx    int
+	ToImpPktCntRx     int
+	ToMarPktCntRx     int
+	ToLinkPktCntRx    int
+	ToNocPktCntRx     int
+	RouteErrCntRx     int
+	OutErrCntRx       int
+	LengthErrCntRx    int
+	RxBusiFlitNum     int
+	RxSendAckFlit     int
+	UbIpv4PktCntTx    int
+	UbIpv6PktCntTx    int
+	UnicIpv4PktCntTx  int
+	UnicIpv6PktCntTx  int
+	UbCompactPktCntTx int
+	UbUmocCtphCntTx   int
+	UbUmocNtphCntTx   int
+	UbMemPktCntTx     int
+	UnknownPktCntTx   int
+	DropIndCntTx      int
+	ErrIndCntTx       int
+	LpbkIndCntTx      int
+	OutErrCntTx       int
+	LengthErrCntTx    int
+	TxBusiFlitNum     int
+	TxRecvAckFlit     int
+	RetryReqSum       int
+	RetryAckSum       int
+	CrcErrorSum       int
+}

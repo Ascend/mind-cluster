@@ -67,6 +67,9 @@ var (
 		api.Atlas3502PMainBoardID: true,
 		api.Atlas3504PMainBoardID: true,
 		api.Atlas9501DMainBoardID: true,
+		api.Atlas950MainBoardID:   true,
+		api.Atlas850MainBoardID:   true,
+		api.Atlas850MainBoardID2:  true,
 	}
 )
 

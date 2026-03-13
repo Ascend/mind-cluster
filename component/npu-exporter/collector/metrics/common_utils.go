@@ -192,9 +192,10 @@ func updateFrame[T any](cacheKey string, n *colcommon.NpuCollector, containerMap
 	}
 }
 
-func logWarnMetricsWithLimit(metric string, logicID int32, err error) {
+func logWarnMetricsWithLimit(domain string, logicID int32, uDie, port int, err error) {
 	logger.LogfWithOptions(logger.WarnLevel, logger.LogOptions{
-		Domain: metric,
-		ID:     logicID},
-		"logicID(%d),%v", logicID, err)
+		Domain:    domain,
+		ID:        logicID,
+		MaxCounts: 1},
+		"logicID(%d),uDie(%d),port(%d),%v", logicID, uDie, port, err)
 }

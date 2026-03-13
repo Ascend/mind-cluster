@@ -32,4 +32,9 @@ const (
 
 	// A5300IBoardId3 board id of 300I A5 specification 3
 	A5300IBoardId3 = 0x1c
+
+	// MaxDieID ascend 950 die max id
+	MaxDieID = 2
+	// MaxPortID ascend 950 port max id
+	MaxPortID = 9
 )

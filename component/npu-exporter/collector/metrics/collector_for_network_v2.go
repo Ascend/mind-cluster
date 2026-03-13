@@ -206,7 +206,7 @@ func collectNetworkA5Info(logicID int32) []*common.NpuNetInfo {
 				netInfo.LinkStatusInfo.LinkState = linkState
 				hwlog.ResetErrCnt(fmt.Sprint(colcommon.DomainForLinkState, dieID, portID), logicID)
 			} else {
-				logWarnMetricsWithLimit(fmt.Sprint(colcommon.DomainForLinkState, dieID, portID), logicID, err)
+				logWarnMetricsWithLimit(fmt.Sprint(colcommon.DomainForLinkState, dieID, portID), logicID, dieID, portID, err)
 				netInfo.LinkStatusInfo.LinkState = colcommon.Abnormal
 			}
 			if tx, rx, err := hccn.GetNPUInterfaceTrafficA5(logicID, int32(dieID), int32(portID), bandwidthTime); err == nil {
@@ -215,14 +215,14 @@ func collectNetworkA5Info(logicID int32) []*common.NpuNetInfo {
 				hwlog.ResetErrCnt(fmt.Sprint(colcommon.DomainForBandwidth, dieID, portID), logicID)
 			} else {
 				netInfo.BandwidthInfo = nil
-				logWarnMetricsWithLimit(fmt.Sprint(colcommon.DomainForBandwidth, dieID, portID), logicID, err)
+				logWarnMetricsWithLimit(fmt.Sprint(colcommon.DomainForBandwidth, dieID, portID), logicID, dieID, portID, err)
 			}
 			if speed, err := hccn.GetNPULinkSpeedA5(logicID, int32(dieID), int32(portID)); err == nil {
 				netInfo.LinkSpeedInfo.Speed = float64(speed)
 				hwlog.ResetErrCnt(fmt.Sprint(colcommon.DomainForLinkSpeed, dieID, portID), logicID)
 			} else {
 				netInfo.LinkSpeedInfo = nil
-				logWarnMetricsWithLimit(fmt.Sprint(colcommon.DomainForLinkSpeed, dieID, portID), logicID, err)
+				logWarnMetricsWithLimit(fmt.Sprint(colcommon.DomainForLinkSpeed, dieID, portID), logicID, dieID, portID, err)
 			}
 			newNetInfo = append(newNetInfo, &netInfo)
 		}

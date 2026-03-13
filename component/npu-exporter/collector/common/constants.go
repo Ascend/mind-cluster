@@ -141,4 +141,6 @@ const (
 	DomainForContainerInfo = "containerInfo"
 	// DomainForProductType domain for product type
 	DomainForProductType = "productType"
+	// DomainForUb  domain for ub infos
+	DomainForUb = "ub"
 )
