@@ -39,16 +39,16 @@
 
 |node label名称|作用|取值|使用组件|
 |--|--|--|--|
-|accelerator|标识节点的处理芯片|huawei-Ascend910、huawei-Ascend310、huawei-Ascend310P|Ascend Device Plugin|
+|accelerator|标识节点的处理芯片|<ul><li>huawei-npu</li><li>huawei-Ascend910</li><li>huawei-Ascend310</li><li>huawei-Ascend310P</li></ul>|Ascend Device Plugin|
 |host-arch|标识节点的CPU架构|<ul><li>huawei-x86</li><li>huawei-arm</li></ul>|Volcano|
 |masterselector|标识MindCluster的管理节点|dls-master-node|Volcano、Ascend Operator、Resilience Controller、ClusterD|
 |node.kubernetes.io/npu.chip.name|上报当前芯片的具体类型|<ul><li>310</li><li>310P1</li><li>310P2</li><li>310P3</li><li>310P4</li><li>{xxx}A</li><li>910PremiumA</li><li>910ProA</li><li>910ProB</li><li>{xxx}Bx（x可取值为1、2、3、4）</li><li>Ascend950PR</li><li>Ascend950DT</li></ul>|Ascend Device Plugin<p></p>芯片型号的数值可通过**npu-smi info**命令查询，返回的“Name”字段对应信息为芯片型号，下文的{*xxx*}即取“910”字符作为芯片型号数值。|
 |nodeDEnable|NodeD节点启动的开关|on|Volcano、Resilience Controller<ul><li>nodeDEnable=on标签表示启用NodeD的节点状态监测功能，用于获取节点的状态信息并用于判断节点是否故障。</li><li>取值为off或无该参数表示仅上报节点信息，不判断节点是否故障。</li><li>使用**容器化支持**或者**资源监测**时，可以不配置该标签；其他特性必须配置该标签。</li></ul>|
 |workerselector|标识MindCluster的计算节点|dls-worker-node|Ascend Device Plugin、NodeD、NPU Exporter|
 |accelerator-type|标识Atlas服务器类型|<ul><li>card</li><li>module</li><li>half</li><li>module-{xxx}b-8</li><li>module-{xxx}b-16</li><li>card-{xxx}b-2</li><li>card-{xxx}b-infer</li><li>module-a3-16</li><li>module-a3-16-super-pod</li><li>350-Atlas-8</li><li>350-Atlas-16</li><li>350-Atlas-4p-8</li><li>350-Atlas-4p-16</li><li>850-Atlas-8p-8</li><li>850-SuperPod-Atlas-8</li><li>950-SuperPod-Atlas-8</li></ul>|Ascend Device Plugin、Volcano|
-|servertype|Atlas 200I SoC A1 核心板标识|<ul><li>soc</li><li>Ascend910-{aicore核数}</li><li>Ascend310P-{aicore核数}</li></ul>|Volcano、Ascend Device Plugin|
-|huawei.com/Ascend910-Recover|Atlas 训练系列产品故障恢复标识|故障芯片ID|Ascend Device Plugin|
-|huawei.com/Ascend910-NetworkRecover|Atlas 训练系列产品网络故障恢复标识|故障芯片ID|Ascend Device Plugin|
+|servertype|设备类型|<ul><li>npu-{aicore核数}</li><li>soc</li><li>Ascend910-{aicore核数}</li><li>Ascend310P-{aicore核数}</li></ul>|Volcano、Ascend Device Plugin|
+|<p>huawei.com/Ascend910-Recover</p><p>huawei.com/npu-Recover</p>|Atlas 训练系列产品故障恢复标识|故障芯片ID|Ascend Device Plugin|
+|<p>huawei.com/Ascend910-NetworkRecover</p><p>huawei.com/npu-NetworkRecover</p>|Atlas 训练系列产品网络故障恢复标识|故障芯片ID|Ascend Device Plugin|
 |infer-card-type|由Ascend Device Plugin写入，表明节点推理卡类型。|card-300i-duo|Volcano|
 |mind-cluster/npu-chip-memory|芯片片上内存|mind-cluster/npu-chip-memory=64G|Volcano、Ascend Device Plugin|
 |huawei.com/scheduler.chip1softsharedev.enable|表示节点是否支持软切分虚拟化功能|<ul><li>true</li><li>false</li></ul>|Volcano、Ascend Device Plugin<ul><li>huawei.com/scheduler.chip1softsharedev.enable=true标签表示节点支持软切分虚拟化功能。</li><li>huawei.com/scheduler.chip1softsharedev.enable=false标签表示节点不支持软切分虚拟化功能。</li></ul>|
@@ -59,7 +59,7 @@
 
 |名称|作用|取值|使用组件|
 |--|--|--|--|
-|ring-controller.atlas|标识Atlas的Pod|<li>ascend-910</li><li>ascend-{xxx}b</li><li>huawei.com/npu</li>|Ascend Device Plugin|
+|ring-controller.atlas|标识Atlas的Pod|<li>ascend-910</li><li>ascend-{xxx}b</li><li>ascend-npu</li>|Ascend Device Plugin|
 |vnpu-dvpp|标记Pod设置的DVPP|<li>yes：该Pod使用DVPP。</li><li>no：该Pod不使用DVPP。</li><li>null：默认值。不关注是否使用DVPP。</li>|Volcano|
 |vnpu-level|标记选择虚拟化实例模板的等级|<li>low：低配，默认值。</li><li>high：性能优先。</li>|Volcano|
 |version|标记Pod的版本|字符串|Ascend Operator|
@@ -86,11 +86,11 @@
 
 |名称|作用|取值|使用组件|
 |--|--|--|--|
-|ascend.kubectl.kubernetes.io/ascend-910-configuration|Ascend Operator生成hccl.json的数据来源|字符串map|Ascend Device Plugin、Ascend Operator|
+|<p>ascend.kubectl.kubernetes.io/ascend-910-configuration</p><p>ascend.kubectl.kubernetes.io/ascend-npu-configuration</p>|Ascend Operator生成hccl.json的数据来源|字符串map|Ascend Device Plugin、Ascend Operator|
 |super_pod_id|为Ascend Operator提供超节点ID信息|数字|Ascend Operator|
 |hccl/rankIndex|断点续训中保持原rankId的依据|[0,1000]|Volcano、Ascend Operator|
 |distributed-job|标记训练任务类型|<ul><li>true：当前任务为分布式任务</li><li>false：当前任务为单机任务</li></ul>|Volcano|
-|huawei.com/Ascend910|Ascend Device Plugin为Pod分配芯片的依据|字符串|Volcano、Ascend Device Plugin|
+|<p>huawei.com/Ascend910</p><p>huawei.com/npu</p>|Ascend Device Plugin为Pod分配芯片的依据|字符串|Volcano、Ascend Device Plugin|
 |huawei.com/AscendReal|Ascend Device Plugin为Pod实际分配芯片的记录|字符串|Volcano、Ascend Device Plugin|
 |huawei.com/npu-core|标记Pod使用的npu卡物理ID及切分模板|字符串|Volcano、Ascend Device Plugin|
 |huawei.com/kltDev|kubelet为Pod分配芯片的记录|字符串|Ascend Device Plugin|
@@ -163,7 +163,7 @@ ResetInfo的内容格式如下所示。
 |--|--|
 |volcano-controllers|开源Volcano的controller组件在K8s中创建的用户。|
 |volcano-scheduler|开源Volcano的scheduler组件在K8s中创建的用户。|
-|<p>ascend-device-plugin-sa-910</p><p>ascend-device-plugin-sa-310p</p><p>ascend-device-plugin-sa-310</p>|使用YAML启动服务，将会在K8s中创建该用户，不同型号的设备使用的账号名不同。|
+|<p>ascend-device-plugin-sa-npu</p><p>ascend-device-plugin-sa-910</p><p>ascend-device-plugin-sa-310p</p><p>ascend-device-plugin-sa-310</p>|使用YAML启动服务，将会在K8s中创建该用户，不同型号的设备使用的账号名不同。|
 |ascend-operator-manager|使用YAML启动服务，将会在K8s中创建该用户，如：ascend-operator-v{version}.yaml。|
 |resilience-controller|建议安全加固启动，使用带without-token的YAML启动服务，在K8s中创建并使用resilience-controller账号，同时为该账号授予适当权限。|
 |noded|使用YAML启动服务，将会在K8s中创建该用户，如：noded-v{version}.yaml。|

@@ -575,28 +575,66 @@ Ascend Device Plugin收集了内部的芯片故障、参数面网络故障和节
 <tbody><tr id="row1537311172012"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p1337319172019"><a name="p1337319172019"></a><a name="p1337319172019"></a>huawei.com/Ascend910</p>
 </td>
 <td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p133731813208"><a name="p133731813208"></a><a name="p133731813208"></a>当前节点可用的芯片名称信息，存在多个时用英文逗号拼接。</p>
-<div class="note" id="note19861106567"><a name="note19861106567"></a><a name="note19861106567"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p1286118615617"><a name="p1286118615617"></a><a name="p1286118615617"></a>该字段正在日落，后续版本该字段不再呈现。默认情况下，节点的可用芯片由Volcano维护，该字段不生效。如果需要生效，可以修改Volcano的配置参数“self-maintain-available-card”值为false。</p>
-</div></div>
+    <div class="note" id="note19861106567"><a name="note19861106567"></a><a name="note19861106567"></a><span class="notetitle">[!NOTE] 说明</span>
+        <div class="notebody">
+            <ul>
+                <li>
+                    <p id="p1286118615617"><a name="p1286118615617"></a><a name="p1286118615617"></a>该字段正在日落，后续版本该字段不再呈现。默认情况下，节点的可用芯片由Volcano维护，该字段不生效。如果需要生效，可以修改Volcano的配置参数“self-maintain-available-card”值为false。</p>
+                </li>
+                <li>
+                    <p>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点使用 huawei.com/npu 作为参数名称</p>
+                </li>
+            </ul>
+        </div>
+    </div>
 </td>
 </tr>
 <tr id="row141511628182110"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p1615272892115"><a name="p1615272892115"></a><a name="p1615272892115"></a>huawei.com/Ascend910-NetworkUnhealthy</p>
 </td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p5152528162120"><a name="p5152528162120"></a><a name="p5152528162120"></a>当前节点网络不健康的芯片名称信息，存在多个时用英文逗号拼接。</p>
+<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 ">
+    <p id="p5152528162120"><a name="p5152528162120"></a><a name="p5152528162120"></a>当前节点网络不健康的芯片名称信息，存在多个时用英文逗号拼接。</p>
+    <div class="note">
+        <span class="notetitle">[!NOTE] 说明</span>
+        <div class="notebody">
+            <p>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点使用 <strong>huawei.com/npu-NetworkUnhealthy</strong> 作为参数名称</p>
+        </div>
+    </div>
 </td>
 </tr>
 <tr id="row5480193118216"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p1148013118214"><a name="p1148013118214"></a><a name="p1148013118214"></a>huawei.com/Ascend910-Unhealthy</p>
 </td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p048119312212"><a name="p048119312212"></a><a name="p048119312212"></a>当前芯片不健康的芯片名称信息，存在多个时用英文逗号拼接。</p>
+<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 ">
+    <p id="p048119312212"><a name="p048119312212"></a><a name="p048119312212"></a>当前芯片不健康的芯片名称信息，存在多个时用英文逗号拼接。</p>
+    <div class="note">
+        <span class="notetitle">[!NOTE] 说明</span>
+        <div class="notebody">
+            <p>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点使用 <strong>huawei.com/npu-Unhealthy</strong> 作为参数名称</p>
+        </div>
+    </div>
 </td>
 </tr>
 <tr id="row14769122916281"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p576934513919"><a name="p576934513919"></a><a name="p576934513919"></a>huawei.com/Ascend910-Recovering</p>
 </td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p4769174519918"><a name="p4769174519918"></a><a name="p4769174519918"></a>标记当前节点正在进行恢复的芯片，存在多个时用英文逗号拼接。</p>
+<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 ">
+    <p id="p4769174519918"><a name="p4769174519918"></a><a name="p4769174519918"></a>标记当前节点正在进行恢复的芯片，存在多个时用英文逗号拼接。</p>
+    <div class="note">
+        <span class="notetitle">[!NOTE] 说明</span>
+        <div class="notebody">
+            <p>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点使用 <strong>huawei.com/npu-Recovering</strong> 作为参数名称</p>
+        </div>
+    </div>
 </td>
 </tr>
 <tr id="row1454493482212"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p19545134202211"><a name="p19545134202211"></a><a name="p19545134202211"></a>huawei.com/Ascend910-Fault</p>
 </td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="p1754514348220"><a name="p1754514348220"></a><a name="p1754514348220"></a>数组对象，对象包含fault_type、npu_name、large_model_fault_level、 fault_level、fault_handling、fault_code和fault_time_and_level_map这7个字段。</p>
+<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 ">
+    <p id="p1754514348220"><a name="p1754514348220"></a><a name="p1754514348220"></a>数组对象，对象包含fault_type、npu_name、large_model_fault_level、 fault_level、fault_handling、fault_code和fault_time_and_level_map这7个字段。</p>
+    <div class="note">
+        <span class="notetitle">[!NOTE] 说明</span>
+        <div class="notebody">
+            <p>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点使用 <strong>huawei.com/npu-Fault</strong> 作为参数名称</p>
+        </div>
+    </div>
 </td>
 </tr>
 <tr id="row15951101284313"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="p1595114125437"><a name="p1595114125437"></a><a name="p1595114125437"></a>- fault_type</p>
@@ -734,22 +772,50 @@ m为从0开始递增的整数。集群规模每增加1000个节点，则会新�
 </tr>
 <tr id="zh-cn_topic_0000002511346785_row1537311172012"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p815924703619"><a name="zh-cn_topic_0000002511346785_p815924703619"></a><a name="zh-cn_topic_0000002511346785_p815924703619"></a><span id="zh-cn_topic_0000002511346785_ph157567569819"><a name="zh-cn_topic_0000002511346785_ph157567569819"></a><a name="zh-cn_topic_0000002511346785_ph157567569819"></a>huawei.com/Ascend910</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511346785_p115919478362"><a name="zh-cn_topic_0000002511346785_p115919478362"></a><a name="zh-cn_topic_0000002511346785_p115919478362"></a><span id="zh-cn_topic_0000002511346785_ph1175620561885"><a name="zh-cn_topic_0000002511346785_ph1175620561885"></a><a name="zh-cn_topic_0000002511346785_ph1175620561885"></a>当前节点可用的芯片名称信息，存在多个时用英文逗号拼接。</span></p>
+<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 ">
+    <p id="zh-cn_topic_0000002511346785_p115919478362"><a name="zh-cn_topic_0000002511346785_p115919478362"></a><a name="zh-cn_topic_0000002511346785_p115919478362"></a><span id="zh-cn_topic_0000002511346785_ph1175620561885"><a name="zh-cn_topic_0000002511346785_ph1175620561885"></a><a name="zh-cn_topic_0000002511346785_ph1175620561885"></a>当前节点可用的芯片名称信息，存在多个时用英文逗号拼接。</span></p>
+    <div class="note">
+        <span class="notetitle">[!NOTE] 说明</span>
+        <div class="notebody">
+            <p>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点使用 huawei.com/npu 作为参数名称</p>
+        </div>
+    </div>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002511346785_row141511628182110"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p31592478363"><a name="zh-cn_topic_0000002511346785_p31592478363"></a><a name="zh-cn_topic_0000002511346785_p31592478363"></a><span id="zh-cn_topic_0000002511346785_ph127565563814"><a name="zh-cn_topic_0000002511346785_ph127565563814"></a><a name="zh-cn_topic_0000002511346785_ph127565563814"></a>huawei.com/Ascend910-NetworkUnhealthy</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511346785_p10159174753614"><a name="zh-cn_topic_0000002511346785_p10159174753614"></a><a name="zh-cn_topic_0000002511346785_p10159174753614"></a><span id="zh-cn_topic_0000002511346785_ph1675713561789"><a name="zh-cn_topic_0000002511346785_ph1675713561789"></a><a name="zh-cn_topic_0000002511346785_ph1675713561789"></a>当前节点网络不健康的芯片名称信息，存在多个时用英文逗号拼接。</span></p>
+<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 ">
+    <p id="zh-cn_topic_0000002511346785_p10159174753614"><a name="zh-cn_topic_0000002511346785_p10159174753614"></a><a name="zh-cn_topic_0000002511346785_p10159174753614"></a><span id="zh-cn_topic_0000002511346785_ph1675713561789"><a name="zh-cn_topic_0000002511346785_ph1675713561789"></a><a name="zh-cn_topic_0000002511346785_ph1675713561789"></a>当前节点网络不健康的芯片名称信息，存在多个时用英文逗号拼接。</span></p>
+    <div class="note">
+        <span class="notetitle">[!NOTE] 说明</span>
+        <div class="notebody">
+            <p>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点使用 <strong>huawei.com/npu-NetworkUnhealthy</strong> 作为参数名称</p>
+        </div>
+    </div>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002511346785_row5480193118216"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p1716054723614"><a name="zh-cn_topic_0000002511346785_p1716054723614"></a><a name="zh-cn_topic_0000002511346785_p1716054723614"></a><span id="zh-cn_topic_0000002511346785_ph47571856981"><a name="zh-cn_topic_0000002511346785_ph47571856981"></a><a name="zh-cn_topic_0000002511346785_ph47571856981"></a>huawei.com/Ascend910-Unhealthy</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511346785_p1916004773611"><a name="zh-cn_topic_0000002511346785_p1916004773611"></a><a name="zh-cn_topic_0000002511346785_p1916004773611"></a><span id="zh-cn_topic_0000002511346785_ph17573569819"><a name="zh-cn_topic_0000002511346785_ph17573569819"></a><a name="zh-cn_topic_0000002511346785_ph17573569819"></a>当前芯片不健康的芯片名称信息，存在多个时用英文逗号拼接。</span></p>
+<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 ">
+    <p id="zh-cn_topic_0000002511346785_p1916004773611"><a name="zh-cn_topic_0000002511346785_p1916004773611"></a><a name="zh-cn_topic_0000002511346785_p1916004773611"></a><span id="zh-cn_topic_0000002511346785_ph17573569819"><a name="zh-cn_topic_0000002511346785_ph17573569819"></a><a name="zh-cn_topic_0000002511346785_ph17573569819"></a>当前芯片不健康的芯片名称信息，存在多个时用英文逗号拼接。</span></p>
+    <div class="note">
+        <span class="notetitle">[!NOTE] 说明</span>
+        <div class="notebody">
+            <p>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点使用 <strong>huawei.com/npu-Unhealthy</strong> 作为参数名称</p>
+        </div>
+    </div>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002511346785_row1454493482212"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p16161164717366"><a name="zh-cn_topic_0000002511346785_p16161164717366"></a><a name="zh-cn_topic_0000002511346785_p16161164717366"></a><span id="zh-cn_topic_0000002511346785_ph1375817561389"><a name="zh-cn_topic_0000002511346785_ph1375817561389"></a><a name="zh-cn_topic_0000002511346785_ph1375817561389"></a>huawei.com/Ascend910-Fault</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000002511346785_p11611747103611"><a name="zh-cn_topic_0000002511346785_p11611747103611"></a><a name="zh-cn_topic_0000002511346785_p11611747103611"></a><span id="zh-cn_topic_0000002511346785_ph107588564815"><a name="zh-cn_topic_0000002511346785_ph107588564815"></a><a name="zh-cn_topic_0000002511346785_ph107588564815"></a>数组对象，对象包含fault_type、npu_name、large_model_fault_level、 fault_level、fault_handling、fault_code和<span id="zh-cn_topic_0000002511346785_ph1411311427424"><a name="zh-cn_topic_0000002511346785_ph1411311427424"></a><a name="zh-cn_topic_0000002511346785_ph1411311427424"></a>fault_time_and_level_map</span>字段。</span></p>
+<td class="cellrowborder" valign="top" width="71.11%" headers="mcps1.2.3.1.2 ">
+    <p id="zh-cn_topic_0000002511346785_p11611747103611"><a name="zh-cn_topic_0000002511346785_p11611747103611"></a><a name="zh-cn_topic_0000002511346785_p11611747103611"></a><span id="zh-cn_topic_0000002511346785_ph107588564815"><a name="zh-cn_topic_0000002511346785_ph107588564815"></a><a name="zh-cn_topic_0000002511346785_ph107588564815"></a>数组对象，对象包含fault_type、npu_name、large_model_fault_level、 fault_level、fault_handling、fault_code和<span id="zh-cn_topic_0000002511346785_ph1411311427424"><a name="zh-cn_topic_0000002511346785_ph1411311427424"></a><a name="zh-cn_topic_0000002511346785_ph1411311427424"></a>fault_time_and_level_map</span>字段。</span></p>
+    <div class="note">
+        <span class="notetitle">[!NOTE] 说明</span>
+        <div class="notebody">
+            <p>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点使用 <strong>huawei.com/npu-Fault</strong> 作为参数名称</p>
+        </div>
+    </div>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002511346785_row5162134716364"><td class="cellrowborder" valign="top" width="28.89%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000002511346785_p8162114713611"><a name="zh-cn_topic_0000002511346785_p8162114713611"></a><a name="zh-cn_topic_0000002511346785_p8162114713611"></a><span id="zh-cn_topic_0000002511346785_ph147591356181"><a name="zh-cn_topic_0000002511346785_ph147591356181"></a><a name="zh-cn_topic_0000002511346785_ph147591356181"></a>- fault_type</span></p>

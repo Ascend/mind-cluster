@@ -29,7 +29,7 @@
 -   Atlas 800I A3 超节点服务器
 -   推理服务器（插Atlas 350 标卡）
 -   Atlas 850 服务器
--   Atlas 950 SuperPod 超节点
+-   Atlas 950 SuperPoD 超节点
 
 **使用场景<a name="section124697813416"></a>**
 

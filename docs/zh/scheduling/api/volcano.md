@@ -34,7 +34,7 @@
 <a name="table143562050699"></a>
 |名称|作用|取值|使用组件|
 |--|--|--|--|
-|ring-controller.atlas|标识Atlas的Pod|<ul><li>ascend-910</li><li>ascend-<span><em>{xxx}</em></span>b</li><li>huawei.com/npu</li></ul>|Ascend Device Plugin、Ascend Operator、Volcano|
+|ring-controller.atlas|标识Atlas的Pod|<ul><li>ascend-npu</li><li>ascend-910</li><li>ascend-<span><em>{xxx}</em></span>b</li></ul>|Ascend Device Plugin、Ascend Operator、Volcano|
 |fault-scheduling|任务故障重调度开关|grace、force、off|Volcano、Resilience Controller|
 |elastic-scheduling|任务弹性调度开关|on|Volcano、Resilience Controller|
 |fault-retry-times|任务发生业务面故障可以重调度的次数|0-100|Volcano、Ascend Operator|
@@ -157,8 +157,7 @@
 |chip1-node8|1个节点8张卡，每张卡之间无互联。例如，Atlas 350 标卡共8张卡，每张卡之间无互联。|
 |chip1-node16|1个节点16张卡，每张卡之间无互联。例如，Atlas 350 标卡共16张卡，每张卡之间无互联。|
 |chip8-node8-sp|1个节点8张卡，8张卡都在1个互联环上，多个服务器形成超节点。例如，Atlas 850 超节点服务器。|
-|chip8-node8-ra64-sp|1个节点8张卡，8张卡都在1个互联环上，64个节点组成一个计算框，多个框形成超节点。例如，Atlas 950 PoD 超节点集群。|
-|chip1-softShareDev|软切分虚拟化专用调度策略。|
+|chip8-node8-ra64-sp|1个节点8张卡，8张卡都在1个互联环上，64个节点组成一个计算框，多个框形成超节点。例如，Atlas 950 SuperPoD 超节点集群。|
 
 
 ## Pod<a name="ZH-CN_TOPIC_0000002484428552"></a>
@@ -961,7 +960,7 @@ MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写
 </tr>
 <tr id="row1194165581219"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1095195511125"><a name="p1095195511125"></a><a name="p1095195511125"></a>- tor_ip</p>
 </td>
-<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="p19953555121"><a name="p19953555121"></a><a name="p19953555121"></a>交换机的IP地址，要求为常规IPv4或IPv6格式</p>
+<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="p19953555121"><a name="p19953555121"></a><a name="p19953555121"></a>交换机的IP地址</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><p id="p99515520126"><a name="p99515520126"></a><a name="p99515520126"></a>字符串</p>
 </td>
@@ -979,7 +978,7 @@ MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写
 </tr>
 <tr id="row199718557121"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1697555161219"><a name="p1697555161219"></a><a name="p1697555161219"></a>- server_ip</p>
 </td>
-<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="p0986557122"><a name="p0986557122"></a><a name="p0986557122"></a>节点的IP地址，要求为常规IPv4或IPv6格式</p>
+<td class="cellrowborder" valign="top" width="26.75%" headers="mcps1.2.5.1.2 "><p id="p0986557122"><a name="p0986557122"></a><a name="p0986557122"></a>节点的IP地址</p>
 </td>
 <td class="cellrowborder" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><p id="p16983555129"><a name="p16983555129"></a><a name="p16983555129"></a>字符串</p>
 </td>
@@ -1082,5 +1081,3 @@ MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写
 </tr>
 </tbody>
 </table>
-
-

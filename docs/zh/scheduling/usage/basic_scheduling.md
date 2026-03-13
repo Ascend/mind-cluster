@@ -1360,6 +1360,8 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 -   若当前环境使用的是Atlas A3 训练系列产品，选择[表3](#table57051049102614)获取相应的YAML示例。
 
+- 若当前环境使用的是Atlas 950 训练系列产品，选择[表4](#950_yaml)获取相应的YAML示例。
+
 **表 1** Atlas A2 训练系列产品支持的YAML
 
 <a name="table529015783811"></a>
@@ -1550,15 +1552,50 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </tbody>
 </table>
 
+
+
+**表 4** Atlas 950 系列产品支持的YAML
+<a name="950_yaml"></a>
+<table>
+    <thead align="left">
+        <tr>
+            <th class="cellrowborder" valign="top" width="8.799999999999999%" id="mcps1.2.7.1.1"><p id="p8705114972617"><a name="p8705114972617"></a><a name="p8705114972617"></a>任务类型</p></th>
+            <th class="cellrowborder" valign="top" width="15%" id="mcps1.2.7.1.2"><p id="p1870594972615"><a name="p1870594972615"></a><a name="p1870594972615"></a>硬件型号</p></th>
+            <th class="cellrowborder" valign="top" width="11.65%" id="mcps1.2.7.1.3"><p id="p97063498264"><a name="p97063498264"></a><a name="p97063498264"></a>训练框架</p></th>
+            <th class="cellrowborder" valign="top" width="39.269999999999996%" id="mcps1.2.7.1.4"><p id="p1706204911262"><a name="p1706204911262"></a><a name="p1706204911262"></a>YAML文件名称</p></th>
+            <th class="cellrowborder" valign="top" width="10.280000000000001%" id="mcps1.2.7.1.5"><p id="p970615497266"><a name="p970615497266"></a><a name="p970615497266"></a>说明</p></th>
+            <th class="cellrowborder" valign="top" width="15%" id="mcps1.2.7.1.6"><p id="p170694910264"><a name="p170694910264"></a><a name="p170694910264"></a>获取链接</p></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="cellrowborder" rowspan="3" valign="top" width="8.799999999999999%" headers="mcps1.2.7.1.1 "><p>Ascend Job</p></td>
+            <td class="cellrowborder" rowspan="3" valign="top" width="15%" headers="mcps1.2.7.1.2 "><p><span>Atlas 950 SuperPoD 超节点</span></p></td>
+            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>PyTorch</p></td>
+            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>pytorch_standalone_acjob_950.yaml</p></td>
+            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>示例默认为单机8卡任务。</p></td>
+            <td class="cellrowborder" rowspan="3" valign="top" width="15%" headers="mcps1.2.7.1.6 ">
+                <p>选择相应的训练框架后，<a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/master/samples/train/basic-training/without-ranktable" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+            </td>
+        </tr>
+        <tr><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>MindSpore</p></td>
+            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>mindspore_standalone_acjob_950.yaml</p></td>
+            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>示例默认为单机单卡任务。</p></td>
+        </tr>
+    </tbody>
+</table>
+
+
 **通过文件配置资源信息场景<a name="section158807920347"></a>**
 
--   若当前环境使用的是Atlas A2 训练系列产品，选择[表4](#table62591594016)获取相应的YAML示例。
+-   若当前环境使用的是Atlas A2 训练系列产品，选择[表5](#table62591594016)获取相应的YAML示例。
 
     根据[表1](#table529015783811)获取示例YAML后，Atlas 800T A2 训练服务器、Atlas 200T A2 Box16 异构子框和A200T A3 Box8 超节点服务器可基于[表2](#yaml参数说明)给出的参数说明进行修改适配。
 
--   若当前环境使用的是Atlas 训练系列产品，选择[表5](#table21811158146)获取相应的YAML示例。
+-   若当前环境使用的是Atlas 训练系列产品，选择[表6](#table21811158146)获取相应的YAML示例。
+-   若当前环境使用的是Atlas 950 训练系列产品，选择[表7](#table950_yaml)获取相应的YAML示例。
 
-**表 4** Atlas A2 训练系列产品支持的YAML
+**表 5** Atlas A2 训练系列产品支持的YAML
 
 <a name="table62591594016"></a>
 <table><thead align="left"><tr id="row72551515403"><th class="cellrowborder" valign="top" width="9.35%" id="mcps1.2.7.1.1"><p id="p72510154400"><a name="p72510154400"></a><a name="p72510154400"></a>任务类型</p>
@@ -1632,7 +1669,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </tbody>
 </table>
 
-**表 5** Atlas 训练系列产品支持的YAML
+**表 6** Atlas 训练系列产品支持的YAML
 
 <a name="table21811158146"></a>
 <table><thead align="left"><tr id="row10181111518146"><th class="cellrowborder" valign="top" width="9.35%" id="mcps1.2.7.1.1"><p id="p51941552181410"><a name="p51941552181410"></a><a name="p51941552181410"></a>任务类型</p>
@@ -1739,6 +1776,48 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </table>
 
 
+**表 7** Atlas 950 系列产品支持的YAML
+<a name="table950_yaml"></a>
+<table>
+    <thead align="left">
+        <tr>
+            <th class="cellrowborder" valign="top" width="9.35%" id="mcps1.2.7.1.1"><p>任务类型</p></th>
+            <th class="cellrowborder" valign="top" width="14.99%" id="mcps1.2.7.1.2"><p>硬件型号</p></th>
+            <th class="cellrowborder" valign="top" width="11.87%" id="mcps1.2.7.1.3"><p>训练框架</p></th>
+            <th class="cellrowborder" valign="top" width="36.51%" id="mcps1.2.7.1.4"><p>YAML文件名称</p></th>
+            <th class="cellrowborder" valign="top" width="12.26%" id="mcps1.2.7.1.5"><p>说明</p></th>
+            <th class="cellrowborder" valign="top" width="15.02%" id="mcps1.2.7.1.6"><p>获取链接</p></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="cellrowborder" rowspan="2" valign="top" width="9.35%" headers="mcps1.2.7.1.1 "><p>Volcano Job</p></td>
+            <td class="cellrowborder" rowspan="2" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD 超节点</p></td>
+            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>PyTorch</p></td>
+            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>a950_superpod_pytorch_vcjob.yaml</p></td>
+            <td class="cellrowborder" rowspan="4" valign="top" width="12.26%" headers="mcps1.2.7.1.5 "><p>示例默认为单机8卡任务。</p></td>
+            <td class="cellrowborder" rowspan="4" valign="top" width="15.02%" headers="mcps1.2.7.1.6 ">
+                <p><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/master/samples/train/basic-training/ranktable/yaml/950" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+            </td>
+        </tr>
+        <tr>
+            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>MindSpore</p></td>
+            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>a950_superpod_mindspore_vcjob.yaml</p></td>
+        </tr>
+        <tr>
+            <td class="cellrowborder" rowspan="2" valign="top" width="9.35%" headers="mcps1.2.7.1.1 "><p>Deployment</p></td>
+            <td class="cellrowborder" rowspan="2" valign="top" width="14.99%" headers="mcps1.2.7.1.2 "><p>Atlas 950 SuperPoD 超节点</p></td>
+            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>PyTorch</p></td>
+            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>a950_superpod_pytorch_deployment.yaml</p></td>
+        </tr>
+        <tr>
+            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>MindSpore</p></td>
+            <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>a950_superpod_mindspore_deployment.yaml</p></td>
+        </tr>
+    </tbody>
+</table>
+
+
 ##### YAML参数说明<a name="ZH-CN_TOPIC_0000002511347099"></a>
 
 本章节提供使用整卡调度或静态vNPU调度配置YAML的操作示例。在操作前，用户需要了解YAML示例的参数说明，再进行操作。
@@ -1772,7 +1851,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </tr>
 <tr id="row2097633513272"><td class="cellrowborder" valign="top" width="27.21%" headers="mcps1.2.4.1.1 "><p id="p6976153532710"><a name="p6976153532710"></a><a name="p6976153532710"></a>ring-controller.atlas</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.18%" headers="mcps1.2.4.1.2 "><a name="ul16230203215710"></a><a name="ul16230203215710"></a><ul id="ul16230203215710"><li><span id="ph20976435102713"><a name="ph20976435102713"></a><a name="ph20976435102713"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 训练系列产品</term></span>、<span id="ph163483412215"><a name="ph163483412215"></a><a name="ph163483412215"></a>A200T A3 Box8 超节点服务器</span>、<span id="ph077885871817"><a name="ph077885871817"></a><a name="ph077885871817"></a>Atlas 900 A3 SuperPoD 超节点</span>、<span id="ph10355115144111"><a name="ph10355115144111"></a><a name="ph10355115144111"></a>Atlas 800T A3 超节点服务器</span>取值为：ascend-<span id="ph11976935122715"><a name="ph11976935122715"></a><a name="ph11976935122715"></a><em id="zh-cn_topic_0000001519959665_i1489729141619"><a name="zh-cn_topic_0000001519959665_i1489729141619"></a><a name="zh-cn_topic_0000001519959665_i1489729141619"></a>{xxx}</em></span>b</li><li>Atlas 800 训练服务器，服务器（插<span id="ph2099203201811"><a name="ph2099203201811"></a><a name="ph2099203201811"></a>Atlas 300T 训练卡</span>）取值为：ascend-910</li><li>Atlas A5 系列产品、Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPod 超节点</span>取值为：huawei.com/npu</li>
+<td class="cellrowborder" valign="top" width="36.18%" headers="mcps1.2.4.1.2 "><a name="ul16230203215710"></a><a name="ul16230203215710"></a><ul id="ul16230203215710"><li><span id="ph20976435102713"><a name="ph20976435102713"></a><a name="ph20976435102713"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 训练系列产品</term></span>、<span id="ph163483412215"><a name="ph163483412215"></a><a name="ph163483412215"></a>A200T A3 Box8 超节点服务器</span>、<span id="ph077885871817"><a name="ph077885871817"></a><a name="ph077885871817"></a>Atlas 900 A3 SuperPoD 超节点</span>、<span id="ph10355115144111"><a name="ph10355115144111"></a><a name="ph10355115144111"></a>Atlas 800T A3 超节点服务器</span>取值为：ascend-<span id="ph11976935122715"><a name="ph11976935122715"></a><a name="ph11976935122715"></a><em id="zh-cn_topic_0000001519959665_i1489729141619"><a name="zh-cn_topic_0000001519959665_i1489729141619"></a><a name="zh-cn_topic_0000001519959665_i1489729141619"></a>{xxx}</em></span>b</li><li>Atlas 800 训练服务器，服务器（插<span id="ph2099203201811"><a name="ph2099203201811"></a><a name="ph2099203201811"></a>Atlas 300T 训练卡</span>）取值为：ascend-910</li><li>（可选）Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点取值为：ascend-npu</li>
 </ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="p139761835102718"><a name="p139761835102718"></a><a name="p139761835102718"></a>用于区分任务使用的芯片的类型。</p>
@@ -1901,7 +1980,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 <tr id="row9984235132714"><td class="cellrowborder" valign="top" width="27.21%" headers="mcps1.2.4.1.1 "><p id="p18984535132720"><a name="p18984535132720"></a><a name="p18984535132720"></a>accelerator-type</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.18%" headers="mcps1.2.4.1.2 "><p id="p16729326173616"><a name="p16729326173616"></a><a name="p16729326173616"></a>根据所使用芯片类型不同，取值如下：</p>
-<a name="ul139845353279"></a><a name="ul139845353279"></a><ul id="ul139845353279"><li><span id="ph169841935102711"><a name="ph169841935102711"></a><a name="ph169841935102711"></a>Atlas 800 训练服务器（NPU满配）</span>：module</li><li><span id="ph10984193517273"><a name="ph10984193517273"></a><a name="ph10984193517273"></a>Atlas 800 训练服务器（NPU半配）</span>：half</li><li>服务器（插<span id="ph169855357273"><a name="ph169855357273"></a><a name="ph169855357273"></a>Atlas 300T 训练卡</span>）：card</li><li><span id="ph157633217501"><a name="ph157633217501"></a><a name="ph157633217501"></a>Atlas 800T A2 训练服务器</span>和<span id="ph14985135162710"><a name="ph14985135162710"></a><a name="ph14985135162710"></a>Atlas 900 A2 PoD 集群基础单元</span>：module-<span id="ph1898523510277"><a name="ph1898523510277"></a><a name="ph1898523510277"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_1"><a name="zh-cn_topic_0000001519959665_i1489729141619_1"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_1"></a>{xxx}</em></span>b-8</li><li><span id="ph19985163514279"><a name="ph19985163514279"></a><a name="ph19985163514279"></a>Atlas 200T A2 Box16 异构子框</span>：module-<span id="ph4985183516277"><a name="ph4985183516277"></a><a name="ph4985183516277"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_2"><a name="zh-cn_topic_0000001519959665_i1489729141619_2"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_2"></a>{xxx}</em></span>b-16</li><li><span id="ph1514953013253"><a name="ph1514953013253"></a><a name="ph1514953013253"></a>A200T A3 Box8 超节点服务器</span>：module-a3-16</li><li>（可选）<span id="ph8619174411286"><a name="ph8619174411286"></a><a name="ph8619174411286"></a>Atlas 800 训练服务器（NPU满配）</span>可以省略该标签。</li><li><span id="ph261924414289"><a name="ph261924414289"></a><a name="ph261924414289"></a>Atlas 900 A3 SuperPoD 超节点</span>：module-a3-16-super-pod</li><li><span id="ph1973065563912"><a name="ph1973065563912"></a><a name="ph1973065563912"></a>Atlas 350 标卡（可选）</span>：350-Atlas-8、350-Atlas-16、350-Atlas-4p-8、350-Atlas-4p-16</li><li>Atlas 850 服务器（可选）：850-Atlas-8p-8、850-SuperPod-Atlas-8</li><li>Atlas 950 PoD 超节点（可选）：950-SuperPod-Atlas-8</li></ul>
+<a name="ul139845353279"></a><a name="ul139845353279"></a><ul id="ul139845353279"><li><span id="ph169841935102711"><a name="ph169841935102711"></a><a name="ph169841935102711"></a>Atlas 800 训练服务器（NPU满配）</span>：module</li><li><span id="ph10984193517273"><a name="ph10984193517273"></a><a name="ph10984193517273"></a>Atlas 800 训练服务器（NPU半配）</span>：half</li><li>服务器（插<span id="ph169855357273"><a name="ph169855357273"></a><a name="ph169855357273"></a>Atlas 300T 训练卡</span>）：card</li><li><span id="ph157633217501"><a name="ph157633217501"></a><a name="ph157633217501"></a>Atlas 800T A2 训练服务器</span>和<span id="ph14985135162710"><a name="ph14985135162710"></a><a name="ph14985135162710"></a>Atlas 900 A2 PoD 集群基础单元</span>：module-<span id="ph1898523510277"><a name="ph1898523510277"></a><a name="ph1898523510277"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_1"><a name="zh-cn_topic_0000001519959665_i1489729141619_1"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_1"></a>{xxx}</em></span>b-8</li><li><span id="ph19985163514279"><a name="ph19985163514279"></a><a name="ph19985163514279"></a>Atlas 200T A2 Box16 异构子框</span>：module-<span id="ph4985183516277"><a name="ph4985183516277"></a><a name="ph4985183516277"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_2"><a name="zh-cn_topic_0000001519959665_i1489729141619_2"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_2"></a>{xxx}</em></span>b-16</li><li><span id="ph1514953013253"><a name="ph1514953013253"></a><a name="ph1514953013253"></a>A200T A3 Box8 超节点服务器</span>：module-a3-16</li><li>（可选）<span id="ph8619174411286"><a name="ph8619174411286"></a><a name="ph8619174411286"></a>Atlas 800 训练服务器（NPU满配）</span>可以省略该标签。</li><li><span id="ph261924414289"><a name="ph261924414289"></a><a name="ph261924414289"></a>Atlas 900 A3 SuperPoD 超节点</span>：module-a3-16-super-pod</li><li><span id="ph1973065563912"><a name="ph1973065563912"></a><a name="ph1973065563912"></a>（可选）Atlas 350 标卡</span>：350-Atlas-8、350-Atlas-16、350-Atlas-4p-8、350-Atlas-4p-16</li><li>（可选）Atlas 850 服务器：850-Atlas-8p-8、850-SuperPod-Atlas-8</li><li>（可选）Atlas 950 SuperPoD 超节点：950-SuperPod-Atlas-8</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="p5986235142714"><a name="p5986235142714"></a><a name="p5986235142714"></a>根据需要运行训练任务的节点类型，选取不同的值。</p>
 <div class="note" id="note898773512719"><a name="note898773512719"></a><a name="note898773512719"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p1027616512420"><a name="p1027616512420"></a><a name="p1027616512420"></a><span id="ph9014016509"><a name="ph9014016509"></a><a name="ph9014016509"></a>芯片型号的数值可通过<strong id="zh-cn_topic_0000001519959665_b168254314713"><a name="zh-cn_topic_0000001519959665_b168254314713"></a><a name="zh-cn_topic_0000001519959665_b168254314713"></a>npu-smi info</strong>命令查询，返回的“Name”字段对应信息为芯片型号，下文的{<em id="zh-cn_topic_0000001519959665_i1914312018209"><a name="zh-cn_topic_0000001519959665_i1914312018209"></a><a name="zh-cn_topic_0000001519959665_i1914312018209"></a>xxx</em>}即取“910”字符作为芯片型号数值。</span></p>
@@ -1911,7 +1990,8 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 <tr id="row1598720359275"><td class="cellrowborder" valign="top" width="27.21%" headers="mcps1.2.4.1.1 "><p id="p2987143519279"><a name="p2987143519279"></a><a name="p2987143519279"></a>requests</p>
 </td>
 <td class="cellrowborder" rowspan="2" valign="top" width="36.18%" headers="mcps1.2.4.1.2 "><p id="p1198733572715"><a name="p1198733572715"></a><a name="p1198733572715"></a><strong id="b2098733513275"><a name="b2098733513275"></a><a name="b2098733513275"></a>整卡调度：</strong></p>
-<p id="p998783518273"><a name="p998783518273"></a><a name="p998783518273"></a>huawei.com/Ascend910: <em id="i6988935192715"><a name="i6988935192715"></a><a name="i6988935192715"></a>x</em></p>
+<p>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点需配置为 huawei.com/npu: <em>x</em></p>
+<p id="p998783518273"><a name="p998783518273"></a><a name="p998783518273"></a>其他产品配置为 huawei.com/Ascend910: <em id="i6988935192715"><a name="i6988935192715"></a><a name="i6988935192715"></a>x</em></p>
 <p id="p39887359272"><a name="p39887359272"></a><a name="p39887359272"></a>根据所使用芯片类型不同，x取值如下：</p>
 <a name="ul1798823522713"></a><a name="ul1798823522713"></a><ul id="ul1798823522713"><li><span id="ph1598853514277"><a name="ph1598853514277"></a><a name="ph1598853514277"></a>Atlas 800 训练服务器（NPU满配）</span>：<a name="ul1998810354278"></a><a name="ul1998810354278"></a><ul id="ul1998810354278"><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4、8</li><li>分布式任务：1、2、4、8</li></ul>
 </li><li><span id="ph2988153582716"><a name="ph2988153582716"></a><a name="ph2988153582716"></a>Atlas 800 训练服务器（NPU半配）</span>：<a name="ul159887358276"></a><a name="ul159887358276"></a><ul id="ul159887358276"><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4</li><li>分布式任务：1、2、4</li></ul>
@@ -1919,7 +1999,61 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </li><li><span id="ph52261657163417"><a name="ph52261657163417"></a><a name="ph52261657163417"></a>Atlas 800T A2 训练服务器</span>和<span id="ph999063517276"><a name="ph999063517276"></a><a name="ph999063517276"></a>Atlas 900 A2 PoD 集群基础单元</span>：<a name="ul199020351273"></a><a name="ul199020351273"></a><ul id="ul199020351273"><li>单机单芯片任务：1</li><li>单机多芯片任务：2、3、4、5、6、7、8</li><li>分布式任务：1、2、3、4、5、6、7、8</li></ul>
 </li><li><span id="ph18991173510273"><a name="ph18991173510273"></a><a name="ph18991173510273"></a>Atlas 200T A2 Box16 异构子框</span>：<a name="ul69913354274"></a><a name="ul69913354274"></a><ul id="ul69913354274"><li>单机单芯片任务：1</li><li>单机多芯片任务：2、3、4、5、6、7、8、10、12、14、16</li><li>分布式任务：1、2、3、4、5、6、7、8、10、12、14、16</li></ul>
 </li><li><span id="ph18991153532717"><a name="ph18991153532717"></a><a name="ph18991153532717"></a>Atlas 900 A3 SuperPoD 超节点</span>、<span id="ph20855174373110"><a name="ph20855174373110"></a><a name="ph20855174373110"></a>A200T A3 Box8 超节点服务器</span>、<span id="ph27041232195"><a name="ph27041232195"></a><a name="ph27041232195"></a>Atlas 800T A3 超节点服务器</span>：<a name="ul499153515277"></a><a name="ul499153515277"></a><ul id="ul499153515277"><li>单机多芯片任务：2、4、6、8、10、12、14、16</li><li>分布式任务：2、4、6、8、10、12、14、16</li><li>针对<span id="ph798511112819"><a name="ph798511112819"></a><a name="ph798511112819"></a>Atlas 900 A3 SuperPoD 超节点</span>的逻辑超节点亲和任务：16</li></ul>
-</li></ul>
+</li>
+<li>
+    <span>Atlas 350 标卡 无互联 节点内8卡</span>：
+    <ul>
+        <li>单机：1、2、3、4、5、6、7、8</li>
+        <li>分布式：1、2、3、4、5、6、7、8</li>
+    </ul>
+</li>
+<li>
+    <span>Atlas 350 标卡 无互联 节点内16卡</span>：
+    <ul>
+        <li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li>
+        <li>分布式：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li>
+    </ul>
+</li>
+<li>
+    <span>Atlas 350 标卡 4P mesh 8卡</span>：
+    <ul>
+        <li>单机（满足亲和性）：1、2、3、4、8</li>
+        <li>单机（不保证亲和性）：5、6、7</li>
+        <li>分布式（满足亲和性）：1、2、3、4、8</li>
+        <li>分布式（不保证亲和性）：5、6、7</li>
+    </ul>
+</li>
+<li>
+    <span>Atlas 350 标卡 4P mesh 16卡</span>：
+    <ul>
+        <li>单机（满足亲和性）：1、2、3、4、8、12、16</li>
+        <li>单机（不保证亲和性）：5、6、7、9、10、11、13、14、15</li>
+        <li>分布式（满足亲和性）：1、2、3、4、8、12、16</li>
+        <li>分布式（不保证亲和性）：5、6、7、9、10、11、13、14、15</li>
+    </ul>
+</li>
+<li>
+    <span>Atlas 850 服务器（普通集群）</span>：
+    <ul>
+        <li>单机：1、2、4、8</li>
+        <li>分布式：1、2、4、8</li>
+    </ul>
+</li>
+<li>
+    <span>Atlas 850 服务器（超节点集群）</span>：
+    <ul>
+        <li>单机：1、2、4、8（sp-block参数取值与其保持一致）</li>
+        <li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li>
+    </ul>
+</li>
+<li>
+    <span>Atlas 950 SuperPoD 超节点集群</span>：
+    <ul>
+        <li>单机：1、2、3、4、5、6、7、8（sp-block参数取值与其保持一致）</li>
+        <li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li>
+    </ul>
+</li>
+</ul>
 <p id="p4993163513278"><a name="p4993163513278"></a><a name="p4993163513278"></a><strong id="b099353510277"><a name="b099353510277"></a><a name="b099353510277"></a>静态vNPU调度：</strong></p>
 <p id="p39931635142716"><a name="p39931635142716"></a><a name="p39931635142716"></a>huawei.com/Ascend910-<strong id="b12993153514272"><a name="b12993153514272"></a><a name="b12993153514272"></a><em id="i16993153522711"><a name="i16993153522711"></a><a name="i16993153522711"></a>Y</em></strong>: 1</p>
 <p id="p1399323512713"><a name="p1399323512713"></a><a name="p1399323512713"></a>取值为1。只能使用一个NPU下的vNPU。</p>
@@ -1942,9 +2076,18 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </td>
 <td class="cellrowborder" valign="top" width="36.18%" headers="mcps1.2.4.1.2 "><p id="p12995163592715"><a name="p12995163592715"></a><a name="p12995163592715"></a>XXX表示芯片的型号，支持的取值为910，310和310P。取值需要和环境上实际的芯片类型保持一致。</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="p17995235152710"><a name="p17995235152710"></a><a name="p17995235152710"></a><span id="ph13995133582718"><a name="ph13995133582718"></a><a name="ph13995133582718"></a>Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>
-<div class="note" id="note6995123592720"><a name="note6995123592720"></a><a name="note6995123592720"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p1299613592712"><a name="p1299613592712"></a><a name="p1299613592712"></a>该参数只支持使用<span id="ph699616354271"><a name="ph699616354271"></a><a name="ph699616354271"></a>Volcano</span>调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
-</div></div>
+<td class="cellrowborder" valign="top" width="36.61%" headers="mcps1.2.4.1.3 ">
+    <p id="p17995235152710"><a name="p17995235152710"></a><a name="p17995235152710"></a><span id="ph13995133582718"><a name="ph13995133582718"></a><a name="ph13995133582718"></a>Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>
+    <div class="note" id="note6995123592720"><a name="note6995123592720"></a><a name="note6995123592720"></a><span class="notetitle">[!NOTE] 说明</span>
+        <div class="notebody">
+            <ul>
+                <li>
+                    <p id="p1299613592712"><a name="p1299613592712"></a><a name="p1299613592712"></a>该参数只支持使用<span id="ph699616354271"><a name="ph699616354271"></a><a name="ph699616354271"></a>Volcano</span>调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
+                </li>
+                <li><p>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点需配置为metadata.annotations['huawei.com/npu']</p></li>
+            </ul>
+        </div>
+    </div>
 </td>
 </tr>
 <tr id="row158871116111016"><td class="cellrowborder" valign="top" width="27.21%" headers="mcps1.2.4.1.1 "><p id="p1062816462407"><a name="p1062816462407"></a><a name="p1062816462407"></a>hostNetwork</p>
@@ -2074,7 +2217,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 <tr id="zh-cn_topic_0000001609074269_row15494422131"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001609074269_p1449413229314"><a name="zh-cn_topic_0000001609074269_p1449413229314"></a><a name="zh-cn_topic_0000001609074269_p1449413229314"></a>accelerator-type</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p7665323173618"><a name="p7665323173618"></a><a name="p7665323173618"></a>根据所使用芯片类型不同，取值如下：</p>
-<a name="ul14200073713"></a><a name="ul14200073713"></a><ul id="ul14200073713"><li><span id="zh-cn_topic_0000001609074269_ph1881218064513"><a name="zh-cn_topic_0000001609074269_ph1881218064513"></a><a name="zh-cn_topic_0000001609074269_ph1881218064513"></a>Atlas 800 训练服务器（NPU满配）</span>：module</li><li><span id="zh-cn_topic_0000001609074269_ph1284164912438"><a name="zh-cn_topic_0000001609074269_ph1284164912438"></a><a name="zh-cn_topic_0000001609074269_ph1284164912438"></a>Atlas 800 训练服务器（NPU半配）</span>：half</li><li>服务器（插<span id="zh-cn_topic_0000001609074269_ph4528511506"><a name="zh-cn_topic_0000001609074269_ph4528511506"></a><a name="zh-cn_topic_0000001609074269_ph4528511506"></a>Atlas 300T 训练卡</span>）：card</li><li><span id="ph486033685311"><a name="ph486033685311"></a><a name="ph486033685311"></a>Atlas 800T A2 训练服务器</span>和<span id="ph1296712308221"><a name="ph1296712308221"></a><a name="ph1296712308221"></a>Atlas 900 A2 PoD 集群基础单元</span>：module-<span id="ph4487202241512"><a name="ph4487202241512"></a><a name="ph4487202241512"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_3"><a name="zh-cn_topic_0000001519959665_i1489729141619_3"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_3"></a>{xxx}</em></span>b-8</li><li><span id="ph1114211211203"><a name="ph1114211211203"></a><a name="ph1114211211203"></a>Atlas 200T A2 Box16 异构子框</span>：module-<span id="ph5811017182112"><a name="ph5811017182112"></a><a name="ph5811017182112"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_4"><a name="zh-cn_topic_0000001519959665_i1489729141619_4"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_4"></a>{xxx}</em></span>b-16</li><li><span id="ph115277505269"><a name="ph115277505269"></a><a name="ph115277505269"></a>A200T A3 Box8 超节点服务器</span>：module-a3-16</li><li>（可选）<span id="ph7730165573912"><a name="ph7730165573912"></a><a name="ph7730165573912"></a>Atlas 800 训练服务器（NPU满配）</span>可以省略该标签。</li><li><span id="ph1973065563912"><a name="ph1973065563912"></a><a name="ph1973065563912"></a>Atlas 900 A3 SuperPoD 超节点</span>：module-a3-16-super-pod</li><li><span id="ph1973065563912"><a name="ph1973065563912"></a><a name="ph1973065563912"></a>Atlas 350 标卡（可选）</span>：350-Atlas-8、350-Atlas-16、350-Atlas-4p-8、350-Atlas-4p-16</li><li>Atlas 850 服务器（可选）：850-Atlas-8p-8、850-SuperPod-Atlas-8</li><li>Atlas 950 PoD 超节点（可选）：950-SuperPod-Atlas-8</li></ul>
+<a name="ul14200073713"></a><a name="ul14200073713"></a><ul id="ul14200073713"><li><span id="zh-cn_topic_0000001609074269_ph1881218064513"><a name="zh-cn_topic_0000001609074269_ph1881218064513"></a><a name="zh-cn_topic_0000001609074269_ph1881218064513"></a>Atlas 800 训练服务器（NPU满配）</span>：module</li><li><span id="zh-cn_topic_0000001609074269_ph1284164912438"><a name="zh-cn_topic_0000001609074269_ph1284164912438"></a><a name="zh-cn_topic_0000001609074269_ph1284164912438"></a>Atlas 800 训练服务器（NPU半配）</span>：half</li><li>服务器（插<span id="zh-cn_topic_0000001609074269_ph4528511506"><a name="zh-cn_topic_0000001609074269_ph4528511506"></a><a name="zh-cn_topic_0000001609074269_ph4528511506"></a>Atlas 300T 训练卡</span>）：card</li><li><span id="ph486033685311"><a name="ph486033685311"></a><a name="ph486033685311"></a>Atlas 800T A2 训练服务器</span>和<span id="ph1296712308221"><a name="ph1296712308221"></a><a name="ph1296712308221"></a>Atlas 900 A2 PoD 集群基础单元</span>：module-<span id="ph4487202241512"><a name="ph4487202241512"></a><a name="ph4487202241512"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_3"><a name="zh-cn_topic_0000001519959665_i1489729141619_3"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_3"></a>{xxx}</em></span>b-8</li><li><span id="ph1114211211203"><a name="ph1114211211203"></a><a name="ph1114211211203"></a>Atlas 200T A2 Box16 异构子框</span>：module-<span id="ph5811017182112"><a name="ph5811017182112"></a><a name="ph5811017182112"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_4"><a name="zh-cn_topic_0000001519959665_i1489729141619_4"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_4"></a>{xxx}</em></span>b-16</li><li><span id="ph115277505269"><a name="ph115277505269"></a><a name="ph115277505269"></a>A200T A3 Box8 超节点服务器</span>：module-a3-16</li><li>（可选）<span id="ph7730165573912"><a name="ph7730165573912"></a><a name="ph7730165573912"></a>Atlas 800 训练服务器（NPU满配）</span>可以省略该标签。</li><li><span id="ph1973065563912"><a name="ph1973065563912"></a><a name="ph1973065563912"></a>Atlas 900 A3 SuperPoD 超节点</span>：module-a3-16-super-pod</li><li><span id="ph1973065563912"><a name="ph1973065563912"></a><a name="ph1973065563912"></a>Atlas 350 标卡（可选）</span>：350-Atlas-8、350-Atlas-16、350-Atlas-4p-8、350-Atlas-4p-16</li><li>Atlas 850 服务器（可选）：850-Atlas-8p-8、850-SuperPod-Atlas-8</li><li>Atlas 950 SuperPoD 超节点（可选）：950-SuperPod-Atlas-8</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p1954213851616"><a name="p1954213851616"></a><a name="p1954213851616"></a>根据需要运行训练任务的节点类型，选取不同的值。</p>
 <div class="note" id="note19666163011214"><a name="note19666163011214"></a><a name="note19666163011214"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p1105153313533"><a name="p1105153313533"></a><a name="p1105153313533"></a><span id="ph710573305319"><a name="ph710573305319"></a><a name="ph710573305319"></a>芯片型号的数值可通过<strong id="zh-cn_topic_0000001519959665_b168254314713_1"><a name="zh-cn_topic_0000001519959665_b168254314713_1"></a><a name="zh-cn_topic_0000001519959665_b168254314713_1"></a>npu-smi info</strong>命令查询，返回的“Name”字段对应信息为芯片型号，下文的{<em id="zh-cn_topic_0000001519959665_i1914312018209_1"><a name="zh-cn_topic_0000001519959665_i1914312018209_1"></a><a name="zh-cn_topic_0000001519959665_i1914312018209_1"></a>xxx</em>}即取“910”字符作为芯片型号数值。</span></p>
@@ -2084,7 +2227,8 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 <tr id="zh-cn_topic_0000001609074269_row1725618216467"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001609074269_p15256112124619"><a name="zh-cn_topic_0000001609074269_p15256112124619"></a><a name="zh-cn_topic_0000001609074269_p15256112124619"></a>requests</p>
 </td>
 <td class="cellrowborder" rowspan="2" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p1996615912482"><a name="p1996615912482"></a><a name="p1996615912482"></a><strong id="b118963916494"><a name="b118963916494"></a><a name="b118963916494"></a>整卡调度：</strong></p>
-<p id="p44675644812"><a name="p44675644812"></a><a name="p44675644812"></a><span id="ph1567213131613"><a name="ph1567213131613"></a><a name="ph1567213131613"></a>huawei.com/Ascend910</span>: <em id="i2478131910511"><a name="i2478131910511"></a><a name="i2478131910511"></a>x</em></p>
+<p>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点需配置为 huawei.com/npu: <em>x</em></p>
+<p id="p44675644812"><a name="p44675644812"></a><a name="p44675644812"></a><span id="ph1567213131613"><a name="ph1567213131613"></a><a name="ph1567213131613"></a>其他产品配置为 huawei.com/Ascend910</span>: <em id="i2478131910511"><a name="i2478131910511"></a><a name="i2478131910511"></a>x</em></p>
 <p id="p370843110385"><a name="p370843110385"></a><a name="p370843110385"></a>根据所使用芯片类型不同，x取值如下：</p>
 <a name="ul4403181216571"></a><a name="ul4403181216571"></a><ul id="ul4403181216571"><li><span id="zh-cn_topic_0000001609074269_ph141901927154611"><a name="zh-cn_topic_0000001609074269_ph141901927154611"></a><a name="zh-cn_topic_0000001609074269_ph141901927154611"></a>Atlas 800 训练服务器（NPU满配）</span>：<a name="zh-cn_topic_0000001609074269_ul169264817234"></a><a name="zh-cn_topic_0000001609074269_ul169264817234"></a><ul id="zh-cn_topic_0000001609074269_ul169264817234"><li>单机单芯片：1</li><li>单机多芯片：2、4、8</li><li>分布式：1、2、4、8</li></ul>
 </li><li><span id="zh-cn_topic_0000001609074269_ph1312973814465"><a name="zh-cn_topic_0000001609074269_ph1312973814465"></a><a name="zh-cn_topic_0000001609074269_ph1312973814465"></a>Atlas 800 训练服务器（NPU半配）</span>：<a name="zh-cn_topic_0000001609074269_ul1713712328597"></a><a name="zh-cn_topic_0000001609074269_ul1713712328597"></a><ul id="zh-cn_topic_0000001609074269_ul1713712328597"><li>单机单芯片：1</li><li>单机多芯片：2、4</li><li>分布式：1、2、4</li></ul>
@@ -2092,7 +2236,61 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </li><li><span id="ph1176216314557"><a name="ph1176216314557"></a><a name="ph1176216314557"></a>Atlas 800T A2 训练服务器</span>和<span id="ph107421743105017"><a name="ph107421743105017"></a><a name="ph107421743105017"></a>Atlas 900 A2 PoD 集群基础单元</span>：<a name="ul169264817234"></a><a name="ul169264817234"></a><ul id="ul169264817234"><li>单机单芯片：1</li><li>单机多芯片：2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul>
 </li><li><span id="ph129391532155719"><a name="ph129391532155719"></a><a name="ph129391532155719"></a>Atlas 200T A2 Box16 异构子框</span>：<a name="ul555885820439"></a><a name="ul555885820439"></a><ul id="ul555885820439"><li>单机单芯片：1</li><li>单机多芯片：2、3、4、5、6、7、8、10、12、14、16</li><li>分布式：1、2、3、4、5、6、7、8、10、12、14、16</li></ul>
 </li><li><span id="ph133001904447"><a name="ph133001904447"></a><a name="ph133001904447"></a>Atlas 900 A3 SuperPoD 超节点</span>、<span id="ph830011074420"><a name="ph830011074420"></a><a name="ph830011074420"></a>A200T A3 Box8 超节点服务器</span>、<span id="ph83001907446"><a name="ph83001907446"></a><a name="ph83001907446"></a>Atlas 800T A3 超节点服务器</span>：<a name="ul130020074415"></a><a name="ul130020074415"></a><ul id="ul130020074415"><li>单机多芯片：2、4、6、8、10、12、14、16</li><li>分布式：16</li></ul>
-</li></ul>
+</li>
+<li>
+    <span>Atlas 350 标卡 无互联 节点内8卡</span>：
+    <ul>
+        <li>单机：1、2、3、4、5、6、7、8</li>
+        <li>分布式：1、2、3、4、5、6、7、8</li>
+    </ul>
+</li>
+<li>
+    <span>Atlas 350 标卡 无互联 节点内16卡</span>：
+    <ul>
+        <li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li>
+        <li>分布式：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li>
+    </ul>
+</li>
+<li>
+    <span>Atlas 350 标卡 4P mesh 8卡</span>：
+    <ul>
+        <li>单机（满足亲和性）：1、2、3、4、8</li>
+        <li>单机（不保证亲和性）：5、6、7</li>
+        <li>分布式（满足亲和性）：1、2、3、4、8</li>
+        <li>分布式（不保证亲和性）：5、6、7</li>
+    </ul>
+</li>
+<li>
+    <span>Atlas 350 标卡 4P mesh 16卡</span>：
+    <ul>
+        <li>单机（满足亲和性）：1、2、3、4、8、12、16</li>
+        <li>单机（不保证亲和性）：5、6、7、9、10、11、13、14、15</li>
+        <li>分布式（满足亲和性）：1、2、3、4、8、12、16</li>
+        <li>分布式（不保证亲和性）：5、6、7、9、10、11、13、14、15</li>
+    </ul>
+</li>
+<li>
+    <span>Atlas 850 服务器（普通集群）</span>：
+    <ul>
+        <li>单机：1、2、4、8</li>
+        <li>分布式：1、2、4、8</li>
+    </ul>
+</li>
+<li>
+    <span>Atlas 850 服务器（超节点集群）</span>：
+    <ul>
+        <li>单机：1、2、4、8（sp-block参数取值与其保持一致）</li>
+        <li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li>
+    </ul>
+</li>
+<li>
+    <span>Atlas 950 SuperPoD 超节点集群</span>：
+    <ul>
+        <li>单机：1、2、3、4、5、6、7、8（sp-block参数取值与其保持一致）</li>
+        <li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li>
+    </ul>
+</li>
+</ul>
 <p id="p1498123034911"><a name="p1498123034911"></a><a name="p1498123034911"></a><strong id="b7488133134911"><a name="b7488133134911"></a><a name="b7488133134911"></a>静态vNPU调度：</strong></p>
 <p id="p19104113195111"><a name="p19104113195111"></a><a name="p19104113195111"></a>huawei.com/Ascend910-<strong id="b14105734512"><a name="b14105734512"></a><a name="b14105734512"></a><em id="i17105533512"><a name="i17105533512"></a><a name="i17105533512"></a>Y</em></strong>: 1</p>
 <p id="p1851116142917"><a name="p1851116142917"></a><a name="p1851116142917"></a>取值为1。只能使用一个NPU下的vNPU。</p>
@@ -2115,15 +2313,25 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p178151812224"><a name="p178151812224"></a><a name="p178151812224"></a>XXX表示芯片的型号，支持的取值为910，310和310P。取值需要和环境上实际的芯片类型保持一致。</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p5781181818226"><a name="p5781181818226"></a><a name="p5781181818226"></a><span id="ph1378141872210"><a name="ph1378141872210"></a><a name="ph1378141872210"></a>Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>
-<div class="note" id="note269473654014"><a name="note269473654014"></a><a name="note269473654014"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p66941536154018"><a name="p66941536154018"></a><a name="p66941536154018"></a>该参数只支持使用<span id="ph4213155617124"><a name="ph4213155617124"></a><a name="ph4213155617124"></a>Volcano</span>调度器的整卡调度特性。使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
-</div></div>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 ">
+    <p id="p5781181818226"><a name="p5781181818226"></a><a name="p5781181818226"></a><span id="ph1378141872210"><a name="ph1378141872210"></a><a name="ph1378141872210"></a>Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>
+<p id="zh-cn_topic_0000001609074269_p173021526124817"><a name="zh-cn_topic_0000001609074269_p173021526124817"></a><a name="zh-cn_topic_0000001609074269_p173021526124817"></a>分布式任务中，请确保运行训练任务的节点架构相同。</p>
+<div class="note" id="note269473654014"><a name="note269473654014"></a><a name="note269473654014"></a><span class="notetitle">[!NOTE] 说明</span>
+    <div class="notebody">
+        <ul>
+            <li>
+                <p id="p66941536154018"><a name="p66941536154018"></a><a name="p66941536154018"></a>该参数只支持使用<span id="ph4213155617124"><a name="ph4213155617124"></a><a name="ph4213155617124"></a>Volcano</span>调度器的整卡调度特性。使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
+            </li>
+            <li><p>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点需配置为metadata.annotations['huawei.com/npu']</p></li>
+        </ul>
+</div>
+</div>
 </td>
 </tr>
 <tr id="row171754462391"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="p15220101916253"><a name="p15220101916253"></a><a name="p15220101916253"></a>ring-controller.atlas</p>
 </td>
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p1941725316543"><a name="p1941725316543"></a><a name="p1941725316543"></a>根据所使用芯片类型不同，取值如下：</p>
-<a name="ul2750122165318"></a><a name="ul2750122165318"></a><ul id="ul2750122165318"><li>Atlas 800 训练服务器，服务器（插<span id="ph6581133055411"><a name="ph6581133055411"></a><a name="ph6581133055411"></a>Atlas 300T 训练卡</span>）取值为：ascend-910</li><li><span id="ph10656173717129"><a name="ph10656173717129"></a><a name="ph10656173717129"></a><term id="zh-cn_topic_0000001519959665_term57208119917_6"><a name="zh-cn_topic_0000001519959665_term57208119917_6"></a><a name="zh-cn_topic_0000001519959665_term57208119917_6"></a>Atlas A2 训练系列产品</term></span>、<span id="ph1665620377128"><a name="ph1665620377128"></a><a name="ph1665620377128"></a>A200T A3 Box8 超节点服务器</span>、<span id="ph14656337131215"><a name="ph14656337131215"></a><a name="ph14656337131215"></a>Atlas 900 A3 SuperPoD 超节点</span>、<span id="ph12656113717123"><a name="ph12656113717123"></a><a name="ph12656113717123"></a>Atlas 800T A3 超节点服务器</span>取值为：ascend-<span id="ph1265633714121"><a name="ph1265633714121"></a><a name="ph1265633714121"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_5"><a name="zh-cn_topic_0000001519959665_i1489729141619_5"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_5"></a>{xxx}</em></span>b</li><li>Atlas A5 系列产品、Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPod 超节点</span>取值为：huawei.com/npu</li></ul>
+<a name="ul2750122165318"></a><a name="ul2750122165318"></a><ul id="ul2750122165318"><li>Atlas 800 训练服务器，服务器（插<span id="ph6581133055411"><a name="ph6581133055411"></a><a name="ph6581133055411"></a>Atlas 300T 训练卡</span>）取值为：ascend-910</li><li><span id="ph10656173717129"><a name="ph10656173717129"></a><a name="ph10656173717129"></a><term id="zh-cn_topic_0000001519959665_term57208119917_6"><a name="zh-cn_topic_0000001519959665_term57208119917_6"></a><a name="zh-cn_topic_0000001519959665_term57208119917_6"></a>Atlas A2 训练系列产品</term></span>、<span id="ph1665620377128"><a name="ph1665620377128"></a><a name="ph1665620377128"></a>A200T A3 Box8 超节点服务器</span>、<span id="ph14656337131215"><a name="ph14656337131215"></a><a name="ph14656337131215"></a>Atlas 900 A3 SuperPoD 超节点</span>、<span id="ph12656113717123"><a name="ph12656113717123"></a><a name="ph12656113717123"></a>Atlas 800T A3 超节点服务器</span>取值为：ascend-<span id="ph1265633714121"><a name="ph1265633714121"></a><a name="ph1265633714121"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_5"><a name="zh-cn_topic_0000001519959665_i1489729141619_5"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_5"></a>{xxx}</em></span>b</li><li>（可选）Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点</span>取值为：ascend-npu</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p19220131902512"><a name="p19220131902512"></a><a name="p19220131902512"></a>用于区分任务使用的芯片的类型。需要在<span id="ph12290749162911"><a name="ph12290749162911"></a><a name="ph12290749162911"></a>ConfigMap</span>和任务task中配置。</p>
 <div class="note" id="note14282027593"><a name="note14282027593"></a><a name="note14282027593"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p1328162720912"><a name="p1328162720912"></a><a name="p1328162720912"></a><span id="ph19729197"><a name="ph19729197"></a><a name="ph19729197"></a>芯片型号的数值可通过<strong id="zh-cn_topic_0000001519959665_b168254314713_2"><a name="zh-cn_topic_0000001519959665_b168254314713_2"></a><a name="zh-cn_topic_0000001519959665_b168254314713_2"></a>npu-smi info</strong>命令查询，返回的“Name”字段对应信息为芯片型号，此处的{<em id="zh-cn_topic_0000001519959665_i1914312018209_2"><a name="zh-cn_topic_0000001519959665_i1914312018209_2"></a><a name="zh-cn_topic_0000001519959665_i1914312018209_2"></a>xxx</em>}即取“910”字符作为芯片型号数值。</span></p>
@@ -2170,7 +2378,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 |chip1-node8|1个节点8张卡，每张卡之间无互联。例如，Atlas 350 标卡共8张卡，每张卡之间无互联。|
 |chip1-node16|1个节点16张卡，每张卡之间无互联。例如，Atlas 350 标卡共16张卡，每张卡之间无互联。|
 |chip8-node8-sp|1个节点8张卡，8张卡都在1个互联环上，多个服务器形成超节点。例如，Atlas 850 超节点服务器。|
-|chip8-node8-ra64-sp|1个节点8张卡，8张卡都在1个互联环上，64个节点组成一个计算框，多个框形成超节点。例如，Atlas 950 PoD 超节点集群。|
+|chip8-node8-ra64-sp|1个节点8张卡，8张卡都在1个互联环上，64个节点组成一个计算框，多个框形成超节点。例如，Atlas 950 SuperPoD 超节点集群。|
 |chip1-softShareDev|软切分虚拟化专用调度策略。|
 
 
@@ -3884,8 +4092,8 @@ kubectl delete -f XXX.yaml
                                 initContainerCommand([]string{"/bin/bash", "-c", "bash train_start.sh ..."}).  // 初始化容器启动命令，具体参数参考示例YAML
                                 initContainerArgs([]string{"/bin/bash", "-c", "bash train_start.sh ..."}).  // 初始化容器启动命令，具体参数参考示例YAML
                                 initContainerPorts(2222).                                                // 初始化容器端口
-                                initContainerLimits("huawei.com/Ascend910", "8").                        // 初始化任务资源
-                                initContainerRequests("huawei.com/Ascend910", "8").                      // 初始化任务资源
+                                initContainerLimits("huawei.com/Ascend910", "8").                        // 初始化任务资源，Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点需要修改参数名称为huawei.com/npu
+                                initContainerRequests("huawei.com/Ascend910", "8").                      // 初始化任务资源，Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点需要修改参数名称为huawei.com/npu
                                 initContainerVolumeMounts()).                                            // 初始化容器挂载项
                              initReplica()).
               addReplicaSpecs("Worker", newReplica(). // 初始化Worker副本
@@ -3908,8 +4116,8 @@ kubectl delete -f XXX.yaml
                     initContainerCommand([]string{"/bin/bash", "-c", "bash train_start.sh ..."}). // 初始化容器启动命令，具体参数参考示例YAML
                     initContainerArgs([]string{"/bin/bash", "-c", "bash train_start.sh ..."}).    // 初始化容器启动命令，具体参数参考示例YAML
                     initContainerPorts(2222).                                                     // 初始化容器端口
-                    initContainerLimits("huawei.com/Ascend910", "8").                             // 初始化任务资源
-                    initContainerRequests("huawei.com/Ascend910", "8").                           // 初始化任务资源
+                    initContainerLimits("huawei.com/Ascend910", "8").                             // 初始化任务资源，Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点需要修改参数名称为huawei.com/npu
+                    initContainerRequests("huawei.com/Ascend910", "8").                           // 初始化任务资源，Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点需要修改参数名称为huawei.com/npu
                     initContainerVolumeMounts()).
                  initReplica())
            return v1.AscendJob(job)
@@ -4002,8 +4210,8 @@ kubectl delete -f XXX.yaml
                         initContainerName("mindspore").                                             // 初始化容器名
                         initContainerImage("ms-arm:b120").                                          // 初始化镜像名
                         initContainerImagePullPolicy("IfNotPresent").                               // 初始化镜像拉取策略
-                        initContainerLimits("huawei.com/Ascend910", "8").                           // 初始化任务资源
-                        initContainerRequests("huawei.com/Ascend910", "8").                         // 初始化任务资源
+                        initContainerLimits("huawei.com/Ascend910", "8").                           // 初始化任务资源，Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点需要修改参数名称为huawei.com/npu
+                        initContainerRequests("huawei.com/Ascend910", "8").                         // 初始化任务资源，Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点需要修改参数名称为huawei.com/npu
                         initContainerVolumeMounts().                                                // 初始化容器挂载项
                         initContainerEnv("MindSpore").                                              // 初始化容器环境变量
                         initContainerCommand([]string{"/bin/bash", "-c", "bash train_start.sh ..."}))))) // 初始化容器启动命令，具体参数参考示例YAML
@@ -4303,7 +4511,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     </th>
     </tr>
     </thead>
-    <tbody><tr id="zh-cn_topic_0000001609074213_row2169191091919"><td class="cellrowborder" rowspan="2" valign="top" width="18.48%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000001609074213_p6169510191913"><a name="zh-cn_topic_0000001609074213_p6169510191913"></a><a name="zh-cn_topic_0000001609074213_p6169510191913"></a><span id="zh-cn_topic_0000001609074213_ph183921109162"><a name="zh-cn_topic_0000001609074213_ph183921109162"></a><a name="zh-cn_topic_0000001609074213_ph183921109162"></a>Volcano</span>调度的Deployment任务</p>
+    <tbody><tr id="zh-cn_topic_0000001609074213_row2169191091919"><td class="cellrowborder" rowspan="3" valign="top" width="18.48%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000001609074213_p6169510191913"><a name="zh-cn_topic_0000001609074213_p6169510191913"></a><a name="zh-cn_topic_0000001609074213_p6169510191913"></a><span id="zh-cn_topic_0000001609074213_ph183921109162"><a name="zh-cn_topic_0000001609074213_ph183921109162"></a><a name="zh-cn_topic_0000001609074213_ph183921109162"></a>Volcano</span>调度的Deployment任务</p>
     </td>
     <td class="cellrowborder" valign="top" width="26.479999999999997%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000001609074213_p8853185832112"><a name="zh-cn_topic_0000001609074213_p8853185832112"></a><a name="zh-cn_topic_0000001609074213_p8853185832112"></a><span id="zh-cn_topic_0000001609074213_ph238151934915"><a name="zh-cn_topic_0000001609074213_ph238151934915"></a><a name="zh-cn_topic_0000001609074213_ph238151934915"></a>Atlas 200I SoC A1 核心板</span></p>
     </td>
@@ -4311,6 +4519,13 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     </td>
     <td class="cellrowborder" valign="top" width="12.45%" headers="mcps1.2.5.1.4 "><p id="p784716567219"><a name="p784716567219"></a><a name="p784716567219"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/infer-deploy-310p-1usoc.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
+    </tr>
+    <tr>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD 超节点</p></td>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>infer-deploy-950.yaml</p></td>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 ">
+            <p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/infer-deploy-950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+        </td>
     </tr>
     <tr id="zh-cn_topic_0000001609074213_row17169201091917"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000001609074213_p14853125832110"><a name="zh-cn_topic_0000001609074213_p14853125832110"></a><a name="zh-cn_topic_0000001609074213_p14853125832110"></a>其他类型推理节点</p>
     <p id="p1144215219166"><a name="p1144215219166"></a><a name="p1144215219166"></a></p>
@@ -4320,7 +4535,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p74352718168"><a name="p74352718168"></a><a name="p74352718168"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/infer-deploy.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
     </tr>
-    <tr id="row114428221610"><td class="cellrowborder" valign="top" width="18.48%" headers="mcps1.2.5.1.1 "><p id="p9442102131620"><a name="p9442102131620"></a><a name="p9442102131620"></a>Volcano Job任务</p>
+    <tr id="row114428221610"><td class="cellrowborder" rowspan="2" valign="top" width="18.48%" headers="mcps1.2.5.1.1 "><p id="p9442102131620"><a name="p9442102131620"></a><a name="p9442102131620"></a>Volcano Job任务</p>
     </td>
     <td class="cellrowborder" valign="top" width="26.479999999999997%" headers="mcps1.2.5.1.2 "><p id="p367438101714"><a name="p367438101714"></a><a name="p367438101714"></a><span id="ph313817549316"><a name="ph313817549316"></a><a name="ph313817549316"></a>Atlas 800I A2 推理服务器</span></p>
     <p id="p20458181019389"><a name="p20458181019389"></a><a name="p20458181019389"></a><span id="ph56342369338"><a name="ph56342369338"></a><a name="ph56342369338"></a>A200I A2 Box 异构组件</span></p>
@@ -4331,7 +4546,14 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     <td class="cellrowborder" valign="top" width="12.45%" headers="mcps1.2.5.1.4 "><p id="p15442424164"><a name="p15442424164"></a><a name="p15442424164"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/infer-vcjob-910.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
     </tr>
-    <tr id="row16861151313547"><td class="cellrowborder" rowspan="2" valign="top" width="18.48%" headers="mcps1.2.5.1.1 "><p id="p6861171325411"><a name="p6861171325411"></a><a name="p6861171325411"></a>Ascend Job任务</p>
+    <tr>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD 超节点</p></td>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>infer-vcjob-950.yaml</p></td>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 ">
+            <p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/infer-vcjob-950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+        </td>
+    </tr>
+    <tr id="row16861151313547"><td class="cellrowborder" rowspan="3" valign="top" width="18.48%" headers="mcps1.2.5.1.1 "><p id="p6861171325411"><a name="p6861171325411"></a><a name="p6861171325411"></a>Ascend Job任务</p>
     <p id="p12446175211817"><a name="p12446175211817"></a><a name="p12446175211817"></a></p>
     </td>
     <td class="cellrowborder" valign="top" width="26.479999999999997%" headers="mcps1.2.5.1.2 "><p id="p1328416110919"><a name="p1328416110919"></a><a name="p1328416110919"></a>推理服务器（插<span id="ph93658382564"><a name="ph93658382564"></a><a name="ph93658382564"></a>Atlas 300I Duo 推理卡</span>）</p>
@@ -4349,6 +4571,13 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p962512301913"><a name="p962512301913"></a><a name="p962512301913"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_910b_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
+    </tr>
+    <tr>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD 超节点</p></td>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>pytorch_multinodes_acjob_infer_950_with_ranktable.yaml</p></td>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 ">
+            <p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_950_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+        </td>
     </tr>
     </tbody>
     </table>
@@ -4383,7 +4612,10 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     <tr id="zh-cn_topic_0000001609074213_row2059051145219"><td class="cellrowborder" valign="top" width="26.12261226122612%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001609074213_p8590101118522"><a name="zh-cn_topic_0000001609074213_p8590101118522"></a><a name="zh-cn_topic_0000001609074213_p8590101118522"></a>requests</p>
     </td>
     <td class="cellrowborder" rowspan="2" valign="top" width="36.16361636163616%" headers="mcps1.2.4.1.2 "><p id="p4120153112010"><a name="p4120153112010"></a><a name="p4120153112010"></a><strong id="b91271758152414"><a name="b91271758152414"></a><a name="b91271758152414"></a>整卡调度：</strong></p>
-    <a name="zh-cn_topic_0000001609074213_ul1180139155411"></a><a name="zh-cn_topic_0000001609074213_ul1180139155411"></a><ul id="zh-cn_topic_0000001609074213_ul1180139155411"><li>推理服务器（插<span id="ph163696166292"><a name="ph163696166292"></a><a name="ph163696166292"></a>Atlas 300I 推理卡</span>）：<p id="zh-cn_topic_0000001609074213_p364765019017"><a name="zh-cn_topic_0000001609074213_p364765019017"></a><a name="zh-cn_topic_0000001609074213_p364765019017"></a>huawei.com/Ascend310: <em id="zh-cn_topic_0000001609074213_i126472503016"><a name="zh-cn_topic_0000001609074213_i126472503016"></a><a name="zh-cn_topic_0000001609074213_i126472503016"></a>芯片数量</em></p>
+    <a name="zh-cn_topic_0000001609074213_ul1180139155411"></a><a name="zh-cn_topic_0000001609074213_ul1180139155411"></a>
+    <ul id="zh-cn_topic_0000001609074213_ul1180139155411">
+  <li>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点：<p>huawei.com/npu: 芯片数量</p></li>
+    <li>推理服务器（插<span id="ph163696166292"><a name="ph163696166292"></a><a name="ph163696166292"></a>Atlas 300I 推理卡</span>）：<p id="zh-cn_topic_0000001609074213_p364765019017"><a name="zh-cn_topic_0000001609074213_p364765019017"></a><a name="zh-cn_topic_0000001609074213_p364765019017"></a>huawei.com/Ascend310: <em id="zh-cn_topic_0000001609074213_i126472503016"><a name="zh-cn_topic_0000001609074213_i126472503016"></a><a name="zh-cn_topic_0000001609074213_i126472503016"></a>芯片数量</em></p>
     </li></ul>
     <a name="zh-cn_topic_0000001609074213_ul8938201113543"></a><a name="zh-cn_topic_0000001609074213_ul8938201113543"></a><ul id="zh-cn_topic_0000001609074213_ul8938201113543"><li><span id="ph1623844892113"><a name="ph1623844892113"></a><a name="ph1623844892113"></a>Atlas 推理系列产品</span>非混插模式：<p id="zh-cn_topic_0000001609074213_p464718509014"><a name="zh-cn_topic_0000001609074213_p464718509014"></a><a name="zh-cn_topic_0000001609074213_p464718509014"></a>huawei.com/Ascend310P: <em id="zh-cn_topic_0000001609074213_i06475509019"><a name="zh-cn_topic_0000001609074213_i06475509019"></a><a name="zh-cn_topic_0000001609074213_i06475509019"></a>芯片数量</em></p>
     </li></ul>
@@ -4443,13 +4675,22 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     <a name="zh-cn_topic_0000001609074213_ul87677178911"></a><a name="zh-cn_topic_0000001609074213_ul87677178911"></a><ul id="zh-cn_topic_0000001609074213_ul87677178911"><li>调度到<span id="zh-cn_topic_0000001609074213_ph126801133164916"><a name="zh-cn_topic_0000001609074213_ph126801133164916"></a><a name="zh-cn_topic_0000001609074213_ph126801133164916"></a>Atlas 200I SoC A1 核心板</span>节点上，必须要加上此配置，并参考<span class="filepath" id="zh-cn_topic_0000001609074213_filepath127811055718"><a name="zh-cn_topic_0000001609074213_filepath127811055718"></a><a name="zh-cn_topic_0000001609074213_filepath127811055718"></a>“infer-310p-1usoc.yaml”</span>文件进行目录挂载。</li><li>其他类型节点不需要此参数。</li></ul>
     </td>
     </tr>
-    <tr id="row18924102118319"><td class="cellrowborder" valign="top" width="26.12261226122612%" headers="mcps1.2.4.1.1 "><p id="p10781181822210"><a name="p10781181822210"></a><a name="p10781181822210"></a>metadata.annotations['huawei.com/AscendXXX']</p>
+    <tr id="row18924102118319"><td class="cellrowborder" valign="top" width="26.12261226122612%" headers="mcps1.2.4.1.1 "><p id="p10781181822210"><a name="p10781181822210"></a><a name="p10781181822210"></a>metadata.annotations['huawei.com/XXX']</p>
     </td>
-    <td class="cellrowborder" valign="top" width="36.16361636163616%" headers="mcps1.2.4.1.2 "><p id="p178151812224"><a name="p178151812224"></a><a name="p178151812224"></a>XXX表示芯片的型号，支持的取值为910，310和310P。取值需要和环境上实际的芯片类型保持一致。</p>
+    <td class="cellrowborder" valign="top" width="36.16361636163616%" headers="mcps1.2.4.1.2 "><p id="p178151812224"><a name="p178151812224"></a><a name="p178151812224"></a>910，310和310P使用AscendXXX，其中XXX表示芯片的型号，支持的取值为910，310和310P，取值需要和环境上实际的芯片类型保持一致。</p>
     </td>
-    <td class="cellrowborder" valign="top" width="37.71377137713771%" headers="mcps1.2.4.1.3 "><p id="p5781181818226"><a name="p5781181818226"></a><a name="p5781181818226"></a><span id="ph1378141872210"><a name="ph1378141872210"></a><a name="ph1378141872210"></a>Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>
-    <div class="note" id="note269473654014"><a name="note269473654014"></a><a name="note269473654014"></a><span class="notetitle"> 说明： </span><div class="notebody"><p id="p66941536154018"><a name="p66941536154018"></a><a name="p66941536154018"></a>该参数只支持使用<span id="ph4213155617124"><a name="ph4213155617124"></a><a name="ph4213155617124"></a>Volcano</span>调度器的整卡调度特性。使用静态vNPU调度、动态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
-    </div></div>
+    <td class="cellrowborder" valign="top" width="37.71377137713771%" headers="mcps1.2.4.1.3 ">
+    <p id="p5781181818226"><a name="p5781181818226"></a><a name="p5781181818226"></a><span id="ph1378141872210"><a name="ph1378141872210"></a><a name="ph1378141872210"></a>Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>
+    <div class="note" id="note269473654014"><a name="note269473654014"></a><a name="note269473654014"></a><span class="notetitle"> 说明： </span>
+        <div class="notebody">
+            <ul>
+                <li>
+                    <p id="p66941536154018"><a name="p66941536154018"></a><a name="p66941536154018"></a>该参数只支持使用<span id="ph4213155617124"><a name="ph4213155617124"></a><a name="ph4213155617124"></a>Volcano</span>调度器的整卡调度特性。使用静态vNPU调度、动态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
+                </li>
+                <li><p>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点需配置为metadata.annotations['huawei.com/npu']</p></li>
+            </ul>
+        </div>
+    </div>
     </td>
     </tr>
     <tr id="row157451231699"><td class="cellrowborder" colspan="3" valign="top" headers="mcps1.2.4.1.1 mcps1.2.4.1.2 mcps1.2.4.1.3 "><p id="p495717111797"><a name="p495717111797"></a><a name="p495717111797"></a>以下参数仅支持推理服务器（插<span id="ph18312482615"><a name="ph18312482615"></a><a name="ph18312482615"></a>Atlas 300I 推理卡</span>）使用：</p>
@@ -5154,8 +5395,12 @@ job "resnetinfer1-2" deleted
     </tr>
     <tr id="zh-cn_topic_0000001609074213_row2059051145219"><td class="cellrowborder" valign="top" width="21.122112211221122%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001609074213_p8590101118522"><a name="zh-cn_topic_0000001609074213_p8590101118522"></a><a name="zh-cn_topic_0000001609074213_p8590101118522"></a>requests</p>
     </td>
-    <td class="cellrowborder" rowspan="2" valign="top" width="41.16411641164117%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000001609074213_ul1180139155411"></a><a name="zh-cn_topic_0000001609074213_ul1180139155411"></a><ul id="zh-cn_topic_0000001609074213_ul1180139155411"><li>推理服务器（插<span id="ph163696166292"><a name="ph163696166292"></a><a name="ph163696166292"></a>Atlas 300I 推理卡</span>）：<p id="zh-cn_topic_0000001609074213_p364765019017"><a name="zh-cn_topic_0000001609074213_p364765019017"></a><a name="zh-cn_topic_0000001609074213_p364765019017"></a>huawei.com/Ascend310: <em id="zh-cn_topic_0000001609074213_i126472503016"><a name="zh-cn_topic_0000001609074213_i126472503016"></a><a name="zh-cn_topic_0000001609074213_i126472503016"></a>芯片数量</em></p>
-    </li></ul>
+    <td class="cellrowborder" rowspan="2" valign="top" width="41.16411641164117%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000001609074213_ul1180139155411"></a><a name="zh-cn_topic_0000001609074213_ul1180139155411"></a>
+        <ul id="zh-cn_topic_0000001609074213_ul1180139155411">
+            <li>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点：<p>huawei.com/npu: 芯片数量</p></li>
+            <li>推理服务器（插<span id="ph163696166292"><a name="ph163696166292"></a><a name="ph163696166292"></a>Atlas 300I 推理卡</span>）：<p id="zh-cn_topic_0000001609074213_p364765019017"><a name="zh-cn_topic_0000001609074213_p364765019017"></a><a name="zh-cn_topic_0000001609074213_p364765019017"></a>huawei.com/Ascend310: <em id="zh-cn_topic_0000001609074213_i126472503016"><a name="zh-cn_topic_0000001609074213_i126472503016"></a><a name="zh-cn_topic_0000001609074213_i126472503016"></a>芯片数量</em></p>
+            </li>
+        </ul>
     <a name="zh-cn_topic_0000001609074213_ul8938201113543"></a><a name="zh-cn_topic_0000001609074213_ul8938201113543"></a><ul id="zh-cn_topic_0000001609074213_ul8938201113543"><li><span id="ph1623844892113"><a name="ph1623844892113"></a><a name="ph1623844892113"></a>Atlas 推理系列产品</span>非混插模式：<p id="zh-cn_topic_0000001609074213_p464718509014"><a name="zh-cn_topic_0000001609074213_p464718509014"></a><a name="zh-cn_topic_0000001609074213_p464718509014"></a>huawei.com/Ascend310P: <em id="zh-cn_topic_0000001609074213_i06475509019"><a name="zh-cn_topic_0000001609074213_i06475509019"></a><a name="zh-cn_topic_0000001609074213_i06475509019"></a>芯片数量。</em></p>
     </li></ul>
     <a name="zh-cn_topic_0000001609074213_ul13727161475413"></a><a name="zh-cn_topic_0000001609074213_ul13727161475413"></a><ul id="zh-cn_topic_0000001609074213_ul13727161475413"><li><span id="ph181541455134013"><a name="ph181541455134013"></a><a name="ph181541455134013"></a>Atlas 推理系列产品</span>混插模式环境：<a name="zh-cn_topic_0000001609074213_ul8401842105312"></a><a name="zh-cn_topic_0000001609074213_ul8401842105312"></a><ul id="zh-cn_topic_0000001609074213_ul8401842105312"><li>huawei.com/Ascend310P-V: <em id="zh-cn_topic_0000001609074213_i16471550409"><a name="zh-cn_topic_0000001609074213_i16471550409"></a><a name="zh-cn_topic_0000001609074213_i16471550409"></a>芯片数量。</em></li><li>huawei.com/Ascend310P-VPro: <em id="zh-cn_topic_0000001609074213_i146476501013"><a name="zh-cn_topic_0000001609074213_i146476501013"></a><a name="zh-cn_topic_0000001609074213_i146476501013"></a>芯片数量。</em></li><li>huawei.com/Ascend310P-IPro: <em id="zh-cn_topic_0000001609074213_i06476501014"><a name="zh-cn_topic_0000001609074213_i06476501014"></a><a name="zh-cn_topic_0000001609074213_i06476501014"></a>芯片数量。</em></li></ul>
@@ -7367,7 +7612,8 @@ ascendjob.mindxdl.gitee.com "default-infer-test-pytorch-910b" deleted
 </tr>
 <tr id="row171754462391"><td class="cellrowborder" valign="top" width="27.21%" headers="mcps1.2.4.1.1 "><p id="p15220101916253"><a name="p15220101916253"></a><a name="p15220101916253"></a>ring-controller.atlas</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.230000000000004%" headers="mcps1.2.4.1.2 "><p id="p1294216211553"><a name="p1294216211553"></a><a name="p1294216211553"></a>Atlas 800 训练服务器（NPU满配）取值为：ascend-910</p>
+<td class="cellrowborder" valign="top" width="36.230000000000004%" headers="mcps1.2.4.1.2 ">
+    <p id="p1294216211553"><a name="p1294216211553"></a><a name="p1294216211553"></a>Atlas 800 训练服务器（NPU满配）取值为：ascend-910</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p19220131902512"><a name="p19220131902512"></a><a name="p19220131902512"></a>用于区分任务使用的芯片的类型。需要在<span id="ph12290749162911"><a name="ph12290749162911"></a><a name="ph12290749162911"></a>ConfigMap</span>和任务task中配置。</p>
 </td>
@@ -7376,7 +7622,8 @@ ascendjob.mindxdl.gitee.com "default-infer-test-pytorch-910b" deleted
 </td>
 <td class="cellrowborder" valign="top" width="36.230000000000004%" headers="mcps1.2.4.1.2 "><p id="p178151812224"><a name="p178151812224"></a><a name="p178151812224"></a>XXX表示芯片的型号，支持的取值为910，310和310P。取值需要和环境上实际的芯片类型保持一致。</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p5781181818226"><a name="p5781181818226"></a><a name="p5781181818226"></a><span id="ph1378141872210"><a name="ph1378141872210"></a><a name="ph1378141872210"></a>Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 ">
+    <p id="p5781181818226"><a name="p5781181818226"></a><a name="p5781181818226"></a><span id="ph1378141872210"><a name="ph1378141872210"></a><a name="ph1378141872210"></a>Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>	
 </td>
 </tr>
 <tr id="row1149173454010"><td class="cellrowborder" valign="top" width="27.21%" headers="mcps1.2.4.1.1 "><p id="p9313107114010"><a name="p9313107114010"></a><a name="p9313107114010"></a>super-pod-affinity</p>
@@ -7927,21 +8174,31 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
     </th>
     </tr>
     </thead>
-    <tbody><tr id="zh-cn_topic_0000001609074213_row2169191091919"><td class="cellrowborder" rowspan="2" valign="top" width="19.97%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000001609074213_p6169510191913"><a name="zh-cn_topic_0000001609074213_p6169510191913"></a><a name="zh-cn_topic_0000001609074213_p6169510191913"></a><span id="zh-cn_topic_0000001609074213_ph183921109162"><a name="zh-cn_topic_0000001609074213_ph183921109162"></a><a name="zh-cn_topic_0000001609074213_ph183921109162"></a>Volcano</span>调度的Deployment任务</p>
+    <tbody><tr id="zh-cn_topic_0000001609074213_row2169191091919"><td class="cellrowborder" rowspan="3" valign="top" width="19.97%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000001609074213_p6169510191913"><a name="zh-cn_topic_0000001609074213_p6169510191913"></a><a name="zh-cn_topic_0000001609074213_p6169510191913"></a><span id="zh-cn_topic_0000001609074213_ph183921109162"><a name="zh-cn_topic_0000001609074213_ph183921109162"></a><a name="zh-cn_topic_0000001609074213_ph183921109162"></a>Volcano</span>调度的Deployment任务</p>
     </td>
     <td class="cellrowborder" valign="top" width="20.03%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000001609074213_p8853185832112"><a name="zh-cn_topic_0000001609074213_p8853185832112"></a><a name="zh-cn_topic_0000001609074213_p8853185832112"></a><span id="zh-cn_topic_0000001609074213_ph238151934915"><a name="zh-cn_topic_0000001609074213_ph238151934915"></a><a name="zh-cn_topic_0000001609074213_ph238151934915"></a>Atlas 200I SoC A1 核心板</span></p>
     </td>
     <td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000001609074213_p1116971091915"><a name="zh-cn_topic_0000001609074213_p1116971091915"></a><a name="zh-cn_topic_0000001609074213_p1116971091915"></a>infer-deploy-310p-1usoc.yaml</p>
     </td>
-    <td class="cellrowborder" rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.4 "><p id="p784716567219"><a name="p784716567219"></a><a name="p784716567219"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.3.0/samples/inference/volcano" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.4 "><p id="p784716567219"><a name="p784716567219"></a><a name="p784716567219"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v7.3.0/samples/inference/volcano/infer-deploy-310p-1usoc.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
     </tr>
+<tr>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD 超节点</p></td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>infer-deploy-950.yaml</p></td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 ">
+        <p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/infer-deploy-950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+    </td>
+</tr>
     <tr id="zh-cn_topic_0000001609074213_row17169201091917"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000001609074213_p14853125832110"><a name="zh-cn_topic_0000001609074213_p14853125832110"></a><a name="zh-cn_topic_0000001609074213_p14853125832110"></a>其他类型推理节点</p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000001609074213_p51692100191"><a name="zh-cn_topic_0000001609074213_p51692100191"></a><a name="zh-cn_topic_0000001609074213_p51692100191"></a>infer-deploy.yaml</p>
     </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 ">
+        <p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/infer-deploy.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+    </td>
     </tr>
-    <tr id="row1137784216212"><td class="cellrowborder" valign="top" width="19.97%" headers="mcps1.2.5.1.1 "><p id="p9442102131620"><a name="p9442102131620"></a><a name="p9442102131620"></a>Volcano Job任务</p>
+    <tr id="row1137784216212"><td class="cellrowborder" rowspan="2" valign="top" width="19.97%" headers="mcps1.2.5.1.1 "><p id="p9442102131620"><a name="p9442102131620"></a><a name="p9442102131620"></a>Volcano Job任务</p>
     </td>
     <td class="cellrowborder" valign="top" width="20.03%" headers="mcps1.2.5.1.2 "><p id="p367438101714"><a name="p367438101714"></a><a name="p367438101714"></a><span id="ph56332010913"><a name="ph56332010913"></a><a name="ph56332010913"></a>Atlas 800I A2 推理服务器</span></p>
     <p id="p168721535300"><a name="p168721535300"></a><a name="p168721535300"></a><span id="ph56342369338"><a name="ph56342369338"></a><a name="ph56342369338"></a>A200I A2 Box 异构组件</span></p>
@@ -7949,10 +8206,17 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
     </td>
     <td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.3 "><p id="p8442112171619"><a name="p8442112171619"></a><a name="p8442112171619"></a>infer-vcjob-910.yaml</p>
     </td>
-    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.5.1.4 "><p id="p15442424164"><a name="p15442424164"></a><a name="p15442424164"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/infer-vcjob-910.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+    <td class="cellrowborder" rowspan="1" valign="top" width="20%" headers="mcps1.2.5.1.4 "><p id="p15442424164"><a name="p15442424164"></a><a name="p15442424164"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/infer-vcjob-910.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
     </tr>
-    <tr id="row3552077269"><td class="cellrowborder" rowspan="2" valign="top" width="19.97%" headers="mcps1.2.5.1.1 "><p id="p6861171325411"><a name="p6861171325411"></a><a name="p6861171325411"></a>Ascend Job任务</p>
+    <tr>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD 超节点</p></td>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>infer-vcjob-950.yaml</p></td>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 ">
+            <p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/infer-vcjob-950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+        </td>
+    </tr>
+    <tr id="row3552077269"><td class="cellrowborder" rowspan="3" valign="top" width="19.97%" headers="mcps1.2.5.1.1 "><p id="p6861171325411"><a name="p6861171325411"></a><a name="p6861171325411"></a>Ascend Job任务</p>
     <p id="p12446175211817"><a name="p12446175211817"></a><a name="p12446175211817"></a></p>
     <p id="p5735201117263"><a name="p5735201117263"></a><a name="p5735201117263"></a></p>
     </td>
@@ -7971,6 +8235,13 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p962512301913"><a name="p962512301913"></a><a name="p962512301913"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_910b_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
     </td>
+    </tr>
+    <tr>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD 超节点</p></td>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>pytorch_multinodes_acjob_infer_950_with_ranktable.yaml</p></td>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 ">
+            <p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_950_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+        </td>
     </tr>
     </tbody>
     </table>
@@ -8207,5 +8478,3 @@ Atlas 800I A2 推理服务器、A200I A2 Box 异构组件使用**推理卡故障
 >Atlas 800I A2 推理服务器存在以下两种故障恢复方式，一台Atlas 800I A2 推理服务器只能使用一种故障恢复方式，由集群调度组件自动识别使用哪种故障恢复方式。
 >-   方式一：若设备上不存在HCCS环，执行推理任务中，当NPU出现故障，Ascend Device Plugin等待该NPU空闲后，对该NPU进行复位操作。
 >-   方式二：若设备上存在HCCS环，执行推理任务中，当服务器出现一个或多个故障NPU，Ascend Device Plugin等待环上的NPU全部空闲后，一次性复位环上所有的NPU。
-
-

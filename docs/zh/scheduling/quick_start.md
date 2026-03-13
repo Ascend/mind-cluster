@@ -311,7 +311,7 @@
         ```
 
 3.  准备任务YAML。
-    1.  进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](./appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/basic-training/without-ranktable/pytorch“目录下的“pytorch\_standalone\_acjob\_\{xxx\}b.yaml“文件（_\{xxx\}_表示芯片型号的数值）。示例默认为单机单卡任务。
+    1.  进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](./appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/basic-training/without-ranktable/pytorch“目录下的“pytorch\_standalone\_acjob\_\{xxx\}.yaml“文件（_\{xxx\}_表示芯片型号的数值）。示例默认为单机单卡任务。
     2.  修改示例YAML，修改完成后将其上传至任意文件路径。下述YAML中各参数的详细说明详见[表1](./api/ascend_operator.md)。
 
         ```
@@ -326,7 +326,7 @@
                 spec:
                   nodeSelector:
                     host-arch: huawei-arm
-                    accelerator-type: module-{xxx}b-8   # 由原来的card-{xxx}b-2修改为module-{xxx}b-8，{xxx}表示芯片型号的数值
+                    accelerator-type: module-{xxx}b-8   # 由原来的card-{xxx}b-2修改为module-{xxx}b-8，{xxx}表示芯片型号的数值，从Ascend950代际开始根据实际产品形态进行修改
                   containers:
                   - name: ascend 
                     image: pytorch-test:latest     # 修改为步骤1中获取的镜像名称
@@ -356,7 +356,7 @@
 4.  执行以下命令，下发单机单卡任务。
 
     ```
-    kubectl apply -f pytorch_standalone_acjob_{xxx}b.yaml
+    kubectl apply -f pytorch_standalone_acjob_{xxx}.yaml
     ```
 
 5.  执行以下命令，查看Pod运行情况。
