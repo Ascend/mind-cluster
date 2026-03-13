@@ -375,7 +375,7 @@ func (reScheduler *ReScheduler) synCacheFaultJobWithSession(ssn *framework.Sessi
 		updatedFaultJobs[jobId] = faultJob
 	}
 	reScheduler.setFaultJobs(updatedFaultJobs)
-	klog.V(util.LogInfoLev).Infof("ReSchedulerCache fault jobs after sync: %v",
+	klog.V(util.LogDebugLev).Infof("ReSchedulerCache fault jobs after sync: %v",
 		string(util.MarshalData(reScheduler.FaultJobs)))
 }
 

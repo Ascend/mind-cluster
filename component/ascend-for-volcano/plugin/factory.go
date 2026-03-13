@@ -618,7 +618,7 @@ func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 		klog.V(util.LogErrorLev).Infof("batchNodeOrderFn task[%s] failed by err:[%s].", task.Name, util.SafePrint(errGet))
 		return scoreMap, errGet
 	}
-	klog.V(util.LogInfoLev).Infof("batchNodeOrderFn Get task:%s for NPU %+v.", task.Name, scoreMap)
+	klog.V(util.LogDebugLev).Infof("batchNodeOrderFn Get task:%s for NPU %+v.", task.Name, scoreMap)
 
 	return scoreMap, nil
 }

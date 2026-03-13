@@ -124,7 +124,7 @@ func (c *Controller) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeInfo
 			return err
 		}
 	}
-	klog.V(util.LogInfoLev).Infof("ScoreBestNPUNodes task<%s> scoreMap<%v>", task.Name, sMap)
+	klog.V(util.LogDebugLev).Infof("ScoreBestNPUNodes task<%s> scoreMap<%v>", task.Name, sMap)
 	return nil
 }
 
