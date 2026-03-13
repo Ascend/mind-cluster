@@ -11,5 +11,6 @@
   {"metricsGroup": "version", "state": "ON"},
   {"metricsGroup": "optical", "state": "ON"},
   {"metricsGroup": "hbm", "state": "ON"},
-  {"metricsGroup": "ub", "state": "ON"}
+  {"metricsGroup": "ub", "state": "ON"},
+  {"metricsGroup": "optical-npu", "state": "ON"}
 ]

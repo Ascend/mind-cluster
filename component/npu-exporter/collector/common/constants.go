@@ -143,4 +143,6 @@ const (
 	DomainForProductType = "productType"
 	// DomainForUb  domain for ub infos
 	DomainForUb = "ub"
+	// DomainForOpticalV2 domain for optical v2
+	DomainForOpticalV2 = "opticalV2"
 )

@@ -513,3 +513,25 @@ type UBCommonStats struct {
 	RetryAckSum       int
 	CrcErrorSum       int
 }
+
+// OpticalNpuInfo optical info of npu
+type OpticalNpuInfo struct {
+	// Optical module index
+	OpticalIndex int
+	// Power sent by No.0 optical module
+	OpticalTxPower0 float64
+	// Power sent by No.1 optical module
+	OpticalTxPower1 float64
+	// Power sent by No.2 optical module
+	OpticalTxPower2 float64
+	// Power sent by No.3 optical module
+	OpticalTxPower3 float64
+	// Reception power of No.0 optical module
+	OpticalRxPower0 float64
+	// Reception power of No.1 optical module
+	OpticalRxPower1 float64
+	// Reception power of No.2 optical module
+	OpticalRxPower2 float64
+	// Reception power of No.3 optical module
+	OpticalRxPower3 float64
+}

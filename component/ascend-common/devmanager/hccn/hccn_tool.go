@@ -39,10 +39,13 @@ const (
 	LinkDown string = "DOWN"
 
 	opticalPartLen  = 2
+	eleventhIndex   = 11
+	twelfthIndex    = 12
 	netSpeedPartLen = 2
 	firstIndex      = 1
 	secondIndex     = 2
 	fourthIndex     = 4
+	fifthIndex      = 5
 	linkStatusPart  = 3
 	base64          = 64
 
@@ -454,6 +457,71 @@ func buildHccnErrA5(msg string, err error) error {
 	return fmt.Errorf("get npu %s info failed,error is :%v", msg, err)
 }
 
+// GetNpuOpticalInfoNpu get npu optical info from hccn_tool
+func GetNpuOpticalInfoNpu(logicID, udieID, portID int32) (map[string]string, error) {
+	args := []string{"-g", "-optical", "-i", strconv.Itoa(int(logicID)), "-u",
+		strconv.Itoa(int(udieID)), "-p", strconv.Itoa(int(portID))}
+	// command example: hccn_tool -g -optical -i 56 -u 0 -p 4
+	outStr, err := getInfoFromHccnTool(args...)
+	if err != nil {
+		return nil, buildHccnErrA5("optical", err)
+	}
+	return getOpticalFromStrNpu(outStr)
+}
+
+func getOpticalFromStrNpu(str string) (map[string]string, error) {
+	if !strings.Contains(str, "Power") {
+		return map[string]string{}, buildHccnErrA5("optical", fmt.Errorf("optical info is not valid"))
+	}
+	lines := strings.Split(strings.TrimSpace(str), "\n")
+	opticalInfoMap := make(map[string]string)
+	var opticalIndex []string
+	for _, line := range lines[twelfthIndex:] {
+		data := strings.Split(line, "|")
+		if strings.Contains(line, "|") && strings.Contains(line, "optical_") {
+			opticalIndex = append(opticalIndex, strings.TrimSpace(data[eleventhIndex]))
+		}
+		if strings.Contains(line, "dBm") {
+			opticalInfoMap[data[fourthIndex]] = data[fifthIndex]
+		}
+	}
+	hwlog.RunLog.Debugf("opticalIndex: %v, len: %v", opticalIndex, len(opticalIndex))
+	opticalInfoMap["optical_index"] = strconv.Itoa(len(opticalIndex))
+	return opticalInfoMap, nil
+}
+
+// GetFloatDataFromStrNpu get float data from string with space
+func GetFloatDataFromStrNpu(str string) (float64, error) {
+	if str == "" {
+		hwlog.RunLog.Debugf("str is nil")
+		return common.RetError, nil
+	}
+	if strings.Contains(str, naValue) || strings.Contains(str, notSupport) {
+		return common.RetError, fmt.Errorf("npu optical info is not valid")
+	}
+	floatData, err := strconv.ParseFloat(str, base64)
+	if err != nil {
+		return common.RetError, err
+	}
+	return floatData, nil
+}
+
+// GetIntDataFromStrNpu get int data from string
+func GetIntDataFromStrNpu(str string) (int, error) {
+	if str == "" {
+		hwlog.RunLog.Debugf("str is nil")
+		return common.RetError, nil
+	}
+	if strings.Contains(str, naValue) || strings.Contains(str, notSupport) {
+		return common.RetError, fmt.Errorf("npu optical info is not valid")
+	}
+	intData, err := strconv.Atoi(str)
+	if err != nil {
+		return common.RetError, err
+	}
+	return intData, nil
+}
+
 // GetNPUUbStatInfo  get npu ub stat information
 func GetNPUUbStatInfo(logicID, udieID, portID int32) (map[string]string, error) {
 	args := []string{"-g", "-stat", "-i", strconv.Itoa(int(logicID)), "-u", strconv.Itoa(int(udieID)),
@@ -477,7 +545,7 @@ func GetNPUUbStatInfo(logicID, udieID, portID int32) (map[string]string, error) 
 	return ubStatInfoMap, nil
 }
 
-// GetIntDataFromStr get int data from string with space
+// GetIntDataFromStr get int data from string  without err info
 func GetIntDataFromStr(str, dataType string) int {
 	if str == "" || strings.Contains(str, naValue) || strings.Contains(str, notSupport) {
 		return common.RetError
