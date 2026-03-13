@@ -95,30 +95,26 @@ pip3 install mindio_ttp-{version}-py3-none-linux_{arch}.whl --force-reinstall --
 ```
 ${INSTALL_PATH}/
     |-- mindio_tft
+        |-- VERSION
         |-- controller_ttp
         |-- framework_ttp
+        |-- mindspore_api
         |-- utils
         |-- __init__.py
 
 default ${INSTALL_PATH} is /path/to/python3/site-packages/mindio_ttp
 ```
 
-### 用户指南
-`MindIO TFT`提供给开发者的的资料如下：
+### 接口说明
+`MindIO TFT`提供给开发者如下接口：
 
-[《MindIO TFT用户指南》](https://www.hiascend.com/document/detail/zh/mindx-dl/600/clusterscheduling/ref/mindiottp/mindiotft001.html)
+[《API接口参考》](./doc/api/API接口参考.md)
 
-请根据用户指南了解`MindIO TFT`相关约束限制，进行安装，使用，管理与加固。
+### 环境变量说明
+`MindIO TFT`涉及如下环境变量：
+ 	 
+[《环境变量》](doc/环境变量.md)
 
-### 软件硬件配套说明
-- 硬件型号支持
-  - Atlas 800T A2 系列产品
-  - Atlas 900 A3 SuperPoD 超节点
-- 平台：aarch64 / x86
-- 配套软件：驱动固件 Ascend HDK 25.3.RC1、 CANN 8.3.RC1及之后版本
-- python 3.7 ~ 3.11
-- torch 2.7.1
-- torch_npu 7.2.0
 
 ### 安全声明
 [安全声明](./doc/SECURITYNOTE.md)
