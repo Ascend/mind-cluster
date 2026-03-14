@@ -223,20 +223,20 @@ func (mh *MultilevelHandler) scheduleMultipleLevelPodsForJob(task *api.TaskInfo,
 
 	var selectedTaskTree *util.TaskTree
 	for _, resourceTree := range resourceTrees {
-		taskTree, err := mh.tryScheduleTaskInSingleTree(task, resourceTree)
+		newTaskTree, err := mh.tryScheduleTaskInSingleTree(task, resourceTree)
 		if err != nil {
 			klog.V(util.LogErrorLev).Infof("[%s] failed to schedule task %s in topotree %s, %v",
 				mh.GetPluginName(), task.Name, resourceTree.Name, err)
 			continue
 		}
 		klog.V(util.LogInfoLev).Infof("[%s] successfully scheduled task %s in topotree %s with fragment score %d",
-			mh.GetPluginName(), task.Name, resourceTree.Name, taskTree.FragmentScore)
-		if selectedTaskTree != nil && selectedTaskTree.FragmentScore >= taskTree.FragmentScore {
-			klog.V(util.LogInfoLev).Infof("[%s] existing fragment score %d, new score %d, choice last task tree",
-				mh.GetPluginName(), selectedTaskTree.FragmentScore, taskTree.FragmentScore)
+			mh.GetPluginName(), task.Name, resourceTree.Name, newTaskTree.FragmentScore)
+		if selectedTaskTree != nil && selectedTaskTree.FragmentScore <= newTaskTree.FragmentScore {
+			klog.V(util.LogInfoLev).Infof("[%s] existing fragment score %d, new score %d, choosing last task tree",
+				mh.GetPluginName(), selectedTaskTree.FragmentScore, newTaskTree.FragmentScore)
 			continue
 		}
-		selectedTaskTree = taskTree
+		selectedTaskTree = newTaskTree
 	}
 	if selectedTaskTree == nil {
 		klog.V(util.LogErrorLev).Infof("[%s] no valid task tree found for task %s", mh.GetPluginName(), task.Name)
