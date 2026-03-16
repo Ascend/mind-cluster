@@ -785,10 +785,11 @@ func TestGetNodeDevListFromAnno(t *testing.T) {
 	}
 	t.Run("test func GetNodeDevListFromAnno success. If vnpu is included, it will be removed", func(t *testing.T) {
 		expDevList := []string{devName0, devName1, devName2}
-		got, err := GetNodeDevListFromAnno(nodeInfo)
+		got, hasVnpu, err := GetNodeDevListFromAnno(nodeInfo)
 		sort.Strings(got)
-		if !reflect.DeepEqual(got, expDevList) || !reflect.DeepEqual(err, nil) {
-			t.Errorf("Get node device list = %v, want %v. err = %v, want nil", got, expDevList, err)
+		if !reflect.DeepEqual(got, expDevList) || !reflect.DeepEqual(err, nil) || !hasVnpu {
+			t.Errorf("Get node device list = %v, want %v. err = %v, want nil. hasVnpu = %v, want true", got,
+				expDevList, err, hasVnpu)
 		}
 	})
 	t.Run("test func GetNodeDevListFromAnno failed, annotation does not exist", func(t *testing.T) {
@@ -800,7 +801,7 @@ func TestGetNodeDevListFromAnno(t *testing.T) {
 				},
 			},
 		}
-		_, err = GetNodeDevListFromAnno(invalidNodeInfo)
+		_, _, err = GetNodeDevListFromAnno(invalidNodeInfo)
 		expErr := fmt.Errorf("node annotation[%s] does not exist", BaseDeviceInfoKey)
 		if !reflect.DeepEqual(err, expErr) {
 			t.Errorf("Get node device list, err = %v, want %v", err, expErr)
@@ -811,7 +812,7 @@ func TestGetNodeDevListFromAnno(t *testing.T) {
 			return errors.New("test error")
 		})
 		defer p1.Reset()
-		_, err = GetNodeDevListFromAnno(nodeInfo)
+		_, _, err = GetNodeDevListFromAnno(nodeInfo)
 		expErr := errors.New("unmarshal node device list failed")
 		if !reflect.DeepEqual(err, expErr) {
 			t.Errorf("Get node device list, err = %v, want %v", err, expErr)

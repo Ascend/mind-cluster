@@ -1287,7 +1287,8 @@ func (d *DcManager) DcVGetDeviceInfo(cardID, deviceID int32) (common.VirtualDevI
 		dcmiVDevInfo.VDevInfo = append(dcmiVDevInfo.VDevInfo, cgoVDevQueryStru)
 		vDevActivityInfo, err := d.DcGetVDevActivityInfo(cardID, deviceID, vDevID)
 		if err != nil {
-			hwlog.RunLog.Warnf("get cur vDev's activity info failed, err: %s", err)
+			hwlog.RunLog.Warnf("cardID: %v, deviceID: %v, vDevID: %v get cur vDev's activity info failed, err: %s",
+				cardID, deviceID, vDevID, err)
 			continue
 		}
 		vDevActivityInfo.VDevAiCore = float64(cgoVDevQueryStru.QueryInfo.Computing.Aic)
