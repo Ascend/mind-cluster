@@ -39,20 +39,20 @@ func TestIsMindIEEPJob(t *testing.T) {
 			res := IsMindIEEPJob(job)
 			convey.So(res, convey.ShouldBeFalse)
 		})
-		convey.Convey(fmt.Sprintf("03-label %s not exist will return false", v1.JodIdLabelKey), func() {
+		convey.Convey(fmt.Sprintf("03-label %s not exist will return false", v1.JobIdLabelKey), func() {
 			job.SetLabels(map[string]string{v1.AppLabelKey: ""})
 			res := IsMindIEEPJob(job)
 			convey.So(res, convey.ShouldBeFalse)
 		})
 		convey.Convey(fmt.Sprintf("04-label %s not exist will return false", v1.AppLabelKey), func() {
-			job.SetLabels(map[string]string{v1.JodIdLabelKey: ""})
+			job.SetLabels(map[string]string{v1.JobIdLabelKey: ""})
 			res := IsMindIEEPJob(job)
 			convey.So(res, convey.ShouldBeFalse)
 		})
 		convey.Convey(
-			fmt.Sprintf("05-label %s and %s exist will return true", v1.JodIdLabelKey, v1.AppLabelKey),
+			fmt.Sprintf("05-label %s and %s exist will return true", v1.JobIdLabelKey, v1.AppLabelKey),
 			func() {
-				job.SetLabels(map[string]string{v1.JodIdLabelKey: "", v1.AppLabelKey: ""})
+				job.SetLabels(map[string]string{v1.JobIdLabelKey: "", v1.AppLabelKey: ""})
 				res := IsMindIEEPJob(job)
 				convey.So(res, convey.ShouldBeTrue)
 			})

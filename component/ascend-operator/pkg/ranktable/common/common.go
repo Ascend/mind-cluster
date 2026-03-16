@@ -40,6 +40,8 @@ const (
 	SchedulePolicyAnnoKey = "huawei.com/schedule_policy"
 	// OnePodOneNode indicates that for a job all pods are on different node
 	OnePodOneNode = "onePodOneNode"
+	// RanktableStr the string of ranktable
+	RanktableStr = "ranktable"
 )
 
 // BaseGenerator is the base struct for ranktable generator.

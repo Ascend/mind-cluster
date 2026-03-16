@@ -36,8 +36,22 @@ const (
 	// DefaultRestartPolicy is default RestartPolicy for MSReplicaSpec.
 	DefaultRestartPolicy = v1.RestartPolicyNever
 
-	// JodIdLabelKey is AscendJob label key jobID
-	JodIdLabelKey = "jobID"
+	// JobIdLabelKey is AscendJob label key jobID
+	JobIdLabelKey = "jobID"
 	// AppLabelKey is AscendJob label key app
 	AppLabelKey = "app"
+
+	// VcJobPlugin is the plugin name of vcjob crd
+	VcJobPlugin = "VcJob"
+	// StatefulSetPlugin is the plugin name of statefulset crd
+	StatefulSetPlugin = "StatefulSet"
+	// DeploymentPlugin is the plugin name of deployment crd
+	DeploymentPlugin = "Deployment"
+
+	// VcJobKindName is the replica type name of Vcjob
+	VcJobKindName = "VcJob"
+	// StatefulSetKindName is the replica type name of StatefulSet
+	StatefulSetKindName = "StatefulSet"
+	// DeploymentKindName is the replica type name of Deployment
+	DeploymentKindName = "Deployment"
 )
