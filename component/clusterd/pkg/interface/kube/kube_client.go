@@ -16,6 +16,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/workqueue"
 	"volcano.sh/apis/pkg/client/clientset/versioned"
 
 	"ascend-common/api"
@@ -23,7 +24,14 @@ import (
 	"clusterd/pkg/common/constant"
 )
 
-var refreshCMIds sync.Map
+var (
+	refreshCMIds    sync.Map
+	jobReleaseInfos workqueue.DelayingInterface
+)
+
+func init() {
+	jobReleaseInfos = workqueue.NewDelayingQueue()
+}
 
 // CreateConfigMap create configMap here
 func CreateConfigMap(cm *v1.ConfigMap) (*v1.ConfigMap, error) {
@@ -246,11 +254,18 @@ func CreateOrUpdateSuperPodFaultInfo(jobId string, faultInfos map[int]api.SuperP
 
 // RecoverFaultJobInfoCmWithSync update cm with sync
 func RecoverFaultJobInfoCmWithSync(jobId string, nodeName string) {
+	waitDuration := getReleaseWaitDuration()
 	_, ok := refreshCMIds.Load(jobId)
 	if !ok {
-		time.Sleep(time.Minute)
+		waitDuration += getPreReleaseWaitDuration()
 	}
-	RecoverFaultJobInfoCm(jobId, nodeName)
+	info := faultJobReleaseInfo{
+		jobId:      jobId,
+		nodeName:   nodeName,
+		duration:   waitDuration,
+		createTime: time.Now().UnixMilli(),
+	}
+	jobReleaseInfos.AddAfter(info, waitDuration)
 }
 
 // RecoverFaultJobInfoCm update cm
@@ -258,7 +273,53 @@ func RecoverFaultJobInfoCm(jobId string, nodeName string) {
 	if k8sClient == nil || k8sClient.ClientSet == nil {
 		return
 	}
-	time.Sleep(constant.ReleaseTimeOut)
+	waitDuration := getReleaseWaitDuration()
+	info := faultJobReleaseInfo{
+		jobId:      jobId,
+		nodeName:   nodeName,
+		duration:   waitDuration,
+		createTime: time.Now().UnixMilli(),
+	}
+	jobReleaseInfos.AddAfter(info, waitDuration)
+}
+
+// StartFaultJobReleaseInfoConsumer start fault job release info consumer
+func StartFaultJobReleaseInfoConsumer(ctx context.Context) {
+	go ShutDownFaultJobReleaseInfoConsumer(ctx)
+	for {
+		if exit := handleFaultJobRecoverFaultInfoCm(); exit {
+			hwlog.RunLog.Infof("job release info consumer for queue exit success")
+			return
+		}
+	}
+}
+
+// ShutDownFaultJobReleaseInfoConsumer shut down fault job release info consumer for queue
+func ShutDownFaultJobReleaseInfoConsumer(ctx context.Context) {
+	<-ctx.Done()
+	jobReleaseInfos.ShutDown()
+	hwlog.RunLog.Infof("notify job release info consumer for queue exit")
+}
+
+func handleFaultJobRecoverFaultInfoCm() bool {
+	obj, shutdown := jobReleaseInfos.Get()
+	if shutdown {
+		hwlog.RunLog.Info("fault job release info work queue shutdown")
+		return true
+	}
+	defer jobReleaseInfos.Done(obj)
+	jobReleaseInfo, ok := obj.(faultJobReleaseInfo)
+	if !ok {
+		hwlog.RunLog.Errorf("jobReleaseInfo type error, %v", obj)
+		return false
+	}
+	hwlog.RunLog.Infof("run recover fault job info cm task, jobId:%s, nodeName:%s, createTime: %v",
+		jobReleaseInfo.jobId, jobReleaseInfo.nodeName, jobReleaseInfo.createTime)
+	runRecoverFaultJobInfoCmTask(jobReleaseInfo.jobId, jobReleaseInfo.nodeName)
+	return false
+}
+
+func runRecoverFaultJobInfoCmTask(jobId string, nodeName string) {
 	for i := 0; i < constant.RetryTime; i++ {
 		cm, getErr := GetConfigMap(api.FaultJobCmName, api.ClusterNS)
 		if getErr != nil {
@@ -368,4 +429,12 @@ func DeletePodAnnotation(namespace, podName string, keysToDelete []string) error
 	hwlog.RunLog.Errorf("delete pod annotation failed after 3 attempts, namespace=%s, pod=%s, keys=%v, lastErr=%v",
 		namespace, podName, keysToDelete, lastErr)
 	return lastErr
+}
+
+func getPreReleaseWaitDuration() time.Duration {
+	return constant.PreReleaseWaitTimeOut
+}
+
+func getReleaseWaitDuration() time.Duration {
+	return constant.ReleaseTimeOut
 }

@@ -61,7 +61,7 @@ func refreshCmWhenPodRescheduleInPlace(oldPodInfo, newPodInfo *v1.Pod) {
 	if oldPodInfo.Annotations[api.RescheduleInPlaceKey] == "" &&
 		newPodInfo.Annotations[api.RescheduleInPlaceKey] == api.RescheduleInPlaceValue {
 		hwlog.RunLog.Infof("refresh cm when pod %s reschedule in place", newPodInfo.Name)
-		go kube.RecoverFaultJobInfoCmWithSync(pod.GetJobKeyByPod(newPodInfo), newPodInfo.Spec.NodeName)
+		kube.RecoverFaultJobInfoCmWithSync(pod.GetJobKeyByPod(newPodInfo), newPodInfo.Spec.NodeName)
 	}
 }
 

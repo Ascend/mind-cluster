@@ -266,6 +266,8 @@ const (
 const (
 	// ReleaseTimeOut release timeout
 	ReleaseTimeOut = 10 * time.Second
+	// PreReleaseWaitTimeOut preRelease timeout
+	PreReleaseWaitTimeOut = 60 * time.Second
 	// NotReleaseSleepTime sleep time when not do release resources
 	NotReleaseSleepTime = 10 * time.Second
 )
