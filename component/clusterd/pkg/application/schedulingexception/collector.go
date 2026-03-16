@@ -495,6 +495,8 @@ func (c *Collector) cleanupJobs(allJobs map[string]constant.JobInfo, allMetaObjs
 func updateConfigMap(report exceptionReport) error {
 	data := make(map[string]string)
 	for key, jobInfo := range report.JobExceptions {
+		jobInfo.Condition.Message = strings.Replace(jobInfo.Condition.Message, "<", " ", -1)
+		jobInfo.Condition.Message = strings.Replace(jobInfo.Condition.Message, ">", "", -1)
 		data[key] = util.ObjToString(jobInfo)
 	}
 
