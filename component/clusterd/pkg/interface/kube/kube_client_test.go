@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
@@ -32,6 +33,10 @@ const (
 	testValue3  = "value3"
 	testName    = "test-name"
 	testJobType = "test-job-type"
+	testJob1    = "test-job1"
+	testNode1   = "test-node1"
+	testJob2    = "test-job2"
+	testNode2   = "test-node2"
 )
 
 var (
@@ -346,7 +351,46 @@ func TestGetJobEvent(t *testing.T) {
 	})
 }
 
-func TestUpdateFaultJobInfoCmWhenJobDelete(t *testing.T) {
+func TestFaultJobReleaseInfoConsumer(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	const (
+		duration    = 200 * time.Millisecond
+		newDuration = 100 * time.Millisecond
+	)
+	patch := gomonkey.ApplyFuncReturn(getPreReleaseWaitDuration, duration).
+		ApplyFuncReturn(getReleaseWaitDuration, duration)
+	defer patch.Reset()
+	go StartFaultJobReleaseInfoConsumer(ctx)
+	convey.Convey("test RecoverFaultJobInfoCm", t, func() {
+		called := false
+		patch1 := gomonkey.ApplyFunc(GetConfigMap, func(string, string) (*v1.ConfigMap, error) {
+			called = true
+			return nil, errors.New("fake error")
+		})
+		defer patch1.Reset()
+		RecoverFaultJobInfoCm(testJob1, testNode1)
+		time.Sleep(newDuration)
+		RecoverFaultJobInfoCm(testJob1, testNode1)
+		time.Sleep(duration + newDuration)
+		convey.So(called, convey.ShouldBeTrue)
+	})
+	convey.Convey("test RecoverFaultJobInfoCmWithSync", t, func() {
+		called := false
+		patch1 := gomonkey.ApplyFunc(GetConfigMap, func(string, string) (*v1.ConfigMap, error) {
+			called = true
+			return nil, errors.New("fake error")
+		})
+		defer patch1.Reset()
+		RecoverFaultJobInfoCmWithSync(testJob1, testNode1)
+		time.Sleep(newDuration)
+		RecoverFaultJobInfoCmWithSync(testJob2, testNode2)
+		time.Sleep(duration + duration + duration + duration + newDuration)
+		convey.So(called, convey.ShouldBeTrue)
+	})
+}
+
+func TestRunRecoverFaultJobInfoCmTask(t *testing.T) {
 	convey.Convey("test func 'UpdateFaultJobInfoCmWhenJobDelete' success", t, func() {
 		testJobId := "test-job-id"
 		testCm := &v1.ConfigMap{
@@ -362,7 +406,7 @@ func TestUpdateFaultJobInfoCmWhenJobDelete(t *testing.T) {
 		defer p1.Reset()
 		p2 := gomonkey.ApplyFuncReturn(UpdateConfigMap, testCm, nil)
 		defer p2.Reset()
-		RecoverFaultJobInfoCm(testJobId, "")
+		runRecoverFaultJobInfoCmTask(testJobId, "")
 		_, exists := testCm.Data[testJobId]
 		convey.So(exists, convey.ShouldBeFalse)
 	})
@@ -370,7 +414,7 @@ func TestUpdateFaultJobInfoCmWhenJobDelete(t *testing.T) {
 	convey.Convey("test func 'UpdateFaultJobInfoCmWhenJobDelete' with GetConfigMap error", t, func() {
 		p1 := gomonkey.ApplyFuncReturn(GetConfigMap, nil, testErr)
 		defer p1.Reset()
-		RecoverFaultJobInfoCm("test-job-id", "")
+		runRecoverFaultJobInfoCmTask("test-job-id", "")
 	})
 
 	convey.Convey("test func 'UpdateFaultJobInfoCmWhenJobDelete' with UpdateConfigMap error", t, func() {
@@ -390,7 +434,7 @@ func TestUpdateFaultJobInfoCmWhenJobDelete(t *testing.T) {
 		p2 := gomonkey.ApplyFuncReturn(UpdateConfigMap, nil, testErr)
 		defer p2.Reset()
 
-		RecoverFaultJobInfoCm(testJobId, "")
+		runRecoverFaultJobInfoCmTask(testJobId, "")
 	})
 }
 

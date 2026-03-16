@@ -84,6 +84,7 @@ func startInformer(ctx context.Context) {
 
 	// generate global ranktable message handler
 	go epranktable.GetEpGlobalRankTableManager().ConsumerForQueue()
+	go kube.StartFaultJobReleaseInfoConsumer(ctx)
 
 	go jobv2.Handler(ctx)
 	go jobv2.Checker(ctx)

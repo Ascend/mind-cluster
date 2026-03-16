@@ -372,7 +372,7 @@ func ConstructServersByJobKey(jobKey string) map[string]constant.ServerHccl {
 	onePodOneNode := JudgePodOnDiffNode(podMap)
 	for _, pod := range podMap {
 		if pod.Spec.NodeName == "" {
-			hwlog.RunLog.Warnf("job: %s server pod %s is not scheduled", jobKey, pod.Name)
+			hwlog.RunLog.Debugf("job: %s server pod %s is not scheduled", jobKey, pod.Name)
 			return nil
 		}
 		nodeName := pod.Spec.NodeName
