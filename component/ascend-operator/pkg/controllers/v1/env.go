@@ -157,7 +157,7 @@ func (r *ASJobReconciler) setInferEnv(pi *podInfo, podTemplate *corev1.PodTempla
 		if len(podTemplate.Spec.Containers[i].Env) == 0 {
 			podTemplate.Spec.Containers[i].Env = make([]corev1.EnvVar, 0)
 		}
-		addEnvValue(podTemplate, taskIDEnvKey, pi.job.Labels[mindxdlv1.JodIdLabelKey], i)
+		addEnvValue(podTemplate, taskIDEnvKey, pi.job.Labels[mindxdlv1.JobIdLabelKey], i)
 		addEnvValue(podTemplate, appTypeEnvKey, pi.job.Labels[mindxdlv1.AppLabelKey], i)
 		addEnvValue(podTemplate, mindxServerIPEnv, pi.clusterdSvcIp, i)
 		addEnvValue(podTemplate, mindxServerDomainEnv, mindxDefaultServerDomain, i)

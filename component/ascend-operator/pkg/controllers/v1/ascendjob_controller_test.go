@@ -305,7 +305,7 @@ func TestIsJobDecorator(t *testing.T) {
 	r := newCommonReconciler()
 
 	// stub ranktablePipeline
-	patches := gomonkey.ApplyPrivateMethod(r, "ranktablePipeline", func(job *mindxdlv1.AscendJob) { return })
+	patches := gomonkey.ApplyPrivateMethod(r, "ranktablePipeline", func(obj metav1.Object) { return })
 	defer patches.Reset()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -329,56 +329,6 @@ func TestWriteRanktableToCm(t *testing.T) {
 			err := r.writeRanktableToCm("job", "default", "111")
 			convey.So(err, convey.ShouldBeNil)
 		})
-	})
-}
-
-func TestDecorateVcjob(t *testing.T) {
-	convey.Convey("TestDecorateVcjob", t, func() {
-		vcjob := &v1alpha1.Job{
-			Spec: v1alpha1.JobSpec{
-				Tasks: []v1alpha1.TaskSpec{{Name: "task1", Replicas: 1}},
-			},
-		}
-		job := decorateVcjob(vcjob)
-		convey.So(len(job.Spec.ReplicaSpecs), convey.ShouldEqual, 1)
-	})
-}
-
-func TestDecorateStatefulSet(t *testing.T) {
-	convey.Convey("TestDecorateStatefulSet", t, func() {
-		statefulSet := &appsv1.StatefulSet{
-			Spec: appsv1.StatefulSetSpec{
-				Template: corev1.PodTemplateSpec{
-					ObjectMeta: metav1.ObjectMeta{
-						Annotations: map[string]string{
-							"key": "value",
-						},
-					},
-				},
-			},
-		}
-		job := decorateStatefulSet(statefulSet)
-		convey.So(len(job.Spec.ReplicaSpecs), convey.ShouldEqual, 1)
-		convey.So(len(job.Annotations), convey.ShouldEqual, 1)
-	})
-}
-
-func TestDecorateDeployment(t *testing.T) {
-	convey.Convey("TestDecorateDeployment", t, func() {
-		deployment := &appsv1.Deployment{
-			Spec: appsv1.DeploymentSpec{
-				Template: corev1.PodTemplateSpec{
-					ObjectMeta: metav1.ObjectMeta{
-						Annotations: map[string]string{
-							"key": "value",
-						},
-					},
-				},
-			},
-		}
-		job := decorateDeploy(deployment)
-		convey.So(len(job.Spec.ReplicaSpecs), convey.ShouldEqual, 1)
-		convey.So(len(job.Annotations), convey.ShouldEqual, 1)
 	})
 }
 

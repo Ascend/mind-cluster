@@ -10,7 +10,7 @@ func IsMindIEEPJob(job *v1.AscendJob) bool {
 	if job == nil || job.Labels == nil {
 		return false
 	}
-	if _, ok := job.Labels[v1.JodIdLabelKey]; !ok {
+	if _, ok := job.Labels[v1.JobIdLabelKey]; !ok {
 		return false
 	}
 	if _, ok := job.Labels[v1.AppLabelKey]; !ok {

@@ -177,36 +177,36 @@ func (r *ASJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 }
 
 func (r *ASJobReconciler) isJobDecorator(ctx context.Context, req ctrl.Request) bool {
-	// try fetch deployment
-	deploy := &appv1.Deployment{}
-	if err := r.Get(ctx, req.NamespacedName, deploy); err == nil {
-		r.ranktablePipeline(decorateDeploy(deploy))
-		return true
+	// try fetch crds
+	resourceTypes := []client.Object{
+		&appv1.Deployment{},
+		&appv1.StatefulSet{},
+		&v1alpha1.Job{},
 	}
-	// try fetch vcjob
-	vcjob := &v1alpha1.Job{}
-	if err := r.Get(ctx, req.NamespacedName, vcjob); err == nil {
-		r.ranktablePipeline(decorateVcjob(vcjob))
-		return true
-	}
-	// try fetch statefulSet
-	statefulSet := &appv1.StatefulSet{}
-	if err := r.Get(ctx, req.NamespacedName, statefulSet); err == nil {
-		r.ranktablePipeline(decorateStatefulSet(statefulSet))
-		return true
+
+	for _, obj := range resourceTypes {
+		if err := r.Get(ctx, req.NamespacedName, obj); err == nil {
+			r.ranktablePipeline(obj)
+			return true
+		}
 	}
 	return false
 }
 
-func (r *ASJobReconciler) ranktablePipeline(job *mindxdlv1.AscendJob) {
-	if getJobRequiredNpu(job) == 0 {
-		hwlog.RunLog.Debugf("job <%s> does not require NPU, skip ranktable generation", job.Name)
+func (r *ASJobReconciler) ranktablePipeline(obj metav1.Object) {
+	ascendJob, err := ranktable.GetAscendJobFromObject(obj)
+	if err != nil {
+		hwlog.RunLog.Errorf("extract config failed: %v", err)
 		return
 	}
-	ji, err := r.newJobInfo(job, job.Spec.ReplicaSpecs, &job.Status, &job.Spec.RunPolicy)
+
+	if getJobRequiredNpu(ascendJob) == 0 {
+		hwlog.RunLog.Debugf("job <%s> does not require NPU, skip ranktable generation", ascendJob.Name)
+		return
+	}
+	ji, err := r.newJobInfo(ascendJob, ascendJob.Spec.ReplicaSpecs, &ascendJob.Status, &ascendJob.Spec.RunPolicy)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to generate ranktable for job<%s> in namespace<%s>, err: %v",
-			job.Name, job.Namespace, err)
+		hwlog.RunLog.Errorf("failed to generate ranktable for job<%s>, err: %v", ascendJob.Name, err)
 		return
 	}
 	r.genRankTable(ji)
@@ -338,55 +338,25 @@ func (r *ASJobReconciler) watchStatefulSetRelatedResource(c controller.Controlle
 	})
 }
 
-func hasRankTableMountInVcJob(job *v1alpha1.Job) bool {
-	for _, task := range job.Spec.Tasks {
-		if hasRankTableMount(&task.Template) {
-			return true
-		}
-	}
-	return false
-}
-
-func hasRankTableMount(template *corev1.PodTemplateSpec) bool {
-	for _, volume := range template.Spec.Volumes {
-		if volume.Name == rankTableName {
-			return true
-		}
-	}
-	return false
-}
-
 func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {
 	return func(e event.CreateEvent) bool {
-		switch e.Object.(type) {
-		case *v1alpha1.Job:
-			vcjob := e.Object.(*v1alpha1.Job)
-			if _, ok := vcjob.Labels[api.AtlasTaskLabel]; !(ok || hasRankTableMountInVcJob(vcjob)) {
-				return false
-			}
-			r.rtGenerators[vcjob.UID] = ranktable.NewGenerator(decorateVcjob(vcjob))
-			hwlog.RunLog.Infof("create rtGenerator for Volcano Job %s", vcjob.Name)
-			return true
-		case *appv1.Deployment:
-			deploy := e.Object.(*appv1.Deployment)
-			if _, ok := deploy.Labels[api.AtlasTaskLabel]; !(ok || hasRankTableMount(&deploy.Spec.Template)) {
-				return false
-			}
-			r.rtGenerators[deploy.UID] = ranktable.NewGenerator(decorateDeploy(deploy))
-			hwlog.RunLog.Infof("create rtGenerator for Deployment %s", deploy.Name)
-			return true
-		case *appv1.StatefulSet:
-			statefulSet := e.Object.(*appv1.StatefulSet)
-			if _, ok := statefulSet.Labels[api.AtlasTaskLabel]; !(ok || hasRankTableMount(&statefulSet.Spec.Template)) {
-				return false
-			}
-			r.rtGenerators[statefulSet.UID] = ranktable.NewGenerator(decorateStatefulSet(statefulSet))
-			hwlog.RunLog.Infof("create rtGenerator for statefulSet %s", statefulSet.Name)
-			return true
-		default:
-			hwlog.RunLog.Info("job type is not volcano job or deployment")
+		plugin := ranktable.FindPluginForObject(e.Object)
+		if plugin == nil {
+			return r.ascendJobCreateFunc(e)
 		}
-		return r.ascendJobCreateFunc(e)
+		if !plugin.ShouldGenerateRankTable(e.Object) {
+			return false
+		}
+
+		ascendJob, err := plugin.ExtractObjToAscendJob(e.Object)
+		if err != nil {
+			hwlog.RunLog.Errorf("extract config failed: %v", err)
+			return false
+		}
+
+		r.rtGenerators[e.Object.GetUID()] = ranktable.NewGenerator(ascendJob)
+		hwlog.RunLog.Infof("create rtGenerator for %s %s", ascendJob.TypeMeta.Kind, ascendJob.Name)
+		return true
 	}
 }
 
@@ -664,75 +634,6 @@ func (r *ASJobReconciler) IsMasterRole(_ map[commonv1.ReplicaType]*commonv1.Repl
 	return rtype == mindxdlv1.MindSporeReplicaTypeScheduler ||
 		rtype == mindxdlv1.PytorchReplicaTypeMaster ||
 		rtype == mindxdlv1.TensorflowReplicaTypeChief
-}
-
-func decorateVcjob(vcjob *v1alpha1.Job) *mindxdlv1.AscendJob {
-	repSpecs := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{}
-	for i, task := range vcjob.Spec.Tasks {
-		repSpecs[commonv1.ReplicaType("Vcjob"+strconv.Itoa(i))] = &commonv1.ReplicaSpec{
-			Template: task.Template,
-			Replicas: &task.Replicas,
-		}
-	}
-	return &mindxdlv1.AscendJob{
-		TypeMeta:   vcjob.TypeMeta,
-		ObjectMeta: vcjob.ObjectMeta,
-		Spec: mindxdlv1.AscendJobSpec{
-			ReplicaSpecs: repSpecs,
-		},
-	}
-}
-
-func decorateStatefulSet(statefulSet *appv1.StatefulSet) *mindxdlv1.AscendJob {
-	repSpec := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
-		"StatefulSet": {
-			Template: statefulSet.Spec.Template,
-			Replicas: statefulSet.Spec.Replicas,
-		},
-	}
-	objectMeta := statefulSet.ObjectMeta
-	for key, value := range statefulSet.Spec.Template.Annotations {
-		if oldValue, ok := objectMeta.Annotations[key]; ok && oldValue != value {
-			hwlog.RunLog.Warnf("%s annotation %s value %s change to %s", statefulSet.Name, key, oldValue, value)
-		}
-		if objectMeta.Annotations == nil {
-			objectMeta.Annotations = make(map[string]string)
-		}
-		objectMeta.Annotations[key] = value
-	}
-	return &mindxdlv1.AscendJob{
-		TypeMeta:   statefulSet.TypeMeta,
-		ObjectMeta: objectMeta,
-		Spec: mindxdlv1.AscendJobSpec{
-			ReplicaSpecs: repSpec,
-		},
-	}
-}
-
-func decorateDeploy(deploy *appv1.Deployment) *mindxdlv1.AscendJob {
-	repSpec := map[commonv1.ReplicaType]*commonv1.ReplicaSpec{
-		"Deploy": {
-			Template: deploy.Spec.Template,
-			Replicas: deploy.Spec.Replicas,
-		},
-	}
-	objectMeta := deploy.ObjectMeta
-	for key, value := range deploy.Spec.Template.Annotations {
-		if oldValue, ok := objectMeta.Annotations[key]; ok && oldValue != value {
-			hwlog.RunLog.Warnf("%s annotation %s value %s change to %s", deploy.Name, key, oldValue, value)
-		}
-		if objectMeta.Annotations == nil {
-			objectMeta.Annotations = make(map[string]string)
-		}
-		objectMeta.Annotations[key] = value
-	}
-	return &mindxdlv1.AscendJob{
-		TypeMeta:   deploy.TypeMeta,
-		ObjectMeta: objectMeta,
-		Spec: mindxdlv1.AscendJobSpec{
-			ReplicaSpecs: repSpec,
-		},
-	}
 }
 
 func (r *ASJobReconciler) writeRanktableToCm(jobName, namespace string, uid types.UID) error {

@@ -98,7 +98,7 @@ func TestSetInferEnv(t *testing.T) {
 		}
 		convey.Convey("02-rType is worker, scheduler host equal ei.ip", func() {
 			ei.job.SetLabels(map[string]string{
-				mindxdlv1.JodIdLabelKey: fakeJobIdLabelValue,
+				mindxdlv1.JobIdLabelKey: fakeJobIdLabelValue,
 				mindxdlv1.AppLabelKey:   fakeAppLabelValue,
 			})
 			rc.setInferEnv(ei, podTemp)
