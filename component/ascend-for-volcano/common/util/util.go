@@ -304,27 +304,29 @@ func GetDeviceType(devList map[string]string) string {
 }
 
 // GetNodeDevListFromAnno get node device list from annotation
-func GetNodeDevListFromAnno(nodeInfo *api.NodeInfo) ([]string, error) {
+func GetNodeDevListFromAnno(nodeInfo *api.NodeInfo) ([]string, bool, error) {
 	baseDevInfo, ok := nodeInfo.Node.Annotations[BaseDeviceInfoKey]
 	if !ok {
 		klog.V(LogErrorLev).Infof("node annotation[%s] does not exist", BaseDeviceInfoKey)
-		return nil, fmt.Errorf("node annotation[%s] does not exist", BaseDeviceInfoKey)
+		return nil, false, fmt.Errorf("node annotation[%s] does not exist", BaseDeviceInfoKey)
 	}
 	devIpMap := make(map[string]NpuBaseInfo)
 	if err := json.Unmarshal([]byte(baseDevInfo), &devIpMap); err != nil {
 		klog.V(LogErrorLev).Infof("unmarshal node device list failed, error: %v", err)
-		return nil, errors.New("unmarshal node device list failed")
+		return nil, false, errors.New("unmarshal node device list failed")
 	}
 	var nodeDevList = make([]string, 0)
+	hasVnpu := false
 	for devName := range devIpMap {
 		splitDev := strings.Split(devName, "-")
 		// remove vnpu card
 		if len(splitDev) > DevSplitNum {
+			hasVnpu = true
 			continue
 		}
 		nodeDevList = append(nodeDevList, devName)
 	}
-	return nodeDevList, nil
+	return nodeDevList, hasVnpu, nil
 }
 
 // GetActivePodUsedDevFromNode get active pod used device from node

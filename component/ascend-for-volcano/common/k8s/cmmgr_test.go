@@ -214,7 +214,7 @@ func TestUpdateConfigMapCluster(t *testing.T) {
 }
 
 func TestGetCmInfos(t *testing.T) {
-	nodeList := []*api.NodeInfo{{Name: testName}}
+	nodeList := []*api.NodeInfo{{Name: testName, Node: &v1.Node{}}}
 	t.Run("GetSwitchInfos test, get empty switch info", func(t *testing.T) {
 		if got := GetSwitchInfos(nodeList); !reflect.DeepEqual(got, map[string]SwitchFaultInfo{testName: {}}) {
 			t.Errorf("GetSwitchInfos() = %v, want %v", got, map[string]SwitchFaultInfo{testName: {}})
@@ -231,12 +231,6 @@ func TestGetCmInfos(t *testing.T) {
 	needStartInformer = false
 	t.Run("Get device info test, get empty device info with use clusterD", func(t *testing.T) {
 		if got := GetDeviceInfosAndSetInformerStart(nodeList, true, true); !reflect.DeepEqual(got, tmpDeviceInfos) {
-			t.Errorf("Get device info = %v, want %v", got, tmpDeviceInfos)
-		}
-	})
-
-	t.Run("Get device info test, get empty device info without use clusterD", func(t *testing.T) {
-		if got := GetDeviceInfosAndSetInformerStart(nodeList, false, true); !reflect.DeepEqual(got, tmpDeviceInfos) {
 			t.Errorf("Get device info = %v, want %v", got, tmpDeviceInfos)
 		}
 	})

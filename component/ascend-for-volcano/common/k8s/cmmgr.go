@@ -388,14 +388,15 @@ func initNodeDeviceInfoByCmMgr(nodeInfo *api.NodeInfo, deviceInfo NodeDeviceInfo
 	}
 	availableDevKey, _ := util.GetAvailableDevInfo(deviceInfo.DeviceList)
 	softShareDevEnable := getSoftShareDevEnableByNode(nodeInfo)
+	nodeDevList, hasVnpu, err := util.GetNodeDevListFromAnno(nodeInfo)
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("get node device list from annotation failed, error: %v", err)
+		return tmpDeviceInfo
+	}
 	for devListKey, devListValue := range deviceInfo.DeviceList {
-		if devListKey == availableDevKey && selfMaintainAvailCard && !softShareDevEnable {
+		if devListKey == availableDevKey && selfMaintainAvailCard && !softShareDevEnable && !hasVnpu {
+			klog.V(util.LogDebugLev).Infof("node %v devListKey: %v use selfMaintainAvail", nodeInfo.Name, devListKey)
 			devType := util.GetDeviceType(deviceInfo.DeviceList)
-			nodeDevList, err := util.GetNodeDevListFromAnno(nodeInfo)
-			if err != nil {
-				klog.V(util.LogErrorLev).Infof("get node device list from annotation failed, error: %v", err)
-				return tmpDeviceInfo
-			}
 			_, unHealthyDevList := util.GetUnhealthyDevInfo(deviceInfo.DeviceList)
 			_, recoveringDevList := util.GetRecoveringDevInfo(deviceInfo.DeviceList)
 			podUsedDevList := util.GetActivePodUsedDevFromNode(nodeInfo, devType)
@@ -410,6 +411,8 @@ func initNodeDeviceInfoByCmMgr(nodeInfo *api.NodeInfo, deviceInfo NodeDeviceInfo
 			// unable to update timely. This will affect rescheduling
 			tmpDeviceInfo.UpdateTime = time.Now().Unix()
 		} else {
+			klog.V(util.LogDebugLev).Infof("node %v devListKey: %v not use selfMaintainAvail", nodeInfo.Name,
+				devListKey)
 			tmpDeviceInfo.DeviceList[devListKey] = devListValue
 		}
 	}
