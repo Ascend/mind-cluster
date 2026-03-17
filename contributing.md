@@ -57,6 +57,94 @@ ci: CI/CD 相关变更
 2. **进行开发**
     - 编写代码
     - 添加测试
+      - **Go测试**：建议使用convey框架编写测试用例
+        ```go
+        package utils
+        
+        import (
+            "testing"
+            
+            "github.com/smartystreets/goconvey/convey"
+            "k8s.io/apimachinery/pkg/apis/meta/v1"
+        )
+        
+        func TestIsMindIEEPJob(t *testing.T) {
+            convey.Convey("isMindIEEPJob", t, func() {
+                job := &v1.AscendJob{}
+                convey.Convey("job nil will return false", func() {
+                    res := IsMindIEEPJob(nil)
+                    convey.So(res, convey.ShouldBeFalse)
+                })
+                convey.Convey("label nil will return false", func() {
+                    res := IsMindIEEPJob(job)
+                    convey.So(res, convey.ShouldBeFalse)
+                })
+            })
+        }
+        ```
+      - **Python测试**：建议使用unittest框架编写测试用例
+        ```python
+        #!/usr/bin/env python3
+        
+        import unittest
+        from unittest.mock import patch, MagicMock
+        
+        class TestTaskdManagerAPI(unittest.TestCase):
+            @patch('taskd.api.taskd_manager_api.Manager')
+            def test_init_taskd_manager_success(self, mock_manager):
+                # mock the init_taskd_manager method
+                mock_manager_instance = MagicMock()
+                mock_manager_instance.init_taskd_manager.return_value = True
+                mock_manager.return_value = mock_manager_instance
+                
+                config = {}
+                result = init_taskd_manager(config)
+                
+                # verify method calls
+                mock_manager.assert_called_once()
+                mock_manager_instance.init_taskd_manager.assert_called_once_with(config)
+                # verify return value
+                self.assertEqual(result, True)
+        ```
+      - **C/C++测试**：建议使用Google Test框架编写测试用例
+        ```cpp
+        
+        #include <gtest/gtest.h>
+        #include "file_utils.h"
+        
+        using namespace ock::ttp;
+        
+        class FileUtilsTest : public ::testing::Test {
+        protected:
+            void SetUp() override
+            {
+                // 设置测试环境
+                testFile = "/tmp/test_file.txt";
+                std::ofstream file(testFile);
+                file << "Test content";
+                file.close();
+            }
+            
+            void TearDown() override
+            {
+                // 清理测试环境
+                remove(testFile.c_str());
+            }
+            
+            std::string testFile;
+        };
+        
+        TEST_F(FileUtilsTest, CheckFileExists_WhenFileExists_ReturnsTrue)
+        {
+            ASSERT_TRUE(FileUtils::CheckFileExists(testFile));
+        }
+        
+        TEST_F(FileUtilsTest, CheckFileExists_WhenFileNotExists_ReturnsFalse)
+        {
+            std::string nonExistentFile = "/tmp/non_existent.txt";
+            ASSERT_FALSE(FileUtils::CheckFileExists(nonExistentFile));
+        }
+        ```
     - 更新文档
     - 确保代码通过本地测试
 3. **提交代码**
