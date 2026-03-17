@@ -1184,8 +1184,8 @@ func convertToLogicIDs(devices []int, allDevs []common.NpuDevice) []int {
 	return logicIDs
 }
 
-func getFinalVisibleDevices(ascendVisibleDevices []int, allNPUInfo common.NpuAllInfo) []int {
-	if common.ParamOption.RealCardType == api.Ascend910A5 {
+func getFinalVisibleDevices(ascendVisibleDevices []int, allNPUInfo common.NpuAllInfo, usePodAnnotation bool) []int {
+	if common.ParamOption.RealCardType == api.Ascend910A5 && !usePodAnnotation {
 		return convertToLogicIDs(ascendVisibleDevices, allNPUInfo.AllDevs)
 	}
 	return ascendVisibleDevices
@@ -1217,8 +1217,10 @@ func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.Allocate
 		hwlog.RunLog.Debugf("len(allocateDevices)=%d, len(allNPUInfo.AllDevs)=%d",
 			len(allocateDevices), len(allNPUInfo.AllDevs))
 		var npuInfoConfigDir string
+		usePodAnnotation := false
 		if (len(allocateDevices) != len(allNPUInfo.AllDevs) || !common.ParamOption.PresetVDevice) &&
 			common.ParamOption.UseVolcanoType {
+			usePodAnnotation = true
 			allocateDevices, npuInfoConfigDir, err = ps.useVolcano(rqt.DevicesIDs)
 			if err != nil {
 				hwlog.RunLog.Error(err)
@@ -1232,7 +1234,7 @@ func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.Allocate
 		}
 
 		// Determine final ID type based on device type
-		finalVisibleDevices := getFinalVisibleDevices(ascendVisibleDevices, allNPUInfo)
+		finalVisibleDevices := getFinalVisibleDevices(ascendVisibleDevices, allNPUInfo, usePodAnnotation)
 
 		resp := new(v1beta1.ContainerAllocateResponse)
 		mountShareDeviceConfig(resp, finalVisibleDevices, npuInfoConfigDir)

@@ -37,6 +37,12 @@
       "FaultTimeout": 20,
       "RecoverTimeout": 60,
       "FaultHandling": "PreSeparateNPU"
+    },
+    {
+      "EventId": ["81B18603"],
+      "FaultTimeout": 5,
+      "RecoverTimeout": 60,
+      "FaultHandling": "PreSeparateNPU"
     }
   ]
 }
