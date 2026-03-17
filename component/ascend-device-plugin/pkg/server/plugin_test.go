@@ -1055,18 +1055,28 @@ func TestGetFinalVisibleDevices(t *testing.T) {
 	tests := []struct {
 		name                 string
 		realCardType         string
+		usePodAnnotation     bool
 		ascendVisibleDevices []int
 		expected             []int
 	}{
 		{
-			name:                 "Ascend910A5 converts to logicIDs",
+			name:                 "Ascend910A5 converts to logicIDs when not Volcano",
 			realCardType:         api.Ascend910A5,
+			usePodAnnotation:     false,
 			ascendVisibleDevices: []int{0},
 			expected:             []int{100},
 		},
 		{
+			name:                 "Ascend910A5 returns original when Volcano",
+			realCardType:         api.Ascend910A5,
+			usePodAnnotation:     true,
+			ascendVisibleDevices: []int{0},
+			expected:             []int{0},
+		},
+		{
 			name:                 "Other card type returns original",
 			realCardType:         "Ascend310",
+			usePodAnnotation:     false,
 			ascendVisibleDevices: []int{0},
 			expected:             []int{0},
 		},
@@ -1075,7 +1085,7 @@ func TestGetFinalVisibleDevices(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			common.ParamOption.RealCardType = tt.realCardType
-			got := getFinalVisibleDevices(tt.ascendVisibleDevices, allInfo)
+			got := getFinalVisibleDevices(tt.ascendVisibleDevices, allInfo, tt.usePodAnnotation)
 			if !reflect.DeepEqual(got, tt.expected) {
 				t.Errorf("getFinalVisibleDevices() = %v, want %v", got, tt.expected)
 			}
