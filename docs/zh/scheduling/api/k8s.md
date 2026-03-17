@@ -45,13 +45,17 @@
 |node.kubernetes.io/npu.chip.name|上报当前芯片的具体类型|<ul><li>310</li><li>310P1</li><li>310P2</li><li>310P3</li><li>310P4</li><li>{xxx}A</li><li>910PremiumA</li><li>910ProA</li><li>910ProB</li><li>{xxx}Bx（x可取值为1、2、3、4）</li><li>Ascend950PR</li><li>Ascend950DT</li></ul>|Ascend Device Plugin<p></p>芯片型号的数值可通过**npu-smi info**命令查询，返回的“Name”字段对应信息为芯片型号，下文的{*xxx*}即取“910”字符作为芯片型号数值。|
 |nodeDEnable|NodeD节点启动的开关|on|Volcano、Resilience Controller<ul><li>nodeDEnable=on标签表示启用NodeD的节点状态监测功能，用于获取节点的状态信息并用于判断节点是否故障。</li><li>取值为off或无该参数表示仅上报节点信息，不判断节点是否故障。</li><li>使用**容器化支持**或者**资源监测**时，可以不配置该标签；其他特性必须配置该标签。</li></ul>|
 |workerselector|标识MindCluster的计算节点|dls-worker-node|Ascend Device Plugin、NodeD、NPU Exporter|
-|accelerator-type|标识Atlas服务器类型|<ul><li>card</li><li>module</li><li>half</li><li>module-{xxx}b-8</li><li>module-{xxx}b-16</li><li>card-{xxx}b-2</li><li>card-{xxx}b-infer</li><li>module-a3-16</li><li>module-a3-16-super-pod</li><li>350-Atlas-8</li><li>350-Atlas-16</li><li>350-Atlas-4p-8</li><li>350-Atlas-4p-16</li><li>850-Atlas-8p-8</li><li>850-SuperPod-Atlas-8</li><li>950-SuperPod-Atlas-8</li></ul>|Ascend Device Plugin、Volcano|
+|accelerator-type|标识Atlas服务器类型|<ul><li>card</li><li>module</li><li>half</li><li>module-{xxx}b-8</li><li>module-{xxx}b-16</li><li>card-{xxx}b-2</li><li>card-{xxx}b-infer</li><li>module-a3-16</li><li>module-a3-16-super-pod</li><li>module-a3-8-super-pod</li><li>350-Atlas-8</li><li>350-Atlas-16</li><li>350-Atlas-4p-8</li><li>350-Atlas-4p-16</li><li>850-Atlas-8p-8</li><li>850-SuperPod-Atlas-8</li><li>950-SuperPod-Atlas-8</li></ul>|Ascend Device Plugin、Volcano|
 |servertype|设备类型|<ul><li>npu-{aicore核数}</li><li>soc</li><li>Ascend910-{aicore核数}</li><li>Ascend310P-{aicore核数}</li></ul>|Volcano、Ascend Device Plugin|
 |<p>huawei.com/Ascend910-Recover</p><p>huawei.com/npu-Recover</p>|Atlas 训练系列产品故障恢复标识|故障芯片ID|Ascend Device Plugin|
 |<p>huawei.com/Ascend910-NetworkRecover</p><p>huawei.com/npu-NetworkRecover</p>|Atlas 训练系列产品网络故障恢复标识|故障芯片ID|Ascend Device Plugin|
 |infer-card-type|由Ascend Device Plugin写入，表明节点推理卡类型。|card-300i-duo|Volcano|
 |mind-cluster/npu-chip-memory|芯片片上内存|mind-cluster/npu-chip-memory=64G|Volcano、Ascend Device Plugin|
 |huawei.com/scheduler.chip1softsharedev.enable|表示节点是否支持软切分虚拟化功能|<ul><li>true</li><li>false</li></ul>|Volcano、Ascend Device Plugin<ul><li>huawei.com/scheduler.chip1softsharedev.enable=true标签表示节点支持软切分虚拟化功能。</li><li>huawei.com/scheduler.chip1softsharedev.enable=false标签表示节点不支持软切分虚拟化功能。</li></ul>|
+|huawei.com/topotree.rackid|标识节点的机框ID|节点所属机框ID|Volcano|
+|huawei.com/topotree.superpodid|标识节点的超节点ID|节点所属超节点ID|Volcano|
+|huawei.com/topotree.groupid|标识节点的Pod组ID|节点所属Pod组ID|Volcano|
+|huawei.com/topotree|标识节点的网络拓扑树ID|节点所属网络拓扑树ID|Volcano|
 
 **Pod  label<a name="section1019341142914"></a>**
 
@@ -118,6 +122,8 @@
 |huawei.com/scheduler.softShareDev.aicoreQuota|标记当前Pod需要的AI Core百分比。|[1, 100]|Volcano、Ascend Device Plugin|
 |huawei.com/scheduler.softShareDev.hbmQuota|标记当前Pod需要的高带宽内存量。|<p>[1, maxHBM]</p><p>maxHBM为通过<b>npu-smi info</b>命令查询出的HBM-Usage(MB)中HBM的值。</p>|Volcano、Ascend Device Plugin|
 |huawei.com/scheduler.softShareDev.policy|标记当前Pod执行的软切分任务的策略。|<ul><li>fixed-share</li><li>elastic</li><li>best-effort</li></ul>|Volcano、Ascend Device Plugin|
+|huawei.com/affinity-config|配置任务的多级调度的亲和性层级。|<p>level1=x,level2=y,...</p><p>其中x,y...为对应的网络层级子任务大小。</p><p>该字段用于配置任务的多级调度的亲和性层级。</p><p>要求满足格式为leveli=ni样式的字符串的拼接，中间使用英文逗号分隔。其中，i为网络层级序号，ni为该网络层级子任务的副本数量。例如，对于总副本数量为8的任务“level1=2,level2=4”，表示任务Pod中每2个Pod分配到有相同level1标签的节点上，每4个Pod分配到有相同level2标签的节点上。</p><p>网络层级配置需要满足以下要求：<ul><li>任务层级大于1层时，层级n的值必须是n-1的整数倍。</li><li>任务总副本数量必须是所有层级的整数倍。</li><li>任务层级配置必须从level1开始，从小到大连续的。</li></ul></p>|Volcano|
+|huawei.com/schedule_policy|指定调度策略。|目前支持[表3 huawei.com/schedule\_policy配置说明](./volcano.md#podgroup)中的配置。|Volcano|
 
 **Node annotation<a name="section9144358124519"></a>**
 
