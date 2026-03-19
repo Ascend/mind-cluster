@@ -445,7 +445,7 @@ spec:
    >```
     >kubectl get pod -n <namespace> -o wide
     >```
-    >- <模型名称>取配置文件中的`engine_common_config.serve_name`字段。
+   >- <模型名称>取配置文件中的`engine_common_config.serve_name`字段。
 
 10. （可选）删除推理任务。若用户需要删除任务，可以执行该步骤。
 

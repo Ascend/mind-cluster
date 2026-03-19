@@ -34,7 +34,6 @@ class BusParser(FileParser):
     TARGET_FILE_PATTERNS = "bus_log_path"
     SOURCE_FILE = "LCNE_LOG"
     TIME_PATTERN = re.compile(r"^([A-Za-z]{3}\s\d{1,2}\s\d{4}\s\d{2}:\d{2}:\d{2})")
-    ZIP_PATTERN = re.compile(r"_(\d{14})\.log\.zip$")
     LOG_PATTERN = re.compile(r"_(\d{14})\.log$")
     # 读取文件时缓冲区块大小
     CHUNK_SIZE = 4096
@@ -74,27 +73,6 @@ class BusParser(FileParser):
         """
         return ' %%' in line
 
-    def extract_time_from_path(self, path: str) -> Optional[datetime]:
-        """
-        从路径中提取时间戳，支持 .log.zip 和 .log 格式
-        """
-        # 匹配 .log.zip 文件中的时间
-        zip_match = self.ZIP_PATTERN.search(path)
-        if zip_match:
-            time_str = zip_match.group(1)
-        else:
-            # 匹配普通 .log 文件中的时间
-            log_match = self.LOG_PATTERN.search(path)
-            time_str = log_match.group(1) if log_match else None
-
-        if not time_str:
-            return None
-
-        try:
-            return datetime.strptime(time_str, "%Y%m%d%H%M%S")
-        except ValueError:
-            return None
-
     def parse(self, parse_ctx: KGParseCtx, task_id: str):
         """
         Parse lcne log file
@@ -133,41 +111,39 @@ class BusParser(FileParser):
         for path in file_paths:
             # 处理 .log.zip 文件
             if path.endswith('.log.zip'):
-                zip_time = self.extract_time_from_path(path)
-                if not zip_time:
-                    kg_logger.warning(f"Ignore zip files without timestamp: {path}")
-                    continue
-                # 如果时间早于 start_time，直接跳过
-                if has_valid_time_window and zip_time < self.start_time:
-                    continue
-                # 解压并获取解压后的实际文件路径
                 unzipped_path = self.unzip_file(path)
                 if not unzipped_path:
                     continue
                 path = unzipped_path
 
+            if path.endswith('.log'):
+                # 匹配 _{time}.log 文件中的时间
+                log_match = self.LOG_PATTERN.search(path)
+                time_str = log_match.group(1) if log_match else None
+                if time_str:
+                    try:
+                        zip_time = datetime.strptime(time_str, "%Y%m%d%H%M%S")
+                        # 如果时间早于 start_time，直接跳过
+                        if has_valid_time_window and (zip_time < self.start_time or zip_time > self.end_time):
+                            continue
+                    except ValueError:
+                        kg_logger.warning(f"File timestamp parsing failed: {path}")
+
+            if not has_valid_time_window:
+                filtered_files.append(path)
+                continue
             try:
-                if not has_valid_time_window:
-                    filtered_files.append(path)
-                    continue
                 # 获取文件的最早和最晚时间
                 earliest = self._get_time_bound(path, mode="earliest")
                 latest = self._get_time_bound(path, mode="latest")
-
-                if not earliest or not latest:
-                    continue
-
-                # 关键条件：检查两个区间是否重叠
-                is_overlapping = (
-                        earliest <= self.end_time
-                        and
-                        latest >= self.start_time
-                )
-                if is_overlapping:
-                    filtered_files.append(path)
             except Exception as e:
                 kg_logger.error(f"[Error] Exception occurred while processing {path}: {str(e)}")
-
+                continue
+            if not earliest or not latest:
+                continue
+            # 关键条件：检查两个区间是否重叠
+            if earliest <= self.end_time and latest >= self.start_time:
+                filtered_files.append(path)
         return filtered_files
 
     def _parse_log_time(self, line: str):
