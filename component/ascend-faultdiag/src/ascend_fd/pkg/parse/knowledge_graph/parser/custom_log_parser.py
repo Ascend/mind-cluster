@@ -86,7 +86,7 @@ class CustomLogParser(FileParser):
         else:
             multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_info_list), task_id=task_id,
                                                daemon=False)
-            for idx, each_custom_info in enumerate(file_info_list):
+            for idx, each_custom_info in enumerate(parse_ctx.custom_info_list):
                 multiprocess_job.add_security_job(f"{self.TARGET_FILE_PATTERNS}_ID-{idx}",
                                                   self._parse_each_custom_info, each_custom_info, task_id)
             results, _ = multiprocess_job.join_and_get_results()
