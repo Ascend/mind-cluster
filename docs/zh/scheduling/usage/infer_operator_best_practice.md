@@ -441,10 +441,11 @@ spec:
     ```
 
    >[!NOTE] 说明
-   ><routing-podip\>为Routing Pod的IP地址，可以通过以下命令查找router实例pod的IP。
+   >- <routing-podip\>为Routing Pod的IP地址，可以通过以下命令查找router实例pod的IP。
    >```
     >kubectl get pod -n <namespace> -o wide
     >```
+   >- <模型名称>取配置文件中的`engine_common_config.serve_name`字段。
 
 10. （可选）删除推理任务。若用户需要删除任务，可以执行该步骤。
 
@@ -454,7 +455,7 @@ spec:
 
     参数说明如下：
 
-    -   -n, --app-name：应用名称，必填。
+    -   -n, --app-name：应用名称，必填。应用名取配置文件中的`deploy_config.job_name`字段。
     -   -ns, --namespace：应用命名空间，选填。默认值为"default" 。
     -   -k, --kubeconfig：KubeConfig文件路径，选填。默认值为\~/.kube/config。
 
