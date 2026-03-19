@@ -147,25 +147,33 @@ func (c *Collector) checkJobs() {
 	hwlog.RunLog.Infof("updated scheduling exception configmap with %d jobs", len(exceptionJobs))
 }
 
-func (c *Collector) processPodGroup(jobKey string, jobInfo constant.JobInfo) *conditionDetail {
-	if jobInfo.Status == job.StatusJobRunning || jobInfo.Status == job.StatusJobCompleted {
-		delete(c.jobExceptions, jobKey)
-		return nil
-	}
-
-	obj, err := kube.GetObject(kube.PodGroupGVK(), fmt.Sprintf("%s/%s", jobInfo.NameSpace, jobInfo.PgName))
+func getPgFromCache(namespace, name string) *v1beta1.PodGroup {
+	obj, err := kube.GetObject(kube.PodGroupGVK(), fmt.Sprintf("%s/%s", namespace, name))
 	if err != nil {
-		hwlog.RunLog.Warnf("get podgroup %s failed: %v", jobInfo.PgName, err)
+		hwlog.RunLog.Warnf("get podgroup %s/%s failed: %v", namespace, name, err)
 		return nil
 	}
 
 	pg, ok := obj.(*v1beta1.PodGroup)
 	if !ok {
-		hwlog.RunLog.Warnf("convert object to PodGroup failed for job %s", jobKey)
+		hwlog.RunLog.Warnf("convert object to PodGroup failed for job %s/%s", namespace, name)
 		return nil
 	}
 
+	return pg
+}
+
+func (c *Collector) processPodGroup(jobKey string, jobInfo constant.JobInfo) *conditionDetail {
+	if jobInfo.Status == job.StatusJobRunning || jobInfo.Status == job.StatusJobCompleted {
+		delete(c.jobExceptions, jobKey)
+		return nil
+	}
 	pods := pod.GetPodByJobId(jobKey)
+	pg := getPgFromCache(jobInfo.NameSpace, jobInfo.PgName)
+	if pg == nil {
+		return c.processPodGroupUnknown(pods)
+	}
+
 	indices := c.analyzePodGroupConditions(pg)
 	cond := c.analyzePodGroupPhase(pg, pods, indices, jobInfo)
 	return cond
@@ -243,11 +251,7 @@ func (c *Collector) processPodGroupUnknown(pods map[string]corev1.Pod) *conditio
 			}
 		}
 		if p.Status.Phase == corev1.PodFailed {
-			return &conditionDetail{
-				Status:  podGroupUnknown,
-				Reason:  "PodFailed",
-				Message: fmt.Sprintf("pod is failed, please check the pod status, executing command: kubectl describe pod -n %s %s", p.Namespace, p.Name),
-			}
+			return c.processPodFailed(p)
 		}
 	}
 	return nil
@@ -345,9 +349,10 @@ func (c *Collector) processPodGroupRunning(pods map[string]corev1.Pod) *conditio
 func (c *Collector) processPodFailed(p corev1.Pod) *conditionDetail {
 	if p.Status.Reason == "UnexpectedAdmissionError" && strings.Contains(p.Status.Message, "not get valid pod") {
 		return &conditionDetail{
-			Status: podGroupRunning,
+			Status: podGroupUnknown,
 			Reason: "PodFailed",
-			Message: "The pod is not valid for allocation. " +
+			Message: "This pod may not be scheduled by the volcano scheduler or this pod is not valid for" +
+				" allocation." +
 				"Please check whether the annotation huawei." +
 				"com/Ascend910=<some-value> is present in the pod. If it is missing, " +
 				"inspect the Volcano scheduler logs for the keyword `Failed to get plugin volcano" +
@@ -355,12 +360,12 @@ func (c *Collector) processPodFailed(p corev1.Pod) *conditionDetail {
 				"` using the following command: kubectl logs -f -n volcano-system -l app=volcano" +
 				"-scheduler, if exist, " +
 				"check the config in configmap volcano-scheduler-configmap and the plugin " +
-				" in the dir of `\\plugins` of the container",
+				" in the dir of /plugins of the container of the volcano-scheduler",
 		}
 	}
 
 	return &conditionDetail{
-		Status: podGroupRunning,
+		Status: podGroupUnknown,
 		Reason: "PodFailed",
 		Message: fmt.Sprintf("pod is failed, "+
 			"please check the pod status using the following command: kubectl describe pod -n %s"+
@@ -425,7 +430,8 @@ func (c *Collector) processJobObject(jobObj interface{}, metaObj metav1.Object) 
 }
 
 func (c *Collector) processVcJob(vcJob *v1alpha1.Job) *conditionDetail {
-	if vcJob.Status.State.Phase == "" {
+	switch vcJob.Status.State.Phase {
+	case "":
 		return &conditionDetail{
 			Status: jobStatusEmpty,
 			Reason: "JobNoInitialized",
@@ -433,16 +439,24 @@ func (c *Collector) processVcJob(vcJob *v1alpha1.Job) *conditionDetail {
 				"you can check the status by executing command: kubectl get pod -n volcano-system -l" +
 				" app=volcano-controller",
 		}
-	} else if vcJob.Status.State.Phase == v1alpha1.Pending {
+	case v1alpha1.Pending:
 		return &conditionDetail{
 			Status: jobStatusInitialized,
 			Reason: "JobPending",
 			Message: fmt.Sprintf("job is pending, "+
-				"you can check the job status by executing command: kubectl describe [job-type, "+
-				"eg vcjob,acjob] -n %s %s", vcJob.GetNamespace(), vcJob.GetName()),
+				"you can check the job status by executing command: kubectl describe vcjob -n %s %s",
+				vcJob.GetNamespace(), vcJob.GetName()),
 		}
+	case v1alpha1.Failed:
+		return &conditionDetail{
+			Status: jobStatusFailed,
+			Reason: "JobFailed",
+			Message: fmt.Sprintf("job is failed, you can check the job status by executing command: "+
+				"kubectl describe vcjob -n %s %s", vcJob.GetNamespace(), vcJob.GetName()),
+		}
+	default:
+		return nil
 	}
-	return nil
 }
 
 func (c *Collector) processAscendJob(ascendJob *batchv1.AscendJob) *conditionDetail {
@@ -495,9 +509,11 @@ func (c *Collector) cleanupJobs(allJobs map[string]constant.JobInfo, allMetaObjs
 func updateConfigMap(report exceptionReport) error {
 	data := make(map[string]string)
 	for key, jobInfo := range report.JobExceptions {
-		jobInfo.Condition.Message = strings.Replace(jobInfo.Condition.Message, "<", " ", -1)
-		jobInfo.Condition.Message = strings.Replace(jobInfo.Condition.Message, ">", "", -1)
-		data[key] = util.ObjToString(jobInfo)
+		// If jobInfo contains pointer objects, please implement the DeepCopy method and modify this code accordingly.
+		newJobInfo := *jobInfo
+		newJobInfo.Condition.Message = strings.Replace(newJobInfo.Condition.Message, "<", " ", -1)
+		newJobInfo.Condition.Message = strings.Replace(newJobInfo.Condition.Message, ">", "", -1)
+		data[key] = util.ObjToString(newJobInfo)
 	}
 
 	cm := &corev1.ConfigMap{

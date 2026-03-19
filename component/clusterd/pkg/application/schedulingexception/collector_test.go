@@ -205,7 +205,7 @@ func buildProcessPodGroupRunningTestCases() []processPodGroupRunningTestCase {
 					},
 				},
 			},
-			expected: podGroupRunning,
+			expected: podGroupUnknown,
 		},
 		{
 			name:     "no pods",

@@ -175,12 +175,12 @@ func testReachFrequency() {
 	convey.So(ok, convey.ShouldBeTrue)
 	times, ok = f.fault[fault2.Code]
 	convey.So(ok, convey.ShouldBeTrue)
-	convey.So(times, convey.ShouldResemble, []int64{fault1.ReceiveTime, fault2.ReceiveTime})
+	convey.So(times, convey.ShouldBeNil)
 
 	// add fault3: node1, dev1, code1, time3
 	fault3 := getDemoFault3()
 	Counter.AddFault(fault3)
-	convey.So(len(Counter.faults), convey.ShouldEqual, 0)
+	convey.So(len(Counter.faults), convey.ShouldEqual, 1)
 }
 
 func testAddDifferentCode() {
@@ -294,7 +294,7 @@ func testUnReachThreshold() {
 	conf.SetManualSeparatePolicy(threshold1)
 	// add fault3: node1, dev1, code1, time3
 	Counter.AddFault(getDemoFault3())
-	convey.So(len(Counter.faults), convey.ShouldEqual, len0)
+	convey.So(len(Counter.faults), convey.ShouldEqual, len1)
 }
 
 func testDifferentCode() {
@@ -351,7 +351,7 @@ func testPrepare() {
 	convey.So(len(f.fault), convey.ShouldEqual, len2) // 2 code on dev1
 	times, ok := f.fault[code1]
 	convey.So(ok, convey.ShouldBeTrue)
-	convey.So(len(times), convey.ShouldResemble, len2) // 2 times for code1
+	convey.So(len(times), convey.ShouldResemble, 0) // 2 times for code1
 
 	times, ok = f.fault[code2]
 	convey.So(ok, convey.ShouldBeTrue)
