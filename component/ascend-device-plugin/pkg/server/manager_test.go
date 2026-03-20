@@ -56,8 +56,8 @@ const (
 	expectedMemory    = 32768
 	ascend910LogicID0 = api.Ascend910MinuxPrefix + "0"
 	ascend910LogicID1 = api.Ascend910MinuxPrefix + "1"
-	testSuperPodId = int32(2)
-	testRackId     = int32(4)
+	testSuperPodId    = int32(2)
+	testRackId        = int32(4)
 )
 
 var testErr = errors.New("test")
@@ -1150,7 +1150,7 @@ func TestPollFaultCodeCM(t *testing.T) {
 		convey.Convey("When context is canceled, stop polling", func() {
 			ctx, cancel := context.WithCancel(context.Background())
 			cancel()
-			hdm.pollFaultCodeCM(ctx)
+			hdm.pollFaultCodeCM(ctx, common.PollFaultCodeCMInterval)
 		})
 	})
 }
