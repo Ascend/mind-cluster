@@ -34,7 +34,6 @@ class BusParser(FileParser):
     TARGET_FILE_PATTERNS = "bus_log_path"
     SOURCE_FILE = "LCNE_LOG"
     TIME_PATTERN = re.compile(r"^([A-Za-z]{3}\s\d{1,2}\s\d{4}\s\d{2}:\d{2}:\d{2})")
-    ZIP_PATTERN = re.compile(r"_(\d{14})\.log\.zip$")
     LOG_PATTERN = re.compile(r"_(\d{14})\.log$")
     # 读取文件时缓冲区块大小
     CHUNK_SIZE = 4096

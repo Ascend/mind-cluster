@@ -36,7 +36,7 @@ class NodeDLogParser(FileParser):
     EVENT_CODE = "event_code"
     FORMATTER = "%Y-%m-%d %H:%M:%S.%f"
     FILE_TIME_REGEX = re.compile(r"noded-(\d{4}-\d{2}-\d{2})T(\d{2}-\d{2}-\d{2}.\d{3}).log")
-    LOG_TIME_REGEX = re.compile(r"\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}.\d{6}")
+    LOG_TIME_REGEX = re.compile(r"\d{4}[/-]\d{2}[/-]\d{2} \d{2}:\d{2}:\d{2}.\d{6}")
 
     def __init__(self, params):
         """
