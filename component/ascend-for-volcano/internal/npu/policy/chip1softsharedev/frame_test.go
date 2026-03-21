@@ -27,6 +27,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910b"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
@@ -43,10 +44,8 @@ const (
 )
 
 func TestCheckNodeNPUByTask(t *testing.T) {
-	tp, ok := New(pluginName).(*chip1softsharedev)
-	if !ok {
-		t.Error("New() should return chip1softsharedev plugin")
-	}
+	tp := &chip1softsharedev{Base910b: ascend910b.Base910b{
+		NPUHandler: base.NPUHandler{SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{}}}}}
 	task := &api.TaskInfo{Name: testTaskName}
 	node := plugin.NPUNode{
 		CommonNode: plugin.CommonNode{
@@ -57,7 +56,11 @@ func TestCheckNodeNPUByTask(t *testing.T) {
 		},
 	}
 	patch := gomonkey.ApplyMethod(reflect.TypeOf(&base.NPUHandler{}), "GetUsableTopFromNode",
-		func(_ *base.NPUHandler, node plugin.NPUNode, disFlag bool) ([]int, error) { return []int{0}, nil })
+		func(_ *base.NPUHandler, node plugin.NPUNode, disFlag bool) ([]int, error) { return []int{0}, nil }).
+		ApplyFunc((*chip1softsharedev).checkNodeUsableResourceForTask, func(_ *chip1softsharedev, _ plugin.NPUNode,
+			_ []int, _ int, _ softShareDevResource, _ *api.TaskInfo) bool {
+			return true
+		})
 	defer patch.Reset()
 	err := tp.CheckNodeNPUByTask(task, node)
 	if err == nil {

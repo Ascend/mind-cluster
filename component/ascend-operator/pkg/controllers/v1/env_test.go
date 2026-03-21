@@ -43,8 +43,8 @@ const (
 	testEnvValue2        = "test_value_2"
 	testEnvValue3        = "test_value_3"
 	commaSeparator       = ","
-	msRecoverPrefix      = `'{`
-	msRecoverSuffix      = `}'`
+	msRecoverPrefix      = `{`
+	msRecoverSuffix      = `}`
 	strategy1            = "strategy1"
 	strategy2            = "strategy2"
 	strategy3            = "strategy3"
@@ -357,7 +357,7 @@ func TestAddProcessRecoverEnv(t *testing.T) {
 		addProcessRecoverEnv(pi, pod, 0, api.MindSporeFramework)
 		expectedEnv := map[string]string{
 			api.ProcessRecoverEnv: api.EnableFunc, api.ElasticRecoverEnv: api.EnableFlag, api.EnableMS: api.EnableFlag,
-			api.MsRecoverEnv: `'{` + api.MsArfStrategy + `}'`, api.MsCloseWatchDogKey: api.MsCloseWatchDogValue,
+			api.MsRecoverEnv: `{` + api.MsArfStrategy + `}`, api.MsCloseWatchDogKey: api.MsCloseWatchDogValue,
 		}
 		checkEnvVars(t, pod.Spec.Containers[0].Env, expectedEnv)
 	})
@@ -381,7 +381,7 @@ func TestAddProcessRecoverEnv(t *testing.T) {
 		addProcessRecoverEnv(pi, pod, 0, api.MindSporeFramework)
 		expectedEnv := map[string]string{
 			api.ProcessRecoverEnv: api.EnableFunc, api.ElasticRecoverEnv: api.EnableFlag,
-			api.MsRecoverEnv: `'{` + api.MsArfStrategy + "," + api.MsUceStrategy + "," + api.MsHcceStrategy + `}'`,
+			api.MsRecoverEnv: `{` + api.MsArfStrategy + "," + api.MsUceStrategy + "," + api.MsHcceStrategy + `}`,
 			api.EnableMS:     api.EnableFlag, api.MsCloseWatchDogKey: api.MsCloseWatchDogValue}
 		checkEnvVars(t, pod.Spec.Containers[0].Env, expectedEnv)
 	})
@@ -467,7 +467,7 @@ func TestAddMSPodScheduleEnv(t *testing.T) {
 			addMSPodScheduleEnv(pi, podTemp, 0)
 			convey.So(len(podTemp.Spec.Containers[0].Env), convey.ShouldEqual, 1)
 			convey.So(podTemp.Spec.Containers[0].Env[0].Name, convey.ShouldEqual, api.MsRecoverEnv)
-			convey.So(podTemp.Spec.Containers[0].Env[0].Value, convey.ShouldEqual, `'{`+api.MsRscStrategy+`}'`)
+			convey.So(podTemp.Spec.Containers[0].Env[0].Value, convey.ShouldEqual, `{`+api.MsRscStrategy+`}`)
 		})
 		convey.Convey("02-pod schedule strategy is disabled, env should not be added", func() {
 			pi.job.SetLabels(map[string]string{api.PodScheduleLabel: "off"})
@@ -545,7 +545,7 @@ func buildTestAddSubhealthyEnvCases(num3 int, num4 int) []struct {
 			expectedEnvs: map[string]string{
 				api.ProcessRecoverEnv: api.EnableFunc,
 				api.ElasticRecoverEnv: api.EnableFlag,
-				api.MsRecoverEnv:      `'{` + api.MsArfStrategy + `}'`,
+				api.MsRecoverEnv:      `{` + api.MsArfStrategy + `}`,
 				api.EnableMS:          api.EnableFlag,
 			}},
 		{name: "SubHealthyHotSwitch strategy with unsupported framework",
@@ -570,27 +570,27 @@ func TestExtractMsRecoverContent(t *testing.T) {
 		},
 		{
 			name:     "should extract content when input has correct format",
-			input:    `'{strategy1,strategy2}'`,
+			input:    `{strategy1,strategy2}`,
 			expected: "strategy1,strategy2",
 		},
 		{
 			name:     "should extract content when input has spaces",
-			input:    `'{ strategy1 , strategy2 }'`,
+			input:    `{ strategy1 , strategy2 }`,
 			expected: "strategy1 , strategy2",
 		},
 		{
 			name:     "should return trimmed content when input has prefix and suffix",
-			input:    `'{content}'`,
+			input:    `{content}`,
 			expected: "content",
 		},
 		{
 			name:     "should remove suffix when input has no prefix",
-			input:    "content}'",
+			input:    "content}",
 			expected: "content",
 		},
 		{
 			name:     "should remove prefix when input has no suffix",
-			input:    `'{content`,
+			input:    `{content`,
 			expected: "content",
 		},
 	}

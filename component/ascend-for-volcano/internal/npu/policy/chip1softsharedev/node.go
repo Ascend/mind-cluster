@@ -27,6 +27,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
 func (tp *chip1softsharedev) getChipMemoryFromNodeLabel(nodeLabel map[string]string) (int, error) {
@@ -43,39 +44,106 @@ func (tp *chip1softsharedev) getChipMemoryFromNodeLabel(nodeLabel map[string]str
 }
 
 func (tp *chip1softsharedev) getUsedResourceMapFromNodeTasks(
-	tasks map[api.TaskID]*api.TaskInfo) map[int]softShareDevResource {
+	tasks map[api.TaskID]*api.TaskInfo, skipTargetJob bool, targetJob *api.TaskInfo) map[int]softShareDevResource {
 	usedMap := make(map[int]softShareDevResource)
 	for _, taskInfo := range tasks {
-		ascendReal, existAscend := taskInfo.Pod.Annotations[util.AscendNPUPodRealUse]
-		if !existAscend {
-			ascendReal, existAscend = taskInfo.Pod.Annotations[tp.GetAnnoName(tp.ReqNPUName)]
-		}
-		aicoreAnno, existAicore := taskInfo.Pod.Annotations[util.SchedulerSoftShareDevAicoreQuotaKey]
-		hbmAnno, existHbm := taskInfo.Pod.Annotations[util.SchedulerSoftShareDevHbmQuotaKey]
-		policyAnno, existPolicy := taskInfo.Pod.Annotations[util.SchedulerSoftShareDevPolicyKey]
-		if !existAscend || !existAicore || !existHbm || !existPolicy {
+		if skipTargetJob && targetJob != nil && taskInfo.Job == targetJob.Job {
+			klog.V(util.LogDebugLev).Infof("[chip1softsharedev] skip target task %s (job: %s)",
+				taskInfo.Name, targetJob.Job)
 			continue
 		}
-		cardInt, err := strconv.Atoi(strings.TrimPrefix(ascendReal, tp.GetAnnoPreVal(tp.ReqNPUName)))
-		if err != nil {
-			klog.V(util.LogErrorLev).Infof("invalid card number: %s, err: %v", ascendReal, err)
+		cardID, resource, ok := tp.parseTaskResource(taskInfo, tp.GetAnnoPreVal(tp.ReqNPUName))
+		if !ok {
 			continue
 		}
-		aicore, err := strconv.Atoi(aicoreAnno)
-		if err != nil {
-			klog.V(util.LogErrorLev).Infof("invalid aicore quota: %s, err: %v", aicoreAnno, err)
-			continue
-		}
-		hbm, err := strconv.Atoi(hbmAnno)
-		if err != nil {
-			klog.V(util.LogErrorLev).Infof("invalid hbm quota: %s, err: %v", hbmAnno, err)
-			continue
-		}
-		existing := usedMap[cardInt]
-		existing.aicoreQuota += aicore
-		existing.hbmQuota += hbm
-		existing.schedulingPolicy = policyAnno
-		usedMap[cardInt] = existing
+		usedCard := usedMap[cardID]
+		usedCard.aicoreQuota += resource.aicoreQuota
+		usedCard.hbmQuota += resource.hbmQuota
+		usedCard.schedulingPolicy = resource.schedulingPolicy
+		usedMap[cardID] = usedCard
 	}
 	return usedMap
+}
+
+func (tp *chip1softsharedev) parseTaskResource(taskInfo *api.TaskInfo, annoPrefix string) (
+	int, softShareDevResource, bool) {
+	if taskInfo == nil || taskInfo.Pod == nil || taskInfo.Pod.Annotations == nil {
+		klog.V(util.LogErrorLev).Infof("[chip1softsharedev] parseTaskResource: taskInfo, taskInfo.Pod or " +
+			"taskInfo.Pod.Annotations is nil")
+		return 0, softShareDevResource{}, false
+	}
+	annotations := taskInfo.Pod.Annotations
+	ascendReal, existAscend := annotations[util.AscendNPUPodRealUse]
+	if !existAscend {
+		ascendReal, existAscend = taskInfo.Pod.Annotations[tp.GetAnnoName(tp.ReqNPUName)]
+	}
+	aicoreAnno, existAicore := annotations[util.SchedulerSoftShareDevAicoreQuotaKey]
+	hbmAnno, existHbm := annotations[util.SchedulerSoftShareDevHbmQuotaKey]
+	policyAnno, existPolicy := annotations[util.SchedulerSoftShareDevPolicyKey]
+
+	if !existAscend || !existAicore || !existHbm || !existPolicy {
+		return 0, softShareDevResource{}, false
+	}
+	cardStr := strings.TrimPrefix(ascendReal, annoPrefix)
+	cardID, err := strconv.Atoi(cardStr)
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("[chip1softsharedev] task %s invalid card number: %s (prefix: %s), "+
+			"err: %v", taskInfo.Name, ascendReal, annoPrefix, err)
+		return 0, softShareDevResource{}, false
+	}
+	aicoreQuota, err := strconv.Atoi(aicoreAnno)
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("[chip1softsharedev] task %s invalid aicore quota: %s, err: %v",
+			taskInfo.Name, aicoreAnno, err)
+		return 0, softShareDevResource{}, false
+	}
+	hbmQuota, err := strconv.Atoi(hbmAnno)
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("[chip1softsharedev] task %s invalid hbm quota: %s, err: %v",
+			taskInfo.Name, hbmAnno, err)
+		return 0, softShareDevResource{}, false
+	}
+	resource := softShareDevResource{
+		aicoreQuota:      aicoreQuota,
+		hbmQuota:         hbmQuota,
+		schedulingPolicy: policyAnno,
+	}
+	return cardID, resource, true
+}
+
+func (tp *chip1softsharedev) checkNodeUsableResourceForTask(node plugin.NPUNode, nodeTop []int, chipMemory int,
+	reqResourceCfg softShareDevResource, task *api.TaskInfo) bool {
+	if tp == nil || len(node.Annotation) == 0 || task == nil {
+		err := errors.New(util.ArgumentError)
+		klog.V(util.LogErrorLev).Infof("checkNodeUsableResource err: %s", err)
+		return false
+	}
+	nodeUsedResourceMap := tp.getUsedResourceMapFromNodeTasks(node.Tasks, true, task)
+	taskTotalReqResource := softShareDevResource{
+		aicoreQuota:      reqResourceCfg.aicoreQuota * tp.NPUTaskNum,
+		hbmQuota:         reqResourceCfg.hbmQuota * tp.NPUTaskNum,
+		schedulingPolicy: reqResourceCfg.schedulingPolicy,
+	}
+	nodeUsableResourceForTask := softShareDevResource{schedulingPolicy: taskTotalReqResource.schedulingPolicy}
+	for _, cardIdx := range nodeTop {
+		used, exists := nodeUsedResourceMap[cardIdx]
+		if !exists {
+			nodeUsableResourceForTask.aicoreQuota += util.MaxAicoreQuota / reqResourceCfg.aicoreQuota *
+				reqResourceCfg.aicoreQuota
+			nodeUsableResourceForTask.hbmQuota += chipMemory / reqResourceCfg.hbmQuota * reqResourceCfg.hbmQuota
+			continue
+		}
+		if used.schedulingPolicy != taskTotalReqResource.schedulingPolicy {
+			continue
+		}
+		nodeUsableResourceForTask.aicoreQuota += (util.MaxAicoreQuota - used.aicoreQuota) / reqResourceCfg.aicoreQuota *
+			reqResourceCfg.aicoreQuota
+		nodeUsableResourceForTask.hbmQuota += (chipMemory - used.hbmQuota) / reqResourceCfg.hbmQuota *
+			reqResourceCfg.hbmQuota
+	}
+	if taskTotalReqResource.aicoreQuota > nodeUsableResourceForTask.aicoreQuota ||
+		taskTotalReqResource.hbmQuota > nodeUsableResourceForTask.hbmQuota {
+		return false
+	}
+	return true
 }

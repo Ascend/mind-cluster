@@ -345,7 +345,6 @@ TResult Controller::InitCallback()
 {
     isAlreadyBrod_.store(false);
     isBackupToMaster_.store(false);
-    errorRankMsg_.clear();
 
     if (isMasterCtrl_.load()) {
         mindXEngine_->Register2MindX();
@@ -641,6 +640,7 @@ void Controller::InitializeVariables()
     zitParam_.isolateRanks.clear();
     AutoLock errorRankLock(errorRankLock_, TYPE_WRITE);
     errorRankMsg_.clear();
+    errorRankCode_.clear();
 
     hotSwitchRanks_.clear();
     statusMapTmp_.clear();

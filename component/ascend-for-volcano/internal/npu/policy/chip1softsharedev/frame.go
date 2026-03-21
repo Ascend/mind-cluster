@@ -56,33 +56,37 @@ func (tp *chip1softsharedev) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.
 		klog.V(util.LogDebugLev).Infof("CheckNodeNPUByTask err: %s", err)
 		return err
 	}
-	reqResource, err := tp.getSoftShareDevResource()
+	reqResourceCfg, err := tp.getSoftShareDevResource()
 	if err != nil {
 		klog.V(util.LogDebugLev).Infof("%s getSoftShareDevResource err: %s", tp.GetPluginName(), err.Error())
 		return err
 	}
-	nodeUsedResourceMap := tp.getUsedResourceMapFromNodeTasks(node.Tasks)
 	nodeTop, err := tp.GetUsableTopFromNode(node, false)
 	if err != nil {
 		klog.V(util.LogErrorLev).Infof("%s GetUsableTopFromNode err: %s", tp.GetPluginName(), err.Error())
 		return err
 	}
-
 	chipMemory, err := tp.getChipMemoryFromNodeLabel(node.Label)
 	if err != nil {
 		return err
 	}
+	if !tp.checkNodeUsableResourceForTask(node, nodeTop, chipMemory, reqResourceCfg, task) {
+		err := fmt.Errorf("node %s not usable for task %s", node.Name, task.Name)
+		klog.V(util.LogDebugLev).Infof("CheckNodeNPUByTask err: %s", err)
+		return err
+	}
+	nodeUsedResourceMap := tp.getUsedResourceMapFromNodeTasks(node.Tasks, false, nil)
 	for _, cardIdx := range nodeTop {
 		used, exists := nodeUsedResourceMap[cardIdx]
 		if !exists {
-			if reqResource.aicoreQuota <= util.MaxAicoreQuota && reqResource.hbmQuota <= chipMemory {
+			if reqResourceCfg.aicoreQuota <= util.MaxAicoreQuota && reqResourceCfg.hbmQuota <= chipMemory {
 				return nil
 			}
 			continue
 		}
-		if used.aicoreQuota+reqResource.aicoreQuota <= util.MaxAicoreQuota &&
-			used.hbmQuota+reqResource.hbmQuota <= chipMemory &&
-			used.schedulingPolicy == reqResource.schedulingPolicy {
+		if used.aicoreQuota+reqResourceCfg.aicoreQuota <= util.MaxAicoreQuota &&
+			used.hbmQuota+reqResourceCfg.hbmQuota <= chipMemory &&
+			used.schedulingPolicy == reqResourceCfg.schedulingPolicy {
 			return nil
 		}
 	}
@@ -118,7 +122,7 @@ func (tp *chip1softsharedev) ScoreBestNPUNodes(
 			klog.V(util.LogDebugLev).Infof("%s GetUsableTopFromNode err: %s", tp.GetPluginName(), err)
 			continue
 		}
-		usedResourceMap := tp.getUsedResourceMapFromNodeTasks(nNode.Tasks)
+		usedResourceMap := tp.getUsedResourceMapFromNodeTasks(nNode.Tasks, false, nil)
 		npuChipMemory, err := tp.getChipMemoryFromNodeLabel(node.Node.Labels)
 		if err != nil {
 			klog.V(util.LogDebugLev).Infof("%s getChipMemoryFromNodeLabel err: %s", tp.GetPluginName(), err)
@@ -170,7 +174,7 @@ func (tp *chip1softsharedev) selectNPUFromNode(task *api.TaskInfo, node plugin.N
 		klog.V(util.LogDebugLev).Infof("%s getChipMemoryFromNodeLabel %s: %s", tp.GetPluginName(), task.Name, err)
 		return nil, err
 	}
-	nodeTopUsedResourceMap := tp.getUsedResourceMapFromNodeTasks(node.Tasks)
+	nodeTopUsedResourceMap := tp.getUsedResourceMapFromNodeTasks(node.Tasks, false, nil)
 	requestResource := softShareDevResource{
 		aicoreQuota:      reqResource.aicoreQuota,
 		hbmQuota:         reqResource.hbmQuota,

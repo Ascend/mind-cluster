@@ -73,11 +73,11 @@ func mergeEnvValue(envKey, oldValue, newValue string) string {
 	}
 
 	if envKey == api.MsRecoverEnv {
-		// MsRecoverEnv: format is '{...}', extract content, merge and deduplicate
+		// MsRecoverEnv: format is {...}, extract content, merge and deduplicate
 		oldContent := extractMsRecoverContent(oldValue)
 		newContent := extractMsRecoverContent(newValue)
 		mergedContent := mergeCommaSeparatedValues(oldContent, newContent)
-		return `'{` + mergedContent + `}'`
+		return `{` + mergedContent + `}`
 	}
 
 	return newValue
@@ -112,12 +112,12 @@ func extractMsRecoverContent(value string) string {
 	}
 	// Remove leading '{ and trailing }'
 	value = strings.TrimSpace(value)
-	const num2 = 2
-	if strings.HasPrefix(value, `'{`) {
-		value = value[num2:]
+	const num1 = 1
+	if strings.HasPrefix(value, `{`) {
+		value = value[num1:]
 	}
-	if strings.HasSuffix(value, `}'`) {
-		value = value[:len(value)-num2]
+	if strings.HasSuffix(value, `}`) {
+		value = value[:len(value)-num1]
 	}
 	return strings.TrimSpace(value)
 }
@@ -343,7 +343,7 @@ func addMSPodScheduleEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerInde
 			return
 		}
 	}
-	addEnvValue(pod, api.MsRecoverEnv, `'{`+api.MsRscStrategy+`}'`, containerIndex)
+	addEnvValue(pod, api.MsRecoverEnv, `{`+api.MsRscStrategy+`}`, containerIndex)
 }
 
 func addSubHealthyEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerIndex int, framework string) {
@@ -354,7 +354,7 @@ func addSubHealthyEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerIndex i
 	if framework == api.PytorchFramework {
 		addEnvValueWithDedup(pod, api.HighAvailableEnv, api.RecoverStrategy, containerIndex)
 	} else if framework == api.MindSporeFramework {
-		addEnvValueWithDedup(pod, api.MsRecoverEnv, `'{`+api.MsArfStrategy+`}'`, containerIndex)
+		addEnvValueWithDedup(pod, api.MsRecoverEnv, `{`+api.MsArfStrategy+`}`, containerIndex)
 		addEnvValueWithDedup(pod, api.EnableMS, api.EnableFlag, containerIndex)
 	} else {
 		hwlog.RunLog.Warnf("subhealth hotswitch only support pytorch and mindspore framework,current: %v", framework)
@@ -387,7 +387,7 @@ func doAddProcessRecoverEnv(pi *podInfo, pod *corev1.PodTemplateSpec, containerI
 		if isPodScheduleStrategy(pi.job) {
 			trainEnv.Insert(api.MsRscStrategy)
 		}
-		env[api.MsRecoverEnv] = `'{` + strings.Join(trainEnv.List(), ",") + `}'`
+		env[api.MsRecoverEnv] = `{` + strings.Join(trainEnv.List(), ",") + `}`
 		env[api.EnableMS] = api.EnableFlag
 		env[api.MsCloseWatchDogKey] = api.MsCloseWatchDogValue
 	}

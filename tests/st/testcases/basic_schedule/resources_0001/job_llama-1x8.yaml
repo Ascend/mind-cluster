@@ -1,0 +1,148 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reset-config-default-test-1x8    # The value of JobName must be the same as the name attribute of the following job. The prefix fault-config- cannot be modified.
+  namespace: default                      # Name Space must be set to "default"
+  labels:
+    reset: "true"
+data:
+  reset.json: |
+    {
+        "status":"initializing"
+    }
+  checkCode: ""
+---
+apiVersion: mindxdl.gitee.com/v1
+kind: AscendJob
+metadata:
+  name: default-test-1x8
+  labels:
+    framework: pytorch
+    tor-affinity: "null" #该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不适用。large-model-schema表示大模型任务，normal-schema 普通任务
+    fault-scheduling: force # 开启重调度模式，force为故障强制删除pod
+    fault-retry-times: "0" # 开启业务面故障的无条件重试能力，'3'为最大重试次数；同时需要将容器重启策略设置为Never
+    pod-rescheduling: "on"   # 开启Pod级重调度
+    process-recover-enable: "on" # 开启进程级重调度-new
+    subHealthyStrategy: "ignore"
+    ring-controller.atlas: ascend-910b
+  annotations:
+    recover-strategy: "retry,recover,dump,exit"
+    ranktableVersion: "2.0"
+spec:
+  schedulerName: volcano   # work when enableGangScheduling is true
+  runPolicy:
+    schedulingPolicy:      # work when enableGangScheduling is true
+      minAvailable: 1
+      queue: default
+  successPolicy: AllWorkers
+  replicaSpecs:
+    Master:
+      replicas: 1
+      restartPolicy: Never
+      template:
+        metadata:
+          labels:
+            ring-controller.atlas: ascend-910b
+        spec:
+          affinity:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                      - key: job-name
+                        operator: In
+                        values:
+                          - default-test-pytorch
+                  topologyKey: kubernetes.io/hostname
+          nodeSelector:
+            host-arch: huawei-arm
+            accelerator-type: module-910b-8
+          containers:
+            - name: ascend
+              image: TRAINING_IMAGE # it is fixed at the server, if you want to change the image, you need to login the server and build your image
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: HCCL_SNAPSHOT_SAVE_PATH
+                  value: /opt/hccl_snapshot
+                - name: ELASTIC_PROCESS_RECOVER_ENABLE
+                  value: "1"
+                - name: PROCESS_RECOVER
+                  value: "on"
+                - name: TTP_PORT
+                  value: "8000"
+                - name: POD_IP
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: status.podIP
+                - name: XDL_IP                   # IP address of the physical node, which is used to identify the node where the pod is running
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: status.hostIP
+                # ASCEND_VISIBLE_DEVICES env variable is used by ascend-docker-runtime when in the whole card scheduling scene with volcano scheduler. please delete it when in the static vNPU scheduling scene or without volcano.
+                - name: ASCEND_VISIBLE_DEVICES
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.annotations['huawei.com/Ascend910']               # The value must be the same as resources.requests
+                # 内存仿真配置
+                - name: PYTORCH_NPU_ALLOC_CONF
+                  value: expandable_segments:False
+              command:                           # training command, which can be modified
+                - /bin/bash
+                - -c
+              args: [ "sleep 100000; cd /home/simulator/Megatron-LM/Megatron-LM; bash /train-sh/pretrain-llama70b.sh" ]
+              ports:                          # default value containerPort: 2222 name: ascendjob-port if not set
+                - containerPort: 2222         # determined by user
+                  name: ascendjob-port        # do not modify
+                - containerPort: 8000    # 用于mindio通信，请注意上下保持一致
+                  name: ttp-port
+              resources:
+                limits:
+                  huawei.com/Ascend910: 8
+                requests:
+                  huawei.com/Ascend910: 8
+              volumeMounts:
+                - name: hccl-snapshot
+                  mountPath: /opt/hccl_snapshot
+                - name: elastic
+                  mountPath: /var/log/mindx-dl/elastic
+                - name: localtime
+                  mountPath: /etc/localtime
+                - name: train-log
+                  mountPath: /home/simulator/Megatron-LM/Megatron-LM/logs
+                - name: train-script
+                  mountPath: /train-sh
+                - name: simulator-config
+                  mountPath: /root/simulator/config
+                - name: zhanlu-log
+                  mountPath: /zhanlu
+                - name: reset-config
+                  mountPath: /user/restore/reset/config
+                  # readOnly: true
+                - mountPath: /share/simulator_agent
+                  name: simulator-share
+          volumes:
+            - name: hccl-snapshot
+              hostPath:
+                path: /data/hccl_snapshot
+                type: DirectoryOrCreate
+            - name: elastic
+              hostPath:
+                path: /var/log/mindx-dl/elastic
+            - name: localtime
+              hostPath:
+                path: /etc/localtime
+            - name: train-log
+              hostPath:
+                path: /opt/log/train-log
+                type: DirectoryOrCreate
+            - name: zhanlu-log
+              hostPath:
+                path: /opt/log/zhanlu
+                type: DirectoryOrCreate
+            - name: reset-config
+              hostPath:
+                path: /user/restore/reset/default.reset-config-default-test-pytorch               # Correspond to the /user/restore/reset/namespace.configmap-name above.
+            - hostPath:
+                path: /opt/share/simulator_agent
+                type: DirectoryOrCreate
+              name: simulator-share
