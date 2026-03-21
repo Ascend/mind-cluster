@@ -1754,13 +1754,18 @@ func checkOverRetryDev(info device.ResetInfo) device.ResetInfo {
 	return ret
 }
 
-func (hdm *HwDevManager) DoSetMultiDiePolicyForA3(policy dcmi.DiePolicyType) {
+// DoSetMultiDiePolicyForA3 set multi die policy for a3
+func (hdm *HwDevManager) DoSetMultiDiePolicyForA3() {
 	if hdm.manager.GetDmgr().GetDevType() != api.Ascend910A3 {
 		return
 	}
-	err := hdm.manager.GetDmgr().SetMultiDiePolicy(policy)
-	if err != nil {
-		hwlog.RunLog.Warnf("do set multi die policy failed, err: %v", err)
+	if !common.ParamOption.UseSingleDieMode {
+		if err := hdm.manager.GetDmgr().SetMultiDiePolicy(dcmi.MultiDieUnion); err != nil {
+			hwlog.RunLog.Warnf("do set multi die policy %v failed, err: %v", dcmi.MultiDieUnion, err)
+		}
 		return
+	}
+	if err := hdm.manager.GetDmgr().SetMultiDiePolicy(dcmi.MultiDieIndep); err != nil {
+		hwlog.RunLog.Warnf("do set multi die policy %v failed, err: %v", dcmi.MultiDieIndep, err)
 	}
 }

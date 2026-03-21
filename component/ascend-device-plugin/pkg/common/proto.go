@@ -177,6 +177,7 @@ type Option struct {
 	ThirdPartyScanDelay   int      // delay time (seconds) for scanning devices when third party resetting
 	DeviceResetTimeout    int      // device reset timeout
 	SoftShareDevConfigDir string   // soft share device config dir
+	UseSingleDieMode      bool     // use single die mode
 }
 
 // GetAllDeviceInfoTypeList Get All Device Info Type List

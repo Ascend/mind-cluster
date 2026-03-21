@@ -30,7 +30,6 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
-	"ascend-common/devmanager/dcmi"
 )
 
 const (
@@ -96,6 +95,8 @@ var (
 		"when device-plugin starts, if the number of chips is insufficient, the maximum duration to wait for "+
 			"the driver to report all chips, unit second, range [10, 600]")
 	softShareDevConfigDir = flag.String("softShareDevConfigDir", "", "soft share device config dir")
+	useSingleDieMode      = flag.Bool("useSingleDieMode", false,
+		"A3 card whether to use single die mode")
 )
 
 var (
@@ -285,7 +286,7 @@ func main() {
 	if err != nil {
 		return
 	}
-	hdm.DoSetMultiDiePolicyForA3(dcmi.MultiDieIndep)
+	hdm.DoSetMultiDiePolicyForA3()
 	setUseAscendDocker()
 	go hdm.ListenDevice(ctx)
 	go hdm.ListenDpu(ctx)
@@ -318,6 +319,7 @@ func setParameters() {
 		ThirdPartyScanDelay:   *thirdPartyScanDelay,
 		DeviceResetTimeout:    *deviceResetTimeout,
 		SoftShareDevConfigDir: *softShareDevConfigDir,
+		UseSingleDieMode:      *useSingleDieMode,
 	}
 }
 
