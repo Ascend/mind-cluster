@@ -26,7 +26,7 @@
 </tbody>
 </table>
 
->[!NOTE] 说明 
+>[!NOTE]
 >MindCluster  7.0版本规划：MindCluster  7.0.RC1（候选版本）、MindCluster  7.1.RC1（候选版本）、MindCluster  7.2.RC1（候选版本）和MindCluster  7.3.0（正式版本）。
 
 ## 相关产品版本配套说明<a name="ZH-CN_TOPIC_0000002524562893"></a>

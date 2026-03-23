@@ -237,7 +237,7 @@ taskd.__version__
 
 DLRecoverManager类提供进程级恢复和进程级在线恢复相关接口。客户端以Python包形式import到客户端代码中。
 
->[!NOTE] 说明 
+>[!NOTE] 
 >DLRecoverManager类提供的接口可能抛出Exception异常，调用方自行捕获异常、处理异常。
 
 **\_\_init\_\_\(self, info: pb.ClientInfo, server\_addr: str\)<a name="section93535281517"></a>**
