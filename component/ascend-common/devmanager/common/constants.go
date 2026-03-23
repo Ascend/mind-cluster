@@ -297,3 +297,10 @@ const (
 	// TopoLabelRackId topological label for rack id
 	TopoLabelRackId = "huawei.com/topotree.rackid"
 )
+
+const (
+	// NPUNetworkLinkDownStatus indicate the network status of down
+	NPUNetworkLinkDownStatus = "DOWN"
+	// NPUNetworkLinkUpStatus indicate the network status of up
+	NPUNetworkLinkUpStatus = "UP"
+)
