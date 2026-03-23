@@ -9,3 +9,4 @@
 - [MindIE Motor推理任务最佳实践](mindie_motor_best_practice.md)
 - [SGLang推理任务最佳实践](sglang_best_practice.md)
 - [vLLM推理任务最佳实践](vllm_best_practice.md)
+- [Infer Operator推理任务最佳实践](infer_operator_best_practice.md)

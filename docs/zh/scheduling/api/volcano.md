@@ -2,20 +2,22 @@
 
 ## 获取集群调度组件信息<a name="ZH-CN_TOPIC_0000002479386860"></a>
 
--   VolcanoJob接口由开源组件Volcano提供，MindCluster修改了VolcanoJob接口的Annotations字段，如[表1](#table177621954014)所示。其他接口未改动，了解开源Volcano的详细说明请参见Volcano开源社区。
+- VolcanoJob接口由开源组件Volcano提供，MindCluster修改了VolcanoJob接口的Annotations字段，如[表1](#table177621954014)所示。其他接口未改动，了解开源Volcano的详细说明请参见Volcano开源社区。
 
     **表 1**  Annotations参数说明
 
     <a name="table177621954014"></a>
+
     |参数名称|说明|取值|
     |--|--|--|
     |distributed|由Resilience Controller写入和使用，标记job是否为分布式任务。|True|
 
--   对于volcano-scheduler和volcano-controller组件Pod开放的接口（开源组件本身定义），做出如下说明。
+- 对于volcano-scheduler和volcano-controller组件Pod开放的接口（开源组件本身定义），做出如下说明。
 
     **表 2** 集群调度Volcano组件开放接口列表
 
     <a name="zh-cn_topic_0000001446965056_table173071368477"></a>
+
     |访问方式|协议|方法|作用|所属组件|
     |--|--|--|--|--|
     |http://podIP:11251/healthz|http|Get|健康检查端口|volcano-controller|
@@ -23,15 +25,15 @@
     |http://volcano-scheduler-serviceIP:8080/metrics|http|Get|Prometheus信息收集端口|volcano-scheduler|
     |<p>注：</p><p>为保证Volcano健康检查端口和Prometheus信息收集端口的正常访问，请在安装Volcano时，将YAML中的--enable-healthz参数和--enable-metrics参数的值设置为“true”，详细修改方法可参见<a href="../installation_guide.md#安装volcano">步骤7</a>。</p>|
 
-    >[!NOTE] 说明 
+    >[!NOTE]
     >华为云的CCI服务提供了更为详细的VolcanoJob说明，可参见《云容器实例 API参考》中“[创建Volcano Job](https://support.huaweicloud.com/api-cci/createBatchVolcanoShV1alpha1NamespacedJob.html)”章节了解相关内容。
-
 
 ## PodGroup<a name="ZH-CN_TOPIC_0000002479226832"></a>
 
 **表 1** 集群调度组件对PodGroup label使用说明
 
 <a name="table143562050699"></a>
+
 |名称|作用|取值|使用组件|
 |--|--|--|--|
 |ring-controller.atlas|标识Atlas的Pod|<ul><li>ascend-npu</li><li>ascend-910</li><li>ascend-<span><em>{xxx}</em></span>b</li></ul>|Ascend Device Plugin、Ascend Operator、Volcano|
@@ -153,6 +155,7 @@
 **表 3**  huawei.com/schedule\_policy配置说明
 
 <a name="table1120511613153"></a>
+
 |配置|说明|
 |--|--|
 |chip4-node8|1个节点8张芯片，每4个芯片形成1个互联环。例如，Atlas 800 训练服务器（型号 9000）/Atlas 800 训练服务器（型号 9010）芯片的整模块场景/Atlas 350 标卡共8张卡，每4张卡通过UB扣板连接。|
@@ -925,7 +928,6 @@ MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写
 </tbody>
 </table>
 
-
 ## 参数面网络拓扑配置<a name="ZH-CN_TOPIC_0000002479386820"></a>
 
 **basic-tor-node-cm<a name="section18148132883914"></a>**
@@ -1026,7 +1028,6 @@ MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写
 </tr>
 </tbody>
 </table>
-
 
 ## Volcano调度器配置<a name="ZH-CN_TOPIC_0000002511346767"></a>
 

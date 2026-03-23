@@ -138,7 +138,7 @@
 
 ResetInfo的内容格式如下所示。
 
-```
+```ColdFusion
 {
     "ThirdPartyResetDevs": [
         {
