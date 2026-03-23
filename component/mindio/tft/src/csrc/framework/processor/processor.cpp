@@ -536,7 +536,6 @@ void Processor::HeartbeatThread()
 {
     isStarted_.store(true);
     TResult ret;
-
     while (!isStopped_.load() && !readyToExit_.load()) {
         ret = HeartbeatSend();
         if (ret == TTP_TIMEOUT) {
@@ -550,6 +549,7 @@ void Processor::HeartbeatThread()
         } else if (ret != TTP_OK) {
             TTP_LOG_ERROR("rank:" << rank_ << " send heartbeat msg to controller failed, unprocessed");
         }
+        TTP_LOG_DEBUG("rank:" << rank_ << " send heartbeat msg to controller success");
         sleep(TTP_SLEEP_TIME);
     }
     TTP_LOG_DEBUG("rank:" << rank_ << " heartbeat thread exit...");
