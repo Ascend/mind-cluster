@@ -528,11 +528,6 @@ func (hdm *HwDevManager) updateAllInfo() error {
 	return nil
 }
 
-func (hdm *HwDevManager) loadDeviceInfoCm(ctx context.Context) {
-	hdm.loadFaultCode()
-	hdm.manager.LoadDeviceInfoCm(ctx)
-}
-
 func (hdm *HwDevManager) handleDeviceInfoUpdate(ctx context.Context, initTime *time.Time) {
 	common.LockAllDeviceInfo()
 	defer common.UnlockAllDeviceInfo()
@@ -559,6 +554,39 @@ func (hdm *HwDevManager) handleDeviceInfoUpdate(ctx context.Context, initTime *t
 	common.Synchronize = true
 }
 
+func (hdm *HwDevManager) loadFaultCodeAndDeviceInfoCm(ctx context.Context) {
+	// when device-plugin is started, the value of ManuallySeparateNPU and upgrade fault reason in device info configmap
+	// needs to be written into cache to prevent manually separate npu IDs in cache from been lost
+	interval := hdm.loadFaultCode()
+	hwlog.RunLog.Infof("init poll interval is %d", interval)
+	hdm.manager.LoadDeviceInfoCm(ctx)
+	hdm.loadDeviceFaultFromUpgradeReason()
+	go hdm.pollFaultCodeCM(ctx, interval)
+}
+
+func (hdm *HwDevManager) loadDeviceFaultFromUpgradeReason() {
+	for _, devices := range hdm.groupDevice {
+		for _, npuDevice := range devices {
+			faultLevelAndTime := common.GetUpgradeFaultLevelAndTime(npuDevice.LogicID, common.AllFaultMode)
+			for code, levelAndTime := range faultLevelAndTime {
+				faultInfo := npuCommon.DevFaultInfo{
+					EventID:         code,
+					LogicID:         npuDevice.LogicID,
+					Assertion:       npuCommon.FaultOccur,
+					AlarmRaisedTime: levelAndTime.FaultTime,
+				}
+				common.DoSaveDevFaultInfo(faultInfo, false)
+			}
+		}
+	}
+	hdm.manager.UpdateHealth(hdm.groupDevice, hdm.allInfo.AICoreDevs, hdm.RunMode)
+	for _, devices := range hdm.groupDevice {
+		for _, npuDevice := range devices {
+			common.SetDeviceInit(npuDevice.LogicID)
+		}
+	}
+}
+
 // ListenDevice ListenDevice coroutine
 func (hdm *HwDevManager) ListenDevice(ctx context.Context) {
 	hwlog.RunLog.Info("starting the listen device")
@@ -567,10 +595,7 @@ func (hdm *HwDevManager) ListenDevice(ctx context.Context) {
 		// will set a goroutine to query all switch faults every 5 min
 		go hdm.SwitchDevManager.GetSwitchFaultCodeByInterval(ctx, time.Second*common.GetSwitchFaultCodeInterval)
 	}
-	// when device-plugin is started, the value of ManuallySeparateNPU and upgrade fault reason in device info configmap
-	// needs to be written into cache to prevent manually separate npu IDs in cache from been lost
-	hdm.loadDeviceInfoCm(ctx)
-	go hdm.pollFaultCodeCM(ctx)
+	hdm.loadFaultCodeAndDeviceInfoCm(ctx)
 	go hdm.Serve(ctx)
 	if common.ParamOption.CheckCachedPods {
 		go hdm.manager.GetKubeClient().PodInformerInspector(ctx)
@@ -1508,8 +1533,7 @@ func (hdm *HwDevManager) isSupportGraceTolerance() {
 	common.ParamOption.GraceToleranceOn = true
 }
 
-func (hdm *HwDevManager) pollFaultCodeCM(ctx context.Context) {
-	var interval = common.PollFaultCodeCMInterval
+func (hdm *HwDevManager) pollFaultCodeCM(ctx context.Context, interval int) {
 	for {
 		select {
 		case _, ok := <-ctx.Done():
@@ -1521,25 +1545,22 @@ func (hdm *HwDevManager) pollFaultCodeCM(ctx context.Context) {
 		default:
 			time.Sleep(time.Duration(interval) * time.Second)
 			hwlog.RunLog.Debugf("polling '%s' configmap", common.FaultCodeCMName)
-			configMap, fromCm := hdm.loadFaultCode()
-			if fromCm {
-				interval = getFaultCodeCMPollInterval(configMap)
-			}
+			interval = hdm.loadFaultCode()
 		}
 	}
 }
 
-func (hdm *HwDevManager) loadFaultCode() (*v1.ConfigMap, bool) {
+func (hdm *HwDevManager) loadFaultCode() int {
+	interval := common.PollFaultCodeCMInterval
 	configMap, err := hdm.manager.GetKubeClient().GetConfigMap(common.FaultCodeCMName, api.KubeNS)
-	fromCm := false
 	if err != nil {
 		hwlog.RunLog.Debugf("cannot find '%s' configmap, reason: %v", common.FaultCodeCMName, err)
 		initFaultInfoFromFile()
 	} else {
 		updateFaultConfigFromCm(configMap)
-		fromCm = true
+		interval = getFaultCodeCMPollInterval(configMap)
 	}
-	return configMap, fromCm
+	return interval
 }
 
 func updateFaultConfigFromCm(configMap *v1.ConfigMap) {

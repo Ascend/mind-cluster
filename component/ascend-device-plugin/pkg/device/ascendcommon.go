@@ -318,6 +318,7 @@ func (tool *AscendTools) asyncReleaseAutoFill(ctx context.Context, autoFillPhyId
 		}
 		autoFillLogicIds = append(autoFillLogicIds, common.LogicId(logicId))
 	}
+	hwlog.RunLog.Infof("logicIds %v will release auto fill fault after %d seconds", autoFillLogicIds, timeout)
 	go func() {
 		select {
 		case <-ctx.Done():
@@ -804,7 +805,7 @@ func (tool *AscendTools) getDeviceFaults(device *common.NpuDevice) []common.Devi
 
 func (tool *AscendTools) getDeviceFaultsWithMode(device *common.NpuDevice, faultCodes []int64,
 	deviceFaults []common.DeviceFault, mode string, unhealthyType string) []common.DeviceFault {
-	upgradeFaultLevelAndTime := common.GetUpgradeFaultLevelAndTime(device.LogicID)
+	upgradeFaultLevelAndTime := common.GetUpgradeFaultLevelAndTime(device.LogicID, mode)
 	allFaultCodes := append(faultCodes, common.Keys(upgradeFaultLevelAndTime)...)
 	newCode := tool.removeDuplicateErr(allFaultCodes)
 	var faultType = ""

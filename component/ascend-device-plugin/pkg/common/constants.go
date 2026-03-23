@@ -748,6 +748,8 @@ const (
 	ChipFaultMode = "chip fault mode"
 	// NetworkFaultMode represents network fault mode
 	NetworkFaultMode = "network fault mode"
+	// AllFaultMode represents all fault mode
+	AllFaultMode = "all fault mode"
 )
 
 const (

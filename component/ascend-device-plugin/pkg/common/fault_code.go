@@ -875,7 +875,7 @@ func GetFaultType(faultCodes []int64, logicId int32) string {
 	faultTypes = append(faultTypes, GetFaultTypeByCode(newFaultCodes))
 	faultTypes = append(faultTypes, GetFaultTypeFromFaultFrequency(logicId, ChipFaultMode))
 	faultTypes = append(faultTypes, GetFaultTypeFromFaultDuration(logicId, ChipFaultMode))
-	faultLevelAndTime := GetUpgradeFaultLevelAndTime(logicId)
+	faultLevelAndTime := GetUpgradeFaultLevelAndTime(logicId, ChipFaultMode)
 	for _, levelAndTime := range faultLevelAndTime {
 		faultTypes = append(faultTypes, levelAndTime.FaultLevel)
 	}
@@ -895,6 +895,10 @@ func GetNetworkFaultType(faultCodes []int64, logicId int32) string {
 	faultTypes = append(faultTypes, GetNetworkFaultTypeByCode(newNetworkFaultCodes))
 	faultTypes = append(faultTypes, GetFaultTypeFromFaultFrequency(logicId, NetworkFaultMode))
 	faultTypes = append(faultTypes, GetFaultTypeFromFaultDuration(logicId, NetworkFaultMode))
+	faultLevelAndTime := GetUpgradeFaultLevelAndTime(logicId, NetworkFaultMode)
+	for _, levelAndTime := range faultLevelAndTime {
+		faultTypes = append(faultTypes, levelAndTime.FaultLevel)
+	}
 	return getMostSeriousFaultType(faultTypes)
 }
 
@@ -1200,9 +1204,11 @@ func updateDeviceFaultTimeMap(device *NpuDevice, faultInfo common.DevFaultInfo, 
 		if !found || existingFaultTime > faultTime {
 			device.FaultTimeMap[faultInfo.EventID] = faultTime
 		}
-		hexFaultCode := strings.ToUpper(strconv.FormatInt(faultInfo.EventID, Hex))
-		hwlog.RunLog.Debugf("%s fault time: %d", hexFaultCode, device.FaultTimeMap[faultInfo.EventID])
+		hwlog.RunLog.Debugf("add logicId %d event %x fault time: %d",
+			device.LogicID, faultInfo.EventID, device.FaultTimeMap[faultInfo.EventID])
 	} else {
+		hwlog.RunLog.Debugf("del logicId %d event %x fault time: %d",
+			device.LogicID, faultInfo.EventID, device.FaultTimeMap[faultInfo.EventID])
 		delete(device.FaultTimeMap, faultInfo.EventID)
 	}
 }
@@ -1851,13 +1857,22 @@ func GetFrequencyFaultLevelAndCodes(mode string, logicId int32) map[int64]FaultT
 	return result
 }
 
-func GetUpgradeFaultLevelAndTime(logicId int32) map[int64]FaultTimeAndLevel {
+func GetUpgradeFaultLevelAndTime(logicId int32, mode string) map[int64]FaultTimeAndLevel {
 	upgradeReasonSet := copyUpgradeFaultCacheFromLogic(LogicId(logicId))
 	result := make(map[int64]FaultTimeAndLevel)
+	if mode != ChipFaultMode && mode != NetworkFaultMode && mode != AllFaultMode {
+		return result
+	}
 	for _, value := range upgradeReasonSet {
 		num, err := strconv.ParseInt(value.FaultCode, Hex, 0)
 		if err != nil {
 			hwlog.RunLog.Errorf(parseHexFailedMsg, value.FaultCode)
+			continue
+		}
+		if mode == NetworkFaultMode && !NetworkFaultCodes.Has(num) {
+			continue
+		}
+		if mode == ChipFaultMode && NetworkFaultCodes.Has(num) {
 			continue
 		}
 		result[num] = FaultTimeAndLevel{
