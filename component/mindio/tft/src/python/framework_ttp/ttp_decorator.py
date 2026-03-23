@@ -1134,6 +1134,7 @@ def check_pytorch_version():
 
 
 def tft_destroy_processor():
+    ttp_logger.LOGGER.info("calling destroy processor")
     ret = ttp_c2python_api.destroy_processor()
     if ret != RET_OK:
         ttp_logger.LOGGER.error("destroy processor failed, error num:%s", ret)
