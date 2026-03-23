@@ -857,3 +857,10 @@ const (
 	// SoftShareDevNPUInfoConfigParentDirSplitLen split length of soft share device npu info config parent dir
 	SoftShareDevNPUInfoConfigParentDirSplitLen = 2
 )
+
+const (
+	// EveryNetworkQueryDuration indicate query network info per five minute
+	EveryNetworkQueryDuration = 5
+	// NetworkQueryRateLimit upper limit rate of query network status per five minute
+	NetworkQueryRateLimit = 1
+)
