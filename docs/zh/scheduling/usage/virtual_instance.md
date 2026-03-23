@@ -196,8 +196,8 @@
 
 划分vNPU有以下两种方式。
 
--   静态虚拟化：通过npu-smi工具**手动**创建多个vNPU。物理机和虚拟机场景均支持静态虚拟化。
--   动态虚拟化：通过软件配置，在收到虚拟化任务请求后，动态地**自动**创建vNPU、挂载任务、回收vNPU。
+- 静态虚拟化：通过npu-smi工具**手动**创建多个vNPU。物理机和虚拟机场景均支持静态虚拟化。
+- 动态虚拟化：通过软件配置，在收到虚拟化任务请求后，动态地**自动**创建vNPU、挂载任务、回收vNPU。
 
 **表 1**  使用场景
 
@@ -255,16 +255,16 @@
 
 将vNPU挂载到容器有以下方案：
 
--   原生Docker：结合原生Docker使用。仅支持静态虚拟化（通过npu-smi工具创建多个vNPU），通过Docker拉起容器时将vNPU挂载到容器。
+- 原生Docker：结合原生Docker使用。仅支持静态虚拟化（通过npu-smi工具创建多个vNPU），通过Docker拉起容器时将vNPU挂载到容器。
 
-    >[!NOTE] 说明 
+    >[!NOTE] 
     >不支持通过原生Containerd拉起容器时将vNPU挂载到容器。
 
--   结合MindCluster组件：
-    -   Ascend Docker Runtime：单独基于Ascend Docker Runtime（容器引擎插件）使用。支持静态虚拟化和动态虚拟化，通过Ascend Docker Runtime拉起容器时将vNPU挂载到容器。
-    -   Kubernetes：结合MindCluster组件Ascend Device Plugin、Volcano，通过Kubernetes拉起容器时将vNPU挂载到容器。支持静态虚拟化和动态虚拟化。
-        -   静态虚拟化：通过npu-smi工具提前创建多个vNPU，当用户需要使用vNPU资源时，基于Ascend Device Plugin组件的设备发现、设备分配、设备健康状态上报功能，分配vNPU资源提供给上层用户使用，此方案下，集群调度组件的Volcano组件为可选。
-        -   动态虚拟化：Ascend Device Plugin组件上报其所在机器的可用AICore数目。虚拟化任务上报后，Volcano经过计算将该任务调度到满足其要求的节点。该节点的Ascend Device Plugin在收到请求后自动切分出vNPU设备并挂载该任务，从而完成整个动态虚拟化过程。该过程不需要用户提前切分vNPU，在任务使用完成后又能自动回收，很好地支持用户算力需求不断变化的场景。
+- 结合MindCluster组件：
+    - Ascend Docker Runtime：单独基于Ascend Docker Runtime（容器引擎插件）使用。支持静态虚拟化和动态虚拟化，通过Ascend Docker Runtime拉起容器时将vNPU挂载到容器。
+    - Kubernetes：结合MindCluster组件Ascend Device Plugin、Volcano，通过Kubernetes拉起容器时将vNPU挂载到容器。支持静态虚拟化和动态虚拟化。
+        - 静态虚拟化：通过npu-smi工具提前创建多个vNPU，当用户需要使用vNPU资源时，基于Ascend Device Plugin组件的设备发现、设备分配、设备健康状态上报功能，分配vNPU资源提供给上层用户使用，此方案下，集群调度组件的Volcano组件为可选。
+        - 动态虚拟化：Ascend Device Plugin组件上报其所在机器的可用AICore数目。虚拟化任务上报后，Volcano经过计算将该任务调度到满足其要求的节点。该节点的Ascend Device Plugin在收到请求后自动切分出vNPU设备并挂载该任务，从而完成整个动态虚拟化过程。该过程不需要用户提前切分vNPU，在任务使用完成后又能自动回收，很好地支持用户算力需求不断变化的场景。
 
 ### 虚拟化规则<a name="ZH-CN_TOPIC_0000002511346345"></a>
 
@@ -275,6 +275,7 @@
 **表 1**  虚拟化实例模板
 
 <a name="zh-cn_topic_0000002038226813_table140421911260"></a>
+
 |产品型号|虚拟化实例模板|说明|
 |--|--|--|
 |Atlas 训练系列产品（30或32个AI Core）|虚拟化实例模板包括：vir02、vir04、vir08、vir16。|<ul><li>vir后面的数字表示AI Core数量。</li><li>c前面的数字表示AI CPU数量。</li><li>dvpp表示虚拟化时包含所有数字视觉预处理模块（即VPC，VDEC，JPEGD，PNGD，VENC，JPEGE）。</li><li>ndvpp表示虚拟化时没有数字视觉预处理硬件资源。</li></ul>|
@@ -285,77 +286,80 @@
 |Atlas A3 推理系列产品（40个AI Core）|虚拟化实例模板包括：vir05_1c_16g、vir10_3c_32g。|<ul><li>vir后面的数字表示AI Core数量。</li><li>c前面的数字表示AI CPU数量。</li><li>g前面的数字表示内存数量。</li></ul>|
 |注：具体服务器支持的模板可通过**dmidecode -s system-product-name**命令查询。|
 
->[!NOTE] 说明 
+>[!NOTE]  
 >昇腾AI处理器包含AI Core、AI CPU、DVPP、内存等硬件资源，主要用途如下：
->-   AI Core主要用于矩阵乘等计算，适用于卷积模型。
->-   AI CPU主要负责执行CPU类算子（包括控制算子、标量和向量等通用计算）。
->-   虚拟化实例（创建指定芯片的vNPU）会使能SRIOV，将data CPU转化为AI CPU，因此会导致NPU信息中的AI CPU个数发生变化。
->-   DVPP为数字视觉预处理模块，提供对特定格式的视频和图像进行解码、缩放等预处理操作，以及对处理后的视频、图像进行编码再输出的能力，包含VPC、VDEC、JPEGD、PNGD、VENC、JPEGE模块。
->    -   VPC：视觉预处理核心，提供对图像进行缩放、色域转换、降bit数处理、存储格式转换、区块切割转换等能力。
->    -   VDEC：视频解码器，提供对特定格式的视频进行解码的能力。
->    -   JPEGD：JPEG图像解码器，提供对JPEG格式的图像进行解码的能力。
->    -   PNGD：PNG图像解码器，提供对PNG格式的图像进行解码的能力。
->    -   VENC：视频编码器，提供对特定格式的视频进行编码的能力。
->    -   JPEGE：JPEG图像编码器，提供对图像进行编码输出为JPEG格式的能力。
+>
+>- AI Core主要用于矩阵乘等计算，适用于卷积模型。
+>- AI CPU主要负责执行CPU类算子（包括控制算子、标量和向量等通用计算）。
+>- 虚拟化实例（创建指定芯片的vNPU）会使能SRIOV，将data CPU转化为AI CPU，因此会导致NPU信息中的AI CPU个数发生变化。
+>- DVPP为数字视觉预处理模块，提供对特定格式的视频和图像进行解码、缩放等预处理操作，以及对处理后的视频、图像进行编码再输出的能力，包含VPC、VDEC、JPEGD、PNGD、VENC、JPEGE模块。
+>    - VPC：视觉预处理核心，提供对图像进行缩放、色域转换、降bit数处理、存储格式转换、区块切割转换等能力。
+>    - VDEC：视频解码器，提供对特定格式的视频进行解码的能力。
+>    - JPEGD：JPEG图像解码器，提供对JPEG格式的图像进行解码的能力。
+>    - PNGD：PNG图像解码器，提供对PNG格式的图像进行解码的能力。
+>    - VENC：视频编码器，提供对特定格式的视频进行编码的能力。
+>    - JPEGE：JPEG图像编码器，提供对图像进行编码输出为JPEG格式的能力。
 
 ### 创建vNPU<a name="ZH-CN_TOPIC_0000002479226382"></a>
 
--   在物理机和虚拟机使用npu-smi工具创建vNPU的命令基本相同，所以本节命令可以适用于物理机和虚拟机，其中只有Atlas 推理系列产品支持在虚拟机创建vNPU。
--   当使用**静态虚拟化**创建vNPU并挂载到容器时，需要使用**npu-smi**命令创建vNPU，再参考[挂载vNPU](#挂载vnpu)。
--   当使用**动态虚拟化**时，无需提前创建vNPU，请跳过本节，直接在容器拉起时按以下要求进行参数配置。
-    -   使用Ascend Docker Runtime：参考[方式一：Ascend Docker Runtime挂载vNPU](#方式一ascend-docker-runtime挂载vnpu)，通过ASCEND\_VISIBLE\_DEVICES和ASCEND\_VNPU\_SPECS参数从物理芯片上虚拟化出多个vNPU并挂载至容器。
-    -   使用MindCluster集群调度组件（Ascend Device Plugin和Volcano）：参考[动态虚拟化](#动态虚拟化)，运行任务时自动按照配置要求调用接口创建vNPU。
+- 在物理机和虚拟机使用npu-smi工具创建vNPU的命令基本相同，所以本节命令可以适用于物理机和虚拟机，其中只有Atlas 推理系列产品支持在虚拟机创建vNPU。
+- 当使用**静态虚拟化**创建vNPU并挂载到容器时，需要使用**npu-smi**命令创建vNPU，再参考[挂载vNPU](#挂载vnpu)。
+- 当使用**动态虚拟化**时，无需提前创建vNPU，请跳过本节，直接在容器拉起时按以下要求进行参数配置。
+    - 使用Ascend Docker Runtime：参考[方式一：Ascend Docker Runtime挂载vNPU](#方式一ascend-docker-runtime挂载vnpu)，通过ASCEND\_VISIBLE\_DEVICES和ASCEND\_VNPU\_SPECS参数从物理芯片上虚拟化出多个vNPU并挂载至容器。
+    - 使用MindCluster集群调度组件（Ascend Device Plugin和Volcano）：参考[动态虚拟化](#动态虚拟化)，运行任务时自动按照配置要求调用接口创建vNPU。
 
 **创建vNPU方法<a name="section206799361399"></a>**
 
--   在物理机执行以下命令设置虚拟化模式（如果是在虚拟机内划分vNPU，不需要执行本命令），命令格式如下。
+- 在物理机执行以下命令设置虚拟化模式（如果是在虚拟机内划分vNPU，不需要执行本命令），命令格式如下。
 
     **npu-smi set -t vnpu-mode -d** _mode_
 
     **表 1**  参数说明
 
     <a name="table11489191211336"></a>
+
     |类型|描述|
     |--|--|
     |mode|<p>虚拟化实例模式。取值为0或1：</p><ul><li>0：虚拟化实例容器模式</li><li>1：虚拟化实例虚拟机模式</li></ul>|
 
--   创建vNPU。命令格式如下：
+- 创建vNPU。命令格式如下：
 
     **npu-smi set -t create-vnpu -i** _id_ **-c** _chip\_id_ **-f** _vnpu\_config_  \[**-v** _vnpu\_id_\] \[**-g** _vgroup\_id_\]
 
     <a name="table1654283920393"></a>
+
     |类型|描述|
     |--|--|
     |id|设备ID。通过<b>npu-smi info -l</b>命令查出的NPU ID即为设备ID。|
     |chip_id|芯片ID。通过<b>npu-smi info -m</b>命令查出的Chip ID即为芯片ID。|
-    |vnpu_config|虚拟化实例模板名称，可参见<a href="#虚拟化规则">虚拟化规则</a>章节中的“虚拟化模板”。|
-    |vnpu_id|<p>指定需要创建的vNPU的id。</p><ul><li>首次创建可以不指定该参数，由系统默认分配。若重启后业务需要使用重启前的vnpu_id，可以使用-v参数指定重启前的vnpu_id进行恢复。</li><li>取值范围。<ul><li>Atlas 推理系列产品<p>vnpu_id的取值范围为[phy_id * 16 + 100, phy_id * 16+107]。</p></li><li>Atlas 训练系列产品<p>vnpu_id的取值范围为[phy_id * 16 + 100, phy_id * 16+115]。</p></li></ul><div class="note"><span class="notetitle"> 说明： </span><div class="notebody"><p>phy_id表示芯片物理ID，可通过执行<strong>ls /dev/davinci*</strong>命令获取芯片的物理ID。例如/dev/davinci0，表示芯片的物理ID为0。</p></div></div></li><li>vnpu_id传入4294967295时表示不指定虚拟设备号。</li><li>同一台服务器内不可重复创建相同vnpu_id的vNPU。</li></ul>|
-    |vgroup_id|虚拟资源组vGroup的id，取值范围0~3。vGroup的概念可以参见<a href="#虚拟化规则">虚拟化规则</a>章节中的“虚拟化模式”，仅<span>Atlas 推理系列产品</span>支持本参数。|
+    |vnpu_config|虚拟化实例模板名称，详细请参见[虚拟化模板](#虚拟化规则)。|
+    |vnpu_id|<p>指定需要创建的vNPU的ID。</p><ul><li>首次创建可以不指定该参数，由系统默认分配。若重启后业务需要使用重启前的vnpu_id，可以使用-v参数指定重启前的vnpu_id进行恢复。</li><li>取值范围：<ul><li>Atlas 推理系列产品<p>vnpu_id的取值范围为[phy_id \* 16 + 100, phy_id \* 16+107]。</p></li><li>Atlas 训练系列产品<p>vnpu_id的取值范围为[phy_id \* 16 + 100, phy_id \* 16+115]。</p></li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">phy_id表示芯片物理ID，可通过执行<strong>ls /dev/davinci*</strong>命令获取芯片的物理ID。例如/dev/davinci0，表示芯片的物理ID为0。</div></div></li><li>vnpu_id传入4294967295时表示不指定虚拟设备号。</li><li>同一台服务器内不可重复创建相同vnpu_id的vNPU。</li></ul>|
+    |vgroup_id|虚拟资源组vGroup的ID，取值范围为0~3。<p>vGroup是指虚拟化时NPU根据用户指定的虚拟化模板划分出虚拟资源组vGroup，每个vGroup包含若干AICore、AICPU、片上内存、DVPP资源。</p><p>仅<span>Atlas 推理系列产品</span>支持本参数。</p>|
 
     使用示例如下：
 
-    -   在设备0中编号为0的芯片上根据模板vir02创建vNPU。
+    - 在设备0中编号为0的芯片上根据模板vir02创建vNPU。
 
-        ```
+        ```shell
         npu-smi set -t create-vnpu -i 0 -c 0 -f vir02
                 Status : OK         Message : Create vnpu success
         ```
 
-    -   在设备0中编号为0的芯片上指定vnpu\_id为103创建vNPU设备，此vNPU的模板为vir02。
+    - 在设备0中编号为0的芯片上指定vnpu\_id为103创建vNPU设备，此vNPU的模板为vir02。
 
-        ```
+        ```shell
         npu-smi set -t create-vnpu -i 0 -c 0 -f vir02 -v 103
                 Status : OK         Message : Create vnpu success
         ```
 
-    -   在设备0中编号为0的芯片上指定vnpu\_id为100并指定vgroup\_id为1创建vNPU设备，此vNPU的模板为vir02。
+    - 在设备0中编号为0的芯片上指定vnpu\_id为100并指定vgroup\_id为1创建vNPU设备，此vNPU的模板为vir02。
 
-        ```
+        ```shell
         npu-smi set -t create-vnpu -i 0 -c 0 -f vir02 -v 100 -g 1
                 Status : OK         Message : Create vnpu success
         ```
 
--   配置vNPU恢复状态。该参数用于设备重启时，设备能够保存vNPU配置信息，重启后，vNPU配置依然有效。
+- 配置vNPU恢复状态。该参数用于设备重启时，设备能够保存vNPU配置信息，重启后，vNPU配置依然有效。
 
     **npu-smi set -t vnpu-cfg-recover -d** _mode_
 
@@ -365,26 +369,27 @@
 
     **npu-smi set -t vnpu-cfg-recover -d** _1_
 
-    ```
+    ```ColdFusion
            Status : OK
            Message : The VNPU config recover mode Enable is set successfully.
     ```
 
--   查询vNPU的配置恢复状态。
+- 查询vNPU的配置恢复状态。
 
     以下命令表示查询当前环境中vNPU的配置恢复使能状态。
 
     **npu-smi info -t vnpu-cfg-recover**
 
-    ```
+    ```ColdFusion
     VNPU config recover mode : Enable
     ```
 
--   查询vNPU信息。命令格式：
+- 查询vNPU信息。命令格式：
 
     **npu-smi info -t info-vnpu -i** _id_ **-c** _chip\_id_
 
     <a name="table1585213289319"></a>
+
     |类型|描述|
     |--|--|
     |id|设备ID。通过<b>npu-smi info -l</b>命令查出的NPU ID即为设备ID。|
@@ -396,7 +401,7 @@
 
     ![](../../figures/scheduling/1.png)
 
-    >[!NOTE] 说明 
+    >[!NOTE] 
     >Atlas 推理系列产品支持返回AICPU，Vgroup ID信息，Atlas 训练系列产品不支持返回AICPU，Vgroup ID信息。
 
 ### 销毁vNPU<a name="ZH-CN_TOPIC_0000002479386366"></a>
@@ -411,21 +416,19 @@
 
 执行**npu-smi set -t destroy-vnpu -i  0  -c 0 -v 103**销毁设备0编号0的芯片中编号为103的vNPU设备。显示以下信息表示销毁成功。
 
-```
+```ColdFusion
        Status : OK
        Message : Destroy vnpu 103 success
 ```
 
->[!NOTE] 说明 
+>[!NOTE] 
 >在销毁指定vNPU之前，请确保此设备未被使用。
-
 
 ### 挂载vNPU<a name="ZH-CN_TOPIC_0000002479386388"></a>
 
 #### 基于原生Docker挂载vNPU<a name="ZH-CN_TOPIC_0000002479226416"></a>
 
 原生Docker场景下（未部署MindCluster集群调度组件），需要使用npu-smi工具创建vNPU后，将vNPU挂载到容器。具体操作请参见《Atlas 中心训练服务器 25.5.0 NPU驱动和固件安装指南》的“昇腾虚拟化实例（AVI）容器场景下的安装与卸载\>[多容器场景下安装](https://support.huawei.com/enterprise/zh/doc/EDOC1100540363/5b32515a)”章节，该章节指导用户安装Docker和将vNPU挂载进容器。
-
 
 #### 基于MindCluster组件挂载vNPU<a name="ZH-CN_TOPIC_0000002511346329"></a>
 
@@ -441,41 +444,46 @@
 
 选择以下两种方式之一进行使用：
 
--   静态虚拟化：用户已通过npu-smi工具创建vNPU，在拉起容器时执行以下命令将vNPU挂载至容器中。以下命令表示用户在拉起容器时，挂载虚拟芯片ID为100的芯片。
+- 静态虚拟化：用户已通过npu-smi工具创建vNPU，在拉起容器时执行以下命令将vNPU挂载至容器中。以下命令表示用户在拉起容器时，挂载虚拟芯片ID为100的芯片。
 
-    ```
+    ```shell
     docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL image-name:tag /bin/bash
     ```
 
--   动态虚拟化：用户在拉起容器时，执行以下命令虚拟化资源，以下命令表示从物理芯片ID为0的芯片上，切分出4个AI Core作为vNPU并挂载至容器。以此方式拉起的容器，在结束容器进程时，虚拟设备会自动销毁。
+- 动态虚拟化：用户在拉起容器时，执行以下命令虚拟化资源，以下命令表示从物理芯片ID为0的芯片上，切分出4个AI Core作为vNPU并挂载至容器。以此方式拉起的容器，在结束容器进程时，虚拟设备会自动销毁。
 
-    ```
+    ```shell
     docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 image-name:tag /bin/bash
     ```
 
->[!NOTE] 说明 
->-   使用动态虚拟化时，需要关闭vNPU的恢复使能功能，该功能的详细说明和操作指导请参考《Atlas 中心推理卡  25.5.0 npu-smi 命令参考》中的“算力切分相关命令\>[设置vNPU的配置恢复使能状态](https://support.huawei.com/enterprise/zh/doc/EDOC1100540373/fa2a6907)”章节。
->-   可用的芯片ID可通过如下方式查询确认：
->        -   物理芯片ID：
->            ```
->            ls /dev/davinci*
->            ```
->        -   虚拟芯片ID：
->             ```
->             ls /dev/vdavinci*
->             ```
->-   image-name:tag：镜像名称与标签，请根据实际情况修改。如“ascend-tensorflow:tensorflow\_TAG”。
->-   用户在使用过程中，请勿重复定义和在容器镜像中固定ASCEND\_VISIBLE\_DEVICES、ASCEND\_RUNTIME\_OPTIONS和ASCEND\_VNPU\_SPECS环境变量。
+>[!NOTE] 
+>
+>- 使用动态虚拟化时，需要关闭vNPU的恢复使能功能，该功能的详细说明和操作指导请参考《Atlas 中心推理卡  25.5.0 npu-smi 命令参考》中的“算力切分相关命令\>[设置vNPU的配置恢复使能状态](https://support.huawei.com/enterprise/zh/doc/EDOC1100540373/fa2a6907)”章节。
+>- 可用的芯片ID可通过如下方式查询确认：
+>   - 物理芯片ID：
+>
+>      ```shell
+>      ls /dev/davinci*
+>      ```
+>
+>   - 虚拟芯片ID：
+>
+>     ```shell
+>     ls /dev/vdavinci*
+>     ```
+>
+>- image-name:tag：镜像名称与标签，请根据实际情况修改。如“ascend-tensorflow:tensorflow\_TAG”。
+>- 用户在使用过程中，请勿重复定义和在容器镜像中固定ASCEND\_VISIBLE\_DEVICES、ASCEND\_RUNTIME\_OPTIONS和ASCEND\_VNPU\_SPECS环境变量。
 
 **表 1**  参数解释
 
 <a name="zh-cn_topic_0000001136053188_table19948947144812"></a>
+
 |参数|说明|举例|
 |--|--|--|
-|ASCEND_VISIBLE_DEVICES|必须使用ASCEND_VISIBLE_DEVICES环境变量指定被挂载至容器中的NPU设备，否则挂载NPU设备失败；使用NPU设备序号指定设备，支持单个和范围指定且支持混用。|<ul><li>静态虚拟化：<ul><li>ASCEND_VISIBLE_DEVICES=100表示将100号vNPU挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=101,103表示将101、103号vNPU挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=100-102表示将100号至102号vNPU（包含100号和102号）挂载入容器中，效果同ASCEND_VISIBLE_DEVICES=100,101,102。</li><li>ASCEND_VISIBLE_DEVICES=100-102,104表示将100号至102号以及104号vNPU挂载入容器，效果同ASCEND_VISIBLE_DEVICES=100,101,102,104。</li></ul><div class="note"><span class="notetitle"> 说明： </span><div class="notebody"><ul><li>必须搭配ASCEND_RUNTIME_OPTIONS，取值必须包含VIRTUAL，表示挂载的是vNPU。</li></ul></div></div></li></ul></li><li>动态虚拟化：<div class="p">ASCEND_VISIBLE_DEVICES=0表示从0号NPU设备中划分出一定数量的AI Core。<div class="note"><span class="notetitle"> 说明： </span><div class="notebody"><ul><li>一条动态虚拟化的命令只能指定一个物理NPU的ID进行动态虚拟化。</li><li>必须搭配ASCEND_VNPU_SPECS，表示在指定的NPU上划分出的AI Core数量。</li><li>可以搭配ASCEND_RUNTIME_OPTIONS，但是只能取值为NODRV，表示不挂载驱动相关目录。</li></ul></div></div></div></li></ul>|
+|ASCEND_VISIBLE_DEVICES|必须使用ASCEND_VISIBLE_DEVICES环境变量指定被挂载至容器中的NPU设备，否则挂载NPU设备失败；使用NPU设备序号指定设备，支持单个和范围指定且支持混用。|<ul><li>静态虚拟化：<ul><li>ASCEND_VISIBLE_DEVICES=100表示将100号vNPU挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=101,103表示将101、103号vNPU挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=100-102表示将100号至102号vNPU（包含100号和102号）挂载入容器中，效果同ASCEND_VISIBLE_DEVICES=100,101,102。</li><li>ASCEND_VISIBLE_DEVICES=100-102,104表示将100号至102号以及104号vNPU挂载入容器，效果同ASCEND_VISIBLE_DEVICES=100,101,102,104。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">必须搭配ASCEND_RUNTIME_OPTIONS，取值必须包含VIRTUAL，表示挂载的是vNPU。</div></div></li><li>动态虚拟化：ASCEND_VISIBLE_DEVICES=0表示从0号NPU设备中划分出一定数量的AI Core。<ul><li>一条动态虚拟化的命令只能指定一个物理NPU的ID进行动态虚拟化。</li><li>必须搭配ASCEND_VNPU_SPECS，表示在指定的NPU上划分出的AI Core数量。</li><li>可以搭配ASCEND_RUNTIME_OPTIONS，但是只能取值为NODRV，表示不挂载驱动相关目录。</li></ul></li></ul>|
 |ASCEND_RUNTIME_OPTIONS|<p>对参数ASCEND_VISIBLE_DEVICES中指定的芯片ID作出限制：</p><ul><li>NODRV：表示不挂载驱动相关目录。</li><li>VIRTUAL：表示挂载的是虚拟芯片。</li><li>NODRV,VIRTUAL：表示挂载的是虚拟芯片，并且不挂载驱动相关目录。</li></ul>|<ul><li>ASCEND_RUNTIME_OPTIONS=NODRV</li><li>ASCEND_RUNTIME_OPTIONS=VIRTUAL</li><li>ASCEND_RUNTIME_OPTIONS=NODRV,VIRTUAL</li></ul>|
 |ASCEND_VNPU_SPECS|从物理NPU设备中划分出一定数量的AI Core，指定为虚拟设备。支持的取值请参见<a href="#虚拟化规则">表1</a>。<ul><li>只有支持动态虚拟化的产品形态，才能使用该参数。</li><li>需配合参数“ASCEND_VISIBLE_DEVICES”一起使用，参数“ASCEND_VISIBLE_DEVICES”指定用于虚拟化的物理NPU设备。</li></ul>|ASCEND_VNPU_SPECS=vir04表示划分4个AI Core作为vNPU，挂载至容器。|
-
 
 ##### 方式二：Kubernetes挂载vNPU<a name="ZH-CN_TOPIC_0000002511346321"></a>
 
@@ -486,7 +494,7 @@
 **表 1**  虚拟化需要的集群调度组件
 
 <a name="table19103194217329"></a>
-<table><thead align="left"><tr id="row5103242103213"><th class="cellrowborder" valign="top" width="11.677219849801206%" id="mcps1.2.5.1.1"><p id="p2103642143218"><a name="p2103642143218"></a><a name="p2103642143218"></a>特性</p>
+<table><thead align="left"><th class="cellrowborder" valign="top" width="11.677219849801206%" id="mcps1.2.5.1.1"><p id="p2103642143218"><a name="p2103642143218"></a><a name="p2103642143218"></a>特性</p>
 </th>
 <th class="cellrowborder" valign="top" width="24.82697688116625%" id="mcps1.2.5.1.2"><p id="p619110456115"><a name="p619110456115"></a><a name="p619110456115"></a>需要的集群调度组件</p>
 </th>
@@ -522,27 +530,26 @@
 </tbody>
 </table>
 
-
->[!NOTE] 说明 
+>[!NOTE]  
 >Ascend Device Plugin组件的安装请参见[Ascend Device Plugin](../installation_guide.md#ascend-device-plugin)。
 >在静态虚拟化场景下，组件的可选性说明如下。
->-   Volcano：用户若使用自己的调度组件，需要进行参数配置，请参见[表2](#table1064314568229)；用户也可直接使用该组件进行任务调度。
->-   Ascend Operator：当使用训练系列产品时才需要选择该组件；使用推理系列产品时可不选择。
->-   ClusterD：当使用Volcano时才需要选择该组件，详细请参见[安装Volcano](../installation_guide.md#安装volcano)。
-
+>
+>- Volcano：用户若使用自己的调度组件，需要进行参数配置，请参见[表2](#table1064314568229)；用户也可直接使用该组件进行任务调度。
+>- Ascend Operator：当使用训练系列产品时才需要选择该组件；使用推理系列产品时可不选择。
+>- ClusterD：当使用Volcano时才需要选择该组件，详细请参见[安装Volcano](../installation_guide.md#安装volcano)。
 
 ###### 静态虚拟化<a name="ZH-CN_TOPIC_0000002479226392"></a>
 
 **使用限制<a name="section785220396317"></a>**
 
--   当前vNPU仅支持单个vNPU单容器任务，不支持创建多副本任务。
--   任务运行过程中，不支持卸载Volcano。
--   目前任务的每个Pod请求的NPU设备数量规则如下：
+- 当前vNPU仅支持单个vNPU单容器任务，不支持创建多副本任务。
+- 任务运行过程中，不支持卸载Volcano。
+- 目前任务的每个Pod请求的NPU设备数量规则如下：
 
     使用切分后的vNPU，则仅支持1个。
 
--   静态虚拟化场景，如果创建或者销毁vNPU，需要重启Ascend Device Plugin。
--   静态虚拟化任务，不支持故障重调度。
+- 静态虚拟化场景，如果创建或者销毁vNPU，需要重启Ascend Device Plugin。
+- 静态虚拟化任务，不支持故障重调度。
 
 **表 1**  虚拟化实例模板与虚拟设备类型关系表
 
@@ -750,21 +757,22 @@
 
 **前提条件<a name="section18128140645"></a>**
 
-1.  需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run”，安装容器引擎插件。
-2.  参见[安装部署](../installation_guide.md#安装部署)章节，完成各组件的安装。
+1. 需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run”，安装容器引擎插件。
+2. 参见[安装部署](../installation_guide.md#安装部署)章节，完成各组件的安装。
 
     虚拟化实例涉及到需要修改相关参数的集群调度组件为Volcano和Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署。
 
-    -   亲和性场景：需要安装Volcano。
-    -   非亲和性场景：不需要安装Volcano，只会上报设备数量给节点的K8s。
+    - 亲和性场景：需要安装Volcano。
+    - 非亲和性场景：不需要安装Volcano，只会上报设备数量给节点的K8s。
 
-    1.  Ascend Device Plugin参数修改及启动说明：
+    1. Ascend Device Plugin参数修改及启动说明：
 
         虚拟化实例启动参数说明如下：
 
         **表 2** Ascend Device Plugin启动参数
 
         <a name="table1064314568229"></a>
+
         |参数|类型|默认值|说明|
         |--|--|--|--|
         |-volcanoType|bool|false|是否使用Volcano进行调度，如使用动态虚拟化，需要设置为true。|
@@ -772,37 +780,37 @@
 
         YAML启动说明如下：
 
-        -   K8s集群中存在使用Atlas 推理系列产品节点（Ascend Device Plugin独立工作，不使用Volcano调度器）。
+        - K8s集群中存在使用Atlas 推理系列产品节点（Ascend Device Plugin独立工作，不使用Volcano调度器）。
 
-            ```
+            ```shell
             kubectl apply -f device-plugin-310P-v{version}.yaml
             ```
 
-        -   K8s集群中存在使用Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品、Atlas A2 推理系列产品、Atlas A3 推理系列产品节点（Ascend Device Plugin独立工作，不配合Volcano和Ascend Operator使用）。
+        - K8s集群中存在使用Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品、Atlas A2 推理系列产品、Atlas A3 推理系列产品节点（Ascend Device Plugin独立工作，不配合Volcano和Ascend Operator使用）。
 
-            ```
+            ```shell
             kubectl apply -f device-plugin-910-v{version}.yaml
             ```
 
-        -   K8s集群中存在使用Atlas 推理系列产品节点（使用Volcano调度器，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
+        - K8s集群中存在使用Atlas 推理系列产品节点（使用Volcano调度器，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
 
-            ```
+            ```shell
             kubectl apply -f device-plugin-310P-volcano-v{version}.yaml
             ```
 
-        -   K8s集群中存在使用Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品、Atlas A2 推理系列产品、Atlas A3 推理系列产品节点（配合Volcano和Ascend Operator使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
+        - K8s集群中存在使用Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品、Atlas A2 推理系列产品、Atlas A3 推理系列产品节点（配合Volcano和Ascend Operator使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
 
-            ```
+            ```shell
             kubectl apply -f device-plugin-volcano-v{version}.yaml
             ```
 
         如果K8s集群使用了多种类型的昇腾AI处理器，请分别执行对应命令。
 
-    2.  Volcano参数修改及启动说明：
+    2. Volcano参数修改及启动说明：
 
         在Volcano部署文件“volcano-v\{version\}.yaml”中，需要配置“presetVirtualDevice”且值只能为“true”。
 
-        ```
+        ```Yaml
         ...
         data:
           volcano-scheduler.conf: |
@@ -828,11 +836,11 @@
 
 **使用方法<a name="section514441719341"></a>**
 
--   创建训练任务时，需要在创建YAML文件时，修改如下配置。以Atlas 训练系列产品使用为例。
+- 创建训练任务时，需要在创建YAML文件时，修改如下配置。以Atlas 训练系列产品使用为例。
 
     resources中设定的requests和limits资源类型，应修改为huawei.com/Ascend910-_Y_，其中<i>Y</i>值和vNPU类型相关，具体取值参考[表 虚拟化实例模板与虚拟设备类型关系表](#table47415104403)中的虚拟类型。
 
-    ```
+    ```Yaml
     ...
               resources:  
                 requests:
@@ -842,11 +850,11 @@
     ...
     ```
 
--   创建推理任务时，需要在创建YAML文件时，修改如下配置。以Atlas 推理系列产品使用为例。
+- 创建推理任务时，需要在创建YAML文件时，修改如下配置。以Atlas 推理系列产品使用为例。
 
     resources中设定的requests和limits资源类型，应修改为huawei.com/Ascend310P-_Y_，其中<i>Y</i>值和vNPU类型相关，具体取值参考[表 虚拟化实例模板与虚拟设备类型关系表](#table47415104403)中的虚拟类型。
 
-    ```
+    ```Yaml
     ...
               resources:  
                 requests:
@@ -855,7 +863,6 @@
                   huawei.com/Ascend310P-Y: 1          # 数值与请求数量一致。
     ...
     ```
-
 
 ###### 动态虚拟化<a name="ZH-CN_TOPIC_0000002511426291"></a>
 
@@ -999,18 +1006,19 @@
 
 **前提条件<a name="section18128140645"></a>**
 
-1.  需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run”，安装容器引擎插件。
-2.  参见[安装部署](../installation_guide.md#安装部署)章节，完成各组件的安装。
+1. 需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run”，安装容器引擎插件。
+2. 参见[安装部署](../installation_guide.md#安装部署)章节，完成各组件的安装。
 
     虚拟化实例涉及到需要修改相关参数的集群调度组件为Volcano和Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署。
 
-    1.  Ascend Device Plugin参数修改及启动说明。
+    1. Ascend Device Plugin参数修改及启动说明。
 
         虚拟化实例启动参数说明如下：
 
         **表 3** Ascend Device Plugin启动参数
 
         <a name="table1064314568229"></a>
+
         |参数|类型|默认值|说明|
         |--|--|--|--|
         |-volcanoType|bool|false|是否使用Volcano进行调度，如使用动态虚拟化，需要设置为true。|
@@ -1020,18 +1028,18 @@
 
         K8s集群中存在使用Atlas 推理系列产品的节点，需要在device-plugin-310P-volcano-v\{version\}中将“presetVirtualDevice”字段修改为“false”（协同Volcano使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
 
-        ```
+        ```Yaml
         ...
         args: [ "device-plugin  -useAscendDocker=true -volcanoType=true -presetVirtualDevice=false
                    -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0" ]
         ...
         ```
 
-    2.  Volcano参数修改及启动说明。
+    2. Volcano参数修改及启动说明。
 
         在Volcano部署文件“volcano-v_\{version\}_.yaml”中，需要配置“presetVirtualDevice”的值为“false”。
 
-        ```
+        ```Yaml
         ...
         data:
           volcano-scheduler.conf: |
@@ -1061,7 +1069,7 @@
 
 resources中设定的requests和limits资源类型，申请一个AI Core，应修改为huawei.com/npu-core。以deployment部署方式为例：
 
-```
+```Yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1154,12 +1162,13 @@ spec:
 </tbody>
 </table>
 
->[!NOTE] 说明 
+>[!NOTE] 
 >vnpu-level和vnpu-dvpp的选择结果，具体请参见[表5](#table83781115185619)。
->-   表中“降级”表示AI Core满足的情况下，其他资源不够（如AI CPU）时，模板会选择同AI Core下的其他满足资源要求的模板。如在只剩一颗芯片上只有2个AI Core，1个AI CPU时，vir02模板会降级为vir02\_1c。
->-   表中“选择模板”中的值来源于<a href="#虚拟化规则">虚拟化规则</a>的“虚拟化模板”中Atlas 推理系列产品、“虚拟化实例模板”列的取值。
->-   表中“vnpu-level”列的“其他值”表示除去“low”和“high”后的任意取值。
->-   整卡（core的请求数量为8的倍数）场景下vnpu-dvpp与vnpu-level可以取任意值。
+>
+>- 表中“降级”表示AI Core满足的情况下，其他资源不够（如AI CPU）时，模板会选择同AI Core下的其他满足资源要求的模板。如在只剩一颗芯片上只有2个AI Core，1个AI CPU时，vir02模板会降级为vir02\_1c。
+>- 表中“选择模板”中的值来源于<a href="#虚拟化规则">虚拟化规则</a>的“虚拟化模板”中Atlas 推理系列产品、“虚拟化实例模板”列的取值。
+>- 表中“vnpu-level”列的“其他值”表示除去“low”和“high”后的任意取值。
+>- 整卡（core的请求数量为8的倍数）场景下vnpu-dvpp与vnpu-level可以取任意值。
 
 **表 5**  dvpp和level作用结果表
 
@@ -1303,7 +1312,7 @@ spec:
 </tbody>
 </table>
 
->[!NOTICE] 须知 
+>[!NOTICE] 
 >上表中对于芯片虚拟化（非整卡），vnpu-dvpp的值只能为表中对应的值，其他值会导致任务不能下发。
 
 ## 基于vCANN的虚拟化实例<a name="ZH-CN_TOPIC_000000251196876vcann"></a>
@@ -1326,6 +1335,7 @@ spec:
 **表 1**  产品支持情况说明
 
 <a name="table32786155236vcann"></a>
+
 |产品系列|支持的场景|虚拟化方式|是否支持|
 |--|--|--|--|
 |<term>Atlas A2 推理系列产品</term><ul><li>Atlas 800I A2 推理服务器</li></ul>|在物理机生成软切分配置文件，挂载NPU和位置文件到容器|软切分虚拟化|是|
@@ -1349,7 +1359,7 @@ spec:
 
 **使用软切分NPU说明<a name="ZH-CN_TOPIC_00000025113463450356vcann"></a>**
 
-在Kubernetes场景，当用户需要使用NPU资源时，需要通过结合集群调度组件Ascend Device Plugin和Volcano的使用，使Kubernetes可以管理并调度昇腾处理器资源。昇腾软切分虚拟化实例特性需要的集群调度组件包括	Ascend Device Plugin、Volcano、Ascend Operator和ClusterD。支持的产品型号情况请参见[产品支持情况说明](#ZH-CN_TOPIC_0000002511426281vcann)。
+在Kubernetes场景下，当用户需要使用NPU资源时，需要结合集群调度组件Ascend Device Plugin和Volcano的使用，使Kubernetes可以管理并调度昇腾处理器资源。昇腾软切分虚拟化实例特性需要的集群调度组件包括Ascend Device Plugin、Volcano、Ascend Operator和ClusterD。支持的产品型号请参见[产品支持情况说明](#ZH-CN_TOPIC_0000002511426281vcann)。
 
 **场景说明<a name="section1576110260450vcann"></a>**
 
@@ -1423,7 +1433,7 @@ spec:
 
     1. 在device-plugin-volcano-v\{version\}.yaml中添加-shareDevCount=100 -softShareDevConfigDir=/share_device/，其中/share_device/由用户手动创建。
 
-       ```
+       ```Yaml
        ...
 
                args: [ "device-plugin  -useAscendDocker=true -volcanoType=true -presetVirtualDevice=true
@@ -1446,20 +1456,23 @@ spec:
              path: /share_device/  
              type: DirectoryOrCreate             
        ```
+
         软切分虚拟化实例启动参数说明如下：
 
        **表 3** Ascend Device Plugin启动参数
 
        <a name="table1064314568229"></a>
+
        |参数|类型|默认值|说明|
        |--|--|--|--|
        |-shareDevCount|uint|1|使用软切分虚拟化功能时，值只能为100。|
        |-softShareDevConfigDir|string|""|软切分虚拟化场景配置目录。|
-    2. （可选）针对软切分虚拟化功能和非软切分虚拟化功能混合部署场景，需要在支持软切分虚拟化功能的节点上安装支持软切分功能的Ascend Device Plugin；在不支持软切分虚拟化功能的节点上安装原始的Ascend Device Plugin。
 
-       - 支持软切分虚拟化功能的Ascend Device Plugin的device-plugin-volcano-v\{version\}.yaml修改如下：
+    2. （可选）针对软切分虚拟化功能和非软切分虚拟化功能混合部署场景，需要对Ascend Device Plugin的YAML进行如下修改。
 
-         ```
+       - 在支持软切分虚拟化功能的节点上安装支持软切分功能的Ascend Device Plugin，将device-plugin-volcano-v\{version\}.yaml拷贝为softsharedev-device-plugin-volcano-v\{version\}.yaml。softsharedev-device-plugin-volcano-v\{version\}.yaml修改如下：
+
+         ```Yaml
          apiVersion: apps/v1
          kind: DaemonSet
          metadata:
@@ -1499,9 +1512,9 @@ spec:
                type: DirectoryOrCreate     
          ```
 
-       - 不支持软切分虚拟化功能的Ascend Device Plugin的device-plugin-volcano-v\{version\}.yaml修改如下：
+       - 在不支持软切分虚拟化功能的节点上安装原始的Ascend Device Plugin，device-plugin-volcano-v\{version\}.yaml修改如下：
 
-         ```
+         ```Yaml
          apiVersion: apps/v1
          kind: DaemonSet
          metadata:
@@ -1526,7 +1539,7 @@ spec:
 
 申请芯片AI Core百分比为50%，芯片高带宽内存量为2048MB，软切分策略为fixed-share的参数配置示例如下。
 
-```
+<pre>
 apiVersion: mindxdl.gitee.com/v1
 kind: AscendJob
 metadata:
@@ -1535,11 +1548,11 @@ metadata:
     framework: pytorch
     ring-controller.atlas: ascend-910b
     fault-scheduling: "force"
-    huawei.com/scheduler.softShareDev.aicoreQuota: "50" # 软切分任务请求的芯片AI Core百分比，单位为%
+    <b>huawei.com/scheduler.softShareDev.aicoreQuota: "50" # 软切分任务请求的芯片AI Core百分比，单位为%
     huawei.com/scheduler.softShareDev.hbmQuota: "2048" # 软切分任务请求的芯片高带宽内存量，单位为MB
     huawei.com/scheduler.softShareDev.policy: "fixed-share" # 软切分策略，取值为fixed-share、elastic和best-effort
   annotations:
-    huawei.com/schedule_policy: "chip1-softShareDev" # 软切分场景Volcano调度策略
+    huawei.com/schedule_policy: "chip1-softShareDev" # 软切分场景Volcano调度策略</b>
 spec:
   schedulerName: volcano   # work when enableGangScheduling is true
   runPolicy:
@@ -1588,7 +1601,34 @@ spec:
                   name: ascendjob-port        # do not modify
               resources:
                 requests:
-                  huawei.com/Ascend910: 50 # 此处需要与huawei.com/scheduler.softShareDev.aicoreQuota的值保持一致，表示软切分任务请求的AI Core百分比
+                  <b>huawei.com/Ascend910: 50 # 此处需要与huawei.com/scheduler.softShareDev.aicoreQuota的值保持一致，表示软切分任务请求的AI Core百分比</b>
                 limits:
-                  huawei.com/Ascend910: 50 # 数值与requests保持一致
-```
+                  <b>huawei.com/Ascend910: 50 # 数值与requests保持一致</b>
+              volumeMounts:
+                - name: ascend-driver
+                  mountPath: /usr/local/Ascend/driver
+                - name: ascend-add-ons
+                  mountPath: /usr/local/Ascend/add-ons
+                - name: localtime
+                  mountPath: /etc/localtime
+                <b>- name: libpreload # 软切分动态库地址
+                  mountPath: /opt/enpu/vcann-rt/lib/libvruntime.so
+                - name: preload # preload配置文件地址
+                  mountPath: ${preload_path}/ld.so.preload</b>
+          volumes:
+            - name: ascend-driver
+              hostPath:
+                path: /usr/local/Ascend/driver
+            - name: ascend-add-ons
+              hostPath:
+                path: /usr/local/Ascend/add-ons
+            - name: localtime
+              hostPath:
+                path: /etc/localtime
+            <b>- name: libpreload # 软切分动态库地址
+              hostPath:
+                path: /opt/enpu/vcann-rt/lib/libvruntime.so
+            - name: preload # preload配置文件地址
+              hostPath:
+                path: ${preload_path}/ld.so.preload</b>
+</pre>

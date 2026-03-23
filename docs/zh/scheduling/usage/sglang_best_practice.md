@@ -10,43 +10,41 @@ MindCluster集群调度组件支持用户通过OME（Open Model Engine）部署S
 
 在部署SGLang推理服务前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../installation_guide.md#安装部署)章节进行操作。
 
--   Volcano
--   Ascend Device Plugin
--   Ascend Docker Runtime
--   ClusterD
--   NodeD（可选）
+- Volcano
+- Ascend Device Plugin
+- Ascend Docker Runtime
+- ClusterD
+- NodeD（可选）
 
 **支持的产品形态<a name="zh-cn_topic_0000002322062116_section169961844182917"></a>**
 
--   Atlas 800I A2 推理服务器
--   Atlas 800I A3 超节点服务器
+- Atlas 800I A2 推理服务器
+- Atlas 800I A3 超节点服务器
 
 **使用方式<a name="zh-cn_topic_0000002322062116_section6771194616104"></a>**
 
 MindCluster集群调度组件支持用户通过以下方式进行SGLang推理服务的容器化部署、故障重调度。本章节仅介绍通过命令行使用和通过脚本一键式部署使用方式。
 
--   通过命令行使用：通过配置的YAML文件部署任务。
--   通过脚本一键式部署使用：通过自动化脚本参考设计部署任务。
--   集成后使用：将集群调度组件集成到已有的第三方AI平台或者基于集群调度组件开发的AI平台。
-
+- 通过命令行使用：通过配置的YAML文件部署任务。
+- 通过脚本一键式部署使用：通过自动化脚本参考设计部署任务。
+- 集成后使用：将集群调度组件集成到已有的第三方AI平台或者基于集群调度组件开发的AI平台。
 
 ## 部署基于OME的SGLang推理任务<a name="ZH-CN_TOPIC_0000002480571816"></a>
 
 ### 实现原理<a name="ZH-CN_TOPIC_0000002512818803"></a>
 
-1.  集群调度组件定期上报节点和芯片信息；kubelet上报节点芯片数量到节点对象（node）中。
-    -   Ascend Device Plugin上报芯片内存和拓扑信息。
+1. 集群调度组件定期上报节点和芯片信息；kubelet上报节点芯片数量到节点对象（node）中。
+    - Ascend Device Plugin上报芯片内存和拓扑信息。
 
         对于包含片上内存的芯片，Ascend Device Plugin启动时上报芯片内存情况，见node-label说明；上报整卡信息，将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）、已使用的芯片数量（allocated）和芯片的基础信息（device ip和super\_device\_ip）上报到node中，用于整卡调度。
 
-    -   当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
+    - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 
-2.  ClusterD读取device-info-cm和node-info-cm中的信息后，将信息整合到cluster-info-cm中。
-3.  用户通过kubectl或者其他深度学习平台下发OME框架的SGLang推理任务，OME根据推理任务的配置生成Deployment或者LeaderWorkerSet（LWS）的子工作负载，再由对应的子工作负载生成多个推理服务的任务Pod。关于Deployment或者LeaderWorkerSet的详细说明，可以参见[OME文档](https://docs.sglang.ai/ome/docs/concepts/inference_service/)。
-4.  volcano-controller或者LeaderWorkerSet为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参见[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
-5.  对于SGLang推理任务Pod，volcano-scheduler根据节点内存、CPU及标签、亲和性选择合适的节点，volcano-scheduler还会参考芯片拓扑信息为其选择合适的节点，并在Pod的annotation上写入选择的芯片信息以及节点硬件信息。
-6.  kubelet创建容器时，对于基于OME部署的SGLang推理任务，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin或volcano-scheduler在Pod的annotation上写入芯片和节点硬件信息。Ascend Docker Runtime协助挂载相应资源。
-
+2. ClusterD读取device-info-cm和node-info-cm中的信息后，将信息整合到cluster-info-cm中。
+3. 用户通过kubectl或者其他深度学习平台下发OME框架的SGLang推理任务，OME根据推理任务的配置生成Deployment或者LeaderWorkerSet（LWS）的子工作负载，再由对应的子工作负载生成多个推理服务的任务Pod。关于Deployment或者LeaderWorkerSet的详细说明，可以参见[OME文档](https://docs.sglang.ai/ome/docs/concepts/inference_service/)。
+4. volcano-controller或者LeaderWorkerSet为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参见[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
+5. 对于SGLang推理任务Pod，volcano-scheduler根据节点内存、CPU及标签、亲和性选择合适的节点，volcano-scheduler还会参考芯片拓扑信息为其选择合适的节点，并在Pod的annotation上写入选择的芯片信息以及节点硬件信息。
+6. kubelet创建容器时，对于基于OME部署的SGLang推理任务，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin或volcano-scheduler在Pod的annotation上写入芯片和节点硬件信息。Ascend Docker Runtime协助挂载相应资源。
 
 ### 通过命令行使用<a name="ZH-CN_TOPIC_0000002480898900"></a>
 
@@ -63,7 +61,6 @@ MindCluster集群调度组件支持用户通过以下方式进行SGLang推理服
 **图 1**  使用流程<a name="fig38991911205815"></a>  
 ![](../../figures/scheduling/使用流程-15.png "使用流程-15")
 
-
 #### 准备任务YAML<a name="ZH-CN_TOPIC_0000002480835892"></a>
 
 用户可根据实际情况完成制作镜像的准备工作，然后选择相应的YAML示例，对示例进行修改。
@@ -79,18 +76,18 @@ MindCluster集群调度组件支持用户通过以下方式进行SGLang推理服
 集群调度为用户提供OME任务的ClusterServingRuntime资源的YAML示例，用户需要根据使用的组件、芯片类型和任务类型等，选择相应的YAML示例并根据需求进行相应修改后才可使用。
 
 <a name="zh-cn_topic_0000002362848597_table74058394335"></a>
+
 |类型|硬件型号|YAML名称|获取链接|
 |--|--|--|--|
 |实例不跨机（Deployment场景）|<p>Atlas 800I A2 推理服务器</p><p>Atlas 800I A3 超节点服务器</p>|llama-3-2-1b-instruct-rt-pd-standalone.yaml|<a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/master/k8s-deploy-tool/example/ome-runtimes/llama-3-2-1b-instruct-rt-pd-standalone.yaml">获取YAML</a>|
 |实例跨机（LeaderWorkerSet场景）|<p>Atlas 800I A2 推理服务器</p><p>Atlas 800I A3 超节点服务器</p>|llama-3-2-1b-instruct-rt-pd-distributed.yaml|<a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/master/k8s-deploy-tool/example/ome-runtimes/llama-3-2-1b-instruct-rt-pd-distributed.yaml">获取YAML</a>|
 |注：当前示例仅供测试使用，用户可根据模型实际情况进行修改。|
 
-
 用户根据OME框架的部署方式依此完成Base Model、Serving Runtime和Inference Service三个YAML修改之后，由OME及其依赖组件负责拉起子工作负载（Deployment或LeaderWorkerSet）和对应的Pod，并由OME及其依赖组件管理推理服务Pod的生命周期，在推理服务对应的Pod创建完成之后，MindCluster负责对Pod进行调度。
 
 **任务YAML说明<a name="section238217472163"></a>**
 
-```
+```Yaml
 apiVersion: ome.io/v1beta1
 kind: ClusterServingRuntime
 metadata:
@@ -132,7 +129,6 @@ spec:
         path: /usr/local/Ascend/driver
     ...
 ```
-
 
 #### YAML参数说明<a name="ZH-CN_TOPIC_0000002513115345"></a>
 
@@ -191,7 +187,7 @@ spec:
 </tr>
 <tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row36114148312"><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1461116146318"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1461116146318"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1461116146318"></a>accelerator-type</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul461118141037"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul461118141037"></a><ul id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul461118141037"><li><span id="ph16267162611508"><a name="ph16267162611508"></a><a name="ph16267162611508"></a>Atlas 800I A2 推理服务器</span>：module-910b-8</li><li><span id="ph2385246171619"><a name="ph2385246171619"></a><a name="ph2385246171619"></a>Atlas 800I A3 超节点服务器</span>：module-a3-16</li><li><span id="ph261924414289"><a name="ph261924414289"></a><a name="ph261924414289"></a>Atlas 900 A3 SuperPoD 超节点</span>：module-a3-16-super-pod</li><li>Atlas 350 标卡（可选）：350-Atlas-8、350-Atlas-16、350-Atlas-4p-8、350-Atlas-4p-16</li><li>Atlas 850 服务器（可选）：850-Atlas-8p-8、850-SuperPod-Atlas-8</li><li>Atlas 950 SuperPoD 超节点（可选）：950-SuperPod-Atlas-8</li></ul>
+<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul461118141037"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul461118141037"></a><ul id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul461118141037"><li><span id="ph16267162611508"><a name="ph16267162611508"></a><a name="ph16267162611508"></a>Atlas 800I A2 推理服务器</span>：module-910b-8</li><li><span id="ph2385246171619"><a name="ph2385246171619"></a><a name="ph2385246171619"></a>Atlas 800I A3 超节点服务器</span>：module-a3-16</li><li><span id="ph261924414289"><a name="ph261924414289"></a><a name="ph261924414289"></a>Atlas 900 A3 SuperPoD 超节点</span>：module-a3-16-super-pod</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p6612914039"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p6612914039"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p6612914039"></a>根据需要运行训练任务的节点类型，选取不同的值。</p>
 </td>
@@ -200,18 +196,14 @@ spec:
 </td>
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><a name="ul5849154316123"></a><a name="ul5849154316123"></a><ul id="ul5849154316123"><li><span id="ph20407103618121"><a name="ph20407103618121"></a><a name="ph20407103618121"></a>Atlas 800I A2 推理服务器</span>：8</li><li><span id="zh-cn_topic_0000002329010086_ph747840144217"><a name="zh-cn_topic_0000002329010086_ph747840144217"></a><a name="zh-cn_topic_0000002329010086_ph747840144217"></a>Atlas 900 A3 SuperPoD 超节点</span>、<span id="ph2061955101216"><a name="ph2061955101216"></a><a name="ph2061955101216"></a>Atlas 800I A3 超节点服务器</span>: 16</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 ">
-    <p>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点需将参数名称修改为huawei.com/npu</p>
-    <p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p561713141331"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p561713141331"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p561713141331"></a>请求的NPU数量。当前仅支持整机调度，请根据实际硬件卡数进行修改。</p>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p>请求的NPU数量。当前仅支持整机调度，请根据实际硬件卡数进行修改。</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row11621414533"><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p894317013244"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p894317013244"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p894317013244"></a>env[name==ASCEND_VISIBLE_DEVICES].valueFrom.fieldRef.fieldPath</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p7622914235"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p7622914235"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p7622914235"></a>取值为metadata.annotations['huawei.com/Ascend910']，和环境上实际的芯片类型保持一致。</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 ">
-    <p>Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点需配置为metadata.annotations['huawei.com/npu']</p>
-    <p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p136226142031"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p136226142031"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p136226142031"></a><span id="zh-cn_topic_0000002362968521_ph230432885618"><a name="zh-cn_topic_0000002362968521_ph230432885618"></a><a name="zh-cn_topic_0000002362968521_ph230432885618"></a>Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p><span>Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>
 <p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"></a>该参数只支持使用<span id="ph123731542141613"><a name="ph123731542141613"></a><a name="ph123731542141613"></a>Volcano</span>调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
 </td>
 </tr>
@@ -253,19 +245,16 @@ spec:
 </tbody>
 </table>
 
-
 #### 推理任务的下发、查看与删除<a name="ZH-CN_TOPIC_0000002513375093"></a>
 
 用户完成任务YAML的准备工作之后，就可以进行以下操作：
 
-1.  下发推理任务
-2.  查看调度结果
-3.  查看推理任务运行情况
-4.  （可选）删除任务
+1. 下发推理任务
+2. 查看调度结果
+3. 查看推理任务运行情况
+4. （可选）删除任务
 
 了解以上步骤的详细说明，请参见[OME文档](https://docs.sglang.ai/ome/docs/tasks/run-workloads/deploy-inference-service/)。
-
-
 
 ### 通过脚本一键式部署使用<a name="ZH-CN_TOPIC_0000002480866426"></a>
 
@@ -275,91 +264,91 @@ spec:
 
 **前提条件<a name="section178303526285"></a>**
 
--   环境已安装Python，并可联网下载依赖包。
--   存在KubeConfig文件，可以与K8s集群正常通信。
--   已部署MindCluster和OME。
--   已部署任务所需的Base Model和Serving Runtime。
+- 环境已安装Python，并可联网下载依赖包。
+- 存在KubeConfig文件，可以与K8s集群正常通信。
+- 已部署MindCluster和OME。
+- 已部署任务所需的Base Model和Serving Runtime。
 
 **操作步骤<a name="section116575516299"></a>**
 
-1.  从mindcluster-deploy仓库获取源码，进入“k8s-deploy-tool”目录。
+1. 从mindcluster-deploy仓库获取源码，进入“k8s-deploy-tool”目录。
 
-    ```
+    ```shell
     git clone https://gitcode.com/Ascend/mindcluster-deploy.git && cd mindcluster-deploy/k8s-deploy-tool
     ```
 
-2.  （可选）创建并激活Python虚拟环境。该操作可以使得不同Python项目使用不同版本的库而互不干扰。
+2. （可选）创建并激活Python虚拟环境。该操作可以使得不同Python项目使用不同版本的库而互不干扰。
 
-    ```
+    ```shell
     python -m venv venv && source venv/bin/activate
     ```
 
     根据环境实际情况使用Python或Python3。
 
-3.  安装依赖。
+3. 安装依赖。
 
-    ```
+    ```shell
     pip install -r requirements.txt
     ```
 
-4.  （可选）部署示例Serving Runtime。该示例用作测试使用，用户可以根据任务实际情况部署对应的Serving Runtime。
+4. （可选）部署示例Serving Runtime。该示例用作测试使用，用户可以根据任务实际情况部署对应的Serving Runtime。
 
-    ```
+    ```shell
     kubectl apply -f example/ome-runtimes/
     ```
 
-5.  编辑用户配置文件“config/isvc-config.yaml”。
-    1.  打开“config/isvc-config.yaml”文件。
+5. 编辑用户配置文件“config/isvc-config.yaml”。
+    1. 打开“config/isvc-config.yaml”文件。
 
-        ```
+        ```shell
         vi config/isvc-config.yaml
         ```
 
-    2.  按“i”进入编辑模式，按实际情况修改文件中的字段。
-    3.  按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
+    2. 按“i”进入编辑模式，按实际情况修改文件中的字段。
+    3. 按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
 
-6.  （可选）创建任务名称空间。"xxx"为“config/isvc-config.yaml”设置的“app\_namespace”。如果“app\_namespace”为“default”或未设置，可以不创建名称空间。
+6. （可选）创建任务名称空间。"xxx"为“config/isvc-config.yaml”设置的“app\_namespace”。如果“app\_namespace”为“default”或未设置，可以不创建名称空间。
 
-    ```
+    ```shell
     kubectl create ns xxx
     ```
 
-7.  （可选）设置服务框架类型。当前支持ome和aibrix，若不设置，默认使用ome。
+7. （可选）设置服务框架类型。当前支持ome和aibrix，若不设置，默认使用ome。
 
-    ```
+    ```shell
     export SERVING_FRAMEWORK=ome
     ```
 
-8.  部署推理任务。
+8. 部署推理任务。
 
-    ```
+    ```shell
     python main.py deploy -c config/isvc-config.yaml
     ```
 
     根据环境实际情况使用Python或Python3。参数说明如下：
 
-    -   -c, --config：配置文件路径，必填。
-    -   -k, --kubeconfig：KubeConfig文件路径，选填。默认值为\~/.kube/config。
-    -   --dry-run：试运行（不实际部署，展示生成的YAML），选填。
+    - -c, --config：配置文件路径，必填。
+    - -k, --kubeconfig：KubeConfig文件路径，选填。默认值为\~/.kube/config。
+    - --dry-run：试运行（不实际部署，展示生成的YAML），选填。
 
-9.  查看任务运行状态。
+9. 查看任务运行状态。
 
-    ```
+    ```shell
     python main.py status -n my-test -ns default
     ```
 
     参数说明如下：
 
-    -   -n, --app-name：应用名称，必填。my-test为“config/isvc-config.yaml”中设置的“app\_name”。
-    -   -ns, --namespace：应用命名空间，选填。默认值为"default" 。
-    -   -k, --kubeconfig：KubeConfig文件路径，选填。默认值为\~/.kube/config。
+    - -n, --app-name：应用名称，必填。my-test为“config/isvc-config.yaml”中设置的“app\_name”。
+    - -ns, --namespace：应用命名空间，选填。默认值为"default"。
+    - -k, --kubeconfig：KubeConfig文件路径，选填。默认值为\~/.kube/config。
 
-    >[!NOTE] 说明 
+    >[!NOTE] 
     >用户也可以使用kubectl命令行工具查看任务运行状态。
 
 10. 新建终端窗口，在当前K8s集群的节点中执行以下命令，访问推理服务。若请求成功返回，表示推理服务部署成功。
 
-    ```
+    ```shell
     curl --location 'http://<router-podip>:<router-port>/generate' --header 'Content-Type: application/json' --data '{
     "text": "Who are you",
     "sampling_params": {
@@ -370,27 +359,25 @@ spec:
     }'
     ```
 
-    -   <router-podip\>为Router Pod的IP地址，可以通过以下命令查看。
+    - <router-podip\>为Router Pod的IP地址，可以通过以下命令查看。
 
-        ```
+        ```shell
         kubectl get pod -A -o wide
         ```
 
-    -   <router-port\>为Serving Runtime中Router设置的服务端口。
+    - <router-port\>为Serving Runtime中Router设置的服务端口。
 
 11. （可选）删除推理任务。若用户需要删除任务，可以执行该步骤。
 
-    ```
+    ```shell
     python main.py delete -n my-test 
     ```
 
     根据环境实际情况使用Python或Python3。参数说明如下：
 
-    -   -n, --app-name：应用名称，必填。
-    -   -ns, --namespace：应用命名空间，选填。默认值为"default" 。
-    -   -k, --kubeconfig：KubeConfig文件路径，选填。默认值为\~/.kube/config。
-
-
+    - -n, --app-name：应用名称，必填。
+    - -ns, --namespace：应用命名空间，选填。默认值为"default"。
+    - -k, --kubeconfig：KubeConfig文件路径，选填。默认值为\~/.kube/config。
 
 ## 配置推理任务实例重调度<a name="ZH-CN_TOPIC_0000002480738948"></a>
 
@@ -406,26 +393,26 @@ spec:
 
 OME子工作负载为Deployment时（一个P/D实例由一个Pod组成）：
 
--   业务面故障：Pod所属的容器发生非零退出的情况下自动重拉。
--   硬件故障：Ascend Device Plugin或者NodeD上报硬件故障到ClusterD之后，Volcano获取到故障节点，删除节点上的Pod，并隔离故障节点。
+- 业务面故障：Pod所属的容器发生非零退出的情况下自动重拉。
+- 硬件故障：Ascend Device Plugin或者NodeD上报硬件故障到ClusterD之后，Volcano获取到故障节点，删除节点上的Pod，并隔离故障节点。
 
 OME子工作负载为LeaderWorkerSet时（一个P/D实例由多个Pod组成）：
 
--   业务面故障：对于任意实例所属Pod的容器发生非零退出之后，LWS Controller自动删除实例所属整个PodGroup。
--   硬件故障：Ascend Device Plugin或者NodeD上报硬件故障到ClusterD之后，Volcano获取到故障节点，删除节点上的Pod，并隔离故障节点。LWS Controller自动删除实例所属整个PodGroup。
+- 业务面故障：对于任意实例所属Pod的容器发生非零退出之后，LWS Controller自动删除实例所属整个PodGroup。
+- 硬件故障：Ascend Device Plugin或者NodeD上报硬件故障到ClusterD之后，Volcano获取到故障节点，删除节点上的Pod，并隔离故障节点。LWS Controller自动删除实例所属整个PodGroup。
 
 **故障实例Pod的重新创建和调度**
 
 Deployment或者LeaderWorkerSet所属的Pod被Volcano删除之后，由各自对应的Controller重新创建被删除的Pod，并由Volcano执行对恢复Pod的重新调度。
 
->[!NOTE] 说明 
+>[!NOTE] 
 >OME任务进行故障恢复时只会重调度故障的P/D实例。
 
 **配置实例级别重调度<a name="section96795436354"></a>**
 
 下面以ClusterServingRuntime为例配置实例级别重调度。
 
-```
+```Yaml
 apiVersion: ome.io/v1beta1
 kind: ClusterServingRuntime
 metadata:

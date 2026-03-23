@@ -13,6 +13,7 @@
   - [MindIE Motor推理任务最佳实践](./usage/mindie_motor_best_practice.md)
   - [SGLang推理任务最佳实践](./usage/sglang_best_practice.md)
   - [vLLM推理任务最佳实践](./usage/vllm_best_practice.md)
+  - [Infer Operator推理任务最佳实践](./usage/infer_operator_best_practice.md)
 - [API参考](./api/README.md)
   - [NPU Exporter](./api/npu_exporter.md)
   - [Volcano](./api/volcano.md)

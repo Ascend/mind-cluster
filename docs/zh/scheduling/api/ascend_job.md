@@ -4,15 +4,15 @@ Ascend Job：简称acjob，是MindCluster自定义的一种任务类型，当前
 
 **支持的AI框架<a name="zh-cn_topic_0000002377698613_section1580601414413"></a>**
 
--   MindSpore
--   TensorFlow
--   PyTorch
+- MindSpore
+- TensorFlow
+- PyTorch
 
 **样例<a name="zh-cn_topic_0000002377698613_section7389161784012"></a>**
 
 pytorch\_multinodes\_acjob\_910b.yaml示例如下。
 
-```
+```Yaml
 apiVersion: mindxdl.gitee.com/v1
 kind: AscendJob
 metadata:
@@ -214,8 +214,8 @@ spec:
 
 |字段路径|类型|格式|描述|
 |--|--|--|--|
-|apiVersion|字符串 (string)|-|定义对象表示的版本化资源模式。服务器会转换为最新内部值，拒绝不识别的版本。 更多信息请参见<a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds">Types</a>。|
-|kind|字符串 (string)|-|表示此对象对应的REST资源类型。值通过端点推断，不可更新，采用驼峰命名。 更多信息请参见<a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources">Resources</a>。|
+|apiVersion|字符串 (string)|-|定义对象表示的版本化资源模式。服务器会转换为最新内部值，拒绝不识别的版本。更多信息请参见<a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds">Types</a>。|
+|kind|字符串 (string)|-|表示此对象对应的REST资源类型。值通过端点推断，不可更新，采用驼峰命名。更多信息请参见<a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources">Resources</a>。|
 |metadata|对象 (object)|-|Kubernetes元数据（如命名空间、标签等）。更多信息请参见<a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata">Metadata</a>。|
 |spec|对象 (object)|-|AscendJob期望状态的规格描述。必填字段：replicaSpecs。|
 |spec.replicaSpecs|对象 (object)|-|ReplicaType到ReplicaSpec的映射，指定MS集群配置。示例：{ "Scheduler": ReplicaSpec, "Worker": ReplicaSpec }。|
@@ -253,7 +253,6 @@ spec:
 |status.replicaStatuses.[ReplicaType].labelSelector.matchExpressions|数组 (array)|-|标签匹配规则（支持In、NotIn、Exists、DoesNotExist等操作符）。|
 |status.replicaStatuses.[ReplicaType].labelSelector.matchLabels|对象 (object)|-|标签匹配的键值对（等价于matchExpressions条件）。|
 |status.startTime|字符串 (string)|date-time|作业开始时间（RFC3339格式，UTC）。|
-
 
 **任务状态说明<a name="zh-cn_topic_0000002377698613_section177175313294"></a>**
 
@@ -334,5 +333,3 @@ kubectl get acjob -n <namespace> <job-name> -o jsonpath={.status.conditions}
 # 查看 AscendJob 的最新状态
 kubectl get acjob -n <namespace> <job-name> -o jsonpath={.status.conditions[-1]}
 ```
-
-
