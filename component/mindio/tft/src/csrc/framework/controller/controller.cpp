@@ -1532,6 +1532,7 @@ TResult Controller::DoPause()
         TTP_LOG_WARN("controller collect latest status found some worker error");
     }
 
+    SelectErrorRanks();
     if (errorRankMsg_.empty() && repairEvent_ == MindXEvent::MINDX_EVENT_BUTT) {
         TTP_LOG_WARN("errorRankMsg_ is empty, revert to normal state machine");
         return TTP_RERUN;

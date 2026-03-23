@@ -308,7 +308,7 @@ class SaveHandler:
                 else:
                     self._fm_rename_call(self._dump_step, self._args)
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: {str(e)}")
+                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
@@ -321,14 +321,14 @@ class SaveHandler:
             try:
                 self._fm_exit_call(self._exit_ctx)
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: {str(e)}")
+                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
 
     def execute_stop(self):
         try:
             set_device()
             self._fm_stop_call(self._args, self._stop_ctx)
         except Exception as e:
-            ttp_logger.LOGGER.exception(f"An error occurred: {str(e)}")
+            ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
             return RET_ERROR
         return RET_OK
 
@@ -337,7 +337,7 @@ class SaveHandler:
             set_device()
             ret = self._fm_clean_call(uce_error_, self._args, self._clean_ctx)
         except Exception as e:
-            ttp_logger.LOGGER.exception(f"An error occurred: {str(e)}")
+            ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
             return RET_EXCEPTION
         return ret
 
@@ -348,7 +348,7 @@ class SaveHandler:
                 self._fm_repair_call(self._repair_step, self._need_rebuild, self._error_ranks, self._repair_info,
                                      self._args, self._repair_ctx)
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: {str(e)}")
+                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
@@ -358,7 +358,7 @@ class SaveHandler:
                 set_device()
                 self._fm_rollback_call(self._repair_step, self._args, self._rollback_ctx)
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: {str(e)}")
+                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
@@ -367,7 +367,7 @@ class SaveHandler:
             try:
                 self._fm_zit_downgrade_rebuild_call(comm_groups[1], comm_groups[0], self._args, zit_param)
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: {str(e)}")
+                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
@@ -376,7 +376,7 @@ class SaveHandler:
             try:
                 self._fm_zit_upgrade_rebuild_call(rank_list, self._args, zit_param)
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: {str(e)}")
+                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
@@ -385,7 +385,7 @@ class SaveHandler:
             try:
                 self._fm_zit_upgrade_rollback_call(self._repair_step, self._args, self._zit_param)
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: {str(e)}")
+                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
@@ -396,7 +396,7 @@ class SaveHandler:
                                                  self._repair_info,
                                                  self._args, self._zit_param)
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: {str(e)}")
+                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
@@ -423,7 +423,7 @@ class SaveHandler:
                 with torch.npu.stream(sync_stream_):
                     self._fm_save_ckpt_call(self._dump_step, self._dump_info, self._args, self._save_ckpt_ctx)
         except Exception as e:
-            ttp_logger.LOGGER.exception(f"An error occurred: {str(e)}")
+            ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
             ttp_c2python_api.set_dump_status(RET_ERROR)
             return
         ttp_c2python_api.set_dump_status(RET_OK)
@@ -434,7 +434,7 @@ class SaveHandler:
                 set_device()
                 self._fm_rebuild_group_call(fault_ranks, self._args, self._rebuild_group_ctx)
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: {str(e)}")
+                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
@@ -444,7 +444,7 @@ class SaveHandler:
                 set_device()
                 self._fm_sync_stream_call()
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: {str(e)}")
+                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
@@ -935,12 +935,12 @@ def tft_exception_handler(func: Callable):
                         exception = fault_handles[pattern](err_str)
                         break
 
-                ttp_logger.LOGGER.warning(f"rank:{rank_} catch {exception} exception, error_code:{error_code}，"
-                                          f" ex instance:{err_str}")
+                ttp_logger.LOGGER.warning(f"rank:%s catch %s exception, error_code:%s，"
+                                          f" ex instance:%s", rank_, exception, error_code, err_str)
                 report_and_wait(exception, error_code)
                 wait_next = True
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"rank:{rank_} catch other exception, ex instance:{str(e)}")
+                ttp_logger.LOGGER.exception(f"rank:%s catch other exception, ex instance:%s", rank_, str(e))
                 tft_report_error(ReportState.RS_UNKNOWN.value, error_code)
                 raise e
             finally:
