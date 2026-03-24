@@ -220,6 +220,10 @@ const (
 const (
 	// MinAvailableKey decide minAvailable of task
 	MinAvailableKey = "huawei.com/schedule_minAvailable"
+	// SchedulePolicyAnnoKey annotation key for schedule policy
+	SchedulePolicyAnnoKey = "huawei.com/schedule_policy"
+	// AffinityConfigAnnoKey annotation key for multilevel schedule policy
+	AffinityConfigAnnoKey = "huawei.com/affinity-config"
 )
 
 // for cm

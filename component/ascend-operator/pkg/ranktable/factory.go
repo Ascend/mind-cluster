@@ -13,7 +13,6 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
-	"ascend-operator/pkg/ranktable/common"
 	"ascend-operator/pkg/ranktable/generator"
 	ranktablev1 "ascend-operator/pkg/ranktable/v1"
 	"ascend-operator/pkg/ranktable/v1dot2"
@@ -57,8 +56,9 @@ func containsNPURequest(containers []corev1.Container) bool {
 }
 
 func useV1dot2(job *mindxdlv1.AscendJob) bool {
-	if policy, schedulePolicyExit := job.Annotations[common.SchedulePolicyAnnoKey]; schedulePolicyExit {
-		return policy == utils.Chip2Node16Sp || policy == utils.Chip2Node8Sp
+	if policy, schedulePolicyExist := job.Annotations[api.SchedulePolicyAnnoKey]; schedulePolicyExist {
+		return policy == utils.Chip2Node16Sp || policy == utils.Chip2Node8Sp ||
+			(policy == utils.Multilevel && !useV2dot0(job))
 	}
 	if _, spBlockExit := job.Annotations[utils.AnnoKeyOfSuperPod]; spBlockExit {
 		return true

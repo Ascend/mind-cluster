@@ -3,7 +3,10 @@
 // Package utils is common utils
 package utils
 
-import "ascend-operator/pkg/api/v1"
+import (
+	"ascend-common/api"
+	"ascend-operator/pkg/api/v1"
+)
 
 // IsMindIEEPJob judge mindIEEP job
 func IsMindIEEPJob(job *v1.AscendJob) bool {
@@ -25,4 +28,16 @@ func IsSoftStrategyJob(job *v1.AscendJob) bool {
 		return false
 	}
 	return job.Labels[SuperPodAffinity] == SoftStrategy
+}
+
+// IsMultiLevelJob judge multilevel schedule policy job
+func IsMultiLevelJob(job *v1.AscendJob) bool {
+	if job == nil || job.Annotations == nil {
+		return false
+	}
+	val, ok := job.Annotations[api.SchedulePolicyAnnoKey]
+	if !ok {
+		return false
+	}
+	return val == Multilevel
 }
