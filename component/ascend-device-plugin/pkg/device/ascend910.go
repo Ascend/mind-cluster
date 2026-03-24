@@ -1815,13 +1815,13 @@ func (hnm *HwAscend910Manager) resetDeviceOnce(devFaultInfoList []*common.TaskDe
 	}
 	hwlog.RunLog.Debugf("devices %v will be reset", resetFaultInfoMap)
 	processId := time.Now().UnixMilli()
-	resetGoroutine.Store(processId, struct{}{})
+	common.Ascend910ResetGoroutine.Store(processId, struct{}{})
 	if err := hnm.execResetDevice(resetFaultInfoMap); err != nil {
 		hwlog.RunLog.Errorf("failed to exec reset device list, err: %v", err)
-		resetGoroutine.Delete(processId)
+		common.Ascend910ResetGoroutine.Delete(processId)
 		return err
 	}
-	resetGoroutine.Delete(processId)
+	common.Ascend910ResetGoroutine.Delete(processId)
 	for _, devInfo := range devFaultInfoList {
 		common.SetDeviceInit(devInfo.LogicId)
 	}

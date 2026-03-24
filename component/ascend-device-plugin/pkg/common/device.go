@@ -117,8 +117,6 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 	SwitchFaultLock.Lock()
 	defer SwitchFaultLock.Unlock()
 
-	faultLevel, NodeStatus := getSwitchFaultLevelAndNodeStatus()
-
 	reportFaultCodes := make([]string, 0)
 	tmpFaultCodeLevelMap := make(map[string]int)
 	tmpFaultTimeAndLevelMap := make(map[string]FaultTimeAndLevel)
@@ -131,8 +129,9 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 		if err != nil {
 			continue
 		}
-		tmpFaultCodeLevelMap[faultInfo.AssembledFaultCode] = SwitchFaultLevelMap[faultInfo.AssembledFaultCode]
-		if _, ok := switchFaultCodeLevelToCm[faultInfo.AssembledFaultCode]; ok {
+		if GetSyncMapLen(Ascend910ResetGoroutine) == 0 {
+			tmpFaultCodeLevelMap[faultInfo.AssembledFaultCode] = SwitchFaultLevelMap[faultInfo.AssembledFaultCode]
+		} else {
 			tmpFaultCodeLevelMap[faultInfo.AssembledFaultCode] = switchFaultCodeLevelToCm[faultInfo.AssembledFaultCode]
 		}
 		reportFaultCodes = append(reportFaultCodes, faultStr)
@@ -140,10 +139,11 @@ func GetSwitchFaultInfo() SwitchFaultInfo {
 			strconv.Itoa(int(faultInfo.SwitchPortId))
 		tmpFaultTimeAndLevelMap[faultTimeAndLevelKey] = FaultTimeAndLevel{
 			FaultTime:  faultInfo.AlarmRaisedTime,
-			FaultLevel: convertToSwitchLevelStr(SwitchFaultLevelMap[faultInfo.AssembledFaultCode]),
+			FaultLevel: convertToSwitchLevelStr(tmpFaultCodeLevelMap[faultInfo.AssembledFaultCode]),
 		}
 	}
 	switchFaultCodeLevelToCm = tmpFaultCodeLevelMap
+	faultLevel, NodeStatus := getSwitchFaultLevelAndNodeStatus()	
 	return SwitchFaultInfo{
 		FaultCode:            reportFaultCodes,
 		FaultLevel:           faultLevel,

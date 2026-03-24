@@ -16,6 +16,7 @@
 package common
 
 import (
+	"sync"
 	"time"
 
 	"ascend-common/api"
@@ -860,6 +861,9 @@ const (
 	SoftShareDevNPUInfoConfigParentDirSplitLen = 2
 )
 
+var (
+	Ascend910ResetGoroutine = &sync.Map{}
+)
 const (
 	// EveryNetworkQueryDuration indicate query network info per five minute
 	EveryNetworkQueryDuration = 5
