@@ -190,7 +190,7 @@ func (mhd *MsgHandler) responseAgentRestartTimes(msg storage.BaseMessage) {
 		return
 	}
 	mgrRestartTimes := 0
-	if restartTimeStr, exists := mgrInfo.Status[constant.ReportRestartTime]; exists && restartTimeStr != "" {
+	if restartTimeStr, exists := mgrInfo.GetStatusVal(constant.ReportRestartTime); exists && restartTimeStr != "" {
 		var parseErr error
 		mgrRestartTimes, parseErr = strconv.Atoi(restartTimeStr)
 		if parseErr != nil {
@@ -223,8 +223,9 @@ func (mhd *MsgHandler) responseAgentRestartTimes(msg storage.BaseMessage) {
 }
 
 func (mhd *MsgHandler) shouldStartAgent(msg storage.BaseMessage, mgrInfo *storage.MgrInfo) bool {
-	if mgrInfo.Status[constant.SignalType] == clusterdconstant.WaitStartAgentSignalType {
-		hwlog.RunLog.Infof("recv: wait start agent signal: %v", mgrInfo.Status[constant.SignalType])
+	signalType, exists := mgrInfo.GetStatusVal(constant.SignalType)
+	if exists && signalType == clusterdconstant.WaitStartAgentSignalType {
+		hwlog.RunLog.Infof("recv: wait start agent signal: %v", signalType)
 		// wait start agent signal, enqueue msg
 		err := mhd.MsgQueue.Enqueue(msg)
 		if err != nil {
@@ -232,8 +233,8 @@ func (mhd *MsgHandler) shouldStartAgent(msg storage.BaseMessage, mgrInfo *storag
 		}
 		return true
 	}
-	if mgrInfo.Status[constant.SignalType] == clusterdconstant.ContinueStartAgentSignalType {
-		hwlog.RunLog.Infof("recv: continue start agent signal: %v", mgrInfo.Status[constant.SignalType])
+	if exists && signalType == clusterdconstant.ContinueStartAgentSignalType {
+		hwlog.RunLog.Infof("recv: continue start agent signal: %v", signalType)
 	}
 	return false
 }

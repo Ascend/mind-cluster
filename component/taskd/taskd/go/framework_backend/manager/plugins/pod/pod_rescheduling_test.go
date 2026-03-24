@@ -165,7 +165,7 @@ func TestPodReschedulingPlugin_FirstGetRestartTime(t *testing.T) {
 	assert.Equal(t, reportRestartTime, plugin.restartTimes)
 
 	plugin.restartTimes = -1
-	shot.AgentInfos.Agents["agent1"].Status[constant.ReportRestartTime] = "invalid"
+	shot.AgentInfos.Agents["agent1"].SetStatusVal(constant.ReportRestartTime, "invalid")
 	plugin.firstGetRestartTime(shot)
 	assert.Equal(t, 0, plugin.restartTimes)
 }
