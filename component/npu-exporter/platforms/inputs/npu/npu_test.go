@@ -172,3 +172,27 @@ func (m *MockAccumulator) AddError(err error) {
 func (m *MockAccumulator) WithTracking(maxTracked int) telegraf.TrackingAccumulator {
 	return nil
 }
+
+func TestRemoveLastDashAndSuffix(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"should return original string when no dash", "ascend", "ascend"},
+		{"should remove last dash and suffix when single dash exists", "ascend-0", "ascend"},
+		{"should remove last dash and suffix when multiple dashes exist", "ascend-0-1", "ascend-0"},
+		{"should return empty string when input is empty", "", ""},
+		{"should return empty string when input is single dash", "-", ""},
+		{"should remove last dash and numeric suffix", "device-123", "device"},
+		{"should remove last dash and alpha suffix", "device-test", "device"},
+		{"should remove last dash and alphanumeric suffix", "device-test123", "device"},
+	}
+
+	for _, tt := range tests {
+		convey.Convey(tt.name, t, func() {
+			result := removeLastDashAndSuffix(tt.input)
+			convey.So(result, convey.ShouldEqual, tt.expected)
+		})
+	}
+}
