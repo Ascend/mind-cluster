@@ -357,7 +357,7 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet, 
 			}
 		}
 		switchFaultInfo := common.GetSwitchFaultInfo()
-		if common.GetSyncMapLen(resetGoroutine) != 0 {
+		if common.GetSyncMapLen(common.Ascend910ResetGoroutine) != 0 {
 			common.UpdateSwitchFaultInfoAndFaultLevel(&switchFaultInfo)
 		}
 		reasonCache := common.CopyUpgradeFaultCache()

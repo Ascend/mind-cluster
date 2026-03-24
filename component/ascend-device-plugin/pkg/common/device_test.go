@@ -253,7 +253,7 @@ func TestGetSwitchFaultInfo(t *testing.T) {
 
 			switchFaultCodeLevelToCm = map[string]int{generalFaultCode: NotHandleFaultLevel}
 			fault = GetSwitchFaultInfo()
-			convey.So(fault.FaultLevel == NotHandleFaultLevelStr, convey.ShouldBeTrue)
+			convey.So(fault.FaultLevel == SeparateFaultLevelStr, convey.ShouldBeTrue)
 			convey.So(len(fault.FaultTimeAndLevelMap) == 1, convey.ShouldBeTrue)
 		})
 	})

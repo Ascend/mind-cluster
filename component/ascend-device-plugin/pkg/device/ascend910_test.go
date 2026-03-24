@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"sync"
 	"testing"
 	"time"
 
@@ -2412,7 +2411,6 @@ func TestResetDeviceOnce(t *testing.T) {
 	})
 	mockFunc := gomonkey.ApplyPrivateMethod(&HwAscend910Manager{}, "execResetDevice",
 		func(*HwAscend910Manager, map[int32]int32) error { return nil }).
-		ApplyGlobalVar(&resetGoroutine, &sync.Map{}).
 		ApplyFuncReturn(common.SetDeviceInit)
 	defer mockFunc.Reset()
 
