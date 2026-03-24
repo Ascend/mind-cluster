@@ -60,6 +60,7 @@ enum TResult : int {
     TTP_REPAIR = 7,
     TTP_PAUSE = 8,
     TTP_SWITCH = 9,
+    TTP_RERUN = 10,
     TTP_BUTT,
 };
 

@@ -550,6 +550,7 @@ void Processor::HeartbeatThread()
         } else if (ret != TTP_OK) {
             TTP_LOG_ERROR("rank:" << rank_ << " send heartbeat msg to controller failed, unprocessed");
         }
+        TTP_LOG_DEBUG("rank:" << rank_ << " send heartbeat msg to controller success");
         sleep(TTP_SLEEP_TIME);
     }
     TTP_LOG_DEBUG("rank:" << rank_ << " heartbeat thread exit...");

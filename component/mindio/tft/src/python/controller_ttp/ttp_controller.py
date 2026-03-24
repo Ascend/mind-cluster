@@ -67,6 +67,7 @@ def tft_start_controller(bind_ip: str, port: int, enable_tls=True, tls_info=''):
 
 
 def tft_destroy_controller():
+    ttp_logger.LOGGER.info("calling destroy controller")
     ret = ttp_c2python_api.destroy_controller()
     if ret != RET_OK:
         ttp_logger.LOGGER.error("destroy controller failed, error num:%s", ret)
