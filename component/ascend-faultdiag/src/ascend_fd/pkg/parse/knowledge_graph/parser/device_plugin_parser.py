@@ -31,8 +31,8 @@ class DevicePluginParser(FileParser):
     SOURCE_FILE = DEVICEPLUGIN_SOURCE
     TARGET_FILE_PATTERNS = "device_plugin_path"
     FILE_TIME_REGEX = re.compile(r"devicePlugin-(\d{4}-\d{2}-\d{2})T(\d{2}-\d{2}-\d{2}.\d{3}).log")
-    LOG_TIME_REGEX = re.compile(r"(\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}.\d{6})")
-    ASSERTION_KEYWORD_PATTERN = re.compile(r"Assertion:0x(\d)")
+    LOG_TIME_REGEX = re.compile(r"(\d{4}[-/]\d{2}[-/]\d{2} \d{2}:\d{2}:\d{2}.\d{6})")
+    ASSERTION_KEYWORD_PATTERN = re.compile(r"Assertion:(?: |0x)([01])")
     DEFAULT_DEVICE_PLUGIN_FILENAME = "devicePlugin.log"
 
     def __init__(self, params):
