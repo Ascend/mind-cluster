@@ -8727,6 +8727,7 @@
             "source_file": "TrainLog",
             "regex": {
                 "in": [
+                    ["Invalid_Argument", "SetDevice failed", "devId is invalid"],
                     ["Invalid device ID","Check whether the device ID is valid"],
                     ["The argument is invalid","Set device failed","invalid device"]
                 ]
@@ -8796,7 +8797,7 @@
             },
             "source_file": "TrainLog",
             "regex": {
-                "in": ["RuntimeError: trying to initialize the default process group twice!"]
+                "in": ["RuntimeError:", "trying to initialize the default process group twice!"]
             }
         },
         "AISW_PyTorch_Init_05": {

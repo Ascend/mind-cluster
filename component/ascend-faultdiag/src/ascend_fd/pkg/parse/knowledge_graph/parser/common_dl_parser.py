@@ -34,7 +34,7 @@ kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
 class CommonDlParser(FileParser):
     DEFAULT_LOG_FILENAME = None
     FILE_TIME_REGEX = None
-    LOG_TIME_REGEX = re.compile(r"(\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}.\d{6})")
+    LOG_TIME_REGEX = re.compile(r"(\d{4}[-/]\d{2}[-/]\d{2} \d{2}:\d{2}:\d{2}.\d{6})")
 
     def __init__(self, params):
         super().__init__(params)
