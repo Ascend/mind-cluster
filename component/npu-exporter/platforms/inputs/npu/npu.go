@@ -91,13 +91,17 @@ func handleTextMetrics(acc telegraf.Accumulator, fieldsMap map[string]map[string
 		if !ok {
 			continue
 		}
-		splitArr := strings.Split(key, "-")
-		if len(splitArr) < num2 {
-			continue
-		}
-		acc.AddFields(splitArr[0], data.Metrics, data.Labels, data.Timestamp)
+		acc.AddFields(removeLastDashAndSuffix(key), data.Metrics, data.Labels, data.Timestamp)
 	}
 	delete(fieldsMap, common.KeyForTextMetrics)
+}
+
+func removeLastDashAndSuffix(s string) string {
+	idx := strings.LastIndex(s, "-")
+	if idx == -1 {
+		return s
+	}
+	return s[:idx]
 }
 
 func handleGeneralMetrics(acc telegraf.Accumulator, fieldsMap map[string]map[string]interface{}, devName string, devTagValue string) {
