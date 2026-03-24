@@ -1350,7 +1350,7 @@ spec:
 
 - 在软切分虚拟化场景下，一个容器只能挂载一个NPU。
 - 任务YAML中requests对应的数据表示请求的NPU的AI Core百分比，不是真实NPU卡数。
-- Atlas A3 推理系列产品使用软切分功能时，必须先调用驱动接口开启单die直通模式。
+- Atlas A3 推理系列产品使用软切分虚拟化功能时，必须开启单die直通模式，即在Ascend Device Plugin的YAML中，增加启动参数-useSingleDieMode=true。
 - 物理NPU软切分虚拟化后，仅支持将物理NPU挂载到容器，不支持将该物理NPU直通到虚拟机。
 - 在软切分虚拟化场景下，如果所有容器都挂载了相同的物理NPU，则该物理NPU必须采用相同的软切分策略。
 - 对于<term>Atlas A2 推理系列产品</term>/<term>Atlas A3 推理系列产品</term>，一个Device上最多只能支持63个用户进程，Host最多只能支持Device个数\*63个进程，详情请参见[使用约束](https://www.hiascend.com/document/detail/zh/canncommercial/850/appdevg/acldevg/aclcppdevg_000222.html)。
@@ -1431,13 +1431,13 @@ spec:
 
     虚拟化实例涉及修改相关参数的集群调度组件为Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署。
 
-    1. 在device-plugin-volcano-v\{version\}.yaml中添加-shareDevCount=100 -softShareDevConfigDir=/share_device/，其中/share_device/由用户手动创建。
+    1. 在device-plugin-volcano-v\{version\}.yaml中添加-shareDevCount=100 -softShareDevConfigDir=/share_device/，其中/share_device/由用户手动创建。当Atlas A3 推理系列产品使用软切分虚拟化功能时，需额外增加启动参数-useSingleDieMode=true。
 
        ```Yaml
        ...
 
                args: [ "device-plugin  -useAscendDocker=true -volcanoType=true -presetVirtualDevice=true
-                 -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0 -shareDevCount=100 -softShareDevConfigDir=/share_device/" ]
+                 -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0 -shareDevCount=100 -softShareDevConfigDir=/share_device/ -useSingleDieMode=true" ]   # 只有Atlas A3 推理系列产品使用软切分虚拟化功能时，才需增加-useSingleDieMode=true。
              ...
                volumeMounts:
              ...
@@ -1467,6 +1467,7 @@ spec:
        |--|--|--|--|
        |-shareDevCount|uint|1|使用软切分虚拟化功能时，值只能为100。|
        |-softShareDevConfigDir|string|""|软切分虚拟化场景配置目录。|
+       |-useSingleDieMode|bool|false|Atlas A3 推理系列产品是否开启单die直通模式。<ul><li>true：开启单die直通模式。</li><li>false：关闭单die直通模式。</li></ul>使用软切分虚拟化功能时，该参数必须配置为true。|
 
     2. （可选）针对软切分虚拟化功能和非软切分虚拟化功能混合部署场景，需要对Ascend Device Plugin的YAML进行如下修改。
 
@@ -1632,3 +1633,26 @@ spec:
               hostPath:
                 path: ${preload_path}/ld.so.preload</b>
 </pre>
+
+>[!NOTE] 
+>Atlas A3 推理系列产品下发软切分虚拟化任务时，在任务容器中，/dev/实际挂载1个die，但是执行<b>npu-smi info</b>命令查询显示挂载了2个die。回显示例如下：
+>
+> ```ColdFusion
+> +-----------------------------------------------------------------------------------------------+
+> | npu-smi xxx.xxx.xxx                Version: xxx.xxx.xxx                                       |
+> +---------------------------+---------------+---------------------------------------------------+
+> | NPU   Name         | Health        | Power(W)    Temp(C)           Hugepages-Usage(page)      |
+> | Chip  Phy-ID       | Bus-Id        | AICore(%)   Memory-Usage(MB)  HBM-Usage(MB)              |
+> +===========================+===============+===================================================+
+> | 0     xxx          | OK            | 157.3       32                0    / 0                   |
+> | 0     0            | 0000:9D:00.0  | 0           0        / 0      3130 / 65536               |
+> +---------------------------+---------------+---------------------------------------------------+
+> | 0     xxx          | OK            | -           32                0    / 0                   |
+> | 1     0            | 0000:9D:00.0  | 0           0        / 0      3130 / 65536               |
+> +===========================+===============+===================================================+
+> +---------------------------+---------------+---------------------------------------------------+
+> | NPU     Chip       | Process id    | Process name| Process memory(MB) |Process id in container|
+> +===========================+===============+===================================================+
+> | No running processes found in NPU 0                                                           |
+> +===========================+===============+===================================================+
+> ```
