@@ -68,7 +68,7 @@ func getDemoSnapshot() storage.SnapShot {
 
 func getSnapshotWithAgent0Fault() storage.SnapShot {
 	snapshot := getDemoSnapshot()
-	snapshot.AgentInfos.Agents[common.AgentRole+"0"].Status[constant.ReportFaultRank] = "0"
+	snapshot.AgentInfos.Agents[common.AgentRole+"0"].SetStatusVal(constant.ReportFaultRank, "0")
 	return snapshot
 }
 

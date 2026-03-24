@@ -128,7 +128,8 @@ func (job *JobReschedulingPlugin) Predicate(shot storage.SnapShot) (infrastructu
 	}
 
 	for agentName, agent := range shot.AgentInfos.Agents {
-		if agentName == common.AgentRole+"0" && agent.Status[constant.ReportFaultRank] != "" {
+		faultRank, ok := agent.GetStatusVal(constant.ReportFaultRank)
+		if agentName == common.AgentRole+"0" && ok && faultRank != "" {
 			job.faultOccur = true
 			hwlog.RunLog.Info("agent 0 fault job job rescheduling")
 			return infrastructure.PredicateResult{PluginName: job.Name(),
@@ -156,7 +157,8 @@ func (job *JobReschedulingPlugin) resetPluginInfo() {
 
 func (job *JobReschedulingPlugin) updatePluginInfo(shot storage.SnapShot) {
 	for agentName, agent := range shot.AgentInfos.Agents {
-		if agentName == common.AgentRole+"0" && agent.Status[constant.ReportFaultRank] != "" {
+		faultRank, ok := agent.GetStatusVal(constant.ReportFaultRank)
+		if agentName == common.AgentRole+"0" && ok && faultRank != "" {
 			job.killMaster = true
 		}
 	}
@@ -198,7 +200,7 @@ func (job *JobReschedulingPlugin) checkRank0Fault(shot storage.SnapShot) {
 		hwlog.RunLog.Info("JobReschedulingPlugin checkRank0Fault agent 0 not exist")
 		return
 	}
-	if agent0Info.Status[constant.ReportFaultRank] != "" {
+	if faultRank, ok := agent0Info.GetStatusVal(constant.ReportFaultRank); ok && faultRank != "" {
 		hwlog.RunLog.Debug("JobReschedulingPlugin checkRank0Fault agent 0 fault")
 		if shot.MgrInfos != nil && shot.MgrInfos.Status[constant.FaultRecover] != "" &&
 			skipRank0FaultForNow(agent0Info) {
@@ -211,7 +213,7 @@ func (job *JobReschedulingPlugin) checkRank0Fault(shot storage.SnapShot) {
 }
 
 func skipRank0FaultForNow(agent0Info *storage.AgentInfo) bool {
-	reportFaultTimeStr, ok := agent0Info.Status[constant.ReportFaultTime]
+	reportFaultTimeStr, ok := agent0Info.GetStatusVal(constant.ReportFaultTime)
 	if !ok {
 		hwlog.RunLog.Infof("report fault time is empty")
 		return false

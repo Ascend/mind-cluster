@@ -201,12 +201,13 @@ func (pod *PodReschedulingPlugin) Predicate(shot storage.SnapShot) (infrastructu
 
 	for agentName, agentInfo := range shot.AgentInfos.Agents {
 		pod.faultAgentStatus[agentName] = false
-		if agentName == common.AgentRole+"0" && agentInfo.Status[constant.ReportFaultRank] != "" {
+		faultRank, ok := agentInfo.GetStatusVal(constant.ReportFaultRank)
+		if agentName == common.AgentRole+"0" && ok && faultRank != "" {
 			hwlog.RunLog.Info("agent 0 fault, pod rescheduling plugin unselect")
 			return infrastructure.PredicateResult{
 				PluginName: pod.Name(), CandidateStatus: constant.UnselectStatus, PredicateStream: nil}, nil
 		}
-		if agentInfo.Status[constant.ReportFaultRank] != "" {
+		if ok && faultRank != "" {
 			pod.faultAgentStatus[agentName] = true
 			pod.faultOccur = true
 		}
@@ -247,7 +248,8 @@ func (pod *PodReschedulingPlugin) resetPluginInfo() {
 
 func (pod *PodReschedulingPlugin) updatePluginInfo(shot storage.SnapShot) {
 	for agentName, agentInfo := range shot.AgentInfos.Agents {
-		if agentInfo.Status[constant.ReportFaultRank] != "" {
+		faultRank, ok := agentInfo.GetStatusVal(constant.ReportFaultRank)
+		if ok && faultRank != "" {
 			pod.faultAgentStatus[agentName] = true
 		} else {
 			pod.faultAgentStatus[agentName] = false
@@ -270,9 +272,10 @@ func (pod *PodReschedulingPlugin) checkFaultrecover(shot storage.SnapShot) bool 
 func (pod *PodReschedulingPlugin) firstGetRestartTime(shot storage.SnapShot) {
 	var err error
 	for _, agentInfo := range shot.AgentInfos.Agents {
-		if agentInfo.Status[constant.ReportRestartTime] != "" && pod.restartTimes == -1 {
-			hwlog.RunLog.Infof("pod rescheduling first set plugin restart times: %v", agentInfo.Status[constant.ReportRestartTime])
-			pod.restartTimes, err = strconv.Atoi(agentInfo.Status[constant.ReportRestartTime])
+		restartTime, ok := agentInfo.GetStatusVal(constant.ReportRestartTime)
+		if ok && restartTime != "" && pod.restartTimes == -1 {
+			hwlog.RunLog.Infof("pod rescheduling first set plugin restart times: %v", restartTime)
+			pod.restartTimes, err = strconv.Atoi(restartTime)
 			if err != nil {
 				hwlog.RunLog.Error("firstGetRestartTime strconv.Atoi failed")
 				return

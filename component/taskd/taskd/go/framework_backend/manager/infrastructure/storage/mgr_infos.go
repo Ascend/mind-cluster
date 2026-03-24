@@ -17,6 +17,8 @@ package storage
 
 import (
 	"sync"
+
+	"taskd/common/utils"
 )
 
 // ManagerInfo for manager info
@@ -25,18 +27,34 @@ type MgrInfo struct {
 	RWMutex sync.RWMutex
 }
 
-func (m *MgrInfo) getMgrInfo() (*MgrInfo, error) {
-	m.RWMutex.RLock()
-	defer m.RWMutex.RUnlock()
-	return &MgrInfo{
-		Status:  m.Status,
-		RWMutex: sync.RWMutex{},
-	}, nil
-}
-
 func (m *MgrInfo) updateMgr(newMgr *MgrInfo) error {
 	m.RWMutex.Lock()
 	defer m.RWMutex.Unlock()
 	m.Status = newMgr.Status
 	return nil
+}
+
+// SetStatusVal set manager status value
+func (m *MgrInfo) SetStatusVal(key, value string) {
+	m.RWMutex.Lock()
+	defer m.RWMutex.Unlock()
+	m.Status[key] = value
+}
+
+// GetStatusVal get manager status value
+func (m *MgrInfo) GetStatusVal(key string) (string, bool) {
+	m.RWMutex.RLock()
+	defer m.RWMutex.RUnlock()
+	val, ok := m.Status[key]
+	return val, ok
+}
+
+// DeepCopy return a deep copy of MgrInfo
+func (m *MgrInfo) DeepCopy() *MgrInfo {
+	m.RWMutex.RLock()
+	defer m.RWMutex.RUnlock()
+	return &MgrInfo{
+		Status:  utils.CopyStringMap(m.Status),
+		RWMutex: sync.RWMutex{},
+	}
 }

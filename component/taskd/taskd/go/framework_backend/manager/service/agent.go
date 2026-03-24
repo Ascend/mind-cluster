@@ -62,14 +62,16 @@ func (mpc *MsgProcessor) agentStatus(dataPool *storage.DataPool, data storage.Ba
 	agentInfo *storage.AgentInfo) error {
 	switch data.Body.Code {
 	case constant.RestartTimeCode:
-		agentInfo.Status[constant.ReportRestartTime] = data.Body.Message
+		agentInfo.SetStatusVal(constant.ReportRestartTime, data.Body.Message)
 	case constant.FaultRankCode:
-		agentInfo.Status[constant.ReportFaultRank] = data.Body.Message
-		agentInfo.Status[constant.ReportFaultTime] = data.Body.Extension[constant.ReportFaultTime]
-		dataPool.Snapshot.AgentInfos.AllStatus[agentName] = data.Body.Message
+		agentInfo.SetStatusVal(constant.ReportFaultRank, data.Body.Message)
+		if data.Body.Extension != nil && data.Body.Extension[constant.ReportFaultTime] != "" {
+			agentInfo.SetStatusVal(constant.ReportFaultTime, data.Body.Extension[constant.ReportFaultTime])
+		}
+		dataPool.Snapshot.AgentInfos.SetAllStatusVal(agentName, data.Body.Message)
 	case constant.ExitAgentCode:
-		agentInfo.Status[constant.Exit] = data.Body.Message
-		dataPool.Snapshot.AgentInfos.AllStatus[agentName] = data.Body.Message
+		agentInfo.SetStatusVal(constant.Exit, data.Body.Message)
+		dataPool.Snapshot.AgentInfos.SetAllStatusVal(agentName, data.Body.Message)
 	default:
 		return fmt.Errorf("unknown message status code: %v", data.Body.Code)
 	}

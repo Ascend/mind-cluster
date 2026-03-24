@@ -67,7 +67,7 @@ func TestAgentHandler(t *testing.T) {
 func TestAgentStatus(t *testing.T) {
 	mpc := &MsgProcessor{}
 	dp := newDataPool()
-	msg := createBaseMessage(agentPos, constant.REGISTER, 0, "")
+	msg := createBaseMessage(agentPos, constant.REGISTER, constant.FaultRankCode, "")
 	agentName := common.AgentRole + "0"
 	_ = mpc.agentRegister(dp, msg)
 	agentInfo, _ := dp.GetAgent(agentName)
