@@ -6,8 +6,10 @@ Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
 package utils
 
 import (
+	"strconv"
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	commonv1 "github.com/kubeflow/common/pkg/apis/common/v1"
 	"github.com/smartystreets/goconvey/convey"
 	corev1 "k8s.io/api/core/v1"
@@ -15,6 +17,12 @@ import (
 
 	"ascend-common/api"
 	v1 "ascend-operator/pkg/api/v1"
+)
+
+const (
+	nodeNumber2 = 2
+	nodeNumber4 = 4
+	npuNumber8  = 8
 )
 
 func TestGetLogicSuperPodNodes(t *testing.T) {
@@ -68,6 +76,14 @@ func TestGetSpBlock(t *testing.T) {
 			res := GetSpBlock(job)
 			convey.So(res, convey.ShouldEqual, 1)
 		})
+		convey.Convey("05-job with multilevel return 1", func() {
+			job := newCommonAscendJob()
+			patches := gomonkey.ApplyFuncReturn(IsMultiLevelJob, true).
+				ApplyFuncReturn(getSpBlockFromAffinityConfig, 1)
+			defer patches.Reset()
+			res := GetSpBlock(job)
+			convey.So(res, convey.ShouldEqual, 1)
+		})
 	})
 }
 
@@ -113,6 +129,84 @@ func TestGetSpBlockNum(t *testing.T) {
 			const expectedReplicaNum = 4
 			res := GetSpBlockNum(job)
 			convey.So(res, convey.ShouldEqual, expectedReplicaNum) // 2 replicas * 4 devices / 2 spBlock = 4
+		})
+	})
+}
+
+func TestGetDevicesPerPod(t *testing.T) {
+	convey.Convey("TestGetDevicesPerPod", t, func() {
+		convey.Convey("01- get pod npu number correctly", func() {
+			containers := []corev1.Container{
+				{Resources: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{api.HuaweiAscend910: resource.MustParse(strconv.Itoa(npuNumber8))},
+				}},
+			}
+			res := getDevicesPerPod(containers)
+			convey.So(res, convey.ShouldEqual, npuNumber8)
+		})
+		convey.Convey("02- get 0 when pod has no npu", func() {
+			containers := []corev1.Container{{}}
+			res := getDevicesPerPod(containers)
+			convey.So(res, convey.ShouldEqual, 0)
+		})
+	})
+}
+
+func TestGetSpBlockFromAffinityConfig(t *testing.T) {
+	convey.Convey("TestGetSpBlockFromAffinityConfig", t, func() {
+		convey.Convey("01-get sp-block number correctly", func() {
+			patches := gomonkey.ApplyFuncReturn(getAffinityBlocks, map[string]int{Level1BlockKey: nodeNumber2}).
+				ApplyFuncReturn(getDevicesPerPod, npuNumber8)
+			defer patches.Reset()
+			job := &v1.AscendJob{}
+			job.Spec.ReplicaSpecs = map[commonv1.ReplicaType]*commonv1.ReplicaSpec{"Worker": {}}
+			res := getSpBlockFromAffinityConfig(job)
+			convey.So(res, convey.ShouldEqual, npuNumber8*nodeNumber2)
+		})
+		convey.Convey("02-when job is nil return 0 ", func() {
+			res := getSpBlockFromAffinityConfig(nil)
+			convey.So(res, convey.ShouldEqual, 0)
+		})
+		convey.Convey("03-when affinity block is nil return 0 ", func() {
+			patch := gomonkey.ApplyFuncReturn(getAffinityBlocks, nil)
+			defer patch.Reset()
+			job := &v1.AscendJob{}
+			res := getSpBlockFromAffinityConfig(job)
+			convey.So(res, convey.ShouldEqual, 0)
+		})
+		convey.Convey("04-when level config is nil return 0 ", func() {
+			patch := gomonkey.ApplyFuncReturn(getAffinityBlocks, map[string]int{})
+			defer patch.Reset()
+			job := &v1.AscendJob{}
+			res := getSpBlockFromAffinityConfig(job)
+			convey.So(res, convey.ShouldEqual, 0)
+		})
+	})
+}
+
+func TestGetAffinityBlocks(t *testing.T) {
+	const level1BlockKey = "level2"
+	convey.Convey("TestGetAffinityBlocks", t, func() {
+		job := &v1.AscendJob{}
+		convey.Convey("01-get sp-block number correctly", func() {
+			job.Annotations = map[string]string{api.AffinityConfigAnnoKey: "level1=2,level2=4"}
+			res := getAffinityBlocks(job)
+			convey.So(res, convey.ShouldEqual, map[string]int{Level1BlockKey: nodeNumber2, level1BlockKey: nodeNumber4})
+		})
+		convey.Convey("02-job with empty annotation will return nil", func() {
+			job.Annotations = map[string]string{}
+			res := getAffinityBlocks(job)
+			convey.So(res, convey.ShouldEqual, nil)
+		})
+		convey.Convey("03-job with invalid config will return nil", func() {
+			job.Annotations = map[string]string{api.AffinityConfigAnnoKey: "level1"}
+			res := getAffinityBlocks(job)
+			convey.So(res, convey.ShouldEqual, nil)
+		})
+		convey.Convey("04-job with invalid config will return nil", func() {
+			job.Annotations = map[string]string{api.AffinityConfigAnnoKey: "level1=a"}
+			res := getAffinityBlocks(job)
+			convey.So(res, convey.ShouldEqual, nil)
 		})
 	})
 }

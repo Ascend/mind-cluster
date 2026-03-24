@@ -10,6 +10,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"ascend-common/api"
 	"ascend-operator/pkg/api/v1"
 )
 
@@ -84,6 +85,32 @@ func TestIsSoftStrategyJob(t *testing.T) {
 		convey.Convey("05-label SuperPodAffinity equal SoftStrategy will return true", func() {
 			job.SetLabels(map[string]string{SuperPodAffinity: SoftStrategy})
 			res := IsSoftStrategyJob(job)
+			convey.So(res, convey.ShouldBeTrue)
+		})
+	})
+}
+
+// TestIsMultiLevelJob test IsMultiLevelJob
+func TestIsMultiLevelJob(t *testing.T) {
+	convey.Convey("IsMultiLevelJob", t, func() {
+		job := newCommonAscendJob()
+		convey.Convey("01-nil job will return false", func() {
+			res := IsMultiLevelJob(nil)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("02-job with empty annotation will return false", func() {
+			job.SetAnnotations(map[string]string{})
+			res := IsMultiLevelJob(job)
+			convey.So(res, convey.ShouldBeFalse)
+		})
+		convey.Convey("03-job with huawei.com/schedule_policy:multilevel will return true", func() {
+			job.SetAnnotations(map[string]string{api.SchedulePolicyAnnoKey: Multilevel})
+			res := IsMultiLevelJob(job)
+			convey.So(res, convey.ShouldBeTrue)
+		})
+		convey.Convey("04-job with huawei.com/schedule_policy:chip2-node16-sp will return false", func() {
+			job.SetAnnotations(map[string]string{api.SchedulePolicyAnnoKey: Chip2Node16Sp})
+			res := IsMultiLevelJob(job)
 			convey.So(res, convey.ShouldBeTrue)
 		})
 	})
