@@ -1108,6 +1108,10 @@ TResult Controller::AbnormalCallback()
 
     repairId_.fetch_add(1);
     auto ret = DoPause();
+    if (ret == TTP_RERUN) {
+        return ret;
+    }
+
     SelectErrorRanks();
 
     // backup no need to notify mindx
@@ -1526,6 +1530,12 @@ TResult Controller::DoPause()
     TTP_LOG_INFO("controller collect latest status end...");
     if (ret != TTP_OK) {
         TTP_LOG_WARN("controller collect latest status found some worker error");
+    }
+
+    SelectErrorRanks();
+    if (errorRankMsg_.empty() && repairEvent_ == MindXEvent::MINDX_EVENT_BUTT) {
+        TTP_LOG_WARN("errorRankMsg_ is empty, revert to normal state machine");
+        return TTP_RERUN;
     }
 
     // select step & check no dump

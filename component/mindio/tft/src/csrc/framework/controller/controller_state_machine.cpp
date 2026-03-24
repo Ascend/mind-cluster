@@ -42,6 +42,7 @@ StateTransitionItem g_stateTransItemTable[]{
         {STATE_OP_MIGRATION,   TTP_ERROR,        STATE_OP_DUMP},
         {STATE_OP_MIGRATION,   TTP_STOP_SERVICE, STATE_OP_EXIT},
         {STATE_OP_ABNORMAL,    TTP_OK,           STATE_OP_ENV_CLEAR},
+        {STATE_OP_ABNORMAL,    TTP_RERUN,        STATE_OP_NORMAL},
         {STATE_OP_ABNORMAL,    TTP_ERROR,        STATE_OP_DUMP},
         {STATE_OP_ABNORMAL,    TTP_STOP_SERVICE, STATE_OP_EXIT},
         {STATE_OP_ENV_CLEAR,   TTP_OK,           STATE_OP_REPAIR},
