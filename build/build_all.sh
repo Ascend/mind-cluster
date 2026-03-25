@@ -52,7 +52,7 @@ fi
 
 cd "$TOP_DIR"/component
 CUR_DIR=$(dirname $(readlink -f $0))
-mind_cluster=("ascend-device-plugin" "ascend-docker-runtime" "ascend-for-volcano" "ascend-operator" "clusterd" "noded" "npu-exporter" "taskd" "mindcluster-tools")
+mind_cluster=("ascend-device-plugin" "ascend-docker-runtime" "ascend-for-volcano" "ascend-operator" "clusterd" "noded" "npu-exporter" "taskd")
 cd "$TOP_DIR"/build
 cp -rf "$TOP_DIR"/build/service_config.ini $GOPATH/service_config.ini
 dos2unix *.sh && chmod +x *

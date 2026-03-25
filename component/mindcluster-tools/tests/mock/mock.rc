@@ -1,4 +1,0 @@
-export PRODUCT_TYPE=2
-export MOCK_SPOD_ID=0
-export MOCK_SPOD_SIZE=1024
-export MOCK_CHASSIS_ID=0
