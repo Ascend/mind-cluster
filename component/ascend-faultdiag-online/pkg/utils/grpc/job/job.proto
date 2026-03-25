@@ -29,9 +29,17 @@ message JobSummarySignal {
   string sharedTorIp = 12;
   string masterAddr = 13;
   string operator = 14;
+  string sid = 15;
+}
+
+message JobSummarySignalList{
+  repeated JobSummarySignal jobSummarySignals = 1;
+  string ReportTime = 2;
+  int32 JobTotalNum = 3;
 }
 
 service Job {
   rpc Register(ClientInfo) returns (Status) {}
   rpc SubscribeJobSummarySignal(ClientInfo) returns (stream JobSummarySignal){}
+  rpc SubscribeJobSummarySignalList(ClientInfo) returns (stream JobSummarySignalList){}
 }

@@ -251,8 +251,8 @@ func (c *Client) registerJobSummary() error {
 	clientInfo.ClientId = jobStatus.ClientId
 
 	// sub the jobSummary
-	stream, err := utils.Retry(func() (job.Job_SubscribeJobSummarySignalClient, error) {
-		return c.jc.SubscribeJobSummarySignal(context.Background(), clientInfo)
+	stream, err := utils.Retry(func() (job.Job_SubscribeJobSummarySignalListClient, error) {
+		return c.jc.SubscribeJobSummarySignalList(context.Background(), clientInfo)
 	}, nil)
 	if err != nil {
 		return err
@@ -279,7 +279,7 @@ func (c *Client) supervisor() {
 	}
 }
 
-func (c *Client) processJobSummary(stream job.Job_SubscribeJobSummarySignalClient) {
+func (c *Client) processJobSummary(stream job.Job_SubscribeJobSummarySignalListClient) {
 	for {
 		if c.callbacks.Len() == 0 {
 			hwlog.RunLog.Info("[FD-OL]detected callbacks are empty, close job summary register")
@@ -298,30 +298,31 @@ func (c *Client) processJobSummary(stream job.Job_SubscribeJobSummarySignalClien
 			return
 		}
 		hwlog.RunLog.Infof("[FD-OL]got job summary data from grpc: %v", data)
-		// convert JobSummarySignal to model.jobSummary
-		job := &model.JobSummary{
-			JobId:     data.JobId,
-			JobName:   data.JobName,
-			Namespace: data.Namespace,
-			JobStatus: data.JobStatus,
-			Operator:  data.Operator,
-		}
-		if err = json.Unmarshal([]byte(data.HcclJson), &job.HcclJson); err != nil {
-			hwlog.RunLog.Errorf("[FD-OL]json unmarshal hcclJson data: %s failed: %v", data.HcclJson, err)
-			continue
-		}
-		var key = fmt.Sprintf("%s/%s", job.Namespace, job.JobName)
-		if data.JobStatus == enum.IsRunning || data.JobStatus == enum.IsPending {
-			storage.Store(key, job)
-		} else {
-			storage.Delete(key)
-		}
-		c.callbacks.Range(func(key string, cb callback) bool {
-			if cb.namespace == data.Namespace && cb.jobName == data.JobName && cb.f != nil {
-				go cb.f(job)
+		for _, signal := range data.GetJobSummarySignals() {
+			job := &model.JobSummary{
+				JobId:     signal.JobId,
+				JobName:   signal.JobName,
+				Namespace: signal.Namespace,
+				JobStatus: signal.JobStatus,
+				Operator:  signal.Operator,
 			}
-			return true
-		})
+			if err = json.Unmarshal([]byte(signal.HcclJson), &job.HcclJson); err != nil {
+				hwlog.RunLog.Errorf("[FD-OL]json unmarshal hcclJson data: %s failed: %v", signal.HcclJson, err)
+				continue
+			}
+			var key = fmt.Sprintf("%s/%s", job.Namespace, job.JobName)
+			if signal.JobStatus == enum.IsRunning || signal.JobStatus == enum.IsPending {
+				storage.Store(key, job)
+			} else {
+				storage.Delete(key)
+			}
+			c.callbacks.Range(func(key string, cb callback) bool {
+				if cb.namespace == signal.Namespace && cb.jobName == signal.JobName && cb.f != nil {
+					go cb.f(job)
+				}
+				return true
+			})
+		}
 	}
 }
 

@@ -219,14 +219,14 @@ func TestRegisterJobSummary(t *testing.T) {
 	)
 	patches.ApplyMethodFunc(
 		reflect.TypeOf(c.jc),
-		"SubscribeJobSummarySignal",
+		"SubscribeJobSummarySignalList",
 		func(ctx context.Context, info *job.ClientInfo, opts ...grpc.CallOption) (
-			job.Job_SubscribeJobSummarySignalClient, error) {
+			job.Job_SubscribeJobSummarySignalListClient, error) {
 			return nil, nil
 		},
 	)
 	patches.ApplyPrivateMethod(reflect.TypeOf(c), "processJobSummary", func(
-		*Client, job.Job_SubscribeJobSummarySignalClient) {
+		*Client, job.Job_SubscribeJobSummarySignalListClient) {
 	})
 	patches.ApplyPrivateMethod(reflect.TypeOf(c), "supervisor", func(*Client) {})
 	convey.Convey("test registerJobSummary", t, func() {
@@ -250,7 +250,7 @@ func TestRegisterJobSummary(t *testing.T) {
 }
 
 type mockJobSummaryStream struct {
-	job.Job_SubscribeJobSummarySignalClient
+	job.Job_SubscribeJobSummarySignalListClient
 	closeSendCalled int
 	receiveCount    int
 }
@@ -263,17 +263,21 @@ func (m *mockJobSummaryStream) CloseSend() error {
 	return nil
 }
 
-func (m *mockJobSummaryStream) Recv() (*job.JobSummarySignal, error) {
+func (m *mockJobSummaryStream) Recv() (*job.JobSummarySignalList, error) {
 	if m.receiveCount == 1 {
 		return nil, fmt.Errorf("mock recv error")
 	}
 	m.receiveCount++
-	return &job.JobSummarySignal{
-		JobId:     testJobId,
-		JobName:   testJobName,
-		Namespace: testNamespace,
-		HcclJson:  "{}",
-		JobStatus: enum.IsRunning,
+	return &job.JobSummarySignalList{
+		JobSummarySignals: []*job.JobSummarySignal{
+			{
+				JobId:     testJobId,
+				JobName:   testJobName,
+				Namespace: testNamespace,
+				HcclJson:  "{}",
+				JobStatus: enum.IsRunning,
+			},
+		},
 	}, nil
 }
 
