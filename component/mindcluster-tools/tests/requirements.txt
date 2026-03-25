@@ -1,5 +1,0 @@
-bitarray
-netifaces
-pytest
-pytest-cov
-pytest-html
