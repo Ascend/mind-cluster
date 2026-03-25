@@ -52,6 +52,12 @@ import (
 var (
 	runtimeScheme = runtime.NewScheme()
 	hwLogConfig   = &hwlog.LogConfig{}
+
+	version bool
+	// BuildVersion is the version of build package
+	BuildVersion string
+	// BuildName is the name of build package
+	BuildName string
 )
 
 func init() {
@@ -103,6 +109,7 @@ func createCacheOptions() (cache.Options, error) {
 
 // parseFlags parses command line flags
 func parseFlags() {
+	flag.BoolVar(&version, "version", false, "Query the verison of the program")
 	flag.IntVar(&hwLogConfig.LogLevel, "logLevel", 0,
 		"Log level, -1-debug, 0-info, 1-warning, 2-error, 3-critical(default 0)")
 	flag.IntVar(&hwLogConfig.MaxAge, "maxAge", hwlog.DefaultMinSaveAge,
@@ -118,6 +125,10 @@ func parseFlags() {
 
 func main() {
 	parseFlags()
+	if version {
+		fmt.Printf("%s version: %s\n", BuildName, BuildVersion)
+		return
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	if err := hwlog.InitRunLogger(hwLogConfig, ctx); err != nil {
 		fmt.Printf("unable to init run logger: %v\n", err)
