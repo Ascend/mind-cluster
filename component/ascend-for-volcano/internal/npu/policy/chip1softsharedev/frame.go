@@ -20,6 +20,7 @@ package chip1softsharedev
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -27,6 +28,10 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
+)
+
+const (
+	setPodAnnoWaitTimeOut = 200 * time.Millisecond
 )
 
 // New return npu plugin
@@ -151,6 +156,7 @@ func (tp *chip1softsharedev) UseAnnotation(task *api.TaskInfo, node plugin.NPUNo
 		return nil
 	}
 	klog.V(util.LogInfoLev).Infof("%s UseAnnotation %s select %v.", tp.GetPluginName(), task.Name, selectedNPU)
+	time.Sleep(setPodAnnoWaitTimeOut)
 	tp.SetNPUTopologyToPodFn(task, selectedNPU, node)
 	return tp.NPUHandler.UpdateNodeInfo(node, selectedNPU)
 }

@@ -194,7 +194,6 @@ func (tp *NPUHandler) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *pl
 	}
 	klog.V(util.LogInfoLev).Infof("%s UseAnnotation task<%s> select npu <%v>.",
 		tp.GetPluginName(), task.Name, selectedNPU)
-
 	tp.SetNPUTopologyToPodFn(task, selectedNPU, node)
 	return tp.UpdateNodeInfo(node, selectedNPU)
 }
