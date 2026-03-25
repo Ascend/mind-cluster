@@ -16,7 +16,6 @@
 # ==============================================================================
 import logging
 import os
-import re
 
 from ascend_fd.model.node_info import FaultFilterTime
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.kg_engine_main import kg_engine_analyze
@@ -35,7 +34,6 @@ from ascend_fd.utils.status import FileNotExistError, InfoNotFoundError, InnerEr
 from ascend_fd.utils.tool import MultiProcessJob, get_version, load_json_data, get_component_version, \
     get_parse_json, collect_parse_results
 from ascend_fd.configuration.config import DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF
-from ascend_fd.utils.i18n import LANG
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
 MAX_WORKER_CHAIN_NUM = 3
@@ -260,52 +258,6 @@ def _check_and_get_results(worker_name, root_device_list, parse_results, job_nam
     return response
 
 
-def extract_last_brackets(text):
-    """
-    栈结构提取最后一个括号块
-    """
-    stack = []
-    last_start = last_end = None
-    for i, char in enumerate(text):
-        # 遇到左括号：将当前索引压入栈
-        if char == '(':
-            stack.append(i)
-            continue
-        # 遇到右括号：尝试匹配栈顶的左括号
-        if char == ')':
-            if not stack:
-                continue
-            # 弹出栈顶的左括号索引（与该右括号匹配）
-            start = stack.pop()
-            # 若弹出后栈为空，说明这是最后一层括号对
-            # 记录区间为 (start+1, i)，排除左括号和右括号本身
-            if not stack:
-                last_start, last_end = start + 1, i
-    return text[last_start:last_end] if last_start is not None else None
-
-
-def _get_detail_from_key_info(code_result: dict):
-    """
-    处理lcne日志中description缺失的部分
-    """
-    description_filed = f"description_{LANG}"
-    entities_attr = code_result.get("entities_attribute", {})
-    if entities_attr.get(description_filed) == '${detail}':
-        events_attr = code_result.get("events_attribute", [{}])
-        key_info = events_attr[0].get("key_info", "") if events_attr else ""
-        if code_result.get('code') == 'Comp_Bus_Custom_01' and key_info:
-            # 最后一个冒号和最后一个句号之间之间的内容
-            pattern = r":(?!.*:)(.*?)\.(?=\.*$)"
-            match = re.search(pattern, key_info)
-            if match:
-                entities_attr[description_filed] = match.group(1).strip()
-            return
-        # 栈结构提取最后一个括号块
-        match = extract_last_brackets(key_info)
-        if match:
-            entities_attr[description_filed] = match
-
-
 def _get_root_device_causes(kg_analyzer_source, worker_name, root_device_list):
     """
     Get the analysis result of the root cause device
@@ -317,11 +269,6 @@ def _get_root_device_causes(kg_analyzer_source, worker_name, root_device_list):
     root_device_causes = {}
     kg_analyzer = load_json_data(kg_analyzer_source) if isinstance(kg_analyzer_source, str) else kg_analyzer_source
     resp_json = kg_analyzer.get("response", {})
-    # 处理lcne日志中description缺失的部分
-    for worker_result in resp_json.values():
-        for code_result in worker_result.get("root_causes", {}).values():
-            if "Bus" in code_result.get("code", ""):
-                _get_detail_from_key_info(code_result)
     if not root_device_list:
         # 当提前分析的结果中有具体的device时，过滤掉device为Unknown的
         device_causes = {device: resp for device, resp in resp_json.items() if device != "Unknown"}

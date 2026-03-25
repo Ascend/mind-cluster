@@ -17805,202 +17805,319 @@
                 ]
             }
         },
-        "Comp_Bus_Custom_01": {
+        "Net_Param_Dev_Switch_02": {
             "attribute": {
                 "class": "Hardware",
-                "component": "Bus",
-                "module": "Bus",
-                "cause_zh": "单板状态发生变化，计算板或NPU交换板重启/掉电",
-                "description_zh": "${detail}",
+                "component": "LCNE",
+                "module": "NPU Board",
+                "cause_zh": "David互连的接口down",
+                "description_zh": "端口链路状态变为Down。",
                 "suggestion_zh": [
                     "1. 参考《灵衢计算网络指南》处理；"
                 ],
-                "cause_en": "The board status has changed, and the compute board or NPU switch board has restarted or lost power",
-                "description_en": "${detail}",
+                "cause_en": "David interconnection interface is down",
+                "description_en": "Port link status changed to Down.",
                 "suggestion_en": [
                     "1. Refer to the LingQu Computing Network Guide for problem solving."
                 ]
             },
-            "rule_desc": "LCNE日志不区分具体的故障模式，归一化定义为Comp_Bus_Custom_01，不具体定义以下的dst_code故障。",
             "source_file": "LCNE_LOG",
             "regex": {
-                "in": ["WBoardStsChanged", "The board status changed"]
+                "in": ["linkDown_active:", "The interface status changes"]
             }
         },
-        "Comp_Bus_Custom_02": {
+        "Net_Param_Dev_Switch_16": {
             "attribute": {
                 "class": "Hardware",
-                "component": "Bus",
-                "module": "Bus",
-                "cause_zh": "单板局部功能失效，计算板子卡或交换板子卡重启/掉电",
-                "description_zh": "${detail}",
+                "component": "LCNE",
+                "module": "Port",
+                "cause_zh": "端口降lane",
+                "description_zh": "端口局部功能失效，链路有误码。",
                 "suggestion_zh": [
                     "1. 参考《灵衢计算网络指南》处理；"
                 ],
-                "cause_en": "Partial failure of the board function, causing the compute card or switch card to restart or lose power",
-                "description_en": "${detail}",
+                "cause_en": "Port lane downgrade",
+                "description_en": "Port partial function failure, bit errors exist on the link.",
                 "suggestion_en": [
                     "1. Refer to the LingQu Computing Network Guide for problem solving."
                 ]
             },
-            "rule_desc": "LCNE日志不区分具体的故障模式，归一化定义为Comp_Bus_Custom_02，不具体定义以下的dst_code故障。",
             "source_file": "LCNE_LOG",
             "regex": {
-                "in": ["hwBoardFail_active", "The board partially failed"]
+                "in": ["hwPortFail_active:", "The port failed partially"]
             }
         },
-        "Comp_Bus_Custom_03": {
+        "Net_Param_Dev_Switch_17": {
             "attribute": {
                 "class": "Hardware",
-                "component": "Bus",
-                "module": "Bus",
-                "cause_zh": "接口状态发生变化，NPU计算板、CPU板、交换机或交换板接口down，或者光/电模块故障",
-                "description_zh": "${detail}",
+                "component": "LCNE",
+                "module": "LCNE",
+                "cause_zh": "路由协议邻居Down",
+                "description_zh": "链路不通，LBNP状态机从高等级状态转移到低等级状态。",
                 "suggestion_zh": [
                     "1. 参考《灵衢计算网络指南》处理；"
                 ],
-                "cause_en": "The interface status has changed. The NPU compute board, CPU board, switch, or switch board interface is down, or the optical/electrical module is faulty",
-                "description_en": "${detail}",
+                "cause_en": "Routing protocol neighbor down",
+                "description_en": "The link is down, and the LBNP state machine transitions from a high-level state to a low-level state.",
                 "suggestion_en": [
                     "1. Refer to the LingQu Computing Network Guide for problem solving."
                 ]
             },
-            "rule_desc": "LCNE日志不区分具体的故障模式，归一化定义为Comp_Bus_Custom_03，不具体定义以下的dst_code故障。",
             "source_file": "LCNE_LOG",
             "regex": {
-                "in": ["linkDown_active", "The interface status changes"]
+                "in": ["The LBNP FSM moves from a higher numbered state to a lower numbered state"]
             }
         },
-        "Comp_Bus_Custom_04": {
+        "Net_Param_Dev_Switch_19": {
             "attribute": {
                 "class": "Hardware",
-                "component": "Bus",
-                "module": "Bus",
-                "cause_zh": "CRC上升告警，光/电端口错包数超过上线阈值",
-                "description_zh": "${detail}",
+                "component": "LCNE",
+                "module": "LCNE",
+                "cause_zh": "CPU利用率高",
+                "description_zh": "单板管理面/控制面的CPU利用率超过设定的过载门限。",
                 "suggestion_zh": [
                     "1. 参考《灵衢计算网络指南》处理；"
                 ],
-                "cause_en": "CRC increase alarm, the number of error packets on the optical/electrical port exceeds the upper threshold",
-                "description_en": "${detail}",
+                "cause_en": "High CPU utilization",
+                "description_en": "The CPU utilization of the management plane/control plane on the board exceeds the configured overload threshold.",
                 "suggestion_en": [
                     "1. Refer to the LingQu Computing Network Guide for problem solving."
                 ]
             },
-            "rule_desc": "LCNE日志不区分具体的故障模式，归一化定义为Comp_Bus_Custom_04，不具体定义以下的dst_code故障。",
             "source_file": "LCNE_LOG",
             "regex": {
-                "in": ["hwIfMonitorCrcErrorRising_active", "The CRC error is rising"]
+                "in": ["The CPU usage exceeded the pre-set overload threshold"]
             }
         },
-        "Comp_Bus_Custom_05": {
+        "Net_Param_Dev_Switch_20": {
             "attribute": {
                 "class": "Hardware",
-                "component": "Bus",
-                "module": "Bus",
-                "cause_zh": "端口局部功能失效，端口实际通道数小于配置通道数的一半，端口降lane",
-                "description_zh": "${detail}",
+                "component": "LCNE",
+                "module": "LCNE",
+                "cause_zh": "内存使用率高于韧性过载阈值",
+                "description_zh": "单板内存使用率超过设定的内存韧性过载门限。",
                 "suggestion_zh": [
                     "1. 参考《灵衢计算网络指南》处理；"
                 ],
-                "cause_en": "Partial port function failure, the actual number of channels on the port is less than half of the configured number of channels, and the port is configured with reduced lanes",
-                "description_en": "${detail}",
+                "cause_en": "Memory usage is higher than the resilient overload threshold",
+                "description_en": "The memory usage of the board exceeds the configured memory resilient overload threshold.",
                 "suggestion_en": [
                     "1. Refer to the LingQu Computing Network Guide for problem solving."
                 ]
             },
-            "rule_desc": "LCNE日志不区分具体的故障模式，归一化定义为Comp_Bus_Custom_05，不具体定义以下的dst_code故障。",
             "source_file": "LCNE_LOG",
             "regex": {
-                "in": ["hwPortFail_active", "The port failed partially"]
+                "in": ["The memory usage exceeds the reliability overload threshold"]
             }
         },
-        "Comp_Bus_Custom_06": {
-            "attribute": {
-                "class": "Software",
-                "component": "Bus",
-                "module": "Bus",
-                "cause_zh": "BGP状态机从高等级状态转移到低等级状态，BGP邻居Down",
-                "description_zh": "${detail}",
-                "suggestion_zh": [
-                    "1. 参考《灵衢计算网络指南》处理；"
-                ],
-                "cause_en": "The BGP state machine transitions from a higher-level state to a lower-level state, and the BGP neighbor goes down",
-                "description_en": "${detail}",
-                "suggestion_en": [
-                    "1. Refer to the LingQu Computing Network Guide for problem solving."
-                ]
-            },
-            "rule_desc": "LCNE日志不区分具体的故障模式，归一化定义为Comp_Bus_Custom_06，不具体定义以下的dst_code故障。",
-            "source_file": "LCNE_LOG",
-            "regex": {
-                "in": ["PEER_BACKWARDTRANS_NOTIFICATION", "The BGP FSM moves from a higher numbered state to a lower numbered state"]
-            }
-        },
-        "Comp_Bus_Custom_07": {
+        "Net_Param_Dev_Switch_22": {
             "attribute": {
                 "class": "Hardware",
-                "component": "Bus",
-                "module": "Bus",
-                "cause_zh": "转发引擎整体功能失效，David、1650、5808、Unions芯片PCIe故障/多bit ECC/芯片资源耗尽/内部致命故障/协处理器异常",
-                "description_zh": "${detail}",
+                "component": "LCNE",
+                "module": "LCNE",
+                "cause_zh": "日志记录失败",
+                "description_zh": "a. 日志文件buffer写入失败。\nb. 磁盘空间满。\nc. 磁盘写入失败。",
                 "suggestion_zh": [
                     "1. 参考《灵衢计算网络指南》处理；"
                 ],
-                "cause_en": "The forwarding engine's overall functionality fails. Issues include PCIe failure, multi-bit ECC, chip resource exhaustion, internal fatal faults, and coprocessor anomalies in the David, 1650, 5808, and Unions chips",
-                "description_en": "${detail}",
+                "cause_en": "Log recording failed",
+                "description_en": "a. Log file buffer write failure. \nb. Disk full. \nc. Disk write failure.",
                 "suggestion_en": [
                     "1. Refer to the LingQu Computing Network Guide for problem solving."
                 ]
             },
-            "rule_desc": "LCNE日志不区分具体的故障模式，归一化定义为Comp_Bus_Custom_07，不具体定义以下的dst_code故障。",
             "source_file": "LCNE_LOG",
             "regex": {
-                "in": ["hwForwardEngineInvalid_active", "The forwarding engine completely failed"]
+                "in": ["hwLogRecordFailAlarm_active:", "Failed to write log data into the file"]
             }
         },
-        "Comp_Bus_Custom_08": {
+        "Net_Param_Dev_Switch_24": {
             "attribute": {
                 "class": "Hardware",
-                "component": "Bus",
-                "module": "Bus",
-                "cause_zh": "转发引擎端口功能失效，David、1650、5808、Unions芯片端口不稳定/端口非法报文故障/端口配置错误/对端导致的故障",
-                "description_zh": "${detail}",
+                "component": "LCNE",
+                "module": "LCNE",
+                "cause_zh": "软件包损坏",
+                "description_zh": "存储介质故障，导致软件包损坏。",
                 "suggestion_zh": [
                     "1. 参考《灵衢计算网络指南》处理；"
                 ],
-                "cause_en": "Forwarding engine port function failure, David, 1650, 5808, Unions chip port instability/port illegal packet fault/port configuration error/fault caused by the peer end",
-                "description_en": "${detail}",
+                "cause_en": "Software package corrupted",
+                "description_en": "Storage medium failure causes software package corruption.",
                 "suggestion_en": [
                     "1. Refer to the LingQu Computing Network Guide for problem solving."
                 ]
             },
-            "rule_desc": "LCNE日志不区分具体的故障模式，归一化定义为Comp_Bus_Custom_08，不具体定义以下的dst_code故障。",
             "source_file": "LCNE_LOG",
             "regex": {
-                "in": ["hwForwardEnginePortFail_active", "The forwarding engine port function failed"]
+                "in": ["The software package is damaged"]
             }
         },
-        "Comp_Bus_Custom_09": {
+        "Net_Param_Dev_Switch_25": {
             "attribute": {
                 "class": "Hardware",
-                "component": "Bus",
-                "module": "Bus",
-                "cause_zh": "转发引擎模块功能失效，David、1650、5808、Unions芯片单bit ECC/报文丢弃故障/芯片配置错误/芯片内部模块故障",
-                "description_zh": "${detail}",
+                "component": "LCNE",
+                "module": "LCNE",
+                "cause_zh": "软件包检验失败",
+                "description_zh": "a. 软件大包数字签名校验失败或过期。\nb. 补丁包数字签名校验失败或过期。\nc. 特性包数字签名校验失败或过期。\nd. 启动阶段软件大包数字签名校验失败。\ne. 启动阶段补丁包数字签名校验失败。",
                 "suggestion_zh": [
                     "1. 参考《灵衢计算网络指南》处理；"
                 ],
-                "cause_en": "Forwarding engine module malfunction, David, 1650, 5808, Unions chip single-bit ECC/packet drop fault/chip configuration error/chip internal module failure",
-                "description_en": "${detail}",
+                "cause_en": "Software package verification failed",
+                "description_en": "a. Digital signature verification of the main software package failed or expired. \nb. Digital signature verification of the patch package failed or expired. \nc. Digital signature verification of the feature package failed or expired. \nd. Digital signature verification of the main software package failed during the startup phase. \ne. Digital signature verification of the patch package failed during the startup phase.",
                 "suggestion_en": [
                     "1. Refer to the LingQu Computing Network Guide for problem solving."
                 ]
             },
-            "rule_desc": "LCNE日志不区分具体的故障模式，归一化定义为Comp_Bus_Custom_09，不具体定义以下的dst_code故障。",
             "source_file": "LCNE_LOG",
             "regex": {
-                "in": ["hwForwardEngineModelFail_active", "The forwarding engine module failed"]
+                "in": ["Package verification failed"]
+            }
+        },
+        "Net_Param_Dev_Switch_26": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "LCNE",
+                "module": "LCNE",
+                "cause_zh": "系统回退",
+                "description_zh": "系统版本启动失败回滚到老版本：\n  a. 系统发生回滚。\n  b. 系统从备份分区启动。",
+                "suggestion_zh": [
+                    "1. 参考《灵衢计算网络指南》处理；"
+                ],
+                "cause_en": "System rollback",
+                "description_en": "System version startup failed, rolling back to the old version: \n  a. Rollback occurs on the system. \n  b. The system starts from the backup area.",
+                "suggestion_en": [
+                    "1. Refer to the LingQu Computing Network Guide for problem solving."
+                ]
+            },
+            "source_file": "LCNE_LOG",
+            "regex": {
+                "in": ["hwSystemRollback_active:", "System rollback"]
+            }
+        },
+        "Net_Param_Dev_Switch_27": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "LCNE",
+                "module": "LCNE",
+                "cause_zh": "补丁包被损坏",
+                "description_zh": "单板上运行的补丁包被损坏。",
+                "suggestion_zh": [
+                    "1. 参考《灵衢计算网络指南》处理；"
+                ],
+                "cause_en": "The patch package is corrupted",
+                "description_en": "The patch package running on the board is corrupted.",
+                "suggestion_en": [
+                    "1. Refer to the LingQu Computing Network Guide for problem solving."
+                ]
+            },
+            "source_file": "LCNE_LOG",
+            "regex": {
+                "in": ["The patch package running on a board was damaged"]
+            }
+        },
+        "Net_Param_Dev_Switch_28": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "LCNE",
+                "module": "LCNE",
+                "cause_zh": "补丁包安装失败",
+                "description_zh": "a. 读取补丁包配置信息失败。\nb. 该原因值针对所有产品已废弃。\nc. 补丁内存空间不足。\nd. 与上一个补丁包冲突。\ne. 补丁包版本错误。\nf. 磁盘空间不足，同步补丁包失败。\ng. 补丁配置不一致。",
+                "suggestion_zh": [
+                    "1. 参考《灵衢计算网络指南》处理；"
+                ],
+                "cause_en": "Patch package installation failed",
+                "description_en": "a. Failed to read the configuration information of the patch package. \nb. The cause value was not used. \nc. The memory space of the memory was not enough. \nd. The patch conflicted with the previous one. \ne. The patch package version was incorrect. \nf. Failed to synchronize the patch package file because of insufficient disk space. \ng. The patch configuration is inconsistent.",
+                "suggestion_en": [
+                    "1. Refer to the LingQu Computing Network Guide for problem solving."
+                ]
+            },
+            "source_file": "LCNE_LOG",
+            "regex": {
+                "in": ["hwPatchInstallFail_active:", "Patch operation failed"]
+            }
+        },
+        "Net_Param_Dev_david_Chip_01": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "LCNE",
+                "module": "David Chip",
+                "cause_zh": "UCMI故障",
+                "description_zh": "转发引擎整体功能失效。UCMI连通性存在问题，如断链、读写错误等。",
+                "suggestion_zh": [
+                    "1. 参考《灵衢计算网络指南》处理；"
+                ],
+                "cause_en": "UCMI fault",
+                "description_en": "Forwarding engine overall function failure. UCMI connectivity issues exist, such as link disconnection, read/write errors, etc.",
+                "suggestion_en": [
+                    "1. Refer to the LingQu Computing Network Guide for problem solving."
+                ]
+            },
+            "source_file": "LCNE_LOG",
+            "regex": {
+                "in": ["hwForwardEngineInvalid_active:", "The forwarding engine completely failed"]
+            }
+        },
+        "Net_Param_Dev_5808_Chip_02": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "LCNE",
+                "module": "5808 Chip",
+                "cause_zh": "端口级多bit ECC故障",
+                "description_zh": "转发引擎端口功能失效。辐射、电磁干扰、物理失效等导致的异常。",
+                "suggestion_zh": [
+                    "1. 参考《灵衢计算网络指南》处理；"
+                ],
+                "cause_en": "Port-level multi-bit ECC failure",
+                "description_en": "Forwarding engine port function failure. Abnormalities caused by radiation, electromagnetic interference, physical failure, etc.",
+                "suggestion_en": [
+                    "1. Refer to the LingQu Computing Network Guide for problem solving."
+                ]
+            },
+            "source_file": "LCNE_LOG",
+            "regex": {
+                "in": ["hwForwardEnginePortFail_active:", "The forwarding engine port function failed"]
+            }
+        },
+        "Net_Param_Dev_5808_Chip_05": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "LCNE",
+                "module": "5808 Chip",
+                "cause_zh": "芯片配置错误",
+                "description_zh": "配置异常，转发引擎局部功能失效。",
+                "suggestion_zh": [
+                    "1. 参考《灵衢计算网络指南》处理；"
+                ],
+                "cause_en": "Chip configuration error",
+                "description_en": "Configuration exception, partial function failure of the forwarding engine.",
+                "suggestion_en": [
+                    "1. Refer to the LingQu Computing Network Guide for problem solving."
+                ]
+            },
+            "source_file": "LCNE_LOG",
+            "regex": {
+                "in": ["hwForwardEngineFail_active:", "The forwarding engine partially failed"]
+            }
+        },
+        "Net_Param_Dev_5808_Chip_08": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "LCNE",
+                "module": "5808 Chip",
+                "cause_zh": "芯片内部模块故障",
+                "description_zh": "转发引擎模块功能失效。芯片内部某些模块发生错误。如：\n  a. MCORE访问超时。\n  b. EPRS1的HID解析报文发生越界。",
+                "suggestion_zh": [
+                    "1. 参考《灵衢计算网络指南》处理；"
+                ],
+                "cause_en": "Internal module failure of the chip",
+                "description_en": "Forwarding engine module function failure. Errors occur in some internal modules of the chip, such as: \n  a. MCORE access timeout. \n  b. Out-of-bounds occurred during HID packet parsing of EPRS1.",
+                "suggestion_en": [
+                    "1. Refer to the LingQu Computing Network Guide for problem solving."
+                ]
+            },
+            "source_file": "LCNE_LOG",
+            "regex": {
+                "in": ["hwForwardEngineModelFail_active:", "The forwarding engine module failed"]
             }
         },
         "AISW_MindX_Device_Plugin_01": {
