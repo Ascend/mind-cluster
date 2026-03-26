@@ -37,7 +37,7 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
     def filter_timeout_interface(swi_info: SwitchInfo) -> List[ProxyTimeoutStatis]:
         rx_timeout_interfaces = []
         for proxy_timeout in swi_info.hccs_info.proxy_timeout_statis:
-            if not proxy_timeout.is_rx_timeout_happend():
+            if not proxy_timeout.is_rx_timeout_happened():
                 continue
             rx_timeout_interfaces.append(proxy_timeout)
         return rx_timeout_interfaces

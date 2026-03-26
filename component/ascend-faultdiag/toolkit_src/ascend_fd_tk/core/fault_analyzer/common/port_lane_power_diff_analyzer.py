@@ -106,8 +106,9 @@ class PortLanePowerDiffAnalyzer(Analyzer):
     def _check_lane_power_diff(self, lane_power_infos: List[LanePowerInfo],
                                attr: str, port_type: str) -> str:
         origin_attr = attr.replace("_dbm", "")
-        lane_power_infos = [lane_power_info for lane_power_info in lane_power_infos if
-                            getattr(lane_power_info, origin_attr) != self._NA_POWER]
+        lane_power_infos = [lane_power_info
+                            for lane_power_info in lane_power_infos
+                            if getattr(lane_power_info, origin_attr) != self._NA_POWER]
         if not lane_power_infos:
             return ""
         max_power_info = max(lane_power_infos, key=lambda x: helpers.to_float(getattr(x, attr))[1])
