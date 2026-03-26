@@ -134,17 +134,19 @@ func RevertByteSlice(bytes []byte) []byte {
 func ConvertIntToTwoByteSlice(num int64) []byte {
 	if num <= 0 || num > MaxSixTeenBitIntValue {
 		return []byte{0x00, 0x00}
+ 	} 
+ 	var result []byte	 
+ 	for num > 0 {	 
+ 		temp := num % HexByteBase	 
+ 		result = append(result, byte(temp))	 
+ 		num = num / HexByteBase	 
 	}
-	var result []byte
-	for num > 0 {
-		temp := num % HexByteBase
-		result = append(result, byte(temp))
-		num = num / HexByteBase
-	}
-	for len(result) < TwoByteSliceLength {
-		result = append(result, byte(zeroByte))
-	}
-	return result
+	length := len(result)
+ 	for length < TwoByteSliceLength {
+ 		result = append(result, byte(zeroByte))
+ 		length++
+ 	}
+ 	return result
 }
 
 // NewSignalWatcher create a new signal watcher

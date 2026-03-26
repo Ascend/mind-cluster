@@ -797,6 +797,10 @@ func (reScheduler *ReScheduler) UseAnnotation(task *api.TaskInfo) {
 }
 
 func (reScheduler *ReScheduler) reduceScoreForLastFaultNode(faultJob *FaultJob, scoreMap map[string]float64) {
+	if scoreMap == nil {
+		klog.V(util.LogWarningLev).Infof("reduceScoreForLastFaultNode: scoreMap is nil.")
+		return
+	}
 	faultNodeNames := reScheduler.getFaultNodeNameByFaultJob(faultJob)
 	for _, faultNodeName := range faultNodeNames {
 		if score, ok := scoreMap[faultNodeName]; ok {
