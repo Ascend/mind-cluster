@@ -74,7 +74,7 @@ def get_setup_config(mode, version):
     If you want to use the performance (-p --performance) detection module,
     install the following modules: "scikit-learn>=1.3.0", "pandas>=1.3.5", "numpy>=1.21.6", "1.5.0>joblib>=1.2.0"
     """
-    write_version_info(mode, version)
+    _ = write_version_info(mode, version)
     common_config = {
         "version": version,
         "package_data": {"": ["**/*.so"]},

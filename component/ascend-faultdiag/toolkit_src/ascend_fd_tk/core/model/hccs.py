@@ -50,10 +50,10 @@ class ProxyTimeoutStatis(JsonObj):
 
     # 超时代答会导致SDMA报错，触发HCCL算子重执行，建议排除代答次数大于1的端口
     # lp_tx场景不常见，暂不分析
-    def is_rx_timeout_happend(self) -> bool:
+    def is_rx_timeout_happened(self) -> bool:
         return self.rp_rx > 0 or self.lp_rx > 0
 
-    def is_rp_tx_timeout_happend(self) -> bool:
+    def is_rp_tx_timeout_happened(self) -> bool:
         return self.rp_tx > 0
 
     def is_lp_tx_timeout_happend(self) -> bool:

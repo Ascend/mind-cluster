@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 
 ASCEND_KG_CONFIG_PATH = '../data/ascend-kg-config.json'
 
+
 def read_json_file(file_path_list: list) -> dict:
     merged_dict = {}
     for i in file_path_list:
@@ -105,7 +106,8 @@ def find_new_edges_from_log(root_cause_list: list) -> list:
     for i in range(len(root_cause_list)):
         for j in range(len(root_cause_list)):
             if i != j:
-                if root_cause_list[i]['code'].startswith('AISW_TRACEBACK') or root_cause_list[j]['code'].startswith('AISW_TRACEBACK'):
+                if root_cause_list[i]['code'].startswith('AISW_TRACEBACK') or root_cause_list[j]['code'].startswith(
+                        'AISW_TRACEBACK'):
                     continue
                 try:
                     src_log = process_log(root_cause_list[i])
@@ -114,7 +116,8 @@ def find_new_edges_from_log(root_cause_list: list) -> list:
                     table = build_contingency(src_log, tar_log, delta_ms=10000)
                     odds_ratio, p_value = fisher_exact(table)
                     if p_value < 0.05 and odds_ratio > 1:
-                        print('create fisher edge from ', root_cause_list[i]['code'], ' to ', root_cause_list[j]['code'])
+                        print('create fisher edge from ', root_cause_list[i]['code'], ' to ',
+                              root_cause_list[j]['code'])
                         edge_list.append((root_cause_list[j]['code'], root_cause_list[i]['code']))
                 except:
                     continue
@@ -268,10 +271,9 @@ def main():
             else:
                 print('error file name is ', error_data['file_name'])
     print('final rerank file num is ', file_count)
-    print('accuracy is ', correct_count, '/', all_file_count, '=', correct_count/all_file_count)
+    print('accuracy is ', correct_count, '/', all_file_count, '=', correct_count / all_file_count)
     return new_error_data
 
 
 if __name__ == "__main__":
-    main()
-
+    _ = main()
