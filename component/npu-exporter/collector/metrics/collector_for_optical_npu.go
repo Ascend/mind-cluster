@@ -179,6 +179,9 @@ func promUpdateOpticalInfo(ch chan<- prometheus.Metric, cache opticalNpuCache,
 		return
 	}
 	for i := 0; i < (maxDieId * maxPortId); i++ {
+		if opticalInfo[i] == nil {
+			continue
+		}
 		doUpdateMetric(ch, timestamp, opticalInfo[i].OpticalIndex, cardLabel, opticalIndexDesc[i])
 
 		doUpdateMetricWithValidateNum(ch, timestamp, opticalInfo[i].OpticalTxPower0, cardLabel, opticalTxPower0Desc[i])
@@ -216,6 +219,9 @@ func telegrafUpdateOpticalInfo(cache opticalNpuCache, fieldMap map[string]interf
 		return
 	}
 	for i := 0; i < (maxDieId * maxPortId); i++ {
+		if opticalInfo[i] == nil {
+			continue
+		}
 		doUpdateTelegraf(fieldMap, opticalIndexDesc[i], opticalInfo[i].OpticalIndex, "")
 
 		doUpdateTelegrafWithValidateNum(fieldMap, opticalTxPower0Desc[i], opticalInfo[i].OpticalTxPower0, "")
@@ -234,20 +240,21 @@ func collectOpticalNpuInfo(logicID int32) []*common.OpticalNpuInfo {
 	var opticalInfos []*common.OpticalNpuInfo
 	for dieID := 0; dieID < maxDieId; dieID++ {
 		for portID := 0; portID < maxPortId; portID++ {
-			opticalInfo := common.OpticalNpuInfo{}
+			opticalInfo := &common.OpticalNpuInfo{}
 			if info, err := hccn.GetNpuOpticalInfoNpu(logicID, int32(dieID), int32(portID)); err == nil {
 				opticalInfo = storeOpticalNpuInfos(info, logicID, dieID, portID)
 				hwlog.ResetErrCnt(fmt.Sprint(colcommon.DomainForOpticalV2, dieID, portID), logicID)
 			} else {
+				opticalInfo = nil
 				logWarnMetricsWithLimit(fmt.Sprint(colcommon.DomainForOpticalV2, dieID, portID), logicID, dieID, portID, err)
 			}
-			opticalInfos = append(opticalInfos, &opticalInfo)
+			opticalInfos = append(opticalInfos, opticalInfo)
 		}
 	}
 	return opticalInfos
 }
 
-func storeOpticalNpuInfos(info map[string]string, logicID int32, dieID, portID int) common.OpticalNpuInfo {
+func storeOpticalNpuInfos(info map[string]string, logicID int32, dieID, portID int) *common.OpticalNpuInfo {
 	opticalInfo := common.OpticalNpuInfo{}
 	if val, ok := storeSingleOpticalNpuInfo(info[txNpuPower0], logicID, dieID, portID, "float").(float64); ok {
 		opticalInfo.OpticalTxPower0 = val
@@ -276,7 +283,7 @@ func storeOpticalNpuInfos(info map[string]string, logicID int32, dieID, portID i
 	if val, ok := storeSingleOpticalNpuInfo(info[opticalIndex], logicID, dieID, portID, "int").(int); ok {
 		opticalInfo.OpticalIndex = val
 	}
-	return opticalInfo
+	return &opticalInfo
 }
 
 func storeSingleOpticalNpuInfo(str string, logicID int32, uDie, port int, convertType string) interface{} {
