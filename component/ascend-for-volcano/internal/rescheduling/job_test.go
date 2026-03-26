@@ -195,129 +195,49 @@ func TestIsContainTask(t *testing.T) {
 
 // testGetRestartInfosTestCase defines the test case structure for getRestartInfos
 type testGetRestartInfosTestCase struct {
-	name              string
-	isNpuJob          bool
-	faultTasks        []FaultTask
-	wantReason        string
-	wantIsMasterFault bool
+	name       string
+	isNpuJob   bool
+	faultTasks []FaultTask
+	wantReason []FaultReasonList
 }
 
 // buildBasicRestartInfosTests builds basic test cases for getRestartInfos
 func buildBasicRestartInfosTests() []testGetRestartInfosTestCase {
 	return []testGetRestartInfosTestCase{
 		{
-			name:     "Non-NPU job with Rank0 fault task",
+			name:     "fault task with null reason return nil",
 			isNpuJob: false,
 			faultTasks: []FaultTask{{
 				IsFaultTask:   true,
 				NodeRankIndex: util.Rank0,
 				Labels:        map[string]string{},
 			}},
-			wantReason:        "null",
-			wantIsMasterFault: false,
+			wantReason: nil,
 		},
 		{
-			name:     "NPU job with Rank0 fault task, no replica-type label",
+			name:     "fault task with normal reason",
 			isNpuJob: true,
 			faultTasks: []FaultTask{{
 				IsFaultTask:   true,
 				NodeRankIndex: util.Rank0,
 				Labels:        map[string]string{},
+				Reason:        []FaultReasonList{{}},
 			}},
-			wantReason:        "null",
-			wantIsMasterFault: true,
-		},
-		{
-			name:     "NPU job with Rank0 fault task, replica-type not worker",
-			isNpuJob: true,
-			faultTasks: []FaultTask{{
-				IsFaultTask:   true,
-				NodeRankIndex: util.Rank0,
-				Labels: map[string]string{
-					util.ReplicaTypeKey: "master"},
-			}},
-			wantReason:        "null",
-			wantIsMasterFault: true,
-		},
-		{
-			name:     "NPU job with Rank0 fault task, replica-type is worker",
-			isNpuJob: true,
-			faultTasks: []FaultTask{{
-				IsFaultTask:   true,
-				NodeRankIndex: util.Rank0,
-				Labels: map[string]string{
-					util.ReplicaTypeKey: util.ReplicaTypeValueWorker},
-			}},
-			wantReason:        "null",
-			wantIsMasterFault: false,
-		}}
-}
-
-// buildAdvancedRestartInfosTests builds advanced test cases for getRestartInfos
-func buildAdvancedRestartInfosTests() []testGetRestartInfosTestCase {
-	return []testGetRestartInfosTestCase{
-		{
-			name:     "NPU job with non-Rank0 fault task",
-			isNpuJob: true,
-			faultTasks: []FaultTask{{
-				IsFaultTask:   true,
-				NodeRankIndex: "1",
-				Labels:        map[string]string{},
-			}},
-			wantReason:        "null",
-			wantIsMasterFault: false,
-		},
-		{
-			name:     "NPU job with Rank0 non-fault task",
-			isNpuJob: true,
-			faultTasks: []FaultTask{{
-				IsFaultTask:   false,
-				NodeRankIndex: util.Rank0,
-				Labels:        map[string]string{},
-			}},
-			wantReason:        "null",
-			wantIsMasterFault: false,
-		},
-		{
-			name:     "Multiple tasks, one Rank0 fault task",
-			isNpuJob: true,
-			faultTasks: []FaultTask{
-				{
-					IsFaultTask:   true,
-					NodeRankIndex: util.Rank0,
-					Labels:        map[string]string{},
-				},
-				{
-					IsFaultTask:   true,
-					NodeRankIndex: "1",
-					Labels:        map[string]string{},
-				},
-			},
-			wantReason:        "null",
-			wantIsMasterFault: true,
+			wantReason: []FaultReasonList{{}},
 		},
 	}
 }
 
-// buildGetRestartInfosTests builds all test cases for getRestartInfos
-func buildGetRestartInfosTests() []testGetRestartInfosTestCase {
-	return append(buildBasicRestartInfosTests(), buildAdvancedRestartInfosTests()...)
-}
-
 // TestGetRestartInfos tests the getRestartInfos function, focusing on isMasterFault value
 func TestGetRestartInfos(t *testing.T) {
-	tests := buildGetRestartInfosTests()
-
+	tests := buildBasicRestartInfosTests()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fJob := &FaultJob{FaultTasks: tt.faultTasks}
 
-			gotReason, gotIsMasterFault := fJob.getRestartInfos(tt.isNpuJob)
-			if gotReason != tt.wantReason {
-				t.Errorf("getRestartInfos() gotReason = %v, want %v", gotReason, tt.wantReason)
-			}
-			if gotIsMasterFault != tt.wantIsMasterFault {
-				t.Errorf("getRestartInfos() gotIsMasterFault = %v, want %v", gotIsMasterFault, tt.wantIsMasterFault)
+			gotReason := fJob.getRestartInfos()
+			if gotReason != GetTaskRestartReason(tt.wantReason) {
+				t.Errorf("getRestartInfos() gotReason = %v, want %v", gotReason, GetTaskRestartReason(tt.wantReason))
 			}
 		})
 	}
@@ -960,4 +880,170 @@ func TestSetFaultRetryTimeOfJob(t *testing.T) {
 			t.Errorf("setFaultRetryTimeOfJob() FaultRetryTimes = %v, want %v", fJob.FaultRetryTimes, expectedRetryTimes)
 		}
 	})
+}
+
+// testIsMasterRankTestCase defines the test case structure for isMasterRank
+type testIsMasterRankTestCase struct {
+	name      string
+	isNpuJob  bool
+	faultTask FaultTask
+	want      bool
+}
+
+// buildIsMasterRankTests builds basic test cases for isMasterRank
+func buildIsMasterRankTests() []testIsMasterRankTestCase {
+	return []testIsMasterRankTestCase{
+		{
+			name:     "Non-NPU job with Rank0 fault task",
+			isNpuJob: false,
+			faultTask: FaultTask{
+				IsFaultTask:   true,
+				NodeRankIndex: util.Rank0,
+				Labels:        map[string]string{},
+			},
+			want: false,
+		},
+		{
+			name:     "NPU job with Rank0 fault task, no replica-type label",
+			isNpuJob: true,
+			faultTask: FaultTask{
+				IsFaultTask:   true,
+				NodeRankIndex: util.Rank0,
+				Labels:        map[string]string{},
+			},
+			want: true,
+		},
+		{
+			name:     "NPU job with Rank0 fault task, replica-type not worker",
+			isNpuJob: true,
+			faultTask: FaultTask{
+				IsFaultTask:   true,
+				NodeRankIndex: util.Rank0,
+				Labels: map[string]string{
+					util.ReplicaTypeKey: "master"},
+			},
+			want: true,
+		},
+		{
+			name:     "NPU job with Rank0 fault task, replica-type is worker",
+			isNpuJob: true,
+			faultTask: FaultTask{
+				IsFaultTask:   true,
+				NodeRankIndex: util.Rank0,
+				Labels: map[string]string{
+					util.ReplicaTypeKey: util.ReplicaTypeValueWorker},
+			},
+			want: false,
+		},
+	}
+}
+
+// TestIsMaterRank tests the isMasterRank function
+func TestIsMaterRank(t *testing.T) {
+	tests := buildIsMasterRankTests()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotIsMasterRank := isMasterRank(tt.faultTask, tt.isNpuJob)
+			if gotIsMasterRank != tt.want {
+				t.Errorf("isMasterRank() gotIsMasterRank = %v, want %v", gotIsMasterRank, tt.want)
+			}
+		})
+	}
+}
+
+// testIsMasterFault defines the test case structure for isMasterFault
+type testIsMasterFault struct {
+	name string
+	fJob FaultJob
+	dpi  *deletePodInfo
+	want bool
+}
+
+// buildIsMasterFaultWithMultiLevelJob builds basic test cases for isMasterFaultWithMultiLevelJob
+func buildIsMasterFaultWithMultiLevelJob() []testIsMasterFault {
+	return []testIsMasterFault{
+		{
+			name: "master rank in needRescheduleNodes map return true",
+			dpi:  &deletePodInfo{needRescheduleNodes: map[string]struct{}{fakeNodeName: {}}},
+			fJob: FaultJob{FaultTasks: []FaultTask{{NodeName: fakeNodeName, NodeRankIndex: util.Rank0, IsNpuTask: true}}},
+			want: true,
+		},
+		{
+			name: "master rank not in needRescheduleNodes map return false",
+			dpi:  &deletePodInfo{needRescheduleNodes: map[string]struct{}{}},
+			fJob: FaultJob{FaultTasks: []FaultTask{{NodeName: fakeNodeName, NodeRankIndex: util.Rank0, IsNpuTask: true}}},
+			want: false,
+		},
+		{
+			name: "fault node is not master rank return false",
+			dpi:  &deletePodInfo{needRescheduleNodes: map[string]struct{}{fakeNodeName: {}}},
+			fJob: FaultJob{FaultTasks: []FaultTask{{NodeName: fakeNodeName, IsNpuTask: true}}},
+			want: false,
+		},
+	}
+}
+
+// TestIsMasterFaultWithMultiLevelJob tests  the isMasterFaultWithMultiLevelJob function
+func TestIsMasterFaultWithMultiLevelJob(t *testing.T) {
+	tests := buildIsMasterFaultWithMultiLevelJob()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotIsMasterFault := tt.fJob.isMasterFaultWithMultiLevelJob(tt.dpi, true)
+			if gotIsMasterFault != tt.want {
+				t.Errorf("isMasterFaultWithMultiLevelJob() gotIsMasterFault = %v, want %v", gotIsMasterFault, tt.want)
+			}
+		})
+	}
+}
+
+// buildIsMasterFaultWithSuperPodJob builds basic test cases for isMasterFaultWithSuperPodJob
+func buildIsMasterFaultWithSuperPodJob() []testIsMasterFault {
+	const testMockSpId = "0"
+	fakeSuperPod := map[string][]plugin.SuperNode{testMockSpId: {{Name: fakeNodeName}}}
+	return []testIsMasterFault{
+		{
+			name: "master rank in logic super pod after 6 sessions return true",
+			dpi:  &deletePodInfo{isSuperPod: true, ids: []string{testMockSpId}},
+			fJob: FaultJob{
+				PendingSessionNum: spPendingTimes,
+				FaultTasks:        []FaultTask{{NodeName: fakeNodeName, NodeRankIndex: util.Rank0}},
+				SuperPods:         fakeSuperPod,
+			},
+			want: true,
+		},
+		{
+			name: "master rank in logic super pod before 6 sessions return false",
+			dpi:  &deletePodInfo{isSuperPod: true},
+			fJob: FaultJob{
+				PendingSessionNum: 0,
+				FaultTasks:        []FaultTask{{NodeName: fakeNodeName, NodeRankIndex: util.Rank0}},
+				SuperPods:         fakeSuperPod,
+			},
+			want: false,
+		},
+		{
+			name: "non-master rank after 6 sessions return false",
+			dpi:  &deletePodInfo{isSuperPod: true},
+			fJob: FaultJob{
+				PendingSessionNum: spPendingTimes,
+				FaultTasks:        []FaultTask{{NodeName: fakeNodeName}},
+				SuperPods:         fakeSuperPod,
+			},
+			want: false,
+		},
+	}
+}
+
+// TestIsMasterFaultWithSuperPodJob tests  the isMasterFaultWithSuperPodJob function
+func TestIsMasterFaultWithSuperPodJob(t *testing.T) {
+	tests := buildIsMasterFaultWithSuperPodJob()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotIsMasterFault := tt.fJob.isMasterFaultWithSuperPodJob(tt.dpi, true)
+			if gotIsMasterFault != tt.want {
+				t.Errorf("isMasterFaultWithSuperPodJob() gotIsMasterFault = %v, want %v", gotIsMasterFault, tt.want)
+			}
+		})
+	}
+
 }

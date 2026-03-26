@@ -271,7 +271,7 @@ func initResourceLevels(configs map[string]string) map[string][]util.ResourceTre
 	levels, err := getConfigLevels(configs)
 	if err != nil {
 		levels = map[string][]util.ResourceTreeLevel{}
-		klog.V(util.LogWarningLev).Infof("init resource levels failed: %v, set resource-level-config to empty", err)
+		klog.V(util.LogInfoLev).Infof("init resource levels failed: %v, set resource-level-config to empty", err)
 	}
 	klog.V(util.LogInfoLev).Infof("init resourceLevels success, effected levels: %v", levels)
 	return levels
