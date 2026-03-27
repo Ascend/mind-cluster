@@ -107,6 +107,10 @@ func sendHeartBeatMsg(ctx context.Context) {
 			msg := &storage.MsgBody{
 				MsgType: constant.KeepAlive,
 			}
+			if StressTestNetTool == nil {
+				hwlog.RunLog.Error("StressTestNetTool for worker is nil")
+				continue
+			}
 			_, err := StressTestNetTool.SyncSendMessage(uuid.New().String(), "default", utils.ObjToString(msg), &common.Position{
 				Role:       common.MgrRole,
 				ServerRank: "0",

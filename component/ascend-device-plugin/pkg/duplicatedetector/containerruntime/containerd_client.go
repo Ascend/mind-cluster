@@ -90,6 +90,10 @@ func (c *containerdClient) WatchContainerEvents(ctx context.Context, handler typ
 		`topic~="/tasks/start"`,
 		`topic~="/tasks/exit"`,
 	)
+	if eventChan == nil || errChan == nil {
+		hwlog.RunLog.Errorf("failed to subscribe events")
+		return
+	}
 	for {
 		select {
 		case <-ctx.Done():
@@ -97,19 +101,9 @@ func (c *containerdClient) WatchContainerEvents(ctx context.Context, handler typ
 				hwlog.RunLog.Errorf("failed to close containerd client: %v", err)
 			}
 			return
-		case envelope, ok := <-eventChan:
-			if !ok {
-				hwlog.RunLog.Errorf("event channel closed")
-				return
-			}
-			if envelope != nil {
-				c.handleEvent(envelope, handler)
-			}
-		case err, ok := <-errChan:
-			if !ok {
-				hwlog.RunLog.Errorf("error channel closed")
-				return
-			}
+		case envelope := <-eventChan:
+			c.handleEvent(envelope, handler)
+		case err := <-errChan:
 			hwlog.RunLog.Warnf("error receiving event: %v", err)
 		}
 	}
