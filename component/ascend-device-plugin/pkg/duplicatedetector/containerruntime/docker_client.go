@@ -131,6 +131,10 @@ func (d *dockerClient) WatchContainerEvents(ctx context.Context, handler dtypes.
 	eventChan, errChan := d.client.Events(ctx, types.EventsOptions{
 		Filters: filterArgs,
 	})
+	if eventChan == nil || errChan == nil {
+		hwlog.RunLog.Errorf("failed to subscribe events")
+		return
+	}
 	for {
 		select {
 		case <-ctx.Done():
@@ -139,11 +143,7 @@ func (d *dockerClient) WatchContainerEvents(ctx context.Context, handler dtypes.
 				hwlog.RunLog.Errorf("error closing client: %v", err)
 			}
 			return
-		case event, ok := <-eventChan:
-			if !ok {
-				hwlog.RunLog.Errorf("event channel closed")
-				return
-			}
+		case event := <-eventChan:
 			switch event.Action {
 			case "start":
 				handler(dtypes.ContainerEvent{
@@ -164,11 +164,7 @@ func (d *dockerClient) WatchContainerEvents(ctx context.Context, handler dtypes.
 				hwlog.RunLog.Warnf("unknown event type: %T", event)
 			}
 
-		case err, ok := <-errChan:
-			if !ok {
-				hwlog.RunLog.Errorf("error channel closed")
-				return
-			}
+		case err := <-errChan:
 			hwlog.RunLog.Errorf("error receiving event: %v", err)
 		}
 	}
