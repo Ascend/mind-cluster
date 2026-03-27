@@ -413,6 +413,13 @@ func (n *NPUNode) updateNPUNodeDeviceInfos(data k8s.NodeDeviceInfoWithID) {
 }
 
 func (n *NPUNode) updateNPUNodeDeviceInfosWithVolcanoCache(data k8s.NodeDeviceInfoWithID, updateTime int64) {
+	unhealthyCard := ""
+	for k, v := range n.Annotation {
+		if strings.HasSuffix(k, unhealthyCardSuffix) {
+			unhealthyCard = v
+			break
+		}
+	}
 	for k, v := range data.DeviceList {
 		// if k does not represent huawei.com/Ascend910/310/310P continue
 		if len(strings.Split(k, "-")) > 1 {
@@ -424,17 +431,18 @@ func (n *NPUNode) updateNPUNodeDeviceInfosWithVolcanoCache(data k8s.NodeDeviceIn
 			n.Annotation[k] = v
 			continue
 		}
-		n.Annotation[k] = n.getRealHealthyDeviceList(k, n.Annotation[k], v)
+		n.Annotation[k] = n.getRealHealthyDeviceList(k, n.Annotation[k], v, unhealthyCard)
 	}
 }
 
-func (n *NPUNode) getRealHealthyDeviceList(deviceKey, oldList, newList string) string {
+func (n *NPUNode) getRealHealthyDeviceList(deviceKey, oldList, newList, oldUnhealthyCard string) string {
 	// if cache card list is empty or device info is empty. update by device info
 	if len(oldList) == 0 || len(newList) == 0 {
 		return newList
 	}
 	newDeviceList := strings.Split(newList, ",")
 	oldDeviceList := strings.Split(oldList, ",")
+	oldUnhealthyList := strings.Split(oldUnhealthyCard, ",")
 
 	// if cache is not equal k8s or device info is equal k8s. update by device info
 	if int(n.Idle[v1.ResourceName(deviceKey)]/util.NPUHexKilo) != len(oldDeviceList) ||
@@ -445,9 +453,16 @@ func (n *NPUNode) getRealHealthyDeviceList(deviceKey, oldList, newList string) s
 	for _, device := range oldDeviceList {
 		oldDevices[device] = struct{}{}
 	}
+	oldUnhealthyDevices := make(map[string]struct{})
+	for _, device := range oldUnhealthyList {
+		oldUnhealthyDevices[device] = struct{}{}
+	}
+
 	var deviceListCache []string
 	for _, newDevice := range newDeviceList {
-		if _, ok := oldDevices[newDevice]; !ok {
+		_, existInOld := oldDevices[newDevice]
+		_, existInUnhealthy := oldUnhealthyDevices[newDevice]
+		if !existInOld && !existInUnhealthy {
 			continue
 		}
 		deviceListCache = append(deviceListCache, newDevice)
