@@ -733,7 +733,6 @@ func cmPubFaultHandler(oldObj, newObj interface{}, operator string) {
 	}
 	index := 0
 	for _, cmFuncs := range cmPubFaultFuncs {
-		// index = 0, use original obj; index > 0, use deepcopy obj, keep the original obj
 		// different cmFuncs use different data
 		oldPubFaultForBusiness := oldPubFaultInfo
 		newPubFaultForBusiness := newPubFaultInfo
