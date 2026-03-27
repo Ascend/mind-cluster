@@ -38,7 +38,6 @@ import (
 	"Ascend-device-plugin/pkg/next/devicefactory/customname"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
 	"ascend-common/devmanager/dcmi"
 )
 
@@ -1127,7 +1126,7 @@ func (ps *PluginServer) setNPUDeviceMount(resp *v1beta1.ContainerAllocateRespons
 	hwlog.RunLog.Info("device-plugin will use ascend-docker to mount")
 }
 
-func mountShareDeviceConfig(resp *v1beta1.ContainerAllocateResponse, devices []int, npuInfoConfigDir string) {
+func (ps *PluginServer) mountShareDeviceConfig(resp *v1beta1.ContainerAllocateResponse, devices []int, npuInfoConfigDir string) {
 	if !common.IsSupportSoftShareDevice() {
 		hwlog.RunLog.Warnf("not support soft share device plugin")
 		return
@@ -1136,24 +1135,22 @@ func mountShareDeviceConfig(resp *v1beta1.ContainerAllocateResponse, devices []i
 		hwlog.RunLog.Error("deviceIDs length is not equal to 1")
 		return
 	}
-	deviceID := devices[0]
-	dirPath := fmt.Sprintf("%s/%d", common.ParamOption.SoftShareDevConfigDir, deviceID)
-	if !utils.IsDir(dirPath) {
-		hwlog.RunLog.Warnf("dirPath %s not exists, will create it", dirPath)
-		err := os.MkdirAll(dirPath, common.DefaultPerm)
-		if err != nil {
-			hwlog.RunLog.Errorf("mkdir %s failed: %v", dirPath, err)
-			return
-		}
-	}
-	safeDirPath, err := utils.CheckPath(dirPath)
+	physicID := devices[0]
+	dieID, err := ps.getDieIDFromPhysicID(physicID)
 	if err != nil {
-		hwlog.RunLog.Errorf("check path %s failed: %v", dirPath, err)
+		hwlog.RunLog.Errorf("get dieID from physicID %d failed: %v", physicID, err)
 		return
 	}
+	shareMemoryConfigFilePath := filepath.Join(common.ParamOption.SoftShareDevConfigDir, strconv.Itoa(physicID), dieID)
+	err = common.CreateFileIfNotExist(shareMemoryConfigFilePath, common.DefaultPerm, common.DefaultPerm)
+	if err != nil {
+		hwlog.RunLog.Errorf("create share memory config file failed: %v", err)
+		return
+	}
+	shareMemoryConfigFileContainerPath := filepath.Join(common.SoftShareDevConfigDirContainerPath, dieID)
 	resp.Mounts = append(resp.Mounts, &v1beta1.Mount{
-		ContainerPath: common.SoftShareDevConfigDirContainerPath,
-		HostPath:      safeDirPath,
+		ContainerPath: shareMemoryConfigFileContainerPath,
+		HostPath:      shareMemoryConfigFilePath,
 		ReadOnly:      false,
 	})
 	if npuInfoConfigDir != "" {
@@ -1163,6 +1160,20 @@ func mountShareDeviceConfig(resp *v1beta1.ContainerAllocateResponse, devices []i
 			ReadOnly:      true,
 		})
 	}
+}
+
+func (ps *PluginServer) getDieIDFromPhysicID(physicID int) (string, error) {
+	logicID, err := ps.manager.GetDmgr().GetLogicIDFromPhysicID(int32(physicID))
+	if err != nil {
+		hwlog.RunLog.Errorf("get logic id from physicID id: %d failed, err: %v", physicID, err)
+		return "", err
+	}
+	dieId, err := ps.manager.GetDmgr().GetDieID(logicID, dcmi.VDIE)
+	if err != nil {
+		hwlog.RunLog.Errorf("get die id from logic id: %d failed, err: %v", logicID, err)
+		return "", err
+	}
+	return dieId, nil
 }
 
 // convertToLogicIDs converts a list of physic IDs to logic IDs using allDevs info
@@ -1235,9 +1246,8 @@ func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.Allocate
 
 		// Determine final ID type based on device type
 		finalVisibleDevices := getFinalVisibleDevices(ascendVisibleDevices, allNPUInfo, usePodAnnotation)
-
 		resp := new(v1beta1.ContainerAllocateResponse)
-		mountShareDeviceConfig(resp, finalVisibleDevices, npuInfoConfigDir)
+		ps.mountShareDeviceConfig(resp, finalVisibleDevices, npuInfoConfigDir)
 		ps.setNPUDeviceMount(resp, finalVisibleDevices)
 		ps.setHcclTopoFilePathEnv(resp, allNPUInfo)
 		ps.SetSlowNodeNoticeEnv(resp)

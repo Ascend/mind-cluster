@@ -184,3 +184,38 @@ func TestRemoveSoftShareDeviceFileAndDir(t *testing.T) {
 		})
 	})
 }
+
+// TestCreateFileIfNotExist test of CreateFileIfNotExist
+func TestCreateFileIfNotExist(t *testing.T) {
+	convey.Convey("TestCreateFileIfNotExist", t, func() {
+		tempDir := t.TempDir()
+		convey.Convey("Case 1: file already exists, should skip create", func() {
+			testPath := filepath.Join(tempDir, "exist.txt")
+			f, err := os.OpenFile(testPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, DefaultPerm)
+			convey.So(err, convey.ShouldBeNil)
+			closeErr := f.Close()
+			convey.So(closeErr, convey.ShouldBeNil)
+			err = CreateFileIfNotExist(testPath, DefaultPerm, DefaultPerm)
+			convey.So(err, convey.ShouldBeNil)
+		})
+		convey.Convey("Case 2: path is relative, should return error", func() {
+			err := CreateFileIfNotExist("relative.txt", DefaultPerm, DefaultPerm)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "not an absolute path")
+		})
+		convey.Convey("Case 3: directory not exist, should create dir and file", func() {
+			testPath := filepath.Join(tempDir, "a", "b", "c", "test.txt")
+			err := CreateFileIfNotExist(testPath, DefaultPerm, DefaultPerm)
+			convey.So(err, convey.ShouldBeNil)
+			_, statErr := os.Stat(testPath)
+			convey.So(statErr, convey.ShouldBeNil)
+		})
+		convey.Convey("Case 4: path valid, not exist, should create successfully", func() {
+			testPath := filepath.Join(tempDir, "create_success.txt")
+			err := CreateFileIfNotExist(testPath, DefaultPerm, DefaultPerm)
+			convey.So(err, convey.ShouldBeNil)
+			_, statErr := os.Stat(testPath)
+			convey.So(statErr, convey.ShouldBeNil)
+		})
+	})
+}

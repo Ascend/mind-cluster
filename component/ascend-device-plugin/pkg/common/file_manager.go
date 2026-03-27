@@ -32,29 +32,71 @@ func WriteToFile(info, path string) error {
 
 // WriteToFileWithPerm write data to file with permission
 func WriteToFileWithPerm(info, path string, dirPerm, filePerm os.FileMode) error {
+	if err := prepareFileBeforeWrite(path, dirPerm); err != nil {
+		return err
+	}
+	hwlog.RunLog.Infof("start write info into file: %s", path)
+	f, closeFunc, err := openAndCheckFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, filePerm)
+	if err != nil {
+		return err
+	}
+	defer closeFunc()
+	_, err = f.WriteString(info)
+	return err
+}
+
+// CreateFileIfNotExist create file if not exist
+func CreateFileIfNotExist(path string, dirPerm, filePerm os.FileMode) error {
+	if !isFileNotExist(path) {
+		hwlog.RunLog.Infof("file already exists, skip create: %s", path)
+		return nil
+	}
+	if err := prepareFileBeforeWrite(path, dirPerm); err != nil {
+		return err
+	}
+	_, closeFunc, err := openAndCheckFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, filePerm)
+	if err != nil {
+		return err
+	}
+	defer closeFunc()
+	hwlog.RunLog.Infof("create file success: %s", path)
+	return nil
+}
+
+func isFileNotExist(path string) bool {
+	info, err := os.Stat(path)
+	if err == nil {
+		return info.IsDir() == false
+	}
+	return os.IsNotExist(err)
+}
+
+func prepareFileBeforeWrite(path string, dirPerm os.FileMode) error {
 	if !filepath.IsAbs(path) {
 		return fmt.Errorf("the path %s is not an absolute path", path)
 	}
 	dirPath := filepath.Dir(path)
-	err := os.MkdirAll(dirPath, dirPerm)
-	if err != nil {
+	if err := os.MkdirAll(dirPath, dirPerm); err != nil {
 		return err
 	}
-	hwlog.RunLog.Infof("start write info into file: %s", path)
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, filePerm)
+	return nil
+}
+
+func openAndCheckFile(path string, flag int, filePerm os.FileMode) (*os.File, func(), error) {
+	f, err := os.OpenFile(path, flag, filePerm)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
-	defer func() {
-		if err = f.Close(); err != nil {
-			hwlog.RunLog.Errorf("close file failed, err: %v", err)
+	closeFunc := func() {
+		if closeErr := f.Close(); closeErr != nil {
+			hwlog.RunLog.Errorf("close file failed, err: %v", closeErr)
 		}
-	}()
-	if _, err := utils.CheckPath(path); err != nil {
-		return err
 	}
-	_, err = f.WriteString(info)
-	return err
+	if _, err := utils.CheckPath(path); err != nil {
+		closeFunc()
+		return nil, nil, err
+	}
+	return f, closeFunc, nil
 }
 
 // RemoveResetFileAndDir remove file and dir
