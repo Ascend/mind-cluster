@@ -16,10 +16,9 @@
 
 使用样例如下：
 
-```
+<pre>
 import taskd
-taskd.__version__
-```
+taskd.__version__</pre>
 
 ## TaskD Worker接口<a name="ZH-CN_TOPIC_0000002479386850"></a>
 
@@ -49,7 +48,7 @@ taskd.__version__
 
 **功能说明<a name="section1458863753514"></a>**
 
-用户侧代码调用此函数，启动Taskd Worker。
+用户侧代码调用此函数，启动TaskD Worker。
 
 **输入参数说明<a name="section1574654643513"></a>**
 
@@ -412,9 +411,8 @@ MSRunPlugin类提供MindSpore进程管理功能，由MindSpore调用，集成到
 
 **函数原型<a name="section1818889191813"></a>**
 
-```
-rpc Register(RegisterReq) returns (Ack)
-```
+<pre>
+rpc Register(RegisterReq) returns (Ack)</pre>
 
 **输入参数说明<a name="section1177311115553"></a>**
 
@@ -440,9 +438,8 @@ rpc Register(RegisterReq) returns (Ack)
 
 **函数原型<a name="section1818889191813"></a>**
 
-```
-rpc PathDiscovery(PathDiscoveryReq) returns (Ack)
-```
+<pre>
+rpc PathDiscovery(PathDiscoveryReq) returns (Ack)</pre>
 
 **输入参数说明<a name="section1177311115553"></a>**
 
@@ -468,9 +465,8 @@ rpc PathDiscovery(PathDiscoveryReq) returns (Ack)
 
 **函数原型<a name="section1818889191813"></a>**
 
-```
-rpc TransferMessage(Message) returns (Ack)
-```
+<pre>
+rpc TransferMessage(Message) returns (Ack)</pre>
 
 **输入参数说明<a name="section1177311115553"></a>**
 
@@ -496,9 +492,8 @@ rpc TransferMessage(Message) returns (Ack)
 
 **函数原型<a name="section1818889191813"></a>**
 
-```
-rpc InitServerDownStream(stream Ack) returns (stream Message)
-```
+<pre>
+rpc InitServerDownStream(stream Ack) returns (stream Message)</pre>
 
 **输入参数说明<a name="section1177311115553"></a>**
 

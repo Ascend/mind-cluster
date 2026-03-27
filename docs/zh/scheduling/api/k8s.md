@@ -81,7 +81,7 @@
 |training.kubeflow.org/job-role|标记Pod类型|master|Ascend Operator|
 |training.kubeflow.org/operator-name|标记创建Pod的operator名称|ascendjob-controller|Ascend Operator|
 |training.kubeflow.org/replica-index|标记Pod序号|[0-{Pod数量-1}]|Ascend Operator|
-|training.kubeflow.org/replica-type|标记Pod类型|masterchiefschedulerworker|Ascend Operator|
+|training.kubeflow.org/replica-type|标记Pod类型|<ul><li>master</li><li>chief</li><li>scheduler</li><li>worker</li></ul>|Ascend Operator|
 |super-pod-affinity|超节点任务使用的亲和性调度策略|softhard|Ascend Operator、Volcano|
 
 **Pod  annotation<a name="section16927154663513"></a>**

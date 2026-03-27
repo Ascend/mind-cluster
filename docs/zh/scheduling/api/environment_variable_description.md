@@ -24,7 +24,7 @@ MindCluster组件使用的环境变量说明如[表1](#table1132513610543)所示
 |KUBECONFIG|-|否|文件路径|指定Volcano连接K8s api-server的kubeconfig路径|
 |HOME|K8s创建容器时写入|是|文件夹路径|指定Volcano获取当前用户home路径|
 |DEBUG_SOCKET_DIR|-|否|socket文件路径|指定Volcano侦听的socket路径|
-|HCCL_CONNECT_TIMEOUT|训练脚本中写入|否|HCCL建链的超时时间|表示借轨超时时间|
+|HCCL_CONNECT_TIMEOUT|训练脚本中写入|否|HCCL建链的超时时间|表示建链超时时间|
 |TTP_PORT|部署组件的YAML中写入|是|MindIO TTP用的通信端口|用于启动MindIO Controller|
 |SSH_CLIENT|SSH 服务器设置的环境变量，它包含有关客户端连接的信息|是|当前客户端连接的信息|安装Ascend Docker Runtime时，记录该信息到操作日志中|
 |TASKD_LOG_PATH|-|否|字符串|表示TaskD组件运行日志的落盘路径|

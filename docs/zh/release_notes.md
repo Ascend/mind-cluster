@@ -65,7 +65,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 |MindCluster ToolBox|<ul><li>新增A3 A+X PCIE全眼图测试、片上内存压测耗时和算法优化。</li><li>新增Atlas 推理系列产品功耗压力。</li><li>新增DSA随机数算子压测。</li></ul>|
 |MindCluster Ascend FaultDiag|新增A3 AI服务器故障事件。|
 |MindCluster Ascend Deployer|无|
-|MindCluster基础组件|<ul><li>关闭算子重执行下支持灵衢L1-L2链路故障的进程级在线恢复。</li><li>支持基于AIBrix vLLM部署NPU的故障实例流量隔离。</li><li>NPU Exporter支持输出SN序列号。</li><li>支持基于AIBrix vLLM服务化实例级重调度。</li><li>基于AIBrix社区CRD定义，支持一键式脚本生成对应YAML，支持一键式配置和下发。</li><li>基于社区原生CRD定义，支持一键式脚本生成对应YAML，支持一键式配置和下发。</li><li>支持SGLang OME部署与实例级重调度。</li><li>支持灵衢故障上报可靠性增强。</li><li>Volcano新增适配层，隔离不同任务控制器的差异，支持所有满足格式要求的podGroup下的亲和性调度。</li><li>调度资源占用优化，未完成调度时，任务通过一定时间重新入队。</li><li>公共故障支持预隔离处理级别。</li><li>NPU Exporter支持自定义指标。</li><li>支持A3推理多实例任务调度。</li><li>支持A3兼容A2 accelerator-type资源类型。</li><li>生态组件兼容验证。</li><li>新增推理任务守护进程参考设计。</li><li>支持一体机NPU故障检测与恢复。</li><li>Volcano调度支持StatefulSet。</li><li>支持MindSpore框架下的亚健康热切。</li><li>训练快恢易用性增强。</li></ul>|
+|MindCluster基础组件|<ul><li>关闭算子重执行下支持灵衢L1-L2链路故障的进程级在线恢复。</li><li>支持基于AIBrix vLLM部署NPU的故障实例流量隔离。</li><li>NPU Exporter支持输出SN序列号。</li><li>支持基于AIBrix vLLM服务化实例级重调度。</li><li>基于AIBrix社区CRD定义，支持一键式脚本生成对应YAML，支持一键式配置和下发。</li><li>基于社区原生CRD定义，支持一键式脚本生成对应YAML，支持一键式配置和下发。</li><li>支持SGLang OME部署与实例级重调度。</li><li>支持灵衢故障上报可靠性增强。</li><li>Volcano新增适配层，隔离不同任务控制器的差异，支持所有满足格式要求的podGroup下的亲和性调度。</li><li>调度资源占用优化，未完成调度时，任务通过一定时间重新入队。</li><li>公共故障支持预隔离处理级别。</li><li>NPU Exporter支持自定义指标。</li><li>支持A3推理多实例任务调度。</li><li>支持A3兼容A2 accelerator-type资源类型。</li><li>生态组件兼容验证。</li><li>新增推理任务守护进程参考设计。</li><li>支持一体机NPU故障检测与恢复。</li><li>Volcano调度支持StatefulSet。</li><li>支持MindSpore框架下的亚健康热切。</li><li>训练快恢复易用性增强。</li></ul>|
 
 ## 关键特性变更<a name="ZH-CN_TOPIC_0000002524562891"></a>
 

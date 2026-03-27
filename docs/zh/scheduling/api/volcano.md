@@ -10,7 +10,7 @@
 
     |参数名称|说明|取值|
     |--|--|--|
-    |distributed|由Resilience Controller写入和使用，标记job是否为分布式任务。|True|
+    |distributed|由Resilience Controller写入和使用，标记job是否为分布式任务。|true|
 
 - 对于volcano-scheduler和volcano-controller组件Pod开放的接口（开源组件本身定义），做出如下说明。
 

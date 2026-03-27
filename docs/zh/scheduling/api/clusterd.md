@@ -217,7 +217,7 @@ Events:  <none>
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc Register(ClientInfo) returns (Status) {}
 ```
 
@@ -241,7 +241,7 @@ rpc Register(ClientInfo) returns (Status) {}
 
 **函数原型<a name="section2049633816332"></a>**
 
-```
+```rpc
 rpc Init(ClientInfo) returns (Status) {}
 ```
 
@@ -265,8 +265,8 @@ rpc Init(ClientInfo) returns (Status) {}
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
- rpc SubscribeProcessManageSignal(ClientInfo) returns (stream ProcessManageSignal){}
+```rpc
+rpc SubscribeProcessManageSignal(ClientInfo) returns (stream ProcessManageSignal){}
 ```
 
 **输入参数说明<a name="section14344145451114"></a>**
@@ -297,7 +297,7 @@ rpc Init(ClientInfo) returns (Status) {}
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc ReportStopComplete(StopCompleteRequest) returns (Status){}
 ```
 
@@ -321,8 +321,8 @@ rpc ReportStopComplete(StopCompleteRequest) returns (Status){}
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
- rpc ReportRecoverStrategy(RecoverStrategyRequest) returns (Status) {}
+```rpc
+rpc ReportRecoverStrategy(RecoverStrategyRequest) returns (Status) {}
 ```
 
 **输入参数说明<a name="section14344145451114"></a>**
@@ -345,7 +345,7 @@ rpc ReportStopComplete(StopCompleteRequest) returns (Status){}
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc ReportRecoverStatus(RecoverStatusRequest) returns (Status) {}
 ```
 
@@ -369,7 +369,7 @@ rpc ReportRecoverStatus(RecoverStatusRequest) returns (Status) {}
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc ReportProcessFault(ProcessFaultRequest) returns (Status){}
 ```
 
@@ -393,7 +393,7 @@ rpc ReportProcessFault(ProcessFaultRequest) returns (Status){}
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc HealthCheck(ClientInfo) returns (Status) {}
 ```
 
@@ -491,7 +491,7 @@ AI平台可通过Pod Group Annotation控制故障恢复的流程以及恢复策�
 
 **函数原型<a name="section1698941035919"></a>**
 
-```
+```rpc
 rpc SendPublicFault(PublicFaultRequest) returns (RespStatus){}
 ```
 
@@ -520,7 +520,7 @@ rpc SendPublicFault(PublicFaultRequest) returns (RespStatus){}
 
 **函数原型<a name="section1472624833519"></a>**
 
-```
+```rpc
 rpc ModifyTrainingDataTraceSwitch (DataTypeReq) returns (DataTypeRes)
 ```
 
@@ -544,7 +544,7 @@ rpc ModifyTrainingDataTraceSwitch (DataTypeReq) returns (DataTypeRes)
 
 **函数原型<a name="section1723573217426"></a>**
 
-```
+```rpc
 rpc GetTrainingDataTraceSwitch (DataStatusReq) returns (DataStatusRes)
 ```
 
@@ -568,7 +568,7 @@ rpc GetTrainingDataTraceSwitch (DataStatusReq) returns (DataStatusRes)
 
 **函数原型<a name="section1472624833519"></a>**
 
-```
+```rpc
 rpc SubscribeDataTraceSwitch (ProfilingClientInfo) returns (stream DataStatusRes)
 ```
 
@@ -594,7 +594,7 @@ rpc SubscribeDataTraceSwitch (ProfilingClientInfo) returns (stream DataStatusRes
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc Register(ClientInfo) returns (Status) {}
 ```
 
@@ -618,7 +618,7 @@ rpc Register(ClientInfo) returns (Status) {}
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc SubscribeRankTable(ClientInfo) returns (stream RankTableStream) {}
 ```
 
@@ -747,7 +747,7 @@ ClusterD会生成global-ranktable在RankTable字段作为返回消息。global-r
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc Register(ClientInfo) returns (Status) {}
 ```
 
@@ -776,7 +776,7 @@ rpc Register(ClientInfo) returns (Status) {}
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc SubscribeFaultMsgSignal(ClientInfo) returns (stream FaultMsgSignal){}
 ```
 
@@ -809,7 +809,7 @@ rpc SubscribeFaultMsgSignal(ClientInfo) returns (stream FaultMsgSignal){}
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc GetFaultMsgSignal(ClientInfo) returns(FaultQueryResult){}
 ```
 
@@ -850,7 +850,7 @@ rpc GetFaultMsgSignal(ClientInfo) returns(FaultQueryResult){}
 
 **函数原型<a name="section4140960433"></a>**
 
-```
+```rpc
 rpc Register(ClientInfo) returns (Status) {}
 ```
 
@@ -879,7 +879,7 @@ rpc Register(ClientInfo) returns (Status) {}
 
 **函数原型<a name="section1199205575113"></a>**
 
-```
+```rpc
 rpc SubscribeJobSummarySignal(ClientInfo) returns (stream JobSummarySignal){}
 ```
 
@@ -914,7 +914,7 @@ rpc SubscribeJobSummarySignal(ClientInfo) returns (stream JobSummarySignal){}
 
 **函数原型**
 
-```
+```rpc
 rpc SubscribeJobSummarySignalList(ClientInfo) returns (stream JobSummarySignalList){}
 ```
 
@@ -949,7 +949,7 @@ rpc SubscribeJobSummarySignalList(ClientInfo) returns (stream JobSummarySignalLi
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc SwitchNicTrack(SwitchNics) returns (Status) {}
 ```
 
@@ -973,7 +973,7 @@ rpc SwitchNicTrack(SwitchNics) returns (Status) {}
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc SubscribeSwitchNicSignal(SwitchNicRequest) returns (stream SwitchNicResponse) {}
 ```
 
@@ -997,7 +997,7 @@ rpc SubscribeSwitchNicSignal(SwitchNicRequest) returns (stream SwitchNicResponse
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc SubscribeNotifySwitch(ClientInfo) returns (stream SwitchRankList) {}
 ```
 
@@ -1027,7 +1027,7 @@ rpc SubscribeNotifySwitch(ClientInfo) returns (stream SwitchRankList) {}
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc ReplySwitchNicResult(SwitchResult) returns (Status) {}
 ```
 
@@ -1056,7 +1056,7 @@ rpc ReplySwitchNicResult(SwitchResult) returns (Status) {}
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc StressTest(StressTestParam) returns (Status) {}
 ```
 
@@ -1080,7 +1080,7 @@ rpc StressTest(StressTestParam) returns (Status) {}
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc SubscribeStressTestResponse(StressTestRequest) returns (stream StressTestResponse) {}
 ```
 
@@ -1104,7 +1104,7 @@ rpc SubscribeStressTestResponse(StressTestRequest) returns (stream StressTestRes
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc SubscribeNotifyExecStressTest(ClientInfo) returns (stream StressTestRankParams) {}
 ```
 
@@ -1134,7 +1134,7 @@ rpc SubscribeNotifyExecStressTest(ClientInfo) returns (stream StressTestRankPara
 
 **函数原型<a name="section3958124212115"></a>**
 
-```
+```rpc
 rpc ReplyStressTestResult(StressTestResult) returns (Status) {}
 ```
 

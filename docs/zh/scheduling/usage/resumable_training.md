@@ -3663,12 +3663,13 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
   ],
 ```
 
->[!NOTE] 说明 
->-   故障的处理策略为ManuallySeparateNPU时，可以参见[（可选）配置芯片故障频率及时长](#可选配置芯片故障频率及时长)中"手动恢复强制隔离的芯片"步骤进行处理。
->-   除可以识别的硬件故障外，faultCustomization.json文件中还包含以下几类故障。
->     -   无需处理的故障：该类故障出现不影响训练任务及设备，不提供提升故障级别的初始化配置。
->     -   无法识别出是硬件还是软件类故障：该类故障无法准确识别是硬件还是软件故障，且会影响训练任务。该类故障不提供提升故障级别的初始化配置，建议用户根据实际情况手动配置任务支持的断点续训最大次数和达到最大次数后故障的处理策略，可以参见[（可选）配置芯片故障频率及时长](#可选配置芯片故障频率及时长)进行配置。
->     -   软件配置类故障：该类故障为软件配置类问题，正常情况下不会出现。该类故障不提供提升故障级别的初始化配置，建议用户检查软件版本是否配套。
+>[!NOTE]
+>
+>- 故障的处理策略为ManuallySeparateNPU时，可以参见[（可选）配置芯片故障频率及时长](#可选配置芯片故障频率及时长)中"手动恢复强制隔离的芯片"步骤进行处理。
+>- 除可以识别的硬件故障外，faultCustomization.json文件中还包含以下几类故障。
+>     - 无需处理的故障：该类故障出现不影响训练任务及设备，不提供提升故障级别的初始化配置。
+>     - 无法识别出是硬件还是软件类故障：该类故障无法准确识别是硬件还是软件故障，且会影响训练任务。该类故障不提供提升故障级别的初始化配置，建议用户根据实际情况手动配置任务支持的断点续训最大次数和达到最大次数后故障的处理策略，可以参见[（可选）配置芯片故障频率及时长](#可选配置芯片故障频率及时长)进行配置。
+>     - 软件配置类故障：该类故障为软件配置类问题，正常情况下不会出现。该类故障不提供提升故障级别的初始化配置，建议用户检查软件版本是否配套。
 
 **faultCustomization.json参数说明<a name="zh-cn_topic_0000002171521445_section33036167576"></a>**
 
@@ -3920,7 +3921,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 
     根据实际情况，修改芯片的故障频率和时长。
 
-    ```
+    ```json
     # Please edit the object below. Lines beginning with a '#' will be ignored,
     # and an empty file will abort the edit. If an error occurs while saving this file will be
     # reopened with the relevant failures.
@@ -4017,8 +4018,8 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
         >- 若日志出现“modify  _xxx_  success”，表示ConfigMap中faultCustomization.json里的<i>xxx</i>参数设置成功。
         >- 若日志出现“insert fault frequency success”，表示记录了一次频率故障发生时间，在频率窗口内，该卡的该故障记录次数达到频率故障触发次数以后，就会上报频率故障对应的故障级别。
 
-8.  （可选）手动恢复强制隔离的芯片。故障的处理策略为ManuallySeparateNPU时，故障恢复后该芯片也处于隔离状态，需要手动恢复强制隔离的芯片。
-    1.  执行以下命令，查找该节点的Ascend Device Plugin上报的device-info-cm。
+8. （可选）手动恢复强制隔离的芯片。故障的处理策略为ManuallySeparateNPU时，故障恢复后该芯片也处于隔离状态，需要手动恢复强制隔离的芯片。
+    1. 执行以下命令，查找该节点的Ascend Device Plugin上报的device-info-cm。
 
         ```shell
         kubectl get cm -n kube-system | grep deviceinfo | grep {nodeName}
@@ -7335,7 +7336,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 </td>
 <td class="cellrowborder" valign="top" width="24.76247624762476%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000001951418201_p5524103317257"><a name="zh-cn_topic_0000001951418201_p5524103317257"></a><a name="zh-cn_topic_0000001951418201_p5524103317257"></a>表明MindIE Motor任务在Ascend Job中的角色，取值包括mindie-ms-controller、mindie-ms-coordinator、mindie-ms-server。</p>
 </td>
-<td class="cellrowborder" valign="top" width="50.1950195019502%" headers="mcps1.2.4.1.3 "><div class="note" id="zh-cn_topic_0000001951418201_note4367125713295"><a name="zh-cn_topic_0000001951418201_note4367125713295"></a><div class="notebody"><a name="ul139591420161415"></a><a name="ul139591420161415"></a><ul id="ul139591420161415"><li>acjob的任务YAML同时包含jobID和app这2个字段时，<span id="zh-cn_topic_0000001951418201_ph1566531814589"><a name="zh-cn_topic_0000001951418201_ph1566531814589"></a><a name="zh-cn_topic_0000001951418201_ph1566531814589"></a>Ascend Operator</span>组件会自动传入环境变量MINDX_TASK_ID、APP_TYPE及MINDX_SERVICE_IP，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见<a href="../api/environment_variable_description.md">Ascend Operator注入的训练环境变量</a>。</li><li>该参数仅支持在<span id="ph1493312176292"><a name="ph1493312176292"></a><a name="ph1493312176292"></a>Atlas 800I A3 超节点服务器</span>和<span id="ph1893331752914"><a name="ph1893331752914"></a><a name="ph1893331752914"></a>Atlas 800I A2 推理服务器</span>上使用。</li></ul>
+<td class="cellrowborder" valign="top" width="50.1950195019502%" headers="mcps1.2.4.1.3 "><div class="note" id="zh-cn_topic_0000001951418201_note4367125713295"><a name="zh-cn_topic_0000001951418201_note4367125713295"></a><div class="notebody"><a name="ul139591420161415"></a><a name="ul139591420161415"></a><ul id="ul139591420161415"><li>acjob的任务YAML同时包含jobID和app这2个字段时，<span id="zh-cn_topic_0000001951418201_ph1566531814589"><a name="zh-cn_topic_0000001951418201_ph1566531814589"></a><a name="zh-cn_topic_0000001951418201_ph1566531814589"></a>Ascend Operator</span>组件会自动传入环境变量MINDX_TASK_ID、APP_TYPE、MINDX_SERVER_IP及MINDX_SERVER_DOMAIN，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见<a href="../api/environment_variable_description.md">Ascend Operator注入的训练环境变量</a>。</li><li>该参数仅支持在<span id="ph1493312176292"><a name="ph1493312176292"></a><a name="ph1493312176292"></a>Atlas 800I A3 超节点服务器</span>和<span id="ph1893331752914"><a name="ph1893331752914"></a><a name="ph1893331752914"></a>Atlas 800I A2 推理服务器</span>上使用。</li></ul>
 </div></div>
 </td>
 </tr>
@@ -8437,7 +8438,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 1. 参照[表1](#zh-cn_topic_0000002039339945_table1172542119019)，在宿主机上完成软件包的准备工作。
 2. 编写如下Dockerfile。
 
-    ```
+    <pre>
     FROM ubuntu:20.04 
     WORKDIR /root 
     COPY . . 
@@ -8562,7 +8563,6 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
         pip install $TASKD_WHL && \ 
         pip install $MINDIO_TTP_WHL 
       
-      
     # 可选，使用优雅容错、Pod级别重调度或进程级别重调度时必须配置以下命令。
     RUN sed -i '/import os/i import taskd.python.adaptor.patch' $(pip3 show torch | grep Location | awk -F ' ' '{print $2}')/torch/distributed/run.py  
     
@@ -8579,8 +8579,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
         rm -f $MINDIO_TTP_WHL && \ 
         rm -rf $DLLOGGER && \ 
         rm -rf Dockerfile 
-    ## 最后打包成镜像mindspeed-dl:v1
-    ```
+    ## 最后打包成镜像mindspeed-dl:v1</pre>
 
     >[!NOTE] 
     >Python 3.10若无法通过PPA直接安装成功，或者deadsnakes PPA不提供Python 3.10版本的镜像源，则可下载源码手动编译安装。
@@ -8750,7 +8749,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 1. 在宿主机上完成软件包的准备工作。
 2. 构建如下的Dockerfile。
 
-    ```
+    <pre>
     FROM ubuntu:20.04
      
     WORKDIR /root
@@ -8774,7 +8773,6 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
     deb http://repo.huaweicloud.com/ubuntu-ports/ focal-updates main restricted universe multiverse\n\
     deb http://repo.huaweicloud.com/ubuntu-ports/ focal-backports main restricted universe multiverse\n\
     deb http://ports.ubuntu.com/ubuntu-ports/ focal-security main restricted universe multiverse" > /etc/apt/sources.list
-     
      
     ARG DEBIAN_FRONTEND=noninteractive
      
@@ -8871,7 +8869,6 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
         pip install $MINDIO_TTP_WHL --target=$(pip show mindspore | awk '/Location:/ {print $2}') && \
         pip install $TASKD_WHL
      
-     
     # 环境变量
     ENV HCCL_WHITELIST_DISABLE=1
      
@@ -8884,16 +8881,14 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
      
     # 增加安装任务调度依赖库
     RUN pip install apscheduler
-     
-     
+      
     RUN rm -rf tmp && \
         rm -f $TOOLKIT && \
         rm -f $OPS && \
         rm -f $MINDIO_TTP_WHL && \
         rm -f $MINDSPORE_REQUIREMENTS && \
         rm -f $MINDSPORE_WHL
-    ## 最后打包成镜像mindformers-dl:v1
-    ```
+    ## 最后打包成镜像mindformers-dl:v1</pre>
 
 3. 构建镜像。执行以下命令生成镜像。为了使Dockerfile更加安全，用户可以根据业务在其中定义HEALTHCHECK检查。通过在容器内部运行**HEALTHCHECK** _\[OPTIONS\]_ **CMD**命令来检查容器的运行状况。**注意不要遗漏命令结尾的**“.”。
 
@@ -9023,7 +9018,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 
         Qwen3要求使用Transformers\>=4.51.0，因此Python需使用3.9及以上版本且需要安装4.51.0及以上的Transformers。
 
-        ```
+        ```Python
         python preprocess_data.py \
             --input /data/atlas_dls/public/dataset/qwen3-alpaca/train-00000-of-00001-a09b74b3ef9c3b56.parquet \ # 数据集文件路径
             --tokenizer-name-or-path /data/atlas_dls/public/dataset/qwen3-8b-hf \ # 开源模型权重文件目录

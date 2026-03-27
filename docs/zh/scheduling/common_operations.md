@@ -1275,7 +1275,7 @@ Events:  <none>
 4. <a name="zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_li104026527188"></a>Dockerfile编写示例。
     - Ubuntu  ARM系统，配套Python  3.7的Dockerfile示例。
 
-        ```
+        ```Dockerfile
         FROM Ubuntu:18.04
         
         ARG TF_PKG=tensorflow-1.15.0-cp3x-cp3xm-linux_aarch64.whl
@@ -1365,7 +1365,7 @@ Events:  <none>
 
     - Ubuntu  x86\_64系统Dockerfile示例。
 
-        ```
+        ```Dockerfile
         FROM Ubuntu:18.04
         # 编译镜像时在线下载安装使用下面行，与下面的whl配置互斥
         ARG TF_PKG=tensorflow-cpu==1.15.0
@@ -1698,7 +1698,7 @@ Events:  <none>
 4. <a name="zh-cn_topic_0000001497364957_li104026527188"></a>Dockerfile编写示例。
     - Ubuntu  ARM系统，配套Python  3.10的Dockerfile示例。
 
-        ```
+        ```Dockerfile
         FROM ubuntu:18.04
         ARG PYTORCH_PKG=torch-v{version}+cpu.cxx11.abi-cp310-cp310-linux_aarch64.whl
         ARG PYTORCH_NPU_PKG=torch_npu-v{version}.post{version}-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
@@ -1778,7 +1778,7 @@ Events:  <none>
 
     - Ubuntu  x86\_64系统，配套Python  3.10的Dockerfile示例
 
-        ```
+        ```Dockerfile
         FROM ubuntu:18.04
         ARG PYTORCH_PKG=torch-v{version}+cpu.cxx11.abi-cp310-cp310-linux_x86_64.whl
         ARG PYTORCH_NPU_PKG=torch_npu-v{version}.post{version}-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
@@ -2142,7 +2142,7 @@ Events:  <none>
 4. <a name="zh-cn_topic_0000001497124729_zh-cn_topic_0272789326_li104026527188"></a>Dockerfile编写示例。
     - Ubuntu  ARM系统，配套Python  3.9的Dockerfile示例。
 
-        ```
+        ```Dockerfile
         FROM ubuntu:18.04 
         
         ARG HOST_ASCEND_BASE=/usr/local/Ascend 
@@ -2219,7 +2219,7 @@ Events:  <none>
 
     - Ubuntu  x86\_64系统，配套Python  3.9的Dockerfile示例。
 
-        ```
+        ```Dockerfile
         FROM ubuntu:18.04 
         
         ARG HOST_ASCEND_BASE=/usr/local/Ascend 
@@ -2440,7 +2440,7 @@ Events:  <none>
 
 3. <a name="zh-cn_topic_0000001497364777_li166241028113511"></a>Dockerfile编写示例，请根据实际情况进行定制化修改。
 
-    ```
+    ```Dockerfile
     #基础镜像ubuntu:18.04不包含Toolkit包，可参考Dockerfile示例中的部分步骤进行安装，需提前准备好Toolkit包。
     #推荐从昇腾镜像仓库拉取推理基础镜像，此时的镜像中已安装Toolkit包。同时请确认Toolkit包是否与物理机上的驱动版本匹配
     FROM ubuntu:18.04
