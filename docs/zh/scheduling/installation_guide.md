@@ -1252,7 +1252,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     </td>
     <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p>Atlas 350 标卡</p>
     </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3"><ul><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-npu</li><li>（可选）servertype=soc</li><li>（可选）nodeDEnable=on</li><li>（可选）accelerator-type</li></ul>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3"><ul><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>servertype=soc</li><li>（可选）nodeDEnable=on</li><li>（可选）accelerator-type</li></ul>
     </td>
     </tr>
     </tbody>

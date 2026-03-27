@@ -381,6 +381,10 @@ func (tp *module910SuperPod) obtainBatchScoreRank(task *api.TaskInfo, job *plugi
 
 func (tp *module910SuperPod) scoreNodeForReadyJob(task *api.TaskInfo, job plugin.SchedulerJob,
 	sMap map[string]float64) {
+	if sMap == nil {
+		klog.V(util.LogWarningLev).Infof("%s scoreNodeForReadyJob %s: sMap is nil.", tp.GetPluginName(), task.Name)
+		return
+	}
 	var rank int
 	var err error
 	rankIndex, ok := task.Pod.Annotations[plugin.PodRankIndexKey]

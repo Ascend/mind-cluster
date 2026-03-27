@@ -102,8 +102,9 @@ class LinkStatCheckItem(InspectionCheckItem):
 
     def _check_link_flapping(self, swi_info: SwitchInfo) -> List[InspectionErrorItem]:
         result = []
-        link_down_info = [alarm_info for alarm_info in swi_info.history_alarm_info if
-                          alarm_info.alarm_id_int == self._LINK_DOWN_ERR_CODE]
+        link_down_info = [alarm_info
+                          for alarm_info in swi_info.history_alarm_info
+                          if alarm_info.alarm_id_int == self._LINK_DOWN_ERR_CODE]
         if not link_down_info:
             return result
         port_link_down_map: Dict[str, List[AlarmInfo]] = collections.defaultdict(list)

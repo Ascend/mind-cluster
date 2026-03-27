@@ -204,11 +204,11 @@ def main():
     parsed_file_directory = ""
     json_data = read_json_file(json_file_path_list)
     name_to_func_data = generate_name_to_func_data(json_data)
-    name_to_path = generate_name_to_path(json_data)
+    _ = generate_name_to_path(json_data)
     nx_graph = generate_prob_graph(json_data, name_to_func_data)
-    error_data_list = read_log_json_file(parsed_file_directory)
+    _ = read_log_json_file(parsed_file_directory)
     all_config_data = read_json_file([ASCEND_KG_CONFIG_PATH])
-    all_sub_graph, chain_dict, match_result = chain_completion(all_config_data, json_data, '../output/output.json',
+    _, chain_dict, _ = chain_completion(all_config_data, json_data, '../output/output.json',
                                      '../output/output_chain.json', nx_graph, re_calculate=True)
     errorcode_graph = generate_errorcode_graph(json_data, name_to_func_data, all_config_data, chain_dict)
     nx.write_graphml(nx_graph, "../output/nx_graph.graphml")

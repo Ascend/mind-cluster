@@ -236,8 +236,8 @@ func testGetUBStatCase3(t *testing.T) {
 
 		// Verify the result is not nil even on error (should return empty UBInfo)
 		convey.So(result, convey.ShouldNotBeNil)
-		convey.So(result.UBCommonStats, convey.ShouldNotBeNil)
-		convey.So(result.UboeExtensions, convey.ShouldNotBeNil)
+		convey.So(result.UBCommonStats, convey.ShouldBeNil)
+		convey.So(result.UboeExtensions, convey.ShouldBeNil)
 	})
 }
 

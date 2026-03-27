@@ -292,6 +292,68 @@ func (fJob *FaultJob) getResourceLevels(superPod map[string][]plugin.SuperNode, 
 
 }
 
+func (fJob *FaultJob) isMasterFault(dpi *deletePodInfo, isNpuJob bool) bool {
+	masterFault := false
+	for _, task := range fJob.FaultTasks {
+		if task.IsFaultTask && isMasterRank(task, isNpuJob) {
+			masterFault = true
+			break
+		}
+	}
+	masterFault = masterFault || fJob.isMasterPodAffectedByFault(dpi, isNpuJob)
+	if masterFault {
+		klog.V(util.LogInfoLev).Infof("job %v/%v is master fault", fJob.JobNamespace, fJob.JobName)
+	}
+	return masterFault
+}
+
+func (fJob *FaultJob) isMasterPodAffectedByFault(dpi *deletePodInfo, isNpuJob bool) bool {
+	return fJob.isMasterFaultWithMultiLevelJob(dpi, isNpuJob) || fJob.isMasterFaultWithSuperPodJob(dpi, isNpuJob)
+}
+
+func (fJob *FaultJob) isMasterFaultWithMultiLevelJob(dpi *deletePodInfo, isNpuJob bool) bool {
+	if dpi == nil || dpi.needRescheduleNodes == nil {
+		return false
+	}
+	for _, task := range fJob.FaultTasks {
+		if !task.IsNpuTask {
+			continue
+		}
+		_, ok := dpi.needRescheduleNodes[task.NodeName]
+		if ok && isMasterRank(task, isNpuJob) {
+			return true
+		}
+	}
+	return false
+}
+
+func (fJob *FaultJob) isMasterFaultWithSuperPodJob(dpi *deletePodInfo, isNpuJob bool) bool {
+	if dpi == nil || !dpi.isSuperPod {
+		return false
+	}
+	for _, task := range fJob.FaultTasks {
+		if !isMasterRank(task, isNpuJob) {
+			continue
+		}
+		if fJob.PendingSessionNum >= spPendingTimes && fJob.inTheSameVSuperPod(dpi.ids, task.NodeName) {
+			return true
+		}
+	}
+	return false
+}
+
+func isMasterRank(fTask FaultTask, isNpuJob bool) bool {
+	if fTask.NodeRankIndex != util.Rank0 || !isNpuJob {
+		return false
+	}
+	isMaster := true
+	replicaType, ok := fTask.Labels[util.ReplicaTypeKey]
+	if ok && replicaType == util.ReplicaTypeValueWorker {
+		isMaster = false
+	}
+	return isMaster
+}
+
 // ForceDeleteJob force delete jobs includes labelled force delete ones and grace delete failed ones
 func (fJob *FaultJob) ForceDeleteJob(schedulerJob *plugin.SchedulerJob,
 	env plugin.ScheduleEnv) error {
@@ -300,25 +362,12 @@ func (fJob *FaultJob) ForceDeleteJob(schedulerJob *plugin.SchedulerJob,
 		return fmt.Errorf(
 			"getJobFaultRescheduleLabel fJob object or ssn or schedulerJob does not exist")
 	}
-	var isMasterFault bool
-	for _, fTask := range fJob.FaultTasks {
-		if fTask.IsFaultTask && fTask.NodeRankIndex == util.Rank0 && schedulerJob.NPUJob.IsNPUJob() {
-			isMasterFault = true
-		}
-		if replicaType, ok := fTask.Labels[util.ReplicaTypeKey]; ok {
-			isMasterFault = isMasterFault && replicaType != util.ReplicaTypeValueWorker
-		}
-		if isMasterFault {
-			klog.V(util.LogInfoLev).Infof("job %v is master fault", schedulerJob.Name)
-			break
-		}
-	}
 	dpi, err := fJob.getDeletePodInfo(schedulerJob, env)
 	if err != nil {
 		return fmt.Errorf("unable to find the pods to delete, %v", err)
 	}
+	dpi.isMasterFault = fJob.isMasterFault(dpi, schedulerJob.IsNPUJob())
 	fJob.updateSuperPodsReschdInfo(env)
-	dpi.isMasterFault = isMasterFault
 	fJob.forceDeletePods(schedulerJob, env, dpi)
 	return nil
 }
@@ -370,7 +419,7 @@ func (fJob *FaultJob) isNormalTaskCanBeDelete(fTask FaultTask, schedulerJob *plu
 	// super pod, when pod pending 12 session, try job rescheduling
 	if fJob.IsJobSingleRescheduling(schedulerJob) && !fTask.IsFaultTask {
 		// needRescheduleNodes only used by multilevel job
-		if _, ok := dpi.needRescheduleNodes[fTask.NodeName]; ok {
+		if _, ok := dpi.needRescheduleNodes[fTask.NodeName]; ok && fTask.IsNpuTask {
 			return true
 		}
 		if !dpi.isSuperPod {
@@ -575,16 +624,16 @@ func (fJob *FaultJob) GraceDeleteJob(ssn *framework.Session, npuJob *plugin.Sche
 	if npuJob == nil {
 		return fmt.Errorf("schedulerJob does not exist")
 	}
-	reason, isMasterFault := fJob.getRestartInfos(npuJob.NPUJob.IsNPUJob())
-	if isMasterFault {
-		klog.V(util.LogInfoLev).Infof("job %v is master fault", npuJob.Name)
-	}
 	dpi, err := fJob.getDeletePodInfo(npuJob, env)
 	if err != nil {
 		return fmt.Errorf("unable to find the pods to delete, %v", err)
 	}
+	dpi.reason = fJob.getRestartInfos()
+	dpi.isMasterFault = fJob.isMasterFault(dpi, npuJob.IsNPUJob())
+	if dpi.isMasterFault {
+		klog.V(util.LogInfoLev).Infof("job %v is master fault", npuJob.Name)
+	}
 	fJob.updateSuperPodsReschdInfo(env)
-	dpi.reason, dpi.isMasterFault = reason, isMasterFault
 	err = fJob.graceDeletePods(ssn, npuJob, env, dpi)
 	if err != nil {
 		return err
@@ -624,26 +673,15 @@ func (fJob *FaultJob) graceDeletePods(ssn *framework.Session, npuJob *plugin.Sch
 	return nil
 }
 
-// GraceDeleteJob grace delete jobs labelled to be deleted gracefully
-func (fJob *FaultJob) getRestartInfos(isNpuJob bool) (string, bool) {
+func (fJob *FaultJob) getRestartInfos() string {
 	var reasonList []FaultReasonList
-	var isMasterFault bool
 	for _, fTask := range fJob.FaultTasks {
 		if fTask.Reason != nil {
 			reasonList = append(reasonList, fTask.Reason...)
 		}
-		if isMasterFault {
-			continue
-		}
-		if fTask.IsFaultTask && fTask.NodeRankIndex == util.Rank0 && isNpuJob {
-			isMasterFault = true
-		}
-		if replicaType, ok := fTask.Labels[util.ReplicaTypeKey]; ok {
-			isMasterFault = isMasterFault && replicaType != util.ReplicaTypeValueWorker
-		}
 	}
 	reason := GetTaskRestartReason(reasonList)
-	return reason, isMasterFault
+	return reason
 }
 
 func (fJob *FaultJob) restartSingleFaultJob(ssn *framework.Session,

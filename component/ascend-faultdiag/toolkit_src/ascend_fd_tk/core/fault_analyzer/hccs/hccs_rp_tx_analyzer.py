@@ -116,7 +116,7 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
     def filter_timeout_interface(self, swi_info: SwitchInfo, server_id: str):
         rp_tx_timeout_interfaces = {}
         for proxy_timeout in swi_info.hccs_info.proxy_timeout_statis:
-            if proxy_timeout.is_rp_tx_timeout_happend():
+            if proxy_timeout.is_rp_tx_timeout_happened():
                 rp_tx_timeout_interfaces.update(
                     self.filter_rp_tx_timeout_interface(swi_info, server_id, proxy_timeout.interface)
                 )
@@ -205,7 +205,7 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
             lcne_info = self.get_lcne_info(interface.server_id, interface.interface_name)
             diag_results.extend(self.check_local_interface(swi_info, lcne_info))
             # 对端问题
-            self.check_remote_interfaces(swi_info, lcne_info, remote_interfaces)
+            diag_results.extend(self.check_remote_interfaces(swi_info, lcne_info, remote_interfaces))
         return diag_results
 
     def l2_diag(self, local_lcne_info: LCNEInfo, remote_lcne_info: LCNEInfo):
@@ -217,7 +217,7 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
         diag_results = []
         for swi_info in self.swis_info.values():
             for proxy_timeout in swi_info.hccs_info.proxy_timeout_statis:
-                if proxy_timeout.is_rp_tx_timeout_happend():
+                if proxy_timeout.is_rp_tx_timeout_happened():
                     domain = [
                         Domain(DeviceType.SWITCH.value, swi_info.swi_id),
                         Domain(DeviceType.SWI_PORT.value, proxy_timeout.interface)

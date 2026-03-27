@@ -573,6 +573,12 @@ func (fJob *FaultJob) handleAllUnHealthyDevices(allUnhealthyDevices []*constant.
 
 func (fJob *FaultJob) handleUnhealthyOnNode(allUnhealthyDevices []*constant.FaultInfo,
 	deviceLvList map[string][]constant.DeviceStrategy, nodeName string, nodeLvList map[string]string) {
+	if nodeLvList == nil {
+		nodeLvList = make(map[string]string)
+	}
+	if deviceLvList == nil {
+		deviceLvList = make(map[string][]constant.DeviceStrategy)
+	}
 	deviceList := deviceLvList[nodeName]
 	nodeLevel := false
 	for _, device := range allUnhealthyDevices {
@@ -615,6 +621,12 @@ func (fJob *FaultJob) handleAllSubHealthyDevices(nodeDeviceList map[string]strin
 
 func (fJob *FaultJob) handleSubHealthyOnNode(allSubHealthDevices []*constant.FaultInfo, nodeName string,
 	nodeLvList map[string]string, deviceLvList map[string][]constant.DeviceStrategy) {
+	if nodeLvList == nil {
+		nodeLvList = make(map[string]string)
+	}
+	if deviceLvList == nil {
+		deviceLvList = make(map[string][]constant.DeviceStrategy)
+	}
 	deviceList := make([]constant.DeviceStrategy, 0)
 	nodeLevel := false
 	for _, device := range allSubHealthDevices {

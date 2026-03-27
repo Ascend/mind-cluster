@@ -97,9 +97,19 @@ func (c *containerdClient) WatchContainerEvents(ctx context.Context, handler typ
 				hwlog.RunLog.Errorf("failed to close containerd client: %v", err)
 			}
 			return
-		case envelope := <-eventChan:
-			c.handleEvent(envelope, handler)
-		case err := <-errChan:
+		case envelope, ok := <-eventChan:
+			if !ok {
+				hwlog.RunLog.Errorf("event channel closed")
+				return
+			}
+			if envelope != nil {
+				c.handleEvent(envelope, handler)
+			}
+		case err, ok := <-errChan:
+			if !ok {
+				hwlog.RunLog.Errorf("error channel closed")
+				return
+			}
 			hwlog.RunLog.Warnf("error receiving event: %v", err)
 		}
 	}

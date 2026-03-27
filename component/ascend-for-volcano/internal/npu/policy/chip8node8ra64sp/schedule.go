@@ -134,6 +134,10 @@ func (tp *oneRackStrategy) iterateEverySuperPod(superPods []superPod) {
 }
 
 func (tp *oneRackStrategy) selectOneSpBlock(rackGroup map[int32][]nodeBaseInfo) {
+	if rackGroup == nil {
+		klog.V(util.LogWarningLev).Infof("%s selectOneSpBlock: rackGroup is nil.", tp.GetPluginName())
+		return
+	}
 	bestRackId := int32(1)
 	bestRackIdLen := rackNodeNum + 1
 	// finding the best rackId will be selected

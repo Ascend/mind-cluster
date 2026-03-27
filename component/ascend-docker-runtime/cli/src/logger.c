@@ -232,16 +232,16 @@ STATIC void DivertAndWrite(const char *logPath, const char *msg, const int level
     }
     switch (level) {
         case LEVEL_DEBUG:
-            ret = sprintf_s(buffer, destMax, "[Debug]%s\n", msg);
+            ret = sprintf_s(buffer, destMax * sizeof(char), "[Debug]%s\n", msg);
             break;
         case LEVEL_ERROR:
-            ret = sprintf_s(buffer, destMax, "[Error]%s\n", msg);
+            ret = sprintf_s(buffer, destMax * sizeof(char), "[Error]%s\n", msg);
             break;
         case LEVEL_WARN:
-            ret = sprintf_s(buffer, destMax, "[Warn]%s\n", msg);
+            ret = sprintf_s(buffer, destMax * sizeof(char), "[Warn]%s\n", msg);
             break;
         default:
-            ret = sprintf_s(buffer, destMax, "[Info]%s\n", msg);
+            ret = sprintf_s(buffer, destMax * sizeof(char), "[Info]%s\n", msg);
     }
     if (ret < 0) {
         free(buffer);

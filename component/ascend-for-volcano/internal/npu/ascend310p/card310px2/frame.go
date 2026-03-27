@@ -119,6 +119,10 @@ func (tp *card310px2) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeInf
 }
 
 func (tp *card310px2) getScore(nodes []*api.NodeInfo, taskNPUNum int, scoreMap map[string]float64) {
+	if scoreMap == nil {
+		klog.V(util.LogWarningLev).Infof("%s getScore: scoreMap is nil.", tp.GetPluginName())
+		return
+	}
 	for _, node := range nodes {
 		if reflect.ValueOf(node).IsNil() {
 			klog.V(util.LogWarningLev).Infof("%s ScoreBestNPUNodes get node nil.", tp.GetPluginName())
