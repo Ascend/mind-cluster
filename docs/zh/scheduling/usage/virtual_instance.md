@@ -474,6 +474,7 @@
 >
 >- image-name:tag：镜像名称与标签，请根据实际情况修改。如“ascend-tensorflow:tensorflow\_TAG”。
 >- 用户在使用过程中，请勿重复定义和在容器镜像中固定ASCEND\_VISIBLE\_DEVICES、ASCEND\_RUNTIME\_OPTIONS和ASCEND\_VNPU\_SPECS环境变量。
+>- 使用动态虚拟化时，若发生服务器重启，则此场景下无法自动销毁vnpu，需用户自己手动销毁。
 
 **表 1**  参数解释
 
