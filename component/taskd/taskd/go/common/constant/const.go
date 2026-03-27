@@ -184,7 +184,7 @@ const (
 	// ReportFaultTime is the time when fault rank is reported
 	ReportFaultTime = "REPORT_FAULT_TIME"
 	// Rank0FaultTimeout is the timeout for rank0 fault
-	Rank0FaultTimeout = 5 * time.Minute
+	Rank0FaultTimeout = 25 * time.Minute
 )
 
 const (

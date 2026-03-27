@@ -23,12 +23,12 @@ import (
 	"taskd/framework_backend/manager/infrastructure/storage"
 	"taskd/framework_backend/manager/plugins/elastictraining"
 	"taskd/framework_backend/manager/plugins/faultdig"
-	"taskd/framework_backend/manager/plugins/hotswtich"
-	"taskd/framework_backend/manager/plugins/job"
+	"taskd/framework_backend/manager/plugins/hotswitch"
+	jobrescheduling "taskd/framework_backend/manager/plugins/job"
 	"taskd/framework_backend/manager/plugins/om"
-	"taskd/framework_backend/manager/plugins/pod"
-	"taskd/framework_backend/manager/plugins/recover"
-	"taskd/framework_backend/manager/plugins/stoptrain"
+	podrescheduling "taskd/framework_backend/manager/plugins/pod"
+	"taskd/framework_backend/manager/plugins/prerecover"
+	recoveplugin "taskd/framework_backend/manager/plugins/recover"
 )
 
 // PluginHandlerInterface define the interface of plugin handler
@@ -52,7 +52,7 @@ func (p *PluginHandler) Init() error {
 		faultdig.NewProfilingPlugin(),
 		om.NewOmSwitchNicPlugin(),
 		om.NewOmStressTestPlugin(),
-		stoptrain.New(),
+		prerecover.New(),
 		elastictraining.New(),
 		jobrescheduling.NewJobReschedulingPlugin(),
 		podrescheduling.NewPodReschedulingPlugin(),

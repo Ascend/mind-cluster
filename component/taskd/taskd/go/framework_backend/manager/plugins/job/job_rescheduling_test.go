@@ -34,10 +34,8 @@ import (
 )
 
 const (
-	agent0Name   = "agent0"
-	agent1Name   = "agent1"
-	threeMinutes = 3 * time.Minute
-	sixMinutes   = 6 * time.Minute
+	agent0Name = "agent0"
+	agent1Name = "agent1"
 )
 
 func getJobReschedulingPlugin() *JobReschedulingPlugin {
@@ -329,7 +327,7 @@ func TestIsRank0FaultTimeout(t *testing.T) {
 			name: "fault_time_within_timeout",
 			agent0Info: &storage.AgentInfo{
 				Status: map[string]string{
-					constant.ReportFaultTime: strconv.FormatInt(time.Now().Add(-threeMinutes).Unix(), constant.Base),
+					constant.ReportFaultTime: strconv.FormatInt(time.Now().Add(-constant.Rank0FaultTimeout+time.Second).Unix(), constant.Base),
 				},
 			},
 			want: true,
@@ -338,7 +336,7 @@ func TestIsRank0FaultTimeout(t *testing.T) {
 			name: "fault_time_exceed_timeout",
 			agent0Info: &storage.AgentInfo{
 				Status: map[string]string{
-					constant.ReportFaultTime: strconv.FormatInt(time.Now().Add(-sixMinutes).Unix(), constant.Base),
+					constant.ReportFaultTime: strconv.FormatInt(time.Now().Add(-constant.Rank0FaultTimeout-time.Second).Unix(), constant.Base),
 				},
 			},
 			want: false,

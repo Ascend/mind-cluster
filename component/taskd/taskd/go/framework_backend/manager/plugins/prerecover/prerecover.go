@@ -12,8 +12,8 @@
    limitations under the License.
 */
 
-// Package stoptrain for stop train plugin
-package stoptrain
+// Package prerecover for preparation before recovery,such as stoptrain, globalfault, etc
+package prerecover
 
 import (
 	"errors"
@@ -28,8 +28,8 @@ import (
 	pluginutils "taskd/framework_backend/manager/plugins/utils"
 )
 
-// stopTrainingPlugin stop train plugin define
-type stopTrainingPlugin struct {
+// preRecoverPlugin preRecover plugin define
+type preRecoverPlugin struct {
 	hasToken        bool
 	shot            storage.SnapShot
 	signalInfo      *pluginutils.SignalInfo
@@ -39,19 +39,19 @@ type stopTrainingPlugin struct {
 
 // New creates an object
 func New() infrastructure.ManagerPlugin {
-	return &stopTrainingPlugin{
+	return &preRecoverPlugin{
 		HasSendMessages: make(map[string]string),
 		lastUuid:        "",
 	}
 }
 
 // Name returns plugin name
-func (s *stopTrainingPlugin) Name() string {
+func (s *preRecoverPlugin) Name() string {
 	return constant.StopTrainPluginName
 }
 
 // Predicate check whether apply token
-func (s *stopTrainingPlugin) Predicate(shot storage.SnapShot) (infrastructure.PredicateResult, error) {
+func (s *preRecoverPlugin) Predicate(shot storage.SnapShot) (infrastructure.PredicateResult, error) {
 	s.shot = shot
 	s.signalInfo = nil
 	if s.hasToken {
@@ -86,12 +86,12 @@ func (s *stopTrainingPlugin) Predicate(shot storage.SnapShot) (infrastructure.Pr
 }
 
 // Release releases token
-func (s *stopTrainingPlugin) Release() error {
+func (s *preRecoverPlugin) Release() error {
 	return nil
 }
 
 // Handle handles stream events
-func (s *stopTrainingPlugin) Handle() (infrastructure.HandleResult, error) {
+func (s *preRecoverPlugin) Handle() (infrastructure.HandleResult, error) {
 	hwlog.RunLog.Infof("plugin[%s] enter handle", s.Name())
 	s.hasToken = true
 	if s.signalInfo == nil {
@@ -119,7 +119,7 @@ func (s *stopTrainingPlugin) Handle() (infrastructure.HandleResult, error) {
 }
 
 // PullMsg returns messages to other module
-func (s *stopTrainingPlugin) PullMsg() ([]infrastructure.Msg, error) {
+func (s *preRecoverPlugin) PullMsg() ([]infrastructure.Msg, error) {
 	if s.signalInfo == nil {
 		hwlog.RunLog.Warn("signalInfo is nil")
 		return nil, nil
@@ -145,7 +145,7 @@ func (s *stopTrainingPlugin) PullMsg() ([]infrastructure.Msg, error) {
 	return msgs, nil
 }
 
-func (s *stopTrainingPlugin) getSignalInfo() error {
+func (s *preRecoverPlugin) getSignalInfo() error {
 	if s.shot.ClusterInfos == nil {
 		return errors.New("no cluster info")
 	}
