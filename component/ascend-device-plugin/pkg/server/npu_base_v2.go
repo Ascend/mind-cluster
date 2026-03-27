@@ -575,6 +575,9 @@ func getDieIdAndPortId(eid string) (byte, byte, error) {
 }
 
 func savePortsResult(edge Edge, ports []string, portsMap map[string]struct{}) []string {
+	if portsMap == nil {
+		portsMap = make(map[string]struct{})
+	}
 	for _, addr := range edge.LocalAPorts {
 		if _, ok := portsMap[addr]; ok {
 			continue
@@ -587,6 +590,9 @@ func savePortsResult(edge Edge, ports []string, portsMap map[string]struct{}) []
 }
 
 func savePortsResultByDieId(edge Edge, dieId byte, ports []string, portsMap map[string]struct{}) []string {
+	if portsMap == nil {
+		portsMap = make(map[string]struct{})
+	}
 	for _, addr := range edge.LocalAPorts {
 		if _, ok := portsMap[addr]; ok {
 			continue

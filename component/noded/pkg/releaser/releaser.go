@@ -159,6 +159,10 @@ func getReleaseAndRecoverMap(faultInfos map[string]map[int]api.SuperPodFaultInfo
 }
 
 func insertNeedResetJobInfo(needResetJob map[string]api.SuperPodFaultInfos, superFaultInfo api.SuperPodFaultInfos) {
+	if needResetJob == nil {
+		hwlog.RunLog.Warnf("insertNeedResetJobInfo: needResetJob is nil, skip inserting job %s", superFaultInfo.JobId)
+		return
+	}
 	for _, nodeName := range superFaultInfo.NodeNames {
 		if nodeName == kubeclient.GetK8sClient().NodeName {
 			needResetJob[superFaultInfo.JobId] = superFaultInfo

@@ -61,6 +61,10 @@ type mulSuperPodsStrategy struct {
 
 // doSelect select nodes from ubmem level or superpod level, when we have selected one sp-block count nodes, return result
 func (tp *strategy) selectOneSpBlock(rackGroup map[int32][]nodeBaseInfo, superPod superPod) map[int32][]nodeBaseInfo {
+	if rackGroup == nil {
+		klog.V(util.LogWarningLev).Infof("%s selectOneSpBlock: rackGroup is nil.", tp.GetPluginName())
+		return nil
+	}
 	spIndex := tp.unReadyIds[tp.totalCount-1]
 	if tp.tpBlock == 0 {
 		klog.V(util.LogErrorLev).Infof("invalid tp-block, select nodes failed")

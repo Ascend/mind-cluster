@@ -374,6 +374,9 @@ func (c *Collector) processPodFailed(p corev1.Pod) *conditionDetail {
 }
 
 func (c *Collector) processJobs(exceptionJobs map[string]*jobExceptionInfo, pgInfos map[string]constant.JobInfo) map[string]metav1.Object {
+	if exceptionJobs == nil {
+		exceptionJobs = make(map[string]*jobExceptionInfo)
+	}
 	allMetaObjs := make(map[string]metav1.Object, 0)
 	for gvk, jobs := range kube.ListObjects(kube.AcJobGVK(), kube.VcJobGVK()) {
 		for _, jobObj := range jobs {

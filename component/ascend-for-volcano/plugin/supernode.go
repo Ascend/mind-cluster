@@ -173,6 +173,9 @@ type taskTreeConverter struct {
 
 func (ttc *taskTreeConverter) buildSuperNodeMap(
 	taskNode *util.TaskNode, depth int, startRank int, nodeTopoMap map[string]string) error {
+	if nodeTopoMap == nil {
+		nodeTopoMap = make(map[string]string)
+	}
 	if depth >= len(ttc.resourceLevels) {
 		return fmt.Errorf("depth out of resource levels range %v", len(ttc.resourceLevels))
 	}
