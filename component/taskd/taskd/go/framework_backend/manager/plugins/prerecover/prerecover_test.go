@@ -12,9 +12,9 @@
    limitations under the License.
 */
 
-// Package stoptrain for stop train plugin
+// Package prerecover for preparation before recovery,such as stoptrain, globalfault, etc
 
-package stoptrain
+package prerecover
 
 import (
 	"reflect"
@@ -41,7 +41,7 @@ func TestNew(t *testing.T) {
 	}{
 		{
 			name: "get plugin object",
-			want: &stopTrainingPlugin{
+			want: &preRecoverPlugin{
 				HasSendMessages: make(map[string]string),
 			},
 		},
@@ -75,9 +75,9 @@ func TestStopTrainingPluginName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &stopTrainingPlugin{}
+			s := &preRecoverPlugin{}
 			if got := s.Name(); got != tt.want {
-				t.Errorf("stopTrainingPlugin.Name() = %v, want %v", got, tt.want)
+				t.Errorf("preOperationPlugin.Name() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -106,7 +106,7 @@ func TestStopTrainingPluginPredicate(t *testing.T) {
 	tests := getArgsTestStopTrainingPluginPredicateTestCases()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &stopTrainingPlugin{
+			s := &preRecoverPlugin{
 				hasToken:        tt.fields.hasToken,
 				shot:            tt.fields.shot,
 				HasSendMessages: tt.fields.HasSendMessages,
@@ -114,11 +114,11 @@ func TestStopTrainingPluginPredicate(t *testing.T) {
 			}
 			got, err := s.Predicate(tt.args.shot)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("stopTrainingPlugin.Predicate() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("preOperationPlugin.Predicate() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("stopTrainingPlugin.Predicate() = %v, want %v", got, tt.want)
+				t.Errorf("preOperationPlugin.Predicate() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -187,9 +187,9 @@ func TestStopTrainingPluginRelease(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &stopTrainingPlugin{}
+			s := &preRecoverPlugin{}
 			if err := s.Release(); (err != nil) != tt.wantErr {
-				t.Errorf("stopTrainingPlugin.Release() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("preOperationPlugin.Release() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -244,18 +244,18 @@ func TestStopTrainingPluginHandle(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &stopTrainingPlugin{
+			s := &preRecoverPlugin{
 				hasToken:        tt.fields.hasToken,
 				shot:            tt.fields.shot,
 				HasSendMessages: tt.fields.HasSendMessages,
 			}
 			got, err := s.Handle()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("stopTrainingPlugin.Handle() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("preOperationPlugin.Handle() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("stopTrainingPlugin.Handle() = %v, want %v", got, tt.want)
+				t.Errorf("preOperationPlugin.Handle() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -293,7 +293,7 @@ func TestStopTrainingPluginPullMsg(t *testing.T) {
 		wantErr: false}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &stopTrainingPlugin{
+			s := &preRecoverPlugin{
 				hasToken:        tt.fields.hasToken,
 				shot:            tt.fields.shot,
 				signalInfo:      tt.fields.signalInfo,
@@ -301,11 +301,11 @@ func TestStopTrainingPluginPullMsg(t *testing.T) {
 			}
 			got, err := s.PullMsg()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("stopTrainingPlugin.PullMsg() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("preOperationPlugin.PullMsg() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("stopTrainingPlugin.PullMsg() = %v, want %v", got, tt.want)
+				t.Errorf("preOperationPlugin.PullMsg() = %v, want %v", got, tt.want)
 			}
 		})
 	}
