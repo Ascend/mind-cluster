@@ -107,7 +107,7 @@ hccl.json:
       "level_list": [
         {
           "net_layer": 0,   // 通信层级
-          "net_instance_id": "xx",
+          "net_instance_id": "xx",          // 组网ID
           "net_type": "TOPO_FILE_DESC",     // 网络类型，值为TOPO_FILE_DESC和CLOS，TOPO_FILE_DESC代表从文件中查询网络类型，CLOS代表clos网络
           "net_attr": "",                   // 组网层级
           "rank_addr_list": [
