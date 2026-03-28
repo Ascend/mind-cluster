@@ -169,6 +169,7 @@ class TestAgentMessageManager(unittest.TestCase):
 
         agent = AgentMessageManager(self.network_config, self.mock_queue, self.logger)
         test_msg = {
+            "uuid": "test-uuid",
             "body": json.dumps({
                 "msg_type": "TEST",
                 "code": 200,
@@ -182,6 +183,29 @@ class TestAgentMessageManager(unittest.TestCase):
         self.assertIsInstance(result, MsgBody)
         self.assertEqual(result.msg_type, "TEST")
         self.assertEqual(result.code, 200)
+
+    @patch('taskd.python.framework.agent.base_agent.agent_network.cython_api')
+    @patch('taskd.python.framework.agent.base_agent.agent_network.run_log')
+    def test_parse_duplicate_message(self, mock_log, mock_cython):
+        mock_cython.lib = self.mock_lib
+
+        agent = AgentMessageManager(self.network_config, self.mock_queue, self.logger)
+        test_msg = {
+            "uuid": "test-uuid",
+            "body": json.dumps({
+                "msg_type": "TEST",
+                "code": 200,
+                "message": "OK",
+                "extension": {}
+            })
+        }
+
+        result = agent._parse_msg(json.dumps(test_msg))
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, MsgBody)
+
+        result = agent._parse_msg(json.dumps(test_msg))
+        self.assertIsNone(result)
 
     @patch('taskd.python.framework.agent.base_agent.agent_network.cython_api')
     @patch('taskd.python.framework.agent.base_agent.agent_network.run_log')
