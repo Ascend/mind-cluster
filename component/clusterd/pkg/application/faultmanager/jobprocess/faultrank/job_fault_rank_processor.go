@@ -142,7 +142,7 @@ func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(
 		retryInManagementPlane := false
 		podUid, podRankStr, err := podInfo.getPodUidAndRankByCardRank(deviceInfo.RankID)
 		if err != nil {
-			hwlog.RunLog.Errorf("device %s's rank id is %s, getPodUidAndRankByCardRank err: %v",
+			hwlog.RunLog.Debugf("device %s's rank id is %s, getPodUidAndRankByCardRank err: %v",
 				deviceInfo.DeviceIP, deviceInfo.RankID, err)
 		}
 		restartInPlace := processor.canDoRestartInPlace(podInfo.jobId, podRankStr)
