@@ -2,7 +2,7 @@
 
 >[!NOTE]
 >
->- Elastic Agent组件已经日落，相关资料将于2026年的8.3.0版本删除。
+>- Elastic Agent组件已经日落，相关资料将于2026年12月30日的版本删除。
 >- 内部接口严禁调用。
 
 ## mindx\_elastic.\_\_version\_\_<a name="ZH-CN_TOPIC_0000002511346763"></a>

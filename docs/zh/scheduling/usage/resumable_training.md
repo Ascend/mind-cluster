@@ -2178,8 +2178,8 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 
 - 请在训练正常迭代后，再进行借轨或回切指令的下发。
 - 确保已开启进程级恢复相关功能特性。
-- 对于MindSpore训练框架，需要在启动TaskD  Manager前设置export TASKD\_PROCESS\_ENABLE="on"。
 - 暂不支持在IPv6场景下使用。
+- 仅支持Roce通信场景。
 
 **支持的产品型号和AI框架<a name="zh-cn_topic_0000002098609234_section4771115416256"></a>**
 
@@ -6567,23 +6567,23 @@ metadata:
 
 <a name="zh-cn_topic_0000002163392281_table1474820818115"></a>
 
-|参数名称|参数位置|参数说明|
-|--|--|--|
-|hotReset|Ascend Device Plugin组件的启动YAML|优雅容错功能开关。<ul><li>取值为1：使用断点续训时，可以在Job级或Pod级重调度的基础上，开启热复位功能，使用优雅容错模式；</li><li>取值为2：使用进程级恢复时，请将hotReset参数值设置为2，开启离线恢复模式。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>取值为1对应的功能已经日落，请配置其他取值。</p></div></div>|
-|pod-rescheduling|训练任务YAML的metadata.labels|<ul><li>on：开启Pod级别重调度。</li><li>其他值或不使用该字段：关闭Pod级别重调度。</li></ul>|
-|fault-scheduling|训练任务YAML的metadata.labels|重调度开关。|
-|process-recover-enable|训练任务YAML的metadata.labels|<ul><li>on：开启进程级别重调度及进程级在线恢复。进程级别重调度和优雅容错不能同时开启，若同时开启，断点续训将通过job级重调度恢复训练。</li><li>pause：暂时关闭进程级别重调度及进程级在线恢复。</li><li>off或不使用该字段：关闭进程级别重调度及进程级在线恢复。</li></ul>|
-|recover-strategy|训练任务YAML的metadata.annotations|任务可用恢复策略。<ul><li>retry：进程级在线恢复。</li><li>recover：进程级别重调度。</li><li>recover-in-place：进程级原地恢复。</li><li>elastic-training：弹性训练。</li><li>dump：保存临终遗言。</li><li>exit：退出训练。</li></ul>|
-|PROCESS_RECOVER|训练任务YAML的spec.replicaSpecs.{ Master \|Scheduler\| Worker}.template.spec.containers.env|进程级别重调度及进程级在线恢复Elastic Agent/TaskD侧总开关。<ul><li>on：开启。</li><li>off：关闭。</li></ul>|
-|ELASTIC_PROCESS_RECOVER_ENABLE|启动训练YAML的spec.replicaSpecs.{ Master\|Scheduler\| Worker}. template.spec.containers.args|Elastic Agent侧进程级别重调度、进程级在线恢复、临终CKPT恢复功能开关。<ul><li>取值为1：开启本功能。</li><li>其他值：关闭本功能。<p>关闭本功能时，MindIO侧相关功能需同时关闭。</p></li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>Elastic Agent组件已经日落，相关资料将于2026年的8.3.0版本删除。该环境变量会随之删除。</p></div></div>|
-|ENABLE_RESTART_FAULT_PROCESS|启动训练YAML的spec.replicaSpecs.{ Master\|Scheduler\| Worker}. template.spec.containers.args|Elastic Agent/TaskD组件开启故障进程原地恢复功能的开关。<ul><li>on：开启本功能；</li><li>其他值：关闭本功能</li></ul>|
-|--enable-high-availability|训练脚本pretrain_gpt.py的启动参数|故障快速恢复特性开关，默认关闭，配置后即开启临终遗言功能。|
-|--enable-hbmfault-repair|训练脚本pretrain_gpt.py的启动参数|进程级在线恢复功能开关，默认关闭，配置后对片上内存进行故障检测，并完成在线修复。需同时开启enable-high-availability。|
-|--enable-worker-reboot|训练脚本pretrain_gpt.py的启动参数|进程级别重调度功能开关，默认关闭。配置后在发生一般性故障时，进行进程级别调度。需同时开启enable-high-availability。|
-|--enable-elastic-training|训练脚本pretrain_gpt.py的启动参数|弹性训练功能开关，默认关闭。|
-|max_restarts|启动训练的shell脚本（例如train_start.sh）中|配置容器内最大允许触发的故障次数，取值为整数。超出次数后PyTorch训练进程会直接退出训练，不配置该参数时默认为32767次。|
-|monitor_interval|启动训练的shell脚本（例如train_start.sh）中|配置监测训练进程状态的时间间隔，单位为秒，取值为整数。不配置该参数时默认为5秒。|
-|HIGH_AVAILABILITY|Ascend Operator注入容器的环境变量中|Ascend Operator根据任务类型自动注入该环境变量，使用2.3.0版本MindSpeed-LLM会自动读取该环境变量，无需在train_start.sh中手动添加--enable-high-availability、--enable-hbmfault-repair、--enable-worker-reboot和--enable-elastic-training参数开启对应功能。|
+|参数名称|参数位置| 参数说明                                                                                                                                                                                                                                                                                 |
+|--|--|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|hotReset|Ascend Device Plugin组件的启动YAML| 优雅容错功能开关。<ul><li>取值为1：使用断点续训时，可以在Job级或Pod级重调度的基础上，开启热复位功能，使用优雅容错模式；</li><li>取值为2：使用进程级恢复时，请将hotReset参数值设置为2，开启离线恢复模式。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>取值为1对应的功能已经日落，请配置其他取值。</p></div></div>                            |
+|pod-rescheduling|训练任务YAML的metadata.labels| <ul><li>on：开启Pod级别重调度。</li><li>其他值或不使用该字段：关闭Pod级别重调度。</li></ul>                                                                                                                                                                                                                      |
+|fault-scheduling|训练任务YAML的metadata.labels| 重调度开关。                                                                                                                                                                                                                                                                               |
+|process-recover-enable|训练任务YAML的metadata.labels| <ul><li>on：开启进程级别重调度及进程级在线恢复。进程级别重调度和优雅容错不能同时开启，若同时开启，断点续训将通过job级重调度恢复训练。</li><li>pause：暂时关闭进程级别重调度及进程级在线恢复。</li><li>off或不使用该字段：关闭进程级别重调度及进程级在线恢复。</li></ul>                                                                                                                         |
+|recover-strategy|训练任务YAML的metadata.annotations| 任务可用恢复策略。<ul><li>retry：进程级在线恢复。</li><li>recover：进程级别重调度。</li><li>recover-in-place：进程级原地恢复。</li><li>elastic-training：弹性训练。</li><li>dump：保存临终遗言。</li><li>exit：退出训练。</li></ul>                                                                                                          |
+|PROCESS_RECOVER|训练任务YAML的spec.replicaSpecs.{ Master \|Scheduler\| Worker}.template.spec.containers.env| 进程级别重调度及进程级在线恢复Elastic Agent/TaskD侧总开关。<ul><li>on：开启。</li><li>off：关闭。</li></ul>                                                                                                                                                                                                      |
+|ELASTIC_PROCESS_RECOVER_ENABLE|启动训练YAML的spec.replicaSpecs.{ Master\|Scheduler\| Worker}. template.spec.containers.args| Elastic Agent侧进程级别重调度、进程级在线恢复、临终CKPT恢复功能开关。<ul><li>取值为1：开启本功能。</li><li>其他值：关闭本功能。<p>关闭本功能时，MindIO侧相关功能需同时关闭。</p></li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>Elastic Agent组件已经日落，相关资料将于2026年12月30日的版本删除。该环境变量会随之删除。</p></div></div> |
+|ENABLE_RESTART_FAULT_PROCESS|启动训练YAML的spec.replicaSpecs.{ Master\|Scheduler\| Worker}. template.spec.containers.args| Elastic Agent/TaskD组件开启故障进程原地恢复功能的开关。<ul><li>on：开启本功能；</li><li>其他值：关闭本功能</li></ul>                                                                                                                                                                                                   |
+|--enable-high-availability|训练脚本pretrain_gpt.py的启动参数| 故障快速恢复特性开关，默认关闭，配置后即开启临终遗言功能。                                                                                                                                                                                                                                                        |
+|--enable-hbmfault-repair|训练脚本pretrain_gpt.py的启动参数| 进程级在线恢复功能开关，默认关闭，配置后对片上内存进行故障检测，并完成在线修复。需同时开启enable-high-availability。                                                                                                                                                                                                               |
+|--enable-worker-reboot|训练脚本pretrain_gpt.py的启动参数| 进程级别重调度功能开关，默认关闭。配置后在发生一般性故障时，进行进程级别调度。需同时开启enable-high-availability。                                                                                                                                                                                                                |
+|--enable-elastic-training|训练脚本pretrain_gpt.py的启动参数| 弹性训练功能开关，默认关闭。                                                                                                                                                                                                                                                                       |
+|max_restarts|启动训练的shell脚本（例如train_start.sh）中| 配置容器内最大允许触发的故障次数，取值为整数。超出次数后PyTorch训练进程会直接退出训练，不配置该参数时默认为32767次。                                                                                                                                                                                                                     |
+|monitor_interval|启动训练的shell脚本（例如train_start.sh）中| 配置监测训练进程状态的时间间隔，单位为秒，取值为整数。不配置该参数时默认为5秒。                                                                                                                                                                                                                                             |
+|HIGH_AVAILABILITY|Ascend Operator注入容器的环境变量中| Ascend Operator根据任务类型自动注入该环境变量，使用2.3.0版本MindSpeed-LLM会自动读取该环境变量，无需在train_start.sh中手动添加--enable-high-availability、--enable-hbmfault-repair、--enable-worker-reboot和--enable-elastic-training参数开启对应功能。                                                                                  |
 
 **表 3** Ascend Operator注入的环境变量
 

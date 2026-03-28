@@ -292,7 +292,7 @@ MindCluster基础调度特性与断点续训特性支持的框架：Pytorch、Mi
 
 1. 拉取mind-cluster整体源码，例如放在/home目录下。
 
-2. 修改组件版本配置文件service_config.ini中mind-cluster-version字段值为所需编译版本，默认值如下：
+2. 修改组件版本配置文件/home/mind-cluster/build/service_config.ini中mind-cluster-version字段值为所需编译版本，默认值如下：
 
         mind-cluster-version=6.0.0
 
