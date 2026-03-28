@@ -106,7 +106,7 @@ spec:
             labels:
               app: test-prefill
               fault-scheduling: 'grace' # 开启重调度
-              fault-retry-times: 10
+              fault-retry-times: '10'
               ring-controller.atlas: ascend-910b
           spec:
             schedulerName: volcano # 指定调度器为Volcano
@@ -140,7 +140,7 @@ spec:
             labels:
               app: test-decode
               fault-scheduling: 'grace' # 开启重调度
-              fault-retry-times: 10
+              fault-retry-times: '10'
               ring-controller.atlas: ascend-910b
           spec:
             schedulerName: volcano # 指定调度器为Volcano
@@ -165,9 +165,9 @@ spec:
           - port: 1026 
             protocol: TCP
             targetPort: 1026
-            selector: 
-              app: test-router
-            type: ClusterIP
+          selector: 
+            app: test-router
+          type: ClusterIP
       workload:     # router中实例的CRD类型信息
         apiVersion: apps/v1
         kind: Deployment
