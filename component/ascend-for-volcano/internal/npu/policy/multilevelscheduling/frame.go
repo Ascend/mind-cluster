@@ -249,6 +249,8 @@ func (mh *MultilevelHandler) scheduleMultipleLevelPodsForJob(task *api.TaskInfo,
 		return nil, fmt.Errorf("[%s] GetSuperNodeMapFromTaskTree failed: %v", mh.GetPluginName(), err)
 	}
 
+	// reset fault node cache scheduling succeed
+	mh.SuperPodInfo.SuperPodMapFaultTaskNodes[task.Job] = map[string]string{}
 	klog.V(util.LogInfoLev).Infof("[%s] successfully get supernode map for task %s", mh.GetPluginName(), task.Name)
 	return supernode, nil
 }
@@ -316,8 +318,6 @@ func (mh *MultilevelHandler) reschedule(fJob *rescheduling.FaultJob, task *api.T
 			mh.GetPluginName(), task.Job, err)
 		return nil, err
 	}
-	// clean fault node cache when rescheduling succeed
-	mh.SuperPodInfo.SuperPodMapFaultTaskNodes[fJob.JobUID] = map[string]string{}
 	return taskTree, nil
 }
 
