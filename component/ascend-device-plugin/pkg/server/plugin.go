@@ -503,20 +503,20 @@ func (ps *PluginServer) updateDynamicAllocMap(realAlloc, kltAlloc []string) {
 
 func (ps *PluginServer) updatePresetAllocMap(realAlloc, kltAlloc []string) {
 	if common.IsSupportSoftShareDevice() {
+		if len(realAlloc) == 0 {
+			hwlog.RunLog.Error("number of devices of real allocate is 0")
+			return
+		}
 		ps.allocMapLock.Lock()
+		defer ps.allocMapLock.Unlock()
 		for _, id := range kltAlloc {
 			if _, exist := ps.klt2RealDevMap[id]; exist {
 				delete(ps.klt2RealDevMap, id)
 			}
 		}
-		if len(realAlloc) == 0 {
-			hwlog.RunLog.Error("number of devices of real allocate is 0")
-			return
-		}
 		for _, id := range kltAlloc {
 			ps.klt2RealDevMap[id] = realAlloc[0]
 		}
-		ps.allocMapLock.Unlock()
 		return
 	}
 	if len(realAlloc) != len(kltAlloc) {
@@ -524,6 +524,7 @@ func (ps *PluginServer) updatePresetAllocMap(realAlloc, kltAlloc []string) {
 		return
 	}
 	ps.allocMapLock.Lock()
+	defer ps.allocMapLock.Unlock()
 	for _, id := range kltAlloc {
 		if _, exist := ps.klt2RealDevMap[id]; exist {
 			delete(ps.klt2RealDevMap, id)
@@ -532,7 +533,6 @@ func (ps *PluginServer) updatePresetAllocMap(realAlloc, kltAlloc []string) {
 	for i, id := range kltAlloc {
 		ps.klt2RealDevMap[id] = realAlloc[i]
 	}
-	ps.allocMapLock.Unlock()
 }
 
 // GetRealAllocateDevicesFromMap converts devices allocated by kubelet

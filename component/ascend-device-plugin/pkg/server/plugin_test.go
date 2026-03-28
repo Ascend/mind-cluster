@@ -1131,7 +1131,7 @@ func buildUpdatePresetAllocMapTestCases() []updatePresetAllocMapTestCase {
 			realAlloc:           []string{},
 			kltAlloc:            []string{"npu0-0"},
 			preKlt2RealDevMap:   map[string]string{"npu0-0": "old-npu"},
-			expectedKlt2RealDev: map[string]string{},
+			expectedKlt2RealDev: map[string]string{"npu0-0": "old-npu"},
 		},
 		{
 			name:                "soft share disabled, len(realAlloc) == len(kltAlloc)",
