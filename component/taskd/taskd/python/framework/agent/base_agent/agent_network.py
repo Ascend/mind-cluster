@@ -52,6 +52,7 @@ class AgentMessageManager():
         self.rank = int(network_config.pos.server_rank)
         self.msg_queue = msg_queue
         self._network_instance = None
+        self._recved_msg = {}
         self._init_network(network_config, logger)
 
     def register(self, rank: str):
@@ -137,6 +138,12 @@ class AgentMessageManager():
         """
         try:
             msg_json = json.loads(msg_json)
+            msg_uuid = msg_json["uuid"]
+            if msg_uuid in self._recved_msg:
+                run_log.warning(f"agent receive duplicate message, msg: {msg_uuid}")
+                run_log.info(f"received message map len: {len(self._recved_msg)}")
+                return None
+            self._recved_msg[msg_uuid] = True
             msg_body_json = msg_json["body"]
             msg_body = json.loads(msg_body_json)
             msg = MsgBody(
