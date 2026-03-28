@@ -748,7 +748,7 @@ TaskD运行后，会启动gRPC客户端与ClusterD进行gRPC通信，同时TaskD
 ## Elastic Agent安全加固<a name="ZH-CN_TOPIC_0000002511346397"></a>
 
 >[!NOTE] 
->Elastic Agent组件已经日落，相关资料将于2026年的8.3.0版本删除。
+>Elastic Agent组件已经日落，相关资料将于2026年12月30日的版本删除。
 
 Elastic Agent的安全加固请参见[TaskD安全加固](#taskd安全加固)章节。
 

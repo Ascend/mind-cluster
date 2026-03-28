@@ -108,7 +108,7 @@ metadata:
     ring-controller.atlas: ascend-910
 spec:
   replicas: 16                        # The value of replicas is 1 in a single-node scenario and N in an N-node scenario. The number of NPUs in the requests field is 8 in an N-node scenario.
-  podManagementPolicy: Parallel   # 支持OrderdReady和Parallel两种模式。“OrderdReady”仅支持节点内亲和调度并且huawei.com/schedule_minAvailable只能为1。“Parallel”支持节点内和节点间亲和调度
+  podManagementPolicy: Parallel   # 支持OrderedReady和Parallel两种模式。“OrderedReady”仅支持节点内亲和调度并且huawei.com/schedule_minAvailable只能为1。“Parallel”支持节点内和节点间亲和调度
   serviceName: service-headliness
   selector:
     matchLabels:
@@ -7006,7 +7006,7 @@ ascendjob.mindxdl.gitee.com "default-infer-test-pytorch-910b" deleted
 ### 使用前必读<a name="ZH-CN_TOPIC_0000002479227148"></a>
 
 >[!NOTE] 
->本章节描述的是基于Resilience Controller组件的弹性训练，该组件已经日落，相关资料将于2026年的8.2.RC1版本删除。最新的弹性训练能力请参见[弹性训练](./resumable_training.md#弹性训练)。
+>本章节描述的是基于Resilience Controller组件的弹性训练，该组件已经日落，相关资料将于2026年9月30日的版本删除。最新的弹性训练能力请参见[弹性训练](./resumable_training.md#弹性训练)。
 
 当出现硬件故障，且无备用设备时，集群调度组件将对故障节点进行隔离，并根据任务预设的规模和当前集群中可用的节点数，重新设置任务副本数，然后进行重调度和重训练（需进行脚本适配）。
 

@@ -438,7 +438,7 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
 **Elastic Agent环境变量说明<a name="section8853192413411"></a>**
 
 >[!NOTE] 
->Elastic Agent组件已经日落，相关资料将于2026年的8.3.0版本删除。
+>Elastic Agent组件已经日落，相关资料将于2026年12月30日的版本删除。
 
 使用Elastic Agent组件时可以配置的环境变量。如需了解其他来自源码的环境变量，请参见[PyTorch相关资料](https://pytorch.ac.cn/#google_vignette)。
 

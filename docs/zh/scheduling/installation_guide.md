@@ -5,7 +5,7 @@
 Elastic Agent和TaskD组件需部署在容器内，详细安装步骤请参见[制作镜像](./usage/resumable_training.md#制作镜像)。
 
 >[!NOTE] 
->Resilience Controller和Elastic Agent组件已经日落，Resilience Controller相关内容将于2026年的8.2.RC1版本删除；Elastic Agent相关内容将于2026年的8.3.0版本删除。
+>Resilience Controller和Elastic Agent组件已经日落，Resilience Controller相关内容将于2026年9月30日的版本删除；Elastic Agent相关内容将于2026年12月30日的版本删除。
 
 **使用约束<a name="section933252483715"></a>**
 
