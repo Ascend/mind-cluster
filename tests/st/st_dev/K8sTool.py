@@ -83,7 +83,7 @@ class K8sTool(object):
     def check_pod_deleted(case, job_name, timeout=30):
         cur_time = time.time()
         while time.time() - cur_time < timeout:
-            job_info = case.k8s_manager.exec_command("kubectl get pod -A| grep %s" % (job_name))
+            job_info = case.k8s_manager.exec_command("kubectl get pod -A| grep %s" % job_name)
             if job_name not in job_info:
                 return True
             else:
@@ -113,3 +113,11 @@ class K8sTool(object):
             return False
         else:
             return True
+
+    @staticmethod
+    def apply_yaml_by_file(case, yaml_path):
+        return case.k8s_manager.exec_command("kubectl apply -f %s" % yaml_path)
+
+    @staticmethod
+    def delete_yaml_by_file(case, yaml_path):
+        return case.k8s_manager.exec_command("kubectl delete -f %s" % yaml_path)

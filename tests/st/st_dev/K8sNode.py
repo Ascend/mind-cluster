@@ -27,8 +27,8 @@ class K8sNode(ClassCLI):
         err_str = "stderr"
         out_str = "stdout"
         ret = self.SSH_connect.execute_command(cmd, path=path, waitstr=waitstr, timeout=timeout, inputList=inputList)
-        if err_str in ret and ret[err_str] is not None:
-            self.logger.warning(ret[err_str])
+        if err_str in ret and ret['rc'] != 0:
+            self.logger.warning("command: %s => %s" % (cmd, ret[err_str]))
         return ret[out_str] if out_str in ret else None
 
     def execute_command(self, cmd, path="", waitstr=None, timeout=30, inputList=None):

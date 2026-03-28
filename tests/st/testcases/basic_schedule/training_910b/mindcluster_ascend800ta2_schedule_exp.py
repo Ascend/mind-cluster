@@ -8,8 +8,8 @@ from tests.st.st_dev.K8sTool import K8sTool
 
 
 class MindclusterAscend800ta2Schedule0001(unittest.TestCase):
-    base_dir = "/workspace/mind-cluster/tests/st/testcases/"
-    resource_dir = base_dir + "basic_schedule/resources_0001/"
+    base_dir = "/workspace/mind-cluster/tests/st/testcases/basic_schedule/training_910b/"
+    resource_dir = base_dir + "resources_0001/"
     job_yaml_path1 = resource_dir + "job_llama-1x8.yaml"
     job_yaml_path2 = resource_dir + "job_llama-2x8.yaml"
     model_yaml_path = resource_dir + "llama70b-pt.yaml"
@@ -26,7 +26,7 @@ class MindclusterAscend800ta2Schedule0001(unittest.TestCase):
         cls.k8s_manager.exec_command("kubectl delete -f %s" % cls.job_yaml_path1)
         cls.k8s_manager.exec_command("kubectl delete -f %s" % cls.job_yaml_path2)
 
-    def setUp(self, methodName='mindcluster_ascend800ta2_schedule_0001'):
+    def setUp(self):
         self.k8s_manager.exec_command("kubectl delete -f %s" % self.job_yaml_path1)
         self.k8s_manager.exec_command("kubectl delete -f %s" % self.job_yaml_path2)
 
@@ -38,6 +38,3 @@ class MindclusterAscend800ta2Schedule0001(unittest.TestCase):
     def test_valid_job_001(self):
         self.k8s_manager.exec_command("kubectl apply -f %s" % self.job_yaml_path1)
         assert K8sTool.check_pod_status(self, self.job_name1)
-
-if __name__ == '__main__':
-    unittest.main()
