@@ -25,18 +25,11 @@ const clusterdSvcName = "clusterd-grpc-svc.mindx-dl.svc.cluster.local:8899"
 
 // GrpcReporter report fault device info by grpc
 type GrpcReporter struct {
-	client *grpcclient.Client
 }
 
 // NewGrpcReporter create a grpc reporter
 func NewGrpcReporter() *GrpcReporter {
-	client, err := grpcclient.New(clusterdSvcName)
-	if err != nil {
-		return &GrpcReporter{}
-	}
-	return &GrpcReporter{
-		client: client,
-	}
+	return &GrpcReporter{}
 }
 
 // Report send fault device info by grpc
@@ -44,15 +37,13 @@ func (c *GrpcReporter) Report(fcInfo *common.FaultAndConfigInfo) {
 	if fcInfo == nil || fcInfo.PubFaultInfo == nil {
 		return
 	}
-	if c.client == nil {
-		client, err := grpcclient.New(clusterdSvcName)
-		if err != nil {
-			hwlog.RunLog.Errorf("connect to clusterd failed, err is %v", err)
-			return
-		}
-		c.client = client
+	client, err := grpcclient.New(clusterdSvcName)
+	if err != nil {
+		hwlog.RunLog.Errorf("connect to clusterd failed, err is %v", err)
+		return
 	}
-	_, err := c.client.SendToPubFaultCenter(fcInfo.PubFaultInfo)
+	defer client.SafeClose()
+	_, err = client.SendToPubFaultCenter(fcInfo.PubFaultInfo)
 	if err != nil {
 		hwlog.RunLog.Errorf("send to pub fault failed, err is %v", err)
 		return
