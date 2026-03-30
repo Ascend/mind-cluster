@@ -666,11 +666,11 @@ ascend-fd diag -i /ascend_cluster_log/job202405181309/faultdiag_work_tmp/parse_o
         </tr>
         <tr><td class="cellrowborder" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p>Bus日志</p>
         </td>
-        <td class="cellrowborder" valign="top" width="21.26%" headers="mcps1.2.5.1.2 "><p>*.log</p>
+        <td class="cellrowborder" valign="top" width="21.26%" headers="mcps1.2.5.1.2 "><p>log.log</p>
         </td>
         <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p>A5 LCNE组件日志</p>
         </td>
-        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>采集目录/lcne/*/*.log</p>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>采集目录/lcne/*/log.log</p>
         </td>
         </tr>
         </tbody>
@@ -738,7 +738,7 @@ ascend-fd diag -i /ascend_cluster_log/job202405181309/faultdiag_work_tmp/parse_o
     |-- ${--amct_log参数指定路径} 
            |-- amct_{framework}.log
     |-- ${--bus_log参数指定路径} 
-           |-- *.log</pre>
+           |-- log.log</pre>
 
     <a name="table192794861215"></a>
     <table><thead align="left"><tr id="row1527204819125"><th class="cellrowborder" valign="top" width="15.64%" id="mcps1.1.5.1.1"><p id="p1027134812121"><a name="p1027134812121"></a><a name="p1027134812121"></a>文件类型</p>
@@ -999,11 +999,11 @@ ascend-fd diag -i /ascend_cluster_log/job202405181309/faultdiag_work_tmp/parse_o
     </tr>
     <tr><td class="cellrowborder" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p>Bus日志</p>
     </td>
-    <td class="cellrowborder" valign="top" width="21.26%" headers="mcps1.2.5.1.2 "><p>*.log</p>
+    <td class="cellrowborder" valign="top" width="21.26%" headers="mcps1.2.5.1.2 "><p>log.log</p>
     </td>
     <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p>A5 LCNE组件日志</p>
     </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>${--bus_log}/lcne/*/*.log</p>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>${--bus_log}/lcne/*/log.log</p>
     </td>
     </tr>
     </tbody>
@@ -2920,7 +2920,7 @@ cp -r ~/ttp_log 采集目录/dl_log/ttp_log
 **文件说明**
 
 - 文件说明：A5 LCNE组件运行产生的日志。
-- 命名约束：*.log
+- 命名约束：log.log
 - 存放路径约束：存储到“采集目录/lcne/”下。
 
 **采集方式说明**
