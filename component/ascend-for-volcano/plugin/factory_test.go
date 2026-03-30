@@ -956,5 +956,106 @@ func TestObtainTaskRankId(t *testing.T) {
 			}
 		})
 	}
+}
 
+type resourceLevelsCase struct {
+	name       string
+	configs    map[string]string
+	wantErr    bool
+	wantLen    int
+	wantSubLen int
+}
+
+func buildResourceLevelsCases() []resourceLevelsCase {
+	validConfig := `{"tree1":{"level1":{"Label":"level1"}}}`
+	return []resourceLevelsCase{
+		{name: "01-no config", configs: map[string]string{}, wantErr: true},
+		{name: "02-invalid json", configs: map[string]string{configResourceLevelConfig: "invalid"}, wantErr: true},
+		{name: "03-empty config", configs: map[string]string{configResourceLevelConfig: "{}"}, wantErr: true},
+		{
+			name:       "04-valid config",
+			configs:    map[string]string{configResourceLevelConfig: validConfig},
+			wantErr:    false,
+			wantLen:    1,
+			wantSubLen: 3,
+		},
+	}
+}
+
+func TestInitResourceLevels(t *testing.T) {
+	for _, tt := range buildResourceLevelsCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			got := initResourceLevels(tt.configs)
+			if (len(got) == 0) != tt.wantErr {
+				t.Errorf("initResourceLevels() empty = %v, wantErr %v", len(got) == 0, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestGetConfigLevels(t *testing.T) {
+	for _, tt := range buildResourceLevelsCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getConfigLevels(tt.configs)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getConfigLevels() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && len(got) != tt.wantLen {
+				t.Errorf("getConfigLevels() len = %v, want %v", len(got), tt.wantLen)
+			}
+		})
+	}
+}
+
+type configLevelCase struct {
+	name        string
+	levelConfig map[string]util.ResourceTreeLevel
+	wantErr     bool
+	wantLen     int
+}
+
+func buildConfigLevelCases() []configLevelCase {
+	return []configLevelCase{
+		{name: "01-empty config", levelConfig: map[string]util.ResourceTreeLevel{}, wantErr: false, wantLen: 2},
+		{
+			name: "02-missing level1",
+			levelConfig: map[string]util.ResourceTreeLevel{
+				"level2": {Label: "level2"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "03-valid single level",
+			levelConfig: map[string]util.ResourceTreeLevel{
+				"level1": {Label: "level1", ReservedNode: 1},
+			},
+			wantErr: false,
+			wantLen: 3,
+		},
+		{
+			name: "04-valid multi level",
+			levelConfig: map[string]util.ResourceTreeLevel{
+				"level1": {Label: "level1", ReservedNode: 1},
+				"level2": {Label: "level2"},
+			},
+			wantErr: false,
+			wantLen: 4,
+		},
+	}
+}
+
+func TestGetConfigLevel(t *testing.T) {
+	for _, tt := range buildConfigLevelCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getConfigLevel(tt.levelConfig)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getConfigLevel() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && len(got) != tt.wantLen {
+				t.Errorf("getConfigLevel() len = %v, want %v", len(got), tt.wantLen)
+			}
+		})
+	}
 }
