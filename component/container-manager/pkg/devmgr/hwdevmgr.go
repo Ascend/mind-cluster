@@ -113,11 +113,7 @@ func (hdm *HwDevMgr) setRingInfo() error {
 // GetPhyIdOnRing get phy ids on ring
 func (hdm *HwDevMgr) GetPhyIdOnRing(phyId int32) ([]int32, error) {
 	// 300I Duo case need to handle separately
-	logicId, err := hdm.GetDmgr().GetLogicIDFromPhysicID(hdm.GetLogicIdByPhyId(phyId))
-	if err != nil {
-		hwlog.RunLog.Errorf("get brother card failed, logicId %v, err: %v", logicId, err)
-		return nil, err
-	}
+	logicId := hdm.GetLogicIdByPhyId(phyId)
 	if hdm.isAtlas300IDuo(logicId) {
 		hwlog.RunLog.Debugf("product type of physic ID [%v] is <%v>", phyId, common.ProductTypeAtlas300IDuo)
 		return hdm.getCoupledPhyIdsFrom310pDuo(phyId)
