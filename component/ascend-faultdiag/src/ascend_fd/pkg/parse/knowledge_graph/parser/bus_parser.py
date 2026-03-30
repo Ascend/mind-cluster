@@ -24,7 +24,7 @@ from typing import Optional, List
 from itertools import chain
 
 from ascend_fd.model.context import KGParseCtx
-from ascend_fd.utils.tool import MultiProcessJob, TimeBoundExtractor
+from ascend_fd.utils.tool import MultiProcessJob
 from ascend_fd.pkg.parse.knowledge_graph.parser.file_parser import FileParser, EventStorage
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
@@ -42,10 +42,6 @@ class BusParser(FileParser):
 
     def __init__(self, params):
         super().__init__(params)
-        self.time_extractor = TimeBoundExtractor(
-            line_time_parser=self._parse_log_time,
-            line_validator=self._is_valid_log_line
-        )
 
     @staticmethod
     def unzip_file(zip_path: str) -> Optional[str]:
@@ -65,13 +61,6 @@ class BusParser(FileParser):
         except Exception as e:
             kg_logger.error(f"unzip failed: {zip_path}, error: {str(e)}")
             return None
-
-    @staticmethod
-    def _is_valid_log_line(line: str) -> bool:
-        """
-        验证是否为有效日志行
-        """
-        return ' %%' in line
 
     def parse(self, parse_ctx: KGParseCtx, task_id: str):
         """
@@ -105,66 +94,52 @@ class BusParser(FileParser):
         过滤出与[start_time, end_time]有时间重叠的日志文件
         如果不存在训练时间窗口（self.start_time或self.end_time为None），直接返回所有解压后的 .log.zip 文件和非压缩文件
         """
-        filtered_files = []
-        has_valid_time_window = self.start_time and self.end_time
-
+        file_paths_set = set()
         for path in file_paths:
             # 处理 .log.zip 文件
-            if path.endswith('.log.zip'):
+            if path.endswith('log.zip'):
                 unzipped_path = self.unzip_file(path)
-                if not unzipped_path:
-                    continue
-                path = unzipped_path
+                if unzipped_path:
+                    file_paths_set.add(unzipped_path)
+            else:
+                file_paths_set.add(path)
 
-            if path.endswith('.log'):
-                # 匹配 _{time}.log 文件中的时间
-                log_match = self.LOG_PATTERN.search(path)
-                time_str = log_match.group(1) if log_match else None
-                if time_str:
-                    try:
-                        zip_time = datetime.strptime(time_str, "%Y%m%d%H%M%S")
-                        # 如果时间早于 start_time，直接跳过
-                        if has_valid_time_window and (zip_time < self.start_time or zip_time > self.end_time):
-                            continue
-                    except ValueError:
-                        kg_logger.warning(f"File timestamp parsing failed: {path}")
-
+        filtered_files = []
+        has_valid_time_window = self.start_time and self.end_time
+        for path in file_paths_set:
+            if not path.endswith('.log'):
+                continue
             if not has_valid_time_window:
                 filtered_files.append(path)
                 continue
-            try:
-                # 获取文件的最早和最晚时间
-                earliest = self._get_time_bound(path, mode="earliest")
-                latest = self._get_time_bound(path, mode="latest")
-            except Exception as e:
-                kg_logger.error(f"[Error] Exception occurred while processing {path}: {str(e)}")
-                continue
-            if not earliest or not latest:
-                continue
-            # 关键条件：检查两个区间是否重叠
-            if earliest <= self.end_time and latest >= self.start_time:
-                filtered_files.append(path)
+
+            # 匹配 _{time}.log 文件中的时间
+            log_match = self.LOG_PATTERN.search(path)
+            time_str = log_match.group(1) if log_match else None
+            if time_str:
+                try:
+                    time_obj = datetime.strptime(time_str, "%Y%m%d%H%M%S")
+                    zip_time = str(time_obj) + ".000000"
+                    # 如果文件名中时间（日志行最晚时间）早于 start_time，直接跳过
+                    if zip_time < self.start_time:
+                        continue
+                except ValueError:
+                    kg_logger.warning(f"File timestamp parsing failed: {path}")
+            filtered_files.append(path)
         return filtered_files
 
-    def _parse_log_time(self, line: str):
+    def _parse_log_time(self, line: str) -> str:
         """
         解析单行日志时间戳
         """
         match = self.TIME_PATTERN.match(line.strip())
         if not match:
-            return None
-
+            return ""
         try:
-            return datetime.strptime(match.group(1), "%b %d %Y %H:%M:%S")
+            time_obj = datetime.strptime(match.group(1), "%b %d %Y %H:%M:%S")
+            return str(time_obj) + ".000000"
         except ValueError:
-            return None
-
-    def _get_time_bound(self, file_path: str, mode: str = "latest") -> Optional[datetime]:
-        """
-        获取日志时间边界（支持正向/逆向搜索）
-        :param mode: 'earliest' 从文件开头搜索最早时间 / 'latest' 从文件末尾搜索最新时间
-        """
-        return self.time_extractor.get_time_bound(file_path, mode)
+            return ""
 
     def _parse_file(self, file_path):
         """
@@ -174,17 +149,22 @@ class BusParser(FileParser):
         """
         event_storage = EventStorage()
         for log_line in self._yield_log(file_path):
+            if ' %%' not in log_line:
+                continue
+            occur_time = self._parse_log_time(log_line)
+            if not occur_time:
+                continue
+            if self.start_time and occur_time < self.start_time:
+                continue
+            if self.end_time and occur_time > self.end_time:
+                continue
             event_dict = self.parse_single_line(log_line)
             if not event_dict:
                 continue
-            # 检查事件发生时间是否处于start_time和end_time之间
-            occur_time = self._parse_log_time(log_line)
-            if occur_time:
-                if (self.start_time and self.end_time and
-                        not (self.start_time <= occur_time <= self.end_time)):
-                    continue
-                event_dict["occur_time"] = occur_time.strftime("%Y-%m-%d %H:%M:%S")
-            event_dict.update({"source_file": os.path.basename(file_path)})
+            event_dict.update({
+                "source_file": os.path.basename(file_path),
+                "occur_time": occur_time,
+            })
             if "source_device" not in event_dict:
                 event_dict.update({"source_device": "Unknown"})
             event_storage.record_event(event_dict)

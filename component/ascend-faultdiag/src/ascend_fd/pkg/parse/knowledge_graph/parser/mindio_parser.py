@@ -32,7 +32,7 @@ kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
 class MindIOLogParser(FileParser):
     SOURCE_FILE = MINDIO_SOURCE
     TARGET_FILE_PATTERNS = "mindio_log_path"
-    LOG_TIME_REGEX = re.compile(r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})")
+    LOG_TIME_REGEX = re.compile(r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[.,]\d{3,6})")
 
     def __init__(self, params):
         super().__init__(params)
@@ -77,9 +77,6 @@ class MindIOLogParser(FileParser):
         event_storage = EventStorage()
         file_path = self._get_source_file(file_source)
         for log_line in self._yield_log(file_source):
-            event_dict = self.parse_single_line(log_line)
-            if not event_dict:
-                continue
             occur_time = self._get_occur_time(log_line)
             if not occur_time:
                 continue
@@ -89,10 +86,15 @@ class MindIOLogParser(FileParser):
                 continue
             if occur_time < self.resuming_training_time:
                 continue
-            event_dict.update({"source_file": os.path.basename(file_path)})
+            event_dict = self.parse_single_line(log_line)
+            if not event_dict:
+                continue
+            event_dict.update({
+                "source_file": os.path.basename(file_path),
+                "occur_time": occur_time
+            })
             if "source_device" not in event_dict:
                 event_dict.update({"source_device": "Unknown"})
-            event_dict.update({"occur_time": occur_time})
             event_storage.record_event(event_dict)
         return event_storage.generate_event_list()
 

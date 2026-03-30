@@ -715,16 +715,6 @@ class BMCLogSaver(BaseLogSaver):
 
 
 class LCNELogSaver(BaseLogSaver):
-    """
-        采集目录
-           |-- lcne_log
-                  |-- logfile   # CPU/NPU多个LCNE日志目录名称设置为不同名称
-                         |-- log.log
-                         |-- log_xxx.log.zip
-                  |-- logfile1
-                         |-- log.log
-                         |-- log_xxx.log.zip
-    """
     LOG_TYPE = "lcne log"
     CENTRALIZED_STORAGE_DIRECTORY = "lcne_log"
     CMD_ARG_KEYS = ["lcne_log", "bus_log"]
@@ -733,10 +723,8 @@ class LCNELogSaver(BaseLogSaver):
     DEVM_BDDRVADP_DIR = "slot_1/tempdir"
     DIAG_DISPLAY_INFO_KEY = "diag_display_info.txt"
     LOG_PATTERN = r'log_1_\d{13,15}\.log$'
-
-    BUS_KEY = "log"
-    LOG_SUFFIX = ".log"
-    ZIP_SUFFIX = ".log.zip"
+    BUS_DUMP_LOG_PATTERN = re.compile(r"^log_\d{1,3}_\d{14}.log(.zip)?")
+    LOG_LOG = "log.log"
 
     def __init__(self):
         """
@@ -765,17 +753,11 @@ class LCNELogSaver(BaseLogSaver):
                 if file_name == self.DIAG_DISPLAY_INFO_KEY:
                     self.diag_display_info_files.append(file_path)
                     continue
-                if file_name.endswith("log.log") or re.fullmatch(self.LOG_PATTERN, file_name):
+                if file_name.endswith(self.LOG_LOG) or re.fullmatch(self.LOG_PATTERN, file_name):
                     self.lcne_log_list.append(file_path)
-                    continue
-                if file_name.startswith(self.BUS_KEY) and (
-                        file_name.endswith(self.LOG_SUFFIX) or
-                        file_name.endswith(self.ZIP_SUFFIX)
-                ):
+                if file_name == self.LOG_LOG or self.BUS_DUMP_LOG_PATTERN.search(file_name):
                     # 拼接完整路径并添加到当前目录列表
-                    dir_files.append(os.path.join(root, file_name))
-                if dir_files:
-                    self.bus_log_dict[root] = dir_files
+                    self.bus_log_dict.setdefault(root, []).append(os.path.join(root, file_name))
 
     def get_devm_bddvadp_log(self) -> list:
         return self.devm_bddvadp_files
