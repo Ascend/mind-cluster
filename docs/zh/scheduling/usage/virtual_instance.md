@@ -761,7 +761,7 @@
 1. 需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run”，安装容器引擎插件。
 2. 参见[安装部署](../installation_guide.md#安装部署)章节，完成各组件的安装。
 
-    虚拟化实例涉及到需要修改相关参数的集群调度组件为Volcano和Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署。
+    虚拟化实例涉及到需要修改相关参数的集群调度组件为Volcano和Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
 
     - 亲和性场景：需要安装Volcano。
     - 非亲和性场景：不需要安装Volcano，只会上报设备数量给节点的K8s。
@@ -1010,7 +1010,7 @@
 1. 需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run”，安装容器引擎插件。
 2. 参见[安装部署](../installation_guide.md#安装部署)章节，完成各组件的安装。
 
-    虚拟化实例涉及到需要修改相关参数的集群调度组件为Volcano和Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署。
+    虚拟化实例涉及到需要修改相关参数的集群调度组件为Volcano和Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
 
     1. Ascend Device Plugin参数修改及启动说明。
 
@@ -1430,7 +1430,7 @@ spec:
 2. 需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run”，安装容器引擎插件。
 3. 参见[安装部署](../installation_guide.md#安装部署)章节，完成各组件的安装。
 
-    虚拟化实例涉及修改相关参数的集群调度组件为Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署。
+    虚拟化实例涉及修改相关参数的集群调度组件为Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
 
     1. 在device-plugin-volcano-v\{version\}.yaml中添加-shareDevCount=100 -softShareDevConfigDir=/share_device/，其中/share_device/由用户手动创建。当Atlas A3 推理系列产品使用软切分虚拟化功能时，需额外增加启动参数-useSingleDieMode=true。
 
