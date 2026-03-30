@@ -756,7 +756,8 @@ metadata:
     framework: pytorch        
     app: mindie-ms-server        # 表示MindIE Motor在Ascend Job任务中的角色,不可修改
     jobID: mindie-ms-test        # 当前MindIE Motor推理任务在集群中的唯一识别ID，用户可根据实际情况进行配置
-    fault-scheduling: force    # 开启重调度功能
+    fault-scheduling: force      # 开启重调度功能
+    fault-retry-times: "10000"     # 开启业务面故障重调度，值为业务面故障时的重调度次数
     ring-controller.atlas: ascend-910b
 spec:
   schedulerName: volcano   # Ascend Operator启用“gang”调度时所选择的调度器
