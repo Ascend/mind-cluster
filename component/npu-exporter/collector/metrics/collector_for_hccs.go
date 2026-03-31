@@ -96,7 +96,7 @@ type HccsCollector struct {
 // IsSupported judge whether the collector is supported
 func (c *HccsCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	isSupport := supportedHccsDevices[n.Dmgr.GetDevType()]
-	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c), "")
+	logForUnSupportDevice(isSupport, devTypeMap[n.Dmgr.GetDevType()], colcommon.GetCacheKey(c), "")
 	return isSupport
 }
 

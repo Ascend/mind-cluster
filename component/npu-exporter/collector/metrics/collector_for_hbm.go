@@ -77,7 +77,7 @@ type HbmCollector struct {
 // IsSupported check whether the collector is supported
 func (c *HbmCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	isSupport := supportedHbmDevices[n.Dmgr.GetDevType()]
-	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c), "")
+	logForUnSupportDevice(isSupport, devTypeMap[n.Dmgr.GetDevType()], colcommon.GetCacheKey(c), "")
 	return isSupport
 }
 

@@ -63,6 +63,12 @@ var fetchPcieOptions = logger.LogOptions{
 	ID:     fetchTimeout,
 }
 
+var devTypeMap = map[string]string{
+	api.Ascend910B:  api.Ascend910B,
+	api.Ascend910A3: api.Ascend910A3,
+	api.Ascend910A5: api.VersionNPU,
+}
+
 // NpuCollector for collect metrics
 type NpuCollector struct {
 	cache         *cache.ConcurrencyLRUCache
@@ -402,7 +408,7 @@ func setProductType(chip *HuaWeiAIChip, dmgr devmanager.DeviceInterface) {
 			ID:        dmgr.GetDevType(),
 			MaxCounts: 1,
 		},
-			"%v does not support product type info", dmgr.GetDevType())
+			"%v does not support product type info", devTypeMap[dmgr.GetDevType()])
 		return
 	}
 

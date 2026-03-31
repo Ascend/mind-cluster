@@ -54,7 +54,7 @@ type DdrCollector struct {
 // IsSupported check whether the metric is supported
 func (c *DdrCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	isSupport := !notSupportedDdrDevices[n.Dmgr.GetDevType()]
-	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c),
+	logForUnSupportDevice(isSupport, devTypeMap[n.Dmgr.GetDevType()], colcommon.GetCacheKey(c),
 		"there is no DDR module. DDR information cannot be queried.")
 	return isSupport
 }
