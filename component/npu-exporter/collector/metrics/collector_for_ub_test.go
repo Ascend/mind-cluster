@@ -199,7 +199,7 @@ func testGetUBStatCase2(t *testing.T) {
 		// Verify the result is not nil and has the correct structure
 		convey.So(result, convey.ShouldNotBeNil)
 		convey.So(result.UBCommonStats, convey.ShouldNotBeNil)
-		convey.So(result.UboeExtensions, convey.ShouldNotBeNil)
+		convey.So(result.UboeExtensions, convey.ShouldBeNil)
 	})
 }
 

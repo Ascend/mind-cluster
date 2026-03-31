@@ -531,6 +531,8 @@ func getUBStatInfo(logicID int32, dieID, portID int) *common.UBInfo {
 		if result, err := strconv.Atoi(ubInfo[isUboePort]); err == nil && result == isUboe {
 			hwlog.RunLog.Debug("is uboe port")
 			convertUboeExtensions(&ubInfos, ubInfo)
+		} else {
+			ubInfos.UboeExtensions = nil
 		}
 		convertUBCommonStats(&ubInfos, ubInfo)
 		hwlog.ResetErrCnt(fmt.Sprint(colcommon.DomainForUb, dieID, portID), logicID)
