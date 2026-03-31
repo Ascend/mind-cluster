@@ -943,15 +943,15 @@ Events:  <none>
 
 |软件包|说明|获取方法|
 |--|--|--|
-|Ascend-cann-toolkit_*{version}*_linux-*{arch}*.run|CANN Toolkit开发套件包。|<p><a href="https://www.hiascend.com/developer/download/community/result?module=cann">获取链接</a></p><p>需使用CANN 8.5.0之前版本。</p>|
-|TF Adapter|框架插件包。|<a href="https://gitee.com/ascend/tensorflow/tags">获取链接</a>|
-|<ul><li>ARM：tensorflow-*{version}*-cp3x-cp3xm-linux_aarch64.whl</li><li>x86_64：tensorflow_cpu-*{version}*-cp3x-cp3xm-manylinux2010_x86_64.whl</li></ul>|TensorFlow框架whl包。|<a href="https://ascend-repo.obs.cn-east-2.myhuaweicloud.com/MindX/OpenSource/python/index.html">获取链接</a><ul><li>了解TensorFlow支持的Python版本请查询<a href="https://www.tensorflow.org/install?hl=zh-cn">TensorFlow官网</a>。</li><li>若用户想使用源码编译方式安装TensorFlow，编译步骤请参考<a href="https://www.tensorflow.org/install/source">TensorFlow官网</a>。</li><li>TensorFlow2.6.5存在漏洞，请参考相关漏洞及其修复方案处理。</li></ul>|
-|Dockerfile|制作镜像需要。|参考<a href="#zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_li104026527188">4.Dockerfile编写示例</a>。|
+|Ascend-cann-toolkit_*{version}*_linux-*{arch}*.run|CANN Toolkit开发套件包。|<p>[获取链接](https://www.hiascend.com/developer/download/community/result?module=cann)</p><p>需使用CANN 8.5.0之前版本。</p>|
+|TF Adapter|框架插件包。|[获取链接](https://gitee.com/ascend/tensorflow/tags)|
+|<ul><li>ARM：tensorflow-*{version}*-cp3x-cp3xm-linux_aarch64.whl</li><li>x86_64：tensorflow_cpu-*{version}*-cp3x-cp3xm-manylinux2010_x86_64.whl</li></ul>|TensorFlow框架whl包。|[获取链接](https://ascend-repo.obs.cn-east-2.myhuaweicloud.com/MindX/OpenSource/python/index.html)<ul><li>了解TensorFlow支持的Python版本请查询[TensorFlow官网](https://www.tensorflow.org/install?hl=zh-cn)。</li><li>若用户想使用源码编译方式安装TensorFlow，编译步骤请参考[TensorFlow官网](https://www.tensorflow.org/install/source)。</li><li>TensorFlow2.6.5存在漏洞，请参考相关漏洞及其修复方案处理。</li></ul>|
+|Dockerfile|制作镜像需要。|参考[Dockerfile编写示例](#zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_li104026527188)。|
 |ascend_install.info|驱动安装信息文件。|从host拷贝/etc/ascend_install.info文件。|
 |version.info|驱动版本信息文件。|从host拷贝/usr/local/Ascend/driver/version.info文件。|
-|prebuild.sh|执行训练运行环境安装准备工作，例如配置代理等。|参考<a href="#zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li206652021677">步骤3</a>。|
-|install_ascend_pkgs.sh|昇腾软件包安装脚本。|参考<a href="#zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li538351517716">步骤4</a>。|
-|postbuild.sh|清除不需要保留在容器中的安装包、脚本、代理配置等。|参考<a href="#zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li154641047879">步骤5</a>。|
+|prebuild.sh|执行训练运行环境安装准备工作，例如配置代理等。|参考[步骤3](#zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li206652021677)。|
+|install_ascend_pkgs.sh|昇腾软件包安装脚本。|参考[步骤4](#zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li538351517716)。|
+|postbuild.sh|清除不需要保留在容器中的安装包、脚本、代理配置等。|参考[步骤5](#zh-cn_topic_0000001497205425_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li154641047879)。|
 
 为了防止软件包在传递过程或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
 
@@ -1463,18 +1463,18 @@ Events:  <none>
 
 |软件包|说明|获取方法|
 |--|--|--|
-|Ascend-cann-toolkit_*{version}*_linux-*{arch}*.run|CANN Toolkit开发套件包。|<p><a href="https://www.hiascend.com/developer/download/community/result?module=cann">获取链接</a></p>|
-|<p>Ascend-cann-<em>{chip_type}</em>-ops_<em>{version}</em>_linux-<em>{arch}</em>.run</p>|<p>CANN算子包。</p><p>CANN 8.5.0之前版本该包名为Ascend-cann-kernels-<em>{chip_type}</em>_<em>{version}</em>_linux-<em>{arch}</em>.run</p>|<a href="https://www.hiascend.com/developer/download/community/result?module=cann">获取链接</a>|
-|apex-0.1+ascend-cp3x-cp3x-linux_<em>{arch}</em>.whl|<p>混合精度模块。</p><p>软件包中的cp3x表示Python版本号，例如x为10表示Python 3.10。</p>|请参见<span>《Ascend Extension for PyTorch 软件安装指南》中的“<a href="https://www.hiascend.com/document/detail/zh/Pytorch/730/configandinstg/instg/docs/installing_apex.md">安装APEX模块</a>”章节</span>，根据实际情况编译APEX软件包。|
-|<ul><li><span>x86_64</span>：torch-<em>v{version}</em>+cpu-cp3x-cp3x-linux_x86_64.whl</li><li><span>ARM</span>：torch-<em>v{version}</em>-cp3x-cp3x-manylinux_2_17_aarch64.manylinux2014_aarch64.whl</li></ul>|<p>官方<span>PyTorch</span>包。</p><p>软件包中的cp3x表示Python版本号，例如x为10表示Python 3.10。</p><p><em>{version}</em>表示<span>PyTorch</span>版本号，当前可支持<span>PyTorch</span> 2.1.0~2.7.1。</p>|<p><a href="https://download.pytorch.org/whl/torch/">获取链接</a></p><p>请根据实际情况选择要安装的<span>PyTorch</span>版本。如使用进程级别重调度、进程级在线恢复、进程级原地恢复功能，请安装2.1.0版本的<span>PyTorch</span>。</p>|
-|<p>torch_npu-<em>v{version}</em><em>.</em>post<em>{version}</em>-cp3x-cp3x-manylinux_2_17_<em>{arch}</em>.manylinux2014_<em>{arch}</em>.whl</p>|<p><span>Ascend Extension for PyTorch</span>插件。</p><p>软件包中的cp3x表示Python版本号，例如x为10表示Python 3.10。</p>|<p><a href="https://www.hiascend.com/document/detail/zh/Pytorch/600/configandinstg/instg/insg_0001.html">获取链接</a></p><ul><li>请选择与<span>PyTorch</span>配套的torch_npu版本。</li><li>如果使用MindSpeed-LLM代码仓上的<span>PyTorch</span>模型，需要使用<span>Ascend Extension for PyTorch</span> 2.1.0及以上版本。</li></ul>|
-|Dockerfile|制作镜像需要。|参考<a href="#zh-cn_topic_0000001497364957_li104026527188">Dockerfile编写示例</a>|
-|dllogger-master|PyTorch日志工具。|<a href="https://github.com/NVIDIA/dllogger">获取链接</a>|
+|Ascend-cann-toolkit_*{version}*_linux-*{arch}*.run|CANN Toolkit开发套件包。|<p>[获取链接](https://www.hiascend.com/developer/download/community/result?module=cann)</p>|
+|<p>Ascend-cann-<em>{chip_type}</em>-ops_<em>{version}</em>_linux-<em>{arch}</em>.run</p>|<p>CANN算子包。</p><p>CANN 8.5.0之前版本该包名为Ascend-cann-kernels-<em>{chip_type}</em>_<em>{version}</em>_linux-<em>{arch}</em>.run</p>|[获取链接](https://www.hiascend.com/developer/download/community/result?module=cann)|
+|apex-0.1+ascend-cp3x-cp3x-linux_<em>{arch}</em>.whl|<p>混合精度模块。</p><p>软件包中的cp3x表示Python版本号，例如x为10表示Python 3.10。</p>|请参见<span>《Ascend Extension for PyTorch 软件安装指南》中的“[安装APEX模块](https://www.hiascend.com/document/detail/zh/Pytorch/730/configandinstg/instg/docs/installing_apex.md)”章节</span>，根据实际情况编译APEX软件包。|
+|<ul><li><span>x86_64</span>：torch-<em>v{version}</em>+cpu-cp3x-cp3x-linux_x86_64.whl</li><li><span>ARM</span>：torch-<em>v{version}</em>-cp3x-cp3x-manylinux_2_17_aarch64.manylinux2014_aarch64.whl</li></ul>|<p>官方<span>PyTorch</span>包。</p><p>软件包中的cp3x表示Python版本号，例如x为10表示Python 3.10。</p><p><em>{version}</em>表示<span>PyTorch</span>版本号，当前可支持<span>PyTorch</span> 2.1.0~2.7.1。</p>|<p>[获取链接](https://download.pytorch.org/whl/torch/)</p><p>请根据实际情况选择要安装的<span>PyTorch</span>版本。如使用进程级别重调度、进程级在线恢复、进程级原地恢复功能，请安装2.1.0版本的<span>PyTorch</span>。</p>|
+|<p>torch_npu-<em>v{version}</em><em>.</em>post<em>{version}</em>-cp3x-cp3x-manylinux_2_17_<em>{arch}</em>.manylinux2014_<em>{arch}</em>.whl</p>|<p><span>Ascend Extension for PyTorch</span>插件。</p><p>软件包中的cp3x表示Python版本号，例如x为10表示Python 3.10。</p>|<p>[获取链接](https://www.hiascend.com/document/detail/zh/Pytorch/600/configandinstg/instg/insg_0001.html)</p><ul><li>请选择与<span>PyTorch</span>配套的torch_npu版本。</li><li>如果使用MindSpeed-LLM代码仓上的<span>PyTorch</span>模型，需要使用<span>Ascend Extension for PyTorch</span> 2.1.0及以上版本。</li></ul>|
+|Dockerfile|制作镜像需要。|参考[Dockerfile编写示例](#zh-cn_topic_0000001497364957_li104026527188)|
+|dllogger-master|PyTorch日志工具。|[获取链接](https://github.com/NVIDIA/dllogger)|
 |ascend_install.info|驱动安装信息文件。|从host拷贝“/etc/ascend_install.info”文件。|
 |version.info|驱动版本信息文件。|从host拷贝“/usr/local/Ascend/driver/version.info”文件。|
-|prebuild.sh|执行训练运行环境安装准备工作，例如配置代理等。|参考<a href="#zh-cn_topic_0000001497364957_zh-cn_topic_0256378845_li206652021677">步骤3</a>|
-|install_ascend_pkgs.sh|昇腾软件包安装脚本。|参考<a href="#zh-cn_topic_0000001497364957_zh-cn_topic_0256378845_li538351517716">步骤4</a>|
-|postbuild.sh|清除不需要保留在容器中的安装包、脚本、代理配置等。|参考<a href="#zh-cn_topic_0000001497364957_zh-cn_topic_0256378845_li154641047879">步骤5</a>|
+|prebuild.sh|执行训练运行环境安装准备工作，例如配置代理等。|参考[步骤3](#zh-cn_topic_0000001497364957_zh-cn_topic_0256378845_li206652021677)|
+|install_ascend_pkgs.sh|昇腾软件包安装脚本。|参考[步骤4](#zh-cn_topic_0000001497364957_zh-cn_topic_0256378845_li538351517716)|
+|postbuild.sh|清除不需要保留在容器中的安装包、脚本、代理配置等。|参考[步骤5](#zh-cn_topic_0000001497364957_zh-cn_topic_0256378845_li154641047879)|
 
 为了防止软件包在传递过程或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
 
@@ -1867,15 +1867,15 @@ Events:  <none>
 
 |软件包|说明|获取方法|
 |--|--|--|
-|Ascend-cann-toolkit_*{version}*_linux-*{arch}*.run|CANN Toolkit开发套件包。|<p><a href="https://www.hiascend.com/developer/download/community/result?module=cann">获取链接</a></p><p>需使用CANN 8.5.0之前版本。</p>|
-|Ascend-cann-kernels<em>-{chip_type}</em>_<em>{version}</em>_linux-<em>{arch}</em>.run|CANN算子包。|<p><a href="https://www.hiascend.com/developer/download/community/result?module=cann">获取链接</a></p><p>需使用CANN 8.5.0之前版本。</p>|
-|mindspore-<em>{version}</em>-cp3<em>x</em>-cp3<em>x</em>-linux_<em>{arch}</em>.whl|<p>MindSpore框架whl包。</p><p>当前可支持Python 3.9~3.11，软件包名中x表示9、10或11，请根据实际情况选择对应软件包。</p><p>MindSpore 2.0.0版本前的软件包名由mindspore修改为mindspore-ascend。</p>|<a href="https://www.mindspore.cn/install">获取链接</a>|
-|Dockerfile|制作镜像需要。|参考<a href="#zh-cn_topic_0000001497124729_zh-cn_topic_0272789326_li104026527188">4</a>。|
+|Ascend-cann-toolkit_*{version}*_linux-*{arch}*.run|CANN Toolkit开发套件包。|<p>[获取链接](https://www.hiascend.com/developer/download/community/result?module=cann)</p><p>需使用CANN 8.5.0之前版本。</p>|
+|Ascend-cann-kernels<em>-{chip_type}</em>_<em>{version}</em>_linux-<em>{arch}</em>.run|CANN算子包。|<p>[获取链接](https://www.hiascend.com/developer/download/community/result?module=cann)</p><p>需使用CANN 8.5.0之前版本。</p>|
+|mindspore-<em>{version}</em>-cp3<em>x</em>-cp3<em>x</em>-linux_<em>{arch}</em>.whl|<p>MindSpore框架whl包。</p><p>当前可支持Python 3.9~3.11，软件包名中x表示9、10或11，请根据实际情况选择对应软件包。</p><p>MindSpore 2.0.0版本前的软件包名由mindspore修改为mindspore-ascend。</p>|[获取链接](https://www.mindspore.cn/install)|
+|Dockerfile|制作镜像需要。|参考[Dockerfile编写示例](#zh-cn_topic_0000001497124729_zh-cn_topic_0272789326_li104026527188)。|
 |ascend_install.info|驱动安装信息文件。|从host拷贝/etc/ascend_install.info文件。|
 |version.info|驱动版本信息文件。|从host拷贝/usr/local/Ascend/driver/version.info文件。|
-|prebuild.sh|执行训练运行环境安装准备工作，例如配置代理等。|参考<a href="#zh-cn_topic_0000001497124729_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li206652021677">步骤3</a>。|
-|install_ascend_pkgs.sh|昇腾软件包安装脚本。|参考<a href="#zh-cn_topic_0000001497124729_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li538351517716">步骤4</a>。|
-|postbuild.sh|清除不需要保留在容器中的安装包、脚本、代理配置等。|参考<a href="#zh-cn_topic_0000001497124729_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li154641047879">步骤5</a>。|
+|prebuild.sh|执行训练运行环境安装准备工作，例如配置代理等。|参考[步骤3](#zh-cn_topic_0000001497124729_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li206652021677)。|
+|install_ascend_pkgs.sh|昇腾软件包安装脚本。|参考[步骤4](#zh-cn_topic_0000001497124729_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li538351517716)。|
+|postbuild.sh|清除不需要保留在容器中的安装包、脚本、代理配置等。|参考[步骤5](#zh-cn_topic_0000001497124729_zh-cn_topic_0272789326_zh-cn_topic_0256378845_li154641047879)。|
 
 为了防止软件包在传递过程或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
 
@@ -2307,12 +2307,12 @@ Events:  <none>
 
 |软件包|说明|获取方法|
 |--|--|--|
-|Ascend-cann-toolkit_*{version}*_linux-*{arch}*.run|CANN Toolkit开发套件包。|<a href="https://www.hiascend.com/developer/download/community/result?module=cann">获取链接</a>|
-|Ascend-cann-<em>{chip_type}</em>-ops_<em>{version}</em>_linux-<em>{arch}</em>.run|<p>CANN算子包。</p><p>CANN 8.5.0之前版本该包名为Ascend-cann-kernels-<em>{chip_type}</em>_<em>{version}</em>_linux-<em>{arch}</em>.run</p>|<a href="https://www.hiascend.com/developer/download/community/result?module=cann">获取链接</a>|
-|Dockerfile|制作镜像需要。|参考<a href="#zh-cn_topic_0000001497364777_li166241028113511">3.Dockerfile编写示例</a>。|
-|install.sh|安装推理业务的脚本。|推理模型的制作可以参考<a href="https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Resnet50_Pytorch_Infer">ResNet50推理指导</a>。|
-|<em>XXX</em>.tar|推理业务代码包名称，用户根据推理业务准备。本章以dvpp_resnet.tar为例说明。|推理模型的制作可以参考<a href="https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Resnet50_Pytorch_Infer">ResNet50推理指导</a>。|
-|run.sh|启动推理服务的脚本。|推理模型的制作可以参考<a href="https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Resnet50_Pytorch_Infer">ResNet50推理指导</a>。|
+|Ascend-cann-toolkit_*{version}*_linux-*{arch}*.run|CANN Toolkit开发套件包。|[获取链接](https://www.hiascend.com/developer/download/community/result?module=cann)|
+|Ascend-cann-<em>{chip_type}</em>-ops_<em>{version}</em>_linux-<em>{arch}</em>.run|<p>CANN算子包。</p><p>CANN 8.5.0之前版本该包名为Ascend-cann-kernels-<em>{chip_type}</em>_<em>{version}</em>_linux-<em>{arch}</em>.run</p>|[获取链接](https://www.hiascend.com/developer/download/community/result?module=cann)|
+|Dockerfile|制作镜像需要。|参考[Dockerfile编写示例](#zh-cn_topic_0000001497364777_li166241028113511)。|
+|install.sh|安装推理业务的脚本。|推理模型的制作可以参考[ResNet50推理指导](https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Resnet50_Pytorch_Infer)。|
+|<em>XXX</em>.tar|推理业务代码包名称，用户根据推理业务准备。本章以dvpp_resnet.tar为例说明。|推理模型的制作可以参考[ResNet50推理指导](https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Resnet50_Pytorch_Infer)。|
+|run.sh|启动推理服务的脚本。|推理模型的制作可以参考[ResNet50推理指导](https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Resnet50_Pytorch_Infer)。|
 |注：推理需要的其他软件包和代码请用户自行准备。|
 
 为了防止软件包在传递过程或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。

@@ -17,6 +17,7 @@
 |- FaultCode|故障码，由英文和数组拼接而成的字符串，字符串表示故障码的十六进制。|
 |- FaultLevel|故障处理等级。<li>NotHandleFault：无需处理。</li><li>PreSeparateFault：该节点上有任务则不处理，后续调度时不调度任务到该节点。</li><li>SeparateFault：任务重调度。</li>|
 |NodeStatus|节点健康状态，由本节点故障处理等级最严重的设备决定。<li>Healthy：该节点故障处理等级存在且不超过NotHandleFault，该节点为健康节点，可以正常训练。</li><li>PreSeparate：该节点故障处理等级存在且不超过PreSeparateFault，该节点为预隔离节点，暂时可能对任务无影响，待任务受到影响退出后，后续不会再调度任务到该节点。</li><li>UnHealthy：该节点故障处理等级存在SeparateFault，该节点为故障节点，将影响训练任务，立即将任务调离该节点。</li>|
+|CheckCode|校验码。|
 
 ## 自定义节点故障<a name="ZH-CN_TOPIC_0000002479386802"></a>
 

@@ -74,7 +74,7 @@
     <ul id="ul16230203215710">
         <li><span id="ph20976435102713"><a name="ph20976435102713"></a><a name="ph20976435102713"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 训练系列产品</term></span>、<span id="ph163483412215"><a name="ph163483412215"></a><a name="ph163483412215"></a>A200T A3 Box8 超节点服务器</span>、<span id="ph136651315478"><a name="ph136651315478"></a><a name="ph136651315478"></a>Atlas 900 A3 SuperPoD 超节点</span>、<span id="ph10355115144111"><a name="ph10355115144111"></a><a name="ph10355115144111"></a>Atlas 800T A3 超节点服务器</span>、<span id="ph12174764117"><a name="ph12174764117"></a><a name="ph12174764117"></a>Atlas 800I A3 超节点服务器</span>取值为：ascend-<span id="ph11976935122715"><a name="ph11976935122715"></a><a name="ph11976935122715"></a><em id="zh-cn_topic_0000001519959665_i1489729141619"><a name="zh-cn_topic_0000001519959665_i1489729141619"></a><a name="zh-cn_topic_0000001519959665_i1489729141619"></a>{xxx}</em></span>b</li>
         <li>Atlas 800 训练服务器，服务器（插<span id="ph2099203201811"><a name="ph2099203201811"></a><a name="ph2099203201811"></a>Atlas 300T 训练卡</span>）取值为：ascend-910</li>
-        <li>（可选）Atlas 350 标卡、Atlas 850 服务器、Atlas 950 SuperPoD 超节点取值为：ascend-npu</li>
+        <li>（可选）Atlas 350 标卡、Atlas 850 Server、Atlas 950 SuperPoD 超节点取值为：ascend-npu</li>
     </ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001951418201_p43811639112614"><a name="zh-cn_topic_0000001951418201_p43811639112614"></a><a name="zh-cn_topic_0000001951418201_p43811639112614"></a>标识任务使用的芯片的产品类型。</p>

@@ -814,7 +814,7 @@ Container Manager
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p159463383518"><a name="p159463383518"></a><a name="p159463383518"></a><span id="ph16179151202"><a name="ph16179151202"></a><a name="ph16179151202"></a>Atlas 800I A2 推理服务器</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul1491814439342"></a><a name="ul1491814439342"></a><ul id="ul1491814439342"><li>BC-Linux-for-Euler-21.10 for ARM</li><li>BC-Linux_21.10 U4  for ARM</li><li>Euler 2.12 for ARM</li><li>Euler 2.13 for ARM</li><li>Euler 2.15 for ARM</li><li>CentOS 7.6 for ARM</li><li>CTYunOS 22.06 for ARM</li><li>CTYunOS 23.01 for ARM</li><li>Kylin V10 SP2 for ARM</li><li>Kylin V10 SP3 for ARM</li><li>Kylin V11 for ARM</li><li>openEuler 22.03 LTS for ARM</li><li>openEuler 22.03 LTS SP4 for ARM</li><li>openEuler 24.03 LTS SP1 for ARM</li><li>UOS V20 1050u2e for ARM</li><li>UOS V25 for ARM (6.6内核)</li><li>Ubuntu 22.04 for ARM</li><li>Ubuntu 24.04 LTS for ARM</li></ul>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul1491814439342"></a><a name="ul1491814439342"></a><ul id="ul1491814439342"><li>AntOS 6.6 for ARM</li><li>BC-Linux-for-Euler-21.10 for ARM</li><li>BC-Linux_21.10 U4  for ARM</li><li>Euler 2.12 for ARM</li><li>Euler 2.13 for ARM</li><li>Euler 2.15 for ARM</li><li>CentOS 7.6 for ARM</li><li>CTYunOS 22.06 for ARM</li><li>CTYunOS 23.01 for ARM</li><li>Kylin V10 SP2 for ARM</li><li>Kylin V10 SP3 for ARM</li><li>Kylin V11 for ARM</li><li>openEuler 22.03 LTS for ARM</li><li>openEuler 22.03 LTS SP4 for ARM</li><li>openEuler 24.03 LTS SP1 for ARM</li><li>UOS V20 1050u2e for ARM</li><li>UOS V25 for ARM (6.6内核)</li><li>Ubuntu 22.04 for ARM</li><li>Ubuntu 24.04 LTS for ARM</li></ul>
 </td>
 </tr>
 <tr id="row4711679201"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1171275208"><a name="p1171275208"></a><a name="p1171275208"></a><span id="ph9484121219204"><a name="ph9484121219204"></a><a name="ph9484121219204"></a>A200I A2 Box 异构组件</span></p>
@@ -834,9 +834,9 @@ Container Manager
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul877545583412"></a><a name="ul877545583412"></a><ul id="ul877545583412"><li>openEuler 22.03 LTS SP4 for ARM</li><li>Euler 2.13 for ARM</li><li>CUlinux 3.0 for ARM</li><li>CUlinux 4.0 for ARM</li><li>CTYunOS 4.0 for ARM</li><li>HCE 2.0.2506 for ARM</li><li>Velinux 2.0 for ARM</li><li>Kylin V10 SP3 2403 for ARM</li><li>Kylin V11 for ARM</li><li>UOS V25 for ARM (6.6内核)</li></ul>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p><span><term>推理服务器（插Atlas 350 标卡）</term></span></p>
+<tr><td class="cellrowborder" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p>Atlas 350 标卡</p>
 </td>
-<td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p><span>推理服务器（插Atlas 350 标卡）</span></p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas 350 标卡设备在当前版本不支持DPU硬件设备通信功能。</div></div>
+<td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p><span>Atlas 350 标卡</span></p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas 350 标卡设备在当前版本不支持DPU硬件设备通信功能。</div></div>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><ul><li>Velinux 2.0</li><li>Alinux 3 for x86</li></ul>
 </td>

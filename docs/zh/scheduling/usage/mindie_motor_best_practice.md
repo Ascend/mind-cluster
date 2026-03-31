@@ -4,7 +4,7 @@
 
 MindCluster集群调度组件支持用户通过生成acjob推理任务的方式进行MindIE Motor的容器化部署、故障重调度和弹性扩缩容。
 
-本章节仅说明相关特性原理及对应配置示例，所提供的YAML示例不足以完成MindIE任务的部署。了解MindIE Motor的详细部署流程请参见《<a href="https://www.hiascend.com/document/detail/zh/mindie/230/mindiemotor/motordev/mindie_service0001.html">MindIE Motor开发指南</a>》。
+本章节仅说明相关特性原理及对应配置示例，所提供的YAML示例不足以完成MindIE任务的部署。了解MindIE Motor的详细部署流程请参见《[MindIE Motor开发指南](https://www.hiascend.com/document/detail/zh/mindie/230/mindiemotor/motordev/mindie_service0001.html)》。
 
 **前提条件<a name="zh-cn_topic_0000002322062116_section52051339787"></a>**
 
@@ -37,7 +37,8 @@ MindCluster集群调度组件支持用户通过以下2种方式进行MindIE Moto
 
 各步骤说明如下：
 
-1. 集群调度组件定期上报节点和芯片信息；kubelet上报节点芯片数量到节点对象（node）中。
+1. 集群调度组件定期上报节点和芯片信息。
+    - kubelet上报节点芯片数量到节点对象（node）中。
     - Ascend Device Plugin上报芯片内存和拓扑信息。
 
         对于包含片上内存的芯片，Ascend Device Plugin启动时上报芯片内存情况，见node-label说明；上报整卡信息，将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）、已使用的芯片数量（allocated）和芯片的基础信息（device ip和super\_device\_ip）上报到node中，用于整卡调度。
@@ -62,7 +63,7 @@ MindIE Motor包含两个部分，MindIE MS（MindIE Management Service）和Mind
 
 MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Server组件分别运行在独立的Pod内。使用MindCluster集群调度组件进行MindIE Motor任务部署时，MS Controller、MS Coordinator以及MindIE Server中的每个实例分别以一个AscendJob进行部署，例如一个推理任务包含2个Prefill实例和1个Decode实例，则需要部署5个AscendJob。
 
-了解PD分离服务部署的详细说明可参考《MindIE Motor开发指南》中的“集群服务部署 \> <a href="https://www.hiascend.com/document/detail/zh/mindie/230/mindiemotor/motordev/mindie_service0049.html">PD分离服务部署</a>”章节。
+了解PD分离服务部署的详细说明可参考《MindIE Motor开发指南》中的“集群服务部署 \> [PD分离服务部署](https://www.hiascend.com/document/detail/zh/mindie/230/mindiemotor/motordev/mindie_service0049.html)”章节。
 
 **使用流程<a name="zh-cn_topic_0000002328850238_section5640184231810"></a>**
 
@@ -87,10 +88,10 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
 
 |类型|硬件型号|YAML名称|获取链接|
 |--|--|--|--|
-|ms_controller|-|controller.yaml|<a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms">获取YAML</a>|
-|ms_coordinator|-|coordinator.yaml|<a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms">获取YAML</a>|
-|mindie_server|<p>Atlas 800I A2 推理服务器</p><p>Atlas 800I A3 超节点服务器</p>|server.yaml|<a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms">获取YAML</a>|
-|<p>注：</p><p>如使用的设备为Atlas 800I A3 超节点服务器，请在获取YAML后，参考<a href="#li7390175311918">以下的示例</a>对部分参数进行修改。</p>|
+|ms_controller|-|controller.yaml|[获取YAML](https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms)|
+|ms_coordinator|-|coordinator.yaml|[获取YAML](https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms)|
+|mindie_server|<p>Atlas 800I A2 推理服务器</p><p>Atlas 800I A3 超节点服务器</p>|server.yaml|[获取YAML](https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms)|
+|<p>注：</p><p>如使用的设备为Atlas 800I A3 超节点服务器，请在获取YAML后，参考[以下的示例](#li7390175311918)对部分参数进行修改。</p>|
 
 **任务YAML说明<a name="zh-cn_topic_0000002362848597_section1870105118125"></a>**
 
@@ -619,7 +620,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 3. 查看推理任务运行情况
 4. （可选）删除任务
 
-了解以上步骤的详细说明，请参见《MindIE Motor开发指南》中的“集群服务部署 \> PD分离服务部署 \> 安装部署 \> <a href="https://www.hiascend.com/document/detail/zh/mindie/230/mindiemotor/motordev/mindie_service0318.html">使用kubectl部署单机PD分离服务示例</a>”章节。
+了解以上步骤的详细说明，请参见《MindIE Motor开发指南》中的“集群服务部署 \> PD分离服务部署 \> 安装部署 \> [使用kubectl部署单机PD分离服务示例](https://www.hiascend.com/document/detail/zh/mindie/230/mindiemotor/motordev/mindie_service0318.html)”章节。
 
 #### global-ranktable说明<a name="ZH-CN_TOPIC_0000002479226414"></a>
 

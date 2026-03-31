@@ -214,15 +214,15 @@ spec:
 
 |字段路径|类型|格式|描述|
 |--|--|--|--|
-|apiVersion|字符串 (string)|-|定义对象表示的版本化资源模式。服务器会转换为最新内部值，拒绝不识别的版本。更多信息请参见<a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds">Types</a>。|
-|kind|字符串 (string)|-|表示此对象对应的REST资源类型。值通过端点推断，不可更新，采用驼峰命名。更多信息请参见<a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources">Resources</a>。|
-|metadata|对象 (object)|-|Kubernetes元数据（如命名空间、标签等）。更多信息请参见<a href="https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata">Metadata</a>。|
+|apiVersion|字符串 (string)|-|定义对象表示的版本化资源模式。服务器会转换为最新内部值，拒绝不识别的版本。更多信息请参见[Types](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds)。|
+|kind|字符串 (string)|-|表示此对象对应的REST资源类型。值通过端点推断，不可更新，采用驼峰命名。更多信息请参见[Resources](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources)。|
+|metadata|对象 (object)|-|Kubernetes元数据（如命名空间、标签等）。更多信息请参见[Metadata](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata)。|
 |spec|对象 (object)|-|AscendJob期望状态的规格描述。必填字段：replicaSpecs。|
 |spec.replicaSpecs|对象 (object)|-|ReplicaType到ReplicaSpec的映射，指定MS集群配置。示例：{ "Scheduler": ReplicaSpec, "Worker": ReplicaSpec }。|
 |spec.replicaSpecs.[ReplicaType]|对象 (object)|-|副本的描述。|
 |spec.replicaSpecs.[ReplicaType].replicas|整数 (integer)|int32|副本数量，表示给定模板所需的副本数。默认为1。|
 |spec.replicaSpecs.[ReplicaType].restartPolicy|字符串 (string)|-|重启策略：Always、OnFailure、Never、ExitCode。默认为Never。|
-|spec.replicaSpecs.[ReplicaType].template|对象 (object)|-|Kubernetes Pod模板，更多信息请参见<a href="https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-template-v1/">Kubernetes Pod模板</a>。|
+|spec.replicaSpecs.[ReplicaType].template|对象 (object)|-|Kubernetes Pod模板，更多信息请参见[Kubernetes Pod模板](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-template-v1/)。|
 |spec.runPolicy|对象 (object)|-|封装分布式训练作业的运行时策略（如资源清理、活动时间）。|
 |spec.runPolicy.backoffLimit|整数 (integer)|int32|作业失败前允许的重试次数（可选）。|
 |spec.runPolicy.activeDeadlineSeconds|整数 (integer)|int64|作业保持活动的最长时间（秒），值必须为正整数。当前无意义，后续版本将会删除。|
