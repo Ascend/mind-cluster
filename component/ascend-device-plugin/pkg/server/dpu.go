@@ -71,7 +71,7 @@ func (hdm *HwDevManager) ListenDpu(ctx context.Context) {
 		case <-ticker.C:
 			hdm.handleDpu()
 		case <-ctx.Done():
-			hwlog.RunLog.Warnf("%s ListenDpu stop work due to ctx.Done(): %v", api.DpuLogPrefix, ctx.Err())
+			hwlog.RunLog.Warnf("%s ListenDpu stop work due to ctx.Done: %v", api.DpuLogPrefix, ctx.Err())
 			return
 		}
 	}
