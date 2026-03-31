@@ -90,12 +90,12 @@ func (c *OpticalCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	mainBoardID := n.Dmgr.GetMainBoardId()
 	devType := n.Dmgr.GetDevType()
 	if devType == api.Ascend910A5 && notSupportedOpticalDevices[mainBoardID] {
-		logForUnSupportDevice(false, devType, colcommon.GetCacheKey(c),
+		logForUnSupportDevice(false, devTypeMap[devType], colcommon.GetCacheKey(c),
 			fmt.Sprint("this mainBoardId:", mainBoardID, " is not supported"))
 		return false
 	}
 	isSupport := n.Dmgr.IsTrainingCard()
-	logForUnSupportDevice(isSupport, devType, colcommon.GetCacheKey(c),
+	logForUnSupportDevice(isSupport, devTypeMap[devType], colcommon.GetCacheKey(c),
 		"only training card supports network related info")
 	return isSupport
 }

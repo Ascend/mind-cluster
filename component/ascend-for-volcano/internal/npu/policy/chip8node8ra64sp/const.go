@@ -23,9 +23,9 @@ import (
 const (
 	// UninitializedRestRackLenMapId not initialized RestRackLenMapId
 	UninitializedRestRackLenMapId = -1
-	tpRescheduleStage                   = 3
-	spRescheduleStage                   = 6
-	backToJobRescheduleStage            = 12
+	tpRescheduleStage             = 3
+	spRescheduleStage             = 6
+	backToJobRescheduleStage      = 12
 )
 
 const (

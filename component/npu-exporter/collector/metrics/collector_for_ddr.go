@@ -23,6 +23,7 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
+
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 	"huawei.com/npu-exporter/v6/utils/logger"
@@ -54,7 +55,7 @@ type DdrCollector struct {
 // IsSupported check whether the metric is supported
 func (c *DdrCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	isSupport := !notSupportedDdrDevices[n.Dmgr.GetDevType()]
-	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c),
+	logForUnSupportDevice(isSupport, devTypeMap[n.Dmgr.GetDevType()], colcommon.GetCacheKey(c),
 		"there is no DDR module. DDR information cannot be queried.")
 	return isSupport
 }

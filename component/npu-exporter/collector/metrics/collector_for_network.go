@@ -24,6 +24,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
+
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 )
@@ -46,6 +47,12 @@ var (
 	descLinkStatus = colcommon.BuildDesc("npu_chip_info_link_status", "the npu link status")
 )
 
+var devTypeMap = map[string]string{
+	api.Ascend910B:  api.Ascend910B,
+	api.Ascend910A3: api.Ascend910A3,
+	api.Ascend910A5: api.VersionNPU,
+}
+
 type netInfoCache struct {
 	chip      colcommon.HuaWeiAIChip
 	timestamp time.Time
@@ -60,12 +67,12 @@ type NetworkCollector struct {
 // IsSupported check if the collector is supported
 func (c *NetworkCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	isSupport := n.Dmgr.IsTrainingCard()
-	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c),
+	logForUnSupportDevice(isSupport, devTypeMap[n.Dmgr.GetDevType()], colcommon.GetCacheKey(c),
 		"only training card supports network related info")
 	if n.Dmgr.GetDevType() == api.Ascend910A5 {
 		isSupport = false
 	}
-	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c), "")
+	logForUnSupportDevice(isSupport, devTypeMap[n.Dmgr.GetDevType()], colcommon.GetCacheKey(c), "")
 	return isSupport
 }
 

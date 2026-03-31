@@ -26,6 +26,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
+
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 )
@@ -191,7 +192,7 @@ func (c *UbCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	devType := n.Dmgr.GetDevType()
 	mainBoardID := n.Dmgr.GetMainBoardId()
 	isSupport := devType == api.Ascend910A5 && supportedUbDevices[mainBoardID]
-	logForUnSupportDevice(isSupport, devType, colcommon.GetCacheKey(c),
+	logForUnSupportDevice(isSupport, devTypeMap[devType], colcommon.GetCacheKey(c),
 		fmt.Sprint("this mainBoardId:", mainBoardID, " is not supported"))
 	return isSupport
 }

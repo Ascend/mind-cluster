@@ -113,7 +113,7 @@ func (c *OpticalNpuCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	}
 	mainBoardID := n.Dmgr.GetMainBoardId()
 	if !supportedOpticalNpuDevices[mainBoardID] {
-		logForUnSupportDevice(false, devType, colcommon.GetCacheKey(c),
+		logForUnSupportDevice(false, devTypeMap[devType], colcommon.GetCacheKey(c),
 			fmt.Sprint("this mainBoardId:", mainBoardID, " is not supported"))
 		return false
 	}

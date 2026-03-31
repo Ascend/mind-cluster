@@ -88,7 +88,7 @@ func (c *NetworkA5Collector) IsSupported(n *colcommon.NpuCollector) bool {
 	}
 	mainBoardID := n.Dmgr.GetMainBoardId()
 	if notSupportedNetworkA5Devices[mainBoardID] {
-		logForUnSupportDevice(false, devType, colcommon.GetCacheKey(c),
+		logForUnSupportDevice(false, devTypeMap[devType], colcommon.GetCacheKey(c),
 			fmt.Sprint("this mainBoardId:", mainBoardID, " is not supported"))
 		return false
 	}

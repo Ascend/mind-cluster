@@ -23,6 +23,7 @@ import (
 	"ascend-common/api"
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
+
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 )
@@ -77,7 +78,7 @@ type HbmCollector struct {
 // IsSupported check whether the collector is supported
 func (c *HbmCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	isSupport := supportedHbmDevices[n.Dmgr.GetDevType()]
-	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c), "")
+	logForUnSupportDevice(isSupport, devTypeMap[n.Dmgr.GetDevType()], colcommon.GetCacheKey(c), "")
 	return isSupport
 }
 

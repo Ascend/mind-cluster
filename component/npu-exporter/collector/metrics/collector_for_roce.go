@@ -101,12 +101,12 @@ type RoceCollector struct {
 // IsSupported check whether the collector is supported
 func (c *RoceCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	isSupport := n.Dmgr.IsTrainingCard()
-	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c),
+	logForUnSupportDevice(isSupport, devTypeMap[n.Dmgr.GetDevType()], colcommon.GetCacheKey(c),
 		"only training card supports network related info")
 	if n.Dmgr.GetDevType() == api.Ascend910A5 {
 		isSupport = false
 	}
-	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c), "")
+	logForUnSupportDevice(isSupport, devTypeMap[n.Dmgr.GetDevType()], colcommon.GetCacheKey(c), "")
 	return isSupport
 }
 
