@@ -161,7 +161,7 @@ func (c *BaseInfoCollector) PreCollect(n *colcommon.NpuCollector, chipList []col
 		// only A2 and A3 support use new api (dcmi_get_device_utilization_rate_v2)
 		c.realGetDeviceUtilizationRateInfoFunc = collectUtilV1
 		logger.Infof("devType %v does not support get device utilization by v2 api, "+
-			"will use v1 api to get utilization info", n.Dmgr.GetDevType())
+			"will use v1 api to get utilization info", devTypeMap[n.Dmgr.GetDevType()])
 		return
 	}
 	if len(chipList) == 0 {
@@ -497,8 +497,8 @@ func collectUtilV1(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCac
 		handleErr(err, colcommon.DomainForVectorCoreUtilization, logicID)
 		chip.VectorUtilization = int(vecUtil)
 	} else {
-		logger.LogfWithOptions(logger.WarnLevel, logger.LogOptions{Domain: "vectorUtil", ID: devType, MaxCounts: 1},
-			"%v does not support utilization of vector", devType)
+		logger.LogfWithOptions(logger.WarnLevel, logger.LogOptions{Domain: "vectorUtil", ID: devTypeMap[devType], MaxCounts: 1},
+			"%v does not support utilization of vector", devTypeMap[devType])
 	}
 
 	// overall
