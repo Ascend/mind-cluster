@@ -2,9 +2,7 @@
 # coding: utf-8
 # Copyright 2026 Huawei Technologies Co., Ltd
 import logging
-import threading
 import time
-from collections import defaultdict
 from typing import Dict
 
 logger = logging.getLogger(__name__)

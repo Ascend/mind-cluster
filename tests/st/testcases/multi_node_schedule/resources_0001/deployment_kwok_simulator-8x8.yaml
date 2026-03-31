@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: default-test-pytorch-8pod-8npu
+  labels:
+    ring-controller.atlas: ascend-910b
+spec:
+  replicas: 8
+  selector:
+    matchLabels:
+      app: default-test-pytorch-8pod-8npu  # 必须匹配 template.metadata.labels
+  template:
+    metadata:
+      labels:
+        app: default-test-pytorch-8pod-8npu
+        framework: pytorch
+        tor-affinity: "null"
+        fault-scheduling: force
+        fault-retry-times: "3"
+        pod-rescheduling: "on"
+        deploy-name: "default-test-pytorch-8pod-8npu"
+        ring-controller.atlas: ascend-910b
+      annotations:
+        huawei.com/recover_policy_path: "pod"
+    spec:
+      schedulerName: volcano
+      # restartPolicy 不可设置（Deployment 默认 Always）
+      nodeSelector:
+        host-arch: huawei-arm
+        accelerator-type: module-910b-8
+      containers:
+        - name: ascend
+          image: ubuntu:22.04
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: XDL_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: ASCEND_VISIBLE_DEVICES
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['huawei.com/Ascend910']
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - "sleep 9999;"
+          ports:
+            - containerPort: 22222
+              name: ascendjob-port
+          resources:
+            limits:
+              huawei.com/Ascend910: 8
+            requests:
+              huawei.com/Ascend910: 8
+          volumeMounts:
+            - name: localtime
+              mountPath: /etc/localtime
+            - name: reset-config
+              mountPath: /user/restore/reset/config
+              readOnly: true
+            - name: ranktable
+              mountPath: /user/mindx/ranktable
+      volumes:
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+        - name: reset-config
+          hostPath:
+            path: /user/restore/reset/default.reset-config-default-test-pytorch
+        - name: ranktable           # 请勿修改此参数的默认值，Ascend Operator会用于检查是否开启文件挂载hccl.json。
+          hostPath:
+            path: /user/mindx-dl/ranktable/default.default-test-pytorch-8pod-8npu
