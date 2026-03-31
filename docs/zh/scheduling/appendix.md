@@ -955,6 +955,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 
 在Ascend Device Plugin插件中，会生成用于通信的sock文件，sock文件的类型如下所示。
 
+- npu.sock
 - Ascend910.sock
 - Ascend310.sock
 - Ascend310P.sock
