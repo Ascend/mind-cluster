@@ -88,15 +88,6 @@ class K8sDistributedManage(object):
         return self.master.exec_command(cmd)
 
     def __get_roles_nodes(self):
-        worker_list = []
-        master_list = []
-        for node in self.nodes:
-            if "master" in node.role:
-                master_list.append(node)
-            if "worker" in node.role:
-                worker_list.append(node)
-            if "control-plane" in node.role and node not in master_list:
-                master_list.append(node)
-        self.master_nodes = master_list
-        self.worker_nodes = worker_list
-        self.master = master_list[0]
+        self.master_nodes = self.nodes
+        self.worker_nodes = self.nodes
+        self.master = self.nodes[0]

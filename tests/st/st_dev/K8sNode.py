@@ -2,7 +2,6 @@
 # coding: utf-8
 # Copyright 2026 Huawei Technologies Co., Ltd
 import logging
-import os
 
 from tests.st.lib.common.CLI import ClassCLI
 
@@ -27,8 +26,8 @@ class K8sNode(ClassCLI):
         err_str = "stderr"
         out_str = "stdout"
         ret = self.SSH_connect.execute_command(cmd, path=path, waitstr=waitstr, timeout=timeout, inputList=inputList)
-        if err_str in ret and ret[err_str] is not None:
-            self.logger.warning(ret[err_str])
+        if err_str in ret and ret['rc'] != 0:
+            self.logger.warning("command: %s => %s" % (cmd, ret[err_str]))
         return ret[out_str] if out_str in ret else None
 
     def execute_command(self, cmd, path="", waitstr=None, timeout=30, inputList=None):
@@ -52,6 +51,18 @@ class K8sNode(ClassCLI):
 
     def __init_sftp(self, ip, username, password):
         self.SFTP_connect = None
+
+    @staticmethod
+    def set_accelerator_type(case, node_name, node_num, accelerator_type):
+        # Set accelerator-type label for all kwok nodes
+        cmd = (f"kubectl label node {' '.join(f'kwok-node-{node_name}-{i}' for i in range(node_num))} "
+               f"accelerator-type={accelerator_type} --overwrite")
+        case.k8s_manager.exec_command(cmd)
+
+    @staticmethod
+    def get_node_by_pod_name(case, pod_name, namespace="default"):
+        cmd = f"kubectl get pod {pod_name} -n {namespace} -owide --no-headers | awk '{{print $7}}'"
+        return case.k8s_manager.exec_command(cmd).strip()
 
 
 

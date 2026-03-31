@@ -18,29 +18,21 @@ class ClassCLI(ClassSsh):
 
     def execute_command(self, command, timeout=300, waitstr=None, path=None, inputList=None):
         inputList = inputList if inputList else []
-        if waitstr is None:
-            wait_str = self.wait_str
-        if path is None:
-            pass
-        else:
-            command_cd = {
-                "command": ["cd", path],
-                "waitstr": waitstr,
-                "timeout": timeout,
-                "input_list": inputList
-            }
-            self.cmd(command_cd)
-        command = {
+        command_dict = {
             "command": [command],
-            "waitstr": waitstr,
             "timeout": timeout,
-            "input_list": inputList
+            "input": inputList
         }
-        result = self.cmd(command)
+        if path:
+            command_dict["directory"] = path
+
+        result = self.cmd(command_dict)
         if not result:
             return result
-        comp = re.compile(r'\x1b[@-_][0-?]*[ -/]*[@-~]]')
-        result['stdout'] = comp.sub('', result['stdout']).strip()
+
+        # Regex stripping is mostly unnecessary with exec_command, but we keep basic strip
+        if isinstance(result.get('stdout'), str):
+            result['stdout'] = result['stdout'].strip()
         return result
 
     def get_cmd_result(self):
@@ -106,14 +98,9 @@ class ClassCLI(ClassSsh):
             return None
 
     def delete_dir_path(self, dir_f, wait_str=""):
-        if wait_str is None:
-            wait_str = self.wait_str
-        command = {'command': ["rm -rf %s" % dir_f],
-                   'waitstr': wait_str}
-        self.cmd(command)
-        command = {"command": ["cd %s" % dir_f]}
-        ret = self.cmd(command)['stdout']
-        if "No Such file or directory" not in ret['stdout']:
+        command = {'command': [f"rm -rf {dir_f} && [ ! -d {dir_f} ]"]}
+        ret = self.cmd(command)
+        if ret.get('rc') == 0:
             self.logger.warning("delete success")
             return True
         else:

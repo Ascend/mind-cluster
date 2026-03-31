@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # coding: utf-8
 # Copyright 2026 Huawei Technologies Co., Ltd
-import re
+import logging
+import os
 import time
 
-
+logger = logging.getLogger(__name__)
 class K8sTool(object):
 
     @staticmethod
@@ -83,7 +84,7 @@ class K8sTool(object):
     def check_pod_deleted(case, job_name, timeout=30):
         cur_time = time.time()
         while time.time() - cur_time < timeout:
-            job_info = case.k8s_manager.exec_command("kubectl get pod -A| grep %s" % (job_name))
+            job_info = case.k8s_manager.exec_command("kubectl get pod -A| grep %s" % job_name)
             if job_name not in job_info:
                 return True
             else:
@@ -113,3 +114,66 @@ class K8sTool(object):
             return False
         else:
             return True
+
+    @staticmethod
+    def apply_yaml_by_file(case, yaml_path):
+        return case.k8s_manager.exec_command("kubectl apply -f %s" % yaml_path)
+
+    @staticmethod
+    def delete_yaml_by_file(case, yaml_path):
+        return case.k8s_manager.exec_command("kubectl delete -f %s" % yaml_path)
+
+    @staticmethod
+    def find_volcano_yaml(k8s_manager):
+        yaml = k8s_manager.master.exec_command(
+            f'find {os.environ.get("MIND_CLUSTER_YAML_DIR")} -name "volcano-*.yaml"')
+        if not yaml:
+            yaml = k8s_manager.master.exec_command(f'find /home/update/yamls -name "volcano-*.yaml"')
+            if not yaml:
+                raise Exception("未找到volcano组件yaml！")
+        return yaml
+
+    @staticmethod
+    def modify_volcano_yaml(case, super_pod_size="512", useClusterInfoManager="false"):
+        logger.info("修改volcano yaml配置")
+        volcano_yaml_path = K8sTool.find_volcano_yaml(case.k8s_manager)
+        if super_pod_size is not None:
+            case.k8s_manager.master.exec_command(
+                f"sed -i 's/\"super-pod-size\": \"[0-9]\\+\"/\"super-pod-size\": \"{super_pod_size}\"/g'"
+                f" \"{volcano_yaml_path}\"")
+        if useClusterInfoManager is not None:
+            case.k8s_manager.master.exec_command(
+                f"sed -i 's/\"useClusterInfoManager\":\"\\(false\\|true\\)\"/\"useClusterInfoManager\":\"{useClusterInfoManager}\"/g'"
+                f" \"{volcano_yaml_path}\"")
+        K8sTool.restart_volcano(case.k8s_manager, volcano_yaml_path)
+
+    @staticmethod
+    def reset_volcano_yaml(case):
+        volcano_yaml_path = K8sTool.find_volcano_yaml(case.k8s_manager)
+        case.k8s_manager.master.exec_command(f"sed -i 's/\"super-pod-size\": \"[0-9]\\+\"/"
+                                             f"\"super-pod-size\": \"48\"/g' \"{volcano_yaml_path}\"")
+        case.k8s_manager.master.exec_command(f"sed -i 's/\"useClusterInfoManager\":\"\\(false\\|true\\)\"/"
+                                             f"\"useClusterInfoManager\":\"true\"/g' \"{volcano_yaml_path}\"")
+        K8sTool.restart_volcano(case.k8s_manager, volcano_yaml_path)
+
+    @staticmethod
+    def fault_inject(case):
+        case.k8s_manager.master.exec_command(f"bash {case._fault_inject_file_path} --fault_pod_name "
+                                             f"{case._fault_pod} --card_num 8 "
+                                             f"--card_unhealthy \"npu-0\"")
+
+    @staticmethod
+    def restart_volcano(k8s_manager, volcano_yaml_path):
+        logger.info("重启volcano")
+        k8s_manager.master.exec_command(f'kubectl delete -f {volcano_yaml_path}')
+        time.sleep(5)
+        k8s_manager.master.exec_command(f'kubectl apply -f {volcano_yaml_path}')
+
+    @staticmethod
+    def apply_mindcluster(case, yaml_path="/home/update/yamls"):
+        case.k8s_manager.master.exec_command("kubectl create ns mindx-dl && kubectl create ns volcano-system && kubectl create ns cluster-system")
+        case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f device-plugin-npu-volcano-*.yaml")
+        case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f ascend-operator-*.yaml")
+        case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f volcano-*.yaml")
+        case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f clusterd-*.yaml")
+        case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f noded-*.yaml")

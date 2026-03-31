@@ -52,19 +52,9 @@ class ClassSsh(object):
             connectInfo = self.connect()
             self.__sshClient = connectInfo.get("client")
             self.__channel = connectInfo.get("channel")
-
-            if self.sshServerType == ClassSsh.SSH_SERVER_TYPE_LINUX:
-                self.__cmd(self.__channel, 'PS1="\\u@#>"', waitstr='%s@#' % self.username)
-
-                self.DEFAULT_WAIT_STR = self.username + "@#>"
-
-                self.__recv(self.__channel, self.DEFAULT_WAIT_STR, timeout=3, noTimeout=True)
-                self.RECV_TMOUT = False
-            elif self.sshServerType == ClassSsh.SSH_SERVER_TYPE_WINDOWS:
-                pass
-
             return connectInfo.get(STD_OUT)
         except Exception as e:
+            self.logger.error(f"Login failed: {e}")
             return None
 
     def connect(self):
@@ -98,29 +88,9 @@ class ClassSsh(object):
                 continue
         if count >= max_con:
             raise Exception("ssh connection failed")
-        trans = ssh.get_transport()
-        trans.windows_size = 214748
-
-        count = 0
-        while count < max_con:
-            count += 1
-            try:
-                channel = ssh.invoke_shell(width=200)
-                channel.settimeout(20)
-                break
-            except Exception:
-                self.logger.error(traceback.format_exc())
-                ssh.close()
-                return self.connect()
-            finally:
-                pass
-
-        if count >= max_con:
-            raise Exception("get channel failed")
-
-        result = self.__recv(channel, self.DEFAULT_WAIT_STR, 600, 10)
-        self.logger.info(result)
-        return {"client": ssh, "channel": channel, "stdout": result}
+        
+        self.logger.info("Connected successfully using stateless exec_command mode.")
+        return {"client": ssh, "channel": None, "stdout": "Successfully connected"}
 
     def close(self):
         if self.__channel:
@@ -131,182 +101,79 @@ class ClassSsh(object):
 
     def cmd(self, cmd_spec, timeout=60):
         """
-        send command function
-        :param cmd_spec(dict) cmd_spec:
-        {
-          command: []
-          input: []
-          waitstr: []
-          directory: ""
-          timeout: 60
-          username: ""
-          password: ""
-        }
-        :param timeout(int) timeout: the command wait time
-        :return:
-          result(str): the full command output structure
+        send command function (Stateless refactor using exec_command)
         """
-        if not self.__channel:
-            raise Exception("call login first")
+        result = {RESULT_CODE: -1, STD_ERR: None, STD_OUT: ""}
 
-        result = {"rc": None, "stderr": None, "stdout": ""}
-
-        waitstr = cmd_spec["waitstr"]
-        if waitstr == "":
-            waitstr = self.DEFAULT_WAIT_STR
-
-        if "directory" in cmd_spec:
-            ret = self.__cmd(self.__channel, "cd" + cmd_spec["directory"])
-            if not self.__mergeResult(result, ret):
-                self.__discardLine0(result)
-                return result
-
-        cmdstr = " ".join(cmd_spec["command"])
-        self.logger.info("Sending ssh cmd(ip=%s, waitstr: %s): %s" % (self.ip, waitstr, cmdstr))
-        ret = self.__cmd(self.__channel, cmdstr, waitstr, timeout)
-
-        if not self.__mergeResult(result, ret):
-            self.__discardLine0(result)
+        # Extract command components
+        cmd_parts = cmd_spec.get("command", [])
+        if not cmd_parts:
             return result
 
-        # analyze rsult
-        if INPUT_LIST not in cmd_spec:
-            if self.sshServerType == ClassSsh.SSH_SERVER_TYPE_LINUX:
-                ret = self.__cmd(self.__channel, "echo $?", waitstr, timeout)
-                result[RESULT_CODE] = self.__parseRC(ret)
-            self.__discardLine0(result)
+        cmdstr = " ".join(cmd_parts)
+        directory = cmd_spec.get("directory", "")
 
-        waitstr = self.DEFAULT_WAIT_STR
-        length = len(cmd_spec[INPUT_LIST])
-        tmp = 0
-        while tmp < length:
-            sub_cmd = cmd_spec[INPUT_LIST][tmp]
-            sub_wait = cmd_spec[INPUT_LIST][tmp + 1]
-            if sub_wait == "":
-                sub_wait = self.DEFAULT_WAIT_STR
-            self.logger.info("sending ssh sub cmd %s" % sub_cmd)
-            ret = self.__cmd(self.__channel, sub_cmd, sub_wait, timeout)
-            ret = self.__removeEscape(cmdstr, ret)
+        # Combine command with the desired directory
+        if directory:
+            cmdstr = f"cd {directory} && {cmdstr}"
 
-        if self.sshServerType == ClassSsh.SSH_SERVER_TYPE_LINUX:
-            ret = self.__cmd(self.__channel, "echo $?", waitstr, timeout)
-            result[RESULT_CODE] = self.__parseRC(ret)
-        self.__discardLine0(result)
-        return result
+        self.logger.info(f"Sending ssh cmd(ip={self.ip}): {cmdstr}")
 
-    def __cmd(self, channel, cmd, waitstr, timeout, sendonly=False):
-        if not self.__send(channel, cmd, timeout):
-            return None
-        ret = self.__recv(channel, waitstr, 40000, timeout)
-        return ret
-
-    def __mergeResult(self, result, ret):
-        if result.get(STD_OUT) is not None:
-            result[STD_OUT] = ret
-        if ret is None:
-            return False
-        if result[STD_OUT] == self.MSG_TOO_LONG:
-            return True
-
-        result[STD_OUT] += ret
-
-        if len(result[STD_OUT]) >= self.RESULT_MSG_MAX_LEN:
-            result[STD_OUT] = self.MSG_TOO_LONG
-            return True
-
-        return True
-
-    def __discardLine0(self, result):
-        split_str = "\x0d\x0a"
-        if RESULT_CODE in result and result[RESULT_CODE] != 0:
-            result[STD_ERR] = result[STD_OUT].strip()
-        if STD_OUT in result and isinstance(result[STD_OUT], str):
-            result[STD_OUT] = result[STD_OUT].strip()
-            tmp_list = re.split("\x0d?\x0a|\x0d", result[STD_OUT])
-            if len(tmp_list) > 2:
-                tmp_list.pop(0)
-                tmp_list.pop(len(tmp_list) - 1)
-                if len(tmp_list) == 0:
-                    result[STD_OUT] = ""
-                else:
-                    result[STD_OUT] = split_str.join(tmp_list)
-            elif len(tmp_list) == 2:
-                tmp_list.pop(0)
-                result[STD_OUT] = split_str.join(tmp_list)
-
-        if STD_ERR in result and isinstance(result[STD_ERR], str):
-            result[STD_ERR] = result[STD_ERR].strip()
-            tmp_list = re.split("\x0d?\x0a|\x0d", result[STD_ERR])
-            if len(tmp_list) > 2:
-                tmp_list.pop(0)
-                tmp_list.pop(len(tmp_list) - 1)
-                if len(tmp_list) == 0:
-                    result[STD_ERR] = ""
-                else:
-                    result[STD_ERR] = split_str.join(tmp_list)
-            elif len(tmp_list) == 2:
-                tmp_list.pop(0)
-                result[STD_ERR] = split_str.join(tmp_list)
-
-    def __send(self, channel, cmd, timeout):
-        nowtime = time()
-        endtime = nowtime + timeout
-        while nowtime < endtime:
-            if not channel.send_ready:
-                sleep(1)
-                nowtime = time()
-                continue
+        max_retries = 3
+        for retry in range(max_retries):
             try:
-                channel.send(cmd + self.linesep)
-                return True
+                if not self.__sshClient:
+                    self.logger.info("SSH client not found, establishing connection...")
+                    self.login()
+                    
+                stdin, stdout, stderr = self.__sshClient.exec_command(cmdstr, timeout=timeout)
+
+                # Sub-commands (inputs for interactive, rare in stateless but kept as a simple write pattern)
+                inputs = cmd_spec.get(INPUT_LIST, [])
+                if inputs:
+                    for idx in range(0, len(inputs), 2):
+                        sub_cmd = inputs[idx]
+                        if not isinstance(sub_cmd, str):
+                            continue
+                        if not sub_cmd.endswith("\n"):
+                            sub_cmd += "\n"
+                        stdin.write(sub_cmd)
+                        stdin.flush()
+
+                # Decode output cleanly
+                out = stdout.read().decode('utf-8', 'ignore').strip()
+                err = stderr.read().decode('utf-8', 'ignore').strip()
+
+                # Get execution status directly from channel
+                rc = stdout.channel.recv_exit_status()
+
+                if rc == 0 and not out and err:
+                    out = err
+                    err = ""
+
+                if rc != 0:
+                    self.logger.warning(f"cmd failed with rc={rc}. stderr: {err}")
+
+                result[RESULT_CODE] = rc
+                result[STD_OUT] = out
+                if rc != 0 and err:
+                    result[STD_ERR] = err
+
+                return result
+
             except socket.timeout:
-                self.logger.error("time out err %s" % cmd)
-            finally:
-                pass
-            sleep(1)
-            nowtime = time()
-
-    def __recv(self, channel, waitstr, nbytes, timeout, noTimeout=False):
-        recv = ""
-        nowtime = time()
-        endtime = nowtime + timeout
-        match = None
-        while nowtime < endtime:
-            if not channel.recv_ready:
-                sleep(1)
-                nowtime = time()
-                continue
-            try:
-                strGet = channel.recv(nbytes).decode(errors='ignores')
-            except socket.timeout:
-                strGet = ""
-            finally:
-                pass
-            recv += strGet
-            if not waitstr:
-                waitstr = self.DEFAULT_WAIT_STR
-            match = re.search(r'' + str(waitstr) + '', recv)
-            if match is not None:
-                break
-            sleep(1)
-            nowtime = time()
-        if match is None and not noTimeout:
-            self.RECV_TMOUT = True
-            self.logger.warning("TIMEOUT occurred")
-
-        if recv == "":
-            recv = None
-        return recv
-
-    def __removeEscape(self, cmdstr, ret):
-        return ret
-
-    def __parseRC(self, ret):
-        if ret is None or ret == "":
-            return None
-        ret_list = re.split("\x0d?\x0a|\x0d", ret)
-        if len(ret_list) != 3:
-            return None
-        if ret_list[1].isdigit():
-            return int(ret_list[1])
-        return None
+                self.logger.error(f"cmd timeout out after {timeout}s: {cmdstr}")
+                result[STD_ERR] = "TIMEOUT"
+                return result
+            except Exception as e:
+                self.logger.error(f"cmd exception parsing: {e}")
+                if "SSH session not active" in str(e) or "not established" in str(e) or "broken pipe" in str(e).lower():
+                    if retry < max_retries - 1:
+                        self.logger.info(f"SSH session broken, reconnecting... (attempt {retry+1}/{max_retries})")
+                        self.close()
+                        self.__sshClient = None
+                        self.__channel = None
+                        time.sleep(2)
+                        continue
+                result[STD_ERR] = str(e)
+                return result
