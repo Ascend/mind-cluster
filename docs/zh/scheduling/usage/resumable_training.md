@@ -8960,6 +8960,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 >   export HCCL_HOST_SOCKET_PORT_RANGE="60000-60050"
 >   export HCCL_NPU_SOCKET_PORT_RANGE="61000-61050"
 >   ```
+>- 若使用TaskD组件且训练容器使用Host网络，则先通过`sysctl net.ipv4.ip_local_reserved_ports`查询当前预留端口配置后，通过`sysctl -w net.ipv4.ip_local_reserved_ports="xxx,9601,9602"`新增预留端口9601、9602（其中xxx指的是前面查出来已配置的端口，若无则省略）。
 
 **PyTorch场景适配示例（基于MindSpeed-LLM）<a name="zh-cn_topic_0000002003180016_section412442472511"></a>**
 
