@@ -63,6 +63,7 @@ mind_cluster=(
     "noded"
     "npu-exporter"
     "taskd"
+    "mindio"
 )
 cd "$TOP_DIR"/build
 cp -rf "$TOP_DIR"/build/service_config.ini $GOPATH/service_config.ini
