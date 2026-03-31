@@ -3,7 +3,7 @@
   {"metricsGroup": "hccs", "state": "ON"},
   {"metricsGroup": "npu", "state": "ON"},
   {"metricsGroup": "network", "state": "ON"},
-  {"metricsGroup": "network-a5", "state": "ON"},
+  {"metricsGroup": "network-npu", "state": "ON"},
   {"metricsGroup": "pcie", "state": "ON"},
   {"metricsGroup": "roce", "state": "ON"},
   {"metricsGroup": "sio", "state": "ON"},

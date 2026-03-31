@@ -32,12 +32,12 @@ const (
 	ascend950NetworkMetricNum = 4
 )
 
-// TestNetworkCollectorA5IsSupported test NetworkCollectorA5 IsSupported
+// TestNetworkCollectorNPUIsSupported test NetworkCollectorNPU IsSupported
 func TestNetworkCollectorA5IsSupported(t *testing.T) {
 	n := mockNewNpuCollector()
 	cases := []testCase{
-		buildTestCase("NetworkCollector: testIsSupported on Ascend910A3", &NetworkA5Collector{}, api.Ascend910A3, false),
-		buildTestCase("NetworkCollector: testIsSupported on Ascend910A5", &NetworkA5Collector{}, api.Ascend910A5, true),
+		buildTestCase("NetworkCollector: testIsSupported on Ascend910A3", &NetworkNPUCollector{}, api.Ascend910A3, false),
+		buildTestCase("NetworkCollector: testIsSupported on Ascend910A5", &NetworkNPUCollector{}, api.Ascend910A5, true),
 	}
 
 	for _, c := range cases {
@@ -52,11 +52,11 @@ func TestNetworkCollectorA5IsSupported(t *testing.T) {
 }
 
 func TestNetworkCollectorA5CollectToCache(t *testing.T) {
-	collector := &NetworkA5Collector{}
+	collector := &NetworkNPUCollector{}
 	n := mockNewNpuCollector()
 	testChips := []colcommon.HuaWeiAIChip{{PhyId: 0}}
 
-	convey.Convey("TestNetworkCollectorA5CollectToCache", t, func() {
+	convey.Convey("TestNetworkCollectorNPUCollectToCache", t, func() {
 		collector.CollectToCache(n, testChips)
 		cacheInfo := colcommon.GetInfoFromCache[chipCache](n, colcommon.GetCacheKey(collector))
 		convey.So(cacheInfo, convey.ShouldNotBeNil)

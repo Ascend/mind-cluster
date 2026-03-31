@@ -42,11 +42,11 @@ var (
 	// multiGoroutineMap metrics in this map will be collected in multi goroutine
 	multiGoroutineMap = map[string]common.MetricsCollector{
 		groupNetwork:    &metrics.NetworkCollector{},
-		groupNetworkA5:  &metrics.NetworkA5Collector{},
+		groupNetworkNPU: &metrics.NetworkNPUCollector{},
 		groupRoce:       &metrics.RoceCollector{},
 		groupOptical:    &metrics.OpticalCollector{},
 		groupOpticalNpu: &metrics.OpticalNpuCollector{},
-		groupUb:        &metrics.UbCollector{},
+		groupUb:         &metrics.UbCollector{},
 	}
 	// pluginCollectorMap metrics in this map will be collected in plugin goroutine
 	pluginCollectorMap = map[string]common.MetricsCollector{}
@@ -58,7 +58,7 @@ var (
 		{metricsGroup: groupHccs, state: stateOn},
 		{metricsGroup: groupNpu, state: stateOn},
 		{metricsGroup: groupNetwork, state: stateOn},
-		{metricsGroup: groupNetworkA5, state: stateOn},
+		{metricsGroup: groupNetworkNPU, state: stateOn},
 		{metricsGroup: groupPcie, state: stateOn},
 		{metricsGroup: groupRoce, state: stateOn},
 		{metricsGroup: groupSio, state: stateOn},
@@ -90,9 +90,9 @@ const (
 	groupOptical = "optical"
 	groupHbm     = "hbm"
 	// groupText represents text-based metrics collected by plugin collectors
-	groupText      = "text"
-	groupNetworkA5 = "network-a5"
-	groupUb        = "ub"
+	groupText       = "text"
+	groupNetworkNPU = "network-npu"
+	groupUb         = "ub"
 	groupOpticalNpu = "optical-npu"
 
 	stateOn  = "ON"

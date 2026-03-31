@@ -135,7 +135,7 @@ func TestRegister(t *testing.T) {
 		patches.ApplyMethodReturn(&metrics.VnpuCollector{}, "IsSupported", true)
 		patches.ApplyMethodReturn(&metrics.PcieCollector{}, "IsSupported", true)
 		patches.ApplyMethodReturn(&metrics.NetworkCollector{}, "IsSupported", true)
-		patches.ApplyMethodReturn(&metrics.NetworkA5Collector{}, "IsSupported", true)
+		patches.ApplyMethodReturn(&metrics.NetworkNPUCollector{}, "IsSupported", true)
 		patches.ApplyMethodReturn(&metrics.RoceCollector{}, "IsSupported", true)
 		patches.ApplyMethodReturn(&metrics.OpticalCollector{}, "IsSupported", true)
 		patches.ApplyMethodReturn(&metrics.OpticalNpuCollector{}, "IsSupported", true)

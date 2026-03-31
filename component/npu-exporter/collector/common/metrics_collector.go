@@ -32,10 +32,10 @@ var (
 	CardLabel = []string{npuID, modelName, npuUUID, npuPCIEInfo, namespace, podName, cntrName}
 
 	noNeedToPrintUpdateLog = map[string]bool{
-		"NetworkCollector":   true,
-		"NetworkCollectorA5": true,
-		"RoceCollector":      true,
-		"OpticalCollector":   true,
+		"NetworkCollector":    true,
+		"NetworkNPUCollector": true,
+		"RoceCollector":       true,
+		"OpticalCollector":    true,
 	}
 )
 

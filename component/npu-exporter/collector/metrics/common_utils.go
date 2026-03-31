@@ -168,7 +168,7 @@ func validateNotNilForEveryElement(objs ...interface{}) bool {
 }
 func logForUnSupportDevice(isSupport bool, devType string, group string, extInfo string) {
 	if !isSupport {
-		logger.Infof("devType %v does not support [%v], %v", devType, group, extInfo)
+		logger.Infof("devType %v does not support [%v], %v", devTypeMap[devType], group, extInfo)
 	}
 }
 

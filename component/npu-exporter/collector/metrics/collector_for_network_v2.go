@@ -26,6 +26,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
+
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 )
@@ -75,15 +76,15 @@ type netInfoA5Cache struct {
 }
 
 // NetworkA5Collector collects the network info
-type NetworkA5Collector struct {
+type NetworkNPUCollector struct {
 	colcommon.MetricsCollectorAdapter
 }
 
 // IsSupported check if the collector is supported
-func (c *NetworkA5Collector) IsSupported(n *colcommon.NpuCollector) bool {
+func (c *NetworkNPUCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	devType := n.Dmgr.GetDevType()
 	if devType != api.Ascend910A5 {
-		logForUnSupportDevice(false, devType, colcommon.GetCacheKey(c), "")
+		logForUnSupportDevice(false, devTypeMap[devType], colcommon.GetCacheKey(c), "")
 		return false
 	}
 	mainBoardID := n.Dmgr.GetMainBoardId()
@@ -96,7 +97,7 @@ func (c *NetworkA5Collector) IsSupported(n *colcommon.NpuCollector) bool {
 }
 
 // Describe description of the metric
-func (c *NetworkA5Collector) Describe(ch chan<- *prometheus.Desc) {
+func (c *NetworkNPUCollector) Describe(ch chan<- *prometheus.Desc) {
 	// linkstatus
 	for _, desc := range linkStatusDesc {
 		ch <- desc
@@ -113,7 +114,7 @@ func (c *NetworkA5Collector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 // CollectToCache collect the metric to cache
-func (c *NetworkA5Collector) CollectToCache(n *colcommon.NpuCollector, chipList []colcommon.HuaWeiAIChip) {
+func (c *NetworkNPUCollector) CollectToCache(n *colcommon.NpuCollector, chipList []colcommon.HuaWeiAIChip) {
 	for _, chip := range chipList {
 		var netInfos []*common.NpuNetInfo
 		netInfos = collectNetworkA5Info(chip.LogicID)
@@ -123,7 +124,7 @@ func (c *NetworkA5Collector) CollectToCache(n *colcommon.NpuCollector, chipList 
 }
 
 // UpdatePrometheus update prometheus metrics
-func (c *NetworkA5Collector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
+func (c *NetworkNPUCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache netInfoA5Cache, cardLabel []string) {
@@ -155,7 +156,7 @@ func promUpdateNetInfo(ch chan<- prometheus.Metric, cache netInfoA5Cache,
 }
 
 // UpdateTelegraf update telegraf metrics
-func (c *NetworkA5Collector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
+func (c *NetworkNPUCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
 
 	caches := colcommon.GetInfoFromCache[netInfoA5Cache](n, colcommon.GetCacheKey(c))

@@ -108,7 +108,7 @@ type OpticalNpuCollector struct {
 func (c *OpticalNpuCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	devType := n.Dmgr.GetDevType()
 	if devType != api.Ascend910A5 {
-		logForUnSupportDevice(false, devType, colcommon.GetCacheKey(c), "")
+		logForUnSupportDevice(false, devTypeMap[devType], colcommon.GetCacheKey(c), "")
 		return false
 	}
 	mainBoardID := n.Dmgr.GetMainBoardId()
