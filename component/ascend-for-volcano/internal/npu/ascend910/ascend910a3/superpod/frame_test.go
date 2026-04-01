@@ -546,14 +546,6 @@ func buildValidNPUJobTestCases01() []validNPUJobTest {
 			superPodSize:  util.NPUIndex16,
 			wantPass:      false,
 		},
-		{
-			name:          "09 will return true when spBlockNPUNum is 0",
-			taskNum:       util.NPUIndex2,
-			reqNPUNum:     util.NPUIndex1 * util.NPUIndex16,
-			spBlockNPUNum: util.NPUIndex0,
-			superPodSize:  util.NPUIndex6,
-			wantPass:      false,
-		},
 	}
 }
 

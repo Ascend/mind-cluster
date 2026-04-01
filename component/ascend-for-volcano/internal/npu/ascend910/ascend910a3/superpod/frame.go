@@ -53,10 +53,6 @@ func New(name string, nodeNpuNum int) base.AscendHandler {
 
 // ValidNPUJob check job req npu num and mode
 func (tp *module910SuperPod) ValidNPUJob() *api.ValidateResult {
-	// if SpBlockNPUNum is not configured, set SpBlockNPUNum to total npu request of pg as default
-	if tp.SpBlockNPUNum == 0 {
-		tp.SpBlockNPUNum = tp.ReqNPUNum
-	}
 	res := tp.checkSpBlock()
 	if res != nil {
 		return res
