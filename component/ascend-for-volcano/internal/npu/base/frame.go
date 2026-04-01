@@ -97,12 +97,6 @@ func (tp *NPUHandler) InitMyJobPlugin(attr util.SchedulerJobAttr, env plugin.Sch
 	return nil
 }
 
-// IsInstanceOfJobGroup check job is instance of job-group
-func (tp *NPUHandler) IsInstanceOfJobGroup() bool {
-	_, ok := tp.Label[jobGroupIDLabelKey]
-	return ok
-}
-
 // ValidNPUJob check job req npu num
 func (tp *NPUHandler) ValidNPUJob() *api.ValidateResult {
 	if tp == nil {
@@ -141,7 +135,7 @@ func (tp *NPUHandler) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode
 		return err
 	}
 
-	nodeTop, err := tp.GetUsableTopFromNode(node, tp.NPUTaskNum > 1 || tp.IsInstanceOfJobGroup())
+	nodeTop, err := tp.GetUsableTopFromNode(node, tp.NPUTaskNum > 1)
 	if err != nil {
 		klog.V(util.LogDebugLev).Infof("task %s CheckNodeNPUByTask err: %s", task.Name, err.Error())
 		return err

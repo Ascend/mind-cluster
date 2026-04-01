@@ -85,7 +85,7 @@ func (tp *module910bx16) checkNodeNPUForWholeCard(task *api.TaskInfo, node plugi
 		klog.V(util.LogDebugLev).Infof("%s GetTaskReqNPUNum err: %s", tp.GetPluginName(), err.Error())
 		return err
 	}
-	nodeTop, err := tp.GetUsableTopFromNode(node, tp.NPUTaskNum > 1 || tp.IsInstanceOfJobGroup())
+	nodeTop, err := tp.GetUsableTopFromNode(node, tp.NPUTaskNum > 1)
 	if err != nil {
 		klog.V(util.LogDebugLev).Infof("task %s GetUsableTopFromNode err: %s", task.Name, err.Error())
 		return err
