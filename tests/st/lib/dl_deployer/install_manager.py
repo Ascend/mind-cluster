@@ -13,17 +13,17 @@ class InstallManager:
     arch = "aarch64"
 
     def __init__(self, ip, username, password, resource_dir, component_name):
-        self.cli = ClassCLI(ip, username, password)
         self.component_name = component_name
         self.component_installer = None
         self.resource_dir = resource_dir
+        cli = ClassCLI(ip, username, password)
         self.installer_dict = {
-            'device-plugin': DevicePluginInstaller(ip, username, password, resource_dir),
-            'ascend-operator': Installer(ip, username, password, resource_dir),
-            'noded': Installer(ip, username, password, resource_dir),
-            'npu-exporter': Installer(ip, username, password, resource_dir),
-            'volcano': VolcanoInstaller(ip, username, password, resource_dir),
-            'clusterd': Installer(ip, username, password, resource_dir),
+            'device-plugin': DevicePluginInstaller(cli, resource_dir),
+            'ascend-operator': Installer(cli, resource_dir),
+            'noded': Installer(cli, resource_dir),
+            'npu-exporter': Installer(cli, resource_dir),
+            'volcano': VolcanoInstaller(cli, resource_dir),
+            'clusterd': Installer(cli, resource_dir),
         }
 
     def execute(self):

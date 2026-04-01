@@ -2,6 +2,7 @@
 # coding: utf-8
 # Copyright 2026 Huawei Technologies Co., Ltd
 import logging
+import os
 import re
 import socket
 from time import sleep, time
@@ -25,7 +26,8 @@ class ClassSsh(object):
 
     def __init__(self, ip, username, password, port=22, password_hidden="***", **kwargs):
         self.logger = logging.getLogger("ssh-mindcluster")
-        logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        logging_level = os.environ.get("SSH_LOG_LEVEL", "INFO")
+        logging.basicConfig(level=logging_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         self.ip = ip
         self.username = username
         self.password = password
