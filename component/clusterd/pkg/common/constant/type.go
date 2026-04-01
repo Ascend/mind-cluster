@@ -522,3 +522,10 @@ type faultLevelStatus struct {
 	faultLevel int
 	nodeStatus string
 }
+
+// UpdatePodInfo update pod info
+type UpdatePodInfo struct {
+	JobId   string
+	PodUid  string
+	PodRank string
+}

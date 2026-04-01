@@ -453,4 +453,8 @@ const (
 	SecondsToMilliseconds = 1000
 	// DefaultSlidingWindow default sliding window size
 	DefaultSlidingWindow = 30
+	// TimeIntervalForFaultReport time interval for report fault
+	// After detecting faults, MindIO requires a delay of three heartbeat intervals(2 seconds each)
+	// before reporting the fault
+	TimeIntervalForFaultReport = 10 * time.Second
 )

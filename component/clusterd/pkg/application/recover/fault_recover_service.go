@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"k8s.io/api/core/v1"
+	"k8s.io/client-go/util/workqueue"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/api"
@@ -30,6 +31,10 @@ const (
 	normalFaultValue = "software"
 	retryFaultValue  = "retry-fault"
 	maxFaultPodLen   = 10
+)
+
+var (
+	newPodInfos workqueue.DelayingInterface
 )
 
 // FaultRecoverService is a service for fault recover
@@ -54,6 +59,7 @@ func NewFaultRecoverService(keepAlive int, ctx context.Context) *FaultRecoverSer
 	s.initJob = make(map[string]common.JobBaseInfo)
 	s.faultCh = make(chan map[string]constant.JobFaultInfo, 5)
 	s.currentFaults = make(map[string]map[string]bool)
+	newPodInfos = workqueue.NewDelayingQueue()
 
 	filterLevel := []string{constant.NotHandleFault, constant.PreSeparateNPU}
 	if err := faultmanager.RegisterForJobFaultRank(s.faultCh, filterLevel, reflect.TypeOf(*s).Name()); err != nil {
@@ -66,6 +72,10 @@ func NewFaultRecoverService(keepAlive int, ctx context.Context) *FaultRecoverSer
 		}
 		s.DeleteJob(podgroup.GetJobKeyByPG(pg))
 	})
+	kube.AddPodFunc(constant.FaultRecover, func(oldPodInfo *v1.Pod, newPodInfo *v1.Pod, op string) {
+		s.updateOriginPodInfo(oldPodInfo, newPodInfo, op)
+	})
+	go s.startUpdateOriginPodInfo(s.serviceCtx)
 	go s.checkFaultFromFaultCenter()
 	go s.podStatusMonitor()
 	return s
@@ -816,4 +826,71 @@ func (s *FaultRecoverService) HealthCheck(ctx context.Context, request *pb.Clien
 		Code: int32(common.OK),
 		Info: fmt.Sprintf("jobId=%s, receive HeathCheck", request.JobId),
 	}, nil
+}
+
+func (s *FaultRecoverService) updateOriginPodInfo(oldPodInfo, newPodInfo *v1.Pod, operator string) {
+	if newPodInfo == nil {
+		hwlog.RunLog.Error("updateOriginPodInfo: newPodInfo is nil")
+		return
+	}
+	if operator != constant.AddOperator {
+		hwlog.RunLog.Debugf("updateOriginPodInfo: operator is not %s, skip update, pod=%s",
+			constant.AddOperator, newPodInfo.Name)
+		return
+	}
+	jobId := pod.GetJobKeyByPod(newPodInfo)
+	if jobId == "" {
+		hwlog.RunLog.Errorf("updateOriginPodInfo: jobId is empty, pod=%s", newPodInfo.Name)
+		return
+	}
+	podInfo := constant.UpdatePodInfo{
+		JobId:   jobId,
+		PodUid:  string(newPodInfo.UID),
+		PodRank: newPodInfo.Annotations[constant.PodRankIndexAnno],
+	}
+	newPodInfos.AddAfter(podInfo, constant.TimeIntervalForFaultReport)
+}
+
+func (s *FaultRecoverService) handleUpdateOriginPodInfo() bool {
+	podInfo, shutdown := newPodInfos.Get()
+	if shutdown {
+		hwlog.RunLog.Info("update originpod queue quit success")
+		return true
+	}
+	defer newPodInfos.Done(podInfo)
+	updatePodInfo, ok := podInfo.(constant.UpdatePodInfo)
+	if !ok {
+		hwlog.RunLog.Errorf("updateOriginPodInfo: podInfo type error, podInfo=%v", podInfo)
+		return false
+	}
+	jobId := updatePodInfo.JobId
+	ctl, exist := s.getController(jobId)
+	if !exist || ctl == nil {
+		hwlog.RunLog.Debugf("updateOriginPodInfo: controller not found, jobId=%s", jobId)
+		return false
+	}
+	ctl.lock.Lock()
+	defer ctl.lock.Unlock()
+	if ctl.state.GetState() != common.InitState {
+		hwlog.RunLog.Warnf("jobId=%s state is not %v now, not need to update origin pod info",
+			jobId, common.InitState)
+		return false
+	}
+	ctl.originPod[updatePodInfo.PodRank] = updatePodInfo.PodUid
+	hwlog.RunLog.Infof("jobId=%s update origin pod info, rank=%s, uid=%s", jobId,
+		updatePodInfo.PodRank, updatePodInfo.PodUid)
+	return false
+}
+
+func (s *FaultRecoverService) startUpdateOriginPodInfo(ctx context.Context) {
+	go s.shutdownUpdateOriginPodInfo(ctx)
+	for !s.handleUpdateOriginPodInfo() {
+	}
+	hwlog.RunLog.Info("update originpod queue quit success")
+}
+
+func (s *FaultRecoverService) shutdownUpdateOriginPodInfo(ctx context.Context) {
+	<-ctx.Done()
+	newPodInfos.ShutDown()
+	hwlog.RunLog.Infof("shutdown update origin pod info")
 }

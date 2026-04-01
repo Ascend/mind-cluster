@@ -7,10 +7,15 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
@@ -1153,6 +1158,41 @@ func TestSleepForStateChange(t *testing.T) {
 			ctl := &EventController{state: fsm}
 			svr.sleepForStateChange(ctl)
 			convey.So(true, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestUpdateOriginPodInfo(t *testing.T) {
+	convey.Convey("Test updateOriginPodInfo", t, func() {
+		s := fakeService()
+		jobId := "testJobId"
+		rankIndex := "rank0"
+		podUid := "test-uid-123"
+		ctl := &EventController{
+			jobInfo:   common.JobBaseInfo{JobId: jobId},
+			originPod: make(map[string]string),
+			state:     common.NewStateMachine(common.InitState, nil),
+			lock:      sync.RWMutex{},
+		}
+		s.eventCtl[jobId] = ctl
+		convey.Convey("newPodInfo is nil", func() {
+			s.updateOriginPodInfo(nil, nil, constant.AddOperator)
+			convey.So(len(ctl.originPod), convey.ShouldEqual, 0)
+		})
+		convey.Convey("operator is not AddOperator", func() {
+			const sleepTime = 100 * time.Millisecond
+			newPod := &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:        "test-pod",
+					UID:         types.UID(podUid),
+					Annotations: map[string]string{constant.PodRankIndexAnno: rankIndex},
+				},
+			}
+			patch := gomonkey.ApplyFuncReturn(pod.GetJobKeyByPod, jobId)
+			defer patch.Reset()
+			s.updateOriginPodInfo(nil, newPod, "delete")
+			time.Sleep(sleepTime)
+			convey.So(len(ctl.originPod), convey.ShouldEqual, 0)
 		})
 	})
 }
