@@ -498,7 +498,7 @@ func collectUtilV1(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCac
 		handleErr(err, colcommon.DomainForVectorCoreUtilization, logicID)
 		chip.VectorUtilization = int(vecUtil)
 	} else {
-		logger.LogfWithOptions(logger.WarnLevel, logger.LogOptions{Domain: "vectorUtil", ID: devTypeMap[devType], MaxCounts: 1},
+		logger.LogfWithOptions(logger.WarnLevel, logger.LogOptions{Domain: "vectorUtil", ID: devType, MaxCounts: 1},
 			"%v does not support utilization of vector", devTypeMap[devType])
 	}
 
@@ -523,7 +523,7 @@ func collectUtilV1(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCac
 		msg = "%v does not support utilization of cube"
 	}
 	logger.LogfWithOptions(logger.WarnLevel,
-		logger.LogOptions{Domain: "cubeUtil", ID: devTypeMap[devType], MaxCounts: 1}, msg, devType)
+		logger.LogOptions{Domain: "cubeUtil", ID: devType, MaxCounts: 1}, msg, devTypeMap[devType])
 }
 
 func collectUtilV2(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCache) {
