@@ -34,12 +34,6 @@ class MindClusterHandler:
                                  % (yaml_path, device_plugin_yaml_prefix))
 
     @staticmethod
-    def restart_volcano(k8s_manager, yaml_path):
-        k8s_manager.exec_command('find %s -name "%s*" | xargs -I {} kubectl delete -f {}' % (yaml_path, volcano_prefix))
-        time.sleep(5)
-        k8s_manager.exec_command('find %s -name "%s*" | xargs -I {} kubectl apply -f {}' % (yaml_path, volcano_prefix))
-
-    @staticmethod
     def check_is_dp_service_allocatable(case, work, timeout=30):
         cur_time = time.time()
         while time.time() - cur_time < timeout:

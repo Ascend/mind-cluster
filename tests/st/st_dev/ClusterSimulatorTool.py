@@ -46,7 +46,8 @@ class ClusterSimulator(object):
     @staticmethod
     def get_ready_kwok_node_count(case):
         ready_kwok_node_cmd = "kubectl get nodes | grep kwok-node | grep Ready | wc -l"
-        ready_node_count = int(case.k8s_manager.exec_command(ready_kwok_node_cmd))
+        ready_node_count_str = case.k8s_manager.exec_command(ready_kwok_node_cmd)
+        ready_node_count = int(ready_node_count_str.splitlines()[0])
         return ready_node_count
 
     @staticmethod
@@ -58,7 +59,8 @@ class ClusterSimulator(object):
 
         while time.time() - start_time < timeout:
             try:
-                node_count = int(case.k8s_manager.exec_command(cmd))
+                node_count_str = case.k8s_manager.exec_command(cmd)
+                node_count = int(node_count_str.splitlines()[0])
                 if node_count > 0:
                     return node_count
             except (ValueError, Exception) as e:
@@ -102,6 +104,17 @@ class ClusterSimulator(object):
     def stop_cluster_simulator(case):
         case.k8s_manager.master.exec_command("docker rm -f my_container")
         case.k8s_manager.master.exec_command(
-            "docker run  --rm -v /root/.kube/config:/root/.kube/config cluster_simulator:v1.7 cleanup")
+            "docker run  --rm -v /root/.kube/config:/root/.kube/config cluster_simulator:v1.8 cleanup")
         case.k8s_manager.master.exec_command(
             "kubectl get nodes | awk {'print $1'} | grep work | xargs -I {}  kubectl uncordon {}")
+
+    @staticmethod
+    def mock_kwok_cluster_a3(case, node_name, super_pod_num, super_pod_size):
+        case.k8s_manager.exec_command(f"docker run -d  --name my_container -v /root/.kube/config:/root/.kube/config --rm \
+         cluster_simulator:v1.8 simulate {node_name} --super_pod_num {super_pod_num} --super_pod_size {super_pod_size}")
+
+    @staticmethod
+    def stop_cluster_simulator_a3(case):
+        case.k8s_manager.master.exec_command("docker rm -f my_container")
+        case.k8s_manager.master.exec_command(
+            "docker run  --rm -v /root/.kube/config:/root/.kube/config cluster_simulator:v1.8 cleanup")

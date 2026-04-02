@@ -40,16 +40,16 @@ class Installer(object):
     group_id = 9000
     namespace = 'mindx-dl'
 
-    def __init__(self, ip, username, password, resource_dir):
+    def __init__(self, client, resource_dir):
         self.image_tags = []
         self.component_installer = None
-        self.module = ClassCLI(ip, username, password)
+        self.module = client
         self.resources_dir = resource_dir
         self.package_name = ""
         self.arch = platform.machine()
         self.arch = "aarch64"
         self.dl_dir = os.path.join(os.path.dirname(self.resources_dir), 'mindxdl')
-        self.package_dir = os.path.join('/workspace/', 'dlPackage', self.arch)
+        self.package_dir = os.path.join('/workspace/', 'dlPackage', self.arch, self.component_name)
         self.extract_dir = os.path.join('/workspace/', 'dlDeployPackages', self.arch, self.component_name)
         self.yaml_dir = os.path.join(self.dl_dir, 'yamls', self.arch)
         self.dl_log = '/var/log/mindx-dl'
@@ -61,10 +61,10 @@ class Installer(object):
         self.facts = dict()
 
     def is_new_k8s_version(self):
-        out = self.module.execute_command('kubelet --version')
-        if 'Kubernetes' not in out:
-            raise Exception('failed to get kubelet version, out:{}'.format(out))
-        version = re.search(r'(?<=v)\d+\.\d+(\.\d+)?', out).group()
+        ret = self.module.execute_command('kubelet --version')
+        if 'Kubernetes' not in ret['stdout']:
+            raise Exception('failed to get kubelet version, ret:{}'.format(ret['stdout']))
+        version = re.search(r'(?<=v)\d+\.\d+(\.\d+)?', ret['stdout']).group()
         version_tuple = tuple(map(int, version.split('.')))
         return version_tuple > (1, 19, 16)
 
@@ -111,41 +111,40 @@ class Installer(object):
             raise Exception('failed to find image name in file: {}'.format(self.yaml_file_path))
         return image_tags
 
-    def load_base_images(self):
-        for image in os.listdir(self.base_images_dir):
-            cmd = 'docker load -i {}'.format(image)
-
     def build_images(self):
         build_dir = os.path.dirname(self.yaml_file_path)
         for tag, save_name in self.images.items():
             full_tag = self.module.ip + ":{}/".format(self.registry_port) + tag
             self.image_tags.append(full_tag)
             self.module.execute_command('docker build -t {} .'.format(full_tag), path=build_dir)
-            self.module.execute_command('docker save -o {} {}'.format(save_name, full_tag))
-            self.module.logger.info('build image file: {} in {} successfully'.format(save_name, self.extract_dir))
+            self.module.logger.info('build image file: {} in {} successfully'.format(save_name, build_dir))
+
+    def is_images_exists(self):
+        for image_tag in self.get_image_tags():
+            image_name, image_version = image_tag.split(':')
+            image_name = image_name.split('/')[-1]
+            image_save_name = '{}_{}.tar'.format(image_name, self.arch)
+            self.images[image_tag] = image_save_name
+        image_path_list = []
+        exist = True
+        for save_name in self.images.values():
+            image_path = os.path.join(self.yaml_file_path, save_name)
+            image_path_list.append(image_path)
+            if not os.path.exists(image_path):
+                exist = False
+        return exist
 
     def build(self):
         self.check_and_prepare()
+        if self.is_images_exists():
+            self.module.logger.warning('images already exists, skip build')
+            return
         self.build_images()
 
     def push(self):
         self.module.logger.info("push the image to %s" % self.module.ip)
         for image_tag in self.image_tags:
             self.module.execute_command("docker push %s" % image_tag, path=self.extract_dir)
-
-    def iter_cmd_output(self, cmd):
-        out = self.module.execute_command(cmd)
-        if out:
-            for line in out.splitlines():
-                yield line
-
-    def load_images(self):
-        self.import_cmd = 'docker load -i' if not self.use_new_k8s else 'ctr -n=k8s.io images import'
-        suffix = '' if not self.use_new_k8s else '--all-platforms'
-        for _, image_file in self.images.items():
-            self.module.execute_command('{} {} {}'.format(self.import_cmd, image_file, suffix),
-                                        path=os.path.dirname(self.get_yaml_path()))
-            self.module.logger.info('load image file: {} in {} successfully'.format(image_file, self.extract_dir))
 
     def ensure_group_exist(self):
         cmd = 'groupmod -g {} {}'.format(self.group_id, self.group)
@@ -163,7 +162,6 @@ class Installer(object):
     def install(self):
         if not os.path.exists(self.dl_log):
             os.makedirs(self.dl_log, 0o755)
-        self.load_images()
         self.ensure_group_exist()
         self.create_log_dir()
 
@@ -174,12 +172,16 @@ class Installer(object):
                 replace_line = line.replace("image: ",
                                             "image: {}:{}/".format(self.module.ip, self.registry_port))
                 lines[index] = replace_line
+            if "imagePullPolicy:" in line:
+                lines[index] = line.replace("imagePullPolicy: Never", "imagePullPolicy: IfNotPresent")
         return lines
 
     def create_namespace(self):
         cmd = 'kubectl create namespace {}'.format(self.namespace)
         self.module.execute_command(cmd)
         self.module.logger.info('create namespace: {} for component: {}'.format(self.namespace, self.component_name))
+        if self.component_name == 'npu-exporter':
+            self.module.execute_command('kubectl create namespace npu-exporter')
 
     def clear_previous_pod(self, yaml_path):
         cmd = 'kubectl delete -f {}'.format(yaml_path)
@@ -207,7 +209,6 @@ class Installer(object):
             'install': self.install,
             'apply': self.apply
         }
-        self.module.login()
 
         steps.get(self.step)()
 

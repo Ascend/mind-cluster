@@ -27,7 +27,6 @@ class MindclusterTest0001(unittest.TestCase):
         4. clean the environment with tear down func
         please to take care not making effect to others' testcase
     """
-    base_dir = "/workspace/mind-cluster/tests/st/testcases/"
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -46,6 +45,3 @@ class MindclusterTest0001(unittest.TestCase):
     def tearDown(self) -> None:
         pass
 
-
-if __name__ == '__main__':
-    unittest.main()
