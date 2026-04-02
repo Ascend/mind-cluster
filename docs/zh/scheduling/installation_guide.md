@@ -1659,7 +1659,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
     ```
 
 5. （可选）如果安装失败，可参照以下步骤修改Containerd配置文件。
-    1. 修改配置文件。
+    1. 打开配置文件。
         - **Containerd无默认配置文件场景**：依次执行以下命令，创建并修改配置文件。
 
             ```shell
@@ -1674,83 +1674,82 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
             vim /etc/containerd/config.toml
             ```
 
-    2. 执行以下命令查询当前cgroup的版本。
-
-        ```shell
-        stat -fc %T /sys/fs/cgroup/
-        ```
-
-        - 若回显为tmpfs，表示当前为cgroup v1版本。
-        - 若回显为cgroup2fs，表示当前为cgroup v2版本。
-
-    3. 根据cgroup的版本修改runtime\_type字段，并修改Ascend Docker Runtime安装路径，示例如下所示。
-        - cgroup v1
-
-            >[!NOTE] 
-            >若为openEuler 24.03操作系统，需将cgroup v1版本中的runtime\_type修改为io.containerd.runc.v2。
+    2. 新增ascend runtime，并将其设置为默认runtime，示例如下所示。
+       1. 在配置文件中找到如下runc配置内容（其中“io.containerd.cri.v1.runtime”在不同containerd版本下可能不同，以实际为准）：
 
             <pre>
-                [plugins."io.containerd.grpc.v1.cri".containerd.runtimes] 
-                   [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]  
-                     runtime_type = "io.containerd.runtime.v1.linux" 
-                     runtime_engine = "" 
-                     runtime_root = "" 
-                     privileged_without_host_devices = false 
-                     base_runtime_spec = "" 
-                     [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options] 
-               [plugins."io.containerd.grpc.v1.cri".cni] 
-                 bin_dir = "/opt/cni/bin" 
-                 conf_dir = "/etc/cni/net.d" 
-                 max_conf_num = 1 
-                 conf_template = "" 
-             [plugins."io.containerd.grpc.v1.cri".registry] 
-                 [plugins."io.containerd.grpc.v1.cri".registry.mirrors] 
-                   [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"] 
-                     endpoint = ["https://registry-1.docker.io"] 
-             [plugins."io.containerd.grpc.v1.cri".image_decryption] 
-                 key_model = "" 
-             
-            ...
-             [plugins."io.containerd.monitor.v1.cgroups"] 
-               no_prometheus = false 
-             [plugins."io.containerd.runtime.v1.linux"] 
-               shim = "containerd-shim" 
-               runtime = "/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime"   
-               runtime_root = "" 
-               no_shim = false 
-               shim_debug = false 
-             [plugins."io.containerd.runtime.v2.task"] 
-               platforms = ["linux/amd64"] 
+             [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.runc]
+               runtime_type = 'io.containerd.runc.v2'
+               runtime_path = ''
+               pod_annotations = []
+               container_annotations = []
+               privileged_without_host_devices = false
+               privileged_without_host_devices_all_devices_allowed = false
+               cgroup_writable = false
+               base_runtime_spec = ''
+               cni_conf_dir = ''
+               cni_max_conf_num = 0
+               snapshotter = ''
+               sandboxer = 'podsandbox'
+               io_type = ''
+                
+               [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.runc.options]
+                 BinaryName = ''
+                 CriuImagePath = ''
+                 CriuWorkPath = ''
+                 IoGid = 0
+                 IoUid = 0
+                 NoNewKeyring = false
+                 Root = ''
+                 ShimCgroup = ''
+                 SystemdCgroup = true
             ...</pre>
 
-        - cgroup v2
+       2. 复制上述配置内容，将“runc”修改为“ascend”并配置“BinaryName”的值为ascend-docker-runtime可执行文件的安装路径，参考如下（其中“io.containerd.cri.v1.runtime”在不同containerd版本下可能不同，以实际为准）：
 
             <pre>
-                    [plugins."io.containerd.grpc.v1.cri".containerd.default_runtime.options]
-                  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
-                    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-                      base_runtime_spec = ""
-                      cni_conf_dir = ""
-                      cni_max_conf_num = 0
-                      container_annotations = []
-                      pod_annotations = []
-                      privileged_without_host_devices = false
-                      runtime_engine = ""
-                      runtime_path = ""
-                      runtime_root = ""
-                      runtime_type = "io.containerd.runc.v2"
-                      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
-                        BinaryName = "/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime"
-                        CriuImagePath = ""
-                        CriuPath = ""
-                        CriuWorkPath = ""
-                        IoGid = 0
-                        IoUid = 0
-                        NoNewKeyring = false
-                        NoPivotRoot = false
-                        Root = ""
-                        ShimCgroup = ""
-                        SystemdCgroup = true
+             [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.ascend]
+               runtime_type = 'io.containerd.runc.v2'
+               runtime_path = ''
+               pod_annotations = []
+               container_annotations = []
+               privileged_without_host_devices = false
+               privileged_without_host_devices_all_devices_allowed = false
+               cgroup_writable = false
+               base_runtime_spec = ''
+               cni_conf_dir = ''
+               cni_max_conf_num = 0
+               snapshotter = ''
+               sandboxer = 'podsandbox'
+               io_type = ''
+                
+               [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.ascend.options]
+                 BinaryName = '/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime'
+                 CriuImagePath = ''
+                 CriuWorkPath = ''
+                 IoGid = 0
+                 IoUid = 0
+                 NoNewKeyring = false
+                 Root = ''
+                 ShimCgroup = ''
+                 SystemdCgroup = true
+            ...</pre>
+            
+       3. 找到下述配置项，将其中的“default_runtime_name”的值修改为“ascend”（其中“io.containerd.cri.v1.runtime”在不同containerd版本下可能不同，以实际为准）：
+
+            <pre>
+            修改前：
+            [plugins.'io.containerd.cri.v1.runtime'.containerd]
+              default_runtime_name = 'runc'
+              ignore_blockio_not_enabled_errors = false
+              ignore_rdt_not_enabled_errors = false
+              ...
+              
+            修改后：
+            [plugins.'io.containerd.cri.v1.runtime'.containerd]
+              default_runtime_name = 'ascend'
+              ignore_blockio_not_enabled_errors = false
+              ignore_rdt_not_enabled_errors = false
             ...</pre>
 
 6. 执行以下命令，重启Containerd。
@@ -1814,102 +1813,10 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
     [INFO] ascend-docker-runtime install success
     ```
 
-5. （可选）如果安装失败，可参照以下步骤修改Containerd配置文件。
-    1. 修改配置文件。
-        - **Containerd无默认配置文件场景**：依次执行以下命令，创建并修改配置文件。
-
-            ```shell
-            mkdir /etc/containerd
-            containerd config default > /etc/containerd/config.toml
-            vim /etc/containerd/config.toml
-            ```
-
-        - **Containerd已有配置文件场景**：打开并修改配置文件。
-
-            ```shell
-            vim /etc/containerd/config.toml
-            ```
-
-    2. 执行以下命令查询当前cgroup的版本。
-
-        ```shell
-        stat -fc %T /sys/fs/cgroup/
-        ```
-
-        - 若回显为tmpfs，表示当前为cgroup v1版本。
-        - 若回显为cgroup2fs，表示当前为cgroup v2版本。
-
-    3. 根据cgroup的版本修改runtime\_type字段，并修改Ascend Docker Runtime安装路径，示例如下所示。
-        - cgroup v1
-
-            >[!NOTE] 
-            >若为openEuler 24.03操作系统，需将cgroup v1版本中的runtime\_type修改为io.containerd.runc.v2。
-
-            <pre>
-                [plugins."io.containerd.grpc.v1.cri".containerd.runtimes] 
-                   [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]  
-                     runtime_type = "io.containerd.runtime.v1.linux" 
-                     runtime_engine = "" 
-                     runtime_root = "" 
-                     privileged_without_host_devices = false 
-                     base_runtime_spec = "" 
-                     [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options] 
-               [plugins."io.containerd.grpc.v1.cri".cni] 
-                 bin_dir = "/opt/cni/bin" 
-                 conf_dir = "/etc/cni/net.d" 
-                 max_conf_num = 1 
-                 conf_template = "" 
-             [plugins."io.containerd.grpc.v1.cri".registry] 
-                 [plugins."io.containerd.grpc.v1.cri".registry.mirrors] 
-                   [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"] 
-                     endpoint = ["https://registry-1.docker.io"] 
-             [plugins."io.containerd.grpc.v1.cri".image_decryption] 
-                 key_model = "" 
-             
-            ...
-             [plugins."io.containerd.monitor.v1.cgroups"] 
-               no_prometheus = false 
-             [plugins."io.containerd.runtime.v1.linux"] 
-               shim = "containerd-shim" 
-               runtime = "/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime"   
-               runtime_root = "" 
-               no_shim = false 
-               shim_debug = false 
-             [plugins."io.containerd.runtime.v2.task"] 
-               platforms = ["linux/amd64"] 
-            ...</pre>
-
-        - cgroup v2
-
-            <pre>
-                    [plugins."io.containerd.grpc.v1.cri".containerd.default_runtime.options]
-                  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
-                    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-                      base_runtime_spec = ""
-                      cni_conf_dir = ""
-                      cni_max_conf_num = 0
-                      container_annotations = []
-                      pod_annotations = []
-                      privileged_without_host_devices = false
-                      runtime_engine = ""
-                      runtime_path = ""
-                      runtime_root = ""
-                      runtime_type = "io.containerd.runc.v2"
-                      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
-                        BinaryName = "/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime"
-                        CriuImagePath = ""
-                        CriuPath = ""
-                        CriuWorkPath = ""
-                        IoGid = 0
-                        IoUid = 0
-                        NoNewKeyring = false
-                        NoPivotRoot = false
-                        Root = ""
-                        ShimCgroup = ""
-                        SystemdCgroup = true
-            ...</pre>
+5. （可选）如果安装失败，可参考[Containerd场景下安装Ascend Docker Runtime](#zh-cn_topic_0000001930317932_section196591123133116)章节的步骤5。
 
 6. 如需将节点上的容器运行时从Docker更改为Containerd，需要修改节点上kubelet的配置文件kubeadm-flags.env。详情请参见[K8s官方文档](https://kubernetes.io/docs/tasks/administer-cluster/migrating-from-dockershim/change-runtime-containerd/)。
+
 7. 如果存在Docker服务，请执行以下命令停止对应服务。
 
     ```shell
@@ -5273,23 +5180,11 @@ Ascend Deployer工具现支持的硬件产品、OS清单、安装场景请参见
 
     - Containerd（或K8s集成Containerd场景）。
 
-        执行以下命令，查看当前cgroup的版本。
+        执行以下命令，挂载物理芯片。
 
         ```shell
-        stat -fc %T /sys/fs/cgroup/
+        ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 ubuntu:22.04 containerID
         ```
-
-        - 若回显为tmpfs，表示当前为cgroup v1版本，执行以下命令挂载物理芯片。
-
-            ```shell
-            ctr run --runtime io.containerd.runtime.v1.linux -t --env ASCEND_VISIBLE_DEVICES=0 ubuntu:22.04 containerID
-            ```
-
-        - 若回显为cgroup2fs，表示当前为cgroup v2版本，执行以下命令挂载物理芯片。
-
-            ```shell
-            ctr run --runtime io.containerd.runc.v2 --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 ubuntu:22.04 containerID
-            ```
 
     >[!NOTE]
     >- ASCEND\_VISIBLE\_DEVICES参数表示挂载的芯片ID。
