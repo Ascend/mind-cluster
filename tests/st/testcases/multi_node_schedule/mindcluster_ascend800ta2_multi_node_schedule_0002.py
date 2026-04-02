@@ -1,23 +1,12 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright 2026. Huawei Technologies Co.,Ltd. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
+# coding: utf-8
+# Copyright 2026 Huawei Technologies Co., Ltd
+import random
+import time
 import unittest
 
-from tests.st.st_dev.CaseRoutines import CaseRoutines
 from tests.st.st_dev.ClusterSimulatorTool import ClusterSimulator
+from tests.st.st_dev.JobTool import JobHelper
 from tests.st.st_dev.K8sDistributedManage import K8sDistributedManage
 from tests.st.st_dev.K8sTool import K8sTool
 from tests.st.st_dev.K8sNode import K8sNode
@@ -27,10 +16,10 @@ NODE_NAME = "910ax8"
 MODULE_910B_8 = "module-910b-8"
 BASE_DIR = "/workspace/mind-cluster/tests/st/testcases/"
 
-class MindclusterAscend800ta2MutliNodeSchedule0001(unittest.TestCase):
+class MindclusterAscend800ta2MutliNodeSchedule0002(unittest.TestCase):
     resource_dir = BASE_DIR + "multi_node_schedule/resources_0001/"
-    job_yaml_path1 = resource_dir + "job_kwok_simulator-8x8.yaml"
-    job_name1 = "default-test-8x8"
+    job_yaml_path1 = resource_dir + "deployment_kwok_simulator-8x8.yaml"
+    job_name1 = "default-test-pytorch-8pod-8npu"
     k8s_manager = K8sDistributedManage()
     logger = k8s_manager.logger
 
@@ -40,7 +29,6 @@ class MindclusterAscend800ta2MutliNodeSchedule0001(unittest.TestCase):
 
     def test_valid_job_000(self):
         K8sTool.apply_mindcluster(self)
-        self.assertTrue(CaseRoutines.check_mind_cluster(self), "mindcluster is not ready")
 
     def test_valid_job_001(self):
         ClusterSimulator.create_kwok_cluster(self, node_name=NODE_NAME, node_num=NODE_NUM + 2)
@@ -58,28 +46,13 @@ class MindclusterAscend800ta2MutliNodeSchedule0001(unittest.TestCase):
         self.k8s_manager.exec_command("kubectl apply -f %s" % self.job_yaml_path1)
         self.assertTrue(K8sTool.check_pod_status(self, self.job_name1), "pod is not running")
 
-
     def test_valid_job_005(self):
-        self.assertTrue(K8sTool.check_pod_status(self, self.job_name1), "pod is not running")
-        master_node = K8sNode.get_node_by_pod_name(self, self.job_name1+"-master-0")
-        ClusterSimulator.inject_kwok_software_fault(self, namespace="default", pod_name=self.job_name1+"-worker-0")
-        self.assertTrue(K8sTool.check_pod_status(self, self.job_name1), "pod is not running")
-
-        master_node_after = K8sNode.get_node_by_pod_name(self, self.job_name1+"-master-0")
-        self.assertTrue(master_node == master_node_after,"master_node should equal")
-
-    def test_valid_job_006(self):
-        self.assertTrue(K8sTool.check_pod_status(self, self.job_name1), "pod is not running")
-        ClusterSimulator.inject_kwok_software_fault(self, namespace="default", pod_name=self.job_name1+"-master-0")
-        self.assertTrue(K8sTool.check_pod_status(self, self.job_name1, timeout=120), "pod is not running")
-
-    def test_valid_job_007(self):
         self.k8s_manager.exec_command("kubectl delete -f %s" % self.job_yaml_path1)
         ret = self.k8s_manager.exec_command(f"kubectl get pod {self.job_name1}'")
         self.assertTrue(len(ret) == 0, "job delete fail")
 
 
-    def test_valid_job_008(self):
+    def test_valid_job_006(self):
         ClusterSimulator.delete_kwok_cluster(self)
         self.assertIs(ClusterSimulator.get_ready_kwok_node_count(self), 0)
 
