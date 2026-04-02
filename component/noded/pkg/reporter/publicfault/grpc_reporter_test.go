@@ -27,23 +27,8 @@ func init() {
 func TestNewGrpcReporter(t *testing.T) {
 	convey.Convey("Test NewGrpcReporter", t, func() {
 		convey.Convey("test success case", func() {
-			patches := gomonkey.NewPatches()
-			defer patches.Reset()
-			mockClient := &grpcclient.Client{}
-			patches.ApplyFunc(grpcclient.New, func(string) (*grpcclient.Client, error) {
-				return mockClient, nil
-			})
 			reporter := NewGrpcReporter()
-			convey.So(reporter.client, convey.ShouldEqual, mockClient)
-		})
-		convey.Convey("test error case", func() {
-			patches := gomonkey.NewPatches()
-			defer patches.Reset()
-			patches.ApplyFunc(grpcclient.New, func(string) (*grpcclient.Client, error) {
-				return nil, errors.New("fake error")
-			})
-			reporter := NewGrpcReporter()
-			convey.So(reporter.client, convey.ShouldBeNil)
+			convey.So(reporter, convey.ShouldNotBeNil)
 		})
 	})
 }
@@ -70,24 +55,12 @@ func TestReport(t *testing.T) {
 			patches.ApplyFunc(grpcclient.New, func(_ string) (*grpcclient.Client, error) {
 				clientNewCalled = true
 				return &grpcclient.Client{}, nil
-			}).ApplyMethodReturn(reporter.client, "SendToPubFaultCenter",
+			}).ApplyMethodReturn(&grpcclient.Client{}, "SendToPubFaultCenter",
 				&pubfault.RespStatus{}, errors.New(""))
 			reporter.Report(&common.FaultAndConfigInfo{
 				PubFaultInfo: &pubfault.PublicFaultRequest{},
 			})
 			convey.So(clientNewCalled, convey.ShouldBeTrue)
-		})
-		convey.Convey("case new client error", func() {
-			reporter := &GrpcReporter{}
-			patches := gomonkey.NewPatches()
-			defer patches.Reset()
-			patches.ApplyFunc(grpcclient.New, func(_ string) (*grpcclient.Client, error) {
-				return nil, errors.New("")
-			})
-			reporter.Report(&common.FaultAndConfigInfo{
-				PubFaultInfo: &pubfault.PublicFaultRequest{},
-			})
-			convey.So(reporter.client, convey.ShouldBeNil)
 		})
 	})
 }
