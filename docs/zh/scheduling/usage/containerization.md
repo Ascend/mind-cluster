@@ -254,7 +254,6 @@ K8s集成Docker场景下，用户需要安装Ascend Docker Runtime。
 
 **使用说明<a name="section0966931165317"></a>**
 
-- 在Containerd客户端使用Ascend Docker Runtime挂载之前，需要确认当前cgroup的版本。执行<b>stat -fc %T /sys/fs/cgroup/</b>命令，若显示为tmpfs，表示当前为cgroup v1版本；若显示为cgroup2fs，表示当前为cgroup v2版本。
 - Ascend Docker Runtime支持挂载物理芯片，同时支持挂载虚拟芯片。挂载虚拟芯片前需要参考[创建vNPU](./virtual_instance.md#创建vnpu)章节，对物理芯片进行虚拟化操作，支持对物理芯片进行静态虚拟化和动态虚拟化。
 - 可通过<b>ls /dev/davinci\*</b>命令查询当前可用的物理芯片ID；通过<b>ls /dev/vdavinci\*</b>命令查询当前可用的虚拟芯片ID。
 - 若用户不需要挂载Ascend Docker Runtime的默认配置文件“/etc/ascend-docker-runtime.d/base.list”中所有内容，可创建自定义配置文件（例如hostlog.list），减少挂载内容，具体操作请参考[（可选）配置自定义挂载内容](#可选配置自定义挂载内容)章节。
@@ -264,82 +263,39 @@ K8s集成Docker场景下，用户需要安装Ascend Docker Runtime。
 示例中的image-name:tag为镜像名称与标签，如“ascend-tensorflow:tensorflow\_TAG”。containerID为容器ID，使用ctr启动容器需要指定容器ID，如“c1”。
 
 - 示例1：启动容器时，挂载物理芯片ID为0的芯片。
-    - cgroup v1
-
-        ```shell
-        ctr run --runtime io.containerd.runtime.v1.linux -t --env ASCEND_VISIBLE_DEVICES=0 image-name:tag containerID bash
-        ```
-
-    - cgroup v2
-
-        ```shell
-        ctr run --runtime io.containerd.runc.v2 --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 image-name:tag containerID bash
-        ```
+    ```shell
+    ctr run --runtime io.containerd.runc.v2 --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime-t --env ASCEND_VISIBLE_DEVICES=0 image-name:tag containerID bash
+    ```
 
 - 示例2：启动容器时，仅挂载NPU设备和管理设备，不挂载驱动相关目录。
-    - cgroup v1
 
-        ```shell
-        ctr run --runtime io.containerd.runtime.v1.linux -t --env ASCEND_VISIBLE_DEVICES=0 --env ASCEND_RUNTIME_OPTIONS=NODRV image-name:tag containerID bash
-        ```
-
-    - cgroup v2
-
-        ```shell
-        ctr run --runtime io.containerd.runc.v2 --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 --env ASCEND_RUNTIME_OPTIONS=NODRV image-name:tag containerID bash
-        ```
+    ```shell
+    ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime-t --env ASCEND_VISIBLE_DEVICES=0 --env ASCEND_RUNTIME_OPTIONS=NODRV image-name:tag containerID bash
+    ```
 
 - 示例3：启动容器时，挂载物理芯片ID为0的芯片，读取自定义配置文件hostlog中的挂载内容。
-    - cgroup v1
 
-        ```shell
-        ctr run --runtime io.containerd.runtime.v1.linux -t --env ASCEND_VISIBLE_DEVICES=0 --env ASCEND_RUNTIME_MOUNTS=hostlog image-name:tag containerID bash
-        ```
-
-    - cgroup v2
-
-        ```shell
-        ctr run --runtime io.containerd.runc.v2 --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 --env ASCEND_RUNTIME_MOUNTS=hostlog image-name:tag containerID bash
-        ```
+    ```shell
+    ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime-t --env ASCEND_VISIBLE_DEVICES=0 --env ASCEND_RUNTIME_MOUNTS=hostlog image-name:tag containerID bash
+    ```
 
 - 示例4：启动容器时，挂载虚拟芯片ID为100的芯片。
-    - cgroup v1
 
-        ```shell
-        ctr run --runtime io.containerd.runtime.v1.linux -t --env ASCEND_VISIBLE_DEVICES=100 --env ASCEND_RUNTIME_OPTIONS=VIRTUAL image-name:tag containerID bash
-        ```
-
-    - cgroup v2
-
-        ```shell
-        ctr run --runtime io.containerd.runc.v2 --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=100 --env ASCEND_RUNTIME_OPTIONS=VIRTUAL image-name:tag containerID bash
-        ```
+    ```shell
+    ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime-t --env ASCEND_VISIBLE_DEVICES=100 --env ASCEND_RUNTIME_OPTIONS=VIRTUAL image-name:tag containerID bash
+    ```
 
 - 示例5：启动容器时，从物理芯片ID为0的芯片上，切分出4个AI Core作为虚拟设备并挂载至容器中。
-    - cgroup v1
 
-        ```shell
-        ctr run --runtime io.containerd.runtime.v1.linux -t --env ASCEND_VISIBLE_DEVICES=0 --env ASCEND_VNPU_SPECS=vir04 image-name:tag containerID bash
-        ```
-
-    - cgroup v2
-
-        ```shell
-        ctr run --runtime io.containerd.runc.v2 --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 --env ASCEND_VNPU_SPECS=vir04 image-name:tag containerID bash
-        ```
+    ```shell
+    ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime-t --env ASCEND_VISIBLE_DEVICES=0 --env ASCEND_VNPU_SPECS=vir04 image-name:tag containerID bash
+    ```
 
 - 示例6：启动容器时，挂载物理芯片ID为0的芯片，并且允许挂载的驱动文件中存在软链接（仅适用于Atlas 500 A2 智能小站、Atlas 200I A2 加速模块和Atlas 200I DK A2 开发者套件场景）。
-    - cgroup v1
 
-        ```shell
-        ctr run --runtime io.containerd.runtime.v1.linux -t --env ASCEND_VISIBLE_DEVICES=0 -e ASCEND_ALLOW_LINK=True image-name:tag containerID bash
-        ```
-
-    - cgroup v2
-
-        ```shell
-        ctr run --runtime io.containerd.runc.v2 --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 -e ASCEND_ALLOW_LINK=True image-name:tag containerID bash
-        ```
+    ```shell
+    ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime-t --env ASCEND_VISIBLE_DEVICES=0 -e ASCEND_ALLOW_LINK=True image-name:tag containerID bash
+    ```
 
 启动命令相关参数如[表1](#table5134121862415)所示。
 
