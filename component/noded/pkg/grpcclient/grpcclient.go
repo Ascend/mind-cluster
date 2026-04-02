@@ -21,8 +21,10 @@ import (
 	"fmt"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/grpcclient/pubfault"
 )
 
@@ -45,6 +47,29 @@ func New(serverAddr string) (*Client, error) {
 	}
 	c.pf = pubfault.NewPubFaultClient(c.conn)
 	return &c, nil
+}
+
+// IsConnected grpc client is connected
+func (c *Client) IsConnected() bool {
+	if c == nil || c.conn == nil {
+		hwlog.RunLog.Warn("connection is nil")
+		return false
+	}
+	state := c.conn.GetState()
+	return state == connectivity.Ready || state == connectivity.Connecting
+}
+
+// SafeClose safe close grpc client
+func (c *Client) SafeClose() {
+	if c == nil || c.conn == nil {
+		hwlog.RunLog.Warn("connection is nil, close grpc client failed")
+		return
+	}
+	err := c.conn.Close()
+	if err != nil {
+		hwlog.RunLog.Errorf("close grpc client failed, error is %v", err)
+	}
+	c.pf = nil
 }
 
 // SendToPubFaultCenter send fault to public fault center
