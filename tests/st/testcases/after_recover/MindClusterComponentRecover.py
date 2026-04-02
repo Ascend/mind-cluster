@@ -19,11 +19,12 @@ import unittest
 
 from tests.st.st_dev.K8sDistributedManage import K8sDistributedManage
 from tests.st.st_dev.K8sTool import K8sTool
+from tests.st.envs import MIND_CLUSTER_YAML_DIR
 
 
 class MindClusterComponentRecoverCases(unittest.TestCase):
     k8s_manager = K8sDistributedManage()
-    base_dir = os.environ.get("MIND_CLUSTER_YAML_DIR")
+    base_dir = MIND_CLUSTER_YAML_DIR
     dp_yaml = "device-plugin-volcano-*.yaml"
     volcano_yaml = "volcano-*.yaml"
     clusterd_yaml = "clusterd-*.yaml"

@@ -15,16 +15,12 @@
 # limitations under the License.
 # ==============================================================================
 import logging
-import os
 import time
 from typing import List
 
 from tests.st.st_dev.K8sNode import K8sNode
 from tests.st.lib.dl.DLConf import K8S_VOLCANO
-
-
-class InitEnvironment:
-    pass
+from tests.st.envs import ipv4_address, username, password
 
 
 class K8sDistributedManage(object):
@@ -40,7 +36,7 @@ class K8sDistributedManage(object):
         self.__get_roles_nodes()
 
     def get_current_nodes(self):
-        node = K8sNode(os.environ['ipv4_address'], os.environ['username'], os.environ['password'])
+        node = K8sNode(ipv4_address, username, password)
         return [node]
 
     def refresh_nodes_info(self):

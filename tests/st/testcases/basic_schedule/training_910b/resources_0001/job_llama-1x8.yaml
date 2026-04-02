@@ -1,0 +1,100 @@
+apiVersion: mindxdl.gitee.com/v1
+kind: AscendJob
+metadata:
+  name: default-test-1x8
+  namespace: trjob
+  labels:
+    framework: pytorch
+    ring-controller.atlas: ascend-910b
+    fault-scheduling: "force"
+    pod-rescheduling: "on"
+    fault-retry-times: "10"
+spec:
+  schedulerName: volcano    # work when enableGangScheduling is true
+  runPolicy:
+    backoffLimit: 30                  #fault-reshchedule-times
+    schedulingPolicy: # work when enableGangScheduling is true
+      minAvailable: 1
+      queue: default
+  successPolicy: AllWorkers
+  replicaSpecs:
+    Master:
+      replicas: 1
+      restartPolicy: Never
+      template:
+        metadata:
+          labels:
+            ring-controller.atlas: ascend-910b
+        spec:
+          affinity:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                      - key: job-name
+                        operator: In
+                        values:
+                          - default-test-1x8
+                  topologyKey: kubernetes.io/hostname
+          nodeSelector:
+            #The master task is not scheduled to the worker when the tag node is faulty
+            host-arch: huawei-arm
+          hostNetwork: True
+          containers:
+            - name: ascend # do not modify
+              image: ubuntu：22.04
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: XDL_IP
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: status.hostIP
+                - name: POD_IP
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: status.podIP
+                - name: ASCEND_VISIBLE_DEVICES
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.annotations['huawei.com/Ascend910']
+              command:
+                - /bin/bash
+                - -c
+              args: [ "sleep 10000" ]
+              ports: # default value containerPort: 2222 name: ascendjob-port if not set
+                - containerPort: 2222         # determined by user
+                  name: ascendjob-port        # do not modify
+                - containerPort: 9601
+                  name: taskd-port
+              resources:
+                limits:
+                  huawei.com/Ascend910: 8
+                requests:
+                  huawei.com/Ascend910: 8
+              volumeMounts:
+                - name: ascend-driver
+                  mountPath: /usr/local/Ascend/driver
+                - name: ascend-add-ons
+                  mountPath: /usr/local/Ascend/add-ons
+                - name: dshm
+                  mountPath: /dev/shm
+                - name: localtime
+                  mountPath: /etc/localtime
+                - name: reset-config
+                  mountPath: /user/restore/reset/config
+          volumes:
+            - name: reset-config
+              hostPath:
+                path: "/user/restore/reset/trjob.reset-config-default-test-1x8"
+            - name: ascend-driver
+              hostPath:
+                path: /usr/local/Ascend/driver
+            - name: ascend-add-ons
+              hostPath:
+                path: /usr/local/Ascend/add-ons
+            - name: dshm
+              emptyDir:
+                medium: Memory
+            - name: localtime
+              hostPath:
+                path: /etc/localtime

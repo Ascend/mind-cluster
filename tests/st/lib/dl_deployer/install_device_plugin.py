@@ -23,8 +23,8 @@ class DevicePluginInstaller(Installer):
     component_name = 'device-plugin'
     accelerator_labels = ["910"]
 
-    def __init__(self, ip, username, password, resource_dir):
-        super(DevicePluginInstaller, self).__init__(ip, username, password, resource_dir)
+    def __init__(self, cli, resource_dir):
+        super(DevicePluginInstaller, self).__init__(cli, resource_dir)
         self.all_yaml_files = []
 
     def get_yaml_path(self):
@@ -36,18 +36,8 @@ class DevicePluginInstaller(Installer):
         if not yaml_files:
             raise Exception('failed to find the yaml about volcano in {}'.format(self.extract_dir))
         self.all_yaml_files.extend(sorted(yaml_files, reverse=self.use_new_k8s))
-        matching_yaml_files = []
-        for line in self.iter_cmd_output('lspci'):
-            if 'Processing accelerators' in line:
-                if 'Device d500' in line:
-                    substring = 'device-plugin-310P-'
-                    matching_yaml_files = [file for file in yaml_files if substring in file]
-                elif 'Device d100' in line or 'Device d107' in line:
-                    substring = 'device-plugin-310-'
-                    matching_yaml_files = [file for file in yaml_files if substring in file]
-                elif 'Device d801' in line or 'Device d802' in line or 'Device d803' in line:
-                    substring = 'device-plugin-volcano-'
-                    matching_yaml_files = [file for file in yaml_files if substring in file]
+        substring = 'device-plugin-volcano-'
+        matching_yaml_files = [file for file in yaml_files if substring in file]
         if not matching_yaml_files:
             matching_yaml_files.append(yaml_files[0])
         return matching_yaml_files[0]

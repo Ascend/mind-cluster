@@ -19,10 +19,11 @@ import unittest
 from tests.st.st_dev.K8sDistributedManage import K8sDistributedManage
 from tests.st.st_dev.K8sTool import K8sTool
 from tests.st.st_dev.CaseRoutines import CaseRoutines
+from tests.st.envs import BASE_DIR
 
 
 class MindclusterSingleNodeA2Cases(unittest.TestCase):
-    base_dir = "/workspace/mind-cluster/tests/st/testcases/basic_schedule/training_910b/"
+    base_dir = BASE_DIR + "basic_schedule/training_910b/"
     resource_dir = base_dir + "resources_0001/"
     job_yaml_path1 = resource_dir + "basic_training_1x8.yaml"
     job_name1 = "basic-training-1x8"

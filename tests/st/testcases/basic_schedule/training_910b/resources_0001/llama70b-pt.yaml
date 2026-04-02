@@ -1,0 +1,127 @@
+apiVersion: v1
+data:
+  pretrain-llama70b.sh: |
+    #!/bin/bash
+
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
+    export ACL_OP_COMPILER_ORIGIN_PATH=/usr/local/Ascend/ascend-toolkit/8.0.T16/aarch64-linux/lib64/libacl_op_compiler_origin.so
+    export PYTHONUNBUFFERED=1;
+    export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
+    export ASCEND_GLOBAL_LOG_LEVEL=0
+    export ASCEND_HOME_PATH=/usr/local/Ascend/ascend-toolkit/latest
+    export ASCEND_OPP_PATH=/usr/local/Ascend/ascend-toolkit/latest/opp
+    export ASCEND_SLOG_PRINT_TO_STDOUT=0
+    export ASCEND_TOOLKIT_HOME=/usr/local/Ascend/ascend-toolkit/latest/opp
+    export LD_LIBRARY_PATH=/root/simulator/lib:/usr/local/boost1.82.0/lib/:/usr/local/lib:/usr/local/python3.9.16/lib:/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/lib64:/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/devlib:/usr/local/Ascend/ascend-toolkit/latest/tools/aml/lib64:/usr/local/Ascend/ascend-toolkit/latest/tools/aml/lib64/plugin:/usr/local/Ascend/ascend-toolkit/latest/lib64:/usr/local/Ascend/ascend-toolkit/latest/lib64/plugin/opskernel:/usr/local/Ascend/ascend-toolkit/latest/lib64/plugin/nnengine:/usr/local/Ascend/ascend-toolkit/latest/opp/built-in/op_impl/ai_core/tbe/op_tiling/lib/linux/aarch64:/usr/local/Ascend/ascend-toolkit/latest/tools/aml/lib64:/usr/local/Ascend/ascend-toolkit/latest/tools/aml/lib64/plugin:/usr/local/Ascend/ascend-toolkit/latest/lib64:/usr/local/Ascend/ascend-toolkit/latest/lib64/plugin/opskernel:/usr/local/Ascend/ascend-toolkit/latest/lib64/plugin/nnengine:/usr/local/Ascend/ascend-toolkit/latest/opp/built-in/op_impl/ai_core/tbe/op_tiling/lib/linux/aarch64:/usr/local/boost1.82.0/lib/:/usr/local/lib/:/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/lib64:/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/devlib:/usr/local/Ascend/ascend-toolkit/latest/tools/aml/lib64:/usr/local/Ascend/ascend-toolkit/latest/tools/aml/lib64/plugin:/usr/local/Ascend/ascend-toolkit/latest/lib64:/usr/local/Ascend/ascend-toolkit/latest/lib64/plugin/opskernel:/usr/local/Ascend/ascend-toolkit/latest/lib64/plugin/nnengine:/usr/local/Ascend/ascend-toolkit/latest/opp/built-in/op_impl/ai_core/tbe/op_tiling/lib/linux/aarch64:/usr/local/Ascend/ascend-toolkit/latest/tools/aml/lib64:/usr/local/Ascend/ascend-toolkit/latest/tools/aml/lib64/plugin:/usr/local/Ascend/ascend-toolkit/latest/lib64:/usr/local/Ascend/ascend-toolkit/latest/lib64/plugin/opskernel:/usr/local/Ascend/ascend-toolkit/latest/lib64/plugin/nnengine:/usr/local/Ascend/ascend-toolkit/latest/opp/built-in/op_impl/ai_core/tbe/op_tiling/lib/linux/aarch64:$LD_LIBRARY_PATH
+    export ASCEND_GLOBAL_EVENT_ENABLE=1
+    export PYTHONPATH=/usr/local/Ascend/ascend-toolkit/latest/python/site-packages:/usr/local/Ascend/ascend-toolkit/latest/opp/built-in/op_impl/ai_core/tbe:
+    export TOOLCHAIN_HOME=/usr/local/Ascend/ascend-toolkit/latest/toolkit
+    export ASCEND_LAUNCH_BLOCKING=1
+    export PATH=/usr/local/Ascend/ascend-toolkit/latest/bin:/usr/local/Ascend/ascend-toolkit/latest/compiler/ccec_compiler/bin:/usr/local/Ascend/ascend-toolkit/latest/tools/ccec_compiler/bin:$PATH
+    export HCCL_ENTRY_LOG_ENABLE=1
+    export PATH=/usr/local/python3.9.16/bin/:$PATH
+    export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
+    export COST_MODEL_PATH=/home/simulator/BeiMing-DevPlane-ZhanluSim-PyTorch_2.0.0.B099_linux-aarch64/cost_model/
+    export ACL_STREAM_TIMEOUT=0
+    export PYTORCH_NPU_ALLOC_CONF=expandable_segments:False
+    export CUDA_DEVICE_MAX_CONNECTIONS=1
+    export NPU_ASD_ENABLE=0
+    export HCCL_ASYNC_ERROR_HANDLING=0
+    export LD_LIBRARY_PATH=/usr/local/boost1.82.0/lib/:$LD_LIBRARY_PATH
+    export LD_PRELOAD=/preload/libhccl_mock.so:/preload/libdcmi_mock.so
+    export ASCEND_CUSTOM_OPP_PATH=/home/simulator/
+    export TORCH_VERSION=1.11.0
+    export CANN_VERSION=7.0.0
+    export SOC_VERSION=Ascend910B3
+
+        GPUS_PER_NODE=${LOCAL_WORLD_SIZE:-8}
+        # MASTER_ADDR=localhost
+        # MASTER_PORT=6000
+        NNODES=`expr $WORLD_SIZE / $GPUS_PER_NODE`
+        NODE_RANK=${RANK}
+        # WORLD_SIZE=$(($GPUS_PER_NODE*$NNODES))
+
+        CKPT_DIR=/result/ckpt-llama2-7b
+        DATA_PATH=/dataset/gpt_text_sentence_text_document
+        TOKENIZER_MODEL=./tokenizer_llama/tokenizer.model
+
+    TP=16
+    PP=4
+
+    DISTRIBUTED_ARGS="
+        --nproc_per_node $GPUS_PER_NODE \
+        --nnodes $NNODES \
+        --node_rank $NODE_RANK \
+        --master_addr $MASTER_ADDR \
+        --master_port $MASTER_PORT
+    "
+    #--use-flash-attn
+    GPT_ARGS="
+        --tensor-model-parallel-size ${TP} \
+        --pipeline-model-parallel-size ${PP} \
+        --sequence-parallel \
+        --num-layers 4 \
+        --hidden-size 2048 \
+        --ffn-hidden-size 4096 \
+        --num-attention-heads 64 \
+        --tokenizer-type Llama2Tokenizer \
+        --tokenizer-model ${TOKENIZER_MODEL} \
+        --seq-length 1024 \
+        --max-position-embeddings 1024 \
+        --micro-batch-size 1 \
+        --global-batch-size 8 \
+        --make-vocab-size-divisible-by 1 \
+        --lr 1.25e-6 \
+        --train-iters 50 \
+        --lr-decay-style cosine \
+        --untie-embeddings-and-output-weights \
+        --disable-bias-linear \
+        --attention-dropout 0.0 \
+        --init-method-std 0.01 \
+        --hidden-dropout 0.0 \
+        --position-embedding-type rope \
+        --normalization RMSNorm \
+        --use-fused-rmsnorm \
+        --swiglu \
+        --no-masked-softmax-fusion \
+        --attention-softmax-in-fp32 \
+        --min-lr 1.25e-7 \
+        --weight-decay 1e-1 \
+        --lr-warmup-fraction 0.01 \
+        --clip-grad 1.0 \
+        --adam-beta1 0.9 \
+        --initial-loss-scale 65536 \
+        --adam-beta2 0.95 \
+        --no-gradient-accumulation-fusion \
+        --no-load-optim \
+        --no-load-rng \
+        --fp16
+    "
+
+    DATA_ARGS="
+        --data-path $DATA_PATH \
+        --split 949,50,1
+    "
+
+    OUTPUT_ARGS="
+        --log-interval 1 \
+        --save-interval 5 \
+        --eval-interval 5000 \
+        --eval-iters 0 \
+        --log-throughput \
+        --timing-log-option max \
+        --no-barrier-with-level-1-timing \
+        --timing-log-level 0 \
+
+    "
+
+    torchrun $DISTRIBUTED_ARGS pretrain_gpt.py \
+        $GPT_ARGS \
+        $DATA_ARGS \
+        $OUTPUT_ARGS \
+        --distributed-backend nccl 2>&1 \
+        --save $CKPT_DIR \
+        --load $CKPT_DIR
+kind: ConfigMap
+metadata:
+  name: llama70b-pt

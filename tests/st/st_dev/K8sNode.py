@@ -77,5 +77,10 @@ class K8sNode(ClassCLI):
         cmd = f"kubectl get pod {pod_name} -n {namespace} -owide --no-headers | awk '{{print $7}}'"
         return case.k8s_manager.exec_command(cmd).strip()
 
-
+    @staticmethod
+    def set_accelerator_type_a3(case, node_name, node_num, accelerator_type):
+        # Set accelerator-type label for all kwok nodes
+        cmd = (f"kubectl label node {' '.join(f'kwok-node-{node_name}-0-{i}' for i in range(node_num))} "
+               f"accelerator-type={accelerator_type} --overwrite")
+        case.k8s_manager.exec_command(cmd)
 
