@@ -19,6 +19,8 @@ import os
 import time
 
 logger = logging.getLogger(__name__)
+
+
 class K8sTool(object):
 
     @staticmethod
@@ -29,14 +31,23 @@ class K8sTool(object):
         return True
 
     @staticmethod
-    def check_pod_status(case, pod_name, status="Running", timeout=30):
+    def check_pod_status(case, pod_name, status=None, timeout=30):
+        if status is None:
+            status = ["Running"]
+        elif isinstance(status, str):
+            status = [status]
         is_all_status = False
-        status_cmd = "kubectl get pods -A | grep %s | awk '{print$4}'" % pod_name
+        status_cmd = "kubectl get pods -A | grep %s | awk '{print $4}'" % pod_name
         cur_time = time.time()
         while time.time() - cur_time < timeout:
             ret = case.k8s_manager.exec_command(status_cmd)
+            logger.info(f"{pod_name}--pod_status: {ret}")
+            if not ret or not ret.strip():
+                logger.info(f"Warning: No pods found for {pod_name}")
+                time.sleep(5)
+                continue
             for pod_status in ret.splitlines():
-                if pod_status != status:
+                if pod_status not in status:
                     time.sleep(5)
                     break
             else:
@@ -136,7 +147,6 @@ class K8sTool(object):
     def delete_yaml_by_file(case, yaml_path):
         return case.k8s_manager.exec_command("kubectl delete -f %s" % yaml_path)
 
-    @staticmethod
     def find_volcano_yaml(k8s_manager):
         yaml = k8s_manager.master.exec_command(
             f'find {os.environ.get("MIND_CLUSTER_YAML_DIR")} -name "volcano-*.yaml"')
@@ -184,8 +194,24 @@ class K8sTool(object):
 
     @staticmethod
     def apply_mindcluster(case, yaml_path="/home/update/yamls"):
-        case.k8s_manager.master.exec_command("kubectl create ns mindx-dl && kubectl create ns volcano-system && kubectl create ns cluster-system")
+        case.k8s_manager.master.exec_command(
+            "kubectl create ns mindx-dl && kubectl create ns volcano-system && kubectl create ns cluster-system")
         case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f device-plugin-npu-volcano-*.yaml")
+        case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f ascend-operator-*.yaml")
+        case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f volcano-*.yaml")
+        case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f clusterd-*.yaml")
+        case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f noded-*.yaml")
+
+    @staticmethod
+    def insert_software_fault(case, ns="default", pod_name=""):
+        case.k8s_manager.exec_command(f"kubectl label pod -n {ns} {pod_name} software-fault=occur")
+
+    @staticmethod
+    def apply_mindcluster_v2(case, yaml_path="/home/update/yamls"):
+        case.k8s_manager.master.exec_command(
+            "kubectl create ns mindx-dl && kubectl create ns volcano-system && kubectl create ns cluster-system")
+        case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl delete -f device-plugin-npu-volcano-*.yaml")
+        case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f device-plugin-volcano-*.yaml")
         case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f ascend-operator-*.yaml")
         case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f volcano-*.yaml")
         case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f clusterd-*.yaml")

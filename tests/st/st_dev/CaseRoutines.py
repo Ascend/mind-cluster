@@ -34,8 +34,7 @@ class CaseRoutines(object):
     def check_mind_cluster(case):
         dls = ["ascend-operator", "clusterd", "noded", "device-plugin", "volcano"]
         case.logger.info("checking mindcluster component status %s" % dls)
-        K8sTool.check_pods_status(case, dls)
-        return CaseRoutines.check_driver_status(case)
+        return K8sTool.check_pods_status(case, dls)
 
     @staticmethod
     def get_pod_name_and_rank_index(case, job_name, namespace):

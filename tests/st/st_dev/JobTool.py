@@ -72,3 +72,13 @@ class JobHelper(object):
                     pod_name, node_name = parts
                     mapping[pod_name] = node_name
         return mapping
+
+    @staticmethod
+    def check_pod_label_exist(case, pod_name, label_name, ns="default") -> bool:
+        cmd = "kubectl get pod -n {} {} --show-labels | grep -o \"{}\"".format(ns, pod_name, label_name)
+        res = case.k8s_manager.master.exec_command(cmd)
+        if label_name in res:
+            return True
+        return False
+
+
