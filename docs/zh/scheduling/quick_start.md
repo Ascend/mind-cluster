@@ -143,7 +143,7 @@
         kubectl label nodes worker01 node-role.kubernetes.io/worker=worker
         kubectl label nodes worker01 workerselector=dls-worker-node
         kubectl label nodes worker01 host-arch=huawei-arm
-        kubectl label nodes worker01 accelerator=huawei-npu
+        kubectl label nodes worker01 accelerator=huawei-Ascend910
         kubectl label nodes worker01 accelerator-type=module-{xxx}b-8     #填写芯片型号数值         
         kubectl label nodes worker01 nodeDEnable=on
         ```
@@ -285,7 +285,7 @@
         root@ubuntu:/data/atlas_dls/public/dataset/resnet50/imagenet# pwd
         ```
 
-    4. 将[1](#zh-cn_topic_0000001558834814_li1298552813512)中下载的训练代码解压到本地，将解压后的训练代码中“ModelZoo-PyTorch/PyTorch/built-in/cv/classification/ResNet50\_ID4149\_for\_PyTorch”目录上传至环境，如“/data/atlas\_dls/public/code/”路径下。
+    4. 将[步骤1](#zh-cn_topic_0000001558834814_li1298552813512)中下载的训练代码解压到本地，将解压后的训练代码中“ModelZoo-PyTorch/PyTorch/built-in/cv/classification/ResNet50\_ID4149\_for\_PyTorch”目录上传至环境，如“/data/atlas\_dls/public/code/”路径下。
     5. 在“/data/atlas\_dls/public/code/ResNet50\_ID4149\_for\_PyTorch”路径下，注释掉main.py中的以下代码。
 
         ```Python
@@ -326,7 +326,7 @@
                 spec:
                   nodeSelector:
                     host-arch: huawei-arm
-                    accelerator-type: module-{xxx}b-8   # 由原来的card-{xxx}b-2修改为module-{xxx}b-8，{xxx}表示芯片型号的数值，从Ascend950代际开始根据实际产品形态进行修改
+                    accelerator-type: module-{xxx}b-8   # 由原来的card-{xxx}b-2修改为module-{xxx}b-8，{xxx}表示芯片型号的数值
                   containers:
                   - name: ascend 
                     image: pytorch-test:latest     # 修改为步骤1中获取的镜像名称

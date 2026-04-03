@@ -375,8 +375,8 @@ Ascend Docker Runtime
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参考[安装部署](./installation_guide.md#安装部署)章节进行操作。
-2. 特性使用指导请参考[容器化支持](./usage/containerization.md)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+2. 特性使用指导请参见[容器化支持](./usage/containerization.md)章节进行操作。
 
 ### 资源监测<a name="ZH-CN_TOPIC_0000002479386910"></a>
 
@@ -390,8 +390,8 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参考[安装部署](./installation_guide.md#安装部署)章节进行操作。
-2. 特性使用指导请参考[资源监测](./usage/resource_monitoring.md)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+2. 特性使用指导请参见[资源监测](./usage/resource_monitoring.md)章节进行操作。
 
 ### 虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855"></a>
 
@@ -399,7 +399,7 @@ NPU Exporter
 
 **功能介绍<a name="section1337420477275"></a>**
 
-基于HDK的昇腾虚拟化实例功能是指通过资源虚拟化的方式将物理机或虚拟机配置的NPU（昇腾AI处理器）切分成若干份vNPU（虚拟NPU）挂载到容器中使用，虚拟化管理方式能够实现统一不同规格资源的分配和回收处理，满足多用户反复申请/释放的资源操作请求。
+基于HDK的虚拟化实例功能是指通过资源虚拟化的方式将物理机或虚拟机配置的NPU（昇腾AI处理器）切分成若干份vNPU（虚拟NPU）挂载到容器中使用，虚拟化管理方式能够实现统一不同规格资源的分配和回收处理，满足多用户反复申请/释放的资源操作请求。
 
 昇腾基于HDK的虚拟化实例功能的优点是可实现多个用户共同使用一台服务器，用户可以按需申请vNPU，降低了用户使用NPU算力的门槛和成本。多个用户共同使用一台服务器的NPU，并借助容器进行资源隔离，资源隔离性好，保证运行环境的平稳和安全，且资源分配，资源回收过程统一，方便多租户管理。
 
@@ -427,18 +427,18 @@ NPU Exporter
 
 **使用说明<a name="section1350915844811"></a>**
 
-- 驱动安装后会默认安装npu-smi工具，安装操作请参考《CANN 软件安装指南》中的“<a href="https://www.hiascend.com/document/detail/zh/canncommercial/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian">安装NPU驱动和固件</a>”章节（商用版）或“<a href="https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler">安装NPU驱动和固件</a>”章节（社区版）；安装成功后，npu-smi放置在“/usr/local/sbin/”和“/usr/local/bin/”路径下。
-- 安装MindCluster中的Ascend Docker Runtime、Ascend Device Plugin和Volcano组件，请参考[安装部署](./installation_guide.md#安装部署)章节进行操作。
-- 安装Docker，请参考[安装Docker](https://docs.docker.com/engine/install/)。
+- 驱动安装后会默认安装npu-smi工具，安装操作请参见《CANN 软件安装指南》中的“<a href="https://www.hiascend.com/document/detail/zh/canncommercial/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian">安装NPU驱动和固件</a>”章节（商用版）或“<a href="https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler">安装NPU驱动和固件</a>”章节（社区版）；安装成功后，npu-smi放置在“/usr/local/sbin/”和“/usr/local/bin/”路径下。
+- 安装MindCluster中的Ascend Docker Runtime、Ascend Device Plugin和Volcano组件，请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+- 安装Docker，请参见[安装Docker](https://docs.docker.com/engine/install/)。
 - 安装Kubernetes，请参见[安装Kubernetes](https://kubernetes.io/zh/docs/setup/production-environment/tools/)。
 
-#### 基于vCANN的虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855vcann"></a>
+#### 基于vCANN-RT的虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855vcann"></a>
 
 **功能介绍<a name="section1337420477275vcann"></a>**
 
-基于vCANN的虚拟化实例功能是指通过向vCANN提供软切分配置文件的方式将物理机配置的NPU（昇腾AI处理器）挂载到容器中使用，虚拟化管理方式能够实现统一不同规格资源的分配和回收处理，满足多用户反复申请/释放资源的操作请求。
+基于vCANN-RT的虚拟化实例功能是指通过向vCANN-RT提供软切分配置文件的方式将物理机配置的NPU（昇腾AI处理器）挂载到容器中使用，虚拟化管理方式能够实现统一不同规格资源的分配和回收处理，满足多用户反复申请/释放资源的操作请求。
 
-昇腾基于vCANN的虚拟化实例功能的优点是可实现多个用户共同使用一台服务器，用户可以按需申请NPU的资源，降低了用户使用NPU算力的门槛和成本。多个用户共同使用一台服务器的NPU，并借助容器进行资源隔离，资源隔离性好，保证运行环境的平稳和安全，且资源分配与回收过程统一，从而方便多租户管理。
+昇腾基于vCANN-RT的虚拟化实例功能的优点是可实现多个用户共同使用一台服务器，用户可以按需申请NPU的资源，降低了用户使用NPU算力的门槛和成本。多个用户共同使用一台服务器的NPU，并借助容器进行资源隔离，资源隔离性好，保证运行环境的平稳和安全，且资源分配与回收过程统一，从而方便多租户管理。
 
 **所需组件<a name="ZH-CN_TOPIC_0000002479226932vcann"></a>**
 
@@ -450,8 +450,8 @@ NPU Exporter
 
 **使用说明<a name="section1350915844811vcann"></a>**
 
-1. 安装组件请参考[安装部署](./installation_guide.md#安装部署)章节进行操作。
-2. 特性使用指导请参考[软切分调度（推理）](./usage/basic_scheduling.md#软切分调度推理)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+2. 特性使用指导请参见[基于vCANN-RT的虚拟化实例](./usage/virtual_instance.md#基于vcann-rt的虚拟化实例)章节进行操作。
 
 ### 基础调度<a name="ZH-CN_TOPIC_0000002511346871"></a>
 
@@ -475,8 +475,8 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参考[安装部署](./installation_guide.md#安装部署)章节进行操作。
-2. 特性使用指导请参考[整卡调度或静态vNPU调度（训练）](./usage/basic_scheduling.md#整卡调度或静态vnpu调度训练)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+2. 特性使用指导请参见[整卡调度或静态vNPU调度（训练）](./usage/basic_scheduling.md#整卡调度或静态vnpu调度训练)章节进行操作。
 
 #### 静态vNPU调度<a name="ZH-CN_TOPIC_0000002511426831"></a>
 
@@ -486,7 +486,7 @@ NPU Exporter
 
 **所需组件<a name="section15655185785119"></a>**
 
-训练任务及推理任务下需要安装以下组件
+训练任务及推理任务下需要安装以下组件：
 
 - 调度器（Volcano或其他调度器）
 - Ascend Device Plugin
@@ -498,8 +498,28 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参考[安装部署](./installation_guide.md#安装部署)章节进行操作。
-2. 特性使用指导请参考[整卡调度或静态vNPU调度（训练）](./usage/basic_scheduling.md#整卡调度或静态vnpu调度训练)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+2. 特性使用指导请参见[整卡调度或静态vNPU调度（训练）](./usage/basic_scheduling.md#整卡调度或静态vnpu调度训练)章节进行操作。
+
+#### 多级调度
+
+**功能特点**
+
+多级调度是ascend-for-volcano插件中的一种高级调度策略，专为具有复杂网络拓扑的NPU集群设计。多级调度是整卡调度的一种特殊场景，它根据NPU的网络拓扑层级关系将集群资源抽象为多层级结构，为NPU集群提供高效、灵活、可靠的调度能力。用户运行训练任务时，根据网络拓扑选择合适的NPU设备，最大化发挥NPU性能，实现训练任务的NPU卡调度的最佳分配。
+
+**所需组件**
+
+- Volcano
+- Ascend Device Plugin
+- Ascend Docker Runtime
+- Ascend Operator
+- ClusterD
+- NodeD
+
+**使用说明**
+
+1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+2. 特性使用指导请参见[多级调度](./usage/basic_scheduling.md#多级调度)章节进行操作。
 
 #### 动态vNPU调度<a name="ZH-CN_TOPIC_0000002479226956"></a>
 
@@ -517,8 +537,27 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参考[安装部署](./installation_guide.md#安装部署)章节进行操作。
-2. 特性使用指导请参考[动态vNPU调度（推理）](./usage/basic_scheduling.md#动态vnpu调度推理)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+2. 特性使用指导请参见[动态vNPU调度（推理）](./usage/basic_scheduling.md#动态vnpu调度推理)章节进行操作。
+
+#### 软切分调度
+
+**功能特点**
+
+软切分虚拟化调度需要Ascend Device Plugin组件上报其所在节点的可用芯片的AI Core总百分比信息。虚拟化任务上报后，Volcano经过计算将该任务调度到满足其要求的节点，由Ascend Device Plugin根据任务的配置信息生成软切分配置文件并挂载到任务容器中供[vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md)使用。该功能通过向[vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md)提供软切分配置文件的方式，使用户可以按需申请NPU（昇腾AI处理器）资源，实现对NPU资源的精细化管理和动态分配，支持多个用户共同使用一台服务器的NPU资源。该虚拟化管理方式具有统一资源分配与回收能力，可满足多租户场景下反复申请、释放资源的动态操作需求，提升资源利用率。
+
+**所需组件**
+
+- Volcano
+- Ascend Device Plugin
+- Ascend Docker Runtime
+- Ascend Operator
+- ClusterD
+
+**使用说明**
+
+1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+2. 特性使用指导请参见[软切分调度（推理）](./usage/basic_scheduling.md#软切分调度推理)章节进行操作。
 
 #### 弹性训练<a name="ZH-CN_TOPIC_0000002479226936"></a>
 
@@ -541,8 +580,8 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参考[安装部署](./installation_guide.md#安装部署)章节进行操作。
-2. 特性使用指导请参考[弹性训练](./usage/basic_scheduling.md#弹性训练)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+2. 特性使用指导请参见[弹性训练](./usage/basic_scheduling.md#弹性训练)章节进行操作。
 
 #### 推理卡故障恢复<a name="ZH-CN_TOPIC_0000002479226952"></a>
 
@@ -560,8 +599,8 @@ NPU Exporter
 
 **使用说明<a name="section74221327111220"></a>**
 
-- 安装组件请参考[安装部署](./installation_guide.md#安装部署)章节进行操作。
-- 特性使用指导请参考[推理卡故障恢复](./usage/basic_scheduling.md#推理卡故障恢复)章节进行操作。
+- 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+- 特性使用指导请参见[推理卡故障恢复](./usage/basic_scheduling.md#推理卡故障恢复)章节进行操作。
 
 #### 推理卡故障重调度<a name="ZH-CN_TOPIC_0000002511346875"></a>
 
@@ -581,8 +620,8 @@ NPU Exporter
 
 **使用说明<a name="section18894171918127"></a>**
 
-- 安装组件请参考[安装部署](./installation_guide.md#安装部署)章节进行操作。
-- 特性使用指导请参考[推理卡故障重调度](./usage/basic_scheduling.md#推理卡故障重调度)章节进行操作。
+- 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+- 特性使用指导请参见[推理卡故障重调度](./usage/basic_scheduling.md#推理卡故障重调度)章节进行操作。
 
 ### 断点续训<a name="ZH-CN_TOPIC_0000002511346867"></a>
 
@@ -611,9 +650,9 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参考[安装部署](./installation_guide.md#安装部署)章节进行操作。
-2. 特性使用指导请参考[断点续训](./usage/resumable_training.md)章节进行操作。
-3. TaskD需安装在容器内，详见[制作镜像](./usage/resumable_training.md#制作镜像)章节。
+1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+2. 特性使用指导请参见[断点续训](./usage/resumable_training.md)章节进行操作。
+3. TaskD需安装在容器内，详细请参见[制作镜像](./usage/resumable_training.md#制作镜像)章节。
 4. MindIO ACP的详细介绍及安装步骤请参见[Checkpoint保存与加载优化](./optimizing_saving_and_loading_checkpoints.md)章节。
 5. MindIO TFT的详细介绍及安装步骤请参见[故障恢复加速](./fault_recovery_acceleration.md)。
 
@@ -633,8 +672,8 @@ Container Manager
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参考[安装部署](./installation_guide.md#安装部署)章节进行操作。
-2. 特性使用指导请参考[一体机特性指南](./usage/appliance.md)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+2. 特性使用指导请参见[一体机特性指南](./usage/appliance.md)章节进行操作。
 
 ## 支持的产品形态和OS清单<a name="ZH-CN_TOPIC_0000002511346411"></a>
 
@@ -834,9 +873,9 @@ Container Manager
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul877545583412"></a><a name="ul877545583412"></a><ul id="ul877545583412"><li>openEuler 22.03 LTS SP4 for ARM</li><li>Euler 2.13 for ARM</li><li>CUlinux 3.0 for ARM</li><li>CUlinux 4.0 for ARM</li><li>CTYunOS 4.0 for ARM</li><li>HCE 2.0.2506 for ARM</li><li>Velinux 2.0 for ARM</li><li>Kylin V10 SP3 2403 for ARM</li><li>Kylin V11 for ARM</li><li>UOS V25 for ARM (6.6内核)</li></ul>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p>Atlas 350 标卡</p>
+<tr><td class="cellrowborder" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p>Atlas 350 加速卡</p>
 </td>
-<td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p><span>Atlas 350 标卡</span></p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas 350 标卡设备在当前版本不支持DPU硬件设备通信功能。</div></div>
+<td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p><span>Atlas 350 加速卡</span></p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas 350 加速卡设备在当前版本不支持DPU硬件设备通信功能。</div></div>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><ul><li>Velinux 2.0</li><li>Alinux 3 for x86</li></ul>
 </td>

@@ -40,7 +40,6 @@ MindIO ACP加速LLM Checkpoint保存和加载的4个关键点如下：
 
 - 训练[故障快速恢复](./fault_recovery_acceleration.md)框架正在向MindIO ACP保存Checkpoint时，如果遇到Checkpoint保存失败，当前正在保存的Checkpoint不能作为训练恢复点，训练框架需要从上一次完整的Checkpoint点进行恢复。
 - 在训练过程中发生MindIO ACP故障，已经下发的业务，MindIO ACP SDK会重试3次连接，3次都失败则对接原生存储方式，重试最长等待60s；在训练开始前发生MindIO ACP故障，MindIO ACP SDK则会跳过对接MindIO ACP，Checkpoint的数据直接对接原生数据存储方式。
-- 本特性与MindIO TFT[故障快速恢复](./fault_recovery_acceleration.md)特性不兼容。
 - 本特性不配套MindSpore 2.7.0之前的版本，功能无法使用。
 
 ### 安装前准备
@@ -332,7 +331,7 @@ MindIO ACP加速LLM Checkpoint保存和加载的4个关键点如下：
         vim pipe/module.py
         ```
 
-    2. 替换torch.save和torch.load，替换方式参见步骤[3.b](#step_acp_li002)  \~ 步骤[3.c](#step_acp_li003)。
+    2. 替换torch.save和torch.load，替换方式参见[步骤3.b](#step_acp_li002)  \~ [步骤3.c](#step_acp_li003)。
 
 5. <a id="step_acp_li004"></a>修改state\_dict\_factory.py文件。
     1. 打开state\_dict\_factory.py文件。
@@ -341,9 +340,9 @@ MindIO ACP加速LLM Checkpoint保存和加载的4个关键点如下：
         vim state_dict_factory.py
         ```
 
-    2. 替换torch.save和torch.load，替换方式参见步骤[3.b](#step_acp_li002)  \~步骤  [3.c](#step_acp_li003)。
+    2. 替换torch.save和torch.load，替换方式参见[步骤3.b](#step_acp_li002)  \~ [步骤3.c](#step_acp_li003)。
 
-6. 完成步骤[3](#step_acp_li001)  \~ 步骤[5](#step_acp_li004)的.py文件修改，DeepSpeed即可使用MindIO ACP服务。
+6. 完成[步骤3](#step_acp_li001)  \~ [步骤5](#step_acp_li004)的.py文件修改，DeepSpeed即可使用MindIO ACP服务。
 
 ### Torch对接X1框架
 
@@ -588,7 +587,7 @@ MindIO ACP加速LLM Checkpoint保存和加载的4个关键点如下：
 
     3. 按“Esc”键，输入 **:wq!** ，按“Enter”保存并退出编辑。
 
-5. 完成步骤[3](#step_acp_li005)  \~ 步骤[4](#step_acp_li006)的.py文件修改，MindSpeed-LLM即可使用MindIO ACP加速周期性Checkpoint特性。
+5. 完成[步骤3](#step_acp_li005)  \~ [步骤4](#step_acp_li006)的.py文件修改，MindSpeed-LLM即可使用MindIO ACP加速周期性Checkpoint特性。
 
 ### 对接K8s
 
@@ -1225,12 +1224,12 @@ MindIO ACP组件不可服务，在用户侧转为直接操作后端存储。
 **处理步骤**
 
 1. 检查后端存储状态是否正常。
-    - 状态正常，执行[2](#step_acp_li007)。
-    - 状态异常，执行[3](#step_acp_li008)。
+    - 状态正常，执行[步骤2](#step_acp_li007)。
+    - 状态异常，执行[步骤3](#step_acp_li008)。
 
 2. <a id="step_acp_li007"></a>检查后端存储内的文件归属的用户名和属组权限，与客户端进程的权限是否一致。
     - 权限一致，告警会自动清除。
-    - 权限不一致，执行[3](#step_acp_li008)。
+    - 权限不一致，执行[步骤3](#step_acp_li008)。
 
 3. <a id="step_acp_li008"></a>搜集故障或者日志信息，联系技术支持处理。
 

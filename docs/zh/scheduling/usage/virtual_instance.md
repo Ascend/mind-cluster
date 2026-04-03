@@ -482,7 +482,7 @@
 
 |参数|说明|举例|
 |--|--|--|
-|ASCEND_VISIBLE_DEVICES|必须使用ASCEND_VISIBLE_DEVICES环境变量指定被挂载至容器中的NPU设备，否则挂载NPU设备失败；使用NPU设备序号指定设备，支持单个和范围指定且支持混用；使用芯片名称指定设备时，支持同时指定多个同类型的芯片名称。|<ul><li>静态虚拟化：<ul><li>ASCEND_VISIBLE_DEVICES=100表示将100号vNPU挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=101,103表示将101、103号vNPU挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=100-102表示将100号至102号vNPU（包含100号和102号）挂载入容器中，效果同ASCEND_VISIBLE_DEVICES=100,101,102。</li><li>ASCEND_VISIBLE_DEVICES=100-102,104表示将100号至102号以及104号vNPU挂载入容器，效果同ASCEND_VISIBLE_DEVICES=100,101,102,104。</li><li>ASCEND_VISIBLE_DEVICES=XXX-Y，其中XXX表示NPU设备，支持的取值为npu、Ascend910、Ascend310、Ascend310B和Ascend310P；Y表示物理NPU设备ID。<ul><li>ASCEND_VISIBLE_DEVICES=npu-101，表示把101号vNPU挂载进容器。</li><li>ASCEND_VISIBLE_DEVICES=npu-101,npu-103，表示把101号NPU和103号vNPU挂载进容器。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>使用芯片名称指定设备时，建议统一取值npu。</li><li>不支持在一个参数里既指定设备序号又指定NPU名称，即不支持ASCEND_VISIBLE_DEVICES=101，npu-103。</li><li>必须搭配ASCEND_RUNTIME_OPTIONS，取值必须包含VIRTUAL，表示挂载的是vNPU。</li></ul></div></div></li><li>动态虚拟化：ASCEND_VISIBLE_DEVICES=0表示从0号NPU设备中划分出一定数量的AI Core。<ul><li>一条动态虚拟化的命令只能指定一个物理NPU的ID进行动态虚拟化。</li><li>必须搭配ASCEND_VNPU_SPECS，表示在指定的NPU上划分出的AI Core数量。</li><li>可以搭配ASCEND_RUNTIME_OPTIONS，但是只能取值为NODRV，表示不挂载驱动相关目录。</li></ul></li></ul>|
+|ASCEND_VISIBLE_DEVICES|必须使用ASCEND_VISIBLE_DEVICES环境变量指定被挂载至容器中的NPU设备，否则挂载NPU设备失败；使用NPU设备序号指定设备，支持单个和范围指定且支持混用；使用芯片名称指定设备时，支持同时指定多个同类型的芯片名称。|<ul><li>静态虚拟化：<ul><li>ASCEND_VISIBLE_DEVICES=100表示将100号vNPU挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=101,103表示将101、103号vNPU挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=100-102表示将100号至102号vNPU（包含100号和102号）挂载入容器中，效果同ASCEND_VISIBLE_DEVICES=100,101,102。</li><li>ASCEND_VISIBLE_DEVICES=100-102,104表示将100号至102号以及104号vNPU挂载入容器，效果同ASCEND_VISIBLE_DEVICES=100,101,102,104。</li><li>ASCEND_VISIBLE_DEVICES=XXX-Y，其中XXX表示NPU设备，支持的取值为npu、Ascend910、Ascend310、Ascend310B和Ascend310P；Y表示物理NPU设备ID。<ul><li>ASCEND_VISIBLE_DEVICES=npu-101，表示把101号vNPU挂载进容器。</li><li>ASCEND_VISIBLE_DEVICES=npu-101,npu-103，表示把101号NPU和103号vNPU挂载进容器。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>使用芯片名称指定设备时，建议统一取值npu。</li><li>不支持在一个参数里既指定设备序号又指定NPU名称，即不支持ASCEND_VISIBLE_DEVICES=101，npu-103。</li><li>必须搭配ASCEND_RUNTIME_OPTIONS，取值必须包含VIRTUAL，表示挂载的是vNPU。</li></ul></div></div></li><li>动态虚拟化：ASCEND_VISIBLE_DEVICES=0表示从0号NPU设备中划分出一定数量的AI Core。<ul><li>一条动态虚拟化的命令只能指定一个物理NPU的ID进行动态虚拟化。</li><li>必须搭配ASCEND_VNPU_SPECS，表示在指定的NPU上划分出的AI Core数量。</li><li>可以搭配ASCEND_RUNTIME_OPTIONS，但是只能取值为NODRV，表示不挂载驱动相关目录。</li></ul></li></ul></li></ul>|
 |ASCEND_RUNTIME_OPTIONS|<p>对参数ASCEND_VISIBLE_DEVICES中指定的芯片ID作出限制：</p><ul><li>NODRV：表示不挂载驱动相关目录。</li><li>VIRTUAL：表示挂载的是虚拟芯片。</li><li>NODRV,VIRTUAL：表示挂载的是虚拟芯片，并且不挂载驱动相关目录。</li></ul>|<ul><li>ASCEND_RUNTIME_OPTIONS=NODRV</li><li>ASCEND_RUNTIME_OPTIONS=VIRTUAL</li><li>ASCEND_RUNTIME_OPTIONS=NODRV,VIRTUAL</li></ul>|
 |ASCEND_VNPU_SPECS|从物理NPU设备中划分出一定数量的AI Core，指定为虚拟设备。支持的取值请参见[表1](#虚拟化规则)。<ul><li>只有支持动态虚拟化的产品形态，才能使用该参数。</li><li>需配合参数“ASCEND_VISIBLE_DEVICES”一起使用，参数“ASCEND_VISIBLE_DEVICES”指定用于虚拟化的物理NPU设备。</li></ul>|ASCEND_VNPU_SPECS=vir04表示划分4个AI Core作为vNPU，挂载至容器。|
 
@@ -1316,19 +1316,19 @@ spec:
 >[!NOTICE] 
 >上表中对于芯片虚拟化（非整卡），vnpu-dvpp的值只能为表中对应的值，其他值会导致任务不能下发。
 
-## 基于vCANN的虚拟化实例<a name="ZH-CN_TOPIC_000000251196876vcann"></a>
+## 基于vCANN-RT的虚拟化实例<a name="ZH-CN_TOPIC_000000251196876vcann"></a>
 
 ### 特性说明<a name="ZH-CN_TOPIC_0000002511426281vcann"></a>
 
-基于vCANN的虚拟化功能是指通过向vCANN提供软切分配置文件的方式将物理机配置的NPU（昇腾AI处理器）挂载到容器中使用，虚拟化管理方式能够实现统一不同规格资源的分配和回收处理，满足多用户反复申请/释放资源的操作请求。
+基于vCANN-RT的虚拟化功能是指通过向vCANN-RT提供软切分配置文件的方式将物理机配置的NPU（昇腾AI处理器）挂载到容器中使用，虚拟化管理方式能够实现统一不同规格资源的分配和回收处理，满足多用户反复申请/释放资源的操作请求。
 
-昇腾基于vCANN的虚拟化实例功能的优点是可实现多个用户共同使用一台服务器，用户可以按需申请NPU的资源，降低了用户使用NPU算力的门槛和成本。多个用户共同使用一台服务器的NPU，并借助容器进行资源隔离，资源隔离性好，保证运行环境的平稳和安全，且资源分配与回收过程统一，从而方便多租户管理。
+昇腾基于vCANN-RT的虚拟化实例功能的优点是可实现多个用户共同使用一台服务器，用户可以按需申请NPU的资源，降低了用户使用NPU算力的门槛和成本。多个用户共同使用一台服务器的NPU，并借助容器进行资源隔离，资源隔离性好，保证运行环境的平稳和安全，且资源分配与回收过程统一，从而方便多租户管理。
 
 **原理介绍<a name="section154002962818vcann"></a>**
 
-昇腾NPU硬件资源主要包括AICore（用于AI模型的计算）、AICPU、内存等，基于vCANN的虚拟化实例功能主要原理是将上述硬件资源根据用户指定的资源需求，以软切分配置文件的方式通过vCANN实现按需分配。例如用户只需要使用50% AICore的算力和2048MB的高带宽内存，系统就会创建一个npu_info配置文件，通过vCANN向NPU芯片获取上述资源提供给容器使用，基于vCANN的虚拟化实例方案如[图1 基于vCANN的虚拟化实例方案](#fig987114711574vcann)所示。
+昇腾NPU硬件资源主要包括AICore（用于AI模型的计算）、AICPU、内存等，基于vCANN-RT的虚拟化实例功能主要原理是将上述硬件资源根据用户指定的资源需求，以软切分配置文件的方式通过vCANN-RT实现按需分配。例如用户只需要使用50% AICore的算力和2048MB的高带宽内存，系统就会创建一个npu_info配置文件，通过vCANN-RT向NPU芯片获取上述资源提供给容器使用，基于vCANN-RT的虚拟化实例方案如[图1 基于vCANN-RT的虚拟化实例方案](#fig987114711574vcann)所示。
 
-**图 1**  基于vCANN的虚拟化实例方案<a name="fig987114711574vcann"></a>  
+**图 1**  基于vCANN-RT的虚拟化实例方案<a name="fig987114711574vcann"></a>  
 ![](../../figures/scheduling/virtual_instance_vcann.PNG "virtual_instance_vcann")
 
 **产品支持说明<a name="section17326115542216vcann"></a>**
@@ -1344,7 +1344,7 @@ spec:
 
 **使用说明<a name="section1296713336303vcann"></a>**
 
-- 软切分虚拟化基于[vCANN](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md)实现，直接将NPU重复挂载到多个容器，容器内的CANN按照配置好的比例使用NPU资源。
+- 软切分虚拟化基于[vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md)实现，直接将NPU重复挂载到多个容器，容器内的CANN按照配置好的比例使用NPU资源。
 - 如果使用软切分虚拟化功能，需要先参见[软切分虚拟化](#软切分虚拟化)，再进行挂载到容器操作。
 
 **使用约束<a name="section911013420264vcann"></a>**
@@ -1380,7 +1380,7 @@ spec:
 <td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 "><p>分配的芯片信息会在PodGroup的label中体现出来，关于PodGroup label的详细说明请参见<a href="../api/volcano.md#podgroup">PodGroup label</a>中的如下参数：<ul><li>huawei.com/scheduler.softShareDev.aicoreQuota</li><li>huawei.com/scheduler.softShareDev.hbmQuota</li><li>huawei.com/scheduler.softShareDev.policy</li></ul></p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>软切分功能必须配合vCANN使用。</p>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>软切分功能必须配合vCANN-RT使用。</p>
 </td>
 </tr>
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>分配软切分NPU时，经MindCluster调度，将优先占满剩余算力最少的物理NPU。</p>

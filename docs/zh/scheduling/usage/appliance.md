@@ -121,7 +121,7 @@ Container Manager从驱动获取到芯片故障码后，根据故障码对设备
 </tr>
 <tr id="zh-cn_topic_0000002171521445_row116184515226"><td class="cellrowborder" valign="top" width="23.830000000000002%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p5618751102216"><a name="zh-cn_topic_0000002171521445_p5618751102216"></a><a name="zh-cn_topic_0000002171521445_p5618751102216"></a>RestartRequest</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="44.73%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002171521445_p05771854113911"><a name="zh-cn_topic_0000002171521445_p05771854113911"></a><a name="zh-cn_topic_0000002171521445_p05771854113911"></a><span id="ph6926121810160"><a name="ph6926121810160"></a><a name="ph6926121810160"></a>Container Manager</span>在故障持续60秒后，将故障芯片和关联芯片加入到待复位芯片缓存中。待复位芯片缓存复位逻辑详细请参见<a href="#故障处理">故障处理</a>。</p>
+<td class="cellrowborder" rowspan="2" valign="top" width="44.73%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002171521445_p05771854113911"><a name="zh-cn_topic_0000002171521445_p05771854113911"></a><a name="zh-cn_topic_0000002171521445_p05771854113911"></a><span id="ph6926121810160"><a name="ph6926121810160"></a><a name="ph6926121810160"></a>Container Manager</span>在故障持续60秒后，将故障芯片和关联芯片加入到待复位芯片缓存中。芯片复位逻辑详细请参见<a href="#故障处理">故障处理</a>。</p>
 </td>
 <td class="cellrowborder" rowspan="4" valign="top" width="31.44%" headers="mcps1.2.4.1.3 "><p id="p11041540152412"><a name="p11041540152412"></a><a name="p11041540152412"></a>当命令run的启动参数<span class="parmname" id="parmname127339182715"><a name="parmname127339182715"></a><a name="parmname127339182715"></a>“-ctrStrategy”</span>配置为<span class="parmvalue" id="parmvalue058714462711"><a name="parmvalue058714462711"></a><a name="parmvalue058714462711"></a>“singleRecover”</span>或者<span class="parmvalue" id="parmvalue1923725032719"><a name="parmvalue1923725032719"></a><a name="parmvalue1923725032719"></a>“ringRecover”</span>时，开启容器启停功能。两个配置参数的差异请参见<a href="../installation_guide.md#container-manager">安装Container Manager</a>中"Container Manager启动参数"表。</p>
 </td>
@@ -131,7 +131,7 @@ Container Manager从驱动获取到芯片故障码后，根据故障码对设备
 </tr>
 <tr id="zh-cn_topic_0000002171521445_row561825132214"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p66188511222"><a name="zh-cn_topic_0000002171521445_p66188511222"></a><a name="zh-cn_topic_0000002171521445_p66188511222"></a>FreeRestartNPU</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" headers="mcps1.2.4.1.2 "><p id="p17596495131"><a name="p17596495131"></a><a name="p17596495131"></a><span id="ph1559049101318"><a name="ph1559049101318"></a><a name="ph1559049101318"></a>Container Manager</span>收到故障后，立即将故障芯片和关联芯片加入到待复位芯片缓存中。待复位芯片缓存复位逻辑详细请参见<a href="#故障处理">故障处理</a>。</p>
+<td class="cellrowborder" rowspan="2" valign="top" headers="mcps1.2.4.1.2 "><p id="p17596495131"><a name="p17596495131"></a><a name="p17596495131"></a><span id="ph1559049101318"><a name="ph1559049101318"></a><a name="ph1559049101318"></a>Container Manager</span>收到故障后，立即将故障芯片和关联芯片加入到待复位芯片缓存中。芯片复位逻辑详细请参见<a href="#故障处理">故障处理</a>。</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002171521445_row14618125152210"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002171521445_p17618155116227"><a name="zh-cn_topic_0000002171521445_p17618155116227"></a><a name="zh-cn_topic_0000002171521445_p17618155116227"></a>RestartNPU</p>
@@ -236,7 +236,7 @@ Container Manager在感知到芯片处于RestartRequest、RestartBusiness、Free
 在一体机混部或无K8s的场景下，推理进程异常后，没有有效的恢复手段。本章节提供了推理业务故障后自动恢复的示例。示例中启动脚本作为容器entrypoint，自动拉起推理进程，监控推理进程状态，并在异常后重新拉起推理进程。
 
 - 支持MindIE Server单机推理。
-- 不支持MindIE Server多机推理。仅重启其中一个容器中的推理进程，业务无法恢复。
+- 不支持MindIE Server多机推理。原因是仅重启其中一个容器中的推理进程，业务无法恢复。
 
 **操作步骤<a name="section169801610181818"></a>**
 

@@ -42,7 +42,11 @@ MindCluster集群调度组件支持用户通过以下方式进行SGLang推理服
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 
 2. ClusterD读取device-info-cm和node-info-cm中的信息后，将信息整合到cluster-info-cm中。
-3. 用户通过kubectl或者其他深度学习平台下发OME框架的SGLang推理任务，OME根据推理任务的配置生成Deployment或者LeaderWorkerSet（LWS）的子工作负载，再由对应的子工作负载生成多个推理服务的任务Pod。关于Deployment或者LeaderWorkerSet的详细说明，可以参见[OME文档](https://docs.sglang.ai/ome/docs/concepts/inference_service/)。
+3. 用户通过kubectl或者其他深度学习平台下发OME框架的SGLang推理任务，OME根据推理任务的配置生成Deployment或者LeaderWorkerSet（LWS）的子工作负载，再由对应的子工作负载生成多个推理服务的任务Pod。关于Deployment或者LeaderWorkerSet的详细说明，可以参见[OME文档](https://docs.sglang.ai/ome/docs/concepts/inference_service/)。PodGroup生成策略如下：
+    
+   OME框架下存在如下两种不同类型的PodGroup映射方式：
+   - 对于实例不跨机（Deployment场景）的任务，由OME创建的需要NPU的一个Deployment包含一个类型（P/D）的全部实例，对应的PodGroup由volcano-controller创建和管理生命周期。单个PodGroup下管理该类型实例的全部Pod，一个Pod对应一个推理实例。
+   - 对于实例跨机（LeaderWorkerSet场景）的任务，由OME创建的需要NPU的一个LeaderWorkerSet包含一个类型（P/D）的全部实例，LeaderWorkerSet在开启Volcano组调度的情况下，会为每一个推理实例创建一个PodGroup，这些PodGroup由LeaderWorkerSet Controller创建和管理生命周期。单个PodGroup下管理该实例的全部Pod，同属一个PodGroup的多个Pod共同组成一个推理实例，一个PodGroup对应一个推理实例。
 4. volcano-controller或者LeaderWorkerSet为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参见[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
 5. 对于SGLang推理任务Pod，volcano-scheduler根据节点内存、CPU及标签、亲和性选择合适的节点，volcano-scheduler还会参考芯片拓扑信息为其选择合适的节点，并在Pod的annotation上写入选择的芯片信息以及节点硬件信息。
 6. kubelet创建容器时，对于基于OME部署的SGLang推理任务，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin或volcano-scheduler在Pod的annotation上写入芯片和节点硬件信息。Ascend Docker Runtime协助挂载相应资源。
@@ -86,6 +90,9 @@ MindCluster集群调度组件支持用户通过以下方式进行SGLang推理服
 
 用户根据OME框架的部署方式依此完成Base Model、Serving Runtime和Inference Service三个YAML修改之后，由OME及其依赖组件负责拉起子工作负载（Deployment或LeaderWorkerSet）和对应的Pod，并由OME及其依赖组件管理推理服务Pod的生命周期，在推理服务对应的Pod创建完成之后，MindCluster负责对Pod进行调度。
 
+>[!NOTE] 
+>任务P/D实例的副本数量由OME定义的Inference Service资源配置，具体配置方法请参见[OME Inference Service说明文档](https://docs.sglang.io/ome/docs/concepts/inference_service/)。
+
 **任务YAML说明<a name="section238217472163"></a>**
 
 ```Yaml
@@ -98,6 +105,7 @@ spec:
     annotations:
       sp-block: "16"  #仅Atlas 900 A3 SuperPoD 超节点场景配置，大小为一个P/D实例对应的Pod请求的NPU总数       
       huawei.com/schedule_minAvailable: "2" #仅在实例不跨机，即Deployment场景下配置，大小为D实例(在engineConfig字段中为P实例)的副本数量
+      huawei.com/recover_policy_path: "pod" #pod-rescheduling为"on"时任务执行恢复的路径。设置为"pod"，表明Pod级重调度失败时，不升级到Job级重调度。对于OME任务，Deployment场景下PodGroup中的每一个Pod都是一个独立的实例，因此其故障处理不能扩散到其他实例；LeaderWorkerSet场景下单个PodGroup下任意Pod重启均会由LeaderWorkerSet Controller重启整个PodGroup触发实例重调度。
     leader:
       nodeSelector:
         accelerator-type: module-a3-16-super-pod   #根据实际节点类型配置
@@ -176,6 +184,13 @@ spec:
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><p id="p115661830165610"><a name="p115661830165610"></a><a name="p115661830165610"></a>整数</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p12566330135620"><a name="p12566330135620"></a><a name="p12566330135620"></a>任务能够调度的最小副本数。在实例不跨机，即Deployment场景下必须指定该字段，根据该字段所属的P实例或者D实例，配置为engine或者decoder的生效副本数量。其他场景下不需要指定该字段。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p>huawei.com/recover_policy_path</p>
+</td>
+<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><p>"pod"</p>
+</td>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p>pod-rescheduling为"on"时任务执行恢复的路径。设置为"pod"，表明Pod级重调度失败时，不升级到Job级重调度。对于OME任务，Deployment场景下PodGroup中的每一个Pod都是一个独立的实例，因此其故障处理不能扩散到其他实例；LeaderWorkerSet场景下单个PodGroup下任意Pod重启均会由LeaderWorkerSet Controller重启整个PodGroup触发实例重调度。</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row46101144312"><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1861010140316"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1861010140316"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1861010140316"></a>pod-rescheduling</p>
@@ -295,7 +310,7 @@ spec:
 4. （可选）部署示例Serving Runtime。该示例用作测试使用，用户可以根据任务实际情况部署对应的Serving Runtime。
 
     ```shell
-    kubectl apply -f example/ome-runtimes/
+    kubectl apply -f example/ome-runtimes/xxx.yaml #请将xxx.yaml替换为实际选择的Serving Runtime文件名
     ```
 
 5. 编辑用户配置文件“config/isvc-config.yaml”。

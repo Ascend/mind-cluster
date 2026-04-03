@@ -57,6 +57,12 @@ MindCluster集群调度组件支持用户通过以下2种方式进行MindIE Moto
 
 ### 通过命令行使用<a name="ZH-CN_TOPIC_0000002511426327"></a>
 
+>[!NOTICE] 
+>如果用户未配置RoCE网络：
+>
+>- 在非超节点调度场景下，单机推理实例可以正常调度，但是推理实例间的KV传输可能异常，导致推理任务无法正常运行。
+>- 在超节点调度场景下，如果推理实例的逻辑超节点数量为1，推理实例可以正常调度，但是推理实例间的KV传输可能异常，导致推理任务无法正常运行。
+
 #### 流程说明<a name="ZH-CN_TOPIC_0000002511426315"></a>
 
 MindIE Motor包含两个部分，MindIE MS（MindIE Management Service）和MindIE Server。其中MindIE MS包含MS Controller和MS Coordinator，MindIE Server可以分为Prefill实例和Decode实例。其中MS Controller、MS Coordinator不需要使用NPU资源，MindIE Server需要NPU资源。
