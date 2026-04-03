@@ -92,70 +92,72 @@ spec:
       replicas: 1   # prefill副本数
       workload:     # prefill中实例的CRD类型信息
         apiVersion: apps/v1
-        kind: StatefulSet
+        kind: StatefulSet # workload类型，当前支持StatefulSet/Deployment
       metadata:
         labels: 
           infer.huawei.com/gang-schedule: 'false' # 关闭gang调度，开启时会为每一个workload实例创建PodGroup
       spec:
         replicas: 1 # prefill中workload的pod副本数
+        podManagementPolicy: Parallel # 此配置可不填，当workload为StatefulSet，且infer.huawei.com/gang-schedule为true时，需配置为Parallel
         selector:
           matchLabels:
-            app: test-prefill
+            app: test-prefill # 用户自定义，需要与下面labels中app配置保持一致
         template:
           metadata:
             labels:
-              app: test-prefill
+              app: test-prefill # 用户自定义，需要与下面labels中app配置保持一致
               fault-scheduling: 'grace' # 开启重调度
               fault-retry-times: '10'
-              ring-controller.atlas: ascend-910b
+              ring-controller.atlas: ascend-910b # 标识产品类型
           spec:
             schedulerName: volcano # 指定调度器为Volcano
             nodeSelector:
               accelerator-type: module-910b-8 # 根据硬件形态设置
             containers:
             - name: prefill
-              image: vllm-ascend:xxx
+              image: vllm-ascend:xxx # 自定义vllm镜像名
               ...
               resources:
                 requests:
                   huawei.com/Ascend910: 8
                 limits:
                   huawei.com/Ascend910: 8
-    ...
+              ... # 补充容器必要的挂载项与运行命令
     - name: decode  # decode定义
       replicas: 1   # decode副本数
       workload:     # decode中实例的CRD类型信息
         apiVersion: apps/v1
-        kind: StatefulSet
+        kind: StatefulSet # workload类型，当前支持StatefulSet/Deployment
       metadata:
         labels: 
           infer.huawei.com/gang-schedule: 'false' # 关闭gang调度，开启时会为每一个workload实例创建PodGroup
       spec:
         replicas: 1 # decode中workload的pod副本数
+        podManagementPolicy: Parallel # 此配置可不填，当workload为StatefulSet，且infer.huawei.com/gang-schedule为true时，需配置为Parallel
         selector:
           matchLabels:
-            app: test-decode
+            app: test-decode # 用户自定义，需要与下面labels中app配置保持一致
         template:
           metadata:
             labels:
-              app: test-decode
+              app: test-decode # 用户自定义，需要与下面labels中app配置保持一致
               fault-scheduling: 'grace' # 开启重调度
               fault-retry-times: '10'
-              ring-controller.atlas: ascend-910b
+              ring-controller.atlas: ascend-910b # 标识产品类型
           spec:
             schedulerName: volcano # 指定调度器为Volcano
             nodeSelector:
               accelerator-type: module-910b-8 # 根据硬件形态设置
             containers:
             - name: decode
-              image: vllm-ascend:xxx
+              image: vllm-ascend:xxx # 自定义vllm镜像名
               ...
               resources:
                 requests:
                   huawei.com/Ascend910: 8
                 limits:
                   huawei.com/Ascend910: 8
-    ...
+              ... # 补充容器必要的挂载项与运行命令
     - name: router  # router定义
       replicas: 1   # router副本数
       services:     # router services定义，此处定义的service在一个角色范围内仅创建一个
@@ -166,26 +168,26 @@ spec:
             protocol: TCP
             targetPort: 1026
           selector: 
-            app: test-router
+            app: test-router # 用户自定义，需要与下面labels中app配置保持一致
           type: ClusterIP
       workload:     # router中实例的CRD类型信息
         apiVersion: apps/v1
-        kind: Deployment
+        kind: Deployment # workload类型，当前支持StatefulSet/Deployment
       spec:
         replicas: 1 # router中workload的pod副本数
         selector:
           matchLabels:
-            app: test-router
+            app: test-router # 用户自定义，需要与下面labels中app配置保持一致
         template:
           metadata:
             labels:
-              app: test-router
+              app: test-router # 用户自定义，需要与下面labels中app配置保持一致
           spec:
             schedulerName: volcano # 指定调度器为Volcano
             containers:
             - name: router
-              image: xxx:yyy
-              ...
+              image: xxx:yyy # 自定义镜像名
+              ... # 补充容器必要的挂载项与运行命令
 ```
 
 #### YAML参数说明
@@ -230,6 +232,7 @@ spec:
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><ul ><li>true：开启组调度。</li><li>其他值或不使用该字段：关闭组调度。默认关闭。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >开启组调度后，Infer Operator将为每个实例（workload）创建对应的PodGroup，确保同一PodGroup内的所有Pod能够同时启动。</p>
+<p>workload为StatefulSet的场景下，开启组调度的同时需要配置`podManagementPolicy`为`Parallel`，否则StatefulSet无法正常调度。</p>
 </td>
 </tr>
 <tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >accelerator-type</p>
@@ -294,26 +297,58 @@ spec:
 </table>
 
 #### 下发任务
-
-用户可以使用kubectl命令行工具下发InferServiceSet任务
+用户可以使用kubectl命令行工具下发InferServiceSet任务：
 
   ```shell
     kubectl apply -f <job-yaml> # 下发准备好的YAML文件
   ```
 
-#### 查看调度结果
+得到下述回显示例表示下发成功：
 
+  ```shell
+    inferserviceset.mindcluster.huawei.com/my-test created
+  ```
+
+#### 查看调度结果
 用户可以使用kubectl命令行工具查看任务运行状态:
 
   ```shell
     kubectl get pod -n <namespace> # 查看相关推理实例pod是否拉起，namespace为用户定义的命名空间
+
+    # 回显示例如下，所有实例的pod处于Running状态
+    NAME                                  READY   STATUS    RESTARTS   AGE
+    my-test-0-decode-0-0                  1/1     Running   0          2s
+    my-test-0-prefill1-0-0                1/1     Running   0          2s
+    my-test-0-router-0-584bd5c9f9-vhwsm   1/1     Running   0          2s
+  ```
+
+  ```shell
     kubectl get instanceset -n <namespace> # 查看相关推理角色(prefill实例集、decode实例集等)是否拉起
+
+    # 回显示例如下，三种实例集成功创建
+    NAME                 AGE
+    my-test-0-decode     69s
+    my-test-0-prefill1   69s
+    my-test-0-router     69s
+  ```
+
+  ```shell
     kubectl get inferservice -n <namespace> # 查看相关推理服务是否拉起
+    
+    # 回显示例如下，inferservice成功创建
+    NAME        AGE
+    my-test-0   112s
+  ```
+
+  ```shell
     kubectl get inferserviceset -n <namespace> # 查看相关推理服务集合是否拉起
+
+    # 回显示例如下，inferserviceset成功创建
+    NAME      AGE
+    my-test   2m38s
   ```
 
 #### 查看推理任务运行结果
-
 用户可以在推理任务运行后，请求推理接口验证运行结果。
 
   ```shell
@@ -328,16 +363,22 @@ spec:
   ```
 
 >[!NOTE]
-><routing-podip\>为Routing Pod的IP地址，可以通过以下命令查找router实例pod的IP。
->
+>- <模型名称>取决于vllm用于设定模型名称的启动参数`served_model_name`。
+>- <routing-podip\>为Routing Pod的IP地址，可以通过以下命令查找router实例pod的IP。
 >```shell
 >kubectl get pod -n <namespace> -o wide
+>
+> # 回显示例如下，my-test-0-router-0-584bd5c9f9-xpj28对应的IP值10.244.1.92即为router实例pod的IP
+>NAME                                  READY   STATUS    RESTARTS   AGE   IP             NODE                   NOMINATED NODE   READINESS GATES
+>my-test-0-decode-0-0                  1/1     Running   0          5s    10.244.2.83    test-cluster-worker3   <none>           <none>
+>my-test-0-prefill1-0-0                1/1     Running   0          5s    10.244.3.100   test-cluster-worker    <none>           <none>
+>my-test-0-router-0-584bd5c9f9-xpj28   1/1     Running   0          5s    10.244.1.92    test-cluster-worker2   <none>           <none>
 >```
 
 若推理任务运行成功，上述指令将返回推理结果。若返回失败，可通过kubectl命令行工具查看业务容器中的运行日志：
 
   ```shell
-  kubectl logs -n <namespace> <pod-name> # 查看相应实例容器中的推理业务运行日志
+    kubectl logs -n <namespace> <pod-name> # 运行后回显查看相应实例容器中的推理业务运行日志
   ```
 
 #### 删除任务
@@ -345,7 +386,13 @@ spec:
 用户可以使用kubectl命令行工具删除InferServiceSet任务:
 
   ```shell
-  kubectl delete -f <job-yaml> # 删除<job-yaml>文件定义的推理任务
+    kubectl delete -f <job-yaml> # 删除<job-yaml>文件定义的推理任务
+  ```
+
+得到下述回显示例表示删除成功：
+
+  ```shell
+    inferserviceset.mindcluster.huawei.com "my-test" deleted
   ```
 
 ### 通过MindCluster社区部署工具一键部署使用
@@ -374,7 +421,7 @@ spec:
     python -m venv infer-operator-deploy-tool && source infer-operator-deploy-tool/bin/activate
     ```
 
-    根据环境实际情况使用Python或Python3。
+    根据环境实际情况选择使用Python或Python3。
 
 3. 安装依赖。
 
@@ -400,13 +447,13 @@ spec:
     2. 按“i”进入编辑模式，按实际情况修改文件中的字段。
     3. 按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
 
-    >[!NOTE] 
-    >用户配置文件中的配置字段说明可参考：[infer-operator-deploy-tool](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/infer-operator-deploy-tool/README.md)
+    >[!NOTE]
+    > 用户配置文件中的配置字段说明可参考：[infer-operator-deploy-tool](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/infer-operator-deploy-tool/README.md)
 
-6. （可选）创建任务名称空间，vllm-test为“config/user-config.yaml”设置的“deploy_config.namespace”。如果“deploy_config.namespace”为“default”或未设置，可以不创建名称空间。
+6.  （可选）创建任务名称空间，<namespace\>为“config/user-config.yaml”设置的“deploy_config.namespace”。如果“deploy_config.namespace”为“default”或未设置，可以不创建名称空间。
 
     ```shell
-    kubectl create ns vllm-test
+    kubectl create ns <namespace>
     ```
 
 7. 部署推理任务。在k8s的控制平面或具备k8s权限的节点上执行部署指令：
@@ -426,10 +473,39 @@ spec:
    用户可以使用kubectl命令行工具查看任务运行状态:
 
     ```shell
-    kubectl get pod -n <namespace> # 查看相关推理实例pod是否拉起，namespace为user-config.yaml中配置的namespace，默认为default
-    kubectl get instanceset -n <namespace> # 查看相关推理角色(prefill实例集、decode实例集等)是否拉起
-    kubectl get inferservice -n <namespace> # 查看相关推理服务是否拉起
-    kubectl get inferserviceset -n <namespace> # 查看相关推理服务集合是否拉起
+      kubectl get pod -n <namespace> # 查看相关推理实例pod是否拉起，namespace为“config/user-config.yaml”设置的“deploy_config.namespace”
+
+      # 回显示例如下，所有实例的pod处于Running状态
+      NAME                                  READY   STATUS    RESTARTS   AGE
+      qwen-0-decode-0-0                  1/1     Running   0          2s
+      qwen-0-prefill1-0-0                1/1     Running   0          2s
+      qwen-0-router-0-584bd5c9f9-vhwsm   1/1     Running   0          2s
+    ```
+
+    ```shell
+      kubectl get instanceset -n <namespace> # 查看相关推理角色(prefill实例集、decode实例集等)是否拉起
+
+      # 回显示例如下，三种实例集成功创建
+      NAME                 AGE
+      qwen-0-decode     69s
+      qwen-0-prefill1   69s
+      qwen-0-router     69s
+    ```
+
+    ```shell
+      kubectl get inferservice -n <namespace> # 查看相关推理服务是否拉起
+      
+      # 回显示例如下，inferservice成功创建
+      NAME        AGE
+      qwen-0   112s
+    ```
+
+    ```shell
+      kubectl get inferserviceset -n <namespace> # 查看相关推理服务集合是否拉起
+
+      # 回显示例如下，inferserviceset成功创建
+      NAME      AGE
+      qwen   2m38s
     ```
 
 9. 新建终端窗口，在当前K8s集群的节点中执行以下命令，访问推理服务。若请求成功返回，表示推理服务部署成功。
@@ -445,19 +521,23 @@ spec:
     }'
     ```
 
-   >[!NOTE] 
+   >[!NOTE]
    >- <routing-podip\>为Routing Pod的IP地址，可以通过以下命令查找router实例pod的IP。
-   >
-   >   ```shell
-   >   kubectl get pod -n <namespace> -o wide
-   >   ```
-   >
+   >```shell
+    >kubectl get pod -n <namespace> -o wide
+    >
+    > # 回显示例如下，qwen-0-router-0-584bd5c9f9-xpj28对应的IP值10.244.1.92即为router实例pod的IP
+    >NAME                                  READY   STATUS    RESTARTS   AGE   IP             NODE                   NOMINATED NODE   READINESS GATES
+    >qwen-0-decode-0-0                  1/1     Running   0          5s    10.244.2.83    test-cluster-worker3   <none>           <none>
+    >qwen-0-prefill1-0-0                1/1     Running   0          5s    10.244.3.100   test-cluster-worker    <none>           <none>
+    >qwen-0-router-0-584bd5c9f9-xpj28   1/1     Running   0          5s    10.244.1.92    test-cluster-worker2   <none>           <none>
+    >```
    >- <模型名称>取配置文件中的`engine_common_config.serve_name`字段。
 
 10. （可选）删除推理任务。若用户需要删除任务，可以执行该步骤。
 
     ```shell
-    python main.py delete -n my-test -ns default
+    python main.py delete -n qwen -ns default
     ```
 
     参数说明如下：
