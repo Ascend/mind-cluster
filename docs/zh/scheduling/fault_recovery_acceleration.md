@@ -292,7 +292,7 @@ MindIO TFT的关键点如下：
 
 > [!NOTE]说明
 >
-> - 本次发布包配套MindSpeed-LLM的 **master** 分支，环境、代码、数据集准备请用户参考MindSpeed-LLM仓库的相关指导说明，并确保其安全性。
+> - 本次发布包配套MindSpeed-LLM的 **2.3.0** 分支，环境、代码、数据集准备请用户参考MindSpeed-LLM仓库的相关指导说明，并确保其安全性。
 > - MindIO TFT对接MindSpeed-LLM框架，目前支持MindIO TTP、MindIO UCE和MindIO ARF功能。
 > - 对于PyTorch类框架，安装或开启MindCluster后，跳过步骤[1](#step_tft_li001)对torchrun的修改，由MindCluster控制进程退出。
 
