@@ -423,7 +423,7 @@ MindIO ACP加速LLM Checkpoint保存和加载的4个关键点如下：
 - MindSpeed-LLM框架准备请参见[MindSpeed-LLM](https://gitcode.com/Ascend/MindSpeed-LLM/tree/2.2.0)。匹配的Megatron-LM版本为 **core\_v0.12.1**。
 
 > [!NOTE]说明
-> 本次发布包配套MindSpeed-LLM的 **2.2.0** 分支，环境、代码、数据集准备请用户参考MindSpeed-LLM仓库的相关指导说明，并确保其安全性。
+> 本次发布包配套MindSpeed-LLM的 **2.3.0** 分支，环境、代码、数据集准备请用户参考MindSpeed-LLM仓库的相关指导说明，并确保其安全性。
 
 **操作步骤**
 

@@ -2246,7 +2246,7 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 - 请在训练正常迭代后，再进行借轨或回切指令的下发。
 - 确保已开启进程级恢复相关功能特性。
 - 暂不支持在IPv6场景下使用。
-- 仅支持Roce通信场景。
+- 仅支持Pod间为Roce通信的场景。
 
 **支持的产品型号和AI框架<a name="zh-cn_topic_0000002098609234_section4771115416256"></a>**
 
@@ -3978,7 +3978,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
         >- 若日志出现“modify  _xxx_  success”，表示ConfigMap中faultCustomization.json里的<i>xxx</i>参数设置成功。
         >- 若日志出现“insert fault frequency success”，表示记录了一次频率故障发生时间，在频率窗口内，该卡的该故障记录次数达到频率故障触发次数以后，就会上报频率故障对应的故障级别。
 
-8. （可选）手动恢复强制隔离的芯片。故障的处理策略为ManuallySeparateNPU时，故障恢复后该芯片也处于隔离状态，需要手动恢复强制隔离的芯片。
+8. （可选）手动恢复强制隔离的芯片。故障的处理策略为ManuallySeparateNPU时，故障恢复后该芯片也处于隔离状态，在未达到释放条件时若需要手动恢复强制隔离的芯片。
     1. 执行以下命令，查找该节点的Ascend Device Plugin上报的device-info-cm。
 
         ```shell
