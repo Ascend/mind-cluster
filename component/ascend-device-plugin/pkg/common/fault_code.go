@@ -800,6 +800,12 @@ func validateFaultFrequencyCustomization(customization *FaultFrequencyCustomizat
 			customization.EventId, customization.Times, MinFaultFrequencyTimes, MaxFaultFrequencyTimes, invalidMsg)
 		return false
 	}
+	if customization.FaultHandling != ManuallySeparateNPU && customization.ReleaseTimeWindow == MaxReleaseTimeWindow {
+		hwlog.RunLog.Warnf(
+			"EventIDs: %v, FaultHandling(%s) in this FaultFrequency without ReleaseTimeWindow is not support. %s",
+			customization.EventId, customization.FaultHandling, invalidMsg)
+		return false
+	}
 	if !FaultTypeSet.Has(customization.FaultHandling) {
 		hwlog.RunLog.Warnf("EventIDs: %v, FaultHandling(%s) in this FaultFrequency is unrecognized. "+
 			"The supported range of FaultHandling in this FaultFrequency is %v. %s",

@@ -1161,6 +1161,22 @@ func TestValidateFaultFrequencyCustomizationPart2(t *testing.T) {
 	})
 }
 
+// TestValidateFaultFrequencyCustomizationPart3 for test validateFaultFrequencyCustomization
+func TestValidateFaultFrequencyCustomizationPart3(t *testing.T) {
+	convey.Convey("test validateFaultFrequencyCustomization success", t, func() {
+		faultFrequencyCustomization := FaultFrequencyCustomization{
+			EventId: []string{"80C98000", "80B78000"},
+			FaultFrequency: FaultFrequency{
+				TimeWindow:    86400,
+				Times:         3,
+				FaultHandling: SeparateNPU,
+			},
+		}
+		result := validateFaultFrequencyCustomization(&faultFrequencyCustomization)
+		convey.So(result, convey.ShouldEqual, false)
+	})
+}
+
 // TestLoadFaultFrequencyCustomizationCase1 for test loadFaultFrequencyCustomization
 func TestLoadFaultFrequencyCustomizationCase1(t *testing.T) {
 	convey.Convey("test loadFaultFrequencyCustomization success case1", t, func() {
