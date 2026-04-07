@@ -41,7 +41,10 @@ ClusterD启动后，会创建如下ConfigMap：
 |<p>- large_model_fault_level</p><p>- fault_level</p><p>- fault_handling</p>|故障处理类型，节点故障时取值为空。<ul><li>NotHandleFault：不做处理</li><li>RestartRequest：推理场景需要重新执行推理请求，训练场景重新执行训练业务</li><li>RestartBusiness：需要重新执行业务</li><li>FreeRestartNPU：影响业务执行，待芯片空闲时需复位芯片</li><li>RestartNPU：直接复位芯片并重新执行业务</li><li>SeparateNPU：隔离芯片</li><li>PreSeparateNPU：预隔离芯片，会根据训练任务实际运行情况判断是否重调度</li><li>ManuallySeparateNPU：人工隔离芯片。当达到Ascend Device Plugin和ClusterD各自的故障频率，Ascend Device Plugin和ClusterD会将故障芯片进行人工隔离。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>large_model_fault_level、fault_handling和fault_level参数功能一致，推荐使用fault_handling。</li><li>若推理任务订阅了故障信息，任务使用的推理卡上发生RestartRequest故障且故障持续时间未超过60秒，则不执行任务重调度；若故障持续时间超过60秒仍未恢复，则隔离芯片，进行任务重调度。</li></ul></div></div>|
 |- fault_code|故障码，英文逗号拼接的字符串。|
 |- fault_time_and_level_map|故障码、故障发生时间及故障处理等级。|
+|UpdateTime|当前节点信息的更新时间，格式为时间戳，用于标识故障信息或设备状态的最新上报时间。|
+|CmName|该ConfigMap的NAME，即该节点对应的配置在集群中的ConfigMap名称。|
 |SuperPodID|超节点ID。|
+|RackID|框ID。|
 |ServerIndex|当前节点在超节点中的相对位置。<ul><li>驱动上报的SuperPodID或ServerIndex的值为0xffffffff时，SuperPodID或ServerIndex的取值为-1。</li><li>存在以下情况，SuperPodID或ServerIndex的取值为-2。</li><ul><li>当前设备不支持查询超节点信息。</li><li>因驱动问题导致获取超节点信息失败。</li></ul></ul>|
 
 **表 3**  cluster-info-switch-$\{x\}
