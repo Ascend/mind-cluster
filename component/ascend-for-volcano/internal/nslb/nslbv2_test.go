@@ -87,7 +87,7 @@ func buildScoreBestNPUNodesV203() scoreBestNPUNodesTest {
 		name:       "03-ScoreBestNPUNodes nslb 2.0 test, tor node num is not enough for normal job",
 		ssn:        ssn,
 		torHandler: newTestTorHandler(ssn),
-		wantErr:    false,
+		wantErr:    true,
 	}
 }
 
