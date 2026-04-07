@@ -241,7 +241,11 @@ func (th *TorHandlerV2) setTorAndGetSharedTorNum(tors []*plugin.Tor, isShared, s
 	}
 	var isHealthyTor int
 	for _, tor := range tors {
+		if tor.FreeServerCount == 0 {
+			continue
+		}
 		if serverNum < tor.FreeServerCount {
+			tor.FreeServerCount -= serverNum
 			return serverNum, tor
 		}
 		isHealthyTor = healthyTor
@@ -252,6 +256,7 @@ func (th *TorHandlerV2) setTorAndGetSharedTorNum(tors []*plugin.Tor, isShared, s
 		tor.IsHealthy = isHealthyTor
 		th.setOneTorServer(tor, isShared, tor.FreeServerCount)
 		serverNum -= tor.FreeServerCount
+		tor.FreeServerCount = 0
 	}
 	return serverNum, nil
 }
@@ -537,9 +542,15 @@ func getUnhealthyTorServer(tors []*plugin.Tor, sortType string) []*plugin.Tor {
 // getHealthyTorUsedByNormalJob get shared tors only used by normal job
 func getHealthyTorUsedByNormalJob(tors []*plugin.Tor, sortType string) []*plugin.Tor {
 	var tmpTors []*plugin.Tor
-	allShareTor := getTorServer(tors, allTor, healthyTor, sortType)
+	allShareTor := getTorServer(tors, sharedTor, healthyTor, sortType)
 	for _, tor := range allShareTor {
-		if !tor.IsUsedByAcrossLargeModelJob() || tor.IsOnlyUsedByNormalAcrossJob() {
+		if !tor.IsUsedByAcrossLargeModelJob() {
+			tmpTors = append(tmpTors, tor)
+		}
+	}
+	exclusiveTors := getTorServer(tors, exclusiveTor, healthyTor, sortType)
+	for _, tor := range exclusiveTors {
+		if !tor.IsUsedByAcrossLargeModelJob() {
 			tmpTors = append(tmpTors, tor)
 		}
 	}
