@@ -87,7 +87,6 @@ class CallBackFuncs:
 def init_controller():
     register_callback_func()
     run_log.info(f"will init mindio controller")
-    world_size = "0"
     world_size = os.getenv(constants.WORLD_SIZE) or os.getenv(constants.MS_WORKER_NUM)
     process_recover = os.getenv(constants.PROCESS_RECOVER)
     if process_recover == "on":

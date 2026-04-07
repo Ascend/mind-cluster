@@ -12,12 +12,10 @@ import (
 	"sync"
 	"time"
 
-	kubeflowutil "github.com/kubeflow/common/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"ascend-common/api"
-	"ascend-common/api/ascend-operator/apis/batch/v1"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/application/faultmanager/cmprocess/recoverinplace"
@@ -27,7 +25,6 @@ import (
 	"clusterd/pkg/domain/job"
 	"clusterd/pkg/domain/pod"
 	"clusterd/pkg/domain/podgroup"
-	"clusterd/pkg/domain/statistics"
 	"clusterd/pkg/domain/superpod"
 	"clusterd/pkg/interface/grpc/recover"
 	"clusterd/pkg/interface/kube"
@@ -1965,16 +1962,9 @@ func (ctl *EventController) waitScaleOut() {
 				ctl.jobInfo.JobId, common.ScaleInRunningState)
 			return
 		}
-		jobObject := statistics.GetJob(ctl.jobInfo.JobId)
-		if jobObject == nil {
-			ctl.addEvent(common.FinishEvent)
-			return
-		}
-		if acJobInfo, ok := jobObject.(*v1.AscendJob); ok && (kubeflowutil.IsSucceeded(acJobInfo.
-			Status) || kubeflowutil.IsFailed(acJobInfo.Status)) {
-			hwlog.RunLog.Infof("job[%s] is succeeded or failed, IsSucceed: %v", ctl.jobInfo.JobId,
-				kubeflowutil.IsSucceeded(acJobInfo.
-					Status))
+		podGroup := podgroup.GetPodGroup(ctl.jobInfo.JobId)
+		if podGroup.Name == "" {
+			hwlog.RunLog.Infof("job[%s] podgroup has been deleted, scale-training loop break", ctl.jobInfo.JobId)
 			ctl.addEvent(common.FinishEvent)
 			return
 		}

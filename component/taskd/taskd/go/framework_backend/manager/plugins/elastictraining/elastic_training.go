@@ -17,12 +17,10 @@ package elastictraining
 
 import (
 	"errors"
-	"strconv"
 
 	"ascend-common/common-utils/hwlog"
 	clusterdconstant "clusterd/pkg/common/constant"
 	"taskd/common/constant"
-	"taskd/common/utils"
 	"taskd/framework_backend/manager/infrastructure"
 	"taskd/framework_backend/manager/infrastructure/storage"
 	pluginutils "taskd/framework_backend/manager/plugins/utils"
@@ -130,41 +128,17 @@ func (s *elasticTrainingPlugin) PullMsg() ([]infrastructure.Msg, error) {
 }
 
 func (s *elasticTrainingPlugin) getSignalInfo() error {
+	if s.shot.ClusterInfos == nil {
+		return errors.New("no cluster info")
+	}
 	clusterInfo, err := s.shot.ClusterInfos.GetCluster(constant.ClusterDRank)
 	if err != nil {
 		hwlog.RunLog.Debugf("Get clusterD info failed: %s", err.Error())
 		return err
 	}
-	if clusterInfo == nil {
-		return errors.New("cluster info is nil")
-	}
-	s.signalInfo = &pluginutils.SignalInfo{
-		SignalType:     clusterInfo.Command[constant.SignalType],
-		ChangeStrategy: clusterInfo.Command[constant.ChangeStrategy],
-		ExtraParams:    clusterInfo.Command[constant.ExtraParams],
-		Command:        clusterInfo.Command,
-	}
-	if s.signalInfo.SignalType == "" {
-		return nil
-	}
-	s.signalInfo.Timeout, err = strconv.ParseInt(clusterInfo.Command[constant.Timeout], constant.TenBase, constant.BitSize64)
+	s.signalInfo, err = pluginutils.ParseSignalInfo(clusterInfo)
 	if err != nil {
-		hwlog.RunLog.Errorf("ParseInt failed: %s", err.Error())
-		return err
-	}
-	s.signalInfo.Actions, err = utils.StringToObj[[]string](clusterInfo.Command[constant.Actions])
-	if err != nil {
-		hwlog.RunLog.Errorf("unmarshal actions failed: %s", err.Error())
-		return err
-	}
-	s.signalInfo.FaultRanks, err = utils.StringToObj[map[int]int](clusterInfo.Command[constant.FaultRanks])
-	if err != nil {
-		hwlog.RunLog.Errorf("unmarshal FaultRanks failed: %s", err.Error())
-		return err
-	}
-	s.signalInfo.NodeRankIds, err = utils.StringToObj[[]string](clusterInfo.Command[constant.NodeRankIds])
-	if err != nil {
-		hwlog.RunLog.Errorf("unmarshal FaultRanks failed: %s", err.Error())
+		hwlog.RunLog.Errorf("ParseSignalInfo failed: %v", err)
 		return err
 	}
 	return nil

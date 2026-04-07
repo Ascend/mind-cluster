@@ -40,24 +40,30 @@ type SignalInfo struct {
 	Uuid           string
 }
 
+// MsgFunc action messages dealing func
+type MsgFunc func(*SignalInfo) []infrastructure.Msg
+
+var (
+	actionsMap = map[string]MsgFunc{
+		clusterdconstant.StopAction:              (*SignalInfo).getStopTrainActionMsgs,
+		clusterdconstant.PauseTrainAction:        (*SignalInfo).getPauseTrainActionMsgs,
+		clusterdconstant.FaultNodesExitAction:    (*SignalInfo).getFaultNodesExitActionMsgs,
+		clusterdconstant.OnGlobalRankAction:      (*SignalInfo).getOnGlobalRankActionMsgs,
+		clusterdconstant.FaultNodesRestartAction: (*SignalInfo).getFaultNodesRestartActionMsgs,
+		clusterdconstant.ChangeStrategyAction:    (*SignalInfo).getChangeStrategyActionMsgs,
+		clusterdconstant.PreExitProcessAction:    (*SignalInfo).getPreExitProcessActionMsgs,
+	}
+)
+
 // GetMsgs returns msgs by actions
 func (s *SignalInfo) GetMsgs() []infrastructure.Msg {
 	msgs := make([]infrastructure.Msg, 0)
+	if s == nil {
+		return msgs
+	}
 	for _, action := range s.Actions {
-		if action == clusterdconstant.StopAction {
-			msgs = append(msgs, s.getStopTrainActionMsgs()...)
-		} else if action == clusterdconstant.PauseTrainAction {
-			msgs = append(msgs, s.getPauseTrainActionMsgs()...)
-		} else if action == clusterdconstant.FaultNodesExitAction {
-			msgs = append(msgs, s.getFaultNodesExitActionMsgs()...)
-		} else if action == clusterdconstant.OnGlobalRankAction {
-			msgs = append(msgs, s.getOnGlobalRankActionMsgs()...)
-		} else if action == clusterdconstant.FaultNodesRestartAction {
-			msgs = append(msgs, s.getFaultNodesRestartActionMsgs()...)
-		} else if action == clusterdconstant.ChangeStrategyAction {
-			msgs = append(msgs, s.getChangeStrategyActionMsgs()...)
-		} else if action == clusterdconstant.PreExitProcessAction {
-			msgs = append(msgs, s.getPreExitProcessActionMsgs()...)
+		if actionFunc, ok := actionsMap[action]; ok {
+			msgs = append(msgs, actionFunc(s)...)
 		}
 	}
 	return msgs
