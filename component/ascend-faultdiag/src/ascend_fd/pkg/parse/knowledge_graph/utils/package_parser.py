@@ -259,22 +259,3 @@ class PackageParser(object):
             }
         except Exception as e:
             result_dict[parser_name] = e
-
-    def parse_group(self, parser_group: list, task_id: str):
-        execution_err = dict()
-        execution_issue = dict()
-        for parser in parser_group:
-            try:
-                result, parser_err_dict = parser.parse(self.kg_parse_ctx, task_id)
-            except Exception as error:
-                kg_logger.warning("The %s parser parse log failed. The reason is: %s",
-                                  parser.__class__.__name__, error)
-                execution_err.update({parser.__class__.__name__: error})
-            else:
-                if isinstance(result, FilesParseInfo):
-                    self.desc.update_events(result.event_list)
-                    self.desc.files_parse_info = result
-                else:
-                    self.desc.update_events(result)
-                execution_issue.update(parser_err_dict)
-        return execution_err, execution_issue
