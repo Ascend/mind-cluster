@@ -187,4 +187,4 @@ if __name__ == "__main__":
         pip3 install openpyxl
     """
     event_summary = EventSummary()
-    event_summary.create_sheet("MindCluster 7.3.0 故障诊断类型.xlsx")
+    event_summary.create_sheet("MindCluster 26.0.0 故障诊断类型.xlsx")

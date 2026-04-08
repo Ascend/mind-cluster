@@ -38,6 +38,7 @@ class AMCTLogParser(FileParser):
         AMCT Log parser
         """
         super().__init__(params)
+        self._skip_time_filter = False
 
     def parse(self, parse_ctx: KGParseCtx, task_id):
         """
@@ -71,6 +72,42 @@ class AMCTLogParser(FileParser):
             events_list.extend(event_list)
         kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
         return events_list, {}
+
+    def collect(self, parse_ctx: KGParseCtx, task_id: str):
+        """
+        Collect raw events without time filtering.
+        """
+        self.resuming_training_time = parse_ctx.resuming_training_time
+        self.is_sdk_input = parse_ctx.is_sdk_input
+        self._skip_time_filter = True
+        file_source_list = self.find_log(parse_ctx.parse_file_path)
+        if not file_source_list:
+            return [], {}, {}
+        kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
+        if self.is_sdk_input:
+            results = dict()
+            for idx, file_source in enumerate(file_source_list):
+                results.update({
+                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}":
+                        self._parse_single_file(file_source)
+                })
+        else:
+            multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_source_list), task_id=task_id)
+            for idx, file_source in enumerate(file_source_list):
+                job_name = f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}"
+                multiprocess_job.add_security_job(job_name, self._parse_single_file, file_source)
+            results, _ = multiprocess_job.join_and_get_results()
+        events_list = []
+        for event_list in list(results.values()):
+            events_list.extend(event_list)
+        kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
+        return events_list, {}, {}
+
+    def filter_events(self, events_list: list, collect_result: dict):
+        """
+        Filter events by start_time and end_time from params.
+        """
+        return events_list
 
     def _parse_single_file(self, file_source: Union[str, LogInfoSaver]):
         """

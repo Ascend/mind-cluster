@@ -147,6 +147,17 @@ class MindieParser(FileParser):
             event.update({"source_device": temp_device_id})
         return files_parse_info, {}
 
+    def collect(self, parse_ctx: KGParseCtx, task_id: str):
+        """
+        Collect raw events from mindie log files.
+        Mindie parser does not need time filtering.
+        """
+        result, err_dict = self.parse(parse_ctx, task_id)
+        return result, {}, err_dict
+
+    def filter_events(self, events_list: list, collect_result: dict):
+        return events_list
+
     def find_container_ip(self, log_line):
         """
         Find server ip from log line

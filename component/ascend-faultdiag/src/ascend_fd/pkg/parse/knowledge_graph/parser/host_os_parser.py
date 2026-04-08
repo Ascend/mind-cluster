@@ -46,6 +46,7 @@ class HostOsParser(FileParser):
         Host OS Log parser
         """
         super().__init__(params)
+        self._skip_time_filter = False
 
     def parse(self, parse_ctx: KGParseCtx, task_id):
         """
@@ -78,6 +79,52 @@ class HostOsParser(FileParser):
         kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
         err_msg_dict = {self.__class__.__name__: list(chain(err_msg.values()))} if err_msg else {}
         return list(chain(*results.values())), err_msg_dict
+
+    def collect(self, parse_ctx: KGParseCtx, task_id: str):
+        """
+        Collect raw events without time filtering.
+        """
+        self.resuming_training_time = parse_ctx.resuming_training_time
+        self.is_sdk_input = parse_ctx.is_sdk_input
+        self._skip_time_filter = True
+        kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
+        file_source_list = self._data_preprocessing(parse_ctx.parse_file_path)
+        err_msg = dict()
+        if self.is_sdk_input:
+            results = dict()
+            for idx, file_source in enumerate(file_source_list):
+                results.update({
+                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}": self._parse_file(file_source)
+                })
+        else:
+            multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_source_list),
+                                               task_id=task_id, daemon=False)
+            for idx, file_source in enumerate(file_source_list):
+                multiprocess_job.add_security_job(f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}",
+                                                  self._parse_file, file_source, task_id)
+            results, err_msg = multiprocess_job.join_and_get_results()
+        kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
+        err_msg_dict = {self.__class__.__name__: list(chain(err_msg.values()))} if err_msg else {}
+        return list(chain(*results.values())), {}, err_msg_dict
+
+    def filter_events(self, events_list: list, collect_result: dict):
+        """
+        Filter events by start_time and end_time from params.
+        """
+        self.start_time = self.params.get("start_time")
+        self.end_time = self.params.get("end_time")
+        if not self.start_time and not self.end_time:
+            return events_list
+        filtered_list = []
+        for event in events_list:
+            occur_time = event.get("occur_time", "")
+            if not occur_time:
+                filtered_list.append(event)
+                continue
+            if not self._check_time(occur_time):
+                continue
+            filtered_list.append(event)
+        return filtered_list
 
     def _data_preprocessing(self, parse_filepath: KGParseFilePath):
         """
@@ -141,17 +188,16 @@ class HostOsParser(FileParser):
         if not event_dict:
             return
         event_dict.update({"source_file": self._get_source_file(file_source)})
-        # Host file time use regex to get. Therefore, the time is obtained after the fault is obtained.
         try:
             occur_time = self._filter_host_time(line)
         except ValueError:
-            return  # when cannot get time, ignore this line
+            return
         if not occur_time:
             return
         if self.is_sdk_input and file_source.modification_time and occur_time.startswith(DEFAULT_YEAR):
-            year_len = 4  # the year info: yyyy
+            year_len = 4
             occur_time = file_source.modification_time[:year_len] + occur_time[year_len:]
-        if not self._check_time(occur_time):
+        if not self._skip_time_filter and not self._check_time(occur_time):
             return
         self.supplement_common_info(event_dict, file_source, occur_time)
         events_list.append(event_dict)

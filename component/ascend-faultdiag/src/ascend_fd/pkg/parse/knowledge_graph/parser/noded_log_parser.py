@@ -43,6 +43,7 @@ class NodeDLogParser(FileParser):
         NodeD Log parser
         """
         super().__init__(params)
+        self._skip_time_filter = False
 
     @staticmethod
     def _group_single_file_event(results):
@@ -94,6 +95,66 @@ class NodeDLogParser(FileParser):
 
         all_event_dict = self._group_single_file_event(results)
         return self._deduplicate_event_by_event_code(all_event_dict), {}
+
+    def collect(self, parse_ctx: KGParseCtx, task_id: str):
+        """
+        Collect raw events without time filtering.
+        """
+        self.resuming_training_time = parse_ctx.resuming_training_time
+        self.is_sdk_input = parse_ctx.is_sdk_input
+        self._skip_time_filter = True
+        kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
+        file_source_list = self._get_latest_noded_files(parse_ctx.parse_file_path)
+        if not file_source_list:
+            return [], {}, {}
+        if self.is_sdk_input:
+            results = dict()
+            for idx, file_source in enumerate(file_source_list):
+                results.update({
+                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}":
+                        self._parse_single_file(file_source)
+                })
+        else:
+            multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_source_list), task_id=task_id)
+            for idx, file_source in enumerate(file_source_list):
+                job_name = f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}"
+                multiprocess_job.add_security_job(job_name, self._parse_single_file, file_source)
+            results, _ = multiprocess_job.join_and_get_results()
+        all_event_dict = self._group_single_file_event(results)
+        events_list = self._deduplicate_event_by_event_code(all_event_dict)
+        kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
+        return events_list, {}, {}
+
+    def _get_latest_noded_files(self, parse_filepath: KGParseFilePath):
+        """
+        Get latest noded files without time filtering.
+        """
+        noded_file_list = self.find_log(parse_filepath)
+        if not noded_file_list or len(noded_file_list) == 1:
+            return noded_file_list
+        noded_file_list.sort(key=lambda x: self._get_filename(x))
+        return noded_file_list[-2:]
+
+    def filter_events(self, events_list: list, collect_result: dict):
+        """
+        Filter events by start_time and end_time from params.
+        """
+        self.start_time = self.params.get("start_time")
+        self.end_time = self.params.get("end_time")
+        if not self.start_time and not self.end_time:
+            return events_list
+        filtered_list = []
+        for event in events_list:
+            occur_time = event.get("occur_time", "")
+            if not occur_time:
+                filtered_list.append(event)
+                continue
+            if self.start_time and occur_time < self.start_time:
+                continue
+            if self.end_time and occur_time > self.end_time:
+                continue
+            filtered_list.append(event)
+        return filtered_list
 
     def _filter_noded_file(self, parse_filepath: KGParseFilePath):
         """

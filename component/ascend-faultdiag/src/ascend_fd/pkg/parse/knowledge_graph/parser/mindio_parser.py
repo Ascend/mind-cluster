@@ -36,6 +36,7 @@ class MindIOLogParser(FileParser):
 
     def __init__(self, params):
         super().__init__(params)
+        self._skip_time_filter = False
 
     def parse(self, parse_ctx: KGParseCtx, task_id: str):
         """
@@ -68,6 +69,33 @@ class MindIOLogParser(FileParser):
         kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
         return events_list, {}
 
+    def collect(self, parse_ctx: KGParseCtx, task_id: str):
+        """
+        Collect raw events without time filtering.
+        """
+        self.resuming_training_time = parse_ctx.resuming_training_time
+        self.is_sdk_input = parse_ctx.is_sdk_input
+        self._skip_time_filter = True
+        file_list = self.find_log(parse_ctx.parse_file_path)
+        kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
+        if self.is_sdk_input:
+            results = dict()
+            for idx, file_source in enumerate(sorted(file_list)):
+                results.update({
+                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}": self._parse_file(file_source)
+                })
+        else:
+            multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_list), task_id=task_id)
+            for idx, file_source in enumerate(file_list):
+                multiprocess_job.add_security_job(f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}",
+                                                  self._parse_file, file_source)
+            results, _ = multiprocess_job.join_and_get_results()
+        events_list = []
+        for event_list in results.values():
+            events_list.extend(event_list)
+        kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
+        return events_list, {}, {}
+
     def _parse_file(self, file_source: Union[str, LogInfoSaver]):
         """
         Parse single ttp_log log file
@@ -80,12 +108,13 @@ class MindIOLogParser(FileParser):
             occur_time = self._get_occur_time(log_line)
             if not occur_time:
                 continue
-            if self.start_time and occur_time < self.start_time:
-                continue
-            if self.end_time and occur_time > self.end_time:
-                continue
-            if occur_time < self.resuming_training_time:
-                continue
+            if not self._skip_time_filter:
+                if self.start_time and occur_time < self.start_time:
+                    continue
+                if self.end_time and occur_time > self.end_time:
+                    continue
+                if occur_time < self.resuming_training_time:
+                    continue
             event_dict = self.parse_single_line(log_line)
             if not event_dict:
                 continue

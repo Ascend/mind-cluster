@@ -46,6 +46,7 @@ class BMCParser(FileParser):
         file_list = self.find_log(parse_ctx.parse_file_path)
         if not file_list:
             return [], {}
+        self.is_sdk_input = parse_ctx.is_sdk_input
         kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
         multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_list), task_id=task_id)
         if self.is_sdk_input:
@@ -61,6 +62,14 @@ class BMCParser(FileParser):
             results, _ = multiprocess_job.join_and_get_results()
         kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
         return list(chain(*results.values())), {}
+
+    def collect(self, parse_ctx: KGParseCtx, task_id: str):
+        """
+        Collect raw events from bmc log files.
+        BMC parser does not need time filtering.
+        """
+        events_list, err_dict = self.parse(parse_ctx, task_id)
+        return events_list, {}, err_dict
 
     def _parse_file(self, file_source: Union[str, LogInfoSaver]):
         """

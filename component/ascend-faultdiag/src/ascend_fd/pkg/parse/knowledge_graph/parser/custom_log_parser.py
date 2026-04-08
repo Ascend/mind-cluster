@@ -93,6 +93,14 @@ class CustomLogParser(FileParser):
         kg_logger.info("%s files parse job is complete.", self.TARGET_FILE_PATTERNS)
         return list(chain(*results.values())), {}
 
+    def collect(self, parse_ctx: KGParseCtx, task_id: str):
+        """
+        Collect raw events from custom log files.
+        Custom log parser does not need time filtering.
+        """
+        events_list, err_dict = self.parse(parse_ctx, task_id)
+        return events_list, {}, err_dict
+
     def _parse_each_custom_info(self, each_custom_info: MatchedCustomInfo, task_id: str = ""):
         """
         Parse each custom parsing file list

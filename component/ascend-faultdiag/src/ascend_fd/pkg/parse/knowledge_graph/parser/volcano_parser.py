@@ -35,6 +35,7 @@ class VolcanoParser(FileParser):
         """
         super().__init__(params)
         self.train_across_year = False
+        self._skip_time_filter = False
 
     def parse(self, parse_ctx: KGParseCtx, task_id: str):
         """
@@ -56,6 +57,44 @@ class VolcanoParser(FileParser):
         results = self._parse_file(file_source)
         kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
         return results, {}
+
+    def collect(self, parse_ctx: KGParseCtx, task_id: str):
+        """
+        Collect raw events without time filtering.
+        """
+        self.resuming_training_time = parse_ctx.resuming_training_time
+        self.is_sdk_input = parse_ctx.is_sdk_input
+        self._skip_time_filter = True
+        find_log = self.find_log(parse_ctx.parse_file_path)
+        file_source = find_log[0] if find_log else ""
+        if not file_source:
+            return [], {}, {}
+        kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
+        results = self._parse_file(file_source)
+        kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
+        return results, {}, {}
+
+    def filter_events(self, events_list: list, collect_result: dict):
+        """
+        Filter events by start_time and end_time from params.
+        """
+        self.start_time = self.params.get("start_time")
+        self.end_time = self.params.get("end_time")
+        self._check_and_process_train_time()
+        if not self.start_time and not self.end_time:
+            return events_list
+        filtered_list = []
+        for event in events_list:
+            occur_time = event.get("occur_time", "")
+            if not occur_time:
+                filtered_list.append(event)
+                continue
+            if self.start_time and occur_time < self.start_time and not self.train_across_year:
+                continue
+            if self.end_time and occur_time > self.end_time and not self.train_across_year:
+                continue
+            filtered_list.append(event)
+        return filtered_list
 
     def _check_and_process_train_time(self):
         """
@@ -84,12 +123,13 @@ class VolcanoParser(FileParser):
             occur_time = self._get_occur_time(log_line)
             if not occur_time:
                 continue
-            if self.start_time and occur_time < self.start_time and not self.train_across_year:
-                continue
-            if self.end_time and occur_time > self.end_time and not self.train_across_year:
-                continue
-            if occur_time < self.resuming_training_time and not self.train_across_year:
-                continue
+            if not self._skip_time_filter:
+                if self.start_time and occur_time < self.start_time and not self.train_across_year:
+                    continue
+                if self.end_time and occur_time > self.end_time and not self.train_across_year:
+                    continue
+                if occur_time < self.resuming_training_time and not self.train_across_year:
+                    continue
             self.supplement_common_info(event_dict, file_source, occur_time)
             event_storage.record_event(event_dict)
         return event_storage.generate_event_list()

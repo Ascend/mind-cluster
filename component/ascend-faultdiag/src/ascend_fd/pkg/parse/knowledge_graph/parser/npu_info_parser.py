@@ -1095,3 +1095,25 @@ class NpuInfoParser(FileParser):
             self.params.update({"start_time": self.start_time})
         if not pre_end_time or self.end_time and self.end_time > pre_end_time:
             self.params.update({"end_time": self.end_time})
+
+    def collect(self, parse_ctx: KGParseCtx, task_id: str):
+        """
+        Collect raw events and train time info from npu info files.
+        This parser is a primary parser and will be executed serially.
+        """
+        events_list, err_dict = self.parse(parse_ctx, task_id)
+        collect_result = {
+            "start_time": self.params.get("start_time"),
+            "end_time": self.params.get("end_time")
+        }
+        return events_list, collect_result, err_dict
+
+    def filter_events(self, events_list: list, collect_result: dict):
+        """
+        Update params with train time info and return events list.
+        """
+        self.params.update({
+            "start_time": collect_result.get("start_time"),
+            "end_time": collect_result.get("end_time")
+        })
+        return events_list

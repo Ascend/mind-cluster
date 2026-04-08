@@ -63,70 +63,76 @@ class BusParser(FileParser):
             return None
 
     def parse(self, parse_ctx: KGParseCtx, task_id: str):
+        pass
+
+    def collect(self, parse_ctx: KGParseCtx, task_id: str):
         """
-        Parse lcne log file
-        :param parse_ctx: file paths
-        :param task_id: unique task id
-        :return: parse descriptor result
+        Collect raw events without time filtering.
         """
         file_path_dict = self.find_log(parse_ctx.parse_file_path)
         if not file_path_dict:
-            return [], {}
+            return [], {}, {}
         kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
-
-        self.start_time = self.params.get("start_time")
-        self.end_time = self.params.get("end_time")
         file_path_list = list(chain(*file_path_dict.values()))
-        # 过滤出有效的日志文件
-        filtered_file_list = self.filter_files_in_range(file_path_list)
-
-        # 单文件清洗
-        multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(filtered_file_list), task_id=task_id)
-        for idx, file_path in enumerate(filtered_file_list):
+        all_file_list = self._get_all_log_files(file_path_list)
+        multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(all_file_list), task_id=task_id)
+        for idx, file_path in enumerate(all_file_list):
             multiprocess_job.add_security_job(f"{self.SOURCE_FILE}_ID-{idx}_{os.path.basename(file_path)}",
-                                              self._parse_file, file_path)
+                                              self._parse_file_without_filter, file_path)
         results, _ = multiprocess_job.join_and_get_results()
         kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
-        return list(chain(*results.values())), {}
+        return list(chain(*results.values())), {}, {}
 
-    def filter_files_in_range(self, file_paths: List[str]) -> List[str]:
+    def _get_all_log_files(self, file_paths: List[str]) -> List[str]:
         """
-        过滤出与[start_time, end_time]有时间重叠的日志文件
-        如果不存在训练时间窗口（self.start_time或self.end_time为None），直接返回所有解压后的 .log.zip 文件和非压缩文件
+        Get all log files without time filtering.
         """
-        file_paths_set = set()
+        all_files = set()
         for path in file_paths:
-            # 处理 .log.zip 文件
             if path.endswith('log.zip'):
                 unzipped_path = self.unzip_file(path)
                 if unzipped_path:
-                    file_paths_set.add(unzipped_path)
-            else:
-                file_paths_set.add(path)
+                    all_files.add(unzipped_path)
+            elif path.endswith('.log'):
+                all_files.add(path)
+        return list(all_files)
 
-        filtered_files = []
-        has_valid_time_window = self.start_time and self.end_time
-        for path in file_paths_set:
-            if not path.endswith('.log'):
+    def _parse_file_without_filter(self, file_path: str):
+        """
+        Parse file without time filtering.
+        """
+        event_storage = EventStorage()
+        for line in self._yield_log(file_path):
+            event_dict = self.parse_single_line(line)
+            if not event_dict:
                 continue
-            if not has_valid_time_window:
-                filtered_files.append(path)
-                continue
+            occur_time = self._parse_log_time(line)
+            if not occur_time:
+                occur_time = ""
+            self.supplement_common_info(event_dict, file_path, occur_time)
+            event_storage.record_event(event_dict)
+        return event_storage.generate_event_list()
 
-            # 匹配 _{time}.log 文件中的时间
-            log_match = self.LOG_PATTERN.search(path)
-            time_str = log_match.group(1) if log_match else None
-            if time_str:
-                try:
-                    time_obj = datetime.strptime(time_str, "%Y%m%d%H%M%S")
-                    zip_time = str(time_obj) + ".000000"
-                    # 如果文件名中时间（日志行最晚时间）早于 start_time，直接跳过
-                    if zip_time < self.start_time:
-                        continue
-                except ValueError:
-                    kg_logger.warning(f"File timestamp parsing failed: {path}")
-            filtered_files.append(path)
-        return filtered_files
+    def filter_events(self, events_list: list, collect_result: dict):
+        """
+        Filter events by start_time and end_time from params.
+        """
+        self.start_time = self.params.get("start_time")
+        self.end_time = self.params.get("end_time")
+        if not self.start_time and not self.end_time:
+            return events_list
+        filtered_list = []
+        for event in events_list:
+            occur_time = event.get("occur_time", "")
+            if not occur_time:
+                filtered_list.append(event)
+                continue
+            if self.start_time and occur_time < self.start_time:
+                continue
+            if self.end_time and occur_time > self.end_time:
+                continue
+            filtered_list.append(event)
+        return filtered_list
 
     def _parse_log_time(self, line: str) -> str:
         """
@@ -140,32 +146,3 @@ class BusParser(FileParser):
             return str(time_obj) + ".000000"
         except ValueError:
             return ""
-
-    def _parse_file(self, file_path):
-        """
-        Parse single lcne log line by line
-        :param file_path: log file path
-        :return: a list of event dict
-        """
-        event_storage = EventStorage()
-        for log_line in self._yield_log(file_path):
-            if ' %%' not in log_line:
-                continue
-            occur_time = self._parse_log_time(log_line)
-            if not occur_time:
-                continue
-            if self.start_time and occur_time < self.start_time:
-                continue
-            if self.end_time and occur_time > self.end_time:
-                continue
-            event_dict = self.parse_single_line(log_line)
-            if not event_dict:
-                continue
-            event_dict.update({
-                "source_file": os.path.basename(file_path),
-                "occur_time": occur_time,
-            })
-            if "source_device" not in event_dict:
-                event_dict.update({"source_device": "Unknown"})
-            event_storage.record_event(event_dict)
-        return event_storage.generate_event_list()
