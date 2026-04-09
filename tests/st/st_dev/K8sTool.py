@@ -15,7 +15,6 @@
 # limitations under the License.
 # ==============================================================================
 import logging
-import os
 import time
 
 from tests.st.envs import MIND_CLUSTER_YAML_DIR
@@ -56,6 +55,61 @@ class K8sTool(object):
                 is_all_status = True
                 break
         return is_all_status
+
+    @staticmethod
+    def check_all_pods_status(case, pod_names=None, status=None, timeout=30, check_interval=2):
+        if not pod_names:
+            logger.error("error: pod_names should not be nil!")
+            return False
+        elif isinstance(pod_names, str):
+            pod_names = [pod_names]
+
+        if status is None:
+            expected_status = ["Running"]
+        elif isinstance(status, str):
+            expected_status = [status]
+
+        logger.info(
+            f"start check pod status | target pod: {pod_names} | expected status: {expected_status} | timeout: {timeout}s")
+
+        pod_commands = {}
+        for pod in pod_names:
+            cmd = f"kubectl get pods -A | grep -w {pod} | awk '{{print $4}}'"
+            pod_commands[pod] = cmd
+
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            all_pods_ok = True
+            for pod_name, cmd in pod_commands.items():
+                try:
+                    ret = case.k8s_manager.exec_command(cmd)
+                    ret = ret.strip()
+                    logger.info(f"[{pod_name}] current status: {ret if ret else 'not found'}")
+                    if not ret:
+                        logger.warning(f"[{pod_name}] not found pod, wait...")
+                        all_pods_ok = False
+                        break
+
+                    if ret not in expected_status:
+                        logger.warning(
+                            f"[{pod_name}] status not expected, current status: {ret}, expected status: {expected_status}")
+                        all_pods_ok = False
+                        break
+
+                except Exception as e:
+                    logger.error(f"[{pod_name}] exec failed: {str(e)}")
+                    all_pods_ok = False
+                    break
+
+            if all_pods_ok:
+                cost_time = round(time.time() - start_time, 2)
+                logger.info(f"all Pods have reached the desired state! Time taken: {cost_time}s")
+                return True
+
+            time.sleep(check_interval)
+
+        logger.error(f"Check timed out! Not all Pods reached the desired state within {timeout}s: {expected_status}")
+        return False
 
     @staticmethod
     def check_pg_info(case, pod_group_name, info, timeout=30):
