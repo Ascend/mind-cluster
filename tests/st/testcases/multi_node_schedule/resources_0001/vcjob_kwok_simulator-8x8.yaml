@@ -1,0 +1,87 @@
+apiVersion: batch.volcano.sh/v1alpha1   # The value cannot be changed. The volcano API must be used.
+kind: Job                               # Only the job type is supported at present.
+metadata:
+  name: default-test-vcjob-8pod-8npu            # The value must be consistent with the name of ConfigMap.
+  labels:
+    ring-controller.atlas: ascend-910b   # The value must be the same as the label in ConfigMap and cannot be changed.
+    fault-scheduling: "force"
+spec:
+  minAvailable: 8                       # The value of minAvailable is 1 in a single-node scenario and N in an N-node distributed scenario.
+  schedulerName: volcano                # Use the Volcano scheduler to schedule jobs.
+  policies:
+    - event: PodEvicted
+      action: RestartJob
+  plugins:
+    ssh: []
+    env: []
+    svc: []
+  maxRetry: 3
+  queue: default
+  tasks:
+  - name: default-test-vcjob-8pod-8npu
+    replicas: 8                              # The value of replicas is 1 in a single-node scenario and N in an N-node scenario. The number of NPUs in the requests field is 8 in an N-node scenario.
+    template:
+      metadata:
+        labels:
+          app: pytorch
+          ring-controller.atlas: ascend-910b  # The value must be the same as the label in ConfigMap and cannot be changed.
+      spec:
+        terminationGracePeriodSeconds: 900
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: volcano.sh/job-name
+                      operator: In
+                      values:
+                        - mindx-dls-test
+                topologyKey: kubernetes.io/hostname
+        hostNetwork: true
+        automountServiceAccountToken: false
+        containers:
+        - image: ubuntu:22.04               # Training framework image, which can be modified.
+          imagePullPolicy: IfNotPresent
+          name: pytorch
+          env:
+          - name: mindx-pre-smoke-test                         # The value must be the same as that of Jobname.
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: XDL_IP                                       # IP address of the physical node, which is used to identify the node where the pod is running
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: POD_UID
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.uid
+          - name: framework
+            value: "PyTorch"
+          # ASCEND_VISIBLE_DEVICES env variable is used by ascend-docker-runtime when in the whole card scheduling scene with volcano scheduler.
+          # Please delete it when in the static vNPU scheduling, dynamic vNPU scheduling, volcano without Ascend-volcano-plugin, without volcano scenes.
+          - name: ASCEND_VISIBLE_DEVICES
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.annotations['huawei.com/Ascend910']               # The value must be the same as resources.requests
+          command:
+          - "/bin/bash"
+          - "-c"
+          # Commands for running the training script. Ensure that the involved commands and paths exist on Docker.
+          args: ["sleep 9999"]     # Comment out the preceding line and enable this line. You can manually run the training script in the container to facilitate debugging.
+          resources:
+            requests:
+              huawei.com/Ascend910: 8                 # Number of required NPUs. The maximum value is 8. You can add lines below to configure resources such as memory and CPU.
+            limits:
+              huawei.com/Ascend910: 8                 # The value must be consistent with that in requests.
+          volumeMounts:
+          - name: localtime
+            mountPath: /etc/localtime
+        nodeSelector:
+          host-arch: huawei-arm                       # Configure the label based on the actual job.
+          accelerator-type: module-910b-8
+        volumes:
+        - name: localtime
+          hostPath:
+            path: /etc/localtime                      # Configure the NPU log path and mount it to the local host.
+        restartPolicy: Never

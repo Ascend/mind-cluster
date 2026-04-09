@@ -27,32 +27,32 @@ class MindclusterAscend800ta2MutliNodeSchedule0002(unittest.TestCase):
     def setUpClass(self):
         self.k8s_manager.exec_command("kubectl delete -f %s" % self.job_yaml_path1)
 
-    def test_valid_job_000(self):
+    def test_multinode_schedule_deployment_000(self):
         K8sTool.apply_mindcluster(self)
 
-    def test_valid_job_001(self):
+    def test_multinode_schedule_deployment_001(self):
         ClusterSimulator.create_kwok_cluster(self, node_name=NODE_NAME, node_num=NODE_NUM + 2)
 
-    def test_valid_job_002(self):
+    def test_multinode_schedule_deployment_002(self):
         self.assertIs(ClusterSimulator.get_ready_kwok_node_count(self), NODE_NUM + 2)
 
-    def test_valid_job_003(self):
+    def test_multinode_schedule_deployment_003(self):
         K8sNode.set_accelerator_type(self, node_name=NODE_NAME, node_num=NODE_NUM + 2, accelerator_type=MODULE_910B_8)
         self.assertIs(ClusterSimulator.get_kwok_nodes_with_accelerator_type(self), NODE_NUM + 2)
 
-    def test_valid_job_004(self):
+    def test_multinode_schedule_deployment_004(self):
         self.k8s_manager.exec_command("kubectl cordon localhost.localdomain master")
         self.k8s_manager.exec_command("kubectl delete -f %s" % self.job_yaml_path1)
         self.k8s_manager.exec_command("kubectl apply -f %s" % self.job_yaml_path1)
         self.assertTrue(K8sTool.check_pod_status(self, self.job_name1), "pod is not running")
 
-    def test_valid_job_005(self):
+    def test_multinode_schedule_deployment_005(self):
         self.k8s_manager.exec_command("kubectl delete -f %s" % self.job_yaml_path1)
         ret = self.k8s_manager.exec_command(f"kubectl get pod {self.job_name1}'")
         self.assertTrue(len(ret) == 0, "job delete fail")
 
 
-    def test_valid_job_006(self):
+    def test_multinode_schedule_deployment_006(self):
         ClusterSimulator.delete_kwok_cluster(self)
         self.assertIs(ClusterSimulator.get_ready_kwok_node_count(self), 0)
 
