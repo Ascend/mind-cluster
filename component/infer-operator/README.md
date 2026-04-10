@@ -1,9 +1,9 @@
-# Ascend Operator
+# Infer Operator
 
 # 组件介绍
 - Infer Operator 是一个Kubernetes Operator，用于部署和管理多角色合作的推理任务。Infer Operator 定义了InferServiceSet, InferService和InstanceSet三种CRD, 并实现了三种资源的控制器用于调谐三种资源实例状态。
   
-# 编译Ascend Operator
+# 编译Infer Operator
 1.  通过git拉取源码，获得infer-operator。
 
     示例：源码放在/home/mind-cluster/component/infer-operator目录下
