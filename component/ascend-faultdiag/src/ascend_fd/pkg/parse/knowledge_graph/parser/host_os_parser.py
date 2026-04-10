@@ -84,6 +84,8 @@ class HostOsParser(FileParser):
         """
         Collect raw events without time filtering.
         """
+        self.start_time = self.params.get("start_time")
+        self.end_time = self.params.get("end_time")
         self.resuming_training_time = parse_ctx.resuming_training_time
         self.is_sdk_input = parse_ctx.is_sdk_input
         self._skip_time_filter = True
@@ -111,20 +113,7 @@ class HostOsParser(FileParser):
         """
         Filter events by start_time and end_time from params.
         """
-        self.start_time = self.params.get("start_time")
-        self.end_time = self.params.get("end_time")
-        if not self.start_time and not self.end_time:
-            return events_list
-        filtered_list = []
-        for event in events_list:
-            occur_time = event.get("occur_time", "")
-            if not occur_time:
-                filtered_list.append(event)
-                continue
-            if not self._check_time(occur_time):
-                continue
-            filtered_list.append(event)
-        return filtered_list
+        return events_list
 
     def _data_preprocessing(self, parse_filepath: KGParseFilePath):
         """
@@ -197,7 +186,7 @@ class HostOsParser(FileParser):
         if self.is_sdk_input and file_source.modification_time and occur_time.startswith(DEFAULT_YEAR):
             year_len = 4
             occur_time = file_source.modification_time[:year_len] + occur_time[year_len:]
-        if not self._skip_time_filter and not self._check_time(occur_time):
+        if not self._check_time(occur_time):
             return
         self.supplement_common_info(event_dict, file_source, occur_time)
         events_list.append(event_dict)

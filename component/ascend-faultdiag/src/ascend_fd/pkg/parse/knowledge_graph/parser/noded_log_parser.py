@@ -100,13 +100,16 @@ class NodeDLogParser(FileParser):
         """
         Collect raw events without time filtering.
         """
+        self.start_time = self.params.get("start_time")
+        self.end_time = self.params.get("end_time")
         self.resuming_training_time = parse_ctx.resuming_training_time
         self.is_sdk_input = parse_ctx.is_sdk_input
         self._skip_time_filter = True
         kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
-        file_source_list = self._get_latest_noded_files(parse_ctx.parse_file_path)
+        file_source_list = self._filter_noded_file(parse_ctx.parse_file_path)
         if not file_source_list:
             return [], {}, {}
+        self._check_start_end_time(file_source_list)
         if self.is_sdk_input:
             results = dict()
             for idx, file_source in enumerate(file_source_list):
@@ -139,22 +142,7 @@ class NodeDLogParser(FileParser):
         """
         Filter events by start_time and end_time from params.
         """
-        self.start_time = self.params.get("start_time")
-        self.end_time = self.params.get("end_time")
-        if not self.start_time and not self.end_time:
-            return events_list
-        filtered_list = []
-        for event in events_list:
-            occur_time = event.get("occur_time", "")
-            if not occur_time:
-                filtered_list.append(event)
-                continue
-            if self.start_time and occur_time < self.start_time:
-                continue
-            if self.end_time and occur_time > self.end_time:
-                continue
-            filtered_list.append(event)
-        return filtered_list
+        return events_list
 
     def _filter_noded_file(self, parse_filepath: KGParseFilePath):
         """
