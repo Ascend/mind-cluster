@@ -17,13 +17,13 @@
 import os
 import unittest
 
+from tests.st.envs import BASE_DIR
+from tests.st.st_dev.CaseRoutines import CaseRoutines
 from tests.st.st_dev.ClusterSimulatorTool import ClusterSimulator
 from tests.st.st_dev.JobTool import JobHelper
 from tests.st.st_dev.K8sDistributedManage import K8sDistributedManage
-from tests.st.st_dev.CaseRoutines import CaseRoutines
 from tests.st.st_dev.K8sNode import K8sNode
 from tests.st.st_dev.K8sTool import K8sTool
-from tests.st.envs import BASE_DIR
 
 
 class MindclusterA3JobReschedule(unittest.TestCase):
@@ -43,11 +43,11 @@ class MindclusterA3JobReschedule(unittest.TestCase):
 
     def test_mindcluster_a3_job_reschedule_001(self):
         self.assertIs(ClusterSimulator.get_ready_kwok_node_count(self), 3, "kwok nodes are not ready")
-    
+
     def test_mindcluster_a3_job_reschedule_002(self):
         K8sNode.set_accelerator_type_a3(self, "910csuperpod", 3, "module-a3-16-super-pod")
         self.assertIs(ClusterSimulator.get_kwok_nodes_with_accelerator_type(self, "module-a3-16-super-pod"),
-                    3, "kwok nodes with a3 accelerator type are not ready")
+                      3, "kwok nodes with a3 accelerator type are not ready")
 
     def test_mindcluster_a3_job_reschedule_003(self):
         K8sTool.apply_mindcluster_v2(self)
@@ -60,10 +60,8 @@ class MindclusterA3JobReschedule(unittest.TestCase):
 
     def test_mindcluster_a3_job_reschedule_005(self):
         K8sTool.insert_software_fault(self, ns="default", pod_name=self.worker_pod_name)
-        self.assertTrue(K8sTool.check_pod_status(self, self.worker_pod_name, status=["Error", "Pending"]),
-                        "worker pod is not error")
-        self.assertTrue(K8sTool.check_pod_status(self, self.master_pod_name, status=["Error", "Pending"]),
-                        "master pod is not error")
+        self.assertTrue(K8sTool.check_all_pods_status(self, pod_names=[self.worker_pod_name, self.master_pod_name],
+                                                      status=["Error", "Pending"]), "master or worker pod is not error")
 
     def test_mindcluster_a3_job_reschedule_006(self):
         self.assertTrue(K8sTool.check_pod_status(self, self.master_pod_name, timeout=60), "master pod is not running")
@@ -75,10 +73,8 @@ class MindclusterA3JobReschedule(unittest.TestCase):
 
     def test_mindcluster_a3_job_reschedule_008(self):
         K8sTool.insert_software_fault(self, ns="default", pod_name=self.master_pod_name)
-        self.assertTrue(K8sTool.check_pod_status(self, self.master_pod_name, status=["Error", "Pending"]),
-                        "master pod is not error")
-        self.assertTrue(K8sTool.check_pod_status(self, self.worker_pod_name, status=["Error", "Pending"]),
-                        "worker pod is not error")
+        self.assertTrue(K8sTool.check_all_pods_status(self, pod_names=[self.worker_pod_name, self.master_pod_name],
+                                                      status=["Error", "Pending"]), "master or worker pod is not error")
 
     def test_mindcluster_a3_job_reschedule_009(self):
         self.assertTrue(K8sTool.check_pod_status(self, self.master_pod_name, timeout=60), "master pod is not running")
