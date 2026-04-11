@@ -89,11 +89,11 @@ ClusterD启动后，会创建如下ConfigMap：
 |Description|公共故障数量过大时的提示信息。|
 |<p>说明：</p><ul><li>公共故障对外展示1M数据，大约4500条。</li><li>超过4500条时，部分数据不再对外展示，ConfigMap中会新增Description内容进行提示，内部缓存正常运行。</li></ul>|
 
-**cluster-system super-pod-<super-pod-id\><a name="section53741611135414"></a>**
+**super-pod-<super-pod-id\><a name="section53741611135414"></a>**
 
 该ConfigMap位于用户创建的cluster-system命名空间下，Label为app=pingmesh。
 
-**表 5**  cluster-system super-pod-<super-pod-id\>
+**表 5**  super-pod-<super-pod-id\>
 
 |参数|说明|
 |--|--|
@@ -158,22 +158,23 @@ Events:  <none>
 
 |参数|说明|取值|
 |--|--|--|
-|hccl.json|任务使用的芯片通信信息。可转义为JSON格式，字段说明如下：<ul><li>status：任务RankTable是否已经生成。</li><ul><li>initializing：还在为任务分配设备，RankTable未生成。</li><li>complete：当RankTable生成后，状态会立即变为complete，同步出现server_list等其他字段。</li></ul><li>server_list：任务设备分配情况。</li><ul><li>device：记录NPU分配，NPU IP和rank_id信息。</li><li>server_id：AI Server标识，全局唯一。</li><li>server_name：节点名称。</li><li>server_sn：节点的SN号。需要保证设备的SN存在。若不存在，请联系华为技术支持。</li></ul><li>server_count：任务使用的节点数量。</li><li>version：版本信息。</li></ul>|字符串|
+|hccl.json|任务使用的芯片通信信息。可转义为JSON格式，字段说明如下：<ul><li>status：任务RankTable是否已经生成。</li><ul><li>initializing：还在为任务分配设备，RankTable未生成。</li><li>complete：当RankTable生成后，状态会立即变为complete，同步出现server_list等其他字段。</li></ul><li>server_list：任务设备分配情况。</li><ul><li>device：记录NPU分配，NPU IP和rank_id信息。</li><ul><li>device_id：NPU 的设备 ID。</li><li>device_ip：NPU 的设备 IP。</li><li>rank_id：NPU 对应的训练 rank ID。</li><li>super_device_id：超节点内 NPU 的唯一标识。</li></ul><li>server_id：AI Server标识，全局唯一。</li><li>server_name：节点名称。</li><li>server_sn：节点的SN号。需要保证设备的SN存在。若不存在，请联系华为技术支持。</li><li>host_ip：主机 ip。</li><li>super_pod_id：超节点 id。</li><li>pod_name：pod 名称。</li><li>container_ids：pod 所有容器的 id 映射表。</li></ul><li>server_count：任务使用的节点数量。</li><li>version：版本信息。</li><li>total：configmap 个数。</li></ul>|字符串|
 |job_id|任务的K8s ID信息。|字符串|
 |operator|<ul><li>add：接收到添加任务命令后状态更新为add。</li><li>delete：接收到删除任务命令后状态更新为delete。</li></ul>|字符串|
 |deleteTime|任务被删除的时间。|字符串|
 |sharedTorIp|任务使用的共享交换机信息。|字符串|
 |masterAddr|PyTorch训练时指定的MASTER_ADDR值。|字符串|
-|total|ConfigMap的个数。|整数类型|
+|total|ConfigMap的个数。|字符串|
 |time|任务开始时间。|字符串|
 |framework|任务使用的框架。|字符串|
-|job_status|任务状态，存在以下几种状态。<ul><li>Pending</li><li>Running</li><li>Complete</li><li>Failed</li></ul>|字符串|
+|job_status|任务状态，存在以下几种状态。<ul><li>pending</li><li>running</li><li>complete</li><li>failed</li></ul>|字符串|
 |job_name|任务名称。|字符串|
 |cm_index|当前ConfigMap的序号。|字符串|
+|sid|用户自定义任务 id|字符串|
 
 **current-job-statistic<a name="section39901331194218"></a>**
 
-用于展示集群中当前任务的统计信息，记录在/var/log/mindx-dl/clusterd/event\_job.log日志文件中。由于K8s的ConfigMap容量大小限制，最大支持统计集群任务数量约为1w条。当日志文件达到20M时，触发自动转储，最多保存5份转储日志，转储日志最长保留时间为40天。
+用于展示集群中当前任务的统计信息，详细信息记录在/var/log/mindx-dl/clusterd/event\_job.log日志文件中。由于K8s的ConfigMap容量大小限制，最大支持统计集群任务数量约为1w条。当日志文件达到20M时，触发自动转储，最多保存5份转储日志，转储日志最长保留时间为40天。
 
 |参数|说明|
 |--|--|
