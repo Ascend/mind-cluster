@@ -94,10 +94,10 @@ struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info){
    	CALL_FUNC(dcmi_get_device_utilization_rate,card_id,device_id,input_type,utilization_rate)
    }
 
-   static int (*dcmi_get_device_utilization_rate_v2_func)(int card_id, int device_id,
+   static int (*dcmi_get_device_multi_utilization_rate_func)(int card_id, int device_id,
 				struct dcmi_multi_utilization_info *util_info);
-   int dcmi_get_device_utilization_rate_v2(int card_id, int device_id, struct dcmi_multi_utilization_info *util_info){
-   	CALL_FUNC(dcmi_get_device_utilization_rate_v2,card_id,device_id,util_info)
+   int dcmi_get_device_multi_utilization_rate(int card_id, int device_id, struct dcmi_multi_utilization_info *util_info){
+   	CALL_FUNC(dcmi_get_device_multi_utilization_rate,card_id,device_id,util_info)
    }
 
    static int (*dcmi_get_device_temperature_func)(int card_id, int device_id, int *temperature);
@@ -424,7 +424,7 @@ unsigned int *state){
 
    	dcmi_get_device_utilization_rate_func = dlsym(dcmiHandle,"dcmi_get_device_utilization_rate");
 
-   	dcmi_get_device_utilization_rate_v2_func = dlsym(dcmiHandle,"dcmi_get_device_utilization_rate_v2");
+   	dcmi_get_device_multi_utilization_rate_func = dlsym(dcmiHandle,"dcmi_get_device_multi_utilization_rate");
 
    	dcmi_get_device_temperature_func = dlsym(dcmiHandle,"dcmi_get_device_temperature");
 
@@ -1081,7 +1081,7 @@ func convertCreateVDevOut(cCreateVDevOut C.struct_dcmi_create_vdev_out) common.C
 
 // DcCreateVirtualDevice create virtual device
 func (d *DcManager) DcCreateVirtualDevice(cardID, deviceID int32, vDevInfo common.CgoCreateVDevRes) (common.
-CgoCreateVDevOut, error) {
+	CgoCreateVDevOut, error) {
 	if !common.IsValidCardIDAndDeviceID(cardID, deviceID) {
 		return common.CgoCreateVDevOut{}, fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
 	}
@@ -1319,7 +1319,7 @@ func (d *DcManager) DcGetCardIDDeviceID(logicID int32) (int32, int32, error) {
 
 // DcCreateVDevice create virtual device by logic id
 func (d *DcManager) DcCreateVDevice(logicID int32, vDevInfo common.CgoCreateVDevRes) (common.
-CgoCreateVDevOut, error) {
+	CgoCreateVDevOut, error) {
 	if !common.IsValidLogicIDOrPhyID(logicID) {
 		return common.CgoCreateVDevOut{}, fmt.Errorf("input invalid logicID: %d", logicID)
 	}
@@ -1597,7 +1597,7 @@ func (d *DcManager) DcGetDeviceUtilizationRateV2(cardID, deviceID int32) (common
 			fmt.Errorf("cardID(%d) or deviceID(%d) is invalid", cardID, deviceID)
 	}
 	var multiUtilizationInfo C.struct_dcmi_multi_utilization_info
-	if retCode := C.dcmi_get_device_utilization_rate_v2(C.int(cardID), C.int(deviceID),
+	if retCode := C.dcmi_get_device_multi_utilization_rate(C.int(cardID), C.int(deviceID),
 		&multiUtilizationInfo); int32(retCode) != common.Success {
 		return BuildErrNpuMultiUtilizationInfo(),
 			buildDcmiErr(cardID, deviceID, "npu multi utilization info", retCode)

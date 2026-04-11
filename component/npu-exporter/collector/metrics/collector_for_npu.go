@@ -159,7 +159,7 @@ type BaseInfoCollector struct {
 
 func (c *BaseInfoCollector) PreCollect(n *colcommon.NpuCollector, chipList []colcommon.HuaWeiAIChip) {
 	if n.Dmgr.GetDevType() != common.Ascend910B && n.Dmgr.GetDevType() != common.Ascend910A3 {
-		// only A2 and A3 support use new api (dcmi_get_device_utilization_rate_v2)
+		// only A2 and A3 support use new api (dcmi_get_device_multi_utilization_rate)
 		c.realGetDeviceUtilizationRateInfoFunc = collectUtilV1
 		logger.Infof("devType %v does not support get device utilization by v2 api, "+
 			"will use v1 api to get utilization info", utils.MaskDevType(n.Dmgr.GetDevType()))
