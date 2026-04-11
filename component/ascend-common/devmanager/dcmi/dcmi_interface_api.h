@@ -573,7 +573,7 @@ DCMIDLLEXPORT int dcmi_get_device_memory_info_v3(int card_id, int device_id,
 DCMIDLLEXPORT int dcmi_get_device_utilization_rate(
     int card_id, int device_id, int input_type, unsigned int *utilization_rate);
 
-DCMIDLLEXPORT int dcmi_get_device_utilization_rate_v2(
+DCMIDLLEXPORT int dcmi_get_device_multi_utilization_rate(
     int card_id, int device_id, struct dcmi_multi_utilization_info *util_info);
 
 DCMIDLLEXPORT int dcmi_get_device_info(
