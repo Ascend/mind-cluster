@@ -3,7 +3,6 @@
   {"metricsGroup": "hccs", "state": "ON"},
   {"metricsGroup": "npu", "state": "ON"},
   {"metricsGroup": "network", "state": "ON"},
-  {"metricsGroup": "network-npu", "state": "ON"},
   {"metricsGroup": "pcie", "state": "ON"},
   {"metricsGroup": "roce", "state": "ON"},
   {"metricsGroup": "sio", "state": "ON"},
@@ -11,6 +10,5 @@
   {"metricsGroup": "version", "state": "ON"},
   {"metricsGroup": "optical", "state": "ON"},
   {"metricsGroup": "hbm", "state": "ON"},
-  {"metricsGroup": "ub", "state": "ON"},
-  {"metricsGroup": "optical-npu", "state": "ON"}
+  {"metricsGroup": "ub", "state": "ON"}
 ]

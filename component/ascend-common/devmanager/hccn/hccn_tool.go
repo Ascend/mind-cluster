@@ -46,6 +46,7 @@ const (
 	secondIndex     = 2
 	fourthIndex     = 4
 	fifthIndex      = 5
+	sixthIndex      = 6
 	linkStatusPart  = 3
 	base64          = 64
 
@@ -340,8 +341,8 @@ func buildHccnErr(phyID int32, msg string, err error) error {
 	return fmt.Errorf("phyID(%d),get npu %s info failed,error is :%v", phyID, msg, err)
 }
 
-// GetNPULinkStatusA5 exec "hccn_tool -g -link -i device_id -u udie_id -p port_id" to get link status
-func GetNPULinkStatusA5(logicID, udieID, portID int32) (string, error) {
+// GetNPULinkStatusNpu exec "hccn_tool -g -link -i device_id -u udie_id -p port_id" to get link status
+func GetNPULinkStatusNpu(logicID, udieID, portID int32) (string, error) {
 	args := []string{"-g", "-link", "-i", strconv.Itoa(int(logicID)), "-u", strconv.Itoa(int(udieID)), "-p", strconv.Itoa(int(portID))}
 	// command example: hccn_tool -g -link -i 58 -u 0 -p 4
 	// success result example is: link status: DOWN
@@ -362,8 +363,8 @@ func GetNPULinkStatusA5(logicID, udieID, portID int32) (string, error) {
 	return status, nil
 }
 
-// GetNPUInterfaceTrafficA5 exec "hccn_tool -g -bandwidth -i device_id -u udie_id -p port_id -time [1-226]" to get bandwidth info
-func GetNPUInterfaceTrafficA5(logicID, udieID, portID, durationTime int32) (float64, float64, error) {
+// GetNPUInterfaceTrafficNpu exec "hccn_tool -g -bandwidth -i device_id -u udie_id -p port_id -time [1-226]" to get bandwidth info
+func GetNPUInterfaceTrafficNpu(logicID, udieID, portID, durationTime int32) (float64, float64, error) {
 	const (
 		noTraffic      = common.RetError
 		trafficPartLen = 4
@@ -414,8 +415,8 @@ func GetNPUInterfaceTrafficA5(logicID, udieID, portID, durationTime int32) (floa
 	return tx, rx, nil
 }
 
-// GetNPULinkSpeedA5 exec "hccn_tool -g -speed -i phy_id -u udie_id -p port_id" to get link speed
-func GetNPULinkSpeedA5(logicID, udieID, portID int32) (int, error) {
+// GetNPULinkSpeedNpu exec "hccn_tool -g -speed -i phy_id -u udie_id -p port_id" to get link speed
+func GetNPULinkSpeedNpu(logicID, udieID, portID int32) (int, error) {
 	args := []string{"-g", "-speed", "-i", strconv.Itoa(int(logicID)), "-u", strconv.Itoa(int(udieID)),
 		"-p", strconv.Itoa(int(portID))}
 	// command example: hccn_tool -g -speed -i 56 -u 0 -p 4
@@ -466,26 +467,51 @@ func GetNpuOpticalInfoNpu(logicID, udieID, portID int32) (map[string]string, err
 	if err != nil {
 		return nil, buildHccnErrA5("optical", err)
 	}
-	return getOpticalFromStrNpu(outStr)
-}
-
-func getOpticalFromStrNpu(str string) (map[string]string, error) {
-	if !strings.Contains(str, "Power") {
+	if !strings.Contains(outStr, "Power") {
 		return map[string]string{}, buildHccnErrA5("optical", fmt.Errorf("optical info is not valid"))
 	}
-	lines := strings.Split(strings.TrimSpace(str), "\n")
+	lines := strings.Split(strings.TrimSpace(outStr), "\n")
+	return parseSecondTableColumns(lines)
+}
+
+func parseSecondTableColumns(lines []string) (map[string]string, error) {
 	opticalInfoMap := make(map[string]string)
 	var opticalIndex []string
-	for _, line := range lines[twelfthIndex:] {
-		data := strings.Split(line, "|")
-		if strings.Contains(line, "|") && strings.Contains(line, "optical_") {
-			opticalIndex = append(opticalIndex, strings.TrimSpace(data[eleventhIndex]))
+
+	tableSepCount := 0
+	inDataRow := false
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+
+		if strings.HasPrefix(line, "+-") {
+			tableSepCount++
+			if tableSepCount == fifthIndex {
+				inDataRow = true
+			} else if tableSepCount == sixthIndex {
+				break
+			}
+			continue
 		}
-		if strings.Contains(line, "dBm") {
-			opticalInfoMap[data[fourthIndex]] = data[fifthIndex]
+
+		if !inDataRow {
+			continue
+		}
+		parts := strings.Split(line, "|")
+		if len(parts) < eleventhIndex {
+			continue
+		}
+		col4 := strings.TrimSpace(parts[fourthIndex])
+		col5 := strings.TrimSpace(parts[fifthIndex])
+		if strings.Contains(line, "optical_") {
+			opticalIndex = append(opticalIndex, strings.TrimSpace(parts[len(parts)-2]))
+		}
+		if col4 != "" && strings.Contains(line, "xPower") {
+			opticalInfoMap[col4] = col5
 		}
 	}
 	hwlog.RunLog.Debugf("opticalIndex: %v, len: %v", opticalIndex, len(opticalIndex))
+	hwlog.RunLog.Debugf("opticalInfoMap: %v", opticalInfoMap)
 	opticalInfoMap["optical_index"] = strconv.Itoa(len(opticalIndex))
 	return opticalInfoMap, nil
 }

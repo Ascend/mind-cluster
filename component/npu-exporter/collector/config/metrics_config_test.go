@@ -135,10 +135,8 @@ func TestRegister(t *testing.T) {
 		patches.ApplyMethodReturn(&metrics.VnpuCollector{}, "IsSupported", true)
 		patches.ApplyMethodReturn(&metrics.PcieCollector{}, "IsSupported", true)
 		patches.ApplyMethodReturn(&metrics.NetworkCollector{}, "IsSupported", true)
-		patches.ApplyMethodReturn(&metrics.NetworkNPUCollector{}, "IsSupported", true)
 		patches.ApplyMethodReturn(&metrics.RoceCollector{}, "IsSupported", true)
 		patches.ApplyMethodReturn(&metrics.OpticalCollector{}, "IsSupported", true)
-		patches.ApplyMethodReturn(&metrics.OpticalNpuCollector{}, "IsSupported", true)
 		patches.ApplyMethodReturn(&metrics.UbCollector{}, "IsSupported", true)
 		patches.ApplyFunc(loadConfiguration, func() {
 			initConfiguration(loadFromFile("../../build/metricConfiguration.json"), &presetConfigs)

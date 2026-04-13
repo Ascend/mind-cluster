@@ -16,6 +16,8 @@
 package metrics
 
 import (
+	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -24,7 +26,6 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
-
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 )
@@ -45,6 +46,25 @@ var (
 
 	// linkstatus
 	descLinkStatus = colcommon.BuildDesc("npu_chip_info_link_status", "the npu link status")
+
+	// npu specific metrics
+	linkStatusDesc           []*prometheus.Desc
+	bandwidthTxDesc          []*prometheus.Desc
+	bandwidthRxDesc          []*prometheus.Desc
+	npuChipPortLinkSpeedDesc []*prometheus.Desc
+
+	notSupportedNetworkNpuDevices = map[uint32]bool{
+		api.Atlas3501PMainBoardID: true,
+	}
+)
+
+const (
+	// maxDieId max udie id
+	maxDieId = 2
+	// maxPortId max port id
+	maxPortId = 9
+	// bandwidthTime bandwidth's time param
+	bandwidthTime = 100
 )
 
 type netInfoCache struct {
@@ -53,39 +73,98 @@ type netInfoCache struct {
 	extInfo   *common.NpuNetInfo
 }
 
+type netInfoNPUCache struct {
+	chip      colcommon.HuaWeiAIChip
+	timestamp time.Time
+	extInfo   []*common.NpuNetInfo
+}
+
 // NetworkCollector collects the network info
 type NetworkCollector struct {
 	colcommon.MetricsCollectorAdapter
 }
 
+func init() {
+	// Initialize Npu specific metrics descriptions
+	for dieID := 0; dieID < maxDieId; dieID++ {
+		for portID := 0; portID < maxPortId; portID++ {
+			colcommon.BuildDescSlice(&linkStatusDesc, fmt.Sprint(api.MetricsPrefix, "link_status_", strconv.Itoa(dieID),
+				"_", strconv.Itoa(portID)), fmt.Sprint("the npu link status ", "dieId:", strconv.Itoa(dieID),
+				" portId:", strconv.Itoa(portID)))
+			colcommon.BuildDescSlice(&bandwidthTxDesc, fmt.Sprint(api.MetricsPrefix, "bandwidth_tx_", strconv.Itoa(dieID),
+				"_", strconv.Itoa(portID)), fmt.Sprint("the npu port transport speed, unit is 'MB/s' ", "dieId:",
+				strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+			colcommon.BuildDescSlice(&bandwidthRxDesc, fmt.Sprint(api.MetricsPrefix, "bandwidth_rx_", strconv.Itoa(dieID),
+				"_", strconv.Itoa(portID)), fmt.Sprint("the npu port receive speed, unit is 'MB/s' ", "dieId:",
+				strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+			colcommon.BuildDescSlice(&npuChipPortLinkSpeedDesc, fmt.Sprint(api.MetricsPrefix, "link_speed_",
+				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("the npu port link speed, unit is 'G' ",
+				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+		}
+	}
+}
+
 // IsSupported check if the collector is supported
 func (c *NetworkCollector) IsSupported(n *colcommon.NpuCollector) bool {
-	isSupport := n.Dmgr.IsTrainingCard()
-	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c),
-		"only training card supports network related info")
-	if n.Dmgr.GetDevType() == api.Ascend910A5 {
-		isSupport = false
+	devType = n.Dmgr.GetDevType()
+
+	// For Npu devices, check if it's a supported model
+	if devType == api.Ascend910A5 {
+		mainBoardID := n.Dmgr.GetMainBoardId()
+		if notSupportedNetworkNpuDevices[mainBoardID] {
+			logForUnSupportDevice(false, devType, colcommon.GetCacheKey(c),
+				fmt.Sprint("this mainBoardId:", mainBoardID, " is not supported"))
+			return false
+		}
+		return true
 	}
-	logForUnSupportDevice(isSupport, n.Dmgr.GetDevType(), colcommon.GetCacheKey(c), "")
+
+	// For other devices, check if it's a training card
+	isSupport := n.Dmgr.IsTrainingCard()
+	logForUnSupportDevice(isSupport, devType, colcommon.GetCacheKey(c),
+		"only training card supports network related info")
 	return isSupport
 }
 
 // Describe description of the metric
 func (c *NetworkCollector) Describe(ch chan<- *prometheus.Desc) {
-	// bandwidth
+	if devType == api.Ascend910A5 {
+		// Npu specific metrics
+		for _, desc := range linkStatusDesc {
+			ch <- desc
+		}
+		for _, desc := range bandwidthTxDesc {
+			ch <- desc
+		}
+		for _, desc := range bandwidthRxDesc {
+			ch <- desc
+		}
+		for _, desc := range npuChipPortLinkSpeedDesc {
+			ch <- desc
+		}
+		return
+	}
+	// Non-Npu metrics
 	ch <- descBandwidthTx
 	ch <- descBandwidthRx
-	// linkspeed
 	ch <- npuChipLinkSpeed
-	// linkupNum
 	ch <- npuChipLinkUpNum
-	// linkstatus
 	ch <- descLinkStatus
 }
 
 // CollectToCache collect the metric to cache
 func (c *NetworkCollector) CollectToCache(n *colcommon.NpuCollector, chipList []colcommon.HuaWeiAIChip) {
+	if devType == api.Ascend910A5 {
+		for _, chip := range chipList {
+			// Collect Npu specific network info
+			netInfos := collectNetworkNpuInfo(chip.LogicID)
+			c.LocalCache.Store(chip.PhyId, netInfoNPUCache{chip: chip, timestamp: time.Now(), extInfo: netInfos})
+		}
+		colcommon.UpdateCache[netInfoNPUCache](n, colcommon.GetCacheKey(c), &c.LocalCache)
+		return
+	}
 	for _, chip := range chipList {
+		// Collect regular network info
 		netInfo := collectNetworkInfo(chip.PhyId)
 		c.LocalCache.Store(chip.PhyId, netInfoCache{chip: chip, timestamp: time.Now(), extInfo: &netInfo})
 	}
@@ -95,25 +174,34 @@ func (c *NetworkCollector) CollectToCache(n *colcommon.NpuCollector, chipList []
 // UpdatePrometheus update prometheus metrics
 func (c *NetworkCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
-
+	if devType == api.Ascend910A5 {
+		// Update Npu specific metrics
+		updateSingleChipNpu := func(chipWithVnpu colcommon.HuaWeiAIChip, cache netInfoNPUCache, cardLabel []string) {
+			timestamp := cache.timestamp
+			promUpdateNetInfo(ch, cache, timestamp, cardLabel)
+		}
+		updateFrame[netInfoNPUCache](colcommon.GetCacheKey(c), n, containerMap, chips, updateSingleChipNpu)
+		return
+	}
+	// Update regular metrics
 	updateSingleChip := func(chipWithVnpu colcommon.HuaWeiAIChip, cache netInfoCache, cardLabel []string) {
 		netInfo := cache.extInfo
 		if netInfo == nil {
 			return
 		}
-		time := cache.timestamp
+		timestamp := cache.timestamp
 		if validateNotNilForEveryElement(netInfo.BandwidthInfo) {
-			doUpdateMetricWithValidateNum(ch, time, netInfo.BandwidthInfo.TxValue, cardLabel, descBandwidthTx)
-			doUpdateMetricWithValidateNum(ch, time, netInfo.BandwidthInfo.RxValue, cardLabel, descBandwidthRx)
+			doUpdateMetricWithValidateNum(ch, timestamp, netInfo.BandwidthInfo.TxValue, cardLabel, descBandwidthTx)
+			doUpdateMetricWithValidateNum(ch, timestamp, netInfo.BandwidthInfo.RxValue, cardLabel, descBandwidthRx)
 		}
 		if validateNotNilForEveryElement(netInfo.LinkSpeedInfo) {
-			doUpdateMetricWithValidateNum(ch, time, netInfo.LinkSpeedInfo.Speed, cardLabel, npuChipLinkSpeed)
+			doUpdateMetricWithValidateNum(ch, timestamp, netInfo.LinkSpeedInfo.Speed, cardLabel, npuChipLinkSpeed)
 		}
 		if validateNotNilForEveryElement(netInfo.LinkStatInfo) {
-			doUpdateMetricWithValidateNum(ch, time, netInfo.LinkStatInfo.LinkUPNum, cardLabel, npuChipLinkUpNum)
+			doUpdateMetricWithValidateNum(ch, timestamp, netInfo.LinkStatInfo.LinkUPNum, cardLabel, npuChipLinkUpNum)
 		}
 		if validateNotNilForEveryElement(netInfo.LinkStatusInfo) {
-			doUpdateMetricWithValidateNum(ch, time, float64(hccn.GetLinkStatusCode(netInfo.LinkStatusInfo.LinkState)),
+			doUpdateMetricWithValidateNum(ch, timestamp, float64(hccn.GetLinkStatusCode(netInfo.LinkStatusInfo.LinkState)),
 				cardLabel, descLinkStatus)
 		}
 	}
@@ -123,7 +211,20 @@ func (c *NetworkCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colc
 // UpdateTelegraf update telegraf metrics
 func (c *NetworkCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
-
+	if devType == api.Ascend910A5 {
+		// Update Npu specific metrics
+		caches := colcommon.GetInfoFromCache[netInfoNPUCache](n, colcommon.GetCacheKey(c))
+		for _, chip := range chips {
+			cache, ok := caches[chip.PhyId]
+			if !ok {
+				continue
+			}
+			fieldMap := getFieldMap(fieldsMap, cache.chip.LogicID)
+			telegrafUpdateNetInfo(cache, fieldMap)
+		}
+		return fieldsMap
+	}
+	// Update regular metrics
 	caches := colcommon.GetInfoFromCache[netInfoCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
 		cache, ok := caches[chip.PhyId]
@@ -155,7 +256,6 @@ func (c *NetworkCollector) UpdateTelegraf(fieldsMap map[string]map[string]interf
 
 func collectNetworkInfo(phyID int32) common.NpuNetInfo {
 	newNetInfo := common.NpuNetInfo{}
-
 	newNetInfo.LinkStatusInfo = &common.LinkStatusInfo{}
 	if linkState, err := hccn.GetNPULinkStatus(phyID); err == nil {
 		newNetInfo.LinkStatusInfo.LinkState = linkState
@@ -193,4 +293,84 @@ func collectNetworkInfo(phyID int32) common.NpuNetInfo {
 	}
 
 	return newNetInfo
+}
+
+// Npu specific collection functions
+func collectNetworkNpuInfo(logicID int32) []*common.NpuNetInfo {
+	var newNetInfo []*common.NpuNetInfo
+	for dieID := 0; dieID < maxDieId; dieID++ {
+		for portID := 0; portID < maxPortId; portID++ {
+			netInfo := common.NpuNetInfo{
+				LinkStatusInfo: &common.LinkStatusInfo{},
+				BandwidthInfo:  &common.BandwidthInfo{},
+				LinkSpeedInfo:  &common.LinkSpeedInfo{},
+			}
+			if linkState, err := hccn.GetNPULinkStatusNpu(logicID, int32(dieID), int32(portID)); err == nil {
+				hwlog.RunLog.Debugf("hccn_tool get npu link status: %s", linkState)
+				netInfo.LinkStatusInfo.LinkState = linkState
+				hwlog.ResetErrCnt(fmt.Sprint(colcommon.DomainForLinkState, dieID, portID), logicID)
+			} else {
+				logWarnMetricsWithLimit(fmt.Sprint(colcommon.DomainForLinkState, dieID, portID), logicID, dieID, portID, err)
+				netInfo.LinkStatusInfo.LinkState = colcommon.Abnormal
+			}
+			if tx, rx, err := hccn.GetNPUInterfaceTrafficNpu(logicID, int32(dieID), int32(portID), int32(bandwidthTime)); err == nil {
+				netInfo.BandwidthInfo.RxValue = rx
+				netInfo.BandwidthInfo.TxValue = tx
+				hwlog.ResetErrCnt(fmt.Sprint(colcommon.DomainForBandwidth, dieID, portID), logicID)
+			} else {
+				netInfo.BandwidthInfo = nil
+				logWarnMetricsWithLimit(fmt.Sprint(colcommon.DomainForBandwidth, dieID, portID), logicID, dieID, portID, err)
+			}
+			if speed, err := hccn.GetNPULinkSpeedNpu(logicID, int32(dieID), int32(portID)); err == nil {
+				netInfo.LinkSpeedInfo.Speed = float64(speed)
+				hwlog.ResetErrCnt(fmt.Sprint(colcommon.DomainForLinkSpeed, dieID, portID), logicID)
+			} else {
+				netInfo.LinkSpeedInfo = nil
+				logWarnMetricsWithLimit(fmt.Sprint(colcommon.DomainForLinkSpeed, dieID, portID), logicID, dieID, portID, err)
+			}
+			newNetInfo = append(newNetInfo, &netInfo)
+		}
+	}
+
+	return newNetInfo
+}
+
+func promUpdateNetInfo(ch chan<- prometheus.Metric, cache netInfoNPUCache, timestamp time.Time, cardLabel []string) {
+	netInfo := cache.extInfo
+	if netInfo == nil {
+		return
+	}
+	for i := 0; i < (maxDieId * maxPortId); i++ {
+		if validateNotNilForEveryElement(netInfo[i].LinkStatusInfo) {
+			doUpdateMetricWithValidateNum(ch, timestamp, float64(hccn.GetLinkStatusCode(netInfo[i].LinkStatusInfo.LinkState)),
+				cardLabel, linkStatusDesc[i])
+		}
+		if validateNotNilForEveryElement(netInfo[i].BandwidthInfo) {
+			doUpdateMetricWithValidateNum(ch, timestamp, netInfo[i].BandwidthInfo.TxValue, cardLabel, bandwidthTxDesc[i])
+			doUpdateMetricWithValidateNum(ch, timestamp, netInfo[i].BandwidthInfo.RxValue, cardLabel, bandwidthRxDesc[i])
+		}
+		if validateNotNilForEveryElement(netInfo[i].LinkSpeedInfo) {
+			doUpdateMetricWithValidateNum(ch, timestamp, netInfo[i].LinkSpeedInfo.Speed, cardLabel, npuChipPortLinkSpeedDesc[i])
+		}
+	}
+}
+
+func telegrafUpdateNetInfo(cache netInfoNPUCache, fieldMap map[string]interface{}) {
+	netInfo := cache.extInfo
+	if netInfo == nil {
+		return
+	}
+	for i := 0; i < (maxDieId * maxPortId); i++ {
+		if validateNotNilForEveryElement(netInfo[i].LinkStatusInfo) {
+			doUpdateTelegrafWithValidateNum(fieldMap, linkStatusDesc[i],
+				float64(hccn.GetLinkStatusCode(netInfo[i].LinkStatusInfo.LinkState)), "")
+		}
+		if validateNotNilForEveryElement(netInfo[i].BandwidthInfo) {
+			doUpdateTelegrafWithValidateNum(fieldMap, bandwidthTxDesc[i], netInfo[i].BandwidthInfo.TxValue, "")
+			doUpdateTelegrafWithValidateNum(fieldMap, bandwidthRxDesc[i], netInfo[i].BandwidthInfo.RxValue, "")
+		}
+		if validateNotNilForEveryElement(netInfo[i].LinkSpeedInfo) {
+			doUpdateTelegrafWithValidateNum(fieldMap, npuChipPortLinkSpeedDesc[i], netInfo[i].LinkSpeedInfo.Speed, "")
+		}
+	}
 }
