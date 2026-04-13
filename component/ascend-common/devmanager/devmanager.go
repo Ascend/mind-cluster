@@ -35,7 +35,7 @@ type DeviceInterface interface {
 	Init() error
 	ShutDown() error
 	GetDcmiVersion() string
-	GetDeviceCount() (int32, error)
+	GetAllDeviceCount() (int32, error)
 	GetCardList() (int32, []int32, error)
 	GetDeviceNumInCard(cardID int32) (int32, error)
 	GetDeviceList() (int32, []int32, error)
@@ -408,8 +408,8 @@ func (d *DeviceManager) ShutDown() error {
 }
 
 // GetDeviceCount get npu device count
-func (d *DeviceManager) GetDeviceCount() (int32, error) {
-	return d.DcMgr.DcGetDeviceCount()
+func (d *DeviceManager) GetAllDeviceCount() (int32, error) {
+	return d.DcMgr.DcGetAllDeviceCount()
 }
 
 // GetCardList  get all card list

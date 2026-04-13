@@ -572,7 +572,7 @@ type DcDriverInterface interface {
 	DcShutDown() error
 
 	DcGetDcmiVersion() (string, error)
-	DcGetDeviceCount() (int32, error)
+	DcGetAllDeviceCount() (int32, error)
 	DcGetLogicIDList() (int32, []int32, error)
 	DcGetDeviceHealth(int32, int32) (int32, error)
 	DcGetDeviceNetWorkHealth(int32, int32) (uint32, error)
@@ -1514,8 +1514,8 @@ func (d *DcManager) DcGetDeviceErrorCode(cardID, deviceID int32) (int32, int64, 
 	return int32(errCount), int64(errCodeArray[0]), nil
 }
 
-// DcGetDeviceCount get device count
-func (d *DcManager) DcGetDeviceCount() (int32, error) {
+// DcGetAllDeviceCount get device count
+func (d *DcManager) DcGetAllDeviceCount() (int32, error) {
 	devNum, _, err := d.DcGetLogicIDList()
 	if err != nil {
 		return common.RetError, fmt.Errorf("get device count failed, error: %v", err)

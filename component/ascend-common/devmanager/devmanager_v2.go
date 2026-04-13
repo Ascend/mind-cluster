@@ -171,8 +171,9 @@ func retryGetDeviceList(mgr *DeviceManagerV2, resetTimeout int) bool {
 	var retryDelay = defaultRetryDelay
 	hwlog.RunLog.Infof("get device list from dcmi reset timeout is %d", resetTimeout)
 	for currentTime, retryCount := 0, 0; currentTime <= resetTimeout; currentTime += retryDelay {
-		devNum, devList, err := mgr.GetDeviceList()
-		if err == nil && int(devNum) == len(devList) {
+		_, devList, err1 := mgr.GetDeviceList()
+		devNum, err2 := mgr.GetAllDeviceCount()
+		if err1 == nil && err2 == nil && int(devNum) == len(devList) {
 			hwlog.RunLog.Infof("deviceManager get devList is %v, devList length equal to devNum: %v", devList, devNum)
 			break
 		}
@@ -180,10 +181,15 @@ func retryGetDeviceList(mgr *DeviceManagerV2, resetTimeout int) bool {
 			retryDelay = int(math.Min(float64(defaultRetryDelay), diffTime))
 		}
 		retryCount++
-		hwlog.RunLog.Warnf("deviceManager get device list failed (attempt %d), devNum=%d, devList=%v, err: %v",
-			retryCount, devNum, devList, err)
+		hwlog.RunLog.Warnf("get devNum = %d, devList = %v at %d times, and wait to try again", devNum, devList, retryCount)
+		if err1 != nil {
+			hwlog.RunLog.Warnf("get device list failed at %d times, err: %v", retryCount, err1)
+		}
+		if err2 != nil {
+			hwlog.RunLog.Warnf("get all device count failed at %d times, err: %v", retryCount, err2)
+		}
 		if currentTime+retryDelay <= resetTimeout {
-			if err = mgr.ShutDown(); err != nil {
+			if err := mgr.ShutDown(); err != nil {
 				hwlog.RunLog.Errorf("deviceManager shut down failed, err: %v", err)
 				return false
 			}
@@ -191,7 +197,7 @@ func retryGetDeviceList(mgr *DeviceManagerV2, resetTimeout int) bool {
 			continue
 		}
 		if int(devNum) != len(devList) {
-			hwlog.RunLog.Warnf("deviceManager get devList is %v, but devNum is %v, "+
+			hwlog.RunLog.Warnf("deviceManager get devList is %v, but devNum is %d, "+
 				"please check whether the real number of npu matches the devList", devList, devNum)
 		}
 	}
@@ -258,8 +264,8 @@ func (d *DeviceManagerV2) GetDcmiVersion() string {
 }
 
 // GetDeviceCount get npu device count
-func (d *DeviceManagerV2) GetDeviceCount() (int32, error) {
-	return d.DcMgr.DcGetDeviceCount()
+func (d *DeviceManagerV2) GetAllDeviceCount() (int32, error) {
+	return d.DcMgr.DcGetAllDeviceCount()
 }
 
 // GetBrotherCardID get brother card id

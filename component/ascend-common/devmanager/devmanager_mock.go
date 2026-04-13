@@ -75,7 +75,7 @@ func (d *DeviceManagerMock) GetDevType() string {
 }
 
 // GetDeviceCount get npu device count
-func (d *DeviceManagerMock) GetDeviceCount() (int32, error) {
+func (d *DeviceManagerMock) GetAllDeviceCount() (int32, error) {
 	return 1, nil
 }
 

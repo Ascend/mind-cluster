@@ -29,6 +29,8 @@ DCMIDLLEXPORT int dcmiv2_init(void);
 
 DCMIDLLEXPORT int dcmiv2_get_device_list(int *device_list, int *device_num, int list_len);
 
+DCMIDLLEXPORT int dcmiv2_get_all_device_count(int *all_device_count);
+
 DCMIDLLEXPORT int dcmiv2_get_device_type(int dev_id, enum dcmi_unit_type *device_type);
 
 DCMIDLLEXPORT int dcmiv2_get_device_pcie_info(int dev_id, struct dcmi_pcie_info_all *pcie_info);

@@ -43,6 +43,11 @@ package dcmi
         CALL_FUNC(dcmiv2_get_device_info,dev_id,main_cmd,sub_cmd,buf,size)
     }
 
+	static int (*dcmiv2_get_all_device_count_func)(int *all_device_count);
+    static int dcmiv2_get_all_device_count(int *all_device_count){
+        CALL_FUNC(dcmiv2_get_all_device_count,all_device_count)
+    }
+
     static int (*dcmiv2_get_device_type_func)(int dev_id,enum dcmi_unit_type *device_type);
     static int dcmiv2_get_device_type(int dev_id,enum dcmi_unit_type *device_type){
         CALL_FUNC(dcmiv2_get_device_type,dev_id,device_type)
@@ -260,6 +265,7 @@ package dcmi
         }
         dcmiv2_init_func = dlsym(dcmiHandle,"dcmiv2_init");
         dcmiv2_get_device_info_func = dlsym(dcmiHandle,"dcmiv2_get_device_info");
+		dcmiv2_get_all_device_count_func = dlsym(dcmiHandle,"dcmiv2_get_all_device_count");
         dcmiv2_get_device_type_func = dlsym(dcmiHandle,"dcmiv2_get_device_type");
         dcmiv2_get_device_health_func = dlsym(dcmiHandle,"dcmiv2_get_device_health");
         dcmiv2_get_device_utilization_rate_func = dlsym(dcmiHandle,"dcmiv2_get_device_utilization_rate");
@@ -327,7 +333,7 @@ type DcV2DriverInterface interface {
 	DcInit() error
 	DcShutDown() error
 	DcGetDcmiVersion() (string, error)
-	DcGetDeviceCount() (int32, error)
+	DcGetAllDeviceCount() (int32, error)
 	DcGetDeviceHealth(logicID int32) (int32, error)
 	DcGetDeviceNetWorkHealth(logicID int32) (uint32, error)
 	DcGetDeviceUtilizationRate(logicID int32, devType common.DeviceType) (int32, error)
@@ -414,13 +420,13 @@ func (d *DcV2Manager) DcGetDcmiVersion() (string, error) {
 	return C.GoString(cDcmiVer), nil
 }
 
-// DcGetDeviceCount get device count
-func (d *DcV2Manager) DcGetDeviceCount() (int32, error) {
-	devNum, _, err := d.DcGetDeviceList()
-	if err != nil {
-		return common.RetError, fmt.Errorf("get device count failed, error: %v", err)
+// DcGetAllDeviceCount get all device count
+func (d *DcV2Manager) DcGetAllDeviceCount() (int32, error) {
+	var allDeviceCount C.int
+	if retCode := C.dcmiv2_get_all_device_count(&allDeviceCount); int32(retCode) != common.Success {
+		return 0, fmt.Errorf("get all device count failed, errCode: %d", int32(retCode))
 	}
-	return devNum, nil
+	return int32(allDeviceCount), nil
 }
 
 // DcGetDeviceHealth get device health
