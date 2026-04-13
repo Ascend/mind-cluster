@@ -1,44 +1,9 @@
-# Infer Operator推理任务最佳实践
+# 基于vLLM Proxy部署Infer Operator推理任务
 
-## 使用前必读
+## 实现原理
 
-MindCluster集群调度组件支持用户通过Infer Operator部署推理任务进行调度和故障实例重调度。
-
-本章节仅说明相关特性原理及对应配置示例。用户可以参考配置示例部署Infer Operator推理任务。
-
-**前提条件**
-
-在部署Infer Operator推理任务前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../installation_guide.md#安装部署)章节进行操作。
-
-- Volcano
-- Ascend Device Plugin
-- Ascend Docker Runtime
-- Infer Operator
-- ClusterD
-- NodeD（可选）
-
-**支持的产品形态**
-
-- Atlas 800I A2 推理服务器
-- Atlas 800I A3 超节点服务器
-
-**使用方式**
-
-MindCluster集群调度组件支持用户通过以下2种方式部署Infer Operator推理任务。
-
-- 基于vLLM Proxy部署Infer Operator推理任务。
-- 基于MindIE-PyMotor部署Infer Operator推理任务。
-
-## 基于vLLM Proxy部署Infer Operator推理任务
-
-MindCluster集群调度组件支持用户通过两种方式部署基于vLLM Proxy的Infer Operator推理任务。
-
-- 通过命令行使用：通过配置的YAML文件部署任务。
-- 通过MindCluster社区部署工具一键部署使用：通过自动化脚本参考设计部署任务。
-
-### 实现原理
-
-1. 集群调度组件定期上报节点和芯片信息；kubelet上报节点芯片数量到节点对象（node）中。
+1. 集群调度组件定期上报节点和芯片信息。
+    - kubelet上报节点芯片数量到节点对象（node）中。
     - Ascend Device Plugin上报芯片内存和拓扑信息。
 
         对于包含片上内存的芯片，Ascend Device Plugin启动时上报芯片内存情况，见node-label说明；上报整卡信息，将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）、已使用的芯片数量（allocated）和芯片的基础信息（device ip和super\_device\_ip）上报到node中，用于整卡调度。
@@ -51,20 +16,20 @@ MindCluster集群调度组件支持用户通过两种方式部署基于vLLM Prox
 5. volcano-scheduler根据节点内存、CPU及标签、亲和性为Pod选择合适的节点，并在Pod的annotation上写入选择的芯片信息以及节点硬件信息。
 6. kubelet创建容器时，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin或volcano-scheduler在Pod的annotation上写入芯片和节点硬件信息。Ascend Docker Runtime协助挂载相应资源。
 
-### 通过命令行使用
+## 通过命令行使用
 
-#### 流程说明
+### 流程说明
 
-基于vLLM Proxy的Infer Operator推理任务包含Routing  Pod和推理实例Pod，推理实例Pod可以分为Prefill实例Pod和Decode实例Pod，其中Routing  Pod不需要使用NPU资源，Infer Operator根据不同的推理服务配置方式生成不同的工作负载，用于创建不同的推理实例，并由Router统一对外提供推理服务。
+基于vLLM Proxy的Infer Operator推理任务包含Routing Pod和推理实例Pod，推理实例Pod可以分为Prefill实例Pod和Decode实例Pod，其中Routing Pod不需要使用NPU资源，Infer Operator根据不同的推理服务配置方式生成不同的工作负载，用于创建不同的推理实例，并由Router统一对外提供推理服务。
 
 **使用流程**
 
 通过命令行使用MindCluster集群调度组件部署基于vLLM Proxy的Infer Operator推理任务时，使用流程如[图1](#fig38991911205816)所示。
 
 **图 1**  使用流程<a name="fig38991911205816"></a>  
-![](../../figures/scheduling/infer-operator-use-process.png)
+![](../../../figures/scheduling/infer-operator-use-process.png)
 
-#### 准备任务YAML
+### 准备任务YAML
 
 用户可根据实际情况完成制作镜像的准备工作，然后选择相应的YAML示例，对示例进行修改。
 
@@ -74,7 +39,7 @@ MindCluster集群调度组件支持用户通过两种方式部署基于vLLM Prox
 
 **选择YAML示例**
 
-当前，基于vLLM Proxy的Infer Operator推理任务由InferServiceSet自定义CRD部署，Infer Operator的部署请参见[安装部署](../installation_guide.md#infer-operator)。
+当前，基于vLLM Proxy的Infer Operator推理任务由InferServiceSet自定义CRD部署，Infer Operator的部署请参见[安装部署](../../installation_guide/03_installation.md#infer-operator)。
 
 以下是一个适配示例，用户可根据需求进行修改。
 
@@ -190,7 +155,7 @@ spec:
               ... # 补充容器必要的挂载项与运行命令
 ```
 
-#### YAML参数说明
+### YAML参数说明
 
 下表对InferServiceSet YAML中与MindCluster相关的字段进行说明。
 
@@ -224,7 +189,7 @@ spec:
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><ul ><li>on：开启<span >Pod</span>级别重调度。</li><li>其他值或不使用该字段：关闭<span >Pod</span>级别重调度。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p ><span >Pod</span>级重调度，表示任务发生故障后，不会删除PodGroup内的所有任务<span >Pod</span>，而是将发生故障的<span >Pod</span>进行删除，由控制器重新创建新<span >Pod</span>后进行重调度。</p>
-<p>PD实例必须配置此字段，router实例可不配置</p>
+<p>PD实例必须配置此字段，Router实例可不配置</p>
 </td>
 </tr>
 <tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >infer.huawei.com/gang-schedule</p>
@@ -232,7 +197,7 @@ spec:
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><ul ><li>true：开启组调度。</li><li>其他值或不使用该字段：关闭组调度。默认关闭。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >开启组调度后，Infer Operator将为每个实例（workload）创建对应的PodGroup，确保同一PodGroup内的所有Pod能够同时启动。</p>
-<p>workload为StatefulSet的场景下，开启组调度的同时需要配置`podManagementPolicy`为`Parallel`，否则StatefulSet无法正常调度。</p>
+<p>workload为StatefulSet场景下，开启组调度的同时需要配置podManagementPolicy为Parallel，否则StatefulSet无法正常调度。</p>
 </td>
 </tr>
 <tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >accelerator-type</p>
@@ -296,106 +261,132 @@ spec:
 </tbody>
 </table>
 
-#### 下发任务
-用户可以使用kubectl命令行工具下发InferServiceSet任务：
+### 下发任务
 
-  ```shell
-    kubectl apply -f <job-yaml> # 下发准备好的YAML文件
-  ```
+执行以下命令，下发InferServiceSet任务。其中，<job-yaml\>为InferServiceSet任务的YAML文件。
 
-得到下述回显示例表示下发成功：
+```shell
+kubectl apply -f <job-yaml>
+```
 
-  ```shell
-    inferserviceset.mindcluster.huawei.com/my-test created
-  ```
+回显示例如下，InferServiceSet任务下发成功。
 
-#### 查看调度结果
-用户可以使用kubectl命令行工具查看任务运行状态:
+```ColdFusion
+inferserviceset.mindcluster.huawei.com/my-test created
+```
 
-  ```shell
-    kubectl get pod -n <namespace> # 查看相关推理实例pod是否拉起，namespace为用户定义的命名空间
+### 查看调度结果
 
-    # 回显示例如下，所有实例的pod处于Running状态
-    NAME                                  READY   STATUS    RESTARTS   AGE
-    my-test-0-decode-0-0                  1/1     Running   0          2s
-    my-test-0-prefill1-0-0                1/1     Running   0          2s
-    my-test-0-router-0-584bd5c9f9-vhwsm   1/1     Running   0          2s
-  ```
+1. 查看相关推理实例Pod是否拉起。其中，\<namespace\>为用户定义的命名空间。
 
-  ```shell
-    kubectl get instanceset -n <namespace> # 查看相关推理角色(prefill实例集、decode实例集等)是否拉起
+   ```shell
+   kubectl get pod -n <namespace> 
+   ```
 
-    # 回显示例如下，三种实例集成功创建
-    NAME                 AGE
-    my-test-0-decode     69s
-    my-test-0-prefill1   69s
-    my-test-0-router     69s
-  ```
+   回显示例如下，所有实例的Pod处于Running状态。
 
-  ```shell
-    kubectl get inferservice -n <namespace> # 查看相关推理服务是否拉起
-    
-    # 回显示例如下，inferservice成功创建
-    NAME        AGE
-    my-test-0   112s
-  ```
+   ```ColdFusion
+   NAME                                  READY   STATUS    RESTARTS   AGE
+   my-test-0-decode-0-0                  1/1     Running   0          2s
+   my-test-0-prefill1-0-0                1/1     Running   0          2s
+   my-test-0-router-0-584bd5c9f9-vhwsm   1/1     Running   0          2s
+   ```
 
-  ```shell
-    kubectl get inferserviceset -n <namespace> # 查看相关推理服务集合是否拉起
+2. 查看相关推理角色（prefill实例集、decode实例集等）是否创建。
 
-    # 回显示例如下，inferserviceset成功创建
-    NAME      AGE
-    my-test   2m38s
-  ```
+   ```shell
+   kubectl get instanceset -n <namespace> 
+   ```
 
-#### 查看推理任务运行结果
-用户可以在推理任务运行后，请求推理接口验证运行结果。
+   回显示例如下，三种实例集成功创建。
 
-  ```shell
-    curl http://<routing-podip>:8080/v1/completions \
-    -H "Content-Type: application/json" \
-    -d '{
-    "model": "<模型名称>",
-    "prompt": "Who are you?",
-    "max_tokens": 10,
-    "temperature": 0
-    }'
-  ```
+   ```ColdFusion
+   NAME                 AGE
+   my-test-0-decode     69s
+   my-test-0-prefill1   69s
+   my-test-0-router     69s
+   ```
+
+3. 查看相关推理服务是否创建。
+
+   ```shell
+   kubectl get inferservice -n <namespace>
+   ```
+
+   回显示例如下，推理服务成功创建。
+
+   ```ColdFusion
+   NAME        AGE
+   my-test-0   112s
+   ```
+
+4. 查看相关推理服务集合是否创建。
+
+   ```shell
+   kubectl get inferserviceset -n <namespace>
+   ```
+
+   回显示例如下，推理服务集合成功创建。
+
+   ```ColdFusion
+   NAME      AGE
+   my-test   2m38s
+   ```
+
+### 查看推理任务运行结果
+
+推理任务运行后，请求推理接口验证运行结果。
+
+```shell
+curl http://<routing-podip>:8080/v1/completions \
+-H "Content-Type: application/json" \
+-d '{
+"model": "<模型名称>",
+"prompt": "Who are you?",
+"max_tokens": 10,
+"temperature": 0
+}'
+```
 
 >[!NOTE]
->- <模型名称>取决于vllm用于设定模型名称的启动参数`served_model_name`。
->- <routing-podip\>为Routing Pod的IP地址，可以通过以下命令查找router实例pod的IP。
->```shell
->kubectl get pod -n <namespace> -o wide
 >
-> # 回显示例如下，my-test-0-router-0-584bd5c9f9-xpj28对应的IP值10.244.1.92即为router实例pod的IP
->NAME                                  READY   STATUS    RESTARTS   AGE   IP             NODE                   NOMINATED NODE   READINESS GATES
->my-test-0-decode-0-0                  1/1     Running   0          5s    10.244.2.83    test-cluster-worker3   <none>           <none>
->my-test-0-prefill1-0-0                1/1     Running   0          5s    10.244.3.100   test-cluster-worker    <none>           <none>
->my-test-0-router-0-584bd5c9f9-xpj28   1/1     Running   0          5s    10.244.1.92    test-cluster-worker2   <none>           <none>
->```
+>- <模型名称>取决于vLLM用于设定模型名称的启动参数`served_model_name`。
+>- <routing-podip\>为Router实例Pod的IP地址。可执行以下命令进行查询。
+>
+>   ```shell
+>   kubectl get pod -n <namespace> -o wide
+>   ```
+>
+>   回显示例如下，my-test-0-router-0-584bd5c9f9-xpj28对应的IP 10.244.1.92即为Router实例Pod的IP地址。
+>
+>   ```ColdFusion
+>   NAME                                  READY   STATUS    RESTARTS   AGE   IP             NODE                   NOMINATED NODE   READINESS GATES
+>   my-test-0-decode-0-0                  1/1     Running   0          5s    10.244.2.83    test-cluster-worker3   <none>           <none>
+>   my-test-0-prefill1-0-0                1/1     Running   0          5s    10.244.3.100   test-cluster-worker    <none>           <none>
+>   my-test-0-router-0-584bd5c9f9-xpj28   1/1     Running   0          5s    10.244.1.92    test-cluster-worker2   <none>           <none>
+>   ```
 
-若推理任务运行成功，上述指令将返回推理结果。若返回失败，可通过kubectl命令行工具查看业务容器中的运行日志：
+若推理任务运行成功，上述指令将返回推理结果。若返回失败，可执行以下命令查看相应实例容器中的推理业务运行日志。
 
-  ```shell
-    kubectl logs -n <namespace> <pod-name> # 运行后回显查看相应实例容器中的推理业务运行日志
-  ```
+```shell
+kubectl logs -n <namespace> <pod-name>
+```
 
-#### 删除任务
+### 删除任务
 
-用户可以使用kubectl命令行工具删除InferServiceSet任务:
+执行以下命令，删除推理任务。其中，<job-yaml\>为InferServiceSet任务的YAML文件。
 
-  ```shell
-    kubectl delete -f <job-yaml> # 删除<job-yaml>文件定义的推理任务
-  ```
+```shell
+kubectl delete -f <job-yaml> 
+```
 
-得到下述回显示例表示删除成功：
+回显示例如下，推理任务删除成功。
 
-  ```shell
-    inferserviceset.mindcluster.huawei.com "my-test" deleted
-  ```
+```ColdFusion
+inferserviceset.mindcluster.huawei.com "my-test" deleted
+```
 
-### 通过MindCluster社区部署工具一键部署使用
+## 通过MindCluster社区部署工具一键部署使用
 
 用户在K8s集群中部署Infer Operator推理任务，手动编写和维护K8s YAML文件效率低下且容易出错。为此，MindCluster社区为用户提供了一个Infer Operator推理任务的一键式部署工具，替代繁琐的手动操作。用户只需提供基本的应用信息（如应用名、镜像版本、副本数等），脚本就能自动生成所有必要的、符合规范的InferServiceSet YAML文件，并直接部署到指定集群，同时，该部署工具提供一种简单的方式（如指定同一个应用名）一键删除所有相关资源。
 
@@ -448,15 +439,15 @@ spec:
     3. 按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
 
     >[!NOTE]
-    > 用户配置文件中的配置字段说明可参考：[infer-operator-deploy-tool](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/infer-operator-deploy-tool/README.md)
+    >用户配置文件中的配置字段说明详细请参见[infer-operator-deploy-tool](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/infer-operator-deploy-tool/README.md)。
 
-6.  （可选）创建任务名称空间，<namespace\>为“config/user-config.yaml”设置的“deploy_config.namespace”。如果“deploy_config.namespace”为“default”或未设置，可以不创建名称空间。
+6. （可选）创建任务名称空间，<namespace\>为“config/user-config.yaml”设置的“deploy_config.namespace”。如果“deploy_config.namespace”为“default”或未设置，可以不创建名称空间。
 
     ```shell
     kubectl create ns <namespace>
     ```
 
-7. 部署推理任务。在k8s的控制平面或具备k8s权限的节点上执行部署指令：
+7. 部署推理任务。在K8s的控制平面或具有K8s权限的节点上执行部署指令：
 
     ```shell
     python main.py deploy -c config/user-config.yaml
@@ -470,43 +461,61 @@ spec:
 
 8. 查看任务运行状态。
 
-   用户可以使用kubectl命令行工具查看任务运行状态:
+    1. 查看相关推理实例Pod是否拉起。其中，<namespace\>为“config/user-config.yaml”中设置的“deploy_config.namespace”。
 
-    ```shell
-      kubectl get pod -n <namespace> # 查看相关推理实例pod是否拉起，namespace为“config/user-config.yaml”设置的“deploy_config.namespace”
+       ```shell
+       kubectl get pod -n <namespace>
+       ```
 
-      # 回显示例如下，所有实例的pod处于Running状态
-      NAME                                  READY   STATUS    RESTARTS   AGE
-      qwen-0-decode-0-0                  1/1     Running   0          2s
-      qwen-0-prefill1-0-0                1/1     Running   0          2s
-      qwen-0-router-0-584bd5c9f9-vhwsm   1/1     Running   0          2s
-    ```
+       回显示例如下，所有实例的Pod处于Running状态。
 
-    ```shell
-      kubectl get instanceset -n <namespace> # 查看相关推理角色(prefill实例集、decode实例集等)是否拉起
+       ```ColdFusion
+       NAME                               READY   STATUS    RESTARTS   AGE
+       qwen-0-decode-0-0                  1/1     Running   0          2s
+       qwen-0-prefill1-0-0                1/1     Running   0          2s
+       qwen-0-router-0-584bd5c9f9-vhwsm   1/1     Running   0          2s
+       ```
 
-      # 回显示例如下，三种实例集成功创建
-      NAME                 AGE
-      qwen-0-decode     69s
-      qwen-0-prefill1   69s
-      qwen-0-router     69s
-    ```
+    2. 查看相关推理角色（prefill实例集、decode实例集等）是否创建。
 
-    ```shell
-      kubectl get inferservice -n <namespace> # 查看相关推理服务是否拉起
+        ```shell
+        kubectl get instanceset -n <namespace>
+        ```
+
+       回显示例如下，三种实例集成功创建。
+
+       ```ColdFusion
+       NAME              AGE
+       qwen-0-decode     69s
+       qwen-0-prefill1   69s
+       qwen-0-router     69s
+       ```
+
+    3. 查看相关推理服务是否创建。
+
+       ```shell
+       kubectl get inferservice -n <namespace>
+       ```
       
-      # 回显示例如下，inferservice成功创建
-      NAME        AGE
-      qwen-0   112s
-    ```
+       回显示例如下，推理服务成功创建。
 
-    ```shell
-      kubectl get inferserviceset -n <namespace> # 查看相关推理服务集合是否拉起
+       ```ColdFusion
+       NAME     AGE
+       qwen-0   112s
+       ```
 
-      # 回显示例如下，inferserviceset成功创建
-      NAME      AGE
-      qwen   2m38s
-    ```
+    4. 查看相关推理服务集合是否创建。
+
+       ```shell
+       kubectl get inferserviceset -n <namespace>
+       ```
+
+       回显示例如下，推理服务集合成功创建。
+
+       ```ColdFusion
+       NAME   AGE
+       qwen   2m38s
+       ```
 
 9. 新建终端窗口，在当前K8s集群的节点中执行以下命令，访问推理服务。若请求成功返回，表示推理服务部署成功。
 
@@ -522,17 +531,22 @@ spec:
     ```
 
    >[!NOTE]
-   >- <routing-podip\>为Routing Pod的IP地址，可以通过以下命令查找router实例pod的IP。
-   >```shell
-    >kubectl get pod -n <namespace> -o wide
-    >
-    > # 回显示例如下，qwen-0-router-0-584bd5c9f9-xpj28对应的IP值10.244.1.92即为router实例pod的IP
-    >NAME                                  READY   STATUS    RESTARTS   AGE   IP             NODE                   NOMINATED NODE   READINESS GATES
-    >qwen-0-decode-0-0                  1/1     Running   0          5s    10.244.2.83    test-cluster-worker3   <none>           <none>
-    >qwen-0-prefill1-0-0                1/1     Running   0          5s    10.244.3.100   test-cluster-worker    <none>           <none>
-    >qwen-0-router-0-584bd5c9f9-xpj28   1/1     Running   0          5s    10.244.1.92    test-cluster-worker2   <none>           <none>
-    >```
-   >- <模型名称>取配置文件中的`engine_common_config.serve_name`字段。
+   >- <routing-podip\>为Router实例Pod的IP地址，可执行以下命令进行查询。
+   >
+   >   ```shell
+   >   kubectl get pod -n <namespace> -o wide
+   >   ```
+   >
+   >   回显示例如下，qwen-0-router-0-584bd5c9f9-xpj28对应的IP 10.244.1.92即为Router实例Pod的IP。
+   >
+   >   ```ColdFusion
+   >   NAME                               READY   STATUS    RESTARTS   AGE   IP             NODE                   NOMINATED NODE   READINESS GATES
+   >   qwen-0-decode-0-0                  1/1     Running   0          5s    10.244.2.83    test-cluster-worker3   <none>           <none>
+   >   qwen-0-prefill1-0-0                1/1     Running   0          5s    10.244.3.100   test-cluster-worker    <none>           <none>
+   >   qwen-0-router-0-584bd5c9f9-xpj28   1/1     Running   0          5s    10.244.1.92    test-cluster-worker2   <none>           <none>
+   >   ```
+   >
+   >- <模型名称>为配置文件中的`engine_common_config.serve_name`字段。
 
 10. （可选）删除推理任务。若用户需要删除任务，可以执行该步骤。
 
@@ -542,10 +556,6 @@ spec:
 
     参数说明如下：
 
-    - -n, --app-name：应用名称，必填。应用名取配置文件中的`deploy_config.job_name`字段。
+    - -n, --app-name：应用名称，必填。应用名为配置文件中的`deploy_config.job_name`字段。
     - -ns, --namespace：应用命名空间，选填。默认值为"default" 。
     - -k, --kubeconfig：KubeConfig文件路径，选填。默认值为\~/.kube/config。
-
-## 基于MindIE-PyMotor部署Infer Operator推理任务
-
-MindIE-PyMotor是昇腾自研的推理集群管理框架，MindIE-PyMotor支持生成并部署Infer Operator推理任务。了解基于MindIE-PyMotor下发推理任务的详细部署流程可参见：[CRD 方式部署设计文档](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/developer_guide/crd_deployment/crd_deployment_design.md)

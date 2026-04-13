@@ -33,7 +33,7 @@
 
 |产品名称|版本|
 |--|--|
-|Ascend HDK| <ul><li>Atlas A2 系列产品/Atlas A3 系列产品：26.0.RC1</li><li>Atlas 350 加速卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD：26.7.0</li></ul> |
+|Ascend HDK| <ul><li>Atlas 350 加速卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD：25.1.RC1</li><li>其他产品：26.0.RC1</li></ul> |
 |CANN|9.0.0|
 
 ## 病毒扫描结果<a name="ZH-CN_TOPIC_0000002492443186"></a>
@@ -48,7 +48,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
 |MindCluster软件版本|MindCluster待升级版本|CANN版本兼容性|Ascend HDK版本兼容性|
 |--|--|--|--|
-|MindCluster 26.0.0|<ul><li>MindCluster 7.0.RC1及7.0.RC1.x</li><li>MindCluster 7.1.RC1及7.1.RC1.x</li><li>MindCluster 7.2.RC1及7.2.RC1.x</li><li>MindCluster 7.3.0及7.3.0.x</li></ul>|<ul><li>CANN 8.5.0及8.5.0.x</li><li>CANN 9.0.0及9.0.0.x</li></ul>|<ul><li>Ascend HDK 25.5.0及25.5.0.x</li><li>Ascend HDK 26.0.RC1及26.0.RC1.x</li><li>Ascend HDK 26.7.0及26.7.0.x</li></ul>|
+|MindCluster 26.0.0|<ul><li>MindCluster 7.0.RC1及7.0.RC1.x</li><li>MindCluster 7.1.RC1及7.1.RC1.x</li><li>MindCluster 7.2.RC1及7.2.RC1.x</li><li>MindCluster 7.3.0及7.3.0.x</li></ul>|<ul><li>CANN 8.5.0及8.5.0.x</li><li>CANN 9.0.0及9.0.0.x</li></ul>|<ul><li>Ascend HDK 25.1.RC1及25.1.RC1.x</li><li>Ascend HDK 25.5.0及25.5.0.x</li><li>Ascend HDK 26.0.RC1及26.0.RC1.x</li></ul>|
 
 # 版本使用注意事项<a name="ZH-CN_TOPIC_0000002492283210"></a>
 

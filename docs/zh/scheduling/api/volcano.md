@@ -23,10 +23,10 @@
     |http://podIP:11251/healthz|http|Get|健康检查端口|volcano-controller|
     |http://podIP:11251/healthz|http|Get|健康检查端口|volcano-scheduler|
     |http://volcano-scheduler-serviceIP:8080/metrics|http|Get|Prometheus信息收集端口|volcano-scheduler|
-    |<p>注：</p><p>为保证Volcano健康检查端口和Prometheus信息收集端口的正常访问，请在安装Volcano时，将YAML中的--enable-healthz参数和--enable-metrics参数的值设置为“true”，详细修改方法可参见[步骤7](../installation_guide.md#安装volcano)。</p>|
 
     >[!NOTE]
-    >华为云的CCI服务提供了更为详细的VolcanoJob说明，可参见《云容器实例 API参考》中“[创建Volcano Job](https://support.huaweicloud.com/api-cci/createBatchVolcanoShV1alpha1NamespacedJob.html)”章节了解相关内容。
+    >- 为保证Volcano健康检查端口和Prometheus信息收集端口的正常访问，请在安装Volcano时，将YAML中的--enable-healthz参数和--enable-metrics参数的值设置为“true”，详细修改方法可参见[安装Volcano](../installation_guide/03_installation.md#安装volcano)中“步骤7”。
+    >- 华为云的CCI服务提供了更为详细的VolcanoJob说明，可参见《云容器实例 API参考》中“[创建Volcano Job](https://support.huaweicloud.com/api-cci/createBatchVolcanoShV1alpha1NamespacedJob.html)”章节了解相关内容。
 
 ## PodGroup<a name="ZH-CN_TOPIC_0000002479226832"></a>
 

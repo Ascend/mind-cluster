@@ -1,37 +1,6 @@
-# SGLang推理任务最佳实践<a name="ZH-CN_TOPIC_0000002480719278"></a>
+# 部署基于OME的SGLang推理任务<a name="ZH-CN_TOPIC_0000002480571816"></a>
 
-## 使用前必读<a name="ZH-CN_TOPIC_0000002512753445"></a>
-
-MindCluster集群调度组件支持用户通过OME（Open Model Engine）部署SGLang推理任务进行调度和故障实例重调度。
-
-本章节说明相关特性原理及对应配置示例，用户可以参考配置示例部署基于OME的SGLang推理任务。
-
-**前提条件<a name="zh-cn_topic_0000002322062116_section52051339787"></a>**
-
-在部署SGLang推理服务前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../installation_guide.md#安装部署)章节进行操作。
-
-- Volcano
-- Ascend Device Plugin
-- Ascend Docker Runtime
-- ClusterD
-- NodeD（可选）
-
-**支持的产品形态<a name="zh-cn_topic_0000002322062116_section169961844182917"></a>**
-
-- Atlas 800I A2 推理服务器
-- Atlas 800I A3 超节点服务器
-
-**使用方式<a name="zh-cn_topic_0000002322062116_section6771194616104"></a>**
-
-MindCluster集群调度组件支持用户通过以下方式进行SGLang推理服务的容器化部署、故障重调度。本章节仅介绍通过命令行使用和通过脚本一键式部署使用方式。
-
-- 通过命令行使用：通过配置的YAML文件部署任务。
-- 通过脚本一键式部署使用：通过自动化脚本参考设计部署任务。
-- 集成后使用：将集群调度组件集成到已有的第三方AI平台或者基于集群调度组件开发的AI平台。
-
-## 部署基于OME的SGLang推理任务<a name="ZH-CN_TOPIC_0000002480571816"></a>
-
-### 实现原理<a name="ZH-CN_TOPIC_0000002512818803"></a>
+## 实现原理<a name="ZH-CN_TOPIC_0000002512818803"></a>
 
 1. 集群调度组件定期上报节点和芯片信息。
     - kubelet上报节点芯片数量到节点对象（node）中。
@@ -51,9 +20,9 @@ MindCluster集群调度组件支持用户通过以下方式进行SGLang推理服
 5. 对于SGLang推理任务Pod，volcano-scheduler根据节点内存、CPU及标签、亲和性选择合适的节点，volcano-scheduler还会参考芯片拓扑信息为其选择合适的节点，并在Pod的annotation上写入选择的芯片信息以及节点硬件信息。
 6. kubelet创建容器时，对于基于OME部署的SGLang推理任务，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin或volcano-scheduler在Pod的annotation上写入芯片和节点硬件信息。Ascend Docker Runtime协助挂载相应资源。
 
-### 通过命令行使用<a name="ZH-CN_TOPIC_0000002480898900"></a>
+## 通过命令行使用<a name="ZH-CN_TOPIC_0000002480898900"></a>
 
-#### 流程说明<a name="ZH-CN_TOPIC_0000002480995454"></a>
+### 流程说明<a name="ZH-CN_TOPIC_0000002480995454"></a>
 
 基于OME的SGLang推理任务包含Router  Pod和推理实例Pod，推理实例Pod可以分为Prefill实例Pod和Decode实例Pod，其中Router  Pod不需要使用NPU资源，OME根据不同的推理服务配置方式生成不同的工作负载，用于创建不同的推理实例，并由Router统一对外提供推理服务。MindCluster集群调度组件支持对Deployment和LeaderWorkerSet两种OME推理任务的工作负载进行调度。LeaderWorkerSet任务场景下需要开启LWS的组调度功能。
 
@@ -64,9 +33,9 @@ MindCluster集群调度组件支持用户通过以下方式进行SGLang推理服
 通过命令行使用MindCluster集群调度组件部署基于OME的SGLang推理任务时，使用流程如[图1](#fig38991911205815)所示。
 
 **图 1**  使用流程<a name="fig38991911205815"></a>  
-![](../../figures/scheduling/使用流程-15.png "使用流程-15")
+![](../../../figures/scheduling/使用流程-15.png "使用流程-15")
 
-#### 准备任务YAML<a name="ZH-CN_TOPIC_0000002480835892"></a>
+### 准备任务YAML<a name="ZH-CN_TOPIC_0000002480835892"></a>
 
 用户可根据实际情况完成制作镜像的准备工作，然后选择相应的YAML示例，对示例进行修改。
 
@@ -86,16 +55,17 @@ MindCluster集群调度组件支持用户通过以下方式进行SGLang推理服
 |--|--|--|--|
 |实例不跨机（Deployment场景）|<p>Atlas 800I A2 推理服务器</p><p>Atlas 800I A3 超节点服务器</p>|llama-3-2-1b-instruct-rt-pd-standalone.yaml|[获取YAML](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/k8s-deploy-tool/example/ome-runtimes/llama-3-2-1b-instruct-rt-pd-standalone.yaml)|
 |实例跨机（LeaderWorkerSet场景）|<p>Atlas 800I A2 推理服务器</p><p>Atlas 800I A3 超节点服务器</p>|llama-3-2-1b-instruct-rt-pd-distributed.yaml|[获取YAML](https://gitcode.com/Ascend/mindcluster-deploy/blob/master/k8s-deploy-tool/example/ome-runtimes/llama-3-2-1b-instruct-rt-pd-distributed.yaml)|
-|注：当前示例仅供测试使用，用户可根据模型实际情况进行修改。|
+
+>[!NOTE] 
+>以上YAML示例仅供测试使用，用户可根据模型实际情况进行修改。
 
 用户根据OME框架的部署方式依此完成Base Model、Serving Runtime和Inference Service三个YAML修改之后，由OME及其依赖组件负责拉起子工作负载（Deployment或LeaderWorkerSet）和对应的Pod，并由OME及其依赖组件管理推理服务Pod的生命周期，在推理服务对应的Pod创建完成之后，MindCluster负责对Pod进行调度。
 
->[!NOTE] 
->任务P/D实例的副本数量由OME定义的Inference Service资源配置，具体配置方法请参见[OME Inference Service说明文档](https://docs.sglang.io/ome/docs/concepts/inference_service/)。
+任务P/D实例的副本数量由OME定义的Inference Service资源配置，具体配置方法请参见[OME Inference Service说明文档](https://docs.sglang.io/ome/docs/concepts/inference_service/)。
 
 **任务YAML说明<a name="section238217472163"></a>**
 
-```Yaml
+<pre codetype="yaml">
 apiVersion: ome.io/v1beta1
 kind: ClusterServingRuntime
 metadata:
@@ -103,13 +73,13 @@ metadata:
 spec:
   decoderConfig:
     annotations:
-      sp-block: "16"  #仅Atlas 900 A3 SuperPoD 超节点场景配置，大小为一个P/D实例对应的Pod请求的NPU总数       
+      <strong>sp-block: "16"  #仅Atlas 900 A3 SuperPoD 超节点场景配置，大小为一个P/D实例对应的Pod请求的NPU总数       
       huawei.com/schedule_minAvailable: "2" #仅在实例不跨机，即Deployment场景下配置，大小为D实例(在engineConfig字段中为P实例)的副本数量
-      huawei.com/recover_policy_path: "pod" #pod-rescheduling为"on"时任务执行恢复的路径。设置为"pod"，表明Pod级重调度失败时，不升级到Job级重调度。对于OME任务，Deployment场景下PodGroup中的每一个Pod都是一个独立的实例，因此其故障处理不能扩散到其他实例；LeaderWorkerSet场景下单个PodGroup下任意Pod重启均会由LeaderWorkerSet Controller重启整个PodGroup触发实例重调度。
+      huawei.com/recover_policy_path: "pod" #pod-rescheduling为"on"时任务执行恢复的路径。设置为"pod"，表明Pod级重调度失败时，不升级到Job级重调度。对于OME任务，Deployment场景下PodGroup中的每一个Pod都是一个独立的实例，因此其故障处理不能扩散到其他实例；LeaderWorkerSet场景下单个PodGroup下任意Pod重启均会由LeaderWorkerSet Controller重启整个PodGroup触发实例重调度</strong>
     leader:
       nodeSelector:
-        accelerator-type: module-a3-16-super-pod   #根据实际节点类型配置
-        schedulerName: volcano  #设置调度器为Volcano
+        <strong>accelerator-type: module-a3-16-super-pod   #根据实际节点类型配置
+        schedulerName: volcano  #设置调度器为Volcano</strong>
       runner:
         name: sglang-decoder
         image: "sglang:xxx"
@@ -117,29 +87,28 @@ spec:
         ...
         env:
         ...
-        - name: ASCEND_VISIBLE_DEVICES
+        <strong>- name: ASCEND_VISIBLE_DEVICES
           valueFrom:
             fieldRef:
-              fieldPath: metadata.annotations['huawei.com/Ascend910']
+              fieldPath: metadata.annotations['huawei.com/Ascend910']</strong>
         resources:
           limits:
-           huawei.com/Ascend910: 16  #根据实际每个Pod所需NPU数量进行配置
+           <strong>huawei.com/Ascend910: 16  #根据实际每个Pod所需NPU数量进行配置</strong>
           requests:
-           huawei.com/Ascend910: 16  #根据实际每个Pod所需NPU数量进行配置
+           <strong>huawei.com/Ascend910: 16  #根据实际每个Pod所需NPU数量进行配置</strong>
        volumeMounts:
        ...
-       - name: driver
-         mountPath: /usr/local/Ascend/driver
+       <strong>- name: driver
+         mountPath: /usr/local/Ascend/driver</strong>
        ...
      volumes:
       ...
-      - name: driver
+      <strong>- name: driver
         hostPath:
-        path: /usr/local/Ascend/driver
-    ...
-```
+        path: /usr/local/Ascend/driver</strong>
+    ...</pre>
 
-#### YAML参数说明<a name="ZH-CN_TOPIC_0000002513115345"></a>
+### YAML参数说明<a name="ZH-CN_TOPIC_0000002513115345"></a>
 
 下表仅说明OME的Serving Runtime YAML中与MindCluster有关的字段。
 
@@ -175,7 +144,7 @@ spec:
 <p id="p161001559326"><a name="p161001559326"></a><a name="p161001559326"></a>需要是节点芯片数量的整数倍，且P/D实例的总芯片数量是其整数倍。</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p1670155202912"><a name="p1670155202912"></a><a name="p1670155202912"></a>指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度。<span id="zh-cn_topic_0000002511347099_ph521204025916"><a name="zh-cn_topic_0000002511347099_ph521204025916"></a><a name="zh-cn_topic_0000002511347099_ph521204025916"></a>若用户未指定该字段，</span><span id="zh-cn_topic_0000002511347099_ph172121408590"><a name="zh-cn_topic_0000002511347099_ph172121408590"></a><a name="zh-cn_topic_0000002511347099_ph172121408590"></a>Volcano</span><span id="zh-cn_topic_0000002511347099_ph192121140135911"><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a>调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。</span></p>
-<p id="p19701652112917"><a name="p19701652112917"></a><a name="p19701652112917"></a>了解详细说明请参见<a href="./basic_scheduling.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a>。</p>
+<p id="p19701652112917"><a name="p19701652112917"></a><a name="p19701652112917"></a>了解详细说明请参见<a href="../basic_scheduling.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a>。</p>
 <p id="p12461828061"><a name="p12461828061"></a><a name="p12461828061"></a>仅支持在<span id="ph914694014812"><a name="ph914694014812"></a><a name="ph914694014812"></a>Atlas 900 A3 SuperPoD 超节点</span>中使用该字段。</p>
 </td>
 </tr>
@@ -261,7 +230,7 @@ spec:
 </tbody>
 </table>
 
-#### 推理任务的下发、查看与删除<a name="ZH-CN_TOPIC_0000002513375093"></a>
+### 推理任务的下发、查看与删除<a name="ZH-CN_TOPIC_0000002513375093"></a>
 
 用户完成任务YAML的准备工作之后，就可以进行以下操作：
 
@@ -272,7 +241,7 @@ spec:
 
 了解以上步骤的详细说明，请参见[OME文档](https://docs.sglang.ai/ome/docs/tasks/run-workloads/deploy-inference-service/)。
 
-### 通过脚本一键式部署使用<a name="ZH-CN_TOPIC_0000002480866426"></a>
+## 通过脚本一键式部署使用<a name="ZH-CN_TOPIC_0000002480866426"></a>
 
 用户在K8s集群中部署多个相关联的推理任务，手动编写和维护大量的K8s YAML文件效率低下且容易出错。为此，MindCluster提供一个自动化脚本参考设计，替代繁琐的手动操作。用户只需提供基本的应用信息（如应用名、镜像版本、副本数等），脚本就能自动生成所有必要的、符合规范的K8s YAML文件，并直接部署到指定集群。同时，MindCluster提供一种简单的方式（如指定同一个应用名）一键删除所有相关资源。
 
@@ -394,51 +363,3 @@ spec:
     - -n, --app-name：应用名称，必填。
     - -ns, --namespace：应用命名空间，选填。默认值为"default"。
     - -k, --kubeconfig：KubeConfig文件路径，选填。默认值为\~/.kube/config。
-
-## 配置推理任务实例重调度<a name="ZH-CN_TOPIC_0000002480738948"></a>
-
-当推理任务中出现节点、芯片或其他故障时，MindCluster集群调度组件可以对故障资源进行隔离并自动进行重调度。如需了解故障的检测原理，请参见[故障检测](../usage/resumable_training.md#故障检测)章节。
-
-**前提条件<a name="zh-cn_topic_0000002356060805_section19119249163119"></a>**
-
-已完成部署基于OME的SGLang推理服务。
-
-**实例重调度原理<a name="zh-cn_topic_0000002356060805_section4253197539"></a>**
-
-**故障实例Pod的删除**
-
-OME子工作负载为Deployment时（一个P/D实例由一个Pod组成）：
-
-- 业务面故障：Pod所属的容器发生非零退出的情况下自动重拉。
-- 硬件故障：Ascend Device Plugin或者NodeD上报硬件故障到ClusterD之后，Volcano获取到故障节点，删除节点上的Pod，并隔离故障节点。
-
-OME子工作负载为LeaderWorkerSet时（一个P/D实例由多个Pod组成）：
-
-- 业务面故障：对于任意实例所属Pod的容器发生非零退出之后，LWS Controller自动删除实例所属整个PodGroup。
-- 硬件故障：Ascend Device Plugin或者NodeD上报硬件故障到ClusterD之后，Volcano获取到故障节点，删除节点上的Pod，并隔离故障节点。LWS Controller自动删除实例所属整个PodGroup。
-
-**故障实例Pod的重新创建和调度**
-
-Deployment或者LeaderWorkerSet所属的Pod被Volcano删除之后，由各自对应的Controller重新创建被删除的Pod，并由Volcano执行对恢复Pod的重新调度。
-
->[!NOTE] 
->OME任务进行故障恢复时只会重调度故障的P/D实例。
-
-**配置实例级别重调度<a name="section96795436354"></a>**
-
-下面以ClusterServingRuntime为例配置实例级别重调度。
-
-```Yaml
-apiVersion: ome.io/v1beta1
-kind: ClusterServingRuntime
-metadata:
-  name: lws-runtime
-  annotations:
-    sp-block: "16"
-  labels:
-    fault-scheduling: "force"          # 开启重调度功能
-    pod-rescheduling: "on"             # 开启Pod级重调度
-    fault-retry-times: "3"             # 开启业务面故障无条件重试能力
-spec:
-...
-```

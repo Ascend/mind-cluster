@@ -4,7 +4,7 @@
 
 集群调度组件基于业界流行的集群调度系统Kubernetes，增加了昇腾AI处理器（NPU）的支持，提供NPU资源管理、优化调度和分布式训练集合通信配置等基础功能。深度学习平台开发厂商可以有效减少底层资源调度相关软件开发工作量，使能用户基于MindCluster快速开发深度学习平台。
 
-本文档是用户使用集群调度组件的指导文档，在安装和使用集群调度组件前，用户需要提前了解[集群调度组件的特性](#特性介绍)，并根据具体特性的特点和功能，选择需要使用的特性并[安装相应的组件](./installation_guide.md#安装部署)。
+本文档是用户使用集群调度组件的指导文档，在安装和使用集群调度组件前，用户需要提前了解[集群调度组件的特性](#特性介绍)，并根据具体特性的特点和功能，选择需要使用的特性并[安装相应的组件](./installation_guide/03_installation.md)。
 
 **使用流程<a name="section10118105218514"></a>**
 
@@ -375,8 +375,8 @@ Ascend Docker Runtime
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
-2. 特性使用指导请参见[容器化支持](./usage/containerization.md)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+2. 特性使用指导请参见[容器化支持](./usage/containerization/00_before_you_start.md)章节进行操作。
 
 ### 资源监测<a name="ZH-CN_TOPIC_0000002479386910"></a>
 
@@ -390,8 +390,8 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
-2. 特性使用指导请参见[资源监测](./usage/resource_monitoring.md)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+2. 特性使用指导请参见[资源监测](./usage/resource_monitoring/00_before_you_start.md)章节进行操作。
 
 ### 虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855"></a>
 
@@ -428,9 +428,10 @@ NPU Exporter
 **使用说明<a name="section1350915844811"></a>**
 
 - 驱动安装后会默认安装npu-smi工具，安装操作请参见《CANN 软件安装指南》中的“<a href="https://www.hiascend.com/document/detail/zh/canncommercial/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian">安装NPU驱动和固件</a>”章节（商用版）或“<a href="https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler">安装NPU驱动和固件</a>”章节（社区版）；安装成功后，npu-smi放置在“/usr/local/sbin/”和“/usr/local/bin/”路径下。
-- 安装MindCluster中的Ascend Docker Runtime、Ascend Device Plugin和Volcano组件，请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+- 安装MindCluster中的Ascend Docker Runtime、Ascend Device Plugin和Volcano组件，请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
 - 安装Docker，请参见[安装Docker](https://docs.docker.com/engine/install/)。
 - 安装Kubernetes，请参见[安装Kubernetes](https://kubernetes.io/zh/docs/setup/production-environment/tools/)。
+- 特性使用指导请参见[基于HDK的虚拟化实例](./usage/virtual_instance/virtual_instance_with_hdk/01_description.md)章节进行操作。
 
 #### 基于vCANN-RT的虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855vcann"></a>
 
@@ -450,8 +451,8 @@ NPU Exporter
 
 **使用说明<a name="section1350915844811vcann"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
-2. 特性使用指导请参见[基于vCANN-RT的虚拟化实例](./usage/virtual_instance.md#基于vcann-rt的虚拟化实例)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+2. 特性使用指导请参见[基于vCANN-RT的虚拟化实例](./usage/virtual_instance/virtual_instance_with_vcann_rt/00_description.md)章节进行操作。
 
 ### 基础调度<a name="ZH-CN_TOPIC_0000002511346871"></a>
 
@@ -475,7 +476,7 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
 2. 特性使用指导请参见[整卡调度或静态vNPU调度（训练）](./usage/basic_scheduling.md#整卡调度或静态vnpu调度训练)章节进行操作。
 
 #### 静态vNPU调度<a name="ZH-CN_TOPIC_0000002511426831"></a>
@@ -498,7 +499,7 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
 2. 特性使用指导请参见[整卡调度或静态vNPU调度（训练）](./usage/basic_scheduling.md#整卡调度或静态vnpu调度训练)章节进行操作。
 
 #### 多级调度
@@ -518,7 +519,7 @@ NPU Exporter
 
 **使用说明**
 
-1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
 2. 特性使用指导请参见[多级调度](./usage/basic_scheduling.md#多级调度)章节进行操作。
 
 #### 动态vNPU调度<a name="ZH-CN_TOPIC_0000002479226956"></a>
@@ -537,7 +538,7 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
 2. 特性使用指导请参见[动态vNPU调度（推理）](./usage/basic_scheduling.md#动态vnpu调度推理)章节进行操作。
 
 #### 软切分调度
@@ -556,7 +557,7 @@ NPU Exporter
 
 **使用说明**
 
-1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
 2. 特性使用指导请参见[软切分调度（推理）](./usage/basic_scheduling.md#软切分调度推理)章节进行操作。
 
 #### 弹性训练<a name="ZH-CN_TOPIC_0000002479226936"></a>
@@ -580,7 +581,7 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
 2. 特性使用指导请参见[弹性训练](./usage/basic_scheduling.md#弹性训练)章节进行操作。
 
 #### 推理卡故障恢复<a name="ZH-CN_TOPIC_0000002479226952"></a>
@@ -599,7 +600,7 @@ NPU Exporter
 
 **使用说明<a name="section74221327111220"></a>**
 
-- 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+- 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
 - 特性使用指导请参见[推理卡故障恢复](./usage/basic_scheduling.md#推理卡故障恢复)章节进行操作。
 
 #### 推理卡故障重调度<a name="ZH-CN_TOPIC_0000002511346875"></a>
@@ -620,7 +621,7 @@ NPU Exporter
 
 **使用说明<a name="section18894171918127"></a>**
 
-- 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+- 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
 - 特性使用指导请参见[推理卡故障重调度](./usage/basic_scheduling.md#推理卡故障重调度)章节进行操作。
 
 ### 断点续训<a name="ZH-CN_TOPIC_0000002511346867"></a>
@@ -650,7 +651,7 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
 2. 特性使用指导请参见[断点续训](./usage/resumable_training.md)章节进行操作。
 3. TaskD需安装在容器内，详细请参见[制作镜像](./usage/resumable_training.md#制作镜像)章节。
 4. MindIO ACP的详细介绍及安装步骤请参见[Checkpoint保存与加载优化](./optimizing_saving_and_loading_checkpoints.md)章节。
@@ -672,8 +673,8 @@ Container Manager
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide.md#安装部署)章节进行操作。
-2. 特性使用指导请参见[一体机特性指南](./usage/appliance.md)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+2. 特性使用指导请参见[一体机特性指南](./usage/appliance/01_npu_hardware_fault_detection_and_rectification.md)章节进行操作。
 
 ## 支持的产品形态和OS清单<a name="ZH-CN_TOPIC_0000002511346411"></a>
 
