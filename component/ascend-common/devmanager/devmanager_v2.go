@@ -670,8 +670,12 @@ func (d *DeviceManagerV2) GetDeviceAllErrorCode(logicID int32) (int32, []int64, 
 
 // GetDeviceAllErrorCodeWithTimeOut get npu device all error code with timeout
 func (d *DeviceManagerV2) GetDeviceAllErrorCodeWithTimeOut(logicID int32, timeout time.Duration) (int32, []int64, error) {
-	return common.RetError, nil, fmt.Errorf("getDeviceAllErrorCodeWithTimeOut by logicID(%d) %s",
-		logicID, errNotSupportedInDcmiV2)
+	errCount, errCodes, err := d.DcMgr.DcGetDeviceAllErrorCodeWithTimeout(logicID, timeout)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return common.RetError, nil, fmt.Errorf("failed to get device all error code by logicID(%d)", logicID)
+	}
+	return errCount, errCodes, nil
 }
 
 // SubscribeDeviceFaultEvent get npu device error code by subscribe
