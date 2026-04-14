@@ -33,7 +33,7 @@ class JobHelper(object):
 
     @staticmethod
     def delete_job(case, job_name=None):
-        logger.info(f"删除任务{job_name}")
+        logger.info(f"Deleting job {job_name}")
         acjobs = case.k8s_manager.master.exec_command("kubectl get acjob  --no-headers | awk '{print $1}'")
         for job in acjobs.splitlines():
             case.k8s_manager.master.exec_command(f"kubectl delete acjob {job}")
@@ -45,7 +45,7 @@ class JobHelper(object):
 
     @staticmethod
     def check_job_pods_all_running(case, job_name: str, pod_num: int, timeout=60):
-        logger.info(f"查看训练任务{job_name}是否Running")
+        logger.info(f"Checking if training job {job_name} is Running")
         cur_time = time.time()
         while time.time() - cur_time < timeout:
             res = case.k8s_manager.master.exec_command(
@@ -58,11 +58,11 @@ class JobHelper(object):
 
         case.k8s_manager.master.exec_command(f"kubectl get pods -n default -l job-name={job_name} -o wide")
         case.k8s_manager.master.exec_command(f"kubectl describe pg")
-        raise Exception(f"任务<{job_name}>的pod没有全部running！")
+        raise Exception(f"Not all pods of job <{job_name}> are running!")
 
     @staticmethod
     def get_pod_node_mapping(case, job_name) -> Dict:
-        logger.info("获取 pod name 和 node name 的映射关系")
+        logger.info("Getting mapping relationship between pod name and node name")
         mapping = {}
         cmd = f"kubectl get pods -n default -l job-name={job_name} -o=jsonpath='{{range .items[*]}}{{.metadata.name}} {{.spec.nodeName}}{{\"\\n\"}}{{end}}'  "
         res = case.k8s_manager.master.exec_command(cmd)
@@ -85,13 +85,13 @@ class JobHelper(object):
     @staticmethod
     def get_server_count_from_ranktable(case, ranktable_path):
         """
-        从 hccl.json 中获取 server_count 并返回整数
+        Get server_count from hccl.json and return as integer
         """
         cmd = f"cat {ranktable_path}"
         res = case.k8s_manager.master.exec_command(cmd)
 
         if not res:
-            print("Error: 无法获取文件内容或内容为空")
+            print("Error: Unable to get file content or content is empty")
             return 0
 
         try:
@@ -100,10 +100,10 @@ class JobHelper(object):
             return server_count
 
         except json.JSONDecodeError as e:
-            print(f"Error: JSON 解析失败 - {e}")
+            print(f"Error: JSON parsing failed - {e}")
             return 0
         except (ValueError, TypeError) as e:
-            print(f"Error: server_count 格式转换失败 - {e}")
+            print(f"Error: server_count format conversion failed - {e}")
             return 0
 
 

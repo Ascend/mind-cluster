@@ -208,12 +208,12 @@ class K8sTool(object):
         yaml = case.k8s_manager.master.exec_command(
             f'find {MIND_CLUSTER_YAML_DIR} -name "volcano-*.yaml"')
         if not yaml:
-            raise Exception("未找到volcano组件yaml！")
+            raise Exception("volcano component yaml not found!")
         return yaml
 
     @staticmethod
     def modify_volcano_yaml(case, super_pod_size="512", useClusterInfoManager="false"):
-        logger.info("修改volcano yaml配置")
+        logger.info("Modifying volcano yaml configuration")
         volcano_yaml_path = K8sTool.find_volcano_yaml(case)
         if super_pod_size is not None:
             case.k8s_manager.master.exec_command(
@@ -242,7 +242,7 @@ class K8sTool(object):
 
     @staticmethod
     def restart_volcano(k8s_manager):
-        logger.info("重启volcano")
+        logger.info("Restarting volcano")
         k8s_manager.master.exec_command("kubectl delete pod -n volcano-system -l app=volcano-scheduler")
         time.sleep(5)
 
