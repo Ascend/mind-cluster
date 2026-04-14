@@ -8996,8 +8996,8 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
             # 执行时若报错ModuleNotFoundError: No module named 'xxx'，请自行安装依赖
             cd /data/atlas_dls/public/code/QWEN3_for_MS_code
             python toolkit/data_preprocess/megatron/preprocess_indexed_dataset.py \
-              --input /data/atlas_dls/public/code/QWEN3_for_MS_code/dataset /wiki.jsonl \
-              --output-prefix /data/atlas_dls/public/code/QWEN3_for_MS_code/dataset /wiki103-megatron \
+              --input /data/atlas_dls/public/code/QWEN3_for_MS_code/dataset/wiki.jsonl \
+              --output-prefix /data/atlas_dls/public/code/QWEN3_for_MS_code/dataset/wiki103-megatron \
               --tokenizer-type HuggingFaceTokenizer \
               --tokenizer-dir /data/atlas_dls/public/code/QWEN3_for_MS_code/dataset/Qwen3-32B-tokenizer # 其他规格的模型可以调整为对应的tokenizer路径
             ```

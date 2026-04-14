@@ -1203,7 +1203,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
     ```shell
     mkdir -p /data/atlas_dls/public/code
     cd /data/atlas_dls/public/code
-    git clone [https://gitcode.com/Ascend/mind-cluster.git](https://gitcode.com/Ascend/mind-cluster.git)
+    git clone https://gitcode.com/Ascend/mind-cluster.git
     cd ./mind-cluster/component/clusterd
     git checkout v7.3.0   # v7.3.0是代码仓版本tag，请自行切换到目标版本
     ```
