@@ -63,6 +63,7 @@ mind_cluster=(
     "ascend-docker-runtime"
     "ascend-for-volcano"
     "ascend-operator"
+    "ascend-faultdiag"
     "clusterd"
     "container-manager"
     "infer-operator"
