@@ -50,7 +50,8 @@ func SaveUpgradeFaultCache(cache UpgradeFaultReasonMap[LogicId]) {
 }
 
 // InsertUpgradeFaultCache update upgrade fault cache
-func InsertUpgradeFaultCache(logicId LogicId, faultTime int64, faultCode, faultLevel string, upgradeType UpgradeTypeEnum) {
+func InsertUpgradeFaultCache(logicId LogicId, faultTime int64, faultCode, faultLevel string,
+	upgradeType UpgradeTypeEnum) {
 	upgradeFaultCacheMgr.cacheLock.Lock()
 	defer upgradeFaultCacheMgr.cacheLock.Unlock()
 
@@ -462,4 +463,110 @@ func (reasonMap UpgradeFaultReasonMap[ReasonKey]) UpdateReason(
 
 	reasonMap[key] = reasonSet
 	return updated
+}
+
+// checkAndUpdateExistingUpgradeFaults checks existing upgrade faults and updates them based on new config
+func checkAndUpdateExistingUpgradeFaults(frequencyConfig map[string]FaultFrequency,
+	durationConfig map[string]FaultDuration) {
+	// Check and update existing upgrade faults
+	upgradeFaultCacheMgr.cacheLock.Lock()
+	defer upgradeFaultCacheMgr.cacheLock.Unlock()
+
+	for logicId, reasonSet := range upgradeFaultCacheMgr.cache {
+		updatedReasonSet := make(UpgradeFaultReasonSet)
+
+		for _, reasonVal := range reasonSet {
+			if updatedReason := getUpdatedFaultReason(reasonVal, logicId, frequencyConfig, durationConfig); updatedReason != nil {
+				updatedReasonSet[updatedReason.UpgradeFaultReasonKey] = *updatedReason
+			}
+		}
+
+		// Update the reason set for this logicId
+		if len(updatedReasonSet) > 0 {
+			upgradeFaultCacheMgr.cache[logicId] = updatedReasonSet
+		} else {
+			// Remove the logicId if no reasons left
+			delete(upgradeFaultCacheMgr.cache, logicId)
+		}
+	}
+}
+
+// getUpdatedFaultReason gets the updated fault reason based on current config
+func getUpdatedFaultReason(reasonVal UpgradeFaultReason, logicId LogicId,
+	frequencyConfig map[string]FaultFrequency, durationConfig map[string]FaultDuration) *UpgradeFaultReason {
+	// Check if fault code has a new strategy based on upgrade type
+	switch reasonVal.UpgradeType {
+	case FrequencyUpgradeType:
+		return getUpdatedFrequencyFaultReason(reasonVal, logicId, frequencyConfig)
+	case DurationUpgradeType:
+		return getUpdatedDurationFaultReason(reasonVal, logicId, durationConfig)
+	case AutofillUpgradeType:
+		// Keep AutofillUpgradeType faults as they are, since we don't know the original fault code
+		hwlog.RunLog.Debugf("Keeping AutofillUpgradeType fault for logicId %d, fault code %s", logicId, reasonVal.FaultCode)
+		return &reasonVal
+	default:
+		hwlog.RunLog.Errorf("Unknown upgrade type: %v for logicId %d", reasonVal.UpgradeType, logicId)
+		return nil
+	}
+}
+
+// getUpdatedFrequencyFaultReason gets the updated frequency-based fault reason
+func getUpdatedFrequencyFaultReason(reasonVal UpgradeFaultReason, logicId LogicId,
+	frequencyConfig map[string]FaultFrequency) *UpgradeFaultReason {
+	reasonKey := reasonVal.UpgradeFaultReasonKey
+
+	if freqConfig, exists := frequencyConfig[reasonKey.FaultCode]; exists {
+		newFaultLevel := freqConfig.FaultHandling
+		if newFaultLevel != reasonKey.FaultLevel {
+			// Update fault level
+			hwlog.RunLog.Infof(
+				"Fault config updated, changing frequency fault level for logicId %d, fault code %s from %s to %s",
+				logicId, reasonKey.FaultCode, reasonKey.FaultLevel, newFaultLevel)
+			return updateFaultLevel(reasonVal, newFaultLevel)
+		}
+		// Strategy exists and fault level hasn't changed, keep as is
+		return &reasonVal
+	} else {
+		// Fault code strategy has been removed
+		hwlog.RunLog.Infof("Fault config updated, removing frequency upgrade fault for logicId %d, fault code %s",
+			logicId, reasonKey.FaultCode)
+		return nil
+	}
+}
+
+// getUpdatedDurationFaultReason gets the updated duration-based fault reason
+func getUpdatedDurationFaultReason(reasonVal UpgradeFaultReason, logicId LogicId,
+	durationConfig map[string]FaultDuration) *UpgradeFaultReason {
+	reasonKey := reasonVal.UpgradeFaultReasonKey
+
+	if durConfig, exists := durationConfig[reasonKey.FaultCode]; exists {
+		newFaultLevel := durConfig.FaultHandling
+		if newFaultLevel != reasonKey.FaultLevel {
+			// Update fault level
+			hwlog.RunLog.Infof(
+				"Fault config updated, changing duration fault level for logicId %d, fault code %s from %s to %s",
+				logicId, reasonKey.FaultCode, reasonKey.FaultLevel, newFaultLevel)
+			return updateFaultLevel(reasonVal, newFaultLevel)
+		}
+		// Strategy exists and fault level hasn't changed, keep as is
+		return &reasonVal
+	} else {
+		// Fault code strategy has been removed
+		hwlog.RunLog.Infof("Fault config updated, removing duration upgrade fault for logicId %d, fault code %s",
+			logicId, reasonKey.FaultCode)
+		return nil
+	}
+}
+
+// updateFaultLevel updates the fault level for a reason
+func updateFaultLevel(reasonVal UpgradeFaultReason, newFaultLevel string) *UpgradeFaultReason {
+	newReasonKey := UpgradeFaultReasonKey{
+		FaultCode:   reasonVal.FaultCode,
+		FaultLevel:  newFaultLevel,
+		UpgradeType: reasonVal.UpgradeType,
+	}
+	return &UpgradeFaultReason{
+		UpgradeTime:           reasonVal.UpgradeTime,
+		UpgradeFaultReasonKey: newReasonKey,
+	}
 }
