@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -109,6 +110,7 @@ func TestInsertUpgradeFaultCache(t *testing.T) {
 			InsertUpgradeFaultCache(testLogicID1, testFaultTime, testFaultCode, testFaultLevel, testUpgradeType)
 
 			convey.So(len(upgradeFaultCacheMgr.cache), convey.ShouldEqual, 1)
+			RemoveTimeoutReasonCache(testLogicID1)
 		})
 
 		convey.Convey("should update reason when newer fault time", func() {
@@ -139,6 +141,7 @@ func TestInsertUpgradeFaultCache(t *testing.T) {
 				FaultLevel:  testFaultLevel,
 				UpgradeType: testUpgradeType}]
 			convey.So(reason.UpgradeTime, convey.ShouldEqual, testFaultTime)
+			RemoveTimeoutReasonCache(testLogicID1)
 		})
 	})
 }
@@ -664,4 +667,294 @@ func logicToPhyConvertFunc(logicID int32) (int32, error) {
 
 func phyToLogicConvertFunc(phyID int32) (int32, error) {
 	return int32(testLogicID1), nil
+}
+
+// TestCheckAndUpdateExistingUpgradeFaultsUpdateFaultLevel for
+// test checkAndUpdateExistingUpgradeFaults with fault level update
+func TestCheckAndUpdateExistingUpgradeFaultsUpdateFaultLevel(t *testing.T) {
+	convey.Convey("test checkAndUpdateExistingUpgradeFaults with fault level update", t, func() {
+		// Initialize test data
+		logicId := int32(0)
+		faultTime := time.Now().UnixMilli()
+		faultCode := "81078603"
+		oldFaultLevel := "PreSeparateNPU"
+		newFaultLevel := "Subhealth"
+
+		// Insert upgrade fault to cache
+		InsertUpgradeFaultCache(LogicId(logicId), faultTime, faultCode, oldFaultLevel, DurationUpgradeType)
+
+		// Setup fault duration map with new fault level
+		faultDurationMap := map[string]FaultDuration{
+			strings.ToLower(faultCode): {
+				FaultTimeout:   20,
+				RecoverTimeout: 60,
+				FaultHandling:  newFaultLevel,
+			},
+		}
+		faultFrequencyMap := make(map[string]FaultFrequency)
+
+		// Call checkAndUpdateExistingUpgradeFaults
+		checkAndUpdateExistingUpgradeFaults(faultFrequencyMap, faultDurationMap)
+
+		// Verify fault level is updated
+		upgradeFaultCacheMgr.cacheLock.Lock()
+		updatedReasonSet, exists := upgradeFaultCacheMgr.cache[LogicId(logicId)]
+		upgradeFaultCacheMgr.cacheLock.Unlock()
+		convey.So(exists, convey.ShouldBeTrue)
+		convey.So(len(updatedReasonSet), convey.ShouldEqual, 1)
+
+		for reasonKey := range updatedReasonSet {
+			convey.So(reasonKey.FaultCode, convey.ShouldEqual, strings.ToLower(faultCode))
+			convey.So(reasonKey.FaultLevel, convey.ShouldEqual, newFaultLevel)
+			convey.So(reasonKey.UpgradeType, convey.ShouldEqual, DurationUpgradeType)
+		}
+
+		// Cleanup
+		RemoveTimeoutReasonCache(LogicId(logicId))
+	})
+}
+
+// TestCheckAndUpdateExistingUpgradeFaultsRemoveFaultStrategy for
+// test checkAndUpdateExistingUpgradeFaults with fault strategy removal
+func TestCheckAndUpdateExistingUpgradeFaultsRemoveFaultStrategy(t *testing.T) {
+	convey.Convey("test checkAndUpdateExistingUpgradeFaults with fault strategy removal", t, func() {
+		// Initialize test data
+		logicId := int32(0)
+		faultTime := time.Now().UnixMilli()
+		faultCode := "81078603"
+		oldFaultLevel := "PreSeparateNPU"
+
+		// Insert upgrade fault to cache
+		InsertUpgradeFaultCache(LogicId(logicId), faultTime, faultCode, oldFaultLevel, DurationUpgradeType)
+
+		// Clear fault duration map
+		faultDurationMap := make(map[string]FaultDuration)
+		faultFrequencyMap := make(map[string]FaultFrequency)
+
+		// Call checkAndUpdateExistingUpgradeFaults
+		checkAndUpdateExistingUpgradeFaults(faultFrequencyMap, faultDurationMap)
+
+		// Verify fault is removed
+		upgradeFaultCacheMgr.cacheLock.Lock()
+		_, exists := upgradeFaultCacheMgr.cache[LogicId(logicId)]
+		upgradeFaultCacheMgr.cacheLock.Unlock()
+		convey.So(exists, convey.ShouldBeFalse)
+
+		// Cleanup
+		RemoveTimeoutReasonCache(LogicId(logicId))
+	})
+}
+
+// TestCheckAndUpdateExistingUpgradeFaultsFaultLevelUnchanged for
+// test checkAndUpdateExistingUpgradeFaults with unchanged fault level
+func TestCheckAndUpdateExistingUpgradeFaultsFaultLevelUnchanged(t *testing.T) {
+	convey.Convey("test checkAndUpdateExistingUpgradeFaults with unchanged fault level", t, func() {
+		// Initialize test data
+		logicId := int32(0)
+		faultTime := time.Now().UnixMilli()
+		faultCode := "81078603"
+		oldFaultLevel := "PreSeparateNPU"
+
+		// Insert upgrade fault to cache
+		InsertUpgradeFaultCache(LogicId(logicId), faultTime, faultCode, oldFaultLevel, DurationUpgradeType)
+
+		// Setup fault duration map with same fault level
+		faultDurationMap := map[string]FaultDuration{
+			strings.ToLower(faultCode): {
+				FaultTimeout:   20,
+				RecoverTimeout: 60,
+				FaultHandling:  oldFaultLevel,
+			},
+		}
+		faultFrequencyMap := make(map[string]FaultFrequency)
+
+		// Call checkAndUpdateExistingUpgradeFaults
+		checkAndUpdateExistingUpgradeFaults(faultFrequencyMap, faultDurationMap)
+
+		// Verify fault level remains unchanged
+		upgradeFaultCacheMgr.cacheLock.Lock()
+		updatedReasonSet, exists := upgradeFaultCacheMgr.cache[LogicId(logicId)]
+		upgradeFaultCacheMgr.cacheLock.Unlock()
+		convey.So(exists, convey.ShouldBeTrue)
+		convey.So(len(updatedReasonSet), convey.ShouldEqual, 1)
+
+		for reasonKey := range updatedReasonSet {
+			convey.So(reasonKey.FaultCode, convey.ShouldEqual, strings.ToLower(faultCode))
+			convey.So(reasonKey.FaultLevel, convey.ShouldEqual, oldFaultLevel)
+			convey.So(reasonKey.UpgradeType, convey.ShouldEqual, DurationUpgradeType)
+		}
+
+		// Cleanup
+		upgradeFaultCacheMgr.cacheLock.Lock()
+		delete(upgradeFaultCacheMgr.cache, LogicId(logicId))
+		upgradeFaultCacheMgr.cacheLock.Unlock()
+	})
+}
+
+// TestCheckAndUpdateExistingUpgradeFaultsAutofillUpgradeType for
+// test checkAndUpdateExistingUpgradeFaults with AutofillUpgradeType
+func TestCheckAndUpdateExistingUpgradeFaultsAutofillUpgradeType(t *testing.T) {
+	convey.Convey("test checkAndUpdateExistingUpgradeFaults with AutofillUpgradeType", t, func() {
+		// Initialize test data
+		logicId := int32(0)
+		faultTime := time.Now().UnixMilli()
+		faultCode := "81078603"
+		autofillFaultLevel := "Subhealth"
+
+		// Insert AutofillUpgradeType fault to cache
+		InsertUpgradeFaultCache(LogicId(logicId), faultTime, faultCode, autofillFaultLevel, AutofillUpgradeType)
+
+		// Clear fault duration map to simulate strategy removal
+		faultDurationMap := make(map[string]FaultDuration)
+		faultFrequencyMap := make(map[string]FaultFrequency)
+
+		// Call checkAndUpdateExistingUpgradeFaults
+		checkAndUpdateExistingUpgradeFaults(faultFrequencyMap, faultDurationMap)
+
+		// Verify AutofillUpgradeType fault is kept
+		upgradeFaultCacheMgr.cacheLock.Lock()
+		updatedReasonSet, exists := upgradeFaultCacheMgr.cache[LogicId(logicId)]
+		upgradeFaultCacheMgr.cacheLock.Unlock()
+		convey.So(exists, convey.ShouldBeTrue)
+		convey.So(len(updatedReasonSet), convey.ShouldEqual, 1)
+
+		for reasonKey := range updatedReasonSet {
+			convey.So(reasonKey.FaultCode, convey.ShouldEqual, strings.ToLower(faultCode))
+			convey.So(reasonKey.FaultLevel, convey.ShouldEqual, autofillFaultLevel)
+			convey.So(reasonKey.UpgradeType, convey.ShouldEqual, AutofillUpgradeType)
+		}
+
+		// Cleanup
+		upgradeFaultCacheMgr.cacheLock.Lock()
+		delete(upgradeFaultCacheMgr.cache, LogicId(logicId))
+		upgradeFaultCacheMgr.cacheLock.Unlock()
+	})
+}
+
+// TestCheckAndUpdateExistingUpgradeFaultsFrequencyUpgradeType_UpdateFaultLevel for
+// test checkAndUpdateExistingUpgradeFaults with FrequencyUpgradeType and fault level update
+func TestCheckAndUpdateExistingUpgradeFaultsFrequencyUpgradeType_UpdateFaultLevel(t *testing.T) {
+	convey.Convey("test checkAndUpdateExistingUpgradeFaults with FrequencyUpgradeType and fault level update", t, func() {
+		// Initialize test data
+		logicId := int32(0)
+		faultTime := time.Now().UnixMilli()
+		faultCode := "81078603"
+		oldFaultLevel := "PreSeparateNPU"
+		newFaultLevel := "Subhealth"
+
+		// Insert upgrade fault to cache
+		InsertUpgradeFaultCache(LogicId(logicId), faultTime, faultCode, oldFaultLevel, FrequencyUpgradeType)
+
+		// Setup fault frequency map with new fault level
+		faultFrequencyMap := map[string]FaultFrequency{
+			strings.ToLower(faultCode): {
+				TimeWindow:        60,
+				Times:             3,
+				FaultHandling:     newFaultLevel,
+				ReleaseTimeWindow: 3600,
+			},
+		}
+		faultDurationMap := make(map[string]FaultDuration)
+
+		// Call checkAndUpdateExistingUpgradeFaults
+		checkAndUpdateExistingUpgradeFaults(faultFrequencyMap, faultDurationMap)
+
+		// Verify fault level is updated
+		upgradeFaultCacheMgr.cacheLock.Lock()
+		updatedReasonSet, exists := upgradeFaultCacheMgr.cache[LogicId(logicId)]
+		upgradeFaultCacheMgr.cacheLock.Unlock()
+		convey.So(exists, convey.ShouldBeTrue)
+		convey.So(len(updatedReasonSet), convey.ShouldEqual, 1)
+
+		for reasonKey := range updatedReasonSet {
+			convey.So(reasonKey.FaultCode, convey.ShouldEqual, strings.ToLower(faultCode))
+			convey.So(reasonKey.FaultLevel, convey.ShouldEqual, newFaultLevel)
+			convey.So(reasonKey.UpgradeType, convey.ShouldEqual, FrequencyUpgradeType)
+		}
+
+		// Cleanup
+		upgradeFaultCacheMgr.cacheLock.Lock()
+		delete(upgradeFaultCacheMgr.cache, LogicId(logicId))
+		upgradeFaultCacheMgr.cacheLock.Unlock()
+	})
+}
+
+// TestCheckAndUpdateExistingUpgradeFaults_FrequencyUpgradeType_RemoveFaultStrategy for
+// test checkAndUpdateExistingUpgradeFaults with FrequencyUpgradeType and fault strategy removal
+func TestCheckAndUpdateExistingUpgradeFaults_FrequencyUpgradeType_RemoveFaultStrategy(t *testing.T) {
+	convey.Convey("test checkAndUpdateExistingUpgradeFaults with FrequencyUpgradeType and fault strategy removal", t, func() {
+		// Initialize test data
+		logicId := int32(0)
+		faultTime := time.Now().UnixMilli()
+		faultCode := "81078603"
+		oldFaultLevel := "PreSeparateNPU"
+
+		// Insert upgrade fault to cache
+		InsertUpgradeFaultCache(LogicId(logicId), faultTime, faultCode, oldFaultLevel, FrequencyUpgradeType)
+
+		// Clear fault frequency map
+		faultFrequencyMap := make(map[string]FaultFrequency)
+		faultDurationMap := make(map[string]FaultDuration)
+
+		// Call checkAndUpdateExistingUpgradeFaults
+		checkAndUpdateExistingUpgradeFaults(faultFrequencyMap, faultDurationMap)
+
+		// Verify fault is removed
+		upgradeFaultCacheMgr.cacheLock.Lock()
+		_, exists := upgradeFaultCacheMgr.cache[LogicId(logicId)]
+		upgradeFaultCacheMgr.cacheLock.Unlock()
+		convey.So(exists, convey.ShouldBeFalse)
+
+		// Cleanup
+		upgradeFaultCacheMgr.cacheLock.Lock()
+		delete(upgradeFaultCacheMgr.cache, LogicId(logicId))
+		upgradeFaultCacheMgr.cacheLock.Unlock()
+	})
+}
+
+// TestCheckAndUpdateExistingUpgradeFaultsFrequencyUpgradeTypeFaultLevelUnchanged for
+// test checkAndUpdateExistingUpgradeFaults with FrequencyUpgradeType and unchanged fault level
+func TestCheckAndUpdateExistingUpgradeFaultsFrequencyUpgradeTypeFaultLevelUnchanged(t *testing.T) {
+	convey.Convey("test checkAndUpdateExistingUpgradeFaults with FrequencyUpgradeType and unchanged fault level", t, func() {
+		// Initialize test data
+		logicId := int32(0)
+		faultTime := time.Now().UnixMilli()
+		faultCode := "81078603"
+		oldFaultLevel := "PreSeparateNPU"
+
+		// Insert upgrade fault to cache
+		InsertUpgradeFaultCache(LogicId(logicId), faultTime, faultCode, oldFaultLevel, FrequencyUpgradeType)
+
+		// Setup fault frequency map with same fault level
+		faultFrequencyMap := map[string]FaultFrequency{
+			strings.ToLower(faultCode): {
+				TimeWindow:        60,
+				Times:             3,
+				FaultHandling:     oldFaultLevel,
+				ReleaseTimeWindow: 3600,
+			},
+		}
+		faultDurationMap := make(map[string]FaultDuration)
+
+		// Call checkAndUpdateExistingUpgradeFaults
+		checkAndUpdateExistingUpgradeFaults(faultFrequencyMap, faultDurationMap)
+
+		// Verify fault level remains unchanged
+		upgradeFaultCacheMgr.cacheLock.Lock()
+		updatedReasonSet, exists := upgradeFaultCacheMgr.cache[LogicId(logicId)]
+		upgradeFaultCacheMgr.cacheLock.Unlock()
+		convey.So(exists, convey.ShouldBeTrue)
+		convey.So(len(updatedReasonSet), convey.ShouldEqual, 1)
+
+		for reasonKey := range updatedReasonSet {
+			convey.So(reasonKey.FaultCode, convey.ShouldEqual, strings.ToLower(faultCode))
+			convey.So(reasonKey.FaultLevel, convey.ShouldEqual, oldFaultLevel)
+			convey.So(reasonKey.UpgradeType, convey.ShouldEqual, FrequencyUpgradeType)
+		}
+
+		// Cleanup
+		upgradeFaultCacheMgr.cacheLock.Lock()
+		delete(upgradeFaultCacheMgr.cache, LogicId(logicId))
+		upgradeFaultCacheMgr.cacheLock.Unlock()
+	})
 }

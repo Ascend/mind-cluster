@@ -1212,6 +1212,7 @@ func TestLoadFaultFrequencyCustomizationCase1(t *testing.T) {
 		faultFrequencyMap = make(map[string]*FaultFrequencyCache, common.MaxErrorCodeCount)
 		loadFaultFrequencyCustomization(faultFrequencyCustomizations)
 		convey.So(faultFrequencyMap, convey.ShouldResemble, expectVal)
+		ResetFaultCustomizationCache()
 	})
 }
 
@@ -1250,6 +1251,7 @@ func TestLoadFaultFrequencyCustomizationCase2(t *testing.T) {
 					FaultHandling: ManuallySeparateNPU}}}
 		loadFaultFrequencyCustomization(faultFrequencyCustomizations)
 		convey.So(faultFrequencyMap, convey.ShouldResemble, expectVal)
+		ResetFaultCustomizationCache()
 	})
 }
 
@@ -1477,6 +1479,7 @@ func TestGetFaultTypeFromFaultFrequency(t *testing.T) {
 		convey.So(GetFaultTypeFromFaultFrequency(logicId, ChipFaultMode), convey.ShouldEqual, ManuallySeparateNPU)
 		convey.So(manuallySeparateNpuMap[logicId].FirstHandle, convey.ShouldEqual, true)
 		convey.So(recoverFaultFrequencyMap[logicId], convey.ShouldEqual, strings.ToLower("80E18005"))
+		ResetFaultCustomizationCache()
 	})
 }
 
@@ -1815,6 +1818,7 @@ func TestGetFrequencyFaultCodes(t *testing.T) {
 		expectedNetworkFaultCodes := make(map[int64]FaultTimeAndLevel)
 		convey.So(len(GetFrequencyFaultLevelAndCodes(ChipFaultMode, logicID)), convey.ShouldResemble, expectedChipFaultCodesLen)
 		convey.So(GetFrequencyFaultLevelAndCodes(NetworkFaultMode, logicID), convey.ShouldResemble, expectedNetworkFaultCodes)
+		ResetFaultCustomizationCache()
 	})
 }
 
@@ -2015,7 +2019,7 @@ func TestQueryManuallyFaultNPULogicIDsByHandleStatus(t *testing.T) {
 		})
 		convey.Convey("04-handleStatus is other value, should return empty list", func() {
 			manuallySeparateNpuMap = map[int32]ManuallyFaultInfo{1: {LogicID: 1}}
-			convey.So(QueryManuallyFaultNPULogicIDsByHandleStatus(""), convey.ShouldResemble, []int32{})
+			convey.So(QueryManuallyFaultNPULogicIDsByHandleStatus("other"), convey.ShouldResemble, []int32{})
 		})
 	})
 }
@@ -2064,5 +2068,6 @@ func TestGetUpgradeFaultLevelAndTime(t *testing.T) {
 		num, err := strconv.ParseInt(HbmDoubleBitFaultCodeStr, Hex, 0)
 		convey.So(err, convey.ShouldEqual, err)
 		convey.So(faultLevelAndTime[num].FaultLevel, convey.ShouldEqual, ManuallySeparateNPU)
+		RemoveTimeoutReasonCache(LogicId(0))
 	})
 }

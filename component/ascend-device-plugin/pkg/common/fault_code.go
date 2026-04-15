@@ -157,11 +157,11 @@ var (
 	// faultFrequencyMap is the cache saving to occur frequency of a fault, key is event id
 	faultFrequencyMap = make(map[string]*FaultFrequencyCache, common.MaxErrorCodeCount)
 	// faultFrequencyMapLock is the lock of faultFrequencyMap
-	faultFrequencyMapLock sync.Mutex
+	faultFrequencyMapLock sync.RWMutex
 	// faultDurationMap is the cache saving to occur duration of a fault, key is event id
 	faultDurationMap = make(map[string]*FaultDurationCache, common.MaxErrorCodeCount)
 	// faultDurationMapLock is the lock of faultDurationMap
-	faultDurationMapLock           sync.Mutex
+	faultDurationMapLock           sync.RWMutex
 	faultSeverityMap               = make(map[int64]int8, common.MaxErrorCodeCount)
 	parseHexFailedMsg              = "parse hex int failed and skip it, string: %s"
 	networkFaultConfigureFailedMsg = "%x is a network fault and cannot be configured to %s now, " +
@@ -170,6 +170,32 @@ var (
 	// autoFillReasonReleaseTimeWindow indicate that some reason is automatic fill should release in future
 	autoFillReasonReleaseTimeWindow int64 = 0
 )
+
+// copyFaultFrequencyConfig creates a copy of fault frequency configuration
+// to avoid concurrent map access issues
+func copyFaultFrequencyConfig() map[string]FaultFrequency {
+	faultFrequencyMapLock.RLock()
+	defer faultFrequencyMapLock.RUnlock()
+
+	result := make(map[string]FaultFrequency, len(faultFrequencyMap))
+	for k, v := range faultFrequencyMap {
+		result[k] = v.FaultFrequency
+	}
+	return result
+}
+
+// copyFaultDurationConfig creates a copy of fault duration configuration
+// to avoid concurrent map access issues
+func copyFaultDurationConfig() map[string]FaultDuration {
+	faultDurationMapLock.RLock()
+	defer faultDurationMapLock.RUnlock()
+
+	result := make(map[string]FaultDuration, len(faultDurationMap))
+	for k, v := range faultDurationMap {
+		result[k] = v.FaultDuration
+	}
+	return result
+}
 
 // ManuallyFaultInfo save the info of ManuallySeparateNPU
 type ManuallyFaultInfo struct {
@@ -513,6 +539,12 @@ func LoadFaultCustomization(faultCustomizationByte []byte) error {
 	loadFaultFrequencyCustomization(faultCustomization.FaultFrequency)
 	setAutofillReasonReleaseTime()
 	loadFaultDurationCustomization(faultCustomization.FaultDuration)
+
+	// Check and update existing upgrade faults when config changes
+	// Only copy FaultFrequency and FaultDuration fields to avoid concurrent map access issues
+	frequencyConfig := copyFaultFrequencyConfig()
+	durationConfig := copyFaultDurationConfig()
+	checkAndUpdateExistingUpgradeFaults(frequencyConfig, durationConfig)
 	return nil
 }
 
