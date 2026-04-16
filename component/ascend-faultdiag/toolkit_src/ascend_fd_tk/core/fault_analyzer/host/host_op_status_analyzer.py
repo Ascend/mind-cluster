@@ -28,18 +28,18 @@ _DIAG_LOGGER = logger.DIAG_LOGGER
 
 @register_analyzer
 class HostOpticalStatusAnalyzer(Analyzer):
-    _NET_HEALTH_STATUS = "Success"
-    _UP_STATUS = "UP"
     _FAULT_DESC = "端口光模块状态异常，网络健康状态：{}，连接状态：{}。"
     _PEER_PORT_INFO = " 对端交换机：{}，对端端口：{}。"
     _SUGGESTION = "请检查NPU端口，或对端端口状态"
 
     def analyse(self) -> List[DiagResult]:
+        th = self.cluster_info.get_threshold()
         result = []
         for host_info in self.cluster_info.hosts_info.values():
             for chip_info in host_info.npu_chip_info.values():
-                is_healthy = chip_info.net_health and chip_info.net_health != self._NET_HEALTH_STATUS
-                is_up = chip_info.link_status and chip_info.link_status != self._UP_STATUS
+                is_healthy = (chip_info.net_health and
+                              chip_info.net_health != th.NET_HEALTH_THRESHOLD.normal_alarm_th)
+                is_up = chip_info.link_status and chip_info.link_status != th.LINK_STATUS_THRESHOLD.normal_alarm_th
                 if is_healthy or is_up:
                     domain = [
                         Domain(DeviceType.SERVER, host_info.host_id),

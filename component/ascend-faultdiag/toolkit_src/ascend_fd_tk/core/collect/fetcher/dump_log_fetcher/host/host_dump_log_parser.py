@@ -34,7 +34,7 @@ from ascend_fd_tk.core.log_parser.parse_config import msnpureport_log_config
 
 class HostDumpLogParser(DumpLogDirParser, abc.ABC):
     _TITLE_TEMPLATE = r'([=-]){3,20}\s*{title}\s*\1{3,20}'
-    _END_SIGNS = ["---", "==="]
+    _END_SIGNS = ["---", "====="]
     _TIME_FMT_PATTERN = re.compile(r"\d{4}(-\d{1,2}){5}")
 
     def __init__(self, root_dir: str, parse_dir: str):
