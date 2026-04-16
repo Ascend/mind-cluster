@@ -15,6 +15,7 @@
 # limitations under the License.
 # ==============================================================================
 import os
+import atexit
 import threading
 import time
 from ctypes import CFUNCTYPE, POINTER, c_int, c_bool, c_char_p, create_string_buffer, addressof
@@ -105,6 +106,10 @@ class Worker:
         result = init_taskd_func(self.global_rank, node_rank, upper_limit_of_disk_in_mb)
         if result == 0:
             self.register_callback()
+            at_exit_func = cython_api.lib.AtExitAction
+            def at_exit():
+                at_exit_func()
+            atexit.register(at_exit)
             run_log.info("Successfully init taskd monitor")
             return True
         run_log.warning(f"failed to init taskd monitor with ret code:f{result}")

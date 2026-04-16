@@ -39,6 +39,7 @@ import (
 	"taskd/framework_backend/manager/application"
 	"taskd/framework_backend/proxy"
 	"taskd/framework_backend/worker"
+	"taskd/framework_backend/worker/monitor/profiling"
 	"taskd/framework_backend/worker/om"
 	"taskd/toolkit_backend/net"
 	"taskd/toolkit_backend/net/common"
@@ -321,6 +322,17 @@ func SendMessageToBackend(msgJSON *C.char) C.int {
 //export RegisterBackendCallback
 func RegisterBackendCallback(cb uintptr) {
 	application.RegisterControllerCallback(cb)
+}
+
+// AtExitAction is called when the program is about to exit.
+// It sets the PreExiting flag and attempts to flush all profiling activities.
+// This function should be called during graceful shutdown to ensure
+// all monitoring data is properly saved before termination.
+//
+//export AtExitAction
+func AtExitAction() {
+	profiling.PreExiting.Store(true)
+	hwlog.RunLog.Infof("profiling PreExiting set to true, worker rank %d", worker.GlobalRank)
 }
 
 func main() {
