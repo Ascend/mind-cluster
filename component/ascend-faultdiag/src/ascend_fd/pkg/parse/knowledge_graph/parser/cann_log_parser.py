@@ -114,7 +114,7 @@ class CANNLogParser(FileParser):
     def parse(self, parse_ctx: KGParseCtx, task_id):
         """
         Parse log file
-        :param parse_ctx: file path
+       :param parse_ctx: knowledge graph parser context
         :param task_id: the task unique id
         :return: parse fault events list
         """
@@ -314,135 +314,7 @@ class CANNPlogParser(CANNLogParser):
     TARGET_FILE_PATTERNS = "plog_path"
     SOURCE_FILE = CANN_PLOG_SOURCE
 
-    def collect(self, parse_ctx: KGParseCtx, task_id: str):
-        """
-        Collect raw events and train time info from plog files.
-        This parser is a primary parser and will be executed serially.
-        """
-        events_list = []
-        pid_file_dict = self.find_log(parse_ctx.parse_file_path)
-        if not pid_file_dict:
-            return [], {}, {}
-        pid_file_item = pid_file_dict.items()
-        self.resuming_training_time = parse_ctx.resuming_training_time
-        self.is_sdk_input = parse_ctx.is_sdk_input
-        kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
-        if self.is_sdk_input:
-            results = dict()
-            for pid, file_list in pid_file_item:
-                results.update({
-                    f"{self.SOURCE_FILE}_{pid}": self._parse_files_of_pid(pid, file_list)
-                })
-        else:
-            multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(pid_file_item),
-                                               task_id=task_id)
-            for pid, file_list in pid_file_item:
-                multiprocess_job.add_security_job(f"{self.SOURCE_FILE}_{pid}", self._parse_files_of_pid, pid, file_list)
-            results, _ = multiprocess_job.join_and_get_results()
-        device_pid_map = dict()
-        pid_info_cache = dict()
-        pid_device_dict = dict()
-        for event_list, start_end_time, pid_device_id in results.values():
-            pid, device_id = pid_device_id
-            pid_device_dict.update({pid: device_id})
-            pid_info_cache.update({pid: (event_list, start_end_time)})
-            if not device_id or device_id == "Unknown":
-                continue
-            store_pid = device_pid_map.get(device_id, "")
-            if not store_pid:
-                device_pid_map.update({device_id: pid})
-                continue
-            store_pid_info = pid_info_cache.get(store_pid)
-            store_start_end_time = store_pid_info[1]
-            if store_start_end_time[0] <= start_end_time[0]:
-                pid_info_cache.pop(store_pid)
-                device_pid_map.update({device_id: pid})
-                continue
-            pid_info_cache.pop(pid)
-        useful_pid = list(pid_info_cache.keys())
-        train_start_time = ""
-        train_end_time = ""
-        for event_list, start_end_time in pid_info_cache.values():
-            events_list.extend(event_list)
-            if start_end_time[0]:
-                train_start_time = min(train_start_time, start_end_time[0]) if train_start_time else start_end_time[0]
-            if start_end_time[1]:
-                train_end_time = max(train_end_time, start_end_time[1]) if train_end_time else start_end_time[1]
-        kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
-        collect_result = {
-            "train_start_time": train_start_time,
-            "train_end_time": train_end_time,
-            "pid_device_dict": pid_device_dict,
-            "useful_pid": useful_pid
-        }
-        return events_list, collect_result, {}
-
-    def filter_events(self, events_list: list, collect_result: dict):
-        """
-        Update params with train time info and return events list.
-        """
-        train_start_time = collect_result.get("train_start_time", "")
-        train_end_time = collect_result.get("train_end_time", "")
-        pid_device_dict = collect_result.get("pid_device_dict", {})
-        useful_pid = collect_result.get("useful_pid", [])
-        self.params.update({
-            "start_time": train_start_time,
-            "end_time": train_end_time,
-            "pid_device_dict": pid_device_dict,
-            "useful_pid": useful_pid
-        })
-        self.start_time = train_start_time
-        self.end_time = train_end_time
-        return events_list
-
 
 class CANNDeviceLogParser(CANNLogParser):
     TARGET_FILE_PATTERNS = "device_log_path"
     SOURCE_FILE = CANN_DEVICE_SOURCE
-
-    def collect(self, parse_ctx: KGParseCtx, task_id: str):
-        """
-        Collect raw events from device log files without pid filtering.
-        """
-        events_list = []
-        pid_file_dict = self.find_log(parse_ctx.parse_file_path)
-        if not pid_file_dict:
-            return [], {}, {}
-        pid_file_item = pid_file_dict.items()
-        self.resuming_training_time = parse_ctx.resuming_training_time
-        self.is_sdk_input = parse_ctx.is_sdk_input
-        kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
-        if self.is_sdk_input:
-            results = dict()
-            for pid, file_list in pid_file_item:
-                results.update({
-                    f"{self.SOURCE_FILE}_{pid}": self._parse_files_of_pid(pid, file_list)
-                })
-        else:
-            multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(pid_file_item),
-                                               task_id=task_id)
-            for pid, file_list in pid_file_item:
-                multiprocess_job.add_security_job(f"{self.SOURCE_FILE}_{pid}", self._parse_files_of_pid, pid, file_list)
-            results, _ = multiprocess_job.join_and_get_results()
-        all_events = []
-        pid_events_map = {}
-        for event_list, _, pid_device_id in results.values():
-            pid = pid_device_id[0]
-            all_events.extend(event_list)
-            pid_events_map[pid] = event_list
-        kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
-        collect_result = {"pid_events_map": pid_events_map}
-        return all_events, collect_result, {}
-
-    def filter_events(self, events_list: list, collect_result: dict):
-        """
-        Filter events by useful_pid from params.
-        """
-        useful_pid = self.params.get("useful_pid", [])
-        pid_events_map = collect_result.get("pid_events_map", {})
-        if not useful_pid:
-            return events_list
-        filtered_events = []
-        for pid in useful_pid:
-            filtered_events.extend(pid_events_map.get(pid, []))
-        return filtered_events

@@ -44,7 +44,6 @@ class BaseNpuLogParser(FileParser):
         NPU Device Log info parser
         """
         super().__init__(params)
-        self._skip_time_filter = False
 
     @staticmethod
     def _get_occur_time(line, dir_name) -> str:
@@ -64,11 +63,12 @@ class BaseNpuLogParser(FileParser):
             return log_list
         start_file = time_format.format(start_time.replace("-", "").replace(":", "").replace(" ", ""))
         end_file = time_format.format(end_time.replace("-", "").replace(":", "").replace(" ", ""))
+        # use bisect to get the start time file and end time file index, obtaining logs in the Training Time Range
         start_idx = max(bisect.bisect(log_list, start_file) - 1, 0)
         end_idx = bisect.bisect(log_list, end_file)
         return log_list[start_idx: end_idx]
 
-    def parse(self, file_dict: dict, task_id: str):
+    def parse(self, parse_ctx: KGParseCtx, task_id):
         pass
 
     def process_parse_file_list(self, file_source_list: list, task_id: str):
@@ -113,15 +113,16 @@ class BaseNpuLogParser(FileParser):
         for line in self._yield_log(file_source):
             occur_time = self._get_occur_time(line, dir_name)
             if not occur_time or occur_time < self.resuming_training_time:
+                continue  # when cannot get time or this line is before resuming training, ignore this line
+            # not in the Training Time Range, ignore it
+            if self.start_time and occur_time < self.start_time:
                 continue
-            if not self._skip_time_filter:
-                if self.start_time and occur_time < self.start_time:
-                    continue
-                if self.end_time and occur_time > self.end_time:
-                    continue
+            if self.end_time and occur_time > self.end_time:
+                continue
             event_dict = self.parse_single_line(line)
             if not event_dict:
                 continue
+            # if rf_lf does not exist or when rf_lf is 1, pcs_err_cnt is equal to 0, the fault condition is not met
             rf_lf = event_dict.get("rf_lf", "")
             pcs_err_cnt = event_dict.get("pcs_err_cnt", PCS_NORMAL_TH)
             is_custom_fault = event_dict.get("event_code", "") == FIBER_OR_COPPER_LINK_FAULT
@@ -193,7 +194,7 @@ class NpuHistoryLogParser(BaseNpuLogParser):
     def parse(self, parse_ctx: KGParseCtx, task_id):
         """
         Parse hisi logs file, contain history.log
-        :param parse_ctx: file path
+        :param parse_ctx: knowledge graph parser context
         :param task_id: the task unique id
         :return: hisi logs parse result
         """
@@ -202,38 +203,6 @@ class NpuHistoryLogParser(BaseNpuLogParser):
         self.resuming_training_time = parse_ctx.resuming_training_time
         self.is_sdk_input = parse_ctx.is_sdk_input
         return self.process_parse_file_list(self.find_log(parse_ctx.parse_file_path), task_id)
-
-    def collect(self, parse_ctx: KGParseCtx, task_id: str):
-        """
-        Collect raw events without time filtering.
-        """
-        self.resuming_training_time = parse_ctx.resuming_training_time
-        self.is_sdk_input = parse_ctx.is_sdk_input
-        self._skip_time_filter = True
-        file_source_list = self.find_log(parse_ctx.parse_file_path)
-        events_list, err_dict = self.process_parse_file_list(file_source_list, task_id)
-        return events_list, {}, err_dict
-
-    def filter_events(self, events_list: list, collect_result: dict):
-        """
-        Filter events by start_time and end_time from params.
-        """
-        self.start_time = self.params.get("start_time")
-        self.end_time = self.params.get("end_time")
-        if not self.start_time and not self.end_time:
-            return events_list
-        filtered_list = []
-        for event in events_list:
-            occur_time = event.get("occur_time", "")
-            if not occur_time:
-                filtered_list.append(event)
-                continue
-            if self.start_time and occur_time < self.start_time:
-                continue
-            if self.end_time and occur_time > self.end_time:
-                continue
-            filtered_list.append(event)
-        return filtered_list
 
 
 class NpuSlogParser(BaseNpuLogParser):
@@ -255,7 +224,7 @@ class NpuSlogParser(BaseNpuLogParser):
     def parse(self, parse_ctx: KGParseCtx, task_id):
         """
         Parse slog file
-        :param parse_ctx: file path
+        :param parse_ctx: knowledge graph parser context
         :param task_id: the task unique id
         :return: slog parse result
         """
@@ -274,56 +243,6 @@ class NpuSlogParser(BaseNpuLogParser):
                 elif isinstance(file_source, LogInfoSaver):
                     file_source_list.append(file_source)
         return self.process_parse_file_list(file_source_list, task_id)
-
-    def collect(self, parse_ctx: KGParseCtx, task_id: str):
-        """
-        Collect raw events without time filtering.
-        """
-        self.resuming_training_time = parse_ctx.resuming_training_time
-        self.is_sdk_input = parse_ctx.is_sdk_input
-        self._skip_time_filter = True
-        file_source_list = []
-        slog_dict = self.find_log(parse_ctx.parse_file_path)
-        if not self.is_sdk_input:
-            slog_dict = self._get_latest_slog_files(slog_dict)
-        for log_dir, log_list in slog_dict.items():
-            for file_source in log_list:
-                if isinstance(file_source, str):
-                    file_source_list.append(os.path.join(log_dir, file_source))
-                elif isinstance(file_source, LogInfoSaver):
-                    file_source_list.append(file_source)
-        events_list, err_dict = self.process_parse_file_list(file_source_list, task_id)
-        return events_list, {}, err_dict
-
-    def _get_latest_slog_files(self, slog_dict: dict):
-        """
-        Get latest slog files without time filtering.
-        """
-        new_slog_dict = dict()
-        for log_dir, log_list in slog_dict.items():
-            new_slog_dict.update({log_dir: log_list[-2:]})
-        return new_slog_dict
-
-    def filter_events(self, events_list: list, collect_result: dict):
-        """
-        Filter events by start_time and end_time from params.
-        """
-        self.start_time = self.params.get("start_time")
-        self.end_time = self.params.get("end_time")
-        if not self.start_time and not self.end_time:
-            return events_list
-        filtered_list = []
-        for event in events_list:
-            occur_time = event.get("occur_time", "")
-            if not occur_time:
-                filtered_list.append(event)
-                continue
-            if self.start_time and occur_time < self.start_time:
-                continue
-            if self.end_time and occur_time > self.end_time:
-                continue
-            filtered_list.append(event)
-        return filtered_list
 
     def _filter_slog_by_time(self, slog_dict: dict):
         """

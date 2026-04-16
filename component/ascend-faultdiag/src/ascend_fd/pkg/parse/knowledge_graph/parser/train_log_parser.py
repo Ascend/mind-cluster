@@ -58,7 +58,7 @@ class TrainLogParser(FileParser):
     def parse(self, parse_ctx: KGParseCtx, task_id: str):
         """
         Parse the train log
-        :param parse_ctx: the parse context object containing file path
+        :param parse_ctx: knowledge graph parser context
         :param task_id: the task unique id
         :return: traceback error
         """
@@ -83,14 +83,6 @@ class TrainLogParser(FileParser):
             events_list.extend(event_list)
         kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
         return events_list, {}
-
-    def collect(self, parse_ctx: KGParseCtx, task_id: str):
-        """
-        Collect raw events from train log files.
-        Train log parser does not need time filtering.
-        """
-        events_list, err_dict = self.parse(parse_ctx, task_id)
-        return events_list, {}, err_dict
 
     def _parse_single_file(self, file_source: Union[str, LogInfoSaver]):
         """

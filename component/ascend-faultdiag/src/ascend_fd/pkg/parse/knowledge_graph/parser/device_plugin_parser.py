@@ -42,12 +42,11 @@ class DevicePluginParser(FileParser):
         super().__init__(params)
         self.default_conf.update(self.regex_conf.get(COMPOSITE_SWITCH_CHIP_SOURCE, {}))
         self.user_conf.update(self.regex_conf.get(COMPOSITE_SWITCH_CHIP_SOURCE, {}))
-        self._skip_time_filter = False
 
     def parse(self, parse_ctx: KGParseCtx, task_id):
         """
         Parse log file
-        :param parse_ctx: file paths
+        :param parse_ctx: knowledge graph parser context
         :param task_id: unique task id
         :return: parse descriptor result
         """
@@ -60,13 +59,6 @@ class DevicePluginParser(FileParser):
         results = self._parse_files(file_source_list)
         kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
         return results, {}
-
-    def collect(self, parse_ctx: KGParseCtx, task_id: str):
-        """
-        Collect raw events without time filtering.
-        """
-        results, _, = self.parse(parse_ctx, task_id)
-        return results, {}, {}
 
     def _filter_dp_list(self, parse_filepath: KGParseFilePath):
         """
@@ -132,17 +124,19 @@ class DevicePluginParser(FileParser):
         occur_time, assertion_flag = self._filter_dp_info(dp_log)
         if not occur_time or occur_time < self.resuming_training_time:
             return
-        if not self._skip_time_filter:
-            if self.start_time and occur_time < self.start_time:
-                return
-            if self.end_time and occur_time > self.end_time:
-                return
+        if self.start_time and occur_time < self.start_time:
+            return
+        if self.end_time and occur_time > self.end_time:
+            return
         self.supplement_common_info(event_dict, file_source, occur_time)
         event_code = event_dict.get("event_code", "unknown_code")
+        # in switch fault case, Assertion flag 1 signals fault occurrence for switch, otherwise 0 means fault recovery
         if not assertion_flag or assertion_flag == "1":
+            # if not in switch fault case or flag 1 in switch fault case, record event occurrence
             feasible_events[event_code] = event_dict
             return
         if assertion_flag == "0":
+            # if flag 0 in switch fault case, recover the fault
             feasible_events.pop(event_code, None)
 
     def _filter_dp_info(self, dp_log):

@@ -38,12 +38,11 @@ class CommonDlParser(FileParser):
 
     def __init__(self, params):
         super().__init__(params)
-        self._skip_time_filter = False
 
     def parse(self, parse_ctx: KGParseCtx, task_id):
         """
         Parse log file
-        :param parse_ctx: file paths
+       :param parse_ctx: knowledge graph parser context
         :param task_id: unique task id
         :return: parse descriptor result
         """
@@ -67,61 +66,6 @@ class CommonDlParser(FileParser):
             results, _ = multiprocess_job.join_and_get_results()
         kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
         return list(chain(*results.values())), {}
-
-    def collect(self, parse_ctx: KGParseCtx, task_id: str):
-        """
-        Collect raw events without time filtering.
-        """
-        self.resuming_training_time = parse_ctx.resuming_training_time
-        self.is_sdk_input = parse_ctx.is_sdk_input
-        self._skip_time_filter = True
-        kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
-        file_source_list = self._get_latest_dl_files(parse_ctx.parse_file_path)
-        if self.is_sdk_input:
-            results = dict()
-            for idx, file_source in enumerate(file_source_list):
-                results.update({
-                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}": self._parse_file(file_source)
-                })
-        else:
-            multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_source_list), task_id=task_id)
-            for idx, file_source in enumerate(file_source_list):
-                multiprocess_job.add_security_job(f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}",
-                                                  self._parse_file, file_source)
-            results, _ = multiprocess_job.join_and_get_results()
-        kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
-        return list(chain(*results.values())), {}, {}
-
-    def _get_latest_dl_files(self, parse_filepath: KGParseFilePath):
-        """
-        Get latest dl files without time filtering.
-        """
-        dl_list = self.find_log(parse_filepath)
-        if len(dl_list) < 2:
-            return dl_list
-        dl_list.sort(key=lambda x: self._get_filename(x))
-        return dl_list[-2:]
-
-    def filter_events(self, events_list: list, collect_result: dict):
-        """
-        Filter events by start_time and end_time from params.
-        """
-        self.start_time = self.params.get("start_time")
-        self.end_time = self.params.get("end_time")
-        if not self.start_time and not self.end_time:
-            return events_list
-        filtered_list = []
-        for event in events_list:
-            occur_time = event.get("occur_time", "")
-            if not occur_time:
-                filtered_list.append(event)
-                continue
-            if self.start_time and occur_time < self.start_time:
-                continue
-            if self.end_time and occur_time > self.end_time:
-                continue
-            filtered_list.append(event)
-        return filtered_list
 
     def _path_preprocessing(self, parse_filepath: KGParseFilePath):
         """
@@ -178,14 +122,14 @@ class CommonDlParser(FileParser):
             if not event_dict:
                 continue
             ret = self.LOG_TIME_REGEX.findall(log_line)
+            # transfer YYYY/MM/DD hh:mm:ss.****** to YYYY-MM-DD hh:mm:ss.****** for further comparison with train time
             occur_time = ret[0].replace("/", "-") if ret else ""
             if not occur_time or occur_time < self.resuming_training_time:
                 continue
-            if not self._skip_time_filter:
-                if self.start_time and occur_time < self.start_time:
-                    continue
-                if self.end_time and occur_time > self.end_time:
-                    continue
+            if self.start_time and occur_time < self.start_time:
+                continue
+            if self.end_time and occur_time > self.end_time:
+                continue
             self.supplement_common_info(event_dict, file_source, occur_time)
             event_storage.record_event(event_dict)
         return event_storage.generate_event_list()

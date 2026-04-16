@@ -16,6 +16,7 @@
 # ==============================================================================
 from itertools import chain
 
+from ascend_fd.model.context import KGParseCtx
 from ascend_fd.pkg.parse.knowledge_graph.parser.file_parser import FileParser, EventStorage
 from ascend_fd.pkg.customize.custom_entity.valid import source_check
 from ascend_fd.utils.load_kg_config import ParseRegexMap
@@ -138,7 +139,7 @@ class LogItemParser(FileParser):
         if self.SOURCE_FILE == "TrainLog":
             self.pattern_matcher = PatternSingleOrMultiLineMatcher(log_lines=self.log_lines)
 
-    def parse(self, file_dict: dict = None, task_id: str = ""):
+    def parse(self, parse_ctx: KGParseCtx = None, task_id: str = ""):
         """
         Parse the single log item
         :return: the result event list

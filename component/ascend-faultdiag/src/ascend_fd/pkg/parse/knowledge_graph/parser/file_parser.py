@@ -174,55 +174,14 @@ class FileParser(ABC):
             return file_stream.readline().replace('\00', '').strip()
 
     @abstractmethod
-    def parse(self, file_dict: dict, task_id: str):
+    def parse(self, parse_ctx: KGParseCtx, task_id: str):
         """
         Parse log file
-        :param file_dict: file path dict
+        :param parse_ctx: knowledge graph parser context
         :param task_id: the task unique id
         :return:
         """
         pass
-
-    def collect(self, parse_ctx: KGParseCtx, task_id: str):
-        """
-        Collect raw events from log files without time filtering.
-        This method should be overridden by subclasses for parallel execution.
-        :param parse_ctx: parse context
-        :param task_id: the task unique id
-        :return: (raw_events_list, collect_result_dict, error_dict)
-        """
-        self.resuming_training_time = parse_ctx.resuming_training_time
-        self.is_sdk_input = parse_ctx.is_sdk_input
-        try:
-            events_list, err_dict = self.parse(parse_ctx, task_id)
-            return events_list, {}, err_dict
-        except Exception as e:
-            return [], {}, {self.__class__.__name__: str(e)}
-
-    def filter_events(self, events_list: list, collect_result: dict):
-        """
-        Filter events based on params (start_time, end_time, etc.).
-        This method is called serially after all collectors finish.
-        :param events_list: raw events list from collect()
-        :param collect_result: additional result dict from collect()
-        :return: filtered events list
-        """
-        start_time = self.params.get("start_time")
-        end_time = self.params.get("end_time")
-        if not start_time and not end_time:
-            return events_list
-        filtered_list = []
-        for event in events_list:
-            occur_time = event.get("occur_time", "")
-            if not occur_time:
-                filtered_list.append(event)
-                continue
-            if start_time and occur_time < start_time:
-                continue
-            if end_time and occur_time > end_time:
-                continue
-            filtered_list.append(event)
-        return filtered_list
 
     def get_timezone_trans_flag(self):
         """

@@ -181,25 +181,17 @@ class PackageParser(object):
             parser_name = parser.__class__.__name__
             collect_result = collect_results.get(parser_name, {})
             if isinstance(collect_result, Exception):
+                kg_logger.warning("The %s parser filter events failed. The reason is: %s",
+                                  parser_name, collect_result)
                 execution_err.update({parser_name: str(collect_result)})
                 continue
-            events_list = collect_result.get("events_list", [])
+            parse_result = collect_result.get("parse_result", [])
             err_dict = collect_result.get("err_dict", {})
-            collect_data = collect_result.get("collect_result", {})
-            if isinstance(events_list, FilesParseInfo):
-                events_list = events_list.event_list
-            try:
-                filtered_events = parser.filter_events(events_list, collect_data)
-            except Exception as error:
-                kg_logger.warning("The %s parser filter events failed. The reason is: %s",
-                                  parser_name, error)
-                execution_err.update({parser_name: str(error)})
-                continue
-            if isinstance(events_list, FilesParseInfo):
-                self.desc.update_events(filtered_events.event_list)
-                self.desc.files_parse_info = events_list
+            if isinstance(parse_result, FilesParseInfo):
+                self.desc.update_events(parse_result.event_list)
+                self.desc.files_parse_info = parse_result
             else:
-                self.desc.update_events(filtered_events)
+                self.desc.update_events(parse_result)
             execution_issue.update(err_dict)
         return execution_err, execution_issue
 
@@ -235,10 +227,9 @@ class PackageParser(object):
         for parser in self.other_parsers:
             parser_name = parser.__class__.__name__
             try:
-                events_list, collect_result, err_dict = parser.collect(self.kg_parse_ctx, "")
+                parse_result, err_dict = parser.parse(self.kg_parse_ctx, "")
                 results[parser_name] = {
-                    "events_list": events_list,
-                    "collect_result": collect_result,
+                    "parse_result": parse_result,
                     "err_dict": err_dict
                 }
             except Exception as e:
@@ -251,10 +242,9 @@ class PackageParser(object):
         Worker function for parallel collect execution
         """
         try:
-            events_list, collect_result, err_dict = parser.collect(kg_parse_ctx, task_id)
+            parse_result, err_dict = parser.parse(kg_parse_ctx, task_id)
             result_dict[parser_name] = {
-                "events_list": events_list,
-                "collect_result": collect_result,
+                "parse_result": parse_result,
                 "err_dict": err_dict
             }
         except Exception as e:

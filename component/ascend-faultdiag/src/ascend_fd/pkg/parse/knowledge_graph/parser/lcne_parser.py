@@ -51,7 +51,7 @@ class LCNEParser(FileParser):
     def parse(self, parse_ctx: KGParseCtx, task_id: str):
         """
         Parse lcne log file
-        :param parse_ctx: file paths
+        :param parse_ctx: knowledge graph parser context
         :param task_id: unique task id
         :return: parse descriptor result
         """
@@ -74,14 +74,6 @@ class LCNEParser(FileParser):
             results, _ = multiprocess_job.join_and_get_results()
         kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
         return list(chain(*results.values())), {}
-
-    def collect(self, parse_ctx: KGParseCtx, task_id: str):
-        """
-        Collect raw events from lcne log files.
-        LCNE parser does not need time filtering.
-        """
-        events_list, err_dict = self.parse(parse_ctx, task_id)
-        return events_list, {}, err_dict
 
     def _filter_lcne_time(self, context: str):
         """
