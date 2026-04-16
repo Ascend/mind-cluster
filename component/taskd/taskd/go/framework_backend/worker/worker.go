@@ -67,6 +67,7 @@ func InitMonitor(ctx context.Context, globalRank int, upperLimitOfDiskInMb int) 
 	}
 	profiling.MsSubscribed.Store(false)
 	profiling.MgrProfilingCmd.Store(false)
+	profiling.PreExiting.Store(false)
 	hwlog.RunLog.Info("successfully init mspti lib so")
 	monitorInitNotify()
 }
