@@ -1527,36 +1527,36 @@ func queryNetworkStatusWithoutFaultCode(faultCodes []int64, device *common.NpuDe
 	if len(faultCodes) != 0 {
 		return newFaultCodes
 	}
-	linkStatus := getNetworkStatusCache(device.DeviceID)
+	linkStatus := getNetworkStatusCache(device.PhyID)
 	hwlog.RunLog.Debugf("device %d link status : %s, network healthy: %s",
-		device.DeviceID, linkStatus, device.NetworkHealth)
+		device.PhyID, linkStatus, device.NetworkHealth)
 	if linkStatus == npuCommon.NPUNetworkLinkDownStatus {
 		newFaultCodes = append(newFaultCodes, common.LinkDownFaultCode)
 		hwlog.RunLog.Debugf("device %d generate network fault code %d based on link down fault ,"+
-			"network health: %s", device.DeviceID, common.LinkDownFaultCode, device.NetworkHealth)
+			"network health: %s", device.PhyID, common.LinkDownFaultCode, device.NetworkHealth)
 	}
 	return newFaultCodes
 }
 
-func getNetworkStatusCache(deviceId int32) string {
-	netWorkLimiter, ok := netWorkLimiterMap[deviceId]
+func getNetworkStatusCache(phyId int32) string {
+	netWorkLimiter, ok := netWorkLimiterMap[phyId]
 	if !ok {
-		hwlog.RunLog.Infof("init device %d network limiter", deviceId)
+		hwlog.RunLog.Infof("init device %d network limiter", phyId)
 		netWorkLimiter = rate.NewLimiter(
 			rate.Every(common.EveryNetWorkQueryDuration*time.Minute/common.NetWorkQueryReteLimit),
 			common.NetWorkQueryReteLimit)
-		netWorkLimiterMap[deviceId] = netWorkLimiter
+		netWorkLimiterMap[phyId] = netWorkLimiter
 	}
-	linkStatusCache, ok := netWorkStatusCache[deviceId]
+	linkStatusCache, ok := netWorkStatusCache[phyId]
 	if !netWorkLimiter.Allow() && ok {
 		return linkStatusCache
 	}
-	linkStatus, err := hccn.GetNPULinkStatus(deviceId)
+	linkStatus, err := hccn.GetNPULinkStatus(phyId)
 	if err != nil {
-		hwlog.RunLog.Errorf("get device %d link status failed, err: %v", deviceId, err)
-		netWorkStatusCache[deviceId] = npuCommon.NPUNetworkLinkDownStatus
+		hwlog.RunLog.Errorf("get device %d link status failed, err: %v", phyId, err)
+		netWorkStatusCache[phyId] = npuCommon.NPUNetworkLinkDownStatus
 		return npuCommon.NPUNetworkLinkDownStatus
 	}
-	netWorkStatusCache[deviceId] = linkStatus
+	netWorkStatusCache[phyId] = linkStatus
 	return linkStatus
 }
