@@ -78,10 +78,7 @@ class OpticalFaultChecker:
         }
 
     def power_analyze_single_ended(self, info: OpticalModuleInfo, domain_list: List[Domain]) -> List[DiagResult]:
-        abn_rx_power_infos, abn_tx_power_infos = info.get_abnormal_power_infos(
-            self._threshold.TX_POWER_THRESHOLD_CONFIG_DBM,
-            self._threshold.RX_POWER_THRESHOLD_CONFIG_DBM
-        )
+        abn_rx_power_infos, abn_tx_power_infos = info.get_abnormal_power_infos(self._threshold)
         if not abn_rx_power_infos and not abn_tx_power_infos:
             return []
         description, suggest = self._check_single_power_value(bool(abn_rx_power_infos), bool(abn_tx_power_infos))
@@ -111,12 +108,8 @@ class OpticalFaultChecker:
 
     def power_analyze(self, local_info: OpticalModuleInfo, remote_info: OpticalModuleInfo,
                       domain_list: List[Domain]) -> List[DiagResult]:
-        local_abn_rx_power_infos, local_abn_tx_power_infos = local_info.get_abnormal_power_infos(
-            self._threshold.TX_POWER_THRESHOLD_CONFIG_DBM,
-            self._threshold.RX_POWER_THRESHOLD_CONFIG_DBM)
-        remote_abn_rx_power_infos, remote_abn_tx_power_infos = remote_info.get_abnormal_power_infos(
-            self._threshold.TX_POWER_THRESHOLD_CONFIG_DBM,
-            self._threshold.RX_POWER_THRESHOLD_CONFIG_DBM)
+        local_abn_rx_power_infos, local_abn_tx_power_infos = local_info.get_abnormal_power_infos(self._threshold)
+        remote_abn_rx_power_infos, remote_abn_tx_power_infos = remote_info.get_abnormal_power_infos(self._threshold)
         description, suggest = self._check_power_value(bool(local_abn_rx_power_infos), bool(local_abn_tx_power_infos),
                                                        bool(remote_abn_rx_power_infos), bool(remote_abn_tx_power_infos))
         if not description or not suggest:

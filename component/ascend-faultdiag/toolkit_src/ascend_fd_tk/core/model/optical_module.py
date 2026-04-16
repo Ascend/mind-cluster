@@ -20,6 +20,7 @@ from typing import List
 from ascend_fd_tk.core.common.constants import SNR_LANE_DIFF_THRESHOLD
 from ascend_fd_tk.core.common.diag_enum import PowerUnitType
 from ascend_fd_tk.core.common.json_obj import JsonObj
+from ascend_fd_tk.core.config.threshold_config import OpticalModuleThreshold
 from ascend_fd_tk.core.model.threshold import Threshold
 from ascend_fd_tk.utils import helpers
 
@@ -92,10 +93,15 @@ class OpticalModuleInfo(JsonObj):
                 abnormal_bias_list.append(f"Lane{info.lane_id} {desc}")
         return "\n".join(abnormal_bias_list)
 
-    def get_abnormal_power_infos(self, th_tx: Threshold = None, th_rx: Threshold = None):
+    def get_abnormal_power_infos(self, th: OpticalModuleThreshold):
         abnormal_rx_power_list = []
         abnormal_tx_power_list = []
+        th_tx = th.TX_POWER_THRESHOLD_CONFIG_DBM
+        th_rx = th.RX_POWER_THRESHOLD_CONFIG_DBM
         for info in self.lane_power_infos:
+            if info.power_unit_type == PowerUnitType.MW:
+                th_tx = th.TX_POWER_THRESHOLD_CONFIG_MW
+                th_rx = th.RX_POWER_THRESHOLD_CONFIG_MW
             desc_tx = th_tx.check_value_str(info.tx_power)
             if desc_tx:
                 abnormal_tx_power_list.append(f"Lane{info.lane_id} {desc_tx}")

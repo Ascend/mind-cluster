@@ -651,6 +651,11 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                 threshold=threshold_cls.LINK_STATUS_THRESHOLD,
                 display_name="主机侧链路状态"
             ),
+            ThresholdConfig(
+                field_name="host_optical_present",
+                threshold=threshold_cls.OPTICAL_PRESENT_THRESHOLD,
+                display_name="主机侧光模块状态"
+            ),
 
             # 对端交换机光模块Lane功率阈值（dBm）- 复用主机端配置
             ThresholdConfig(

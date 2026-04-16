@@ -203,9 +203,9 @@ class SwiSshFetcher(SshFetcher, SwitchFetcher):
     async def fetch_serdes_dump_info(self, port_snr_list: List[HccsChipPortSnr]) -> List[HccsSerdesDumpInfo]:
         results = []
         cdr_los_pattern = re.compile(r"CDR_LOS = (\d+)")
-        rx_dig_csr119_value_pattern = re.compile(r"RX_DIG_CSR119: (\w+)")
+        rx_dig_csr119_value_pattern = re.compile(r"RX_DIG_CSR119: ?(\w+)")
         for port_snr in port_snr_list:
-            src_cmd = (f'display for info enp s 1 c {port_snr.swi_chip_id} "get port serdes dump-info marco-id'
+            src_cmd = (f'display for info enp s 1 c {port_snr.swi_chip_id} "get port serdes dump-info macro-id'
                        f' {port_snr.port_id} lane-id {port_snr.lane_id} hilink ')
             cdr_cmd = src_cmd + f'{HiLinkType.SERDES_INFO.value}" | no-more | in ^LOS_STATUS.*CDR_LOS'
             ds_cmd = src_cmd + f'{HiLinkType.DS.value}" | no-more | in RX_DIG_CSR119'

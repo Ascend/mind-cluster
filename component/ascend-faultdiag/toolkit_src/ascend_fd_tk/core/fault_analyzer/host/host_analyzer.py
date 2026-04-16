@@ -107,10 +107,7 @@ class HostAnalyzer(Analyzer):
     def _analyze_power(self, domain_list: List[Domain], optical_info: OpticalModuleInfo) -> List[DiagResult]:
         if not optical_info:
             return []
-        abn_rx_power_infos, abn_tx_power_infos = optical_info.get_abnormal_power_infos(
-            self._threshold.TX_POWER_THRESHOLD_CONFIG_MW,
-            self._threshold.RX_POWER_THRESHOLD_CONFIG_MW
-        )
+        abn_rx_power_infos, abn_tx_power_infos = optical_info.get_abnormal_power_infos(self._threshold)
         if not abn_rx_power_infos and not abn_tx_power_infos:
             return []
         abn_power_infos = "\n".join(abn_rx_power_infos + abn_tx_power_infos)

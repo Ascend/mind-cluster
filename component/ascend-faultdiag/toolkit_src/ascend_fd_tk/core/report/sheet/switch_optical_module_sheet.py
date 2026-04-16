@@ -258,10 +258,6 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
 
         # 遍历所有交换机
         for switch_info in self.cluster_info.swis_info.values():
-            # 检查hccs_info是否为空
-            if not switch_info.hccs_info:
-                continue
-
             # 遍历交换机的接口映射
             for interface_mapping in switch_info.interface_mapping:
                 if not interface_mapping.remote_device_interface:

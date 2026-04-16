@@ -46,5 +46,6 @@ class OpticalModuleThreshold:
     # 网络状态阈值（字符串相等判断）
     # 逻辑：只有等于normal_value_alarm的才是正常，其他均为异常
     DUPLEX_THRESHOLD = Threshold(normal_value_alarm="Full", desc="duplex mode", unit="")  # 只有Full是正常的
-    NET_HEALTH_THRESHOLD = Threshold(normal_value_alarm="Good", desc="network health", unit="")  # 只有Good是正常的
+    NET_HEALTH_THRESHOLD = Threshold(normal_value_alarm="Success", desc="network health", unit="")  # 只有Success是正常的
     LINK_STATUS_THRESHOLD = Threshold(normal_value_alarm="Up", desc="link status", unit="")  # 只有Up是正常的
+    OPTICAL_PRESENT_THRESHOLD = Threshold(normal_value_alarm="present", desc="optical module status", unit="")
