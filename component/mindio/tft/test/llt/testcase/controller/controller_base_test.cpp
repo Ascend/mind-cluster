@@ -575,6 +575,18 @@ TEST_F(ControllerBaseTest, controller_get_instance)
     ASSERT_EQ(ctrl, nullptr);
 }
 
+TEST_F(ControllerBaseTest, controller_abnormal_callback)
+{
+    ControllerBaseTest::InitSource();
+    controller1->isNeedToReportResult_.store(true);
+    int32_t ret = controller1->AbnormalCallback();
+    ASSERT_EQ(ret, TTP_RERUN);
+
+    controller1->isPorcessorExit_ = true;
+    ret = controller1->AbnormalCallback();
+    ASSERT_EQ(ret, TTP_STOP_SERVICE);
+}
+
 TEST_F(ControllerBaseTest, controller_dump_callback)
 {
     ControllerBaseTest::InitSource();

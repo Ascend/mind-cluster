@@ -8,12 +8,28 @@
 
 set -e
 
+usage() {
+    echo "Usage: $0 [ -h | --help ] [ -s | --skip ] [ -n | --no_collect ] [ -f | --filter ]"
+    echo
+    echo "Examples:"
+    echo " 1. bash run_ut.sh -h"
+    echo " 2. bash run_ut.sh -s"
+    echo " 3. bash run_ut.sh -f TestBackupFileManager.*"
+    echo " 4. bash run_ut.sh -s -f TestBackupFileManager.Initialize"
+    echo
+    exit 1;
+}
+
 PROJECT_HOME="$( cd "$( dirname "$0" )"/.. && pwd )"
 UT_SRC_PATH="${PROJECT_HOME}/test"
 BUILD_DIR="${PROJECT_HOME}/test/build"
 BIN_DIR="${BUILD_DIR}/bin"
 REPORT_DIR="${PROJECT_HOME}/test/build/report"
 TEST_EXECUTABLE="test_ttp"
+
+SKIP_FLAG=""
+UT_FILTER="*"
+ENABLE_COLLECT="1"
 
 print_info() {
     echo "[INFO] $1"
@@ -67,21 +83,51 @@ fi
 
 cd ${PROJECT_HOME}
 
-bash $PROJECT_HOME/build/build.sh -t debug --ut ON
-if [ 0 != $? ];then
-    print_error "Failed to build ockio!"
-    exit 1
-fi
+# Parse the argument params
+while true; do
+    case "$1" in
+        -s | --skip )
+            SKIP_FLAG="0"
+            shift ;;
+        -n | --no_collect )
+            ENABLE_COLLECT="0"
+            shift ;;
+        -f | --filter )
+            UT_FILTER=$2
+            shift 2
+            ;;
+        -h | --help )
+            usage
+            exit 0
+            ;;
+        * )
+            break;;
+    esac
+done
 
 # 清理函数
 clean() {
-    print_info "Cleaning build directory..."
-    rm -rf "${BUILD_DIR}"
+    if [[ "$ENABLE_COLLECT" == "0" ]]; then
+        return 0
+    fi
+    print_info "Cleaning old report directory..."
     rm -rf "${REPORT_DIR}"
 }
 
 # 编译函数
 build() {
+    if [[ "$SKIP_FLAG" == "0" ]]; then
+        print_info "Skip the build step."
+        return 0
+    fi
+
+    print_info "Building main program with build.sh..."
+    bash $PROJECT_HOME/build/build.sh -t debug --ut ON
+    if [ 0 != $? ];then
+        print_error "Failed to build ockio!"
+        exit 1
+    fi
+
     print_info "Building with CMake..."
     
     # 创建构建目录
@@ -133,9 +179,9 @@ run_tests() {
     
     # 运行测试
     cd "${BIN_DIR}"
-    print_info "Running: ./${TEST_EXECUTABLE} --gtest_output=xml:${REPORT_DIR}/report.xml --gtest_filter=*.*"
+    print_info "Running: ./${TEST_EXECUTABLE} --gtest_output=xml:${REPORT_DIR}/report.xml --gtest_filter=${UT_FILTER}"
     
-    if ! ./${TEST_EXECUTABLE} --gtest_output=xml:"${REPORT_DIR}/report.xml" --gtest_filter=*.*; then
+    if ! ./${TEST_EXECUTABLE} --gtest_output=xml:"${REPORT_DIR}/report.xml" --gtest_filter="${UT_FILTER}"; then
         print_warn "Some tests failed. Check the report for details."
     else
         print_info "All tests passed!"
@@ -144,6 +190,11 @@ run_tests() {
 
 # 生成覆盖率报告
 generate_coverage_report() {
+    if [[ "$ENABLE_COLLECT" == "0" ]]; then
+        print_info "Skip coverage collection."
+        return 0
+    fi
+
     print_info "Generating coverage report..."
     
     # 检查是否安装了 lcov
