@@ -479,7 +479,7 @@ func testWithoutRoCEDevAscend910A5(t *testing.T) {
 		ParamOption = Option{RealCardType: api.Ascend910A5}
 		defer func() { ParamOption = Option{} }()
 		result := WithoutRoCEDev()
-		convey.So(result, convey.ShouldBeFalse)
+		convey.So(result, convey.ShouldBeTrue)
 	})
 }
 
