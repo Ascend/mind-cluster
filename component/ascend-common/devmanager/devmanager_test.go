@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"sync"
 	"testing"
 	"time"
 
@@ -51,21 +50,53 @@ const (
 )
 
 var (
-	mockDcmiVersion           = "24.0.rc2"
 	mockCardNum         int32 = 16
 	mockDeviceNumInCard int32 = 1
 	mockCardList              = []int32{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
 	mockProductType           = ""
 	mockErr                   = errors.New("test error")
-	mockChipInfo              = &common.ChipInfo{
+	mockLogicId               = int32(0)
+	mock910ChipInfo           = &common.ChipInfo{
 		Type:    "Ascend",
-		Name:    "Ascend910 7591",
+		Name:    "910_7591",
 		Version: "V1",
 	}
 	mockBoardInfo = common.BoardInfo{
 		BoardId: 0x28,
 	}
+	mockMainBoardId = uint32(0x01)
 )
+
+var (
+	mockDeviceNum   int32 = 8
+	mockDeviceList        = []int32{0, 1, 2, 3, 4, 5, 6, 7}
+	mock950ChipInfo       = &common.ChipInfo{
+		Type:    "Ascend",
+		Name:    "Ascend950PR",
+		Version: "V1",
+	}
+	mock950BoardInfo = common.BoardInfo{
+		BoardId: 0x1c,
+	}
+	mock950MainBoardId = uint32(0x01)
+)
+
+var testAutoInitWhenDcmiMap = map[string]interface{}{
+	"auto init success":                              testAutoInitSuccessWithDcmi,
+	"auto init failed, get card list failed":         testGetCardListFailedWithDcmi,
+	"auto init failed, get chip info failed":         testGetChipInfoFailedWithDcmi,
+	"auto init failed, get device board info failed": testGetDeviceBoardInfoFailedWithDcmi,
+	"auto init failed, get main board info failed":   testGetMainBoardInfoFailedWithDcmi,
+	"auto init success, get empty all product ype":   testGetDeviceLogicIDFailedWithDcmi,
+}
+
+var testAutoInitWhenDcmiV2Map = map[string]interface{}{
+	"auto init success":                              testAutoInitSuccessWithDcmiV2,
+	"auto init failed, get device list failed":       testGetDeviceListFailedWithDcmiV2,
+	"auto init failed, get chip info failed":         testGetChipInfoFailedWithDcmiV2,
+	"auto init failed, get device board info failed": testGetDeviceBoardInfoFailedWithDcmiV2,
+	"auto init failed, get main board info failed":   testGetMainBoardInfoFailedWithDcmiV2,
+}
 
 func TestDeviceManagerGetDeviceAllErrorCodeWithTimeOut(t *testing.T) {
 	testCases := []struct {
@@ -162,7 +193,7 @@ func doTestGetDeviceAllErrorCodeWithTimeOut(t *testing.T, testCases []struct {
 
 // TestGetCardIdAndDeviceId test the getCardIdAndDeviceId function
 func TestGetCardIdAndDeviceId(t *testing.T) {
-
+	idCache.Clear()
 	var (
 		cardId, deviceId = int32(0), int32(0)
 		err              error
@@ -251,7 +282,7 @@ func buildDcGetDeviceUtilizationRateV2TestCases() []dcGetDeviceUtilizationRateV2
 						func(*DeviceManager, int32) (int32, int32, error) {
 							return testCardID0, testDeviceID0, nil
 						}).
-					ApplyMethodReturn(dm.DcMgr, "GetDeviceUtilizationRateV2",
+					ApplyMethodReturn(dm.DcMgr, "DcGetDeviceUtilizationRateV2",
 						dcmi.BuildErrNpuMultiUtilizationInfo(), errors.New(dcmiFailedMsg))
 			},
 			expectError: true},
@@ -263,7 +294,7 @@ func buildDcGetDeviceUtilizationRateV2TestCases() []dcGetDeviceUtilizationRateV2
 						func(*DeviceManager, int32) (int32, int32, error) {
 							return testCardID0, testDeviceID0, nil
 						}).
-					ApplyMethodReturn(dm.DcMgr, "GetDeviceUtilizationRateV2",
+					ApplyMethodReturn(dm.DcMgr, "DcGetDeviceUtilizationRateV2",
 						common.DcmiMultiUtilizationInfo{
 							AicUtil:    testAicUtil,
 							AivUtil:    testAivUtil,
@@ -303,74 +334,180 @@ func TestDcGetDeviceUtilizationRateV2(t *testing.T) {
 
 // TestAutoInit test auto init
 func TestAutoInit(t *testing.T) {
-	p := gomonkey.ApplyMethodReturn(&dcmi.DcManager{}, "DcInit", nil).
-		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDcmiVersion", mockDcmiVersion, nil).
-		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceList", mockCardNum, mockCardList, nil).
-		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceNumInCard", mockDeviceNumInCard, nil).
-		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetChipInfo", mockChipInfo, nil).
-		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceBoardInfo", mockBoardInfo, nil).
-		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetProductType", mockProductType, nil)
-	defer p.Reset()
-
-	convey.Convey("auto init success", t, testAutoInitSuccess)
-	convey.Convey("auto init failed, get card list failed", t, testGetCardListFailed)
-	convey.Convey("auto init failed, get chip info failed", t, testGetChipInfoFailed)
-	convey.Convey("auto init failed, get device board info failed", t, testDeviceBoardInfoFailed)
+	convey.Convey("auto init when dcmi version is dcmi", t, testAutoInitWhenDcmi)
+	convey.Convey("auto init when dcmi version is dcmiv2", t, testAutoInitWhenDcmiV2)
 }
 
-func testAutoInitSuccess() {
+func testAutoInitWhenDcmi() {
+	p := getDcmiFullPatches()
+	defer p.Reset()
+	for tip, testCase := range testAutoInitWhenDcmiMap {
+		autoInitSetup()
+		convey.Convey(tip, testCase)
+	}
+}
+
+func autoInitSetup() {
+	deviceCommonSetManagerList = []DeviceCommonSetInterface{
+		&deviceCommonInitManager{
+			DeviceManager: DeviceManager{
+				DcMgr:       &dcmi.DcManager{},
+				dcmiVersion: DcmiApiV1,
+			},
+		},
+		&deviceCommonInitManagerV2{
+			DeviceManagerV2: DeviceManagerV2{
+				DcMgr:       &dcmi.DcV2Manager{},
+				dcmiVersion: DcmiApiV2,
+			},
+		},
+	}
+}
+
+func testAutoInitWhenDcmiV2() {
+	p := getDcmiV2FullPatches()
+	defer p.Reset()
+	for tip, testCase := range testAutoInitWhenDcmiV2Map {
+		autoInitSetup()
+		convey.Convey(tip, testCase)
+	}
+}
+
+func getDcmiFullPatches() *gomonkey.Patches {
+	p := gomonkey.ApplyMethodReturn(&dcmi.DcManager{}, "DcInit", nil).
+		ApplyMethodReturn(&dcmi.DcManager{}, "DcShutDown", nil).
+		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetCardList", mockCardNum, mockCardList, nil).
+		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceNumInCard", mockDeviceNumInCard, nil).
+		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetChipInfo", mock910ChipInfo, nil).
+		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceBoardInfo", mockBoardInfo, nil).
+		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceMainBoardInfo", mockMainBoardId, nil).
+		ApplyMethod(reflect.TypeOf(&dcmi.DcManager{}), "DcGetCardIDDeviceID", func(_ *dcmi.DcManager, logicId int32) (int32, int32, error) {
+			return logicId, 0, nil
+		}).
+		ApplyMethod(reflect.TypeOf(&dcmi.DcManager{}), "DcGetDeviceLogicID", func(_ *dcmi.DcManager, cardId, _ int32) (int32, error) {
+			return cardId, nil
+		}).
+		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetProductType", mockProductType, nil)
+	return p
+}
+
+func getDcmiV2FullPatches() *gomonkey.Patches {
+	p := gomonkey.ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcInit", nil).
+		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcShutDown", nil).
+		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetDeviceList", mockDeviceNum, mockDeviceList, nil).
+		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetAllDeviceCount", mockDeviceNum, nil).
+		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetChipInfo", mock950ChipInfo, nil).
+		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetDeviceBoardInfo", mock950BoardInfo, nil).
+		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetDeviceMainBoardInfo", mock950MainBoardId, nil)
+	return p
+}
+
+func testAutoInitSuccessWithDcmi() {
 	devm, err := AutoInit("", api.DefaultDeviceResetTimeout)
 	devM, ok := devm.(*DeviceManager)
 	convey.So(ok, convey.ShouldBeTrue)
 	convey.So(err, convey.ShouldBeNil)
-	convey.So(devM.DevType, convey.ShouldEqual, api.Ascend910A5)
-	convey.So(devM.dcmiVersion, convey.ShouldEqual, mockDcmiVersion)
+	convey.So(devM.DevType, convey.ShouldEqual, api.Ascend910)
+	convey.So(devM.dcmiVersion, convey.ShouldEqual, DcmiApiV1)
 	convey.So(devM.isTrainingCard, convey.ShouldBeTrue)
 	convey.So(devM.ProductTypes, convey.ShouldResemble, []string{mockProductType})
 	convey.So(devM.DcMgr, convey.ShouldResemble, &A910Manager{})
 }
 
-func testGetCardListFailed() {
-	patch := gomonkey.ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceList", mockCardNum, mockCardList, mockErr)
-	defer patch.Reset()
+func testAutoInitSuccessWithDcmiV2() {
+	devm, err := AutoInit("", api.DefaultDeviceResetTimeout)
+	devM, ok := devm.(*DeviceManagerV2)
+	convey.So(ok, convey.ShouldBeTrue)
+	convey.So(err, convey.ShouldBeNil)
+	convey.So(devM.DevType, convey.ShouldEqual, api.Ascend910A5)
+	convey.So(devM.dcmiVersion, convey.ShouldEqual, DcmiApiV2)
+	convey.So(devM.isTrainingCard, convey.ShouldBeTrue)
+	convey.So(devM.ProductTypes, convey.ShouldResemble, []string{})
+	convey.So(devM.DcMgr, convey.ShouldResemble, &A950Manager{})
+}
 
-	expectErr := errors.New("auto init failed, err: get card list failed for init")
+func testGetCardListFailedWithDcmi() {
+	patch := gomonkey.ApplyMethodReturn(&dcmi.DcManager{}, "DcGetCardList", mockCardNum, mockCardList, mockErr)
+	defer patch.Reset()
+	expectErr := errors.New("auto init failed when get device info, err: get card list failed for init")
 	errDevM, err := AutoInit("", api.DefaultDeviceResetTimeout)
 	convey.So(err, convey.ShouldResemble, expectErr)
 	convey.So(errDevM, convey.ShouldBeNil)
 }
 
-func testGetChipInfoFailed() {
-	patch := gomonkey.ApplyMethodReturn(&dcmi.DcManager{}, "DcGetChipInfo", mockChipInfo, mockErr)
+func testGetDeviceListFailedWithDcmiV2() {
+	patch := gomonkey.ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetDeviceList", mockDeviceNum, mockDeviceList, mockErr)
 	defer patch.Reset()
-
-	expectErr := errors.New("auto init failed, err: cannot get valid chip info")
+	expectErr := errors.New("auto init failed when get device info, err: get device list failed for init")
 	errDevM, err := AutoInit("", api.DefaultDeviceResetTimeout)
 	convey.So(err, convey.ShouldResemble, expectErr)
 	convey.So(errDevM, convey.ShouldBeNil)
 }
 
-func testDeviceBoardInfoFailed() {
+func testGetChipInfoFailedWithDcmi() {
+	patch := gomonkey.ApplyMethodReturn(&dcmi.DcManager{}, "DcGetChipInfo", mock910ChipInfo, mockErr)
+	defer patch.Reset()
+
+	expectErr := errors.New("auto init failed when get device info, err: cannot get valid chip info")
+	errDevM, err := AutoInit("", api.DefaultDeviceResetTimeout)
+	convey.So(err, convey.ShouldResemble, expectErr)
+	convey.So(errDevM, convey.ShouldBeNil)
+}
+
+func testGetChipInfoFailedWithDcmiV2() {
+	patch := gomonkey.ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetChipInfo", mock950ChipInfo, mockErr)
+	defer patch.Reset()
+
+	expectErr := errors.New("auto init failed when get device info, err: cannot get valid chip info")
+	errDevM, err := AutoInit("", api.DefaultDeviceResetTimeout)
+	convey.So(err, convey.ShouldResemble, expectErr)
+	convey.So(errDevM, convey.ShouldBeNil)
+}
+
+func testGetDeviceBoardInfoFailedWithDcmi() {
 	patch := gomonkey.ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceBoardInfo", mockBoardInfo, mockErr)
 	defer patch.Reset()
-
-	expectErr := errors.New("auto init failed, err: cannot get valid board info")
+	expectErr := errors.New("auto init failed when get device info, err: cannot get valid board info")
 	errDevM, err := AutoInit("", api.DefaultDeviceResetTimeout)
 	convey.So(err, convey.ShouldResemble, expectErr)
 	convey.So(errDevM, convey.ShouldBeNil)
 }
 
-// TestDeviceManagerInitError test device manager init error (GetDeviceManager)
-func TestDeviceManagerInitError(t *testing.T) {
-	patch := gomonkey.ApplyMethodReturn(&dcmi.DcManager{}, "DcInit", errors.New("init error"))
+func testGetDeviceBoardInfoFailedWithDcmiV2() {
+	patch := gomonkey.ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetDeviceBoardInfo", mock950BoardInfo, mockErr)
 	defer patch.Reset()
-	devManagerOnce = sync.Once{} // reset singleton
-	devManager = nil
-	manager, err := GetDeviceManager(testTime)
-	convey.Convey("GetDeviceManager returns error when DcInit fails", t, func() {
-		convey.So(manager, convey.ShouldBeNil)
-		convey.So(err, convey.ShouldNotBeNil)
-	})
+	expectErr := errors.New("auto init failed when get device info, err: cannot get valid board info")
+	errDevM, err := AutoInit("", api.DefaultDeviceResetTimeout)
+	convey.So(err, convey.ShouldResemble, expectErr)
+	convey.So(errDevM, convey.ShouldBeNil)
+}
+
+func testGetMainBoardInfoFailedWithDcmi() {
+	patch := gomonkey.ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceMainBoardInfo", mockMainBoardId, mockErr)
+	defer patch.Reset()
+	DevM, err := AutoInit("", api.DefaultDeviceResetTimeout)
+	convey.So(DevM, convey.ShouldNotBeNil)
+	convey.So(DevM.GetMainBoardId(), convey.ShouldEqual, 0)
+	convey.So(err, convey.ShouldBeNil)
+}
+
+func testGetMainBoardInfoFailedWithDcmiV2() {
+	patch := gomonkey.ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetDeviceMainBoardInfo", mockMainBoardId, mockErr)
+	defer patch.Reset()
+	DevM, err := AutoInit("", api.DefaultDeviceResetTimeout)
+	convey.So(DevM, convey.ShouldNotBeNil)
+	convey.So(DevM.GetMainBoardId(), convey.ShouldEqual, 0)
+	convey.So(err, convey.ShouldBeNil)
+}
+
+func testGetDeviceLogicIDFailedWithDcmi() {
+	patch := gomonkey.ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceLogicID", mockLogicID, mockErr)
+	defer patch.Reset()
+	DevM, err := AutoInit("", api.DefaultDeviceResetTimeout)
+	convey.So(DevM, convey.ShouldNotBeNil)
+	allProductType, _ := DevM.GetAllProductType()
+	convey.So(allProductType, convey.ShouldResemble, []string{})
+	convey.So(err, convey.ShouldBeNil)
 }
 
 // TestDeviceManagerGetDeviceHealthErrorPath test GetDeviceHealth

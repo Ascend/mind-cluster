@@ -19,6 +19,17 @@ import (
 // check if the struct DeviceManagerV2 implements the DeviceInterface interface not not in build stage
 var _ DeviceInterface = &DeviceManagerV2{}
 
+const (
+	// DcmiApiV1 for the dcmi_xxx api
+	errNotSupportedInDcmiV2 = "is not supported in dcmiv2"
+)
+
+var (
+	// isContainAtlas300IDuo for reset scene
+	isContainAtlas300IDuo = false
+	devManagerV2Once      sync.Once
+)
+
 // DeviceManagerV2 common device manager by dcmiv2 api
 type DeviceManagerV2 struct {
 	// DcMgr for common dev manager
@@ -37,215 +48,62 @@ type DeviceManagerV2 struct {
 	mainBoardId uint32
 }
 
-const (
-	// SoNotFound so file not found error, which should be kept same with cgo definition
-	SoNotFound = "-99999"
-	// FunctionNotFound function symbol not found error, which should be kept same with cgo definition
-	FunctionNotFound = "-99998"
-	// ApiNotSupported function api not supported by libdcmi.so error, which should be kept same with libdcmi.so definition
-	ApiNotSupported = "-8255"
-	// DcmiApiV1 for the dcmi_xxx api
-	DcmiApiV1 = "dcmi"
-	// DcmiApiV2 for the dcmiv2_xxx api
-	DcmiApiV2               = "dcmiv2"
-	errNotSupportedInDcmiV2 = "is not supported in dcmiv2"
-)
+type deviceCommonInitManagerV2 struct {
+	DeviceManagerV2
+}
 
-var (
-	// for dcmiv2
-	devManagerV2     *DeviceManagerV2 = nil
-	devManagerV2Once sync.Once
-	dcmiApiVersion   = ""
-	// isContainAtlas300IDuo for reset scene
-	isContainAtlas300IDuo = false
-)
-
-// GetDcmiApiVersionFromLib get dcmi api version from libdcmi.so lib
-func GetDcmiApiVersionFromLib() string {
-	if len(dcmiApiVersion) != 0 {
-		return dcmiApiVersion
-	}
-	ver, err := DetectDcmiApiVersion()
+// SetValidMainBoardInfo get valid main board info
+func (d *deviceCommonInitManagerV2) SetValidMainBoardInfo() error {
+	// get device list
+	deviceNum, deviceList, err := d.DcMgr.DcGetDeviceList()
 	if err != nil {
-		hwlog.RunLog.Warnf("detect dcmi api version failed, err: %v", err)
-		// ignore the error, continue work flow
+		hwlog.RunLog.Error(err)
+		return fmt.Errorf(common.ErrMsgInitCardListFailed)
 	}
-	hwlog.RunLog.Infof("dcmi api version is: %s", ver)
-	dcmiApiVersion = ver
-	return dcmiApiVersion
-}
-
-// DetectDcmiApiVersion for detect dcmi dynamic library interface api version, such as dcmi_xxx or dcmiv2_xxx
-func DetectDcmiApiVersion() (string, error) {
-	mgrv1 := DeviceManager{
-		DcMgr: &dcmi.DcManager{},
+	if deviceNum == 0 {
+		return fmt.Errorf(common.ErrMsgGetBoardInfoFailed)
 	}
-	var err error
-	if err = mgrv1.Init(); err == nil {
-		if err := mgrv1.ShutDown(); err != nil {
-			hwlog.RunLog.Warnf("dcmi shutdown failed, err: %v", err)
-			// ignore error
-		}
-		return DcmiApiV1, nil
-	}
-
-	if !strings.Contains(err.Error(), SoNotFound) && strings.Contains(err.Error(),
-		FunctionNotFound) && !strings.Contains(err.Error(), ApiNotSupported) {
-		hwlog.RunLog.Errorf("dcmi_init failed, err: %v", err)
-		return "", err
-	}
-
-	hwlog.RunLog.Warnf("dcmi_init failed, will try dcmiv2_init, msg: %v", err)
-	if err := mgrv1.ShutDown(); err != nil {
-		hwlog.RunLog.Warnf("dcmi shutdown failed, err: %v", err)
-		// ignore error
-	}
-
-	mgrv2 := DeviceManagerV2{
-		DcMgr: &dcmi.DcV2Manager{},
-	}
-	if err = mgrv2.Init(); err == nil {
-		if err := mgrv2.ShutDown(); err != nil {
-			hwlog.RunLog.Warnf("dcmiv2 shutdown failed, err: %v", err)
-			// ignore error
-		}
-		return DcmiApiV2, nil
-	}
-	if err := mgrv2.ShutDown(); err != nil {
-		hwlog.RunLog.Warnf("dcmiv2 shutdown failed, err: %v", err)
-		// ignore error
-	}
-	hwlog.RunLog.Errorf("dcmiv2_init failed, err: %v", err)
-	return DcmiApiV1, err
-}
-
-// DeviceManagerInit initializes the DeviceManagerV2 singleton instance
-func DeviceManagerInit(dType string, resetTimeout int) (DeviceInterface, error) {
-	devManagerV2Once.Do(func() {
-		mgr := DeviceManagerV2{
-			DcMgr: &dcmi.DcV2Manager{},
-		}
-		if !initDeviceManager(&mgr) {
-			return
-		}
-		if !retryGetDeviceList(&mgr, resetTimeout) {
-			return
-		}
-		if !setupDeviceInfo(&mgr, dType) {
-			return
-		}
-		devManagerV2 = &mgr
-	})
-	if devManagerV2 == nil {
-		return nil, errors.New("device Manager V2 is nil, may encounter an exception during initialization. " +
-			"You can check the system log to confirm")
-	}
-	return devManagerV2, nil
-}
-
-func initDeviceManager(mgr *DeviceManagerV2) bool {
-	if mgr == nil {
-		hwlog.RunLog.Error("init device manager v2 failed, mgr is empty")
-		return false
-	}
-	if err := mgr.Init(); err != nil {
-		hwlog.RunLog.Errorf("init device manager v2 failed, err: %s", err)
-		return false
-	}
-	hwlog.RunLog.Info("init device manager v2 success")
-	dcmiVer, err := mgr.DcMgr.DcGetDcmiVersion()
-	if err != nil {
-		hwlog.RunLog.Warnf("deviceManager get dcmi version failed, err: %v", err)
-		// will continue the whole init workflow
-	}
-	hwlog.RunLog.Infof("the dcmi version is %s", dcmiVer)
-	mgr.dcmiVersion = dcmiVer
-	return true
-}
-
-func retryGetDeviceList(mgr *DeviceManagerV2, resetTimeout int) bool {
-	if mgr == nil {
-		hwlog.RunLog.Error("retry get device list failed, mgr is empty")
-		return false
-	}
-	var retryDelay = defaultRetryDelay
-	hwlog.RunLog.Infof("get device list from dcmi reset timeout is %d", resetTimeout)
-	for currentTime, retryCount := 0, 0; currentTime <= resetTimeout; currentTime += retryDelay {
-		_, devList, err1 := mgr.GetDeviceList()
-		devNum, err2 := mgr.GetAllDeviceCount()
-		if err1 == nil && err2 == nil && int(devNum) == len(devList) {
-			hwlog.RunLog.Infof("deviceManager get devList is %v, devList length equal to devNum: %v", devList, devNum)
-			break
-		}
-		if diffTime := float64(resetTimeout - currentTime); diffTime > 0 {
-			retryDelay = int(math.Min(float64(defaultRetryDelay), diffTime))
-		}
-		retryCount++
-		hwlog.RunLog.Warnf("get devNum = %d, devList = %v at %d times, and wait to try again", devNum, devList, retryCount)
-		if err1 != nil {
-			hwlog.RunLog.Warnf("get device list failed at %d times, err: %v", retryCount, err1)
-		}
-		if err2 != nil {
-			hwlog.RunLog.Warnf("get all device count failed at %d times, err: %v", retryCount, err2)
-		}
-		if currentTime+retryDelay <= resetTimeout {
-			if err := mgr.ShutDown(); err != nil {
-				hwlog.RunLog.Errorf("deviceManager shut down failed, err: %v", err)
-				return false
-			}
-			time.Sleep(time.Second * time.Duration(retryDelay))
+	for _, deviceID := range deviceList {
+		mainBoardId, err := d.DcMgr.DcGetDeviceMainBoardInfo(deviceID)
+		if err != nil {
+			hwlog.RunLog.Debug(err)
 			continue
 		}
-		if int(devNum) != len(devList) {
-			hwlog.RunLog.Warnf("deviceManager get devList is %v, but devNum is %d, "+
-				"please check whether the real number of npu matches the devList", devList, devNum)
+		if !common.IsValidMainBoardInfo(mainBoardId) {
+			hwlog.RunLog.Warnf("invalid mainBoardId info by deviceID(%d), error: %v", deviceID, err)
+			continue
 		}
+		d.mainBoardId = mainBoardId
+		return nil
 	}
-	return true
+	return errors.New("cannot get main board id")
 }
 
-func setupDeviceInfo(mgr *DeviceManagerV2, dType string) bool {
-	if mgr == nil {
-		hwlog.RunLog.Error("retry get device list failed, mgr is empty")
-		return false
+// SetDcManger set DcManager
+func (d *deviceCommonInitManagerV2) SetDcManger(dcMgr interface{}) error {
+	dcMgrV2, ok := dcMgr.(dcmi.DcV2DriverInterface)
+	if !ok {
+		return errors.New(fmt.Sprintf("DcManger type is %T, need dcmi.DcV2DriverInterface", dcMgr))
 	}
-	chipInfo, err := mgr.GetValidChipInfo()
-	if err != nil {
-		hwlog.RunLog.Error(err)
-		return false
-	}
-	boardInfo, err := mgr.GetValidBoardInfo()
-	if err != nil {
-		hwlog.RunLog.Error(err)
-		return false
-	}
-	_, err = mgr.GetValidMainBoardInfo()
-	if err != nil {
-		hwlog.RunLog.Warn(err)
-	}
-	devType := common.GetDevType(chipInfo.Name, boardInfo.BoardId)
-	switch devType {
-	case api.Ascend910A5:
-	default:
-		hwlog.RunLog.Errorf("unsupport device type (%s)", devType)
-		return false
-	}
-	hwlog.RunLog.Infof("chipName: %v, devType: %v", chipInfo.Name, utils.MaskDevType(devType))
-	if dType != "" && devType != dType {
-		hwlog.RunLog.Errorf("the value of dType(%s) is inconsistent with the actual chip type(%s)", dType, devType)
-		return false
-	}
-	mgr.DevType = devType
-	if err = mgr.SetIsTrainingCard(); err != nil {
-		hwlog.RunLog.Errorf("auto recognize training card failed, err: %s", err)
-	}
-	pTypes, err := mgr.GetAllProductType()
-	if err != nil {
-		hwlog.RunLog.Debugf("auto init product types failed, err: %s", err)
-		// ignore the error, which does not matter
-	}
-	mgr.ProductTypes = pTypes
-	return true
+	d.DcMgr = dcMgrV2
+	return nil
+}
+
+// SetDevType set device type
+func (d *deviceCommonInitManagerV2) SetDevType(devType string) {
+	d.DevType = devType
+}
+
+// getDcManager get DcManager
+func (d *deviceCommonInitManagerV2) GetDcManager() DeviceInterface {
+	return &d.DeviceManagerV2
+}
+
+// SetAllProductType get all product type
+func (d *deviceCommonInitManagerV2) SetAllProductType() error {
+	hwlog.RunLog.Debugf("SetAllProductType %s", errNotSupportedInDcmiV2)
+	d.ProductTypes = []string{}
+	return nil
 }
 
 // Init load symbol and initialize dcmi
@@ -273,6 +131,53 @@ func (d *DeviceManagerV2) GetBrotherCardID(logicID int32) (int32, error) {
 	err := fmt.Errorf("get brother card id by logicID(%d) %s", logicID, errNotSupportedInDcmiV2)
 	hwlog.RunLog.Error(err)
 	return common.RetError, err
+}
+
+// WaitDeviceOnline wait device online until reset timeout, retry per defaultRetryDelay
+func (d *DeviceManagerV2) WaitDeviceOnline(resetTimeout int) {
+	if d == nil {
+		hwlog.RunLog.Error("wait device online failed, mgrV2 is empty")
+		return
+	}
+	devManagerV2Once.Do(func() {
+		var retryDelay = defaultRetryDelay
+		hwlog.RunLog.Infof("get device list from dcmiv2 reset timeout is %d", resetTimeout)
+		for currentTime, retryCount := 0, 0; currentTime <= resetTimeout; currentTime += retryDelay {
+			if err := d.Init(); err != nil {
+				hwlog.RunLog.Errorf("DeviceManagerV2 init failed, prepare dcmi failed, err: %v", err)
+				return
+			}
+			_, devList, err1 := d.GetDeviceList()
+			devNum, err2 := d.GetAllDeviceCount()
+			if err1 == nil && err2 == nil && int(devNum) == len(devList) {
+				hwlog.RunLog.Infof("DeviceManagerV2 get devList is %v, devList length equal to devNum: %v", devList, devNum)
+				break
+			}
+			if diffTime := float64(resetTimeout - currentTime); diffTime > 0 {
+				retryDelay = int(math.Min(float64(defaultRetryDelay), diffTime))
+			}
+			retryCount++
+			hwlog.RunLog.Warnf("get devNum = %d, devList = %v at %d times, and wait to try again", devNum, devList, retryCount)
+			if err1 != nil {
+				hwlog.RunLog.Warnf("get device list failed at %d times, err: %v", retryCount, err1)
+			}
+			if err2 != nil {
+				hwlog.RunLog.Warnf("get all device count failed at %d times, err: %v", retryCount, err2)
+			}
+			if currentTime+retryDelay <= resetTimeout {
+				if err := d.ShutDown(); err != nil {
+					hwlog.RunLog.Errorf("DeviceManagerV2 shut down failed, err: %v", err)
+					return
+				}
+				time.Sleep(time.Second * time.Duration(retryDelay))
+				continue
+			}
+			if int(devNum) != len(devList) {
+				hwlog.RunLog.Warnf("DeviceManagerV2 get devList is %v, but devNum is %d, "+
+					"please check whether the real number of npu matches the devList", devList, devNum)
+			}
+		}
+	})
 }
 
 // PreResetSoc pre reset soc
@@ -334,6 +239,32 @@ func (d *DeviceManagerV2) GetMainBoardId() uint32 {
 	return d.mainBoardId
 }
 
+// GetValidChipInfo get valid chip info
+func (d *DeviceManagerV2) GetValidChipInfo() (common.ChipInfo, error) {
+	devNum, devList, err := d.DcMgr.DcGetDeviceList()
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return common.ChipInfo{}, fmt.Errorf(common.ErrMsgInitDeviceListFailed)
+	}
+	if devNum == 0 {
+		return common.ChipInfo{}, fmt.Errorf("get chip info failed, no device found")
+	}
+	for _, devId := range devList {
+		chipInfo, err := d.DcMgr.DcGetChipInfo(devId)
+		if err != nil {
+			hwlog.RunLog.Debugf("get chip info failed by deviceId(%d), error: %v", devId, err)
+			continue
+		}
+		if !common.IsValidChipInfo(chipInfo) {
+			hwlog.RunLog.Debugf("invalid chip info by deviceID(%d), error: %v", devId, err)
+			continue
+		}
+		return *chipInfo, nil
+	}
+
+	return common.ChipInfo{}, errors.New("cannot get valid chip info")
+}
+
 // GetValidMainBoardInfo get valid main board info
 func (d *DeviceManagerV2) GetValidMainBoardInfo() (uint32, error) {
 	// get device list
@@ -359,33 +290,6 @@ func (d *DeviceManagerV2) GetValidMainBoardInfo() (uint32, error) {
 		return mainBoardId, nil
 	}
 	return 0, errors.New("cannot get main board id")
-}
-
-// GetValidChipInfo get valid chip info
-func (d *DeviceManagerV2) GetValidChipInfo() (common.ChipInfo, error) {
-	devNum, devList, err := d.DcMgr.DcGetDeviceList()
-	if err != nil {
-		hwlog.RunLog.Error(err)
-		return common.ChipInfo{}, fmt.Errorf(common.ErrMsgInitDeviceListFailed)
-	}
-
-	if devNum == 0 {
-		return common.ChipInfo{}, fmt.Errorf("get chip info failed, no device found")
-	}
-	for _, devId := range devList {
-		chipInfo, err := d.DcMgr.DcGetChipInfo(devId)
-		if err != nil {
-			hwlog.RunLog.Debugf("get chip info failed by deviceId(%d), error: %v", devId, err)
-			continue
-		}
-		if !common.IsValidChipInfo(chipInfo) {
-			hwlog.RunLog.Debugf("invalid chip info by deviceID(%d), error: %v", devId, err)
-			continue
-		}
-		return *chipInfo, nil
-	}
-
-	return common.ChipInfo{}, errors.New("cannot get valid chip info")
 }
 
 // GetValidBoardInfo get valid board info

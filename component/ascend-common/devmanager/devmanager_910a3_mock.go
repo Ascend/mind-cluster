@@ -26,6 +26,11 @@ type DeviceManager910A3Mock struct {
 	DeviceManagerMock
 }
 
+// WaitDeviceOnline wait device online until reset timeout, retry per defaultRetryDelay
+func (d *DeviceManager910A3Mock) WaitDeviceOnline(resetTimeout int) {
+
+}
+
 // GetDevType return mock type
 func (d *DeviceManager910A3Mock) GetDevType() string {
 	return api.Ascend910A3

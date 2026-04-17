@@ -29,6 +29,11 @@ type DeviceManagerMock struct {
 	DevType string // Add this field
 }
 
+// WaitDeviceOnline wait device online until reset timeout, retry per defaultRetryDelay
+func (d *DeviceManagerMock) WaitDeviceOnline(resetTimeout int) {
+
+}
+
 // GetValidBoardInfo find a valid board info from all devices
 func (d *DeviceManagerMock) GetValidBoardInfo() (common.BoardInfo, error) {
 	return common.BoardInfo{}, nil
@@ -200,7 +205,7 @@ func (d *DeviceManagerMock) GetDeviceIPAddress(logicID, ipType int32) (string, e
 
 // CreateVirtualDevice create virtual device
 func (d *DeviceManagerMock) CreateVirtualDevice(logicID int32, vDevInfo common.CgoCreateVDevRes) (common.
-	CgoCreateVDevOut, error) {
+CgoCreateVDevOut, error) {
 	return common.CgoCreateVDevOut{}, nil
 }
 

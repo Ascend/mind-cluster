@@ -36,10 +36,6 @@ import (
 	_ "nodeD/pkg/testtool"
 )
 
-func patchGetDeviceManager(m *devmanager.DeviceManager, err error) *gomonkey.Patches {
-	return gomonkey.ApplyFuncReturn(devmanager.GetDeviceManager, m, err)
-}
-
 func patchGetDeviceManagerByAutoInit(m *devmanager.DeviceManager, err error) *gomonkey.Patches {
 	return gomonkey.ApplyFunc(devmanager.AutoInit, func(dType string, resetTimeout int) (devmanager.DeviceInterface, error) {
 		return m, err

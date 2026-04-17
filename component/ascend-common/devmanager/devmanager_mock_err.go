@@ -31,6 +31,11 @@ var _ DeviceInterface = &DeviceManagerMockErr{}
 type DeviceManagerMockErr struct {
 }
 
+// WaitDeviceOnline wait device online until reset timeout, retry per defaultRetryDelay
+func (d *DeviceManagerMockErr) WaitDeviceOnline(resetTimeout int) {
+
+}
+
 // GetValidBoardInfo find a valid board info from all devices
 func (d *DeviceManagerMockErr) GetValidBoardInfo() (common.BoardInfo, error) {
 	return common.BoardInfo{}, errors.New("get valid board info failed")

@@ -42,7 +42,7 @@ func TestBuildHccnErr(t *testing.T) {
 
 	t.Run("nil error", func(t *testing.T) {
 		err := buildHccnErr(0, "", nil)
-		if !strings.Contains(err.Error(), "error is :nil") {
+		if !strings.Contains(err.Error(), "error is :<nil>") {
 			t.Error("should handle nil error")
 		}
 	})

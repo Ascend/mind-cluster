@@ -990,7 +990,7 @@ func (d *DcV2Manager) DcGetDeviceVDevResource(logicID int32, vDevID uint32) (com
 // DcGetDeviceTotalResource get device total resource info
 func (d *DcV2Manager) DcGetDeviceTotalResource(logicID int32) (common.CgoSocTotalResource, error) {
 	if !common.IsValidLogicIDOrPhyID(logicID) {
-		return common.CgoSocTotalResource{}, fmt.Errorf("logicID(%d) or deviceID(%d) is invalid", logicID)
+		return common.CgoSocTotalResource{}, fmt.Errorf("deviceID(%d) is invalid", logicID)
 	}
 	var cMainCmd = C.enum_dcmi_main_cmd(MainCmdVDevMng)
 	subCmd := VmngSubCmdGetTotalResource
