@@ -27,12 +27,15 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	"taskd/common/constant"
 )
+
+var PreExiting atomic.Bool
 
 // GlobalRankId is the global rank id pass in by python api
 var GlobalRankId int
@@ -341,6 +344,11 @@ func ManageSaveProfiling(ctx context.Context) {
 		default:
 			if err := SaveProfilingDataIntoFile(GlobalRankId); err != nil {
 				hwlog.RunLog.Errorf("failed to save profiling, error: %v", err)
+			}
+			if PreExiting.Load() {
+				hwlog.RunLog.Info("worker process prepare exit, " +
+					"don't allow flush activity avoid unexpected crash")
+				return
 			}
 			if err := FlushAllActivity(); err != nil {
 				hwlog.RunLog.Errorf("failed to flush profiling data,err: %s", err.Error())
