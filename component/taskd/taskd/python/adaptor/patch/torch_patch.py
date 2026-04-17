@@ -239,7 +239,7 @@ def patch_monitor_workers(self, worker_group: WorkerGroup) -> RunResult:
             for _, ret_val in result.return_values.items():
                 worker = worker_group.workers[local_rank]
                 workers_ret_vals[worker.global_rank] = ret_val
-    if len(workers_ret_vals) == 0 and len(worker_failures) == 0:
+    if len(workers_ret_vals) != len(self._pcontext_dict) and len(worker_failures) == 0:
         return RunResult(state=WorkerState.HEALTHY)
     elif len(worker_failures) > 0:
         return RunResult(
@@ -247,15 +247,11 @@ def patch_monitor_workers(self, worker_group: WorkerGroup) -> RunResult:
             failures=worker_failures,
         )
     else:
-        return get_success_run_result(worker_group)
-
-
-def get_success_run_result(worker_group: WorkerGroup) -> RunResult:
-    workers_ret_vals = {worker.global_rank: "completed" for worker in worker_group.workers}
-    return RunResult(
-        state=WorkerState.SUCCEEDED,
-        return_values=workers_ret_vals,
-    )
+        run_log.info(f"monitor workers done, ret values: {workers_ret_vals}")
+        return RunResult(
+            state=WorkerState.SUCCEEDED,
+            return_values=workers_ret_vals,
+        )
 
 
 # p_context only contain on process,
