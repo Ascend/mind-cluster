@@ -54,41 +54,84 @@ func (a *AgentInfos) registerAgent(agentName string, agentInfo *AgentInfo) error
 
 func (a *AgentInfos) getAgent(agentName string) (*AgentInfo, error) {
 	a.RWMutex.RLock()
-	if agent, exists := a.Agents[agentName]; exists {
-		agentInfo := agent.getAgent()
-		a.RWMutex.RUnlock()
-		return agentInfo, nil
-	}
-	a.RWMutex.RUnlock()
-	return nil, fmt.Errorf("agent name is unregistered : %v", agentName)
-}
-
-func (a *AgentInfo) getAgent() *AgentInfo {
-	a.RWMutex.RLock()
 	defer a.RWMutex.RUnlock()
-	return &AgentInfo{
-		Config:    a.Config,
-		Actions:   a.Actions,
-		Status:    a.Status,
-		NodeRank:  a.NodeRank,
-		HeartBeat: a.HeartBeat,
-		FaultInfo: a.FaultInfo,
-		Pos:       a.Pos,
-		RWMutex:   sync.RWMutex{},
+	if agent, exists := a.Agents[agentName]; exists {
+		return agent, nil
 	}
+	return nil, fmt.Errorf("agent name is unregistered : %v", agentName)
 }
 
 func (a *AgentInfos) updateAgent(agentName string, newAgent *AgentInfo) error {
 	a.RWMutex.Lock()
 	defer a.RWMutex.Unlock()
-	a.Agents[agentName] = &AgentInfo{
-		Config:    newAgent.Config,
-		Actions:   newAgent.Actions,
-		Status:    newAgent.Status,
-		NodeRank:  newAgent.NodeRank,
-		HeartBeat: newAgent.HeartBeat,
-		FaultInfo: newAgent.FaultInfo,
-		Pos:       newAgent.Pos,
-	}
+	a.Agents[agentName] = newAgent
 	return nil
+}
+
+// SetAllStatusVal set agent all status value
+func (a *AgentInfos) SetAllStatusVal(agentName string, status string) error {
+	a.RWMutex.Lock()
+	defer a.RWMutex.Unlock()
+	a.AllStatus[agentName] = status
+	return nil
+}
+
+// DeepCopy return a deep copy of AgentInfos
+func (a *AgentInfos) DeepCopy() *AgentInfos {
+	a.RWMutex.RLock()
+	defer a.RWMutex.RUnlock()
+	clone := &AgentInfos{
+		Agents:    make(map[string]*AgentInfo, len(a.Agents)),
+		AllStatus: make(map[string]string, len(a.AllStatus)),
+		RWMutex:   sync.RWMutex{},
+	}
+	for k, v := range a.AllStatus {
+		clone.AllStatus[k] = v
+	}
+	for k, v := range a.Agents {
+		if v == nil {
+			clone.Agents[k] = nil
+			continue
+		}
+		clone.Agents[k] = v.DeepCopy()
+	}
+	return clone
+}
+
+// GetStatusVal get agent status value
+func (a *AgentInfo) GetStatusVal(key string) (string, bool) {
+	a.RWMutex.RLock()
+	defer a.RWMutex.RUnlock()
+	val, ok := a.Status[key]
+	return val, ok
+}
+
+// SetStatusVal set agent status value
+func (a *AgentInfo) SetStatusVal(key, value string) {
+	a.RWMutex.Lock()
+	defer a.RWMutex.Unlock()
+	a.Status[key] = value
+}
+
+// DeepCopy return a deep copy of AgentInfo
+func (a *AgentInfo) DeepCopy() *AgentInfo {
+	a.RWMutex.RLock()
+	defer a.RWMutex.RUnlock()
+	clone := &AgentInfo{
+		Config:    utils.CopyStringMap(a.Config),
+		Actions:   utils.CopyStringMap(a.Actions),
+		Status:    utils.CopyStringMap(a.Status),
+		FaultInfo: utils.CopyStringMap(a.FaultInfo),
+		NodeRank:  a.NodeRank,
+		HeartBeat: a.HeartBeat,
+		RWMutex:   sync.RWMutex{},
+	}
+	if a.Pos != nil {
+		clone.Pos = &common.Position{
+			Role:        a.Pos.Role,
+			ServerRank:  a.Pos.ServerRank,
+			ProcessRank: a.Pos.ProcessRank,
+		}
+	}
+	return clone
 }

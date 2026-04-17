@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"taskd/common/constant"
-	"taskd/common/utils"
 	"taskd/toolkit_backend/net/common"
 )
 
@@ -190,7 +189,10 @@ func (d *DataPool) UpdateMgr(mgrInfo *MgrInfo) error {
 
 // GetMgr return mgr info about mgr name
 func (d *DataPool) GetMgr() (*MgrInfo, error) {
-	return d.Snapshot.MgrInfos.getMgrInfo()
+	if d == nil || d.Snapshot == nil || d.Snapshot.MgrInfos == nil || d.Snapshot.MgrInfos.Status == nil {
+		return nil, fmt.Errorf("mgr is not initialized")
+	}
+	return d.Snapshot.MgrInfos, nil
 }
 
 func (s *SnapShot) deepCopy() (*SnapShot, error) {
@@ -215,108 +217,17 @@ func (s *SnapShot) deepCopy() (*SnapShot, error) {
 }
 
 func deepCopyAgent(agentInfos *AgentInfos) *AgentInfos {
-	clone := &AgentInfos{
-		Agents:    make(map[string]*AgentInfo, len(agentInfos.Agents)),
-		AllStatus: make(map[string]string, len(agentInfos.AllStatus)),
-	}
-	for k, v := range agentInfos.AllStatus {
-		clone.AllStatus[k] = v
-	}
-	for k, v := range agentInfos.Agents {
-		if v == nil {
-			clone.Agents[k] = nil
-			continue
-		}
-		cloneAgent := &AgentInfo{
-			Status:    v.Status,
-			NodeRank:  v.NodeRank,
-			HeartBeat: v.HeartBeat,
-		}
-		cloneAgent.Config = utils.CopyStringMap(v.Config)
-		cloneAgent.Actions = utils.CopyStringMap(v.Actions)
-		cloneAgent.FaultInfo = utils.CopyStringMap(v.FaultInfo)
-		if v.Pos != nil {
-			cloneAgent.Pos = &common.Position{
-				Role:        v.Pos.Role,
-				ServerRank:  v.Pos.ServerRank,
-				ProcessRank: v.Pos.ProcessRank,
-			}
-		}
-		clone.Agents[k] = cloneAgent
-	}
-	return clone
+	return agentInfos.DeepCopy()
 }
 
 func deepCopyWorker(workerInfos *WorkerInfos) *WorkerInfos {
-	clone := &WorkerInfos{
-		Workers:   make(map[string]*WorkerInfo, len(workerInfos.Workers)),
-		AllStatus: make(map[string]string, len(workerInfos.AllStatus)),
-	}
-	for k, v := range workerInfos.AllStatus {
-		clone.AllStatus[k] = v
-	}
-	for k, v := range workerInfos.Workers {
-		if v == nil {
-			clone.Workers[k] = nil
-			continue
-		}
-		cloneWorker := &WorkerInfo{
-			Status:     v.Status,
-			GlobalRank: v.GlobalRank,
-			HeartBeat:  v.HeartBeat,
-		}
-		cloneWorker.Config = utils.CopyStringMap(v.Config)
-		cloneWorker.Actions = utils.CopyStringMap(v.Actions)
-		cloneWorker.FaultInfo = utils.CopyStringMap(v.FaultInfo)
-		if v.Pos != nil {
-			cloneWorker.Pos = &common.Position{
-				Role:        v.Pos.Role,
-				ServerRank:  v.Pos.ServerRank,
-				ProcessRank: v.Pos.ProcessRank,
-			}
-		}
-
-		clone.Workers[k] = cloneWorker
-	}
-	return clone
+	return workerInfos.DeepCopy()
 }
 
 func deepCopyCluster(clusterInfos *ClusterInfos) *ClusterInfos {
-	clone := &ClusterInfos{
-		Clusters:  make(map[string]*ClusterInfo, len(clusterInfos.Clusters)),
-		AllStatus: make(map[string]string, len(clusterInfos.AllStatus)),
-	}
-	for k, v := range clusterInfos.AllStatus {
-		clone.AllStatus[k] = v
-	}
-	for k, v := range clusterInfos.Clusters {
-		if v == nil {
-			clone.Clusters[k] = nil
-			continue
-		}
-		cloneCluster := &ClusterInfo{
-			HeartBeat: v.HeartBeat,
-		}
-		cloneCluster.Command = utils.CopyStringMap(v.Command)
-		cloneCluster.FaultInfo = utils.CopyStringMap(v.FaultInfo)
-		cloneCluster.Business = make([]int32, 0)
-		cloneCluster.Business = append(cloneCluster.Business, v.Business...)
-		if v.Pos != nil {
-			cloneCluster.Pos = &common.Position{
-				Role:        v.Pos.Role,
-				ServerRank:  v.Pos.ServerRank,
-				ProcessRank: v.Pos.ProcessRank,
-			}
-		}
-		clone.Clusters[k] = cloneCluster
-	}
-	return clone
+	return clusterInfos.DeepCopy()
 }
 
 func deepCopyMgr(mgrInfos *MgrInfo) *MgrInfo {
-	clone := &MgrInfo{
-		Status: make(map[string]string, len(mgrInfos.Status)),
-	}
-	clone.Status = utils.CopyStringMap(mgrInfos.Status)
-	return clone
+	return mgrInfos.DeepCopy()
 }

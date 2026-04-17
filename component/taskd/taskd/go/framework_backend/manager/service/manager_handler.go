@@ -24,7 +24,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"ascend-common/common-utils/hwlog"
-	"clusterd/pkg/interface/grpc/recover"
+	pb "clusterd/pkg/interface/grpc/recover"
 	"taskd/common/constant"
 	"taskd/common/utils"
 	"taskd/framework_backend/manager/infrastructure/storage"
@@ -43,15 +43,15 @@ func (mpc *MsgProcessor) managerHandler(dataPool *storage.DataPool, msg storage.
 	switch msg.Body.MsgType {
 	case constant.Action:
 		if msg.Body.Code == constant.RestartTimeCode {
-			mgrInfo.Status[constant.ReportRestartTime] = msg.Body.Message
+			mgrInfo.SetStatusVal(constant.ReportRestartTime, msg.Body.Message)
 			return nil
 		}
 		if msg.Body.Code == constant.ProcessManageRecoverSignal {
-			mgrInfo.Status[constant.Actions] = msg.Body.Extension[constant.Actions]
-			mgrInfo.Status[constant.SignalType] = msg.Body.Extension[constant.SignalType]
+			mgrInfo.SetStatusVal(constant.Actions, msg.Body.Extension[constant.Actions])
+			mgrInfo.SetStatusVal(constant.SignalType, msg.Body.Extension[constant.SignalType])
 		}
 		if msg.Body.Code == constant.FaultRecoverCode {
-			mgrInfo.Status[constant.FaultRecover] = msg.Body.Message
+			mgrInfo.SetStatusVal(constant.FaultRecover, msg.Body.Message)
 		}
 		if msg.Body.Code == constant.ReplyToClusterDCode {
 			go mpc.replyToClusterD(msg.Body.Extension)

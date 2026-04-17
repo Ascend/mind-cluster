@@ -54,41 +54,67 @@ func (w *WorkerInfos) registerWorker(workerName string, workerInfo *WorkerInfo) 
 
 func (w *WorkerInfos) getWorker(workerName string) (*WorkerInfo, error) {
 	w.RWMutex.RLock()
-	if worker, exists := w.Workers[workerName]; exists {
-		workerInfo := worker.getWorker()
-		w.RWMutex.RUnlock()
-		return workerInfo, nil
-	}
-	w.RWMutex.RUnlock()
-	return nil, fmt.Errorf("worker name is unregistered : %v", workerName)
-}
-
-func (w *WorkerInfo) getWorker() *WorkerInfo {
-	w.RWMutex.RLock()
 	defer w.RWMutex.RUnlock()
-	return &WorkerInfo{
-		Config:     w.Config,
-		Actions:    w.Actions,
-		Status:     w.Status,
-		GlobalRank: w.GlobalRank,
-		HeartBeat:  w.HeartBeat,
-		FaultInfo:  w.FaultInfo,
-		Pos:        w.Pos,
-		RWMutex:    sync.RWMutex{},
+	if worker, exists := w.Workers[workerName]; exists {
+		return worker, nil
 	}
+	return nil, fmt.Errorf("worker name is unregistered : %v", workerName)
 }
 
 func (w *WorkerInfos) updateWorker(workerName string, newWorker *WorkerInfo) error {
 	w.RWMutex.Lock()
 	defer w.RWMutex.Unlock()
-	w.Workers[workerName] = &WorkerInfo{
-		Config:     newWorker.Config,
-		Actions:    newWorker.Actions,
-		Status:     newWorker.Status,
-		GlobalRank: newWorker.GlobalRank,
-		HeartBeat:  newWorker.HeartBeat,
-		FaultInfo:  newWorker.FaultInfo,
-		Pos:        newWorker.Pos,
-	}
+	w.Workers[workerName] = newWorker
 	return nil
+}
+
+// DeepCopy return a deep copy of WorkerInfos
+func (w *WorkerInfos) DeepCopy() *WorkerInfos {
+	w.RWMutex.RLock()
+	defer w.RWMutex.RUnlock()
+	clone := &WorkerInfos{
+		Workers:   make(map[string]*WorkerInfo, len(w.Workers)),
+		AllStatus: make(map[string]string, len(w.AllStatus)),
+	}
+	for k, v := range w.AllStatus {
+		clone.AllStatus[k] = v
+	}
+	for k, v := range w.Workers {
+		if v == nil {
+			clone.Workers[k] = nil
+			continue
+		}
+		clone.Workers[k] = v.DeepCopy()
+	}
+	return clone
+}
+
+// SetStatusVal set worker status value
+func (w *WorkerInfo) SetStatusVal(statusType string, statusVal string) {
+	w.RWMutex.Lock()
+	defer w.RWMutex.Unlock()
+	w.Status[statusType] = statusVal
+}
+
+// DeepCopy return a deep copy of WorkerInfo
+func (w *WorkerInfo) DeepCopy() *WorkerInfo {
+	w.RWMutex.RLock()
+	defer w.RWMutex.RUnlock()
+	clone := &WorkerInfo{
+		Config:     utils.CopyStringMap(w.Config),
+		Actions:    utils.CopyStringMap(w.Actions),
+		FaultInfo:  utils.CopyStringMap(w.FaultInfo),
+		Status:     utils.CopyStringMap(w.Status),
+		GlobalRank: w.GlobalRank,
+		HeartBeat:  w.HeartBeat,
+		RWMutex:    sync.RWMutex{},
+	}
+	if w.Pos != nil {
+		clone.Pos = &common.Position{
+			Role:        w.Pos.Role,
+			ServerRank:  w.Pos.ServerRank,
+			ProcessRank: w.Pos.ProcessRank,
+		}
+	}
+	return clone
 }

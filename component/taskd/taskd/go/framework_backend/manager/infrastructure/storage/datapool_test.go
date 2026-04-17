@@ -166,7 +166,9 @@ func TestRegisterAgent(t *testing.T) {
 		agent, err := dp.GetAgent(agentName)
 		convey.So(err, convey.ShouldBeNil)
 		convey.So(agent.NodeRank, convey.ShouldEqual, "1")
-		convey.So(agent.Status["status1"], convey.ShouldEqual, "value1")
+		statusVal, ok := agent.GetStatusVal("status1")
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(statusVal, convey.ShouldEqual, "value1")
 	})
 }
 
@@ -212,7 +214,9 @@ func TestUpdateAgent(t *testing.T) {
 		convey.So(err, convey.ShouldBeNil)
 		agent, _ := dp.GetAgent(agentName)
 		convey.So(agent.NodeRank, convey.ShouldEqual, "2")
-		convey.So(agent.Status["status1"], convey.ShouldEqual, "updated")
+		statusVal, ok := agent.GetStatusVal("status1")
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(statusVal, convey.ShouldEqual, "updated")
 	})
 	convey.Convey("UpdateAgent should fail with nil data pool", t, func() {
 		nilDp := &DataPool{}
