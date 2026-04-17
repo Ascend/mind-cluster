@@ -60,38 +60,17 @@ func (c *ClusterInfos) registerCluster(clusterName string) *ClusterInfo {
 
 func (c *ClusterInfos) getCluster(clusterName string) (*ClusterInfo, error) {
 	c.RWMutex.RLock()
-	if cluster, exists := c.Clusters[clusterName]; exists {
-		clusterInfo := cluster.getCluster()
-		c.RWMutex.RUnlock()
-		return clusterInfo, nil
-	}
-	c.RWMutex.RUnlock()
-	return nil, fmt.Errorf("cluster name is unregistered : %v", clusterName)
-}
-
-func (c *ClusterInfo) getCluster() *ClusterInfo {
-	c.RWMutex.RLock()
 	defer c.RWMutex.RUnlock()
-	return &ClusterInfo{
-		Command:   c.Command,
-		Business:  c.Business,
-		HeartBeat: c.HeartBeat,
-		FaultInfo: c.FaultInfo,
-		Pos:       c.Pos,
-		RWMutex:   sync.RWMutex{},
+	if cluster, exists := c.Clusters[clusterName]; exists {
+		return cluster, nil
 	}
+	return nil, fmt.Errorf("cluster name is unregistered : %v", clusterName)
 }
 
 func (c *ClusterInfos) updateCluster(clusterName string, newCluster *ClusterInfo) error {
 	c.RWMutex.Lock()
 	defer c.RWMutex.Unlock()
-	c.Clusters[clusterName] = &ClusterInfo{
-		Command:   newCluster.Command,
-		Business:  newCluster.Business,
-		HeartBeat: newCluster.HeartBeat,
-		FaultInfo: newCluster.FaultInfo,
-		Pos:       newCluster.Pos,
-	}
+	c.Clusters[clusterName] = newCluster
 	return nil
 }
 
@@ -103,4 +82,55 @@ func (c *ClusterInfos) GetCluster(clusterName string) (*ClusterInfo, error) {
 		return cluster, nil
 	}
 	return nil, fmt.Errorf("cluster name is unregistered : %v", clusterName)
+}
+
+// DeepCopy return a deep copy of ClusterInfos
+func (c *ClusterInfos) DeepCopy() *ClusterInfos {
+	c.RWMutex.RLock()
+	defer c.RWMutex.RUnlock()
+	clone := &ClusterInfos{
+		Clusters:  make(map[string]*ClusterInfo, len(c.Clusters)),
+		AllStatus: make(map[string]string, len(c.AllStatus)),
+		RWMutex:   sync.RWMutex{},
+	}
+	for k, v := range c.AllStatus {
+		clone.AllStatus[k] = v
+	}
+	for k, v := range c.Clusters {
+		if v == nil {
+			clone.Clusters[k] = nil
+			continue
+		}
+		clone.Clusters[k] = v.DeepCopy()
+	}
+	return clone
+}
+
+// SetCommandVal set cluster command value
+func (c *ClusterInfo) SetCommandVal(key, val string) {
+	c.RWMutex.Lock()
+	defer c.RWMutex.Unlock()
+	c.Command[key] = val
+}
+
+// DeepCopy return a deep copy of ClusterInfo
+func (c *ClusterInfo) DeepCopy() *ClusterInfo {
+	c.RWMutex.RLock()
+	defer c.RWMutex.RUnlock()
+	cloneCluster := &ClusterInfo{
+		HeartBeat: c.HeartBeat,
+		RWMutex:   sync.RWMutex{},
+	}
+	cloneCluster.Command = utils.CopyStringMap(c.Command)
+	cloneCluster.FaultInfo = utils.CopyStringMap(c.FaultInfo)
+	cloneCluster.Business = make([]int32, 0, len(c.Business))
+	cloneCluster.Business = append(cloneCluster.Business, c.Business...)
+	if c.Pos != nil {
+		cloneCluster.Pos = &common.Position{
+			Role:        c.Pos.Role,
+			ServerRank:  c.Pos.ServerRank,
+			ProcessRank: c.Pos.ProcessRank,
+		}
+	}
+	return cloneCluster
 }

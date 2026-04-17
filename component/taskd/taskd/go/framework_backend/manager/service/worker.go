@@ -37,12 +37,12 @@ func (mpc *MsgProcessor) workerHandler(dataPool *storage.DataPool, data storage.
 	switch data.Body.MsgType {
 	case constant.Action:
 		if data.Body.Code == constant.SwitchNicCode {
-			workerInfo.Status[constant.SwitchNic] = data.Body.Message
-			workerInfo.Status[constant.SwitchNicUUID] = data.Body.Extension[constant.SwitchNicUUID]
+			workerInfo.SetStatusVal(constant.SwitchNic, data.Body.Message)
+			workerInfo.SetStatusVal(constant.SwitchNicUUID, data.Body.Extension[constant.SwitchNicUUID])
 			return nil
 		} else if data.Body.Code == constant.StressTestCode {
-			workerInfo.Status[constant.StressTest] = data.Body.Message
-			workerInfo.Status[constant.StressTestUUID] = data.Body.Extension[constant.StressTestUUID]
+			workerInfo.SetStatusVal(constant.StressTest, data.Body.Message)
+			workerInfo.SetStatusVal(constant.StressTestUUID, data.Body.Extension[constant.StressTestUUID])
 			return nil
 		}
 	case constant.STATUS:
@@ -92,12 +92,12 @@ func profilingStatus(data storage.BaseMessage, workerInfo *storage.WorkerInfo) e
 		constant.ExpCode: constant.Exp,
 	}
 	if statusText, exists := statusMap[commDomainStatus]; exists {
-		workerInfo.Status[constant.CommDomainStatus] = statusText
+		workerInfo.SetStatusVal(constant.CommDomainStatus, statusText)
 	} else {
 		return fmt.Errorf("unknown comm domain status: %v", commDomainStatus)
 	}
 	if statusText, exists := statusMap[defaultDomainStatus]; exists {
-		workerInfo.Status[constant.DefaultDomainStatus] = statusText
+		workerInfo.SetStatusVal(constant.DefaultDomainStatus, statusText)
 	} else {
 		return fmt.Errorf("unknown default domain status: %v", defaultDomainStatus)
 	}

@@ -50,30 +50,30 @@ func (mpc *MsgProcessor) clusterHandler(dataPool *storage.DataPool, data storage
 func (mpc *MsgProcessor) clusterAction(data storage.BaseMessage, clusterInfo *storage.ClusterInfo) error {
 	switch data.Body.Code {
 	case constant.SwitchNicCode:
-		clusterInfo.Command[constant.GlobalRankKey] = data.Body.Extension[constant.GlobalRankKey]
-		clusterInfo.Command[constant.GlobalOpKey] = data.Body.Extension[constant.GlobalOpKey]
-		clusterInfo.Command[constant.SwitchNicUUID] = data.Header.Uuid
-		clusterInfo.Command[constant.SwitchJobID] = data.Body.Extension[constant.SwitchJobID]
+		clusterInfo.SetCommandVal(constant.GlobalRankKey, data.Body.Extension[constant.GlobalRankKey])
+		clusterInfo.SetCommandVal(constant.GlobalOpKey, data.Body.Extension[constant.GlobalOpKey])
+		clusterInfo.SetCommandVal(constant.SwitchNicUUID, data.Header.Uuid)
+		clusterInfo.SetCommandVal(constant.SwitchJobID, data.Body.Extension[constant.SwitchJobID])
 	case constant.ProcessManageRecoverSignal:
-		clusterInfo.Command[constant.Uuid] = data.Body.Extension[constant.Uuid]
-		clusterInfo.Command[constant.SignalType] = data.Body.Extension[constant.SignalType]
-		clusterInfo.Command[constant.Actions] = data.Body.Extension[constant.Actions]
-		clusterInfo.Command[constant.FaultRanks] = data.Body.Extension[constant.FaultRanks]
-		clusterInfo.Command[constant.ChangeStrategy] = data.Body.Extension[constant.ChangeStrategy]
-		clusterInfo.Command[constant.Timeout] = data.Body.Extension[constant.Timeout]
-		clusterInfo.Command[constant.NodeRankIds] = data.Body.Extension[constant.NodeRankIds]
-		clusterInfo.Command[constant.ExtraParams] = data.Body.Extension[constant.ExtraParams]
+		clusterInfo.SetCommandVal(constant.Uuid, data.Body.Extension[constant.Uuid])
+		clusterInfo.SetCommandVal(constant.SignalType, data.Body.Extension[constant.SignalType])
+		clusterInfo.SetCommandVal(constant.Actions, data.Body.Extension[constant.Actions])
+		clusterInfo.SetCommandVal(constant.FaultRanks, data.Body.Extension[constant.FaultRanks])
+		clusterInfo.SetCommandVal(constant.ChangeStrategy, data.Body.Extension[constant.ChangeStrategy])
+		clusterInfo.SetCommandVal(constant.Timeout, data.Body.Extension[constant.Timeout])
+		clusterInfo.SetCommandVal(constant.NodeRankIds, data.Body.Extension[constant.NodeRankIds])
+		clusterInfo.SetCommandVal(constant.ExtraParams, data.Body.Extension[constant.ExtraParams])
 	case constant.StressTestCode:
-		clusterInfo.Command[constant.StressTestRankOPStr] = data.Body.Extension[constant.StressTestRankOPStr]
-		clusterInfo.Command[constant.StressTestUUID] = data.Header.Uuid
-		clusterInfo.Command[constant.StressTestJobID] = data.Body.Extension[constant.StressTestJobID]
+		clusterInfo.SetCommandVal(constant.StressTestRankOPStr, data.Body.Extension[constant.StressTestRankOPStr])
+		clusterInfo.SetCommandVal(constant.StressTestUUID, data.Header.Uuid)
+		clusterInfo.SetCommandVal(constant.StressTestJobID, data.Body.Extension[constant.StressTestJobID])
 	default:
 		defaultDomainCmd, commDomainCmd, err := profilingCmd(data.Body.Code)
 		if err != nil {
 			return err
 		}
-		clusterInfo.Command[constant.DefaultDomainCmd] = defaultDomainCmd
-		clusterInfo.Command[constant.CommDomainCmd] = commDomainCmd
+		clusterInfo.SetCommandVal(constant.DefaultDomainCmd, defaultDomainCmd)
+		clusterInfo.SetCommandVal(constant.CommDomainCmd, commDomainCmd)
 	}
 	return nil
 }
