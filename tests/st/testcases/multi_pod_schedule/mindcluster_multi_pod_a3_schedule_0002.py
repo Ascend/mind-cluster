@@ -77,7 +77,7 @@ class MindclusterA3JobReschedule(unittest.TestCase):
 
     def test_mindcluster_a3_job_reschedule_008(self):
         K8sTool.insert_software_fault(self, ns="default", pod_name=self.master_pod_name)
-        self.assertTrue(K8sTool.check_all_pods_status(self, pod_names=[self.worker_pod_name, self.master_pod_name],
+        self.assertTrue(K8sTool.check_all_pods_status(self, pod_names=[self.master_pod_name, self.worker_pod_name],
                                                       status=["Error", "Pending"]), "master or worker pod is not error")
 
     def test_mindcluster_a3_job_reschedule_009(self):

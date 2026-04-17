@@ -17,6 +17,8 @@
 import logging
 import time
 
+from tests.st.envs import WAIT_TIME
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,23 +29,22 @@ class ClusterSimulator(object):
             f"docker run -d --name {container_name} -v /root/.kube/config:/root/.kube/config "
             f"-v /workspace/mind-cluster/tests/st/specs/:/cluster_simulator/specs "
             f"--rm cluster_simulator:base simulate {node_name} --node_num {node_num}")
-        time.sleep(3)
+        time.sleep(WAIT_TIME)
 
     @staticmethod
-    def create_kwok_cluster_a3(case, container_name, node_name, super_pod_num, super_pod_size, node_num=4):
+    def create_kwok_cluster_a3(case, container_name, node_name, super_pod_num, super_pod_size):
         case.k8s_manager.exec_command(
-            f"docker run -d --name {container_name} "
-            f"-v /root/.kube/config:/root/.kube/config "
+            f"docker run -d --name {container_name} -v /root/.kube/config:/root/.kube/config "
             f"-v /workspace/mind-cluster/tests/st/specs/:/cluster_simulator/specs --rm cluster_simulator:base "
-            f"simulate {node_name} --super_pod_num {super_pod_num} --super_pod_size {super_pod_size} --node_num {node_num}")
-        time.sleep(2)
+            f"simulate {node_name} --super_pod_num {super_pod_num} --super_pod_size {super_pod_size}")
+        time.sleep(WAIT_TIME)
 
     @staticmethod
     def stop_kwok_cluster(case, container_name):
         case.k8s_manager.master.exec_command(f"docker rm -f {container_name}")
         case.k8s_manager.exec_command(
             f"docker run -d -v /root/.kube/config:/root/.kube/config --rm cluster_simulator:base cleanup")
-        time.sleep(3)
+        time.sleep(WAIT_TIME)
 
     @staticmethod
     def inject_kwok_software_fault(case, namespace, pod_name):
