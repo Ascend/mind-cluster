@@ -57,7 +57,7 @@ class K8sTool(object):
         return is_all_status
 
     @staticmethod
-    def check_all_pods_status(case, pod_names=None, status=None, timeout=30, check_interval=2):
+    def check_all_pods_status(case, pod_names=None, status=None, timeout=30):
         if not pod_names:
             logger.error("error: pod_names should not be nil!")
             return False
@@ -65,12 +65,12 @@ class K8sTool(object):
             pod_names = [pod_names]
 
         if status is None:
-            expected_status = ["Running"]
+            status = ["Running"]
         elif isinstance(status, str):
-            expected_status = [status]
+            status = [status]
 
         logger.info(
-            f"start check pod status | target pod: {pod_names} | expected status: {expected_status} | timeout: {timeout}s")
+            f"start check pod status | target pod: {pod_names} | expected status: {status} | timeout: {timeout}s")
 
         pod_commands = {}
         for pod in pod_names:
@@ -90,9 +90,9 @@ class K8sTool(object):
                         all_pods_ok = False
                         break
 
-                    if ret not in expected_status:
+                    if ret not in status:
                         logger.warning(
-                            f"[{pod_name}] status not expected, current status: {ret}, expected status: {expected_status}")
+                            f"[{pod_name}] status not expected, current status: {ret}, expected status: {status}")
                         all_pods_ok = False
                         break
 
@@ -106,9 +106,7 @@ class K8sTool(object):
                 logger.info(f"all Pods have reached the desired state! Time taken: {cost_time}s")
                 return True
 
-            time.sleep(check_interval)
-
-        logger.error(f"Check timed out! Not all Pods reached the desired state within {timeout}s: {expected_status}")
+        logger.error(f"Check timed out! Not all Pods reached the desired state within {timeout}s: {status}")
         return False
 
     @staticmethod
@@ -271,7 +269,7 @@ class K8sTool(object):
         case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f volcano-*.yaml")
         case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f clusterd-*.yaml")
         case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f noded-*.yaml")
-    
+
     @staticmethod
     def cordon_node(case, node_name):
         node_names = [node_name] if isinstance(node_name, str) else node_name
@@ -289,7 +287,7 @@ class K8sTool(object):
     @staticmethod
     def cordon_all_nodes(case):
         all_node_names = []
-        
+
         for node in case.k8s_manager.master_nodes:
             all_node_names.append(node.node_name)
         for node in case.k8s_manager.worker_nodes:
@@ -299,7 +297,7 @@ class K8sTool(object):
     @staticmethod
     def uncordon_all_nodes(case):
         all_node_names = []
-        
+
         for node in case.k8s_manager.master_nodes:
             all_node_names.append(node.node_name)
         for node in case.k8s_manager.worker_nodes:
@@ -309,7 +307,7 @@ class K8sTool(object):
     @staticmethod
     def check_pod_start_time(case, pod_name, namespace="default"):
         cmd = (
-        f"kubectl get pods {pod_name} -n {namespace} "
-        f"-o jsonpath='{{.metadata.name}}{{\"\\t\"}}{{.metadata.creationTimestamp}}{{\"\\n\"}}'")
-        
+            f"kubectl get pods {pod_name} -n {namespace} "
+            f"-o jsonpath='{{.metadata.name}}{{\"\\t\"}}{{.metadata.creationTimestamp}}{{\"\\n\"}}'")
+
         return case.k8s_manager.exec_command(cmd)

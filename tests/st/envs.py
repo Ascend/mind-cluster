@@ -17,6 +17,8 @@
 import os
 from typing import Dict, Callable, Any
 
+DEFAULT_WAIT_TIME = 3
+
 env_variables: Dict[str, Callable[[], Any]] = {
     # the place where the testcases are located, usually the testcases directory of the project, e.g.,
     # tests/st/testcases.
@@ -42,6 +44,8 @@ env_variables: Dict[str, Callable[[], Any]] = {
         lambda: os.getenv("SSH_LOG_LEVEL", "INFO"),
     "BACKUP_YAML_DIR":
         lambda: os.getenv("BACKUP_YAML_DIR", None),
+    "WAIT_TIME":
+        lambda: os.getenv("WAIT_TIME", DEFAULT_WAIT_TIME),
 }
 
 
@@ -50,4 +54,3 @@ def __getattr__(name: str):
     if name in env_variables:
         return env_variables[name]()
     raise AttributeError(f"environment dont have attribute {name!r}")
-
