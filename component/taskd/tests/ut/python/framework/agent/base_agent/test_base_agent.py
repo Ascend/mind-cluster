@@ -164,6 +164,15 @@ class TestBaseAgent(unittest.TestCase):
             mock_error_log.assert_called_once_with('waiting for message manager timeout')
             self.assertIn('initialization message_manager timeout', str(context.exception))
 
+    @patch('taskd.python.framework.agent.base_agent.base_agent.get_report_fault_timeout')
+    @patch('taskd.python.framework.agent.base_agent.base_agent.time.time')
+    def test_is_timeout_exceeded(self, mock_time, mock_get_timeout):
+        mock_get_timeout.return_value = 300
+        mock_time.return_value = 1400.0
+        self.agent.report_fault_time = 1000.0
+        result = self.agent.is_report_timeout()
+        self.assertTrue(result)
+
 
 if __name__ == '__main__':
     unittest.main()

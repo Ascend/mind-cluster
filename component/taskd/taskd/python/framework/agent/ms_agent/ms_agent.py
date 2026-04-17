@@ -142,7 +142,11 @@ class MsAgent(BaseAgent):
     def report_fault_rank(self, fault_ranks: list):
         if not self.check_new_fault(fault_ranks):
             run_log.info(f'no additional fault process, fault_rank: {fault_ranks}')
+            if self.is_report_timeout():
+                run_log.error(f'agent report fault rank timeout, exiting...')
+                exit(1)
             return
+        self.report_fault_time = time.time()
         report_info = AgentReportInfo(fault_ranks=fault_ranks)
         self.send_message_to_manager('STATUS', constants.REPORT_CODE, report_info)
         self.local_fault_rank = fault_ranks
@@ -171,6 +175,7 @@ class MsAgent(BaseAgent):
         time.sleep(constants.KILL_INTERVAL)
         self._func_map.get('START_ALL_WORKER')()
         self.local_fault_rank = []
+        self.report_fault_time = None
         
     def recover_in_place(self, msg):
         run_log.info(f'receive {msg.code} command, start to recover in place')
@@ -194,6 +199,7 @@ class MsAgent(BaseAgent):
             time.sleep(constants.RELEASE_INTERVAL) # wait for device release resources
             self._func_map.get(constants.START_WORKER_LIST_CALLBACK_NAME)(restart_local_rank)
             self.local_fault_rank = []
+            self.report_fault_time = None
 
     def get_fault_pids(self, local_ranks):
         pid_list = []
