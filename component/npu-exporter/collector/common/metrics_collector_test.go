@@ -16,6 +16,7 @@
 package common
 
 import (
+	"context"
 	"reflect"
 	"sync"
 	"testing"
@@ -24,7 +25,15 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 
 	"ascend-common/api"
+	"ascend-common/common-utils/hwlog"
 )
+
+func init() {
+	hwLogConfig := hwlog.LogConfig{
+		OnlyToStdout: true,
+	}
+	hwlog.InitRunLogger(&hwLogConfig, context.Background())
+}
 
 // TestCopyMap test copyMap
 func TestCopyMap(t *testing.T) {

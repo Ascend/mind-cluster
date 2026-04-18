@@ -113,8 +113,8 @@ type OpticalCollector struct {
 
 func initNpuOpticalDesc() {
 	// Initialize Npu specific metrics descriptions
-	for dieID := 0; dieID < maxDieId; dieID++ {
-		for portID := 0; portID < maxPortId; portID++ {
+	for dieID, portIDs := range colcommon.NpuDevPortInfos.GetPortMap() {
+		for _, portID := range portIDs {
 			colcommon.BuildDescSlice(&opticalIndexDesc, fmt.Sprint(api.MetricsPrefix, "optical_index_num_",
 				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("the npu link optical index num ",
 				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
@@ -151,28 +151,26 @@ func initNpuOpticalDesc() {
 // IsSupported judge whether the collector is supported
 func (c *OpticalCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	mainBoardID := n.Dmgr.GetMainBoardId()
-	devType = n.Dmgr.GetDevType()
-
 	// For Npu devices, check if it's a supported optical model
-	if devType == api.Ascend910A5 {
+	if colcommon.DevType == api.Ascend910A5 {
 		if supportedOpticalNpuDevices[mainBoardID] {
 			initNpuOpticalDesc()
 			return true
 		}
-		logForUnSupportDevice(false, devType, colcommon.GetCacheKey(c),
+		logForUnSupportDevice(false, colcommon.DevType, colcommon.GetCacheKey(c),
 			fmt.Sprint("this mainBoardId:", mainBoardID, " is not supported"))
 		return false
 	}
 
 	isSupport := n.Dmgr.IsTrainingCard()
-	logForUnSupportDevice(isSupport, devType, colcommon.GetCacheKey(c),
+	logForUnSupportDevice(isSupport, colcommon.DevType, colcommon.GetCacheKey(c),
 		"only training card supports optical related info")
 	return isSupport
 }
 
 // Describe description of the metric
 func (c *OpticalCollector) Describe(ch chan<- *prometheus.Desc) {
-	if devType == api.Ascend910A5 {
+	if colcommon.DevType == api.Ascend910A5 {
 		// Npu specific optical metrics
 		for _, desc := range opticalIndexDesc {
 			ch <- desc
@@ -219,7 +217,7 @@ func (c *OpticalCollector) Describe(ch chan<- *prometheus.Desc) {
 
 // CollectToCache collect the metric to cache
 func (c *OpticalCollector) CollectToCache(n *colcommon.NpuCollector, chipList []colcommon.HuaWeiAIChip) {
-	if devType == api.Ascend910A5 {
+	if colcommon.DevType == api.Ascend910A5 {
 		for _, chip := range chipList {
 			// Collect Npu specific optical info
 			opticalInfos := collectOpticalNpuInfo(chip.LogicID)
@@ -245,7 +243,7 @@ func (c *OpticalCollector) CollectToCache(n *colcommon.NpuCollector, chipList []
 // UpdatePrometheus update prometheus metrics
 func (c *OpticalCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
-	if devType == api.Ascend910A5 {
+	if colcommon.DevType == api.Ascend910A5 {
 		// Update Npu specific optical metrics
 		updateSingleChipNpu := func(chipWithVnpu colcommon.HuaWeiAIChip, cache opticalNpuCache, cardLabel []string) {
 			timestamp := cache.timestamp
@@ -281,7 +279,7 @@ func (c *OpticalCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colc
 // UpdateTelegraf update telegraf metrics
 func (c *OpticalCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
-	if devType == api.Ascend910A5 {
+	if colcommon.DevType == api.Ascend910A5 {
 		// Update Npu specific optical metrics
 		caches := colcommon.GetInfoFromCache[opticalNpuCache](n, colcommon.GetCacheKey(c))
 		for _, chip := range chips {
@@ -352,8 +350,8 @@ func getMainOptInfo(opticalInfo map[string]string) *common.OpticalInfo {
 // Npu specific optical collection functions
 func collectOpticalNpuInfo(logicID int32) []*common.OpticalNpuInfo {
 	var opticalInfos []*common.OpticalNpuInfo
-	for dieID := 0; dieID < maxDieId; dieID++ {
-		for portID := 0; portID < maxPortId; portID++ {
+	for dieID, portIDs := range colcommon.NpuDevPortInfos.GetPortMap() {
+		for _, portID := range portIDs {
 			opticalInfo := &common.OpticalNpuInfo{}
 			if info, err := hccn.GetNpuOpticalInfoNpu(logicID, int32(dieID), int32(portID)); err == nil {
 				opticalInfo = storeOpticalNpuInfos(info, logicID, dieID, portID)
@@ -373,7 +371,7 @@ func promUpdateOpticalInfo(ch chan<- prometheus.Metric, cache opticalNpuCache, t
 	if opticalInfo == nil {
 		return
 	}
-	for i := 0; i < (maxDieId * maxPortId); i++ {
+	for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
 		if opticalInfo[i] == nil {
 			continue
 		}
@@ -396,7 +394,7 @@ func telegrafUpdateOpticalInfo(cache opticalNpuCache, fieldMap map[string]interf
 	if opticalInfo == nil {
 		return
 	}
-	for i := 0; i < (maxDieId * maxPortId); i++ {
+	for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
 		if opticalInfo[i] == nil {
 			continue
 		}

@@ -132,7 +132,7 @@ func TestCollectToCache(t *testing.T) {
 	n := mockNewNpuCollector()
 
 	convey.Convey("TestCollectToCache", t, func() {
-
+		colcommon.DevType = api.Ascend910A3
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
 		patches.ApplyMethodReturn(n.Dmgr, "GetDeviceMemoryInfo", mockMemoryInfo(), nil)

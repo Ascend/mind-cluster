@@ -40,10 +40,11 @@ const (
 
 	opticalPartLen  = 2
 	eleventhIndex   = 11
-	twelfthIndex    = 12
+	threePart       = 3
 	netSpeedPartLen = 2
 	firstIndex      = 1
 	secondIndex     = 2
+	secondLast      = 2
 	fourthIndex     = 4
 	fifthIndex      = 5
 	sixthIndex      = 6
@@ -471,7 +472,9 @@ func GetNpuOpticalInfoNpu(logicID, udieID, portID int32) (map[string]string, err
 		return map[string]string{}, buildHccnErrA5("optical", fmt.Errorf("optical info is not valid"))
 	}
 	lines := strings.Split(strings.TrimSpace(outStr), "\n")
-	return parseSecondTableColumns(lines)
+	result, err := parseSecondTableColumns(lines)
+	hwlog.RunLog.Debugf("logicID:%v, udiePort:%v, portID:%v optical info: %v", logicID, udieID, portID, result)
+	return result, err
 }
 
 func parseSecondTableColumns(lines []string) (map[string]string, error) {
@@ -498,20 +501,18 @@ func parseSecondTableColumns(lines []string) (map[string]string, error) {
 			continue
 		}
 		parts := strings.Split(line, "|")
-		if len(parts) < eleventhIndex {
-			continue
-		}
 		col4 := strings.TrimSpace(parts[fourthIndex])
 		col5 := strings.TrimSpace(parts[fifthIndex])
+		if len(parts) < eleventhIndex || strings.Contains(col5, "-") {
+			continue
+		}
 		if strings.Contains(line, "optical_") {
-			opticalIndex = append(opticalIndex, strings.TrimSpace(parts[len(parts)-2]))
+			opticalIndex = append(opticalIndex, strings.TrimSpace(parts[len(parts)-secondLast]))
 		}
 		if col4 != "" && strings.Contains(line, "xPower") {
 			opticalInfoMap[col4] = col5
 		}
 	}
-	hwlog.RunLog.Debugf("opticalIndex: %v, len: %v", opticalIndex, len(opticalIndex))
-	hwlog.RunLog.Debugf("opticalInfoMap: %v", opticalInfoMap)
 	opticalInfoMap["optical_index"] = strconv.Itoa(len(opticalIndex))
 	return opticalInfoMap, nil
 }
@@ -582,4 +583,103 @@ func GetIntDataFromStr(str, dataType string) int {
 		return common.RetError
 	}
 	return intData
+}
+
+// GetNpuDevNetPortInfo retrieves NPU device information and returns UdieID-PortID mapping
+func GetNpuDevNetPortInfo(logicID int32) (map[int][]int, error) {
+	args := []string{"-g", "-dev_info", "-i", strconv.Itoa(int(logicID))}
+	// command example: hccn_tool -g -dev_info -i 0
+	outStr, err := getInfoFromHccnTool(args...)
+	if err != nil {
+		return nil, buildHccnErrA5("npu dev info", err)
+	}
+
+	// First, log the full output for debugging
+	hwlog.RunLog.Debugf("Full hccn_tool output: %s", outStr)
+
+	// Split output into lines and parse table data
+	lines := strings.Split(outStr, "\n")
+	result, err := parseDeviceTable(lines)
+	if err != nil {
+		return nil, buildHccnErrA5("npu dev info", err)
+	}
+
+	return result, nil
+}
+
+// parseDeviceTable processes device information table and returns UdieID-PortID mapping
+func parseDeviceTable(lines []string) (map[int][]int, error) {
+	result := make(map[int][]int)
+	isInTable := false
+	separatorCount := 0
+
+	for _, line := range lines {
+		trimmedLine := strings.TrimSpace(line)
+		if trimmedLine == "" {
+			continue // Skip empty lines
+		}
+
+		// Handle table separator lines
+		if strings.HasPrefix(trimmedLine, "+-") {
+			separatorCount++
+			if separatorCount == firstIndex {
+				isInTable = true
+			} else if separatorCount == threePart {
+				hwlog.RunLog.Debugf("Found end of first table, stopping parsing")
+				break
+			}
+			continue
+		}
+
+		// Process table data lines
+		if !isInTable || !strings.HasPrefix(trimmedLine, "|") {
+			continue
+		}
+		// Skip header row
+		lineLower := strings.ToLower(trimmedLine)
+		if !strings.Contains(lineLower, "ub") {
+			continue
+		}
+
+		// Parse device row data
+		uDieID, portID, err := parseDeviceRow(trimmedLine)
+		if err != nil {
+			hwlog.RunLog.Warnf("Skipping invalid row: %s", trimmedLine)
+			continue
+		}
+		result[uDieID] = append(result[uDieID], portID)
+	}
+
+	if len(result) == 0 {
+		return nil, fmt.Errorf("failed to parse any valid data rows")
+	}
+	return result, nil
+}
+
+// parseDeviceRow extracts and validates UdieID and PortID from a single table row
+func parseDeviceRow(trimmedLine string) (int, int, error) {
+	// Extract columns from table row
+	rowData := strings.TrimPrefix(trimmedLine, "|")
+	rowData = strings.TrimSuffix(rowData, "|")
+	columns := strings.Split(rowData, "|")
+	for i, col := range columns {
+		columns[i] = strings.TrimSpace(col)
+	}
+
+	// Validate columns
+	if len(columns) < secondIndex || columns[0] == "" || columns[1] == "" {
+		return 0, 0, fmt.Errorf("insufficient or empty columns")
+	}
+
+	// Convert to integers
+	uDieID, err := strconv.Atoi(columns[0])
+	if err != nil {
+		return 0, 0, err
+	}
+	portID, err := strconv.Atoi(columns[1])
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return uDieID, portID, nil
 }

@@ -84,6 +84,7 @@ func NewNpuCollector(cacheTime time.Duration, updateTime time.Duration,
 		devicesParser: deviceParser,
 		Dmgr:          dmgr,
 	}
+	InitNpuDevNetPortInfos(CommonCollector)
 	return CommonCollector
 }
 

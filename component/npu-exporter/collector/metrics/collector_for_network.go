@@ -59,10 +59,6 @@ var (
 )
 
 const (
-	// maxDieId max udie id
-	maxDieId = 2
-	// maxPortId max port id
-	maxPortId = 9
 	// bandwidthTime bandwidth's time param
 	bandwidthTime = 100
 )
@@ -84,51 +80,30 @@ type NetworkCollector struct {
 	colcommon.MetricsCollectorAdapter
 }
 
-func init() {
-	// Initialize Npu specific metrics descriptions
-	for dieID := 0; dieID < maxDieId; dieID++ {
-		for portID := 0; portID < maxPortId; portID++ {
-			colcommon.BuildDescSlice(&linkStatusDesc, fmt.Sprint(api.MetricsPrefix, "link_status_", strconv.Itoa(dieID),
-				"_", strconv.Itoa(portID)), fmt.Sprint("the npu link status ", "dieId:", strconv.Itoa(dieID),
-				" portId:", strconv.Itoa(portID)))
-			colcommon.BuildDescSlice(&bandwidthTxDesc, fmt.Sprint(api.MetricsPrefix, "bandwidth_tx_", strconv.Itoa(dieID),
-				"_", strconv.Itoa(portID)), fmt.Sprint("the npu port transport speed, unit is 'MB/s' ", "dieId:",
-				strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
-			colcommon.BuildDescSlice(&bandwidthRxDesc, fmt.Sprint(api.MetricsPrefix, "bandwidth_rx_", strconv.Itoa(dieID),
-				"_", strconv.Itoa(portID)), fmt.Sprint("the npu port receive speed, unit is 'MB/s' ", "dieId:",
-				strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
-			colcommon.BuildDescSlice(&npuChipPortLinkSpeedDesc, fmt.Sprint(api.MetricsPrefix, "link_speed_",
-				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("the npu port link speed, unit is 'G' ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
-		}
-	}
-}
-
 // IsSupported check if the collector is supported
 func (c *NetworkCollector) IsSupported(n *colcommon.NpuCollector) bool {
-	devType = n.Dmgr.GetDevType()
-
 	// For Npu devices, check if it's a supported model
-	if devType == api.Ascend910A5 {
+	if colcommon.DevType == api.Ascend910A5 {
 		mainBoardID := n.Dmgr.GetMainBoardId()
 		if notSupportedNetworkNpuDevices[mainBoardID] {
-			logForUnSupportDevice(false, devType, colcommon.GetCacheKey(c),
+			logForUnSupportDevice(false, colcommon.DevType, colcommon.GetCacheKey(c),
 				fmt.Sprint("this mainBoardId:", mainBoardID, " is not supported"))
 			return false
 		}
+		initNpuNetWorkDesc()
 		return true
 	}
 
 	// For other devices, check if it's a training card
 	isSupport := n.Dmgr.IsTrainingCard()
-	logForUnSupportDevice(isSupport, devType, colcommon.GetCacheKey(c),
+	logForUnSupportDevice(isSupport, colcommon.DevType, colcommon.GetCacheKey(c),
 		"only training card supports network related info")
 	return isSupport
 }
 
 // Describe description of the metric
 func (c *NetworkCollector) Describe(ch chan<- *prometheus.Desc) {
-	if devType == api.Ascend910A5 {
+	if colcommon.DevType == api.Ascend910A5 {
 		// Npu specific metrics
 		for _, desc := range linkStatusDesc {
 			ch <- desc
@@ -154,7 +129,7 @@ func (c *NetworkCollector) Describe(ch chan<- *prometheus.Desc) {
 
 // CollectToCache collect the metric to cache
 func (c *NetworkCollector) CollectToCache(n *colcommon.NpuCollector, chipList []colcommon.HuaWeiAIChip) {
-	if devType == api.Ascend910A5 {
+	if colcommon.DevType == api.Ascend910A5 {
 		for _, chip := range chipList {
 			// Collect Npu specific network info
 			netInfos := collectNetworkNpuInfo(chip.LogicID)
@@ -174,7 +149,7 @@ func (c *NetworkCollector) CollectToCache(n *colcommon.NpuCollector, chipList []
 // UpdatePrometheus update prometheus metrics
 func (c *NetworkCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommon.NpuCollector,
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
-	if devType == api.Ascend910A5 {
+	if colcommon.DevType == api.Ascend910A5 {
 		// Update Npu specific metrics
 		updateSingleChipNpu := func(chipWithVnpu colcommon.HuaWeiAIChip, cache netInfoNPUCache, cardLabel []string) {
 			timestamp := cache.timestamp
@@ -211,7 +186,7 @@ func (c *NetworkCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colc
 // UpdateTelegraf update telegraf metrics
 func (c *NetworkCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
 	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
-	if devType == api.Ascend910A5 {
+	if colcommon.DevType == api.Ascend910A5 {
 		// Update Npu specific metrics
 		caches := colcommon.GetInfoFromCache[netInfoNPUCache](n, colcommon.GetCacheKey(c))
 		for _, chip := range chips {
@@ -298,8 +273,8 @@ func collectNetworkInfo(phyID int32) common.NpuNetInfo {
 // Npu specific collection functions
 func collectNetworkNpuInfo(logicID int32) []*common.NpuNetInfo {
 	var newNetInfo []*common.NpuNetInfo
-	for dieID := 0; dieID < maxDieId; dieID++ {
-		for portID := 0; portID < maxPortId; portID++ {
+	for dieID, portIDs := range colcommon.NpuDevPortInfos.GetPortMap() {
+		for _, portID := range portIDs {
 			netInfo := common.NpuNetInfo{
 				LinkStatusInfo: &common.LinkStatusInfo{},
 				BandwidthInfo:  &common.BandwidthInfo{},
@@ -340,7 +315,7 @@ func promUpdateNetInfo(ch chan<- prometheus.Metric, cache netInfoNPUCache, times
 	if netInfo == nil {
 		return
 	}
-	for i := 0; i < (maxDieId * maxPortId); i++ {
+	for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
 		if validateNotNilForEveryElement(netInfo[i].LinkStatusInfo) {
 			doUpdateMetricWithValidateNum(ch, timestamp, float64(hccn.GetLinkStatusCode(netInfo[i].LinkStatusInfo.LinkState)),
 				cardLabel, linkStatusDesc[i])
@@ -360,7 +335,7 @@ func telegrafUpdateNetInfo(cache netInfoNPUCache, fieldMap map[string]interface{
 	if netInfo == nil {
 		return
 	}
-	for i := 0; i < (maxDieId * maxPortId); i++ {
+	for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
 		if validateNotNilForEveryElement(netInfo[i].LinkStatusInfo) {
 			doUpdateTelegrafWithValidateNum(fieldMap, linkStatusDesc[i],
 				float64(hccn.GetLinkStatusCode(netInfo[i].LinkStatusInfo.LinkState)), "")
@@ -371,6 +346,25 @@ func telegrafUpdateNetInfo(cache netInfoNPUCache, fieldMap map[string]interface{
 		}
 		if validateNotNilForEveryElement(netInfo[i].LinkSpeedInfo) {
 			doUpdateTelegrafWithValidateNum(fieldMap, npuChipPortLinkSpeedDesc[i], netInfo[i].LinkSpeedInfo.Speed, "")
+		}
+	}
+}
+
+func initNpuNetWorkDesc() {
+	for dieID, portIDs := range colcommon.NpuDevPortInfos.GetPortMap() {
+		for _, portID := range portIDs {
+			colcommon.BuildDescSlice(&linkStatusDesc, fmt.Sprint(api.MetricsPrefix, "link_status_", strconv.Itoa(dieID),
+				"_", strconv.Itoa(portID)), fmt.Sprint("the npu link status ", "dieId:", strconv.Itoa(dieID),
+				" portId:", strconv.Itoa(portID)))
+			colcommon.BuildDescSlice(&bandwidthTxDesc, fmt.Sprint(api.MetricsPrefix, "bandwidth_tx_", strconv.Itoa(dieID),
+				"_", strconv.Itoa(portID)), fmt.Sprint("the npu port transport speed, unit is 'MB/s' ", "dieId:",
+				strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+			colcommon.BuildDescSlice(&bandwidthRxDesc, fmt.Sprint(api.MetricsPrefix, "bandwidth_rx_", strconv.Itoa(dieID),
+				"_", strconv.Itoa(portID)), fmt.Sprint("the npu port receive speed, unit is 'MB/s' ", "dieId:",
+				strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+			colcommon.BuildDescSlice(&npuChipPortLinkSpeedDesc, fmt.Sprint(api.MetricsPrefix, "link_speed_",
+				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("the npu port link speed, unit is 'G' ",
+				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
 		}
 	}
 }

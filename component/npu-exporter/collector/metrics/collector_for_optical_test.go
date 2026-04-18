@@ -16,6 +16,7 @@
 package metrics
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -25,6 +26,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 
 	"ascend-common/api"
+	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
@@ -33,6 +35,11 @@ import (
 const (
 	opticalMetricsNum = 9
 )
+
+func init() {
+	colcommon.NpuDevPortInfos.SetPortMap(mockPorts)
+	colcommon.NpuDevPortInfos.Init()
+}
 
 // TestOpticalCollectorIsSupported test OpticalCollector IsSupported
 func TestOpticalCollectorIsSupported(t *testing.T) {
@@ -64,11 +71,11 @@ func TestOpticalCollectorIsSupported2(t *testing.T) {
 	}
 
 	for _, c := range cases {
+		colcommon.DevType = c.deviceType
 		patches := gomonkey.NewPatches()
 		convey.Convey(c.name, t, func() {
 			defer patches.Reset()
 			patches.ApplyMethodReturn(n.Dmgr, "GetMainBoardId", uint32(api.Atlas9501DMainBoardID))
-			patches.ApplyMethodReturn(n.Dmgr, "GetDevType", c.deviceType)
 			patches.ApplyMethodReturn(n.Dmgr, "IsTrainingCard", true)
 			isSupported := c.collectorType.IsSupported(n)
 			convey.So(isSupported, convey.ShouldEqual, c.expectValue)
@@ -78,7 +85,7 @@ func TestOpticalCollectorIsSupported2(t *testing.T) {
 
 func mockOpticalInfoNpu() []*common.OpticalNpuInfo {
 	var newOpticalInfos []*common.OpticalNpuInfo
-	for i := 0; i < (maxDieId * maxPortId); i++ {
+	for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
 		opticalInfos := common.OpticalNpuInfo{
 			OpticalIndex:    num2,
 			OpticalTxPower0: 1.0,
@@ -108,7 +115,8 @@ func mockOpticalNpuCache(n *colcommon.NpuCollector, chips []colcommon.HuaWeiAICh
 func TestUpdateTelegrafOpticalNpu(t *testing.T) {
 	n := mockNewNpuCollector()
 	convey.Convey("TestUpdateTelegrafOpticalNpu", t, func() {
-		devType = api.Ascend910A5
+		colcommon.DevType = api.Ascend910A5
+		initNpuOpticalDesc()
 		containerInfos := mockGetContainerNPUInfo()
 		chips := mockGetNPUChipList()
 		c := OpticalCollector{}
@@ -123,13 +131,12 @@ func TestUpdateTelegrafOpticalNpu(t *testing.T) {
 func TestCollectToCacheOpticalNpu(t *testing.T) {
 	n := mockNewNpuCollector()
 	convey.Convey("TestCollectToCacheOpticalNpu", t, func() {
-		devType = api.Ascend910A5
+		colcommon.DevType = api.Ascend910A5
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
 		patches.ApplyFuncReturn(collectOpticalNpuInfo, mockOpticalInfoNpu())
 		chips := mockGetNPUChipList()
 		c := OpticalCollector{}
-		c.PreCollect(n, chips)
 		c.CollectToCache(n, chips)
 		convey.So(colcommon.GetInfoFromCache[opticalNpuCache](n, colcommon.GetCacheKey(&c)),
 			convey.ShouldNotBeEmpty)
@@ -142,7 +149,6 @@ func TestCollectOpticalNpuInfo(t *testing.T) {
 		// Mock the dependencies
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
-
 		// Mock GetNpuOpticalInfoNpu to return success
 		testOpticalInfo := map[string]string{
 			txNpuPower0:  "1.0",
@@ -164,7 +170,7 @@ func TestCollectOpticalNpuInfo(t *testing.T) {
 
 		// Basic verification
 		convey.So(result, convey.ShouldNotBeEmpty)
-		convey.So(len(result), convey.ShouldEqual, maxDieId*maxPortId)
+		convey.So(len(result), convey.ShouldEqual, colcommon.NpuDevPortInfos.GetCount())
 		convey.So(result[0], convey.ShouldNotBeNil)
 		convey.So(result[0].OpticalIndex, convey.ShouldEqual, 1)
 	})
@@ -189,7 +195,6 @@ func TestPromUpdateOpticalInfo(t *testing.T) {
 
 		convey.Convey("When cache has valid data", func() {
 			cache := opticalNpuCache{extInfo: mockOpticalInfoNpu()}
-
 			callCount := 0
 			callTelCount := 0
 			mockFiledMap := make(map[string]interface{})
@@ -208,7 +213,7 @@ func TestPromUpdateOpticalInfo(t *testing.T) {
 
 			promUpdateOpticalInfo(ch, cache, timestamp, cardLabel)
 			telegrafUpdateOpticalInfo(cache, mockFiledMap)
-			expectedCalls := maxDieId * maxPortId * opticalMetricsNum
+			expectedCalls := colcommon.NpuDevPortInfos.GetCount() * opticalMetricsNum
 			convey.So(callCount, convey.ShouldEqual, expectedCalls)
 			convey.So(callTelCount, convey.ShouldEqual, expectedCalls)
 		})
@@ -243,5 +248,45 @@ func TestStoreOpticalNpuInfos(t *testing.T) {
 		convey.So(result.OpticalIndex, convey.ShouldEqual, 5)
 		convey.So(result.OpticalTxPower0, convey.ShouldNotEqual, 0)
 		convey.So(result.OpticalRxPower0, convey.ShouldNotEqual, 0)
+	})
+}
+
+// TestStoreSingleOpticalNpuInfo test storeSingleOpticalNpuInfo function
+func TestStoreSingleOpticalNpuInfo(t *testing.T) {
+	convey.Convey("TestStoreSingleOpticalNpuInfo", t, func() {
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+
+		// Mock logging
+		patches.ApplyFunc(hwlog.RunLog.Errorf, func(format string, args ...interface{}) {})
+
+		convey.Convey("Test int conversion success", func() {
+			patches.ApplyFuncReturn(hccn.GetIntDataFromStrNpu, 10, nil)
+			result := storeSingleOpticalNpuInfo("10", 0, 0, 0, "int")
+			convey.So(result, convey.ShouldEqual, 10)
+		})
+
+		convey.Convey("Test float conversion success", func() {
+			patches.ApplyFuncReturn(hccn.GetFloatDataFromStrNpu, 10.5, nil)
+			result := storeSingleOpticalNpuInfo("10.5", 0, 0, 0, "float")
+			convey.So(result, convey.ShouldEqual, 10.5)
+		})
+
+		convey.Convey("Test int conversion failure", func() {
+			patches.ApplyFuncReturn(hccn.GetIntDataFromStrNpu, 0, fmt.Errorf("parse error"))
+			result := storeSingleOpticalNpuInfo("invalid", 0, 0, 0, "int")
+			convey.So(result, convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("Test float conversion failure", func() {
+			patches.ApplyFuncReturn(hccn.GetFloatDataFromStrNpu, 0.0, fmt.Errorf("parse error"))
+			result := storeSingleOpticalNpuInfo("invalid", 0, 0, 0, "float")
+			convey.So(result, convey.ShouldEqual, 0.0)
+		})
+
+		convey.Convey("Test invalid convert type", func() {
+			result := storeSingleOpticalNpuInfo("10", 0, 0, 0, "invalid")
+			convey.So(result, convey.ShouldEqual, common.RetError)
+		})
 	})
 }
