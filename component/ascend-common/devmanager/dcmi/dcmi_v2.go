@@ -89,11 +89,11 @@ package dcmi
         CALL_FUNC(dcmiv2_get_device_hbm_info,dev_id,hbm_info)
     }
 
-    static int (*dcmiv2_get_device_errorcode_func)(int dev_id, int *error_count,
+    static int (*dcmiv2_get_device_error_code_list_func)(int dev_id, int *error_count,
         unsigned int *error_code_list, unsigned int list_len);
-    static int dcmiv2_get_device_errorcode(int dev_id, int *error_count,
+    static int dcmiv2_get_device_error_code_list(int dev_id, int *error_count,
         unsigned int *error_code_list, unsigned int list_len){
-        CALL_FUNC(dcmiv2_get_device_errorcode,dev_id,error_count,error_code_list,list_len)
+        CALL_FUNC(dcmiv2_get_device_error_code_list,dev_id,error_count,error_code_list,list_len)
     }
 
     static int (*dcmiv2_get_device_chip_info_func)(int dev_id, struct dcmi_chip_info_v2 *chip_info);
@@ -101,14 +101,14 @@ package dcmi
         CALL_FUNC(dcmiv2_get_device_chip_info,dev_id,chip_info)
     }
 
-    static int (*dcmiv2_get_chip_phyid_from_dev_id_func)(unsigned int dev_id, unsigned int *phyid);
-    static int dcmiv2_get_chip_phyid_from_dev_id(unsigned int dev_id, unsigned int *phyid){
-        CALL_FUNC(dcmiv2_get_chip_phyid_from_dev_id,dev_id,phyid)
+    static int (*dcmiv2_get_chip_phy_id_by_dev_id_func)(unsigned int dev_id, unsigned int *phyid);
+    static int dcmiv2_get_chip_phy_id_by_dev_id(unsigned int dev_id, unsigned int *phyid){
+        CALL_FUNC(dcmiv2_get_chip_phy_id_by_dev_id,dev_id,phyid)
     }
 
-    static int (*dcmiv2_get_dev_id_from_chip_phyid_func)(unsigned int phyid, unsigned int *dev_id);
-    static int dcmiv2_get_dev_id_from_chip_phyid(unsigned int phyid, unsigned int *dev_id){
-        CALL_FUNC(dcmiv2_get_dev_id_from_chip_phyid,phyid,dev_id)
+    static int (*dcmiv2_get_dev_id_by_chip_phy_id_func)(unsigned int phyid, unsigned int *dev_id);
+    static int dcmiv2_get_dev_id_by_chip_phy_id(unsigned int phyid, unsigned int *dev_id){
+        CALL_FUNC(dcmiv2_get_dev_id_by_chip_phy_id,phyid,dev_id)
     }
 
     static int (*dcmiv2_get_device_ip_func)(int dev_id, enum dcmi_port_type input_type, int port_id,
@@ -128,14 +128,14 @@ package dcmi
         CALL_FUNC(dcmiv2_get_device_list,device_num,device_list,list_len)
     }
 
-    static int (*dcmiv2_get_card_elabel_func)(int dev_id, struct dcmi_elabel_info *elabel_info);
-    static int dcmiv2_get_card_elabel(int dev_id, struct dcmi_elabel_info *elabel_info){
-        CALL_FUNC(dcmiv2_get_card_elabel,dev_id,elabel_info)
+    static int (*dcmiv2_get_device_elabel_info_func)(int dev_id, struct dcmi_elabel_info *elabel_info);
+    static int dcmiv2_get_device_elabel_info(int dev_id, struct dcmi_elabel_info *elabel_info){
+        CALL_FUNC(dcmiv2_get_device_elabel_info,dev_id,elabel_info)
     }
 
-    static int (*dcmiv2_set_device_reset_func)(int dev_id, enum dcmi_reset_channel channel_type);
-    static int dcmiv2_set_device_reset(int dev_id, enum dcmi_reset_channel channel_type){
-        CALL_FUNC(dcmiv2_set_device_reset,dev_id,channel_type)
+    static int (*dcmiv2_reset_device_func)(int dev_id, enum dcmi_reset_channel channel_type);
+    static int dcmiv2_reset_device(int dev_id, enum dcmi_reset_channel channel_type){
+        CALL_FUNC(dcmiv2_reset_device,dev_id,channel_type)
     }
 
     static int (*dcmiv2_get_device_outband_channel_state_func)(int dev_id, int* channel_state);
@@ -143,14 +143,14 @@ package dcmi
         CALL_FUNC(dcmiv2_get_device_outband_channel_state,dev_id,channel_state)
     }
 
-    static int (*dcmiv2_pre_reset_soc_func)(int dev_id);
-    static int dcmiv2_pre_reset_soc(int dev_id){
-        CALL_FUNC(dcmiv2_pre_reset_soc,dev_id)
+    static int (*dcmiv2_pre_reset_device_func)(int dev_id);
+    static int dcmiv2_pre_reset_device(int dev_id){
+        CALL_FUNC(dcmiv2_pre_reset_device,dev_id)
     }
 
-    static int (*dcmiv2_rescan_soc_func)(int dev_id);
-    static int dcmiv2_rescan_soc(int dev_id){
-        CALL_FUNC(dcmiv2_rescan_soc,dev_id)
+    static int (*dcmiv2_rescan_device_func)(int dev_id);
+    static int dcmiv2_rescan_device(int dev_id){
+        CALL_FUNC(dcmiv2_rescan_device,dev_id)
     }
 
     static int (*dcmiv2_get_device_boot_status_func)(int dev_id, enum dcmi_boot_status *boot_status);
@@ -169,16 +169,16 @@ package dcmi
         CALL_FUNC(dcmiv2_subscribe_fault_event,dev_id,filter,event_handler)
     }
 
-    static int (*dcmiv2_get_device_die_func)(int dev_id, enum dcmi_die_type input_type,
+    static int (*dcmiv2_get_device_die_id_func)(int dev_id, enum dcmi_die_type input_type,
         struct dcmi_die_id *die_id);
-    static int dcmiv2_get_device_die(int dev_id, enum dcmi_die_type input_type, struct dcmi_die_id *die_id){
-        CALL_FUNC(dcmiv2_get_device_die,dev_id,input_type,die_id)
+    static int dcmiv2_get_device_die_id(int dev_id, enum dcmi_die_type input_type, struct dcmi_die_id *die_id){
+        CALL_FUNC(dcmiv2_get_device_die_id,dev_id,input_type,die_id)
     }
 
-    static int (*dcmiv2_get_device_resource_info_func)(int dev_id, struct dcmi_proc_mem_info *proc_info,
+    static int (*dcmiv2_get_device_proc_mem_info_func)(int dev_id, struct dcmi_proc_mem_info *proc_info,
         int *proc_num);
-    static int dcmiv2_get_device_resource_info(int dev_id, struct dcmi_proc_mem_info *proc_info, int *proc_num){
-        CALL_FUNC(dcmiv2_get_device_resource_info,dev_id,proc_info,proc_num)
+    static int dcmiv2_get_device_proc_mem_info(int dev_id, struct dcmi_proc_mem_info *proc_info, int *proc_num){
+        CALL_FUNC(dcmiv2_get_device_proc_mem_info,dev_id,proc_info,proc_num)
     }
 
     static int (*dcmiv2_get_device_pcie_info_func)(int dev_id, struct dcmi_pcie_info_all *pcie_info);
@@ -274,22 +274,22 @@ package dcmi
         dcmiv2_get_device_power_info_func = dlsym(dcmiHandle,"dcmiv2_get_device_power_info");
         dcmiv2_get_device_frequency_func = dlsym(dcmiHandle,"dcmiv2_get_device_frequency");
         dcmiv2_get_device_hbm_info_func = dlsym(dcmiHandle,"dcmiv2_get_device_hbm_info");
-        dcmiv2_get_device_errorcode_func = dlsym(dcmiHandle,"dcmiv2_get_device_errorcode");
+        dcmiv2_get_device_error_code_list_func = dlsym(dcmiHandle,"dcmiv2_get_device_error_code_list");
         dcmiv2_get_device_chip_info_func = dlsym(dcmiHandle,"dcmiv2_get_device_chip_info");
-        dcmiv2_get_chip_phyid_from_dev_id_func = dlsym(dcmiHandle,"dcmiv2_get_chip_phyid_from_dev_id");
-        dcmiv2_get_dev_id_from_chip_phyid_func = dlsym(dcmiHandle,"dcmiv2_get_dev_id_from_chip_phyid");
+        dcmiv2_get_chip_phy_id_by_dev_id_func = dlsym(dcmiHandle,"dcmiv2_get_chip_phy_id_by_dev_id");
+        dcmiv2_get_dev_id_by_chip_phy_id_func = dlsym(dcmiHandle,"dcmiv2_get_dev_id_by_chip_phy_id");
         dcmiv2_get_device_ip_func = dlsym(dcmiHandle,"dcmiv2_get_device_ip");
         dcmiv2_get_device_network_health_func = dlsym(dcmiHandle,"dcmiv2_get_device_network_health");
         dcmiv2_get_device_list_func = dlsym(dcmiHandle,"dcmiv2_get_device_list");
-        dcmiv2_get_card_elabel_func = dlsym(dcmiHandle,"dcmiv2_get_card_elabel");
-        dcmiv2_set_device_reset_func = dlsym(dcmiHandle,"dcmiv2_set_device_reset");
+        dcmiv2_get_device_elabel_info_func = dlsym(dcmiHandle,"dcmiv2_get_device_elabel_info");
+        dcmiv2_reset_device_func = dlsym(dcmiHandle,"dcmiv2_reset_device");
         dcmiv2_get_device_outband_channel_state_func = dlsym(dcmiHandle,"dcmiv2_get_device_outband_channel_state");
-        dcmiv2_pre_reset_soc_func = dlsym(dcmiHandle,"dcmiv2_pre_reset_soc");
-        dcmiv2_rescan_soc_func = dlsym(dcmiHandle,"dcmiv2_rescan_soc");
+        dcmiv2_pre_reset_device_func = dlsym(dcmiHandle,"dcmiv2_pre_reset_device");
+        dcmiv2_rescan_device_func = dlsym(dcmiHandle,"dcmiv2_rescan_device");
         dcmiv2_get_device_boot_status_func = dlsym(dcmiHandle,"dcmiv2_get_device_boot_status");
         dcmiv2_subscribe_fault_event_func = dlsym(dcmiHandle,"dcmiv2_subscribe_fault_event");
-        dcmiv2_get_device_die_func = dlsym(dcmiHandle, "dcmiv2_get_device_die");
-        dcmiv2_get_device_resource_info_func = dlsym(dcmiHandle, "dcmiv2_get_device_resource_info");
+        dcmiv2_get_device_die_id_func = dlsym(dcmiHandle, "dcmiv2_get_device_die_id");
+        dcmiv2_get_device_proc_mem_info_func = dlsym(dcmiHandle, "dcmiv2_get_device_proc_mem_info");
         dcmiv2_get_device_pcie_info_func = dlsym(dcmiHandle, "dcmiv2_get_device_pcie_info");
         dcmiv2_get_device_board_info_func = dlsym(dcmiHandle, "dcmiv2_get_device_board_info");
         dcmiv2_get_pcie_link_bandwidth_info_func = dlsym(dcmiHandle, "dcmiv2_get_pcie_link_bandwidth_info");
@@ -603,7 +603,7 @@ func (d *DcV2Manager) DcGetDeviceErrorCode(logicID int32) (int32, int64, error) 
 	}
 	var errCount C.int
 	var errCodeArray [common.MaxErrorCodeCount]C.uint
-	if retCode := C.dcmiv2_get_device_errorcode(C.int(logicID), &errCount, &errCodeArray[0],
+	if retCode := C.dcmiv2_get_device_error_code_list(C.int(logicID), &errCount, &errCodeArray[0],
 		common.MaxErrorCodeCount); int32(retCode) != common.Success {
 		return common.RetError, common.RetError, fmt.Errorf("failed to obtain the device errorcode based on "+
 			"logicID(%d), error code: %d, error count: %d", logicID, int32(retCode), int32(errCount))
@@ -647,7 +647,7 @@ func (d *DcV2Manager) DcGetPhysicIDFromLogicID(logicID int32) (int32, error) {
 		return common.RetError, fmt.Errorf("logicID(%d) is invalid", logicID)
 	}
 	var physicID C.uint
-	if rCode := C.dcmiv2_get_chip_phyid_from_dev_id(C.uint(logicID), &physicID); int32(rCode) != common.Success {
+	if rCode := C.dcmiv2_get_chip_phy_id_by_dev_id(C.uint(logicID), &physicID); int32(rCode) != common.Success {
 		return common.RetError, fmt.Errorf("get physic id from logicID(%d) failed, error code: %d", logicID, int32(rCode))
 	}
 	if !common.IsValidLogicIDOrPhyID(int32(physicID)) {
@@ -662,7 +662,7 @@ func (d *DcV2Manager) DcGetLogicIDFromPhysicID(physicID int32) (int32, error) {
 		return common.RetError, fmt.Errorf("physicID(%d) is invalid", physicID)
 	}
 	var logicID C.uint
-	if rCode := C.dcmiv2_get_dev_id_from_chip_phyid(C.uint(physicID), &logicID); int32(rCode) != common.Success {
+	if rCode := C.dcmiv2_get_dev_id_by_chip_phy_id(C.uint(physicID), &logicID); int32(rCode) != common.Success {
 		return common.RetError, fmt.Errorf("get logicID from physicID(%d) failed, error code: %d",
 			physicID, int32(rCode))
 	}
@@ -734,7 +734,7 @@ func (d *DcV2Manager) DcGetDieID(logicID int32, dcmiDieType DieType) (string, er
 	}
 
 	var dieIDObj C.struct_dcmi_die_id
-	if retCode := C.dcmiv2_get_device_die(C.int(logicID),
+	if retCode := C.dcmiv2_get_device_die_id(C.int(logicID),
 		C.enum_dcmi_die_type(dcmiDieType), &dieIDObj); int32(retCode) != common.Success {
 		return "", buildDcmiV2Err(logicID, "chip die ID", retCode)
 	}
@@ -1145,7 +1145,7 @@ func (d *DcV2Manager) DcGetOutBandChannelState(logicID int32) error {
 
 // DcPreResetSoc pre reset soc
 func (d *DcV2Manager) DcPreResetSoc(logicID int32) error {
-	errCode := C.dcmiv2_pre_reset_soc(C.int(logicID))
+	errCode := C.dcmiv2_pre_reset_device(C.int(logicID))
 	if errCode != common.Success {
 		return fmt.Errorf("pre reset failed, cardID: %v, errCode: %v", logicID, errCode)
 	}
@@ -1162,7 +1162,7 @@ func (d *DcV2Manager) setDeviceReset(logicID int32, channelType C.enum_dcmi_rese
 	if !common.IsValidLogicIDOrPhyID(logicID) {
 		return fmt.Errorf("logicID(%d) is invalid", logicID)
 	}
-	if errCode := C.dcmiv2_set_device_reset(C.int(logicID), channelType); errCode != 0 {
+	if errCode := C.dcmiv2_reset_device(C.int(logicID), channelType); errCode != 0 {
 		return fmt.Errorf("cardID(%d) hot reset errCode: %v", logicID, errCode)
 	}
 	return nil
@@ -1170,7 +1170,7 @@ func (d *DcV2Manager) setDeviceReset(logicID int32, channelType C.enum_dcmi_rese
 
 // DcRescanSoc rescan soc
 func (d *DcV2Manager) DcRescanSoc(logicID int32) error {
-	errCode := C.dcmiv2_rescan_soc(C.int(logicID))
+	errCode := C.dcmiv2_rescan_device(C.int(logicID))
 	if errCode != common.Success {
 		return fmt.Errorf("fail to rescan chip logicID %d, errCode: %v", logicID, errCode)
 	}
@@ -1196,7 +1196,8 @@ func (d *DcV2Manager) DcGetDeviceAllErrorCode(logicID int32) (int32, []int64, er
 	}
 	var errCount C.int
 	var errCodeArray [common.MaxErrorCodeCount]C.uint
-	retCode := C.dcmiv2_get_device_errorcode(C.int(logicID), &errCount, &errCodeArray[0], common.MaxErrorCodeCount)
+	retCode := C.dcmiv2_get_device_error_code_list(C.int(logicID), &errCount, &errCodeArray[0],
+		common.MaxErrorCodeCount)
 
 	var health C.uint
 	healthRetCode := C.dcmiv2_get_device_health(C.int(logicID), &health)
@@ -1237,7 +1238,8 @@ func (d *DcV2Manager) DcGetDeviceAllErrorCodeWithTimeout(logicID int32, timeout 
 	var errCodeArray [common.MaxErrorCodeCount]C.uint
 
 	// attempt to get device error codes
-	retCode := C.dcmiv2_get_device_errorcode(C.int(logicID), &errCount, &errCodeArray[0], common.MaxErrorCodeCount)
+	retCode := C.dcmiv2_get_device_error_code_list(C.int(logicID), &errCount, &errCodeArray[0],
+		common.MaxErrorCodeCount)
 	if int32(retCode) != common.Success {
 		return common.RetError, nil, fmt.Errorf("failed to obtain the device errorcode based on logicID(%d), "+
 			"error code: %d, error count: %d", logicID, int32(retCode), int32(errCount))
@@ -1249,7 +1251,8 @@ func (d *DcV2Manager) DcGetDeviceAllErrorCodeWithTimeout(logicID int32, timeout 
 
 	// If health check took longer than retry interval, re-fetch error codes
 	if time.Since(startTime) >= time.Second*common.DcmiRetryInterval {
-		retCode = C.dcmiv2_get_device_errorcode(C.int(logicID), &errCount, &errCodeArray[0], common.MaxErrorCodeCount)
+		retCode = C.dcmiv2_get_device_error_code_list(C.int(logicID), &errCount, &errCodeArray[0],
+			common.MaxErrorCodeCount)
 		if int32(retCode) != common.Success {
 			return common.RetError, nil, fmt.Errorf("failed to obtain the device errorcode after get device health "+
 				"based on logicID(%d), error code: %d, error count: %d", logicID, int32(retCode), int32(errCount))
@@ -1326,7 +1329,7 @@ func (d *DcV2Manager) DcGetDevProcessInfo(logicID int32) (*common.DevProcessInfo
 	var procList [common.MaxProcNum]C.struct_dcmi_proc_mem_info
 	var procNum C.int
 
-	if retCode := C.dcmiv2_get_device_resource_info(C.int(logicID), &procList[0],
+	if retCode := C.dcmiv2_get_device_proc_mem_info(C.int(logicID), &procList[0],
 		&procNum); int32(retCode) != common.Success {
 		return nil, buildDcmiV2Err(logicID, "device resource", retCode)
 	}
@@ -1511,7 +1514,7 @@ func (d *DcV2Manager) DcGetCardElabel(logicID int32) (common.ElabelInfo, error) 
 		return common.ElabelInfo{}, fmt.Errorf("logicID(%d) is invalid", logicID)
 	}
 	var elabelInfo C.struct_dcmi_elabel_info
-	if retCode := C.dcmiv2_get_card_elabel(C.int(logicID), &elabelInfo); int32(retCode) != common.Success {
+	if retCode := C.dcmiv2_get_device_elabel_info(C.int(logicID), &elabelInfo); int32(retCode) != common.Success {
 		return common.ElabelInfo{}, fmt.Errorf("logicID(%d): get elabel info failed, error code: %v", logicID, retCode)
 	}
 	return common.ElabelInfo{
