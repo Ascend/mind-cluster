@@ -12,9 +12,12 @@
    limitations under the License.
 */
 
-// Package metrics for general collector
-package metrics
+// Package common for collector
+package common
 
 var (
-	devType string
+	// DevType npu device type
+	DevType string
+	// NpuDevPortInfos npu dev port infos
+	NpuDevPortInfos NpuDevPortInfo
 )

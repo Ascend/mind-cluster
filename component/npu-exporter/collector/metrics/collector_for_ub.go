@@ -26,7 +26,6 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
-
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 )
@@ -141,19 +140,11 @@ var (
 	coreMibTxbadpktsDesc   []*prometheus.Desc
 	coreMibRxbadoctetsDesc []*prometheus.Desc
 	coreMibTxbadoctetsDesc []*prometheus.Desc
-
-	supportedUbDevices = map[uint32]bool{
-		api.Atlas3504PMainBoardID: true,
-		api.Atlas9501DMainBoardID: true,
-		api.Atlas950MainBoardID:   true,
-		api.Atlas850MainBoardID:   true,
-		api.Atlas850MainBoardID2:  true,
-	}
 )
 
-func init() {
-	for dieID := 0; dieID < common.MaxDieID; dieID++ {
-		for portID := 0; portID < common.MaxPortID; portID++ {
+func initBuildDesc() {
+	for dieID, portIDs := range colcommon.NpuDevPortInfos.GetPortMap() {
+		for _, portID := range portIDs {
 			// rx
 			initBuildDescRx(dieID, portID)
 			// tx
@@ -189,11 +180,11 @@ type UbCollector struct {
 
 // IsSupported check whether the collector is supported
 func (c *UbCollector) IsSupported(n *colcommon.NpuCollector) bool {
-	devType := n.Dmgr.GetDevType()
-	mainBoardID := n.Dmgr.GetMainBoardId()
-	isSupport := devType == api.Ascend910A5 && supportedUbDevices[mainBoardID]
-	logForUnSupportDevice(isSupport, devType, colcommon.GetCacheKey(c),
-		fmt.Sprint("this mainBoardId:", mainBoardID, " is not supported"))
+	isSupport := colcommon.DevType == api.Ascend910A5
+	logForUnSupportDevice(isSupport, colcommon.DevType, colcommon.GetCacheKey(c), "")
+	if isSupport {
+		initBuildDesc()
+	}
 	return isSupport
 }
 
@@ -240,7 +231,10 @@ func promUpdateUbInfo(ch chan<- prometheus.Metric, cache ubCache,
 	if ubInfo == nil {
 		return
 	}
-	for i := 0; i < (common.MaxDieID * common.MaxPortID); i++ {
+	for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
+		if ubInfo[i] == nil {
+			continue
+		}
 		if ubInfo[i].UBCommonStats != nil {
 			// rx
 			promUpdateUbRx(ch, timestamp, ubInfo, cardLabel, i)
@@ -340,7 +334,10 @@ func telegrafUpdateUbInfo(cache ubCache, fieldMap map[string]interface{}) {
 	if ubInfo == nil {
 		return
 	}
-	for i := 0; i < (common.MaxDieID * common.MaxPortID); i++ {
+	for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
+		if ubInfo[i] == nil {
+			continue
+		}
 		if ubInfo[i].UBCommonStats != nil {
 			// rx
 			telegrafUpdateUbRx(fieldMap, ubInfo, i)
@@ -515,33 +512,32 @@ func initBuildDescTx(dieID, portID int) {
 
 func collectUbInfo(logicID int32) []*common.UBInfo {
 	var newUbInfos []*common.UBInfo
-	for dieID := 0; dieID < common.MaxDieID; dieID++ {
-		for portID := 0; portID < common.MaxPortID; portID++ {
+	for dieID, portIDs := range colcommon.NpuDevPortInfos.GetPortMap() {
+		for _, portID := range portIDs {
 			newUbInfos = append(newUbInfos, getUBStatInfo(logicID, dieID, portID))
 		}
 	}
 	return newUbInfos
 }
 
-func getUBStatInfo(logicID int32, dieID, portID int) *common.UBInfo {
+func getUBStatInfo(logicID int32, uDieID, portID int) *common.UBInfo {
 	ubInfos := common.UBInfo{
 		UBCommonStats:  &common.UBCommonStats{},
 		UboeExtensions: &common.UBOEExtensions{},
 	}
-	if ubInfo, err := hccn.GetNPUUbStatInfo(logicID, int32(dieID), int32(portID)); err == nil {
-		if result, err := strconv.Atoi(ubInfo[isUboePort]); err == nil && result == isUboe {
-			hwlog.RunLog.Debug("is uboe port")
-			convertUboeExtensions(&ubInfos, ubInfo)
-		} else {
-			ubInfos.UboeExtensions = nil
-		}
-		convertUBCommonStats(&ubInfos, ubInfo)
-		hwlog.ResetErrCnt(fmt.Sprint(colcommon.DomainForUb, dieID, portID), logicID)
-	} else {
-		ubInfos.UBCommonStats = nil
-		ubInfos.UboeExtensions = nil
-		logWarnMetricsWithLimit(fmt.Sprint(colcommon.DomainForUb, dieID, portID), logicID, dieID, portID, err)
+	ubInfo, err := hccn.GetNPUUbStatInfo(logicID, int32(uDieID), int32(portID))
+	if err != nil {
+		logWarnMetricsWithLimit(fmt.Sprint(colcommon.DomainForUb, uDieID, portID), logicID, uDieID, portID, err)
+		return nil
 	}
+	if result, err := strconv.Atoi(ubInfo[isUboePort]); err == nil && result == isUboe {
+		hwlog.RunLog.Debugf("logicID:%v ,UdieID:%v, portID:%v is uboe port", logicID, uDieID, portID)
+		convertUboeExtensions(&ubInfos, ubInfo)
+	} else {
+		ubInfos.UboeExtensions = nil
+	}
+	convertUBCommonStats(&ubInfos, ubInfo)
+	hwlog.ResetErrCnt(fmt.Sprint(colcommon.DomainForUb, uDieID, portID), logicID)
 	return &ubInfos
 }
 

@@ -142,6 +142,7 @@ func TestRegister(t *testing.T) {
 			initConfiguration(loadFromFile("../../build/metricConfiguration.json"), &presetConfigs)
 			initConfiguration(loadFromFile("../../build/pluginConfiguration.json"), &pluginConfigs)
 		})
+		patches.ApplyFunc(common.InitNpuDevNetPortInfos, func(n *common.NpuCollector) {})
 		Register(n)
 		convey.Convey("Should add collectors to ChainForSingleGoroutine", func() {
 			convey.So(len(common.ChainForSingleGoroutine), convey.ShouldBeGreaterThan, 0)

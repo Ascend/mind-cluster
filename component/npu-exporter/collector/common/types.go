@@ -59,3 +59,9 @@ type TelegrafData struct {
 	Metrics   map[string]interface{}
 	Timestamp time.Time
 }
+
+// NpuDevPortInfo npu ports info data structure
+type NpuDevPortInfo struct {
+	devPortMap map[int][]int
+	totalPort  int
+}

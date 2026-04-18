@@ -28,15 +28,26 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
+	colcommon "huawei.com/npu-exporter/v6/collector/common"
 )
 
 const ascend950NetworkMetricNum = 4
+
+var (
+	mockPorts = map[int][]int{
+		0: {1, 2, 3},
+		1: {1, 2, 3},
+	}
+)
 
 func init() {
 	hwLogConfig := hwlog.LogConfig{
 		OnlyToStdout: true,
 	}
 	hwlog.InitRunLogger(&hwLogConfig, context.Background())
+
+	colcommon.NpuDevPortInfos.SetPortMap(mockPorts)
+	colcommon.NpuDevPortInfos.Init()
 }
 
 // TestCollectNetworkNpuInfo test collectNetworkNpuInfo function
@@ -55,7 +66,7 @@ func TestCollectNetworkNpuInfo(t *testing.T) {
 
 		// Basic verification
 		convey.So(result, convey.ShouldNotBeEmpty)
-		convey.So(len(result), convey.ShouldEqual, maxDieId*maxPortId)
+		convey.So(len(result), convey.ShouldEqual, colcommon.NpuDevPortInfos.GetCount())
 		convey.So(result[0].LinkStatusInfo.LinkState, convey.ShouldEqual, "up")
 		convey.So(result[0].BandwidthInfo.TxValue, convey.ShouldEqual, 100.0)
 		convey.So(result[0].BandwidthInfo.RxValue, convey.ShouldEqual, 200.0)
@@ -87,21 +98,16 @@ func TestNetworkCollectorIsSupported(t *testing.T) {
 // TestNetworkCollectorIsSupported2 test NetworkCollector IsSupported
 func TestNetworkCollectorIsSupported2(t *testing.T) {
 	n := mockNewNpuCollector()
-	cases := []testCase{
-		buildTestCase("NetworkCollector: testIsSupported on Npu: false", &NetworkCollector{}, api.Ascend910A5, false),
-	}
-
-	for _, c := range cases {
-		patches := gomonkey.NewPatches()
-		convey.Convey(c.name, t, func() {
-			defer patches.Reset()
-			patches.ApplyMethodReturn(n.Dmgr, "GetMainBoardId", uint32(api.Atlas3501PMainBoardID))
-			patches.ApplyMethodReturn(n.Dmgr, "IsTrainingCard", true)
-			patches.ApplyMethodReturn(n.Dmgr, "GetDevType", c.deviceType)
-			isSupported := c.collectorType.IsSupported(n)
-			convey.So(isSupported, convey.ShouldEqual, c.expectValue)
-		})
-	}
+	c := buildTestCase("NetworkCollector: testIsSupported on Npu: false", &NetworkCollector{}, api.Ascend910A5, false)
+	patches := gomonkey.NewPatches()
+	convey.Convey(c.name, t, func() {
+		defer patches.Reset()
+		patches.ApplyMethodReturn(n.Dmgr, "GetMainBoardId", uint32(api.Atlas3501PMainBoardID))
+		patches.ApplyMethodReturn(n.Dmgr, "IsTrainingCard", true)
+		colcommon.DevType = c.deviceType
+		isSupported := c.collectorType.IsSupported(n)
+		convey.So(isSupported, convey.ShouldEqual, c.expectValue)
+	})
 }
 
 // TestPromUpdateNetInfo test update prometheus update info
@@ -122,8 +128,9 @@ func TestPromUpdateNetInfo(t *testing.T) {
 		})
 
 		convey.Convey("When cache has valid data", func() {
-			mockExtInfo := make([]*common.NpuNetInfo, maxDieId*maxPortId)
-			for i := 0; i < (maxDieId * maxPortId); i++ {
+			mockExtInfo := make([]*common.NpuNetInfo, colcommon.NpuDevPortInfos.GetCount())
+			initNpuNetWorkDesc()
+			for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
 				mockExtInfo[i] = &common.NpuNetInfo{
 					LinkStatusInfo: &common.LinkStatusInfo{LinkState: "UP"},
 					BandwidthInfo:  &common.BandwidthInfo{TxValue: 100, RxValue: 200},
@@ -135,16 +142,17 @@ func TestPromUpdateNetInfo(t *testing.T) {
 			callCount := 0
 			callTelCount := 0
 			mockFiledMap := make(map[string]interface{})
-			patches.ApplyFunc(doUpdateMetricWithValidateNum, func(ch chan<- prometheus.Metric, ts time.Time, val float64, labels []string, desc *prometheus.Desc) {
+			patches.ApplyFunc(doUpdateMetricWithValidateNum, func(ch chan<- prometheus.Metric, ts time.Time, val float64,
+				labels []string, desc *prometheus.Desc) {
 				callCount++
 			})
-			patches.ApplyFunc(doUpdateTelegrafWithValidateNum, func(fieldMap map[string]interface{}, desc *prometheus.Desc, value float64, extInfo string) {
+			patches.ApplyFunc(doUpdateTelegrafWithValidateNum, func(fieldMap map[string]interface{}, desc *prometheus.Desc,
+				value float64, extInfo string) {
 				callTelCount++
 			})
-
 			promUpdateNetInfo(ch, cache, timestamp, cardLabel)
 			telegrafUpdateNetInfo(cache, mockFiledMap)
-			expectedCalls := (maxDieId * maxPortId) * ascend950NetworkMetricNum
+			expectedCalls := colcommon.NpuDevPortInfos.GetCount() * ascend950NetworkMetricNum
 			convey.So(callCount, convey.ShouldEqual, expectedCalls)
 			convey.So(callTelCount, convey.ShouldEqual, expectedCalls)
 		})

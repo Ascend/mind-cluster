@@ -16,6 +16,7 @@
 package metrics
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"testing"
@@ -30,15 +31,16 @@ import (
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
-	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
 func init() {
-	logger.HwLogConfig = &hwlog.LogConfig{
+	hwLogConfig := hwlog.LogConfig{
 		OnlyToStdout: true,
 	}
-	logger.InitLogger("Prometheus")
-	initChain()
+	hwlog.InitRunLogger(&hwLogConfig, context.Background())
+
+	colcommon.NpuDevPortInfos.SetPortMap(mockPorts)
+	colcommon.NpuDevPortInfos.Init()
 }
 
 // TestInitDesc tests the initDesc function
@@ -96,10 +98,10 @@ func TestInitDesc(t *testing.T) {
 
 // TestDescribeUB test Describe
 func TestDescribeUB(t *testing.T) {
-
 	convey.Convey("test prometheus desc ", t, func() {
 		ch := make(chan *prometheus.Desc, maxMetricsCount)
 		c := UbCollector{}
+		initBuildDesc()
 		c.Describe(ch)
 		t.Logf("Describe len(ch):%v", len(ch))
 		convey.So(ch, convey.ShouldNotBeEmpty)
@@ -235,9 +237,7 @@ func testGetUBStatCase3(t *testing.T) {
 		convey.So(logWarnMetricsWithLimitCalled, convey.ShouldBeTrue)
 
 		// Verify the result is not nil even on error (should return empty UBInfo)
-		convey.So(result, convey.ShouldNotBeNil)
-		convey.So(result.UBCommonStats, convey.ShouldBeNil)
-		convey.So(result.UboeExtensions, convey.ShouldBeNil)
+		convey.So(result, convey.ShouldBeNil)
 	})
 }
 
@@ -246,10 +246,10 @@ func TestCollectUBInfo(t *testing.T) {
 	convey.Convey("Test collectUBInfo function", t, func() {
 		// Track calls to getUBStatInfo
 		callCount := 0
-		expectedCalls := common.MaxDieID * common.MaxPortID
+		expectedCalls := colcommon.NpuDevPortInfos.GetCount()
 
 		// Mock getUBStatInfo function to match the new signature
-		mockGetUBStatInfo := func(logicID int32, dieID, portID int) *common.UBInfo {
+		mockGetUBStatInfo := func(logicID int32, uDieID, portID int) *common.UBInfo {
 			callCount++
 			// Return a mock UBInfo
 			return &common.UBInfo{
@@ -257,7 +257,6 @@ func TestCollectUBInfo(t *testing.T) {
 				UboeExtensions: &common.UBOEExtensions{},
 			}
 		}
-
 		// Use gomonkey to patch getUBStatInfo
 		patch := gomonkey.ApplyFunc(getUBStatInfo, mockGetUBStatInfo)
 		defer patch.Reset()
@@ -286,8 +285,8 @@ func TestIsSupportedUB(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		convey.Convey(c.name, t, func() {
 			defer patches.Reset()
+			colcommon.DevType = c.deviceType
 			patches.ApplyMethodReturn(n.Dmgr, "GetMainBoardId", uint32(api.Atlas9501DMainBoardID))
-			patches.ApplyMethodReturn(n.Dmgr, "GetDevType", c.deviceType)
 			isSupported := c.collectorType.IsSupported(n)
 			convey.So(isSupported, convey.ShouldEqual, c.expectValue)
 		})
