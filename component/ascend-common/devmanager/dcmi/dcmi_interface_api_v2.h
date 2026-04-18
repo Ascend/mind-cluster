@@ -41,7 +41,7 @@ DCMIDLLEXPORT int dcmiv2_get_device_power_info(int dev_id, int *power);
 
 DCMIDLLEXPORT int dcmiv2_get_device_health(int dev_id, unsigned int *health);
 
-DCMIDLLEXPORT int dcmiv2_get_device_errorcode(
+DCMIDLLEXPORT int dcmiv2_get_device_error_code_list(
     int dev_id, int *error_count, unsigned int *error_code_list, unsigned int list_len);
 
 DCMIDLLEXPORT int dcmiv2_get_device_temperature(int dev_id, int *temperature);
@@ -67,26 +67,26 @@ DCMIDLLEXPORT int dcmiv2_get_device_ip(int dev_id, enum dcmi_port_type input_typ
 
 DCMIDLLEXPORT int dcmiv2_get_device_network_health(int dev_id, enum dcmi_rdfx_detect_result *result);
 
-DCMIDLLEXPORT int dcmiv2_get_chip_phyid_from_dev_id(unsigned int dev_id, unsigned int *phyid);
+DCMIDLLEXPORT int dcmiv2_get_chip_phy_id_by_dev_id(unsigned int dev_id, unsigned int *phyid);
 
-DCMIDLLEXPORT int dcmiv2_get_dev_id_from_chip_phyid(unsigned int phyid, unsigned int *dev_id);
+DCMIDLLEXPORT int dcmiv2_get_dev_id_by_chip_phy_id(unsigned int phyid, unsigned int *dev_id);
 
-DCMIDLLEXPORT int dcmiv2_set_device_reset(int dev_id, enum dcmi_reset_channel channel_type);
+DCMIDLLEXPORT int dcmiv2_reset_device(int dev_id, enum dcmi_reset_channel channel_type);
 
 DCMIDLLEXPORT int dcmiv2_get_device_outband_channel_state(int dev_id, int* channel_state);
 
-DCMIDLLEXPORT int dcmiv2_pre_reset_soc(int dev_id);
+DCMIDLLEXPORT int dcmiv2_pre_reset_device(int dev_id);
 
-DCMIDLLEXPORT int dcmiv2_rescan_soc(int dev_id);
+DCMIDLLEXPORT int dcmiv2_rescan_device(int dev_id);
 
 DCMIDLLEXPORT int dcmiv2_get_device_boot_status(int dev_id, enum dcmi_boot_status *boot_status);
 
 DCMIDLLEXPORT int dcmiv2_subscribe_fault_event(int dev_id, struct dcmi_event_filter filter);
 
-DCMIDLLEXPORT int dcmiv2_get_device_die(
+DCMIDLLEXPORT int dcmiv2_get_device_die_id(
     int dev_id, enum dcmi_die_type input_type, struct dcmi_die_id *die_id);
 
-DCMIDLLEXPORT int dcmiv2_get_device_resource_info(int dev_id, struct dcmi_proc_mem_info *proc_info,
+DCMIDLLEXPORT int dcmiv2_get_device_proc_mem_info(int dev_id, struct dcmi_proc_mem_info *proc_info,
     int *proc_num);
 
 DCMIDLLEXPORT int dcmiv2_get_device_board_info(int dev_id, struct dcmi_board_info *board_info);
@@ -113,7 +113,7 @@ DCMIDLLEXPORT int dcmiv2_get_urma_device_cnt(int dev_id, unsigned int *dev_cnt);
 DCMIDLLEXPORT int dcmiv2_get_eid_list_by_urma_dev_index(int dev_id, unsigned int dev_index,
     dcmi_urma_eid_info_t *eid_list, unsigned int *eid_cnt);
 
-DCMIDLLEXPORT int dcmiv2_get_card_elabel(int dev_id, struct dcmi_elabel_info *elabel_info);
+DCMIDLLEXPORT int dcmiv2_get_device_elabel_info(int dev_id, struct dcmi_elabel_info *elabel_info);
 #endif
 
 #ifdef __cplusplus
