@@ -34,3 +34,16 @@ def get_hccl_switch_nic_timeout():
     except Exception as err:
         run_log.warning(f"get HCCL_CONNECT_TIMEOUT failed, {err}")
         return constants.SWITCH_NIC_DEFAULT_TIMEOUT
+
+def get_report_fault_timeout() -> int:
+    timeout = os.getenv(constants.REPORT_FAULT_TIMEOUT_ENV)
+    if timeout is None:
+        return constants.REPORT_FAULT_TIMEOUT_DISABLED
+    try:
+        timeout = int(timeout)
+        if timeout < constants.REPORT_FAULT_TIMEOUT_MIN or timeout > constants.REPORT_FAULT_TIMEOUT_MAX:
+            return constants.REPORT_FAULT_TIMEOUT_DISABLED
+        return timeout
+    except Exception as err:
+        run_log.warning(f"get {constants.REPORT_FAULT_TIMEOUT_ENV} failed, {err}")
+        return constants.REPORT_FAULT_TIMEOUT_DISABLED

@@ -25,6 +25,7 @@ from taskd.python.toolkit.fault_checker.fault_check import grace_exit_pids, stop
 from taskd.python.framework.agent.base_agent.agent_network import get_message_manager, network_send_message, \
     get_msg_network_instance
 from taskd.python.framework.common.type import MsgBody, MessageInfo
+from taskd.python.framework.common.utils import get_report_fault_timeout
 from taskd.python.toolkit.constants import constants
 
 
@@ -56,6 +57,7 @@ class BaseAgent:
         self.command_map = {}
         self.network_config = None
         self.msg_queue = queue.Queue()
+        self.report_fault_time = None
 
     def register_callbacks(self, operator, func):
         self._func_map[operator] = func
@@ -126,3 +128,16 @@ class BaseAgent:
                 continue
             run_log.info('message manager is ready')
             break
+    
+    def is_report_timeout(self) -> bool:
+        if self.report_fault_time is None:
+            return False
+        timeout = get_report_fault_timeout()
+        if timeout == constants.REPORT_FAULT_TIMEOUT_DISABLED:
+            return False
+        current_time = time.time()
+        elapsed_time = current_time - self.report_fault_time
+        if elapsed_time > timeout:
+            run_log.error(f'Fault report timeout after {elapsed_time:.2f}s (limit: {timeout}s)')
+            return True
+        return False

@@ -138,6 +138,17 @@ class TestMsAgent(unittest.TestCase):
         self.agent.report_fault_rank([1, 2])
         
         mock_send.assert_not_called()
+    
+    @patch.object(MsAgent, 'is_report_timeout')
+    @patch.object(MsAgent, 'send_message_to_manager')
+    @patch.object(MsAgent, 'check_new_fault')
+    def test_report_fault_rank_no_new_fault_timeout_exit(self, mock_check_new, mock_send, mock_report):
+        mock_check_new.return_value = False
+        mock_report.return_value = True
+        
+        with patch('taskd.python.framework.agent.ms_agent.ms_agent.exit') as mock_exit:
+            self.agent.report_fault_rank([1, 2])
+            mock_exit.assert_called_once_with(1)
 
     def test_initialize_workers(self):
         mock_msg = MagicMock()
