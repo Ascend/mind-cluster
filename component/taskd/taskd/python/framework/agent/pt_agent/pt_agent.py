@@ -91,13 +91,18 @@ class PtAgent(BaseAgent):
         for worker in self.worker_group.workers:
             self.pids[worker.global_rank] = worker.id
         self.local_fault_rank = []
+        self.report_fault_time = None
         return
 
     def report_fault_rank(self, result: RunResult):
         fault_ranks = list(result.failures.keys())
         if not self.check_new_fault(fault_ranks):
             run_log.info(f'no additional fault process, fault_rank: {fault_ranks}')
+            if self.is_report_timeout():
+                run_log.error(f'agent report fault rank timeout, exiting...')
+                exit(1)
             return
+        self.report_fault_time = time.time()
         report_info = AgentReportInfo(fault_ranks=fault_ranks)
         self.send_message_to_manager('STATUS', constants.REPORT_CODE, report_info, {"REPORT_FAULT_TIME": str(int(time.time()))})
         self.local_fault_rank = fault_ranks
@@ -146,6 +151,7 @@ class PtAgent(BaseAgent):
         self.worker_group.state = WorkerState.STOPPED
         self._func_map.get('START_ALL_WORKER')(self.worker_group)
         self.local_fault_rank = []
+        self.report_fault_time = None
 
     def recover_in_place(self, msg):
         run_log.info(f'receive {msg.code} command, start to recover in place')
@@ -163,6 +169,7 @@ class PtAgent(BaseAgent):
         fault_workers = get_fault_workers(self.pt_instance._worker_group, int_fault_ranks)
         self._func_map.get('RESTART')(fault_workers)
         self.local_fault_rank = []
+        self.report_fault_time = None
 
     def start_worker(self):
         time_use = 0
