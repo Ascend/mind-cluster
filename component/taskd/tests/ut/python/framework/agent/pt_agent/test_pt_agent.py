@@ -132,6 +132,18 @@ class TestPtAgent(unittest.TestCase):
         mock_check_new.assert_called_once_with([0])
         mock_send.assert_not_called()
 
+    @patch.object(PtAgent, 'is_report_timeout')
+    @patch.object(PtAgent, 'send_message_to_manager')
+    @patch.object(PtAgent, 'check_new_fault')
+    def test_report_fault_rank_no_new_fault_timeout_exit(self, mock_check_new, mock_send, mock_timeout):
+        mock_check_new.return_value = False
+        mock_timeout.return_value = True
+        self.mock_run_result.failures = {0: 'error'}
+        
+        with patch('taskd.python.framework.agent.pt_agent.pt_agent.exit') as mock_exit:
+            self.agent.report_fault_rank(self.mock_run_result)
+            mock_exit.assert_called_once_with(1)
+
     def test_initialize_workers(self):
         mock_msg = MagicMock()
         mock_msg.code = constants.STARTAGENTCODE

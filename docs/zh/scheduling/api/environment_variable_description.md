@@ -542,6 +542,7 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
 |LOCAL_PROXY_ENABLE|是否开启本地代理（安全加固需要）。|字符串|取值为“on”或“off”。<ul><li>on：开启本功能</li><li>off：关闭本功能</li></ul>默认值为“off”，通信安全加固场景需要设置为“on”。|
 |HCCL_ASYNC_ERROR_HANDLING|是否开启watchdog功能。|字符串|取值如下：<ul><li>0：表示关闭故障检测和进程退出功能。</li><li>1：表示开启故障检测和进程退出功能。</li><li>2：表示仅开启故障检测功能。</li></ul>默认值为1。|
 |TASKD_PROCESS_INTERVAL|设置TaskD Manager主流程处理间隔。|字符串|取值范围为100~1000，单位为毫秒。|
+|TASKD_REPORT_FAULT_TIMEOUT|设置TaskD Agent上报业务故障给TaskD Manager的超时时间。若超时后，故障仍然存在，则TaskD Agent退出。|字符串|取值范围为300~600，单位为秒。|
 
 **NodeD环境变量说明<a name="section10131935141216"></a>**
 
