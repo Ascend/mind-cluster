@@ -213,16 +213,6 @@ spec:
           labels:
             ring-controller.atlas: ascend-910b
         spec:
-          affinity:
-            podAntiAffinity:
-              requiredDuringSchedulingIgnoredDuringExecution:
-                - labelSelector:
-                    matchExpressions:
-                      - key: job-name
-                        operator: In
-                        values:
-                          - default-infer-test-pytorch-910b
-                  topologyKey: kubernetes.io/hostname
           automountServiceAccountToken: false
           nodeSelector:
             host-arch: huawei-arm
