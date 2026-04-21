@@ -21,21 +21,64 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/containerd/containerd/services/server/config"
 	"github.com/pelletier/go-toml"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/mindxcheckutils"
 )
 
+func getConfigVersion(t *toml.Tree) int64 {
+	switch v := t.Get("version").(type) {
+	case int64:
+		return v
+	default:
+		return configVersion2
+	}
+}
+
+func getCriRuntimePluginName(configVersion int64) string {
+	switch configVersion {
+	case configVersion1:
+		return version1RuntimePluginName
+	case configVersion2:
+		return version2RuntimePluginName
+	default:
+		return version3RuntimePluginName
+	}
+}
+
+func getSubtreeByPath(keys []string, t *toml.Tree) *toml.Tree {
+	subtree := t.GetPath(keys)
+	if subtree == nil {
+		return nil
+	}
+
+	switch subtree := subtree.(type) {
+	case *toml.Tree:
+		return subtree
+	default:
+		hwlog.RunLog.Errorf("invalid subtree type %T", subtree)
+		return nil
+	}
+}
+
+func copy(t *toml.Tree) *toml.Tree {
+	if t == nil {
+		return nil
+	}
+	copyTree, err := toml.Load(t.String())
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to load toml: %v", err)
+		return nil
+	}
+	return copyTree
+}
+
 type commandArgs struct {
 	action          string
 	srcFilePath     string
 	runtimeFilePath string
 	destFilePath    string
-	cgroupInfo      string
-	osName          string
-	osVersion       string
 }
 
 // ContainerdProcess modifies the containerd configuration file when installing or uninstalling the containerd scenario.
@@ -49,12 +92,7 @@ func ContainerdProcess(command []string) (string, error) {
 		return "", fmt.Errorf("error param")
 	}
 	srcFilePath := command[srcFilePosition]
-	if _, err := os.Stat(srcFilePath); os.IsNotExist(err) {
-		if _, err := mindxcheckutils.RealDirChecker(filepath.Dir(srcFilePath), true, false); err != nil {
-			hwlog.RunLog.Errorf("check failed, error: %v", err)
-			return behavior, err
-		}
-	} else {
+	if _, err := os.Stat(srcFilePath); !os.IsNotExist(err) {
 		if _, err := mindxcheckutils.RealFileChecker(srcFilePath, true, false, mindxcheckutils.DefaultSize); err != nil {
 			hwlog.RunLog.Errorf("check failed, error: %v", err)
 			return behavior, err
@@ -64,6 +102,7 @@ func ContainerdProcess(command []string) (string, error) {
 	if _, err := mindxcheckutils.RealDirChecker(filepath.Dir(destFilePath), true, false); err != nil {
 		return behavior, err
 	}
+
 	runtimeFilePath := ""
 	if len(command) == addCommandLength {
 		runtimeFilePath = command[runtimeFilePosition]
@@ -72,201 +111,166 @@ func ContainerdProcess(command []string) (string, error) {
 			return behavior, err
 		}
 	}
+
 	arg := &commandArgs{
 		action:          action,
 		srcFilePath:     srcFilePath,
 		runtimeFilePath: runtimeFilePath,
 		destFilePath:    destFilePath,
-		cgroupInfo:      command[len(command)-cgroupInfoIndexFromEnd],
-		osName:          command[len(command)-osNameIndexFromEnd],
-		osVersion:       command[len(command)-osVersionIndexFromEnd],
 	}
+
 	err := editContainerdConfig(arg)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to edit containerd config, err: %v", err)
 		return behavior, err
 	}
+
 	return behavior, nil
 }
 
 func editContainerdConfig(arg *commandArgs) error {
 	if arg == nil {
-		hwlog.RunLog.Error("arg is nil")
 		return errors.New("arg is nil")
 	}
-	cfg := config.Config{}
-	if err := config.LoadConfig(arg.srcFilePath, &cfg); err != nil {
-		hwlog.RunLog.Errorf("failed to load configuration file: %v", err)
+	configTree, err := toml.LoadFile(arg.srcFilePath)
+	if err != nil {
 		return err
 	}
-	if strings.Contains(arg.cgroupInfo, cgroupV2InfoStr) {
-		hwlog.RunLog.Info("it is cgroup v2")
-		binaryName := ""
-		if arg.action == addCommand {
-			binaryName = arg.runtimeFilePath
-		}
-		err := changeCgroupV2BinaryNameConfig(&cfg, binaryName)
+	version := getConfigVersion(configTree)
+	criRuntimePluginName := getCriRuntimePluginName(version)
+	if arg.action == addCommand {
+		// Add Ascend runtime
+		err = addRuntime(runtimeName, arg.runtimeFilePath, configTree, criRuntimePluginName)
 		if err != nil {
-			hwlog.RunLog.Errorf("failed to change cgroup v2 config, error: %v", err)
+			hwlog.RunLog.Errorf("failed to add Ascend runtime, error: %v", err)
 			return err
 		}
-	} else {
-		hwlog.RunLog.Info("it is cgroup v1")
-		runtimeValue := defaultRuntimeValue
-		runtimeType := v2RuncRuntimeType
-		if arg.action == addCommand {
-			runtimeValue = arg.runtimeFilePath
-			runtimeType = v1RuntimeType
-			if arg.osName == openEulerStr && arg.osVersion == openEulerVersionForV2RuntimeType {
-				runtimeType = v2RuncRuntimeType
-			}
-		}
-		err := changeCgroupV1Config(&cfg, runtimeValue, runtimeType)
+	} else if arg.action == rmCommand {
+		// Remove Ascend runtime
+		err = removeRuntime(runtimeName, configTree, criRuntimePluginName)
 		if err != nil {
-			hwlog.RunLog.Errorf("failed to change cgroup v1 config, error: %v", err)
+			hwlog.RunLog.Errorf("failed to remove Ascend runtime, error: %v", err)
 			return err
 		}
 	}
-	err := writeContainerdConfigToFile(cfg, arg.destFilePath)
+
+	// Save config to file
+	err = writeContainerdConfigToFile(configTree, arg.destFilePath)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to write configuration file: %v", err)
 		return err
 	}
+
 	return nil
 }
 
-func changeCgroupV2BinaryNameConfig(cfg *config.Config, binaryName string) error {
-	value, ok := cfg.Plugins[v1RuntimeTypeFirstLevelPlugin]
-	if !ok {
-		hwlog.RunLog.Errorf(notFindPluginLogStr, v1RuntimeTypeFirstLevelPlugin, cfg.Plugins)
-		return fmt.Errorf(notFindPluginErrorStr, v1RuntimeTypeFirstLevelPlugin)
-	}
-	valueMap := value.ToMap()
-	containerdConfig := valueMap[containerdKey]
-	runtimesConfig, err := getMap(containerdConfig, runtimesKey)
+func getDefaultRuntimeOptions(t *toml.Tree, criRuntimePluginName string) (interface{}, error) {
+	defaultOptions, err := toml.TreeFromMap(map[string]interface{}{
+		"runtime_type":                    v2RuncRuntimeType,
+		"runtime_root":                    "",
+		"runtime_engine":                  "",
+		"privileged_without_host_devices": false,
+	})
 	if err != nil {
-		hwlog.RunLog.Errorf(getMapFaileLogStr, runtimesKey, err)
+		hwlog.RunLog.Errorf("TreeFromMap failed: %v", err)
+		return nil, err
+	}
+	defaultOptions.SetPath([]string{optionsKey, systemdCgroupKey}, true)
+	if t == nil {
+		hwlog.RunLog.Warn("Tree is nil, could not infer options from runtimes runc")
+		return defaultOptions, nil
+	}
+	options := getSubtreeByPath([]string{pluginsKey, criRuntimePluginName, containerdKey, runtimesKey,
+		defaultRuntimeValue}, t)
+	if options != nil {
+		hwlog.RunLog.Infof("Using options from runtime runc: %v", options)
+		newOptions := copy(options)
+		if newOptions != nil {
+			return newOptions, nil
+		}
+	}
+	hwlog.RunLog.Warn("Could not infer options from runtimes runc")
+	return defaultOptions, nil
+}
+
+// addRuntime adds a runtime to the containerd config
+func addRuntime(name string, path string, tree *toml.Tree, criRuntimePluginName string) error {
+	if tree == nil {
+		return fmt.Errorf("config tree is nil")
+	}
+	// Create default runtime options
+	defaultOptions, err := getDefaultRuntimeOptions(tree, criRuntimePluginName)
+	if err != nil {
+		hwlog.RunLog.Errorf("getDefaultRuntimeOptions failed: %v", err)
 		return err
 	}
-	runcConfig, err := getMap(runtimesConfig, runcKey)
-	if err != nil {
-		hwlog.RunLog.Errorf(getMapFaileLogStr, runcKey, err)
-		return err
-	}
-	runcOptionsConfig, err := getMap(runcConfig, runcOptionsKey)
-	if err != nil {
-		hwlog.RunLog.Errorf(getMapFaileLogStr, runcOptionsKey, err)
-		return err
-	}
-	runcOptionsConfigMap, ok := runcOptionsConfig.(map[string]interface{})
-	if !ok {
-		hwlog.RunLog.Errorf(convertConfigFailLogStr, runcOptionsKey, runcOptionsConfig)
-		return fmt.Errorf(convertConfigFailErrorStr, runcOptionsKey, runcOptionsConfig)
-	}
-	runcOptionsConfigMap[binaryNameKey] = binaryName
-	newTree, err := toml.TreeFromMap(valueMap)
-	if err != nil {
-		hwlog.RunLog.Errorf(convertTreeFailLogStr, err)
-		return err
-	}
-	cfg.Plugins[v1RuntimeTypeFirstLevelPlugin] = *newTree
+	// Set runtime options
+	tree.SetPath([]string{pluginsKey, criRuntimePluginName, containerdKey, runtimesKey, name}, defaultOptions)
+	// Set binary path
+	tree.SetPath([]string{pluginsKey, criRuntimePluginName, containerdKey, runtimesKey, name,
+		optionsKey, binaryNameKey}, path)
+	// Set default_runtime_name
+	tree.SetPath([]string{pluginsKey, criRuntimePluginName, containerdKey, defaultRuntimeNameKey}, name)
 	return nil
 }
 
-func changeCgroupV1Config(cfg *config.Config, runtimeValue, runtimeType string) error {
-	err := changeCgroupV1RuntimeConfig(cfg, runtimeValue)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to change cgroup V1 runtime config, error: %v", err)
-		return err
+// removeRuntime removes a runtime from the containerd config
+func removeRuntime(name string, tree *toml.Tree, criRuntimePluginName string) error {
+	if tree == nil {
+		return nil
 	}
-	return changeCgroupV1RuntimeTypeConfig(cfg, runtimeType)
-}
+	// Set default_runtime_name
+	tree.SetPath([]string{pluginsKey, criRuntimePluginName, containerdKey, defaultRuntimeNameKey}, defaultRuntimeValue)
+	// Remove runtime configuration
+	runtimePath := []string{pluginsKey, criRuntimePluginName, containerdKey, runtimesKey, name}
+	err := tree.DeletePath(runtimePath)
+	if err != nil {
+		// If path doesn't exist, ignore error
+		if !strings.Contains(err.Error(), "path not found") {
+			hwlog.RunLog.Errorf("failed to remove runtime, error: %v", err)
+			return err
+		}
+	}
 
-func changeCgroupV1RuntimeConfig(cfg *config.Config, runtimeValue string) error {
-	value, ok := cfg.Plugins[v1RuntimeType]
-	if !ok {
-		hwlog.RunLog.Errorf(notFindPluginLogStr, v1RuntimeType, cfg.Plugins)
-		return fmt.Errorf(notFindPluginErrorStr, v1RuntimeType)
+	// Clean up empty parent directories
+	for i := 1; i < len(runtimePath); i++ {
+		parentPath := runtimePath[:len(runtimePath)-i]
+		parentNode := getSubtreeByPath(parentPath, tree)
+		if parentNode != nil && len(parentNode.Keys()) == 0 {
+			tree.DeletePath(parentPath)
+		} else {
+			// If parent has other keys, stop cleaning up
+			break
+		}
 	}
-	valueMap := value.ToMap()
-	valueMap[v1NeedChangeKeyRuntime] = runtimeValue
-	newTree, err := toml.TreeFromMap(valueMap)
-	if err != nil {
-		hwlog.RunLog.Errorf(convertTreeFailLogStr, err)
-		return err
-	}
-	cfg.Plugins[v1RuntimeType] = *newTree
+
 	return nil
 }
 
-func changeCgroupV1RuntimeTypeConfig(cfg *config.Config, runtimeType string) error {
-	value, ok := cfg.Plugins[v1RuntimeTypeFirstLevelPlugin]
-	if !ok {
-		hwlog.RunLog.Errorf(notFindPluginLogStr, v1RuntimeTypeFirstLevelPlugin, cfg.Plugins)
-		return fmt.Errorf(notFindPluginErrorStr, v1RuntimeTypeFirstLevelPlugin)
+func writeContainerdConfigToFile(configTree *toml.Tree, destFilePath string) error {
+	if configTree == nil {
+		return fmt.Errorf("config tree is nil")
 	}
-	valueMap := value.ToMap()
-	containerdConfig := valueMap[containerdKey]
-	runtimesConfig, err := getMap(containerdConfig, runtimesKey)
-	if err != nil {
-		hwlog.RunLog.Errorf(getMapFaileLogStr, runtimesKey, err)
-		return err
-	}
-	runcConfig, err := getMap(runtimesConfig, runcKey)
-	if err != nil {
-		hwlog.RunLog.Errorf(getMapFaileLogStr, runcKey, err)
-		return err
-	}
-	runcConfigMap, ok := runcConfig.(map[string]interface{})
-	if !ok {
-		hwlog.RunLog.Errorf(convertConfigFailLogStr, runcKey, runcConfig)
-		return fmt.Errorf(convertConfigFailErrorStr, runcKey, runcConfig)
-	}
-	runcConfigMap[v1NeedChangeKeyRuntimeType] = runtimeType
-	newTree, err := toml.TreeFromMap(valueMap)
-	if err != nil {
-		hwlog.RunLog.Errorf(convertTreeFailLogStr, err)
-		return err
-	}
-	cfg.Plugins[v1RuntimeTypeFirstLevelPlugin] = *newTree
-	return nil
-}
 
-func getMap(input interface{}, key string) (interface{}, error) {
-	inputMap, ok := input.(map[string]interface{})
-	if !ok {
-		hwlog.RunLog.Errorf(convertConfigFailLogStr, key, input)
-		return nil, fmt.Errorf(convertConfigFailErrorStr, key, input)
-	}
-	output, ok := inputMap[key]
-	if !ok {
-		hwlog.RunLog.Errorf("can not find config %v, config is: %+v", key, inputMap)
-		return nil, fmt.Errorf("can not find config: %v", key)
-	}
-	return output, nil
-}
-
-func writeContainerdConfigToFile(cfg config.Config, destFilePath string) error {
-	tomlString, err := toml.Marshal(cfg)
+	// Marshal config to TOML
+	tomlData, err := configTree.Marshal()
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to marshall to toml, error: %v", err)
-		return err
+		return fmt.Errorf("unable to convert to TOML: %v", err)
 	}
+
+	// Write to file
 	file, err := os.OpenFile(destFilePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, perm)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to create file, error: %v", err)
+		hwlog.RunLog.Errorf("failed to open file for writing: %v", err)
 		return err
 	}
-	defer func() {
-		err := file.Close()
-		if err != nil {
-			hwlog.RunLog.Errorf("failed to close file, error: %v", err)
-		}
-	}()
-	_, err = file.Write(tomlString)
+	defer file.Close()
+
+	_, err = file.Write(tomlData)
 	if err != nil {
-		hwlog.RunLog.Errorf("failed to write, error: %v", err)
+		hwlog.RunLog.Errorf("failed to write config to file: %v", err)
 		return err
 	}
+
 	return nil
 }

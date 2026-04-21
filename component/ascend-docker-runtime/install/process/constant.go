@@ -36,18 +36,18 @@ const noDefaultTemplate = `{
 }`
 
 const (
-	reserveIndexFromEnd                = 5
-	actionPosition                     = 0
-	srcFilePosition                    = 1
-	destFilePosition                   = 2
-	runtimeFilePosition                = 3
-	rmCommandLength                    = 8
-	addCommandLength                   = 9
-	maxFileSize                        = 1024 * 1024 * 10
-	cgroupInfoIndexFromEnd             = 3
-	osNameIndexFromEnd                 = 2
-	osVersionIndexFromEnd              = 1
-	perm                   os.FileMode = 0600
+	reserveIndexFromEnd             = 5
+	actionPosition                  = 0
+	srcFilePosition                 = 1
+	destFilePosition                = 2
+	runtimeFilePosition             = 3
+	rmCommandLength                 = 5
+	addCommandLength                = 6
+	maxFileSize                     = 1024 * 1024 * 10
+	perm                os.FileMode = 0600
+	configVersion1                  = 1
+	configVersion2                  = 2
+	configVersion3                  = 3
 )
 
 const (
@@ -59,29 +59,19 @@ const (
 	// InstallSceneContainerd is a 'containerd' string of scene
 	InstallSceneContainerd = "containerd"
 	// InstallSceneIsula is a 'isula' string of scene
-	InstallSceneIsula          = "isula"
-	v1NeedChangeKeyRuntime     = "runtime"
-	v1NeedChangeKeyRuntimeType = "runtime_type"
-	v1RuntimeType              = "io.containerd.runtime.v1.linux"
+	InstallSceneIsula = "isula"
+	runtimeName       = "ascend"
 	// default runtime type for containerd
-	v2RuncRuntimeType                = "io.containerd.runc.v2"
-	defaultRuntimeValue              = "runc"
-	v1RuntimeTypeFirstLevelPlugin    = "io.containerd.grpc.v1.cri"
-	containerdKey                    = "containerd"
-	runtimesKey                      = "runtimes"
-	runcKey                          = "runc"
-	runcOptionsKey                   = "options"
-	binaryNameKey                    = "BinaryName"
-	cgroupV2InfoStr                  = "cgroup2fs"
-	openEulerStr                     = "openEuler"
-	openEulerVersionForV2RuntimeType = "24.03"
-)
-
-const (
-	notFindPluginLogStr       = "can not find plugin %v, plugins is: %+v"
-	notFindPluginErrorStr     = "can not find plugin: %v"
-	convertConfigFailLogStr   = "can not convert config %v, config is: %+v"
-	convertConfigFailErrorStr = "can not convert config %v, config is: %+v"
-	convertTreeFailLogStr     = "failed to convert map to tree, error: %v"
-	getMapFaileLogStr         = "failed to get map, key: %v, error: %v"
+	v2RuncRuntimeType         = "io.containerd.runc.v2"
+	defaultRuntimeValue       = "runc"
+	version1RuntimePluginName = "cri"
+	version2RuntimePluginName = "io.containerd.grpc.v1.cri"
+	version3RuntimePluginName = "io.containerd.cri.v1.runtime"
+	containerdKey             = "containerd"
+	runtimesKey               = "runtimes"
+	pluginsKey                = "plugins"
+	optionsKey                = "options"
+	binaryNameKey             = "BinaryName"
+	defaultRuntimeNameKey     = "default_runtime_name"
+	systemdCgroupKey          = "SystemdCgroup"
 )

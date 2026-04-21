@@ -253,7 +253,7 @@ func TestDockerProcess(t *testing.T) {
 	tests := getTestDockerProcessCases()
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
-			if tt.Name == "success case 4" {
+			if tt.Name == "success case 3" {
 				patch := gomonkey.ApplyFunc(os.Stat, func(name string) (os.FileInfo, error) {
 					return &FileInfoMock{}, nil
 				})
@@ -286,13 +286,17 @@ func TestDockerProcess(t *testing.T) {
 					return jsonBytes, nil
 				})
 				defer patchReadAll.Reset()
+				patchWriteJson := gomonkey.ApplyFunc(writeJson, func(destFilePath string, writeContent []byte) error {
+					return nil
+				})
+				defer patchWriteJson.Reset()
 			}
-			got, got1 := DockerProcess(tt.Command)
-			if (got1 == nil) == tt.WantErr {
-				t.Errorf("DockerProcess() got = %v, want %v", got, tt.WantErr)
+			got, gotErr := DockerProcess(tt.Command)
+			if (gotErr != nil) != tt.WantErr {
+				t.Errorf("DockerProcess() err = %v, wantErr %v", gotErr, tt.WantErr)
 			}
 			if got != tt.WantResult {
-				t.Errorf("DockerProcess() got1 = %v, want %v", got1, tt.WantResult)
+				t.Errorf("DockerProcess() result = %v, want %v", got, tt.WantResult)
 			}
 		})
 	}
@@ -349,7 +353,6 @@ func TestDockerProcess2(t *testing.T) {
 func getTestDockerProcessCases() []testProcessArg {
 	emptyStr := ""
 	addBehavior := "install"
-	rmBehavior := "uninstall"
 	destFileTest := "aaa.txt.pid"
 	return []testProcessArg{
 		{
@@ -363,19 +366,13 @@ func getTestDockerProcessCases() []testProcessArg {
 			WantErr: true,
 		},
 		{
-			Name:       "file not exist case 3",
-			Command:    []string{"rm", oldJson, emptyStr, emptyStr, emptyStr, emptyStr, emptyStr, emptyStr},
-			WantErr:    true,
-			WantResult: rmBehavior,
-		},
-		{
-			Name:       "success case 4",
-			Command:    []string{"add", oldJson, destFileTest, emptyStr, emptyStr, emptyStr, emptyStr, emptyStr, emptyStr},
-			WantErr:    true,
+			Name:       "success case 3",
+			Command:    []string{"add", oldJson, destFileTest, emptyStr, emptyStr, emptyStr}, // addCommandLength=6
+			WantErr:    false,
 			WantResult: addBehavior,
 		},
 		{
-			Name:       "error param case 5",
+			Name:       "error param case 4",
 			Command:    []string{},
 			WantErr:    true,
 			WantResult: emptyStr,
