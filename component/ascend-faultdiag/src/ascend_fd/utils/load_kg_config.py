@@ -38,10 +38,10 @@ class EntityAttribute:
         self.module = attributes.get("module", "")
         self.cause_zh = attributes.get("cause_zh", "")
         self.description_zh = attributes.get("description_zh", "")
-        self.suggestion_zh = attributes.get("suggestion_zh", "")
+        self.suggestion_zh = attributes.get("suggestion_zh", [])
         self.cause_en = attributes.get("cause_en", "")
         self.description_en = attributes.get("description_en", "")
-        self.suggestion_en = attributes.get("suggestion_en", "")
+        self.suggestion_en = attributes.get("suggestion_en", [])
         self.error_case = attributes.get("error_case", "")
         self.fixed_case = attributes.get("fixed_case", "")
 
