@@ -661,7 +661,7 @@ Ascend Docker Runtime安装后，会在安装目录生成可执行工具，涉�
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="zh-cn_topic_0000001538744718_p176171436115"><a name="zh-cn_topic_0000001538744718_p176171436115"></a><a name="zh-cn_topic_0000001538744718_p176171436115"></a>-</p>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000001538744718_row186172438110"><td class="cellrowborder" rowspan="11" valign="top" width="19.97%" headers="mcps1.2.6.1.1 "><p id="zh-cn_topic_0000001538744718_p34219818414"><a name="zh-cn_topic_0000001538744718_p34219818414"></a><a name="zh-cn_topic_0000001538744718_p34219818414"></a>ascend-docker-plugin-install-helper</p>
+<tr id="zh-cn_topic_0000001538744718_row186172438110"><td class="cellrowborder" rowspan="8" valign="top" width="19.97%" headers="mcps1.2.6.1.1 "><p id="zh-cn_topic_0000001538744718_p34219818414"><a name="zh-cn_topic_0000001538744718_p34219818414"></a><a name="zh-cn_topic_0000001538744718_p34219818414"></a>ascend-docker-plugin-install-helper</p>
 </td>
 <td class="cellrowborder" valign="top" width="20.03%" headers="mcps1.2.6.1.2 "><p id="zh-cn_topic_0000001538744718_p19617943318"><a name="zh-cn_topic_0000001538744718_p19617943318"></a><a name="zh-cn_topic_0000001538744718_p19617943318"></a>-</p>
 </td>
@@ -735,33 +735,7 @@ Ascend Docker Runtime安装后，会在安装目录生成可执行工具，涉�
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p82001435233"><a name="p82001435233"></a><a name="p82001435233"></a>安装时为6，卸载时为5</p>
 </td>
 </tr>
-<tr id="row4729103441412"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p1572913347142"><a name="p1572913347142"></a><a name="p1572913347142"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p972912348144"><a name="p972912348144"></a><a name="p972912348144"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p520033172318"><a name="p520033172318"></a><a name="p520033172318"></a>cgroupInfo</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p19200837239"><a name="p19200837239"></a><a name="p19200837239"></a>安装时为7，卸载时为6</p>
-</td>
-</tr>
-<tr id="row1548213111410"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p14828315142"><a name="p14828315142"></a><a name="p14828315142"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p8482131181418"><a name="p8482131181418"></a><a name="p8482131181418"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p15200637233"><a name="p15200637233"></a><a name="p15200637233"></a>osName</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p82017312312"><a name="p82017312312"></a><a name="p82017312312"></a>安装时为8，卸载时为7</p>
-</td>
-</tr>
-<tr id="row885713161410"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p58571138148"><a name="p58571138148"></a><a name="p58571138148"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p1685717351413"><a name="p1685717351413"></a><a name="p1685717351413"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p1520163172314"><a name="p1520163172314"></a><a name="p1520163172314"></a>osVersion</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p0201736235"><a name="p0201736235"></a><a name="p0201736235"></a>安装时为9，卸载时为8</p>
-</td>
-</tr>
+
 <tr id="zh-cn_topic_0000001538744718_row146209438117"><td class="cellrowborder" rowspan="2" valign="top" width="19.97%" headers="mcps1.2.6.1.1 "><p id="zh-cn_topic_0000001538744718_p19762345867"><a name="zh-cn_topic_0000001538744718_p19762345867"></a><a name="zh-cn_topic_0000001538744718_p19762345867"></a>ascend-docker-runtime</p>
 <p id="zh-cn_topic_0000001538744718_p156203435115"><a name="zh-cn_topic_0000001538744718_p156203435115"></a><a name="zh-cn_topic_0000001538744718_p156203435115"></a></p>
 </td>

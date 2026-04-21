@@ -14,7 +14,9 @@
 
     用户在卸载Ascend Docker Runtime时，只需根据[步骤2](#li345320287225)进行一次卸载操作。卸载完成之后需要手动将另一引擎的daemon.json文件还原为Ascend Docker Runtime安装之前的内容。
 
-若用户需要保留其中一个容器引擎，需要在Ascend Docker Runtime卸载之后，针对相应场景进行重新安装。
+>[!NOTE]
+>- 若用户需要保留其中一个容器引擎，需要在Ascend Docker Runtime卸载之后，针对相应场景进行重新安装。
+>- 卸载Ascend Docker Runtime会将Docker或Containerd的默认runtime恢复成runc。
 
 1. （可选）关闭pingmesh灵衢网络检测。
     1. 登录环境，进入NodeD解压目录。

@@ -52,7 +52,7 @@ const (
 	maxCommandLength         = 65535
 	logPath                  = api.InstallHelperRunLogPath
 	minCommandLength         = 2
-	installSceneIndexFromEnd = 4
+	installSceneIndexFromEnd = 1
 )
 
 var reserveDefaultRuntime = false

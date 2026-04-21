@@ -6,19 +6,67 @@
 
 **操作步骤<a name="section44081649104318"></a>**
 
-1. 执行以下命令，查看是否存在基础镜像。
+1. 执行以下命令，查看配置文件是否修改成功。
 
-    ```shell
-    docker images | grep ubuntu
-    ```
+    - Docker（或K8s集成Docker场景）。
+    
+        ```shell
+        cat /etc/docker/daemon.json | grep ascend
+        ```
+    
+        回显示例如下，表示修改成功。
+    
+        ```ColdFusion
+        "default-runtime": "ascend",
+            "ascend": {
+                "path": "/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime",
+        ```
 
-    回显示例如下，表示存在基础镜像ubuntu:22.04。若不存在基础镜像，可以执行**docker pull ubuntu:22.04**命令，拉取基础镜像。
+    - Containerd（或K8s集成Containerd场景）。
 
-    ```ColdFusion
-    ubuntu              22.04               6526a1858e5d        2 years ago         64.2MB
-    ```
+        ```shell
+        cat /etc/containerd/config.toml | grep ascend
+        ```
+    
+        回显示例如下，表示修改成功。
+    
+        ```ColdFusion
+        default_runtime_name = "ascend"
+            [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.ascend]
+                [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.ascend.options]
+                    BinaryName = "/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime"
+        ```
 
-2. 执行以下命令，使用Ascend Docker Runtime挂载物理芯片ID为0的芯片。
+    >[!NOTE]
+    >- Docker或Containerd的配置文件路径如果与用户实际路径不符，请自行修改。
+
+2. 执行以下命令，查看是否存在基础镜像。
+
+    - Docker（或K8s集成Docker场景）。
+    
+        ```shell
+        docker images | grep ubuntu
+        ```
+    
+        回显示例如下，表示存在基础镜像ubuntu:22.04。若不存在基础镜像，可以执行**docker pull ubuntu:22.04**命令，拉取基础镜像。
+    
+        ```ColdFusion
+        ubuntu              22.04               6526a1858e5d        2 years ago         64.2MB
+        ```
+
+    - Containerd（或K8s集成Containerd场景）。
+
+        ```shell
+        ctr i ls|grep ubuntu
+        ```
+    
+        回显示例如下，表示存在基础镜像ubuntu:22.04。若不存在基础镜像，可以执行**ctr images pull docker.io/library/ubuntu:22.04**命令，拉取基础镜像。
+    
+        ```ColdFusion
+        docker.io/library/ubuntu:22.04    application/vnd.docker.distribution.manifest.v2+json sha256:555f8bd7441bb97303961a52ec7dec94d755f9f39077801de3e11c706c9ee7dc 68.5 MiB  linux/arm64 io.cri-containerd.image=managed
+        ```
+   
+3. 执行以下命令，使用Ascend Docker Runtime挂载物理芯片ID为0的芯片。
 
     - Docker（或K8s集成Docker场景）。
 
@@ -31,14 +79,14 @@
         执行以下命令，挂载物理芯片。
 
         ```shell
-        ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 ubuntu:22.04 containerID
+        ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 docker.io/library/ubuntu:22.04 containerID
         ```
 
     >[!NOTE]
     >- ASCEND\_VISIBLE\_DEVICES参数表示挂载的芯片ID。
     >- containerID为用户自定义的容器ID。
 
-3. 执行以下命令，查询芯片是否挂载成功。
+4. 执行以下命令，查询芯片是否挂载成功。
 
     ```shell
     ls /dev

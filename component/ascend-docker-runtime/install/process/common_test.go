@@ -22,8 +22,8 @@ func TestCheckParamAndGetBehavior(t *testing.T) {
 		action  string
 		command []string
 	}
-	addCmds := []string{"0", "0", "0", "0", "0", "0", "0", "0", "0"}
-	rmCmds := []string{"0", "0", "0", "0", "0", "0", "0", "0"}
+	addCmds := []string{"0", "0", "0", "0", "0", "0"}
+	rmCmds := []string{"0", "0", "0", "0", "0"}
 	var tests = []struct {
 		name  string
 		args  args
@@ -57,7 +57,7 @@ func TestCheckParamAndGetBehavior(t *testing.T) {
 
 func TestCheckParamLength(t *testing.T) {
 	emptyStr := ""
-	command := []string{"rm", oldJson, emptyStr, emptyStr, emptyStr, emptyStr, emptyStr, emptyStr}
+	command := []string{"rm", oldJson, emptyStr, emptyStr, emptyStr}
 	if got := CheckParamLength(command); !got {
 		t.Errorf("CheckParamLength() got = %v, want %v", got, true)
 	}
