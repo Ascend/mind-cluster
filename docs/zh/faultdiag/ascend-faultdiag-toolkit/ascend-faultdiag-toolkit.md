@@ -561,7 +561,7 @@ dump_info/
 | HCCS端口SNR | `display interface hilink snr \| n` | 获取HCCS端口信噪比 |
 | 收发器信息 | `display interface transceiver verbose \| no-more` | 获取接口收发器详细信息 |
 | 接口通道信息 | `display interface information \| no-more` | 获取接口通道信息 |
-| Serdes转储信息 | `display for info enp s 1 c {chip_id} "get port serdes dump-info marco-id {port_id} lane-id {lane_id} hilink {type}" \| no-more` | 获取Serdes转储信息 |
+| Serdes转储信息 | `display for info enp s 1 c {chip_id} "get port serdes dump-info macro-id {port_id} lane-id {lane_id} hilink {type}" \| no-more` | 获取Serdes转储信息 |
 
 #### 离线日志解析
 
@@ -626,7 +626,7 @@ dump_info/
 - 光模块功率异常：当TX/RX功率值超出阈值范围时
 
   示例："光模块功率异常，TX功率：-5dBm（阈值范围：-3~0dBm）"
-- SNR异常：当SNR值低于阈值(如12dB)时
+- SNR异常：当SNR值低于阈值（如12dB）时
 
   示例："光模块SNR异常，当前值：10.5dB（阈值：12dB）"
 - CDR失锁：当CDR状态为"Unlock"时
@@ -873,7 +873,7 @@ HCCS链路降级：当事件代码包含"0x28000049"时
 
 **异常输出**
 
-误码率超阈值：当误码率值大于预定义阈值(如1e-12)时
+误码率超阈值：当误码率值大于预定义阈值（如1e-12）时
 
 示例："交换机端口误码率超阈值，当前值：5e-12（阈值：1e-12），指示链路质量问题"
 
@@ -958,11 +958,11 @@ HCCS链路降级：当事件代码包含"0x28000049"时
 
 **诊断逻辑**
 
-计算同一端口不同lane间的功率最大值和最小值差值，判断是否超过阈值(3db)。
+计算同一端口不同lane间的功率最大值和最小值差值，判断是否超过阈值（3db）。
 
 **异常输出**
 
-lane间功率差异过大：当同一端口不同lane间的功率最大值和最小值差值超过阈值(3db)时
+lane间功率差异过大：当同一端口不同lane间的功率最大值和最小值差值超过阈值（3db）时
 
 示例："端口lane功率差异过大，端口：eth0，最大差值：4.2db（阈值：3db），指示端口内部lane故障"
 
@@ -1013,7 +1013,7 @@ lane间功率差异过大：当同一端口不同lane间的功率最大值和最
 
 **输入**
 
-- 交换机SSH在线采集：`display for info enp s 1 c {chip_id} "get port serdes dump-info marco-id {port_id} lane-id {lane_id} hilink {type}"` (Serdes转储信息)
+- 交换机SSH在线采集：`display for info enp s 1 c {chip_id} "get port serdes dump-info macro-id {port_id} lane-id {lane_id} hilink {type}"` (Serdes转储信息)
 - 交换机离线日志：CLI命令输出中的Serdes转储信息
 
 **诊断逻辑**
@@ -1042,6 +1042,6 @@ lane间功率差异过大：当同一端口不同lane间的功率最大值和最
 
 **异常输出**
 
-SNR低于阈值：当SNR值低于阈值(如12dB)时
+SNR低于阈值：当SNR值低于阈值（如12dB）时
 
 示例："HCCS端口SNR异常，接口：eth2，当前SNR：10.5dB（阈值：12dB），指示链路质量问题"
