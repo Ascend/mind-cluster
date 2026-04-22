@@ -15,5 +15,5 @@ ascend-fd version
 版本号信息。
 
 ```ColdFusion
-ascend-fd 组件版本号
+ascend-fd ${组件版本号}
 ```
