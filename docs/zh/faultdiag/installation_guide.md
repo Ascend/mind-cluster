@@ -4,7 +4,7 @@
 
 ### 安装前必读<a name="ZH-CN_TOPIC_0000002054156561"></a>
 
-- 请保证MindCluster Ascend FaultDiag工具独立部署在各服务器产品中使用，若部署在共享目录中供多台服务器共同访问使用，可能会导致功能执行失败或性能不符合预期等不可预测情况。
+- 请保证MindCluster Ascend FaultDiag工具独立部署在各服务器产品中使用，若部署在共享目录中供多台服务器共同访问使用，可能会导致功能执行失败或性能不符合预期等不可预知的情况。
 - 建议使用同一用户进行安装和使用MindCluster Ascend FaultDiag。
 - MindCluster Ascend FaultDiag支持的Python版本需≥3.7。在安装MindCluster Ascend FaultDiag前，请检查依赖的Python版本是否满足要求。
 
@@ -132,7 +132,7 @@ MindCluster Ascend Deployer支持5.0.0.2及以上版本的MindCluster Ascend Fau
 
 安装命令如下：
 
-```shell
+```bash
 bash install.sh --install=fault-diag                                            //安装故障诊断组件
 ```
 
