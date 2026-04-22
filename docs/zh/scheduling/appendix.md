@@ -50,7 +50,7 @@
 
 ## Ascend Docker Runtime默认挂载内容<a name="ZH-CN_TOPIC_0000002511346331"></a>
 
-Ascend Docker Runtime会根据实际环境情况默认以只读方式挂载以下目录和文件到容器中。
+Ascend Docker Runtime会根据实际环境情况默认以只读方式挂载以下目录和文件到容器中。挂载的文件对other用户不能有写权限，对同组内的其他用户也不能有写权限。
 
 **表 1**  默认挂载目录和文件（Atlas 200 AI加速模块（RC场景））
 
