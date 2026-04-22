@@ -23,6 +23,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"testing"
+
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
@@ -133,5 +135,61 @@ func fakeResetCmInfos() map[string]string {
 	}
 	return map[string]string{
 		ResetInfoCMDataKey: string(resetInfosBytes),
+	}
+}
+
+// TestGetAnnoName tests the GetAnnoName method for all NPU types
+func TestGetAnnoName(t *testing.T) {
+	baseAttr := SchedulerBaseAttr{
+		annoName: "default-anno-name",
+	}
+
+	testCases := []struct {
+		name        string
+		reqNPUName  string
+		expected    string
+	}{
+		{"NPUCardName", util.NPUCardName, util.NPUCardName},
+		{"NPU910CardName", util.NPU910CardName, util.NPU910CardName},
+		{"NPU310CardName", util.NPU310CardName, baseAttr.annoName}, // Not supported in current implementation
+		{"NPU310PCardName", util.NPU310PCardName, baseAttr.annoName}, // Not supported in current implementation
+		{"DefaultValue", "unknown-npu", baseAttr.annoName},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := baseAttr.GetAnnoName(tc.reqNPUName)
+			if result != tc.expected {
+				t.Errorf("GetAnnoName(%q) = %q, want %q", tc.reqNPUName, result, tc.expected)
+			}
+		})
+	}
+}
+
+// TestGetAnnoPreVal tests the GetAnnoPreVal method for all NPU types
+func TestGetAnnoPreVal(t *testing.T) {
+	baseAttr := SchedulerBaseAttr{
+		annoPreVal: "default-pre-val",
+	}
+
+	testCases := []struct {
+		name        string
+		reqNPUName  string
+		expected    string
+	}{
+		{"NPUCardName", util.NPUCardName, util.NPUCardNamePre},
+		{"NPU910CardName", util.NPU910CardName, util.NPU910CardNamePre},
+		{"NPU310CardName", util.NPU310CardName, baseAttr.annoPreVal}, // Not supported in current implementation
+		{"NPU310PCardName", util.NPU310PCardName, baseAttr.annoPreVal}, // Not supported in current implementation
+		{"DefaultValue", "unknown-npu", baseAttr.annoPreVal},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := baseAttr.GetAnnoPreVal(tc.reqNPUName)
+			if result != tc.expected {
+				t.Errorf("GetAnnoPreVal(%q) = %q, want %q", tc.reqNPUName, result, tc.expected)
+			}
+		})
 	}
 }

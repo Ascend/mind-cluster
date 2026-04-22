@@ -98,7 +98,7 @@ func TestCheckNodeNPUByTask(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.Name, func(t *testing.T) {
 			job := test.FakeNormalTestJob("job", 1)
-			test.SetFakeJobResRequest(job, util.NPU910CardName, tt.TaskNodeNPU)
+			test.SetFakeJobResRequest(job, util.NPUCardName, tt.TaskNodeNPU)
 			attr := itest.FakeSchedulerJobAttrByJob(job)
 			sJob := plugin.SchedulerJob{}
 			sJob.SchedulerJobAttr = attr
@@ -229,7 +229,7 @@ func buildcheckNodeNPUByTaskTestCases03() []checkNodeNPUByTaskTestCase {
 }
 
 func buildcheckNodeNPUByTaskTestCases04() []checkNodeNPUByTaskTestCase {
-	task := test.FakeTaskWithResReq("pod0", util.NPU910CardName, util.NPUIndex8)
+	task := test.FakeTaskWithResReq("pod0", util.NPUCardName, util.NPUIndex8)
 	return []checkNodeNPUByTaskTestCase{
 		{
 			Name:          "9-CheckNodeNPUByTask return nil when tp-block is valid",
@@ -252,7 +252,7 @@ func buildcheckNodeNPUByTaskTestCases04() []checkNodeNPUByTaskTestCase {
 }
 
 func buildcheckNodeNPUByTaskTestCases05() []checkNodeNPUByTaskTestCase {
-	task := test.FakeTaskWithResReq("pod0", util.NPU910CardName, util.NPUIndex8)
+	task := test.FakeTaskWithResReq("pod0", util.NPUCardName, util.NPUIndex8)
 	return []checkNodeNPUByTaskTestCase{
 		{
 			Name:          "10-CheckNodeNPUByTask return err when node has no req npu",
@@ -275,7 +275,7 @@ func buildcheckNodeNPUByTaskTestCases05() []checkNodeNPUByTaskTestCase {
 }
 
 func buildcheckNodeNPUByTaskTestCases06() []checkNodeNPUByTaskTestCase {
-	task := test.FakeTaskWithResReq("pod0", util.NPU910CardName, npuNumber8)
+	task := test.FakeTaskWithResReq("pod0", util.NPUCardName, npuNumber8)
 	return []checkNodeNPUByTaskTestCase{
 		{
 			Name:          "11-CheckNodeNPUByTask return err when node RackID invalid",
