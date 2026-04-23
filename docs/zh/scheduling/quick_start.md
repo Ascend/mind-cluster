@@ -2,16 +2,16 @@
 
 本章节以待安装设备为两台Atlas 800T A2 训练服务器（一台作为管理节点、一台作为计算节点）为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。
 
-**操作说明<a name="section17940333114314"></a>**
+## 操作说明<a name="section17940333114314"></a>
 
 **表 1**  关键步骤说明
 
 |操作步骤|操作说明|更多参考|
 |--|--|--|
 |[安装组件](#section1837511531098)|以Atlas 800T A2 训练服务器为例，手把手带您在昇腾设备上快速安装集群调度组件。|更多安装集群调度组件的参数说明和操作步骤，请参考[安装部署](./installation_guide/03_installation.md)章节。|
-|[下发训练任务](#section106493419399)|以一个简单的PyTorch训练任务为例，让您快速了解训练任务下发的操作流程。|更多下发训练任务的参数说明和操作步骤，请参考[基础调度](./usage/basic_scheduling.md)章节。|
+|[下发训练任务](#section106493419399)|以一个简单的PyTorch训练任务为例，让您快速了解训练任务下发的操作流程。|更多下发训练任务的参数说明和操作步骤，请参考[基础调度](./usage/basic_scheduling/00_feature_description.md)章节。|
 
-**环境准备<a name="section159013591917"></a>**
+## 环境准备<a name="section159013591917"></a>
 
 安装组件前，需要确保集群环境已经搭建完成。
 
@@ -26,7 +26,7 @@
     >- NPU驱动和固件版本可通过**npu-smi info -t board -i** <i>NPU ID</i>命令查询。回显信息中的“Software Version”字段值表示NPU驱动版本，“Firmware Version”字段值表示NPU固件版本。
     >- 芯片型号的数值可通过**npu-smi info**命令查询，返回的“Name”字段对应信息为芯片型号，下文的<i>\{xxx\}</i>即取“910”字符作为芯片型号数值。
 
-**安装组件<a name="section1837511531098"></a>**
+## 安装组件<a name="section1837511531098"></a>
 
 以下步骤命令均以待安装设备Atlas 800T A2 训练服务器为例，如需了解所有组件的详细安装步骤和参数说明请参见[安装](./installation_guide/03_installation.md)。
 
@@ -54,31 +54,31 @@
 
         ```shell
         cd /home/noded
-        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v7.3.0/Ascend-mindxdl-noded_7.3.0_linux-aarch64.zip
-        unzip Ascend-mindxdl-noded_7.3.0_linux-aarch64.zip
+        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-noded_26.0.0_linux-aarch64.zip
+        unzip Ascend-mindxdl-noded_26.0.0_linux-aarch64.zip
         
         cd /home/devicePlugin
-        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v7.3.0/Ascend-mindxdl-device-plugin_7.3.0_linux-aarch64.zip
-        unzip Ascend-mindxdl-device-plugin_7.3.0_linux-aarch64.zip
+        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip
+        unzip Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip
         
         cd /home/Ascend-docker-runtime
-        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v7.3.0/Ascend-docker-runtime_7.3.0_linux-aarch64.run
+        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-docker-runtime_26.0.0_linux-aarch64.run
         ```
 
     2. 在**管理节点**依次执行以下命令，获取Volcano、ClusterD和Ascend Operator组件安装包。
 
         ```shell
         cd /home/ascend-volcano
-        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v7.3.0/Ascend-mindxdl-volcano_7.3.0_linux-aarch64.zip
-        unzip Ascend-mindxdl-volcano_7.3.0_linux-aarch64.zip
+        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip
+        unzip Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip
         
         cd /home/ascend-operator
-        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v7.3.0/Ascend-mindxdl-ascend-operator_7.3.0_linux-aarch64.zip
-        unzip Ascend-mindxdl-ascend-operator_7.3.0_linux-aarch64.zip
+        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-ascend-operator_26.0.0_linux-aarch64.zip
+        unzip Ascend-mindxdl-ascend-operator_26.0.0_linux-aarch64.zip
         
         cd /home/clusterd
-        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v7.3.0/Ascend-mindxdl-clusterd_7.3.0_linux-aarch64.zip
-        unzip Ascend-mindxdl-clusterd_7.3.0_linux-aarch64.zip
+        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-clusterd_26.0.0_linux-aarch64.zip
+        unzip Ascend-mindxdl-clusterd_26.0.0_linux-aarch64.zip
         ```
 
 3. 制作组件镜像。
@@ -100,10 +100,10 @@
 
         ```shell
         cd /home/noded
-        docker build --no-cache -t noded:v7.3.0 ./
+        docker build --no-cache -t noded:v26.0.0 ./
         
         cd /home/devicePlugin
-        docker build --no-cache -t ascend-k8sdeviceplugin:v7.3.0 ./
+        docker build --no-cache -t ascend-k8sdeviceplugin:v26.0.0 ./
         ```
 
     4. 依次执行以下命令，在**管理节点**制作组件镜像。
@@ -114,10 +114,10 @@
         docker build --no-cache -t volcanosh/vc-controller-manager:v1.7.0 ./ -f ./Dockerfile-controller
         
         cd /home/ascend-operator
-        docker build --no-cache -t ascend-operator:v7.3.0 ./
+        docker build --no-cache -t ascend-operator:v26.0.0 ./
         
         cd /home/clusterd
-        docker build --no-cache -t clusterd:v7.3.0 ./
+        docker build --no-cache -t clusterd:v26.0.0 ./
         ```
 
 4. 创建节点标签。
@@ -212,8 +212,8 @@
 
         ```shell
         cd /home/Ascend-docker-runtime
-        chmod u+x Ascend-docker-runtime_7.3.0_linux-aarch64.run
-        ./Ascend-docker-runtime_7.3.0_linux-aarch64.run --install
+        chmod u+x Ascend-docker-runtime_26.0.0_linux-aarch64.run
+        ./Ascend-docker-runtime_26.0.0_linux-aarch64.run --install
         systemctl daemon-reload && systemctl restart docker
         ```
 
@@ -221,29 +221,29 @@
 
         ```shell
         cd /home/noded
-        scp noded-v7.3.0.yaml root@{管理节点IP地址}:/home/noded
+        scp noded-v26.0.0.yaml root@{管理节点IP地址}:/home/noded
         
         cd /home/devicePlugin
-        scp device-plugin-volcano-v7.3.0.yaml root@{管理节点IP地址}:/home/devicePlugin
+        scp device-plugin-volcano-v26.0.0.yaml root@{管理节点IP地址}:/home/devicePlugin
         ```
 
     3. 在**管理节点**，依次执行以下命令，安装组件。
 
         ```shell
         cd /home/ascend-operator
-        kubectl apply -f ascend-operator-v7.3.0.yaml
+        kubectl apply -f ascend-operator-v26.0.0.yaml
         
         cd /home/ascend-volcano/volcano-v1.7.0  # 使用1.9.0版本Volcano需要修改为v1.9.0
         kubectl apply -f volcano-v1.7.0.yaml
         
         cd /home/noded
-        kubectl apply -f noded-v7.3.0.yaml
+        kubectl apply -f noded-v26.0.0.yaml
         
         cd /home/clusterd
-        kubectl apply -f clusterd-v7.3.0.yaml
+        kubectl apply -f clusterd-v26.0.0.yaml
         
         cd /home/devicePlugin
-        kubectl apply -f device-plugin-volcano-v7.3.0.yaml
+        kubectl apply -f device-plugin-volcano-v26.0.0.yaml
         ```
 
         以NodeD组件为例，回显示例如下，表示组件安装成功。
@@ -270,7 +270,7 @@
         ...
         ```
 
-**下发训练任务<a name="section106493419399"></a>**
+## 下发训练任务<a name="section106493419399"></a>
 
 1. 准备镜像。
 
@@ -304,7 +304,7 @@
 
     6. 进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](./appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/basic-training/without-ranktable/pytorch”目录中的train\_start.sh，在“/data/atlas\_dls/public/code/ResNet50\_ID4149\_for\_PyTorch/scripts”路径下，构造如下的目录结构。
 
-        ```ColdFusion
+        ```text
         root@ubuntu:/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts#
         scripts/
              ├── train_start.sh

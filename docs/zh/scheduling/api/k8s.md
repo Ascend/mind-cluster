@@ -1,6 +1,6 @@
 # K8s原生对象说明<a name="ZH-CN_TOPIC_0000002511346725"></a>
 
-**Service label<a name="section17127184555719"></a>**
+## Service label<a name="section17127184555719"></a>
 
 **表 1**  集群调度对Service的使用说明
 
@@ -15,7 +15,7 @@
 |training.kubeflow.org/replica-index|标记Pod序号|[0-{Pod数量-1}]|Ascend Operator|
 |training.kubeflow.org/replica-type|标记Pod类型|<ul><li>master</li><li>chief</li><li>scheduler</li><li>worker</li></ul>|Ascend Operator|
 
-**Job label<a name="section3960559173617"></a>**
+## Job label<a name="section3960559173617"></a>
 
 **表 2**  集群调度对Job label使用说明
 
@@ -24,16 +24,16 @@
 |mind-cluster/scaling-rule: scaling-rule|标记扩缩容规则对应的ConfigMap名称。|字符串|Ascend Operator|
 |mind-cluster/group-name: group0|标记扩缩容规则中对应的group名称。|字符串|Ascend Operator|
 
-**Job annotation**
+## Job annotation
 
 **表 3**  集群调度对Job annotation使用说明
 
 |Job annotation名称|作用|取值|使用组件|
 |--|--|--|--|
 |huawei.com/schedule.filter.faultCode|<p>配置任务需要静默的故障码和时间窗。</p><ul><li>故障码仅支持配置芯片故障和灵衢总线设备故障的故障码。支持的故障码详细请参见faultCode.json和SwitchFaultCode.json文件。</li><li>支持配置多个故障码和时间窗，多个配置使用英文逗号分隔。</li></ul>|<p>取值示例："8C1F8608:30, 80E01801"，表示在30秒时间窗内，静默8C1F8608故障；在60秒时间窗内，静默80E01801故障。</p><p>若未配置时间窗，则默认为60，取值范围为0~86400，单位为秒。</p>|ClusterD|
-|huawei.com/schedule.filter.faultLevel|<p>配置任务需要静默的故障级别和时间窗。</p><ul><li>故障级别仅支持配置芯片故障和灵衢总线设备故障的级别。支持的故障级别详细请参见[配置说明](../usage/resumable_training.md#配置说明)。</li><li>支持配置多个故障级别和时间窗，多个配置使用英文逗号分隔。</li><li>对于MindIE Service，若YAML文件中无此配置项，则默认所有RestartRequest级别的故障静默60秒。</li><li>huawei.com/schedule.filter.faultCode的优先级高于huawei.com/schedule.filter.faultLevel。</li><li>对于通知类故障，ClusterD静默此类故障后，可能导致Volcano不主动重调度故障Pod。任务可以通过订阅ClusterD的故障订阅接口，对接收到的故障进行相应处理，若处理失败需主动Error退出Pod。</li></ul>|<p>取值示例："RestartRequest:30, RestartBusiness"，表示在30秒时间窗内，静默所有RestartRequest级别的故障；在60秒时间窗内，静默所有RestartBusiness级别的故障。</p><p>若未配置时间窗，则默认为60，取值范围为0~86400，单位为秒。</p>|ClusterD|
+|huawei.com/schedule.filter.faultLevel|<p>配置任务需要静默的故障级别和时间窗。</p><ul><li>故障级别仅支持配置芯片故障和灵衢总线设备故障的级别。支持的故障级别详细请参见[配置说明](../usage/resumable_training/03_configuring_fault_detection_levels.md#配置说明)。</li><li>支持配置多个故障级别和时间窗，多个配置使用英文逗号分隔。</li><li>对于MindIE Service，若YAML文件中无此配置项，则默认所有RestartRequest级别的故障静默60秒。</li><li>huawei.com/schedule.filter.faultCode的优先级高于huawei.com/schedule.filter.faultLevel。</li><li>对于通知类故障，ClusterD静默此类故障后，可能导致Volcano不主动重调度故障Pod。任务可以通过订阅ClusterD的故障订阅接口，对接收到的故障进行相应处理，若处理失败需主动Error退出Pod。</li></ul>|<p>取值示例："RestartRequest:30, RestartBusiness"，表示在30秒时间窗内，静默所有RestartRequest级别的故障；在60秒时间窗内，静默所有RestartBusiness级别的故障。</p><p>若未配置时间窗，则默认为60，取值范围为0~86400，单位为秒。</p>|ClusterD|
 
-**Node label<a name="section121401114162912"></a>**
+## Node label<a name="section121401114162912"></a>
 
 **表 4**  集群调度对Node label使用说明
 
@@ -57,7 +57,7 @@
 |huawei.com/topotree.groupid|标识节点的Pod组ID|节点所属Pod组ID|Volcano|
 |huawei.com/topotree|标识节点的网络拓扑树ID|节点所属网络拓扑树ID|Volcano|
 
-**Pod  label<a name="section1019341142914"></a>**
+## Pod  label<a name="section1019341142914"></a>
 
 **表 5** 集群调度组件对Pod  label使用说明
 
@@ -84,7 +84,7 @@
 |training.kubeflow.org/replica-type|标记Pod类型|<ul><li>master</li><li>chief</li><li>scheduler</li><li>worker</li></ul>|Ascend Operator|
 |super-pod-affinity|超节点任务使用的亲和性调度策略|softhard|Ascend Operator、Volcano|
 
-**Pod  annotation<a name="section16927154663513"></a>**
+## Pod  annotation<a name="section16927154663513"></a>
 
 **表 6** 集群调度组件对Pod  annotation使用说明
 
@@ -125,7 +125,7 @@
 |huawei.com/affinity-config|配置任务的多级调度的亲和性层级。|<p>level1=x,level2=y,...</p><p>其中x,y...为对应的网络层级子任务大小。</p><p>该字段用于配置任务的多级调度的亲和性层级。</p><p>要求满足格式为leveli=ni样式的字符串的拼接，中间使用英文逗号分隔。其中，i为网络层级序号，ni为该网络层级子任务的副本数量。例如，对于总副本数量为8的任务“level1=2,level2=4”，表示任务Pod中每2个Pod分配到有相同level1标签的节点上，每4个Pod分配到有相同level2标签的节点上。</p><p>网络层级配置需要满足以下要求：<ul><li>任务层级大于1层时，层级n的值必须是n-1的整数倍。</li><li>任务总副本数量必须是所有层级的整数倍。</li><li>任务层级配置必须从level1开始，从小到大连续的。</li></ul></p>|Volcano|
 |huawei.com/schedule_policy|指定调度策略。|目前支持[表3 huawei.com/schedule\_policy配置说明](./volcano.md#podgroup)中的配置。|Volcano|
 
-**Node annotation<a name="section9144358124519"></a>**
+## Node annotation<a name="section9144358124519"></a>
 
 **表 7** 集群调度组件对Node annotation使用说明
 
@@ -138,7 +138,7 @@
 
 ResetInfo的内容格式如下所示。
 
-```ColdFusion
+```json
 {
     "ThirdPartyResetDevs": [
         {
@@ -161,7 +161,7 @@ ResetInfo的内容格式如下所示。
 }
 ```
 
-**K8s的ServiceAccount<a name="section168254015405"></a>**
+## K8s的ServiceAccount<a name="section168254015405"></a>
 
 **表 8**  组件在K8s中创建的ServiceAccount列表
 

@@ -17,11 +17,11 @@
 2. ClusterD读取device-info-cm和node-info-cm中信息后，将信息整合到cluster-info-cm中。
 3. 用户通过kubectl或者其他深度学习平台下发不使用NPU卡的MS Controller、MS Coordinator以及数个使用NPU卡的MindIE Server任务。
 4. Ascend Operator为任务创建相应的podGroup。关于podGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
-5. Ascend Operator为任务创建相应的Pod，并注入MindIE Server服务启动所需的环境变量。关于环境变量的详细说明请参见[环境变量说明](../../api/environment_variable_description.md)中"Ascend Operator注入的训练环境变量"表。
+5. Ascend Operator为任务创建相应的Pod，并注入MindIE Server服务启动所需的环境变量。关于环境变量的详细说明请参见[环境变量说明](../../api/environment_variable_description.md)中“Ascend Operator注入的训练环境变量”表。
 6. 对于MS Controller、MS Coordinator任务，volcano-scheduler根据节点内存、CPU及标签、亲和性选择合适节点。对于MindIE Server任务volcano-scheduler还会参考芯片拓扑信息为其选择合适节点，并在Pod的annotation上写入选择的芯片信息以及节点硬件信息。
 7. kubelet创建容器时，对于MindIE Server任务，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin或volcano-scheduler在Pod的annotation上写入芯片和节点硬件信息。Ascend Docker Runtime协助挂载相应资源。
 8. Ascend Operator读取每个MindIE Server任务Pod的annotation信息，生成各自的集合通信文件hccl.json，以ConfigMap形式存储在etcd中。
-9. ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json对应ConfigMap的变化，实时生成global-ranktable。关于global-ranktable的详细说明请参见[SubscribeRankTable](../../api/clusterd.md#subscriberanktable)中"global-ranktable文件说明"部分。
+9. ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json对应ConfigMap的变化，实时生成global-ranktable。关于global-ranktable的详细说明请参见[SubscribeRankTable](../../api/clusterd/05_service_configuration_apis.md#subscriberanktable)中“global-ranktable文件说明”部分。
 10. MS Controller启动后，与ClusterD建立通信，通过gRPC接口订阅global-ranktable的变化。
 
 ## 通过命令行使用<a name="ZH-CN_TOPIC_0000002511426327"></a>
@@ -87,8 +87,8 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
       namespace: mindie
       labels:
         framework: pytorch          
-        <strong>app: mindie-ms-controller   # 表示MindIE Motor在Ascend Job任务中的角色,不可修改
-        jobID: mindie-ms-test       # 当前MindIE Motor任务在集群中的唯一识别ID，用户可根据实际情况进行配置</strong>
+        <strong>app: mindie-ms-controller   # 表示MindIE Motor在Ascend Job任务中的角色,不可修改</strong>
+        <strong>jobID: mindie-ms-test       # 当前MindIE Motor任务在集群中的唯一识别ID，用户可根据实际情况进行配置</strong>
         ring-controller.atlas: ascend-910b
     spec:
       schedulerName: volcano   # Ascend Operator启用“gang”调度时所选择的调度器
@@ -136,8 +136,8 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
       namespace: mindie
       labels:
         framework: pytorch        
-        <strong>app: mindie-ms-server        # 表示当前MindIE Motor在Ascend Job任务中的角色,不可修改
-        jobID: mindie-ms-test        # 当前MindIE Motor任务在集群中的唯一识别ID，用户可根据实际情况进行配置</strong>
+        <strong>app: mindie-ms-server        # 表示当前MindIE Motor在Ascend Job任务中的角色,不可修改</strong>
+        <strong>jobID: mindie-ms-test        # 当前MindIE Motor任务在集群中的唯一识别ID，用户可根据实际情况进行配置</strong>
         ring-controller.atlas: ascend-910b
       annotations:
         huawei.com/schedule.filter.faultCode: "8C1F8608,4C1F8608,80E01801"       # 增加该annotation，配置方法请参见YAML参数说明
@@ -166,8 +166,8 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
         jobID: mindie-ms-test        # MindIE Motor任务在集群中的唯一识别ID，用户可根据实际情况进行配置
         ring-controller.atlas: ascend-910b
         fault-scheduling: force
-      <strong>annotations:
-        sp-block: "16"         # 增加该annotation，配置方法请参见YAML参数说明</strong>
+      <strong>annotations:</strong>
+        <strong>sp-block: "16"         # 增加该annotation，配置方法请参见YAML参数说明</strong>
         huawei.com/schedule.filter.faultCode: "8C1F8608,4C1F8608,80E01801"       # 增加该annotation，配置方法请参见YAML参数说明
         huawei.com/schedule.filter.faultLevel: "RestartRequest"       # 增加该annotation，配置方法请参见YAML参数说明
     spec:
@@ -196,7 +196,7 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
 
 Atlas 800I A3 超节点服务器场景下，MindCluster集群调度组件支持MindIE Motor推理任务配置任务级别亲和性调度策略，可实现将MindIE Server实例尽量调度到同一个物理超节点中，充分利用HCCS网络，加速实例间的网络通信。
 
-关于逻辑超节点的亲和性调度规则的详细说明，请参见[灵衢总线设备节点网络说明](../basic_scheduling.md#atlas-900-a3-superpod-超节点)章节。
+关于逻辑超节点的亲和性调度规则的详细说明，请参见[灵衢总线设备节点网络说明](../basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点)章节。
 
 **图 1**  灵衢总线设备节点网络<a name="zh-cn_topic_0000002362872425_fig1054553210321"></a>  
 ![](../../../figures/scheduling/灵衢总线设备节点网络.png "灵衢总线设备节点网络")
@@ -227,8 +227,8 @@ metadata:
     ring-controller.atlas: ascend-910b
     fault-scheduling: force
   annotations:
-    <strong>sp-block: "16"              # 指定sp-block字段，集群调度组件会在物理超节点的基础上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度
-    sp-fit: "idlest"            # 超节点调度策略，详细说明请参见YAML参数说明</strong>
+    <strong>sp-block: "16"              # 指定sp-block字段，集群调度组件会在物理超节点的基础上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度</strong>
+    <strong>sp-fit: "idlest"            # 超节点调度策略，详细说明请参见YAML参数说明</strong>
 spec:
   schedulerName: volcano   # Ascend Operator启用“gang”调度时所选择的调度器
   runPolicy:
@@ -245,14 +245,14 @@ spec:
             ring-controller.atlas: ascend-910b
         spec:
           affinity:
-            <strong>podAffinity:            # 表示逻辑超节点会往具有更多亲和性Pod的物理超节点调度
-              preferredDuringSchedulingIgnoredDuringExecution:
-              - weight: 100         # 不可修改
-                podAffinityTerm:
-                  labelSelector:
-                    matchLabels:
-                      jobID: mindie-ms-test  # 亲和Pod所需要的标签 
-                  topologyKey: kubernetes.io/hostname</strong></pre>
+            <strong>podAffinity:            # 表示逻辑超节点会往具有更多亲和性Pod的物理超节点调度</strong>
+              <strong>preferredDuringSchedulingIgnoredDuringExecution:</strong>
+              <strong>- weight: 100         # 不可修改</strong>
+                <strong>podAffinityTerm:</strong>
+                  <strong>labelSelector:</strong>
+                    <strong>matchLabels:</strong>
+                      <strong>jobID: mindie-ms-test  # 亲和Pod所需要的标签</strong>
+                  <strong>topologyKey: kubernetes.io/hostname</strong></pre>
 
 ### YAML参数说明<a name="ZH-CN_TOPIC_0000002511346361"></a>
 
@@ -287,7 +287,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 </td>
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p5524103317257"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p5524103317257"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p5524103317257"></a>表示当前MindIE Motor推理任务在Ascend Job任务中的角色，取值包括mindie-ms-controller、mindie-ms-coordinator、mindie-ms-server。</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><div class="note" id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note4367125713295"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note4367125713295"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note4367125713295"></a><div class="notebody"><a name="zh-cn_topic_0000002329010086_ul139591420161415"></a><a name="zh-cn_topic_0000002329010086_ul139591420161415"></a><ul id="zh-cn_topic_0000002329010086_ul139591420161415"><li>acjob的任务YAML同时包含jobID和app这2个字段时，<span id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph1566531814589"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph1566531814589"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph1566531814589"></a>Ascend Operator</span>组件会自动传入环境变量MINDX_TASK_ID、APP_TYPE、MINDX_SERVER_IP及MINDX_SERVER_DOMAIN，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见<a href="../../api/environment_variable_description.md">环境变量说明</a>中"Ascend Operator注入的训练环境变量"表。</li><li>该参数仅支持在<span id="ph0338135542520"><a name="ph0338135542520"></a><a name="ph0338135542520"></a>Atlas 800I A2 推理服务器</span>、<span id="zh-cn_topic_0000002329010086_ph2790182618303"><a name="zh-cn_topic_0000002329010086_ph2790182618303"></a><a name="zh-cn_topic_0000002329010086_ph2790182618303"></a>Atlas 800I A3 超节点服务器</span>上使用。</li></ul>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><div class="note" id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note4367125713295"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note4367125713295"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note4367125713295"></a><div class="notebody"><a name="zh-cn_topic_0000002329010086_ul139591420161415"></a><a name="zh-cn_topic_0000002329010086_ul139591420161415"></a><ul id="zh-cn_topic_0000002329010086_ul139591420161415"><li>acjob的任务YAML同时包含jobID和app这2个字段时，<span id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph1566531814589"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph1566531814589"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph1566531814589"></a>Ascend Operator</span>组件会自动传入环境变量MINDX_TASK_ID、APP_TYPE、MINDX_SERVER_IP及MINDX_SERVER_DOMAIN，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见<a href="../../api/environment_variable_description.md">环境变量说明</a>中“Ascend Operator注入的训练环境变量”表。</li><li>该参数仅支持在<span id="ph0338135542520"><a name="ph0338135542520"></a><a name="ph0338135542520"></a>Atlas 800I A2 推理服务器</span>、<span id="zh-cn_topic_0000002329010086_ph2790182618303"><a name="zh-cn_topic_0000002329010086_ph2790182618303"></a><a name="zh-cn_topic_0000002329010086_ph2790182618303"></a>Atlas 800I A3 超节点服务器</span>上使用。</li></ul>
 </div></div>
 </td>
 </tr>
@@ -408,7 +408,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 <a name="zh-cn_topic_0000002039339953_ul10451144414619"></a><a name="zh-cn_topic_0000002039339953_ul10451144414619"></a><ul id="zh-cn_topic_0000002039339953_ul10451144414619"><li>单机时需要和任务请求的芯片数量一致。</li><li>分布式时需要是节点芯片数量的整数倍，且任务总芯片数量是其整数倍。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p1670155202912"><a name="p1670155202912"></a><a name="p1670155202912"></a>指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度。<span id="zh-cn_topic_0000002511347099_ph521204025916"><a name="zh-cn_topic_0000002511347099_ph521204025916"></a><a name="zh-cn_topic_0000002511347099_ph521204025916"></a>若用户未指定该字段，</span><span id="zh-cn_topic_0000002511347099_ph172121408590"><a name="zh-cn_topic_0000002511347099_ph172121408590"></a><a name="zh-cn_topic_0000002511347099_ph172121408590"></a>Volcano</span><span id="zh-cn_topic_0000002511347099_ph192121140135911"><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a>调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。</span></p>
-<p id="p19701652112917"><a name="p19701652112917"></a><a name="p19701652112917"></a>了解详细说明请参见<a href="../basic_scheduling.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a>。</p>
+<p id="p19701652112917"><a name="p19701652112917"></a><a name="p19701652112917"></a>了解详细说明请参见<a href="../basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a>。</p>
 <div class="note" id="note47015215291"><a name="note47015215291"></a><a name="note47015215291"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><ul id="zh-cn_topic_0000002511347099_ul546892712569"><li>仅支持在<span id="zh-cn_topic_0000002511347099_ph34244153594"><a name="zh-cn_topic_0000002511347099_ph34244153594"></a><a name="zh-cn_topic_0000002511347099_ph34244153594"></a>Atlas 900 A3 SuperPoD 超节点</span>中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：<a href="../../faq.md#任务申请的总芯片数量为32sp-block设置为32可以正常训练sp-block设置为16无法完成训练训练容器报错提示初始化连接失败">任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败</a></li></ul>
 </div></div>
 </td>
@@ -438,8 +438,6 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul18716519102210"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul18716519102210"></a><ul id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul18716519102210"><li>ignore：忽略该亚健康节点，后续任务在亲和性调度上不优先调度该节点。</li><li>graceExit：不使用亚健康节点，并保存临终CKPT文件后，进行重调度，后续任务不会调度到该节点。</li><li>forceExit：不使用亚健康节点，不保存任务直接退出，进行重调度，后续任务不会调度到该节点。</li><li>默认取值为ignore。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p3641163291319"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p3641163291319"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p3641163291319"></a>节点状态为亚健康（SubHealthy）的节点的处理策略。</p>
-<div class="note" id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note635023119333"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_note635023119333"></a><div class="notebody"><p id="p76416015243"><a name="p76416015243"></a><a name="p76416015243"></a>使用graceExit策略时，需保证训练框架能够接收SIGTERM信号并保存CKPT文件。</p>
-</div></div>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row36114148312"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1461116146318"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1461116146318"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1461116146318"></a>accelerator-type</p>
@@ -470,7 +468,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
     <p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p561713141331"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p561713141331"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p561713141331"></a>请求的NPU数量，请根据实际修改。</p>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row11621414533"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p894317013244"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p894317013244"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p894317013244"></a>(.kind=="AscendJob").spec.replicaSpecs.[Master|Scheduler|Worker].template.spec.containers[0].env[name==ASCEND_VISIBLE_DEVICES].valueFrom.fieldRef.fieldPath</p>
+<tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row11621414533"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p894317013244"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p894317013244"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p894317013244"></a>(.kind=="AscendJob").spec.replicaSpecs.{Master|Scheduler|Worker}.template.spec.containers[0].env[name==ASCEND_VISIBLE_DEVICES].valueFrom.fieldRef.fieldPath</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p7622914235"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p7622914235"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p7622914235"></a>取值为metadata.annotations['huawei.com/AscendXXX']，其中XXX表示芯片的型号，支持的取值为910，310和310P。取值需要和环境上实际的芯片类型保持一致。</p>
 </td>
@@ -578,7 +576,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 </td>
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p>取值示例："RestartRequest:30, RestartBusiness"，表示在30秒时间窗内，静默所有RestartRequest级别的故障；在60秒时间窗内，静默所有RestartBusiness级别的故障。</p><p>若未配置时间窗，则默认为60，取值范围为0~86400，单位为秒。</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p>配置任务需要静默的故障级别和时间窗。</p><ul><li>故障级别仅支持配置芯片故障和灵衢总线设备故障的级别。支持的故障级别详细请参见<a href="../resumable_training.md#配置说明">配置说明</a>。</li><li>支持配置多个故障级别和时间窗，多个配置使用英文逗号分隔。</li><li>对于MindIE Service，若YAML文件中无此配置项，则默认所有RestartRequest级别的故障静默60秒。</li><li>huawei.com/schedule.filter.faultCode的优先级高于huawei.com/schedule.filter.faultLevel。</li><li>对于通知类故障，ClusterD静默此类故障后，可能导致Volcano不主动重调度故障Pod。任务可以通过订阅ClusterD的故障订阅接口，对接收到的故障进行相应处理，若处理失败需主动Error退出Pod。</li></ul>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p>配置任务需要静默的故障级别和时间窗。</p><ul><li>故障级别仅支持配置芯片故障和灵衢总线设备故障的级别。支持的故障级别详细请参见<a href="../resumable_training/03_configuring_fault_detection_levels.md#配置说明">配置说明</a>。</li><li>支持配置多个故障级别和时间窗，多个配置使用英文逗号分隔。</li><li>对于MindIE Service，若YAML文件中无此配置项，则默认所有RestartRequest级别的故障静默60秒。</li><li>huawei.com/schedule.filter.faultCode的优先级高于huawei.com/schedule.filter.faultLevel。</li><li>对于通知类故障，ClusterD静默此类故障后，可能导致Volcano不主动重调度故障Pod。任务可以通过订阅ClusterD的故障订阅接口，对接收到的故障进行相应处理，若处理失败需主动Error退出Pod。</li></ul>
 </td>
 </tr>
 </tbody>
@@ -597,7 +595,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 
 ### global-ranktable说明<a name="ZH-CN_TOPIC_0000002479226414"></a>
 
-ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json对应ConfigMap的变化，实时生成global-ranktable。global-ranktable中部分字段来自于hccl.json文件，关于hccl.json文件的详细说明请参见[hccl.json文件说明](../../api/hccl.json_file_description.md)。
+ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json对应ConfigMap的变化，实时生成global-ranktable。global-ranktable中部分字段来自hccl.json文件，关于hccl.json文件的详细说明请参见[hccl.json文件说明](../../api/hccl.json_file_description.md)。
 
 - Atlas A2 训练系列产品global-ranktable示例如下。
 

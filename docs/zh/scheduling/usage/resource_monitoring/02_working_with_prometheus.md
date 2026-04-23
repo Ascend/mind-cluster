@@ -1,11 +1,11 @@
 # 通过Prometheus使用<a name="ZH-CN_TOPIC_0000002511426931"></a>
 
-本章节指导用户安装部署Prometheus相关软件，并通过Prometheus查看资源监测的相关数据信息，数据信息的相关说明可参见[Prometheus Metrics接口](../../api/npu_exporter.md#prometheus-metrics接口)章节。
+本章节指导用户安装部署Prometheus相关软件，并通过Prometheus查看资源监测的相关数据信息，数据信息的相关说明可参见[Prometheus Metrics接口](../../api/npu_exporter/01_prometheus_metrics_api.md)章节。
 
 - [直接对接Prometheus](#zh-cn_topic_0000001447284876_section875071183215)：NPU Exporter可以直接将NPU设备的数据信息导入到Prometheus中，无需额外的中间件或代理，架构更加简单。
 - [通过Prometheus Operator对接Prometheus](#section1031014512341)：NPU Exporter通过Prometheus Operator插件对接Prometheus，帮助用户快速、简便地实现Prometheus服务的平台化，提高监测系统的可靠性和可维护性。
 
-**直接对接Prometheus<a name="zh-cn_topic_0000001447284876_section875071183215"></a>**
+## 直接对接Prometheus<a name="zh-cn_topic_0000001447284876_section875071183215"></a>
 
 1. 进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](../../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/utils/prometheus/base”目录下的prometheus.yaml文件。
 2. <a name="zh-cn_topic_0000001447284876_li127175170321"></a>在管理节点执行以下命令获取镜像。
@@ -93,7 +93,7 @@
 
     3. 选择NPU的相关标签，查看对应数据信息。
 
-**通过Prometheus Operator对接Prometheus<a name="section1031014512341"></a>**
+## 通过Prometheus Operator对接Prometheus<a name="section1031014512341"></a>
 
 1. 执行以下命令，获取Prometheus Operator插件源码。
 
@@ -167,7 +167,7 @@
         ```
 
 4. <a name="li15822115020428"></a>NPU Exporter通过Prometheus Operator对接Prometheus。
-    1. 获取[npu-exporter-svc.yaml](https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/utils/prometheus/prometheus_operator/npu-exporter-svc.yaml)和[servicemonitor.yaml](https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v7.3.0/samples/utils/prometheus/prometheus_operator/servicemonitor.yaml)。
+    1. 获取[npu-exporter-svc.yaml](https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.0.0/samples/utils/prometheus/prometheus_operator/npu-exporter-svc.yaml)和[servicemonitor.yaml](https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.0.0/samples/utils/prometheus/prometheus_operator/servicemonitor.yaml)。
 
         >[!NOTE] 
         >若已经提前安装Prometheus，需要确保servicemonitor.yaml的以下字段，和已经部署的Prometheus中serviceMonitorSelector配置的matchLabels标签一致。

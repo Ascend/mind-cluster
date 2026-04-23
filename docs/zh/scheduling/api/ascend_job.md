@@ -1,14 +1,14 @@
 # Ascend Job<a name="ZH-CN_TOPIC_0000002479226878"></a>
 
-Ascend Job：简称acjob，是MindCluster自定义的一种任务类型，当前支持通过环境变量配置资源信息及文件配置资源信息这2种方式拉起训练或推理任务。
+Ascend Job：简称acjob，是MindCluster自定义的一种任务类型，当前支持通过环境变量配置资源信息及文件配置资源信息两种方式拉起训练或推理任务。
 
-**支持的AI框架<a name="zh-cn_topic_0000002377698613_section1580601414413"></a>**
+## 支持的AI框架<a name="zh-cn_topic_0000002377698613_section1580601414413"></a>
 
 - MindSpore
 - TensorFlow
 - PyTorch
 
-**样例<a name="zh-cn_topic_0000002377698613_section7389161784012"></a>**
+## 样例<a name="zh-cn_topic_0000002377698613_section7389161784012"></a>
 
 pytorch\_multinodes\_acjob\_910b.yaml示例如下。
 
@@ -52,7 +52,7 @@ spec:
             accelerator-type: card-910b-2 # depend on your device model, 910bx8 is module-910b-8 ,910bx16 is module-910b-16
           containers:
           - name: ascend # do not modify
-            image: pytorch-test:latest         # trainning framework image， which can be modified
+            image: pytorch-test:latest         # training framework image， which can be modified
             imagePullPolicy: IfNotPresent
             env:
               - name: XDL_IP                                       # IP address of the physical node, which is used to identify the node where the pod is running
@@ -140,7 +140,7 @@ spec:
             accelerator-type: card-910b-2 # depend on your device model, 910bx8 is module-910b-8 ,910bx16 is module-910b-16
           containers:
           - name: ascend # do not modify
-            image: pytorch-test:latest                # trainning framework image， which can be modified
+            image: pytorch-test:latest                # training framework image， which can be modified
             imagePullPolicy: IfNotPresent
             env:
               - name: XDL_IP                                       # IP address of the physical node, which is used to identify the node where the pod is running
@@ -208,7 +208,7 @@ spec:
 
 ```
 
-**关键字段<a name="zh-cn_topic_0000002377698613_section92451045124014"></a>**
+## 关键字段<a name="zh-cn_topic_0000002377698613_section92451045124014"></a>
 
 **表 1**  acjob关键字段说明
 
@@ -254,7 +254,7 @@ spec:
 |status.replicaStatuses.[ReplicaType].labelSelector.matchLabels|对象 (object)|-|标签匹配的键值对（等价于matchExpressions条件）。|
 |status.startTime|字符串 (string)|date-time|作业开始时间（RFC3339格式，UTC）。|
 
-**任务状态说明<a name="zh-cn_topic_0000002377698613_section177175313294"></a>**
+## 任务状态说明<a name="zh-cn_topic_0000002377698613_section177175313294"></a>
 
 拉起训练任务后，用户可以通过**kubectl get acjob**命令查看acjob任务的运行状态，当前运行状态有以下几种。
 
@@ -268,7 +268,7 @@ spec:
 |Succeeded|Job的所有子资源(Pod/Service)处于成功终止阶段。|
 |Failed|Job的一个或多个子资源(Pod/Service)运行失败。|
 
-**任务异常条件说明<a name="zh-cn_topic_0000002377698613_section177175313295"></a>**
+## 任务异常条件说明<a name="zh-cn_topic_0000002377698613_section177175313295"></a>
 
 当任务出现异常时，AscendJob 的 status.conditions 字段会记录详细的异常信息。每个 condition 包含以下字段：
 
@@ -281,7 +281,7 @@ spec:
 |message|字符串|条件的详细描述信息|
 |reason|字符串|条件转换的原因代码|
 
-**常见异常原因（reason）说明**
+## 常见异常原因（reason）说明
 
 |原因代码|说明|
 |--|--|
@@ -294,7 +294,7 @@ spec:
 |PodCreateFailed|创建 Pod 失败|
 |JobValidFailed|任务验证失败|
 
-**异常条件示例**
+## 异常条件示例
 
 ```yaml
 status:
@@ -319,7 +319,7 @@ status:
     reason: "JobFailed"
 ```
 
-**查看任务异常信息**
+## 查看任务异常信息
 
 使用以下命令查看任务的详细状态和异常信息：
 

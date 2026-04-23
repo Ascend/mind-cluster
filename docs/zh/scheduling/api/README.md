@@ -1,13 +1,13 @@
 # API参考
 
-- [NPU Exporter](npu_exporter.md)
+- [NPU Exporter](./npu_exporter/menu_npu_exporter.md)
 - [Volcano](volcano.md)
 - [Ascend Device Plugin](ascend_device_plugin.md)
 - [NodeD](noded.md)
-- [ClusterD](clusterd.md)
+- [ClusterD](./clusterd/menu_clusterd.md)
 - [Ascend Operator](ascend_operator.md)
 - [Elastic-Agent（断点续训相关接口）](elastic_agent.md)
-- [TaskD](taskd.md)
+- [TaskD](./taskd/menu_taskd.md)
 - [Ascend Job](ascend_job.md)
 - [K8s原生对象说明](k8s.md)
 - [环境变量说明](environment_variable_description.md)
