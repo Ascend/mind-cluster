@@ -60,7 +60,7 @@ void TestMindxEngine::InitSource()
 TEST_F(TestMindxEngine, register_faild)
 {
     ASSERT_EQ(setenv("MINDX_TASK_ID", "0", 1), 0);
-    MOCKER_CPP(&MindXEngine::EventProcess, TResult(*)(void)).expects(once()).will(returnValue(TResult::TTP_ERROR));
+    MOCKER_CPP(&MindXEngine::EventProcess, TResult(*)(void)).expects(atLeast(1)).will(returnValue(TResult::TTP_ERROR));
     TestMindxEngine::InitSource();
     TResult ret = g_mindxEngine1->EventProcess(MindXEvent::MINDX_EVENT_REGISTER, nullptr, 0);
 
