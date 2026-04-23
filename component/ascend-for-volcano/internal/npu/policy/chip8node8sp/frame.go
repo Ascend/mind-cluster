@@ -43,6 +43,7 @@ func New(name string) base.AscendHandler {
 	m.SetAnnoName(util.NPUCardName)
 	m.SetAnnoPreVal(util.NPUCardNamePre)
 	m.SetMaxNodeNPUNum(nodeNPUNumber)
+	m.SetIsNetworkFaultAttention(true)
 	m.netUnhealthyKey = networkUnhealthyNPU
 	m.nodeVPodId = map[string]string{}
 	return m
