@@ -36,6 +36,7 @@ func New(name string) base.AscendHandler {
 	m.SetPluginName(name)
 	m.SetAnnoName(util.NPUCardName)
 	m.SetAnnoPreVal(util.NPUCardNamePre)
+	m.SetIsNetworkFaultAttention(true)
 	m.affScoreList = createAffScoreList(m.MaxNodeNPUNum)
 	return m
 }
