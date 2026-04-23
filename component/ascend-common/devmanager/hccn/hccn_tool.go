@@ -501,13 +501,13 @@ func parseSecondTableColumns(lines []string) (map[string]string, error) {
 			continue
 		}
 		parts := strings.Split(line, "|")
+		if strings.Contains(line, "optical_") {
+			opticalIndex = append(opticalIndex, strings.TrimSpace(parts[len(parts)-secondLast]))
+		}
 		col4 := strings.TrimSpace(parts[fourthIndex])
 		col5 := strings.TrimSpace(parts[fifthIndex])
 		if len(parts) < eleventhIndex || strings.Contains(col5, "-") {
 			continue
-		}
-		if strings.Contains(line, "optical_") {
-			opticalIndex = append(opticalIndex, strings.TrimSpace(parts[len(parts)-secondLast]))
 		}
 		if col4 != "" && strings.Contains(line, "xPower") {
 			opticalInfoMap[col4] = col5
