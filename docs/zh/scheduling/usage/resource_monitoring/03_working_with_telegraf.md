@@ -1,8 +1,8 @@
 # 通过Telegraf使用<a name="ZH-CN_TOPIC_0000002479227042"></a>
 
-本章节指导用户安装部署Telegraf软件，并通过Telegraf查看资源监测的相关数据信息，数据信息的相关说明可参见[Telegraf数据信息说明](../../api/npu_exporter.md#telegraf数据信息说明)章节。
+本章节指导用户安装部署Telegraf软件，并通过Telegraf查看资源监测的相关数据信息，数据信息的相关说明可参见[Telegraf数据信息说明](../../api/npu_exporter/02_telegraf_data_description.md)章节。
 
-**二进制集成Telegraf<a name="section31082142614"></a>**
+## 二进制集成Telegraf<a name="section31082142614"></a>
 
 >[!NOTE] 
 >除了二进制集成外，集群调度支持通过修改NPU Exporter开源代码，集成Telegraf源码。
@@ -89,6 +89,6 @@
         2023-09-15T10:11:31Z I! Loaded outputs: file
         2023-09-15T10:11:31Z I! Tags enabled: host=xxx
         2023-09-15T10:11:31Z I! [agent] Config: Interval:10s, Quiet:false, Hostname:"xxx", Flush Interval:10s
-        2023-09-15T10:11:31Z I! [inputs.execd] Starting process: /xxx/npu-exporter [-platform=Telegraf -poll_interval=1m]
+        2023-09-15T10:11:31Z I! [inputs.execd] Starting process: /xxx/npu-exporter [-platform=Telegraf -poll_interval=10s]
         Ascend910-0,host=xxx npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt_num=0i,npu_chip_roce_unexpected_ack_num=0i,npu_chip_optical_vcc=3245.1,npu_chip_optical_rx_power_1=0.8585,npu_chip_info_hbm_used_memory=0i,npu_chip_mac_rx_pause_num=0i,npu_chip_roce_tx_all_pkt_num=0i,npu_chip_roce_tx_cnp_pkt_num=0i,npu_chip_info_temperature=46,npu_chip_mac_rx_bad_pkt_num=0i,npu_chip_roce_tx_err_pkt_num=0i,npu_chip_optical_rx_power_3=0.8466,npu_chip_optical_rx_power_0=0.7933,npu_chip_info_network_status=0i,npu_chip_mac_rx_pfc_pkt_num=0i,npu_chip_mac_tx_bad_pkt_num=0i,npu_chip_roce_rx_all_pkt_num=0i,npu_chip_mac_rx_bad_oct_num=0i,npu_chip_optical_tx_power_1=0.9162,npu_chip_info_utilization=0,npu_chip_info_power=73.9000015258789,npu_chip_info_link_status=1i,npu_chip_info_bandwidth_rx=0,npu_chip_mac_tx_pfc_pkt_num=0i,npu_chip_roce_rx_err_pkt_num=0i,npu_chip_roce_verification_err_num=0i,npu_chip_optical_state=1i,npu_chip_info_bandwidth_tx=0,npu_chip_mac_tx_bad_oct_num=0i,npu_chip_roce_out_of_order_num=0i,npu_chip_roce_qp_status_err_num=0i,npu_chip_optical_rx_power_2=0.855,npu_chip_optical_tx_power_0=0.9095,npu_chip_info_hbm_utilization=0,npu_chip_link_up_num=2i,npu_chip_info_health_status=1i,npu_chip_mac_tx_pause_num=0i,npu_chip_roce_new_pkt_rty_num=0i,npu_chip_optical_temp=53,npu_chip_optical_tx_power_2=1.0342,npu_chip_optical_tx_power_3=0.9715 1694772754612200641
         ```

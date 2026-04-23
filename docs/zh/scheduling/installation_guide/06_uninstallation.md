@@ -4,7 +4,7 @@
 - 卸载Container Manager组件，请参见[卸载Container Manager组件](#section1461059103619)进行操作。
 - 卸载NPU Exporter、Ascend Device Plugin、Volcano、ClusterD、Ascend Operator、Infer Operator、NodeD和Resilience Controller，请参见[卸载其他组件](#section6361146202520)。
 
-**卸载Ascend Docker Runtime<a name="section6134163311244"></a>**
+## 卸载Ascend Docker Runtime<a name="section6134163311244"></a>
 
 - 情况一：使用不同安装路径。
 
@@ -113,7 +113,7 @@
         systemctl daemon-reload && systemctl restart containerd
         ```
 
-**卸载Container Manager组件<a name="section1461059103619"></a>**
+## 卸载Container Manager组件<a name="section1461059103619"></a>
 
 1. 以root用户登录Container Manager组件部署的节点。
 2. 依次执行以下命令，卸载Container Manager组件系统服务。
@@ -142,7 +142,7 @@
     rm -rf /var/log/mindx-dl/container-manager
     ```
 
-**卸载其他组件<a name="section6361146202520"></a>**
+## 卸载其他组件<a name="section6361146202520"></a>
 
 支持卸载集群调度组件，用户可以卸载组件后重新安装最新版本组件。通过逐一卸载各组件，并删除对应的命名空间、日志目录、配置文件等，请根据安装方式选择对应的卸载方式。
 

@@ -423,7 +423,7 @@ inferserviceset.mindcluster.huawei.com "my-test" deleted
 4. （可选）复制启动脚本到主机其他目录或集群其他节点，确保其他节点的启动脚本路径与主机一致。如果用户环境为单机环境，可以跳过该步骤。如果用户环境包含共享存储，也可以将脚本文件复制到共享存储，并将共享存储挂载给推理服务。
 
     ```shell
-    cp src/start/*  <target_dir>/src/start/
+    cp src/start/* <target_dir>/src/start/
     scp src/start/* <user>@<IP>:<target_dir>/src/start/
     ```
 

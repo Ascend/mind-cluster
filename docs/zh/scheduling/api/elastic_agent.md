@@ -15,7 +15,7 @@
 
 使用样例如下：
 
-```ColdFusion
+```Python
 import mindx_elastic
 mindx_elastic.__version__
 ```

@@ -113,7 +113,7 @@
 
     - （可选）**检查其他组件**。参考[组件状态确认](./04_confirming_status.md)，确认集群中节点是否安装了相应组件。
 
-4. （可选）若尚未安装MindCluster集群调度组件，请参考[安装部署](./03_installation.md)章节先安装组件，TaskD的安装步骤请参考[制作镜像](../usage/resumable_training.md#制作镜像)章节。
+4. （可选）若尚未安装MindCluster集群调度组件，请参考[安装部署](./03_installation.md)章节先安装组件，TaskD的安装步骤请参考[制作镜像](../usage/resumable_training/07_using_resumable_training_on_the_cli.md#制作镜像)章节。
 
 ## 升级Ascend Docker Runtime<a name="ZH-CN_TOPIC_0000002479226420"></a>
 
@@ -337,16 +337,20 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 - 如需升级NPU Exporter、Ascend Device Plugin、Volcano、ClusterD、Ascend Operator、Infer Operator、NodeD和Resilience Controller组件，需卸载旧版本后，再执行新版本的安装步骤。
 
+**注意事项**
+
+如果存在开启断点续训功能的任务正在运行，则升级ClusterD会导致断点续训功能失效。解决方法：完成新版本镜像制作后，无需卸载旧版本，直接安装新版本ClusterD。
+
 **升级步骤<a name="section65996266718"></a>**
 
-1. 卸载MindCluster旧版本组件。详情请参见[卸载其他组件](./06_uninstallation.md)中"卸载组件"步骤。
+1. 卸载MindCluster旧版本组件。详情请参见[卸载](./06_uninstallation.md)中“卸载其他组件 \> 步骤2”。
 2. 参考[获取软件包](./03_installation.md#获取软件包)章节，下载新版本组件安装包。
 3. （可选）准备MindCluster集群调度组件新版本镜像。若新版本组件采用二进制方式安装，可跳过本步骤。
 
     参考[准备镜像](./03_installation.md#准备镜像)章节，从昇腾镜像仓库拉取新版本镜像或者制作新版本镜像。注意新版本组件镜像tag要与旧版本组件镜像tag不一致，避免覆盖旧版本组件镜像。
 
 4. <a name="li147194506333"></a>请根据要升级的组件，重新执行手动安装步骤。详细步骤请参见[安装MindCluster新版本组件](./03_installation.md)。
-5. （可选）如需回退老版本，依次执行[卸载](./06_uninstallation.md)中"卸载其他组件"中卸载组件步骤和[步骤4](#li147194506333)，卸载新版本组件后安装旧版本组件即可。
+5. （可选）如需回退老版本，依次执行[卸载](./06_uninstallation.md)中“卸载其他组件 \> 步骤2”和[步骤4](#li147194506333)，卸载新版本组件后安装旧版本组件即可。
 
 ## 升级镜像<a name="ZH-CN_TOPIC_0000002511346311"></a>
 
@@ -547,7 +551,7 @@ Elastic Agent组件已经日落，本章节提供将Elastic Agent组件升级为
         ```
 
         >[!NOTE]
-        >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../api/taskd.md#def-init_taskd_managerconfigdict---bool)。
+        >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../api/taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
 
     2. 在训练脚本中增加以下代码拉起TaskD  Manager。
 
@@ -556,7 +560,7 @@ Elastic Agent组件已经日落，本章节提供将Elastic Agent组件升级为
         # 以PyTorch框架为例
         if [[ "${RANK}" == 0 ]]; then
             export MASTER_ADDR=${POD_IP} 
-            python /job/code/manager.py 2>> /job/code/alllogs/$MINDX_TASK_ID/taskd/error.log &           # 具体执行路径由当前路径决定
+            python /job/code/manager.py 2>> /job/code/alllogs/$MINDX_TASK_ID/taskd/error.log &           # manager.py具体执行路径由当前路径决定，error.log日志路径需提前创建
         fi</strong> 
               
         torchrun ...</pre>

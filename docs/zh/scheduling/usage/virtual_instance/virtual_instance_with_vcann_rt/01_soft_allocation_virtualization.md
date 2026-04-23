@@ -1,10 +1,10 @@
 # 软切分虚拟化<a name="ZH-CN_TOPIC_000000968vcann"></a>
 
-**使用软切分NPU说明<a name="ZH-CN_TOPIC_00000025113463450356vcann"></a>**
+## 使用软切分NPU说明<a name="ZH-CN_TOPIC_00000025113463450356vcann"></a>
 
 在Kubernetes场景下，当用户需要使用NPU资源时，需要结合集群调度组件Ascend Device Plugin和Volcano的使用，使Kubernetes可以管理并调度昇腾处理器资源。昇腾软切分虚拟化实例特性需要的集群调度组件包括Ascend Device Plugin、Volcano、Ascend Operator和ClusterD。支持的产品型号请参见[表1 产品支持情况说明](./00_description.md)。
 
-**场景说明<a name="section1576110260450vcann"></a>**
+## 场景说明<a name="section1576110260450vcann"></a>
 
 使用软切分虚拟化前，需要提前了解[表1](#table62551184461989657)中的场景说明。
 
@@ -39,7 +39,7 @@
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>支持K8s的机制，如亲和性等。</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>支持芯片故障和节点故障的重调度。具体参考<a href="../../basic_scheduling.md#推理卡故障恢复">推理卡故障恢复</a>和<a href="../../basic_scheduling.md#推理卡故障重调度">推理卡故障重调度</a>章节。</p>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>支持芯片故障和节点故障的重调度。具体参考<a href="../../basic_scheduling/10_recovery_of_inference_card_faults.md">推理卡故障恢复</a>和<a href="../../basic_scheduling/09_rescheduling_upon_inference_card_faults.md">推理卡故障重调度</a>章节。</p>
 </td>
 </tr>
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>支持集群中软切分虚拟化功能和非软切分虚拟化功能混合部署的场景。</p>
@@ -59,7 +59,7 @@
 </tbody>
 </table>
 
-**前提条件**
+## 前提条件
 
 1. 需要在节点上增加标签huawei.com/scheduler.chip1softsharedev.enable=true，表示该节点支持软切分功能。
 
@@ -177,7 +177,7 @@
            ...     
          ```
 
-**使用方法**
+## 使用方法
 
 创建推理任务时，需要在创建YAML文件时，修改如下配置。以Atlas 800I A2推理服务器为例。
 
@@ -192,11 +192,11 @@ metadata:
     framework: pytorch
     ring-controller.atlas: ascend-910b
     fault-scheduling: "force"
-    <strong>huawei.com/scheduler.softShareDev.aicoreQuota: "50" # 软切分任务请求的芯片AI Core百分比，单位为%
-    huawei.com/scheduler.softShareDev.hbmQuota: "2048" # 软切分任务请求的芯片高带宽内存量，单位为MB
-    huawei.com/scheduler.softShareDev.policy: "fixed-share" # 软切分策略，取值为fixed-share、elastic和best-effort
+    <strong>huawei.com/scheduler.softShareDev.aicoreQuota: "50" # 软切分任务请求的芯片AI Core百分比，单位为%</strong>
+    <strong>huawei.com/scheduler.softShareDev.hbmQuota: "2048" # 软切分任务请求的芯片高带宽内存量，单位为MB</strong>
+    <strong>huawei.com/scheduler.softShareDev.policy: "fixed-share" # 软切分策略，取值为fixed-share、elastic和best-effort</strong>
   annotations:
-    huawei.com/schedule_policy: "chip1-softShareDev" # 软切分场景Volcano调度策略</strong>
+    <strong>huawei.com/schedule_policy: "chip1-softShareDev" # 软切分场景Volcano调度策略</strong>
 spec:
   schedulerName: volcano   # work when enableGangScheduling is true
   runPolicy:
@@ -245,10 +245,10 @@ spec:
                   mountPath: /usr/local/Ascend/add-ons
                 - name: localtime
                   mountPath: /etc/localtime
-                <strong>- name: libpreload # 软切分动态库地址
-                  mountPath: /opt/enpu/vcann-rt/lib/libvruntime.so
-                - name: preload # preload配置文件地址
-                  mountPath: ${preload_path}/ld.so.preload</strong>
+                <strong>- name: libpreload # 软切分动态库地址</strong>
+                  <strong>mountPath: /opt/enpu/vcann-rt/lib/libvruntime.so</strong>
+                <strong>- name: preload # preload配置文件地址</strong>
+                  <strong>mountPath: ${preload_path}/ld.so.preload</strong>
           volumes:
             - name: ascend-driver
               hostPath:
@@ -259,12 +259,12 @@ spec:
             - name: localtime
               hostPath:
                 path: /etc/localtime
-            <strong>- name: libpreload # 软切分动态库地址
-              hostPath:
-                path: /opt/enpu/vcann-rt/lib/libvruntime.so
-            - name: preload # preload配置文件地址
-              hostPath:
-                path: ${preload_path}/ld.so.preload</strong>
+            <strong>- name: libpreload # 软切分动态库地址</strong>
+              <strong>hostPath:</strong>
+                <strong>path: /opt/enpu/vcann-rt/lib/libvruntime.so</strong>
+            <strong>- name: preload # preload配置文件地址</strong>
+              <strong>hostPath:</strong>
+                <strong>path: ${preload_path}/ld.so.preload</strong>
 </pre>
 
 >[!NOTE] 

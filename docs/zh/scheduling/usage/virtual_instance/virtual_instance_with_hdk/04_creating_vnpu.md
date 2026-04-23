@@ -6,7 +6,7 @@
     - 使用Ascend Docker Runtime：参考[方式一：Ascend Docker Runtime挂载vNPU](./06_mounting_vnpu.md#方式一ascend-docker-runtime挂载vnpu)，通过ASCEND\_VISIBLE\_DEVICES和ASCEND\_VNPU\_SPECS参数从物理芯片上虚拟化出多个vNPU并挂载至容器。
     - 使用MindCluster集群调度组件（Ascend Device Plugin和Volcano）：参考[动态虚拟化](./06_mounting_vnpu.md#动态虚拟化)，运行任务时自动按照配置要求调用接口创建vNPU。
 
-**创建vNPU方法<a name="section206799361399"></a>**
+## 创建vNPU方法<a name="section206799361399"></a>
 
 - 在物理机执行以下命令设置虚拟化模式（如果是在虚拟机内划分vNPU，不需要执行本命令），命令格式如下。
 

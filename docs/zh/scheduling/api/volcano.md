@@ -20,9 +20,9 @@
 
     |访问方式|协议|方法|作用|所属组件|
     |--|--|--|--|--|
-    |http://podIP:11251/healthz|http|Get|健康检查端口|volcano-controller|
-    |http://podIP:11251/healthz|http|Get|健康检查端口|volcano-scheduler|
-    |http://volcano-scheduler-serviceIP:8080/metrics|http|Get|Prometheus信息收集端口|volcano-scheduler|
+    |`http://podIP:11251/healthz`|http|Get|健康检查端口|volcano-controller|
+    |`http://podIP:11251/healthz`|http|Get|健康检查端口|volcano-scheduler|
+    |`http://volcano-scheduler-serviceIP:8080/metrics`|http|Get|Prometheus信息收集端口|volcano-scheduler|
 
     >[!NOTE]
     >- 为保证Volcano健康检查端口和Prometheus信息收集端口的正常访问，请在安装Volcano时，将YAML中的--enable-healthz参数和--enable-metrics参数的值设置为“true”，详细修改方法可参见[安装Volcano](../installation_guide/03_installation.md#安装volcano)中“步骤7”。
@@ -144,7 +144,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>配置任务的多级调度的亲和性层级。</p>
 </td>
-<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p>level1=x,level2=y,...</p><p>其中x,y...为对应的网络层级子任务大小。</p><p>要求满足格式为leveli=ni样式的字符串的拼接，中间使用英文逗号分隔。其中，i为网络层级序号，ni为该网络层级子任务的副本数量。例如，对于总副本数量为8的任务“level1=2,level2=4”，表示任务Pod中每2个Pod分配到有相同level1标签的节点上，每4个Pod分配到有相同level2标签的节点上。</p><p>网络层级配置需要满足以下要求：<ul><li>任务层级大于1层时，层级n的值必须是n-1的整数倍。</li><li>任务总副本数量必须是所有层级的整数倍。</li><li>任务层级配置必须从level1开始，从小到大连续的。</li></ul></p>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p>level1=x,level2=y,...</p><p>其中x,y...为对应的网络层级子任务大小。</p><p>要求满足格式为leveli=ni的字符串的拼接，中间使用英文逗号分隔。其中，i为网络层级序号，ni为该网络层级子任务的副本数量。例如，对于总副本数量为8的任务“level1=2,level2=4”，表示任务Pod中每2个Pod分配到有相同level1标签的节点上，每4个Pod分配到有相同level2标签的节点上。</p><p>网络层级配置需要满足以下要求：<ul><li>任务层级大于1层时，层级n的值必须是n-1的整数倍。</li><li>任务总副本数量必须是所有层级的整数倍。</li><li>任务层级配置必须从level1开始，从小到大连续的。</li></ul></p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>
@@ -158,7 +158,7 @@
 
 |配置|说明|
 |--|--|
-|chip4-node8|1个节点8张芯片，每4个芯片形成1个互联环。例如，Atlas 800 训练服务器（型号 9000）/Atlas 800 训练服务器（型号 9010）芯片的整模块场景/Atlas 350 加速卡共8张卡，每4张卡通过UB扣板连接。|
+|chip4-node8|1个节点8张芯片，每4个芯片形成1个互联环。例如，Atlas 800 训练服务器（型号 9000）/Atlas 800 训练服务器（型号 9010）芯片的整模块场景/Atlas 350 标卡共8张卡，每4张卡通过UB扣板连接。|
 |chip1-node2|1个节点2张芯片。例如，Atlas 300T 训练卡的插卡场景，1张卡最多插1个芯片，1个节点最多插2张卡。|
 |chip4-node4|1个节点4张芯片，形成1个互联环。例如，Atlas 800 训练服务器（型号 9000）/Atlas 800 训练服务器（型号 9010）芯片的半配场景。|
 |chip8-node8|1个节点8张卡，8张卡都在1个互联环上。例如，Atlas 800T A2 训练服务器 /Atlas 850 系列硬件产品。|
@@ -167,13 +167,13 @@
 |chip2-node16|1个节点16张卡，每2张卡在1个互联环上。例如，Atlas 800T A3 超节点服务器。|
 |chip2-node8-sp|1个节点8张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，Atlas 9000 A3 SuperPoD 集群算力系统。|
 |chip2-node16-sp|1个节点16张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，Atlas 900 A3 SuperPoD 超节点。|
-|chip4-node16|1个节点16张卡，每4张卡都在1个互联环上。例如，Atlas 350 加速卡共16张卡，每4张卡通过UB扣板连接。|
-|chip1-node8|1个节点8张卡，每张卡之间无互联。例如，Atlas 350 加速卡共8张卡，每张卡之间无互联。|
-|chip1-node16|1个节点16张卡，每张卡之间无互联。例如，Atlas 350 加速卡共16张卡，每张卡之间无互联。|
+|chip4-node16|1个节点16张卡，每4张卡都在1个互联环上。例如，Atlas 350 标卡共16张卡，每4张卡通过UB扣板连接。|
+|chip1-node8|1个节点8张卡，每张卡之间无互联。例如，Atlas 350 标卡共8张卡，每张卡之间无互联。|
+|chip1-node16|1个节点16张卡，每张卡之间无互联。例如，Atlas 350 标卡共16张卡，每张卡之间无互联。|
 |chip8-node8-sp|1个节点8张卡，8张卡都在1个互联环上，多个服务器形成超节点。例如，Atlas 850 系列硬件产品（超节点）。|
 |chip8-node8-ra64-sp|1个节点8张卡，8张卡都在1个互联环上，64个节点组成一个计算框，多个框形成超节点。例如，Atlas 950 SuperPoD。|
 |chip1-softShareDev|软切分虚拟化专用调度策略。|
-|multilevel|多级调度场景使用，多级调度的详细使用方法请参见[多级调度](../usage/basic_scheduling.md#多级调度)。|
+|multilevel|多级调度场景使用，多级调度的详细使用方法请参见[多级调度](../usage/basic_scheduling/05_multi_level_scheduling.md)。|
 
 ## Pod<a name="ZH-CN_TOPIC_0000002484428552"></a>
 
@@ -336,7 +336,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>配置任务的多级调度的亲和性层级。</p>
 </td>
-<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p>level1=x,level2=y,...</p><p>其中x,y...为对应的网络层级子任务大小。</p><p>要求满足格式为leveli=ni样式的字符串的拼接，中间使用英文逗号分隔。其中，i为网络层级序号，ni为该网络层级子任务的副本数量。例如，对于总副本数量为8的任务“level1=2,level2=4”，表示任务Pod中每2个Pod分配到有相同level1标签的节点上，每4个Pod分配到有相同level2标签的节点上。</p><p>网络层级配置需要满足以下要求：<ul><li>任务层级大于1层时，层级n的值必须是n-1的整数倍。</li><li>任务总副本数量必须是所有层级的整数倍。</li><li>任务层级配置必须从level1开始，从小到大连续的。</li></ul></p>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p>level1=x,level2=y,...</p><p>其中x,y...为对应的网络层级子任务大小。</p><p>要求满足格式为leveli=ni的字符串的拼接，中间使用英文逗号分隔。其中，i为网络层级序号，ni为该网络层级子任务的副本数量。例如，对于总副本数量为8的任务“level1=2,level2=4”，表示任务Pod中每2个Pod分配到有相同level1标签的节点上，每4个Pod分配到有相同level2标签的节点上。</p><p>网络层级配置需要满足以下要求：<ul><li>任务层级大于1层时，层级n的值必须是n-1的整数倍。</li><li>任务总副本数量必须是所有层级的整数倍。</li><li>任务层级配置必须从level1开始，从小到大连续的。</li></ul></p>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>
@@ -720,7 +720,7 @@ MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p321511543920"><a name="p321511543920"></a><a name="p321511543920"></a>管理训练进程</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p33363655012"><a name="p33363655012"></a><a name="p33363655012"></a>0或1</p>
-<a name="ul7532185975011"></a><a name="ul7532185975011"></a><ul id="ul7532185975011"><li>取值为1，杀死所有训练进程</li><li>取值为0，不做处理</li></ul>
+<a name="ul7532185975011"></a><a name="ul7532185975011"></a><ul id="ul7532185975011"><li>取值为1，终止所有训练进程</li><li>取值为0，不做处理</li></ul>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p921615511390"><a name="p921615511390"></a><a name="p921615511390"></a>-</p>
 </td>
@@ -770,7 +770,7 @@ MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写
 
 **mindx-dl/job-reschedule-reason<a name="section20866121155814"></a>**
 
-该ConfigMap用于记录任务重调度历史信息，默认情况下会保存任务最近的十次重调度记录，当ConfigMap内容超过950Kb时会依次删减每个任务中发生时间最早的记录。
+该ConfigMap用于记录任务重调度历史信息，默认情况下会保存任务最近的十次重调度记录，当ConfigMap内容超过950Kb时会依次删除每个任务中发生时间最早的记录。
 
 **表 4**  任务字段说明
 

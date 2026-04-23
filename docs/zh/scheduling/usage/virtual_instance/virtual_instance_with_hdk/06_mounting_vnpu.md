@@ -476,7 +476,7 @@
 <tr id="row5256198134612"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p72561586465"><a name="p72561586465"></a><a name="p72561586465"></a>支持K8s的机制，如亲和性等。</p>
 </td>
 </tr>
-<tr id="row825611817468"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p2795151384913"><a name="p2795151384913"></a><a name="p2795151384913"></a>支持芯片故障和节点故障的重调度。具体参考<span id="ph1389215534914"><a name="ph1389215534914"></a><a name="ph1389215534914"></a><a href="../../basic_scheduling.md#推理卡故障恢复">推理卡故障恢复</a></span>和<a href="../../basic_scheduling.md#推理卡故障重调度">推理卡故障重调度</a>章节。</p>
+<tr id="row825611817468"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p2795151384913"><a name="p2795151384913"></a><a name="p2795151384913"></a>支持芯片故障和节点故障的重调度。具体参考<span id="ph1389215534914"><a name="ph1389215534914"></a><a name="ph1389215534914"></a><a href="../../basic_scheduling/10_recovery_of_inference_card_faults.md">推理卡故障恢复</a></span>和<a href="../../basic_scheduling/09_rescheduling_upon_inference_card_faults.md">推理卡故障重调度</a>章节。</p>
 </td>
 </tr>
 <tr id="row237762345420"><td class="cellrowborder" rowspan="4" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p id="p840574125511"><a name="p840574125511"></a><a name="p840574125511"></a>特性不支持的场景</p>
@@ -597,7 +597,7 @@
         |参数|类型|默认值|说明|
         |--|--|--|--|
         |-volcanoType|bool|false|是否使用Volcano进行调度，如使用动态虚拟化，需要设置为true。|
-        |-presetVirtualDevice|bool|true|静态虚拟化功能开关，值只能为true。<p>如使用动态虚拟化，需要设置为false，并需要同步开启Volcano，即设置“-volcanoType”参数为true。</p>|
+        |-presetVirtualDevice|bool|true|静态虚拟化功能开关。<p>如使用动态虚拟化，需要设置为false，并需要同步开启Volcano，即设置“-volcanoType”参数为true。</p>|
 
         YAML启动说明如下：
 

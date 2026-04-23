@@ -1,12 +1,12 @@
 # 配置推理任务交换机亲和性
 
-当前仅支持Atlas 800I A2 推理服务器配置交换机亲和性功能。开启此功能，可规避Spine交换机下行流量冲突问题。如需了解该功能的原理，请参见[交换机亲和性调度1.0](../basic_scheduling.md#交换机亲和性调度10)章节。
+当前仅支持Atlas 800I A2 推理服务器配置交换机亲和性功能。开启此功能，可规避Spine交换机下行流量冲突问题。如需了解该功能的原理，请参见[交换机亲和性调度1.0](../basic_scheduling/01_affinity_scheduling/04_node_based_affinity.md#交换机亲和性调度10)章节。
 
-**前提条件**
+## 前提条件
 
 已完成[（可选）使用Volcano交换机亲和性调度](../../installation_guide/03_installation.md#可选使用volcano交换机亲和性调度)。
 
-**配置推理任务交换机亲和性**
+## 操作步骤
 
 将交换机亲和性tor-affinity配置为normal-schema，YAML示例如下：
 
