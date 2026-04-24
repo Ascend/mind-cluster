@@ -83,10 +83,11 @@ func setK8sPatch() *gomonkey.Patches {
 }
 
 func setDcmiPatch() *gomonkey.Patches {
-	patch := gomonkey.ApplyFuncReturn(devmanager.DetectDcmiApiVersion, devmanager.DcmiApiV2, nil).
-		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcInit", nil).
+	patch := gomonkey.ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcInit", nil).
+		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcShutDown", nil).
 		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetDcmiVersion", mockDcmiVersion, nil).
 		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetDeviceList", mockDeviceNum, mockDeviceList, nil).
+		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetAllDeviceCount", mockDeviceNum, nil).
 		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetChipInfo", mockChipInfo, nil).
 		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetDeviceBoardInfo", mockBoardInfo, nil).
 		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetDeviceMainBoardInfo", mockMainBoardId, nil).

@@ -150,12 +150,27 @@ type DeviceManager struct {
 	// isTrainingCard whether the device is used for training
 	isTrainingCard bool
 	dcmiVersion    string
+	// dcmiApiVersion dcmi interface api version, v1 or empty for dcmi_xxx, v2 for dcmiv2_xxx api
+	dcmiApiVersion string
 	// mainBoardId used to distinguish between A900A3SuperPod and A9000A3SuperPod
 	mainBoardId uint32
 }
 
 type deviceCommonInitManager struct {
 	DeviceManager
+}
+
+// SetDcmiVersion set dcmi version
+func (d *deviceCommonInitManager) SetDcmiVersion() {
+	dcmiVersion, err := d.DcMgr.DcGetDcmiVersion()
+	if err != nil {
+		hwlog.RunLog.Warnf("deviceManager get dcmi version failed, err: %v", err)
+	}
+	d.dcmiVersion = dcmiVersion
+}
+
+func (d *deviceCommonInitManager) GetDcmiApiVersion() string {
+	return d.dcmiApiVersion
 }
 
 // SetValidMainBoardInfo get valid main board info

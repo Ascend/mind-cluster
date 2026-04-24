@@ -50,6 +50,7 @@ const (
 )
 
 var (
+	mockDcmiVersion           = "24.0.rc2"
 	mockCardNum         int32 = 16
 	mockDeviceNumInCard int32 = 1
 	mockCardList              = []int32{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
@@ -351,14 +352,14 @@ func autoInitSetup() {
 	deviceCommonSetManagerList = []DeviceCommonSetInterface{
 		&deviceCommonInitManager{
 			DeviceManager: DeviceManager{
-				DcMgr:       &dcmi.DcManager{},
-				dcmiVersion: DcmiApiV1,
+				DcMgr:          &dcmi.DcManager{},
+				dcmiApiVersion: DcmiApiV1,
 			},
 		},
 		&deviceCommonInitManagerV2{
 			DeviceManagerV2: DeviceManagerV2{
-				DcMgr:       &dcmi.DcV2Manager{},
-				dcmiVersion: DcmiApiV2,
+				DcMgr:          &dcmi.DcV2Manager{},
+				dcmiApiVersion: DcmiApiV2,
 			},
 		},
 	}
@@ -379,6 +380,7 @@ func getDcmiFullPatches() *gomonkey.Patches {
 		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetCardList", mockCardNum, mockCardList, nil).
 		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceNumInCard", mockDeviceNumInCard, nil).
 		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetChipInfo", mock910ChipInfo, nil).
+		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDcmiVersion", mockDcmiVersion, nil).
 		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceBoardInfo", mockBoardInfo, nil).
 		ApplyMethodReturn(&dcmi.DcManager{}, "DcGetDeviceMainBoardInfo", mockMainBoardId, nil).
 		ApplyMethod(reflect.TypeOf(&dcmi.DcManager{}), "DcGetCardIDDeviceID", func(_ *dcmi.DcManager, logicId int32) (int32, int32, error) {
@@ -397,6 +399,7 @@ func getDcmiV2FullPatches() *gomonkey.Patches {
 		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetDeviceList", mockDeviceNum, mockDeviceList, nil).
 		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetAllDeviceCount", mockDeviceNum, nil).
 		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetChipInfo", mock950ChipInfo, nil).
+		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetDcmiVersion", mockDcmiVersion, nil).
 		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetDeviceBoardInfo", mock950BoardInfo, nil).
 		ApplyMethodReturn(&dcmi.DcV2Manager{}, "DcGetDeviceMainBoardInfo", mock950MainBoardId, nil)
 	return p
@@ -408,7 +411,8 @@ func testAutoInitSuccessWithDcmi() {
 	convey.So(ok, convey.ShouldBeTrue)
 	convey.So(err, convey.ShouldBeNil)
 	convey.So(devM.DevType, convey.ShouldEqual, api.Ascend910)
-	convey.So(devM.dcmiVersion, convey.ShouldEqual, DcmiApiV1)
+	convey.So(devM.dcmiApiVersion, convey.ShouldEqual, DcmiApiV1)
+	convey.So(devM.dcmiVersion, convey.ShouldEqual, mockDcmiVersion)
 	convey.So(devM.isTrainingCard, convey.ShouldBeTrue)
 	convey.So(devM.ProductTypes, convey.ShouldResemble, []string{mockProductType})
 	convey.So(devM.DcMgr, convey.ShouldResemble, &A910Manager{})
@@ -420,7 +424,8 @@ func testAutoInitSuccessWithDcmiV2() {
 	convey.So(ok, convey.ShouldBeTrue)
 	convey.So(err, convey.ShouldBeNil)
 	convey.So(devM.DevType, convey.ShouldEqual, api.Ascend910A5)
-	convey.So(devM.dcmiVersion, convey.ShouldEqual, DcmiApiV2)
+	convey.So(devM.dcmiApiVersion, convey.ShouldEqual, DcmiApiV2)
+	convey.So(devM.dcmiVersion, convey.ShouldEqual, mockDcmiVersion)
 	convey.So(devM.isTrainingCard, convey.ShouldBeTrue)
 	convey.So(devM.ProductTypes, convey.ShouldResemble, []string{})
 	convey.So(devM.DcMgr, convey.ShouldResemble, &A950Manager{})

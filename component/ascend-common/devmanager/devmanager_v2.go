@@ -52,6 +52,19 @@ type deviceCommonInitManagerV2 struct {
 	DeviceManagerV2
 }
 
+// SetDcmiVersion set dcmi version
+func (d *deviceCommonInitManagerV2) SetDcmiVersion() {
+	dcmiVersion, err := d.DcMgr.DcGetDcmiVersion()
+	if err != nil {
+		hwlog.RunLog.Warnf("deviceManagerV2 get dcmi version failed, err: %v", err)
+	}
+	d.dcmiVersion = dcmiVersion
+}
+
+func (d *deviceCommonInitManagerV2) GetDcmiApiVersion() string {
+	return d.dcmiApiVersion
+}
+
 // SetValidMainBoardInfo get valid main board info
 func (d *deviceCommonInitManagerV2) SetValidMainBoardInfo() error {
 	// get device list
