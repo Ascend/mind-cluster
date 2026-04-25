@@ -105,10 +105,10 @@ MindCluster基础组件：
 
 # 26.0.0版本配套文档<a name="ZH-CN_TOPIC_0000002524562889"></a>
 
-|文档名称|内容简介|更新说明|
-|--|--|--|
-|《[MindCluster 集群调度用户指南](./scheduling/introduction.md)》|提供集群调度组件说明、特性原理和使用参考，包括各组件的安装部署、集成适配示例和API参考，以及部分调度方案的原理介绍参考。|新增软切分调度、多级调度等，其他变更详见《[MindCluster 集群调度用户指南](./scheduling/introduction.md)》。|
-|《[MindCluster 故障诊断用户指南](./faultdiag/introduction.md)》|提供日志采集、日志清洗与转储、故障诊断等功能的使用指导。|新增Atlas 350 标卡故障模式、Ascend-faultdiag-toolkit工具等，其他变更详见《[MindCluster 故障诊断用户指南](./faultdiag/introduction.md)》。|
+| 文档名称                                                   |内容简介|更新说明|
+|--------------------------------------------------------|--|--|
+| 《[MindCluster 集群调度用户指南](./scheduling/introduction.md)》 |提供集群调度组件说明、特性原理和使用参考，包括各组件的安装部署、集成适配示例和API参考，以及部分调度方案的原理介绍参考。|新增软切分调度、多级调度等，其他变更详见《[MindCluster 集群调度用户指南](./scheduling/introduction.md)》。|
+| 《[MindCluster 故障诊断用户指南](../../component/ascend-faultdiag/README.md)》             |提供日志采集、日志清洗与转储、故障诊断等功能的使用指导。|新增Atlas 350 标卡故障模式、Ascend-faultdiag-toolkit工具等，其他变更详见《[MindCluster 故障诊断用户指南](../../component/ascend-faultdiag/README.md)》。|
 
 # 漏洞修补列表<a name="ZH-CN_TOPIC_0000002524442913"></a>
 
