@@ -20,11 +20,21 @@
 namespace ock {
 namespace acc {
 
-void AccTcpListener::PrepareSockAddr(struct sockaddr_in &addr) noexcept
+void AccTcpListener::PrepareSockAddr(struct sockaddr_storage &addr, socklen_t &addrLen) noexcept
 {
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr(listenIp_.c_str());
-    addr.sin_port = htons(listenPort_);
+    if (enableIPv6_) {
+        struct sockaddr_in6 *addr6 = reinterpret_cast<struct sockaddr_in6 *>(&addr);
+        addr6->sin6_family = AF_INET6;
+        inet_pton(AF_INET6, listenIp_.c_str(), &addr6->sin6_addr);
+        addr6->sin6_port = htons(listenPort_);
+        addrLen = sizeof(struct sockaddr_in6);
+    } else {
+        struct sockaddr_in *addr4 = reinterpret_cast<struct sockaddr_in *>(&addr);
+        addr4->sin_family = AF_INET;
+        addr4->sin_addr.s_addr = inet_addr(listenIp_.c_str());
+        addr4->sin_port = htons(listenPort_);
+        addrLen = sizeof(struct sockaddr_in);
+    }
 }
 
 Result AccTcpListener::Start() noexcept
@@ -40,7 +50,7 @@ Result AccTcpListener::Start() noexcept
     }
 
     /* create socket */
-    auto tmpFD = ::socket(AF_INET, SOCK_STREAM, 0);
+    auto tmpFD = ::socket(enableIPv6_ ? AF_INET6 : AF_INET, SOCK_STREAM, 0);
     if (tmpFD < 0) {
         LOG_ERROR("Failed to create listen socket, error " << strerror(errno) <<
             ", please check if running of fd limit");
@@ -48,8 +58,9 @@ Result AccTcpListener::Start() noexcept
     }
 
     /* assign address */
-    struct sockaddr_in addr {};
-    PrepareSockAddr(addr);
+    struct sockaddr_storage addr {};
+    socklen_t addrLen = 0;
+    PrepareSockAddr(addr, addrLen);
 
     /* set option, bind and listen */
     if (reusePort_) {
@@ -61,7 +72,7 @@ Result AccTcpListener::Start() noexcept
         }
     }
 
-    if (::bind(tmpFD, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) < 0 || ::listen(tmpFD, 200L) < 0) {
+    if (::bind(tmpFD, reinterpret_cast<struct sockaddr *>(&addr), addrLen) < 0 || ::listen(tmpFD, 200L) < 0) {
         auto errorNum = errno;
         SafeCloseFd(tmpFD);
         if (errorNum == EADDRINUSE) {
@@ -155,9 +166,9 @@ void AccTcpListener::RunInThread() noexcept
                 continue;
             }
 
-            struct sockaddr_in addressIn {};
-            socklen_t len = sizeof(addressIn);
-            auto fd = ::accept(listenFd_, reinterpret_cast<struct sockaddr *>(&addressIn), &len);
+            struct sockaddr_storage addressStorage {};
+            socklen_t len = sizeof(addressStorage);
+            auto fd = ::accept(listenFd_, reinterpret_cast<struct sockaddr *>(&addressStorage), &len);
             if (fd < 0) {
                 LOG_WARN("Failed to accept on new socket with " << strerror(errno) << ", ignore and continue");
                 continue;
@@ -169,7 +180,7 @@ void AccTcpListener::RunInThread() noexcept
             struct timeval timeout = {ACC_LINK_RECV_TIMEOUT, 0};
             setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
-            ProcessNewConnection(fd, addressIn);
+            ProcessNewConnection(fd, addressStorage);
         } catch (std::exception &ex) {
             LOG_WARN("Got exception in AccTcpListener::RunInThread, exception " << ex.what() <<
                 ", ignore and continue");
@@ -181,11 +192,23 @@ void AccTcpListener::RunInThread() noexcept
     LOG_INFO("Working thread for AccTcpStore listener at " << NameAndPort() << " exiting");
 }
 
-void AccTcpListener::ProcessNewConnection(int fd, struct sockaddr_in addressIn) noexcept
+void AccTcpListener::ProcessNewConnection(int fd, struct sockaddr_storage &addressStorage) noexcept
 {
-    std::string ipPort = inet_ntoa(addressIn.sin_addr);
-    ipPort += ":";
-    ipPort += std::to_string(ntohs(addressIn.sin_port));
+    std::string ipPort;
+    if (addressStorage.ss_family == AF_INET) {
+        struct sockaddr_in *addr4 = reinterpret_cast<struct sockaddr_in*>(&addressStorage);
+        ipPort = inet_ntoa(addr4->sin_addr);
+        ipPort += ":";
+        ipPort += std::to_string(ntohs(addr4->sin_port));
+    } else if (addressStorage.ss_family == AF_INET6) {
+        struct sockaddr_in6 *addr6 = reinterpret_cast<struct sockaddr_in6*>(&addressStorage);
+        char ip[INET6_ADDRSTRLEN] = {0};
+        inet_ntop(AF_INET6, &addr6->sin6_addr, ip, sizeof(ip));
+        uint16_t port = ntohs(addr6->sin6_port);
+        std::ostringstream oss;
+        oss << "[" << ip << "]:" << port;
+        ipPort = oss.str();
+    }
 
     /* receive header */
     AccConnReq req;
@@ -202,12 +225,13 @@ void AccTcpListener::ProcessNewConnection(int fd, struct sockaddr_in addressIn) 
         if (ret != ACC_OK) {
             LOG_ERROR("Failed to new connection ssl link");
             SafeCloseFd(fd);
-            return ;
+            return;
         }
     }
 
     LOG_INFO("Connected from " << ipPort << " successfully, ssl " << (enableTls_ ? "enable" : "disable"));
-    auto newLink = AccMakeRef<AccTcpLinkComplexDefault>(fd, ipPort, AccTcpLinkDefault::NewId(), ssl);
+    std::string ipPortStr(ipPort);
+    auto newLink = AccMakeRef<AccTcpLinkComplexDefault>(fd, ipPortStr, AccTcpLinkDefault::NewId(), ssl);
     if (newLink == nullptr) {
         LOG_ERROR("Failed to create listener tcp link object, probably out of memory");
         if (ssl != nullptr) {
@@ -221,7 +245,6 @@ void AccTcpListener::ProcessNewConnection(int fd, struct sockaddr_in addressIn) 
         return;
     }
 
-    // tmpLink作为智能指针 异常分支返回时会自动析构释放资源
     auto result = connHandler_(req, newLink.Get());
     if (result != ACC_OK) {
         return;
@@ -231,7 +254,7 @@ void AccTcpListener::ProcessNewConnection(int fd, struct sockaddr_in addressIn) 
     resp.result = 0;
     auto sent = newLink->BlockSend(reinterpret_cast<void *>(&resp), sizeof(resp));
     if (sent != ACC_OK) {
-        LOG_WARN("Failed to connect response to " << ipPort);
+        LOG_WARN("Failed to connect response to " << ipPortStr);
     }
 }
 }

@@ -395,8 +395,8 @@ TResult Processor::Start(std::string &masterIp, int32_t port, std::string localI
 {
     std::lock_guard<std::mutex> guard(initOrDestroyMutex_);
 
-    TTP_ASSERT_RETURN(IsValidIpV4(masterIp), TTP_ERROR);
-    if (localIp != "" && !IsValidIpV4(localIp)) {
+    TTP_ASSERT_RETURN(IsValidIpV4(masterIp) || IsValidIpV6(masterIp), TTP_ERROR);
+    if (localIp != "" && !(IsValidIpV4(localIp) || IsValidIpV6(localIp))) {
         TTP_LOG_ERROR("localIp invalid!");
         return TTP_ERROR;
     }
@@ -1358,30 +1358,36 @@ void Processor::HandleBackupCtrlList(uint8_t *data)
     std::istringstream ss(ipStr);
     std::string eachIp;
     while (std::getline(ss, eachIp, '|')) {
-        size_t index = eachIp.find(':');
-        // 校验输入rank:ip是否合法
-        if (index == std::string::npos || index == 0) {
+
+        size_t bracketStart = eachIp.find('[');
+        size_t bracketEnd = eachIp.find(']');
+        bool isIpv6 = (bracketStart != std::string::npos &&
+                        bracketEnd != std::string::npos &&
+                        bracketStart < bracketEnd);
+
+        std::string pureRankStr;
+        std::string pureIp;
+
+        if (ParseRankIp(eachIp, pureRankStr, pureIp) != TTP_OK) {
             TTP_LOG_WARN("processor:" << rank_ << " receive invalid rank or controller ip:" << eachIp);
             continue;
         }
-        // 1，校验IP部分
-        std::string pureIp = eachIp.substr(index + 1);
-        if (!IsValidIpV4(pureIp)) {
-            TTP_LOG_WARN("processor:" << rank_ << " receive invalid controller ip:" << eachIp);
+
+        if (!(IsValidIpV4(pureIp) || IsValidIpV6(pureIp))) {
+            TTP_LOG_WARN("processor:" << rank_ << " receive invalid controller ip:" << pureIp);
             continue;
         }
-        // 2，校验rank部分
-        std::string pureRankStr = eachIp.substr(0, index);
+
         int32_t pureRankIdx = -1;
         try {
             pureRankIdx = std::stoi(pureRankStr);
         }
         catch (...) {
-            TTP_LOG_WARN("processor:" << rank_ << " receive invalid backup controller rank:" << eachIp);
+            TTP_LOG_WARN("processor:" << rank_ << " receive invalid backup controller rank:" << pureRankStr);
             continue;
         }
         if (pureRankIdx < 0 || pureRankIdx >= worldSize_) {
-            TTP_LOG_WARN("processor:" << rank_ << " receive invalid backup controller rank:" << eachIp);
+            TTP_LOG_WARN("processor:" << rank_ << " receive invalid backup controller rank:" << pureRankStr);
             continue;
         }
 
@@ -1733,13 +1739,18 @@ TResult Processor::ReStart()
     while (controllerIdx_ < nums - 1 && !readyToExit_.load()) {
         controllerIdx_++;
         std::string rankIp = controllerIps_[controllerIdx_];
-        index = rankIp.find(':');
-        if (index == std::string::npos) {
-            TTP_LOG_ERROR("rank:" << rank_ << " receive invalid controller ip:" << rankIp);
+        std::string pureRankStr ;
+
+        if (ParseRankIp(rankIp, pureRankStr, backupIp) != TTP_OK) {
+            TTP_LOG_WARN("rank:" << rank_ << " receive invalid rank or controller ip:" << rankIp);
             continue;
         }
 
-        backupIp = rankIp.substr(index + 1);
+        if (!(IsValidIpV4(backupIp) || IsValidIpV6(backupIp))) {
+            TTP_LOG_WARN("rank:" << rank_ << " receive invalid controller ip:" << backupIp);
+            continue;
+        }
+
         newClient_->Disconnect();
         newClient_->SetServerIpAndPort(backupIp, port_);
 
@@ -1792,20 +1803,30 @@ void Processor::StartBackupController(uint8_t *data)
 
     // rank:ip|rank:ip|...
     for (size_t i = 1; i < nums; i++) {
-        std::istringstream rankIp(controllerIps_[i]);
+        std::string currentEntry = controllerIps_[i];
+
         std::string rankStr;
         std::string ipStr;
-        std::getline(rankIp, rankStr, ':');
-        std::getline(rankIp, ipStr, ':');
-        TTP_LOG_INFO("rank:" << rank_ << ", [rank:ip]:" << controllerIps_[i]
-            << ", backup controller nums:" << (nums - 1));
+        if (ParseRankIp(currentEntry, rankStr, ipStr) != TTP_OK) {
+            TTP_LOG_WARN("processor:" << rank_ << " receive invalid rank or controller ip:" << currentEntry);
+            continue;
+        }
+
+        if (!(IsValidIpV4(ipStr) || IsValidIpV6(ipStr))) {
+            TTP_LOG_WARN("processor:" << rank_ << " receive invalid controller ip:" << ipStr);
+            continue;
+        }
+
+        TTP_LOG_INFO("rank:" << rank_ << ", [rank:ip]:" << currentEntry << ", backup controller nums:" << (nums - 1));
+
         int32_t rankIn = 0;
         try {
             rankIn = std::stoi(rankStr);
         } catch (...) {
-            TTP_LOG_WARN("recv invalid rank from controller!");
+            TTP_LOG_WARN("processor:" << rank_ << " receive invalid backup controller rank:" << rankStr);
             continue;
         }
+
         if (rank_ != rankIn) {
             continue;
         }
@@ -1813,16 +1834,16 @@ void Processor::StartBackupController(uint8_t *data)
         TTP_LOG_INFO("init backup controller, backup rank:" << rankIn << ", worldSize_: " << worldSize_);
         auto result = Controller::GetInstance()->Initialize(rankIn, worldSize_, localCopySwitch_, enableARF, enableZIT);
         if (result != TTP_OK) {
-            TTP_LOG_ERROR("backup controller " << controllerIps_[i] << " initialize failed");
+            TTP_LOG_ERROR("backup controller " << currentEntry << " initialize failed");
             break;
         }
         result = Controller::GetInstance()->Start(ipStr, port_, tlsOption_, i);
         if (result != TTP_OK) {
-            TTP_LOG_ERROR("backup controller " << controllerIps_[i] << " start failed");
+            TTP_LOG_ERROR("backup controller " << currentEntry << " start failed");
             break;
         }
 
-        TTP_LOG_INFO("processor:" << rank_ << " backup controller " << controllerIps_[i] << " start success");
+        TTP_LOG_INFO("processor:" << rank_ << " backup controller " << currentEntry << " start success");
         startBackup_ = static_cast<int32_t>(i);
         break;
     }
@@ -2047,23 +2068,31 @@ TResult Processor::GetTcpStoreUrl(std::string &url)
 {
     TTP_ASSERT_RETURN(controllerIdx_ >= 0 && controllerIdx_ < static_cast<int32_t>(controllerIps_.size()), TTP_ERROR);
 
-    std::string ipPort = controllerIps_.at(controllerIdx_);
-    std::size_t index = 0;
-    if (controllerIdx_ > 0) {
-        index = ipPort.find(':');
-        if (index == std::string::npos) {
-            TTP_LOG_ERROR("rank:" << rank_ << " receive invalid controller ip:" << ipPort);
-            return TTP_ERROR;
-        }
-        index += 1;
+    std::string rankIp = controllerIps_.at(controllerIdx_);
+
+    std::string rankStr;
+    std::string ip;
+    if (ParseRankIp(rankIp, rankStr, ip) != TTP_OK) {
+        TTP_LOG_ERROR("rank:" << rank_ << " receive invalid controller ip:" << rankIp);
+        return TTP_ERROR;
     }
-    std::string ip = ipPort.substr(index);
+
+    bool isIpV6 = IsValidIpV6(ip);
+    if (!(IsValidIpV4(ip) || isIpV6)) {
+        TTP_LOG_ERROR("rank:" << rank_ << " receive invalid controller ip:" << ip);
+        return TTP_ERROR;
+    }
 
     // Get tcp store server port
     uint32_t port = GetEnvValue2Uint32("MASTER_PORT", PortInfo.minVal, PortInfo.maxVal, PortInfo.defaultVal);
     TTP_LOG_INFO("[env] MASTER_PORT:" << port);
 
-    url = "tcp://" + ip + ":" + std::to_string(port);
+    if (isIpV6) {
+        url = "tcp://[" + ip + "]:" + std::to_string(port);
+    } else {
+        url = "tcp://" + ip + ":" + std::to_string(port);
+    }
+
     return TTP_OK;
 }
 
@@ -2082,6 +2111,31 @@ std::string Processor::GetRepairType()
 
     auto itr = type2str.find(repairType_);
     return itr != type2str.end() ? itr->second : "unknow";
+}
+
+TResult Processor::ParseRankIp(const std::string& rankIp, std::string& rank, std::string& ip)
+{
+    if (rankIp.empty()) {
+        return TTP_ERROR;
+    }
+
+    // 1. rank:[ipv6]
+    // 2. rank:ipv4
+    std::regex ipv6_pattern(R"(^(\d+):\[(.+)\]$)");
+    std::regex ipv4_pattern(R"(^(\d+):(.+)$)");
+
+    std::smatch match;
+
+    if (std::regex_match(rankIp, match, ipv6_pattern)) {
+        rank = match[1].str();
+        ip = match[2].str();
+    } else if (std::regex_match(rankIp, match, ipv4_pattern)) {
+        rank = match[1].str();
+        ip = match[2].str();
+    } else {
+        return TTP_ERROR;
+    }
+    return TTP_OK;
 }
 
 }

@@ -290,7 +290,8 @@ TResult Controller::StateMachineInit()
 // init controller
 TResult Controller::Start(std::string &masterIp, int32_t port, const AccTlsOption &tlsOpts, uint32_t controllerIdx)
 {
-    TTP_ASSERT_RETURN(IsValidIpV4(masterIp), TTP_ERROR);
+    bool enableIPv6 = IsValidIpV6(masterIp);
+    TTP_ASSERT_RETURN(IsValidIpV4(masterIp) || enableIPv6, TTP_ERROR);
     TTP_ASSERT_RETURN(controllerIdx >= 0 && controllerIdx <= BACKUP_CONTROLLER_NUM, TTP_ERROR);
     TTP_ASSERT_RETURN(port >= PortInfo.minVal && port <= PortInfo.maxVal, TTP_ERROR);
     std::lock_guard<std::mutex> guard(initOrDestroyMutex_);
@@ -309,6 +310,7 @@ TResult Controller::Start(std::string &masterIp, int32_t port, const AccTlsOptio
     opts.listenIp = masterIp;
     opts.listenPort = port;
     opts.reusePort = true;
+    opts.enableIPv6 = enableIPv6;
     opts.magic = 0;
     opts.version = TTP_DEFAULT_START_VERSION;
     opts.workerCount = TTP_SERVER_WORKER_COUNT;
@@ -3319,30 +3321,55 @@ bool Controller::CheckTcpStoreServerAvailable()
 
 bool Controller::CheckIpPortAccessible(const std::string &ip, uint16_t port)
 {
-    // socket创建，失败的话就返回false
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    bool isIPv6 = IsValidIpV6(ip);
+    bool isIPv4 = IsValidIpV4(ip);
+    if(!isIPv6 && !isIPv4) {
+        TTP_LOG_ERROR("Controller:" << rank_ << " invalid address: " << ip);
+        return false;
+    }
+    struct sockaddr_storage serverAddr;
+    socklen_t addrLen;
+
+    // Attempt to convert the IP address to the network byte.
+    if (isIPv6) {
+        sockaddr_in6* addr6 = reinterpret_cast<sockaddr_in6*>(&serverAddr);
+        addr6->sin6_family = AF_INET6;
+        addr6->sin6_port = htons(port);
+        addrLen = sizeof(struct sockaddr_in6);
+        if (inet_pton(AF_INET6, ip.c_str(), &addr6->sin6_addr) != 1) {
+            TTP_LOG_ERROR("Controller:" << rank_ << " invalid IPv6 address: " << ip);
+            return false;
+        }
+    } else {
+        sockaddr_in* addr4 = reinterpret_cast<sockaddr_in*>(&serverAddr);
+        addr4->sin_family = AF_INET;
+        addr4->sin_port = htons(port);
+        addrLen = sizeof(struct sockaddr_in);
+        if (inet_pton(AF_INET, ip.c_str(), &addr4->sin_addr) != 1) {
+            TTP_LOG_ERROR("Controller:" << rank_ << " invalid IPv4 address: " << ip);
+            return false;
+        }
+    }
+
+    // create socket
+    int sock = socket(isIPv6 ? AF_INET6 : AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
         TTP_LOG_ERROR("Controller:" << rank_ << " error creating socket");
         return false;
     }
 
-    // 建立sockaddr_in结构.
-    struct sockaddr_in serverAddr{};
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(port);  // port已校验范围[1024, uint16_max]
-    serverAddr.sin_addr.s_addr = inet_addr(ip.data());
-
-    // 尝试建立socket连接
-    if (connect(sock, reinterpret_cast<struct sockaddr *>(&serverAddr), sizeof(serverAddr)) < 0) {
+    // Attempt to establish a connection.
+    if (connect(sock, reinterpret_cast<struct sockaddr *>(&serverAddr), addrLen) < 0) {
         TTP_LOG_INFO("Controller:" << rank_ << " connection failed, ip:" << ip << ':' << port);
         close(sock);
         return false;
     }
 
-    // 使用getsockopt函数检查连接状态
+    // Use the getsockopt function to check the connection status.
     int optval;
     socklen_t optlen = sizeof(optval);
     bool retVal;
+    TTP_LOG_INFO("Controller:" << rank_ << " connect to, ip:" << ip << ':' << port << " is v6:" << isIPv6);
     if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &optval, &optlen) == 0) {
         if (optval == 0) {
             TTP_LOG_INFO("Controller:" << rank_ << " connected to the server successfully!");
@@ -3356,7 +3383,7 @@ bool Controller::CheckIpPortAccessible(const std::string &ip, uint16_t port)
         retVal = false;
     }
 
-    // 关闭socket
+    // close socket
     close(sock);
     return retVal;
 }
@@ -3406,22 +3433,54 @@ TResult Controller::TransforHostNameToIp(const char *hostName, std::string &ip)
         return TTP_ERROR;
     }
 
-    struct hostent *masterHostent = nullptr;
-    if (inet_addr(hostName) == INADDR_NONE) {
-        if ((masterHostent = gethostbyname(hostName)) == nullptr) {
-            TTP_LOG_WARN("Input invalid hostname: " << std::string(hostName) << ", convert to ip failed.");
-            return TTP_ERROR;
-        }
-        const char *ipaddr = inet_ntoa(*reinterpret_cast<struct in_addr *>(masterHostent->h_addr));
-        if (ipaddr != nullptr) {
-            ip = ipaddr;
-            return TTP_OK;
-        }
-        TTP_LOG_WARN("hostname:" << std::string(hostName) << " can not convert to ip");
+    struct addrinfo hints;
+    struct addrinfo *result = nullptr;
+
+    memset_s(&hints, sizeof(hints), 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_CANONNAME;
+
+    int error = getaddrinfo(hostName, nullptr, &hints, &result);
+    if (error != 0) {
+        TTP_LOG_WARN("getaddrinfo failed: " << gai_strerror(error));
         return TTP_ERROR;
     }
-    TTP_ASSERT_RETURN(IsValidIpV4(hostName), TTP_ERROR);  // check input length in IsValidIpV4
-    ip = hostName;
+
+    // Traverse the address linked list to find the first valid IPv4 or IPv6 address.
+    struct addrinfo *rp = result;
+    for (; rp != nullptr; rp = rp->ai_next) {
+        char ipstr[INET6_ADDRSTRLEN];
+        void *addr;
+
+        if (rp->ai_family == AF_INET) {
+            struct sockaddr_in *ipv4 = reinterpret_cast<struct sockaddr_in*>(rp->ai_addr);
+            addr = &(ipv4->sin_addr);
+            if (inet_ntop(AF_INET, addr, ipstr, INET_ADDRSTRLEN) == nullptr) {
+                continue;
+            }
+        } else if (rp->ai_family == AF_INET6) {
+            struct sockaddr_in6 *ipv6 = reinterpret_cast<struct sockaddr_in6*>(rp->ai_addr);
+            addr = &(ipv6->sin6_addr);
+            if (inet_ntop(AF_INET6, addr, ipstr, INET6_ADDRSTRLEN) == nullptr) {
+                continue;
+            }
+        } else {
+            continue;
+        }
+
+        ip = ipstr;
+        break;
+    }
+
+    if (rp == nullptr) {
+        TTP_LOG_WARN("hostname: " << std::string(hostName) << " cannot convert to IP address");
+        freeaddrinfo(result);
+        return TTP_ERROR;
+    }
+
+    freeaddrinfo(result);
+
     return TTP_OK;
 }
 

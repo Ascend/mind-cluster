@@ -22,6 +22,7 @@
 #include <vector>
 #include <regex>
 #include <unordered_map>
+#include <arpa/inet.h>
 
 #include "common_constants.h"
 #include "common_types.h"
@@ -82,6 +83,23 @@ inline bool IsValidIpV4(const std::string& address)
         return false;
     }
     return true;
+}
+
+inline bool IsValidIpV6(const std::string& ip)
+{
+    constexpr size_t maxIpLen = 39;
+    if (ip.size() > maxIpLen) {
+        return false;
+    }
+    struct in6_addr addr;
+    if (inet_pton(AF_INET6, ip.c_str(), &addr) != 1) {
+        return false;
+    }
+#ifndef UT_ENABLED  // ut测试跳过ip全0校验
+    return !std::all_of(std::begin(addr.s6_addr), std::end(addr.s6_addr), [](auto byte) { return byte == 0; });
+#else
+    return true;
+#endif
 }
 
 inline uint32_t String2Uint(const char *str)    // avoid throwing ex during converting to std::string

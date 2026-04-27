@@ -140,7 +140,7 @@ Result AccTcpClientDefault::ConnectInit(int &fd)
         return result;
     }
 
-    int tmpFD = ::socket(AF_INET, SOCK_STREAM, 0);
+    int tmpFD = ::socket(enableIPv6_ ? AF_INET6 : AF_INET, SOCK_STREAM, 0);
     if (tmpFD < 0) {
         LOG_ERROR("Failed to create socket, errno:" << errno << ", please check if fd is out of limit");
         return ACC_ERROR;
@@ -151,12 +151,24 @@ Result AccTcpClientDefault::ConnectInit(int &fd)
     int synCnt = 1; /* Set connect() retry time for quick connect */
     setsockopt(tmpFD, IPPROTO_TCP, TCP_SYNCNT, &synCnt, sizeof(synCnt));
 
-    if (localIp_ != "") {
-        struct sockaddr_in addr {};
-        addr.sin_family = AF_INET;
-        addr.sin_addr.s_addr = inet_addr(localIp_.c_str());
+    if (!localIp_.empty()) {
+        struct sockaddr_storage addr {};
+        socklen_t addrLen = 0;
+        if (enableIPv6_) {
+            struct sockaddr_in6* addr6 = reinterpret_cast<struct sockaddr_in6*>(&addr);
+            addr6->sin6_family = AF_INET6;
+            inet_pton(AF_INET6, localIp_.c_str(), &addr6->sin6_addr);
+            addr6->sin6_port = 0;
+            addrLen = sizeof(struct sockaddr_in6);
+        } else {
+            struct sockaddr_in* addr4 = reinterpret_cast<struct sockaddr_in*>(&addr);
+            addr4->sin_family = AF_INET;
+            addr4->sin_addr.s_addr = inet_addr(localIp_.c_str());
+            addr4->sin_port = 0;
+            addrLen = sizeof(struct sockaddr_in);
+        }
 
-        if (::bind(tmpFD, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) < 0) {
+        if (::bind(tmpFD, reinterpret_cast<struct sockaddr*>(&addr), addrLen) < 0) {
             SafeCloseFd(tmpFD);
             LOG_ERROR("Failed to bind on " << localIp_ << " as errno " << errno);
             return ACC_ERROR;
@@ -183,17 +195,37 @@ Result AccTcpClientDefault::Connect(const AccConnReq &connReq, uint32_t maxConnR
     if (prevHandler == SIG_ERR) {
         LOG_ERROR("signal error");
     }
-    struct sockaddr_in addr {};
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr(serverIp_.c_str());
-    addr.sin_port = htons(serverPort_);
+
+    struct sockaddr_storage addr {};
+    socklen_t addrLen = 0;
+    if (enableIPv6_) {
+        struct sockaddr_in6* addr6 = reinterpret_cast<struct sockaddr_in6*>(&addr);
+        addr6->sin6_family = AF_INET6;
+        if (inet_pton(AF_INET6, serverIp_.c_str(), &addr6->sin6_addr) <= 0) {
+            SafeCloseFd(tmpFD);
+            LOG_ERROR("Failed to convert IPv6 address " << serverIp_);
+            return ACC_ERROR;
+        }
+        addr6->sin6_port = htons(serverPort_);
+        addrLen = sizeof(struct sockaddr_in6);
+    } else {
+        struct sockaddr_in* addr4 = reinterpret_cast<struct sockaddr_in*>(&addr);
+        addr4->sin_family = AF_INET;
+        if (inet_pton(AF_INET, serverIp_.c_str(), &(addr4->sin_addr)) <= 0) {
+            SafeCloseFd(tmpFD);
+            LOG_ERROR("Failed to convert IPv4 address: " << serverIp_);
+            return ACC_ERROR;
+        }
+        addr4->sin_port = htons(serverPort_);
+        addrLen = sizeof(struct sockaddr_in);
+    }
 
     uint32_t timesRetried = 0;
     uint32_t maxConnRetryInterval = 10;
     LOG_INFO("connRank: " << connRanks << " connect max times: " << maxConnRetryTimes);
     while (timesRetried < maxConnRetryTimes && !needStop_.load()) {
         LOG_INFO("connRank: " << connRanks << " Trying to connect to " << IpAndPort());
-        if (::connect(tmpFD, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) == 0) {
+        if (::connect(tmpFD, reinterpret_cast<struct sockaddr*>(&addr), addrLen) == 0) {
             reqforReConn_ = connReq;
             struct timeval timeout = {ACC_LINK_CLIENT_RECV_TIMEOUT, 0};
             setsockopt(tmpFD, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
@@ -330,7 +362,8 @@ void AccTcpClientDefault::Disconnect()
 
 void AccTcpClientDefault::SetServerIpAndPort(std::string serverIp, uint16_t serverPort)
 {
-    ASSERT_RET_VOID(AccCommonUtil::IsValidIPv4(serverIp));
+    enableIPv6_ = AccCommonUtil::IsValidIPv6(serverIp);
+    ASSERT_RET_VOID(AccCommonUtil::IsValidIPv4(serverIp) || enableIPv6_);
     serverIp_ = std::move(serverIp);
     serverPort_ = serverPort;
     LOG_INFO("set server ip( " << serverIp_ << " ) and port( " << serverPort_ << " )");
@@ -354,8 +387,8 @@ Result AccTcpClientDefault::LoadDynamicLib(const std::string &dynLibPath)
 
 void AccTcpClientDefault::SetLocalIp(std::string localIp)
 {
-    if (localIp != "" && !AccCommonUtil::IsValidIPv4(localIp)) {
-        LOG_WARN("local ip:" << localIp << " is invalid ipV4 address!");
+    if (localIp != "" && !(AccCommonUtil::IsValidIPv4(localIp) || AccCommonUtil::IsValidIPv6(localIp))) {
+        LOG_WARN("local ip:" << localIp << " is invalid ipV4 or IPv6 address!");
         return;
     }
     localIp_ = std::move(localIp);
