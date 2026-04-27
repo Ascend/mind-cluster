@@ -294,7 +294,8 @@ Result AccTcpServerDefault::StartListener()
     }
 
     AccTcpListenerPtr tmpListener = new (std::nothrow)
-        AccTcpListener(options_.listenIp, options_.listenPort, options_.reusePort, tlsOption_.enableTls, sslCtx_);
+        AccTcpListener(options_.listenIp, options_.listenPort, options_.reusePort, tlsOption_.enableTls, sslCtx_,
+                       options_.enableIPv6);
     ASSERT_RETURN(tmpListener.Get() != nullptr, ACC_NEW_OBJECT_FAIL);
 
     tmpListener->RegisterNewConnectionHandler(
@@ -467,10 +468,19 @@ void AccTcpServerDefault::WorkerLinkCntUpdate(uint32_t workerIdx)
 Result AccTcpServerDefault::ConnectToPeerServer(const std::string &peerIp, uint16_t port, const AccConnReq &req,
                                                 uint32_t maxRetryTimes, AccTcpLinkComplexPtr &newLink)
 {
-    ASSERT_RETURN(AccCommonUtil::IsValidIPv4(peerIp), ACC_ERROR);
+    bool enableIPv6 = AccCommonUtil::IsValidIPv6(peerIp);
+    ASSERT_RETURN(AccCommonUtil::IsValidIPv4(peerIp) || enableIPv6, ACC_ERROR);
     std::string ipAndPort = peerIp + ":" + std::to_string(port);
+    int tmpFD = -1;
+    struct sockaddr_storage addr {};
+    socklen_t addrLen = 0;
 
-    auto tmpFD = ::socket(AF_INET, SOCK_STREAM, 0);
+    if (enableIPv6) {
+        tmpFD = CreateIPv6Socket(peerIp, port, addr, addrLen);
+    } else {
+        tmpFD = CreateIPv4Socket(peerIp, port, addr, addrLen);
+    }
+
     if (tmpFD < 0) {
         LOG_ERROR("Failed to create socket, errno:" << errno << ", please check if fd is out of limit");
         return ACC_ERROR;
@@ -481,17 +491,12 @@ Result AccTcpServerDefault::ConnectToPeerServer(const std::string &peerIp, uint1
     int synCnt = 1; /* Set connect() retry time for quick connect */
     setsockopt(tmpFD, IPPROTO_TCP, TCP_SYNCNT, &synCnt, sizeof(synCnt));
 
-    struct sockaddr_in addr {};
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr(peerIp.c_str());
-    addr.sin_port = htons(port);
-
     uint32_t timesRetried = 0;
     int lastErrno = 0;
 
     while (timesRetried < maxRetryTimes) {
         LOG_INFO("Trying to connect to " << ipAndPort);
-        if (::connect(tmpFD, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) == 0) {
+        if (::connect(tmpFD, reinterpret_cast<struct sockaddr*>(&addr), addrLen) == 0) {
             struct timeval timeout = {ACC_LINK_RECV_TIMEOUT, 0};
             setsockopt(tmpFD, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
             return Handshake(tmpFD, req, ipAndPort, newLink);
@@ -514,6 +519,50 @@ Result AccTcpServerDefault::ConnectToPeerServer(const std::string &peerIp, uint1
     SafeCloseFd(tmpFD);
     LOG_ERROR("Failed to connect to " << ipAndPort << " after tried " << timesRetried << " times");
     return ACC_ERROR;
+}
+
+Result AccTcpServerDefault::CreateIPv6Socket(const std::string &peerIp, uint16_t port, struct sockaddr_storage &addr,
+                                             socklen_t &addrLen)
+{
+    int tmpFD = ::socket(AF_INET6, SOCK_STREAM, 0);
+    if (tmpFD < 0) {
+        LOG_ERROR("Failed to create IPv6 socket, errno: " << errno);
+        return ACC_ERROR;
+    }
+
+    struct sockaddr_in6* addr6 = reinterpret_cast<struct sockaddr_in6*>(&addr);
+    addr6->sin6_family = AF_INET6;
+    if (inet_pton(AF_INET6, peerIp.c_str(), &addr6->sin6_addr) <= 0) {
+        SafeCloseFd(tmpFD);
+        LOG_ERROR("Failed to convert IPv6 address " << peerIp);
+        return ACC_ERROR;
+    }
+    addr6->sin6_port = htons(port);
+    addrLen = sizeof(struct sockaddr_in6);
+
+    return tmpFD;
+}
+
+Result AccTcpServerDefault::CreateIPv4Socket(const std::string &peerIp, uint16_t port, struct sockaddr_storage &addr,
+                                             socklen_t &addrLen)
+{
+    int tmpFD = ::socket(AF_INET, SOCK_STREAM, 0);
+    if (tmpFD < 0) {
+        LOG_ERROR("Failed to create socket, errno:" << errno << ", please check if fd is out of limit");
+        return ACC_ERROR;
+    }
+
+    struct sockaddr_in* addr4 = reinterpret_cast<struct sockaddr_in*>(&addr);
+    addr4->sin_family = AF_INET;
+    if (inet_pton(AF_INET, peerIp.c_str(), &(addr4->sin_addr)) <= 0) {
+        SafeCloseFd(tmpFD);
+        LOG_ERROR("Failed to convert IPv4 address: " << peerIp);
+        return ACC_ERROR;
+    }
+    addr4->sin_port = htons(port);
+    addrLen = sizeof(struct sockaddr_in);
+
+    return tmpFD;
 }
 
 AccTcpServerDefault::~AccTcpServerDefault()

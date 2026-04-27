@@ -17,6 +17,8 @@ import os
 import site
 import ttp_logger
 import time
+import socket
+import ipaddress
 
 
 def input_ip_transform(input_ip: str, max_retries: int = 3) -> str:
@@ -25,7 +27,6 @@ def input_ip_transform(input_ip: str, max_retries: int = 3) -> str:
 
     for attempt in range(max_retries):
         try:
-            import socket
             ip = socket.gethostbyname(input_ip)
             ttp_logger.LOGGER.info(f"transform {input_ip} to {ip}")
             return ip
@@ -40,22 +41,34 @@ def input_ip_transform(input_ip: str, max_retries: int = 3) -> str:
 
 
 def is_valid_ip(ip_str):
-    if len(ip_str) > 15:
-        ttp_logger.LOGGER.warning(f"input illegal ipv4 address: length exceeds 15.")
+    return is_valid_ipv4(ip_str) or is_valid_ipv6(ip_str)
+
+
+def is_valid_ipv4(ip: str) -> bool:
+    try:
+        socket.inet_pton(socket.AF_INET, ip)
+        return True
+    except socket.error:
+        ttp_logger.LOGGER.warning("input illegal ipv4 address: %s", ip)
         return False
-    import re
-    ip_pattern = r'(^((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}$)'
-    return bool(re.match(ip_pattern, ip_str))
+
+
+def is_valid_ipv6(ip: str) -> bool:
+    try:
+        socket.inet_pton(socket.AF_INET6, ip)
+        return True
+    except socket.error:
+        ttp_logger.LOGGER.warning("input illegal ipv6 address: %s", ip)
+        return False
 
 
 def is_zero_ip(ip_str):
-    # if ip_str exceeds max DOMAIN length, directly regard as all-zero ip.
-    if len(ip_str) > 253:
-        ttp_logger.LOGGER.warning(f"input illegal ipv4 address or domain: length exceeds 253.")
-        return True
-    import re
-    zero_pattern = '^0+\\.0+\\.0+\\.0+$'
-    return bool(re.match(zero_pattern, ip_str))
+    try:
+        ip = ipaddress.ip_address(ip_str.strip())
+        return ip == ipaddress.IPv4Address('0.0.0.0') or \
+            ip == ipaddress.IPv6Address('::')
+    except ValueError:
+        return False
 
 
 def get_env_var_int_safely(env_var_name, default_value, min_value=None, max_value=None):

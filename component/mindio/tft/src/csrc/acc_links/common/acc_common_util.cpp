@@ -31,6 +31,12 @@ bool AccCommonUtil::IsValidIPv4(const std::string &ip)
     return std::regex_match(ip, ipv4Regex);
 }
 
+bool AccCommonUtil::IsValidIPv6(const std::string &ip)
+{
+    struct in6_addr addr;
+    return inet_pton(AF_INET6, ip.c_str(), &addr) == 1;
+}
+
 Result AccCommonUtil::SslShutdownHelper(SSL *ssl)
 {
     if (!ssl) {

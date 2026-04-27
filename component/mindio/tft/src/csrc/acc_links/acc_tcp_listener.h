@@ -26,8 +26,10 @@ using NewConnHandlerInner = std::function<int(const AccConnReq &, const AccTcpLi
 
 class AccTcpListener : public ock::ttp::Referable {
 public:
-    AccTcpListener(std::string ip, uint16_t port, bool reusePort, bool enableTls = false, SSL_CTX *sslCtx = nullptr)
-        : listenIp_(std::move(ip)), listenPort_(port), reusePort_(reusePort), enableTls_(enableTls), sslCtx_(sslCtx)
+    AccTcpListener(std::string ip, uint16_t port, bool reusePort, bool enableTls = false, SSL_CTX *sslCtx = nullptr,
+                   bool enableIPv6 = false)
+        : listenIp_(std::move(ip)), listenPort_(port), reusePort_(reusePort), enableTls_(enableTls), sslCtx_(sslCtx),
+        enableIPv6_(enableIPv6)
     {}
 
     ~AccTcpListener() override = default;
@@ -39,8 +41,8 @@ public:
 
 private:
     void RunInThread() noexcept;
-    void ProcessNewConnection(int fd, struct sockaddr_in addressIn) noexcept;
-    void PrepareSockAddr(struct sockaddr_in &addr) noexcept;
+    void ProcessNewConnection(int fd, struct sockaddr_storage &addressStorage) noexcept;
+    void PrepareSockAddr(struct sockaddr_storage &addr, socklen_t &addrLen) noexcept;
     Result StartAcceptThread() noexcept;
 
     inline std::string NameAndPort() const noexcept;
@@ -57,6 +59,7 @@ private:
     const bool reusePort_; /* reuse listen port or not */
     const bool enableTls_; /* enable tls */
     SSL_CTX* sslCtx_ = nullptr; /* ssl ctx */
+    const bool enableIPv6_; /* ipv6 */
 };
 using AccTcpListenerPtr = ock::ttp::Ref<AccTcpListener>;
 

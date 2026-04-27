@@ -299,6 +299,8 @@ private:
     TResult StopAndCleanBeforeDump();
     TResult DeSerializedUpgradeRepairMsg(RepairMsg *msg, TTPReplyMsg &replyMsg, RepairContext &rc);
 
+    TResult ParseRankIp(const std::string& rankIp, std::string& rank, std::string& ip);
+
 private:
     int32_t rank_ = -1;    // current process rank_ number
     int32_t worldSize_ = -1;

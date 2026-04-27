@@ -55,6 +55,11 @@ private:
     Result StartWorkers();
     Result StartListener();
 
+    Result CreateIPv4Socket(const std::string &peerIp, uint16_t port, struct sockaddr_storage &addr,
+                            socklen_t &addrLen);
+    Result CreateIPv6Socket(const std::string &peerIp, uint16_t port, struct sockaddr_storage &addr,
+                     socklen_t &addrLen);
+
     void StopAndCleanDelayCleanup(bool afterFork = false);
     void StopAndCleanListener(bool afterFork = false);
     void StopAndCleanWorkers(bool afterFork = false);

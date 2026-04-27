@@ -102,6 +102,7 @@ protected:
     AccTlsOption tlsOption_{};
     std::string serverIp_ = "";
     std::string localIp_ = "";
+    bool enableIPv6_ = false;
     uint64_t connRanks = 0;
     uint16_t serverPort_ = 0;
     uint32_t maxReconnCnt_ = 1;
