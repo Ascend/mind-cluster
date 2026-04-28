@@ -14,17 +14,32 @@
 - 安装Docker，支持18.09.x\~28.5.1版本，具体操作请参见[安装Docker](https://docs.docker.com/engine/install/)。
 - 安装Containerd，支持1.4.x\~2.1.4版本，具体操作请参见[安装Containerd](https://github.com/containerd/containerd/blob/main/docs/getting-started.md)。
 - 安装Kubernetes，支持1.17.x\~1.34.x版本的Kubernetes（推荐使用1.19.x及以上版本），具体操作请参见[安装Kubernetes](https://kubernetes.io/zh/docs/setup/production-environment/tools/)推荐[使用Kubeadm创建集群](https://kubernetes.io/zh-cn/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/)，集群初始化过程中的部分问题可参考[初始化Kubernetes失败](../faq.md#初始化kubernetes失败)。且需解除管理节点隔离。如需解除管理节点隔离，命令示例如下。
-    - 解除单节点隔离。
+
+    - Kubernetes 1.24之前版本
+      - 解除单节点隔离。
 
         ```shell
         kubectl taint nodes <hostname> node-role.kubernetes.io/master-
         ```
 
-    - 解除所有节点隔离。
+      - 解除所有节点隔离。
 
         ```shell
         kubectl taint nodes --all node-role.kubernetes.io/master-
         ```
 
-        >[!NOTE] 
-        >通过解除管理节点隔离可移除主节点的污点，以允许Pod被调度到主节点上。
+    - Kubernetes 1.24及之后版本
+      - 解除单节点隔离。
+
+        ```shell
+        kubectl taint nodes <hostname> node-role.kubernetes.io/control-plane:NoSchedule-
+        ```
+
+      - 解除所有节点隔离。
+
+        ```shell
+        kubectl taint nodes --all node-role.kubernetes.io/control-plane:NoSchedule-
+        ```
+
+    >[!NOTE] 
+    >通过解除管理节点隔离可移除主节点的污点，以允许Pod被调度到主节点上。

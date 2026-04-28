@@ -12,7 +12,7 @@
 
 **使用前提<a name="section18128140645"></a>**
 
-需要先获取Ascend-docker-runtime\__\{version\}_\_linux-_\{arch\}_.run，并安装容器引擎插件，方法可参见[Ascend Docker Runtime](../../../installation_guide/03_installation.md#ascend-docker-runtime)。
+需要先获取Ascend-docker-runtime\__\{version\}_\_linux-_\{arch\}_.run，并安装容器引擎插件，方法可参见[Ascend Docker Runtime](../../../installation_guide/03_installation/manual_installation/02_ascend_docker_runtime.md)。
 
 **Ascend Docker Runtime使用vNPU方法<a name="section514441719341"></a>**
 
@@ -106,12 +106,12 @@
 </table>
 
 >[!NOTE]  
->Ascend Device Plugin组件的安装请参见[Ascend Device Plugin](../../../installation_guide/03_installation.md#ascend-device-plugin)。
+>Ascend Device Plugin组件的安装请参见[Ascend Device Plugin](../../../installation_guide/03_installation/manual_installation/04_ascend_device_plugin.md)。
 >在静态虚拟化场景下，组件的可选性说明如下。
 >
 >- Volcano：用户若使用自己的调度组件，需要进行参数配置，请参见[表2](#table1064314568229)；用户也可直接使用该组件进行任务调度。
 >- Ascend Operator：当使用训练系列产品时才需要选择该组件；使用推理系列产品时可不选择。
->- ClusterD：当使用Volcano时才需要选择该组件，详细请参见[安装Volcano](../../../installation_guide/03_installation.md#安装volcano)。
+>- ClusterD：当使用Volcano时才需要选择该组件，详细请参见[安装Volcano](../../../installation_guide/03_installation/manual_installation/05_volcano.md#安装volcano)。
 
 #### 静态虚拟化<a name="ZH-CN_TOPIC_0000002479226392"></a>
 
@@ -333,7 +333,7 @@
 **前提条件<a name="section18128140645"></a>**
 
 1. 需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run”，安装容器引擎插件。
-2. 参见[安装部署](../../../installation_guide/03_installation.md)章节，完成各组件的安装。
+2. 参见[安装部署](../../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节，完成各组件的安装。
 
     虚拟化实例涉及到需要修改相关参数的集群调度组件为Volcano和Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
 
@@ -582,7 +582,7 @@
 **前提条件<a name="section18128140645"></a>**
 
 1. 需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run”，安装容器引擎插件。
-2. 参见[安装部署](../../../installation_guide/03_installation.md)章节，完成各组件的安装。
+2. 参见[安装部署](../../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节，完成各组件的安装。
 
     虚拟化实例涉及到需要修改相关参数的集群调度组件为Volcano和Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
 

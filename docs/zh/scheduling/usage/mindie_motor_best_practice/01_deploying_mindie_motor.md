@@ -63,9 +63,9 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
 
 |类型|硬件型号|YAML名称|获取链接|
 |--|--|--|--|
-|ms_controller|-|controller.yaml|[获取YAML](https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms)|
-|ms_coordinator|-|coordinator.yaml|[获取YAML](https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms)|
-|mindie_server|<p>Atlas 800I A2 推理服务器</p><p>Atlas 800I A3 超节点服务器</p>|server.yaml|[获取YAML](https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms)|
+|MS Controller|-|controller.yaml|[获取YAML](https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms)|
+|MS Coordinator|-|coordinator.yaml|[获取YAML](https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms)|
+|MindIE Server|<p>Atlas 800I A2 推理服务器</p><p>Atlas 800I A3 超节点服务器</p>|server.yaml|[获取YAML](https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms)|
 
 >[!NOTE] 
 >若使用的设备为Atlas 800I A3 超节点服务器，请在获取YAML后，参考[以下的示例](#li7390175311918)对部分参数进行修改。
@@ -323,7 +323,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 <tr id="zh-cn_topic_0000002329010086_row22810219519"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_p128102185119"><a name="zh-cn_topic_0000002329010086_p128102185119"></a><a name="zh-cn_topic_0000002329010086_p128102185119"></a>sp-fit</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002329010086_p72820245118"><a name="zh-cn_topic_0000002329010086_p72820245118"></a><a name="zh-cn_topic_0000002329010086_p72820245118"></a>超节点调度策略。</p>
-<p id="p9265820378"><a name="p9265820378"></a><a name="p9265820378"></a>idlest：逻辑超节点会往更空闲的物理超节点调度。</p>
+<p id="p9265820378"><a name="p9265820378"></a><a name="p9265820378"></a><ul><li>idlest：逻辑超节点会往更空闲的物理超节点调度。</li><li>非idlest：逻辑超节点会优先占满物理超节点。</li></ul></p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002329010086_p755841425314"><a name="zh-cn_topic_0000002329010086_p755841425314"></a><a name="zh-cn_topic_0000002329010086_p755841425314"></a>仅支持MindIE Motor推理任务<span id="zh-cn_topic_0000002329010086_ph1858015143594"><a name="zh-cn_topic_0000002329010086_ph1858015143594"></a><a name="zh-cn_topic_0000002329010086_ph1858015143594"></a>Atlas 800I A3 超节点服务器</span>上使用本参数。</p>
 </td>

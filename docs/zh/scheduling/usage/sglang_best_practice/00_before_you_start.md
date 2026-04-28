@@ -6,7 +6,7 @@ MindCluster集群调度组件支持用户通过OME（Open Model Engine）部署S
 
 ## 前提条件<a name="zh-cn_topic_0000002322062116_section52051339787"></a>
 
-在部署SGLang推理服务前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../installation_guide/03_installation.md)章节进行操作。
+在部署SGLang推理服务前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 
 - Volcano
 - Ascend Device Plugin

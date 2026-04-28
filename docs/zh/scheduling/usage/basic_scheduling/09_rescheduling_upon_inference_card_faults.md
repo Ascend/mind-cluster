@@ -14,7 +14,7 @@
     - ClusterD
     - NodeD
 
-- 若没有安装，可以参考[安装部署](../../installation_guide/03_installation.md)章节进行操作。
+- 若没有安装，可以参考[安装部署](../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 
 **使用方式<a name="zh-cn_topic_0000001559979444_section91871616135119"></a>**
 
