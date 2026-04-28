@@ -1,0 +1,132 @@
+#!/bin/bash
+# Perform  build volcano-huawei-npu-scheduler plugin
+# Copyright @ Huawei Technologies CO., Ltd. 2026. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ============================================================================
+
+set -e
+
+# BASE_VER only support 1.10+
+BASE_VER=1.10+
+
+echo "Build Version is ${BASE_VER}"
+
+DEFAULT_VER='v7.3.0'
+TOP_DIR=${GOPATH}/src/volcano.sh/volcano/
+BASE_PATH=${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/
+CMD_PATH=${GOPATH}/src/volcano.sh/volcano/cmd/
+PKG_PATH=volcano.sh/volcano/pkg
+DATE=$(date "+%Y-%m-%d %H:%M:%S")
+
+function parse_version() {
+    version_file="${TOP_DIR}"/service_config.ini
+    if  [ -f "$version_file" ]; then
+      line=$(sed -n '1p' "$version_file" 2>&1)
+      version="v"${line#*=}
+      echo "${version}"
+      return
+    fi
+    echo ${DEFAULT_VER}
+}
+
+function parse_arch() {
+   arch=$(arch 2>&1)
+   echo "${arch}"
+}
+
+REL_VERSION=$(parse_version)
+REL_ARCH=$(parse_arch)
+REL_NPU_PLUGIN=volcano-npu_${REL_VERSION}
+
+function clean() {
+    rm -f "${BASE_PATH}"/output/vc-scheduler
+    rm -f "${BASE_PATH}"/output/*.so
+}
+
+# fix the unconditional retry. All pod errors cause the podgroup to be deleted and cannot be rescheduled
+function replace_code() {
+    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/controllers/job/state/running.go"
+    SEARCH_STRING="Ignore"
+    if ! grep -q "$SEARCH_STRING" "$REPLACE_FILE";then
+      sed -i "s/switch action {/switch action { case \"Ignore\" : return nil/g" "$REPLACE_FILE"
+    fi
+}
+
+function build() {
+    echo "Build Architecture is" "${REL_ARCH}"
+
+    export GO111MODULE=on
+    export PATH=$GOPATH/bin:$PATH
+
+    cd "${TOP_DIR}"
+    go mod tidy
+
+    cd "${BASE_PATH}"/output/
+
+    export CGO_CFLAGS="-fstack-protector-all -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
+    export CGO_CPPFLAGS="-fstack-protector-all -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
+    export CC=musl-gcc
+
+    export CGO_ENABLED=1
+    go build -mod=mod -buildmode=pie -ldflags "-s -linkmode=external -extldflags=-Wl,-z,now
+      -X '${PKG_PATH}/version.Built=${DATE}' -X '${PKG_PATH}/version.Version=${BASE_VER}'" \
+      -o vc-scheduler "${CMD_PATH}"/scheduler
+
+    go build -mod=mod -buildmode=plugin -ldflags "-s -linkmode=external -extldflags=-Wl,-z,now
+      -X volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin.PluginName=${REL_NPU_PLUGIN}" \
+      -o "${REL_NPU_PLUGIN}".so "${GOPATH}"/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/
+
+    if [ ! -f "${BASE_PATH}/output/${REL_NPU_PLUGIN}.so" ]
+    then
+      echo "fail to find volcano-npu_${REL_VERSION}.so"
+      exit 1
+    fi
+
+    chmod 400 "${BASE_PATH}"/output/*.so
+    chmod 500 vc-scheduler
+    chmod 400 "${BASE_PATH}"/output/Dockerfile*
+}
+
+function replace_node_predicate() {
+    cd $BASE_PATH
+    find . -type f ! -path './.git*/*' ! -path './doc/*' -exec sed -i 's/k8s.io\/klog\"/k8s.io\/klog\/v2\"/g' {} +
+}
+
+function replace_node_score() {
+    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/actions/allocate/allocate.go"
+    if [[ "$BASE_VER" == "v1.10+" ]];then
+          sed -i '
+          /case len(nodes) == 1:/ {
+              N
+              N
+              s/case len(nodes) == 1:.*\n.*\n.*/            default:/
+          }' "$REPLACE_FILE"
+       return
+    fi
+    echo "volcano version is $BASE_VER, will not change allocate.go codes"
+}
+
+function main() {
+  clean
+  replace_code
+  replace_node_predicate
+  replace_node_score
+  build
+}
+
+main "${1}"
+
+echo ""
+echo "Finished!"
+echo ""
