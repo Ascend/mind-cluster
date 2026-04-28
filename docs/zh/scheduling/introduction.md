@@ -4,7 +4,7 @@
 
 集群调度组件基于业界流行的集群调度系统Kubernetes，增加了昇腾AI处理器（NPU）的支持，提供NPU资源管理、优化调度和分布式训练集合通信配置等基础功能。深度学习平台开发厂商可以有效减少底层资源调度相关软件开发工作量，使能用户基于MindCluster快速开发深度学习平台。
 
-本文档是用户使用集群调度组件的指导文档，在安装和使用集群调度组件前，用户需要提前了解[集群调度组件的特性](#特性介绍)，并根据具体特性的特点和功能，选择需要使用的特性并[安装相应的组件](./installation_guide/03_installation.md)。
+本文档是用户使用集群调度组件的指导文档，在安装和使用集群调度组件前，用户需要提前了解[集群调度组件的特性](#特性介绍)，并根据具体特性的特点和功能，选择需要使用的特性并[安装相应的组件](./installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)。
 
 **使用流程<a name="section10118105218514"></a>**
 
@@ -375,7 +375,7 @@ Ascend Docker Runtime
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[容器化支持](./usage/containerization/00_before_you_start.md)章节进行操作。
 
 ### 资源监测<a name="ZH-CN_TOPIC_0000002479386910"></a>
@@ -390,7 +390,7 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[资源监测](./usage/resource_monitoring/00_before_you_start.md)章节进行操作。
 
 ### 虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855"></a>
@@ -428,7 +428,7 @@ NPU Exporter
 **使用说明<a name="section1350915844811"></a>**
 
 - 驱动安装后会默认安装npu-smi工具，安装操作请参见《CANN 软件安装指南》中的“<a href="https://www.hiascend.com/document/detail/zh/canncommercial/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian">安装NPU驱动和固件</a>”章节（商用版）或“<a href="https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler">安装NPU驱动和固件</a>”章节（社区版）；安装成功后，npu-smi放置在“/usr/local/sbin/”和“/usr/local/bin/”路径下。
-- 安装MindCluster中的Ascend Docker Runtime、Ascend Device Plugin和Volcano组件，请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+- 安装MindCluster中的Ascend Docker Runtime、Ascend Device Plugin和Volcano组件，请参见[安装部署](./installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 - 安装Docker，请参见[安装Docker](https://docs.docker.com/engine/install/)。
 - 安装Kubernetes，请参见[安装Kubernetes](https://kubernetes.io/zh/docs/setup/production-environment/tools/)。
 - 特性使用指导请参见[基于HDK的虚拟化实例](./usage/virtual_instance/virtual_instance_with_hdk/01_description.md)章节进行操作。
@@ -451,7 +451,7 @@ NPU Exporter
 
 **使用说明<a name="section1350915844811vcann"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[基于vCANN-RT的虚拟化实例](./usage/virtual_instance/virtual_instance_with_vcann_rt/00_description.md)章节进行操作。
 
 ### 基础调度<a name="ZH-CN_TOPIC_0000002511346871"></a>
@@ -476,7 +476,7 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[整卡调度或静态vNPU调度（训练）](./usage/basic_scheduling/03_full_npu_scheduling_and_static_vnpu_scheduling_training.md)章节进行操作。
 
 #### 静态vNPU调度<a name="ZH-CN_TOPIC_0000002511426831"></a>
@@ -499,7 +499,7 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[整卡调度或静态vNPU调度（训练）](./usage/basic_scheduling/03_full_npu_scheduling_and_static_vnpu_scheduling_training.md)章节进行操作。
 
 #### 多级调度
@@ -519,7 +519,7 @@ NPU Exporter
 
 **使用说明**
 
-1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[多级调度](./usage/basic_scheduling/05_multi_level_scheduling.md)章节进行操作。
 
 #### 动态vNPU调度<a name="ZH-CN_TOPIC_0000002479226956"></a>
@@ -538,7 +538,7 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[动态vNPU调度（推理）](./usage/basic_scheduling/06_dynamic_vnpu_scheduling_inference.md)章节进行操作。
 
 #### 软切分调度
@@ -557,7 +557,7 @@ NPU Exporter
 
 **使用说明**
 
-1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[软切分调度（推理）](./usage/basic_scheduling/07_soft_allocation_scheduling_inference.md)章节进行操作。
 
 #### 弹性训练<a name="ZH-CN_TOPIC_0000002479226936"></a>
@@ -581,7 +581,7 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[弹性训练](./usage/basic_scheduling/08_elastic_training.md)章节进行操作。
 
 #### 推理卡故障恢复<a name="ZH-CN_TOPIC_0000002479226952"></a>
@@ -600,7 +600,7 @@ NPU Exporter
 
 **使用说明<a name="section74221327111220"></a>**
 
-- 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+- 安装组件请参见[安装部署](./installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 - 特性使用指导请参见[推理卡故障恢复](./usage/basic_scheduling/10_recovery_of_inference_card_faults.md)章节进行操作。
 
 #### 推理卡故障重调度<a name="ZH-CN_TOPIC_0000002511346875"></a>
@@ -621,7 +621,7 @@ NPU Exporter
 
 **使用说明<a name="section18894171918127"></a>**
 
-- 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+- 安装组件请参见[安装部署](./installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 - 特性使用指导请参见[推理卡故障重调度](./usage/basic_scheduling/09_rescheduling_upon_inference_card_faults.md)章节进行操作。
 
 ### 断点续训<a name="ZH-CN_TOPIC_0000002511346867"></a>
@@ -651,7 +651,7 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[断点续训](./usage/resumable_training/00_feature_description.md)章节进行操作。
 3. TaskD需安装在容器内，详细请参见[制作镜像](./usage/resumable_training/07_using_resumable_training_on_the_cli.md#制作镜像)章节。
 4. MindIO ACP的详细介绍及安装步骤请参见[Checkpoint保存与加载优化](./optimizing_saving_and_loading_checkpoints/01_product_description.md)章节。
@@ -673,7 +673,7 @@ Container Manager
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](./installation_guide/03_installation.md)章节进行操作。
+1. 安装组件请参见[安装部署](./installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[一体机特性指南](./usage/appliance/01_npu_hardware_fault_detection_and_rectification.md)章节进行操作。
 
 ## 支持的产品形态和OS清单<a name="ZH-CN_TOPIC_0000002511346411"></a>
@@ -705,27 +705,27 @@ Container Manager
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p123141723124213"><a name="p123141723124213"></a><a name="p123141723124213"></a>训练服务器（插<span id="ph113141423144220"><a name="ph113141423144220"></a><a name="ph113141423144220"></a>Atlas 300T 训练卡（型号 9000）</span>）</p>
 </td>
-<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul183141847103713"></a><a name="ul183141847103713"></a><ul id="ul183141847103713"><li>CentOS 7.6 for x86</li><li>Kylin V10 SP1 for x86</li><li>openEuler 20.03 for x86</li><li>openEuler 22.03 for x86</li><li>Ubuntu 18.04.1 for x86</li><li>Ubuntu 20.04 for x86</li></ul>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul183141847103713"></a><a name="ul183141847103713"></a><ul id="ul183141847103713"><li>CentOS 7.6 for x86_64</li><li>Kylin V10 SP1 for x86_64</li><li>openEuler 20.03 for x86_64</li><li>openEuler 22.03 for x86_64</li><li>Ubuntu 18.04.1 for x86_64</li><li>Ubuntu 20.04 for x86_64</li></ul>
 </td>
 </tr>
 <tr id="row1231412319429"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p0314723124211"><a name="p0314723124211"></a><a name="p0314723124211"></a>训练服务器（插<span id="ph10314723164217"><a name="ph10314723164217"></a><a name="ph10314723164217"></a>Atlas 300T Pro 训练卡（型号 9000）</span>）</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul12789124011525"></a><a name="ul12789124011525"></a><ul id="ul12789124011525"><li>CentOS 7.6 for x86</li><li>Kylin V10 SP1 for x86</li><li>openEuler 20.03 for x86</li><li>openEuler 22.03 for x86</li><li>Ubuntu 18.04.1 for x86</li><li>Ubuntu 20.04 for x86</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul12789124011525"></a><a name="ul12789124011525"></a><ul id="ul12789124011525"><li>CentOS 7.6 for x86_64</li><li>Kylin V10 SP1 for x86_64</li><li>openEuler 20.03 for x86_64</li><li>openEuler 22.03 for x86_64</li><li>Ubuntu 18.04.1 for x86_64</li><li>Ubuntu 20.04 for x86_64</li></ul>
 </td>
 </tr>
 <tr id="row113141823114217"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1631416238425"><a name="p1631416238425"></a><a name="p1631416238425"></a><span id="ph18314192319429"><a name="ph18314192319429"></a><a name="ph18314192319429"></a>Atlas 800 训练服务器（型号 9000）</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul388031125610"></a><a name="ul388031125610"></a><ul id="ul388031125610"><li>CentOS 7.6 for ARM</li><li>Kylin V10 SP2 for ARM</li><li>openEuler 20.03 for ARM</li><li>openEuler 22.03 for ARM</li><li>Ubuntu 20.04  + 5.15.0-25-generic kernel for ARM</li><li>Ubuntu 20.04  + 5.4.0-26-generic kernel for ARM</li><li>UOS V20 1020e for ARM</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul388031125610"></a><a name="ul388031125610"></a><ul id="ul388031125610"><li>CentOS 7.6 for aarch64</li><li>Kylin V10 SP2 for aarch64</li><li>openEuler 20.03 for aarch64</li><li>openEuler 22.03 for aarch64</li><li>Ubuntu 20.04 for aarch64 (5.15.0-25-generic kernel)</li><li>Ubuntu 20.04 for aarch64 (5.4.0-26-generic kernel)</li><li>UOS V20 1020e for aarch64</li></ul>
 </td>
 </tr>
 <tr id="row1631417235426"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1331442313425"><a name="p1331442313425"></a><a name="p1331442313425"></a><span id="ph631452384213"><a name="ph631452384213"></a><a name="ph631452384213"></a>Atlas 800 训练服务器（型号 9010）</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1083283212561"></a><a name="ul1083283212561"></a><ul id="ul1083283212561"><li>CentOS 7.6 for x86</li><li>Kylin V10 (OpenEuler) SP1 for x86</li><li>openEuler 20.03 for x86</li><li>Ubuntu 18.04.1 for x86</li><li>Ubuntu 18.04.5 for x86</li><li>Ubuntu 20.04 for x86</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1083283212561"></a><a name="ul1083283212561"></a><ul id="ul1083283212561"><li>CentOS 7.6 for x86_64</li><li>Kylin V10 (OpenEuler) SP1 for x86_64 (4.19.90-17.ky10.x86_64 kernel)</li><li>openEuler 20.03 for x86_64</li><li>Ubuntu 18.04.1 for x86_64</li><li>Ubuntu 18.04.5 for x86_64</li><li>Ubuntu 20.04 for x86_64</li></ul>
 </td>
 </tr>
 <tr id="row1731412319425"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1931492374219"><a name="p1931492374219"></a><a name="p1931492374219"></a><span id="ph12314923104215"><a name="ph12314923104215"></a><a name="ph12314923104215"></a>Atlas 900 PoD（型号 9000）</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1486510460560"></a><a name="ul1486510460560"></a><ul id="ul1486510460560"><li>CentOS 7.6 for ARM</li><li>Kylin V10 SP2 for ARM</li><li>openEuler 20.03 for ARM</li><li>openEuler 22.03 for ARM</li><li>Ubuntu 20.04  for ARM</li><li>UOS V20 1020e for ARM</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1486510460560"></a><a name="ul1486510460560"></a><ul id="ul1486510460560"><li>CentOS 7.6 for aarch64</li><li>Kylin V10 SP2 for aarch64</li><li>openEuler 20.03 for aarch64</li><li>openEuler 22.03 for aarch64</li><li>Ubuntu 20.04  for aarch64</li><li>UOS V20 1020e for aarch64</li></ul>
 </td>
 </tr>
 <tr id="row5314823154211"><td class="cellrowborder" rowspan="4" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p73141323184218"><a name="p73141323184218"></a><a name="p73141323184218"></a><span id="ph2314323124211"><a name="ph2314323124211"></a><a name="ph2314323124211"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 训练系列产品</term></span></p>
@@ -735,22 +735,22 @@ Container Manager
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p5314102315424"><a name="p5314102315424"></a><a name="p5314102315424"></a><span id="ph1831422311424"><a name="ph1831422311424"></a><a name="ph1831422311424"></a>Atlas 200T A2 Box16 异构子框</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul66426318579"></a><a name="ul66426318579"></a><ul id="ul66426318579"><li>Debian 10.0 for x86</li><li>Debian 11.7 for x86<span id="ph1116132419442"><a name="ph1116132419442"></a><a name="ph1116132419442"></a> </span>(kernel 5.10.103)</li><li>Debian 12 for x86 (kernel 5.15.152.ve.10)</li><li>Ubuntu 22.04 for x86</li><li>Ubuntu 20.04.1 for x86</li><li>Ubuntu 22.04.1 for x86 (5.16.20-051620-generic)</li><li>Ubuntu 22.04.5 for x86 (5.15.0-119-generic)</li><li>Tlinux 3.1 for x86</li><li>Tlinux 3.2 for x86</li><li>Tlinux 4.0 for x86<span id="ph1569872854619"><a name="ph1569872854619"></a><a name="ph1569872854619"></a> (</span>6.6内核)</li><li>openEuler 22.03 LTS SP4 for x86</li><li>openEuler 24.03 LTS for x86</li><li>openEuler 24.03 LTS SP1 for x86</li></ul>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul66426318579"></a><a name="ul66426318579"></a><ul id="ul66426318579"><li>Debian 10.0 for x86_64</li><li>Debian 11.7 (5.10.0-103-bili kernel)</li><li>Debian 12.0 (5.15.152.ve.10 kernel)</li><li>Ubuntu 20.04.1 for x86_64</li><li>Ubuntu 22.04 for x86_64</li><li>Ubuntu 22.04.1 for x86_64 (5.16.20-051620-generic kernel)</li><li>Ubuntu 22.04.5 for x86_64 (5.15.0-119-generic kernel)</li><li>Tlinux 3.1 for x86_64</li><li>Tlinux 3.2 for x86_64</li><li>Tlinux 4.0 for x86_64 (6.6.80.29.tl4.x86_64 kernel)</li><li>openEuler 22.03 LTS SP4 for x86_64</li><li>openEuler 24.03 LTS for x86_64</li><li>openEuler 24.03 LTS SP1 for x86_64</li></ul>
 </td>
 </tr>
 <tr id="row531414237429"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p831482324215"><a name="p831482324215"></a><a name="p831482324215"></a><span id="ph14314162316427"><a name="ph14314162316427"></a><a name="ph14314162316427"></a>Atlas 800T A2 训练服务器</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul20696163813553"></a><a name="ul20696163813553"></a><ul id="ul20696163813553"><li>CentOS 7.6 for ARM</li><li>CTYunOS 22.06 for ARM</li><li>CTYunOS 23.01 for ARM</li><li>Kylin V10 SP2 for ARM</li><li>Kylin V10 SP3 for ARM</li><li>Kylin V11 for ARM</li><li>UOS V20 1050u2e for ARM</li><li>UOS V25 for ARM (6.6内核)</li><li>Ubuntu 22.04 for ARM</li><li>Ubuntu 22.04.4 LTS<span id="ph198698211464"><a name="ph198698211464"></a><a name="ph198698211464"></a> </span>(Linux 6.5.0-18-generic) for ARM</li><li>Ubuntu 24.04 LTS for ARM</li><li>openEuler 22.03 for ARM</li><li>openEuler 22.03 LTS SP2 for ARM</li><li>openEuler 22.03 LTS SP4 for ARM</li><li>openEuler 24.03 LTS SP1 for ARM</li><li>BC-Linux_21.10 U4  for ARM</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul20696163813553"></a><a name="ul20696163813553"></a><ul id="ul20696163813553"><li>CentOS 7.6 for aarch64</li><li>CTYunOS 22.06 for aarch64</li><li>CTYunOS 23.01 for aarch64</li><li>Kylin V10 SP2 for aarch64</li><li>Kylin V10 SP3 for aarch64</li><li>Kylin V11 for aarch64</li><li>UOS V20 1050u2e for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li><li>Ubuntu 22.04 for aarch64</li><li>Ubuntu 22.04.4 for aarch64 (6.5.0-18-generic kernel)</li><li>Ubuntu 24.04 LTS for aarch64</li><li>openEuler 22.03 for aarch64</li><li>openEuler 22.03 LTS SP2 for aarch64</li><li>openEuler 22.03 LTS SP4 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>BC-Linux_21.10 U4  for aarch64</li></ul>
 </td>
 </tr>
 <tr id="row5314923164214"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p11314172324210"><a name="p11314172324210"></a><a name="p11314172324210"></a><span id="ph1531415237425"><a name="ph1531415237425"></a><a name="ph1531415237425"></a>Atlas 900 A2 PoD 集群基础单元</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul0428918809"></a><a name="ul0428918809"></a><ul id="ul0428918809"><li>BC-Linux-for-Euler-21.10 for ARM</li><li>BC-Linux_21.10 U4  for ARM</li><li>Kylin V10 SP2 for ARM</li><li>Kylin V11 for ARM</li><li>CTYunOS 22.06 for ARM</li><li>openEuler 22.03 for ARM</li><li>openEuler 24.03 LTS SP1 for ARM</li><li>Ubuntu 22.04 for ARM</li><li>Ubuntu 24.04 LTS for ARM</li><li>HCE 2.0  for ARM</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul0428918809"></a><a name="ul0428918809"></a><ul id="ul0428918809"><li>BC-Linux-for-Euler-21.10 for aarch64</li><li>BC-Linux_21.10 U4 for aarch64</li><li>Kylin V10 SP2 for aarch64</li><li>Kylin V11 for aarch64</li><li>CTYunOS 22.06 for aarch64</li><li>openEuler 22.03 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>Ubuntu 22.04 for aarch64</li><li>Ubuntu 24.04 LTS for aarch64</li><li>HCE 2.0  for aarch64</li></ul>
 </td>
 </tr>
 <tr id="row13314162394218"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p14314142374220"><a name="p14314142374220"></a><a name="p14314142374220"></a><span id="ph1431418234423"><a name="ph1431418234423"></a><a name="ph1431418234423"></a>Atlas 900 A2 PoDc 集群基础单元</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1192418295016"></a><a name="ul1192418295016"></a><ul id="ul1192418295016"><li>openEuler 22.03 LTS SP4 for ARM</li><li>openEuler 24.03 LTS SP1 for ARM</li><li>CTYunOS 23.01 for ARM</li><li>Ubuntu 24.04 LTS for ARM</li><li>BC-Linux_21.10 U4  for ARM</li><li>Kylin V11 for ARM</li><li>UOS V25 for ARM (6.6内核)</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1192418295016"></a><a name="ul1192418295016"></a><ul id="ul1192418295016"><li>openEuler 22.03 LTS SP4 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>CTYunOS 23.01 for aarch64</li><li>Ubuntu 24.04 LTS for aarch64</li><li>BC-Linux_21.10 U4 for aarch64</li><li>Kylin V11 for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li></ul>
 </td>
 </tr>
 <tr id="row153141923154210"><td class="cellrowborder" rowspan="2" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p931415234425"><a name="p931415234425"></a><a name="p931415234425"></a><span id="ph531432344210"><a name="ph531432344210"></a><a name="ph531432344210"></a><term id="zh-cn_topic_0000001519959665_term26764913715"><a name="zh-cn_topic_0000001519959665_term26764913715"></a><a name="zh-cn_topic_0000001519959665_term26764913715"></a>Atlas A3 训练系列产品</term></span></p>
@@ -759,19 +759,19 @@ Container Manager
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p1315152304215"><a name="p1315152304215"></a><a name="p1315152304215"></a><span id="ph1731512317424"><a name="ph1731512317424"></a><a name="ph1731512317424"></a>Atlas 900 A3 SuperPoD 超节点</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul1330454618016"></a><a name="ul1330454618016"></a><ul id="ul1330454618016"><li>HCE 2.0  for ARM</li><li>Debian 10.2   for ARM</li><li>BC-Linux_21.10 U4  for ARM</li><li>MTOS for ARM</li><li>openEuler 24.03 LTS SP1  for ARM</li><li>openEuler 22.03 SP1 + openEuler 24.03 SP1 (6.6内核) for ARM</li><li>CentOS 7.5  for ARM</li><li>Linux Kernel 6.6  for ARM</li><li>CTYunOS 23.01 for ARM</li><li>CTYunOS 4.0 for ARM</li><li><span id="ph103053469018"><a name="ph103053469018"></a><a name="ph103053469018"></a>AntOS</span> 6.6.47 for ARM</li><li>Kylin V10 SP3 2403 for ARM</li><li>Kylin V11 for ARM</li><li>Velinux 2.0 for ARM</li><li>VesselOS 2.0 for ARM</li><li>UOS V25 for ARM (6.6内核)</li></ul>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul1330454618016"></a><a name="ul1330454618016"></a><ul id="ul1330454618016"><li>HCE 2.0 for aarch64</li><li>Debian 10.2 for aarch64</li><li>BC-Linux_21.10 U4  for aarch64</li><li>MTOS for aarch64</li><li>openEuler 24.03 LTS SP1  for aarch64</li><li>openEuler 22.03 LTS SP1 for aarch64 (6.6.0-72.0.0.76.oe2403sp1.aarch64 kernel) </li><li>CentOS 7.5 for aarch64</li><li>Linux Kernel 6.6 for aarch64</li><li>CTYunOS 23.01 for aarch64</li><li>CTYunOS 4.0 for aarch64</li><li><span id="ph103053469018"><a name="ph103053469018"></a><a name="ph103053469018"></a>AntOS</span> 6.6.47 for aarch64</li><li>Kylin V10 SP3 2403 for aarch64</li><li>Kylin V11 for aarch64</li><li>Velinux 2.0 for aarch64</li><li>VesselOS 2.0 for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li></ul>
 </td>
 </tr>
 <tr id="row73155239422"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1231542318428"><a name="p1231542318428"></a><a name="p1231542318428"></a><span id="ph1031518232426"><a name="ph1031518232426"></a><a name="ph1031518232426"></a>Atlas 800T A3 超节点服务器</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul19518634212"></a><a name="ul19518634212"></a><ul id="ul19518634212"><li>openEuler 22.03 LTS SP4 for ARM</li><li>openEuler 24.03 LTS SP1 for ARM</li><li>CUlinux 3.0 for ARM</li><li>CUlinux 4.0 for ARM</li><li>HCE 2.0.2506 for ARM</li><li>Velinux 2.0 for ARM</li><li>Kylin V11 for ARM</li><li>UOS V25 for ARM (6.6内核)</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul19518634212"></a><a name="ul19518634212"></a><ul id="ul19518634212"><li>openEuler 22.03 LTS SP4 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>CUlinux 3.0 for aarch64</li><li>CUlinux 4.0 for aarch64</li><li>HCE 2.0.2506 for aarch64</li><li>Velinux 2.0 for aarch64</li><li>Kylin V11 for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li></ul>
 </td>
 </tr>
 <tr id="row16507172322215"><td class="cellrowborder" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p3927183818221"><a name="p3927183818221"></a><a name="p3927183818221"></a><span id="ph1692713816224"><a name="ph1692713816224"></a><a name="ph1692713816224"></a>A200T A3 Box8 超节点服务器</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p166420278225"><a name="p166420278225"></a><a name="p166420278225"></a><span id="ph064214271224"><a name="ph064214271224"></a><a name="ph064214271224"></a>A200T A3 Box8 超节点服务器</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul164242719228"></a><a name="ul164242719228"></a><ul id="ul164242719228"><li>Tlinux 3.1 for x86</li><li>Tlinux 4.0 (6.6内核) for x86</li><li>Velinux 1.4 for x86</li></ul>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul164242719228"></a><a name="ul164242719228"></a><ul id="ul164242719228"><li>Tlinux 3.1 for x86_64</li><li>Tlinux 4.0 for x86_64 (6.6.80-29.tl4.x86_64 kernel) </li><li>Velinux 1.4 for x86_64</li></ul>
 </td>
 </tr>
 <tr id="row7316192354212"><td class="cellrowborder" colspan="3" valign="top" headers="mcps1.2.4.1.1 mcps1.2.4.1.2 mcps1.2.4.1.3 "><p id="p331612304218"><a name="p331612304218"></a><a name="p331612304218"></a>注：</p>
@@ -805,48 +805,48 @@ Container Manager
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p945141161810"><a name="p945141161810"></a><a name="p945141161810"></a><span id="ph111514573319"><a name="ph111514573319"></a><a name="ph111514573319"></a>Atlas 800 推理服务器（型号 3000）</span>（插<span id="ph84512411188"><a name="ph84512411188"></a><a name="ph84512411188"></a>Atlas 300I Pro 推理卡</span>）</p>
 </td>
-<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul511011394313"></a><a name="ul511011394313"></a><ul id="ul511011394313"><li>CentOS 7.6 for ARM</li><li>CTYunOS 23.01 for ARM</li><li>Kylin V10 SP1 for ARM</li><li>Kylin V10 SP2 for ARM</li><li>Kylin V10 SP3 2403 for ARM</li><li>Kylin V11 for ARM</li><li>openEuler 20.03 for ARM</li><li>openEuler 22.03 for ARM</li><li>openEuler 24.03 LTS SP1 for ARM</li><li>Ubuntu 20.04 for ARM</li><li>Euler 2.12 for ARM</li><li>Euler 2.13 for ARM</li><li>Euler 2.15 for ARM</li><li>Debian 10.2 for ARM</li><li>HCS 8.5.0 (Euler 2.12 ARM) for ARM</li><li>HCE 2.0 for ARM</li><li>HCE 2.0.2503 for ARM</li></ul>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul511011394313"></a><a name="ul511011394313"></a><ul id="ul511011394313"><li>CentOS 7.6 for aarch64</li><li>CTYunOS 23.01 for aarch64</li><li>Kylin V10 SP1 for aarch64</li><li>Kylin V10 SP2 for aarch64</li><li>Kylin V10 SP3 2403 for aarch64</li><li>Kylin V11 for aarch64</li><li>openEuler 20.03 for aarch64</li><li>openEuler 22.03 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>Ubuntu 20.04 for aarch64</li><li>Euler 2.12 for aarch64</li><li>Euler 2.13 for aarch64</li><li>Euler 2.15 for aarch64</li><li>Debian 10.2 for aarch64</li><li>HCS 8.5.0 (Euler 2.12 ARM) for aarch64</li><li>HCE 2.0 for aarch64</li><li>HCE 2.0.2503 for aarch64</li></ul>
 </td>
 </tr>
 <tr id="row1574784513319"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p43708501184"><a name="p43708501184"></a><a name="p43708501184"></a><span id="ph629518508411"><a name="ph629518508411"></a><a name="ph629518508411"></a>Atlas 800 推理服务器（型号 3000）</span>（插<span id="ph11370155014182"><a name="ph11370155014182"></a><a name="ph11370155014182"></a>Atlas 300V Pro 视频解析卡</span>）</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul885522434318"></a><a name="ul885522434318"></a><ul id="ul885522434318"><li>CentOS 7.6 for ARM</li><li>CTYunOS 23.01 for ARM</li><li>Kylin V10 SP1 for ARM</li><li>Kylin V10 SP2 for ARM</li><li>Kylin V10 SP3 2403 for ARM</li><li>Kylin V11 for ARM</li><li>openEuler 20.03 for ARM</li><li>openEuler 22.03 for ARM</li><li>openEuler 24.03 LTS SP1 for ARM</li><li>Ubuntu 20.04 for ARM</li><li>Euler 2.13 for ARM</li><li>Euler 2.15 for ARM</li><li>HCE 2.0.2503 for ARM</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul885522434318"></a><a name="ul885522434318"></a><ul id="ul885522434318"><li>CentOS 7.6 for aarch64</li><li>CTYunOS 23.01 for aarch64</li><li>Kylin V10 SP1 for aarch64</li><li>Kylin V10 SP2 for aarch64</li><li>Kylin V10 SP3 2403 for aarch64</li><li>Kylin V11 for aarch64</li><li>openEuler 20.03 for aarch64</li><li>openEuler 22.03 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>Ubuntu 20.04 for aarch64</li><li>Euler 2.13 for aarch64</li><li>Euler 2.15 for aarch64</li><li>HCE 2.0.2503 for aarch64</li></ul>
 </td>
 </tr>
 <tr id="row374710451637"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p9846181011916"><a name="p9846181011916"></a><a name="p9846181011916"></a><span id="ph032572219310"><a name="ph032572219310"></a><a name="ph032572219310"></a>Atlas 800 推理服务器（型号 3000）</span>（插<span id="ph38461010121913"><a name="ph38461010121913"></a><a name="ph38461010121913"></a>Atlas 300I Duo 推理卡</span>）</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul12521284310"></a><a name="ul12521284310"></a><ul id="ul12521284310"><li>Ubuntu 20.04 for ARM</li><li>Euler 2.12 for ARM</li><li>Euler 2.13 for ARM</li><li>Euler 2.15 for ARM</li><li>Debian 10.2 for ARM</li><li>HCS 8.5.0 (Euler 2.12 ARM) for ARM</li><li>HCE 2.0 for ARM</li><li>HCE 2.0.2503 for ARM</li><li>openEuler 24.03 LTS SP1 for ARM</li><li>CTYunOS 23.01 for ARM</li><li>BC-Linux_21.10  for ARM</li><li>Kylin V10 SP3 2403 for ARM</li><li>Kylin V11 for ARM</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul12521284310"></a><a name="ul12521284310"></a><ul id="ul12521284310"><li>Ubuntu 20.04 for aarch64</li><li>Euler 2.12 for aarch64</li><li>Euler 2.13 for aarch64</li><li>Euler 2.15 for aarch64</li><li>Debian 10.2 for aarch64</li><li>HCS 8.5.0 (Euler 2.12 ARM) for aarch64</li><li>HCE 2.0 for aarch64</li><li>HCE 2.0.2503 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>CTYunOS 23.01 for aarch64</li><li>BC-Linux_21.10  for aarch64</li><li>Kylin V10 SP3 2403 for aarch64</li><li>Kylin V11 for aarch64</li></ul>
 </td>
 </tr>
 <tr id="row177472451314"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p135998206190"><a name="p135998206190"></a><a name="p135998206190"></a><span id="ph14285172325711"><a name="ph14285172325711"></a><a name="ph14285172325711"></a>Atlas 800 推理服务器（型号 3000）</span>（插<span id="ph12599520201912"><a name="ph12599520201912"></a><a name="ph12599520201912"></a>Atlas 300V 视频解析卡</span>）</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1858503815433"></a><a name="ul1858503815433"></a><ul id="ul1858503815433"><li>openEuler 22.03 for ARM</li><li>Ubuntu 20.04 for ARM</li><li>Euler 2.13 for ARM</li><li>HCE 2.0.2503 for ARM</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1858503815433"></a><a name="ul1858503815433"></a><ul id="ul1858503815433"><li>openEuler 22.03 for aarch64</li><li>Ubuntu 20.04 for aarch64</li><li>Euler 2.13 for aarch64</li><li>HCE 2.0.2503 for aarch64</li></ul>
 </td>
 </tr>
 <tr id="row0274181305"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p929135235814"><a name="p929135235814"></a><a name="p929135235814"></a><span id="ph1622217204595"><a name="ph1622217204595"></a><a name="ph1622217204595"></a>Atlas 800 推理服务器（型号 3000）</span>（插<span id="ph17882195911594"><a name="ph17882195911594"></a><a name="ph17882195911594"></a>Atlas 300I 推理卡（型号 3000）</span>）</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1367818913590"></a><a name="ul1367818913590"></a><ul id="ul1367818913590"><li>CentOS 7.6 for ARM</li><li>Kylin V10 (openEuler) SP1 for ARM</li><li>openEuler 20.03 for ARM</li><li>openEuler 22.03 for ARM</li><li>Ubuntu 20.04 for ARM</li><li>UOS V20 1020e for ARM</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1367818913590"></a><a name="ul1367818913590"></a><ul id="ul1367818913590"><li>CentOS 7.6 for aarch64</li><li>Kylin V10 (openEuler) SP1 for aarch64</li><li>openEuler 20.03 for aarch64</li><li>openEuler 22.03 for aarch64</li><li>Ubuntu 20.04 for aarch64</li><li>UOS V20 1020e for aarch64</li></ul>
 </td>
 </tr>
 <tr id="row1093610269447"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1614017370445"><a name="p1614017370445"></a><a name="p1614017370445"></a><span id="ph1589132515575"><a name="ph1589132515575"></a><a name="ph1589132515575"></a>Atlas 800 推理服务器（型号 3010）</span>（插<span id="ph37641518154514"><a name="ph37641518154514"></a><a name="ph37641518154514"></a>Atlas 300V 视频解析卡</span>）</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul18831155584417"></a><a name="ul18831155584417"></a><ul id="ul18831155584417"><li>openEuler 22.03 for x86</li><li>Ubuntu 20.04 for x86</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul18831155584417"></a><a name="ul18831155584417"></a><ul id="ul18831155584417"><li>openEuler 22.03 for x86_64</li><li>Ubuntu 20.04 for x86_64</li></ul>
 </td>
 </tr>
 <tr id="row150520455587"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p2254120609"><a name="p2254120609"></a><a name="p2254120609"></a><span id="ph1469113419015"><a name="ph1469113419015"></a><a name="ph1469113419015"></a>Atlas 800 推理服务器（型号 3010）</span>（插<span id="ph88034120118"><a name="ph88034120118"></a><a name="ph88034120118"></a>Atlas 300I 推理卡（型号 3010）</span>）</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul122874255182"></a><a name="ul122874255182"></a><ul id="ul122874255182"><li>CentOS 7.6 for x86</li><li>Kylin V10 SP1 for x86</li><li>openEuler 20.03 for x86</li><li>openEuler 22.03 for x86</li><li>Ubuntu 18.04.1 for x86</li><li>Ubuntu 18.04.5 for x86</li><li>Ubuntu 20.04 for x86</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul122874255182"></a><a name="ul122874255182"></a><ul id="ul122874255182"><li>CentOS 7.6 for x86_64</li><li>Kylin V10 SP1 for x86_64</li><li>openEuler 20.03 for x86_64</li><li>openEuler 22.03 for x86_64</li><li>Ubuntu 18.04.1 for x86_64</li><li>Ubuntu 18.04.5 for x86_64</li><li>Ubuntu 20.04 for x86_64</li></ul>
 </td>
 </tr>
 <tr id="row5407193918119"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p21151131101813"><a name="p21151131101813"></a><a name="p21151131101813"></a><span id="ph2689195113175"><a name="ph2689195113175"></a><a name="ph2689195113175"></a>Atlas 800 推理服务器（型号 3010）</span>（插<span id="ph8455182411180"><a name="ph8455182411180"></a><a name="ph8455182411180"></a>Atlas 300I Pro 推理卡</span>）</p>
 <p id="p167891541191818"><a name="p167891541191818"></a><a name="p167891541191818"></a><span id="ph18789204113183"><a name="ph18789204113183"></a><a name="ph18789204113183"></a>Atlas 800 推理服务器（型号 3010）</span>（插<span id="ph87621118131917"><a name="ph87621118131917"></a><a name="ph87621118131917"></a>Atlas 300V Pro 视频解析卡</span>）</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul388382719122"></a><a name="ul388382719122"></a><ul id="ul388382719122"><li>CentOS 7.6 for x86</li><li>CTYunOS 23.01 for x86</li><li>Kylin V10 SP1 for x86</li><li>Kylin V10 SP3 2403 for x86</li><li>Kylin V11 for x86</li><li>openEuler 20.03 for x86</li><li>openEuler 22.03 for x86</li><li>openEuler 24.03 LTS SP1 for x86</li><li>Ubuntu 20.04 for x86</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul388382719122"></a><a name="ul388382719122"></a><ul id="ul388382719122"><li>CentOS 7.6 for x86_64</li><li>CTYunOS 23.01 for x86_64</li><li>Kylin V10 SP1 for x86_64</li><li>Kylin V10 SP3 2403 for x86_64</li><li>Kylin V11 for x86_64</li><li>openEuler 20.03 for x86_64</li><li>openEuler 22.03 for x86_64</li><li>openEuler 24.03 LTS SP1 for x86_64</li><li>Ubuntu 20.04 for x86_64</li></ul>
 </td>
 </tr>
 <tr id="row1374813451136"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p4468152312519"><a name="p4468152312519"></a><a name="p4468152312519"></a>Atlas 200I SoC A1核心板</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p143050517345"><a name="p143050517345"></a><a name="p143050517345"></a>openEuler 20.03 for ARM</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p143050517345"><a name="p143050517345"></a><a name="p143050517345"></a>openEuler 20.03 for aarch64</p>
 </td>
 </tr>
 <tr id="row12748144512318"><td class="cellrowborder" rowspan="3" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p19470381257"><a name="p19470381257"></a><a name="p19470381257"></a><span id="ph996833614580"><a name="ph996833614580"></a><a name="ph996833614580"></a><term id="zh-cn_topic_0000001094307702_term99602034117"><a name="zh-cn_topic_0000001094307702_term99602034117"></a><a name="zh-cn_topic_0000001094307702_term99602034117"></a>Atlas A2 推理系列产品</term></span></p>
@@ -854,31 +854,31 @@ Container Manager
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p159463383518"><a name="p159463383518"></a><a name="p159463383518"></a><span id="ph16179151202"><a name="ph16179151202"></a><a name="ph16179151202"></a>Atlas 800I A2 推理服务器</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul1491814439342"></a><a name="ul1491814439342"></a><ul id="ul1491814439342"><li>AntOS 6.6 for ARM</li><li>BC-Linux-for-Euler-21.10 for ARM</li><li>BC-Linux_21.10 U4  for ARM</li><li>Euler 2.12 for ARM</li><li>Euler 2.13 for ARM</li><li>Euler 2.15 for ARM</li><li>CentOS 7.6 for ARM</li><li>CTYunOS 22.06 for ARM</li><li>CTYunOS 23.01 for ARM</li><li>Kylin V10 SP2 for ARM</li><li>Kylin V10 SP3 for ARM</li><li>Kylin V11 for ARM</li><li>openEuler 22.03 LTS for ARM</li><li>openEuler 22.03 LTS SP4 for ARM</li><li>openEuler 24.03 LTS SP1 for ARM</li><li>UOS V20 1050u2e for ARM</li><li>UOS V25 for ARM (6.6内核)</li><li>Ubuntu 22.04 for ARM</li><li>Ubuntu 24.04 LTS for ARM</li></ul>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul1491814439342"></a><a name="ul1491814439342"></a><ul id="ul1491814439342"><li>AntOS 6.6 for aarch64</li><li>BC-Linux-for-Euler-21.10 for aarch64</li><li>BC-Linux_21.10 U4  for aarch64</li><li>Euler 2.12 for aarch64</li><li>Euler 2.13 for aarch64</li><li>Euler 2.15 for aarch64</li><li>CentOS 7.6 for aarch64</li><li>CTYunOS 22.06 for aarch64</li><li>CTYunOS 23.01 for aarch64</li><li>Kylin V10 SP2 for aarch64</li><li>Kylin V10 SP3 for aarch64</li><li>Kylin V11 for aarch64</li><li>openEuler 22.03 LTS for aarch64</li><li>openEuler 22.03 LTS SP4 for aarch64</li><li>openEuler 24.03 LTS SP1 for aarch64</li><li>UOS V20 1050u2e for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li><li>Ubuntu 22.04 for aarch64</li><li>Ubuntu 24.04 LTS for aarch64</li></ul>
 </td>
 </tr>
 <tr id="row4711679201"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1171275208"><a name="p1171275208"></a><a name="p1171275208"></a><span id="ph9484121219204"><a name="ph9484121219204"></a><a name="ph9484121219204"></a>A200I A2 Box 异构组件</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul115263163208"></a><a name="ul115263163208"></a><ul id="ul115263163208"><li>Velinux 1.2 for x86</li><li>Ubuntu 22.04 LTS for x86</li><li>openEuler 22.03 LTS for x86</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul115263163208"></a><a name="ul115263163208"></a><ul id="ul115263163208"><li>Velinux 1.2 for x86_64</li><li>Ubuntu 22.04 LTS for x86_64</li><li>openEuler 22.03 LTS for x86_64</li></ul>
 </td>
 </tr>
 <tr id="row022717618816"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1927840182513"><a name="p1927840182513"></a><a name="p1927840182513"></a><span id="ph10949202261219"><a name="ph10949202261219"></a><a name="ph10949202261219"></a>Atlas 200I A2 Box16 异构子框</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul147601946131620"></a><a name="ul147601946131620"></a><ul id="ul147601946131620"><li>Debian 10.0 for x86</li><li>Debian 11.7 for x86 (kernel 5.10.103)</li><li>Debian 12 for x86 (kernel 5.15.152.ve.10)</li><li>Ubuntu 22.04 for x86</li><li>Ubuntu 20.04.1 for x86</li><li>Ubuntu 22.04.1 for x86 (5.16.20-051620-generic)</li><li>Tlinux 3.1 for x86</li><li>Tlinux 3.2 for x86</li><li>Tlinux 4.0 for x86 (6.6内核)</li><li>openEuler 22.03 LTS SP4 for x86</li><li>openEuler 24.03 LTS  for x86</li><li>openEuler 24.03 LTS SP1 for x86</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul147601946131620"></a><a name="ul147601946131620"></a><ul id="ul147601946131620"><li>Debian 10.0 for x86_64</li><li>Debian 11.7 (5.10.0-103-bili kernel)</li><li>Debian 12.0 (5.15.152.ve.10 kernel)</li><li>Ubuntu 20.04.1 for x86_64</li><li>Ubuntu 22.04 for x86_64</li><li>Ubuntu 22.04.1 for x86_64 (5.16.20-051620-generic kernel)</li><li>Tlinux 3.1 for x86_64</li><li>Tlinux 3.2 for x86_64</li><li>Tlinux 4.0 for x86_64 (6.6.80.29.tl4.x86_64 kernel)</li><li>openEuler 22.03 LTS SP4 for x86_64</li><li>openEuler 24.03 LTS for x86_64</li><li>openEuler 24.03 LTS SP1 for x86_64</li></ul>
 </td>
 </tr>
 <tr id="row15438111011218"><td class="cellrowborder" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p id="p168412537204"><a name="p168412537204"></a><a name="p168412537204"></a><span id="ph791742714211"><a name="ph791742714211"></a><a name="ph791742714211"></a><term id="zh-cn_topic_0000001519959665_term176419491615"><a name="zh-cn_topic_0000001519959665_term176419491615"></a><a name="zh-cn_topic_0000001519959665_term176419491615"></a>Atlas A3 推理系列产品</term></span></p>
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p143871017213"><a name="p143871017213"></a><a name="p143871017213"></a><span id="ph18760103420211"><a name="ph18760103420211"></a><a name="ph18760103420211"></a>Atlas 800I A3 超节点服务器</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul877545583412"></a><a name="ul877545583412"></a><ul id="ul877545583412"><li>openEuler 22.03 LTS SP4 for ARM</li><li>Euler 2.13 for ARM</li><li>CUlinux 3.0 for ARM</li><li>CUlinux 4.0 for ARM</li><li>CTYunOS 4.0 for ARM</li><li>HCE 2.0.2506 for ARM</li><li>Velinux 2.0 for ARM</li><li>Kylin V10 SP3 2403 for ARM</li><li>Kylin V11 for ARM</li><li>UOS V25 for ARM (6.6内核)</li></ul>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul877545583412"></a><a name="ul877545583412"></a><ul id="ul877545583412"><li>openEuler 22.03 LTS SP4 for aarch64</li><li>Euler 2.13 for aarch64</li><li>CUlinux 3.0 for aarch64</li><li>CUlinux 4.0 for aarch64</li><li>CTYunOS 4.0 for aarch64</li><li>HCE 2.0.2506 for aarch64</li><li>Velinux 2.0 for aarch64</li><li>Kylin V10 SP3 2403 for aarch64</li><li>Kylin V11 for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li></ul>
 </td>
 </tr>
 <tr><td class="cellrowborder" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p>Atlas 350 标卡</p>
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p><span>Atlas 350 标卡</span></p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas 350 标卡设备在当前版本不支持DPU硬件设备通信功能。</div></div>
 </td>
-<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><ul><li>Velinux 2.0</li><li>Alinux 3 for x86</li></ul>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><ul><li>Velinux 2.0</li><li>Alinux 3 for x86_64</li></ul>
 </td>
 </tr>
 <tr id="row64419316256"><td class="cellrowborder" colspan="3" valign="top" headers="mcps1.2.4.1.1 mcps1.2.4.1.2 mcps1.2.4.1.3 "><a name="ul17949191917256"></a><a name="ul17949191917256"></a><ul id="ul17949191917256"><li><strong id="b189491819122517"><a name="b189491819122517"></a><a name="b189491819122517"></a>单机场景下：以下硬件产品，仅支持安装<span id="ph10949131918259"><a name="ph10949131918259"></a><a name="ph10949131918259"></a>Ascend Docker Runtime</span>组件。</strong></li><li><strong id="b094919197251"><a name="b094919197251"></a><a name="b094919197251"></a>集群场景下：以下硬件产品，仅支持安装<span id="ph1294912191256"><a name="ph1294912191256"></a><a name="ph1294912191256"></a>Ascend Docker Runtime</span>、<span id="ph1794971919254"><a name="ph1794971919254"></a><a name="ph1794971919254"></a>Ascend Device Plugin</span>组件。</strong></li></ul>

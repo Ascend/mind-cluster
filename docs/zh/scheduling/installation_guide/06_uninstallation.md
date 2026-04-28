@@ -15,6 +15,7 @@
     用户在卸载Ascend Docker Runtime时，只需根据[步骤2](#li345320287225)进行一次卸载操作。卸载完成之后需要手动将另一引擎的daemon.json文件还原为Ascend Docker Runtime安装之前的内容。
 
 >[!NOTE]
+>
 >- 若用户需要保留其中一个容器引擎，需要在Ascend Docker Runtime卸载之后，针对相应场景进行重新安装。
 >- 卸载Ascend Docker Runtime会将Docker或Containerd的默认runtime恢复成runc。
 
@@ -223,7 +224,7 @@
     namespace "mindx-dl" deleted
     ```
 
-4. 删除日志文件。参考[创建日志目录](./03_installation.md#创建日志目录)章节，在对应节点上删除集群调度组件的日志目录。以ClusterD为例，请确认后再删除。
+4. 删除日志文件。参考[创建日志目录](./03_installation/manual_installation/01_preparing_for_installation.md#创建日志目录)章节，在对应节点上删除集群调度组件的日志目录。以ClusterD为例，请确认后再删除。
 
     ```shell
     rm -rf /var/log/mindx-dl/clusterd

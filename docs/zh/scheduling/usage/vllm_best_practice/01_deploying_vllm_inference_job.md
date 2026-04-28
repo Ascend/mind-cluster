@@ -14,7 +14,6 @@
 3. 用户通过kubectl或者其他深度学习平台下发AIBrix框架的StormService推理任务，aibrix-controller-manager根据推理任务的配置生成RoleSet或者PodSet的子工作负载，再由对应的子工作负载生成多个推理服务的任务Pod。关于RoleSet或者PodSet的详细说明，可以参见[AIBrix文档](https://aibrix.readthedocs.io/latest/designs/aibrix-stormservice.html)。
 4. volcano-controller为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参见[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
 
-
     **PodGroup生成策略**
 
     当前暂不支持在stormservice.spec.template.spec.schedulingStrategy或stormservice.spec.template.spec.roles[*].schedulingStrategy中设置volcanoSchedulingStrategy。此时由volcano-controller创建对应的PodGroup，具体策略如下：
@@ -434,11 +433,13 @@ spec:
     ```
 
     >[!NOTE]  
-    ><routing-podip\>为Routing Pod的IP地址，可以通过以下命令查看。
+    >- <routing-podip\>为Routing Pod的IP地址，可以通过以下命令查看。
     >
-    >```shell
-    >kubectl get pod -A -o wide
-    >```
+    >   ```shell
+    >   kubectl get pod -A -o wide
+    >   ```
+    >
+    >- <模型名称>取决于vLLM用于设定模型名称的启动参数`served_model_name`。
 
 13. （可选）删除推理任务。若用户需要删除任务，可以执行该步骤。
 

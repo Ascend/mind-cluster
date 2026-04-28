@@ -627,40 +627,53 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
     # 修改芯片故障的故障频率和时长
     faultCustomization.json: |
     {
-      "GraceTolerance": {
-        "WaitProcessReadCMTime": 30,
-        "WaitDeviceResetTime": 150,
-        "WaitFaultSelfHealingTime": 15
+     "GraceTolerance": {
+     "WaitProcessReadCMTime": 30,
+     "WaitDeviceResetTime": 150,
+     "WaitFaultSelfHealingTime": 15
     },
-      "FaultFrequency": [
-    {
-        "EventId": [
-          "80C98000","80B78000","80B58000","80A18008","80A38008","80A58008","80B98000","80B98008","80BB8000",
-          "80BB8008","80BD8000","80BD8008","80C78008","80C98008","80CB8008","80CD8008","80CF8008","80D98008",
-          "80DF8008","80DE1801","80E01801","80E18008","80E38008","80E39200","80E3A202","80E3A203","80E78000",
-          "80E78008","80F18000","80F18008","80F38008","80F78008","81318008","81338008","813B8008","81478008",
-          "81578008","815F8008","81938008","81958008","81978008"
+    "FaultFrequency": [
+     {
+      "EventId": [
+        "80C98000","80B78000","80B58000","80A18008","80A38008","80A58008","80B98000","80B98008","80BB8000",
+        "80BB8008","80BD8000","80BD8008","80C78008","80C98008","80CB8008","80CD8008","80CF8008","80D98008",
+        "80DF8008","80DE1801","80E01801","80E18008","80E38008","80E39200","80E3A202","80E3A203","80E78000",
+        "80E78008","80F18000","80F18008","80F38008","80F78008","81318008","81338008","813B8008","81478008",
+        "81578008","815F8008","81938008","81958008","81978008"
+      ],
+      "TimeWindow": 86400,
+      "Times": 2,
+      "FaultHandling": "ManuallySeparateNPU"
+     },
+     {
+      "EventId": ["80E18005"],
+      "TimeWindow": 86400,
+      "Times": 3,
+      "FaultHandling": "ManuallySeparateNPU"
+     },
+     {
+      "EventId": ["81078603"],
+      "TimeWindow": 86400,
+      "Times": 5,
+      "FaultHandling": "ManuallySeparateNPU",
+      "ReleaseTimeWindow": 172800
+     }
     ],
-        "TimeWindow": 86400,
-        "Times": 2,
-        "FaultHandling": "ManuallySeparateNPU"
-    },
-    {
-    "EventId": ["80E18005"],
-    "TimeWindow": 86400,
-    "Times": 3,
-    "FaultHandling": "ManuallySeparateNPU"
-    }
-    ],
-      "FaultDuration": [
-    {
-        "EventId": ["81078603"],
-        "FaultTimeout": 20,
-        "RecoverTimeout": 60,
-        "FaultHandling": "PreSeparateNPU"
-    }
+    "FaultDuration": [
+     {
+      "EventId": ["81078603"],
+      "FaultTimeout": 20,
+      "RecoverTimeout": 60,
+      "FaultHandling": "PreSeparateNPU"
+     },
+     {
+      "EventId": ["81B18603"],
+      "FaultTimeout": 5,
+      "RecoverTimeout": 60,
+      "FaultHandling": "PreSeparateNPU"
+     }
     ]
-    }
+   }
     kind: ConfigMap
     metadata:
     creationTimestamp: "2024-06-20T10:12:07Z"
@@ -746,7 +759,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 
 断点续训针对芯片故障，支持按故障频率的配置进行处理。
 
-针对芯片故障的不同级别进行分级处理时，ClusterD组件会获取到当前故障的故障码和故障级别，对于除了NotHandleFault和SubHealthFault级别之外的故障，根据ConfigMap（clusterd-config-cm）中配置的故障频率，将芯片状态置为人工隔离。该ConfigMap的参数说明请参见[表1](../../installation_guide/03_installation.md#clusterd)。
+针对芯片故障的不同级别进行分级处理时，ClusterD组件会获取到当前故障的故障码和故障级别，对于除了NotHandleFault和SubHealthFault级别之外的故障，根据ConfigMap（clusterd-config-cm）中配置的故障频率，将芯片状态置为人工隔离。该ConfigMap的参数说明请参见[表1](../../installation_guide/03_installation/manual_installation/06_clusterd.md)。
 
 >[!NOTE] 
 >
@@ -755,7 +768,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 
 #### （可选）配置芯片故障频率<a name="ZH-CN_TOPIC_0000002511426473_01"></a>
 
-在安装ClusterD时，会自动创建ConfigMap（clusterd-config-cm），作为当前人工隔离芯片的检测依据。该ConfigMap的参数说明请参见[表1](../../installation_guide/03_installation.md#clusterd)。
+在安装ClusterD时，会自动创建ConfigMap（clusterd-config-cm），作为当前人工隔离芯片的检测依据。该ConfigMap的参数说明请参见[表1](../../installation_guide/03_installation/manual_installation/06_clusterd.md)。
 
 如果用户想要自定义芯片故障频率，可以通过修改该ConfigMap实现。如果修改后的ConfigMap内容存在格式错误等问题，ClusterD会保留上一次读取成功的配置作为当前人工隔离芯片的检测依据。若ClusterD启动时，读取到的ConfigMap内容错误，则人工隔离芯片检测机制会默认关闭，直到格式和内容正确。
 
@@ -814,7 +827,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
     kubectl edit cm -n cluster-system clusterd-config-cm
     ```
 
-    根据实际情况，修改人工隔离芯片的故障频率。参数说明请参见[表1](../../installation_guide/03_installation.md#clusterd)。
+    根据实际情况，修改人工隔离芯片的故障频率。参数说明请参见[表1](../../installation_guide/03_installation/manual_installation/06_clusterd.md)。
 
     ```Yaml
     # Please edit the object below. Lines beginning with a '#' will be ignored,

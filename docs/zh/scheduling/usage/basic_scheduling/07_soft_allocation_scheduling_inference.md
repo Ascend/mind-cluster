@@ -4,7 +4,7 @@
 
 **前提条件**
 
-在命令行场景下使用软切分调度特性，需要确保已经安装如下组件；若没有安装，可以参考[安装部署](../../installation_guide/03_installation.md)章节进行操作。软切分调度特性只支持使用Volcano作为调度器，不支持使用其他调度器。
+在命令行场景下使用软切分调度特性，需要确保已经安装如下组件；若没有安装，可以参考[安装部署](../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。软切分调度特性只支持使用Volcano作为调度器，不支持使用其他调度器。
 
 - Volcano
 - Ascend Device Plugin
