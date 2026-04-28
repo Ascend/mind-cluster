@@ -433,11 +433,13 @@ spec:
     ```
 
     >[!NOTE]  
-    ><routing-podip\>为Routing Pod的IP地址，可以通过以下命令查看。
+    >- <routing-podip\>为Routing Pod的IP地址，可以通过以下命令查看。
     >
-    >```shell
-    >kubectl get pod -A -o wide
-    >```
+    >   ```shell
+    >   kubectl get pod -A -o wide
+    >   ```
+    >
+    >- <模型名称>取决于vLLM用于设定模型名称的启动参数`served_model_name`。
 
 13. （可选）删除推理任务。若用户需要删除任务，可以执行该步骤。
 

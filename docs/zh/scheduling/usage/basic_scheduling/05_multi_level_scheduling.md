@@ -4,7 +4,7 @@
 
 **前提条件<a name="section52051339787duoji"></a>**
 
-在命令行场景下使用多级调度特性前，需要确保已经安装如下组件，若没有安装，可以参考[安装部署](../../installation_guide/03_installation.md)章节进行操作。多级调度特性仅支持使用Volcano作为调度器，不支持使用其他调度器。
+在命令行场景下使用多级调度特性前，需要确保已经安装如下组件，若没有安装，可以参考[安装部署](../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。多级调度特性仅支持使用Volcano作为调度器，不支持使用其他调度器。
 
 - Volcano
 - Ascend Device Plugin

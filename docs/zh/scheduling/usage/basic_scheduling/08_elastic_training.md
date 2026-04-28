@@ -24,7 +24,7 @@
     - Resilience Controller
     - ClusterD
 
-- 若没有安装，可以参考[安装部署](../../installation_guide/03_installation.md)章节进行操作。
+- 若没有安装，可以参考[安装部署](../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 
 **使用方式<a name="section1215781619816"></a>**
 

@@ -8,7 +8,7 @@
 
 |操作步骤|操作说明|更多参考|
 |--|--|--|
-|[安装组件](#section1837511531098)|以Atlas 800T A2 训练服务器为例，手把手带您在昇腾设备上快速安装集群调度组件。|更多安装集群调度组件的参数说明和操作步骤，请参考[安装部署](./installation_guide/03_installation.md)章节。|
+|[安装组件](#section1837511531098)|以Atlas 800T A2 训练服务器为例，手把手带您在昇腾设备上快速安装集群调度组件。|更多安装集群调度组件的参数说明和操作步骤，请参考[安装部署](./installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节。|
 |[下发训练任务](#section106493419399)|以一个简单的PyTorch训练任务为例，让您快速了解训练任务下发的操作流程。|更多下发训练任务的参数说明和操作步骤，请参考[基础调度](./usage/basic_scheduling/00_feature_description.md)章节。|
 
 ## 环境准备<a name="section159013591917"></a>
@@ -28,7 +28,7 @@
 
 ## 安装组件<a name="section1837511531098"></a>
 
-以下步骤命令均以待安装设备Atlas 800T A2 训练服务器为例，如需了解所有组件的详细安装步骤和参数说明请参见[安装](./installation_guide/03_installation.md)。
+以下步骤命令均以待安装设备Atlas 800T A2 训练服务器为例，如需了解所有组件的详细安装步骤和参数说明请参见[安装](./installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)。
 
 1. 以root用户登录计算或管理节点，创建组件安装目录。
     1. 依次执行以下命令，在**计算节点**创建安装目录。以下目录仅为示例，请以实际为准。

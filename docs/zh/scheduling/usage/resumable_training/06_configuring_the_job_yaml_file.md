@@ -406,7 +406,7 @@
 
 **前提条件<a name="zh-cn_topic_0000002202737289_zh-cn_topic_0000001951258657_section7585519135117"></a>**
 
-用户已创建[hccl.json](../../api/hccl.json_file_description.md)文件的具体挂载路径，详细操作步骤请参见[Ascend Operator](../../installation_guide/03_installation.md#ascend-operator)中的“步骤4”。
+用户已创建[hccl.json](../../api/hccl.json_file_description.md)文件的具体挂载路径，详细操作步骤请参见[Ascend Operator](../../installation_guide/03_installation/manual_installation/08_ascend_operator.md)中的“步骤4”。
 
 **操作步骤<a name="zh-cn_topic_0000002202737289_zh-cn_topic_0000001951258657_section18181655154219"></a>**
 

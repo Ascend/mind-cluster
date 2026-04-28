@@ -51,7 +51,7 @@
 
 # 目录结构
 
-``` 
+```text 
 ├─ build
 └─ component
    ├─ ascend-common
@@ -310,7 +310,7 @@ MindCluster基础调度特性与断点续训特性支持的框架：Pytorch、Mi
 
 ### 组件安装
 
-在安装和使用集群调度组件前，用户需要提前了解[集群调度组件的特性](./docs/zh/scheduling/introduction.md)，并根据具体特性的特点和功能，选择需要使用的特性并[安装相应的组件](./docs/zh/scheduling/installation_guide.md#安装部署)。
+在安装和使用集群调度组件前，用户需要提前了解[集群调度组件的特性](./docs/zh/scheduling/introduction.md)，并根据具体特性的特点和功能，选择需要使用的特性并[安装相应的组件](./docs/zh/scheduling/installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)。
 
 ## MindCluster Ascend FaultDiag
 
@@ -359,15 +359,15 @@ MindCluster具体特性介绍如下：
 
 | 特性名称       | 介绍                                                                                                            | Released |
 |------------|---------------------------------------------------------------------------------------------------------------|----------|
-| 容器化支持特性    | [link](./docs/zh/scheduling/usage/containerization.md) | ✅ |
-| 资源监测特性     | [link](./docs/zh/scheduling/usage/resource_monitoring.md)                                                                                                 | ✅ |
-| 虚拟化实例特性    | [link](./docs/zh/scheduling/usage/virtual_instance.md)                                                                                                  | ✅ |
-| 基础调度特性     | [link](./docs/zh/scheduling/usage/basic_scheduling.md)                                                                                                    | ✅ |
-| 断点续训特性     |[link](./docs/zh/scheduling/usage/resumable_training.md)                                                                                                  | ✅ |
-| 一体机特性     |[link](./docs/zh/scheduling/usage/appliance.md)                                                                                                  | ✅ |
-| MindIE Motor推理任务最佳实践 |[link](./docs/zh/scheduling/usage/mindie_motor_best_practice.md)   | ✅ |
-| SGLang推理任务最佳实践 |[link](./docs/zh/scheduling/usage/sglang_best_practice.md)   | ✅ |
-| vLLM推理任务最佳实践 |[link](./docs/zh/scheduling/usage/vllm_best_practice.md)   | ✅ |
+| 容器化支持特性    | [link](./docs/zh/scheduling/usage/containerization/00_before_you_start.md) | ✅ |
+| 资源监测特性     | [link](./docs/zh/scheduling/usage/resource_monitoring/00_before_you_start.md)                                                                                                 | ✅ |
+| 虚拟化实例特性    | [link](./docs/zh/scheduling/usage/virtual_instance/virtual_instance_with_hdk/01_description.md)                                                                                                  | ✅ |
+| 基础调度特性     | [link](./docs/zh/scheduling/usage/basic_scheduling/00_feature_description.md)                                                                                                    | ✅ |
+| 断点续训特性     |[link](./docs/zh/scheduling/usage/resumable_training/00_feature_description.md)                                                                                                  | ✅ |
+| 一体机特性     |[link](./docs/zh/scheduling/usage/appliance/01_npu_hardware_fault_detection_and_rectification.md)                                                                                                  | ✅ |
+| MindIE Motor推理任务最佳实践 |[link](./docs/zh/scheduling/usage/mindie_motor_best_practice/00_before_you_start.md)   | ✅ |
+| SGLang推理任务最佳实践 |[link](./docs/zh/scheduling/usage/sglang_best_practice/00_before_you_start.md)   | ✅ |
+| vLLM推理任务最佳实践 |[link](./docs/zh/scheduling/usage/vllm_best_practice/00_before_you_start.md)   | ✅ |
 
 ## MindCluster Ascend FaultDiag
 
@@ -384,7 +384,7 @@ MindCluster具体特性介绍如下：
 
 # API参考
 
-MindCluster集群调度API参考请参见：[API参考](./docs/zh/scheduling/api/npu_exporter.md)。
+MindCluster集群调度API参考请参见：[API参考](./docs/zh/scheduling/api/npu_exporter/00_npu_exporter_home_page.md)。
 
 MindCluster Ascend FaultDiag API参考请参见：[API参考](./docs/zh/faultdiag/api/README.md)。
 
@@ -402,12 +402,12 @@ MindCluster Ascend FaultDiag相关FAQ请参见：[FAQ](./docs/zh/faultdiag/faq.m
 - 当前特权容器方式部署，该容器权限具有一定风险，建议用户自行进行安全加强。
 - 其他安全声明详见：[安全声明](./docs/zh/scheduling/security_hardening.md)
 - 通信矩阵详见：[通信矩阵](https://gitcode.com/Ascend/mind-cluster/wiki/Home.md)
-- 公网地址详见：[公网地址](./docs/zh/resource/MindCluster%207.3.0%20公网地址.xlsx)
+- 公网地址详见：[公网地址](./docs/zh/resource/MindCluster%2026.0.0%20公网地址.xlsx)
 
 ## MindCluster Ascend FaultDiag
 
 - 安全声明详见：[安全声明](./docs/zh/faultdiag/security_hardening.md)
-- 公网地址详见：[公网地址](./docs/zh/resource/MindCluster%207.3.0%20Ascend%20FaultDiag公网地址.xlsx)
+- 公网地址详见：[公网地址](./docs/zh/resource/MindCluster%2026.0.0%20Ascend%20FaultDiag公网地址.xlsx)
 
 # 分支维护策略
 
