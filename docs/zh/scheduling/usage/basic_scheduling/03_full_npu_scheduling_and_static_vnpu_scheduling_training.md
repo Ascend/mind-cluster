@@ -5,7 +5,7 @@
 **前提条件<a name="section52051339787"></a>**
 
 - 确保环境中有配置相应的存储方案，比如使用NFS（Network File System），用户可以参见[安装NFS](../../common_operations.md#安装nfs)进行操作。
-- 在使用整卡调度或静态vNPU调度特性前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../installation_guide/03_installation.md)章节进行操作。
+- 在使用整卡调度或静态vNPU调度特性前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../installation_guide//03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
     - 调度器（Volcano或其他调度器）
     - Ascend Device Plugin
     - Ascend Docker Runtime
@@ -1535,7 +1535,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 **通过环境变量配置资源信息场景<a name="section598118132817"></a>**
 
 >[!NOTE] 
->此场景下，用户需已创建[hccl.json](../../api/hccl.json_file_description.md)文件的具体挂载路径才能执行以下操作，详细操作步骤请参见[步骤4](../../installation_guide/03_installation.md#ascend-operator)。
+>此场景下，用户需已创建[hccl.json](../../api/hccl.json_file_description.md)文件的具体挂载路径才能执行以下操作，详细操作步骤请参见[步骤4](../../installation_guide/03_installation/manual_installation/08_ascend_operator.md)。
 
 1. 将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
 

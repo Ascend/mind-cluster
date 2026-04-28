@@ -9,7 +9,7 @@
 
 ## 前提条件<a name="section1632062465010"></a>
 
-- 在使用资源监测特性前，需要确保NPU Exporter组件已经安装，若没有安装，可以参考[安装部署](../../installation_guide/03_installation.md)章节进行操作。
+- 在使用资源监测特性前，需要确保NPU Exporter组件已经安装，若没有安装，可以参考[安装部署](../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 - NPU Exporter启动前，请确保NPU卡在位。
 
 ## 使用说明<a name="section44381612353"></a>

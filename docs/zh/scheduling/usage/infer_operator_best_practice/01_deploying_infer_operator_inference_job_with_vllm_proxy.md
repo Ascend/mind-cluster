@@ -39,7 +39,7 @@
 
 **选择YAML示例**
 
-当前，基于vLLM Proxy的Infer Operator推理任务由InferServiceSet自定义CRD部署，Infer Operator的部署请参见[安装部署](../../installation_guide/03_installation.md#infer-operator)。
+当前，基于vLLM Proxy的Infer Operator推理任务由InferServiceSet自定义CRD部署，Infer Operator的部署请参见[安装部署](../../installation_guide/03_installation/manual_installation/07_infer_operator.md)。
 
 以下是一个适配示例，用户可根据需求进行修改。
 

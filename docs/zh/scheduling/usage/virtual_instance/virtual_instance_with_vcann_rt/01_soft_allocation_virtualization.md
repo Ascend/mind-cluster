@@ -70,7 +70,7 @@
     在软切分虚拟化功能和非软切分虚拟化功能混合部署场景下，若节点不支持软切分虚拟化功能，则需要为节点增加标签huawei.com/scheduler.chip1softsharedev.enable=false。
 
 2. 需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run”，安装容器引擎插件。
-3. 参见[安装部署](../../../installation_guide/03_installation.md)章节，完成各组件的安装。
+3. 参见[安装部署](../../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节，完成各组件的安装。
 
     虚拟化实例涉及修改相关参数的集群调度组件为Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
 
