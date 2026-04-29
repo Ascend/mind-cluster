@@ -59,7 +59,7 @@ class RocePortAnalyzer(Analyzer):
                         f"[chip {npu_chip_info.chip_phy_id}]对端[交换机 {peer_roce_swi.system_name_tlv}]信息")
                     continue
                 for peer_roce_port_info in peer_roce_swi_info.interface_info:
-                    if peer_roce_port_info.interface_name == peer_roce_swi.port_id_tlv:
+                    if peer_roce_port_info.interface_name != peer_roce_swi.port_id_tlv:
                         continue
                     if "auto" in (peer_roce_port_info.speed.lower(), npu_chip_info.speed.lower()):
                         continue

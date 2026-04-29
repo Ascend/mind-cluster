@@ -18,7 +18,6 @@
 import re
 from typing import List, Dict
 
-from ascend_fd_tk.core.common.constants import BIT_ERROR_RATE_LIMIT
 from ascend_fd_tk.core.config import port_mapping_config
 from ascend_fd_tk.core.log_parser.base import FindResult
 from ascend_fd_tk.core.model.switch import OpticalModelBaseInfo, InterfaceBrief, SwiOpticalModel, DeviceInterface, \
@@ -72,20 +71,22 @@ class SwitchParser:
         return list(result_dict.values())
 
     @classmethod
-    def parse_bit_err_rate(cls, cmd_res: str, interface_briefs: List[InterfaceBrief]) -> List[BitErrRate]:
-        cmd_res_list = split_str(cmd_res, "display interface troubleshooting")
+    def parse_bit_err_rate(cls, cmd_res: str) -> List[BitErrRate]:
+        pattern = r"(.{1,10}/\d/.{1,15}) :"
+        re_pattern = re.compile(pattern)
+        cmd_res_list = split_str(cmd_res, pattern, regex=True)
         bit_err_rate_list = []
-        for cmd_res_str, interface_brief in zip(cmd_res_list, interface_briefs):
-            parse_data_dict = FormParser(multi_key_in_line_separator=["       "]).parse(cmd_res_str)
+        for cmd_res_part in cmd_res_list:
+            parse_data_dict = FormParser(multi_key_in_line_separator=["        "]).parse(cmd_res_part)
             bit_err_rate = parse_data_dict.get("Bit error rate")
             if not bit_err_rate:
                 continue
-            try:
-                bit_err_rate_f = float(bit_err_rate)
-            except ValueError:
-                continue
-            if bit_err_rate_f > BIT_ERROR_RATE_LIMIT:
-                bit_err_rate_list.append(BitErrRate(interface_brief.interface, bit_err_rate))
+            search = re_pattern.search(cmd_res_part)
+            interface = ""
+            if search:
+                interface = search.group(1)
+            if interface:
+                bit_err_rate_list.append(BitErrRate(interface, bit_err_rate))
         return bit_err_rate_list
 
     @classmethod

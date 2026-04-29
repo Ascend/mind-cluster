@@ -67,15 +67,11 @@ class SwiSshFetcher(SshFetcher, SwitchFetcher):
     async def fetch_switch_log_info(self) -> List[FindResult]:
         return []
 
-    async def fetch_bit_error_rate(self, interface_briefs: List[InterfaceBrief]) -> str:
+    async def fetch_bit_error_rate(self) -> str:
         # 退出到sys
         await self.executor.run_cmd(CmdTask("quit", timeout=1))
         await self.executor.run_cmd(CmdTask("quit", timeout=1))
-        all_cmd_list = []
-        for interface_brief in interface_briefs:
-            all_cmd_list.append(f"display interface troubleshooting {interface_brief.interface}")
-        all_cmd_str = "\n".join(all_cmd_list)
-        all_cmd_res = await self.executor.run_cmd(CmdTask(all_cmd_str, 15))
+        all_cmd_res = await self.executor.run_cmd(CmdTask("display interface troubleshooting | no-more", 15))
         # 回到诊断视图
         await self.executor.run_cmd(CmdTask("sys", timeout=1))
         await self.executor.run_cmd(CmdTask("diag", timeout=1))

@@ -56,7 +56,7 @@ class SwiCliOutputFetcher(SwitchFetcher):
     async def fetch_switch_log_info(self) -> List[FindResult]:
         return self.parsed_data.fetch_data_by_name(SwiCliOutputDataType.DIAG_INFO_LOG.name)
 
-    async def fetch_bit_error_rate(self, interface_briefs: List[InterfaceBrief]) -> str:
+    async def fetch_bit_error_rate(self) -> str:
         return self.parsed_data.fetch_data_by_name(SwiCliOutputDataType.BIT_ERR_RATE.name)
 
     async def fetch_lldp_nei_brief(self) -> str:
