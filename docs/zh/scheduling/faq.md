@@ -2290,3 +2290,38 @@ MindSpore的Scheduler不支持重复注册。
 - 方法一：断点续训时将Scheduler一并重启。
 
 - 方法二（推荐）：在启动脚本中配置export MS_ENABLE_RECOVERY=1，详细请参见[MindSpore文档](https://www.mindspore.cn/docs/zh-CN/master/api_python/env_var_list.html)。
+
+### 进程级恢复时重建通信域失败
+
+**问题现象描述**
+
+进程级恢复时重建通信域失败，TTP日志中出现如下内容：
+
+```ColdFusion
+2026-03-24 15:19:59.937660 1424551 error [1424551][TTP controller.cpp:3132] controller:-1 hccl communication failed, return 1
+2026-03-24 15:19:59.937667 1424551 error [1424551][TTP controller.cpp:2237] rebuild HCCL comm group failed
+2026-03-24 15:19:59.937676 1424551 error [1424551][TTP controller.cpp:1243] do repair failed, ret: 1
+```
+
+plog开启DEBUG级别(export ASCEND_GLOBAL_LOG_LEVEL=0)后，查看plog日志中出现如下内容：
+```ColdFusion
+[ERROR] DRV(1428447,python):2026-03-24-15:19:11.056.577 [trs_shr_id_fd.c:163][ascend][curpid:1428447,1432059][drv][tsdrv][shridIoctl]Ioctl failed. (ret=32; cmd=4).
+[ERROR] RUNTIME(1428447,python):2026-03-24-15:19:11.056.709 [npu_driver.cc:760]1432059 DestroyIpcNotify:[drv api] halShrIdDestroy failed: name=0015cbdf0000000f0000000000000000000001e406dd000f, device_id=15, tsId=0, notifyId=484, drvRetCode=17!
+[ERROR] DRV(1428447,python):2026-03-24-15:19:11.056.918 [drv_share_log.c:238][ascend][curpid:1428447,1432059][drv][common][share_log_read_in_single_module]Get finish status remain time.(dev_id=15; dst_sdid=100663296; status=1; time=0(us)) s2s send failed.(dev_id=15; dst_sdid=100663296; msg_type=1; ret=-38; data_len=192; out_len=0)
+```
+
+**原因分析**
+
+在A3场景下，HCCL调用底层接口进行内存销毁时，如发生链路异常，HCCL无法感知，只能等待超时。在当前版本的MindCluster中，当发生故障时，clusterd通过configmap通知故障节点的noded调用hdk的dcmi_set_spod_node_status接口配置采用快速析构的方式释放内存。可排查clusterd、noded日志中，是否因某些异常而未进入对应的配置流程。
+查看clusterd日志中是否包含如下关键字：
+```ColdFusion
+create configmap fault-job-info err:namespaces "cluster-system" not fount
+```
+表明因为namespace cluster-system不存在导致创建configmap fault-job-info失败。
+
+**解决措施**
+
+执行如下命令创建cluster-system的namespace：
+```shell
+kubectl create ns cluster-system
+```
