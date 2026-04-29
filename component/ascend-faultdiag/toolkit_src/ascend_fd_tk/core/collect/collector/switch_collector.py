@@ -42,7 +42,7 @@ class SwitchCollector(Collector):
         interface_info = await self.coll_interface_info()
         interface_mapping = await self.coll_lldp_nei_brief()
         date_time = await self.coll_datetime()
-        bit_error_rate_list = await self.coll_bit_error_rate(interface_briefs)
+        bit_error_rate_list = await self.coll_bit_error_rate()
         transceiver_infos = await self.coll_transceiver_info()
         switch_info = SwitchInfo(switch_name, switch_ip, sn=sn,
                                  optical_models=optical_models,
@@ -76,9 +76,9 @@ class SwitchCollector(Collector):
         line_parse_list = self.parser.parse_opt_module_info_from_line(switch_log_info, port_mapping)
         return table_parse_list + line_parse_list
 
-    async def coll_bit_error_rate(self, interface_briefs: List[InterfaceBrief]) -> List[BitErrRate]:
-        bit_error_rate = await self.fetcher.fetch_bit_error_rate(interface_briefs)
-        return self.parser.parse_bit_err_rate(bit_error_rate, interface_briefs)
+    async def coll_bit_error_rate(self) -> List[BitErrRate]:
+        bit_error_rate = await self.fetcher.fetch_bit_error_rate()
+        return self.parser.parse_bit_err_rate(bit_error_rate)
 
     async def coll_lldp_nei_brief(self) -> List[InterfaceMapping]:
         lldp_nei_brief = await self.fetcher.fetch_lldp_nei_brief()

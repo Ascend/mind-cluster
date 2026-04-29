@@ -84,16 +84,12 @@ RxPower  -11.5  -6.0       -8.0      -16.0     -13.0     Normal
         test_num = "1e-5"
         mock_form.parse.return_value = {"Bit error rate": test_num}
         mock_form_parser.return_value = mock_form
-        cmd_res = "display interface troubleshooting eth0\ndisplay interface troubleshooting eth1"
-        mock_interface_briefs = [
-            MagicMock(interface="eth0"),
-            MagicMock(interface="eth1")
-        ]
-        result = SwitchParser.parse_bit_err_rate(cmd_res, mock_interface_briefs)
+        cmd_res = "400GE1/0/11 :\n400GE1/0/12 :\n"
+        result = SwitchParser.parse_bit_err_rate(cmd_res)
         self.assertEqual(len(result), 2)  # 两个interface的bit error rate都超过了阈值
-        self.assertEqual(result[0].interface_name, "eth0")
+        self.assertEqual(result[0].interface_name, "400GE1/0/11")
         self.assertEqual(result[0].bit_err_rate, test_num)
-        self.assertEqual(result[1].interface_name, "eth1")
+        self.assertEqual(result[1].interface_name, "400GE1/0/12")
         self.assertEqual(result[1].bit_err_rate, test_num)
 
     def test_parse_lldp_nei_brief(self):

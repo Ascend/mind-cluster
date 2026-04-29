@@ -51,7 +51,7 @@ class SwitchFetcher(Fetcher):
         return []
 
     @abc.abstractmethod
-    async def fetch_bit_error_rate(self, interface_briefs: List[InterfaceBrief]) -> str:
+    async def fetch_bit_error_rate(self) -> str:
         return ""
 
     @abc.abstractmethod

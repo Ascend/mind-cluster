@@ -22,6 +22,7 @@ from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
 from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
 from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
+from ascend_fd_tk.utils.helpers import to_float
 
 
 @register_analyzer
@@ -34,6 +35,9 @@ class BitErrRateAnalyzer(Analyzer):
         diag_results = []
         for swi in self.cluster_info.swis_info.values():
             for data in swi.bit_error_rate:
+                success, bit_err_rate_f = to_float(data.bit_err_rate)
+                if not success or bit_err_rate_f <= BIT_ERROR_RATE_LIMIT:
+                    continue
                 domain = [
                     Domain(diag_enum.DeviceType.SWITCH.value, f"{swi.name} {swi.swi_id}"),
                     Domain(diag_enum.DeviceType.SWI_PORT.value, f"{data.interface_name}"),
