@@ -322,6 +322,29 @@ bool CheckOpenedFile(FILE* fp, const long maxSize, const bool checkOwner)
     return true;
 }
 
+STATIC bool CheckSymlinkOwner(const char *path)
+{
+    struct stat linkStat;
+    struct stat realStat;
+
+    // get stat of the symlink itself
+    if (lstat(path, &linkStat) != 0) {
+        return ShowExceptionInfo("failed to lstat symlink!");
+    }
+
+    // follow the symlink to get the target file's stat
+    if (stat(path, &realStat) != 0) {
+        return ShowExceptionInfo("failed to stat real file of symlink!");
+    }
+
+    // require both the symlink itself and its target to be owned by root (UID 0)
+    if (linkStat.st_uid != 0 || realStat.st_uid != 0) {
+        return ShowExceptionInfo("symlink or its target is not owned by root!");
+    }
+
+    return true;
+}
+
 STATIC bool CheckFileSubset(const char* filePath, const size_t filePathLen,
     const size_t maxFileSizeMb)
 {
@@ -340,7 +363,9 @@ STATIC bool CheckFileSubset(const char* filePath, const size_t filePathLen,
         return ShowExceptionInfo("filePath does not exist!");
     }
     if (!g_allowLink && S_ISLNK(fileStat.st_mode) != 0) { // 存在软链接
-        return ShowExceptionInfo("filePath is symbolic link!");
+        if (!CheckSymlinkOwner(filePath)) {
+            return false;
+        }
     }
     if (fileStat.st_size >= maxFileSizeB) { // 文件大小超限
         return ShowExceptionInfo("fileSize out of bounds!");
@@ -384,8 +409,10 @@ bool GetFileSubsetAndCheck(const char *basePath, const size_t basePathLen)
                 return false;
             }
         } else if (!g_allowLink && ptr->d_type == DT_LNK) { // 软链接
-            closedir(dir);
-            return ShowExceptionInfo("FilePath has a soft link!");
+            if (!CheckSymlinkOwner(base)) {
+                closedir(dir);
+                return false;
+                }
         } else if (ptr->d_type == DT_DIR) { // 目录
             if (!GetFileSubsetAndCheck(base, strlen(base))) {
                 closedir(dir);
