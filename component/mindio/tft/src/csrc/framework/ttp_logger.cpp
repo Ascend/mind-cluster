@@ -44,14 +44,12 @@ struct FilePermissionHandler {
     void AfterOpen(const std::string &filename)
     {
         chmod(filename.c_str(), S_IRUSR | S_IWUSR | S_IRGRP);
-        spdlog::debug("Set permissions 640 for: {}", filename);
     }
 
     // 日志文件关闭后设置权限为440(r--r-----)
     void AfterClose(const std::string &filename)
     {
         chmod(filename.c_str(), S_IRUSR | S_IRGRP);
-        spdlog::debug("Set permissions 440 for: {}", filename);
     }
 };
 
