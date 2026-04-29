@@ -373,7 +373,8 @@ MS_cleanup()
 
 Script_Args_Check()
 {
-    script_supported_args=\$(echo \${helpheader} | grep -o -E "\-\-[^ ]+" | awk -F"=" {'print \$1'})
+    script_supported_args=\$(echo \${helpheader} | grep -o -E -e "--[^ ]+" | awk -F"=" {'print \$1'})
+
     arg_to_test=\$(echo \$1|awk -F"=" {'print \$1'})
 
     for arg in \${script_supported_args};
