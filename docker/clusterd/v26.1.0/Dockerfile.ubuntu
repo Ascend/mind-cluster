@@ -1,0 +1,60 @@
+FROM ubuntu:22.04
+
+RUN echo 'echo "==============================================================="' >> /etc/profile.d/license.sh
+RUN echo 'echo "  Container image Copyright (c) 2026, Huawei Technologies Co., Ltd. All rights reserved."' >> /etc/profile.d/license.sh
+RUN echo 'echo "  This container image and its contents are governed by the Huawei Container License Agreement ("License")."' >> /etc/profile.d/license.sh
+RUN echo 'echo "  By pulling and using the container, you accept the terms and conditions of the License."' >> /etc/profile.d/license.sh
+RUN echo 'echo "  A copy of this license is made available at: https://www.hiascend.com/en/legal/ascendhub-download"' >> /etc/profile.d/license.sh
+RUN echo 'echo "  Note: You agree and undertake that when using Huawei or third-party software in this image,"' >> /etc/profile.d/license.sh
+RUN echo 'echo "  you will comply with the license agreement of the corresponding Huawei or third-party software."' >> /etc/profile.d/license.sh
+RUN echo 'echo "==============================================================="' >> /etc/profile.d/license.sh
+
+ARG TARGETPLATFORM
+
+RUN sed -i 's@ports.ubuntu.com@repo.huaweicloud.com@g' /etc/apt/sources.list && \
+    sed -i 's@archive.ubuntu.com@repo.huaweicloud.com@g' /etc/apt/sources.list && \
+    sed -i 's@security.ubuntu.com@repo.huaweicloud.com@g' /etc/apt/sources.list
+
+RUN apt update && apt install -y wget unzip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/tmp/* \
+    && rm -rf /tmp/*
+
+RUN ARCH=$(case "${TARGETPLATFORM}" in \
+            "linux/amd64") echo "x86_64" ;; \
+            "linux/arm64") echo "aarch64" ;; \
+            *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
+        esac) && \
+    wget https://gitcode.com/ascend/mind-cluster/releases/download/v26.1.0/Ascend-mindxdl-clusterd_26.1.0_linux-${ARCH}.zip && \
+    mkdir -p /Ascend-mindxdl-clusterd  && \
+    unzip Ascend-mindxdl-clusterd_26.1.0_linux-${ARCH}.zip -d /Ascend-mindxdl-clusterd && \
+    rm -f Ascend-mindxdl-clusterd_26.1.0_linux-${ARCH}.zip
+
+WORKDIR /Ascend-mindxdl-clusterd
+
+RUN useradd -d /home/hwMindX -u 9000 -m -s /usr/sbin/nologin hwMindX &&\
+    usermod root -s /usr/sbin/nologin
+
+RUN cp ./clusterd /usr/local/bin
+RUN cp ./relationFaultCustomization.json /home/hwMindX/relationFaultCustomization.json
+RUN cp ./faultDuration.json /home/hwMindX/faultDuration.json
+RUN cp ./publicFaultConfiguration.json /home/hwMindX/publicFaultConfiguration.json
+RUN cp ./fdConfig.yaml /home/hwMindX/fdConfig.yaml
+
+WORKDIR /
+
+RUN rm -rf /Ascend-mindxdl-clusterd
+
+RUN chown -R hwMindX:hwMindX /home/hwMindX &&\
+    chmod 555 /usr/local/bin/clusterd &&\
+    chmod 750 /home/hwMindX &&\
+    chmod 440 /home/hwMindX/relationFaultCustomization.json &&\
+    chmod 440 /home/hwMindX/faultDuration.json &&\
+    chmod 440 /home/hwMindX/publicFaultConfiguration.json &&\
+    chmod 440 /home/hwMindX/fdConfig.yaml &&\
+    echo 'umask 027' >> /etc/profile &&\
+    echo 'source /etc/profile' >> /home/hwMindX/.bashrc
+
+# hwMindX is used as the default user of the container
+USER hwMindX

@@ -1,0 +1,62 @@
+FROM openeuler/openeuler:24.03-lts
+
+RUN echo 'echo "==============================================================="' >> /etc/profile.d/license.sh
+RUN echo 'echo "  Container image Copyright (c) 2026, Huawei Technologies Co., Ltd. All rights reserved."' >> /etc/profile.d/license.sh
+RUN echo 'echo "  This container image and its contents are governed by the Huawei Container License Agreement ("License")."' >> /etc/profile.d/license.sh
+RUN echo 'echo "  By pulling and using the container, you accept the terms and conditions of the License."' >> /etc/profile.d/license.sh
+RUN echo 'echo "  A copy of this license is made available at: https://www.hiascend.com/en/legal/ascendhub-download"' >> /etc/profile.d/license.sh
+RUN echo 'echo "  Note: You agree and undertake that when using Huawei or third-party software in this image,"' >> /etc/profile.d/license.sh
+RUN echo 'echo "  you will comply with the license agreement of the corresponding Huawei or third-party software."' >> /etc/profile.d/license.sh
+RUN echo 'echo "==============================================================="' >> /etc/profile.d/license.sh
+
+ARG TARGETPLATFORM
+
+RUN sed -i 's@repo.openeuler.org@repo.huaweicloud.com/openeuler@g' /etc/yum.repos.d/openEuler.repo
+
+RUN yum update -y && \
+    yum install -y \
+        wget \
+        unzip \
+        tar \
+        cmake \
+        gcc \
+        gcc-c++ \
+        make \
+        glib2-devel \
+        pkgconfig \
+        libnl3-devel \
+        openssl-devel \
+    && yum clean all \
+    && rm -rf /var/cache/yum \
+    && rm -rf /tmp/*
+
+RUN ARCH=$(case "${TARGETPLATFORM}" in \
+            "linux/amd64") echo "x86_64" ;; \
+            "linux/arm64") echo "aarch64" ;; \
+            *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
+        esac) && \
+    wget https://gitcode.com/ascend/mind-cluster/releases/download/v26.1.0/Ascend-mindxdl-noded_26.1.0_linux-${ARCH}.zip && \
+    mkdir -p /Ascend-mindxdl-noded  && \
+    unzip Ascend-mindxdl-noded_26.1.0_linux-${ARCH}.zip -d /Ascend-mindxdl-noded && \
+    rm -f Ascend-mindxdl-noded_26.1.0_linux-${ARCH}.zip
+
+WORKDIR /Ascend-mindxdl-noded
+
+RUN usermod root -s /usr/sbin/nologin
+
+ENV LD_LIBRARY_PATH /usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common
+
+RUN cp ./noded /usr/local/bin
+RUN cp ./NodeDConfiguration.json /usr/local/
+RUN cp ./fdConfig.yaml /usr/local/fdConfig.yaml
+
+WORKDIR /
+
+RUN rm -rf /Ascend-mindxdl-noded
+
+RUN chmod 550 /usr/local/bin/noded &&\
+    chmod 550 /usr/local/bin &&\
+    chmod 440 /usr/local/NodeDConfiguration.json &&\
+    chmod 440 /usr/local/fdConfig.yaml &&\
+    echo 'umask 027' >> /etc/profile &&\
+    echo 'source /etc/profile' >> ~/.bashrc

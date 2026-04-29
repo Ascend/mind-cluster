@@ -1,0 +1,49 @@
+FROM openeuler/openeuler:24.03-lts
+
+RUN echo 'echo "==============================================================="' >> /etc/profile.d/license.sh
+RUN echo 'echo "  Container image Copyright (c) 2026, Huawei Technologies Co., Ltd. All rights reserved."' >> /etc/profile.d/license.sh
+RUN echo 'echo "  This container image and its contents are governed by the Huawei Container License Agreement ("License")."' >> /etc/profile.d/license.sh
+RUN echo 'echo "  By pulling and using the container, you accept the terms and conditions of the License."' >> /etc/profile.d/license.sh
+RUN echo 'echo "  A copy of this license is made available at: https://www.hiascend.com/en/legal/ascendhub-download"' >> /etc/profile.d/license.sh
+RUN echo 'echo "  Note: You agree and undertake that when using Huawei or third-party software in this image,"' >> /etc/profile.d/license.sh
+RUN echo 'echo "  you will comply with the license agreement of the corresponding Huawei or third-party software."' >> /etc/profile.d/license.sh
+RUN echo 'echo "==============================================================="' >> /etc/profile.d/license.sh
+
+ARG TARGETPLATFORM
+
+RUN sed -i 's@repo.openeuler.org@repo.huaweicloud.com/openeuler@g' /etc/yum.repos.d/openEuler.repo
+
+RUN yum update -y && \
+    yum install -y wget unzip shadow && \
+    yum clean all && \
+    rm -rf /var/cache/yum && \
+    rm -rf /tmp/*
+
+RUN ARCH=$(case "${TARGETPLATFORM}" in \
+            "linux/amd64") echo "x86_64" ;; \
+            "linux/arm64") echo "aarch64" ;; \
+            *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
+        esac) && \
+    wget https://gitcode.com/ascend/mind-cluster/releases/download/v26.1.0/Ascend-mindxdl-infer-operator_26.1.0_linux-${ARCH}.zip && \
+    mkdir -p /Ascend-mindxdl-infer-operator  && \
+    unzip Ascend-mindxdl-infer-operator_26.1.0_linux-${ARCH}.zip -d /Ascend-mindxdl-infer-operator && \
+    rm -f Ascend-mindxdl-infer-operator_26.1.0_linux-${ARCH}.zip
+
+WORKDIR /Ascend-mindxdl-infer-operator
+
+RUN useradd -d /home/hwMindX -u 9000 -m -s  /usr/sbin/nologin hwMindX && \
+    usermod root -s /usr/sbin/nologin
+
+RUN cp ./infer-operator  /usr/local/bin/
+
+WORKDIR /
+
+RUN rm -rf /Ascend-mindxdl-infer-operator
+
+RUN chown -R hwMindX:hwMindX /usr/local/bin/infer-operator  &&\
+    chmod 500 /usr/local/bin/infer-operator &&\
+    chmod 750 /home/hwMindX &&\
+    echo 'umask 027' >> /etc/profile && \
+    echo 'source /etc/profile' >> /home/hwMindX/.bashrc
+
+USER 9000
