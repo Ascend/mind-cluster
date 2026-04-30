@@ -97,6 +97,9 @@ func (sp SchedulerBaseAttr) GetAnnoPreVal(reqNPUName string) string {
 	if reqNPUName == util.NPUCardName {
 		return util.NPUCardNamePre
 	}
+	if reqNPUName == util.NPU910CardName {
+		return util.NPU910CardNamePre
+	}
 	return sp.annoPreVal
 }
 
@@ -114,6 +117,9 @@ func (sp SchedulerBaseAttr) GetAnnoName(reqNPUName string) string {
 	klog.V(util.LogDebugLev).Infof("GetAnnoName reqNPUName: %s.", reqNPUName)
 	if reqNPUName == util.NPUCardName {
 		return util.NPUCardName
+	}
+	if reqNPUName == util.NPU910CardName {
+		return util.NPU910CardName
 	}
 	return sp.annoName
 }

@@ -36,6 +36,7 @@ func New(name string) base.AscendHandler {
 	m.SetPluginName(name)
 	m.SetAnnoName(util.NPUCardName)
 	m.SetAnnoPreVal(util.NPUCardNamePre)
+	m.SetIsNetworkFaultAttention(true)
 	m.affScoreList = createAffScoreList(m.MaxNodeNPUNum)
 	return m
 }
@@ -65,7 +66,8 @@ func (tp *chip4nodex) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode
 	if err = tp.judgeNodeAndTaskNPU(taskNPUNum, nodeTop); err != nil {
 		klog.V(util.LogDebugLev).Infof("the node judgeNodeAndTaskNPU failed, node name %s, err: %s",
 			node.Name, err.Error())
-		return fmt.Errorf("checkNodeNPUByTask %s err: %s", util.NodeNotMeetTopologyWarning, err.Error())
+		return fmt.Errorf("checkNodeNPUByTask %s, network unhealthy card is [ %s ]",
+			util.NodeNotMeetTopologyWarning, node.Annotation[tp.GetNetUnhealthyNPUKey()])
 	}
 	return nil
 }
