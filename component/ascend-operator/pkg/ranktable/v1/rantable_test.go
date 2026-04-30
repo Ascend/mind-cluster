@@ -28,7 +28,7 @@ import (
 func TestWriteToFile(t *testing.T) {
 	convey.Convey("TestWriteToFile", t, func() {
 		job := &mindxdlv1.AscendJob{}
-		convey.Convey("01-empty dir should return error", func() {
+		convey.Convey("01-empty dir should return nil", func() {
 			gen := New(job)
 			err := gen.WriteToFile()
 			convey.So(err, convey.ShouldBeNil)
@@ -37,12 +37,6 @@ func TestWriteToFile(t *testing.T) {
 			return "./"
 		})
 		defer patch.Reset()
-		defer func() {
-			err := os.Remove("./hccl.json")
-			convey.So(err, convey.ShouldBeNil)
-			err = os.Remove("./version")
-			convey.So(err, convey.ShouldBeNil)
-		}()
 		gen := New(job)
 		convey.Convey("02-open file failed should return error", func() {
 			patch1 := gomonkey.ApplyFunc(os.OpenFile, func(string, int, os.FileMode) (*os.File, error) {
@@ -54,6 +48,10 @@ func TestWriteToFile(t *testing.T) {
 		})
 		convey.Convey("03-write to file success return nil", func() {
 			err := gen.WriteToFile()
+			convey.So(err, convey.ShouldBeNil)
+			err = os.Remove("./hccl.json")
+			convey.So(err, convey.ShouldBeNil)
+			err = os.Remove("./version")
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})
