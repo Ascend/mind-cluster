@@ -1787,9 +1787,9 @@ func queryNetworkStatusWithoutFaultCode(faultCodes []int64, device *common.NpuDe
 	if len(faultCodes) != 0 || common.WithoutRoCEDev() {
 		return newFaultCodes
 	}
-	linkStatus := getNetworkStatusCache(device.DeviceID)
+	linkStatus := getNetworkStatusCache(device.PhyID)
 	hwlog.RunLog.Debugf("device %d link status : %s, network healthy: %s",
-		device.DeviceID, linkStatus, device.NetworkHealth)
+		device.PhyID, linkStatus, device.NetworkHealth)
 	if linkStatus == npuCommon.NPUNetworkLinkDownStatus {
 		newFaultCodes = append(newFaultCodes, common.LinkDownFaultCode)
 		hwlog.RunLog.Debugf("device %d generate network fault code %d based on link down fault ,"+
@@ -1798,25 +1798,25 @@ func queryNetworkStatusWithoutFaultCode(faultCodes []int64, device *common.NpuDe
 	return newFaultCodes
 }
 
-func getNetworkStatusCache(deviceId int32) string {
-	networkLimiter, ok := networkLimiterMap[deviceId]
+func getNetworkStatusCache(phyID int32) string {
+	networkLimiter, ok := networkLimiterMap[phyID]
 	if !ok {
-		hwlog.RunLog.Infof("init device %d network limiter", deviceId)
+		hwlog.RunLog.Infof("init device %d network limiter", phyID)
 		networkLimiter = rate.NewLimiter(
 			rate.Every(common.EveryNetworkQueryDuration*time.Minute/common.NetworkQueryRateLimit),
 			common.NetworkQueryRateLimit)
-		networkLimiterMap[deviceId] = networkLimiter
+		networkLimiterMap[phyID] = networkLimiter
 	}
-	linkStatusCache, ok := networkStatusCache[deviceId]
+	linkStatusCache, ok := networkStatusCache[phyID]
 	if !networkLimiter.Allow() && ok {
 		return linkStatusCache
 	}
-	linkStatus, err := hccn.GetNPULinkStatus(deviceId)
+	linkStatus, err := hccn.GetNPULinkStatus(phyID)
 	if err != nil {
-		hwlog.RunLog.Errorf("get device %d link status failed, err: %v", deviceId, err)
-		networkStatusCache[deviceId] = npuCommon.NPUNetworkLinkDownStatus
+		hwlog.RunLog.Errorf("get device %d link status failed, err: %v", phyID, err)
+		networkStatusCache[phyID] = npuCommon.NPUNetworkLinkDownStatus
 		return npuCommon.NPUNetworkLinkDownStatus
 	}
-	networkStatusCache[deviceId] = linkStatus
+	networkStatusCache[phyID] = linkStatus
 	return linkStatus
 }
