@@ -84,7 +84,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p1276582913269"><a name="p1276582913269"></a><a name="p1276582913269"></a>超节点调度策略。</p>
 </td>
-<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p67657296267"><a name="p67657296267"></a><a name="p67657296267"></a>idlest：逻辑超节点会往更空闲的物理超节点调度。</p>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>idlest：逻辑超节点会往更空闲的物理超节点调度。</li><li>非idlest：逻辑超节点会优先占满物理超节点。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p77220742415"><a name="p77220742415"></a><a name="p77220742415"></a><span id="ph1372071243"><a name="ph1372071243"></a><a name="ph1372071243"></a>Volcano</span></p>
 </td>
@@ -309,7 +309,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p id="p1276582913269"><a name="p1276582913269"></a><a name="p1276582913269"></a>超节点调度策略。</p>
 </td>
-<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p id="p67657296267"><a name="p67657296267"></a><a name="p67657296267"></a>idlest：逻辑超节点会往更空闲的物理超节点调度。</p>
+<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><ul><li>idlest：逻辑超节点会往更空闲的物理超节点调度。</li><li>非idlest：逻辑超节点会优先占满物理超节点。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p id="p77220742415"><a name="p77220742415"></a><a name="p77220742415"></a><span id="ph1372071243"><a name="ph1372071243"></a><a name="ph1372071243"></a>Volcano</span></p>
 </td>

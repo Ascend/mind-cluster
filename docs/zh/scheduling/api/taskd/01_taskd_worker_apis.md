@@ -42,7 +42,7 @@
 
 **功能说明<a name="section3468140175411"></a>**
 
-用户侧调用此函数，销毁TaskD worker通信资源。此函数需要在[init\_taskd\_worker](#def-init_taskd_workerrank_id-int-upper_limit_of_disk_in_mb-int--5000-framework-str--pt---bool)接口后使用。
+用户侧调用此函数，销毁TaskD worker通信资源。此函数需要在[init\_taskd\_worker](#ZH-CN_TOPIC_0000002479226866)接口后使用。
 
 **输入参数说明<a name="section1177311115553"></a>**
 
