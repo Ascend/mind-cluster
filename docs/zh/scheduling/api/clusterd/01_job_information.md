@@ -6,7 +6,7 @@
 
 |参数|说明|取值|
 |--|--|--|
-|hccl.json|任务使用的芯片通信信息。可转义为JSON格式，字段说明如下：<ul><li>status：任务RankTable是否已经生成。</li><ul><li>initializing：还在为任务分配设备，RankTable未生成。</li><li>complete：当RankTable生成后，状态会立即变为complete，同步出现server_list等其他字段。</li></ul><li>server_list：任务设备分配情况。</li><ul><li>device：记录NPU分配，NPU IP和rank_id信息。</li><ul><li>device_id：NPU 的设备 ID。</li><li>device_ip：NPU 的设备 IP。</li><li>rank_id：NPU 对应的训练 rank ID。</li><li>super_device_id：超节点内 NPU 的唯一标识。</li></ul><li>server_id：AI Server标识，全局唯一。</li><li>server_name：节点名称。</li><li>server_sn：节点的SN号。需要保证设备的SN存在。若不存在，请联系华为技术支持。</li><li>host_ip：主机 ip。</li><li>super_pod_id：超节点 id。</li><li>pod_name：pod 名称。</li><li>container_ids：pod 所有容器的 id 映射表。</li></ul><li>server_count：任务使用的节点数量。</li><li>version：版本信息。</li><li>total：configmap 个数。</li></ul>|字符串|
+|hccl.json|任务使用的芯片通信信息。可转义为JSON格式，字段说明如下：<ul><li>status：任务RankTable是否已经生成。</li><ul><li>initializing：还在为任务分配设备，RankTable未生成。</li><li>complete：当RankTable生成后，状态会立即变为complete，同步出现server_list等其他字段。</li></ul><li>server_list：任务设备分配情况。</li><ul><li>device：记录NPU分配，NPU IP和rank_id信息。</li><ul><li>device_id：NPU的设备ID。</li><li>device_ip：NPU的设备IP。</li><li>rank_id：NPU对应的训练Rank ID。</li><li>super_device_id：超节点内NPU的唯一标识。</li></ul><li>server_id：AI Server标识，全局唯一。</li><li>server_name：节点名称。</li><li>server_sn：节点的SN号。需要保证设备的SN存在。若不存在，请联系华为技术支持。</li><li>host_ip：主机IP。</li><li>super_pod_id：超节点ID。</li><li>pod_name：Pod名称。</li><li>container_ids：Pod所有容器的ID映射表。</li></ul><li>server_count：任务使用的节点数量。</li><li>version：版本信息。</li><li>total：ConfigMap个数。</li></ul>|字符串|
 |job_id|任务的K8s ID信息。|字符串|
 |operator|<ul><li>add：接收到添加任务命令后状态更新为add。</li><li>delete：接收到删除任务命令后状态更新为delete。</li></ul>|字符串|
 |deleteTime|任务被删除的时间。|字符串|
@@ -18,7 +18,7 @@
 |job_status|任务状态，存在以下几种状态。<ul><li>pending</li><li>running</li><li>complete</li><li>failed</li></ul>|字符串|
 |job_name|任务名称。|字符串|
 |cm_index|当前ConfigMap的序号。|字符串|
-|sid|用户自定义任务 id|字符串|
+|sid|用户自定义任务ID|字符串|
 
 ## current-job-statistic<a name="section39901331194218"></a>
 

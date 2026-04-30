@@ -58,7 +58,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 <p id="p13892755104310"><a name="p13892755104310"></a><a name="p13892755104310"></a>推理服务器（插Atlas 300I 推理卡）</p>
 <p id="p17892655184314"><a name="p17892655184314"></a><a name="p17892655184314"></a>Atlas 推理系列产品</p>
 <p id="p08921555204319"><a name="p08921555204319"></a><a name="p08921555204319"></a><span id="ph16267162611508"><a name="ph16267162611508"></a><a name="ph16267162611508"></a>Atlas 800I A2 推理服务器</span></p>
-<p id="p1115563443"><a name="p1115563443"></a><a name="p1115563443"></a><span id="ph9892125584318"><a name="ph9892125584318"></a><a name="ph9892125584318"></a>A200I A2 Box 异构组件</span></p><p><span>Atlas 350 标卡</span></p>
+<p id="p1115563443"><a name="p1115563443"></a><a name="p1115563443"></a><span id="ph9892125584318"><a name="ph9892125584318"></a><a name="ph9892125584318"></a>A200I A2 Box 异构组件</span></p><p><span>Atlas 350 标卡</span></p><p><span>Atlas 850 系列硬件产品</span></p><p><span>Atlas 950 SuperPoD</span></p>
 </td>
 </tr>
 </tbody>
@@ -408,7 +408,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p018822815114"><a name="p018822815114"></a><a name="p018822815114"></a>单位：次</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>NetworkNpu</p>
+<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_status_X_Y</p>
 </td>
@@ -419,7 +419,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 <td class="cellrowborder" rowspan="4" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><p><span>Atlas 350 标卡（4Pmesh互联）</span></p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>NetworkNpu</p>
+<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_rx_X_Y</p>
 </td>
@@ -428,7 +428,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：MB/s</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>NetworkNpu</p>
+<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx_X_Y</p>
 </td>
@@ -437,7 +437,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：MB/s</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>NetworkNpu</p>
+<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_speed_X_Y</p>
 </td>

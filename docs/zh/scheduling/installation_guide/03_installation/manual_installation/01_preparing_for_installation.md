@@ -386,7 +386,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     >[!NOTE]
     >- [表1](#table202738181704)中各节点标签的详细说明请参见[K8s原生对象说明](../../../api/k8s.md)章节。
     >- 请按[表1](#table202738181704)，根据节点类型和产品类型，配置所列出的所有标签。
-    >- 芯片型号的数值可通过**npu-smi info**命令查询，返回的“Name”字段对应信息为芯片型号，下文的\{_xxx_\}即取“910”字符作为芯片型号数值。
+    >- 下文的\{_xxx_\}即取“910”字符作为芯片型号数值。
 
     **表 1**  节点对应的标签信息
 
@@ -455,11 +455,17 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <tr id="row271845218270"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p188095589274"><a name="p188095589274"></a><a name="p188095589274"></a>计算节点</p>
     </td>
     <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p164951627162819"><a name="p164951627162819"></a><a name="p164951627162819"></a><span id="ph19495127162814"><a name="ph19495127162814"></a><a name="ph19495127162814"></a>Atlas 800I A3 超节点服务器</span></p>
-    <p id="p12463112181614"><a name="p12463112181614"></a><a name="p12463112181614"></a><span id="ph10355115144111"><a name="ph10355115144111"></a><a name="ph10355115144111"></a>Atlas 800T A3 超节点服务器</span></p>
     </td>
     <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul16834964293"></a><a name="ul16834964293"></a><ul id="ul16834964293"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li></ul>
     <a name="ul128341660299"></a><a name="ul128341660299"></a><ul id="ul128341660299"><li>host-arch=huawei-x86或host-arch=huawei-arm</li><li>accelerator=huawei-Ascend910</li></ul>
     <a name="ul168341764299"></a><a name="ul168341764299"></a><ul id="ul168341764299"><li>accelerator-type=module-a3-16</li><li>server-usage=infer</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    <tr><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p><span>Atlas 800T A3 超节点服务器</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><ul><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li></ul><ul><li>host-arch=huawei-x86或host-arch=huawei-arm</li><li>accelerator=huawei-Ascend910</li></ul><ul><li>accelerator-type=module-a3-16</li><li>（可选）nodeDEnable=on</li></ul>
     </td>
     </tr>
     <tr id="row42763185011"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p16530201015713"><a name="p16530201015713"></a><a name="p16530201015713"></a>计算节点</p>

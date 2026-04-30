@@ -42,8 +42,8 @@
 |accelerator|标识节点的处理芯片|<ul><li>huawei-npu</li><li>huawei-Ascend910</li><li>huawei-Ascend310</li><li>huawei-Ascend310P</li></ul>|Ascend Device Plugin|
 |host-arch|标识节点的CPU架构|<ul><li>huawei-x86</li><li>huawei-arm</li></ul>|Volcano|
 |masterselector|标识MindCluster的管理节点|dls-master-node|Volcano、Ascend Operator、Resilience Controller、ClusterD|
-|node.kubernetes.io/npu.chip.name|上报当前芯片的具体类型|<ul><li>310</li><li>310P1</li><li>310P2</li><li>310P3</li><li>310P4</li><li>{xxx}A</li><li>910PremiumA</li><li>910ProA</li><li>910ProB</li><li>{xxx}Bx（x可取值为1、2、3、4）</li><li>Ascend950PR</li><li>Ascend950DT</li></ul>|Ascend Device Plugin<p></p>芯片型号的数值可通过**npu-smi info**命令查询，返回的“Name”字段对应信息为芯片型号，下文的{*xxx*}即取“910”字符作为芯片型号数值。|
-|nodeDEnable|NodeD节点启动的开关|on|Volcano、Resilience Controller<ul><li>nodeDEnable=on标签表示启用NodeD的节点状态监测功能，用于获取节点的状态信息并用于判断节点是否故障。</li><li>取值为off或无该参数表示仅上报节点信息，不判断节点是否故障。</li><li>使用**容器化支持**或者**资源监测**时，可以不配置该标签；其他特性必须配置该标签。</li></ul>|
+|node.kubernetes.io/npu.chip.name|上报当前芯片的具体类型|<ul><li>310</li><li>310P1</li><li>310P2</li><li>310P3</li><li>310P4</li><li>{xxx}A</li><li>910PremiumA</li><li>910ProA</li><li>910ProB</li><li>{xxx}Bx（x可取值为1、2、3、4）</li><li>Ascend950PR</li><li>Ascend950DT</li></ul>|<p>Ascend Device Plugin</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">下文的{*xxx*}即取“910”字符作为芯片型号数值。</div></div>|
+|nodeDEnable|NodeD节点启动的开关|on|Volcano、Resilience Controller<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>nodeDEnable=on标签表示启用NodeD的节点状态监测功能，用于获取节点的状态信息并用于判断节点是否故障。</li><li>取值为off或无该参数表示仅上报节点信息，不判断节点是否故障。</li><li>使用**容器化支持**或者**资源监测**时，可以不配置该标签；其他特性必须配置该标签。</li></ul></div></div>|
 |workerselector|标识MindCluster的计算节点|dls-worker-node|Ascend Device Plugin、NodeD、NPU Exporter|
 |accelerator-type|标识Atlas服务器类型|<ul><li>card</li><li>module</li><li>half</li><li>module-{xxx}b-8</li><li>module-{xxx}b-16</li><li>card-{xxx}b-2</li><li>card-{xxx}b-infer</li><li>module-a3-16</li><li>module-a3-16-super-pod</li><li>module-a3-8-super-pod</li><li>350-Atlas-8</li><li>350-Atlas-16</li><li>350-Atlas-4p-8</li><li>350-Atlas-4p-16</li><li>850-Atlas-8p-8</li><li>850-SuperPod-Atlas-8</li><li>950-SuperPod-Atlas-8</li></ul>|Ascend Device Plugin、Volcano|
 |servertype|设备类型|<ul><li>npu-{aicore核数}</li><li>soc</li><li>Ascend910-{aicore核数}</li><li>Ascend310P-{aicore核数}</li></ul>|Volcano、Ascend Device Plugin|
@@ -51,7 +51,7 @@
 |<p>huawei.com/Ascend910-NetworkRecover</p><p>huawei.com/npu-NetworkRecover</p>|Atlas 训练系列产品网络故障恢复标识|故障芯片ID|Ascend Device Plugin|
 |infer-card-type|由Ascend Device Plugin写入，表明节点推理卡类型。|card-300i-duo|Volcano|
 |mind-cluster/npu-chip-memory|芯片片上内存|mind-cluster/npu-chip-memory=64G|Volcano、Ascend Device Plugin|
-|huawei.com/scheduler.chip1softsharedev.enable|表示节点是否支持软切分虚拟化功能|<ul><li>true</li><li>false</li></ul>|Volcano、Ascend Device Plugin<ul><li>huawei.com/scheduler.chip1softsharedev.enable=true标签表示节点支持软切分虚拟化功能。</li><li>huawei.com/scheduler.chip1softsharedev.enable=false标签表示节点不支持软切分虚拟化功能。</li></ul>|
+|huawei.com/scheduler.chip1softsharedev.enable|表示节点是否支持软切分虚拟化功能|<ul><li>true</li><li>false</li></ul>|Volcano、Ascend Device Plugin<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>huawei.com/scheduler.chip1softsharedev.enable=true标签表示节点支持软切分虚拟化功能。</li><li>huawei.com/scheduler.chip1softsharedev.enable=false标签表示节点不支持软切分虚拟化功能。</li></ul></div></div>|
 |huawei.com/topotree.rackid|标识节点的机框ID|节点所属机框ID|Volcano|
 |huawei.com/topotree.superpodid|标识节点的超节点ID|节点所属超节点ID|Volcano|
 |huawei.com/topotree.groupid|标识节点的Pod组ID|节点所属Pod组ID|Volcano|
@@ -82,7 +82,7 @@
 |training.kubeflow.org/operator-name|标记创建Pod的operator名称|ascendjob-controller|Ascend Operator|
 |training.kubeflow.org/replica-index|标记Pod序号|[0-{Pod数量-1}]|Ascend Operator|
 |training.kubeflow.org/replica-type|标记Pod类型|<ul><li>master</li><li>chief</li><li>scheduler</li><li>worker</li></ul>|Ascend Operator|
-|super-pod-affinity|超节点任务使用的亲和性调度策略|softhard|Ascend Operator、Volcano|
+|super-pod-affinity|超节点任务使用的亲和性调度策略|<ul><li>soft</li><li>hard</li></ul>|Ascend Operator、Volcano|
 
 ## Pod  annotation<a name="section16927154663513"></a>
 

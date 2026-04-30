@@ -237,7 +237,7 @@ deviceNameCustomization.json支持自定义设备名称。编译Ascend Device Pl
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p321511543920"><a name="p321511543920"></a><a name="p321511543920"></a>管理训练进程</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p33363655012"><a name="p33363655012"></a><a name="p33363655012"></a>0或1</p>
-<a name="ul7532185975011"></a><a name="ul7532185975011"></a><ul id="ul7532185975011"><li>取值为1，杀死所有训练进程</li><li>取值为0，不做处理</li></ul>
+<a name="ul7532185975011"></a><a name="ul7532185975011"></a><ul id="ul7532185975011"><li>取值为1，终止所有训练进程</li><li>取值为0，不做处理</li></ul>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p921615511390"><a name="p921615511390"></a><a name="p921615511390"></a>-</p>
 </td>
@@ -422,7 +422,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 </tr>
 <tr id="row89346317136"><td class="cellrowborder" valign="top" width="19.06%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002171521445_p835213245522"><a name="zh-cn_topic_0000002171521445_p835213245522"></a><a name="zh-cn_topic_0000002171521445_p835213245522"></a>SubHealthFault</p>
 </td>
-<td class="cellrowborder" valign="top" width="35.78%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002171521445_p1354813311915"><a name="zh-cn_topic_0000002171521445_p1354813311915"></a><a name="zh-cn_topic_0000002171521445_p1354813311915"></a>根据任务YAML中配置的subHealthyStrategy参数取值进行处理，详细请参见<a href="../api/ascend_operator.md">Ascend Operator</a>中“YAML参数说明（acjob任务）”。</p>
+<td class="cellrowborder" valign="top" width="35.78%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002171521445_p1354813311915"><a name="zh-cn_topic_0000002171521445_p1354813311915"></a><a name="zh-cn_topic_0000002171521445_p1354813311915"></a>根据任务YAML中配置的subHealthyStrategy参数取值进行处理，详细请参见<a href="../api/ascend_operator.md#yaml参数说明acjob任务">表1 YAML参数说明</a>。</p>
 </td>
 <td class="cellrowborder" valign="top" width="20.349999999999998%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002171521445_p3352524125220"><a name="zh-cn_topic_0000002171521445_p3352524125220"></a><a name="zh-cn_topic_0000002171521445_p3352524125220"></a>当芯片出现亚健康故障时，需根据<a href="../usage/resumable_training/06_configuring_the_job_yaml_file.md#任务yaml配置示例">配置YAML</a>策略进行处理。</p>
 <div class="note" id="zh-cn_topic_0000002171521445_note7936204710536"><a name="zh-cn_topic_0000002171521445_note7936204710536"></a><a name="zh-cn_topic_0000002171521445_note7936204710536"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002171521445_p15222114115810"><a name="zh-cn_topic_0000002171521445_p15222114115810"></a><a name="zh-cn_topic_0000002171521445_p15222114115810"></a>如果后续芯片出现其他级别故障，此时SubHealthFault</p>
@@ -482,7 +482,7 @@ Ascend Device Plugin从驱动获取到故障码后，将根据故障码对设备
 |故障类型|说明|重调度处理|
 |--|--|--|
 |NotHandleFault|暂不影响业务，可以自行恢复，无需处理。|暂不处理。|
-|SubHealthFault|影响业务运行性能，需要排查亚健康原因。|当出现亚健康故障时，需根据[Ascend Operator](../api/ascend_operator.md)中"YAML参数说明（acjob任务）"中subHealthyStrategy参数所指定的亚健康策略进行处理。|
+|SubHealthFault|影响业务运行性能，需要排查亚健康原因。|当出现亚健康故障时，需根据[表1 YAML参数说明](../api/ascend_operator.md#yaml参数说明acjob任务)中subHealthyStrategy参数所指定的亚健康策略进行处理。|
 |RestartRequestFault|业务运行失败，需要重新执行业务请求。|停止当前训练任务，隔离节点，进行任务重调度。|
 |ResetFault|业务运行失败。|停止当前训练任务，隔离节点，进行任务重调度。|
 |SeparateFault|业务运行失败，需更换器件或板卡。|停止当前训练任务，隔离节点，进行任务重调度。|

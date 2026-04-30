@@ -474,9 +474,6 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
 <td class="cellrowborder" valign="top" width="14.19%" headers="mcps1.2.5.1.3 "><p id="p09801355144111"><a name="p09801355144111"></a><a name="p09801355144111"></a>字符串</p>
 </td>
 <td class="cellrowborder" valign="top" width="45.839999999999996%" headers="mcps1.2.5.1.4 "><a name="ul1436916744312"></a><a name="ul1436916744312"></a><ul id="ul1436916744312"><li>取值为1：开启本功能。</li><li>其他值：关闭本功能。<p id="p121131599216"><a name="p121131599216"></a><a name="p121131599216"></a>关闭本功能时，MindIO侧相关功能需同时关闭。</p>
-<div class="note" id="note2086611177509"><a name="note2086611177509"></a><div class="notebody"><p id="p1478116510530"><a name="p1478116510530"></a><a name="p1478116510530"></a>MindIO侧相关功能开关说明如下：</p>
-<a name="ul208627229515"></a><a name="ul208627229515"></a><ul id="ul208627229515"><li>enable-high-availability：故障快速恢复特性开关，默认关闭，配置后即开启临终遗言功能。</li><li>enable-worker-reboot：进程级别重调度功能开关，默认关闭，配置后在发生一般性故障时，进行进程级别调度，继续训练。本开关开启时，需同时开启enable-high-availability。</li></ul>
-</div></div>
 </li></ul>
 </td>
 </tr>
