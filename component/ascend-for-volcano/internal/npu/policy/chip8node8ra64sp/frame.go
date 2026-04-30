@@ -35,6 +35,7 @@ func New(name string) *chip8node8ra64sp {
 	m.SetAnnoName(util.NPUCardName)
 	m.SetAnnoPreVal(util.NPUCardNamePre)
 	m.SetMaxNodeNPUNum(nodeNPUNum)
+	m.SetIsNetworkFaultAttention(true)
 	m.netUnhealthyKey = networkUnhealthyNPU
 	m.dpuUnhealthyKey = dpuUnhealthyNPU
 	m.faultNPUKey = faultNPU

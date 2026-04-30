@@ -84,6 +84,14 @@ func (tp *NPUHandler) getNetUnhealthyNPU(node plugin.NPUNode) ([]int, error) {
 	return netUnhealthyTop, nil
 }
 
+// GetNetUnhealthyNPUKey get network unhealthy npu annotation key
+func (tp *NPUHandler) GetNetUnhealthyNPUKey() string {
+	if tp.ReqNPUName == util.NPUCardName {
+		return networkUnhealthyNPU
+	}
+	return networkUnhealthy910
+}
+
 func (tp *NPUHandler) getUnhealthyNPU(node plugin.NPUNode) []int {
 	var annokey string
 	if tp.ReqNPUName == "" {

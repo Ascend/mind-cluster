@@ -43,6 +43,7 @@ func New(name string) base.AscendHandler {
 	m.SetAnnoName(util.NPUCardName)
 	m.SetAnnoPreVal(util.NPUCardNamePre)
 	m.SetMaxNodeNPUNum(nodeNPUNumber)
+	m.SetIsNetworkFaultAttention(true)
 	m.netUnhealthyKey = networkUnhealthyNPU
 	m.nodeVPodId = map[string]string{}
 	return m
@@ -160,7 +161,8 @@ func (tp *chip8node8sp) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNo
 
 	if err = tp.NPUHandler.JudgeNodeAndTaskNPU(taskNPUNum, nodeTop); err != nil {
 		klog.V(util.LogDebugLev).Infof("%s JudgeNodeAndTaskNPU err: %s", tp.GetPluginName(), err.Error())
-		return fmt.Errorf("checkNodeNPUByTask %s err: %s", util.NodeNotMeetTopologyWarning, err.Error())
+		return fmt.Errorf("checkNodeNPUByTask %s, network unhealthy card is [ %s ]",
+			util.NodeNotMeetTopologyWarning, node.Annotation[tp.GetNetUnhealthyNPUKey()])
 	}
 	return nil
 }

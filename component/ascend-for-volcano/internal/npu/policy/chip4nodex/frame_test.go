@@ -294,6 +294,7 @@ func prepareNode(k int) plugin.NPUNode {
 		node.Annotation = make(map[string]string, 1)
 	}
 	node.Annotation[util.NPUCardName] = sb.String()
+	node.Annotation[util.NPUCardName+"-NetworkUnhealthy"] = ""
 	return node
 }
 

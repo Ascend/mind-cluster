@@ -143,6 +143,36 @@ func TestGetNetUnhealthyNPU(t *testing.T) {
 	}
 }
 
+func TestGetNetUnhealthyNPUKey(t *testing.T) {
+	type TestCase struct {
+		name  string
+		setup func(*NPUHandler)
+		want  string
+	}
+
+	testCases := []TestCase{
+		{name: "ReqNPUName is npu", setup: func(tp *NPUHandler) {
+			tp.SetPluginName("test-plugin")
+			tp.ReqNPUName = util.NPUCardName
+		}, want: networkUnhealthyNPU},
+		{name: "ReqNPUName is not npu", setup: func(tp *NPUHandler) {
+			tp.SetPluginName("test-plugin")
+			tp.ReqNPUName = util.Ascend910
+		}, want: networkUnhealthy910},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tp := createNPUHandler()
+			tc.setup(tp)
+			got := tp.GetNetUnhealthyNPUKey()
+			if got != tc.want {
+				t.Errorf("getNetUnhealthyNPUKey() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestGetUnhealthyNPU(t *testing.T) {
 	type TestCase struct {
 		name     string

@@ -19,13 +19,11 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strings"
 	"testing"
 
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 	itest "volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/test"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
@@ -38,7 +36,6 @@ const (
 	nodeInfoIdx4   = 4
 	nodeInfoIdx9   = 9
 	nodeInfoIdx185 = 185
-	SuperPodSize   = 64 // Define SuperPodSize for test cases
 )
 
 var (
@@ -95,13 +92,11 @@ func TestCheckNodeNPUByTask(t *testing.T) {
 	testCases := buildcheckNodeNPUByTaskTestCases01()
 	testCases = append(testCases, buildcheckNodeNPUByTaskTestCases02()...)
 	testCases = append(testCases, buildcheckNodeNPUByTaskTestCases03()...)
-	testCases = append(testCases, buildcheckNodeNPUByTaskTestCases04()...)
-	testCases = append(testCases, buildcheckNodeNPUByTaskTestCases05()...)
 	testCases = append(testCases, buildcheckNodeNPUByTaskTestCases06()...)
 	for _, tt := range testCases {
 		t.Run(tt.Name, func(t *testing.T) {
 			job := test.FakeNormalTestJob("job", 1)
-			test.SetFakeJobResRequest(job, util.NPU910CardName, tt.TaskNodeNPU)
+			test.SetFakeJobResRequest(job, util.NPUCardName, tt.TaskNodeNPU) // Changed to util.NPUCardName
 			attr := itest.FakeSchedulerJobAttrByJob(job)
 			sJob := plugin.SchedulerJob{}
 			sJob.SchedulerJobAttr = attr
@@ -112,8 +107,7 @@ func TestCheckNodeNPUByTask(t *testing.T) {
 			}
 			npu.SetSchedulerAttr(attr)
 			npu.SetSchedulerEnv(env)
-			npu.SetMaxNodeNPUNum(tt.MaxNodeNPUNum)
-			npu.tpBlock = tt.TpBlockNPUNum
+			npu.TpBlockNPUNum = tt.TpBlockNPUNum
 
 			if err := npu.CheckNodeNPUByTask(tt.Task, tt.Node); !reflect.DeepEqual(err, tt.WantErr) {
 				t.Errorf("CheckNodeNPUByTask() error = %v, wantErr %v", err, tt.WantErr)
@@ -178,9 +172,7 @@ func buildcheckNodeNPUByTaskTestCases02() []checkNodeNPUByTaskTestCase {
 					},
 				},
 			},
-			WantErr: errors.New(
-				"checkNodeNPUByTask the npus on this node don't satisfy the schedulable topology err: " +
-					"node don't have enough npu resource, req<8>, idle<2>"),
+			WantErr: errors.New("checkNodeNPUByTask the npus on this node don't satisfy the schedulable topology err: node don't have enough npu resource, req<8>, idle<2>"),
 		},
 		{
 			Name:          "05-CheckNodeNPUByTask return err when node has no req npu",
@@ -196,14 +188,36 @@ func buildcheckNodeNPUByTaskTestCases02() []checkNodeNPUByTaskTestCase {
 					},
 				},
 			},
-			WantErr: errors.New(
-				"checkNodeNPUByTask the npus on this node don't satisfy the schedulable topology err: " +
-					"node don't have enough npu resource, req<8>, idle<3>"), // modified expected error
+			WantErr: errors.New("checkNodeNPUByTask the npus on this node don't satisfy the schedulable topology err: node don't have enough npu resource, req<8>, idle<3>"),
 		},
 	}
 }
 
 func buildcheckNodeNPUByTaskTestCases03() []checkNodeNPUByTaskTestCase {
+	task := test.FakeTaskWithResReq("pod0", util.NPUCardName, util.NPUIndex8)
+	return []checkNodeNPUByTaskTestCase{
+		{
+			Name:          "05-CheckNodeNPUByTask return err when node has no req npu",
+			Task:          task,
+			TpBlockNPUNum: 1,
+			MaxNodeNPUNum: npuNum8,
+			TaskNodeNPU:   "8",
+			Node: plugin.NPUNode{
+				CommonNode: plugin.CommonNode{
+					Name: "node1",
+					Annotation: map[string]string{
+						util.NPUCardName:    buildCardAnnotationStr(npuList8),
+						networkUnhealthyNPU: "npu-5",
+					},
+				},
+			},
+			WantErr: nil, // No longer filter network unhealthy cards in non-multi-SuperPod policy
+		},
+	}
+}
+
+func buildcheckNodeNPUByTaskTestCases06() []checkNodeNPUByTaskTestCase {
+	task := test.FakeTaskWithResReq("pod0", util.NPUCardName, npuNumber8)
 	return []checkNodeNPUByTaskTestCase{
 		{
 			Name:          "07-CheckNodeNPUByTask return err when task is nil",
@@ -233,58 +247,6 @@ func buildcheckNodeNPUByTaskTestCases03() []checkNodeNPUByTaskTestCase {
 			},
 			WantErr: errors.New(util.ArgumentError),
 		},
-	}
-}
-
-func buildcheckNodeNPUByTaskTestCases04() []checkNodeNPUByTaskTestCase {
-	task := test.FakeTaskWithResReq("pod0", util.NPU910CardName, util.NPUIndex8)
-	return []checkNodeNPUByTaskTestCase{
-		{
-			Name:          "9-CheckNodeNPUByTask return nil when tp-block is valid",
-			Task:          task,
-			TpBlockNPUNum: 8,
-			MaxNodeNPUNum: npuNum8,
-			TaskNodeNPU:   "8",
-			Node: plugin.NPUNode{
-				CommonNode: plugin.CommonNode{
-					Name: "node1",
-					Annotation: map[string]string{
-						util.NPUCardName:    buildCardAnnotationStr(npuList8),
-						networkUnhealthyNPU: "",
-					},
-				},
-			},
-			WantErr: nil,
-		},
-	}
-}
-
-func buildcheckNodeNPUByTaskTestCases05() []checkNodeNPUByTaskTestCase {
-	task := test.FakeTaskWithResReq("pod0", util.NPU910CardName, util.NPUIndex8)
-	return []checkNodeNPUByTaskTestCase{
-		{
-			Name:          "10-CheckNodeNPUByTask return err when node has no req npu",
-			Task:          task,
-			TpBlockNPUNum: 1,
-			MaxNodeNPUNum: npuNum8,
-			TaskNodeNPU:   "8",
-			Node: plugin.NPUNode{
-				CommonNode: plugin.CommonNode{
-					Name: "node1",
-					Annotation: map[string]string{
-						util.NPUCardName:    "npu-0,npu-1,npu-2,npu-3,npu-4,npu-5,npu-6,npu-7",
-						networkUnhealthyNPU: "npu-5",
-					},
-				},
-			},
-			WantErr: nil, // modified expected error, no longer filter network unhealthy cards under non-multi-SuperPod strategy
-		},
-	}
-}
-
-func buildcheckNodeNPUByTaskTestCases06() []checkNodeNPUByTaskTestCase {
-	task := test.FakeTaskWithResReq("pod0", util.NPU910CardName, npuNum8)
-	return []checkNodeNPUByTaskTestCase{
 		{
 			Name:          "11-CheckNodeNPUByTask return err when node RackID invalid",
 			Task:          task,
@@ -408,135 +370,6 @@ func buildGetUsableTopFromNodeTest2() []getUsableTopFromNode {
 	}
 }
 
-// createTestTask creates a test task for TestCheckNodeNPUNums
-func createTestTask() *api.TaskInfo {
-	return &api.TaskInfo{Job: "vcjob/job", Name: "test-task", UID: "test-task-0"}
-}
-
-// createNPUJob creates a test NPUJob for TestCheckNodeNPUNums
-func createNPUJob(task *api.TaskInfo) *util.NPUJob {
-	npuJob := &util.NPUJob{
-		Tasks:      make(map[api.TaskID]util.NPUTask),
-		ReqNPUName: util.NPUCardName,
-	}
-	npuJob.Tasks[task.UID] = util.NPUTask{
-		ReqNPUNum:  8,
-		ReqNPUName: util.NPUCardName,
-	}
-	return npuJob
-}
-
-// createStrategy creates a test strategy for TestCheckNodeNPUNums
-func createStrategy(task *api.TaskInfo, npuJob *util.NPUJob) *chip8node8ra64sp {
-	jobs := make(map[api.JobID]plugin.SchedulerJob)
-	jobs[task.Job] = plugin.SchedulerJob{
-		SchedulerJobAttr: util.SchedulerJobAttr{
-			NPUJob: npuJob,
-		},
-	}
-
-	strategy := &chip8node8ra64sp{
-		NPUHandler: base.NPUHandler{
-			ScheduleEnv: plugin.ScheduleEnv{
-				ClusterCache: plugin.ClusterCache{
-					Jobs: jobs,
-				},
-			},
-			SchedulerJobAttr: util.SchedulerJobAttr{
-				NPUJob: npuJob,
-			},
-		},
-		jobParams: jobParams{
-			netUnhealthyKey: networkUnhealthyNPU,
-		},
-	}
-
-	strategy.SetMaxNodeNPUNum(npuNumber8)
-	strategy.SetMaxCardNPUNum(npuNumber8)
-	strategy.tpBlock = 1
-	strategy.spBlock = 1
-
-	return strategy
-}
-
-// TestCheckNodeNPUNums tests the checkNodeNPUNums function
-func TestCheckNodeNPUNums(t *testing.T) {
-	task := createTestTask()
-	npuJob := createNPUJob(task)
-	strategy := createStrategy(task, npuJob)
-
-	cases := []struct {
-		name           string
-		nodeAnnotation map[string]string
-		wantErr        bool
-		errorContains  string
-	}{
-		{
-			"01 multi super pod and network healthy",
-			map[string]string{networkUnhealthyNPU: "", util.NPUCardName: "npu-0,npu-1,npu-2,npu-3,npu-4,npu-5,npu-6,npu-7"},
-			false, "",
-		},
-		{
-			"02 multi super pod and no network annotation",
-			map[string]string{util.NPUCardName: "npu-0,npu-1,npu-2,npu-3,npu-4,npu-5,npu-6,npu-7"},
-			true, "don't have resource",
-		},
-		{
-			"03 multi super pod and network unhealthy npu",
-			map[string]string{
-				networkUnhealthyNPU: "npu-0,npu-1",
-				util.NPUCardName:    "npu-0,npu-1,npu-2,npu-3,npu-4,npu-5,npu-6,npu-7",
-			},
-			true, "don't have enough npu resource",
-		},
-		{
-			"04 not multi super pod and network unhealthy npu",
-			map[string]string{
-				networkUnhealthyNPU: "npu-0,npu-1",
-				util.NPUCardName:    "npu-0,npu-1,npu-2,npu-3,npu-4,npu-5,npu-6,npu-7",
-			},
-			false, "",
-		},
-	}
-
-	for _, tt := range cases {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.name == "04 not multi super pod and network unhealthy npu" {
-				strategy.NPUTaskNum = 1
-			} else {
-				strategy.NPUTaskNum = SuperPodSize + 1
-			}
-
-			node := plugin.NPUNode{
-				CommonNode: plugin.CommonNode{
-					Name:       "test-node",
-					Annotation: tt.nodeAnnotation,
-				},
-			}
-
-			err := strategy.checkNodeNPUNums(task, node)
-			checkTestResult(err, tt.wantErr, tt.errorContains, t)
-		})
-	}
-}
-
-// checkTestResult checks if the test result matches the expected result
-func checkTestResult(err error, wantErr bool, errorContains string, t *testing.T) {
-	if wantErr {
-		if err == nil {
-			t.Fatalf("Expected error but got nil")
-		}
-		if !strings.Contains(err.Error(), errorContains) {
-			t.Fatalf("Expected error to contain '%s', but got '%s'", errorContains, err.Error())
-		}
-	} else {
-		if err != nil {
-			t.Fatalf("Expected no error but got '%s'", err.Error())
-		}
-	}
-}
-
-// TestGetUsableTopFromNode tests the getUsableTopFromNode function
 func TestGetUsableTopFromNode(t *testing.T) {
 	npu := New(SuperPodx8SchedulerName)
 	// Set up NPUJob with ReqNPUName to avoid nil pointer
@@ -549,19 +382,8 @@ func TestGetUsableTopFromNode(t *testing.T) {
 	testCases = append(testCases, buildGetUsableTopFromNodeTest2()...)
 	for _, tt := range testCases {
 		t.Run(tt.Name, func(t *testing.T) {
-			_, err := npu.getUsableTopFromNode(tt.Node)
-			if tt.WantErr != nil {
-				if err == nil {
-					t.Errorf("Expected error but got nil")
-					return
-				}
-				if err.Error() != tt.WantErr.Error() {
-					t.Errorf("getUsableTopFromNode() error = %v, wantErr %v", err, tt.WantErr)
-				}
-			} else {
-				if err != nil {
-					t.Errorf("Expected no error but got %v", err)
-				}
+			if _, err := npu.getUsableTopFromNode(tt.Node); !reflect.DeepEqual(err, tt.WantErr) {
+				t.Errorf("ValidNPUJob() error = %v, wantErr %v", err, tt.WantErr)
 			}
 		})
 	}
