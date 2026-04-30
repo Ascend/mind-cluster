@@ -59,7 +59,7 @@ func TestNewGenerator(t *testing.T) {
 			convey.So(ok, convey.ShouldEqual, true)
 		})
 		convey.Convey("05-job with multilevel schedule policy annotation should return v1.2 ranktable", func() {
-			job.Annotations = map[string]string{api.AcceleratorTypeKey: utils.Multilevel}
+			job.Annotations = map[string]string{api.SchedulePolicyAnnoKey: utils.Multilevel}
 			generator := NewGenerator(job)
 			_, ok := generator.(*v1dot2.RankTable)
 			convey.So(ok, convey.ShouldEqual, true)

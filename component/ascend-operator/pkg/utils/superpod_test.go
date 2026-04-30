@@ -14,9 +14,11 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"ascend-common/api"
 	v1 "ascend-operator/pkg/api/v1"
+	_ "ascend-operator/pkg/testtool"
 )
 
 const (
@@ -158,7 +160,7 @@ func TestGetSpBlockFromAffinityConfig(t *testing.T) {
 			patches := gomonkey.ApplyFuncReturn(getAffinityBlocks, map[string]int{Level1BlockKey: nodeNumber2}).
 				ApplyFuncReturn(getDevicesPerPod, npuNumber8)
 			defer patches.Reset()
-			job := &v1.AscendJob{}
+			job := &v1.AscendJob{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}}}
 			job.Spec.ReplicaSpecs = map[commonv1.ReplicaType]*commonv1.ReplicaSpec{"Worker": {}}
 			res := getSpBlockFromAffinityConfig(job)
 			convey.So(res, convey.ShouldEqual, npuNumber8*nodeNumber2)
@@ -170,14 +172,14 @@ func TestGetSpBlockFromAffinityConfig(t *testing.T) {
 		convey.Convey("03-when affinity block is nil return 0 ", func() {
 			patch := gomonkey.ApplyFuncReturn(getAffinityBlocks, nil)
 			defer patch.Reset()
-			job := &v1.AscendJob{}
+			job := &v1.AscendJob{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}}}
 			res := getSpBlockFromAffinityConfig(job)
 			convey.So(res, convey.ShouldEqual, 0)
 		})
 		convey.Convey("04-when level config is nil return 0 ", func() {
 			patch := gomonkey.ApplyFuncReturn(getAffinityBlocks, map[string]int{})
 			defer patch.Reset()
-			job := &v1.AscendJob{}
+			job := &v1.AscendJob{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}}}
 			res := getSpBlockFromAffinityConfig(job)
 			convey.So(res, convey.ShouldEqual, 0)
 		})
@@ -191,7 +193,7 @@ func TestGetAffinityBlocks(t *testing.T) {
 		convey.Convey("01-get sp-block number correctly", func() {
 			job.Annotations = map[string]string{api.AffinityConfigAnnoKey: "level1=2,level2=4"}
 			res := getAffinityBlocks(job)
-			convey.So(res, convey.ShouldEqual, map[string]int{Level1BlockKey: nodeNumber2, level2BlockKey: nodeNumber4})
+			convey.So(res, convey.ShouldResemble, map[string]int{Level1BlockKey: nodeNumber2, level2BlockKey: nodeNumber4})
 		})
 		convey.Convey("02-job with empty annotation will return nil", func() {
 			job.Annotations = map[string]string{}

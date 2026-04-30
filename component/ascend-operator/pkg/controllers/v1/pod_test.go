@@ -480,41 +480,115 @@ func TestGenRankTable(t *testing.T) {
 	}
 }
 
-// TestUpdateRandIndex test the function of updateRandIndex
-func TestUpdateRandIndex(t *testing.T) {
-	type args struct {
-		allocatedPods []*corev1.Pod
-	}
+func newReconcilerWithRtg() *ASJobReconciler {
 	const testUid types.UID = "for_test_only"
 	acjob := newCommonAscendJob()
 	acjob.UID = testUid
 	rtg := ranktable.NewGenerator(acjob)
-	emptyPod := corev1.Pod{}
-	annotatedPod := corev1.Pod{}
-	annotatedPod.Annotations = map[string]string{"test": "test"}
-	tests := []struct {
-		name string
-		args args
-	}{
-		{name: "01-base function test,should change rank table",
-			args: args{allocatedPods: []*corev1.Pod{
-				&emptyPod,
-				&annotatedPod,
-			}}},
-	}
 	r := newCommonReconciler()
 	r.rtGenerators = map[types.UID]generator.RankTableGenerator{testUid: rtg}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r.updateRandIndex(tt.args.allocatedPods)
-			if emptyPod.Annotations == nil {
-				t.Errorf("fail to create annotation for empty pod")
-			}
-			if _, ok := annotatedPod.Annotations[api.PodRankIndexAnno]; !ok {
-				t.Errorf("fail to write rank index for annotated pod")
-			}
-		})
-	}
+	return r
+}
+
+func TestUpdateRandIndexAllWithoutRank(t *testing.T) {
+	convey.Convey("all pods without rank index should update all and not panic", t, func() {
+		r := newReconcilerWithRtg()
+		emptyPod := corev1.Pod{}
+		annotatedPod := corev1.Pod{}
+		annotatedPod.Annotations = map[string]string{"test": "test"}
+		r.updateRankIndex([]*corev1.Pod{&emptyPod, &annotatedPod})
+		convey.So(emptyPod.Annotations, convey.ShouldNotBeNil)
+		_, ok := annotatedPod.Annotations[api.PodRankIndexAnno]
+		convey.So(ok, convey.ShouldBeTrue)
+	})
+}
+
+func TestUpdateRandIndexAllWithRank(t *testing.T) {
+	convey.Convey("all pods already have rank index should return early", t, func() {
+		r := newReconcilerWithRtg()
+		pod1 := corev1.Pod{}
+		pod1.Annotations = map[string]string{api.PodRankIndexAnno: "0"}
+		pod2 := corev1.Pod{}
+		pod2.Annotations = map[string]string{api.PodRankIndexAnno: "1"}
+		r.updateRankIndex([]*corev1.Pod{&pod1, &pod2})
+	})
+}
+
+func TestUpdateRandIndexPartialWithRank(t *testing.T) {
+	convey.Convey("partial pods have rank index should skip existing and update missing", t, func() {
+		r := newReconcilerWithRtg()
+		podWithRank := corev1.Pod{}
+		podWithRank.Annotations = map[string]string{api.PodRankIndexAnno: "0"}
+		podWithoutRank := corev1.Pod{}
+		podWithoutRank.Annotations = map[string]string{"test": "test"}
+		r.updateRankIndex([]*corev1.Pod{&podWithRank, &podWithoutRank})
+		_, ok := podWithoutRank.Annotations[api.PodRankIndexAnno]
+		convey.So(ok, convey.ShouldBeTrue)
+	})
+}
+
+func TestUpdateRandIndexUpdateFailed(t *testing.T) {
+	convey.Convey("patch pod failed should retry 3 times and not panic", t, func() {
+		r := newReconcilerWithRtg()
+		pod := corev1.Pod{}
+		pod.Annotations = map[string]string{}
+		callCount := 0
+		patch := gomonkey.ApplyMethod(&fakeClient{}, "Patch",
+			func(_ *fakeClient, _ context.Context, _ client.Object, _ client.Patch,
+				_ ...client.PatchOption) error {
+				callCount++
+				return errors.New("network error")
+			})
+		defer patch.Reset()
+		r.updateRankIndex([]*corev1.Pod{&pod})
+		convey.So(callCount, convey.ShouldEqual, rankIndexPatchRetryTimes)
+	})
+}
+
+func TestUpdateRandIndexPartialUpdateFailed(t *testing.T) {
+	convey.Convey("partial patch failed should retry only the failed pod", t, func() {
+		r := newReconcilerWithRtg()
+		pod1 := corev1.Pod{}
+		pod1.Annotations = map[string]string{}
+		pod2 := corev1.Pod{}
+		pod2.Annotations = map[string]string{}
+		callCount := 0
+		patch := gomonkey.ApplyMethod(&fakeClient{}, "Patch",
+			func(_ *fakeClient, _ context.Context, _ client.Object, _ client.Patch,
+				_ ...client.PatchOption) error {
+				callCount++
+				if callCount > 1 {
+					return errors.New("network error")
+				}
+				return nil
+			})
+		defer patch.Reset()
+		r.updateRankIndex([]*corev1.Pod{&pod1, &pod2})
+		convey.So(callCount, convey.ShouldEqual, 1+rankIndexPatchRetryTimes)
+	})
+}
+
+func TestUpdateRankIndexDeploymentReschedule(t *testing.T) {
+	convey.Convey("Deployment: rescheduled pod without replica-index label should fill rank gap", t, func() {
+		r := newReconcilerWithRtg()
+		// Deployment workload: pods have random names, no replica-index label
+		// deploy-ccc12 (rank=2) was deleted, deploy-aaa77 is the new replacement
+		podA := corev1.Pod{}
+		podA.Name = "deploy-bbb89"
+		podA.Annotations = map[string]string{api.PodRankIndexAnno: "0"}
+		podB := corev1.Pod{}
+		podB.Name = "deploy-aaa77"
+		podC := corev1.Pod{}
+		podC.Name = "deploy-eee45"
+		podC.Annotations = map[string]string{api.PodRankIndexAnno: "2"}
+
+		r.updateRankIndex([]*corev1.Pod{&podA, &podB, &podC})
+
+		// podB fills gap: rank 1 (smallest unused rank)
+		convey.So(podB.Annotations[api.PodRankIndexAnno], convey.ShouldEqual, "1")
+		convey.So(podA.Annotations[api.PodRankIndexAnno], convey.ShouldEqual, "0")
+		convey.So(podC.Annotations[api.PodRankIndexAnno], convey.ShouldEqual, "2")
+	})
 }
 
 // TestCheckPodDelete test the function of checkPodDelete

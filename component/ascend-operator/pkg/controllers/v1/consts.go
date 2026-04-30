@@ -47,8 +47,10 @@ const (
 
 	statusPodIPDownwardAPI = "status.podIP"
 
-	cmRetryTime      = 3
-	configmapPrefix  = "rings-config-"
+	cmRetryTime               = 3
+	rankIndexPatchRetryTimes  = 3
+	rankIndexPatchRetrySleep  = 100 * time.Millisecond
+	configmapPrefix           = "rings-config-"
 	rankTableName    = "ranktable"
 	vcjobKind        = "Job"
 	vcjobLabelKey    = "volcano.sh/job-name"

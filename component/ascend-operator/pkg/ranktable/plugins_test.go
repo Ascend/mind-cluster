@@ -172,7 +172,7 @@ func TestFindPluginForObject(t *testing.T) {
 			}
 			plugin := FindPluginForObject(sts)
 			convey.So(plugin, convey.ShouldNotBeNil)
-			convey.So(plugin.Name(), convey.ShouldEqual, mindxdlv1.StatefulsetPlugin)
+			convey.So(plugin.Name(), convey.ShouldEqual, mindxdlv1.StatefulSetPlugin)
 		})
 
 		convey.Convey("03-find vcjob plugin", func() {

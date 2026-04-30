@@ -155,28 +155,91 @@ func (r *ASJobReconciler) reconcilePods(pi *podInfo, pods []*corev1.Pod, jobStat
 	return nil
 }
 
-func (r *ASJobReconciler) updateRandIndex(allocatedPods []*corev1.Pod) {
-	for _, p := range allocatedPods {
-		if _, rankExist := p.Annotations[api.PodRankIndexAnno]; rankExist {
-			hwlog.RunLog.Info("rank index exist")
-			return
-		}
+func (r *ASJobReconciler) updateRankIndex(allocatedPods []*corev1.Pod) {
+	if r.allRankIndexExist(allocatedPods) {
+		hwlog.RunLog.Info("rank index exist")
+		return
 	}
-	var rankIndex uint64 = 0
+	usedRanks := r.collectUsedRanks(allocatedPods)
+	var nextRank uint64 = 0
 	for _, p := range allocatedPods {
-		if p.Annotations == nil {
-			p.Annotations = make(map[string]string, 1)
+		if p == nil {
+			continue
 		}
-		p.Annotations[api.PodRankIndexAnno] = strconv.FormatUint(rankIndex, decimal)
-		err := r.Update(context.TODO(), p)
-		if err != nil {
-			hwlog.RunLog.Warnf("update pod %s/%s rank index %d error: %s", p.Namespace, p.Name, rankIndex, err)
-		} else {
-			hwlog.RunLog.Infof("update pod %s/%s rank index %d success", p.Namespace, p.Name, rankIndex)
+		if p.Annotations != nil {
+			if _, rankExist := p.Annotations[api.PodRankIndexAnno]; rankExist {
+				continue
+			}
 		}
-		rankIndex++
+		for usedRanks[nextRank] {
+			nextRank++
+		}
+		r.patchPodRankIndex(p, nextRank)
+		usedRanks[nextRank] = true
+		nextRank++
 	}
 	hwlog.RunLog.Info("write rank index success")
+}
+
+func (r *ASJobReconciler) collectUsedRanks(allocatedPods []*corev1.Pod) map[uint64]bool {
+	usedRanks := make(map[uint64]bool)
+	for _, p := range allocatedPods {
+		if p == nil || p.Annotations == nil {
+			continue
+		}
+		rankStr, ok := p.Annotations[api.PodRankIndexAnno]
+		if !ok {
+			continue
+		}
+		rank, err := strconv.ParseUint(rankStr, decimal, 64)
+		if err != nil {
+			hwlog.RunLog.Warnf("parse pod %s/%s rank index %s failed: %v", p.Namespace, p.Name, rankStr, err)
+			continue
+		}
+		usedRanks[rank] = true
+	}
+	return usedRanks
+}
+
+func (r *ASJobReconciler) allRankIndexExist(allocatedPods []*corev1.Pod) bool {
+	for _, p := range allocatedPods {
+		if p == nil || p.Annotations == nil {
+			return false
+		}
+		if _, rankExist := p.Annotations[api.PodRankIndexAnno]; !rankExist {
+			return false
+		}
+	}
+	return true
+}
+
+func (r *ASJobReconciler) patchPodRankIndex(p *corev1.Pod, rankIndex uint64) {
+	if p == nil {
+		hwlog.RunLog.Warn("patch pod rank index failed: pod is nil")
+		return
+	}
+	if p.Annotations == nil {
+		p.Annotations = make(map[string]string)
+	}
+	original := p.DeepCopy()
+	p.Annotations[api.PodRankIndexAnno] = strconv.FormatUint(rankIndex, decimal)
+	patch := client.MergeFrom(original)
+	var err error
+	for retry := 0; retry < rankIndexPatchRetryTimes; retry++ {
+		err = r.Patch(context.TODO(), p, patch)
+		if err == nil {
+			break
+		}
+		hwlog.RunLog.Warnf("patch pod %s/%s rank index %d retry %d error: %s",
+			p.Namespace, p.Name, rankIndex, retry, err)
+		time.Sleep(rankIndexPatchRetrySleep)
+	}
+	if err != nil {
+		hwlog.RunLog.Warnf("patch pod %s/%s rank index %d failed after %d retries: %s",
+			p.Namespace, p.Name, rankIndex, rankIndexPatchRetryTimes, err)
+		return
+	}
+	hwlog.RunLog.Infof("patch pod %s/%s rank index %d success", p.Namespace, p.Name, rankIndex)
 }
 
 func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
@@ -199,7 +262,7 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 		return
 	}
 
-	r.updateRandIndex(allocatedPods)
+	r.updateRankIndex(allocatedPods)
 	r.setOnePodOneNode(allocatedPods)
 	if acjob, ok := ji.job.(*mindxdlv1.AscendJob); ok {
 		rtg.SetSpBlockNum(mindxdlutils.GetSpBlockNum(acjob))
