@@ -1,4 +1,5 @@
 [
+  {"metricsGroup": "nodeBase", "state": "ON"},
   {"metricsGroup": "ddr", "state": "ON"},
   {"metricsGroup": "hccs", "state": "ON"},
   {"metricsGroup": "npu", "state": "ON"},
