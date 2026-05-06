@@ -55,9 +55,10 @@ type HuaWeiAIChip struct {
 
 // TelegrafData represents the data structure for metrics collection and export, compatible with Telegraf format.'
 type TelegrafData struct {
-	Labels    map[string]string
-	Metrics   map[string]interface{}
-	Timestamp time.Time
+	Measurement string
+	Labels      map[string]string
+	Metrics     map[string]interface{}
+	Timestamp   time.Time
 }
 
 // NpuDevPortInfo npu ports info data structure

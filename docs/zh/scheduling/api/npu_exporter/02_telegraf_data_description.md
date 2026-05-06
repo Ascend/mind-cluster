@@ -10,6 +10,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 本接口支持查询默认指标组和自定义指标组。自定义指标组的方法详细请参见[自定义指标开发](../../appendix.md#自定义指标开发)；默认指标组包含如下几个部分。指标组的采集和上报由配置文件中的开关控制，若开关配置为开启，则对应的指标组会进行采集和上报；若开关配置为关闭，则对应的指标组不会进行采集和上报。
 
 - [版本数据信息](#section170316521436141)
+- [节点基本信息](#section170316521436120)
 - [NPU数据信息](#section1442282202316)
 - [vNPU数据信息](#section814111613432)
 - [Network数据信息](#section1358881214551)
@@ -63,6 +64,14 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </tr>
 </tbody>
 </table>
+
+## 节点基本信息<a name="section170316521436120"></a>
+
+**表 1**  节点基本信息
+
+| 类别 | 数据信息名称 | 数据信息说明 | 单位 | 支持的产品形态 |
+|------|-------------|-------------|------|---------------|
+| 版本 | node_base_info | 节点基本信息，包括：<br>exporterVersion：当前NPU Exporter版本信息<br>driverVersion：驱动版本信息 | 1：占位字符，无实际含义 | Atlas 训练系列产品<br>Atlas A2 训练系列产品<br>Atlas A3 训练系列产品<br>推理服务器（插Atlas 300I 推理卡）<br>Atlas 推理系列产品<br>Atlas 800I A2 推理服务器<br>A200I A2 Box 异构组件<br>Atlas 350 标卡<br>Atlas 850 系列硬件产品<br>Atlas 950 SuperPoD |
 
 ## NPU数据信息<a name="section1442282202316"></a>
 

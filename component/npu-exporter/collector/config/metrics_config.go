@@ -30,14 +30,15 @@ import (
 var (
 	// singleGoroutineMap metrics in this map will be collected in single goroutine
 	singleGoroutineMap = map[string]common.MetricsCollector{
-		groupHccs:    &metrics.HccsCollector{},
-		groupNpu:     &metrics.BaseInfoCollector{},
-		groupSio:     &metrics.SioCollector{},
-		groupVersion: &metrics.VersionCollector{},
-		groupHbm:     &metrics.HbmCollector{},
-		groupDDR:     &metrics.DdrCollector{},
-		groupVnpu:    &metrics.VnpuCollector{},
-		groupPcie:    &metrics.PcieCollector{},
+		groupHccs:     &metrics.HccsCollector{},
+		groupNpu:      &metrics.BaseInfoCollector{},
+		groupSio:      &metrics.SioCollector{},
+		groupVersion:  &metrics.VersionCollector{},
+		groupHbm:      &metrics.HbmCollector{},
+		groupDDR:      &metrics.DdrCollector{},
+		groupVnpu:     &metrics.VnpuCollector{},
+		groupPcie:     &metrics.PcieCollector{},
+		groupNodeBase: &metrics.NodeBaseCollector{},
 	}
 	// multiGoroutineMap metrics in this map will be collected in multi goroutine
 	multiGoroutineMap = map[string]common.MetricsCollector{
@@ -52,6 +53,7 @@ var (
 	pluginConfigs      = make([]map[string]string, 0)
 
 	defaultPresetConfigs = []map[string]string{
+		{metricsGroup: groupNodeBase, state: stateOn},
 		{metricsGroup: groupDDR, state: stateOn},
 		{metricsGroup: groupHccs, state: stateOn},
 		{metricsGroup: groupNpu, state: stateOn},
@@ -86,8 +88,9 @@ const (
 	groupOptical = "optical"
 	groupHbm     = "hbm"
 	// groupText represents text-based metrics collected by plugin collectors
-	groupText = "text"
-	groupUb   = "ub"
+	groupText     = "text"
+	groupUb       = "ub"
+	groupNodeBase = "nodeBase"
 
 	stateOn  = "ON"
 	stateOFF = "OFF"

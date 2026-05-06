@@ -23,7 +23,6 @@ import (
 	"ascend-common/api"
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
-
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 )

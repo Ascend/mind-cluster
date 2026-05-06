@@ -49,6 +49,9 @@ func (*WatchNPU) SampleConfig() string {
 func (npu *WatchNPU) Gather(acc telegraf.Accumulator) error {
 
 	fieldsMap := make(map[string]map[string]interface{})
+	fieldsMap[common.GeneralDevTagKey] = make(map[string]interface{})
+	fieldsMap[common.KeyForMetricsWithCustomLabels] = make(map[string]interface{})
+	fieldsMap[common.KeyForTextMetrics] = make(map[string]interface{})
 	const devName = "ascend"
 
 	devTagValue := ""
@@ -70,6 +73,7 @@ func (npu *WatchNPU) Gather(acc telegraf.Accumulator) error {
 	fieldsMap = npu.gatherChain(fieldsMap, common.ChainForCustomPlugin, containerMap, chips)
 
 	handleGeneralMetrics(acc, fieldsMap, devName, devTagValue)
+	handleMetricsWithCustomLabels(acc, fieldsMap)
 	handleTextMetrics(acc, fieldsMap)
 
 	for key, fields := range fieldsMap {
@@ -94,6 +98,18 @@ func handleTextMetrics(acc telegraf.Accumulator, fieldsMap map[string]map[string
 		acc.AddFields(removeLastDashAndSuffix(key), data.Metrics, data.Labels, data.Timestamp)
 	}
 	delete(fieldsMap, common.KeyForTextMetrics)
+}
+
+func handleMetricsWithCustomLabels(acc telegraf.Accumulator, fieldsMap map[string]map[string]interface{}) {
+	metrics := fieldsMap[common.KeyForMetricsWithCustomLabels]
+	for _, datas := range metrics {
+		data, ok := datas.(common.TelegrafData)
+		if !ok {
+			continue
+		}
+		acc.AddFields(removeLastDashAndSuffix(data.Measurement), data.Metrics, data.Labels, data.Timestamp)
+	}
+	delete(fieldsMap, common.KeyForMetricsWithCustomLabels)
 }
 
 func removeLastDashAndSuffix(s string) string {

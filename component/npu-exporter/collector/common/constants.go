@@ -71,6 +71,8 @@ const (
 	GeneralDevTagKey = "GeneralDevTagKey"
 	// KeyForTextMetrics is the key for text metrics
 	KeyForTextMetrics = "KeyForTextMetrics"
+	// KeyForMetricsWithCustomLabels is the key for metrics with custom labels
+	KeyForMetricsWithCustomLabels = "KeyForMetricsWithCustomLabels"
 )
 
 // log limit domains for metrics
