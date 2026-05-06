@@ -2304,6 +2304,7 @@ MindSpore的Scheduler不支持重复注册。
 ```
 
 plog开启DEBUG级别(export ASCEND_GLOBAL_LOG_LEVEL=0)后，查看plog日志中出现如下内容：
+
 ```ColdFusion
 [ERROR] DRV(1428447,python):2026-03-24-15:19:11.056.577 [trs_shr_id_fd.c:163][ascend][curpid:1428447,1432059][drv][tsdrv][shridIoctl]Ioctl failed. (ret=32; cmd=4).
 [ERROR] RUNTIME(1428447,python):2026-03-24-15:19:11.056.709 [npu_driver.cc:760]1432059 DestroyIpcNotify:[drv api] halShrIdDestroy failed: name=0015cbdf0000000f0000000000000000000001e406dd000f, device_id=15, tsId=0, notifyId=484, drvRetCode=17!
@@ -2312,16 +2313,19 @@ plog开启DEBUG级别(export ASCEND_GLOBAL_LOG_LEVEL=0)后，查看plog日志中
 
 **原因分析**
 
-在A3场景下，HCCL调用底层接口进行内存销毁时，如发生链路异常，HCCL无法感知，只能等待超时。在当前版本的MindCluster中，当发生故障时，clusterd通过configmap通知故障节点的noded调用hdk的dcmi_set_spod_node_status接口配置采用快速析构的方式释放内存。可排查clusterd、noded日志中，是否因某些异常而未进入对应的配置流程。
-查看clusterd日志中是否包含如下关键字：
+在Atlas A3 系列产品场景下，HCCL调用底层接口进行内存销毁时，若发生链路异常，HCCL无法感知，只能等待超时。在当前版本的MindCluster中，当发生故障时，ClusterD通过ConfigMap通知故障节点的NodeD，调用HDK的dcmi_set_spod_node_status接口，配置采用快速析构的方式释放内存。可排查ClusterD、NodeD日志中，是否因某些异常而未进入对应的配置流程。
+查看ClusterD日志中是否包含如下关键字：
+
 ```ColdFusion
 create configmap fault-job-info err:namespaces "cluster-system" not fount
 ```
-表明因为namespace cluster-system不存在导致创建configmap fault-job-info失败。
+
+以上信息说明因为namespace cluster-system不存在，导致创建ConfigMap fault-job-info失败。
 
 **解决措施**
 
-执行如下命令创建cluster-system的namespace：
+执行如下命令创建cluster-system的命名空间：
+
 ```shell
 kubectl create ns cluster-system
 ```

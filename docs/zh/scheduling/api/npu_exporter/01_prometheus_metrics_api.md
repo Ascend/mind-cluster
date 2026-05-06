@@ -104,7 +104,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <p id="p106501911386"><a name="p106501911386"></a><a name="p106501911386"></a>Atlas 推理系列产品</p>
 <p id="p56500163810"><a name="p56500163810"></a><a name="p56500163810"></a><span id="ph16267162611508"><a name="ph16267162611508"></a><a name="ph16267162611508"></a>Atlas 800I A2 推理服务器</span></p>
 <p id="p1115563443"><a name="p1115563443"></a><a name="p1115563443"></a><span id="ph56342369338"><a name="ph56342369338"></a><a name="ph56342369338"></a>A200I A2 Box 异构组件</span></p>
-<p><span>Atlas 350 标卡</span></p>
+<p><span>Atlas 350 标卡</span></p><p><span>Atlas 950 SuperPoD</span></p>
 </td>
 </tr>
 </tbody>
@@ -2058,7 +2058,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1469410183214"><a name="p1469410183214"></a><a name="p1469410183214"></a>string</p>
 </td>
 </tr>
-<tr id="row739383919217"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p43931839326"><a name="p43931839326"></a><a name="p43931839326"></a>model_name：昇腾AI处理器名称</p>
+<tr id="row739383919217"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p43931839326"><a name="p43931839326"></a><a name="p43931839326"></a>model_name：昇腾AI处理器名称。该字段由芯片名称、芯片类型和芯片版本三部分组成。这三部分可通过<b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i>命令查询，分别对应返回信息中的Chip Name、Chip Type和Chip Version。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas A3 系列产品的返回信息中无Chip Type字段。</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p143931839928"><a name="p143931839928"></a><a name="p143931839928"></a>string</p>
 </td>
@@ -2100,7 +2100,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p17907225953"><a name="p17907225953"></a><a name="p17907225953"></a>string</p>
 </td>
 </tr>
-<tr id="row16907162510513"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p890718251958"><a name="p890718251958"></a><a name="p890718251958"></a>model_name：<span id="ph151081914202916"><a name="ph151081914202916"></a><a name="ph151081914202916"></a>昇腾AI处理器</span>名称</p>
+<tr id="row16907162510513"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p890718251958"><a name="p890718251958"></a><a name="p890718251958"></a>model_name：<span id="ph151081914202916"><a name="ph151081914202916"></a><a name="ph151081914202916"></a>昇腾AI处理器</span>名称。该字段由芯片名称、芯片类型和芯片版本三部分组成。这三部分可通过<b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i>命令查询，分别对应返回信息中的Chip Name、Chip Type和Chip Version。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas A3 系列产品的返回信息中无Chip Type字段。</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p390718251755"><a name="p390718251755"></a><a name="p390718251755"></a>string</p>
 </td>
@@ -2148,7 +2148,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p320616197163"><a name="p320616197163"></a><a name="p320616197163"></a>string</p>
 </td>
 </tr>
-<tr id="row9989656471"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p14989556078"><a name="p14989556078"></a><a name="p14989556078"></a>model_name：昇腾AI处理器名称</p>
+<tr id="row9989656471"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p14989556078"><a name="p14989556078"></a><a name="p14989556078"></a>model_name：昇腾AI处理器名称。该字段由芯片名称、芯片类型和芯片版本三部分组成。这三部分可通过<b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i>命令查询，分别对应返回信息中的Chip Name、Chip Type和Chip Version。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas A3 系列产品的返回信息中无Chip Type字段。</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p11206819191615"><a name="p11206819191615"></a><a name="p11206819191615"></a>string</p>
 </td>
@@ -2185,7 +2185,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p113712551439"><a name="p113712551439"></a><a name="p113712551439"></a>string</p>
 </td>
 </tr>
-<tr id="row12181801433"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p17371205512310"><a name="p17371205512310"></a><a name="p17371205512310"></a>model_name：<span id="ph1237110558312"><a name="ph1237110558312"></a><a name="ph1237110558312"></a>昇腾AI处理器</span>名称</p>
+<tr id="row12181801433"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p17371205512310"><a name="p17371205512310"></a><a name="p17371205512310"></a>model_name：<span id="ph1237110558312"><a name="ph1237110558312"></a><a name="ph1237110558312"></a>昇腾AI处理器</span>名称。该字段由芯片名称、芯片类型和芯片版本三部分组成。这三部分可通过<b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i>命令查询，分别对应返回信息中的Chip Name、Chip Type和Chip Version。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas A3 系列产品的返回信息中无Chip Type字段。</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p6371125516312"><a name="p6371125516312"></a><a name="p6371125516312"></a>string</p>
 </td>
@@ -2238,7 +2238,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p199299511345"><a name="p199299511345"></a><a name="p199299511345"></a>string</p>
 </td>
 </tr>
-<tr id="row127379715315"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p14670733636"><a name="p14670733636"></a><a name="p14670733636"></a>model_name：昇腾AI处理器名称</p>
+<tr id="row127379715315"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p14670733636"><a name="p14670733636"></a><a name="p14670733636"></a>model_name：昇腾AI处理器名称。该字段由芯片名称、芯片类型和芯片版本三部分组成。这三部分可通过<b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i>命令查询，分别对应返回信息中的Chip Name、Chip Type和Chip Version。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas A3 系列产品的返回信息中无Chip Type字段。</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p10930125193414"><a name="p10930125193414"></a><a name="p10930125193414"></a>string</p>
 </td>
@@ -2275,7 +2275,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1570549114116"><a name="p1570549114116"></a><a name="p1570549114116"></a>string</p>
 </td>
 </tr>
-<tr id="row113218442408"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p6706394412"><a name="p6706394412"></a><a name="p6706394412"></a>model_name：昇腾AI处理器名称</p>
+<tr id="row113218442408"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p6706394412"><a name="p6706394412"></a><a name="p6706394412"></a>model_name：昇腾AI处理器名称。该字段由芯片名称、芯片类型和芯片版本三部分组成。这三部分可通过<b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i>命令查询，分别对应返回信息中的Chip Name、Chip Type和Chip Version。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas A3 系列产品的返回信息中无Chip Type字段。</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1670611944113"><a name="p1670611944113"></a><a name="p1670611944113"></a>string</p>
 </td>
@@ -2317,7 +2317,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>model_name：昇腾AI处理器名称</p>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>model_name：昇腾AI处理器名称。该字段由芯片名称、芯片类型和芯片版本三部分组成。这三部分可通过<b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i>命令查询，分别对应返回信息中的Chip Name、Chip Type和Chip Version。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas A3 系列产品的返回信息中无Chip Type字段。</div></div>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
 </td>
