@@ -24,7 +24,7 @@
     >
     >- 参见[《Ascend Training Solution 版本配套表》](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-training-solution-pid-258915853/software)，确认固件与驱动的版本与集群调度组件是否配套。
     >- NPU驱动和固件版本可通过**npu-smi info -t board -i** <i>NPU ID</i>命令查询。回显信息中的“Software Version”字段值表示NPU驱动版本，“Firmware Version”字段值表示NPU固件版本。
-    >- 芯片型号的数值可通过**npu-smi info**命令查询，返回的“Name”字段对应信息为芯片型号，下文的<i>\{xxx\}</i>即取“910”字符作为芯片型号数值。
+    >- 下文的<i>\{xxx\}</i>即取“910”字符作为芯片型号数值。
 
 ## 安装组件<a name="section1837511531098"></a>
 

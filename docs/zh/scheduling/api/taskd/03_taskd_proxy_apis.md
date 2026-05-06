@@ -26,7 +26,7 @@
 
 **功能说明<a name="section3468140175411"></a>**
 
-用户侧调用此函数，销毁TaskD Proxy。此函数需要在[init\_taskd\_proxy](#def-init_taskd_proxyconfig--dict---bool)接口后使用。
+用户侧调用此函数，销毁TaskD Proxy。此函数需要在[init\_taskd\_proxy](#ZH-CN_TOPIC_0000002479226870)接口后使用。
 
 **输入参数说明<a name="section1177311115553"></a>**
 

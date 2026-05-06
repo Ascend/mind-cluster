@@ -58,7 +58,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 <p id="p13892755104310"><a name="p13892755104310"></a><a name="p13892755104310"></a>推理服务器（插Atlas 300I 推理卡）</p>
 <p id="p17892655184314"><a name="p17892655184314"></a><a name="p17892655184314"></a>Atlas 推理系列产品</p>
 <p id="p08921555204319"><a name="p08921555204319"></a><a name="p08921555204319"></a><span id="ph16267162611508"><a name="ph16267162611508"></a><a name="ph16267162611508"></a>Atlas 800I A2 推理服务器</span></p>
-<p id="p1115563443"><a name="p1115563443"></a><a name="p1115563443"></a><span id="ph9892125584318"><a name="ph9892125584318"></a><a name="ph9892125584318"></a>A200I A2 Box 异构组件</span></p><p><span>Atlas 350 标卡</span></p>
+<p id="p1115563443"><a name="p1115563443"></a><a name="p1115563443"></a><span id="ph9892125584318"><a name="ph9892125584318"></a><a name="ph9892125584318"></a>A200I A2 Box 异构组件</span></p><p><span>Atlas 350 标卡</span></p><p><span>Atlas 950 SuperPoD</span></p>
 </td>
 </tr>
 </tbody>
