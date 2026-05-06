@@ -5,7 +5,8 @@
 ## 快速参考
 
 ```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.1.0
+docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.1.0-ubuntu22.04
+docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.1.0-openeuler24.03
 ```
 
 ---
@@ -98,13 +99,13 @@ docker build --no-cache -t ascend-k8sdeviceplugin:{tag} ./ -f Dockerfile.{os}
 1. 拉取镜像
 
 ```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:{version}
+docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:{tag}
 ```
 
 2. 修改镜像标签
 
 ```bash
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:{version} ascend-k8sdeviceplugin:{tag}
+docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:{tag} ascend-k8sdeviceplugin:{tag}
 ```
 
 3. 给节点打标签
@@ -124,20 +125,35 @@ kubectl label nodes <node-name> host-arch=huawei-arm
 将 YAML 文件中镜像的 `{tag}` 替换为实际标签。
 
 ```bash
-# Ascend 310 处理器
+# 推理服务器（插Atlas 300I 推理卡）上不使用Volcano的配置文件。
 kubectl apply -f device-plugin-310-{version}.yaml
 
-# Ascend 910 处理器（不使用 Volcano）
+# 推理服务器（插Atlas 300I 推理卡）上使用Volcano的配置文件。
+kubectl apply -f device-plugin-310-volcano-{version}.yaml
+
+# 除了Atlas 200I SoC A1 核心板之外的Atlas 推理系列产品上不使用Volcano的配置文件。
+kubectl apply -f device-plugin-310P-{version}.yaml
+
+# 除了Atlas 200I SoC A1 核心板之外的Atlas 推理系列产品上使用Volcano的配置文件。
+kubectl apply -f device-plugin-310P-volcano-{version}.yaml
+
+# Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件上不使用Volcano的配置文件。
 kubectl apply -f device-plugin-910-{version}.yaml
 
-# Ascend 910 处理器（使用 Volcano）
-kubectl apply -f device-plugin-volcano-{version}.yaml
+# Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件上使用Volcano的配置文件。
+kubectl apply -f device-plugin-910-volcano-{version}.yaml
+
+# Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD上不使用Volcano的配置文件。
+kubectl apply -f device-plugin-npu-{version}.yaml
+
+# Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD上使用Volcano的配置文件。
+kubectl apply -f device-plugin-npu-volcano-{version}.yaml
 ```
 
 5. 验证部署
 
 ```bash
-kubectl get pods -n kube-system | grep ascend-device-plugin
+kubectl get pods -A | grep device-plugin
 ```
 
 6. 检查节点资源
@@ -150,7 +166,8 @@ kubectl describe node <npu-node-name> | grep "huawei.com/Ascend"
 
 ## 支持的硬件
 
-所有昇腾设备通用
+当前支持的昇腾硬件型号说明，请参考官方文档：
+[支持的产品形态和OS清单](https://gitcode.com/Ascend/mind-cluster/blob/master/docs/zh/scheduling/introduction.md#%E6%94%AF%E6%8C%81%E7%9A%84%E4%BA%A7%E5%93%81%E5%BD%A2%E6%80%81%E5%92%8Cos%E6%B8%85%E5%8D%95)
 
 ---
 

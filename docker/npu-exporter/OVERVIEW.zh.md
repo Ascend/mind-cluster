@@ -5,7 +5,8 @@
 ## 快速参考
 
 ```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:v26.1.0
+docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:v26.1.0-ubuntu22.04
+docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:v26.1.0-openeuler24.03
 ```
 
 ---
@@ -87,13 +88,13 @@ docker build --no-cache -t npu-exporter:{tag} ./ -f Dockerfile.{os}
 1. 拉取镜像
 
 ```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:{version}
+docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:{tag}
 ```
 
 2. 修改镜像标签
 
 ```bash
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:{version} npu-exporter:{tag}
+docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:{tag} npu-exporter:{tag}
 ```
 
 3. 启动 NPU Exporter
@@ -107,7 +108,7 @@ kubectl apply -f npu-exporter-{version}.yaml
 4. 验证部署
 
 ```bash
-kubectl get pods -n kube-system | grep npu-exporter
+kubectl get pods -A | grep npu-exporter
 ```
 
 5. 访问监控指标
@@ -122,7 +123,8 @@ curl http://<pod-ip>:8082/metrics
 
 ## 支持的硬件
 
-所有昇腾设备通用
+当前支持的昇腾硬件型号说明，请参考官方文档：
+[支持的产品形态和OS清单](https://gitcode.com/Ascend/mind-cluster/blob/master/docs/zh/scheduling/introduction.md#%E6%94%AF%E6%8C%81%E7%9A%84%E4%BA%A7%E5%93%81%E5%BD%A2%E6%80%81%E5%92%8Cos%E6%B8%85%E5%8D%95)
 
 ---
 
