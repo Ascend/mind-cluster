@@ -120,15 +120,15 @@ docker build --no-cache -t volcanosh/vc-controller-manager:{tag} ./  -f Dockerfi
 1. 拉取镜像
 
 ```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{version}
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/volcano-controller:{version}
+docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{tag}
+docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/volcano-controller:{tag}
 ```
 
 2. 修改镜像标签
 
 ```bash
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/volcano-scheduler:{version} volcanosh/vc-scheduler:{tag}
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/volcano-controller:{version} volcanosh/vc-controller-manager:{tag}
+docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/volcano-scheduler:{tag} volcanosh/vc-scheduler:{tag}
+docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/volcano-controller:{tag} volcanosh/vc-controller-manager:{tag}
 ```
 
 3. 启动 Volcano
@@ -142,20 +142,15 @@ kubectl apply -f volcano-{version}.yaml
 4. 验证部署
 
 ```bash
-kubectl get pods -n volcano-system | grep volcano
-```
-
-5. 检查调度器插件
-
-```bash
-kubectl logs -n volcano-system deployment/volcano-scheduler | grep volcano-npu
+kubectl get pods -A | grep volcano
 ```
 
 ---
 
 ## 支持的硬件
 
-所有昇腾设备通用
+当前支持的昇腾硬件型号说明，请参考官方文档：
+[支持的产品形态和OS清单](https://gitcode.com/Ascend/mind-cluster/blob/master/docs/zh/scheduling/introduction.md#%E6%94%AF%E6%8C%81%E7%9A%84%E4%BA%A7%E5%93%81%E5%BD%A2%E6%80%81%E5%92%8Cos%E6%B8%85%E5%8D%95)
 
 ---
 
