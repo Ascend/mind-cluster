@@ -594,12 +594,14 @@ class ErrorParser:
         :param err_time: time of printing error log
         """
         # socket timeout key log
-        if "the connection failure" in line:
+        if "the connection failure" in line or "Wait links establish completed failed" in line:
+            self.socket_error_data_cache.exist_data_flag = True
             self.socket_error_data_cache.add_error_type(regular_table.TIMEOUT_SOCKET, err_time)
             self.socket_error_data_cache.add_key_info(line)
             return
         # p2p timeout key log
         if "connected p2p timeout" in line and "remote physic id:" in line:
+            self.socket_error_data_cache.exist_data_flag = True
             self.socket_error_data_cache.add_error_type(regular_table.TIMEOUT_SOCKET, err_time)
             self.socket_error_data_cache.add_key_info(line)
             split_info_list = line.split("remote physic id:")
@@ -617,6 +619,7 @@ class ErrorParser:
         link_num = 2  # src and dest
         if len(device_ip_rank_id) != link_num:
             return
+        self.socket_error_data_cache.add_error_type(regular_table.TIMEOUT_SOCKET, err_time)
         self.socket_error_data_cache.add_key_info(line)
         self.socket_error_data_cache.add_remote_info(RemoteInfo(device_ip_rank_id[0][0], ""))
 
@@ -746,7 +749,6 @@ class SocketErrorDataCache:
         self.exist_data_flag = False
 
     def add_error_type(self, error_type, error_time):
-        self.exist_data_flag = True
         self.error_type = error_type
         if error_time < self.error_time:
             self.error_time = error_time

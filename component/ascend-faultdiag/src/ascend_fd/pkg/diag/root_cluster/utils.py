@@ -570,7 +570,7 @@ class BaseChecker:
         if not show_device:
             # there is no first root device and no first error device
             return device_info
-        show_log = show_device.error_logs_show or show_device.normal_logs_show
+        show_log = show_device.error_logs_show
         if show_log:
             device_info.update({
                 "device_type": device_type,

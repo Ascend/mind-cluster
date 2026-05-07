@@ -21,11 +21,7 @@ from ascend_fd.utils.json_dict import JsonObj
 class FaultDescription(JsonObj):
     def __init__(self, code: int, string: str = ""):
         self.code = code
-        self.string = string
-        self.set_string_by_code(code)
-
-    def set_string_by_code(self, code):
-        self.string = get_fault_description_by_code(code)
+        self.string = string or get_fault_description_by_code(code)
 
     def format(self, *args, **kwargs):
         self.string = self.string.format(*args, **kwargs)
