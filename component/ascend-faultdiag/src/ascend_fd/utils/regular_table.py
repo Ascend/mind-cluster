@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-# normal rules
 from ascend_fd.utils.i18n import get_label_for_language
 
 DEVICE_IP_FILE = r"device_ip_info.json"

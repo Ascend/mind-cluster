@@ -21,14 +21,10 @@ from ascend_fd.utils.json_dict import JsonObj
 class NoteMsg(JsonObj):
     def __init__(self, code: str, note: str = ""):
         self.code = code
-        self.note = note
-        self.set_note_by_code(code)
+        self.note = note or get_note_msg_by_code(code)
 
     def __hash__(self):
         return hash(self.note)
-
-    def set_note_by_code(self, code):
-        self.note = get_note_msg_by_code(code)
 
 
 class FormatNoteMsg(NoteMsg, JsonObj):
