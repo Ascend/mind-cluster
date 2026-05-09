@@ -4,10 +4,11 @@
 
 ## Quick Reference
 
-```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:v1.7.0-v26.1.0
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:v1.7.0-v26.1.0
-```
+- Ascend for Volcano is maintained by [MindCluster Code Repository](https://gitcode.com/Ascend/mind-cluster)
+- Where to get help
+    - [MindCluster Code Repository](https://gitcode.com/Ascend/mind-cluster)
+    - [MindCluster Ascend Community](https://www.hiascend.com/document/detail/zh/mindcluster/2600/clustersched/dlug/docs/zh/scheduling/introduction.md)
+    - [Issue Tracker](https://gitcode.com/Ascend/mind-cluster/issues)
 
 ***
 
