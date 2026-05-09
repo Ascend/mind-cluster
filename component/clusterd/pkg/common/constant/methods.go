@@ -4,6 +4,7 @@
 package constant
 
 import (
+	"fmt"
 	"maps"
 	"reflect"
 	"strconv"
@@ -543,7 +544,34 @@ func SwitchInfoBusinessDataIsNotEqual(oldSwitch, newSwitch *SwitchInfo) bool {
 	}
 	if newSwitch.FaultLevel != oldSwitch.FaultLevel || newSwitch.NodeStatus != oldSwitch.NodeStatus ||
 		len(newSwitch.FaultInfo) != len(oldSwitch.FaultInfo) {
+		hwlog.RunLog.Debugf("neither oldSwitch nor newSwitch is empty, but oldSwitch is not equal to newSwitch, "+
+			"newSwitch.FaultInfo len: %d, oldSwitch.FaultInfo len: %d",
+			len(newSwitch.FaultInfo), len(oldSwitch.FaultInfo))
 		return true
+	}
+	oldFaultMap := make(map[string]SimpleSwitchFaultInfo, len(oldSwitch.FaultInfo))
+	for _, fault := range oldSwitch.FaultInfo {
+		oldFaultMap[fault.GetFaultTimeAndLevelKey()] = fault
+	}
+	for _, newFault := range newSwitch.FaultInfo {
+		key := newFault.GetFaultTimeAndLevelKey()
+		oldFault, exists := oldFaultMap[key]
+		if !exists || oldFault != newFault {
+			hwlog.RunLog.Debugf("neither oldSwitch nor newSwitch is empty, but oldSwitch is not equal to newSwitch, key: %s", key)
+			return true
+		}
+	}
+	newFaultMap := make(map[string]SimpleSwitchFaultInfo, len(newSwitch.FaultInfo))
+	for _, fault := range newSwitch.FaultInfo {
+		newFaultMap[fault.GetFaultTimeAndLevelKey()] = fault
+	}
+	for _, oldFault := range oldSwitch.FaultInfo {
+		key := oldFault.GetFaultTimeAndLevelKey()
+		newFault, exists := newFaultMap[key]
+		if !exists || oldFault != newFault {
+			hwlog.RunLog.Debugf("neither oldSwitch nor newSwitch is empty, but oldSwitch is not equal to newSwitch, reverse key: %s", key)
+			return true
+		}
 	}
 	hwlog.RunLog.Debug("oldSwitch is equal to newSwitch")
 	return false
@@ -563,6 +591,37 @@ func NodeInfoBusinessDataIsNotEqual(oldNodeInfo *NodeInfo, newNodeInfo *NodeInfo
 		len(oldNodeInfo.FaultDevList) != len(newNodeInfo.FaultDevList) {
 		hwlog.RunLog.Debug("neither oldNodeInfo nor newNodeInfo is empty, but oldNodeInfo is not equal to newNodeInfo")
 		return true
+	}
+	oldFaultDevMap := make(map[string]*FaultDev, len(oldNodeInfo.FaultDevList))
+	for _, dev := range oldNodeInfo.FaultDevList {
+		key := fmt.Sprintf("%s_%d", dev.DeviceType, dev.DeviceId)
+		oldFaultDevMap[key] = dev
+	}
+	for _, newDev := range newNodeInfo.FaultDevList {
+		key := fmt.Sprintf("%s_%d", newDev.DeviceType, newDev.DeviceId)
+		oldDev, exists := oldFaultDevMap[key]
+		if !exists {
+			hwlog.RunLog.Debugf("neither oldNodeInfo nor newNodeInfo is empty, but oldNodeInfo is not equal to newNodeInfo, key: %s not found", key)
+			return true
+		}
+		if newDev.FaultLevel != oldDev.FaultLevel {
+			hwlog.RunLog.Debugf("neither oldNodeInfo nor newNodeInfo is empty, but oldNodeInfo is not equal to newNodeInfo, key: %s faultLevel changed", key)
+			return true
+		}
+		if len(newDev.FaultCode) != len(oldDev.FaultCode) {
+			hwlog.RunLog.Debugf("neither oldNodeInfo nor newNodeInfo is empty, but oldNodeInfo is not equal to newNodeInfo, key: %s faultCode len changed", key)
+			return true
+		}
+		oldCodeSet := make(map[string]struct{}, len(oldDev.FaultCode))
+		for _, code := range oldDev.FaultCode {
+			oldCodeSet[code] = struct{}{}
+		}
+		for _, code := range newDev.FaultCode {
+			if _, found := oldCodeSet[code]; !found {
+				hwlog.RunLog.Debugf("neither oldNodeInfo nor newNodeInfo is empty, but oldNodeInfo is not equal to newNodeInfo, key: %s faultCode changed", key)
+				return true
+			}
+		}
 	}
 	hwlog.RunLog.Debug("oldNodeInfo is equal to newNodeInfo")
 	return false
