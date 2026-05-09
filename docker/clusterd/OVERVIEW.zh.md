@@ -4,10 +4,11 @@
 
 ## 快速参考
 
-```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:v26.1.0-ubuntu22.04
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:v26.1.0-openeuler24.03
-```
+- ClusterD 由 [MindCluster 代码仓](https://gitcode.com/Ascend/mind-cluster)  维护
+- 从哪里获取帮助
+    - [MindCluster 代码仓](https://gitcode.com/Ascend/mind-cluster)
+    - [MindCluster 昇腾社区](https://www.hiascend.com/document/detail/zh/mindcluster/2600/clustersched/dlug/docs/zh/scheduling/introduction.md)
+    - [问题反馈](https://gitcode.com/Ascend/mind-cluster/issues)
 
 ---
 

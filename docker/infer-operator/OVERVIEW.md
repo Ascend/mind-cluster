@@ -4,10 +4,11 @@
 
 ## Quick Reference
 
-```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:v26.1.0-ubuntu22.04
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:v26.1.0-openeuler24.03
-```
+- Infer Operator is maintained by [MindCluster Code Repository](https://gitcode.com/Ascend/mind-cluster)
+- Where to get help
+    - [MindCluster Code Repository](https://gitcode.com/Ascend/mind-cluster)
+    - [MindCluster Ascend Community](https://www.hiascend.com/document/detail/zh/mindcluster/2600/clustersched/dlug/docs/zh/scheduling/introduction.md)
+    - [Issue Tracker](https://gitcode.com/Ascend/mind-cluster/issues)
 
 ---
 
