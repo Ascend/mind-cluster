@@ -376,11 +376,41 @@ func TestSwitchInfoBusinessDataIsNotEqual(t *testing.T) {
 		sw2 := &SwitchInfo{SwitchFaultInfo: SwitchFaultInfo{FaultLevel: "1", NodeStatus: "OK"}}
 		sw3 := &SwitchInfo{SwitchFaultInfo: SwitchFaultInfo{FaultLevel: "2", NodeStatus: "OK"}}
 		sw4 := &SwitchInfo{SwitchFaultInfo: SwitchFaultInfo{FaultLevel: "1", NodeStatus: "Error"}}
+		sw5 := &SwitchInfo{SwitchFaultInfo: SwitchFaultInfo{FaultInfo: []SimpleSwitchFaultInfo{
+			{
+				AssembledFaultCode: "123",
+				SwitchChipId:       0,
+				SwitchPortId:       0,
+			},
+		},
+			FaultLevel: "1",
+			NodeStatus: "Error",
+		}}
+		sw6 := &SwitchInfo{SwitchFaultInfo: SwitchFaultInfo{FaultInfo: []SimpleSwitchFaultInfo{
+			{
+				AssembledFaultCode: "456",
+				SwitchChipId:       0,
+				SwitchPortId:       0,
+			},
+		},
+			FaultLevel: "1",
+			NodeStatus: "Error",
+		}}
+		sw7 := &SwitchInfo{SwitchFaultInfo: SwitchFaultInfo{FaultInfo: []SimpleSwitchFaultInfo{
+			{AssembledFaultCode: "123", SwitchChipId: 0, SwitchPortId: 0},
+			{AssembledFaultCode: "456", SwitchChipId: 0, SwitchPortId: 0},
+		}, FaultLevel: "1", NodeStatus: "Error"}}
+		sw8 := &SwitchInfo{SwitchFaultInfo: SwitchFaultInfo{FaultInfo: []SimpleSwitchFaultInfo{
+			{AssembledFaultCode: "123", SwitchChipId: 0, SwitchPortId: 0},
+			{AssembledFaultCode: "123", SwitchChipId: 0, SwitchPortId: 0},
+		}, FaultLevel: "1", NodeStatus: "Error"}}
 		convey.So(SwitchInfoBusinessDataIsNotEqual(nil, nil), convey.ShouldBeFalse)
 		convey.So(SwitchInfoBusinessDataIsNotEqual(nil, sw1), convey.ShouldBeTrue)
 		convey.So(SwitchInfoBusinessDataIsNotEqual(sw1, sw2), convey.ShouldBeFalse)
 		convey.So(SwitchInfoBusinessDataIsNotEqual(sw1, sw3), convey.ShouldBeTrue)
 		convey.So(SwitchInfoBusinessDataIsNotEqual(sw1, sw4), convey.ShouldBeTrue)
+		convey.So(SwitchInfoBusinessDataIsNotEqual(sw5, sw6), convey.ShouldBeTrue)
+		convey.So(SwitchInfoBusinessDataIsNotEqual(sw7, sw8), convey.ShouldBeTrue)
 	})
 }
 
@@ -394,11 +424,16 @@ func TestNodeInfoBusinessDataIsNotEqual(t *testing.T) {
 			FaultDevList: []*FaultDev{{DeviceId: 0}}}}
 		node4 := &NodeInfo{NodeInfoNoName: NodeInfoNoName{NodeStatus: "Ready",
 			FaultDevList: []*FaultDev{{DeviceId: 1}, {DeviceId: 2}}}}
+		node5 := &NodeInfo{NodeInfoNoName: NodeInfoNoName{NodeStatus: "NotReady",
+			FaultDevList: []*FaultDev{{DeviceId: 0, FaultCode: []string{"123"}, FaultLevel: "1", DeviceType: "NPU"}}}}
+		node6 := &NodeInfo{NodeInfoNoName: NodeInfoNoName{NodeStatus: "NotReady",
+			FaultDevList: []*FaultDev{{DeviceId: 0, FaultCode: []string{"456"}, FaultLevel: "1", DeviceType: "NPU"}}}}
 		convey.So(NodeInfoBusinessDataIsNotEqual(nil, nil), convey.ShouldBeFalse)
 		convey.So(NodeInfoBusinessDataIsNotEqual(nil, node1), convey.ShouldBeTrue)
 		convey.So(NodeInfoBusinessDataIsNotEqual(node1, node2), convey.ShouldBeFalse)
 		convey.So(NodeInfoBusinessDataIsNotEqual(node1, node3), convey.ShouldBeTrue)
 		convey.So(NodeInfoBusinessDataIsNotEqual(node1, node4), convey.ShouldBeTrue)
+		convey.So(NodeInfoBusinessDataIsNotEqual(node5, node6), convey.ShouldBeTrue)
 	})
 }
 
