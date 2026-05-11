@@ -40,7 +40,7 @@
 
 - 采用RoCE连接的产品：Atlas 800T A2 训练服务器，Atlas 800I A2 推理服务器，A200I A2 Box 异构组件、Atlas 200T A2 Box16 异构子框、Atlas 200I A2 Box16 异构子框、Atlas 800 训练服务器（型号 9000）和Atlas 800 训练服务器（型号 9010）
 - 采用RoCE连接单层连接的产品：Atlas 800I A2 推理服务器、A200I A2 Box 异构组件
-- 采用灵衢+RoCE连接的产品：Atlas 900 A3 SuperPoD 超节点、Atlas 850 系列硬件产品 超节点、Atlas 950 SuperPoD
+- 采用灵衢+RoCE连接的产品：Atlas 900 A3 SuperPoD 超节点、Atlas 850 系列硬件产品（超节点）、Atlas 950 SuperPoD
 
 **图 2**  节点间网络<a name="fig1728811518184"></a>  
 ![](../../../../figures/scheduling/节点间网络.png "节点间网络")

@@ -335,7 +335,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 - 已完成[升级环境检查](#升级说明)。
 
-- 如需升级NPU Exporter、Ascend Device Plugin、Volcano、ClusterD、Ascend Operator、Infer Operator、NodeD和Resilience Controller组件，需卸载旧版本后，再执行新版本的安装步骤。
+- 如需升级NPU Exporter、Ascend Device Plugin、Volcano、ClusterD、Ascend Operator、Infer Operator和NodeD组件，需卸载旧版本后，再执行新版本的安装步骤。
 
 **注意事项**
 
@@ -356,7 +356,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 本章节仅指导用户在同一个版本内对容器镜像中二进制文件版本进行升级，升级过程中不会修改权限及启动参数。如需了解关于升级方式的更详细说明，请参见[升级说明](#升级说明)。
 
-- 如需升级Volcano、ClusterD、Ascend Operator、Infer Operator、Resilience Controller组件的镜像，可参考[升级管理节点组件](#section1292111716589)。
+- 如需升级Volcano、ClusterD、Ascend Operator和Infer Operator组件的镜像，可参考[升级管理节点组件](#section1292111716589)。
 - 如需升级NPU Exporter、Ascend Device Plugin和NodeD组件镜像，可参考[升级计算节点组件](#section231311416588)。
 - TaskD暂不支持此种升级方式。
 

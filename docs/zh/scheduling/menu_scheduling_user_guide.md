@@ -1,6 +1,10 @@
 # MindCluster 集群调度用户指南 
 
-- [简介](introduction.md)
+- [简介](./introduction/_menu_introduction.md)
+  - [概述](./introduction/00_overview.md)
+  - [组件介绍](./introduction/01_component_description.md)
+  - [特性介绍](./introduction/02_feature_description.md)
+  - [支持的产品形态和OS清单](./introduction/03_supported_product_models_and_os.md)
 - [快速入门](quick_start.md)
 - [安装部署](./installation_guide/menu_installation_guide.md)
   - [安装前必读](./installation_guide/00_before_you_start.md)

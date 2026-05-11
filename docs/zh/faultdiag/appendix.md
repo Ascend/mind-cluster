@@ -19,4 +19,4 @@
 
 ## MindCluster Ascend FaultDiag已支持的故障<a name="ZH-CN_TOPIC_0000001724088177"></a>
 
-本章节介绍MindCluster Ascend FaultDiag组件诊断分析出的已经支持的故障类型及相关信息，请参考[MindCluster 26.0.0 故障诊断类型.xlsx](../resource/MindCluster%2026.0.0%20故障诊断类型.xlsx)。
+本章节介绍MindCluster Ascend FaultDiag组件诊断分析出的已经支持的故障类型及相关信息，请参考[MindCluster 26.0.0 故障诊断类型.xlsx](../resource/故障诊断类型.xlsx)。

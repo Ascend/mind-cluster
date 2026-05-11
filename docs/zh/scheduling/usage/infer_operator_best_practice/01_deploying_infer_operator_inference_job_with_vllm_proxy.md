@@ -189,7 +189,7 @@ spec:
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><ul ><li>on：开启<span >Pod</span>级别重调度。</li><li>其他值或不使用该字段：关闭<span >Pod</span>级别重调度。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p ><span >Pod</span>级重调度，表示任务发生故障后，不会删除PodGroup内的所有任务<span >Pod</span>，而是将发生故障的<span >Pod</span>进行删除，由控制器重新创建新<span >Pod</span>后进行重调度。</p>
-<p>PD实例必须配置此字段，Router实例可不配置</p>
+<p>PD实例必须配置此字段，Router实例可不配置。</p>
 </td>
 </tr>
 <tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >infer.huawei.com/gang-schedule</p>
@@ -390,7 +390,7 @@ inferserviceset.mindcluster.huawei.com "my-test" deleted
 
 用户在K8s集群中部署Infer Operator推理任务，手动编写和维护K8s YAML文件效率低下且容易出错。为此，MindCluster社区为用户提供了一个Infer Operator推理任务的一键式部署工具，替代繁琐的手动操作。用户只需提供基本的应用信息（如应用名、镜像版本、副本数等），脚本就能自动生成所有必要的、符合规范的InferServiceSet YAML文件，并直接部署到指定集群，同时，该部署工具提供一种简单的方式（如指定同一个应用名）一键删除所有相关资源。
 
-当前脚本支持P/D分离以及PD混合部署。
+当前脚本支持P/D分离以及P/D混合部署。
 
 **前提条件<a name="section178303526285"></a>**
 
