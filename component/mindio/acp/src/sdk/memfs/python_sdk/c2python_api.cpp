@@ -113,7 +113,7 @@ int ReadableFile::Initialize() noexcept
     }
     auto result = MemFsOpenFile(filePath.c_str(), O_RDONLY);
     if (result < 0) {
-        LOG_ERROR("MemFs client open file failed: " << errno << ":" << strerror(errno));
+        LOG_WARN("MemFs client open file failed: " << errno << ":" << strerror(errno));
         return -1;
     }
 
