@@ -2590,11 +2590,35 @@ cp -r /var/log/mindx-dl/npu-exporter 采集目录/dl_log
 
 **采集方式说明<a name="section1429254183012"></a>**
 
-进入日志存储目录，拷贝相关组件日志。
+采集前先检查环境是否有设置MindIE组件日志落盘路径
 
 ```shell
-cp -r ~/mindie 采集目录
+env | grep "MINDIE_LOG_PATH"
 ```
+
+- 若无结果显示或结果显示中不包含绝对路径，例如回显为以下：
+
+    ```shell
+    MINDIE_LOG_PATH="llm: llm"
+    ```
+
+    代表日志储存在默认路径下，使用以下命令进入日志默认存储目录，拷贝相关组件日志
+
+    ```shell
+    cp -r ~/mindie 采集目录
+    ```
+
+- 若有结果显示且结果显示中包含绝对路径，例如回显为以下：
+
+    ```shell
+    MINDIE_LOG_PATH="llm: /home/working/"
+    ```                
+  
+    则需要进入回显中对应的日志存储目录，拷贝相关组件日志。
+
+    ```shell
+    cp -r /home/working 采集目录
+    ```
 
 ### AMCT组件日志<a name="ZH-CN_TOPIC_0000002107731865"></a>
 
