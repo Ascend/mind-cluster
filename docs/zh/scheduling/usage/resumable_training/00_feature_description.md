@@ -98,7 +98,7 @@
 
 **使用条件<a name="section179221342141518"></a>**
 
-- 使用断点续训功能需要安装的组件详见[所需组件](../../introduction.md#断点续训)章节。
+- 使用断点续训功能需要安装的组件详见[所需组件](../../introduction/02_feature_description.md#断点续训)章节。
 - 断点续训特性是基于MindCluster集群调度组件的高阶特性，使用断点续训特性前需要完成的准备工作详见[准备K8s和共享存储](./02_preparing_kubernetes_and_shared_storage.md)章节。
 
 ## 性能说明<a name="ZH-CN_TOPIC_0000002479386472"></a>

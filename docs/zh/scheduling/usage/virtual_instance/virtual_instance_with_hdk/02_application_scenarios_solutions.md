@@ -33,15 +33,11 @@
 <p id="p333261621717"><a name="p333261621717"></a><a name="p333261621717"></a></p>
 </td>
 </tr>
-<tr id="row89138123014"><td class="cellrowborder" rowspan="2" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p391138203014"><a name="p391138203014"></a><a name="p391138203014"></a>在物理机划分vNPU，挂载vNPU到容器</p>
+<tr id="row89138123014"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p391138203014"><a name="p391138203014"></a><a name="p391138203014"></a>在物理机划分vNPU，挂载vNPU到容器</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol4232523123116"></a><a name="ol4232523123116"></a><ol id="ol4232523123116"><li>在物理机划分vNPU的步骤请参见<a href="./04_creating_vnpu.md">创建vNPU</a>。</li><li>挂载vNPU到容器的步骤请参见<a href="./06_mounting_vnpu.md">挂载vNPU</a>。</li></ol>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol4232523123116"></a><a name="ol4232523123116"></a><ol id="ol4232523123116"><li>在物理机划分vNPU的步骤请参见<a href="./04_creating_vnpu.md">创建vNPU</a>。</li><li>挂载vNPU到容器的步骤请参见<a href="./06_mounting_vnpu.md">挂载vNPU</a>。</li></ol>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p671845534711"><a name="p671845534711"></a><a name="p671845534711"></a>静态虚拟化</p>
-</td>
-</tr>
-<tr id="row174318393462"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><div class="p" id="p879861715488"><a name="p879861715488"></a><a name="p879861715488"></a>动态虚拟化：<a name="ul1028016496477"></a><a name="ul1028016496477"></a><ul id="ul1028016496477"><li>使用<span id="ph112801498478"><a name="ph112801498478"></a><a name="ph112801498478"></a>Ascend Docker Runtime</span>挂载</li><li>使用<span id="ph828016490479"><a name="ph828016490479"></a><a name="ph828016490479"></a><span id="ph728054934716"><a name="ph728054934716"></a><a name="ph728054934716"></a>Kubernetes</span>挂载</span></li></ul>
-</div>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><ul><li>静态虚拟化</li><li>动态虚拟化：<ul><li>使用Ascend Docker Runtime挂载</li><li>使用Kubernetes挂载</li></ul></li></ul>
 </td>
 </tr>
 <tr id="row131012387307"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1010133833013"><a name="p1010133833013"></a><a name="p1010133833013"></a>在物理机划分vNPU，挂载vNPU到虚拟机，在虚拟机内将vNPU挂载到容器</p>
@@ -51,15 +47,11 @@
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p13911193234713"><a name="p13911193234713"></a><a name="p13911193234713"></a>静态虚拟化</p>
 </td>
 </tr>
-<tr id="row3124381309"><td class="cellrowborder" rowspan="2" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p20127385307"><a name="p20127385307"></a><a name="p20127385307"></a>在物理机直通NPU到虚拟机，在虚拟机内划分vNPU，再将vNPU挂载到虚拟机内的容器</p>
+<tr id="row3124381309"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p20127385307"><a name="p20127385307"></a><a name="p20127385307"></a>在物理机直通NPU到虚拟机，在虚拟机内划分vNPU，再将vNPU挂载到虚拟机内的容器</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol441318447318"></a><a name="ol441318447318"></a><ol id="ol441318447318"><li>在物理机直通NPU到虚拟机的步骤请参见<span id="ph970622925815"><a name="ph970622925815"></a><a name="ph970622925815"></a>《Atlas 系列硬件产品 25.5.0 虚拟机配置指南》的“安装虚拟机&gt;配置NPU直通虚拟机&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540506/2689d3e6" target="_blank" rel="noopener noreferrer">NPU直通虚拟机</a>”章节</span>。</li><li>在虚拟机内划分vNPU步骤请参见<a href="./04_creating_vnpu.md">创建vNPU</a>。</li><li>将vNPU挂载到虚拟机内的容器的步骤请参见<a href="./06_mounting_vnpu.md">挂载vNPU</a>。</li></ol>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol441318447318"></a><a name="ol441318447318"></a><ol id="ol441318447318"><li>在物理机直通NPU到虚拟机的步骤请参见<span id="ph970622925815"><a name="ph970622925815"></a><a name="ph970622925815"></a>《Atlas 系列硬件产品 25.5.0 虚拟机配置指南》的“安装虚拟机&gt;配置NPU直通虚拟机&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540506/2689d3e6" target="_blank" rel="noopener noreferrer">NPU直通虚拟机</a>”章节</span>。</li><li>在虚拟机内划分vNPU步骤请参见<a href="./04_creating_vnpu.md">创建vNPU</a>。</li><li>将vNPU挂载到虚拟机内的容器的步骤请参见<a href="./06_mounting_vnpu.md">挂载vNPU</a>。</li></ol>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p1486613195014"><a name="p1486613195014"></a><a name="p1486613195014"></a>静态虚拟化</p>
-</td>
-</tr>
-<tr id="row8918450194820"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><div class="p" id="p14998206105010"><a name="p14998206105010"></a><a name="p14998206105010"></a>动态虚拟化：<a name="ul55138515017"></a><a name="ul55138515017"></a><ul id="ul55138515017"><li>使用<span id="ph1051325105019"><a name="ph1051325105019"></a><a name="ph1051325105019"></a>Ascend Docker Runtime</span>挂载</li><li>使用<span id="ph1951314565011"><a name="ph1951314565011"></a><a name="ph1951314565011"></a><span id="ph1251318575010"><a name="ph1251318575010"></a><a name="ph1251318575010"></a>Kubernetes</span>挂载</span></li></ul>
-</div>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><ul><li>静态虚拟化</li><li>动态虚拟化：<ul><li>使用Ascend Docker Runtime挂载</li><li>使用Kubernetes挂载</li></ul></li></ul>
 </td>
 </tr>
 </tbody>

@@ -138,7 +138,7 @@
         chmod 400 <path to TLS CA certificate file>
         ```
 
-**“/etc/docker/daemon.json“文件权限配置<a name="zh-cn_topic_0000001497205397_section2824195145813"></a>**
+**“/etc/docker/daemon.json”文件权限配置<a name="zh-cn_topic_0000001497205397_section2824195145813"></a>**
 
 - “daemon.json”文件属主和属组设为root:root，文件权限设为600。
 

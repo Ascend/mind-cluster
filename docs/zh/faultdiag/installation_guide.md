@@ -128,7 +128,7 @@ MindCluster Ascend Deployer支持5.0.0.2及以上版本的MindCluster Ascend Fau
 
 **单机安装MindCluster Ascend FaultDiag<a name="section16724191613286"></a>**
 
-单台设备安装MindCluster Ascend FaultDiag组件，请参见《MindCluster Ascend Deployer 用户指南》中的“[安装昇腾软件](https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/zh/installation_guide.md#%E5%AE%89%E8%A3%85%E6%98%87%E8%85%BE%E8%BD%AF%E4%BB%B6)”章节。
+单台设备安装MindCluster Ascend FaultDiag组件，请参见《MindCluster Ascend Deployer 用户指南》中的“[安装昇腾软件](https://gitcode.com/Ascend/ascend-deployer/blob/26.0.0/docs/zh/installation_guide.md#%E5%AE%89%E8%A3%85%E6%98%87%E8%85%BE%E8%BD%AF%E4%BB%B6)”章节。
 
 安装命令如下：
 
@@ -138,7 +138,7 @@ bash install.sh --install=fault-diag                                            
 
 **批量安装MindCluster Ascend FaultDiag<a name="section207590522915"></a>**
 
-批量安装MindCluster Ascend FaultDiag组件，请参见《MindCluster Ascend Deployer 用户指南》中的“[安装昇腾软件](https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/zh/installation_guide.md#%E5%AE%89%E8%A3%85%E6%98%87%E8%85%BE%E8%BD%AF%E4%BB%B6)”章节。
+批量安装MindCluster Ascend FaultDiag组件，请参见《MindCluster Ascend Deployer 用户指南》中的“[安装昇腾软件](https://gitcode.com/Ascend/ascend-deployer/blob/26.0.0/docs/zh/installation_guide.md#%E5%AE%89%E8%A3%85%E6%98%87%E8%85%BE%E8%BD%AF%E4%BB%B6)”章节。
 
 详细安装流程如[图1](#fig56301358747)所示：
 

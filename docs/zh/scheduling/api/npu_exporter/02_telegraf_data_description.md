@@ -1607,7 +1607,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 
 ## 调用的HDK接口<a name="section345820153363"></a>
 
-NPU Exporter是通过调用底层的HDK接口，获取相应的信息。数据信息调用的HDK接口请参考[NPU Exporter调用的HDK接口.xlsx](../../../resource/NPU%20Exporter调用的HDK接口.xlsx)。查找数据信息对应的HDK接口，可参考如下步骤。
+NPU Exporter是通过调用底层的HDK接口，获取相应的信息。数据信息调用的HDK接口请参考[NPU Exporter调用的HDK接口.xlsx](../../../resource/NPU-Exporter调用的HDK接口.xlsx)。查找数据信息对应的HDK接口，可参考如下步骤。
 
 1. 登录[昇腾计算文档](https://support.huawei.com/enterprise/zh/category/ascend-computing-pid-1557196528909?submodel=doc)中心，选择单击对应产品名称，进入文档界面。例如Atlas 800I A2 推理服务器产品的用户，单击“Atlas 800I A2”。
 2. 在左侧导航栏找到“二次开发”，根据接口的类型选择对应文档。
