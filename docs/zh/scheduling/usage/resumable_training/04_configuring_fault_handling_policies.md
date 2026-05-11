@@ -416,7 +416,7 @@ context:
          get_env_for_pytorch_multi_node_job 
          <strong>DISTRIBUTED_ARGS</strong>="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT <strong>--max_restarts 32767</strong>" </pre>
 
-        其中，--max_restarts表示配置容器内最大允许触发的故障次数，取值为整数。超出次数后PyTorch训练进程会直接退出训练，不配置该参数时默认为32767次。
+      其中，--max_restarts表示配置容器内最大允许触发的故障次数，取值为整数。超出次数后PyTorch训练进程会直接退出训练，不配置该参数时默认为32767次。
 
     - MindSpeed场景下，用户需修改训练启动脚本train\_start.sh，在代码中增加如下字段，示例如下。
 

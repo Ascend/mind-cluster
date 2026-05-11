@@ -2,10 +2,10 @@
 
 基础调度包含如下特性：
 
-- 训练任务：[整卡调度](../../introduction.md#整卡调度)、[静态vNPU调度](../../introduction.md#静态vnpu调度)、[多级调度](../../introduction.md#多级调度)和[弹性训练](../../introduction.md#弹性训练)。若使用断点续训请参见[断点续训](../../usage/resumable_training/00_feature_description.md)。
-- 推理任务：[整卡调度](../../introduction.md#整卡调度)、[静态vNPU调度](../../introduction.md#静态vnpu调度)、[动态vNPU调度](../../introduction.md#动态vnpu调度)、[软切分调度](../../introduction.md#软切分调度)、[推理卡故障恢复](../../introduction.md#推理卡故障恢复)和[推理卡故障重调度](../../introduction.md#推理卡故障重调度)。
+- 训练任务：[整卡调度](../../introduction/02_feature_description.md#整卡调度)、[静态vNPU调度](../../introduction/02_feature_description.md#静态vnpu调度)、[多级调度](../../introduction/02_feature_description.md#多级调度)和[弹性训练](../../introduction/02_feature_description.md#弹性训练)。若使用断点续训请参见[断点续训](../../usage/resumable_training/00_feature_description.md)。
+- 推理任务：[整卡调度](../../introduction/02_feature_description.md#整卡调度)、[静态vNPU调度](../../introduction/02_feature_description.md#静态vnpu调度)、[动态vNPU调度](../../introduction/02_feature_description.md#动态vnpu调度)、[软切分调度](../../introduction/02_feature_description.md#软切分调度)、[推理卡故障恢复](../../introduction/02_feature_description.md#推理卡故障恢复)和[推理卡故障重调度](../../introduction/02_feature_description.md#推理卡故障重调度)。
 
-    不同的特性依赖不同的组件，详细介绍请参见[基础调度](../../introduction.md#基础调度)章节。
+    不同的特性依赖不同的组件，详细介绍请参见[基础调度](../../introduction/02_feature_description.md#基础调度)章节。
 
 本文档演示如何基于某模型部署并执行使用NPU的训练或推理任务。生产环境与示例存在差异，本章节内示例仅做参考，用户需要根据实际生产环境做修改。
 
@@ -13,11 +13,11 @@
 
 Ascend Operator提供以下2种方式配置资源信息：
 
-- 通过环境变量配置资源信息：为不同AI框架的分布式训练任务提供相应的环境变量，请参见[环境变量说明](../../api/environment_variable_description.md)中"Ascend Operator环境变量说明"。使用此方式的用户仅支持创建Ascend Job（以下简称acjob）对象。
+- 通过环境变量配置资源信息：为不同AI框架的分布式训练任务提供相应的环境变量，请参见[Ascend Operator环境变量说明](../../api/environment_variable_description.md#ascend-operator环境变量说明)。使用此方式的用户仅支持创建Ascend Job（以下简称acjob）对象。
 - 通过文件配置资源信息：训练任务集合通信配置文件（RankTable File，也叫[hccl.json](../../api/hccl.json_file_description.md)）。使用此方式的用户支持创建以下3种类型的对象：Volcano Job（以下简称vcjob）、Ascend Job（以下简称acjob）和Deployment（以下简称deploy）。
     - （推荐）Ascend Job：简称acjob，是MindCluster自定义的一种任务类型，当前支持通过环境变量配置资源信息及文件配置资源信息这2种方式拉起训练或推理任务。
 
-        每个acjob任务YAML中包含一些固定字段，例如apiVersion、kind等，如果想了解这些字段的详细说明请参见[acjob关键字段说明](../../api/ascend_job.md)。
+        每个acjob任务YAML中包含一些固定字段，例如apiVersion、kind等，如果想了解这些字段的详细说明请参见[acjob关键字段说明](../../api/ascend_job.md#关键字段)。
 
     - Volcano Job：简称vcjob，适用于批处理任务，任务有完成状态。
     - Deployment：简称deploy，适用于后台常驻任务，任务没有完成状态。在需要持续训练任务、持续占用资源，调试训练任务，或者提供推理服务接口的时候选用。

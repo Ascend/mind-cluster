@@ -21,8 +21,8 @@
 支持以下产品使用资源监测。
 
 - Atlas 训练系列产品
-- Atlas A2 训练系列产品
-- Atlas A3 训练系列产品
+- <term>Atlas A2 训练系列产品</term>
+- <term>Atlas A3 训练系列产品</term>
 - 推理服务器（插Atlas 300I 推理卡）
 - Atlas 推理系列产品
 - Atlas 800I A2 推理服务器
