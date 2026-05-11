@@ -1,4 +1,10 @@
-FROM ubuntu:22.04 as build
+FROM openeuler/openeuler:24.03-lts
+
+RUN yum update -y && \
+    yum install -y wget unzip shadow && \
+    yum clean all && \
+    rm -rf /var/cache/yum && \
+    rm -rf /tmp/*
 
 RUN useradd -d /home/hwMindX -u 9000 -m -s  /usr/sbin/nologin hwMindX && \
     usermod root -s /usr/sbin/nologin

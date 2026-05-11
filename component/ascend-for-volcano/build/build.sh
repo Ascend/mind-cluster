@@ -63,6 +63,11 @@ function copy_yaml() {
     cp "${BASE_PATH}"/build/volcano-"${BASE_VER}".yaml "${BASE_PATH}"/output/
 }
 
+function copy_agreement() {
+    cp "${BASE_PATH}"/build/agreement.txt "${BASE_PATH}"/output/agreement.txt
+    sed -i "s/Volcano Version .*/Volcano Version ${build_version}/" "${BASE_PATH}"/output/agreement.txt
+}
+
 # fix the unconditional retry. All pod errors cause the podgroup to be deleted and cannot be rescheduled
 function replace_code() {
     REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/controllers/job/state/running.go"
@@ -161,6 +166,7 @@ function replace_k8s_version() {
 function main() {
   clean
   copy_yaml
+  copy_agreement
   replace_code
   replace_node_predicate
   replace_node_score

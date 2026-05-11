@@ -1,51 +1,40 @@
-FROM openeuler/openeuler:24.03-lts
+FROM openeuler/openeuler:24.03-lts AS build
 
-RUN echo 'echo "==============================================================="' >> /etc/profile.d/license.sh
-RUN echo 'echo "  Container image Copyright (c) 2026, Huawei Technologies Co., Ltd. All rights reserved."' >> /etc/profile.d/license.sh
-RUN echo 'echo "  This container image and its contents are governed by the Huawei Container License Agreement ("License")."' >> /etc/profile.d/license.sh
-RUN echo 'echo "  By pulling and using the container, you accept the terms and conditions of the License."' >> /etc/profile.d/license.sh
-RUN echo 'echo "  A copy of this license is made available at: https://www.hiascend.com/en/legal/ascendhub-download"' >> /etc/profile.d/license.sh
-RUN echo 'echo "  Note: You agree and undertake that when using Huawei or third-party software in this image,"' >> /etc/profile.d/license.sh
-RUN echo 'echo "  you will comply with the license agreement of the corresponding Huawei or third-party software."' >> /etc/profile.d/license.sh
-RUN echo 'echo "==============================================================="' >> /etc/profile.d/license.sh
-
+ARG VERSION=26.1.0
 ARG TARGETPLATFORM
 
-RUN sed -i 's@repo.openeuler.org@repo.huaweicloud.com/openeuler@g' /etc/yum.repos.d/openEuler.repo
+RUN yum update -y &&\
+    yum install -y wget unzip &&\
+    yum clean all &&\
+    rm -rf /var/cache/yum &&\
+    rm -rf /tmp/* &&\
+    ARCH=$(case "${TARGETPLATFORM}" in \
+        "linux/amd64") echo "x86_64" ;; \
+        "linux/arm64") echo "aarch64" ;; \
+        *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
+    esac) &&\
+    wget https://gitcode.com/ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-clusterd_${VERSION}_linux-${ARCH}.zip &&\
+    unzip Ascend-mindxdl-clusterd_${VERSION}_linux-${ARCH}.zip -d /build
 
-RUN yum update -y && \
-    yum install -y wget unzip shadow && \
-    yum clean all && \
-    rm -rf /var/cache/yum && \
-    rm -rf /tmp/*
+FROM openeuler/openeuler:24.03-lts
 
-RUN ARCH=$(case "${TARGETPLATFORM}" in \
-            "linux/amd64") echo "x86_64" ;; \
-            "linux/arm64") echo "aarch64" ;; \
-            *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
-        esac) && \
-    wget https://gitcode.com/ascend/mind-cluster/releases/download/v26.1.0/Ascend-mindxdl-clusterd_26.1.0_linux-${ARCH}.zip && \
-    mkdir -p /Ascend-mindxdl-clusterd  && \
-    unzip Ascend-mindxdl-clusterd_26.1.0_linux-${ARCH}.zip -d /Ascend-mindxdl-clusterd && \
-    rm -f Ascend-mindxdl-clusterd_26.1.0_linux-${ARCH}.zip
-
-WORKDIR /Ascend-mindxdl-clusterd
-
-RUN useradd -d /home/hwMindX -u 9000 -m -s /usr/sbin/nologin hwMindX &&\
+RUN yum install -y shadow &&\
+    yum clean all &&\
+    rm -rf /var/cache/yum &&\
+    useradd -d /home/hwMindX -u 9000 -m -s /usr/sbin/nologin hwMindX &&\
     usermod root -s /usr/sbin/nologin
 
-RUN cp ./clusterd /usr/local/bin
-RUN cp ./relationFaultCustomization.json /home/hwMindX/relationFaultCustomization.json
-RUN cp ./faultDuration.json /home/hwMindX/faultDuration.json
-RUN cp ./publicFaultConfiguration.json /home/hwMindX/publicFaultConfiguration.json
-RUN cp ./fdConfig.yaml /home/hwMindX/fdConfig.yaml
+COPY --from=build /build/clusterd /usr/local/bin/clusterd
+COPY --from=build /build/agreement.txt /usr/local/
+COPY --from=build /build/relationFaultCustomization.json \
+    /build/faultDuration.json \
+    /build/publicFaultConfiguration.json \
+    /build/fdConfig.yaml \
+    /home/hwMindX/
 
-WORKDIR /
-
-RUN rm -rf /Ascend-mindxdl-clusterd
-
-RUN chown -R hwMindX:hwMindX /home/hwMindX &&\
+RUN chown -R hwMindX:hwMindX /home/hwMindX /usr/local/agreement.txt &&\
     chmod 555 /usr/local/bin/clusterd &&\
+    chmod 440 /usr/local/agreement.txt &&\
     chmod 750 /home/hwMindX &&\
     chmod 440 /home/hwMindX/relationFaultCustomization.json &&\
     chmod 440 /home/hwMindX/faultDuration.json &&\
@@ -54,5 +43,7 @@ RUN chown -R hwMindX:hwMindX /home/hwMindX &&\
     echo 'umask 027' >> /etc/profile &&\
     echo 'source /etc/profile' >> /home/hwMindX/.bashrc
 
-# hwMindX is used as the default user of the container
 USER hwMindX
+
+ENTRYPOINT ["/bin/bash", "-c", "cat /usr/local/agreement.txt; exec /bin/bash"]
+

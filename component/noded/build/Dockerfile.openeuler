@@ -1,4 +1,10 @@
-FROM ubuntu:22.04
+FROM openeuler/openeuler:24.03-lts
+
+RUN yum update -y && \
+    yum install -y wget unzip shadow && \
+    yum clean all && \
+    rm -rf /var/cache/yum && \
+    rm -rf /tmp/*
 
 RUN usermod root -s /usr/sbin/nologin
 

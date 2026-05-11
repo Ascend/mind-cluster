@@ -29,6 +29,7 @@ echo "Build Architecture is" "${arch}"
 
 OUTPUT_NAME="infer-operator"
 sed -i "s/image: infer-operator:.*/image: infer-operator:${build_version}/" "${TOP_DIR}"/build/${OUTPUT_NAME}.yaml
+sed -i "s/Infer Operator Version .*/Infer Operator Version ${build_version}/" "${TOP_DIR}"/build/agreement.txt
 
 DOCKER_FILE_NAME="Dockerfile"
 
@@ -56,6 +57,8 @@ function build() {
 function mv_file() {
   mv "${TOP_DIR}/${OUTPUT_NAME}" "${TOP_DIR}/output"
   cp "${TOP_DIR}"/build/${DOCKER_FILE_NAME} "${TOP_DIR}"/output
+  cp "${TOP_DIR}"/build/Dockerfile.openeuler "${TOP_DIR}"/output
+  cp "${TOP_DIR}"/build/agreement.txt "${TOP_DIR}"/output
   cp "${TOP_DIR}"/build/infer-operator.yaml "${TOP_DIR}"/output/infer-operator-"${build_version}".yaml
 }
 

@@ -1,17 +1,7 @@
-FROM alpine:latest
+FROM alpine:latest AS build
 
-RUN echo 'echo "==============================================================="' >> /etc/profile.d/license.sh
-RUN echo 'echo "  Container image Copyright (c) 2026, Huawei Technologies Co., Ltd. All rights reserved."' >> /etc/profile.d/license.sh
-RUN echo 'echo "  This container image and its contents are governed by the Huawei Container License Agreement ("License")."' >> /etc/profile.d/license.sh
-RUN echo 'echo "  By pulling and using the container, you accept the terms and conditions of the License."' >> /etc/profile.d/license.sh
-RUN echo 'echo "  A copy of this license is made available at: https://www.hiascend.com/en/legal/ascendhub-download"' >> /etc/profile.d/license.sh
-RUN echo 'echo "  Note: You agree and undertake that when using Huawei or third-party software in this image,"' >> /etc/profile.d/license.sh
-RUN echo 'echo "  you will comply with the license agreement of the corresponding Huawei or third-party software."' >> /etc/profile.d/license.sh
-RUN echo 'echo "==============================================================="' >> /etc/profile.d/license.sh
-
+ARG VERSION=26.1.0
 ARG TARGETPLATFORM
-
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.huaweicloud.com/g' /etc/apk/repositories
 
 RUN apk update && apk add --no-cache \
     wget \
@@ -20,26 +10,26 @@ RUN apk update && apk add --no-cache \
     libc6-compat
 
 RUN ARCH=$(case "${TARGETPLATFORM}" in \
-            "linux/amd64") echo "x86_64" ;; \
-            "linux/arm64") echo "aarch64" ;; \
-            *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
-        esac) && \
-    wget https://gitcode.com/ascend/mind-cluster/releases/download/v26.1.0/Ascend-mindxdl-volcano_26.1.0_linux-${ARCH}.zip && \
-    mkdir -p /Ascend-mindxdl-volcano  && \
-    unzip Ascend-mindxdl-volcano_26.1.0_linux-${ARCH}.zip -d /Ascend-mindxdl-volcano
+        "linux/amd64") echo "x86_64" ;; \
+        "linux/arm64") echo "aarch64" ;; \
+        *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
+    esac) &&\
+    wget https://gitcode.com/ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-volcano_${VERSION}_linux-${ARCH}.zip &&\
+    unzip Ascend-mindxdl-volcano_${VERSION}_linux-${ARCH}.zip -d /build
 
-WORKDIR /Ascend-mindxdl-volcano/volcano-v1.7.0
+FROM alpine:latest
 
-RUN cp vc-controller-manager /vc-controller-manager
+COPY --from=build /build/volcano-v1.7.0/vc-controller-manager /vc-controller-manager
+COPY --from=build /build/volcano-v1.7.0/agreement.txt /usr/local/
 
-WORKDIR /
+RUN adduser -h /home/hwMindX -u 9000 -D -s /sbin/nologin hwMindX &&\
+    sed '1c root:x:0:0:root:/root:/sbin/nologin' /etc/passwd &&\
+    chown -R hwMindX:hwMindX vc-controller-manager /usr/local/agreement.txt &&\
+    chmod 750 /home/hwMindX &&\
+    chmod 500 vc-controller-manager &&\
+    chmod 440 /usr/local/agreement.txt
 
-RUN adduser -h /home/hwMindX -u 9000 -D -s /sbin/nologin hwMindX && \
-    sed '1c root:x:0:0:root:/root:/sbin/nologin' /etc/passwd && \
-    chown -R hwMindX:hwMindX vc-controller-manager && \
-    chmod 750 /home/hwMindX && \
-    chmod 500 vc-controller-manager
-#USER hwMindX
+USER hwMindX
 
-
+ENTRYPOINT ["/bin/sh", "-c", "cat /usr/local/agreement.txt; exec /bin/sh"]
 

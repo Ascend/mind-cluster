@@ -1,4 +1,10 @@
-FROM ubuntu:22.04 as build
+FROM openeuler/openeuler:24.03-lts
+
+RUN yum update -y && \
+    yum install -y wget unzip shadow && \
+    yum clean all && \
+    rm -rf /var/cache/yum && \
+    rm -rf /tmp/*
 
 RUN groupadd -g 1000 HwHiAiUser && useradd -u 1000 -g HwHiAiUser -d /home/HwHiAiUser -m HwHiAiUser &&\
     groupadd -g 1101 HwDmUser && useradd -u 1101 -g HwDmUser -d /home/HwDmUser -m HwDmUser &&\
@@ -26,3 +32,4 @@ RUN chmod 550 /usr/local/bin/device-plugin &&\
     echo 'source /etc/profile' >> ~/.bashrc
 
 ENTRYPOINT ["/bin/bash", "-c", "cat /usr/local/agreement.txt; exec /bin/bash"]
+
