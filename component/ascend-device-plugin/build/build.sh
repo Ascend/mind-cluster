@@ -93,8 +93,11 @@ function modify_version() {
     sed -i "s/ascend-k8sdeviceplugin:.*/ascend-k8sdeviceplugin:${build_version}/" "$CUR_DIR"/ascendplugin-310P-1usoc.yaml
     sed -i "s/ascend-k8sdeviceplugin:.*/ascend-k8sdeviceplugin:${build_version}/" "$CUR_DIR"/ascendplugin-npu-volcano.yaml
     sed -i "s/ascend-k8sdeviceplugin:.*/ascend-k8sdeviceplugin:${build_version}/" "$CUR_DIR"/ascendplugin-npu.yaml
+    sed -i "s/Ascend Device Plugin Version .*/Ascend Device Plugin Version ${build_version}/" "$CUR_DIR"/agreement.txt
     cp "$CUR_DIR"/Dockerfile "$TOP_DIR"/output/
+    cp "$CUR_DIR"/Dockerfile.openeuler "$TOP_DIR"/output/
     cp "$CUR_DIR"/Dockerfile-310P-1usoc "$TOP_DIR"/output/Dockerfile-310P-1usoc
+    cp "$CUR_DIR"/Dockerfile-310P-1usoc.openeuler "$TOP_DIR"/output/Dockerfile-310P-1usoc.openeuler
     cp "$CUR_DIR"/run_for_310P_1usoc.sh "$TOP_DIR"/output/run_for_310P_1usoc.sh
     cp "$CUR_DIR"/ascendplugin-910.yaml "$TOP_DIR"/output/device-plugin-910-"${build_version}".yaml
     cp "$CUR_DIR"/ascendplugin-volcano.yaml "$TOP_DIR"/output/device-plugin-volcano-"${build_version}".yaml
@@ -111,6 +114,7 @@ function modify_version() {
     cp "$CUR_DIR"/faultCustomization.json "$TOP_DIR"/output/faultCustomization.json
     cp "$CUR_DIR"/deviceNameCustomization.json "$TOP_DIR"/output/deviceNameCustomization.json
     cp "$CUR_DIR"/SwitchFaultCode.json "$TOP_DIR"/output/SwitchFaultCode.json
+    cp "$CUR_DIR"/agreement.txt "$TOP_DIR"/output/agreement.txt
 
     sed -i "s#output/device-plugin#device-plugin#" "$TOP_DIR"/output/Dockerfile
 }

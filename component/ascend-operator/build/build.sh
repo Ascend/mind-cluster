@@ -19,6 +19,7 @@ echo "Build Architecture is" "${arch}"
 
 OUTPUT_NAME="ascend-operator"
 sed -i "s/ascend-operator:.*/ascend-operator:${build_version}/" "${TOP_DIR}"/build/${OUTPUT_NAME}.yaml
+sed -i "s/Ascend Operator Version .*/Ascend Operator Version ${build_version}/" "${TOP_DIR}"/build/agreement.txt
 
 DOCKER_FILE_NAME="Dockerfile"
 
@@ -46,6 +47,8 @@ function mv_file() {
   mv "${TOP_DIR}/${OUTPUT_NAME}" "${TOP_DIR}/output"
   cp "${TOP_DIR}"/build/ascend-operator.yaml "${TOP_DIR}"/output/ascend-operator-"${build_version}".yaml
   cp "${TOP_DIR}"/build/${DOCKER_FILE_NAME} "${TOP_DIR}"/output
+  cp "${TOP_DIR}"/build/Dockerfile.openeuler "${TOP_DIR}"/output
+  cp "${TOP_DIR}"/build/agreement.txt "${TOP_DIR}"/output
 }
 
 function change_mod() {

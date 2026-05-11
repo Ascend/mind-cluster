@@ -63,13 +63,17 @@ function mv_file() {
   mv "${TOP_DIR}/${output_name}" "${TOP_DIR}"/output
   cd "${TOP_DIR}"
   sed -i "s/clusterd:.*/clusterd:${build_version}/" "$CUR_DIR"/clusterd.yaml
+  sed -i "s/ClusterD Version .*/ClusterD Version ${build_version}/" "$CUR_DIR"/agreement.txt
   cp "$CUR_DIR"/Dockerfile "$TOP_DIR"/output/
+  cp "$CUR_DIR"/Dockerfile.openeuler "$TOP_DIR"/output/
   cp "$CUR_DIR"/faultDuration.json "$TOP_DIR"/output/
   cp "$CUR_DIR"/relationFaultCustomization.json "$TOP_DIR"/output/
   cp "$CUR_DIR"/publicFaultConfiguration.json "$TOP_DIR"/output/
   cp "$CUR_DIR"/clusterd.yaml "$TOP_DIR"/output/clusterd-"${build_version}".yaml
   cp "$CUR_DIR"/fdConfig.yaml "$TOP_DIR"/output/
+  cp "$CUR_DIR"/agreement.txt "$TOP_DIR"/output/
   sed -i "s#output/clusterd#clusterd#" "$TOP_DIR"/output/Dockerfile
+  sed -i "s#output/clusterd#clusterd#" "$TOP_DIR"/output/Dockerfile.openeuler
   change_mod
 }
 

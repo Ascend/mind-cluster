@@ -60,10 +60,14 @@ function mv_file() {
   cp "${TOP_DIR}"/build/npu-exporter-310P-1usoc.yaml "${TOP_DIR}"/output/npu-exporter-310P-1usoc-"${build_version}".yaml
   cp "${TOP_DIR}"/build/metricConfiguration.json "${TOP_DIR}"/output/
   cp "${TOP_DIR}"/build/pluginConfiguration.json "${TOP_DIR}"/output/
+  cp "${TOP_DIR}"/build/agreement.txt "${TOP_DIR}"/output/
   sed -i "s/npu-exporter:.*/npu-exporter:${build_version}/" "${TOP_DIR}"/output/npu-exporter-"${build_version}".yaml
   sed -i "s/npu-exporter:.*/npu-exporter:${build_version}/" "${TOP_DIR}"/output/npu-exporter-310P-1usoc-"${build_version}".yaml
+  sed -i "s/NPU Exporter Version .*/NPU Exporter Version ${build_version}/" "${TOP_DIR}"/output/agreement.txt
   cp "${TOP_DIR}"/build/${DOCKER_FILE_NAME} "${TOP_DIR}"/output
+  cp "${TOP_DIR}"/build/Dockerfile.openeuler "${TOP_DIR}"/output
   cp "${TOP_DIR}"/build/${A200ISOC_DOCKER_FILE_NAME} "${TOP_DIR}"/output
+  cp "${TOP_DIR}"/build/Dockerfile-310P-1usoc.openeuler "${TOP_DIR}"/output
   cp "${TOP_DIR}"/build/${A200ISOC_RUN_SHELL} "${TOP_DIR}"/output
   chmod 400 "${TOP_DIR}"/output/*
   chmod 500 "${TOP_DIR}"/output/${OUTPUT_NAME}

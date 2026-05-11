@@ -1,67 +1,38 @@
-FROM ubuntu:22.04
+FROM ubuntu:22.04 AS build
 
-RUN echo 'echo "==============================================================="' >> /etc/profile.d/license.sh
-RUN echo 'echo "  Container image Copyright (c) 2026, Huawei Technologies Co., Ltd. All rights reserved."' >> /etc/profile.d/license.sh
-RUN echo 'echo "  This container image and its contents are governed by the Huawei Container License Agreement ("License")."' >> /etc/profile.d/license.sh
-RUN echo 'echo "  By pulling and using the container, you accept the terms and conditions of the License."' >> /etc/profile.d/license.sh
-RUN echo 'echo "  A copy of this license is made available at: https://www.hiascend.com/en/legal/ascendhub-download"' >> /etc/profile.d/license.sh
-RUN echo 'echo "  Note: You agree and undertake that when using Huawei or third-party software in this image,"' >> /etc/profile.d/license.sh
-RUN echo 'echo "  you will comply with the license agreement of the corresponding Huawei or third-party software."' >> /etc/profile.d/license.sh
-RUN echo 'echo "==============================================================="' >> /etc/profile.d/license.sh
-
+ARG VERSION=26.1.0
 ARG TARGETPLATFORM
 
-RUN sed -i 's@ports.ubuntu.com@repo.huaweicloud.com@g' /etc/apt/sources.list && \
-    sed -i 's@archive.ubuntu.com@repo.huaweicloud.com@g' /etc/apt/sources.list && \
-    sed -i 's@security.ubuntu.com@repo.huaweicloud.com@g' /etc/apt/sources.list
+RUN apt update && apt install -y wget unzip &&\
+    apt-get clean &&\
+    rm -rf /var/lib/apt/lists/* &&\
+    rm -rf /var/tmp/* &&\
+    rm -rf /tmp/* &&\
+    ARCH=$(case "${TARGETPLATFORM}" in \
+        "linux/amd64") echo "x86_64" ;; \
+        "linux/arm64") echo "aarch64" ;; \
+        *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
+    esac) &&\
+    wget https://gitcode.com/ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-noded_${VERSION}_linux-${ARCH}.zip &&\
+    unzip Ascend-mindxdl-noded_${VERSION}_linux-${ARCH}.zip -d /build
 
-RUN apt update && \
-    apt install -y \
-        wget \
-        unzip \
-        tar \
-        cmake \
-        gcc \
-        g++ \
-        make \
-        libglib2.0-dev \
-        pkg-config \
-        libnl-3-dev \
-        libnl-genl-3-dev \
-        libnl-route-3-dev \
-        libssl-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /var/tmp/* \
-    && rm -rf /tmp/*
-
-RUN ARCH=$(case "${TARGETPLATFORM}" in \
-            "linux/amd64") echo "x86_64" ;; \
-            "linux/arm64") echo "aarch64" ;; \
-            *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
-        esac) && \
-    wget https://gitcode.com/ascend/mind-cluster/releases/download/v26.1.0/Ascend-mindxdl-noded_26.1.0_linux-${ARCH}.zip && \
-    mkdir -p /Ascend-mindxdl-noded  && \
-    unzip Ascend-mindxdl-noded_26.1.0_linux-${ARCH}.zip -d /Ascend-mindxdl-noded && \
-    rm -f Ascend-mindxdl-noded_26.1.0_linux-${ARCH}.zip
-
-WORKDIR /Ascend-mindxdl-noded
+FROM ubuntu:22.04
 
 RUN usermod root -s /usr/sbin/nologin
 
 ENV LD_LIBRARY_PATH /usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common
 
-RUN cp ./noded /usr/local/bin
-RUN cp ./NodeDConfiguration.json /usr/local/
-RUN cp ./fdConfig.yaml /usr/local/fdConfig.yaml
-
-WORKDIR /
-
-RUN rm -rf /Ascend-mindxdl-noded
+COPY --from=build /build/noded /usr/local/bin/noded
+COPY --from=build /build/NodeDConfiguration.json /build/fdConfig.yaml /build/agreement.txt /usr/local/
 
 RUN chmod 550 /usr/local/bin/noded &&\
     chmod 550 /usr/local/bin &&\
     chmod 440 /usr/local/NodeDConfiguration.json &&\
     chmod 440 /usr/local/fdConfig.yaml &&\
+    chmod 440 /usr/local/agreement.txt &&\
     echo 'umask 027' >> /etc/profile &&\
     echo 'source /etc/profile' >> ~/.bashrc
+
+ENTRYPOINT ["/bin/bash", "-c", "cat /usr/local/agreement.txt; exec /bin/bash"]
+
+
