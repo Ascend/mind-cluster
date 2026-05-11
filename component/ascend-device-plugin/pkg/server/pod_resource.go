@@ -22,7 +22,6 @@ import (
 
 	"k8s.io/api/core/v1"
 	"k8s.io/kubelet/pkg/apis/podresources/v1alpha1"
-	"k8s.io/kubernetes/pkg/kubelet/apis/podresources"
 
 	"Ascend-device-plugin/pkg/common"
 	"ascend-common/common-utils/hwlog"
@@ -42,7 +41,7 @@ func (pr *PodResource) start() error {
 		return fmt.Errorf("check kubelet socket file path failed")
 	}
 	var err error
-	if pr.client, pr.conn, err = podresources.GetV1alpha1Client("unix://"+realKubeletSockPath, callTimeout,
+	if pr.client, pr.conn, err = getV1alpha1Client("unix://"+realKubeletSockPath, callTimeout,
 		defaultPodResourcesMaxSize); err != nil {
 		hwlog.RunLog.Errorf("get pod resource client failed, %v", err)
 		return err

@@ -30,7 +30,6 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubelet/pkg/apis/podresources/v1alpha1"
-	"k8s.io/kubernetes/pkg/kubelet/apis/podresources"
 
 	"Ascend-device-plugin/pkg/common"
 )
@@ -82,7 +81,7 @@ func TestPodResourceStart2(t *testing.T) {
 	pr := NewPodResource()
 	convey.Convey("test start", t, func() {
 		convey.Convey("GetClient failed", func() {
-			mockGetClient := gomonkey.ApplyFunc(podresources.GetV1alpha1Client, func(socket string,
+			mockGetClient := gomonkey.ApplyFunc(getV1alpha1Client, func(socket string,
 				connectionTimeout time.Duration, maxMsgSize int) (v1alpha1.PodResourcesListerClient,
 				*grpc.ClientConn, error) {
 				return nil, nil, fmt.Errorf("err")
@@ -91,7 +90,7 @@ func TestPodResourceStart2(t *testing.T) {
 			convey.So(pr.start(), convey.ShouldNotBeNil)
 		})
 		convey.Convey("start ok", func() {
-			mockGetClient := gomonkey.ApplyFunc(podresources.GetV1alpha1Client, func(socket string,
+			mockGetClient := gomonkey.ApplyFunc(getV1alpha1Client, func(socket string,
 				connectionTimeout time.Duration, maxMsgSize int) (v1alpha1.PodResourcesListerClient,
 				*grpc.ClientConn, error) {
 				return nil, nil, nil
