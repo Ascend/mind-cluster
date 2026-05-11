@@ -33,8 +33,8 @@
 
 - 支持以下产品使用**整卡调度**。
     - Atlas 训练系列产品
-    - Atlas A2 训练系列产品
-    - Atlas A3 训练系列产品
+    - <term>Atlas A2 训练系列产品</term>
+    - <term>Atlas A3 训练系列产品</term>
 
 - 支持以下产品使用**静态vNPU调度**。
 
@@ -504,15 +504,15 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 - 若当前环境使用的是<term>Atlas A2 训练系列产品</term>，选择[表1](#table529015783811)获取相应的YAML示例。
 
-    根据[表1](#table529015783811)获取示例YAML后，Atlas 800T A2 训练服务器、Atlas 200T A2 Box16 异构子框和A200T A3 Box8 超节点服务器可基于[表1 YAML参数说明](#yaml参数说明)给出的参数说明进行修改适配。
+    根据[表1](#table529015783811)获取示例YAML后，Atlas 800T A2 训练服务器、Atlas 200T A2 Box16 异构子框和A200T A3 Box8 超节点服务器可基于[表1 YAML参数说明](#table159746356276)给出的参数说明进行修改适配。
 
 - 若当前环境使用的是Atlas 训练系列产品，选择[表2](#table18698184918261)获取相应的YAML示例。
 
-    根据[表2](#table18698184918261)获取示例YAML后，服务器（插Atlas 300T 训练卡）可基于Atlas 800 训练服务器的YAML，以及参考[表1 YAML参数说明](#yaml参数说明)给出的参数说明进行修改适配。
+    根据[表2](#table18698184918261)获取示例YAML后，服务器（插Atlas 300T 训练卡）可基于Atlas 800 训练服务器的YAML，以及参考[表1 YAML参数说明](#table159746356276)给出的参数说明进行修改适配。
 
 - 若当前环境使用的是<term>Atlas A3 训练系列产品</term>，选择[表3](#table57051049102614)获取相应的YAML示例。
 
-- 若当前环境使用的是Atlas 950 训练系列产品，选择[表4](#950_yaml)获取相应的YAML示例。
+- 若当前环境使用的是Atlas 950 训练系列产品，选择[表4](#table5290157950yaml)获取相应的YAML示例。
 
 **表 1** <term>Atlas A2 训练系列产品</term>支持的YAML
 
@@ -705,7 +705,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </table>
 
 **表 4** Atlas 950 系列产品支持的YAML
-<a name="950_yaml"></a>
+<a name="table5290157950yaml"></a>
 <table>
     <thead align="left">
         <tr>
@@ -724,7 +724,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>PyTorch</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>pytorch_standalone_acjob_950.yaml</p></td>
             <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>示例默认为单机8卡任务。</p></td>
-            <td class="cellrowborder" rowspan="3" valign="top" width="15%" headers="mcps1.2.7.1.6 ">
+            <td class="cellrowborder" rowspan="2" valign="top" width="15%" headers="mcps1.2.7.1.6 ">
                 <p>选择相应的训练框架后，<a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v26.0.0/samples/train/basic-training/without-ranktable" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
             </td>
         </tr>
@@ -739,10 +739,10 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 - 若当前环境使用的是<term>Atlas A2 训练系列产品</term>，选择[表5](#table62591594016)获取相应的YAML示例。
 
-    根据[表5](#table62591594016)获取示例YAML后，Atlas 800T A2 训练服务器、Atlas 200T A2 Box16 异构子框和A200T A3 Box8 超节点服务器可基于[表2 YAML参数说明](#yaml参数说明)给出的参数说明进行修改适配。
+    根据[表5](#table62591594016)获取示例YAML后，Atlas 800T A2 训练服务器、Atlas 200T A2 Box16 异构子框和A200T A3 Box8 超节点服务器可基于[表2 YAML参数说明](#zh-cn_topic_0000001609074269_table1565872494511)给出的参数说明进行修改适配。
 
 - 若当前环境使用的是Atlas 训练系列产品，选择[表6](#table21811158146)获取相应的YAML示例。
-- 若当前环境使用的是Atlas 950 训练系列产品，选择[表7](#table950_yaml)获取相应的YAML示例。
+- 若当前环境使用的是Atlas 950 训练系列产品，选择[表7](#table950yaml)获取相应的YAML示例。
 
 **表 5** <term>Atlas A2 训练系列产品</term>支持的YAML
 
@@ -925,7 +925,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </table>
 
 **表 7** Atlas 950 系列产品支持的YAML
-<a name="table950_yaml"></a>
+<a name="table950yaml"></a>
 <table>
     <thead align="left">
         <tr>
@@ -1252,8 +1252,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 <td class="cellrowborder" valign="top" width="36.18%" headers="mcps1.2.4.1.2 "><p id="p20956101093820"><a name="p20956101093820"></a><a name="p20956101093820"></a>超节点任务使用的亲和性调度策略，需要用户在YAML的label中声明。</p>
 <a name="ul959814611371"></a><a name="ul959814611371"></a><ul id="ul959814611371"><li>soft：集群资源不满足超节点亲和性时，任务使用集群中碎片资源继续调度。</li><li>hard：集群资源不满足超节点亲和性时，任务Pending，等待资源。</li><li>其他值或不传入此参数：强制超节点亲和性调度</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><div class="note" id="note14495132616360"><a name="note14495132616360"></a><a name="note14495132616360"></a><div class="notebody"><p id="p20494202617363"><a name="p20494202617363"></a><a name="p20494202617363"></a>仅支持在<span id="ph7230184917387"><a name="ph7230184917387"></a><a name="ph7230184917387"></a>Atlas 900 A3 SuperPoD 超节点</span>中使用本参数。</p>
-</div></div>
+<td class="cellrowborder" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="p20494202617363"><a name="p20494202617363"></a><a name="p20494202617363"></a>仅支持在<span id="ph7230184917387"><a name="ph7230184917387"></a><a name="ph7230184917387"></a>Atlas 900 A3 SuperPoD 超节点</span>中使用本参数。</p>
 </td>
 </tr>
 <tr id="rowcustomjobkey"><td class="cellrowborder" valign="top" width="27.21%" headers="mcps1.2.4.1.1 "><p id="pcustomjobkey"><a name="pcustomjobkey"></a><a name="pcustomjobkey"></a>customJobKey</p>
@@ -1486,8 +1485,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 <td class="cellrowborder" valign="top" width="40.86%" headers="mcps1.2.4.1.2 "><p id="p1531312713409"><a name="p1531312713409"></a><a name="p1531312713409"></a>超节点任务使用的亲和性调度策略，需要用户在YAML的label中声明。</p>
 <a name="ul231337194020"></a><a name="ul231337194020"></a><ul id="ul231337194020"><li>soft：集群资源不满足超节点亲和性时，任务使用集群中碎片资源继续调度。</li><li>hard：集群资源不满足超节点亲和性时，任务Pending，等待资源。</li><li>其他值或不传入此参数：强制超节点亲和性调度</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><div class="note" id="note1031313718402"><a name="note1031313718402"></a><a name="note1031313718402"></a><div class="notebody"><p id="p2313117194012"><a name="p2313117194012"></a><a name="p2313117194012"></a>仅支持在<span id="ph133130710403"><a name="ph133130710403"></a><a name="ph133130710403"></a>Atlas 900 A3 SuperPoD 超节点</span>中使用本参数。</p>
-</div></div>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p2313117194012"><a name="p2313117194012"></a><a name="p2313117194012"></a>仅支持在<span id="ph133130710403"><a name="ph133130710403"></a><a name="ph133130710403"></a>Atlas 900 A3 SuperPoD 超节点</span>中使用本参数。</p>
 </td>
 </tr>
 <tr id="rowcustomjobkey2"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="pcustomjobkey2"><a name="pcustomjobkey2"></a><a name="pcustomjobkey2"></a>customJobKey</p>
@@ -1523,7 +1521,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 |chip4-node16|1个节点16张卡，每4张卡都在1个互联环上。例如，Atlas 350 标卡共16张卡，每4张卡通过UB扣板连接。|
 |chip1-node8|1个节点8张卡，每张卡之间无互联。例如，Atlas 350 标卡共8张卡，每张卡之间无互联。|
 |chip1-node16|1个节点16张卡，每张卡之间无互联。例如，Atlas 350 标卡共16张卡，每张卡之间无互联。|
-|chip8-node8-sp|1个节点8张卡，8张卡都在1个互联环上，多个服务器形成超节点。例如，Atlas 850 系列硬件产品超节点服务器。|
+|chip8-node8-sp|1个节点8张卡，8张卡都在1个互联环上，多个服务器形成超节点。例如，Atlas 850 系列硬件产品（超节点服务器）。|
 |chip8-node8-ra64-sp|1个节点8张卡，8张卡都在1个互联环上，64个节点组成一个计算框，多个框形成超节点。例如，Atlas 950 SuperPoD。|
 |chip1-softShareDev|软切分虚拟化专用调度策略。|
 |multilevel|多级调度场景使用，多级调度的详细使用方法请参见[多级调度](./05_multi_level_scheduling.md)。|
@@ -2411,7 +2409,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         ```
 
         >[!NOTE] 
-        >其余示例可参考[选择YAML示例](#选择yaml示例)中表4和表5，以及YAML对应的参数说明[表2 YAML参数说明](#yaml参数说明)进行适配修改。修改完成后执行[步骤2](#li832632419711)，继续配置YAML的其他字段。
+        >其余示例可参考[表5](#table62591594016)和[表6](#table21811158146)，以及YAML对应的参数说明[表2 YAML参数说明](#zh-cn_topic_0000001609074269_table1565872494511)进行适配修改。修改完成后执行[步骤2](#li832632419711)，继续配置YAML的其他字段。
 
     - <a name="li1328115394814"></a>使用**静态vNPU调度**特性，参考本配置。以a800\_tensorflow\_vcjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，申请2个AI Core的任务为例，修改示例如下。静态vNPU调度特性只支持**单机训练**任务。
 
@@ -3148,7 +3146,7 @@ kubectl delete -f XXX.yaml
 集成操作中会涉及到很多接口，请用户根据实际情况去相关官网了解接口的详细信息，本文档不再进行二次说明。
 
 - K8s相关接口请根据编程语言找到对应的K8s的[官方API库](https://github.com/kubernetes-client)了解相关内容。
-- Ascend Job可参考[表1](#yaml参数说明)中的参数说明，了解相关内容。
+- Ascend Job可参考[表1](#table159746356276)中的参数说明，了解相关内容。
 - Volcano Job相关接口可参见《云容器实例 API参考》中“[创建Volcano Job](https://support.huaweicloud.com/api-cci/createBatchVolcanoShV1alpha1NamespacedJob.html)”章节了解相关内容。
 - 下文的\{_xxx_\}即取“910”字符作为芯片型号数值。
 

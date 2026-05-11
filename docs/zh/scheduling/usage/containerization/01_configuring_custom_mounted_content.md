@@ -24,5 +24,5 @@ Ascend Docker Runtime会为用户默认挂载驱动以及基础配置文件“/e
     ```
 
     >[!NOTE]  
-    >- ASCEND\_VISIBLE\_DEVICES和ASCEND\_RUNTIME\_MOUNTS参数说明，请参见[表1](./02_usage_on_the_docker_client.md)。
+    >- ASCEND\_VISIBLE\_DEVICES和ASCEND\_RUNTIME\_MOUNTS参数说明，请参见[表1](./02_usage_on_the_docker_client.md#参数说明)。
     >- 自定义挂载内容受Ascend Docker Runtime的默认挂载白名单限制，具体白名单列表请参见[Ascend Docker Runtime默认挂载白名单](../../appendix.md#ascend-docker-runtime默认挂载白名单)。

@@ -28,7 +28,7 @@
 </td>
 <td class="cellrowborder" rowspan="5" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p18270161061517"><a name="p18270161061517"></a><a name="p18270161061517"></a><span id="ph622819010286"><a name="ph622819010286"></a><a name="ph622819010286"></a>Ascend Docker Runtime</span>运行所必需的可执行程序，不建议用户直接运行。</p>
 </td>
-<td class="cellrowborder" rowspan="10" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p1620912301185"><a name="p1620912301185"></a><a name="p1620912301185"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="10" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p1620912301185"><a name="p1620912301185"></a><a name="p1620912301185"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
 </tr>
 <tr id="row13637104114174"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p6945174713815"><a name="p6945174713815"></a><a name="p6945174713815"></a>ascend-docker-destroy</p>
@@ -74,7 +74,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p1415172514193"><a name="p1415172514193"></a><a name="p1415172514193"></a><span id="ph11151122561916"><a name="ph11151122561916"></a><a name="ph11151122561916"></a>NPU Exporter</span>二进制文件。</p>
 </td>
-<td class="cellrowborder" rowspan="8" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p8603637171910"><a name="p8603637171910"></a><a name="p8603637171910"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="8" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p8603637171910"><a name="p8603637171910"></a><a name="p8603637171910"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
 </tr>
 <tr id="row89908641918"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p181511250198"><a name="p181511250198"></a><a name="p181511250198"></a><span id="ph61511425111914"><a name="ph61511425111914"></a><a name="ph61511425111914"></a>Dockerfile</span></p>
@@ -118,7 +118,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p34651145494"><a name="p34651145494"></a><a name="p34651145494"></a><span id="ph1024012311247"><a name="ph1024012311247"></a><a name="ph1024012311247"></a>Ascend Device Plugin</span>二进制文件。</p>
 </td>
-<td class="cellrowborder" rowspan="16" align="left" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p578044431010"><a name="p578044431010"></a><a name="p578044431010"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="18" align="left" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p578044431010"><a name="p578044431010"></a><a name="p578044431010"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 <p id="p17810448103"><a name="p17810448103"></a><a name="p17810448103"></a></p>
 <p id="p178144410101"><a name="p178144410101"></a><a name="p178144410101"></a></p>
 </td>
@@ -222,7 +222,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p16854142616202"><a name="p16854142616202"></a><a name="p16854142616202"></a><span id="ph3854152619207"><a name="ph3854152619207"></a><a name="ph3854152619207"></a>Volcano</span>华为NPU调度插件动态链接库。</p>
 </td>
-<td class="cellrowborder" rowspan="7" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p18607137230"><a name="p18607137230"></a><a name="p18607137230"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="7" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p18607137230"><a name="p18607137230"></a><a name="p18607137230"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
 </tr>
 <tr id="row7321176208"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1585422618209"><a name="p1585422618209"></a><a name="p1585422618209"></a>Dockerfile-scheduler</p>
@@ -263,7 +263,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p12556132012216"><a name="p12556132012216"></a><a name="p12556132012216"></a><span id="ph85561520142113"><a name="ph85561520142113"></a><a name="ph85561520142113"></a>Infer Operator</span>二进制文件。</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p166316160318"><a name="p166316160318"></a><a name="p166316160318"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="3" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p166316160318"><a name="p166316160318"></a><a name="p166316160318"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
 </tr>
 <tr id="row4950313152111"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p6556182042112"><a name="p6556182042112"></a><a name="p6556182042112"></a><span id="ph1655611208214"><a name="ph1655611208214"></a><a name="ph1655611208214"></a>Dockerfile</span></p>
@@ -284,7 +284,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p12556132012216"><a name="p12556132012216"></a><a name="p12556132012216"></a><span id="ph85561520142113"><a name="ph85561520142113"></a><a name="ph85561520142113"></a>Ascend Operator</span>二进制文件。</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p166316160318"><a name="p166316160318"></a><a name="p166316160318"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="3" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p166316160318"><a name="p166316160318"></a><a name="p166316160318"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
 </tr>
 <tr id="row4950313152111"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p6556182042112"><a name="p6556182042112"></a><a name="p6556182042112"></a><span id="ph1655611208214"><a name="ph1655611208214"></a><a name="ph1655611208214"></a>Dockerfile</span></p>
@@ -303,7 +303,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p1430618209109"><a name="p1430618209109"></a><a name="p1430618209109"></a><span id="ph133061920101019"><a name="ph133061920101019"></a><a name="ph133061920101019"></a>NodeD</span>二进制文件。</p>
 </td>
-<td class="cellrowborder" rowspan="7" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p2078214442104"><a name="p2078214442104"></a><a name="p2078214442104"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="7" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p2078214442104"><a name="p2078214442104"></a><a name="p2078214442104"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
 </tr>
 <tr id="row2527181014104"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1930716203101"><a name="p1930716203101"></a><a name="p1930716203101"></a>noded-v<em id="i1645121221719"><a name="i1645121221719"></a><a name="i1645121221719"></a>{version}</em>.yaml</p>
@@ -342,7 +342,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p1843512121165"><a name="p1843512121165"></a><a name="p1843512121165"></a><span id="ph1043518127610"><a name="ph1043518127610"></a><a name="ph1043518127610"></a>ClusterD</span>二进制文件。</p>
 </td>
-<td class="cellrowborder" rowspan="7" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p866312341360"><a name="p866312341360"></a><a name="p866312341360"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="7" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p866312341360"><a name="p866312341360"></a><a name="p866312341360"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
 </tr>
 <tr id="row6376165513514"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p15435111214610"><a name="p15435111214610"></a><a name="p15435111214610"></a>clusterd-v<em id="i74356121167"><a name="i74356121167"></a><a name="i74356121167"></a>{version}</em>.yaml</p>
@@ -381,7 +381,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p1347835685717"><a name="p1347835685717"></a><a name="p1347835685717"></a>断点续训特性二进制文件。</p>
 </td>
-<td class="cellrowborder" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p523641511441"><a name="p523641511441"></a><a name="p523641511441"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p523641511441"><a name="p523641511441"></a><a name="p523641511441"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
 </tr>
 <tr id="row1726355217106"><td class="cellrowborder" rowspan="6" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p13571143931110"><a name="p13571143931110"></a><a name="p13571143931110"></a><span id="ph1857163911120"><a name="ph1857163911120"></a><a name="ph1857163911120"></a>Resilience Controller</span></p>
@@ -431,7 +431,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p1846275218911"><a name="p1846275218911"></a><a name="p1846275218911"></a><span id="ph762521420387"><a name="ph762521420387"></a><a name="ph762521420387"></a>Container Manager</span>组件二进制文件。</p>
 </td>
-<td class="cellrowborder" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p12618122171614"><a name="p12618122171614"></a><a name="p12618122171614"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p12618122171614"><a name="p12618122171614"></a><a name="p12618122171614"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
 </tr>
 <tr><td class="cellrowborder" rowspan="2" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p>MindIO</p>
@@ -440,7 +440,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p>MindIO组件二进制文件。</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p166316160318"><a name="p166316160318"></a><a name="p166316160318"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="2" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p166316160318"><a name="p166316160318"></a><a name="p166316160318"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
 </tr>
 <tr id="row4950313152111"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>mindio_ttp-<em>{version}</em>-py3-none-linux_<em>{arch}</em>.whl</p>

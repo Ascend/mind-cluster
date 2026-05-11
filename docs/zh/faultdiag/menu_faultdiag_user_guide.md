@@ -1,6 +1,7 @@
 # MindCluster 故障诊断用户指南 
 
-- [简介](introduction.md)
+- [简介](./introduction.md)
+- [支持的产品形态](./supported_products.md)
 - [安装与升级](installation_guide.md)
 - [使用指导](./user_guide/menu_user_guide.md)
   - [使用说明](./user_guide/00_instruction.md)

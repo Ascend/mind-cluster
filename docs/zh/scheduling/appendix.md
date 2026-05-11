@@ -1012,7 +1012,7 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 |单机单卡训练|使用1台训练服务器上的1颗芯片进行训练。|
 
 >[!NOTE] 
->更多关于集群调度组件支持的产品形态，请参见[支持的产品形态和OS清单](./introduction.md#支持的产品形态和os清单)章节。
+>更多关于集群调度组件支持的产品形态，请参见[支持的产品形态和OS清单](./introduction/03_supported_product_models_and_os.md)章节。
 
 ## 公网地址<a name="ZH-CN_TOPIC_0000002511346387"></a>
 
@@ -1024,9 +1024,9 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 |--|--|
 |huawei.com/Ascend910|Atlas 训练系列产品资源名称，非网址，不访问。|
 |huawei.com/Ascend310P|Atlas 推理系列产品资源名称，非网址，不访问。|
-|huawei.com/Ascend310|Atlas 200/300/500 推理产品资源名称，非网址，不访问。|
+|huawei.com/Ascend310|<term>Atlas 200/300/500 推理产品</term>资源名称，非网址，不访问。|
 |huawei.com/Ascend*|Ascend*切分芯片资源名称，非网址，不访问。|
-|<https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.3>|注释参考信息，不访问。|
+|`https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.3`|注释参考信息，不访问。|
 |huawei.com/Ascend310P-V|Atlas 推理系列产品混插模式：Atlas 300V 视频解析卡资源名称，非网址，不访问。|
 |huawei.com/Ascend310P-VPro|Atlas 推理系列产品混插模式：Atlas 300V Pro 视频解析卡资源名称，非网址，不访问。|
 |huawei.com/Ascend310P-IPro|Atlas 推理系列产品混插模式：Atlas 300I Pro 推理卡资源名称，非网址，不访问。|
@@ -1498,7 +1498,7 @@ MindCluster集群调度组件是基于K8s生态的功能组件，因此训练任
 
     开发示例如下：
 
-    使用NPU Exporter集成并采集Devkit工具生成的hccs\_bandwidth指标，详情请参见[NPU Exporter集成Devkit部署指南](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/utils/npu-exporter)。关于hccs\_bandwidth指标信息的说明请参见[HCCS带宽监控](https://www.hikunpeng.com/document/detail/zh/kunpengdevps/userguide/cliuserguide/KunpengDevKitCli_0251.html)。
+    使用NPU Exporter集成并采集Devkit工具生成的hccs\_bandwidth指标，详情请参见[NPU Exporter集成Devkit部署指南](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/utils/npu-exporter)。关于hccs\_bandwidth指标信息的说明请参见[HCCS带宽监控](https://www.hikunpeng.com/document/detail/zh/kunpengdevps/profiler/profiler/KunpengDevKitCli_0251.html)。
 
 - 通过插件方式开发自定义指标
 

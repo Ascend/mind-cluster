@@ -12,9 +12,7 @@
 
 2. ClusterD读取device-info-cm和node-info-cm中的信息后，将信息整合到cluster-info-cm中。
 3. 用户通过kubectl或者其他深度学习平台下发AIBrix框架的StormService推理任务，aibrix-controller-manager根据推理任务的配置生成RoleSet或者PodSet的子工作负载，再由对应的子工作负载生成多个推理服务的任务Pod。关于RoleSet或者PodSet的详细说明，可以参见[AIBrix文档](https://aibrix.readthedocs.io/latest/designs/aibrix-stormservice.html)。
-4. volcano-controller为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参见[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
-
-    **PodGroup生成策略**
+4. volcano-controller为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参见[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。PodGroup生成策略如下：
 
     当前暂不支持在stormservice.spec.template.spec.schedulingStrategy或stormservice.spec.template.spec.roles[*].schedulingStrategy中设置volcanoSchedulingStrategy。此时由volcano-controller创建对应的PodGroup，具体策略如下：
 

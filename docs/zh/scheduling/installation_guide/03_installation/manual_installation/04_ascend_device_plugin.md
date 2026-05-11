@@ -54,7 +54,7 @@
 <tr id="row11391707149"><td class="cellrowborder" rowspan="2" valign="top" width="25%" headers="mcps1.2.3.1.1 "><p id="p133919013143"><a name="p133919013143"></a><a name="p133919013143"></a><span id="ph1078193611515"><a name="ph1078193611515"></a><a name="ph1078193611515"></a>Atlas 200I SoC A1 核心板</span></p>
 <p id="p1918223205014"><a name="p1918223205014"></a><a name="p1918223205014"></a></p>
 </td>
-<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p786843510309"><a name="p786843510309"></a><a name="p786843510309"></a><span id="ph1480005781518"><a name="ph1480005781518"></a><a name="ph1480005781518"></a>Atlas 200I SoC A1 核心板</span>节点上如果使用容器化部署<span id="ph080185715158"><a name="ph080185715158"></a><a name="ph080185715158"></a>Ascend Device Plugin</span>，需要配置多容器共享模式，具体请参考<span id="ph3957123242310"><a name="ph3957123242310"></a><a name="ph3957123242310"></a>《Atlas 200I SoC A1 核心板 25.0.RC1 NPU驱动和固件安装指南》中“<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100468901/55e9d968" target="_blank" rel="noopener noreferrer">容器内运行</a>”章节</span>。</p>
+<td class="cellrowborder" valign="top" width="75%" headers="mcps1.2.3.1.2 "><p id="p786843510309"><a name="p786843510309"></a><a name="p786843510309"></a><span id="ph1480005781518"><a name="ph1480005781518"></a><a name="ph1480005781518"></a>Atlas 200I SoC A1 核心板</span>节点上如果使用容器化部署<span id="ph080185715158"><a name="ph080185715158"></a><a name="ph080185715158"></a>Ascend Device Plugin</span>，需要配置多容器共享模式，具体请参考<span id="ph3957123242310"><a name="ph3957123242310"></a><a name="ph3957123242310"></a>《Atlas 200I SoC A1 核心板 25.2.0 NPU驱动和固件安装指南》中“<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100493510/55e9d968" target="_blank" rel="noopener noreferrer">容器内运行</a>”章节</span>。</p>
 </td>
 </tr>
 <tr id="row4248144116153"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><div class="p" id="p5840775161"><a name="p5840775161"></a><a name="p5840775161"></a><span id="ph697712515161"><a name="ph697712515161"></a><a name="ph697712515161"></a>Atlas 200I SoC A1 核心板</span>使用<span id="ph99771752169"><a name="ph99771752169"></a><a name="ph99771752169"></a>Ascend Device Plugin</span>组件，需要遵循以下配套关系：<a name="ul2977251161"></a><a name="ul2977251161"></a><ul id="ul2977251161"><li>5.0.RC2版本的<span id="ph49779571614"><a name="ph49779571614"></a><a name="ph49779571614"></a>Ascend Device Plugin</span>需要配合<span id="ph5977135101614"><a name="ph5977135101614"></a><a name="ph5977135101614"></a>Atlas 200I SoC A1 核心板</span>的23.0.RC2及其之后的驱动一起使用。</li><li>5.0.RC2之前版本的<span id="ph59771512164"><a name="ph59771512164"></a><a name="ph59771512164"></a>Ascend Device Plugin</span>只能和<span id="ph1977115181612"><a name="ph1977115181612"></a><a name="ph1977115181612"></a>Atlas 200I SoC A1 核心板</span>的23.0.RC2之前的驱动一起使用。</li></ul>
@@ -105,8 +105,8 @@
     | device-plugin-310P-1usoc-volcano-v<i>\{version\}</i>.yaml | Atlas 200I SoC A1 核心板上使用Volcano的配置文件。                                                               |
     | device-plugin-310P-v<i>\{version\}</i>.yaml               | 除了Atlas 200I SoC A1 核心板之外的Atlas 推理系列产品上不使用Volcano的配置文件。                                             |
     | device-plugin-310P-volcano-v<i>\{version\}</i>.yaml       | 除了Atlas 200I SoC A1 核心板之外的Atlas 推理系列产品上使用Volcano的配置文件。                                              |
-    | device-plugin-910-v<i>\{version\}</i>.yaml                | Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件上不使用Volcano的配置文件。 | 
-    | device-plugin-volcano-v<i>\{version\}</i>.yaml            | Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件上使用Volcano的配置文件。  |
+    | device-plugin-910-v<i>\{version\}</i>.yaml                | Atlas 训练系列产品、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 训练系列产品</term>或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件上不使用Volcano的配置文件。 | 
+    | device-plugin-volcano-v<i>\{version\}</i>.yaml            | Atlas 训练系列产品、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 训练系列产品</term>或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件上使用Volcano的配置文件。  |
     | device-plugin-npu-v<i>\{version\}</i>.yaml                | Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD上不使用Volcano的配置文件。                                  |    
     | device-plugin-npu-volcano-v<i>\{version\}</i>.yaml        | Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD上使用Volcano的配置文件。                                   |    
 
@@ -238,13 +238,13 @@
 
 8. 在K8s管理节点上各YAML对应路径下执行以下命令，启动Ascend Device Plugin。
 
-    - K8s集群中存在使用Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件的节点（配合Volcano使用，支持虚拟化实例，YAML默认开启静态虚拟化）。
+    - K8s集群中存在使用Atlas 训练系列产品、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 训练系列产品</term>或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件的节点（配合Volcano使用，支持虚拟化实例，YAML默认开启静态虚拟化）。
 
         ```shell
         kubectl apply -f device-plugin-volcano-v{version}.yaml
         ```
 
-    - K8s集群中存在使用Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件的节点（Ascend Device Plugin独立工作，不配合Volcano使用）。
+    - K8s集群中存在使用Atlas 训练系列产品、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 训练系列产品</term>或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件的节点（Ascend Device Plugin独立工作，不配合Volcano使用）。
 
         ```shell
         kubectl apply -f device-plugin-910-v{version}.yaml
@@ -350,5 +350,5 @@
 |-thirdPartyScanDelay|int|300|<p>Ascend Device Plugin组件启动重新扫描的等待时长。</p><p>Ascend Device Plugin自动复位芯片失败后，会将失败信息写到节点annotation上，三方平台可以根据该信息复位失败的芯片。Ascend Device Plugin组件根据本参数设置的等待时长，等待一段时间后，重新扫描设备。</p><p>仅Atlas 800T A3 超节点服务器支持使用本参数。</p><p>单位：秒。</p>|
 |-deviceResetTimeout|int|60|组件启动时，若芯片数量不足，等待驱动上报完整芯片的最大时长，单位为秒，取值范围为10~600。<ul><li>Atlas A2 训练系列产品、Atlas 800I A2 推理服务器、A200I A2 Box 异构组件：建议配置为150秒。</li><li>Atlas A3 训练系列产品、A200T A3 Box8 超节点服务器、Atlas 800I A3 超节点服务器：建议配置为360秒。</li><li>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD：建议配置为600秒。</li></ul>|
 |-softShareDevConfigDir|string|""|软切分虚拟化场景配置目录。该配置目录需要在安装Ascend Device Plugin之前在根目录下手动创建。使用软切分功能时，需要配置该参数。|
-|-useSingleDieMode|bool|false|Atlas A3 推理系列产品是否开启单die直通模式。<ul><li>true：开启单die直通模式。</li><li>false：关闭单die直通模式。</li></ul>使用软切分虚拟化功能时，该参数必须配置为true。|
+|-useSingleDieMode|bool|false|<term>Atlas A3 推理系列产品</term>是否开启单die直通模式。<ul><li>true：开启单die直通模式。</li><li>false：关闭单die直通模式。</li></ul>使用软切分虚拟化功能时，该参数必须配置为true。|
 |-h或者-help|无|无|显示帮助信息。|
