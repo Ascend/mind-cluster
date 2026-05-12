@@ -59,6 +59,7 @@ function build() {
 
 function mv_file() {
     mv "${TOP_DIR}/${output_name}"   "${TOP_DIR}"/output
+    mv "${CUR_DIR}/deploy.sh" "${TOP_DIR}/output"
 }
 
 function main() {

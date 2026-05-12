@@ -9,7 +9,7 @@
 
     示例：源码放在/home/mind-cluster/component/container-manager目录下
 
-2.  执行以下命令，进入构建目录，选择构建脚本执行，在“output”目录下生成二进制container-manager、故障码配置文件faultCode.json。
+2.  执行以下命令，进入构建目录，选择构建脚本执行，在“output”目录下生成二进制container-manager、部署脚本deploy.sh。
 
     ```bash
     cd /home/mind-cluster/component/container-manager/build/
@@ -24,7 +24,7 @@
     ```
     回显示例如下：
     ```
-    container-manager faultCode.json
+    container-manager deploy.sh
     ```
 
 # 使用

@@ -118,28 +118,34 @@
 
 ## 卸载Container Manager组件<a name="section1461059103619"></a>
 
+使用部署脚本（deploy.sh）进行卸载，脚本自动完成服务停止与禁用、systemd单元文件删除、二进制文件删除等操作。
+
 1. 以root用户登录Container Manager组件部署的节点。
-2. 依次执行以下命令，卸载Container Manager组件系统服务。
+
+2. 进入Container Manager软件包解压目录，执行deploy.sh脚本卸载Container Manager服务。
 
     ```shell
-    # 停止Container Manager系统服务
-    systemctl stop container-manager.timer
-    systemctl disable container-manager.timer
-    systemctl stop container-manager.service
-    systemctl disable container-manager.service
-    
-    # 删除Container Manager系统服务
-    rm -f /etc/systemd/system/container-manager.service
-    rm -f /etc/systemd/system/container-manager.timer
-    systemctl daemon-reload
-    systemctl reset-failed
-    
-    # 删除对应Container Manager二进制文件
-    chattr -i /usr/local/bin/container-manager
-    rm -f /usr/local/bin/container-manager
+    bash deploy.sh uninstall
     ```
 
-3. 删除日志文件，请确认实际路径后再删除。
+    卸载脚本将依次执行以下操作：停止并禁用systemd服务和定时器、删除systemd单元文件、删除二进制文件。日志目录默认保留，如需清理请手动删除。
+
+    卸载成功后，回显示例如下：
+
+    ```shell
+    [INFO] Uninstalling container-manager...
+    [INFO] Stopping service...
+    [INFO] Disabling service...
+    [INFO] Stopping timer...
+    [INFO] Disabling timer...
+    [INFO] Removing systemd service unit...
+    [INFO] Removing systemd timer unit...
+    [INFO] Removing binary...
+    [INFO] Log directory preserved at /var/log/mindx-dl/container-manager
+    [INFO] Uninstallation completed successfully
+    ```
+
+3. （可选）删除日志文件，请确认实际路径后再删除。
 
     ```shell
     rm -rf /var/log/mindx-dl/container-manager

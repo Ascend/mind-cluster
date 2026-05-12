@@ -246,34 +246,48 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 ## 升级Container Manager<a name="ZH-CN_TOPIC_0000002524548731"></a>
 
-在物理机上直接替换Container Manager二进制升级组件。
+使用部署脚本（deploy.sh）进行升级，脚本自动完成二进制替换和服务重启，保留现有服务配置（启动参数等）不变。
+
+>[!IMPORTANT]
+>请使用 **upgrade** 命令进行升级，不要使用 **install** 命令，重复使用install命令会覆盖现有的服务配置（如启动参数），可能导致服务配置丢失。
 
 1. 以root用户登录Container Manager组件部署的节点。
-2. 将获取到的Container Manager软件包上传至服务器的任意目录（如“/tmp/container-manager”）。
-3. 进入“/tmp/container-manager”目录并进行解压操作。
+
+2. 将获取到的新版本Container Manager软件包上传至服务器的任意目录，以下以“/home/container-manager”目录为例（26.1.0及以上版本支持部署脚本升级）。
+
+    >[!NOTE] 
+    >若服务器可访问网络，也可通过以下命令下载软件包：
+    >
+    >```shell
+    >wget https://gitcode.com/Ascend/mind-cluster/releases/download/v{version}/Ascend-mindxdl-container-manager_{version}_linux-{arch}.zip
+    >```
+    >
+    ><i>\<version\></i>为软件包的版本号；<i>\<arch\></i>为CPU架构（如x86_64、aarch64）。
+
+3. 进入软件包所在目录，解压软件包。
 
     ```shell
+    cd /home/container-manager
     unzip Ascend-mindxdl-container-manager_{version}_linux-{arch}.zip
     ```
 
-    >[!NOTE] 
-    ><i>\<version\></i>为软件包的版本号；<i>\<arch\></i>为CPU架构。
-
-4. 依次执行以下命令，升级Container Manager组件。
+4. 进入软件包解压目录，执行deploy.sh脚本升级Container Manager。
 
     ```shell
-    # 停止Container Manager系统服务，并删除对应Container Manager二进制文件
-    systemctl stop container-manager.service
-    chattr -i /usr/local/bin/container-manager
-    rm -f /usr/local/bin/container-manager
-    
-    # 从解压文件中获取新二进制文件，替换旧Container Manager二进制文件
-    cp /tmp/container-manager/container-manager /usr/local/bin
-    chmod 500 /usr/local/bin/container-manager
-    
-    # 重启Container Manager系统服务
-    systemctl daemon-reload
-    systemctl start container-manager.service
+    bash deploy.sh upgrade
+    ```
+
+    升级脚本将依次执行以下操作：停止服务、替换二进制文件、重启服务。
+
+    升级成功后，回显示例如下：
+
+    ```shell
+    [INFO] Upgrading container-manager...
+    [INFO] Stopping service...
+    [INFO] Replacing binary...
+    [INFO] Starting service...
+    [INFO] Binary upgraded to: container-manager version: v26.1.0_linux-x86-64
+    [INFO] Upgrade completed successfully
     ```
 
 5. 验证Container Manager组件的升级状态。
