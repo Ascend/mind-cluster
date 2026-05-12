@@ -86,9 +86,12 @@ var (
 	opticalRxPower2Desc []*prometheus.Desc
 	opticalRxPower3Desc []*prometheus.Desc
 
-	supportedOpticalNpuDevices = map[uint32]bool{
-		api.Atlas850MainBoardID:  true,
-		api.Atlas850MainBoardID2: true,
+	notSupportedOpticalNpuDevices = map[uint32]bool{
+		api.Atlas3501PMainBoardID: true,
+		api.Atlas3502PMainBoardID: true,
+		api.Atlas3504PMainBoardID: true,
+		api.Atlas9501DMainBoardID: true,
+		api.Atlas950MainBoardID:   true,
 	}
 )
 
@@ -153,7 +156,7 @@ func (c *OpticalCollector) IsSupported(n *colcommon.NpuCollector) bool {
 	mainBoardID := n.Dmgr.GetMainBoardId()
 	// For Npu devices, check if it's a supported optical model
 	if colcommon.DevType == api.Ascend910A5 {
-		if supportedOpticalNpuDevices[mainBoardID] {
+		if !notSupportedOpticalNpuDevices[mainBoardID] {
 			initNpuOpticalDesc()
 			return true
 		}
