@@ -142,8 +142,7 @@ validate_fault_config() {
     fi
     validate_path_not_symlink "${path}" "faultConfigPath"
     local perm
-    perm=$(stat -c '%a' "${path}" 2>/dev/null || stat -f '%Lp' "${path}" 2>/dev/null || echo "777")
-    # Take last 3 characters to handle both 3-digit (640) and 4-digit (0640) octal output
+    perm=$(stat -c '%a' "${path}" 2>/dev/null || echo "777")
     local perm_last3="${perm: -3}"
     if [ "${perm_last3:0:1}" -gt 6 ] || [ "${perm_last3:1:1}" -gt 4 ] || [ "${perm_last3:2:1}" -gt 0 ]; then
         log_error "Fault config file permission too open: ${perm}, must not exceed 640"

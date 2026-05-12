@@ -31,6 +31,7 @@ arch=$(arch 2>&1)
 echo "Build Architecture is" "${arch}"
 
 output_name="container-manager"
+script_name="deploy.sh"
 os_type=$(arch)
 
 function clean() {
@@ -59,7 +60,7 @@ function build() {
 
 function mv_file() {
     mv "${TOP_DIR}/${output_name}"   "${TOP_DIR}"/output
-    mv "${CUR_DIR}/deploy.sh" "${TOP_DIR}/output"
+    mv "${CUR_DIR}/${script_name}" "${TOP_DIR}"/output && chmod 0500 "${TOP_DIR}"/output/"${script_name}"
 }
 
 function main() {
