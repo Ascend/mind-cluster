@@ -1,96 +1,243 @@
-# Container Manager<a name="ZH-CN_TOPIC_0000002524428759"></a>
+﻿# Container Manager<a name="ZH-CN_TOPIC_0000002524428759"></a>
+
+Container Manager组件直接在物理机上通过二进制方式运行，提供容器生命周期管理、故障检测与恢复功能。
 
 ## 操作步骤
 
-Container Manager组件直接在物理机上通过二进制方式运行。
+使用部署脚本（deploy.sh）进行安装，脚本自动完成二进制拷贝、systemd服务文件生成、服务启停等操作，减少人工配置错误。
 
 1. 使用root用户登录服务器。
-2. 将获取到的Container Manager软件包上传至服务器的任意目录（以下以“/home/container-manager”目录为例）。
-3. 进入“/home/container-manager”目录并进行解压操作。
+
+2. 将获取到的Container Manager软件包上传至服务器的任意目录，以下以“/home/container-manager”目录为例（26.1.0及以上版本支持部署脚本安装，使用历史版本请参考对应历史版本资料说明）。
+
+    >[!NOTE]
+    >若服务器可访问网络，也可通过以下命令下载软件包：
+    >
+    >```shell
+    >wget https://gitcode.com/Ascend/mind-cluster/releases/download/v{version}/Ascend-mindxdl-container-manager_{version}_linux-{arch}.zip
+    >```
+    >
+    ><i>\<version\></i>为软件包的版本号；<i>\<arch\></i>为CPU架构（如x86_64、aarch64）。
+
+3. 进入软件包所在目录，解压软件包。
 
     ```shell
+    cd /home/container-manager
     unzip Ascend-mindxdl-container-manager_{version}_linux-{arch}.zip
     ```
 
-    >[!NOTE] 
-    ><i><version\></i>为软件包的版本号；<i><arch\></i>为CPU架构。
-
 4. （可选）创建自定义故障码配置文件，自定义故障码处理级别。配置及使用详情请参见[（可选）配置芯片故障级别](../../../usage/appliance/01_npu_hardware_fault_detection_and_rectification.md#可选配置芯片故障级别)，以下步骤不体现该文件。
-5. 创建并编辑container-manager.service文件。
-    1. 执行以下命令，创建container-manager.service文件。
+
+5. 进入解压后的目录，执行deploy.sh脚本安装Container Manager服务。
+
+    - 使用默认参数安装（Docker运行时，不自动恢复容器）：
 
         ```shell
-        vi container-manager.service
+        bash deploy.sh install
         ```
 
-    2. 参考如下内容，写入container-manager.service文件中。“ExecStart”字段中加粗的内容为启动命令，启动参数说明请参见[表1](#table8724104319141cm)，用户可以根据实际需要进行修改。
-
-        <pre>
-        [Unit]
-        Description=Ascend container manager
-        Documentation=hiascend.com
-        
-        [Service]
-        ExecStart=/bin/bash -c "<strong>container-manager run -ctrStrategy ringRecover -logPath=/var/log/mindx-dl/container-manager/container-manager.log >/dev/null  2>&1 &</strong>"
-        Restart=always
-        RestartSec=2
-        KillMode=process
-        Environment="GOGC=50"
-        Environment="GOMAXPROCS=2"
-        Environment="GODEBUG=madvdontneed=1"
-        Type=forking
-        User=root
-        Group=root
-        
-        [Install]
-        WantedBy=multi-user.target</pre>
-
-    3. 按“Esc”键，输入:wq!保存并退出。
-
-6. 创建并编辑container-manager.timer文件。通过配置timer延时启动，可保证Container Manager启动时NPU卡已就位。
-    1. 执行以下命令，创建container-manager.timer文件。
+    - 使用自定义参数安装，请根据实际环境配置启动参数：
 
         ```shell
-        vi container-manager.timer
+        bash deploy.sh install \
+            --runtimeType=containerd \
+            --ctrStrategy=ringRecover \
+            --logLevel=0 \
+            --timerDelay=60s \
+            --logPath=/var/log/mindx-dl/container-manager/container-manager.log
         ```
 
-    2. 参考以下示例，并将其写入container-manager.timer文件中。
+        安装成功后，回显示例如下，安装完成会自动输出验证结果，Service为 **active (running)** 表示服务启动成功。
 
-        <pre>
-        [Unit]
-        Description=Timer for container manager Service
-        
-        [Timer]
-        # 设置Container Manager延时启动时间，请根据实际情况调整
-        <strong>OnBootSec=60s</strong> 
-        Unit=container-manager.service
-        
-        [Install]
-        WantedBy=timers.target</pre>
+        ```shell
+        [INFO] Installing container-manager...
+        [INFO]   Runtime type : containerd
+        [INFO]   Socket path  : /run/containerd/containerd.sock
+        [INFO]   CTR strategy : ringRecover (recover all related chip containers)
+        [INFO]   Log level    : 0 (info)
+        [INFO]   Log path     : /var/log/mindx-dl/container-manager/container-manager.log
+        [INFO] Creating log directory...
+        [INFO] Installing binary to /usr/local/bin/
+        [INFO] Generating systemd service unit...
+        [INFO] Generating systemd timer (delay=60s)...
+        [INFO] Timer enabled (starts 60s after boot)
+        [INFO] Installation completed, verifying...
+          Service       : active (running)
+          Auto-start    : enabled
+          Timer         : active
+          Binary        : /usr/local/bin/container-manager  (v26.1.0)
 
-    3. 按“Esc”键，输入:wq!保存并退出。
+          ✓ All checks passed
 
-7. 依次执行以下命令，启用Container Manager服务。
+        Usage:
+          systemctl status container-manager   # Check running status
+          journalctl -u container-manager -f   # View live logs
+          bash deploy.sh uninstall             # Uninstall
+        ```
 
-    ```shell
-    # 准备Container Manager二进制文件到PATH
-    cp container-manager /usr/local/bin
-    chmod 500 /usr/local/bin/container-manager
-    
-    # 准备Container Manager系统服务文件
-    cp container-manager.service /etc/systemd/system
-    cp container-manager.timer /etc/systemd/system      
-    
-    # 启动Container Manager系统服务
-    systemctl enable container-manager.service 
-    systemctl enable container-manager.timer 
-    systemctl start container-manager.service
-    systemctl start container-manager.timer
-    ```
+        >[!NOTE]
+        >如果回显中Service显示为**failed**或**inactive**，可通过以下命令查看服务日志排查问题：
+        >
+        >```shell
+        >journalctl -u container-manager -f
+        >```
+
+    install命令支持的选项请参见[表1](#table_deploy_script_options)，各启动参数的详细含义请参见[表2](#table8724104319141cm)。
+
+    更多使用示例：
+
+    - 使用containerd运行时，配置ringRecover恢复策略：
+
+        ```shell
+        bash deploy.sh install --runtimeType=containerd --ctrStrategy=ringRecover
+        ```
+
+    - 使用自定义故障配置文件，并配置日志级别：
+
+        ```shell
+        bash deploy.sh install --ctrStrategy=singleRecover --faultConfig=/etc/mindx-dl/container-manager/faultCode.json --logLevel=-1
+        ```
+
+    - 使用containerd运行时，自定义日志路径和定时器延迟：
+
+        ```shell
+        bash deploy.sh install \
+            --runtimeType=containerd \
+            --ctrStrategy=ringRecover \
+            --logPath=/var/log/mindx-dl/container-manager/container-manager.log \
+            --timerDelay=120s \
+            --maxAge=30 \
+            --maxBackups=10
+        ```
 
 ## 参数说明<a name="section2042611570392"></a>
 
-**表 1** Container Manager启动参数
+**表 1** deploy.sh脚本命令
+
+<a name="table_deploy_script_options"></a>
+<table><thead align="left"><tr id="row_deploy_cmd_header"><th class="cellrowborder" valign="top" width="10.801080108010803%" id="mcps1.2.6.1.1"><p id="p_deploy_cmd_name"><a name="p_deploy_cmd_name"></a><a name="p_deploy_cmd_name"></a>命令</p>
+</th>
+<th class="cellrowborder" valign="top" width="16.291629162916294%" id="mcps1.2.6.1.2"><p id="p_deploy_cmd_param"><a name="p_deploy_cmd_param"></a><a name="p_deploy_cmd_param"></a>参数</p>
+</th>
+<th class="cellrowborder" valign="top" width="11.561156115611562%" id="mcps1.2.6.1.3"><p id="p_deploy_cmd_type"><a name="p_deploy_cmd_type"></a><a name="p_deploy_cmd_type"></a>类型</p>
+</th>
+<th class="cellrowborder" valign="top" width="23.342334233423344%" id="mcps1.2.6.1.4"><p id="p_deploy_cmd_default"><a name="p_deploy_cmd_default"></a><a name="p_deploy_cmd_default"></a>默认值</p>
+</th>
+<th class="cellrowborder" valign="top" width="38.00380038003801%" id="mcps1.2.6.1.5"><p id="p_deploy_cmd_desc"><a name="p_deploy_cmd_desc"></a><a name="p_deploy_cmd_desc"></a>说明</p>
+</th>
+</tr>
+</thead>
+<tbody><tr id="row_deploy_install_runtime_type"><td class="cellrowborder" rowspan="9" valign="top" width="10.801080108010803%" headers="mcps1.2.6.1.1 "><p id="p_deploy_install_name"><a name="p_deploy_install_name"></a><a name="p_deploy_install_name"></a>install</p>
+</td>
+<td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_runtime_type_param"><a name="p_deploy_install_runtime_type_param"></a><a name="p_deploy_install_runtime_type_param"></a>--runtimeType</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_install_runtime_type_type"><a name="p_deploy_install_runtime_type_type"></a><a name="p_deploy_install_runtime_type_type"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_runtime_type_default"><a name="p_deploy_install_runtime_type_default"></a><a name="p_deploy_install_runtime_type_default"></a>docker</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_runtime_type_desc"><a name="p_deploy_install_runtime_type_desc"></a><a name="p_deploy_install_runtime_type_desc"></a>容器运行时类型，对应二进制启动参数<em>-runtimeType</em>，详细说明参见<a href="#table8724104319141cm">表2</a>。选择containerd时，sockPath未指定则自动切换为/run/containerd/containerd.sock。</p>
+</td>
+</tr>
+<tr id="row_deploy_install_sock_path"><td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_sock_path_param"><a name="p_deploy_install_sock_path_param"></a><a name="p_deploy_install_sock_path_param"></a>--sockPath</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_install_sock_path_type"><a name="p_deploy_install_sock_path_type"></a><a name="p_deploy_install_sock_path_type"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_sock_path_default"><a name="p_deploy_install_sock_path_default"></a><a name="p_deploy_install_sock_path_default"></a>/run/docker.sock</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_sock_path_desc"><a name="p_deploy_install_sock_path_desc"></a><a name="p_deploy_install_sock_path_desc"></a>容器运行时的sock文件路径，对应二进制启动参数<em>-sockPath</em>，详细说明参见<a href="#table8724104319141cm">表2</a>。</p>
+</td>
+</tr>
+<tr id="row_deploy_install_ctr_strategy"><td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_ctr_strategy_param"><a name="p_deploy_install_ctr_strategy_param"></a><a name="p_deploy_install_ctr_strategy_param"></a>--ctrStrategy</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_install_ctr_strategy_type"><a name="p_deploy_install_ctr_strategy_type"></a><a name="p_deploy_install_ctr_strategy_type"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_ctr_strategy_default"><a name="p_deploy_install_ctr_strategy_default"></a><a name="p_deploy_install_ctr_strategy_default"></a>never</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_ctr_strategy_desc"><a name="p_deploy_install_ctr_strategy_desc"></a><a name="p_deploy_install_ctr_strategy_desc"></a>故障容器启停策略，对应二进制启动参数<em>-ctrStrategy</em>，详细说明参见<a href="#table8724104319141cm">表2</a>。</p>
+</td>
+</tr>
+<tr id="row_deploy_install_log_level"><td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_log_level_param"><a name="p_deploy_install_log_level_param"></a><a name="p_deploy_install_log_level_param"></a>--logLevel</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_install_log_level_type"><a name="p_deploy_install_log_level_type"></a><a name="p_deploy_install_log_level_type"></a>int</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_log_level_default"><a name="p_deploy_install_log_level_default"></a><a name="p_deploy_install_log_level_default"></a>0</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_log_level_desc"><a name="p_deploy_install_log_level_desc"></a><a name="p_deploy_install_log_level_desc"></a>日志级别，对应二进制启动参数<em>-logLevel</em>，详细说明参见<a href="#table8724104319141cm">表2</a>。</p>
+</td>
+</tr>
+<tr id="row_deploy_install_log_path"><td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_log_path_param"><a name="p_deploy_install_log_path_param"></a><a name="p_deploy_install_log_path_param"></a>--logPath</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_install_log_path_type"><a name="p_deploy_install_log_path_type"></a><a name="p_deploy_install_log_path_type"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_log_path_default"><a name="p_deploy_install_log_path_default"></a><a name="p_deploy_install_log_path_default"></a>/var/log/mindx-dl/container-manager/container-manager.log</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_log_path_desc"><a name="p_deploy_install_log_path_desc"></a><a name="p_deploy_install_log_path_desc"></a>日志文件路径，对应二进制启动参数<em>-logPath</em>，详细说明参见<a href="#table8724104319141cm">表2</a>。</p>
+</td>
+</tr>
+<tr id="row_deploy_install_max_age"><td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_max_age_param"><a name="p_deploy_install_max_age_param"></a><a name="p_deploy_install_max_age_param"></a>--maxAge</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_install_max_age_type"><a name="p_deploy_install_max_age_type"></a><a name="p_deploy_install_max_age_type"></a>int</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_max_age_default"><a name="p_deploy_install_max_age_default"></a><a name="p_deploy_install_max_age_default"></a>7</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_max_age_desc"><a name="p_deploy_install_max_age_desc"></a><a name="p_deploy_install_max_age_desc"></a>日志备份时间，对应二进制启动参数<em>-maxAge</em>，详细说明参见<a href="#table8724104319141cm">表2</a>。</p>
+</td>
+</tr>
+<tr id="row_deploy_install_max_backups"><td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_max_backups_param"><a name="p_deploy_install_max_backups_param"></a><a name="p_deploy_install_max_backups_param"></a>--maxBackups</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_install_max_backups_type"><a name="p_deploy_install_max_backups_type"></a><a name="p_deploy_install_max_backups_type"></a>int</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_max_backups_default"><a name="p_deploy_install_max_backups_default"></a><a name="p_deploy_install_max_backups_default"></a>30</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_max_backups_desc"><a name="p_deploy_install_max_backups_desc"></a><a name="p_deploy_install_max_backups_desc"></a>转储后日志文件保留个数上限，对应二进制启动参数<em>-maxBackups</em>，详细说明参见<a href="#table8724104319141cm">表2</a>。</p>
+</td>
+</tr>
+<tr id="row_deploy_install_fault_config"><td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_fault_config_param"><a name="p_deploy_install_fault_config_param"></a><a name="p_deploy_install_fault_config_param"></a>--faultConfig</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_install_fault_config_type"><a name="p_deploy_install_fault_config_type"></a><a name="p_deploy_install_fault_config_type"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_fault_config_default"><a name="p_deploy_install_fault_config_default"></a><a name="p_deploy_install_fault_config_default"></a>""（空）</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_fault_config_desc"><a name="p_deploy_install_fault_config_desc"></a><a name="p_deploy_install_fault_config_desc"></a>自定义故障配置文件路径，对应二进制启动参数<em>-faultConfigPath</em>，详细说明参见<a href="#table8724104319141cm">表2</a>。</p>
+</td>
+</tr>
+<tr id="row_deploy_install_timer_delay"><td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_timer_delay_param"><a name="p_deploy_install_timer_delay_param"></a><a name="p_deploy_install_timer_delay_param"></a>--timerDelay</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_install_timer_delay_type"><a name="p_deploy_install_timer_delay_type"></a><a name="p_deploy_install_timer_delay_type"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_timer_delay_default"><a name="p_deploy_install_timer_delay_default"></a><a name="p_deploy_install_timer_delay_default"></a>60s</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_timer_delay_desc"><a name="p_deploy_install_timer_delay_desc"></a><a name="p_deploy_install_timer_delay_desc"></a>系统启动后延时启动Container Manager的时间，确保NPU设备就位后再启动服务。支持格式如60s、2min、1h等。</p>
+</td>
+</tr>
+<tr id="row_deploy_uninstall"><td class="cellrowborder" valign="top" width="10.801080108010803%" headers="mcps1.2.6.1.1 "><p id="p_deploy_uninstall_name"><a name="p_deploy_uninstall_name"></a><a name="p_deploy_uninstall_name"></a>uninstall</p>
+</td>
+<td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_uninstall_param"><a name="p_deploy_uninstall_param"></a><a name="p_deploy_uninstall_param"></a>-</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_uninstall_type"><a name="p_deploy_uninstall_type"></a><a name="p_deploy_uninstall_type"></a>-</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_uninstall_default"><a name="p_deploy_uninstall_default"></a><a name="p_deploy_uninstall_default"></a>-</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_uninstall_desc"><a name="p_deploy_uninstall_desc"></a><a name="p_deploy_uninstall_desc"></a>卸载Container Manager服务，包括：停止并禁用systemd服务和定时器、删除systemd单元文件、删除二进制文件。日志目录默认保留。</p>
+</td>
+</tr>
+<tr id="row_deploy_upgrade"><td class="cellrowborder" valign="top" width="10.801080108010803%" headers="mcps1.2.6.1.1 "><p id="p_deploy_upgrade_name"><a name="p_deploy_upgrade_name"></a><a name="p_deploy_upgrade_name"></a>upgrade</p>
+</td>
+<td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_upgrade_param"><a name="p_deploy_upgrade_param"></a><a name="p_deploy_upgrade_param"></a>-</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_upgrade_type"><a name="p_deploy_upgrade_type"></a><a name="p_deploy_upgrade_type"></a>-</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_upgrade_default"><a name="p_deploy_upgrade_default"></a><a name="p_deploy_upgrade_default"></a>-</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_upgrade_desc"><a name="p_deploy_upgrade_desc"></a><a name="p_deploy_upgrade_desc"></a>升级Container Manager服务，包括：停止服务、替换二进制文件、重启服务。保留现有服务配置（启动参数等）不变。</p>
+<div class="note" id="note_deploy_upgrade"><a name="note_deploy_upgrade"></a><a name="note_deploy_upgrade"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="ul_deploy_upgrade_note"></a><a name="ul_deploy_upgrade_note"></a><ul id="ul_deploy_upgrade_note"><li>请使用upgrade命令进行升级，多次使用install命令会覆盖现有的服务配置（如启动参数），可能导致服务配置丢失。</li></ul>
+</div></div>
+</td>
+</tr>
+</tbody>
+</table>
+
+**表 2** Container Manager启动参数
 
 <a name="table8724104319141cm"></a>
 <table><thead align="left"><tr id="row57241434113"><th class="cellrowborder" valign="top" width="10.801080108010803%" id="mcps1.2.6.1.1"><p id="p1272416432118"><a name="p1272416432118"></a><a name="p1272416432118"></a>命令</p>
@@ -174,7 +321,7 @@ Container Manager组件直接在物理机上通过二进制方式运行。
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p9414134153113"><a name="p9414134153113"></a><a name="p9414134153113"></a>故障容器启停策略：</p>
 <a name="ul17352545173818"></a><a name="ul17352545173818"></a><ul id="ul17352545173818"><li>never：不进行容器启停。</li><li>singleRecover：仅启停单个挂载故障芯片的容器。故障产生时，停止容器；故障恢复后，将容器重新拉起。</li><li>ringRecover：启停挂载故障芯片所关联的所有芯片的容器。故障产生时，停止容器；故障恢复后，将容器重新拉起。</li></ul>
-<div class="note" id="note16897891164"><a name="note16897891164"></a><a name="note16897891164"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="ul370062752110"></a><a name="ul370062752110"></a><ul id="ul370062752110"><li><span id="ph646865823518"><a name="ph646865823518"></a><a name="ph646865823518"></a>Container Manager</span>在感知到芯片处于RestartRequest、RestartBusiness、FreeRestartNPU和RestartNPU类型故障时，才会进行容器启停操作。故障类型说明请参见<a href="../../../usage/appliance/01_npu_hardware_fault_detection_and_rectification.md#故障配置说明">故障配置说明</a>中“故障码级别说明”。</li><li>当故障容器启停策略配置为singleRecover或者ringRecover时，不支持用户启动容器时指定容器重启策略，使容器自动重启，二者选其一即可。</li><li>若用户手动干预导致容器停止，可能会造成<span id="ph93985387580"><a name="ph93985387580"></a><a name="ph93985387580"></a>Container Manager</span>内存数据混乱，导致容器状态异常。</li></ul>
+<div class="note" id="note16897891164"><a name="note16897891164"></a><a name="note16897891164"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="ul370062752110"></a><a name="ul370062752110"></a><ul id="ul370062752110"><li><span id="ph646865823518"><a name="ph646865823518"></a><a name="ph646865823518"></a>Container Manager</span>在感知到芯片处于RestartRequest、RestartBusiness、FreeRestartNPU和RestartNPU类型故障时，才会进行容器启停操作。故障类型说明请参见<a href="../../../usage/appliance/01_npu_hardware_fault_detection_and_rectification.md#故障配置说明">故障配置说明</a>中"故障码级别说明"。</li><li>当故障容器启停策略配置为singleRecover或者ringRecover时，不支持用户启动容器时指定容器重启策略，使容器自动重启，二者选其一即可。</li><li>若用户手动干预导致容器停止，可能会造成<span id="ph93985387580"><a name="ph93985387580"></a><a name="ph93985387580"></a>Container Manager</span>内存数据混乱，导致容器状态异常。</li></ul>
 </div></div>
 </td>
 </tr>
@@ -231,4 +378,10 @@ Container Manager组件直接在物理机上通过二进制方式运行。
 >
 >```shell
 >systemctl daemon-reload && systemctl restart container-manager
+>```
+>
+>或者使用部署脚本重新安装（脚本会自动停止旧服务并覆盖安装）：
+>
+>```shell
+>bash deploy.sh install --ctrStrategy=singleRecover --logLevel=1
 >```
