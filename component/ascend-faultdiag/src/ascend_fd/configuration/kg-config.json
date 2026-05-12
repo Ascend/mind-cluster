@@ -7810,7 +7810,7 @@
                 ]
             }
         },
-        "0x81B78009": {
+        "0x81B78005": {
             "attribute": {
                 "class": "Hardware",
                 "component": "NPU",
@@ -7829,7 +7829,7 @@
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
-                    "Event id=0x81b78009"
+                    "Event id=0x81b78005"
                 ]
             }
         },
