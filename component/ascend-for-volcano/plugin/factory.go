@@ -219,6 +219,18 @@ func (sHandle *ScheduleHandler) getJobTemplate() map[string]map[string]util.VRes
 			VNPUB4TempVir10C4M:  {Aicore: util.NPUIndex10, Aicpu: util.NPUIndex4, DVPP: AscendDVPPEnabledOn},
 			VNPUB4TempVir10:     {Aicore: util.NPUIndex10, Aicpu: util.NPUIndex3, DVPP: AscendDVPPEnabledNull},
 		},
+		ChipTypeB41: {
+			VNPUTempVir05: {Aicore: util.NPUIndex5, Aicpu: util.NPUIndex1, DVPP: AscendDVPPEnabledNull},
+			VNPUTempVir10: {Aicore: util.NPUIndex10, Aicpu: util.NPUIndex3, DVPP: AscendDVPPEnabledNull},
+		},
+		ServerTypeA3X20: {
+			VNPUTempVir05: {Aicore: util.NPUIndex5, Aicpu: util.NPUIndex1, DVPP: AscendDVPPEnabledNull},
+			VNPUTempVir10: {Aicore: util.NPUIndex10, Aicpu: util.NPUIndex3, DVPP: AscendDVPPEnabledNull},
+		},
+		ServerTypeA3X24: {
+			VNPUTempVir06: {Aicore: util.NPUIndex6, Aicpu: util.NPUIndex1, DVPP: AscendDVPPEnabledNull},
+			VNPUTempVir12: {Aicore: util.NPUIndex12, Aicpu: util.NPUIndex3, DVPP: AscendDVPPEnabledNull},
+		},
 	}
 	return jobTemplate
 }

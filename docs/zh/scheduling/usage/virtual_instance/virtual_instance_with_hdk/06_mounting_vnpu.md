@@ -454,7 +454,7 @@
 </th>
 </tr>
 </thead>
-<tbody><tr id="row132012115910"><td class="cellrowborder" rowspan="4" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p id="p1950512911598"><a name="p1950512911598"></a><a name="p1950512911598"></a>通用说明</p>
+<tbody><tr id="row132012115910"><td class="cellrowborder" rowspan="8" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p id="p1950512911598"><a name="p1950512911598"></a><a name="p1950512911598"></a>通用说明</p>
 </td>
 <td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 "><p id="p450516910592"><a name="p450516910592"></a><a name="p450516910592"></a>分配的芯片信息会在Pod的annotation中体现出来，关于Pod annotation的详细说明请参见<a href="../../../api/k8s.md">Pod annotation</a>中的huawei.com/npu-core、huawei.com/AscendReal参数。</p>
 </td>
@@ -468,12 +468,21 @@
 <tr id="row11648825917"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p19505796596"><a name="p19505796596"></a><a name="p19505796596"></a>目前任务的每个Pod请求的NPU数量为1个。</p>
 </td>
 </tr>
-<tr id="row32567817461"><td class="cellrowborder" rowspan="3" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p id="p1325613818460"><a name="p1325613818460"></a><a name="p1325613818460"></a>特性支持的场景</p>
-</td>
-<td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 "><p id="p32561983469"><a name="p32561983469"></a><a name="p32561983469"></a>支持多副本，但多副本中的每个pod都必须使用vNPU。</p>
+<tr id="row192561854613"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p02561481463"><a name="p02561481463"></a><a name="p02561481463"></a>任务请求的AI Core数量，为vNPU时，按实际填写；为整张物理NPU时，需要为单张卡的AI Core个数或其倍数且整卡时调度可能不满足亲和性。</p>
 </td>
 </tr>
-<tr id="row5256198134612"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p72561586465"><a name="p72561586465"></a><a name="p72561586465"></a>支持K8s的机制，如亲和性等。</p>
+<tr id="row11782173617479"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18782936144718"><a name="p18782936144718"></a><a name="p18782936144718"></a>默认需要容器以root用户启动，若需要以普通用户运行推理任务，需要参考<a href="../../../faq.md#使用动态虚拟化时以普通用户运行推理业务失败">使用动态虚拟化时，以普通用户运行推理业务容器失败</a>章节进行操作。</p>
+</td>
+</tr>
+<tr id="row117233216566"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18081933105617"><a name="p18081933105617"></a><a name="p18081933105617"></a>vNPU动态创建和销毁在<span id="ph20808153335610"><a name="ph20808153335610"></a><a name="ph20808153335610"></a>Atlas 推理系列产品、Atlas A2 训练/推理系列产品和Atlas A3 训练/推理系列产品</span>上有效，并且需要配套<span id="ph13808233145619"><a name="ph13808233145619"></a><a name="ph13808233145619"></a>Volcano</span>使用。</p>
+</td>
+</tr>
+<tr id="row_dyn_switch"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p_dyn_switch">节点在动态虚拟化和非动态虚拟化之间切换时，需要将已有任务删除。</p>
+</td>
+</tr>
+<tr id="row32567817461"><td class="cellrowborder" rowspan="2" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p id="p1325613818460"><a name="p1325613818460"></a><a name="p1325613818460"></a>特性支持的场景</p>
+</td>
+<td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 "><p id="p32561983469"><a name="p32561983469"></a><a name="p32561983469"></a>支持多副本，但多副本中的每个pod都必须使用vNPU。</p>
 </td>
 </tr>
 <tr id="row825611817468"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p2795151384913"><a name="p2795151384913"></a><a name="p2795151384913"></a>支持芯片故障和节点故障的重调度。具体参考<span id="ph1389215534914"><a name="ph1389215534914"></a><a name="ph1389215534914"></a><a href="../../basic_scheduling/10_recovery_of_inference_card_faults.md">推理卡故障恢复</a></span>和<a href="../../basic_scheduling/09_rescheduling_upon_inference_card_faults.md">推理卡故障重调度</a>章节。</p>
@@ -495,18 +504,6 @@
 </td>
 </tr>
 <tr id="row151011624135113"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18102182414515"><a name="p18102182414515"></a><a name="p18102182414515"></a>进行动态虚拟化的节点不能对芯片的CPU进行设置。详情请参考<span id="ph373734654014"><a name="ph373734654014"></a><a name="ph373734654014"></a>《Atlas 中心推理卡  25.5.0 npu-smi 命令参考》中的“信息查询&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540373/6faea171" target="_blank" rel="noopener noreferrer">查询所有芯片的AI CPU、control CPU和data CPU数量</a>”</span>章节。</p>
-</td>
-</tr>
-<tr id="row192561854613"><td class="cellrowborder" rowspan="3" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p id="p1125610854611"><a name="p1125610854611"></a><a name="p1125610854611"></a><span id="ph10445185418466"><a name="ph10445185418466"></a><a name="ph10445185418466"></a>Atlas 推理系列产品</span>（8个AI Core）使用说明</p>
-<p id="p1173133213564"><a name="p1173133213564"></a><a name="p1173133213564"></a></p>
-</td>
-<td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 "><p id="p02561481463"><a name="p02561481463"></a><a name="p02561481463"></a>任务请求的AI Core数量，为vNPU时，按实际填写1、2、4；整张物理NPU时，需要为8以及8的倍数。</p>
-</td>
-</tr>
-<tr id="row11782173617479"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18782936144718"><a name="p18782936144718"></a><a name="p18782936144718"></a>默认需要容器以root用户启动，若需要以普通用户运行推理任务，需要参考<a href="../../../faq.md#使用动态虚拟化时以普通用户运行推理业务失败">使用动态虚拟化时，以普通用户运行推理业务容器失败</a>章节进行操作。</p>
-</td>
-</tr>
-<tr id="row117233216566"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18081933105617"><a name="p18081933105617"></a><a name="p18081933105617"></a>vNPU动态创建和销毁仅在<span id="ph20808153335610"><a name="ph20808153335610"></a><a name="ph20808153335610"></a>Atlas 推理系列产品</span>上有效，并且需要配套<span id="ph13808233145619"><a name="ph13808233145619"></a><a name="ph13808233145619"></a>Volcano</span>使用。</p>
 </td>
 </tr>
 </tbody>
@@ -575,6 +572,40 @@
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p9957636276"><a name="p9957636276"></a><a name="p9957636276"></a>Ascend310P-4c.4cpu.dvpp-100-0</p>
 </td>
+</tr>
+<tr><td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas A2 训练/推理系列产品</p><p>（20/24/25个AI Core）</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>vir05_1c_16g</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-5c.1cpu.16g</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-5c.1cpu.16g-100-0</p></td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>vir10_3c_32g</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-10c.3cpu.32g</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-10c.3cpu.32g-100-0</p></td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>vir06_1c_16g</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-6c.1cpu.16g</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-6c.1cpu.16g-100-0</p></td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>vir12_3c_32g</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-12c.3cpu.32g</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-12c.3cpu.32g-100-0</p></td>
+</tr>
+<tr><td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas A3 训练/推理系列产品</p><p>（40/48个AI Core）</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>vir05_1c_16g</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-5c.1cpu.16g</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-5c.1cpu.16g-100-0</p></td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>vir10_3c_32g</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-10c.3cpu.32g</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-10c.3cpu.32g-100-0</p></td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>vir06_1c_16g</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-6c.1cpu.16g</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-6c.1cpu.16g-100-0</p></td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>vir12_3c_32g</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-12c.3cpu.32g</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-12c.3cpu.32g-100-0</p></td>
 </tr>
 </tbody>
 </table>
@@ -685,6 +716,9 @@ spec:
  ....
 ```
 
+> [!NOTE]
+> 对于Atlas A2/A3系列产品，`ring-controller.atlas` 需设置为 `ascend-910b`，且不需要配置 `vnpu-dvpp` 和 `vnpu-level`（A2/A3不支持dvpp和level配置降级）。
+
 **表 4**  虚拟化实例任务YAML中label说明
 
 <a name="table1084325844716"></a>
@@ -727,11 +761,17 @@ spec:
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1871982374915"><a name="p1871982374915"></a><a name="p1871982374915"></a>默认值。不关注是否使用DVPP。</p>
 </td>
 </tr>
-<tr id="row184385814710"><td class="cellrowborder" valign="top" width="17.88178817881788%" headers="mcps1.2.4.1.1 "><p id="p1680094354812"><a name="p1680094354812"></a><a name="p1680094354812"></a>ring-controller.atlas</p>
+<tr id="row184385814710"><td class="cellrowborder" rowspan="2" valign="top" width="17.88178817881788%" headers="mcps1.2.4.1.1 "><p id="p1680094354812"><a name="p1680094354812"></a><a name="p1680094354812"></a>ring-controller.atlas</p>
+<p id="p1680094354812_2"><a name="p1680094354812_2"></a><a name="p1680094354812_2"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="31.053105310531055%" headers="mcps1.2.4.1.2 "><p id="p530851794913"><a name="p530851794913"></a><a name="p530851794913"></a>ascend-310P</p>
 </td>
 <td class="cellrowborder" valign="top" width="51.06510651065107%" headers="mcps1.2.4.1.3 "><p id="p1871918233494"><a name="p1871918233494"></a><a name="p1871918233494"></a>任务使用<span id="ph968626194020"><a name="ph968626194020"></a><a name="ph968626194020"></a>Atlas 推理系列产品</span>的标识。</p>
+</td>
+</tr>
+<tr id="row184385814711"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p530851794914"><a name="p530851794914"></a><a name="p530851794914"></a>ascend-910b</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1871918233495"><a name="p1871918233495"></a><a name="p1871918233495"></a>任务使用Atlas A2 训练/推理系列产品、Atlas A3 训练/推理系列产品的标识。</p>
 </td>
 </tr>
 </tbody>
@@ -743,9 +783,9 @@ spec:
 >- 表中“降级”表示AI Core满足的情况下，其他资源不够（如AI CPU）时，模板会选择同AI Core下的其他满足资源要求的模板。如在只剩一颗芯片上只有2个AI Core，1个AI CPU时，vir02模板会降级为vir02\_1c。
 >- 表中“选择模板”中的值来源于[虚拟化模板](./03_virtualization_templates.md)中Atlas 推理系列产品、“虚拟化实例模板”列的取值。
 >- 表中“vnpu-level”列的“其他值”表示除去“low”和“high”后的任意取值。
->- 整卡（core的请求数量为8的倍数）场景下vnpu-dvpp与vnpu-level可以取任意值。
+>- 整卡场景下vnpu-dvpp与vnpu-level可以取任意值。
 
-**表 5**  dvpp和level作用结果表
+**表 5**  Atlas 推理系列产品dvpp和level作用结果表
 
 <a name="table83781115185619"></a>
 <table><thead align="left"><tr id="row1837817157565"><th class="cellrowborder" valign="top" width="17.2982701729827%" id="mcps1.2.7.1.1"><p id="p11560216112"><a name="p11560216112"></a><a name="p11560216112"></a>产品型号</p>
@@ -887,5 +927,5 @@ spec:
 </tbody>
 </table>
 
->[!NOTICE] 
->上表中对于芯片虚拟化（非整卡），vnpu-dvpp的值只能为表中对应的值，其他值会导致任务不能下发。
+> [!NOTICE]
+> 上表中对于芯片虚拟化（非整卡），vnpu-dvpp的值只能为表中对应的值，其他值会导致任务不能下发。

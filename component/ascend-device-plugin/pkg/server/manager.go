@@ -127,8 +127,9 @@ func NewHwDevManager(devM devmanager.DeviceInterface) *HwDevManager {
 
 func (hdm *HwDevManager) setAscendManager(dmgr devmanager.DeviceInterface) error {
 	devType := dmgr.GetDevType()
-	if !common.ParamOption.PresetVDevice && devType != api.Ascend310P && devType != api.Ascend910B {
-		return fmt.Errorf("only 310p and 910b support to set presetVirtualDevice false")
+	if !common.ParamOption.PresetVDevice && devType != api.Ascend310P && devType != api.Ascend910B &&
+		devType != api.Ascend910A3 {
+		return fmt.Errorf("only 310p, 910a2 and 910a3 support to set presetVirtualDevice false")
 	}
 	common.ParamOption.RealCardType = devType
 	switch devType {

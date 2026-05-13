@@ -101,8 +101,8 @@ func TestIsSupported(t *testing.T) {
 		buildTestCase("VnpuCollector: testIsSupported on Ascend310", &VnpuCollector{}, api.Ascend310, false),
 		buildTestCase("VnpuCollector: testIsSupported on Ascend310P", &VnpuCollector{}, api.Ascend310P, true),
 		buildTestCase("VnpuCollector: testIsSupported on Ascend910", &VnpuCollector{}, api.Ascend910, false),
-		buildTestCase("VnpuCollector: testIsSupported on Ascend910B", &VnpuCollector{}, api.Ascend910B, false),
-		buildTestCase("VnpuCollector: testIsSupported on Ascend910A3", &VnpuCollector{}, api.Ascend910A3, false),
+		buildTestCase("VnpuCollector: testIsSupported on Ascend910B", &VnpuCollector{}, api.Ascend910B, true),
+		buildTestCase("VnpuCollector: testIsSupported on Ascend910A3", &VnpuCollector{}, api.Ascend910A3, true),
 	}
 
 	for _, c := range cases {

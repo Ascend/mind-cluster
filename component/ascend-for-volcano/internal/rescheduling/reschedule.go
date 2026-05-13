@@ -122,9 +122,8 @@ func (reScheduler *ReScheduler) updateNewFaultJobAttr(
 		klog.V(util.LogInfoLev).Infof("job %s rescheduleLabel off, skip rescheduling.", jobInfo.Name)
 		return faultJob
 	}
-	npuName := util.GetNpuNameFromJobRequire(npuJob.ReqNPUName)
 	// 2. create new FaultTask objects and update corresponding attributes
-	tmpFaultTasks, err := reScheduler.createFaultTaskHandler(jobInfo, npuName, env, faultJob)
+	tmpFaultTasks, err := reScheduler.createFaultTaskHandler(jobInfo, npuJob.ReqNPUName, env, faultJob)
 	if err != nil {
 		klog.V(util.LogInfoLev).Infof("job %s createFaultTaskHandler failed: %s", jobInfo.Name, util.SafePrint(err))
 	}

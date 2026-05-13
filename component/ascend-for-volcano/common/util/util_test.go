@@ -409,35 +409,6 @@ func TestChangeNodesToNodeMaps(t *testing.T) {
 	}
 }
 
-func TestGetNpuNameFromJobRequire(t *testing.T) {
-	type args struct {
-		npuName string
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{
-			name: "01-GetNpuNameFromJobRequire get npu name",
-			args: args{npuName: AscendNPUCore},
-			want: NPU310PCardName,
-		},
-		{
-			name: "02-GetNpuNameFromJobRequire get npu name",
-			args: args{npuName: NPU310CardName},
-			want: NPU310CardName,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GetNpuNameFromJobRequire(tt.args.npuName); got != tt.want {
-				t.Errorf("GetNpuNameFromJobRequire() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestCheckStrInSlice(t *testing.T) {
 	type args struct {
 		str   string

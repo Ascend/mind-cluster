@@ -22,23 +22,20 @@ package vnpu
 import (
 	"errors"
 	"fmt"
-	"strconv"
-	"strings"
-
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
-	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/ascend910/ascend910b"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/vnpu"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
 type virtual910NPU struct {
-	ascend910b.Base910b
-	vHandle *vnpu.VirtualNPU
+	base.NPUHandler
+	AffScoreList [][]int
+	vHandle      *vnpu.VirtualNPU
 }
 
 // New return npu plugin.
@@ -71,7 +68,7 @@ func (tp *virtual910NPU) ValidNPUJob() *api.ValidateResult {
 	return tp.ValidDyVNPUJob()
 }
 
-// CheckNodeNPUByTask check nod npu meet task req
+// CheckNodeNPUByTask check node npu meet task req
 func (tp *virtual910NPU) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUNode) error {
 	if tp == nil || task == nil || len(node.Annotation) == 0 {
 		err := errors.New(util.ArgumentError)
@@ -82,19 +79,8 @@ func (tp *virtual910NPU) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.NPUN
 	if err != nil {
 		return err
 	}
-	if node.Label[util.AcceleratorType] != util.Module910bx16AcceleratorType {
-		return tp.vHandle.CheckNodeNPUByDyTask(task, node, taskRes)
-	}
-	return tp.checkNodeNPUForDyCut(task, node, taskRes)
-}
 
-func (tp *virtual910NPU) checkNodeNPUForDyCut(task *api.TaskInfo, node plugin.NPUNode, taskRes util.VResource) error {
-	if !node.IsResourceWholeCard(taskRes.Aicore) {
-		return tp.vHandle.CheckNodeNPUByDyTask(task, node, taskRes)
-	}
-	nodeTop := node.GetNodeTopForWholeCard()
-	taskNPUNum := taskRes.Aicore / node.AiCorePerChip
-	return tp.Judge910BNodeAndTaskNPU(taskNPUNum, nodeTop)
+	return tp.vHandle.CheckNodeNPUByDyTask(task, node, taskRes)
 }
 
 // ScoreBestNPUNodes score best npu nodes
@@ -122,33 +108,6 @@ func (tp *virtual910NPU) UseAnnotation(task *api.TaskInfo, node plugin.NPUNode) 
 			tp.GetPluginName(), tp.Name, err)
 		return &node
 	}
-	if node.Label[util.AcceleratorType] != util.Module910bx16AcceleratorType {
-		return tp.vHandle.UseAnnotation(task, node, taskRes, tp.vHandle.VT)
-	}
-	return tp.useAnnotationForDyCut(task, node, taskRes)
-}
 
-func (tp *virtual910NPU) useAnnotationForDyCut(task *api.TaskInfo, node plugin.NPUNode,
-	taskRes util.VResource) *plugin.NPUNode {
-	if !node.IsResourceWholeCard(taskRes.Aicore) {
-		return tp.vHandle.DynamicVNPU.UseAnnotation(task, node, taskRes, tp.vHandle.VT)
-	}
-	nodeTop := node.GetNodeTopForWholeCard()
-	taskNPUNum := taskRes.Aicore / node.AiCorePerChip
-	selectNpu, err := tp.SelectNPUByTaskNPUNumAndNodeTop(taskNPUNum, nodeTop)
-	if err != nil {
-		return nil
-	}
-	allocChipID := strings.Join(changeIntSliceToString(selectNpu), ",")
-	tp.vHandle.SetNPUTopologyToPodFn(task, node, taskRes, allocChipID, tp.vHandle.VT)
-	return tp.vHandle.UpdateNodeInfo(node, allocChipID, taskRes)
-
-}
-
-func changeIntSliceToString(npuTop []int) []string {
-	s := make([]string, len(npuTop))
-	for i, chipId := range npuTop {
-		s[i] = strconv.Itoa(chipId)
-	}
-	return s
+	return tp.vHandle.UseAnnotation(task, node, taskRes, tp.vHandle.VT)
 }

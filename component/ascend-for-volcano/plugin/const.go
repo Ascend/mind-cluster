@@ -104,6 +104,14 @@ const (
 	ChipTypeB3 = util.ChipKind + "B3"
 	// ChipTypeB4 chip type 910B4
 	ChipTypeB4 = util.ChipKind + "B4"
+	// ChipTypeB41 chip type 910B4-1
+	ChipTypeB41 = util.ChipKind + "B4-1"
+	// ServerTypeA3Prefix A3 server type prefix
+	ServerTypeA3Prefix = "Ascend910A3-"
+	// ServerTypeA3X20 A3-20 server type
+	ServerTypeA3X20 = "Ascend910A3-20"
+	// ServerTypeA3X24 A3-24 server type
+	ServerTypeA3X24 = "Ascend910A3-24"
 )
 
 // the temp of 910B1/910B2C

@@ -21,6 +21,7 @@ package vnpu
 
 import (
 	"fmt"
+	"strings"
 
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -85,6 +86,9 @@ func (tp *VirtualNPU) getEnvTemplate(env *plugin.ScheduleEnv) string {
 			return node.VNode.ChipKind
 		}
 		if node.VNode.ChipKind == util.Ascend910 {
+			if strings.HasPrefix(node.VNode.ServerType, plugin.ServerTypeA3Prefix) {
+				return node.VNode.ServerType
+			}
 			return node.VNode.ChipType
 		}
 	}

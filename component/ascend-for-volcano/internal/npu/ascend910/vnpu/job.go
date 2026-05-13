@@ -60,19 +60,22 @@ func (tp *virtual910NPU) checkDyVJobReq() error {
 	return nil
 }
 
+var checkDyJobRequireMap = map[string]func(util.NPUTask) bool{
+	plugin.ChipTypeB1:      checkB1DyJobRequire,
+	plugin.ChipTypeB2C:     checkB2AndB2CDyJobRequire,
+	plugin.ChipTypeB2:      checkB2AndB2CDyJobRequire,
+	plugin.ChipTypeB3:      checkB3DyJobRequire,
+	plugin.ChipTypeB4:      checkB4DyJobRequire,
+	plugin.ChipTypeB41:     checkB41DyJobRequire,
+	plugin.ServerTypeA3X20: checkA3X20DyJobRequire,
+	plugin.ServerTypeA3X24: checkA3X24DyJobRequire,
+}
+
 func (tp *virtual910NPU) checkDyVJobReqByTemp(vT util.NPUTask) bool {
-	switch tp.vHandle.VT.Temp {
-	case plugin.ChipTypeB1:
-		return checkB1DyJobRequire(vT)
-	case plugin.ChipTypeB2C, plugin.ChipTypeB2:
-		return checkB2AndB2CDyJobRequire(vT)
-	case plugin.ChipTypeB3:
-		return checkB3DyJobRequire(vT)
-	case plugin.ChipTypeB4:
-		return checkB4DyJobRequire(vT)
-	default:
-		return true
+	if checkFunc, ok := checkDyJobRequireMap[tp.vHandle.VT.Temp]; ok {
+		return checkFunc(vT)
 	}
+	return false
 }
 
 func checkB1DyJobRequire(vT util.NPUTask) bool {
@@ -89,6 +92,18 @@ func checkB3DyJobRequire(vT util.NPUTask) bool {
 
 func checkB4DyJobRequire(vT util.NPUTask) bool {
 	return vT.ReqNPUNum == util.CoreNum5 || vT.ReqNPUNum == util.CoreNum10 || vT.ReqNPUNum%util.CoreNum20 == 0
+}
+
+func checkB41DyJobRequire(vT util.NPUTask) bool {
+	return vT.ReqNPUNum == util.CoreNum5 || vT.ReqNPUNum == util.CoreNum10 || vT.ReqNPUNum%util.CoreNum20 == 0
+}
+
+func checkA3X20DyJobRequire(vT util.NPUTask) bool {
+	return vT.ReqNPUNum == util.CoreNum5 || vT.ReqNPUNum == util.CoreNum10 || vT.ReqNPUNum%util.CoreNum20 == 0
+}
+
+func checkA3X24DyJobRequire(vT util.NPUTask) bool {
+	return vT.ReqNPUNum == util.CoreNum6 || vT.ReqNPUNum == util.CoreNum12 || vT.ReqNPUNum%util.CoreNum24 == 0
 }
 
 func (tp *virtual910NPU) validDyVNPUTaskDVPPLabel(vT util.NPUTask) error {

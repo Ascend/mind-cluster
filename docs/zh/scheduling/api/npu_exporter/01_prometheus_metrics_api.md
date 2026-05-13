@@ -464,7 +464,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="10.43%" headers="mcps1.2.7.1.5 "><p id="p1835917279917"><a name="p1835917279917"></a><a name="p1835917279917"></a>单位：%</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="20.18%" headers="mcps1.2.7.1.6 "><p id="p735982715917"><a name="p735982715917"></a><a name="p735982715917"></a><span id="ph19590185162111"><a name="ph19590185162111"></a><a name="ph19590185162111"></a>Atlas 推理系列产品</span></p>
+<td class="cellrowborder" rowspan="3" valign="top" width="20.18%" headers="mcps1.2.7.1.6 "><p id="p735982715917"><a name="p735982715917"></a><a name="p735982715917"></a><span id="ph19590185162111"><a name="ph19590185162111"></a><a name="ph19590185162111"></a>Atlas 推理系列产品、Atlas A2 训练/推理系列产品、Atlas A3 训练/推理系列产品</span></p>
 </td>
 </tr>
 <tr id="row17703155715411"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p136032717910"><a name="p136032717910"></a><a name="p136032717910"></a>vNPU</p>

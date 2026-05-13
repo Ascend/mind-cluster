@@ -163,6 +163,15 @@ func TestSetAscendManager(t *testing.T) {
 		err := hdm.setAscendManager(devM)
 		convey.So(err, convey.ShouldBeNil)
 	})
+	convey.Convey("test devType is Ascend910A3", t, func() {
+		mockGetDevType := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)), "GetDevType",
+			func(_ *devmanager.DeviceManagerMock) string {
+				return api.Ascend910A3
+			})
+		defer mockGetDevType.Reset()
+		err := hdm.setAscendManager(devM)
+		convey.So(err, convey.ShouldBeNil)
+	})
 	convey.Convey("test GetChipAiCoreCount return error", t, func() {
 		mockGetChipAiCoreCount = gomonkey.ApplyMethod(reflect.TypeOf(new(device.AscendTools)), "GetChipAiCoreCount",
 			func(_ *device.AscendTools) (int32, error) {

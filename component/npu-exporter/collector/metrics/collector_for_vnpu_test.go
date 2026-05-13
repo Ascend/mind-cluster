@@ -40,6 +40,8 @@ func TestVnpuCollectorIsSupported(t *testing.T) {
 	n := mockNewNpuCollector()
 	cases := []testCase{
 		buildTestCase("VnpuCollector: testIsSupported on Ascend310P", &VnpuCollector{}, api.Ascend310P, true),
+		buildTestCase("VnpuCollector: testIsSupported on Ascend910B", &VnpuCollector{}, api.Ascend910B, true),
+		buildTestCase("VnpuCollector: testIsSupported on Ascend910A3", &VnpuCollector{}, api.Ascend910A3, true),
 		buildTestCase("VnpuCollector: testIsSupported on other type", &VnpuCollector{}, "OTHER", false),
 	}
 
