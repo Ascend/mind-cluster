@@ -162,7 +162,7 @@ func buildCheckSuperPodSizeValidCase() []ValidNPUJobTestCase {
 func buildCheckTpBlockNumCase() []ValidNPUJobTestCase {
 	return []ValidNPUJobTestCase{
 		{
-			Name:       "checkTpBlockNum-01: Parameter tp-block is invalid, it should be a number in the range",
+			Name:       "checkTpBlockNum-01: Parameter ra-block is invalid, it should be a number in the range",
 			Attr:       buildTestJobAttr(npuTaskNum4, "8"),
 			SpBlockNum: 32,
 			TpBlockNum: 128,
@@ -172,11 +172,11 @@ func buildCheckTpBlockNumCase() []ValidNPUJobTestCase {
 			WantErr: &api.ValidateResult{
 				Pass:    false,
 				Reason:  tpBlockInvalidReason,
-				Message: "Parameter tp-block is invalid, it should be a number in the range from 1 to 64",
+				Message: "Parameter ra-block is invalid, it should be a number in the range from 1 to 64",
 			},
 		},
 		{
-			Name:       "checkTpBlockNum-02: Parameter tp-block(48) must be the power of 2",
+			Name:       "checkTpBlockNum-02: Parameter ra-block(48) must be the power of 2",
 			Attr:       buildTestJobAttr(npuTaskNum8, "8"),
 			SpBlockNum: 64,
 			TpBlockNum: 48,
@@ -186,7 +186,7 @@ func buildCheckTpBlockNumCase() []ValidNPUJobTestCase {
 			WantErr: &api.ValidateResult{
 				Pass:    false,
 				Reason:  tpBlockInvalidReason,
-				Message: "Parameter tp-block(48) must be the power of 2",
+				Message: "Parameter ra-block(48) must be the power of 2",
 			},
 		},
 	}
@@ -195,7 +195,7 @@ func buildCheckTpBlockNumCase() []ValidNPUJobTestCase {
 func buildCalculateTpBlockAndCheckCase01() ValidNPUJobTestCase {
 	return ValidNPUJobTestCase{
 		Name: "calculateTpBlockAndCheck-01: " +
-			"Parameter tp-block(32)/8 could not be bigger than sp-block(16)/8",
+			"Parameter ra-block(32)/8 could not be bigger than sp-block(16)/8",
 		Attr:       buildTestJobAttr(npuTaskNum2, "8"),
 		SpBlockNum: 16,
 		TpBlockNum: 32,
@@ -205,7 +205,7 @@ func buildCalculateTpBlockAndCheckCase01() ValidNPUJobTestCase {
 		WantErr: &api.ValidateResult{
 			Pass:    false,
 			Reason:  tpBlockInvalidReason,
-			Message: "Parameter tp-block(32)/8 could not be bigger than sp-block(16)/8",
+			Message: "Parameter ra-block(32)/8 could not be bigger than sp-block(16)/8",
 		},
 	}
 }
@@ -213,7 +213,7 @@ func buildCalculateTpBlockAndCheckCase01() ValidNPUJobTestCase {
 func buildCalculateTpBlockAndCheckCase02() ValidNPUJobTestCase {
 	return ValidNPUJobTestCase{
 		Name: "calculateTpBlockAndCheck-02: " +
-			"number of tasks(3) must be multiple of nodes occupied by tp-block(2)",
+			"number of tasks(3) must be multiple of nodes occupied by ra-block(2)",
 		Attr:       buildTestJobAttr(npuTaskNum3, "8"),
 		SpBlockNum: 24,
 		TpBlockNum: 16,
@@ -223,7 +223,7 @@ func buildCalculateTpBlockAndCheckCase02() ValidNPUJobTestCase {
 		WantErr: &api.ValidateResult{
 			Pass:    false,
 			Reason:  tpBlockInvalidReason,
-			Message: "number of tasks(3) must be multiple of nodes occupied by tp-block(2)",
+			Message: "number of tasks(3) must be multiple of nodes occupied by ra-block(2)",
 		},
 	}
 }
@@ -319,7 +319,7 @@ func buildCheckJobReqNpuNumCase2() []ValidNPUJobTestCase {
 		},
 		{
 			Name: "checkJobReqNpuNum-05: distributed super-pod job require npu(10) " +
-				"should be multiple of tp-block",
+				"should be multiple of ra-block",
 			Attr:       buildTestJobAttr(npuTaskNum2, "5"),
 			SpBlockNum: 2,
 			TpBlockNum: 8,
@@ -329,7 +329,7 @@ func buildCheckJobReqNpuNumCase2() []ValidNPUJobTestCase {
 			WantErr: &api.ValidateResult{
 				Pass:    false,
 				Reason:  jobCheckFailedReason,
-				Message: "distributed super-pod job require npu(10) should be multiple of tp-block",
+				Message: "distributed super-pod job require npu(10) should be multiple of ra-block",
 			},
 		},
 	}

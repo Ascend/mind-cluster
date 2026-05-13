@@ -67,7 +67,7 @@ func (tp *strategy) selectOneSpBlock(rackGroup map[int32][]nodeBaseInfo, superPo
 	}
 	spIndex := tp.unReadyIds[tp.totalCount-1]
 	if tp.tpBlock == 0 {
-		klog.V(util.LogErrorLev).Infof("invalid tp-block, select nodes failed")
+		klog.V(util.LogErrorLev).Infof("invalid ra-block, select nodes failed")
 		return rackGroup
 	}
 	tpCountRemain := tp.spBlock / tp.tpBlock
@@ -79,7 +79,7 @@ func (tp *strategy) selectOneSpBlock(rackGroup map[int32][]nodeBaseInfo, superPo
 		if tpCountRemain == 0 {
 			break
 		}
-		// how many tp-block count can be selected in this rack
+		// how many ra-block count can be selected in this rack
 		tpBlockNum := len(rackGroup[rackId]) / tp.tpBlock
 		if tpCountRemain < tpBlockNum {
 			tpBlockNum = tpCountRemain

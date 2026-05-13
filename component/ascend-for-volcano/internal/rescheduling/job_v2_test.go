@@ -94,7 +94,7 @@ func buildInTheSameTpBlockTestCases1() []inTheSameTpBlockTestCase {
 	faultTask1 := fakeReSchedulerFaultTask(true, []string{"pod0", "vcjob", "node0", "job0", "0"}, testCreateTime)
 	faultTask2 := fakeReSchedulerFaultTask(false, []string{"pod1", "vcjob", "node1", "job0", "1"}, testCreateTime)
 	test1 := inTheSameTpBlockTestCase{
-		name: "01-inTheSameTpBlock() return true when in same tp-block=16",
+		name: "01-inTheSameTpBlock() return true when in same ra-block=16",
 		fields: FaultJobTestField{
 			JobName:      "job0",
 			JobUID:       "vcjob/job0",
@@ -105,7 +105,7 @@ func buildInTheSameTpBlockTestCases1() []inTheSameTpBlockTestCase {
 		wantErr: [nodeNum]bool{true, true, false, false, false, false, false, false},
 	}
 	test2 := inTheSameTpBlockTestCase{
-		name: "02-inTheSameTpBlock() return true when in same tp-block=64",
+		name: "02-inTheSameTpBlock() return true when in same ra-block=64",
 		fields: FaultJobTestField{
 			JobName:      "job0",
 			JobUID:       "vcjob/job0",
@@ -124,7 +124,7 @@ func buildInTheSameTpBlockTestCases2() []inTheSameTpBlockTestCase {
 	faultTask1 := fakeReSchedulerFaultTask(false, []string{"pod0", "vcjob", "node0", "job0", "0"}, testCreateTime)
 	faultTask2 := fakeReSchedulerFaultTask(true, []string{"pod1", "vcjob", "node1", "job0", "7"}, testCreateTime)
 	test1 := inTheSameTpBlockTestCase{
-		name: "03-inTheSameTpBlock() return true when in same tp-block=16",
+		name: "03-inTheSameTpBlock() return true when in same ra-block=16",
 		fields: FaultJobTestField{
 			JobName:      "job0",
 			JobUID:       "vcjob/job0",
@@ -135,7 +135,7 @@ func buildInTheSameTpBlockTestCases2() []inTheSameTpBlockTestCase {
 		wantErr: [nodeNum]bool{false, false, false, false, false, false, true, true},
 	}
 	test2 := inTheSameTpBlockTestCase{
-		name: "04-inTheSameTpBlock() return true when in same tp-block=32",
+		name: "04-inTheSameTpBlock() return true when in same ra-block=32",
 		fields: FaultJobTestField{
 			JobName:      "job0",
 			JobUID:       "vcjob/job0",
@@ -152,7 +152,7 @@ func buildInTheSameTpBlockTestCases3() []inTheSameTpBlockTestCase {
 	faultTask1 := fakeReSchedulerFaultTask(true, []string{"pod0", "vcjob", "node0", "job0", "0"}, testCreateTime)
 	faultTask2 := fakeReSchedulerFaultTask(true, []string{"pod1", "vcjob", "node1", "job0", "7"}, testCreateTime)
 	test1 := inTheSameTpBlockTestCase{
-		name: "05-inTheSameTpBlock() return false when in same tp-block=8 and two fault tasks",
+		name: "05-inTheSameTpBlock() return false when in same ra-block=8 and two fault tasks",
 		fields: FaultJobTestField{
 			JobName:      "job0",
 			JobUID:       "vcjob/job0",
@@ -163,7 +163,7 @@ func buildInTheSameTpBlockTestCases3() []inTheSameTpBlockTestCase {
 		wantErr: [nodeNum]bool{false, false, false, false, false, false, false, false},
 	}
 	test2 := inTheSameTpBlockTestCase{
-		name: "06-inTheSameTpBlock() return true when in same tp-block=16 and two fault tasks",
+		name: "06-inTheSameTpBlock() return true when in same ra-block=16 and two fault tasks",
 		fields: FaultJobTestField{
 			JobName:      "job0",
 			JobUID:       "vcjob/job0",

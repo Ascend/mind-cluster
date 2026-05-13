@@ -62,7 +62,7 @@ func (tp *chip4nodex) validNPUJob() *api.ValidateResult {
 		klog.V(util.LogWarningLev).Infof("There is no need to set sp-block in standard cluster server.")
 	}
 	if tp.TpBlockNPUNum != util.LeastTpBlock {
-		klog.V(util.LogWarningLev).Infof("There is no need to set tp-block in standard cluster server.")
+		klog.V(util.LogWarningLev).Infof("There is no need to set ra-block in standard cluster server.")
 	}
 	// check job mode:distribute and single.
 	if vErr = tp.checkJobMode(); vErr != nil {

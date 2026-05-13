@@ -92,37 +92,39 @@ func (tp *chip8node8ra64sp) checkSuperPodSizeValid() *api.ValidateResult {
 	return nil
 }
 
-// check the validation of tp-block
+// check the validation of ra-block
 func (tp *chip8node8ra64sp) checkTpBlockNum() *api.ValidateResult {
-	// the tp-block value must in range [1,64]
+	// the ra-block value must in range [1,64]
 	if tp.TpBlockNPUNum > rackNPUNumber || tp.TpBlockNPUNum < miniTpBlockNum {
 		return &api.ValidateResult{
 			Pass:   false,
 			Reason: tpBlockInvalidReason,
-			Message: fmt.Sprintf("Parameter tp-block is invalid, it should be a number in the range "+
+			Message: fmt.Sprintf("Parameter ra-block is invalid, it should be a number in the range "+
 				"from %d to %d", miniTpBlockNum, rackNPUNumber),
 		}
 	}
 
-	// check if tp-block is power of 2 by bitwise operation
+	// check if ra-block is power of 2 by bitwise operation
 	if (tp.TpBlockNPUNum & (tp.TpBlockNPUNum - 1)) != 0 {
 		return &api.ValidateResult{
 			Pass:    false,
 			Reason:  tpBlockInvalidReason,
-			Message: fmt.Sprintf("Parameter tp-block(%d) must be the power of 2", tp.TpBlockNPUNum),
+			Message: fmt.Sprintf("Parameter ra-block(%d) must be the power of 2", tp.TpBlockNPUNum),
 		}
 	}
 
 	return nil
 }
 
-// calculate the tp-block and check if it's valid
+// calculate the ra-block and check if it's valid
 func (tp *chip8node8ra64sp) calculateTpBlockAndCheck() *api.ValidateResult {
-	// tp-block=1 -> tpBlock=1
-	// tp-block=8 -> tpBlock=1
-	// tp-block=16 -> tpBlock=2
-	// tp-block=32 -> tpBlock=4
-	// tp-block=64 -> tpBlock=8
+	// ra-block is the number of NPUs, which is the value of annotation "ra-block" in volcano.yaml, tpBlock is the number of nodes occupied by ra-block, which is the value of annotation "ra-block" divided by node max npu num
+	// the relation between ra-block and tpBlock is as follows:
+	// ra-block=1 -> tpBlock=1
+	// ra-block=8 -> tpBlock=1
+	// ra-block=16 -> tpBlock=2
+	// ra-block=32 -> tpBlock=4
+	// ra-block=64 -> tpBlock=8
 	const (
 		plusTpBlockNum = 7
 	)
@@ -132,7 +134,7 @@ func (tp *chip8node8ra64sp) calculateTpBlockAndCheck() *api.ValidateResult {
 		return &api.ValidateResult{
 			Pass:   false,
 			Reason: tpBlockInvalidReason,
-			Message: fmt.Sprintf("Parameter tp-block(%d)/%d could not be bigger than sp-block(%d)/%d",
+			Message: fmt.Sprintf("Parameter ra-block(%d)/%d could not be bigger than sp-block(%d)/%d",
 				tp.TpBlockNPUNum, tp.MaxNodeNPUNum, tp.SpBlockNPUNum, tp.MaxNodeNPUNum),
 		}
 	}
@@ -142,7 +144,7 @@ func (tp *chip8node8ra64sp) calculateTpBlockAndCheck() *api.ValidateResult {
 			Pass:   false,
 			Reason: tpBlockInvalidReason,
 			Message: fmt.Sprintf("number of tasks(%d) must be multiple of "+
-				"nodes occupied by tp-block(%d)", tp.NPUTaskNum, tp.tpBlock),
+				"nodes occupied by ra-block(%d)", tp.NPUTaskNum, tp.tpBlock),
 		}
 	}
 
@@ -187,12 +189,12 @@ func (tp *chip8node8ra64sp) checkJobReqNpuNum() *api.ValidateResult {
 				tp.ReqNPUNum),
 		}
 	}
-	// distributed job required npu must be multiple of tp-block
+	// distributed job required npu must be multiple of ra-block
 	if tp.ReqNPUNum%tp.TpBlockNPUNum != 0 {
 		return &api.ValidateResult{
 			Pass:   false,
 			Reason: jobCheckFailedReason,
-			Message: fmt.Sprintf("distributed super-pod job require npu(%d) should be multiple of tp-block",
+			Message: fmt.Sprintf("distributed super-pod job require npu(%d) should be multiple of ra-block",
 				tp.ReqNPUNum),
 		}
 	}
