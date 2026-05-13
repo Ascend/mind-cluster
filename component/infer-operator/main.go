@@ -39,8 +39,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	volcanov1beta1 "volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
+	"ascend-common/common-utils/agreement"
 	"ascend-common/common-utils/hwlog"
-	v1 "infer-operator/pkg/api/v1"
+	"infer-operator/pkg/api/v1"
 	"infer-operator/pkg/common"
 	util "infer-operator/pkg/common/client-go"
 	"infer-operator/pkg/common/utils"
@@ -61,6 +62,7 @@ var (
 )
 
 func init() {
+	agreement.PrintAgreement()
 	utilruntime.Must(apiextv1.AddToScheme(runtimeScheme))
 	utilruntime.Must(v1alpha1.AddToScheme(runtimeScheme))
 	utilruntime.Must(v1beta1.AddToScheme(runtimeScheme))

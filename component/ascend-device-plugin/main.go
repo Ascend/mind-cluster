@@ -28,6 +28,7 @@ import (
 	"Ascend-device-plugin/pkg/next/devicefactory"
 	"Ascend-device-plugin/pkg/topology"
 	"ascend-common/api"
+	"ascend-common/common-utils/agreement"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 )
@@ -264,6 +265,10 @@ func checkShareDevCount() bool {
 		return false
 	}
 	return true
+}
+
+func init() {
+	agreement.PrintAgreement()
 }
 
 func main() {

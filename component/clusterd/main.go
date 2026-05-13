@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 
+	"ascend-common/common-utils/agreement"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/conf"
 	"clusterd/pkg/application/faultmanager"
@@ -221,6 +222,7 @@ func initK8sServer() error {
 }
 
 func init() {
+	agreement.PrintAgreement()
 	flag.BoolVar(&version, "version", false, "the version of the program")
 	// hwlog configuration
 	flag.IntVar(&hwLogConfig.LogLevel, "logLevel", 0,

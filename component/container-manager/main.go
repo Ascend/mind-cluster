@@ -23,6 +23,7 @@ import (
 	"sort"
 	"strings"
 
+	"ascend-common/common-utils/agreement"
 	"container-manager/pkg/command"
 )
 
@@ -45,6 +46,10 @@ var (
 	curCmd command.Command
 	cmdMap = make(map[string]command.Command)
 )
+
+func init() {
+	agreement.PrintAgreement()
+}
 
 func setCurCmd(cmd command.Command) {
 	curCmd = cmd
