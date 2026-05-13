@@ -335,7 +335,6 @@
 - ResNet50模型适配
     - [基于PyTorch的故障恢复](#section72859254718)
     - [基于MindSpore的故障恢复](#section127532091511)
-    - [基于TensorFlow的故障恢复](#section2352206112211)
 
 - Pangu\_alpha模型适配（MindSpore框架）
 
@@ -622,57 +621,6 @@
             lr = ms.Tensor(init_lr(step_size=step_size))
         ...
         ```
-
-**TensorFlow的故障恢复示例<a name="section2352206112211"></a>**
-
-1. <a name="li360413424258"></a>下载[TensorFlow代码仓](https://gitee.com/ascend/ModelZoo-TensorFlow/tree/master/TensorFlow2/built-in/cv/image_classification/ResNet50_ID0360_for_TensorFlow2.X)中master分支中的“ResNet50\_ID0360\_for\_TensorFlow2.X”作为训练代码，请根据该模型代码TensorFlow版本选择训练镜像中的TensorFlow版本包。
-2. 管理员用户上传数据集到存储节点。
-    1. 进入“/data/atlas\_dls/public”目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/resnet50/imagenet\_TF”。
-
-        ```shell
-        root@ubuntu:/data/atlas_dls/public/dataset/resnet50/imagenet_TF# pwd
-        /data/atlas_dls/public/dataset/resnet50/imagenet_TF
-        ```
-
-    2. 执行**du -sh**命令，查看数据集大小。
-
-        ```shell
-        root@ubuntu:/data/atlas_dls/public/dataset/resnet50/imagenet_TF# du -sh
-        42G
-        ```
-
-3. 在本地解压[步骤1](#li360413424258)中下载的训练代码，将“ModelZoo-TensorFlow-master/TensorFlow2/built-in/cv/image\_classification/”下的“ResNet50\_ID0360\_for\_TensorFlow2.X”目录重命名为“ResNet50\_for\_TensorFlow\_2.6\_code/”目录。
-4. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/basic-training/ranktable”目录中的train\_start.sh、utils.sh和rank\_table.sh文件，在训练代码中创建“scripts”目录，在管理节点构造如下的目录结构。
-
-    ```text
-    /data/atlas_dls/public/code/ResNet50_for_TensorFlow_2.6_code/
-    ├──  scripts
-    │   ├──  train_start.sh
-    │   ├──  utils.sh
-    │   ├──  rank_table.sh
-    │    ...
-    ```
-
-5. 修改训练代码。补充加载CKPT文件时的日志打印。修改"tensorflow/tf2\_common/training/controller.py"。
-
-    <pre codetype="Python">
-    class Controller(object):
-      """Class that facilitates training and evaluation of models."""
-      def __init__(
-        ...
-        # Restore Model if needed.
-        if self.checkpoint_manager is not None:
-          model_restored = self._restore_model()
-          <strong>logging.info("loading checkpoint %s", model_restored)</strong>
-          if not model_restored and self.checkpoint_manager.checkpoint_interval:
-            # If the model is not restored from a checkpoint, save an initial
-            # checkpoint.
-            ckpt_path = self.checkpoint_manager.save(
-                checkpoint_number=self.global_step)
-            logging.info("Saved checkpoints in %s", ckpt_path)
-        # Create and initialize the interval triggers.
-        self.eval_trigger = utils.IntervalTrigger(self.eval_interval,
-                                                  self.eval_offset)</pre>
 
 **Pangu\_alpha模型适配示例<a name="section1844516123710"></a>**
 
@@ -1269,17 +1217,7 @@
                 mountPath: /job/output                    # 容器中训练输出路径
     ```
 
-5. 如下所示，YAML中训练命令**bash train\_start.sh**后跟的三个参数依次为容器内训练代码目录、输出目录（其中包括生成日志重定向文件以及TensorFlow框架模型文件）、启动脚本相对代码目录的路径。之后的以“--”开头的参数为训练脚本需要的参数。单机和分布式训练脚本、脚本参数可参考模型脚本来源处的模型说明修改。
-    - **TensorFlow命令参数**
-
-        ```Yaml
-        command:
-        - "/bin/bash"
-        - "-c"
-        - "cd /job/code/scripts;chmod +x train_start.sh;bash train_start.sh /job/code/ /job/output/ tensorflow/resnet_ctl_imagenet_main.py --data_dir=/job/data/imagenet_TF --distribution_strategy=one_device --use_tf_while_loop=true --epochs_between_evals=1 --skip_eval --enable_checkpoint_and_export;"
-        ...
-        ```
-
+5. 如下所示，YAML中训练命令**bash train\_start.sh**后跟的三个参数依次为容器内训练代码目录、输出目录（其中包括生成日志重定向文件以及框架模型文件）、启动脚本相对代码目录的路径。之后的以“--”开头的参数为训练脚本需要的参数。单机和分布式训练脚本、脚本参数可参考模型脚本来源处的模型说明修改。
     - **PyTorch命令参数**
 
         ```Yaml

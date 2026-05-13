@@ -5,7 +5,6 @@ Ascend Job：简称acjob，是MindCluster自定义的一种任务类型，当前
 ## 支持的AI框架<a name="zh-cn_topic_0000002377698613_section1580601414413"></a>
 
 - MindSpore
-- TensorFlow
 - PyTorch
 
 ## 样例<a name="zh-cn_topic_0000002377698613_section7389161784012"></a>

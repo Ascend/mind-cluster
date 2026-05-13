@@ -19,9 +19,9 @@
 </thead>
 <tbody><tr id="zh-cn_topic_0000002039339953_row43521630112117"><td class="cellrowborder" valign="top" width="25.042504250425047%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002039339953_p64516449226"><a name="zh-cn_topic_0000002039339953_p64516449226"></a><a name="zh-cn_topic_0000002039339953_p64516449226"></a>(.kind=="AscendJob").metadata.labels.framework</p>
 </td>
-<td class="cellrowborder" valign="top" width="24.76247624762476%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002039339953_ul745174412210"></a><a name="zh-cn_topic_0000002039339953_ul745174412210"></a><ul id="zh-cn_topic_0000002039339953_ul745174412210"><li>mindspore</li><li>pytorch</li><li>tensorflow</li></ul>
+<td class="cellrowborder" valign="top" width="24.76247624762476%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002039339953_ul745174412210"></a><a name="zh-cn_topic_0000002039339953_ul745174412210"></a><ul id="zh-cn_topic_0000002039339953_ul745174412210"><li>mindspore</li><li>pytorch</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="50.1950195019502%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002039339953_p1745112442227"><a name="zh-cn_topic_0000002039339953_p1745112442227"></a><a name="zh-cn_topic_0000002039339953_p1745112442227"></a>框架类型，目前只支持三种。</p>
+<td class="cellrowborder" valign="top" width="50.1950195019502%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002039339953_p1745112442227"><a name="zh-cn_topic_0000002039339953_p1745112442227"></a><a name="zh-cn_topic_0000002039339953_p1745112442227"></a>框架类型，目前只支持两种。</p>
 </td>
 </tr>
 <tr id="row133645515273"><td class="cellrowborder" valign="top" width="25.042504250425047%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p2436102814254"><a name="zh-cn_topic_0000001951418201_p2436102814254"></a><a name="zh-cn_topic_0000001951418201_p2436102814254"></a>(.kind=="AscendJob").metadata.labels.jobID</p>
@@ -82,7 +82,7 @@
 <td class="cellrowborder" valign="top" width="24.76247624762476%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002039339953_ul14521244102210"></a><a name="zh-cn_topic_0000002039339953_ul14521244102210"></a><ul id="zh-cn_topic_0000002039339953_ul14521244102210"><li>on：开启Pod级别重调度</li><li>其他值或不使用该字段：关闭Pod级别重调度</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="50.1950195019502%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002039339953_p12453044102217"><a name="zh-cn_topic_0000002039339953_p12453044102217"></a><a name="zh-cn_topic_0000002039339953_p12453044102217"></a>Pod级别重调度，表示任务发生故障后，不会删除所有任务Pod，而是将发生故障的Pod进行删除，重新创建新Pod后进行重调度。</p>
-<div class="note" id="zh-cn_topic_0000002039339953_note1430334413223"><a name="zh-cn_topic_0000002039339953_note1430334413223"></a><div class="notebody"><a name="zh-cn_topic_0000002039339953_ul461013147314"></a><a name="zh-cn_topic_0000002039339953_ul461013147314"></a><ul id="zh-cn_topic_0000002039339953_ul461013147314"><li>重调度模式默认为任务级重调度，若需要开启Pod级别重调度，需要新增该字段。</li><li><span id="zh-cn_topic_0000002039339953_ph1061091414318"><a name="zh-cn_topic_0000002039339953_ph1061091414318"></a><a name="zh-cn_topic_0000002039339953_ph1061091414318"></a>TensorFlow</span>暂不支持Pod级别重调度。</li></ul>
+<div class="note" id="zh-cn_topic_0000002039339953_note1430334413223"><a name="zh-cn_topic_0000002039339953_note1430334413223"></a><div class="notebody"><a name="zh-cn_topic_0000002039339953_ul461013147314"></a><a name="zh-cn_topic_0000002039339953_ul461013147314"></a><ul id="zh-cn_topic_0000002039339953_ul461013147314"><li>重调度模式默认为任务级重调度，若需要开启Pod级别重调度，需要新增该字段。</li></ul>
 </div></div>
 </td>
 </tr>
@@ -712,21 +712,10 @@
                 mountPath: /job/output                    # 容器中训练输出路径        
     ```
 
-8. （可选）如下所示，YAML中训练命令**bash train\_start.sh**后跟的三个参数依次为容器内训练代码目录、输出目录（其中包括生成日志重定向文件以及TensorFlow框架模型文件）、启动脚本相对代码目录的路径（PyTorch命令参数不涉及启动脚本）。之后的以“--”开头的参数为训练脚本需要的参数。单机和分布式训练脚本、脚本参数可参考模型脚本来源处的模型说明修改。
+8. （可选）如下所示，YAML中训练命令**bash train\_start.sh**后跟的三个参数依次为容器内训练代码目录、输出目录（其中包括生成日志重定向文件以及框架模型文件）、启动脚本相对代码目录的路径（PyTorch命令参数不涉及启动脚本）。之后的以“--”开头的参数为训练脚本需要的参数。单机和分布式训练脚本、脚本参数可参考模型脚本来源处的模型说明修改。
 
     >[!NOTE] 
     >使用**优雅容错模式**可跳过该步骤。
-
-    - **TensorFlow命令参数**
-
-        ```shell
-        command:
-        - "/bin/bash"
-        - "-c"
-        - "cd /job/code/scripts;chmod +x train_start.sh;bash train_start.sh /job/code/ /job/output/ tensorflow/resnet_ctl_imagenet_main.py --data_dir=/job/data/imagenet_TF --distribution_strategy=one_device --use_tf_while_loop=true --epochs_between_evals=1 --skip_eval --enable_checkpoint_and_export;"
-        ...
-        ```
-
     - **PyTorch命令参数**
 
         ```shell

@@ -14,7 +14,7 @@
 
 ## Ascend Operator
 
-Ascend Operator is a MindCluster cluster scheduling component deployed on management nodes. It supports distributed training on Kubernetes using three AI frameworks: MindSpore, PyTorch, and TensorFlow. The CRD (Custom Resource Definition) defines the AscendJob task type, allowing users to easily implement distributed training by simply configuring YAML files.
+Ascend Operator is a MindCluster cluster scheduling component deployed on management nodes. It supports distributed training on Kubernetes using two AI frameworks: MindSpore and PyTorch. The CRD (Custom Resource Definition) defines the AscendJob task type, allowing users to easily implement distributed training by simply configuring YAML files.
 
 ### Use Cases
 
