@@ -234,6 +234,7 @@ do_install() {
     local fault_cfg_path=""
     local log_path="${DEFAULT_LOG_FILE}"
     local timer_delay="${DEFAULT_TIMER_DELAY}"
+    local skip_confirm=false
 
     # Parse install arguments
     while [ $# -gt 0 ]; do
@@ -272,6 +273,10 @@ do_install() {
                 ;;
             --timerDelay=*)
                 timer_delay="${1#*=}"
+                shift
+                ;;
+            -y|--yes)
+                skip_confirm=true
                 shift
                 ;;
             *)
@@ -350,6 +355,19 @@ do_install() {
 
     # Check prerequisites
     check_binary
+
+    if [ -f "${SYSTEMD_UNIT_DIR}/${SERVICE_NAME}.service" ]; then
+        if [ "${skip_confirm}" = false ]; then
+            log_warn "Service is already installed. Reinstalling will overwrite existing configuration."
+            echo ""
+            echo -e "  ${YELLOW}Do you want to continue? [y/N]${NC}"
+            read -r confirm
+            if [[ "${confirm}" != "y" && "${confirm}" != "Y" ]]; then
+                log_info "Installation cancelled"
+                exit 0
+            fi
+        fi
+    fi
 
     # Stop existing service if running
     if systemctl is-active --quiet "${SERVICE_NAME}" 2>/dev/null; then
@@ -454,6 +472,15 @@ do_uninstall() {
 
     log_info "Uninstalling ${COMPONENT_NAME}..."
 
+    local actual_log_dir="${INSTALL_LOG_DIR}"
+    if [ -f "${SYSTEMD_UNIT_DIR}/${SERVICE_NAME}.service" ]; then
+        local log_path_in_unit
+        log_path_in_unit=$(sed -n 's/.*-logPath=\([^ ]*\).*/\1/p' "${SYSTEMD_UNIT_DIR}/${SERVICE_NAME}.service" 2>/dev/null || true)
+        if [ -n "${log_path_in_unit}" ]; then
+            actual_log_dir=$(dirname "${log_path_in_unit}")
+        fi
+    fi
+
     # Stop and disable service
     if systemctl is-active --quiet "${SERVICE_NAME}" 2>/dev/null; then
         log_info "Stopping service..."
@@ -501,8 +528,8 @@ do_uninstall() {
     fi
 
     # Preserve log directory by default
-    if [ -d "${INSTALL_LOG_DIR}" ]; then
-        log_info "Log directory preserved at ${INSTALL_LOG_DIR}"
+    if [ -d "${actual_log_dir}" ]; then
+        log_info "Log directory preserved at ${actual_log_dir}"
     fi
 
     log_info "Uninstallation completed successfully"
@@ -518,16 +545,21 @@ do_upgrade() {
 
     log_info "Upgrading ${COMPONENT_NAME}..."
 
-    # Check if service is installed
     if [ ! -f "${SYSTEMD_UNIT_DIR}/${SERVICE_NAME}.service" ]; then
         log_error "Service is not installed. Please run 'install' first."
         exit 1
     fi
 
-    # Check binary exists in source directory
     check_binary
 
-    # Stop service
+    local current_version
+    current_version=$("${INSTALL_BIN_DIR}/${COMPONENT_NAME}" -v 2>/dev/null || echo "unknown")
+    local target_version
+    target_version=$("${BINARY_PATH}" -v 2>/dev/null || echo "unknown")
+
+    log_info "Current version : ${current_version}"
+    log_info "Target version  : ${target_version}"
+
     if systemctl is-active --quiet "${SERVICE_NAME}" 2>/dev/null; then
         log_info "Stopping service..."
         systemctl stop "${SERVICE_NAME}"
@@ -599,6 +631,7 @@ Options:
                             Single log file rotates when exceeding 20MB
   --timerDelay=<duration>   Boot timer delay duration (default: ${DEFAULT_TIMER_DELAY})
                             Ensures NPU devices are ready before service starts
+  -y, --yes                 Skip confirmation prompt (for scripted/automated use)
 
 Examples:
   # Install with defaults (Docker runtime, no auto-recovery)
