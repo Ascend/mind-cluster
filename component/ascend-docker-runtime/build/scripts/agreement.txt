@@ -1,0 +1,4 @@
+Please read the End User License Agreement carefully. Your use of the Huawei Software
+will be deemed as your acceptance of the constraints mentioned in the Agreement.
+The full text of the EULA is available at:
+https://www.hiascend.com/zh/legal/softlicense

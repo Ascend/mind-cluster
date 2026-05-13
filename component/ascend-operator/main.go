@@ -32,6 +32,7 @@ import (
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/api"
+	"ascend-common/common-utils/agreement"
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/controllers/v1"
@@ -58,6 +59,7 @@ var (
 )
 
 func init() {
+	agreement.PrintAgreement()
 	utilruntime.Must(scheme.AddToScheme(runtimeScheme))
 	utilruntime.Must(v1beta1.AddToScheme(runtimeScheme))
 	utilruntime.Must(mindxdlv1.AddToScheme(runtimeScheme))

@@ -36,6 +36,7 @@ import (
 	net2 "k8s.io/utils/net"
 
 	"ascend-common/api"
+	"ascend-common/common-utils/agreement"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/limiter"
 	"ascend-common/devmanager"
@@ -399,6 +400,7 @@ func containerSockCheck() error {
 }
 
 func init() {
+	agreement.PrintAgreement()
 	flag.IntVar(&port, "port", portConst,
 		"The server port of the http service,range[1025-40000]")
 	flag.StringVar(&ip, "ip", "",

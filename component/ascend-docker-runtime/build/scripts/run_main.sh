@@ -210,8 +210,36 @@ function add_so() {
     fi
 }
 
+function check_eula()
+{
+    local eula_file="$(cd "$(dirname "$0")" && pwd)/agreement.txt"
+    if [[ -f "${eula_file}" ]]; then
+        cat "${eula_file}"
+        echo ""
+    fi
+    echo "Do you accept the EULA to install ${RT_FIRST_CASE}?[Y/N]"
+    while true
+    do
+        read -r yn
+        case "${yn}" in
+            [Yy])
+                log "[INFO]" "user accepted EULA"
+                break
+                ;;
+            [Nn])
+                log "[INFO]" "install cancelled, user declined EULA"
+                exit 0
+                ;;
+            *)
+                echo "Do you accept the EULA to install ${RT_FIRST_CASE}?[Y/N]"
+                ;;
+        esac
+    done
+}
+
 function install()
 {
+    check_eula
     echo "[INFO] installing ${RT_LOWER_CASE}"
     check_platform
     if [[ $? != 0 ]]; then
@@ -372,6 +400,7 @@ function uninstall()
 
 function upgrade()
 {
+    check_eula
     echo "[INFO] upgrading ${RT_LOWER_CASE}"
     check_platform
     if [[ $? != 0 ]]; then

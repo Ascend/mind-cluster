@@ -23,6 +23,7 @@ import (
 	"syscall"
 
 	"ascend-common/api"
+	"ascend-common/common-utils/agreement"
 	"ascend-common/common-utils/hwlog"
 	fdol "ascend-faultdiag-online"
 	"nodeD/pkg/common"
@@ -119,6 +120,7 @@ func main() {
 }
 
 func init() {
+	agreement.PrintAgreement()
 	flag.BoolVar(&version, "version", false, "the version of the program")
 	flag.IntVar(&reportInterval, "reportInterval", defaultReportInterval,
 		"Min interval of report node status")
