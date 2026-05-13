@@ -8,7 +8,7 @@
 
 ## 使用示例<a name="section148905517122"></a>
 
-示例中的image-name:tag为镜像名称与标签，如“ascend-tensorflow:tensorflow\_TAG”。containerID为容器ID，使用ctr启动容器需要指定容器ID，如“c1”。
+示例中的image-name:tag为镜像名称与标签，如“ascend-pytorch:pytorch\_TAG”。containerID为容器ID，使用ctr启动容器需要指定容器ID，如“c1”。
 
 - 示例1：启动容器时，挂载物理芯片ID为0的芯片。
 

@@ -151,7 +151,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 可选择以下方式中的一种来获取训练镜像：
 
-- （推荐）从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)根据系统架构（ARM/x86\_64）、模型框架（TensorFlow、PyTorch、MindSpore）下载配套驱动版本的**训练基础镜像**。基于训练基础镜像进行修改，将容器中默认用户修改为root（21.0.4版本之后训练基础镜像默认用户为非root）。基础镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
+- （推荐）从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)根据系统架构（ARM/x86\_64）、模型框架（PyTorch、MindSpore）下载配套驱动版本的**训练基础镜像**。基于训练基础镜像进行修改，将容器中默认用户修改为root（21.0.4版本之后训练基础镜像默认用户为非root）。基础镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
 - 从头开始定制用户自己的训练镜像，制作过程请参考[制作镜像](../../common_operations.md#制作镜像)中制作容器相关章节。
 
 可将下载/制作的训练基础镜像重命名，如：training:v26.0.0。
@@ -166,64 +166,13 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 根据模型框架选择对应的指导示例。
 
-- [TensorFlow](#zh-cn_topic_0000001558834814_section146363219252)
 - [PyTorch](#zh-cn_topic_0000001558834814_section17760205783316)
 - [MindSpore](#zh-cn_topic_0000001558834814_section868111733711)
 
     >[!NOTE] 
-    >- 本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。TensorFlow框架请参考**数据集准备**部分内容进行数据集预处理，详情请参见《TensorFlow 1.15模型迁移指南》的“样例参考 \> [训练前准备](https://www.hiascend.com/document/detail/zh/TensorFlowCommercial/850/migration/tfmigr1/tfmigr1_000101.html)”章节。
+    >- 本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。
     >- 下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
-    >- 以下TensorFlow和MindSpore示例需使用CANN 8.5.0之前版本。   
-
-**TensorFlow<a name="zh-cn_topic_0000001558834814_section146363219252"></a>**
-
-1. <a name="zh-cn_topic_0000001558834814_li1040412108620"></a>下载[TensorFlow代码仓](https://gitee.com/ascend/ModelZoo-TensorFlow/tree/master/TensorFlow2/built-in/cv/image_classification/ResNet50_ID0360_for_TensorFlow2.X)中master分支中的“ResNet50\_ID0360\_for\_TensorFlow2.X”作为训练代码，请根据该模型代码TensorFlow版本选择训练镜像中的TensorFlow版本包。
-2. 管理员用户上传数据集到存储节点。
-    1. 进入“/data/atlas\_dls/public”目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/resnet50/imagenet\_TF”。
-
-        ```shell
-        root@ubuntu:/data/atlas_dls/public/dataset/resnet50/imagenet_TF# pwd
-        ```
-
-        回显示例如下：
-
-        ```ColdFusion
-        /data/atlas_dls/public/dataset/resnet50/imagenet_TF
-        ```
-
-    2. 执行**du -sh**命令，查看数据集大小。
-
-        ```shell
-        root@ubuntu:/data/atlas_dls/public/dataset/resnet50/imagenet_TF# du -sh
-        ```
-
-        回显示例如下：
-
-        ```ColdFusion
-        42G
-        ```
-
-3. <a name="zh-cn_topic_0000001558834814_li1630573712375"></a>在本地解压[步骤1](#zh-cn_topic_0000001558834814_li1040412108620)中下载的训练代码，将“ModelZoo-TensorFlow-master/TensorFlow2/built-in/cv/image\_classification/”下的“ResNet50\_ID0360\_for\_TensorFlow2.X”目录重命名为“ResNet50\_for\_TensorFlow\_2.6\_code/”目录。
-4. 将ResNet50\_for\_TensorFlow\_2.6\_code文件上传至环境的“/data/atlas\_dls/public/code/”路径下。
-5. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/without-ranktable/tensorflow”目录中的“train\_start.sh”文件，结合[步骤3](#zh-cn_topic_0000001558834814_li1630573712375)中的“ResNet50\_for\_TensorFlow\_2.6\_code”目录，在host的“/data/atlas\_dls/public/code”路径下，构造如下的目录结构。
-
-    ```text
-    /data/atlas_dls/public/code/ResNet50_for_TensorFlow_2.6_code/
-    ├──  scripts
-    │   ├──  train_start.sh
-    │    ...
-    │        ...
-    ├──  tensorflow
-    │   ├──  resnet_ctl_imagenet_main.py
-    │   ├──  resnet_model.py
-    │   ├──  resnet_runnable.py
-    │    ...
-    │        ...
-    ├──  benchmark.sh
-    ├──  modelzoo_level.txt
-     ...
-    └──  requirements.txt
-    ```
+    >- 以下MindSpore示例需使用CANN 8.5.0之前版本。   
 
 **PyTorch<a name="zh-cn_topic_0000001558834814_section17760205783316"></a>**
 
@@ -346,67 +295,14 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 通过文件变量配置资源信息支持创建以下3种类型的对象：acjob、vcjob及deploy。下面将以vcjob和deploy为例，介绍脚本适配的操作示例。
 
-- [TensorFlow](#zh-cn_topic_0000001558834798_section146363219252)
 - [PyTorch](#zh-cn_topic_0000001558834798_section17760205783316)
 - [MindSpore](#zh-cn_topic_0000001558834798_section868111733711)
 
 >[!NOTE] 
 >
->- 本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。TensorFlow框架请参考**数据集准备**部分内容进行数据集预处理，详情请参见《TensorFlow 1.15模型迁移指南》的“样例参考 \> [训练前准备](https://www.hiascend.com/document/detail/zh/TensorFlowCommercial/850/migration/tfmigr1/tfmigr1_000101.html)”章节。
+>- 本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。
 >- 下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
->- 以下TensorFlow和MindSpore示例需使用CANN 8.5.0之前版本。
-
-**TensorFlow<a name="zh-cn_topic_0000001558834798_section146363219252"></a>**
-
-1. <a name="zh-cn_topic_0000001558834798_li360413424258"></a>下载[TensorFlow代码仓](https://gitee.com/ascend/ModelZoo-TensorFlow/tree/master/TensorFlow2/built-in/cv/image_classification/ResNet50_ID0360_for_TensorFlow2.X)中master分支中的“ResNet50\_ID0360\_for\_TensorFlow2.X”作为训练代码，请根据该模型代码TensorFlow版本选择训练镜像中的TensorFlow版本包。
-2. 管理员用户上传数据集到存储节点。
-    1. 进入“/data/atlas\_dls/public”目录，将数据集上传到任意位置，如“/data/atlas\_dls/public/dataset/resnet50/imagenet\_TF”。
-
-        ```shell
-        root@ubuntu:/data/atlas_dls/public/dataset/resnet50/imagenet_TF# pwd
-        ```
-
-        回显示例如下：
-
-        ```ColdFusion
-        /data/atlas_dls/public/dataset/resnet50/imagenet_TF
-        ```
-
-    2. 执行**du -sh**命令，查看数据集大小。
-
-        ```shell
-        root@ubuntu:/data/atlas_dls/public/dataset/resnet50/imagenet_TF# du -sh
-        ```
-
-        回显示例如下：
-
-        ```ColdFusion
-        42G
-        ```
-
-3. <a name="zh-cn_topic_0000001558834798_li1630573712375"></a>在本地解压[步骤1](#zh-cn_topic_0000001558834798_li360413424258)中下载的训练代码，将“ModelZoo-TensorFlow-master/TensorFlow2/built-in/cv/image\_classification/”下的“ResNet50\_ID0360\_for\_TensorFlow2.X”目录重命名为“ResNet50\_for\_TensorFlow\_2.6\_code/”目录。
-4. 将“ResNet50\_for\_TensorFlow\_2.6\_code”上传至环境的“/data/atlas\_dls/public/code/”路径下。
-5. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/ranktable”目录中的“train\_start.sh”、“rank\_table.sh”和“utils.sh”文件，结合[步骤3](#zh-cn_topic_0000001558834798_li1630573712375)中的“ResNet50\_for\_TensorFlow\_2.6\_code”目录，在host的“/data/atlas\_dls/public/code”路径下，构造如下的目录结构。
-
-    ```text
-    /data/atlas_dls/public/code/ResNet50_for_TensorFlow_2.6_code/
-    ├──  scripts
-    │   ├──  train_start.sh
-    │   ├──  utils.sh
-    │   ├──  rank_table.sh
-    │    ...
-    │        ...
-    ├──  tensorflow
-    │   ├──  resnet_ctl_imagenet_main.py
-    │   ├──  resnet_model.py
-    │   ├──  resnet_runnable.py
-    │    ...
-    │        ...
-    ├──  benchmark.sh
-    ├──  modelzoo_level.txt
-     ...
-    └──  requirements.txt
-    ```
+>- 以下MindSpore示例需使用CANN 8.5.0之前版本。
 
 **PyTorch<a name="zh-cn_topic_0000001558834798_section17760205783316"></a>**
 
@@ -991,9 +887,9 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </thead>
 <tbody><tr id="row99751335102713"><td class="cellrowborder" valign="top" width="27.21%" headers="mcps1.2.4.1.1 "><p id="p189751735172716"><a name="p189751735172716"></a><a name="p189751735172716"></a>framework</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.18%" headers="mcps1.2.4.1.2 "><a name="ul4975113512712"></a><a name="ul4975113512712"></a><ul id="ul4975113512712"><li>mindspore</li><li>pytorch</li><li>tensorflow</li></ul>
+<td class="cellrowborder" valign="top" width="36.18%" headers="mcps1.2.4.1.2 "><a name="ul4975113512712"></a><a name="ul4975113512712"></a><ul id="ul4975113512712"><li>mindspore</li><li>pytorch</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="p79751235102712"><a name="p79751235102712"></a><a name="p79751235102712"></a>框架类型，目前只支持三种。</p>
+<td class="cellrowborder" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="p79751235102712"><a name="p79751235102712"></a><a name="p79751235102712"></a>框架类型，目前只支持两种。</p>
 </td>
 </tr>
 <tr id="row2097633513272"><td class="cellrowborder" valign="top" width="27.21%" headers="mcps1.2.4.1.1 "><p id="p6976153532710"><a name="p6976153532710"></a><a name="p6976153532710"></a>ring-controller.atlas</p>
@@ -1546,16 +1442,13 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     </th>
     </tr>
     </thead>
-    <tbody><tr id="row1383111642810"><td class="cellrowborder" rowspan="2" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p183111662814"><a name="p183111662814"></a><a name="p183111662814"></a>整卡调度</p>
+    <tbody><tr id="row1383111642810"><td class="cellrowborder" rowspan="1" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p183111662814"><a name="p183111662814"></a><a name="p183111662814"></a>整卡调度</p>
     <p id="p6831131682816"><a name="p6831131682816"></a><a name="p6831131682816"></a></p>
     <p id="p4831141617286"><a name="p4831141617286"></a><a name="p4831141617286"></a></p>
     <p id="p1783141615287"><a name="p1783141615287"></a><a name="p1783141615287"></a></p>
     <p id="p53986186431"><a name="p53986186431"></a><a name="p53986186431"></a></p>
     </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1083151622813"><a name="p1083151622813"></a><a name="p1083151622813"></a><a href="#li28347161281">在Atlas 800 训练服务器上创建单机任务</a></p><p id="p128321216132812"><a name="p128321216132812"></a><a name="p128321216132812"></a>若需要使用<span id="ph1183219160285"><a name="ph1183219160285"></a><a name="ph1183219160285"></a>PyTorch</span>或<span id="ph8832121614281"><a name="ph8832121614281"></a><a name="ph8832121614281"></a>MindSpore</span>框架支持的交换机亲和性调度，配置示例请参见<a href="#li583911163280">配置交换机亲和性调度参考示例</a>。</p>
-    </td>
-    </tr>
-    <tr id="row0832171652816"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p178320163285"><a name="p178320163285"></a><a name="p178320163285"></a><a href="#li1731218243100">在Atlas 800T A2 训练服务器上创建分布式任务</a></p>
+    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1083151622813"><a name="p1083151622813"></a><a name="p1083151622813"></a></p><p id="p128321216132812"><a name="p128321216132812"></a><a name="p128321216132812"></a>若需要使用<span id="ph1183219160285"><a name="ph1183219160285"></a><a name="ph1183219160285"></a>PyTorch</span>或<span id="ph8832121614281"><a name="ph8832121614281"></a><a name="ph8832121614281"></a>MindSpore</span>框架支持的交换机亲和性调度，配置示例请参见<a href="#li583911163280">配置交换机亲和性调度参考示例</a>。</p>
     </td>
     </tr>
     <tr id="row108334168282"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p2833141612811"><a name="p2833141612811"></a><a name="p2833141612811"></a>整卡调度</p>
@@ -1568,62 +1461,8 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1924622524915"><a name="p1924622524915"></a><a name="p1924622524915"></a><a href="#li164321720423">在Atlas&nbsp;800T&nbsp;A2&nbsp;训练服务器上创建训练任务（Scheduler挂载芯片的方式）</a></p>
     </td>
     </tr>
-    <tr id="row10833191620281"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1983421672814"><a name="p1983421672814"></a><a name="p1983421672814"></a>静态vNPU调度</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p16834616182815"><a name="p16834616182815"></a><a name="p16834616182815"></a><a href="#li1987314168284">在Atlas 800 训练服务器上创建单机任务</a></p>
-    </td>
-    </tr>
     </tbody>
     </table>
-
-    - <a name="li28347161281"></a>使用**整卡调度**特性，参考本配置。以tensorflow\_standalone\_acjob.yaml为例，在Atlas 800 训练服务器节点创建**单机训练**任务，执行1\*8芯片训练任务，修改示例如下。
-
-        ```Yaml
-        apiVersion: mindxdl.gitee.com/v1
-        kind: AscendJob
-        metadata:
-          name: default-test-tensorflow
-          labels:
-            framework: tensorflow  # 训练框架
-        spec:
-          schedulerName: volcano        #当Ascend Operator组件的启动参数enableGangScheduling为true时生效
-          runPolicy:
-            schedulingPolicy:           # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
-              minAvailable: 1        # 任务总副本数
-              queue: default         # 任务所属队列
-          successPolicy: AllWorkers    # 任务成功的前提
-          replicaSpecs:
-            Chief:
-              replicas: 1      # 任务副本数
-              restartPolicy: Never
-              template:
-                spec:
-                  nodeSelector:
-                    host-arch: huawei-arm               # 可选值，根据实际情况填写
-                    accelerator-type: module           #节点类型
-                  containers:
-                  - name: ascend                        # 必须为ascend，不能修改
-                    image: tensorflow-test:latest        # 镜像名称
-        ...
-                  env:
-        ...
-                  - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime会使用该字段
-                    valueFrom:
-                      fieldRef:
-                        fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
-        ...
-                   ports:                           # 分布式训练集合通信端口
-                      - containerPort: 2222         
-                        name: ascendjob-port
-                    resources:
-                      limits:
-                        huawei.com/Ascend910: 8 # 申请的芯片数量
-                      requests:
-                        huawei.com/Ascend910: 8 #与limits取值一致
-        ...
-        ```
-
-        修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
 
     - <a name="li583911163280"></a>使用**整卡调度**特性，参考本配置。PyTorch和MindSpore框架新增了使用交换机亲和性调度的功能，该功能支持大模型任务和普通任务。以pytorch\_standalone\_acjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，任务使用1个芯片，修改示例如下。
 
@@ -1676,106 +1515,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
 
         >[!NOTE] 
-        >TensorFlow、PyTorch、MindSpore框架中对应的Chief、Master、Scheduler的“replicas”字段不能超过1。单机任务时，TensorFlow、PyTorch框架不需要Worker。单卡任务时，MindSpore框架不需要Scheduler。
-
-    - <a name="li1731218243100"></a>使用**整卡调度**特性，参考本配置。tensorflow\_multinodes\_acjob\_\{xxx\}b.yaml为例，在两台Atlas 800T A2 训练服务器节点创建**分布式训练**任务，执行2\*8芯片训练任务，修改示例如下，分布式任务的每个Pod只能调度到不同节点。
-
-        ```Yaml
-        apiVersion: mindxdl.gitee.com/v1
-        kind: AscendJob
-        metadata:
-          name: default-test-tensorflow        # 任务名
-          labels:
-            framework: tensorflow     # 训练框架名称
-            ring-controller.atlas: ascend-{xxx}b  # 标识产品类型
-        spec:
-          schedulerName: volcano    # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
-          runPolicy:
-            schedulingPolicy:       # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
-              minAvailable: 2   #任务总副本数
-              queue: default     # 任务所属队列
-          successPolicy: AllWorkers  #任务成功的前提
-          replicaSpecs:
-            Chief:
-              replicas: 1   # 任务副本数
-              restartPolicy: Never
-              template:
-                metadata:
-                  labels:
-                    ring-controller.atlas: ascend-{xxx}b  # 标识产品类型
-                spec:
-                  affinity:                                         # 本段配置表示分布式任务的Pod调度到不同节点
-                    podAntiAffinity:
-                      requiredDuringSchedulingIgnoredDuringExecution:
-                        - labelSelector:
-                            matchExpressions:
-                              - key: job-name
-                                operator: In
-                                values:
-                                  - default-test-tensorflow         # 需要和上面的任务名一致
-                          topologyKey: kubernetes.io/hostname
-                  nodeSelector:
-                    host-arch: huawei-arm               # 可选值，根据实际情况填写
-                    accelerator-type: module-{xxx}b-8   # 节点类型
-                  containers:
-                  - name: ascend                                     # 必须为ascend，不能修改
-                  image: tensorflow-test:latest  #镜像名称
-        ...
-                    resources:
-                      limits:
-                        huawei.com/Ascend910: 8     #申请的芯片数量
-                      requests:
-                        huawei.com/Ascend910: 8     # 与limits取值一致
-                    volumeMounts:
-        ...
-                  volumes:
-        ...
-            Worker:
-              replicas: 1   #任务副本数
-              restartPolicy: Never
-              template:
-                metadata:
-                  labels:
-                    ring-controller.atlas: ascend-{xxx}b   # 标识产品类型
-                spec:
-                  affinity:            # 本段配置表示分布式任务的Pod调度到不同节点
-                    podAntiAffinity:
-                      requiredDuringSchedulingIgnoredDuringExecution:
-                        - labelSelector:
-                            matchExpressions:
-                              - key: job-name
-                                operator: In
-                                values:
-                                  - default-test-tensorflow        # 需要和上面的任务名一致
-                          topologyKey: kubernetes.io/hostname
-                  nodeSelector:
-                    host-arch: huawei-arm               # 可选值，根据实际情况填写
-                    accelerator-type: module-{xxx}b-8  # 节点类型
-                  containers:
-                  - name: ascend                                   # 必须为ascend，不能修改
-        ...
-                  env:
-        ...
-                  - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime会使用该字段
-                    valueFrom:
-                      fieldRef:
-                        fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
-        ...
-                    ports:                          # 分布式训练集合通信端口
-                      - containerPort: 2222         
-                        name: ascendjob-port
-                    resources:
-                      limits:
-                        huawei.com/Ascend910: 8   # 任务申请的芯片数量
-                      requests:
-                        huawei.com/Ascend910: 8   # 与limits取值一致
-                    volumeMounts:
-        ...
-                  volumes:
-        ...
-        ```
-
-        修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
+        >PyTorch、MindSpore框架中对应的Chief、Master、Scheduler的“replicas”字段不能超过1。单机任务时，PyTorch框架不需要Worker。单卡任务时，MindSpore框架不需要Scheduler。
 
     - <a name="li1086213163289"></a>使用**整卡调度**特性，参考本配置。以pytorch\_standalone\_acjob\_super\_pod.yaml为例，在一台Atlas 900 A3 SuperPoD 超节点上创建**单机训练**任务，修改示例如下。
 
@@ -1830,60 +1570,6 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                         huawei.com/Ascend910: 16   # 与limits取值一致
         ...
         ```
-
-        修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
-
-    - <a name="li1987314168284"></a>使用**静态vNPU调度**特性，参考本配置。以tensorflow\_standalone\_acjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，申请2个AI Core的任务为例，修改示例如下。静态vNPU调度只支持单机训练任务。
-
-        <pre codetype="yaml">
-        apiVersion: mindxdl.gitee.com/v1
-        kind: AscendJob
-        metadata:
-          name: default-test-tensorflow
-          labels:
-            framework: tensorflow  # 训练框架
-            ring-controller.atlas: ascend-910   # 标识产品类型
-        spec:
-          schedulerName: volcano        # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
-          runPolicy:
-            schedulingPolicy:           # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
-              minAvailable: 1   # 任务总副本数
-              queue: default   # 任务所属队列
-          successPolicy: AllWorkers  # 任务成功的前提
-          replicaSpecs:
-            Chief:
-              replicas: 1 # 任务副本数
-              restartPolicy: Never
-              template:
-                metadata:
-                  labels:
-                    ring-controller.atlas: ascend-910   # 标识产品类型
-                spec:
-                  nodeSelector:
-                    host-arch: huawei-arm               # 可选值，根据实际情况填写
-                    accelerator-type: module-{xxx}b-8  # 节点类型
-                  containers:
-                  - name: ascend                          # 必须为ascend，不能修改
-                  image: tensorflow-test:latest       # 镜像名称
-        ...
-                  env:
-        ...
-                 # 静态vNPU调度暂不支持ASCEND_VISIBLE_DEVICES相关字段，需要删除以下加粗字段
-                  <strong>- name: ASCEND_VISIBLE_DEVICES</strong>                       
-                    <strong>valueFrom:</strong>
-                      <strong>fieldRef:</strong>
-                        <strong>fieldPath: metadata.annotations['huawei.com/Ascend910']</strong>               
-        ...
-                    ports:                 # 分布式训练集合通信端口
-                      - containerPort: 2222         
-                        name: ascendjob-port
-                    resources:
-                      limits:
-                        huawei.com/Ascend910-2c: 1# vNPU调度此处数量只能为1
-                      requests:
-                        huawei.com/Ascend910-2c: 1# vNPU调度此处数量只能为1
-                    volumeMounts:
-        ...</pre>
 
         修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
 
@@ -2035,17 +1721,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                 mountPath: /job/output                    # 容器中训练输出路径
     ```
 
-4. 如下所示，YAML中训练命令**bash train\_start.sh**后跟的三个参数依次为容器内训练代码目录、输出目录（其中包括生成日志重定向文件以及TensorFlow框架模型文件）、启动脚本相对代码目录的路径。之后的以“--”开头的参数为训练脚本需要的参数。单机和分布式训练脚本、脚本参数可参考模型脚本来源处的模型说明修改。
-    - **TensorFlow命令参数**
-
-        ```Yaml
-           command:
-          - /bin/bash
-          - -c
-        args: [ "cd /job/code/scripts; chmod +x train_start.sh; bash train_start.sh /job/code/ /job/output/ tensorflow/resnet_ctl_imagenet_main.py --data_dir=/job/data/resnet50/imagenet_TF/ --distribution_strategy=one_device --use_tf_while_loop=true --epochs_between_evals=1 --skip_eval --enable_checkpoint_and_export" ]
-        ...
-        ```
-
+4. 如下所示，YAML中训练命令**bash train\_start.sh**后跟的三个参数依次为容器内训练代码目录、输出目录（其中包括生成日志重定向文件以及PyTorch、MindSpore框架模型文件）、启动脚本相对代码目录的路径。之后的以“--”开头的参数为训练脚本需要的参数。单机和分布式训练脚本、脚本参数可参考模型脚本来源处的模型说明修改。
     - **PyTorch命令参数**
 
         ```Yaml
@@ -2067,10 +1743,10 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         ```
 
         >[!NOTE] 
-        >以TensorFlow命令参数为例。
+        >以PyTorch命令参数为例。
         >- /job/code/：[步骤3](#li0303)中用户自定义的容器中训练脚本路径。
         >- /job/output/：[步骤3](#li0303)中用户自定义的容器中训练输出路径。
-        >- tensorflow/resnet\_ctl\_imagenet\_main.py：启动训练脚本路径。
+        >- main.py：启动训练脚本路径。
 
 5. YAML为使用NFS场景，需要指定NFS服务器地址、训练数据集路径、脚本路径和训练输出路径，请根据实际修改。如果不使用NFS请根据K8s相关指导自行修改。
 
@@ -2123,212 +1799,14 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     </th>
     </tr>
     </thead>
-    <tbody><tr id="row4532141711226"><td class="cellrowborder" rowspan="2" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p16533181762219"><a name="p16533181762219"></a><a name="p16533181762219"></a>整卡调度</p>
-    <p id="p144064285710"><a name="p144064285710"></a><a name="p144064285710"></a></p>
-    <p id="p1966518379556"><a name="p1966518379556"></a><a name="p1966518379556"></a></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p2533121714227"><a name="p2533121714227"></a><a name="p2533121714227"></a><a href="#li103534014484">在Atlas 800 训练服务器上创建单机任务</a></p>
-    </td>
-    </tr>
-    <tr id="row1753371710227"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p053317172221"><a name="p053317172221"></a><a name="p053317172221"></a><a href="#li21411371493">在Atlas 800 训练服务器上创建分布式任务</a></p>
-    </td>
-    </tr>
+    <tbody>
     <tr id="row173101655202217"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1366503795516"><a name="p1366503795516"></a><a name="p1366503795516"></a>整卡调度</p>
     </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p133113557220"><a name="p133113557220"></a><a name="p133113557220"></a><a href="#li1487005712813">在Atlas 800T A2 训练服务器上创建分布式任务</a></p><p id="p918205224718"><a name="p918205224718"></a><a name="p918205224718"></a>若需要使用<span id="ph181814524472"><a name="ph181814524472"></a><a name="ph181814524472"></a>PyTorch</span>或<span id="ph318155294712"><a name="ph318155294712"></a><a name="ph318155294712"></a>MindSpore</span>框架支持的交换机亲和性调度，配置示例请参见<a href="#li1460553372">配置交换机亲和性调度参考示例</a>。</p>
-    </td>
-    </tr>
-    <tr id="row1140175742214"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p24055715225"><a name="p24055715225"></a><a name="p24055715225"></a>静态vNPU调度</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1140155720221"><a name="p1140155720221"></a><a name="p1140155720221"></a><a href="#li1328115394814">在Atlas 800 训练服务器上创建单机任务</a></p>
+    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p918205224718"><a name="p918205224718"></a><a name="p918205224718"></a>若需要使用<span id="ph181814524472"><a name="ph181814524472"></a><a name="ph181814524472"></a>PyTorch</span>或<span id="ph318155294712"><a name="ph318155294712"></a><a name="ph318155294712"></a>MindSpore</span>框架支持的交换机亲和性调度，配置示例请参见<a href="#li1460553372">配置交换机亲和性调度参考示例</a>。</p>
     </td>
     </tr>
     </tbody>
     </table>
-
-    - <a name="li103534014484"></a>使用**整卡调度**特性，参考本配置。以a800\_tensorflow\_vcjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，任务使用8个芯片，修改示例如下。
-
-        ```Yaml
-        apiVersion: v1
-        kind: ConfigMap
-        metadata:
-          name: rings-config-mindx-dls-test     # rings-config-后的名字需要与任务名一致
-        ...
-          labels:
-            ring-controller.atlas: ascend-910   # 标识任务使用的芯片的产品类型
-        ...
-        ---
-        apiVersion: batch.volcano.sh/v1alpha1   # 不可修改。必须使用Volcano的API。
-        kind: Job                               # 目前只支持Job类型
-        metadata:
-          name: mindx-dls-test                  # 任务名，可自定义
-        ...
-        spec:
-          minAvailable: 1                  # 单机为1
-        ...
-          - name: "default-test"
-              replicas: 1                  # 单机为1
-              template:
-                metadata:
-        ...
-                spec:
-        ...
-                   containers:
-                   - image: tensorflow-test:latest   #镜像名称
-        ...
-                     env:
-        ...
-                     - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime使用该字段
-                       valueFrom:
-                         fieldRef:
-                           fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
-        ...
-                    resources:  
-                      requests:
-                        huawei.com/Ascend910: 8          # 需要的NPU芯片个数为8。
-                      limits:
-                        huawei.com/Ascend910: 8          # 目前需要和上面requests保持一致
-        ...
-                    nodeSelector:
-                      host-arch: huawei-arm              # 可选值，根据实际情况填写
-                      accelerator-type: module        # 调度到Atlas 800 训练服务器
-        ...
-        ```
-
-        修改完成后执行[步骤2](#li832632419711)，配置YAML的其他字段。
-
-    - <a name="li21411371493"></a>使用**整卡调度**特性，参考本配置。以a800\_tensorflow\_vcjob.yaml为例，在两台Atlas 800 训练服务器节点创建**分布式训练**任务，任务使用2\*8个芯片，修改示例如下，分布式任务的每个Pod只能调度到不同节点。
-
-        ```Yaml
-        apiVersion: v1
-        kind: ConfigMap
-        metadata:
-          name: rings-config-mindx-dls-test     # rings-config-后的名字需要与任务名一致
-        ...
-          labels:
-            ring-controller.atlas: ascend-910  # 标识任务使用的芯片的产品类型
-        ...
-        ---
-        apiVersion: batch.volcano.sh/v1alpha1   # 不可修改。必须使用Volcano的API
-        kind: Job                               # 目前只支持Job类型
-        metadata:
-          name: mindx-dls-test                  # 任务名，可自定义
-        ...
-        spec:
-          minAvailable: 2                  # 2节点分布式任务则为2，N节点则为N，Deployment类型的任务不需要该参数
-        ...
-          - name: "default-test"
-              replicas: 2                  # N节点分布式场景为N
-              template:
-                metadata:
-        ...
-                spec:
-                  affinity:                            # 本段配置表示分布式任务的Pod调度到不同节点
-                    podAntiAffinity:
-                      requiredDuringSchedulingIgnoredDuringExecution:
-                        - labelSelector:
-                            matchExpressions:
-                              - key: volcano.sh/job-name      # vcjob固定字段，当任务类型为deployment时，key为deploy-name
-                                operator: In                   # 固定字段
-                                values:
-                                  - mindx-dls-test             # 需要和上面的任务名一致
-                          topologyKey: kubernetes.io/hostname
-                containers:
-                - image: tensorflow-test:latest  # 镜像名称
-        ...
-                  env:
-        ...
-                  - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime使用该字段
-                    valueFrom:
-                      fieldRef:
-                        fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
-        
-                    resources:  
-                      requests:
-                        huawei.com/Ascend910: 8          # 需要的NPU芯片个数为8。可在下方添加行，配置memory、cpu等资源
-                      limits:
-                        huawei.com/Ascend910: 8          # 目前需要和上面requests保持一致
-        ...
-                    nodeSelector:
-                      host-arch: huawei-arm               # 可选值，根据实际情况填写
-                      accelerator-type: module     # 调度到Atlas 800 训练服务器
-        ...
-        ```
-
-        修改完成后执行[步骤2](#li832632419711)，配置YAML的其他字段。
-
-    - <a name="li1487005712813"></a>使用**整卡调度**特性，参考本配置。以a800\_tensorflow\_vcjob.yaml为例，在两台Atlas 800T A2 训练服务器节点创建**分布式训练**任务，任务使用2\*8个芯片，修改示例如下，分布式任务的每个Pod只能调度到不同节点。
-
-        ```Yaml
-        apiVersion: v1
-        kind: ConfigMap
-        metadata:
-          name: rings-config-mindx-dls-test     # rings-config-后的名字需要与任务名一致
-        ...
-          labels:
-            ring-controller.atlas: ascend-{xxx}b   # 产品类型
-        ..
-        ---
-        apiVersion: batch.volcano.sh/v1alpha1   # 不可修改，必须使用Volcano的API
-        kind: Job                               # 目前只支持Job类型
-        metadata:
-          name: mindx-dls-test                  # 任务名字
-        ...
-          labels:
-            ring-controller.atlas: ascend-{xxx}b   # 必须与ConfigMap中的标签保持一致，不可修改
-        ...
-        spec:
-          minAvailable: 2                      # 此处建议与下面的为节点个数保持一致
-          schedulerName: volcano                # 使用Volcano进行调度
-        ...
-          tasks:
-          - name: "default-test"
-            replicas: 2                         # 此处为节点个数
-            template:
-              metadata:
-                labels:
-                  app: tf
-                  ring-controller.atlas: ascend-{xxx}b  # 必须与ConfigMap中的标签一致，不可修改
-              spec:
-                affinity:                                   # 本段配置表示分布式任务的Pod调度到不同节点
-                  podAntiAffinity:
-                    requiredDuringSchedulingIgnoredDuringExecution:
-                      - labelSelector:
-                          matchExpressions:
-                            - key: volcano.sh/job-name      # vcjob固定字段，当任务类型为deployment时，key为deploy-name
-                              operator: In                   # 固定字段
-                              values:
-                                - mindx-dls-test             # 需要和上面的任务名一致                  
-                        topologyKey: kubernetes.io/hostname
-                containers:
-                - image: tensorflow-test:latest               # 训练框架镜像，根据实际情况修改
-        ...
-                  env:
-        ...
-                  - name: XDL_IP                 # 本段固定不变
-                    valueFrom:
-                      fieldRef:
-                        fieldPath: status.hostIP
-                  - name: framework
-                    value: "Tensorflow"          # 根据实际框架变化进行修改
-                  - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime会使用该字段
-                    valueFrom:
-                      fieldRef:
-                        fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
-        ...
-                  resources:
-                    requests:
-                      huawei.com/Ascend910: 8    # 每台Atlas 800T A2 训练服务器芯片数量最多为8
-                    limits:
-                      huawei.com/Ascend910: 8    # 每台Atlas 800T A2 训练服务器芯片数量最多为8
-        ...
-                nodeSelector:
-                  host-arch: huawei-arm              # 可选值，根据实际情况填写
-                  accelerator-type: module-{xxx}b-8          # 调度到Atlas 800T A2 训练服务器节点
-        ...
-        ```
-
-        修改完成后执行[步骤2](#li832632419711)，配置YAML的其他字段。
 
     - <a name="li1460553372"></a>使用**整卡调度**特性，参考本配置。PyTorch和MindSpore框架新增了使用交换机亲和性调度的功能，该功能支持大模型任务和普通任务。以a800\_pytorch\_vcjob.yaml为例，在一台Atlas 800T A2 训练服务器节点创建**分布式训练**任务，任务使用1\*8个芯片，修改示例如下。
 
@@ -2411,57 +1889,6 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         >[!NOTE] 
         >其余示例可参考[表5](#table62591594016)和[表6](#table21811158146)，以及YAML对应的参数说明[表2 YAML参数说明](#zh-cn_topic_0000001609074269_table1565872494511)进行适配修改。修改完成后执行[步骤2](#li832632419711)，继续配置YAML的其他字段。
 
-    - <a name="li1328115394814"></a>使用**静态vNPU调度**特性，参考本配置。以a800\_tensorflow\_vcjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，申请2个AI Core的任务为例，修改示例如下。静态vNPU调度特性只支持**单机训练**任务。
-
-        <pre codetype="yaml">
-        apiVersion: v1
-        kind: ConfigMap
-        metadata:
-          name: rings-config-mindx-dls-test     # rings-config-后的名字需要与任务名一致
-        ...
-          labels:
-            ring-controller.atlas: ascend-910   # 产品类型
-        ...
-        ---
-        apiVersion: batch.volcano.sh/v1alpha1   # 不可修改，必须使用Volcano的API
-        kind: Job                               #目前只支持Job类型
-        metadata:
-          name: mindx-dls-test                  # 任务名，可自定义
-        ...
-        spec:
-          minAvailable: 1                  # 如果使用静态vNPU调度，此处取值需为1
-        ...
-          - name: "default-test"
-              replicas: 1                  # 如果使用静态vNPU调度，此处取值需为1
-              template:
-                metadata:
-        ...
-                spec:
-        ...
-                containers:
-                - image: tensorflow-test:latest  # 训练镜像
-        ...
-                  env:
-        ...
-                 # 静态vNPU调度暂不支持ASCEND_VISIBLE_DEVICES相关字段，需要删除以下加粗字段
-                  <strong>- name: ASCEND_VISIBLE_DEVICES</strong>                                    
-                    <strong>valueFrom:</strong> 
-                      <strong>fieldRef:</strong> 
-                        <strong>fieldPath: metadata.annotations['huawei.com/Ascend910']</strong>              
-        ...
-                    resources:  
-                      requests:
-                        huawei.com/Ascend910-2c: 1          # 如果使用静态vNPU调度，此处数量只能为1
-                      limits:
-                        huawei.com/Ascend910-2c: 1          # 如果使用静态vNPU调度此处数量只能为1
-        ...
-                    nodeSelector:
-                      host-arch: huawei-arm               # 可选值，根据实际情况填写
-                      accelerator-type: module    # 调度到Atlas 800 训练服务器上
-        ...</pre>
-
-        修改完成后执行[步骤2](#li832632419711)，配置YAML的其他字段。
-
     >[!NOTE] 
     >整卡调度或静态vNPU调度特性配置YAML的操作只在步骤1中有区别，整卡调度和静态vNPU调度特性在步骤1之后的操作相同。
 
@@ -2497,17 +1924,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                 mountPath: /job/output                    # 容器中训练输出路径
     ```
 
-4. 如下所示，YAML中训练命令**bash train\_start.sh**后跟的三个参数依次为容器内训练代码目录、输出目录（其中包括生成日志重定向文件以及TensorFlow框架模型文件）、启动脚本相对代码目录的路径。之后的以“--”开头的参数为训练脚本需要的参数。单机和分布式训练脚本、脚本参数可参考模型脚本来源处的模型说明修改。
-    - **TensorFlow命令参数**
-
-        ```Yaml
-        command:
-        - "/bin/bash"
-        - "-c"
-        - "cd /job/code/scripts;chmod +x train_start.sh;bash train_start.sh /job/code/ /job/output/ tensorflow/resnet_ctl_imagenet_main.py --data_dir=/job/data/imagenet_TF --distribution_strategy=one_device --use_tf_while_loop=true --epochs_between_evals=1 --skip_eval --enable_checkpoint_and_export;"
-        ...
-        ```
-
+4. 如下所示，YAML中训练命令**bash train\_start.sh**后跟的三个参数依次为容器内训练代码目录、输出目录（其中包括生成日志重定向文件以及框架模型文件）、启动脚本相对代码目录的路径。之后的以“--”开头的参数为训练脚本需要的参数。单机和分布式训练脚本、脚本参数可参考模型脚本来源处的模型说明修改。
     - **PyTorch命令参数**
 
         ```Yaml
@@ -2529,10 +1946,10 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         ```
 
         >[!NOTE] 
-        >以TensorFlow命令参数为例。
+        >以PyTorch命令参数为例。
         >- /job/code/：[步骤3](#li112747151117)中用户自定义的容器中训练脚本路径。
         >- /job/output/：[步骤3](#li112747151117)中用户自定义的容器中训练输出路径。
-        >- tensorflow/resnet\_ctl\_imagenet\_main.py：启动训练脚本路径。
+        >- main.py：启动训练脚本路径。
 
 5. YAML为使用NFS场景，需要指定NFS服务器地址、训练数据集路径、脚本路径和训练输出路径，请根据实际修改。如果不使用NFS请根据K8s相关指导自行修改。
 
@@ -2777,68 +2194,6 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 ### 查看整卡调度或静态vNPU调度结果<a name="ZH-CN_TOPIC_0000002479387140"></a>
 
-**TensorFlow<a name="zh-cn_topic_0000001609474257_section1188814431750"></a>**
-
-1. 在执行如下命令，查看训练结果。
-
-    ```shell
-    kubectl logs -n  <namespace> <pod-name>
-    ```
-
-    如：
-
-    ```shell
-    kubectl logs -n vcjob mindx-dls-test-default-test-0
-    ```
-
-2. 查看训练日志，如果出现如下内容表示训练成功。
-
-    ```ColdFusion
-    ...
-    I1123 16:20:11.016411 139889740781376 controller.py:458] train | step:    112 | steps/sec:    4.0 | output: {'train_accuracy': 0.0, 'train_loss': 12.339745}
-    train | step:    112 | steps/sec:    4.0 | output: {'train_accuracy': 0.0, 'train_loss': 12.339745}
-    2022-11-23 16:20:11.541361: I core/op_executors/npu_concrete_graph.cpp:84] Start consume iterator resource AnonymousIterator0 4 times
-    2022-11-23 16:20:11.541499: I core/op_executors/npu_concrete_graph.cpp:118] Start run ge graph 445 pin to cpu, loop size 4
-    2022-11-23 16:20:11.565552: I core/op_executors/npu_concrete_graph.cpp:92] Iterator resource AnonymousIterator0 consume 4 times done with status OK
-    I1123 16:20:12.046172 139889740781376 controller.py:458] train | step:    116 | steps/sec:    4.0 | output: {'train_accuracy': 0.0, 'train_loss': 12.389724}
-    train | step:    116 | steps/sec:    4.0 | output: {'train_accuracy': 0.0, 'train_loss': 12.389724}
-    2022-11-23 16:20:12.542817: I core/op_executors/npu_concrete_graph.cpp:84] Start consume iterator resource AnonymousIterator0 4 times
-    2022-11-23 16:20:12.542937: I core/op_executors/npu_concrete_graph.cpp:118] Start run ge graph 445 pin to cpu, loop size 4
-    2022-11-23 16:20:12.571535: I core/op_executors/npu_concrete_graph.cpp:92] Iterator resource AnonymousIterator0 consume 4 times done with status OK
-    I1123 16:20:13.038832 139889740781376 controller.py:458] train | step:    120 | steps/sec:    4.2 | output: {'train_accuracy': 0.0, 'train_loss': 12.421794}
-    train | step:    120 | steps/sec:    4.2 | output: {'train_accuracy': 0.0, 'train_loss': 12.421794}
-    2022-11-23 16:20:13.559254: I core/op_executors/npu_concrete_graph.cpp:84] Start consume iterator resource AnonymousIterator0 4 times
-    2022-11-23 16:20:13.559394: I core/op_executors/npu_concrete_graph.cpp:118] Start run ge graph 445 pin to cpu, loop size 4
-    2022-11-23 16:20:13.604791: I core/op_executors/npu_concrete_graph.cpp:92] Iterator resource AnonymousIterator0 consume 4 times done with status OK
-    I1123 16:20:14.052418 139889740781376 controller.py:458] train | step:    124 | steps/sec:    4.1 | output: {'train_accuracy': 0.0, 'train_loss': 12.335646}
-    train | step:    124 | steps/sec:    4.1 | output: {'train_accuracy': 0.0, 'train_loss': 12.335646}
-    2022-11-23 16:20:14.555126: I core/op_executors/npu_concrete_graph.cpp:84] Start consume iterator resource AnonymousIterator0 4 times
-    2022-11-23 16:20:14.555217: I core/op_executors/npu_concrete_graph.cpp:118] Start run ge graph 445 pin to cpu, loop size 4
-    2022-11-23 16:20:14.601171: I core/op_executors/npu_concrete_graph.cpp:92] Iterator resource AnonymousIterator0 consume 4 times done with status OK
-    I1123 16:20:15.058790 139889740781376 controller.py:458] train | step:    128 | steps/sec:    4.1 | output: {'train_accuracy': 0.0, 'train_loss': 12.415506}
-    train | step:    128 | steps/sec:    4.1 | output: {'train_accuracy': 0.0, 'train_loss': 12.415506}
-    I1123 16:20:15.228246 139889740781376 resnet_ctl_imagenet_main.py:191] Run stats:
-    {'step_timestamp_log': ['BatchTimestamp<batch_index: 0, timestamp: 1669191532.9730577>', 'BatchTimestamp<batch_index: 100, timestamp: 1669191607.7925153>'], 'train_finish_time': 1669191615.2273297, 'avg_exp_per_second': 24.973437296848516}
-    2022-11-23 16:20:15.232802: I core/npu_logger.cpp:58] Stopping npu stdout receiver of device 0
-    2022-11-23 16:20:15.232901: I core/npu_device.cpp:122] Stopping iterator resource provider for AnonymousMultiDeviceIterator0
-    2022-11-23 16:20:15.233013: I core/npu_device.cpp:122] Stopping iterator resource provider for AnonymousIterator0
-    2022-11-23 16:20:15.235151: I core/npu_wrapper.cpp:230] Stop tensorflow model parser succeed
-    2022-11-23 16:20:18.289648: I core/npu_wrapper.cpp:240] Stop graph engine succeed
-    ...
-    ```
-
-3. 进入模型输出目录，查看生成的模型文件。
-
-    ```ColdFusion
-    drwxr-xr-x 1 root root       4096 Dec  2 11:36 ./
-    drwxrwxrwx 1 root root       4096 Dec  2 11:36 ../
-    -rw-r--r--. 1 root root       999 Dec  2 11:36 checkpoint
-    -rw-r--r--. 1 root root 306986892 Dec  2 11:35 ckpt-111.data-00000-of-00001
-    -rw-r--r--. 1 root root     44311 Dec  2 11:35 ckpt-111.index
-    -rw-r--r--. 1 root root 306986892 Dec  2 11:36 ckpt-128.data-00000-of-00001
-    -rw-r--r--. 1 root root     44311 Dec  2 11:36 ckpt-128.index
-    ```
-
 **PyTorch<a name="zh-cn_topic_0000001609474257_section15657195014514"></a>**
 
 1. 在执行如下命令，查看训练结果。
@@ -3068,18 +2423,7 @@ kubectl delete -f XXX.yaml
                 mountPath: /job/output                    # 容器中训练输出路径
     ```
 
-4. 如下所示，YAML中训练命令**bash train\_start.sh**后跟的三个参数依次为容器内训练代码目录、输出目录（其中包括生成日志重定向文件以及TensorFlow框架模型文件）、启动脚本相对代码目录的路径。之后的以“--”开头的参数为训练脚本需要的参数。单机和分布式训练脚本、脚本参数可参考模型脚本来源处的模型说明修改。
-
-    - **TensorFlow命令参数**
-
-        ```Yaml
-        command:
-        - "/bin/bash"
-        - "-c"
-        - "cd /job/code/scripts;chmod +x train_start.sh;bash train_start.sh /job/code/ /job/output/ tensorflow/resnet_ctl_imagenet_main.py --data_dir=/job/data/imagenet_TF --distribution_strategy=one_device --use_tf_while_loop=true --epochs_between_evals=1 --skip_eval --enable_checkpoint_and_export;"
-        ...
-        ```
-
+4. 如下所示，YAML中训练命令**bash train\_start.sh**后跟的三个参数依次为容器内训练代码目录、输出目录（其中包括生成日志重定向文件以及框架模型文件）、启动脚本相对代码目录的路径。之后的以“--”开头的参数为训练脚本需要的参数。单机和分布式训练脚本、脚本参数可参考模型脚本来源处的模型说明修改。
     - **PyTorch命令参数**
 
         ```Yaml
@@ -3101,10 +2445,10 @@ kubectl delete -f XXX.yaml
         ```
 
     >[!NOTE] 
-    >以TensorFlow命令参数为例。
+    >以PyTorch命令参数为例。
     >- /job/code/：[步骤3](#li1127471511178)中用户自定义的容器中训练脚本路径。
     >- /job/output/：[步骤3](#li1127471511178)中用户自定义的容器中训练输出路径。
-    >- tensorflow/resnet\_ctl\_imagenet\_main.py：启动训练脚本路径。
+    >- main.py：启动训练脚本路径。
 
 5. YAML为使用NFS场景，需要指定NFS服务器地址、训练数据集路径、脚本路径和训练输出路径，请根据实际修改。如果不使用NFS请根据K8s相关指导自行修改。
 
@@ -3390,7 +2734,7 @@ kubectl delete -f XXX.yaml
                   },
                   {
                      Name:  "framework",
-                     Value: framework, // 使用的训练框架名称。支持MindSpore、PyTorch和Tensorflow
+                     Value: framework, // 使用的训练框架名称。支持MindSpore、PyTorch
                   },
                }
                return ct

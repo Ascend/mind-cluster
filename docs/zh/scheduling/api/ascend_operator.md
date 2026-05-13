@@ -19,7 +19,7 @@
 </thead>
 <tbody><tr id="zh-cn_topic_0000001951418201_row260211141136"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001951418201_p1660311140313"><a name="zh-cn_topic_0000001951418201_p1660311140313"></a><a name="zh-cn_topic_0000001951418201_p1660311140313"></a>framework</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><a name="ul4975113512712"></a><a name="ul4975113512712"></a><ul id="ul4975113512712"><li>mindspore</li><li>pytorch</li><li>tensorflow</li></ul>
+<td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><a name="ul4975113512712"></a><a name="ul4975113512712"></a><ul id="ul4975113512712"><li>mindspore</li><li>pytorch</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p4389131101318"><a name="p4389131101318"></a><a name="p4389131101318"></a>-</p>
 </td>
@@ -180,7 +180,7 @@
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000001951418201_ul186101614131"></a><a name="zh-cn_topic_0000001951418201_ul186101614131"></a><ul id="zh-cn_topic_0000001951418201_ul186101614131"><li>on：开启Pod级别重调度</li><li>其他值或不使用该字段：关闭Pod级别重调度</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001951418201_p661016141437"><a name="zh-cn_topic_0000001951418201_p661016141437"></a><a name="zh-cn_topic_0000001951418201_p661016141437"></a>Pod级别重调度，表示任务发生故障后，不会删除所有任务Pod，而是将发生故障的Pod进行删除，重新创建新Pod后进行重调度。</p>
-<div class="note" id="zh-cn_topic_0000001951418201_note1561010145316"><a name="zh-cn_topic_0000001951418201_note1561010145316"></a><a name="zh-cn_topic_0000001951418201_note1561010145316"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000001951418201_ul461013147314"></a><a name="zh-cn_topic_0000001951418201_ul461013147314"></a><ul id="zh-cn_topic_0000001951418201_ul461013147314"><li>重调度模式默认为任务级重调度，若需要开启Pod级别重调度，需要新增该字段。</li><li><span id="zh-cn_topic_0000001951418201_ph1061091414318"><a name="zh-cn_topic_0000001951418201_ph1061091414318"></a><a name="zh-cn_topic_0000001951418201_ph1061091414318"></a>TensorFlow</span>暂不支持Pod级别重调度。</li></ul>
+<div class="note" id="zh-cn_topic_0000001951418201_note1561010145316"><a name="zh-cn_topic_0000001951418201_note1561010145316"></a><a name="zh-cn_topic_0000001951418201_note1561010145316"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000001951418201_ul461013147314"></a><a name="zh-cn_topic_0000001951418201_ul461013147314"></a><ul id="zh-cn_topic_0000001951418201_ul461013147314"><li>重调度模式默认为任务级重调度，若需要开启Pod级别重调度，需要新增该字段。</li></ul>
 </div></div>
 </td>
 </tr>
@@ -620,7 +620,7 @@
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000001951418201_ul5821162501510"></a><a name="zh-cn_topic_0000001951418201_ul5821162501510"></a><ul id="zh-cn_topic_0000001951418201_ul5821162501510"><li>on：开启Pod级别重调度</li><li>其他值或不使用该字段：关闭Pod级别重调度</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001951418201_p78221125201514"><a name="zh-cn_topic_0000001951418201_p78221125201514"></a><a name="zh-cn_topic_0000001951418201_p78221125201514"></a>Pod级别重调度，表示任务发生故障后，不会删除所有任务Pod，而是将发生故障的Pod进行删除，重新创建新Pod后进行重调度。</p>
-<div class="note" id="zh-cn_topic_0000001951418201_note5822925151516"><a name="zh-cn_topic_0000001951418201_note5822925151516"></a><a name="zh-cn_topic_0000001951418201_note5822925151516"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000001951418201_ul17822112517158"></a><a name="zh-cn_topic_0000001951418201_ul17822112517158"></a><ul id="zh-cn_topic_0000001951418201_ul17822112517158"><li>重调度模式默认为任务级重调度，若需要开启Pod级别重调度，需要新增该字段。</li><li><span id="zh-cn_topic_0000001951418201_ph19822625101514"><a name="zh-cn_topic_0000001951418201_ph19822625101514"></a><a name="zh-cn_topic_0000001951418201_ph19822625101514"></a>TensorFlow</span>暂不支持Pod级别重调度。</li></ul>
+<div class="note" id="zh-cn_topic_0000001951418201_note5822925151516"><a name="zh-cn_topic_0000001951418201_note5822925151516"></a><a name="zh-cn_topic_0000001951418201_note5822925151516"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000001951418201_ul17822112517158"></a><a name="zh-cn_topic_0000001951418201_ul17822112517158"></a><ul id="zh-cn_topic_0000001951418201_ul17822112517158"><li>重调度模式默认为任务级重调度，若需要开启Pod级别重调度，需要新增该字段。</li></ul>
 </div></div>
 </td>
 </tr>

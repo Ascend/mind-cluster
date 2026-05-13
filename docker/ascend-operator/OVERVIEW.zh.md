@@ -14,7 +14,7 @@
 
 ## Ascend Operator
 
-Ascend Operator 是 MindCluster 集群调度组件之一，部署在管理节点上，支持 MindSpore、PyTorch、TensorFlow 三个 AI 框架在 Kubernetes 上进行分布式训练。CRD（Custom Resource Definition）中定义了 AscendJob 任务，用户只需配置 YAML 文件，即可轻松实现分布式训练。
+Ascend Operator 是 MindCluster 集群调度组件之一，部署在管理节点上，支持 MindSpore、PyTorch 两个 AI 框架在 Kubernetes 上进行分布式训练。CRD（Custom Resource Definition）中定义了 AscendJob 任务，用户只需配置 YAML 文件，即可轻松实现分布式训练。
 
 ### 应用场景
 
