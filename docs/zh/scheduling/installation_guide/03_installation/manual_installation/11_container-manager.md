@@ -1,4 +1,4 @@
-﻿# Container Manager<a name="ZH-CN_TOPIC_0000002524428759"></a>
+# Container Manager<a name="ZH-CN_TOPIC_0000002524428759"></a>
 
 Container Manager组件直接在物理机上通过二进制方式运行，提供容器生命周期管理、故障检测与恢复功能。
 
@@ -29,6 +29,8 @@ Container Manager组件直接在物理机上通过二进制方式运行，提供
 4. （可选）创建自定义故障码配置文件，自定义故障码处理级别。配置及使用详情请参见[（可选）配置芯片故障级别](../../../usage/appliance/01_npu_hardware_fault_detection_and_rectification.md#可选配置芯片故障级别)，以下步骤不体现该文件。
 
 5. 进入解压后的目录，执行deploy.sh脚本安装Container Manager服务。
+
+    若服务已安装，脚本会提示重新安装将覆盖现有配置并要求确认，输入 **y** 继续安装，输入 **N** 取消安装。首次安装无需确认。自动化场景下可使用 **-y** 参数跳过确认。
 
     - 使用默认参数安装（Docker运行时，不自动恢复容器）：
 
@@ -127,7 +129,7 @@ Container Manager组件直接在物理机上通过二进制方式运行，提供
 </th>
 </tr>
 </thead>
-<tbody><tr id="row_deploy_install_runtime_type"><td class="cellrowborder" rowspan="9" valign="top" width="10.801080108010803%" headers="mcps1.2.6.1.1 "><p id="p_deploy_install_name"><a name="p_deploy_install_name"></a><a name="p_deploy_install_name"></a>install</p>
+<tbody><tr id="row_deploy_install_runtime_type"><td class="cellrowborder" rowspan="10" valign="top" width="10.801080108010803%" headers="mcps1.2.6.1.1 "><p id="p_deploy_install_name"><a name="p_deploy_install_name"></a><a name="p_deploy_install_name"></a>install</p>
 </td>
 <td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_runtime_type_param"><a name="p_deploy_install_runtime_type_param"></a><a name="p_deploy_install_runtime_type_param"></a>--runtimeType</p>
 </td>
@@ -208,6 +210,15 @@ Container Manager组件直接在物理机上通过二进制方式运行，提供
 <td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_timer_delay_default"><a name="p_deploy_install_timer_delay_default"></a><a name="p_deploy_install_timer_delay_default"></a>60s</p>
 </td>
 <td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_timer_delay_desc"><a name="p_deploy_install_timer_delay_desc"></a><a name="p_deploy_install_timer_delay_desc"></a>系统启动后延时启动Container Manager的时间，确保NPU设备就位后再启动服务。支持格式如60s、2min、1h等。</p>
+</td>
+</tr>
+<tr id="row_deploy_install_yes"><td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_yes_param"><a name="p_deploy_install_yes_param"></a><a name="p_deploy_install_yes_param"></a>-y, --yes</p>
+</td>
+<td class="cellrowborder" valign="top" width="11.561156115611562%" headers="mcps1.2.6.1.3 "><p id="p_deploy_install_yes_type"><a name="p_deploy_install_yes_type"></a><a name="p_deploy_install_yes_type"></a>-</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_yes_default"><a name="p_deploy_install_yes_default"></a><a name="p_deploy_install_yes_default"></a>-</p>
+</td>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_yes_desc"><a name="p_deploy_install_yes_desc"></a><a name="p_deploy_install_yes_desc"></a>跳过安装确认提示，用于自动化脚本场景。</p>
 </td>
 </tr>
 <tr id="row_deploy_uninstall"><td class="cellrowborder" valign="top" width="10.801080108010803%" headers="mcps1.2.6.1.1 "><p id="p_deploy_uninstall_name"><a name="p_deploy_uninstall_name"></a><a name="p_deploy_uninstall_name"></a>uninstall</p>
