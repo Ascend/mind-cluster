@@ -2848,9 +2848,9 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
     - forward\_step\_wrapper将入参num\_microbatches修改为1，目的是loss计算时不再除以num\_microbatches，因为在start\_grad\_sync\_wrapper中已经除以了num\_microbatches。
     - elastic\_training\_get\_forward\_backward\_func\_wrapper因为loss\_func没有执行DP组内all\_reduce，原生forward\_backward\_func执行完成后，在最后一个PP时将losses\_reduced每个key的和（即所有micro\_batch的lm loss相加）在DP组内执行all\_reduce操作求和。
 
-## 训练恢复<a name="ZH-CN_TOPIC_0000002511426359"></a>
+## 恢复加速<a name="ZH-CN_TOPIC_0000002511426359"></a>
 
-### 训练恢复原理说明<a name="ZH-CN_TOPIC_0000002479226500"></a>
+### 恢复加速原理说明<a name="ZH-CN_TOPIC_0000002479226500"></a>
 
 在完成故障处理后，训练进程会被重新拉起，拉起的训练进程需要完成模型权重的保存和加载，才能回到任务中断时的训练状态。在正常训练中，每隔一段时间保存训练模型权重的CKPT（Checkpoint）文件，在任务中断后，新拉起的进程可以加载之前保存的CKPT文件，从而恢复到之前保存点的模型权重状态，减少训练时间。对于不同框架，保存和加载CKPT的方法不一样，以下给出了TensorFlow、PyTorch、MindSpore保存和加载CKPT的示例，用户需按照示例修改自己的**训练模型脚本**。
 
