@@ -76,7 +76,7 @@
     - [准备K8s和共享存储](./usage/resumable_training/02_preparing_kubernetes_and_shared_storage.md)
     - [（可选）配置故障检测级别](./usage/resumable_training/03_configuring_fault_detection_levels.md)
     - [配置故障处理](./usage/resumable_training/04_configuring_fault_handling_policies.md)
-    - [配置训练恢复](./usage/resumable_training/05_configuring_training_recovery.md)
+    - [配置恢复加速](./usage/resumable_training/05_configuring_training_recovery.md)
     - [配置任务YAML](./usage/resumable_training/06_configuring_the_job_yaml_file.md)
     - [通过命令行使用](./usage/resumable_training/07_using_resumable_training_on_the_cli.md)
   - [一体机特性指南](./usage/appliance/menu_appliance.md)
