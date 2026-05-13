@@ -100,7 +100,6 @@
 </td>
 </tr>
 <tr id="row32781215162311"><td class="cellrowborder" valign="top" width="31.78%" headers="mcps1.2.5.1.1 "><p id="p162786153239"><a name="p162786153239"></a><a name="p162786153239"></a><span id="ph151431757142112"><a name="ph151431757142112"></a><a name="ph151431757142112"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 训练系列产品</term></span></p>
-<ul><li><span>Atlas 800T A2 训练服务器</span></li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="33.339999999999996%" headers="mcps1.2.5.1.2 "><p id="p366920193216"><a name="p366920193216"></a><a name="p366920193216"></a>在物理机划分vNPU，挂载vNPU到容器</p>
 </td>
@@ -109,8 +108,13 @@
 <td class="cellrowborder" valign="top" width="13.01%" headers="mcps1.2.5.1.4 "><p id="p1154214466369"><a name="p1154214466369"></a><a name="p1154214466369"></a>是</p>
 </td>
 </tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><span>Atlas A2 训练系列产品</span></p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>在物理机划分vNPU，挂载vNPU到容器</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>动态虚拟化</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.4 "><p>是</p></td>
+</tr>
 <tr id="row11243152011236"><td class="cellrowborder" valign="top" width="31.78%" headers="mcps1.2.5.1.1 "><p id="p18243192015230"><a name="p18243192015230"></a><a name="p18243192015230"></a><span id="ph18411121792018"><a name="ph18411121792018"></a><a name="ph18411121792018"></a><term id="zh-cn_topic_0000001519959665_term26764913715"><a name="zh-cn_topic_0000001519959665_term26764913715"></a><a name="zh-cn_topic_0000001519959665_term26764913715"></a>Atlas A3 训练系列产品</term></span></p>
-<ul><li><span>Atlas 800T A3 超节点服务器</span></li></ul>
+<ul><li><span>Atlas 800T A3 训练服务器</span></li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="33.339999999999996%" headers="mcps1.2.5.1.2 "><p id="p82441020122317"><a name="p82441020122317"></a><a name="p82441020122317"></a>在物理机划分vNPU，挂载vNPU到容器</p>
 </td>
@@ -118,6 +122,13 @@
 </td>
 <td class="cellrowborder" valign="top" width="13.01%" headers="mcps1.2.5.1.4 "><p id="p2244122042319"><a name="p2244122042319"></a><a name="p2244122042319"></a>是</p>
 </td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><span>Atlas A3 训练系列产品</span></p>
+<ul><li><span>Atlas 800T A3 训练服务器</span></li></ul>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>在物理机划分vNPU，挂载vNPU到容器</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>动态虚拟化</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.4 "><p>是</p></td>
 </tr>
 <tr id="row18359185713363"><td class="cellrowborder" valign="top" width="31.78%" headers="mcps1.2.5.1.1 "><p id="p18176151918"><a name="p18176151918"></a><a name="p18176151918"></a><span id="ph996833614580"><a name="ph996833614580"></a><a name="ph996833614580"></a><term id="zh-cn_topic_0000001094307702_term99602034117"><a name="zh-cn_topic_0000001094307702_term99602034117"></a><a name="zh-cn_topic_0000001094307702_term99602034117"></a>Atlas A2 推理系列产品</term></span></p>
 <ul><li><span>Atlas 800I A2 推理服务器</span></li></ul>
@@ -129,8 +140,13 @@
 <td class="cellrowborder" valign="top" width="13.01%" headers="mcps1.2.5.1.4 "><p id="p143597578361"><a name="p143597578361"></a><a name="p143597578361"></a>是</p>
 </td>
 </tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><span>Atlas A2 推理系列产品</span></p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>在物理机划分vNPU，挂载vNPU到容器</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>动态虚拟化</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.4 "><p>是</p></td>
+</tr>
 <tr><td><p><span><term>Atlas A3 推理系列产品</term></span></p>
-<ul><li><span>Atlas 800I A3 超节点服务器</span></li></ul>
+<ul><li><span>Atlas 800I A3 推理服务器</span></li></ul>
 </td>
 <td><p>在物理机划分vNPU，挂载vNPU到容器</p>
 </td>
@@ -138,6 +154,13 @@
 </td>
 <td><p>是</p>
 </td>
+</tr>
+<tr><td><p><span>Atlas A3 推理系列产品</span></p>
+<ul><li><span>Atlas 800I A3 推理服务器</span></li></ul>
+</td>
+<td><p>在物理机划分vNPU，挂载vNPU到容器</p></td>
+<td><p>动态虚拟化</p></td>
+<td><p>是</p></td>
 </tr>
 <tr id="row188952007382"><td class="cellrowborder" valign="top" width="31.78%" headers="mcps1.2.5.1.1 "><p id="p1746332773811"><a name="p1746332773811"></a><a name="p1746332773811"></a><span id="ph97104582114"><a name="ph97104582114"></a><a name="ph97104582114"></a><term id="zh-cn_topic_0000001519959665_term169221139190"><a name="zh-cn_topic_0000001519959665_term169221139190"></a><a name="zh-cn_topic_0000001519959665_term169221139190"></a>Atlas 200/300/500 推理产品</term></span></p>
 </td>

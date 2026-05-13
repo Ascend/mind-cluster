@@ -22,6 +22,7 @@ package vnpu
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -63,9 +64,13 @@ func (tp *VirtualNPU) GetTaskResource(task *api.TaskInfo, node plugin.NPUNode) (
 
 	cpuLevel := tp.getVTaskLevel(task)
 
-	virTemplate := getResTemplateFromTaskSettingAndChipType(coreNum, dvpp, node.ChipType)
+	virTemplate := ""
 	if node.ChipKind == util.Ascend310P {
 		virTemplate = getResTemplateFromTaskSetting(coreNum, cpuLevel, dvpp)
+	} else if strings.HasPrefix(node.ServerType, plugin.ServerTypeA3Prefix) {
+		virTemplate = getResTemplateFromTaskSettingForA3(coreNum, node.ServerType)
+	} else {
+		virTemplate = getResTemplateFromTaskSettingAndChipType(coreNum, dvpp, node.ChipType)
 	}
 	if virTemplate == "" {
 		return util.VResource{}, fmt.Errorf("task<%s> get virTemplate is null", task.Name)
@@ -151,6 +156,8 @@ func getResTemplateFromTaskSettingAndChipType(coreNum int, dvpp, chipType string
 		return getResTemplateFromTaskSettingForB3(coreNum)
 	case plugin.ChipTypeB4:
 		return getResTemplateFromTaskSettingForB4(coreNum, dvpp)
+	case plugin.ChipTypeB41:
+		return getResTemplateFromTaskSettingForB41(coreNum)
 	default:
 		klog.V(util.LogErrorLev).Infof(coreNumErr, coreNum)
 		return ""
@@ -229,5 +236,55 @@ func getVirTemplate(dvpp string, cpuLevel string) string {
 			virTemplate = virTemplate + "_3c"
 		}
 		return virTemplate
+	}
+}
+
+func getResTemplateFromTaskSettingForB41(coreNum int) string {
+	var virTemplate string
+	switch coreNum {
+	case util.NPUIndex5:
+		virTemplate = plugin.VNPUTempVir05
+	case util.NPUIndex10:
+		virTemplate = plugin.VNPUTempVir10
+	default:
+		klog.V(util.LogErrorLev).Infof(coreNumErr, coreNum)
+		return ""
+	}
+	return virTemplate
+}
+
+func getResTemplateFromTaskSettingForA3(coreNum int, serverType string) string {
+	switch serverType {
+	case plugin.ServerTypeA3X20:
+		return getResTemplateFromTaskSettingForA3X20(coreNum)
+	case plugin.ServerTypeA3X24:
+		return getResTemplateFromTaskSettingForA3X24(coreNum)
+	default:
+		klog.V(util.LogErrorLev).Infof("serverType %s not support", serverType)
+		return ""
+	}
+}
+
+func getResTemplateFromTaskSettingForA3X20(coreNum int) string {
+	switch coreNum {
+	case util.NPUIndex5:
+		return plugin.VNPUTempVir05
+	case util.NPUIndex10:
+		return plugin.VNPUTempVir10
+	default:
+		klog.V(util.LogErrorLev).Infof(coreNumErr, coreNum)
+		return ""
+	}
+}
+
+func getResTemplateFromTaskSettingForA3X24(coreNum int) string {
+	switch coreNum {
+	case util.NPUIndex6:
+		return plugin.VNPUTempVir06
+	case util.NPUIndex12:
+		return plugin.VNPUTempVir12
+	default:
+		klog.V(util.LogErrorLev).Infof(coreNumErr, coreNum)
+		return ""
 	}
 }

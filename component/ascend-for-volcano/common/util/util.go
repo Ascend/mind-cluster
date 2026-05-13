@@ -210,14 +210,6 @@ func ChangeNodesToNodeMaps(nodes []*api.NodeInfo) map[string]*api.NodeInfo {
 	return tmpNodes
 }
 
-// GetNpuNameFromJobRequire get npuName,if job require name is npu-core return huawei.com/Ascend310P
-func GetNpuNameFromJobRequire(npuName string) string {
-	if npuName == AscendNPUCore {
-		return NPU310PCardName
-	}
-	return npuName
-}
-
 // CheckStrInSlice return whether str in string slice
 func CheckStrInSlice(str string, slice []string) bool {
 	for _, item := range slice {

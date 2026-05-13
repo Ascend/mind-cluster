@@ -369,6 +369,20 @@ func TestGetChipListWithVNPU(t *testing.T) {
 			},
 			expectValue: num2,
 		},
+		{name: "TestGetChipListWithVNPU_910b_2_vnpus",
+			devType: api.Ascend910B,
+			buildChips: func() {
+				chip = createValidVnpuChip()
+			},
+			expectValue: num2,
+		},
+		{name: "TestGetChipListWithVNPU_910a3_2_vnpus",
+			devType: api.Ascend910A3,
+			buildChips: func() {
+				chip = createValidVnpuChip()
+			},
+			expectValue: num2,
+		},
 		{name: "TestGetChipListWithVNPU_910",
 			devType: api.Ascend910,
 			buildChips: func() {

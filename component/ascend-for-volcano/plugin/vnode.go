@@ -52,10 +52,7 @@ func (n *NPUNode) setNodeVNPUInfo(ni *api.NodeInfo, jobTemplate map[string]map[s
 }
 
 func initTemplate() []util.VTemplate {
-	nodeTemplate := make([]util.VTemplate, util.NPUIndex7)
-	if len(nodeTemplate) < util.NPUIndex7 {
-		return nodeTemplate
-	}
+	nodeTemplate := make([]util.VTemplate, util.NPUIndex10)
 	nodeTemplate[0] = util.VTemplate{
 		ChipKind: util.Ascend310P,
 		AICore:   util.NPUIndex8,
@@ -90,6 +87,21 @@ func initTemplate() []util.VTemplate {
 		ChipKind: util.Ascend310P,
 		AICore:   util.CoreNum10,
 		AICPU:    util.NPUIndex7,
+	}
+	nodeTemplate[util.NPUIndex7] = util.VTemplate{
+		ChipKind: ChipTypeB41,
+		AICore:   util.CoreNum20,
+		AICPU:    util.CpuNum6,
+	}
+	nodeTemplate[util.NPUIndex8] = util.VTemplate{
+		ChipKind: ServerTypeA3X20,
+		AICore:   util.CoreNum20,
+		AICPU:    util.CpuNum6,
+	}
+	nodeTemplate[util.NPUIndex9] = util.VTemplate{
+		ChipKind: ServerTypeA3X24,
+		AICore:   util.CoreNum24,
+		AICPU:    util.CpuNum6,
 	}
 	return nodeTemplate
 }
@@ -181,7 +193,8 @@ func (n *NPUNode) setTotalResAndChipNumByTemplates() error {
 func (n NPUNode) getCpuNumPerChip(templates []util.VTemplate) int {
 	cpuPerChip := util.ErrorInt
 	for _, temp := range templates {
-		if (temp.ChipKind != n.VNode.ChipKind && temp.ChipKind != n.VNode.ChipType) ||
+		if (temp.ChipKind != n.VNode.ChipKind && temp.ChipKind != n.VNode.ChipType &&
+			temp.ChipKind != n.VNode.ServerType) ||
 			temp.AICore*n.TotalChipNum != n.VNode.TotalRes.Aicore {
 			continue
 		}
@@ -349,10 +362,15 @@ func (vNode *VNode) getPodUsedRes(pod *v1.Pod, taskTemplate map[string]map[strin
 		klog.V(util.LogErrorLev).Infof("getPodUsedRes get pod<%s> %s format error", pod.Name, realStr)
 		return nil
 	}
+	var key string
 	if vNode.ChipKind == util.Ascend310P {
-		return getResourceFromTemplate(vNode.ChipKind, ascendRealSplit[1], taskTemplate)
+		key = vNode.ChipKind
+	} else if strings.HasPrefix(vNode.ServerType, ServerTypeA3Prefix) {
+		key = vNode.ServerType
+	} else {
+		key = vNode.ChipType
 	}
-	return getResourceFromTemplate(vNode.ChipType, ascendRealSplit[1], taskTemplate)
+	return getResourceFromTemplate(key, ascendRealSplit[1], taskTemplate)
 }
 
 // addNPUResourceWholeCard Ascend910-0,Ascend910-1

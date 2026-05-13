@@ -28,7 +28,7 @@
 
 **支持的产品形态<a name="section169961844182917"></a>**
 
-Atlas 推理系列产品
+Atlas 推理系列产品、Atlas A2 训练/推理系列产品、Atlas A3 训练/推理系列产品
 
 **使用流程<a name="zh-cn_topic_0000001559979444_section246711128536"></a>**
 
@@ -200,6 +200,9 @@ deploy任务原理图如[图2](#fig349112913199)所示。
                   huawei.com/npu-core: 1        # 数值与requests保持一致
     ```
 
+    > [!NOTE] 
+    > 对于Atlas A2/A3系列产品，`ring-controller.atlas` 需设置为 `ascend-910b`，且不需要配置 `vnpu-dvpp` 和 `vnpu-level`（A2/A3不支持dvpp和level配置降级）。
+
     **表 2**  infer-deploy-dynamic.yaml参数说明
 
     <a name="table116201128162111"></a>
@@ -243,11 +246,17 @@ deploy任务原理图如[图2](#fig349112913199)所示。
     <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p11621102818211"><a name="p11621102818211"></a><a name="p11621102818211"></a>默认值，不关注是否使用DVPP。</p>
     </td>
     </tr>
-    <tr id="row1762110285219"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p2062182822111"><a name="p2062182822111"></a><a name="p2062182822111"></a>ring-controller.atlas</p>
+    <tr id="row1762110285219"><td class="cellrowborder" rowspan="2" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p2062182822111"><a name="p2062182822111"></a><a name="p2062182822111"></a>ring-controller.atlas</p>
+    <p id="p2062182822111_2"><a name="p2062182822111_2"></a><a name="p2062182822111_2"></a></p>
     </td>
     <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="p8621102882111"><a name="p8621102882111"></a><a name="p8621102882111"></a>ascend-310P</p>
     </td>
     <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p1762182892113"><a name="p1762182892113"></a><a name="p1762182892113"></a>任务使用<span id="ph1623844892113"><a name="ph1623844892113"></a><a name="ph1623844892113"></a>Atlas 推理系列产品</span>的标识。</p>
+    </td>
+    </tr>
+    <tr id="row1762110285220"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p8621102882112"><a name="p8621102882112"></a><a name="p8621102882112"></a>ascend-910b</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p1762182892114"><a name="p1762182892114"></a><a name="p1762182892114"></a>任务使用Atlas A2 训练/推理系列产品、Atlas A3 训练/推理系列产品的标识。</p>
     </td>
     </tr>
     </tbody>
@@ -255,7 +264,7 @@ deploy任务原理图如[图2](#fig349112913199)所示。
 
     vnpu-level和vnpu-dvpp作用后，选择的vNPU模板可参考[表3](#zh-cn_topic_0000001557486210_table83781115185619)。
 
-    **表 3**  dvpp和level作用结果
+    **表 3**  Atlas 推理系列产品dvpp和level作用结果
 
     <a name="zh-cn_topic_0000001557486210_table83781115185619"></a>
     <table><thead align="left"><tr id="zh-cn_topic_0000001557486210_row1837817157565"><th class="cellrowborder" valign="top" width="22.69453890778156%" id="mcps1.2.6.1.1"><p id="zh-cn_topic_0000001557486210_p1024717408463"><a name="zh-cn_topic_0000001557486210_p1024717408463"></a><a name="zh-cn_topic_0000001557486210_p1024717408463"></a>AI Core请求数量</p>

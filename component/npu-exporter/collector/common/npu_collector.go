@@ -435,7 +435,8 @@ func setProductType(chip *HuaWeiAIChip, dmgr devmanager.DeviceInterface) {
 }
 
 func assemblevNPUInfo(dmgr devmanager.DeviceInterface, logicID int32, baseChipInfo *HuaWeiAIChip) {
-	if dmgr.GetDevType() != api.Ascend310P {
+	devType := dmgr.GetDevType()
+	if devType != api.Ascend310P && devType != api.Ascend910B && devType != api.Ascend910A3 {
 		return
 	}
 	vDevInfos, err := dmgr.GetVirtualDeviceInfo(logicID)
@@ -453,9 +454,11 @@ func assemblevNPUInfo(dmgr devmanager.DeviceInterface, logicID int32, baseChipIn
 func GetChipListWithVNPU(n *NpuCollector) []HuaWeiAIChip {
 	result := make([]HuaWeiAIChip, 0)
 	chips := getChipListCache(n)
+	devType := n.Dmgr.GetDevType()
 
 	for _, chipInfo := range chips {
-		isNeedHandleVnpu := n.Dmgr.GetDevType() == api.Ascend310P && chipInfo.VDevInfos != nil &&
+		isNeedHandleVnpu := (devType == api.Ascend310P || devType == api.Ascend910B ||
+			devType == api.Ascend910A3) && chipInfo.VDevInfos != nil &&
 			len(chipInfo.VDevInfos.VDevActivityInfo) > 0
 
 		if !isNeedHandleVnpu {

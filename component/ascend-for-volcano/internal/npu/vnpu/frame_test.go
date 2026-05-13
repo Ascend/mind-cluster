@@ -400,6 +400,27 @@ func buildGetResTemplateTestCases() []getResTemplateTestCase {
 			chipType: plugin.ChipTypeB4,
 			want:     plugin.VNPUB4TempVir05,
 		},
+		{
+			name: "05-getResTemplateFromTaskSettingAndChipType return plugin.VNPUTempVir05 " +
+				"when coreNum is util.NPUIndex5 and chipType is plugin.ChipTypeB41",
+			coreNum:  util.NPUIndex5,
+			chipType: plugin.ChipTypeB41,
+			want:     plugin.VNPUTempVir05,
+		},
+		{
+			name: "06-getResTemplateFromTaskSettingAndChipType return plugin.VNPUTempVir10 " +
+				"when coreNum is util.NPUIndex10 and chipType is plugin.ChipTypeB41",
+			coreNum:  util.NPUIndex10,
+			chipType: plugin.ChipTypeB41,
+			want:     plugin.VNPUTempVir10,
+		},
+		{
+			name: "07-getResTemplateFromTaskSettingAndChipType return empty " +
+				"when coreNum is util.ErrorInt and chipType is plugin.ChipTypeB41",
+			coreNum:  util.ErrorInt,
+			chipType: plugin.ChipTypeB41,
+			want:     "",
+		},
 	}
 }
 
@@ -580,6 +601,150 @@ func TestGetB4TempFromTaskLabel(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if res := getB4TempFromTaskLabel(tt.dvpp); !reflect.DeepEqual(res, tt.want) {
 				t.Errorf("getB4TempFromTaskLabel() = %v, want %v", res, tt.want)
+			}
+		})
+	}
+}
+
+type getResTemplateForB41TestCase struct {
+	name    string
+	coreNum int
+	want    string
+}
+
+func buildGetResTemplateForB41TestCases() []getResTemplateForB41TestCase {
+	return []getResTemplateForB41TestCase{
+		{
+			name:    "01-getResTemplateFromTaskSettingForB41 return plugin.VNPUTempVir05 when coreNum is util.NPUIndex5",
+			coreNum: util.NPUIndex5,
+			want:    plugin.VNPUTempVir05,
+		},
+		{
+			name:    "02-getResTemplateFromTaskSettingForB41 return plugin.VNPUTempVir10 when coreNum is util.NPUIndex10",
+			coreNum: util.NPUIndex10,
+			want:    plugin.VNPUTempVir10,
+		},
+		{
+			name:    "03-getResTemplateFromTaskSettingForB41 return empty when coreNum is util.ErrorInt",
+			coreNum: util.ErrorInt,
+			want:    "",
+		},
+	}
+}
+
+func TestGetResTemplateFromTaskSettingForB41(t *testing.T) {
+	testCases := buildGetResTemplateForB41TestCases()
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			res := getResTemplateFromTaskSettingForB41(tt.coreNum)
+			if !reflect.DeepEqual(res, tt.want) {
+				t.Errorf("getResTemplateFromTaskSettingForB41() got = %v, want %v", res, tt.want)
+			}
+		})
+	}
+}
+
+type getResTemplateForA3TestCase struct {
+	name       string
+	coreNum    int
+	serverType string
+	want       string
+}
+
+func buildGetResTemplateForA3TestCases() []getResTemplateForA3TestCase {
+	return []getResTemplateForA3TestCase{
+		{
+			name:       "01-getResTemplateFromTaskSettingForA3 return empty when serverType is not support",
+			coreNum:    util.NPUIndex5,
+			serverType: "Ascend910A3-99",
+			want:       "",
+		},
+	}
+}
+
+func TestGetResTemplateFromTaskSettingForA3(t *testing.T) {
+	testCases := buildGetResTemplateForA3TestCases()
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			res := getResTemplateFromTaskSettingForA3(tt.coreNum, tt.serverType)
+			if !reflect.DeepEqual(res, tt.want) {
+				t.Errorf("getResTemplateFromTaskSettingForA3() got = %v, want %v", res, tt.want)
+			}
+		})
+	}
+}
+
+type getResTemplateForA3X20TestCase struct {
+	name    string
+	coreNum int
+	want    string
+}
+
+func buildGetResTemplateForA3X20TestCases() []getResTemplateForA3X20TestCase {
+	return []getResTemplateForA3X20TestCase{
+		{
+			name:    "01-getResTemplateFromTaskSettingForA3X20 return plugin.VNPUTempVir05 when coreNum is util.NPUIndex5",
+			coreNum: util.NPUIndex5,
+			want:    plugin.VNPUTempVir05,
+		},
+		{
+			name:    "02-getResTemplateFromTaskSettingForA3X20 return plugin.VNPUTempVir10 when coreNum is util.NPUIndex10",
+			coreNum: util.NPUIndex10,
+			want:    plugin.VNPUTempVir10,
+		},
+		{
+			name:    "03-getResTemplateFromTaskSettingForA3X20 return empty when coreNum is util.ErrorINT",
+			coreNum: util.ErrorInt,
+			want:    "",
+		},
+	}
+}
+
+func TestGetResTemplateFromTaskSettingForA3X20(t *testing.T) {
+	testCases := buildGetResTemplateForA3X20TestCases()
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			res := getResTemplateFromTaskSettingForA3X20(tt.coreNum)
+			if !reflect.DeepEqual(res, tt.want) {
+				t.Errorf("getResTemplateFromTaskSettingForA3X20() got = %v, want %v", res, tt.want)
+			}
+		})
+	}
+}
+
+type getResTemplateForA3X24TestCase struct {
+	name    string
+	coreNum int
+	want    string
+}
+
+func buildGetResTemplateForA3X24TestCases() []getResTemplateForA3X24TestCase {
+	return []getResTemplateForA3X24TestCase{
+		{
+			name:    "01-getResTemplateFromTaskSettingForA3X24 return plugin.VNPUTempVir06 when coreNum is util.NPUIndex6",
+			coreNum: util.NPUIndex6,
+			want:    plugin.VNPUTempVir06,
+		},
+		{
+			name:    "02-getResTemplateFromTaskSettingForA3X24 return plugin.VNPUTempVir12 when coreNum is util.NPUIndex12",
+			coreNum: util.NPUIndex12,
+			want:    plugin.VNPUTempVir12,
+		},
+		{
+			name:    "03-getResTemplateFromTaskSettingForA3X24 return empty when coreNum is util.ErrorInt",
+			coreNum: util.ErrorInt,
+			want:    "",
+		},
+	}
+}
+
+func TestGetResTemplateFromTaskSettingForA3X24(t *testing.T) {
+	testCases := buildGetResTemplateForA3X24TestCases()
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			res := getResTemplateFromTaskSettingForA3X24(tt.coreNum)
+			if !reflect.DeepEqual(res, tt.want) {
+				t.Errorf("getResTemplateFromTaskSettingForA3X24() got = %v, want %v", res, tt.want)
 			}
 		})
 	}
