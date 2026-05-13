@@ -178,7 +178,7 @@ func getSuperPodsInfo(totalNodes map[int32]superPod, superPodSize int, spBlock i
 func filterRackIdByTpBlock(superPodWithRack map[int32][]nodeBaseInfo, tpBlock int) {
 	for rackId, nodes := range superPodWithRack {
 		if len(nodes) < tpBlock {
-			klog.V(util.LogInfoLev).Infof("the usable nodes %v in rack %v are unreachable because of tp-block",
+			klog.V(util.LogInfoLev).Infof("the usable nodes %v in rack %v are unreachable because of ra-block",
 				nodes, rackId)
 			delete(superPodWithRack, rackId)
 		}

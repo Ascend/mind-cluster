@@ -216,7 +216,7 @@ func buildTestSelectNodesForJobCases3() []*selectScoreBestNPUNodesTestCase {
 			spBlock:          spBlock4,
 			tpBlock:          tpBlock4,
 			wantRes:          make(map[int32]*selectedRackInfo),
-			wantErr:          errors.New("not found the 1 count of tp-block:0 in all racks of every super-pod, exit select process"),
+			wantErr:          errors.New("not found the 1 count of ra-block:0 in all racks of every super-pod, exit select process"),
 		},
 	}
 	return selectSuperPodForJobTestCases

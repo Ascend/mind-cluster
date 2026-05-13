@@ -91,7 +91,7 @@ func (tp *oneRackStrategy) entrySelect(superPodTopo *superPodsInfo) (bool, error
 
 	// select failed and do not need to try the next strategy
 	if len(tp.selectedNodes) == 0 && requireTpBlockCount == 1 && !tp.isSoftSuperPodAffinity {
-		return false, fmt.Errorf("not found the 1 count of tp-block:%d in all racks of every super-pod, "+
+		return false, fmt.Errorf("not found the 1 count of ra-block:%d in all racks of every super-pod, "+
 			"exit select process", tp.TpBlockNPUNum)
 	}
 
@@ -192,7 +192,7 @@ func (tp *oneUBMemStrategy) entrySelect(superPodTopo *superPodsInfo) (bool, erro
 		return false, fmt.Errorf("strategy is nil")
 	}
 	if tp.spBlock < tp.tpBlock {
-		return false, fmt.Errorf("parameter tp-block(%d) could not be bigger than sp-block(%d)", tp.tpBlock, tp.spBlock)
+		return false, fmt.Errorf("parameter ra-block(%d) could not be bigger than sp-block(%d)", tp.tpBlock, tp.spBlock)
 	}
 	klog.V(util.LogInfoLev).Infof("select nodes in one UBMem start.")
 	tp.totalCount = len(tp.unReadyIds)
@@ -302,7 +302,7 @@ func (tp *oneSuperPodStrategy) entrySelect(superPodTopo *superPodsInfo) (bool, e
 	}
 
 	if tp.spBlock < tp.tpBlock {
-		return false, fmt.Errorf("parameter tp-block(%d) could not be bigger than sp-block(%d)", tp.tpBlock, tp.spBlock)
+		return false, fmt.Errorf("parameter ra-block(%d) could not be bigger than sp-block(%d)", tp.tpBlock, tp.spBlock)
 	}
 	klog.V(util.LogInfoLev).Info("select nodes in one superpod start")
 	tp.totalCount = len(tp.unReadyIds)
@@ -383,7 +383,7 @@ func (tp *mulSuperPodsStrategy) entrySelect(superPodTopo *superPodsInfo) (bool, 
 	}
 
 	if tp.spBlock < tp.tpBlock {
-		return false, fmt.Errorf("parameter tp-block(%d) could not be bigger than sp-block(%d)", tp.tpBlock, tp.spBlock)
+		return false, fmt.Errorf("parameter ra-block(%d) could not be bigger than sp-block(%d)", tp.tpBlock, tp.spBlock)
 	}
 	klog.V(util.LogInfoLev).Infof("select nodes in multiple superpods start.")
 	tp.totalCount = len(tp.unReadyIds)

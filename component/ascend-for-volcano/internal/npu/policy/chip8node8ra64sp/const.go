@@ -51,7 +51,7 @@ const (
 	jobCheckFailedReason = "npu num is invalid"
 
 	spBlockInvalidReason      = "Parameter sp-block is invalid."
-	tpBlockInvalidReason      = "Parameter tp-block is invalid."
+	tpBlockInvalidReason      = "Parameter ra-block is invalid."
 	superPodSizeInvalidReason = "Parameter super-pod-size is invalid."
 
 	taskSpec                   = "volcano.sh/task-spec"

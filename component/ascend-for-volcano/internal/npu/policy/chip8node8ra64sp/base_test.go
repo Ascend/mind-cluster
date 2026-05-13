@@ -99,7 +99,7 @@ type doSelectForStrategyTestCaseType struct {
 func buildDoSelectForStrategyTestCases() []doSelectForStrategyTestCaseType {
 	return []doSelectForStrategyTestCaseType{
 		{
-			name: "case1 test need 4 nodes with tp-block=32, sp-block=32",
+			name: "case1 test need 4 nodes with ra-block=32, sp-block=32",
 			jobParams: jobParams{
 				spBlock:    testSpBlock4,
 				tpBlock:    testTpBlock4,
@@ -108,7 +108,7 @@ func buildDoSelectForStrategyTestCases() []doSelectForStrategyTestCaseType {
 			nodesInSuperPod: buildSuperPodsByParams(map[int32]int32{testSuperPodID0: testNodeCount})[testSuperPodID0],
 		},
 		{
-			name: "case2 test need 8 nodes with tp-block=64, sp-block=64",
+			name: "case2 test need 8 nodes with ra-block=64, sp-block=64",
 			jobParams: jobParams{
 				spBlock:    testSpBlock8,
 				tpBlock:    testTpBlock8,
