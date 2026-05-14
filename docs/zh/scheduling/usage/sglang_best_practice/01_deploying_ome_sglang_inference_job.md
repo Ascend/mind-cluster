@@ -11,7 +11,7 @@
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 
 2. ClusterD读取device-info-cm和node-info-cm中的信息后，将信息整合到cluster-info-cm中。
-3. 用户通过kubectl或者其他深度学习平台下发OME框架的SGLang推理任务，OME根据推理任务的配置生成Deployment或者LeaderWorkerSet（LWS）的子工作负载，再由对应的子工作负载生成多个推理服务的任务Pod。关于Deployment或者LeaderWorkerSet的详细说明，可以参见[OME代码仓](https://github.com/ome-projects/ome)。
+3. 用户通过kubectl或者其他深度学习平台下发OME框架的SGLang推理任务，OME根据推理任务的配置生成Deployment或者LeaderWorkerSet（LWS）的子工作负载，再由对应的子工作负载生成多个推理服务的任务Pod。关于Deployment或者LeaderWorkerSet的详细说明，可以参见[OME文档](https://ome-projects.github.io/ome/docs/concepts/inference_service/)。
 4. volcano-controller或者LeaderWorkerSet为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参见[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。PodGroup生成策略如下：
     
    OME框架下存在如下两种不同类型的PodGroup映射方式：
@@ -26,7 +26,7 @@
 
 基于OME的SGLang推理任务包含Router  Pod和推理实例Pod，推理实例Pod可以分为Prefill实例Pod和Decode实例Pod，其中Router  Pod不需要使用NPU资源，OME根据不同的推理服务配置方式生成不同的工作负载，用于创建不同的推理实例，并由Router统一对外提供推理服务。MindCluster集群调度组件支持对Deployment和LeaderWorkerSet两种OME推理任务的工作负载进行调度。LeaderWorkerSet任务场景下需要开启LWS的组调度功能。
 
-关于OME任务部署的详细说明可参见[OME代码仓](https://github.com/ome-projects/ome)。LWS的组调度功能开启可以参考[LWS文档](https://github.com/kubernetes-sigs/lws/tree/main/docs/examples/sample/gang-scheduling)。
+关于OME任务部署的详细说明可参见[OME文档](https://ome-projects.github.io/ome/docs/)。LWS的组调度功能开启可以参考[LWS文档](https://github.com/kubernetes-sigs/lws/tree/main/docs/examples/sample/gang-scheduling)。
 
 **使用流程<a name="section19644656124210"></a>**
 
@@ -45,7 +45,7 @@
 
 **选择YAML示例<a name="section1419519264165"></a>**
 
-基于OME框架的SGLang推理任务可以由Base Model、Serving Runtime和Inference Service三类CRD拉起，Base Model和Inference Service的资源使用和部署请参见[OME代码仓](https://github.com/ome-projects/ome)。
+基于OME框架的SGLang推理任务可以由Base Model、Serving Runtime和Inference Service三类CRD拉起，Base Model和Inference Service的资源使用和部署请参见[OME文档](https://ome-projects.github.io/ome/docs/)。
 
 集群调度为用户提供OME任务的ClusterServingRuntime资源的YAML示例，用户需要根据使用的组件、芯片类型和任务类型等，选择相应的YAML示例并根据需求进行相应修改后才可使用。
 
@@ -61,7 +61,7 @@
 
 用户根据OME框架的部署方式依此完成Base Model、Serving Runtime和Inference Service三个YAML修改之后，由OME及其依赖组件负责拉起子工作负载（Deployment或LeaderWorkerSet）和对应的Pod，并由OME及其依赖组件管理推理服务Pod的生命周期，在推理服务对应的Pod创建完成之后，MindCluster负责对Pod进行调度。
 
-任务P/D实例的副本数量由OME定义的Inference Service资源配置，具体配置方法请参见[OME代码仓](https://github.com/ome-projects/ome)。
+任务P/D实例的副本数量由OME定义的Inference Service资源配置，具体配置方法请参见[OME文档](https://ome-projects.github.io/ome/docs/concepts/inference_service/)。
 
 **任务YAML说明<a name="section238217472163"></a>**
 
@@ -239,7 +239,7 @@ spec:
 3. 查看推理任务运行情况
 4. （可选）删除任务
 
-了解以上步骤的详细说明，请参见[OME代码仓](https://github.com/ome-projects/ome)。
+了解以上步骤的详细说明，请参见[OME文档](https://ome-projects.github.io/ome/docs/tasks/run-workloads/deploy-inference-service/)。
 
 ## 通过脚本一键式部署使用<a name="ZH-CN_TOPIC_0000002480866426"></a>
 
