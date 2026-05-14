@@ -298,7 +298,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p791781503215"><a name="p791781503215"></a><a name="p791781503215"></a>npu_chip_info_utilization</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p791831523215"><a name="p791831523215"></a><a name="p791831523215"></a><span id="ph149181315193212"><a name="ph149181315193212"></a><a name="ph149181315193212"></a>昇腾AI处理器</span>AI Core利用率</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p791831523215"><a name="p791831523215"></a><a name="p791831523215"></a><span id="ph149181315193212"><a name="ph149181315193212"></a><a name="ph149181315193212"></a>昇腾AI处理器</span>AICore利用率</p>
 <p id="p191811520325"><a name="p191811520325"></a><a name="p191811520325"></a></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p1191861563217"><a name="p1191861563217"></a><a name="p1191861563217"></a><a href="#table191895615241">标签1</a></p>
@@ -311,7 +311,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p2326184543212"><a name="p2326184543212"></a><a name="p2326184543212"></a>npu_chip_info_aicore_current_freq</p>
 <p id="p632604563212"><a name="p632604563212"></a><a name="p632604563212"></a></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p5326204533217"><a name="p5326204533217"></a><a name="p5326204533217"></a><span id="ph9326144583218"><a name="ph9326144583218"></a><a name="ph9326144583218"></a>昇腾AI处理器</span>的AI Core当前频率</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p5326204533217"><a name="p5326204533217"></a><a name="p5326204533217"></a><span id="ph9326144583218"><a name="ph9326144583218"></a><a name="ph9326144583218"></a>昇腾AI处理器</span>的AICore当前频率</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p153271145183219"><a name="p153271145183219"></a><a name="p153271145183219"></a><a href="#table191895615241">标签1</a></p>
 </td>
@@ -322,7 +322,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p1576464114356"><a name="p1576464114356"></a><a name="p1576464114356"></a>container_npu_utilization</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p1076564110356"><a name="p1076564110356"></a><a name="p1076564110356"></a>带有容器信息的NPU的AI Core利用率</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p1076564110356"><a name="p1076564110356"></a><a name="p1076564110356"></a>带有容器信息的NPU的AICore利用率</p>
 <div class="note" id="note15509181573618"><a name="note15509181573618"></a><a name="note15509181573618"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p1851016154367"><a name="p1851016154367"></a><a name="p1851016154367"></a>Telegraf不支持上报该指标</p>
 </div></div>
 </td>
@@ -449,7 +449,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="24.62%" headers="mcps1.2.7.1.2 "><p id="p435920278918"><a name="p435920278918"></a><a name="p435920278918"></a>vnpu_pod_aicore_utilization</p>
 </td>
-<td class="cellrowborder" valign="top" width="21.5%" headers="mcps1.2.7.1.3 "><p id="p1835982714920"><a name="p1835982714920"></a><a name="p1835982714920"></a>vNPU的AI Core利用率</p>
+<td class="cellrowborder" valign="top" width="21.5%" headers="mcps1.2.7.1.3 "><p id="p1835982714920"><a name="p1835982714920"></a><a name="p1835982714920"></a>vNPU的AICore利用率</p>
 </td>
 <td class="cellrowborder" valign="top" width="14.899999999999999%" headers="mcps1.2.7.1.4 "><p id="p848015281474"><a name="p848015281474"></a><a name="p848015281474"></a><a href="#table191895615241">标签3</a></p>
 </td>

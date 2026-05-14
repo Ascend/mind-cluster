@@ -54,7 +54,7 @@ vcjob任务原理图如[图1](#fig1918122131712)所示。
 
 1. 集群调度组件定期上报节点和芯片信息。
     - kubelet上报节点芯片数量到节点对象（node）中。
-    - Ascend Device Plugin定期上报AI Core数量到Node中。
+    - Ascend Device Plugin定期上报AICore数量到Node中。
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 
 2. ClusterD读取device-info-cm和node-info-cm中信息后，将信息分别写入cluster-info-device-cm和cluster-info-node-cm中。
@@ -74,7 +74,7 @@ deploy任务原理图如[图2](#fig349112913199)所示。
 各步骤说明如下：
 
 1. 集群调度组件定期上报节点和芯片信息。
-    - Ascend Device Plugin定期上报AI Core数量到Node中。
+    - Ascend Device Plugin定期上报AICore数量到Node中。
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 2. ClusterD读取device-info-cm和node-info-cm中信息后，将信息分别写入cluster-info-device-cm和cluster-info-node-cm中。
 3. 用户通过kubectl或者其他深度学习平台下发deploy任务。
@@ -162,7 +162,7 @@ deploy任务原理图如[图2](#fig349112913199)所示。
 
 2. 将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
 
-    在Atlas 推理系列产品上，以infer-deploy-dynamic.yaml为例，申请1个AI Core的参数配置示例如下。
+    在Atlas 推理系列产品上，以infer-deploy-dynamic.yaml为例，申请1个AICore的参数配置示例如下。
 
     ```Yaml
     apiVersion: apps/v1
@@ -222,7 +222,7 @@ deploy任务原理图如[图2](#fig349112913199)所示。
     <tr id="row196219286214"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p146219285218"><a name="p146219285218"></a><a name="p146219285218"></a>high</p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p19621528112118"><a name="p19621528112118"></a><a name="p19621528112118"></a>性能优先。</p>
-    <p id="p6621152812214"><a name="p6621152812214"></a><a name="p6621152812214"></a>在集群资源充足的情况下，将选择尽量高配的虚拟化实例模板；在整个集群资源已使用过多的情况下，如大部分物理NPU都已使用，每个物理NPU只剩下小部分AI Core，不足以满足高配虚拟化实例模板时，将使用相同AI Core数量下较低配置的其他模板。具体选择请参考<a href="../virtual_instance/virtual_instance_with_hdk/03_virtualization_templates.md">虚拟化模板</a>章节。</p>
+    <p id="p6621152812214"><a name="p6621152812214"></a><a name="p6621152812214"></a>在集群资源充足的情况下，将选择尽量高配的虚拟化实例模板；在整个集群资源已使用过多的情况下，如大部分物理NPU都已使用，每个物理NPU只剩下小部分AICore，不足以满足高配虚拟化实例模板时，将使用相同AICore数量下较低配置的其他模板。具体选择请参考<a href="../virtual_instance/virtual_instance_with_hdk/03_virtualization_templates.md">虚拟化模板</a>章节。</p>
     </td>
     </tr>
     <tr id="row1762192862114"><td class="cellrowborder" rowspan="3" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p462112842110"><a name="p462112842110"></a><a name="p462112842110"></a>vnpu-dvpp</p>
@@ -258,7 +258,7 @@ deploy任务原理图如[图2](#fig349112913199)所示。
     **表 3**  dvpp和level作用结果
 
     <a name="zh-cn_topic_0000001557486210_table83781115185619"></a>
-    <table><thead align="left"><tr id="zh-cn_topic_0000001557486210_row1837817157565"><th class="cellrowborder" valign="top" width="22.69453890778156%" id="mcps1.2.6.1.1"><p id="zh-cn_topic_0000001557486210_p1024717408463"><a name="zh-cn_topic_0000001557486210_p1024717408463"></a><a name="zh-cn_topic_0000001557486210_p1024717408463"></a>AI Core请求数量</p>
+    <table><thead align="left"><tr id="zh-cn_topic_0000001557486210_row1837817157565"><th class="cellrowborder" valign="top" width="22.69453890778156%" id="mcps1.2.6.1.1"><p id="zh-cn_topic_0000001557486210_p1024717408463"><a name="zh-cn_topic_0000001557486210_p1024717408463"></a><a name="zh-cn_topic_0000001557486210_p1024717408463"></a>AICore请求数量</p>
     </th>
     <th class="cellrowborder" valign="top" width="22.69453890778156%" id="mcps1.2.6.1.2"><p id="zh-cn_topic_0000001557486210_p192479402463"><a name="zh-cn_topic_0000001557486210_p192479402463"></a><a name="zh-cn_topic_0000001557486210_p192479402463"></a>vnpu-dvpp</p>
     </th>
@@ -370,7 +370,7 @@ deploy任务原理图如[图2](#fig349112913199)所示。
     </table>
 
     >[!NOTE] 
-    >AI Core的申请数量为8或8的倍数，表示使用整张NPU卡。
+    >AICore的申请数量为8或8的倍数，表示使用整张NPU卡。
 
 3. 挂载权重文件。
 

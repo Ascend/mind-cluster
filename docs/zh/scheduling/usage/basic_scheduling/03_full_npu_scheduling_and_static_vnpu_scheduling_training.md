@@ -1833,7 +1833,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
         修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
 
-    - <a name="li1987314168284"></a>使用**静态vNPU调度**特性，参考本配置。以tensorflow\_standalone\_acjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，申请2个AI Core的任务为例，修改示例如下。静态vNPU调度只支持单机训练任务。
+    - <a name="li1987314168284"></a>使用**静态vNPU调度**特性，参考本配置。以tensorflow\_standalone\_acjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，申请2个AICore的任务为例，修改示例如下。静态vNPU调度只支持单机训练任务。
 
         <pre codetype="yaml">
         apiVersion: mindxdl.gitee.com/v1
@@ -2411,7 +2411,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         >[!NOTE] 
         >其余示例可参考[表5](#table62591594016)和[表6](#table21811158146)，以及YAML对应的参数说明[表2 YAML参数说明](#zh-cn_topic_0000001609074269_table1565872494511)进行适配修改。修改完成后执行[步骤2](#li832632419711)，继续配置YAML的其他字段。
 
-    - <a name="li1328115394814"></a>使用**静态vNPU调度**特性，参考本配置。以a800\_tensorflow\_vcjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，申请2个AI Core的任务为例，修改示例如下。静态vNPU调度特性只支持**单机训练**任务。
+    - <a name="li1328115394814"></a>使用**静态vNPU调度**特性，参考本配置。以a800\_tensorflow\_vcjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，申请2个AICore的任务为例，修改示例如下。静态vNPU调度特性只支持**单机训练**任务。
 
         <pre codetype="yaml">
         apiVersion: v1
@@ -2691,7 +2691,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         ```
 
         >[!NOTE] 
-        >**Allocated resources**的字段**huawei.com/Ascend910-2c**的值为1，表明训练使用了一个包含了2个AI Core的vNPU。
+        >**Allocated resources**的字段**huawei.com/Ascend910-2c**的值为1，表明训练使用了一个包含了2个AICore的vNPU。
 
     - 两个训练节点，执行2\*8芯片分布式训练任务，查看其中一个节点示例。**静态vNPU调度**不支持分布式训练任务。
 
