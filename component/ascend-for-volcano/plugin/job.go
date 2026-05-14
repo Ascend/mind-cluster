@@ -819,11 +819,9 @@ func (sHandle *ScheduleHandler) JobValid(obj interface{}) *api.ValidateResult {
 				job.ValidTaskNum())}
 		return result
 	}
-
 	if result = validVirtualDevJob(job); result != nil {
 		return result
 	}
-
 	vcJob, ok := sHandle.Jobs[job.UID]
 	if !ok {
 		klog.V(util.LogDebugLev).Infof("%s %s not support or init", PluginName, job.Name)
@@ -898,9 +896,9 @@ func validVirtualDevJob(job *api.JobInfo) *api.ValidateResult {
 		return nil
 	}
 	if (ascend910VirtualDevNameReg.MatchString(npuName) || ascend310VirtualDevNameReg.MatchString(npuName)) &&
-		(rNpuNum > util.NPUIndex1 || len(job.Tasks) > util.NPUIndex1) {
+		(rNpuNum > util.NPUIndex1) {
 		err := fmt.Errorf("job %s task num is <%v> request <%v> more than 1 virtual device"+
-			"and 1 replicas , keep job pending ", job.Name, len(job.Tasks), rNpuNum)
+			", keep job pending ", job.Name, len(job.Tasks), rNpuNum)
 		klog.V(util.LogDebugLev).Infof(err.Error())
 		return &api.ValidateResult{Pass: false, Reason: util.InvalidResourceRequestReason, Message: err.Error()}
 	}
