@@ -69,6 +69,7 @@ var (
 	}
 	defaultPluginConfigs = []map[string]string{
 		{metricsGroup: groupText, state: stateOn},
+		{metricsGroup: groupMachineCardNum, state: stateOn},
 	}
 )
 
@@ -88,9 +89,10 @@ const (
 	groupOptical = "optical"
 	groupHbm     = "hbm"
 	// groupText represents text-based metrics collected by plugin collectors
-	groupText     = "text"
-	groupUb       = "ub"
-	groupNodeBase = "nodeBase"
+	groupText           = "text"
+	groupUb             = "ub"
+	groupNodeBase       = "nodeBase"
+	groupMachineCardNum = "machineCardNum"
 
 	stateOn  = "ON"
 	stateOFF = "OFF"

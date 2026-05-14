@@ -236,7 +236,7 @@ const (
 	pluginLabel      = "pluginLabel"
 	npuPluginLabel   = "npuPluginInfoKey"
 	npuPluginInfoKey = "npuPluginInfoKey"
-	pluginName       = "MyPlugin"
+	pluginName       = "myPlugin"
 )
 
 // PluginInfoCollector collect custom plugin info
@@ -362,7 +362,7 @@ func RegisterPlugin() {
     return
   }
   // pluginName should be consistent with the name in pluginConfiguration.json
-  registerPlugin("MyPlugin", &PluginInfoCollector{})
+  registerPlugin("myPlugin", &PluginInfoCollector{})
 }
 
 func registerPlugin(pluginName string, c common.MetricsCollector) {
@@ -373,4 +373,3 @@ func registerPlugin(pluginName string, c common.MetricsCollector) {
 }
 
 ```
-
