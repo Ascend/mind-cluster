@@ -20,6 +20,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"ascend-common/api"
+	commonutils "ascend-common/common-utils/utils"
 	"huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 	"huawei.com/npu-exporter/v6/utils"
@@ -28,17 +30,34 @@ import (
 
 var (
 	machineInfoCardDesc = prometheus.NewDesc("machine_card_nums", "Amount of card installed on the machine.", nil, nil)
+
+	supportedCardNumDevices = map[string]bool{
+		api.Ascend310P:  true,
+		api.Ascend910A:  true,
+		api.Ascend910B:  true,
+		api.Ascend910A3: true,
+	}
 )
 
 const (
-	machineInfoCardDescKey = "machineCardNum"
-	machineCardNumPluginName = "MachineCardNumPlugin"
+	machineInfoCardDescKey   = "machineCardNum"
+	machineCardNumPluginName = "machineCardNum"
 )
 
 // MachineCardNumPluginInfoCollector collect machine_card_num plugin info
 type MachineCardNumPluginInfoCollector struct {
 	common.MetricsCollectorAdapter
 	Cache sync.Map
+}
+
+// IsSupported check whether the metric is supported
+func (c *MachineCardNumPluginInfoCollector) IsSupported(n *common.NpuCollector) bool {
+	isSupport := supportedCardNumDevices[n.Dmgr.GetDevType()]
+	if !isSupport {
+		logger.Infof("devType %v does not support [%v], %v",
+			commonutils.MaskDevType(n.Dmgr.GetDevType()), common.GetCacheKey(c), "")
+	}
+	return isSupport
 }
 
 // Describe description of the metric
@@ -61,12 +80,12 @@ func (c *MachineCardNumPluginInfoCollector) CollectToCache(n *common.NpuCollecto
 // UpdatePrometheus update prometheus metric
 func (c *MachineCardNumPluginInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *common.NpuCollector,
 	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
-    // update machine_card_nums
+	// update machine_card_nums
 	machineInfoCardCache, ok := c.Cache.Load(machineInfoCardDescKey)
 	if ok {
 		value := float64(machineInfoCardCache.(int32))
 		ch <- prometheus.MustNewConstMetric(machineInfoCardDesc, prometheus.GaugeValue, value)
-	}	
+	}
 }
 
 // UpdateTelegraf update telegraf metric
