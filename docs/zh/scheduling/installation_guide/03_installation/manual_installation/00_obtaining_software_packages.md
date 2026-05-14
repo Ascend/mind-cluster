@@ -68,23 +68,38 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p14904321133219"><a name="p14904321133219"></a><a name="p14904321133219"></a><span id="ph179041721123211"><a name="ph179041721123211"></a><a name="ph179041721123211"></a>Ascend Docker Runtime</span>说明资料，包含设计原理。</p>
 </td>
 </tr>
-<tr id="row103211151198"><td class="cellrowborder" rowspan="8" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p8202152511199"><a name="p8202152511199"></a><a name="p8202152511199"></a><span id="ph19685554163314"><a name="ph19685554163314"></a><a name="ph19685554163314"></a>NPU Exporter</span></p>
+<tr id="row103211151198"><td class="cellrowborder" rowspan="11" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p8202152511199"><a name="p8202152511199"></a><a name="p8202152511199"></a><span id="ph19685554163314"><a name="ph19685554163314"></a><a name="ph19685554163314"></a>NPU Exporter</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="24.310000000000002%" headers="mcps1.2.5.1.2 "><p id="p815122517194"><a name="p815122517194"></a><a name="p815122517194"></a>npu-exporter</p>
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p1415172514193"><a name="p1415172514193"></a><a name="p1415172514193"></a><span id="ph11151122561916"><a name="ph11151122561916"></a><a name="ph11151122561916"></a>NPU Exporter</span>二进制文件。</p>
 </td>
-<td class="cellrowborder" rowspan="8" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p8603637171910"><a name="p8603637171910"></a><a name="p8603637171910"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="11" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p8603637171910"><a name="p8603637171910"></a><a name="p8603637171910"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
 </tr>
 <tr id="row89908641918"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p181511250198"><a name="p181511250198"></a><a name="p181511250198"></a><span id="ph61511425111914"><a name="ph61511425111914"></a><a name="ph61511425111914"></a>Dockerfile</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1915116253194"><a name="p1915116253194"></a><a name="p1915116253194"></a><span id="ph1415116253194"><a name="ph1415116253194"></a><a name="ph1415116253194"></a>NPU Exporter</span>镜像构建文本文件。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1915116253194"><a name="p1915116253194"></a><a name="p1915116253194"></a>基础镜像为Ubuntu的<span id="ph1415116253194"><a name="ph1415116253194"></a><a name="ph1415116253194"></a>NPU Exporter</span>镜像构建文本文件。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Dockerfile.openeuler</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>基础镜像为openEuler的<span>NPU Exporter</span>镜像构建文本文件。</p>
 </td>
 </tr>
 <tr id="row25751084192"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p9151132581916"><a name="p9151132581916"></a><a name="p9151132581916"></a>Dockerfile-310P-1usoc</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1815192519196"><a name="p1815192519196"></a><a name="p1815192519196"></a><span id="ph19151102512197"><a name="ph19151102512197"></a><a name="ph19151102512197"></a>Atlas 200I SoC A1 核心板</span>上<span id="ph7151725131914"><a name="ph7151725131914"></a><a name="ph7151725131914"></a>NPU Exporter</span>镜像构建文本文件。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1815192519196"><a name="p1815192519196"></a><a name="p1815192519196"></a>基础镜像为Ubuntu的<span id="ph19151102512197"><a name="ph19151102512197"></a><a name="ph19151102512197"></a>Atlas 200I SoC A1 核心板</span>上<span id="ph7151725131914"><a name="ph7151725131914"></a><a name="ph7151725131914"></a>NPU Exporter</span>镜像构建文本文件。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Dockerfile-310P-1usoc.openeuler</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>基础镜像为openEuler的<span>Atlas 200I SoC A1 核心板</span>上<span>NPU Exporter</span>镜像构建文本文件。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>agreement.txt</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>镜像许可协议。</p>
 </td>
 </tr>
 <tr id="row698299141912"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p14151325131910"><a name="p14151325131910"></a><a name="p14151325131910"></a>run_for_310P_1usoc.sh</p>
@@ -112,25 +127,40 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p2907182417816"><a name="p2907182417816"></a><a name="p2907182417816"></a>自定义指标组配置文件。</p>
 </td>
 </tr>
-<tr id="row10465947499"><td class="cellrowborder" rowspan="18" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p349233264112"><a name="p349233264112"></a><a name="p349233264112"></a><span id="ph522114212719"><a name="ph522114212719"></a><a name="ph522114212719"></a>Ascend Device Plugin</span></p>
+<tr id="row10465947499"><td class="cellrowborder" rowspan="21" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p349233264112"><a name="p349233264112"></a><a name="p349233264112"></a><span id="ph522114212719"><a name="ph522114212719"></a><a name="ph522114212719"></a>Ascend Device Plugin</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="24.310000000000002%" headers="mcps1.2.5.1.2 "><p id="p246510417491"><a name="p246510417491"></a><a name="p246510417491"></a>device-plugin</p>
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p34651145494"><a name="p34651145494"></a><a name="p34651145494"></a><span id="ph1024012311247"><a name="ph1024012311247"></a><a name="ph1024012311247"></a>Ascend Device Plugin</span>二进制文件。</p>
 </td>
-<td class="cellrowborder" rowspan="18" align="left" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p578044431010"><a name="p578044431010"></a><a name="p578044431010"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="21" align="left" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p578044431010"><a name="p578044431010"></a><a name="p578044431010"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 <p id="p17810448103"><a name="p17810448103"></a><a name="p17810448103"></a></p>
 <p id="p178144410101"><a name="p178144410101"></a><a name="p178144410101"></a></p>
 </td>
 </tr>
 <tr id="row6309142253316"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p18649310173610"><a name="p18649310173610"></a><a name="p18649310173610"></a><span id="ph945392991719"><a name="ph945392991719"></a><a name="ph945392991719"></a>Dockerfile</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p86498100367"><a name="p86498100367"></a><a name="p86498100367"></a><span id="ph59665356281"><a name="ph59665356281"></a><a name="ph59665356281"></a>Ascend Device Plugin</span>镜像构建文本文件。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p86498100367"><a name="p86498100367"></a><a name="p86498100367"></a>基础镜像为Ubuntu的<span id="ph59665356281"><a name="ph59665356281"></a><a name="ph59665356281"></a>Ascend Device Plugin</span>镜像构建文本文件。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Dockerfile.openeuler</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>基础镜像为openEuler的<span>Ascend Device Plugin</span>镜像构建文本文件。</p>
 </td>
 </tr>
 <tr id="row1792262132218"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1892218210228"><a name="p1892218210228"></a><a name="p1892218210228"></a>Dockerfile-310P-1usoc</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p5922721122210"><a name="p5922721122210"></a><a name="p5922721122210"></a><span id="ph2783189473"><a name="ph2783189473"></a><a name="ph2783189473"></a>Atlas 200I SoC A1 核心板</span>上<span id="ph758710382283"><a name="ph758710382283"></a><a name="ph758710382283"></a>Ascend Device Plugin</span>镜像构建文本文件。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p5922721122210"><a name="p5922721122210"></a><a name="p5922721122210"></a>基础镜像为Ubuntu的<span id="ph2783189473"><a name="ph2783189473"></a><a name="ph2783189473"></a>Atlas 200I SoC A1 核心板</span>上<span id="ph758710382283"><a name="ph758710382283"></a><a name="ph758710382283"></a>Ascend Device Plugin</span>镜像构建文本文件。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Dockerfile-310P-1usoc.openeuler</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>基础镜像为openEuler的<span>Atlas 200I SoC A1 核心板</span>上<span>Ascend Device Plugin</span>镜像构建文本文件。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>agreement.txt</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>镜像许可协议。</p>
 </td>
 </tr>
 <tr id="row9471113116227"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p64721131142217"><a name="p64721131142217"></a><a name="p64721131142217"></a>run_for_310P_1usoc.sh</p>
@@ -216,13 +246,13 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD上使用Volcano的配置文件。</p>
 </td>
 </tr>
-<tr id="row15450141514209"><td class="cellrowborder" rowspan="7" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p10503112473412"><a name="p10503112473412"></a><a name="p10503112473412"></a><span id="ph5971324183414"><a name="ph5971324183414"></a><a name="ph5971324183414"></a>Volcano</span></p>
+<tr id="row15450141514209"><td class="cellrowborder" rowspan="8" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p10503112473412"><a name="p10503112473412"></a><a name="p10503112473412"></a><span id="ph5971324183414"><a name="ph5971324183414"></a><a name="ph5971324183414"></a>Volcano</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="24.310000000000002%" headers="mcps1.2.5.1.2 "><p id="p178531826142015"><a name="p178531826142015"></a><a name="p178531826142015"></a>volcano-npu_<em id="i7853172682017"><a name="i7853172682017"></a><a name="i7853172682017"></a>{version}</em>_linux-<em id="i285417261206"><a name="i285417261206"></a><a name="i285417261206"></a>{arch}.</em>so</p>
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p16854142616202"><a name="p16854142616202"></a><a name="p16854142616202"></a><span id="ph3854152619207"><a name="ph3854152619207"></a><a name="ph3854152619207"></a>Volcano</span>华为NPU调度插件动态链接库。</p>
 </td>
-<td class="cellrowborder" rowspan="7" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p18607137230"><a name="p18607137230"></a><a name="p18607137230"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="8" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p18607137230"><a name="p18607137230"></a><a name="p18607137230"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
 </tr>
 <tr id="row7321176208"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1585422618209"><a name="p1585422618209"></a><a name="p1585422618209"></a>Dockerfile-scheduler</p>
@@ -250,12 +280,17 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1785572611207"><a name="p1785572611207"></a><a name="p1785572611207"></a>volcano-controller组件二进制文件。</p>
 </td>
 </tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>agreement.txt</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>镜像许可协议。</p>
+</td>
+</tr>
 <tr id="row8271202512020"><td class="cellrowborder" colspan="2" valign="top" headers="mcps1.2.5.1.2 mcps1.2.5.1.3 "><div class="note" id="note118552026192017"><a name="note118552026192017"></a><a name="note118552026192017"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p89689544619"><a name="p89689544619"></a><a name="p89689544619"></a>请根据<span id="ph1280481810116"><a name="ph1280481810116"></a><a name="ph1280481810116"></a>K8s</span>和开源<span id="ph145451647133910"><a name="ph145451647133910"></a><a name="ph145451647133910"></a>Volcano</span>的兼容性选择合适的版本进行安装<span id="ph14710141210128"><a name="ph14710141210128"></a><a name="ph14710141210128"></a>，具体</span><span id="ph271071215129"><a name="ph271071215129"></a><a name="ph271071215129"></a>版本请参见</span><a href="https://github.com/volcano-sh/volcano/blob/master/README.md#kubernetes-compatibility" target="_blank" rel="noopener noreferrer">Volcano官网中对应的Kubernetes版本</a>。</p>
 <a name="ul422518573615"></a><a name="ul422518573615"></a><ul id="ul422518573615"><li><span id="ph148661501863"><a name="ph148661501863"></a><a name="ph148661501863"></a>Volcano</span> v1.7.0兼容的<span id="ph11728942124314"><a name="ph11728942124314"></a><a name="ph11728942124314"></a>K8s</span>版本范围为1.19.x~1.28.x。</li><li><span id="ph1945014372610"><a name="ph1945014372610"></a><a name="ph1945014372610"></a>Volcano</span> v1.9.0兼容的<span id="ph127281742154313"><a name="ph127281742154313"></a><a name="ph127281742154313"></a>K8s</span>版本范围为1.21.x~1.28.x。</li></ul>
 </div></div>
 </td>
 </tr>
-<tr id="row1823125217"><td class="cellrowborder" rowspan="3" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p20784133583419"><a name="p20784133583419"></a><a name="p20784133583419"></a><span id="ph12208193653414"><a name="ph12208193653414"></a><a name="ph12208193653414"></a>Infer Operator</span></p>
+<tr id="row1823125217"><td class="cellrowborder" rowspan="5" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p20784133583419"><a name="p20784133583419"></a><a name="p20784133583419"></a><span id="ph12208193653414"><a name="ph12208193653414"></a><a name="ph12208193653414"></a>Infer Operator</span></p>
 <p id="p958252015218"><a name="p958252015218"></a><a name="p958252015218"></a></p>
 <p id="p145801320142115"><a name="p145801320142115"></a><a name="p145801320142115"></a></p>
 </td>
@@ -263,12 +298,22 @@
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p12556132012216"><a name="p12556132012216"></a><a name="p12556132012216"></a><span id="ph85561520142113"><a name="ph85561520142113"></a><a name="ph85561520142113"></a>Infer Operator</span>二进制文件。</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p166316160318"><a name="p166316160318"></a><a name="p166316160318"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="5" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p166316160318"><a name="p166316160318"></a><a name="p166316160318"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
 </tr>
 <tr id="row4950313152111"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p6556182042112"><a name="p6556182042112"></a><a name="p6556182042112"></a><span id="ph1655611208214"><a name="ph1655611208214"></a><a name="ph1655611208214"></a>Dockerfile</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p17556172062117"><a name="p17556172062117"></a><a name="p17556172062117"></a><span id="ph355672072120"><a name="ph355672072120"></a><a name="ph355672072120"></a>Infer Operator</span>镜像构建文本文件。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p17556172062117"><a name="p17556172062117"></a><a name="p17556172062117"></a>基础镜像为Ubuntu的<span id="ph355672072120"><a name="ph355672072120"></a><a name="ph355672072120"></a>Infer Operator</span>镜像构建文本文件。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Dockerfile.openeuler</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>基础镜像为openEuler的<span>Infer Operator</span>镜像构建文本文件。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>agreement.txt</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>镜像许可协议。</p>
 </td>
 </tr>
 <tr id="row466481562111"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p655682032116"><a name="p655682032116"></a><a name="p655682032116"></a>infer-operator-v<em id="i165564208218"><a name="i165564208218"></a><a name="i165564208218"></a>{version}</em>.yaml</p>
@@ -276,7 +321,7 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p18556172072113"><a name="p18556172072113"></a><a name="p18556172072113"></a><span id="ph355672072119"><a name="ph355672072119"></a><a name="ph355672072119"></a>Infer Operator</span>的启动配置文件。</p>
 </td>
 </tr>
-<tr id="row1823125217"><td class="cellrowborder" rowspan="3" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p20784133583419"><a name="p20784133583419"></a><a name="p20784133583419"></a><span id="ph12208193653414"><a name="ph12208193653414"></a><a name="ph12208193653414"></a>Ascend Operator</span></p>
+<tr id="row1823125217"><td class="cellrowborder" rowspan="5" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p20784133583419"><a name="p20784133583419"></a><a name="p20784133583419"></a><span id="ph12208193653414"><a name="ph12208193653414"></a><a name="ph12208193653414"></a>Ascend Operator</span></p>
 <p id="p958252015218"><a name="p958252015218"></a><a name="p958252015218"></a></p>
 <p id="p145801320142115"><a name="p145801320142115"></a><a name="p145801320142115"></a></p>
 </td>
@@ -284,12 +329,22 @@
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p12556132012216"><a name="p12556132012216"></a><a name="p12556132012216"></a><span id="ph85561520142113"><a name="ph85561520142113"></a><a name="ph85561520142113"></a>Ascend Operator</span>二进制文件。</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p166316160318"><a name="p166316160318"></a><a name="p166316160318"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="5" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p166316160318"><a name="p166316160318"></a><a name="p166316160318"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
 </tr>
 <tr id="row4950313152111"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p6556182042112"><a name="p6556182042112"></a><a name="p6556182042112"></a><span id="ph1655611208214"><a name="ph1655611208214"></a><a name="ph1655611208214"></a>Dockerfile</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p17556172062117"><a name="p17556172062117"></a><a name="p17556172062117"></a><span id="ph355672072120"><a name="ph355672072120"></a><a name="ph355672072120"></a>Ascend Operator</span>镜像构建文本文件。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p17556172062117"><a name="p17556172062117"></a><a name="p17556172062117"></a>基础镜像为Ubuntu的<span id="ph355672072120"><a name="ph355672072120"></a><a name="ph355672072120"></a>Ascend Operator</span>镜像构建文本文件。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Dockerfile.openeuler</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>基础镜像为openEuler的<span>Ascend Operator</span>镜像构建文本文件。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>agreement.txt</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>镜像许可协议。</p>
 </td>
 </tr>
 <tr id="row466481562111"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p655682032116"><a name="p655682032116"></a><a name="p655682032116"></a>ascend-operator-v<em id="i165564208218"><a name="i165564208218"></a><a name="i165564208218"></a>{version}</em>.yaml</p>
@@ -297,13 +352,13 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p18556172072113"><a name="p18556172072113"></a><a name="p18556172072113"></a><span id="ph355672072119"><a name="ph355672072119"></a><a name="ph355672072119"></a>Ascend Operator</span>的启动配置文件。</p>
 </td>
 </tr>
-<tr id="row1221137141018"><td class="cellrowborder" rowspan="7" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p8312184419344"><a name="p8312184419344"></a><a name="p8312184419344"></a><span id="ph573619445343"><a name="ph573619445343"></a><a name="ph573619445343"></a>NodeD</span></p>
+<tr id="row1221137141018"><td class="cellrowborder" rowspan="9" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p8312184419344"><a name="p8312184419344"></a><a name="p8312184419344"></a><span id="ph573619445343"><a name="ph573619445343"></a><a name="ph573619445343"></a>NodeD</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="24.310000000000002%" headers="mcps1.2.5.1.2 "><p id="p14306112011011"><a name="p14306112011011"></a><a name="p14306112011011"></a>noded</p>
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p1430618209109"><a name="p1430618209109"></a><a name="p1430618209109"></a><span id="ph133061920101019"><a name="ph133061920101019"></a><a name="ph133061920101019"></a>NodeD</span>二进制文件。</p>
 </td>
-<td class="cellrowborder" rowspan="7" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p2078214442104"><a name="p2078214442104"></a><a name="p2078214442104"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="9" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p2078214442104"><a name="p2078214442104"></a><a name="p2078214442104"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
 </tr>
 <tr id="row2527181014104"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1930716203101"><a name="p1930716203101"></a><a name="p1930716203101"></a>noded-v<em id="i1645121221719"><a name="i1645121221719"></a><a name="i1645121221719"></a>{version}</em>.yaml</p>
@@ -333,16 +388,26 @@
 </tr>
 <tr id="row0727191313105"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p17307162011106"><a name="p17307162011106"></a><a name="p17307162011106"></a><span id="ph530762013105"><a name="ph530762013105"></a><a name="ph530762013105"></a>Dockerfile</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p14307142081012"><a name="p14307142081012"></a><a name="p14307142081012"></a><span id="ph830712203103"><a name="ph830712203103"></a><a name="ph830712203103"></a>NodeD</span>镜像构建文本文件。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p14307142081012"><a name="p14307142081012"></a><a name="p14307142081012"></a>基础镜像为Ubuntu的<span id="ph830712203103"><a name="ph830712203103"></a><a name="ph830712203103"></a>NodeD</span>镜像构建文本文件。</p>
 </td>
 </tr>
-<tr id="row3837449156"><td class="cellrowborder" rowspan="7" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p3777145313419"><a name="p3777145313419"></a><a name="p3777145313419"></a><span id="ph12251185443414"><a name="ph12251185443414"></a><a name="ph12251185443414"></a>ClusterD</span></p>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Dockerfile.openeuler</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>基础镜像为openEuler的<span>NodeD</span>镜像构建文本文件。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>agreement.txt</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>镜像许可协议。</p>
+</td>
+</tr>
+<tr id="row3837449156"><td class="cellrowborder" rowspan="9" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p3777145313419"><a name="p3777145313419"></a><a name="p3777145313419"></a><span id="ph12251185443414"><a name="ph12251185443414"></a><a name="ph12251185443414"></a>ClusterD</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="24.310000000000002%" headers="mcps1.2.5.1.2 "><p id="p12435111214612"><a name="p12435111214612"></a><a name="p12435111214612"></a>clusterd</p>
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p1843512121165"><a name="p1843512121165"></a><a name="p1843512121165"></a><span id="ph1043518127610"><a name="ph1043518127610"></a><a name="ph1043518127610"></a>ClusterD</span>二进制文件。</p>
 </td>
-<td class="cellrowborder" rowspan="7" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p866312341360"><a name="p866312341360"></a><a name="p866312341360"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="9" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p866312341360"><a name="p866312341360"></a><a name="p866312341360"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
 </tr>
 <tr id="row6376165513514"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p15435111214610"><a name="p15435111214610"></a><a name="p15435111214610"></a>clusterd-v<em id="i74356121167"><a name="i74356121167"></a><a name="i74356121167"></a>{version}</em>.yaml</p>
@@ -357,7 +422,17 @@
 </tr>
 <tr id="row191165115618"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p124358124611"><a name="p124358124611"></a><a name="p124358124611"></a><span id="ph1435121219617"><a name="ph1435121219617"></a><a name="ph1435121219617"></a>Dockerfile</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p6436151215618"><a name="p6436151215618"></a><a name="p6436151215618"></a><span id="ph743671216617"><a name="ph743671216617"></a><a name="ph743671216617"></a>ClusterD</span>镜像构建文本文件。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p6436151215618"><a name="p6436151215618"></a><a name="p6436151215618"></a>基础镜像为Ubuntu的<span id="ph743671216617"><a name="ph743671216617"></a><a name="ph743671216617"></a>ClusterD</span>镜像构建文本文件。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Dockerfile.openeuler</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>基础镜像为openEuler的<span>ClusterD</span>镜像构建文本文件。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>agreement.txt</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>镜像许可协议。</p>
 </td>
 </tr>
 <tr id="row1741494011129"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p14414340141218"><a name="p14414340141218"></a><a name="p14414340141218"></a>faultDuration.json</p>

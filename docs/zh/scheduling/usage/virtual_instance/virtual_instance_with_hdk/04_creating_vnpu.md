@@ -43,10 +43,10 @@
                 Status : OK         Message : Create vnpu success
         ```
 
-    - 在设备0中编号为0的芯片上指定vnpu\_id为103创建vNPU设备，此vNPU的模板为vir02。
+    - 在设备0中编号为0的芯片上指定vnpu\_id为100创建vNPU设备，此vNPU的模板为vir02。
 
         ```shell
-        npu-smi set -t create-vnpu -i 0 -c 0 -f vir02 -v 103
+        npu-smi set -t create-vnpu -i 0 -c 0 -f vir02 -v 100
                 Status : OK         Message : Create vnpu success
         ```
 

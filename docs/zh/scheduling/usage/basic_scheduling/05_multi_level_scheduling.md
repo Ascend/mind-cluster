@@ -248,21 +248,16 @@ Ascend Device Plugin组件会通过昇腾硬件驱动自动获取有效的节点
 </th>
 </tr>
 </thead>
-<tbody><tr id="row570610499268"><td class="cellrowborder" rowspan="3" valign="top" width="8.799999999999999%" headers="mcps1.2.7.1.1 "><p>Ascend Job</p>
+<tbody><tr id="row570610499268"><td class="cellrowborder" rowspan="2" valign="top" width="8.799999999999999%" headers="mcps1.2.7.1.1 "><p>Ascend Job</p>
 </td>
-<td class="cellrowborder" valign="top" width="11.65%" headers="mcps1.2.7.1.3 "><p id="p6706349192610"><a name="p6706349192610"></a><a name="p6706349192610"></a><span id="ph13706154962618"><a name="ph13706154962618"></a><a name="ph13706154962618"></a>TensorFlow</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="39.269999999999996%" headers="mcps1.2.7.1.4 "><p id="p1370624952612"><a name="p1370624952612"></a><a name="p1370624952612"></a>tensorflow_multinodes_acjob_super_pod.yaml</p>
-</td>
-<td class="cellrowborder" rowspan="3" valign="top" width="10.280000000000001%" headers="mcps1.2.7.1.5 "><p id="p3707749162616"><a name="p3707749162616"></a><a name="p3707749162616"></a>示例默认为双机任务。</p>
-</td>
-<td class="cellrowborder" rowspan="3" valign="top" width="15%" headers="mcps1.2.7.1.6 "><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/tree/branch_v26.0.0/samples/train/basic-training/without-ranktable
-">获取YAML</a></p>
-</td>
-</tr>
-<tr id="row770724972619"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p><span>PyTorch</span></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p><span>PyTorch</span></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>pytorch_multinodes_acjob_super_pod.yaml</p>
+</td>
+<td class="cellrowborder" rowspan="2" valign="top" width="10.280000000000001%" headers="mcps1.2.7.1.5 "><p id="p3707749162616"><a name="p3707749162616"></a><a name="p3707749162616"></a>示例默认为双机任务。</p>
+</td>
+<td class="cellrowborder" rowspan="2" valign="top" width="15%" headers="mcps1.2.7.1.6 "><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/tree/branch_v26.0.0/samples/train/basic-training/without-ranktable
+">获取YAML</a></p>
 </td>
 </tr>
 <tr id="row7707164912262"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p><span>MindSpore</span></p>

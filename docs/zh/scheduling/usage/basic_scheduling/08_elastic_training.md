@@ -934,21 +934,16 @@
 </th>
 </tr>
 </thead>
-<tbody><tr id="row10488181375112"><td class="cellrowborder" rowspan="4" valign="top" width="12.98259651930386%" headers="mcps1.2.6.1.1 "><p id="p9942132045117"><a name="p9942132045117"></a><a name="p9942132045117"></a>Volcano Job</p>
+<tbody><tr id="row10488181375112"><td class="cellrowborder" rowspan="3" valign="top" width="12.98259651930386%" headers="mcps1.2.6.1.1 "><p id="p9942132045117"><a name="p9942132045117"></a><a name="p9942132045117"></a>Volcano Job</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="21.754350870174033%" headers="mcps1.2.6.1.2 "><p id="p1394262015120"><a name="p1394262015120"></a><a name="p1394262015120"></a>ResNet50</p>
+<td class="cellrowborder" rowspan="2" valign="top" width="21.754350870174033%" headers="mcps1.2.6.1.2 "><p id="p1394262015120"><a name="p1394262015120"></a><a name="p1394262015120"></a>ResNet50</p>
 </td>
-<td class="cellrowborder" valign="top" width="21.754350870174033%" headers="mcps1.2.6.1.3 "><p id="p10942152013510"><a name="p10942152013510"></a><a name="p10942152013510"></a>a800_tensorflow_vcjob.yaml</p>
-</td>
-<td class="cellrowborder" valign="top" width="21.754350870174033%" headers="mcps1.2.6.1.4 "><p id="p9942102010518"><a name="p9942102010518"></a><a name="p9942102010518"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/tree/branch_v26.0.0/samples/train/basic-training/ranktable/yaml/910" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
-</td>
-<td class="cellrowborder" rowspan="2" valign="top" width="21.754350870174033%" headers="mcps1.2.6.1.5 "><p id="p1694222015119"><a name="p1694222015119"></a><a name="p1694222015119"></a>示例默认为单机8卡任务</p>
-<p id="p1161014614466"><a name="p1161014614466"></a><a name="p1161014614466"></a></p>
-</td>
-</tr>
-<tr id="row20488131310512"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p92173245117"><a name="p92173245117"></a><a name="p92173245117"></a>a800_pytorch_vcjob.yaml</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p92173245117"><a name="p92173245117"></a><a name="p92173245117"></a>a800_pytorch_vcjob.yaml</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p191773377514"><a name="p191773377514"></a><a name="p191773377514"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.0.0/samples/train/resumable-training/fault-rescheduling/withRanktable/pytorch/resnet50/yamls/910/a800_pytorch_vcjob.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+</td>
+<td class="cellrowborder" valign="top" width="21.754350870174033%" headers="mcps1.2.6.1.5 "><p id="p1694222015119"><a name="p1694222015119"></a><a name="p1694222015119"></a>示例默认为单机8卡任务</p>
+<p id="p1161014614466"><a name="p1161014614466"></a><a name="p1161014614466"></a></p>
 </td>
 </tr>
 <tr id="row348851319516"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p32203210515"><a name="p32203210515"></a><a name="p32203210515"></a>a800_vcjob.yaml（MindSpore架构）</p>
