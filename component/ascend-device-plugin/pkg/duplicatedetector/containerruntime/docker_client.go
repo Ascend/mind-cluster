@@ -165,7 +165,9 @@ func (d *dockerClient) WatchContainerEvents(ctx context.Context, handler dtypes.
 			}
 
 		case err := <-errChan:
-			hwlog.RunLog.Errorf("error receiving event: %v", err)
+			if err != nil {
+				hwlog.RunLog.Errorf("error receiving event: %v", err)
+			}
 		}
 	}
 }
