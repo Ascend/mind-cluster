@@ -119,7 +119,7 @@
 |needOperatorOpe|标记当前Pod需要Ascend Operator进行处理|<ul><li>create：需要Ascend Operator基于当前Pod创建备份Pod</li><li>delete：需要Ascend Operator删除当前Pod</li></ul>|ClusterD、Ascend Operator|
 |needVolcanoOpe|标记当前Pod需要Volcano进行处理|delete：需要Volcano删除当前Pod|ClusterD、Volcano|
 |podType|标记当前Pod是备份Pod|backup|ClusterD、Ascend Operator|
-|huawei.com/scheduler.softShareDev.aicoreQuota|标记当前Pod需要的AI Core百分比。|[1, 100]|Volcano、Ascend Device Plugin|
+|huawei.com/scheduler.softShareDev.aicoreQuota|标记当前Pod需要的AICore百分比。|[1, 100]|Volcano、Ascend Device Plugin|
 |huawei.com/scheduler.softShareDev.hbmQuota|标记当前Pod需要的高带宽内存量。|<p>[1, maxHBM]</p><p>maxHBM为通过<b>npu-smi info</b>命令查询出的HBM-Usage(MB)中HBM的值。</p>|Volcano、Ascend Device Plugin|
 |huawei.com/scheduler.softShareDev.policy|标记当前Pod执行的软切分任务的策略。|<ul><li>fixed-share</li><li>elastic</li><li>best-effort</li></ul>|Volcano、Ascend Device Plugin|
 |huawei.com/affinity-config|配置任务的多级调度的亲和性层级。|<p>level1=x,level2=y,...</p><p>其中x,y...为对应的网络层级子任务大小。</p><p>该字段用于配置任务的多级调度的亲和性层级。</p><p>要求满足格式为leveli=ni样式的字符串的拼接，中间使用英文逗号分隔。其中，i为网络层级序号，ni为该网络层级子任务的副本数量。例如，对于总副本数量为8的任务“level1=2,level2=4”，表示任务Pod中每2个Pod分配到有相同level1标签的节点上，每4个Pod分配到有相同level2标签的节点上。</p><p>网络层级配置需要满足以下要求：<ul><li>任务层级大于1层时，层级n的值必须是n-1的整数倍。</li><li>任务总副本数量必须是所有层级的整数倍。</li><li>任务层级配置必须从level1开始，从小到大连续的。</li></ul></p>|Volcano|

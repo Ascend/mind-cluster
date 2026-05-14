@@ -181,7 +181,7 @@
 
 创建推理任务时，需要在创建YAML文件时，修改如下配置。以Atlas 800I A2推理服务器为例。
 
-申请芯片AI Core百分比为50%，芯片高带宽内存量为2048MB，软切分策略为fixed-share的参数配置示例如下。
+申请芯片AICore百分比为50%，芯片高带宽内存量为2048MB，软切分策略为fixed-share的参数配置示例如下。
 
 <pre codetype="yaml">
 apiVersion: mindxdl.gitee.com/v1
@@ -192,7 +192,7 @@ metadata:
     framework: pytorch
     ring-controller.atlas: ascend-910b
     fault-scheduling: "force"
-    <strong>huawei.com/scheduler.softShareDev.aicoreQuota: "50" # 软切分任务请求的芯片AI Core百分比，单位为%</strong>
+    <strong>huawei.com/scheduler.softShareDev.aicoreQuota: "50" # 软切分任务请求的芯片AICore百分比，单位为%</strong>
     <strong>huawei.com/scheduler.softShareDev.hbmQuota: "2048" # 软切分任务请求的芯片高带宽内存量，单位为MB</strong>
     <strong>huawei.com/scheduler.softShareDev.policy: "fixed-share" # 软切分策略，取值为fixed-share、elastic和best-effort</strong>
   annotations:
@@ -235,7 +235,7 @@ spec:
                   name: ascendjob-port        # do not modify
               resources:
                 requests:
-                  <strong>huawei.com/Ascend910: 50 # 此处需要与huawei.com/scheduler.softShareDev.aicoreQuota的值保持一致，表示软切分任务请求的AI Core百分比</strong>
+                  <strong>huawei.com/Ascend910: 50 # 此处需要与huawei.com/scheduler.softShareDev.aicoreQuota的值保持一致，表示软切分任务请求的AICore百分比</strong>
                 limits:
                   <strong>huawei.com/Ascend910: 50 # 数值与requests保持一致</strong>
               volumeMounts:

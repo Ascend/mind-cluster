@@ -6,7 +6,7 @@
 
 ## 虚拟化场景<a name="section1618382307"></a>
 
-昇腾虚拟化实例功能在物理机或虚拟机使用时，支持以下虚拟化场景，如[表1](#table197838103018)所示。本文主要介绍在昇腾设备划分vNPU支持的场景和方法，如果涉及虚拟机相关的配置，需要结合另一本文档《Atlas 系列硬件产品 25.5.0 虚拟机配置指南》的“安装虚拟机\>配置NPU直通虚拟机\>[NPU直通虚拟机](https://support.huawei.com/enterprise/zh/doc/EDOC1100540506/2689d3e6)”章节一起使用。
+昇腾虚拟化实例功能在物理机或虚拟机使用时，支持以下虚拟化场景，如[表1](#table197838103018)所示。本文主要介绍在昇腾设备划分vNPU支持的场景和方法，如果涉及虚拟机相关的配置，需要结合另一本文档《Atlas 系列硬件产品 26.0.RC1 虚拟机配置指南》的“安装虚拟机\>配置NPU直通虚拟机\>[NPU直通虚拟机](https://support.huawei.com/enterprise/zh/doc/EDOC1100568653/2689d3e6)”章节一起使用。
 
 划分vNPU有以下两种方式。
 
@@ -26,7 +26,7 @@
 </thead>
 <tbody><tr id="row158123818304"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1819384303"><a name="p1819384303"></a><a name="p1819384303"></a>在物理机划分vNPU，挂载vNPU到虚拟机</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p1290518155817"><a name="p1290518155817"></a><a name="p1290518155817"></a>在物理机划分vNPU和挂载vNPU到虚拟机的步骤请参见<span id="ph15232948195013"><a name="ph15232948195013"></a><a name="ph15232948195013"></a>《Atlas 系列硬件产品 25.5.0 虚拟机配置指南》的“安装虚拟机&gt;配置NPU直通虚拟机&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540506/bf80825c" target="_blank" rel="noopener noreferrer">vNPU直通虚拟机</a>”章节</span>。</p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p1290518155817"><a name="p1290518155817"></a><a name="p1290518155817"></a>在物理机划分vNPU和挂载vNPU到虚拟机的步骤请参见<span id="ph15232948195013"><a name="ph15232948195013"></a><a name="ph15232948195013"></a>《Atlas 系列硬件产品 26.0.RC1 虚拟机配置指南》的“安装虚拟机&gt;配置NPU直通虚拟机&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100568653/bf80825c" target="_blank" rel="noopener noreferrer">vNPU直通虚拟机</a>”章节</span>。</p>
 <p id="p134351910131711"><a name="p134351910131711"></a><a name="p134351910131711"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p10921030123711"><a name="p10921030123711"></a><a name="p10921030123711"></a>静态虚拟化</p>
@@ -42,14 +42,14 @@
 </tr>
 <tr id="row131012387307"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1010133833013"><a name="p1010133833013"></a><a name="p1010133833013"></a>在物理机划分vNPU，挂载vNPU到虚拟机，在虚拟机内将vNPU挂载到容器</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol14307634103119"></a><a name="ol14307634103119"></a><ol id="ol14307634103119"><li>在物理机划分vNPU和挂载vNPU到虚拟机的步骤请参见<span id="ph452785715619"><a name="ph452785715619"></a><a name="ph452785715619"></a>《Atlas 系列硬件产品 25.5.0 虚拟机配置指南》的“安装虚拟机&gt;配置NPU直通虚拟机&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540506/bf80825c" target="_blank" rel="noopener noreferrer">vNPU直通虚拟机</a>”章节</span>。</li><li>在虚拟机内挂载vNPU到容器的步骤请参见<a href="./06_mounting_vnpu.md">挂载vNPU</a>。</li></ol>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol14307634103119"></a><a name="ol14307634103119"></a><ol id="ol14307634103119"><li>在物理机划分vNPU和挂载vNPU到虚拟机的步骤请参见<span id="ph452785715619"><a name="ph452785715619"></a><a name="ph452785715619"></a>《Atlas 系列硬件产品 26.0.RC1 虚拟机配置指南》的“安装虚拟机&gt;配置NPU直通虚拟机&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100568653/bf80825c" target="_blank" rel="noopener noreferrer">vNPU直通虚拟机</a>”章节</span>。</li><li>在虚拟机内挂载vNPU到容器的步骤请参见<a href="./06_mounting_vnpu.md">挂载vNPU</a>。</li></ol>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p13911193234713"><a name="p13911193234713"></a><a name="p13911193234713"></a>静态虚拟化</p>
 </td>
 </tr>
 <tr id="row3124381309"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p20127385307"><a name="p20127385307"></a><a name="p20127385307"></a>在物理机直通NPU到虚拟机，在虚拟机内划分vNPU，再将vNPU挂载到虚拟机内的容器</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol441318447318"></a><a name="ol441318447318"></a><ol id="ol441318447318"><li>在物理机直通NPU到虚拟机的步骤请参见<span id="ph970622925815"><a name="ph970622925815"></a><a name="ph970622925815"></a>《Atlas 系列硬件产品 25.5.0 虚拟机配置指南》的“安装虚拟机&gt;配置NPU直通虚拟机&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540506/2689d3e6" target="_blank" rel="noopener noreferrer">NPU直通虚拟机</a>”章节</span>。</li><li>在虚拟机内划分vNPU步骤请参见<a href="./04_creating_vnpu.md">创建vNPU</a>。</li><li>将vNPU挂载到虚拟机内的容器的步骤请参见<a href="./06_mounting_vnpu.md">挂载vNPU</a>。</li></ol>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol441318447318"></a><a name="ol441318447318"></a><ol id="ol441318447318"><li>在物理机直通NPU到虚拟机的步骤请参见<span id="ph970622925815"><a name="ph970622925815"></a><a name="ph970622925815"></a>《Atlas 系列硬件产品 26.0.RC1 虚拟机配置指南》的“安装虚拟机&gt;配置NPU直通虚拟机&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100568653/2689d3e6" target="_blank" rel="noopener noreferrer">NPU直通虚拟机</a>”章节</span>。</li><li>在虚拟机内划分vNPU步骤请参见<a href="./04_creating_vnpu.md">创建vNPU</a>。</li><li>将vNPU挂载到虚拟机内的容器的步骤请参见<a href="./06_mounting_vnpu.md">挂载vNPU</a>。</li></ol>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><ul><li>静态虚拟化</li><li>动态虚拟化：<ul><li>使用Ascend Docker Runtime挂载</li><li>使用Kubernetes挂载</li></ul></li></ul>
 </td>

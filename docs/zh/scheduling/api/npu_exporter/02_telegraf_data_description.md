@@ -174,7 +174,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p1047181985617"><a name="p1047181985617"></a><a name="p1047181985617"></a>npu_chip_info_utilization</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p447112192567"><a name="p447112192567"></a><a name="p447112192567"></a><span id="ph7471111975618"><a name="ph7471111975618"></a><a name="ph7471111975618"></a><span id="ph3471141910562"><a name="ph3471141910562"></a><a name="ph3471141910562"></a>昇腾AI处理器</span></span>的AI Core利用率。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p447112192567"><a name="p447112192567"></a><a name="p447112192567"></a><span id="ph7471111975618"><a name="ph7471111975618"></a><a name="ph7471111975618"></a><span id="ph3471141910562"><a name="ph3471141910562"></a><a name="ph3471141910562"></a>昇腾AI处理器</span></span>的AICore利用率。</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p247131915566"><a name="p247131915566"></a><a name="p247131915566"></a>单位：%</p>
 </td>
@@ -183,7 +183,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p15471161918560"><a name="p15471161918560"></a><a name="p15471161918560"></a>npu_chip_info_aicore_current_freq</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p19471819155615"><a name="p19471819155615"></a><a name="p19471819155615"></a>昇腾AI处理器的AI Core当前频率</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p19471819155615"><a name="p19471819155615"></a><a name="p19471819155615"></a>昇腾AI处理器的AICore当前频率</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p104711319115610"><a name="p104711319115610"></a><a name="p104711319115610"></a>单位：MHz</p>
 </td>
@@ -311,7 +311,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </td>
 <td class="cellrowborder" valign="top" width="28.822882288228826%" headers="mcps1.2.6.1.2 "><p id="p78031825162113"><a name="p78031825162113"></a><a name="p78031825162113"></a>vnpu_pod_aicore_utilization</p>
 </td>
-<td class="cellrowborder" valign="top" width="25.182518251825186%" headers="mcps1.2.6.1.3 "><p id="p7803225132114"><a name="p7803225132114"></a><a name="p7803225132114"></a>vNPU的AI Core利用率</p>
+<td class="cellrowborder" valign="top" width="25.182518251825186%" headers="mcps1.2.6.1.3 "><p id="p7803225132114"><a name="p7803225132114"></a><a name="p7803225132114"></a>vNPU的AICore利用率</p>
 </td>
 <td class="cellrowborder" valign="top" width="12.55125512551255%" headers="mcps1.2.6.1.4 "><p id="p480452542116"><a name="p480452542116"></a><a name="p480452542116"></a>单位：%</p>
 </td>

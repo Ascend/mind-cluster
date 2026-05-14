@@ -1,7 +1,7 @@
 # 创建vNPU<a name="ZH-CN_TOPIC_0000002479226382"></a>
 
 - 在物理机和虚拟机使用npu-smi工具创建vNPU的命令基本相同，所以本节命令可以适用于物理机和虚拟机，其中只有Atlas 推理系列产品支持在虚拟机创建vNPU。
-- 当使用**静态虚拟化**创建vNPU并挂载到容器时，需要使用**npu-smi**命令创建vNPU，再参考[挂载vNPU](./06_mounting_vnpu.md)。
+- 当使用**静态虚拟化**创建vNPU并挂载到容器时，需要使用**npu-smi**命令创建vNPU，再参考[挂载vNPU](./06_mounting_vnpu.md)章节挂载到容器。
 - 当使用**动态虚拟化**时，无需提前创建vNPU，请跳过本节，直接在容器拉起时按以下要求进行参数配置。
     - 使用Ascend Docker Runtime：参考[方式一：Ascend Docker Runtime挂载vNPU](./06_mounting_vnpu.md#方式一ascend-docker-runtime挂载vnpu)，通过ASCEND\_VISIBLE\_DEVICES和ASCEND\_VNPU\_SPECS参数从物理芯片上虚拟化出多个vNPU并挂载至容器。
     - 使用MindCluster集群调度组件（Ascend Device Plugin和Volcano）：参考[动态虚拟化](./06_mounting_vnpu.md#动态虚拟化)，运行任务时自动按照配置要求调用接口创建vNPU。
@@ -61,9 +61,9 @@
 
     **npu-smi set -t vnpu-cfg-recover -d** _mode_
 
-    mode表示vNPU的配置恢复使能状态，“1”表示开启状态，“0”表示关闭状态，默认为使能状态。
+    mode表示vNPU的配置恢复状态，“1”表示开启状态，“0”表示关闭状态，默认为开启状态。
 
-    执行如下命令设置vNPU的配置恢复状态，以下命令表示将vNPU的配置恢复状态设置为使能状态。
+    执行如下命令设置vNPU的配置恢复状态，以下命令表示将vNPU的配置恢复状态设置为开启状态。
 
     **npu-smi set -t vnpu-cfg-recover -d** _1_
 
@@ -74,7 +74,7 @@
 
 - 查询vNPU的配置恢复状态。
 
-    以下命令表示查询当前环境中vNPU的配置恢复使能状态。
+    以下命令表示查询当前环境中vNPU的配置恢复状态。
 
     **npu-smi info -t vnpu-cfg-recover**
 
