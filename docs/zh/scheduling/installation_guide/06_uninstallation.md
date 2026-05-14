@@ -115,6 +115,15 @@
         ```shell
         systemctl daemon-reload && systemctl restart containerd
         ```
+      
+        >[!NOTE] 
+        > 重启后节点上部分Pod可能会报错，报错信息示例如下：
+        >
+        > ```ColdFusion
+        >  Error: failed to create containerd task: failed to create shim task: OCI runtime create failed: unable to retrieve OCI runtime error (open /run/containerd/io.containerd.runtime. v2.task/k8s.io/device-plugin-01/log.json: no such file or directory): fork/exec /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime: no such file or directory
+        >  ```
+        >
+        > 解决方法：通过kubectl delete pod --force -n <i>{pod_namespace} {pod_name}</i>命令删除报错的Pod，等待Pod重新拉起即可解决。
 
 ## 卸载Container Manager组件<a name="section1461059103619"></a>
 

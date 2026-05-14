@@ -104,7 +104,9 @@ func (c *containerdClient) WatchContainerEvents(ctx context.Context, handler typ
 		case envelope := <-eventChan:
 			c.handleEvent(envelope, handler)
 		case err := <-errChan:
-			hwlog.RunLog.Warnf("error receiving event: %v", err)
+			if err != nil {
+				hwlog.RunLog.Warnf("error receiving event: %v", err)
+			}
 		}
 	}
 }
