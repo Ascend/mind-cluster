@@ -681,17 +681,17 @@ kind: Deployment
 metadata:
   name: deploy-with-volcano
   labels:
-    app: tf
+    app: test
   namespace: vnpu
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: tf
+      app: test
   template:
     metadata:
       labels:
-        app: tf
+        app: test
         ring-controller.atlas: ascend-310P  # 参见表4
         fault-scheduling: "grace"           # 重调度所使用的label
         vnpu-dvpp: "yes"                    # 参见表4
@@ -703,7 +703,7 @@ spec:
       containers:
         - image: ubuntu:22.04   # 示例镜像
           imagePullPolicy: IfNotPresent
-          name: tf
+          name: test
           command:
           - "/bin/bash"
           - "-c"

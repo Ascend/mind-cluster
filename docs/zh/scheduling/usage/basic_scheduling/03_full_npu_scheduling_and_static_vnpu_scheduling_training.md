@@ -1376,13 +1376,16 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     </th>
     </tr>
     </thead>
-    <tbody><tr id="row1383111642810"><td class="cellrowborder" rowspan="1" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p183111662814"><a name="p183111662814"></a><a name="p183111662814"></a>整卡调度</p>
+    <tbody><tr id="row1383111642810"><td class="cellrowborder" rowspan="2" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p183111662814"><a name="p183111662814"></a><a name="p183111662814"></a>整卡调度</p>
     <p id="p6831131682816"><a name="p6831131682816"></a><a name="p6831131682816"></a></p>
     <p id="p4831141617286"><a name="p4831141617286"></a><a name="p4831141617286"></a></p>
     <p id="p1783141615287"><a name="p1783141615287"></a><a name="p1783141615287"></a></p>
     <p id="p53986186431"><a name="p53986186431"></a><a name="p53986186431"></a></p>
     </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1083151622813"><a name="p1083151622813"></a><a name="p1083151622813"></a></p><p id="p128321216132812"><a name="p128321216132812"></a><a name="p128321216132812"></a>若需要使用<span id="ph1183219160285"><a name="ph1183219160285"></a><a name="ph1183219160285"></a>PyTorch</span>或<span id="ph8832121614281"><a name="ph8832121614281"></a><a name="ph8832121614281"></a>MindSpore</span>框架支持的交换机亲和性调度，配置示例请参见<a href="#li583911163280">配置交换机亲和性调度参考示例</a>。</p>
+    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1083151622813"><a name="p1083151622813"></a><a name="p1083151622813"></a><a href="#li583911163280">在Atlas 800 训练服务器上创建单机任务</a></p>
+    </td>
+    </tr>
+    <tr id="row0832171652816"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p178320163285"><a name="p178320163285"></a><a name="p178320163285"></a><a href="#li1731218243100">在Atlas 800T A2 训练服务器上创建分布式任务</a></p>
     </td>
     </tr>
     <tr id="row108334168282"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p2833141612811"><a name="p2833141612811"></a><a name="p2833141612811"></a>整卡调度</p>
@@ -1395,10 +1398,15 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1924622524915"><a name="p1924622524915"></a><a name="p1924622524915"></a><a href="#li164321720423">在Atlas&nbsp;800T&nbsp;A2&nbsp;训练服务器上创建训练任务（Scheduler挂载芯片的方式）</a></p>
     </td>
     </tr>
+    <tr id="row10833191620281"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1983421672814"><a name="p1983421672814"></a><a name="p1983421672814"></a>静态vNPU调度</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p16834616182815"><a name="p16834616182815"></a><a name="p16834616182815"></a><a href="#li1987314168284">在Atlas 800 训练服务器上创建单机任务</a></p>
+    </td>
+    </tr>
     </tbody>
     </table>
 
-    - <a name="li583911163280"></a>使用**整卡调度**特性，参考本配置。PyTorch和MindSpore框架新增了使用交换机亲和性调度的功能，该功能支持大模型任务和普通任务。以pytorch\_standalone\_acjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，任务使用1个芯片，修改示例如下。
+    - <a name="li583911163280"></a>使用**整卡调度**特性，参考本配置。以pytorch\_standalone\_acjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，任务使用1个芯片，修改示例如下。
 
         ```Yaml
         apiVersion: mindxdl.gitee.com/v1
@@ -1450,6 +1458,106 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
         >[!NOTE] 
         >PyTorch、MindSpore框架中对应的Chief、Master、Scheduler的“replicas”字段不能超过1。单机任务时，PyTorch框架不需要Worker。单卡任务时，MindSpore框架不需要Scheduler。
+
+    - <a name="li1731218243100"></a>使用**整卡调度**特性，参考本配置。pytorch\_multinodes\_acjob\_\{xxx\}b.yaml为例，在两台Atlas 800T A2 训练服务器节点创建**分布式训练**任务，执行2\*8芯片训练任务，修改示例如下，分布式任务的每个Pod只能调度到不同节点。
+
+        ```Yaml
+        apiVersion: mindxdl.gitee.com/v1
+        kind: AscendJob
+        metadata:
+          name: default-test-pytorch        # 任务名
+          labels:
+            framework: pytorch     # 训练框架名称
+            ring-controller.atlas: ascend-{xxx}b  # 标识产品类型
+            tor-affinity: "null" #该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不适用。large-model-schema表示大模型任务，normal-schema 普通任务
+        spec:
+          schedulerName: volcano    # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
+          runPolicy:
+            schedulingPolicy:       # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
+              minAvailable: 2   #任务总副本数
+              queue: default     # 任务所属队列
+          successPolicy: AllWorkers  #任务成功的前提
+          replicaSpecs:
+            Master:
+              replicas: 1   # 任务副本数
+              restartPolicy: Never
+              template:
+                metadata:
+                  labels:
+                    ring-controller.atlas: ascend-{xxx}b  # 标识产品类型
+                spec:
+                  affinity:                                         # 本段配置表示分布式任务的Pod调度到不同节点
+                    podAntiAffinity:
+                      requiredDuringSchedulingIgnoredDuringExecution:
+                        - labelSelector:
+                            matchExpressions:
+                              - key: job-name
+                                operator: In
+                                values:
+                                  - default-test-pytorch         # 需要和上面的任务名一致
+                          topologyKey: kubernetes.io/hostname
+                  nodeSelector:
+                    host-arch: huawei-arm               # 可选值，根据实际情况填写
+                    accelerator-type: module-{xxx}b-8   # 节点类型
+                  containers:
+                  - name: ascend                                     # 必须为ascend，不能修改
+                  image: pytorch-test:latest  #镜像名称
+        ...
+                    resources:
+                      limits:
+                        huawei.com/Ascend910: 8     #申请的芯片数量
+                      requests:
+                        huawei.com/Ascend910: 8     # 与limits取值一致
+                    volumeMounts:
+        ...
+                  volumes:
+        ...
+            Worker:
+              replicas: 1   #任务副本数
+              restartPolicy: Never
+              template:
+                metadata:
+                  labels:
+                    ring-controller.atlas: ascend-{xxx}b   # 标识产品类型
+                spec:
+                  affinity:            # 本段配置表示分布式任务的Pod调度到不同节点
+                    podAntiAffinity:
+                      requiredDuringSchedulingIgnoredDuringExecution:
+                        - labelSelector:
+                            matchExpressions:
+                              - key: job-name
+                                operator: In
+                                values:
+                                  - default-test-pytorch        # 需要和上面的任务名一致
+                          topologyKey: kubernetes.io/hostname
+                  nodeSelector:
+                    host-arch: huawei-arm               # 可选值，根据实际情况填写
+                    accelerator-type: module-{xxx}b-8  # 节点类型
+                  containers:
+                  - name: ascend                                   # 必须为ascend，不能修改
+        ...
+                  env:
+        ...
+                  - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime会使用该字段
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
+        ...
+                    ports:                          # 分布式训练集合通信端口
+                      - containerPort: 2222         
+                        name: ascendjob-port
+                    resources:
+                      limits:
+                        huawei.com/Ascend910: 8   # 任务申请的芯片数量
+                      requests:
+                        huawei.com/Ascend910: 8   # 与limits取值一致
+                    volumeMounts:
+        ...
+                  volumes:
+        ...
+        ```
+
+        修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
 
     - <a name="li1086213163289"></a>使用**整卡调度**特性，参考本配置。以pytorch\_standalone\_acjob\_super\_pod.yaml为例，在一台Atlas 900 A3 SuperPoD 超节点上创建**单机训练**任务，修改示例如下。
 
@@ -1504,6 +1612,60 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                         huawei.com/Ascend910: 16   # 与limits取值一致
         ...
         ```
+
+        修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
+
+    - <a name="li1987314168284"></a>使用**静态vNPU调度**特性，参考本配置。以pytorch\_standalone\_acjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，申请2个AI Core的任务为例，修改示例如下。静态vNPU调度只支持单机训练任务。
+
+        <pre codetype="yaml">
+        apiVersion: mindxdl.gitee.com/v1
+        kind: AscendJob
+        metadata:
+          name: default-test-pytorch
+          labels:
+            framework: pytorch  # 训练框架
+            tor-affinity: "null" #该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不适用。large-model-schema表示大模型任务，normal-schema 普通任务
+        spec:
+          schedulerName: volcano        # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
+          runPolicy:
+            schedulingPolicy:           # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
+              minAvailable: 1   # 任务总副本数
+              queue: default   # 任务所属队列
+          successPolicy: AllWorkers  # 任务成功的前提
+          replicaSpecs:
+            Master:
+              replicas: 1 # 任务副本数
+              restartPolicy: Never
+              template:
+                metadata:
+                  labels:
+                    ring-controller.atlas: ascend-910   # 标识产品类型
+                spec:
+                  nodeSelector:
+                    host-arch: huawei-arm               # 可选值，根据实际情况填写
+                    accelerator-type: module-{xxx}b-8  # 节点类型
+                  containers:
+                  - name: ascend                          # 必须为ascend，不能修改
+                  image: pytorch-test:latest       # 镜像名称
+        ...
+                  env:
+        ...
+                 # 静态vNPU调度暂不支持ASCEND_VISIBLE_DEVICES相关字段，需要删除以下加粗字段
+                  <strong>- name: ASCEND_VISIBLE_DEVICES</strong>                       
+                    <strong>valueFrom:</strong>
+                      <strong>fieldRef:</strong>
+                        <strong>fieldPath: metadata.annotations['huawei.com/Ascend910']</strong>               
+        ...
+                    ports:                 # 分布式训练集合通信端口
+                      - containerPort: 2222         
+                        name: ascendjob-port
+                    resources:
+                      limits:
+                        huawei.com/Ascend910-2c: 1# vNPU调度此处数量只能为1
+                      requests:
+                        huawei.com/Ascend910-2c: 1# vNPU调度此处数量只能为1
+                    volumeMounts:
+        ...</pre>
 
         修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
 
@@ -1733,16 +1895,141 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     </th>
     </tr>
     </thead>
-    <tbody>
+    <tbody><tr id="row4532141711226"><td class="cellrowborder" rowspan="2" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p16533181762219"><a name="p16533181762219"></a><a name="p16533181762219"></a>整卡调度</p>
+    <p id="p144064285710"><a name="p144064285710"></a><a name="p144064285710"></a></p>
+    <p id="p1966518379556"><a name="p1966518379556"></a><a name="p1966518379556"></a></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p2533121714227"><a name="p2533121714227"></a><a name="p2533121714227"></a><a href="#li103534014484">在Atlas 800 训练服务器上创建单机任务</a></p>
+    </td>
+    </tr>
+    <tr id="row1753371710227"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p053317172221"><a name="p053317172221"></a><a name="p053317172221"></a><a href="#li21411371493">在Atlas 800 训练服务器上创建分布式任务</a></p>
+    </td>
+    </tr>
     <tr id="row173101655202217"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1366503795516"><a name="p1366503795516"></a><a name="p1366503795516"></a>整卡调度</p>
     </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p918205224718"><a name="p918205224718"></a><a name="p918205224718"></a>若需要使用<span id="ph181814524472"><a name="ph181814524472"></a><a name="ph181814524472"></a>PyTorch</span>或<span id="ph318155294712"><a name="ph318155294712"></a><a name="ph318155294712"></a>MindSpore</span>框架支持的交换机亲和性调度，配置示例请参见<a href="#li1460553372">配置交换机亲和性调度参考示例</a>。</p>
+    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p133113557220"><a name="p133113557220"></a><a name="p133113557220"></a><a href="#li1487005712813">在Atlas 800T A2 训练服务器上创建分布式任务</a></p>
+    </td>
+    </tr>
+    <tr id="row1140175742214"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p24055715225"><a name="p24055715225"></a><a name="p24055715225"></a>静态vNPU调度</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1140155720221"><a name="p1140155720221"></a><a name="p1140155720221"></a><a href="#li1328115394814">在Atlas 800 训练服务器上创建单机任务</a></p>
     </td>
     </tr>
     </tbody>
     </table>
 
-    - <a name="li1460553372"></a>使用**整卡调度**特性，参考本配置。PyTorch和MindSpore框架新增了使用交换机亲和性调度的功能，该功能支持大模型任务和普通任务。以a800\_pytorch\_vcjob.yaml为例，在一台Atlas 800T A2 训练服务器节点创建**分布式训练**任务，任务使用1\*8个芯片，修改示例如下。
+    - <a name="li103534014484"></a>使用**整卡调度**特性，参考本配置。以a800\_pytorch\_vcjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，任务使用8个芯片，修改示例如下。
+
+        ```Yaml
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: rings-config-mindx-dls-test     # rings-config-后的名字需要与任务名一致
+        ...
+          labels:
+            ring-controller.atlas: ascend-910   # 标识任务使用的芯片的产品类型
+        ...
+        ---
+        apiVersion: batch.volcano.sh/v1alpha1   # 不可修改。必须使用Volcano的API。
+        kind: Job                               # 目前只支持Job类型
+        metadata:
+          name: mindx-dls-test                  # 任务名，可自定义
+        ...
+        spec:
+          minAvailable: 1                  # 单机为1
+        ...
+          - name: "default-test"
+              replicas: 1                  # 单机为1
+              template:
+                metadata:
+        ...
+                spec:
+        ...
+                   containers:
+                   - image: pytorch-test:latest   #镜像名称
+        ...
+                     env:
+        ...
+                     - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime使用该字段
+                       valueFrom:
+                         fieldRef:
+                           fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
+        ...
+                    resources:  
+                      requests:
+                        huawei.com/Ascend910: 8          # 需要的NPU芯片个数为8。
+                      limits:
+                        huawei.com/Ascend910: 8          # 目前需要和上面requests保持一致
+        ...
+                    nodeSelector:
+                      host-arch: huawei-arm              # 可选值，根据实际情况填写
+                      accelerator-type: module        # 调度到Atlas 800 训练服务器
+        ...
+        ```
+
+        修改完成后执行[步骤2](#li832632419711)，配置YAML的其他字段。
+
+    - <a name="li21411371493"></a>使用**整卡调度**特性，参考本配置。以a800\_pytorch\_vcjob.yaml为例，在两台Atlas 800 训练服务器节点创建**分布式训练**任务，任务使用2\*8个芯片，修改示例如下，分布式任务的每个Pod只能调度到不同节点。
+
+        ```Yaml
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: rings-config-mindx-dls-test     # rings-config-后的名字需要与任务名一致
+        ...
+          labels:
+            ring-controller.atlas: ascend-910  # 标识任务使用的芯片的产品类型
+        ...
+        ---
+        apiVersion: batch.volcano.sh/v1alpha1   # 不可修改。必须使用Volcano的API
+        kind: Job                               # 目前只支持Job类型
+        metadata:
+          name: mindx-dls-test                  # 任务名，可自定义
+        ...
+        spec:
+          minAvailable: 2                  # 2节点分布式任务则为2，N节点则为N，Deployment类型的任务不需要该参数
+        ...
+          - name: "default-test"
+              replicas: 2                  # N节点分布式场景为N
+              template:
+                metadata:
+        ...
+                spec:
+                  affinity:                            # 本段配置表示分布式任务的Pod调度到不同节点
+                    podAntiAffinity:
+                      requiredDuringSchedulingIgnoredDuringExecution:
+                        - labelSelector:
+                            matchExpressions:
+                              - key: volcano.sh/job-name      # vcjob固定字段，当任务类型为deployment时，key为deploy-name
+                                operator: In                   # 固定字段
+                                values:
+                                  - mindx-dls-test             # 需要和上面的任务名一致
+                          topologyKey: kubernetes.io/hostname
+                containers:
+                - image: pytorch-test:latest  # 镜像名称
+        ...
+                  env:
+        ...
+                  - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime使用该字段
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
+        
+                    resources:  
+                      requests:
+                        huawei.com/Ascend910: 8          # 需要的NPU芯片个数为8。可在下方添加行，配置memory、cpu等资源
+                      limits:
+                        huawei.com/Ascend910: 8          # 目前需要和上面requests保持一致
+        ...
+                    nodeSelector:
+                      host-arch: huawei-arm               # 可选值，根据实际情况填写
+                      accelerator-type: module     # 调度到Atlas 800 训练服务器
+        ...
+        ```
+
+        修改完成后执行[步骤2](#li832632419711)，配置YAML的其他字段。
+
+    - <a name="li1487005712813"></a>使用**整卡调度**特性，参考本配置。以a800\_pytorch\_vcjob.yaml为例，在一台Atlas 800T A2 训练服务器节点创建**分布式训练**任务，任务使用1\*8个芯片，修改示例如下。
 
         ```Yaml
         apiVersion: v1
@@ -1822,6 +2109,57 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
         >[!NOTE] 
         >其余示例可参考[表5](#table62591594016)和[表6](#table21811158146)，以及YAML对应的参数说明[表2 YAML参数说明](#zh-cn_topic_0000001609074269_table1565872494511)进行适配修改。修改完成后执行[步骤2](#li832632419711)，继续配置YAML的其他字段。
+
+    - <a name="li1328115394814"></a>使用**静态vNPU调度**特性，参考本配置。以a800\_pytorch\_vcjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，申请2个AI Core的任务为例，修改示例如下。静态vNPU调度特性只支持**单机训练**任务。
+
+        <pre codetype="yaml">
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: rings-config-mindx-dls-test     # rings-config-后的名字需要与任务名一致
+        ...
+          labels:
+            ring-controller.atlas: ascend-910   # 产品类型
+        ...
+        ---
+        apiVersion: batch.volcano.sh/v1alpha1   # 不可修改，必须使用Volcano的API
+        kind: Job                               #目前只支持Job类型
+        metadata:
+          name: mindx-dls-test                  # 任务名，可自定义
+        ...
+        spec:
+          minAvailable: 1                  # 如果使用静态vNPU调度，此处取值需为1
+        ...
+          - name: "default-test"
+              replicas: 1                  # 如果使用静态vNPU调度，此处取值需为1
+              template:
+                metadata:
+        ...
+                spec:
+        ...
+                containers:
+                - image: pytorch-test:latest  # 训练镜像
+        ...
+                  env:
+        ...
+                 # 静态vNPU调度暂不支持ASCEND_VISIBLE_DEVICES相关字段，需要删除以下加粗字段
+                  <strong>- name: ASCEND_VISIBLE_DEVICES</strong>                                    
+                    <strong>valueFrom:</strong> 
+                      <strong>fieldRef:</strong> 
+                        <strong>fieldPath: metadata.annotations['huawei.com/Ascend910']</strong>              
+        ...
+                    resources:  
+                      requests:
+                        huawei.com/Ascend910-2c: 1          # 如果使用静态vNPU调度，此处数量只能为1
+                      limits:
+                        huawei.com/Ascend910-2c: 1          # 如果使用静态vNPU调度此处数量只能为1
+        ...
+                    nodeSelector:
+                      host-arch: huawei-arm               # 可选值，根据实际情况填写
+                      accelerator-type: module    # 调度到Atlas 800 训练服务器上
+        ...</pre>
+
+        修改完成后执行[步骤2](#li832632419711)，配置YAML的其他字段。
 
     >[!NOTE] 
     >整卡调度或静态vNPU调度特性配置YAML的操作只在步骤1中有区别，整卡调度和静态vNPU调度特性在步骤1之后的操作相同。
@@ -1920,7 +2258,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 **操作步骤<a name="zh-cn_topic_0000001608595413_section15243115731317"></a>**
 
-1. 示例a800\_tensorflow\_vcjob.yaml中，任务部署在vcjob命名空间下，因此需要在管理节点执行以下命令，为训练任务创建命名空间。如果任务创建到非默认的命名空间，则需要根据实际情况创建命名空间。
+1. 示例a800\_pytorch\_vcjob.yaml中，任务部署在vcjob命名空间下，因此需要在管理节点执行以下命令，为训练任务创建命名空间。如果任务创建到非默认的命名空间，则需要根据实际情况创建命名空间。
 
     ```shell
     kubectl create namespace vcjob
@@ -1938,19 +2276,19 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     - 通过环境变量配置资源信息场景的示例如下：
 
         ```shell
-        kubectl apply -f tensorflow_standalone_acjob.yaml
+        kubectl apply -f pytorch_standalone_acjob.yaml
         ```
 
         回显示例如下：
 
         ```ColdFusion
-        ascendjob.mindxdl.gitee.com/default-tensorflow-test created
+        ascendjob.mindxdl.gitee.com/default-test-pytorch created
         ```
 
     - 通过文件配置资源信息场景的示例如下：
 
         ```shell
-        kubectl apply -f a800_tensorflow_vcjob.yaml
+        kubectl apply -f a800_pytorch_vcjob.yaml
         ```
 
         回显示例如下：
@@ -2079,7 +2417,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         Priority:     0
         Node:         ubuntu/XXX.XXX.XXX.XXX
         Start Time:   Wed, 30 Sep 2020 15:38:22 +0800
-        Labels:       app=tf
+        Labels:       app=pytorch
                       ring-controller.atlas=ascend-910
                       volcano.sh/job-name=mindx-dls-test
                       volcano.sh/job-namespace=vcjob
@@ -2107,7 +2445,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         Priority:     0
         Node:         ubuntu/XXX.XXX.XXX.XXX
         Start Time:   Wed, 30 Sep 2020 15:38:22 +0800
-        Labels:       app=tf
+        Labels:       app=pytorch
                       ring-controller.atlas=ascend-910
                       volcano.sh/job-name=mindx-dls-test
                       volcano.sh/job-namespace=vcjob
@@ -2243,19 +2581,19 @@ kubectl delete -f XXX.yaml
 - 通过环境变量配置资源信息场景的示例如下：
 
     ```shell
-    kubectl delete -f tensorflow_standalone_acjob.yaml
+    kubectl delete -f pytorch_standalone_acjob.yaml
     ```
 
     回显示例如下：
 
     ```ColdFusion
-    ascendjob.mindxdl.gitee.com "default-test-tensorflow" deleted
+    ascendjob.mindxdl.gitee.com "default-test-pytorch" deleted
     ```
 
 - 通过文件配置资源信息场景的示例如下：
 
     ```shell
-    kubectl delete -f a800_tensorflow_vcjob.yaml
+    kubectl delete -f a800_pytorch_vcjob.yaml
     ```
 
     回显示例如下：
@@ -2278,15 +2616,15 @@ kubectl delete -f XXX.yaml
 
     集群调度并未专门提供使用其他调度器的YAML示例，用户可以获取使用Volcano的YAML示例并做如下修改即可使用。
 
-    以tensorflow\_standalone\_acjob.yaml为例，在一台Atlas 800T A2 训练服务器节点创建**单机训练**任务，执行1\*8芯片训练任务，修改示例如下。
+    以pytorch\_standalone\_acjob.yaml为例，在一台Atlas 800T A2 训练服务器节点创建**单机训练**任务，执行1\*8芯片训练任务，修改示例如下。
 
     <pre codetype="yaml">
     apiVersion: mindxdl.gitee.com/v1
     kind: AscendJob
     metadata:
-      name: default-test-tensorflow
+      name: default-test-pytorch
       labels:
-        framework: tensorflow
+        framework: pytorch
         ring-controller.atlas: ascend-{xxx}b   
     spec:
       schedulerName: volcano        # 使用其他调度器时，删除该字段
