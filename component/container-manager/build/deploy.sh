@@ -437,7 +437,7 @@ do_install() {
     fi
 
     local version
-    version=$("${INSTALL_BIN_DIR}/${COMPONENT_NAME}" -v 2>/dev/null || echo "unknown")
+    version=$("${INSTALL_BIN_DIR}/${COMPONENT_NAME}" -v 2>/dev/null | grep "version:" || echo "unknown")
     echo "  Binary        : ${INSTALL_BIN_DIR}/${COMPONENT_NAME}  (${version})"
 
     local all_ok=true
@@ -553,9 +553,9 @@ do_upgrade() {
     check_binary
 
     local current_version
-    current_version=$("${INSTALL_BIN_DIR}/${COMPONENT_NAME}" -v 2>/dev/null || echo "unknown")
+    current_version=$("${INSTALL_BIN_DIR}/${COMPONENT_NAME}" -v 2>/dev/null | grep "version:" || echo "unknown")
     local target_version
-    target_version=$("${BINARY_PATH}" -v 2>/dev/null || echo "unknown")
+    target_version=$("${BINARY_PATH}" -v 2>/dev/null | grep "version:" || echo "unknown")
 
     log_info "Current version : ${current_version}"
     log_info "Target version  : ${target_version}"
@@ -579,7 +579,7 @@ do_upgrade() {
 
     # Verify
     local version
-    version=$("${INSTALL_BIN_DIR}/${COMPONENT_NAME}" -v 2>/dev/null || echo "unknown")
+    version=$("${INSTALL_BIN_DIR}/${COMPONENT_NAME}" -v 2>/dev/null | grep "version:" || echo "unknown")
     log_info "Binary upgraded to: ${version}"
 
     if systemctl is-active --quiet "${SERVICE_NAME}" 2>/dev/null; then
