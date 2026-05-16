@@ -39,9 +39,9 @@ repos:
       - id: codespell
         args: [
           "-L",
-          "CANN,cann,NNAL,nnal,ASCEND,ascend,EnQue,CopyIn,ArchType,AND,ND,tbe,copyin,alog",
+          "CANN,cann,NNAL,nnal,ASCEND,ascend,EnQue,CopyIn,ArchType,AND,ND,tbe,copyin,alog,ist",
           "--skip",
-          "*.py,*.cpp,*.hpp,*.c,*.h",
+          "*.toml,*.py,*.cpp,*.hpp,*.c,*.h",
         ]
 
   # pylint：指定 pre-commit/pyproject.toml
@@ -84,4 +84,3 @@ repos:
           - "--verbose"
           - "-i"
         exclude: ^build/|tests/third_party/
-
