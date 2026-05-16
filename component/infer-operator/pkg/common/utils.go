@@ -22,6 +22,8 @@ import (
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"ascend-common/common-utils/hwlog"
@@ -112,4 +114,13 @@ func IsRequeueError(err error) bool {
 	var reQueueError *RequeueError
 	ok := errors.As(err, &reQueueError)
 	return ok
+}
+
+// IsInstanceSetReady check if instanceset is ready
+func IsInstanceSetReady(instanceSet *v1.InstanceSet) bool {
+	condition := meta.FindStatusCondition(instanceSet.Status.Conditions, string(InstanceSetReady))
+	if condition == nil {
+		return false
+	}
+	return condition.Status == metav1.ConditionTrue
 }

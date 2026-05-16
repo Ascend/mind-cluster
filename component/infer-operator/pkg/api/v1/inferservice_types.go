@@ -23,7 +23,13 @@ import (
 
 // InferServiceSpec defines the desired state of InferService
 type InferServiceSpec struct {
-	Roles []InstanceSetSpec `json:"roles,omitempty"`
+	Roles              []InstanceSetSpec   `json:"roles,omitempty"`
+	SchedulingStrategy *SchedulingStrategy `json:"schedulingStrategy,omitempty"`
+}
+
+// SchedulingStrategy defines the scheduling strategy of InferService
+type SchedulingStrategy struct {
+	Type string `json:"type,omitempty"`
 }
 
 // InferServiceStatus defines the observed state of InferService

@@ -826,3 +826,62 @@ func TestFilterInferServiceEventsGenericFunc(t *testing.T) {
 		convey.So(result, convey.ShouldBeFalse)
 	})
 }
+
+func TestManageInferServicesSuccess(t *testing.T) {
+	convey.Convey("TestManageInferServices success", t, func() {
+		scheme := runtime.NewScheme()
+		apiv1.AddToScheme(scheme)
+		fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
+		reconciler := &InferServiceSetReconciler{client: fakeClient, scheme: scheme}
+		iss := testISSForScale()
+		err := reconciler.manageInferServices(context.Background(), iss, nil, nil, nil)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func TestManageInferServicesErrors(t *testing.T) {
+	convey.Convey("Test manageInferServices error scenarios", t, func() {
+		scheme := runtime.NewScheme()
+		apiv1.AddToScheme(scheme)
+		fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
+		reconciler := &InferServiceSetReconciler{client: fakeClient, scheme: scheme}
+		iss := testISSForScale()
+		is := &apiv1.InferService{
+			ObjectMeta: metav1.ObjectMeta{Name: "test-0", Namespace: "default"},
+		}
+
+		convey.Convey("Should return error when scaleDown fails", func() {
+			patch := gomonkey.ApplyMethodFunc(fakeClient, "Delete",
+				func(_ context.Context, _ client.Object, _ ...client.DeleteOption) error {
+					return errors.New("delete error")
+				})
+			defer patch.Reset()
+			err := fakeClient.Create(context.Background(), is)
+			convey.So(err, convey.ShouldBeNil)
+			err = reconciler.manageInferServices(context.Background(), iss, []*apiv1.InferService{is}, nil, nil)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("Should return error when update fails", func() {
+			err := fakeClient.Create(context.Background(), is)
+			convey.So(err, convey.ShouldBeNil)
+			patch := gomonkey.ApplyMethodFunc(fakeClient, "Get",
+				func(_ context.Context, _ types.NamespacedName, _ client.Object) error {
+					return errors.New("get error")
+				})
+			defer patch.Reset()
+			err = reconciler.manageInferServices(context.Background(), iss, nil, []*apiv1.InferService{is}, nil)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("Should return error when scaleUp fails", func() {
+			patch := gomonkey.ApplyMethodFunc(fakeClient, "Create",
+				func(_ context.Context, _ client.Object, _ ...client.CreateOption) error {
+					return errors.New("create error")
+				})
+			defer patch.Reset()
+			err := reconciler.manageInferServices(context.Background(), iss, nil, nil, []*apiv1.InferService{is})
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}

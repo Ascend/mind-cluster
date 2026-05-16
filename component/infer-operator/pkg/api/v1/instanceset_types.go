@@ -50,6 +50,7 @@ type InstanceSetSpec struct {
 	WorkloadTypeMeta   WorkloadType         `json:"workload,omitempty"`
 	WorkloadObjectMeta ObjectMeta           `json:"metadata,omitempty"`
 	InstanceSpec       runtime.RawExtension `json:"spec,omitempty"`
+	Priority           *int32               `json:"priority,omitempty"`
 }
 
 // InstanceSetStatus defines the observed state of InstanceSet

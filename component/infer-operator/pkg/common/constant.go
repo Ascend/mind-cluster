@@ -16,24 +16,29 @@ limitations under the License.
 
 package common
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	// LabelKeyPrefix is the prefix of the labels
 	LabelKeyPrefix = "infer.huawei.com/"
-
+	HuaweiPrefix   = "huawei.com/"
 	// OperatorNameKey is the key of the operator name
 	OperatorNameKey = LabelKeyPrefix + "ascend-infer-operator"
 
 	// VolcanoPodGroupCrdName is the name of volcano PodGroup CRD
 	VolcanoPodGroupCrdName = "podgroups.scheduling.volcano.sh"
-
+	// InstanceSetKind is InstanceSet kind in its gkv
+	InstanceSetKind = "InstanceSet"
 	// InferServiceSetControllerName is the name of the infer serviceset controller
 	InferServiceSetControllerName = "inferserviceset-controller"
 	// InferServiceControllerName is the name of the infer service controller
 	InferServiceControllerName = "inferservice-controller"
 	// InstanceSetControllerName is the name of the instance set controller
 	InstanceSetControllerName = "instanceset-controller"
+	// InferReschedulingControllerName is the name of the infer rescheduling controller
+	InferReschedulingControllerName = "infer-rescheduling-controller"
 	// DefaultReEnqueueInterval is the default re-enqueue interval when reconcile failed
 	DefaultReEnqueueInterval = time.Second
 	// NonRetriableRequeInterval is the non-retriable re-enqueue interval when reconcile failed
@@ -90,6 +95,8 @@ const (
 	DefaultPortName = "infer"
 	// DefaultPort is the default port
 	DefaultPort = 8080
+	// DefaultPriority is the default priority
+	DefaultPriority = int32(32)
 	// InferServiceNameSplitNum is the least number of segments after splitting infer service name
 	InferServiceNameSplitNum = 2
 	// BaseDec is the base for integer conversion
@@ -147,4 +154,10 @@ const (
 	MaxRoleTypeCount = 32
 	// MaxRoleReplicas is the max replicas of the role type of the infer service
 	MaxRoleReplicas = 256
+)
+
+const (
+	SchedulingStrategySequential       = "Sequential"
+	SchedulingStrategyPriority         = "Priority"
+	PrioritySchedulingStrategyLabelKey = LabelKeyPrefix + "priority-scheduling-strategy"
 )

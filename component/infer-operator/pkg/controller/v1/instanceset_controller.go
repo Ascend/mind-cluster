@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package v1 contains API Schema definitions for the mindcluster v1 API group
 package v1
 
 import (
@@ -45,6 +46,7 @@ import (
 	apiv1 "infer-operator/pkg/api/v1"
 	"infer-operator/pkg/common"
 	util "infer-operator/pkg/common/client-go"
+	"infer-operator/pkg/controller/schedule"
 	"infer-operator/pkg/controller/workload"
 )
 
@@ -87,24 +89,28 @@ func (r *InstanceSetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	// 3. reconcile workloads
 	err := r.reconcileWorkLoads(ctx, instanceSet)
-	if err == nil {
+	if common.IsRequeueError(err) || err == nil {
 		// 4. update status
 		if err := r.updateStatus(ctx, instanceSet); err != nil {
 			hwlog.RunLog.Errorf("unable to update status %s/%s, error: %v", req.Namespace, req.Name, err)
 			return ctrl.Result{}, err
 		}
+		if common.IsRequeueError(err) {
+			hwlog.RunLog.Warnf("reconcile workloads of InstanceSet %s/%s error: %v, will requeue this request",
+				req.Namespace, req.Name, err)
+			return ctrl.Result{RequeueAfter: common.DefaultReEnqueueInterval}, nil
+		}
 		return ctrl.Result{}, nil
 	}
 
-	if !apierrors.IsConflict(err) || common.IsRequeueError(err) {
-		hwlog.RunLog.Errorf("reconcile workloads of InstanceSet %s/%s error: %v, will requeue this request",
-			req.Namespace, req.Name, err)
-		// requeue error, return error to requeue request
-		return ctrl.Result{}, err
+	if apierrors.IsConflict(err) {
+		hwlog.RunLog.Warnf("conflict error when reconcile workloads of InstanceSet %s/%s, "+
+			"will requeue immediately, error: %v", req.Namespace, req.Name, err)
+		return ctrl.Result{Requeue: true}, nil
 	}
 	hwlog.RunLog.Errorf("reconcile workloads of InstanceSet %s/%s error: %v",
 		req.Namespace, req.Name, err)
-	return ctrl.Result{}, nil
+	return ctrl.Result{}, err
 }
 
 func (r *InstanceSetReconciler) reconcileWorkLoads(ctx context.Context, instanceSet *apiv1.InstanceSet) error {
@@ -113,31 +119,22 @@ func (r *InstanceSetReconciler) reconcileWorkLoads(ctx context.Context, instance
 		ServiceName:    instanceSet.Labels[common.InferServiceNameLabelKey],
 		InstanceSetKey: instanceSet.Labels[common.InstanceSetNameLabelKey],
 	}
-	// 1. delete extra workloads
-	err := r.WorkLoadReconciler.DeleteExtraInstances(ctx, instanceSet, indexer)
-	if err != nil {
+
+	if err := r.deleteExtraWorkloads(ctx, instanceSet, indexer); err != nil {
 		return err
 	}
 
-	// 2. check or create service
-	for _, serviceSpec := range instanceSet.Spec.Services {
-		if err := r.checkOrCreateService(ctx, instanceSet, serviceSpec, indexer); err != nil {
-			return err
-		}
+	if err := r.reconcileServices(ctx, instanceSet, indexer); err != nil {
+		return err
 	}
 
-	// 3. reconciler single workload
-	replicaNum := int(*instanceSet.Spec.Replicas)
-	for instanceIndex := 0; instanceIndex < replicaNum; instanceIndex++ {
-		indexer.InstanceIndex = strconv.Itoa(instanceIndex)
-		err := r.WorkLoadReconciler.Reconcile(ctx, instanceSet, indexer)
-		if err != nil {
-			hwlog.RunLog.Errorf("reconcile WorkLoads of InstanceSet %s/%s, error: %v",
-				instanceSet.Namespace, instanceSet.Name, err)
-			return err
-		}
+	if shouldSchedule, err := schedule.ShouldSchedule(ctx, r.Client, instanceSet); err != nil {
+		return err
+	} else if !shouldSchedule {
+		return nil
 	}
-	return nil
+
+	return r.reconcileWorkloadInstances(ctx, instanceSet, indexer)
 }
 
 func (r *InstanceSetReconciler) checkOrCreateService(
@@ -414,4 +411,30 @@ func PodGroupPredicate() predicate.Predicate {
 			return true
 		},
 	}
+}
+
+func (r *InstanceSetReconciler) deleteExtraWorkloads(ctx context.Context, instanceSet *apiv1.InstanceSet, indexer common.InstanceIndexer) error {
+	return r.WorkLoadReconciler.DeleteExtraInstances(ctx, instanceSet, indexer)
+}
+
+func (r *InstanceSetReconciler) reconcileServices(ctx context.Context, instanceSet *apiv1.InstanceSet, indexer common.InstanceIndexer) error {
+	for _, serviceSpec := range instanceSet.Spec.Services {
+		if err := r.checkOrCreateService(ctx, instanceSet, serviceSpec, indexer); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *InstanceSetReconciler) reconcileWorkloadInstances(ctx context.Context, instanceSet *apiv1.InstanceSet, indexer common.InstanceIndexer) error {
+	replicaNum := int(*instanceSet.Spec.Replicas)
+	for instanceIndex := 0; instanceIndex < replicaNum; instanceIndex++ {
+		indexer.InstanceIndex = strconv.Itoa(instanceIndex)
+		if err := r.WorkLoadReconciler.Reconcile(ctx, instanceSet, indexer); err != nil {
+			hwlog.RunLog.Errorf("reconcile WorkLoads of InstanceSet %s/%s, error: %v",
+				instanceSet.Namespace, instanceSet.Name, err)
+			return err
+		}
+	}
+	return nil
 }
