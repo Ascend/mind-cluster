@@ -25,6 +25,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"ascend-common/common-utils/hwlog"
@@ -434,6 +435,47 @@ func TestIsRequeueError(t *testing.T) {
 			result := IsRequeueError(err)
 
 			convey.So(result, convey.ShouldBeTrue)
+		})
+	})
+}
+
+// TestIsInstanceSetReady tests the IsInstanceSetReady function.
+func TestIsInstanceSetReady(t *testing.T) {
+	convey.Convey("Test IsInstanceSetReady function", t, func() {
+		instanceSet := &v1.InstanceSet{
+			Status: v1.InstanceSetStatus{
+				Conditions: []metav1.Condition{},
+			},
+		}
+
+		convey.Convey("Should return true when InstanceSetReady condition is true", func() {
+			instanceSet.Status.Conditions = append(instanceSet.Status.Conditions, metav1.Condition{
+				Type:   string(InstanceSetReady),
+				Status: metav1.ConditionTrue,
+			})
+			result := IsInstanceSetReady(instanceSet)
+			convey.So(result, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("Should return false when InstanceSetReady condition is false", func() {
+			instanceSet.Status.Conditions = append(instanceSet.Status.Conditions, metav1.Condition{
+				Type:   string(InstanceSetReady),
+				Status: metav1.ConditionFalse,
+			})
+			result := IsInstanceSetReady(instanceSet)
+			convey.So(result, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("Should return false when InstanceSetReady condition not found", func() {
+			instanceSet.Status.Conditions = []metav1.Condition{}
+			result := IsInstanceSetReady(instanceSet)
+			convey.So(result, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("Should return false when conditions is nil", func() {
+			instanceSet.Status.Conditions = nil
+			result := IsInstanceSetReady(instanceSet)
+			convey.So(result, convey.ShouldBeFalse)
 		})
 	})
 }

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package v1 contains API Schema definitions for the mindcluster v1 API group
 package v1
 
 import (
@@ -38,6 +39,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"infer-operator/pkg/api/v1"
 	"infer-operator/pkg/common"
+	"infer-operator/pkg/controller/schedule"
 	"infer-operator/pkg/controller/workload"
 )
 
@@ -250,7 +252,7 @@ func TestInstanceSetReconcilerReconcile4(t *testing.T) {
 
 			result, err := reconciler.Reconcile(ctx, req)
 			convey.So(err, convey.ShouldBeNil)
-			convey.So(result, convey.ShouldResemble, reconcile.Result{})
+			convey.So(result, convey.ShouldResemble, reconcile.Result{Requeue: true})
 		})
 	})
 }
@@ -291,6 +293,98 @@ func TestInstanceSetReconcilerReconcile5(t *testing.T) {
 			}
 
 			_, err := reconciler.Reconcile(ctx, req)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+// TestInstanceSetReconcilerReconcileWithRequeueError tests the Reconcile method of InstanceSetReconciler.
+func TestInstanceSetReconcilerReconcileWithRequeueError(t *testing.T) {
+	convey.Convey("Test InstanceSetReconciler Reconcile method", t, func() {
+		convey.Convey("Should return nil when reconcileWorkLoads fails with requeue error", func() {
+			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+			fakeClient := NewFakeClient(instanceSet).Build()
+
+			workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+			reconciler := &InstanceSetReconciler{
+				Client:             fakeClient,
+				WorkLoadReconciler: workLoadReconciler,
+			}
+
+			patches := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "validate",
+				func(_ *InstanceSetReconciler, is *v1.InstanceSet) error { return nil })
+			defer patches.Reset()
+			requeueErr := common.NewRequeueError("requeue error")
+			patches2 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "reconcileWorkLoads",
+				func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return requeueErr })
+			defer patches2.Reset()
+			patches3 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "updateStatus",
+				func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error {
+					return nil
+				})
+			defer patches3.Reset()
+
+			ctx := context.Background()
+			req := reconcile.Request{
+				NamespacedName: types.NamespacedName{
+					Name:      "test-instance",
+					Namespace: "default",
+				},
+			}
+
+			result, err := reconciler.Reconcile(ctx, req)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(result, convey.ShouldResemble, reconcile.Result{RequeueAfter: common.DefaultReEnqueueInterval})
+		})
+	})
+}
+
+// TestReconcileWorkLoadsShouldSchedule tests the reconcileWorkLoads method with different ShouldSchedule results.
+func TestReconcileWorkLoadsShouldSchedule(t *testing.T) {
+	convey.Convey("Test reconcileWorkLoads with ShouldSchedule", t, func() {
+		instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+		instanceSet.Labels[common.PrioritySchedulingStrategyLabelKey] = common.SchedulingStrategyPriority
+		fakeClient := NewFakeClient(instanceSet).Build()
+		workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+		reconciler := &InstanceSetReconciler{Client: fakeClient, WorkLoadReconciler: workLoadReconciler}
+		ctx := context.Background()
+		patches := gomonkey.ApplyMethod(reflect.TypeOf(workLoadReconciler), "DeleteExtraInstances",
+			func(_ *workload.WorkLoadReconciler, ctx context.Context, is *v1.InstanceSet, indexer common.InstanceIndexer) error {
+				return nil
+			})
+		defer patches.Reset()
+		patches2 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "reconcileServices",
+			func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet, indexer common.InstanceIndexer) error {
+				return nil
+			})
+		defer patches2.Reset()
+		ifSchedule := false
+		patches3 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "reconcileWorkloadInstances",
+			func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet, indexer common.InstanceIndexer) error {
+				ifSchedule = true
+				return nil
+			})
+		defer patches3.Reset()
+
+		convey.Convey("Should return nil when ShouldSchedule returns false", func() {
+			patches4 := gomonkey.ApplyFuncReturn(schedule.ShouldSchedule, false, nil)
+			defer patches4.Reset()
+			err := reconciler.reconcileWorkLoads(ctx, instanceSet)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(ifSchedule, convey.ShouldBeFalse)
+		})
+		convey.Convey("Should continue reconciliation when ShouldSchedule returns true", func() {
+			patches4 := gomonkey.ApplyFuncReturn(schedule.ShouldSchedule, true, nil)
+			defer patches4.Reset()
+			err := reconciler.reconcileWorkLoads(ctx, instanceSet)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(ifSchedule, convey.ShouldBeTrue)
+		})
+		convey.Convey("Should return error when ShouldSchedule returns error", func() {
+			scheduleErr := errors.New("schedule error")
+			patches4 := gomonkey.ApplyFuncReturn(schedule.ShouldSchedule, false, scheduleErr)
+			defer patches4.Reset()
+			err := reconciler.reconcileWorkLoads(ctx, instanceSet)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})

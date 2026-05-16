@@ -111,7 +111,7 @@ rules:
     resources: [ "configmaps" ]
     verbs: [ "create", "list", "watch", "delete", "get", "patch", "update" ]
   - apiGroups: [ "apps" ]
-    resources: [ "deployments", "statefulsets" ]
+    resources: [ "deployments", "statefulsets", "replicasets"]
     verbs: [ "create", "list", "watch", "delete", "get", "patch", "update" ]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -170,46 +170,71 @@ spec:
             description: InferServiceSetSpec defines the desired state of InferServiceSet
             properties:
               replicas:
+                description: replicas is the number of desired replicas for the InferServiceSet
                 format: int32
                 type: integer
               template:
                 description: InferServiceSpec defines the desired state of InferService
                 properties:
                   roles:
+                    description: roles defines the list of InstanceSet specs for the
+                      InferService
                     items:
                       description: InstanceSetSpec defines the desired state of InstanceSet
                       properties:
                         metadata:
+                          description: metadata defines the metadata of the workload
                           properties:
                             annotations:
                               additionalProperties:
                                 type: string
+                              description: annotations are key-value pairs that are
+                                attached to the workload
                               type: object
                             labels:
                               additionalProperties:
                                 type: string
+                              description: labels are key-value pairs that are attached
+                                to the workload
                               type: object
                           type: object
                         name:
+                          description: name is the name of the InstanceSet
                           type: string
+                        priority:
+                          description: priority is the priority of the InstanceSet
+                          format: int32
+                          type: integer
                         replicas:
+                          description: replicas is the number of desired replicas
+                            for the InstanceSet
                           format: int32
                           type: integer
                         services:
+                          description: services is the list of services for the InstanceSet
                           items:
+                            description: ServiceSpec defines the desired state of
+                              Service
                             properties:
                               metadata:
+                                description: metadata defines the metadata of the
+                                  service
                                 properties:
                                   annotations:
                                     additionalProperties:
                                       type: string
+                                    description: annotations are key-value pairs that
+                                      are attached to the workload
                                     type: object
                                   labels:
                                     additionalProperties:
                                       type: string
+                                    description: labels are key-value pairs that are
+                                      attached to the workload
                                     type: object
                                 type: object
                               name:
+                                description: name is the name of the service
                                 type: string
                               spec:
                                 description: ServiceSpec describes the attributes
@@ -552,21 +577,35 @@ spec:
                             type: object
                           type: array
                         spec:
+                          description: spec is the raw extension spec of the workload
                           type: object
                           x-kubernetes-preserve-unknown-fields: true
                         workload:
+                          description: workload defines the type of workload
                           properties:
                             apiVersion:
+                              description: apiVersion indicates the API version of
+                                the workload
                               type: string
                             kind:
+                              description: kind indicates the kind of the workload
+                                (e.g., Deployment, StatefulSet)
                               type: string
                           type: object
                       type: object
                     type: array
+                  schedulingStrategy:
+                    description: schedulingStrategy defines the scheduling strategy
+                      for the InferService
+                    properties:
+                      type:
+                        description: type indicates the type of scheduling strategy
+                        type: string
+                    type: object
                 type: object
             type: object
           status:
-            description: InferServiceSetStatus defines the observed state of InferServiceSet
+            description: status defines the observed state of InferServiceSet
             properties:
               conditions:
                 items:
@@ -641,9 +680,12 @@ spec:
                 format: int64
                 type: integer
               readyReplicas:
+                description: readyReplicas is the number of ready replicas for this
+                  InferServiceSet.
                 format: int32
                 type: integer
               replicas:
+                description: replicas is the total number of replicas for this InferServiceSet.
                 format: int32
                 type: integer
             type: object
@@ -704,32 +746,51 @@ spec:
                         annotations:
                           additionalProperties:
                             type: string
+                          description: annotations are key-value pairs that are attached
+                            to the workload
                           type: object
                         labels:
                           additionalProperties:
                             type: string
+                          description: labels are key-value pairs that are attached
+                            to the workload
                           type: object
                       type: object
                     name:
+                      description: name is the name of the InstanceSet
                       type: string
+                    priority:
+                      description: priority is the priority of the InstanceSet
+                      format: int32
+                      type: integer
                     replicas:
+                      description: replicas is the number of desired replicas for
+                        the InstanceSet
                       format: int32
                       type: integer
                     services:
+                      description: services is the list of services for the InstanceSet
                       items:
+                        description: ServiceSpec defines the desired state of Service
                         properties:
                           metadata:
+                            description: metadata defines the metadata of the service
                             properties:
                               annotations:
                                 additionalProperties:
                                   type: string
+                                description: annotations are key-value pairs that
+                                  are attached to the workload
                                 type: object
                               labels:
                                 additionalProperties:
                                   type: string
+                                description: labels are key-value pairs that are attached
+                                  to the workload
                                 type: object
                             type: object
                           name:
+                            description: name is the name of the service
                             type: string
                           spec:
                             description: ServiceSpec describes the attributes that
@@ -783,7 +844,6 @@ spec:
                                   be initialized from the clusterIP field.  If this field is specified,
                                   clients must ensure that clusterIPs[0] and clusterIP have the same
                                   value.
-
 
                                   This field may hold a maximum of two entries (dual-stack IPs, in either order).
                                   These IPs must correspond to the values of the ipFamilies field. Both
@@ -863,7 +923,6 @@ spec:
                                   NodePort, and LoadBalancer, and does apply to "headless" services.
                                   This field will be wiped when updating a Service to type ExternalName.
 
-
                                   This field may hold a maximum of two entries (dual-stack families, in
                                   either order).  These families must correspond to the values of the
                                   clusterIPs field, if specified. Both clusterIPs and ipFamilies are
@@ -933,16 +992,13 @@ spec:
                                         This field follows standard Kubernetes label syntax.
                                         Valid values are either:
 
-
                                         * Un-prefixed protocol names - reserved for IANA standard service names (as per
                                         RFC-6335 and https://www.iana.org/assignments/service-names).
-
 
                                         * Kubernetes-defined prefixed names:
                                           * 'kubernetes.io/h2c' - HTTP/2 prior knowledge over cleartext as described in https://www.rfc-editor.org/rfc/rfc9113.html#name-starting-http-2-with-prior-
                                           * 'kubernetes.io/ws'  - WebSocket over cleartext as described in https://www.rfc-editor.org/rfc/rfc6455
                                           * 'kubernetes.io/wss' - WebSocket over TLS as described in https://www.rfc-editor.org/rfc/rfc6455
-
 
                                         * Other protocols should use implementation-defined prefixed names such as
                                         mycompany.com/my-custom-protocol.
@@ -1072,17 +1128,31 @@ spec:
                         type: object
                       type: array
                     spec:
+                      description: spec is the raw extension spec of the workload
                       type: object
                       x-kubernetes-preserve-unknown-fields: true
                     workload:
+                      description: workload defines the type of workload
                       properties:
                         apiVersion:
+                          description: apiVersion indicates the API version of the
+                            workload
                           type: string
                         kind:
+                          description: kind indicates the kind of the workload (e.g.,
+                            Deployment, StatefulSet)
                           type: string
                       type: object
                   type: object
                 type: array
+              schedulingStrategy:
+                description: schedulingStrategy defines the scheduling strategy for
+                  the InferService
+                properties:
+                  type:
+                    description: type indicates the type of scheduling strategy
+                    type: string
+                type: object
             type: object
           status:
             description: InferServiceStatus defines the observed state of InferService
@@ -1160,9 +1230,12 @@ spec:
                 format: int64
                 type: integer
               readyReplicas:
+                description: readyReplicas is the number of ready replicas for this
+                  InferService.
                 format: int32
                 type: integer
               replicas:
+                description: replicas is the total number of replicas for this InferService.
                 format: int32
                 type: integer
             type: object
@@ -1215,36 +1288,55 @@ spec:
             description: InstanceSetSpec defines the desired state of InstanceSet
             properties:
               metadata:
+                description: metadata defines the metadata of the workload
                 properties:
                   annotations:
                     additionalProperties:
                       type: string
+                    description: annotations are key-value pairs that are attached
+                      to the workload
                     type: object
                   labels:
                     additionalProperties:
                       type: string
+                    description: labels are key-value pairs that are attached to the
+                      workload
                     type: object
                 type: object
               name:
+                description: name is the name of the InstanceSet
                 type: string
+              priority:
+                description: priority is the priority of the InstanceSet
+                format: int32
+                type: integer
               replicas:
+                description: replicas is the number of desired replicas for the InstanceSet
                 format: int32
                 type: integer
               services:
+                description: services is the list of services for the InstanceSet
                 items:
+                  description: ServiceSpec defines the desired state of Service
                   properties:
                     metadata:
+                      description: metadata defines the metadata of the service
                       properties:
                         annotations:
                           additionalProperties:
                             type: string
+                          description: annotations are key-value pairs that are attached
+                            to the workload
                           type: object
                         labels:
                           additionalProperties:
                             type: string
+                          description: labels are key-value pairs that are attached
+                            to the workload
                           type: object
                       type: object
                     name:
+                      description: name is the name of the service
                       type: string
                     spec:
                       description: ServiceSpec describes the attributes that a user
@@ -1298,7 +1390,6 @@ spec:
                             be initialized from the clusterIP field.  If this field is specified,
                             clients must ensure that clusterIPs[0] and clusterIP have the same
                             value.
-
 
                             This field may hold a maximum of two entries (dual-stack IPs, in either order).
                             These IPs must correspond to the values of the ipFamilies field. Both
@@ -1378,7 +1469,6 @@ spec:
                             NodePort, and LoadBalancer, and does apply to "headless" services.
                             This field will be wiped when updating a Service to type ExternalName.
 
-
                             This field may hold a maximum of two entries (dual-stack families, in
                             either order).  These families must correspond to the values of the
                             clusterIPs field, if specified. Both clusterIPs and ipFamilies are
@@ -1448,16 +1538,13 @@ spec:
                                   This field follows standard Kubernetes label syntax.
                                   Valid values are either:
 
-
                                   * Un-prefixed protocol names - reserved for IANA standard service names (as per
                                   RFC-6335 and https://www.iana.org/assignments/service-names).
-
 
                                   * Kubernetes-defined prefixed names:
                                     * 'kubernetes.io/h2c' - HTTP/2 prior knowledge over cleartext as described in https://www.rfc-editor.org/rfc/rfc9113.html#name-starting-http-2-with-prior-
                                     * 'kubernetes.io/ws'  - WebSocket over cleartext as described in https://www.rfc-editor.org/rfc/rfc6455
                                     * 'kubernetes.io/wss' - WebSocket over TLS as described in https://www.rfc-editor.org/rfc/rfc6455
-
 
                                   * Other protocols should use implementation-defined prefixed names such as
                                   mycompany.com/my-custom-protocol.
@@ -1587,13 +1674,18 @@ spec:
                   type: object
                 type: array
               spec:
+                description: spec is the raw extension spec of the workload
                 type: object
                 x-kubernetes-preserve-unknown-fields: true
               workload:
+                description: workload defines the type of workload
                 properties:
                   apiVersion:
+                    description: apiVersion indicates the API version of the workload
                     type: string
                   kind:
+                    description: kind indicates the kind of the workload (e.g., Deployment,
+                      StatefulSet)
                     type: string
                 type: object
             type: object
@@ -1676,9 +1768,12 @@ spec:
                 format: int64
                 type: integer
               readyReplicas:
+                description: readyReplicas is the number of ready replicas for this
+                  InstanceSet.
                 format: int32
                 type: integer
               replicas:
+                description: replicas is the total number of replicas for this InstanceSet.
                 format: int32
                 type: integer
             type: object

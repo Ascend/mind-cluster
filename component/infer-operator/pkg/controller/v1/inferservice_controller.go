@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package v1 contains API Schema definitions for the mindcluster v1 API group
 package v1
 
 import (
@@ -44,6 +45,8 @@ import (
 	"infer-operator/pkg/common"
 )
 
+const minPriority = 1
+
 // InferServiceReconciler reconciles a InferService object
 type InferServiceReconciler struct {
 	client   client.Client
@@ -66,6 +69,7 @@ func NewInferServiceReconciler(mgr ctrl.Manager) *InferServiceReconciler {
 // 1. If the number of roles exceeds roletypecount
 // 2. If there are duplicate role names
 // 3. If each role name complies with IsDNS1123Label standards
+// 4. If priority is within valid range when using priority scheduling
 func (r *InferServiceReconciler) validateRoles(is *apiv1.InferService) error {
 	if is == nil {
 		return fmt.Errorf("inferService cannot be nil")
@@ -91,6 +95,17 @@ func (r *InferServiceReconciler) validateRoles(is *apiv1.InferService) error {
 		// Check if role name complies with IsDNS1123Label standards
 		if errs := validation.IsDNS1123Label(role.Name); len(errs) > 0 {
 			return fmt.Errorf("role name %s is invalid: %v", role.Name, errs)
+		}
+
+		if is.Spec.SchedulingStrategy == nil || is.Spec.SchedulingStrategy.Type != common.SchedulingStrategyPriority {
+			// skip non-priority scheduling
+			continue
+		}
+		// Check priority range if priority scheduling is enabled
+		if is.Spec.Roles[i].Priority != nil &&
+			(*is.Spec.Roles[i].Priority < minPriority || *is.Spec.Roles[i].Priority > common.MaxRoleReplicas) {
+			return fmt.Errorf("role %s priority %d is out of valid range [%d, %d]",
+				role.Name, role.Priority, minPriority, common.MaxRoleReplicas)
 		}
 	}
 
@@ -442,6 +457,12 @@ func (r *InferServiceReconciler) newInstanceSet(is *apiv1.InferService, role api
 	}
 	labels[common.InferServiceNameLabelKey] = is.Name
 	labels[common.InstanceSetNameLabelKey] = role.Name
+	if is.Spec.SchedulingStrategy != nil && is.Spec.SchedulingStrategy.Type != "" {
+		labels[common.PrioritySchedulingStrategyLabelKey] = is.Spec.SchedulingStrategy.Type
+	} else {
+		// Default to Sequential scheduling strategy if not specified
+		labels[common.PrioritySchedulingStrategyLabelKey] = common.SchedulingStrategySequential
+	}
 
 	annotations := make(map[string]string)
 	if role.WorkloadObjectMeta.Annotations != nil {

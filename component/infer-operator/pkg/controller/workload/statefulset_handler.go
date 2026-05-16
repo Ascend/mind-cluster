@@ -101,8 +101,16 @@ func (s *StatefulSetHandler) createStatefulSet(
 		return err
 	}
 	// 2. add labels and annotations
-	statefulsetLabels := common.DeepCopyLabelsMap(instanceSet.Spec.WorkloadObjectMeta.Labels)
+	statefulsetLabels := common.DeepCopyLabelsMap(instanceSet.Labels)
+	for k, v := range instanceSet.Spec.WorkloadObjectMeta.Labels {
+		statefulsetLabels[k] = v
+	}
 	statefulsetLabels = common.AddLabelsFromIndexer(statefulsetLabels, indexer)
+	statefulsetAnnotations := common.DeepCopyLabelsMap(instanceSet.Annotations)
+	for k, v := range instanceSet.Spec.WorkloadObjectMeta.Annotations {
+		statefulsetAnnotations[k] = v
+	}
+
 	statefulsetSpec.Template.Labels = common.AddLabelsFromIndexer(statefulsetSpec.Template.Labels, indexer)
 	if statefulsetSpec.Template.Annotations == nil {
 		statefulsetSpec.Template.Annotations = map[string]string{}
@@ -118,7 +126,7 @@ func (s *StatefulSetHandler) createStatefulSet(
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        common.GetWorkLoadNameFromIndexer(indexer),
 			Namespace:   instanceSet.Namespace,
-			Annotations: instanceSet.Annotations,
+			Annotations: statefulsetAnnotations,
 			Labels:      statefulsetLabels,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(instanceSet, instanceSet.GroupVersionKind()),

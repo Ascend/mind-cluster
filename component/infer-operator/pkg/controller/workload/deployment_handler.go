@@ -116,8 +116,17 @@ func (d *DeploymentHandler) createDeployment(
 	}
 
 	// 2. add labels and annotations
-	deployLabels := common.DeepCopyLabelsMap(instanceSet.Spec.WorkloadObjectMeta.Labels)
+	deployLabels := common.DeepCopyLabelsMap(instanceSet.Labels)
+	for k, v := range instanceSet.Spec.WorkloadObjectMeta.Labels {
+		deployLabels[k] = v
+	}
 	deployLabels = common.AddLabelsFromIndexer(deployLabels, indexer)
+	deployAnnotations := common.DeepCopyLabelsMap(instanceSet.Annotations)
+	for k, v := range instanceSet.Spec.WorkloadObjectMeta.Annotations {
+		deployAnnotations[k] = v
+	}
+
+	deploymentSpec.Template.Labels = common.AddLabelsFromIndexer(deploymentSpec.Template.Labels, indexer)
 	if deploymentSpec.Template.Annotations == nil {
 		deploymentSpec.Template.Annotations = map[string]string{}
 	}
@@ -132,7 +141,7 @@ func (d *DeploymentHandler) createDeployment(
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        common.GetWorkLoadNameFromIndexer(indexer),
 			Namespace:   instanceSet.Namespace,
-			Annotations: instanceSet.Annotations,
+			Annotations: deployAnnotations,
 			Labels:      deployLabels,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(instanceSet, instanceSet.GroupVersionKind()),
