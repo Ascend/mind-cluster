@@ -62,6 +62,7 @@ func (hdm *HwDevManager) getProductInfo() *ProductBase {
 		superPodType:   uint8(hdm.manager.GetSuperPodType()),
 		nodeInternalIP: hdm.manager.GetNodeInternalIPInK8s(),
 		cardType:       common.ParamOption.CardType,
+		mainBoardId:    int(hdm.manager.GetDmgr().GetMainBoardId()),
 	}
 }
 
@@ -77,8 +78,8 @@ func (hdm *HwDevManager) getLevelList(dev *common.NpuDevice) []api.RankLevel {
 	}
 	npuBase.productInfo = hdm.getProductInfo()
 	if err := npuBase.SetUrmaDeviceInfoByHdm(hdm, dev); err != nil {
-		hwlog.RunLog.Errorf("set urma device info by hdm failed for cardID(%d) deviceID(%d) phyID(%d), err: %v",
-			dev.CardID, dev.DeviceID, dev.PhyID, err)
+		hwlog.RunLog.Errorf("set urma device info by hdm failed for LogicID(%d) phyID(%d), err: %v",
+			dev.LogicID, dev.PhyID, err)
 		// a5 standard card no mesh scene, there is no urma device and eid info, should generate rank table level_list
 	}
 
@@ -91,8 +92,8 @@ func (hdm *HwDevManager) getLevelList(dev *common.NpuDevice) []api.RankLevel {
 		}
 		rankAddrList := hdm.getRankAddrList(level, dev)
 		if len(rankAddrList) == 0 {
-			hwlog.RunLog.Warnf("rank addr list is empty for cardID(%d) deviceID(%d) phyID(%d) level(%d) netType(%s)",
-				dev.CardID, dev.DeviceID, dev.PhyID, level, infoKey)
+			hwlog.RunLog.Warnf("rank addr list is empty for LogicID(%d) phyID(%d) level(%d) netType(%s)",
+				dev.LogicID, dev.PhyID, level, infoKey)
 			continue
 		}
 		info := map[string]api.LevelElement{
@@ -112,9 +113,70 @@ func (hdm *HwDevManager) getLevelList(dev *common.NpuDevice) []api.RankLevel {
 
 // getRankAddrList for get the rank addr list in rant table for A5
 func (hdm *HwDevManager) getRankAddrList(level int, dev *common.NpuDevice) []api.RankAddrItem {
+	if dev == nil {
+		return nil
+	}
+	product := hdm.getProductInfo()
+	if product == nil {
+		return nil
+	}
+
+	// RoCE：same logic for both server and pod
 	if level == api.RankLevel3 {
 		return hdm.getROCEAddrList(dev)
 	}
+
+	// Standcard: keep the original logic
+	if product.isStandCard() {
+		return hdm.getRankAddrListOriginal(level, dev)
+	}
+
+	// Parse all URMA devices once (die/fe/port/PG/UBOE/IP)
+	urmaList := hdm.GetUrmaDeviceList(dev)
+	if len(urmaList) == 0 {
+		return nil
+	}
+	// Parse URMA（die/fe/port/PG/UBOE/IP）
+	parsed := ParseUrmaDevices(urmaList)
+	// Pod scene
+	if product.isPodScene() {
+		return npuBase.buildPodRankAddrListParsed(level, dev, parsed)
+	}
+	// Server scene
+	if product.isServer() {
+		return npuBase.buildServerRankAddrListParsed(level, parsed)
+	}
+	return nil
+}
+
+// GetUrmaDeviceList get urma device eid list from dcmi
+func (hdm *HwDevManager) GetUrmaDeviceList(dev *common.NpuDevice) []*UrmaDevice {
+	dmgr := hdm.manager.GetDmgr()
+	if dmgr == nil {
+		return nil
+	}
+
+	infoList, err := dmgr.GetUrmaDevEidListAll(dev.LogicID)
+	if err != nil {
+		return nil
+	}
+	result := make([]*UrmaDevice, 0)
+	for _, info := range infoList {
+		u := &UrmaDevice{
+			EidList: make([]string, 0),
+		}
+		for i := 0; i < int(info.EidCount); i++ {
+			raw := info.EidInfos[i].Eid.Raw[:]
+			eid := RawBytesToEidString(raw)
+			u.EidList = append(u.EidList, eid)
+		}
+		result = append(result, u)
+	}
+	return result
+}
+
+// getRankAddrListOriginal for get the rank addr list in rant table for A5 stand card
+func (hdm *HwDevManager) getRankAddrListOriginal(level int, dev *common.NpuDevice) []api.RankAddrItem {
 	netType, feIdList := npuBase.getNetTypeAndFeIDListByRankLevel(level)
 	rankAddrList := make([]api.RankAddrItem, 0)
 	for _, feId := range feIdList {
@@ -144,7 +206,7 @@ func (hdm *HwDevManager) getROCEAddrList(dev *common.NpuDevice) []api.RankAddrIt
 	return rankAddrList
 }
 
-// GetDevManager get device manger instance
+// GetDevManager get device manager instance
 func (hdm *HwDevManager) GetDevManager() device.DevManager {
 	return hdm.manager
 }

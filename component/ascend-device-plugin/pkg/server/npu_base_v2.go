@@ -65,6 +65,22 @@ const (
 	rightShiftLen  = 3
 )
 
+// level1 (superpod) Port groups
+var (
+	// ServerLevel1Ports defines the port list used for server Level‑1.
+	ServerLevel1Ports = []int{1, 2, 3, 4, 5, 6, 7, 8}
+	// PodLevel1LowerHalfPortsDie0 defines the port list for pod Level‑1 (lower half, Die 0).
+	PodLevel1LowerHalfPortsDie0 = []int{1, 2}
+	// PodLevel1LowerHalfPortsDie1 defines the port list for pod Level‑1 (lower half, Die 1).
+	PodLevel1LowerHalfPortsDie1 = []int{0, 1, 2, 3, 5, 6}
+	// PodLevel1UpperHalfPortsDie1 defines the port list for pod Level‑1 (upper half, Die 1).
+	PodLevel1UpperHalfPortsDie1 = []int{1, 2}
+	// PodLevel1UpperHalfPortsDie0 defines the port list for pod Level‑1 (upper half, Die 0).
+	PodLevel1UpperHalfPortsDie0 = []int{0, 1, 2, 3, 4, 5}
+	// PodLevel1HalfGroupBoundary defines the split point
+	PodLevel1HalfGroupBoundary = 4
+)
+
 var npuBase *NpuBase
 
 func init() {
@@ -86,6 +102,7 @@ type ProductBase struct {
 	nodeInternalIP string
 	topoFilePath   string
 	cardType       string
+	mainBoardId    int
 	topoInfo       *TopoInfo
 }
 
@@ -243,8 +260,8 @@ func (n *NpuBase) SetUrmaDeviceInfoByHdm(hdm *HwDevManager, dev *common.NpuDevic
 		return errors.New("input parameter dev is nil")
 	}
 	if _, exist := n.urmaDevInfoMap[dev.PhyID]; exist {
-		hwlog.RunLog.Infof("cardID(%d) deviceID(%d) phyID(%d) urma devie info already exist", dev.CardID,
-			dev.DeviceID, dev.PhyID)
+		hwlog.RunLog.Infof("LogicID(%d) phyID(%d) urma devie info already exist",
+			dev.LogicID, dev.PhyID)
 		return nil
 	}
 
@@ -519,6 +536,214 @@ func (n *NpuBase) getPortsList(phyId int32, eid string, rLevel int) ([]string, e
 		eidPortMapKey, ports, rLevel)
 	n.eidPortMap[eidPortMapKey] = ports
 	return ports, nil
+}
+
+type ServerLevel1Config struct {
+	Die   int
+	Fe    int
+	Ports []int
+}
+
+// getServerLevel1Config returns the Level1 configuration for a server scene based on configuration tables
+func (n *NpuBase) getServerLevel1Config() []ServerLevel1Config {
+	mainBoardId := n.productInfo.mainBoardId
+
+	if mainBoardId == api.Atlas850MainBoardID2 || mainBoardId == api.Atlas850MainBoardID3 {
+		return []ServerLevel1Config{
+			{Die: common.DieID0, Fe: common.UrmaFeId3, Ports: ServerLevel1Ports},
+		}
+	}
+	return nil
+}
+
+type PodLevel1Config struct {
+	Die   int
+	Fe    int
+	Ports []int
+}
+
+// getPodLevel1Config returns the Level1 configuration for a pod scene based on configuration tables
+func (n *NpuBase) getPodLevel1Config(phyID int) []PodLevel1Config {
+	mainBoardId := n.productInfo.mainBoardId
+
+	if (mainBoardId == api.Atlas9501DMainBoardID || mainBoardId == api.Atlas950MainBoardID) &&
+		(phyID%api.NpuCountPerNode) < PodLevel1HalfGroupBoundary {
+		return []PodLevel1Config{
+			{Die: common.DieID0, Fe: common.UrmaFeId2, Ports: PodLevel1LowerHalfPortsDie0},
+			{Die: common.DieID1, Fe: common.UrmaFeId2, Ports: PodLevel1LowerHalfPortsDie1},
+		}
+	}
+
+	if (mainBoardId == api.Atlas9501DMainBoardID || mainBoardId == api.Atlas950MainBoardID) &&
+		(phyID%api.NpuCountPerNode) >= PodLevel1HalfGroupBoundary {
+		return []PodLevel1Config{
+			{Die: common.DieID1, Fe: common.UrmaFeId2, Ports: PodLevel1UpperHalfPortsDie1},
+			{Die: common.DieID0, Fe: common.UrmaFeId2, Ports: PodLevel1UpperHalfPortsDie0},
+		}
+	}
+
+	return nil
+}
+
+// selectMeshDev selects the ParsedUrma with the highest FE value from parsed
+func selectMeshDev(parsed []*ParsedUrma, keep func(p *ParsedUrma) bool) *ParsedUrma {
+	var meshDev *ParsedUrma
+	maxFe := common.InvalidFeValue
+	for _, p := range parsed {
+		if p == nil || p.IsUboe {
+			continue
+		}
+		if !keep(p) {
+			continue
+		}
+		if p.Fe > maxFe {
+			maxFe = p.Fe
+			meshDev = p
+		}
+	}
+	return meshDev
+}
+
+// buildRankListFromMesh builds a rank list from the given meshDev.
+func buildRankListFromMesh(meshDev *ParsedUrma) []api.RankAddrItem {
+	rankList := make([]api.RankAddrItem, 0)
+	if meshDev == nil {
+		return rankList
+	}
+	for _, e := range meshDev.Eids {
+		if e.IsPg {
+			continue
+		}
+		if e.Die < common.DieID0 || e.Port < common.PortId0 {
+			continue
+		}
+		rankList = append(rankList, api.RankAddrItem{
+			AddrType: addrTypeEID,
+			Addr:     e.Eid,
+			Ports:    []string{fmt.Sprintf("%d/%d", e.Die, e.Port)},
+			PlaneId:  fmt.Sprintf("%d", e.Die),
+		})
+	}
+	return rankList
+}
+
+func buildLevel1ParsedWithGetter(parsed []*ParsedUrma, getPorts func(die, fe int) []int, skipUboe bool) []api.RankAddrItem {
+	rankList := make([]api.RankAddrItem, 0)
+	for _, p := range parsed {
+		if p == nil || p.PgEid == "" {
+			continue
+		}
+		if skipUboe && p.IsUboe {
+			continue
+		}
+		ports := getPorts(p.Die, p.Fe)
+		if len(ports) == 0 {
+			continue
+		}
+		portList := make([]string, 0, len(ports))
+		for _, port := range ports {
+			portList = append(portList, fmt.Sprintf("%d/%d", p.Die, port))
+		}
+		rankList = append(rankList, api.RankAddrItem{
+			AddrType: addrTypeEID,
+			Addr:     p.PgEid,
+			Ports:    portList,
+			PlaneId:  fmt.Sprintf("%d", p.Die),
+		})
+	}
+	return rankList
+}
+
+func (n *NpuBase) buildServerRankAddrListParsed(level int, parsed []*ParsedUrma) []api.RankAddrItem {
+	switch level {
+	case api.RankLevel0:
+		return n.buildServerLevel0Parsed(parsed)
+	case api.RankLevel1:
+		return n.buildServerLevel1Parsed(parsed)
+	case api.RankLevel2:
+		return n.buildServerLevel2Parsed(parsed)
+	default:
+		return nil
+	}
+}
+
+func (n *NpuBase) buildServerLevel0Parsed(parsed []*ParsedUrma) []api.RankAddrItem {
+	keep := func(p *ParsedUrma) bool {
+		return p.Die != common.DieID0
+	}
+	meshDev := selectMeshDev(parsed, keep)
+	return buildRankListFromMesh(meshDev)
+}
+
+func (n *NpuBase) buildServerLevel1Parsed(parsed []*ParsedUrma) []api.RankAddrItem {
+	cfgs := n.getServerLevel1Config()
+	getPorts := func(die, fe int) []int {
+		for _, c := range cfgs {
+			if c.Die == die && c.Fe == fe {
+				return c.Ports
+			}
+		}
+		return nil
+	}
+	return buildLevel1ParsedWithGetter(parsed, getPorts, true)
+}
+
+func (n *NpuBase) buildServerLevel2Parsed(parsed []*ParsedUrma) []api.RankAddrItem {
+	for _, p := range parsed {
+		if p == nil || !p.IsUboe || p.IPv4 == "" {
+			continue
+		}
+
+		return []api.RankAddrItem{
+			{
+				AddrType: addrTypeIPV4,
+				Addr:     p.IPv4,
+				Ports:    []string{common.A5ServerLevel2UboePort},
+				PlaneId:  api.DefaultRandAddrPlaneID,
+			},
+		}
+	}
+	return nil
+}
+
+func (n *NpuBase) buildPodRankAddrListParsed(level int, dev *common.NpuDevice, parsed []*ParsedUrma, ) []api.RankAddrItem {
+	switch level {
+	case api.RankLevel0:
+		return n.buildPodLevel0Parsed(dev, parsed)
+	case api.RankLevel1:
+		return n.buildPodLevel1Parsed(dev, parsed)
+	default:
+		return nil
+	}
+}
+
+func (n *NpuBase) buildPodLevel0Parsed(dev *common.NpuDevice, parsed []*ParsedUrma) []api.RankAddrItem {
+	keep := func(p *ParsedUrma) bool {
+		die := p.Die
+		phyMod := int(dev.PhyID) % api.NpuCountPerNode
+		if phyMod < PodLevel1HalfGroupBoundary && die == common.DieID1 {
+			return false
+		}
+		if phyMod >= PodLevel1HalfGroupBoundary && die == common.DieID0 {
+			return false
+		}
+		return true
+	}
+	meshDev := selectMeshDev(parsed, keep)
+	return buildRankListFromMesh(meshDev)
+}
+
+func (n *NpuBase) buildPodLevel1Parsed(dev *common.NpuDevice, parsed []*ParsedUrma) []api.RankAddrItem {
+	cfgs := n.getPodLevel1Config(int(dev.PhyID))
+	getPorts := func(die, fe int) []int {
+		for _, c := range cfgs {
+			if c.Die == die && c.Fe == fe {
+				return c.Ports
+			}
+		}
+		return nil
+	}
+	return buildLevel1ParsedWithGetter(parsed, getPorts, false)
 }
 
 func getDieIdByEid(eid string) (byte, error) {

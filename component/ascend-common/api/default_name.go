@@ -198,6 +198,8 @@ const (
 	Atlas850MainBoardID = 0x23
 	// Atlas850MainBoardID2 board id of Atlas850 Server MainBoard
 	Atlas850MainBoardID2 = 0x25
+	// Atlas850MainBoardID3 board id of Atlas850 Server MainBoard
+	Atlas850MainBoardID3 = 0x27
 )
 
 const (

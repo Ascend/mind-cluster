@@ -126,10 +126,14 @@ const (
 	ProductType1PCard = 5
 	// ProductTypeCard4p standard 4p
 	ProductType4PCard = 6
+	// InvalidFeValue represents an invalid FE value used for initialization.
+	InvalidFeValue = -1
 	// UrmaFeId0 for level 1
 	UrmaFeId0 = 0
 	// UrmaFeId1 for level 0
 	UrmaFeId1 = 1
+	// UrmaFeId2 for level 1
+	UrmaFeId2 = 2
 	// UrmaFeId3 for level 2 ubg
 	UrmaFeId3 = 3
 	// UrmaFeId8 for level 2 uboe
@@ -146,6 +150,8 @@ const (
 	InvalidSuperPodID = 0xffffffff
 	// InvalidSuperPodSize all f -> super pod / not super pod
 	InvalidSuperPodSize = 0xffffffff
+	// A5ServerLevel2UboePort defines the fixed uplink port used for Server Level‑2 UBoE topology.
+	A5ServerLevel2UboePort = "1/8"
 )
 
 const (
@@ -155,4 +161,10 @@ const (
 	DieIDOffset = 3
 	// PortIdLimit is the portId limit
 	PortIdLimit = 8
+	// PortId0 is the first portId
+	PortId0 = 0
+	// DieID0 die id 0
+	DieID0 = 0
+	//DieID1 die id 1
+	DieID1 = 1
 )
