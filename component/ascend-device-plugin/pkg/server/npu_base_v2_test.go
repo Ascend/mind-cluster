@@ -661,3 +661,117 @@ func TestGetPortsList(t *testing.T) {
 		})
 	})
 }
+
+func TestGetServerLevel1Config(t *testing.T) {
+	convey.Convey("test getServerLevel1Config", t, func() {
+		n := &NpuBase{
+			productInfo: &ProductBase{mainBoardId: api.Atlas850MainBoardID3},
+		}
+		cfg := n.getServerLevel1Config()
+		convey.So(cfg, convey.ShouldNotBeNil)
+		convey.So(cfg[0].Die, convey.ShouldEqual, common.DieID0)
+	})
+}
+
+func TestGetPodLevel1Config(t *testing.T) {
+	convey.Convey("test getPodLevel1Config", t, func() {
+		n := &NpuBase{
+			productInfo: &ProductBase{mainBoardId: api.Atlas950MainBoardID},
+		}
+		cfg := n.getPodLevel1Config(1) // lower half
+		convey.So(cfg, convey.ShouldNotBeNil)
+		convey.So(cfg[0].Die, convey.ShouldEqual, common.DieID0)
+	})
+}
+
+func TestBuildServerRankAddrListParsed(t *testing.T) {
+	convey.Convey("test buildServerRankAddrListParsed", t, func() {
+		n := &NpuBase{}
+		parsed := []*ParsedUrma{
+			{Die: 1, Fe: 3, Eids: []ParsedEid{{Eid: "abc", Die: 1, Port: 1}}},
+		}
+		res := n.buildServerRankAddrListParsed(api.RankLevel0, parsed)
+		convey.So(res, convey.ShouldNotBeNil)
+	})
+}
+
+func TestBuildServerLevel0Parsed(t *testing.T) {
+	convey.Convey("test buildServerLevel0Parsed", t, func() {
+		n := &NpuBase{}
+		parsed := []*ParsedUrma{
+			{
+				Die: 1, Fe: 3,
+				Eids: []ParsedEid{{Eid: "eid1", Die: 1, Port: 1}},
+			},
+		}
+		res := n.buildServerLevel0Parsed(parsed)
+		convey.So(len(res), convey.ShouldEqual, 1)
+	})
+}
+
+func TestBuildServerLevel1Parsed(t *testing.T) {
+	convey.Convey("test buildServerLevel1Parsed", t, func() {
+		n := &NpuBase{
+			productInfo: &ProductBase{mainBoardId: api.Atlas850MainBoardID2},
+		}
+		parsed := []*ParsedUrma{
+			{Die: 0, Fe: common.UrmaFeId3, PgEid: "pg"},
+		}
+		res := n.buildServerLevel1Parsed(parsed)
+		convey.So(len(res), convey.ShouldEqual, 1)
+	})
+}
+
+func TestBuildServerLevel2Parsed(t *testing.T) {
+	convey.Convey("test buildServerLevel2Parsed", t, func() {
+		n := &NpuBase{}
+		parsed := []*ParsedUrma{
+			{IsUboe: true, IPv4: "1.2.3.4"},
+		}
+		res := n.buildServerLevel2Parsed(parsed)
+		convey.So(len(res), convey.ShouldEqual, 1)
+	})
+}
+
+func TestBuildPodRankAddrListParsed(t *testing.T) {
+	convey.Convey("test buildPodRankAddrListParsed", t, func() {
+		n := &NpuBase{
+			productInfo: &ProductBase{mainBoardId: api.Atlas9501DMainBoardID},
+		}
+		dev := &common.NpuDevice{PhyID: 1}
+		parsed := []*ParsedUrma{
+			{Die: 0, Fe: common.UrmaFeId2, PgEid: "pg"},
+		}
+		res := n.buildPodRankAddrListParsed(api.RankLevel1, dev, parsed)
+		convey.So(res, convey.ShouldNotBeNil)
+	})
+}
+
+func TestBuildPodLevel0Parsed(t *testing.T) {
+	convey.Convey("test buildPodLevel0Parsed", t, func() {
+		n := &NpuBase{}
+		dev := &common.NpuDevice{PhyID: 1}
+		parsed := []*ParsedUrma{
+			{
+				Die: 0, Fe: 3,
+				Eids: []ParsedEid{{Eid: "eid1", Die: 0, Port: 1}},
+			},
+		}
+		res := n.buildPodLevel0Parsed(dev, parsed)
+		convey.So(len(res), convey.ShouldEqual, 1)
+	})
+}
+
+func TestBuildPodLevel1Parsed(t *testing.T) {
+	convey.Convey("test buildPodLevel1Parsed", t, func() {
+		n := &NpuBase{
+			productInfo: &ProductBase{mainBoardId: api.Atlas9501DMainBoardID},
+		}
+		dev := &common.NpuDevice{PhyID: 1}
+		parsed := []*ParsedUrma{
+			{Die: 0, Fe: common.UrmaFeId2, PgEid: "pg"},
+		}
+		res := n.buildPodLevel1Parsed(dev, parsed)
+		convey.So(len(res), convey.ShouldEqual, 1)
+	})
+}
