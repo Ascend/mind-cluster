@@ -211,7 +211,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="50.1950195019502%" headers="mcps1.2.4.1.3 "><p id="p1670155202912"><a name="p1670155202912"></a><a name="p1670155202912"></a>指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度。<span id="zh-cn_topic_0000002511347099_ph521204025916"><a name="zh-cn_topic_0000002511347099_ph521204025916"></a><a name="zh-cn_topic_0000002511347099_ph521204025916"></a>若用户未指定该字段，</span><span id="zh-cn_topic_0000002511347099_ph172121408590"><a name="zh-cn_topic_0000002511347099_ph172121408590"></a><a name="zh-cn_topic_0000002511347099_ph172121408590"></a>Volcano</span><span id="zh-cn_topic_0000002511347099_ph192121140135911"><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a>调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。</span></p>
 <p id="p19701652112917"><a name="p19701652112917"></a><a name="p19701652112917"></a>了解详细说明请参见<a href="../basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a>。</p>
-<div class="note" id="note47015215291"><a name="note47015215291"></a><a name="note47015215291"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><ul id="zh-cn_topic_0000002511347099_ul546892712569"><li>仅支持在Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点服务器、Atlas 800I A3 超节点服务器中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：<a href="../../faq.md#任务申请的总芯片数量为32sp-block设置为32可以正常训练sp-block设置为16无法完成训练训练容器报错提示初始化连接失败">任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败</a></li></ul>
+<div class="note" id="note47015215291"><a name="note47015215291"></a><a name="note47015215291"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><ul id="zh-cn_topic_0000002511347099_ul546892712569"><li>仅支持在Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点服务器、Atlas 800I A3 超节点服务器中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：<a href="https://gitcode.com/Ascend/mind-cluster/issues/377">任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败</a></li></ul>
 </div></div>
 </td>
 </tr>
@@ -259,7 +259,7 @@
 <td class="cellrowborder" valign="top" width="24.76247624762476%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002039339953_p159431102243"><a name="zh-cn_topic_0000002039339953_p159431102243"></a><a name="zh-cn_topic_0000002039339953_p159431102243"></a>取值为metadata.annotations['huawei.com/AscendXXX']，其中XXX表示芯片的型号，支持的取值为910，310和310P。取值需要和环境上实际的芯片类型保持一致。</p>
 </td>
 <td class="cellrowborder" valign="top" width="50.1950195019502%" headers="mcps1.2.4.1.3 ">
-    <p id="zh-cn_topic_0000002039339953_p136226142031"><a name="zh-cn_topic_0000002039339953_p136226142031"></a><a name="zh-cn_topic_0000002039339953_p136226142031"></a><span id="zh-cn_topic_0000002039339953_ph1062212140315"><a name="zh-cn_topic_0000002039339953_ph1062212140315"></a><a name="zh-cn_topic_0000002039339953_ph1062212140315"></a>Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>          
+    <p id="zh-cn_topic_0000002039339953_p136226142031"><a name="zh-cn_topic_0000002039339953_p136226142031"></a><a name="zh-cn_topic_0000002039339953_p136226142031"></a><span id="zh-cn_topic_0000002039339953_ph1062212140315"><a name="zh-cn_topic_0000002039339953_ph1062212140315"></a><a name="zh-cn_topic_0000002039339953_ph1062212140315"></a>Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>
     <div class="note" id="zh-cn_topic_0000002039339953_note462214141730"><a name="zh-cn_topic_0000002039339953_note462214141730"></a><a name="zh-cn_topic_0000002039339953_note462214141730"></a>
         <span class="notetitle">[!NOTE] 说明</span>
         <div class="notebody">
@@ -443,18 +443,18 @@
                     ring-controller.atlas: ascend-{xxx}b  # 标识产品类型
                 spec:
                   terminationGracePeriodSeconds: 360  #容器收到SIGTERM到被K8s强制停止经历的时间
-                  nodeSelector:                       
+                  nodeSelector:
                     host-arch: huawei-x86          # Atlas 200T A2 Box16 异构子框只有x86_64架构
                     accelerator-type: module-{xxx}b-16   # 节点类型
                   containers:
                   - name: ascend     # 不能修改
         ...
                     ports:                     # 可选，分布式训练集合通信端口
-                      - containerPort: 2222    
-                        name: ascendjob-port 
+                      - containerPort: 2222
+                        name: ascendjob-port
                     volumeMounts:
         ...
-          
+
             Worker:
               replicas: 2
               restartPolicy: Never  # 容器重启策略
@@ -466,7 +466,7 @@
                   terminationGracePeriodSeconds: 360   #容器收到SIGTERM到被K8s强制停止经历的时间
                   affinity:
         ...
-                  nodeSelector:           
+                  nodeSelector:
                     host-arch: huawei-x86      # Atlas 200T A2 Box16 异构子框只有x86_64架构
                     accelerator-type: module-{xxx}b-16   # 节点类型
                   containers:
@@ -476,12 +476,12 @@
                     - name: ASCEND_VISIBLE_DEVICES
                       valueFrom:
                         fieldRef:
-                          fieldPath: metadata.annotations['huawei.com/Ascend910']         # 需要和下面resources和requests保持一致     
+                          fieldPath: metadata.annotations['huawei.com/Ascend910']         # 需要和下面resources和requests保持一致
         ...
-        
+
                     ports:        # 可选，分布式训练集合通信端口
-                      - containerPort: 2222    
-                        name: ascendjob-port  
+                      - containerPort: 2222
+                        name: ascendjob-port
                     resources:
                       limits:
                         huawei.com/Ascend910: 4      # 需要的NPU芯片个数为4
@@ -506,7 +506,7 @@
         metadata:
           name: mindx-dls-test                  # 任务名，可自定义
           labels:
-            ring-controller.atlas: ascend-910   
+            ring-controller.atlas: ascend-910
             fault-scheduling: "grace"        # 开启优雅删除模式
             fault-retry-times: "3"            # 开启业务面故障无条件重试能力，同时需要将restartPolicy取值设置为Never；并将policies的event设置为PodFailed，action设置为Ignore
             tor-affinity: "normal-schema" #该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不使用该特性。large-model-schema表示大模型任务或填充任务，normal-schema表示普通任务
@@ -537,7 +537,7 @@
                       fieldRef:
                         fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources和requests保持一致
         ...
-                    resources:  
+                    resources:
                       requests:
                         huawei.com/Ascend910: 8          # 需要的NPU芯片个数为8。可在下方添加行，配置memory、cpu等资源
                       limits:
@@ -556,7 +556,7 @@
     ...
        Master:
     ...
-                env:        
+                env:
                   - name: POD_IP
                     valueFrom:
                       fieldRef:
@@ -570,12 +570,12 @@
        Master:
     ...
               <strong>env:</strong>
-                  <strong>- name: TTP_PORT</strong>                  
+                  <strong>- name: TTP_PORT</strong>
                     <strong>value: "8000"     # 用于临终遗言通信，请注意上下保持一致</strong>
     ...
-                ports:                         
-                    - containerPort: 2222        
-                      name: ascendjob-port       
+                ports:
+                    - containerPort: 2222
+                      name: ascendjob-port
                     <strong>- containerPort: 8000     # 用于临终遗言通信，请注意上下保持一致</strong>
                       <strong>name: ttp-port</strong>
                     <strong>- containerPort: 9601     # TaskD Pod间通信端口</strong>
@@ -584,81 +584,81 @@
        Worker:
     ...
               <strong>env:</strong>
-                  <strong>- name: TTP_PORT</strong>                  
+                  <strong>- name: TTP_PORT</strong>
                     <strong>value: "8000"            # 用于临终遗言通信，请注意上下保持一致</strong>
     ...
-                ports:                          
-                    - containerPort: 2222         
-                      name: ascendjob-port       
+                ports:
+                    - containerPort: 2222
+                      name: ascendjob-port
                     <strong>- containerPort: 8000     # 用于临终遗言通信，请注意上下保持一致</strong>
                       <strong>name: ttp-port</strong>
                     <strong>- containerPort: 9601     # TaskD Pod间通信端口</strong>
                       <strong>name: taskd-port</strong>
-    
+
     ...</pre>
 
 4. （可选）如果使用临终遗言和进程级恢复，需要在训练YAML中增加临终遗言通信的端口信息和进程级恢复开关等信息，以pytorch\_multinodes\_acjob\_<i>\{xxx\}</i>b.yaml为例，新增以下加粗内容。
 
     <pre codetype="yaml">
     ...
-      labels:    
-           framework: pytorch   
-           ring-controller.atlas: ascend-{xxx}b    
-           <strong>fault-scheduling: "grace"</strong>    
+      labels:
+           framework: pytorch
+           ring-controller.atlas: ascend-{xxx}b
+           <strong>fault-scheduling: "grace"</strong>
            <strong>fault-retry-times: "10"   // 开启无条件重试</strong>
            <strong>pod-rescheduling: "on"   // 开启Pod级重调度</strong>
            tor-affinity: "null" # 该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不适用。large-model-schema表示大模型任务或填充任务，normal-schema表示普通任务
     ...
-      annotations:  
-         ...  
+      annotations:
+         ...
          <strong>recover-strategy: "recover,dump"</strong>
-      replicaSpecs:    
-          Master:     
-            replicas: 1      
-            <strong>restartPolicy: Never</strong>      
-            template:        
+      replicaSpecs:
+          Master:
+            replicas: 1
+            <strong>restartPolicy: Never</strong>
+            template:
                 metadata:
     ...
                <strong>- name: TTP_PORT</strong>
                  <strong>value: "8000"  # 用于MindIO通信，请注意上下保持一致</strong>
-            command:                           # training command, which can be modified             
-              - /bin/bash              
-              - -c            
+            command:                           # training command, which can be modified
+              - /bin/bash
+              - -c
             args:
-              - | 
-                cd /job/code; 
-                chmod +x scripts/train_start.sh; 
+              - |
+                cd /job/code;
+                chmod +x scripts/train_start.sh;
                 bash scripts/train_start.sh
-             ports:                          # default value 
-               - containerPort: 2222 
-                 name: ascendjob-port              
+             ports:                          # default value
+               - containerPort: 2222
+                 name: ascendjob-port
                <strong>- containerPort: 8000    # 用于MindIO通信，请注意上下保持一致</strong>
                  <strong>name: ttp-port</strong>
                <strong>- containerPort: 9601    # TaskD Pod间通信端口</strong>
                  <strong>name: taskd-port</strong>
     ...
-    
+
     ...
-      replicaSpecs:    
-          Worker:     
-            replicas: 1      
-            <strong>restartPolicy: Never</strong>      
-            template:        
+      replicaSpecs:
+          Worker:
+            replicas: 1
+            <strong>restartPolicy: Never</strong>
+            template:
                 metadata:
     ...
                 <strong>- name: TTP_PORT</strong>
                 <strong>value: "8000"  # 用于MindIO通信，请注意上下保持一致</strong>
-            command:                           # training command, which can be modified             
-              - /bin/bash              
-              - -c            
+            command:                           # training command, which can be modified
+              - /bin/bash
+              - -c
             args:
-              - | 
-                cd /job/code; 
-                chmod +x scripts/train_start.sh; 
+              - |
+                cd /job/code;
+                chmod +x scripts/train_start.sh;
                 bash scripts/train_start.sh
-             ports:                          # default value 
-               - containerPort: 2222 
-                 name: ascendjob-port              
+             ports:                          # default value
+               - containerPort: 2222
+                 name: ascendjob-port
                <strong>- containerPort: 8000    # 用于MindIO通信，请注意上下保持一致</strong>
                  <strong>name: ttp-port</strong>
                <strong>- containerPort: 9601    # TaskD Pod间通信端口</strong>
@@ -684,11 +684,11 @@
 
     ```Yaml
     ...
-              resources:  
+              resources:
                 requests:
                   huawei.com/Ascend910: 8
-                  cpu: 100m               
-                  memory: 100Gi           
+                  cpu: 100m
+                  memory: 100Gi
                 limits:
                   huawei.com/Ascend910: 8
                   cpu: 100m
@@ -709,12 +709,12 @@
               - name: data
                 mountPath: /job/data                      # 容器中训练数据集路径
               - name: output
-                mountPath: /job/output                    # 容器中训练输出路径        
+                mountPath: /job/output                    # 容器中训练输出路径
     ```
 
 8. （可选）如下所示，YAML中训练命令**bash train\_start.sh**后跟的三个参数依次为容器内训练代码目录、输出目录（其中包括生成日志重定向文件以及框架模型文件）、启动脚本相对代码目录的路径（PyTorch命令参数不涉及启动脚本）。之后的以“--”开头的参数为训练脚本需要的参数。单机和分布式训练脚本、脚本参数可参考模型脚本来源处的模型说明修改。
 
-    >[!NOTE] 
+    >[!NOTE]
     >使用**优雅容错模式**可跳过该步骤。
     - **PyTorch命令参数**
 
@@ -731,7 +731,7 @@
 9. 选择存储方式。
     - （可选）NFS场景需要指定NFS服务器地址、训练数据集路径、脚本路径和训练输出路径，请根据实际修改。如果不使用NFS请根据K8s相关指导自行修改。
 
-        >[!NOTE] 
+        >[!NOTE]
         >请勿使用ConfigMap挂载RankTable文件，否则可能会导致任务重调度失败。
 
         ```Yaml
@@ -747,7 +747,7 @@
                     mountPath: /job/output                    # 容器中训练输出路径
         ...
                    # 可选，使用Ascend Operator组件为训练任务生成RankTable文件，需要新增以下字段，设置容器中hccl.json文件保存路径，该路径不可修改。
-                  - name: ranktable        
+                  - name: ranktable
                     mountPath: /user/serverid/devindex/config
         ...
                 volumes:
@@ -801,13 +801,13 @@
 如果希望任务发生亚健康故障时保存临终遗言，需修改任务YAML，配置亚健康策略为“graceExit”，故障恢复策略为“dump”，其余启动脚本、任务YAML配置可参见[配置临终CKPT保存](./05_configuring_training_recovery.md#配置临终ckpt保存)修改。此功能需确保TaskD和ClusterD可以正常使用。
 
 ```Yaml
-...  
-  labels:  
-     ... 
+...
+  labels:
+     ...
      subHealthyStrategy: "graceExit"  # 配置亚健康策略
 ...
-  annotations:  
-    ...  
+  annotations:
+    ...
     recover-strategy: "dump"  # 任务可用恢复策略为保存临终遗言
 ...
 ```

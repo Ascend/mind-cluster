@@ -116,8 +116,8 @@
     change owner and set file mode successfully
     ```
 
-    >[!NOTE] 
-    >- 已经导入了KubeConfig配置文件，但是组件还是出现连接K8s异常的场景，可以参见[集群调度组件连接K8s异常](../../../faq.md#集群调度组件连接k8s异常)章节进行处理。
+    >[!NOTE]
+    >- 已经导入了KubeConfig配置文件，但是组件还是出现连接K8s异常的场景，可以参见[集群调度组件连接K8s异常](https://gitcode.com/Ascend/mind-cluster/issues/344)章节进行处理。
     >- 导入证书时，导入工具cert-importer会自动创建“/var/log/mindx-dl/cert-importer”目录，目录权限750，属主为root:root。
 
 6. 执行以下命令，将备份的环境变量还原。
@@ -300,12 +300,12 @@
 
         启动示例如下：
 
-        ```ColdFusion 
+        ```ColdFusion
         serviceaccount/resilience-controller created
         clusterrole.rbac.authorization.k8s.io/pods-resilience-controller-role created
         clusterrolebinding.rbac.authorization.k8s.io/resilience-controller-rolebinding created
         deployment.apps/resilience-controller created
-       ```       
+       ```
 
     - 如果导入了KubeConfig证书，执行如下命令。
 
@@ -317,7 +317,7 @@
 
         ```ColdFusion
         deployment.apps/resilience-controller created
-        ``` 
+        ```
 
 5. 执行以下命令，查看组件是否安装成功。
 
@@ -336,10 +336,10 @@
 
 >[!NOTE]
 >
->- 安装组件后，组件的Pod状态不为Running，可参考[组件Pod状态不为Running](../../../faq.md#组件pod状态不为running)章节进行处理。
->- 安装组件后，组件的Pod状态为ContainerCreating，可参考[集群调度组件Pod处于ContainerCreating状态](../../../faq.md#集群调度组件pod处于containercreating状态)章节进行处理。
->- 启动组件失败，可参考[启动集群调度组件失败，日志打印“get sem errno =13”](../../../faq.md#启动集群调度组件失败日志打印get-sem-errno-13)章节信息。
->- 组件启动成功，找不到组件对应的Pod，可参考[组件启动YAML执行成功，找不到组件对应的Pod](../../../faq.md#组件启动yaml执行成功找不到组件对应的pod)章节信息。
+>- 安装组件后，组件的Pod状态不为Running，可参考[组件Pod状态不为Running](https://gitcode.com/Ascend/mind-cluster/issues/342)章节进行处理。
+>- 安装组件后，组件的Pod状态为ContainerCreating，可参考[集群调度组件Pod处于ContainerCreating状态](https://gitcode.com/Ascend/mind-cluster/issues/343)章节进行处理。
+>- 启动组件失败，可参考[启动集群调度组件失败，日志打印"get sem errno =13"](https://gitcode.com/Ascend/mind-cluster/issues/390)章节信息。
+>- 组件启动成功，找不到组件对应的Pod，可参考[组件启动YAML执行成功，找不到组件对应的Pod](https://gitcode.com/Ascend/mind-cluster/issues/345)章节信息。
 
 **参数说明<a name="section1868556161717"></a>**
 
