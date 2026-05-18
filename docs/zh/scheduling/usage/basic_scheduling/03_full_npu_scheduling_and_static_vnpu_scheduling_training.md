@@ -46,7 +46,7 @@
 
 通过命令行使用Volcano和其他调度器的使用流程一致。使用其他调度器准备任务YAML需要参考[通过命令行使用（其他调度器）](#通过命令行使用其他调度器)章节创建任务YAML。使用其他调度器的其余操作和使用Volcano一致，可以参考[通过命令行使用（Volcano）](#通过命令行使用volcano)进行操作。
 
-**图 1**  整卡调度和静态vNPU调度使用流程<a name="fig107864120214"></a>  
+**图 1**  整卡调度和静态vNPU调度使用流程<a name="fig107864120214"></a>
 ![](../../../figures/scheduling/整卡调度和静态vNPU调度使用流程.png "整卡调度和静态vNPU调度使用流程")
 
 1. 脚本适配时，用户可根据实际情况选择通过环境变量或文件配置资源信息。
@@ -60,7 +60,7 @@
 
 acjob任务原理图如[图1](#fig5188536014)所示。
 
-**图 1**  acjob任务调度原理图<a name="fig5188536014"></a>  
+**图 1**  acjob任务调度原理图<a name="fig5188536014"></a>
 ![](../../../figures/scheduling/acjob任务调度原理图.png "acjob任务调度原理图")
 
 各步骤说明如下：
@@ -89,7 +89,7 @@ acjob任务原理图如[图1](#fig5188536014)所示。
 
 vcjob任务的原理图如[图2](#fig8717151315416)所示。
 
-**图 2**  vcjob任务调度原理图<a name="fig8717151315416"></a>  
+**图 2**  vcjob任务调度原理图<a name="fig8717151315416"></a>
 ![](../../../figures/scheduling/vcjob任务调度原理图.png "vcjob任务调度原理图")
 
 各步骤说明如下：
@@ -118,7 +118,7 @@ vcjob任务的原理图如[图2](#fig8717151315416)所示。
 
 deploy任务原理图如[图3](#fig06571541566)所示。
 
-**图 3**  deploy任务调度原理图<a name="fig06571541566"></a>  
+**图 3**  deploy任务调度原理图<a name="fig06571541566"></a>
 ![](../../../figures/scheduling/deploy任务调度原理图.png "deploy任务调度原理图")
 
 各步骤说明如下：
@@ -169,10 +169,10 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 - [PyTorch](#zh-cn_topic_0000001558834814_section17760205783316)
 - [MindSpore](#zh-cn_topic_0000001558834814_section868111733711)
 
-    >[!NOTE] 
+    >[!NOTE]
     >- 本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。
     >- 下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
-    >- 以下MindSpore示例需使用CANN 8.5.0之前版本。   
+    >- 以下MindSpore示例需使用CANN 8.5.0之前版本。
 
 **PyTorch<a name="zh-cn_topic_0000001558834814_section17760205783316"></a>**
 
@@ -298,7 +298,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 - [PyTorch](#zh-cn_topic_0000001558834798_section17760205783316)
 - [MindSpore](#zh-cn_topic_0000001558834798_section868111733711)
 
->[!NOTE] 
+>[!NOTE]
 >
 >- 本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。
 >- 下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
@@ -939,7 +939,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </td>
 <td class="cellrowborder" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="p398216353271"><a name="p398216353271"></a><a name="p398216353271"></a>指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度。<span id="ph521204025916"><a name="ph521204025916"></a><a name="ph521204025916"></a>若用户未指定该字段，</span><span id="ph172121408590"><a name="ph172121408590"></a><a name="ph172121408590"></a>Volcano</span><span id="ph192121140135911"><a name="ph192121140135911"></a><a name="ph192121140135911"></a>调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。</span></p>
 <p id="p19975815131410"><a name="p19975815131410"></a><a name="p19975815131410"></a>了解详细说明请参见<a href="./01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a>。</p>
-<div class="note" id="note1998233513279"><a name="note1998233513279"></a><a name="note1998233513279"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="ul546892712569"></a><a name="ul546892712569"></a><ul id="ul546892712569"><li>仅支持在Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点服务器、Atlas 800I A3 超节点服务器中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：<a href="../../faq.md#任务申请的总芯片数量为32sp-block设置为32可以正常训练sp-block设置为16无法完成训练训练容器报错提示初始化连接失败">任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败</a></li></ul>
+<div class="note" id="note1998233513279"><a name="note1998233513279"></a><a name="note1998233513279"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="ul546892712569"></a><a name="ul546892712569"></a><ul id="ul546892712569"><li>仅支持在Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点服务器、Atlas 800I A3 超节点服务器中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：<a href="https://gitcode.com/Ascend/mind-cluster/issues/377">任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败</a></li></ul>
 </div></div>
 </td>
 </tr>
@@ -1173,7 +1173,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p175075613422"><a name="p175075613422"></a><a name="p175075613422"></a>指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度。<span id="zh-cn_topic_0000002511347099_ph521204025916"><a name="zh-cn_topic_0000002511347099_ph521204025916"></a><a name="zh-cn_topic_0000002511347099_ph521204025916"></a>若用户未指定该字段，</span><span id="zh-cn_topic_0000002511347099_ph172121408590"><a name="zh-cn_topic_0000002511347099_ph172121408590"></a><a name="zh-cn_topic_0000002511347099_ph172121408590"></a>Volcano</span><span id="zh-cn_topic_0000002511347099_ph192121140135911"><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a>调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。</span></p>
 <p id="p1250719624216"><a name="p1250719624216"></a><a name="p1250719624216"></a>了解详细说明请参见<a href="./01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a>。</p>
-<div class="note" id="note550714615429"><a name="note550714615429"></a><a name="note550714615429"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><ul id="zh-cn_topic_0000002511347099_ul546892712569"><li>仅支持在Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点服务器、Atlas 800I A3 超节点服务器中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：<a href="../../faq.md#任务申请的总芯片数量为32sp-block设置为32可以正常训练sp-block设置为16无法完成训练训练容器报错提示初始化连接失败">任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败</a></li></ul>
+<div class="note" id="note550714615429"><a name="note550714615429"></a><a name="note550714615429"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><ul id="zh-cn_topic_0000002511347099_ul546892712569"><li>仅支持在Atlas 900 A3 SuperPoD 超节点、Atlas 800T A3 超节点服务器、Atlas 800I A3 超节点服务器中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：<a href="https://gitcode.com/Ascend/mind-cluster/issues/377">任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败</a></li></ul>
 </div></div>
 </td>
 </tr>
@@ -1362,7 +1362,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 **通过环境变量配置资源信息场景<a name="section598118132817"></a>**
 
->[!NOTE] 
+>[!NOTE]
 >此场景下，用户需已创建[hccl.json](../../api/hccl.json_file_description.md)文件的具体挂载路径才能执行以下操作，详细操作步骤请参见[步骤4](../../installation_guide/03_installation/manual_installation/08_ascend_operator.md)。
 
 1. 将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
@@ -1444,7 +1444,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                         fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
         ...
                     ports:                          #分布式训练集合通信端口
-                      - containerPort: 2222         
+                      - containerPort: 2222
                         name: ascendjob-port
                     resources:
                       limits:
@@ -1456,7 +1456,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
         修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
 
-        >[!NOTE] 
+        >[!NOTE]
         >PyTorch、MindSpore框架中对应的Chief、Master、Scheduler的“replicas”字段不能超过1。单机任务时，PyTorch框架不需要Worker。单卡任务时，MindSpore框架不需要Scheduler。
 
     - <a name="li1731218243100"></a>使用**整卡调度**特性，参考本配置。pytorch\_multinodes\_acjob\_\{xxx\}b.yaml为例，在两台Atlas 800T A2 训练服务器节点创建**分布式训练**任务，执行2\*8芯片训练任务，修改示例如下，分布式任务的每个Pod只能调度到不同节点。
@@ -1544,7 +1544,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                         fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
         ...
                     ports:                          # 分布式训练集合通信端口
-                      - containerPort: 2222         
+                      - containerPort: 2222
                         name: ascendjob-port
                     resources:
                       limits:
@@ -1600,9 +1600,9 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                       - name: ASCEND_VISIBLE_DEVICES     # Ascend Docker Runtime会使用该字段
                         valueFrom:
                           fieldRef:
-                            fieldPath: metadata.annotations['huawei.com/Ascend910']               
+                            fieldPath: metadata.annotations['huawei.com/Ascend910']
         ...
-                    ports:                     # 分布式训练集合通信端口   
+                    ports:                     # 分布式训练集合通信端口
                       - containerPort: 2222         # determined by user
                         name: ascendjob-port        # do not modify
                     resources:
@@ -1651,13 +1651,13 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                   env:
         ...
                  # 静态vNPU调度暂不支持ASCEND_VISIBLE_DEVICES相关字段，需要删除以下加粗字段
-                  <strong>- name: ASCEND_VISIBLE_DEVICES</strong>                       
+                  <strong>- name: ASCEND_VISIBLE_DEVICES</strong>
                     <strong>valueFrom:</strong>
                       <strong>fieldRef:</strong>
-                        <strong>fieldPath: metadata.annotations['huawei.com/Ascend910']</strong>               
+                        <strong>fieldPath: metadata.annotations['huawei.com/Ascend910']</strong>
         ...
                     ports:                 # 分布式训练集合通信端口
-                      - containerPort: 2222         
+                      - containerPort: 2222
                         name: ascendjob-port
                     resources:
                       limits:
@@ -1714,14 +1714,14 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                     image: mindspore-test:latest  #镜像名称
                     imagePullPolicy: IfNotPresent
         ...
-                    env:                                    
+                    env:
                       - name: HCCL_IF_IP                    # 可选值，根据实际情况填写
                         valueFrom:                          # 若hostNetwork配置为true，需要同步配置HCCL_IF_IP环境变量
                           fieldRef:                         # 若hostNetwork未配置或配置为false，不可配置HCCL_IF_IP环境变量
-                            fieldPath: status.hostIP        # 
-        ...            
+                            fieldPath: status.hostIP        #
+        ...
                     ports:                          # 分布式训练集合通信端口
-                      - containerPort: 2222         
+                      - containerPort: 2222
                         name: ascendjob-port
                     resources:
                       limits:
@@ -1729,9 +1729,9 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                       requests:
                         huawei.com/Ascend910: 8 #与limits取值一致
                     volumeMounts:
-        ...            
+        ...
                   volumes:
-        ...            
+        ...
             Worker:
               replicas: 1   #任务副本数
               restartPolicy: Never
@@ -1757,11 +1757,11 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                   containers:
                   - name: ascend                            # 必须为ascend，不能修改
         ...
-                    env:                                    
+                    env:
                       - name: HCCL_IF_IP                    # 可选值，根据实际情况填写
                         valueFrom:                          # 若hostNetwork配置为true，需要同步配置HCCL_IF_IP环境变量
                           fieldRef:                         # 若hostNetwork未配置或配置为false，不可配置HCCL_IF_IP环境变量
-                            fieldPath: status.hostIP        # 
+                            fieldPath: status.hostIP        #
         ...
                   - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime会使用该字段
                     valueFrom:
@@ -1769,7 +1769,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                         fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
         ...
                     ports:                          # 分布式训练集合通信端口
-                      - containerPort: 2222         
+                      - containerPort: 2222
                         name: ascendjob-port
                     resources:
                       limits:
@@ -1782,18 +1782,18 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         ...
         ```
 
-    >[!NOTE] 
+    >[!NOTE]
     >整卡调度或静态vNPU调度特性配置YAML的操作只在步骤1中有区别，整卡调度和静态vNPU调度特性在步骤1之后的操作相同。
 
 2. <a name="li118885168281"></a>若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu”和“memory”参数和对应的参数值，具体数值请根据实际情况配置。
 
     ```Yaml
     ...
-              resources:  
+              resources:
                 requests:
                   huawei.com/Ascend910: 8
-                  cpu: 100m            
-                  memory: 100Gi      
+                  cpu: 100m
+                  memory: 100Gi
                 limits:
                   huawei.com/Ascend910: 8
                   cpu: 100m
@@ -1838,7 +1838,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         ...
         ```
 
-        >[!NOTE] 
+        >[!NOTE]
         >以PyTorch命令参数为例。
         >- /job/code/：[步骤3](#li0303)中用户自定义的容器中训练脚本路径。
         >- /job/output/：[步骤3](#li0303)中用户自定义的容器中训练输出路径。
@@ -1859,7 +1859,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                 mountPath: /job/output                    # 容器中训练输出路径
     ...
                # 可选，使用组件为训练任务生成RankTable文件，需要新增以下加粗字段，设置容器中hccl.json文件保存路径。该路径不可修改。
-              <strong>- name: ranktable</strong>                                 
+              <strong>- name: ranktable</strong>
                 <strong>mountPath: /user/serverid/devindex/config</strong>
     ...
             volumes:
@@ -1955,7 +1955,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                          fieldRef:
                            fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
         ...
-                    resources:  
+                    resources:
                       requests:
                         huawei.com/Ascend910: 8          # 需要的NPU芯片个数为8。
                       limits:
@@ -2014,8 +2014,8 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                     valueFrom:
                       fieldRef:
                         fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
-        
-                    resources:  
+
+                    resources:
                       requests:
                         huawei.com/Ascend910: 8          # 需要的NPU芯片个数为8。可在下方添加行，配置memory、cpu等资源
                       limits:
@@ -2036,7 +2036,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         kind: ConfigMap
         metadata:
           name: rings-config-mindx-dls-test     # rings-config-后的名字需要与任务名一致
-          namespace: vcjob                      
+          namespace: vcjob
           labels:
             ring-controller.atlas: ascend-{xxx}b   # 产品类型
         data:
@@ -2048,7 +2048,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         apiVersion: batch.volcano.sh/v1alpha1   # 不可修改，必须使用Volcano的API
         kind: Job                               # 目前只支持Job类型
         metadata:
-        ...                 
+        ...
           labels:
             ring-controller.atlas: ascend-{xxx}b   # 必须与ConfigMap中的标签保持一致，不可修改
             fault-scheduling: "force"
@@ -2107,7 +2107,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         ...
         ```
 
-        >[!NOTE] 
+        >[!NOTE]
         >其余示例可参考[表5](#table62591594016)和[表6](#table21811158146)，以及YAML对应的参数说明[表2 YAML参数说明](#zh-cn_topic_0000001609074269_table1565872494511)进行适配修改。修改完成后执行[步骤2](#li832632419711)，继续配置YAML的其他字段。
 
     - <a name="li1328115394814"></a>使用**静态vNPU调度**特性，参考本配置。以a800\_pytorch\_vcjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，申请2个AI Core的任务为例，修改示例如下。静态vNPU调度特性只支持**单机训练**任务。
@@ -2143,12 +2143,12 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                   env:
         ...
                  # 静态vNPU调度暂不支持ASCEND_VISIBLE_DEVICES相关字段，需要删除以下加粗字段
-                  <strong>- name: ASCEND_VISIBLE_DEVICES</strong>                                    
-                    <strong>valueFrom:</strong> 
-                      <strong>fieldRef:</strong> 
-                        <strong>fieldPath: metadata.annotations['huawei.com/Ascend910']</strong>              
+                  <strong>- name: ASCEND_VISIBLE_DEVICES</strong>
+                    <strong>valueFrom:</strong>
+                      <strong>fieldRef:</strong>
+                        <strong>fieldPath: metadata.annotations['huawei.com/Ascend910']</strong>
         ...
-                    resources:  
+                    resources:
                       requests:
                         huawei.com/Ascend910-2c: 1          # 如果使用静态vNPU调度，此处数量只能为1
                       limits:
@@ -2161,18 +2161,18 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
         修改完成后执行[步骤2](#li832632419711)，配置YAML的其他字段。
 
-    >[!NOTE] 
+    >[!NOTE]
     >整卡调度或静态vNPU调度特性配置YAML的操作只在步骤1中有区别，整卡调度和静态vNPU调度特性在步骤1之后的操作相同。
 
 2. <a name="li832632419711"></a>若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu”和“memory”参数和对应的参数值，具体数值请根据实际情况配置。
 
     ```Yaml
     ...
-              resources:  
+              resources:
                 requests:
                   huawei.com/Ascend910: 8
-                  cpu: 100m            
-                  memory: 100Gi      
+                  cpu: 100m
+                  memory: 100Gi
                 limits:
                   huawei.com/Ascend910: 8
                   cpu: 100m
@@ -2217,7 +2217,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         ...
         ```
 
-        >[!NOTE] 
+        >[!NOTE]
         >以PyTorch命令参数为例。
         >- /job/code/：[步骤3](#li112747151117)中用户自定义的容器中训练脚本路径。
         >- /job/output/：[步骤3](#li112747151117)中用户自定义的容器中训练输出路径。
@@ -2270,7 +2270,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     kubectl apply -f XXX.yaml
     ```
 
-    >[!NOTE] 
+    >[!NOTE]
     >如果下发任务成功后，又修改了任务YAML，需要先执行kubectl delete -f <i>XXX.yaml</i>命令删除原任务，再重新下发任务。
 
     - 通过环境变量配置资源信息场景的示例如下：
@@ -2300,8 +2300,8 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 >[!NOTE]
 >
->- 若下发训练任务后，任务一直处于Pending状态，可以参见[训练任务处于Pending状态，原因：nodes are unavailable](../../faq.md#训练任务处于pending状态原因nodes-are-unavailable)或者[资源不足时，任务处于Pending状态](../../faq.md#资源不足时任务处于pending状态)章节进行处理。
->- 若成功启动训练任务后，发现训练任务容器内部hccl.json文件处于initializing状态，可以参见[hccl.json文件没有生成](../../faq.md#hccljson文件没有生成)章节进行处理。
+>- 若下发训练任务后，任务一直处于Pending状态，可以参见[训练任务处于Pending状态，原因：nodes are unavailable](https://gitcode.com/Ascend/mind-cluster/issues/352)或者[资源不足时，任务处于Pending状态](https://gitcode.com/Ascend/mind-cluster/issues/355)章节进行处理。
+>- 若成功启动训练任务后，发现训练任务容器内部hccl.json文件处于initializing状态，可以参见[hccl.json文件没有生成](https://gitcode.com/Ascend/mind-cluster/issues/323)章节进行处理。
 
 ### 查看任务进程<a name="ZH-CN_TOPIC_0000002479387130"></a>
 
@@ -2358,7 +2358,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         Events:                 <none>
         ```
 
-        >[!NOTE] 
+        >[!NOTE]
         >**Allocated resources**的字段huawei.com/Ascend910的值为1，表明训练使用了一个NPU。
 
     - 使用**静态vNPU调度**特性，单机单芯片训练任务回显示例。
@@ -2379,7 +2379,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         Events:                 <none>
         ```
 
-        >[!NOTE] 
+        >[!NOTE]
         >**Allocated resources**的字段**huawei.com/Ascend910-2c**的值为1，表明训练使用了一个包含了2个AI Core的vNPU。
 
     - 两个训练节点，执行2\*8芯片分布式训练任务，查看其中一个节点示例。**静态vNPU调度**不支持分布式训练任务。
@@ -2401,7 +2401,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         Events:                 <none>
         ```
 
-        >[!NOTE] 
+        >[!NOTE]
         >**Allocated resources**的字段huawei.com/Ascend910的值为8，表明分布式训练使用了节点上所有的NPU。
 
 3. 查看Pod的NPU使用情况。
@@ -2603,8 +2603,8 @@ kubectl delete -f XXX.yaml
     job.batch.volcano.sh "mindx-dls-test" deleted
     ```
 
->[!NOTE] 
->若删除训练任务后，Pod一直处于Terminating状态，可以参见[手动删除vcjob后Pod一直处于Terminating状态](../../faq.md#手动删除vcjob后pod一直处于terminating状态)章节进行处理。
+>[!NOTE]
+>若删除训练任务后，Pod一直处于Terminating状态，可以参见[手动删除vcjob后Pod一直处于Terminating状态](https://gitcode.com/Ascend/mind-cluster/issues/354)章节进行处理。
 
 ## 通过命令行使用（其他调度器）<a name="ZH-CN_TOPIC_0000002511427069"></a>
 
@@ -2625,11 +2625,11 @@ kubectl delete -f XXX.yaml
       name: default-test-pytorch
       labels:
         framework: pytorch
-        ring-controller.atlas: ascend-{xxx}b   
+        ring-controller.atlas: ascend-{xxx}b
     spec:
       schedulerName: volcano        # 使用其他调度器时，删除该字段
       runPolicy:                    # 使用其他调度器时，删除该字段
-        schedulingPolicy:           
+        schedulingPolicy:
           minAvailable: 1
           queue: default
       successPolicy: AllWorkers
@@ -2640,25 +2640,25 @@ kubectl delete -f XXX.yaml
           template:
             metadata:
               labels:
-                ring-controller.atlas: ascend-{xxx}b   
+                ring-controller.atlas: ascend-{xxx}b
             spec:
               nodeSelector:
                 host-arch: huawei-arm
                 accelerator-type: module-{xxx}b-8
               containers:
-              - name: ascend                    
+              - name: ascend
     ...
                 env:
     ...
              # 使用其他调度器暂不支持ASCEND_VISIBLE_DEVICES相关字段，需要删除以下加粗字段
-              <strong>- name: ASCEND_VISIBLE_DEVICES</strong>                       
+              <strong>- name: ASCEND_VISIBLE_DEVICES</strong>
                 <strong>valueFrom:</strong>
                   <strong>fieldRef:</strong>
-                    <strong>fieldPath: metadata.annotations['huawei.com/Ascend910']</strong>               
+                    <strong>fieldPath: metadata.annotations['huawei.com/Ascend910']</strong>
     ...
-              resources: 
+              resources:
                 limits:
-                 huawei.com/Ascend910: 8 
+                 huawei.com/Ascend910: 8
                 requests:
                   huawei.com/Ascend910: 8
               volumeMounts:</pre>
@@ -2667,11 +2667,11 @@ kubectl delete -f XXX.yaml
 
     ```Yaml
     ...
-              resources:  
+              resources:
                 requests:
                   huawei.com/Ascend910: 8
-                  cpu: 100m            
-                  memory: 100Gi      
+                  cpu: 100m
+                  memory: 100Gi
                 limits:
                   huawei.com/Ascend910: 8
                   cpu: 100m
@@ -2716,7 +2716,7 @@ kubectl delete -f XXX.yaml
         ...
         ```
 
-    >[!NOTE] 
+    >[!NOTE]
     >以PyTorch命令参数为例。
     >- /job/code/：[步骤3](#li1127471511178)中用户自定义的容器中训练脚本路径。
     >- /job/output/：[步骤3](#li1127471511178)中用户自定义的容器中训练输出路径。
@@ -2788,7 +2788,7 @@ kubectl delete -f XXX.yaml
     Client, err := NewForConfig(cfg)
     ```
 
-    >[!NOTE] 
+    >[!NOTE]
     >NewForConfig\(cfg\)的函数原型为**NewForConfig\(c \*rest.Config\)\(\*Clientset, error\)。**
     >参数说明如下：
     >- **\*rest.Config**：客户端配置文件，由K8s提供的接口生成；包括cluster host、证书等信息。
@@ -2797,7 +2797,7 @@ kubectl delete -f XXX.yaml
 
 3. 创建Job对象。通过环境变量配置资源信息的用户需要创建Ascend Job对象；通过文件配置资源信息的用户需要创建Volcano Job对象。
 
-    >[!NOTE] 
+    >[!NOTE]
     >在进行本步骤操作之前，建议用户详细阅读[准备任务YAML](#准备任务yaml)章节，了解示例YAML实现逻辑和关键字段说明，可以更好地帮助用户进行接下来的操作。
 
     - 创建Ascend Job对象。
@@ -2814,7 +2814,7 @@ kubectl delete -f XXX.yaml
            metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
            "k8s.io/client-go/tools/clientcmd"
         )
-        
+
         func initAcJob() v1.AscendJob {
            job := newAcJob().
               initName("default-test-pytorch"). // 初始化任务名
@@ -2877,11 +2877,11 @@ kubectl delete -f XXX.yaml
                  initReplica())
            return v1.AscendJob(job)
         }
-        
+
         type acJob v1.AscendJob
         type Replica commonv1.ReplicaSpec
         type container corev1.Container
-        
+
         func (job acJob) initRunPolicy(n *int32) acJob {
            job.Spec.RunPolicy = commonv1.RunPolicy{SchedulingPolicy: &commonv1.SchedulingPolicy{MinAvailable: n, Queue: "default"}}
            return job
@@ -2909,15 +2909,15 @@ kubectl delete -f XXX.yaml
         1. 初始化Volcano Job挂载的ConfigMap。初始化ConfigMap相关字段，示例如下。
 
             ```go
-            import "k8s.io/api/core/v1"                                                 
+            import "k8s.io/api/core/v1"
             func newConfigMap(name string) *v1.ConfigMap {
-                   cm := &v1.ConfigMap{}                           
+                   cm := &v1.ConfigMap{}
                    cm.Name = name
                    cm.Labels = map[string]string{
                           "ring-controller.atlas": "ascend-{xxx}b",  // 标识任务使用的芯片的产品类型
                    }
                    cm.Data = map[string]string{
-                          "hccl.json": `{"status": "initializing"}`,  
+                          "hccl.json": `{"status": "initializing"}`,
                    }
                    return cm
             }
@@ -2934,7 +2934,7 @@ kubectl delete -f XXX.yaml
                "volcano.sh/apis/pkg/apis/batch/v1alpha1"
                "volcano.sh/apis/pkg/client/clientset/versioned"
             )
-            
+
             func initJob() v1alpha1.Job {
                job := newJobBuilder().
                   initNameSpace("vcjob").       // 初始化命名空间
@@ -2972,11 +2972,11 @@ kubectl delete -f XXX.yaml
                         initContainerCommand([]string{"/bin/bash", "-c", "bash train_start.sh ..."}))))) // 初始化容器启动命令，具体参数参考示例YAML
                return v1alpha1.Job(job)
             }
-            
+
             type vcJob v1alpha1.Job
             type vcTask v1alpha1.TaskSpec
             type container v1.Container
-            
+
             // 初始化任务名
             func (job *vcJob) initName(n string) *vcJob {
                job.Name = n

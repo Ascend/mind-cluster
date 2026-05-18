@@ -78,7 +78,7 @@
     </tr>
     </tbody>
     </table>
-    
+
 4. 进入组件解压目录，执行**docker build**命令制作镜像，命令参考如下[表2](#table998719467243)。
 
     **表 2**  各组件镜像制作命令
@@ -295,25 +295,25 @@
     </tbody>
     </table>
 
-    >[!NOTE] 
+    >[!NOTE]
     >若无下载权限，请根据页面提示申请权限。提交申请后等待管理员审核，审核通过后即可下载镜像。
 
 3. <a name="li14816124549"></a>昇腾镜像仓库中拉取的集群调度镜像与组件启动YAML中的名字不一致，需要重命名拉取的镜像后才能启动。根据以下步骤将[步骤2](#li1381232414410)中获取的镜像重新命名，同时建议删除原始名字的镜像。具体操作如下。
     1. 执行以下命令，重命名镜像（用户需根据所使用的组件，选取对应命令执行）。
 
-        ```shell       
+        ```shell
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:v26.0.0 ascend-operator:v26.0.0
-        
+
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:v26.0.0 npu-exporter:v26.0.0
-        
+
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.0.0 ascend-k8sdeviceplugin:v26.0.0
-        
+
         # 使用1.9.0版本的Volcano，需要将镜像tag修改为v1.9.0-v26.0.0
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:v1.7.0-v26.0.0 volcanosh/vc-controller-manager:v1.7.0
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:v1.7.0-v26.0.0 volcanosh/vc-scheduler:v1.7.0
-        
+
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:v26.0.0 noded:v26.0.0
-        
+
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:v26.0.0 clusterd:v26.0.0
         ```
 
@@ -552,7 +552,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
 >     - 基于Ubuntu操作系统开发的操作系统，参考[Ubuntu操作系统](#li1069651515405)。
 >     - 基于CentOS操作系统开发的操作系统，参考[CentOS操作系统](#li19202165424015)。
 >- HwHiAiUser是驱动或CANN软件包所需的软件运行用户。
->- 执行**getent passwd**命令，查看所有物理机（存储节点、管理节点、计算节点）和容器内，HwHiAiUser的UID和GID是否一致，且都为1000。如果被占用可能会导致服务不可用，可以参见[用户UID或GID被占用](../../../faq.md#用户uid或gid被占用)章节进行处理。
+>- 执行**getent passwd**命令，查看所有物理机（存储节点、管理节点、计算节点）和容器内，HwHiAiUser的UID和GID是否一致，且都为1000。如果被占用可能会导致服务不可用，可以参见[用户UID或GID被占用](https://gitcode.com/Ascend/mind-cluster/issues/337)章节进行处理。
 
 **表 1**  组件用户说明
 

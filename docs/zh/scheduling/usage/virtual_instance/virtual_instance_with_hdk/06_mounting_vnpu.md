@@ -30,7 +30,7 @@
     docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 image-name:tag /bin/bash
     ```
 
->[!NOTE] 
+>[!NOTE]
 >
 >- 使用动态虚拟化时，需要关闭vNPU的恢复使能功能，该功能的详细说明和操作指导请参考《Atlas 中心推理卡  25.5.0 npu-smi 命令参考》中的“昇腾虚拟化实例（AVI）相关命令\>[设置vNPU的配置恢复使能状态](https://support.huawei.com/enterprise/zh/doc/EDOC1100540373/fa2a6907)”章节。
 >- 可用的芯片ID可通过如下方式查询确认：
@@ -105,7 +105,7 @@
 </tbody>
 </table>
 
->[!NOTE]  
+>[!NOTE]
 >Ascend Device Plugin组件的安装请参见[Ascend Device Plugin](../../../installation_guide/03_installation/manual_installation/04_ascend_device_plugin.md)。
 >在静态虚拟化场景下，组件的可选性说明如下。
 >
@@ -405,7 +405,7 @@
             configurations:
              ...
               - name: init-params
-                arguments: {"grace-over-time":"900","presetVirtualDevice":"true"}  
+                arguments: {"grace-over-time":"900","presetVirtualDevice":"true"}
         ...
         ```
 
@@ -417,7 +417,7 @@
 
     ```Yaml
     ...
-              resources:  
+              resources:
                 requests:
                   huawei.com/Ascend910-Y: 1          # 请求的vNPU数量，最大值为1。
                 limits:
@@ -431,7 +431,7 @@
 
     ```Yaml
     ...
-              resources:  
+              resources:
                 requests:
                   huawei.com/Ascend310P-Y: 1          # 请求的vNPU数量，最大值为1。
                 limits:
@@ -471,7 +471,7 @@
 <tr id="row192561854613"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p02561481463"><a name="p02561481463"></a><a name="p02561481463"></a>任务请求的AI Core数量，为vNPU时，按实际填写；为整张物理NPU时，需要为单张卡的AI Core个数或其倍数且整卡时调度可能不满足亲和性。</p>
 </td>
 </tr>
-<tr id="row11782173617479"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18782936144718"><a name="p18782936144718"></a><a name="p18782936144718"></a>默认需要容器以root用户启动，若需要以普通用户运行推理任务，需要参考<a href="../../../faq.md#使用动态虚拟化时以普通用户运行推理业务失败">使用动态虚拟化时，以普通用户运行推理业务容器失败</a>章节进行操作。</p>
+<tr id="row11782173617479"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18782936144718"><a name="p18782936144718"></a><a name="p18782936144718"></a>默认需要容器以root用户启动，若需要以普通用户运行推理任务，需要参考<a href="https://gitcode.com/Ascend/mind-cluster/issues/359">使用动态虚拟化时，以普通用户运行推理业务容器失败</a>章节进行操作。</p>
 </td>
 </tr>
 <tr id="row117233216566"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18081933105617"><a name="p18081933105617"></a><a name="p18081933105617"></a>vNPU动态创建和销毁在<span id="ph20808153335610"><a name="ph20808153335610"></a><a name="ph20808153335610"></a>Atlas 推理系列产品、Atlas A2 训练/推理系列产品和Atlas A3 训练/推理系列产品</span>上有效，并且需要配套<span id="ph13808233145619"><a name="ph13808233145619"></a><a name="ph13808233145619"></a>Volcano</span>使用。</p>
@@ -655,7 +655,7 @@
               - name: priority
               - name: gang
               - name: conformance
-              - name: volcano-npu-v{version}_linux-aarch64   
+              - name: volcano-npu-v{version}_linux-aarch64
             - plugins:
               - name: drf
               - name: predicates
@@ -777,7 +777,7 @@ spec:
 </tbody>
 </table>
 
->[!NOTE] 
+>[!NOTE]
 >vnpu-level和vnpu-dvpp的选择结果，具体请参见[表5](#table83781115185619)。
 >
 >- 表中“降级”表示AI Core满足的情况下，其他资源不够（如AI CPU）时，模板会选择同AI Core下的其他满足资源要求的模板。如在只剩一颗芯片上只有2个AI Core，1个AI CPU时，vir02模板会降级为vir02\_1c。

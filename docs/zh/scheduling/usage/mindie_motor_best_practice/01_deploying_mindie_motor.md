@@ -26,7 +26,7 @@
 
 ## 通过命令行使用<a name="ZH-CN_TOPIC_0000002511426327"></a>
 
->[!NOTICE] 
+>[!NOTICE]
 >如果用户未配置RoCE网络：
 >
 >- 在非超节点调度场景下，单机推理实例可以正常调度，但是推理实例间的KV传输可能异常，导致推理任务无法正常运行。
@@ -44,7 +44,7 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
 
 通过命令行使用MindCluster集群调度组件部署MindIE Motor推理任务时，使用流程如下图所示。
 
-**图 1**  使用流程<a name="fig38991911205815"></a>  
+**图 1**  使用流程<a name="fig38991911205815"></a>
 ![](../../../figures/scheduling/使用流程-14.png "使用流程-14")
 
 ### 准备任务YAML<a name="ZH-CN_TOPIC_0000002479386386"></a>
@@ -67,14 +67,14 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
 |MS Coordinator|-|coordinator.yaml|[获取YAML](https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms)|
 |MindIE Server|<p>Atlas 800I A2 推理服务器</p><p>Atlas 800I A3 超节点服务器</p>|server.yaml|[获取YAML](https://gitcode.com/Ascend/mindxdl-deploy/tree/c20d2ea32f5ccca8b06b735d31cf36240ed1407f/samples/inference/volcano/mindie-ms)|
 
->[!NOTE] 
+>[!NOTE]
 >若使用的设备为Atlas 800I A3 超节点服务器，请在获取YAML后，参考[以下的示例](#li7390175311918)对部分参数进行修改。
 
 **任务YAML说明<a name="zh-cn_topic_0000002362848597_section1870105118125"></a>**
 
 与普通Ascend Job任务相比，MindIE Motor推理任务需要额外增加以下两个label：app和jobID。MindIE Server使用NPU卡，用户需根据Prefill实例和Decode实例数，下发等量的AscendJob。
 
->[!NOTE] 
+>[!NOTE]
 >关于等量acjob的说明如下：例如一个MindIE Motor推理任务包含1个controller、1个coordinator，x个P实例，y个D实例，则需要部署以下数量的acjob：1+1+x+y。
 
 - **MS Controller、MS Coordinator**不使用NPU卡，分别以一个AscendJob进行部署，支持多副本。MS Controller、MS Coordinator的YAML示例如下。
@@ -86,7 +86,7 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
       name: mindie-ms-test-controller
       namespace: mindie
       labels:
-        framework: pytorch          
+        framework: pytorch
         <strong>app: mindie-ms-controller   # 表示MindIE Motor在Ascend Job任务中的角色,不可修改</strong>
         <strong>jobID: mindie-ms-test       # 当前MindIE Motor任务在集群中的唯一识别ID，用户可根据实际情况进行配置</strong>
         ring-controller.atlas: ascend-910b
@@ -135,7 +135,7 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
       name: mindie-server-0
       namespace: mindie
       labels:
-        framework: pytorch        
+        framework: pytorch
         <strong>app: mindie-ms-server        # 表示当前MindIE Motor在Ascend Job任务中的角色,不可修改</strong>
         <strong>jobID: mindie-ms-test        # 当前MindIE Motor任务在集群中的唯一识别ID，用户可根据实际情况进行配置</strong>
         ring-controller.atlas: ascend-910b
@@ -198,7 +198,7 @@ Atlas 800I A3 超节点服务器场景下，MindCluster集群调度组件支持M
 
 关于逻辑超节点的亲和性调度规则的详细说明，请参见[灵衢总线设备节点网络说明](../basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点)章节。
 
-**图 1**  灵衢总线设备节点网络<a name="zh-cn_topic_0000002362872425_fig1054553210321"></a>  
+**图 1**  灵衢总线设备节点网络<a name="zh-cn_topic_0000002362872425_fig1054553210321"></a>
 ![](../../../figures/scheduling/灵衢总线设备节点网络.png "灵衢总线设备节点网络")
 
 **配置实例级亲和性调度<a name="zh-cn_topic_0000002362872425_section18872194156"></a>**
@@ -221,7 +221,7 @@ metadata:
   name: mindie-server-0
   namespace: mindie
   labels:
-    framework: pytorch        
+    framework: pytorch
     app: mindie-ms-server        # 表示MindIE Motor在Ascend Job任务中的角色,不可修改
     jobID: mindie-ms-test        # 当前MindIE Motor任务在集群中的唯一识别ID，用户可根据实际情况进行配置
     ring-controller.atlas: ascend-910b
@@ -408,7 +408,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p1670155202912"><a name="p1670155202912"></a><a name="p1670155202912"></a>指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度。<span id="zh-cn_topic_0000002511347099_ph521204025916"><a name="zh-cn_topic_0000002511347099_ph521204025916"></a><a name="zh-cn_topic_0000002511347099_ph521204025916"></a>若用户未指定该字段，</span><span id="zh-cn_topic_0000002511347099_ph172121408590"><a name="zh-cn_topic_0000002511347099_ph172121408590"></a><a name="zh-cn_topic_0000002511347099_ph172121408590"></a>Volcano</span><span id="zh-cn_topic_0000002511347099_ph192121140135911"><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a>调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。</span></p>
 <p id="p19701652112917"><a name="p19701652112917"></a><a name="p19701652112917"></a>了解详细说明请参见<a href="../basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a>。</p>
-<div class="note" id="note47015215291"><a name="note47015215291"></a><a name="note47015215291"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><ul id="zh-cn_topic_0000002511347099_ul546892712569"><li>仅支持在Atlas 800I A3 超节点服务器中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：<a href="../../faq.md#任务申请的总芯片数量为32sp-block设置为32可以正常训练sp-block设置为16无法完成训练训练容器报错提示初始化连接失败">任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败</a></li></ul>
+<div class="note" id="note47015215291"><a name="note47015215291"></a><a name="note47015215291"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><a name="zh-cn_topic_0000002511347099_ul546892712569"></a><ul id="zh-cn_topic_0000002511347099_ul546892712569"><li>仅支持在Atlas 800I A3 超节点服务器中使用该字段。</li><li>使用了该字段后，不需要额外配置tor-affinity字段。</li><li>FAQ：<a href="https://gitcode.com/Ascend/mind-cluster/issues/377">任务申请的总芯片数量为32，sp-block设置为32可以正常训练，sp-block设置为16无法完成训练，训练容器报错提示初始化连接失败</a></li></ul>
 </div></div>
 </td>
 </tr>
@@ -616,7 +616,7 @@ ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json
                                 "device_logical_id": "x",
                                 "rank_id": "x"
                             }
-                        ],                   
+                        ],
                         "server_id": "xx.xx.xx.xx",
                         "server_ip": "xx.xx.xx.xx"
                     }

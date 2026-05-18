@@ -1,4 +1,4 @@
-# MindCluster 故障诊断用户指南 
+# MindCluster 故障诊断用户指南
 
 - [简介](./introduction.md)
 - [支持的产品形态](./supported_products.md)

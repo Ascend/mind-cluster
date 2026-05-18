@@ -105,15 +105,15 @@
     | device-plugin-310P-1usoc-volcano-v<i>\{version\}</i>.yaml | Atlas 200I SoC A1 核心板上使用Volcano的配置文件。                                                               |
     | device-plugin-310P-v<i>\{version\}</i>.yaml               | 除了Atlas 200I SoC A1 核心板之外的Atlas 推理系列产品上不使用Volcano的配置文件。                                             |
     | device-plugin-310P-volcano-v<i>\{version\}</i>.yaml       | 除了Atlas 200I SoC A1 核心板之外的Atlas 推理系列产品上使用Volcano的配置文件。                                              |
-    | device-plugin-910-v<i>\{version\}</i>.yaml                | Atlas 训练系列产品、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 训练系列产品</term>或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件上不使用Volcano的配置文件。 | 
+    | device-plugin-910-v<i>\{version\}</i>.yaml                | Atlas 训练系列产品、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 训练系列产品</term>或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件上不使用Volcano的配置文件。 |
     | device-plugin-volcano-v<i>\{version\}</i>.yaml            | Atlas 训练系列产品、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 训练系列产品</term>或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件上使用Volcano的配置文件。  |
-    | device-plugin-npu-v<i>\{version\}</i>.yaml                | Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD上不使用Volcano的配置文件。                                  |    
-    | device-plugin-npu-volcano-v<i>\{version\}</i>.yaml        | Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD上使用Volcano的配置文件。                                   |    
+    | device-plugin-npu-v<i>\{version\}</i>.yaml                | Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD上不使用Volcano的配置文件。                                  |
+    | device-plugin-npu-volcano-v<i>\{version\}</i>.yaml        | Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD上使用Volcano的配置文件。                                   |
 
 3. 如不修改组件启动参数，可跳过本步骤。否则，根据实际情况修改Ascend Device Plugin的启动参数。启动参数请参见[表3](#table1064314568229)，可执行<b>./device-plugin -h</b>查看参数说明。
     - 在Atlas 200I SoC A1 核心板节点上，修改启动脚本“run\_for\_310P\_1usoc.sh”中Ascend Device Plugin的启动参数。修改完后需在所有Atlas 200I SoC A1 核心板节点上重新制作镜像，或者将本节点镜像重新制作后分发到其余所有Atlas 200I SoC A1 核心板节点。
 
-        >[!NOTE] 
+        >[!NOTE]
         >如果不使用Volcano作为调度器，在启动Ascend Device Plugin的时候，需要修改“run\_for\_310P\_1usoc.sh”中Ascend Device Plugin的启动参数，将“-volcanoType”参数设置为false。
 
     - 其他类型节点，修改对应启动YAML文件中Ascend Device Plugin的启动参数。
@@ -133,13 +133,13 @@
                 memory: 500Mi
                 cpu: 500m
             command: [ "/bin/bash", "-c", "--"]
-            args: [ "device-plugin  
-                     -useAscendDocker=true 
+            args: [ "device-plugin
+                     -useAscendDocker=true
                      <strong>-volcanoType=true                    # 重调度场景下必须使用Volcano
                      -autoStowing=true                    # 是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于Atlas 训练系列产品
                      -listWatchPeriod=5                   # 设置健康状态检查周期，范围[3,1800]，单位为秒
                      -hotReset=2 # 使用进程级恢复时，请将hotReset参数值设置为2，开启离线恢复模式</strong>
-                     -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log 
+                     -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log
                      -logLevel=0" ]
             securityContext:
               privileged: true
@@ -160,10 +160,10 @@
                 memory: 500Mi
                 cpu: 500m
             command: [ "/bin/bash", "-c", "--"]
-            args: [ "device-plugin  
+            args: [ "device-plugin
     ...
                      <strong>-hotReset=0 # 使用推理卡故障恢复时，开启热复位功能</strong>
-                     -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log 
+                     -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log
                      -logLevel=0" ]
     ...</pre>
 
@@ -180,7 +180,7 @@
              fieldRef:
                fieldPath: status.hostIP
          <strong>- name: KUBELET_PORT   # 通知Ascend Device Plugin组件当前节点kubelet默认端口号，若未自定义kubelet默认端口号则无需传入本字段
-           value: "10251"</strong>      
+           value: "10251"</strong>
     volumes:
        - name: device-plugin
          hostPath:
@@ -231,7 +231,7 @@
                 path: /run/containerd
         ```
 
-    >[!NOTE] 
+    >[!NOTE]
     >- 如果docker.sock文件路径不是/run/docker.sock，请在volumes中修改为实际路径，不支持使用符号链接。
     >- 如果docker目录不是/var/run/docker，请在volumes中修改为实际路径，不支持使用符号链接。
     >- 如果containerd目录不是/run/containerd，请在volumes中修改为实际路径，不支持使用符号链接。
@@ -315,10 +315,10 @@
 
 >[!NOTE]
 >
->- 安装组件后，组件的Pod状态不为Running，可参考[组件Pod状态不为Running](../../../faq.md#组件pod状态不为running)章节进行处理。
->- 安装组件后，组件的Pod状态为ContainerCreating，可参考[集群调度组件Pod处于ContainerCreating状态](../../../faq.md#集群调度组件pod处于containercreating状态)章节进行处理。
->- 启动组件失败，可参考[启动集群调度组件失败，日志打印“get sem errno =13”](../../../faq.md#启动集群调度组件失败日志打印get-sem-errno-13)章节信息。
->- 组件启动成功，找不到组件对应的Pod，可参考[组件启动YAML执行成功，找不到组件对应的Pod](../../../faq.md#组件启动yaml执行成功找不到组件对应的pod)章节信息。
+>- 安装组件后，组件的Pod状态不为Running，可参考[组件Pod状态不为Running](https://gitcode.com/Ascend/mind-cluster/issues/342)章节进行处理。
+>- 安装组件后，组件的Pod状态为ContainerCreating，可参考[集群调度组件Pod处于ContainerCreating状态](https://gitcode.com/Ascend/mind-cluster/issues/343)章节进行处理。
+>- 启动组件失败，可参考[启动集群调度组件失败，日志打印"get sem errno =13"](https://gitcode.com/Ascend/mind-cluster/issues/390)章节信息。
+>- 组件启动成功，找不到组件对应的Pod，可参考[组件启动YAML执行成功，找不到组件对应的Pod](https://gitcode.com/Ascend/mind-cluster/issues/345)章节信息。
 
 ## 参数说明<a name="section479917441223"></a>
 
