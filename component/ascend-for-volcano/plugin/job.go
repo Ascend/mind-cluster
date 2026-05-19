@@ -49,7 +49,7 @@ func (sJob *SchedulerJob) init(vcJob *api.JobInfo, sHandle *ScheduleHandler) err
 	}
 
 	if !sJob.isJobSupportByPlugin() {
-		return fmt.Errorf("%s's plugin not regist", sJob.Name)
+		return fmt.Errorf("%s's plugin not register", sJob.Name)
 	}
 
 	sJob.initSelfPluginByJobInfo(sHandle)
@@ -891,16 +891,15 @@ func GetJobInfoAllocatedTaskNum(jobInfo *api.JobInfo) int32 {
 }
 
 func validVirtualDevJob(job *api.JobInfo) *api.ValidateResult {
-	npuName, rNpuNum, err := GetVCJobReqNPUTypeFromJobInfo(job)
-	if err != nil {
-		return nil
-	}
-	if (ascend910VirtualDevNameReg.MatchString(npuName) || ascend310VirtualDevNameReg.MatchString(npuName)) &&
-		(rNpuNum > util.NPUIndex1) {
-		err := fmt.Errorf("job %s task num is <%v> request <%v> more than 1 virtual device"+
-			", keep job pending ", job.Name, len(job.Tasks), rNpuNum)
-		klog.V(util.LogDebugLev).Infof(err.Error())
-		return &api.ValidateResult{Pass: false, Reason: util.InvalidResourceRequestReason, Message: err.Error()}
+	for _, task := range job.Tasks {
+		npuName, rNpuNum := getVCTaskReqNPUTypeFromTaskInfo(task)
+		if (ascend910VirtualDevNameReg.MatchString(npuName) || ascend310VirtualDevNameReg.MatchString(npuName)) &&
+			(rNpuNum > util.NPUIndex1) {
+			err := fmt.Errorf("job %s task num is <%v>, request vnpu num <%v> more than 1 virtual device"+
+				", keep job pending ", job.Name, len(job.Tasks), rNpuNum)
+			klog.V(util.LogDebugLev).Infof(err.Error())
+			return &api.ValidateResult{Pass: false, Reason: util.InvalidResourceRequestReason, Message: err.Error()}
+		}
 	}
 	return nil
 }

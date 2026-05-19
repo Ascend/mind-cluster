@@ -55,7 +55,7 @@
                 ./Ascend-docker-runtime_{version}_linux-{arch}.run --uninstall --install-scene=containerd
                 ```
 
-            >[!NOTE] 
+            >[!NOTE]
             >- Docker配置文件路径不是默认的“/etc/docker/daemon.json”时，需要新增“--config-file-path”参数，用于指定该配置文件路径。
             >- Containerd的配置文件路径不是默认的“/etc/containerd/config.toml”时，需要新增“--config-file-path”参数，用于指定该配置文件路径。
             >- 如需要卸载指定安装路径下的Ascend Docker Runtime，需要在卸载命令中新增“--install-path=<path\>”参数。
@@ -115,15 +115,15 @@
         ```shell
         systemctl daemon-reload && systemctl restart containerd
         ```
-      
-        >[!NOTE] 
-        > 重启后节点上部分Pod可能会报错，报错信息示例如下：
-        >
-        > ```ColdFusion
-        >  Error: failed to create containerd task: failed to create shim task: OCI runtime create failed: unable to retrieve OCI runtime error (open /run/containerd/io.containerd.runtime. v2.task/k8s.io/device-plugin-01/log.json: no such file or directory): fork/exec /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime: no such file or directory
-        >  ```
-        >
-        > 解决方法：通过kubectl delete pod --force -n <i>{pod_namespace} {pod_name}</i>命令删除报错的Pod，等待Pod重新拉起即可解决。
+
+    >[!NOTE]
+    > 重启后节点上部分Pod可能会报错，报错信息示例如下：
+    >
+    > ```ColdFusion
+    >  Error: failed to create containerd task: failed to create shim task: OCI runtime create failed: unable to retrieve OCI runtime error (open /run/containerd/io.containerd.runtime. v2.task/k8s.io/device-plugin-01/log.json: no such file or directory): fork/exec /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime: no such file or directory
+    >  ```
+    >
+    > 解决方法：通过kubectl delete pod --force -n <i>{pod_namespace} {pod_name}</i>命令删除报错的Pod，等待Pod重新拉起即可解决。
 
 ## 卸载Container Manager组件<a name="section1461059103619"></a>
 
@@ -203,7 +203,7 @@
             deployment.apps "ascend-device-plugin-daemonset-910" deleted
             ```
 
-        >[!NOTE] 
+        >[!NOTE]
         >Ascend Device Plugin配合Volcano使用时，会创建ConfigMap，执行如下命令进行删除。
         >
         >```shell
