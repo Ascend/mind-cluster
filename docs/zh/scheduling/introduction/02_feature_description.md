@@ -13,7 +13,7 @@ Ascend Docker Runtime
 **使用说明<a name="section1245612501584"></a>**
 
 1. 安装组件请参见[安装部署](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[容器化支持](../usage/containerization/00_before_you_start.md)章节进行操作。
+2. 特性使用指导请参见[容器化支持特性指南](../usage/containerization/00_before_you_start.md)章节进行操作。
 
 ## 资源监测<a name="ZH-CN_TOPIC_0000002479386910"></a>
 

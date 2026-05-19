@@ -53,8 +53,19 @@
 ```shell
 ls /dev | grep davinci* && ls /dev | grep devmm_svm && ls /dev | grep hisi_hdc && ls /usr/local/Ascend/driver && ls /usr/local/ |grep dcmi && ls /usr/local/bin
 ```
+可能的输出结果如下：
 
->[!NOTE] 
+```shell
+davinci0
+davinci_manager
+devmm_svm
+hisi_hdc
+include lib64
+dcmi
+npu-smi
+```
+
+>[!NOTE]
 >用户在使用过程中，请勿重复定义和在容器镜像中固定ASCEND\_VISIBLE\_DEVICES、ASCEND\_RUNTIME\_OPTIONS、ASCEND\_RUNTIME\_MOUNTS和ASCEND\_VNPU\_SPECS等环境变量。
 
 **表 1** Ascend Docker Runtime运行参数解释
