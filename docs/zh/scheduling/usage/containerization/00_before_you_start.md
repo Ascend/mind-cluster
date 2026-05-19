@@ -4,7 +4,9 @@
 
 ## 前提条件<a name="section1632062465010"></a>
 
-在使用容器化支持特性前，需要确保Ascend Docker Runtime组件已经安装，若没有安装，可以参考[安装部署](../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
+在使用容器化支持特性前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
+
+- Ascend Docker Runtime
 
 ## 使用说明<a name="section44381612353"></a>
 
@@ -31,9 +33,7 @@
 
 ## 使用场景<a name="section124697813416"></a>
 
-Ascend Docker Runtime组件支持在以下4种场景下使用容器化支持功能。
+Ascend Docker Runtime组件支持在以下2种场景下使用容器化支持功能。
 
 - [在Docker客户端使用](./02_usage_on_the_docker_client.md)
-- [在K8s集成Docker使用](./03_usage_on_the_docker_integrated_with_kubernetes.md)
-- [在Containerd客户端使用](./04_usage_on_the_containerd_client.md)
-- [在K8s集成Containerd使用](./05_usage_on_the_containerd_integrated_with_kubernetes.md)
+- [在Containerd客户端使用](./03_usage_on_the_containerd_client.md)
