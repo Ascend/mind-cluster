@@ -2147,7 +2147,7 @@
                 "cause_en": "Data batch exception",
                 "description_en": "The dataset is abnormal. The data samples are not of the same shape.",
                 "suggestion_en": [
-                    "1. Check whether MindData has thown a data batch failure.",
+                    "1. Check whether MindData has thrown a data batch failure.",
                     "2. The user should remove the batch, then loop through the dataset to find and eliminate data with abnormal shapes."
                 ]
             },
@@ -6971,7 +6971,7 @@
                 "suggestion_en": [
                     "1. It is advised to exit the AI task and execute it again.",
                     "2. If the AI task fails to be re-executed, reset the SoC.",
-                    "3. If the fault persists, it is recommended that return the hardward to the factory for repair."
+                    "3. If the fault persists, it is recommended that return the hardware to the factory for repair."
                 ]
             },
             "source_file": "NPU_OS",
@@ -7001,7 +7001,7 @@
                 "suggestion_en": [
                     "1. It is advised to exit the AI task and execute it again.",
                     "2. If the AI task fails to be re-executed, reset the SoC.",
-                    "3. If the fault persists, it is recommended that return the hardward to the factory for repair."
+                    "3. If the fault persists, it is recommended that return the hardware to the factory for repair."
                 ]
             },
             "source_file": "NPU_OS",
@@ -12875,7 +12875,11 @@
             "regex": {
                 "in": [
                     ["bind fail", "family", "IP", "port", "sock", "ret", "error", "Possible Cause: the IP address and port have been bound already"],
-                    ["socket type", "listen on ip", "and specific port", "fail", "Please check the port status and whether the port is been using by other process"]
+                    ["socket type", "listen on ip", "and specific port", "fail", "Please check the port status and whether the port"],
+                    ["bind and listen fail", "err_no", "listen_fd", "listen state", "server_port"],
+                    ["ra listen start failed ret"],
+                    ["bind fail", "port", "sock", "ret", "error"],
+                    ["rs_connect_bind_client_failed", "ret"]
                 ]
             }
         },
