@@ -27,6 +27,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/consts"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
@@ -709,5 +710,218 @@ func TestMultilevelHandler_SetPluginName(t *testing.T) {
 	mh.SetPluginName(testPluginName)
 	if mh.GetPluginName() != testPluginName {
 		t.Errorf("SetPluginName() failed, got %s", mh.GetPluginName())
+	}
+}
+
+type checkNodeForHotSwitchCase struct {
+	name    string
+	mh      *MultilevelHandler
+	task    *api.TaskInfo
+	node    plugin.NPUNode
+	wantErr bool
+}
+
+func buildHotSwitchCheckHandler() *MultilevelHandler {
+	jobReady := true
+	mh := newTestHandler()
+	mh.ScheduleEnv.Jobs = map[api.JobID]plugin.SchedulerJob{
+		"job1": {
+			JobReadyTag: &jobReady,
+			SuperPods: map[string][]plugin.SuperNode{
+				"0": {{Name: "node0", TopoTreeName: "topoA"}, {Name: "node1", TopoTreeName: "topoA"}},
+			},
+		},
+	}
+	mh.FrameAttr.ResourceLevelsInfo = map[string][]util.ResourceTreeLevel{
+		"topoA": {
+			{Type: util.LevelTypeTree, Label: util.TopoTreeLabel},
+			{Type: util.LevelTypeMiddle, Label: "rack-id"},
+			{Type: util.LevelTypeNode},
+		},
+	}
+	mh.Nodes = map[string]plugin.NPUNode{
+		"node0": {CommonNode: plugin.CommonNode{
+			Name: "node0", Label: map[string]string{util.TopoTreeLabel: "topoA", "rack-id": "rack1"},
+		}},
+	}
+	return mh
+}
+
+func buildCheckNodeForHotSwitchCases() []checkNodeForHotSwitchCase {
+	mh := buildHotSwitchCheckHandler()
+	backupTask := &api.TaskInfo{
+		Name: "backup-pod", Job: "job1",
+		Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{consts.BackupSourcePodNameKey: "origin-pod"},
+		}},
+	}
+	normalTask := newTestTask("normal-pod")
+	normalTask.Job = "job1"
+	sameL1Node := plugin.NPUNode{
+		CommonNode: plugin.CommonNode{
+			Name: "node-same-l1", Label: map[string]string{util.TopoTreeLabel: "topoA", "rack-id": "rack1"},
+			Annotation: map[string]string{"a": "b"},
+		},
+	}
+	diffL1Node := plugin.NPUNode{
+		CommonNode: plugin.CommonNode{
+			Name: "node-diff-l1", Label: map[string]string{util.TopoTreeLabel: "topoA", "rack-id": "rack2"},
+			Annotation: map[string]string{"a": "b"},
+		},
+	}
+	diffTopoNode := plugin.NPUNode{
+		CommonNode: plugin.CommonNode{
+			Name: "node-diff", Label: map[string]string{util.TopoTreeLabel: "topoB"},
+			Annotation: map[string]string{"a": "b"},
+		},
+	}
+	noTopoNode := newTestNode("node-notopo")
+	mhNoJob := newTestHandler()
+	mhNoJob.ScheduleEnv.Jobs = map[api.JobID]plugin.SchedulerJob{}
+	mhNotReady := newTestHandler()
+	mhNotReady.ScheduleEnv.Jobs = map[api.JobID]plugin.SchedulerJob{
+		"job1": {SuperPods: map[string][]plugin.SuperNode{}},
+	}
+	return []checkNodeForHotSwitchCase{
+		{"normal_pod_skip", mh, normalTask, diffTopoNode, false},
+		{"backup_pod_same_l1", mh, backupTask, sameL1Node, false},
+		{"backup_pod_diff_l1_same_topo", mh, backupTask, diffL1Node, true},
+		{"backup_pod_diff_topo", mh, backupTask, diffTopoNode, true},
+		{"backup_pod_no_topo_label", mh, backupTask, noTopoNode, true},
+		{"backup_pod_job_not_exist", mhNoJob, backupTask, sameL1Node, true},
+		{"backup_pod_job_not_ready", mhNotReady, backupTask, sameL1Node, false},
+	}
+}
+
+func TestCheckNodeForHotSwitch(t *testing.T) {
+	cases := buildCheckNodeForHotSwitchCases()
+	for _, tc := range cases {
+		patch := gomonkey.ApplyFunc(getHcclRankIndex,
+			func(*api.TaskInfo, plugin.SchedulerJob) (int, error) { return 0, nil }).
+			ApplyFunc(getL1Ranks,
+				func(map[string][]plugin.SuperNode, int) (string, int, error) { return "0", 0, nil })
+		err := tc.mh.checkNodeForHotSwitch(tc.task, tc.node)
+		patch.Reset()
+		if (err != nil) != tc.wantErr {
+			t.Errorf("%s: got err=%v, wantErr=%v", tc.name, err, tc.wantErr)
+		}
+	}
+}
+
+func TestCheckNodeForHotSwitch_GetRankFailed(t *testing.T) {
+	jobReady := true
+	mh := newTestHandler()
+	mh.ScheduleEnv.Jobs = map[api.JobID]plugin.SchedulerJob{
+		"job1": {JobReadyTag: &jobReady, SuperPods: map[string][]plugin.SuperNode{"0": {{Name: "n0"}}}},
+	}
+	task := &api.TaskInfo{
+		Name: "backup-pod", Job: "job1",
+		Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{consts.BackupSourcePodNameKey: "origin-pod"},
+		}},
+	}
+	patch := gomonkey.ApplyFunc(getHcclRankIndex,
+		func(*api.TaskInfo, plugin.SchedulerJob) (int, error) { return 0, errors.New("mock") })
+	defer patch.Reset()
+	err := mh.checkNodeForHotSwitch(task, newTestNode("node0"))
+	if err == nil {
+		t.Error("checkNodeForHotSwitch() should return error when getHcclRankIndex failed")
+	}
+}
+
+func TestCheckNodeForHotSwitch_GetL1RanksFailed(t *testing.T) {
+	jobReady := true
+	mh := newTestHandler()
+	mh.ScheduleEnv.Jobs = map[api.JobID]plugin.SchedulerJob{
+		"job1": {JobReadyTag: &jobReady, SuperPods: map[string][]plugin.SuperNode{"0": {{Name: "n0"}}}},
+	}
+	task := &api.TaskInfo{
+		Name: "backup-pod", Job: "job1",
+		Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{consts.BackupSourcePodNameKey: "origin-pod"},
+		}},
+	}
+	patch := gomonkey.ApplyFunc(getHcclRankIndex,
+		func(*api.TaskInfo, plugin.SchedulerJob) (int, error) { return 0, nil }).
+		ApplyFunc(getL1Ranks,
+			func(map[string][]plugin.SuperNode, int) (string, int, error) { return "", 0, errors.New("mock") })
+	defer patch.Reset()
+	err := mh.checkNodeForHotSwitch(task, newTestNode("node0"))
+	if err == nil {
+		t.Error("checkNodeForHotSwitch() should return error when getL1Ranks failed")
+	}
+}
+
+func TestCheckNodeForHotSwitch_EmptyTopoTree(t *testing.T) {
+	jobReady := true
+	mh := newTestHandler()
+	mh.ScheduleEnv.Jobs = map[api.JobID]plugin.SchedulerJob{
+		"job1": {
+			JobReadyTag: &jobReady,
+			SuperPods:   map[string][]plugin.SuperNode{"0": {{Name: "n0", TopoTreeName: ""}}},
+		},
+	}
+	task := &api.TaskInfo{
+		Name: "backup-pod", Job: "job1",
+		Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{consts.BackupSourcePodNameKey: "origin-pod"},
+		}},
+	}
+	node := plugin.NPUNode{
+		CommonNode: plugin.CommonNode{
+			Name: "node-any", Label: map[string]string{util.TopoTreeLabel: "topoB"},
+			Annotation: map[string]string{"a": "b"},
+		},
+	}
+	patch := gomonkey.ApplyFunc(getHcclRankIndex,
+		func(*api.TaskInfo, plugin.SchedulerJob) (int, error) { return 0, nil }).
+		ApplyFunc(getL1Ranks,
+			func(map[string][]plugin.SuperNode, int) (string, int, error) { return "0", 0, nil })
+	defer patch.Reset()
+	err := mh.checkNodeForHotSwitch(task, node)
+	if err == nil {
+		t.Error("checkNodeForHotSwitch() should return error when cached TopoTreeName is empty")
+	}
+}
+
+func TestScoreNodeForHotSwitchBackupPod(t *testing.T) {
+	mh := newTestHandler()
+	sMap := map[string]float64{"nodeA": 1.0, "nodeB": 2.0}
+	mh.scoreNodeForHotSwitchBackupPod(sMap)
+	expectedBonus := float64(scoreForNode)
+	if sMap["nodeA"] != 1.0+expectedBonus || sMap["nodeB"] != 2.0+expectedBonus {
+		t.Errorf("scoreNodeForHotSwitchBackupPod() sMap=%v, want bonus=%f", sMap, expectedBonus)
+	}
+}
+
+func TestScoreNodeForReadyJob_BackupPod(t *testing.T) {
+	mh := newTestHandler()
+	sMap := map[string]float64{"nodeA": 0}
+	task := &api.TaskInfo{
+		Name: "backup-pod",
+		Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{consts.BackupSourcePodNameKey: "origin-pod"},
+		}},
+	}
+	mh.scoreNodeForReadyJob(task, plugin.SchedulerJob{}, sMap)
+	if sMap["nodeA"] <= 0 {
+		t.Errorf("scoreNodeForReadyJob() should score backup pod's node, got %f", sMap["nodeA"])
+	}
+}
+
+func TestScoreNodeBatchForReadyJob_BackupPod(t *testing.T) {
+	mh := newTestHandler()
+	jobReady := true
+	job := &plugin.SchedulerJob{JobReadyTag: &jobReady}
+	sMap := map[string]float64{"nodeA": 0}
+	task := &api.TaskInfo{
+		Name: "backup-pod",
+		Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{consts.BackupSourcePodNameKey: "origin-pod"},
+		}},
+	}
+	mh.scoreNodeBatchForReadyJob(task, job, sMap)
+	if sMap["nodeA"] <= 0 {
+		t.Errorf("scoreNodeBatchForReadyJob() should score backup pod's node, got %f", sMap["nodeA"])
 	}
 }

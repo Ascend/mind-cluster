@@ -154,11 +154,21 @@ func (fJob *FaultJob) updateFaultJobInfo(npuJob plugin.SchedulerJob, reScheduler
 		reScheduler.Jobs[fJob.JobUID] = npuJob
 	}
 	fJob.SuperPods = npuJob.SuperPods
-
 	if !fJob.IsFaultJob {
 		return
 	}
 	defer func() { reScheduler.Jobs[fJob.JobUID] = npuJob }()
+	replaceNodes := fJob.collectHotSwitchReplaceNodes(&npuJob)
+	if npuJob.SuperPods == nil {
+		return
+	}
+	applySuperPodReplacements(&npuJob, replaceNodes)
+}
+
+// collectHotSwitchReplaceNodes iterates FaultTasks to collect node replacement info for hot switch.
+// It records original node names from fault tasks and new node names from backup pods.
+// For non-hot-switch fault tasks, it clears npuJob.SuperPods to trigger full rebuild.
+func (fJob *FaultJob) collectHotSwitchReplaceNodes(npuJob *plugin.SchedulerJob) map[string][]string {
 	replaceNodes := make(map[string][]string, 1)
 	for _, fTask := range fJob.FaultTasks {
 		if fTask.IsFaultTask {
@@ -181,13 +191,27 @@ func (fJob *FaultJob) updateFaultJobInfo(npuJob plugin.SchedulerJob, reScheduler
 			if len(replaceNodes[sourcePod]) == 0 {
 				replaceNodes[sourcePod] = make([]string, replaceNodesLen)
 			}
-			replaceNodes[sourcePod][newNodeNameIndex] = fTask.NodeName
+			if fTask.NodeName != "" {
+				replaceNodes[sourcePod][newNodeNameIndex] = fTask.NodeName
+			} else {
+				klog.V(util.LogInfoLev).Infof("hotSwitch: backup pod %s is still pending, "+
+					"skip SuperPods node replacement for source pod %s", fTask.TaskName, sourcePod)
+			}
 		}
 	}
-	if npuJob.SuperPods == nil {
-		return
-	}
+	return replaceNodes
+}
+
+// applySuperPodReplacements replaces original node names with new backup pod node names
+// in the SuperPods cache. It skips entries where either origin or new node name is empty.
+func applySuperPodReplacements(npuJob *plugin.SchedulerJob, replaceNodes map[string][]string) {
 	for _, item := range replaceNodes {
+		if item[originNodeNameIndex] == "" || item[newNodeNameIndex] == "" {
+			klog.V(util.LogInfoLev).Infof("hotSwitch: skip SuperPods replacement, "+
+				"originNode=%s, newNode=%s, superPodRank=%s",
+				item[originNodeNameIndex], item[newNodeNameIndex], item[superPodRankIndex])
+			continue
+		}
 		for index, sn := range npuJob.SuperPods[item[superPodRankIndex]] {
 			if sn.Name == item[originNodeNameIndex] {
 				sn.Name = item[newNodeNameIndex]

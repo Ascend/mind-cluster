@@ -26,7 +26,6 @@ import (
 	"reflect"
 	"testing"
 	"time"
-	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"k8s.io/api/core/v1"
@@ -34,7 +33,10 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"volcano.sh/volcano/pkg/scheduler/api"
+	"volcano.sh/volcano/pkg/scheduler/framework"
+
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/consts"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
 )
@@ -1626,4 +1628,206 @@ func TestSetFaultTaskUseNodeLinkDownTime(t *testing.T) {
 			t.Errorf("setFaultTaskUseNodeLinkDownTime() data wrong.")
 		}
 	})
+}
+
+func TestUpdateFaultJobInfo_HotSwitchBackupPodScheduled(t *testing.T) {
+	npuJob := plugin.SchedulerJob{
+		SuperPods: map[string][]plugin.SuperNode{
+			"0": {{Name: "node0", TopoTreeName: "topoA"}, {Name: "node1", TopoTreeName: "topoA"}},
+		},
+	}
+	reScheduler := &ReScheduler{
+		DealReSchedulerCache: &DealReSchedulerCache{},
+		Jobs:                 map[api.JobID]plugin.SchedulerJob{},
+	}
+	fJob := &FaultJob{
+		IsFaultJob: true,
+		JobUID:     "vcjob/job1",
+		FaultTasks: []FaultTask{
+			{
+				IsFaultTask:       true,
+				TaskName:          "origin-pod",
+				NodeName:          "node0",
+				IsHotSwitchDelete: true,
+				Annotations: map[string]string{
+					consts.BackupNewPodNameKey: "backup-pod",
+					util.SuperPodRankKey:       "0",
+				},
+			},
+			{
+				IsFaultTask: false,
+				TaskName:    "backup-pod",
+				NodeName:    "node2",
+				Annotations: map[string]string{
+					consts.BackupSourcePodNameKey: "origin-pod",
+				},
+			},
+		},
+	}
+	patch := gomonkey.ApplyFunc(rebuildScheduledSuperPods,
+		func(plugin.SchedulerJob, plugin.ScheduleEnv) map[string][]plugin.SuperNode {
+			return npuJob.SuperPods
+		})
+	defer patch.Reset()
+	fJob.updateFaultJobInfo(npuJob, reScheduler, plugin.ScheduleEnv{})
+	updatedJob := reScheduler.Jobs["vcjob/job1"]
+	if updatedJob.SuperPods["0"][0].Name != "node2" {
+		t.Errorf("updateFaultJobInfo() should replace node0 with node2, got %s",
+			updatedJob.SuperPods["0"][0].Name)
+	}
+}
+
+func TestUpdateFaultJobInfo_HotSwitchBackupPodPending(t *testing.T) {
+	npuJob := plugin.SchedulerJob{
+		SuperPods: map[string][]plugin.SuperNode{
+			"0": {{Name: "node0", TopoTreeName: "topoA"}, {Name: "node1", TopoTreeName: "topoA"}},
+		},
+	}
+	reScheduler := &ReScheduler{
+		DealReSchedulerCache: &DealReSchedulerCache{},
+		Jobs:                 map[api.JobID]plugin.SchedulerJob{},
+	}
+	fJob := &FaultJob{
+		IsFaultJob: true,
+		JobUID:     "vcjob/job1",
+		FaultTasks: []FaultTask{
+			{
+				IsFaultTask:       true,
+				TaskName:          "origin-pod",
+				NodeName:          "node0",
+				IsHotSwitchDelete: true,
+				Annotations: map[string]string{
+					consts.BackupNewPodNameKey: "backup-pod",
+					util.SuperPodRankKey:       "0",
+				},
+			},
+			{
+				IsFaultTask: false,
+				TaskName:    "backup-pod",
+				NodeName:    "",
+				Annotations: map[string]string{
+					consts.BackupSourcePodNameKey: "origin-pod",
+				},
+			},
+		},
+	}
+	patch := gomonkey.ApplyFunc(rebuildScheduledSuperPods,
+		func(plugin.SchedulerJob, plugin.ScheduleEnv) map[string][]plugin.SuperNode {
+			return npuJob.SuperPods
+		})
+	defer patch.Reset()
+	fJob.updateFaultJobInfo(npuJob, reScheduler, plugin.ScheduleEnv{})
+	updatedJob := reScheduler.Jobs["vcjob/job1"]
+	if updatedJob.SuperPods["0"][0].Name != "node0" {
+		t.Errorf("updateFaultJobInfo() should keep node0 when backup pod is pending, got %s",
+			updatedJob.SuperPods["0"][0].Name)
+	}
+}
+
+func TestUpdateFaultJobInfo_HotSwitchNonFaultTaskSkip(t *testing.T) {
+	npuJob := plugin.SchedulerJob{
+		SuperPods: map[string][]plugin.SuperNode{
+			"0": {{Name: "node0", TopoTreeName: "topoA"}, {Name: "node1", TopoTreeName: "topoA"}},
+		},
+	}
+	reScheduler := &ReScheduler{
+		DealReSchedulerCache: &DealReSchedulerCache{},
+		Jobs:                 map[api.JobID]plugin.SchedulerJob{},
+	}
+	fJob := &FaultJob{
+		IsFaultJob: true,
+		JobUID:     "vcjob/job1",
+		FaultTasks: []FaultTask{
+			{
+				IsFaultTask:       true,
+				TaskName:          "fault-pod",
+				NodeName:          "node0",
+				IsHotSwitchDelete: false,
+				Annotations:       map[string]string{},
+			},
+		},
+	}
+	patch := gomonkey.ApplyFunc(rebuildScheduledSuperPods,
+		func(plugin.SchedulerJob, plugin.ScheduleEnv) map[string][]plugin.SuperNode {
+			return npuJob.SuperPods
+		})
+	defer patch.Reset()
+	fJob.updateFaultJobInfo(npuJob, reScheduler, plugin.ScheduleEnv{})
+	updatedJob := reScheduler.Jobs["vcjob/job1"]
+	if updatedJob.SuperPods != nil {
+		t.Errorf("updateFaultJobInfo() should nil SuperPods for non-hot-switch fault task, got %v",
+			updatedJob.SuperPods)
+	}
+}
+
+func TestUpdateFaultJobInfo_HotSwitchNoSuperPodRankKey(t *testing.T) {
+	npuJob := plugin.SchedulerJob{
+		SuperPods: map[string][]plugin.SuperNode{
+			"0": {{Name: "node0", TopoTreeName: "topoA"}, {Name: "node1", TopoTreeName: "topoA"}},
+		},
+	}
+	reScheduler := &ReScheduler{
+		DealReSchedulerCache: &DealReSchedulerCache{},
+		Jobs:                 map[api.JobID]plugin.SchedulerJob{},
+	}
+	fJob := &FaultJob{
+		IsFaultJob: true,
+		JobUID:     "vcjob/job1",
+		FaultTasks: []FaultTask{
+			{
+				IsFaultTask:       true,
+				TaskName:          "origin-pod",
+				NodeName:          "node0",
+				IsHotSwitchDelete: true,
+				Annotations: map[string]string{
+					consts.BackupNewPodNameKey: "backup-pod",
+				},
+			},
+			{
+				IsFaultTask: false,
+				TaskName:    "backup-pod",
+				NodeName:    "node2",
+				Annotations: map[string]string{
+					consts.BackupSourcePodNameKey: "origin-pod",
+				},
+			},
+		},
+	}
+	patch := gomonkey.ApplyFunc(rebuildScheduledSuperPods,
+		func(plugin.SchedulerJob, plugin.ScheduleEnv) map[string][]plugin.SuperNode {
+			return npuJob.SuperPods
+		})
+	defer patch.Reset()
+	fJob.updateFaultJobInfo(npuJob, reScheduler, plugin.ScheduleEnv{})
+	updatedJob := reScheduler.Jobs["vcjob/job1"]
+	if updatedJob.SuperPods["0"][0].Name != "node0" {
+		t.Errorf("updateFaultJobInfo() should not replace when superPodRankKey is missing, got %s",
+			updatedJob.SuperPods["0"][0].Name)
+	}
+}
+
+func TestUpdateFaultJobInfo_NotFaultJob(t *testing.T) {
+	npuJob := plugin.SchedulerJob{
+		SuperPods: map[string][]plugin.SuperNode{
+			"0": {{Name: "node0"}, {Name: "node1"}},
+		},
+	}
+	reScheduler := &ReScheduler{
+		DealReSchedulerCache: &DealReSchedulerCache{},
+		Jobs:                 map[api.JobID]plugin.SchedulerJob{},
+	}
+	fJob := &FaultJob{
+		IsFaultJob: false,
+		JobUID:     "vcjob/job1",
+		FaultTasks: []FaultTask{},
+	}
+	patch := gomonkey.ApplyFunc(rebuildScheduledSuperPods,
+		func(plugin.SchedulerJob, plugin.ScheduleEnv) map[string][]plugin.SuperNode {
+			return npuJob.SuperPods
+		})
+	defer patch.Reset()
+	fJob.updateFaultJobInfo(npuJob, reScheduler, plugin.ScheduleEnv{})
+	if fJob.SuperPods == nil {
+		t.Error("updateFaultJobInfo() should set fJob.SuperPods even for non-fault job")
+	}
 }
