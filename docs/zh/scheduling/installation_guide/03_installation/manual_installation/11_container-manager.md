@@ -146,7 +146,7 @@ Container Manager组件直接在物理机上通过二进制方式运行，提供
 </td>
 <td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p_deploy_install_sock_path_default"><a name="p_deploy_install_sock_path_default"></a><a name="p_deploy_install_sock_path_default"></a>/run/docker.sock</p>
 </td>
-<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_sock_path_desc"><a name="p_deploy_install_sock_path_desc"></a><a name="p_deploy_install_sock_path_desc"></a>容器运行时的sock文件路径，对应二进制启动参数<em>-sockPath</em>，详细说明参见<a href="#table8724104319141cm">表2</a>。</p>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p_deploy_install_sock_path_desc"><a name="p_deploy_install_sock_path_desc"></a><a name="p_deploy_install_sock_path_desc"></a>容器运行时的sock文件路径，对应二进制启动参数<em>-sockPath</em>，详细说明参见<a href="#table8724104319141cm">表2</a>。路径必须存在且不能为软链接。</p>
 </td>
 </tr>
 <tr id="row_deploy_install_ctr_strategy"><td class="cellrowborder" valign="top" width="16.291629162916294%" headers="mcps1.2.6.1.2 "><p id="p_deploy_install_ctr_strategy_param"><a name="p_deploy_install_ctr_strategy_param"></a><a name="p_deploy_install_ctr_strategy_param"></a>--ctrStrategy</p>

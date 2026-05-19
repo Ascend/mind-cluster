@@ -316,9 +316,12 @@ do_install() {
         log_info "Runtime is containerd, using default socket: ${sock_path}"
     fi
 
-    # Validate sock path is not a symlink
+    # Validate sock path
     if [ -e "${sock_path}" ]; then
         validate_path_not_symlink "${sock_path}" "sockPath"
+    else
+        log_error "sockPath does not exist: ${sock_path}"
+        exit 1
     fi
 
     # Validate fault config if specified
@@ -616,7 +619,7 @@ Options:
   --runtimeType=<type>      Container runtime type (default: ${DEFAULT_RUNTIME_TYPE})
                             Valid values: docker, containerd
   --sockPath=<path>         Container runtime socket path (default: ${DEFAULT_SOCK_PATH})
-                            Must not be a symlink
+                            Path must exist and must not be a symlink
   --ctrStrategy=<strategy>  Faulty container recovery strategy (default: ${DEFAULT_CTR_STRATEGY})
                             never          - not recover containers
                             singleRecover  - recover single faulty chip container
