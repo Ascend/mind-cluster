@@ -33,6 +33,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/consts"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/test"
 )
@@ -1370,5 +1371,133 @@ func TestGetNeedReschedulePods(t *testing.T) {
 				t.Errorf("getNeedReschedulePods() len = %v, want %v", len(got), tt.wantLen)
 			}
 		})
+	}
+}
+
+func TestReBuildMultiLevelSchedulingCache_HotSwitchOriginPodIncluded(t *testing.T) {
+	sJob := plugin.SchedulerJob{
+		SchedulerJobAttr: util.SchedulerJobAttr{
+			ComJob: util.ComJob{Annotation: map[string]string{util.AffinityConfig: "level1=2", util.SchedulePolicyAnnoKey: util.MultiLevel}},
+			NPUJob: &util.NPUJob{
+				NPUTaskNum: 4,
+				Tasks: map[api.TaskID]util.NPUTask{
+					"t0": {Name: "pod0", NodeName: "node0", Annotation: map[string]string{plugin.PodRankIndexKey: "0"}},
+					"t1": {Name: "pod1", NodeName: "node1", Annotation: map[string]string{plugin.PodRankIndexKey: "1"}},
+					"t2": {Name: "backup-pod", NodeName: "", Annotation: map[string]string{
+						plugin.PodRankIndexKey: "2", consts.BackupSourcePodNameKey: "pod2"}},
+					"t3": {Name: "pod2", NodeName: "node2", Annotation: map[string]string{plugin.PodRankIndexKey: "2"}},
+					"t4": {Name: "pod3", NodeName: "node3", Annotation: map[string]string{plugin.PodRankIndexKey: "3"}},
+				},
+			},
+		},
+	}
+	env := plugin.ScheduleEnv{
+		ClusterCache: plugin.ClusterCache{
+			Nodes: map[string]plugin.NPUNode{
+				"node0": {CommonNode: plugin.CommonNode{Name: "node0", Label: map[string]string{util.TopoTreeLabel: "topoA"}}},
+				"node1": {CommonNode: plugin.CommonNode{Name: "node1", Label: map[string]string{util.TopoTreeLabel: "topoA"}}},
+				"node2": {CommonNode: plugin.CommonNode{Name: "node2", Label: map[string]string{util.TopoTreeLabel: "topoA"}}},
+				"node3": {CommonNode: plugin.CommonNode{Name: "node3", Label: map[string]string{util.TopoTreeLabel: "topoA"}}},
+			},
+		},
+	}
+	superPods := reBuildMultiLevelSchedulingCache(sJob, env)
+	if len(superPods) == 0 {
+		t.Error("reBuildMultiLevelSchedulingCache() should return non-empty superPods")
+	}
+	if _, ok := superPods["0"]; !ok {
+		t.Error("reBuildMultiLevelSchedulingCache() should have L1 group 0")
+	}
+	if _, ok := superPods["1"]; !ok {
+		t.Error("reBuildMultiLevelSchedulingCache() should have L1 group 1")
+	}
+}
+
+func TestReBuildMultiLevelSchedulingCache_BackupPodPendingSkipped(t *testing.T) {
+	sJob := plugin.SchedulerJob{
+		SchedulerJobAttr: util.SchedulerJobAttr{
+			ComJob: util.ComJob{Annotation: map[string]string{util.AffinityConfig: "level1=2", util.SchedulePolicyAnnoKey: util.MultiLevel}},
+			NPUJob: &util.NPUJob{
+				NPUTaskNum: 2,
+				Tasks: map[api.TaskID]util.NPUTask{
+					"t0": {Name: "pod0", NodeName: "node0", Annotation: map[string]string{plugin.PodRankIndexKey: "0"}},
+					"t1": {Name: "backup-pod", NodeName: "", Annotation: map[string]string{
+						plugin.PodRankIndexKey: "1", consts.BackupSourcePodNameKey: "pod1"}},
+				},
+			},
+		},
+	}
+	env := plugin.ScheduleEnv{
+		ClusterCache: plugin.ClusterCache{
+			Nodes: map[string]plugin.NPUNode{
+				"node0": {CommonNode: plugin.CommonNode{Name: "node0", Label: map[string]string{util.TopoTreeLabel: "topoA"}}},
+			},
+		},
+	}
+	superPods := reBuildMultiLevelSchedulingCache(sJob, env)
+	if len(superPods) == 0 {
+		t.Error("reBuildMultiLevelSchedulingCache() should return non-empty superPods")
+	}
+	if _, ok := superPods["0"]; !ok {
+		t.Error("reBuildMultiLevelSchedulingCache() should have L1 group 0 from pod0")
+	}
+}
+
+func TestReBuildMultiLevelSchedulingCache_BackupPodScheduledIncluded(t *testing.T) {
+	sJob := plugin.SchedulerJob{
+		SchedulerJobAttr: util.SchedulerJobAttr{
+			ComJob: util.ComJob{Annotation: map[string]string{util.AffinityConfig: "level1=2", util.SchedulePolicyAnnoKey: util.MultiLevel}},
+			NPUJob: &util.NPUJob{
+				NPUTaskNum: 2,
+				Tasks: map[api.TaskID]util.NPUTask{
+					"t0": {Name: "pod0", NodeName: "node0", Annotation: map[string]string{plugin.PodRankIndexKey: "0"}},
+					"t1": {Name: "backup-pod", NodeName: "node2", Annotation: map[string]string{
+						plugin.PodRankIndexKey: "1", consts.BackupSourcePodNameKey: "pod1"}},
+				},
+			},
+		},
+	}
+	env := plugin.ScheduleEnv{
+		ClusterCache: plugin.ClusterCache{
+			Nodes: map[string]plugin.NPUNode{
+				"node0": {CommonNode: plugin.CommonNode{Name: "node0", Label: map[string]string{util.TopoTreeLabel: "topoA"}}},
+				"node2": {CommonNode: plugin.CommonNode{Name: "node2", Label: map[string]string{util.TopoTreeLabel: "topoA"}}},
+			},
+		},
+	}
+	superPods := reBuildMultiLevelSchedulingCache(sJob, env)
+	if len(superPods) == 0 {
+		t.Error("reBuildMultiLevelSchedulingCache() should return non-empty superPods")
+	}
+	if superPods["0"][1].Name != "node2" {
+		t.Errorf("reBuildMultiLevelSchedulingCache() should include backup pod's node, got %s",
+			superPods["0"][1].Name)
+	}
+}
+
+func TestReBuildMultiLevelSchedulingCache_NilAnnotationSkipped(t *testing.T) {
+	sJob := plugin.SchedulerJob{
+		SchedulerJobAttr: util.SchedulerJobAttr{
+			ComJob: util.ComJob{Annotation: map[string]string{util.AffinityConfig: "level1=2", util.SchedulePolicyAnnoKey: util.MultiLevel}},
+			NPUJob: &util.NPUJob{
+				NPUTaskNum: 2,
+				Tasks: map[api.TaskID]util.NPUTask{
+					"t0": {Name: "pod0", NodeName: "node0", Annotation: nil},
+					"t1": {Name: "pod1", NodeName: "node1", Annotation: map[string]string{plugin.PodRankIndexKey: "1"}},
+				},
+			},
+		},
+	}
+	env := plugin.ScheduleEnv{
+		ClusterCache: plugin.ClusterCache{
+			Nodes: map[string]plugin.NPUNode{
+				"node0": {CommonNode: plugin.CommonNode{Name: "node0", Label: map[string]string{util.TopoTreeLabel: "topoA"}}},
+				"node1": {CommonNode: plugin.CommonNode{Name: "node1", Label: map[string]string{util.TopoTreeLabel: "topoA"}}},
+			},
+		},
+	}
+	superPods := reBuildMultiLevelSchedulingCache(sJob, env)
+	if len(superPods) == 0 {
+		t.Error("reBuildMultiLevelSchedulingCache() should return non-empty superPods from pod1")
 	}
 }

@@ -28,6 +28,7 @@ import (
 
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/consts"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/npu/base"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/rescheduling"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
@@ -93,6 +94,11 @@ func (mh *MultilevelHandler) CheckNodeNPUByTask(task *api.TaskInfo, node plugin.
 		klog.V(util.LogErrorLev).Infof("CheckNodeNPUByTask err: %v", err)
 		return err
 	}
+
+	if err := mh.checkNodeForHotSwitch(task, node); err != nil {
+		return err
+	}
+
 	topo, exist := node.Label[util.TopoTreeLabel]
 	if !exist {
 		topo = util.DefaultTopoTree
@@ -349,6 +355,12 @@ func (mh *MultilevelHandler) scoreNodeBatchForReadyJob(task *api.TaskInfo, job *
 		klog.V(util.LogErrorLev).Infof("scoreNodeBatchForReadyJob %s", errors.New(util.ArgumentError))
 		return
 	}
+
+	if _, isBackup := task.Pod.Annotations[consts.BackupSourcePodNameKey]; isBackup {
+		mh.scoreNodeForHotSwitchBackupPod(sMap)
+		return
+	}
+
 	rankIdMap := mh.obtainBatchScoreRank(task, job)
 	if len(rankIdMap) == 0 {
 		klog.V(util.LogErrorLev).Infof("%s scoreNodeBatchForReadyJob %s: rankIdMap empty", mh.GetPluginName(), task.Name)
@@ -426,6 +438,12 @@ func (mh *MultilevelHandler) scoreNodeForReadyJob(task *api.TaskInfo, job plugin
 		klog.V(util.LogWarningLev).Infof("%s scoreNodeForReadyJob %s: sMap is nil.", mh.GetPluginName(), task.Name)
 		return
 	}
+
+	if _, isBackup := task.Pod.Annotations[consts.BackupSourcePodNameKey]; isBackup {
+		mh.scoreNodeForHotSwitchBackupPod(sMap)
+		return
+	}
+
 	rank, err := getHcclRankIndex(task, job)
 	if err != nil {
 		klog.V(util.LogErrorLev).Infof("getHcclRankIndex %s failed: %v", task.Name, err)
@@ -543,4 +561,142 @@ func ifPodLevelRescheduling(fJob *rescheduling.FaultJob, sJob *plugin.SchedulerJ
 	// for multilevel rescheduling, only single pod need to individually update fault node in L1 group
 	return sJob.SchedulingTaskNum != len(sJob.Tasks) && fJob.PendingSessionNum < sessionsForSinglePod &&
 		(fJob.IsJobSingleRescheduling(sJob) || fJob.IsProcessReschedulingJob(sJob))
+}
+
+type hotSwitchContext struct {
+	logicL1Rank  string
+	localRank    int
+	TopoTreeName string
+	LabelKey     string
+	LabelValue   string
+}
+
+// resolveHotSwitchSuperPods returns SuperPods for hot switch, falling back to SuperPodReschdInfo cache
+// when job.SuperPods is empty.
+func (mh *MultilevelHandler) resolveHotSwitchSuperPods(job plugin.SchedulerJob) map[string][]plugin.SuperNode {
+	if len(job.SuperPods) > 0 {
+		return job.SuperPods
+	}
+	if mh.SuperPodInfo == nil {
+		return nil
+	}
+	cached, ok := mh.SuperPodInfo.SuperPodReschdInfo[job.Name]
+	if !ok {
+		return nil
+	}
+	return cached
+}
+
+// buildHotSwitchContext resolves rank, L1 group, and L1 label context for the given task.
+// Used by checkNodeForHotSwitch for node validation during the predicate phase.
+func (mh *MultilevelHandler) buildHotSwitchContext(task *api.TaskInfo, job plugin.SchedulerJob,
+	superPods map[string][]plugin.SuperNode) (*hotSwitchContext, error) {
+	rank, err := getHcclRankIndex(task, job)
+	if err != nil {
+		return nil, err
+	}
+	logicL1Rank, localRank, err := getL1Ranks(superPods, rank)
+	if err != nil {
+		return nil, err
+	}
+	superNodes, ok := superPods[logicL1Rank]
+	if !ok {
+		return nil, fmt.Errorf("level1 group %s not found in SuperPods", logicL1Rank)
+	}
+	if localRank >= len(superNodes) {
+		return nil, fmt.Errorf("localRank %d out of range for level1 group %s", localRank, logicL1Rank)
+	}
+	var level1TopoTree string
+	for _, sn := range superNodes {
+		if sn.TopoTreeName != "" {
+			level1TopoTree = sn.TopoTreeName
+			break
+		}
+	}
+	cachedNode := superNodes[localRank]
+	level1LabelKey, level1LabelValue, err := mh.getL1LabelFromCache(cachedNode)
+	if err != nil {
+		return nil, err
+	}
+	return &hotSwitchContext{
+		logicL1Rank:  logicL1Rank,
+		localRank:    localRank,
+		TopoTreeName: level1TopoTree,
+		LabelKey:     level1LabelKey,
+		LabelValue:   level1LabelValue,
+	}, nil
+}
+
+// scoreNodeForHotSwitchBackupPod scores nodes for a backup pod in hot switch scenario.
+// All nodes in sMap have already passed TopoTree and L1 label validation in checkNodeForHotSwitch,
+// so this function simply adds a uniform score bonus to each candidate node.
+func (mh *MultilevelHandler) scoreNodeForHotSwitchBackupPod(sMap map[string]float64) {
+	if sMap == nil {
+		return
+	}
+	for nodeName := range sMap {
+		sMap[nodeName] += float64(scoreForNode)
+	}
+}
+
+// checkNodeForHotSwitch validates node constraint for backup pod during hot switch in multi-level scheduling.
+// For non-hot-switch pods, returns nil without any validation.
+func (mh *MultilevelHandler) checkNodeForHotSwitch(task *api.TaskInfo, node plugin.NPUNode) error {
+	if _, ok := task.Pod.Annotations[consts.BackupSourcePodNameKey]; !ok {
+		return nil
+	}
+	job, ok := mh.ScheduleEnv.Jobs[task.Job]
+	if !ok {
+		return fmt.Errorf("%s checkNodeForHotSwitch %s: job is not exist", mh.GetPluginName(), task.Name)
+	}
+	superPods := mh.resolveHotSwitchSuperPods(job)
+	if job.JobReadyTag == nil || !*job.JobReadyTag || len(superPods) == 0 {
+		klog.V(util.LogInfoLev).Infof("%s checkNodeForHotSwitch: job not ready or SuperPods empty, "+
+			"skip validation for pod %s", mh.GetPluginName(), task.Name)
+		return nil
+	}
+	ctx, err := mh.buildHotSwitchContext(task, job, superPods)
+	if err != nil {
+		return fmt.Errorf("%s checkNodeForHotSwitch %s: %v", mh.GetPluginName(), task.Name, err)
+	}
+	nodeTopoTree := node.Label[util.TopoTreeLabel]
+	if nodeTopoTree == "" {
+		nodeTopoTree = util.DefaultTopoTree
+	}
+	if ctx.TopoTreeName != nodeTopoTree {
+		return fmt.Errorf("%s checkNodeForHotSwitch: node %s topoTree %s mismatch L1 topoTree %s",
+			mh.GetPluginName(), node.Name, nodeTopoTree, ctx.TopoTreeName)
+	}
+	nodeL1Value, l1Exist := node.Label[ctx.LabelKey]
+	if !l1Exist || nodeL1Value != ctx.LabelValue {
+		return fmt.Errorf("%s checkNodeForHotSwitch: node %s L1 label %s=%s mismatch fault L1 %s=%s",
+			mh.GetPluginName(), node.Name, ctx.LabelKey, nodeL1Value, ctx.LabelKey, ctx.LabelValue)
+	}
+	klog.V(util.LogInfoLev).Infof("%s checkNodeForHotSwitch: backup pod %s passed validation, "+
+		"logicL1Rank=%s, node=%s", mh.GetPluginName(), task.Name, ctx.logicL1Rank, node.Name)
+	return nil
+}
+
+// getL1LabelFromCache returns the L1 label key and its value by looking up the fault node in the cluster cache.
+// The cachedNode.TopoTreeName is guaranteed non-empty (at least DefaultTopoTree) because it was set
+// during reBuildMultiLevelSchedulingCache from the node's actual label.
+func (mh *MultilevelHandler) getL1LabelFromCache(cachedNode plugin.SuperNode) (string, string, error) {
+	resourceLevels, ok := mh.FrameAttr.ResourceLevelsInfo[cachedNode.TopoTreeName]
+	if !ok {
+		return "", "", fmt.Errorf("topoTree %s not found in ResourceLevelsInfo", cachedNode.TopoTreeName)
+	}
+	l1Index := len(resourceLevels) - 2
+	if l1Index < 1 || resourceLevels[l1Index].Type != util.LevelTypeMiddle {
+		return "", "", fmt.Errorf("no valid L1 label config for topoTree %s", cachedNode.TopoTreeName)
+	}
+	l1LabelKey := resourceLevels[l1Index].Label
+	faultNode, ok := mh.Nodes[cachedNode.Name]
+	if !ok {
+		return "", "", fmt.Errorf("cached node %s not found in cluster nodes", cachedNode.Name)
+	}
+	l1LabelValue, ok := faultNode.Label[l1LabelKey]
+	if !ok {
+		return "", "", fmt.Errorf("label of L1:%s not found on node %s", l1LabelKey, cachedNode.Name)
+	}
+	return l1LabelKey, l1LabelValue, nil
 }
