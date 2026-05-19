@@ -1,5 +1,5 @@
 #!/bin/bash
-# Perform  build volcano-huawei-npu-scheduler plugin
+# Perform build volcano-huawei-npu-scheduler plugin
 # Copyright @ Huawei Technologies CO., Ltd. 2020-2022. All rights reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -68,7 +68,25 @@ function copy_agreement() {
     sed -i "s/Volcano Version .*/Volcano Version ${build_version}/" "${BASE_PATH}"/output/agreement.txt
 }
 
-# fix the unconditional retry. All pod errors cause the podgroup to be deleted and cannot be rescheduled
+function df_print_agreement() {
+    DOCKERFILES=("${BASE_PATH}"/output/Dockerfile*)
+    for dockerfile in "${DOCKERFILES[@]}"; do
+        if [ -f "$dockerfile" ]; then
+            # Insert COPY agreement.txt with a blank line after FROM
+            if ! grep -q "^COPY agreement.txt /usr/local/" "$dockerfile"; then
+                sed -i '/^COPY /a COPY agreement.txt /usr/local/' "$dockerfile"
+                echo "Inserted COPY agreement.txt after COPY in ${dockerfile}"
+            fi
+
+            # Add ENTRYPOINT at the end with leading newline
+            if ! grep -q 'ENTRYPOINT \["/bin/sh", "-c", "cat /usr/local/agreement.txt; exec /bin/sh"\]' "$dockerfile"; then
+                printf '\n%s\n' 'ENTRYPOINT ["/bin/sh", "-c", "cat /usr/local/agreement.txt; exec /bin/sh"]' >> "$dockerfile"
+                echo "Added ENTRYPOINT to ${dockerfile}"
+            fi
+        fi
+    done
+}
+
 function replace_code() {
     REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/controllers/job/state/running.go"
     SEARCH_STRING="Ignore"
@@ -108,7 +126,7 @@ function build() {
 
     if [ ! -f "${BASE_PATH}/output/${REL_NPU_PLUGIN}.so" ]
     then
-      echo "fail to find volcano-npu_${REL_VERSION}.so"
+      echo "Failed to find volcano-npu_${REL_VERSION}.so"
       exit 1
     fi
 
@@ -167,6 +185,7 @@ function main() {
   clean
   copy_yaml
   copy_agreement
+  df_print_agreement
   replace_code
   replace_node_predicate
   replace_node_score
