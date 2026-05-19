@@ -37,11 +37,13 @@ repos:
     rev: v2.4.1
     hooks:
       - id: codespell
+        exclude: |
+          component/ascend-faultdiag/src/ascend_fd/configuration/kg-config.json
         args: [
           "-L",
           "CANN,cann,NNAL,nnal,ASCEND,ascend,EnQue,CopyIn,ArchType,AND,ND,tbe,copyin,alog,ist,NotIn",
           "--skip",
-          "*.toml,*.py,*.cpp,*.hpp,*.c,*.h,kg-config.json",
+          "*.toml,*.py,*.cpp,*.hpp,*.c,*.h",
         ]
 
   # pylint：指定 pre-commit/pyproject.toml
