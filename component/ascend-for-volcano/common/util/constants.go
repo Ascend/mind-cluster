@@ -224,4 +224,8 @@ const (
 	SkipAscendPluginAnno = "huawei.com/skip-ascend-plugin"
 	// SkipEnabled is the value of SkipAscendPluginAnno, skip the ascend plugin
 	SkipEnabled = "enabled"
+	// PodTypeKey pod type annotation key used to identify backup pods in hot-switch
+	PodTypeKey = "podType"
+	// PodTypeBackup pod type value for backup pods in hot-switch
+	PodTypeBackup = "backup"
 )

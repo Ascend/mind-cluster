@@ -190,6 +190,21 @@ func (nJob *NPUJob) GetSchedulingTaskNum() int {
 	return schedulingTaskNum
 }
 
+// CountBackupTasks returns the number of backup pods in hot-switch scenarios.
+// Backup pods are identified by the podType=backup annotation on the task.
+func (nJob *NPUJob) CountBackupTasks() int {
+	if nJob == nil {
+		return 0
+	}
+	count := 0
+	for _, task := range nJob.Tasks {
+		if task.Annotation[PodTypeKey] == PodTypeBackup {
+			count++
+		}
+	}
+	return count
+}
+
 // ReferenceNameOfJob get name of job
 func ReferenceNameOfJob(job *api.JobInfo) string {
 	if job != nil && job.PodGroup != nil && len(job.PodGroup.OwnerReferences) > 0 {

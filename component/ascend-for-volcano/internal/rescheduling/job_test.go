@@ -824,63 +824,54 @@ func TestIsFailedTask(t *testing.T) {
 	})
 }
 
+type setFaultRetryTimeOfJobCase struct {
+	name           string
+	fJob           *FaultJob
+	wantRetryTimes int
+}
+
+func buildSetFaultRetryTimeOfJobCases() []setFaultRetryTimeOfJobCase {
+	return []setFaultRetryTimeOfJobCase{
+		{
+			name: "01-setFaultRetryTimeOfJob with no fault-retry-times label",
+			fJob: &FaultJob{JobUID: "test-job-1", Labels: map[string]string{}},
+			wantRetryTimes: 0,
+		},
+		{
+			name: "02-setFaultRetryTimeOfJob with invalid fault-retry-times label",
+			fJob: &FaultJob{JobUID: "test-job-2", Labels: map[string]string{
+				FaultRetryTimesKey: "invalid-value",
+			}},
+			wantRetryTimes: 0,
+		},
+		{
+			name: "03-setFaultRetryTimeOfJob with valid fault-retry-times label",
+			fJob: &FaultJob{JobUID: "test-job-3", Labels: map[string]string{
+				FaultRetryTimesKey: "3",
+			}},
+			wantRetryTimes: 3,
+		},
+		{
+			name: "04-setFaultRetryTimeOfJob with zero fault-retry-times label",
+			fJob: &FaultJob{JobUID: "test-job-4", Labels: map[string]string{
+				FaultRetryTimesKey: "0",
+			}},
+			wantRetryTimes: 0,
+		},
+	}
+}
+
 // TestSetFaultRetryTimeOfJob tests the setFaultRetryTimeOfJob function
 func TestSetFaultRetryTimeOfJob(t *testing.T) {
-	// Test case 1: Job without fault-retry-times label
-	t.Run("01-setFaultRetryTimeOfJob with no fault-retry-times label", func(t *testing.T) {
-		fJob := &FaultJob{
-			JobUID: "test-job-1",
-			Labels: map[string]string{},
-		}
-		fJob.setFaultRetryTimeOfJob()
-		if fJob.FaultRetryTimes != 0 {
-			t.Errorf("setFaultRetryTimeOfJob() FaultRetryTimes = %v, want 0", fJob.FaultRetryTimes)
-		}
-	})
-
-	// Test case 2: Job with invalid fault-retry-times label
-	t.Run("02-setFaultRetryTimeOfJob with invalid fault-retry-times label", func(t *testing.T) {
-		fJob := &FaultJob{
-			JobUID: "test-job-2",
-			Labels: map[string]string{
-				FaultRetryTimesKey: "invalid-value",
-			},
-		}
-		fJob.setFaultRetryTimeOfJob()
-		if fJob.FaultRetryTimes != 0 {
-			t.Errorf("setFaultRetryTimeOfJob() FaultRetryTimes = %v, want 0", fJob.FaultRetryTimes)
-		}
-	})
-
-	// Test case 3: Job with valid fault-retry-times label
-	t.Run("03-setFaultRetryTimeOfJob with valid fault-retry-times label", func(t *testing.T) {
-		expectedRetryTimes := 3
-		fJob := &FaultJob{
-			JobUID: "test-job-3",
-			Labels: map[string]string{
-				FaultRetryTimesKey: strconv.Itoa(expectedRetryTimes),
-			},
-		}
-		fJob.setFaultRetryTimeOfJob()
-		if fJob.FaultRetryTimes != expectedRetryTimes {
-			t.Errorf("setFaultRetryTimeOfJob() FaultRetryTimes = %v, want %v", fJob.FaultRetryTimes, expectedRetryTimes)
-		}
-	})
-
-	// Test case 4: Job with zero fault-retry-times label
-	t.Run("04-setFaultRetryTimeOfJob with zero fault-retry-times label", func(t *testing.T) {
-		expectedRetryTimes := 0
-		fJob := &FaultJob{
-			JobUID: "test-job-4",
-			Labels: map[string]string{
-				FaultRetryTimesKey: strconv.Itoa(expectedRetryTimes),
-			},
-		}
-		fJob.setFaultRetryTimeOfJob()
-		if fJob.FaultRetryTimes != expectedRetryTimes {
-			t.Errorf("setFaultRetryTimeOfJob() FaultRetryTimes = %v, want %v", fJob.FaultRetryTimes, expectedRetryTimes)
-		}
-	})
+	for _, tt := range buildSetFaultRetryTimeOfJobCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.fJob.setFaultRetryTimeOfJob()
+			if tt.fJob.FaultRetryTimes != tt.wantRetryTimes {
+				t.Errorf("setFaultRetryTimeOfJob() FaultRetryTimes = %v, want %v",
+					tt.fJob.FaultRetryTimes, tt.wantRetryTimes)
+			}
+		})
+	}
 }
 
 // testIsMasterRankTestCase defines the test case structure for isMasterRank
@@ -1312,7 +1303,7 @@ func TestGetMultiLevelJobDeletePodInfo(t *testing.T) {
 	}
 }
 
-func buildNeedRescheduleCases() []multiLevelCase {
+func buildNeedRescheduleBasicCases() []multiLevelCase {
 	return []multiLevelCase{
 		{
 			name: "01-empty super pods",
@@ -1342,6 +1333,36 @@ func buildNeedRescheduleCases() []multiLevelCase {
 			wantErr: false,
 			wantLen: 1,
 		},
+	}
+}
+
+func buildNeedRescheduleAdvCases() []multiLevelCase {
+	return []multiLevelCase{
+		{
+			name: "04-hot-switch backup pod excluded from tree level check",
+			fJob: &FaultJob{
+				PendingSessionNum: 0,
+				FaultTasks:        []FaultTask{{IsFaultTask: true, NodeName: "node0"}},
+				SuperPods:         map[string][]plugin.SuperNode{"0": {{Name: "node0", TopoTreeName: "tree1"}}},
+			},
+			schedulerJob: &plugin.SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					ComJob: util.ComJob{Annotation: map[string]string{}},
+					NPUJob: &util.NPUJob{
+						NPUTaskNum:    3,
+						AffinityBlocks: map[string]int{"level1": 2},
+						Tasks: map[api.TaskID]util.NPUTask{
+							"t0":       {Annotation: map[string]string{}},
+							"t1":       {Annotation: map[string]string{}},
+							"t_backup": {Annotation: map[string]string{util.PodTypeKey: util.PodTypeBackup}},
+						},
+					},
+				},
+			},
+			env:     buildMultiLevelEnv(),
+			wantErr: false,
+			wantLen: 1,
+		},
 		{
 			name: "03-resource levels failed",
 			fJob: &FaultJob{
@@ -1361,7 +1382,8 @@ func buildNeedRescheduleCases() []multiLevelCase {
 }
 
 func TestGetNeedReschedulePods(t *testing.T) {
-	for _, tt := range buildNeedRescheduleCases() {
+	cases := append(buildNeedRescheduleBasicCases(), buildNeedRescheduleAdvCases()...)
+	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := tt.fJob.getNeedReschedulePods(tt.schedulerJob, tt.env)
 			if (err != nil) != tt.wantErr {
