@@ -1,5 +1,419 @@
 # 安装前准备<a name="ZH-CN_TOPIC_0000002479386432"></a>
 
+## 创建用户<a name="ZH-CN_TOPIC_0000002511346353"></a>
+
+为了减少手工操作，宿主机上可不新创建用户，只需要保证没有其他用户占用UID为9000的情况即可。启动用户为hwMindX的组件（可查阅[表1](#table125971501113)），您可以根据实际情况决定创建用户的方式：
+1. 创建用户：（1）用户可按以下命令创建hwMindX用户；（2）也可以创建自定义用户，需将以下命令中的用户名和UID替换为实际值，同时修改对应组件的Dockerfile中`useradd`命令的UID，使其与实际值一致。
+
+   - <a name="li1069651515405"></a>Ubuntu操作系统
+
+     ```shell
+     useradd -d /home/hwMindX -u 9000 -m -s /usr/sbin/nologin hwMindX
+     usermod -a -G HwHiAiUser hwMindX
+     ```
+
+   - <a name="li19202165424015"></a>CentOS操作系统
+
+     ```shell
+     useradd -d /home/hwMindX -u 9000 -m -s /sbin/nologin hwMindX
+     usermod -a -G HwHiAiUser hwMindX
+     ```
+2. 使用环境中已有用户：需执行 <code>usermod -a -G HwHiAiUser <i>{your_username}</i></code>，并修改对应组件的Dockerfile，将Dockerfile里`useradd`命令中的UID替换为已有用户的UID。
+
+
+>[!NOTE]
+>
+>- 其余操作系统创建用户：
+>     - 基于Ubuntu操作系统开发的操作系统，参考[Ubuntu操作系统](#li1069651515405)。
+>     - 基于CentOS操作系统开发的操作系统，参考[CentOS操作系统](#li19202165424015)。
+>- HwHiAiUser是驱动或CANN软件包所需的软件运行用户。
+>- 执行**getent passwd**命令，查看所有物理机（存储节点、管理节点、计算节点）和容器内，HwHiAiUser的UID和GID是否一致，且都为1000。如果被占用可能会导致服务不可用，可以参见[用户UID或GID被占用](https://gitcode.com/Ascend/mind-cluster/issues/337)章节进行处理。
+>- 如果不在宿主机上创建用户，Dockerfile会默认在容器内创建UID为9000的用户，容器内进程以该UID运行并映射到宿主机，需确保宿主机上该UID未被其他用户占用。
+
+**表 1**  组件用户说明
+
+<a name="table125971501113"></a>
+<table><thead align="left"><tr id="zh-cn_topic_0299839362_row86431704617"><th class="cellrowborder" valign="top" width="20.962096209620963%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0299839362_p464201754614"><a name="zh-cn_topic_0299839362_p464201754614"></a><a name="zh-cn_topic_0299839362_p464201754614"></a>组件</p>
+</th>
+<th class="cellrowborder" valign="top" width="34.13341334133413%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0299839362_p11647172468"><a name="zh-cn_topic_0299839362_p11647172468"></a><a name="zh-cn_topic_0299839362_p11647172468"></a>启动用户</p>
+</th>
+<th class="cellrowborder" valign="top" width="44.90449044904491%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0299839362_p56451734620"><a name="zh-cn_topic_0299839362_p56451734620"></a><a name="zh-cn_topic_0299839362_p56451734620"></a>是否使用特权容器</p>
+</th>
+</tr>
+</thead>
+<tbody><tr id="zh-cn_topic_0299839362_row3641172465"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p671453716107"><a name="p671453716107"></a><a name="p671453716107"></a><span id="ph14925450192719"><a name="ph14925450192719"></a><a name="ph14925450192719"></a>NPU Exporter</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><a name="ul124012695512"></a><a name="ul124012695512"></a><ul id="ul124012695512"><li>二进制运行：hwMindX</li><li>容器运行：root</li></ul>
+</td>
+<td class="cellrowborder" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><a name="ul8401830195518"></a><a name="ul8401830195518"></a><ul id="ul8401830195518"><li>二进制运行：不涉及。</li><li>容器运行：需要使用特权容器，建议用户使用二进制运行。</li></ul>
+</td>
+</tr>
+<tr id="zh-cn_topic_0299839362_row1064121764612"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0299839362_p16641317134612"><a name="zh-cn_topic_0299839362_p16641317134612"></a><a name="zh-cn_topic_0299839362_p16641317134612"></a><span id="ph522114212719"><a name="ph522114212719"></a><a name="ph522114212719"></a>Ascend Device Plugin</span></p>
+</td>
+<td class="cellrowborder" rowspan="2" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p53735269103"><a name="p53735269103"></a><a name="p53735269103"></a>root</p>
+</td>
+<td class="cellrowborder" rowspan="2" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p29286561106"><a name="p29286561106"></a><a name="p29286561106"></a>需要使用特权容器。</p>
+</td>
+</tr>
+<tr id="row10935147171519"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1935947181513"><a name="p1935947181513"></a><a name="p1935947181513"></a><span id="ph5551115391513"><a name="ph5551115391513"></a><a name="ph5551115391513"></a>NodeD</span></p>
+</td>
+</tr>
+<tr id="zh-cn_topic_0299839362_row664817164615"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0299839362_p0649177466"><a name="zh-cn_topic_0299839362_p0649177466"></a><a name="zh-cn_topic_0299839362_p0649177466"></a><span id="ph175881448132716"><a name="ph175881448132716"></a><a name="ph175881448132716"></a>Volcano</span></p>
+</td>
+<td class="cellrowborder" rowspan="5" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p153424813128"><a name="p153424813128"></a><a name="p153424813128"></a>hwMindX</p>
+</td>
+<td class="cellrowborder" rowspan="5" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p17327314131212"><a name="p17327314131212"></a><a name="p17327314131212"></a>不涉及。</p>
+</td>
+</tr>
+<tr id="row24141825191817"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1941515259187"><a name="p1941515259187"></a><a name="p1941515259187"></a><span id="ph16899408574"><a name="ph16899408574"></a><a name="ph16899408574"></a>ClusterD</span></p>
+</td>
+</tr>
+<tr id="row29051413163917"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p390551333913"><a name="p390551333913"></a><a name="p390551333913"></a><span id="ph829115811272"><a name="ph829115811272"></a><a name="ph829115811272"></a>Resilience Controller</span></p>
+</td>
+</tr>
+<tr id="row1674814434406"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p97491434407"><a name="p97491434407"></a><a name="p97491434407"></a><span id="ph1566531814589"><a name="ph1566531814589"></a><a name="ph1566531814589"></a>Infer Operator</span></p>
+</td>
+</tr>
+<tr id="row1674814434406"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p97491434407"><a name="p97491434407"></a><a name="p97491434407"></a><span id="ph1566531814589"><a name="ph1566531814589"></a><a name="ph1566531814589"></a>Ascend Operator</span></p>
+</td>
+</tr>
+<tr id="row6784854202610"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p11621711181811"><a name="p11621711181811"></a><a name="p11621711181811"></a><span id="ph1790811553279"><a name="ph1790811553279"></a><a name="ph1790811553279"></a>Elastic Agent</span></p>
+</td>
+<td class="cellrowborder" rowspan="2" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p161622011121819"><a name="p161622011121819"></a><a name="p161622011121819"></a>由用户自行决定，建议使用非root用户。</p>
+</td>
+<td class="cellrowborder" rowspan="2" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p1916271131815"><a name="p1916271131815"></a><a name="p1916271131815"></a>由用户自行决定，建议不使用特权容器。</p>
+</td>
+</tr>
+<tr id="row315419369301"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p715593611302"><a name="p715593611302"></a><a name="p715593611302"></a><span id="ph11742444163719"><a name="ph11742444163719"></a><a name="ph11742444163719"></a>TaskD</span></p>
+</td>
+</tr>
+<tr id="row3502131311115"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p175021513201117"><a name="p175021513201117"></a><a name="p175021513201117"></a><span id="ph16988102112717"><a name="ph16988102112717"></a><a name="ph16988102112717"></a>Container Manager</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p1450212134110"><a name="p1450212134110"></a><a name="p1450212134110"></a>root</p>
+</td>
+<td class="cellrowborder" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p6502191318116"><a name="p6502191318116"></a><a name="p6502191318116"></a>不涉及。</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+## 创建日志目录<a name="ZH-CN_TOPIC_0000002511346417"></a>
+
+在对应节点创建组件日志父目录和各组件的日志目录，并设置目录对应属主和权限。
+
+**操作步骤<a name="section124928122416"></a>**
+
+1. 执行以下命令，按照[表1 集群调度组件日志路径列表](#table957112617314)，在各节点创建组件日志父目录。
+
+    ```shell
+    mkdir -m 755 /var/log/mindx-dl
+    chown root:root /var/log/mindx-dl
+    ```
+
+2. 根据所使用组件的具体情况，创建相应的日志目录。用户名需使用[创建用户](#ZH-CN_TOPIC_0000002511346353)步骤所创建出来的用户，此处以hwMindX用户为例，请根据实际情况将以下命令中的hwMindX替换成您实际使用的用户名。若宿主机上未创建用户，`chown`命令中需使用数字UID替代用户名，例如`chown 9000:9000 /var/log/mindx-dl/clusterd`。对于已安装的组件修改启动用户时，需使用`chown -R`递归修改日志目录属主，否则目录下已有的日志文件仍属于原用户，可能导致新用户无法读取。
+
+    **表 1** 集群调度组件日志路径列表
+
+    <a name="table957112617314"></a>
+    <table><thead align="left"><tr id="row2057210616310"><th class="cellrowborder" valign="top" width="21.93%" id="mcps1.2.5.1.1"><p id="p10572761231"><a name="p10572761231"></a><a name="p10572761231"></a>组件</p>
+    </th>
+    <th class="cellrowborder" valign="top" width="41.91%" id="mcps1.2.5.1.2"><p id="p11572156430"><a name="p11572156430"></a><a name="p11572156430"></a>创建日志目录命令</p>
+    </th>
+    <th class="cellrowborder" valign="top" width="17.05%" id="mcps1.2.5.1.3"><p id="p25721364319"><a name="p25721364319"></a><a name="p25721364319"></a>日志路径创建节点</p>
+    </th>
+    <th class="cellrowborder" valign="top" width="19.11%" id="mcps1.2.5.1.4"><p id="p16572661320"><a name="p16572661320"></a><a name="p16572661320"></a>说明</p>
+    </th>
+    </tr>
+    </thead>
+    <tbody><tr id="row457296131"><td class="cellrowborder" valign="top" width="21.93%" headers="mcps1.2.5.1.1 "><p id="p1572469315"><a name="p1572469315"></a><a name="p1572469315"></a><span id="ph9572196532"><a name="ph9572196532"></a><a name="ph9572196532"></a>Ascend Device Plugin</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen1657216638"><a name="screen1657216638"></a><a name="screen1657216638"></a>mkdir -m 750 /var/log/mindx-dl/devicePlugin
+   chown root:root /var/log/mindx-dl/devicePlugin</pre>
+    </td>
+    <td class="cellrowborder" rowspan="5" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p11572661536"><a name="p11572661536"></a><a name="p11572661536"></a>计算节点</p>
+    </td>
+    <td class="cellrowborder" rowspan="3" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p557592110325"><a name="p557592110325"></a><a name="p557592110325"></a>-</p>
+    </td>
+    </tr>
+    <tr id="row95721761536"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p125721269315"><a name="p125721269315"></a><a name="p125721269315"></a><span id="ph14572161034"><a name="ph14572161034"></a><a name="ph14572161034"></a>NPU Exporter</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen457213611313"><a name="screen457213611313"></a><a name="screen457213611313"></a>mkdir -m 750 /var/log/mindx-dl/npu-exporter
+   chown root:root /var/log/mindx-dl/npu-exporter</pre>
+    </td>
+    </tr>
+    <tr id="row105739620318"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p195731868318"><a name="p195731868318"></a><a name="p195731868318"></a><span id="ph11573862310"><a name="ph11573862310"></a><a name="ph11573862310"></a>NodeD</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen1957396735"><a name="screen1957396735"></a><a name="screen1957396735"></a>mkdir -m 750 /var/log/mindx-dl/noded
+   chown root:root /var/log/mindx-dl/noded</pre>
+    </td>
+    </tr>
+    <tr id="row55731961237"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p15573961314"><a name="p15573961314"></a><a name="p15573961314"></a><span id="ph13573106431"><a name="ph13573106431"></a><a name="ph13573106431"></a>Elastic Agent</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen55735616314"><a name="screen55735616314"></a><a name="screen55735616314"></a>mkdir -m 750 /var/log/mindx-dl/elastic
+   chown <em id="i15731661134"><a name="i15731661134"></a><a name="i15731661134"></a>由用户自行定义</em> /var/log/mindx-dl/elastic</pre>
+    <div class="note" id="note3573061032"><a name="note3573061032"></a><a name="note3573061032"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p2057310617318"><a name="p2057310617318"></a><a name="p2057310617318"></a>将<span id="ph1472342453512"><a name="ph1472342453512"></a><a name="ph1472342453512"></a>Elastic Agent</span>日志目录挂载到容器内，详见<a href="../../../usage/resumable_training/06_configuring_the_job_yaml_file.md#任务yaml配置示例">任务YAML配置示例</a>章节中“修改训练脚本、代码的挂载路径”步骤。</p>
+    </div></div>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><a name="ul958614153510"></a><a name="ul958614153510"></a><ul id="ul958614153510"><li>目录属主由用户自定义。注意：安装<span id="ph67093892615"><a name="ph67093892615"></a><a name="ph67093892615"></a>Elastic Agent</span>的用户属组、调用<span id="ph1642075902418"><a name="ph1642075902418"></a><a name="ph1642075902418"></a>Elastic Agent</span>的运行用户属组、挂载宿主机的目录属组请保持一致。</li><li>用户可自定义<span id="ph1790811553279"><a name="ph1790811553279"></a><a name="ph1790811553279"></a>Elastic Agent</span>的运行日志的落盘路径，在该路径下，用户可查看<span id="ph1529820279122"><a name="ph1529820279122"></a><a name="ph1529820279122"></a>Elastic Agent</span>所有节点日志，无需逐一登录每个节点查看。</li></ul>
+    </td>
+    </tr>
+    <tr id="row189638410329"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p7963164113217"><a name="p7963164113217"></a><a name="p7963164113217"></a><span id="ph11742444163719"><a name="ph11742444163719"></a><a name="ph11742444163719"></a>TaskD</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen929012103313"><a name="screen929012103313"></a><a name="screen929012103313"></a>mkdir  -m 750  <em id="i15660102313617"><a name="i15660102313617"></a><a name="i15660102313617"></a>训练脚本目录</em>/taskd_log
+   chown <em id="i4956143053617"><a name="i4956143053617"></a><a name="i4956143053617"></a>由用户自行定义</em> <em id="i6187123720366"><a name="i6187123720366"></a><a name="i6187123720366"></a>训练脚本目录</em>/taskd_log </pre>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><a name="ul9461980353"></a><a name="ul9461980353"></a><ul id="ul9461980353"><li>目录属主由用户自定义。</li><li><span id="ph1524182517352"><a name="ph1524182517352"></a><a name="ph1524182517352"></a>TaskD</span>在运行过程中可以自动创建对应日志目录，日志目录前缀一般为任务YAML中执行<strong id="b5881131073711"><a name="b5881131073711"></a><a name="b5881131073711"></a>bash命令</strong>或拉起训练时所在目录。</li></ul>
+    </td>
+    </tr>
+    <tr id="row65749616319"><td class="cellrowborder" valign="top" width="21.93%" headers="mcps1.2.5.1.1 "><p id="p8574136838"><a name="p8574136838"></a><a name="p8574136838"></a><span id="ph13574365316"><a name="ph13574365316"></a><a name="ph13574365316"></a>Ascend Operator</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen05746613313"><a name="screen05746613313"></a><a name="screen05746613313"></a>mkdir -m 750 /var/log/mindx-dl/ascend-operator
+   chown hwMindX:hwMindX /var/log/mindx-dl/ascend-operator</pre>
+    </td>
+    <td class="cellrowborder" rowspan="6" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p65611868135"><a name="p65611868135"></a><a name="p65611868135"></a>管理节点</p>
+    </td>
+    <td class="cellrowborder" rowspan="6" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p11355115061313"><a name="p11355115061313"></a><a name="p11355115061313"></a>-</p>
+    </td>
+    </tr>
+    <tr id="row45741461130"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p18574466314"><a name="p18574466314"></a><a name="p18574466314"></a><span id="ph13574176736"><a name="ph13574176736"></a><a name="ph13574176736"></a>Infer Operator</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen1574064313"><a name="screen1574064313"></a><a name="screen1574064313"></a>mkdir -m 750 /var/log/mindx-dl/infer-operator
+   chown hwMindX:hwMindX /var/log/mindx-dl/infer-operator</pre>
+    </td>
+    </tr>
+    <tr id="row45741461130"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p18574466314"><a name="p18574466314"></a><a name="p18574466314"></a><span id="ph13574176736"><a name="ph13574176736"></a><a name="ph13574176736"></a>Resilience Controller</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen1574064313"><a name="screen1574064313"></a><a name="screen1574064313"></a>mkdir -m 750 /var/log/mindx-dl/resilience-controller
+   chown hwMindX:hwMindX /var/log/mindx-dl/resilience-controller</pre>
+    </td>
+    </tr>
+    <tr id="row68981954111810"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p28991454191811"><a name="p28991454191811"></a><a name="p28991454191811"></a><span id="ph16899408574"><a name="ph16899408574"></a><a name="ph16899408574"></a>ClusterD</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen161652618196"><a name="screen161652618196"></a><a name="screen161652618196"></a>mkdir -m 750 /var/log/mindx-dl/clusterd
+   chown hwMindX:hwMindX /var/log/mindx-dl/clusterd</pre>
+    </td>
+    </tr>
+    <tr id="row957413616315"><td class="cellrowborder" rowspan="2" valign="top" headers="mcps1.2.5.1.1 "><p id="p1657414618311"><a name="p1657414618311"></a><a name="p1657414618311"></a><span id="ph185741164311"><a name="ph185741164311"></a><a name="ph185741164311"></a>Volcano</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen145741661036"><a name="screen145741661036"></a><a name="screen145741661036"></a>mkdir -m 750 /var/log/mindx-dl/volcano-controller
+   chown hwMindX:hwMindX /var/log/mindx-dl/volcano-controller</pre>
+    </td>
+    </tr>
+    <tr id="row18574568314"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><pre class="screen" id="screen1257416635"><a name="screen1257416635"></a><a name="screen1257416635"></a>mkdir -m 750 /var/log/mindx-dl/volcano-scheduler
+   chown hwMindX:hwMindX /var/log/mindx-dl/volcano-scheduler</pre>
+    </td>
+    </tr>
+    <tr id="row14307175681213"><td class="cellrowborder" valign="top" width="21.93%" headers="mcps1.2.5.1.1 "><p id="p1030717560124"><a name="p1030717560124"></a><a name="p1030717560124"></a><span id="ph172417011305"><a name="ph172417011305"></a><a name="ph172417011305"></a>Container Manager</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen44681417291"><a name="screen44681417291"></a><a name="screen44681417291"></a>mkdir -m 750 /var/log/mindx-dl/container-manager
+   chown root:root /var/log/mindx-dl/container-manager</pre>
+    </td>
+    <td class="cellrowborder" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p53074565125"><a name="p53074565125"></a><a name="p53074565125"></a>需要使用容器恢复特性的节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p1518124119135"><a name="p1518124119135"></a><a name="p1518124119135"></a>-</p>
+    </td>
+    </tr>
+    </tbody>
+    </table>
+
+## 创建节点标签<a name="ZH-CN_TOPIC_0000002511426279"></a>
+
+K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点，此时该节点既是管理节点又是计算节点，除了需要管理节点对应的标签外，还需要根据节点的昇腾AI处理器类型，打上计算节点的相关标签。生产环境中，管理节点一般为通用服务器，不包含昇腾AI处理器。
+
+**操作步骤<a name="section847765415564"></a>**
+
+1. 在任意节点执行以下命令，查询节点名称。
+
+    ```shell
+    kubectl get node
+    ```
+
+    回显示例如下：
+
+    ```ColdFusion
+    NAME       STATUS   ROLES           AGE   VERSION
+    ubuntu     Ready    worker          23h   v1.17.3
+    ```
+
+2. 按照[表1](#table202738181704)的标签信息，为对应节点打标签，方便集群调度组件在各种不同形态的工作节点之间进行调度。为节点打标签的命令参考如下。
+
+    ```shell
+    kubectl label nodes 主机名称 标签
+    ```
+
+    以主机名称“ubuntu”，标签“masterselector=dls-master-node”为例，命令参考如下。
+
+    ```shell
+    kubectl label nodes ubuntu masterselector=dls-master-node
+    ```
+
+    回显示例如下，表示操作成功。
+
+    ```ColdFusion
+    node/ubuntu labeled
+    ```
+
+    >[!NOTE]
+    >- [表1](#table202738181704)中各节点标签的详细说明请参见[K8s原生对象说明](../../../api/k8s.md)章节。
+    >- 请按[表1](#table202738181704)，根据节点类型和产品类型，配置所列出的所有标签。
+    >- 下文的\{_xxx_\}即取“910”字符作为芯片型号数值。
+
+    **表 1**  节点对应的标签信息
+
+    <a name="table202738181704"></a>
+    <table><thead align="left"><tr id="row627331819017"><th class="cellrowborder" valign="top" width="31.840000000000003%" id="mcps1.2.4.1.1"><p id="p19273918201"><a name="p19273918201"></a><a name="p19273918201"></a>节点类型</p>
+    </th>
+    <th class="cellrowborder" valign="top" width="25.96%" id="mcps1.2.4.1.2"><p id="p3273218803"><a name="p3273218803"></a><a name="p3273218803"></a>产品类型</p>
+    </th>
+    <th class="cellrowborder" valign="top" width="42.199999999999996%" id="mcps1.2.4.1.3"><p id="p19273118301"><a name="p19273118301"></a><a name="p19273118301"></a>标签</p>
+    </th>
+    </tr>
+    </thead>
+    <tbody><tr id="row227451815011"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p142747189017"><a name="p142747189017"></a><a name="p142747189017"></a>管理节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p102741181908"><a name="p102741181908"></a><a name="p102741181908"></a>-</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><p id="p1227417181004"><a name="p1227417181004"></a><a name="p1227417181004"></a>masterselector=dls-master-node</p>
+    </td>
+    </tr>
+    <tr id="row127412189015"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p14274118905"><a name="p14274118905"></a><a name="p14274118905"></a>计算节点</p>
+    <p id="p203704324914"><a name="p203704324914"></a><a name="p203704324914"></a></p>
+    <p id="p4371534493"><a name="p4371534493"></a><a name="p4371534493"></a></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p627418181808"><a name="p627418181808"></a><a name="p627418181808"></a><span id="ph42747181102"><a name="ph42747181102"></a><a name="ph42747181102"></a>Atlas 800 训练服务器（NPU满配）</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul727421813014"></a><a name="ul727421813014"></a><ul id="ul727421813014"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    <tr id="row19274318806"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p742615141511"><a name="p742615141511"></a><a name="p742615141511"></a>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p027411181309"><a name="p027411181309"></a><a name="p027411181309"></a><span id="ph127517181101"><a name="ph127517181101"></a><a name="ph127517181101"></a>Atlas 800 训练服务器（NPU半配）</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul22751618203"></a><a name="ul22751618203"></a><ul id="ul22751618203"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=half</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    <tr id="row92751018202"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p554271313169"><a name="p554271313169"></a><a name="p554271313169"></a>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p527551818016"><a name="p527551818016"></a><a name="p527551818016"></a><span id="ph1427511188015"><a name="ph1427511188015"></a><a name="ph1427511188015"></a>Atlas 800T A2 训练服务器</span>或<span id="ph102750181803"><a name="ph102750181803"></a><a name="ph102750181803"></a>Atlas 900 A2 PoD 集群基础单元</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul32752181202"></a><a name="ul32752181202"></a><ul id="ul32752181202"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-<span id="ph12761718301"><a name="ph12761718301"></a><a name="ph12761718301"></a><em id="zh-cn_topic_0000001519959665_i1489729141619"><a name="zh-cn_topic_0000001519959665_i1489729141619"></a><a name="zh-cn_topic_0000001519959665_i1489729141619"></a>{xxx}</em></span>b-8</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    <tr id="row8394133819129"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p1237115354918"><a name="p1237115354918"></a><a name="p1237115354918"></a>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p2039613891219"><a name="p2039613891219"></a><a name="p2039613891219"></a><span id="ph077885871817"><a name="ph077885871817"></a><a name="ph077885871817"></a>Atlas 900 A3 SuperPoD 超节点</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul3874134511121"></a><a name="ul3874134511121"></a><ul id="ul3874134511121"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-a3-16-super-pod</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    <tr><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p><span>Atlas 9000 A3 SuperPoD 集群算力系统</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul3874134511121"></a><a name="ul3874134511121"></a><ul id="ul3874134511121"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-a3-8-super-pod</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    <tr id="row69181319336"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p738423163315"><a name="p738423163315"></a><a name="p738423163315"></a>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p1584884715522"><a name="p1584884715522"></a><a name="p1584884715522"></a><span id="ph126247155413"><a name="ph126247155413"></a><a name="ph126247155413"></a>A200T A3 Box8 超节点服务器</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul537611425289"></a><a name="ul537611425289"></a><ul id="ul537611425289"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li></ul>
+    <a name="ul13263154872811"></a><a name="ul13263154872811"></a><ul id="ul13263154872811"><li>host-arch=huawei-x86或host-arch=huawei-arm</li><li>accelerator=huawei-Ascend910</li></ul>
+    <a name="ul17911532280"></a><a name="ul17911532280"></a><ul id="ul17911532280"><li>accelerator-type=module-a3-16</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    <tr id="row271845218270"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p188095589274"><a name="p188095589274"></a><a name="p188095589274"></a>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p164951627162819"><a name="p164951627162819"></a><a name="p164951627162819"></a><span id="ph19495127162814"><a name="ph19495127162814"></a><a name="ph19495127162814"></a>Atlas 800I A3 超节点服务器</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul16834964293"></a><a name="ul16834964293"></a><ul id="ul16834964293"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li></ul>
+    <a name="ul128341660299"></a><a name="ul128341660299"></a><ul id="ul128341660299"><li>host-arch=huawei-x86或host-arch=huawei-arm</li><li>accelerator=huawei-Ascend910</li></ul>
+    <a name="ul168341764299"></a><a name="ul168341764299"></a><ul id="ul168341764299"><li>accelerator-type=module-a3-16</li><li>server-usage=infer</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    <tr><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p><span>Atlas 800T A3 超节点服务器</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><ul><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li></ul><ul><li>host-arch=huawei-x86或host-arch=huawei-arm</li><li>accelerator=huawei-Ascend910</li></ul><ul><li>accelerator-type=module-a3-16</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    <tr id="row42763185011"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p16530201015713"><a name="p16530201015713"></a><a name="p16530201015713"></a>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p19276111815011"><a name="p19276111815011"></a><a name="p19276111815011"></a><span id="ph152766181106"><a name="ph152766181106"></a><a name="ph152766181106"></a>Atlas 800I A2 推理服务器</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul72766183018"></a><a name="ul72766183018"></a><ul id="ul72766183018"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-<span id="ph2027661812017"><a name="ph2027661812017"></a><a name="ph2027661812017"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_1"><a name="zh-cn_topic_0000001519959665_i1489729141619_1"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_1"></a>{xxx}</em></span>b-8</li><li>server-usage=infer</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    <tr id="row1468510421395"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p868624283911"><a name="p868624283911"></a><a name="p868624283911"></a>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p534220145119"><a name="p534220145119"></a><a name="p534220145119"></a><span id="ph56342369338"><a name="ph56342369338"></a><a name="ph56342369338"></a>A200I A2 Box 异构组件</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul19511133318489"></a><a name="ul19511133318489"></a><ul id="ul19511133318489"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-<span id="ph175351194911"><a name="ph175351194911"></a><a name="ph175351194911"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_2"><a name="zh-cn_topic_0000001519959665_i1489729141619_2"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_2"></a>{xxx}</em></span>b-8</li><li>server-usage=infer</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    <tr id="row13277101813019"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p356115645715"><a name="p356115645715"></a><a name="p356115645715"></a>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p122778182014"><a name="p122778182014"></a><a name="p122778182014"></a><span id="ph3277518801"><a name="ph3277518801"></a><a name="ph3277518801"></a>Atlas 200T A2 Box16 异构子框</span></p>
+    <p id="p1993115373112"><a name="p1993115373112"></a><a name="p1993115373112"></a><span id="ph10949202261219"><a name="ph10949202261219"></a><a name="ph10949202261219"></a>Atlas 200I A2 Box16 异构子框</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul15277318601"></a><a name="ul15277318601"></a><ul id="ul15277318601"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-<span id="ph52776181604"><a name="ph52776181604"></a><a name="ph52776181604"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_3"><a name="zh-cn_topic_0000001519959665_i1489729141619_3"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_3"></a>{xxx}</em></span>b-16</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    <tr id="row1627716183019"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p556216614577"><a name="p556216614577"></a><a name="p556216614577"></a>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p32771718506"><a name="p32771718506"></a><a name="p32771718506"></a><span id="ph162771318306"><a name="ph162771318306"></a><a name="ph162771318306"></a>训练服务器（插<span id="ph4277131818016"><a name="ph4277131818016"></a><a name="ph4277131818016"></a>Atlas 300T 训练卡</span>）</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul72771181601"></a><a name="ul72771181601"></a><ul id="ul72771181601"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=card</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    <tr id="row62791418607"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p45625617576"><a name="p45625617576"></a><a name="p45625617576"></a>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p122793182008"><a name="p122793182008"></a><a name="p122793182008"></a>推理服务器（插<span id="ph19279181811010"><a name="ph19279181811010"></a><a name="ph19279181811010"></a>Atlas 300I 推理卡</span>）</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul127919181101"></a><a name="ul127919181101"></a><ul id="ul127919181101"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend310</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    <tr id="row72822181005"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p165621264571"><a name="p165621264571"></a><a name="p165621264571"></a>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p16282118603"><a name="p16282118603"></a><a name="p16282118603"></a><span id="ph182828181802"><a name="ph182828181802"></a><a name="ph182828181802"></a>Atlas 推理系列产品</span>（除<span id="ph828261816012"><a name="ph828261816012"></a><a name="ph828261816012"></a>Atlas 200I SoC A1 核心板</span>）</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul162825182010"></a><a name="ul162825182010"></a><ul id="ul162825182010"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend310P</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    <tr id="row328212184011"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p20562266579"><a name="p20562266579"></a><a name="p20562266579"></a>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p228281818011"><a name="p228281818011"></a><a name="p228281818011"></a><span id="ph928241810010"><a name="ph928241810010"></a><a name="ph928241810010"></a><span id="ph122828181609"><a name="ph122828181609"></a><a name="ph122828181609"></a>Atlas 200I SoC A1 核心板</span></span></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul202825181508"></a><a name="ul202825181508"></a><ul id="ul202825181508"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend310P</li><li>servertype=soc</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    <tr><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p>Atlas 350 标卡</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3"><ul><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-npu</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    </tbody>
+    </table>
+
+## 创建命名空间<a name="ZH-CN_TOPIC_0000002479226384"></a>
+
+- 集群调度的NodeD、Resilience Controller、ClusterD、Infer Operator和Ascend Operator组件会运行在K8s的mindx-dl命名空间下，请在K8s的管理节点执行如下命令，创建对应的命名空间。
+
+    ```shell
+    kubectl create ns mindx-dl
+    ```
+
+- MindCluster上报超节点信息、pingmesh配置信息、公共故障信息需手动创建名为cluster-system命名空间。请在K8s的管理节点执行如下命令。
+
+    ```shell
+    kubectl create ns cluster-system
+    ```
+
+- NPU Exporter的命名空间为npu-exporter；Volcano的命名空间为volcano-system；Ascend Device Plugin的命名空间为kube-system，上述组件的命名空间由系统创建，用户无需再次创建。
+
 ## 准备镜像<a name="ZH-CN_TOPIC_0000002479226488"></a>
 
 用户可通过以下两种方式准备镜像，获取镜像后依次为安装的相应组件创建节点标签、创建用户、创建日志目录和创建命名空间。
@@ -13,6 +427,7 @@
 >- 拉取或者制作镜像完成后，请及时进行安全加固，如修复基础镜像的漏洞、安装第三方依赖导致的漏洞等。
 >- 在K8s所使用的容器运行时中导入镜像。如K8s  1.24以上版本默认使用Containerd作为容器运行时，拉取或者制作完镜像后需要将镜像导入到Containerd中。
 >- NPU Exporter和Ascend Device Plugin的运行用户为root，在对应的Dockerfile中配置了LD\_LIBRARY\_PATH环境变量，其中的值包含了驱动库的相关路径。组件运行时会使用到其中的文件，建议驱动安装时指定的运行用户为root，避免用户不一致带来的提权风险。
+>- 启动用户为hwMindX的组件，若在[创建用户](#ZH-CN_TOPIC_0000002511346353)时使用了自定义用户或已有用户，需在制作镜像前修改对应组件Dockerfile中`useradd`命令的UID，使其与宿主机上的用户UID一致。
 
 **制作镜像<a name="section106851195114"></a>**
 
@@ -345,413 +760,3 @@
         ```shell
         ctr -n k8s.io images import noded-v{version}-linux-aarch64.tar
         ```
-
-## 创建节点标签<a name="ZH-CN_TOPIC_0000002511426279"></a>
-
-K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点，此时该节点既是管理节点又是计算节点，除了需要管理节点对应的标签外，还需要根据节点的昇腾AI处理器类型，打上计算节点的相关标签。生产环境中，管理节点一般为通用服务器，不包含昇腾AI处理器。
-
-**操作步骤<a name="section847765415564"></a>**
-
-1. 在任意节点执行以下命令，查询节点名称。
-
-    ```shell
-    kubectl get node
-    ```
-
-    回显示例如下：
-
-    ```ColdFusion
-    NAME       STATUS   ROLES           AGE   VERSION
-    ubuntu     Ready    worker          23h   v1.17.3
-    ```
-
-2. 按照[表1](#table202738181704)的标签信息，为对应节点打标签，方便集群调度组件在各种不同形态的工作节点之间进行调度。为节点打标签的命令参考如下。
-
-    ```shell
-    kubectl label nodes 主机名称 标签
-    ```
-
-    以主机名称“ubuntu”，标签“masterselector=dls-master-node”为例，命令参考如下。
-
-    ```shell
-    kubectl label nodes ubuntu masterselector=dls-master-node
-    ```
-
-    回显示例如下，表示操作成功。
-
-    ```ColdFusion
-    node/ubuntu labeled
-    ```
-
-    >[!NOTE]
-    >- [表1](#table202738181704)中各节点标签的详细说明请参见[K8s原生对象说明](../../../api/k8s.md)章节。
-    >- 请按[表1](#table202738181704)，根据节点类型和产品类型，配置所列出的所有标签。
-    >- 下文的\{_xxx_\}即取“910”字符作为芯片型号数值。
-
-    **表 1**  节点对应的标签信息
-
-    <a name="table202738181704"></a>
-    <table><thead align="left"><tr id="row627331819017"><th class="cellrowborder" valign="top" width="31.840000000000003%" id="mcps1.2.4.1.1"><p id="p19273918201"><a name="p19273918201"></a><a name="p19273918201"></a>节点类型</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="25.96%" id="mcps1.2.4.1.2"><p id="p3273218803"><a name="p3273218803"></a><a name="p3273218803"></a>产品类型</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="42.199999999999996%" id="mcps1.2.4.1.3"><p id="p19273118301"><a name="p19273118301"></a><a name="p19273118301"></a>标签</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="row227451815011"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p142747189017"><a name="p142747189017"></a><a name="p142747189017"></a>管理节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p102741181908"><a name="p102741181908"></a><a name="p102741181908"></a>-</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><p id="p1227417181004"><a name="p1227417181004"></a><a name="p1227417181004"></a>masterselector=dls-master-node</p>
-    </td>
-    </tr>
-    <tr id="row127412189015"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p14274118905"><a name="p14274118905"></a><a name="p14274118905"></a>计算节点</p>
-    <p id="p203704324914"><a name="p203704324914"></a><a name="p203704324914"></a></p>
-    <p id="p4371534493"><a name="p4371534493"></a><a name="p4371534493"></a></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p627418181808"><a name="p627418181808"></a><a name="p627418181808"></a><span id="ph42747181102"><a name="ph42747181102"></a><a name="ph42747181102"></a>Atlas 800 训练服务器（NPU满配）</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul727421813014"></a><a name="ul727421813014"></a><ul id="ul727421813014"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row19274318806"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p742615141511"><a name="p742615141511"></a><a name="p742615141511"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p027411181309"><a name="p027411181309"></a><a name="p027411181309"></a><span id="ph127517181101"><a name="ph127517181101"></a><a name="ph127517181101"></a>Atlas 800 训练服务器（NPU半配）</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul22751618203"></a><a name="ul22751618203"></a><ul id="ul22751618203"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=half</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row92751018202"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p554271313169"><a name="p554271313169"></a><a name="p554271313169"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p527551818016"><a name="p527551818016"></a><a name="p527551818016"></a><span id="ph1427511188015"><a name="ph1427511188015"></a><a name="ph1427511188015"></a>Atlas 800T A2 训练服务器</span>或<span id="ph102750181803"><a name="ph102750181803"></a><a name="ph102750181803"></a>Atlas 900 A2 PoD 集群基础单元</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul32752181202"></a><a name="ul32752181202"></a><ul id="ul32752181202"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-<span id="ph12761718301"><a name="ph12761718301"></a><a name="ph12761718301"></a><em id="zh-cn_topic_0000001519959665_i1489729141619"><a name="zh-cn_topic_0000001519959665_i1489729141619"></a><a name="zh-cn_topic_0000001519959665_i1489729141619"></a>{xxx}</em></span>b-8</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row8394133819129"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p1237115354918"><a name="p1237115354918"></a><a name="p1237115354918"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p2039613891219"><a name="p2039613891219"></a><a name="p2039613891219"></a><span id="ph077885871817"><a name="ph077885871817"></a><a name="ph077885871817"></a>Atlas 900 A3 SuperPoD 超节点</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul3874134511121"></a><a name="ul3874134511121"></a><ul id="ul3874134511121"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-a3-16-super-pod</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p><span>Atlas 9000 A3 SuperPoD 集群算力系统</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul3874134511121"></a><a name="ul3874134511121"></a><ul id="ul3874134511121"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-a3-8-super-pod</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row69181319336"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p738423163315"><a name="p738423163315"></a><a name="p738423163315"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p1584884715522"><a name="p1584884715522"></a><a name="p1584884715522"></a><span id="ph126247155413"><a name="ph126247155413"></a><a name="ph126247155413"></a>A200T A3 Box8 超节点服务器</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul537611425289"></a><a name="ul537611425289"></a><ul id="ul537611425289"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li></ul>
-    <a name="ul13263154872811"></a><a name="ul13263154872811"></a><ul id="ul13263154872811"><li>host-arch=huawei-x86或host-arch=huawei-arm</li><li>accelerator=huawei-Ascend910</li></ul>
-    <a name="ul17911532280"></a><a name="ul17911532280"></a><ul id="ul17911532280"><li>accelerator-type=module-a3-16</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row271845218270"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p188095589274"><a name="p188095589274"></a><a name="p188095589274"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p164951627162819"><a name="p164951627162819"></a><a name="p164951627162819"></a><span id="ph19495127162814"><a name="ph19495127162814"></a><a name="ph19495127162814"></a>Atlas 800I A3 超节点服务器</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul16834964293"></a><a name="ul16834964293"></a><ul id="ul16834964293"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li></ul>
-    <a name="ul128341660299"></a><a name="ul128341660299"></a><ul id="ul128341660299"><li>host-arch=huawei-x86或host-arch=huawei-arm</li><li>accelerator=huawei-Ascend910</li></ul>
-    <a name="ul168341764299"></a><a name="ul168341764299"></a><ul id="ul168341764299"><li>accelerator-type=module-a3-16</li><li>server-usage=infer</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p><span>Atlas 800T A3 超节点服务器</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><ul><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li></ul><ul><li>host-arch=huawei-x86或host-arch=huawei-arm</li><li>accelerator=huawei-Ascend910</li></ul><ul><li>accelerator-type=module-a3-16</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row42763185011"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p16530201015713"><a name="p16530201015713"></a><a name="p16530201015713"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p19276111815011"><a name="p19276111815011"></a><a name="p19276111815011"></a><span id="ph152766181106"><a name="ph152766181106"></a><a name="ph152766181106"></a>Atlas 800I A2 推理服务器</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul72766183018"></a><a name="ul72766183018"></a><ul id="ul72766183018"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-<span id="ph2027661812017"><a name="ph2027661812017"></a><a name="ph2027661812017"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_1"><a name="zh-cn_topic_0000001519959665_i1489729141619_1"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_1"></a>{xxx}</em></span>b-8</li><li>server-usage=infer</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row1468510421395"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p868624283911"><a name="p868624283911"></a><a name="p868624283911"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p534220145119"><a name="p534220145119"></a><a name="p534220145119"></a><span id="ph56342369338"><a name="ph56342369338"></a><a name="ph56342369338"></a>A200I A2 Box 异构组件</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul19511133318489"></a><a name="ul19511133318489"></a><ul id="ul19511133318489"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-<span id="ph175351194911"><a name="ph175351194911"></a><a name="ph175351194911"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_2"><a name="zh-cn_topic_0000001519959665_i1489729141619_2"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_2"></a>{xxx}</em></span>b-8</li><li>server-usage=infer</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row13277101813019"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p356115645715"><a name="p356115645715"></a><a name="p356115645715"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p122778182014"><a name="p122778182014"></a><a name="p122778182014"></a><span id="ph3277518801"><a name="ph3277518801"></a><a name="ph3277518801"></a>Atlas 200T A2 Box16 异构子框</span></p>
-    <p id="p1993115373112"><a name="p1993115373112"></a><a name="p1993115373112"></a><span id="ph10949202261219"><a name="ph10949202261219"></a><a name="ph10949202261219"></a>Atlas 200I A2 Box16 异构子框</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul15277318601"></a><a name="ul15277318601"></a><ul id="ul15277318601"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-<span id="ph52776181604"><a name="ph52776181604"></a><a name="ph52776181604"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_3"><a name="zh-cn_topic_0000001519959665_i1489729141619_3"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_3"></a>{xxx}</em></span>b-16</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row1627716183019"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p556216614577"><a name="p556216614577"></a><a name="p556216614577"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p32771718506"><a name="p32771718506"></a><a name="p32771718506"></a><span id="ph162771318306"><a name="ph162771318306"></a><a name="ph162771318306"></a>训练服务器（插<span id="ph4277131818016"><a name="ph4277131818016"></a><a name="ph4277131818016"></a>Atlas 300T 训练卡</span>）</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul72771181601"></a><a name="ul72771181601"></a><ul id="ul72771181601"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=card</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row62791418607"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p45625617576"><a name="p45625617576"></a><a name="p45625617576"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p122793182008"><a name="p122793182008"></a><a name="p122793182008"></a>推理服务器（插<span id="ph19279181811010"><a name="ph19279181811010"></a><a name="ph19279181811010"></a>Atlas 300I 推理卡</span>）</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul127919181101"></a><a name="ul127919181101"></a><ul id="ul127919181101"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend310</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row72822181005"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p165621264571"><a name="p165621264571"></a><a name="p165621264571"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p16282118603"><a name="p16282118603"></a><a name="p16282118603"></a><span id="ph182828181802"><a name="ph182828181802"></a><a name="ph182828181802"></a>Atlas 推理系列产品</span>（除<span id="ph828261816012"><a name="ph828261816012"></a><a name="ph828261816012"></a>Atlas 200I SoC A1 核心板</span>）</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul162825182010"></a><a name="ul162825182010"></a><ul id="ul162825182010"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend310P</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row328212184011"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p20562266579"><a name="p20562266579"></a><a name="p20562266579"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p228281818011"><a name="p228281818011"></a><a name="p228281818011"></a><span id="ph928241810010"><a name="ph928241810010"></a><a name="ph928241810010"></a><span id="ph122828181609"><a name="ph122828181609"></a><a name="ph122828181609"></a>Atlas 200I SoC A1 核心板</span></span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul202825181508"></a><a name="ul202825181508"></a><ul id="ul202825181508"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend310P</li><li>servertype=soc</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p>Atlas 350 标卡</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3"><ul><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-npu</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    </tbody>
-    </table>
-
-## 创建用户<a name="ZH-CN_TOPIC_0000002511346353"></a>
-
-在对应组件安装的节点上执行以下命令创建用户。
-
-- <a name="li1069651515405"></a>Ubuntu操作系统
-
-    ```shell
-    useradd -d /home/hwMindX -u 9000 -m -s /usr/sbin/nologin hwMindX
-    usermod -a -G HwHiAiUser hwMindX
-    ```
-
-- <a name="li19202165424015"></a>CentOS操作系统
-
-    ```shell
-    useradd -d /home/hwMindX -u 9000 -m -s /sbin/nologin hwMindX
-    usermod -a -G HwHiAiUser hwMindX
-    ```
-
->[!NOTE]
->
->- 其余操作系统创建用户：
->     - 基于Ubuntu操作系统开发的操作系统，参考[Ubuntu操作系统](#li1069651515405)。
->     - 基于CentOS操作系统开发的操作系统，参考[CentOS操作系统](#li19202165424015)。
->- HwHiAiUser是驱动或CANN软件包所需的软件运行用户。
->- 执行**getent passwd**命令，查看所有物理机（存储节点、管理节点、计算节点）和容器内，HwHiAiUser的UID和GID是否一致，且都为1000。如果被占用可能会导致服务不可用，可以参见[用户UID或GID被占用](https://gitcode.com/Ascend/mind-cluster/issues/337)章节进行处理。
-
-**表 1**  组件用户说明
-
-<a name="table125971501113"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0299839362_row86431704617"><th class="cellrowborder" valign="top" width="20.962096209620963%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0299839362_p464201754614"><a name="zh-cn_topic_0299839362_p464201754614"></a><a name="zh-cn_topic_0299839362_p464201754614"></a>组件</p>
-</th>
-<th class="cellrowborder" valign="top" width="34.13341334133413%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0299839362_p11647172468"><a name="zh-cn_topic_0299839362_p11647172468"></a><a name="zh-cn_topic_0299839362_p11647172468"></a>启动用户</p>
-</th>
-<th class="cellrowborder" valign="top" width="44.90449044904491%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0299839362_p56451734620"><a name="zh-cn_topic_0299839362_p56451734620"></a><a name="zh-cn_topic_0299839362_p56451734620"></a>是否使用特权容器</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0299839362_row3641172465"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p671453716107"><a name="p671453716107"></a><a name="p671453716107"></a><span id="ph14925450192719"><a name="ph14925450192719"></a><a name="ph14925450192719"></a>NPU Exporter</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><a name="ul124012695512"></a><a name="ul124012695512"></a><ul id="ul124012695512"><li>二进制运行：hwMindX</li><li>容器运行：root</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><a name="ul8401830195518"></a><a name="ul8401830195518"></a><ul id="ul8401830195518"><li>二进制运行：不涉及。</li><li>容器运行：需要使用特权容器，建议用户使用二进制运行。</li></ul>
-</td>
-</tr>
-<tr id="zh-cn_topic_0299839362_row1064121764612"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0299839362_p16641317134612"><a name="zh-cn_topic_0299839362_p16641317134612"></a><a name="zh-cn_topic_0299839362_p16641317134612"></a><span id="ph522114212719"><a name="ph522114212719"></a><a name="ph522114212719"></a>Ascend Device Plugin</span></p>
-</td>
-<td class="cellrowborder" rowspan="2" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p53735269103"><a name="p53735269103"></a><a name="p53735269103"></a>root</p>
-</td>
-<td class="cellrowborder" rowspan="2" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p29286561106"><a name="p29286561106"></a><a name="p29286561106"></a>需要使用特权容器。</p>
-</td>
-</tr>
-<tr id="row10935147171519"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1935947181513"><a name="p1935947181513"></a><a name="p1935947181513"></a><span id="ph5551115391513"><a name="ph5551115391513"></a><a name="ph5551115391513"></a>NodeD</span></p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0299839362_row664817164615"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0299839362_p0649177466"><a name="zh-cn_topic_0299839362_p0649177466"></a><a name="zh-cn_topic_0299839362_p0649177466"></a><span id="ph175881448132716"><a name="ph175881448132716"></a><a name="ph175881448132716"></a>Volcano</span></p>
-</td>
-<td class="cellrowborder" rowspan="5" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p153424813128"><a name="p153424813128"></a><a name="p153424813128"></a>hwMindX</p>
-</td>
-<td class="cellrowborder" rowspan="5" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p17327314131212"><a name="p17327314131212"></a><a name="p17327314131212"></a>不涉及。</p>
-</td>
-</tr>
-<tr id="row24141825191817"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1941515259187"><a name="p1941515259187"></a><a name="p1941515259187"></a><span id="ph16899408574"><a name="ph16899408574"></a><a name="ph16899408574"></a>ClusterD</span></p>
-</td>
-</tr>
-<tr id="row29051413163917"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p390551333913"><a name="p390551333913"></a><a name="p390551333913"></a><span id="ph829115811272"><a name="ph829115811272"></a><a name="ph829115811272"></a>Resilience Controller</span></p>
-</td>
-</tr>
-<tr id="row1674814434406"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p97491434407"><a name="p97491434407"></a><a name="p97491434407"></a><span id="ph1566531814589"><a name="ph1566531814589"></a><a name="ph1566531814589"></a>Infer Operator</span></p>
-</td>
-</tr>
-<tr id="row1674814434406"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p97491434407"><a name="p97491434407"></a><a name="p97491434407"></a><span id="ph1566531814589"><a name="ph1566531814589"></a><a name="ph1566531814589"></a>Ascend Operator</span></p>
-</td>
-</tr>
-<tr id="row6784854202610"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p11621711181811"><a name="p11621711181811"></a><a name="p11621711181811"></a><span id="ph1790811553279"><a name="ph1790811553279"></a><a name="ph1790811553279"></a>Elastic Agent</span></p>
-</td>
-<td class="cellrowborder" rowspan="2" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p161622011121819"><a name="p161622011121819"></a><a name="p161622011121819"></a>由用户自行决定，建议使用非root用户。</p>
-</td>
-<td class="cellrowborder" rowspan="2" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p1916271131815"><a name="p1916271131815"></a><a name="p1916271131815"></a>由用户自行决定，建议不使用特权容器。</p>
-</td>
-</tr>
-<tr id="row315419369301"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p715593611302"><a name="p715593611302"></a><a name="p715593611302"></a><span id="ph11742444163719"><a name="ph11742444163719"></a><a name="ph11742444163719"></a>TaskD</span></p>
-</td>
-</tr>
-<tr id="row3502131311115"><td class="cellrowborder" valign="top" width="20.962096209620963%" headers="mcps1.2.4.1.1 "><p id="p175021513201117"><a name="p175021513201117"></a><a name="p175021513201117"></a><span id="ph16988102112717"><a name="ph16988102112717"></a><a name="ph16988102112717"></a>Container Manager</span></p>
-</td>
-<td class="cellrowborder" valign="top" width="34.13341334133413%" headers="mcps1.2.4.1.2 "><p id="p1450212134110"><a name="p1450212134110"></a><a name="p1450212134110"></a>root</p>
-</td>
-<td class="cellrowborder" valign="top" width="44.90449044904491%" headers="mcps1.2.4.1.3 "><p id="p6502191318116"><a name="p6502191318116"></a><a name="p6502191318116"></a>不涉及。</p>
-</td>
-</tr>
-</tbody>
-</table>
-
-## 创建日志目录<a name="ZH-CN_TOPIC_0000002511346417"></a>
-
-在对应节点创建组件日志父目录和各组件的日志目录，并设置目录对应属主和权限。
-
-**操作步骤<a name="section124928122416"></a>**
-
-1. 执行以下命令，按照[表1 集群调度组件日志路径列表](#table957112617314)，在各节点创建组件日志父目录。
-
-    ```shell
-    mkdir -m 755 /var/log/mindx-dl
-    chown root:root /var/log/mindx-dl
-    ```
-
-2. 根据所使用组件的具体情况，创建相应的日志目录。
-
-    **表 1** 集群调度组件日志路径列表
-
-    <a name="table957112617314"></a>
-    <table><thead align="left"><tr id="row2057210616310"><th class="cellrowborder" valign="top" width="21.93%" id="mcps1.2.5.1.1"><p id="p10572761231"><a name="p10572761231"></a><a name="p10572761231"></a>组件</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="41.91%" id="mcps1.2.5.1.2"><p id="p11572156430"><a name="p11572156430"></a><a name="p11572156430"></a>创建日志目录命令</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="17.05%" id="mcps1.2.5.1.3"><p id="p25721364319"><a name="p25721364319"></a><a name="p25721364319"></a>日志路径创建节点</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="19.11%" id="mcps1.2.5.1.4"><p id="p16572661320"><a name="p16572661320"></a><a name="p16572661320"></a>说明</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="row457296131"><td class="cellrowborder" valign="top" width="21.93%" headers="mcps1.2.5.1.1 "><p id="p1572469315"><a name="p1572469315"></a><a name="p1572469315"></a><span id="ph9572196532"><a name="ph9572196532"></a><a name="ph9572196532"></a>Ascend Device Plugin</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen1657216638"><a name="screen1657216638"></a><a name="screen1657216638"></a>mkdir -m 750 /var/log/mindx-dl/devicePlugin
-   chown root:root /var/log/mindx-dl/devicePlugin</pre>
-    </td>
-    <td class="cellrowborder" rowspan="5" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p11572661536"><a name="p11572661536"></a><a name="p11572661536"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" rowspan="3" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p557592110325"><a name="p557592110325"></a><a name="p557592110325"></a>-</p>
-    </td>
-    </tr>
-    <tr id="row95721761536"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p125721269315"><a name="p125721269315"></a><a name="p125721269315"></a><span id="ph14572161034"><a name="ph14572161034"></a><a name="ph14572161034"></a>NPU Exporter</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen457213611313"><a name="screen457213611313"></a><a name="screen457213611313"></a>mkdir -m 750 /var/log/mindx-dl/npu-exporter
-   chown root:root /var/log/mindx-dl/npu-exporter</pre>
-    </td>
-    </tr>
-    <tr id="row105739620318"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p195731868318"><a name="p195731868318"></a><a name="p195731868318"></a><span id="ph11573862310"><a name="ph11573862310"></a><a name="ph11573862310"></a>NodeD</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen1957396735"><a name="screen1957396735"></a><a name="screen1957396735"></a>mkdir -m 750 /var/log/mindx-dl/noded
-   chown root:root /var/log/mindx-dl/noded</pre>
-    </td>
-    </tr>
-    <tr id="row55731961237"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p15573961314"><a name="p15573961314"></a><a name="p15573961314"></a><span id="ph13573106431"><a name="ph13573106431"></a><a name="ph13573106431"></a>Elastic Agent</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen55735616314"><a name="screen55735616314"></a><a name="screen55735616314"></a>mkdir -m 750 /var/log/mindx-dl/elastic
-   chown <em id="i15731661134"><a name="i15731661134"></a><a name="i15731661134"></a>由用户自行定义</em> /var/log/mindx-dl/elastic</pre>
-    <div class="note" id="note3573061032"><a name="note3573061032"></a><a name="note3573061032"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p2057310617318"><a name="p2057310617318"></a><a name="p2057310617318"></a>将<span id="ph1472342453512"><a name="ph1472342453512"></a><a name="ph1472342453512"></a>Elastic Agent</span>日志目录挂载到容器内，详见<a href="../../../usage/resumable_training/06_configuring_the_job_yaml_file.md#任务yaml配置示例">任务YAML配置示例</a>章节中“修改训练脚本、代码的挂载路径”步骤。</p>
-    </div></div>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><a name="ul958614153510"></a><a name="ul958614153510"></a><ul id="ul958614153510"><li>目录属主由用户自定义。注意：安装<span id="ph67093892615"><a name="ph67093892615"></a><a name="ph67093892615"></a>Elastic Agent</span>的用户属组、调用<span id="ph1642075902418"><a name="ph1642075902418"></a><a name="ph1642075902418"></a>Elastic Agent</span>的运行用户属组、挂载宿主机的目录属组请保持一致。</li><li>用户可自定义<span id="ph1790811553279"><a name="ph1790811553279"></a><a name="ph1790811553279"></a>Elastic Agent</span>的运行日志的落盘路径，在该路径下，用户可查看<span id="ph1529820279122"><a name="ph1529820279122"></a><a name="ph1529820279122"></a>Elastic Agent</span>所有节点日志，无需逐一登录每个节点查看。</li></ul>
-    </td>
-    </tr>
-    <tr id="row189638410329"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p7963164113217"><a name="p7963164113217"></a><a name="p7963164113217"></a><span id="ph11742444163719"><a name="ph11742444163719"></a><a name="ph11742444163719"></a>TaskD</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen929012103313"><a name="screen929012103313"></a><a name="screen929012103313"></a>mkdir  -m 750  <em id="i15660102313617"><a name="i15660102313617"></a><a name="i15660102313617"></a>训练脚本目录</em>/taskd_log
-   chown <em id="i4956143053617"><a name="i4956143053617"></a><a name="i4956143053617"></a>由用户自行定义</em> <em id="i6187123720366"><a name="i6187123720366"></a><a name="i6187123720366"></a>训练脚本目录</em>/taskd_log </pre>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><a name="ul9461980353"></a><a name="ul9461980353"></a><ul id="ul9461980353"><li>目录属主由用户自定义。</li><li><span id="ph1524182517352"><a name="ph1524182517352"></a><a name="ph1524182517352"></a>TaskD</span>在运行过程中可以自动创建对应日志目录，日志目录前缀一般为任务YAML中执行<strong id="b5881131073711"><a name="b5881131073711"></a><a name="b5881131073711"></a>bash命令</strong>或拉起训练时所在目录。</li></ul>
-    </td>
-    </tr>
-    <tr id="row65749616319"><td class="cellrowborder" valign="top" width="21.93%" headers="mcps1.2.5.1.1 "><p id="p8574136838"><a name="p8574136838"></a><a name="p8574136838"></a><span id="ph13574365316"><a name="ph13574365316"></a><a name="ph13574365316"></a>Ascend Operator</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen05746613313"><a name="screen05746613313"></a><a name="screen05746613313"></a>mkdir -m 750 /var/log/mindx-dl/ascend-operator
-   chown hwMindX:hwMindX /var/log/mindx-dl/ascend-operator</pre>
-    </td>
-    <td class="cellrowborder" rowspan="6" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p65611868135"><a name="p65611868135"></a><a name="p65611868135"></a>管理节点</p>
-    </td>
-    <td class="cellrowborder" rowspan="6" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p11355115061313"><a name="p11355115061313"></a><a name="p11355115061313"></a>-</p>
-    </td>
-    </tr>
-    <tr id="row45741461130"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p18574466314"><a name="p18574466314"></a><a name="p18574466314"></a><span id="ph13574176736"><a name="ph13574176736"></a><a name="ph13574176736"></a>Infer Operator</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen1574064313"><a name="screen1574064313"></a><a name="screen1574064313"></a>mkdir -m 750 /var/log/mindx-dl/infer-operator
-   chown hwMindX:hwMindX /var/log/mindx-dl/infer-operator</pre>
-    </td>
-    </tr>
-    <tr id="row45741461130"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p18574466314"><a name="p18574466314"></a><a name="p18574466314"></a><span id="ph13574176736"><a name="ph13574176736"></a><a name="ph13574176736"></a>Resilience Controller</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen1574064313"><a name="screen1574064313"></a><a name="screen1574064313"></a>mkdir -m 750 /var/log/mindx-dl/resilience-controller
-   chown hwMindX:hwMindX /var/log/mindx-dl/resilience-controller</pre>
-    </td>
-    </tr>
-    <tr id="row68981954111810"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p28991454191811"><a name="p28991454191811"></a><a name="p28991454191811"></a><span id="ph16899408574"><a name="ph16899408574"></a><a name="ph16899408574"></a>ClusterD</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen161652618196"><a name="screen161652618196"></a><a name="screen161652618196"></a>mkdir -m 750 /var/log/mindx-dl/clusterd
-   chown hwMindX:hwMindX /var/log/mindx-dl/clusterd</pre>
-    </td>
-    </tr>
-    <tr id="row957413616315"><td class="cellrowborder" rowspan="2" valign="top" headers="mcps1.2.5.1.1 "><p id="p1657414618311"><a name="p1657414618311"></a><a name="p1657414618311"></a><span id="ph185741164311"><a name="ph185741164311"></a><a name="ph185741164311"></a>Volcano</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen145741661036"><a name="screen145741661036"></a><a name="screen145741661036"></a>mkdir -m 750 /var/log/mindx-dl/volcano-controller
-   chown hwMindX:hwMindX /var/log/mindx-dl/volcano-controller</pre>
-    </td>
-    </tr>
-    <tr id="row18574568314"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><pre class="screen" id="screen1257416635"><a name="screen1257416635"></a><a name="screen1257416635"></a>mkdir -m 750 /var/log/mindx-dl/volcano-scheduler
-   chown hwMindX:hwMindX /var/log/mindx-dl/volcano-scheduler</pre>
-    </td>
-    </tr>
-    <tr id="row14307175681213"><td class="cellrowborder" valign="top" width="21.93%" headers="mcps1.2.5.1.1 "><p id="p1030717560124"><a name="p1030717560124"></a><a name="p1030717560124"></a><span id="ph172417011305"><a name="ph172417011305"></a><a name="ph172417011305"></a>Container Manager</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="41.91%" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen44681417291"><a name="screen44681417291"></a><a name="screen44681417291"></a>mkdir -m 750 /var/log/mindx-dl/container-manager
-   chown root:root /var/log/mindx-dl/container-manager</pre>
-    </td>
-    <td class="cellrowborder" valign="top" width="17.05%" headers="mcps1.2.5.1.3 "><p id="p53074565125"><a name="p53074565125"></a><a name="p53074565125"></a>需要使用容器恢复特性的节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="19.11%" headers="mcps1.2.5.1.4 "><p id="p1518124119135"><a name="p1518124119135"></a><a name="p1518124119135"></a>-</p>
-    </td>
-    </tr>
-    </tbody>
-    </table>
-
-## 创建命名空间<a name="ZH-CN_TOPIC_0000002479226384"></a>
-
-- 集群调度的NodeD、Resilience Controller、ClusterD、Infer Operator和Ascend Operator组件会运行在K8s的mindx-dl命名空间下，请在K8s的管理节点执行如下命令，创建对应的命名空间。
-
-    ```shell
-    kubectl create ns mindx-dl
-    ```
-
-- MindCluster上报超节点信息、pingmesh配置信息、公共故障信息需手动创建名为cluster-system命名空间。请在K8s的管理节点执行如下命令。
-
-    ```shell
-    kubectl create ns cluster-system
-    ```
-
-- NPU Exporter的命名空间为npu-exporter；Volcano的命名空间为volcano-system；Ascend Device Plugin的命名空间为kube-system，上述组件的命名空间由系统创建，用户无需再次创建。
