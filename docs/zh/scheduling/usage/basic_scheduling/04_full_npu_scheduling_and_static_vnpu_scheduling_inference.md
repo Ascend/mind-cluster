@@ -27,7 +27,7 @@
 - 推理卡故障恢复特性可以搭配整卡调度特性一起使用，开启整卡故障恢复特性只需要将Ascend Device Plugin的启动参数“-hotReset”取值设置为“0”或“2”（默认为“-1”，不支持故障恢复功能）。
 - 整卡调度支持下发单副本数或者多副本数的单机任务，每个副本独立工作，只支持推理服务器（插Atlas 300I Duo 推理卡）和Atlas 800I A2 推理服务器、A200I A2 Box 异构组件部署acjob类型的分布式任务。
 - 静态vNPU调度只支持下发单副本数的单机任务，不支持分布式任务。
-- 静态vNPU调度特性需要搭配算力虚拟化特性一起使用，关于静态虚拟化的相关说明和操作请参见[静态虚拟化](../virtual_instance/virtual_instance_with_hdk/06_mounting_vnpu.md#静态虚拟化)章节。
+- 静态vNPU调度特性需要搭配算力虚拟化特性一起使用，关于静态虚拟化的相关说明和操作请参见[静态虚拟化](../virtual_instance/virtual_instance_with_hdk/static_vnpu_scheduling/03_mounting_vnpu_static.md#静态虚拟化)章节。
 
 **支持的产品形态<a name="section169961844182917"></a>**
 
@@ -51,7 +51,7 @@
 
 通过命令行使用Volcano和其他调度器的使用流程一致，主要区别在使用其他调度器准备任务YAML需要参考[通过命令行使用（其他调度器）](#ZH-CN_TOPIC_0000002479227152)章节创建任务YAML。使用其他调度器的其余操作和使用Volcano一致，可以参考[通过命令行使用（Volcano）](#ZH-CN_TOPIC_0000002511427059)进行操作。
 
-**图 1**  使用流程<a name="fig242524985412"></a>  
+**图 1**  使用流程<a name="fig242524985412"></a>
 ![](../../../figures/scheduling/使用流程.png "使用流程")
 
 ## 实现原理<a name="ZH-CN_TOPIC_0000002479227174"></a>
@@ -62,7 +62,7 @@
 
 acjob任务原理图如[图1](#fig36890512379)所示。
 
-**图 1**  acjob任务调度原理图<a name="fig36890512379"></a>  
+**图 1**  acjob任务调度原理图<a name="fig36890512379"></a>
 ![](../../../figures/scheduling/acjob任务调度原理图-0.png "acjob任务调度原理图-0")
 
 各步骤说明如下：
@@ -84,14 +84,14 @@ acjob任务原理图如[图1](#fig36890512379)所示。
 8. Ascend Operator读取Pod的annotation信息，将相关信息写入hccl.json。
 9. 容器读取环境变量或者hccl.json信息，建立通信渠道，开始执行推理任务。
 
-    >[!NOTE] 
+    >[!NOTE]
     >Ascend Operator当前仅支持为PyTorch任务生成hccl.json。
 
 **vcjob任务<a name="section428321965913"></a>**
 
 vcjob任务的原理图如[图2](#fig8231124765)所示。
 
-**图 2**  vcjob任务调度原理图<a name="fig8231124765"></a>  
+**图 2**  vcjob任务调度原理图<a name="fig8231124765"></a>
 ![](../../../figures/scheduling/vcjob任务调度原理图-1.png "vcjob任务调度原理图-1")
 
 各步骤说明如下：
@@ -115,7 +115,7 @@ vcjob任务的原理图如[图2](#fig8231124765)所示。
 
 deploy任务原理图如[图3](#fig178781320593)所示。
 
-**图 3**  deploy任务调度原理图<a name="fig178781320593"></a>  
+**图 3**  deploy任务调度原理图<a name="fig178781320593"></a>
 ![](../../../figures/scheduling/deploy任务调度原理图-2.png "deploy任务调度原理图-2")
 
 各步骤说明如下：
@@ -147,7 +147,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
 
     请注意，21.0.4版本之后推理基础镜像默认用户为非root用户，需要在下载基础镜像后对其进行修改，将默认用户修改为root。
 
-    >[!NOTE]  
+    >[!NOTE]
     >基础镜像中不包含推理模型、脚本等文件，因此，用户需要根据自己的需求进行定制化修改（如加入推理脚本代码、模型等）后才能使用。
 
 - （可选）如果用户需要更个性化的推理环境，可基于已下载的推理基础镜像，再[使用Dockerfile对其进行修改](../../common_operations.md#使用dockerfile构建容器镜像pytorch)。
@@ -167,12 +167,12 @@ deploy任务原理图如[图3](#fig178781320593)所示。
 1. 确保服务器能访问互联网后，访问[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)。
 2. 在左侧导航栏选择推理镜像，然后选择[mindie](https://www.hiascend.com/developer/ascendhub/detail/af85b724a7e5469ebd7ea13c3439d48f)镜像，获取推理示例脚本。
 
-    >[!NOTE] 
+    >[!NOTE]
     >若无下载权限，请根据页面提示申请权限。提交申请后等待管理员审核，审核通过后即可下载镜像。
 
 ### 准备任务YAML<a name="ZH-CN_TOPIC_0000002479387148"></a>
 
->[!NOTE] 
+>[!NOTE]
 >如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载“/dev”目录下的设备。其他目录（如“/usr”）用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
 >因为Atlas 200I SoC A1 核心板场景不支持Ascend Docker Runtime，用户也无需修改YAML文件。
 
@@ -301,7 +301,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     <a name="ul1257013663114"></a><a name="ul1257013663114"></a>
     <p id="p444515595295"><a name="p444515595295"></a><a name="p444515595295"></a>如<em id="i154056256459"><a name="i154056256459"></a><a name="i154056256459"></a>huawei.com/Ascend310P-4c.3cpu</em>: 1</p>
     </td>
-    <td class="cellrowborder" valign="top" width="37.71377137713771%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001609074213_p11590211155219"><a name="zh-cn_topic_0000001609074213_p11590211155219"></a><a name="zh-cn_topic_0000001609074213_p11590211155219"></a>请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。requests和limits下，芯片的名字和数量需保持一致。</p><ul id="ul10782193418818"><li>仅<span id="ph1038285416813"><a name="ph1038285416813"></a><a name="ph1038285416813"></a>Atlas 推理系列产品</span>非混插模式支持静态vNPU调度。</li><li>推理服务器（插<span id="ph1990710374611"><a name="ph1990710374611"></a><a name="ph1990710374611"></a>Atlas 300I 推理卡</span>）和<span id="ph629210161695"><a name="ph629210161695"></a><a name="ph629210161695"></a>Atlas 推理系列产品</span>混插模式不支持静态vNPU调度。</li><li><strong id="b179331118122318"><a name="b179331118122318"></a><a name="b179331118122318"></a><em id="i14933131862318"><a name="i14933131862318"></a><a name="i14933131862318"></a>Y</em></strong>取值可参考<a href="../virtual_instance/virtual_instance_with_hdk/06_mounting_vnpu.md#静态虚拟化">静态虚拟化</a>章节中的虚拟化实例模板与虚拟设备类型关系表的对应产品的“vNPU类型”列。<p id="p208621211164518"><a name="p208621211164518"></a><a name="p208621211164518"></a>以vNPU类型<em id="i412654718449"><a name="i412654718449"></a><a name="i412654718449"></a>Ascend310P-4c.3cpu</em>为例，<strong id="b1835616104433"><a name="b1835616104433"></a><a name="b1835616104433"></a><em id="i135681014319"><a name="i135681014319"></a><a name="i135681014319"></a>Y</em></strong>取值为4c.3cpu，不包括前面的Ascend310P。</p>
+    <td class="cellrowborder" valign="top" width="37.71377137713771%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001609074213_p11590211155219"><a name="zh-cn_topic_0000001609074213_p11590211155219"></a><a name="zh-cn_topic_0000001609074213_p11590211155219"></a>请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。requests和limits下，芯片的名字和数量需保持一致。</p><ul id="ul10782193418818"><li>仅<span id="ph1038285416813"><a name="ph1038285416813"></a><a name="ph1038285416813"></a>Atlas 推理系列产品</span>非混插模式支持静态vNPU调度。</li><li>推理服务器（插<span id="ph1990710374611"><a name="ph1990710374611"></a><a name="ph1990710374611"></a>Atlas 300I 推理卡</span>）和<span id="ph629210161695"><a name="ph629210161695"></a><a name="ph629210161695"></a>Atlas 推理系列产品</span>混插模式不支持静态vNPU调度。</li><li><strong id="b179331118122318"><a name="b179331118122318"></a><a name="b179331118122318"></a><em id="i14933131862318"><a name="i14933131862318"></a><a name="i14933131862318"></a>Y</em></strong>取值可参考<a href="../virtual_instance/virtual_instance_with_hdk/static_vnpu_scheduling/03_mounting_vnpu_static.md#静态虚拟化">静态虚拟化</a>章节中的虚拟化实例模板与虚拟设备类型关系表的对应产品的“vNPU类型”列。<p id="p208621211164518"><a name="p208621211164518"></a><a name="p208621211164518"></a>以vNPU类型<em id="i412654718449"><a name="i412654718449"></a><a name="i412654718449"></a>Ascend310P-4c.3cpu</em>为例，<strong id="b1835616104433"><a name="b1835616104433"></a><a name="b1835616104433"></a><em id="i135681014319"><a name="i135681014319"></a><a name="i135681014319"></a>Y</em></strong>取值为4c.3cpu，不包括前面的Ascend310P。</p>
     </li></ul>
     </td>
     </tr>
@@ -513,7 +513,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
         ...
         spec:
           template:
-            metadata: 
+            metadata:
               labels:
                  app: infers
                  host-arch: huawei-arm
@@ -555,11 +555,11 @@ deploy任务原理图如[图3](#fig178781320593)所示。
             duo: "true"             # 使用Atlas 300I Duo 推理卡
             ring-controller.atlas: ascend-310P  # 标识任务使用的芯片的产品类型
             framework: pytorch       # 框架类型
-        
+
         spec:
-          schedulerName: volcano     #当Ascend Operator组件的启动参数enableGangScheduling为true时生效  
+          schedulerName: volcano     #当Ascend Operator组件的启动参数enableGangScheduling为true时生效
           runPolicy:
-            schedulingPolicy:    
+            schedulingPolicy:
               minAvailable: 2  # 任务总副本数
               queue: default      # 任务所属队列
           successPolicy: AllWorkers # 任务成功的前提
@@ -580,8 +580,8 @@ deploy任务原理图如[图3](#fig178781320593)所示。
                               fieldPath: metadata.annotations['huawei.com/Ascend310P']       # 给容器挂载相应类型的芯片
         ...
                       ports:                  # 分布式训练集合通信端口
-                        - containerPort: 2222     
-                          name: ascendjob-port    
+                        - containerPort: 2222
+                          name: ascendjob-port
                       resources:
                         limits:
                           huawei.com/Ascend310P: 1   # 申请的芯片数量
@@ -589,14 +589,14 @@ deploy任务原理图如[图3](#fig178781320593)所示。
                           huawei.com/Ascend310P: 1  #与limits取值一致
                       volumeMounts:
         ...
-                        - name: ranktable                  
+                        - name: ranktable
                           mountPath: /user/serverid/devindex/config
         ...
                   volumes:
         ...
                     - name: ranktable
                       hostPath:
-                        path: /user/mindx-dl/ranktable/default.default-infer-test  
+                        path: /user/mindx-dl/ranktable/default.default-infer-test
         ...
             Worker:
         ...
@@ -612,8 +612,8 @@ deploy任务原理图如[图3](#fig178781320593)所示。
                               fieldPath: metadata.annotations['huawei.com/Ascend310P']      # 给容器挂载相应类型的芯片
         ...
                       ports:     # 分布式训练集合通信端口
-                        - containerPort: 2222      
-                          name: ascendjob-port      
+                        - containerPort: 2222
+                          name: ascendjob-port
                       resources:
                         limits:
                           huawei.com/Ascend310P: 1   # 申请的芯片数
@@ -622,7 +622,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
                       volumeMounts:
         ...
                           # 可选，使用Ascend Operator组件为PyTorch和MindSpore框架生成RankTable文件，需要新增以下加粗字段，设置容器中hccl.json文件保存路径
-                        <strong>- name: ranktable</strong>                  
+                        <strong>- name: ranktable</strong>
                           <strong>mountPath: /user/serverid/devindex/config</strong>
         ...
                   volumes:
@@ -641,7 +641,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
         ...
         spec:
           template:
-            metadata: 
+            metadata:
               labels:
                  app: infers
         ...
@@ -655,9 +655,9 @@ deploy任务原理图如[图3](#fig178781320593)所示。
                             operator: NotIn
                             values:
                               - soc
-              schedulerName: volcano 
+              schedulerName: volcano
               nodeSelector:
-                host-arch: huawei-arm 
+                host-arch: huawei-arm
         ...
               containers:
               - image: ubuntu-infer:v1
@@ -676,7 +676,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
         ...
         ```
 
-        >[!NOTE] 
+        >[!NOTE]
         >因为Atlas 200I SoC A1 核心板节点需要挂载的目录和文件与其他类型节点不一致，为了避免推理失败，如果需要使用Atlas 推理系列产品芯片，且集群中有Atlas 200I SoC A1 核心板节点但是不希望调度到这类节点上，请在示例的YAML中增加“affinity”字段，表示不调度到有“servertype=soc”标签的节点上。
 
     - <a name="li132621943121411"></a>使用**整卡调度**特性，参考本配置。以infer-deploy-310p-1usoc.yaml为例，在Atlas 200I SoC A1 核心板节点（不支持混插模式）创建一个单卡推理任务，示例如下。
@@ -687,12 +687,12 @@ deploy任务原理图如[图3](#fig178781320593)所示。
         ...
         spec:
           template:
-            metadata: 
+            metadata:
               labels:
                  app: infers
         ...
             spec:
-              schedulerName: volcano 
+              schedulerName: volcano
               nodeSelector:
                 host-arch: huawei-arm
                 servertype: soc      # 该标签表示仅能调度到Atlas 200I SoC A1 核心板节点
@@ -766,14 +766,14 @@ deploy任务原理图如[图3](#fig178781320593)所示。
         ...
         spec:
           template:
-            metadata: 
+            metadata:
               labels:
                  app: infers
         ...
             spec:
-              schedulerName: volcano 
+              schedulerName: volcano
               nodeSelector:
-                host-arch: huawei-arm 
+                host-arch: huawei-arm
         ...
               containers:
               - image: ubuntu-infer:v1
@@ -797,8 +797,8 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     ```Yaml
     ...
                   ports:     # 分布式训练集合通信端口
-                    - containerPort: 2222      
-                      name: ascendjob-port      
+                    - containerPort: 2222
+                      name: ascendjob-port
                   resources:
                     limits:
                       huawei.com/Ascend310P: 1   # 申请的芯片数
@@ -807,7 +807,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
                   volumeMounts:
     ...
                       # 权重文件挂载路径
-                    - name: weights                  
+                    - name: weights
                       mountPath: /path-to-weights
     ...
               volumes:
@@ -856,7 +856,7 @@ kubectl apply -f infer-310p-1usoc.yaml
 job.batch/resnetinfer1-2 created
 ```
 
->[!NOTE] 
+>[!NOTE]
 >如果下发任务成功后，又修改了任务YAML，需要先执行kubectl delete -f _XXX_.yaml命令删除原任务，再重新下发任务。
 
 ### 查看任务进程<a name="ZH-CN_TOPIC_0000002511347103"></a>
@@ -932,7 +932,7 @@ job.batch/resnetinfer1-2 created
 
         在显示的信息中，找到“Allocated resources”下的**Ascend310P-2c**，该参数取值在执行推理任务之后会增加，增加数量为推理任务使用的vNPU芯片个数。
 
-    >[!NOTE]  
+    >[!NOTE]
     >- 如果使用的是Atlas 推理系列产品非混插模式，则上述字段显示为**Ascend310P，Ascend310P-2c**。
     >- 如果使用的是Atlas 推理系列产品混插模式，则上述字段显示为**Ascend310P-V、Ascend310P-VPro、Ascend310P-IPro之一**。
 
@@ -953,14 +953,14 @@ kubectl logs -f resnetinfer1-2-scpr5
 [2025-02-24 19:13:09,331] [2269] [281472887965984] [llm] [INFO] [logging.py-331] : Generate[0] token num: (0, 20)
 ```
 
->[!NOTE]  
+>[!NOTE]
 ><i>resnetinfer1-2-scpr5</i>为[步骤1](#ZH-CN_TOPIC_0000002511347103_li96791230183711)中创建任务对应的Pod名称。
 
 ### （可选）查看推理卡故障恢复结果<a name="ZH-CN_TOPIC_0000002511427061"></a>
 
 当NPU故障时，Volcano组件会自动将该NPU上运行的推理任务调度到其他节点上（其他调度器不支持该功能，需要用户自行实现）；再由Ascend Device Plugin组件实现NPU的复位操作，使NPU恢复健康。用户可以通过**npu-smi info**命令查看NPU信息，若故障的NPU当前“health”字段显示的信息为“OK”，表示NPU已经恢复健康。
 
->[!NOTE] 
+>[!NOTE]
 >Ascend Device Plugin组件实现NPU的复位功能，需要确保当前故障NPU上没有推理任务或者推理任务已经被调走。若用户使用其他调度器且该调度器没有实现重调度功能，可以手动删除该NPU上的推理任务。
 
 ### 删除任务<a name="ZH-CN_TOPIC_0000002511427043"></a>
@@ -980,7 +980,7 @@ kubectl delete -f infer-310p-1usoc.yaml
 回显示例如下：
 
 ```ColdFusion
-root@ubuntu:/home/test/yaml# kubectl delete -f infer-310p-1usoc.yaml 
+root@ubuntu:/home/test/yaml# kubectl delete -f infer-310p-1usoc.yaml
 job "resnetinfer1-2" deleted
 ```
 
@@ -1175,7 +1175,7 @@ job "resnetinfer1-2" deleted
         ...
         ```
 
-        >[!NOTE] 
+        >[!NOTE]
         >因为Atlas 200I SoC A1 核心板节点需要挂载的目录和文件与其他类型节点不一致，为了避免推理失败，如果需要使用Atlas 推理系列产品，且集群中有Atlas 200I SoC A1 核心板节点但是不希望调度到这类节点上，请在示例的YAML中增加“affinity”字段，表示不调度到有“servertype=soc”标签的节点上。
 
     - <a name="li11341135480159"></a>使用**整卡调度**特性，参考本配置。以infer.yaml为例，在Atlas 800I A2 推理服务器上创建一个单卡推理任务，示例如下。

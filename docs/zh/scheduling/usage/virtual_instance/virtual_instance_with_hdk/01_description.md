@@ -8,7 +8,7 @@
 
 昇腾NPU硬件资源主要包括AICore（用于AI模型的计算）、AICPU、内存等，基于HDK的虚拟化实例功能主要原理是将上述硬件资源根据用户指定的资源需求划分出vNPU，每个vNPU对应若干AICore、AICPU、内存资源。例如用户只需要使用4个AICore的算力，系统就会创建一个vNPU，通过vNPU向NPU芯片获取4个AICore提供给容器使用，基于HDK的虚拟化实例方案如[图1 基于HDK的虚拟化实例方案](#fig987114711574)所示。
 
-**图 1**  基于HDK的虚拟化实例方案<a name="fig987114711574"></a>  
+**图 1**  基于HDK的虚拟化实例方案<a name="fig987114711574"></a>
 ![](../../../../figures/scheduling/虚拟化实例方案.png "虚拟化实例方案")
 
 ## 产品支持说明<a name="section17326115542216"></a>
@@ -186,8 +186,8 @@
 ## 使用说明<a name="section1296713336303"></a>
 
 - 静态虚拟化、动态虚拟化基于HDK实现，通过HDK接口将芯片切分成vNPU后，挂载到容器中使用。
-- 如果使用动态虚拟化功能，请直接参见[动态虚拟化](./06_mounting_vnpu.md#动态虚拟化)章节，不需要提前使用npu-smi命令创建vNPU。
-- 如果使用静态虚拟化功能，需要先参见[创建vNPU](./04_creating_vnpu.md)，再进行挂载到容器操作。
+- 如果使用动态虚拟化功能，请直接参见[动态vNPU调度(推理)](./dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md)章节，不需要提前使用npu-smi命令创建vNPU。
+- 如果使用静态虚拟化功能，需要先参见[创建vNPU](./static_vnpu_scheduling/01_creating_vnpu.md)，再进行挂载到容器操作。
 
 ## 使用约束<a name="section911013420264"></a>
 
