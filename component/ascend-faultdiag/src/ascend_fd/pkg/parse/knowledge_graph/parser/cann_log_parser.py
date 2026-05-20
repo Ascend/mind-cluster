@@ -36,8 +36,10 @@ TIME_BUFFER = 300
 
 
 class CANNLogParser(FileParser):
-    HEXADECIMAL_TRIPLET_PATTERN = re.compile(r"errcode:(\((?:0x[0-9A-Fa-f]{1,16}|0), (?:0x[0-9A-Fa-f]{1,16}|0), "
-                                             r"(?:0x[0-9A-Fa-f]{1,16}|0)\))")
+    HEXADECIMAL_TRIPLET_PATTERN = re.compile(
+        r"errcode:(\((?:0x[0-9A-Fa-f]{1,16}|0), (?:0x[0-9A-Fa-f]{1,16}|0), "
+        r"(?:0x[0-9A-Fa-f]{1,16}|0)\))"
+    )
 
     def __init__(self, params: dict):
         """
@@ -55,7 +57,7 @@ class CANNLogParser(FileParser):
         """
         # Log format, eg. "[ERROR] RUNTIME(python3):2023-02-08-14:03:57.xxx.xxx Log string xxx"
         # Parsing "time" format, eg. "2023-02-08 14:03:57.xxxxxx"
-        occur_time = line[line.find(":") + 1:]
+        occur_time = line[line.find(":") + 1 :]
         occur_time = occur_time.split(" ")[0]
         return check_and_format_time_str(occur_time.strip())
 
@@ -80,16 +82,26 @@ class CANNLogParser(FileParser):
         :param line: log line
         :return: logic_device_id, phy_device_id
         """
+        if regular_table.ROOT_INFO_DETECT in line:
+            logic_device_id = filter_single_rank_info(line, regular_table.ENTRY_DEVICE_INFO)
+            phy_device_id = filter_single_rank_info(line, regular_table.SOCKET_PHY_ID_INFO)
+            return (
+                logic_device_id if logic_device_id != NEGATIVE_ONE else "",
+                phy_device_id if phy_device_id != NEGATIVE_ONE else "",
+            )
         if regular_table.ENTRY_ROOT_INFO in line:
             logic_device_id = filter_single_rank_info(line, regular_table.ENTRY_DEVICE_INFO)
             if logic_device_id != NEGATIVE_ONE:
                 return logic_device_id, ""
         if regular_table.RANK_NUM_INFO in line and regular_table.RANK_INFO in line:
-            logic_device_id = filter_single_rank_info(line, regular_table.OLD_DEVICE_INFO) or \
-                              filter_single_rank_info(line, regular_table.LOGIC_DEVICE_INFO)
+            logic_device_id = filter_single_rank_info(line, regular_table.OLD_DEVICE_INFO) or filter_single_rank_info(
+                line, regular_table.LOGIC_DEVICE_INFO
+            )
             phy_device_id = filter_single_rank_info(line, regular_table.PHY_DEVICE_INFO)
-            return logic_device_id if logic_device_id != NEGATIVE_ONE else "", \
-                phy_device_id if phy_device_id != NEGATIVE_ONE else ""
+            return (
+                logic_device_id if logic_device_id != NEGATIVE_ONE else "",
+                phy_device_id if phy_device_id != NEGATIVE_ONE else "",
+            )
         if regular_table.TOTAL_RANK_INFO in line and regular_table.SERVER_ID_INFO in line:
             logic_device_id = filter_single_rank_info(line, regular_table.LOGIC_DEVICE_INFO)
             return logic_device_id, ""
@@ -113,10 +125,10 @@ class CANNLogParser(FileParser):
 
     def parse(self, parse_ctx: KGParseCtx, task_id):
         """
-        Parse log file
-       :param parse_ctx: knowledge graph parser context
-        :param task_id: the task unique id
-        :return: parse fault events list
+         Parse log file
+        :param parse_ctx: knowledge graph parser context
+         :param task_id: the task unique id
+         :return: parse fault events list
         """
         events_list = []
         pid_file_dict = self.find_log(parse_ctx.parse_file_path)
@@ -125,18 +137,18 @@ class CANNLogParser(FileParser):
         pid_file_item = pid_file_dict.items()
         self.resuming_training_time = parse_ctx.resuming_training_time
         self.is_sdk_input = parse_ctx.is_sdk_input
+        device_info_map = getattr(parse_ctx, "device_info_map", {})
         kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
         if self.is_sdk_input:
             results = dict()
             for pid, file_list in pid_file_item:
-                results.update({
-                    f"{self.SOURCE_FILE}_{pid}": self._parse_files_of_pid(pid, file_list)
-                })
+                results.update({f"{self.SOURCE_FILE}_{pid}": self._parse_files_of_pid(pid, file_list, device_info_map)})
         else:
-            multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(pid_file_item),
-                                               task_id=task_id)
+            multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(pid_file_item), task_id=task_id)
             for pid, file_list in pid_file_item:
-                multiprocess_job.add_security_job(f"{self.SOURCE_FILE}_{pid}", self._parse_files_of_pid, pid, file_list)
+                multiprocess_job.add_security_job(
+                    f"{self.SOURCE_FILE}_{pid}", self._parse_files_of_pid, pid, file_list, device_info_map
+                )
             results, _ = multiprocess_job.join_and_get_results()
         if self.SOURCE_FILE == CANN_PLOG_SOURCE:
             device_pid_map = dict()
@@ -183,7 +195,7 @@ class CANNLogParser(FileParser):
             self.end_time = end_time
         self.params.update({"start_time": self.start_time, "end_time": self.end_time})
 
-    def _parse_files_of_pid(self, pid, file_list: List[Union[str, LogInfoSaver]]):
+    def _parse_files_of_pid(self, pid, file_list: List[Union[str, LogInfoSaver]], device_info_map=None):
         """
         Parses all log files of the same PID
         :param pid: the pid of files
@@ -243,6 +255,9 @@ class CANNLogParser(FileParser):
                 if event_dict.get("event_code") == RUNTIME_AICORE_EXECUTE_FAULT and aicore_errcode_record:
                     event_dict.update({"error_code": aicore_errcode_record})
                 event_storage.record_event(event_dict)
+        # A5 plog: 如果没有解析到 phy_device_id，从 device_info_map 中通过 logic_device_id 查找
+        if self.SOURCE_FILE == CANN_PLOG_SOURCE and not phy_device_id and logic_device_id:
+            phy_device_id = (device_info_map or {}).get(logic_device_id, logic_device_id)
         device_id = self._verify_device_id(device_id, phy_device_id, logic_device_id, sdk_device_id)
         event_storage.add_device_id(device_id)
         memory_info_parser.device_id = device_id
@@ -257,8 +272,14 @@ class MemoryInfoParser:
         r"(?P<current_alloced_size>\d{1,20})[;,]? alloced_peak_size=(?P<alloced_peak_size>\d{1,20})[;,]? alloc_cnt="
         r"(?P<alloc_cnt>\d{1,5})[;,]? free_cnt=(?P<free_cnt>\d{1,5})"
     )
-    MEMORY_INFO_KEY_WORDS = ["module_name=", "module_id=", "current_alloced_size=", "alloced_peak_size=", "alloc_cnt=",
-                             "free_cnt="]
+    MEMORY_INFO_KEY_WORDS = [
+        "module_name=",
+        "module_id=",
+        "current_alloced_size=",
+        "alloced_peak_size=",
+        "alloc_cnt=",
+        "free_cnt=",
+    ]
 
     def __init__(self):
         self.source_file = ""
@@ -297,16 +318,21 @@ class MemoryInfoParser:
             if not regex_data:
                 continue
             memory_info.append(regex_data.groupdict())
-        sorted_memory_info = sorted(memory_info, key=lambda info: (
-            int(info["current_alloced_size"]), int(info["alloced_peak_size"])), reverse=True)
-        memory_events.append({
-            "event_code": AISW_CANN_MEMORY_INFO,
-            "key_info": "\n".join(key_info_list),
-            "source_device": self.device_id or "Unknown",
-            "occur_time": occur_time,
-            "source_file": self.source_file,
-            "memory_info": sorted_memory_info
-        })
+        sorted_memory_info = sorted(
+            memory_info,
+            key=lambda info: (int(info["current_alloced_size"]), int(info["alloced_peak_size"])),
+            reverse=True,
+        )
+        memory_events.append(
+            {
+                "event_code": AISW_CANN_MEMORY_INFO,
+                "key_info": "\n".join(key_info_list),
+                "source_device": self.device_id or "Unknown",
+                "occur_time": occur_time,
+                "source_file": self.source_file,
+                "memory_info": sorted_memory_info,
+            }
+        )
         return memory_events
 
 

@@ -22,11 +22,33 @@ from itertools import chain
 
 from ascend_fd.model.parse_info import PlogPidParseInfo, SuperPodInfo, LCNInfo
 from ascend_fd.utils.status import FileNotExistError
-from ascend_fd.utils.tool import safe_write_open, safe_read_open, check_file_num_and_size, \
-    safe_generate_or_merge_json_file, PLOG_MAX_NUM, PLOG_SIZE_THRESHOLD, SERIAL_NUMBER, \
-    BOARD_SERIAL_NUMBER, LCNE_LEVEL, LCNE_SWITCH_ID, LCNE_CONFIG_NAME
-from ascend_fd.utils.regular_table import DEVICE_IP_FILE, TLS_SWITCH, HCCL_IP_INFO, HCCL_IPADDR, \
-    MAX_TIME, MIN_TIME, HOST_SN, BMC_COMPLETE_MACHINE_SN, BMC_BOARD_SN, LCNE_BOARD_SN, SERVER_INFO_FILE
+from ascend_fd.utils.tool import (
+    safe_write_open,
+    safe_read_open,
+    check_file_num_and_size,
+    safe_generate_or_merge_json_file,
+    PLOG_MAX_NUM,
+    PLOG_SIZE_THRESHOLD,
+    SERIAL_NUMBER,
+    BOARD_SERIAL_NUMBER,
+    LCNE_LEVEL,
+    LCNE_SWITCH_ID,
+    LCNE_CONFIG_NAME,
+    load_device_info_map,
+)
+from ascend_fd.utils.regular_table import (
+    DEVICE_IP_FILE,
+    TLS_SWITCH,
+    HCCL_IP_INFO,
+    HCCL_IPADDR,
+    MAX_TIME,
+    MIN_TIME,
+    HOST_SN,
+    BMC_COMPLETE_MACHINE_SN,
+    BMC_BOARD_SN,
+    LCNE_BOARD_SN,
+    SERVER_INFO_FILE,
+)
 from ascend_fd.configuration.config import RC_PARSER_DUMP_NAME
 from ascend_fd.pkg.parse.root_cluster.parser import PidFileParser
 
@@ -42,7 +64,7 @@ SUPER_POD_ID = "SuperPodId"
 SUPER_POD_SIZE = "SuperPodSize"
 SUPER_POD_BOARD_PRODUCT_NAME = "IT22SMMB"
 A3_SUPER_POD = "Atlas 900 A3 SuperPoD Compute Node"
-MAX_UINT32 = 2 ** 32 - 1
+MAX_UINT32 = 2**32 - 1
 
 
 def parse_lcne_info(cfg):
@@ -56,8 +78,11 @@ def parse_lcne_info(cfg):
         safe_generate_or_merge_json_file(os.path.join(cfg.output_path, SERVER_INFO_FILE), lcne_sn_dict)
     lcne_switch_info = parse_lcne_switch_info(cfg)
     if lcne_switch_info:
-        super_info_dict = {LCNE_LEVEL: lcne_switch_info.level, LCNE_SWITCH_ID: lcne_switch_info.switch_id,
-                           LCNE_CONFIG_NAME: lcne_switch_info.config_name}
+        super_info_dict = {
+            LCNE_LEVEL: lcne_switch_info.level,
+            LCNE_SWITCH_ID: lcne_switch_info.switch_id,
+            LCNE_CONFIG_NAME: lcne_switch_info.config_name,
+        }
         safe_generate_or_merge_json_file(os.path.join(cfg.output_path, SERVER_INFO_FILE), super_info_dict)
 
 
@@ -76,8 +101,11 @@ def parse_bmc_info(cfg):
         safe_generate_or_merge_json_file(os.path.join(cfg.output_path, SERVER_INFO_FILE), bmc_sn_dict)
     super_pod_info = parse_bmc_super_pod_info(cfg)
     if super_pod_info:
-        super_info_dict = {SERVER_INDEX: super_pod_info.server_index, SUPER_POD_ID: super_pod_info.super_pod_id,
-                           SUPER_POD_SIZE: super_pod_info.super_pod_size}
+        super_info_dict = {
+            SERVER_INDEX: super_pod_info.server_index,
+            SUPER_POD_ID: super_pod_info.super_pod_id,
+            SUPER_POD_SIZE: super_pod_info.super_pod_size,
+        }
         safe_generate_or_merge_json_file(os.path.join(cfg.output_path, SERVER_INFO_FILE), super_info_dict)
 
 
@@ -91,8 +119,9 @@ def start_rc_parse_job(cfg):
     if cfg.lcne_log:
         parse_lcne_info(cfg)
     plog_files = cfg.log_saver.get_plog_dict() if cfg.log_saver is not None else dict()
-    check_file_num_and_size(list(chain(*plog_files.values())), rc_logger, file_num=PLOG_MAX_NUM,
-                            file_size=PLOG_SIZE_THRESHOLD)
+    check_file_num_and_size(
+        list(chain(*plog_files.values())), rc_logger, file_num=PLOG_MAX_NUM, file_size=PLOG_SIZE_THRESHOLD
+    )
     if not plog_files:
         if cfg.bmc_log or cfg.lcne_log:
             return
@@ -100,6 +129,7 @@ def start_rc_parse_job(cfg):
         raise FileNotExistError("No plog file that meets the path specifications is found.")
     device_ip_map = parse_device_ip_map(cfg)
     tls_status_map = parse_tls_status(cfg)
+    device_info_map = load_device_info_map(cfg.dev_log_saver.get_hisi_logs_list() if cfg.dev_log_saver else [])
     pid_parse_result = dict()
     device_pid_map = dict()  # use device id and pid to filter the latest task
     resuming_training_dict = cfg.log_saver.resuming_training_record
@@ -107,8 +137,13 @@ def start_rc_parse_job(cfg):
     device_log_dict = cfg.log_saver.get_device_log_dict()
 
     for pid, file_list in plog_files.items():
-        pid_file_parser = PidFileParser(pid, device_ip_map, resuming_training_dict.get(pid, MIN_TIME),
-                                        n_second_recovery_record.get(pid, MIN_TIME))
+        pid_file_parser = PidFileParser(
+            pid,
+            device_ip_map,
+            resuming_training_dict.get(pid, MIN_TIME),
+            n_second_recovery_record.get(pid, MIN_TIME),
+            device_info_map=device_info_map,
+        )
         for file_path in file_list:
             pid_file_parser.parse_log(file_path)
         this_pid_result = pid_file_parser.get_result()
@@ -123,8 +158,9 @@ def start_rc_parse_job(cfg):
         this_pid_result.aicpu_notify_wait_remote = filter_device_error(device_log_dict.get(pid))
         pid_parse_result.update({pid: this_pid_result.to_dict()})
 
-    with safe_write_open(os.path.join(cfg.output_path, RC_PARSER_DUMP_NAME), mode="w+", encoding="utf-8") \
-            as file_stream:
+    with safe_write_open(
+        os.path.join(cfg.output_path, RC_PARSER_DUMP_NAME), mode="w+", encoding="utf-8"
+    ) as file_stream:
         file_stream.write(json.dumps(pid_parse_result, ensure_ascii=False))
         file_stream.write('\r\n')
     # save device_ip_info.json for old version
@@ -254,8 +290,11 @@ def get_bmc_super_pod_info(bmc_log):
                 value = line.split(':', 1)[1].strip()
                 super_pod_info_dict[current_key] = int(value) if value.isdigit() else 0
 
-    return SuperPodInfo(super_pod_info_dict.get(SERVER_INDEX, 0), super_pod_info_dict.get(SUPER_POD_ID, 0),
-                        super_pod_info_dict.get(SUPER_POD_SIZE, 0))
+    return SuperPodInfo(
+        super_pod_info_dict.get(SERVER_INDEX, 0),
+        super_pod_info_dict.get(SUPER_POD_ID, 0),
+        super_pod_info_dict.get(SUPER_POD_SIZE, 0),
+    )
 
 
 def get_lcne_switch_info(lcne_log):
@@ -278,17 +317,15 @@ def get_lcne_switch_info(lcne_log):
             switch_match = switch_pattern.search(line.strip())
             superpod_match = superpod_pattern.search(line.strip())
             if switch_match:
-                current_block.update({
-                    LCNE_LEVEL: int(switch_match.group(1)),
-                    LCNE_SWITCH_ID: int(switch_match.group(2))
-                })
+                current_block.update(
+                    {LCNE_LEVEL: int(switch_match.group(1)), LCNE_SWITCH_ID: int(switch_match.group(2))}
+                )
             elif superpod_match:
                 current_block[LCNE_CONFIG_NAME] = superpod_match.group(1)
                 result = current_block.copy()
                 current_block = {}  # reset current block
 
-    return LCNInfo(result.get(LCNE_LEVEL, 0), result.get(LCNE_SWITCH_ID, 0),
-                   result.get(LCNE_CONFIG_NAME, ""))
+    return LCNInfo(result.get(LCNE_LEVEL, 0), result.get(LCNE_SWITCH_ID, 0), result.get(LCNE_CONFIG_NAME, ""))
 
 
 def parse_npu_info_file(npu_info_file):
@@ -303,16 +340,14 @@ def parse_npu_info_file(npu_info_file):
             event_message = event_message.strip()
             if "ipaddr" not in event_message:
                 continue
-            """
-            examples of some contents in the npu_info_before(after).txt file 
-                hccn_tool -i 0 -ip -g
-                ipaddr:x.x.x.x
-                netmask:x.x.x.x
-
-                hccn_tool -i 1 -ip -g
-                ipaddr:x.x.x.x
-                netmask:x.x.x.x
-            """
+            # examples of some contents in the npu_info_before(after).txt file
+            #     hccn_tool -i 0 -ip -g
+            #     ipaddr:x.x.x.x
+            #     netmask:x.x.x.x
+            #
+            #     hccn_tool -i 1 -ip -g
+            #     ipaddr:x.x.x.x
+            #     netmask:x.x.x.x
             hccl_info_re = re.search(HCCL_IP_INFO, event_message)
             ipaddr_re = re.search(HCCL_IPADDR, event_message)
             if not hccl_info_re or not ipaddr_re:

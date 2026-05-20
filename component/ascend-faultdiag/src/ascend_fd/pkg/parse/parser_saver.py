@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+# pylint: disable=too-many-lines
 import argparse
 import bisect
 import glob
@@ -32,9 +33,22 @@ from ascend_fd.model.mindie_info import MindIEParseResult, MindIEDiagResult
 from ascend_fd.pkg.customize.custom_config.config_info import get_config_info, ConfigInfo, CustomFileInfo
 from ascend_fd.utils import regular_table
 from ascend_fd.utils.status import ParamError, InnerError, PathError, FileNotExistError
-from ascend_fd.utils.tool import safe_walk, get_log_module_and_time, path_check, fd_logger, SERIAL_NUMBER, \
-    check_and_format_time_str, echo, safe_list_dir, safe_write_open, safe_read_json, BOARD_SERIAL_NUMBER, \
-    collect_parse_results, WORKER_MAX_NUM, check_symlink
+from ascend_fd.utils.tool import (
+    safe_walk,
+    get_log_module_and_time,
+    path_check,
+    fd_logger,
+    SERIAL_NUMBER,
+    check_and_format_time_str,
+    echo,
+    safe_list_dir,
+    safe_write_open,
+    safe_read_json,
+    BOARD_SERIAL_NUMBER,
+    collect_parse_results,
+    WORKER_MAX_NUM,
+    check_symlink,
+)
 
 logger = logging.getLogger("FAULT_DIAG")
 
@@ -117,18 +131,10 @@ class ProcessLogSaver(BaseLogSaver):
         """
         super().__init__()
         # plog save dict
-        self.plog_dict = {
-            "run": dict(),
-            "debug": dict(),
-            "default": dict()
-        }
+        self.plog_dict = {"run": dict(), "debug": dict(), "default": dict()}
 
         # device log save dict
-        self.device_log_dict = {
-            "debug": dict(),
-            "run": dict(),
-            "default": dict()
-        }
+        self.device_log_dict = {"debug": dict(), "run": dict(), "default": dict()}
 
         self.resuming_training_time = regular_table.MIN_TIME
         self.resuming_training_record = dict()
@@ -202,8 +208,9 @@ class ProcessLogSaver(BaseLogSaver):
             return
         unique_pids = set()
         for item in item_list:
-            match_re = re.match(regular_table.PLOG_ORIGIN, item.filename) or \
-                       re.match(regular_table.PLOG_DEVICE_ORIGIN, item.filename)
+            match_re = re.match(regular_table.PLOG_ORIGIN, item.filename) or re.match(
+                regular_table.PLOG_DEVICE_ORIGIN, item.filename
+            )
             pid = match_re[1] if match_re else self._allocate_unique_pid(unique_pids)
             unique_pids.add(pid)
             if item.has_parent("run"):
@@ -223,11 +230,13 @@ class ProcessLogSaver(BaseLogSaver):
             return
         pid_info_dict = dict()
         for pid, item_list in run_plog.items():
+            # fmt: off
             all_lines = (
                 line
                 for item in item_list
                 for line in item.log_lines
             )
+            # fmt: on
             for line in all_lines:
                 self._handle_single_resuming_training_info(line, pid, pid_info_dict)
         self._update_resuming_training_time_by_pid_info(pid_info_dict)
@@ -311,10 +320,11 @@ class ProcessLogSaver(BaseLogSaver):
                 "-rHE",
                 "--include=plog-*",
                 regular_table.ATTR_INIT_SUCCESS + "|" + regular_table.N_SECOND_RECOVERY_FINISH,
-                run_plog_dir
+                run_plog_dir,
             ],
             text=True,
-            capture_output=True
+            capture_output=True,
+            check=False,
         )
         # cmd return code 0 if executed successfully
         if result.returncode != 0:
@@ -373,8 +383,7 @@ class ProcessLogSaver(BaseLogSaver):
             pid_info_dict[pid] = (store_time, count + 1)
             return
         pid_info_dict[pid] = (log_time, count + 1)
-        if log_time > self.resuming_training_time:
-            self.resuming_training_time = log_time
+        self.resuming_training_time = max(self.resuming_training_time, log_time)
 
 
 class EnvInfoSaver(BaseLogSaver):
@@ -456,8 +465,11 @@ class EnvInfoSaver(BaseLogSaver):
         if re.match(regular_table.NPU_DETAILS_CSV, file_name):
             self.npu_detail_list.append(os.path.join(dir_path, file_name))
             return
-        if not self.host_metrics_path and file_name.startswith(self.HOST_METRICS_NAME) \
-                and file_name.endswith(self.HOST_METRICS_KEY):
+        if (
+            not self.host_metrics_path
+            and file_name.startswith(self.HOST_METRICS_NAME)
+            and file_name.endswith(self.HOST_METRICS_KEY)
+        ):
             self.host_metrics_path = os.path.join(dir_path, file_name)
 
 
@@ -486,27 +498,27 @@ class TrainLogSaver(BaseLogSaver):
         """
         return self.train_log_files if not self.is_sdk_input else self.log_map.get(regular_table.TRAIN_LOG_SOURCE, [])
 
-    def filter_log(self, file_src):
+    def filter_log(self, file_dir):
         """
         Filter the train log.
-        :param file_src: str of dir or list of dirs and filenames for train log
+        :param file_dir: str of dir or list of dirs and filenames for train log
         """
-        if file_src is None:
+        if file_dir is None:
             return
-        if isinstance(file_src, str):
-            self._recognize_full_formatted_train_log(file_src)
+        if isinstance(file_dir, str):
+            self._recognize_full_formatted_train_log(file_dir)
             return
-        for src in sorted(file_src, key=lambda path: os.path.isdir(path)):
+        for src in sorted(file_dir, key=os.path.isdir):
             if os.path.isfile(src):
                 self.train_log_files.append(src)
             else:
                 self._recognize_partial_formatted_train_log(src)
             if len(self.train_log_files) > self.TRAIN_LOG_LOAD_LIMIT:
-                self.train_log_files = self.train_log_files[:self.TRAIN_LOG_LOAD_LIMIT]
-                self.logger.warning("As the quantity of input train logs exceed the limit of 20, "
-                                    "excess logs are discarded.")
-                echo.warning("As the quantity of input train logs exceed the limit of 20, "
-                             "excess logs are discarded.")
+                self.train_log_files = self.train_log_files[: self.TRAIN_LOG_LOAD_LIMIT]
+                self.logger.warning(
+                    "As the quantity of input train logs exceed the limit of 20, excess logs are discarded."
+                )
+                echo.warning("As the quantity of input train logs exceed the limit of 20, excess logs are discarded.")
                 break
 
     def _recognize_full_formatted_train_log(self, file_dir):
@@ -624,16 +636,22 @@ class HostLogSaver(BaseLogSaver):
         Get the vmcore-dmesg.txt list
         :return: vmcore-dmesg.txt list
         """
-        return self.host_vmcore_dmesg_files if not self.is_sdk_input \
+        return (
+            self.host_vmcore_dmesg_files
+            if not self.is_sdk_input
             else self.log_map.get(regular_table.OS_VMCORE_DMESG_SOURCE, [])
+        )
 
     def get_dmidecode_log(self) -> list:
         """
         Get the dmidecode.txt list
         :return: dmidecode.txt list
         """
-        return self.host_dmidecode_files if not self.is_sdk_input else self.log_map.get(regular_table.DMI_DECODE_SOURCE,
-                                                                                        [])
+        return (
+            self.host_dmidecode_files
+            if not self.is_sdk_input
+            else self.log_map.get(regular_table.DMI_DECODE_SOURCE, [])
+        )
 
 
 class BMCLogSaver(BaseLogSaver):
@@ -702,16 +720,25 @@ class BMCLogSaver(BaseLogSaver):
         return self.bmc_log_list if not self.is_sdk_input else self.log_map.get(regular_table.BMC_SOURCE, [])
 
     def get_bmc_app_dump_log_list(self) -> list:
-        return self.bmc_app_dump_log_list if not self.is_sdk_input \
+        return (
+            self.bmc_app_dump_log_list
+            if not self.is_sdk_input
             else self.log_map.get(regular_table.BMC_APP_DUMP_SOURCE, [])
+        )
 
     def get_bmc_device_dump_log_list(self) -> list:
-        return self.bmc_device_dump_log_list if not self.is_sdk_input \
+        return (
+            self.bmc_device_dump_log_list
+            if not self.is_sdk_input
             else self.log_map.get(regular_table.BMC_DEVICE_DUMP_SOURCE, [])
+        )
 
     def get_bmc_log_dump_log_list(self) -> list:
-        return self.bmc_log_dump_log_list if not self.is_sdk_input \
+        return (
+            self.bmc_log_dump_log_list
+            if not self.is_sdk_input
             else self.log_map.get(regular_table.BMC_LOG_DUMP_SOURCE, [])
+        )
 
 
 class LCNELogSaver(BaseLogSaver):
@@ -744,7 +771,6 @@ class LCNELogSaver(BaseLogSaver):
         if not file_dir or not os.path.isdir(file_dir):
             return
         for root, _, files in safe_walk(file_dir):
-            dir_files = []
             for file_name in files:
                 file_path = os.path.join(root, file_name)
                 if file_name == self.DEVM_BDDRVADP_KEY and self.DEVM_BDDRVADP_DIR in file_path:
@@ -791,16 +817,16 @@ class DevLogSaver(BaseLogSaver):
         self.slog_dict = dict()
         self.hisi_logs_list = []
 
-    def filter_log(self, dev_log_dir: str):
+    def filter_log(self, file_dir: str):
         """
         Filter device log
-        :param dev_log_dir: the device log root dir
+        :param file_dir: the device log root dir
         :return: slog and hisi_logs filter result
         """
-        if not dev_log_dir or not os.path.isdir(dev_log_dir):
+        if not file_dir or not os.path.isdir(file_dir):
             return
         hisi_log_path, slog_path = "", ""
-        for root, dirs, _ in safe_walk(dev_log_dir):
+        for root, dirs, _ in safe_walk(file_dir):
             if not hisi_log_path and "hisi_logs" in dirs:
                 hisi_log_path = os.path.join(root, "hisi_logs")
                 self._filter_hisi_logs(hisi_log_path)
@@ -834,8 +860,11 @@ class DevLogSaver(BaseLogSaver):
         slog_dict = {k: v for k, v in self.log_map.items() if k in slog_keys}
         for source_list in slog_dict.values():
             for file_source in source_list:
-                if file_source.path and not file_source.parent_is("event") and not \
-                        re.match(r"device-(\d{1,3}|os)", file_source.filename):
+                if (
+                    file_source.path
+                    and not file_source.parent_is("event")
+                    and not re.match(r"device-(\d{1,3}|os)", file_source.filename)
+                ):
                     continue
                 self.slog_dict.setdefault(file_source.dir_name, []).append(file_source)
         for file_list in self.slog_dict.values():
@@ -848,6 +877,10 @@ class DevLogSaver(BaseLogSaver):
         """
         if not hisi_logs_path or not os.path.isdir(hisi_logs_path):
             return
+        # A5 plog: device_info.txt 存放于 hisi_logs 根目录，用于 phy-logic dev-id 映射
+        device_info_path = os.path.join(hisi_logs_path, regular_table.DEVICE_INFO_FILE)
+        if os.path.isfile(device_info_path):
+            self.hisi_logs_list.append(device_info_path)
         for device_dir in safe_list_dir(hisi_logs_path):
             history_path = os.path.join(hisi_logs_path, device_dir, regular_table.DEV_NPU_HISI_HISTORY_ORIGIN)
             if os.path.exists(history_path) and os.path.isfile(history_path):
@@ -932,7 +965,12 @@ class DlLogSaver(BaseLogSaver):
     MINDIO_KEY = "ttp_log"
     LOG_SUFFIX = ".log"
     DL_LOG_LABEL_LIST = [
-        DEVICE_PLUGIN_KEY, NODED_KEY, VOLCANO_SCHEDULER_KEY, VOLCANO_CONTROLLER_KEY, NPU_EXPORTER_KEY, MINDIO_KEY
+        DEVICE_PLUGIN_KEY,
+        NODED_KEY,
+        VOLCANO_SCHEDULER_KEY,
+        VOLCANO_CONTROLLER_KEY,
+        NPU_EXPORTER_KEY,
+        MINDIO_KEY,
     ]
 
     def __init__(self):
@@ -961,24 +999,37 @@ class DlLogSaver(BaseLogSaver):
                 self._record_dl_log(os.path.join(file_dir, dir_name))
 
     def get_device_plugin_list(self):
-        return self.device_plugin_list if not self.is_sdk_input \
+        return (
+            self.device_plugin_list
+            if not self.is_sdk_input
             else self.log_map.get(regular_table.DEVICEPLUGIN_SOURCE, [])
+        )
 
     def get_volcano_scheduler_list(self):
-        return self.volcano_scheduler_list if not self.is_sdk_input \
+        return (
+            self.volcano_scheduler_list
+            if not self.is_sdk_input
             else self.log_map.get(regular_table.VOLCANO_SCHEDULER_SOURCE, [])
+        )
 
     def get_volcano_controller_list(self):
-        return self.volcano_controller_list if not self.is_sdk_input \
+        return (
+            self.volcano_controller_list
+            if not self.is_sdk_input
             else self.log_map.get(regular_table.VOLCANO_CONTROLLER_SOURCE, [])
+        )
 
     def get_docker_runtime_list(self):
-        return self.docker_runtime_list if not self.is_sdk_input \
+        return (
+            self.docker_runtime_list
+            if not self.is_sdk_input
             else self.log_map.get(regular_table.DOCKER_RUNTIME_SOURCE, [])
+        )
 
     def get_npu_exporter_list(self):
-        return self.npu_exporter_list if not self.is_sdk_input \
-            else self.log_map.get(regular_table.NPU_EXPORTER_SOURCE, [])
+        return (
+            self.npu_exporter_list if not self.is_sdk_input else self.log_map.get(regular_table.NPU_EXPORTER_SOURCE, [])
+        )
 
     def get_noded_list(self):
         return self.noded_log_list if not self.is_sdk_input else self.log_map.get(regular_table.NODEDLOG_SOURCE, [])
@@ -1005,8 +1056,9 @@ class DlLogSaver(BaseLogSaver):
                 if filename.startswith(self.VOLCANO_CONTROLLER_KEY) and filename.endswith(self.LOG_SUFFIX):
                     self.volcano_controller_list.append(os.path.join(root, filename))
                     continue
-                if (filename.startswith(self.DOCKER_RUNTIME_RUN_KEY) or filename.startswith(self.DOCKER_HOOK_RUN_KEY)) \
-                        and filename.endswith(self.LOG_SUFFIX):
+                if (
+                    filename.startswith(self.DOCKER_RUNTIME_RUN_KEY) or filename.startswith(self.DOCKER_HOOK_RUN_KEY)
+                ) and filename.endswith(self.LOG_SUFFIX):
                     self.docker_runtime_list.append(os.path.join(root, filename))
                     continue
                 if filename.startswith(self.NPU_EXPORTER_KEY) and filename.endswith(self.LOG_SUFFIX):
@@ -1077,8 +1129,11 @@ class MindieLogSaver(BaseLogSaver):
             for filename in files:
                 if os.path.basename(root) == self.MINDIE_CLUSTER_KEY:
                     continue
-                if filename.startswith(self.MINDIE_KEY) and filename.endswith(self.LOG_SUFFIX) and \
-                        not filename.startswith(self.CERT_MODULE_KEY):
+                if (
+                    filename.startswith(self.MINDIE_KEY)
+                    and filename.endswith(self.LOG_SUFFIX)
+                    and not filename.startswith(self.CERT_MODULE_KEY)
+                ):
                     self.mindie_log_list.append(os.path.join(root, filename))
 
     def filter_mindie_cluster_log(self, file_dir: str):
@@ -1090,8 +1145,11 @@ class MindieLogSaver(BaseLogSaver):
         return self.mindie_log_list if not self.is_sdk_input else self.log_map.get(regular_table.MINDIE_SOURCE, [])
 
     def get_mindie_clu_log_list(self):
-        return self.mindie_cluster_log_list if not self.is_sdk_input \
+        return (
+            self.mindie_cluster_log_list
+            if not self.is_sdk_input
             else self.log_map.get(regular_table.MINDIE_CLUSTER_SOURCE, [])
+        )
 
 
 @dataclass
@@ -1211,8 +1269,9 @@ class SuperpodInfoSaver:
             topo_info = {
                 "host": (self.host_info_by_sn.get(bmc_sn_info_info_instance.serial_number) or EmptyObject()).__dict__,
                 "bmc": (bmc_sn_info_info_instance or EmptyObject()).__dict__,
-                "lcne": (self.lcne_info_by_board_sn.get(
-                    bmc_sn_info_info_instance.board_serial_number) or EmptyObject()).__dict__
+                "lcne": (
+                    self.lcne_info_by_board_sn.get(bmc_sn_info_info_instance.board_serial_number) or EmptyObject()
+                ).__dict__,
             }
             topo_infos.append(topo_info)
         with safe_write_open(os.path.join(save_path, file_name), mode='w+', encoding='utf-8') as file_stream:
@@ -1226,13 +1285,15 @@ class SuperpodInfoSaver:
     def _find_from_lcne(self, lcne_sn_info_instance):
         bmc_sn_info_info_instance = self.bmc_info_by_board_sn.get(lcne_sn_info_instance.board_serial_number)
         host_info_instance = bmc_sn_info_info_instance and self.host_info_by_sn.get(
-            bmc_sn_info_info_instance.serial_number)
+            bmc_sn_info_info_instance.serial_number
+        )
         return host_info_instance, bmc_sn_info_info_instance
 
     def _find_from_host(self, host_info_instance):
         bmc_sn_info_info_instance = self.bmc_info_by_sn.get(host_info_instance.serial_number)
         lcne_sn_info_instance = bmc_sn_info_info_instance and self.lcne_info_by_board_sn.get(
-            bmc_sn_info_info_instance.board_serial_number)
+            bmc_sn_info_info_instance.board_serial_number
+        )
         return bmc_sn_info_info_instance, lcne_sn_info_instance
 
 
@@ -1260,7 +1321,7 @@ class ServiceInfo:
         return {
             "logic_device_id": self.logic_device_id,
             "phy_device_id": self.phy_device_id,
-            "device_ip": self.device_ip
+            "device_ip": self.device_ip,
         }
 
 
@@ -1343,11 +1404,14 @@ class ParsedDataSaver:
                 self.all_worker_path_dict.update({worker_dir: worker_dir_path})
         if self.scene == "super_pod" and not (self.bmc_dir_exist and self.lcne_dir_exist):
             fd_logger.error(
-                "The bmc or lcne dir not exist in {}, not applicable to super_pod scenario diagnosis.".format(
-                    self.data_path))
+                "The bmc or lcne dir not exist in %s, not applicable to super_pod scenario diagnosis.",
+                self.data_path,
+            )
             raise InnerError(
                 "The bmc or lcne dir not exist in {}, not applicable to super_pod scenario diagnosis.".format(
-                    self.data_path))
+                    self.data_path
+                )
+            )
 
     def init_super_pod(self, worker_dir):
         for super_dir in safe_list_dir(os.path.join(self.data_path, worker_dir)):
@@ -1360,21 +1424,25 @@ class ParsedDataSaver:
                 self.bmc_path_dict.update({f"BMC:{super_dir}": worker_dir_path})
                 self.all_worker_path_dict.update({f"BMC:{super_dir}": worker_dir_path})
                 self.super_pod_info_saver.add_bmc_sn_info(
-                    BMCSNInfo(os.path.join(worker_dir, super_dir),
-                              server_info_dict.get(SERIAL_NUMBER, ""),
-                              server_info_dict.get(BOARD_SERIAL_NUMBER, "")))
+                    BMCSNInfo(
+                        os.path.join(worker_dir, super_dir),
+                        server_info_dict.get(SERIAL_NUMBER, ""),
+                        server_info_dict.get(BOARD_SERIAL_NUMBER, ""),
+                    )
+                )
             elif 'lcne' in worker_dir:
                 self.lcne_dir_exist = True
                 self.lcne_path_dict.update({f"LCNE:{super_dir}": worker_dir_path})
                 self.all_worker_path_dict.update({f"LCNE:{super_dir}": worker_dir_path})
-                self.super_pod_info_saver.add_lcne_sn_info(LCNESNInfo(os.path.join(worker_dir, super_dir),
-                                                                      server_info_dict.get(
-                                                                          BOARD_SERIAL_NUMBER, "")))
+                self.super_pod_info_saver.add_lcne_sn_info(
+                    LCNESNInfo(os.path.join(worker_dir, super_dir), server_info_dict.get(BOARD_SERIAL_NUMBER, ""))
+                )
             else:
                 self.worker_path_dict.update({super_dir: worker_dir_path})
                 self.all_worker_path_dict.update({super_dir: worker_dir_path})
                 self.super_pod_info_saver.add_host_info(
-                    HostSnInfo(os.path.join(worker_dir, super_dir), server_info_dict.get(SERIAL_NUMBER, "")))
+                    HostSnInfo(os.path.join(worker_dir, super_dir), server_info_dict.get(SERIAL_NUMBER, ""))
+                )
 
     def init_infer_task(self):
         """

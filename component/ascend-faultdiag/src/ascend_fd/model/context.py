@@ -22,11 +22,17 @@ from ascend_fd.utils.regular_table import KG_MIN_TIME
 
 
 class KGParseCtx(JsonObj):
-    def __init__(self, parse_file_path: KGParseFilePath = None,
-                 resuming_training_time: str = KG_MIN_TIME,
-                 is_sdk_input: bool = False,
-                 custom_info_list: List = None):
+    def __init__(
+        self,
+        parse_file_path: KGParseFilePath = None,
+        resuming_training_time: str = KG_MIN_TIME,
+        is_sdk_input: bool = False,
+        custom_info_list: List = None,
+        device_info_map: dict = None,
+    ):
         self.parse_file_path = parse_file_path
         self.resuming_training_time = resuming_training_time
         self.is_sdk_input = is_sdk_input
         self.custom_info_list = custom_info_list or []
+        # 该数据为逻辑 id 和物理 id 的映射关系，从 hisi_logs/device_info.txt 解析得到, 格式为 {逻辑 id: 物理 id}
+        self.device_info_map = device_info_map or {}
