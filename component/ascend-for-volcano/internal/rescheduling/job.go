@@ -229,7 +229,8 @@ func (fJob *FaultJob) getNormalJobDeletePodInfo(schedulerJob *plugin.SchedulerJo
 
 func (fJob *FaultJob) getNeedReschedulePods(
 	schedulerJob *plugin.SchedulerJob, env plugin.ScheduleEnv) (map[string]struct{}, error) {
-	treeLevels, err := util.GetTaskTreeLevels(schedulerJob.AffinityBlocks, schedulerJob.NPUTaskNum)
+	treeLevels, err := util.GetTaskTreeLevels(schedulerJob.AffinityBlocks,
+		schedulerJob.NPUTaskNum-schedulerJob.CountBackupTasks())
 	if err != nil {
 		return nil, fmt.Errorf("getTaskTreeLevels failed: %v", err)
 	}
@@ -975,7 +976,7 @@ func getMultiLevelAffinityConfig(sJob plugin.SchedulerJob) ([]util.TaskTreeLevel
 	if err != nil {
 		return nil, err
 	}
-	levels, err := util.GetTaskTreeLevels(blocks, sJob.NPUTaskNum)
+	levels, err := util.GetTaskTreeLevels(blocks, sJob.NPUTaskNum-sJob.CountBackupTasks())
 	if err != nil {
 		return nil, err
 	}

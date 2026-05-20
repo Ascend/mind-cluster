@@ -302,6 +302,57 @@ func TestIsSuperPodJob(t *testing.T) {
 		})
 }
 
+
+type countBackupTasksCase struct {
+	name  string
+	tasks map[api.TaskID]NPUTask
+	want  int
+}
+
+func buildCountBackupTasksCases() []countBackupTasksCase {
+	return []countBackupTasksCase{
+		{name: "01-nil job tasks", tasks: nil, want: 0},
+		{name: "02-empty tasks", tasks: map[api.TaskID]NPUTask{}, want: 0},
+		{
+			name: "03-no backup pods",
+			tasks: map[api.TaskID]NPUTask{
+				"t0": {Annotation: map[string]string{}},
+				"t1": {Annotation: map[string]string{"other": "val"}},
+			},
+			want: 0,
+		},
+		{
+			name: "04-one backup pod",
+			tasks: map[api.TaskID]NPUTask{
+				"t0": {Annotation: map[string]string{PodTypeKey: PodTypeBackup}},
+				"t1": {Annotation: map[string]string{}},
+			},
+			want: 1,
+		},
+		{
+			name: "05-mixed original and backup pods",
+			tasks: map[api.TaskID]NPUTask{
+				"t0": {Annotation: map[string]string{}},
+				"t1": {Annotation: map[string]string{PodTypeKey: PodTypeBackup}},
+				"t2": {Annotation: map[string]string{}},
+				"t3": {Annotation: map[string]string{PodTypeKey: PodTypeBackup}},
+			},
+			want: 2,
+		},
+	}
+}
+
+func TestNPUJobCountBackupTasks(t *testing.T) {
+	for _, tt := range buildCountBackupTasksCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			nJob := &NPUJob{Tasks: tt.tasks}
+			if got := nJob.CountBackupTasks(); got != tt.want {
+				t.Errorf("CountBackupTasks() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestTaskValidResult(t *testing.T) {
 	helper := NewTaskValidateHelper()
 	expected := "valid expected message"

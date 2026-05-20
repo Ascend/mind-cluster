@@ -56,7 +56,7 @@ func (mh *MultilevelHandler) ValidNPUJob() *api.ValidateResult {
 
 // sample task level  [{name: level1, reqNode: 2}, {name: level2, reqNode: 4}]
 func (mh *MultilevelHandler) checkLevels() *api.ValidateResult {
-	taskLevels, err := util.GetTaskTreeLevels(mh.AffinityBlocks, mh.NPUTaskNum)
+	taskLevels, err := util.GetTaskTreeLevels(mh.AffinityBlocks, mh.NPUTaskNum-mh.CountBackupTasks())
 	if err != nil {
 		return &api.ValidateResult{
 			Pass:    false,
