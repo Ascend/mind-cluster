@@ -37,7 +37,7 @@
 >
 >- Volcano：用户若使用自己的调度组件，需要进行参数配置，请参见[表4](#table1064314568229)；用户也可直接使用该组件进行任务调度。
 >- Ascend Operator：当使用训练系列产品时才需要选择该组件；使用推理系列产品时可不选择。
->- ClusterD：当使用Volcano时才需要选择该组件，详细请参见[安装Volcano](../../../../installation_guide/03_installation/manual_installation/05_volcano.md#安装volcano)。
+>- ClusterD：当使用Volcano时才需要选择该组件，详细请参见[安装Volcano](../../../../installation_guide/02_installation/manual_installation/05_volcano.md#安装volcano)。
 
 ## 静态虚拟化<a name="ZH-CN_TOPIC_0000002479226392"></a>
 
@@ -257,7 +257,7 @@
 **前提条件<a name="section18128140645"></a>**
 
 1. 需要先获取"Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run"，安装容器引擎插件。
-2. 参见[安装部署](../../../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节，完成各组件的安装。
+2. 参见[安装部署](../../../../installation_guide/02_installation/manual_installation/00_obtaining_software_packages.md)章节，完成各组件的安装。
 
     虚拟化实例涉及到需要修改相关参数的集群调度组件为Volcano和Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
 

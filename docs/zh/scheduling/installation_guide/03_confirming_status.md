@@ -9,13 +9,13 @@
 1. 执行以下命令，查看配置文件是否修改成功。
 
     - Docker（或K8s集成Docker场景）。
-    
+
         ```shell
         cat /etc/docker/daemon.json | grep ascend
         ```
-    
+
         回显示例如下，表示修改成功。
-    
+
         ```ColdFusion
         "default-runtime": "ascend",
             "ascend": {
@@ -27,9 +27,9 @@
         ```shell
         cat /etc/containerd/config.toml | grep ascend
         ```
-    
+
         回显示例如下，表示修改成功。
-    
+
         ```ColdFusion
         default_runtime_name = "ascend"
             [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.ascend]
@@ -43,13 +43,13 @@
 2. 执行以下命令，查看是否存在基础镜像。
 
     - Docker（或K8s集成Docker场景）。
-    
+
         ```shell
         docker images | grep ubuntu
         ```
-    
+
         回显示例如下，表示存在基础镜像ubuntu:22.04。若不存在基础镜像，可以执行**docker pull ubuntu:22.04**命令，拉取基础镜像。
-    
+
         ```ColdFusion
         ubuntu              22.04               6526a1858e5d        2 years ago         64.2MB
         ```
@@ -59,13 +59,13 @@
         ```shell
         ctr i ls|grep ubuntu
         ```
-    
+
         回显示例如下，表示存在基础镜像ubuntu:22.04。若不存在基础镜像，可以执行**ctr images pull docker.io/library/ubuntu:22.04**命令，拉取基础镜像。
-    
+
         ```ColdFusion
         docker.io/library/ubuntu:22.04    application/vnd.docker.distribution.manifest.v2+json sha256:555f8bd7441bb97303961a52ec7dec94d755f9f39077801de3e11c706c9ee7dc 68.5 MiB  linux/arm64 io.cri-containerd.image=managed
         ```
-   
+
 3. 执行以下命令，使用Ascend Docker Runtime挂载物理芯片ID为0的芯片。
 
     - Docker（或K8s集成Docker场景）。
@@ -223,12 +223,12 @@
     回显示例如下，表示组件正常。
 
     ```ColdFusion
-    root@ubuntu:~# kubectl logs -n kube-system ascend-device-plugin-daemonset-910-85p9v 
+    root@ubuntu:~# kubectl logs -n kube-system ascend-device-plugin-daemonset-910-85p9v
     [INFO]     2022/11/21 11:20:04.534992 1       hwlog@v0.0.0/api.go:96    devicePlugin.log's logger init success
     [INFO]     2022/11/21 11:20:04.535750 1       main.go:127    ascend device plugin starting and the version is xxx_linux-x86_64
     [INFO]     2022/11/21 11:20:05.992823 1       K8stool@v0.0.0/self_K8s_client.go:116    start to decrypt cfg
     [INFO]     2022/11/21 11:20:06.002773 1       K8stool@v0.0.0/self_K8s_client.go:125    Config loaded from file: ****tc/mindx-dl/device-plugin/.config/config6
-    [INFO]     2022/11/21 11:20:06.003751 1       main.go:153    init kube client success 
+    [INFO]     2022/11/21 11:20:06.003751 1       main.go:153    init kube client success
     [INFO]     2022/11/21 11:20:06.003923 1       device/ascendcommon.go:104    Found Huawei Ascend, deviceType: Ascend910, deviceName: Ascend910-4
     [INFO]     2022/11/21 11:20:06.003970 1       main.go:160    init device manager success
     [INFO]     2022/11/21 11:20:06.004157 21      device/manager.go:125    starting the listen device
@@ -468,7 +468,7 @@
     回显示例如下，表示组件正常运行。
 
     ```ColdFusion
-    root@ubuntu:~# kubectl logs -n mindx-dl ascend-operator-manager-b59774f7-8l5gn 
+    root@ubuntu:~# kubectl logs -n mindx-dl ascend-operator-manager-b59774f7-8l5gn
     [INFO]     2023/03/20 17:48:34.308373 1       hwlog/api.go:108    ascend-operator.log's logger init success
     [INFO]     2023/03/20 17:48:34.308469 1       ascend-operator/main.go:86    ascend-operator starting and the version is xxx
     [INFO]     2023/03/20 17:48:34.964296 1       ascend-operator/main.go:101    starting manager
@@ -500,7 +500,7 @@
     回显示例如下，表示组件正常运行。
 
     ```ColdFusion
-    root@ubuntu:~# kubectl logs -n mindx-dl infer-operator-manager-6bf95f6956-sdkbd 
+    root@ubuntu:~# kubectl logs -n mindx-dl infer-operator-manager-6bf95f6956-sdkbd
     [INFO]     2026/03/20 16:22:12.668888 1       hwlog/api.go:164    infer-operator.log's logger init success
     ...
     ```
@@ -575,7 +575,7 @@
     回显示例如下，表示组件正常运行。
 
     ```ColdFusion
-    root@ubuntu:~# kubectl logs -n mindx-dl resilience-controller-76f4476bb5-fs986 
+    root@ubuntu:~# kubectl logs -n mindx-dl resilience-controller-76f4476bb5-fs986
     [INFO]     2022/11/17 17:18:46.697010 1       hwlog@v0.0.0/api.go:96    run.log's logger init success
     [INFO]     2022/11/17 17:18:46.697139 1       cmd/main.go:57    resilience-controller starting and the version is xxx_linux-x86_64
     [INFO]     2022/11/17 17:18:47.227913 1       K8stool@v0.0.0/self_K8s_client.go:116    start to decrypt cfg

@@ -1363,7 +1363,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 **通过环境变量配置资源信息场景<a name="section598118132817"></a>**
 
 >[!NOTE]
->此场景下，用户需已创建[hccl.json](../../api/hccl.json_file_description.md)文件的具体挂载路径才能执行以下操作，详细操作步骤请参见[步骤4](../../installation_guide/03_installation/manual_installation/08_ascend_operator.md)。
+>此场景下，用户需已创建[hccl.json](../../api/hccl.json_file_description.md)文件的具体挂载路径才能执行以下操作，详细操作步骤请参见[步骤4](../../installation_guide/02_installation/manual_installation/08_ascend_operator.md)。
 
 1. 将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
 

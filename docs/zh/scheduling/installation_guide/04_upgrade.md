@@ -41,7 +41,7 @@
     </tbody>
     </table>
 
-    >[!NOTE] 
+    >[!NOTE]
     >本章节不适用的场景：用户对旧版本MindCluster集群调度组件的源代码（不含配置文件）进行了修改，请分析版本代码差异后再进行升级。
 
 **升级环境检查<a name="section19242859587"></a>**
@@ -59,13 +59,13 @@
 
         ```ColdFusion
         NAMESPACE        NAME                                       READY   STATUS    RESTARTS         AGE
-        default          ubuntu-pod                                 1/1     Running   32 (118m ago)    3d18h ...  
+        default          ubuntu-pod                                 1/1     Running   32 (118m ago)    3d18h ...
         ```
 
     2. 进入任务YAML所在路径，执行以下命令停止任务。
 
         ```shell
-        kubectl delete -f  xxx.yaml              # xxx表示任务YAML的名称，请根据实际情况填写    
+        kubectl delete -f  xxx.yaml              # xxx表示任务YAML的名称，请根据实际情况填写
         ```
 
 2. （可选）检查pingmesh灵衢网络检测开关是否已关闭。
@@ -103,17 +103,17 @@
         Version: x.x.x
         Summary: Ascend MindCluster taskd is a new library for training management
         Home-page: UNKNOWN
-        Author: 
-        Author-email: 
+        Author:
+        Author-email:
         License: UNKNOWN
         Location: /usr/local/python3/lib/python3.10/site-packages
         Requires: grpcio, protobuf, pyOpenSSL, torch, torch-npu
         Required-by:
         ```
 
-    - （可选）**检查其他组件**。参考[组件状态确认](./04_confirming_status.md)，确认集群中节点是否安装了相应组件。
+    - （可选）**检查其他组件**。参考[组件状态确认](./03_confirming_status)，确认集群中节点是否安装了相应组件。
 
-4. （可选）若尚未安装MindCluster集群调度组件，请参考[安装部署](./03_installation/manual_installation/00_obtaining_software_packages.md)章节先安装组件，TaskD的安装步骤请参考[制作镜像](../usage/resumable_training/07_using_resumable_training_on_the_cli.md#制作镜像)章节。
+4. （可选）若尚未安装MindCluster集群调度组件，请参考[安装部署](02_installation/manual_installation/00_obtaining_software_packages.md)章节先安装组件，TaskD的安装步骤请参考[制作镜像](../usage/resumable_training/07_using_resumable_training_on_the_cli.md#制作镜像)章节。
 
 ## 升级Ascend Docker Runtime<a name="ZH-CN_TOPIC_0000002479226420"></a>
 
@@ -127,7 +127,7 @@
 
 **升级步骤<a name="section520182224617"></a>**
 
-1. 下载新版本组件安装包，详情请参见参考[获取软件包](./03_installation/manual_installation/00_obtaining_software_packages.md)章节。
+1. 下载新版本组件安装包，详情请参见参考[获取软件包](02_installation/manual_installation/00_obtaining_software_packages.md)章节。
 2. <a name="li12599722163212"></a>进入安装包（run包）所在路径，在该路径下执行以下命令为软件包添加可执行权限。
 
     ```shell
@@ -169,7 +169,7 @@
         systemctl daemon-reload && systemctl restart containerd
         ```
 
-5. <a name="li76002022113215"></a>参考[组件状态确认](./04_confirming_status.md)章节，检查新版本Ascend Docker Runtime是否升级成功状态。
+5. <a name="li76002022113215"></a>参考[组件状态确认](./03_confirming_status)章节，检查新版本Ascend Docker Runtime是否升级成功状态。
 6. （可选）恢复旧版本。下载旧版本安装包，依次重新执行[步骤2](#li12599722163212)到[步骤5](#li76002022113215)。
 
 ## 升级TaskD<a name="ZH-CN_TOPIC_0000002479226444"></a>
@@ -182,7 +182,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 **升级步骤<a name="section1720814439492"></a>**
 
-1. 参考[获取软件包](./03_installation/manual_installation/00_obtaining_software_packages.md)章节，下载新版本组件安装包。
+1. 参考[获取软件包](02_installation/manual_installation/00_obtaining_software_packages.md)章节，下载新版本组件安装包。
 2. 下载完成后，进入安装包所在路径并解压安装包。
 3. 执行**ls -l**命令，回显示例如下。
 
@@ -255,7 +255,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 2. 将获取到的新版本Container Manager软件包上传至服务器的任意目录，以下以“/home/container-manager”目录为例（26.1.0及以上版本支持部署脚本升级）。
 
-    >[!NOTE] 
+    >[!NOTE]
     >若服务器可访问网络，也可通过以下命令下载软件包：
     >
     >```shell
@@ -359,14 +359,14 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 **升级步骤<a name="section65996266718"></a>**
 
-1. 卸载MindCluster旧版本组件。详情请参见[卸载](./06_uninstallation.md)中“卸载其他组件 \> 步骤2”。
-2. 参考[获取软件包](./03_installation/manual_installation/00_obtaining_software_packages.md)章节，下载新版本组件安装包。
+1. 卸载MindCluster旧版本组件。详情请参见[卸载](./05_uninstallation)中“卸载其他组件 \> 步骤2”。
+2. 参考[获取软件包](02_installation/manual_installation/00_obtaining_software_packages.md)章节，下载新版本组件安装包。
 3. （可选）准备MindCluster集群调度组件新版本镜像。若新版本组件采用二进制方式安装，可跳过本步骤。
 
-    参考[准备镜像](./03_installation/manual_installation/01_preparing_for_installation.md#准备镜像)章节，从昇腾镜像仓库拉取新版本镜像或者制作新版本镜像。注意新版本组件镜像tag要与旧版本组件镜像tag不一致，避免覆盖旧版本组件镜像。
+    参考[准备镜像](02_installation/manual_installation/01_preparing_for_installation.md#准备镜像)章节，从昇腾镜像仓库拉取新版本镜像或者制作新版本镜像。注意新版本组件镜像tag要与旧版本组件镜像tag不一致，避免覆盖旧版本组件镜像。
 
-4. <a name="li147194506333"></a>请根据要升级的组件，重新执行手动安装步骤。详细步骤请参见[安装MindCluster新版本组件](./03_installation/manual_installation/00_obtaining_software_packages.md)。
-5. （可选）如需回退老版本，依次执行[卸载](./06_uninstallation.md)中“卸载其他组件 \> 步骤2”和[步骤4](#li147194506333)，卸载新版本组件后安装旧版本组件即可。
+4. <a name="li147194506333"></a>请根据要升级的组件，重新执行手动安装步骤。详细步骤请参见[安装MindCluster新版本组件](02_installation/manual_installation/00_obtaining_software_packages.md)。
+5. （可选）如需回退老版本，依次执行[卸载](./05_uninstallation)中“卸载其他组件 \> 步骤2”和[步骤4](#li147194506333)，卸载新版本组件后安装旧版本组件即可。
 
 ## 升级镜像<a name="ZH-CN_TOPIC_0000002511346311"></a>
 
@@ -378,7 +378,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 **升级管理节点组件<a name="section1292111716589"></a>**
 
-1. 参考[准备镜像](./03_installation/manual_installation/01_preparing_for_installation.md#准备镜像)章节，使用新的软件包制作镜像。
+1. 参考[准备镜像](02_installation/manual_installation/01_preparing_for_installation.md#准备镜像)章节，使用新的软件包制作镜像。
 
     >[!NOTE]
     >请保持镜像名称一致，否则可能导致原配置文件无法拉起Pod。
@@ -421,9 +421,9 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 **升级计算节点组件<a name="section231311416588"></a>**
 
-1. 参考[准备镜像](./03_installation/manual_installation/01_preparing_for_installation.md#准备镜像)章节，使用新的软件包制作镜像。
+1. 参考[准备镜像](02_installation/manual_installation/01_preparing_for_installation.md#准备镜像)章节，使用新的软件包制作镜像。
 
-    >[!NOTE] 
+    >[!NOTE]
     >请保持镜像名称一致，否则可能导致原配置文件无法拉起Pod。
 
 2. 执行以下命令，查询旧版本DaemonSet配置。
@@ -473,7 +473,7 @@ Elastic Agent组件已经日落，本章节提供将Elastic Agent组件升级为
 
 **操作步骤<a name="section1643711813"></a>**
 
-1. 参考[获取软件包](./03_installation/manual_installation/00_obtaining_software_packages.md)章节，下载新版本TaskD组件安装包。
+1. 参考[获取软件包](02_installation/manual_installation/00_obtaining_software_packages.md)章节，下载新版本TaskD组件安装包。
 2. 下载完成后，进入安装包所在路径并解压安装包。
 3. 执行**ls -l**命令，回显示例如下。
 
@@ -540,7 +540,7 @@ Elastic Agent组件已经日落，本章节提供将Elastic Agent组件升级为
         回显示例如下。
 
         ```ColdFusion
-        CONTAINER ID   IMAGE                  COMMAND                  CREATED        STATUS        PORTS     NAMES 
+        CONTAINER ID   IMAGE                  COMMAND                  CREATED        STATUS        PORTS     NAMES
         bb118ca00041    f76142d63d3a           "/bin/bash -c 'sleep…"   2 hours ago    Up 2 hours              k8s_ascend_default-last-test-deepseek2-60b
         ```
 
@@ -556,13 +556,13 @@ Elastic Agent组件已经日落，本章节提供将Elastic Agent组件升级为
 
         ```Python
         from taskd.api import init_taskd_manager, start_taskd_manager
-        import os 
-         
-        job_id=os.getenv("MINDX_TASK_ID") 
+        import os
+
+        job_id=os.getenv("MINDX_TASK_ID")
         node_nums=XX         # 用户填入任务节点总数
         proc_per_node=XX     # 用户填入任务每个节点的训练进程数量
-          
-        init_taskd_manager({"job_id":job_id, "node_nums": node_nums, "proc_per_node": proc_per_node}) 
+
+        init_taskd_manager({"job_id":job_id, "node_nums": node_nums, "proc_per_node": proc_per_node})
         start_taskd_manager()
         ```
 
@@ -572,13 +572,13 @@ Elastic Agent组件已经日落，本章节提供将Elastic Agent组件升级为
     2. 在训练脚本中增加以下代码拉起TaskD  Manager。
 
         <pre codetype="Python">
-        <strong>export TASKD_PROCESS_ENABLE="on" 
+        <strong>export TASKD_PROCESS_ENABLE="on"
         # 以PyTorch框架为例
         if [[ "${RANK}" == 0 ]]; then
-            export MASTER_ADDR=${POD_IP} 
+            export MASTER_ADDR=${POD_IP}
             python /job/code/manager.py 2>> /job/code/alllogs/$MINDX_TASK_ID/taskd/error.log &           # manager.py具体执行路径由当前路径决定，error.log日志路径需提前创建
-        fi</strong> 
-              
+        fi</strong>
+
         torchrun ...</pre>
 
     3. 在任务YAML中修改容器端口，在所有的Pod下增加TaskD通信使用的端口9601。
@@ -589,7 +589,7 @@ Elastic Agent组件已经日落，本章节提供将Elastic Agent组件升级为
         ...
                    containers:
         ...
-                     <strong>ports:                          
-                       - containerPort: 9601              
+                     <strong>ports:
+                       - containerPort: 9601
                          name: taskd-port</strong>
         ...</pre>

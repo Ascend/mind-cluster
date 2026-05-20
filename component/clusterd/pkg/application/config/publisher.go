@@ -178,7 +178,7 @@ func (c *ConfigPublisher[T]) SaveData(jobId string, data T) bool {
 	defer func() {
 		if r := recover(); r != nil {
 			saved = false
-			hwlog.RunLog.Errorf("panic occured when saving %s, jobId=%s err=%v", c.dataType, c.jobId, r)
+			hwlog.RunLog.Errorf("panic occurred when saving %s, jobId=%s err=%v", c.dataType, c.jobId, r)
 		}
 	}()
 	if len(c.sendChan) >= chanBufferSize {

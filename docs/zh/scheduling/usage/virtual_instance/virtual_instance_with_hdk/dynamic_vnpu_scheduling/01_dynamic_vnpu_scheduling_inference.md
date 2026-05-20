@@ -4,7 +4,7 @@
 
 ### 前提条件<a name="section121807404519"></a>
 
-在命令行场景下使用动态vNPU调度特性，需要确保已经安装如下组件；若没有安装，可以参考[安装部署](../../../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。动态vNPU调度特性只支持使用Volcano作为调度器，不支持使用其他调度器。
+在命令行场景下使用动态vNPU调度特性，需要确保已经安装如下组件；若没有安装，可以参考[安装部署](../../../../installation_guide/02_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。动态vNPU调度特性只支持使用Volcano作为调度器，不支持使用其他调度器。
 
 **表 1**  虚拟化需要的集群调度组件
 
@@ -36,7 +36,7 @@
 </table>
 
 1. 需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run”，安装容器引擎插件。
-2. 参见[安装部署](../../../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节，完成各组件的安装。
+2. 参见[安装部署](../../../../installation_guide/02_installation/manual_installation/00_obtaining_software_packages.md)章节，完成各组件的安装。
 
    虚拟化实例涉及到需要修改相关参数的集群调度组件为Volcano和Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
 

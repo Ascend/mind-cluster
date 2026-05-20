@@ -26,7 +26,7 @@
 
 通过命令行使用MindCluster集群调度组件部署基于vLLM Proxy的Infer Operator推理任务时，使用流程如[图1](#fig38991911205816)所示。
 
-**图 1**  使用流程<a name="fig38991911205816"></a>  
+**图 1**  使用流程<a name="fig38991911205816"></a>
 ![](../../../figures/scheduling/infer-operator-use-process.png)
 
 ### 准备任务YAML
@@ -39,7 +39,7 @@
 
 **选择YAML示例**
 
-当前，基于vLLM Proxy的Infer Operator推理任务由InferServiceSet自定义CRD部署，Infer Operator的部署请参见[安装部署](../../installation_guide/03_installation/manual_installation/07_infer_operator.md)。
+当前，基于vLLM Proxy的Infer Operator推理任务由InferServiceSet自定义CRD部署，Infer Operator的部署请参见[安装部署](../../installation_guide/02_installation/manual_installation/07_infer_operator.md)。
 
 以下是一个适配示例，用户可根据需求进行修改。
 
@@ -59,7 +59,7 @@ spec:
         apiVersion: apps/v1
         kind: StatefulSet # workload类型，当前支持StatefulSet/Deployment
       metadata:
-        labels: 
+        labels:
           infer.huawei.com/gang-schedule: 'false' # 关闭gang调度，开启时会为每一个workload实例创建PodGroup
       spec:
         replicas: 1 # prefill中workload的pod副本数
@@ -94,7 +94,7 @@ spec:
         apiVersion: apps/v1
         kind: StatefulSet # workload类型，当前支持StatefulSet/Deployment
       metadata:
-        labels: 
+        labels:
           infer.huawei.com/gang-schedule: 'false' # 关闭gang调度，开启时会为每一个workload实例创建PodGroup
       spec:
         replicas: 1 # decode中workload的pod副本数
@@ -129,10 +129,10 @@ spec:
       - name: vllm-router-service
         spec:
           ports:    # service的端口定义
-          - port: 1026 
+          - port: 1026
             protocol: TCP
             targetPort: 1026
-          selector: 
+          selector:
             app: test-router # 用户自定义，需要与下面labels中app配置保持一致
           type: ClusterIP
       workload:     # router中实例的CRD类型信息
@@ -280,7 +280,7 @@ inferserviceset.mindcluster.huawei.com/my-test created
 1. 查看相关推理实例Pod是否拉起。其中，\<namespace\>为用户定义的命名空间。
 
    ```shell
-   kubectl get pod -n <namespace> 
+   kubectl get pod -n <namespace>
    ```
 
    回显示例如下，所有实例的Pod处于Running状态。
@@ -295,7 +295,7 @@ inferserviceset.mindcluster.huawei.com/my-test created
 2. 查看相关推理角色（prefill实例集、decode实例集等）是否创建。
 
    ```shell
-   kubectl get instanceset -n <namespace> 
+   kubectl get instanceset -n <namespace>
    ```
 
    回显示例如下，三种实例集成功创建。
@@ -377,7 +377,7 @@ kubectl logs -n <namespace> <pod-name>
 执行以下命令，删除推理任务。其中，<job-yaml\>为InferServiceSet任务的YAML文件。
 
 ```shell
-kubectl delete -f <job-yaml> 
+kubectl delete -f <job-yaml>
 ```
 
 回显示例如下，推理任务删除成功。
@@ -496,7 +496,7 @@ inferserviceset.mindcluster.huawei.com "my-test" deleted
        ```shell
        kubectl get inferservice -n <namespace>
        ```
-      
+
        回显示例如下，推理服务成功创建。
 
        ```ColdFusion
