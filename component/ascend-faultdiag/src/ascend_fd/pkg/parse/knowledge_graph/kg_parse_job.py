@@ -14,12 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
+# pylint: disable=too-many-lines
 import logging
 
 from ascend_fd.model.context import KGParseCtx
 from ascend_fd.model.parse_info import KGParseFilePath
 from ascend_fd.utils.status import FileNotExistError
-from ascend_fd.utils.tool import check_file_num_and_size
+from ascend_fd.utils.tool import check_file_num_and_size, load_device_info_map
 from ascend_fd.model.cfg import ParseCFG
 from ascend_fd.pkg.parse.knowledge_graph.utils import SingleJsonFileProcessing
 from ascend_fd.utils.regular_table import KG_MIN_TIME
@@ -94,14 +96,16 @@ class SaverCollector:
             bmc_log_path=self.safe_get("bmc_log_saver", "get_bmc_log_list", default=[]),
             lcne_log_path=self.safe_get("lcne_log_saver", "get_lcne_log_list", default=[]),
             bus_log_path=self.safe_get("lcne_log_saver", "get_bus_log_dict", default={}),
-            custom_log_list=self.safe_get("custom_log_saver", "get_custom_log_list", default=[])
+            custom_log_list=self.safe_get("custom_log_saver", "get_custom_log_list", default=[]),
         )
         # sdk断点续训时间属性需要在self.plog_dict后。（先要plog解析时间）
         self.parse_ctx = KGParseCtx(
             parse_file_path=self.parse_file_path,
             resuming_training_time=self.safe_get("log_saver", "get_resuming_training_time", default=KG_MIN_TIME),
             is_sdk_input=cfg.is_sdk_input,
-            custom_info_list=self.safe_get("custom_log_saver", "get_custom_info_list", default=[]))
+            custom_info_list=self.safe_get("custom_log_saver", "get_custom_info_list", default=[]),
+            device_info_map=load_device_info_map(self.safe_get("dev_log_saver", "get_hisi_logs_list", default=[])),
+        )
 
     def safe_get(self, attr_name: str, method_name: str, default=None):
         sub_obj = getattr(self.cfg, attr_name, None)

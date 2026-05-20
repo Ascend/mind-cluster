@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+# pylint: disable=too-many-lines
 import abc
 import argparse
 import datetime
@@ -33,15 +34,30 @@ import sys
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Dict, Type, Optional, Any, Union, Callable, BinaryIO, Tuple
+from typing import List, Dict, Type, Optional, Any, Union, Callable
 
-from ascend_fd.configuration.config import DEFAULT_USER_CONF, DEFAULT_HOME_PATH, ENV_VAR_KEY, RUN_LOG_FORMAT, \
-    OP_LOG_FILE, HOME_PATH
+from ascend_fd.configuration.config import (
+    DEFAULT_USER_CONF,
+    DEFAULT_HOME_PATH,
+    ENV_VAR_KEY,
+    RUN_LOG_FORMAT,
+    OP_LOG_FILE,
+    HOME_PATH,
+)
 from ascend_fd.utils import regular_table
 from ascend_fd.utils.constant.str_const import COMPLEMENT, ERROR_CODE
 from ascend_fd.utils.fault_code import CANN_ERRCODE_CUSTOM, PYTORCH_ERRCODE_COMMON, MINDIE_ERRCODE_COMMON
-from ascend_fd.utils.status import FileOpenError, InnerError, SuccessRet, FileTooLarge, FileNotExistError, \
-    InfoIncorrectError, InfoNotFoundError, ParamError, PathError
+from ascend_fd.utils.status import (
+    FileOpenError,
+    InnerError,
+    SuccessRet,
+    FileTooLarge,
+    FileNotExistError,
+    InfoIncorrectError,
+    InfoNotFoundError,
+    ParamError,
+    PathError,
+)
 
 VERSION_FILE_READ_LIMIT = 100
 MAX_SIZE = 512 * 1024 * 1024
@@ -61,7 +77,7 @@ TIME_WHITE_LIST = string.digits + "-:.T+ "
 CODE_WHITE_LIST = string.digits + string.ascii_letters + "-_"
 ITEM_CHOICES = ["attribute", "rule", "regex"]
 CONF_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "configuration")
-INVALID_HOME_PATH_LIST = ["/tmp"]
+INVALID_HOME_PATH_LIST = ["/tmp"]  # nosec B108
 LOG_DIR_PATH = os.path.join(HOME_PATH, "RUN_LOG")
 DEFAULT_BLACKLIST_CONF = os.path.join(HOME_PATH, 'custom-blacklist.json')
 echo = logging.getLogger("ECHO")
@@ -69,8 +85,9 @@ fd_logger = logging.getLogger("FAULT_DIAG")
 LOG_MAX_BACKUP_COUNT = 10
 LOG_MAX_SIZE = 10 * 1024 * 1024
 LOG_MODULE = ["FAULT_DIAG", "ROOT_CLUSTER", "KNOWLEDGE_GRAPH", "NODE_ANOMALY", "NET_CONGESTION", "KG_ENGINE"]
-DETAIL_FORMAT = '%(levelname)-7s[%(name)s][%(asctime)s][Process %(processName)s:%(process)d]' \
-                '[%(filename)s:%(lineno)d] %(message)s'
+DETAIL_FORMAT = (
+    '%(levelname)-7s[%(name)s][%(asctime)s][Process %(processName)s:%(process)d][%(filename)s:%(lineno)d] %(message)s'
+)
 OPERATION_FORMAT = '[%(asctime)s][%(levelname)s][%(user_name)s@%(host_name)s@%(process)s] %(message)s'
 RUN_LOG_DIR_MAX_SIZE = 100 * 1024 * 1024
 RUN_LOG_DIR_MAX_NUM = 100
@@ -96,6 +113,7 @@ class MultiProcessJob:
     """
     This class is used to execute multiprocess tasks and receive results.
     """
+
     TIME_OUT = 600
     MAX_SIZE = 20
 
@@ -140,12 +158,14 @@ class MultiProcessJob:
         :param func_args: job args (except result_dict)
         """
         self.safe_get_one_completed_job()
-        job = multiprocessing.Process(target=self._security_mask, name=job_name, daemon=self.daemon,
-                                      args=(job_name, function, *func_args))
+        job = multiprocessing.Process(
+            target=self._security_mask, name=job_name, daemon=self.daemon, args=(job_name, function, *func_args)
+        )
         self.job_dict.update({job_name: job})
         job.start()
-        self.logger.info("Start the subjob %s. The run logs are recorded in the %s file.",
-                         job_name, RUN_LOG_FORMAT.format(job.pid))
+        self.logger.info(
+            "Start the subjob %s. The run logs are recorded in the %s file.", job_name, RUN_LOG_FORMAT.format(job.pid)
+        )
 
     def join_and_get_results(self):
         """
@@ -196,7 +216,8 @@ class MultiProcessJob:
             if self.failed_raise:
                 first_key, first_value = next(iter(failed_details.items()))
                 raise InnerError(
-                    f"All subjobs execute failed. The first subjob: {first_key}, error reason is: {first_value}")
+                    f"All subjobs execute failed. The first subjob: {first_key}, error reason is: {first_value}"
+                )
         elif failed_details:  # record the failed subjobs.
             self.logger.error("Some subjobs %s execute failed.", list(failed_details.keys()))
         return results, failed_details
@@ -273,7 +294,7 @@ class BaseMatcher:
         :param idx: index
         """
         index_sfx = text[idx:].find("\n")
-        self.key_info = text[:idx + index_sfx] if index_sfx != -1 else text
+        self.key_info = text[: idx + index_sfx] if index_sfx != -1 else text
 
 
 class PatternMatcher(BaseMatcher):
@@ -364,6 +385,7 @@ class PatternSingleOrMultiLineMatcher(PatternMatcher):
     """
     Pattern Error Matcher for single-line or multiline
     """
+
     COMPLEMENT = "complement"
     ERROR_CODE = "error_code"
 
@@ -450,7 +472,7 @@ class PatternSingleOrMultiLineMatcher(PatternMatcher):
         Read series of lines through the log line list
         :return: a combined list of multi lines
         """
-        return "\n".join(self.log_lines[self.cur_list_idx:self.cur_list_idx + LINE_NUM_OF_MULTILINE_MATCH])
+        return "\n".join(self.log_lines[self.cur_list_idx : self.cur_list_idx + LINE_NUM_OF_MULTILINE_MATCH])
 
     def _match_in_for_single_patterns(self, patterns: List[str], text: str) -> bool:
         """
@@ -495,7 +517,7 @@ def read_version_info():
     version_file = src_path.joinpath("Version.info")
     if os.path.islink(version_file):
         raise FileOpenError(f"{os.path.basename(version_file)} should not be a symbolic link file.")
-    with open(os.path.realpath(version_file)) as file_stream:
+    with open(os.path.realpath(version_file), encoding='utf-8') as file_stream:
         version_info = file_stream.read(VERSION_FILE_READ_LIMIT).splitlines()
     return version_info
 
@@ -512,7 +534,7 @@ def get_version():
 
 def str_param_len_check(input_str: str):
     if len(input_str) > MAX_PARAM_LEN:
-        raise argparse.ArgumentTypeError('the input string length cannot over %d', MAX_PARAM_LEN)
+        raise argparse.ArgumentTypeError(f'the input string length cannot over {MAX_PARAM_LEN}')
     return input_str
 
 
@@ -530,13 +552,13 @@ def chinese_check(char: str) -> bool:
     """
     Check whether the value is a Chinese character.
     [\u4e00, \u9fa5] is Chinese characters
-    [\u3000, \u303F] or [\uFF00, \uFFEF] is Chinese punctuation
+    [\u3000, \u303f] or [\uff00, \uffef] is Chinese punctuation
     :param char: character
     :return: Chinese or not
     """
     if len(char) != 1:  # 长度不为1时返回false
         return False
-    return '\u4e00' <= char <= '\u9fa5' or '\u3000' <= char <= '\u303F' or '\uFF00' <= char <= '\uFFEF'
+    return '\u4e00' <= char <= '\u9fa5' or '\u3000' <= char <= '\u303f' or '\uff00' <= char <= '\uffef'
 
 
 def white_check(check_str: str, white_list: str, allow_zh: bool = False):
@@ -561,13 +583,14 @@ def code_check(code: str):
     """
     if len(code) < 1 or len(code) > MAX_CODE_LEN:
         raise argparse.ArgumentTypeError(
-            f"The fault code is invalid.\n"
-            f"The fault code length exceeds the maximum code length({MAX_CODE_LEN}).")
+            f"The fault code is invalid.\nThe fault code length exceeds the maximum code length({MAX_CODE_LEN})."
+        )
     if not white_check(code, CODE_WHITE_LIST):
         raise argparse.ArgumentTypeError(
             "The fault code is invalid.\n"
             "The fault code can contain only digits, uppercase and lowercase letters, "
-            "and following characters: ['-', '_']")
+            "and following characters: ['-', '_']"
+        )
     return code
 
 
@@ -583,11 +606,12 @@ def path_check(path: str):
         raise argparse.ArgumentTypeError(
             "The path is invalid.\n"
             "The path can contain only digits, uppercase and lowercase letters, "
-            "and following characters: ['~', '+', '-', '_', '.', ' ']")
+            "and following characters: ['~', '+', '-', '_', '.', ' ']"
+        )
     if len(path) < 1 or len(path) > MAX_PATH_LEN:
         raise argparse.ArgumentTypeError(
-            f"The path is invalid.\n"
-            f"The path length exceeds the maximum path length({MAX_PATH_LEN}).")
+            f"The path is invalid.\nThe path length exceeds the maximum path length({MAX_PATH_LEN})."
+        )
     try:
         real_path = check_symlink(path)
     except (PathError, FileNotExistError) as err:
@@ -699,7 +723,7 @@ def safe_read_open(file, *args, **kwargs):
     if os.path.islink(file):
         raise FileOpenError(f"The {os.path.basename(file)} should not be a symbolic link file.")
     file_real_path = os.path.realpath(file)
-    file_stream = open(file_real_path, *args, **kwargs)
+    file_stream = open(file_real_path, *args, **kwargs)  # noqa: SIM115  # pylint: disable=unspecified-encoding,consider-using-with
     file_info = os.stat(file_stream.fileno())
     if file_info.st_size > MAX_SIZE:
         file_stream.close()
@@ -707,7 +731,7 @@ def safe_read_open(file, *args, **kwargs):
     return file_stream
 
 
-def safe_read_open_with_size(file: str, size: int = 100 * 1024, *args, **kwargs):
+def safe_read_open_with_size(file: str, size: int = 100 * 1024, *args, **kwargs):  # pylint: disable=keyword-arg-before-vararg
     """
     Safe open file and read specify size.
     If file size <= specify size, read all; if file size > specify size, read the latest specify size data
@@ -721,7 +745,7 @@ def safe_read_open_with_size(file: str, size: int = 100 * 1024, *args, **kwargs)
         raise FileOpenError(f"The {os.path.basename(file)} should not be a symbolic link file.")
     file_real_path = os.path.realpath(file)
     kwargs.update({"errors": "ignore"})
-    file_stream = open(file_real_path, *args, **kwargs)
+    file_stream = open(file_real_path, *args, **kwargs)  # noqa: SIM115  # pylint: disable=unspecified-encoding,consider-using-with
     file_info = os.stat(file_stream.fileno())
     if file_info.st_size > size:
         file_stream.seek(file_info.st_size - size + 1)
@@ -743,7 +767,7 @@ def safe_generate_or_merge_json_file(file_path, new_data):
         file_stream.write('\r\n')
 
 
-def safe_write_open(file, open_flags=os.O_WRONLY | os.O_CREAT | os.O_TRUNC, open_mode=0o640, *args, **kwargs):
+def safe_write_open(file, open_flags=os.O_WRONLY | os.O_CREAT | os.O_TRUNC, open_mode=0o640, *args, **kwargs):  # pylint: disable=keyword-arg-before-vararg
     """
     Safe open file for writing
     :param file: file path
@@ -827,7 +851,7 @@ def get_user_host():
     :return: user host
     """
     user_host = 'localhost'
-    who_cmd = subprocess.run(['/usr/bin/who', '-m'], shell=False, stdout=subprocess.PIPE)
+    who_cmd = subprocess.run(['/usr/bin/who', '-m'], shell=False, stdout=subprocess.PIPE, check=False)
     if who_cmd.returncode != 0:
         return user_host
     who = who_cmd.stdout.decode()
@@ -868,8 +892,10 @@ def safe_walk(file_dir: str, dir_depth: int = DIR_MAX_DEPTH, max_loop_size: int 
         root_depth = root.rstrip().count(os.sep)
         if root_depth - input_path_depth > dir_depth:
             dirs[:] = []  # 清空 dirs 列表，不再继续向里查找
-            fd_logger.warning("The search depth of the current dir has reached %s. "
-                              "The part that is too deep will be ignored.", dir_depth)
+            fd_logger.warning(
+                "The search depth of the current dir has reached %s. The part that is too deep will be ignored.",
+                dir_depth,
+            )
             continue
         yield root, dirs, files
         loop_num += 1
@@ -915,7 +941,7 @@ def log_filter_character_defence(log_record: logging.LogRecord):
     :param log_record: logging LogRecord
     """
     log_record.msg = repr(str(log_record.msg)).strip("'\"")
-    log_record.args = tuple([repr(str(arg)).strip("'\"") for arg in log_record.args])
+    log_record.args = tuple(repr(str(arg)).strip("'\"") for arg in log_record.args)
 
 
 def log_filter_for_run(log_record: logging.LogRecord) -> bool:
@@ -948,10 +974,7 @@ def log_filter_for_echo(log_record: logging.LogRecord) -> bool:
     :param log_record: logging LogRecord
     :return: bool
     """
-    level_map = {
-        logging.WARNING: "Warn: ",
-        logging.ERROR: "Error: "
-    }
+    level_map = {logging.WARNING: "Warn: ", logging.ERROR: "Error: "}
     log_record.msg = f"{level_map.get(log_record.levelno, '')}{log_record.msg}"
     return True
 
@@ -965,8 +988,9 @@ def init_run_log(task_id):
     task_log_path = os.path.join(LOG_DIR_PATH, task_id)
     os.makedirs(task_log_path, 0o700, exist_ok=True)
     log_file = RUN_LOG_FORMAT.format(os.getpid())
-    file_handler = MyRotatingFileHandler(os.path.join(task_log_path, log_file),
-                                         maxBytes=LOG_MAX_SIZE, backupCount=LOG_MAX_BACKUP_COUNT)
+    file_handler = MyRotatingFileHandler(
+        os.path.join(task_log_path, log_file), maxBytes=LOG_MAX_SIZE, backupCount=LOG_MAX_BACKUP_COUNT
+    )
     safe_chmod(os.path.join(task_log_path, log_file), mode=0o640)
     file_handler.setFormatter(logging.Formatter(DETAIL_FORMAT))
     for name in LOG_MODULE:
@@ -1045,8 +1069,9 @@ def _init_home_path_by_env() -> bool:
         echo.error("The %s path already exists but is not a folder.", ENV_VAR_KEY)
         return False
     if not check_owner(HOME_PATH):
-        echo.error("The owner of %s path does not belong to the root user or the user who executes the program.",
-                   ENV_VAR_KEY)
+        echo.error(
+            "The owner of %s path does not belong to the root user or the user who executes the program.", ENV_VAR_KEY
+        )
         return False
     try:
         _create_default_conf_file()
@@ -1184,7 +1209,7 @@ def check_and_format_time_str(time_str, timezone_trans_flag=False):
         "%Y-%m-%dT%H:%M:%S%z",  # 格式3：ISO格式带时区
         "%Y-%m-%d %H:%M:%S.%f%z",  # 格式4：空格分隔带毫秒和时区
         "%Y-%m-%d %H:%M:%S.%f",  # 格式5：空格字符分割
-        "%Y%m%d%H%M%S"  # 格式6：紧凑型日期时间
+        "%Y%m%d%H%M%S",  # 格式6：紧凑型日期时间
     ]
     dt = None
     for fmt in formats:
@@ -1217,10 +1242,12 @@ def check_file_num_and_size(files, logger, file_num=FILE_MAX_NUM, file_size=FILE
         logger.error("The number of files is too large to be parsed.")
         raise FileTooLarge("The number of files is too large to be parsed.")
     if all_file_size_sum(files) > file_size:
-        echo.warning(f"All files size exceeds %s GB, it may take a long time to parse these files.",
-                     file_size >> GB_SHIFT)
-        logger.warning("All files size exceeds %s GB, it may take a long time to parse these files.",
-                       file_size >> GB_SHIFT)
+        echo.warning(
+            "All files size exceeds %s GB, it may take a long time to parse these files.", file_size >> GB_SHIFT
+        )
+        logger.warning(
+            "All files size exceeds %s GB, it may take a long time to parse these files.", file_size >> GB_SHIFT
+        )
 
 
 def check_scikit_learn_version(threshold: str = "1.3.0"):
@@ -1228,11 +1255,11 @@ def check_scikit_learn_version(threshold: str = "1.3.0"):
     Check scikit-learn version >= threshold
     """
     import sklearn
+
     sklearn_version = sklearn.__version__
     if sklearn_version.split(".") < threshold.split("."):
         raise ImportError(
-            f"The scikit-learn version ({sklearn_version}) is too low. "
-            "Please upgrade to version 1.3.0 or higher."
+            f"The scikit-learn version ({sklearn_version}) is too low. Please upgrade to version 1.3.0 or higher."
         )
 
 
@@ -1288,8 +1315,7 @@ def validate_type(data, param_type: type, filed_name: str):
     :param filed_name: original filed name
     """
     if not isinstance(data, param_type):
-        raise ParamError(
-            "Invalid parameter type for '{}', it should be '{}'.".format(filed_name, param_type.__name__))
+        raise ParamError("Invalid parameter type for '{}', it should be '{}'.".format(filed_name, param_type.__name__))
 
 
 def validate_list_length(param_list: list, limit: int, label: str):
@@ -1302,8 +1328,11 @@ def validate_list_length(param_list: list, limit: int, label: str):
     """
     input_list_size = len(param_list)
     if input_list_size > limit:
-        raise ParamError("The size of {} exceeds the limit, which is {}, "
-                         "whereas the current size is {}.".format(label, limit, input_list_size))
+        raise ParamError(
+            "The size of {} exceeds the limit, which is {}, whereas the current size is {}.".format(
+                label, limit, input_list_size
+            )
+        )
 
 
 def generate_task_id():
@@ -1339,8 +1368,11 @@ class SchemaValidator:
     @staticmethod
     def _validate_type(value, cur_key_path, value_type: type):
         if not isinstance(value, value_type):
-            raise ParamError("Type mismatch for '{}', expected {}, got {} instead"
-                             .format(cur_key_path, value_type.__name__, type(value).__name__))
+            raise ParamError(
+                "Type mismatch for '{}', expected {}, got {} instead".format(
+                    cur_key_path, value_type.__name__, type(value).__name__
+                )
+            )
 
     def validate(self, data: dict, schema: dict = None, root: str = ""):
         """
@@ -1395,20 +1427,29 @@ class SchemaValidator:
         Validate whether the value is in range or pre-defined choices
         """
         if isinstance(choices, range) and value_type in (int, float) and value not in choices:
-            raise ParamError("Validation error at '{}': Value '{}' not in the allowed range: [{}-{}]"
-                             .format(self.cur_key_path, value, choices.start, choices.stop - 1))
+            raise ParamError(
+                "Validation error at '{}': Value '{}' not in the allowed range: [{}-{}]".format(
+                    self.cur_key_path, value, choices.start, choices.stop - 1
+                )
+            )
 
         if choices is not None and value not in choices:
-            raise ParamError("Validation error at '{}': Value '{}' not in the allowed choices: {}"
-                             .format(self.cur_key_path, value, choices))
+            raise ParamError(
+                "Validation error at '{}': Value '{}' not in the allowed choices: {}".format(
+                    self.cur_key_path, value, choices
+                )
+            )
 
     def _validate_length(self, value: Union[list, dict, str], size_limit: int):
         """
         Validate whether the length exceeds the limit
         """
         if size_limit is not None and len(value) > size_limit:
-            raise ParamError("Value size exceeds the limit: {}, expected no greater than {}, got {}"
-                             .format(self.cur_key_path, size_limit, len(value)))
+            raise ParamError(
+                "Value size exceeds the limit: {}, expected no greater than {}, got {}".format(
+                    self.cur_key_path, size_limit, len(value)
+                )
+            )
 
     def _validate_sub_schema(self, value, sub_schema, value_type: type):
         """
@@ -1423,8 +1464,11 @@ class SchemaValidator:
                 original_cur_key_path = self.cur_key_path
                 self.cur_key_path = f"{self.cur_key_path}[{idx}]"
                 if not isinstance(item, dict):
-                    raise ParamError("Validation error at '{}': Type mismatch, expected {}, got {} instead"
-                                     .format(self.cur_key_path, dict.__name__, type(item).__name__))
+                    raise ParamError(
+                        "Validation error at '{}': Type mismatch, expected {}, got {} instead".format(
+                            self.cur_key_path, dict.__name__, type(item).__name__
+                        )
+                    )
                 self.validate(item, sub_schema, self.cur_key_path)
                 self.cur_key_path = original_cur_key_path
 
@@ -1485,3 +1529,53 @@ def init_sdk_task():
     init_echo_log(log_lever=logging.CRITICAL)
     init_run_log(task_id)
     return task_id
+
+
+def parse_device_info_file(file_path: str) -> dict:
+    """
+    解析 hisi_logs/device_info.txt 文件，提取 phy-id 到 logic-id 的映射关系。
+
+    文件格式:
+        devices info:
+        ==============================================
+        dir        phy-id        logic-id   status
+        device-0   0             3          os running
+        ...
+
+    返回 {logic_id: phy_id} 字典。
+    """
+    if not file_path or not os.path.exists(file_path):
+        return {}
+    device_info_map = {}
+    device_line = re.compile(r"device-(\d+)\s+(\d+)\s+(\d+)\s+")
+    phy_id_pos = 2
+    logic_id_pos = 3
+    in_devices_section = False
+    for line in safe_read_line(file_path):
+        if not line:
+            continue
+        if "devices info:" in line:
+            in_devices_section = True
+            continue
+        if not in_devices_section:
+            continue
+        match = device_line.match(line)
+        if match:
+            phy_id = match.group(phy_id_pos)
+            logic_id = match.group(logic_id_pos)
+            device_info_map[logic_id] = phy_id
+    return device_info_map
+
+
+def load_device_info_map(hisi_logs_list: list) -> dict:
+    """
+    A5 plog: 从 hisi_logs_list 中找到 device_info.txt 并解析 {logic_id: phy_id}。
+    """
+    if not hisi_logs_list:
+        return {}
+    for hisi_file in hisi_logs_list:
+        if not hisi_file:
+            continue
+        if hisi_file.endswith(regular_table.DEVICE_INFO_FILE):
+            return parse_device_info_file(hisi_file)
+    return {}

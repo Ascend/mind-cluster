@@ -19,29 +19,47 @@ import os
 from datetime import datetime, timedelta
 from typing import List, Union
 
-from ascend_fd.model.parse_info import PlogBaseInfo, PlogPidParseInfo, PlogErrorInfo, PlogShowLogs, RemoteInfo, \
-    TimeoutEvent
+from ascend_fd.model.parse_info import (
+    PlogBaseInfo,
+    PlogPidParseInfo,
+    PlogErrorInfo,
+    PlogShowLogs,
+    RemoteInfo,
+    TimeoutEvent,
+)
 from ascend_fd.utils import regular_table
 from ascend_fd.utils.constant.str_const import TRANSPORT_INIT_ERROR
-from ascend_fd.utils.regular_table import ERROR_CQE_LATEST, ERROR_CQE_LATEST_SPLIT, ERROR_CQE, ERROR_CQE_NEW, \
-    ERROR_CQE_SPLIT, ERROR_CQE_NEW_SPLIT
-from ascend_fd.utils.tool import safe_write_open, safe_read_open, SHOW_LINES_NUM, get_log_module_and_time
+from ascend_fd.utils.regular_table import (
+    ERROR_CQE_LATEST,
+    ERROR_CQE_LATEST_SPLIT,
+    ERROR_CQE,
+    ERROR_CQE_NEW,
+    ERROR_CQE_SPLIT,
+    ERROR_CQE_NEW_SPLIT,
+)
+from ascend_fd.utils.tool import safe_write_open, SHOW_LINES_NUM, get_log_module_and_time, safe_read_line
 from ascend_fd.pkg.parse.blacklist.blacklist_op import BlackListManager
 
-INVALID_ID = "-1"
-INVALID_IP = "0.0.0.0"
+INVALID_ID = "-1"  # nosec
+INVALID_IP = "0.0.0.0"  # nosec
 
 
 class PidFileParser:
-    def __init__(self, pid: str, device_ip_map: dict, resuming_training_time: str = regular_table.MIN_TIME,
-                 recovery_time: str = regular_table.MIN_TIME):
+    def __init__(
+        self,
+        pid: str,
+        device_ip_map: dict,
+        resuming_training_time: str = regular_table.MIN_TIME,
+        recovery_time: str = regular_table.MIN_TIME,
+        device_info_map: dict = None,
+    ):
         self.pid = pid
         self.start_train_time = regular_table.MAX_TIME
         self.end_train_time = regular_table.MIN_TIME
         self.resuming_training_time = resuming_training_time
         self.lagging_time = regular_table.MIN_TIME
         blacklist_manager = BlackListManager()
-        self.base_info_parser = BaseInfoParser(device_ip_map, blacklist_manager)
+        self.base_info_parser = BaseInfoParser(device_ip_map, blacklist_manager, device_info_map)
         self.error_parser = ErrorParser(blacklist_manager)
         self.repeat_filter_set = set()
         self.recovery_success_time = recovery_time
@@ -103,21 +121,14 @@ class PidFileParser:
             self._parse_line(line, module, log_time)
 
     def _parse_file(self, file_path: str):
-        """
-        Parse a file of one pid
-        """
         if not os.path.isfile(file_path):
             return
-        with safe_read_open(file_path, "r", encoding="UTF-8") as file_stream:
-            while True:
-                line = file_stream.readline()
-                if not line:
-                    break
-                try:
-                    module, log_time = get_log_module_and_time(line)
-                except IndexError:
-                    continue  # If error, mean the log format is incorrect. Skip this line
-                self._parse_line(line, module, log_time)
+        for line in safe_read_line(file_path):
+            try:
+                module, log_time = get_log_module_and_time(line)
+            except IndexError:
+                continue  # If error, mean the log format is incorrect. Skip this line
+            self._parse_line(line, module, log_time)
 
     def _parse_line(self, line, module, log_time):
         """
@@ -127,10 +138,8 @@ class PidFileParser:
         # Manually update base info in n seconds recovery scenario
         if log_time < self.resuming_training_time and self.recovery_success_time == regular_table.MIN_TIME:
             return
-        if log_time < self.start_train_time:
-            self.start_train_time = log_time
-        if log_time > self.end_train_time:
-            self.end_train_time = log_time
+        self.start_train_time = min(log_time, self.start_train_time)
+        self.end_train_time = max(self.end_train_time, log_time)
         # 忽略场景："Process group work %s, seq_num %u dispatch sucess.This error log can be ignored."
         if "error log can be ignored" in line and "Process group work" not in line:
             self.error_parser.re_init()
@@ -153,8 +162,9 @@ class PidFileParser:
             return
         if self.base_info_parser.parse_line(line):
             self._add_origin_log(line)
-        if self.error_parser.parse_line(line, module, log_time, self.resuming_training_time,
-                                        self.recovery_success_time):
+        if self.error_parser.parse_line(
+            line, module, log_time, self.resuming_training_time, self.recovery_success_time
+        ):
             self._add_origin_log(line)
 
     def _add_origin_log(self, log_line):
@@ -205,19 +215,20 @@ class BaseInfoParser:
         regular_table.CONNECT_TIMEOUT: regular_table.CONNECT_TIMEOUT_KEYWORD,
         regular_table.EXEC_TIMEOUT: regular_table.EXEC_TIMEOUT_KEYWORD,
         regular_table.RDMA_TIMEOUT: regular_table.RDMA_TIMEOUT_KEYWORD,
-        regular_table.RDMA_RETRY_CNT: regular_table.RDMA_RETRY_CNT_KEYWORD
+        regular_table.RDMA_RETRY_CNT: regular_table.RDMA_RETRY_CNT_KEYWORD,
     }
     DEFAULT_TIMEOUT_SET_KEYWORD = {
         regular_table.CONNECT_TIMEOUT: regular_table.DEFAULT_CONNECT_TIMEOUT_SET_KEYWORD,
         regular_table.EXEC_TIMEOUT: regular_table.DEFAULT_EXEC_TIMEOUT_SET_KEYWORD,
         regular_table.RDMA_TIMEOUT: regular_table.DEFAULT_RDMA_TIMEOUT_SET_KEYWORD,
-        regular_table.RDMA_RETRY_CNT: regular_table.DEFAULT_RDMA_RETRY_CNT_SET_KEYWORD
+        regular_table.RDMA_RETRY_CNT: regular_table.DEFAULT_RDMA_RETRY_CNT_SET_KEYWORD,
     }
     TIMEOUT_PATTERN = re.compile(regular_table.TIME_OUT)
 
-    def __init__(self, device_ip_map: dict, blacklist_manager: BlackListManager):
+    def __init__(self, device_ip_map: dict, blacklist_manager: BlackListManager, device_info_map: dict = None):
         self.device_ip_map = device_ip_map
         self.blacklist_manager = blacklist_manager
+        self.device_info_map = device_info_map or {}
 
         self.logic_device_id = ""
         self.phy_device_id = ""
@@ -234,7 +245,7 @@ class BaseInfoParser:
         """
         Re init class
         """
-        self.__init__(self.device_ip_map, self.blacklist_manager)
+        self.__init__(self.device_ip_map, self.blacklist_manager)  # pylint: disable=unnecessary-dunder-call
 
     def parse_line(self, line):
         """
@@ -243,20 +254,32 @@ class BaseInfoParser:
         if regular_table.GET_ROOT_INFO in line and not self.blacklist_manager.is_log_line_need_ignore(line):
             self._parse_root_init_info(line)
             return True
+        if regular_table.ROOT_INFO_DETECT in line and not self.blacklist_manager.is_log_line_need_ignore(line):
+            self._parse_a5_root_info_detect(line)
+            return True
         if regular_table.ENTRY_ROOT_INFO in line and not self.blacklist_manager.is_log_line_need_ignore(line):
             self._parse_entry_init_info(line)
             return True
-        if regular_table.RANK_NUM_INFO in line and regular_table.RANK_INFO in line \
-                and not self.blacklist_manager.is_log_line_need_ignore(line):
+        if (
+            regular_table.RANK_NUM_INFO in line
+            and regular_table.RANK_INFO in line
+            and not self.blacklist_manager.is_log_line_need_ignore(line)
+        ):
             self._parse_common_init_info(line)
             return True
-        if regular_table.TOTAL_RANK_INFO in line and regular_table.SERVER_ID_INFO in line \
-                and not self.blacklist_manager.is_log_line_need_ignore(line):
+        if (
+            regular_table.TOTAL_RANK_INFO in line
+            and regular_table.SERVER_ID_INFO in line
+            and not self.blacklist_manager.is_log_line_need_ignore(line)
+        ):
             self._parse_common_init_info(line)
             return True
         for cate, keyword in self.DEFAULT_TIMEOUT_SET_KEYWORD.items():
-            default_timeout_key_in_line = regular_table.EXTERNAL_INPUT_KEYWORD in line and keyword in line \
-                                          and not self.blacklist_manager.is_log_line_need_ignore(line)
+            default_timeout_key_in_line = (
+                regular_table.EXTERNAL_INPUT_KEYWORD in line
+                and keyword in line
+                and not self.blacklist_manager.is_log_line_need_ignore(line)
+            )
             if default_timeout_key_in_line:
                 self._parse_default_timeout_set_info(line, cate)
                 return True
@@ -265,8 +288,11 @@ class BaseInfoParser:
             if timeout_key_in_line:
                 self._parse_timeout_info(line, cate)
                 return True
-        if regular_table.SOCKET_VIRTUAL_NIC_IP_INFO in line and regular_table.SOCKET_PHY_ID_INFO in line \
-                and not self.blacklist_manager.is_log_line_need_ignore(line):
+        if (
+            regular_table.SOCKET_VIRTUAL_NIC_IP_INFO in line
+            and regular_table.SOCKET_PHY_ID_INFO in line
+            and not self.blacklist_manager.is_log_line_need_ignore(line)
+        ):
             self._parse_vNic_ip_phy_device_id(line)
             return True
         return False
@@ -275,9 +301,11 @@ class BaseInfoParser:
         """
         Get the parse result
         """
+        self._resolve_phy_device_id()
         plog_base_info = PlogBaseInfo()
-        plog_base_info.device_ip = self.device_ip or self.device_ip_map.get(self.phy_device_id or self.logic_device_id,
-                                                                            "")
+        plog_base_info.device_ip = self.device_ip or self.device_ip_map.get(
+            self.phy_device_id or self.logic_device_id, ""
+        )
         plog_base_info.vNic_ip = self.vNic_ip
         plog_base_info.logic_device_id = self.logic_device_id
         plog_base_info.phy_device_id = self.phy_device_id
@@ -312,6 +340,22 @@ class BaseInfoParser:
         self.rank_map.update(rank_map)
         self.root_for_identifiers.add(instance_id)
         self.server_name = server_name
+
+    def _resolve_phy_device_id(self):
+        """
+        A5 plog 物理 ID 解析回退逻辑:
+        1. 如果 phy_device_id 已从日志行中解析到，直接使用
+        2. 如果没有 phy_device_id，通过 logic_device_id 到 device_info_map 中查找映射
+        3. 如果没有 device_info_map，将 logic_device_id 当作 device_id
+        """
+        if self.phy_device_id or not self.logic_device_id:
+            return
+        if self.device_info_map:
+            phy_id = self.device_info_map.get(self.logic_device_id, "")
+            if phy_id:
+                self.phy_device_id = phy_id
+                return
+        self.phy_device_id = self.logic_device_id
 
     def _parse_vNic_ip_phy_device_id(self, line: str):
         """
@@ -359,8 +403,9 @@ class BaseInfoParser:
         Entry-HcclCommInitRootInfo:ranks[*], rank[*], rootinfo: host ip[*] port[*] nicDeploy[*] identifier[*],
         deviceLogicId[*]
         """
-        identifier_name = filter_single_rank_info(line, regular_table.IDENTIFIER_INFO) or \
-                          regular_table.DEFAULT_IDENTIFIER
+        identifier_name = (
+            filter_single_rank_info(line, regular_table.IDENTIFIER_INFO) or regular_table.DEFAULT_IDENTIFIER
+        )
         rank_id = filter_single_rank_info(line, regular_table.RANK_INFO)
         if rank_id:
             self.rank_map.setdefault(identifier_name, dict()).update({"rank_id": rank_id})
@@ -371,6 +416,42 @@ class BaseInfoParser:
         if logic_device_id == INVALID_ID:
             logic_device_id = ""
         self.logic_device_id = self.logic_device_id or logic_device_id
+
+    def _parse_a5_root_info_detect(self, line: str):
+        """
+        解析 A5 版本 plog 的 RootInfoDetect 日志行，提取设备信息和 rank 信息。
+        Log 格式:
+        [RootInfoDetect] nRanks[16], rank[15] entry flat topo detect, rootinfo: host ip[192.168.0.1]
+        port[30000] netMode[HrtNetworkMode::HDC] identifier[*], deviceLogicId[7], devPhyId[15]
+
+        A5 变更点: 从该行直接提取物理 id (devPhyId) 和逻辑 id (deviceLogicId)。
+        如果有物理 id，则不需要下一步判断。
+        """
+        identifier_name = filter_single_rank_info(line, regular_table.IDENTIFIER_INFO)
+        if not identifier_name:
+            identifier_name = regular_table.DEFAULT_IDENTIFIER
+        rank_id = filter_single_rank_info(line, regular_table.RANK_INFO)
+        if rank_id:
+            self.rank_map.setdefault(identifier_name, dict()).update({"rank_id": rank_id})
+        rank_num_str = filter_single_rank_info(line, regular_table.NRANKS_INFO)
+        if rank_num_str:
+            try:
+                self.rank_map.setdefault(identifier_name, dict()).update({"rank_num": int(rank_num_str)})
+            except ValueError:
+                self.rank_map.setdefault(identifier_name, dict()).update({"rank_num": -1})
+        logic_device_id = filter_single_rank_info(line, regular_table.ENTRY_DEVICE_INFO)
+        if logic_device_id == INVALID_ID:
+            logic_device_id = ""
+        self.logic_device_id = self.logic_device_id or logic_device_id
+
+        phy_device_id = filter_single_rank_info(line, regular_table.SOCKET_PHY_ID_INFO)
+        if phy_device_id == INVALID_ID:
+            phy_device_id = ""
+        self.phy_device_id = self.phy_device_id or phy_device_id
+
+        host_ip = filter_single_rank_info(line, regular_table.HOST_IP_INFO)
+        if host_ip and host_ip != INVALID_IP:
+            self.device_ip = self.device_ip or host_ip
 
     def _parse_common_init_info(self, line: str):
         """
@@ -393,21 +474,25 @@ class BaseInfoParser:
         - 20240927 New info:
         hcclCommInitInfo:commId[*], rank[*], totalRanks[*], serverId[*], deviceType[*],logicDevId[*], identifier[*]
         """
-        identifier_name = filter_single_rank_info(line, regular_table.IDENTIFIER_INFO) or \
-                          regular_table.DEFAULT_IDENTIFIER
+        identifier_name = (
+            filter_single_rank_info(line, regular_table.IDENTIFIER_INFO) or regular_table.DEFAULT_IDENTIFIER
+        )
         rank_id = filter_single_rank_info(line, regular_table.RANK_INFO)
-        rank_num_str = filter_single_rank_info(line, regular_table.RANK_NUM_INFO) or \
-                       filter_single_rank_info(line, regular_table.TOTAL_RANK_INFO)
-        if (identifier_name != regular_table.DEFAULT_IDENTIFIER or regular_table.INIT_ROOT_INFO not in line) \
-                and rank_num_str:
+        rank_num_str = filter_single_rank_info(line, regular_table.RANK_NUM_INFO) or filter_single_rank_info(
+            line, regular_table.TOTAL_RANK_INFO
+        )
+        if (
+            identifier_name != regular_table.DEFAULT_IDENTIFIER or regular_table.INIT_ROOT_INFO not in line
+        ) and rank_num_str:
             # skip line when not found identifier and use root info to init
             try:
                 rank_num = int(rank_num_str)
             except ValueError:
                 rank_num = -1
             self.rank_map.setdefault(identifier_name, dict()).update({"rank_num": rank_num, "rank_id": rank_id})
-        logic_device_id = filter_single_rank_info(line, regular_table.OLD_DEVICE_INFO) or \
-                          filter_single_rank_info(line, regular_table.LOGIC_DEVICE_INFO)
+        logic_device_id = filter_single_rank_info(line, regular_table.OLD_DEVICE_INFO) or filter_single_rank_info(
+            line, regular_table.LOGIC_DEVICE_INFO
+        )
         if logic_device_id == INVALID_ID:
             logic_device_id = ""
         self.logic_device_id = self.logic_device_id or logic_device_id
@@ -428,7 +513,7 @@ class BaseInfoParser:
 class ErrorParser:
     OTHER_TIMEOUT_KEYWORDS = {
         regular_table.TIMEOUT_FFTS: ["FFTS+ run failed"],
-        regular_table.TIMEOUT_NORMAL: ["Wait timeout for sockets recv", "get rasocket timeout", "recv fail"]
+        regular_table.TIMEOUT_NORMAL: ["Wait timeout for sockets recv", "get rasocket timeout", "recv fail"],
     }
     _Transport_error_info_pattern = re.compile(r"remoteIpAddr\[(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/(\d)]")
 
@@ -450,8 +535,11 @@ class ErrorParser:
         """
         Parse error info from plog log
         """
-        error_need_ignore = self.blacklist_manager.is_log_line_need_ignore(
-            line) or log_time < resuming_training_time or log_time < recovery_time
+        error_need_ignore = (
+            self.blacklist_manager.is_log_line_need_ignore(line)
+            or log_time < resuming_training_time
+            or log_time < recovery_time
+        )
         if not line.startswith(regular_table.ERROR_ALL) or error_need_ignore:
             return False
         self._parse_error_info(line, module, log_time)
@@ -483,7 +571,7 @@ class ErrorParser:
         """
         Re init class
         """
-        self.__init__(self.blacklist_manager)
+        self.__init__(self.blacklist_manager)  # pylint: disable=unnecessary-dunder-call
 
     def _parse_error_info(self, line, err_module, err_time):
         """
@@ -507,10 +595,7 @@ class ErrorParser:
         Filter the cqe error link info from log
         :return:
         """
-        for keyword, split_key in zip(
-                [ERROR_CQE, ERROR_CQE_NEW],
-                [ERROR_CQE_SPLIT, ERROR_CQE_NEW_SPLIT]
-        ):
+        for keyword, split_key in zip([ERROR_CQE, ERROR_CQE_NEW], [ERROR_CQE_SPLIT, ERROR_CQE_NEW_SPLIT]):
             if keyword in line:
                 cqe_ip = filter_single_rank_info(line, split_key)
                 if ERROR_CQE_LATEST in line:
@@ -524,16 +609,21 @@ class ErrorParser:
         """
         Filter the root info timeout error info. Contain connected ranks, identifier and error info
         """
-        if ("DisplayConnectionedRank" in line or "DispalyConnectionedRank" in line) and \
-                "connected rankinfo" in line:
+        if ("DisplayConnectionedRank" in line or "DispalyConnectionedRank" in line) and "connected rankinfo" in line:
             for connect_fail_info in line.split("]:")[-1].strip(';\n').split(','):
                 rank_id_str = connect_fail_info.split(":")[0].strip().lstrip('[').rstrip(']')
                 self.root_info_error_data_cache.add_connected_rank_info(rank_id_str)
             self.root_info_error_data_cache.add_key_info(line)
             return
-        for key_id, keyword in enumerate(["topo exchange server get socket timeout", "GetRankBasicInfo from rank[",
-                                          "topo exchange agent get socket timeout", "receive from fdhandle failed",
-                                          "receive msg length from fdhandle failed"]):
+        for key_id, keyword in enumerate(
+            [
+                "topo exchange server get socket timeout",
+                "GetRankBasicInfo from rank[",
+                "topo exchange agent get socket timeout",
+                "receive from fdhandle failed",
+                "receive msg length from fdhandle failed",
+            ]
+        ):
             if keyword in line:
                 # the first two errors indicate that the device is a root rank.
                 self.root_info_error_data_cache.add_timeout_info(err_time, key_id <= 1)
@@ -686,12 +776,16 @@ class RootInfoErrorDataCache:
     def format_data(self, identifier_name):
         key_info_str = "".join(self.key_info)  # the origin log list has "\n"
         return TimeoutEvent(
-            error_type=regular_table.TIMEOUT_ROOT_INFO, error_time=self.error_time, identifier=identifier_name,
-            root_flag=self.root_rank_flag, connected_ranks=list(self.connected_ranks_set), key_info=key_info_str
+            error_type=regular_table.TIMEOUT_ROOT_INFO,
+            error_time=self.error_time,
+            identifier=identifier_name,
+            root_flag=self.root_rank_flag,
+            connected_ranks=list(self.connected_ranks_set),
+            key_info=key_info_str,
         )
 
     def re_init(self):
-        self.__init__()
+        self.__init__()  # pylint: disable=unnecessary-dunder-call
 
 
 class NotifyErrorDataCache:
@@ -713,8 +807,7 @@ class NotifyErrorDataCache:
         self.exist_data_flag = True
         self.tag_name = tag_name
         self.tag_index = tag_index
-        if error_time < self.error_time:
-            self.error_time = error_time
+        self.error_time = min(self.error_time, error_time)
 
     def add_remote_rank(self, remote_rank):
         if not self.remote_rank or self.remote_rank == "local":
@@ -728,12 +821,18 @@ class NotifyErrorDataCache:
 
     def format_data(self):
         key_info_str = "".join(self.key_info)  # the origin log list has "\n"
-        return TimeoutEvent(error_type=regular_table.TIMEOUT_NOTIFY, error_time=self.error_time, tag=self.tag_name,
-                            identifier=self.identifier_name, key_info=key_info_str, index=self.tag_index,
-                            remote_rank=self.remote_rank)
+        return TimeoutEvent(
+            error_type=regular_table.TIMEOUT_NOTIFY,
+            error_time=self.error_time,
+            tag=self.tag_name,
+            identifier=self.identifier_name,
+            key_info=key_info_str,
+            index=self.tag_index,
+            remote_rank=self.remote_rank,
+        )
 
     def re_init(self):
-        self.__init__()
+        self.__init__()  # pylint: disable=unnecessary-dunder-call
 
 
 class SocketErrorDataCache:
@@ -750,8 +849,7 @@ class SocketErrorDataCache:
 
     def add_error_type(self, error_type, error_time):
         self.error_type = error_type
-        if error_time < self.error_time:
-            self.error_time = error_time
+        self.error_time = min(self.error_time, error_time)
 
     def add_key_info(self, line: str):
         self.key_info.append(line)
@@ -762,8 +860,12 @@ class SocketErrorDataCache:
     def format_data(self):
         key_info_str = "".join(self.key_info)  # the origin log list has "\n"
         if self.error_type == regular_table.TIMEOUT_SOCKET:
-            return TimeoutEvent(error_type=self.error_type, error_time=self.error_time, key_info=key_info_str,
-                                remote_info=self.remote_info)
+            return TimeoutEvent(
+                error_type=self.error_type,
+                error_time=self.error_time,
+                key_info=key_info_str,
+                remote_info=self.remote_info,
+            )
         return TimeoutEvent(error_type=self.error_type, error_time=self.error_time, key_info=key_info_str)
 
 

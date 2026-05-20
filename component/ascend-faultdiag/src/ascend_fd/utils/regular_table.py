@@ -77,12 +77,17 @@ EXTERNAL_INPUT_KEYWORD = "externalinput.cc"
 ENTRY_ROOT_INFO = "Entry-HcclCommInitRootInfo"
 GET_ROOT_INFO = "HcclGetRootInfo success"
 INIT_ROOT_INFO = "HcclCommInitRootInfo"
+ROOT_INFO_DETECT = "RootInfoDetect"
+NRANKS_INFO = "nRanks["
+HOST_IP_INFO = "host ip["
+ROOT_PORT_INFO = "port["
+DEVICE_INFO_FILE = "device_info.txt"
 HCCL_IP_INFO = r"hccn_tool -i (\d{1,3}) -ip -g"
 HCCL_IPADDR = r"ipaddr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
 TLS_SWITCH = r"TLS SWITCH \((\d{1,3})\)"
 HOST_SN = r'Serial Number:\s{0,10}([A-Z0-9]{15,25})'
-BMC_BOARD_SN = 'Board Serial Number\s{0,10}:\s{0,10}([A-Z0-9]{10,15})'
-BMC_COMPLETE_MACHINE_SN = 'Product Serial Number\s{0,2}:\s{0,2}([A-Z0-9]{15,25})'
+BMC_BOARD_SN = r'Board Serial Number\s{0,10}:\s{0,10}([A-Z0-9]{10,15})'
+BMC_COMPLETE_MACHINE_SN = r'Product Serial Number\s{0,2}:\s{0,2}([A-Z0-9]{15,25})'
 LCNE_BOARD_SN = r"\[GetCPUTablebar_code\]outbuf=([A-Z0-9]{10,15})"
 DEVICE_ID = r'device-(\d{1,3})'
 DEV_OS_ID = r'dev-os-(\d{1,3})'
@@ -114,8 +119,15 @@ NIC_OUT_FILENAME = "nic_clean.csv"
 
 # Version information label
 # VERSION_INFO_LABEL_LIST and SHOW_LABEL_LIST must correspond to each other.
-VERSION_INFO_LABEL_LIST = ["driver_version", "firm_version", "nnae_version", "cann_version", "pytorch_version",
-                           "torch_npu_version", "mindspore_version"]
+VERSION_INFO_LABEL_LIST = [
+    "driver_version",
+    "firm_version",
+    "nnae_version",
+    "cann_version",
+    "pytorch_version",
+    "torch_npu_version",
+    "mindspore_version",
+]
 SHOW_LABEL_LIST = ["Driver", "Firmware", "NNAE", "Toolkit", "PyTorch", "Torch-npu", "MindSpore"]
 
 # component sort rules
@@ -157,7 +169,7 @@ TRAIN_CALL_FAULT_ENTITY_ATTR = {
     "suggestion_zh": f"{zh_lb.traceback_former_suggestion}\n{zh_lb.traceback_latter_suggestion}",
     "cause_en": en_lb.traceback_cause,
     "description_en": en_lb.traceback_description,
-    "suggestion_en": f"{en_lb.traceback_former_suggestion}\n{en_lb.traceback_latter_suggestion}"
+    "suggestion_en": f"{en_lb.traceback_former_suggestion}\n{en_lb.traceback_latter_suggestion}",
 }
 
 # default max time and min time
@@ -202,27 +214,53 @@ CUSTOM_LOG_SOURCE = "CustomLog"
 COMPOSITE_SWITCH_CHIP_SOURCE = "DL_DevicePlugin | LCNELog"
 
 # supported source file list
-SUPPORTED_SOURCE_FILE_LIST = [CANN_PLOG_SOURCE, CANN_DEVICE_SOURCE, TRAIN_LOG_SOURCE, NPU_OS_SOURCE, NPU_DEVICE_SOURCE,
-                              NPU_HISTORY_SOURCE, OS_SOURCE, OS_DEMESG_SOURCE, OS_VMCORE_DMESG_SOURCE, OS_SYSMON_SOURCE,
-                              NODEDLOG_SOURCE, DEVICEPLUGIN_SOURCE, VOLCANO_SCHEDULER_SOURCE, VOLCANO_CONTROLLER_SOURCE,
-                              DOCKER_RUNTIME_SOURCE, NPU_EXPORTER_SOURCE, MINDIE_SOURCE, AMCT_SOURCE, BMC_SOURCE,
-                              BMC_APP_DUMP_SOURCE, BMC_DEVICE_DUMP_SOURCE, BMC_LOG_DUMP_SOURCE, LCNE_SOURCE]
+SUPPORTED_SOURCE_FILE_LIST = [
+    CANN_PLOG_SOURCE,
+    CANN_DEVICE_SOURCE,
+    TRAIN_LOG_SOURCE,
+    NPU_OS_SOURCE,
+    NPU_DEVICE_SOURCE,
+    NPU_HISTORY_SOURCE,
+    OS_SOURCE,
+    OS_DEMESG_SOURCE,
+    OS_VMCORE_DMESG_SOURCE,
+    OS_SYSMON_SOURCE,
+    NODEDLOG_SOURCE,
+    DEVICEPLUGIN_SOURCE,
+    VOLCANO_SCHEDULER_SOURCE,
+    VOLCANO_CONTROLLER_SOURCE,
+    DOCKER_RUNTIME_SOURCE,
+    NPU_EXPORTER_SOURCE,
+    MINDIE_SOURCE,
+    AMCT_SOURCE,
+    BMC_SOURCE,
+    BMC_APP_DUMP_SOURCE,
+    BMC_DEVICE_DUMP_SOURCE,
+    BMC_LOG_DUMP_SOURCE,
+    LCNE_SOURCE,
+]
 
 # saver to source file map
 SAVER_TO_SOURCE_FILE_MAP = {
-        "ProcessLogSaver": [CANN_PLOG_SOURCE, CANN_DEVICE_SOURCE],
-        "EnvInfoSaver": [NPU_INFO_SOURCE],
-        "TrainLogSaver": [TRAIN_LOG_SOURCE],
-        "DevLogSaver": [NPU_OS_SOURCE, NPU_DEVICE_SOURCE, NPU_HISTORY_SOURCE],
-        "HostLogSaver": [OS_SOURCE, OS_DEMESG_SOURCE, OS_VMCORE_DMESG_SOURCE,
-                         OS_SYSMON_SOURCE],
-        "DlLogSaver": [NODEDLOG_SOURCE, DEVICEPLUGIN_SOURCE, VOLCANO_SCHEDULER_SOURCE, VOLCANO_CONTROLLER_SOURCE,
-                       DOCKER_RUNTIME_SOURCE, NPU_EXPORTER_SOURCE, MINDIO_SOURCE],
-        "MindieLogSaver": [MINDIE_SOURCE, MINDIE_CLUSTER_SOURCE],
-        "BMCLogSaver": [BMC_SOURCE, BMC_APP_DUMP_SOURCE, BMC_DEVICE_DUMP_SOURCE, BMC_LOG_DUMP_SOURCE],
-        "LCNELogSaver": [LCNE_SOURCE],
-        "AMCTLogSaver": [AMCT_SOURCE]
-    }
+    "ProcessLogSaver": [CANN_PLOG_SOURCE, CANN_DEVICE_SOURCE],
+    "EnvInfoSaver": [NPU_INFO_SOURCE],
+    "TrainLogSaver": [TRAIN_LOG_SOURCE],
+    "DevLogSaver": [NPU_OS_SOURCE, NPU_DEVICE_SOURCE, NPU_HISTORY_SOURCE],
+    "HostLogSaver": [OS_SOURCE, OS_DEMESG_SOURCE, OS_VMCORE_DMESG_SOURCE, OS_SYSMON_SOURCE],
+    "DlLogSaver": [
+        NODEDLOG_SOURCE,
+        DEVICEPLUGIN_SOURCE,
+        VOLCANO_SCHEDULER_SOURCE,
+        VOLCANO_CONTROLLER_SOURCE,
+        DOCKER_RUNTIME_SOURCE,
+        NPU_EXPORTER_SOURCE,
+        MINDIO_SOURCE,
+    ],
+    "MindieLogSaver": [MINDIE_SOURCE, MINDIE_CLUSTER_SOURCE],
+    "BMCLogSaver": [BMC_SOURCE, BMC_APP_DUMP_SOURCE, BMC_DEVICE_DUMP_SOURCE, BMC_LOG_DUMP_SOURCE],
+    "LCNELogSaver": [LCNE_SOURCE],
+    "AMCTLogSaver": [AMCT_SOURCE],
+}
 
 OS_FAULT_PREFIX = "Comp_OS"
 MINDIE_FAULT_PREFIX = "AISW_MindIE"
