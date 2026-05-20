@@ -332,6 +332,11 @@ func (hdm *HwDevManager) addTopologyLabel(newLabelMap map[string]string) {
 			hwlog.RunLog.Infof("npu device add rackid label: %d", superPodId)
 			newLabelMap[npuCommon.TopoLabelRackId] = strconv.Itoa(int(rackId))
 		}
+		serverIndex := hdm.manager.GetServerIndex()
+		if int(serverIndex) >= 0 {
+			hwlog.RunLog.Infof("npu device add serverid label: %d", serverIndex)
+			newLabelMap[npuCommon.TopoLabelServerId] = strconv.Itoa(int(serverIndex))
+		}
 	}
 }
 
@@ -990,7 +995,7 @@ func (hdm *HwDevManager) ResetServerForA3(devType string, devices []*common.NpuD
 			podRemoved := hdm.isPodRemove(devType, dev, prClient)
 			noProc := hdm.checkNoProc(dev.LogicID)
 			if inReset || resetFailedTimes >= common.MaxResetTimes || !podRemoved || !noProc {
-				hwlog.RunLog.Infof("device %v cant reset, "+
+				hwlog.RunLog.Infof("device %v can't reset, "+
 					"inReset: %v, resetFailedTimes: %v, podRemoved: %v, noProc: %v",
 					dev.DeviceName, inReset, resetFailedTimes, podRemoved, noProc)
 				break
@@ -1482,7 +1487,7 @@ func (hdm *HwDevManager) subscribeSwitchFaultEvent() {
 	hwlog.RunLog.Error("request Subscribe Switch FaultEvent failed, the subscribe way is closed")
 }
 
-// subscribeNpuFaultEvent subscribe fault happend on npus
+// subscribeNpuFaultEvent subscribe fault happened on npus
 func (hdm *HwDevManager) subscribeNpuFaultEvent() {
 	if err := common.LoadFaultCodeFromFile(); err != nil {
 		common.SubscribeFailed = true
@@ -1539,7 +1544,7 @@ func (hdm *HwDevManager) pollFaultCodeCM(ctx context.Context, interval int) {
 		select {
 		case _, ok := <-ctx.Done():
 			if !ok {
-				hwlog.RunLog.Info("stop signal chanel closed")
+				hwlog.RunLog.Info("stop signal channel closed")
 			}
 			hwlog.RunLog.Info("poll fault code cm stop")
 			return

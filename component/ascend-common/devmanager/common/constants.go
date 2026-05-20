@@ -227,7 +227,7 @@ const (
 
 // log limit domains for metrics
 const (
-	// DomainForLogicIdErr domain for faild to get cardId and deviceId by logicID
+	// DomainForLogicIdErr domain for failed to get cardId and deviceId by logicID
 	DomainForLogicIdErr = "logicID"
 )
 
@@ -296,6 +296,8 @@ const (
 	TopoLabelSuperPodId = "huawei.com/topotree.superpodid"
 	// TopoLabelRackId topological label for rack id
 	TopoLabelRackId = "huawei.com/topotree.rackid"
+	// TopoLabelServerId topological label for server id
+	TopoLabelServerId = "huawei.com/topotree.serverid"
 )
 
 const (

@@ -53,6 +53,7 @@
 |mind-cluster/npu-chip-memory|芯片片上内存|mind-cluster/npu-chip-memory=64G|Volcano、Ascend Device Plugin|
 |huawei.com/scheduler.chip1softsharedev.enable|表示节点是否支持软切分虚拟化功能|<ul><li>true</li><li>false</li></ul>|Volcano、Ascend Device Plugin<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>huawei.com/scheduler.chip1softsharedev.enable=true标签表示节点支持软切分虚拟化功能。</li><li>huawei.com/scheduler.chip1softsharedev.enable=false标签表示节点不支持软切分虚拟化功能。</li></ul></div></div>|
 |huawei.com/topotree.rackid|标识节点的机框ID|节点所属机框ID|Volcano|
+|huawei.com/topotree.serverid|标识节点在超节点内的索引ID|节点所属超节点内的索引ID|Volcano|
 |huawei.com/topotree.superpodid|标识节点的超节点ID|节点所属超节点ID|Volcano|
 |huawei.com/topotree.groupid|标识节点的Pod组ID|节点所属Pod组ID|Volcano|
 |huawei.com/topotree|标识节点的网络拓扑树ID|节点所属网络拓扑树ID|Volcano|

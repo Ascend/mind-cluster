@@ -48,17 +48,21 @@ import (
 )
 
 const (
-	serverNum         = 2
-	rqtTaskNum        = 4
-	numTwo            = 2
-	numThree          = 3
-	numTen            = 10
-	numThirty         = 30
-	expectedMemory    = 32768
-	ascend910LogicID0 = api.Ascend910MinuxPrefix + "0"
-	ascend910LogicID1 = api.Ascend910MinuxPrefix + "1"
-	testSuperPodId    = int32(2)
-	testRackId        = int32(4)
+	serverNum              = 2
+	rqtTaskNum             = 4
+	numTwo                 = 2
+	numThree               = 3
+	numTen                 = 10
+	numThirty              = 30
+	expectedMemory         = 32768
+	ascend910LogicID0      = api.Ascend910MinuxPrefix + "0"
+	ascend910LogicID1      = api.Ascend910MinuxPrefix + "1"
+	testSuperPodId         = int32(2)
+	testRackId             = int32(4)
+	testServerIndex        = int32(6)
+	testNegativeSuperPodId = int32(-1)
+	testNegativeRackId     = int32(-1)
+	testNegativeServerIdx  = int32(-1)
 )
 
 var testErr = errors.New("test")
@@ -364,14 +368,87 @@ func TestAddTopologyLabel_ExistingMap_A5(t *testing.T) {
 
 		mockGetSuperPodInfo := gomonkey.ApplyMethodReturn(device.NewHwAscend910Manager(),
 			"GetSuperPodID", testSuperPodId).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetRackID", testRackId)
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetRackID", testRackId).
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetServerIndex", testServerIndex)
 		defer mockGetSuperPodInfo.Reset()
 
 		newLabelMap := map[string]string{"existing-label": "value"}
 		hdm.addTopologyLabel(newLabelMap)
 		convey.So(newLabelMap[npuCommon.TopoLabelSuperPodId], convey.ShouldEqual, strconv.Itoa(int(testSuperPodId)))
 		convey.So(newLabelMap[npuCommon.TopoLabelRackId], convey.ShouldEqual, strconv.Itoa(int(testRackId)))
+		convey.So(newLabelMap[npuCommon.TopoLabelServerId], convey.ShouldEqual, strconv.Itoa(int(testServerIndex)))
 		convey.So(newLabelMap["existing-label"], convey.ShouldEqual, "value")
+	})
+}
+
+// TestAddTopologyLabel_NonA3A5 tests non-A3/A5 card type: no topology labels written
+func TestAddTopologyLabel_NonA3A5(t *testing.T) {
+	convey.Convey("Test addTopologyLabel: non-A3/A5 card type should not write any topology label", t, func() {
+		hdm := &HwDevManager{manager: device.NewHwAscend910Manager()}
+
+		convey.Convey("01-Ascend910A should not write topology labels", func() {
+			common.ParamOption.RealCardType = api.Ascend910A
+			newLabelMap := make(map[string]string)
+			hdm.addTopologyLabel(newLabelMap)
+			convey.So(len(newLabelMap), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("02-Ascend910B should not write topology labels", func() {
+			common.ParamOption.RealCardType = api.Ascend910B
+			newLabelMap := make(map[string]string)
+			hdm.addTopologyLabel(newLabelMap)
+			convey.So(len(newLabelMap), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("03-Ascend310 should not write topology labels", func() {
+			common.ParamOption.RealCardType = api.Ascend310
+			newLabelMap := make(map[string]string)
+			hdm.addTopologyLabel(newLabelMap)
+			convey.So(len(newLabelMap), convey.ShouldEqual, 0)
+		})
+	})
+}
+
+// TestAddTopologyLabel_A5_NegativeServerIndex tests A5 with negative serverIndex
+func TestAddTopologyLabel_A5_NegativeServerIndex(t *testing.T) {
+	convey.Convey("Test addTopologyLabel: A5 with negative serverIndex", t, func() {
+		hdm := &HwDevManager{manager: device.NewHwAscend910Manager()}
+		common.ParamOption.RealCardType = api.Ascend910A5
+
+		mockGetSuperPodInfo := gomonkey.ApplyMethodReturn(device.NewHwAscend910Manager(),
+			"GetSuperPodID", testSuperPodId).
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetRackID", testRackId).
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetServerIndex", testNegativeServerIdx)
+		defer mockGetSuperPodInfo.Reset()
+
+		convey.Convey("01-should skip serverIndex but write superPodId and rackId labels", func() {
+			newLabelMap := make(map[string]string)
+			hdm.addTopologyLabel(newLabelMap)
+			convey.So(newLabelMap[npuCommon.TopoLabelSuperPodId], convey.ShouldEqual, strconv.Itoa(int(testSuperPodId)))
+			convey.So(newLabelMap[npuCommon.TopoLabelRackId], convey.ShouldEqual, strconv.Itoa(int(testRackId)))
+			_, serverExists := newLabelMap[npuCommon.TopoLabelServerId]
+			convey.So(serverExists, convey.ShouldBeFalse)
+		})
+	})
+}
+
+// TestAddTopologyLabel_A5_AllNegative tests A5 with all negative values
+func TestAddTopologyLabel_A5_AllNegative(t *testing.T) {
+	convey.Convey("Test addTopologyLabel: A5 with all negative values", t, func() {
+		hdm := &HwDevManager{manager: device.NewHwAscend910Manager()}
+		common.ParamOption.RealCardType = api.Ascend910A5
+
+		mockGetSuperPodInfo := gomonkey.ApplyMethodReturn(device.NewHwAscend910Manager(),
+			"GetSuperPodID", testNegativeSuperPodId).
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetRackID", testNegativeRackId).
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetServerIndex", testNegativeServerIdx)
+		defer mockGetSuperPodInfo.Reset()
+
+		convey.Convey("01-should not write any topology label", func() {
+			newLabelMap := make(map[string]string)
+			hdm.addTopologyLabel(newLabelMap)
+			convey.So(len(newLabelMap), convey.ShouldEqual, 0)
+		})
 	})
 }
 
@@ -1544,7 +1621,7 @@ func TestParseTriggers(t *testing.T) {
 		hdm := &HwDevManager{}
 		select {
 		case common.GetUpdateChan() <- struct{}{}:
-			fmt.Print("send to update chane")
+			fmt.Print("send to update channel")
 		default:
 			fmt.Println("update channel is full")
 		}
@@ -1556,7 +1633,7 @@ func TestParseTriggers(t *testing.T) {
 		deviceInfoHandled = false
 		select {
 		case <-common.GetUpdateChan():
-			fmt.Print("clear update chane")
+			fmt.Print("clear update channel")
 		default:
 			fmt.Println("update channel is empty")
 		}
