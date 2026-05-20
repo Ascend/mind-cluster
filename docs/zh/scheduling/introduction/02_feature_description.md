@@ -176,7 +176,7 @@ NPU Exporter
 **使用说明<a name="section1245612501584"></a>**
 
 1. 安装组件请参见[安装部署](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[动态vNPU调度（推理）](../usage/basic_scheduling/06_dynamic_vnpu_scheduling_inference.md)章节进行操作。
+2. 特性使用指导请参见[动态vNPU调度（推理）](../usage/virtual_instance/virtual_instance_with_hdk/dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md)章节进行操作。
 
 ### 软切分调度
 
@@ -195,7 +195,7 @@ NPU Exporter
 **使用说明**
 
 1. 安装组件请参见[安装部署](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[软切分调度（推理）](../usage/basic_scheduling/07_soft_allocation_scheduling_inference.md)章节进行操作。
+2. 特性使用指导请参见[软切分调度（推理）](../usage/virtual_instance/virtual_instance_with_vcann_rt/01_soft_allocation_scheduling_inference.md)章节进行操作。
 
 ### 弹性训练<a name="ZH-CN_TOPIC_0000002479226936"></a>
 
@@ -219,7 +219,7 @@ NPU Exporter
 **使用说明<a name="section1245612501584"></a>**
 
 1. 安装组件请参见[安装部署](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[弹性训练](../usage/basic_scheduling/08_elastic_training.md)章节进行操作。
+2. 特性使用指导请参见[弹性训练](../usage/basic_scheduling/06_elastic_training.md)章节进行操作。
 
 ### 推理卡故障恢复<a name="ZH-CN_TOPIC_0000002479226952"></a>
 
@@ -238,7 +238,7 @@ NPU Exporter
 **使用说明<a name="section74221327111220"></a>**
 
 - 安装组件请参见[安装部署](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-- 特性使用指导请参见[推理卡故障恢复](../usage/basic_scheduling/10_recovery_of_inference_card_faults.md)章节进行操作。
+- 特性使用指导请参见[推理卡故障恢复](../usage/basic_scheduling/08_recovery_of_inference_card_faults.md)章节进行操作。
 
 ### 推理卡故障重调度<a name="ZH-CN_TOPIC_0000002511346875"></a>
 
@@ -259,7 +259,7 @@ NPU Exporter
 **使用说明<a name="section18894171918127"></a>**
 
 - 安装组件请参见[安装部署](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-- 特性使用指导请参见[推理卡故障重调度](../usage/basic_scheduling/09_rescheduling_upon_inference_card_faults.md)章节进行操作。
+- 特性使用指导请参见[推理卡故障重调度](../usage/basic_scheduling/07_rescheduling_upon_inference_card_faults.md)章节进行操作。
 
 ## 断点续训<a name="ZH-CN_TOPIC_0000002511346867"></a>
 

@@ -35,21 +35,21 @@
 </tr>
 <tr id="row89138123014"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p391138203014"><a name="p391138203014"></a><a name="p391138203014"></a>在物理机划分vNPU，挂载vNPU到容器</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol4232523123116"></a><a name="ol4232523123116"></a><ol id="ol4232523123116"><li>在物理机划分vNPU的步骤请参见<a href="./04_creating_vnpu.md">创建vNPU</a>。</li><li>挂载vNPU到容器的步骤请参见<a href="./06_mounting_vnpu.md">挂载vNPU</a>。</li></ol>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol4232523123116"></a><a name="ol4232523123116"></a><ol id="ol4232523123116"><li>在物理机划分vNPU的步骤请参见<a href="./static_vnpu_scheduling/01_creating_vnpu.md">创建vNPU</a>。</li><li>挂载vNPU到容器的步骤请参见<a href="./static_vnpu_scheduling/03_mounting_vnpu_static.md">挂载vNPU（静态虚拟化）</a>或<a href="./dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md">动态vNPU调度（推理）</a>。</li></ol>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><ul><li>静态虚拟化</li><li>动态虚拟化：<ul><li>使用Ascend Docker Runtime挂载</li><li>使用Kubernetes挂载</li></ul></li></ul>
 </td>
 </tr>
 <tr id="row131012387307"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1010133833013"><a name="p1010133833013"></a><a name="p1010133833013"></a>在物理机划分vNPU，挂载vNPU到虚拟机，在虚拟机内将vNPU挂载到容器</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol14307634103119"></a><a name="ol14307634103119"></a><ol id="ol14307634103119"><li>在物理机划分vNPU和挂载vNPU到虚拟机的步骤请参见<span id="ph452785715619"><a name="ph452785715619"></a><a name="ph452785715619"></a>《Atlas 系列硬件产品 25.5.0 虚拟机配置指南》的“安装虚拟机&gt;配置NPU直通虚拟机&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540506/bf80825c" target="_blank" rel="noopener noreferrer">vNPU直通虚拟机</a>”章节</span>。</li><li>在虚拟机内挂载vNPU到容器的步骤请参见<a href="./06_mounting_vnpu.md">挂载vNPU</a>。</li></ol>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol14307634103119"></a><a name="ol14307634103119"></a><ol id="ol14307634103119"><li>在物理机划分vNPU和挂载vNPU到虚拟机的步骤请参见<span id="ph452785715619"><a name="ph452785715619"></a><a name="ph452785715619"></a>《Atlas 系列硬件产品 25.5.0 虚拟机配置指南》的“安装虚拟机&gt;配置NPU直通虚拟机&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540506/bf80825c" target="_blank" rel="noopener noreferrer">vNPU直通虚拟机</a>”章节</span>。</li><li>在虚拟机内挂载vNPU到容器的步骤请参见<a href="./static_vnpu_scheduling/03_mounting_vnpu_static.md">挂载vNPU（静态虚拟化）</a>。</li></ol>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p13911193234713"><a name="p13911193234713"></a><a name="p13911193234713"></a>静态虚拟化</p>
 </td>
 </tr>
 <tr id="row3124381309"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p20127385307"><a name="p20127385307"></a><a name="p20127385307"></a>在物理机直通NPU到虚拟机，在虚拟机内划分vNPU，再将vNPU挂载到虚拟机内的容器</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol441318447318"></a><a name="ol441318447318"></a><ol id="ol441318447318"><li>在物理机直通NPU到虚拟机的步骤请参见<span id="ph970622925815"><a name="ph970622925815"></a><a name="ph970622925815"></a>《Atlas 系列硬件产品 25.5.0 虚拟机配置指南》的“安装虚拟机&gt;配置NPU直通虚拟机&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540506/2689d3e6" target="_blank" rel="noopener noreferrer">NPU直通虚拟机</a>”章节</span>。</li><li>在虚拟机内划分vNPU步骤请参见<a href="./04_creating_vnpu.md">创建vNPU</a>。</li><li>将vNPU挂载到虚拟机内的容器的步骤请参见<a href="./06_mounting_vnpu.md">挂载vNPU</a>。</li></ol>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol441318447318"></a><a name="ol441318447318"></a><ol id="ol441318447318"><li>在物理机直通NPU到虚拟机的步骤请参见<span id="ph970622925815"><a name="ph970622925815"></a><a name="ph970622925815"></a>《Atlas 系列硬件产品 25.5.0 虚拟机配置指南》的“安装虚拟机&gt;配置NPU直通虚拟机&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540506/2689d3e6" target="_blank" rel="noopener noreferrer">NPU直通虚拟机</a>”章节</span>。</li><li>在虚拟机内划分vNPU步骤请参见<a href="./static_vnpu_scheduling/01_creating_vnpu.md">创建vNPU</a>。</li><li>将vNPU挂载到虚拟机内的容器的步骤请参见<a href="./static_vnpu_scheduling/03_mounting_vnpu_static.md">挂载vNPU（静态虚拟化）</a>或<a href="./dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md">动态vNPU调度（推理）</a>。</li></ol>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><ul><li>静态虚拟化</li><li>动态虚拟化：<ul><li>使用Ascend Docker Runtime挂载</li><li>使用Kubernetes挂载</li></ul></li></ul>
 </td>
@@ -63,7 +63,7 @@
 
 - 原生Docker：结合原生Docker使用。仅支持静态虚拟化（通过npu-smi工具创建多个vNPU），通过Docker拉起容器时将vNPU挂载到容器。
 
-    >[!NOTE] 
+    >[!NOTE]
     >不支持通过原生Containerd拉起容器时将vNPU挂载到容器。
 
 - 结合MindCluster组件：

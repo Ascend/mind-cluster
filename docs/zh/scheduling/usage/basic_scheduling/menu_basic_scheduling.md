@@ -1,4 +1,4 @@
-# 调度特性指南 
+# 调度特性指南
 
 - [特性说明](./00_feature_description.md)
 - [亲和性调度](./01_affinity_scheduling/menu_affinity_scheduling.md)
@@ -12,8 +12,6 @@
 - [整卡调度或静态vNPU调度（训练）](./03_full_npu_scheduling_and_static_vnpu_scheduling_training.md)
 - [整卡调度或静态vNPU调度（推理）](./04_full_npu_scheduling_and_static_vnpu_scheduling_inference.md)
 - [多级调度](./05_multi_level_scheduling.md)
-- [动态vNPU调度（推理）](./06_dynamic_vnpu_scheduling_inference.md)
-- [软切分调度（推理）](./07_soft_allocation_scheduling_inference.md)
-- [弹性训练](./08_elastic_training.md)
-- [推理卡故障重调度](./09_rescheduling_upon_inference_card_faults.md)
-- [推理卡故障恢复](./10_recovery_of_inference_card_faults.md)
+- [弹性训练](./06_elastic_training.md)
+- [推理卡故障重调度](./07_rescheduling_upon_inference_card_faults.md)
+- [推理卡故障恢复](./08_recovery_of_inference_card_faults.md)

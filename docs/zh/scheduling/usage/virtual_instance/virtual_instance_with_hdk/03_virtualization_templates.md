@@ -46,7 +46,7 @@
     </tr>
 </table>
 
->[!NOTE]  
+>[!NOTE]
 >昇腾AI处理器包含AI Core、AI CPU、DVPP、内存等硬件资源，主要用途如下：
 >
 >- AI Core主要用于矩阵乘等计算，适用于卷积模型。

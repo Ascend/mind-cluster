@@ -15,5 +15,5 @@
        Message : Destroy vnpu 100 success
 ```
 
->[!NOTE] 
+>[!NOTE]
 >在销毁指定vNPU之前，请确保此设备未被使用。
