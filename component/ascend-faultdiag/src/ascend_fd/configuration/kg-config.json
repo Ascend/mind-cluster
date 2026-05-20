@@ -8558,6 +8558,323 @@
                 ]
             }
         },
+        "0x80C98001": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "AIC",
+                "cause_zh": "AIC复位失败",
+                "description_zh": "AIC复位失败，可能是软件或硬件问题。",
+                "suggestion_zh": [
+                    "1. 建议复位SOC。"
+                ],
+                "cause_en": "AIC reset failure",
+                "description_en": "The AIC fails to be reset. This may be a software or hardware problem.",
+                "suggestion_en": [
+                    "1. It is recommended to reset the SOC."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": ["Event id=0x80c98001"]
+            }
+        },
+        "0x80CB8000": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "AIV",
+                "cause_zh": "AIV指令数据校验失败",
+                "description_zh": "icache数据与GM校验不一致，可能是软件或硬件问题。可能原因包括： \n  a. icache 数据跳变。\n  b. GM 数据被改写。",
+                "suggestion_zh": [
+                    "1. 建议AI训练任务退出重新执行；重新发起推理请求；",
+                    "2. 若AI任务重新执行异常则建议复位SOC，如果故障持续建议返厂送修；"
+                ],
+                "cause_en": "AIV command data verification failed.",
+                "description_en": "Data in the iCache is inconsistent with that in the GM, This may be a software or hardware problem. Possible causes include: \n  a. Data changes in the iCache. \n  b. GM data is modified.",
+                "suggestion_en": [
+                    "1. It is recommended to exit and re-execute the AI training task; re-initiate the inference request.",
+                    "2. If the AI task re-execution encounters abnormalities, it is recommended to reset the SOC. If the fault persists, it is recommended to return the device to the factory for repair."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["event_id:  [0x80cb8000]"],
+                    ["Event id=0x80cb8000"]
+                ]
+            }
+        },
+        "0x80CB8001": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "AIV",
+                "cause_zh": "AIV复位失败",
+                "description_zh": "AIV复位失败，可能是软件或硬件问题。",
+                "suggestion_zh": [
+                    "1. 建议复位SOC。"
+                ],
+                "cause_en": "AIV reset failure",
+                "description_en": "The AIV fails to be reset. This may be a software or hardware problem.",
+                "suggestion_en": [
+                    "1. It is recommended to reset the SOC."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["event_id:  [0x80cb8001]"],
+                    ["Event id=0x80cb8001"]
+                ]
+            }
+        },
+        "0x80AD8009": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "GIC",
+                "cause_zh": "GIC 总线错误",
+                "description_zh": "GIC 总线错误。",
+                "suggestion_zh": [
+                    "1. 无需操作。"
+                ],
+                "cause_en": "GIC bus error",
+                "description_en": "GIC bus error.",
+                "suggestion_en": [
+                    "1. No operation is required."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["event_id:  [0x80ad8009]"],
+                    ["Event id=0x80ad8009"]
+                ]
+            }
+        },
+        "0x80F38000": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "HBMA",
+                "cause_zh": "HBMA硬件模块内部异常",
+                "description_zh": "HBMA模块逻辑异常，访存通路异常，通常是硬件问题。",
+                "suggestion_zh": [
+                    "1. 建议复位SOC，如果故障持续建议返厂送修。"
+                ],
+                "cause_en": "Internal abnormality in the HBMA hardware module",
+                "description_en": "The logic of the HBMA module is abnormal, and the memory access channel is abnormal. Generally, the hardware is faulty.",
+                "suggestion_en": [
+                    "1. It is recommended to reset the SOC. If the issue persists, it is advised to return the product to the factory for repair."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": ["Event id=0x80f38000"]
+            }
+        },
+        "0x80F78C02": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "HWTS/STARS",
+                "cause_zh": "RTSQ资源挂死异常",
+                "description_zh": "RTSQ检测失败，检测到RTSQ资源挂死异常，可能是软件或硬件问题。",
+                "suggestion_zh": [
+                    "1. 建议复位SOC，如果故障持续建议隔离人工排查（L7）。"
+                ],
+                "cause_en": "RTSQ Resource Suspension Exception",
+                "description_en": "The RTSQ detection fails. The RTSQ resource is suspended. This may be a software or hardware problem.",
+                "suggestion_en": [
+                    "1. It is recommended to reset the SOC. If the fault persists, it is advised to isolate and manually troubleshoot (L7)."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": ["Event id=0x80f78c02"]
+            }
+        },
+        "0x80F78C03": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "HWTS/STARS",
+                "cause_zh": "ACSQ资源挂死异常",
+                "description_zh": "ACSQ检测失败，检测到ACSQ资源挂死异常，可能是软件或硬件问题。",
+                "suggestion_zh": [
+                    "1. 建议复位SOC，如果故障持续建议隔离人工排查（L7）。"
+                ],
+                "cause_en": "ACSQ resource deadlock exception",
+                "description_en": "The ACSQ detection fails, and the ACSQ resource is suspended. This may be a software or hardware problem.",
+                "suggestion_en": [
+                    "1. It is recommended to reset the SOC. If the fault persists, it is advised to isolate and manually troubleshoot (L7)."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": ["Event id=0x80f78c03"]
+            }
+        },
+        "0x80F78C04": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "HWTS/STARS",
+                "cause_zh": "PCIE DMA通道资源挂死异常",
+                "description_zh": "PCIE DMA检测失败，检测到PCIE DMA通道资源挂死异常，可能是软件或硬件问题。",
+                "suggestion_zh": [
+                    "1. 建议复位SOC，如果故障持续建议隔离人工排查（L7）。"
+                ],
+                "cause_en": "PCIE DMA channel resource deadlock exception",
+                "description_en": "The PCIe DMA detection fails. The PCIe DMA channel resource is suspended. This may be a software or hardware problem.",
+                "suggestion_en": [
+                    "1. It is recommended to reset the SOC. If the fault persists, it is advised to isolate and manually troubleshoot (L7)."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": ["Event id=0x80f78c04"]
+            }
+        },
+        "0x8C2FA009": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "OS",
+                "cause_zh": "芯片初始化启动完成",
+                "description_zh": "芯片OS初始化启动完成，包括冷复位和热复位，通常是设备故障或版本升级导致的冷复位或热复位。",
+                "suggestion_zh": [
+                    "1. 无需操作。"
+                ],
+                "cause_en": "Chip initialization startup completed",
+                "description_en": "The OS initialization and startup are complete, including cold reset and hot reset. Cold or warm resets are usually caused by device faults or version upgrades.",
+                "suggestion_en": [
+                    "1. No operation is required."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": ["Event id=0x8c2fa009"]
+            }
+        },
+        "0x80CF8000": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "SDMA",
+                "cause_zh": "SDMA复位失败",
+                "description_zh": "a. SDMA channel复位失败；\n  b. A3可能由于路由配置异常导致SDMA阻塞，可能是软件或硬件问题。",
+                "suggestion_zh": [
+                    "1. 建议复位SOC。"
+                ],
+                "cause_en": "SDMA reset failed",
+                "description_en": "a. The SDMA channel fails to be reset. \n  b. A3 may be blocked by the SDMA due to incorrect route configuration. This may be a software or hardware problem.",
+                "suggestion_en": [
+                    "1. It is recommended to reset the SOC."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["event_id:  [0x80cf8000]"],
+                    ["Event id=0x80cf8000"]
+                ]
+            }
+        },
+        "0x80A84E00": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "SoC",
+                "cause_zh": "总线ringbist检测错误",
+                "description_zh": "供电不稳、脉冲信号失真导致总线收发bit流错误。",
+                "suggestion_zh": [
+                    "1. 结合业务影响处理，如持续出现业务失败、精度不达标或性能下降，则建议复位NPU，如果复位后依然有问题，则更换NPU。"
+                ],
+                "cause_en": "Bus ringbist detected an error.",
+                "description_en": "Unstable power supply and distortion of pulse signals lead to errors in the bit stream received and transmitted by the bus.",
+                "suggestion_en": [
+                    "1. Combine business impact handling. If business failures, precision not meeting standards, or performance degradation persist, it is recommended to reset the NPU. If the issue still persists after the reset, replace the NPU."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["event_id:  [0x80a84e00]"],
+                    ["Event id=0x80a84e00"]
+                ]
+            }
+        },
+        "0x80818C06": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "SoC",
+                "cause_zh": "硬件计算检测低风险异常",
+                "description_zh": "芯片硬件故障，通常是硬件问题。",
+                "suggestion_zh": [
+                    "1. 根据该故障对业务的影响，可选择设备隔离并送厂返修或者无需操作。"
+                ],
+                "cause_en": "Hardware computing detects low-risk anomalies.",
+                "description_en": "The chip hardware is faulty. It's usually a hardware problem.",
+                "suggestion_en": [
+                    "1. According to the impact of this fault on services, you may either isolate the device for factory repair or take no action."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["event_id:  [0x80818c06]"],
+                    ["Event id=0x80818c06"]
+                ]
+            }
+        },
+        "0x80818C05": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "SoC",
+                "cause_zh": "硬件计算检测高风险异常",
+                "description_zh": "芯片硬件故障，通常是硬件问题。",
+                "suggestion_zh": [
+                    "1. 建议设备隔离，送厂返修"
+                ],
+                "cause_en": "Hardware computing detects high-risk anomalies.",
+                "description_en": "The chip hardware is faulty. It's usually a hardware problem.",
+                "suggestion_en": [
+                    "1. It is recommended to isolate the equipment and send it to the factory for repair."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": [
+                    ["event_id:  [0x80818c05]"],
+                    ["Event id=0x80818c05"]
+                ]
+            }
+        },
+        "0x81B18605": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "NPU",
+                "module": "UB_PORT",
+                "cause_zh": "UB_PORT 部分lane故障",
+                "description_zh": "a. UB_PORT口芯片检测到自身link部分lane故障； \n  b. UB_PORT口芯片检测到对端link部分lane故障。",
+                "suggestion_zh": [
+                    "1. 可选择继续训练，或主动保存checkpoint文件，建议隔离NPU，重新执行AI任务；"
+                ],
+                "cause_en": "UB_PORT: Partial lane failure",
+                "description_en": "a. The UB_PORT chip detects a fault in the lane of its own link section. \n  b. The UB_PORT chip detects a fault in the lane of the link section on the opposite end.",
+                "suggestion_en": [
+                    "1. You can choose to continue training, or proactively save the checkpoint file. It is recommended to isolate the NPU and re-execute the AI task."
+                ]
+            },
+            "source_file": "NPU_OS",
+            "regex": {
+                "in": ["Event id=0x81b18605"]
+            }
+        },
         "AISW_PyTorch_Env_01": {
             "attribute": {
                 "class": "User",
@@ -12760,6 +13077,29 @@
                 "in": ["[HcomLoadRanktableFile]get file[","] real path error"]
             }
         },
+        "AISW_CANN_HCCL_008": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "HCCL",
+                "cause_zh": "通信算子参数校验失败",
+                "description_zh": "HCCL算子加载失败：通信算子在加载时，会校验上层应用传入的参数是否合理。可能有以下原因：\n a. send/recv地址为空。 \n  b.通信数据量超限。 \n  c.数据类型不支持。 \n  d.reduce类型不支持。 \n  e.root rank, peer rank非法。",
+                "suggestion_zh": [
+                    "1. HCCL的使用方传入的参数非法；"
+                ],
+                "cause_en": "Failed to verify communication operator parameters.",
+                "description_en": "HCCL operator loading failed: When a communication operator is loaded, it verifies whether the parameters passed by the upper-layer application are reasonable. The possible reasons are as follows: \n  a. The send/recv address is empty. \n  b. The communication data volume exceeds the limit. \n  c. The data type is not supported. \n  d. The reduce type is not supported. \n  e. The root rank or peer rank is invalid.",
+                "suggestion_en": [
+                    "1. The input parameter of the HCCL user is invalid."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    "DataType check fail"
+                ]
+            }
+        },
         "AISW_CANN_HCCL_009": {
             "attribute": {
                 "class": "Software",
@@ -15799,6 +16139,29 @@
                 "in": ["Aicpu engine process failed, result[","opName["]
             }
         },
+        "AISW_CANN_AICPU_12": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "AICPU",
+                "cause_zh": "算子任务执行失败",
+                "description_zh": "a. AICPU算子计算过程调用drv API，使用device失败。 \n  b. 输入参数解析出错。 \n  c. 算子执行出错。",
+                "suggestion_zh": [
+                    "1. 重新拉起业务，或需要联系工程师处理；"
+                ],
+                "cause_en": "Operator task execution failed",
+                "description_en": "a. During the computation process of the AICPU operator, the drv API is called, and the device fails to be used. \n  b. An error occurs in the parsing of input parameters. \n  c. An error occurs during the execution of the operator.",
+                "suggestion_en": [
+                    "1. To restart the business, it may be necessary to contact an engineer for assistance."
+                ]
+            },
+            "source_file": "CANN_Device",
+            "regex": {
+                "in": [
+                    "Aicpu engine process failed", "result[", "opName["
+                ]
+            }
+        },
         "AISW_CANN_AICPU_13": {
             "attribute": {
                 "class": "Software/User",
@@ -15821,6 +16184,29 @@
             "source_file": "CANN_Device",
             "regex": {
                 "in": ["Send timeout to tsdaemon","tsdaemon will kill aicpu-sd process","thread index"]
+            }
+        },
+        "AISW_CANN_AICPU_14": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "AICPU",
+                "cause_zh": "算子任务执行失败",
+                "description_zh": "a. 输入参数解析出错。 \n  b. 算子执行出错。",
+                "suggestion_zh": [
+                    "1. 重新拉起业务，或需要联系工程师处理；"
+                ],
+                "cause_en": "Operator task execution failed",
+                "description_en": "a. Input parameter parsing error. \n  b. Operator execution error.",
+                "suggestion_en": [
+                    "1. To restart the business, it may be necessary to contact an engineer for assistance."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    "Failed to compute host cpu op"
+                ]
             }
         },
         "AISW_CANN_TSD_01": {
@@ -17434,6 +17820,171 @@
             "source_file": "CANN_Plog",
             "regex": {
                 "in": ["Error 0xA0078015"]
+            }
+        },
+        "AISW_CANN_ACL_02": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "ACL",
+                "cause_zh": "ACL单算子接口执行失败",
+                "description_zh": "a. 单算子编译失败。 \n  b. 单算子执行超时。 \n  c. device异常。",
+                "suggestion_zh": [
+                    "1. 记录错误日志、ERR MSG、API返回错误码；"
+                ],
+                "cause_en": "ACL single-operator interface execution failed",
+                "description_en": "a. Single-operator compilation fails. \n  b. Single-operator execution times out. \n  c. Device exception.",
+                "suggestion_en": [
+                    "1. Error logs and ERR MSG are recorded. Error code returned by the API."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    "Execute op failed", "op type"
+                ]
+            }
+        },
+        "AISW_CANN_ACL_03": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "ACL",
+                "cause_zh": "ACL模型加载与执行接口执行失败",
+                "description_zh": "a. 模型总数超过系统最大值(1024)。 \n  b. 模型中的算子超过最大值(4096)。 \n  c. 内存超过系统可用内存。 \n d. 算子执行失败或者超时。 \n  e. device异常。",
+                "suggestion_zh": [
+                    "1. 记录错误日志、ERR MSG、API返回错误码；"
+                ],
+                "cause_en": "Failed to execute the ACL model loading and execution interface.",
+                "description_en": "a. The total number of models exceeds the system's maximum limit (1024). \n  b. The number of operators in the model exceeds the maximum limit (4096). \n  c. The memory usage exceeds the system's available memory. \n  d. The operator execution fails or times out. \n  e. The device encounters an exception.",
+                "suggestion_en": [
+                    "1. Error logs and ERR MSG are recorded. Error code returned by the API."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    "load model from data failed", "ge result["
+                ]
+            }
+        },
+        "AISW_CANN_ACL_04": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "ACL",
+                "cause_zh": "ACL系统配置接口执行失败",
+                "description_zh": "acl运行环境无device。",
+                "suggestion_zh": [
+                    "1. 记录错误日志、ERR MSG、API返回错误码；"
+                ],
+                "cause_en": "Failed to execute the ACL system configuration interface.",
+                "description_en": "No device exists in the ACL running environment.",
+                "suggestion_en": [
+                    "1. Error logs and ERR MSG are recorded. Error code returned by the API"
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    "open device", "failed", "runtime result"
+                ]
+            }
+        },
+        "AISW_CANN_CCE_005": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "CCE",
+                "cause_zh": "加载文件失败",
+                "description_zh": "文件找不到。",
+                "suggestion_zh": [
+                    "1. 确认文件查找路径是否配置正确，确认配置路径下是否存在加载文件；"
+                ],
+                "cause_en": "Failed to load the file",
+                "description_en": "File not found.",
+                "suggestion_en": [
+                    "1. Verify whether the file search path is configured correctly. Confirm whether the loading file exists under the configured path."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    "fatal error", "file not found"
+                ]
+            }
+        },
+        "AISW_CANN_CCE_007": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "CCE",
+                "cause_zh": "编译链接失败",
+                "description_zh": "a. 依赖文件找不到。 \n  b. 源文件错误。",
+                "suggestion_zh": [
+                    "1. 查看日志信息，确认查找路径是否配置，确认配置查找路径中是否存在包含预期文件；"
+                ],
+                "cause_en": "Compilation and linking failed",
+                "description_en": "a. The dependent file cannot be found. \n  b. The source file contains errors.",
+                "suggestion_en": [
+                    "1. Review the log information to confirm whether the search path is configured. Verify whether the configured search path contains the expected files."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    "unknown option:"
+                ]
+            }
+        },
+        "AISW_CANN_CCE_009": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "CCE",
+                "cause_zh": "输出二进制文件落盘失败",
+                "description_zh": "磁盘无空间。",
+                "suggestion_zh": [
+                    "1. 排查系统内存是否耗尽；"
+                ],
+                "cause_en": "Failed to flush the output binary file to disk.",
+                "description_en": "No space on the disk.",
+                "suggestion_en": [
+                    "1. Check whether the system memory is exhausted."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    "Out of memory:", "Kill process"
+                ]
+            }
+        },
+        "AISW_CANN_STARS_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "RUNTIME",
+                "cause_zh": "Profiling功能失效，无法采集数据",
+                "description_zh": "a. 软件流程配合问题导致profiling无法开启。 \n  b. 软件未及时同步读写指针导致Profiling写满。",
+                "suggestion_zh": [
+                    "1. 检查参数；",
+                    "2. 如无法解决，联系开发工程师定位排查；"
+                ],
+                "cause_en": "The profiling function fails and data cannot be collected.",
+                "description_en": "a. Issues with software process coordination caused profiling to fail to start. \n  b. The software did not synchronize read and write pointers in a timely manner, causing the Profiling to become full.",
+                "suggestion_en": [
+                    "1. Check the parameters.",
+                    "2. If the issue cannot be resolved, contact a development engineer to identify and troubleshoot the problem."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    ["The device nums is invalid"],
+                    ["deviceIdList is nullptr"],
+                    ["PreCheck ProfConfig Failed"]
+                ]
             }
         },
         "Comp_Switch_L1_01": {
@@ -21401,9 +21952,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCAppDumpLog",
             "regex": {
-                "in": ["error","code","2800001F"]
+                "in": [
+                    ["error", "code", "2800001F"],
+                    ["CPU", "HCCS", "link failed"]
+                ]
             }
         },
         "0x01000017": {
@@ -22252,9 +22806,12 @@
                     "3. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCAppDumpLog",
             "regex": {
-                "in": ["error","code","08000045"]
+                "in": [
+                    ["error", "code", "08000045"],
+                    ["The", "PCIe card", "EEPROM is fault"]
+                ]
             }
         },
         "0x0800004B": {
@@ -22603,6 +23160,259 @@
             "source_file": "NodeDLog",
             "regex": {
                 "in": ["error","code","2C000081"]
+            }
+        },
+        "0x000000DF": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "AI Server",
+                "module": "CPU",
+                "cause_zh": "CPU的VRD电压过低",
+                "description_zh": "CPU所在的板卡故障。",
+                "suggestion_zh": [
+                    "1. 不处理；"
+                ],
+                "cause_en": "The VRD voltage of the CPU is too low.",
+                "description_en": "The board where the CPU is located has failed.",
+                "suggestion_en": [
+                    "1. Not processed."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": [
+                    "iBMC cannot communicate with PSU"
+                ]
+            }
+        },
+        "0x000000E1": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "AI Server",
+                "module": "CPU",
+                "cause_zh": "CPU的VRD电压读取失败",
+                "description_zh": "VRD电路异常。",
+                "suggestion_zh": [
+                    "1. 不处理；"
+                ],
+                "cause_en": "Failed to read the VRD voltage of the CPU.",
+                "description_en": "The VRD circuit is abnormal.",
+                "suggestion_en": [
+                    "1. Not processed."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": [
+                    "The AC/DC input of PSU", "is lost or out-of-range"
+                ]
+            }
+        },
+        "0x000000E7": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "AI Server",
+                "module": "CPU",
+                "cause_zh": "CPU同步异常",
+                "description_zh": "CPU管脚故障或BIOS软件异常。",
+                "suggestion_zh": [
+                    "1. 不处理；"
+                ],
+                "cause_en": "CPU synchronization exception",
+                "description_en": "The CPU pin is faulty or the BIOS software is abnormal.",
+                "suggestion_en": [
+                    "1. Not processed."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": [
+                    "PSU", "is overtemperature"
+                ]
+            }
+        },
+        "0x08000007": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "AI Server",
+                "module": "PCIe Card",
+                "cause_zh": "PCIE标卡FRU数据读取失败",
+                "description_zh": "EEPROM或访问通道故障。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "Failed to read FRU data from a standard PCIE card.",
+                "description_en": "EEPROM or access channel failure.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": [
+                    "Failed to obtain electronic label data of the", "PCIe card"
+                ]
+            }
+        },
+        "0x0F000019": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "AI Server",
+                "module": "Riser Card",
+                "cause_zh": "Riser卡更换记录",
+                "description_zh": "1. 更换Riser卡。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "Riser Card Replacement Record",
+                "description_en": "1. Replace the Riser card.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": [
+                    "Riser Card", "is replaced from SN", "to SN"
+                ]
+            }
+        },
+        "0x0F00001D": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "AI Server",
+                "module": "PCIe Riser",
+                "cause_zh": "PCIe Riser卡MCU通信异常",
+                "description_zh": "Riser卡线缆接触不良或Riser卡故障。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "Abnormal Communication Between PCIe Riser Card MCU",
+                "description_en": "The riser card cable has poor contact, or the riser card is faulty.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": [
+                    "The MCU", "communication error occurs on", "PCIe riser card"
+                ]
+            }
+        },
+        "0x28000031": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "AI Server",
+                "module": "Cable",
+                "cause_zh": "UB线缆或连接器连接错误",
+                "description_zh": "a. 线缆的连接顺序或位置存在错误。 \n  b. 连接器连接错误。 \n  c. 组件故障。 \n  d. 线缆故障。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "The UB cable or connector is incorrectly connected.",
+                "description_en": "a. There is an error in the sequence or position of cable connections. \n  b. The connector is incorrectly connected. \n  c. Component failure. \n  d. Cable failure.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": [
+                    "Incorrect connection between the unit", "and connector", "of"
+                ]
+            }
+        },
+        "0x28000033": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "AI Server",
+                "module": "Cable",
+                "cause_zh": "UB线缆不在位或连接器未插稳",
+                "description_zh": "a. 线缆未插或松动。 \n  b. 连接器没有插稳。 \n  c. 线缆故障。 \n  d. 组件故障。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器； "
+                ],
+                "cause_en": "The UB cable is not installed or the connector is not securely inserted.",
+                "description_en": "a. The cable is not plugged in or is loose. \n  b. The connector is not securely plugged in. \n  c. Cable malfunction. \n  d. Component malfunction.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": [
+                    "The cable of unit" , "is absent or the connector is not properly connected"
+                ]
+            }
+        },
+        "0x28000035": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "AI Server",
+                "module": "Cable",
+                "cause_zh": "组件不支持",
+                "description_zh": "服务器不支持该型号的组件。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "The component does not support",
+                "description_en": "The server does not support components of this model.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": [
+                    "The unit", "linked to connector",  "of", "is not supported"
+                ]
+            }
+        },
+        "0x31000001": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "AI Server",
+                "module": "Button",
+                "cause_zh": "电源按钮按下",
+                "description_zh": "按下面板电源按钮。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "The power button is pressed",
+                "description_en": "Press the power button on the front panel.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": [
+                    "The power button on the panel is pressed"
+                ]
+            }
+        },
+        "0x5D00000D": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "AI Server",
+                "module": "Expansion board",
+                "cause_zh": "扩展板更换记录",
+                "description_zh": "更换扩展板。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "Expansion Board Replacement Record",
+                "description_en": "Replace the expansion board.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCAppDumpLog",
+            "regex": {
+                "in": [
+                    "Expansion board", "is replaced from serial number", "to serial number"
+                ]
             }
         },
         "AISW_CANN_AMCT_ALL_001": {
