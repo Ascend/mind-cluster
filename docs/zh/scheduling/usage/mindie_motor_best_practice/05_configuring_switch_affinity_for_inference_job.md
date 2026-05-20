@@ -4,7 +4,7 @@
 
 ## 前提条件
 
-已完成[（可选）使用Volcano交换机亲和性调度](../../installation_guide/03_installation/manual_installation/05_volcano.md#可选使用volcano交换机亲和性调度)。
+已完成[（可选）使用Volcano交换机亲和性调度](../../installation_guide/02_installation/manual_installation/05_volcano.md#可选使用volcano交换机亲和性调度)。
 
 ## 操作步骤
 
@@ -17,7 +17,7 @@ metadata:
   name: mindie-server-0
   namespace: mindie
   labels:
-    framework: pytorch        
+    framework: pytorch
     app: mindie-ms-server        # 表示MindIE Motor在Ascend Job任务中的角色,不可修改
     jobID: mindie-ms-test        # 当前MindIE Motor推理任务在集群中的唯一识别ID，用户可根据实际情况进行配置
     tor-affinity: normal-schema    # 开启交换机亲和性

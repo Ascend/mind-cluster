@@ -14,7 +14,7 @@
     - ClusterD
     - NodeD
 
-- 若没有安装，可以参考[安装部署](../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
+- 若没有安装，可以参考[安装部署](../../installation_guide/02_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 
 **使用方式<a name="zh-cn_topic_0000001559979444_section91871616135119"></a>**
 
@@ -47,7 +47,7 @@
 
 通过命令行使用推理卡故障重调度特性流程可以参见[图1](#zh-cn_topic_0000001559979444_fig242524985412)。
 
-**图 1**  使用流程<a name="zh-cn_topic_0000001559979444_fig242524985412"></a>  
+**图 1**  使用流程<a name="zh-cn_topic_0000001559979444_fig242524985412"></a>
 ![](../../../figures/scheduling/使用流程-7.png "使用流程-7")
 
 ## 通过命令行使用（Volcano）<a name="ZH-CN_TOPIC_0000002511427039"></a>
@@ -62,7 +62,7 @@
 
     请注意，21.0.4版本之后推理基础镜像默认用户为非root用户，需要在下载基础镜像后对其进行修改，将默认用户修改为root。
 
-    >[!NOTE] 
+    >[!NOTE]
     >基础镜像中不包含推理模型、脚本等文件，因此，用户需要根据自己的需求进行定制化修改（如加入推理脚本代码、模型等）后才能使用。
 
 - （可选）如果用户需要更个性化的推理环境，可基于已下载的推理基础镜像，再[使用Dockerfile对其进行修改](../../common_operations.md#使用dockerfile构建容器镜像pytorch)。
@@ -82,12 +82,12 @@
 1. 确保服务器能访问互联网后，访问[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)。
 2. 在左侧导航栏选择推理镜像，然后选择[mindie](https://www.hiascend.com/developer/ascendhub/detail/af85b724a7e5469ebd7ea13c3439d48f)镜像，获取推理示例脚本。
 
-    >[!NOTE]  
+    >[!NOTE]
     >若无下载权限，请根据页面提示申请权限。提交申请后等待管理员审核，审核通过后即可下载镜像。
 
 ### 准备任务YAML<a name="ZH-CN_TOPIC_0000002511427029"></a>
 
->[!NOTE]  
+>[!NOTE]
 >
 >- 如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载“/dev”目录下的设备。其他目录（如“/usr”）用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
 >- 因为Atlas 200I SoC A1 核心板场景不支持Ascend Docker Runtime，用户也无需修改YAML文件。
@@ -177,7 +177,7 @@
     </tbody>
     </table>
 
-    >[!NOTE] 
+    >[!NOTE]
     >Volcano支持Job类型任务，但是Job类型任务的YAML需要用户自行根据示例YAML修改适配。
 
 2. 在[整卡调度](./04_full_npu_scheduling_and_static_vnpu_scheduling_inference.md#准备任务yaml)或者[动态vNPU调度](../virtual_instance/virtual_instance_with_hdk/dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md#准备任务yaml)的YAML配置基础上，增加如下字段启用重调度功能，以整卡调度的infer-deploy.yaml为例。
@@ -247,8 +247,8 @@
     ```Yaml
     ...
                   ports:     # 分布式训练集合通信端口
-                    - containerPort: 2222      
-                      name: ascendjob-port      
+                    - containerPort: 2222
+                      name: ascendjob-port
                   resources:
                     limits:
                       huawei.com/Ascend310P: 1   # 申请的芯片数
@@ -257,7 +257,7 @@
                   volumeMounts:
     ...
                       # 权重文件挂载路径
-                    - name: weights                  
+                    - name: weights
                       mountPath: /path-to-weights
     ...
               volumes:
@@ -269,7 +269,7 @@
     ...
     ```
 
-    >[!NOTE] 
+    >[!NOTE]
     >- /path-to-weights为模型权重，需要用户自行准备。mindie镜像可以参考镜像中$ATB\_SPEED\_HOME\_PATH/examples/models/llama3/README.md文件中的说明进行下载。
     >- ATB_SPEED_HOME_PATH默认路径为“/usr/local/Ascend/atb-models”，在source模型仓中set_env.sh脚本时已配置，用户无需自行配置。
 
@@ -306,7 +306,7 @@ kubectl apply -f infer-310p-1usoc.yaml
 job.batch/resnetinfer1-2 created
 ```
 
->[!NOTE]  
+>[!NOTE]
 >如果下发任务成功后，又修改了任务YAML，需要先执行kubectl delete -f _XXX_.yaml命令删除原任务，再重新下发任务。
 
 ### 查看任务进程<a name="ZH-CN_TOPIC_0000002511427025"></a>
@@ -379,7 +379,7 @@ kubectl delete -f infer-310p-1usoc.yaml
 回显示例如下：
 
 ```ColdFusion
-root@ubuntu:/home/test/yaml# kubectl delete -f infer-310p-1usoc.yaml 
+root@ubuntu:/home/test/yaml# kubectl delete -f infer-310p-1usoc.yaml
 job "resnetinfer1-2" deleted
 ```
 

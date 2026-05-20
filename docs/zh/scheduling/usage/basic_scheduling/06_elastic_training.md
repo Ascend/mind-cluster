@@ -2,7 +2,7 @@
 
 ## 使用前必读<a name="ZH-CN_TOPIC_0000002479227148"></a>
 
->[!NOTE] 
+>[!NOTE]
 >本章节描述的是基于Resilience Controller组件的弹性训练，该组件已经日落，相关资料将于2026年9月30日的版本删除。最新的弹性训练能力请参见[弹性训练](../resumable_training/01_solutions_principles.md#弹性训练)。
 
 当出现硬件故障，且无备用设备时，集群调度组件将对故障节点进行隔离，并根据任务预设的规模和当前集群中可用的节点数，重新设置任务副本数，然后进行重调度和重训练（需进行脚本适配）。
@@ -24,7 +24,7 @@
     - Resilience Controller
     - ClusterD
 
-- 若没有安装，可以参考[安装部署](../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
+- 若没有安装，可以参考[安装部署](../../installation_guide/02_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 
 **使用方式<a name="section1215781619816"></a>**
 
@@ -95,7 +95,7 @@
 
 通过命令行使用弹性训练特性流程可以参见[图1](#fig1445992135513)。
 
-**图 1**  使用流程<a name="fig1445992135513"></a>  
+**图 1**  使用流程<a name="fig1445992135513"></a>
 ![](../../../figures/scheduling/使用流程-6.png "使用流程-6")
 
 ## 通过命令行使用（Volcano）<a name="ZH-CN_TOPIC_0000002511427031"></a>
@@ -123,12 +123,12 @@
                 memory: 500Mi
                 cpu: 500m
             command: [ "/bin/bash", "-c", "--"]
-            args: [ "device-plugin  
-                     -useAscendDocker=true 
+            args: [ "device-plugin
+                     -useAscendDocker=true
                      <strong>-volcanoType=true                    # 重调度场景下必须使用Volcano。</strong>
                      <strong>-autoStowing=true                    # 是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于Atlas 训练系列产品</strong>
                      -listWatchPeriod=5                   # 设置健康状态检查周期，范围[3,1800]；单位为秒。
-                     -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log 
+                     -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log
                      -logLevel=0" ]
             securityContext:
               privileged: true
@@ -211,7 +211,7 @@
 
 企业客户请访问：[https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054)
 
->[!NOTE] 
+>[!NOTE]
 >本章节以Ubuntu操作系统为例。
 
 **操作步骤<a name="section173381914413"></a>**
@@ -275,55 +275,55 @@
     - Ubuntu  ARM系统Dockerfile示例。
 
         ```Dockerfile
-        FROM xxx # 基础训练镜像 
+        FROM xxx # 基础训练镜像
         ARG MINDFORMERS_PKG=mindformers-{version}-py3-none-any.whl
-        
-        WORKDIR /tmp 
-        COPY . ./ 
-         
+
+        WORKDIR /tmp
+        COPY . ./
+
         ENV http_proxy xxx
         ENV https_proxy xxx
-        
-        # 配置Python pip源 
+
+        # 配置Python pip源
         RUN mkdir -p ~/.pip \
         && echo '[global] \n\
         index-url=https://pypi.doubanio.com/simple/\n\
         trusted-host=pypi.doubanio.com' >> ~/.pip/pip.conf
-         
+
         # 安装MindFormers
         RUN pip install $MINDFORMERS_PKG
-        
-         
-        ENV http_proxy "" 
-        ENV https_proxy "" 
-        
+
+
+        ENV http_proxy ""
+        ENV https_proxy ""
+
         ```
 
     - Ubuntu  x86\_64系统Dockerfile示例。
 
         ```Dockerfile
-        FROM xxx # 基础训练镜像 
+        FROM xxx # 基础训练镜像
         ARG MINDFORMERS_PKG=mindformers-{version}-py3-none-any.whl
-        
-        WORKDIR /tmp 
-        COPY . ./ 
-         
+
+        WORKDIR /tmp
+        COPY . ./
+
         ENV http_proxy xxx
         ENV https_proxy xxx
-        
-        # 配置Python pip源 
+
+        # 配置Python pip源
         RUN mkdir -p ~/.pip \
         && echo '[global] \n\
         index-url=https://pypi.doubanio.com/simple/\n\
         trusted-host=pypi.doubanio.com' >> ~/.pip/pip.conf
-        
+
         # 安装MindFormers
         RUN pip install $MINDFORMERS_PKG
-        
-         
-        ENV http_proxy "" 
-        ENV https_proxy "" 
-        
+
+
+        ENV http_proxy ""
+        ENV https_proxy ""
+
         ```
 
     为了使Dockerfile更加安全，用户可以根据业务在其中定义HEALTHCHECK检查。通过在容器内部运行**HEALTHCHECK** _\[OPTIONS\]_ **CMD**命令来检查容器的运行状况。
@@ -340,7 +340,7 @@
 
     [基于Pangu\_alpha的故障恢复示例](#section1844516123710)
 
->[!NOTE]  
+>[!NOTE]
 >下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
 
 **PyTorch的故障恢复示例<a name="section72859254718"></a>**
@@ -468,9 +468,9 @@
     ```shell
     # main.sh: 针对本示例（ResNet50模型），用户不需要再修改此脚本；其他模型适配，请根据实际情况，增、删或修改环境变量配置，然后修改训练启动脚本路径和对应的参数，即main.sh脚本中Python命令调用的部分。
     # 本例中，单机单卡的Python命令如下：
-    python ${ROOT_PATH}/../train.py --data_path=${DATA_PATH} --config_path=${CONFIG_PATH} 
+    python ${ROOT_PATH}/../train.py --data_path=${DATA_PATH} --config_path=${CONFIG_PATH}
     # 本例中，单机多卡和分布式的命令如下：
-    python ${ROOT_PATH}/../train.py --run_distribute=True --device_num=${RANK_SIZE} --data_path=${DATA_PATH} --config_path=${CONFIG_PATH} 
+    python ${ROOT_PATH}/../train.py --run_distribute=True --device_num=${RANK_SIZE} --data_path=${DATA_PATH} --config_path=${CONFIG_PATH}
     ```
 
 5. 修改“/data/atlas\_dls/public/code/resnet/config/”目录的配置文件“resnet50\_imagenet2012\_config.yaml”。模型保存和加载设置，图编译保存和加载设置。
@@ -498,9 +498,9 @@
     eval_start_epoch: 40
     ...
     network_dataset: "resnet50_imagenet2012"
-    
-    
-    # 再训练选项 
+
+
+    # 再训练选项
     save_graphs: False  # 是否开启图编译结果保存
     save_graphs_path: "./graphs" # 图编译结果保存路径
     has_trained_epoch: 0 # 模型预训练的epoch，默认是0
@@ -566,21 +566,21 @@
             if ckpt_files:
                 ckpt_files.sort(key=os.path.getmtime, reverse=True)
             return ckpt_files
-        
+
         # 尝试加载CKPT文件，尝试次数为INIT_WEIGHT_MAX_ATTEMPTS次
         def _try_to_init_weight(net, config):
             if os.path.isfile(config.pre_trained):
                 latest_ckpt = [config.pre_trained]
             else:
                 latest_ckpt = _find_latest_ckpt()
-        
+
             if not latest_ckpt:
                 config.logger.warning("There is not ckpt file: %s", config.pre_trained)
                 return
-        
+
             init_weight_attempts = 0
             INIT_WEIGHT_MAX_ATTEMPTS = 5
-            while(latest_ckpt and init_weight_attempts < INIT_WEIGHT_MAX_ATTEMPTS): 
+            while(latest_ckpt and init_weight_attempts < INIT_WEIGHT_MAX_ATTEMPTS):
                 try:
                     config.pre_trained = latest_ckpt[0]
                     init_weight(net, config)
@@ -594,7 +594,7 @@
                     else:
                         config.logger.error("no more ckpt to load", config.pre_trained)
                         raise ValueError("ckpt format is incorrect, no more ckpt to load, load ckpt failed.")
-        
+
         ...
         @moxing_wrapper()
         def train_net():
@@ -613,7 +613,7 @@
                 net.set_param_ps()
             # 替换原有的init_weight函数，使用_try_to_init_weight尝试加载CKPT文件，避免加载到不完整的CKPT，导致训练报错
             _try_to_init_weight(net, config)
-        
+
             if config.resume_ckpt:
                 resume_param = ms.load_checkpoint(config.resume_ckpt,
                                                   choice_func=lambda x: not x.startswith(('learning_rate', 'global_step')))
@@ -634,7 +634,7 @@
 3. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-rescheduling/withRanktable/mindspore/pangu\_alpha”目录中的“train\_start.sh”和“main.sh”文件，结合训练代码中“pangu\_alpha/scripts”目录，在管理节点构造如下的目录结构。对于盘古百亿模型，使用“samples/train/resumable-training/fault-rescheduling/withRanktable/mindspore/pangu\_alpha\_13B”目录中的对应文件。
 
     ```text
-    root@ubuntu:/data/atlas_dls/code/pangu_alpha/scripts/# 
+    root@ubuntu:/data/atlas_dls/code/pangu_alpha/scripts/#
     scripts/
     ├── main.sh
     ├── run_cluster_export.sh
@@ -655,10 +655,10 @@
     # 训练数据集路径，根据实际情况修改
     # 安全提示，涉及对路径和输入参数的校验
     dataset="/job/data/train_data"
-    
+
     # 设置训练环境变量
     set_env
-    
+
     # 单节点训练场景
     if [[ "$server_count" == "1" ]]; then
         server_id=0
@@ -668,7 +668,7 @@
         if [ ${device_count} -eq 8 ]; then
             bash main.sh ${device_count} ${server_count} ${RANK_TABLE_FILE} ${server_id} ${dataset}
         fi
-    
+
     # 分布式训练场景
     else
         server_id=$(get_server_id)
@@ -678,7 +678,7 @@
         fi
         echo "server id is: "${server_id}
         bash main.sh ${device_count} ${server_count} ${RANK_TABLE_FILE} ${server_id} ${dataset}
-    
+
     ```
 
 5. 百亿及以下模型可跳过该步骤。训练千亿模型时，期望恢复时间小于5min，需要进行额外脚本适配。下文以[MindSpore代码仓](https://gitee.com/mindspore/models/tree/master/official/nlp/Pangu_alpha)中pangu\_alpha的master分支为例（**已完成弹性训练任务配置和脚本适配**）。
@@ -720,7 +720,7 @@
 
     ```Python
     ...
-    
+
         # 保存Checkpoint的代码调用
         add_checkpoint_callback_policy(args_opt, callback, rank)
     ...
@@ -738,13 +738,13 @@
                                            integrated_save=False,
                                            append_info=ckpt_append_info
                                            )
-    
-    
+
+
             ckpoint_cb = ModelCheckpoint(prefix=args_param.ckpt_name_prefix + str(rank_id),
                                          directory=os.path.join(args_param.save_checkpoint_path, f"rank_{rank_id}"),
                                          config=ckpt_config)
-    
-    
+
+
             callback.append(ckpoint_cb)
     ...
     ```
@@ -760,17 +760,17 @@
     # 安全提示，涉及对路径和输入参数的校验
     def set_pipeline_parallel_context(args_opt):
     # 在mindspore.set_auto_parallel_context前添加以下代码，请参考[MindSpore文档分布式并行接口说明](https://www.mindspore.cn/tutorials/experts/zh-CN/r2.0/index.html)对set_auto_parallel_context参数的使用说明
-            
-             
+
+
             # 弹性训练中增加内容
             if not os.path.exists(args_opt.strategy_load_ckpt_path):
                 args_opt.strategy_load_ckpt_path = ""
-    
+
             # 弹性训练中增加内容，strategy_ckpt_save_file_path参数可以根据容器内路径指定
-            strategy_ckpt_save_file_path = '/job/data/code/fault_torlence/pangu_alpha/strategy.ckpt' 
+            strategy_ckpt_save_file_path = '/job/data/code/fault_torlence/pangu_alpha/strategy.ckpt'
             if args_opt.strategy_load_ckpt_path == strategy_ckpt_save_file_path:
                  strategy_ckpt_save_file_path = '/job/data/code/fault_torlence/pangu_alpha/strategy_new.ckpt'
-     
+
             # 将strategy_ckpt_save_file='strategy.ckpt'修改成strategy_ckpt_save_file=strategy_ckpt_save_file_path，如果set_auto_parallel_context里没有指定strategy_ckpt_save_file参数，则需要手动添加strategy_ckpt_save_file=strategy_ckpt_save_file_path，如下粗体所示
             mindspore.set_auto_parallel_context(
                 parallel_mode=args_opt.parallel_mode, gradients_mean=False, search_mode=args_opt.search_mode,
@@ -778,7 +778,7 @@
                 device_num=device_num, enable_parallel_optimizer=bool(args_opt.optimizer_shard),
                 pipeline_stages=args_opt.stage_num, enable_alltoall=bool(args_opt.enable_alltoall),
                 strategy_ckpt_save_file=strategy_ckpt_save_file_path)
-           
+
     ...
     ...
     # checkpoint加载代码定义
@@ -808,7 +808,7 @@
         for file in ckpt_all_files:
             if file not in ckpt_exp_files:
                 ckpt_files.append(file)
-    
+
         if not ckpt_files:
             print(
                 f"There is no ckpt file in {args_param.save_checkpoint_path}, "
@@ -862,7 +862,7 @@
                          type=str,
                          default="/job/data/code/fault_torlence/pangu_alpha/8p", # 指定预训练模型路径，
                          help="Pretrained checkpoint path.")
-        opt.add_argument("--save_checkpoint_path",  
+        opt.add_argument("--save_checkpoint_path",
                          type=str,
                          default="/job/data/code/fault_torlence/pangu_alpha/8p",   # 指定模型保存路径
                          help="Save checkpoint path.")
@@ -888,7 +888,7 @@
 10. <a name="li6181138370"></a>在“/data/atlas\_dls/code/pangu\_alpha”目录下构建空文件“group\_info\_env”。
 
     ```text
-    root@ubuntu:/data/atlas_dls/code/pangu_alpha/# 
+    root@ubuntu:/data/atlas_dls/code/pangu_alpha/#
     pangu_alpha/
     ├── README.md
     ├── README_CN.md
@@ -1104,7 +1104,7 @@
 </tbody>
 </table>
 
->[!NOTE]  
+>[!NOTE]
 >新任务副本数范围为\[minReplicas, replicas\]，具体数值由当前集群中的可用节点数确定，多节点分布式训练时有效。
 
 #### 配置YAML<a name="ZH-CN_TOPIC_0000002479227138"></a>
@@ -1154,7 +1154,7 @@
                   fieldRef:
                     fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
     ...
-                resources:  
+                resources:
                   requests:
                     huawei.com/Ascend910: 8          # 需要的NPU芯片个数为8
                   limits:
@@ -1184,11 +1184,11 @@
 
     ```Yaml
     ...
-              resources:  
+              resources:
                 requests:
                   huawei.com/Ascend910: 8
-                  cpu: 100m           
-                  memory: 100Gi       
+                  cpu: 100m
+                  memory: 100Gi
                 limits:
                   huawei.com/Ascend910: 8
                   cpu: 100m
@@ -1282,7 +1282,7 @@
     job.batch.volcano.sh/mindx-dls-test created
     ```
 
-    >[!NOTE] 
+    >[!NOTE]
     >如果下发任务成功后，又修改了任务YAML，需要先执行kubectl delete -f _XXX_.yaml命令删除原任务，再重新下发任务。
 
 ### 查看任务进程<a name="ZH-CN_TOPIC_0000002479227140"></a>
@@ -1326,7 +1326,7 @@
     hccn_tool -i {device_id} -link -s down
     ```
 
-    >[!NOTE]  
+    >[!NOTE]
     >device\_id为NPU的ID，可以通过npu-smi info命令查看NPU的ID。
 
 3. 执行以下命令，查看NPU链路状态。
@@ -1426,14 +1426,14 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
     ...
     2023-06-09 22:17:33,441:INFO:--> pre_trained: /job/code/mindspore/output/resnet50/imagenet2012/ckpt_0/resnet50-39_48.ckpt
     2023-06-09 22:17:33,441:INFO:--> run_eval: False
-    2023-06-09 22:17:33,441:INFO:--> eval_dataset_path: 
+    2023-06-09 22:17:33,441:INFO:--> eval_dataset_path:
     2023-06-09 22:17:33,441:INFO:--> parameter_server: False
     2023-06-09 22:17:33,441:INFO:--> filter_weight: False
     2023-06-09 22:17:33,441:INFO:--> save_best_ckpt: True
     2023-06-09 22:17:33,441:INFO:--> eval_start_epoch: 40
     2023-06-09 22:17:33,441:INFO:--> eval_interval: 1
     2023-06-09 22:17:33,441:INFO:--> enable_cache: False
-    2023-06-09 22:17:33,441:INFO:--> cache_session_id: 
+    2023-06-09 22:17:33,441:INFO:--> cache_session_id:
     2023-06-09 22:17:33,441:INFO:--> mode_name: GRAPH
     2023-06-09 22:17:33,441:INFO:--> boost_mode: O0
     2023-06-09 22:17:33,441:INFO:--> conv_init: XavierUniform
@@ -1446,14 +1446,14 @@ kubectl logs mindx-dls-test-default-test-0 -n vcjob -f
     2023-06-09 22:17:33,442:INFO:--> height: 224
     2023-06-09 22:17:33,442:INFO:--> file_name: resnet50
     2023-06-09 22:17:33,442:INFO:--> file_format: MINDIR
-    2023-06-09 22:17:33,442:INFO:--> ckpt_file: 
+    2023-06-09 22:17:33,442:INFO:--> ckpt_file:
     2023-06-09 22:17:33,442:INFO:--> network_dataset: resnet50_imagenet2012
     2023-06-09 22:17:33,442:INFO:--> save_graphs: False
     2023-06-09 22:17:33,442:INFO:--> save_graphs_path: ./graphs
     2023-06-09 22:17:33,442:INFO:--> has_trained_epoch: 0
     2023-06-09 22:17:33,442:INFO:--> has_trained_step: 0
-    2023-06-09 22:17:33,442:INFO:--> result_path: 
-    2023-06-09 22:17:33,442:INFO:--> label_path: 
+    2023-06-09 22:17:33,442:INFO:--> result_path:
+    2023-06-09 22:17:33,442:INFO:--> label_path:
     2023-06-09 22:17:33,442:INFO:--> config_path: /job/code/mindspore/config/resnet50_imagenet2012_config.yaml
     2023-06-09 22:17:33,442:INFO:--> rank_id: 0
     2023-06-09 22:17:33,442:INFO:--> save_ckpt_dir: /job/code/mindspore/output/resnet50/imagenet2012/ckpt

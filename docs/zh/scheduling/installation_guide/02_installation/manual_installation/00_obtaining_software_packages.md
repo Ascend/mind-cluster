@@ -6,7 +6,7 @@
 
 下载本软件即表示您同意[华为企业业务最终用户许可协议（EULA）](https://e.huawei.com/cn/about/eula)的条款和条件。
 
->[!NOTE] 
+>[!NOTE]
 ><i>\{version\}</i>表示软件版本号，<i>\{arch\}</i>表示CPU架构。
 
 **表 1**  各组件软件包

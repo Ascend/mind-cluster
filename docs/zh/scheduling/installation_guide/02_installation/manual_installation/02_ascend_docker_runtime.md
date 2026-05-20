@@ -156,7 +156,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
         ./Ascend-docker-runtime_{version}_linux-{arch}.run --install --install-scene=containerd --install-path=<path>
         ```
 
-        >[!NOTE] 
+        >[!NOTE]
         >- 指定安装路径时必须使用绝对路径。
         >- Containerd的配置文件路径不是默认的“/etc/containerd/config.toml”时，需要新增--config-file-path参数，用于指定该配置文件路径。
 
@@ -203,7 +203,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
                snapshotter = ''
                sandboxer = 'podsandbox'
                io_type = ''
-                
+
                [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.runc.options]
                  BinaryName = ''
                  CriuImagePath = ''
@@ -233,7 +233,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
                snapshotter = ''
                sandboxer = 'podsandbox'
                io_type = ''
-                
+
                [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.ascend.options]
                  BinaryName = '/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime'
                  CriuImagePath = ''
@@ -245,7 +245,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
                  ShimCgroup = ''
                  SystemdCgroup = true
             ...</pre>
-            
+
        3. 找到下述配置项，将其中的“default_runtime_name”的值修改为“ascend”（其中“io.containerd.cri.v1.runtime”在不同Containerd版本下可能不同，以实际为准）：
 
             修改前：
@@ -255,7 +255,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
               ignore_blockio_not_enabled_errors = false
               ignore_rdt_not_enabled_errors = false
               ...</pre>
-              
+
             修改后：
             <pre>
             [plugins.'io.containerd.cri.v1.runtime'.containerd]
@@ -313,7 +313,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
         ./Ascend-docker-runtime_{version}_linux-{arch}.run --install --install-scene=containerd --install-path=<path>
         ```
 
-        >[!NOTE] 
+        >[!NOTE]
         >指定安装路径时必须使用绝对路径。
 
     回显示例如下，表示安装成功。
