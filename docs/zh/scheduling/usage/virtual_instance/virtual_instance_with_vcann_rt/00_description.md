@@ -8,7 +8,7 @@
 
 昇腾NPU硬件资源主要包括AICore（用于AI模型的计算）、AICPU、内存等，基于vCANN-RT的虚拟化实例功能主要原理是将上述硬件资源根据用户指定的资源需求，以软切分配置文件的方式通过vCANN-RT实现按需分配。例如用户只需要使用50% AICore的算力和2048MB的高带宽内存，系统就会创建一个npu_info配置文件，通过vCANN-RT向NPU芯片获取上述资源提供给容器使用，基于vCANN-RT的虚拟化实例方案如[图1 基于vCANN-RT的虚拟化实例方案](#fig987114711574vcann)所示。
 
-**图 1**  基于vCANN-RT的虚拟化实例方案<a name="fig987114711574vcann"></a>  
+**图 1**  基于vCANN-RT的虚拟化实例方案<a name="fig987114711574vcann"></a>
 ![](../../../../figures/scheduling/virtual_instance_vcann.PNG "virtual_instance_vcann")
 
 ## 产品支持说明<a name="section17326115542216vcann"></a>
@@ -25,7 +25,7 @@
 ## 使用说明<a name="section1296713336303vcann"></a>
 
 - 软切分虚拟化基于[vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md)实现，直接将NPU重复挂载到多个容器，容器内的CANN按照配置好的比例使用NPU资源。
-- 如果使用软切分虚拟化功能，需要先参见[软切分虚拟化](./01_soft_allocation_virtualization.md)，再进行挂载到容器操作。
+- 如果使用软切分虚拟化功能，请参见[软切分调度（推理）](./01_soft_allocation_scheduling_inference.md)章节进行操作。
 
 ## 使用约束<a name="section911013420264vcann"></a>
 
