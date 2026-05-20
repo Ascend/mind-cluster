@@ -37,9 +37,7 @@ var (
 
 var (
 	supportedVnpuDevices = map[string]bool{
-		api.Ascend310P:  true,
-		api.Ascend910B:  true,
-		api.Ascend910A3: true,
+		api.Ascend310P: true,
 	}
 )
 

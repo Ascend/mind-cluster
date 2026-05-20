@@ -8,7 +8,7 @@
 
 `GET http://ip:port/metrics`
 
->[!NOTE] 
+>[!NOTE]
 >NPU Exporter为了安全考虑，默认启用容器级别端口（默认8082），请求IP为Kubernetes容器IP，当K8s网络插件为Calico时，网络策略设置为允许label为app=prometheus的应用访问。
 
 ## 请求参数<a name="zh-cn_topic_0000001446964912_section162719122175"></a>
@@ -59,7 +59,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 
 了解以上各项数据信息中标签的说明，请参见[标签数据信息说明](#section129583351126)。
 
->[!NOTE] 
+>[!NOTE]
 >
 >- 如果进程运行在主机上，Pod没有使用NPU，则pod\_name、container\_name和namespace的值将为空。
 >- NPU Exporter是通过调用底层的HDK接口，获取相应的信息。数据信息调用的HDK接口请参考[调用的HDK接口](#section1137512020304)。
@@ -454,7 +454,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="10.43%" headers="mcps1.2.7.1.5 "><p id="p1835917279917"><a name="p1835917279917"></a><a name="p1835917279917"></a>单位：%</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="20.18%" headers="mcps1.2.7.1.6 "><p id="p735982715917"><a name="p735982715917"></a><a name="p735982715917"></a><span id="ph19590185162111"><a name="ph19590185162111"></a><a name="ph19590185162111"></a>Atlas 推理系列产品、Atlas A2 训练/推理系列产品、Atlas A3 训练/推理系列产品</span></p>
+<td class="cellrowborder" rowspan="3" valign="top" width="20.18%" headers="mcps1.2.7.1.6 "><p id="p735982715917"><a name="p735982715917"></a><a name="p735982715917"></a><span id="ph19590185162111"><a name="ph19590185162111"></a><a name="ph19590185162111"></a>Atlas 推理系列产品</span></p>
 </td>
 </tr>
 <tr id="row17703155715411"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p136032717910"><a name="p136032717910"></a><a name="p136032717910"></a>vNPU</p>
