@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -63,6 +64,7 @@ const (
 	dieIdMaskNum   = 0x04
 	portIdMaskNum  = 0x7F
 	rightShiftLen  = 3
+    podPlanePortCount = 6
 )
 
 // level1 (superpod) Port groups
@@ -121,7 +123,7 @@ func (p *ProductBase) getID(level int) string {
 		}
 		// pod
 		if !p.isServer() {
-			return fmt.Sprintf("%s_%s", strconv.Itoa(int(p.superPodID)), strconv.Itoa(int(p.chassisID)))
+			return fmt.Sprintf("%s_%s", strconv.Itoa(int(p.superPodID)), strconv.Itoa(int(p.serverIndex)))
 		}
 		// server super pod
 		if p.isSuperServer() {
@@ -627,7 +629,9 @@ func buildRankListFromMesh(meshDev *ParsedUrma) []api.RankAddrItem {
 	return rankList
 }
 
-func buildLevel1ParsedWithGetter(parsed []*ParsedUrma, getPorts func(die, fe int) []int, skipUboe bool) []api.RankAddrItem {
+func buildLevel1ParsedGeneric(parsed []*ParsedUrma, getPorts func(die, fe int) []int, skipUboe bool,
+	planeIdFunc func(p *ParsedUrma, ports []int) string,
+) []api.RankAddrItem {
 	rankList := make([]api.RankAddrItem, 0)
 	for _, p := range parsed {
 		if p == nil || p.PgEid == "" {
@@ -648,9 +652,14 @@ func buildLevel1ParsedWithGetter(parsed []*ParsedUrma, getPorts func(die, fe int
 			AddrType: addrTypeEID,
 			Addr:     p.PgEid,
 			Ports:    portList,
-			PlaneId:  fmt.Sprintf("%d", p.Die),
+			PlaneId:  planeIdFunc(p, ports),
 		})
 	}
+
+	sort.Slice(rankList, func(i, j int) bool {
+		return len(rankList[i].Ports) > len(rankList[j].Ports)
+	})
+
 	return rankList
 }
 
@@ -685,7 +694,10 @@ func (n *NpuBase) buildServerLevel1Parsed(parsed []*ParsedUrma) []api.RankAddrIt
 		}
 		return nil
 	}
-	return buildLevel1ParsedWithGetter(parsed, getPorts, true)
+	planeIdFunc := func(p *ParsedUrma, ports []int) string {
+		return fmt.Sprintf("%d", p.Die)
+	}
+	return buildLevel1ParsedGeneric(parsed, getPorts, true, planeIdFunc)
 }
 
 func (n *NpuBase) buildServerLevel2Parsed(parsed []*ParsedUrma) []api.RankAddrItem {
@@ -743,7 +755,13 @@ func (n *NpuBase) buildPodLevel1Parsed(dev *common.NpuDevice, parsed []*ParsedUr
 		}
 		return nil
 	}
-	return buildLevel1ParsedWithGetter(parsed, getPorts, false)
+	planeIdFunc := func(p *ParsedUrma, ports []int) string {
+		if len(ports) == podPlanePortCount {
+			return "0"
+		}
+		return "1"
+	}
+	return buildLevel1ParsedGeneric(parsed, getPorts, false, planeIdFunc)
 }
 
 func getDieIdByEid(eid string) (byte, error) {
