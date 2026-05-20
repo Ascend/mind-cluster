@@ -15215,6 +15215,233 @@
                 ]
             }
         },
+        "AISW_CANN_Runtime_056": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "RUNTIME",
+                "cause_zh": "Device/CTX资源初始化失败，导致无法调用运行时的相关接口",
+                "description_zh": "a. Runtime侧软件资源初始化失败。 \n  b. TSDRV设备初始化失败。 \n  c. SVM设备初始化失败。 \n  d.TsdOpen初始化失败。",
+                "suggestion_zh": [
+                    "1. 重启进程；"
+                ],
+                "cause_en": "Initialization of the device/CTX resources failed, resulting in the inability to call the relevant runtime interfaces.",
+                "description_en": "a. Initialization of runtime-side software resources failed. \n  b. Initialization of TSDRV device failed. \n  c. Initialization of SVM device failed. \n  d. Initialization of TsdOpen failed.",
+                "suggestion_en": [
+                    "1. Restart the process."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    "Start aicpu executor failed"
+                ]
+            }
+        },
+        "AISW_CANN_Runtime_057": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "RUNTIME",
+                "cause_zh": "Runtime资源泄露",
+                "description_zh": "软件bug。",
+                "suggestion_zh": [
+                    "1. 释放Steam资源，重启进程；"
+                ],
+                "cause_en": "Runtime resource leak",
+                "description_en": "Software bug.",
+                "suggestion_en": [
+                    "1. Release Steam resources and restart the process."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    "Alloc sq cq fail"
+                ]
+            }
+        },
+        "AISW_CANN_Runtime_058": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "RUNTIME",
+                "cause_zh": "Runtime资源申请失败",
+                "description_zh": "a. 内存类资源：内存资源不够或者参数传入类型不正确。 \n  b. Stream资源：资源不足。 \n  c. Event资源：资源不足。 \n  d. Notify资源：资源不足。 \n  e. Model资源：资源不足。 \n  f. 资源的释放和泄露问题。",
+                "suggestion_zh": [
+                    "1. 请等待一分钟后再重新启动进程, 保证上一个进程资源释放完毕；",
+                    "2. 请停止其他进程或者等其他进程执行完成后再启动进程；",
+                    "3. 若无法解决，请检查是否超过可用资源上限，如果未超上限，则需要重启环境强行释放资源、恢复环境；"
+                ],
+                "cause_en": "Runtime resource allocation failed",
+                "description_en": "a. Memory resources: Memory resources are insufficient or the input parameter type is incorrect. \n  b. Stream resources: Insufficient resources. \n  c. Event resources: Insufficient resources. \n  d. Notify resources: Insufficient resources. \n  e. Model resources: Insufficient resources. \n  f. Resource release and leakage.",
+                "suggestion_en": [
+                    "1. Please wait for one minute before restarting the process to ensure that the resources of the previous process have been fully released.",
+                    "2. Please stop other processes or wait until other processes have completed execution before starting the process.",
+                    "3. If the issue cannot be resolved, please check whether the available resource limit has been exceeded. If the limit has not been exceeded, you will need to restart the environment to forcibly release resources and restore the environment."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    ["driver error:", "out of memory"],
+                    ["Alloc sq cq fail"],
+                    ["driver error:", "no event resource"],
+                    ["driver error:", "no notify resource"],
+                    ["driver error:", "no model resource"]
+                ]
+            }
+        },
+        "AISW_CANN_Runtime_059": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "RUNTIME",
+                "cause_zh": "wait任务执行超时",
+                "description_zh": "a. 其它stream未执行到record任务。 \n  b. 通信异常导致远端芯片的record写未到达本端芯片。",
+                "suggestion_zh": [
+                    "1. 重启进程；"
+                ],
+                "cause_en": "Wait task execution timed out.",
+                "description_en": "a. Other streams have not executed the record task. \n  b. Communication abnormalities have caused the record write of the remote chip to fail to reach the local chip.",
+                "suggestion_en": [
+                    "1. Restart the process."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    "event wait error", "retCode=0x105", "[task timeout]"
+                ]
+            }
+        },
+        "AISW_CANN_Runtime_060": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "RUNTIME",
+                "cause_zh": "下沉模型执行失败",
+                "description_zh": "a. 计算和DMA搬移、DVPP类算子、通信算子执行失败。 \n  b. 模型中的同步逻辑执行不正确。 \n  c. 模型中的跳转逻辑执行不正确。",
+                "suggestion_zh": [
+                    "1. 检查参数；",
+                    "2. 如无法解决，联系开发工程师定位排查；"
+                ],
+                "cause_en": "Failed to execute the sinking model.",
+                "description_en": "a. Calculation and DMA transfer, DVPP operators, and communication operators fail to execute. \n  b. The synchronization logic in the model is executed incorrectly. \n  c. The jump logic in the model is executed incorrectly.",
+                "suggestion_en": [
+                    "1. Check the parameters.",
+                    "2. If the issue cannot be resolved, contact a development engineer to identify and troubleshoot the problem."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    "model_execute_task_info.cc", "ReportErrorInfoForModelExecuteTask:", "Real fault task", "device_id=", "stream_id=", "task_id=", "type="
+                ]
+            }
+        },
+        "AISW_CANN_Runtime_061": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "RUNTIME",
+                "cause_zh": "下沉模型执行超时",
+                "description_zh": "a. 超时时间设置不合理，模型执行时间本身就比较长。 \n  b. 模型里有算子卡住。 \n  c. 模型里record/wait异常，导致流间同步卡住。 \n  d. 模型里条件算子跳转逻辑异常。",
+                "suggestion_zh": [
+                    "1. 设置更大的超时时间；",
+                    "2. 如无法解决，联系开发工程师定位排查；"
+                ],
+                "cause_en": "Sink model execution timeout occurred",
+                "description_en": "a. The timeout setting is unreasonable, and the model's execution time is inherently long. \n  b. There is an operator stuck in the model. \n  c. There is an abnormality in the record/wait in the model, causing inter-stream synchronization to get stuck. \n  d. There is an abnormality in the jump logic of the conditional operator in the model.",
+                "suggestion_en": [
+                    "1. Set a longer timeout period.",
+                    "2. If the issue cannot be resolved, contact a development engineer to identify and troubleshoot the problem."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    "api_c_model.cc:", "rtModelExecuteSync:", "ErrCode=", "desc=[stream sync timeout]", "InnerCode=0x7030010"
+                ]
+            }
+        },
+        "AISW_CANN_Runtime_062": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "RUNTIME",
+                "cause_zh": "单算子执行失败",
+                "description_zh": "需要针对不同的算子类型分析原因：\n  a. 计算类：AIC、AIV算子，可能是指令或者参数异常，可能是核间同步异常等，具体原因需要分析AIC、AIV运行时的错误码；AICPU类型算子，可能是在CPU核上的代码运行异常。 \n  b. DMA数据搬移类：H2D、D2H、D2D的数据搬移算子，可能是地址访问异常。\n  c. DVPP类的算子，可能是加速器异常或者CMDList描述符不合法。 \n  d. 算子执行超时，调度卡住或者算子执行时间设置不当。",
+                "suggestion_zh": [
+                    "1. 查阅plog日志, 根据错误信息以及错误码获取异常信息；",
+                    "2. 如无法解决，联系开发工程师定位排查；"
+                ],
+                "cause_en": "Single operator execution failed",
+                "description_en": "Analyze the cause based on the operator type:\n  a. Computing: AIC and AIV operators, which may be caused by instruction or parameter exceptions, or inter-core synchronization exceptions. For specific causes, analyze the error codes during AIC and AIV running. For the AICPU operator, the code running on the CPU core may be abnormal. \n  b. DMA data migration: H2D, D2H, and D2D data migration operators, which may be caused by address access exceptions. \n  c. For DVPP operators, the accelerator may be abnormal or the CMDList descriptor is invalid. \n  d. The operator execution times out, the scheduling is suspended, or the operator execution time is incorrectly set.",
+                "suggestion_en": [
+                    "1. Check the plog log, and obtain exception information based on the error message and error code.",
+                    "2. If the issue cannot be resolved, contact the development engineer to locate and troubleshoot the problem."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    ["Aicpu kernel execute failed"],
+                    ["aicpu exception"]
+                ]
+            }
+        },
+        "AISW_CANN_Runtime_063": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "RUNTIME",
+                "cause_zh": "单算子执行超时",
+                "description_zh": "a. 算子执行超时时间设置不合适，本身算子执行时间就比较长。 \n  b. 算子内部核间同步超时。 \n  c. 算子内计算与通信同步超时。 \n  d. 软同步/硬同步算子的blockdim超过可用最大核数。 \n  e. AICPU算子线程卡死。 \n  f. Fusion任务中获取不到可用的异构加速器资源。 \n  g. 无人写或通信异常导致notify寄存器未被record，导致notify wait超时。 \n  h. ccu任务内部卡死。",
+                "suggestion_zh": [
+                    "1. 根据plog日志获取异常信息；",
+                    "2. 如无法解决，联系开发工程师定位排查；"
+                ],
+                "cause_en": "Single operator execution timeout",
+                "description_en": "a. The timeout setting for operator execution is inappropriate. The operator itself takes a relatively long time to execute. \n  b. The inter-core synchronization within the operator times out. \n  c. The synchronization between computation and communication within the operator times out. \n  d. The blockdim of the soft synchronization/hard synchronization operator exceeds the maximum number of available cores. \n  e. The AICPU operator thread is stuck. \n  f. In the Fusion task, the available heterogeneous accelerator resources cannot be obtained. \n  g. The notify register is not recorded due to no one writing or communication exceptions, causing notify wait to time out. \n  h. The ccu task is stuck internally.",
+                "suggestion_en": [
+                    "1. Obtain exception information based on the plog log.",
+                    "2. If the issue cannot be resolved, contact a development engineer to identify and troubleshoot the problem."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    ["aicore timeout"],
+                    ["AICORE Kernel task happen error"]
+                ]
+            }
+        },
+        "AISW_CANN_Runtime_064": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "RUNTIME",
+                "cause_zh": "接口卡死",
+                "description_zh": "a. mutex卡死。 \n  b. 死循环判断。 \n  c. 长期陷入驱动内核态。",
+                "suggestion_zh": [
+                    "1. 重启进程；",
+                    "2. 如果重启后无法恢复，需要联系华为工程师；"
+                ],
+                "cause_en": "Interface card deadlock",
+                "description_en": "a. Mutex card deadlock. \n  b. Dead loop judgment. \n  c. Long-term entrapment in driver kernel mode.",
+                "suggestion_en": [
+                    "1. Restart the process.",
+                    "2. If the issue cannot be resolved after restarting, you need to contact a Huawei engineer."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    "stream sync timeout"
+                ]
+            }
+        },
         "AISW_CANN_Runtime_Drv_001": {
             "attribute": {
                 "class": "Software",
