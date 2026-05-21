@@ -1,10 +1,10 @@
-# 整卡调度或静态vNPU调度（推理）<a name="ZH-CN_TOPIC_0000002511347095"></a>
+# 整卡调度（推理）<a name="ZH-CN_TOPIC_0000002511347095"></a>
 
 ## 使用前必读<a name="ZH-CN_TOPIC_0000002511427055"></a>
 
 **前提条件<a name="section116017220425"></a>**
 
-在命令行场景下使用整卡调度和静态vNPU调度特性，需要确保已经安装如下组件；若没有安装，可以参考[安装部署](../../installation_guide/02_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
+在命令行场景下使用整卡调度特性，需要确保已经安装如下组件；若没有安装，可以参考[安装部署](../../installation_guide/02_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 
 - 调度器（Volcano或其他调度器）
 - Ascend Device Plugin
@@ -15,7 +15,7 @@
 
 **使用方式<a name="section91871616135119"></a>**
 
-整卡调度或静态vNPU调度特性的使用方式如下：
+整卡调度特性的使用方式如下：
 
 - 通过命令行使用：安装集群调度组件，通过命令行使用整卡调度特性。
 - 集成后使用：将集群调度组件集成到已有的第三方AI平台或者基于集群调度组件开发的AI平台。
@@ -23,11 +23,9 @@
 **使用说明<a name="section577625973520"></a>**
 
 - 资源监测可以和推理场景下的所有特性一起使用。
-- 集群中同时跑多个推理任务，每个任务使用的特性可以不同，但不能同时存在使用静态vNPU的任务和使用动态vNPU的任务。
+- 集群中同时跑多个推理任务，每个任务使用的特性可以不同。
 - 推理卡故障恢复特性可以搭配整卡调度特性一起使用，开启整卡故障恢复特性只需要将Ascend Device Plugin的启动参数“-hotReset”取值设置为“0”或“2”（默认为“-1”，不支持故障恢复功能）。
 - 整卡调度支持下发单副本数或者多副本数的单机任务，每个副本独立工作，只支持推理服务器（插Atlas 300I Duo 推理卡）和Atlas 800I A2 推理服务器、A200I A2 Box 异构组件部署acjob类型的分布式任务。
-- 静态vNPU调度只支持下发单副本数的单机任务，不支持分布式任务。
-- 静态vNPU调度特性需要搭配算力虚拟化特性一起使用，关于静态虚拟化的相关说明和操作请参见[静态虚拟化](../virtual_instance/virtual_instance_with_hdk/static_vnpu_scheduling/03_mounting_vnpu_static.md#静态虚拟化)章节。
 
 **支持的产品形态<a name="section169961844182917"></a>**
 
@@ -41,13 +39,9 @@
     - Atlas 850 系列硬件产品
     - Atlas 950 SuperPoD
 
-- 支持以下产品使用**静态vNPU调度**。
-
-    - Atlas 推理系列产品
-
 **使用流程<a name="section246711128536"></a>**
 
-通过命令行使用整卡调度或静态vNPU调度特性的流程可以参见[图1](#fig242524985412)。
+通过命令行使用整卡调度特性的流程可以参见[图1](#fig242524985412)。
 
 通过命令行使用Volcano和其他调度器的使用流程一致，主要区别在使用其他调度器准备任务YAML需要参考[通过命令行使用（其他调度器）](#ZH-CN_TOPIC_0000002479227152)章节创建任务YAML。使用其他调度器的其余操作和使用Volcano一致，可以参考[通过命令行使用（Volcano）](#ZH-CN_TOPIC_0000002511427059)进行操作。
 
@@ -56,7 +50,7 @@
 
 ## 实现原理<a name="ZH-CN_TOPIC_0000002479227174"></a>
 
-根据推理任务类型的不同，特性的原理图略有差异。静态vNPU调度需要使用npu-smi工具提前创建好需要的vNPU。
+根据推理任务类型的不同，特性的原理图略有差异。
 
 **acjob任务<a name="section9971431567"></a>**
 
@@ -100,7 +94,7 @@ vcjob任务的原理图如[图2](#fig8231124765)所示。
     - kubelet上报节点芯片数量到节点对象（node）中。
     - Ascend Device Plugin定期上报芯片拓扑信息。
         - 上报整卡信息。将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）和已使用的芯片数量（allocated）上报到Node中，用于整卡调度。
-        - 上报vNPU相关信息到Node中，用于静态vNPU调度。
+
 
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 
@@ -124,7 +118,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     - kubelet上报节点芯片数量到节点对象（node）中。
     - Ascend Device Plugin定期上报芯片拓扑信息。
         - 上报整卡信息。将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）和已使用的芯片数量（allocated）上报到Node中，用于整卡调度。
-        - 上报vNPU相关信息到Node中，用于静态vNPU调度。
+
 
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 
@@ -296,18 +290,14 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     </li></ul>
     <a name="zh-cn_topic_0000001609074213_ul13727161475413"></a><a name="zh-cn_topic_0000001609074213_ul13727161475413"></a><ul id="zh-cn_topic_0000001609074213_ul13727161475413"><li><span id="ph1883472303917"><a name="ph1883472303917"></a><a name="ph1883472303917"></a>Atlas 推理系列产品</span>混插模式：<a name="zh-cn_topic_0000001609074213_ul8401842105312"></a><a name="zh-cn_topic_0000001609074213_ul8401842105312"></a><ul id="zh-cn_topic_0000001609074213_ul8401842105312"><li>huawei.com/Ascend310P-V: <em id="zh-cn_topic_0000001609074213_i16471550409"><a name="zh-cn_topic_0000001609074213_i16471550409"></a><a name="zh-cn_topic_0000001609074213_i16471550409"></a>芯片数量</em></li><li>huawei.com/Ascend310P-VPro: <em id="zh-cn_topic_0000001609074213_i146476501013"><a name="zh-cn_topic_0000001609074213_i146476501013"></a><a name="zh-cn_topic_0000001609074213_i146476501013"></a>芯片数量</em></li><li>huawei.com/Ascend310P-IPro: <em id="zh-cn_topic_0000001609074213_i06476501014"><a name="zh-cn_topic_0000001609074213_i06476501014"></a><a name="zh-cn_topic_0000001609074213_i06476501014"></a>芯片数量</em></li></ul>
     </li><li><span id="ph16267162611508"><a name="ph16267162611508"></a><a name="ph16267162611508"></a>Atlas 800I A2 推理服务器</span>、<span id="ph1222716463422"><a name="ph1222716463422"></a><a name="ph1222716463422"></a>A200I A2 Box 异构组件</span>、<span id="ph8551122472512"><a name="ph8551122472512"></a><a name="ph8551122472512"></a>Atlas 800I A3 超节点服务器</span>：huawei.com/Ascend910：<em id="i68164310406"><a name="i68164310406"></a><a name="i68164310406"></a>芯片数量</em></li></ul>
-    <p id="p11520941142018"><a name="p11520941142018"></a><a name="p11520941142018"></a><strong id="b1023211223510"><a name="b1023211223510"></a><a name="b1023211223510"></a>静态vNPU调度：</strong>取值为1。只能使用一个NPU下的vNPU。</p>
-    <p id="p99844293552"><a name="p99844293552"></a><a name="p99844293552"></a><span id="ph876864313911"><a name="ph876864313911"></a><a name="ph876864313911"></a>Atlas 推理系列产品</span>非混插模式：huawei.com/Ascend310P-<em id="i1745936185214"><a name="i1745936185214"></a><a name="i1745936185214"></a>Y</em>: 1</p>
-    <a name="ul1257013663114"></a><a name="ul1257013663114"></a>
-    <p id="p444515595295"><a name="p444515595295"></a><a name="p444515595295"></a>如<em id="i154056256459"><a name="i154056256459"></a><a name="i154056256459"></a>huawei.com/Ascend310P-4c.3cpu</em>: 1</p>
+
     </td>
-    <td class="cellrowborder" valign="top" width="37.71377137713771%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001609074213_p11590211155219"><a name="zh-cn_topic_0000001609074213_p11590211155219"></a><a name="zh-cn_topic_0000001609074213_p11590211155219"></a>请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。requests和limits下，芯片的名字和数量需保持一致。</p><ul id="ul10782193418818"><li>仅<span id="ph1038285416813"><a name="ph1038285416813"></a><a name="ph1038285416813"></a>Atlas 推理系列产品</span>非混插模式支持静态vNPU调度。</li><li>推理服务器（插<span id="ph1990710374611"><a name="ph1990710374611"></a><a name="ph1990710374611"></a>Atlas 300I 推理卡</span>）和<span id="ph629210161695"><a name="ph629210161695"></a><a name="ph629210161695"></a>Atlas 推理系列产品</span>混插模式不支持静态vNPU调度。</li><li><strong id="b179331118122318"><a name="b179331118122318"></a><a name="b179331118122318"></a><em id="i14933131862318"><a name="i14933131862318"></a><a name="i14933131862318"></a>Y</em></strong>取值可参考<a href="../virtual_instance/virtual_instance_with_hdk/static_vnpu_scheduling/03_mounting_vnpu_static.md#静态虚拟化">静态虚拟化</a>章节中的虚拟化实例模板与虚拟设备类型关系表的对应产品的“vNPU类型”列。<p id="p208621211164518"><a name="p208621211164518"></a><a name="p208621211164518"></a>以vNPU类型<em id="i412654718449"><a name="i412654718449"></a><a name="i412654718449"></a>Ascend310P-4c.3cpu</em>为例，<strong id="b1835616104433"><a name="b1835616104433"></a><a name="b1835616104433"></a><em id="i135681014319"><a name="i135681014319"></a><a name="i135681014319"></a>Y</em></strong>取值为4c.3cpu，不包括前面的Ascend310P。</p>
-    </li></ul>
+    <td class="cellrowborder" valign="top" width="37.71377137713771%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000001609074213_p11590211155219"><a name="zh-cn_topic_0000001609074213_p11590211155219"></a><a name="zh-cn_topic_0000001609074213_p11590211155219"></a>请求的NPU类型、数量，请根据实际修改。requests和limits下，芯片的名字和数量需保持一致。</p>
     </td>
     </tr>
     <tr id="zh-cn_topic_0000001609074213_row114301545157"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001609074213_p16864941511"><a name="zh-cn_topic_0000001609074213_p16864941511"></a><a name="zh-cn_topic_0000001609074213_p16864941511"></a>limits</p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p203039915181"><a name="p203039915181"></a><a name="p203039915181"></a>限制请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。</p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p203039915181"><a name="p203039915181"></a><a name="p203039915181"></a>限制请求的NPU类型、数量，请根据实际修改。</p>
     <p id="p4739213121713"><a name="p4739213121713"></a><a name="p4739213121713"></a>limits需要和requests的芯片名称和数量需保持一致。</p>
     </td>
     </tr>
@@ -354,7 +344,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     </td>
     <td class="cellrowborder" valign="top" width="37.71377137713771%" headers="mcps1.2.4.1.3 ">
     <p id="p5781181818226"><a name="p5781181818226"></a><a name="p5781181818226"></a><span id="ph1378141872210"><a name="ph1378141872210"></a><a name="ph1378141872210"></a>Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>
-    <div class="note" id="note269473654014"><a name="note269473654014"></a><a name="note269473654014"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li><p id="p66941536154018"><a name="p66941536154018"></a><a name="p66941536154018"></a>该参数只支持使用<span id="ph4213155617124"><a name="ph4213155617124"></a><a name="ph4213155617124"></a>Volcano</span>调度器的整卡调度特性。使用静态vNPU调度、动态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p></li><li><p>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD需配置为metadata.annotations['huawei.com/npu']。</p></li></ul>
+    <div class="note" id="note269473654014"><a name="note269473654014"></a><a name="note269473654014"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li><p id="p66941536154018"><a name="p66941536154018"></a><a name="p66941536154018"></a>该参数只支持使用<span id="ph4213155617124"><a name="ph4213155617124"></a><a name="ph4213155617124"></a>Volcano</span>调度器的整卡调度特性。使用其他调度器的用户需要删除示例YAML中该参数的相关字段。</p></li><li><p>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD需配置为metadata.annotations['huawei.com/npu']。</p></li></ul>
     </div>
     </div>
     </td>
@@ -497,11 +487,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     <tr id="row1843115298483"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p4432729124818"><a name="p4432729124818"></a><a name="p4432729124818"></a><a href="#li1134113548015">在Atlas 800I A2 推理服务器上创建单卡任务</a></p>
     </td>
     </tr>
-    <tr id="row11909558173312"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p109091558193312"><a name="p109091558193312"></a><a name="p109091558193312"></a>静态vNPU调度</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p590919584334"><a name="p590919584334"></a><a name="p590919584334"></a><a href="#li21860112612">在Atlas 推理系列产品（非Atlas 200I SoC A1 核心板）上创建单卡任务</a></p>
-    </td>
-    </tr>
+
     </tbody>
     </table>
 
@@ -758,40 +744,6 @@ deploy任务原理图如[图3](#fig178781320593)所示。
                 restartPolicy: OnFailure
         ```
 
-    - <a name="li21860112612"></a>使用**静态vNPU调度**特性，参考本配置。以infer-deploy.yaml为例，在Atlas 推理系列产品节点（非Atlas 200I SoC A1 核心板节点）创建一个使用vNPU的推理任务，示例如下。
-
-        ```Yaml
-        apiVersion: apps/v1
-        kind: Deployment
-        ...
-        spec:
-          template:
-            metadata:
-              labels:
-                 app: infers
-        ...
-            spec:
-              schedulerName: volcano
-              nodeSelector:
-                host-arch: huawei-arm
-        ...
-              containers:
-              - image: ubuntu-infer:v1
-        ...
-        # 静态vNPU调度暂不支持ASCEND_VISIBLE_DEVICES相关字段，需要删除以下字段
-                env:
-                - name: ASCEND_VISIBLE_DEVICES
-                  valueFrom:
-                    fieldRef:
-                      fieldPath: metadata.annotations['huawei.com/Ascend310P']    # 删除到此行
-                resources:
-                  requests:
-                    huawei.com/Ascend310P-2c: 1      # vNPU调度此处数量只能为1
-                  limits:
-                    huawei.com/Ascend310P-2c: 1       # 必须与requests的值一致
-        ...
-        ```
-
 4. 挂载权重文件。
 
     ```Yaml
@@ -911,32 +863,11 @@ job.batch/resnetinfer1-2 created
 
         在显示的信息中，找到“Allocated resources”下的**huawei.com/Ascend310P**，该参数取值在执行推理任务之后会增加，增加数量为推理任务使用的NPU芯片个数。
 
-    - **静态vNPU调度**回显示例如下：
-
-        ```ColdFusion
-        ...
-        Allocated resources:
-          (Total limits may be over 100 percent, i.e., overcommitted.)
-          Resource              Requests     Limits
-          --------              --------     ------
-          cpu                   4 (2%)       3500m (1%)
-          memory                2140Mi (0%)  4040Mi (0%)
-          ephemeral-storage     0 (0%)       0 (0%)
-          Ascend310P-2c  1            1
-        Events:
-          Type    Reason    Age   From                Message
-          ----    ------    ----  ----                -------
-          Normal  Starting  36m   kube-proxy, ubuntu  Starting kube-proxy.
-        ...
-        ```
-
-        在显示的信息中，找到“Allocated resources”下的**Ascend310P-2c**，该参数取值在执行推理任务之后会增加，增加数量为推理任务使用的vNPU芯片个数。
-
     >[!NOTE]
-    >- 如果使用的是Atlas 推理系列产品非混插模式，则上述字段显示为**Ascend310P，Ascend310P-2c**。
+    >- 如果使用的是Atlas 推理系列产品非混插模式，则上述字段显示为**Ascend310P**。
     >- 如果使用的是Atlas 推理系列产品混插模式，则上述字段显示为**Ascend310P-V、Ascend310P-VPro、Ascend310P-IPro之一**。
 
-### 查看整卡调度或静态vNPU调度结果<a name="ZH-CN_TOPIC_0000002511347083"></a>
+### 查看整卡调度结果<a name="ZH-CN_TOPIC_0000002511347083"></a>
 
 **操作步骤<a name="zh-cn_topic_0000001558675486_section96791230183711"></a>**
 
@@ -1111,11 +1042,7 @@ job "resnetinfer1-2" deleted
     <tr id="row119193361316"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p4432729124818"><a name="p4432729124818"></a><a name="p4432729124818"></a><a href="#li11341135480159">在Atlas 800I A2 推理服务器上创建单卡任务</a></p>
     </td>
     </tr>
-    <tr id="row1319312910372"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1019310298378"><a name="p1019310298378"></a><a name="p1019310298378"></a>静态vNPU</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p171935298379"><a name="p171935298379"></a><a name="p171935298379"></a><a href="#li11239121841616">在Atlas 推理系列产品（非Atlas 200I SoC A1 核心板）上创建单卡任务</a></p>
-    </td>
-    </tr>
+
     </tbody>
     </table>
 
@@ -1199,29 +1126,6 @@ job "resnetinfer1-2" deleted
                     huawei.com/Ascend910: 1
                   limits:
                     huawei.com/Ascend910: 1
-        ...
-        ```
-
-    - <a name="li11239121841616"></a>以infer.yaml为例，在Atlas 推理系列产品节点（非Atlas 200I SoC A1 核心板节点）创建一个使用vNPU的推理任务，示例如下。
-
-        ```Yaml
-        apiVersion: batch/v1
-        kind: Job
-        metadata:
-          name: resnetinfer1-1
-        spec:
-          template:
-            spec:
-              nodeSelector:
-                host-arch: huawei-arm    # 可选值，根据实际情况填写
-              containers:
-              - image: ubuntu-infer:v1
-        ...
-                resources:
-                  requests:
-                    huawei.com/Ascend310P-2c: 1
-                  limits:
-                    huawei.com/Ascend310P-2c: 1
         ...
         ```
 

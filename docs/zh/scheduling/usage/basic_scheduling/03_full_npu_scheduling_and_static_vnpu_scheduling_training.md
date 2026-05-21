@@ -1,11 +1,11 @@
-# 整卡调度或静态vNPU调度（训练）<a name="ZH-CN_TOPIC_0000002479387138"></a>
+# 整卡调度（训练）<a name="ZH-CN_TOPIC_0000002479387138"></a>
 
 ## 使用前必读<a name="ZH-CN_TOPIC_0000002511347093"></a>
 
 **前提条件<a name="section52051339787"></a>**
 
 - 确保环境中有配置相应的存储方案，比如使用NFS（Network File System），用户可以参见[安装NFS](../../common_operations.md#安装nfs)进行操作。
-- 在使用整卡调度或静态vNPU调度特性前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../installation_guide//03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
+- 在使用整卡调度特性前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../installation_guide//03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
     - 调度器（Volcano或其他调度器）
     - Ascend Device Plugin
     - Ascend Docker Runtime
@@ -20,14 +20,13 @@
 
 **使用方式<a name="section179431435174811"></a>**
 
-- 通过命令行使用：整卡调度或静态vNPU调度特性需要使用调度器，用户可以选择使用Volcano调度器和其他调度器。无论选择哪种调度器，都需要使用Ascend Operator组件设置资源信息。
+- 通过命令行使用：整卡调度特性需要使用调度器，用户可以选择使用Volcano调度器和其他调度器。无论选择哪种调度器，都需要使用Ascend Operator组件设置资源信息。
 - 集成后使用：将集群调度组件集成到已有的第三方AI平台或者基于集群调度组件开发的AI平台。
 
 **使用说明<a name="section577625973520"></a>**
 
 - 资源监测可以和训练场景下的所有特性一起使用。
 - 集群中同时跑多个训练任务，每个任务使用的特性可以不同。
-- 静态vNPU调度特性需要搭配算力虚拟化特性一起使用，关于静态虚拟化的相关说明和操作请参见[静态虚拟化](../virtual_instance/virtual_instance_with_hdk/static_vnpu_scheduling/03_mounting_vnpu_static.md#静态虚拟化)章节。
 
 **支持的产品形态<a name="section169961844182917"></a>**
 
@@ -36,25 +35,21 @@
     - <term>Atlas A2 训练系列产品</term>
     - <term>Atlas A3 训练系列产品</term>
 
-- 支持以下产品使用**静态vNPU调度**。
-
-    - Atlas 训练系列产品
-
 **使用流程<a name="section5640184231810"></a>**
 
-整卡调度、静态vNPU调度有3种使用场景，分别是通过命令行使用（Volcano）、通过命令行使用（其他调度器）和集成后使用。
+整卡调度有3种使用场景，分别是通过命令行使用（Volcano）、通过命令行使用（其他调度器）和集成后使用。
 
 通过命令行使用Volcano和其他调度器的使用流程一致。使用其他调度器准备任务YAML需要参考[通过命令行使用（其他调度器）](#通过命令行使用其他调度器)章节创建任务YAML。使用其他调度器的其余操作和使用Volcano一致，可以参考[通过命令行使用（Volcano）](#通过命令行使用volcano)进行操作。
 
-**图 1**  整卡调度和静态vNPU调度使用流程<a name="fig107864120214"></a>
-![](../../../figures/scheduling/整卡调度和静态vNPU调度使用流程.png "整卡调度和静态vNPU调度使用流程")
+**图 1**  整卡调度使用流程<a name="fig107864120214"></a>
+![](../../../figures/scheduling/整卡调度使用流程.png "整卡调度使用流程")
 
 1. 脚本适配时，用户可根据实际情况选择通过环境变量或文件配置资源信息。
 2. 在准备任务YAML时，下发的任务YAML需要根据具体的NPU型号，选择不同的YAML进行修改适配。选择YAML时可以参考[准备任务YAML](#准备任务yaml)，根据实际情况选择合适的YAML。
 
 ## 实现原理<a name="ZH-CN_TOPIC_0000002479387150"></a>
 
-根据训练任务类型的不同，特性的原理图略有差异。静态vNPU调度需要使用npu-smi工具提前创建好需要的vNPU。
+根据训练任务类型的不同，特性的原理图略有差异。
 
 **acjob任务<a name="section9971431567"></a>**
 
@@ -69,7 +64,7 @@ acjob任务原理图如[图1](#fig5188536014)所示。
     - kubelet上报节点芯片数量到节点对象（node）中。
     - Ascend Device Plugin定期上报芯片拓扑信息。
         - 上报整卡信息。将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）、已使用的芯片数量（allocated）和芯片的基础信息（device ip和super\_device\_ip）上报到Node中，用于整卡调度。
-        - 上报vNPU相关信息到Node中，用于静态vNPU调度。
+
 
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 
@@ -77,9 +72,7 @@ acjob任务原理图如[图1](#fig5188536014)所示。
 3. 用户通过kubectl或者其他深度学习平台下发acjob任务。
 4. Ascend Operator为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
 5. Ascend Operator为任务创建相应的Pod，并在容器中注入集合通信所需环境变量。
-6. volcano-scheduler根据节点和芯片拓扑信息为任务选择合适节点，并在Pod的annotation上写入选择的芯片信息。
-    - 整卡调度写入整卡信息。
-    - 静态vNPU调度写入vNPU相关信息。
+6. volcano-scheduler根据节点和芯片拓扑信息为任务选择合适节点，并在Pod的annotation上写入选择的整卡信息。
 
 7. kubelet创建容器时，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin或volcano-scheduler在Pod的annotation上写入芯片信息。Ascend Docker Runtime协助挂载相应资源。
 8. Ascend Operator读取Pod的annotation信息，将相关信息写入hccl.json。
@@ -98,7 +91,7 @@ vcjob任务的原理图如[图2](#fig8717151315416)所示。
     - kubelet上报节点芯片数量到节点对象（node）中。
     - Ascend Device Plugin定期上报芯片拓扑信息。
         - 上报整卡信息。将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）和已使用的芯片数量（allocated）上报到Node中，用于整卡调度。
-        - 上报vNPU相关信息到Node中，用于静态vNPU调度。
+
 
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 
@@ -106,9 +99,7 @@ vcjob任务的原理图如[图2](#fig8717151315416)所示。
 3. 用户通过kubectl或者其他深度学习平台下发vcjob任务。
 4. volcano-controller为任务创建相应PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
 5. 当集群资源满足任务要求时，volcano-controller创建任务Pod。
-6. volcano-scheduler根据节点和芯片拓扑信息为任务选择合适节点，并在Pod的annotation上写入选择的芯片信息。
-    - 整卡调度写入整卡信息。
-    - 静态vNPU调度写入vNPU相关信息。
+6. volcano-scheduler根据节点和芯片拓扑信息为任务选择合适节点，并在Pod的annotation上写入选择的整卡信息。
 
 7. kubelet创建容器时，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin在Pod的annotation上写入芯片信息。Ascend Docker Runtime协助挂载相应资源，将hccl.json挂载进入容器。
 8. Ascend Operator获取每个Pod的annotation信息，写入hccl.json。
@@ -127,7 +118,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     - kubelet上报节点芯片数量到节点对象（node）中。
     - Ascend Device Plugin定期上报芯片拓扑信息。
         - 上报整卡信息。将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）和已使用的芯片数量（allocated）上报到Node中，用于整卡调度。
-        - 上报vNPU相关信息到Node中，用于静态vNPU调度。
+
 
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 
@@ -135,9 +126,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 3. 用户通过kubectl或者其他深度学习平台下发deploy任务。
 4. kube-controller为任务创建相应Pod。
 5. volcano-controller创建任务PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
-6. volcano-scheduler根据节点和芯片拓扑信息为任务选择合适节点，并在Pod的annotation上写入选择的芯片信息。
-    - 整卡调度写入整卡信息。
-    - 静态vNPU调度写入vNPU相关信息。
+6. volcano-scheduler根据节点和芯片拓扑信息为任务选择合适节点，并在Pod的annotation上写入选择的整卡信息。
 
 7. kubelet创建容器时，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin在Pod的annotation上写入芯片信息。Ascend Docker Runtime协助挂载相应资源，将hccl.json挂载进入容器。
 8. Ascend Operator获取每个Pod的annotation信息，写入hccl.json。
@@ -797,7 +786,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 #### YAML参数说明<a name="ZH-CN_TOPIC_0000002511347099"></a>
 
-本章节提供使用整卡调度或静态vNPU调度配置YAML的操作示例。在操作前，用户需要了解YAML示例的参数说明，再进行操作。
+本章节提供使用整卡调度配置YAML的操作示例。在操作前，用户需要了解YAML示例的参数说明，再进行操作。
 
 - 使用Ascend Job的用户，请参考[表1](#table159746356276)。
 - 使用Volcano Job的用户，请参考[表2](#zh-cn_topic_0000001609074269_table1565872494511)。
@@ -949,7 +938,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </div></div>
 </li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="p2983173572716"><a name="p2983173572716"></a><a name="p2983173572716"></a>默认值为null，表示不使用交换机亲和性调度。用户需要根据任务类型进行配置。</p><ul id="ul59831535122714"><li>交换机亲和性调度1.0版本支持<span id="ph1157665817140"><a name="ph1157665817140"></a><a name="ph1157665817140"></a>Atlas 训练系列产品</span>和<span id="ph168598363399"><a name="ph168598363399"></a><a name="ph168598363399"></a><term id="zh-cn_topic_0000001519959665_term57208119917_2"><a name="zh-cn_topic_0000001519959665_term57208119917_2"></a><a name="zh-cn_topic_0000001519959665_term57208119917_2"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph4181625925"><a name="ph4181625925"></a><a name="ph4181625925"></a>PyTorch</span>和<span id="ph61882510210"><a name="ph61882510210"></a><a name="ph61882510210"></a>MindSpore</span>框架。</li><li>交换机亲和性调度2.0版本支持<span id="ph311717506401"><a name="ph311717506401"></a><a name="ph311717506401"></a><term id="zh-cn_topic_0000001519959665_term57208119917_3"><a name="zh-cn_topic_0000001519959665_term57208119917_3"></a><a name="zh-cn_topic_0000001519959665_term57208119917_3"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph619244413568"><a name="ph619244413568"></a><a name="ph619244413568"></a>PyTorch</span>框架。</li><li>只支持整卡进行交换机亲和性调度，不支持静态vNPU进行交换机亲和性调度。</li></ul>
+<td class="cellrowborder" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="p2983173572716"><a name="p2983173572716"></a><a name="p2983173572716"></a>默认值为null，表示不使用交换机亲和性调度。用户需要根据任务类型进行配置。</p><ul id="ul59831535122714"><li>交换机亲和性调度1.0版本支持<span id="ph1157665817140"><a name="ph1157665817140"></a><a name="ph1157665817140"></a>Atlas 训练系列产品</span>和<span id="ph168598363399"><a name="ph168598363399"></a><a name="ph168598363399"></a><term id="zh-cn_topic_0000001519959665_term57208119917_2"><a name="zh-cn_topic_0000001519959665_term57208119917_2"></a><a name="zh-cn_topic_0000001519959665_term57208119917_2"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph4181625925"><a name="ph4181625925"></a><a name="ph4181625925"></a>PyTorch</span>和<span id="ph61882510210"><a name="ph61882510210"></a><a name="ph61882510210"></a>MindSpore</span>框架。</li><li>交换机亲和性调度2.0版本支持<span id="ph311717506401"><a name="ph311717506401"></a><a name="ph311717506401"></a><term id="zh-cn_topic_0000001519959665_term57208119917_3"><a name="zh-cn_topic_0000001519959665_term57208119917_3"></a><a name="zh-cn_topic_0000001519959665_term57208119917_3"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph619244413568"><a name="ph619244413568"></a><a name="ph619244413568"></a>PyTorch</span>框架。</li><li></li></ul>
 </td>
 </tr>
 <tr id="row9984235132714"><td class="cellrowborder" valign="top" width="27.21%" headers="mcps1.2.4.1.1 "><p id="p18984535132720"><a name="p18984535132720"></a><a name="p18984535132720"></a>accelerator-type</p>
@@ -1029,21 +1018,15 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     </ul>
 </li>
 </ul>
-<p id="p4993163513278"><a name="p4993163513278"></a><a name="p4993163513278"></a><strong id="b099353510277"><a name="b099353510277"></a><a name="b099353510277"></a>静态vNPU调度：</strong></p>
-<p id="p39931635142716"><a name="p39931635142716"></a><a name="p39931635142716"></a>huawei.com/Ascend910-<strong id="b12993153514272"><a name="b12993153514272"></a><a name="b12993153514272"></a><em id="i16993153522711"><a name="i16993153522711"></a><a name="i16993153522711"></a>Y</em></strong>: 1</p>
-<p id="p1399323512713"><a name="p1399323512713"></a><a name="p1399323512713"></a>取值为1。只能使用一个NPU下的vNPU。</p>
-<p id="p119931335142715"><a name="p119931335142715"></a><a name="p119931335142715"></a>如huawei.com/Ascend910-<em id="i20993935152714"><a name="i20993935152714"></a><a name="i20993935152714"></a>6c.1cpu.16g</em>: 1</p>
+
 </td>
-<td class="cellrowborder" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="p4994193520276"><a name="p4994193520276"></a><a name="p4994193520276"></a>至少请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。</p>
-<div class="note" id="note6994535162719"><a name="note6994535162719"></a><a name="note6994535162719"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p169941635192717"><a name="p169941635192717"></a><a name="p169941635192717"></a><strong id="b179941535122710"><a name="b179941535122710"></a><a name="b179941535122710"></a><em id="i1999493582720"><a name="i1999493582720"></a><a name="i1999493582720"></a>Y</em></strong>取值可参考<a href="../virtual_instance/virtual_instance_with_hdk/static_vnpu_scheduling/03_mounting_vnpu_static.md#静态虚拟化">静态虚拟化</a>章节中的虚拟化实例模板与虚拟设备类型关系表的“vNPU类型”列。</p>
-<p id="p17994143511279"><a name="p17994143511279"></a><a name="p17994143511279"></a>以vNPU类型Ascend910-6c.1cpu.16g为例，<strong id="b29941735102716"><a name="b29941735102716"></a><a name="b29941735102716"></a><em id="i11995143582719"><a name="i11995143582719"></a><a name="i11995143582719"></a>Y</em></strong>取值为6c.1cpu.16g，不包括前面的Ascend910。</p>
-<p id="p699519351275"><a name="p699519351275"></a><a name="p699519351275"></a>虚拟化模板的更多信息可以参考<a href="../virtual_instance/virtual_instance_with_hdk/03_virtualization_templates.md">虚拟化模板</a>章节。</p>
-</div></div>
+<td class="cellrowborder" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="p4994193520276"><a name="p4994193520276"></a><a name="p4994193520276"></a>requests请求的NPU类型、数量，请根据实际修改。</p>
+
 </td>
 </tr>
 <tr id="row1899517352272"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p999523582714"><a name="p999523582714"></a><a name="p999523582714"></a>limits</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p203039915181"><a name="p203039915181"></a><a name="p203039915181"></a>限制请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p203039915181"><a name="p203039915181"></a><a name="p203039915181"></a>limits请求的NPU类型、数量，请根据实际修改。</p>
 <p id="p4739213121713"><a name="p4739213121713"></a><a name="p4739213121713"></a>limits需要和requests的芯片名称和数量需保持一致。</p>
 </td>
 </tr>
@@ -1057,7 +1040,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         <div class="notebody">
             <ul>
                 <li>
-                    <p id="p1299613592712"><a name="p1299613592712"></a><a name="p1299613592712"></a>该参数只支持使用<span id="ph699616354271"><a name="ph699616354271"></a><a name="ph699616354271"></a>Volcano</span>调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
+                    <p id="p1299613592712"><a name="p1299613592712"></a><a name="p1299613592712"></a>该参数只支持使用<span id="ph699616354271"><a name="ph699616354271"></a><a name="ph699616354271"></a>Volcano</span>调度器的整卡调度特性。</p>
                 </li>
                 <li><p>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD需配置为metadata.annotations['huawei.com/npu']。</p></li>
             </ul>
@@ -1183,7 +1166,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </div></div>
 </li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p32732087577"><a name="p32732087577"></a><a name="p32732087577"></a>默认值为null，表示不使用交换机亲和性调度。用户需要根据任务类型进行配置。</p><ul id="ul961424647"><li>交换机亲和性调度1.0版本支持<span id="ph63831524184110"><a name="ph63831524184110"></a><a name="ph63831524184110"></a>Atlas 训练系列产品</span>和<span id="ph138318245414"><a name="ph138318245414"></a><a name="ph138318245414"></a><term id="zh-cn_topic_0000001519959665_term57208119917_4"><a name="zh-cn_topic_0000001519959665_term57208119917_4"></a><a name="zh-cn_topic_0000001519959665_term57208119917_4"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph17383182419412"><a name="ph17383182419412"></a><a name="ph17383182419412"></a>PyTorch</span>和<span id="ph1383224134120"><a name="ph1383224134120"></a><a name="ph1383224134120"></a>MindSpore</span>框架。</li><li>交换机亲和性调度2.0版本支持<span id="ph438320243412"><a name="ph438320243412"></a><a name="ph438320243412"></a><term id="zh-cn_topic_0000001519959665_term57208119917_5"><a name="zh-cn_topic_0000001519959665_term57208119917_5"></a><a name="zh-cn_topic_0000001519959665_term57208119917_5"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph134821711841"><a name="ph134821711841"></a><a name="ph134821711841"></a>PyTorch</span>框架。</li><li>只支持整卡进行交换机亲和性调度，不支持静态vNPU进行交换机亲和性调度。</li></ul>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p32732087577"><a name="p32732087577"></a><a name="p32732087577"></a>默认值为null，表示不使用交换机亲和性调度。用户需要根据任务类型进行配置。</p><ul id="ul961424647"><li>交换机亲和性调度1.0版本支持<span id="ph63831524184110"><a name="ph63831524184110"></a><a name="ph63831524184110"></a>Atlas 训练系列产品</span>和<span id="ph138318245414"><a name="ph138318245414"></a><a name="ph138318245414"></a><term id="zh-cn_topic_0000001519959665_term57208119917_4"><a name="zh-cn_topic_0000001519959665_term57208119917_4"></a><a name="zh-cn_topic_0000001519959665_term57208119917_4"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph17383182419412"><a name="ph17383182419412"></a><a name="ph17383182419412"></a>PyTorch</span>和<span id="ph1383224134120"><a name="ph1383224134120"></a><a name="ph1383224134120"></a>MindSpore</span>框架。</li><li>交换机亲和性调度2.0版本支持<span id="ph438320243412"><a name="ph438320243412"></a><a name="ph438320243412"></a><term id="zh-cn_topic_0000001519959665_term57208119917_5"><a name="zh-cn_topic_0000001519959665_term57208119917_5"></a><a name="zh-cn_topic_0000001519959665_term57208119917_5"></a>Atlas A2 训练系列产品</term></span>；支持<span id="ph134821711841"><a name="ph134821711841"></a><a name="ph134821711841"></a>PyTorch</span>框架。</li><li></li></ul>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000001609074269_row15494422131"><td class="cellrowborder" valign="top" width="22.58%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000001609074269_p1449413229314"><a name="zh-cn_topic_0000001609074269_p1449413229314"></a><a name="zh-cn_topic_0000001609074269_p1449413229314"></a>accelerator-type</p>
@@ -1263,21 +1246,15 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     </ul>
 </li>
 </ul>
-<p id="p1498123034911"><a name="p1498123034911"></a><a name="p1498123034911"></a><strong id="b7488133134911"><a name="b7488133134911"></a><a name="b7488133134911"></a>静态vNPU调度：</strong></p>
-<p id="p19104113195111"><a name="p19104113195111"></a><a name="p19104113195111"></a>huawei.com/Ascend910-<strong id="b14105734512"><a name="b14105734512"></a><a name="b14105734512"></a><em id="i17105533512"><a name="i17105533512"></a><a name="i17105533512"></a>Y</em></strong>: 1</p>
-<p id="p1851116142917"><a name="p1851116142917"></a><a name="p1851116142917"></a>取值为1。只能使用一个NPU下的vNPU。</p>
-<p id="p11413153312435"><a name="p11413153312435"></a><a name="p11413153312435"></a>如huawei.com/Ascend910-<em id="i94134332434"><a name="i94134332434"></a><a name="i94134332434"></a>6c.1cpu.16g</em>: 1</p>
+
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p5498134535310"><a name="p5498134535310"></a><a name="p5498134535310"></a>至少请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。</p>
-<div class="note" id="note1648201912419"><a name="note1648201912419"></a><a name="note1648201912419"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p124851954116"><a name="p124851954116"></a><a name="p124851954116"></a><strong id="b1327175513443"><a name="b1327175513443"></a><a name="b1327175513443"></a><em id="i827655184412"><a name="i827655184412"></a><a name="i827655184412"></a>Y</em></strong>取值可参考<a href="../virtual_instance/virtual_instance_with_hdk/static_vnpu_scheduling/03_mounting_vnpu_static.md#静态虚拟化">静态虚拟化</a>章节中的虚拟化实例模板与虚拟设备类型关系表的“vNPU类型”列。</p>
-<p id="p128388914430"><a name="p128388914430"></a><a name="p128388914430"></a>以vNPU类型Ascend910-6c.1cpu.16g为例，<strong id="b1835616104433"><a name="b1835616104433"></a><a name="b1835616104433"></a><em id="i135681014319"><a name="i135681014319"></a><a name="i135681014319"></a>Y</em></strong>取值为6c.1cpu.16g，不包括前面的Ascend910。</p>
-<p id="p2491818192318"><a name="p2491818192318"></a><a name="p2491818192318"></a>虚拟化模板的更多信息可以参考<a href="../virtual_instance/virtual_instance_with_hdk/03_virtualization_templates.md">虚拟化模板</a>章节。</p>
-</div></div>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p5498134535310"><a name="p5498134535310"></a><a name="p5498134535310"></a>requests请求的NPU类型、数量，请根据实际修改。</p>
+
 </td>
 </tr>
 <tr id="row25918533287"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p05117110298"><a name="p05117110298"></a><a name="p05117110298"></a>limits</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p13683185074711"><a name="p13683185074711"></a><a name="p13683185074711"></a>限制请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p13683185074711"><a name="p13683185074711"></a><a name="p13683185074711"></a>limits请求的NPU类型、数量，请根据实际修改。</p>
 <p id="p16683135019479"><a name="p16683135019479"></a><a name="p16683135019479"></a>limits需要和requests的芯片名称和数量需保持一致。</p>
 </td>
 </tr>
@@ -1292,7 +1269,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     <div class="notebody">
         <ul>
             <li>
-                <p id="p66941536154018"><a name="p66941536154018"></a><a name="p66941536154018"></a>该参数只支持使用<span id="ph4213155617124"><a name="ph4213155617124"></a><a name="ph4213155617124"></a>Volcano</span>调度器的整卡调度特性。使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
+                <p id="p66941536154018"><a name="p66941536154018"></a><a name="p66941536154018"></a>该参数只支持使用<span id="ph4213155617124"><a name="ph4213155617124"></a><a name="ph4213155617124"></a>Volcano</span>调度器的整卡调度特性。使用其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
             </li>
             <li><p>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD需配置为metadata.annotations['huawei.com/npu']。</p></li>
         </ul>
@@ -1358,7 +1335,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 #### 配置YAML<a name="ZH-CN_TOPIC_0000002511347101"></a>
 
-本章节指导用户配置整卡调度或静态vNPU调度特性的任务YAML，通过环境变量配置资源信息的用户请参考[通过环境变量配置资源信息场景](#section598118132817)；通过文件配置资源信息的用户请参考[通过文件配置资源信息场景](#section6131855154814)。
+本章节指导用户配置整卡调度特性的任务YAML，通过环境变量配置资源信息的用户请参考[通过环境变量配置资源信息场景](#section598118132817)；通过文件配置资源信息的用户请参考[通过文件配置资源信息场景](#section6131855154814)。
 
 **通过环境变量配置资源信息场景<a name="section598118132817"></a>**
 
@@ -1398,11 +1375,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1924622524915"><a name="p1924622524915"></a><a name="p1924622524915"></a><a href="#li164321720423">在Atlas&nbsp;800T&nbsp;A2&nbsp;训练服务器上创建训练任务（Scheduler挂载芯片的方式）</a></p>
     </td>
     </tr>
-    <tr id="row10833191620281"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1983421672814"><a name="p1983421672814"></a><a name="p1983421672814"></a>静态vNPU调度</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p16834616182815"><a name="p16834616182815"></a><a name="p16834616182815"></a><a href="#li1987314168284">在Atlas 800 训练服务器上创建单机任务</a></p>
-    </td>
-    </tr>
+
     </tbody>
     </table>
 
@@ -1615,59 +1588,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
         修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
 
-    - <a name="li1987314168284"></a>使用**静态vNPU调度**特性，参考本配置。以pytorch\_standalone\_acjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，申请2个AI Core的任务为例，修改示例如下。静态vNPU调度只支持单机训练任务。
 
-        <pre codetype="yaml">
-        apiVersion: mindxdl.gitee.com/v1
-        kind: AscendJob
-        metadata:
-          name: default-test-pytorch
-          labels:
-            framework: pytorch  # 训练框架
-            tor-affinity: "null" #该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不适用。large-model-schema表示大模型任务，normal-schema 普通任务
-        spec:
-          schedulerName: volcano        # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
-          runPolicy:
-            schedulingPolicy:           # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
-              minAvailable: 1   # 任务总副本数
-              queue: default   # 任务所属队列
-          successPolicy: AllWorkers  # 任务成功的前提
-          replicaSpecs:
-            Master:
-              replicas: 1 # 任务副本数
-              restartPolicy: Never
-              template:
-                metadata:
-                  labels:
-                    ring-controller.atlas: ascend-910   # 标识产品类型
-                spec:
-                  nodeSelector:
-                    host-arch: huawei-arm               # 可选值，根据实际情况填写
-                    accelerator-type: module-{xxx}b-8  # 节点类型
-                  containers:
-                  - name: ascend                          # 必须为ascend，不能修改
-                  image: pytorch-test:latest       # 镜像名称
-        ...
-                  env:
-        ...
-                 # 静态vNPU调度暂不支持ASCEND_VISIBLE_DEVICES相关字段，需要删除以下加粗字段
-                  <strong>- name: ASCEND_VISIBLE_DEVICES</strong>
-                    <strong>valueFrom:</strong>
-                      <strong>fieldRef:</strong>
-                        <strong>fieldPath: metadata.annotations['huawei.com/Ascend910']</strong>
-        ...
-                    ports:                 # 分布式训练集合通信端口
-                      - containerPort: 2222
-                        name: ascendjob-port
-                    resources:
-                      limits:
-                        huawei.com/Ascend910-2c: 1# vNPU调度此处数量只能为1
-                      requests:
-                        huawei.com/Ascend910-2c: 1# vNPU调度此处数量只能为1
-                    volumeMounts:
-        ...</pre>
-
-        修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
 
     - <a name="li164321720423"></a>使用整卡调度特性，参考本配置。以mindspore\_multinodes\_acjob\_\{xxx\}b.yaml为例，在一台Atlas 800T A2 训练服务器上以Scheduler挂载芯片的方式执行2\*8卡训练任务，修改示例如下。
 
@@ -1782,8 +1703,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         ...
         ```
 
-    >[!NOTE]
-    >整卡调度或静态vNPU调度特性配置YAML的操作只在步骤1中有区别，整卡调度和静态vNPU调度特性在步骤1之后的操作相同。
+
 
 2. <a name="li118885168281"></a>若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu”和“memory”参数和对应的参数值，具体数值请根据实际情况配置。
 
@@ -1910,11 +1830,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p133113557220"><a name="p133113557220"></a><a name="p133113557220"></a><a href="#li1487005712813">在Atlas 800T A2 训练服务器上创建分布式任务</a></p>
     </td>
     </tr>
-    <tr id="row1140175742214"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p24055715225"><a name="p24055715225"></a><a name="p24055715225"></a>静态vNPU调度</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1140155720221"><a name="p1140155720221"></a><a name="p1140155720221"></a><a href="#li1328115394814">在Atlas 800 训练服务器上创建单机任务</a></p>
-    </td>
-    </tr>
+
     </tbody>
     </table>
 
@@ -2110,59 +2026,6 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         >[!NOTE]
         >其余示例可参考[表5](#table62591594016)和[表6](#table21811158146)，以及YAML对应的参数说明[表2 YAML参数说明](#zh-cn_topic_0000001609074269_table1565872494511)进行适配修改。修改完成后执行[步骤2](#li832632419711)，继续配置YAML的其他字段。
 
-    - <a name="li1328115394814"></a>使用**静态vNPU调度**特性，参考本配置。以a800\_pytorch\_vcjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，申请2个AI Core的任务为例，修改示例如下。静态vNPU调度特性只支持**单机训练**任务。
-
-        <pre codetype="yaml">
-        apiVersion: v1
-        kind: ConfigMap
-        metadata:
-          name: rings-config-mindx-dls-test     # rings-config-后的名字需要与任务名一致
-        ...
-          labels:
-            ring-controller.atlas: ascend-910   # 产品类型
-        ...
-        ---
-        apiVersion: batch.volcano.sh/v1alpha1   # 不可修改，必须使用Volcano的API
-        kind: Job                               #目前只支持Job类型
-        metadata:
-          name: mindx-dls-test                  # 任务名，可自定义
-        ...
-        spec:
-          minAvailable: 1                  # 如果使用静态vNPU调度，此处取值需为1
-        ...
-          - name: "default-test"
-              replicas: 1                  # 如果使用静态vNPU调度，此处取值需为1
-              template:
-                metadata:
-        ...
-                spec:
-        ...
-                containers:
-                - image: pytorch-test:latest  # 训练镜像
-        ...
-                  env:
-        ...
-                 # 静态vNPU调度暂不支持ASCEND_VISIBLE_DEVICES相关字段，需要删除以下加粗字段
-                  <strong>- name: ASCEND_VISIBLE_DEVICES</strong>
-                    <strong>valueFrom:</strong>
-                      <strong>fieldRef:</strong>
-                        <strong>fieldPath: metadata.annotations['huawei.com/Ascend910']</strong>
-        ...
-                    resources:
-                      requests:
-                        huawei.com/Ascend910-2c: 1          # 如果使用静态vNPU调度，此处数量只能为1
-                      limits:
-                        huawei.com/Ascend910-2c: 1          # 如果使用静态vNPU调度此处数量只能为1
-        ...
-                    nodeSelector:
-                      host-arch: huawei-arm               # 可选值，根据实际情况填写
-                      accelerator-type: module    # 调度到Atlas 800 训练服务器上
-        ...</pre>
-
-        修改完成后执行[步骤2](#li832632419711)，配置YAML的其他字段。
-
-    >[!NOTE]
-    >整卡调度或静态vNPU调度特性配置YAML的操作只在步骤1中有区别，整卡调度和静态vNPU调度特性在步骤1之后的操作相同。
 
 2. <a name="li832632419711"></a>若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu”和“memory”参数和对应的参数值，具体数值请根据实际情况配置。
 
@@ -2361,28 +2224,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         >[!NOTE]
         >**Allocated resources**的字段huawei.com/Ascend910的值为1，表明训练使用了一个NPU。
 
-    - 使用**静态vNPU调度**特性，单机单芯片训练任务回显示例。
 
-        ```ColdFusion
-        Name:               ubuntu
-        Roles:              master,worker
-        Labels:             accelerator=huawei-Ascend910
-        ...
-        Allocated resources:
-          (Total limits may be over 100 percent, i.e., overcommitted.)
-          Resource              Requests        Limits
-          --------              --------        ------
-          cpu                   37250m (19%)    37500m (19%)
-          memory                117536Mi (15%)  119236Mi (15%)
-          ephemeral-storage     0 (0%)          0 (0%)
-          huawei.com/Ascend910-2c  1               1
-        Events:                 <none>
-        ```
-
-        >[!NOTE]
-        >**Allocated resources**的字段**huawei.com/Ascend910-2c**的值为1，表明训练使用了一个包含了2个AI Core的vNPU。
-
-    - 两个训练节点，执行2\*8芯片分布式训练任务，查看其中一个节点示例。**静态vNPU调度**不支持分布式训练任务。
 
         ```ColdFusion
         Name:               ubuntu
@@ -2464,7 +2306,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         Status:       Running
         ```
 
-### 查看整卡调度或静态vNPU调度结果<a name="ZH-CN_TOPIC_0000002479387140"></a>
+### 查看整卡调度结果<a name="ZH-CN_TOPIC_0000002479387140"></a>
 
 **PyTorch<a name="zh-cn_topic_0000001609474257_section15657195014514"></a>**
 
