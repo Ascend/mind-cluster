@@ -25,10 +25,13 @@ from ascend_fd.pkg.parse.knowledge_graph.parser.amct_log_parser import AMCTLogPa
 from ascend_fd.pkg.parse.knowledge_graph.parser.lcne_parser import LCNEParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.mindio_parser import MindIOLogParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.noded_log_parser import NodeDLogParser
-from ascend_fd.pkg.parse.knowledge_graph.parser.npu_device_parse import NpuOsLogParser, NpuDeviceLogParser, \
-    NpuHistoryLogParser
+from ascend_fd.pkg.parse.knowledge_graph.parser.npu_device_parse import (
+    NpuOsLogParser,
+    NpuDeviceLogParser,
+    NpuHistoryLogParser,
+)
 from ascend_fd.pkg.parse.knowledge_graph.parser.train_log_parser import TrainLogParser
-from ascend_fd.pkg.parse.knowledge_graph.parser.cann_log_parser import CANNPlogParser
+from ascend_fd.pkg.parse.knowledge_graph.parser.cann_log_parser import CANNPlogParser, CANNLogParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.host_os_parser import HostMsgParser, HostVmCoreParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.npu_info_parser import NpuInfoParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.device_plugin_parser import DevicePluginParser
@@ -72,37 +75,37 @@ class KgParseTestCase(unittest.TestCase):
         self.npu_device_code = "Comp_Network_Custom_11"
         self.mindio_code = "AISW_MindIO_TTP_01"
         self.train_call_faults = {
-            "worker-0": {
-                "AISW_SEG_InitException": 7,
-                "AISW_SEG_UnknownError": 10
-            },
+            "worker-0": {"AISW_SEG_InitException": 7, "AISW_SEG_UnknownError": 10},
             "worker-1": {
                 "AISW_TRACEBACK_RuntimeError": 6,
                 "AISW_SEG_UnknownError": 6,
-                "AISW_TRACEBACK_UnknownError": 7
+                "AISW_TRACEBACK_UnknownError": 7,
             },
             "worker-2": {
                 "AISW_TRACEBACK_DataError": 11,
                 "AISW_TRACEBACK_InitError": 11,
-                "AISW_TRACEBACK_UnknownError": 12
+                "AISW_TRACEBACK_UnknownError": 12,
             },
             "worker-3": {
                 "AISW_TRACEBACK_ray.exceptions.RayTaskError": 6,
                 "AISW_TRACEBACK_UnknownError": 6,
-                "AISW_TRACEBACK_TimeException": 7
-            }
+                "AISW_TRACEBACK_TimeException": 7,
+            },
         }
         self.params = {
             "default_conf": ParseRegexMap([KNOWLEDGE_GRAPH_CONF]).get_parse_regex(),
-            "user_conf": {**ParseRegexMap([DEFAULT_USER_CONF]).get_parse_regex(),
-                          **ParseRegexMap([TEST_USER_CONF]).get_parse_regex()},
-            "start_time": "1999-10-01 03:40:50.000000", "end_time": "2999-10-01 03:40:50.000000"
+            "user_conf": {
+                **ParseRegexMap([DEFAULT_USER_CONF]).get_parse_regex(),
+                **ParseRegexMap([TEST_USER_CONF]).get_parse_regex(),
+            },
+            "start_time": "1999-10-01 03:40:50.000000",
+            "end_time": "2999-10-01 03:40:50.000000",
         }
         self.host_os_parser = HostMsgParser(self.params)
         self.host_os_input_file_list = [
             os.path.join(TESTCASE_KG_PARSE_INPUT, "messages"),
             os.path.join(TESTCASE_KG_PARSE_INPUT, "messages-2"),
-            os.path.join(TESTCASE_KG_PARSE_INPUT, "messages-3")
+            os.path.join(TESTCASE_KG_PARSE_INPUT, "messages-3"),
         ]
 
         self.vmcore_dmesg_parser = HostVmCoreParser(self.params)
@@ -118,13 +121,14 @@ class KgParseTestCase(unittest.TestCase):
 
         self.cann_log_parser = CANNPlogParser(self.params)
         self.cann_input_file_list = (
-            "test_pid", [os.path.join(TESTCASE_KG_PARSE_INPUT, "plog-10972_20230131024824126.log")]
+            "test_pid",
+            [os.path.join(TESTCASE_KG_PARSE_INPUT, "plog-10972_20230131024824126.log")],
         )
 
         self.npu_info_parser = NpuInfoParser(self.params)
         self.npu_info_file_list = [
             os.path.join(TESTCASE_KG_PARSE_INPUT, "npu_info_before.txt"),
-            os.path.join(TESTCASE_KG_PARSE_INPUT, "npu_info_after.txt")
+            os.path.join(TESTCASE_KG_PARSE_INPUT, "npu_info_after.txt"),
         ]
         self.npu_os_parser = NpuOsLogParser(self.params)
         self.npu_os_input_file_dict = {
@@ -133,18 +137,21 @@ class KgParseTestCase(unittest.TestCase):
         self.npu_device_parser = NpuDeviceLogParser(self.params)
         self.npu_device_input_file_dict = {
             TESTCASE_KG_PARSE_INPUT: [
-                os.path.join(TESTCASE_KG_PARSE_INPUT, "device-1", "device-1_20241204162140159.log")]
+                os.path.join(TESTCASE_KG_PARSE_INPUT, "device-1", "device-1_20241204162140159.log")
+            ]
         }
         self.npu_history_parser = NpuHistoryLogParser(self.params)
         self.npu_history_input_file_dict = {
             TESTCASE_KG_PARSE_INPUT: [
-                os.path.join(TESTCASE_KG_PARSE_INPUT, "hisi_logs", "device-1", "20241204162140-590391000", "log",
-                             "kernel.log")]
+                os.path.join(
+                    TESTCASE_KG_PARSE_INPUT, "hisi_logs", "device-1", "20241204162140-590391000", "log", "kernel.log"
+                )
+            ]
         }
         self.device_plugin_parser = DevicePluginParser(self.params)
         self.device_plugin_file_list = [
             os.path.join(TESTCASE_KG_PARSE_INPUT, "dl_log", "devicePlugin", "devicePlugin.log"),
-            os.path.join(TESTCASE_KG_PARSE_INPUT, "dl_log", "devicePlugin", "devicePlugin-2024-01-10T03-30-45.197.log")
+            os.path.join(TESTCASE_KG_PARSE_INPUT, "dl_log", "devicePlugin", "devicePlugin-2024-01-10T03-30-45.197.log"),
         ]
         self.volcano_scheduler_parser = VolcanoSchedulerParser(self.params)
         self.volcano_scheduler_file_list = [
@@ -161,7 +168,7 @@ class KgParseTestCase(unittest.TestCase):
         self.npu_exporter_parser = NpuExporterParser(self.params)
         self.npu_exporter_file_list = [
             os.path.join(TESTCASE_KG_PARSE_INPUT, "dl_log", "npu-exporter", "npu-exporter.log"),
-            os.path.join(TESTCASE_KG_PARSE_INPUT, "dl_log", "npu-exporter", "npu-exporter-2023-12-22T22-40-17.760.log")
+            os.path.join(TESTCASE_KG_PARSE_INPUT, "dl_log", "npu-exporter", "npu-exporter-2023-12-22T22-40-17.760.log"),
         ]
         self.mindie_ms_parser = MindieParser(self.params)
         self.mindie_log_list = [
@@ -170,17 +177,13 @@ class KgParseTestCase(unittest.TestCase):
         self.noded_log_parser = NodeDLogParser(self.params)
         self.noded_log_list = [
             os.path.join(TESTCASE_KG_PARSE_INPUT, "dl_log", "noded", "noded.log"),
-            os.path.join(TESTCASE_KG_PARSE_INPUT, "dl_log", "noded", "noded-2999-10-01T03-39-17.760.log")
+            os.path.join(TESTCASE_KG_PARSE_INPUT, "dl_log", "noded", "noded-2999-10-01T03-39-17.760.log"),
         ]
         self.noded_log_dict = {"noded_log_path": self.noded_log_list}
         self.mindio_log_parser = MindIOLogParser(self.params)
-        self.mindio_log_list = [
-            os.path.join(TESTCASE_KG_PARSE_INPUT, "ttp_log", "ttp_log.log.1")
-        ]
+        self.mindio_log_list = [os.path.join(TESTCASE_KG_PARSE_INPUT, "ttp_log", "ttp_log.log.1")]
         self.amct_log_parser = AMCTLogParser(self.params)
-        self.amct_log_dict = {
-            "amct_path": [os.path.join(TESTCASE_KG_PARSE_INPUT, "amct_log/amct_onnx.log")]
-        }
+        self.amct_log_dict = {"amct_path": [os.path.join(TESTCASE_KG_PARSE_INPUT, "amct_log/amct_onnx.log")]}
 
     def test_train_call_parse_func(self):
         worker_num = 4
@@ -192,10 +195,10 @@ class KgParseTestCase(unittest.TestCase):
             assert_res = {}
             for event in event_result_list:
                 event_code = event.get(EVENT_CODE, "")
-                assert_res.update({
-                    event_code: len(event.get("key_info", "").split("\n"))
-                })
-            self.assertEqual(sorted(self.train_call_faults.get(f"worker-{num}", {}).items()), sorted(assert_res.items()))
+                assert_res.update({event_code: len(event.get("key_info", "").split("\n"))})
+            self.assertEqual(
+                sorted(self.train_call_faults.get(f"worker-{num}", {}).items()), sorted(assert_res.items())
+            )
 
     def test_train_log_parse_func(self):
         parse_ctx = KGParseCtx(parse_file_path=KGParseFilePath(train_log_path=self.train_input_file_list))
@@ -221,8 +224,7 @@ class KgParseTestCase(unittest.TestCase):
         self.assertIn("Comp_OS_Kernel_FS_02", event_codes)
 
     def test_vmcore_dmesg_parse_func(self):
-        event_result_list = self.vmcore_dmesg_parser._parse_chunk(
-            self.vmcore_dmesg_input_file_list[0], 0, 1024 * 1024)
+        event_result_list = self.vmcore_dmesg_parser._parse_chunk(self.vmcore_dmesg_input_file_list[0], 0, 1024 * 1024)
         self.assertEqual(self.os_code, event_result_list[0][EVENT_CODE])
 
     def test_cann_log_parse_func(self):
@@ -235,27 +237,28 @@ class KgParseTestCase(unittest.TestCase):
     def test_npu_info_parse_func(self):
         parse_ctx = KGParseCtx(parse_file_path=KGParseFilePath(npu_info_path=self.npu_info_file_list))
         event_result_list, _ = self.npu_info_parser.parse(parse_ctx, "test_task_id")
-        self.assertTrue("Comp_Network_Custom_01", event_result_list[0][EVENT_CODE])
-        self.assertTrue("0x8C03A000", event_result_list[1][EVENT_CODE])
-        self.assertTrue("0x8C084E00", event_result_list[2][EVENT_CODE])
-        self.assertTrue("0xA4025021", event_result_list[3][EVENT_CODE])
-        self.assertTrue("AISW_CANN_DRV_Custom_01", event_result_list[4][EVENT_CODE])
-        self.assertTrue("Comp_Network_Custom_07", event_result_list[5][EVENT_CODE])
-        self.assertTrue("Comp_NPU_DRV_Custom_01", event_result_list[6][EVENT_CODE])
-        self.assertTrue("Comp_NPU_DRV_Custom_02", event_result_list[7][EVENT_CODE])
-        self.assertTrue("Comp_Network_Custom_05", event_result_list[8][EVENT_CODE])
-        self.assertTrue("Comp_Network_Custom_08", event_result_list[9][EVENT_CODE])
-        self.assertTrue("Comp_Network_Custom_09", event_result_list[10][EVENT_CODE])
-        self.assertTrue("Comp_Network_Custom_10", event_result_list[11][EVENT_CODE])
-        self.assertTrue("Comp_Network_Custom_02", event_result_list[12][EVENT_CODE])
-        self.assertTrue("Comp_Network_Custom_03", event_result_list[13][EVENT_CODE])
-        self.assertTrue("23.0.7", event_result_list[14]["driver_version"])
-        self.assertTrue("7.1.0.11.220", event_result_list[14]["firm_version"])
-        self.assertTrue("7.0.T10", event_result_list[14]["cann_version"])
-        self.assertTrue("8.0.RC3", event_result_list[14]["nnae_version"])
-        self.assertTrue("1.11.0", event_result_list[14]["pytorch_version"])
-        self.assertTrue("2.1.0.post8.dev20241009", event_result_list[14]["torch_npu_version"])
-        self.assertTrue("2.3.0", event_result_list[14]["mindspore_version"])
+        self.assertEqual("Comp_Network_Custom_01", event_result_list[0][EVENT_CODE])
+        self.assertEqual(
+            ["0x8C03A000", "0x8C084E00", "0xA4025021"],
+            sorted(e[EVENT_CODE] for e in event_result_list[1:4]),
+        )
+        self.assertEqual("AISW_CANN_DRV_Custom_01", event_result_list[4][EVENT_CODE])
+        self.assertEqual("Comp_Network_Custom_07", event_result_list[5][EVENT_CODE])
+        self.assertEqual("Comp_NPU_DRV_Custom_01", event_result_list[6][EVENT_CODE])
+        self.assertEqual("Comp_NPU_DRV_Custom_02", event_result_list[7][EVENT_CODE])
+        self.assertEqual("Comp_Network_Custom_05", event_result_list[8][EVENT_CODE])
+        self.assertEqual("Comp_Network_Custom_08", event_result_list[9][EVENT_CODE])
+        self.assertEqual("Comp_Network_Custom_09", event_result_list[10][EVENT_CODE])
+        self.assertEqual("Comp_Network_Custom_10", event_result_list[11][EVENT_CODE])
+        self.assertEqual("Comp_Network_Custom_02", event_result_list[12][EVENT_CODE])
+        self.assertEqual("Comp_Network_Custom_03", event_result_list[13][EVENT_CODE])
+        self.assertEqual("23.0.7", event_result_list[14]["driver_version"])
+        self.assertEqual("7.1.0.11.220", event_result_list[14]["firm_version"])
+        self.assertEqual("7.0.T10", event_result_list[14]["cann_version"])
+        self.assertEqual("8.0.RC3", event_result_list[14]["nnae_version"])
+        self.assertEqual("1.11.0", event_result_list[14]["pytorch_version"])
+        self.assertEqual("2.1.0.post8.dev20241009", event_result_list[14]["torch_npu_version"])
+        self.assertEqual("2.3.0", event_result_list[14]["mindspore_version"])
 
     def test_npu_os_parse_func(self):
         parse_ctx = KGParseCtx(parse_file_path=KGParseFilePath(slog_path=self.npu_os_input_file_dict))
@@ -285,8 +288,11 @@ class KgParseTestCase(unittest.TestCase):
         self.assertEqual("Test_NPU_History_Code_1", event_result_list[0][EVENT_CODE])
 
     def test_npu_0x40f84e00(self):
-        parse_ctx = KGParseCtx(parse_file_path=KGParseFilePath(
-            host_log_path=[os.path.join(TESTCASE_KG_PARSE_INPUT, "messages_0x40F84E00")]))
+        parse_ctx = KGParseCtx(
+            parse_file_path=KGParseFilePath(
+                host_log_path=[os.path.join(TESTCASE_KG_PARSE_INPUT, "messages_0x40F84E00")]
+            )
+        )
         event_list, _ = self.host_os_parser.parse(parse_ctx, "test_task_id")
         for event in event_list:
             self.assertEqual("0x40F84E00", event[EVENT_CODE])
@@ -300,17 +306,18 @@ class KgParseTestCase(unittest.TestCase):
     def test_mindie_ms_parse_func(self):
         parse_ctx = KGParseCtx(parse_file_path=KGParseFilePath(mindie_log_path=self.mindie_log_list))
         files_parse_info, _ = self.mindie_ms_parser.parse(parse_ctx, "test_task_id")
-        self.assertTrue("AISW_MindIE_Ms_HttpServer_01", files_parse_info.event_list[0][EVENT_CODE])
+        self.assertEqual("AISW_MindIE_MS_HttpServer_01", files_parse_info.event_list[0][EVENT_CODE])
 
     def test_mindie_ms_parse_file(self):
         single_file_parse_info = self.mindie_ms_parser._parse_file(self.mindie_log_list[0])
-        self.assertTrue("AISW_MindIE_Ms_HttpServer_01", single_file_parse_info.event_list[0][EVENT_CODE])
+        self.assertEqual("AISW_MindIE_MS_HttpServer_01", single_file_parse_info.event_list[0][EVENT_CODE])
         self.assertEqual("xxx.xx.xx.x", single_file_parse_info.device_info.device_ip)
         self.assertEqual("6", single_file_parse_info.device_info.phy_device_id)
         self.assertEqual("6", single_file_parse_info.device_info.logic_device_id)
         self.assertEqual("6", single_file_parse_info.device_info.device_id)
         self.assertEqual("11", single_file_parse_info.device_info.pid)
-        self.assertTrue("AISW_MindIE_ERRCODE_Common_MIE1AE66666B", single_file_parse_info.event_list[0][EVENT_CODE])
+        event_codes = {event[EVENT_CODE] for event in single_file_parse_info.event_list}
+        self.assertIn("AISW_MindIE_ERRCODE_Common_MIE03E400008", event_codes)
 
     def test_device_plugin_parse_func(self):
         parse_ctx = KGParseCtx(parse_file_path=KGParseFilePath(device_plugin_path=self.device_plugin_file_list))
@@ -323,28 +330,29 @@ class KgParseTestCase(unittest.TestCase):
     def test_volcano_scheduler_parse_func(self):
         parse_ctx = KGParseCtx(parse_file_path=KGParseFilePath(volcano_scheduler_path=self.volcano_scheduler_file_list))
         event_result_list, _ = self.volcano_scheduler_parser.parse(parse_ctx, "test_task_id")
-        self.assertTrue("AISW_MindX_Volcano_03", event_result_list[0][EVENT_CODE])
+        self.assertEqual("AISW_MindX_Volcano_03", event_result_list[0][EVENT_CODE])
 
     def test_volcano_controller_parse_func(self):
-        parse_ctx = KGParseCtx(parse_file_path=KGParseFilePath(
-            volcano_controller_path=self.volcano_controller_file_list))
+        parse_ctx = KGParseCtx(
+            parse_file_path=KGParseFilePath(volcano_controller_path=self.volcano_controller_file_list)
+        )
         event_result_list, _ = self.volcano_controller_parser.parse(parse_ctx, "test_task_id")
-        self.assertTrue("AISW_MindX_Volcano_10", event_result_list[0][EVENT_CODE])
+        self.assertEqual("AISW_MindX_Volcano_10", event_result_list[0][EVENT_CODE])
 
     def test_docker_runtime_parse_func(self):
         parse_ctx = KGParseCtx(parse_file_path=KGParseFilePath(docker_runtime_path=self.docker_runtime_file_list))
         event_result_list, _ = self.docker_runtime_parser.parse(parse_ctx, "test_task_id")
-        self.assertTrue("AISW_MindX_Docker_Runtime_02", event_result_list[0][EVENT_CODE])
+        self.assertEqual("AISW_MindX_Docker_Runtime_02", event_result_list[0][EVENT_CODE])
 
     def test_dl_log_parse_file(self):
         event_result_list = self.docker_runtime_parser._parse_file(self.docker_runtime_file_list[0])
-        self.assertTrue("AISW_MindX_Docker_Runtime_02", event_result_list[0][EVENT_CODE])
+        self.assertEqual("AISW_MindX_Docker_Runtime_02", event_result_list[0][EVENT_CODE])
 
     def test_npu_exporter_parse_func(self):
         parse_ctx = KGParseCtx(parse_file_path=KGParseFilePath(npu_exporter_path=self.npu_exporter_file_list))
         event_result_list, _ = self.npu_exporter_parser.parse(parse_ctx, "test_task_id")
-        self.assertTrue("AISW_MindX_Npu_Exporter_03", event_result_list[0][EVENT_CODE])
-        self.assertTrue("AISW_MindX_Npu_Exporter_01", event_result_list[1][EVENT_CODE])
+        self.assertEqual("AISW_MindX_Npu_Exporter_03", event_result_list[0][EVENT_CODE])
+        self.assertEqual("AISW_MindX_Npu_Exporter_01", event_result_list[1][EVENT_CODE])
 
     def test_noded_log_parse_func(self):
         parse_ctx = KGParseCtx(parse_file_path=KGParseFilePath(noded_log_path=self.noded_log_list))
@@ -369,8 +377,9 @@ class KgParseTestCase(unittest.TestCase):
         self.assertEqual(self.mindio_code, event_list[0][EVENT_CODE])
 
     def test_amct_log_parse_func(self):
-        parse_ctx = KGParseCtx(parse_file_path=KGParseFilePath(
-            amct_path=[os.path.join(TESTCASE_KG_PARSE_INPUT, "amct_log/amct_onnx.log")]))
+        parse_ctx = KGParseCtx(
+            parse_file_path=KGParseFilePath(amct_path=[os.path.join(TESTCASE_KG_PARSE_INPUT, "amct_log/amct_onnx.log")])
+        )
         event_list, _ = self.amct_log_parser.parse(parse_ctx, "test_task_id")
         self.assertEqual("AISW_CANN_AMCT_ALL_001", event_list[0][EVENT_CODE])
 
@@ -395,3 +404,103 @@ class KgParseTestCase(unittest.TestCase):
     def tearDown(self) -> None:
         if os.path.exists(self.crash_dir):
             shutil.rmtree(self.crash_dir)
+
+
+class TestGetDeviceIdFromLine(unittest.TestCase):
+    def test_a5_root_info_detect(self):
+        line = (
+            "[RootInfoDetect] nRanks[16], rank[15] entry flat topo detect, "
+            "rootinfo: host ip[192.168.0.1] port[30000] netMode[HrtNetworkMode::HDC] "
+            "identifier[test_id], deviceLogicId[7], devPhyId[15]"
+        )
+        logic_id, phy_id = CANNLogParser.get_device_id_from_line(line)
+        self.assertEqual(logic_id, "7")
+        self.assertEqual(phy_id, "15")
+
+    def test_a5_root_info_detect_negative_one(self):
+        line = (
+            "[RootInfoDetect] nRanks[8], rank[0] entry flat topo detect, "
+            "rootinfo: host ip[10.0.0.1] port[20000] netMode[HrtNetworkMode::HDC] "
+            "identifier[test_id], deviceLogicId[-1], devPhyId[-1]"
+        )
+        logic_id, phy_id = CANNLogParser.get_device_id_from_line(line)
+        self.assertEqual(logic_id, "")
+        self.assertEqual(phy_id, "")
+
+    def test_entry_root_info(self):
+        line = (
+            "Entry-HcclCommInitRootInfo:ranks[8], rank[3], rootinfo: host ip[10.0.0.1] "
+            "port[20000] nicDeploy[test] identifier[test_id], deviceLogicId[5]"
+        )
+        logic_id, phy_id = CANNLogParser.get_device_id_from_line(line)
+        self.assertEqual(logic_id, "5")
+        self.assertEqual(phy_id, "")
+
+    def test_entry_root_info_negative_one(self):
+        line = (
+            "Entry-HcclCommInitRootInfo:ranks[8], rank[3], rootinfo: host ip[10.0.0.1] "
+            "port[20000] nicDeploy[test] identifier[test_id], deviceLogicId[-1]"
+        )
+        logic_id, phy_id = CANNLogParser.get_device_id_from_line(line)
+        self.assertEqual(logic_id, "")
+        self.assertEqual(phy_id, "")
+
+    def test_common_init_info(self):
+        line = (
+            "rankNum[4], rank[2], clusterInfo: host ip[10.0.0.1] port[20000] "
+            "identifier[test_id], device[3], logicDevId[3], phydevId[9]"
+        )
+        logic_id, phy_id = CANNLogParser.get_device_id_from_line(line)
+        self.assertEqual(logic_id, "3")
+        self.assertEqual(phy_id, "9")
+
+    def test_common_init_info_old_device_precedence(self):
+        line = (
+            "rankNum[4], rank[2], clusterInfo: host ip[10.0.0.1] port[20000] "
+            "identifier[test_id], device[3], logicDevId[5], phydevId[9]"
+        )
+        logic_id, phy_id = CANNLogParser.get_device_id_from_line(line)
+        self.assertEqual(logic_id, "3")
+        self.assertEqual(phy_id, "9")
+
+    def test_common_init_info_negative_one(self):
+        line = (
+            "rankNum[4], rank[2], clusterInfo: host ip[10.0.0.1] port[20000] "
+            "identifier[test_id], device[-1], logicDevId[-1], phydevId[-1]"
+        )
+        logic_id, phy_id = CANNLogParser.get_device_id_from_line(line)
+        self.assertEqual(logic_id, "")
+        self.assertEqual(phy_id, "")
+
+    def test_common_init_info_only_logic_dev_id(self):
+        line = (
+            "rankNum[4], rank[2], clusterInfo: host ip[10.0.0.1] port[20000] "
+            "identifier[test_id], logicDevId[5], phydevId[9]"
+        )
+        logic_id, phy_id = CANNLogParser.get_device_id_from_line(line)
+        self.assertEqual(logic_id, "5")
+        self.assertEqual(phy_id, "9")
+
+    def test_total_rank_info(self):
+        line = (
+            "totalRanks[16], serverId[10.0.0.1], rank[8], "
+            "clusterInfo: rootinfo host ip[10.0.0.1] identifier[test_id], logicDevId[3]"
+        )
+        logic_id, phy_id = CANNLogParser.get_device_id_from_line(line)
+        self.assertEqual(logic_id, "3")
+        self.assertEqual(phy_id, "")
+
+    def test_total_rank_info_negative_one_no_filter(self):
+        line = (
+            "totalRanks[16], serverId[10.0.0.1], rank[8], "
+            "clusterInfo: rootinfo host ip[10.0.0.1] identifier[test_id], logicDevId[-1]"
+        )
+        logic_id, phy_id = CANNLogParser.get_device_id_from_line(line)
+        self.assertEqual(logic_id, "-1")
+        self.assertEqual(phy_id, "")
+
+    def test_non_matching_line(self):
+        line = "[INFO] Some random log line without any device info keywords"
+        logic_id, phy_id = CANNLogParser.get_device_id_from_line(line)
+        self.assertEqual(logic_id, "")
+        self.assertEqual(phy_id, "")

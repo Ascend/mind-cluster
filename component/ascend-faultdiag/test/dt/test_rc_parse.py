@@ -17,14 +17,20 @@
 import unittest
 import os
 
-from ascend_fd.pkg.parse.root_cluster.parser import PidFileParser
+from ascend_fd.pkg.parse.root_cluster.parser import PidFileParser, BaseInfoParser
+from ascend_fd.pkg.parse.blacklist.blacklist_op import BlackListManager
 
 TEST_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 TESTCASE_KG_PARSE_INPUT = os.path.join(TEST_DIR, "st_module_testcase", "rc_parse")
 
+A5_ROOT_INFO_DETECT_LINE = (
+    "[RootInfoDetect] nRanks[16], rank[15] entry flat topo detect, "
+    "rootinfo: host ip[192.168.0.1] port[30000] netMode[HrtNetworkMode::HDC] "
+    "identifier[192.168.0.1_30000_0_947147113161045], deviceLogicId[7], devPhyId[15]"
+)
+
 
 class RcParseTestCase(unittest.TestCase):
-
     def test_base_info_parser_func(self):
         pid_file_parser = PidFileParser("test_pid", {})
         pid_file_parser.parse_log(os.path.join(TESTCASE_KG_PARSE_INPUT, "example.log"))
@@ -49,3 +55,112 @@ class RcParseTestCase(unittest.TestCase):
                 self.assertEqual("3", event_dict.get("remote_rank"))
                 self.assertEqual("AllReduce_10.136.181.175%enp179s0f0_60000_0_1712529353144389", event_dict.get("tag"))
                 self.assertEqual("3", event_dict.get("index"))
+
+
+class TestA5RootInfoDetect(unittest.TestCase):
+    def _create_parser(self, device_info_map=None):
+        return BaseInfoParser({}, BlackListManager(), device_info_map)
+
+    def test_parse_full_line(self):
+        parser = self._create_parser()
+        parser.parse_line(A5_ROOT_INFO_DETECT_LINE)
+
+        self.assertEqual(parser.logic_device_id, "7")
+        self.assertEqual(parser.phy_device_id, "15")
+        self.assertEqual(parser.device_ip, "192.168.0.1")
+        self.assertIn("192.168.0.1_30000_0_947147113161045", parser.rank_map)
+        self.assertEqual(parser.rank_map["192.168.0.1_30000_0_947147113161045"]["rank_id"], "15")
+        self.assertEqual(parser.rank_map["192.168.0.1_30000_0_947147113161045"]["rank_num"], 16)
+
+    def test_parse_line_wildcard_identifier(self):
+        line = (
+            "[RootInfoDetect] nRanks[8], rank[0] entry flat topo detect, "
+            "rootinfo: host ip[10.0.0.1] port[20000] netMode[HrtNetworkMode::HDC] "
+            "identifier[*], deviceLogicId[3], devPhyId[9]"
+        )
+        parser = self._create_parser()
+        parser.parse_line(line)
+
+        self.assertIn("*", parser.rank_map)
+        self.assertEqual(parser.rank_map["*"]["rank_id"], "0")
+        self.assertEqual(parser.rank_map["*"]["rank_num"], 8)
+        self.assertEqual(parser.logic_device_id, "3")
+        self.assertEqual(parser.phy_device_id, "9")
+
+    def test_parse_line_invalid_logic_id(self):
+        line = (
+            "[RootInfoDetect] nRanks[4], rank[2] entry flat topo detect, "
+            "rootinfo: host ip[10.0.0.2] port[30000] netMode[HrtNetworkMode::HDC] "
+            "identifier[test_id], deviceLogicId[-1], devPhyId[5]"
+        )
+        parser = self._create_parser()
+        parser.parse_line(line)
+
+        self.assertEqual(parser.logic_device_id, "")
+        self.assertEqual(parser.phy_device_id, "5")
+
+    def test_parse_line_invalid_host_ip(self):
+        line = (
+            "[RootInfoDetect] nRanks[4], rank[2] entry flat topo detect, "
+            "rootinfo: host ip[0.0.0.0] port[30000] netMode[HrtNetworkMode::HDC] "
+            "identifier[test_id], deviceLogicId[3], devPhyId[5]"
+        )
+        parser = self._create_parser()
+        parser.parse_line(line)
+
+        self.assertEqual(parser.device_ip, "")
+
+    def test_parse_line_rank_num_not_integer(self):
+        line = (
+            "[RootInfoDetect] nRanks[abc], rank[2] entry flat topo detect, "
+            "rootinfo: host ip[10.0.0.2] port[30000] netMode[HrtNetworkMode::HDC] "
+            "identifier[test_id], deviceLogicId[3], devPhyId[5]"
+        )
+        parser = self._create_parser()
+        parser.parse_line(line)
+
+        self.assertEqual(parser.logic_device_id, "3")
+        self.assertEqual(parser.rank_map["test_id"]["rank_num"], -1)
+
+
+class TestResolvePhyDeviceId(unittest.TestCase):
+    def _create_parser(self, device_info_map=None):
+        return BaseInfoParser({}, BlackListManager(), device_info_map)
+
+    def test_phy_already_set_not_overridden(self):
+        parser = self._create_parser()
+        parser.phy_device_id = "15"
+        parser.logic_device_id = "7"
+        parser._resolve_phy_device_id()
+
+        self.assertEqual(parser.phy_device_id, "15")
+
+    def test_no_logic_id_phy_stays_empty(self):
+        parser = self._create_parser()
+        parser.phy_device_id = ""
+        parser.logic_device_id = ""
+        parser._resolve_phy_device_id()
+
+        self.assertEqual(parser.phy_device_id, "")
+
+    def test_resolve_from_device_info_map(self):
+        parser = self._create_parser({"7": "15", "3": "9"})
+        parser.phy_device_id = ""
+        parser.logic_device_id = "7"
+        parser._resolve_phy_device_id()
+
+        self.assertEqual(parser.phy_device_id, "15")
+
+    def test_no_mapping_in_map_fallbacks_to_logic_id(self):
+        parser = self._create_parser({"3": "9"})
+        parser.phy_device_id = ""
+        parser.logic_device_id = "7"
+        parser._resolve_phy_device_id()
+        self.assertEqual(parser.phy_device_id, "7")
+
+    def test_no_device_info_map_fallbacks_to_logic_id(self):
+        parser = self._create_parser()
+        parser.phy_device_id = ""
+        parser.logic_device_id = "7"
+        parser._resolve_phy_device_id()
+        self.assertEqual(parser.phy_device_id, "7")
