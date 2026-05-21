@@ -46,6 +46,7 @@ import (
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/core"
+	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/ub_device"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
 )
 
@@ -157,38 +158,38 @@ func main() {
 		stopPeriodicUpdate = rm.PeriodicUpdate()
 	}
 
-	//// Initialize and start UB device manager if enabled
-	//if enableUb {
-	//	log.Println("Initializing UB device resource manager")
-	//	rm = ub_device.NewUbResourceManager(configFilePath, useCdi)
-	//
-	//	log.Println("Reading UB device configs")
-	//	if err := rm.ReadConfig(); err != nil {
-	//		log.Fatalln(err.Error())
-	//	}
-	//
-	//	log.Println("Validating UB device configs")
-	//	if err := rm.ValidateConfigs(); err != nil {
-	//		log.Fatalf("Exiting.. one or more invalid UB configuration(s) given: %v", err)
-	//	}
-	//
-	//	log.Println("Discovering UB host devices")
-	//	if err := rm.DiscoverHostDevices(); err != nil {
-	//		log.Fatalf("Error: error discovering UB host devices %v \n", err)
-	//	}
-	//
-	//	log.Println("Initializing UB resource servers")
-	//	if err := rm.InitServers(); err != nil {
-	//		log.Fatalf("Error: initializing UB resource servers %v \n", err)
-	//	}
-	//
-	//	log.Println("Starting UB servers...")
-	//	if err := rm.StartAllServers(); err != nil {
-	//		log.Fatalf("Error: starting UB resource servers %v\n", err.Error())
-	//	}
-	//
-	//	stopPeriodicUpdate = rm.PeriodicUpdate()
-	//}
+	// Initialize and start UB device manager if enabled
+	if enableUb {
+		log.Println("Initializing UB device resource manager")
+		rm = ub_device.NewUbResourceManager(configFilePath, useCdi)
+
+		log.Println("Reading UB device configs")
+		if err := rm.ReadConfig(); err != nil {
+			log.Fatalln(err.Error())
+		}
+
+		log.Println("Validating UB device configs")
+		if err := rm.ValidateConfigs(); err != nil {
+			log.Fatalf("Exiting.. one or more invalid UB configuration(s) given: %v", err)
+		}
+
+		log.Println("Discovering UB host devices")
+		if err := rm.DiscoverHostDevices(); err != nil {
+			log.Fatalf("Error: error discovering UB host devices %v \n", err)
+		}
+
+		log.Println("Initializing UB resource servers")
+		if err := rm.InitServers(); err != nil {
+			log.Fatalf("Error: initializing UB resource servers %v \n", err)
+		}
+
+		log.Println("Starting UB servers...")
+		if err := rm.StartAllServers(); err != nil {
+			log.Fatalf("Error: starting UB resource servers %v\n", err.Error())
+		}
+
+		stopPeriodicUpdate = rm.PeriodicUpdate()
+	}
 
 	log.Println("Enabled servers started.")
 
