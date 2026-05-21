@@ -1,0 +1,18 @@
+# User-defined parameters
+is310P1usoc: false
+
+image:
+  repository: ""
+  tag: ""
+  pullPolicy: ""
+
+resources:
+  requests:
+    memory: ""
+    cpu: ""
+  limits:
+    memory: ""
+    cpu: ""
+
+args: ""
+command: ""

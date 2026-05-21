@@ -1,0 +1,9 @@
+ascend-operator-crds:
+  enabled: true
+
+ascend-for-volcano-crds:
+  enabled: true
+  volcanoVersion: "v1.7.0"
+
+infer-operator-crds:
+  enabled: true

@@ -1,0 +1,59 @@
+clusterd:
+  enabled: true
+  image:
+    repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd"
+    tag: "v26.1.0"
+    pullPolicy: "IfNotPresent"
+
+noded:
+  enabled: true
+  enableDpc: true # Whether to enable DPC
+  image:
+    repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/noded"
+    tag: "v26.1.0"
+    pullPolicy: "IfNotPresent"
+
+npu-exporter:
+  enabled: true
+  is310P1usoc: false # Whether it is 310P-1usoc
+  image:
+    repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter"
+    tag: "v26.1.0"
+    pullPolicy: "IfNotPresent"
+
+ascend-operator:
+  enabled: true
+  image:
+    repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator"
+    tag: "v26.1.0"
+    pullPolicy: "IfNotPresent"
+
+ascend-for-volcano:
+  enabled: true
+  volcanoVersion: "v1.7.0" # Volcano version
+  scheduler:
+    image:
+      repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler"
+      tag: "v1.7.0-v26.1.0"
+      pullPolicy: "IfNotPresent"
+  controller:
+    image:
+      repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager"
+      tag: "v1.7.0-v26.1.0"
+      pullPolicy: "IfNotPresent"
+
+infer-operator:
+  enabled: true
+  image:
+    repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator"
+    tag: "v26.1.0"
+    pullPolicy: "IfNotPresent"
+
+ascend-device-plugin:
+  enabled: true
+  npuType: 910 # NPU type, values include npu, 910, 310, 310P, 310P-1usoc
+  volcanoType: true # Whether to use volcano for scheduling
+  image:
+    repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin"
+    tag: "v26.1.0"
+    pullPolicy: "IfNotPresent"

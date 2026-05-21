@@ -1,0 +1,6 @@
+apiVersion: v2
+name: npu-exporter
+description: MindCluster npu-exporter Deploy Tool
+type: application
+version: 1.1.0
+appVersion: "26.1.0"

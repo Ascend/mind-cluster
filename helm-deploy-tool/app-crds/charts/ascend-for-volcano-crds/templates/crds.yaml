@@ -1,0 +1,18 @@
+{{- $volcanoVersion := .Values.volcanoVersion | default "" }}
+{{- if not (has $volcanoVersion .Values.supportedVolcanoVersion) }}
+  {{- fail (printf "unsupported volcano version: %s, supported versions: %v" $volcanoVersion .Values.supportedVolcanoVersion) }}
+{{- end }}
+
+{{- if not (hasKey .Values.renderVersions $volcanoVersion) -}}
+  {{- fail (printf "volcano version %s not found in renderVersions" $volcanoVersion) }}
+{{- end -}}
+{{- $config := index .Values.renderVersions $volcanoVersion -}}
+
+{{- range $key, $filePath := $config }}
+{{- if not ($.Files.Glob $filePath) -}}
+  {{- fail (printf "crd file %s does not exist" $filePath) }}
+{{- end -}}
+{{- $content := $.Files.Get $filePath -}}
+{{- tpl $content $ }}
+---
+{{- end }}

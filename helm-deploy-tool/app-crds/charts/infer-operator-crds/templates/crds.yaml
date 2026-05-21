@@ -1,0 +1,8 @@
+{{- range $key, $filePath := .Values.renderCrds }}
+{{- if not ($.Files.Glob $filePath) -}}
+  {{- fail (printf "crd file %s does not exist" $filePath) }}
+{{- end -}}
+{{- $content := $.Files.Get $filePath -}}
+{{- tpl $content $ }}
+---
+{{- end }}

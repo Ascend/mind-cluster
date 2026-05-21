@@ -1,0 +1,24 @@
+{{- if and .Values.enableDpc (not (eq (kindOf .Values.enableDpc) "bool")) -}}
+  {{- fail (printf "enableDpc must be a boolean value, got %s: %v" (kindOf .Values.enableDpc) .Values.enableDpc) -}}
+{{- end -}}
+
+{{- $key := "default" -}}
+{{- if eq (.Values.enableDpc | toString)  "true" -}}
+{{- $key = "dpc" -}}
+{{- end -}}
+
+{{- $filePath := printf "yamls/%s/**.yaml" $key -}}
+
+{{- $files := .Files.Glob $filePath -}}
+{{- if not $files -}}
+  {{- fail (printf "No files found matching pattern: %s" $filePath) -}}
+{{- end -}}
+
+{{- $currentScope := . }}
+{{- range $path, $_ := .Files.Glob $filePath }}
+  {{- with $currentScope }}
+    {{- $content := $.Files.Get $path -}}
+    {{- tpl $content $ }}
+---
+  {{- end }}
+{{- end }}

@@ -1,0 +1,20 @@
+# User-configurable parameters
+npuType: 910
+volcanoType: true
+image:
+  repository: ""
+  tag: ""
+  pullPolicy: ""
+resources:
+  requests:
+    memory: ""
+    cpu: ""
+  limits:
+    memory: ""
+    cpu: ""
+
+args: ""
+command: ""
+
+# Built-in parameters
+supportedNpuType: ["npu", "910", "310", "310P", "310P-1usoc"]

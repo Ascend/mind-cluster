@@ -1,0 +1,21 @@
+{{- /* Volcano version selection logic */ -}}
+{{- $volcanoVersion := .Values.volcanoVersion | default "" }}
+{{- if not (has $volcanoVersion .Values.supportedVolcanoVersion) }}
+  {{- fail (printf "unsupported volcano version: %s, supported versions: %v" $volcanoVersion .Values.supportedVolcanoVersion) }}
+{{- end }}
+
+{{- $filePath := printf "yamls/%s/**.yaml" $volcanoVersion -}}
+
+{{- $files := .Files.Glob $filePath -}}
+{{- if not $files -}}
+  {{- fail (printf "No files found matching pattern: %s" $filePath) -}}
+{{- end -}}
+
+{{- $currentScope := . }}
+{{- range $path, $_ := .Files.Glob $filePath }}
+  {{- with $currentScope }}
+    {{- $content := $.Files.Get $path -}}
+    {{- tpl $content $ }}
+---
+  {{- end }}
+{{- end }}

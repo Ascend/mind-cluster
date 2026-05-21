@@ -1,0 +1,25 @@
+apiVersion: v2
+name: mindcluster-crds-deploy-tool
+description: MindCluster CRDs Deploy Tool
+type: application
+# The version of Chart itself, when the template, default configuration, or dependencies of Chart change, it is usually necessary to increment the version.
+# Helm uses version field as the unique identifier for the Chart, which is used for installation, upgrade, rollback, and indexing.
+# If the version is not updated, helm upgrade will consider the Chart unchanged and will not apply the new content.
+version: 1.1.0
+# The version of the deployed application.
+# This field is primarily for user reference, and Helm itself does not rely on it for version comparison or upgrade decision-making
+appVersion: "26.1.0"
+
+dependencies:
+  - name: ascend-operator-crds
+    version: 1.1.0
+    repository: ""
+    condition: ascend-operator-crds.enabled
+  - name: ascend-for-volcano-crds
+    version: 1.1.0
+    repository: ""
+    condition: ascend-for-volcano-crds.enabled
+  - name: infer-operator-crds
+    version: 1.1.0
+    repository: ""
+    condition: infer-operator-crds.enabled
