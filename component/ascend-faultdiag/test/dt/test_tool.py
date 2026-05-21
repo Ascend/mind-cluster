@@ -40,8 +40,9 @@ class VersionTestCase(unittest.TestCase):
 
     def test_path_check(self):
         self.assertIn(os.path.realpath(__file__), tool.file_check(os.path.realpath(__file__)))
-        self.assertIn(os.path.dirname(os.path.realpath(__file__)),
-                      tool.dir_check(os.path.dirname(os.path.realpath(__file__))))
+        self.assertIn(
+            os.path.dirname(os.path.realpath(__file__)), tool.dir_check(os.path.dirname(os.path.realpath(__file__)))
+        )
         self.assertIn(os.path.realpath(__file__), tool.file_or_dir_check(os.path.realpath(__file__)))
         self.assertIn(os.path.dirname(os.path.realpath(__file__)), tool.file_or_dir_check(os.path.dirname(__file__)))
         # non-existent file
@@ -71,10 +72,13 @@ class VersionTestCase(unittest.TestCase):
         log_saver.filter_log(os.path.realpath(__file__))
         self.assertEqual([], log_saver.device_plugin_list)
         log_saver.filter_log(self.TESTCASE_DL_LOG_INPUT)
-        self.assertIn(os.path.join(self.TESTCASE_DL_LOG_INPUT, "devicePlugin", "devicePlugin.log"),
-                      log_saver.device_plugin_list)
-        self.assertIn(os.path.join(self.TESTCASE_DL_LOG_INPUT, "devicePlugin",
-                                   "devicePlugin-2024-01-10T03-30-45.197.log"), log_saver.device_plugin_list)
+        self.assertIn(
+            os.path.join(self.TESTCASE_DL_LOG_INPUT, "devicePlugin", "devicePlugin.log"), log_saver.device_plugin_list
+        )
+        self.assertIn(
+            os.path.join(self.TESTCASE_DL_LOG_INPUT, "devicePlugin", "devicePlugin-2024-01-10T03-30-45.197.log"),
+            log_saver.device_plugin_list,
+        )
 
     def test_resuming_training_fetch(self):
         log_saver = ProcessLogSaver()
@@ -122,29 +126,30 @@ class TestFilterBmcLog(unittest.TestCase):
         self.assertEqual(self.instance.bmc_log_list, [])
 
     def test_with_files(self):
-        with open(os.path.join(self.temp_dir, 'fruinfo.txt'), 'w') as f:
+        with open(os.path.join(self.temp_dir, 'fruinfo.txt'), 'w', encoding='utf-8') as f:
             f.write('test')
         os.makedirs(os.path.join(self.temp_dir, "chassis"), exist_ok=True)
         os.makedirs(os.path.join(self.temp_dir, "AppDump"), exist_ok=True)
         os.makedirs(os.path.join(self.temp_dir, "DeviceDump"), exist_ok=True)
         os.makedirs(os.path.join(self.temp_dir, "LogDump"), exist_ok=True)
-        with open(os.path.join(self.temp_dir, "chassis", 'mdb_info.log'), 'w') as f:
+        with open(os.path.join(self.temp_dir, "chassis", 'mdb_info.log'), 'w', encoding='utf-8') as f:
             f.write('test')
-        with open(os.path.join(self.temp_dir, "AppDump", 'app_dump.log'), 'w') as f:
+        with open(os.path.join(self.temp_dir, "AppDump", 'app_dump.log'), 'w', encoding='utf-8') as f:
             f.write('test')
-        with open(os.path.join(self.temp_dir, "DeviceDump", 'device_dump.log'), 'w') as f:
+        with open(os.path.join(self.temp_dir, "DeviceDump", 'device_dump.log'), 'w', encoding='utf-8') as f:
             f.write('test')
-        with open(os.path.join(self.temp_dir, "LogDump", 'log_dump.log'), 'w') as f:
+        with open(os.path.join(self.temp_dir, "LogDump", 'log_dump.log'), 'w', encoding='utf-8') as f:
             f.write('test')
-        with open(os.path.join(self.temp_dir, 'bmc.log'), 'w') as f:
+        with open(os.path.join(self.temp_dir, 'bmc.log'), 'w', encoding='utf-8') as f:
             f.write('test')
 
         self.instance.filter_log(self.temp_dir)
         self.assertEqual(self.instance.fruinfo_files, [os.path.join(self.temp_dir, 'fruinfo.txt')])
         self.assertEqual(self.instance.mdb_info_files, [os.path.join(self.temp_dir, "chassis", 'mdb_info.log')])
         self.assertEqual(self.instance.bmc_app_dump_log_list, [os.path.join(self.temp_dir, "AppDump", 'app_dump.log')])
-        self.assertEqual(self.instance.bmc_device_dump_log_list,
-                         [os.path.join(self.temp_dir, "DeviceDump", 'device_dump.log')])
+        self.assertEqual(
+            self.instance.bmc_device_dump_log_list, [os.path.join(self.temp_dir, "DeviceDump", 'device_dump.log')]
+        )
         self.assertEqual(self.instance.bmc_log_dump_log_list, [os.path.join(self.temp_dir, "LogDump", 'log_dump.log')])
         self.assertEqual(self.instance.bmc_log_list, [])
 
@@ -162,8 +167,14 @@ class TestGetSuperPodAnalyzerDict(unittest.TestCase):
     @patch('ascend_fd.pkg.diag.knowledge_graph.kg_diag_job.get_host_worker_name_by_lcne_worker_name')
     def test_infer_task_flag_false(self, mock_lcne_func, mock_bmc_func):
         analyzer_dict = get_super_pod_analyzer_dict(self.cfg, self.parsed_saver)
-        expected_dict = {'worker1': 'path1', 'worker2': 'path2', 'worker3': 'path3', 'worker4': 'path4',
-                         'worker5': 'path5', 'worker6': 'path6'}
+        expected_dict = {
+            'worker1': 'path1',
+            'worker2': 'path2',
+            'worker3': 'path3',
+            'worker4': 'path4',
+            'worker5': 'path5',
+            'worker6': 'path6',
+        }
         self.assertEqual(analyzer_dict, expected_dict)
         # 验证 mock 函数没有被调用（因为 infer_task_flag 为 False）
         mock_bmc_func.assert_not_called()
@@ -191,12 +202,96 @@ class TestGetSuperPodAnalyzerDict(unittest.TestCase):
         mock_lcne_func.return_value = 'worker1'
 
         analyzer_dict = get_super_pod_analyzer_dict(self.cfg, self.parsed_saver)
-        expected_dict = {'worker1': 'path1', 'worker2': 'path2', 'worker3': 'path3', 'worker4': 'path4',
-                         'worker5': 'path5'}
+        expected_dict = {
+            'worker1': 'path1',
+            'worker2': 'path2',
+            'worker3': 'path3',
+            'worker4': 'path4',
+            'worker5': 'path5',
+        }
         self.assertEqual(analyzer_dict, expected_dict)
         # 验证 mock 函数被调用
         mock_bmc_func.assert_called()
         mock_lcne_func.assert_called()
+
+
+class TestDeviceInfoMap(unittest.TestCase):
+    """A5 plog: device_info.txt 解析测试"""
+
+    def test_parse_device_info_file_empty(self):
+        """空文件/不存在文件"""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+            f.write("")
+        try:
+            self.assertEqual(tool.parse_device_info_file(f.name), {})
+        finally:
+            os.unlink(f.name)
+        self.assertEqual(tool.parse_device_info_file("/non/existent/path"), {})
+
+    def test_parse_device_info_file_format(self):
+        """标准格式"""
+        content = """base info:
+==============================================
+device num: 0x8
+
+devices info:
+==============================================
+dir        phy-id        logic-id   status
+device-0   0             3          os running
+device-1   1             4          os running
+device-2   2             6          os running
+device-3   3             7          os running
+device-4   4             2          os running
+device-5   5             0          os running
+device-6   6             1          os running
+device-7   7             5          os running
+"""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+            f.write(content)
+        try:
+            expected = {"3": "0", "4": "1", "6": "2", "7": "3", "2": "4", "0": "5", "1": "6", "5": "7"}
+            self.assertEqual(tool.parse_device_info_file(f.name), expected)
+        finally:
+            os.unlink(f.name)
+
+    def test_parse_device_info_file_malformed(self):
+        """格式异常行"""
+        content = """devices info:
+==============================================
+dir        phy-id        logic-id   status
+device-0   0             3          os running
+device-X   a             b          os running
+device-1   1             4          os running
+"""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+            f.write(content)
+        try:
+            self.assertEqual(tool.parse_device_info_file(f.name), {"3": "0", "4": "1"})
+        finally:
+            os.unlink(f.name)
+
+    def test_load_device_info_map_empty(self):
+        """空列表"""
+        self.assertEqual(tool.load_device_info_map([]), {})
+
+    def test_load_device_info_map_found(self):
+        """找到 device_info.txt"""
+        with tempfile.NamedTemporaryFile(mode="w", suffix="device_info.txt", delete=False) as f:
+            f.write("""devices info:
+==============================================
+dir        phy-id        logic-id   status
+device-0   0             3          os running
+device-1   1             4          os running
+""")
+        try:
+            hisi_logs = ["/hisi_logs/device-0/kernel.log", f.name, "/hisi_logs/device-1/kernel.log"]
+            self.assertEqual(tool.load_device_info_map(hisi_logs), {"3": "0", "4": "1"})
+        finally:
+            os.unlink(f.name)
+
+    def test_load_device_info_map_not_found(self):
+        """没有 device_info.txt"""
+        self.assertEqual(tool.load_device_info_map(["/hisi_logs/device-0/kernel.log"]), {})
 
 
 if __name__ == '__main__':
