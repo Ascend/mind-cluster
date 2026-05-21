@@ -48,6 +48,7 @@ from ascend_fd.utils.regular_table import (
     BMC_BOARD_SN,
     LCNE_BOARD_SN,
     SERVER_INFO_FILE,
+    PRODUCT_SYS_SN,
 )
 from ascend_fd.configuration.config import RC_PARSER_DUMP_NAME
 from ascend_fd.pkg.parse.root_cluster.parser import PidFileParser
@@ -63,7 +64,6 @@ SERVER_INDEX = "ServerIndex"
 SUPER_POD_ID = "SuperPodId"
 SUPER_POD_SIZE = "SuperPodSize"
 SUPER_POD_BOARD_PRODUCT_NAME = "IT22SMMB"
-A3_SUPER_POD = "Atlas 900 A3 SuperPoD Compute Node"
 MAX_UINT32 = 2**32 - 1
 
 
@@ -255,15 +255,18 @@ def get_bmc_sn_info(bmc_log):
         lines = file_stream.readlines()
         selected_lines = []
         for i, line in enumerate(lines):
-            if "Atlas 900 A3 SuperPoD Compute Node" in line or SUPER_POD_BOARD_PRODUCT_NAME in line:
+            if PRODUCT_SYS_SN in line:
+                complete_machine_sn_match = BMC_COMPLETE_MACHINE_SN_PATTERN.search(line.strip())
+                if complete_machine_sn_match:
+                    complete_machine_sn_info = complete_machine_sn_match.group(1)
+                continue
+
+            if SUPER_POD_BOARD_PRODUCT_NAME in line:
                 # Capture the current line and the next 5 lines
                 end_index = i + 6
                 block = lines[i:end_index]
                 selected_lines.extend(block)
         for line in selected_lines:
-            complete_machine_sn_match = BMC_COMPLETE_MACHINE_SN_PATTERN.search(line.strip())
-            if complete_machine_sn_match:
-                complete_machine_sn_info = complete_machine_sn_match.group(1)
             board_sn_match = BMC_BOARD_SN_PATTERN.search(line.strip())
             if board_sn_match:
                 board_sn_info = board_sn_match.group(1)
