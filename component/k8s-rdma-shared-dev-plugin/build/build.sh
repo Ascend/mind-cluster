@@ -54,6 +54,12 @@ function build() {
 
 function mv_file() {
   mv "${TOP_DIR}"/cmd/k8s-rdma-shared-dp/${OUTPUT_NAME} "${TOP_DIR}"/output
+  cp "${TOP_DIR}"/build/k8s-rdma-shared-dp.yaml "${TOP_DIR}"/output/k8s-rdma-shared-dp-"${build_version}".yaml
+  cp "${TOP_DIR}"/build/config.json "${TOP_DIR}"/output/config.json
+  cp "${TOP_DIR}"/build/${DOCKER_FILE_NAME} "${TOP_DIR}"/output
+  cp "${TOP_DIR}"/build/Dockerfile.openeuler "${TOP_DIR}"/output
+  cp "${TOP_DIR}"/build/agreement.txt "${TOP_DIR}"/output
+  chmod 400 "${TOP_DIR}"/output/*
   chmod 500 "${TOP_DIR}"/output/${OUTPUT_NAME}
 
 }

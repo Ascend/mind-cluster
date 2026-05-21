@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rdma-devices
+  namespace: kube-system
+data:
+  config.json: |
+    {
+      "periodicUpdateInterval": 300,
+      "configList": [
+        {
+          "resourcePrefix": "huawei.com",
+          "resourceName": "ub_rdma",
+          "rdmaHcaMax": 8,
+          "selectors": {
+            "buses": ["ub"],
+            "vendors": ["0xcc08"],
+            "deviceIDs": ["0x8200"]
+          }
+        }
+      ]
+    }
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: rdma-shared-dp-ds
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: rdma-shared-dp-ds
+  template:
+    metadata:
+      labels:
+        name: rdma-shared-dp-ds
+    spec:
+      hostNetwork: true
+      priorityClassName: system-node-critical
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      containers:
+        - image: image_name:tag
+          name: k8s-rdma-shared-dp-ds
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: device-plugin
+              mountPath: /var/lib/kubelet/device-plugins
+            - name: config
+              mountPath: /k8s-rdma-shared-dev-plugin
+            - name: devs
+              mountPath: /dev/
+            - name: sys
+              mountPath: /sys
+            - name: infiniband
+              mountPath: /dev/infiniband
+      volumes:
+        - name: device-plugin
+          hostPath:
+            path: /var/lib/kubelet/device-plugins
+        - name: config
+          configMap:
+            name: rdma-devices
+            items:
+              - key: config.json
+                path: config.json
+        - name: devs
+          hostPath:
+            path: /dev/
+            type: Directory
+        - name: sys
+          hostPath:
+            path: /sys/
+        - name: infiniband
+          hostPath:
+            path: /dev/infiniband/
