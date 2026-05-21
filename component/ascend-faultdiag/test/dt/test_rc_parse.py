@@ -122,6 +122,44 @@ class TestA5RootInfoDetect(unittest.TestCase):
         self.assertEqual(parser.logic_device_id, "3")
         self.assertEqual(parser.rank_map["test_id"]["rank_num"], -1)
 
+    def test_parse_generation_info_a5(self):
+        line = "[HCCL_TRACE]V950 Entry-HcclCommInitRootInfo:ranks[16], rank[0]"
+        parser = self._create_parser()
+        parser.parse_line(line)
+
+        self.assertEqual(parser.generation_info, "A5")
+
+    def test_parse_generation_info_default(self):
+        line = "[HCCL_TRACE]Entry-HcclCommInitRootInfo:ranks[16], rank[0]"
+        parser = self._create_parser()
+        parser.parse_line(line)
+
+        self.assertEqual(parser.generation_info, "A2/A3")
+
+    def test_parse_base_info_a5(self):
+        line = "Entry-HcclCommInitRootInfoConfigV2:ranks[8], rank[2], rootinfo: host ip[1.1.1.1] , identifier[group_0]"
+        parser = self._create_parser()
+        parser.parse_line(line)
+
+        self.assertEqual(parser.rank_map["group_0"]["rank_num"], 8)
+        self.assertEqual(parser.rank_map["group_0"]["rank_id"], "2")
+
+    def test_parse_a5_timeout_info(self):
+        line = "[HCCL_TRACE]Env config hcclSocketFamily[*], linkTimeOut[180]s, execTimeOut[300]s"
+        parser = self._create_parser()
+        parser.parse_line(line)
+
+        self.assertEqual(parser.timeout_params.get("CONNECT_TIMEOUT"), 180)
+        self.assertEqual(parser.timeout_params.get("EXEC_TIMEOUT"), 300)
+
+    def test_parse_eid_plane_info(self):
+        line = "[HCCL_TRACE]Net2PeerLink rankId[0] eid[0x1234] planeId[1]"
+        parser = self._create_parser()
+        parser.parse_line(line)
+
+        self.assertIn("0", parser.rank_eid_plane_info)
+        self.assertEqual(len(parser.rank_eid_plane_info["0"]), 1)
+
 
 class TestResolvePhyDeviceId(unittest.TestCase):
     def _create_parser(self, device_info_map=None):
