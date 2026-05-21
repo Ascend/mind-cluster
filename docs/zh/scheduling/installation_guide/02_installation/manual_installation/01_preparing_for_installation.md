@@ -568,10 +568,10 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <tr id="row1498819461243"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p7417181910258"><a name="p7417181910258"></a><a name="p7417181910258"></a><span id="ph1841103815159"><a name="ph1841103815159"></a><a name="ph1841103815159"></a>Volcano</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p7611881466"><a name="p7611881466"></a><a name="p7611881466"></a>进入<span id="ph11611128154615"><a name="ph11611128154615"></a><a name="ph11611128154615"></a>Volcano</span>组件解压目录，选择以下版本路径并进入。</p>
-    <a name="ul1193395714453"></a><a name="ul1193395714453"></a><ul id="ul1193395714453"><li>v1.7.0版本执行以下命令。<pre class="screen" id="screen73221362140"><a name="screen73221362140"></a><a name="screen73221362140"></a>docker build --no-cache -t volcanosh/vc-scheduler:v1.7.0 ./ -f ./Dockerfile-scheduler
-   docker build --no-cache -t volcanosh/vc-controller-manager:v1.7.0 ./ -f ./Dockerfile-controller</pre>
-    </li><li>v1.9.0版本执行以下命令。<pre class="screen" id="screen20630163032915"><a name="screen20630163032915"></a><a name="screen20630163032915"></a>docker build --no-cache -t volcanosh/vc-scheduler:v1.9.0 ./ -f ./Dockerfile-scheduler
-   docker build --no-cache -t volcanosh/vc-controller-manager:v1.9.0 ./ -f ./Dockerfile-controller</pre>
+    <a name="ul1193395714453"></a><a name="ul1193395714453"></a><ul id="ul1193395714453"><li>v1.7.0版本执行以下命令。<pre class="screen" id="screen73221362140"><a name="screen73221362140"></a><a name="screen73221362140"></a>docker build --no-cache -t volcanosh/vc-scheduler:v1.7.0-{tag} ./ -f ./Dockerfile-scheduler
+   docker build --no-cache -t volcanosh/vc-controller-manager:v1.7.0-{tag} ./ -f ./Dockerfile-controller</pre>
+    </li><li>v1.9.0版本执行以下命令。<pre class="screen" id="screen20630163032915"><a name="screen20630163032915"></a><a name="screen20630163032915"></a>docker build --no-cache -t volcanosh/vc-scheduler:v1.9.0-{tag} ./ -f ./Dockerfile-scheduler
+   docker build --no-cache -t volcanosh/vc-controller-manager:v1.9.0-{tag} ./ -f ./Dockerfile-controller</pre>
     </li></ul>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p966311264620"><a name="p966311264620"></a><a name="p966311264620"></a>-</p>
@@ -723,7 +723,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
 
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.0.0 ascend-k8sdeviceplugin:v26.0.0
 
-        # 使用1.9.0版本的Volcano，需要将镜像tag修改为v1.9.0-v26.0.0
+        # 使用1.9.0版本的Volcano，需要将镜像tag修改为v1.9.0-v26.0.0。从MindCluster v26.1.0开始，镜像tag需改为v1.7.0-v26.1.0
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:v1.7.0-v26.0.0 volcanosh/vc-controller-manager:v1.7.0
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:v1.7.0-v26.0.0 volcanosh/vc-scheduler:v1.7.0
 

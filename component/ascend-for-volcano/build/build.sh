@@ -131,6 +131,7 @@ function build() {
     fi
 
     sed -i "s/name: volcano-npu_.*/name: ${REL_NPU_PLUGIN}/" "${BASE_PATH}"/output/volcano-*.yaml
+    sed -i "s/:${BASE_VER}/:${BASE_VER}-${REL_VERSION}/g" "${BASE_PATH}"/output/volcano-${BASE_VER}.yaml
 
     chmod 400 "${BASE_PATH}"/output/*.so
     chmod 500 vc-controller-manager vc-scheduler
