@@ -40,7 +40,7 @@ repos:
       - id: codespell
         args: [
           "-L",
-          "CANN,cann,NNAL,nnal,ASCEND,ascend,EnQue,CopyIn,ArchType,AND,ND,tbe,copyin,alog,ist,NotIn,aNULL",
+          "CANN,cann,NNAL,nnal,ASCEND,ascend,EnQue,CopyIn,ArchType,AND,ND,nd,tbe,copyin,alog,ist,NotIn,aNULL",
           "--skip",
           "*.toml,*.py,*.cpp,*.hpp,*.c,*.h,component/ascend-faultdiag/src/ascend_fd/configuration/kg-config.json",
         ]

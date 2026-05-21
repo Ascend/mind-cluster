@@ -1,0 +1,19 @@
+FROM golang:alpine as builder
+
+COPY . /usr/src/k8s-rdma-shared-dp
+
+ENV HTTP_PROXY $http_proxy
+ENV HTTPS_PROXY $https_proxy
+
+RUN apk add --update --virtual build-dependencies build-base linux-headers git
+WORKDIR /usr/src/k8s-rdma-shared-dp
+RUN make clean && \
+    make build
+
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.10-1295.1749680713-1295.1749680713
+RUN microdnf install kmod hwdata
+COPY --from=builder /usr/src/k8s-rdma-shared-dp/build/k8s-rdma-shared-dp /bin/
+
+LABEL io.k8s.display-name="RDMA Shared Device Plugin"
+
+CMD ["/bin/k8s-rdma-shared-dp"]
