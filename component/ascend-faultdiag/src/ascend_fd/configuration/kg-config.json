@@ -15624,7 +15624,6 @@
             "source_file": "CANN_Plog",
             "regex": {
                 "in": [
-                    ["driver error:", "out of memory"],
                     ["Alloc sq cq fail"],
                     ["driver error:", "no event resource"],
                     ["driver error:", "no notify resource"],
