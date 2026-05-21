@@ -45,6 +45,7 @@ import (
 
 // Selectors contains common device selectors fields
 type Selectors struct {
+	Buses     []string `json:"buses,omitempty"`
 	Vendors   []string `json:"vendors,omitempty"`
 	DeviceIDs []string `json:"deviceIDs,omitempty"`
 	Drivers   []string `json:"drivers,omitempty"`
@@ -74,7 +75,7 @@ type ResourceServer interface {
 	Stop() error
 	Restart() error
 	Watch()
-	UpdateDevices([]PciNetDevice)
+	UpdateDevices([]Device)
 }
 
 // ResourceManager manager multi plugins
@@ -83,12 +84,12 @@ type ResourceManager interface {
 	ValidateConfigs() error
 	ValidateRdmaSystemMode() error
 	DiscoverHostDevices() error
-	GetDevices() []PciNetDevice
+	GetDevices() []Device
 	InitServers() error
 	StartAllServers() error
 	StopAllServers() error
 	RestartAllServers() error
-	GetFilteredDevices(devices []PciNetDevice, selector *Selectors) []PciNetDevice
+	GetFilteredDevices(devices []Device, selector *Selectors) []Device
 	PeriodicUpdate() func()
 }
 
@@ -105,7 +106,7 @@ type ResourceServerPort interface {
 	GetClientConn(string) (*grpc.ClientConn, error)
 }
 
-// SignalNotifier NotifierFactory register signals to listen for
+// NotifierFactory register signals to listen for
 type SignalNotifier interface {
 	Notify() chan os.Signal
 }
@@ -116,20 +117,33 @@ type RdmaDeviceSpec interface {
 	VerifyRdmaSpec([]*pluginapi.DeviceSpec) error
 }
 
-// PciNetDevice provides an interface to get generic device specific information
-type PciNetDevice interface {
-	GetPciAddr() string
-	GetIfName() string
+// Device is a generic interface for all device types
+type Device interface {
+	GetName() string
 	GetVendor() string
 	GetDeviceID() string
 	GetDriver() string
-	GetLinkType() string
 	GetRdmaSpec() []*pluginapi.DeviceSpec
+	GetIfName() string
+	GetLinkType() string
+}
+
+// PciNetDevice provides an interface to get PCI network device specific information
+type PciNetDevice interface {
+	Device
+	GetPciAddr() string
+}
+
+// UbDevice provides an interface to get UB device specific information
+type UbDevice interface {
+	Device
+	GetUbID() string
+	GetDeviceName() string
 }
 
 // DeviceSelector provides an interface for filtering a list of devices
 type DeviceSelector interface {
-	Filter([]PciNetDevice) []PciNetDevice
+	Filter([]Device) []Device
 }
 
 // NetlinkManager is an interface to mock netlink library

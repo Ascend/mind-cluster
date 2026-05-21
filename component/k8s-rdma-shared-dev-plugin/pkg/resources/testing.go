@@ -19,6 +19,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"net"
 	"path"
 	"time"
@@ -80,7 +81,7 @@ func (s *fakeRegistrationServer) getInfo(ctx context.Context,
 
 func (s *fakeRegistrationServer) notifyPlugin(client registerapi.RegistrationClient, registered bool,
 	errStr string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), watchWaitTime)
+	ctx, cancel := context.WithTimeout(context.Background(), common.WatchWaitTime)
 	defer cancel()
 
 	status := &registerapi.RegistrationStatus{
@@ -146,7 +147,7 @@ func (s *fakeRegistrationServer) start() {
 	go func() {
 		_ = s.grpcServer.Serve(l)
 	}()
-	_ = s.waitForServer(watchWaitTime)
+	_ = s.waitForServer(common.WatchWaitTime)
 }
 
 func (s *fakeRegistrationServer) waitForServer(timeout time.Duration) error {

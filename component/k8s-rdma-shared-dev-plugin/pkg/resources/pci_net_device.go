@@ -85,30 +85,38 @@ func NewPciNetDevice(dev *ghw.PCIDevice, rds types.RdmaDeviceSpec,
 	}, nil
 }
 
-func (pnd *pciNetDevice) GetVendor() string {
-	return pnd.vendor
+func (nd *pciNetDevice) GetVendor() string {
+	return nd.vendor
 }
 
-func (pnd *pciNetDevice) GetDeviceID() string {
-	return pnd.deviceID
+func (nd *pciNetDevice) GetDeviceID() string {
+	return nd.deviceID
 }
 
-func (pnd *pciNetDevice) GetDriver() string {
-	return pnd.driver
+func (nd *pciNetDevice) GetDriver() string {
+	return nd.driver
 }
 
-func (pnd *pciNetDevice) GetLinkType() string {
-	return pnd.linkType
+func (nd *pciNetDevice) GetLinkType() string {
+	return nd.linkType
 }
 
-func (pnd *pciNetDevice) GetIfName() string {
-	return pnd.ifName
+func (nd *pciNetDevice) GetIfName() string {
+	return nd.ifName
 }
 
-func (pnd *pciNetDevice) GetPciAddr() string {
-	return pnd.pciAddress
+func (nd *pciNetDevice) GetPciAddr() string {
+	return nd.pciAddress
 }
 
-func (pnd *pciNetDevice) GetRdmaSpec() []*pluginapi.DeviceSpec {
-	return pnd.rdmaSpec
+func (nd *pciNetDevice) GetRdmaSpec() []*pluginapi.DeviceSpec {
+	return nd.rdmaSpec
+}
+
+func (nd *pciNetDevice) GetName() string {
+	// Return a combination of PCI address and interface name for uniqueness
+	if nd.ifName != "" {
+		return fmt.Sprintf("%s-%s", nd.pciAddress, nd.ifName)
+	}
+	return nd.pciAddress
 }

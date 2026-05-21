@@ -42,11 +42,6 @@ import (
 	"sync"
 	"time"
 
-	cdiMocks "github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/cdi/mocks"
-	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
-	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types/mocks"
-	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/utils"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -54,6 +49,12 @@ import (
 	"google.golang.org/grpc"
 	pluginapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 	registerapi "k8s.io/kubelet/pkg/apis/pluginregistration/v1"
+
+	cdiMocks "github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/cdi/mocks"
+	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
+	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
+	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types/mocks"
+	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/utils"
 )
 
 const (
@@ -339,19 +340,19 @@ var _ = Describe("resourceServer tests", func() {
 		fakeSocketName := "fake.socket"
 		var fakeSocketPath string
 		var fs utils.FakeFilesystem
-		deprecatedSockDirBackup := deprecatedSockDir
+		deprecatedSockDirBackup := common.DeprecatedSockDir
 		var cleanTemp func()
 		BeforeEach(func() {
 			fs = utils.FakeFilesystem{
 				Files: map[string][]byte{fakeSocketName: []byte("")},
 			}
 			cleanTemp = fs.Use()
-			deprecatedSockDir = fs.RootDir
+			common.DeprecatedSockDir = fs.RootDir
 			fakeSocketPath = path.Join(fs.RootDir, fakeSocketName)
 		})
 		AfterEach(func() {
 			cleanTemp()
-			deprecatedSockDir = deprecatedSockDirBackup
+			common.DeprecatedSockDir = deprecatedSockDirBackup
 		})
 		It("Watch socket then stop watcher", func() {
 			rs := resourceServer{
@@ -534,23 +535,23 @@ var _ = Describe("resourceServer tests", func() {
 			Expect(len(rs.devs)).To(Equal(0))
 		})
 	})
-	Context("devicesChanged", func() {
+	Context("common.DevicesChanged", func() {
 		It("device is present and did not change", func() {
 			deviceList := []*pluginapi.DeviceSpec{{HostPath: "/foo/bar"}}
 			newDeviceList := []*pluginapi.DeviceSpec{{HostPath: "/foo/bar"}}
-			changed := devicesChanged(deviceList, newDeviceList)
+			changed := common.DevicesChanged(deviceList, newDeviceList)
 			Expect(changed).To(BeFalse())
 		})
 		It("device changed - num of devices in deviceList", func() {
 			deviceList := []*pluginapi.DeviceSpec{{HostPath: "/foo/bar"}}
 			newDeviceList := []*pluginapi.DeviceSpec{{HostPath: "/foo/bar"}, {HostPath: "/foo/bar2"}}
-			changed := devicesChanged(deviceList, newDeviceList)
+			changed := common.DevicesChanged(deviceList, newDeviceList)
 			Expect(changed).To(BeTrue())
 		})
 		It("device changed - mounts changed for one of the devices in the deviceList", func() {
 			deviceList := []*pluginapi.DeviceSpec{{HostPath: "/foo/bar"}}
 			newDeviceList := []*pluginapi.DeviceSpec{{HostPath: "/foo/bar2"}}
-			changed := devicesChanged(deviceList, newDeviceList)
+			changed := common.DevicesChanged(deviceList, newDeviceList)
 			Expect(changed).To(BeTrue())
 		})
 	})
@@ -561,13 +562,13 @@ var _ = Describe("resourceServer tests", func() {
 
 			// Use faked dir as socket dir
 			activeSockDirBackup := activeSockDir
-			deprecatedSockDirBackup := deprecatedSockDir
+			deprecatedSockDirBackup := common.DeprecatedSockDir
 
-			deprecatedSockDir = fs.RootDir
+			common.DeprecatedSockDir = fs.RootDir
 			activeSockDir = fs.RootDir
 
 			defer func() {
-				deprecatedSockDir = deprecatedSockDirBackup
+				common.DeprecatedSockDir = deprecatedSockDirBackup
 				activeSockDir = activeSockDirBackup
 			}()
 
@@ -576,7 +577,7 @@ var _ = Describe("resourceServer tests", func() {
 			Expect(err).ToNot(HaveOccurred())
 			rs := obj.(*resourceServer)
 
-			registrationServer := createFakeRegistrationServer(deprecatedSockDir,
+			registrationServer := createFakeRegistrationServer(common.DeprecatedSockDir,
 				"fake_test.socket", shouldServerFail, shouldEnablePluginWatch)
 
 			if shouldRunServer {
@@ -619,7 +620,7 @@ var _ = Describe("resourceServer tests", func() {
 		)
 		BeforeEach(func() {
 			activeSockDirBackup = activeSockDir
-			deprecatedSockDirBackup = deprecatedSockDir
+			deprecatedSockDirBackup = common.DeprecatedSockDir
 			selectors := &types.Selectors{}
 			err := json.Unmarshal([]byte(`{"deviceIDs": ["fakeid"]}`), selectors)
 			Expect(err).NotTo(HaveOccurred())
@@ -627,20 +628,20 @@ var _ = Describe("resourceServer tests", func() {
 		})
 		AfterEach(func() {
 			activeSockDir = activeSockDirBackup
-			deprecatedSockDir = deprecatedSockDirBackup
+			common.DeprecatedSockDir = deprecatedSockDirBackup
 		})
 		Context("starting, restarting and stopping the resource server", func() {
 			It("should not fail and messages should be received on the channels without watcher mode", func() {
 				defer fs.Use()()
 				// Use faked dir as socket dir
-				deprecatedSockDir = fs.RootDir
+				common.DeprecatedSockDir = fs.RootDir
 
 				conf := &types.UserConfig{ResourceName: "fakename", ResourcePrefix: "rdma", RdmaHcaMax: 100}
 				obj, err := newResourceServer(conf, fakeDeviceList, false, "socket", false)
 				Expect(err).ToNot(HaveOccurred())
 				rs := obj.(*resourceServer)
 
-				registrationServer := createFakeRegistrationServer(deprecatedSockDir,
+				registrationServer := createFakeRegistrationServer(common.DeprecatedSockDir,
 					"fakename.socket", false, false)
 				registrationServer.start()
 				defer registrationServer.stop()
@@ -692,14 +693,14 @@ var _ = Describe("resourceServer tests", func() {
 			It("should not fail and messages should be received on the channels", func() {
 				defer fs.Use()()
 				// Use faked dir as socket dir
-				deprecatedSockDir = fs.RootDir
+				common.DeprecatedSockDir = fs.RootDir
 
 				conf := &types.UserConfig{ResourceName: "fakename", ResourcePrefix: "rdma", RdmaHcaMax: 100}
 				obj, err := newResourceServer(conf, fakeDeviceList, false, "socket", false)
 				Expect(err).ToNot(HaveOccurred())
 				rs := obj.(*resourceServer)
 
-				registrationServer := createFakeRegistrationServer(deprecatedSockDir,
+				registrationServer := createFakeRegistrationServer(common.DeprecatedSockDir,
 					"fakename.socket", false, false)
 				registrationServer.start()
 				defer registrationServer.stop()
