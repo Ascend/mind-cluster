@@ -1,0 +1,15 @@
+{
+  "periodicUpdateInterval": 300,
+  "configList": [
+    {
+      "resourcePrefix": "huawei.com",
+      "resourceName": "ub_rdma",
+      "rdmaHcaMax": 8,
+      "selectors": {
+        "buses": ["ub"],
+        "vendors": ["0xcc08"],
+        "deviceIDs": ["0x8200"]
+      }
+    }
+  ]
+}
