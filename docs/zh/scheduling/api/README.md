@@ -12,3 +12,4 @@
 - [K8s原生对象说明](k8s.md)
 - [环境变量说明](environment_variable_description.md)
 - [hccl.json文件说明](hccl.json_file_description.md)
+- [任务YAML配置说明](yaml_configuration.md)
