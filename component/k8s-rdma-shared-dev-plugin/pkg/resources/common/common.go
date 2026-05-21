@@ -22,4 +22,5 @@ const (
 	WatchWaitTime         = 5 * time.Second
 	Infiniband            = "infiniband"
 	SysBusUb              = "/sys/bus/ub/devices"
+	KubeEndPoint          = "kubelet.sock"
 )

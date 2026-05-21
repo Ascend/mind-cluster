@@ -52,12 +52,11 @@ import (
 	registerapi "k8s.io/kubelet/pkg/apis/pluginregistration/v1"
 
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/cdi"
+	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
 )
 
 const (
-	// Local use
-	watchWaitTime     = 5 * time.Second
 	cdiResourcePrefix = "nvidia.com"
 	cdiResourceKind   = "net-rdma"
 )
@@ -80,7 +79,7 @@ type resourceServer struct {
 	mutex           sync.RWMutex
 	devs            []*pluginapi.Device
 	deviceSpec      []*pluginapi.DeviceSpec
-	pciDevices      []types.PciNetDevice
+	devices         []types.Device
 	useCdi          bool
 	cdi             cdi.CDI
 	cdiResourceName string
@@ -136,7 +135,7 @@ func (rsc *resourcesServerPort) GetClientConn(unixSocketPath string) (*grpc.Clie
 }
 
 // newResourceServer returns an initialized server
-func newResourceServer(config *types.UserConfig, devices []types.PciNetDevice, watcherMode bool,
+func newResourceServer(config *types.UserConfig, devices []types.Device, watcherMode bool,
 	socketSuffix string, useCdi bool) (types.ResourceServer, error) {
 	var devs []*pluginapi.Device
 
@@ -165,7 +164,7 @@ func newResourceServer(config *types.UserConfig, devices []types.PciNetDevice, w
 	}
 
 	if !watcherMode {
-		sockDir = deprecatedSockDir
+		sockDir = common.DeprecatedSockDir
 	}
 
 	socketName := fmt.Sprintf("%s.%s", config.ResourceName, socketSuffix)
@@ -182,7 +181,7 @@ func newResourceServer(config *types.UserConfig, devices []types.PciNetDevice, w
 		health:          make(chan *pluginapi.Device),
 		rsConnector:     &resourcesServerPort{},
 		rdmaHcaMax:      config.RdmaHcaMax,
-		pciDevices:      devices,
+		devices:         devices,
 		useCdi:          useCdi,
 		cdi:             cdi.New(),
 		cdiResourceName: config.ResourceName,
@@ -285,13 +284,13 @@ func (rs *resourceServer) Watch() {
 			}
 		}
 		// Sleep for some intervals; TODO: investigate on suggested interval
-		time.Sleep(watchWaitTime)
+		time.Sleep(common.WatchWaitTime)
 	}
 }
 
 // Register registers the device plugin for the given resourceName with Kubelet.
 func (rs *resourceServer) register() error {
-	kubeletEndpoint := filepath.Join(deprecatedSockDir, kubeEndPoint)
+	kubeletEndpoint := filepath.Join(common.DeprecatedSockDir, kubeEndPoint)
 	conn, err := rs.rsConnector.GetClientConn(kubeletEndpoint)
 	if err != nil {
 		return err
@@ -356,7 +355,7 @@ func (rs *resourceServer) updateCDISpec() error {
 	if !rs.useCdi {
 		return nil
 	}
-	err := rs.cdi.CreateCDISpec(cdiResourcePrefix, cdiResourceKind, rs.cdiResourceName, rs.pciDevices)
+	err := rs.cdi.CreateCDISpec(cdiResourcePrefix, cdiResourceKind, rs.cdiResourceName, rs.devices)
 	if err != nil {
 		log.Printf("updateCDISpec(): error creating CDI spec: %v", err)
 		return err
@@ -394,7 +393,7 @@ func (rs *resourceServer) Allocate(_ context.Context, r *pluginapi.AllocateReque
 		if rs.useCdi {
 			var err error
 			ress[i].Annotations, err = rs.cdi.CreateContainerAnnotations(
-				rs.pciDevices, cdiResourcePrefix, cdiResourceKind)
+				rs.devices, cdiResourcePrefix, cdiResourceKind)
 			if err != nil {
 				return nil, fmt.Errorf("can not create container annotation: %s", err)
 			}
@@ -456,7 +455,7 @@ func (rs *resourceServer) NotifyRegistrationStatus(_ context.Context, regstat *r
 	return &registerapi.RegistrationStatusResponse{}, nil
 }
 
-func (rs *resourceServer) UpdateDevices(devices []types.PciNetDevice) {
+func (rs *resourceServer) UpdateDevices(devices []types.Device) {
 	var needUpdate bool
 
 	// Lock reading for plugin server for updating
@@ -473,7 +472,7 @@ func (rs *resourceServer) UpdateDevices(devices []types.PciNetDevice) {
 	deviceSpec := getDevicesSpec(devices)
 
 	// If not devices not changed skip
-	if !devicesChanged(rs.deviceSpec, deviceSpec) {
+	if !common.DevicesChanged(rs.deviceSpec, deviceSpec) {
 		log.Printf("no changes to devices for \"%s\"", rs.resourceName)
 		log.Printf("exposing \"%d\" devices", len(rs.devs))
 		return
@@ -508,33 +507,13 @@ func (rs *resourceServer) GetPreferredAllocation(
 	return nil, nil
 }
 
-// devicesChanged detect if original and new devices are different
-func devicesChanged(deviceList, newDeviceList []*pluginapi.DeviceSpec) bool {
-	if len(deviceList) != len(newDeviceList) {
-		return true
-	}
-
-	deviceListMap := map[string]bool{}
-	for _, dev := range deviceList {
-		deviceListMap[dev.HostPath] = true
-	}
-
-	for _, dev := range newDeviceList {
-		if _, exists := deviceListMap[dev.HostPath]; !exists {
-			return true
-		}
-	}
-
-	return false
-}
-
 // getDevicesSpec return devicesSpec for given NetDevs
-func getDevicesSpec(devices []types.PciNetDevice) []*pluginapi.DeviceSpec {
+func getDevicesSpec(devices []types.Device) []*pluginapi.DeviceSpec {
 	devicesSpec := make([]*pluginapi.DeviceSpec, 0)
 	for _, device := range devices {
 		rdmaDeviceSpec := device.GetRdmaSpec()
 		if len(rdmaDeviceSpec) == 0 {
-			log.Printf("Warning: non-Rdma Device %s\n", device.GetPciAddr())
+			log.Printf("Warning: non-Rdma Device %s\n", device.GetName())
 		}
 		devicesSpec = append(devicesSpec, rdmaDeviceSpec...)
 	}

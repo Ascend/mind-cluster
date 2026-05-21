@@ -48,9 +48,9 @@ import (
 
 // CDI represents CDI API required by Device plugin
 type CDI interface {
-	CreateCDISpec(resourcePrefix, resourceName, poolName string, devices []types.PciNetDevice) error
+	CreateCDISpec(resourcePrefix, resourceName, poolName string, devices []types.Device) error
 	CreateContainerAnnotations(
-		devices []types.PciNetDevice, resourcePrefix, resourceKind string) (map[string]string, error)
+		devices []types.Device, resourcePrefix, resourceKind string) (map[string]string, error)
 }
 
 // impl implements CDI interface
@@ -59,7 +59,7 @@ type impl struct {
 
 // CreateCDISpec creates CDI spec file with specified devices
 func (c *impl) CreateCDISpec(
-	resourcePrefix, resourceName, poolName string, devices []types.PciNetDevice) error {
+	resourcePrefix, resourceName, poolName string, devices []types.Device) error {
 	log.Printf("creating CDI spec for \"%s\" resource", resourceName)
 
 	cdiDevices := make([]cdiSpecs.Device, 0)
@@ -85,7 +85,7 @@ func (c *impl) CreateCDISpec(
 		}
 
 		device := cdiSpecs.Device{
-			Name:           dev.GetPciAddr(),
+			Name:           dev.GetName(),
 			ContainerEdits: containerEdit,
 		}
 		cdiSpec.Devices = append(cdiSpec.Devices, device)
@@ -111,7 +111,7 @@ func (c *impl) CreateCDISpec(
 
 // CreateContainerAnnotations creates container annotations based on CDI spec for a container runtime
 func (c *impl) CreateContainerAnnotations(
-	devices []types.PciNetDevice, resourceNamePrefix, resourceKind string) (map[string]string, error) {
+	devices []types.Device, resourceNamePrefix, resourceKind string) (map[string]string, error) {
 	if len(devices) == 0 {
 		return nil, errors.New("devices list is empty")
 	}
@@ -123,7 +123,7 @@ func (c *impl) CreateContainerAnnotations(
 	}
 	deviceNames := make([]string, len(devices))
 	for i, dev := range devices {
-		deviceNames[i] = cdi.QualifiedName(resourceNamePrefix, resourceKind, dev.GetPciAddr())
+		deviceNames[i] = cdi.QualifiedName(resourceNamePrefix, resourceKind, dev.GetName())
 	}
 	annoValue, err := cdi.AnnotationValue(deviceNames)
 	if err != nil {

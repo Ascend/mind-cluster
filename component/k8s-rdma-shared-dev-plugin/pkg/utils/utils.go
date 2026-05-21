@@ -25,12 +25,14 @@ import (
 
 	"github.com/Mellanox/rdmamap"
 
+	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
 )
 
 var (
 	sysNetDevices = "/sys/class/net"
 	SysBusPci     = "/sys/bus/pci/devices"
+	SysBusUb      = "/sys/bus/ub/devices"
 )
 
 // GetPciAddress return the pci address for given interface name
@@ -61,6 +63,31 @@ func GetRdmaDevices(pciAddress string) []string {
 	rdmaDevices := make([]string, 0, len(rdmaResources))
 	for _, resource := range rdmaResources {
 		rdmaResourceDevices := rdmamap.GetRdmaCharDevices(resource)
+		rdmaDevices = append(rdmaDevices, rdmaResourceDevices...)
+	}
+
+	return rdmaDevices
+}
+
+// GetRdmaDevicesForUbdev returns rdma char device paths for a given UB device ID
+func GetRdmaDevicesForUbdev(ubID string) []string {
+	infinibandDir := filepath.Join(common.SysBusUb, ubID, common.Infiniband)
+
+	var rdmadevs []string
+	entries, err := os.ReadDir(infinibandDir)
+	if err != nil {
+		return nil
+	}
+
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		rdmadevs = append(rdmadevs, entry.Name())
+	}
+	rdmaDevices := make([]string, 0, len(rdmadevs))
+	for _, entry := range entries {
+		rdmaResourceDevices := rdmamap.GetRdmaCharDevices(entry.Name())
 		rdmaDevices = append(rdmaDevices, rdmaResourceDevices...)
 	}
 

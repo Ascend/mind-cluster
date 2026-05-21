@@ -31,9 +31,6 @@ type rdmaDeviceSpec struct {
 	rdmaDevs []string
 }
 
-// Required RDMA devices
-var requiredRdmaDevices = []string{"rdma_cm", "umad", "uverbs"}
-
 func NewRdmaDeviceSpec(rdmaDevs []string) types.RdmaDeviceSpec {
 	return &rdmaDeviceSpec{rdmaDevs: rdmaDevs}
 }

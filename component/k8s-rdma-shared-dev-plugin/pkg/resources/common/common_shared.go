@@ -18,4 +18,5 @@ package common
 var (
 	RequiredRdmaDevices = []string{"rdma_cm", "umad", "uverbs"}
 	DeprecatedSockDir   = "/var/lib/kubelet/device-plugins"
+	ActiveSockDir       = "/var/lib/kubelet/plugins_registry"
 )
