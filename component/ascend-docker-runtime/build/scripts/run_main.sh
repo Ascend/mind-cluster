@@ -122,7 +122,7 @@ function check_path_permission {
     fi
     local permission=$(stat -c %A "${path}")
     if [[ $(echo "${permission}" | cut -c6) == w ]] || [[ $(echo "${permission}" | cut -c9) == w ]]; then
-        echo "[ERROR] group or other of ${path} has write permisson"
+        echo "[ERROR] group or other of ${path} has write permission"
         return 1
     fi
 }
@@ -136,9 +136,6 @@ function print_help {
 Usage: ./${RT_FIRST_CASE}_${PACKAGE_VERSION}_linux-$(uname -m).run [options]
 Options:
   --help | -h                   Print this message
-  --check|--info|--list|--quiet|--tar|
-                                These parameters are meaningless for ${RT_FIRST_CASE} and
-                                will be discarded in the future
   --install                     Install into this system
   --install-path                Specify the installation path, which must be absolute path
   --uninstall                   Uninstall the installed ${RT_FIRST_CASE} tool
@@ -146,11 +143,6 @@ Options:
   --install-type=<type>         Only A500, A500A2, A200ISoC, A200IA2 and A200 need to specify
                                 the installation type of ${RT_FIRST_CASE}
                                 (eg: --install-type=A200IA2, when your product is A200I A2 or A200I DK A2)
-  --ce=<ce>                     Only iSula need to specify the container engine(eg: --ce=isula)
-                                MUST use with --install or --uninstall
-                                Do not use with --install-scene
-                                [Deprecated] This parameter will be removed in future versions.
-                                Please use --install-scene=isula instead
   --version                     Query ${RT_FIRST_CASE} version
   --install-scene=<scene>       Installation scenario, only docker, containerd or isula(eg: --install-scene=docker, default: docker)
   --config-file-path            Specifies the path of the Docker or containerd configuration file
@@ -513,7 +505,7 @@ do
                 exit 1
             fi
             if [ "${ISULA}" == "isula" ]; then
-                log "[ERROR]" "failed, incompatible parameters: '--install-scene' and '--ce' !"
+                log "[ERROR]" "failed, incompatible parameters: '--install-scene' !"
                 exit 1
             fi
             need_help=n
@@ -582,26 +574,6 @@ do
             fi
             need_help=n
             UPGRADE_FLAG=y
-            shift
-            ;;
-        --ce=*)
-            if [ "${ISULA}" == "isula" ]; then
-                log "[ERROR]" "failed, '--ce' Repeat parameter!"
-                exit 1
-            fi
-            if [ "${INSTALL_SCENE_FLAG}" == "y" ]; then
-                log "[ERROR]" "failed, incompatible parameters: '--install-scene' and '--ce' !"
-                exit 1
-            fi
-            need_help=n
-            if [ "$3" == "--ce=isula" ]; then
-                DOCKER_CONFIG_DIR="/etc/isulad"
-                ISULA=isula
-                RESERVEDEFAULT=yes
-            else
-                log "[ERROR]" "failed, please check the parameter of --ce=<ce>"
-                exit 1
-            fi
             shift
             ;;
         --install-type=*)

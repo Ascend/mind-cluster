@@ -109,7 +109,7 @@ function check_path_permission {
     fi
     local permission=$(stat -c %A "${path}")
     if [[ $(echo "${permission}" | cut -c6) == w ]] || [[ $(echo "${permission}" | cut -c9) == w ]]; then
-        echo "[ERROR] group or other of ${path} has write permisson"
+        echo "[ERROR] group or other of ${path} has write permission"
         return 1
     fi
 }
