@@ -401,7 +401,7 @@
 
 ## 任务YAML配置示例<a name="ZH-CN_TOPIC_0000002511346461"></a>
 
-重调度模式和优雅容错模式可参见如下[操作步骤](#zh-cn_topic_0000002202737289_zh-cn_topic_0000001951258657_section18181655154219)配置示例。当**subHealthyStrategy**取值为graceExit时，需要参见[（可选）配置亚健康故障保存临终遗言](#zh-cn_topic_0000002202737289_zh-cn_topic_0000001951258657_section1048332432310)完成启动脚本与任务YAML的适配，以确保任务因亚健康故障被重调度前能够正常保存CKPT文件。
+重调度模式和优雅容错模式可参见如下[操作步骤](#zh-cn_topic_0000002202737289_zh-cn_topic_0000001951258657_section18181655154219)配置示例。当**subHealthyStrategy**取值为graceExit时，需要参见[配置亚健康主动CKPT保存](./05_configuring_training_recovery.md#zh-cn_topic_0000002202737289_zh-cn_topic_0000001951258657_section1048332432310)完成启动脚本与任务YAML的适配，以确保任务因亚健康故障被重调度前能够正常保存CKPT文件。
 
 **前提条件<a name="zh-cn_topic_0000002202737289_zh-cn_topic_0000001951258657_section7585519135117"></a>**
 
@@ -795,19 +795,3 @@
                     hostPath:
                       path: /etc/localtime
         ```
-
-**（可选）配置亚健康故障保存临终遗言<a name="zh-cn_topic_0000002202737289_zh-cn_topic_0000001951258657_section1048332432310"></a>**
-
-如果希望任务发生亚健康故障时保存临终遗言，需修改任务YAML，配置亚健康策略为“graceExit”，故障恢复策略为“dump”，其余启动脚本、任务YAML配置可参见[配置临终CKPT保存](./05_configuring_training_recovery.md#配置临终ckpt保存)修改。此功能需确保TaskD和ClusterD可以正常使用。
-
-```Yaml
-...
-  labels:
-     ...
-     subHealthyStrategy: "graceExit"  # 配置亚健康策略
-...
-  annotations:
-    ...
-    recover-strategy: "dump"  # 任务可用恢复策略为保存临终遗言
-...
-```
