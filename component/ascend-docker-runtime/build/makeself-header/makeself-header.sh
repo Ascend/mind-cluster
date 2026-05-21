@@ -75,7 +75,6 @@ filesizes="$filesizes"
 totalsize="$totalsize"
 keep="$KEEP"
 nooverwrite="$NOOVERWRITE"
-quiet="n"
 accept="n"
 nodiskspace="n"
 export_conf="$EXPORT_CONF"
@@ -206,8 +205,6 @@ MS_Help()
 Usage: \$0 [options]
 Options:
   --help | -h                   Print this message
-  --check|--info|--list|--quiet|--tar    These parameters are meaningless for \${RT_LOWER_CASE} and
-                                will be discarded in the future
 \${helpheader}
 EOH
 }
@@ -219,8 +216,6 @@ Error input
 Usage: \$0 [options]
 Options:
   --help | -h                   Print this message
-  --check|--info|--list|--quiet|--tar    These parameters are meaningless for \${RT_LOWER_CASE} and
-                                will be discarded in the future
 \${helpheader}
 EOH
 }
@@ -239,13 +234,13 @@ MS_Verify_Sig()
     rm -f "\$temp_sig"
     if test \$gpg_res -eq 0 && test \`echo \$gpg_output | grep -c Good\` -eq 1; then
         if test \`echo \$gpg_output | grep -c \$sig_key\` -eq 1; then
-            test x"\$quiet" = xn && echo "GPG signature is good" >&2
+            echo "GPG signature is good" >&2
         else
             echo "GPG Signature key does not match" >&2
             exit 2
         fi
     else
-        test x"\$quiet" = xn && echo "GPG signature failed to verify" >&2
+        echo "GPG signature failed to verify" >&2
         exit 2
     fi
 }
@@ -263,9 +258,7 @@ MS_Check()
     SHA_PATH=\`exec <&- 2>&-; which shasum || command -v shasum || type shasum\`
     test -x "\$SHA_PATH" || SHA_PATH=\`exec <&- 2>&-; which sha256sum || command -v sha256sum || type sha256sum\`
 
-    if test x"\$quiet" = xn; then
-		MS_Printf "Verifying archive integrity..."
-    fi
+    MS_Printf "Verifying archive integrity..."
     offset=\`head -n "\$skip" "\$1" | wc -c | tr -d " "\`
     verb=\$2
     i=1
@@ -286,7 +279,7 @@ MS_Check()
 					echo "Error in SHA256 checksums: \$shasum is different from \$sha" >&2
                     log "[ERROR]" "check failed, Error in SHA256 checksums: \$shasum is different from \$sha"
                     exit 2
-				elif test x"\$quiet" = xn; then
+				else
 					MS_Printf " SHA256 checksums are OK.\\n" >&2
 				fi
 				crc="0000000000";
@@ -305,7 +298,7 @@ MS_Check()
 					echo "Error in MD5 checksums: \$md5sum is different from \$md5" >&2
                     log "[ERROR]" "check failed, Error in MD5 checksums: \$md5sum is different from \$md5"
                     exit 2
-				elif test x"\$quiet" = xn; then
+				else
 					MS_Printf " MD5 checksums are OK." >&2
 				fi
 				crc="0000000000"; verb=n
@@ -319,16 +312,14 @@ MS_Check()
 				echo "Error in checksums: \$sum1 is different from \$crc" >&2
 				log "[ERROR]" "check failed, Error in checksums: \$sum1 is different from \$crc"
                 exit 2
-			elif test x"\$quiet" = xn; then
+			else
 				MS_Printf " CRC checksums are OK." >&2
 			fi
 		fi
 		i=\`expr \$i + 1\`
 		offset=\`expr \$offset + \$s\`
     done
-    if test x"\$quiet" = xn; then
-		echo " All good."
-    fi
+    echo " All good."
     log "[INFO]" "check success"
 }
 
@@ -347,11 +338,7 @@ MS_Decompress()
 
 UnTAR()
 {
-    if test x"\$quiet" = xn; then
-		tar \$1vf - $UNTAR_EXTRA 2>&1 || { echo " ... Extraction failed." >&2; kill -15 \$$; }
-    else
-		tar \$1f - $UNTAR_EXTRA 2>&1 || { echo Extraction failed. >&2; kill -15 \$$; }
-    fi
+    tar \$1vf - $UNTAR_EXTRA 2>&1 || { echo " ... Extraction failed." >&2; kill -15 \$$; }
 }
 
 MS_exec_cleanup() {
@@ -407,59 +394,6 @@ do
 	MS_Help
 	exit 0
 	;;
-    --info)
-      echo "[WARNING]: --info is meaningless for \${RT_LOWER_CASE} and will be discarded in the future"
-      echo "\${RT_LOWER_CASE} pkg"
-      exit 0
-      ;;
-    --list)
-      echo "[WARNING]: --list is meaningless for \${RT_LOWER_CASE} and will be discarded in the future"
-      echo "
-  ascend-docker-cli
-  ascend-docker-destroy
-  ascend-docker-hook
-  ascend-docker-plugin-install-helper
-  ascend-docker-runtime
-  assets/
-  base.list
-  base.list_A200
-  base.list_A200IA2
-  base.list_A200ISoC
-  base.list_A500
-  base.list_A500A2
-  README.md
-  run_main.sh
-  uninstall.sh
-      "
-      exit 0
-      ;;
-    --quiet)
-      echo "[WARNING]: --quiet is meaningless for \${RT_LOWER_CASE} and will be discarded in the future"
-      shift
-      ;;
-    --tar)
-      echo "[WARNING]: --tar is meaningless for \${RT_LOWER_CASE} and will be discarded in the future"
-      offset=\`head -n "\$skip" "\$0" | wc -c | sed "s/ //g"\`
-      arg1="\$2"
-        shift 2 || { MS_Help; exit 1; }
-      for s in \$filesizes
-      do
-            MS_dd "\$0" \$offset \$s | MS_Decompress | tar "\$arg1" - "\$@"
-            if test \$? -ne 0; then
-              log "[ERROR]" "tar failed"
-              exit 1
-            fi
-          offset=\`expr \$offset + \$s\`
-      done
-      log "[INFO]" "tar success"
-      exit 0
-      ;;
-    --check)
-    echo "[WARNING]: --check is meaningless for \${RT_LOWER_CASE} and will be discarded in the future"
-	MS_Check "\$0" y
-    exit 0
-  shift
-	;;
 	*)
 	Script_Args_Check \$1
 	scriptargs="\$scriptargs '\$1'"
@@ -468,16 +402,7 @@ do
   esac
 done
 
-quiet_para=""
-if test x"\$quiet" = xy; then
-    quiet_para="--quiet "
-fi
-scriptargs="--\$name_of_file""--\"\$pwd_of_file\""" \$quiet_para""\$scriptargs"
-
-if test x"\$quiet" = xy -a x"\$verbose" = xy; then
-	echo Cannot be verbose and quiet at the same time. >&2
-	exit 1
-fi
+scriptargs="--\$name_of_file""--\"\$pwd_of_file\""" \$scriptargs"
 
 if test x"$NEED_ROOT" = xy -a \`id -u\` -ne 0; then
 	echo "Administrative privileges required for this archive (use su or sudo)" >&2
@@ -493,9 +418,7 @@ else
             log "[ERROR]" "extract failed, Target directory \$targetdir already exists, aborting."
             exit 1
 	fi
-	if test x"\$quiet" = xn; then
-	    echo "Creating directory \$targetdir" >&2
-	fi
+	echo "Creating directory \$targetdir" >&2
 	tmpdir="\$targetdir"
 	dashp="-p"
     else
@@ -523,14 +446,10 @@ if test x"\$verbose" = xy; then
 	fi
 fi
 
-if test x"\$quiet" = xn; then
-    # Decrypting with openssl will ask for password,
-    # the prompt needs to start on new line
-	if test x"$ENCRYPT" = x"openssl"; then
-	    echo "Decrypting and uncompressing \$label..."
-	else
-        MS_Printf "Uncompressing \$label"
-	fi
+if test x"$ENCRYPT" = x"openssl"; then
+    echo "Decrypting and uncompressing \$label..."
+else
+    MS_Printf "Uncompressing \$label"
 fi
 res=3
 if test x"\$keep" = xn; then
@@ -567,9 +486,7 @@ do
     fi
     offset=\`expr \$offset + \$s\`
 done
-if test x"\$quiet" = xn; then
-	echo
-fi
+echo
 
 cd "\$tmpdir"
 res=0

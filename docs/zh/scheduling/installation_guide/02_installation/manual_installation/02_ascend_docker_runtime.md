@@ -359,31 +359,6 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
 <td class="cellrowborder" valign="top" width="67.57%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001930317932_p1356892011218"><a name="zh-cn_topic_0000001930317932_p1356892011218"></a><a name="zh-cn_topic_0000001930317932_p1356892011218"></a>查询帮助信息。</p>
 </td>
 </tr>
-<tr id="zh-cn_topic_0000001930317932_row165681520112117"><td class="cellrowborder" valign="top" width="32.43%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001930317932_p3568122042118"><a name="zh-cn_topic_0000001930317932_p3568122042118"></a><a name="zh-cn_topic_0000001930317932_p3568122042118"></a>--info</p>
-</td>
-<td class="cellrowborder" valign="top" width="67.57%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001930317932_p15568720122112"><a name="zh-cn_topic_0000001930317932_p15568720122112"></a><a name="zh-cn_topic_0000001930317932_p15568720122112"></a>查询软件包构建信息。在未来某个版本将废弃该参数。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000001930317932_row756832062117"><td class="cellrowborder" valign="top" width="32.43%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001930317932_p6568142052120"><a name="zh-cn_topic_0000001930317932_p6568142052120"></a><a name="zh-cn_topic_0000001930317932_p6568142052120"></a>--list</p>
-</td>
-<td class="cellrowborder" valign="top" width="67.57%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001930317932_p4568182018212"><a name="zh-cn_topic_0000001930317932_p4568182018212"></a><a name="zh-cn_topic_0000001930317932_p4568182018212"></a>查询软件包文件列表。在未来某个版本将废弃该参数。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000001930317932_row2568520172112"><td class="cellrowborder" valign="top" width="32.43%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001930317932_p856882092110"><a name="zh-cn_topic_0000001930317932_p856882092110"></a><a name="zh-cn_topic_0000001930317932_p856882092110"></a>--check</p>
-</td>
-<td class="cellrowborder" valign="top" width="67.57%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001930317932_p185681720182113"><a name="zh-cn_topic_0000001930317932_p185681720182113"></a><a name="zh-cn_topic_0000001930317932_p185681720182113"></a>检查软件包的一致性和完整性。在未来某个版本将废弃该参数。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000001930317932_row165681920202119"><td class="cellrowborder" valign="top" width="32.43%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001930317932_p15568122012120"><a name="zh-cn_topic_0000001930317932_p15568122012120"></a><a name="zh-cn_topic_0000001930317932_p15568122012120"></a>--quiet</p>
-</td>
-<td class="cellrowborder" valign="top" width="67.57%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001930317932_p256818204217"><a name="zh-cn_topic_0000001930317932_p256818204217"></a><a name="zh-cn_topic_0000001930317932_p256818204217"></a>静默安装，跳过交互式信息，需要配合install、uninstall或者upgrade使用。在未来某个版本将废弃该参数。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000001930317932_row19568182011213"><td class="cellrowborder" valign="top" width="32.43%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001930317932_p55691220202114"><a name="zh-cn_topic_0000001930317932_p55691220202114"></a><a name="zh-cn_topic_0000001930317932_p55691220202114"></a>--tar arg1 [arg2 ...]</p>
-</td>
-<td class="cellrowborder" valign="top" width="67.57%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001930317932_p25691320162114"><a name="zh-cn_topic_0000001930317932_p25691320162114"></a><a name="zh-cn_topic_0000001930317932_p25691320162114"></a>对软件包执行tar命令，使用tar后面的参数作为命令的参数。例如执行<strong id="zh-cn_topic_0000001930317932_b656982016214"><a name="zh-cn_topic_0000001930317932_b656982016214"></a><a name="zh-cn_topic_0000001930317932_b656982016214"></a>--tar xvf</strong>命令，解压run安装包的内容到当前目录。在未来某个版本将废弃该参数。</p>
-</td>
-</tr>
 <tr id="zh-cn_topic_0000001930317932_row156942092116"><td class="cellrowborder" valign="top" width="32.43%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001930317932_p75697203214"><a name="zh-cn_topic_0000001930317932_p75697203214"></a><a name="zh-cn_topic_0000001930317932_p75697203214"></a>--install</p>
 </td>
 <td class="cellrowborder" valign="top" width="67.57%" headers="mcps1.2.3.1.2 "><p id="zh-cn_topic_0000001930317932_p1357015208213"><a name="zh-cn_topic_0000001930317932_p1357015208213"></a><a name="zh-cn_topic_0000001930317932_p1357015208213"></a>安装软件包。可以指定安装路径--install-path=&lt;path&gt;，也可以不指定安装路径，直接安装到默认路径下。</p>
@@ -423,11 +398,6 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
 </div>
 <div class="p" id="zh-cn_topic_0000001930317932_p157201431201014"><a name="zh-cn_topic_0000001930317932_p157201431201014"></a><a name="zh-cn_topic_0000001930317932_p157201431201014"></a>该参数用于设置<span id="zh-cn_topic_0000001930317932_ph118353873517"><a name="zh-cn_topic_0000001930317932_ph118353873517"></a><a name="zh-cn_topic_0000001930317932_ph118353873517"></a>Ascend Docker Runtime</span>的默认挂载内容，且需要配合“--install”一起使用，格式为--install --install-type=&lt;type&gt;。&lt;type&gt;可选值为：<a name="zh-cn_topic_0000001930317932_ul848511715115"></a><a name="zh-cn_topic_0000001930317932_ul848511715115"></a><ul id="zh-cn_topic_0000001930317932_ul848511715115"><li>A200</li><li>A200ISoC</li><li>A200IA2（支持<span id="zh-cn_topic_0000001930317932_ph1323354011201"><a name="zh-cn_topic_0000001930317932_ph1323354011201"></a><a name="zh-cn_topic_0000001930317932_ph1323354011201"></a>Atlas 200I A2 加速模块</span>（RC场景）和<span id="zh-cn_topic_0000001930317932_ph192331940102018"><a name="zh-cn_topic_0000001930317932_ph192331940102018"></a><a name="zh-cn_topic_0000001930317932_ph192331940102018"></a>Atlas 200I DK A2 开发者套件</span>）</li><li>A500</li><li>A500A2</li></ul>
 </div>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000001930317932_row14570162052115"><td class="cellrowborder" valign="top" width="32.43%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001930317932_p1857042012112"><a name="zh-cn_topic_0000001930317932_p1857042012112"></a><a name="zh-cn_topic_0000001930317932_p1857042012112"></a>--ce=&lt;ce&gt;</p>
-</td>
-<td class="cellrowborder" valign="top" width="67.57%" headers="mcps1.2.3.1.2 "><a name="zh-cn_topic_0000001930317932_ul4752351238"></a><a name="zh-cn_topic_0000001930317932_ul4752351238"></a><ul id="zh-cn_topic_0000001930317932_ul4752351238"><li>仅在使用<span id="zh-cn_topic_0000001930317932_ph137882109239"><a name="zh-cn_topic_0000001930317932_ph137882109239"></a><a name="zh-cn_topic_0000001930317932_ph137882109239"></a>iSula</span>启动容器时需要指定该参数，参数值为isula。并且需要配合--install或者--uninstall一起使用，不能单独使用。</li><li>不支持和--install-scene同时使用。建议使用--install-scene替代--ce参数。后续--ce会废弃。</li></ul>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000001930317932_row1633572102619"><td class="cellrowborder" valign="top" width="32.43%" headers="mcps1.2.3.1.1 "><p id="zh-cn_topic_0000001930317932_p733611211268"><a name="zh-cn_topic_0000001930317932_p733611211268"></a><a name="zh-cn_topic_0000001930317932_p733611211268"></a>--version</p>
