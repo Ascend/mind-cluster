@@ -26,6 +26,8 @@ from ascend_fd.model.parse_info import (
     PlogShowLogs,
     RemoteInfo,
     TimeoutEvent,
+    EidPlaneInfo,
+    RankInfo,
 )
 from ascend_fd.utils import regular_table
 from ascend_fd.utils.constant.str_const import TRANSPORT_INIT_ERROR
@@ -223,6 +225,12 @@ class BaseInfoParser:
         regular_table.RDMA_TIMEOUT: regular_table.DEFAULT_RDMA_TIMEOUT_SET_KEYWORD,
         regular_table.RDMA_RETRY_CNT: regular_table.DEFAULT_RDMA_RETRY_CNT_SET_KEYWORD,
     }
+    TIMEOUT_KEYWORD_A5 = {
+        regular_table.CONNECT_TIMEOUT: regular_table.CONNECT_TIMEOUT_KEYWORD_A5,
+        regular_table.EXEC_TIMEOUT: regular_table.EXEC_TIMEOUT_KEYWORD_A5,
+        regular_table.RDMA_TIMEOUT: regular_table.RDMA_TIMEOUT_KEYWORD_A5,
+        regular_table.RDMA_RETRY_CNT: regular_table.RDMA_RETRY_CNT_KEYWORD_A5,
+    }
     TIMEOUT_PATTERN = re.compile(regular_table.TIME_OUT)
 
     def __init__(self, device_ip_map: dict, blacklist_manager: BlackListManager, device_info_map: dict = None):
@@ -235,10 +243,13 @@ class BaseInfoParser:
         self.device_ip = ""
         self.vNic_ip = ""
         self.server_id = ""
-        self.rank_map = {}  # {identifier_name: {"rank_id": rank id str, "rank_num": int}}
+        # {identifier_name: {"rank_id": rank id str, "rank_num": int}}
+        self.rank_map = {}
         self.root_for_identifiers = set()
         self.server_name = ""
-
+        # {"rank_id": [EidPlaneInfo()]}
+        self.rank_eid_plane_info = {}
+        self.generation_info = regular_table.DEFAULT_GENERATION_SIGN
         self.timeout_params = {}
 
     def re_init(self):
@@ -251,48 +262,45 @@ class BaseInfoParser:
         """
         Parse base info from log line
         """
-        if regular_table.GET_ROOT_INFO in line and not self.blacklist_manager.is_log_line_need_ignore(line):
+        if self.blacklist_manager.is_log_line_need_ignore(line):
+            return False
+        # 代际信息
+        if regular_table.GENERATION_INFO_A5 in line:
+            self.generation_info = regular_table.GENERATION_SIGN_A5
+        # rank基础信息
+        if regular_table.GET_ROOT_INFO in line:
             self._parse_root_init_info(line)
             return True
-        if regular_table.ROOT_INFO_DETECT in line and not self.blacklist_manager.is_log_line_need_ignore(line):
-            self._parse_a5_root_info_detect(line)
+        rank_info_flag = regular_table.ENTRY_RANKS_INFO in line and regular_table.RANK_INFO in line
+        if regular_table.ROOT_INFO_DETECT in line or rank_info_flag:
+            self._parse_a5_root_info(line)
             return True
-        if regular_table.ENTRY_ROOT_INFO in line and not self.blacklist_manager.is_log_line_need_ignore(line):
+        if regular_table.ENTRY_ROOT_INFO in line:
             self._parse_entry_init_info(line)
             return True
-        if (
-            regular_table.RANK_NUM_INFO in line
-            and regular_table.RANK_INFO in line
-            and not self.blacklist_manager.is_log_line_need_ignore(line)
-        ):
+        if regular_table.RANK_NUM_INFO in line and regular_table.RANK_INFO in line:
             self._parse_common_init_info(line)
             return True
-        if (
-            regular_table.TOTAL_RANK_INFO in line
-            and regular_table.SERVER_ID_INFO in line
-            and not self.blacklist_manager.is_log_line_need_ignore(line)
-        ):
+        if regular_table.TOTAL_RANK_INFO in line and regular_table.SERVER_ID_INFO in line:
             self._parse_common_init_info(line)
             return True
+        # 超时信息
         for cate, keyword in self.DEFAULT_TIMEOUT_SET_KEYWORD.items():
-            default_timeout_key_in_line = (
-                regular_table.EXTERNAL_INPUT_KEYWORD in line
-                and keyword in line
-                and not self.blacklist_manager.is_log_line_need_ignore(line)
-            )
-            if default_timeout_key_in_line:
+            if regular_table.EXTERNAL_INPUT_KEYWORD in line and keyword in line:
                 self._parse_default_timeout_set_info(line, cate)
                 return True
         for cate, keyword in self.TIMEOUT_KEYWORD.items():
-            timeout_key_in_line = keyword in line and not self.blacklist_manager.is_log_line_need_ignore(line)
-            if timeout_key_in_line:
+            if keyword in line:
                 self._parse_timeout_info(line, cate)
                 return True
-        if (
-            regular_table.SOCKET_VIRTUAL_NIC_IP_INFO in line
-            and regular_table.SOCKET_PHY_ID_INFO in line
-            and not self.blacklist_manager.is_log_line_need_ignore(line)
-        ):
+        if regular_table.TIMEOUT_KEYWORD_A5 in line:
+            self._parse_a5_timeout_info(line)
+        # EID 信息
+        if regular_table.EID_PLANE_INFO in line:
+            self._parse_eid_plane_id(line)
+            return True
+        # VNic 信息
+        if regular_table.SOCKET_VIRTUAL_NIC_IP_INFO in line and regular_table.SOCKET_PHY_ID_INFO in line:
             self._parse_vNic_ip_phy_device_id(line)
             return True
         return False
@@ -314,6 +322,13 @@ class BaseInfoParser:
         plog_base_info.timeout_param = self.timeout_params
         plog_base_info.rank_map = self.rank_map
         plog_base_info.server_name = self.server_name
+        plog_base_info.generation_info = self.generation_info
+        for identifier_name, rank_info in self.rank_map.items():
+            rank_id = rank_info.get("rank_id")
+            if rank_id:
+                data = RankInfo.from_dict(rank_info)
+                data.eid_plane_list = self.rank_eid_plane_info.get(rank_id, [])
+                plog_base_info.rank_map[identifier_name] = data
         return plog_base_info
 
     def supplement_base_info(self, device_id: int, server_id: str):
@@ -386,6 +401,21 @@ class BaseInfoParser:
         if timeout:
             self.timeout_params.update({cate: int(timeout)})
 
+    def _parse_a5_timeout_info(self, line: str):
+        """
+        Parse through splitting the line to obtain a5 timeout info
+        The log line is in the following format
+        Env config hcclSocketFamily[*], linkTimeOut[timeout]s
+        """
+        for cate, keyword in self.TIMEOUT_KEYWORD_A5.items():
+            if keyword not in line:
+                continue
+            if self.timeout_params.get(cate):
+                continue
+            timeout = filter_single_rank_info(line, keyword)
+            if timeout:
+                self.timeout_params.update({cate: int(timeout)})
+
     def _parse_root_init_info(self, line: str):
         """
         Parse and save the Device root init info.
@@ -417,15 +447,20 @@ class BaseInfoParser:
             logic_device_id = ""
         self.logic_device_id = self.logic_device_id or logic_device_id
 
-    def _parse_a5_root_info_detect(self, line: str):
+    def _parse_a5_root_info(self, line: str):
         """
-        解析 A5 版本 plog 的 RootInfoDetect 日志行，提取设备信息和 rank 信息。
-        Log 格式:
+        Filter and save the device base Info from plog HCCL logs or Hccl.
+        Log e.g:
         [RootInfoDetect] nRanks[16], rank[15] entry flat topo detect, rootinfo: host ip[192.168.0.1]
         port[30000] netMode[HrtNetworkMode::HDC] identifier[*], deviceLogicId[7], devPhyId[15]
-
         A5 变更点: 从该行直接提取物理 id (devPhyId) 和逻辑 id (deviceLogicId)。
         如果有物理 id，则不需要下一步判断。
+
+        Entry-HcclCommInitRootInfo V950, ranks[%u], rank[%u], rootinfo: host ip[%s] port[%u]
+        netMode[%s] identifier[%s], deviceLogicId[%d], devPhyId[%d]
+
+        Entry-HcclCommInitRootInfoConfigV2:ranks[%u], rank[%u], rootinfo: host ip[%s] port[%u]
+        netMode[%s] rootHandle.identifier[%s], identifier[%s]
         """
         identifier_name = filter_single_rank_info(line, regular_table.IDENTIFIER_INFO)
         if not identifier_name:
@@ -433,13 +468,17 @@ class BaseInfoParser:
         rank_id = filter_single_rank_info(line, regular_table.RANK_INFO)
         if rank_id:
             self.rank_map.setdefault(identifier_name, dict()).update({"rank_id": rank_id})
-        rank_num_str = filter_single_rank_info(line, regular_table.NRANKS_INFO)
+        rank_num_str = filter_single_rank_info(line, regular_table.NRANKS_INFO) or filter_single_rank_info(
+            line, regular_table.ENTRY_RANKS_INFO
+        )
         if rank_num_str:
             try:
                 self.rank_map.setdefault(identifier_name, dict()).update({"rank_num": int(rank_num_str)})
             except ValueError:
                 self.rank_map.setdefault(identifier_name, dict()).update({"rank_num": -1})
-        logic_device_id = filter_single_rank_info(line, regular_table.ENTRY_DEVICE_INFO)
+        logic_device_id = filter_single_rank_info(line, regular_table.ENTRY_DEVICE_INFO) or filter_single_rank_info(
+            line, regular_table.LOGIC_DEVICE_INFO
+        )
         if logic_device_id == INVALID_ID:
             logic_device_id = ""
         self.logic_device_id = self.logic_device_id or logic_device_id
@@ -451,7 +490,7 @@ class BaseInfoParser:
 
         host_ip = filter_single_rank_info(line, regular_table.HOST_IP_INFO)
         if host_ip and host_ip != INVALID_IP:
-            self.device_ip = self.device_ip or host_ip
+            self.server_id = self.server_id or host_ip
 
     def _parse_common_init_info(self, line: str):
         """
@@ -508,6 +547,16 @@ class BaseInfoParser:
         server_info = server_info.split("%")[0]  # remove the network adapter info
         new_server_id = filter_single_rank_info(line, regular_table.SERVER_ID_INFO)
         self.server_id = self.server_id or server_info or new_server_id
+
+    def _parse_eid_plane_id(self, line: str):
+        """
+        Parse eid and plane id
+        """
+        rank_id = filter_single_rank_info(line, regular_table.RANK_ID_INFO)
+        eid = filter_single_rank_info(line, regular_table.EID_ID_INFO)
+        plane_id = filter_single_rank_info(line, regular_table.PLANE_ID_INFO)
+        if rank_id and eid and plane_id:
+            self.rank_eid_plane_info.setdefault(rank_id, []).append(EidPlaneInfo(eid, plane_id))
 
 
 class ErrorParser:

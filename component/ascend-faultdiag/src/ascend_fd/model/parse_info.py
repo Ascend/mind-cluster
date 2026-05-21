@@ -25,7 +25,13 @@ from ascend_fd.utils.tool import convert_sets_to_lists
 
 
 class SingleFileParseInfo(JsonObj):
-    def __init__(self, container_ip, event_list: List, device_info: DeviceInfo, link_error_info: dict):
+    def __init__(
+        self,
+        container_ip,
+        event_list: List,
+        device_info: DeviceInfo,
+        link_error_info: dict,
+    ):
         self.container_ip = container_ip
         self.event_list = event_list
         self.device_info = device_info
@@ -53,24 +59,41 @@ class FilesParseInfo(JsonObj):
         }
 
 
+class EidPlaneInfo(JsonObj):
+    def __init__(self, eid: str, plane_id: str):
+        self.eid = eid
+        self.plane_id = plane_id
+
+
 class RankInfo(JsonObj):  # 通信域、卡号信息
-    def __init__(self, rank_id: str = "", rank_num: int = -1, identifier: str = ""):
+    def __init__(
+        self,
+        rank_id: str = "",
+        rank_num: int = -1,
+        identifier: str = "",
+        eid_plane_list: List[EidPlaneInfo] = None,
+    ):
         self.rank_id = rank_id
         self.rank_num = rank_num
         self.identifier = identifier
+        self.eid_plane_list = eid_plane_list or []
 
 
 class PlogBaseInfo(JsonObj):  # plog解析出设备基本信息
-    def __init__(self, device_ip: str = "",
-                 vNic_ip: str = "",
-                 logic_device_id: str = "",
-                 phy_device_id: str = "",
-                 server_id: str = "",
-                 root_list: List[str] = None,
-                 time_out_param: Dict = None,
-                 rank_info_list: List[RankInfo] = None,
-                 rank_map: Dict[str, RankInfo] = None,
-                 server_name: str = ""):
+    def __init__(
+        self,
+        device_ip: str = "",
+        vNic_ip: str = "",
+        logic_device_id: str = "",
+        phy_device_id: str = "",
+        server_id: str = "",
+        root_list: List[str] = None,
+        time_out_param: Dict = None,
+        rank_info_list: List[RankInfo] = None,
+        rank_map: Dict[str, RankInfo] = None,
+        server_name: str = "",
+        generation_info: str = "",
+    ):
         self.device_ip = device_ip
         self.vNic_ip = vNic_ip
         self.logic_device_id = logic_device_id
@@ -81,26 +104,35 @@ class PlogBaseInfo(JsonObj):  # plog解析出设备基本信息
         self.rank_info_list = rank_info_list or []
         self.rank_map: Dict[str, RankInfo] = rank_map or {}
         self.server_name = server_name
+        self.generation_info = generation_info
 
 
-class RemoteInfo(JsonObj):
-    def __init__(self, device_ip: str = "", phy_device_id: str = "", server_ip: str = ""):
+class RemoteInfo(JsonObj):  # 对端关系
+    def __init__(
+        self,
+        device_ip: str = "",
+        phy_device_id: str = "",
+        server_ip: str = "",
+    ):
         self.device_ip = device_ip
         self.phy_device_id = phy_device_id
         self.server_ip = server_ip
 
 
 class TimeoutEvent(JsonObj):
-    def __init__(self, error_type: str = "",
-                 error_time: str = "",
-                 key_info: str = "",
-                 root_flag: bool = False,
-                 connected_ranks: List[str] = None,
-                 identifier: str = "",
-                 tag: str = "",
-                 index: str = "",
-                 remote_rank: str = "",
-                 remote_info: List[RemoteInfo] = None):
+    def __init__(
+        self,
+        error_type: str = "",
+        error_time: str = "",
+        key_info: str = "",
+        root_flag: bool = False,
+        connected_ranks: List[str] = None,
+        identifier: str = "",
+        tag: str = "",
+        index: str = "",
+        remote_rank: str = "",
+        remote_info: List[RemoteInfo] = None,
+    ):
         self.error_type = error_type
         self.error_time = error_time
         self.key_info = key_info
@@ -114,13 +146,16 @@ class TimeoutEvent(JsonObj):
 
 
 class PlogErrorInfo(JsonObj):
-    def __init__(self, first_error_module: str = "",
-                 first_error_time: str = "",
-                 cqe_links: List[str] = None,
-                 timeout_error_events_list: List[TimeoutEvent] = None,
-                 cluster_exception: Dict = None,
-                 transport_error_remote: RemoteInfo = None,
-                 transport_init_error_happened: bool = False):
+    def __init__(
+        self,
+        first_error_module: str = "",
+        first_error_time: str = "",
+        cqe_links: List[str] = None,
+        timeout_error_events_list: List[TimeoutEvent] = None,
+        cluster_exception: Dict = None,
+        transport_error_remote: RemoteInfo = None,
+        transport_init_error_happened: bool = False,
+    ):
         self.first_error_module = first_error_module
         self.first_error_time = first_error_time
         self.cqe_links = cqe_links or []
@@ -137,18 +172,21 @@ class PlogShowLogs(JsonObj):
 
 
 class PlogPidParseInfo(JsonObj):
-    def __init__(self, pid: str = "",
-                 base: PlogBaseInfo = None,
-                 error: PlogErrorInfo = None,
-                 tls_status: str = "",
-                 start_train_time: str = regular_table.MAX_TIME,
-                 end_train_time: str = regular_table.MIN_TIME,
-                 lagging_time: str = regular_table.MIN_TIME,
-                 recovery_success_time: str = "",
-                 start_resumable_training_time: str = "",
-                 plog_parsed_name: str = "",
-                 show_logs: PlogShowLogs = None,
-                 aicpu_notify_wait_remote: str = ""):
+    def __init__(
+        self,
+        pid: str = "",
+        base: PlogBaseInfo = None,
+        error: PlogErrorInfo = None,
+        tls_status: str = "",
+        start_train_time: str = regular_table.MAX_TIME,
+        end_train_time: str = regular_table.MIN_TIME,
+        lagging_time: str = regular_table.MIN_TIME,
+        recovery_success_time: str = "",
+        start_resumable_training_time: str = "",
+        plog_parsed_name: str = "",
+        show_logs: PlogShowLogs = None,
+        aicpu_notify_wait_remote: str = "",
+    ):
         self.pid = pid
         self.base = base
         self.error = error
@@ -165,34 +203,34 @@ class PlogPidParseInfo(JsonObj):
 
 class KGParseFilePath(JsonObj):
     def __init__(
-            self,
-            plog_path: Dict = None,
-            device_log_path: Dict = None,
-            npu_info_path: List = None,
-            train_log_path: List = None,
-            host_log_path: List = None,
-            host_dmesg_path: List = None,
-            host_sysmon_path: List = None,
-            host_vmcore_dmesg_path: List = None,
-            hisi_logs_path: List = None,
-            slog_path: Dict = None,
-            noded_log_path: List = None,
-            device_plugin_path: List = None,
-            volcano_scheduler_path: List = None,
-            volcano_controller_path: List = None,
-            mindio_log_path: List = None,
-            docker_runtime_path: List = None,
-            npu_exporter_path: List = None,
-            amct_path: List = None,
-            mindie_log_path: List = None,
-            mindie_cluster_log_path: List = None,
-            bmc_app_dump_log_path: List = None,
-            bmc_device_dump_log_path: List = None,
-            bmc_log_dump_log_path: List = None,
-            bmc_log_path: List = None,
-            lcne_log_path: List = None,
-            bus_log_path: List = None,
-            custom_log_list: List = None
+        self,
+        plog_path: Dict = None,
+        device_log_path: Dict = None,
+        npu_info_path: List = None,
+        train_log_path: List = None,
+        host_log_path: List = None,
+        host_dmesg_path: List = None,
+        host_sysmon_path: List = None,
+        host_vmcore_dmesg_path: List = None,
+        hisi_logs_path: List = None,
+        slog_path: Dict = None,
+        noded_log_path: List = None,
+        device_plugin_path: List = None,
+        volcano_scheduler_path: List = None,
+        volcano_controller_path: List = None,
+        mindio_log_path: List = None,
+        docker_runtime_path: List = None,
+        npu_exporter_path: List = None,
+        amct_path: List = None,
+        mindie_log_path: List = None,
+        mindie_cluster_log_path: List = None,
+        bmc_app_dump_log_path: List = None,
+        bmc_device_dump_log_path: List = None,
+        bmc_log_dump_log_path: List = None,
+        bmc_log_path: List = None,
+        lcne_log_path: List = None,
+        bus_log_path: List = None,
+        custom_log_list: List = None,
     ):
         self.plog_path = plog_path or {}
         self.device_log_path = device_log_path or {}
@@ -239,6 +277,7 @@ class SuperPodInfo:
     """
     Parse Config
     """
+
     server_index: int
     super_pod_id: int
     super_pod_size: int
@@ -249,6 +288,7 @@ class LCNInfo:
     """
     Parse Config
     """
+
     level: int
     switch_id: int
     config_name: str

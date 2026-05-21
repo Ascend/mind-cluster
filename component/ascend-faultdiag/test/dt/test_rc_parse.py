@@ -67,7 +67,7 @@ class TestA5RootInfoDetect(unittest.TestCase):
 
         self.assertEqual(parser.logic_device_id, "7")
         self.assertEqual(parser.phy_device_id, "15")
-        self.assertEqual(parser.device_ip, "192.168.0.1")
+        self.assertEqual(parser.server_id, "192.168.0.1")
         self.assertIn("192.168.0.1_30000_0_947147113161045", parser.rank_map)
         self.assertEqual(parser.rank_map["192.168.0.1_30000_0_947147113161045"]["rank_id"], "15")
         self.assertEqual(parser.rank_map["192.168.0.1_30000_0_947147113161045"]["rank_num"], 16)
