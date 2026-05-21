@@ -1,0 +1,94 @@
+// Copyright 2025 NVIDIA CORPORATION & AFFILIATES
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+package utils
+
+import (
+	"fmt"
+	"os"
+	"path"
+)
+
+// File and directory permission constants
+const (
+	DirPerm  = 0700 // Default directory permissions
+	FilePerm = 0600 // Default file permissions
+)
+
+// FakeFilesystem allows to setup isolated fake files structure used for the tests.
+type FakeFilesystem struct {
+	RootDir  string
+	Dirs     []string
+	Files    map[string][]byte
+	Symlinks map[string]string
+}
+
+// Use function creates entire files structure and returns a function to tear it down. Example usage: defer fs.Use()()
+//
+//nolint:mnd,gosec
+func (fs *FakeFilesystem) Use() func() {
+	// create the new fake fs root dir in /tmp/sriov...
+	tmpDir, err := os.MkdirTemp("", "k8s-rdma-shared-dev-plugin-")
+	if err != nil {
+		panic(fmt.Errorf("error creating fake root dir: %s", err.Error()))
+	}
+	fs.RootDir = tmpDir
+
+	for _, dir := range fs.Dirs {
+		osErr := os.MkdirAll(path.Join(fs.RootDir, dir), DirPerm)
+		if osErr != nil {
+			panic(fmt.Errorf("error creating fake directory: %s", osErr.Error()))
+		}
+	}
+	for filename, body := range fs.Files {
+		ioErr := os.WriteFile(path.Join(fs.RootDir, filename), body, FilePerm)
+		if ioErr != nil {
+			panic(fmt.Errorf("error creating fake file: %s", ioErr.Error()))
+		}
+	}
+	for link, target := range fs.Symlinks {
+		osErr := os.Symlink(target, path.Join(fs.RootDir, link))
+		if osErr != nil {
+			panic(fmt.Errorf("error creating fake symlink: %s", osErr.Error()))
+		}
+	}
+	err = os.MkdirAll(path.Join(fs.RootDir, "usr/share/hwdata"), DirPerm)
+	if err != nil {
+		panic(fmt.Errorf("error creating fake directory: %s", err.Error()))
+	}
+
+	// TODO: Remove writing pci.ids file once ghw is mocked
+	// This is to fix the CI failure where ghw lib fails to
+	// unzip pci.ids file downloaded from internet.
+	pciData, err := os.ReadFile("/usr/share/hwdata/pci.ids")
+	if err != nil {
+		panic(fmt.Errorf("error reading file: %s", err.Error()))
+	}
+	err = os.WriteFile(path.Join(fs.RootDir, "usr/share/hwdata/pci.ids"), pciData, FilePerm)
+	if err != nil {
+		panic(fmt.Errorf("error creating fake file: %s", err.Error()))
+	}
+
+	sysNetDevices = path.Join(fs.RootDir, "/sys/class/net")
+
+	return func() {
+		// remove temporary fake fs
+		err := os.RemoveAll(fs.RootDir)
+		if err != nil {
+			panic(fmt.Errorf("error tearing down fake filesystem: %s", err.Error()))
+		}
+	}
+}
