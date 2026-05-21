@@ -107,3 +107,9 @@ do
     zip -r ./output/Ascend-mindxdl-"$component"_linux.zip ./output/*
   }
 done
+
+cp -rf "$TOP_DIR"/build/service_config.ini "$TOP_DIR"/helm-deploy-tool/
+cd "$TOP_DIR"/helm-deploy-tool/build/
+dos2unix *.sh && chmod +x *
+./build.sh
+echo "helm deploy tool has built"

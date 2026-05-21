@@ -1,0 +1,24 @@
+{{- if and .Values.is310P1usoc (not (eq (kindOf .Values.is310P1usoc) "bool")) -}}
+  {{- fail (printf "is310P1usoc must be a boolean value, got %s: %v" (kindOf .Values.is310P1usoc) .Values.is310P1usoc) -}}
+{{- end -}}
+
+{{- $key := "default" -}}
+{{- if eq (.Values.is310P1usoc | toString)  "true" -}}
+{{- $key = "310P-1usoc" -}}
+{{- end -}}
+
+{{- $filePath := printf "yamls/%s/**.yaml" $key -}}
+
+{{- $files := .Files.Glob $filePath -}}
+{{- if not $files -}}
+  {{- fail (printf "No files found matching pattern: %s" $filePath) -}}
+{{- end -}}
+
+{{- $currentScope := . }}
+{{- range $path, $_ := .Files.Glob $filePath }}
+  {{- with $currentScope }}
+    {{- $content := $.Files.Get $path -}}
+    {{- tpl $content $ }}
+---
+  {{- end }}
+{{- end }}

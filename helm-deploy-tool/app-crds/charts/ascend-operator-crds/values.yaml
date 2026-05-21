@@ -1,0 +1,3 @@
+# Built-in parameters
+renderCrds:
+  ascendJobs: "yamls/default/CustomResourceDefinition-ascendjobs.mindxdl.gitee.com.yaml"

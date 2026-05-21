@@ -1,0 +1,35 @@
+{{- if not (has (toString .Values.npuType) .Values.supportedNpuType) -}}
+  {{- fail (printf "npuType %s is not supported, please select from %v" .Values.npuType .Values.supportedNpuType) -}}
+{{- end -}}
+
+{{- if and .Values.volcanoType (not (eq (kindOf .Values.volcanoType) "bool")) -}}
+  {{- fail (printf "volcanoType must be a boolean value, got %s: %v" (kindOf .Values.volcanoType) .Values.volcanoType) -}}
+{{- end -}}
+
+{{- $npuType := (toString .Values.npuType) | default "default" -}}
+{{- $volcanoType := (toString .Values.volcanoType) | default "true" -}}
+{{- $volcanoSuffix := "" -}}
+{{- if eq $volcanoType "true" -}}
+  {{- $volcanoSuffix = "-volcano" -}}
+{{- end -}}
+
+{{- $dirKey := printf "%s%s" $npuType $volcanoSuffix -}}
+{{- if and (eq $volcanoType "true") (eq $npuType "910") -}}
+  {{- $dirKey = "volcano" -}}
+{{- end -}}
+
+{{- $filePath := printf "yamls/%s/**.yaml" $dirKey -}}
+
+{{- $files := .Files.Glob $filePath -}}
+{{- if not $files -}}
+  {{- fail (printf "No files found matching pattern: %s" $filePath) -}}
+{{- end -}}
+
+{{- $currentScope := . }}
+{{- range $path, $_ := .Files.Glob $filePath }}
+  {{- with $currentScope }}
+    {{- $content := $.Files.Get $path -}}
+    {{- tpl $content $ }}
+---
+  {{- end }}
+{{- end }}
