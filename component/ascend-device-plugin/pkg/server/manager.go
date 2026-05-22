@@ -277,6 +277,14 @@ func (hdm *HwDevManager) getNewNodeLabel(node *v1.Node) (map[string]string, erro
 			newLabelMap[common.ServerTypeLabelKey] = customname.ReplaceDevicePublicName(hdm.RunMode, cardType)
 		}
 	}
+
+	driverVersion := hdm.manager.GetDmgr().GetDcmiVersion()
+	if driverVersion != "" {
+		newLabelMap[common.DcmiDriverVersion] = driverVersion
+	} else {
+		hwlog.RunLog.Warnf("failed to get dcmi driver version")
+	}
+
 	if len(hdm.allInfo.AllDevs) <= common.FirstDevice {
 		return nil, fmt.Errorf("index(%d) exceeds the range of alldevs", common.FirstDevice)
 	}
