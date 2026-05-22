@@ -361,6 +361,8 @@ const (
 	InferCardKey = "infer-card-type"
 	// LabelValueRegex k8s label value regex (max 63 characters)
 	LabelValueRegex = "(([A-Za-z0-9][-A-Za-z0-9_.]{0,61})?[A-Za-z0-9])?"
+	// DCMI driver version
+	DcmiDriverVersion = "huawei.com/driver.version"
 )
 
 const (
@@ -511,7 +513,7 @@ const (
 	Ascend910A5RingsNum = 1
 	// RingSum indicates the max number of ring
 	RingSum = 2
-	// InferRankIndex indecates the rank index of infer situation (rank index is meaningless in infer situation)
+	// InferRankIndex indicates the rank index of infer situation (rank index is meaningless in infer situation)
 	InferRankIndex = "-1"
 	// ResetRetryTimes for max retry times when reset failed
 	ResetRetryTimes = 4
