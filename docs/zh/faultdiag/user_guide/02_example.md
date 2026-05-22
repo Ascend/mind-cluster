@@ -25,7 +25,7 @@
 
 宿主机和容器中的相关日志路径与共享存储下的日志路径的映射关系如[图1](#fig118691742112210)所示。
 
-**图 1**  日志路径映射图<a name="fig118691742112210"></a>  
+**图 1**  日志路径映射图<a name="fig118691742112210"></a>
 ![](../../figures/faultdiag/日志路径映射图.png "日志路径映射图")
 
 ## 使用流程<a name="section125992312510"></a>
@@ -38,7 +38,7 @@
 
 以下日志目录仅为示例，用户可以根据实际情况自定义存储目录。示例以单台服务器名为worker-0为例，请用户为所有训练服务器创建相应目录。
 
->[!NOTE] 
+>[!NOTE]
 >创建日志目录时建议保证目录具有默认的读写权限。训练容器启动时不建议挂载root用户目录为日志存储目录。
 
 1. 在共享存储任意路径下，创建昇腾训练日志存储目录，如“/ascend\_cluster\_log”。
@@ -90,8 +90,8 @@
         |最大存储目录容量|导出Device侧日志和文件的存储目录容量。取值为大于等于2的整数，单位是G，如：10G。|
         |Device日志存储目录名|导出Device侧日志和文件的存储路径（任意的绝对路径）。如：“/home/log/”。|
 
-        >[!NOTE] 
-        >- msnpureport\_auto\_export.sh脚本的更多使用指导请参见《Atlas 系列硬件产品 25.5.0 msnpureport 工具使用指南》的“[连续导出Device侧系统类日志和其他维测信息](https://support.huawei.com/enterprise/zh/doc/EDOC1100540106/7f3ad48)”章节。
+        >[!NOTE]
+        >- msnpureport\_auto\_export.sh脚本的更多使用指导请参见《Atlas 系列硬件产品 26.0.RC1 msnpureport 工具使用指南》的“[连续导出Device侧系统类日志和其他维测信息](https://support.huawei.com/enterprise/zh/doc/EDOC1100568649/7f3ad48)”章节。
         >- 若设置采集间隔时间较短，频繁导出日志可能会导致系统资源开销较大，推荐参数设置为300（5分钟），可根据实际场景调整。
         >- 训练服务器开机后，只需执行一次msnpureport\_auto\_export.sh脚本。训练服务器重启后，也需要重新执行该采集脚本。
 
@@ -102,7 +102,7 @@
             docker run \
                 -v /共享存储的CANN应用类日志路径:/容器内CANN应用类日志路径 \
                 --env ASCEND_PROCESS_LOG_PATH=/容器内CANN应用类日志路径 \
-                \...其他启动项...\    
+                \...其他启动项...\
                 ${训练镜像名} /bin/bash
             ```
 
@@ -112,7 +112,7 @@
             docker run \
                 -v /ascend_cluster_log/job202405181309/worker-0/process_log:/ascend_cluster_log/job202405181309/worker-0/process_log \
                 --env ASCEND_PROCESS_LOG_PATH=/ascend_cluster_log/job202405181309/worker-0/process_log \
-                \...其他启动项...\    
+                \...其他启动项...\
                 ${训练镜像名} /bin/bash
             ```
 
@@ -134,7 +134,7 @@
             ```shell
             docker run \
                 -v /共享存储用户训练日志采集目录:/容器内的用户训练日志采集目录 \
-                \...其他启动项...\    
+                \...其他启动项...\
                 ${训练镜像名} /bin/bash
             ```
 
@@ -143,7 +143,7 @@
             ```shell
             docker run \
                 -v /ascend_cluster_log/job202405181309/worker-0/train_log:/ascend_cluster_log/job202405181309/worker-0/train_log \
-                \...其他启动项...\    
+                \...其他启动项...\
                 ${训练镜像名} /bin/bash
             ```
 
@@ -153,13 +153,13 @@
             python train.py > /ascend_cluster_log/job202405181309/worker-0/train_log/rank-0.txt 2>&1
             ```
 
-            >[!NOTE] 
+            >[!NOTE]
             >- 将每张NPU卡的训练日志文件保存为txt或log文件，6.0.RC3之前的版本需要按照rank-_\(rank\_id\)_.txt的格式要求命名用户训练转储日志文件。
             >- 若使用PyTorch框架，所有NPU卡的训练日志可重定向到同一个文件，如rank-all.txt。
 
     4. 启动训练任务前，需要参考[训练及推理前NPU环境检查文件](./03_collecting_logs.md#训练及推理前npu环境检查文件)章节，查询训练前NPU相关信息。在训练结束后，再参考[训练及推理后NPU环境检查文件](./03_collecting_logs.md#训练及推理后npu环境检查文件)章节，查询训练后NPU相关信息。
 
-        >[!NOTE] 
+        >[!NOTE]
         >更多关于日志采集的详细信息，可以参见[日志采集](./03_collecting_logs.md)章节。
 
 ## 日志清洗<a name="section6586172714334"></a>
@@ -183,7 +183,7 @@
 
     ```shell
     ascend-fd parse --process_log /ascend_cluster_log/job202405181309/worker-0/process_log --train_log /ascend_cluster_log/job202405181309/worker-0/train_log --env_check /ascend_cluster_log/job202405181309/worker-0/environment_check --host_log /var/log --device_log /ascend_cluster_log/device_log/worker-0/msnpureport_log_new --dl_log /ascend_cluster_log/job202405181309/worker-0/dl_log --custom_log worker-0/
-    -o /ascend_cluster_log/job202405181309/faultdiag_work_tmp/parse_out/worker-0 
+    -o /ascend_cluster_log/job202405181309/faultdiag_work_tmp/parse_out/worker-0
     ```
 
 3. （可选）若有BMC侧日志，执行如下。

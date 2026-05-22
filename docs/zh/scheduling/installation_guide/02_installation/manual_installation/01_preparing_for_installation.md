@@ -3,6 +3,7 @@
 ## 创建用户<a name="ZH-CN_TOPIC_0000002511346353"></a>
 
 为了减少手工操作，宿主机上可不新创建用户，只需要保证没有其他用户占用UID为9000的情况即可。启动用户为hwMindX的组件（可查阅[表1](#table125971501113)），您可以根据实际情况决定创建用户的方式：
+
 1. 创建用户：（1）用户可按以下命令创建hwMindX用户；（2）也可以创建自定义用户，需将以下命令中的用户名和UID替换为实际值，同时修改对应组件的Dockerfile中`useradd`命令的UID，使其与实际值一致。
 
    - <a name="li1069651515405"></a>Ubuntu操作系统
@@ -18,8 +19,8 @@
      useradd -d /home/hwMindX -u 9000 -m -s /sbin/nologin hwMindX
      usermod -a -G HwHiAiUser hwMindX
      ```
-2. 使用环境中已有用户：需执行 <code>usermod -a -G HwHiAiUser <i>{your_username}</i></code>，并修改对应组件的Dockerfile，将Dockerfile里`useradd`命令中的UID替换为已有用户的UID。
 
+2. 使用环境中已有用户：需执行 <code>usermod -a -G HwHiAiUser <i>{your_username}</i></code>，并修改对应组件的Dockerfile，将Dockerfile里`useradd`命令中的UID替换为已有用户的UID。
 
 >[!NOTE]
 >
@@ -445,7 +446,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     ```
 
     >[!NOTE]
-    >NPU Exporter和Ascend Device Plugin若以容器化的形式部署在Atlas 200I SoC A1 核心板上，需要进行如下操作。
+    >NPU Exporter和Ascend Device Plugin若以镜像方式部署在Atlas 200I SoC A1 核心板上，需要进行如下操作。
     >1. 在制作镜像时检查宿主机HwHiAiUser、HwDmUser、HwBaseUser用户的UID和GID，并记录该GID和UID的取值。
     >2. 查看在Dockerfile-310P-1usoc中创建HwHiAiUser、HwDmUser、HwBaseUser用户时指定的GID和UID是否与宿主机的一致。如果一致则不做修改；如果不一致，请手动修改Dockerfile-310P-1usoc文件使其保持一致，同时需要保证每台宿主机上HwHiAiUser、HwDmUser、HwBaseUser用户的GID和UID的取值一致。
 

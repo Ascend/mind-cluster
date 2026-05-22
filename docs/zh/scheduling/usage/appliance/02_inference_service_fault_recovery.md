@@ -11,7 +11,7 @@
 
 1. 获取MindIE容器镜像。
     - 方式一：进入昇腾镜像仓库的[MindIE镜像下载](https://www.hiascend.com/developer/ascendhub/detail/af85b724a7e5469ebd7ea13c3439d48f)页面，下载MindIE镜像。
-    - 方式二：参考《MindIE安装指南》中的“安装MindIE \> [方式三：容器安装方式](https://www.hiascend.com/document/detail/zh/mindie/230/envdeployment/instg/mindie_instg_0022.html)”章节，自行准备镜像。
+    - 方式二：参考《MindIE安装指南》中的“安装MindIE \> [方式三：容器安装方式](https://gitcode.com/Ascend/MindIE-LLM/blob/v3.0.0/docs/zh/user_guide/install/source/installation_in_containerized.md)”章节，自行准备镜像。
 
 2. 在节点上查看MindIE镜像。
 
@@ -34,7 +34,7 @@
     mkdir -p /data/atlas_dls/public/infer/model_weight
     cd /data/atlas_dls/public/infer/model_weight/
     # 若未安装git-lfs，需要先安装git-lfs。git-lfs是一个Git扩展，专门用于管理大文件和二进制文件
-    yum install -y git-lfs 
+    yum install -y git-lfs
     # git启用lfs
     git lfs install
     # 权重下载
@@ -45,7 +45,7 @@
     chown -R 1000:1000 Qwen3-1.7B/
     ```
 
-    >[!NOTE] 
+    >[!NOTE]
     >某些模型下载后，还需进行权重量化，详细请参见[ModelZoo-PyTorch](https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/MindIE/LLM)中各类模型的README.md。
 
 4. 从MindIE容器内复制配置文件config.json到节点目录。
@@ -100,7 +100,7 @@
         vi /data/atlas_dls/public/infer/script/Qwen3-1.7B/config.json
         ```
 
-    2. 按“i”进入编辑模式，按实际使用情况修改如下参数。参数说明详细请参见《MindIE LLM开发指南》中的“核心概念与配置 \> [配置参数说明（服务化）](https://www.hiascend.com/document/detail/zh/mindie/230/mindiellm/llmdev/mindie_service0285.html)”章节。
+    2. 按“i”进入编辑模式，按实际使用情况修改如下参数。参数说明详细请参见《MindIE LLM开发指南》中的“核心概念与配置 \> [配置参数说明（服务化）](https://www.hiascend.com/document/detail/zh/mindie/300/mindiellm/llmdev/user_guide/user_manual/service_parameter_configuration.md)”章节。
 
         ```json
         {
@@ -116,7 +116,7 @@
                 "httpsEnabled" : false,
                 …
             },
-         
+
         "BackendConfig" : {
             …
                 "npuDeviceIds" : [[0,1]],
@@ -142,9 +142,6 @@
 
         其中，modelWeightPath为挂载到容器中的模型权重路径。
 
-        >[!NOTICE] 
-        >"httpsEnabled"表示是否开启HTTPS协议。设为"true"表示开启HTTPS协议，此时需要配置双向认证证书；设为"false"表示不开启HTTPS协议。推荐开启HTTPS协议，并参见《MindIE Motor开发指南》中的“配套工具 \> MindIE Service Tools \> [CertTools](https://www.hiascend.com/document/detail/zh/mindie/230/mindiemotor/motordev/mindie_service0312.html)”章节，配置开启HTTPS通信所需服务证书、私钥等证书文件。
-
     3. 按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
 
 6. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/inference/without-k8s/”目录下的启动脚本infer\_start.sh，放在节点目录“/data/atlas\_dls/public/infer/script/Qwen3-1.7B/”下，并对infer\_start.sh脚本进行编辑。
@@ -165,7 +162,7 @@
         …
         mkdir -p /job/script/alllog/
         INFER_LOG_PATH=/job/script/alllog/output_$(date +%Y%m%d_%H%M%S).log # 日志落盘路径
-         
+
         # config.json
         export MIES_CONFIG_JSON_PATH=/job/script/config.json # 推理任务启动配置文件路径，容器启动时挂载进容器
         # （可选）其他用户自定义步骤
@@ -195,7 +192,7 @@
     - 使用Ascend Docker Runtime挂载芯片和设备
 
         ```shell
-        docker run -it -d --net=host --shm-size=1g \ 
+        docker run -it -d --net=host --shm-size=1g \
         --name <container-name> \
         -e ASCEND_VISIBLE_DEVICES=0,1 \
         -v /usr/local/Ascend/driver:/usr/local/Ascend/driver:ro \
@@ -229,8 +226,8 @@
     - \<restart\_times\>作为参数传入infer\_start.sh中，表示服务重启次数，需替换为数字，不填默认为0。超过重启次数会退出容器。
     - 请用户按需自行修改环境变量ASCEND\_VISIBLE\_DEVICES的值，以挂载不同数量芯片。芯片ID需要与config.json中npuDeviceIds字段包含的芯片ID保持一致。
     - 请用户自行增删“--device”参数，以挂载不同数量芯片和设备。芯片ID需要与config.json中npuDeviceIds字段包含的芯片ID保持一致。
-     
-   >[!NOTE] 
+
+   >[!NOTE]
    >启动容器后，若报错"OpenBLAS blas_thread_int: pthread_create failed for thread 1 of 128: Operation not permitted"，即OpenBLAS尝试创建多线程失败，可能原因是seccomp阻止了pthread相关系统的调用，此时可以在Docker启动命令中增加“--security-opt seccomp=unconfined --security-opt no-new-privileges”参数解决。
 
 8. 查看容器日志。
@@ -253,15 +250,15 @@
     curl -H "Accept: application/json" \
     -H "Content-Type: application/json" \
     -X POST -d '{
-        "model": "<model_name>", 
-    "messages": [ 
+        "model": "<model_name>",
+    "messages": [
             {"role": "system", "content": "you are a helpful assistant."},
-            { "role": "user", "content": "How many r are in the word \"strawberry\"" } 
-        ], 
-        "max_tokens": 256, 
+            { "role": "user", "content": "How many r are in the word \"strawberry\"" }
+        ],
+        "max_tokens": 256,
         "stream": false,
         "do_sample": true,
-        "ignore_eos": true, 
+        "ignore_eos": true,
         "temperature": 0.6,
         "top_p": 0.95,
         "top_k": 20,
@@ -269,7 +266,7 @@
     http://<ipAddress>:<port>/v1/chat/completions
     ```
 
-    >[!NOTE] 
+    >[!NOTE]
     >- \<model\_name\>需替换为config.json中modelName字段的值。
     >- \<ipAddress\>需替换为config.json中ipAddress字段的值。
     >- \<port\>需替换为config.json中port字段的值。

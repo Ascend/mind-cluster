@@ -98,7 +98,7 @@
 
 本章节以对接Prometheus，上报Prometheus数据为例，确认NPU Exporter组件是否正常运行。
 
-**NPU Exporter使用容器部署<a name="section1595201114126"></a>**
+**NPU Exporter使用镜像部署<a name="section1595201114126"></a>**
 
 请在任意节点执行以下步骤验证NPU Exporter的安装状态。
 
@@ -217,7 +217,7 @@
 2. 通过如下命令查看K8s集群中Ascend Device Plugin的日志。
 
     ```shell
-    kubectl logs -n kube-system Ascend Device Plugin组件的Pod名字
+    kubectl logs -n kube-system {Ascend Device Plugin组件的Pod名字}
     ```
 
     回显示例如下，表示组件正常。
@@ -244,8 +244,23 @@
 3. 通过如下命令查看K8s中节点的详细情况。如果节点详情中的“Capacity”字段和“Allocatable”字段出现了昇腾AI处理器的相关信息，表示Ascend Device Plugin给K8s上报芯片正常，组件运行正常。
 
     ```shell
-    kubectl describe node K8s中的节点名
+    kubectl describe node {K8s中的节点名}
     ```
+
+    >[!NOTE]
+    >
+    >在K8s管理节点执行以下命令，可查询K8s中的节点名。
+    >
+    >```shell
+    >kubectl get node
+    >```
+    >
+    >回显示例如下：
+    >
+    >```ColdFusion
+    >NAME       STATUS   ROLES           AGE   VERSION
+    >ubuntu     Ready    worker          23h   v1.17.3
+    >```
 
     - 以Atlas 800 训练服务器为例，回显示例如下：
 
@@ -612,7 +627,7 @@
     ```
 
     >[!NOTE]
-    >若回显中出现类似如下信息，可忽略，不影响实际功能，可能原因是未配置RoCE网卡IP地址和子网掩码。若不想打印该信息，可参见《Atlas A2 中心推理和训练硬件 25.5.0 HCCN Tool 接口参考》的“[配置功能\>配置RoCE网卡IP地址和子网掩码](https://support.huawei.com/enterprise/zh/doc/EDOC1100540101/44299f2a)”章节配置。
+    >若回显中出现类似如下信息，可忽略，不影响实际功能，可能原因是未配置RoCE网卡IP地址和子网掩码。若不想打印该信息，可参见《Atlas A2 中心推理和训练硬件 26.0.RC1 HCCN Tool 接口参考》的“[配置功能\>配置RoCE网卡IP地址和子网掩码](https://support.huawei.com/enterprise/zh/doc/EDOC1100568362/83923a94)”章节配置。
     >
     >```ColdFusion
     >[dsmi_common_interface.c:1017][ascend][curpid:244135,244135][drv][dmp][dsmi_get_device_ip_address]devid 0 dsmi_cmd_get_device_ip_address return 1 error!

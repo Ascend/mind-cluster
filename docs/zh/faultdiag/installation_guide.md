@@ -55,14 +55,14 @@
 </tbody>
 </table>
 
->[!NOTE] 
+>[!NOTE]
 ><i>\{version\}</i>为软件包的版本号，请用户根据实际情况需要获取对应的软件包。
 
 **软件数字签名验证<a name="zh-cn_topic_0000001511594161_section199643813528"></a>**
 
 为了防止软件包在传递过程中或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
 
-在软件包下载之后，请参考《OpenPGP签名验证指南》，对从Support网站下载的软件包进行PGP数字签名校验。如果校验失败，请不要使用该软件包，先联系华为技术支持工程师解决。
+在软件包下载之后，请参考《[OpenPGP签名验证指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100209376)》，对从Support网站下载的软件包进行PGP数字签名校验。如果校验失败，请不要使用该软件包，先联系华为技术支持工程师解决。
 
 使用软件包安装/升级之前，也需要按上述过程先验证软件包的数字签名，确保软件包未被篡改。
 
@@ -92,7 +92,7 @@
 4. 执行如下命令进行安装。
 
     ```shell
-    pip3 install ascend_faultdiag-{version}-py3-none-linux_{arch}.whl --log ~/.ascend_faultdiag/install.log          
+    pip3 install ascend_faultdiag-{version}-py3-none-linux_{arch}.whl --log ~/.ascend_faultdiag/install.log
     ```
 
 5. 修改目录权限。
@@ -142,7 +142,7 @@ bash install.sh --install=fault-diag                                            
 
 详细安装流程如[图1](#fig56301358747)所示：
 
-**图 1**  使用MindCluster Ascend Deployer批量安装MindCluster Ascend FaultDiag组件<a name="fig56301358747"></a>  
+**图 1**  使用MindCluster Ascend Deployer批量安装MindCluster Ascend FaultDiag组件<a name="fig56301358747"></a>
 ![](../figures/faultdiag/使用MindCluster-Ascend-Deployer批量安装MindCluster-Ascend-FaultDiag组件.png "使用MindCluster-Ascend-Deployer批量安装MindCluster-Ascend-FaultDiag组件")
 
 ## 升级组件<a name="ZH-CN_TOPIC_0000001592268721"></a>
@@ -178,5 +178,5 @@ pip3 uninstall ascend-faultdiag -y --log ~/.ascend_faultdiag/uninstall.log
 rm /usr/local/bin/ascend-fd
 ```
 
->[!NOTE] 
+>[!NOTE]
 >“\~/.ascend\_faultdiag”目录保存了日志等信息，不会随着卸载自动删除，请手动删除。
