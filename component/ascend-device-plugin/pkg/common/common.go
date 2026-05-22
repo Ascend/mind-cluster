@@ -455,6 +455,12 @@ func CheckDeviceName(deviceName, deviceRunMode string) bool {
 
 	pattern := patternMap[runModeRegexpMap[deviceRunMode]]
 	if !pattern.MatchString(deviceName) {
+		if deviceRunMode == api.Ascend910 && ParamOption.RealCardType == api.Ascend910A5 {
+			npuPattern := patternMap[api.NPULowerCase]
+			if npuPattern.MatchString(deviceName) {
+				return true
+			}
+		}
 		hwlog.RunLog.Warnf("in %s device run mode, device name %s is illegal", deviceRunMode, deviceName)
 		return false
 	}

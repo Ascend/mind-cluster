@@ -380,9 +380,7 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet, 
 func (tool *AscendTools) writeDeviceInfoCm(manuallySeparateNPU string, newDeviceList map[string]string,
 	reasonCache common.UpgradeFaultReasonMap[common.LogicId], switchFaultInfo common.SwitchFaultInfo,
 	dpuInfo common.DpuInfo) (bool, error) {
-	if manuallySeparateNPU != "" {
-		hwlog.RunLog.Infof("configmap/ManuallySeparateNPU:[%v] are unhealthy", manuallySeparateNPU)
-	}
+
 	reasonCm, err := reasonCache.ConvertCacheToCm(tool.GetDmgr().GetPhysicIDFromLogicID)
 	if err != nil {
 		hwlog.RunLog.Infof("UpdateNodeDeviceInfo ConvertCacheToCm err:%v", err)
@@ -391,6 +389,9 @@ func (tool *AscendTools) writeDeviceInfoCm(manuallySeparateNPU string, newDevice
 	reasonCmStr := reasonCm.CmToString(tool.GetName())
 	newDeviceList, manuallySeparateNPU, reasonCmStr = customname.ReplaceDeviceInfoPublicName(tool.name,
 		newDeviceList, manuallySeparateNPU, reasonCmStr)
+	if manuallySeparateNPU != "" {
+		hwlog.RunLog.Infof("configmap/ManuallySeparateNPU:[%v] are unhealthy", manuallySeparateNPU)
+	}
 	nodeDeviceData := tool.getNodeDeviceInfoCache(newDeviceList)
 	if err = tool.client.WriteDeviceInfoDataIntoCMCache(nodeDeviceData, manuallySeparateNPU,
 		switchFaultInfo, dpuInfo, reasonCmStr); err != nil {
@@ -737,7 +738,7 @@ func (tool *AscendTools) getFaultTimeAndLevelMap(
 		faultLevel := getFaultLevelFunc([]int64{eventId}, device.LogicID)
 		faultTime, found := device.FaultTimeMap[eventId]
 		if !found {
-			hwlog.RunLog.Warnf("fault time map is inconsistance with faults, map: %s, codes: %s",
+			hwlog.RunLog.Warnf("fault time map is inconsistency with faults, map: %s, codes: %s",
 				common.ObjToString(device.FaultTimeMap), common.ObjToString(events))
 		}
 		faultTimeAndLevel := common.FaultTimeAndLevel{
@@ -1182,7 +1183,7 @@ func (tool *AscendTools) getVGroupID(device string) (uint32, error) {
 			return vDevInfo.QueryInfo.Base.VfgID, nil
 		}
 	}
-	return 0, fmt.Errorf("not found virutal device info, %s", device)
+	return 0, fmt.Errorf("not found virtual device info, %s", device)
 }
 
 // AppendVGroupInfo append virtual group id info after device name
@@ -1223,7 +1224,7 @@ func (tool *AscendTools) CheckDeviceTypeLabel() error {
 	}
 	aiCore, err := strconv.Atoi(deviceTypeInfos[1])
 	if err != nil {
-		return fmt.Errorf("covert label ai core failed, error is %v", err)
+		return fmt.Errorf("convert label ai core failed, error is %v", err)
 	}
 	if aiCore != int(common.ParamOption.AiCoreCount) {
 		return fmt.Errorf("label ai core %d not equal real chip ai core %d", aiCore, common.ParamOption.AiCoreCount)
@@ -1516,7 +1517,7 @@ func (tool *AscendTools) WriteFaultToEvent(ctx context.Context) {
 		select {
 		case _, ok := <-ctx.Done():
 			if !ok {
-				hwlog.RunLog.Info("stop signal chanel closed")
+				hwlog.RunLog.Info("stop signal channel closed")
 			}
 			hwlog.RunLog.Info("write fault to k8s event stop")
 			return

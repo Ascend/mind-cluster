@@ -151,28 +151,45 @@ func TestReplacePodAnnotation(t *testing.T) {
 
 // TestReplaceDeviceInfoPublicName tests ReplaceDeviceInfoPublicName
 func TestReplaceDeviceInfoPublicName(t *testing.T) {
-	resourceType := api.Ascend310
-	deviceList := map[string]string{
-		api.HuaweiAscend310: "value1",
-		"other-key":         "value2",
-	}
-	deviceName := api.Ascend310MinuxPrefix + "1"
-	reason := api.Ascend310MinuxPrefix + "1"
+	originalRealCardType := common.ParamOption.RealCardType
+	defer func() { common.ParamOption.RealCardType = originalRealCardType }()
 
-	// Set up mock devNameMap
-	devNameMap[resourceType] = DevName{
-		ResourceType:           resourceType,
-		DevicePublicType:       "CustomAscend310",
-		OldDevicePublicType:    api.HuaweiAscend310,
-		DevicePublicNamePre:    "custom310-",
-		OldDevicePublicNamePre: api.Ascend310MinuxPrefix,
-	}
+	originalDevNameMap := devNameMap
+	defer func() { devNameMap = originalDevNameMap }()
 
-	newDeviceList, newDeviceName, newReason := ReplaceDeviceInfoPublicName(resourceType, deviceList, deviceName, reason)
-
-	assert.Contains(t, newDeviceList, "CustomAscend310", "device type key should be replaced")
-	assert.Equal(t, "custom310-1", newDeviceName, "device name prefix should be replaced")
-	assert.Equal(t, "custom310-1", newReason, "reason should be replaced")
+	convey.Convey("test ReplaceDeviceInfoPublicName", t, func() {
+		convey.Convey("with custom name config, replace device name", func() {
+			resourceType := api.Ascend310
+			deviceList := map[string]string{
+				api.HuaweiAscend310: "value1",
+				"other-key":         "value2",
+			}
+			deviceName := api.Ascend310MinuxPrefix + "1"
+			reason := api.Ascend310MinuxPrefix + "1"
+			devNameMap[resourceType] = DevName{
+				ResourceType:           resourceType,
+				DevicePublicType:       "CustomAscend310",
+				OldDevicePublicType:    api.HuaweiAscend310,
+				DevicePublicNamePre:    "custom310-",
+				OldDevicePublicNamePre: api.Ascend310MinuxPrefix,
+			}
+			newDeviceList, newDeviceName, newReason := ReplaceDeviceInfoPublicName(
+				resourceType, deviceList, deviceName, reason)
+			assert.Contains(t, newDeviceList, "CustomAscend310", "device type key should be replaced")
+			assert.Equal(t, "custom310-1", newDeviceName, "device name prefix should be replaced")
+			assert.Equal(t, "custom310-1", newReason, "reason should be replaced")
+		})
+		convey.Convey("without config and new device type, replace with npu prefix", func() {
+			devNameMap = map[string]DevName{}
+			common.ParamOption.RealCardType = api.Ascend910A5
+			newDeviceList, newDeviceName, _ := ReplaceDeviceInfoPublicName(
+				api.Ascend910,
+				map[string]string{api.HuaweiAscend910: api.Ascend910MinuxPrefix + "1"},
+				api.Ascend910MinuxPrefix+"1", api.Ascend910MinuxPrefix+"1")
+			assert.Contains(t, newDeviceList, api.HuaweiNPU)
+			assert.Equal(t, api.AscendMinuxPrefix+"1", newDeviceName)
+		})
+	})
 }
 
 // TestGetPodAnnotationWithPublicName tests getPodAnnotationWithPublicName
@@ -332,8 +349,8 @@ func TestInitPublicNameConfig(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			resetGlobalState()
-			patchs := tc.mockActions()
-			defer patchs.Reset()
+			patches := tc.mockActions()
+			defer patches.Reset()
 			InitPublicNameConfig()
 			assert.Equal(t, tc.expectedMap, devNameMap)
 		})
