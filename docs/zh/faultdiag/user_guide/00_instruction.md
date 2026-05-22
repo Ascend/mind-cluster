@@ -22,13 +22,13 @@
 
 |日志文件|对应软件|软件版本|说明|
 |--|--|--|--|
-|CANN应用类日志|CANN|7.0.RC1及以上|CANN打印的Host侧应用类日志和Device侧应用类日志。更多相关信息请参见《CANN 日志参考》中的“[查看日志（Ascend EP）](https://www.hiascend.com/document/detail/zh/canncommercial/850/maintenref/logreference/logreference_0002.html)”章节。|
+|CANN应用类日志|CANN|7.0.RC1及以上|CANN打印的Host侧应用类日志和Device侧应用类日志。更多相关信息请参见《CANN 日志参考》中的“[查看日志（Ascend EP）](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/logreference/logreference_0002.html)”章节。|
 |PyTorch框架训练及推理日志|PyTorch1.11.0框架适配插件|5.0.RC3及以上|-|
 |MindSpore框架训练日志|MindSpore|2.1.0及以上|部分故障类型描述中包含对应的MindSpore版本说明，请以实际故障诊断描述为主。|
 |Host OS日志|-|-|<ul><li>支持检测Host OS日志包括但不限于CentOS 7.6、Debian 10.0、EulerOS 2.10、EulerOS 2.12和CTyunOS 22.06的HOST OS日志。不同操作系统日志打印关键字可能存在差异。</li><li>建议Host OS日志大小在512MB以内。</li></ul>|
 |Device侧日志|Ascend HDK|23.0.RC3及以上|-|
 |MindCluster组件日志|Ascend Device Plugin、NodeD、Ascend Docker Runtime、NPU Exporter、Volcano|6.0.RC3及以上|-|
 |MindIE组件日志|MindIE Server、MindIE LLM、MindIE SD、MindIE RT、MindIE Torch、MindIE MS、MindIE Benchmark、MindIE Client|6.0.0及以上|-|
-|AMCT组件日志|AMCT模型压缩组件|7.0.RC1及以上|AMCT集成在CANN包中进行发布。更多相关信息请参见《[AMCT模型压缩工具用户指南](https://www.hiascend.com/document/detail/zh/canncommercial/850/devaids/amct/atlasamct_16_0001.html)》。|
+|AMCT组件日志|AMCT模型压缩组件|7.0.RC1及以上|AMCT集成在CANN包中进行发布。更多相关信息请参见《[AMCT模型压缩工具用户指南](https://www.hiascend.com/document/detail/zh/canncommercial/900/devaids/amct/atlasamct_16_0001.html)》。|
 |MindIE Pod控制台日志|MindIE Pod控制台日志|-|-|
 |MindIO组件日志|MindIO组件日志|-|-|

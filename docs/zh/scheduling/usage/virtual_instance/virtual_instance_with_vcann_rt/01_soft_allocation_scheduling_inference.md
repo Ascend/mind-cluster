@@ -4,13 +4,13 @@
 
 ### 使用软切分NPU说明<a name="ZH-CN_TOPIC_00000025113463450356vcann"></a>
 
-在Kubernetes场景下，当用户需要使用NPU资源时，需要结合集群调度组件Ascend Device Plugin和Volcano的使用，使Kubernetes可以管理并调度昇腾处理器资源。昇腾软切分虚拟化实例特性需要的集群调度组件包括Ascend Device Plugin、Volcano、Ascend Docker Runtime、Ascend Operator和ClusterD。支持的产品型号请参见[表1 产品支持情况说明](./00_description.md)。
+在Kubernetes场景下，当用户需要使用NPU资源时，需要结合集群调度组件Ascend Device Plugin和Volcano的使用，使Kubernetes可以管理并调度昇腾处理器资源。昇腾软切分虚拟化实例特性需要的集群调度组件包括Ascend Device Plugin、Volcano、Ascend Docker Runtime、Ascend Operator和ClusterD。支持的产品型号请参见[特性说明](./00_description.md)中的“表1 产品支持情况说明”。
 
 软切分调度特性只支持使用Volcano作为调度器，不支持使用其他调度器。
 
 ### 场景说明<a name="section1576110260450vcann"></a>
 
-使用软切分虚拟化前，需要提前了解[表1](#table62551184461989657)中的场景说明。
+使用软切分虚拟化前，需要提前了解[表1 场景说明](#table62551184461989657)中的场景说明。
 
 **表 1**  场景说明
 
@@ -229,7 +229,7 @@
 3. 用户通过kubectl或者其他深度学习平台下发acjob任务。
 4. Ascend Operator为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
 5. Ascend Operator为任务创建相应的Pod，并在容器中注入集合通信所需环境变量。
-6. volcano-scheduler根据节点的芯片AI Core百分比总量和芯片高带宽内存总量以及该节点上已部署Pod的annotation已使用信息为任务选择合适节点，并在Pod的annotation上写入选择的芯片信息。
+6. volcano-scheduler根据节点的芯片AICore百分比总量和芯片高带宽内存总量以及该节点上已部署Pod的annotation已使用信息为任务选择合适节点，并在Pod的annotation上写入选择的芯片信息。
 7. kubelet创建容器时，调用Ascend Device Plugin挂载芯片及芯片共享所需文件，Ascend Device Plugin或volcano-scheduler在Pod的annotation上写入芯片信息。Ascend Docker Runtime协助挂载相应资源。
 
 ## 通过命令行使用（Volcano）<a name="ZH-CN_TOPIC_00000024792271456"></a>
@@ -285,7 +285,7 @@
 
 2. 将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
 
-    在Atlas 800I A2 推理服务器上，以pytorch_acjob_infer_910b_softsharedev.yaml为例，申请芯片AI Core百分比为50%，芯片高带宽内存量为2048MB，软切分策略为fixed-share的参数配置示例如下。
+    在Atlas 800I A2 推理服务器上，以pytorch_acjob_infer_910b_softsharedev.yaml为例，申请芯片AICore百分比为50%，芯片高带宽内存量为2048MB，软切分策略为fixed-share的参数配置示例如下。
 
     <pre codetype="yaml">
     apiVersion: mindxdl.gitee.com/v1
@@ -296,7 +296,7 @@
         framework: pytorch
         ring-controller.atlas: ascend-910b
         fault-scheduling: "force"
-        <strong>huawei.com/scheduler.softShareDev.aicoreQuota: "50" # 软切分任务请求的芯片AI Core百分比，单位为%</strong>
+        <strong>huawei.com/scheduler.softShareDev.aicoreQuota: "50" # 软切分任务请求的芯片AICore百分比，单位为%</strong>
         <strong>huawei.com/scheduler.softShareDev.hbmQuota: "2048" # 软切分任务请求的芯片高带宽内存量，单位为MB</strong>
         <strong>huawei.com/scheduler.softShareDev.policy: "fixed-share" # 软切分策略，取值为fixed-share、elastic和best-effort</strong>
       annotations:
@@ -339,7 +339,7 @@
                       name: ascendjob-port        # do not modify
                   resources:
                     requests:
-                      <strong>huawei.com/Ascend910: 50 # 此处需要与huawei.com/scheduler.softShareDev.aicoreQuota的值保持一致，表示软切分任务请求的AI Core百分比</strong>
+                      <strong>huawei.com/Ascend910: 50 # 此处需要与huawei.com/scheduler.softShareDev.aicoreQuota的值保持一致，表示软切分任务请求的AICore百分比</strong>
                     limits:
                       <strong>huawei.com/Ascend910: 50 # 数值与requests保持一致</strong>
                   volumeMounts:
@@ -375,13 +375,13 @@
 
     |参数|取值|说明|
     |--|--|--|
-    |huawei.com/scheduler.softShareDev.aicoreQuota|[1, 100]|请求的AI Core百分比。|
+    |huawei.com/scheduler.softShareDev.aicoreQuota|[1, 100]|请求的AICore百分比。|
     |huawei.com/scheduler.softShareDev.hbmQuota|<p>[1, maxHBM]</p><p>maxHBM为通过<b>npu-smi info</b>命令查询出的HBM-Usage(MB)中HBM的值。</p>|请求的高带宽内存量，单位为MB。|
     |huawei.com/scheduler.softShareDev.policy|<ul><li>fixed-share</li><li>elastic</li><li>best-effort</li></ul>|软切分策略。|
     |huawei.com/schedule_policy|chip1-softShareDev|软切分场景调度策略。|
 
 >[!NOTE]
->Atlas A3 推理系列产品下发软切分虚拟化任务时，在任务容器中，/dev/实际挂载1个die，但是执行<b>npu-smi info</b>命令查询显示挂载了2个die。回显示例如下：
+><term>Atlas A3 推理系列产品</term>下发软切分虚拟化任务时，在任务容器中，/dev/实际挂载1个die，但是执行<b>npu-smi info</b>命令查询显示挂载了2个die。回显示例如下：
 >
 > ```ColdFusion
 > +-----------------------------------------------------------------------------------------------+
@@ -477,7 +477,7 @@ ascendjob.mindxdl.gitee.com/default-infer-test-pytorch-910b created
         ...
         ```
 
-        在显示的信息中，找到"Allocated resources"下的**huawei.com/Ascend910**，该参数取值在执行推理任务之后会增加，增加数量为推理任务使用的NPU芯片的AI Core百分比总量。
+        在显示的信息中，找到"Allocated resources"下的**huawei.com/Ascend910**，该参数取值在执行推理任务之后会增加，增加数量为推理任务使用的NPU芯片的AICore百分比总量。
 
 ### 查看软切分调度结果<a name="ZH-CN_TOPIC_000000247938712002"></a>
 

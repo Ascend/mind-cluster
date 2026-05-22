@@ -2,9 +2,9 @@
 
 ## 使用vNPU说明<a name="ZH-CN_TOPIC_0000002511426303"></a>
 
-在Kubernetes场景，当用户需要使用vNPU资源时，需要通过结合集群调度组件Ascend Device Plugin的使用，使Kubernetes可以管理昇腾处理器资源。静态虚拟化场景使用时，不能与动态虚拟化混合使用。昇腾虚拟化实例特性需要的集群调度组件如下表所示，支持的产品型号情况请参见[表1 产品支持情况说明](../01_description.md)。
+在Kubernetes场景，当用户需要使用vNPU资源时，需要通过结合集群调度组件Ascend Device Plugin的使用，使Kubernetes可以管理昇腾处理器资源。静态虚拟化场景使用时，不能与动态虚拟化混合使用。昇腾虚拟化实例特性需要的集群调度组件如下表所示，支持的产品型号情况请参见[特性说明](../01_description.md)中的“表1 产品支持情况说明”。
 
-**表 2**  虚拟化需要的集群调度组件
+**表 1**  虚拟化需要的集群调度组件
 
 <a name="table19103194217329"></a>
 <table><thead align="left"><th class="cellrowborder" valign="top" width="11.677219849801206%" id="mcps1.2.5.1.1"><p id="p2103642143218"><a name="p2103642143218"></a><a name="p2103642143218"></a>特性</p>
@@ -35,7 +35,7 @@
 >[!NOTE]
 >在静态虚拟化场景下，组件的可选性说明如下。
 >
->- Volcano：用户若使用自己的调度组件，需要进行参数配置，请参见[表4](#table1064314568229)；用户也可直接使用该组件进行任务调度。
+>- Volcano：用户若使用自己的调度组件，需要进行参数配置，请参见[表3](#table1064314568229)；用户也可直接使用该组件进行任务调度。
 >- Ascend Operator：当使用训练系列产品时才需要选择该组件；使用推理系列产品时可不选择。
 >- ClusterD：当使用Volcano时才需要选择该组件，详细请参见[安装Volcano](../../../../installation_guide/02_installation/manual_installation/05_volcano.md#安装volcano)。
 
@@ -51,7 +51,7 @@
 - 静态虚拟化场景，如果创建或者销毁vNPU，需要重启Ascend Device Plugin。
 - 静态虚拟化任务，不支持故障重调度。
 
-**表 3**  虚拟化实例模板与虚拟设备类型关系表
+**表 2**  虚拟化实例模板与vNPU类型关系表
 
 <a name="table47415104403"></a>
 <table><thead align="left"><tr id="row67416101402"><th class="cellrowborder" valign="top" width="20%" id="mcps1.2.5.1.1"><p id="p117491014400"><a name="p117491014400"></a><a name="p117491014400"></a>NPU类型</p>
@@ -64,7 +64,7 @@
 </th>
 </tr>
 </thead>
-<tbody><tr id="row5741710164014"><td class="cellrowborder" rowspan="4" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p074181014408"><a name="p074181014408"></a><a name="p074181014408"></a><span id="ph327965117217"><a name="ph327965117217"></a><a name="ph327965117217"></a>Atlas 训练系列产品</span>（30或32个AI Core）</p>
+<tbody><tr id="row5741710164014"><td class="cellrowborder" rowspan="4" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p074181014408"><a name="p074181014408"></a><a name="p074181014408"></a><span id="ph327965117217"><a name="ph327965117217"></a><a name="ph327965117217"></a>Atlas 训练系列产品</span>（30或32个AICore）</p>
 </td>
 <td class="cellrowborder" valign="top" width="19.96%" headers="mcps1.2.5.1.2 "><p id="p974510184017"><a name="p974510184017"></a><a name="p974510184017"></a>vir02</p>
 </td>
@@ -93,37 +93,7 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p188588202135"><a name="p188588202135"></a><a name="p188588202135"></a>Ascend910-16c-100-0</p>
 </td>
 </tr>
-<tr><td rowspan="4" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A2 训练系列产品</span>（20或24或25个AI Core）</p>
-</td>
-<td><p>vir10_3c_32g</p>
-</td>
-<td><p>Ascend910-10c.3cpu.32g</p>
-</td>
-<td><p>Ascend910-10c.3cpu.32g-100-0</p>
-</td>
-</tr>
-<tr><td><p>vir05_1c_16g</p>
-</td>
-<td><p>Ascend910-5c.1cpu.16g</p>
-</td>
-<td><p>Ascend910-5c.1cpu.16g-100-0</p>
-</td>
-</tr>
-<tr><td><p>vir12_3c_32g</p>
-</td>
-<td><p>Ascend910-12c.3cpu.32g</p>
-</td>
-<td><p>Ascend910-12c.3cpu.32g-100-0</p>
-</td>
-</tr>
-<tr><td><p>vir06_1c_16g</p>
-</td>
-<td><p>Ascend910-6c.1cpu.16g</p>
-</td>
-<td><p>Ascend910-6c.1cpu.16g-100-0</p>
-</td>
-</tr>
-<tr><td rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A3 训练系列产品</span>（48个AI Core）</p>
+<tr><td rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A2 训练系列产品</span>（24个AICore）</p>
 </td>
 <td><p>vir12_3c_32g</p>
 </td>
@@ -139,7 +109,23 @@
 <td><p>Ascend910-6c.1cpu.16g-100-0</p>
 </td>
 </tr>
-<tr id="row84911853114212"><td class="cellrowborder" rowspan="7" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p1868751772016"><a name="p1868751772016"></a><a name="p1868751772016"></a><span id="ph1623844892113"><a name="ph1623844892113"></a><a name="ph1623844892113"></a>Atlas 推理系列产品</span>（8个AI Core）</p>
+<tr><td rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A3 训练系列产品</span>（48个AICore）</p>
+</td>
+<td><p>vir12_3c_32g</p>
+</td>
+<td><p>Ascend910-12c.3cpu.32g</p>
+</td>
+<td><p>Ascend910-12c.3cpu.32g-100-0</p>
+</td>
+</tr>
+<tr><td><p>vir06_1c_16g</p>
+</td>
+<td><p>Ascend910-6c.1cpu.16g</p>
+</td>
+<td><p>Ascend910-6c.1cpu.16g-100-0</p>
+</td>
+</tr>
+<tr id="row84911853114212"><td class="cellrowborder" rowspan="7" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p1868751772016"><a name="p1868751772016"></a><a name="p1868751772016"></a><span id="ph1623844892113"><a name="ph1623844892113"></a><a name="ph1623844892113"></a>Atlas 推理系列产品</span>（8个AICore）</p>
 <p id="p12827141603014"><a name="p12827141603014"></a><a name="p12827141603014"></a></p>
 </td>
 <td class="cellrowborder" valign="top" width="19.96%" headers="mcps1.2.5.1.2 "><p id="p11312190431"><a name="p11312190431"></a><a name="p11312190431"></a>vir01</p>
@@ -191,7 +177,7 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p9957636276"><a name="p9957636276"></a><a name="p9957636276"></a>Ascend310P-4c.4cpu.dvpp-100-0</p>
 </td>
 </tr>
-<tr><td rowspan="6" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A2 推理系列产品</span>（20个AI Core）</p>
+<tr><td rowspan="6" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A2 推理系列产品</span>（20个AICore）</p>
 </td>
 <td><p>vir10_3c_16g</p>
 </td>
@@ -235,7 +221,7 @@
 <td><p>Ascend910-5c.1cpu.16g-100-0</p>
 </td>
 </tr>
-<tr><td rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A3 推理系列产品</span>（40个AI Core）</p>
+<tr><td rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A3 推理系列产品</span>（40个AICore）</p>
 </td>
 <td><p>vir10_3c_32g</p>
 </td>
@@ -268,7 +254,7 @@
 
         虚拟化实例启动参数说明如下：
 
-        **表 4** Ascend Device Plugin启动参数
+        **表 3** Ascend Device Plugin启动参数
 
         <a name="table1064314568229"></a>
 
@@ -307,7 +293,7 @@
 
     2. Volcano参数修改及启动说明：
 
-        在Volcano部署文件"volcano-v\{version\}.yaml"中，需要配置"presetVirtualDevice"且值只能为"true"。
+        在Volcano部署文件"volcano-v<i>\{version\}</i>.yaml"中，需要配置"presetVirtualDevice"且值只能为"true"。
 
         ```Yaml
         ...
@@ -337,7 +323,7 @@
 
 - 创建训练任务时，需要在创建YAML文件时，修改如下配置。以Atlas 训练系列产品使用为例。
 
-    resources中设定的requests和limits资源类型，应修改为huawei.com/Ascend910-_Y_，其中<i>Y</i>值和vNPU类型相关，具体取值参考[表 虚拟化实例模板与虚拟设备类型关系表](#table47415104403)中的虚拟类型。
+    resources中设定的requests和limits资源类型，应修改为huawei.com/Ascend910-_Y_，其中<i>Y</i>值和vNPU类型相关，具体取值参考[表2 虚拟化实例模板与vNPU类型关系表](#table47415104403)中的“vNPU类型”列。
 
     ```Yaml
     ...
@@ -351,7 +337,7 @@
 
 - 创建推理任务时，需要在创建YAML文件时，修改如下配置。以Atlas 推理系列产品使用为例。
 
-    resources中设定的requests和limits资源类型，应修改为huawei.com/Ascend310P-_Y_，其中<i>Y</i>值和vNPU类型相关，具体取值参考[表 虚拟化实例模板与虚拟设备类型关系表](#table47415104403)中的虚拟类型。
+    resources中设定的requests和limits资源类型，应修改为huawei.com/Ascend310P-_Y_，其中<i>Y</i>值和vNPU类型相关，具体取值参考[表2 虚拟化实例模板与vNPU类型关系表](#table47415104403)中的“vNPU类型”列。
 
     ```Yaml
     ...

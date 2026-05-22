@@ -4,7 +4,7 @@
 
 本章节介绍待清洗的目录结构组成，用户可参照以下内容进行日志收集，并按对应结构存储。
 
->[!NOTE] 
+>[!NOTE]
 >
 >- Ascend-fd parse输入目录的日志文件大小会影响执行清洗命令的效率，总文件大小应限制在5G以下，文件总数量不能超过1000000。
 >- CANN应用类日志的单个文件应限制在20MB以下。
@@ -56,7 +56,7 @@
              ...
             |-- npu_smi_7_details.csv   # NPU状态监测指标文件
             |-- npu_0_details.csv       # NPU网口统计监测指标文件
-             ...    
+             ...
             |-- npu_7_details.csv       # NPU网口统计监测指标文件
             |-- npu_info_before/after.txt  # 训练及推理前或后NPU环境检查文件
             |-- host_metrics_{core_num}.json # 主机资源监测指标文件
@@ -397,8 +397,8 @@
             |-- run/plog/plog-{pid}_{time}.log
             |-- debug/device-*/device-{pid}_{time}.log
             |-- run/device-*/device-{pid}_{time}.log
-    
-    |-- ${--device_log参数指定路径} 
+
+    |-- ${--device_log参数指定路径}
             |-- slog/dev-os-*/debug/device-os/device-os_*.log
             |-- slog/dev-os-*/run/device-os/device-os_*.log
             |-- slog/dev-os-*/run/event/event_*.log      #仅Ascend HDK 23.0.3及以上版本显示此路径
@@ -409,48 +409,48 @@
             |-- hisi_logs/device-*/{time}/bbox/os/os_info.txt
             |-- hisi_logs/device-*/{time}/mntn/hbm.txt
             ....
-    
-    |-- ${--env_check参数指定路径} 
-           |-- npu_info_before.txt 
-           |-- npu_info_after.txt 
+
+    |-- ${--env_check参数指定路径}
+           |-- npu_info_before.txt
+           |-- npu_info_after.txt
            |-- npu_smi_0_details.csv
             ...
            |-- npu_smi_0_details.csv
            |-- npu_0_details.csv
            ...
            |-- npu_7_details.csv
-    
-    |-- ${--train_log参数指定路径}  
-           |-- rank-0.txt      
+
+    |-- ${--train_log参数指定路径}
+           |-- rank-0.txt
            ...
-           |-- rank-7.txt  
-     
-    |-- ${--host_log参数指定路径}    
+           |-- rank-7.txt
+
+    |-- ${--host_log参数指定路径}
            |-- messages
            |-- crash
                   |-- 主机+故障时间目录(eg:127.xx.xx.1-2024-09-23-11:25:29)
                          |-- vmcore_dmesg.txt
-           |-- dmesg 
-           |-- sysmonitor.log   
-    
-    |-- ${--dl_log参数指定路径} 
+           |-- dmesg
+           |-- sysmonitor.log
+
+    |-- ${--dl_log参数指定路径}
            |-- devicePlugin/devicePlugin*.log
            |-- noded/noded*.log
            |-- ascend-docker-runtime/runtime-run*.log
            |-- ascend-docker-runtime/hook-run*.log
            |-- volcano-scheduler/volcano-scheduler*.log
            |-- volcano-controller/volcano-controller*.log
-    
+
            |-- npu-exporter/npu-exporter*.log
            |-- ttp_log/ttp_log.log.*
-    
-    |-- ${--mindie_log参数指定路径} 
+
+    |-- ${--mindie_log参数指定路径}
            |-- log/debug/mindie-{module}_{pid}_{datetime}.log
            |-- log/mindie_cluster_log/{podname}.log
-    
-    |-- ${--amct_log参数指定路径} 
+
+    |-- ${--amct_log参数指定路径}
            |-- amct_{framework}.log
-    |-- ${--bus_log参数指定路径} 
+    |-- ${--bus_log参数指定路径}
            |-- log.log
     ```
 
@@ -881,10 +881,10 @@
     ```ColdFusion
     /usr/local/Ascend/driver/tools/hccn_tool -i 0 -net_health -g
     net health status: Init
-    
+
     /usr/local/Ascend/driver/tools/hccn_tool -i 0 -link -g
     link status: UP
-    
+
     /usr/local/Ascend/driver/tools/hccn_tool -i 0 -optical -g
     optical info:
     present              : not present
@@ -905,17 +905,17 @@
     Tx LoL Flag          : 0x0
     Rx LoL Flag          : 0xff
     ...
-    
+
     /usr/local/Ascend/driver/tools/hccn_tool -i 0 -tls -g | grep switch
     dev_id:0, tls switch[0](0:disable, 1:enable), tls preconfigured[1](0:non-preset, 1:preset), tls alarm time threshold[60]days
-    
+
     /usr/local/Ascend/driver/tools/hccn_tool -i 0 -fec -g
     fec mode: rs FEC mode
-    
+
     /usr/local/Ascend/driver/tools/hccn_tool -i 0 -ip -g
     ipaddr:10.xx.xx.10
     netmask:255.255.255.0
-    
+
     /usr/local/Ascend/driver/tools/hccn_tool -i 0 -stat -g
     packet statistics:
     mac_tx_mac_pause_num:0
@@ -927,7 +927,7 @@
     nic_tx_all_oct_num:16921741
     nic_rx_all_pkg_num:6414803
     nic_rx_all_oct_num:482237805
-    
+
     /usr/local/Ascend/driver/tools/hccn_tool -i 0 -link_stat -g
     [device 0]current time        : Wed Jun  7 10:08:28 2023
     [device 0]link up count       : 2
@@ -937,7 +937,7 @@
     [device 0]    Tue Jun  6 16:31:55 2023    LINK UP
     ```
 
-    >[!NOTE] 
+    >[!NOTE]
     >每条采集命令的结果之间需间隔1行。示例如下：
     >
     >```shell
@@ -989,7 +989,7 @@
         ```ColdFusion
         NPU ID                                   : 1
         Chip Count                               : 1
-        
+
         DDR Single Bit Error Count               : 0
         DDR Double Bit Error Count               : 0
         DDR Single Bit Aggregate Total Err Cnt   : 0
@@ -1066,7 +1066,7 @@
         ```ColdFusion
         NPU ID                         : 0
         Chip Count                     : 1
-        
+
         DDR Capacity(MB)               : 13553
         DDR Usage Rate(%)              : 6
         DDR Hugepages Total(page)      : 0
@@ -1122,16 +1122,16 @@
         +===========================+===============+====================================================+
         | No running processes found in NPU 7                                                            |
         +===========================+===============+====================================================+
-        
+
         /usr/local/bin/npu-smi info -i 0 -c 0 -t health
         Health Status                  : OK
         Error Code                     : NA
         Error Information              : NA
-        
+
         /usr/local/bin/npu-smi info -i 0 -t ecc
         NPU ID                                   : 0
         Chip Count                               : 1
-        
+
         DDR Single Bit Error Count               : 0
         DDR Double Bit Error Count               : 0
         DDR Single Bit Aggregate Total Err Cnt   : 0
@@ -1145,7 +1145,7 @@
         HBM Single Bit Isolated Pages Count      : 0
         HBM Double Bit Isolated Pages Count      : 0
         Chip ID                                  : 0
-        
+
         /usr/local/bin/npu-smi info -i 0 -t board
         NPU ID                         : 0
         Software Version               : 23.0.5
@@ -1162,7 +1162,7 @@
         Subsystem Vendor ID            : 0x0200
         Subsystem Device ID            : 0x0100
         Chip Count                     : 1
-        
+
         /usr/local/bin/npu-smi info -i 0 -c 0 -t board
         NPU ID                         : 0
         Chip ID                        : 0
@@ -1177,11 +1177,11 @@
         Chip Position ID               : 0
         PCIe Bus Info                  : 0000:61:00.0
         Firmware Version               : 7.1.0.7.220
-        
+
         /usr/local/bin/npu-smi info -i 0 -t usages
         NPU ID                         : 0
         Chip Count                     : 1
-        
+
         DDR Capacity(MB)               : 13553
         DDR Usage Rate(%)              : 6
         DDR Hugepages Total(page)      : 0
@@ -1194,7 +1194,7 @@
         DDR Bandwidth Usage Rate(%)    : 0
         HBM Bandwidth Usage Rate(%)    : 0
         Chip ID                        : 0
-        
+
         /usr/local/bin/npu-smi info -i 0 -c 0 -t health
          Health Status                  : OK
          Error Code                     : NA
@@ -1202,7 +1202,7 @@
         ...
         ```
 
-    >[!NOTE] 
+    >[!NOTE]
     >每条采集命令的结果之间需间隔1行。示例如下：
     >
     > ```shell
@@ -1358,7 +1358,7 @@
     - $\{--env\_check参数指定路径\}/
     - 详细说明请参考[日志采集目录结构](#日志采集目录结构)
 
->[!NOTE] 
+>[!NOTE]
 >设备上的每张NPU卡都需要创建对应的NPU网口统计监测指标文件。
 
 **采集方式说明<a name="section207215361658"></a>**
@@ -1415,7 +1415,7 @@ nic_rx_all_oct_num:482237805
     - $\{--env\_check参数指定路径\}/
     - 详细说明请参考[日志采集目录结构](#日志采集目录结构)
 
->[!NOTE] 
+>[!NOTE]
 >设备上的每张NPU卡都需要创建对应的NPU状态监测指标文件。
 
 **采集方式说明<a name="section20721536165801"></a>**
@@ -1577,7 +1577,7 @@ nic_rx_all_oct_num:482237805
     %Cpu(s):  5.6 us,  5.4 sy,  0.0 ni, 89.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
     KiB Mem : 80358528+total, 57884742+free, 70817856 used, 15392000+buff/cache
     KiB Swap:        0 total,        0 free,        0 used. 67941792+avail Mem
-     
+
        PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
     139667 root      20   0 8203.5g   3.4g 526208 R 309.5  0.4   1:46.26 python
     139577 root      20   0 8203.5g   3.4g 526208 R 214.3  0.4   1:25.03 python
@@ -1607,7 +1607,7 @@ nic_rx_all_oct_num:482237805
     - node\_cpu\_$\{pid\}：进程使用的cpu占比的指标列表，对应%CPU数据，按PID分组存储。
     - node\_mem\_used：主机使用物理内存总量的指标列表，对应KiB Mem：xxx used。
 
-    >[!NOTE] 
+    >[!NOTE]
     >若采集的主机侧资源信息中包含较多异常数据，可能会导致后续故障诊断的设备资源分析结果异常，无法诊断实际问题。
 
     存储示例如下：
@@ -1687,7 +1687,7 @@ nic_rx_all_oct_num:482237805
     - container\_ip：容器IP
     - device\_id：卡号
 
->[!NOTE] 
+>[!NOTE]
 >MindIE Pod日志在拉起服务后，会记录实例相关日志，由于日志存在老化机制，若采集的MindIE Pod日志不包含实例相关日志，组件将不支持多实例故障诊断。
 
 ## 训练及推理后采集<a name="ZH-CN_TOPIC_0000001601249970"></a>
@@ -1847,10 +1847,10 @@ nic_rx_all_oct_num:482237805
         ```ColdFusion
         /usr/local/Ascend/driver/tools/hccn_tool -i 0 -net_health -g
         net health status: Init
-        
+
         /usr/local/Ascend/driver/tools/hccn_tool -i 0 -link -g
         link status: UP
-        
+
         /usr/local/Ascend/driver/tools/hccn_tool -i 0 -optical -g
         optical info:
         present              : not present
@@ -1871,17 +1871,17 @@ nic_rx_all_oct_num:482237805
         Tx LoL Flag          : 0x0
         Rx LoL Flag          : 0xff
         ...
-        
+
         /usr/local/Ascend/driver/tools/hccn_tool -i 0 -tls -g | grep switch
         dev_id:0, tls switch[0](0:disable, 1:enable), tls preconfigured[1](0:non-preset, 1:preset), tls alarm time threshold[60]days
-        
+
         /usr/local/Ascend/driver/tools/hccn_tool -i 0 -fec -g
         fec mode: rs FEC mode
-        
+
         /usr/local/Ascend/driver/tools/hccn_tool -i 0 -ip -g
         ipaddr:10.xx.xx.10
         netmask:255.255.255.0
-        
+
         /usr/local/Ascend/driver/tools/hccn_tool -i 0 -stat -g
         packet statistics:
         mac_tx_mac_pause_num:0
@@ -1893,7 +1893,7 @@ nic_rx_all_oct_num:482237805
         nic_tx_all_oct_num:16921741
         nic_rx_all_pkg_num:6414803
         nic_rx_all_oct_num:482237805
-        
+
         /usr/local/Ascend/driver/tools/hccn_tool -i 0 -link_stat -g
         [device 0]current time        : Wed Jun  7 10:08:28 2023
         [device 0]link up count       : 2
@@ -1903,7 +1903,7 @@ nic_rx_all_oct_num:482237805
         [device 0]    Tue Jun  6 16:31:55 2023    LINK UP
         ```
 
-        >[!NOTE] 
+        >[!NOTE]
         >每条采集命令的结果之间需间隔1行。示例如下：
         >
         >```shell
@@ -2017,7 +2017,7 @@ nic_rx_all_oct_num:482237805
         ```ColdFusion
         NPU ID                         : 0
         Chip Count                     : 1
-        
+
         DDR Capacity(MB)               : 13553
         DDR Usage Rate(%)              : 6
         DDR Hugepages Total(page)      : 0
@@ -2073,16 +2073,16 @@ nic_rx_all_oct_num:482237805
         +===========================+===============+====================================================+
         | No running processes found in NPU 7                                                            |
         +===========================+===============+====================================================+
-        
+
         /usr/local/bin/npu-smi info -i 0 -c 0 -t health
         Health Status                  : OK
         Error Code                     : NA
         Error Information              : NA
-        
+
         /usr/local/bin/npu-smi info -i 0 -t ecc
         NPU ID                                   : 0
         Chip Count                               : 1
-        
+
         DDR Single Bit Error Count               : 0
         DDR Double Bit Error Count               : 0
         DDR Single Bit Aggregate Total Err Cnt   : 0
@@ -2096,7 +2096,7 @@ nic_rx_all_oct_num:482237805
         HBM Single Bit Isolated Pages Count      : 0
         HBM Double Bit Isolated Pages Count      : 0
         Chip ID                                  : 0
-        
+
         /usr/local/bin/npu-smi info -i 0 -t board
         NPU ID                         : 0
         Software Version               : 23.0.5
@@ -2113,7 +2113,7 @@ nic_rx_all_oct_num:482237805
         Subsystem Vendor ID            : 0x0200
         Subsystem Device ID            : 0x0100
         Chip Count                     : 1
-        
+
         /usr/local/bin/npu-smi info -i 0 -c 0 -t board
         NPU ID                         : 0
         Chip ID                        : 0
@@ -2128,11 +2128,11 @@ nic_rx_all_oct_num:482237805
         Chip Position ID               : 0
         PCIe Bus Info                  : 0000:61:00.0
         Firmware Version               : 7.1.0.7.220
-        
+
         /usr/local/bin/npu-smi info -i 0 -t usages
         NPU ID                         : 0
         Chip Count                     : 1
-        
+
         DDR Capacity(MB)               : 13553
         DDR Usage Rate(%)              : 6
         DDR Hugepages Total(page)      : 0
@@ -2145,7 +2145,7 @@ nic_rx_all_oct_num:482237805
         DDR Bandwidth Usage Rate(%)    : 0
         HBM Bandwidth Usage Rate(%)    : 0
         Chip ID                        : 0
-        
+
         /usr/local/bin/npu-smi info -i 0 -c 0 -t health
          Health Status                  : OK
          Error Code                     : NA
@@ -2153,7 +2153,7 @@ nic_rx_all_oct_num:482237805
         ...
         ```
 
-        >[!NOTE] 
+        >[!NOTE]
         >每条采集命令的结果之间需间隔1行。示例如下：
         >
         >```shell
@@ -2304,7 +2304,7 @@ nic_rx_all_oct_num:482237805
 - 命名约束：文件名内含有“rank-”或“worker-”并且以.txt或.log后缀结尾。
 - 存放路径约束：存储到“采集目录”下。采集目录详细说明请参考[日志采集目录结构](#日志采集目录结构)
 
-    **图 1**  示例<a name="fig21301540402"></a>  
+    **图 1**  示例<a name="fig21301540402"></a>
     ![](../../figures/faultdiag/示例.png "示例")
 
 **采集方式说明<a name="section1020314437418"></a>**
@@ -2317,7 +2317,7 @@ nic_rx_all_oct_num:482237805
 
 **文件说明<a name="section56641436194180007"></a>**
 
-- 文件说明：由CANN打印的应用类日志，包括Host侧应用类日志plog-_\{pid\}_-_\{time\}_.log和Device侧应用类日志device-\{pid\}-\{time\}.log两类，更多日志相关信息请参见《CANN 日志参考》中的“[查看日志（Ascend EP）](https://www.hiascend.com/document/detail/zh/canncommercial/850/maintenref/logreference/logreference_0002.html)”章节。
+- 文件说明：由CANN打印的应用类日志，包括Host侧应用类日志plog-_\{pid\}_-_\{time\}_.log和Device侧应用类日志device-\{pid\}-\{time\}.log两类，更多日志相关信息请参见《CANN 日志参考》中的“[查看日志（Ascend EP）](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/logreference/logreference_0002.html)”章节。
 - 命名约束：plog-_\{pid\}_-_\{time\}_.log、device-_\{pid\}_-_\{time\}_.log
 - 存放路径约束：
     - _采集目录/_
@@ -2326,7 +2326,7 @@ nic_rx_all_oct_num:482237805
 - 目录结构：
 
     ```text
-    |-- process_log    
+    |-- process_log
         |-- debug
             |--plog              # Host侧应用类日志目录
                |--plog-{pid}-{unix时间}.log
@@ -2487,14 +2487,14 @@ dmidecode > dmidecode.txt
     Ascend HDK 23.0.RC3版本：
 
     ```text
-    |--device_log   
+    |--device_log
         |-- slog
             |-- dev-os-3
                 |-- debug
-                    |--device-os 
+                    |--device-os
                         |-- device-os_{time}.log # Device侧Control CPU上的系统类日志
                 |-- run
-                    |--device-os 
+                    |--device-os
                         |-- device-os_{time}.log # Device侧Control CPU上的系统类日志
                 |--device-0
                     |--device-0_{time}.log   # Device侧非Control CPU上的系统类日志
@@ -2516,18 +2516,18 @@ dmidecode > dmidecode.txt
     Ascend HDK 23.0.3及以上版本：
 
     ```text
-    |--device_log   
+    |--device_log
         |-- slog
             |-- dev-os-3
                 |-- debug
-                    |--device-os 
+                    |--device-os
                         |-- device-os_{time}.log # Device侧Control CPU上的系统类日志
                     |--device-0
                         |--device-0_{time}.log   # Device侧非Control CPU上的系统类日志
                     |--device-2
                     |--…
                 |-- run
-                    |--device-os 
+                    |--device-os
                         |-- device-os_{time}.log # Device侧Control CPU上的系统类日志
                     |--event
                         |-- event_{time}.log # Device Control CPU 的EVENT级别系统日志
@@ -2557,7 +2557,7 @@ msnpureport
 ```
 
 - 执行完成后会在当前目录下生成一个时间戳的文件夹，请用户将该时间戳目录下“slog”和“hisi\_logs”文件夹转储至“采集目录/device\_log”下。
-- 若采集日志失败，请参考FAQ：《CANN 日志参考》中的“FAQ \> [日志没有正常落盘](https://www.hiascend.com/document/detail/zh/canncommercial/850/maintenref/logreference/logreference_0024.html)”章节进行处理。
+- 若采集日志失败，请参考FAQ：《CANN 日志参考》中的“FAQ \> [日志没有正常落盘](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/logreference/logreference_0024.html)”章节进行处理。
 
 ### MindCluster组件日志<a name="ZH-CN_TOPIC_0000002045702997"></a>
 
@@ -2612,8 +2612,8 @@ env | grep "MINDIE_LOG_PATH"
 
     ```shell
     MINDIE_LOG_PATH="llm: /home/working/"
-    ```                
-  
+    ```
+
     则需要进入回显中对应的日志存储目录，拷贝相关组件日志。
 
     ```shell

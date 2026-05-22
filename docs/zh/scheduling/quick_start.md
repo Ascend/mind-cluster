@@ -1,4 +1,5 @@
 # 快速入门<a name="ZH-CN_TOPIC_0000002511346939"></a>
+
 本文档提供两种快速入门场景，帮助您快速上手Ascend NPU集群调度：
 
 - **10分钟极简入门**：仅部署Ascend Device Plugin，使用Kubernetes原生调度器调度普通Pod，快速验证NPU资源调度能力，适合初学者快速体验。
@@ -12,8 +13,8 @@
 
 - 所有节点已安装Kubernetes，支持的版本为1.17.x\~1.34.x。（如需安装Volcano组件，请安装1.19.x及以上版本的Kubernetes，具体Kubernetes版本请参见[Volcano官网中对应的Kubernetes版本](https://github.com/volcano-sh/volcano/blob/master/README.md#kubernetes-compatibility)）。如需获取软件包，请参见[Kubernetes社区](https://kubernetes.io/zh-cn/docs/setup/)。
 - 所有节点已安装Docker，支持的版本为18.09.x\~28.5.1。如需获取软件包，请参见[Docker社区或官网](https://docs.docker.com/engine/install/)。
-- 所有节点已经安装配套的固件与驱动。Atlas 800T A2 训练服务器固件和驱动安装步骤请参见《[Atlas A2 中心推理和训练硬件 25.5.0 NPU驱动和固件安装指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100540370/426cffd9)》。
-- 检查主机上[npu-smi](https://support.huawei.com/enterprise/zh/doc/EDOC1100540371/426cffd9?idPath=23710424|251366513|22892968|252309113|254184887)以及[hccn_tool工具](https://support.huawei.com/enterprise/zh/doc/EDOC1100540101/426cffd9?idPath=23710424|251366513|254884019|261408772|261457531)是否可正常运行。
+- 所有节点已经安装配套的固件与驱动。Atlas 800T A2 训练服务器固件和驱动安装步骤请参见《[Atlas A2 中心推理和训练硬件 26.0.RC1 NPU驱动和固件安装指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100568434/426cffd9)》。
+- 检查主机上[npu-smi](https://support.huawei.com/enterprise/zh/doc/EDOC1100568421/426cffd9)以及[hccn_tool工具](https://support.huawei.com/enterprise/zh/doc/EDOC1100568362/426cffd9)是否可正常运行。
 
     >[!NOTE]
     >
@@ -21,12 +22,12 @@
     >- NPU驱动和固件版本可通过**npu-smi info -t board -i** <i>NPU ID</i>命令查询。回显信息中的“Software Version”字段值表示NPU驱动版本，“Firmware Version”字段值表示NPU固件版本。
     >- 下文的<i>\{xxx\}</i>即取“910”字符作为芯片型号数值。
 
-
 ## 10分钟快速入门
 
 ### 概述
 
 本教程将指导您在 **10分钟内** 完成最简化的Ascend NPU集群调度环境搭建，仅使用：
+
 - **Ascend Device Plugin** - NPU设备发现与资源上报
 - **Kubernetes原生调度器** - 无需额外调度组件
 - **普通Pod** - 快速验证NPU调度能力
@@ -37,7 +38,6 @@
 |------|-------------------|
 | 计算节点 | 以Altlas 800T A2 arm64训练服务器为例    |
 | 驱动版本 | 配套服务器的Ascend驱动已安装 |
-
 
 ### 前置检查
 
@@ -186,8 +186,8 @@ kubectl delete -f device-plugin-910-v26.0.0.yaml
 | Pod一直Pending | NPU资源不足或节点标签不匹配 | 检查`kubectl describe pod`和节点标签 |
 | Device Plugin启动失败 | 驱动路径不正确 | 检查`/usr/local/Ascend/driver`是否存在 |
 
-
 ## 训练业务快速入门
+
 本章节以待安装设备为两台Atlas 800T A2 训练服务器（一台作为管理节点、一台作为计算节点）为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。
 
 ### 操作说明<a name="section17940333114314"></a>
@@ -198,7 +198,6 @@ kubectl delete -f device-plugin-910-v26.0.0.yaml
 |--|--|--|
 |[安装组件](#section1837511531098)|以Atlas 800T A2 训练服务器为例，手把手带您在昇腾设备上快速安装集群调度组件。|更多安装集群调度组件的参数说明和操作步骤，请参考[安装部署](installation_guide/02_installation/manual_installation/00_obtaining_software_packages.md)章节。|
 |[下发训练任务](#section106493419399)|以一个简单的PyTorch训练任务为例，让您快速了解训练任务下发的操作流程。|更多下发训练任务的参数说明和操作步骤，请参考[基础调度](./usage/basic_scheduling/00_feature_description.md)章节。|
-
 
 ### 安装组件<a name="section1837511531098"></a>
 
@@ -254,7 +253,7 @@ kubectl delete -f device-plugin-910-v26.0.0.yaml
         ```
 
 3. 拉取组件镜像。
-   1. 依次执行以下命令，在**计算节点**拉取组件镜像。
+    1. 依次执行以下命令，在**计算节点**拉取组件镜像。
 
         ```shell
         cd /tmp/noded
@@ -381,7 +380,9 @@ kubectl delete -f device-plugin-910-v26.0.0.yaml
         ./Ascend-docker-runtime_26.0.0_linux-aarch64.run --install
         systemctl daemon-reload && systemctl restart docker
         ```
+
     2. 在**计算节点**，依次执行以下命令，安装组件。
+
         ```shell
         cd /tmp/noded
         kubectl apply -f noded-v26.0.0.yaml
@@ -390,7 +391,7 @@ kubectl delete -f device-plugin-910-v26.0.0.yaml
         kubectl apply -f device-plugin-volcano-v26.0.0.yaml
         ```
 
-    2. 在**管理节点**，依次执行以下命令，安装组件。
+    3. 在**管理节点**，依次执行以下命令，安装组件。
 
         ```shell
         cd /tmp/ascend-operator
@@ -403,7 +404,7 @@ kubectl delete -f device-plugin-910-v26.0.0.yaml
         kubectl apply -f clusterd-v26.0.0.yaml
         ```
 
-    3. 执行以下命令，查看组件是否启动成功。
+    4. 执行以下命令，查看组件是否启动成功。
 
         ```shell
         kubectl get pod -A

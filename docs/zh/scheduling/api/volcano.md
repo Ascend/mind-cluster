@@ -45,7 +45,7 @@
 |pod-rescheduling|是否启用Pod级别重调度。|<ul><li>on：开启Pod级别重调度</li><li>其他值或不使用该字段：关闭Pod级别重调度</li></ul>|Volcano|
 |process-recover-enable|是否启用进程级别重调度。|<ul><li>on：开启进程级别重调度</li><li>其他值或不使用该字段：关闭进程级别重调度</li></ul>|Volcano|
 |subHealthyStrategy|亚健康处理策略。|<ul><li>ignore：忽略该亚健康节点，后续任务在亲和性调度上不优先调度该节点。</li><li>graceExit：不使用亚健康节点，并保存临终CKPT文件后，进行重调度，后续任务不会调度到该节点。</li><li>forceExit：不使用亚健康节点，不保存任务直接退出，进行重调度，后续任务不会调度到该节点。</li><li>hotSwitch：执行亚健康热切，拉起备份Pod后，暂停训练任务，并使用新节点重新拉起训练。</li></ul>|Volcano|
-|huawei.com/scheduler.softShareDev.aicoreQuota|软切分任务请求的AI Core百分比。|[1, 100]|Volcano|
+|huawei.com/scheduler.softShareDev.aicoreQuota|软切分任务请求的AICore百分比。|[1, 100]|Volcano|
 |huawei.com/scheduler.softShareDev.hbmQuota|软切分任务请求的高带宽内存量。|<p>[1, maxHBM]</p><p>maxHBM为通过<b>npu-smi info</b>命令查询出的HBM-Usage(MB)中HBM的值。</p>|Volcano|
 |huawei.com/scheduler.softShareDev.policy|软切分任务的策略。|<ul><li>fixed-share</li><li>elastic</li><li>best-effort</li></ul>|Volcano|
 

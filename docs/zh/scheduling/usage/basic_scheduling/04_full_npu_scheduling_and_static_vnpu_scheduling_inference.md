@@ -95,7 +95,6 @@ vcjob任务的原理图如[图2](#fig8231124765)所示。
     - Ascend Device Plugin定期上报芯片拓扑信息。
         - 上报整卡信息。将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）和已使用的芯片数量（allocated）上报到Node中，用于整卡调度。
 
-
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 
 2. ClusterD读取device-info-cm和node-info-cm中信息后，将信息写入cluster-info-cm。
@@ -118,7 +117,6 @@ deploy任务原理图如[图3](#fig178781320593)所示。
     - kubelet上报节点芯片数量到节点对象（node）中。
     - Ascend Device Plugin定期上报芯片拓扑信息。
         - 上报整卡信息。将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）和已使用的芯片数量（allocated）上报到Node中，用于整卡调度。
-
 
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 

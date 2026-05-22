@@ -44,7 +44,7 @@
 
       虚拟化实例启动参数说明如下：
 
-      **表 3** Ascend Device Plugin启动参数
+      **表 2** Ascend Device Plugin启动参数
 
       <a name="table1064314568229"></a>
 
@@ -66,7 +66,7 @@
 
    2. Volcano参数修改及启动说明。
 
-      在Volcano部署文件“volcano-v_\{version\}_.yaml”中，需要配置“presetVirtualDevice”的值为“false”。
+      在Volcano部署文件“volcano-v<i>\{version\}</i>.yaml”中，需要配置“presetVirtualDevice”的值为“false”。
 
        ```Yaml
        ...
@@ -122,7 +122,7 @@
 <tr id="row11648825917"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p19505796596"><a name="p19505796596"></a><a name="p19505796596"></a>目前任务的每个Pod请求的NPU数量为1个。</p>
 </td>
 </tr>
-<tr id="row192561854613"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p02561481463"><a name="p02561481463"></a><a name="p02561481463"></a>任务请求的AI Core数量，为vNPU时，按实际填写；为整张物理NPU时，需要为单张卡的AI Core个数或其倍数且整卡时调度可能不满足亲和性。</p>
+<tr id="row192561854613"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p02561481463"><a name="p02561481463"></a><a name="p02561481463"></a>任务请求的AICore数量，为vNPU时，按实际填写；为整张物理NPU时，需要为单张卡的AICore个数或其倍数且整卡时调度可能不满足亲和性。</p>
 </td>
 </tr>
 <tr id="row11782173617479"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18782936144718"><a name="p18782936144718"></a><a name="p18782936144718"></a>默认需要容器以root用户启动，若需要以普通用户运行推理任务，需要参考<a href="https://gitcode.com/Ascend/mind-cluster/issues/359">使用动态虚拟化时，以普通用户运行推理业务容器失败</a>章节进行操作。</p>
@@ -157,13 +157,13 @@
 <tr id="row1854910515540"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p12256108124616"><a name="p12256108124616"></a><a name="p12256108124616"></a>K8s场景会自动创建与销毁vNPU，不能与Docker场景的操作混用。</p>
 </td>
 </tr>
-<tr id="row151011624135113"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18102182414515"><a name="p18102182414515"></a><a name="p18102182414515"></a>进行动态虚拟化的节点不能对芯片的CPU进行设置。详情请参考<span id="ph373734654014"><a name="ph373734654014"></a><a name="ph373734654014"></a>《Atlas 中心推理卡  25.5.0 npu-smi 命令参考》中的"信息查询&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100540373/6faea171" target="_blank" rel="noopener noreferrer">查询所有芯片的AI CPU、control CPU和data CPU数量</a>"</span>章节。</p>
+<tr id="row151011624135113"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p18102182414515"><a name="p18102182414515"></a><a name="p18102182414515"></a>进行动态虚拟化的节点不能对芯片的CPU进行设置。详情请参考<span id="ph373734654014"><a name="ph373734654014"></a><a name="ph373734654014"></a>《Atlas 中心推理卡 26.0.RC1 npu-smi 命令参考》中的"信息查询（info）&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100568418/a31a9e5b" target="_blank" rel="noopener noreferrer">查询所有芯片的AI CPU、control CPU和data CPU数量</a>"</span>章节。</p>
 </td>
 </tr>
 </tbody>
 </table>
 
-**表 4**  虚拟化实例模板与虚拟设备类型关系表
+**表 4**  虚拟化实例模板与vNPU类型关系表
 
 <a name="table47415104403"></a>
 <table><thead align="left"><tr id="row67416101402"><th class="cellrowborder" valign="top" width="20%" id="mcps1.2.5.1.1"><p id="p117491014400"><a name="p117491014400"></a><a name="p117491014400"></a>NPU类型</p>
@@ -176,7 +176,7 @@
 </th>
 </tr>
 </thead>
-<tbody><tr id="row84911853114212"><td class="cellrowborder" rowspan="7" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p1868751772016"><a name="p1868751772016"></a><a name="p1868751772016"></a><span id="ph1534112451967"><a name="ph1534112451967"></a><a name="ph1534112451967"></a>Atlas 推理系列产品</span>（8个AI Core）</p>
+<tbody><tr id="row84911853114212"><td class="cellrowborder" rowspan="7" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p id="p1868751772016"><a name="p1868751772016"></a><a name="p1868751772016"></a><span id="ph1534112451967"><a name="ph1534112451967"></a><a name="ph1534112451967"></a>Atlas 推理系列产品</span>（8个AICore）</p>
 </td>
 <td class="cellrowborder" valign="top" width="19.98%" headers="mcps1.2.5.1.2 "><p id="p11312190431"><a name="p11312190431"></a><a name="p11312190431"></a>vir01</p>
 </td>
@@ -227,7 +227,7 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p9957636276"><a name="p9957636276"></a><a name="p9957636276"></a>Ascend310P-4c.4cpu.dvpp-100-0</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas A2 训练/推理系列产品</p><p>（20/24/25个AI Core）</p></td>
+<tr><td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas A2 训练/推理系列产品</p><p>（20/24/25个AICore）</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>vir05_1c_16g</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-5c.1cpu.16g</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-5c.1cpu.16g-100-0</p></td>
@@ -244,7 +244,7 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-12c.3cpu.32g</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-12c.3cpu.32g-100-0</p></td>
 </tr>
-<tr><td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas A3 训练/推理系列产品</p><p>（40/48个AI Core）</p></td>
+<tr><td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas A3 训练/推理系列产品</p><p>（40/48个AICore）</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>vir05_1c_16g</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-5c.1cpu.16g</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-5c.1cpu.16g-100-0</p></td>
@@ -263,7 +263,6 @@
 </tr>
 </tbody>
 </table>
-
 
 - 资源监测可以和推理场景下的所有特性一起使用。
 - 集群中同时运行多个推理任务，每个任务使用的特性可以不同，但不能同时存在使用静态vNPU的任务和使用动态vNPU的任务。
@@ -295,7 +294,7 @@ vcjob任务原理图如[图2](#fig1918122131712)所示。
 
 1. 集群调度组件定期上报节点和芯片信息。
     - kubelet上报节点芯片数量到节点对象（node）中。
-    - Ascend Device Plugin定期上报AI Core数量到Node中。
+    - Ascend Device Plugin定期上报AICore数量到Node中。
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 
 2. ClusterD读取device-info-cm和node-info-cm中信息后，将信息分别写入cluster-info-device-cm和cluster-info-node-cm中。
@@ -315,7 +314,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
 各步骤说明如下：
 
 1. 集群调度组件定期上报节点和芯片信息。
-    - Ascend Device Plugin定期上报AI Core数量到Node中。
+    - Ascend Device Plugin定期上报AICore数量到Node中。
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 2. ClusterD读取device-info-cm和node-info-cm中信息后，将信息分别写入cluster-info-device-cm和cluster-info-node-cm中。
 3. 用户通过kubectl或者其他深度学习平台下发deploy任务。
@@ -403,7 +402,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
 
 2. 将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
 
-    在Atlas 推理系列产品上，以infer-deploy-dynamic.yaml为例，申请1个AI Core的参数配置示例如下。
+    在Atlas 推理系列产品上，以infer-deploy-dynamic.yaml为例，申请1个AICore的参数配置示例如下。
 
     ```Yaml
     apiVersion: apps/v1
@@ -466,7 +465,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
     <tr id="row196219286214"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p146219285218"><a name="p146219285218"></a><a name="p146219285218"></a>high</p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="p19621528112118"><a name="p19621528112118"></a><a name="p19621528112118"></a>性能优先。</p>
-    <p id="p6621152812214"><a name="p6621152812214"></a><a name="p6621152812214"></a>在集群资源充足的情况下，将选择尽量高配的虚拟化实例模板；在整个集群资源已使用过多的情况下，如大部分物理NPU都已使用，每个物理NPU只剩下小部分AI Core，不足以满足高配虚拟化实例模板时，将使用相同AI Core数量下较低配置的其他模板。具体选择请参考<a href="../../03_virtualization_templates.md">虚拟化模板</a>章节。</p>
+    <p id="p6621152812214"><a name="p6621152812214"></a><a name="p6621152812214"></a>在集群资源充足的情况下，将选择尽量高配的虚拟化实例模板；在整个集群资源已使用过多的情况下，如大部分物理NPU都已使用，每个物理NPU只剩下小部分AICore，不足以满足高配虚拟化实例模板时，将使用相同AICore数量下较低配置的其他模板。具体选择请参考<a href="../../virtual_instance_with_hdk/03_virtualization_templates.md">虚拟化模板</a>章节。</p>
     </td>
     </tr>
     <tr id="row1762192862114"><td class="cellrowborder" rowspan="3" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p462112842110"><a name="p462112842110"></a><a name="p462112842110"></a>vnpu-dvpp</p>
@@ -503,159 +502,158 @@ deploy任务原理图如[图3](#fig349112913199)所示。
     </tbody>
     </table>
 
+   >[!NOTE]
+   >vnpu-level和vnpu-dvpp的选择结果，具体请参见[表5](#table83781115185619)。
+   >
+   >- 表中“降级”表示AICore满足的情况下，其他资源不够（如AICPU）时，模板会选择同AICore下的其他满足资源要求的模板。如在只剩一颗芯片上只有2个AICore，1个AICPU时，vir02模板会降级为vir02\_1c。
+   >- 表中“选择模板”中的值来源于[虚拟化模板](./../03_virtualization_templates.md)中表1的Atlas 推理系列产品、“虚拟化实例模板”列的取值。
+   >- 表中“vnpu-level”列的“其他值”表示除去“low”和“high”后的任意取值。
+   >- 整卡场景下vnpu-dvpp与vnpu-level可以取任意值。
 
->[!NOTE]
->vnpu-level和vnpu-dvpp的选择结果，具体请参见[表5](#table83781115185619)。
->
->- 表中“降级”表示AI Core满足的情况下，其他资源不够（如AI CPU）时，模板会选择同AI Core下的其他满足资源要求的模板。如在只剩一颗芯片上只有2个AI Core，1个AI CPU时，vir02模板会降级为vir02\_1c。
->- 表中“选择模板”中的值来源于[虚拟化模板](./../03_virtualization_templates.md)中Atlas 推理系列产品、“虚拟化实例模板”列的取值。
->- 表中“vnpu-level”列的“其他值”表示除去“low”和“high”后的任意取值。
->- 整卡场景下vnpu-dvpp与vnpu-level可以取任意值。
+    **表 5**  Atlas 推理系列产品dvpp和level作用结果表
 
-**表 5**  Atlas 推理系列产品dvpp和level作用结果表
+    <a name="table83781115185619"></a>
+    <table><thead align="left"><tr id="row1837817157565"><th class="cellrowborder" valign="top" width="17.2982701729827%" id="mcps1.2.7.1.1"><p id="p11560216112"><a name="p11560216112"></a><a name="p11560216112"></a>产品型号</p>
+    </th>
+    <th class="cellrowborder" valign="top" width="16.42835716428357%" id="mcps1.2.7.1.2"><p id="p1024717408463"><a name="p1024717408463"></a><a name="p1024717408463"></a>AICore请求数量</p>
+    </th>
+    <th class="cellrowborder" valign="top" width="15.768423157684234%" id="mcps1.2.7.1.3"><p id="p192479402463"><a name="p192479402463"></a><a name="p192479402463"></a>vnpu-dvpp</p>
+    </th>
+    <th class="cellrowborder" valign="top" width="20.987901209879013%" id="mcps1.2.7.1.4"><p id="p1024716402460"><a name="p1024716402460"></a><a name="p1024716402460"></a>vnpu-level</p>
+    </th>
+    <th class="cellrowborder" valign="top" width="8.52914708529147%" id="mcps1.2.7.1.5"><p id="p8247440174613"><a name="p8247440174613"></a><a name="p8247440174613"></a>是否降级</p>
+    </th>
+    <th class="cellrowborder" valign="top" width="20.987901209879013%" id="mcps1.2.7.1.6"><p id="p0247164034611"><a name="p0247164034611"></a><a name="p0247164034611"></a>选择模板</p>
+    </th>
+    </tr>
+    </thead>
+    <tbody><tr id="row1517703912018"><td class="cellrowborder" rowspan="12" valign="top" width="17.2982701729827%" headers="mcps1.2.7.1.1 "><p id="p8916171416125"><a name="p8916171416125"></a><a name="p8916171416125"></a><span id="ph1856391311016"><a name="ph1856391311016"></a><a name="ph1856391311016"></a>Atlas 推理系列产品</span>（8个AICore）</p>
+    <p id="p317720394019"><a name="p317720394019"></a><a name="p317720394019"></a></p>
+    <p id="p717811391508"><a name="p717811391508"></a><a name="p717811391508"></a></p>
+    <p id="p16324345105912"><a name="p16324345105912"></a><a name="p16324345105912"></a></p>
+    <p id="p5934321617"><a name="p5934321617"></a><a name="p5934321617"></a></p>
+    <p id="p209341921210"><a name="p209341921210"></a><a name="p209341921210"></a></p>
+    <p id="p59341821618"><a name="p59341821618"></a><a name="p59341821618"></a></p>
+    <p id="p9797183210114"><a name="p9797183210114"></a><a name="p9797183210114"></a></p>
+    <p id="p19813153915118"><a name="p19813153915118"></a><a name="p19813153915118"></a></p>
+    <p id="p1481383919117"><a name="p1481383919117"></a><a name="p1481383919117"></a></p>
+    </td>
+    <td class="cellrowborder" valign="top" width="16.42835716428357%" headers="mcps1.2.7.1.2 "><p id="p191771939903"><a name="p191771939903"></a><a name="p191771939903"></a>1</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="15.768423157684234%" headers="mcps1.2.7.1.3 "><p id="p14248174010469"><a name="p14248174010469"></a><a name="p14248174010469"></a>null</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="20.987901209879013%" headers="mcps1.2.7.1.4 "><p id="p1385717396538"><a name="p1385717396538"></a><a name="p1385717396538"></a>任意值</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="8.52914708529147%" headers="mcps1.2.7.1.5 "><p id="p38575391531"><a name="p38575391531"></a><a name="p38575391531"></a>-</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="20.987901209879013%" headers="mcps1.2.7.1.6 "><p id="p385603935319"><a name="p385603935319"></a><a name="p385603935319"></a>vir01</p>
+    </td>
+    </tr>
+    <tr id="row11177839600"><td class="cellrowborder" rowspan="3" valign="top" headers="mcps1.2.7.1.1 "><p id="p1317733915013"><a name="p1317733915013"></a><a name="p1317733915013"></a>2</p>
+    <p id="p8178439503"><a name="p8178439503"></a><a name="p8178439503"></a></p>
+    <p id="p1732216453596"><a name="p1732216453596"></a><a name="p1732216453596"></a></p>
+    </td>
+    <td class="cellrowborder" rowspan="3" valign="top" headers="mcps1.2.7.1.2 "><p id="p1248174014614"><a name="p1248174014614"></a><a name="p1248174014614"></a>null</p>
+    <p id="p13302164084616"><a name="p13302164084616"></a><a name="p13302164084616"></a></p>
+    <p id="p1448013112212"><a name="p1448013112212"></a><a name="p1448013112212"></a></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p14619832145315"><a name="p14619832145315"></a><a name="p14619832145315"></a>low/其他值</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p126198326538"><a name="p126198326538"></a><a name="p126198326538"></a>-</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p3248164094613"><a name="p3248164094613"></a><a name="p3248164094613"></a>vir02_1c</p>
+    </td>
+    </tr>
+    <tr id="row117818394016"><td class="cellrowborder" rowspan="2" valign="top" headers="mcps1.2.7.1.1 "><p id="p162489402463"><a name="p162489402463"></a><a name="p162489402463"></a>high</p>
+    <p id="p143218450593"><a name="p143218450593"></a><a name="p143218450593"></a></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p22482040124615"><a name="p22482040124615"></a><a name="p22482040124615"></a>否</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p182481740174611"><a name="p182481740174611"></a><a name="p182481740174611"></a>vir02</p>
+    </td>
+    </tr>
+    <tr id="row16943192222113"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p1324834017468"><a name="p1324834017468"></a><a name="p1324834017468"></a>是</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p16248840154619"><a name="p16248840154619"></a><a name="p16248840154619"></a>vir02_1c</p>
+    </td>
+    </tr>
+    <tr id="row15502725152112"><td class="cellrowborder" rowspan="7" valign="top" headers="mcps1.2.7.1.1 "><p id="p1531894575910"><a name="p1531894575910"></a><a name="p1531894575910"></a>4</p>
+    <p id="p231434585920"><a name="p231434585920"></a><a name="p231434585920"></a></p>
+    <p id="p793462111111"><a name="p793462111111"></a><a name="p793462111111"></a></p>
+    <p id="p1793418218114"><a name="p1793418218114"></a><a name="p1793418218114"></a></p>
+    <p id="p16934112119119"><a name="p16934112119119"></a><a name="p16934112119119"></a></p>
+    <p id="p1879713323111"><a name="p1879713323111"></a><a name="p1879713323111"></a></p>
+    <p id="p68138391419"><a name="p68138391419"></a><a name="p68138391419"></a></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p10248164012460"><a name="p10248164012460"></a><a name="p10248164012460"></a>yes</p>
+    </td>
+    <td class="cellrowborder" rowspan="3" valign="top" headers="mcps1.2.7.1.3 "><p id="p3248184024610"><a name="p3248184024610"></a><a name="p3248184024610"></a>low/其他值</p>
+    </td>
+    <td class="cellrowborder" rowspan="3" valign="top" headers="mcps1.2.7.1.4 "><p id="p4249114074618"><a name="p4249114074618"></a><a name="p4249114074618"></a>-</p>
+    ia<p id="p1631211451596"><a name="p1631211451596"></a><a name="p1631211451596"></a></p>
+    <p id="p189347217116"><a name="p189347217116"></a><a name="p189347217116"></a></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p8249540164619"><a name="p8249540164619"></a><a name="p8249540164619"></a>vir04_4c_dvpp</p>
+    </td>
+    </tr>
+    <tr id="row1631142722119"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p192491540164619"><a name="p192491540164619"></a><a name="p192491540164619"></a>no</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p5249124011467"><a name="p5249124011467"></a><a name="p5249124011467"></a>vir04_3c_ndvpp</p>
+    </td>
+    </tr>
+    <tr id="row493411217111"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p424914004612"><a name="p424914004612"></a><a name="p424914004612"></a>null</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p192493409466"><a name="p192493409466"></a><a name="p192493409466"></a>vir04_3c</p>
+    </td>
+    </tr>
+    <tr id="row139342211813"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p924924018462"><a name="p924924018462"></a><a name="p924924018462"></a>yes</p>
+    </td>
+    <td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.7.1.2 "><p id="p2249440184619"><a name="p2249440184619"></a><a name="p2249440184619"></a>high</p>
+    </td>
+    <td class="cellrowborder" rowspan="2" valign="top" headers="mcps1.2.7.1.3 "><p id="p14272035114811"><a name="p14272035114811"></a><a name="p14272035114811"></a>-</p>
+    <p id="p021482217814"><a name="p021482217814"></a><a name="p021482217814"></a></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p1324984017461"><a name="p1324984017461"></a><a name="p1324984017461"></a>vir04_4c_dvpp</p>
+    </td>
+    </tr>
+    <tr id="row1993412116119"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p824916403462"><a name="p824916403462"></a><a name="p824916403462"></a>no</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p15249440164616"><a name="p15249440164616"></a><a name="p15249440164616"></a>vir04_3c_ndvpp</p>
+    </td>
+    </tr>
+    <tr id="row2797113219118"><td class="cellrowborder" rowspan="2" valign="top" headers="mcps1.2.7.1.1 "><p id="p1824974014620"><a name="p1824974014620"></a><a name="p1824974014620"></a>null</p>
+    <p id="p1681315391419"><a name="p1681315391419"></a><a name="p1681315391419"></a></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p10249124011467"><a name="p10249124011467"></a><a name="p10249124011467"></a>否</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p324964074618"><a name="p324964074618"></a><a name="p324964074618"></a>vir04</p>
+    </td>
+    </tr>
+    <tr id="row16813143918117"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p2249340144615"><a name="p2249340144615"></a><a name="p2249340144615"></a>是</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p924924064613"><a name="p924924064613"></a><a name="p924924064613"></a>vir04_3c</p>
+    </td>
+    </tr>
+    <tr id="row1781312397116"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p102497405465"><a name="p102497405465"></a><a name="p102497405465"></a>8或8的倍数</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p42491440174615"><a name="p42491440174615"></a><a name="p42491440174615"></a>任意值</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p5249114074614"><a name="p5249114074614"></a><a name="p5249114074614"></a>任意值</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p1224920403467"><a name="p1224920403467"></a><a name="p1224920403467"></a>-</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p55031522345"><a name="p55031522345"></a><a name="p55031522345"></a>-</p>
+    </td>
+    </tr>
+    <tr id="row74471126913"><td class="cellrowborder" colspan="6" valign="top" headers="mcps1.2.7.1.1 mcps1.2.7.1.2 mcps1.2.7.1.3 mcps1.2.7.1.4 mcps1.2.7.1.5 mcps1.2.7.1.6 "><p id="p627014191100"><a name="p627014191100"></a><a name="p627014191100"></a>注：</p>
+    <p id="p9942971914"><a name="p9942971914"></a><a name="p9942971914"></a>如果是<span id="ph884102218100"><a name="ph884102218100"></a><a name="ph884102218100"></a>Atlas 推理系列产品</span>（8个AICore），必须申请AICore数量为8或8的倍数。</p>
+    </td>
+    </tr>
+    </tbody>
+    </table>
 
-<a name="table83781115185619"></a>
-<table><thead align="left"><tr id="row1837817157565"><th class="cellrowborder" valign="top" width="17.2982701729827%" id="mcps1.2.7.1.1"><p id="p11560216112"><a name="p11560216112"></a><a name="p11560216112"></a>产品型号</p>
-</th>
-<th class="cellrowborder" valign="top" width="16.42835716428357%" id="mcps1.2.7.1.2"><p id="p1024717408463"><a name="p1024717408463"></a><a name="p1024717408463"></a>AI Core请求数量</p>
-</th>
-<th class="cellrowborder" valign="top" width="15.768423157684234%" id="mcps1.2.7.1.3"><p id="p192479402463"><a name="p192479402463"></a><a name="p192479402463"></a>vnpu-dvpp</p>
-</th>
-<th class="cellrowborder" valign="top" width="20.987901209879013%" id="mcps1.2.7.1.4"><p id="p1024716402460"><a name="p1024716402460"></a><a name="p1024716402460"></a>vnpu-level</p>
-</th>
-<th class="cellrowborder" valign="top" width="8.52914708529147%" id="mcps1.2.7.1.5"><p id="p8247440174613"><a name="p8247440174613"></a><a name="p8247440174613"></a>是否降级</p>
-</th>
-<th class="cellrowborder" valign="top" width="20.987901209879013%" id="mcps1.2.7.1.6"><p id="p0247164034611"><a name="p0247164034611"></a><a name="p0247164034611"></a>选择模板</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row1517703912018"><td class="cellrowborder" rowspan="12" valign="top" width="17.2982701729827%" headers="mcps1.2.7.1.1 "><p id="p8916171416125"><a name="p8916171416125"></a><a name="p8916171416125"></a><span id="ph1856391311016"><a name="ph1856391311016"></a><a name="ph1856391311016"></a>Atlas 推理系列产品</span>（8个AI Core）</p>
-<p id="p317720394019"><a name="p317720394019"></a><a name="p317720394019"></a></p>
-<p id="p717811391508"><a name="p717811391508"></a><a name="p717811391508"></a></p>
-<p id="p16324345105912"><a name="p16324345105912"></a><a name="p16324345105912"></a></p>
-<p id="p5934321617"><a name="p5934321617"></a><a name="p5934321617"></a></p>
-<p id="p209341921210"><a name="p209341921210"></a><a name="p209341921210"></a></p>
-<p id="p59341821618"><a name="p59341821618"></a><a name="p59341821618"></a></p>
-<p id="p9797183210114"><a name="p9797183210114"></a><a name="p9797183210114"></a></p>
-<p id="p19813153915118"><a name="p19813153915118"></a><a name="p19813153915118"></a></p>
-<p id="p1481383919117"><a name="p1481383919117"></a><a name="p1481383919117"></a></p>
-</td>
-<td class="cellrowborder" valign="top" width="16.42835716428357%" headers="mcps1.2.7.1.2 "><p id="p191771939903"><a name="p191771939903"></a><a name="p191771939903"></a>1</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.768423157684234%" headers="mcps1.2.7.1.3 "><p id="p14248174010469"><a name="p14248174010469"></a><a name="p14248174010469"></a>null</p>
-</td>
-<td class="cellrowborder" valign="top" width="20.987901209879013%" headers="mcps1.2.7.1.4 "><p id="p1385717396538"><a name="p1385717396538"></a><a name="p1385717396538"></a>任意值</p>
-</td>
-<td class="cellrowborder" valign="top" width="8.52914708529147%" headers="mcps1.2.7.1.5 "><p id="p38575391531"><a name="p38575391531"></a><a name="p38575391531"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" width="20.987901209879013%" headers="mcps1.2.7.1.6 "><p id="p385603935319"><a name="p385603935319"></a><a name="p385603935319"></a>vir01</p>
-</td>
-</tr>
-<tr id="row11177839600"><td class="cellrowborder" rowspan="3" valign="top" headers="mcps1.2.7.1.1 "><p id="p1317733915013"><a name="p1317733915013"></a><a name="p1317733915013"></a>2</p>
-<p id="p8178439503"><a name="p8178439503"></a><a name="p8178439503"></a></p>
-<p id="p1732216453596"><a name="p1732216453596"></a><a name="p1732216453596"></a></p>
-</td>
-<td class="cellrowborder" rowspan="3" valign="top" headers="mcps1.2.7.1.2 "><p id="p1248174014614"><a name="p1248174014614"></a><a name="p1248174014614"></a>null</p>
-<p id="p13302164084616"><a name="p13302164084616"></a><a name="p13302164084616"></a></p>
-<p id="p1448013112212"><a name="p1448013112212"></a><a name="p1448013112212"></a></p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p14619832145315"><a name="p14619832145315"></a><a name="p14619832145315"></a>low/其他值</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p126198326538"><a name="p126198326538"></a><a name="p126198326538"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p3248164094613"><a name="p3248164094613"></a><a name="p3248164094613"></a>vir02_1c</p>
-</td>
-</tr>
-<tr id="row117818394016"><td class="cellrowborder" rowspan="2" valign="top" headers="mcps1.2.7.1.1 "><p id="p162489402463"><a name="p162489402463"></a><a name="p162489402463"></a>high</p>
-<p id="p143218450593"><a name="p143218450593"></a><a name="p143218450593"></a></p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p22482040124615"><a name="p22482040124615"></a><a name="p22482040124615"></a>否</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p182481740174611"><a name="p182481740174611"></a><a name="p182481740174611"></a>vir02</p>
-</td>
-</tr>
-<tr id="row16943192222113"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p1324834017468"><a name="p1324834017468"></a><a name="p1324834017468"></a>是</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p16248840154619"><a name="p16248840154619"></a><a name="p16248840154619"></a>vir02_1c</p>
-</td>
-</tr>
-<tr id="row15502725152112"><td class="cellrowborder" rowspan="7" valign="top" headers="mcps1.2.7.1.1 "><p id="p1531894575910"><a name="p1531894575910"></a><a name="p1531894575910"></a>4</p>
-<p id="p231434585920"><a name="p231434585920"></a><a name="p231434585920"></a></p>
-<p id="p793462111111"><a name="p793462111111"></a><a name="p793462111111"></a></p>
-<p id="p1793418218114"><a name="p1793418218114"></a><a name="p1793418218114"></a></p>
-<p id="p16934112119119"><a name="p16934112119119"></a><a name="p16934112119119"></a></p>
-<p id="p1879713323111"><a name="p1879713323111"></a><a name="p1879713323111"></a></p>
-<p id="p68138391419"><a name="p68138391419"></a><a name="p68138391419"></a></p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p10248164012460"><a name="p10248164012460"></a><a name="p10248164012460"></a>yes</p>
-</td>
-<td class="cellrowborder" rowspan="3" valign="top" headers="mcps1.2.7.1.3 "><p id="p3248184024610"><a name="p3248184024610"></a><a name="p3248184024610"></a>low/其他值</p>
-</td>
-<td class="cellrowborder" rowspan="3" valign="top" headers="mcps1.2.7.1.4 "><p id="p4249114074618"><a name="p4249114074618"></a><a name="p4249114074618"></a>-</p>
-ia<p id="p1631211451596"><a name="p1631211451596"></a><a name="p1631211451596"></a></p>
-<p id="p189347217116"><a name="p189347217116"></a><a name="p189347217116"></a></p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p8249540164619"><a name="p8249540164619"></a><a name="p8249540164619"></a>vir04_4c_dvpp</p>
-</td>
-</tr>
-<tr id="row1631142722119"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p192491540164619"><a name="p192491540164619"></a><a name="p192491540164619"></a>no</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p5249124011467"><a name="p5249124011467"></a><a name="p5249124011467"></a>vir04_3c_ndvpp</p>
-</td>
-</tr>
-<tr id="row493411217111"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p424914004612"><a name="p424914004612"></a><a name="p424914004612"></a>null</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p192493409466"><a name="p192493409466"></a><a name="p192493409466"></a>vir04_3c</p>
-</td>
-</tr>
-<tr id="row139342211813"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p924924018462"><a name="p924924018462"></a><a name="p924924018462"></a>yes</p>
-</td>
-<td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.7.1.2 "><p id="p2249440184619"><a name="p2249440184619"></a><a name="p2249440184619"></a>high</p>
-</td>
-<td class="cellrowborder" rowspan="2" valign="top" headers="mcps1.2.7.1.3 "><p id="p14272035114811"><a name="p14272035114811"></a><a name="p14272035114811"></a>-</p>
-<p id="p021482217814"><a name="p021482217814"></a><a name="p021482217814"></a></p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p1324984017461"><a name="p1324984017461"></a><a name="p1324984017461"></a>vir04_4c_dvpp</p>
-</td>
-</tr>
-<tr id="row1993412116119"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p824916403462"><a name="p824916403462"></a><a name="p824916403462"></a>no</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p15249440164616"><a name="p15249440164616"></a><a name="p15249440164616"></a>vir04_3c_ndvpp</p>
-</td>
-</tr>
-<tr id="row2797113219118"><td class="cellrowborder" rowspan="2" valign="top" headers="mcps1.2.7.1.1 "><p id="p1824974014620"><a name="p1824974014620"></a><a name="p1824974014620"></a>null</p>
-<p id="p1681315391419"><a name="p1681315391419"></a><a name="p1681315391419"></a></p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p10249124011467"><a name="p10249124011467"></a><a name="p10249124011467"></a>否</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p324964074618"><a name="p324964074618"></a><a name="p324964074618"></a>vir04</p>
-</td>
-</tr>
-<tr id="row16813143918117"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p2249340144615"><a name="p2249340144615"></a><a name="p2249340144615"></a>是</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p924924064613"><a name="p924924064613"></a><a name="p924924064613"></a>vir04_3c</p>
-</td>
-</tr>
-<tr id="row1781312397116"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p102497405465"><a name="p102497405465"></a><a name="p102497405465"></a>8或8的倍数</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p42491440174615"><a name="p42491440174615"></a><a name="p42491440174615"></a>任意值</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p5249114074614"><a name="p5249114074614"></a><a name="p5249114074614"></a>任意值</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p1224920403467"><a name="p1224920403467"></a><a name="p1224920403467"></a>-</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p55031522345"><a name="p55031522345"></a><a name="p55031522345"></a>-</p>
-</td>
-</tr>
-<tr id="row74471126913"><td class="cellrowborder" colspan="6" valign="top" headers="mcps1.2.7.1.1 mcps1.2.7.1.2 mcps1.2.7.1.3 mcps1.2.7.1.4 mcps1.2.7.1.5 mcps1.2.7.1.6 "><p id="p627014191100"><a name="p627014191100"></a><a name="p627014191100"></a>注：</p>
-<p id="p9942971914"><a name="p9942971914"></a><a name="p9942971914"></a>如果是<span id="ph884102218100"><a name="ph884102218100"></a><a name="ph884102218100"></a>Atlas 推理系列产品</span>（8个AI Core），必须申请AI Core数量为8或8的倍数。</p>
-</td>
-</tr>
-</tbody>
-</table>
-
-> [!NOTICE]
-> 上表中对于芯片虚拟化（非整卡），vnpu-dvpp的值只能为表中对应的值，其他值会导致任务不能下发。
+    >[!NOTICE]
+    >上表中对于芯片虚拟化（非整卡），vnpu-dvpp的值只能为表中对应的值，其他值会导致任务不能下发。
 
 3. 挂载权重文件。
 

@@ -5,7 +5,7 @@
 **前提条件<a name="section52051339787"></a>**
 
 - 确保环境中有配置相应的存储方案，比如使用NFS（Network File System），用户可以参见[安装NFS](../../common_operations.md#安装nfs)进行操作。
-- 在使用整卡调度特性前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../installation_guide//03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
+- 在使用整卡调度特性前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../installation_guide//02_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
     - 调度器（Volcano或其他调度器）
     - Ascend Device Plugin
     - Ascend Docker Runtime
@@ -65,7 +65,6 @@ acjob任务原理图如[图1](#fig5188536014)所示。
     - Ascend Device Plugin定期上报芯片拓扑信息。
         - 上报整卡信息。将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）、已使用的芯片数量（allocated）和芯片的基础信息（device ip和super\_device\_ip）上报到Node中，用于整卡调度。
 
-
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 
 2. ClusterD读取device-info-cm和node-info-cm中信息后，将信息写入cluster-info-cm。
@@ -92,7 +91,6 @@ vcjob任务的原理图如[图2](#fig8717151315416)所示。
     - Ascend Device Plugin定期上报芯片拓扑信息。
         - 上报整卡信息。将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）和已使用的芯片数量（allocated）上报到Node中，用于整卡调度。
 
-
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 
 2. ClusterD读取device-info-cm和node-info-cm中信息后，将信息写入cluster-info-cm。
@@ -118,7 +116,6 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     - kubelet上报节点芯片数量到节点对象（node）中。
     - Ascend Device Plugin定期上报芯片拓扑信息。
         - 上报整卡信息。将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）和已使用的芯片数量（allocated）上报到Node中，用于整卡调度。
-
 
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
 
@@ -1588,8 +1585,6 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
         修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
 
-
-
     - <a name="li164321720423"></a>使用整卡调度特性，参考本配置。以mindspore\_multinodes\_acjob\_\{xxx\}b.yaml为例，在一台Atlas 800T A2 训练服务器上以Scheduler挂载芯片的方式执行2\*8卡训练任务，修改示例如下。
 
         ```Yaml
@@ -1702,8 +1697,6 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                   volumes:
         ...
         ```
-
-
 
 2. <a name="li118885168281"></a>若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu”和“memory”参数和对应的参数值，具体数值请根据实际情况配置。
 
@@ -2026,7 +2019,6 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         >[!NOTE]
         >其余示例可参考[表5](#table62591594016)和[表6](#table21811158146)，以及YAML对应的参数说明[表2 YAML参数说明](#zh-cn_topic_0000001609074269_table1565872494511)进行适配修改。修改完成后执行[步骤2](#li832632419711)，继续配置YAML的其他字段。
 
-
 2. <a name="li832632419711"></a>若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu”和“memory”参数和对应的参数值，具体数值请根据实际情况配置。
 
     ```Yaml
@@ -2223,8 +2215,6 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
         >[!NOTE]
         >**Allocated resources**的字段huawei.com/Ascend910的值为1，表明训练使用了一个NPU。
-
-
 
         ```ColdFusion
         Name:               ubuntu

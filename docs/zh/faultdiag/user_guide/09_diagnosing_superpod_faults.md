@@ -43,7 +43,7 @@
     │       ├── device_ip_info.json
     │       ├── plog-parser-10802-1.log
     │       ├── plog-parser-1132-0.log
-     
+
     │       └── server-info.json
     └── lcne
         ├── xxx.xx.xx.xx6
@@ -114,10 +114,10 @@
     └── topo_info.json #超节点拓扑信息
     ```
 
->[!NOTE] 
+>[!NOTE]
 >
 >- 针对此章节场景提供的参考示例，可参考[超节点日志清洗及诊断脚本](https://gitcode.com/Ascend/mindxdl-deploy/tree/master/super_pod_diag)进行超节点日志批量解压，清洗及诊断。
->- 日志级别配置较低时，会存在日志刷屏冲刷关键日志无法诊断的情况，涉及的环境变量包含ASCEND\_GLOBAL\_EVENT\_ENABLE、HCCL\_ENTRY\_LOG\_ENABLE、ASCEND\_GLOBAL\_LOG\_LEVEL、ASCEND\_MODULE\_LOG\_LEVEL。更多信息请参见《CANN 环境变量参考》中的“[环境变量列表](https://www.hiascend.com/document/detail/zh/canncommercial/850/maintenref/envvar/envref_07_0001.html)”章节。
+>- 日志级别配置较低时，会存在日志刷屏冲刷关键日志无法诊断的情况，涉及的环境变量包含ASCEND\_GLOBAL\_EVENT\_ENABLE、HCCL\_ENTRY\_LOG\_ENABLE、ASCEND\_GLOBAL\_LOG\_LEVEL、ASCEND\_MODULE\_LOG\_LEVEL。更多信息请参见《CANN 环境变量参考》中的“[环境变量列表](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/envvar/envref_07_0001.html)”章节。
 
 ## 超节点拓扑信息手动关联场景<a name="section117571749184019"></a>
 
@@ -222,7 +222,7 @@ ascend-fd parse --host_log parse_input/host/xxx.xx.xx.128/host_log/   --mindie_l
     |              | 关键传播链 | ['xxxxxx']                                                                                                                                      |
     |              |            | Comp_Network_Custom_01（Link Down: NPU端闪断错误）-> 0x81078603（网口Link状态变化，Up->Down）                                                   |
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-    
+
     ============================
     实例名：xxx.xxx.xx8.201-xxx.xxx.xx2.204-xxx.xxx.8.183-xxx.xxx.x7.203
     节点名：['xxx.xxx.xx8.201', 'xxx.xxx.xx2.204', 'xxx.xxx.8.183', 'xxx.xxx.x7.203']

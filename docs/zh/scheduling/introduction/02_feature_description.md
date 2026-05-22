@@ -36,9 +36,9 @@ NPU Exporter
 
 **功能介绍<a name="section1337420477275"></a>**
 
-基于HDK的虚拟化实例功能是指通过资源虚拟化的方式将物理机或虚拟机配置的NPU（昇腾AI处理器）切分成若干份vNPU（虚拟NPU）挂载到容器中使用，虚拟化管理方式能够实现统一不同规格资源的分配和回收处理，满足多用户反复申请/释放的资源操作请求。
+基于HDK的虚拟化实例功能是指通过资源虚拟化的方式将物理机或虚拟机配置的NPU（昇腾AI处理器）切分成若干份vNPU（虚拟NPU）挂载到容器中使用，虚拟化管理方式能够实现不同规格资源的分配和回收处理，满足多用户反复申请/释放的资源操作请求。
 
-昇腾基于HDK的虚拟化实例功能的优点是可实现多个用户共同使用一台服务器，用户可以按需申请vNPU，降低了用户使用NPU算力的门槛和成本。多个用户共同使用一台服务器的NPU，并借助容器进行资源隔离，资源隔离性好，保证运行环境的稳定和安全，且资源分配，资源回收过程统一，方便多租户管理。
+昇腾基于HDK的虚拟化实例功能的优点是可实现多个用户共同使用一台服务器，用户可以按需申请vNPU，降低了用户使用NPU算力的门槛和成本。多个用户共同使用一台服务器的NPU，并借助容器进行资源隔离，这种方式资源隔离性好，保证运行环境的稳定和安全，且资源分配与回收过程统一，方便多租户管理。
 
 **所需组件<a name="ZH-CN_TOPIC_0000002479226932"></a>**
 
@@ -64,7 +64,7 @@ NPU Exporter
 
 **使用说明<a name="section1350915844811"></a>**
 
-- 驱动安装后会默认安装npu-smi工具，安装操作请参见《CANN 软件安装指南》中的“<a href="https://www.hiascend.com/document/detail/zh/canncommercial/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian">安装NPU驱动和固件</a>”章节（商用版）或“<a href="https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler">安装NPU驱动和固件</a>”章节（社区版）；安装成功后，npu-smi放置在“/usr/local/sbin/”和“/usr/local/bin/”路径下。
+- 驱动安装后会默认安装npu-smi工具，安装操作请参见《CANN 软件安装》中的“<a href="https://www.hiascend.com/document/detail/zh/canncommercial/900/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian">安装NPU驱动和固件</a>”章节（商用版）或“<a href="https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/900/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler">安装NPU驱动和固件</a>”章节（社区版）；安装成功后，npu-smi放置在“/usr/local/sbin/”和“/usr/local/bin/”路径下。
 - 安装MindCluster中的Ascend Docker Runtime、Ascend Device Plugin和Volcano组件，请参见[安装部署](../installation_guide/02_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 - 安装Docker，请参见[安装Docker](https://docs.docker.com/engine/install/)。
 - 安装Kubernetes，请参见[安装Kubernetes](https://kubernetes.io/zh/docs/setup/production-environment/tools/)。
@@ -74,9 +74,9 @@ NPU Exporter
 
 **功能介绍<a name="section1337420477275vcann"></a>**
 
-基于vCANN-RT的虚拟化实例功能是指通过向vCANN-RT提供软切分配置文件的方式将物理机配置的NPU（昇腾AI处理器）挂载到容器中使用，虚拟化管理方式能够实现统一不同规格资源的分配和回收处理，满足多用户反复申请/释放资源的操作请求。
+基于vCANN-RT的虚拟化实例功能是指通过向vCANN-RT提供软切分配置文件的方式将物理机配置的NPU（昇腾AI处理器）挂载到容器中使用，虚拟化管理方式能够实现不同规格资源的分配和回收处理，满足多用户反复申请/释放资源的操作请求。
 
-昇腾基于vCANN-RT的虚拟化实例功能的优点是可实现多个用户共同使用一台服务器，用户可以按需申请NPU的资源，降低了用户使用NPU算力的门槛和成本。多个用户共同使用一台服务器的NPU，并借助容器进行资源隔离，资源隔离性好，保证运行环境的稳定和安全，且资源分配与回收过程统一，从而方便多租户管理。
+昇腾基于vCANN-RT的虚拟化实例功能的优点是可实现多个用户共同使用一台服务器，用户可以按需申请NPU的资源，降低了用户使用NPU算力的门槛和成本。多个用户共同使用一台服务器的NPU，并借助容器进行资源隔离，这种方式资源隔离性好，保证运行环境的稳定和安全，且资源分配与回收过程统一，从而方便多租户管理。
 
 **所需组件<a name="ZH-CN_TOPIC_0000002479226932vcann"></a>**
 
@@ -163,7 +163,7 @@ NPU Exporter
 
 **功能特点<a name="section1788818281655"></a>**
 
-动态vNPU调度需要Ascend Device Plugin组件上报其所在节点的可用AI Core数目。虚拟化任务上报后，Volcano经过计算将该任务调度到满足其要求的节点。该节点的Ascend Device Plugin在收到请求后自动切分出vNPU设备并挂载该任务，从而完成整个动态虚拟化过程。该过程不需要用户提前切分vNPU，在任务使用完成后又能自动回收，支持用户算力需求不断变化的场景。
+动态vNPU调度需要Ascend Device Plugin组件上报其所在节点的可用AICore数目。虚拟化任务上报后，Volcano经过计算将该任务调度到满足其要求的节点。该节点的Ascend Device Plugin在收到请求后自动切分出vNPU设备并挂载该任务，从而完成整个动态虚拟化过程。该过程不需要用户提前切分vNPU，在任务使用完成后又能自动回收，支持用户算力需求不断变化的场景。
 
 **所需组件<a name="section15655185785119"></a>**
 
@@ -182,7 +182,7 @@ NPU Exporter
 
 **功能特点**
 
-软切分虚拟化调度需要Ascend Device Plugin组件上报其所在节点的可用芯片的AI Core总百分比信息。虚拟化任务上报后，Volcano经过计算将该任务调度到满足其要求的节点，由Ascend Device Plugin根据任务的配置信息生成软切分配置文件并挂载到任务容器中供[vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md)使用。该功能通过向[vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md)提供软切分配置文件的方式，使用户可以按需申请NPU（昇腾AI处理器）资源，实现对NPU资源的精细化管理和动态分配，支持多个用户共同使用一台服务器的NPU资源。该虚拟化管理方式具有统一资源分配与回收能力，可满足多租户场景下反复申请、释放资源的动态操作需求，提升资源利用率。
+软切分虚拟化调度需要Ascend Device Plugin组件上报其所在节点的可用芯片的AICore总百分比信息。虚拟化任务上报后，Volcano经过计算将该任务调度到满足其要求的节点，由Ascend Device Plugin根据任务的配置信息生成软切分配置文件并挂载到任务容器中供[vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md)使用。该功能通过向[vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md)提供软切分配置文件的方式，使用户可以按需申请NPU（昇腾AI处理器）资源，实现对NPU资源的精细化管理和动态分配，支持多个用户共同使用一台服务器的NPU资源。该虚拟化管理方式具有统一资源分配与回收能力，可满足多租户场景下反复申请、释放资源的动态操作需求，提升资源利用率。
 
 **所需组件**
 

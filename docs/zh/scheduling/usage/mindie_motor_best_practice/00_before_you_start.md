@@ -2,7 +2,7 @@
 
 MindCluster集群调度组件支持用户通过生成acjob推理任务的方式进行MindIE Motor的容器化部署、故障重调度和弹性扩缩容。
 
-本章节仅说明相关特性原理及对应配置示例，所提供的YAML示例不足以完成MindIE任务的部署。了解MindIE Motor的详细部署流程请参见《[MindIE Motor开发指南](https://www.hiascend.com/document/detail/zh/mindie/230/mindiemotor/motordev/mindie_service0001.html)》。
+本章节仅说明相关特性原理及对应配置示例，所提供的YAML示例不足以完成MindIE任务的部署。了解MindIE Motor的详细部署流程请参见《[MindIE Motor开发指南](https://www.hiascend.com/document/detail/zh/mindie/300/mindiemotor/motordev/user_guide/introduction.md)》。
 
 ## 前提条件<a name="zh-cn_topic_0000002322062116_section52051339787"></a>
 

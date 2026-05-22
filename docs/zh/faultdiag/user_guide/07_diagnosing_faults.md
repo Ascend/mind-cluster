@@ -11,7 +11,7 @@
     - 不指定--performance\(-p\)参数时，程序默认仅清洗根因节点、故障事件两个模块的对应数据。
 
         ```shell
-        ascend-fd diag -i 诊断输入目录 -o 诊断结果输出目录 
+        ascend-fd diag -i 诊断输入目录 -o 诊断结果输出目录
         ```
 
         诊断训练任务异常退出问题，回显示例如下：
@@ -62,7 +62,7 @@
 
         ```ColdFusion
         The diag job starts. Please wait. Job id: [****], run log file is [****].
-        
+
         ============================
         实例名：****
         节点名：[****，****]
@@ -90,7 +90,7 @@
         |              |  建议方案  | 1. 请联系华为工程师处理；                                                                                                                                      |
         |              |  关键日志  | [2025-06-17 16:59:10.282+08:00] [97] [147] [server] [WARN] [llm_infer_engine.cpp:117] : MIE05E040000[llm_backend] get model instance processing request failed |
         +--------------+------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+
-        
+
         ============================
         实例名：****
         节点名：[****, ****]
@@ -221,7 +221,7 @@
 
     ```text
     诊断结果输出目录
-    ├── fault_diag_result    
+    ├── fault_diag_result
         ├── diag_report.json    # 诊断结果
         ├── diag_report_{实例名}.json    # 多实例推理诊断结果
     ```
@@ -230,4 +230,4 @@
     >- 故障诊断执行出错时，“故障事件分析”回显中的说明（或分析失败）字段将会打印失败信息。如果想查看所有异常信息，可通过diag\_report.json文件查看。
     >- 执行诊断命令时，若不指定--performance\(-p\)参数，则仅执行根因节点分析与故障事件分析两个模块，对应JSON文件中仅包含这两个模块的结果。
     >- 暂不支持发生过（有/无）冗余恢复的MindIE多实例推理集群故障诊断。由于（有/无）冗余恢复特性，会重启MindIE Pod，实例信息被刷新，MindIE各组件重启前后的日志存在相同目录，导致组件无法正确切分实例和日志。
-    >- 日志级别配置较低时，会存在日志刷屏冲刷关键日志无法诊断的情况，涉及的环境变量包含ASCEND\_GLOBAL\_EVENT\_ENABLE、HCCL\_ENTRY\_LOG\_ENABLE、ASCEND\_GLOBAL\_LOG\_LEVEL、ASCEND\_MODULE\_LOG\_LEVEL。更多信息请参见《CANN 环境变量参考》中的“[环境变量列表](https://www.hiascend.com/document/detail/zh/canncommercial/850/maintenref/envvar/envref_07_0001.html)”章节。
+    >- 日志级别配置较低时，会存在日志刷屏冲刷关键日志无法诊断的情况，涉及的环境变量包含ASCEND\_GLOBAL\_EVENT\_ENABLE、HCCL\_ENTRY\_LOG\_ENABLE、ASCEND\_GLOBAL\_LOG\_LEVEL、ASCEND\_MODULE\_LOG\_LEVEL。更多信息请参见《CANN 环境变量参考》中的“[环境变量列表](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/envvar/envref_07_0001.html)”章节。
