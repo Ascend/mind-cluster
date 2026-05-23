@@ -32,6 +32,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/consts"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
 
@@ -61,6 +62,10 @@ func (fTask *FaultTask) getTaskHealthStateBySubHealth(subHealthyStrategy string)
 		needVolcanoOpe, exists := fTask.Annotations[util.NeedVolcanoOpeKey]
 		if !exists || needVolcanoOpe != util.OpeTypeDelete {
 			return false, PodHealthy
+		}
+		if _, ok := fTask.Annotations[consts.BackupNewPodNameKey]; !ok {
+			klog.V(util.LogInfoLev).Infof("fTask %s has no backup pod, will not mark as hotSwitchDelete", fTask.TaskName)
+			return true, SubHealthFault
 		}
 		klog.V(util.LogInfoLev).Infof("fTask wait to be deleted :%s, %v", fTask.TaskName, fTask.Reason)
 		fTask.IsHotSwitchDelete = true
