@@ -111,7 +111,7 @@
         Required-by:
         ```
 
-    - （可选）**检查其他组件**。参考[组件状态确认](./03_confirming_status.md)，确认集群中节点是否安装了相应组件。
+    - （可选）**检查其他组件**。参考[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)，确认集群中节点是否安装了相应组件。
 
 4. （可选）若尚未安装MindCluster集群调度组件，请参考[安装部署](02_installation/manual_installation/00_obtaining_software_packages.md)章节先安装组件，TaskD的安装步骤请参考[制作镜像](../usage/resumable_training/07_using_resumable_training_on_the_cli.md#制作镜像)章节。
 
@@ -169,7 +169,7 @@
         systemctl daemon-reload && systemctl restart containerd
         ```
 
-5. <a name="li76002022113215"></a>参考[组件状态确认](./03_confirming_status.md)章节，检查新版本Ascend Docker Runtime是否升级成功状态。
+5. <a name="li76002022113215"></a>参考[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)章节，检查新版本Ascend Docker Runtime是否升级成功状态。
 6. （可选）恢复旧版本。下载旧版本安装包，依次重新执行[步骤2](#li12599722163212)到[步骤5](#li76002022113215)。
 
 ## 升级TaskD<a name="ZH-CN_TOPIC_0000002479226444"></a>

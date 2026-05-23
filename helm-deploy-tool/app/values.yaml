@@ -7,7 +7,7 @@ clusterd:
 
 noded:
   enabled: true
-  enableDpc: true # Whether to enable DPC
+  enableDpc: false # Whether to enable DPC
   image:
     repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/noded"
     tag: "v26.1.0"
