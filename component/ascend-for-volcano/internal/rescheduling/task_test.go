@@ -23,15 +23,17 @@ import (
 	"testing"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/consts"
 )
 
 type testCase struct {
-	name               string
-	subHealthyStrategy string
-	hasSubHealthFault  bool
-	annotations        map[string]string
-	expectedIsFault    bool
-	expectedFaultType  string
+	name                    string
+	subHealthyStrategy      string
+	hasSubHealthFault       bool
+	annotations             map[string]string
+	expectedIsFault         bool
+	expectedFaultType       string
+	expectedHotSwitchDelete bool
 }
 
 func buildTestCase(name string, hasSubHealthFault bool, annotations map[string]string,
@@ -57,8 +59,24 @@ func TestGetTaskHealthStateBySubHealth(t *testing.T) {
 			true, map[string]string{}, false, PodHealthy),
 		buildTestCase("HotSwitch strategy with non-delete annotation should return healthy",
 			true, map[string]string{}, false, PodHealthy),
-		buildTestCase("HotSwitch strategy with delete annotation should return sub health fault",
-			true, map[string]string{util.NeedVolcanoOpeKey: util.OpeTypeDelete}, true, SubHealthFault),
+		{
+			name:               "HotSwitch delete annotation without backup pod should NOT mark hotSwitchDelete",
+			subHealthyStrategy: util.SubHealthyHotSwitch,
+			hasSubHealthFault:  true,
+			annotations:        map[string]string{util.NeedVolcanoOpeKey: util.OpeTypeDelete},
+			expectedIsFault:    true,
+			expectedFaultType:  SubHealthFault,
+		},
+		{
+			name:      "HotSwitch delete annotation with backup pod should mark hotSwitchDelete",
+			subHealthyStrategy: util.SubHealthyHotSwitch,
+			hasSubHealthFault:  true,
+			annotations:        map[string]string{util.NeedVolcanoOpeKey: util.OpeTypeDelete,
+				consts.BackupNewPodNameKey: "backup-pod-1"},
+			expectedIsFault:         true,
+			expectedFaultType:       SubHealthFault,
+			expectedHotSwitchDelete: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -78,6 +96,11 @@ func TestGetTaskHealthStateBySubHealth(t *testing.T) {
 
 			if faultType != tt.expectedFaultType {
 				t.Errorf("getTaskHealthStateBySubHealth() faultType = %v, want %v", faultType, tt.expectedFaultType)
+			}
+
+			if fTask.IsHotSwitchDelete != tt.expectedHotSwitchDelete {
+				t.Errorf("getTaskHealthStateBySubHealth() IsHotSwitchDelete = %v, want %v",
+					fTask.IsHotSwitchDelete, tt.expectedHotSwitchDelete)
 			}
 		})
 	}
