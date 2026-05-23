@@ -115,6 +115,9 @@ docker build --no-cache -t volcanosh/vc-scheduler:{tag} ./ -f Dockerfile-schedul
 # Build controller image
 docker build --no-cache -t volcanosh/vc-controller-manager:{tag} ./ -f Dockerfile-controller
 ```
+> **Note**:
+> - TARGETPLATFORM is a global built-in parameter provided by Docker BuildKit, used to obtain the target platform of the current build, such as linux/amd64 and linux/arm64.
+> - This variable is automatically injected only when BuildKit is enabled. It will not be available in older Docker versions or environments with BuildKit disabled by default. Run <b>export DOCKER_BUILDKIT=1</b> to enable it temporarily before executing build commands.
 
 ### Deploy Ascend for Volcano
 

@@ -81,6 +81,9 @@ Tag 遵循以下格式：
 ```bash
 docker build --no-cache -t infer-operator:{tag} ./ -f Dockerfile.{os}
 ```
+> **注意**：
+> - TARGETPLATFORM 是 Docker BuildKit 提供的全局内置参数，用于获取当前构建的目标平台（如 linux/amd64、linux/arm64）。
+> - 只有启用 BuildKit，才会自动注入这个变量。旧版 Docker / 默认关闭 BuildKit 的环境，构建时不存在这个变量，需要在运行构建指令前通过 <b>export DOCKER_BUILDKIT=1</b> 临时启用。
 
 ### 部署 Infer Operator
 
