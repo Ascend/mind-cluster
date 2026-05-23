@@ -84,7 +84,19 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </th>
 </tr>
 </thead>
-<tbody><tr id="row1999144418467"><td class="cellrowborder" valign="top" width="9.8%" headers="mcps1.2.6.1.1 "><p id="p1549615614460"><a name="p1549615614460"></a><a name="p1549615614460"></a>NPU</p>
+<tbody>
+<tr id="row_machine_card_nums"><td class="cellrowborder" valign="top" width="9.8%" headers="mcps1.2.6.1.1 "><p id="p_machine_card_nums_cat">NPU</p>
+</td>
+<td class="cellrowborder" valign="top" width="24.279999999999998%" headers="mcps1.2.6.1.2 "><p id="p_machine_card_nums_name">machine_card_nums</p>
+</td>
+<td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.6.1.3 "><p id="p_machine_card_nums_desc"><span>昇腾AI处理器</span>模组数目</p>
+</td>
+<td class="cellrowborder" valign="top" width="19.68%" headers="mcps1.2.6.1.4 "><p id="p_machine_card_nums_unit">单位：个</p>
+</td>
+<td class="cellrowborder" valign="top" width="23.94%" headers="mcps1.2.6.1.5 "><ul><li>Atlas 训练系列产品</li><li>Atlas A2 训练系列产品</li><li>Atlas A3 训练系列产品</li><li>推理服务器（插Atlas 300I 推理卡）</li><li>Atlas 推理系列产品</li><li><span>Atlas 800I A2 推理服务器</span></li><li><span>A200I A2 Box 异构组件</span></li></ul>
+</td>
+</tr>
+<tr id="row1999144418467"><td class="cellrowborder" valign="top" width="9.8%" headers="mcps1.2.6.1.1 "><p id="p1549615614460"><a name="p1549615614460"></a><a name="p1549615614460"></a>NPU</p>
 </td>
 <td class="cellrowborder" valign="top" width="24.279999999999998%" headers="mcps1.2.6.1.2 "><p id="p949618565464"><a name="p949618565464"></a><a name="p949618565464"></a>machine_npu_nums</p>
 </td>
