@@ -440,9 +440,11 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     total 41388
     drwxr-xr-x 2 root root     4096 Aug 26 20:20 ./
     drwxr-xr-x 6 root root     4096 Aug 26 20:20 ../
+    -r-------- 1 root root 41992192 Aug 26 02:02 agreement.txt
     -r-x------ 1 root root 41992192 Aug 26 02:02 ascend-operator*
     -r-------- 1 root root   372291 Aug 26 02:02 ascend-operator-v{version}.yaml
     -r-------- 1 root root      482 Aug 26 02:02 Dockerfile
+    -r-------- 1 root root     1024 Aug 26 02:02 Dockerfile.openeuler
     ```
 
     >[!NOTE]
@@ -457,7 +459,10 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
         ```ColdFusion
         ubuntu              22.04               6526a1858e5d        2 years ago         64.2MB
         ```
-
+   - 执行**docker images | grep openeuler**命令检查openEuler镜像，ARM架构和x86\_64架构镜像大小有差异。
+       ```ColdFusion
+       openeuler/openeuler              24.03-lts               2fc1d956e7ed        2 years ago         205MB
+       ```
     - 如果需要安装Volcano，则需要检查alpine镜像是否存在。执行**docker images | grep alpine**命令检查，回显示例如下，ARM架构和x86\_64架构镜像大小有差异。
 
         ```ColdFusion
@@ -480,6 +485,13 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <tbody><tr><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1"><p>ubuntu:22.04</p>
     </td>
     <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.2 "><pre class="screen">docker pull ubuntu:22.04</pre>
+    </td>
+    <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.3 "><p>拉取时自动识别系统架构。</p>
+    </td>
+    </tr>
+    <tr><td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.1"><p>openeuler/openeuler:24.03-lts</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.4.1.2 "><pre class="screen">docker pull openeuler/openeuler:24.03-lts</pre>
     </td>
     <td class="cellrowborder" valign="top" width="20%" headers="mcps1.2.4.1.3 "><p>拉取时自动识别系统架构。</p>
     </td>

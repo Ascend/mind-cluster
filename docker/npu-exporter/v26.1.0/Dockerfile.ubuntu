@@ -34,7 +34,7 @@ RUN chown root:root /usr/local/bin/npu-exporter &&\
     chmod 440 /usr/local/pluginConfiguration.json &&\
     chmod 440 /usr/local/agreement.txt &&\
     echo 'umask 027' >> /etc/profile && \
-    echo 'source /etc/profile' >> ~/.bashrc \
+    echo 'source /etc/profile' >> ~/.bashrc
 
 ENV LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/add-ons:/usr/local/Ascend/driver/lib64:/usr/local/dcmi
 
