@@ -499,7 +499,7 @@ func (d *DeviceManager) ShutDown() error {
 	return d.DcMgr.DcShutDown()
 }
 
-// GetDeviceCount get npu device count
+// GetAllDeviceCount get npu device count
 func (d *DeviceManager) GetAllDeviceCount() (int32, error) {
 	return d.DcMgr.DcGetAllDeviceCount()
 }

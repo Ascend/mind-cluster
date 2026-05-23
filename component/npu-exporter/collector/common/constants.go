@@ -73,11 +73,13 @@ const (
 	KeyForTextMetrics = "KeyForTextMetrics"
 	// KeyForMetricsWithCustomLabels is the key for metrics with custom labels
 	KeyForMetricsWithCustomLabels = "KeyForMetricsWithCustomLabels"
+	// MachineInfoCardDescKey is the key for machine info card desc
+	MachineInfoCardDescKey = "MachineCardNum"
 )
 
 // log limit domains for metrics
 const (
-	// DomainForLogicIdErr domain for faild to get cardId and deviceId by logicID
+	// DomainForLogicIdErr domain for failed to get cardId and deviceId by logicID
 	DomainForLogicIdErr = "logicID"
 
 	// DomainForHccs domain for hccs
@@ -147,4 +149,7 @@ const (
 	DomainForUb = "ub"
 	// DomainForOpticalV2 domain for optical v2
 	DomainForOpticalV2 = "opticalV2"
+
+	// DomainForCardNum domain for cardNum
+	DomainForCardNum = "cardNum"
 )

@@ -25,11 +25,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"ascend-common/api"
+	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
+	utils2 "huawei.com/npu-exporter/v6/utils"
 	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
@@ -59,10 +61,18 @@ var (
 		common.Ascend910B:  true,
 		common.Ascend910A3: true,
 	}
+
+	supportedCardNumDevices = map[string]bool{
+		api.Ascend310P:  true,
+		api.Ascend910A:  true,
+		api.Ascend910B:  true,
+		api.Ascend910A3: true,
+	}
 )
 
 var (
-	machineInfoNPUDesc = colcommon.BuildDescWithLabel("machine_npu_nums", "Amount of npu installed on the machine.", nil)
+	machineInfoNPUDesc  = colcommon.BuildDescWithLabel("machine_npu_nums", "Amount of npu installed on the machine.", nil)
+	machineInfoCardDesc = prometheus.NewDesc("machine_card_nums", "Amount of card installed on the machine.", nil, nil)
 
 	descUtil       = colcommon.BuildDesc("npu_chip_info_utilization", "the ai core utilization")
 	descOverUtil   = colcommon.BuildDesc("npu_chip_info_overall_utilization", "the overall utilization of npu")
@@ -207,6 +217,7 @@ func (c *BaseInfoCollector) PreCollect(n *colcommon.NpuCollector, chipList []col
 func (c *BaseInfoCollector) Describe(ch chan<- *prometheus.Desc) {
 	// base info
 	ch <- machineInfoNPUDesc
+	ch <- machineInfoCardDesc
 	ch <- descUtil
 	ch <- descVectorUtil
 	ch <- descCubeUtil
@@ -236,6 +247,7 @@ func (c *BaseInfoCollector) Describe(ch chan<- *prometheus.Desc) {
 
 // CollectToCache collects the base info of the chip
 func (c *BaseInfoCollector) CollectToCache(n *colcommon.NpuCollector, chipList []colcommon.HuaWeiAIChip) {
+	collectCardNum(n, c)
 	for _, chip := range chipList {
 		logicID := chip.LogicID
 
@@ -278,6 +290,23 @@ func (c *BaseInfoCollector) CollectToCache(n *colcommon.NpuCollector, chipList [
 		c.LocalCache.Store(chip.PhyId, *cache)
 	}
 	colcommon.UpdateCache[chipCache](n, colcommon.GetCacheKey(c), &c.LocalCache)
+}
+
+func collectCardNum(n *colcommon.NpuCollector, c *BaseInfoCollector) {
+	if !supportedCardNumDevices[n.Dmgr.GetDevType()] {
+		logger.LogfWithOptions(logger.ErrorLevel, logger.LogOptions{Domain: colcommon.DomainForCardNum, ID: 0, MaxCounts: 1},
+			fmt.Sprintf("devType %v does not support [%v]",
+				utils.MaskDevType(n.Dmgr.GetDevType()), utils2.GetDescName(machineInfoCardDesc)))
+		return
+	}
+
+	cardNum, _, err := n.Dmgr.GetCardList()
+	if err != nil {
+		logger.LogfWithOptions(logger.ErrorLevel, logger.LogOptions{Domain: colcommon.DomainForCardNum, ID: 0}, err.Error())
+		return
+	}
+	hwlog.ResetErrCnt(colcommon.DomainForCardNum, 0)
+	c.LocalCache.Store(colcommon.MachineInfoCardDescKey, cardNum)
 }
 
 func collectPower(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCache) {
@@ -329,7 +358,11 @@ func (c *BaseInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *col
 		}
 	}
 	updateFrame[chipCache](colcommon.GetCacheKey(c), n, containerMap, chips, updateSingleChip)
-
+	machineInfoCardCache, ok := c.LocalCache.Load(colcommon.MachineInfoCardDescKey)
+	if ok {
+		value := float64(machineInfoCardCache.(int32))
+		ch <- prometheus.MustNewConstMetric(machineInfoCardDesc, prometheus.GaugeValue, value)
+	}
 	ch <- prometheus.MustNewConstMetric(machineInfoNPUDesc, prometheus.GaugeValue, float64(len(chips)))
 }
 
@@ -433,6 +466,10 @@ func (c *BaseInfoCollector) UpdateTelegraf(fieldsMap map[string]map[string]inter
 
 	if fieldsMap[colcommon.GeneralDevTagKey] == nil {
 		fieldsMap[colcommon.GeneralDevTagKey] = make(map[string]interface{})
+	}
+	machineInfoCardCache, ok := c.LocalCache.Load(colcommon.MachineInfoCardDescKey)
+	if ok {
+		doUpdateTelegraf(fieldsMap[colcommon.GeneralDevTagKey], machineInfoCardDesc, machineInfoCardCache, "")
 	}
 	doUpdateTelegraf(fieldsMap[colcommon.GeneralDevTagKey], machineInfoNPUDesc, len(chips), "")
 	return fieldsMap

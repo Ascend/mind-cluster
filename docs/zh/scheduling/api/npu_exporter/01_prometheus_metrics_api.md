@@ -25,6 +25,9 @@
 # HELP machine_npu_nums Amount of npu installed on the machine.
 # TYPE machine_npu_nums gauge
 machine_npu_nums 8
+# HELP machine_card_nums Amount of card installed on the machine.
+# TYPE machine_card_nums gauge
+machine_card_nums 8
 # HELP npu_chip_info_aicore_current_freq the npu ai core current frequency, unit is 'MHz'
 # TYPE npu_chip_info_aicore_current_freq gauge
 npu_chip_info_aicore_current_freq{container_name="",id="0",model_name="910A-Ascend-V1",namespace="",pcie_bus_info="0000:61:00.0",pod_name="",vdie_id="185011D4-21104518-A0C4ED94-14CC040A-56102003"} 1000 1723621883587
@@ -159,6 +162,19 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p1846173515376"><a name="p1846173515376"></a><a name="p1846173515376"></a>单位：%</p>
 </td>
 <td><ul><li>Atlas A2 训练系列产品</li><li>Atlas A3 训练系列产品</li><li>推理服务器（插Atlas 300I 推理卡）</li><li>Atlas 推理系列产品</li><li><span>Atlas 800I A2 推理服务器</span></li><li><span>A200I A2 Box 异构组件</span></li><li><span>Atlas 350 标卡</span></li><li>Atlas 850 系列硬件产品</li><li>Atlas 950 SuperPoD</li></ul>
+</td>
+</tr>
+<tr id="row_machine_card_nums"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p_machine_card_nums_cat">NPU</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p_machine_card_nums_name">machine_card_nums</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p_machine_card_nums_desc"><span>昇腾AI处理器</span>模组数目</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p_machine_card_nums_label">-</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p_machine_card_nums_unit">单位：个</p>
+</td>
+<td class="cellrowborder" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><ul><li>Atlas 训练系列产品</li><li>Atlas A2 训练系列产品</li><li>Atlas A3 训练系列产品</li><li>推理服务器（插Atlas 300I 推理卡）</li><li>Atlas 推理系列产品</li><li><span>Atlas 800I A2 推理服务器</span></li><li><span>A200I A2 Box 异构组件</span></li></ul>
 </td>
 </tr>
 <tr id="row14396115717449"><td class="cellrowborder" valign="top" width="8.43%" headers="mcps1.2.7.1.1 "><p id="p1214131124617"><a name="p1214131124617"></a><a name="p1214131124617"></a>NPU</p>

@@ -411,3 +411,70 @@ func TestCollectUtilV2(t *testing.T) {
 		}
 	})
 }
+
+const (
+	testCardNum        = int32(4)
+	testUnsupportedDev = "UnsupportedDevType"
+	testSupportedDev   = api.Ascend910A
+)
+
+type collectCardNumTestCase struct {
+	name        string
+	devType     string
+	cardNum     int32
+	cardListErr error
+	expectCache bool
+	expectValue int32
+}
+
+func buildCollectCardNumTestCases() []collectCardNumTestCase {
+	return []collectCardNumTestCase{
+		{
+			name:        "should return early when device type is not supported",
+			devType:     testUnsupportedDev,
+			cardNum:     0,
+			cardListErr: nil,
+			expectCache: false,
+			expectValue: 0,
+		},
+		{
+			name:        "should log error and return when GetCardList fails",
+			devType:     testSupportedDev,
+			cardNum:     0,
+			cardListErr: errors.New(apiCallFailedMsg),
+			expectCache: false,
+			expectValue: 0,
+		},
+		{
+			name:        "should store card number to cache when GetCardList succeeds",
+			devType:     testSupportedDev,
+			cardNum:     testCardNum,
+			cardListErr: nil,
+			expectCache: true,
+			expectValue: testCardNum,
+		},
+	}
+}
+
+func TestCollectCardNum(t *testing.T) {
+	for _, tt := range buildCollectCardNumTestCases() {
+		convey.Convey(tt.name, t, func() {
+			dmgr := &devmanager.DeviceManager{}
+			patches := gomonkey.NewPatches()
+			patches.ApplyMethodReturn(dmgr, "GetDevType", tt.devType)
+			patches.ApplyMethodReturn(dmgr, "GetCardList", tt.cardNum, []int32{}, tt.cardListErr)
+			defer patches.Reset()
+
+			n := &colcommon.NpuCollector{Dmgr: dmgr}
+			c := &BaseInfoCollector{}
+
+			collectCardNum(n, c)
+
+			cacheVal, ok := c.LocalCache.Load(colcommon.MachineInfoCardDescKey)
+			convey.So(ok, convey.ShouldEqual, tt.expectCache)
+			if tt.expectCache {
+				convey.So(cacheVal, convey.ShouldEqual, tt.expectValue)
+			}
+		})
+	}
+}

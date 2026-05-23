@@ -20,25 +20,24 @@ import (
 	"fmt"
 	"reflect"
 
+	"ascend-common/common-utils/utils"
 	"huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/metrics"
 	"huawei.com/npu-exporter/v6/utils/logger"
-
-	"ascend-common/common-utils/utils"
 )
 
 var (
 	// singleGoroutineMap metrics in this map will be collected in single goroutine
 	singleGoroutineMap = map[string]common.MetricsCollector{
-		groupHccs:     &metrics.HccsCollector{},
-		groupNpu:      &metrics.BaseInfoCollector{},
-		groupSio:      &metrics.SioCollector{},
-		groupVersion:  &metrics.VersionCollector{},
-		groupHbm:      &metrics.HbmCollector{},
-		groupDDR:      &metrics.DdrCollector{},
-		groupVnpu:     &metrics.VnpuCollector{},
-		groupPcie:     &metrics.PcieCollector{},
-		groupNodeBase: &metrics.NodeBaseCollector{},
+		groupHccs:           &metrics.HccsCollector{},
+		groupNpu:            &metrics.BaseInfoCollector{},
+		groupSio:            &metrics.SioCollector{},
+		groupVersion:        &metrics.VersionCollector{},
+		groupHbm:            &metrics.HbmCollector{},
+		groupDDR:            &metrics.DdrCollector{},
+		groupVnpu:           &metrics.VnpuCollector{},
+		groupPcie:           &metrics.PcieCollector{},
+		groupNodeBase:       &metrics.NodeBaseCollector{},
 	}
 	// multiGoroutineMap metrics in this map will be collected in multi goroutine
 	multiGoroutineMap = map[string]common.MetricsCollector{
@@ -69,7 +68,6 @@ var (
 	}
 	defaultPluginConfigs = []map[string]string{
 		{metricsGroup: groupText, state: stateOn},
-		{metricsGroup: groupMachineCardNum, state: stateOn},
 	}
 )
 
@@ -92,7 +90,6 @@ const (
 	groupText           = "text"
 	groupUb             = "ub"
 	groupNodeBase       = "nodeBase"
-	groupMachineCardNum = "machineCardNum"
 
 	stateOn  = "ON"
 	stateOFF = "OFF"

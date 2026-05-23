@@ -16,23 +16,22 @@
 package plugins
 
 import (
-    "huawei.com/npu-exporter/v6/collector/common"
-    "huawei.com/npu-exporter/v6/collector/config"
-    "huawei.com/npu-exporter/v6/utils/logger"
+	"huawei.com/npu-exporter/v6/collector/common"
+	"huawei.com/npu-exporter/v6/collector/config"
+	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
 // RegisterPlugin register plugin collector
 func RegisterPlugin() {
-    registerPlugin("text", &TextMetricsInfoCollector{})
-    
-    // Add custom plugin，pluginName should be consistent with the name in pluginConfiguration.json
-    // The path of the pluginConfiguration.json file must be /usr/local/pluginConfiguration.json
-    registerPlugin(machineCardNumPluginName, &MachineCardNumPluginInfoCollector{})
+	registerPlugin("text", &TextMetricsInfoCollector{})
+
+	// Add custom plugin，pluginName should be consistent with the name in pluginConfiguration.json
+	// The path of the pluginConfiguration.json file must be /usr/local/pluginConfiguration.json
 }
 
 func registerPlugin(pluginName string, c common.MetricsCollector) {
-    err := config.AddPluginCollector(pluginName, c)
-    if err != nil {
-        logger.Errorf("%v", err)
-    }
+	err := config.AddPluginCollector(pluginName, c)
+	if err != nil {
+		logger.Errorf("%v", err)
+	}
 }
