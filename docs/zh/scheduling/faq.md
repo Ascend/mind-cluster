@@ -13,11 +13,11 @@
 
 - 使用cri-dockerd时，初始化集群失败。查看初始化时，是否指定了“--cri-socket”参数，并且是否[配置正确](https://kubernetes.io/zh-cn/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#installing-runtime)。
 
-### Kubernetes 1.25.10及以上版本，不支持vNPU的恢复使能功能<a name="ZH-CN_TOPIC_0000002511426399"></a>
+### Kubernetes 1.25.10及以上版本，不支持vNPU的恢复功能<a name="ZH-CN_TOPIC_0000002511426399"></a>
 
 **问题描述<a name="section89018461129"></a>**
 
-Kubernetes 1.25.10及以上版本，集群调度组件不支持vNPU的恢复使能功能。该功能的详细说明和操作指导请参见《Atlas 中心推理卡  25.5.0 npu-smi 命令参考》中的“昇腾虚拟化实例（AVI）相关命令 \>  [设置vNPU的配置恢复使能状态](https://support.huawei.com/enterprise/zh/doc/EDOC1100540373/fa2a6907)”章节。
+Kubernetes 1.25.10及以上版本，集群调度组件不支持vNPU的恢复功能。该功能的详细说明和操作指导请参见《Atlas 中心推理卡 26.0.RC1 npu-smi 命令参考》中的“昇腾虚拟化实例（AVI）相关命令 \>  [设置vNPU的配置恢复使能状态](https://support.huawei.com/enterprise/zh/doc/EDOC1100568418/d1e009e6)”章节。
 
 **原因分析<a name="section1175235326"></a>**
 

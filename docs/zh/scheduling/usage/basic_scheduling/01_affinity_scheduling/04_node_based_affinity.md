@@ -23,7 +23,7 @@
 >[!NOTE] 
 >
 >- 当前只支持训练和推理任务进行整卡的交换机亲和性调度，不支持静态或动态vNPU调度。
->- 使用交换机亲和性调度2.0前，请先参见《[Ascend Training Solution 24.0.0 组网指南（Atlas A2训练产品）](https://support.huawei.com/enterprise/zh/doc/EDOC1100437043)》中的“参数面网络配置示例 \> 网络配置说明 \> NSLB配置策略”和“配置示例”章节，了解相关参数面组网的原理说明和操作指导。
+>- 使用交换机亲和性调度2.0前，请先参见《[Ascend Training Solution 组网指南（Atlas A2训练产品）](https://support.huawei.com/enterprise/zh/doc/EDOC1100570094)》中的“参数面网络配置示例 \> 网络配置说明 \> NSLB配置策略”和“配置示例”章节，了解相关参数面组网的原理说明和操作指导。
 
 **交换机亲和性调度1.0流程图<a name="section116221319144514"></a>**
 

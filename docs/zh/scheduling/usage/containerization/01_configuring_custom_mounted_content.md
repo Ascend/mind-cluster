@@ -20,7 +20,7 @@ Ascend Docker Runtime会为用户默认挂载驱动以及基础配置文件“/e
 4. 执行命令，使自定义配置文件hostlog.list生效。示例如下：
 
     ```shell
-    docker run --rm -it -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_RUNTIME_MOUNTS=hostlog image-name:tag /bin/bash
+    docker run --rm -it -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_RUNTIME_MOUNTS=hostlog {image-name:tag} /bin/bash
     ```
 
     >[!NOTE]  

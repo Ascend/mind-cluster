@@ -2,11 +2,11 @@
 
 ## 使用软切分NPU说明<a name="ZH-CN_TOPIC_00000025113463450356vcann"></a>
 
-在Kubernetes场景下，当用户需要使用NPU资源时，需要结合集群调度组件Ascend Device Plugin和Volcano的使用，使Kubernetes可以管理并调度昇腾处理器资源。昇腾软切分虚拟化实例特性需要的集群调度组件包括Ascend Device Plugin、Volcano、Ascend Operator和ClusterD。支持的产品型号请参见[表1 产品支持情况说明](./00_description.md)。
+在Kubernetes场景下，当用户需要使用NPU资源时，需要结合集群调度组件Ascend Device Plugin和Volcano的使用，使Kubernetes可以管理并调度昇腾处理器资源。昇腾软切分虚拟化实例特性需要的集群调度组件包括Ascend Device Plugin、Volcano、Ascend Operator和ClusterD。支持的产品型号请参见[特性说明](./00_description.md)中的“表1 产品支持情况说明”。
 
 ## 场景说明<a name="section1576110260450vcann"></a>
 
-使用软切分虚拟化前，需要提前了解[表1](#table62551184461989657)中的场景说明。
+使用软切分虚拟化前，需要提前了解[表1 场景说明](#table62551184461989657)中的场景说明。
 
 **表 1**  场景说明
 
@@ -102,7 +102,7 @@
 
         软切分虚拟化实例启动参数说明如下：
 
-       **表 3** Ascend Device Plugin启动参数
+       **表 2** Ascend Device Plugin启动参数
 
        <a name="table1064314568229"></a>
 

@@ -171,7 +171,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 - [MindSpore](#zh-cn_topic_0000001558834814_section868111733711)
 
     >[!NOTE] 
-    >- 本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。TensorFlow框架请参考**数据集准备**部分内容进行数据集预处理，详情请参见《TensorFlow 1.15模型迁移指南》的“样例参考 \> [训练前准备](https://www.hiascend.com/document/detail/zh/TensorFlowCommercial/850/migration/tfmigr1/tfmigr1_000101.html)”章节。
+    >- 本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。TensorFlow框架请参考**数据集准备**部分内容进行数据集预处理，详情请参见《TensorFlow 1.15模型迁移指南》的“样例参考 \> [训练前准备](https://www.hiascend.com/document/detail/zh/TensorFlowCommercial/900/migration/tfmigr1/tfmigr1_000101.html)”章节。
     >- 下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
     >- 以下TensorFlow和MindSpore示例需使用CANN 8.5.0之前版本。   
 
@@ -352,7 +352,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 >[!NOTE] 
 >
->- 本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。TensorFlow框架请参考**数据集准备**部分内容进行数据集预处理，详情请参见《TensorFlow 1.15模型迁移指南》的“样例参考 \> [训练前准备](https://www.hiascend.com/document/detail/zh/TensorFlowCommercial/850/migration/tfmigr1/tfmigr1_000101.html)”章节。
+>- 本节中使用的数据集为[ImageNet2012](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)数据集（**注：如使用该数据集需遵循数据集提供者的使用规范**）。TensorFlow框架请参考**数据集准备**部分内容进行数据集预处理，详情请参见《TensorFlow 1.15模型迁移指南》的“样例参考 \> [训练前准备](https://www.hiascend.com/document/detail/zh/TensorFlowCommercial/900/migration/tfmigr1/tfmigr1_000101.html)”章节。
 >- 下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
 >- 以下TensorFlow和MindSpore示例需使用CANN 8.5.0之前版本。
 
@@ -1205,7 +1205,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 <p id="p119931335142715"><a name="p119931335142715"></a><a name="p119931335142715"></a>如huawei.com/Ascend910-<em id="i20993935152714"><a name="i20993935152714"></a><a name="i20993935152714"></a>6c.1cpu.16g</em>: 1</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.61%" headers="mcps1.2.4.1.3 "><p id="p4994193520276"><a name="p4994193520276"></a><a name="p4994193520276"></a>至少请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。</p>
-<div class="note" id="note6994535162719"><a name="note6994535162719"></a><a name="note6994535162719"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p169941635192717"><a name="p169941635192717"></a><a name="p169941635192717"></a><strong id="b179941535122710"><a name="b179941535122710"></a><a name="b179941535122710"></a><em id="i1999493582720"><a name="i1999493582720"></a><a name="i1999493582720"></a>Y</em></strong>取值可参考<a href="../virtual_instance/virtual_instance_with_hdk/06_mounting_vnpu.md#静态虚拟化">静态虚拟化</a>章节中的虚拟化实例模板与虚拟设备类型关系表的“vNPU类型”列。</p>
+<div class="note" id="note6994535162719"><a name="note6994535162719"></a><a name="note6994535162719"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p169941635192717"><a name="p169941635192717"></a><a name="p169941635192717"></a><strong id="b179941535122710"><a name="b179941535122710"></a><a name="b179941535122710"></a><em id="i1999493582720"><a name="i1999493582720"></a><a name="i1999493582720"></a>Y</em></strong>取值可参考<a href="../virtual_instance/virtual_instance_with_hdk/06_mounting_vnpu.md#静态虚拟化">静态虚拟化</a>章节中的虚拟化实例模板与vNPU类型关系表的“vNPU类型”列。</p>
 <p id="p17994143511279"><a name="p17994143511279"></a><a name="p17994143511279"></a>以vNPU类型Ascend910-6c.1cpu.16g为例，<strong id="b29941735102716"><a name="b29941735102716"></a><a name="b29941735102716"></a><em id="i11995143582719"><a name="i11995143582719"></a><a name="i11995143582719"></a>Y</em></strong>取值为6c.1cpu.16g，不包括前面的Ascend910。</p>
 <p id="p699519351275"><a name="p699519351275"></a><a name="p699519351275"></a>虚拟化模板的更多信息可以参考<a href="../virtual_instance/virtual_instance_with_hdk/03_virtualization_templates.md">虚拟化模板</a>章节。</p>
 </div></div>
@@ -1439,7 +1439,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 <p id="p11413153312435"><a name="p11413153312435"></a><a name="p11413153312435"></a>如huawei.com/Ascend910-<em id="i94134332434"><a name="i94134332434"></a><a name="i94134332434"></a>6c.1cpu.16g</em>: 1</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p5498134535310"><a name="p5498134535310"></a><a name="p5498134535310"></a>至少请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。</p>
-<div class="note" id="note1648201912419"><a name="note1648201912419"></a><a name="note1648201912419"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p124851954116"><a name="p124851954116"></a><a name="p124851954116"></a><strong id="b1327175513443"><a name="b1327175513443"></a><a name="b1327175513443"></a><em id="i827655184412"><a name="i827655184412"></a><a name="i827655184412"></a>Y</em></strong>取值可参考<a href="../virtual_instance/virtual_instance_with_hdk/06_mounting_vnpu.md#静态虚拟化">静态虚拟化</a>章节中的虚拟化实例模板与虚拟设备类型关系表的“vNPU类型”列。</p>
+<div class="note" id="note1648201912419"><a name="note1648201912419"></a><a name="note1648201912419"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p124851954116"><a name="p124851954116"></a><a name="p124851954116"></a><strong id="b1327175513443"><a name="b1327175513443"></a><a name="b1327175513443"></a><em id="i827655184412"><a name="i827655184412"></a><a name="i827655184412"></a>Y</em></strong>取值可参考<a href="../virtual_instance/virtual_instance_with_hdk/06_mounting_vnpu.md#静态虚拟化">静态虚拟化</a>章节中的虚拟化实例模板与vNPU类型关系表的“vNPU类型”列。</p>
 <p id="p128388914430"><a name="p128388914430"></a><a name="p128388914430"></a>以vNPU类型Ascend910-6c.1cpu.16g为例，<strong id="b1835616104433"><a name="b1835616104433"></a><a name="b1835616104433"></a><em id="i135681014319"><a name="i135681014319"></a><a name="i135681014319"></a>Y</em></strong>取值为6c.1cpu.16g，不包括前面的Ascend910。</p>
 <p id="p2491818192318"><a name="p2491818192318"></a><a name="p2491818192318"></a>虚拟化模板的更多信息可以参考<a href="../virtual_instance/virtual_instance_with_hdk/03_virtualization_templates.md">虚拟化模板</a>章节。</p>
 </div></div>

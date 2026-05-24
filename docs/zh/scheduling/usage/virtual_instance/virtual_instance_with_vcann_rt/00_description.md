@@ -34,4 +34,4 @@
 - Atlas A3 推理系列产品使用软切分虚拟化功能时，必须开启单die直通模式，即在Ascend Device Plugin的YAML中，增加启动参数-useSingleDieMode=true。
 - 物理NPU软切分虚拟化后，仅支持将物理NPU挂载到容器，不支持将该物理NPU直通到虚拟机。
 - 在软切分虚拟化场景下，如果所有容器都挂载了相同的物理NPU，则该物理NPU必须采用相同的软切分策略。
-- 对于<term>Atlas A2 推理系列产品</term>/<term>Atlas A3 推理系列产品</term>，一个Device上最多只能支持63个用户进程，Host最多只能支持Device个数\*63个进程，详情请参见[使用约束](https://www.hiascend.com/document/detail/zh/canncommercial/850/appdevg/acldevg/aclcppdevg_000222.html)。
+- 对于<term>Atlas A2 推理系列产品</term>/<term>Atlas A3 推理系列产品</term>，一个Device上最多只能支持63个用户进程，Host最多只能支持Device个数\*63个进程，详情请参见[使用约束](https://www.hiascend.com/document/detail/zh/canncommercial/900/programug/acldevg/aclcppdevg_000222.html)。

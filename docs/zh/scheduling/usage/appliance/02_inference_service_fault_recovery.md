@@ -11,7 +11,7 @@
 
 1. 获取MindIE容器镜像。
     - 方式一：进入昇腾镜像仓库的[MindIE镜像下载](https://www.hiascend.com/developer/ascendhub/detail/af85b724a7e5469ebd7ea13c3439d48f)页面，下载MindIE镜像。
-    - 方式二：参考《MindIE安装指南》中的“安装MindIE \> [方式三：容器安装方式](https://www.hiascend.com/document/detail/zh/mindie/230/envdeployment/instg/mindie_instg_0022.html)”章节，自行准备镜像。
+    - 方式二：参考《MindIE安装指南》中的“安装MindIE \> [方式三：容器安装方式](https://gitcode.com/Ascend/MindIE-LLM/blob/v3.0.0/docs/zh/user_guide/install/source/installation_in_containerized.md)”章节，自行准备镜像。
 
 2. 在节点上查看MindIE镜像。
 
@@ -100,7 +100,7 @@
         vi /data/atlas_dls/public/infer/script/Qwen3-1.7B/config.json
         ```
 
-    2. 按“i”进入编辑模式，按实际使用情况修改如下参数。参数说明详细请参见《MindIE LLM开发指南》中的“核心概念与配置 \> [配置参数说明（服务化）](https://www.hiascend.com/document/detail/zh/mindie/230/mindiellm/llmdev/mindie_service0285.html)”章节。
+    2. 按“i”进入编辑模式，按实际使用情况修改如下参数。参数说明详细请参见《MindIE LLM开发指南》中的“核心概念与配置 \> [配置参数说明（服务化）](https://www.hiascend.com/document/detail/zh/mindie/300/mindiellm/llmdev/user_guide/user_manual/service_parameter_configuration.md)”章节。
 
         ```json
         {
@@ -141,9 +141,6 @@
         ```
 
         其中，modelWeightPath为挂载到容器中的模型权重路径。
-
-        >[!NOTICE] 
-        >"httpsEnabled"表示是否开启HTTPS协议。设为"true"表示开启HTTPS协议，此时需要配置双向认证证书；设为"false"表示不开启HTTPS协议。推荐开启HTTPS协议，并参见《MindIE Motor开发指南》中的“配套工具 \> MindIE Service Tools \> [CertTools](https://www.hiascend.com/document/detail/zh/mindie/230/mindiemotor/motordev/mindie_service0312.html)”章节，配置开启HTTPS通信所需服务证书、私钥等证书文件。
 
     3. 按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
 

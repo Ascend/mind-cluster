@@ -21,18 +21,18 @@
 - 静态虚拟化：用户已通过npu-smi工具创建vNPU，在拉起容器时执行以下命令将vNPU挂载至容器中。以下命令表示用户在拉起容器时，挂载虚拟芯片ID为100的芯片。
 
     ```shell
-    docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL image-name:tag /bin/bash
+    docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {image-name:tag} /bin/bash
     ```
 
 - 动态虚拟化：用户在拉起容器时，执行以下命令虚拟化资源，以下命令表示从物理芯片ID为0的芯片上，切分出4个AICore作为vNPU并挂载至容器。以此方式拉起的容器，在结束容器进程时，虚拟设备会自动销毁。
 
     ```shell
-    docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 image-name:tag /bin/bash
+    docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {image-name:tag} /bin/bash
     ```
 
 >[!NOTE] 
 >
->- 使用动态虚拟化时，需要关闭vNPU的恢复使能功能，该功能的详细说明和操作指导请参考《Atlas 中心推理卡 26.0.RC1 npu-smi 命令参考》中的“昇腾虚拟化实例（AVI）相关命令\>[设置vNPU的配置恢复使能状态](https://support.huawei.com/enterprise/zh/doc/EDOC1100568418/d1e009e6)”章节。
+>- 使用动态虚拟化时，需要关闭vNPU的恢复功能，该功能的详细说明和操作指导请参考《Atlas 中心推理卡 26.0.RC1 npu-smi 命令参考》中的“昇腾虚拟化实例（AVI）相关命令\>[设置vNPU的配置恢复使能状态](https://support.huawei.com/enterprise/zh/doc/EDOC1100568418/d1e009e6)”章节。
 >- 可用的芯片ID可通过如下方式查询确认：
 >   - 物理芯片ID：
 >
@@ -57,8 +57,8 @@
 |参数|说明|举例|
 |--|--|--|
 |ASCEND_VISIBLE_DEVICES|必须使用ASCEND_VISIBLE_DEVICES环境变量指定被挂载至容器中的NPU设备，否则挂载NPU设备失败；使用NPU设备序号指定设备，支持单个和范围指定且支持混用；使用芯片名称指定设备时，支持同时指定多个同类型的芯片名称。|<ul><li>静态虚拟化：<ul><li>ASCEND_VISIBLE_DEVICES=100表示将100号vNPU挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=101,103表示将101、103号vNPU挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=100-102表示将100号至102号vNPU（包含100号和102号）挂载入容器中，效果同ASCEND_VISIBLE_DEVICES=100,101,102。</li><li>ASCEND_VISIBLE_DEVICES=100-102,104表示将100号至102号以及104号vNPU挂载入容器，效果同ASCEND_VISIBLE_DEVICES=100,101,102,104。</li><li>ASCEND_VISIBLE_DEVICES=XXX-Y，其中XXX表示NPU设备，支持的取值为npu、Ascend910、Ascend310、Ascend310B和Ascend310P；Y表示物理NPU设备ID。<ul><li>ASCEND_VISIBLE_DEVICES=npu-101，表示把101号vNPU挂载进容器。</li><li>ASCEND_VISIBLE_DEVICES=npu-101,npu-103，表示把101号NPU和103号vNPU挂载进容器。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>使用芯片名称指定设备时，建议统一取值npu。</li><li>不支持在一个参数里既指定设备序号又指定NPU名称，即不支持ASCEND_VISIBLE_DEVICES=101，npu-103。</li><li>必须搭配ASCEND_RUNTIME_OPTIONS，取值必须包含VIRTUAL，表示挂载的是vNPU。</li></ul></div></div></li></ul></li><li>动态虚拟化：ASCEND_VISIBLE_DEVICES=0表示从0号NPU设备中划分出一定数量的AICore。<ul><li>一条动态虚拟化的命令只能指定一个物理NPU的ID进行动态虚拟化。</li><li>必须搭配ASCEND_VNPU_SPECS，表示在指定的NPU上划分出的AICore数量。</li><li>可以搭配ASCEND_RUNTIME_OPTIONS，但是只能取值为NODRV，表示不挂载驱动相关目录。</li></ul></li></ul>|
-|ASCEND_RUNTIME_OPTIONS|<p>对参数ASCEND_VISIBLE_DEVICES中指定的芯片ID作出限制：</p><ul><li>NODRV：表示不挂载驱动相关目录。</li><li>VIRTUAL：表示挂载的是虚拟芯片。</li><li>NODRV,VIRTUAL：表示挂载的是虚拟芯片，并且不挂载驱动相关目录。</li></ul>|<ul><li>ASCEND_RUNTIME_OPTIONS=NODRV</li><li>ASCEND_RUNTIME_OPTIONS=VIRTUAL</li><li>ASCEND_RUNTIME_OPTIONS=NODRV,VIRTUAL</li></ul>|
-|ASCEND_VNPU_SPECS|从物理NPU设备中划分出一定数量的AICore，指定为虚拟设备。支持的取值请参见[虚拟化模板](./03_virtualization_templates.md)中的“表1 虚拟化实例模板”。<ul><li>只有支持动态虚拟化的产品形态，才能使用该参数。</li><li>需配合参数“ASCEND_VISIBLE_DEVICES”一起使用，参数“ASCEND_VISIBLE_DEVICES”指定用于虚拟化的物理NPU设备。</li></ul>|ASCEND_VNPU_SPECS=vir04表示划分4个AICore作为vNPU，挂载至容器。|
+|ASCEND_RUNTIME_OPTIONS|<p>对参数ASCEND_VISIBLE_DEVICES中指定的芯片ID作出限制：</p><ul><li>NODRV：表示不挂载驱动相关目录。</li><li>VIRTUAL：表示挂载的是虚拟芯片。</li><li>NODRV,VIRTUAL：表示挂载的是虚拟芯片，并且不挂载驱动相关目录。</li></ul>|<ul><li>ASCEND_RUNTIME_OPTIONS=NODRV</li><li>ASCEND_RUNTIME_OPTIONS=VIRTUAL</li><li>ASCEND_RUNTIME_OPTIONS=NODRV,VIRTUAL</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>静态虚拟化场景下，ASCEND_RUNTIME_OPTIONS为必选参数，且取值必须包含VIRTUAL。</li><li>动态虚拟化场景下，若使用ASCEND_RUNTIME_OPTIONS参数，则其取值不能包含VIRTUAL。</li></ul></div></div>|
+|ASCEND_VNPU_SPECS|从物理NPU设备中划分出一定数量的AICore，指定为虚拟设备。支持的取值请参见[虚拟化模板](./03_virtualization_templates.md)中表1的“虚拟化实例模板”列。<ul><li>只有支持动态虚拟化的产品形态，才能使用该参数。</li><li>需配合参数“ASCEND_VISIBLE_DEVICES”一起使用，参数“ASCEND_VISIBLE_DEVICES”指定用于虚拟化的物理NPU设备。</li></ul>|ASCEND_VNPU_SPECS=vir04表示划分4个AICore作为vNPU，挂载至容器。|
 
 ### 方式二：Kubernetes挂载vNPU<a name="ZH-CN_TOPIC_0000002511346321"></a>
 
@@ -126,7 +126,7 @@
 - 静态虚拟化场景，如果创建或者销毁vNPU，需要重启Ascend Device Plugin。
 - 静态虚拟化任务，不支持故障重调度。
 
-**表 1**  虚拟化实例模板与虚拟设备类型关系表
+**表 1**  虚拟化实例模板与vNPU类型关系表
 
 <a name="table47415104403"></a>
 <table><thead align="left"><tr id="row67416101402"><th class="cellrowborder" valign="top" width="20%" id="mcps1.2.5.1.1"><p id="p117491014400"><a name="p117491014400"></a><a name="p117491014400"></a>NPU类型</p>
@@ -169,23 +169,9 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p188588202135"><a name="p188588202135"></a><a name="p188588202135"></a>Ascend910-16c-100-0</p>
 </td>
 </tr>
-<tr><td rowspan="4" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A2 训练系列产品</span>（20或24或25个AICore）</p>
+<tr><td rowspan="2" valign="top" width="20%" headers="mcps1.2.5.1.1 "><p><span>Atlas A2 训练系列产品</span>（24个AICore）</p>
 </td>
-<td><p>vir10_3c_32g</p>
-</td>
-<td><p>Ascend910-10c.3cpu.32g</p>
-</td>
-<td><p>Ascend910-10c.3cpu.32g-100-0</p>
-</td>
-</tr>
-<tr><td><p>vir05_1c_16g</p>
-</td>
-<td><p>Ascend910-5c.1cpu.16g</p>
-</td>
-<td><p>Ascend910-5c.1cpu.16g-100-0</p>
-</td>
-</tr>
-<tr><td><p>vir12_3c_32g</p>
+<td><p>vir12_3c_32g</p>
 </td>
 <td><p>Ascend910-12c.3cpu.32g</p>
 </td>
@@ -413,7 +399,7 @@
 
 - 创建训练任务时，需要在创建YAML文件时，修改如下配置。以Atlas 训练系列产品使用为例。
 
-    resources中设定的requests和limits资源类型，应修改为huawei.com/Ascend910-_Y_，其中<i>Y</i>值和vNPU类型相关，具体取值参考[表1 虚拟化实例模板与虚拟设备类型关系表](#table47415104403)中的虚拟类型。
+    resources中设定的requests和limits资源类型，应修改为huawei.com/Ascend910-_Y_，其中<i>Y</i>值和vNPU类型相关，具体取值参考[表1 虚拟化实例模板与vNPU类型关系表](#table47415104403)中的“vNPU类型”列。
 
     ```Yaml
     ...
@@ -427,7 +413,7 @@
 
 - 创建推理任务时，需要在创建YAML文件时，修改如下配置。以Atlas 推理系列产品使用为例。
 
-    resources中设定的requests和limits资源类型，应修改为huawei.com/Ascend310P-_Y_，其中<i>Y</i>值和vNPU类型相关，具体取值参考[表1 虚拟化实例模板与虚拟设备类型关系表](#table47415104403)中的虚拟类型。
+    resources中设定的requests和limits资源类型，应修改为huawei.com/Ascend310P-_Y_，其中<i>Y</i>值和vNPU类型相关，具体取值参考[表1 虚拟化实例模板与vNPU类型关系表](#table47415104403)中的“vNPU类型”列。
 
     ```Yaml
     ...
@@ -512,9 +498,9 @@
 </tbody>
 </table>
 
-**表 2**  虚拟化实例模板与虚拟设备类型关系表
+**表 2**  虚拟化实例模板与vNPU类型关系表
 
-<a name="table47415104403"></a>
+<a name="table474151044030123"></a>
 <table><thead align="left"><tr id="row67416101402"><th class="cellrowborder" valign="top" width="20%" id="mcps1.2.5.1.1"><p id="p117491014400"><a name="p117491014400"></a><a name="p117491014400"></a>NPU类型</p>
 </th>
 <th class="cellrowborder" valign="top" width="19.98%" id="mcps1.2.5.1.2"><p id="p177431064013"><a name="p177431064013"></a><a name="p177431064013"></a>虚拟化实例模板</p>
@@ -592,7 +578,7 @@
 
         **表 3** Ascend Device Plugin启动参数
 
-        <a name="table1064314568229"></a>
+        <a name="table1064314568229112"></a>
 
         |参数|类型|默认值|说明|
         |--|--|--|--|
@@ -741,7 +727,7 @@ spec:
 >vnpu-level和vnpu-dvpp的选择结果，具体请参见[表5](#table83781115185619)。
 >
 >- 表中“降级”表示AICore满足的情况下，其他资源不够（如AICPU）时，模板会选择同AICore下的其他满足资源要求的模板。如在只剩一颗芯片上只有2个AICore，1个AICPU时，vir02模板会降级为vir02\_1c。
->- 表中“选择模板”中的值来源于[虚拟化模板](./03_virtualization_templates.md)中Atlas 推理系列产品、“虚拟化实例模板”列的取值。
+>- 表中“选择模板”中的值来源于[虚拟化模板](./03_virtualization_templates.md)中表1的Atlas 推理系列产品、“虚拟化实例模板”列的取值。
 >- 表中“vnpu-level”列的“其他值”表示除去“low”和“high”后的任意取值。
 >- 整卡（core的请求数量为8的倍数）场景下vnpu-dvpp与vnpu-level可以取任意值。
 

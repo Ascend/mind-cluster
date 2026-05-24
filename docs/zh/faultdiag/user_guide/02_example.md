@@ -91,7 +91,7 @@
         |Device日志存储目录名|导出Device侧日志和文件的存储路径（任意的绝对路径）。如：“/home/log/”。|
 
         >[!NOTE] 
-        >- msnpureport\_auto\_export.sh脚本的更多使用指导请参见《Atlas 系列硬件产品 25.5.0 msnpureport 工具使用指南》的“[连续导出Device侧系统类日志和其他维测信息](https://support.huawei.com/enterprise/zh/doc/EDOC1100540106/7f3ad48)”章节。
+        >- msnpureport\_auto\_export.sh脚本的更多使用指导请参见《Atlas 系列硬件产品 26.0.RC1 msnpureport 工具使用指南》的“[连续导出Device侧系统类日志和其他维测信息](https://support.huawei.com/enterprise/zh/doc/EDOC1100568649/7f3ad48)”章节。
         >- 若设置采集间隔时间较短，频繁导出日志可能会导致系统资源开销较大，推荐参数设置为300（5分钟），可根据实际场景调整。
         >- 训练服务器开机后，只需执行一次msnpureport\_auto\_export.sh脚本。训练服务器重启后，也需要重新执行该采集脚本。
 

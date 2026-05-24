@@ -117,7 +117,7 @@
 >[!NOTE] 
 >
 >- 针对此章节场景提供的参考示例，可参考[超节点日志清洗及诊断脚本](https://gitcode.com/Ascend/mindxdl-deploy/tree/master/super_pod_diag)进行超节点日志批量解压，清洗及诊断。
->- 日志级别配置较低时，会存在日志刷屏冲刷关键日志无法诊断的情况，涉及的环境变量包含ASCEND\_GLOBAL\_EVENT\_ENABLE、HCCL\_ENTRY\_LOG\_ENABLE、ASCEND\_GLOBAL\_LOG\_LEVEL、ASCEND\_MODULE\_LOG\_LEVEL。更多信息请参见《CANN 环境变量参考》中的“[环境变量列表](https://www.hiascend.com/document/detail/zh/canncommercial/850/maintenref/envvar/envref_07_0001.html)”章节。
+>- 日志级别配置较低时，会存在日志刷屏冲刷关键日志无法诊断的情况，涉及的环境变量包含ASCEND\_GLOBAL\_EVENT\_ENABLE、HCCL\_ENTRY\_LOG\_ENABLE、ASCEND\_GLOBAL\_LOG\_LEVEL、ASCEND\_MODULE\_LOG\_LEVEL。更多信息请参见《CANN 环境变量参考》中的“[环境变量列表](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/envvar/envref_07_0001.html)”章节。
 
 ## 超节点拓扑信息手动关联场景<a name="section117571749184019"></a>
 

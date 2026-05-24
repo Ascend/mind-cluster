@@ -100,7 +100,7 @@
 </td>
 </tr>
 <tr id="row32781215162311"><td class="cellrowborder" valign="top" width="31.78%" headers="mcps1.2.5.1.1 "><p id="p162786153239"><a name="p162786153239"></a><a name="p162786153239"></a><span id="ph151431757142112"><a name="ph151431757142112"></a><a name="ph151431757142112"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 训练系列产品</term></span></p>
-<ul><li><span>Atlas 800T A2 训练服务器</span></li></ul>
+<ul><li><span>Atlas 800T A2 训练服务器（24个AICore）</span></li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="33.339999999999996%" headers="mcps1.2.5.1.2 "><p id="p366920193216"><a name="p366920193216"></a><a name="p366920193216"></a>在物理机划分vNPU，挂载vNPU到容器</p>
 </td>
@@ -165,6 +165,7 @@
 - 静态虚拟化、动态虚拟化基于HDK实现，通过HDK接口将芯片切分成vNPU后，挂载到容器中使用。
 - 如果使用动态虚拟化功能，请直接参见[动态虚拟化](./06_mounting_vnpu.md#动态虚拟化)章节，不需要提前使用npu-smi命令创建vNPU。
 - 如果使用静态虚拟化功能，需要先参见[创建vNPU](./04_creating_vnpu.md)，再进行挂载到容器操作。
+- npu-smi工具相关命令的详细说明请参见《Atlas A3 中心推理和训练硬件 26.0.RC1 npu-smi 命令参考》中的“[昇腾虚拟化实例（AVI）相关命令](https://support.huawei.com/enterprise/zh/doc/EDOC1100568420/690dda6e)”章节。
 
 ## 使用约束<a name="section911013420264"></a>
 

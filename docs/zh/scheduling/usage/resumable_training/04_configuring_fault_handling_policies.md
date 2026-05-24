@@ -92,7 +92,7 @@ metadata:
     2. 在训练脚本（例如train\_start.sh）中增加以下代码，拉起TaskD Manager。在以下代码中：
 
         - TASKD\_SO\_PATH和export LD\_PRELOAD两条语句的作用是将安装TaskD后libtaskd.so的路径配置到环境变量LD\_PRELOAD中。如果这两条语句配置不成功，可通过手动执行pip show taskd命令获取Location的值拼接上/taskd/python/cython\_api/libs/libtaskd.so，然后通过export设置。
-        - TASKD\_PROCESS\_ENABLE环境变量配置说明：若任务YAML中“recover-strategy”未配置恢复策略且未使能亚健康热切，需要配置**export TASKD\_PROCESS\_ENABLE="off"**；若“recover-strategy”配置了恢复策略或使能了亚健康热切，则无需配置**export TASKD\_PROCESS\_ENABLE="off"**。
+        - TASKD\_PROCESS\_ENABLE环境变量配置说明：若任务YAML中“recover-strategy”未配置恢复策略且未开启亚健康热切，需要配置**export TASKD\_PROCESS\_ENABLE="off"**；若“recover-strategy”配置了恢复策略或开启了亚健康热切，则无需配置**export TASKD\_PROCESS\_ENABLE="off"**。
 
         ```shell
         TASKD_SO_PATH="$(pip show taskd | awk '/^Location: / {print $2"/taskd/python/cython_api/libs/libtaskd.so"}')"
@@ -440,7 +440,7 @@ context:
 
 **配置环境变量<a name="section12610013287"></a>**
 
-使用算子级在线恢复前，用户需在启动训练的脚本中配置环境变量HCCL\_OP\_RETRY\_ENABLE和HCCL\_OP\_RETRY\_PARAMS。关于该环境变量的详细说明请参见《[CANN 环境变量参考](https://www.hiascend.com/document/detail/zh/canncommercial/850/maintenref/envvar/envref_07_0001.html)》。配置示例如下。
+使用算子级在线恢复前，用户需在启动训练的脚本中配置环境变量HCCL\_OP\_RETRY\_ENABLE和HCCL\_OP\_RETRY\_PARAMS。关于该环境变量的详细说明请参见《[CANN 环境变量参考](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/envvar/envref_07_0001.html)》。配置示例如下。
 
 ```shell
 export HCCL_OP_RETRY_ENABLE="L0:0, L1:1, L2:1"     # 是否开启HCCL算子的重执行特性

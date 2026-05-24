@@ -30,7 +30,7 @@
     ```
 
     >[!NOTE]
-    >NPU Exporter和Ascend Device Plugin若以容器化的形式部署在Atlas 200I SoC A1 核心板上，需要进行如下操作。
+    >NPU Exporter和Ascend Device Plugin若以镜像方式部署在Atlas 200I SoC A1 核心板上，需要进行如下操作。
     >1. 在制作镜像时检查宿主机HwHiAiUser、HwDmUser、HwBaseUser用户的UID和GID，并记录该GID和UID的取值。
     >2. 查看在Dockerfile-310P-1usoc中创建HwHiAiUser、HwDmUser、HwBaseUser用户时指定的GID和UID是否与宿主机的一致。如果一致则不做修改；如果不一致，请手动修改Dockerfile-310P-1usoc文件使其保持一致，同时需要保证每台宿主机上HwHiAiUser、HwDmUser、HwBaseUser用户的GID和UID的取值一致。
 

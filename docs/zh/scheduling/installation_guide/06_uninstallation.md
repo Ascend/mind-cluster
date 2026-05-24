@@ -161,7 +161,7 @@
             - 删除pingmesh-config文件中所有超节点的信息，并将global配置中activate字段的值设置为off。
 
 2. 卸载组件。根据组件的安装方式，选择以下对应的卸载方式。
-    - 通过容器方式卸载。各组件卸载方法类似，均为进入该组件配置文件YAML所在目录，并执行删除操作实现，此操作需要在K8s的管理节点操作。以卸载Ascend Device Plugin为例说明，请用户自行完成其余组件卸载。
+    - 通过镜像方式卸载。各组件卸载方法类似，均为进入该组件配置文件YAML所在目录，并执行删除操作实现，此操作需要在K8s的管理节点操作。以卸载Ascend Device Plugin为例说明，请用户自行完成其余组件卸载。
 
         1. 以root用户登录管理节点。
         2. 进入Ascend Device PluginYAML配置文件所在目录（如：“/home/ascend-device-plugin”）。

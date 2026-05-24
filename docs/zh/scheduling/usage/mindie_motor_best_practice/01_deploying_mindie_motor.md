@@ -38,7 +38,7 @@ MindIE Motor包含两个部分，MindIE MS（MindIE Management Service）和Mind
 
 MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Server组件分别运行在独立的Pod内。使用MindCluster集群调度组件进行MindIE Motor任务部署时，MS Controller、MS Coordinator以及MindIE Server中的每个实例分别以一个AscendJob进行部署，例如一个推理任务包含2个Prefill实例和1个Decode实例，则需要部署5个AscendJob。
 
-了解PD分离服务部署的详细说明可参考《MindIE Motor开发指南》中的“集群服务部署 \> [PD分离服务部署](https://www.hiascend.com/document/detail/zh/mindie/230/mindiemotor/motordev/mindie_service0049.html)”章节。
+了解PD分离服务部署的详细说明可参考《MindIE Motor开发指南》中的“集群服务部署 \> [PD分离服务部署](https://www.hiascend.com/document/detail/zh/mindie/300/mindiemotor/motordev/user_guide/service_deployment/pd_separation_service_deployment.md)”章节。
 
 **使用流程<a name="zh-cn_topic_0000002328850238_section5640184231810"></a>**
 
@@ -590,7 +590,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 3. 查看推理任务运行情况
 4. （可选）删除任务
 
-了解以上步骤的详细说明，请参见《MindIE Motor开发指南》中的“集群服务部署 \> PD分离服务部署 \> 安装部署 \> [使用kubectl部署单机PD分离服务示例](https://www.hiascend.com/document/detail/zh/mindie/230/mindiemotor/motordev/mindie_service0318.html)”章节。
+了解以上步骤的详细说明，请参见《MindIE Motor开发指南》中的“集群服务部署 \> PD分离服务部署 \> 安装部署 \> [使用kubectl部署单机PD分离服务示例](https://www.hiascend.com/document/detail/zh/mindie/300/mindiemotor/motordev/user_guide/service_deployment/pd_separation_service_deployment.md#使用kubectl部署单机pd分离服务示例)”章节。
 
 ### global-ranktable说明<a name="ZH-CN_TOPIC_0000002479226414"></a>
 

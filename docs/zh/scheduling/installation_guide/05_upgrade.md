@@ -485,7 +485,7 @@ Elastic Agent组件已经日落，本章节提供将Elastic Agent组件升级为
         Successfully uninstalled mindx_elastic-{version}
         ```
 
-    3. 删除Elastic Agent使能代码。
+    3. 删除Elastic Agent启动代码。
 
         ```shell
         sed -i '/mindx_elastic.api/d' $(pip3 show torch | grep Location | awk -F ' ' '{print $2}')/torch/distributed/run.py
@@ -509,7 +509,7 @@ Elastic Agent组件已经日落，本章节提供将Elastic Agent组件升级为
         Successfully installed taskd-{version}
         ```
 
-        执行以下命令，使能TaskD。
+        执行以下命令，启动TaskD。
 
         ```shell
         sed -i '/import os/i import taskd.python.adaptor.patch' $(pip3 show torch | grep Location | awk -F ' ' '{print $2}')/torch/distributed/run.py

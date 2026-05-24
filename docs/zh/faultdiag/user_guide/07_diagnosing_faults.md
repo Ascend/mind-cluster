@@ -230,4 +230,4 @@
     >- 故障诊断执行出错时，“故障事件分析”回显中的说明（或分析失败）字段将会打印失败信息。如果想查看所有异常信息，可通过diag\_report.json文件查看。
     >- 执行诊断命令时，若不指定--performance\(-p\)参数，则仅执行根因节点分析与故障事件分析两个模块，对应JSON文件中仅包含这两个模块的结果。
     >- 暂不支持发生过（有/无）冗余恢复的MindIE多实例推理集群故障诊断。由于（有/无）冗余恢复特性，会重启MindIE Pod，实例信息被刷新，MindIE各组件重启前后的日志存在相同目录，导致组件无法正确切分实例和日志。
-    >- 日志级别配置较低时，会存在日志刷屏冲刷关键日志无法诊断的情况，涉及的环境变量包含ASCEND\_GLOBAL\_EVENT\_ENABLE、HCCL\_ENTRY\_LOG\_ENABLE、ASCEND\_GLOBAL\_LOG\_LEVEL、ASCEND\_MODULE\_LOG\_LEVEL。更多信息请参见《CANN 环境变量参考》中的“[环境变量列表](https://www.hiascend.com/document/detail/zh/canncommercial/850/maintenref/envvar/envref_07_0001.html)”章节。
+    >- 日志级别配置较低时，会存在日志刷屏冲刷关键日志无法诊断的情况，涉及的环境变量包含ASCEND\_GLOBAL\_EVENT\_ENABLE、HCCL\_ENTRY\_LOG\_ENABLE、ASCEND\_GLOBAL\_LOG\_LEVEL、ASCEND\_MODULE\_LOG\_LEVEL。更多信息请参见《CANN 环境变量参考》中的“[环境变量列表](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/envvar/envref_07_0001.html)”章节。
