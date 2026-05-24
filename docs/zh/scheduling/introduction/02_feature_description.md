@@ -64,7 +64,7 @@ NPU Exporter
 
 **使用说明<a name="section1350915844811"></a>**
 
-- 驱动安装后会默认安装npu-smi工具，安装操作请参见《CANN 软件安装指南》中的“<a href="https://www.hiascend.com/document/detail/zh/canncommercial/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian">安装NPU驱动和固件</a>”章节（商用版）或“<a href="https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler">安装NPU驱动和固件</a>”章节（社区版）；安装成功后，npu-smi放置在“/usr/local/sbin/”和“/usr/local/bin/”路径下。
+- 驱动安装后会默认安装npu-smi工具，安装操作请参见《CANN 软件安装》中的“<a href="https://www.hiascend.com/document/detail/zh/canncommercial/900/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian">安装NPU驱动和固件</a>”章节（商用版）或“<a href="https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/900/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler">安装NPU驱动和固件</a>”章节（社区版）；安装成功后，npu-smi放置在“/usr/local/sbin/”和“/usr/local/bin/”路径下。
 - 安装MindCluster中的Ascend Docker Runtime、Ascend Device Plugin和Volcano组件，请参见[安装部署](../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 - 安装Docker，请参见[安装Docker](https://docs.docker.com/engine/install/)。
 - 安装Kubernetes，请参见[安装Kubernetes](https://kubernetes.io/zh/docs/setup/production-environment/tools/)。

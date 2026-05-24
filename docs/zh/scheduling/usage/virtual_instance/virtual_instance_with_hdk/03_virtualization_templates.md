@@ -22,8 +22,8 @@
         <td><ul><li>vir后面的数字表示AICore数量。</li><li>c前面的数字表示AICPU数量。</li><li>dvpp表示虚拟化时包含所有数字视觉预处理模块（即VPC，VDEC，JPEGD，PNGD，VENC，JPEGE）。</li><li>ndvpp表示虚拟化时没有数字视觉预处理硬件资源。</li></ul></td>
     </tr>
     <tr>
-        <td>Atlas A2 训练系列产品（20或24或25个AICore）</td>
-        <td>虚拟化实例模板包括：vir05_1c_16g、vir10_3c_32g、vir06_1c_16g、vir12_3c_32g。</td>
+        <td>Atlas A2 训练系列产品（24个AICore）</td>
+        <td>虚拟化实例模板包括：vir06_1c_16g、vir12_3c_32g。</td>
         <td><ul><li>vir后面的数字表示AICore数量。</li><li>c前面的数字表示AICPU数量。</li><li>g前面的数字表示内存数量。</li></ul></td>
     </tr>
     <tr>
@@ -51,7 +51,7 @@
 >
 >- AICore主要用于矩阵乘等计算，适用于卷积模型。
 >- AICPU主要负责执行CPU类算子（包括控制算子、标量和向量等通用计算）。
->- 虚拟化实例（创建指定芯片的vNPU）会使能SRIOV，将data CPU转化为AICPU，因此会导致NPU信息中的AICPU个数发生变化。
+>- 虚拟化实例（创建指定芯片的vNPU）会开启SRIOV，将data CPU转化为AICPU，因此会导致NPU信息中的AICPU个数发生变化。
 >- DVPP为数字视觉预处理模块，提供对特定格式的视频和图像进行解码、缩放等预处理操作，以及对处理后的视频、图像进行编码再输出的能力，包含VPC、VDEC、JPEGD、PNGD、VENC、JPEGE模块。
 >    - VPC：视觉预处理核心，提供对图像进行缩放、色域转换、降bit数处理、存储格式转换、区块切割转换等能力。
 >    - VDEC：视频解码器，提供对特定格式的视频进行解码的能力。

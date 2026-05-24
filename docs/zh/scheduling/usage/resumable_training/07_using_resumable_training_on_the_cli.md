@@ -6,7 +6,7 @@
 
 **配置Ascend Device Plugin<a name="section14208511958"></a>**
 
-只支持以容器化方式启动Ascend Device Plugin。
+只支持以镜像方式启动Ascend Device Plugin。
 
 1. 根据所使用的故障处理模式，修改Ascend Device Plugin组件的启动YAML，修改如下所示加粗部分。
     1. 重调度模式
@@ -173,7 +173,7 @@
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002039339945_p166105316515"><a name="zh-cn_topic_0000002039339945_p166105316515"></a><a name="zh-cn_topic_0000002039339945_p166105316515"></a>混合精度训练是在训练时混合使用单精度（float32）与半精度(float16)数据类型，将两者结合在一起，并使用相同的超参数实现了与float32几乎相同的精度。</p>
 <p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p626262173118"></a>软件包中的cp3x表示Python版本号，例如x为10表示Python 3.10，具体Python版本以MindSpeed-LLM版本说明为准。</p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a>请参见<span id="zh-cn_topic_0000002039339945_ph156792413596"><a name="zh-cn_topic_0000002039339945_ph156792413596"></a><a name="zh-cn_topic_0000002039339945_ph156792413596"></a>《Ascend Extension for PyTorch 软件安装指南》中的“<a href="https://www.hiascend.com/document/detail/zh/Pytorch/730/configandinstg/instg/docs/installing_apex.md">安装APEX模块</a>”章节</span>，根据实际情况编译APEX软件包。</p>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a><a name="zh-cn_topic_0000002039339945_zh-cn_topic_0000001497364957_p39761346403"></a>请参见<span id="zh-cn_topic_0000002039339945_ph156792413596"><a name="zh-cn_topic_0000002039339945_ph156792413596"></a><a name="zh-cn_topic_0000002039339945_ph156792413596"></a>《Ascend Extension for PyTorch 软件安装指南》中的“<a href="https://gitcode.com/Ascend/apex/blob/master/docs/zh/installing_apex.md">安装APEX模块</a>”章节</span>，根据实际情况编译APEX软件包。</p>
 <p id="zh-cn_topic_0000002039339945_p1761531257"><a name="zh-cn_topic_0000002039339945_p1761531257"></a><a name="zh-cn_topic_0000002039339945_p1761531257"></a></p>
 </td>
 </tr>
@@ -766,11 +766,11 @@
 
 **构建镜像**
 
-详细请参见[Verl官网文档-构建镜像](https://github.com/verl-project/verl/blob/main/docs/ascend_tutorial/quick_start/dockerfile_build_guidance.rst)。vLLM和Megatron分别作为推理和训练后端。
+详细请参见[Verl官网文档-构建镜像](https://github.com/verl-project/verl/blob/main/docs/ascend_tutorial/get_start/dockerfile_build_guidance.rst)。vLLM和Megatron分别作为推理和训练后端。
 
 **安装软件**
 
-详细请参见[Verl官网文档-安装软件](https://github.com/verl-project/verl/blob/main/docs/ascend_tutorial/quick_start/ascend_quick_start.rst)。
+详细请参见[Verl官网文档-安装软件](https://github.com/verl-project/verl/blob/main/docs/ascend_tutorial/get_start/install_guidance.rst)。
 
 >[!NOTE] 
 >若需使用Pod重调度功能，建议MindSpeed版本不早于commit id为6390a8ee2f0e59ae237753cce51289a3fe490905的版本。
@@ -818,7 +818,7 @@
 >- 断点续训展示的组件代码为开源代码，其中涉及到相关安全说明请参见[安全说明](../../appendix.md#安全说明)。
 >- 下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
 >- 模型的参数配置，根据模型仓的模型配置以实际情况来写。若修改不当，可能会引发不可预知的问题。
->- 若训练过程中出现“Failed to bind the IP port. Reason: The IP address and port have been bound already”报错，可以按照如下进行配置，详情请参见《CANN 环境变量参考》中的“[HCCL_HOST_SOCKET_PORT_RANGE](https://www.hiascend.com/document/detail/zh/canncommercial/850/maintenref/envvar/envref_07_0143.html)”章节。
+>- 若训练过程中出现“Failed to bind the IP port. Reason: The IP address and port have been bound already”报错，可以按照如下进行配置，详情请参见《CANN 环境变量参考》中的“[HCCL_HOST_SOCKET_PORT_RANGE](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/envvar/envref_07_0143.html)”章节。
 >
 >   ```shell
 >   export HCCL_HOST_SOCKET_PORT_RANGE="60000-60050"

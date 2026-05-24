@@ -2317,7 +2317,7 @@ nic_rx_all_oct_num:482237805
 
 **文件说明<a name="section56641436194180007"></a>**
 
-- 文件说明：由CANN打印的应用类日志，包括Host侧应用类日志plog-_\{pid\}_-_\{time\}_.log和Device侧应用类日志device-\{pid\}-\{time\}.log两类，更多日志相关信息请参见《CANN 日志参考》中的“[查看日志（Ascend EP）](https://www.hiascend.com/document/detail/zh/canncommercial/850/maintenref/logreference/logreference_0002.html)”章节。
+- 文件说明：由CANN打印的应用类日志，包括Host侧应用类日志plog-_\{pid\}_-_\{time\}_.log和Device侧应用类日志device-\{pid\}-\{time\}.log两类，更多日志相关信息请参见《CANN 日志参考》中的“[查看日志（Ascend EP）](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/logreference/logreference_0002.html)”章节。
 - 命名约束：plog-_\{pid\}_-_\{time\}_.log、device-_\{pid\}_-_\{time\}_.log
 - 存放路径约束：
     - _采集目录/_
@@ -2557,7 +2557,7 @@ msnpureport
 ```
 
 - 执行完成后会在当前目录下生成一个时间戳的文件夹，请用户将该时间戳目录下“slog”和“hisi\_logs”文件夹转储至“采集目录/device\_log”下。
-- 若采集日志失败，请参考FAQ：《CANN 日志参考》中的“FAQ \> [日志没有正常落盘](https://www.hiascend.com/document/detail/zh/canncommercial/850/maintenref/logreference/logreference_0024.html)”章节进行处理。
+- 若采集日志失败，请参考FAQ：《CANN 日志参考》中的“FAQ \> [日志没有正常落盘](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/logreference/logreference_0024.html)”章节进行处理。
 
 ### MindCluster组件日志<a name="ZH-CN_TOPIC_0000002045702997"></a>
 

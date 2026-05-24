@@ -79,7 +79,7 @@ MindCluster基础组件：
 |MindIO ACP|无|
 |MindIO TFT|新增tft_register_exception_handler：注册异常处理程序。|
 |MindCluster Ascend FaultDiag|新增Ascend-faultdiag-toolkit工具相关接口，详细请参见[接口描述](./faultdiag/ascend-faultdiag-toolkit/01_api_description.md)。|
-|MindCluster基础组件|<ul><li>任务创建接口新增可自愈故障级别、故障码、自愈时长配置字段。</li><li>任务创建接口新增软切分模式、AICore百分比、高带宽内存量配置字段。</li><li>ClusterD支持配置故障自动强制隔离的使能开关、触发频率、隔离时长。</li><li>Ascend Device Plugin新增自动强制隔离的隔离时长配置字段。</li><li>支持多级网络拓扑配置，以及任务的多级网络亲和配置。</li><li>新增任务信息订阅接口SubscribeJobSummarySignalList。</li><li>新增任务调度异常原因查询接口。</li><li>新增文件形式的自定义指标接口。</li><li>优化NPU Exporter的NPU利用率接口的计算方式。</li><li>新增Atlas 350 标卡的设备基础信息、故障码和芯片名称。</li></ul>|
+|MindCluster基础组件|<ul><li>任务创建接口新增可自愈故障级别、故障码、自愈时长配置字段。</li><li>任务创建接口新增软切分模式、AICore百分比、高带宽内存量配置字段。</li><li>ClusterD支持配置故障自动强制隔离的启动开关、触发频率、隔离时长。</li><li>Ascend Device Plugin新增自动强制隔离的隔离时长配置字段。</li><li>支持多级网络拓扑配置，以及任务的多级网络亲和配置。</li><li>新增任务信息订阅接口SubscribeJobSummarySignalList。</li><li>新增任务调度异常原因查询接口。</li><li>新增文件形式的自定义指标接口。</li><li>优化NPU Exporter的NPU利用率接口的计算方式。</li><li>新增Atlas 350 标卡的设备基础信息、故障码和芯片名称。</li></ul>|
 
 ### 已解决的问题<a name="ZH-CN_TOPIC_0000002492283206"></a>
 
@@ -109,8 +109,8 @@ MindCluster基础组件：
 
 |文档名称|内容简介|更新说明|
 |--|--|--|
-|《[MindCluster 集群调度用户指南](https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.0.0/docs/zh/scheduling/introduction/00_overview.md)》|提供集群调度组件说明、特性原理和使用参考，包括各组件的安装部署、集成适配示例和API参考，以及部分调度方案的原理介绍参考。|新增软切分调度、多级调度等，其他变更详见《[MindCluster 集群调度用户指南](https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.0.0/docs/zh/scheduling/introduction/00_overview.md)》。|
-|《[MindCluster 故障诊断用户指南](../../component/ascend-faultdiag/README.md)》|提供日志采集、日志清洗与转储、故障诊断等功能的使用指导。|新增Atlas 350 标卡故障模式、Ascend-faultdiag-toolkit工具等，其他变更详见《[MindCluster 故障诊断用户指南](../../component/ascend-faultdiag/README.md)》。|
+|《[MindCluster 集群调度用户指南](./scheduling/introduction/00_overview.md)》|提供集群调度组件说明、特性原理和使用参考，包括各组件的安装部署、集成适配示例和API参考，以及部分调度方案的原理介绍参考。|新增软切分调度、多级调度等，其他变更详见《[MindCluster 集群调度用户指南](./scheduling/introduction/00_overview.md)》。|
+|《[MindCluster 故障诊断用户指南](./faultdiag/introduction.md)》|提供日志采集、日志清洗与转储、故障诊断等功能的使用指导。|新增Atlas 350 标卡故障模式、Ascend-faultdiag-toolkit工具等，其他变更详见《[MindCluster 故障诊断用户指南](./faultdiag/introduction.md)》。|
 
 ## 漏洞修补列表<a name="ZH-CN_TOPIC_0000002524442913"></a>
 
