@@ -46,6 +46,7 @@ import (
 	apiv1 "infer-operator/pkg/api/v1"
 	"infer-operator/pkg/common"
 	util "infer-operator/pkg/common/client-go"
+	"infer-operator/pkg/controller/rescheduling"
 	"infer-operator/pkg/controller/schedule"
 	"infer-operator/pkg/controller/workload"
 )
@@ -58,6 +59,7 @@ type InstanceSetReconciler struct {
 	WorkLoadReconciler *workload.WorkLoadReconciler
 	Recorder           record.EventRecorder
 	SupportPodGroup    bool
+	rescheduler        *rescheduling.Rescheduler
 }
 
 type WorkloadRegister func(mgr ctrl.Manager, factory *workload.WorkLoadHandlerFactory)
@@ -77,6 +79,7 @@ func (r *InstanceSetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	}
 	if !(instanceSet.DeletionTimestamp == nil || instanceSet.DeletionTimestamp.IsZero()) {
 		hwlog.RunLog.Infof("instanceSet %s is being deleted", req.NamespacedName)
+		r.rescheduler.CleanupWithInstanceSetDeletion(instanceSet.Name)
 		return ctrl.Result{}, nil
 	}
 
@@ -86,11 +89,16 @@ func (r *InstanceSetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			req.Namespace, req.Name, err)
 		return ctrl.Result{}, nil
 	}
-
-	// 3. reconcile workloads
-	err := r.reconcileWorkLoads(ctx, instanceSet)
+	// 3. perform rescheduling, anyway it will continue to reconcile workloads
+	err := r.doRescheduling(ctx, instanceSet)
+	if err != nil {
+		hwlog.RunLog.Warnf("InstanceSet %s/%s rescheduling failed, continue to reconcile workloads, error: %v",
+			instanceSet.Namespace, instanceSet.Name, err)
+	}
+	// 4. reconcile workloads
+	err = r.reconcileWorkLoads(ctx, instanceSet)
 	if common.IsRequeueError(err) || err == nil {
-		// 4. update status
+		// 5. update status
 		if err := r.updateStatus(ctx, instanceSet); err != nil {
 			hwlog.RunLog.Errorf("unable to update status %s/%s, error: %v", req.Namespace, req.Name, err)
 			return ctrl.Result{}, err
@@ -347,10 +355,12 @@ func handleConflictNodePort(serviceSpec *apiv1.ServiceSpec, indexer common.Insta
 func NewInstanceSetReconciler(
 	mgr manager.Manager,
 	workloadRegister WorkloadRegister) *InstanceSetReconciler {
-	workLoadReconciler := workload.NewWorkLoadReconciler(mgr.GetClient())
 	workLoadHandlerFactory := workload.NewWorkLoadHandlerFactory()
 	workloadRegister(mgr, workLoadHandlerFactory)
+	workLoadReconciler := workload.NewWorkLoadReconciler(mgr.GetClient())
+	rescheduler := rescheduling.NewRescheduler(mgr.GetClient(), common.FaultRetryTimesCleanupInterval)
 	workLoadReconciler.SetWorkLoadHandlerFactory(workLoadHandlerFactory)
+	rescheduler.SetWorkLoadHandlerFactory(workLoadHandlerFactory)
 	recorder := mgr.GetEventRecorderFor(common.InstanceSetControllerName)
 	return &InstanceSetReconciler{
 		Client:             mgr.GetClient(),
@@ -359,6 +369,7 @@ func NewInstanceSetReconciler(
 		WorkLoadReconciler: workLoadReconciler,
 		Recorder:           recorder,
 		SupportPodGroup:    false,
+		rescheduler:        rescheduler,
 	}
 }
 
@@ -370,7 +381,6 @@ func (r *InstanceSetReconciler) SetupWithManager(ctx context.Context, mgr ctrl.M
 		Owns(&appsv1.StatefulSet{}, builder.WithPredicates(WorkLoadPredicate())).
 		Owns(&corev1.Service{}, builder.WithPredicates(WorkLoadPredicate())).
 		Named(common.InstanceSetControllerName)
-
 	// if PodGroup exists, support PodGroup
 	if err := util.CRDExists(ctx, mgr.GetAPIReader(), common.VolcanoPodGroupCrdName); err == nil {
 		hwlog.RunLog.Info("Volcano PodGroup CRD exists, support PodGroup")
@@ -380,8 +390,33 @@ func (r *InstanceSetReconciler) SetupWithManager(ctx context.Context, mgr ctrl.M
 		hwlog.RunLog.Infof("Volcano PodGroup CRD not exists, gang schedule is disabled, err: %v",
 			err.Error())
 	}
-
+	// setup rescheduler
+	err := r.rescheduler.SetupWithManager(ctx, mgr)
+	if err != nil {
+		return fmt.Errorf("setup rescheduler failed: %v", err)
+	}
 	return controller.Complete(r)
+}
+
+func (r *InstanceSetReconciler) doRescheduling(ctx context.Context, instanceSet *apiv1.InstanceSet) error {
+	deletedInstanceSets, err := r.rescheduler.DoRescheduling(ctx, instanceSet)
+	if err != nil {
+		return fmt.Errorf("InstanceSet %s/%s has fault pod but rescheduling failed, error: %v",
+			instanceSet.Namespace, instanceSet.Name, err)
+	}
+	// update status for deleted instanceSet
+	if len(deletedInstanceSets) > 0 {
+		hwlog.RunLog.Infof("InstanceSet %s/%s has fault pod, affect %d workloads",
+			instanceSet.Namespace, instanceSet.Name, len(deletedInstanceSets))
+		for _, deletedInstanceSet := range deletedInstanceSets {
+			err := r.updateStatus(ctx, &deletedInstanceSet)
+			if err != nil {
+				return fmt.Errorf("update status failed for instanceSet %s/%s, error: %v",
+					instanceSet.Namespace, instanceSet.Name, err)
+			}
+		}
+	}
+	return nil
 }
 
 func WorkLoadPredicate() predicate.Predicate {

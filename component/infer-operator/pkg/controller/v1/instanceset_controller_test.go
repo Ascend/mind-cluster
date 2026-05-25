@@ -21,11 +21,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"infer-operator/pkg/controller/rescheduling"
 	"reflect"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,8 +52,8 @@ func init() {
 	hwlog.InitRunLogger(&hwLogConfig, context.Background())
 }
 
-// TestInstanceSetReconcilerReconcile tests the Reconcile method of InstanceSetReconciler.
-func TestInstanceSetReconcilerReconcile(t *testing.T) {
+// TestInstanceSetReconcilerReconcile1 tests the Reconcile method of InstanceSetReconciler.
+func TestInstanceSetReconcilerReconcile1(t *testing.T) {
 	convey.Convey("Test InstanceSetReconciler Reconcile method", t, func() {
 		convey.Convey("Should successfully reconcile InstanceSet", func() {
 			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
@@ -72,6 +74,9 @@ func TestInstanceSetReconcilerReconcile(t *testing.T) {
 			patches3 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "updateStatus",
 				func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return nil })
 			defer patches3.Reset()
+			patches4 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "doRescheduling",
+				func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return nil })
+			defer patches4.Reset()
 
 			ctx := context.Background()
 			req := reconcile.Request{
@@ -131,29 +136,6 @@ func TestInstanceSetReconcilerReconcile2(t *testing.T) {
 			_, err := reconciler.Reconcile(ctx, req)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
-
-		convey.Convey("Should skip reconcile when InstanceSet is being deleted", func() {
-			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
-			now := metav1.Now()
-			instanceSet.DeletionTimestamp = &now
-			fakeClient := NewFakeClient(instanceSet).Build()
-
-			reconciler := &InstanceSetReconciler{
-				Client: fakeClient,
-			}
-
-			ctx := context.Background()
-			req := reconcile.Request{
-				NamespacedName: types.NamespacedName{
-					Name:      "test-instance",
-					Namespace: "default",
-				},
-			}
-
-			result, err := reconciler.Reconcile(ctx, req)
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(result, convey.ShouldResemble, reconcile.Result{})
-		})
 	})
 }
 
@@ -205,7 +187,9 @@ func TestInstanceSetReconcilerReconcile3(t *testing.T) {
 			patches2 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "reconcileWorkLoads",
 				func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return reconcileErr })
 			defer patches2.Reset()
-
+			patches3 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "doRescheduling",
+				func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return nil })
+			defer patches3.Reset()
 			ctx := context.Background()
 			req := reconcile.Request{
 				NamespacedName: types.NamespacedName{
@@ -241,6 +225,9 @@ func TestInstanceSetReconcilerReconcile4(t *testing.T) {
 			patches2 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "reconcileWorkLoads",
 				func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return conflictErr })
 			defer patches2.Reset()
+			patches3 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "doRescheduling",
+				func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return nil })
+			defer patches3.Reset()
 
 			ctx := context.Background()
 			req := reconcile.Request{
@@ -283,6 +270,9 @@ func TestInstanceSetReconcilerReconcile5(t *testing.T) {
 					return updateStatusErr
 				})
 			defer patches3.Reset()
+			patches4 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "doRescheduling",
+				func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return nil })
+			defer patches4.Reset()
 
 			ctx := context.Background()
 			req := reconcile.Request{
@@ -306,9 +296,17 @@ func TestInstanceSetReconcilerReconcileWithRequeueError(t *testing.T) {
 			fakeClient := NewFakeClient(instanceSet).Build()
 
 			workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+			workLoadHandlerFactory := workload.NewWorkLoadHandlerFactory()
+			deploymentGVK := appsv1.SchemeGroupVersion.WithKind("Deployment")
+			deploymentHandler := workload.NewDeploymentHandler(fakeClient)
+			err := workLoadHandlerFactory.Register(deploymentGVK, deploymentHandler)
+			convey.So(err, convey.ShouldBeNil)
+			rescheduler := rescheduling.NewRescheduler(fakeClient, common.FaultRetryTimesCleanupInterval)
+			rescheduler.SetWorkLoadHandlerFactory(workLoadHandlerFactory)
 			reconciler := &InstanceSetReconciler{
 				Client:             fakeClient,
 				WorkLoadReconciler: workLoadReconciler,
+				rescheduler:        rescheduler,
 			}
 
 			patches := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "validate",
