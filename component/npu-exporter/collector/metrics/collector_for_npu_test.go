@@ -18,9 +18,11 @@ package metrics
 import (
 	"errors"
 	"reflect"
+	"sync"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/smartystreets/goconvey/convey"
 
 	"ascend-common/api"
@@ -474,6 +476,64 @@ func TestCollectCardNum(t *testing.T) {
 			convey.So(ok, convey.ShouldEqual, tt.expectCache)
 			if tt.expectCache {
 				convey.So(cacheVal, convey.ShouldEqual, tt.expectValue)
+			}
+		})
+	}
+}
+
+type updateMachineInfoCardMetricTestCase struct {
+	name         string
+	setupCache   func(*sync.Map)
+	expectMetric bool
+}
+
+func buildUpdateMachineInfoCardMetricTestCases() []updateMachineInfoCardMetricTestCase {
+	return []updateMachineInfoCardMetricTestCase{
+		{
+			name: "should not send metric when cache key not found",
+			setupCache: func(localCache *sync.Map) {
+			},
+			expectMetric: false,
+		},
+		{
+			name: "should not send metric when cache value type is wrong",
+			setupCache: func(localCache *sync.Map) {
+				localCache.Store(colcommon.MachineInfoCardDescKey, "invalid_type")
+			},
+			expectMetric: false,
+		},
+		{
+			name: "should send metric when cache value is valid int32",
+			setupCache: func(localCache *sync.Map) {
+				localCache.Store(colcommon.MachineInfoCardDescKey, int32(testCardNum))
+			},
+			expectMetric: true,
+		},
+	}
+}
+
+func TestUpdateMachineInfoCardMetric(t *testing.T) {
+	for _, tt := range buildUpdateMachineInfoCardMetricTestCases() {
+		convey.Convey(tt.name, t, func() {
+			localCache := &sync.Map{}
+			tt.setupCache(localCache)
+
+			ch := make(chan prometheus.Metric, 1)
+			go func() {
+				updateMachineInfoCardMetric(ch, localCache)
+				close(ch)
+			}()
+
+			var metric prometheus.Metric
+			var received bool
+			for m := range ch {
+				metric = m
+				received = true
+			}
+
+			convey.So(received, convey.ShouldEqual, tt.expectMetric)
+			if tt.expectMetric {
+				convey.So(metric, convey.ShouldNotBeNil)
 			}
 		})
 	}
