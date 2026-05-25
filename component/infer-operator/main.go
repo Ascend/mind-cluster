@@ -111,7 +111,7 @@ func createCacheOptions() (cache.Options, error) {
 
 // parseFlags parses command line flags
 func parseFlags() {
-	flag.BoolVar(&version, "version", false, "Query the verison of the program")
+	flag.BoolVar(&version, "version", false, "Query the version of the program")
 	flag.IntVar(&hwLogConfig.LogLevel, "logLevel", 0,
 		"Log level, -1-debug, 0-info, 1-warning, 2-error, 3-critical(default 0)")
 	flag.IntVar(&hwLogConfig.MaxAge, "maxAge", hwlog.DefaultMinSaveAge,
@@ -184,14 +184,20 @@ func cacheBuilder(opts cache.Options) func(config *rest.Config, opts cache.Optio
 }
 
 func registerWorkLoadHandlersFunc() clusterctrlv1.WorkloadRegister {
-	return func(mgr ctrl.Manager, reconciler *workload.WorkLoadReconciler) {
+	return func(mgr ctrl.Manager, factory *workload.WorkLoadHandlerFactory) {
 		deploymentGVK := appsv1.SchemeGroupVersion.WithKind("Deployment")
 		deploymentHandler := workload.NewDeploymentHandler(mgr.GetClient())
-		reconciler.Register(deploymentGVK, deploymentHandler)
+		err := factory.Register(deploymentGVK, deploymentHandler)
+		if err != nil {
+			hwlog.RunLog.Errorf("unable to register deployment handler: %v", err)
+		}
 
 		statefulSetGVK := appsv1.SchemeGroupVersion.WithKind("StatefulSet")
 		statefulSetHandler := workload.NewStatefulSetHandler(mgr.GetClient())
-		reconciler.Register(statefulSetGVK, statefulSetHandler)
+		err = factory.Register(statefulSetGVK, statefulSetHandler)
+		if err != nil {
+			hwlog.RunLog.Errorf("unable to register statefulSet handler: %v", err)
+		}
 	}
 }
 

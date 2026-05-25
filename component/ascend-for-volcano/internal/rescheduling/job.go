@@ -20,13 +20,18 @@ Package rescheduling is using for HuaWei Ascend pin fault rescheduling.
 package rescheduling
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
 	"sync"
+	"time"
 
 	"k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -695,6 +700,8 @@ func (fJob *FaultJob) restartSingleFaultJob(ssn *framework.Session,
 	switch fJob.ReScheduleKey {
 	case JobForceRescheduleLabelValue, JobGraceRescheduleLabelValue:
 		deleteErr = fJob.deleteJobWithLabels(ssn, reschedule, schedulerJob, env)
+	case JobExternalForceReschedulingPrefix, JobExternalGraceReschedulingPrefix:
+		deleteErr = fJob.addPodStatusAnnotationForFaultTask(env)
 	case JobOffRescheduleLabelValue:
 		deleteErr = fmt.Errorf("job reschedule %s", fJob.ReScheduleKey)
 	default:
@@ -702,6 +709,56 @@ func (fJob *FaultJob) restartSingleFaultJob(ssn *framework.Session,
 	}
 
 	return deleteErr
+}
+
+func (fJob *FaultJob) addPodStatusAnnotationForFaultTask(env plugin.ScheduleEnv) error {
+	klog.V(util.LogWarningLev).Infof("job %s uses external rescheduling, try to add annotation %s for its fault tasks",
+		fJob.JobName, PodStatus)
+	for _, faultTask := range fJob.FaultTasks {
+		if faultTask.IsFaultTask {
+			if err := fJob.addPodStatusAnnotation(env, faultTask); err != nil {
+				err := fmt.Errorf("add pod status annotation for fault task %s/%s failed: %s",
+					faultTask.TaskNamespace, faultTask.TaskName, err)
+				klog.V(util.LogErrorLev).Infof(err.Error())
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (fJob *FaultJob) addPodStatusAnnotation(env plugin.ScheduleEnv, faultTask FaultTask) error {
+	type metaData struct {
+		Annotations map[string]string `json:"annotations"`
+	}
+	type podMetaData map[string]metaData
+	annotation := metaData{
+		Annotations: map[string]string{
+			PodStatus: fmt.Sprintf("%s-%s", CommonUnhealthyStatus, faultTask.faultType),
+		},
+	}
+	newPodMetaData := podMetaData{
+		MetaData: annotation,
+	}
+	podUpdateMetaData, err := json.Marshal(newPodMetaData)
+	if err != nil {
+		klog.V(util.LogErrorLev).Infof("failed to marshal the pod status annotation, error: %v", err)
+		return err
+	}
+	for i := 0; i < retryTime; i++ {
+		if _, err = env.FrameAttr.KubeClient.CoreV1().Pods(faultTask.TaskNamespace).Patch(context.Background(),
+			faultTask.TaskName, types.StrategicMergePatchType, podUpdateMetaData, metav1.PatchOptions{}); err == nil {
+			return nil
+		}
+		// There is no need to retry if the pod does not exist
+		if apierrors.IsNotFound(err) {
+			return err
+		}
+
+		klog.V(util.LogErrorLev).Infof("patch pod annotation failed: %v, try again", err)
+		time.Sleep(UpdatePodWaitTime * time.Millisecond)
+	}
+	return fmt.Errorf("add pod status annotation failed, exceeded max number of retries")
 }
 
 func (fJob *FaultJob) resetGraceExitCode(k8sClient kubernetes.Interface) {

@@ -36,6 +36,7 @@ import (
 	"infer-operator/pkg/common"
 )
 
+// DeploymentWorkLoad implements WorkLoad interface for the deployment
 type DeploymentHandler struct {
 	client client.Client
 }
@@ -44,6 +45,75 @@ func NewDeploymentHandler(client client.Client) *DeploymentHandler {
 	return &DeploymentHandler{
 		client: client,
 	}
+}
+
+type DeploymentWorkLoad struct {
+	*appsv1.Deployment
+}
+
+// SetWorkLoadObjMeta set the object meta of the deployment
+func (d *DeploymentWorkLoad) SetWorkLoadObjMeta(objectMeta metav1.ObjectMeta) {
+	if d == nil {
+		return
+	}
+	d.ObjectMeta = objectMeta
+}
+
+// GetWorkLoadObjMeta get the object meta of the workload
+func (d *DeploymentWorkLoad) GetWorkLoadObjMeta() metav1.ObjectMeta {
+	if d == nil {
+		return metav1.ObjectMeta{}
+	}
+	return d.ObjectMeta
+}
+
+// IsWorkLoadReady returns true if the workload is ready
+func (d *DeploymentWorkLoad) IsWorkLoadReady() bool {
+	if d == nil {
+		return false
+	}
+	// 1. get desired replicas
+	desiredReplicas := common.DefaultReplicas
+	if d.Spec.Replicas != nil {
+		desiredReplicas = *d.Spec.Replicas
+	}
+	// 2. check if status is latest
+	if d.Generation > 0 && d.Status.ObservedGeneration < d.Generation {
+		hwlog.RunLog.Warnf("Deployment %s/%s is not latest", d.Namespace, d.Name)
+		return false
+	}
+	// 3. check replicas number
+	if d.Status.ReadyReplicas != desiredReplicas ||
+		d.Status.AvailableReplicas != desiredReplicas ||
+		d.Status.UpdatedReplicas != desiredReplicas {
+		return false
+	}
+	// 4. check conditions
+	available := getDeploymentCondition(d.Status.Conditions, appsv1.DeploymentAvailable)
+	progressing := getDeploymentCondition(d.Status.Conditions, appsv1.DeploymentProgressing)
+	if available == nil || available.Status != corev1.ConditionTrue {
+		hwlog.RunLog.Warnf("Deployment %s/%s is not available, Condition<%s> is not true",
+			d.Namespace, d.Name, appsv1.DeploymentAvailable)
+		return false
+	}
+	if progressing == nil || progressing.Status != corev1.ConditionTrue {
+		hwlog.RunLog.Warnf("Deployment %s/%s is not progressing, Condition<%s> is not true",
+			d.Namespace, d.Name, appsv1.DeploymentAvailable)
+		return false
+	}
+	return true
+}
+
+// GetWorkLoadReplicas returns the number of replicas of the deployment
+func (d *DeploymentWorkLoad) GetWorkLoadReplicas() int32 {
+	if d == nil {
+		return common.DefaultReplicas
+	}
+	replicas := d.Spec.Replicas
+	if replicas == nil {
+		return common.DefaultReplicas
+	}
+	return *replicas
 }
 
 // CheckOrCreateWorkLoad checks if the deployment exists and creates it if not
@@ -121,6 +191,10 @@ func (d *DeploymentHandler) createDeployment(
 		deployLabels[k] = v
 	}
 	deployLabels = common.AddLabelsFromIndexer(deployLabels, indexer)
+	faultScheduling, ok := deploymentSpec.Template.Labels[common.FaultSchedulingLabelKey]
+	if ok {
+		deployLabels[common.FaultSchedulingLabelKey] = faultScheduling
+	}
 	deployAnnotations := common.DeepCopyLabelsMap(instanceSet.Annotations)
 	for k, v := range instanceSet.Spec.WorkloadObjectMeta.Annotations {
 		deployAnnotations[k] = v
@@ -399,4 +473,109 @@ func (d *DeploymentHandler) parseDeploymentWithScheme(raw runtime.RawExtension) 
 		return nil, fmt.Errorf("failed to unmarshal RawExtension to DeploymentSpec: %w", err)
 	}
 	return &spec, nil
+}
+
+// ListWorkLoad list workloads via selector
+func (d *DeploymentHandler) ListWorkLoad(
+	ctx context.Context,
+	selectLabels map[string]string,
+	namespace string,
+	filters ...WorkLoadFilter) ([]WorkLoadInterface, error) {
+	deployList := &appsv1.DeploymentList{}
+	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+		MatchLabels: selectLabels,
+	})
+	if err != nil {
+		hwlog.RunLog.Errorf("Failed to create selector: %v", err)
+		return nil, common.NewRequeueError(err.Error())
+	}
+	if err = d.client.List(ctx, deployList,
+		client.MatchingLabelsSelector{Selector: selector}, client.InNamespace(namespace)); err != nil {
+		hwlog.RunLog.Errorf("Failed to list Deployments: %v", err)
+		return nil, common.NewRequeueError(err.Error())
+	}
+	deploymentWorkLoadList := make([]WorkLoadInterface, 0, len(deployList.Items))
+	for _, deploy := range deployList.Items {
+		deployCopy := deploy
+		ok := true
+		deploymentWorkLoad := &DeploymentWorkLoad{Deployment: &deployCopy}
+		for _, filter := range filters {
+			ok = ok && filter(deploymentWorkLoad)
+			if !ok {
+				break
+			}
+		}
+		if ok {
+			deploymentWorkLoadList = append(deploymentWorkLoadList, deploymentWorkLoad)
+		}
+	}
+	return deploymentWorkLoadList, nil
+}
+
+// DeleteWorkLoad fetches workloads via selector and deletes those filtered by filters, with the timeout for graceful deletion
+func (d *DeploymentHandler) DeleteWorkLoad(
+	ctx context.Context,
+	selectLabels map[string]string,
+	namespace string,
+	filters ...WorkLoadFilter) error {
+	deployList, err := d.ListWorkLoads(ctx, selectLabels, namespace)
+	if err != nil {
+		return fmt.Errorf("failed to list deployment work loads: %w", err)
+	}
+	var workloadList []*DeploymentWorkLoad
+	for _, deploy := range deployList.Items {
+		ok := true
+		deployCopy := deploy
+		workload := &DeploymentWorkLoad{Deployment: &deployCopy}
+		for _, filter := range filters {
+			ok = ok && filter(workload)
+			if !ok {
+				break
+			}
+		}
+		if ok {
+			workloadList = append(workloadList, workload)
+		}
+	}
+	for _, workload := range workloadList {
+		if err := d.client.Delete(ctx, workload.Deployment); err != nil {
+			return fmt.Errorf("failed to delete deployment work load %s/%s: %w", workload.Namespace, workload.Name, err)
+		}
+	}
+	return nil
+}
+
+// UpdateWorkLoad updates workloads match selector and filters with updater function
+func (d *DeploymentHandler) UpdateWorkLoad(
+	ctx context.Context,
+	selectLabels map[string]string,
+	namespace string,
+	updater WorkloadUpdater,
+	filters ...WorkLoadFilter) error {
+	deployList, err := d.ListWorkLoads(ctx, selectLabels, namespace)
+	if err != nil {
+		return fmt.Errorf("failed to list deployment work loads: %w", err)
+	}
+	var workloadList []*DeploymentWorkLoad
+	for _, deploy := range deployList.Items {
+		ok := true
+		deployCopy := deploy
+		workload := &DeploymentWorkLoad{Deployment: &deployCopy}
+		for _, filter := range filters {
+			ok = ok && filter(workload)
+			if !ok {
+				break
+			}
+		}
+		if ok {
+			workloadList = append(workloadList, workload)
+		}
+	}
+	for _, workload := range workloadList {
+		updater(workload)
+		if err := d.client.Update(ctx, workload.Deployment); err != nil {
+			return fmt.Errorf("failed to update deployment work load %s/%s: %w", workload.Namespace, workload.Name, err)
+		}
+	}
+	return nil
 }

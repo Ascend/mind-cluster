@@ -464,6 +464,10 @@ func (r *InferServiceReconciler) newInstanceSet(is *apiv1.InferService, role api
 		labels[common.PrioritySchedulingStrategyLabelKey] = common.SchedulingStrategySequential
 	}
 
+	if is.Spec.SchedulingStrategy != nil && is.Spec.SchedulingStrategy.Type == common.SchedulingStrategyPriority {
+		labels[common.PrioritySchedulingStrategyLabelKey] = common.SchedulingStrategyPriority
+	}
+
 	annotations := make(map[string]string)
 	if role.WorkloadObjectMeta.Annotations != nil {
 		for k, v := range role.WorkloadObjectMeta.Annotations {

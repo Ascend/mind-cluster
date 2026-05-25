@@ -60,7 +60,7 @@ type InstanceSetReconciler struct {
 	SupportPodGroup    bool
 }
 
-type WorkloadRegister func(mgr ctrl.Manager, reconciler *workload.WorkLoadReconciler)
+type WorkloadRegister func(mgr ctrl.Manager, factory *workload.WorkLoadHandlerFactory)
 
 // Reconcile reconciles the InstanceSet.
 func (r *InstanceSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -348,7 +348,9 @@ func NewInstanceSetReconciler(
 	mgr manager.Manager,
 	workloadRegister WorkloadRegister) *InstanceSetReconciler {
 	workLoadReconciler := workload.NewWorkLoadReconciler(mgr.GetClient())
-	workloadRegister(mgr, workLoadReconciler)
+	workLoadHandlerFactory := workload.NewWorkLoadHandlerFactory()
+	workloadRegister(mgr, workLoadHandlerFactory)
+	workLoadReconciler.SetWorkLoadHandlerFactory(workLoadHandlerFactory)
 	recorder := mgr.GetEventRecorderFor(common.InstanceSetControllerName)
 	return &InstanceSetReconciler{
 		Client:             mgr.GetClient(),

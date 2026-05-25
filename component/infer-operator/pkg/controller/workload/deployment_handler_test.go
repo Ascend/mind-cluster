@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -687,6 +688,390 @@ func TestParseDeploymentWithScheme(t *testing.T) {
 			result, err := handler.parseDeploymentWithScheme(raw)
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(result, convey.ShouldBeNil)
+		})
+	})
+}
+
+func createTestWorkLoadFilter() WorkLoadFilter {
+	return func(workload WorkLoadInterface) bool {
+		return workload.GetWorkLoadReplicas() > 0
+	}
+}
+
+func createTestWorkloadUpdater() WorkloadUpdater {
+	return func(workload WorkLoadInterface) {
+		workload.SetWorkLoadObjMeta(metav1.ObjectMeta{
+			Labels: map[string]string{"updated": "true"},
+		})
+	}
+}
+
+func TestDeploymentHandlerListWorkLoad(t *testing.T) {
+	convey.Convey("Test DeploymentHandler ListWorkLoad method", t, func() {
+		selectLabels := map[string]string{
+			common.InferServiceNameLabelKey: "test-service",
+			common.InstanceSetNameLabelKey:  "test-role",
+		}
+
+		convey.Convey("Should list workloads successfully without filters", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			deployment.Spec.Replicas = func() *int32 { r := int32(2); return &r }()
+			fakeClient := NewFakeClient().WithObjects(deployment).Build()
+			handler := NewDeploymentHandler(fakeClient)
+
+			result, err := handler.ListWorkLoad(context.Background(), selectLabels, "default")
+
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(len(result), convey.ShouldEqual, 1)
+			convey.So(result[0].GetWorkLoadReplicas(), convey.ShouldEqual, int32(2))
+		})
+
+		convey.Convey("Should filter workloads with filter function", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			deployment.Spec.Replicas = func() *int32 { r := int32(0); return &r }()
+			fakeClient := NewFakeClient().WithObjects(deployment).Build()
+			handler := NewDeploymentHandler(fakeClient)
+			filter := createTestWorkLoadFilter()
+
+			result, err := handler.ListWorkLoad(context.Background(), selectLabels, "default", filter)
+
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(len(result), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("Should return empty list when no deployments match", func() {
+			fakeClient := NewFakeClient().Build()
+			handler := NewDeploymentHandler(fakeClient)
+
+			result, err := handler.ListWorkLoad(context.Background(), selectLabels, "default")
+
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(len(result), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("Should return error when selector creation fails", func() {
+			fakeClient := NewFakeClient().Build()
+			handler := NewDeploymentHandler(fakeClient)
+			invalidLabels := map[string]string{"invalid/label": "value"}
+			patch := gomonkey.ApplyFuncReturn(metav1.LabelSelectorAsSelector, nil, fmt.Errorf("create selector failed"))
+			defer patch.Reset()
+			result, err := handler.ListWorkLoad(context.Background(), invalidLabels, "default")
+
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(result, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should return error when client List fails", func() {
+			fakeClient := NewFakeClient().Build()
+			handler := NewDeploymentHandler(fakeClient)
+			mockErr := errors.New("failed to list deployments")
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "List", mockErr)
+			defer patches.Reset()
+
+			result, err := handler.ListWorkLoad(context.Background(), selectLabels, "default")
+
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(result, convey.ShouldBeNil)
+		})
+	})
+}
+
+func TestDeploymentHandlerDeleteWorkLoad(t *testing.T) {
+	convey.Convey("Test DeploymentHandler DeleteWorkLoad method", t, func() {
+		selectLabels := map[string]string{
+			common.InferServiceNameLabelKey: "test-service",
+			common.InstanceSetNameLabelKey:  "test-role",
+		}
+
+		convey.Convey("Should delete workloads successfully without filters", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			fakeClient := NewFakeClient().WithObjects(deployment).Build()
+			handler := NewDeploymentHandler(fakeClient)
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "Delete", nil)
+			defer patches.Reset()
+
+			err := handler.DeleteWorkLoad(context.Background(), selectLabels, "default")
+
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should skip workloads that don't match filter", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 0)
+			fakeClient := NewFakeClient().WithObjects(deployment).Build()
+			handler := NewDeploymentHandler(fakeClient)
+			filter := createTestWorkLoadFilter()
+
+			err := handler.DeleteWorkLoad(context.Background(), selectLabels, "default", filter)
+
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should return error when ListWorkLoads fails", func() {
+			fakeClient := NewFakeClient().Build()
+			handler := NewDeploymentHandler(fakeClient)
+			mockErr := errors.New("failed to list deployments")
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "List", mockErr)
+			defer patches.Reset()
+
+			err := handler.DeleteWorkLoad(context.Background(), selectLabels, "default")
+
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("Should return error when client Delete fails", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			fakeClient := NewFakeClient().WithObjects(deployment).Build()
+			handler := NewDeploymentHandler(fakeClient)
+			mockErr := errors.New("failed to delete deployment")
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "Delete", mockErr)
+			defer patches.Reset()
+
+			err := handler.DeleteWorkLoad(context.Background(), selectLabels, "default")
+
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func TestDeploymentHandlerUpdateWorkLoad(t *testing.T) {
+	convey.Convey("Test DeploymentHandler UpdateWorkLoad method", t, func() {
+		selectLabels := map[string]string{
+			common.InferServiceNameLabelKey: "test-service",
+			common.InstanceSetNameLabelKey:  "test-role",
+		}
+
+		convey.Convey("Should update workloads successfully without filters", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			fakeClient := NewFakeClient().WithObjects(deployment).Build()
+			handler := NewDeploymentHandler(fakeClient)
+			updater := createTestWorkloadUpdater()
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "Update", nil)
+			defer patches.Reset()
+
+			err := handler.UpdateWorkLoad(context.Background(), selectLabels, "default", updater)
+
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should skip workloads that don't match filter", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 0)
+			fakeClient := NewFakeClient().WithObjects(deployment).Build()
+			handler := NewDeploymentHandler(fakeClient)
+			filter := createTestWorkLoadFilter()
+			updater := createTestWorkloadUpdater()
+
+			err := handler.UpdateWorkLoad(context.Background(), selectLabels, "default", updater, filter)
+
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should return error when ListWorkLoads fails", func() {
+			fakeClient := NewFakeClient().Build()
+			handler := NewDeploymentHandler(fakeClient)
+			mockErr := errors.New("failed to list deployments")
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "List", mockErr)
+			defer patches.Reset()
+			updater := createTestWorkloadUpdater()
+
+			err := handler.UpdateWorkLoad(context.Background(), selectLabels, "default", updater)
+
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("Should return error when client Update fails", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			fakeClient := NewFakeClient().WithObjects(deployment).Build()
+			handler := NewDeploymentHandler(fakeClient)
+			mockErr := errors.New("failed to update deployment")
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "Update", mockErr)
+			defer patches.Reset()
+			updater := createTestWorkloadUpdater()
+
+			err := handler.UpdateWorkLoad(context.Background(), selectLabels, "default", updater)
+
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func createTestDeploymentWorkLoad() *DeploymentWorkLoad {
+	deployment := CreateTestDeployment("test-deployment", "default", 1)
+	deployment.Status.ReadyReplicas = 1
+	deployment.Status.AvailableReplicas = 1
+	deployment.Status.UpdatedReplicas = 1
+	deployment.Status.ObservedGeneration = 1
+	deployment.Status.Conditions = []appsv1.DeploymentCondition{
+		{
+			Type:   appsv1.DeploymentAvailable,
+			Status: corev1.ConditionTrue,
+		},
+		{
+			Type:   appsv1.DeploymentProgressing,
+			Status: corev1.ConditionTrue,
+		},
+	}
+	return &DeploymentWorkLoad{Deployment: deployment}
+}
+
+func TestDeploymentWorkLoadSetWorkLoadObjMeta(t *testing.T) {
+	convey.Convey("Test DeploymentWorkLoad SetWorkLoadObjMeta method", t, func() {
+		convey.Convey("Should set object meta successfully", func() {
+			workload := &DeploymentWorkLoad{
+				Deployment: &appsv1.Deployment{},
+			}
+			objectMeta := metav1.ObjectMeta{
+				Name:      "test-deployment",
+				Namespace: "default",
+				Labels:    map[string]string{"key": "value"},
+			}
+
+			workload.SetWorkLoadObjMeta(objectMeta)
+
+			convey.So(workload.Name, convey.ShouldEqual, "test-deployment")
+			convey.So(workload.Namespace, convey.ShouldEqual, "default")
+			convey.So(workload.Labels["key"], convey.ShouldEqual, "value")
+		})
+
+		convey.Convey("Should handle nil workload", func() {
+			var workload *DeploymentWorkLoad
+			objectMeta := metav1.ObjectMeta{Name: "test"}
+
+			workload.SetWorkLoadObjMeta(objectMeta)
+
+			convey.So(workload, convey.ShouldBeNil)
+		})
+	})
+}
+
+func TestDeploymentWorkLoadGetWorkLoadObjMeta(t *testing.T) {
+	convey.Convey("Test DeploymentWorkLoad GetWorkLoadObjMeta method", t, func() {
+		convey.Convey("Should get object meta successfully", func() {
+			workload := &DeploymentWorkLoad{
+				Deployment: &appsv1.Deployment{},
+			}
+			expectedMeta := metav1.ObjectMeta{
+				Name:      "test-deployment",
+				Namespace: "default",
+			}
+			workload.SetWorkLoadObjMeta(expectedMeta)
+
+			result := workload.GetWorkLoadObjMeta()
+
+			convey.So(result.Name, convey.ShouldEqual, "test-deployment")
+			convey.So(result.Namespace, convey.ShouldEqual, "default")
+		})
+
+		convey.Convey("Should return empty meta for nil workload", func() {
+			var workload *DeploymentWorkLoad
+
+			result := workload.GetWorkLoadObjMeta()
+
+			convey.So(result, convey.ShouldResemble, metav1.ObjectMeta{})
+		})
+	})
+}
+
+func TestDeploymentWorkLoadIsWorkloadReady(t *testing.T) {
+	convey.Convey("Test DeploymentWorkLoad IsWorkLoadReady method", t, func() {
+		convey.Convey("Should return true for ready workload", func() {
+			workload := createTestDeploymentWorkLoad()
+
+			result := workload.IsWorkLoadReady()
+
+			convey.So(result, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("Should return false when replicas don't match", func() {
+			workload := createTestDeploymentWorkLoad()
+			workload.Status.ReadyReplicas = 0
+
+			result := workload.IsWorkLoadReady()
+
+			convey.So(result, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("Should return false when generation is not latest", func() {
+			workload := createTestDeploymentWorkLoad()
+			workload.Generation = 2
+			workload.Status.ObservedGeneration = 1
+
+			result := workload.IsWorkLoadReady()
+
+			convey.So(result, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("Should return false when available condition is missing", func() {
+			workload := createTestDeploymentWorkLoad()
+			workload.Status.Conditions = []appsv1.DeploymentCondition{}
+
+			result := workload.IsWorkLoadReady()
+
+			convey.So(result, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("Should return false when available condition is false", func() {
+			workload := createTestDeploymentWorkLoad()
+			for i := range workload.Status.Conditions {
+				if workload.Status.Conditions[i].Type == appsv1.DeploymentAvailable {
+					workload.Status.Conditions[i].Status = corev1.ConditionFalse
+				}
+			}
+
+			result := workload.IsWorkLoadReady()
+
+			convey.So(result, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("Should return false when progressing condition is false", func() {
+			workload := createTestDeploymentWorkLoad()
+			for i := range workload.Status.Conditions {
+				if workload.Status.Conditions[i].Type == appsv1.DeploymentProgressing {
+					workload.Status.Conditions[i].Status = corev1.ConditionFalse
+				}
+			}
+
+			result := workload.IsWorkLoadReady()
+
+			convey.So(result, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("Should return false for nil workload", func() {
+			var workload *DeploymentWorkLoad
+
+			result := workload.IsWorkLoadReady()
+
+			convey.So(result, convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestDeploymentWorkLoadGetWorkLoadReplicas(t *testing.T) {
+	convey.Convey("Test DeploymentWorkLoad GetWorkLoadReplicas method", t, func() {
+		convey.Convey("Should return correct replicas", func() {
+			workload := createTestDeploymentWorkLoad()
+			replicas := int32(5)
+			workload.Spec.Replicas = &replicas
+
+			result := workload.GetWorkLoadReplicas()
+
+			convey.So(result, convey.ShouldEqual, int32(5))
+		})
+
+		convey.Convey("Should return default replicas when replicas is nil", func() {
+			workload := createTestDeploymentWorkLoad()
+			workload.Spec.Replicas = nil
+
+			result := workload.GetWorkLoadReplicas()
+
+			convey.So(result, convey.ShouldEqual, common.DefaultReplicas)
+		})
+
+		convey.Convey("Should return default replicas for nil workload", func() {
+			var workload *DeploymentWorkLoad
+
+			result := workload.GetWorkLoadReplicas()
+
+			convey.So(result, convey.ShouldEqual, common.DefaultReplicas)
 		})
 	})
 }

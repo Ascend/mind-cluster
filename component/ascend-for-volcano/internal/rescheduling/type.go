@@ -48,6 +48,10 @@ const (
 	JobGraceRescheduleLabelValue = "grace"
 	// JobForceRescheduleLabelValue Force delete reschedule job, possible value of re-scheduling configuration
 	JobForceRescheduleLabelValue = "force"
+	// JobExternalForceReschedulingPrefix Force delete reschedule job with external rescheduling
+	JobExternalForceReschedulingPrefix = "external-force"
+	// JobExternalGraceReschedulingPrefix Grace delete reschedule job with external rescheduling
+	JobExternalGraceReschedulingPrefix = "external-grace"
 	// JobOffRescheduleLabelValue not delete reschedule job, possible value of re-scheduling configuration
 	JobOffRescheduleLabelValue = "off"
 	// GraceOverTimeKey for GraceOverTime config by user
@@ -166,6 +170,20 @@ const (
 	replaceNodesLen
 )
 
+const (
+	HuaweiPrefix = "huawei.com/"
+	TrueStr      = "true"
+	PodStatus    = HuaweiPrefix + "pod-status"
+	// CommonUnhealthyStatus is the common unhealthy status of pod
+	CommonUnhealthyStatus = "Unhealthy"
+	// retryTime is the number of retries to update pod annotation
+	retryTime = 3
+	// MetaData is the metadata key in pod annotation
+	MetaData = "metadata"
+	// UpdatePodWaitTime is the wait time between retries to update pod annotation
+	UpdatePodWaitTime = 200
+)
+
 // ReScheduler object for re-scheduling
 type ReScheduler struct {
 	*DealReSchedulerCache
@@ -208,7 +226,7 @@ type RescheduleReason struct {
 
 // RescheduleRecord will records job rescheduling records
 type RescheduleRecord struct {
-	// LogFileFormatTime is the formated time, to make it convenient to read and locate log
+	// LogFileFormatTime is the formatted time, to make it convenient to read and locate log
 	LogFileFormatTime string
 	// RescheduleTimeStamp time.now.unix() indicates when the rescheduling happened
 	RescheduleTimeStamp int64

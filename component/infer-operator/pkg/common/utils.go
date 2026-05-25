@@ -49,6 +49,16 @@ func WorkLoadTypeToGVK(tm v1.WorkloadType) (schema.GroupVersionKind, error) {
 	return gv.WithKind(tm.Kind), nil
 }
 
+// AssembleGVKFromAPIVersionAndKind assembles GVK from apiVersion and kind.
+func AssembleGVKFromAPIVersionAndKind(apiVersion, kind string) (schema.GroupVersionKind, error) {
+	gv, err := schema.ParseGroupVersion(apiVersion)
+	if err != nil {
+		hwlog.RunLog.Warnf(`Could not parse GroupVersion "%s", error: %v`, apiVersion, err)
+		return schema.GroupVersionKind{}, err
+	}
+	return gv.WithKind(kind), nil
+}
+
 // AddLabelsFromIndexer adds labels from instance indexer.
 func AddLabelsFromIndexer(labels map[string]string, indexer InstanceIndexer) map[string]string {
 	newLabels := DeepCopyLabelsMap(labels)
@@ -123,4 +133,11 @@ func IsInstanceSetReady(instanceSet *v1.InstanceSet) bool {
 		return false
 	}
 	return condition.Status == metav1.ConditionTrue
+}
+
+// IsInstanceSet checks if a gvk is InstanceSet
+func IsInstanceSet(gvk schema.GroupVersionKind) bool {
+	return gvk.Group == v1.GroupVersion.Group &&
+		gvk.Version == v1.GroupVersion.Version &&
+		gvk.Kind == InstanceSetKind
 }

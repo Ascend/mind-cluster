@@ -18,10 +18,7 @@ package workload
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
@@ -31,33 +28,28 @@ import (
 )
 
 type WorkLoadReconciler struct {
-	handlerRegisterMap map[string]WorkLoadHandler
+	workLoadHandlerFactory *WorkLoadHandlerFactory
 	PodGroupManager
 	client client.Client
 }
 
 // NewWorkLoadReconciler creates a new WorkLoadReconciler.
 func NewWorkLoadReconciler(client client.Client) *WorkLoadReconciler {
-	handlerMap := make(map[string]WorkLoadHandler)
 	return &WorkLoadReconciler{
-		handlerRegisterMap: handlerMap,
-		client:             client,
-		PodGroupManager:    NewVolcanoPodGroupManager(client),
+		workLoadHandlerFactory: NewWorkLoadHandlerFactory(),
+		client:                 client,
+		PodGroupManager:        NewVolcanoPodGroupManager(client),
 	}
 }
 
-// Register registers a WorkLoadHandler.
-func (r *WorkLoadReconciler) Register(gvk schema.GroupVersionKind, handler WorkLoadHandler) {
-	if _, ok := r.handlerRegisterMap[gvk.String()]; !ok {
-		r.handlerRegisterMap[gvk.String()] = handler
-		hwlog.RunLog.Infof("Register workload <%s> successfully", gvk.String())
-	}
+func (r *WorkLoadReconciler) SetWorkLoadHandlerFactory(factory *WorkLoadHandlerFactory) {
+	r.workLoadHandlerFactory = factory
 }
 
 // Validate validates the InstanceSet.
 func (r *WorkLoadReconciler) Validate(instanceSet *v1.InstanceSet) error {
 	// 1. check WorkLoadHandler
-	workloadHandler, err := r.getWorkLoadReconciler(instanceSet)
+	workloadHandler, err := r.GetWorkLoadReconciler(instanceSet)
 	if err != nil {
 		hwlog.RunLog.Errorf("Failed to get workload handler: %v", err)
 		return err
@@ -73,7 +65,7 @@ func (r *WorkLoadReconciler) Reconcile(
 	instanceSet *v1.InstanceSet,
 	indexer common.InstanceIndexer) error {
 	// 1. check WorkLoadHandler
-	workloadHandler, err := r.getWorkLoadReconciler(instanceSet)
+	workloadHandler, err := r.GetWorkLoadReconciler(instanceSet)
 	if err != nil {
 		hwlog.RunLog.Errorf("Failed to get workload handler: %v", err)
 		return err
@@ -110,7 +102,7 @@ func (r *WorkLoadReconciler) InstanceReady(
 	indexer common.InstanceIndexer) (int, error) {
 	// 1. check WorkLoadHandler
 	readyReplicas := 0
-	workloadHandler, err := r.getWorkLoadReconciler(instanceSet)
+	workloadHandler, err := r.GetWorkLoadReconciler(instanceSet)
 	if err != nil {
 		hwlog.RunLog.Errorf("Failed to get workload handler: %v", err)
 		return readyReplicas, err
@@ -126,7 +118,7 @@ func (r *WorkLoadReconciler) DeleteExtraInstances(
 	instanceSet *v1.InstanceSet,
 	indexer common.InstanceIndexer) error {
 	// 1. check WorkLoadHandler
-	workloadHandler, err := r.getWorkLoadReconciler(instanceSet)
+	workloadHandler, err := r.GetWorkLoadReconciler(instanceSet)
 	if err != nil {
 		hwlog.RunLog.Errorf("Failed to get workload handler: %v", err)
 		return err
@@ -138,18 +130,17 @@ func (r *WorkLoadReconciler) DeleteExtraInstances(
 	return workloadHandler.DeleteExtraWorkLoad(ctx, indexer, replicaNum)
 }
 
-func (r *WorkLoadReconciler) getWorkLoadReconciler(instanceSet *v1.InstanceSet) (WorkLoadHandler, error) {
+// GetWorkLoadReconciler returns the WorkLoadHandler for the given InstanceSet
+func (r *WorkLoadReconciler) GetWorkLoadReconciler(instanceSet *v1.InstanceSet) (WorkLoadHandler, error) {
 	workloadType := instanceSet.Spec.WorkloadTypeMeta
 	gvk, err := common.WorkLoadTypeToGVK(workloadType)
 	if err != nil {
 		return nil, err
 	}
-	workloadHandler, ok := r.handlerRegisterMap[gvk.String()]
-	if !ok {
-		errMsg := fmt.Sprintf("WorkLoadHandler for %s is not registered yet, maybe operator doesn't support it",
-			gvk)
-		hwlog.RunLog.Error(errMsg)
-		return nil, errors.New(errMsg)
+	workloadHandler, err := r.workLoadHandlerFactory.GetWorkLoadHandler(gvk)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return nil, err
 	}
 	return workloadHandler, nil
 }
