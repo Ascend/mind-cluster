@@ -1,4 +1,4 @@
-# 参考 
+# 参考
 
 - [故障恢复加速](./fault_recovery_acceleration/menu_fault_recovery_acceleration.md)
 - [Checkpoint保存与加载优化](./optimizing_saving_and_loading_checkpoints/menu_optimizing_saving_and_loading_checkpoints.md)
@@ -6,3 +6,4 @@
 - [FAQ](faq.md)
 - [安全加固](security_hardening.md)
 - [附录](appendix.md)
+- [弹性训练](elastic_training.md)
