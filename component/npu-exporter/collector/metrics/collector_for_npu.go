@@ -20,6 +20,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -358,12 +359,21 @@ func (c *BaseInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *col
 		}
 	}
 	updateFrame[chipCache](colcommon.GetCacheKey(c), n, containerMap, chips, updateSingleChip)
-	machineInfoCardCache, ok := c.LocalCache.Load(colcommon.MachineInfoCardDescKey)
-	if ok {
-		value := float64(machineInfoCardCache.(int32))
-		ch <- prometheus.MustNewConstMetric(machineInfoCardDesc, prometheus.GaugeValue, value)
-	}
+	updateMachineInfoCardMetric(ch, &c.LocalCache)
 	ch <- prometheus.MustNewConstMetric(machineInfoNPUDesc, prometheus.GaugeValue, float64(len(chips)))
+}
+
+func updateMachineInfoCardMetric(ch chan<- prometheus.Metric, localCache *sync.Map) {
+	machineInfoCardCache, ok := localCache.Load(colcommon.MachineInfoCardDescKey)
+	if !ok {
+		return
+	}
+	cardNum, ok := machineInfoCardCache.(int32)
+	if !ok {
+		logger.Errorf("machineInfoCardCache type assertion failed, got %T", machineInfoCardCache)
+		return
+	}
+	ch <- prometheus.MustNewConstMetric(machineInfoCardDesc, prometheus.GaugeValue, float64(cardNum))
 }
 
 func updateContainerInfo(ch chan<- prometheus.Metric, containerInfo container.DevicesInfo,
