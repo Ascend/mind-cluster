@@ -17,7 +17,7 @@ Ascend Operator提供以下2种方式配置资源信息：
 - 通过文件配置资源信息：训练任务集合通信配置文件（RankTable File，也叫[hccl.json](../../api/hccl.json_file_description.md)）。使用此方式的用户支持创建以下3种类型的对象：Volcano Job（以下简称vcjob）、Ascend Job（以下简称acjob）和Deployment（以下简称deploy）。
     - （推荐）Ascend Job：简称acjob，是MindCluster自定义的一种任务类型，当前支持通过环境变量配置资源信息及文件配置资源信息这2种方式拉起训练或推理任务。
 
-        每个acjob任务YAML中包含一些固定字段，例如apiVersion、kind等，如果想了解这些字段的详细说明请参见[acjob关键字段说明](../../api/ascend_job.md#关键字段)。
+        每个acjob任务YAML中包含一些固定字段，例如apiVersion、kind等，如果想了解这些字段的详细说明请参见[acjob任务yaml参数说明](../../api/yaml_configuration.md#acjob)。
 
     - Volcano Job：简称vcjob，适用于批处理任务，任务有完成状态。
     - Deployment：简称deploy，适用于后台常驻任务，任务没有完成状态。在需要持续训练任务、持续占用资源，调试训练任务，或者提供推理服务接口的时候选用。

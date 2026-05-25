@@ -270,7 +270,7 @@ Ascend Device Plugin组件会通过昇腾硬件驱动自动获取有效的节点
 
 #### YAML参数说明<a name="ZH-CN_TOPIC_000000251196386duoji"></a>
 
-本章节仅提供多级调度需要使用的YAML参数，详细的任务YAML参数说明请参见整卡调度或静态vNPU调度（训练）中[YAML参数说明](./03_full_npu_scheduling_and_static_vnpu_scheduling_training.md#yaml参数说明)。
+本章节仅提供多级调度需要使用的YAML参数，详细的任务YAML参数说明请参见整卡调度或静态vNPU调度（训练）中[acjob任务yaml参数说明](../../api/yaml_configuration.md#acjob)。
 
 **表 1**  YAML参数说明
 

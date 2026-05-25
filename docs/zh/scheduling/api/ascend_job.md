@@ -58,7 +58,7 @@ spec:
                 valueFrom:
                   fieldRef:
                     fieldPath: status.hostIP
-              # ASCEND_VISIBLE_DEVICES env variable is used by ascend-docker-runtime when in the whole card scheduling scene with volcano scheduler. 
+              # ASCEND_VISIBLE_DEVICES env variable is used by ascend-docker-runtime when in the whole card scheduling scene with volcano scheduler.
               # Please delete it when in the static vNPU scheduling, dynamic vNPU scheduling, volcano without Ascend-volcano-plugin, without volcano scenes.
               - name: ASCEND_VISIBLE_DEVICES
                 valueFrom:
@@ -146,7 +146,7 @@ spec:
                 valueFrom:
                   fieldRef:
                     fieldPath: status.hostIP
-              # ASCEND_VISIBLE_DEVICES env variable is used by ascend-docker-runtime when in the whole card scheduling scene with volcano scheduler. 
+              # ASCEND_VISIBLE_DEVICES env variable is used by ascend-docker-runtime when in the whole card scheduling scene with volcano scheduler.
           # Please delete it when in the static vNPU scheduling, dynamic vNPU scheduling, volcano without Ascend-volcano-plugin, without volcano scenes.
               - name: ASCEND_VISIBLE_DEVICES
                 valueFrom:
@@ -206,52 +206,6 @@ spec:
               path: /etc/localtime
 
 ```
-
-## 关键字段<a name="zh-cn_topic_0000002377698613_section92451045124014"></a>
-
-**表 1**  acjob关键字段说明
-
-|字段路径|类型|格式|描述|
-|--|--|--|--|
-|apiVersion|字符串 (string)|-|定义对象表示的版本化资源模式。服务器会转换为最新内部值，拒绝不识别的版本。更多信息请参见[Types](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds)。|
-|kind|字符串 (string)|-|表示此对象对应的REST资源类型。值通过端点推断，不可更新，采用驼峰命名。更多信息请参见[Resources](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources)。|
-|metadata|对象 (object)|-|Kubernetes元数据（如命名空间、标签等）。更多信息请参见[Metadata](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata)。|
-|spec|对象 (object)|-|AscendJob期望状态的规格描述。必填字段：replicaSpecs。|
-|spec.replicaSpecs|对象 (object)|-|ReplicaType到ReplicaSpec的映射，指定MS集群配置。示例：{ "Scheduler": ReplicaSpec, "Worker": ReplicaSpec }。|
-|spec.replicaSpecs.[ReplicaType]|对象 (object)|-|副本的描述。|
-|spec.replicaSpecs.[ReplicaType].replicas|整数 (integer)|int32|副本数量，表示给定模板所需的副本数。默认为1。|
-|spec.replicaSpecs.[ReplicaType].restartPolicy|字符串 (string)|-|重启策略：Always、OnFailure、Never、ExitCode。默认为Never。|
-|spec.replicaSpecs.[ReplicaType].template|对象 (object)|-|Kubernetes Pod模板，更多信息请参见[Kubernetes Pod模板](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-template-v1/)。|
-|spec.runPolicy|对象 (object)|-|封装分布式训练作业的运行时策略（如资源清理、活动时间）。|
-|spec.runPolicy.backoffLimit|整数 (integer)|int32|作业失败前允许的重试次数（可选）。|
-|spec.runPolicy.activeDeadlineSeconds|整数 (integer)|int64|作业保持活动的最长时间（秒），值必须为正整数。当前无意义，后续版本将会删除。|
-|spec.runPolicy.cleanPodPolicy|字符串 (string)|-|作业完成后清理Pod的策略。默认值为Running。当前无意义，后续版本将会删除。|
-|spec.runPolicy.ttlSecondsAfterFinished|整数 (integer)|int32|作业完成后的TTL（生存时间）。默认为无限，实际删除可能延迟。当前无意义，后续版本将会删除。|
-|spec.runPolicy.schedulingPolicy|对象 (object)|-|调度策略（如gang-scheduling）。|
-|spec.runPolicy.schedulingPolicy.minAvailable|整数 (integer)|int32|最小可用资源数。|
-|spec.runPolicy.schedulingPolicy.minResources|对象 (object)|-|按资源名称分配的最小资源集合（支持整数或字符串格式）。|
-|spec.runPolicy.schedulingPolicy.priorityClass|字符串 (string)|-|优先级类名称。|
-|spec.runPolicy.schedulingPolicy.queue|字符串 (string)|-|调度队列名称。|
-|spec.schedulerName|字符串 (string)|-|指定在开启gang-scheduling情况下的调度器，当前仅支持Volcano。|
-|spec.successPolicy|字符串 (string)|-|标记AscendJob成功的标准，当前无意义，仅当所有Pod成功时，才会判定任务成功。后续版本将会删除。|
-|status|对象 (object)|-|AscendJob的最新观察状态（只读）。必填字段：conditions、replicaStatuses。|
-|status.completionTime|字符串 (string)|date-time|作业完成时间（RFC3339格式，UTC）。|
-|status.conditions|数组 (array)|-|当前作业条件数组。|
-|status.conditions[type]|字符串 (string)|-|作业条件的类型（如 "Complete"）。|
-|status.conditions[status]|字符串 (string)|-|条件状态：True、False、Unknown。|
-|status.conditions[lastTransitionTime]|字符串 (string)|date-time|条件状态转换的时间。|
-|status.conditions[lastUpdateTime]|字符串 (string)|date-time|条件更新后的最终时间。|
-|status.conditions[message]|字符串 (string)|-|条件的详细描述。|
-|status.conditions[reason]|字符串 (string)|-|条件转换的原因。|
-|status.lastReconcileTime|字符串 (string)|date-time|作业最后一次调和的时间（RFC3339格式，UTC）。|
-|status.replicaStatuses|对象 (object)|-|副本类型到副本状态的映射。|
-|status.replicaStatuses.[ReplicaType].active|整数 (integer)|int32|正在运行的Pod数量。|
-|status.replicaStatuses.[ReplicaType].failed|整数 (integer)|int32|已失败的Pod数量。|
-|status.replicaStatuses.[ReplicaType].succeeded|整数 (integer)|int32|已成功的Pod数量。|
-|status.replicaStatuses.[ReplicaType].labelSelector|对象 (object)|-|Pod标签选择器（定义如何筛选Pod）。|
-|status.replicaStatuses.[ReplicaType].labelSelector.matchExpressions|数组 (array)|-|标签匹配规则（支持In、NotIn、Exists、DoesNotExist等操作符）。|
-|status.replicaStatuses.[ReplicaType].labelSelector.matchLabels|对象 (object)|-|标签匹配的键值对（等价于matchExpressions条件）。|
-|status.startTime|字符串 (string)|date-time|作业开始时间（RFC3339格式，UTC）。|
 
 ## 任务状态说明<a name="zh-cn_topic_0000002377698613_section177175313294"></a>
 
