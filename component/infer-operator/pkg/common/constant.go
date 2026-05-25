@@ -18,15 +18,15 @@ package common
 
 import (
 	"time"
+
+	ascendapi "ascend-common/api"
 )
 
 const (
 	// LabelKeyPrefix is the prefix of the labels
 	LabelKeyPrefix = "infer.huawei.com/"
-	HuaweiPrefix   = "huawei.com/"
 	// OperatorNameKey is the key of the operator name
 	OperatorNameKey = LabelKeyPrefix + "ascend-infer-operator"
-
 	// VolcanoPodGroupCrdName is the name of volcano PodGroup CRD
 	VolcanoPodGroupCrdName = "podgroups.scheduling.volcano.sh"
 	// InstanceSetKind is InstanceSet kind in its gkv
@@ -157,7 +157,25 @@ const (
 )
 
 const (
+	PriorityLabelKey                   = LabelKeyPrefix + "priority"
 	SchedulingStrategySequential       = "Sequential"
 	SchedulingStrategyPriority         = "Priority"
 	PrioritySchedulingStrategyLabelKey = LabelKeyPrefix + "priority-scheduling-strategy"
+)
+
+const (
+	// FaultSchedulingLabelKey describe resource deleting policy (force/grace)
+	FaultSchedulingLabelKey = "fault-scheduling"
+	// PodStatusAnnotationKey describe pod status of infer service
+	PodStatusAnnotationKey = ascendapi.ResourceNamePrefix + "pod-status"
+	// CommonUnhealthyStatus describe common unhealthy status of infer service pod
+	CommonUnhealthyStatus = "Unhealthy"
+	// PodFailed the state of failed pod
+	PodFailed = "pod-failed"
+	// FaultRetryTimesLabelKey describe the retry times of the business fault
+	FaultRetryTimesLabelKey = "fault-retry-times"
+	// DeletingTrigger describe the trigger of deleting workloads
+	DeletingTriggerAnnotationKey = LabelKeyPrefix + "deleting-trigger"
+	// FaultRetryTimesCleanupInterval is the interval of cleanup fault retry times map
+	FaultRetryTimesCleanupInterval = 24 * time.Hour
 )

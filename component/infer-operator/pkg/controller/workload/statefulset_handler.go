@@ -35,6 +35,68 @@ import (
 	"infer-operator/pkg/common"
 )
 
+// StatefulSetWorkLoad implements WorkLoad interface for the statefulset
+type StatefulSetWorkLoad struct {
+	*appsv1.StatefulSet
+}
+
+// SetWorkLoadObjMeta set the object meta of the statefulset
+func (s *StatefulSetWorkLoad) SetWorkLoadObjMeta(objectMeta metav1.ObjectMeta) {
+	if s == nil {
+		return
+	}
+	s.ObjectMeta = objectMeta
+}
+
+// GetWorkLoadObjMeta get the object meta of the statefulset
+func (s *StatefulSetWorkLoad) GetWorkLoadObjMeta() metav1.ObjectMeta {
+	if s == nil {
+		return metav1.ObjectMeta{}
+	}
+	return s.ObjectMeta
+}
+
+// IsWorkLoadReady returns true if the statefulset is ready
+func (s *StatefulSetWorkLoad) IsWorkLoadReady() bool {
+	if s == nil {
+		return false
+	}
+	// 1. get desired replicas
+	desiredReplicas := common.DefaultReplicas
+	if s.Spec.Replicas != nil {
+		desiredReplicas = *s.Spec.Replicas
+	}
+	// 2. check if status is latest
+	if s.Generation > 0 && s.Status.ObservedGeneration < s.Generation {
+		return false
+	}
+	// 3. check replicas number
+	if s.Status.ReadyReplicas != desiredReplicas ||
+		s.Status.UpdatedReplicas != desiredReplicas {
+		return false
+	}
+	// 4. check revision (rollout update)
+	if s.Status.CurrentRevision != "" && s.Status.UpdateRevision != "" &&
+		s.Status.CurrentRevision != s.Status.UpdateRevision {
+		// A rolling update is in progress, need to confirm all replicas are updated
+		// Even if the number of replicas meets the requirement, it is not considered fully ready if still rolling
+		return false
+	}
+	return true
+}
+
+// GetWorkLoadReplicas returns the number of replicas of the statefulset
+func (s *StatefulSetWorkLoad) GetWorkLoadReplicas() int32 {
+	if s == nil {
+		return common.DefaultReplicas
+	}
+	replicas := s.Spec.Replicas
+	if replicas == nil {
+		return common.DefaultReplicas
+	}
+	return *replicas
+}
+
 type StatefulSetHandler struct {
 	client client.Client
 }
@@ -106,6 +168,10 @@ func (s *StatefulSetHandler) createStatefulSet(
 		statefulsetLabels[k] = v
 	}
 	statefulsetLabels = common.AddLabelsFromIndexer(statefulsetLabels, indexer)
+	faultScheduling, ok := statefulsetSpec.Template.Labels[common.FaultSchedulingLabelKey]
+	if ok {
+		statefulsetLabels[common.FaultSchedulingLabelKey] = faultScheduling
+	}
 	statefulsetAnnotations := common.DeepCopyLabelsMap(instanceSet.Annotations)
 	for k, v := range instanceSet.Spec.WorkloadObjectMeta.Annotations {
 		statefulsetAnnotations[k] = v
@@ -363,4 +429,108 @@ func (s *StatefulSetHandler) parseStatefulSetWithScheme(raw runtime.RawExtension
 		return nil, fmt.Errorf("failed to unmarshal RawExtension to StatefulSetSpec: %w", err)
 	}
 	return &spec, nil
+}
+
+// ListWorkLoad list workloads via selector
+func (d *StatefulSetHandler) ListWorkLoad(
+	ctx context.Context,
+	selectLabels map[string]string,
+	namespace string,
+	filters ...WorkLoadFilter) ([]WorkLoadInterface, error) {
+	statefulsetList := &appsv1.StatefulSetList{}
+	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+		MatchLabels: selectLabels,
+	})
+	if err != nil {
+		hwlog.RunLog.Errorf("Failed to create selector: %v", err)
+		return nil, common.NewRequeueError(err.Error())
+	}
+	if err = d.client.List(ctx, statefulsetList,
+		client.MatchingLabelsSelector{Selector: selector}, client.InNamespace(namespace)); err != nil {
+		hwlog.RunLog.Errorf("Failed to list StatefulSets: %v", err)
+		return nil, common.NewRequeueError(err.Error())
+	}
+	statefulsetWorkLoadList := make([]WorkLoadInterface, 0, len(statefulsetList.Items))
+	for _, statefulset := range statefulsetList.Items {
+		statefulsetCopy := statefulset
+		statefulSetWorkLoad := &StatefulSetWorkLoad{StatefulSet: &statefulsetCopy}
+		ok := true
+		for _, filter := range filters {
+			ok = ok && filter(statefulSetWorkLoad)
+			if !ok {
+				break
+			}
+		}
+		if ok {
+			statefulsetWorkLoadList = append(statefulsetWorkLoadList, statefulSetWorkLoad)
+		}
+	}
+	return statefulsetWorkLoadList, nil
+}
+
+// DeleteWorkLoad fetch workloads via selector and deletes those workloads filtered by filters
+func (s *StatefulSetHandler) DeleteWorkLoad(
+	ctx context.Context,
+	selectLabels map[string]string,
+	namespace string,
+	filters ...WorkLoadFilter) error {
+	statefulsetList, err := s.ListWorkLoads(ctx, selectLabels, namespace)
+	if err != nil {
+		return fmt.Errorf("failed to list statefulset work loads: %w", err)
+	}
+	var workloadList []*StatefulSetWorkLoad
+	for _, statefulset := range statefulsetList.Items {
+		ok := true
+		statefulsetCopy := statefulset
+		workload := &StatefulSetWorkLoad{StatefulSet: &statefulsetCopy}
+		for _, filter := range filters {
+			ok = ok && filter(workload)
+			if !ok {
+				break
+			}
+		}
+		if ok {
+			workloadList = append(workloadList, workload)
+		}
+	}
+	for _, workload := range workloadList {
+		if err := s.client.Delete(ctx, workload.StatefulSet); err != nil {
+			return fmt.Errorf("failed to delete statefulset work load %s/%s: %w", workload.Namespace, workload.Name, err)
+		}
+	}
+	return nil
+}
+
+func (s *StatefulSetHandler) UpdateWorkLoad(
+	ctx context.Context,
+	selectLabels map[string]string,
+	namespace string,
+	updater WorkloadUpdater,
+	filters ...WorkLoadFilter) error {
+	statefulsetList, err := s.ListWorkLoads(ctx, selectLabels, namespace)
+	if err != nil {
+		return fmt.Errorf("failed to list statefulset work loads: %w", err)
+	}
+	var workloadList []*StatefulSetWorkLoad
+	for _, statefulset := range statefulsetList.Items {
+		ok := true
+		statefulsetCopy := statefulset
+		workload := &StatefulSetWorkLoad{StatefulSet: &statefulsetCopy}
+		for _, filter := range filters {
+			ok = ok && filter(workload)
+			if !ok {
+				break
+			}
+		}
+		if ok {
+			workloadList = append(workloadList, workload)
+		}
+	}
+	for _, workload := range workloadList {
+		updater(workload)
+		if err := s.client.Update(ctx, workload.StatefulSet); err != nil {
+			return fmt.Errorf("failed to update statefulset work load %s/%s: %w", workload.Namespace, workload.Name, err)
+		}
+	}
+	return nil
 }

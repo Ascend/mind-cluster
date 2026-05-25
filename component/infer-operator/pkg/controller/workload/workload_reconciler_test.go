@@ -39,7 +39,7 @@ func TestNewWorkLoadReconciler(t *testing.T) {
 
 			convey.So(reconciler, convey.ShouldNotBeNil)
 			convey.So(reconciler.client, convey.ShouldEqual, fakeClient)
-			convey.So(reconciler.handlerRegisterMap, convey.ShouldNotBeNil)
+			convey.So(reconciler.workLoadHandlerFactory, convey.ShouldNotBeNil)
 			convey.So(reconciler.PodGroupManager, convey.ShouldNotBeNil)
 		})
 	})
@@ -59,10 +59,13 @@ func TestWorkLoadReconcilerRegister(t *testing.T) {
 			}
 
 			mockHandler := &mockWorkLoadHandler{}
-			reconciler.Register(gvk, mockHandler)
+			workLoadHandlerFactory := NewWorkLoadHandlerFactory()
+			err := workLoadHandlerFactory.Register(gvk, mockHandler)
+			convey.So(err, convey.ShouldBeNil)
+			reconciler.SetWorkLoadHandlerFactory(workLoadHandlerFactory)
 
-			handler, ok := reconciler.handlerRegisterMap[gvk.String()]
-			convey.So(ok, convey.ShouldBeTrue)
+			handler, err := reconciler.workLoadHandlerFactory.GetWorkLoadHandler(gvk)
+			convey.So(err, convey.ShouldBeNil)
 			convey.So(handler, convey.ShouldEqual, mockHandler)
 		})
 	})
@@ -84,9 +87,12 @@ func TestWorkLoadReconcilerValidate(t *testing.T) {
 				Kind:    "Deployment",
 			}
 			mockHandler := &mockWorkLoadHandler{}
-			reconciler.Register(gvk, mockHandler)
+			workLoadHandlerFactory := NewWorkLoadHandlerFactory()
+			err := workLoadHandlerFactory.Register(gvk, mockHandler)
+			convey.So(err, convey.ShouldBeNil)
+			reconciler.SetWorkLoadHandlerFactory(workLoadHandlerFactory)
 
-			err := reconciler.Validate(instanceSet)
+			err = reconciler.Validate(instanceSet)
 			convey.So(err, convey.ShouldBeNil)
 		})
 
@@ -102,11 +108,14 @@ func TestWorkLoadReconcilerValidate(t *testing.T) {
 			mockHandler := &mockWorkLoadHandler{
 				validateError: errors.New("validation failed"),
 			}
-			reconciler.Register(gvk, mockHandler)
+			workLoadHandlerFactory := NewWorkLoadHandlerFactory()
+			err := workLoadHandlerFactory.Register(gvk, mockHandler)
+			convey.So(err, convey.ShouldBeNil)
+			reconciler.SetWorkLoadHandlerFactory(workLoadHandlerFactory)
 
 			replicas := int32(1)
 			instanceSet := CreateTestInstanceSet("test", "default", replicas)
-			err := reconciler.Validate(instanceSet)
+			err = reconciler.Validate(instanceSet)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
@@ -125,13 +134,16 @@ func TestWorkLoadReconcilerReconcile(t *testing.T) {
 				Kind:    "Deployment",
 			}
 			mockHandler := &mockWorkLoadHandler{}
-			reconciler.Register(gvk, mockHandler)
+			workLoadHandlerFactory := NewWorkLoadHandlerFactory()
+			err := workLoadHandlerFactory.Register(gvk, mockHandler)
+			convey.So(err, convey.ShouldBeNil)
+			reconciler.SetWorkLoadHandlerFactory(workLoadHandlerFactory)
 
 			replicas := int32(1)
 			instanceSet := CreateTestInstanceSet("test", "default", replicas)
 			indexer := GetTestIndexer("test-service", "test-role", "0")
 			ctx := context.Background()
-			err := reconciler.Reconcile(ctx, instanceSet, indexer)
+			err = reconciler.Reconcile(ctx, instanceSet, indexer)
 			convey.So(err, convey.ShouldBeNil)
 		})
 
@@ -148,14 +160,17 @@ func TestWorkLoadReconcilerReconcile(t *testing.T) {
 				Kind:    "Deployment",
 			}
 			mockHandler := &mockWorkLoadHandler{}
-			reconciler.Register(gvk, mockHandler)
+			workLoadHandlerFactory := NewWorkLoadHandlerFactory()
+			err := workLoadHandlerFactory.Register(gvk, mockHandler)
+			convey.So(err, convey.ShouldBeNil)
+			reconciler.SetWorkLoadHandlerFactory(workLoadHandlerFactory)
 
 			patches := gomonkey.ApplyMethodReturn(reconciler.PodGroupManager, "GetOrCreatePodGroupForInstance", true, nil)
 			defer patches.Reset()
 
 			indexer := GetTestIndexer("test-service", "test-role", "0")
 			ctx := context.Background()
-			err := reconciler.Reconcile(ctx, instanceSet, indexer)
+			err = reconciler.Reconcile(ctx, instanceSet, indexer)
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})
@@ -178,7 +193,10 @@ func TestWorkLoadReconcilerReconcile2(t *testing.T) {
 				Kind:    "Deployment",
 			}
 			mockHandler := &mockWorkLoadHandler{}
-			reconciler.Register(gvk, mockHandler)
+			workLoadHandlerFactory := NewWorkLoadHandlerFactory()
+			err := workLoadHandlerFactory.Register(gvk, mockHandler)
+			convey.So(err, convey.ShouldBeNil)
+			reconciler.SetWorkLoadHandlerFactory(workLoadHandlerFactory)
 
 			mockErr := errors.New("failed to create podgroup")
 			patches := gomonkey.ApplyMethodReturn(reconciler.PodGroupManager,
@@ -187,7 +205,7 @@ func TestWorkLoadReconcilerReconcile2(t *testing.T) {
 
 			indexer := GetTestIndexer("test-service", "test-role", "0")
 			ctx := context.Background()
-			err := reconciler.Reconcile(ctx, instanceSet, indexer)
+			err = reconciler.Reconcile(ctx, instanceSet, indexer)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 
@@ -205,11 +223,14 @@ func TestWorkLoadReconcilerReconcile2(t *testing.T) {
 			mockHandler := &mockWorkLoadHandler{
 				checkOrCreateError: errors.New("failed to create workload"),
 			}
-			reconciler.Register(gvk, mockHandler)
+			workLoadHandlerFactory := NewWorkLoadHandlerFactory()
+			err := workLoadHandlerFactory.Register(gvk, mockHandler)
+			convey.So(err, convey.ShouldBeNil)
+			reconciler.SetWorkLoadHandlerFactory(workLoadHandlerFactory)
 
 			indexer := GetTestIndexer("test-service", "test-role", "0")
 			ctx := context.Background()
-			err := reconciler.Reconcile(ctx, instanceSet, indexer)
+			err = reconciler.Reconcile(ctx, instanceSet, indexer)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
@@ -232,7 +253,10 @@ func TestWorkLoadReconcilerInstanceReady(t *testing.T) {
 			mockHandler := &mockWorkLoadHandler{
 				readyReplicas: 1,
 			}
-			reconciler.Register(gvk, mockHandler)
+			workLoadHandlerFactory := NewWorkLoadHandlerFactory()
+			err := workLoadHandlerFactory.Register(gvk, mockHandler)
+			convey.So(err, convey.ShouldBeNil)
+			reconciler.SetWorkLoadHandlerFactory(workLoadHandlerFactory)
 
 			indexer := GetTestIndexer("test-service", "test-role", "0")
 			ctx := context.Background()
@@ -255,11 +279,14 @@ func TestWorkLoadReconcilerInstanceReady(t *testing.T) {
 			mockHandler := &mockWorkLoadHandler{
 				getReadyReplicasError: errors.New("failed to get ready replicas"),
 			}
-			reconciler.Register(gvk, mockHandler)
+			workLoadHandlerFactory := NewWorkLoadHandlerFactory()
+			err := workLoadHandlerFactory.Register(gvk, mockHandler)
+			convey.So(err, convey.ShouldBeNil)
+			reconciler.SetWorkLoadHandlerFactory(workLoadHandlerFactory)
 
 			indexer := GetTestIndexer("test-service", "test-role", "0")
 			ctx := context.Background()
-			_, err := reconciler.InstanceReady(ctx, instanceSet, indexer)
+			_, err = reconciler.InstanceReady(ctx, instanceSet, indexer)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
@@ -280,11 +307,14 @@ func TestWorkLoadReconcilerDeleteExtraInstances(t *testing.T) {
 				Kind:    "Deployment",
 			}
 			mockHandler := &mockWorkLoadHandler{}
-			reconciler.Register(gvk, mockHandler)
+			workLoadHandlerFactory := NewWorkLoadHandlerFactory()
+			err := workLoadHandlerFactory.Register(gvk, mockHandler)
+			convey.So(err, convey.ShouldBeNil)
+			reconciler.SetWorkLoadHandlerFactory(workLoadHandlerFactory)
 
 			indexer := GetTestIndexer("test-service", "test-role", "0")
 			ctx := context.Background()
-			err := reconciler.DeleteExtraInstances(ctx, instanceSet, indexer)
+			err = reconciler.DeleteExtraInstances(ctx, instanceSet, indexer)
 			convey.So(err, convey.ShouldBeNil)
 		})
 
@@ -302,23 +332,25 @@ func TestWorkLoadReconcilerDeleteExtraInstances(t *testing.T) {
 			mockHandler := &mockWorkLoadHandler{
 				deleteExtraWorkLoadError: errors.New("failed to delete extra instances"),
 			}
-			reconciler.Register(gvk, mockHandler)
+			workLoadHandlerFactory := NewWorkLoadHandlerFactory()
+			err := workLoadHandlerFactory.Register(gvk, mockHandler)
+			convey.So(err, convey.ShouldBeNil)
+			reconciler.SetWorkLoadHandlerFactory(workLoadHandlerFactory)
 
 			indexer := GetTestIndexer("test-service", "test-role", "0")
 			ctx := context.Background()
-			err := reconciler.DeleteExtraInstances(ctx, instanceSet, indexer)
+			err = reconciler.DeleteExtraInstances(ctx, instanceSet, indexer)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
 }
 
-// TestGetWorkLoadReconciler tests the getWorkLoadReconciler method of WorkLoadReconciler.
+// TestGetWorkLoadReconciler tests the GetWorkLoadReconciler method of WorkLoadReconciler.
 func TestGetWorkLoadReconciler(t *testing.T) {
-	convey.Convey("Test WorkLoadReconciler getWorkLoadReconciler method", t, func() {
+	convey.Convey("Test WorkLoadReconciler GetWorkLoadReconciler method", t, func() {
 		convey.Convey("Should return registered handler", func() {
 			fakeClient := NewFakeClient().Build()
 			reconciler := NewWorkLoadReconciler(fakeClient)
-
 			replicas := int32(1)
 			instanceSet := CreateTestInstanceSet("test", "default", replicas)
 			gvk := schema.GroupVersionKind{
@@ -327,9 +359,11 @@ func TestGetWorkLoadReconciler(t *testing.T) {
 				Kind:    "Deployment",
 			}
 			mockHandler := &mockWorkLoadHandler{}
-			reconciler.Register(gvk, mockHandler)
-
-			handler, err := reconciler.getWorkLoadReconciler(instanceSet)
+			workLoadHandlerFactory := NewWorkLoadHandlerFactory()
+			err := workLoadHandlerFactory.Register(gvk, mockHandler)
+			convey.So(err, convey.ShouldBeNil)
+			reconciler.SetWorkLoadHandlerFactory(workLoadHandlerFactory)
+			handler, err := reconciler.GetWorkLoadReconciler(instanceSet)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(handler, convey.ShouldEqual, mockHandler)
 		})
@@ -340,7 +374,7 @@ func TestGetWorkLoadReconciler(t *testing.T) {
 
 			replicas := int32(1)
 			instanceSet := CreateTestInstanceSet("test", "default", replicas)
-			handler, err := reconciler.getWorkLoadReconciler(instanceSet)
+			handler, err := reconciler.GetWorkLoadReconciler(instanceSet)
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(handler, convey.ShouldBeNil)
 		})
@@ -372,6 +406,31 @@ type mockWorkLoadHandler struct {
 	deleteExtraWorkLoadError error
 	getReadyReplicasError    error
 	readyReplicas            int
+}
+
+func (m *mockWorkLoadHandler) DeleteWorkLoad(
+	ctx context.Context,
+	selectLabels map[string]string,
+	namespace string,
+	filters ...WorkLoadFilter) error {
+	return nil
+}
+
+func (m *mockWorkLoadHandler) ListWorkLoad(
+	ctx context.Context,
+	selectLabels map[string]string,
+	namespace string,
+	filters ...WorkLoadFilter) ([]WorkLoadInterface, error) {
+	return nil, nil
+}
+
+func (m *mockWorkLoadHandler) UpdateWorkLoad(
+	ctx context.Context,
+	selectLabels map[string]string,
+	namespace string,
+	updater WorkloadUpdater,
+	filters ...WorkLoadFilter) error {
+	return nil
 }
 
 func (m *mockWorkLoadHandler) CheckOrCreateWorkLoad(context.Context, *v1.InstanceSet,

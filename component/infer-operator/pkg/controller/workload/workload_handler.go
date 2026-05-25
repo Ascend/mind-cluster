@@ -18,12 +18,41 @@ package workload
 
 import (
 	"context"
+	"fmt"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"infer-operator/pkg/api/v1"
 	"infer-operator/pkg/common"
 )
+
+type WorkLoadHandlerFactory struct {
+	workloadHandlerMap map[string]WorkLoadHandler
+}
+
+func NewWorkLoadHandlerFactory() *WorkLoadHandlerFactory {
+	return &WorkLoadHandlerFactory{
+		workloadHandlerMap: make(map[string]WorkLoadHandler),
+	}
+}
+
+func (factory *WorkLoadHandlerFactory) Register(gvk schema.GroupVersionKind, handler WorkLoadHandler) error {
+	if _, ok := factory.workloadHandlerMap[gvk.String()]; ok {
+		return fmt.Errorf("duplicate workload handler for GVK %s", gvk)
+	}
+	factory.workloadHandlerMap[gvk.String()] = handler
+	return nil
+}
+
+func (factory *WorkLoadHandlerFactory) GetWorkLoadHandler(gvk schema.GroupVersionKind) (WorkLoadHandler, error) {
+	handler, ok := factory.workloadHandlerMap[gvk.String()]
+	if !ok {
+		return nil, fmt.Errorf("can not find workload handler for GVK %s", gvk)
+	}
+	return handler, nil
+}
 
 type WorkLoadHandler interface {
 	// CheckOrCreateWorkLoad checks if the workload exists and creates it if not
@@ -36,4 +65,28 @@ type WorkLoadHandler interface {
 	Validate(spec runtime.RawExtension) error
 	// GetReplicas retrieves the number of replicas from the workload specification
 	GetReplicas(spec runtime.RawExtension) (int32, error)
+	// ListWorkLoad list workloads via selector with filter
+	ListWorkLoad(ctx context.Context, selectLabels map[string]string, namespace string, filters ...WorkLoadFilter) ([]WorkLoadInterface, error)
+	// DeleteWorkLoad fetches workloads match selector and deletes those filtered by filters
+	DeleteWorkLoad(ctx context.Context, selectLabels map[string]string, namespace string, filters ...WorkLoadFilter) error
+	// UpdateWorkLoad updates workloads match selector and filters with updater function
+	UpdateWorkLoad(ctx context.Context, selectLabels map[string]string, namespace string, updater WorkloadUpdater, filters ...WorkLoadFilter) error
 }
+
+// WorkLoadInterface defines the interface for workload objects
+type WorkLoadInterface interface {
+	// GetWorkLoadObjMeta get the object meta of the workload
+	GetWorkLoadObjMeta() metav1.ObjectMeta
+	// SetWorkLoadObjMeta set the object meta of the workload
+	SetWorkLoadObjMeta(metav1.ObjectMeta)
+	// GetWorkLoadReplicas returns the number of ready replicas of the workload
+	GetWorkLoadReplicas() int32
+	// IsWorkLoadReady returns true if the workload is ready
+	IsWorkLoadReady() bool
+}
+
+// WorkLoadFilter return true if the workload meets the filter condition
+type WorkLoadFilter func(workLoad WorkLoadInterface) bool
+
+// WorkloadUpdater updates the workload
+type WorkloadUpdater func(workLoad WorkLoadInterface)
