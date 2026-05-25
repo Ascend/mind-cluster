@@ -454,12 +454,12 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
 
 3. 检查制作集群调度组件镜像的节点是否存在如下基础镜像。
 
-    - 执行**docker images | grep ubuntu**命令检查Ubuntu镜像，ARM架构和x86\_64架构镜像大小有差异。
+    - 如果需要以Ubuntu镜像为基础镜像进行构建，则需要检查Ubuntu镜像是否存在。执行**docker images | grep ubuntu**命令检查Ubuntu镜像，ARM架构和x86\_64架构镜像大小有差异。
 
         ```ColdFusion
         ubuntu              22.04               6526a1858e5d        2 years ago         64.2MB
         ```
-   - 执行**docker images | grep openeuler**命令检查openEuler镜像，ARM架构和x86\_64架构镜像大小有差异。
+   - 如果需要以openEuler镜像为基础镜像进行构建，则需要检查openEuler镜像是否存在。执行**docker images | grep openeuler**命令检查openEuler镜像，ARM架构和x86\_64架构镜像大小有差异。
        ```ColdFusion
        openeuler/openeuler              24.03-lts               2fc1d956e7ed        2 years ago         205MB
        ```
