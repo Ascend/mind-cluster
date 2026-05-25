@@ -69,7 +69,6 @@
     - [整卡调度或静态vNPU调度（训练）](./usage/basic_scheduling/03_full_npu_scheduling_and_static_vnpu_scheduling_training.md)
     - [整卡调度或静态vNPU调度（推理）](./usage/basic_scheduling/04_full_npu_scheduling_and_static_vnpu_scheduling_inference.md)
     - [多级调度](./usage/basic_scheduling/05_multi_level_scheduling.md)
-    - [弹性训练](./usage/basic_scheduling/06_elastic_training.md)
     - [推理卡故障重调度](./usage/basic_scheduling/07_rescheduling_upon_inference_card_faults.md)
     - [推理卡故障恢复](./usage/basic_scheduling/08_recovery_of_inference_card_faults.md)
   - [断点续训特性指南](./usage/resumable_training/menu_resumable_training.md)
@@ -159,3 +158,4 @@
   - [FAQ](faq.md)
   - [安全加固](security_hardening.md)
   - [附录](appendix.md)
+  - [弹性训练](elastic_training.md)

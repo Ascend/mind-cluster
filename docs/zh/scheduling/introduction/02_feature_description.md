@@ -219,7 +219,7 @@ NPU Exporter
 **使用说明<a name="section1245612501584"></a>**
 
 1. 安装组件请参见[安装部署](../installation_guide/02_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[弹性训练](../usage/basic_scheduling/06_elastic_training.md)章节进行操作。
+2. 特性使用指导请参见[弹性训练](../elastic_training.md)章节进行操作。
 
 ### 推理卡故障恢复<a name="ZH-CN_TOPIC_0000002479226952"></a>
 

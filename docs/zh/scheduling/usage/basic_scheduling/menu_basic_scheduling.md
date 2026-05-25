@@ -12,6 +12,5 @@
 - [整卡调度或静态vNPU调度（训练）](./03_full_npu_scheduling_and_static_vnpu_scheduling_training.md)
 - [整卡调度或静态vNPU调度（推理）](./04_full_npu_scheduling_and_static_vnpu_scheduling_inference.md)
 - [多级调度](./05_multi_level_scheduling.md)
-- [弹性训练](./06_elastic_training.md)
 - [推理卡故障重调度](./07_rescheduling_upon_inference_card_faults.md)
 - [推理卡故障恢复](./08_recovery_of_inference_card_faults.md)
