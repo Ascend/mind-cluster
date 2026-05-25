@@ -285,7 +285,7 @@
 
 2. 将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
 
-    在Atlas 800I A2 推理服务器上，以pytorch_acjob_infer_910b_softsharedev.yaml为例，申请芯片AICore百分比为50%，芯片高带宽内存量为2048MB，软切分策略为fixed-share的参数配置示例如下。
+    在Atlas 800I A2 推理服务器上，以pytorch_acjob_infer_910b_softsharedev.yaml为例，申请芯片AICore百分比为50%，芯片高带宽内存量为2048MB，软切分策略为fixed-share的参数配置示例如下。yaml配置参考请参考[YAML配置说明](../../../api/yaml_configuration.md#yaml_configuration)。
 
     <pre codetype="yaml">
     apiVersion: mindxdl.gitee.com/v1
@@ -370,15 +370,6 @@
                   <strong>hostPath:</strong>
                     <strong>path: ${preload_path}/ld.so.preload</strong>
     </pre>
-
-    **表 4**  pytorch_acjob_infer_910b_softsharedev.yaml参数说明
-
-    |参数|取值|说明|
-    |--|--|--|
-    |huawei.com/scheduler.softShareDev.aicoreQuota|[1, 100]|请求的AICore百分比。|
-    |huawei.com/scheduler.softShareDev.hbmQuota|<p>[1, maxHBM]</p><p>maxHBM为通过<b>npu-smi info</b>命令查询出的HBM-Usage(MB)中HBM的值。</p>|请求的高带宽内存量，单位为MB。|
-    |huawei.com/scheduler.softShareDev.policy|<ul><li>fixed-share</li><li>elastic</li><li>best-effort</li></ul>|软切分策略。|
-    |huawei.com/schedule_policy|chip1-softShareDev|软切分场景调度策略。|
 
 >[!NOTE]
 ><term>Atlas A3 推理系列产品</term>下发软切分虚拟化任务时，在任务容器中，/dev/实际挂载1个die，但是执行<b>npu-smi info</b>命令查询显示挂载了2个die。回显示例如下：
