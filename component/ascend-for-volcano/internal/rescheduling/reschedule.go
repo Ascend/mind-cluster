@@ -58,7 +58,7 @@ func (reScheduler *ReScheduler) createFaultTaskHandler(job *api.JobInfo, cardNam
 		}
 		faultTask.setNodeRankIndex(tmpNodeRankIndex)
 		// 3. update UseCardName
-		tmpUseCardName, getErr := faultTask.getUseCardName(task, cardName, env)
+		tmpUseCardName, getErr := faultTask.getUseCardName(task, cardName)
 		if getErr != nil {
 			klog.V(util.LogInfoLev).Infof("getUseCardName %s %s", task.Name, util.SafePrint(getErr))
 		}
