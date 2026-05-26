@@ -396,6 +396,20 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3"><ul><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-npu</li><li>（可选）nodeDEnable=on</li></ul>
     </td>
     </tr>
+    <tr><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p>Atlas 850 系列硬件产品</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3"><ul><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-npu</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
+    <tr><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p>计算节点</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p>Atlas 950 SuperPoD</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3"><ul><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-npu</li><li>（可选）nodeDEnable=on</li></ul>
+    </td>
+    </tr>
     </tbody>
     </table>
 
