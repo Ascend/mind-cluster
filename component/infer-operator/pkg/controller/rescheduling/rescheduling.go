@@ -25,6 +25,7 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -82,7 +83,37 @@ func (r *Rescheduler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) er
 	podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: r.handlePodUpdate,
 	})
+	go r.retryTimesMapPeriodicCleanup(ctx)
 	return nil
+}
+
+func (r *Rescheduler) retryTimesMapPeriodicCleanup(ctx context.Context) {
+	ticker := time.NewTicker(r.cleanupInterval)
+	defer ticker.Stop()
+	hwlog.RunLog.Infof("Started periodic cleanup fault retry times map with interval %v",
+		r.cleanupInterval)
+	for {
+		select {
+		case <-ticker.C:
+			r.cleanupWithTimeout()
+		case <-ctx.Done():
+			hwlog.RunLog.Infof("Stopping periodic cleanup fault retry times map due to context cancellation")
+			return
+		}
+	}
+}
+
+func (r *Rescheduler) cleanupWithTimeout() {
+	r.Lock()
+	defer r.Unlock()
+	hwlog.RunLog.Infof("Performing cleanup fault retry times map with timeout")
+	// clean up faultWorkLoad that not in faultWorkLoadMap each day
+	for currentFaultWorkLoad, _ := range r.faultRetryTimesMap {
+		_, ok := r.faultWorkLoadMap[currentFaultWorkLoad]
+		if !ok {
+			delete(r.faultRetryTimesMap, currentFaultWorkLoad)
+		}
+	}
 }
 
 func (r *Rescheduler) CleanupWithInstanceSetDeletion(instanceSetName string) {
@@ -242,6 +273,15 @@ func (r *Rescheduler) getWorkLoadNameAndInstanceSetName(pod *corev1.Pod) (string
 	return workLoadName, instanceSetName
 }
 
+func getNamespacedNameList(workloadList []workload.WorkLoadInterface) map[types.NamespacedName]struct{} {
+	namespacedNameMap := make(map[types.NamespacedName]struct{})
+	for _, workload := range workloadList {
+		objMeta := workload.GetWorkLoadObjMeta()
+		namespacedNameMap[types.NamespacedName{Namespace: objMeta.GetNamespace(), Name: objMeta.GetName()}] = struct{}{}
+	}
+	return namespacedNameMap
+}
+
 // triggerInstanceSetReconcile trigger instanceSet reconcile by modifying instanceSet annotation
 func (r *Rescheduler) triggerInstanceSetReconcile(
 	ctx context.Context,
@@ -281,5 +321,184 @@ func (r *Rescheduler) triggerInstanceSetReconcile(
 func (r *Rescheduler) DoRescheduling(
 	ctx context.Context,
 	instanceSet *apiv1.InstanceSet) ([]apiv1.InstanceSet, error) {
-	return nil, nil
+	// 1. get fault workloads of current instanceSet
+	workloadType := instanceSet.Spec.WorkloadTypeMeta
+	gvk, err := common.WorkLoadTypeToGVK(workloadType)
+	if err != nil {
+		return nil, err
+	}
+	workloadHandler, err := r.workLoadHandlerFactory.GetWorkLoadHandler(gvk)
+	if err != nil {
+		return nil, err
+	}
+	currentFaultWorkLoadMap, err := r.getFaultWorkLoad(ctx, instanceSet, workloadHandler)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get fault workloads for instanceSet %s/%s: %v",
+			instanceSet.Namespace, instanceSet.Name, err)
+	}
+	if len(currentFaultWorkLoadMap) == 0 {
+		return make([]apiv1.InstanceSet, 0), nil
+	}
+	// 2. process priority setting
+	deletedInstanceSets, err := r.processPrioritySetting(ctx, instanceSet, workloadHandler)
+	if err != nil {
+		return nil, fmt.Errorf("failed to process priority setting when rescheduling: %v", err)
+	}
+	// 3. delete fault workloads
+	err = r.deleteFaultWorkLoad(ctx, instanceSet, workloadHandler, currentFaultWorkLoadMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to delete fault workloads: %v", err)
+	}
+	deletedInstanceSets = append(deletedInstanceSets, *instanceSet)
+	// 4. if rescheduling success, delete current fault workloads in faultWorkLoadMap
+	r.Lock()
+	defer r.Unlock()
+	for currentFaultWorkLoad, _ := range currentFaultWorkLoadMap {
+		delete(r.faultWorkLoadMap, currentFaultWorkLoad)
+	}
+	return deletedInstanceSets, nil
+}
+
+func (r *Rescheduler) processPrioritySetting(
+	ctx context.Context,
+	instanceSet *apiv1.InstanceSet,
+	workloadHandler workload.WorkLoadHandler) ([]apiv1.InstanceSet, error) {
+	priority := instanceSet.Spec.Priority
+	priorityStrategy, ok2 := instanceSet.Labels[common.PrioritySchedulingStrategyLabelKey]
+	if ok2 && priorityStrategy == common.SchedulingStrategyPriority && priority != nil {
+		inferServiceName, ok := instanceSet.Labels[common.InferServiceNameLabelKey]
+		if !ok {
+			return nil, fmt.Errorf("instance set does not have infer service label: %v", instanceSet.Labels)
+		}
+		// delete unready workload that has lower priority than current instanceSet if it has priority setting
+		deletedInstanceSets, err := r.deleteOtherWorkLoad(ctx, int(*priority), instanceSet.Namespace, inferServiceName, workloadHandler)
+		if err != nil {
+			return nil, fmt.Errorf("failed to delete unready work loads: %v", err)
+		}
+		return deletedInstanceSets, nil
+	}
+	return make([]apiv1.InstanceSet, 0), nil
+}
+
+func (r *Rescheduler) deleteOtherWorkLoad(
+	ctx context.Context,
+	priority int,
+	namespace, serviceName string,
+	workloadHandler workload.WorkLoadHandler) ([]apiv1.InstanceSet, error) {
+	// 3.1 fetch other unready instanceSet that has lower priority than current instanceSet
+	instanceSetList := &apiv1.InstanceSetList{}
+	selector := labels.SelectorFromSet(labels.Set{
+		common.InferServiceNameLabelKey: serviceName,
+	})
+	if err := r.client.List(ctx, instanceSetList,
+		client.InNamespace(namespace),
+		client.MatchingLabelsSelector{Selector: selector}); err != nil {
+		return nil, fmt.Errorf("failed to list InstanceSet for InferService %s/%s: %v at infer rescheduling", namespace, serviceName, err)
+	}
+	unreadyLowPriorityInstanceSetList := &apiv1.InstanceSetList{Items: []apiv1.InstanceSet{}}
+	for _, instanceSet := range instanceSetList.Items {
+		otherPriority := instanceSet.Spec.Priority
+		if otherPriority == nil {
+			hwlog.RunLog.Warnf("instanceSet %s/%s has no priority label", instanceSet.Namespace, instanceSet.Name)
+			continue
+		}
+		if int(*otherPriority) > priority && instanceSet.Status.ReadyReplicas < instanceSet.Status.Replicas {
+			unreadyLowPriorityInstanceSetList.Items = append(unreadyLowPriorityInstanceSetList.Items, instanceSet)
+		}
+	}
+	// 3.2 delete unready workload that has lower priority than current instanceSet
+	if len(unreadyLowPriorityInstanceSetList.Items) > 0 {
+		for _, instanceSet := range unreadyLowPriorityInstanceSetList.Items {
+			indexer := common.InstanceIndexer{
+				Namespace:      instanceSet.Namespace,
+				ServiceName:    instanceSet.Labels[common.InferServiceNameLabelKey],
+				InstanceSetKey: instanceSet.Labels[common.InstanceSetNameLabelKey],
+			}
+			selectLabels := make(map[string]string)
+			selectLabels = common.AddLabelsFromIndexer(selectLabels, indexer)
+			delete(selectLabels, common.InstanceIndexLabelKey)
+			unReadyFilter := func(workload workload.WorkLoadInterface) bool {
+				return !workload.IsWorkLoadReady()
+			}
+			if err := workloadHandler.DeleteWorkLoad(ctx, selectLabels, indexer.Namespace, unReadyFilter); err != nil {
+				return nil, fmt.Errorf("failed to delete unready workload instance %v/%v: %v",
+					instanceSet.Namespace, instanceSet.Name, err)
+			}
+		}
+	}
+	return unreadyLowPriorityInstanceSetList.Items, nil
+}
+
+func (r *Rescheduler) deleteFaultWorkLoad(
+	ctx context.Context,
+	instanceSet *apiv1.InstanceSet,
+	workloadHandler workload.WorkLoadHandler,
+	currentFaultWorkLoadMap map[faultWorkLoad]string) error {
+	indexer := common.InstanceIndexer{
+		Namespace:      instanceSet.Namespace,
+		ServiceName:    instanceSet.Labels[common.InferServiceNameLabelKey],
+		InstanceSetKey: instanceSet.Labels[common.InstanceSetNameLabelKey],
+	}
+	selectLabels := make(map[string]string)
+	selectLabels = common.AddLabelsFromIndexer(selectLabels, indexer)
+	delete(selectLabels, common.InstanceIndexLabelKey)
+	faultFilter := func(workload workload.WorkLoadInterface) bool {
+		objMeta := workload.GetWorkLoadObjMeta()
+		currentFaultWorkLoad := faultWorkLoad{
+			NamespacedName:  types.NamespacedName{Namespace: objMeta.GetNamespace(), Name: objMeta.GetName()},
+			instanceSetName: instanceSet.Name,
+		}
+		faultReason, ok := currentFaultWorkLoadMap[currentFaultWorkLoad]
+		if ok && strings.HasSuffix(faultReason, common.PodFailed) {
+			r.Lock()
+			defer r.Unlock()
+			return r.faultRetryTimesMap[currentFaultWorkLoad] > 0
+		}
+		return ok
+	}
+	if err := workloadHandler.DeleteWorkLoad(ctx, selectLabels, instanceSet.Namespace, faultFilter); err != nil {
+		return fmt.Errorf("failed to delete fault workload for instanceSet %v/%v: %v",
+			instanceSet.Namespace, instanceSet.Name, err)
+	}
+	r.Lock()
+	defer r.Unlock()
+	for currentFaultWorkLoad, faultReason := range currentFaultWorkLoadMap {
+		if strings.HasSuffix(faultReason, common.PodFailed) && r.faultRetryTimesMap[currentFaultWorkLoad] > 0 {
+			r.faultRetryTimesMap[currentFaultWorkLoad]--
+		}
+	}
+	return nil
+}
+
+func (r *Rescheduler) getFaultWorkLoad(
+	ctx context.Context,
+	instanceSet *apiv1.InstanceSet,
+	workloadHandler workload.WorkLoadHandler) (map[faultWorkLoad]string, error) {
+	indexer := common.InstanceIndexer{
+		Namespace:      instanceSet.Namespace,
+		ServiceName:    instanceSet.Labels[common.InferServiceNameLabelKey],
+		InstanceSetKey: instanceSet.Labels[common.InstanceSetNameLabelKey],
+	}
+	selectLabels := make(map[string]string)
+	selectLabels = common.AddLabelsFromIndexer(selectLabels, indexer)
+	delete(selectLabels, common.InstanceIndexLabelKey)
+	workloadList, err := workloadHandler.ListWorkLoad(ctx, selectLabels, instanceSet.Namespace)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list all workload for instanceSet %s/%s: %v", instanceSet.Namespace, instanceSet.Name, err)
+	}
+	namespacedNameMap := getNamespacedNameList(workloadList)
+	currentFaultWorkLoadMap := make(map[faultWorkLoad]string)
+	r.Lock()
+	defer r.Unlock()
+	for namespacedName := range namespacedNameMap {
+		currentFaultWorkLoad := faultWorkLoad{
+			NamespacedName:  namespacedName,
+			instanceSetName: instanceSet.Name,
+		}
+		faultReason, ok := r.faultWorkLoadMap[currentFaultWorkLoad]
+		if ok {
+			currentFaultWorkLoadMap[currentFaultWorkLoad] = faultReason
+		}
+	}
+	return currentFaultWorkLoadMap, nil
 }
