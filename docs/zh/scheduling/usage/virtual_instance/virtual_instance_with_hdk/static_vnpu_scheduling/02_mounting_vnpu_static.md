@@ -50,6 +50,17 @@
 
 - 静态虚拟化场景，如果创建或者销毁vNPU，需要重启Ascend Device Plugin。
 - 静态虚拟化任务，不支持故障重调度。
+- 不支持静态vNPU进行交换机亲和性调度。
+- 静态vNPU调度暂不支持ASCEND_VISIBLE_DEVICES相关字段，如存在以下字段，需要删除:
+```yaml
+...
+                env:
+                - name: ASCEND_VISIBLE_DEVICES
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.annotations['huawei.com/Ascend310P']
+...
+```
 
 **表 2**  虚拟化实例模板与vNPU类型关系表
 

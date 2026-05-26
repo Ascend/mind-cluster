@@ -1,4 +1,4 @@
-# Ascend Operator<a name="ZH-CN_TOPIC_0000002479386414"></a>
+﻿# Ascend Operator<a name="ZH-CN_TOPIC_0000002479386414"></a>
 
 - 使用整卡调度（训练）、静态vNPU调度（训练）、断点续训或弹性训练的用户，必须安装Ascend Operator组件。如果使用Volcano组件作为调度器，需要先安装Volcano组件，否则Ascend Operator会启动失败。
 - 使用整卡调度（推理）和推理卡故障重调度特性，下发acjob类型的分布式推理任务，必须安装Ascend Operator。

@@ -1,4 +1,4 @@
-# Infer Operator<a name="ZH-CN_TOPIC_0000002479386414"></a>
+﻿# Infer Operator<a name="ZH-CN_TOPIC_0000002479386414"></a>
 
 下发InferServiceSet类型的推理任务，必须安装Infer Operator。
 

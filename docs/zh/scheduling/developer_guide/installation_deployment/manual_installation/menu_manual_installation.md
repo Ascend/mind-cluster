@@ -1,4 +1,4 @@
-# 手动安装
+﻿# 手动安装
 
 - [获取软件包](./00_obtaining_software_packages.md)
 - [安装前准备](./01_preparing_for_installation.md)

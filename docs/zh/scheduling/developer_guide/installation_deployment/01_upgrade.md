@@ -1,4 +1,4 @@
-# 升级<a name="ZH-CN_TOPIC_0000002479226452"></a>
+﻿# 手动升级<a name="ZH-CN_TOPIC_0000002479226452"></a>
 
 ## 升级说明<a name="ZH-CN_TOPIC_0000002511346381"></a>
 
@@ -111,9 +111,9 @@
         Required-by:
         ```
 
-    - （可选）**检查其他组件**。参考[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)，确认集群中节点是否安装了相应组件。
+    - （可选）**检查其他组件**。参考[组件状态确认](../../installation_guide/03_confirming_status)，确认集群中节点是否安装了相应组件。
 
-4. （可选）若尚未安装MindCluster集群调度组件，请参考[安装部署](02_installation/manual_installation/00_obtaining_software_packages.md)章节先安装组件，TaskD的安装步骤请参考[制作镜像](../usage/resumable_training/07_using_resumable_training_on_the_cli.md#制作镜像)章节。
+4. （可选）若尚未安装MindCluster集群调度组件，请参考[安装部署](manual_installation/00_obtaining_software_packages.md)章节先安装组件，TaskD的安装步骤请参考[制作镜像](../../usage/resumable_training/07_using_resumable_training_on_the_cli.md#制作镜像)章节。
 
 ## 升级Ascend Docker Runtime<a name="ZH-CN_TOPIC_0000002479226420"></a>
 
@@ -127,7 +127,7 @@
 
 **升级步骤<a name="section520182224617"></a>**
 
-1. 下载新版本组件安装包，详情请参见参考[获取软件包](02_installation/manual_installation/00_obtaining_software_packages.md)章节。
+1. 下载新版本组件安装包，详情请参见参考[获取软件包](manual_installation/00_obtaining_software_packages.md)章节。
 2. <a name="li12599722163212"></a>进入安装包（run包）所在路径，在该路径下执行以下命令为软件包添加可执行权限。
 
     ```shell
@@ -169,7 +169,7 @@
         systemctl daemon-reload && systemctl restart containerd
         ```
 
-5. <a name="li76002022113215"></a>参考[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)章节，检查新版本Ascend Docker Runtime是否升级成功状态。
+5. <a name="li76002022113215"></a>参考[组件状态确认](../../installation_guide/03_confirming_status)章节，检查新版本Ascend Docker Runtime是否升级成功状态。
 6. （可选）恢复旧版本。下载旧版本安装包，依次重新执行[步骤2](#li12599722163212)到[步骤5](#li76002022113215)。
 
 ## 升级TaskD<a name="ZH-CN_TOPIC_0000002479226444"></a>
@@ -182,7 +182,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 **升级步骤<a name="section1720814439492"></a>**
 
-1. 参考[获取软件包](02_installation/manual_installation/00_obtaining_software_packages.md)章节，下载新版本组件安装包。
+1. 参考[获取软件包](manual_installation/00_obtaining_software_packages.md)章节，下载新版本组件安装包。
 2. 下载完成后，进入安装包所在路径并解压安装包。
 3. 执行**ls -l**命令，回显示例如下。
 
@@ -359,14 +359,14 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 **升级步骤<a name="section65996266718"></a>**
 
-1. 卸载MindCluster旧版本组件。详情请参见[卸载](./05_uninstallation.md)中“卸载其他组件 \> 步骤2”。
-2. 参考[获取软件包](02_installation/manual_installation/00_obtaining_software_packages.md)章节，下载新版本组件安装包。
+1. 卸载MindCluster旧版本组件。详情请参见[卸载](01_uninstallation.md)中“卸载其他组件 \> 步骤2”。
+2. 参考[获取软件包](manual_installation/00_obtaining_software_packages.md)章节，下载新版本组件安装包。
 3. （可选）准备MindCluster集群调度组件新版本镜像。若新版本组件采用二进制方式安装，可跳过本步骤。
 
-    参考[准备镜像](02_installation/manual_installation/01_preparing_for_installation.md#准备镜像)章节，从昇腾镜像仓库拉取新版本镜像或者制作新版本镜像。注意新版本组件镜像tag要与旧版本组件镜像tag不一致，避免覆盖旧版本组件镜像。
+    参考[准备镜像](manual_installation/01_preparing_for_installation.md#准备镜像)章节，从昇腾镜像仓库拉取新版本镜像或者制作新版本镜像。注意新版本组件镜像tag要与旧版本组件镜像tag不一致，避免覆盖旧版本组件镜像。
 
-4. <a name="li147194506333"></a>请根据要升级的组件，重新执行手动安装步骤。详细步骤请参见[安装MindCluster新版本组件](02_installation/manual_installation/00_obtaining_software_packages.md)。
-5. （可选）如需回退老版本，依次执行[卸载](./05_uninstallation.md)中“卸载其他组件 \> 步骤2”和[步骤4](#li147194506333)，卸载新版本组件后安装旧版本组件即可。
+4. <a name="li147194506333"></a>请根据要升级的组件，重新执行手动安装步骤。详细步骤请参见[安装MindCluster新版本组件](manual_installation/00_obtaining_software_packages.md)。
+5. （可选）如需回退老版本，依次执行[卸载](01_uninstallation.md)中“卸载其他组件 \> 步骤2”和[步骤4](#li147194506333)，卸载新版本组件后安装旧版本组件即可。
 
 ## 升级镜像<a name="ZH-CN_TOPIC_0000002511346311"></a>
 
@@ -378,7 +378,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 **升级管理节点组件<a name="section1292111716589"></a>**
 
-1. 参考[准备镜像](02_installation/manual_installation/01_preparing_for_installation.md#准备镜像)章节，使用新的软件包制作镜像。
+1. 参考[准备镜像](manual_installation/01_preparing_for_installation.md#准备镜像)章节，使用新的软件包制作镜像。
 
     >[!NOTE]
     >请保持镜像名称一致，否则可能导致原配置文件无法拉起Pod。
@@ -421,7 +421,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 **升级计算节点组件<a name="section231311416588"></a>**
 
-1. 参考[准备镜像](02_installation/manual_installation/01_preparing_for_installation.md#准备镜像)章节，使用新的软件包制作镜像。
+1. 参考[准备镜像](manual_installation/01_preparing_for_installation.md#准备镜像)章节，使用新的软件包制作镜像。
 
     >[!NOTE]
     >请保持镜像名称一致，否则可能导致原配置文件无法拉起Pod。
@@ -473,7 +473,7 @@ Elastic Agent组件已经日落，本章节提供将Elastic Agent组件升级为
 
 **操作步骤<a name="section1643711813"></a>**
 
-1. 参考[获取软件包](02_installation/manual_installation/00_obtaining_software_packages.md)章节，下载新版本TaskD组件安装包。
+1. 参考[获取软件包](manual_installation/00_obtaining_software_packages.md)章节，下载新版本TaskD组件安装包。
 2. 下载完成后，进入安装包所在路径并解压安装包。
 3. 执行**ls -l**命令，回显示例如下。
 
@@ -567,7 +567,7 @@ Elastic Agent组件已经日落，本章节提供将Elastic Agent组件升级为
         ```
 
         >[!NOTE]
-        >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../api/taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
+        >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../api/taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
 
     2. 在训练脚本中增加以下代码拉起TaskD  Manager。
 
