@@ -1,4 +1,4 @@
-# Ascend Device Plugin<a name="ZH-CN_TOPIC_0000002511426341"></a>
+﻿# Ascend Device Plugin<a name="ZH-CN_TOPIC_0000002511426341"></a>
 
 - 使用整卡调度、静态vNPU调度、动态vNPU调度、断点续训、弹性训练、推理卡故障恢复或推理卡故障重调度的用户，必须在计算节点安装Ascend Device Plugin。
 - 仅使用容器化支持和资源监测的用户，可以不安装Ascend Device Plugin，请直接跳过本章节。

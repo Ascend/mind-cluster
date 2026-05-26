@@ -1,4 +1,4 @@
-# Ascend Docker Runtime<a name="ZH-CN_TOPIC_0000002479226434"></a>
+﻿# Ascend Docker Runtime<a name="ZH-CN_TOPIC_0000002479226434"></a>
 
 - 使用容器化支持、整卡调度、静态vNPU调度、动态vNPU调度、断点续训、弹性训练、推理卡故障恢复或推理卡故障重调度的用户，必须安装Ascend Docker Runtime。
 - 仅使用资源监测的用户，可以不安装Ascend Docker Runtime，请直接跳过本章节。

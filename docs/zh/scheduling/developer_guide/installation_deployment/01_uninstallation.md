@@ -1,4 +1,4 @@
-# 卸载<a name="ZH-CN_TOPIC_0000002511426389"></a>
+﻿# 手动卸载<a name="ZH-CN_TOPIC_0000002511426389"></a>
 
 - 卸载Ascend Docker Runtime组件，请参见[卸载Ascend Docker Runtime](#section6134163311244)进行操作。
 - 卸载Container Manager组件，请参见[卸载Container Manager组件](#section1461059103619)进行操作。
@@ -239,7 +239,7 @@
     namespace "mindx-dl" deleted
     ```
 
-4. 删除日志文件。参考[创建日志目录](02_installation/manual_installation/01_preparing_for_installation.md#创建日志目录)章节，在对应节点上删除集群调度组件的日志目录。以ClusterD为例，请确认后再删除。
+4. 删除日志文件。参考[创建日志目录](manual_installation/01_preparing_for_installation.md#创建日志目录)章节，在对应节点上删除集群调度组件的日志目录。以ClusterD为例，请确认后再删除。
 
     ```shell
     rm -rf /var/log/mindx-dl/clusterd

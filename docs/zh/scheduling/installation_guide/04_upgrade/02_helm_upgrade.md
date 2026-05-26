@@ -15,7 +15,7 @@
 >[!NOTE]
 >
 >- 仅支持使用helm 3.x版本进行升级。
->- docker-runtime、taskd和container-manager等组件不支持通过helm管理，请参考[手动升级](./01_upgrade.md)对应组件章节进行升级。
+>- docker-runtime、taskd和container-manager等组件不支持通过helm管理，请参考[手动升级](01_manual_upgrade.md)对应组件章节进行升级。
 >- 升级前请确认集群中无正在使用mindcluster组件管理的工作负载，避免业务中断。
 
 ## 确认组件是否通过helm管理<a name="section_check_helm_upgrade"></a>

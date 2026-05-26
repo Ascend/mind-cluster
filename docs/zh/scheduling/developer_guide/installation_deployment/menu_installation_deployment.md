@@ -1,0 +1,17 @@
+# 安装部署
+
+- [手动安装部署](./manual_installation/menu_manual_installation.md)
+  - [获取软件包](./manual_installation/00_obtaining_software_packages.md)
+  - [安装前准备](./manual_installation/01_preparing_for_installation.md)
+  - [Ascend Docker Runtime](./manual_installation/02_ascend_docker_runtime.md)
+  - [NPU Exporter](./manual_installation/03_npu_exporter.md)
+  - [Ascend Device Plugin](./manual_installation/04_ascend_device_plugin.md)
+  - [Volcano](./manual_installation/05_volcano.md)
+  - [ClusterD](./manual_installation/06_clusterd.md)
+  - [Infer Operator](./manual_installation/07_infer_operator.md)
+  - [Ascend Operator](./manual_installation/08_ascend_operator.md)
+  - [NodeD](./manual_installation/09_noded.md)
+  - [Resilience Controller](./manual_installation/10_resilience_controller.md)
+  - [Container Manager](./manual_installation/11_container-manager.md)
+- [手动升级](01_upgrade.md)
+- [手动卸载](01_uninstallation.md)

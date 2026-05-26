@@ -1,4 +1,4 @@
-# Container Manager<a name="ZH-CN_TOPIC_0000002524428759"></a>
+﻿# Container Manager<a name="ZH-CN_TOPIC_0000002524428759"></a>
 
 Container Manager组件直接在物理机上通过二进制方式运行，提供容器生命周期管理、故障检测与恢复功能。
 

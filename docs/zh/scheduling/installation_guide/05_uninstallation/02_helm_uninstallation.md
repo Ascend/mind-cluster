@@ -14,13 +14,13 @@
 
 >[!NOTE]
 >
->- 若组件未通过helm安装或升级后纳入helm管理，请参照[手动卸载](./01_uninstallation.md)进行卸载，否则可能导致卸载不完整或集群状态异常。
->- docker-runtime、container-manager等组件不支持通过helm管理，请参照[手动卸载](./01_uninstallation.md)对应组件章节进行卸载。
+>- 若组件未通过helm安装或升级后纳入helm管理，请参照[手动卸载](01_manual_uninstallation.md)进行卸载，否则可能导致卸载不完整或集群状态异常。
+>- docker-runtime、container-manager等组件不支持通过helm管理，请参照[手动卸载](01_manual_uninstallation.md)对应组件章节进行卸载。
 >- 仅支持使用helm 3.x版本进行卸载。
 
 ## 确认组件是否通过helm管理<a name="section_check_helm"></a>
 
-在执行helm卸载前，请先确认待卸载的组件是否已通过helm管理。若未通过helm管理，请参照[手动卸载](./01_uninstallation.md)进行操作。
+在执行helm卸载前，请先确认待卸载的组件是否已通过helm管理。若未通过helm管理，请参照[手动卸载](01_manual_uninstallation.md)进行操作。
 
 1. 以root用户登录K8s管理节点。
 
@@ -41,7 +41,7 @@
 3. 根据回显结果判断组件是否通过helm管理。
 
     - 若回显中存在名称为**mindcluster**和**mindcluster-crds**的Release，且STATUS为**deployed**，表示组件已通过helm管理，可继续执行helm卸载操作。
-    - 若回显中不存在上述Release，表示组件未通过helm管理，请参照[手动卸载](./01_uninstallation.md)进行卸载。
+    - 若回显中不存在上述Release，表示组件未通过helm管理，请参照[手动卸载](01_manual_uninstallation.md)进行卸载。
 
 4. （可选）若需进一步确认某个Release管理的资源详情，可执行以下命令查看。
 
