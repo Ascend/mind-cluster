@@ -769,6 +769,176 @@ func TestGetRealAllocateDevicesFromEnv(t *testing.T) {
 	}
 }
 
+// TestGetRealAllocateDevicesFromEnv_A5 tests A5 scenario: deviceType=npu, RealCardType=Ascend910A5
+func TestGetRealAllocateDevicesFromEnv_A5(t *testing.T) {
+	convey.Convey("Test GetRealAllocateDevicesFromEnv for A5 card type", t, func() {
+		fieldPath := fmt.Sprintf("%s['%s%s']",
+			common.MetaDataAnnotation, api.ResourceNamePrefix, api.NPULowerCase)
+		annotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, api.NPULowerCase)
+
+		convey.Convey("01-should convert logicID to phyID when deviceType is npu and card is A5", func() {
+			a5Devices := []*common.NpuDevice{
+				{DevType: api.NPULowerCase, DeviceName: "npu-0", LogicID: 0, PhyID: 10,
+					Health: "Healthy"},
+				{DevType: api.NPULowerCase, DeviceName: "npu-1", LogicID: 1, PhyID: 11,
+					Health: "Healthy"},
+				{DevType: api.NPULowerCase, DeviceName: "npu-2", LogicID: 2, PhyID: 12,
+					Health: "Healthy"},
+			}
+			oldRealCardType := common.ParamOption.RealCardType
+			common.ParamOption.RealCardType = api.Ascend910A5
+			defer func() { common.ParamOption.RealCardType = oldRealCardType }()
+
+			ps := NewPluginServer(api.NPULowerCase, a5Devices, nil,
+				device.NewHwAscend910Manager())
+
+			pod := v1.Pod{
+				Spec: v1.PodSpec{Containers: []v1.Container{
+					{Env: []v1.EnvVar{
+						{Name: common.AscendVisibleDevicesEnv,
+							ValueFrom: &v1.EnvVarSource{
+								FieldRef: &v1.ObjectFieldSelector{FieldPath: fieldPath},
+							}},
+					}},
+				}},
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{annotationTag: "npu-0,npu-2"},
+				},
+			}
+			deviceList := ps.GetRealAllocateDevicesFromEnv(pod)
+			convey.So(deviceList, convey.ShouldResemble, []string{"npu-10", "npu-12"})
+		})
+
+		convey.Convey("02-should not convert when deviceType is npu but card is not A5", func() {
+			a5Devices := []*common.NpuDevice{
+				{DevType: api.Ascend910A5, DeviceName: "Ascend910A5-0", LogicID: 0, PhyID: 10,
+					Health: "Healthy"},
+			}
+			oldRealCardType := common.ParamOption.RealCardType
+			common.ParamOption.RealCardType = api.Ascend910A
+			defer func() { common.ParamOption.RealCardType = oldRealCardType }()
+
+			ps := NewPluginServer(api.NPULowerCase, a5Devices, nil,
+				device.NewHwAscend910Manager())
+
+			pod := v1.Pod{
+				Spec: v1.PodSpec{Containers: []v1.Container{
+					{Env: []v1.EnvVar{
+						{Name: common.AscendVisibleDevicesEnv,
+							ValueFrom: &v1.EnvVarSource{
+								FieldRef: &v1.ObjectFieldSelector{FieldPath: fieldPath},
+							}},
+					}},
+				}},
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{annotationTag: "npu-0"},
+				},
+			}
+			deviceList := ps.GetRealAllocateDevicesFromEnv(pod)
+			convey.So(deviceList, convey.ShouldResemble, []string{"npu-0"})
+		})
+
+		convey.Convey("03-should not convert when deviceType is not npu even if card is A5", func() {
+			oldRealCardType := common.ParamOption.RealCardType
+			common.ParamOption.RealCardType = api.Ascend910A5
+			defer func() { common.ParamOption.RealCardType = oldRealCardType }()
+			ps := NewPluginServer(api.Ascend910, devices, nil,
+				device.NewHwAscend910Manager())
+
+			altFieldPath := fmt.Sprintf("%s['%s%s']",
+				common.MetaDataAnnotation, api.ResourceNamePrefix, api.Ascend910)
+			altAnnotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, api.Ascend910)
+
+			pod := v1.Pod{
+				Spec: v1.PodSpec{Containers: []v1.Container{
+					{Env: []v1.EnvVar{
+						{Name: common.AscendVisibleDevicesEnv,
+							ValueFrom: &v1.EnvVarSource{
+								FieldRef: &v1.ObjectFieldSelector{FieldPath: altFieldPath},
+							}},
+					}},
+				}},
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{altAnnotationTag: "Ascend910-0,Ascend910-1"},
+				},
+			}
+			deviceList := ps.GetRealAllocateDevicesFromEnv(pod)
+			convey.So(deviceList, convey.ShouldResemble, []string{"Ascend910-0", "Ascend910-1"})
+		})
+	})
+}
+
+// TestConvertLogicIDToPhyID tests convertLogicIDToPhyID method
+func TestConvertLogicIDToPhyID(t *testing.T) {
+	convey.Convey("Test convertLogicIDToPhyID", t, func() {
+		convey.Convey("01-should return empty slice when input is empty", func() {
+			npuDevices := []common.NpuDevice{
+				{DevType: api.NPULowerCase, LogicID: 0, PhyID: 10},
+			}
+			ps := &PluginServer{cachedDevices: npuDevices}
+			result := ps.convertLogicIDToPhyID([]string{})
+			convey.So(result, convey.ShouldBeEmpty)
+		})
+
+		convey.Convey("02-should return original list when id format is invalid", func() {
+			npuDevices := []common.NpuDevice{
+				{DevType: api.NPULowerCase, LogicID: 0, PhyID: 10},
+			}
+			ps := &PluginServer{cachedDevices: npuDevices}
+			result := ps.convertLogicIDToPhyID([]string{"npu_0"})
+			convey.So(result, convey.ShouldResemble, []string{"npu_0"})
+		})
+
+		convey.Convey("03-should return empty slice when no matching device found", func() {
+			npuDevices := []common.NpuDevice{
+				{DevType: api.Ascend910, LogicID: 0, PhyID: 10},
+			}
+			ps := &PluginServer{cachedDevices: npuDevices}
+			result := ps.convertLogicIDToPhyID([]string{"npu-99"})
+			convey.So(result, convey.ShouldBeEmpty)
+		})
+
+		convey.Convey("04-should convert logicID to phyID when matching device found", func() {
+			npuDevices := []common.NpuDevice{
+				{DevType: api.NPULowerCase, LogicID: 0, PhyID: 10},
+				{DevType: api.NPULowerCase, LogicID: 1, PhyID: 11},
+				{DevType: api.NPULowerCase, LogicID: 2, PhyID: 12},
+			}
+			ps := &PluginServer{cachedDevices: npuDevices}
+			result := ps.convertLogicIDToPhyID([]string{"npu-0", "npu-2"})
+			convey.So(result, convey.ShouldResemble, []string{"npu-10", "npu-12"})
+		})
+
+		convey.Convey("05-should only convert matching devices, skip non-matching", func() {
+			npuDevices := []common.NpuDevice{
+				{DevType: api.NPULowerCase, LogicID: 0, PhyID: 10},
+			}
+			ps := &PluginServer{cachedDevices: npuDevices}
+			result := ps.convertLogicIDToPhyID(
+				[]string{"npu-0", "Ascend910-99", "Ascend910B-0"})
+			convey.So(result, convey.ShouldResemble, []string{"npu-10"})
+		})
+
+		convey.Convey("06-should convert single logicID to phyID", func() {
+			npuDevices := []common.NpuDevice{
+				{DevType: api.NPULowerCase, LogicID: 5, PhyID: 15},
+			}
+			ps := &PluginServer{cachedDevices: npuDevices}
+			result := ps.convertLogicIDToPhyID([]string{"npu-5"})
+			convey.So(result, convey.ShouldResemble, []string{"npu-15"})
+		})
+
+		convey.Convey("07-should handle DevType with suffix correctly", func() {
+			npuDevices := []common.NpuDevice{
+				{DevType: api.NPULowerCase, LogicID: 100, PhyID: 200},
+			}
+			ps := &PluginServer{cachedDevices: npuDevices}
+			result := ps.convertLogicIDToPhyID([]string{"npu-2c-100"})
+			convey.So(result, convey.ShouldResemble, []string{"npu-2c-100"})
+		})
+	})
+}
+
 func getMockPodList() []v1.Pod {
 	return []v1.Pod{
 		getMockPod(),

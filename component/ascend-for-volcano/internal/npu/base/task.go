@@ -73,14 +73,15 @@ func (tp *NPUHandler) SetNPUTopologyToPodFn(task *api.TaskInfo, top []int, node 
 		}
 	}
 	topologyStr := util.ChangeIntArrToStr(convertedTop, tp.GetAnnoPreVal(tp.ReqNPUName))
+	topologyRealStr := util.ChangeIntArrToStr(top, tp.GetAnnoPreVal(tp.ReqNPUName))
 	task.Pod.Annotations[tp.GetAnnoName(tp.ReqNPUName)] = topologyStr
 	// to device-plugin judge pending pod.
 	tmp := strconv.FormatInt(time.Now().UnixNano(), util.Base10)
 	task.Pod.Annotations[util.PodPredicateTime] = tmp
-	klog.V(util.LogDebugLev).Infof("%s setNPUTopologyToPod %s==%v top:%s.", tp.GetPluginName(),
-		task.Name, tmp, topologyStr)
+	klog.V(util.LogDebugLev).Infof("%s setNPUTopologyToPod %s==%v top:%s, topReal:%s.", tp.GetPluginName(),
+		task.Name, tmp, topologyStr, topologyRealStr)
 	tp.setHardwareTypeToPod(task, node)
-	tp.setRealUsedNpuToPod(task, top, topologyStr, node)
+	tp.setRealUsedNpuToPod(task, top, topologyRealStr, node)
 	tp.setRankIndex(task)
 	tp.setSchedulerShareAnnoToPod(task, node)
 }

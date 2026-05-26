@@ -250,6 +250,8 @@ func (ps *PluginServer) deepCopyDevice(cachedDevices []*common.NpuDevice) {
 			DeviceName: dev.DeviceName,
 			Health:     dev.Health,
 			PhyID:      dev.PhyID,
+			LogicID:    dev.LogicID,
+			DevType:    dev.DevType,
 		})
 	}
 	ps.cachedLock.Unlock()
@@ -594,12 +596,39 @@ func (ps *PluginServer) GetRealAllocateDevicesFromEnv(pod v1.Pod) []string {
 				hwlog.RunLog.Errorf("get volcano device err: %v", err)
 				return nil
 			}
+			if ps.deviceType == api.NPULowerCase && common.ParamOption.RealCardType == api.Ascend910A5 {
+				annotationTag := fmt.Sprintf("%s%s", api.ResourceNamePrefix, ps.deviceType)
+				hwlog.RunLog.Infof("convert logicID to phyID from annotation %s, origin: %v", annotationTag,
+					volAllocateDevice)
+				volAllocateDevice = ps.convertLogicIDToPhyID(volAllocateDevice)
+				hwlog.RunLog.Infof("convert logicID to phyID from annotation %s, after: %v", annotationTag,
+					volAllocateDevice)
+			}
 			return volAllocateDevice
 		}
 	}
 
 	hwlog.RunLog.Debug("maybe no downward api setting here")
 	return nil
+}
+
+func (ps *PluginServer) convertLogicIDToPhyID(logicIDNameList []string) []string {
+	phyIDList := make([]string, 0)
+	ps.cachedLock.RLock()
+	defer ps.cachedLock.RUnlock()
+	for _, logicIDName := range logicIDNameList {
+		idArr := strings.Split(logicIDName, common.MiddelLine)
+		if len(idArr) != common.KeySliceLength {
+			hwlog.RunLog.Warnf("id name is not in a-b format, which is %s", logicIDName)
+			return logicIDNameList
+		}
+		for _, dev := range ps.cachedDevices {
+			if dev.DevType == idArr[0] && strconv.Itoa(int(dev.LogicID)) == idArr[1] {
+				phyIDList = append(phyIDList, fmt.Sprintf("%s%s%d", dev.DevType, common.MiddelLine, dev.PhyID))
+			}
+		}
+	}
+	return phyIDList
 }
 
 // GetKltAndRealAllocateDev get kubelet and real allocate device of pod

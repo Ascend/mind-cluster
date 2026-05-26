@@ -96,7 +96,7 @@
 |super_pod_id|为Ascend Operator提供超节点ID信息|数字|Ascend Operator|
 |hccl/rankIndex|断点续训中保持原rankId的依据|[0,1000]|Volcano、Ascend Operator|
 |distributed-job|标记训练任务类型|<ul><li>true：当前任务为分布式任务</li><li>false：当前任务为单机任务</li></ul>|Volcano|
-|<p>huawei.com/Ascend910</p><p>huawei.com/npu</p>|Ascend Device Plugin为Pod分配芯片的依据|字符串|Volcano、Ascend Device Plugin|
+|<p>huawei.com/Ascend910</p><p>huawei.com/npu</p>|Ascend Device Plugin为Pod分配芯片的依据。具体的取值含义表示对应的是/dev/下的davinciX，Ascend950代际是NPU ID，以前代际是物理ID|字符串|Volcano、Ascend Device Plugin|
 |huawei.com/AscendReal|Ascend Device Plugin为Pod实际分配芯片的记录|字符串|Volcano、Ascend Device Plugin|
 |huawei.com/npu-core|标记Pod使用的npu卡物理ID及切分模板|字符串|Volcano、Ascend Device Plugin|
 |huawei.com/kltDev|kubelet为Pod分配芯片的记录|字符串|Ascend Device Plugin|
