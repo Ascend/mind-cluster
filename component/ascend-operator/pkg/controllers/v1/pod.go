@@ -249,19 +249,54 @@ func (r *ASJobReconciler) genRankTable(ji *jobInfo) {
 		hwlog.RunLog.Warnf("rank table generator not found for job %s", ji.name)
 		return
 	}
-	if rtg.GetStatus() == utils.CompletedRTStatus {
-		hwlog.RunLog.Debugf("rank table already generated for job %s", ji.name)
-		r.checkPodDelete(rtg, ji)
+
+	allocatedPods := getAllocatedPods(ji)
+	if r.handleCompletedRankTable(rtg, ji, allocatedPods) {
 		return
 	}
 
-	allocatedPods := getAllocatedPods(ji)
 	hwlog.RunLog.Infof("allocatedPods: %d, total replicas: %d, total pods: %d",
 		len(allocatedPods), ji.totalReplicas, len(ji.pods))
 	if int(ji.totalReplicas) == 0 || len(allocatedPods) != int(ji.totalReplicas) {
 		return
 	}
 
+	r.buildNewRankTable(rtg, ji, allocatedPods)
+}
+
+func (r *ASJobReconciler) handleCompletedRankTable(
+	rtg generator.RankTableGenerator, ji *jobInfo, allocatedPods []*corev1.Pod) bool {
+	if rtg.GetStatus() != utils.CompletedRTStatus {
+		return false
+	}
+
+	// When there are more allocated pods than replicas (e.g. hot-switch backup pod),
+	// keep the current ranktable intact and wait for the transition to settle.
+	if len(allocatedPods) > int(ji.totalReplicas) {
+		hwlog.RunLog.Debugf("more allocated pods than replicas for job %s, skip ranktable update", ji.name)
+		return true
+	}
+	needClear := len(allocatedPods) < int(ji.totalReplicas)
+	needUpdate := !needClear && rtg.PodSetChanged(allocatedPods)
+	if !needClear && !needUpdate {
+		hwlog.RunLog.Debugf("rank table already generated for job %s and pod set unchanged", ji.name)
+		return true
+	}
+
+	rtg.DeletePod()
+	if needClear {
+		r.saveRankTable(rtg, ji.mtObj.GetName(), ji.mtObj.GetNamespace(), ji.mtObj.GetUID())
+		return true
+	}
+
+	rtg.SetFileStatus(utils.InitialRTStatus)
+	rtg.SetConfigmapStatus(utils.InitialRTStatus)
+	hwlog.RunLog.Infof("pod set changed for job %s, regenerating rank table", ji.name)
+	return false
+}
+
+func (r *ASJobReconciler) buildNewRankTable(
+	rtg generator.RankTableGenerator, ji *jobInfo, allocatedPods []*corev1.Pod) {
 	r.updateRankIndex(allocatedPods)
 	r.setOnePodOneNode(allocatedPods)
 	if acjob, ok := ji.job.(*mindxdlv1.AscendJob); ok {
@@ -343,19 +378,6 @@ func (r *ASJobReconciler) setOnePodOneNode(allocatedPods []*corev1.Pod) {
 			pod.Annotations[rtcm.OnePodOneNode] = "true"
 		}
 	}
-}
-
-func (r *ASJobReconciler) checkPodDelete(rtg generator.RankTableGenerator, ji *jobInfo) {
-	if len(ji.pods) >= int(ji.totalReplicas) {
-		return
-	}
-	r.deletePodForCmFile(rtg, ji.mtObj.GetUID(), ji.mtObj.GetName(), ji.mtObj.GetNamespace())
-}
-
-func (r *ASJobReconciler) deletePodForCmFile(rtg generator.RankTableGenerator,
-	uid types.UID, jobName, namespace string) {
-	rtg.DeletePod()
-	r.saveRankTable(rtg, jobName, namespace, uid)
 }
 
 func (r *ASJobReconciler) saveRankTable(rtg generator.RankTableGenerator,

@@ -10,6 +10,7 @@ package v1
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -33,6 +34,19 @@ import (
 	"ascend-operator/pkg/ranktable/utils"
 	_ "ascend-operator/pkg/testtool"
 )
+
+// newValidDeviceAnno creates a valid device annotation JSON string for testing.
+func newValidDeviceAnno() string {
+	inst := common.Instance{
+		PodName:  "test-pod",
+		ServerID: "127.0.0.1",
+		Devices: []common.Dev{
+			{DeviceID: "0", DeviceIP: "127.0.0.1"},
+		},
+	}
+	b, _ := json.Marshal(inst)
+	return string(b)
+}
 
 const (
 	num2 = 2
@@ -591,39 +605,10 @@ func TestUpdateRankIndexDeploymentReschedule(t *testing.T) {
 	})
 }
 
-// TestCheckPodDelete test the function of checkPodDelete
-func TestCheckPodDelete(t *testing.T) {
-	type args struct {
-		rtg generator.RankTableGenerator
-		ji  *jobInfo
-	}
+// TestGenRankTablePodSetChanged test genRankTable with pod set changes
+func TestGenRankTablePodSetChanged(t *testing.T) {
 	const testUid types.UID = "for_test_only"
-	const minReplicas int32 = -1
-	const maxReplicas int32 = 10
-	acjob := newCommonAscendJob()
-	acjob.UID = testUid
-	rtg := ranktable.NewGenerator(acjob)
-	rtg.SetStatus(utils.CompletedRTStatus)
-	jiNotDelete := newJobInfo(acjob)
-	jiDelete := newJobInfo(acjob)
-	jiNotDelete.totalReplicas = minReplicas // not trigger pod delete
-	jiDelete.totalReplicas = maxReplicas    // trigger pod delete
-	tests := []struct {
-		name       string
-		args       args
-		wantStatus utils.RankTableStatus
-	}{
-		{
-			name:       "01-not trigger pod delete, should not change status",
-			args:       args{rtg: rtg, ji: jiNotDelete},
-			wantStatus: utils.CompletedRTStatus,
-		},
-		{
-			name:       "02-trigger pod delete, should change status",
-			args:       args{rtg: rtg, ji: jiDelete},
-			wantStatus: utils.InitialRTStatus,
-		},
-	}
+
 	r := newCommonReconciler()
 	patch1 := gomonkey.ApplyPrivateMethod(r, "saveRankTable",
 		func(r *ASJobReconciler, rtg generator.RankTableGenerator,
@@ -631,14 +616,165 @@ func TestCheckPodDelete(t *testing.T) {
 			return
 		})
 	defer patch1.Reset()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r.checkPodDelete(tt.args.rtg, tt.args.ji)
-			if rtg.GetStatus() != tt.wantStatus {
-				t.Errorf("fail to check pod delete, status wrong")
-			}
-		})
-	}
+	patch2 := gomonkey.ApplyFunc(utils.PodHasAllocated, func(pod *corev1.Pod) bool {
+		return pod.GetDeletionTimestamp() == nil && pod.Annotations[api.Pod910DeviceAnno] != ""
+	})
+	defer patch2.Reset()
+
+	t.Run("01-pod set unchanged, should not regenerate", func(t *testing.T) {
+		acjob := newCommonAscendJob()
+		acjob.UID = testUid
+		rtg := ranktable.NewGenerator(acjob)
+		rtg.SetStatus(utils.CompletedRTStatus)
+		r.rtGenerators = map[types.UID]generator.RankTableGenerator{testUid: rtg}
+
+		pod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				UID: "pod-uid-1",
+				Annotations: map[string]string{
+					api.Pod910DeviceAnno:  newValidDeviceAnno(),
+					api.PodRankIndexAnno: "0",
+				},
+			},
+			Status: corev1.PodStatus{PodIP: "10.0.0.1"},
+		}
+		ji := newJobInfo(acjob)
+		ji.totalReplicas = 1
+		ji.pods = []*corev1.Pod{pod}
+
+		if err := rtg.AddPod(pod); err != nil {
+			t.Fatalf("failed to add pod to ranktable: %v", err)
+		}
+		rtg.SetStatus(utils.CompletedRTStatus)
+
+		r.genRankTable(ji)
+		if rtg.GetStatus() != utils.CompletedRTStatus {
+			t.Errorf("expected CompletedRTStatus, got %v", rtg.GetStatus())
+		}
+	})
+
+	t.Run("02-terminating pod with new allocated pod, should regenerate", func(t *testing.T) {
+		acjob := newCommonAscendJob()
+		acjob.UID = testUid + "_02"
+		rtg := ranktable.NewGenerator(acjob)
+		rtg.SetStatus(utils.CompletedRTStatus)
+		r.rtGenerators = map[types.UID]generator.RankTableGenerator{testUid + "_02": rtg}
+
+		validAnno := newValidDeviceAnno()
+		now := metav1.Now()
+		oldPod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				UID:              "old-pod-uid",
+				DeletionTimestamp: &now,
+				Annotations: map[string]string{
+					api.Pod910DeviceAnno:  validAnno,
+					api.PodRankIndexAnno: "0",
+				},
+			},
+			Status: corev1.PodStatus{PodIP: "10.0.0.2"},
+		}
+		newPod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				UID: "new-pod-uid",
+				Annotations: map[string]string{
+					api.Pod910DeviceAnno: validAnno,
+				},
+			},
+			Status: corev1.PodStatus{PodIP: "10.0.0.1"},
+		}
+
+		if err := rtg.AddPod(oldPod); err != nil {
+			t.Fatalf("failed to add oldPod to ranktable: %v", err)
+		}
+		rtg.SetStatus(utils.CompletedRTStatus)
+
+		ji := newJobInfo(acjob)
+		ji.totalReplicas = 1
+		ji.pods = []*corev1.Pod{oldPod, newPod}
+
+		r.genRankTable(ji)
+		if rtg.GetStatus() != utils.CompletedRTStatus {
+			t.Errorf("expected CompletedRTStatus after regeneration, got %v", rtg.GetStatus())
+		}
+	})
+
+	t.Run("03-no allocated pods, should clear ranktable", func(t *testing.T) {
+		acjob := newCommonAscendJob()
+		acjob.UID = testUid + "_03"
+		rtg := ranktable.NewGenerator(acjob)
+		rtg.SetStatus(utils.CompletedRTStatus)
+		r.rtGenerators = map[types.UID]generator.RankTableGenerator{testUid + "_03": rtg}
+
+		now := metav1.Now()
+		terminatingPod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				UID:              "term-pod-uid",
+				DeletionTimestamp: &now,
+			},
+		}
+
+		rtg.AddPod(terminatingPod)
+		rtg.SetStatus(utils.CompletedRTStatus)
+
+		ji := newJobInfo(acjob)
+		ji.totalReplicas = 1
+		ji.pods = []*corev1.Pod{terminatingPod}
+
+		r.genRankTable(ji)
+		if rtg.GetStatus() != utils.InitialRTStatus {
+			t.Errorf("expected InitialRTStatus after clear, got %v", rtg.GetStatus())
+		}
+	})
+
+	t.Run("04-pod set changed and then stable, should not oscillate", func(t *testing.T) {
+		acjob := newCommonAscendJob()
+		acjob.UID = testUid + "_04"
+		rtg := ranktable.NewGenerator(acjob)
+		rtg.SetStatus(utils.CompletedRTStatus)
+		r.rtGenerators = map[types.UID]generator.RankTableGenerator{testUid + "_04": rtg}
+
+		validAnno := newValidDeviceAnno()
+		now := metav1.Now()
+		oldPod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				UID:              "old-pod-uid-4",
+				DeletionTimestamp: &now,
+				Annotations: map[string]string{
+					api.Pod910DeviceAnno:  validAnno,
+					api.PodRankIndexAnno: "0",
+				},
+			},
+			Status: corev1.PodStatus{PodIP: "10.0.0.2"},
+		}
+		newPod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				UID: "new-pod-uid-4",
+				Annotations: map[string]string{
+					api.Pod910DeviceAnno: validAnno,
+				},
+			},
+			Status: corev1.PodStatus{PodIP: "10.0.0.1"},
+		}
+
+		if err := rtg.AddPod(oldPod); err != nil {
+			t.Fatalf("failed to add oldPod to ranktable: %v", err)
+		}
+		rtg.SetStatus(utils.CompletedRTStatus)
+
+		ji := newJobInfo(acjob)
+		ji.totalReplicas = 1
+		ji.pods = []*corev1.Pod{oldPod, newPod}
+
+		r.genRankTable(ji)
+		if rtg.GetStatus() != utils.CompletedRTStatus {
+			t.Fatalf("first gen: expected CompletedRTStatus, got %v", rtg.GetStatus())
+		}
+
+		r.genRankTable(ji)
+		if rtg.GetStatus() != utils.CompletedRTStatus {
+			t.Errorf("second gen: expected CompletedRTStatus (no oscillation), got %v", rtg.GetStatus())
+		}
+	})
 }
 
 // TestSaveRankTable test the function of saveRankTable

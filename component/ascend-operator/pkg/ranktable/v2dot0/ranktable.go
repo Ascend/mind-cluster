@@ -310,6 +310,11 @@ func (r *RankTable) DeletePod() {
 	r.SetStatus(utils.InitialRTStatus)
 }
 
+// PodSetChanged checks whether the given pod set differs from the current ranks stored in the generator.
+func (r *RankTable) PodSetChanged(pods []*corev1.Pod) bool {
+	return common.PodUIDSetChanged(r.ranks, pods)
+}
+
 func (r *RankTable) GatherServerList() {
 	r.RankList = make([]*common.Rank, 0)
 	r.ranks.Range(func(key, value interface{}) bool {

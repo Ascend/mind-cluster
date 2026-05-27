@@ -27,6 +27,7 @@ type RankTableGenerator interface {
 	GetStatus() utils.RankTableStatus
 	AddPod(*v1.Pod) error
 	DeletePod()
+	PodSetChanged(pods []*v1.Pod) bool
 	GatherServerList()
 	ToString() (string, error)
 	GetConfigmapExist() utils.ConfigmapCheck

@@ -281,6 +281,49 @@ func TestDeletePod(t *testing.T) {
 	}
 }
 
+// TestPodSetChanged checks that PodSetChanged correctly detects pod set changes.
+func TestPodSetChanged(t *testing.T) {
+	rt := New(fakeAscendJob())
+
+	pod1 := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{UID: "uid-1"}}
+	pod2 := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{UID: "uid-2"}}
+	pod3 := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{UID: "uid-3"}}
+
+	// empty ranks, empty pods
+	if rt.PodSetChanged(nil) {
+		t.Error("expected no change for empty ranks and nil pods")
+	}
+
+	// empty ranks, non-empty pods
+	if !rt.PodSetChanged([]*corev1.Pod{pod1}) {
+		t.Error("expected change when ranks empty but pods provided")
+	}
+
+	// set ranks to [pod1, pod2]
+	rt.ranks.Store(pod1.UID, &common.Rank{})
+	rt.ranks.Store(pod2.UID, &common.Rank{})
+
+	// same pods, no change
+	if rt.PodSetChanged([]*corev1.Pod{pod1, pod2}) {
+		t.Error("expected no change for same pod set")
+	}
+
+	// different order, still same UIDs
+	if rt.PodSetChanged([]*corev1.Pod{pod2, pod1}) {
+		t.Error("expected no change when order differs but UIDs same")
+	}
+
+	// pod replaced: [pod1, pod3] vs [pod1, pod2]
+	if !rt.PodSetChanged([]*corev1.Pod{pod1, pod3}) {
+		t.Error("expected change when a pod is replaced")
+	}
+
+	// fewer pods: [pod1] vs [pod1, pod2]
+	if !rt.PodSetChanged([]*corev1.Pod{pod1}) {
+		t.Error("expected change when pods count decreases")
+	}
+}
+
 // genRankListForTest is a test-only helper that allows specifying portAddrType directly.
 func genRankListForTest(inst *common.Instance, portAddrType string) *common.Rank {
 	rank := &common.Rank{}

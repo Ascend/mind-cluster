@@ -17,6 +17,7 @@ import (
 	"sync"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
@@ -378,6 +379,38 @@ func (r *BaseGenerator) setExtendedServerInfo(pod *corev1.Pod, server *Server) {
 func (r *BaseGenerator) DeletePod() {
 	r.servers = &sync.Map{}
 	r.SetStatus(utils.InitialRTStatus)
+}
+
+// PodSetChanged checks whether the given pod set differs from the current servers stored in the generator.
+func (r *BaseGenerator) PodSetChanged(pods []*corev1.Pod) bool {
+	return PodUIDSetChanged(r.servers, pods)
+}
+
+// PodUIDSetChanged compares pod UIDs from a sync.Map against a pod slice to detect set changes.
+func PodUIDSetChanged(m *sync.Map, pods []*corev1.Pod) bool {
+	newUIDs := make(map[types.UID]struct{}, len(pods))
+	for _, p := range pods {
+		newUIDs[p.UID] = struct{}{}
+	}
+	oldCount := 0
+	changed := false
+	m.Range(func(key, _ interface{}) bool {
+		oldCount++
+		uid, ok := key.(types.UID)
+		if !ok {
+			changed = true
+			return false
+		}
+		if _, ok := newUIDs[uid]; !ok {
+			changed = true
+			return false
+		}
+		return true
+	})
+	if changed || oldCount != len(pods) {
+		return true
+	}
+	return false
 }
 
 // GatherServerList is used to gather server list.

@@ -48,6 +48,7 @@ dout = "dout"
 Pn = "Pn"
 arange = "arange"
 ist = "ist"
+CLOS = "CLOS"
 
 [type.py]
 extend-glob = []
