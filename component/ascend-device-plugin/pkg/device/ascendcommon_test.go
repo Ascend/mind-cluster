@@ -34,6 +34,7 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
@@ -1692,5 +1693,115 @@ func TestQueryNetworkStatusWithoutRoCEDev(t *testing.T) {
 			result := queryNetworkStatusWithoutFaultCode(faultCodes, device)
 			convey.So(result, convey.ShouldNotContain, common.LinkDownFaultCode)
 		})
+	})
+}
+
+func TestUpdateNodeDeviceInfoRateLimit(t *testing.T) {
+	convey.Convey("test UpdateNodeDeviceInfo cm report rate limit", t, func() {
+		tool := &AscendTools{
+			name:   api.Ascend910,
+			client: &kubeclient.ClientK8s{},
+			dmgr:   &devmanager.DeviceManagerMock{},
+		}
+
+		var writeCmCalled bool
+		var updateFuncCalled bool
+		var condSucceeded bool
+
+		patches := gomonkey.NewPatches().
+			ApplyPrivateMethod(tool, "checkAndInitNodeDeviceInfo", func(_ *AscendTools) {}).
+			ApplyMethod(reflect.TypeOf(&kubeclient.ClientK8s{}), "GetDeviceInfoCMCache",
+				func(_ *kubeclient.ClientK8s) *common.NodeDeviceInfoCache {
+					return &common.NodeDeviceInfoCache{
+						DeviceInfo: common.NodeDeviceInfo{
+							DeviceList: map[string]string{"Ascend910-0": `{"health":"healthy"}`},
+							UpdateTime: time.Now().Unix(),
+						},
+					}
+				}).
+			ApplyPrivateMethod(tool, "handleManuallySeparateNPUFaultInfo",
+				func(_ *AscendTools) (string, []common.LogicId) { return "", nil }).
+			ApplyPrivateMethod(tool, "delVirDevInfo", func(_ *AscendTools, _ map[string]string) {}).
+			ApplyFuncReturn(common.GetSwitchFaultInfo, common.SwitchFaultInfo{}).
+			ApplyFuncReturn(common.GetSyncMapLen, 0).
+			ApplyFuncReturn(common.CopyUpgradeFaultCache, common.UpgradeFaultReasonMap[common.LogicId]{}).
+			ApplyPrivateMethod(tool, "writeDeviceInfoCm",
+				func(_ *AscendTools, _ string, _ map[string]string,
+					_ common.UpgradeFaultReasonMap[common.LogicId], _ common.SwitchFaultInfo,
+					_ common.DpuInfo) (bool, error) {
+					writeCmCalled = true
+					return true, nil
+				}).
+			ApplyFunc(wait.PollImmediate,
+				func(_, _ time.Duration, condition wait.ConditionFunc) error {
+					ok, _ := condition()
+					condSucceeded = ok
+					return nil
+				})
+		defer patches.Reset()
+
+		noopUpdateBase := func(deviceList, newDeviceList map[string]string, _ common.DevStatusSet) error {
+			return nil
+		}
+		changeUpdateBase := func(deviceList, newDeviceList map[string]string, _ common.DevStatusSet) error {
+			newDeviceList["Ascend910-1"] = `{"health":"healthy"}`
+			return nil
+		}
+		noopUpdate := func(a, b map[string]string, c common.DevStatusSet) error {
+			updateFuncCalled = true
+			return noopUpdateBase(a, b, c)
+		}
+		changeUpdate := func(a, b map[string]string, c common.DevStatusSet) error {
+			updateFuncCalled = true
+			return changeUpdateBase(a, b, c)
+		}
+
+		tests := []struct {
+			name                 string
+			timestamp            time.Time
+			updateFunc           func(map[string]string, map[string]string, common.DevStatusSet) error
+			wantWriteCm          bool
+			wantCondSucceed      bool
+			wantUpdateFuncCalled bool
+		}{
+			{
+				name:                 "should return false to retry when rate limited within 1s",
+				timestamp:            time.Now(),
+				updateFunc:           changeUpdate,
+				wantWriteCm:          false,
+				wantCondSucceed:      false,
+				wantUpdateFuncCalled: false,
+			},
+			{
+				name:                 "should proceed when lastUpdateTimeStamp is zero",
+				timestamp:            time.Time{},
+				updateFunc:           noopUpdate,
+				wantWriteCm:          true,
+				wantCondSucceed:      true,
+				wantUpdateFuncCalled: true,
+			},
+			{
+				name:                 "should proceed when min interval has passed",
+				timestamp:            time.Now().Add(-2 * time.Second),
+				updateFunc:           changeUpdate,
+				wantWriteCm:          true,
+				wantCondSucceed:      true,
+				wantUpdateFuncCalled: true,
+			},
+		}
+
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				tool.lastUpdateTimeStamp = tt.timestamp
+				writeCmCalled = false
+				updateFuncCalled = false
+				condSucceeded = false
+				err := tool.UpdateNodeDeviceInfo(common.DevStatusSet{}, common.DpuInfo{}, tt.updateFunc)
+				convey.So(err, convey.ShouldBeNil)
+				convey.So(writeCmCalled, convey.ShouldEqual, tt.wantWriteCm)
+				convey.So(condSucceeded, convey.ShouldEqual, tt.wantCondSucceed)
+				convey.So(updateFuncCalled, convey.ShouldEqual, tt.wantUpdateFuncCalled)
+			})
+		}
 	})
 }
