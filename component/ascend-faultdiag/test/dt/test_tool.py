@@ -138,7 +138,7 @@ class TestFilterBmcLog(unittest.TestCase):
             f.write('test')
         with open(os.path.join(self.temp_dir, "DeviceDump", 'device_dump.log'), 'w', encoding='utf-8') as f:
             f.write('test')
-        with open(os.path.join(self.temp_dir, "LogDump", 'log_dump.log'), 'w', encoding='utf-8') as f:
+        with open(os.path.join(self.temp_dir, "LogDump", 'remote_log'), 'w', encoding='utf-8') as f:
             f.write('test')
         with open(os.path.join(self.temp_dir, 'bmc.log'), 'w', encoding='utf-8') as f:
             f.write('test')
@@ -150,7 +150,7 @@ class TestFilterBmcLog(unittest.TestCase):
         self.assertEqual(
             self.instance.bmc_device_dump_log_list, [os.path.join(self.temp_dir, "DeviceDump", 'device_dump.log')]
         )
-        self.assertEqual(self.instance.bmc_log_dump_log_list, [os.path.join(self.temp_dir, "LogDump", 'log_dump.log')])
+        self.assertEqual(self.instance.bmc_log_dump_log_list, [os.path.join(self.temp_dir, "LogDump", 'remote_log')])
         self.assertEqual(self.instance.bmc_log_list, [])
 
 

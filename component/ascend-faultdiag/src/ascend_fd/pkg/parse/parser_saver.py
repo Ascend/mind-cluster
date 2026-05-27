@@ -48,6 +48,7 @@ from ascend_fd.utils.tool import (
     collect_parse_results,
     WORKER_MAX_NUM,
     check_symlink,
+    decompress_gz,
 )
 
 logger = logging.getLogger("FAULT_DIAG")
@@ -661,6 +662,7 @@ class BMCLogSaver(BaseLogSaver):
 
     FRU_INFO_KEY = "fruinfo.txt"
     MDB_INFO_KEY = "mdb_info.log"
+    REMOTE_LOG_KEY = "remote_log"
     APP_DUMP_KEY = "AppDump"
     DEVICE_DUMP_KEY = "DeviceDump"
     LOG_DUMP_KEY = "LogDump"
@@ -693,14 +695,29 @@ class BMCLogSaver(BaseLogSaver):
                 if file_name == self.MDB_INFO_KEY and "chassis" in file_path:
                     self.mdb_info_files.append(file_path)
                     continue
+                if self.LOG_DUMP_KEY in file_path:
+                    self.collect_remote_log(file_name, file_path)
+                    continue
                 if not file_name.endswith(".log"):
                     continue
                 if self.APP_DUMP_KEY in file_path:
                     self.bmc_app_dump_log_list.append(file_path)
                 elif self.DEVICE_DUMP_KEY in file_path:
                     self.bmc_device_dump_log_list.append(file_path)
-                elif self.LOG_DUMP_KEY in file_path:
-                    self.bmc_log_dump_log_list.append(file_path)
+
+    def collect_remote_log(self, file_name, file_path):
+        """
+        Collect remote log
+        :param file_name: remote log name
+        :param file_path: remote log path
+        """
+        if self.REMOTE_LOG_KEY not in file_name:
+            return
+        output_file_path = file_path
+        if file_name.endswith(".gz"):
+            output_file_path = decompress_gz(file_path)
+        if output_file_path:
+            self.bmc_log_dump_log_list.append(output_file_path)
 
     def get_fruinfo_log(self) -> list:
         """

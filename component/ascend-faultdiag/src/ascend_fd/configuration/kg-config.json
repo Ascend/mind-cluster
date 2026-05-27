@@ -21909,9 +21909,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","0000001D"]
+                "in": [
+                    ["error", "code", "0000001D"],
+                    ["0x0000001D", "Asserted"]
+                ]
             }
         },
         "0x2C000031": {
@@ -21930,9 +21933,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","2C000031"]
+                "in": [
+                    ["error", "code", "2C000031"],
+                    ["0x2C000031", "Asserted"]
+                ]
             }
         },
         "0x2800001F": {
@@ -21951,11 +21957,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog | BMCAppDumpLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
                 "in": [
                     ["error", "code", "2800001F"],
-                    ["CPU", "HCCS", "link failed"]
+                    ["CPU", "HCCS", "link failed"],
+                    ["0x2800001F", "Asserted"]
                 ]
             }
         },
@@ -21975,9 +21982,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","01000017"]
+                "in": [
+                    ["error", "code", "01000017"],
+                    ["0x01000017", "Asserted"]
+                ]
             }
         },
         "0x00000099": {
@@ -21996,9 +22006,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","00000099"]
+                "in": [
+                    ["error", "code", "00000099"],
+                    ["0x00000099", "Asserted"]
+                ]
             }
         },
         "0x00000089": {
@@ -22017,9 +22030,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","00000089"]
+                "in": [
+                    ["error", "code", "00000089"],
+                    ["0x00000089", "Asserted"]
+                ]
             }
         },
         "0x06000025": {
@@ -22038,9 +22054,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","06000025"]
+                "in": [
+                    ["error", "code", "06000025"],
+                    ["0x06000025", "Asserted"]
+                ]
             }
         },
         "0x080000ED": {
@@ -22059,9 +22078,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","080000ED"]
+                "in": [
+                    ["error", "code", "080000ED"],
+                    ["0x080000ED", "Asserted"]
+                ]
             }
         },
         "0x080000CF": {
@@ -22080,9 +22102,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","080000CF"]
+                "in": [
+                    ["error", "code", "080000CF"],
+                    ["0x080000CF", "Asserted"]
+                ]
             }
         },
         "0x080000D7": {
@@ -22101,9 +22126,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","080000D7"]
+                "in": [
+                    ["error", "code", "080000D7"],
+                    ["0x080000D7", "Asserted"]
+                ]
             }
         },
         "0x080000D5": {
@@ -22122,9 +22150,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","080000D5"]
+                "in": [
+                    ["error", "code", "080000D5"],
+                    ["0x080000D5", "Asserted"]
+                ]
             }
         },
         "0x080000DF": {
@@ -22143,9 +22174,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","080000DF"]
+                "in": [
+                    ["error", "code", "080000DF"],
+                    ["0x080000DF", "Asserted"]
+                ]
             }
         },
         "0x080000DB": {
@@ -22164,9 +22198,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","080000DB"]
+                "in": [
+                    ["error", "code", "080000DB"],
+                    ["0x080000DB", "Asserted"]
+                ]
             }
         },
         "0x080000EB": {
@@ -22185,9 +22222,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","080000EB"]
+                "in": [
+                    ["error", "code", "080000EB"],
+                    ["0x080000EB", "Asserted"]
+                ]
             }
         },
         "0x080000C9": {
@@ -22206,9 +22246,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","080000C9"]
+                "in": [
+                    ["error", "code", "080000C9"],
+                    ["0x080000C9", "Asserted"]
+                ]
             }
         },
         "0x02000007": {
@@ -22227,9 +22270,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","02000007"]
+                "in": [
+                    ["error", "code", "02000007"],
+                    ["0x02000007", "Asserted"]
+                ]
             }
         },
         "0x02000017": {
@@ -22248,9 +22294,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","02000017"]
+                "in": [
+                    ["error", "code", "02000017"],
+                    ["0x02000017", "Asserted"]
+                ]
             }
         },
         "0x0F000011": {
@@ -22269,9 +22318,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","0F000011"]
+                "in": [
+                    ["error", "code", "0F000011"],
+                    ["0x0F000011", "Asserted"]
+                ]
             }
         },
         "0x0500000D": {
@@ -22290,9 +22342,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","0500000D"]
+                "in": [
+                    ["error", "code", "0500000D"],
+                    ["0x0500000D", "Asserted"]
+                ]
             }
         },
         "0x05000005": {
@@ -22311,9 +22366,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","05000005"]
+                "in": [
+                    ["error", "code", "05000005"],
+                    ["0x05000005", "Asserted"]
+                ]
             }
         },
         "0x05000001": {
@@ -22332,9 +22390,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","05000001"]
+                "in": [
+                    ["error", "code", "05000001"],
+                    ["0x05000001", "Asserted"]
+                ]
             }
         },
         "0x05000009": {
@@ -22353,9 +22414,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","05000009"]
+                "in": [
+                    ["error", "code", "05000009"],
+                    ["0x05000009", "Asserted"]
+                ]
             }
         },
         "0x28000037": {
@@ -22374,9 +22438,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","28000037"]
+                "in": [
+                    ["error", "code", "28000037"],
+                    ["0x28000037", "Asserted"]
+                ]
             }
         },
         "0x00000003": {
@@ -22407,9 +22474,12 @@
                     "7. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","00000003"]
+                "in": [
+                    ["error", "code", "00000003"],
+                    ["0x00000003", "Asserted"]
+                ]
             }
         },
         "0x0000001F": {
@@ -22432,9 +22502,12 @@
                     "3. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","0000001F"]
+                "in": [
+                    ["error", "code", "0000001F"],
+                    ["0x0000001F", "Asserted"]
+                ]
             }
         },
         "0x00000021": {
@@ -22455,9 +22528,12 @@
                     "2. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","00000021"]
+                "in": [
+                    ["error", "code", "00000021"],
+                    ["0x00000021", "Asserted"]
+                ]
             }
         },
         "0x000000D3": {
@@ -22480,9 +22556,12 @@
                     "3. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","000000D3"]
+                "in": [
+                    ["error", "code", "000000D3"],
+                    ["0x000000D3", "Asserted"]
+                ]
             }
         },
         "0x01000057": {
@@ -22509,9 +22588,12 @@
                     "5. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","01000057"]
+                "in": [
+                    ["error", "code", "01000057"],
+                    ["0x01000057", "Asserted"]
+                ]
             }
         },
         "0x01000059": {
@@ -22534,9 +22616,12 @@
                     "3. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","01000059"]
+                "in": [
+                    ["error", "code", "01000059"],
+                    ["0x01000059", "Asserted"]
+                ]
             }
         },
         "0x02000009": {
@@ -22557,9 +22642,12 @@
                     "2. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","02000009"]
+                "in": [
+                    ["error", "code", "02000009"],
+                    ["0x02000009", "Asserted"]
+                ]
             }
         },
         "0x0200000B": {
@@ -22582,9 +22670,12 @@
                     "3. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","0200000B"]
+                "in": [
+                    ["error", "code", "0200000B"],
+                    ["0x0200000B", "Asserted"]
+                ]
             }
         },
         "0x02000013": {
@@ -22605,9 +22696,12 @@
                     "2. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","02000013"]
+                "in": [
+                    ["error", "code", "02000013"],
+                    ["0x02000013", "Asserted"]
+                ]
             }
         },
         "0x0200001F": {
@@ -22628,9 +22722,12 @@
                     "2. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","0200001F"]
+                "in": [
+                    ["error", "code", "0200001F"],
+                    ["0x0200001F", "Asserted"]
+                ]
             }
         },
         "0x02000027": {
@@ -22653,9 +22750,12 @@
                     "3. On the web storage management page, collect RAID card logs and contact the RAID card engineer for further handling."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","02000027"]
+                "in": [
+                    ["error", "code", "02000027"],
+                    ["0x02000027", "Asserted"]
+                ]
             }
         },
         "0x02000029": {
@@ -22676,9 +22776,12 @@
                     "2. On the web storage management page, collect RAID card logs and contact the RAID card engineer for further handling."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","02000029"]
+                "in": [
+                    ["error", "code", "02000029"],
+                    ["0x02000029", "Asserted"]
+                ]
             }
         },
         "0x0200002B": {
@@ -22699,9 +22802,12 @@
                     "2. On the web storage management page, collect RAID card logs and contact the RAID card engineer for further handling."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","0200002B"]
+                "in": [
+                    ["error", "code", "0200002B"],
+                    ["0x0200002B", "Asserted"]
+                ]
             }
         },
         "0x0200002D": {
@@ -22724,9 +22830,12 @@
                     "3. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","0200002D"]
+                "in": [
+                    ["error", "code", "0200002D"],
+                    ["0x0200002D", "Asserted"]
+                ]
             }
         },
         "0x08000001": {
@@ -22751,9 +22860,12 @@
                     "4. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","08000001"]
+                "in": [
+                    ["error", "code", "08000001"],
+                    ["0x08000001", "Asserted"]
+                ]
             }
         },
         "0x08000003": {
@@ -22780,9 +22892,12 @@
                     "5. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","08000003"]
+                "in": [
+                    ["error", "code", "08000003"],
+                    ["0x08000003", "Asserted"]
+                ]
             }
         },
         "0x08000045": {
@@ -22805,11 +22920,12 @@
                     "3. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog | BMCAppDumpLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
                 "in": [
                     ["error", "code", "08000045"],
-                    ["The", "PCIe card", "EEPROM is fault"]
+                    ["The", "PCIe card", "EEPROM is fault"],
+                    ["0x08000045", "Asserted"]
                 ]
             }
         },
@@ -22833,9 +22949,12 @@
                     "3. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","0800004B"]
+                "in": [
+                    ["error", "code", "0800004B"],
+                    ["0x0800004B", "Asserted"]
+                ]
             }
         },
         "0x0800005D": {
@@ -22858,9 +22977,12 @@
                     "3. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","0800005D"]
+                "in": [
+                    ["error", "code", "0800005D"],
+                    ["0x0800005D", "Asserted"]
+                ]
             }
         },
         "0x0800006F": {
@@ -22883,9 +23005,12 @@
                     "3. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","0800006F"]
+                "in": [
+                    ["error", "code", "0800006F"],
+                    ["0x0800006F", "Asserted"]
+                ]
             }
         },
         "0x08000095": {
@@ -22910,9 +23035,12 @@
                     "4. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","08000095"]
+                "in": [
+                    ["error", "code", "08000095"],
+                    ["0x08000095", "Asserted"]
+                ]
             }
         },
         "0x080000F3": {
@@ -22935,9 +23063,12 @@
                     "3. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","080000F3"]
+                "in": [
+                    ["error", "code", "080000F3"],
+                    ["0x080000F3", "Asserted"]
+                ]
             }
         },
         "0x0D000001": {
@@ -22962,9 +23093,12 @@
                     "4. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","0D000001"]
+                "in": [
+                    ["error", "code", "0D000001"],
+                    ["0x0D000001", "Asserted"]
+                ]
             }
         },
         "0x0D000003": {
@@ -22991,9 +23125,12 @@
                     "5. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","0D000003"]
+                "in": [
+                    ["error", "code", "0D000003"],
+                    ["0x0D000003", "Asserted"]
+                ]
             }
         },
         "0x24000007": {
@@ -23014,9 +23151,12 @@
                     "2. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","24000007"]
+                "in": [
+                    ["error", "code", "24000007"],
+                    ["0x24000007", "Asserted"]
+                ]
             }
         },
         "0x2400000D": {
@@ -23035,9 +23175,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","2400000D"]
+                "in": [
+                    ["error", "code", "2400000D"],
+                    ["0x2400000D", "Asserted"]
+                ]
             }
         },
         "0x2400000F": {
@@ -23056,9 +23199,12 @@
                     "1. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","2400000F"]
+                "in": [
+                    ["error", "code", "2400000F"],
+                    ["0x2400000F", "Asserted"]
+                ]
             }
         },
         "0x24000011": {
@@ -23079,9 +23225,12 @@
                     "2. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","24000011"]
+                "in": [
+                    ["error", "code", "24000011"],
+                    ["0x24000011", "Asserted"]
+                ]
             }
         },
         "0x29000001": {
@@ -23106,9 +23255,12 @@
                     "4. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","29000001"]
+                "in": [
+                    ["error", "code", "29000001"],
+                    ["0x29000001", "Asserted"]
+                ]
             }
         },
         "0x2900002F": {
@@ -23133,9 +23285,12 @@
                     "4. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","2900002F"]
+                "in": [
+                    ["error", "code", "2900002F"],
+                    ["0x2900002F", "Asserted"]
+                ]
             }
         },
         "0x2C000081": {
@@ -23156,15 +23311,291 @@
                     "2. Contact technical support."
                 ]
             },
-            "source_file": "NodeDLog",
+            "source_file": "NodeDLog | BMCLogDumpLog",
             "regex": {
-                "in": ["error","code","2C000081"]
+                "in": [
+                    ["error", "code", "2C000081"],
+                    ["0x2C000081", "Asserted"]
+                ]
+            }
+        },
+        "0x00000005": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "CPU",
+                "cause_zh": "CPU VDDQ温度过高一般告警",
+                "description_zh": "a. 风扇模块故障。\nb. 环境温度过高。\nc. 进风口/出风口堵塞。\nd. 未安装导风罩。\ne. 主板故障。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "CPU VDDQ Overtemperature Minor Alarm",
+                "description_en": "a. Fan module failure.\nb. Ambient temperature too high.\nc. Air intake/exhaust vent blocked.\nd. Air deflector not installed.\ne. Motherboard failure.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x00000005", "Asserted"]
+            }
+        },
+        "0x00000007": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "CPU",
+                "cause_zh": "CPU VRD温度过高一般告警",
+                "description_zh": "a. 风扇模块故障。\nb. 环境温度过高。\nc. 进风口/出风口堵塞。\nd. 未安装导风罩。\ne. 主板故障。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "CPU VRD Overtemperature Minor Alarm",
+                "description_en": "a. Fan module failure.\nb. Ambient temperature too high.\nc. Air intake/exhaust vent blocked.\nd. Air deflector not installed.\ne. Motherboard failure.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x00000007", "Asserted"]
+            }
+        },
+        "0x0000000F": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "CPU",
+                "cause_zh": "CPU过热关机",
+                "description_zh": "a. 环境温度过高。\nb. 进风口/出风口堵塞。\nc. 存在空槽位或间隔。\nd. 风扇模块故障。\ne. 未安装导风罩。\nf. 散热器接触不良或液冷装置故障。\ng. CPU故障。",
+                "suggestion_zh": [
+                    "1. 不处理；"
+                ],
+                "cause_en": "CPU overheating shutdown",
+                "description_en": "a. The ambient temperature is too high.\nb. The air intake vent/exhaust vent is blocked.\nc. There are empty slots or gaps.\nd. The fan module is faulty.\ne. The air deflector is not installed.\nf. The heat sink has poor contact or the liquid cooling device is faulty.\ng. The CPU is faulty.",
+                "suggestion_en": [
+                    "1. Not processed."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x0000000F", "Asserted"]
+            }
+        },
+        "0x00000011": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "CPU",
+                "cause_zh": "CPU自检失败",
+                "description_zh": "a. CPU故障。\nb. 主板故障。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "CPU self-test failed",
+                "description_en": "a. CPU failure.\nb. Motherboard failure.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x00000011", "Asserted"]
+            }
+        },
+        "0x00000015": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "CPU",
+                "cause_zh": "CPU插入",
+                "description_zh": "CPU插入。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "CPU insertion",
+                "description_en": "CPU insertion.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x00000015", "Asserted"]
+            }
+        },
+        "0x00000017": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "CPU",
+                "cause_zh": "CPU移除",
+                "description_zh": "CPU移除。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "CPU Removal",
+                "description_en": "CPU Removal.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x00000017", "Asserted"]
+            }
+        },
+        "0x00000023": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "CPU",
+                "cause_zh": "CPU核心温度读取失败",
+                "description_zh": "与ME通信故障，或ME异常。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "Failed to read the CPU core temperature.",
+                "description_en": "The communication with the ME fails, or the ME is abnormal.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x00000023", "Asserted"]
+            }
+        },
+        "0x0000006D": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "CPU",
+                "cause_zh": "CPU核心温度过高一般告警",
+                "description_zh": "CPU核心温度高于门限。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "The CPU core temperature is too high.",
+                "description_en": "The CPU core temperature is higher than the threshold.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x0000006D", "Asserted"]
+            }
+        },
+        "0x00000073": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "CPU",
+                "cause_zh": "CPU不在位严重告警",
+                "description_zh": "a. 未安装CPU。\nb. CPU插座接触不良。\nc. 主板故障。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "CPU Not In Position (Major Alarm)",
+                "description_en": "a. No CPU is installed.\nb. The CPU socket is in poor contact.\nc. The main board is faulty.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x00000073", "Asserted"]
+            }
+        },
+        "0x00000079": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "CPU",
+                "cause_zh": "CPU CE类硬失效",
+                "description_zh": "CPU与底座可能存在损坏或接触不良现象。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "CPU CE hard failure",
+                "description_en": "The CPU and the socket may be damaged or in poor contact.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x00000079", "Asserted"]
+            }
+        },
+        "0x000000BB": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "CPU",
+                "cause_zh": "CPU的内存通道故障",
+                "description_zh": "a. 内存连接松动或损坏。\nb. 内存故障。\nc. 主板故障。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "Memory channel failure of the CPU",
+                "description_en": "a. The memory connection is loose or damaged.\nb. Memory failure.\nc. Motherboard failure.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x000000BB", "Asserted"]
+            }
+        },
+        "0x000000C3": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "CPU",
+                "cause_zh": "CPU核心温度过高严重告警",
+                "description_zh": "a. 环境温度过高。\nb. 风扇模块故障。\nc. 进风口/出风口堵塞。\nd. 主板故障。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "The CPU core temperature is too high.",
+                "description_en": "a. The ambient temperature is too high.\nb. The fan module is faulty.\nc. The air intake/exhaust vents are blocked.\nd. The motherboard is faulty.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x000000C3", "Asserted"]
+            }
+        },
+        "0x000000DD": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "CPU",
+                "cause_zh": "CPU的VRD电压过高",
+                "description_zh": "ADC电路异常。",
+                "suggestion_zh": [
+                    "1. 不处理；"
+                ],
+                "cause_en": "The VRD voltage of the CPU is too high.",
+                "description_en": "The ADC circuit is abnormal.",
+                "suggestion_en": [
+                    "1. Not processed."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x000000DD", "Asserted"]
             }
         },
         "0x000000DF": {
             "attribute": {
                 "class": "Hardware",
-                "component": "AI Server",
+                "component": "BMC",
                 "module": "CPU",
                 "cause_zh": "CPU的VRD电压过低",
                 "description_zh": "CPU所在的板卡故障。",
@@ -23177,17 +23608,15 @@
                     "1. Not processed."
                 ]
             },
-            "source_file": "BMCAppDumpLog",
+            "source_file": "BMCLogDumpLog",
             "regex": {
-                "in": [
-                    "iBMC cannot communicate with PSU"
-                ]
+                "in": ["0x000000DF", "Asserted"]
             }
         },
         "0x000000E1": {
             "attribute": {
                 "class": "Hardware",
-                "component": "AI Server",
+                "component": "BMC",
                 "module": "CPU",
                 "cause_zh": "CPU的VRD电压读取失败",
                 "description_zh": "VRD电路异常。",
@@ -23200,17 +23629,15 @@
                     "1. Not processed."
                 ]
             },
-            "source_file": "BMCAppDumpLog",
+            "source_file": "BMCLogDumpLog",
             "regex": {
-                "in": [
-                    "The AC/DC input of PSU", "is lost or out-of-range"
-                ]
+                "in": ["0x000000E1", "Asserted"]
             }
         },
         "0x000000E7": {
             "attribute": {
                 "class": "Hardware",
-                "component": "AI Server",
+                "component": "BMC",
                 "module": "CPU",
                 "cause_zh": "CPU同步异常",
                 "description_zh": "CPU管脚故障或BIOS软件异常。",
@@ -23223,195 +23650,387 @@
                     "1. Not processed."
                 ]
             },
-            "source_file": "BMCAppDumpLog",
+            "source_file": "BMCLogDumpLog",
             "regex": {
-                "in": [
-                    "PSU", "is overtemperature"
-                ]
+                "in": ["0x000000E7", "Asserted"]
             }
         },
-        "0x08000007": {
+        "0x0100000D": {
             "attribute": {
                 "class": "Hardware",
-                "component": "AI Server",
-                "module": "PCIe Card",
-                "cause_zh": "PCIE标卡FRU数据读取失败",
-                "description_zh": "EEPROM或访问通道故障。",
+                "component": "BMC",
+                "module": "Memory",
+                "cause_zh": "内存可纠正（ECC）错误计数超门限",
+                "description_zh": "内存可纠正（ECC）错误计数超门限。",
                 "suggestion_zh": [
                     "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
                 ],
-                "cause_en": "Failed to read FRU data from a standard PCIE card.",
-                "description_en": "EEPROM or access channel failure.",
+                "cause_en": "The count of correctable (ECC) memory errors has exceeded the threshold.",
+                "description_en": "The count of correctable (ECC) memory errors has exceeded the threshold.",
                 "suggestion_en": [
                     "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
                 ]
             },
-            "source_file": "BMCAppDumpLog",
+            "source_file": "BMCLogDumpLog",
             "regex": {
-                "in": [
-                    "Failed to obtain electronic label data of the", "PCIe card"
-                ]
+                "in": ["0x0100000D", "Asserted"]
             }
         },
-        "0x0F000019": {
+        "0x0100000F": {
             "attribute": {
                 "class": "Hardware",
-                "component": "AI Server",
-                "module": "Riser Card",
-                "cause_zh": "Riser卡更换记录",
-                "description_zh": "1. 更换Riser卡。",
+                "component": "BMC",
+                "module": "Memory",
+                "cause_zh": "内存插入",
+                "description_zh": "内存插入。",
                 "suggestion_zh": [
                     "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
                 ],
-                "cause_en": "Riser Card Replacement Record",
-                "description_en": "1. Replace the Riser card.",
+                "cause_en": "Memory Insertion",
+                "description_en": "Memory Insertion.",
                 "suggestion_en": [
                     "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
                 ]
             },
-            "source_file": "BMCAppDumpLog",
+            "source_file": "BMCLogDumpLog",
             "regex": {
-                "in": [
-                    "Riser Card", "is replaced from SN", "to SN"
-                ]
+                "in": ["0x0100000F", "Asserted"]
             }
         },
-        "0x0F00001D": {
+        "0x01000011": {
             "attribute": {
                 "class": "Hardware",
-                "component": "AI Server",
-                "module": "PCIe Riser",
-                "cause_zh": "PCIe Riser卡MCU通信异常",
-                "description_zh": "Riser卡线缆接触不良或Riser卡故障。",
+                "component": "BMC",
+                "module": "Memory",
+                "cause_zh": "内存拔出",
+                "description_zh": "内存拔出。",
                 "suggestion_zh": [
                     "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
                 ],
-                "cause_en": "Abnormal Communication Between PCIe Riser Card MCU",
-                "description_en": "The riser card cable has poor contact, or the riser card is faulty.",
+                "cause_en": "Memory card removed",
+                "description_en": "Memory card removed.",
                 "suggestion_en": [
                     "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
                 ]
             },
-            "source_file": "BMCAppDumpLog",
+            "source_file": "BMCLogDumpLog",
             "regex": {
-                "in": [
-                    "The MCU", "communication error occurs on", "PCIe riser card"
-                ]
+                "in": ["0x01000011", "Asserted"]
             }
         },
-        "0x28000031": {
+        "0x01000015": {
             "attribute": {
                 "class": "Hardware",
-                "component": "AI Server",
-                "module": "Cable",
-                "cause_zh": "UB线缆或连接器连接错误",
-                "description_zh": "a. 线缆的连接顺序或位置存在错误。 \n  b. 连接器连接错误。 \n  c. 组件故障。 \n  d. 线缆故障。",
+                "component": "BMC",
+                "module": "Memory",
+                "cause_zh": "内存配置错误",
+                "description_zh": "a. 配置了不兼容的内存。\nb. 内存插法错误。\nc. 内存故障。",
                 "suggestion_zh": [
                     "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
                 ],
-                "cause_en": "The UB cable or connector is incorrectly connected.",
-                "description_en": "a. There is an error in the sequence or position of cable connections. \n  b. The connector is incorrectly connected. \n  c. Component failure. \n  d. Cable failure.",
+                "cause_en": "Memory configuration error.",
+                "description_en": "a. Incompatible memory modules are configured.\nb. The memory modules are installed incorrectly.\nc. The memory modules are faulty.",
                 "suggestion_en": [
                     "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
                 ]
             },
-            "source_file": "BMCAppDumpLog",
+            "source_file": "BMCLogDumpLog",
             "regex": {
-                "in": [
-                    "Incorrect connection between the unit", "and connector", "of"
-                ]
+                "in": ["0x01000015", "Asserted"]
             }
         },
-        "0x28000033": {
+        "0x01000025": {
             "attribute": {
                 "class": "Hardware",
-                "component": "AI Server",
-                "module": "Cable",
-                "cause_zh": "UB线缆不在位或连接器未插稳",
-                "description_zh": "a. 线缆未插或松动。 \n  b. 连接器没有插稳。 \n  c. 线缆故障。 \n  d. 组件故障。",
-                "suggestion_zh": [
-                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器； "
-                ],
-                "cause_en": "The UB cable is not installed or the connector is not securely inserted.",
-                "description_en": "a. The cable is not plugged in or is loose. \n  b. The connector is not securely plugged in. \n  c. Cable malfunction. \n  d. Component malfunction.",
-                "suggestion_en": [
-                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
-                ]
-            },
-            "source_file": "BMCAppDumpLog",
-            "regex": {
-                "in": [
-                    "The cable of unit" , "is absent or the connector is not properly connected"
-                ]
-            }
-        },
-        "0x28000035": {
-            "attribute": {
-                "class": "Hardware",
-                "component": "AI Server",
-                "module": "Cable",
-                "cause_zh": "组件不支持",
-                "description_zh": "服务器不支持该型号的组件。",
+                "component": "BMC",
+                "module": "Memory",
+                "cause_zh": "内存配置错误",
+                "description_zh": "a. 配置了不兼容的内存。\nb. 内存插法错误。",
                 "suggestion_zh": [
                     "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
                 ],
-                "cause_en": "The component does not support",
-                "description_en": "The server does not support components of this model.",
+                "cause_en": "Memory configuration error.",
+                "description_en": "a. Incompatible memory modules are configured.\nb. The memory modules are installed incorrectly.",
                 "suggestion_en": [
                     "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
                 ]
             },
-            "source_file": "BMCAppDumpLog",
+            "source_file": "BMCLogDumpLog",
             "regex": {
-                "in": [
-                    "The unit", "linked to connector",  "of", "is not supported"
-                ]
+                "in": ["0x01000025", "Asserted"]
             }
         },
-        "0x31000001": {
+        "0x0100002D": {
             "attribute": {
                 "class": "Hardware",
-                "component": "AI Server",
-                "module": "Button",
-                "cause_zh": "电源按钮按下",
-                "description_zh": "按下面板电源按钮。",
+                "component": "BMC",
+                "module": "Memory",
+                "cause_zh": "内存CE类硬失效",
+                "description_zh": "CPU检测到错误后会触发SMI中断，BIOS处理该中断时会上报告警给BMC。",
                 "suggestion_zh": [
                     "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
                 ],
-                "cause_en": "The power button is pressed",
-                "description_en": "Press the power button on the front panel.",
+                "cause_en": "Memory CE Class Hard Failure",
+                "description_en": "When the CPU detects an error, it triggers an SMI interrupt. When the BIOS processes this interrupt, it reports an alarm to the BMC.",
                 "suggestion_en": [
                     "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
                 ]
             },
-            "source_file": "BMCAppDumpLog",
+            "source_file": "BMCLogDumpLog",
             "regex": {
-                "in": [
-                    "The power button on the panel is pressed"
-                ]
+                "in": ["0x0100002D", "Asserted"]
             }
         },
-        "0x5D00000D": {
+        "0x0100003B": {
             "attribute": {
                 "class": "Hardware",
-                "component": "AI Server",
-                "module": "Expansion board",
-                "cause_zh": "扩展板更换记录",
-                "description_zh": "更换扩展板。",
+                "component": "BMC",
+                "module": "Memory",
+                "cause_zh": "内存温度过高一般告警",
+                "description_zh": "a. 环境温度过高。\nb. 风扇模块故障。\nc. 进风口/出风口堵塞。\nd. 内存故障。",
                 "suggestion_zh": [
                     "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
                 ],
-                "cause_en": "Expansion Board Replacement Record",
-                "description_en": "Replace the expansion board.",
+                "cause_en": "Memory Temperature Overhigh Minor Alarm",
+                "description_en": "a. The ambient temperature is too high.\nb. The fan module is faulty.\nc. The air intake vent/exhaust vent is blocked.\nd. The memory is faulty.",
                 "suggestion_en": [
                     "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
                 ]
             },
-            "source_file": "BMCAppDumpLog",
+            "source_file": "BMCLogDumpLog",
             "regex": {
-                "in": [
-                    "Expansion board", "is replaced from serial number", "to serial number"
+                "in": ["0x0100003B", "Asserted"]
+            }
+        },
+        "0x0100003F": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Memory",
+                "cause_zh": "内存温度读取失败",
+                "description_zh": "ME故障或访问通道异常。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "Failed to read memory temperature",
+                "description_en": "ME failure or abnormal access channel.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
                 ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x0100003F", "Asserted"]
+            }
+        },
+        "0x01000041": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Memory",
+                "cause_zh": "内存更换记录",
+                "description_zh": "a. 更换内存。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "Memory Replacement Record",
+                "description_en": "a. Replace the memory.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x01000041", "Asserted"]
+            }
+        },
+        "0x0100005B": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Memory",
+                "cause_zh": "内存条接触异常告警",
+                "description_zh": "a. 内存与其插槽接触不良。\nb. 内存芯片与内存条PCB板的焊点老化。\nc. 内存颗粒故障。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "Abnormal DIMM contact",
+                "description_en": "a. Poor contact between the memory and its slot.\nb. Aging solder joints between the memory chips and the PCB board of the memory module.\nc. Faulty memory chips.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x0100005B", "Asserted"]
+            }
+        },
+        "0x01000073": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Memory",
+                "cause_zh": "内存I2C/I3C链路异常告警",
+                "description_zh": "a. 内存故障。\nb. 主板I2C/I3C链路异常。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "Memory I2C/I3C link abnormal",
+                "description_en": "a. Memory failure.\nb. Abnormal I2C/I3C link on the motherboard.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x01000073", "Asserted"]
+            }
+        },
+        "0x01000079": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Memory",
+                "cause_zh": "内存CE风暴故障告警",
+                "description_zh": "a. 内存与其插槽接触不良。\nb. 内存芯片与内存条PCB板的焊点老化。\nc. 内存颗粒故障。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "Memory CE Storm Alarm",
+                "description_en": "a. Poor contact between the memory and its slot.\nb. Aging solder joints between the memory chips and the PCB board of the memory module.\nc. Faulty memory chips.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x01000079", "Asserted"]
+            }
+        },
+        "0x02000003": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Disk",
+                "cause_zh": "硬盘插入",
+                "description_zh": "硬盘插入。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "Hard drive inserted",
+                "description_en": "Hard drive inserted.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x02000003", "Asserted"]
+            }
+        },
+        "0x02000005": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Disk",
+                "cause_zh": "硬盘拔出",
+                "description_zh": "拔出硬盘。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "Hard drive removed",
+                "description_en": "Remove the hard drive.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x02000005", "Asserted"]
+            }
+        },
+        "0x0200000D": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Disk",
+                "cause_zh": "硬盘RAID组重构开始",
+                "description_zh": "硬盘RAID组重构开始。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "The reconstruction of the hard drive RAID array has begun.",
+                "description_en": "The reconstruction of the hard drive RAID array has begun.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x0200000D", "Asserted"]
+            }
+        },
+        "0x0200000F": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Disk",
+                "cause_zh": "硬盘RAID组重构停止",
+                "description_zh": "硬盘RAID组重构停止。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "Hard drive RAID array reconstruction has stopped.",
+                "description_en": "Hard drive RAID array reconstruction has stopped.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x0200000F", "Asserted"]
+            }
+        },
+        "0x02000015": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Disk",
+                "cause_zh": "硬盘温度过高一般告警",
+                "description_zh": "1，风扇模块故障。\n2，环境温度过高。\n3，服务器进风口/出风口堵塞。\n4，硬盘故障。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "Hard disk temperature is too high.",
+                "description_en": "a. Fan module failure.\nb. Ambient temperature too high.\nc. Server air intake/exhaust vents blocked.\nd. Hard drive failure.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x02000015", "Asserted"]
+            }
+        },
+        "0x02000019": {
+            "attribute": {
+                "class": "Hardware",
+                "component": "BMC",
+                "module": "Disk",
+                "cause_zh": "硬盘温度过高严重告警",
+                "description_zh": "a. 环境温度过高。\nb. 进风口/出风口堵塞。\nc. 存在空槽位或间隔。\nd. 风扇模块故障。\ne. 硬盘故障。",
+                "suggestion_zh": [
+                    "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
+                ],
+                "cause_en": "Hard disk temperature is overhigh.",
+                "description_en": "a. The ambient temperature is too high.\nb. The air intake vent/exhaust vent is blocked.\nc. There are empty slots or intervals.\nd. The fan module is faulty.\ne. The hard drive is faulty.",
+                "suggestion_en": [
+                    "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
+                ]
+            },
+            "source_file": "BMCLogDumpLog",
+            "regex": {
+                "in": ["0x02000019", "Asserted"]
             }
         },
         "AISW_CANN_AMCT_ALL_001": {
