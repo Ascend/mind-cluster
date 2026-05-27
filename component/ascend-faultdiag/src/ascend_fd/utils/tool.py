@@ -19,6 +19,7 @@ import abc
 import argparse
 import datetime
 import getpass
+import gzip
 import io
 import json
 import logging
@@ -1579,3 +1580,49 @@ def load_device_info_map(hisi_logs_list: list) -> dict:
         if hisi_file.endswith(regular_table.DEVICE_INFO_FILE):
             return parse_device_info_file(hisi_file)
     return {}
+
+
+def decompress_gz(gz_file_path: str) -> str:
+    """
+    解压 .gz 文件，附带完整安全校验
+    :param gz_file_path: gz 文件路径
+    :return: 成功返回解压后路径，失败返回 ""
+    """
+    if not os.path.exists(gz_file_path):
+        return ""
+    if os.path.islink(gz_file_path):
+        fd_logger.error("The %s should not be a symbolic link file.", gz_file_path)
+        return ""
+    if not os.path.isfile(gz_file_path) or not gz_file_path.lower().endswith(".gz"):
+        return ""
+    gz_file_path = os.path.realpath(gz_file_path)
+
+    file_size = os.path.getsize(gz_file_path)
+    if file_size == 0 or file_size > MAX_SIZE:
+        fd_logger.error("File size is empty or exceeds %d MB, path: %s", MAX_SIZE >> MB_SHIFT, gz_file_path)
+        return ""
+    # 解压到原目录，文件名去掉.gz 后缀
+    out_file_path = os.path.splitext(gz_file_path)[0]
+    if os.path.exists(out_file_path):
+        fd_logger.warning("Target file exists, skipped: %s", out_file_path)
+        return ""
+    try:
+        with gzip.open(gz_file_path, "rb") as f_in, open(out_file_path, "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
+        # 解压后二次校验：判断输出文件是否生成、非空
+        out_file_size = os.path.getsize(out_file_path)
+        if not os.path.isfile(out_file_path) or out_file_size == 0 or out_file_size > MAX_SIZE:
+            os.remove(out_file_path)  # 清理损坏空文件
+            fd_logger.warning(
+                "Invalid extracted file, or file size is empty, or file size exceeds  %d MB, removed: %s",
+                MAX_SIZE >> MB_SHIFT,
+                out_file_path,
+            )
+            return ""
+        return out_file_path
+    except Exception as e:
+        fd_logger.error("Failed to decompress: %s, reason: %s", gz_file_path, str(e))
+        # 异常时清理残留文件
+        if os.path.exists(out_file_path):
+            os.remove(out_file_path)
+        return ""
