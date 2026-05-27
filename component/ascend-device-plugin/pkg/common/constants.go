@@ -147,6 +147,8 @@ const (
 
 	// Interval interval time
 	Interval = 1
+	// MinCMReportInterval min interval between two configmap reports (seconds)
+	MinCMReportInterval = 1
 	// Timeout time
 	Timeout = 10
 	// BaseDec base

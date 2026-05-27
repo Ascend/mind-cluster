@@ -337,6 +337,12 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet, 
 	updateDeviceInfoFunc func(map[string]string, map[string]string, common.DevStatusSet) error) error {
 	tool.checkAndInitNodeDeviceInfo()
 	waitErr := wait.PollImmediate(common.Interval*time.Second, common.Timeout*time.Second, func() (bool, error) {
+		if timeDiff := time.Since(tool.lastUpdateTimeStamp); timeDiff < common.MinCMReportInterval*time.Second {
+			hwlog.RunLog.Debugf("cm report rate limited, last update %v ago, min interval %v",
+				timeDiff, common.MinCMReportInterval*time.Second)
+			return false, nil
+		}
+
 		nodeDeviceInfo := tool.GetKubeClient().GetDeviceInfoCMCache()
 		deviceList := nodeDeviceInfo.DeviceInfo.DeviceList
 		newDeviceList := common.MapDeepCopy(deviceList)
@@ -367,11 +373,12 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet, 
 			manuallySeparateNPU == tool.lastManuallySeparateNPU &&
 			reasonCache.Equals(tool.lastUpgradeFaultReason) &&
 			common.DeepEqualDpuInfo(dpuInfo, tool.lastDpuInfo)
-		timeDiff := time.Now().Sub(tool.lastUpdateTimeStamp)
-		if dataSame && timeDiff < defaultUpdateTimeInterval*time.Minute {
+
+		if dataSame && time.Since(tool.lastUpdateTimeStamp) < defaultUpdateTimeInterval*time.Minute {
 			hwlog.RunLog.Debug("device info is not changed and timeDiff less than 5 minutes, no need to update")
 			return true, nil
 		}
+
 		return tool.writeDeviceInfoCm(manuallySeparateNPU, newDeviceList, reasonCache, switchFaultInfo, dpuInfo)
 	})
 	return waitErr
