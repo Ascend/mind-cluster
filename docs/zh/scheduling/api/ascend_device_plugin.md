@@ -458,7 +458,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 |FaultDuration|-|自定义故障超时策略，当某一故障持续时间达到配置上限时，该故障会按照指定的故障处理策略进行处理。<ul><li>FaultDuration及其子参数取值范围不正确，则忽略该条配置。</li><li>FaultDuration及其子参数数据格式不正确，则会使用默认配置。</li></ul>|
 |-|EventId|故障ID。<p>每个故障码（EventId）只允许配置一个FaultDuration参数，如果配置了多个，则只有第一条正确的会生效。</p>|
 |-|FaultTimeout|故障持续时间超过该值，则按照FaultHandling中定义的故障处理策略进行处理，单位为秒，取值范围为0~600，默认值说明如下。<ul><li>故障ID为81078603的参数面网络故障默认值为20。</li><li>故障ID为80E01801的片上内存多Bit故障默认值为30。</li><li>其余故障默认值为0。</li></ul>|
-|-|RecoverTimeout|故障恢复时间超过该值，则上报故障恢复，单位为秒，取值范围为0~86400，默认值说明如下。<ul><li>故障ID为81078603的参数面网络故障默认值为60。不建议设置为0，建议大于listWatchPeriod健康状态检查周期。关于listWatchPeriod的详细说明请参见[Ascend Device Plugin](../installation_guide/02_installation/manual_installation/04_ascend_device_plugin.md)中“Ascend Device Plugin启动参数”表。</li><li>其余故障默认值为0。</li></ul> |
+|-|RecoverTimeout|故障恢复时间超过该值，则上报故障恢复，单位为秒，取值范围为0~86400，默认值说明如下。<ul><li>故障ID为81078603的参数面网络故障默认值为60。不建议设置为0，建议大于listWatchPeriod健康状态检查周期。关于listWatchPeriod的详细说明请参见[Ascend Device Plugin](../developer_guide/installation_deployment/manual_installation/04_ascend_device_plugin.md)中“Ascend Device Plugin启动参数”表。</li><li>其余故障默认值为0。</li></ul> |
 |-|FaultHandling|<p>超过故障持续时间后的故障处理策略，支持配置不同级别的故障处理策略，同时还支持配置PreSeparateNPU故障处理策略。</p><p>超过故障持续时间后的故障处理策略，建议高于故障本身的故障处理策略，否则配置不生效。</p><p>不支持配置ManuallySeparateNPU策略，配置不生效。</p>|
 
 >[!NOTE]

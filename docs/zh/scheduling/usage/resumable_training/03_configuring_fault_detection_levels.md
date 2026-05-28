@@ -759,7 +759,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 
 断点续训针对芯片故障，支持按故障频率的配置进行处理。
 
-针对芯片故障的不同级别进行分级处理时，ClusterD组件会获取到当前故障的故障码和故障级别，对于除了NotHandleFault和SubHealthFault级别之外的故障，根据ConfigMap（clusterd-config-cm）中配置的故障频率，将芯片状态置为人工隔离。该ConfigMap的参数说明请参见[表1](../../installation_guide/02_installation/manual_installation/06_clusterd.md)。
+针对芯片故障的不同级别进行分级处理时，ClusterD组件会获取到当前故障的故障码和故障级别，对于除了NotHandleFault和SubHealthFault级别之外的故障，根据ConfigMap（clusterd-config-cm）中配置的故障频率，将芯片状态置为人工隔离。该ConfigMap的参数说明请参见[表1](../../developer_guide/installation_deployment/manual_installation/06_clusterd.md)。
 
 >[!NOTE]
 >
@@ -768,7 +768,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 
 #### （可选）配置芯片故障频率<a name="ZH-CN_TOPIC_0000002511426473_01"></a>
 
-在安装ClusterD时，会自动创建ConfigMap（clusterd-config-cm），作为当前人工隔离芯片的检测依据。该ConfigMap的参数说明请参见[表1](../../installation_guide/02_installation/manual_installation/06_clusterd.md)。
+在安装ClusterD时，会自动创建ConfigMap（clusterd-config-cm），作为当前人工隔离芯片的检测依据。该ConfigMap的参数说明请参见[表1](../../developer_guide/installation_deployment/manual_installation/06_clusterd.md)。
 
 如果用户想要自定义芯片故障频率，可以通过修改该ConfigMap实现。如果修改后的ConfigMap内容存在格式错误等问题，ClusterD会保留上一次读取成功的配置作为当前人工隔离芯片的检测依据。若ClusterD启动时，读取到的ConfigMap内容错误，则人工隔离芯片检测机制会默认关闭，直到格式和内容正确。
 
@@ -827,7 +827,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
     kubectl edit cm -n cluster-system clusterd-config-cm
     ```
 
-    根据实际情况，修改人工隔离芯片的故障频率。参数说明请参见[表1](../../installation_guide/02_installation/manual_installation/06_clusterd.md)。
+    根据实际情况，修改人工隔离芯片的故障频率。参数说明请参见[表1](../../developer_guide/installation_deployment/manual_installation/06_clusterd.md)。
 
     ```Yaml
     # Please edit the object below. Lines beginning with a '#' will be ignored,
