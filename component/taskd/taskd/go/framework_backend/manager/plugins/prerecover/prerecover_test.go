@@ -132,8 +132,12 @@ func getArgsTestPreRecoverPluginPredicateTestCases() []testsTestPreRecoverPlugin
 	}
 	return []testsTestPreRecoverPluginPredicate{
 		{
-			name:    "case 1: has token",
-			fields:  fieldsTestPreRecoverPluginPredicate{hasToken: true},
+			name: "case 1: has token",
+			fields: fieldsTestPreRecoverPluginPredicate{
+				hasToken: true,
+				shot:     getArgsTestPreRecoverPluginPredicate(clusterdconstant.StopTrainSignalType).shot,
+			},
+			args:    getArgsTestPreRecoverPluginPredicate(clusterdconstant.StopTrainSignalType),
 			want:    candidateResult,
 			wantErr: false},
 		{
@@ -161,6 +165,26 @@ func getArgsTestPreRecoverPluginPredicateTestCases() []testsTestPreRecoverPlugin
 				lastUuid: "randomUuid"},
 			args:    getArgsTestPreRecoverPluginPredicate(clusterdconstant.PreExitProcessSignalType),
 			want:    candidateResult,
+			wantErr: false},
+		{
+			name: "case 6: kill master signal returns unselect",
+			fields: fieldsTestPreRecoverPluginPredicate{
+				hasToken:        true,
+				HasSendMessages: make(map[string]string),
+			},
+			args: getArgsTestPreRecoverPluginPredicate(clusterdconstant.KillMasterSignalType),
+			want: infrastructure.PredicateResult{
+				CandidateStatus: constant.UnselectStatus},
+			wantErr: false},
+		{
+			name: "case 7: kill master signal with hasToken=false",
+			fields: fieldsTestPreRecoverPluginPredicate{
+				hasToken:        false,
+				HasSendMessages: make(map[string]string),
+			},
+			args: getArgsTestPreRecoverPluginPredicate(clusterdconstant.KillMasterSignalType),
+			want: infrastructure.PredicateResult{
+				CandidateStatus: constant.UnselectStatus},
 			wantErr: false}}
 }
 
