@@ -91,3 +91,50 @@ spec:
                       huawei.com/Ascend910: 8
                   securityContext:
 ...</pre>
+
+## 重调度功能验证<a name="section96726516020"></a>
+
+以示例yaml中的配置为例：
+
+- prefill实例：`replicas=1`，`podGroupSize=2`
+- decode实例：`replicas=1`，`podGroupSize=2`
+
+成功下发任务后，通过如下命令查看对应pod的运行状态：
+
+```shell
+kubectl get pods -A
+```
+
+可以看到类似下面的prefill和decode实例的信息：
+
+```
+NAMESPACE   NAME                                                  READY   STATUS    RESTARTS   AGE
+default     vllm-1p1d-roleset-<id>-prefill-<prefill-ins>-0-0      1/1     Running   0          <time>
+default     vllm-1p1d-roleset-<id>-prefill-<prefill-ins>-0-1      1/1     Running   0          <time>
+default     vllm-1p1d-roleset-<id>-decode-<decode-ins>-0-0        1/1     Running   0          <time>
+default     vllm-1p1d-roleset-<id>-decode-<decode-ins>-0-1        1/1     Running   0          <time>
+```
+
+- 其中`<id>`为roleset标识，`<prefill-ins>`为prefill实例索引，`<decode-ins>`为decode实例索引，`<time>`为Pod运行时长。
+
+此时若手动构造故障：
+
+```shell
+kubectl exec -it vllm-1p1d-roleset-<id>-prefill-<prefill-ins>-0-1 -- kill -9 <pid>
+```
+
+- 其中`<pid>`为容器内vllm进程ID
+
+立即查看prefill和decode实例的信息，会发现vllm-1p1d-roleset-<id>-prefill-<prefill-ins>-0-1的状态变为Error：
+
+```
+NAMESPACE   NAME                                                  READY   STATUS    RESTARTS   AGE
+default     vllm-1p1d-roleset-<id>-prefill-<prefill-ins>-0-0      1/1     Running   0          <time>
+default     vllm-1p1d-roleset-<id>-prefill-<prefill-ins>-0-1      1/1     Error     0          <time>
+default     vllm-1p1d-roleset-<id>-decode-<decode-ins>-0-0        1/1     Running   0          <time>
+default     vllm-1p1d-roleset-<id>-decode-<decode-ins>-0-1        1/1     Running   0          <time>
+```
+
+若实例级重调度配置正确，vllm-1p1d-roleset-<id>-prefill-<prefill-ins>-0-1 与 vllm-1p1d-roleset-<id>-prefill-<prefill-ins>
+-0-0 会自动被重调度为Running状态，对应的<time>值会更新。
+待vllm推理服务拉起后，可正常处理推理请求。
