@@ -4,12 +4,14 @@ go 1.25.0
 
 require (
 	github.com/Mellanox/rdmamap v1.2.0
+	github.com/agiledragon/gomonkey/v2 v2.13.0
 	github.com/container-orchestrated-devices/container-device-interface v0.5.4
 	github.com/jaypipes/ghw v0.24.0
 	github.com/jaypipes/pcidb v1.1.1
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.40.0
 	github.com/pkg/errors v0.9.1
+	github.com/smartystreets/goconvey v1.8.1
 	github.com/stretchr/testify v1.11.1
 	github.com/vishvananda/netlink v1.3.1
 	google.golang.org/grpc v1.80.0
