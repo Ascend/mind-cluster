@@ -35,6 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
@@ -2248,5 +2249,117 @@ func TestLoadDeviceFaultFromUpgradeReason(t *testing.T) {
 		convey.So(addAic.Load(), convey.ShouldBeTrue)
 		convey.So(len(initLogicIDs), convey.ShouldNotBeZeroValue)
 		convey.So(initLogicIDs[0], convey.ShouldEqual, 0)
+	})
+}
+
+type registerSoftSharePodDeleteHandlerTestCase struct {
+	name             string
+	supportSoftShare bool
+	kubeClientNil    bool
+	podInformerNil   bool
+	serverMapEmpty   bool
+	expectRegistered bool
+}
+
+func buildRegisterSoftSharePodDeleteHandlerTestCases() []registerSoftSharePodDeleteHandlerTestCase {
+	return []registerSoftSharePodDeleteHandlerTestCase{
+		{
+			name:             "soft share not supported, should not register handler",
+			supportSoftShare: false,
+			kubeClientNil:    false,
+			podInformerNil:   false,
+			serverMapEmpty:   false,
+			expectRegistered: false,
+		},
+		{
+			name:             "kubeClient is nil, should not register handler",
+			supportSoftShare: true,
+			kubeClientNil:    true,
+			podInformerNil:   false,
+			serverMapEmpty:   false,
+			expectRegistered: false,
+		},
+		{
+			name:             "podInformer is nil, should not register handler",
+			supportSoftShare: true,
+			kubeClientNil:    false,
+			podInformerNil:   true,
+			serverMapEmpty:   false,
+			expectRegistered: false,
+		},
+		{
+			name:             "serverMap is empty, should not register handler",
+			supportSoftShare: true,
+			kubeClientNil:    false,
+			podInformerNil:   false,
+			serverMapEmpty:   true,
+			expectRegistered: false,
+		},
+		{
+			name:             "all conditions met, should register handler",
+			supportSoftShare: true,
+			kubeClientNil:    false,
+			podInformerNil:   false,
+			serverMapEmpty:   false,
+			expectRegistered: true,
+		},
+	}
+}
+
+type mockSharedIndexInformer struct {
+	cache.SharedIndexInformer
+	handlerAdded bool
+}
+
+func (m *mockSharedIndexInformer) AddEventHandler(handler cache.ResourceEventHandler) {
+	m.handlerAdded = true
+}
+
+func TestRegisterSoftSharePodDeleteHandler(t *testing.T) {
+	convey.Convey("Test registerSoftSharePodDeleteHandler", t, func() {
+		tests := buildRegisterSoftSharePodDeleteHandlerTestCases()
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				patchSoftShare := gomonkey.ApplyFuncReturn(common.IsSupportSoftShareDevice, tt.supportSoftShare)
+				defer patchSoftShare.Reset()
+
+				mockInformer := &mockSharedIndexInformer{}
+				var kubeClient *kubeclient.ClientK8s
+				if !tt.kubeClientNil {
+					kubeClient = &kubeclient.ClientK8s{}
+					if !tt.podInformerNil {
+						kubeClient.PodInformer = mockInformer
+					}
+				}
+
+				manager := device.NewHwAscend910Manager()
+				patchGetKubeClient := gomonkey.ApplyMethod(manager, "GetKubeClient",
+					func(_ *device.HwAscend910Manager) *kubeclient.ClientK8s {
+						return kubeClient
+					})
+				defer patchGetKubeClient.Reset()
+
+				hdm := &HwDevManager{
+					manager: manager,
+				}
+
+				if !tt.serverMapEmpty {
+					ps := &PluginServer{}
+					hdm.ServerMap = map[string]InterfaceServer{
+						api.Ascend910: ps,
+					}
+				} else {
+					hdm.ServerMap = map[string]InterfaceServer{}
+				}
+
+				hdm.registerSoftSharePodDeleteHandler()
+
+				if tt.expectRegistered {
+					convey.So(mockInformer.handlerAdded, convey.ShouldBeTrue)
+				} else {
+					convey.So(mockInformer.handlerAdded, convey.ShouldBeFalse)
+				}
+			})
+		}
 	})
 }

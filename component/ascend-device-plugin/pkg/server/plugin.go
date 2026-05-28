@@ -903,6 +903,11 @@ func (ps *PluginServer) doWithVolcanoSchedule(requestDevices []string) ([]string
 	hwlog.RunLog.Infof("vol found: %#v", allocateDevices)
 	ps.updateAllocMap(allocateDevices, requestDevices)
 	npuInfoConfigDir := ps.getNPUInfoConfigDirFromPod(oldestPod, allocateDevices)
+	if npuInfoConfigDir != "" {
+		podKey := fmt.Sprintf("%s/%s", oldestPod.Namespace, oldestPod.Name)
+		jobName := common.GetJobNameOfPod(oldestPod)
+		ps.softShareJobs.Store(podKey, jobName)
+	}
 	return allocateDevices, npuInfoConfigDir, nil
 }
 
@@ -1040,7 +1045,11 @@ func (ps *PluginServer) getNPUInfoConfigDirFromPod(pod *v1.Pod, devices []string
 		hwlog.RunLog.Errorf("get logic id failed, physical id: %d err: %v", physicalID, err)
 		return ""
 	}
-	dieId, err := ps.manager.GetDmgr().GetDieID(logicID, dcmi.VDIE)
+	dieType := dcmi.VDIE
+	if ps.deviceType == api.NPULowerCase {
+		dieType = dcmi.DDIE
+	}
+	dieId, err := ps.manager.GetDmgr().GetDieID(logicID, dieType)
 	if err != nil {
 		hwlog.RunLog.Errorf("get die id failed, logic id: %d err: %v", logicID, err)
 		return ""
@@ -1191,13 +1200,39 @@ func (ps *PluginServer) mountShareDeviceConfig(resp *v1beta1.ContainerAllocateRe
 	}
 }
 
+func (ps *PluginServer) handleSoftSharePodDelete(obj interface{}) {
+	if !common.IsSupportSoftShareDevice() {
+		return
+	}
+	pod, ok := obj.(*v1.Pod)
+	if !ok {
+		return
+	}
+	podKey := fmt.Sprintf("%s/%s", pod.Namespace, pod.Name)
+	value, ok := ps.softShareJobs.LoadAndDelete(podKey)
+	if !ok {
+		return
+	}
+	jobName, ok := value.(string)
+	if !ok {
+		return
+	}
+	if rmErr := common.RemoveSoftShareDeviceFileAndDir(pod.Namespace, jobName); rmErr != nil {
+		hwlog.RunLog.Errorf("failed to remove soft share device file: %v", rmErr)
+	}
+}
+
 func (ps *PluginServer) getDieIDFromPhysicID(physicID int) (string, error) {
 	logicID, err := ps.manager.GetDmgr().GetLogicIDFromPhysicID(int32(physicID))
 	if err != nil {
 		hwlog.RunLog.Errorf("get logic id from physicID id: %d failed, err: %v", physicID, err)
 		return "", err
 	}
-	dieId, err := ps.manager.GetDmgr().GetDieID(logicID, dcmi.VDIE)
+	dieType := dcmi.VDIE
+	if ps.deviceType == api.NPULowerCase {
+		dieType = dcmi.DDIE
+	}
+	dieId, err := ps.manager.GetDmgr().GetDieID(logicID, dieType)
 	if err != nil {
 		hwlog.RunLog.Errorf("get die id from logic id: %d failed, err: %v", logicID, err)
 		return "", err

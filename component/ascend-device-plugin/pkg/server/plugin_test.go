@@ -282,7 +282,7 @@ func TestAllocateRequestPhysicalDevice(t *testing.T) {
 			ps.deepCopyDevice(devices)
 			deviceID := "1"
 			requests.ContainerRequests = []*v1beta1.
-				ContainerAllocateRequest{{DevicesIDs: []string{api.Ascend910 + "-" + deviceID}}}
+			ContainerAllocateRequest{{DevicesIDs: []string{api.Ascend910 + "-" + deviceID}}}
 			resp, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(resp, convey.ShouldNotBeNil)
@@ -304,14 +304,14 @@ func TestAllocateRequestVirtualDevice(t *testing.T) {
 		convey.Convey("request more than 1 virtual device", func() {
 			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910vir2, DeviceName: "Ascend910-2c-100-0"}}
 			requests.ContainerRequests = []*v1beta1.
-				ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-100-0", "Ascend910-2c-100-1"}}}
+			ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-100-0", "Ascend910-2c-100-1"}}}
 			_, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 		convey.Convey("request virtual device not exist", func() {
 			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910vir2, DeviceName: "Ascend910-2c-100-0"}}
 			requests.ContainerRequests = []*v1beta1.
-				ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-100-1"}}}
+			ContainerAllocateRequest{{DevicesIDs: []string{"Ascend910-2c-100-1"}}}
 			_, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
@@ -323,7 +323,7 @@ func TestAllocateRequestVirtualDevice(t *testing.T) {
 			ps.cachedDevices = []common.NpuDevice{{DevType: common.Ascend910vir2,
 				DeviceName: api.Ascend910 + "-2c-" + deviceID + "-0"}}
 			requests.ContainerRequests = []*v1beta1.
-				ContainerAllocateRequest{{DevicesIDs: []string{api.Ascend910 + "-2c-" + deviceID + "-0"}}}
+			ContainerAllocateRequest{{DevicesIDs: []string{api.Ascend910 + "-2c-" + deviceID + "-0"}}}
 			resp, err := ps.Allocate(context.Background(), &requests)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(resp, convey.ShouldNotBeNil)
@@ -1914,6 +1914,114 @@ func TestGetNPUInfoConfigDirFromPod(t *testing.T) {
 				defer patchWriteConfigFile.Reset()
 				gotDir := ps.getNPUInfoConfigDirFromPod(tt.pod, tt.devices)
 				convey.So(gotDir, convey.ShouldEqual, tt.expectedDir)
+			})
+		}
+	})
+}
+
+type handleSoftSharePodDeleteTestCase struct {
+	name               string
+	supportSoftShare   bool
+	obj                interface{}
+	preStorePodKey     string
+	preStoreJobName    string
+	expectRemoveCalled bool
+	expectKeyDeleted   bool
+}
+
+func buildHandleSoftSharePodDeleteTestCases() []handleSoftSharePodDeleteTestCase {
+	return []handleSoftSharePodDeleteTestCase{
+		{
+			name:               "soft share not supported, should return directly",
+			supportSoftShare:   false,
+			obj:                &v1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "pod1"}},
+			preStorePodKey:     "default/pod1",
+			preStoreJobName:    "job1",
+			expectRemoveCalled: false,
+			expectKeyDeleted:   false,
+		},
+		{
+			name:               "obj is not a pod, should return directly",
+			supportSoftShare:   true,
+			obj:                "not-a-pod",
+			preStorePodKey:     "default/pod1",
+			preStoreJobName:    "job1",
+			expectRemoveCalled: false,
+			expectKeyDeleted:   false,
+		},
+		{
+			name:               "pod not in softShareJobs, should return directly",
+			supportSoftShare:   true,
+			obj:                &v1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "unknown-pod"}},
+			preStorePodKey:     "default/other-pod",
+			preStoreJobName:    "other-job",
+			expectRemoveCalled: false,
+			expectKeyDeleted:   false,
+		},
+		{
+			name:               "soft share pod deleted, should call RemoveSoftShareDeviceFileAndDir and delete key",
+			supportSoftShare:   true,
+			obj:                &v1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "pod1"}},
+			preStorePodKey:     "default/pod1",
+			preStoreJobName:    "job1",
+			expectRemoveCalled: true,
+			expectKeyDeleted:   true,
+		},
+		{
+			name:               "RemoveSoftShareDeviceFileAndDir returns error, should still delete key",
+			supportSoftShare:   true,
+			obj:                &v1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "pod1"}},
+			preStorePodKey:     "default/pod1",
+			preStoreJobName:    "job1",
+			expectRemoveCalled: true,
+			expectKeyDeleted:   true,
+		},
+	}
+}
+
+func TestHandleSoftSharePodDelete(t *testing.T) {
+	convey.Convey("Test handleSoftSharePodDelete", t, func() {
+		tests := buildHandleSoftSharePodDeleteTestCases()
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				ps := &PluginServer{}
+				ps.softShareJobs.Store("dummy", "keep")
+
+				patchSoftShare := gomonkey.ApplyFuncReturn(common.IsSupportSoftShareDevice, tt.supportSoftShare)
+				defer patchSoftShare.Reset()
+
+				removeCalled := false
+				removeErr := error(nil)
+				if tt.name == "RemoveSoftShareDeviceFileAndDir returns error, should still delete key" {
+					removeErr = errors.New("remove failed")
+				}
+				patchRemove := gomonkey.ApplyFunc(common.RemoveSoftShareDeviceFileAndDir,
+					func(namespace, jobName string) error {
+						removeCalled = true
+						return removeErr
+					})
+				defer patchRemove.Reset()
+
+				if tt.preStorePodKey != "" && tt.preStoreJobName != "" {
+					ps.softShareJobs.Store(tt.preStorePodKey, tt.preStoreJobName)
+				}
+
+				ps.handleSoftSharePodDelete(tt.obj)
+
+				convey.So(removeCalled, convey.ShouldEqual, tt.expectRemoveCalled)
+
+				if tt.expectRemoveCalled {
+					convey.So(removeCalled, convey.ShouldBeTrue)
+					if tt.preStorePodKey != "" {
+						_, exists := ps.softShareJobs.Load(tt.preStorePodKey)
+						convey.So(exists, convey.ShouldEqual, !tt.expectKeyDeleted)
+					}
+				}
+
+				if !tt.supportSoftShare {
+					_, exists := ps.softShareJobs.Load("dummy")
+					convey.So(exists, convey.ShouldBeTrue)
+				}
 			})
 		}
 	})
