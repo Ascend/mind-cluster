@@ -24,22 +24,22 @@
 
 ## 10分钟快速入门
 
-### 概述
-
 本教程将指导您在 **10分钟内** 完成最简化的Ascend NPU集群调度环境搭建，仅使用：
 
 - **Ascend Device Plugin** - NPU设备发现与资源上报
 - **Kubernetes原生调度器** - 无需额外调度组件
 - **普通Pod** - 快速验证NPU调度能力
 
-### 环境要求
+### 安装组件
+
+1. 环境要求
 
 | 要求 | 说明                |
 |------|-------------------|
 | 计算节点 | 以Altlas 800T A2 arm64训练服务器为例    |
 | 驱动版本 | 配套服务器的Ascend驱动已安装 |
 
-### 前置检查
+2. 前置检查
 
 在开始前，请确保NPU驱动已正确安装：
 
@@ -48,7 +48,7 @@
 npu-smi info
 ```
 
-### 为NPU节点添加标签
+3. 为NPU节点添加标签
 
 ```shell
 # 获取节点名称
@@ -59,58 +59,58 @@ kubectl label nodes worker01 workerselector=dls-worker-node
 kubectl label nodes worker01 accelerator=huawei-Ascend910
 ```
 
-### 部署Ascend Device Plugin
+4. 部署Ascend Device Plugin
 
-#### 1. 拉取Device Plugin镜像
+    1. 拉取Device Plugin镜像
 
-```shell
-# 从华为云镜像仓拉取Device Plugin镜像
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.0.0
+        ```shell
+        # 从华为云镜像仓拉取Device Plugin镜像
+        docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.0.0
 
-# 为镜像添加本地标签
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.0.0 ascend-k8sdeviceplugin:v26.0.0
-```
+        # 为镜像添加本地标签
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.0.0 ascend-k8sdeviceplugin:v26.0.0
+        ```
 
-#### 2 部署Device Plugin
+    2. 部署Device Plugin
 
-```shell
-# 拉取配置文件
-mkdir /tmp/devicePlugin
-cd /tmp/devicePlugin
-wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip
-unzip Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip
+        ```shell
+        # 拉取配置文件
+        mkdir /tmp/devicePlugin
+        cd /tmp/devicePlugin
+        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip
+        unzip Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip
 
-# 部署Device Plugin
-kubectl apply -f device-plugin-910-v26.0.0.yaml
-```
+        # 部署Device Plugin
+        kubectl apply -f device-plugin-910-v26.0.0.yaml
+        ```
 
-#### 3 验证部署
+    3. 验证部署
 
-```shell
-# 查看Device Plugin Pod状态
-kubectl get pod -n kube-system
+        ```shell
+        # 查看Device Plugin Pod状态
+        kubectl get pod -n kube-system
 
-# 预期输出
-NAME                                  READY   STATUS    RESTARTS   AGE
-...
-ascend-device-plugin-daemonset-d5ctz  1/1     Running   0          11s
-...
-```
+        # 预期输出
+        NAME                                  READY   STATUS    RESTARTS   AGE
+        ...
+        ascend-device-plugin-daemonset-d5ctz  1/1     Running   0          11s
+        ...
+        ```
 
-### 验证NPU资源上报
+    4. 验证NPU资源上报
 
-```shell
-# 查看节点的NPU资源
-kubectl describe node worker01 | grep -A 10 "huawei.com/Ascend910"
+        ```shell
+        # 查看节点的NPU资源
+        kubectl describe node worker01 | grep -A 10 "huawei.com/Ascend910"
 
-# 预期输出（显示可用的NPU数量）
-huawei.com/Ascend910:     8
-huawei.com/Ascend910:     8
-```
+        # 预期输出（显示可用的NPU数量）
+        huawei.com/Ascend910:     8
+        huawei.com/Ascend910:     8
+        ```
 
 ### 调度NPU Pod
 
-#### 1 创建测试Pod配置文件
+1. 创建测试Pod配置文件
 
 创建 `npu-test-pod.yaml`：
 
@@ -141,13 +141,13 @@ spec:
       path: /usr/local/Ascend/driver
 ```
 
-#### 2 部署测试Pod
+2. 部署测试Pod
 
 ```shell
 kubectl apply -f npu-test-pod.yaml
 ```
 
-#### 3 验证Pod调度
+3. 验证Pod调度
 
 ```shell
 # 查看Pod状态
@@ -158,7 +158,7 @@ NAME      READY   STATUS    RESTARTS   AGE   IP           NODE      NOMINATED NO
 npu-test  1/1     Running   0          10s   10.244.1.2   worker01  <none>
 ```
 
-### 验证NPU访问
+4. 验证NPU访问
 
 ```shell
 # 进入容器验证NPU可用性
@@ -169,7 +169,7 @@ export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/d
 npu-smi info
 ```
 
-### 清理测试资源
+5. 清理测试资源
 
 ```shell
 # 删除测试Pod
@@ -179,7 +179,7 @@ kubectl delete pod npu-test
 kubectl delete -f device-plugin-910-v26.0.0.yaml
 ```
 
-### 常见问题
+6. 常见问题
 
 | 问题 | 原因 | 解决方法 |
 |------|------|---------|
@@ -296,7 +296,7 @@ kubectl delete -f device-plugin-910-v26.0.0.yaml
 
         回显示例如下：
 
-        ```ColdFusion
+        ```CodeFusion
         NAME       STATUS   ROLES           AGE   VERSION
         worker01   Ready    worker    23h   v1.17.3
         ```
@@ -412,7 +412,7 @@ kubectl delete -f device-plugin-910-v26.0.0.yaml
 
         以clusterd组件为例，回显示例如下，出现**Running**表示组件启动成功。
 
-        ```ColdFusion
+        ```CodeFusion
         NAME                              READY   STATUS    RESTARTS   AGE
         ...
         clusterd-fd6t8                       1/1     Running   0          74s
@@ -423,92 +423,54 @@ kubectl delete -f device-plugin-910-v26.0.0.yaml
 
 1. 准备镜像。
 
-    从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)根据系统架构（ARM/x86_64），下载24.0.X版本的ascend-pytorch训练镜像。基于训练基础镜像进行修改，将容器中默认用户修改为root。镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
-
-2. 脚本适配。
-    1. <a name="zh-cn_topic_0000001558834814_li1298552813512"></a>下载[PyTorch代码仓](https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/cv/classification/ResNet50_ID4149_for_PyTorch)中master分支的“ResNet50_ID4149_for_PyTorch”作为训练代码。
-    2. 自行准备ResNet-50对应的数据集，使用时请遵守对应规范。
-    3. 管理员用户上传数据集到存储节点。进入“/data/atlas_dls/public”目录，将数据集上传到任意位置，如“/data/atlas_dls/public/dataset/resnet50/imagenet”。
+    从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)根据系统架构（ARM/x86_64），下载24.0.X版本的ascend-pytorch训练镜像。镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
 
         ```shell
+        docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-pytorch:24.0.0-A2-2.1.0-ubuntu20.04
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-pytorch:24.0.0-A2-2.1.0-ubuntu20.04 ascend-pytorch:24.0.0-A2-2.1.0-ubuntu20.04
+        ```
+2. 训练任务准备。
+
+    1. 下载[PyTorch代码仓](https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/cv/classification/ResNet50_ID4149_for_PyTorch)中master分支的“ResNet50_ID4149_for_PyTorch”作为训练代码。
+    下载的训练代码解压到“/data/atlas_dls/public/code/”路径下。
+
+        ```shell
+        mkdir -p /data/atlas_dls/public/code/
+        cd /data/atlas_dls/public/code/
+        wget https://raw.gitcode.com/Ascend/ModelZoo-PyTorch/archive/refs/heads/master.zip?path=PyTorch/built-in/cv/classification/ResNet50_ID4149_for_PyTorch -O ResNet50_ID4149_for_PyTorch.zip
+        unzip ResNet50_ID4149_for_PyTorch.zip
+        mv ModelZoo-PyTorch-master-PyTorch-built-in-cv-classification-ResNet50_ID4149_for_PyTorch ResNet50_ID4149_for_PyTorch
+        ```
+    2. 自行准备ResNet-50对应的数据集，使用时请遵守对应规范。管理员用户上传数据集到存储节点，将数据集上传到任意位置，如“/data/atlas_dls/public/dataset/resnet50/imagenet”。
+
+        ```shell
+        mkdir /data/atlas_dls/public/dataset/resnet50/imagenet
+        cd /data/atlas_dls/public/dataset/resnet50/imagenet
         root@ubuntu:/data/atlas_dls/public/dataset/resnet50/imagenet# pwd
         ```
 
-    4. 将[步骤1](#zh-cn_topic_0000001558834814_li1298552813512)中下载的训练代码解压到本地，将解压后的训练代码中“ModelZoo-PyTorch/PyTorch/built-in/cv/classification/ResNet50_ID4149_for_PyTorch”目录上传至环境，如“/data/atlas_dls/public/code/”路径下。
-    5. 在“/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch”路径下，注释掉main.py中的以下代码。
+    3. 进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](./appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，
+   获取“samples/train/basic-training/without-ranktable/pytorch”目录中的train_start.sh，放在“/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts”路径下。
 
-        ```Python
-        def main():
-            args = parser.parse_args()
-            os.environ['MASTER_ADDR'] = args.addr
-            #os.environ['MASTER_PORT'] = '29501'  # 注释该行代码
-            if os.getenv('ALLOW_FP32', False) and os.getenv('ALLOW_HF32', False):
-                raise RuntimeError('ALLOW_FP32 and ALLOW_HF32 cannot be set at the same time!')
-            elif os.getenv('ALLOW_HF32', False):
-                torch.npu.conv.allow_hf32 = True
-            elif os.getenv('ALLOW_FP32', False):
-                torch.npu.conv.allow_hf32 = False
-                torch.npu.matmul.allow_hf32 = False
+        ```shell
+        mkdir /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
+        cd /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
+        wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/train_start.sh
+        ```
+    4. 准备任务YAML。进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](./appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/basic-training/without-ranktable/pytorch”目录下的“pytorch_standalone_acjob_<i>\{xxx\}</i>.yaml”文件（<i>\{xxx\}</i>表示芯片型号的数值）。示例默认为单机单卡任务。
+
+        ```shell
+        cd /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
+        wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/pytorch_standalone_acjob_quickstart.yaml
         ```
 
-    6. 进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](./appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/basic-training/without-ranktable/pytorch”目录中的train_start.sh，在“/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts”路径下，构造如下的目录结构。
-
-        ```text
-        root@ubuntu:/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts#
-        scripts/
-             ├── train_start.sh
-        ```
-
-3. 准备任务YAML。
-    1. 进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](./appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/basic-training/without-ranktable/pytorch”目录下的“pytorch_standalone_acjob_<i>\{xxx\}</i>.yaml”文件（<i>\{xxx\}</i>表示芯片型号的数值）。示例默认为单机单卡任务。
-    2. 修改示例YAML，修改完成后将其上传至任意文件路径。下述YAML中各参数的详细说明详见[表1](./api/ascend_operator.md)。
-
-        ```Yaml
-        apiVersion: mindxdl.gitee.com/v1
-        kind: AscendJob
-        ...
-        spec:
-        ...
-          replicaSpecs:
-            Master:
-        ...
-                spec:
-                  nodeSelector:
-                    host-arch: huawei-arm
-                    accelerator-type: module-{xxx}b-8   # 由原来的card-{xxx}b-2修改为module-{xxx}b-8，{xxx}表示芯片型号的数值
-                  containers:
-                  - name: ascend
-                    image: pytorch-test:latest     # 修改为步骤1中获取的镜像名称
-        ...
-                    resources:
-                      limits:
-                        huawei.com/Ascend910: 1
-                      requests:
-                        huawei.com/Ascend910: 1
-        ...
-                  volumes:
-                  - name: code
-                    nfs:      #如没有安装nfs服务，需要将nfs改为hostPath，并且删掉server: 127.0.0.1
-                      server: 127.0.0.1
-                      path: "/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/"
-                  - name: data
-                    nfs:     #如没有安装nfs服务，需要将nfs改为hostPath，并且删掉server: 127.0.0.1
-                      server: 127.0.0.1
-                      path: "/data/atlas_dls/public/dataset/"
-                  - name: output
-                    nfs:     #如没有安装nfs服务，需要将nfs改为hostPath，并且删掉server: 127.0.0.1
-                      server: 127.0.0.1
-                      path: "/data/atlas_dls/output/"
-        ...
-        ```
-
-4. 执行以下命令，下发单机单卡任务。
+3. 执行以下命令，下发单机单卡任务。
 
     ```shell
-    kubectl apply -f pytorch_standalone_acjob_{xxx}.yaml
+    kubectl apply -f pytorch_standalone_acjob_quickstart.yaml
     ```
 
-5. 执行以下命令，查看Pod运行情况。
+4. 执行以下命令，查看Pod运行情况。
 
     ```shell
     kubectl get pod --all-namespaces -o wide
@@ -525,7 +487,8 @@ kubectl delete -f device-plugin-910-v26.0.0.yaml
     >
     >若下发训练任务后，任务一直处于Pending状态，可以参见[训练任务处于Pending状态，原因：nodes are unavailable](https://gitcode.com/Ascend/mind-cluster/issues/352)或者[资源不足时，任务处于Pending状态](https://gitcode.com/Ascend/mind-cluster/issues/355)章节进行处理。
 
-6. 查看训练结果。
+5. 查看训练结果。
+
     1. 在任意节点执行如下命令，查看训练结果。
 
         ```shell
