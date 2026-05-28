@@ -61,6 +61,8 @@ spec:
       metadata:
         labels:
           infer.huawei.com/gang-schedule: 'false' # 关闭gang调度，开启时会为每一个workload实例创建PodGroup
+        annotations:
+          huawei.com/schedule_policy: chip8-node8 # 根据硬件形态设置
       spec:
         replicas: 1 # prefill中workload的pod副本数
         podManagementPolicy: Parallel # 此配置可不填，当workload为StatefulSet，且infer.huawei.com/gang-schedule为true时，需配置为Parallel
@@ -76,8 +78,6 @@ spec:
               ring-controller.atlas: ascend-910b # 标识产品类型
           spec:
             schedulerName: volcano # 指定调度器为Volcano
-            nodeSelector:
-              accelerator-type: module-910b-8 # 根据硬件形态设置
             containers:
             - name: prefill
               image: vllm-ascend:xxx # 自定义vllm镜像名
@@ -96,6 +96,8 @@ spec:
       metadata:
         labels:
           infer.huawei.com/gang-schedule: 'false' # 关闭gang调度，开启时会为每一个workload实例创建PodGroup
+        annotations:
+          huawei.com/schedule_policy: chip8-node8 # 根据硬件形态设置
       spec:
         replicas: 1 # decode中workload的pod副本数
         podManagementPolicy: Parallel # 此配置可不填，当workload为StatefulSet，且infer.huawei.com/gang-schedule为true时，需配置为Parallel
@@ -111,8 +113,6 @@ spec:
               ring-controller.atlas: ascend-910b # 标识产品类型
           spec:
             schedulerName: volcano # 指定调度器为Volcano
-            nodeSelector:
-              accelerator-type: module-910b-8 # 根据硬件形态设置
             containers:
             - name: decode
               image: vllm-ascend:xxx # 自定义vllm镜像名
@@ -125,6 +125,124 @@ spec:
               ... # 补充容器必要的挂载项与运行命令
     - name: router  # router定义
       replicas: 1   # router副本数
+      services:     # router services定义，此处定义的service在一个角色范围内仅创建一个
+      - name: vllm-router-service
+        spec:
+          ports:    # service的端口定义
+          - port: 1026
+            protocol: TCP
+            targetPort: 1026
+          selector:
+            app: test-router # 用户自定义，需要与下面labels中app配置保持一致
+          type: ClusterIP
+      workload:     # router中实例的CRD类型信息
+        apiVersion: apps/v1
+        kind: Deployment # workload类型，当前支持StatefulSet/Deployment
+      spec:
+        replicas: 1 # router中workload的pod副本数
+        selector:
+          matchLabels:
+            app: test-router # 用户自定义，需要与下面labels中app配置保持一致
+        template:
+          metadata:
+            labels:
+              app: test-router # 用户自定义，需要与下面labels中app配置保持一致
+          spec:
+            schedulerName: volcano # 指定调度器为Volcano
+            containers:
+            - name: router
+              image: xxx:yyy # 自定义镜像名
+              ... # 补充容器必要的挂载项与运行命令
+```
+Infer Operator使用缩P保D特性需要开启优先级调度与实例级重调度，适配示例如下：
+
+```Yaml
+apiVersion: mindcluster.huawei.com/v1
+kind: InferServiceSet
+metadata:
+  name: "my-test"
+  namespace: default
+spec:
+  replicas: 1 # 推理服务副本数
+  template:
+    schedulingStrategy: # 将type配置为Priority开启优先级调度
+      type: Priority
+    roles:
+    - name: prefill # prefill定义
+      replicas: 1   # prefill副本数
+      priority: 2   # prefill的优先级配置，值越小优先级越高，仅开启优先级调度时生效
+      workload:     # prefill中实例的CRD类型信息
+        apiVersion: apps/v1
+        kind: StatefulSet # workload类型，当前支持StatefulSet/Deployment
+      metadata:
+        labels:
+          infer.huawei.com/gang-schedule: 'false' # 关闭gang调度，开启时会为每一个workload实例创建PodGroup
+        annotations:
+          huawei.com/schedule_policy: chip8-node8 # 根据硬件形态设置
+      spec:
+        replicas: 1 # prefill中workload的pod副本数
+        podManagementPolicy: Parallel # 此配置可不填，当workload为StatefulSet，且infer.huawei.com/gang-schedule为true时，需配置为Parallel
+        selector:
+          matchLabels:
+            app: test-prefill # 用户自定义，需要与下面labels中app配置保持一致
+        template:
+          metadata:
+            labels:
+              app: test-prefill # 用户自定义，需要与下面labels中app配置保持一致
+              fault-scheduling: 'external-force' # 开启实例级重调度
+              fault-retry-times: '10'
+              ring-controller.atlas: ascend-910b # 标识产品类型
+          spec:
+            schedulerName: volcano # 指定调度器为Volcano
+            containers:
+            - name: prefill
+              image: vllm-ascend:xxx # 自定义vllm镜像名
+              ...
+              resources:
+                requests:
+                  huawei.com/Ascend910: 8
+                limits:
+                  huawei.com/Ascend910: 8
+              ... # 补充容器必要的挂载项与运行命令
+    - name: decode  # decode定义
+      replicas: 1   # decode副本数
+      priority: 1   # decode的优先级配置，值越小优先级越高，仅开启优先级调度时生效
+      workload:     # decode中实例的CRD类型信息
+        apiVersion: apps/v1
+        kind: StatefulSet # workload类型，当前支持StatefulSet/Deployment
+      metadata:
+        labels:
+          infer.huawei.com/gang-schedule: 'false' # 关闭gang调度，开启时会为每一个workload实例创建PodGroup
+        annotations:
+          huawei.com/schedule_policy: chip8-node8 # 根据硬件形态设置
+      spec:
+        replicas: 1 # decode中workload的pod副本数
+        podManagementPolicy: Parallel # 此配置可不填，当workload为StatefulSet，且infer.huawei.com/gang-schedule为true时，需配置为Parallel
+        selector:
+          matchLabels:
+            app: test-decode # 用户自定义，需要与下面labels中app配置保持一致
+        template:
+          metadata:
+            labels:
+              app: test-decode # 用户自定义，需要与下面labels中app配置保持一致
+              fault-scheduling: 'external-force' # 开启实例级重调度
+              fault-retry-times: '10'
+              ring-controller.atlas: ascend-910b # 标识产品类型
+          spec:
+            schedulerName: volcano # 指定调度器为Volcano
+            containers:
+            - name: decode
+              image: vllm-ascend:xxx # 自定义vllm镜像名
+              ...
+              resources:
+                requests:
+                  huawei.com/Ascend910: 8
+                limits:
+                  huawei.com/Ascend910: 8
+              ... # 补充容器必要的挂载项与运行命令
+    - name: router  # router定义
+      replicas: 1   # router副本数
+      priority: 3   # router的优先级配置，值越小优先级越高，仅开启优先级调度时生效
       services:     # router services定义，此处定义的service在一个角色范围内仅创建一个
       - name: vllm-router-service
         spec:
@@ -189,7 +307,23 @@ spec:
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><ul ><li>on：开启<span >Pod</span>级别重调度。</li><li>其他值或不使用该字段：关闭<span >Pod</span>级别重调度。</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p ><span >Pod</span>级重调度，表示任务发生故障后，不会删除PodGroup内的所有任务<span >Pod</span>，而是将发生故障的<span >Pod</span>进行删除，由控制器重新创建新<span >Pod</span>后进行重调度。</p>
-<p>PD实例必须配置此字段，Router实例可不配置。</p>
+</td>
+</tr>
+<tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >schedulingStrategy.type</p>
+</td>
+<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 ">
+<ul ><li><span >Parallel</span>：并发调度，默认调度方式，并发创建所有实例。</li><li><span >Priority</span>: 优先级调度，按照优先级顺序依次创建不同角色实例。</li></ul>
+</td>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >使用缩P保D特性时必须开启优先级调度，并配置decode实例优先级高于prefill实例，以确保高优先级实例先与低优先级实例被调度。</p>
+<p>优先级的配置见priority字段说明。</p>
+</td>
+</tr>
+<tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >priority</p>
+</td>
+<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 ">
+数字，取值范围为1-32。
+</td>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >该字段值越小，优先级越高。当使用缩P保D特性时，建议配置：prefill角色的priority值 > decode角色的priority值。</p>
 </td>
 </tr>
 <tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >infer.huawei.com/gang-schedule</p>
@@ -200,10 +334,9 @@ spec:
 <p>workload为StatefulSet场景下，开启组调度的同时需要配置podManagementPolicy为Parallel，否则StatefulSet无法正常调度。</p>
 </td>
 </tr>
-<tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >accelerator-type</p>
+<tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >huawei.com/schedule_policy</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><ul ><li><span >Atlas 800I A2 推理服务器</span>：module-910b-8</li><li><span >Atlas 800I A3 超节点服务器</span>：module-a3-16</li>
-</ul>
+<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 ">取值可参考<a href="../../api/volcano.md#podgroup">参数说明</a>中表3对该字段的说明。
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >根据需要运行训练任务的节点类型，选取不同的值。</p>
 </td>
@@ -223,7 +356,7 @@ spec:
 <p >该参数只支持使用<span >Volcano</span>调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
 </td>
 </tr>
-<tr ><td class="cellrowborder" rowspan="5" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >fault-scheduling</p>
+<tr ><td class="cellrowborder" rowspan="7" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >fault-scheduling</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><p >grace</p>
 </td>
@@ -233,6 +366,16 @@ spec:
 <tr ><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p >force</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p >配置任务采用强制删除模式，在过程中强制删除原<span >Pod</span>。</p>
+</td>
+</tr>
+<tr ><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p >external-grace</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p >配置任务开启实例级重调度，会强制删除原实例，并级联删除Pod。预留该字段用于实现实例的优雅删除。</p>
+</td>
+</tr>
+<tr ><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p >external-force</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p >配置任务开启实例级重调度，会强制删除原实例，并级联删除Pod。预留该字段用于实现实例的强制删除。</p>
 </td>
 </tr>
 <tr ><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p >off</p>
