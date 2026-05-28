@@ -177,6 +177,7 @@ func TestWriteNodeAnnotation(t *testing.T) {
 	defer patch.Reset()
 	convey.Convey("test writeNodeAnnotation", t, func() {
 		convey.Convey("enter AddAnnotation, flag should be true", func() {
+			mgr.client = &kubeclient.ClientK8s{}
 			writeNodeAnnotation("")
 			convey.So(flag, convey.ShouldBeTrue)
 		})

@@ -1256,45 +1256,6 @@ func (hdm *HwDevManager) updatePodAnnotation() error {
 	return nil
 }
 
-// tryToClearResetInfoCM try to clear reset info config map
-func (hdm *HwDevManager) tryToClearResetInfoCM(pod v1.Pod) error {
-	taskName, ok := pod.Annotations[common.ResetTaskNameKey]
-	if !ok {
-		taskName, ok = pod.Labels[common.ResetTaskNameKeyInLabel]
-		if !ok {
-			hwlog.RunLog.Error("failed to get task name by task key in tryToClearResetInfoCM")
-			return fmt.Errorf("failed to get task name by task key")
-		}
-	}
-	resetInfo, err := hdm.manager.GetKubeClient().GetConfigMap(
-		common.ResetInfoCMNamePrefix+taskName, pod.Namespace)
-	if err != nil {
-		hwlog.RunLog.Warnf("get reset configMap failed, because: %v", err)
-		return err
-	}
-
-	data, ok := resetInfo.Data[common.ResetInfoCMDataKey]
-	if !ok {
-		return fmt.Errorf("%s not exist", common.ResetInfoCMDataKey)
-	}
-	if len(data) > common.CMDataMaxLength {
-		return fmt.Errorf("configmap data size is out of memory")
-	}
-	var taskResetInfo common.TaskResetInfo
-	if err := json.Unmarshal([]byte(data), &taskResetInfo); err != nil {
-		return fmt.Errorf("unmarshal configmap data failed, err: %v", err)
-	}
-	// skip it when the reset info config map is initialized
-	if taskResetInfo.UpdateTime == 0 {
-		return nil
-	}
-
-	if err := hdm.manager.GetKubeClient().ClearResetInfo(taskName, pod.Namespace); err != nil {
-		return fmt.Errorf("clear reset configMap failed err is: %v", err)
-	}
-	return nil
-}
-
 // updateSpecTypePodAnnotation will update annotation of pod and
 // try to clear reset info config map which may not be initialized after rescheduling
 func (hdm *HwDevManager) updateSpecTypePodAnnotation(deviceType, serverID string) error {
@@ -1325,15 +1286,6 @@ func (hdm *HwDevManager) updateSpecTypePodAnnotation(deviceType, serverID string
 		if err := hdm.manager.AddPodAnnotation(deviceInfo, deviceType, serverID, hdm.allInfo.AllDevs); err != nil {
 			hwlog.RunLog.Errorf("update pod %s_%s annotation failed, %v", deviceInfo.Pod.Namespace,
 				deviceInfo.Pod.Name, err)
-		}
-
-		if common.ParamOption.HotReset != common.HotResetTrainOnLine {
-			continue
-		}
-
-		// need to clear reset info config map after rescheduling
-		if err = hdm.tryToClearResetInfoCM(deviceInfo.Pod); err != nil {
-			hwlog.RunLog.Warnf("try to clear configMap failed, err is: %v", err)
 		}
 	}
 	return nil
@@ -1553,8 +1505,7 @@ func (hdm *HwDevManager) graceTolerance(ctx context.Context, groupDevice map[str
 }
 
 func (hdm *HwDevManager) isSupportGraceTolerance() {
-	if common.ParamOption.HotReset != common.HotResetTrainOnLine &&
-		common.ParamOption.HotReset != common.HotResetTrainOffLine {
+	if common.ParamOption.HotReset != common.HotResetTrainOffLine {
 		hwlog.RunLog.Debugf("train device hot reset mode error: %d", common.ParamOption.HotReset)
 		return
 	}

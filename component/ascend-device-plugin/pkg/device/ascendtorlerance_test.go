@@ -186,56 +186,6 @@ func TestGetChipCountOnRing2(t *testing.T) {
 		})
 	})
 }
-
-// TestGetAllTaskDevFaultInfoList for test get all the dev fault info list
-func TestGetAllTaskDevFaultInfoList(t *testing.T) {
-	convey.Convey("test GetTaskAllDevFaultInfoList", t, func() {
-		convey.Convey("test GetTaskAllDevFaultInfoList success when not nil", func() {
-			tool := &HotResetTools{allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": {}}}
-			convey.So(tool.GetAllTaskDevFaultInfoList(), convey.ShouldNotBeNil)
-		})
-		convey.Convey("test GetTaskAllDevFaultInfoList success when nil", func() {
-			tool := &HotResetTools{}
-			convey.So(tool.GetAllTaskDevFaultInfoList(), convey.ShouldBeNil)
-		})
-	})
-}
-
-// TestGetTaskDevFaultInfoList for test get the dev fault info list by task name
-func TestGetTaskDevFaultInfoList(t *testing.T) {
-	convey.Convey("test GetTaskDevFaultInfoList", t, func() {
-		convey.Convey("test GetTaskDevFaultInfoList success", func() {
-			tool := &HotResetTools{allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": {}}}
-			devInfoList, ok := tool.GetTaskDevFaultInfoList("test")
-			convey.So(devInfoList, convey.ShouldNotBeNil)
-			convey.So(ok, convey.ShouldBeNil)
-		})
-		convey.Convey("test GetTaskDevFaultInfoList failed", func() {
-			tool := &HotResetTools{}
-			devInfoList, ok := tool.GetTaskDevFaultInfoList("test")
-			convey.So(devInfoList, convey.ShouldBeNil)
-			convey.So(ok, convey.ShouldNotBeNil)
-		})
-	})
-}
-
-// TestGetTaskPod for test get the pod of a task by task name
-func TestGetTaskPod(t *testing.T) {
-	convey.Convey("test GetTaskPod", t, func() {
-		convey.Convey("test GetTaskPod success", func() {
-			tool := &HotResetTools{taskPod: map[string]v1.Pod{"test": {}}}
-			_, err := tool.GetTaskPod("test")
-			convey.So(err, convey.ShouldBeNil)
-		})
-		convey.Convey("test GetTaskPod failed", func() {
-			tool := &HotResetTools{}
-			_, err := tool.GetTaskPod("test")
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-	})
-}
-
-// TestGetDevListInReset for test get the device list in reset
 func TestGetDevListInReset(t *testing.T) {
 	convey.Convey("test GetDevListInReset", t, func() {
 		convey.Convey("test GetDevListInReset success when reset dev exist", func() {
@@ -278,39 +228,6 @@ func TestGetDevProcessPolicy(t *testing.T) {
 		})
 	})
 }
-
-// TestGetTaskProcessPolicy for test get a process policy by task name
-func TestGetTaskProcessPolicy(t *testing.T) {
-	convey.Convey("test GetTaskProcessPolicy", t, func() {
-		convey.Convey("test GetTaskProcessPolicy success", func() {
-			tool := &HotResetTools{
-				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockTaskDevInfoList()},
-			}
-			processPolicy, processPolicyLevel, err := tool.GetTaskProcessPolicy("test")
-			convey.So(processPolicy, convey.ShouldEqual, common.ResetError)
-			convey.So(processPolicyLevel, convey.ShouldEqual, common.ResetErrorLevel)
-			convey.So(err, convey.ShouldBeNil)
-		})
-		convey.Convey("test GetTaskDevFaultInfoList failed  when task dev info not exist", func() {
-			tool := &HotResetTools{}
-			processPolicy, processPolicyLevel, err := tool.GetTaskProcessPolicy("test")
-			convey.So(processPolicy, convey.ShouldEqual, "")
-			convey.So(processPolicyLevel, convey.ShouldEqual, -1)
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-		convey.Convey("test GetTaskDevFaultInfoList failed when invalid policy", func() {
-			tool := &HotResetTools{
-				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockWrongTaskDevInfoList()},
-			}
-			processPolicy, processPolicyLevel, err := tool.GetTaskProcessPolicy("test")
-			convey.So(processPolicy, convey.ShouldEqual, "")
-			convey.So(processPolicyLevel, convey.ShouldEqual, -1)
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-	})
-}
-
-// TestGetDevList for test get the device list
 func TestGetDevList(t *testing.T) {
 	convey.Convey("test GetDevList", t, func() {
 		convey.Convey("test GetDevList success", func() {
@@ -327,128 +244,6 @@ func TestGetDevList(t *testing.T) {
 		})
 	})
 }
-
-// TestGetDevListByPolicyLevel for test get the device list by policy level
-func TestDevListByPolicyLevel(t *testing.T) {
-	convey.Convey("test GetDevListByPolicyLevel", t, func() {
-		convey.Convey("test GetDevListByPolicyLevel success", func() {
-			tool := &HotResetTools{
-				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockTaskDevInfoList()},
-			}
-			devList, err := tool.GetDevListByPolicyLevel(tool.allTaskDevFaultInfo["test"], common.ResetErrorLevel)
-			convey.So(devList[0], convey.ShouldNotBeNil)
-			convey.So(err, convey.ShouldBeNil)
-			devList2, err := tool.GetDevListByPolicyLevel(tool.allTaskDevFaultInfo["test"], common.IsolateErrorLevel)
-			convey.So(len(devList2), convey.ShouldEqual, 0)
-			convey.So(err, convey.ShouldBeNil)
-		})
-		convey.Convey("test GetDevListByPolicyLevel failed", func() {
-			tool := &HotResetTools{
-				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockWrongTaskDevInfoList()},
-			}
-			devList, err := tool.GetDevListByPolicyLevel(tool.allTaskDevFaultInfo["test"], common.ResetErrorLevel)
-			convey.So(devList, convey.ShouldBeNil)
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-	})
-}
-
-// TestGetNeedResetDevList for test get the needed be reseted device list
-func TestGetNeedResetDevList(t *testing.T) {
-	patch := gomonkey.ApplyMethodReturn(&HotResetTools{}, "GetResetDevNumOnce", common.Ascend910RingsNum, nil)
-	defer patch.Reset()
-	convey.Convey("test GetNeedResetDevMap", t, func() {
-		convey.Convey("test GetNeedResetDevMap success", func() {
-			tool := &HotResetTools{
-				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockTaskDevInfoList()},
-				resetDevNumOnce:     1,
-			}
-			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
-			convey.So(ok, convey.ShouldBeTrue)
-			devList, err := tool.GetNeedResetDevMap(devFaultInfoList)
-			convey.So(err, convey.ShouldBeNil)
-			needResetDev, ok := devList[0]
-			convey.So(needResetDev, convey.ShouldNotBeNil)
-			convey.So(ok, convey.ShouldBeTrue)
-			_, ok = devList[1]
-			convey.So(ok, convey.ShouldBeFalse)
-		})
-		convey.Convey("test GetNeedResetDevMap failed", func() {
-			tool := &HotResetTools{
-				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockWrongTaskDevInfoList()},
-				resetDevNumOnce:     1,
-			}
-			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
-			convey.So(ok, convey.ShouldBeTrue)
-			devList, err := tool.GetNeedResetDevMap(devFaultInfoList)
-			convey.So(devList, convey.ShouldBeNil)
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-	})
-}
-
-// TestGetTaskResetInfo for test get the reset info of task to process
-func TestGetTaskResetInfo(t *testing.T) {
-	convey.Convey("test GetTaskResetInfo", t, func() {
-		convey.Convey("test GetTaskResetInfo success", func() {
-			tool := &HotResetTools{
-				resetDevNumOnce:     common.Ascend910BRingsNumTrain,
-				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockTaskDevInfoList()},
-			}
-			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
-			convey.So(ok, convey.ShouldBeTrue)
-			taskResetInfo, err := tool.GetTaskResetInfo(devFaultInfoList, common.ResetError,
-				common.ResetError, common.UnrecoveredStatus)
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(taskResetInfo.RankList[0].RankId, convey.ShouldEqual, 0)
-			convey.So(taskResetInfo.RankList[0].Status, convey.ShouldEqual, common.UnrecoveredStatus)
-			convey.So(taskResetInfo.RankList[0].Policy, convey.ShouldEqual, common.ResetError)
-			convey.So(taskResetInfo.RankList[0].InitialPolicy, convey.ShouldEqual, common.ResetError)
-		})
-		convey.Convey("test GetTaskResetInfo failed", func() {
-			tool := &HotResetTools{
-				resetDevNumOnce:     common.Ascend910BRingsNumTrain,
-				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockWrongTaskDevInfoList()},
-			}
-			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
-			convey.So(ok, convey.ShouldBeTrue)
-			taskResetInfo, err := tool.GetTaskResetInfo(devFaultInfoList, common.ResetError,
-				common.ResetError, common.UnrecoveredStatus)
-			convey.So(taskResetInfo, convey.ShouldBeNil)
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-	})
-}
-
-// TestGetTaskFaultRankInfo for test get the fault rank info of task
-func TestGetTaskFaultRankInfo(t *testing.T) {
-	convey.Convey("test GetTaskFaultRankInfo", t, func() {
-		convey.Convey("test GetTaskFaultRankInfo success", func() {
-			tool := &HotResetTools{
-				resetDevNumOnce:     common.Ascend910BRingsNumTrain,
-				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockTaskDevInfoList()},
-			}
-			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
-			convey.So(ok, convey.ShouldBeTrue)
-			faultRankInfo, err := tool.GetTaskFaultRankInfo(devFaultInfoList)
-			convey.So(err, convey.ShouldBeNil)
-			sliceIntEqual(faultRankInfo.FaultRank, []int{0, 1})
-		})
-		convey.Convey("test GetTaskFaultRankInfo failed", func() {
-			tool := &HotResetTools{
-				resetDevNumOnce:     common.Ascend910BRingsNumTrain,
-				allTaskDevFaultInfo: map[string][]*common.TaskDevInfo{"test": mockWrongTaskDevInfoList()},
-			}
-			devFaultInfoList, ok := tool.allTaskDevFaultInfo["test"]
-			convey.So(ok, convey.ShouldBeTrue)
-			faultRankInfo, err := tool.GetTaskFaultRankInfo(devFaultInfoList)
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(len(faultRankInfo.FaultRank), convey.ShouldEqual, 0)
-		})
-	})
-}
-
-// TestGetFaultDev2PodMap for test get the fault dev with pod map
 func TestGetFaultDev2PodMap(t *testing.T) {
 	convey.Convey("test GetFaultDev2PodMap", t, func() {
 		convey.Convey("test GetFaultDev2PodMap success", func() {
@@ -628,247 +423,6 @@ func TestUpdateFreeTask(t *testing.T) {
 		})
 	})
 }
-
-// TestIsCurNodeTaskInReset for test judge whether the current node task is being resetting
-func TestIsCurNodeTaskInReset(t *testing.T) {
-	convey.Convey("test IsCurNodeTaskInReset", t, func() {
-		convey.Convey("test IsCurNodeTaskInReset true", func() {
-			tool := &HotResetTools{
-				resetTask: map[string]struct{}{"test": {}},
-			}
-			convey.So(tool.IsCurNodeTaskInReset("test"), convey.ShouldBeTrue)
-		})
-		convey.Convey("test IsCurNodeTaskInReset false", func() {
-			tool := &HotResetTools{
-				resetTask: map[string]struct{}{},
-			}
-			convey.So(tool.IsCurNodeTaskInReset("test"), convey.ShouldBeFalse)
-		})
-	})
-}
-
-// TestIsExistFaultyDevInTask for test judge whether the faulty dev exist in task
-func TestIsExistFaultyDevInTask(t *testing.T) {
-	convey.Convey("test IsExistFaultyDevInTask", t, func() {
-		convey.Convey("test IsExistFaultyDevInTask true", func() {
-			tool := &HotResetTools{
-				allTaskDevList: map[string][]int32{"test": {}},
-				resetTask:      map[string]struct{}{"test": {}},
-				faultDev2PodMap: map[int32]v1.Pod{0: {
-					TypeMeta: metav1.TypeMeta{},
-					ObjectMeta: metav1.ObjectMeta{
-						Annotations: map[string]string{common.ResetTaskNameKey: "test"},
-						Labels:      map[string]string{common.ResetTaskNameKeyInLabel: "test"},
-					},
-				},
-				},
-			}
-			convey.So(tool.IsExistFaultyDevInTask("test"), convey.ShouldBeTrue)
-		})
-		convey.Convey("test IsExistFaultyDevInTask false by not in cache", func() {
-			tool := &HotResetTools{}
-			convey.So(tool.IsExistFaultyDevInTask("test"), convey.ShouldBeFalse)
-		})
-		convey.Convey("test IsExistFaultyDevInTask false by not have annotation and label", func() {
-			tool := &HotResetTools{
-				allTaskDevList: map[string][]int32{"test": {}},
-				resetTask:      map[string]struct{}{"test": {}},
-				faultDev2PodMap: map[int32]v1.Pod{0: {
-					TypeMeta: metav1.TypeMeta{},
-					ObjectMeta: metav1.ObjectMeta{
-						Annotations: map[string]string{},
-						Labels:      map[string]string{},
-					},
-				},
-				},
-			}
-			// test the pod have not reset annotation
-			convey.So(tool.IsExistFaultyDevInTask("test"), convey.ShouldBeFalse)
-			// test the pod have not reset label
-			tool.faultDev2PodMap[0].Annotations[common.ResetTaskNameKey] = "test"
-			convey.So(tool.IsExistFaultyDevInTask("test"), convey.ShouldBeTrue)
-			// test the pod have not reset annotation
-			delete(tool.faultDev2PodMap[0].Annotations, common.ResetTaskNameKey)
-			tool.faultDev2PodMap[0].Labels[common.ResetTaskNameKeyInLabel] = "test"
-			convey.So(tool.IsExistFaultyDevInTask("test"), convey.ShouldBeTrue)
-		})
-	})
-}
-
-// TestSetTaskInReset for test set task in reset task cache
-func TestSetTaskInReset(t *testing.T) {
-	convey.Convey("test SetTaskInReset", t, func() {
-		convey.Convey("test SetTaskInReset success", func() {
-			tool := &HotResetTools{
-				resetTask: map[string]struct{}{},
-			}
-			err := tool.SetTaskInReset("test")
-			convey.So(err, convey.ShouldBeNil)
-		})
-		convey.Convey("test SetTaskInReset failed", func() {
-			tool := &HotResetTools{
-				resetTask: map[string]struct{}{"test": {}},
-			}
-			err := tool.SetTaskInReset("test")
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-	})
-}
-
-// TestSetDevInReset for test set dev in reset dev cache
-func TestSetDevInReset(t *testing.T) {
-	convey.Convey("test SetDevInReset", t, func() {
-		convey.Convey("test SetDevInReset success", func() {
-			tool := &HotResetTools{
-				resetDev: map[int32]struct{}{},
-			}
-			err := tool.SetDevInReset(0)
-			convey.So(err, convey.ShouldBeNil)
-		})
-		convey.Convey("test SetDevInReset failed", func() {
-			tool := &HotResetTools{
-				resetDev: map[int32]struct{}{0: {}},
-			}
-			err := tool.SetDevInReset(0)
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-	})
-}
-
-// TestSetAllDevInReset for test set all dev in reset dev cache
-func TestSetAllDevInReset(t *testing.T) {
-	convey.Convey("test SetAllDevInReset", t, func() {
-		convey.Convey("resetInfo is nil", func() {
-			tool := &HotResetTools{
-				resetDev: map[int32]struct{}{},
-			}
-			err := tool.SetAllDevInReset(nil)
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-		convey.Convey("test SetAllDevInReset success", func() {
-			tool := &HotResetTools{
-				resetDev: map[int32]struct{}{},
-			}
-			resetInfo := &common.TaskResetInfo{
-				RankList: mockTaskDevInfoList(),
-			}
-			err := tool.SetAllDevInReset(resetInfo)
-			convey.So(err, convey.ShouldBeNil)
-		})
-		convey.Convey("test SetAllDevInReset failed", func() {
-			tool := &HotResetTools{
-				resetDev: map[int32]struct{}{0: {}},
-			}
-			resetInfo := &common.TaskResetInfo{
-				RankList: mockTaskDevInfoList(),
-			}
-			err := tool.SetAllDevInReset(resetInfo)
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-	})
-}
-
-// TestUnSetDevInReset for test unset dev in reset dev cache
-func TestUnSetDevInReset(t *testing.T) {
-	convey.Convey("test UnSetDevInReset", t, func() {
-		convey.Convey("test UnSetDevInReset success", func() {
-			tool := &HotResetTools{
-				resetDev: map[int32]struct{}{0: {}},
-			}
-			err := tool.UnSetDevInReset(0)
-			convey.So(err, convey.ShouldBeNil)
-			_, ok := tool.resetDev[0]
-			convey.So(ok, convey.ShouldBeFalse)
-		})
-		convey.Convey("test UnSetDevInReset failed", func() {
-			tool := &HotResetTools{
-				resetDev: map[int32]struct{}{},
-			}
-			err := tool.UnSetDevInReset(0)
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-	})
-}
-
-// TestUnSetAllDevInReset for test unset dev in reset dev cache
-func TestUnSetAllDevInReset(t *testing.T) {
-	convey.Convey("test UnSetAllDevInReset", t, func() {
-		convey.Convey("resetInfo is nil", func() {
-			tool := &HotResetTools{
-				resetDev: map[int32]struct{}{},
-			}
-			err := tool.UnSetAllDevInReset(nil)
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-		convey.Convey("test UnSetAllDevInReset success", func() {
-			tool := &HotResetTools{
-				resetDev: map[int32]struct{}{0: {}, 1: {}},
-			}
-			resetInfo := &common.TaskResetInfo{
-				RankList: mockTaskDevInfoList(),
-			}
-			err := tool.UnSetAllDevInReset(resetInfo)
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(len(tool.resetDev), convey.ShouldEqual, 0)
-		})
-		convey.Convey("test UnSetAllDevInReset failed", func() {
-			tool := &HotResetTools{
-				resetDev: map[int32]struct{}{},
-			}
-			resetInfo := &common.TaskResetInfo{
-				RankList: mockTaskDevInfoList(),
-			}
-			err := tool.UnSetAllDevInReset(resetInfo)
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-	})
-}
-
-// TestUnSetTaskInReset for test unset task in reset task cache
-func TestUnSetTaskInReset(t *testing.T) {
-	convey.Convey("test UnSetTaskInReset", t, func() {
-		convey.Convey("test UnSetTaskInReset success", func() {
-			tool := &HotResetTools{
-				resetTask: map[string]struct{}{"test": {}},
-			}
-			err := tool.UnSetTaskInReset("test")
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(len(tool.resetDev), convey.ShouldEqual, 0)
-		})
-		convey.Convey("test UnSetTaskInReset failed", func() {
-			tool := &HotResetTools{
-				resetTask: map[string]struct{}{},
-			}
-			err := tool.UnSetTaskInReset("test")
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-	})
-}
-
-// TestDeepCopyFunc for test function of deep copy
-func TestDeepCopyFunc(t *testing.T) {
-	convey.Convey("test deep copy func of tool", t, func() {
-		devInfoList := mockTaskDevInfoList()
-		tool := &HotResetTools{}
-		convey.Convey("test deep copy task dev info is nil", func() {
-			devInfoTest := tool.DeepCopyDevInfo(nil)
-			convey.So(devInfoTest, convey.ShouldBeNil)
-		})
-		convey.Convey("test deep copy task dev info struct true", func() {
-			devInfo := devInfoList[0]
-			devInfoTest := tool.DeepCopyDevInfo(devInfo)
-			deepTestDevInfo(devInfo, devInfoTest)
-		})
-		convey.Convey("test deep copy task dev info struct list true", func() {
-			devInfoListTest := tool.DeepCopyDevFaultInfoList(devInfoList)
-			convey.So(devInfoListTest, convey.ShouldNotEqual, devInfoList)
-			for i := range devInfoList {
-				deepTestDevInfo(devInfoList[i], devInfoListTest[i])
-			}
-		})
-	})
-}
-
 func deepTestDevInfo(devInfo, devInfoTest *common.TaskDevInfo) {
 	convey.So(devInfoTest, convey.ShouldNotBeNil)
 	convey.So(devInfo, convey.ShouldNotBeNil)
@@ -1484,5 +1038,41 @@ func TestGetTaskNameByPod(t *testing.T) {
 		}
 		tool := &HotResetTools{}
 		convey.So(tool.GetTaskNameByPod(pod), convey.ShouldEqual, "task-name")
+	})
+}
+
+func TestGetResetDevNumOnce(t *testing.T) {
+	convey.Convey("test GetResetDevNumOnce", t, func() {
+		convey.Convey("01-resetDevNumOnce is zero, should return error", func() {
+			tool := &HotResetTools{resetDevNumOnce: 0}
+			result, err := tool.GetResetDevNumOnce()
+			convey.So(result, convey.ShouldEqual, 0)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("02-resetDevNumOnce is not zero, should return value", func() {
+			tool := &HotResetTools{resetDevNumOnce: 4}
+			result, err := tool.GetResetDevNumOnce()
+			convey.So(result, convey.ShouldEqual, 4)
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
+func TestGetGlobalDevFaultInfo(t *testing.T) {
+	convey.Convey("test GetGlobalDevFaultInfo", t, func() {
+		convey.Convey("01-logicID not in cache, should return error", func() {
+			tool := &HotResetTools{globalDevFaultInfo: map[int32]*common.DevFaultInfo{}}
+			result, err := tool.GetGlobalDevFaultInfo(0)
+			convey.So(result, convey.ShouldBeNil)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+		convey.Convey("02-logicID in cache, should return info", func() {
+			info := &common.DevFaultInfo{LogicId: 0, Policy: common.ResetError}
+			tool := &HotResetTools{globalDevFaultInfo: map[int32]*common.DevFaultInfo{0: info}}
+			result, err := tool.GetGlobalDevFaultInfo(0)
+			convey.So(result, convey.ShouldNotBeNil)
+			convey.So(result.LogicId, convey.ShouldEqual, int32(0))
+			convey.So(err, convey.ShouldBeNil)
+		})
 	})
 }

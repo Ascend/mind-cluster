@@ -515,17 +515,12 @@ func TestUpdatePodAnnotation(t *testing.T) {
 				func(_ *kubeclient.ClientK8s) []v1.Pod {
 					return []v1.Pod{}
 				})
-			mockClearCM := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "tryToClearResetInfoCM",
-				func(_ *HwDevManager, _ v1.Pod) error {
-					return nil
-				})
 			patch := setPatch()
 			defer patch.Reset()
 			defer mockPodList.Reset()
 			defer mockManager.Reset()
 			defer mockNode.Reset()
 			defer mockPodDeviceInfo.Reset()
-			defer mockClearCM.Reset()
 			devMgrPatch := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{}, "GetSuperPodInfo",
 				npuCommon.CgoSuperPodInfo{RackId: 1, SuperPodType: 1}, nil)
 			defer devMgrPatch.Reset()
@@ -834,7 +829,7 @@ func TestIsSupportGraceTolerance(t *testing.T) {
 		convey.So(common.ParamOption.GraceToleranceOn, convey.ShouldNotEqual, true)
 	})
 
-	common.ParamOption.HotReset = common.HotResetTrainOnLine
+	common.ParamOption.HotReset = common.HotResetTrainOffLine
 	convey.Convey("test isSupportGraceTolerance when run mode is not Ascend910", t, func() {
 		hdm.RunMode = api.Ascend310P
 		hdm.isSupportGraceTolerance()
@@ -917,84 +912,6 @@ func mockGetConfigMap(configmap *v1.ConfigMap, err error) *gomonkey.Patches {
 			return configmap, err
 		})
 }
-
-// TestTryToClearResetInfoCM1 test tryToClearResetInfoCM
-func TestTryToClearResetInfoCM1(t *testing.T) {
-	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}}
-	convey.Convey("test tryToClearResetInfoCM when get task name failed return error", t, func() {
-		pod := v1.Pod{}
-		err := hdm.tryToClearResetInfoCM(pod)
-		convey.So(err.Error(), convey.ShouldEqual, "failed to get task name by task key")
-	})
-	pod := v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{common.ResetTaskNameKey: "taskName"}}}
-	mockGetKubeClient := gomonkey.ApplyMethodReturn(&mockDevManager{}, "GetKubeClient", &kubeclient.ClientK8s{})
-	defer mockGetKubeClient.Reset()
-	convey.Convey("test tryToClearResetInfoCM when get reset cm failed return error", t, func() {
-		mockGetConfigMap := mockGetConfigMap(nil, errors.New("error"))
-		defer mockGetConfigMap.Reset()
-		err := hdm.tryToClearResetInfoCM(pod)
-		convey.So(err.Error(), convey.ShouldEqual, "error")
-	})
-	convey.Convey("test tryToClearResetInfoCM when reset.json not exist return error", t, func() {
-		mockGetConfigMap := mockGetConfigMap(&v1.ConfigMap{Data: map[string]string{}}, nil)
-		defer mockGetConfigMap.Reset()
-		err := hdm.tryToClearResetInfoCM(pod)
-		convey.So(err.Error(), convey.ShouldEqual, "reset.json not exist")
-	})
-	convey.Convey("test tryToClearResetInfoCM when cm data size out of memory return error", t, func() {
-		mockGetConfigMap := mockGetConfigMap(&v1.ConfigMap{Data: map[string]string{
-			common.ResetInfoCMDataKey: string(make([]byte, common.CMDataMaxLength+1))}}, nil)
-		defer mockGetConfigMap.Reset()
-		err := hdm.tryToClearResetInfoCM(pod)
-		convey.So(err.Error(), convey.ShouldEqual, "configmap data size is out of memory")
-	})
-}
-
-// TestTryToClearResetInfoCM2 test tryToClearResetInfoCM
-func TestTryToClearResetInfoCM2(t *testing.T) {
-	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}}
-	pod := v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{common.ResetTaskNameKey: "taskName"}}}
-	mockGetKubeClient := gomonkey.ApplyMethodReturn(&mockDevManager{}, "GetKubeClient", &kubeclient.ClientK8s{})
-	defer mockGetKubeClient.Reset()
-	mockGetConfigMap := mockGetConfigMap(&v1.ConfigMap{Data: map[string]string{common.ResetInfoCMDataKey: "key"}}, nil)
-	defer mockGetConfigMap.Reset()
-	convey.Convey("test tryToClearResetInfoCM when unmarshal configmap data failed return error", t, func() {
-		err := hdm.tryToClearResetInfoCM(pod)
-		convey.So(err.Error(), convey.ShouldEqual,
-			"unmarshal configmap data failed, err: invalid character 'k' looking for beginning of value")
-	})
-	convey.Convey("test tryToClearResetInfoCM when reset info config map is initialized return nil", t, func() {
-		mockUnmarshal := gomonkey.ApplyFuncReturn(json.Unmarshal, nil)
-		defer mockUnmarshal.Reset()
-		err := hdm.tryToClearResetInfoCM(pod)
-		convey.So(err, convey.ShouldBeNil)
-	})
-	mockUnmarshal := gomonkey.ApplyFunc(json.Unmarshal, func(_ []byte, value any) error {
-		taskResetInfo, ok := value.(*common.TaskResetInfo)
-		if !ok {
-			return errors.New("error")
-		}
-		taskResetInfo.UpdateTime = 1
-		return nil
-	})
-	defer mockUnmarshal.Reset()
-	convey.Convey("test tryToClearResetInfoCM when clear reset info failed return error", t, func() {
-		mockClearResetInfo := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "ClearResetInfo",
-			func(_ *kubeclient.ClientK8s, _, _ string) error { return errors.New("error") })
-		defer mockClearResetInfo.Reset()
-		err := hdm.tryToClearResetInfoCM(pod)
-		convey.So(err.Error(), convey.ShouldEqual, "clear reset configMap failed err is: error")
-	})
-	convey.Convey("test tryToClearResetInfoCM when clear reset info success return nil", t, func() {
-		mockClearResetInfo := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)), "ClearResetInfo",
-			func(_ *kubeclient.ClientK8s, _, _ string) error { return nil })
-		defer mockClearResetInfo.Reset()
-		err := hdm.tryToClearResetInfoCM(pod)
-		convey.So(err, convey.ShouldBeNil)
-	})
-}
-
-// TestResetHccsServer tests the ResetHccsServer function.
 func TestResetHccsServer(t *testing.T) {
 	hdm := &HwDevManager{manager: &device.HwAscend310Manager{}}
 	convey.Convey("Test ResetHccsServer", t, func() {
@@ -1338,7 +1255,7 @@ func TestChipHotReset(t *testing.T) {
 	originalHotReset := common.ParamOption.HotReset
 	convey.Convey("Test chipHotReset", t, func() {
 		convey.Convey("When HotReset mode is not Infer, log debug and return", func() {
-			common.ParamOption.HotReset = common.HotResetTrainOnLine
+			common.ParamOption.HotReset = common.HotResetTrainOffLine
 			convey.So(CapturePanic(func() { hdm.chipHotReset() }), convey.ShouldBeNil)
 		})
 		common.ParamOption.HotReset = common.HotResetInfer

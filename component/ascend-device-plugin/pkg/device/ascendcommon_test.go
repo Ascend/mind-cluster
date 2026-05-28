@@ -246,7 +246,7 @@ func TestSetHealthyIfDuoCard(t *testing.T) {
 		})
 		convey.Convey("02-HotReset is false, should not update groupDevice", func() {
 			mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption,
-				common.Option{ProductTypes: []string{common.Atlas300IDuo}, HotReset: common.HotResetTrainOnLine})
+				common.Option{ProductTypes: []string{common.Atlas300IDuo}, HotReset: common.HotResetTrainOffLine})
 			defer mockOption.Reset()
 			setHealthyIfDuoCard(map[string][]*common.NpuDevice{})
 		})
