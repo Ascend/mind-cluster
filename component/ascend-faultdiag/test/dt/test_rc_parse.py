@@ -16,8 +16,10 @@
 # ==============================================================================
 import unittest
 import os
+import tempfile
 
-from ascend_fd.pkg.parse.root_cluster.parser import PidFileParser, BaseInfoParser
+from ascend_fd.pkg.parse.root_cluster.parser import PidFileParser, BaseInfoParser, ErrorParser
+from ascend_fd.pkg.parse.root_cluster.rc_parse_job import parse_npu_info_file
 from ascend_fd.pkg.parse.blacklist.blacklist_op import BlackListManager
 
 TEST_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -202,3 +204,227 @@ class TestResolvePhyDeviceId(unittest.TestCase):
         parser.logic_device_id = "7"
         parser._resolve_phy_device_id()
         self.assertEqual(parser.phy_device_id, "7")
+
+
+class TestTransportErrorPattern(unittest.TestCase):
+    def _create_parser(self):
+        return ErrorParser(BlackListManager())
+
+    def test_ipv4_match_sets_transport_error_remote(self):
+        parser = self._create_parser()
+        line = "[ERROR] HCCL Transport init error: remoteIpAddr[192.168.1.100/3]"
+        parser._filter_transport_error_from_log(line)
+
+        self.assertTrue(parser.transport_init_error_happened)
+        self.assertIsNotNone(parser.transport_error_remote)
+        self.assertEqual(parser.transport_error_remote.server_ip, "192.168.1.100")
+        self.assertEqual(parser.transport_error_remote.phy_device_id, "3")
+
+    def test_ipv6_match_sets_transport_error_remote(self):
+        parser = self._create_parser()
+        line = "[ERROR] HCCL Transport init error: remoteIpAddr[2001:db8::1/5]"
+        parser._filter_transport_error_from_log(line)
+
+        self.assertTrue(parser.transport_init_error_happened)
+        self.assertIsNotNone(parser.transport_error_remote)
+        self.assertEqual(parser.transport_error_remote.server_ip, "2001:db8::1")
+        self.assertEqual(parser.transport_error_remote.phy_device_id, "5")
+
+    def test_ipv6_full_address_match(self):
+        parser = self._create_parser()
+        line = "[ERROR] HCCL Transport init error: remoteIpAddr[fe80:0000:0000:0000:0202:b3ff:fe1e:8329/2]"
+        parser._filter_transport_error_from_log(line)
+
+        self.assertTrue(parser.transport_init_error_happened)
+        self.assertIsNotNone(parser.transport_error_remote)
+        self.assertEqual(parser.transport_error_remote.server_ip, "fe80:0000:0000:0000:0202:b3ff:fe1e:8329")
+        self.assertEqual(parser.transport_error_remote.phy_device_id, "2")
+
+    def test_no_transport_init_error_keyword_skipped(self):
+        parser = self._create_parser()
+        line = "[ERROR] HCCL some other error: remoteIpAddr[192.168.1.100/3]"
+        parser._filter_transport_error_from_log(line)
+
+        self.assertFalse(parser.transport_init_error_happened)
+        self.assertIsNone(parser.transport_error_remote)
+
+    def test_transport_error_remote_already_set_skipped(self):
+        parser = self._create_parser()
+        line1 = "[ERROR] HCCL Transport init error: remoteIpAddr[192.168.1.100/3]"
+        parser._filter_transport_error_from_log(line1)
+
+        line2 = "[ERROR] HCCL Transport init error: remoteIpAddr[10.0.0.1/7]"
+        parser._filter_transport_error_from_log(line2)
+
+        self.assertEqual(parser.transport_error_remote.server_ip, "192.168.1.100")
+        self.assertEqual(parser.transport_error_remote.phy_device_id, "3")
+
+    def test_ipv4_match_invalid_ip_filtered_out(self):
+        parser = self._create_parser()
+        line = "[ERROR] HCCL Transport init error: remoteIpAddr[999.999.999.999/3]"
+        parser._filter_transport_error_from_log(line)
+
+        self.assertTrue(parser.transport_init_error_happened)
+        self.assertIsNone(parser.transport_error_remote)
+
+    def test_ipv6_match_invalid_ip_filtered_out(self):
+        parser = self._create_parser()
+        line = "[ERROR] HCCL Transport init error: remoteIpAddr[gggg::1/3]"
+        parser._filter_transport_error_from_log(line)
+
+        self.assertTrue(parser.transport_init_error_happened)
+        self.assertIsNone(parser.transport_error_remote)
+
+    def test_no_remote_ip_addr_pattern_no_match(self):
+        parser = self._create_parser()
+        line = "[ERROR] HCCL Transport init error: no remote ip address here"
+        parser._filter_transport_error_from_log(line)
+
+        self.assertTrue(parser.transport_init_error_happened)
+        self.assertIsNone(parser.transport_error_remote)
+
+
+class TestServerInfoValidation(unittest.TestCase):
+    def _create_parser(self):
+        return BaseInfoParser({}, BlackListManager())
+
+    def test_valid_ipv4_server_info(self):
+        parser = self._create_parser()
+        line = "[HCCL_TRACE] rankNum[4], rank[0], rootInfo identifier[test_id], server[192.168.1.100], logicDevId[3]"
+        parser._parse_common_init_info(line)
+
+        self.assertEqual(parser.server_id, "192.168.1.100")
+
+    def test_valid_ipv6_server_info(self):
+        parser = self._create_parser()
+        line = "[HCCL_TRACE] rankNum[4], rank[0], rootInfo identifier[test_id], server[2001:db8::1], logicDevId[3]"
+        parser._parse_common_init_info(line)
+
+        self.assertEqual(parser.server_id, "2001:db8::1")
+
+    def test_invalid_ip_server_info_set_to_empty(self):
+        parser = self._create_parser()
+        line = "[HCCL_TRACE] rankNum[4], rank[0], rootInfo identifier[test_id], server[not_an_ip], logicDevId[3]"
+        parser._parse_common_init_info(line)
+
+        self.assertEqual(parser.server_id, "")
+
+    def test_server_info_with_network_adapter_split(self):
+        parser = self._create_parser()
+        line = (
+            "[HCCL_TRACE] rankNum[4], rank[0], rootInfo identifier[test_id], server[192.168.1.100%eth0], logicDevId[3]"
+        )
+        parser._parse_common_init_info(line)
+
+        self.assertEqual(parser.server_id, "192.168.1.100")
+
+    def test_server_info_ipv6_with_network_adapter(self):
+        parser = self._create_parser()
+        line = "[HCCL_TRACE] rankNum[4], rank[0], rootInfo identifier[test_id], server[fe80::1%eth0], logicDevId[3]"
+        parser._parse_common_init_info(line)
+
+        self.assertEqual(parser.server_id, "fe80::1")
+
+    def test_no_server_info_fallbacks_to_server_id_info(self):
+        parser = self._create_parser()
+        line = (
+            "hcclCommInitInfo:commId[test], rank[0], totalRanks[4], "
+            "serverId[192.168.1.100], deviceType[1], logicDevId[3], identifier[test_id]"
+        )
+        parser._parse_common_init_info(line)
+
+        self.assertEqual(parser.server_id, "192.168.1.100")
+
+
+class TestParseNpuInfoFile(unittest.TestCase):
+    def test_ipv4_ipaddr_extraction(self):
+        content = (
+            "hccn_tool -i 0 -ip -g\n"
+            "ipaddr:192.168.1.100\n"
+            "netmask:255.255.255.0\n"
+            "\n"
+            "hccn_tool -i 1 -ip -g\n"
+            "ipaddr:10.0.0.1\n"
+            "netmask:255.255.0.0\n"
+        )
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as tmp_file:
+            tmp_file.write(content)
+
+        try:
+            result = parse_npu_info_file(tmp_file.name)
+
+            self.assertEqual(result, {"0": "192.168.1.100", "1": "10.0.0.1"})
+        finally:
+            os.unlink(tmp_file.name)
+
+    def test_ipv6_ipaddr_extraction(self):
+        content = (
+            "hccn_tool -i 0 -ip -g\n"
+            "ipaddr:2001:db8::1\n"
+            "netmask:ffff:ffff::\n"
+            "\n"
+            "hccn_tool -i 2 -ip -g\n"
+            "ipaddr:fe80::1\n"
+            "netmask:ffff::\n"
+        )
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as tmp_file:
+            tmp_file.write(content)
+
+        try:
+            result = parse_npu_info_file(tmp_file.name)
+
+            self.assertEqual(result, {"0": "2001:db8::1", "2": "fe80::1"})
+        finally:
+            os.unlink(tmp_file.name)
+
+    def test_invalid_ip_filtered_out(self):
+        content = (
+            "hccn_tool -i 0 -ip -g\n"
+            "ipaddr:not_an_ip\n"
+            "netmask:255.255.255.0\n"
+            "\n"
+            "hccn_tool -i 1 -ip -g\n"
+            "ipaddr:192.168.1.100\n"
+            "netmask:255.255.255.0\n"
+        )
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as tmp_file:
+            tmp_file.write(content)
+
+        try:
+            result = parse_npu_info_file(tmp_file.name)
+
+            self.assertEqual(result, {"1": "192.168.1.100"})
+        finally:
+            os.unlink(tmp_file.name)
+
+    def test_mixed_ipv4_ipv6_extraction(self):
+        content = (
+            "hccn_tool -i 0 -ip -g\n"
+            "ipaddr:192.168.1.100\n"
+            "netmask:255.255.255.0\n"
+            "\n"
+            "hccn_tool -i 1 -ip -g\n"
+            "ipaddr:fe80::1\n"
+            "netmask:ffff::\n"
+        )
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as tmp_file:
+            tmp_file.write(content)
+
+        try:
+            result = parse_npu_info_file(tmp_file.name)
+
+            self.assertEqual(result, {"0": "192.168.1.100", "1": "fe80::1"})
+        finally:
+            os.unlink(tmp_file.name)
+
+    def test_no_ipaddr_section_skipped(self):
+        content = "hccn_tool -i 0 -g\nchip_id:0\n\nhccn_tool -i 1 -g\nchip_id:1\n"
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as tmp_file:
+            tmp_file.write(content)
+
+        try:
+            result = parse_npu_info_file(tmp_file.name)
+
+            self.assertEqual(result, {})
+        finally:
+            os.unlink(tmp_file.name)
