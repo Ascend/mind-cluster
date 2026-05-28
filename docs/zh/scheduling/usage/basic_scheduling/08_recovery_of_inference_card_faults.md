@@ -1,6 +1,6 @@
 # 推理卡故障恢复<a name="ZH-CN_TOPIC_0000002479227136"></a>
 
-**推理卡故障恢复特性**需要搭配**整卡调度特性**一起使用，开启推理卡故障恢复特性只需要将Ascend Device Plugin的启动参数“-hotReset”取值设置为“0”或“2”（默认为“-1”，不支持故障恢复功能）。具体使用方式请参考[整卡调度或静态vNPU调度（推理）](./04_full_npu_scheduling_and_static_vnpu_scheduling_inference.md)。
+**推理卡故障恢复特性**需要搭配**整卡调度特性**一起使用，开启推理卡故障恢复特性只需要将Ascend Device Plugin的启动参数“-hotReset”取值设置为“0”或“2”（默认为“-1”，不支持故障恢复功能）。具体使用方式请参考[整卡调度](./03_full_npu_scheduling.md)。
 
 Atlas 800I A2 推理服务器、A200I A2 Box 异构组件使用**推理卡故障恢复特性**，仅支持下发单机单卡任务，不支持分布式任务，且需要单独使用[infer-vcjob-910-hotreset.yaml](https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.0.0/samples/inference/volcano/infer-vcjob-910-hotreset.yaml)示例下发任务。
 

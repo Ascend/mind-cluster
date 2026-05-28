@@ -114,7 +114,7 @@ NPU Exporter
 **使用说明<a name="section1245612501584"></a>**
 
 1. 安装组件请参见[安装部署](../installation_guide/02_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[整卡调度或静态vNPU调度（训练）](../usage/basic_scheduling/03_full_npu_scheduling_and_static_vnpu_scheduling_training.md)章节进行操作。
+2. 特性使用指导请参见[整卡调度](../usage/basic_scheduling/03_full_npu_scheduling.md)章节进行操作。
 
 ### 静态vNPU调度<a name="ZH-CN_TOPIC_0000002511426831"></a>
 
@@ -137,7 +137,7 @@ NPU Exporter
 **使用说明<a name="section1245612501584"></a>**
 
 1. 安装组件请参见[安装部署](../installation_guide/02_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[整卡调度或静态vNPU调度（训练）](../usage/basic_scheduling/03_full_npu_scheduling_and_static_vnpu_scheduling_training.md)章节进行操作。
+2. 特性使用指导请参见[整卡调度](../usage/basic_scheduling/03_full_npu_scheduling.md)章节进行操作。
 
 ### 多级调度
 
