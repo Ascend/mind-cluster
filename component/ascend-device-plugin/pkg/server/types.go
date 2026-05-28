@@ -53,6 +53,7 @@ type PluginServer struct {
 	deviceSyncStat       *common.SendStats
 	restartTimes         atomic.Uint64
 	podLock              sync.Mutex
+	softShareJobs        sync.Map
 }
 
 // PodDevice define device info in pod

@@ -71,6 +71,8 @@ const (
 	NDIE DieType = 0
 	// VDIE VDie ID, it can be the uuid of chip
 	VDIE DieType = 1
+	// DDIE DDie ID, it can be the uuid of A5 chip
+	DDIE DieType = 2
 	// DieIDCount die id array max length
 	DieIDCount = 5
 

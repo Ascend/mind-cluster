@@ -325,9 +325,6 @@ func (hrt *HotResetTools) handlePodDeleteEvent(obj interface{}) {
 	if rmErr := common.RemoveDataTraceFileAndDir(namespace, jobName); rmErr != nil {
 		hwlog.RunLog.Errorf("failed to remove file: %v", rmErr)
 	}
-	if rmErr := common.RemoveSoftShareDeviceFileAndDir(namespace, jobName); rmErr != nil {
-		hwlog.RunLog.Errorf("failed to remove file: %v", rmErr)
-	}
 	delete(hrt.jobs, event.Key)
 	hrt.queue.Forget(obj)
 }
@@ -369,7 +366,7 @@ func (hrt *HotResetTools) writeCMToFile(cm *v1.ConfigMap) error {
 		if err := common.WriteToFile(data, fileFullName); err != nil {
 			return fmt.Errorf("failed to write file %s, err: %v", fileFullName, common.DataTraceCmProfilingSwitchKey)
 		}
-		hwlog.RunLog.Infof("suceessfully wrote file %s", fileFullName)
+		hwlog.RunLog.Infof("successfully wrote file %s", fileFullName)
 		return nil
 	}
 	if strings.HasPrefix(cm.Name, common.ResetInfoCMNamePrefix) {

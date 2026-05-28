@@ -32,6 +32,7 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
@@ -119,6 +120,7 @@ func NewHwDevManager(devM devmanager.DeviceInterface) *HwDevManager {
 		hwlog.RunLog.Errorf("init plugin server failed, err: %v", err)
 		return nil
 	}
+	hdm.registerSoftSharePodDeleteHandler()
 	if runtime, err := hdm.manager.GetKubeClient().GetContainerRuntime(); err == nil {
 		hdm.ContainerRuntime = runtime
 	}
@@ -485,6 +487,27 @@ func (hdm *HwDevManager) initPluginServer() error {
 			hdm.manager)
 	}
 	return nil
+}
+
+func (hdm *HwDevManager) registerSoftSharePodDeleteHandler() {
+	if !common.IsSupportSoftShareDevice() {
+		return
+	}
+	kubeClient := hdm.manager.GetKubeClient()
+	if kubeClient == nil || kubeClient.PodInformer == nil {
+		hwlog.RunLog.Warn("kubeClient or PodInformer is nil, skip registering soft share pod delete handler")
+		return
+	}
+	for _, server := range hdm.ServerMap {
+		ps, ok := server.(*PluginServer)
+		if !ok {
+			continue
+		}
+		kubeClient.PodInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+			DeleteFunc: ps.handleSoftSharePodDelete,
+		})
+		hwlog.RunLog.Info("registered soft share pod delete handler")
+	}
 }
 
 func (hdm *HwDevManager) checkSupportedProductType() error {

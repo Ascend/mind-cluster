@@ -383,6 +383,12 @@ type DcV2DriverInterface interface {
 // DcV2Manager for manager dcmi interface
 type DcV2Manager struct{}
 
+var supportedDieType = map[DieType]struct{}{
+	VDIE: {},
+	NDIE: {},
+	DDIE: {},
+}
+
 // check if struct DcV2Manager implements all methods of interface DcV2DriverInterface in build stage
 var _ DcV2DriverInterface = &DcV2Manager{}
 
@@ -514,7 +520,7 @@ func (d *DcV2Manager) DcGetDeviceTemperature(logicID int32) (int32, error) {
 	}
 	parsedTemp := int32(temp)
 	if parsedTemp < int32(common.DefaultTemperatureWhenQueryFailed) {
-		return common.RetError, fmt.Errorf("get wrong device temperature, devcie (logicID: %d), "+
+		return common.RetError, fmt.Errorf("get wrong device temperature, device (logicID: %d), "+
 			"temperature: %d", logicID, parsedTemp)
 	}
 	return parsedTemp, nil
@@ -729,8 +735,8 @@ func (d *DcV2Manager) DcGetDieID(logicID int32, dcmiDieType DieType) (string, er
 		return "", fmt.Errorf("logicID(%d) is invalid", logicID)
 	}
 
-	if dcmiDieType != VDIE && dcmiDieType != NDIE {
-		return "", fmt.Errorf("dcmi die type can only be one of %d or %d", VDIE, NDIE)
+	if _, ok := supportedDieType[dcmiDieType]; !ok {
+		return "", fmt.Errorf("dcmi die type can only be one of %v", supportedDieType)
 	}
 
 	var dieIDObj C.struct_dcmi_die_id
@@ -1335,7 +1341,7 @@ func (d *DcV2Manager) DcGetDevProcessInfo(logicID int32) (*common.DevProcessInfo
 	}
 
 	if int32(procNum) < 0 || int32(procNum) > common.MaxProcNum {
-		return nil, fmt.Errorf("get invalid proccess num (%d), logicID(%d)", int32(procNum), logicID)
+		return nil, fmt.Errorf("get invalid process num (%d), logicID(%d)", int32(procNum), logicID)
 	}
 
 	info, err := d.convertToDevResourceInfo(procList, int32(procNum))
