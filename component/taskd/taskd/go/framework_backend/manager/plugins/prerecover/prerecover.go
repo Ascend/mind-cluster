@@ -52,6 +52,21 @@ func (s *preRecoverPlugin) Name() string {
 func (s *preRecoverPlugin) Predicate(shot storage.SnapShot) (infrastructure.PredicateResult, error) {
 	s.shot = shot
 	s.signalInfo = nil
+	if err := s.getSignalInfo(); err != nil {
+		hwlog.RunLog.Errorf("getSignalInfo error: %v", err)
+		if s.hasToken {
+			return infrastructure.PredicateResult{
+				PluginName:      s.Name(),
+				CandidateStatus: constant.CandidateStatus,
+				PredicateStream: map[string]string{constant.ResumeTrainingAfterFaultStream: ""},
+			}, nil
+		}
+		return infrastructure.PredicateResult{PluginName: s.Name(), CandidateStatus: constant.UnselectStatus}, nil
+	}
+	if s.signalInfo != nil && s.signalInfo.SignalType == clusterdconstant.KillMasterSignalType {
+		s.hasToken = false
+		return infrastructure.PredicateResult{CandidateStatus: constant.UnselectStatus}, nil
+	}
 	if s.hasToken {
 		return infrastructure.PredicateResult{
 			PluginName:      s.Name(),
@@ -59,10 +74,7 @@ func (s *preRecoverPlugin) Predicate(shot storage.SnapShot) (infrastructure.Pred
 			PredicateStream: map[string]string{constant.ResumeTrainingAfterFaultStream: ""},
 		}, nil
 	}
-	if err := s.getSignalInfo(); err != nil {
-		hwlog.RunLog.Debugf("getSignalInfo error: %v", err)
-		return infrastructure.PredicateResult{PluginName: s.Name(), CandidateStatus: constant.UnselectStatus}, nil
-	}
+
 	if s.signalInfo.SignalType == clusterdconstant.StopTrainSignalType {
 		hwlog.RunLog.Info("get stop_train signal, apply for the token")
 		return infrastructure.PredicateResult{
@@ -123,7 +135,7 @@ func (s *preRecoverPlugin) PullMsg() ([]infrastructure.Msg, error) {
 		return nil, nil
 	}
 	if _, ok := s.HasSendMessages[s.signalInfo.SignalType+s.signalInfo.Command[constant.Actions]]; ok {
-		hwlog.RunLog.Debugf("the signal info has dealed, signal info: %v", s.signalInfo)
+		hwlog.RunLog.Debugf("the signal info has dealt, signal info: %v", s.signalInfo)
 		return nil, nil
 	}
 	msgs := make([]infrastructure.Msg, 0)
