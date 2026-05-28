@@ -40,6 +40,7 @@ from ascend_fd.utils.regular_table import (
     ERROR_CQE_NEW_SPLIT,
 )
 from ascend_fd.utils.tool import safe_write_open, SHOW_LINES_NUM, get_log_module_and_time, safe_read_line
+from ascend_fd.utils.net_tools import IPAddress
 from ascend_fd.pkg.parse.blacklist.blacklist_op import BlackListManager
 
 INVALID_ID = "-1"  # nosec
@@ -489,7 +490,7 @@ class BaseInfoParser:
         self.phy_device_id = self.phy_device_id or phy_device_id
 
         host_ip = filter_single_rank_info(line, regular_table.HOST_IP_INFO)
-        if host_ip and host_ip != INVALID_IP:
+        if host_ip != INVALID_IP and IPAddress.is_valid_ip(host_ip):
             self.server_id = self.server_id or host_ip
 
     def _parse_common_init_info(self, line: str):
@@ -540,11 +541,14 @@ class BaseInfoParser:
             phy_device_id = ""
         self.phy_device_id = self.phy_device_id or phy_device_id
         device_ip = filter_single_rank_info(line, regular_table.DEVICE_IP_INFO)
-        if device_ip == INVALID_IP:
+        if device_ip == INVALID_IP or not IPAddress.is_valid_ip(device_ip):
             device_ip = ""
         self.device_ip = self.device_ip or device_ip
         server_info = filter_single_rank_info(line, regular_table.SERVER_INFO)
-        server_info = server_info.split("%")[0]  # remove the network adapter info
+        if server_info:
+            server_info = server_info.split("%")[0]  # remove the network adapter info
+            if not IPAddress.is_valid_ip(server_info):
+                server_info = ""
         new_server_id = filter_single_rank_info(line, regular_table.SERVER_ID_INFO)
         self.server_id = self.server_id or server_info or new_server_id
 
@@ -564,7 +568,8 @@ class ErrorParser:
         regular_table.TIMEOUT_FFTS: ["FFTS+ run failed"],
         regular_table.TIMEOUT_NORMAL: ["Wait timeout for sockets recv", "get rasocket timeout", "recv fail"],
     }
-    _Transport_error_info_pattern = re.compile(r"remoteIpAddr\[(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/(\d)]")
+    _Transport_error_info_pattern_v4 = re.compile(r"remoteIpAddr\[(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/(\d)]")
+    _Transport_error_info_pattern_v6 = re.compile(r"remoteIpAddr\[([0-9a-fA-F:]+?)/(\d)]")
 
     def __init__(self, blacklist_manager: BlackListManager):
         self.first_error_time = regular_table.MAX_TIME  # default max time
@@ -792,8 +797,10 @@ class ErrorParser:
         if self.transport_error_remote or TRANSPORT_INIT_ERROR not in line:
             return
         self.transport_init_error_happened = True
-        match = re.search(self._Transport_error_info_pattern, line)
-        if match:
+        match = re.search(self._Transport_error_info_pattern_v4, line) or re.search(
+            self._Transport_error_info_pattern_v6, line
+        )
+        if match and IPAddress.is_valid_ip(match[1]):
             self.transport_error_remote = RemoteInfo(phy_device_id=match[2], server_ip=match[1])
 
 

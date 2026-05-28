@@ -33,12 +33,14 @@ from ascend_fd.pkg.parse.knowledge_graph.parser.npu_device_parse import (
 from ascend_fd.pkg.parse.knowledge_graph.parser.train_log_parser import TrainLogParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.cann_log_parser import CANNPlogParser, CANNLogParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.host_os_parser import HostMsgParser, HostVmCoreParser
-from ascend_fd.pkg.parse.knowledge_graph.parser.npu_info_parser import NpuInfoParser
+from ascend_fd.pkg.parse.knowledge_graph.parser.npu_info_parser import NpuInfoParser, IpInfoParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.device_plugin_parser import DevicePluginParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.volcano_parser import VolcanoSchedulerParser, VolcanoControllerParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.common_dl_parser import DockerRuntimeParser, NpuExporterParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.mindie_parser import MindieParser
 from ascend_fd.utils.load_kg_config import ParseRegexMap
+from ascend_fd.utils.net_tools import IPAddress
+from ascend_fd.utils.fault_code import IP_NOT_CONFIG_FAULT
 
 TEST_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 TESTCASE_KG_PARSE_INPUT = os.path.join(TEST_DIR, "st_module_testcase", "kg_parse")
@@ -311,7 +313,7 @@ class KgParseTestCase(unittest.TestCase):
     def test_mindie_ms_parse_file(self):
         single_file_parse_info = self.mindie_ms_parser._parse_file(self.mindie_log_list[0])
         self.assertEqual("AISW_MindIE_MS_HttpServer_01", single_file_parse_info.event_list[0][EVENT_CODE])
-        self.assertEqual("xxx.xx.xx.x", single_file_parse_info.device_info.device_ip)
+        self.assertEqual("10.0.2.31", single_file_parse_info.device_info.device_ip)
         self.assertEqual("6", single_file_parse_info.device_info.phy_device_id)
         self.assertEqual("6", single_file_parse_info.device_info.logic_device_id)
         self.assertEqual("6", single_file_parse_info.device_info.device_id)
@@ -504,3 +506,154 @@ class TestGetDeviceIdFromLine(unittest.TestCase):
         logic_id, phy_id = CANNLogParser.get_device_id_from_line(line)
         self.assertEqual(logic_id, "")
         self.assertEqual(phy_id, "")
+
+
+class TestIPRegex(unittest.TestCase):
+    def test_ipv4_match(self):
+        line = "Link from 192.168.1.100 to 10.0.0.1 failed"
+        ips = MindieParser.IP_REGEX.findall(line)
+        ips = [ip for ip in ips if IPAddress.is_valid_ip(ip)]
+
+        self.assertEqual(ips, ["192.168.1.100", "10.0.0.1"])
+
+    def test_ipv6_full_address_match(self):
+        line = "Link from 2001:0db8:85a3:0000:0000:8a2e:0370:7334 to fe80:0000:0000:0000:0202:b3ff:fe1e:8329 failed"
+        ips = MindieParser.IP_REGEX.findall(line)
+        ips = [ip for ip in ips if IPAddress.is_valid_ip(ip)]
+
+        self.assertEqual(len(ips), 2)
+        self.assertIn("2001:0db8:85a3:0000:0000:8a2e:0370:7334", ips)
+        self.assertIn("fe80:0000:0000:0000:0202:b3ff:fe1e:8329", ips)
+
+    def test_ipv6_compressed_match(self):
+        line = "Link from 2001:db8::1 to ::1 failed"
+        ips = MindieParser.IP_REGEX.findall(line)
+        ips = [ip for ip in ips if IPAddress.is_valid_ip(ip)]
+
+        self.assertEqual(ips, ["2001:db8::1", "::1"])
+
+    def test_mixed_ipv4_ipv6_match(self):
+        line = "Link from 192.168.1.100 to fe80::1 failed"
+        ips = MindieParser.IP_REGEX.findall(line)
+        ips = [ip for ip in ips if IPAddress.is_valid_ip(ip)]
+
+        self.assertEqual(ips, ["192.168.1.100", "fe80::1"])
+
+    def test_invalid_text_no_match(self):
+        line = "Link from somewhere to nowhere failed, error code is MIE05E01001B"
+        ips = MindieParser.IP_REGEX.findall(line)
+        ips = [ip for ip in ips if IPAddress.is_valid_ip(ip)]
+
+        self.assertEqual(ips, [])
+
+    def test_invalid_ipv4_filtered_valid_ipv6_preserved(self):
+        line = "Link from 999.999.999.999 to ::1 failed"
+        ips = MindieParser.IP_REGEX.findall(line)
+        ips = [ip for ip in ips if IPAddress.is_valid_ip(ip)]
+
+        self.assertEqual(ips, ["::1"])
+
+
+class TestContrastIpInfo(unittest.TestCase):
+    def _create_parser(self, end_time="2024-01-01 00:00:00.000000"):
+        return IpInfoParser(end_time)
+
+    def test_create_ip_fault_event(self):
+        parser = self._create_parser()
+        event = parser._create_ip_fault_event("0", "test error message")
+        self.assertEqual(event["occur_time"], "2024-01-01 00:00:00.000000")
+        self.assertEqual(event["key_info"], "test error message")
+        self.assertEqual(event["event_code"], IP_NOT_CONFIG_FAULT)
+        self.assertEqual(event["source_device"], "0")
+        self.assertEqual(event["source_file"], "npu_info_before/after.txt")
+
+    def test_valid_ipv4_ipaddr_and_netmask(self):
+        parser = self._create_parser()
+        ip_info_list = [
+            {"npu_id": "0", "detail_info": [("192.168.1.100", "", "255.255.255.0")]},
+            {"npu_id": "1", "detail_info": [("10.0.0.1", "", "255.255.0.0")]},
+        ]
+        events = parser._contrast_ip_info(ip_info_list)
+        self.assertEqual(events, [])
+
+    def test_valid_ipv6_address_and_prefix_length(self):
+        parser = self._create_parser()
+        ip_info_list = [
+            {"npu_id": "0", "detail_info": [(None, "2001:db8::1", "64")]},
+            {"npu_id": "1", "detail_info": [(None, "fe80::1", "128")]},
+        ]
+        events = parser._contrast_ip_info(ip_info_list)
+        self.assertEqual(events, [])
+
+    def test_invalid_ipv4_ipaddr_generates_event(self):
+        parser = self._create_parser()
+        ip_info_list = [
+            {"npu_id": "0", "detail_info": [("not_an_ip", "", "255.255.255.0")]},
+        ]
+        events = parser._contrast_ip_info(ip_info_list)
+
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["event_code"], IP_NOT_CONFIG_FAULT)
+        self.assertEqual(events[0]["source_device"], "0")
+        self.assertIn("Invalid IP address configured", events[0]["key_info"])
+
+    def test_invalid_ipv4_netmask_generates_event(self):
+        parser = self._create_parser()
+        ip_info_list = [
+            {"npu_id": "1", "detail_info": [("192.168.1.100", "", "not_a_netmask")]},
+        ]
+        events = parser._contrast_ip_info(ip_info_list)
+
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["event_code"], IP_NOT_CONFIG_FAULT)
+        self.assertEqual(events[0]["source_device"], "1")
+        self.assertIn("Invalid netmask configured", events[0]["key_info"])
+
+    def test_invalid_ipv6_address_generates_event(self):
+        parser = self._create_parser()
+        ip_info_list = [
+            {"npu_id": "2", "detail_info": [(None, "not_an_ipv6", "64")]},
+        ]
+        events = parser._contrast_ip_info(ip_info_list)
+
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["event_code"], IP_NOT_CONFIG_FAULT)
+        self.assertEqual(events[0]["source_device"], "2")
+        self.assertIn("Invalid IPv6 address configured", events[0]["key_info"])
+
+    def test_empty_detail_info_generates_event_with_ipv6_cmd(self):
+        parser = self._create_parser()
+        ip_info_list = [
+            {"npu_id": "3"},
+        ]
+        events = parser._contrast_ip_info(ip_info_list)
+
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["event_code"], IP_NOT_CONFIG_FAULT)
+        self.assertEqual(events[0]["source_device"], "3")
+        key_info = events[0]["key_info"]
+        self.assertIn("hccn_tool", key_info)
+        self.assertIn("-ip -g", key_info)
+        self.assertIn("-ip -inet6 -g", key_info)
+        self.assertIn("ipv6_address:", key_info)
+        self.assertIn("prefix_length:", key_info)
+
+    def test_empty_ip_info_list_no_events(self):
+        parser = self._create_parser()
+        events = parser._contrast_ip_info([])
+        self.assertEqual(events, [])
+
+    def test_mixed_ipv4_and_ipv6_entries(self):
+        parser = self._create_parser()
+        ip_info_list = [
+            {"npu_id": "0", "detail_info": [("192.168.1.100", "", "255.255.255.0")]},
+            {"npu_id": "1", "detail_info": [(None, "2001:db8::1", "64")]},
+            {"npu_id": "2", "detail_info": [("invalid_ip", "", "255.255.0.0")]},
+            {"npu_id": "3", "detail_info": [(None, "invalid_ipv6", "64")]},
+        ]
+        events = parser._contrast_ip_info(ip_info_list)
+
+        self.assertEqual(len(events), 2)
+        event_sources = [e["source_device"] for e in events]
+        self.assertIn("2", event_sources)
+        self.assertIn("3", event_sources)

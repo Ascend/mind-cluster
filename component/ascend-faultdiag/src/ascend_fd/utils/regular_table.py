@@ -96,6 +96,20 @@ ROOT_PORT_INFO = "port["
 DEVICE_INFO_FILE = "device_info.txt"
 HCCL_IP_INFO = r"hccn_tool -i (\d{1,3}) -ip -g"
 HCCL_IPADDR = r"ipaddr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+HCCL_IPADDR_V6_PATTERN = (
+    r"ipaddr:("
+    r"(?:(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})|"
+    r"(?:(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4})|"
+    r"(?:(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2})|"
+    r"(?:(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3})|"
+    r"(?:(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4})|"
+    r"(?:(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5})|"
+    r"(?:[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6})|"
+    r"(?:(?:[0-9a-fA-F]{1,4}:){1,7}:)|"
+    r"(?::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4})|"
+    r"(?::)"
+    r")"
+)
 TLS_SWITCH = r"TLS SWITCH \((\d{1,3})\)"
 HOST_SN = r'Serial Number:\s{0,10}([A-Z0-9]{15,25})'
 BMC_BOARD_SN = r'Board Serial Number\s{0,10}:\s{0,10}([A-Z0-9]{10,15})'
