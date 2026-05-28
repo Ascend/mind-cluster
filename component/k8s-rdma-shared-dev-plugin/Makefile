@@ -105,7 +105,7 @@ COVERAGE_MODE = count
 test-coverage-tools: | $(GOVERALLS)
 test-coverage: COVERAGE_DIR := $(CURDIR)/test
 test-coverage: test-coverage-tools | ; $(info  running coverage tests...) @ ## Run coverage tests
-		$Q $(GO) test -covermode=$(COVERAGE_MODE) -coverprofile=k8s-rdma-shared-dev-plugin.cover ./...
+		$Q $(GO) test -mod=mod -gcflags=all=-l -covermode=$(COVERAGE_MODE) -coverprofile=k8s-rdma-shared-dev-plugin.cover ./...
 
 # Container image
 .PHONY: image ubi-image
