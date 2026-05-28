@@ -102,15 +102,15 @@
 
 >[!NOTE]
 >
->多级调度特性是基于整卡调度或静态vNPU调度（训练）配置的。
+>多级调度特性是基于整卡调度配置的。
 
 ### 制作镜像<a name="ZH-CN_TOPIC_0000002479227164duoji"></a>
 
-详细请参见整卡调度或静态vNPU调度（训练）中的[制作镜像](./03_full_npu_scheduling_and_static_vnpu_scheduling_training.md#制作镜像)。
+详细请参见整卡调度中的[制作镜像](./03_full_npu_scheduling.md#制作镜像)。
 
 ### 脚本适配<a name="ZH-CN_TOPIC_0000002511347097duoji"></a>
 
-详细请参见整卡调度或静态vNPU调度（训练）中的[脚本适配](./03_full_npu_scheduling_and_static_vnpu_scheduling_training.md#脚本适配)。
+详细请参见整卡调度中的[脚本适配](./03_full_npu_scheduling.md#脚本适配)。
 
 ### 配置Volcano启动参数<a name="ZH-CN_TOPIC_000000251196358duoji"></a>
 
@@ -231,7 +231,7 @@ Ascend Device Plugin组件会通过昇腾硬件驱动自动获取有效的节点
 
 #### 选择YAML示例<a name="ZH-CN_TOPIC_0000002479duoji"></a>
 
-多级调度任务是在整卡调度或静态vNPU调度（训练）方式的基础上进行额外配置，通过以下YAML示例进行说明。
+多级调度任务是在整卡调度方式的基础上进行额外配置，通过以下YAML示例进行说明。
 
 **表 1** YAML示例
 
@@ -270,7 +270,7 @@ Ascend Device Plugin组件会通过昇腾硬件驱动自动获取有效的节点
 
 #### YAML参数说明<a name="ZH-CN_TOPIC_000000251196386duoji"></a>
 
-本章节仅提供多级调度需要使用的YAML参数，详细的任务YAML参数说明请参见整卡调度或静态vNPU调度（训练）中[acjob任务yaml参数说明](../../api/yaml_configuration.md#acjob)。
+本章节仅提供多级调度需要使用的YAML参数，详细的任务YAML参数说明请参见[acjob任务yaml参数说明](../../api/yaml_configuration.md#acjob)。
 
 **表 1**  YAML参数说明
 
@@ -367,23 +367,23 @@ spec:
                 huawei.com/Ascend910: 8   # 与limits取值一致
 ```
 
-若需要配置CPU、Memory资源、修改训练脚本、代码的挂载路径，请参见整卡调度或静态vNPU调度（训练）中[配置YAML](./03_full_npu_scheduling_and_static_vnpu_scheduling_training.md#配置yaml)中对应的步骤。
+若需要配置CPU、Memory资源、修改训练脚本、代码的挂载路径，请参见整卡调度中[配置YAML](./03_full_npu_scheduling.md#配置yaml)中对应的步骤。
 
 ### 下发任务
 
-详细请参见整卡调度或静态vNPU调度（训练）中的[下发任务](./03_full_npu_scheduling_and_static_vnpu_scheduling_training.md#下发任务)。
+详细请参见整卡调度中的[下发任务](./03_full_npu_scheduling.md#下发任务)。
 
 ### 查看任务进程
 
-详细请参见整卡调度或静态vNPU调度（训练）中的[查看任务进程](./03_full_npu_scheduling_and_static_vnpu_scheduling_training.md#查看任务进程)。
+详细请参见整卡调度中的[查看任务进程](./03_full_npu_scheduling.md#查看任务进程)。
 
 ### 查看任务调度结果
 
-详细请参见整卡调度或静态vNPU调度（训练）中的[查看任务调度结果](./03_full_npu_scheduling_and_static_vnpu_scheduling_training.md#查看整卡调度或静态vnpu调度结果)。
+详细请参见整卡调度中的[查看任务调度结果](./03_full_npu_scheduling.md#查看整卡调度结果)。
 
 ### 删除任务
 
-详细请参见整卡调度或静态vNPU调度（训练）中的[删除任务](./03_full_npu_scheduling_and_static_vnpu_scheduling_training.md#删除任务)。
+详细请参见整卡调度中的[删除任务](./03_full_npu_scheduling.md#删除任务)。
 
 ## 集成后使用
 

@@ -1,10 +1,9 @@
-# 整卡调度（训练）<a name="ZH-CN_TOPIC_0000002479387138"></a>
+# 整卡调度<a name="ZH-CN_TOPIC_0000002479387138"></a>
 
 ## 使用前必读<a name="ZH-CN_TOPIC_0000002511347093"></a>
 
 **前提条件<a name="section52051339787"></a>**
 
-- 确保环境中有配置相应的存储方案，比如使用NFS（Network File System），用户可以参见[安装NFS](../../common_operations.md#安装nfs)进行操作。
 - 在使用整卡调度特性前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../installation_guide//02_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
     - 调度器（Volcano或其他调度器）
     - Ascend Device Plugin
@@ -12,11 +11,12 @@
     - Ascend Operator
     - ClusterD
     - NodeD
-
-- 对于训练任务类型为acjob，调度器为Volcano的整卡调度，支持批量创建Pod和批量调度功能。
-    - 若要使用批量创建Pod功能，安装Ascend Operator组件时需使用openFuyao定制Kubernetes组件。
-    - 若要使用批量调度功能，安装Volcano组件时需使用openFuyao定制Kubernetes和volcano-ext组件，并开启批量调度功能。
-    - 批量调度功能适用于超大规模集群场景，在此场景下请根据实际需要扩展MindCluster组件分配的CPU和内存资源，防止MindCluster组件出现性能不足或者超出分配内存使用，导致组件被Kubernetes驱逐。
+- 针对故障恢复场景，需要确保每个节点都有任务运行所需的模型脚本信息，建议使用共享存储方案，比如NFS（Network File System），用户可以参见[安装NFS](../../common_operations.md#安装nfs)。
+- 针对训练场景：
+  - 针对超大规模集群调度场景，支持批量创建Pod和批量调度功能。
+      - 若要使用批量创建Pod功能，安装Ascend Operator组件时需使用openFuyao定制Kubernetes组件。
+      - 若要使用批量调度功能，安装Volcano组件时需使用openFuyao定制Kubernetes和volcano-ext组件，并开启批量调度功能。
+      - 批量调度功能适用于超大规模集群场景，在此场景下请根据实际需要扩展MindCluster组件分配的CPU和内存资源，防止MindCluster组件出现性能不足或者超出分配内存使用，导致组件被Kubernetes驱逐。
 
 **使用方式<a name="section179431435174811"></a>**
 
@@ -25,15 +25,19 @@
 
 **使用说明<a name="section577625973520"></a>**
 
-- 资源监测可以和训练场景下的所有特性一起使用。
-- 集群中同时跑多个训练任务，每个任务使用的特性可以不同。
+- 资源监测可以和训练、推理场景下的所有特性一起使用。
+- 集群中同时跑多个任务，每个任务使用的特性可以不同。
+- 故障卡热恢复特性可以搭配整卡调度特性一起使用，可将Ascend Device Plugin的启动参数“-hotReset”取值设置为“0”开启故障恢复特性。
 
 **支持的产品形态<a name="section169961844182917"></a>**
 
 - 支持以下产品使用**整卡调度**。
-    - Atlas 训练系列产品
-    - <term>Atlas A2 训练系列产品</term>
-    - <term>Atlas A3 训练系列产品</term>
+    - 950系列产品
+    - A3系列产品
+    - A2系列产品
+    - 训练系列产品
+    - 推理系列产品
+    - 200I推理产品
 
 **使用流程<a name="section5640184231810"></a>**
 
@@ -42,14 +46,30 @@
 通过命令行使用Volcano和其他调度器的使用流程一致。使用其他调度器准备任务YAML需要参考[通过命令行使用（其他调度器）](#通过命令行使用其他调度器)章节创建任务YAML。使用其他调度器的其余操作和使用Volcano一致，可以参考[通过命令行使用（Volcano）](#通过命令行使用volcano)进行操作。
 
 **图 1**  整卡调度使用流程<a name="fig107864120214"></a>
-![](../../../figures/scheduling/整卡调度使用流程.png "整卡调度使用流程")
+
+```mermaid
+graph TD
+  Start([开始]) --> MakeImage[制作镜像]:::rectStyle
+  MakeImage --> ScriptAdapt[脚本适配]:::rectStyle
+  ScriptAdapt --> PrepareYaml[准备任务yaml]:::rectStyle
+  PrepareYaml --> SubmitJob[下发任务]:::rectStyle
+  SubmitJob --> CheckProcess[（可选）查看任务进程]:::rectStyle
+  CheckProcess --> CheckResult[查看调度结果]:::rectStyle
+  CheckResult --> DeleteJob[（可选）删除任务]:::rectStyle
+  DeleteJob --> End([结束])
+
+  %% 样式定义
+  style Start fill:#686d75,stroke:#686d75,stroke-width:1px,color:#fff
+  style End fill:#686d75,stroke:#686d75,stroke-width:1px,color:#fff
+  classDef rectStyle fill:#c2d5fe,stroke:#c2d5fe,stroke-width:1px,color:#000,rx:4,ry:4;
+```
 
 1. 脚本适配时，用户可根据实际情况选择通过环境变量或文件配置资源信息。
 2. 在准备任务YAML时，下发的任务YAML需要根据具体的NPU型号，选择不同的YAML进行修改适配。选择YAML时可以参考[准备任务YAML](#准备任务yaml)，根据实际情况选择合适的YAML。
 
 ## 实现原理<a name="ZH-CN_TOPIC_0000002479387150"></a>
 
-根据训练任务类型的不同，特性的原理图略有差异。
+根据任务类型的不同，特性的原理图略有差异。
 
 **acjob任务<a name="section9971431567"></a>**
 
@@ -75,7 +95,10 @@ acjob任务原理图如[图1](#fig5188536014)所示。
 
 7. kubelet创建容器时，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin或volcano-scheduler在Pod的annotation上写入芯片信息。Ascend Docker Runtime协助挂载相应资源。
 8. Ascend Operator读取Pod的annotation信息，将相关信息写入hccl.json。
-9. 容器读取环境变量或者hccl.json信息，建立通信通道，开始执行训练任务。
+9. 容器读取环境变量或者hccl.json信息，建立通信通道，开始执行任务。
+
+    >[!NOTE]
+    >Ascend Operator当前仅支持为PyTorch任务生成hccl.json。
 
 **vcjob任务<a name="section13884164615313"></a>**
 
@@ -101,7 +124,7 @@ vcjob任务的原理图如[图2](#fig8717151315416)所示。
 
 7. kubelet创建容器时，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin在Pod的annotation上写入芯片信息。Ascend Docker Runtime协助挂载相应资源，将hccl.json挂载进入容器。
 8. Ascend Operator获取每个Pod的annotation信息，写入hccl.json。
-9. 容器读取hccl.json信息，建立通信渠道，开始执行训练任务。
+9. 容器读取hccl.json信息，建立通信渠道，开始执行任务。
 
 **deploy任务<a name="section32752223579"></a>**
 
@@ -127,24 +150,25 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 7. kubelet创建容器时，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin在Pod的annotation上写入芯片信息。Ascend Docker Runtime协助挂载相应资源，将hccl.json挂载进入容器。
 8. Ascend Operator获取每个Pod的annotation信息，写入hccl.json。
-9. 容器读取hccl.json信息，建立通信渠道，开始执行训练任务。
+9. 容器读取hccl.json信息，建立通信渠道，开始执行任务。
 
 ## 通过命令行使用（Volcano）<a name="ZH-CN_TOPIC_0000002479227158"></a>
 
 ### 制作镜像<a name="ZH-CN_TOPIC_0000002479227164"></a>
 
-**获取训练镜像<a name="zh-cn_topic_0000001609314597_section971616541059"></a>**
+**获取镜像<a name="zh-cn_topic_0000001609314597_section971616541059"></a>**
 
-可选择以下方式中的一种来获取训练镜像：
+- 可选择以下方式中的一种来获取镜像：
+  - （推荐）从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)下载：根据系统架构（ARM/x86\_64）下载配套驱动版本的基础镜像。基于基础镜像进行修改，将容器中默认用户修改为root（21.0.4版本之后基础镜像默认用户为非root）。基础镜像中不包含训练脚本、推理模型、代码等文件，用户需要根据自己的需求进行定制化修改（如加入脚本代码、模型等）后才能使用。
+  - 基于下载基础镜像做个性化配置：再[使用Dockerfile对其进行修改](../../common_operations.md#使用dockerfile构建容器镜像pytorch)。
+  - 从头开始定制用户自己的镜像：制作过程请参考[制作镜像](../../common_operations.md#制作镜像)中制作容器相关章节。
 
-- （推荐）从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)根据系统架构（ARM/x86\_64）、模型框架（PyTorch、MindSpore）下载配套驱动版本的**训练基础镜像**。基于训练基础镜像进行修改，将容器中默认用户修改为root（21.0.4版本之后训练基础镜像默认用户为非root）。基础镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
-- 从头开始定制用户自己的训练镜像，制作过程请参考[制作镜像](../../common_operations.md#制作镜像)中制作容器相关章节。
-
-可将下载/制作的训练基础镜像重命名，如：training:v26.0.0。
+  >[!NOTE]
+  >完成定制化修改后，用户可以给镜像重命名，以便管理和使用。
 
 **加固镜像<a name="zh-cn_topic_0000001609314597_section8425732111611"></a>**
 
-下载或者制作的训练基础镜像可以进行安全加固，提升镜像安全性，可参见[容器安全加固](../../security_hardening.md#容器安全加固)章节进行操作。
+下载或者制作的基础镜像可以进行安全加固，提升镜像安全性，可参见[容器安全加固](../../security_hardening.md#容器安全加固)章节进行操作。
 
 ### 脚本适配<a name="ZH-CN_TOPIC_0000002511347097"></a>
 
@@ -375,6 +399,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     ├── utils.sh
     └── train_start.sh
     ```
+
 
 ### 准备任务YAML<a name="ZH-CN_TOPIC_0000002479227170"></a>
 
@@ -781,6 +806,89 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     </tbody>
 </table>
 
+
+**表 8**  推理任务类型与硬件型号对应YAML文件
+
+<a name="zh-cn_topic_0000001609074213_table15169151021912"></a>
+<table><thead align="left"><tr id="zh-cn_topic_0000001609074213_row16169201019192"><th class="cellrowborder" valign="top" width="18.48%" id="mcps1.2.5.1.1"><p id="zh-cn_topic_0000001609074213_p4169191017192"><a name="zh-cn_topic_0000001609074213_p4169191017192"></a><a name="zh-cn_topic_0000001609074213_p4169191017192"></a>任务类型</p>
+</th>
+<th class="cellrowborder" valign="top" width="26.479999999999997%" id="mcps1.2.5.1.2"><p id="zh-cn_topic_0000001609074213_p20181111517147"><a name="zh-cn_topic_0000001609074213_p20181111517147"></a><a name="zh-cn_topic_0000001609074213_p20181111517147"></a>硬件型号</p>
+</th>
+<th class="cellrowborder" valign="top" width="42.59%" id="mcps1.2.5.1.3"><p id="zh-cn_topic_0000001609074213_p181811156149"><a name="zh-cn_topic_0000001609074213_p181811156149"></a><a name="zh-cn_topic_0000001609074213_p181811156149"></a>YAML名称</p>
+</th>
+<th class="cellrowborder" valign="top" width="12.45%" id="mcps1.2.5.1.4"><p id="p1693015221828"><a name="p1693015221828"></a><a name="p1693015221828"></a>获取链接</p>
+</th>
+</tr>
+</thead>
+<tbody><tr id="zh-cn_topic_0000001609074213_row2169191091919"><td class="cellrowborder" rowspan="3" valign="top" width="18.48%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000001609074213_p6169510191913"><a name="zh-cn_topic_0000001609074213_p6169510191913"></a><a name="zh-cn_topic_0000001609074213_p6169510191913"></a><span id="zh-cn_topic_0000001609074213_ph183921109162"><a name="zh-cn_topic_0000001609074213_ph183921109162"></a><a name="zh-cn_topic_0000001609074213_ph183921109162"></a>Volcano</span>调度的Deployment任务</p>
+</td>
+<td class="cellrowborder" valign="top" width="26.479999999999997%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000001609074213_p8853185832112"><a name="zh-cn_topic_0000001609074213_p8853185832112"></a><a name="zh-cn_topic_0000001609074213_p8853185832112"></a><span id="zh-cn_topic_0000001609074213_ph238151934915"><a name="zh-cn_topic_0000001609074213_ph238151934915"></a><a name="zh-cn_topic_0000001609074213_ph238151934915"></a>Atlas 200I SoC A1 核心板</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="42.59%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000001609074213_p1116971091915"><a name="zh-cn_topic_0000001609074213_p1116971091915"></a><a name="zh-cn_topic_0000001609074213_p1116971091915"></a>infer-deploy-310p-1usoc.yaml</p>
+</td>
+<td class="cellrowborder" valign="top" width="12.45%" headers="mcps1.2.5.1.4 "><p id="p784716567219"><a name="p784716567219"></a><a name="p784716567219"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.0.0/samples/inference/volcano/infer-deploy-310p-1usoc.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+</td>
+</tr>
+<tr>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD</p><p>Atlas 850 系列硬件产品（超节点）</p><p>Atlas 350 标卡</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>infer-deploy-950.yaml</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.0.0/samples/inference/volcano/infer-deploy-950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+</td>
+</tr>
+<tr id="zh-cn_topic_0000001609074213_row17169201091917"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000001609074213_p14853125832110"><a name="zh-cn_topic_0000001609074213_p14853125832110"></a><a name="zh-cn_topic_0000001609074213_p14853125832110"></a>其他类型推理节点</p>
+<p id="p1144215219166"><a name="p1144215219166"></a><a name="p1144215219166"></a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000001609074213_p51692100191"><a name="zh-cn_topic_0000001609074213_p51692100191"></a><a name="zh-cn_topic_0000001609074213_p51692100191"></a>infer-deploy.yaml</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p74352718168"><a name="p74352718168"></a><a name="p74352718168"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.0.0/samples/inference/volcano/infer-deploy.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+</td>
+</tr>
+<tr id="row114428221610"><td class="cellrowborder" rowspan="2" valign="top" width="18.48%" headers="mcps1.2.5.1.1 "><p id="p9442102131620"><a name="p9442102131620"></a><a name="p9442102131620"></a>Volcano Job任务</p>
+</td>
+<td class="cellrowborder" valign="top" width="26.479999999999997%" headers="mcps1.2.5.1.2 "><p id="p367438101714"><a name="p367438101714"></a><a name="p367438101714"></a><span id="ph313817549316"><a name="ph313817549316"></a><a name="ph313817549316"></a>Atlas 800I A2 推理服务器</span></p>
+<p id="p20458181019389"><a name="p20458181019389"></a><a name="p20458181019389"></a><span id="ph56342369338"><a name="ph56342369338"></a><a name="ph56342369338"></a>A200I A2 Box 异构组件</span></p>
+<p id="p1792637151014"><a name="p1792637151014"></a><a name="p1792637151014"></a><span id="ph12174764117"><a name="ph12174764117"></a><a name="ph12174764117"></a>Atlas 800I A3 超节点服务器</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="42.59%" headers="mcps1.2.5.1.3 "><p id="p8442112171619"><a name="p8442112171619"></a><a name="p8442112171619"></a>infer-vcjob-910.yaml</p>
+</td>
+<td class="cellrowborder" valign="top" width="12.45%" headers="mcps1.2.5.1.4 "><p id="p15442424164"><a name="p15442424164"></a><a name="p15442424164"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.0.0/samples/inference/volcano/infer-vcjob-910.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+</td>
+</tr>
+<tr>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD</p><p>Atlas 850 系列硬件产品（超节点）</p><p>Atlas 350 标卡</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>infer-vcjob-950.yaml</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.0.0/samples/inference/volcano/infer-vcjob-950.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+</td>
+</tr>
+<tr id="row16861151313547"><td class="cellrowborder" rowspan="3" valign="top" width="18.48%" headers="mcps1.2.5.1.1 "><p id="p6861171325411"><a name="p6861171325411"></a><a name="p6861171325411"></a>Ascend Job任务</p>
+<p id="p12446175211817"><a name="p12446175211817"></a><a name="p12446175211817"></a></p>
+</td>
+<td class="cellrowborder" valign="top" width="26.479999999999997%" headers="mcps1.2.5.1.2 "><p id="p1328416110919"><a name="p1328416110919"></a><a name="p1328416110919"></a>推理服务器（插<span id="ph93658382564"><a name="ph93658382564"></a><a name="ph93658382564"></a>Atlas 300I Duo 推理卡</span>）</p>
+</td>
+<td class="cellrowborder" valign="top" width="42.59%" headers="mcps1.2.5.1.3 "><p id="p10861813135419"><a name="p10861813135419"></a><a name="p10861813135419"></a>pytorch_acjob_infer_310p_with_ranktable.yaml</p>
+</td>
+<td class="cellrowborder" valign="top" width="12.45%" headers="mcps1.2.5.1.4 "><p id="p1986116136544"><a name="p1986116136544"></a><a name="p1986116136544"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.0.0/samples/inference/volcano/pytorch_acjob_infer_310p_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+</td>
+</tr>
+<tr id="row18446115212811"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1611216221297"><a name="p1611216221297"></a><a name="p1611216221297"></a><span id="ph10342125017508"><a name="ph10342125017508"></a><a name="ph10342125017508"></a>Atlas 800I A2 推理服务器</span></p>
+<p id="p1877419343388"><a name="p1877419343388"></a><a name="p1877419343388"></a><span id="ph1311636133812"><a name="ph1311636133812"></a><a name="ph1311636133812"></a>A200I A2 Box 异构组件</span></p>
+<p id="p1368016125100"><a name="p1368016125100"></a><a name="p1368016125100"></a><span id="ph17176513111020"><a name="ph17176513111020"></a><a name="ph17176513111020"></a>Atlas 800I A3 超节点服务器</span></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p4446185212815"><a name="p4446185212815"></a><a name="p4446185212815"></a>pytorch_multinodes_acjob_infer_<em id="i232224205019"><a name="i232224205019"></a><a name="i232224205019"></a>{</em><em id="i133214249507"><a name="i133214249507"></a><a name="i133214249507"></a>xxx}</em>b_with_ranktable.yaml</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p962512301913"><a name="p962512301913"></a><a name="p962512301913"></a><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.0.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_910b_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+</td>
+</tr>
+<tr>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas 950 SuperPoD</p><p>Atlas 850 系列硬件产品（超节点）</p><p>Atlas 350 标卡</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>pytorch_multinodes_acjob_infer_950_with_ranktable.yaml</p></td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p><a href="https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.0.0/samples/inference/volcano/pytorch_multinodes_acjob_infer_950_with_ranktable.yaml" target="_blank" rel="noopener noreferrer">获取YAML</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+
+
 #### YAML参数说明<a name="ZH-CN_TOPIC_0000002511347099"></a>
 
 本章节提供使用整卡调度配置YAML的操作示例。在操作前，用户需要了解YAML示例的参数说明，再进行操作。
@@ -790,202 +898,29 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 #### 配置YAML<a name="ZH-CN_TOPIC_0000002511347101"></a>
 
-本章节指导用户配置整卡调度特性的任务YAML，通过环境变量配置资源信息的用户请参考[通过环境变量配置资源信息场景](#section598118132817)；通过文件配置资源信息的用户请参考[通过文件配置资源信息场景](#section6131855154814)。
-
-**通过环境变量配置资源信息场景<a name="section598118132817"></a>**
-
->[!NOTE]
->此场景下，用户需已创建[hccl.json](../../api/hccl.json_file_description.md)文件的具体挂载路径才能执行以下操作，详细操作步骤请参见[步骤4](../../installation_guide/02_installation/manual_installation/08_ascend_operator.md)。
+本章节指导用户配置整卡调度特性的任务YAML。
 
 1. 将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
 
     **表 1**  操作参考
 
     <a name="table9830101615287"></a>
-    <table><thead align="left"><tr id="row1183115167289"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="p1883131617285"><a name="p1883131617285"></a><a name="p1883131617285"></a>特性名称</p>
-    </th>
+    <table><thead align="left"><tr id="row1183115167289">
     <th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.2"><p id="p118311416122815"><a name="p118311416122815"></a><a name="p118311416122815"></a>操作示例</p>
     </th>
     </tr>
     </thead>
-    <tbody><tr id="row1383111642810"><td class="cellrowborder" rowspan="2" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p183111662814"><a name="p183111662814"></a><a name="p183111662814"></a>整卡调度</p>
-    <p id="p6831131682816"><a name="p6831131682816"></a><a name="p6831131682816"></a></p>
-    <p id="p4831141617286"><a name="p4831141617286"></a><a name="p4831141617286"></a></p>
-    <p id="p1783141615287"><a name="p1783141615287"></a><a name="p1783141615287"></a></p>
-    <p id="p53986186431"><a name="p53986186431"></a><a name="p53986186431"></a></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1083151622813"><a name="p1083151622813"></a><a name="p1083151622813"></a><a href="#li583911163280">在Atlas 800 训练服务器上创建单机任务</a></p>
-    </td>
-    </tr>
-    <tr id="row0832171652816"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p178320163285"><a name="p178320163285"></a><a name="p178320163285"></a><a href="#li1731218243100">在Atlas 800T A2 训练服务器上创建分布式任务</a></p>
-    </td>
-    </tr>
-    <tr id="row108334168282"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p2833141612811"><a name="p2833141612811"></a><a name="p2833141612811"></a>整卡调度</p>
-    </td>
+    <tbody>
+    <tr id="row108334168282">
     <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p18339161282"><a name="p18339161282"></a><a name="p18339161282"></a><a href="#li1086213163289">Atlas 900 A3 SuperPoD 超节点上创建单机训练任务</a></p>
     </td>
     </tr>
-    <tr id="row524620253494"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1324682574913"><a name="p1324682574913"></a><a name="p1324682574913"></a>整卡调度</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p1924622524915"><a name="p1924622524915"></a><a name="p1924622524915"></a><a href="#li164321720423">在Atlas&nbsp;800T&nbsp;A2&nbsp;训练服务器上创建训练任务（Scheduler挂载芯片的方式）</a></p>
+     <tr id="row1843115298483"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p4432729124818"><a name="p4432729124818"></a><a name="p4432729124818"></a><a href="#li1134113548015">在Atlas 800I A2 推理服务器上创建单卡任务</a></p>
     </td>
     </tr>
 
     </tbody>
     </table>
-
-    - <a name="li583911163280"></a>使用**整卡调度**特性，参考本配置。以pytorch\_standalone\_acjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，任务使用1个芯片，修改示例如下。
-
-        ```Yaml
-        apiVersion: mindxdl.gitee.com/v1
-        kind: AscendJob
-        metadata:
-          name: default-test-pytorch
-          labels:
-            framework: pytorch   # 镜像名称
-            tor-affinity: "normal-schema" # 该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不使用该特性。large-model-schema表示大模型任务或填充任务，normal-schema表示普通任务
-        spec:
-          schedulerName: volcano  # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
-          runPolicy:
-            schedulingPolicy:    # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
-              minAvailable: 1    # 任务总副本数
-              queue: default    # 任务所属队列
-          successPolicy: AllWorkers   # 任务成功的前提
-          replicaSpecs:
-            Master:
-              replicas: 1      # 任务副本数
-              restartPolicy: Never
-              template:
-                spec:
-                  nodeSelector:
-                    host-arch: huawei-arm               # 可选值，根据实际情况填写
-                    accelerator-type: module         # 节点类型
-                  containers:
-                  - name: ascend                       # 必须为ascend，不能修改
-                  image: PyTorch-test:latest       # 镜像名称
-        ...
-                  env:
-        ...
-                  - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime会使用该字段
-                    valueFrom:
-                      fieldRef:
-                        fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
-        ...
-                    ports:                          #分布式训练集合通信端口
-                      - containerPort: 2222
-                        name: ascendjob-port
-                    resources:
-                      limits:
-                        huawei.com/Ascend910: 1    # 任务申请的芯片数量
-                      requests:
-                        huawei.com/Ascend910: 1   # 与limits取值一致
-        ...
-        ```
-
-        修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
-
-        >[!NOTE]
-        >PyTorch、MindSpore框架中对应的Chief、Master、Scheduler的“replicas”字段不能超过1。单机任务时，PyTorch框架不需要Worker。单卡任务时，MindSpore框架不需要Scheduler。
-
-    - <a name="li1731218243100"></a>使用**整卡调度**特性，参考本配置。pytorch\_multinodes\_acjob\_\{xxx\}b.yaml为例，在两台Atlas 800T A2 训练服务器节点创建**分布式训练**任务，执行2\*8芯片训练任务，修改示例如下，分布式任务的每个Pod只能调度到不同节点。
-
-        ```Yaml
-        apiVersion: mindxdl.gitee.com/v1
-        kind: AscendJob
-        metadata:
-          name: default-test-pytorch        # 任务名
-          labels:
-            framework: pytorch     # 训练框架名称
-            ring-controller.atlas: ascend-{xxx}b  # 标识产品类型
-            tor-affinity: "null" #该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不适用。large-model-schema表示大模型任务，normal-schema 普通任务
-        spec:
-          schedulerName: volcano    # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
-          runPolicy:
-            schedulingPolicy:       # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
-              minAvailable: 2   #任务总副本数
-              queue: default     # 任务所属队列
-          successPolicy: AllWorkers  #任务成功的前提
-          replicaSpecs:
-            Master:
-              replicas: 1   # 任务副本数
-              restartPolicy: Never
-              template:
-                metadata:
-                  labels:
-                    ring-controller.atlas: ascend-{xxx}b  # 标识产品类型
-                spec:
-                  affinity:                                         # 本段配置表示分布式任务的Pod调度到不同节点
-                    podAntiAffinity:
-                      requiredDuringSchedulingIgnoredDuringExecution:
-                        - labelSelector:
-                            matchExpressions:
-                              - key: job-name
-                                operator: In
-                                values:
-                                  - default-test-pytorch         # 需要和上面的任务名一致
-                          topologyKey: kubernetes.io/hostname
-                  nodeSelector:
-                    host-arch: huawei-arm               # 可选值，根据实际情况填写
-                    accelerator-type: module-{xxx}b-8   # 节点类型
-                  containers:
-                  - name: ascend                                     # 必须为ascend，不能修改
-                  image: pytorch-test:latest  #镜像名称
-        ...
-                    resources:
-                      limits:
-                        huawei.com/Ascend910: 8     #申请的芯片数量
-                      requests:
-                        huawei.com/Ascend910: 8     # 与limits取值一致
-                    volumeMounts:
-        ...
-                  volumes:
-        ...
-            Worker:
-              replicas: 1   #任务副本数
-              restartPolicy: Never
-              template:
-                metadata:
-                  labels:
-                    ring-controller.atlas: ascend-{xxx}b   # 标识产品类型
-                spec:
-                  affinity:            # 本段配置表示分布式任务的Pod调度到不同节点
-                    podAntiAffinity:
-                      requiredDuringSchedulingIgnoredDuringExecution:
-                        - labelSelector:
-                            matchExpressions:
-                              - key: job-name
-                                operator: In
-                                values:
-                                  - default-test-pytorch        # 需要和上面的任务名一致
-                          topologyKey: kubernetes.io/hostname
-                  nodeSelector:
-                    host-arch: huawei-arm               # 可选值，根据实际情况填写
-                    accelerator-type: module-{xxx}b-8  # 节点类型
-                  containers:
-                  - name: ascend                                   # 必须为ascend，不能修改
-        ...
-                  env:
-        ...
-                  - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime会使用该字段
-                    valueFrom:
-                      fieldRef:
-                        fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
-        ...
-                    ports:                          # 分布式训练集合通信端口
-                      - containerPort: 2222
-                        name: ascendjob-port
-                    resources:
-                      limits:
-                        huawei.com/Ascend910: 8   # 任务申请的芯片数量
-                      requests:
-                        huawei.com/Ascend910: 8   # 与limits取值一致
-                    volumeMounts:
-        ...
-                  volumes:
-        ...
-        ```
-
-        修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
 
     - <a name="li1086213163289"></a>使用**整卡调度**特性，参考本配置。以pytorch\_standalone\_acjob\_super\_pod.yaml为例，在一台Atlas 900 A3 SuperPoD 超节点上创建**单机训练**任务，修改示例如下。
 
@@ -1043,118 +978,51 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
         修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
 
-    - <a name="li164321720423"></a>使用整卡调度特性，参考本配置。以mindspore\_multinodes\_acjob\_\{xxx\}b.yaml为例，在一台Atlas 800T A2 训练服务器上以Scheduler挂载芯片的方式执行2\*8卡训练任务，修改示例如下。
+
+    - <a name="li1134113548015"></a>使用**整卡调度**特性，参考本配置。以infer-vcjob-910.yaml为例，在Atlas 800I A2 推理服务器上创建一个单卡推理任务，示例如下。
 
         ```Yaml
-        apiVersion: mindxdl.gitee.com/v1
-        kind: AscendJob
+        apiVersion: batch.volcano.sh/v1alpha1
+        kind: Job
         metadata:
-          name: default-test-mindspore
+          name: mindx-infer-test
+          namespace: vcjob                      # 根据实际情况选择合适的命名空间
           labels:
-            framework: mindspore     # 训练框架名称
-            ring-controller.atlas: ascend-{xxx}b  # 标识产品类型
+            ring-controller.atlas: ascend-{xxx}b
+            fault-scheduling: "force"
         spec:
-          schedulerName: volcano    # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
-          runPolicy:
-            schedulingPolicy:      # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
-              minAvailable: 2  #任务总副本数
-              queue: default     # 任务所属队列
-          successPolicy: AllWorkers  #任务成功的前提
-          replicaSpecs:
-            Scheduler:
-              replicas: 1   # 任务副本数
-              restartPolicy: Never
-              template:
-                metadata:
-                  labels:
-                    ring-controller.atlas: ascend-{xxx}b  # 标识产品类型
-                spec:
-                  hostNetwork: true    # 可选值，根据实际情况填写，true支持hostIP创建Pod，false不支持hostIP创建Pod
-                  affinity:                                         # 本段配置表示分布式任务的Pod调度到不同节点
-                    podAntiAffinity:
-                      requiredDuringSchedulingIgnoredDuringExecution:
-                        - labelSelector:
-                            matchExpressions:
-                              - key: job-name
-                                operator: In
-                                values:
-                                  - default-test-mindspore         # 需要和上面的任务名一致
-                          topologyKey: kubernetes.io/hostname
-                  nodeSelector:
-                    host-arch: huawei-arm              # 可选值，根据实际情况填写
-                    accelerator-type: module-{xxx}b-8   # 节点类型
-                  containers:
-                  - name: ascend                                     # 必须为ascend，不能修改
-                    image: mindspore-test:latest  #镜像名称
-                    imagePullPolicy: IfNotPresent
         ...
-                    env:
-                      - name: HCCL_IF_IP                    # 可选值，根据实际情况填写
-                        valueFrom:                          # 若hostNetwork配置为true，需要同步配置HCCL_IF_IP环境变量
-                          fieldRef:                         # 若hostNetwork未配置或配置为false，不可配置HCCL_IF_IP环境变量
-                            fieldPath: status.hostIP        #
+            template:
+              metadata:
+                labels:
+                  app: infer
+                  ring-controller.atlas: ascend-{xxx}b
+              spec:
+                containers:
+                  - image: infer_image:latest             # 推理镜像名称，以实际情况为准
         ...
-                    ports:                          # 分布式训练集合通信端口
-                      - containerPort: 2222
-                        name: ascendjob-port
-                    resources:
-                      limits:
-                        huawei.com/Ascend910: 8 # 申请的芯片数量
+              env:
+              - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime会使用该字段
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
                       requests:
-                        huawei.com/Ascend910: 8 #与limits取值一致
-                    volumeMounts:
-        ...
-                  volumes:
-        ...
-            Worker:
-              replicas: 1   #任务副本数
-              restartPolicy: Never
-              template:
-                metadata:
-                  labels:
-                    ring-controller.atlas: ascend-{xxx}b   # 标识产品类型
-                spec:
-                  hostNetwork: true    # 可选值，根据实际情况填写，true支持hostIP创建Pod，false不支持hostIP创建Pod
-                  affinity:            # 本段配置表示分布式任务的Pod调度到不同节点
-                    podAntiAffinity:
-                      requiredDuringSchedulingIgnoredDuringExecution:
-                        - labelSelector:
-                            matchExpressions:
-                              - key: job-name
-                                operator: In
-                                values:
-                                  - default-test-mindspore        # 需要和上面的任务名一致
-                          topologyKey: kubernetes.io/hostname
-                  nodeSelector:
-                    host-arch: huawei-arm              # 可选值，根据实际情况填写
-                    accelerator-type: module-{xxx}b-8  # 节点类型
-                  containers:
-                  - name: ascend                            # 必须为ascend，不能修改
-        ...
-                    env:
-                      - name: HCCL_IF_IP                    # 可选值，根据实际情况填写
-                        valueFrom:                          # 若hostNetwork配置为true，需要同步配置HCCL_IF_IP环境变量
-                          fieldRef:                         # 若hostNetwork未配置或配置为false，不可配置HCCL_IF_IP环境变量
-                            fieldPath: status.hostIP        #
-        ...
-                  - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime会使用该字段
-                    valueFrom:
-                      fieldRef:
-                        fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
-        ...
-                    ports:                          # 分布式训练集合通信端口
-                      - containerPort: 2222
-                        name: ascendjob-port
-                    resources:
+                        huawei.com/Ascend910: 1          # 所需的芯片数量
                       limits:
-                        huawei.com/Ascend910: 8  # 申请的芯片数量
-                      requests:
-                        huawei.com/Ascend910: 8  #与limits取值一致
+                        huawei.com/Ascend910: 1          # 必须与requests的值一致.
                     volumeMounts:
-        ...
-                  volumes:
-        ...
+                      - name: localtime                  # 容器时间必须与主机时间一致
+                        mountPath: /etc/localtime
+                nodeSelector:
+                  host-arch: huawei-arm                  # 根据实际情况进行配置
+                  accelerator-type: module-{xxx}b-8      # Atlas 800I A2 推理服务器
+                volumes:
+                - name: localtime
+                  hostPath:
+                    path: /etc/localtime
+                restartPolicy: OnFailure
         ```
+        修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
 
 2. <a name="li118885168281"></a>若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu”和“memory”参数和对应的参数值，具体数值请根据实际情况配置。
 
@@ -1181,41 +1049,46 @@ deploy任务原理图如[图3](#fig06571541566)所示。
               - name: ascend-server-config
                 mountPath: /user/serverid/devindex/config
               - name: code
-                mountPath: /job/code                     # 容器中训练脚本路径
+                mountPath: /job/code                      # （训练场景）容器中训练脚本路径
               - name: data
-                mountPath: /job/data                      # 容器中训练数据集路径
+                mountPath: /job/data                      # （训练场景）容器中训练数据集路径
               - name: output
-                mountPath: /job/output                    # 容器中训练输出路径
+                mountPath: /job/output                    # （训练场景）容器中训练输出路径
+    ...
+
+              - name: weights
+                mountPath: /path-to-weights               # （推理场景）权重文件挂载路径
+    ...
+              volumes:
+                - name: weights                           # （推理场景）权重文件挂载路径
+                  hostPath:
+                    path: /path-to-weights                # （推理场景）共享存储或者本地存储路径，请根据实际情况修改
     ```
 
-4. 如下所示，YAML中训练命令**bash train\_start.sh**后跟的三个参数依次为容器内训练代码目录、输出目录（其中包括生成日志重定向文件以及PyTorch、MindSpore框架模型文件）、启动脚本相对代码目录的路径。之后的以“--”开头的参数为训练脚本需要的参数。单机和分布式训练脚本、脚本参数可参考模型脚本来源处的模型说明修改。
-    - **PyTorch命令参数**
+    >[!NOTE]
+    >推理场景下：
+    >- /path-to-weights为模型权重，需要用户自行准备。mindie镜像可以参考镜像中$ATB\_SPEED\_HOME\_PATH/examples/models/llama3/README.md文件中的说明进行下载。
+    >- ATB_SPEED_HOME_PATH默认路径为“/usr/local/Ascend/atb-models”，在source模型仓中set_env.sh脚本时已配置，用户无需自行配置。
 
-        ```Yaml
-        command:
-          - /bin/bash
-          - -c
-        args: ["cd /job/code/scripts; chmod +x train_start.sh; bash train_start.sh /job/code /job/output main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --epochs=90 --batch-size=512"]
-        ...
-        ```
+4. 修改示例YAML中容器启动命令，即"command"字段内容，如果没有则需添加。请根据实际业务场景修改启动命令。
 
-    - **MindSpore命令参数**
+    ```Yaml
+    ...
+          containers:
+          - image: your_image:v1
+    ...
+            command: ["/bin/bash", "-c", "your_start_command"]
+            resources:
+              requests:
+    ...
+    ```
 
-        ```Yaml
-        command:
-          - /bin/bash
-          - -c
-        args: ["cd /job/code/scripts; chmod +x train_start.sh; bash train_start.sh /job/code/ /job/code/output train.py  --data_path=/job/data/resnet50/imagenet/train --config=/job/code/config/resnet50_imagenet2012_config.yaml"]
-        ...
-        ```
+    >[!NOTE]
+    >启动命令示例：
+    >- 训练场景：`cd /job/code/scripts; chmod +x train_start.sh; bash train_start.sh /job/code /job/output main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50`。其中，/job/code/为容器中训练脚本路径，/job/output/为容器中训练输出路径，main.py为启动训练脚本路径。
+    >- 推理场景：`cd $ATB_SPEED_HOME_PATH; python examples/run_pa.py --model_path /path-to-weights`。其中，/path-to-weights为模型权重路径。
 
-        >[!NOTE]
-        >以PyTorch命令参数为例。
-        >- /job/code/：[步骤3](#li0303)中用户自定义的容器中训练脚本路径。
-        >- /job/output/：[步骤3](#li0303)中用户自定义的容器中训练输出路径。
-        >- main.py：启动训练脚本路径。
-
-5. YAML为使用NFS场景，需要指定NFS服务器地址、训练数据集路径、脚本路径和训练输出路径，请根据实际修改。如果不使用NFS请根据K8s相关指导自行修改。
+5. 如YAML为使用NFS场景，需要指定NFS服务器地址、脚本路径和输出路径，请根据实际修改。如果不使用NFS请根据K8s相关指导自行修改。
 
     <pre codetype="yaml">
     ...
@@ -1223,13 +1096,13 @@ deploy任务原理图如[图3](#fig06571541566)所示。
               - name: ascend-server-config
                 mountPath: /user/serverid/devindex/config
               - name: code
-                mountPath: /job/code                     # 容器中训练脚本路径
+                mountPath: /job/code                     # 容器中脚本路径
               - name: data
-                mountPath: /job/data                      # 容器中训练数据集路径
+                mountPath: /job/data                      # （训练场景）容器中数据集路径
               - name: output
-                mountPath: /job/output                    # 容器中训练输出路径
+                mountPath: /job/output                    # 容器中输出路径
     ...
-               # 可选，使用组件为训练任务生成RankTable文件，需要新增以下加粗字段，设置容器中hccl.json文件保存路径。该路径不可修改。
+               # 可选，（训练场景）使用组件为训练任务生成RankTable文件，需要新增以下加粗字段，设置容器中hccl.json文件保存路径。该路径不可修改。
               <strong>- name: ranktable</strong>
                 <strong>mountPath: /user/serverid/devindex/config</strong>
     ...
@@ -1238,441 +1111,81 @@ deploy任务原理图如[图3](#fig06571541566)所示。
             - name: code
               nfs:
                 server: 127.0.0.1        # NFS服务器IP地址
-                path: "xxxxxx"           # 配置训练脚本路径
+                path: "xxxxxx"           # 配置脚本路径
             - name: data
               nfs:
                 server: 127.0.0.1
-                path: "xxxxxx"           # 配置训练集路径
+                path: "xxxxxx"           # （训练场景）配置数据集路径
             - name: output
               nfs:
                 server: 127.0.0.1
-                path: "xxxxxx"           # 设置脚本相关配置模型保存路径
+                path: "xxxxxx"           # 配置输出路径
     ...
-             # 可选，使用组件为PyTorch和MindSpore框架生成RankTable文件，需要新增以下加粗字段，设置hccl.json文件保存路径
+             # 可选，（训练场景）使用组件为PyTorch和MindSpore框架生成RankTable文件，需要新增以下加粗字段，设置hccl.json文件保存路径
             <strong>- name: ranktable           # 请勿修改此参数的默认值，Ascend Operator会用于检查是否开启文件挂载hccl.json</strong>
               <strong>hostPath:                 #请使用hostpath挂载或NFS挂载</strong>
                 <strong>path: /user/mindx-dl/ranktable/default.default-test-pytorch   # 共享存储或者本地存储路径，/user/mindx-dl/ranktable/为前缀路径，必须和Ascend Operator挂载的Ranktable根目录保持一致。default.default-test-pytorch为后缀路径，建议改为:namespace.job-name</strong></pre>
 
-**通过文件配置资源信息场景<a name="section6131855154814"></a>**
-
-1. 将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
-
-    **表 2**  操作参考
-
-    <a name="table353271710226"></a>
-    <table><thead align="left"><tr id="row8532181713223"><th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.1"><p id="p8532151719228"><a name="p8532151719228"></a><a name="p8532151719228"></a>特性名称</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.2"><p id="p853216179225"><a name="p853216179225"></a><a name="p853216179225"></a>操作示例</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="row4532141711226"><td class="cellrowborder" rowspan="2" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p16533181762219"><a name="p16533181762219"></a><a name="p16533181762219"></a>整卡调度</p>
-    <p id="p144064285710"><a name="p144064285710"></a><a name="p144064285710"></a></p>
-    <p id="p1966518379556"><a name="p1966518379556"></a><a name="p1966518379556"></a></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p2533121714227"><a name="p2533121714227"></a><a name="p2533121714227"></a><a href="#li103534014484">在Atlas 800 训练服务器上创建单机任务</a></p>
-    </td>
-    </tr>
-    <tr id="row1753371710227"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p053317172221"><a name="p053317172221"></a><a name="p053317172221"></a><a href="#li21411371493">在Atlas 800 训练服务器上创建分布式任务</a></p>
-    </td>
-    </tr>
-    <tr id="row173101655202217"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p1366503795516"><a name="p1366503795516"></a><a name="p1366503795516"></a>整卡调度</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p133113557220"><a name="p133113557220"></a><a name="p133113557220"></a><a href="#li1487005712813">在Atlas 800T A2 训练服务器上创建分布式任务</a></p>
-    </td>
-    </tr>
-
-    </tbody>
-    </table>
-
-    - <a name="li103534014484"></a>使用**整卡调度**特性，参考本配置。以a800\_pytorch\_vcjob.yaml为例，在一台Atlas 800 训练服务器节点创建**单机训练**任务，任务使用8个芯片，修改示例如下。
-
-        ```Yaml
-        apiVersion: v1
-        kind: ConfigMap
-        metadata:
-          name: rings-config-mindx-dls-test     # rings-config-后的名字需要与任务名一致
-        ...
-          labels:
-            ring-controller.atlas: ascend-910   # 标识任务使用的芯片的产品类型
-        ...
-        ---
-        apiVersion: batch.volcano.sh/v1alpha1   # 不可修改。必须使用Volcano的API。
-        kind: Job                               # 目前只支持Job类型
-        metadata:
-          name: mindx-dls-test                  # 任务名，可自定义
-        ...
-        spec:
-          minAvailable: 1                  # 单机为1
-        ...
-          - name: "default-test"
-              replicas: 1                  # 单机为1
-              template:
-                metadata:
-        ...
-                spec:
-        ...
-                   containers:
-                   - image: pytorch-test:latest   #镜像名称
-        ...
-                     env:
-        ...
-                     - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime使用该字段
-                       valueFrom:
-                         fieldRef:
-                           fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
-        ...
-                    resources:
-                      requests:
-                        huawei.com/Ascend910: 8          # 需要的NPU芯片个数为8。
-                      limits:
-                        huawei.com/Ascend910: 8          # 目前需要和上面requests保持一致
-        ...
-                    nodeSelector:
-                      host-arch: huawei-arm              # 可选值，根据实际情况填写
-                      accelerator-type: module        # 调度到Atlas 800 训练服务器
-        ...
-        ```
-
-        修改完成后执行[步骤2](#li832632419711)，配置YAML的其他字段。
-
-    - <a name="li21411371493"></a>使用**整卡调度**特性，参考本配置。以a800\_pytorch\_vcjob.yaml为例，在两台Atlas 800 训练服务器节点创建**分布式训练**任务，任务使用2\*8个芯片，修改示例如下，分布式任务的每个Pod只能调度到不同节点。
-
-        ```Yaml
-        apiVersion: v1
-        kind: ConfigMap
-        metadata:
-          name: rings-config-mindx-dls-test     # rings-config-后的名字需要与任务名一致
-        ...
-          labels:
-            ring-controller.atlas: ascend-910  # 标识任务使用的芯片的产品类型
-        ...
-        ---
-        apiVersion: batch.volcano.sh/v1alpha1   # 不可修改。必须使用Volcano的API
-        kind: Job                               # 目前只支持Job类型
-        metadata:
-          name: mindx-dls-test                  # 任务名，可自定义
-        ...
-        spec:
-          minAvailable: 2                  # 2节点分布式任务则为2，N节点则为N，Deployment类型的任务不需要该参数
-        ...
-          - name: "default-test"
-              replicas: 2                  # N节点分布式场景为N
-              template:
-                metadata:
-        ...
-                spec:
-                  affinity:                            # 本段配置表示分布式任务的Pod调度到不同节点
-                    podAntiAffinity:
-                      requiredDuringSchedulingIgnoredDuringExecution:
-                        - labelSelector:
-                            matchExpressions:
-                              - key: volcano.sh/job-name      # vcjob固定字段，当任务类型为deployment时，key为deploy-name
-                                operator: In                   # 固定字段
-                                values:
-                                  - mindx-dls-test             # 需要和上面的任务名一致
-                          topologyKey: kubernetes.io/hostname
-                containers:
-                - image: pytorch-test:latest  # 镜像名称
-        ...
-                  env:
-        ...
-                  - name: ASCEND_VISIBLE_DEVICES                       # Ascend Docker Runtime使用该字段
-                    valueFrom:
-                      fieldRef:
-                        fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
-
-                    resources:
-                      requests:
-                        huawei.com/Ascend910: 8          # 需要的NPU芯片个数为8。可在下方添加行，配置memory、cpu等资源
-                      limits:
-                        huawei.com/Ascend910: 8          # 目前需要和上面requests保持一致
-        ...
-                    nodeSelector:
-                      host-arch: huawei-arm               # 可选值，根据实际情况填写
-                      accelerator-type: module     # 调度到Atlas 800 训练服务器
-        ...
-        ```
-
-        修改完成后执行[步骤2](#li832632419711)，配置YAML的其他字段。
-
-    - <a name="li1487005712813"></a>使用**整卡调度**特性，参考本配置。以a800\_pytorch\_vcjob.yaml为例，在一台Atlas 800T A2 训练服务器节点创建**分布式训练**任务，任务使用1\*8个芯片，修改示例如下。
-
-        ```Yaml
-        apiVersion: v1
-        kind: ConfigMap
-        metadata:
-          name: rings-config-mindx-dls-test     # rings-config-后的名字需要与任务名一致
-          namespace: vcjob
-          labels:
-            ring-controller.atlas: ascend-{xxx}b   # 产品类型
-        data:
-          hccl.json: |
-            {
-                "status":"initializing"
-            }
-        ---
-        apiVersion: batch.volcano.sh/v1alpha1   # 不可修改，必须使用Volcano的API
-        kind: Job                               # 目前只支持Job类型
-        metadata:
-        ...
-          labels:
-            ring-controller.atlas: ascend-{xxx}b   # 必须与ConfigMap中的标签保持一致，不可修改
-            fault-scheduling: "force"
-            tor-affinity: "normal-schema"      # 该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不使用该特性。large-model-schema表示大模型任务或填充任务，normal-schema表示普通任务
-        spec:
-          minAvailable: 1                       # 此处建议与下面的为节点个数保持一致
-          schedulerName: volcano                # 使用Volcano进行调度
-        ...
-          tasks:
-          - name: "default-test"
-            replicas: 1                              # 此处为节点个数
-            template:
-              metadata:
-                labels:
-                  app: pytorch
-                  ring-controller.atlas: ascend-{xxx}b  # 必须与ConfigMap中的标签一致，不可修改
-              spec:
-                affinity:                           # 本段配置表示分布式任务的Pod调度到不同节点
-                  podAntiAffinity:
-                    requiredDuringSchedulingIgnoredDuringExecution:
-                      - labelSelector:
-                          matchExpressions:
-                            - key: volcano.sh/job-name
-                              operator: In
-                              values:
-                                - mindx-dls-test
-                        topologyKey: kubernetes.io/hostname
-                hostNetwork: true
-                containers:
-                - image: torch:b030               # 训练框架镜像，根据实际情况修改
-                  - name: XDL_IP                   # 本段固定不变
-                    valueFrom:
-                      fieldRef:
-                        fieldPath: status.hostIP
-                  - name: POD_UID
-                    valueFrom:
-                      fieldRef:
-                        fieldPath: metadata.uid
-                  - name: framework
-                    value: "PyTorch"
-        ...
-                  - name: ASCEND_VISIBLE_DEVICES
-                    valueFrom:
-                      fieldRef:
-                        fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
-        ...
-                  resources:
-                    requests:
-                      huawei.com/Ascend910: 8                # 每台Atlas 800T A2 训练服务器芯片数量最多为8
-                    limits:
-                      huawei.com/Ascend910: 8                 # 每台Atlas 800T A2 训练服务器芯片数量最多为8
-         ...
-                nodeSelector:
-                  host-arch: huawei-x86       # 可选值，根据实际情况填写
-                  accelerator-type: module-{xxx}b-8    #调度到Atlas 800T A2 训练服务器节点
-        ...
-        ```
-
-        >[!NOTE]
-        >其余示例可参考[表5](#table62591594016)和[表6](#table21811158146)，以及YAML对应的参数说明[vcjob任务yaml参数说明](../../api/yaml_configuration.md#vcjob)进行适配修改。修改完成后执行[步骤2](#li832632419711)，继续配置YAML的其他字段。
-
-2. <a name="li832632419711"></a>若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu”和“memory”参数和对应的参数值，具体数值请根据实际情况配置。
-
-    ```Yaml
-    ...
-              resources:
-                requests:
-                  huawei.com/Ascend910: 8
-                  cpu: 100m
-                  memory: 100Gi
-                limits:
-                  huawei.com/Ascend910: 8
-                  cpu: 100m
-                  memory: 100Gi
-    ...
-    ```
-
-3. <a name="li112747151117"></a>修改训练脚本、代码的挂载路径。
-
-    从昇腾镜像仓库拉取的基础镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
-
-    ```Yaml
-              volumeMounts:
-              - name: ascend-910-config
-                mountPath: /user/serverid/devindex/config
-              - name: code
-                mountPath: /job/code                     # 容器中训练脚本路径
-              - name: data
-                mountPath: /job/data                      # 容器中训练数据集路径
-              - name: output
-                mountPath: /job/output                    # 容器中训练输出路径
-    ```
-
-4. 如下所示，YAML中训练命令**bash train\_start.sh**后跟的三个参数依次为容器内训练代码目录、输出目录（其中包括生成日志重定向文件以及框架模型文件）、启动脚本相对代码目录的路径。之后的以“--”开头的参数为训练脚本需要的参数。单机和分布式训练脚本、脚本参数可参考模型脚本来源处的模型说明修改。
-    - **PyTorch命令参数**
-
-        ```Yaml
-        command:
-        - "/bin/bash"
-        - "-c"
-        - "cd /job/code/scripts;chmod +x train_start.sh;bash train_start.sh /job/code/ /job/output/ main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --lr=1.6 --world-size=1 --dist-backend='hccl' --multiprocessing-distributed --epochs=90 --batch-size=1024;"
-        ...
-        ```
-
-    - **MindSpore命令参数**
-
-        ```Yaml
-        command:
-        - "/bin/bash"
-        - "-c"
-        - "cd /job/code/scripts;chmod +x train_start.sh;bash train_start.sh /job/code/ /job/output/ train.py  --config_path=/job/code/config/resnet50_imagenet2012_config.yaml --output_dir=/job/output --run_distribute=True --device_num=8 --data_path=/job/data/imagenet/train"
-        ...
-        ```
-
-        >[!NOTE]
-        >以PyTorch命令参数为例。
-        >- /job/code/：[步骤3](#li112747151117)中用户自定义的容器中训练脚本路径。
-        >- /job/output/：[步骤3](#li112747151117)中用户自定义的容器中训练输出路径。
-        >- main.py：启动训练脚本路径。
-
-5. YAML为使用NFS场景，需要指定NFS服务器地址、训练数据集路径、脚本路径和训练输出路径，请根据实际修改。如果不使用NFS请根据K8s相关指导自行修改。
-
-    ```Yaml
-    ...
-              volumeMounts:
-              - name: ascend-910-config
-                mountPath: /user/serverid/devindex/config
-              - name: code
-                mountPath: /job/code                     # 容器中训练脚本路径
-              - name: data
-                mountPath: /job/data                      # 容器中训练数据集路径
-              - name: output
-                mountPath: /job/output                    # 容器中训练输出路径
-    ...
-            volumes:
-    ...
-            - name: code
-              nfs:
-                server: 127.0.0.1        # NFS服务器IP地址
-                path: "xxxxxx"           # 配置训练脚本路径
-            - name: data
-              nfs:
-                server: 127.0.0.1
-                path: "xxxxxx"           # 配置训练集路径
-            - name: output
-              nfs:
-                server: 127.0.0.1
-                path: "xxxxxx"           # 设置脚本相关配置模型保存路径
-    ...
-    ```
 
 ### 下发任务<a name="ZH-CN_TOPIC_0000002511427065"></a>
 
-**操作步骤<a name="zh-cn_topic_0000001608595413_section15243115731317"></a>**
-
-1. 示例a800\_pytorch\_vcjob.yaml中，任务部署在vcjob命名空间下，因此需要在管理节点执行以下命令，为训练任务创建命名空间。如果任务创建到非默认的命名空间，则需要根据实际情况创建命名空间。
+1. 如果任务创建到非默认的命名空间，则需要根据实际情况创建命名空间。如任务部署在vcjob命名空间下，因此需要在管理节点执行以下命令，为任务创建命名空间。
 
     ```shell
     kubectl create namespace vcjob
     ```
 
-2. 在管理节点示例YAML所在路径，执行以下命令，使用YAML下发训练任务。
+2. 在管理节点示例YAML所在路径，执行以下命令，使用YAML下发任务。
 
     ```shell
     kubectl apply -f XXX.yaml
     ```
 
+    回显示例如下：
+
+    ```ColdFusion
+    xx/xxx created
+    ```
+
     >[!NOTE]
-    >如果下发任务成功后，又修改了任务YAML，需要先执行kubectl delete -f <i>XXX.yaml</i>命令删除原任务，再重新下发任务。
-
-    - 通过环境变量配置资源信息场景的示例如下：
-
-        ```shell
-        kubectl apply -f pytorch_standalone_acjob.yaml
-        ```
-
-        回显示例如下：
-
-        ```ColdFusion
-        ascendjob.mindxdl.gitee.com/default-test-pytorch created
-        ```
-
-    - 通过文件配置资源信息场景的示例如下：
-
-        ```shell
-        kubectl apply -f a800_pytorch_vcjob.yaml
-        ```
-
-        回显示例如下：
-
-        ```ColdFusion
-        configmap/rings-config-mindx-dls-test created
-        job.batch.volcano.sh/mindx-dls-test created
-        ```
+    >回显格式为`资源类型/资源名称 created`，具体内容取决于YAML中定义的资源类型和名称。若YAML中包含多个资源定义，则每个资源各回显一行。
 
 >[!NOTE]
 >
->- 若下发训练任务后，任务一直处于Pending状态，可以参见[训练任务处于Pending状态，原因：nodes are unavailable](https://gitcode.com/Ascend/mind-cluster/issues/352)或者[资源不足时，任务处于Pending状态](https://gitcode.com/Ascend/mind-cluster/issues/355)章节进行处理。
->- 若成功启动训练任务后，发现训练任务容器内部hccl.json文件处于initializing状态，可以参见[hccl.json文件没有生成](https://gitcode.com/Ascend/mind-cluster/issues/323)章节进行处理。
+>- 如果下发任务成功后，又修改了任务YAML，需要先执行kubectl delete -f <i>XXX.yaml</i>命令删除原任务，再重新下发任务。
+>- 若下发任务后，任务一直处于Pending状态，可以参见[任务处于Pending状态，原因：nodes are unavailable](https://gitcode.com/Ascend/mind-cluster/issues/352)或者[资源不足时，任务处于Pending状态](https://gitcode.com/Ascend/mind-cluster/issues/355)章节进行处理。
+>- 通过文件配置资源信息场景，若成功启动任务后，发现任务容器内部hccl.json文件处于initializing状态，可以参见[hccl.json文件没有生成](https://gitcode.com/Ascend/mind-cluster/issues/323)章节进行处理。
 
 ### 查看任务进程<a name="ZH-CN_TOPIC_0000002479387130"></a>
 
 **操作步骤<a name="zh-cn_topic_0000001558675462_section15243115731317"></a>**
 
-1. 在管理节点查看任务Pod的状态，需要保证Pod状态为Running。
+1. <a name="ZH-CN_TOPIC_0000002511347103_li96791230183711"></a>在管理节点查看任务Pod的状态，需要保证Pod状态为Running。
 
-    执行以下命令，查看Pod运行情况。
+    - 执行以下命令，查看Pod运行情况。
 
-    ```shell
-    kubectl get pod --all-namespaces -o wide
-    ```
+       ```shell
+       kubectl get pod --all-namespaces -o wide
+       ```
 
-    - 单机单芯片训练任务回显示例。
-
-        ```ColdFusion
-        NAMESPACE        NAME                                       READY   STATUS              RESTARTS   AGE     IP                NODE           NOMINATED NODE   READINESS GATES
-        ...
-        vcjob            mindx-dls-test-default-test-0             1/1     Running            0          4m      192.168.243.198   ubuntu         <none>           <none>
-        ...
-        ```
-
-    - 两个训练节点，执行2\*8芯片分布式训练任务回显示例。
+    - 回显示例如下：
 
         ```ColdFusion
         NAMESPACE        NAME                                       READY   STATUS              RESTARTS   AGE     IP                NODE           NOMINATED NODE   READINESS GATES
         ...
-        vcjob            mindx-dls-test-default-test-0             1/1     Running            0          3m      192.168.243.198   ubuntu         <none>           <none>
-        vcjob            mindx-dls-test-default-test-1             1/1     Running            0          3m      192.168.243.199   ubuntu         <none>           <none>
+        <namespace>      <pod-name>                                1/1     Running            0          4m      x.x.x.x          <node-name>    <none>           <none>
         ...
         ```
 
-2. 查看计算节点的NPU分配情况，在管理节点执行以下命令查看。
 
-    ```shell
-    kubectl describe nodes {任务运行节点的节点名}
-    ```
+2. 查看计算节点的NPU分配情况。
+    - 在管理节点执行以下命令，查看NPU分配情况。
 
-    - 使用**整卡调度**特性，单机单芯片训练任务回显示例。
+      ```shell
+      kubectl describe nodes <node-name>
+      ```
 
-        ```ColdFusion
-        Name:               ubuntu
-        Roles:              master,worker
-        Labels:             accelerator=huawei-Ascend910
-        ...
-        Allocated resources:
-          (Total limits may be over 100 percent, i.e., overcommitted.)
-          Resource              Requests        Limits
-          --------              --------        ------
-          cpu                   37250m (19%)    37500m (19%)
-          memory                117536Mi (15%)  119236Mi (15%)
-          ephemeral-storage     0 (0%)          0 (0%)
-          huawei.com/Ascend910  1               1
-        Events:                 <none>
-        ```
-
-        >[!NOTE]
-        >**Allocated resources**的字段huawei.com/Ascend910的值为1，表明训练使用了一个NPU。
+    - 回显示例如下：
 
         ```ColdFusion
         Name:               ubuntu
@@ -1692,360 +1205,147 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         ```
 
         >[!NOTE]
-        >**Allocated resources**的字段huawei.com/Ascend910的值为8，表明分布式训练使用了节点上所有的NPU。
+        > - **Allocated resources** 重点关注 `huawei.com/XXX` 字段：
+        >   - `huawei.com/Ascend910` 代表服务器的类型为 Atlas 训练系列产品、Atlas A2 系列产品、Atlas A3 系列产品。如果是 950 系列，则该字段为 `huawei.com/npu`。
+        >   - `huawei.com/Ascend910` 对应的值是8，该值表示该节点上当前已被容器挂载的芯片数量。下发任务成功后，该值会增大，增加数量为任务使用的NPU芯片个数。
+        > - 针对推理场景：
+        >   - 如果使用的是Atlas 推理系列产品非混插模式，则上述字段显示为**Ascend310P**。
+        >   - 如果使用的是Atlas 推理系列产品混插模式，则上述字段显示为**Ascend310P-V、Ascend310P-VPro、Ascend310P-IPro之一**。
 
 3. 查看Pod的NPU使用情况。
+    - 执行以下命令，查看NPU使用情况。
 
-    本例中使用**kubectl describe pod mindx-dls-test-default-test-0 -n vcjob**命令查看运行Pod的情况。
+      ```shell
+      kubectl describe pod <pod-name> -n <namespace>
+      ```
 
-    - 单机单芯片训练任务示例，显示如下内容表示正常。
+    - 回显示例如下：
 
-        ```ColdFusion
-        root@ubuntu:/home/test/yaml# kubectl describe pod mindx-dls-test-default-test-0 -n vcjob
-        Name:         mindx-dls-test-default-test-0
-        Namespace:    vcjob
-        Priority:     0
-        Node:         ubuntu/XXX.XXX.XXX.XXX
-        Start Time:   Wed, 30 Sep 2020 15:38:22 +0800
-        Labels:       app=pytorch
-                      ring-controller.atlas=ascend-910
-                      volcano.sh/job-name=mindx-dls-test
-                      volcano.sh/job-namespace=vcjob
-        Annotations:  ascend.kubectl.kubernetes.io/ascend-910-configuration:
-                        {"pod_name":"0","server_id":"xx-xx-xx-xx","devices":[{"device_id":"3","device_ip":"192.168.20.102"}...
-                      cni.projectcalico.org/podIP: 192.168.243.195/32
-                      cni.projectcalico.org/podIPs: 192.168.243.195/32
-                      huawei.com/Ascend910: Ascend910-3
-                      huawei.com/AscendReal: Ascend910-3
-                      huawei.com/kltDev: Ascend910-3
-                      predicate-time: 18446744073709551615
-                      scheduling.k8s.io/group-name: mindx-dls-test
-                      volcano.sh/job-name: mindx-dls-test
-                      volcano.sh/job-version: 0
-                      volcano.sh/task-spec: default-test
-        Status:       Running
-        ```
+       ```ColdFusion
+       Name:         <pod-name>
+       Namespace:    <namespace>
+       Priority:     0
+       Node:         <node-name>/<node-ip>
+       Start Time:   <start-time>
+       Labels:       app=<app-label>
+                     ring-controller.atlas=ascend-910
+                     volcano.sh/job-name=<job-name>
+                     volcano.sh/job-namespace=<namespace>
+       Annotations:  ascend.kubectl.kubernetes.io/ascend-910-configuration:
+                       {"pod_name":"0","server_id":"xx-xx-xx-xx","devices":[{"device_id":"0","device_ip":"192.168.x.x"}...
+                     cni.projectcalico.org/podIP: x.x.x.x/32
+                     cni.projectcalico.org/podIPs: x.x.x.x/32
+                     huawei.com/Ascend910: Ascend910-0[,Ascend910-1,...]
+                     huawei.com/AscendReal: Ascend910-0[,Ascend910-1,...]
+                     huawei.com/kltDev: Ascend910-0[,Ascend910-1,...]
+                     predicate-time: 18446744073709551615
+                     scheduling.k8s.io/group-name: <job-name>
+                     volcano.sh/job-name: <job-name>
+                     volcano.sh/job-version: 0
+                     volcano.sh/task-spec: <task-spec>
+       Status:       Running
+       ```
 
-    - 两个训练节点，执行2\*8芯片分布式训练任务示例，显示如下内容表示正常。
-
-        ```ColdFusion
-        root@ubuntu:/home/test/yaml# kubectl describe pod mindx-dls-test-default-test-0 -n vcjob
-        Name:         mindx-dls-test-default-test-0
-        Namespace:    vcjob
-        Priority:     0
-        Node:         ubuntu/XXX.XXX.XXX.XXX
-        Start Time:   Wed, 30 Sep 2020 15:38:22 +0800
-        Labels:       app=pytorch
-                      ring-controller.atlas=ascend-910
-                      volcano.sh/job-name=mindx-dls-test
-                      volcano.sh/job-namespace=vcjob
-        Annotations:  ascend.kubectl.kubernetes.io/ascend-910-configuration:
-                        {"pod_name":"0","server_id":"xx-xx-xx-xx","devices":[{"device_id":"0","device_ip":"192.168.20.100"}...
-                      cni.projectcalico.org/podIP: 192.168.243.195/32
-                      cni.projectcalico.org/podIPs: 192.168.243.195/32
-                      huawei.com/Ascend910: Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7
-                      huawei.com/AscendReal: Ascend910-1,Ascend910-2,Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7,Ascend910-0
-                      huawei.com/kltDev: Ascend910-3,Ascend910-4,Ascend910-5,Ascend910-6,Ascend910-7,Ascend910-0,Ascend910-1,Ascend910-2
-                      predicate-time: 18446744073709551615
-                      scheduling.k8s.io/group-name: mindx-dls-test
-                      volcano.sh/job-name: mindx-dls-test
-                      volcano.sh/job-version: 0
-                      volcano.sh/task-spec: default-test
-        Status:       Running
-        ```
+    >[!NOTE]
+    >- `huawei.com/Ascend910`、`huawei.com/AscendReal`、`huawei.com/kltDev`字段中的芯片数量取决于任务申请的NPU数量。单芯片任务仅显示一个芯片编号（如`Ascend910-3`），多芯片任务显示多个芯片编号（如`Ascend910-0,Ascend910-1,...,Ascend910-7`）。
+    >- 如果使用的是Atlas 推理系列产品非混插模式，则上述字段显示为**Ascend310P**。
+    >- 如果使用的是Atlas 推理系列产品混插模式，则上述字段显示为**Ascend310P-V、Ascend310P-VPro、Ascend310P-IPro之一**。
 
 ### 查看整卡调度结果<a name="ZH-CN_TOPIC_0000002479387140"></a>
 
-**PyTorch<a name="zh-cn_topic_0000001609474257_section15657195014514"></a>**
-
-1. 在执行如下命令，查看训练结果。
+1. 在执行如下命令，查看结果。
 
     ```shell
     kubectl logs -n  <namespace> <pod-name>
     ```
 
-    如：
+    >[!NOTE]
+    >`<pod-name>`为[步骤1](#ZH-CN_TOPIC_0000002511347103_li96791230183711)中创建任务对应的Pod名称。
 
-    ```shell
-    kubectl logs -n vcjob mindx-dls-test-default-test-0
-    ```
+2. 查看日志。这里以 PyTorch 训练场景为例，如果出现如下内容表示成功，具体以实际回显为准。
 
-2. 查看训练日志，如果出现如下内容表示训练成功。
+      ```ColdFusion
+      [gpu id: 0 ] Test: [77/85]      Time  0.117 ( 0.281)    Loss 1.073741e+01 (1.078090e+01)        Acc@1   0.00 (  0.02)   Acc@5   0.00 (  0.12)
+      [gpu id: 0 ] Test: [78/85]      Time  0.114 ( 0.279)    Loss 1.072909e+01 (1.078015e+01)        Acc@1   0.00 (  0.02)   Acc@5   0.00 (  0.12)
+      [gpu id: 0 ] Test: [79/85]      Time  0.115 ( 0.277)    Loss 1.073733e+01 (1.077953e+01)        Acc@1   0.00 (  0.02)   Acc@5   0.20 (  0.12)
+      [gpu id: 0 ] Test: [80/85]      Time  2.385 ( 0.306)    Loss 1.087646e+01 (1.078090e+01)        Acc@1   0.00 (  0.02)   Acc@5   0.00 (  0.12)
+      [gpu id: 0 ] Test: [81/85]      Time  1.139 ( 0.318)    Loss 1.075754e+01 (1.078058e+01)        Acc@1   0.00 (  0.02)   Acc@5   0.39 (  0.12)
+      [gpu id: 0 ] Test: [82/85]      Time  0.115 ( 0.315)    Loss 1.068419e+01 (1.077925e+01)        Acc@1   0.00 (  0.02)   Acc@5   0.20 (  0.13)
+      [gpu id: 0 ] Test: [83/85]      Time  0.129 ( 0.313)    Loss 1.075079e+01 (1.077887e+01)        Acc@1   0.00 (  0.02)   Acc@5   0.20 (  0.13)
+      [gpu id: 0 ] Test: [84/85]      Time  0.134 ( 0.310)    Loss 1.093459e+01 (1.078095e+01)        Acc@1   0.00 (  0.02)   Acc@5   0.39 (  0.13)
+      [gpu id: 0 ] [AVG-ACC] * Acc@1 0.016 Acc@5 0.130
+      validate acc1 tensor(0.0156, device='npu:0')
+      Complete 90 epoch training, take time:1.05h
+      ...
+      ```
+      进入模型输出目录，查看生成的模型文件。
 
-    ```ColdFusion
-    [gpu id: 0 ] Test: [77/85]      Time  0.117 ( 0.281)    Loss 1.073741e+01 (1.078090e+01)        Acc@1   0.00 (  0.02)   Acc@5   0.00 (  0.12)
-    [gpu id: 0 ] Test: [78/85]      Time  0.114 ( 0.279)    Loss 1.072909e+01 (1.078015e+01)        Acc@1   0.00 (  0.02)   Acc@5   0.00 (  0.12)
-    [gpu id: 0 ] Test: [79/85]      Time  0.115 ( 0.277)    Loss 1.073733e+01 (1.077953e+01)        Acc@1   0.00 (  0.02)   Acc@5   0.20 (  0.12)
-    [gpu id: 0 ] Test: [80/85]      Time  2.385 ( 0.306)    Loss 1.087646e+01 (1.078090e+01)        Acc@1   0.00 (  0.02)   Acc@5   0.00 (  0.12)
-    [gpu id: 0 ] Test: [81/85]      Time  1.139 ( 0.318)    Loss 1.075754e+01 (1.078058e+01)        Acc@1   0.00 (  0.02)   Acc@5   0.39 (  0.12)
-    [gpu id: 0 ] Test: [82/85]      Time  0.115 ( 0.315)    Loss 1.068419e+01 (1.077925e+01)        Acc@1   0.00 (  0.02)   Acc@5   0.20 (  0.13)
-    [gpu id: 0 ] Test: [83/85]      Time  0.129 ( 0.313)    Loss 1.075079e+01 (1.077887e+01)        Acc@1   0.00 (  0.02)   Acc@5   0.20 (  0.13)
-    [gpu id: 0 ] Test: [84/85]      Time  0.134 ( 0.310)    Loss 1.093459e+01 (1.078095e+01)        Acc@1   0.00 (  0.02)   Acc@5   0.39 (  0.13)
-    [gpu id: 0 ] [AVG-ACC] * Acc@1 0.016 Acc@5 0.130
-    validate acc1 tensor(0.0156, device='npu:0')
-    Complete 90 epoch training, take time:1.05h
-    ...
-    ```
+      ```ColdFusion
+      drwxrwx--- 2 root root      4096 Mar  4 19:28 ./
+      drwxrwx--- 4 root root      4096 Mar  4 19:28 ../
+      -rw-rw---- 1 root root 102489869 Mar  4 19:28 checkpoint_npu0model_best.pth.tar
+      -rw-rw---- 1 root root 102489869 Mar  4 19:28 checkpoint_npu0.pth.tar
+      ...
+      ```
 
-3. 进入模型输出目录，查看生成的模型文件。
-
-    ```ColdFusion
-    drwxrwx--- 2 root root      4096 Mar  4 19:28 ./
-    drwxrwx--- 4 root root      4096 Mar  4 19:28 ../
-    -rw-rw---- 1 root root 102489869 Mar  4 19:28 checkpoint_npu0model_best.pth.tar
-    -rw-rw---- 1 root root 102489869 Mar  4 19:28 checkpoint_npu0.pth.tar
-    ...
-    ```
-
-    可以参考ModelZoo上，PyTorch框架的[ResNet-50](https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/cv/classification/ResNet50_for_PyTorch#%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86)模型中的“模型推理”章节，对生成的模型文件进行模型转换处理。
-
-**MindSpore<a name="zh-cn_topic_0000001609474257_section1533335719514"></a>**
-
-1. 在执行如下命令，查看训练结果。
-
-    ```shell
-    kubectl logs -n  <namespace> <pod-name>
-    ```
-
-    如：
-
-    ```shell
-    kubectl logs -n vcjob mindx-dls-test-default-test-0
-    ```
-
-2. 查看训练日志，如果出现如下内容表示训练成功。
-
-    ```ColdFusion
-    ...
-    2023-06-09 17:55:04,837:INFO:epoch: [70/90] loss: 1.541062, epoch time: 7.563 s, per step time: 157.554 ms
-    2023-06-09 17:55:10,540:INFO:epoch: [71/90] loss: 1.544771, epoch time: 5.702 s, per step time: 118.796 ms
-    2023-06-09 17:55:16,347:INFO:epoch: [72/90] loss: 1.506525, epoch time: 5.807 s, per step time: 120.979 ms
-    2023-06-09 17:55:24,904:INFO:epoch: [73/90] loss: 1.519342, epoch time: 8.556 s, per step time: 178.260 ms
-    2023-06-09 17:55:29,887:INFO:epoch: [74/90] loss: 1.387423, epoch time: 4.982 s, per step time: 103.783 ms
-    2023-06-09 17:55:39,785:INFO:epoch: [75/90] loss: 1.440862, epoch time: 9.897 s, per step time: 206.194 ms
-    2023-06-09 17:55:48,780:INFO:epoch: [76/90] loss: 1.431275, epoch time: 8.995 s, per step time: 187.399 ms
-    2023-06-09 17:55:55,764:INFO:epoch: [77/90] loss: 1.411003, epoch time: 6.984 s, per step time: 145.492 ms
-    2023-06-09 17:56:03,962:INFO:epoch: [78/90] loss: 1.457689, epoch time: 8.198 s, per step time: 170.783 ms
-    2023-06-09 17:56:11,517:INFO:epoch: [79/90] loss: 1.410896, epoch time: 7.554 s, per step time: 157.372 ms
-    2023-06-09 17:56:16,643:INFO:epoch: [80/90] loss: 1.517990, epoch time: 5.126 s, per step time: 106.789 ms
-    2023-06-09 17:56:23,364:INFO:epoch: [81/90] loss: 1.342399, epoch time: 6.720 s, per step time: 140.005 ms
-    2023-06-09 17:56:31,835:INFO:epoch: [82/90] loss: 1.352396, epoch time: 8.471 s, per step time: 176.470 ms
-    2023-06-09 17:56:36,971:INFO:epoch: [83/90] loss: 1.358075, epoch time: 5.135 s, per step time: 106.984 ms
-    2023-06-09 17:56:44,259:INFO:epoch: [84/90] loss: 1.400720, epoch time: 7.288 s, per step time: 151.838 ms
-    2023-06-09 17:56:52,868:INFO:epoch: [85/90] loss: 1.371813, epoch time: 8.608 s, per step time: 179.339 ms
-    2023-06-09 17:56:57,613:INFO:epoch: [86/90] loss: 1.303416, epoch time: 4.745 s, per step time: 98.858 ms
-    2023-06-09 17:57:04,177:INFO:epoch: [87/90] loss: 1.290425, epoch time: 6.564 s, per step time: 136.744 ms
-    2023-06-09 17:57:11,797:INFO:epoch: [88/90] loss: 1.298486, epoch time: 7.619 s, per step time: 158.738 ms
-    2023-06-09 17:57:16,807:INFO:epoch: [89/90] loss: 1.297104, epoch time: 5.009 s, per step time: 104.363 ms
-    2023-06-09 17:57:25,568:INFO:epoch: [90/90] loss: 1.401816, epoch time: 8.759 s, per step time: 182.486 ms
-    ```
-
-3. 进入模型输出目录，查看生成的模型文件。
-
-    ```ColdFusion
-    drwx------  2 root root      4096 Dec 21 15:35 ./
-    drwxrwxrwx 10 root root      4096 Dec 21 15:26 ../
-    -r--------  1 root root 188546464 Dec 21 15:31 resnet50-45_234.ckpt
-    -r--------  1 root root 188546464 Dec 21 15:31 resnet50-50_234.ckpt
-    -r--------  1 root root 188546464 Dec 21 15:32 resnet50-55_234.ckpt
-    -r--------  1 root root 188546464 Dec 21 15:32 resnet50-60_234.ckpt
-    -r--------  1 root root 188546464 Dec 21 15:33 resnet50-65_234.ckpt
-    -r--------  1 root root 188546464 Dec 21 15:33 resnet50-70_234.ckpt
-    -r--------  1 root root 188546464 Dec 21 15:33 resnet50-75_234.ckpt
-    -r--------  1 root root 188546464 Dec 21 15:34 resnet50-80_234.ckpt
-    -r--------  1 root root 188546464 Dec 21 15:34 resnet50-85_234.ckpt
-    -r--------  1 root root 188546464 Dec 21 15:35 resnet50-90_234.ckpt
-    -rw-------  1 root root    769071 Dec 21 15:28 resnet50-graph.meta
-    ```
+      可以参考ModelZoo上，PyTorch框架的[ResNet-50](https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/cv/classification/ResNet50_for_PyTorch#%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86)模型中的“模型推理”章节，对生成的模型文件进行模型转换处理。
 
 ### 删除任务<a name="ZH-CN_TOPIC_0000002479227168"></a>
 
 **操作步骤<a name="zh-cn_topic_0000001609474265_section1595872772813"></a>**
 
-在示例YAML所在路径下，执行以下命令，删除对应的训练任务。
+在示例YAML所在路径下，执行以下命令，删除对应的任务。
 
 ```shell
 kubectl delete -f XXX.yaml
 ```
 
-- 通过环境变量配置资源信息场景的示例如下：
+回显示例如下：
 
-    ```shell
-    kubectl delete -f pytorch_standalone_acjob.yaml
-    ```
-
-    回显示例如下：
-
-    ```ColdFusion
-    ascendjob.mindxdl.gitee.com "default-test-pytorch" deleted
-    ```
-
-- 通过文件配置资源信息场景的示例如下：
-
-    ```shell
-    kubectl delete -f a800_pytorch_vcjob.yaml
-    ```
-
-    回显示例如下：
-
-    ```ColdFusion
-    configmap "rings-config-mindx-dls-test" deleted
-    job.batch.volcano.sh "mindx-dls-test" deleted
-    ```
+```ColdFusion
+xx "xxx" deleted
+```
 
 >[!NOTE]
->若删除训练任务后，Pod一直处于Terminating状态，可以参见[手动删除vcjob后Pod一直处于Terminating状态](https://gitcode.com/Ascend/mind-cluster/issues/354)章节进行处理。
+>回显格式为`资源类型/资源名称 deleted`，具体内容取决于YAML中定义的资源类型和名称。
+>若删除任务后，Pod一直处于Terminating状态，可以参见[手动删除vcjob后Pod一直处于Terminating状态](https://gitcode.com/Ascend/mind-cluster/issues/354)章节进行处理。
 
 ## 通过命令行使用（其他调度器）<a name="ZH-CN_TOPIC_0000002511427069"></a>
 
-通过命令行使用（其他调度器）和通过命令行使用（Volcano）使用流程一致，只有任务YAML有所不同，用户可以准备好相应YAML后参考[通过命令行使用（Volcano）](#通过命令行使用volcano)章节使用。
+通过命令行使用（其他调度器）和通过命令行使用（Volcano）使用流程一致，只有任务YAML有所不同，用户可以准备好相应YAML后参考[通过命令行使用（Volcano）](#通过命令行使用volcano)章节使用。Device Plugin 已经按 k8s 设备插件机制将昇腾硬件上报到 Node.Resource 下，只需在创建任务时，指定所需的昇腾硬件资源即可。
 
-**操作步骤<a name="section1780564613381"></a>**
+**操作步骤**
 
 1. 将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
+   集群调度并未专门提供使用其他调度器的YAML示例，用户可以获取使用Volcano的YAML示例并做如下修改即可使用。
 
-    集群调度并未专门提供使用其他调度器的YAML示例，用户可以获取使用Volcano的YAML示例并做如下修改即可使用。
+   <pre codetype="yaml">
+   spec:
+   schedulerName: volcano        # 使用其他调度器时，删除该字段
+   runPolicy:                    # 使用其他调度器时，删除该字段
+     schedulingPolicy:
+       minAvailable: 1
+       queue: default
+   replicaSpecs:
+     Chief:
+       ...
+       template:
+         ...
+         spec:
+           ...
+           containers:
+          # 使用其他调度器暂不支持ASCEND_VISIBLE_DEVICES相关字段，需要删除以下加粗字段
+           <strong>- name: ASCEND_VISIBLE_DEVICES</strong>
+             <strong>valueFrom:</strong>
+               <strong>fieldRef:</strong>
+                 <strong>fieldPath: metadata.annotations['huawei.com/Ascend910']</strong>
+   </pre>
 
-    以pytorch\_standalone\_acjob.yaml为例，在一台Atlas 800T A2 训练服务器节点创建**单机训练**任务，执行1\*8芯片训练任务，修改示例如下。
-
-    <pre codetype="yaml">
-    apiVersion: mindxdl.gitee.com/v1
-    kind: AscendJob
-    metadata:
-      name: default-test-pytorch
-      labels:
-        framework: pytorch
-        ring-controller.atlas: ascend-{xxx}b
-    spec:
-      schedulerName: volcano        # 使用其他调度器时，删除该字段
-      runPolicy:                    # 使用其他调度器时，删除该字段
-        schedulingPolicy:
-          minAvailable: 1
-          queue: default
-      successPolicy: AllWorkers
-      replicaSpecs:
-        Chief:
-          replicas: 1
-          restartPolicy: Never
-          template:
-            metadata:
-              labels:
-                ring-controller.atlas: ascend-{xxx}b
-            spec:
-              nodeSelector:
-                host-arch: huawei-arm
-                accelerator-type: module-{xxx}b-8
-              containers:
-              - name: ascend
-    ...
-                env:
-    ...
-             # 使用其他调度器暂不支持ASCEND_VISIBLE_DEVICES相关字段，需要删除以下加粗字段
-              <strong>- name: ASCEND_VISIBLE_DEVICES</strong>
-                <strong>valueFrom:</strong>
-                  <strong>fieldRef:</strong>
-                    <strong>fieldPath: metadata.annotations['huawei.com/Ascend910']</strong>
-    ...
-              resources:
-                limits:
-                 huawei.com/Ascend910: 8
-                requests:
-                  huawei.com/Ascend910: 8
-              volumeMounts:</pre>
-
-2. 若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu”和“memory”参数和对应的参数值，具体数值请根据实际情况配置。
-
-    ```Yaml
-    ...
-              resources:
-                requests:
-                  huawei.com/Ascend910: 8
-                  cpu: 100m
-                  memory: 100Gi
-                limits:
-                  huawei.com/Ascend910: 8
-                  cpu: 100m
-                  memory: 100Gi
-    ...
-    ```
-
-3. <a name="li1127471511178"></a>修改训练脚本、代码的挂载路径。
-
-    从昇腾镜像仓库拉取的基础镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
-
-    ```Yaml
-              volumeMounts:
-              - name: ascend-910-config
-                mountPath: /user/serverid/devindex/config
-              - name: code
-                mountPath: /job/code                     # 容器中训练脚本路径
-              - name: data
-                mountPath: /job/data                      # 容器中训练数据集路径
-              - name: output
-                mountPath: /job/output                    # 容器中训练输出路径
-    ```
-
-4. 如下所示，YAML中训练命令**bash train\_start.sh**后跟的三个参数依次为容器内训练代码目录、输出目录（其中包括生成日志重定向文件以及框架模型文件）、启动脚本相对代码目录的路径。之后的以“--”开头的参数为训练脚本需要的参数。单机和分布式训练脚本、脚本参数可参考模型脚本来源处的模型说明修改。
-    - **PyTorch命令参数**
-
-        ```Yaml
-        command:
-        - "/bin/bash"
-        - "-c"
-        - "cd /job/code/scripts;chmod +x train_start.sh;bash train_start.sh /job/code/ /job/output/ main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --lr=1.6 --world-size=1 --dist-backend='hccl' --multiprocessing-distributed --epochs=90 --batch-size=1024;"
-        ...
-        ```
-
-    - **MindSpore命令参数**
-
-        ```Yaml
-        command:
-        - "/bin/bash"
-        - "-c"
-        - "cd /job/code/scripts;chmod +x train_start.sh;bash train_start.sh /job/code/ /job/output/ train.py  --config_path=/job/code/config/resnet50_imagenet2012_config.yaml --output_dir=/job/output --run_distribute=True --device_num=8 --data_path=/job/data/imagenet/train"
-        ...
-        ```
-
-    >[!NOTE]
-    >以PyTorch命令参数为例。
-    >- /job/code/：[步骤3](#li1127471511178)中用户自定义的容器中训练脚本路径。
-    >- /job/output/：[步骤3](#li1127471511178)中用户自定义的容器中训练输出路径。
-    >- main.py：启动训练脚本路径。
-
-5. YAML为使用NFS场景，需要指定NFS服务器地址、训练数据集路径、脚本路径和训练输出路径，请根据实际修改。如果不使用NFS请根据K8s相关指导自行修改。
-
-    ```Yaml
-    ...
-              volumeMounts:
-              - name: ascend-910-config
-                mountPath: /user/serverid/devindex/config
-              - name: code
-                mountPath: /job/code                     # 容器中训练脚本路径
-              - name: data
-                mountPath: /job/data                      # 容器中训练数据集路径
-              - name: output
-                mountPath: /job/output                    # 容器中训练输出路径
-    ...
-            volumes:
-    ...
-            - name: code
-              nfs:
-                server: 127.0.0.1        # NFS服务器IP地址
-                path: "xxxxxx"           # 配置训练脚本路径
-            - name: data
-              nfs:
-                server: 127.0.0.1
-                path: "xxxxxx"           # 配置训练集路径
-            - name: output
-              nfs:
-                server: 127.0.0.1
-                path: "xxxxxx"           # 设置脚本相关配置模型保存路径
-    ...
-    ```
+2. 后续步骤可参考[通过命令行使用（Volcano）—步骤2](#li118885168281)开始的后续步骤
 
 ## 集成后使用<a name="ZH-CN_TOPIC_0000002511347081"></a>
 
-本章节以**整卡调度**特性为例，介绍如何将整卡调度特性集成在AI平台上的关键操作步骤。在下发训练任务时，平台需要实现获取认证文件，创建客户端，创建Job对象，创建命名空间和调用接口下发训练任务等，将整卡调度特性提供的示例YAML转换成K8s提供的Go编程语言的API对象。
+本章节以**整卡调度**特性为例，介绍如何将整卡调度特性集成在AI平台上的关键操作步骤。在下发任务时，平台需要实现获取认证文件，创建客户端，创建Job对象，创建命名空间和调用接口下发任务等，将整卡调度特性提供的示例YAML转换成K8s提供的Go编程语言的API对象。
 
 **集成前说明<a name="section16646104012516"></a>**
 
@@ -2315,7 +1615,7 @@ kubectl delete -f XXX.yaml
     clientset.CoreV1().ConfigMaps(job.Namespace).Create(context.TODO(), newConfigMap("rings-config-"+job.Name), metav1.CreateOptions{})
     ```
 
-6. 调用Create接口，下发训练任务。
+6. 调用Create接口，下发任务。
     - Ascend Job
 
         ```go
@@ -2359,4 +1659,4 @@ kubectl delete -f XXX.yaml
 1. 制作相应的镜像，可参考[制作镜像](../../common_operations.md#制作镜像)章节进行操作。
 2. 完成相应的脚本适配，可参考[脚本适配](#脚本适配)章节进行操作。
 3. 创建任务。
-4. 运行训练任务。可通过平台配置并创建训练任务，下发任务后查看结果。
+4. 运行任务。可通过平台配置并创建任务，下发任务后查看结果。

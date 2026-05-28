@@ -180,7 +180,7 @@
     >[!NOTE]
     >Volcano支持Job类型任务，但是Job类型任务的YAML需要用户自行根据示例YAML修改适配。
 
-2. 在[整卡调度](./04_full_npu_scheduling_and_static_vnpu_scheduling_inference.md#准备任务yaml)或者[动态vNPU调度](../virtual_instance/virtual_instance_with_hdk/dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md#准备任务yaml)的YAML配置基础上，增加如下字段启用重调度功能，以整卡调度的infer-deploy.yaml为例。
+2. 在[整卡调度](./03_full_npu_scheduling.md#准备任务yaml)或者[动态vNPU调度](../virtual_instance/virtual_instance_with_hdk/dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md#准备任务yaml)的YAML配置基础上，增加如下字段启用重调度功能，以整卡调度的infer-deploy.yaml为例。
 
     ```Yaml
     apiVersion: apps/v1
