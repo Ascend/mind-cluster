@@ -22,33 +22,36 @@
 #include <limits.h>
 #endif
 
-#define DEFAULT_DIR_MODE      0755
-#define DEFAULT_LOG_MODE      0600
-#define DUMP_LOG_MODE         0400
-#define DEFAULT_LOGDIR_MODE   0700
-#define BUF_SIZE              1024
-#define MAX_DEVICE_NR         1024
-#define MAX_MOUNT_NR          512
-#define WHITE_LIST_NUM        45
- 
-#define ROOT_UID              0
+#define DEFAULT_DIR_MODE 0755
+#define DEFAULT_LOG_MODE 0600
+#define DUMP_LOG_MODE 0400
+#define DEFAULT_LOGDIR_MODE 0700
+#define BUF_SIZE 1024
+#define MAX_DEVICE_NR 1024
+#define MAX_MOUNT_NR 512
 
-#define ROOT_UID              0
+#define ROOT_UID 0
 
-#define LEVEL_INFO     0
-#define LEVEL_WARN     1
-#define LEVEL_ERROR    2
-#define LEVEL_DEBUG    3
-#define SCREEN_NO      0
-#define SCREEN_YES     1
+#define ROOT_UID 0
+
+#define LEVEL_INFO 0
+#define LEVEL_WARN 1
+#define LEVEL_ERROR 2
+#define LEVEL_DEBUG 3
+#define SCREEN_NO 0
+#define SCREEN_YES 1
 
 #define LOG_ERROR(fmt, ...)                                         \
-    do {                                                            \
-        char content[BUF_SIZE] = {0};                             \
+    do                                                              \
+    {                                                               \
+        char content[BUF_SIZE] = {0};                               \
         int ret = sprintf_s(content, BUF_SIZE, fmt, ##__VA_ARGS__); \
-        if (ret < 0) {                                              \
+        if (ret < 0)                                                \
+        {                                                           \
             (void)fprintf(stderr, "cannot assemble log content");   \
-        } else {                                                    \
+        }                                                           \
+        else                                                        \
+        {                                                           \
             (void)fprintf(stderr, "%s", (const char *)content);     \
         }                                                           \
     } while (0)
@@ -58,19 +61,22 @@
 #define MOUNT_SUBSTR_GAP 2
 #define ROOT_SUBSTR_GAP 2
 
-struct PathInfo {
-    char* src;
+struct PathInfo
+{
+    char *src;
     size_t srcLen;
-    char* dst;
+    char *dst;
     size_t dstLen;
 };
 
-struct MountList {
+struct MountList
+{
     unsigned int count;
     char list[MAX_MOUNT_NR][PATH_MAX];
 };
 
-struct CmdArgs {
+struct CmdArgs
+{
     char rootfs[BUF_SIZE];
     long pid;
     char options[BUF_SIZE];
@@ -78,7 +84,8 @@ struct CmdArgs {
     struct MountList dirs;
 };
 
-struct ParsedConfig {
+struct ParsedConfig
+{
     char rootfs[BUF_SIZE];
     char containerNsPath[BUF_SIZE];
     char cgroupPath[BUF_SIZE];

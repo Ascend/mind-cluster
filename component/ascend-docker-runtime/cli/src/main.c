@@ -13,39 +13,37 @@
  * limitations under the License.
  */
 #define _GNU_SOURCE
-#include <stdbool.h>
-#include <getopt.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sched.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <ctype.h>
-#include "securec.h"
+#include <fcntl.h>
+#include <getopt.h>
+#include <sched.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "basic.h"
-#include "ns.h"
-#include "u_mount.h"
 #include "cgrp.h"
-#include "options.h"
-#include "utils.h"
 #include "logger.h"
+#include "ns.h"
+#include "options.h"
+#include "securec.h"
+#include "u_mount.h"
+#include "utils.h"
 
 #define DECIMAL 10
 #define MAX_ARGC 1024
 #define MAX_ARG_LEN 1024
 
-static struct option g_cmdOpts[] = {
-    {"allow-link", required_argument, 0, 'l'},
-    {"pid", required_argument, 0, 'p'},
-    {"rootfs", required_argument, 0, 'r'},
-    {"options", required_argument, 0, 'o'},
-    {"mount-file", required_argument, 0, 'f'},
-    {"mount-dir", required_argument, 0, 'i'},
-    {0, 0, 0, 0}
-};
+static struct option g_cmdOpts[] = {{"allow-link", required_argument, 0, 'l'},
+                                    {"pid", required_argument, 0, 'p'},
+                                    {"rootfs", required_argument, 0, 'r'},
+                                    {"options", required_argument, 0, 'o'},
+                                    {"mount-file", required_argument, 0, 'f'},
+                                    {"mount-dir", required_argument, 0, 'i'},
+                                    {0, 0, 0, 0}};
 
 typedef bool (*CmdArgParser)(struct CmdArgs *args, const char *arg);
 
@@ -53,22 +51,26 @@ STATIC bool PidCmdArgParser(struct CmdArgs *args, const char *arg)
 {
     char buff[PATH_MAX] = {0};
 
-    if (args == NULL || arg == NULL) {
+    if (args == NULL || arg == NULL)
+    {
         Logger("args, arg pointer is null!", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
     args->pid = strtol(arg, NULL, DECIMAL);
-    const char* pidMax = "/proc/sys/kernel/pid_max";
-    const size_t maxFileSzieMb = 10; // max 10MB
-    if (!CheckExternalFile(pidMax, strlen(pidMax), maxFileSzieMb, true)) {
+    const char *pidMax = "/proc/sys/kernel/pid_max";
+    const size_t maxFileSzieMb = 10;  // max 10MB
+    if (!CheckExternalFile(pidMax, strlen(pidMax), maxFileSzieMb, true))
+    {
         Logger("failed to check pid_max path.", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
     errno = 0;
-    FILE* pFile = NULL;
+    FILE *pFile = NULL;
     pFile = fopen(pidMax, "r");
-    if ((pFile == NULL) || (fgets(buff, PATH_MAX, pFile) == NULL)) {
-        if (pFile != NULL) {
+    if ((pFile == NULL) || (fgets(buff, PATH_MAX, pFile) == NULL))
+    {
+        if (pFile != NULL)
+        {
             (void)fclose(pFile);
         }
         pFile = NULL;
@@ -76,21 +78,26 @@ STATIC bool PidCmdArgParser(struct CmdArgs *args, const char *arg)
         return false;
     }
     (void)fclose(pFile);
-    if ((strlen(buff) > 0) && (buff[strlen(buff) - 1] == '\n')) {
+    if ((strlen(buff) > 0) && (buff[strlen(buff) - 1] == '\n'))
+    {
         buff[strlen(buff) - 1] = '\0';
     }
-    for (size_t iLoop = 0; iLoop < strlen(buff); iLoop++) {
-        if (isdigit(buff[iLoop]) == 0) {
+    for (size_t iLoop = 0; iLoop < strlen(buff); iLoop++)
+    {
+        if (isdigit(buff[iLoop]) == 0)
+        {
             Logger("failed to get pid_max value.", LEVEL_ERROR, SCREEN_YES);
             return false;
         }
     }
-    if ((args->pid < 0) || (args->pid >= strtol(buff, NULL, DECIMAL))) {
+    if ((args->pid < 0) || (args->pid >= strtol(buff, NULL, DECIMAL)))
+    {
         Logger("The PID out of bounds.", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
-    if (errno != 0) {
-        char* str = FormatLogMessage("failed to convert pid string from cmd args, pid string: %s.", arg);
+    if (errno != 0)
+    {
+        char *str = FormatLogMessage("failed to convert pid string from cmd args, pid string: %s.", arg);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
         str = NULL;
@@ -99,25 +106,29 @@ STATIC bool PidCmdArgParser(struct CmdArgs *args, const char *arg)
     return true;
 }
 
-static bool CheckFileLegality(const char* filePath, const size_t filePathLen,
-    const size_t maxFileSzieMb)
+static bool CheckFileLegality(const char *filePath, const size_t filePathLen, const size_t maxFileSzieMb)
 {
-    if ((filePathLen > PATH_MAX) || (filePathLen <= 0)) { // 长度越界
+    if ((filePathLen > PATH_MAX) || (filePathLen <= 0))
+    {  // 长度越界
         Logger("filePathLen out of bounds!", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
-    for (size_t iLoop = 0; iLoop < filePathLen; iLoop++) {
-        if (!IsValidChar(filePath[iLoop])) { // 非法字符
+    for (size_t iLoop = 0; iLoop < filePathLen; iLoop++)
+    {
+        if (!IsValidChar(filePath[iLoop]))
+        {  // 非法字符
             Logger("filePath has an illegal character!", LEVEL_ERROR, SCREEN_YES);
             return false;
         }
     }
     char resolvedPath[PATH_MAX] = {0};
-    if (realpath(filePath, resolvedPath) == NULL && errno != ENOENT) {
+    if (realpath(filePath, resolvedPath) == NULL && errno != ENOENT)
+    {
         Logger("realpath failed!", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
-    if (!GetAllowLink() && strcmp(resolvedPath, filePath) != 0) { // 存在软链接
+    if (!GetAllowLink() && strcmp(resolvedPath, filePath) != 0)
+    {  // 存在软链接
         Logger("filePath has a soft link!", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
@@ -126,18 +137,21 @@ static bool CheckFileLegality(const char* filePath, const size_t filePathLen,
 
 static bool RootfsCmdArgParser(struct CmdArgs *args, const char *arg)
 {
-    if (args == NULL || arg == NULL) {
+    if (args == NULL || arg == NULL)
+    {
         Logger("args, arg pointer is null!", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
 
     errno_t err = strcpy_s(args->rootfs, BUF_SIZE, arg);
-    if (err != EOK) {
+    if (err != EOK)
+    {
         Logger("failed to get rootfs path from cmd args", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
-    const size_t maxFileSzieMb = 50; // max 50MB
-    if (!CheckFileLegality(args->rootfs, strlen(args->rootfs), maxFileSzieMb)) {
+    const size_t maxFileSzieMb = 50;  // max 50MB
+    if (!CheckFileLegality(args->rootfs, strlen(args->rootfs), maxFileSzieMb))
+    {
         Logger("failed to check rootf.", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
@@ -147,20 +161,22 @@ static bool RootfsCmdArgParser(struct CmdArgs *args, const char *arg)
 
 STATIC bool OptionsCmdArgParser(struct CmdArgs *args, const char *arg)
 {
-    if (args == NULL || arg == NULL) {
+    if (args == NULL || arg == NULL)
+    {
         Logger("args, arg pointer is null!", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
 
     errno_t err = strcpy_s(args->options, BUF_SIZE, arg);
-    if (err != EOK) {
+    if (err != EOK)
+    {
         Logger("failed to get options string from cmd args", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
 
-    if ((strcmp(args->options, "NODRV,VIRTUAL") != 0) &&
-        (strcmp(args->options, "NODRV") != 0) &&
-        (strcmp(args->options, "VIRTUAL") != 0)) {
+    if ((strcmp(args->options, "NODRV,VIRTUAL") != 0) && (strcmp(args->options, "NODRV") != 0) &&
+        (strcmp(args->options, "VIRTUAL") != 0))
+    {
         Logger("Whitelist check failed.", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
@@ -168,52 +184,17 @@ STATIC bool OptionsCmdArgParser(struct CmdArgs *args, const char *arg)
     return true;
 }
 
-static bool CheckWhiteList(const char* fileName)
-{
-    if (fileName == NULL) {
-        return false;
-    }
-    bool fileExists = false;
-    static const char MOUNT_WHITE_LIST[WHITE_LIST_NUM][PATH_MAX] = {{"/usr/local/Ascend/driver/lib64"},
-        {"/usr/local/Ascend/driver/include"}, {"/usr/local/dcmi"}, {"/usr/local/bin/npu-smi"},
-        {"/home/data/miniD/driver/lib64"}, {"/usr/local/sbin/npu-smi"},
-        {"/usr/local/Ascend/driver/tools"}, {"/etc/hdcBasic.cfg"}, {"/etc/sys_version.conf"},
-        {"/etc/ld.so.conf.d/mind_so.conf"}, {"/etc/slog.conf"}, {"/var/dmp_daemon"}, {"/var/slogd"},
-        {"/usr/lib64/libsemanage.so.2"}, {"/usr/lib64/libmmpa.so"}, {"/usr/lib64/libcrypto.so.1.1"},
-        {"/usr/lib64/libdrvdsmi.so"}, {"/usr/lib64/libdcmi.so"}, {"/usr/lib64/libstackcore.so"},
-        {"/usr/lib64/libmpi_dvpp_adapter.so"}, {"/usr/lib64/libaicpu_scheduler.so"},
-        {"/usr/lib64/libaicpu_processer.so"}, {"/usr/lib64/libaicpu_prof.so"}, {"/usr/lib64/libaicpu_sharder.so"},
-        {"/usr/lib64/libadump.so"}, {"/usr/lib64/libtsd_eventclient.so"},
-        {"/usr/lib64/aicpu_kernels"}, {"/usr/lib64/libyaml-0.so.2"},
-        {"/usr/lib/aarch64-linux-gnu/libyaml-0.so.2"}, {"/usr/lib/aarch64-linux-gnu/libcrypto.so.1.1"},
-        {"/var/queue_schedule"}, {"/etc/hccl_rootinfo.json"}, {"/usr/local/Ascend/driver/topo"}
-        };
-
-    for (size_t iLoop = 0; iLoop < WHITE_LIST_NUM; iLoop++) {
-        if (strcmp(MOUNT_WHITE_LIST[iLoop], fileName) == 0) {
-            fileExists = true;
-            break;
-        }
-    }
-    if (!fileExists) {
-        char* str = FormatLogMessage("failed to check whiteList value: %s.", fileName);
-        Logger(str, LEVEL_ERROR, SCREEN_YES);
-        free(str);
-        str = NULL;
-        return false;
-    }
-    return true;
-}
-
 STATIC bool MountFileCmdArgParser(struct CmdArgs *args, const char *arg)
 {
-    if (args == NULL || arg == NULL) {
+    if (args == NULL || arg == NULL)
+    {
         Logger("args, arg pointer is null!", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
 
-    if (args->files.count >= MAX_MOUNT_NR) {
-        char* str = FormatLogMessage("too many files to mount, max number is %u", MAX_MOUNT_NR);
+    if (args->files.count >= MAX_MOUNT_NR)
+    {
+        char *str = FormatLogMessage("too many files to mount, max number is %u", MAX_MOUNT_NR);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
         str = NULL;
@@ -222,34 +203,38 @@ STATIC bool MountFileCmdArgParser(struct CmdArgs *args, const char *arg)
 
     char *dst = &args->files.list[args->files.count++][0];
     errno_t err = strcpy_s(dst, PATH_MAX, arg);
-    if (err != EOK) {
-        char* str = FormatLogMessage("failed to copy mount file path: %s", arg);
+    if (err != EOK)
+    {
+        char *str = FormatLogMessage("failed to copy mount file path: %s", arg);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
         str = NULL;
         return false;
     }
-    const size_t maxFileSzieMb = 50; // max 50MB
-    if (!CheckFileLegality(dst, strlen(dst), maxFileSzieMb)) {
-        char* str = FormatLogMessage("failed to check files: %s", dst);
+    const size_t maxFileSzieMb = 50;  // max 50MB
+    if (!CheckFileLegality(dst, strlen(dst), maxFileSzieMb))
+    {
+        char *str = FormatLogMessage("failed to check files: %s", dst);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
         str = NULL;
         return false;
     }
 
-    return CheckWhiteList(dst) ? true : false;
+    return true;
 }
 
 STATIC bool MountDirCmdArgParser(struct CmdArgs *args, const char *arg)
 {
-    if (args == NULL || arg == NULL) {
+    if (args == NULL || arg == NULL)
+    {
         Logger("args, arg pointer is null!", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
 
-    if (args->dirs.count >= MAX_MOUNT_NR) {
-        char* str = FormatLogMessage("too many directories to mount, max number is %u", MAX_MOUNT_NR);
+    if (args->dirs.count >= MAX_MOUNT_NR)
+    {
+        char *str = FormatLogMessage("too many directories to mount, max number is %u", MAX_MOUNT_NR);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
         str = NULL;
@@ -258,34 +243,39 @@ STATIC bool MountDirCmdArgParser(struct CmdArgs *args, const char *arg)
 
     char *dst = &args->dirs.list[args->dirs.count++][0];
     errno_t err = strcpy_s(dst, PATH_MAX, arg);
-    if (err != EOK) {
-        char* str = FormatLogMessage("error: failed to copy mount directory path: %s", arg);
+    if (err != EOK)
+    {
+        char *str = FormatLogMessage("error: failed to copy mount directory path: %s", arg);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
         str = NULL;
         return false;
     }
-    const size_t maxFileSzieMb = 50; // max 50MB
-    if (!CheckFileLegality(dst, strlen(dst), maxFileSzieMb)) {
+    const size_t maxFileSzieMb = 50;  // max 50MB
+    if (!CheckFileLegality(dst, strlen(dst), maxFileSzieMb))
+    {
         Logger("failed to check dir.", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
 
-    return CheckWhiteList(dst) ? true : false;
+    return true;
 }
 
 STATIC bool LinkCheckCmdArgParser(const char *argv)
 {
-    if (argv == NULL) {
+    if (argv == NULL)
+    {
         Logger("link arg pointer is null!", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
 
-    if (strcmp(argv, "True") == 0) {
+    if (strcmp(argv, "True") == 0)
+    {
         SetAllowLink(true);
         return true;
     }
-    if (strcmp(argv, "False") == 0) {
+    if (strcmp(argv, "False") == 0)
+    {
         SetAllowLink(false);
         return true;
     }
@@ -296,43 +286,48 @@ STATIC bool LinkCheckCmdArgParser(const char *argv)
 
 #define NUM_OF_CMD_ARGS 6
 
-static struct {
+static struct
+{
     const char c;
     CmdArgParser parser;
-} g_cmdArgParsers[NUM_OF_CMD_ARGS] = {
-    {'l', LinkCheckCmdArgParser},
-    {'p', PidCmdArgParser},
-    {'r', RootfsCmdArgParser},
-    {'o', OptionsCmdArgParser},
-    {'f', MountFileCmdArgParser},
-    {'i', MountDirCmdArgParser}
-};
+} g_cmdArgParsers[NUM_OF_CMD_ARGS] = {{'l', LinkCheckCmdArgParser}, {'p', PidCmdArgParser},
+                                      {'r', RootfsCmdArgParser},    {'o', OptionsCmdArgParser},
+                                      {'f', MountFileCmdArgParser}, {'i', MountDirCmdArgParser}};
 
 static int ParseOneCmdArg(struct CmdArgs *args, char indicator, const char *value)
 {
-    if (args == NULL || value == NULL) {
+    if (args == NULL || value == NULL)
+    {
         Logger("args, value pointer is null!", LEVEL_ERROR, SCREEN_YES);
         return -1;
     }
 
     int i;
-    for (i = 0; i < NUM_OF_CMD_ARGS; i++) {
-        if (g_cmdArgParsers[i].c == indicator) {
+    for (i = 0; i < NUM_OF_CMD_ARGS; i++)
+    {
+        if (g_cmdArgParsers[i].c == indicator)
+        {
             break;
         }
     }
 
     bool isOK;
-    if (i == 0) {
+    if (i == 0)
+    {
         isOK = LinkCheckCmdArgParser(value);
-    } else if (i < NUM_OF_CMD_ARGS) {
+    }
+    else if (i < NUM_OF_CMD_ARGS)
+    {
         isOK = g_cmdArgParsers[i].parser(args, value);
-    } else {
+    }
+    else
+    {
         isOK = false;
     }
 
-    if (!isOK) {
-        char* str = FormatLogMessage("failed while parsing cmd arg, indicate char: %c, value: %s.", indicator, value);
+    if (!isOK)
+    {
+        char *str = FormatLogMessage("failed while parsing cmd arg, indicate char: %c, value: %s.", indicator, value);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
         str = NULL;
@@ -343,7 +338,8 @@ static int ParseOneCmdArg(struct CmdArgs *args, char indicator, const char *valu
 
 static inline bool IsCmdArgsValid(const struct CmdArgs *args)
 {
-    if (args == NULL) {
+    if (args == NULL)
+    {
         Logger("args pointer is null!", LEVEL_ERROR, SCREEN_YES);
         return false;
     }
@@ -352,7 +348,8 @@ static inline bool IsCmdArgsValid(const struct CmdArgs *args)
 
 int DoPrepare(const struct CmdArgs *args, struct ParsedConfig *config)
 {
-    if (args == NULL || config == NULL) {
+    if (args == NULL || config == NULL)
+    {
         Logger("args, config pointer is null!", LEVEL_ERROR, SCREEN_YES);
         return -1;
     }
@@ -361,14 +358,16 @@ int DoPrepare(const struct CmdArgs *args, struct ParsedConfig *config)
     errno_t err;
 
     err = strcpy_s(config->rootfs, BUF_SIZE, args->rootfs);
-    if (err != EOK) {
+    if (err != EOK)
+    {
         Logger("failed to copy rootfs path to parsed config.", LEVEL_ERROR, SCREEN_YES);
         return -1;
     }
 
     ret = GetNsPath(args->pid, "mnt", config->containerNsPath, BUF_SIZE);
-    if (ret < 0) {
-        char* str = FormatLogMessage("failed to get container mnt ns path: pid(%d).", args->pid);
+    if (ret < 0)
+    {
+        char *str = FormatLogMessage("failed to get container mnt ns path: pid(%d).", args->pid);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
         str = NULL;
@@ -377,14 +376,16 @@ int DoPrepare(const struct CmdArgs *args, struct ParsedConfig *config)
 
     char originNsPath[BUF_SIZE] = {0};
     ret = GetSelfNsPath("mnt", originNsPath, BUF_SIZE);
-    if (ret < 0) {
+    if (ret < 0)
+    {
         Logger("failed to get self ns path.", LEVEL_ERROR, SCREEN_YES);
         return -1;
     }
 
-    config->originNsFd = open((const char *)originNsPath, O_RDONLY); // proc接口，非外部输入
-    if (config->originNsFd < 0) {
-        char* str = FormatLogMessage("failed to get self ns fd: %s.", originNsPath);
+    config->originNsFd = open((const char *)originNsPath, O_RDONLY);  // proc接口，非外部输入
+    if (config->originNsFd < 0)
+    {
+        char *str = FormatLogMessage("failed to get self ns fd: %s.", originNsPath);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
         str = NULL;
@@ -399,7 +400,8 @@ int DoPrepare(const struct CmdArgs *args, struct ParsedConfig *config)
 
 int SetupContainer(struct CmdArgs *args)
 {
-    if (args == NULL) {
+    if (args == NULL)
+    {
         Logger("args pointer is null!", LEVEL_ERROR, SCREEN_YES);
         return -1;
     }
@@ -409,7 +411,8 @@ int SetupContainer(struct CmdArgs *args)
 
     Logger("prepare necessary config", LEVEL_INFO, SCREEN_YES);
     ret = DoPrepare(args, &config);
-    if (ret < 0) {
+    if (ret < 0)
+    {
         Logger("failed to prepare nesessary config.", LEVEL_ERROR, SCREEN_YES);
         return -1;
     }
@@ -417,8 +420,9 @@ int SetupContainer(struct CmdArgs *args)
     // enter container's mount namespace
     Logger("enter container's mount namespace", LEVEL_INFO, SCREEN_YES);
     ret = EnterNsByPath((const char *)config.containerNsPath, CLONE_NEWNS);
-    if (ret < 0) {
-        char* str = FormatLogMessage("failed to set to container ns: %s.", config.containerNsPath);
+    if (ret < 0)
+    {
+        char *str = FormatLogMessage("failed to set to container ns: %s.", config.containerNsPath);
         Logger(str, LEVEL_ERROR, SCREEN_YES);
         free(str);
         str = NULL;
@@ -427,7 +431,8 @@ int SetupContainer(struct CmdArgs *args)
     }
     Logger("do mounting", LEVEL_INFO, SCREEN_YES);
     ret = DoMounting(&config);
-    if (ret < 0) {
+    if (ret < 0)
+    {
         Logger("failed to do mounting.", LEVEL_ERROR, SCREEN_YES);
         close(config.originNsFd);
         return -1;
@@ -436,7 +441,8 @@ int SetupContainer(struct CmdArgs *args)
     // back to original namespace
     Logger("back to original namespace", LEVEL_INFO, SCREEN_YES);
     ret = EnterNsByFd(config.originNsFd, CLONE_NEWNS);
-    if (ret < 0) {
+    if (ret < 0)
+    {
         Logger("failed to set ns back.", LEVEL_ERROR, SCREEN_YES);
         close(config.originNsFd);
         return -1;
@@ -448,26 +454,31 @@ int SetupContainer(struct CmdArgs *args)
 
 int Process(int argc, char **argv)
 {
-    if (argv == NULL) {
+    if (argv == NULL)
+    {
         Logger("argv pointer is null!", LEVEL_ERROR, SCREEN_YES);
         return -1;
     }
-    if (argc > MAX_ARGC) {
+    if (argc > MAX_ARGC)
+    {
         Logger("too many arguments!", LEVEL_ERROR, SCREEN_YES);
         return -1;
     }
     int c;
     int ret;
     struct CmdArgs *args = calloc(1, sizeof(struct CmdArgs));
-    if (args == NULL) {
+    if (args == NULL)
+    {
         Logger("calloc failed!", LEVEL_ERROR, SCREEN_YES);
         return -1;
     }
 
     Logger("runc start prestart-hook ...", LEVEL_INFO, SCREEN_YES);
-    while ((c = getopt_long(argc, argv, "l:p:r:o:f:i", g_cmdOpts, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "l:p:r:o:f:i", g_cmdOpts, NULL)) != -1)
+    {
         ret = ParseOneCmdArg(args, (char)c, optarg);
-        if (ret < 0) {
+        if (ret < 0)
+        {
             Logger("failed to parse cmd args.", LEVEL_ERROR, SCREEN_YES);
             free(args);
             args = NULL;
@@ -475,7 +486,8 @@ int Process(int argc, char **argv)
         }
     }
     Logger("verify parameters valid and parse runtime options", LEVEL_INFO, SCREEN_YES);
-    if (!IsCmdArgsValid(args)) {
+    if (!IsCmdArgsValid(args))
+    {
         Logger("information not completed or valid.", LEVEL_ERROR, SCREEN_YES);
         free(args);
         args = NULL;
@@ -485,7 +497,8 @@ int Process(int argc, char **argv)
     ParseRuntimeOptions(args->options);
     Logger("setup container config ...", LEVEL_INFO, SCREEN_YES);
     ret = SetupContainer(args);
-    if (ret < 0) {
+    if (ret < 0)
+    {
         Logger("failed to setup container.", LEVEL_ERROR, SCREEN_YES);
         free(args);
         args = NULL;
