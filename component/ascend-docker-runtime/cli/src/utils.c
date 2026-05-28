@@ -14,18 +14,19 @@
  */
 #include "utils.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <libgen.h>
 #include <ctype.h>
-#include "securec.h"
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <libgen.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "logger.h"
+#include "securec.h"
 
 #define LOG_LENGTH 1024
 
@@ -34,7 +35,8 @@ static bool g_allowLink = false;
 
 char *FormatLogMessage(char *format, ...)
 {
-    if (format == NULL) {
+    if (format == NULL)
+    {
         (void)fprintf(stderr, "format pointer is null!\n");
         return NULL;
     }
@@ -45,7 +47,8 @@ char *FormatLogMessage(char *format, ...)
     char buff[LOG_LENGTH] = {0};
     int ret = vsnprintf_s(buff, sizeof(buff), sizeof(buff) - 1, format, list);
     va_end(list);
-    if (ret <= 0) {
+    if (ret <= 0)
+    {
         return NULL;
     }
     size_t size = (size_t)ret;
@@ -53,13 +56,15 @@ char *FormatLogMessage(char *format, ...)
     // 复位va_list, 将格式化字符串写入到buf
     va_start(list, format);
     char *buf = (char *)malloc(size);
-    if (buf == NULL) {
+    if (buf == NULL)
+    {
         va_end(list);
         return NULL;
     }
     ret = vsnprintf_s(buf, size, size - 1, format, list);
     va_end(list);
-    if (ret <= 0) {
+    if (ret <= 0)
+    {
         free(buf);
         buf = NULL;
         return NULL;
@@ -69,7 +74,8 @@ char *FormatLogMessage(char *format, ...)
 
 STATIC int MkDir(const char *dir, mode_t mode)
 {
-    if (dir == NULL) {
+    if (dir == NULL)
+    {
         (void)fprintf(stderr, "dir pointer is null!\n");
         return -1;
     }
@@ -77,9 +83,10 @@ STATIC int MkDir(const char *dir, mode_t mode)
     return mkdir(dir, mode);
 }
 
-int VerifyPathInfo(const struct PathInfo* pathInfo)
+int VerifyPathInfo(const struct PathInfo *pathInfo)
 {
-    if (pathInfo == NULL || pathInfo->dst == NULL || pathInfo->src == NULL) {
+    if (pathInfo == NULL || pathInfo->dst == NULL || pathInfo->src == NULL)
+    {
         return -1;
     }
     return 0;
@@ -87,13 +94,15 @@ int VerifyPathInfo(const struct PathInfo* pathInfo)
 
 int CheckDirExists(const char *dir)
 {
-    if (dir == NULL) {
+    if (dir == NULL)
+    {
         (void)fprintf(stderr, "dir pointer is null!\n");
         return -1;
     }
 
     DIR *ptr = opendir(dir);
-    if (NULL == ptr) {
+    if (NULL == ptr)
+    {
         return -1;
     }
 
@@ -103,23 +112,27 @@ int CheckDirExists(const char *dir)
 
 int GetParentPathStr(const char *path, char *parent, size_t bufSize)
 {
-    if (path == NULL || parent == NULL) {
+    if (path == NULL || parent == NULL)
+    {
         (void)fprintf(stderr, "path pointer or parentPath is null!\n");
         return -1;
     }
 
     char *ptr = strrchr(path, '/');
-    if (ptr == NULL) {
+    if (ptr == NULL)
+    {
         return 0;
     }
 
     int len = (int)strlen(path) - (int)strlen(ptr);
-    if (len < 1) {
+    if (len < 1)
+    {
         return 0;
     }
 
     errno_t ret = strncpy_s(parent, bufSize, path, len);
-    if (ret != EOK) {
+    if (ret != EOK)
+    {
         return -1;
     }
 
@@ -128,26 +141,31 @@ int GetParentPathStr(const char *path, char *parent, size_t bufSize)
 
 int MakeDirWithParent(const char *path, mode_t mode)
 {
-    if (path == NULL) {
+    if (path == NULL)
+    {
         (void)fprintf(stderr, "path pointer is null!\n");
         return -1;
     }
 
-    if (*path == '\0' || *path == '.') {
+    if (*path == '\0' || *path == '.')
+    {
         return 0;
     }
-    if (CheckDirExists(path) == 0) {
+    if (CheckDirExists(path) == 0)
+    {
         return 0;
     }
 
     char parentPath[BUF_SIZE] = {0};
     GetParentPathStr(path, parentPath, BUF_SIZE);
-    if (strlen(parentPath) > 0 && MakeDirWithParent(parentPath, mode) < 0) {
+    if (strlen(parentPath) > 0 && MakeDirWithParent(parentPath, mode) < 0)
+    {
         return -1;
     }
 
     int ret = MkDir(path, mode);
-    if (ret < 0) {
+    if (ret < 0)
+    {
         return -1;
     }
 
@@ -156,7 +174,8 @@ int MakeDirWithParent(const char *path, mode_t mode)
 
 int MakeMountPoints(const char *path, mode_t mode)
 {
-    if (path == NULL) {
+    if (path == NULL)
+    {
         (void)fprintf(stderr, "path pointer is null!\n");
         return -1;
     }
@@ -166,19 +185,22 @@ int MakeMountPoints(const char *path, mode_t mode)
     GetParentPathStr(path, parentDir, BUF_SIZE);
 
     int ret = MakeDirWithParent(parentDir, DEFAULT_DIR_MODE);
-    if (ret < 0) {
+    if (ret < 0)
+    {
         Logger("Failed to make parent dir for file.", LEVEL_ERROR, SCREEN_YES);
         return -1;
     }
 
     char resolvedPath[PATH_MAX] = {0};
-    if (realpath(path, resolvedPath) == NULL && errno != ENOENT) {
+    if (realpath(path, resolvedPath) == NULL && errno != ENOENT)
+    {
         Logger("failed to resolve path.", LEVEL_ERROR, SCREEN_YES);
         return -1;
     }
 
     int fd = open(resolvedPath, O_NOFOLLOW | O_CREAT, mode);
-    if (fd < 0) {
+    if (fd < 0)
+    {
         Logger("cannot create file.", LEVEL_ERROR, SCREEN_YES);
         return -1;
     }
@@ -186,7 +208,7 @@ int MakeMountPoints(const char *path, mode_t mode)
     return 0;
 }
 
-STATIC bool ShowExceptionInfo(const char* exceptionInfo)
+STATIC bool ShowExceptionInfo(const char *exceptionInfo)
 {
     (void)fprintf(stderr, "%s\n", exceptionInfo);
     return false;
@@ -194,62 +216,74 @@ STATIC bool ShowExceptionInfo(const char* exceptionInfo)
 
 STATIC bool CheckFileOwner(const struct stat fileStat, const bool checkOwner)
 {
-    if (checkOwner) {
-        if ((fileStat.st_uid != ROOT_UID) && (fileStat.st_uid != geteuid())) { // 操作文件owner非root/自己
+    if (checkOwner)
+    {
+        if ((fileStat.st_uid != ROOT_UID) && (fileStat.st_uid != geteuid()))
+        {  // 操作文件owner非root/自己
             return ShowExceptionInfo("Please check the folder owner!");
         }
     }
     return true;
 }
 
-STATIC bool CheckParentDir(const char* filePath, const size_t filePathLen,
-    struct stat fileStat, const bool checkOwner)
+STATIC bool CheckParentDir(const char *filePath, const size_t filePathLen, struct stat fileStat, const bool checkOwner)
 {
     char buf[PATH_MAX] = {0};
-    if (strncpy_s(buf, sizeof(buf), filePath, filePathLen) != EOK) {
+    if (strncpy_s(buf, sizeof(buf), filePath, filePathLen) != EOK)
+    {
         return false;
     }
-    for (int iLoop = 0; iLoop < PATH_MAX; iLoop++) {
-        if (!CheckFileOwner(fileStat, checkOwner)) {
+    for (int iLoop = 0; iLoop < PATH_MAX; iLoop++)
+    {
+        if (!CheckFileOwner(fileStat, checkOwner))
+        {
             return false;
         }
-        if ((fileStat.st_mode & S_IWOTH) != 0) { // 操作文件对other用户可写
+        if ((fileStat.st_mode & S_IWOTH) != 0)
+        {  // 操作文件对other用户可写
             return ShowExceptionInfo("Please check the write permission!");
         }
-        if (g_checkWgroup && ((fileStat.st_mode & S_IWGRP) != 0)) { // 除日志文件外对group可写
+        if (g_checkWgroup && ((fileStat.st_mode & S_IWGRP) != 0))
+        {  // 除日志文件外对group可写
             return ShowExceptionInfo("Please check the write permission!");
         }
-        if (S_ISLNK(fileStat.st_mode) != 0) { // 存在软链接
+        if (S_ISLNK(fileStat.st_mode) != 0)
+        {  // 存在软链接
             return ShowExceptionInfo("resolvedPath is symbolic link!");
         }
-        if ((strcmp(buf, "/") == 0) || (strstr(buf, "/") == NULL)) {
+        if ((strcmp(buf, "/") == 0) || (strstr(buf, "/") == NULL))
+        {
             break;
         }
-        if (strcmp(dirname(buf), ".") == 0) {
+        if (strcmp(dirname(buf), ".") == 0)
+        {
             break;
         }
-        if (lstat(buf, &fileStat) != 0) {
+        if (lstat(buf, &fileStat) != 0)
+        {
             return false;
         }
     }
     return true;
 }
 
-STATIC bool CheckLegality(const char* filePath, const size_t filePathLen,
-    const unsigned long long maxFileSizeMb, const bool checkOwner)
+STATIC bool CheckLegality(const char *filePath, const size_t filePathLen, const unsigned long long maxFileSizeMb,
+                          const bool checkOwner)
 {
     const unsigned long long maxFileSizeB = maxFileSizeMb * 1024 * 1024;
     char buf[PATH_MAX] = {0};
-    if (strncpy_s(buf, sizeof(buf), filePath, filePathLen) != EOK) {
+    if (strncpy_s(buf, sizeof(buf), filePath, filePathLen) != EOK)
+    {
         return false;
     }
     struct stat fileStat;
-    if ((lstat(buf, &fileStat) != 0) ||
-        (!g_allowLink && (S_ISLNK(fileStat.st_mode) != 0)) ||
-        ((S_ISREG(fileStat.st_mode) == 0) && (S_ISDIR(fileStat.st_mode) == 0))) {
+    if ((lstat(buf, &fileStat) != 0) || (!g_allowLink && (S_ISLNK(fileStat.st_mode) != 0)) ||
+        ((S_ISREG(fileStat.st_mode) == 0) && (S_ISDIR(fileStat.st_mode) == 0)))
+    {
         return ShowExceptionInfo("filePath does not exist or is not a file/dir!");
     }
-    if ((maxFileSizeMb > 0) && (fileStat.st_size >= maxFileSizeB)) { // 文件大小超限，日志文件不校验大小，由轮滚机制保护
+    if ((maxFileSizeMb > 0) && (fileStat.st_size >= maxFileSizeB))
+    {  // 文件大小超限，日志文件不校验大小，由轮滚机制保护
         return ShowExceptionInfo("fileSize out of bounds!");
     }
     return CheckParentDir(filePath, filePathLen, fileStat, checkOwner);
@@ -257,46 +291,53 @@ STATIC bool CheckLegality(const char* filePath, const size_t filePathLen,
 
 bool IsValidChar(const char c)
 {
-    if (isalnum(c) != 0) {
+    if (isalnum(c) != 0)
+    {
         return true;
     }
     // ._-/~为合法字符
-    if ((c == '.') || (c == '_') ||
-        (c == '-') || (c == '/') || (c == '~')) {
+    if ((c == '.') || (c == '_') || (c == '-') || (c == '/') || (c == '~'))
+    {
         return true;
     }
     return false;
 }
 
-bool CheckExternalFile(const char* filePath, const size_t filePathLen,
-    const size_t maxFileSizeMb, const bool checkOwner)
+bool CheckExternalFile(const char *filePath, const size_t filePathLen, const size_t maxFileSizeMb,
+                       const bool checkOwner)
 {
-    if ((filePathLen > PATH_MAX) || (filePathLen <= 0)) { // 长度越界
+    if ((filePathLen > PATH_MAX) || (filePathLen <= 0))
+    {  // 长度越界
         return ShowExceptionInfo("filePathLen out of bounds!");
     }
-    for (size_t iLoop = 0; iLoop < filePathLen; iLoop++) {
-        if (!IsValidChar(filePath[iLoop])) { // 非法字符
+    for (size_t iLoop = 0; iLoop < filePathLen; iLoop++)
+    {
+        if (!IsValidChar(filePath[iLoop]))
+        {  // 非法字符
             return ShowExceptionInfo("filePath has an illegal character!");
         }
     }
     return CheckLegality(filePath, filePathLen, maxFileSizeMb, checkOwner);
 }
 
-bool CheckExistsFile(const char* filePath, const size_t filePathLen,
-    const size_t maxFileSizeMb, const bool checkWgroup)
+bool CheckExistsFile(const char *filePath, const size_t filePathLen, const size_t maxFileSizeMb, const bool checkWgroup)
 {
-    if (filePath == NULL) {
+    if (filePath == NULL)
+    {
         return false;
     }
     struct stat fileStat;
-    if (lstat(filePath, &fileStat) != 0) {
-        return true; // 文件不存在
+    if (lstat(filePath, &fileStat) != 0)
+    {
+        return true;  // 文件不存在
     }
-    if (S_ISREG(fileStat.st_mode) == 0) { // 不是文件
+    if (S_ISREG(fileStat.st_mode) == 0)
+    {  // 不是文件
         return false;
     }
     g_checkWgroup = checkWgroup;
-    if (!CheckExternalFile(filePath, filePathLen, maxFileSizeMb, true)) {
+    if (!CheckExternalFile(filePath, filePathLen, maxFileSizeMb, true))
+    {
         g_checkWgroup = true;
         return false;
     }
@@ -304,19 +345,23 @@ bool CheckExistsFile(const char* filePath, const size_t filePathLen,
     return true;
 }
 
-bool CheckOpenedFile(FILE* fp, const long maxSize, const bool checkOwner)
+bool CheckOpenedFile(FILE *fp, const long maxSize, const bool checkOwner)
 {
-    if (fp == NULL) {
+    if (fp == NULL)
+    {
         return false;
     }
     struct stat st;
-    if (fstat(fileno(fp), &st) != 0) {
+    if (fstat(fileno(fp), &st) != 0)
+    {
         return false;
     }
-    if (S_ISREG(st.st_mode) == 0 || st.st_size > maxSize) {
+    if (S_ISREG(st.st_mode) == 0 || st.st_size > maxSize)
+    {
         return false;
     }
-    if (!CheckFileOwner(st, checkOwner)) {
+    if (!CheckFileOwner(st, checkOwner))
+    {
         return false;
     }
     return true;
@@ -328,46 +373,72 @@ STATIC bool CheckSymlinkOwner(const char *path)
     struct stat realStat;
 
     // get stat of the symlink itself
-    if (lstat(path, &linkStat) != 0) {
+    if (lstat(path, &linkStat) != 0)
+    {
         return ShowExceptionInfo("failed to lstat symlink!");
     }
 
     // follow the symlink to get the target file's stat
-    if (stat(path, &realStat) != 0) {
+    if (stat(path, &realStat) != 0)
+    {
         return ShowExceptionInfo("failed to stat real file of symlink!");
     }
 
     // require both the symlink itself and its target to be owned by root (UID 0)
-    if (linkStat.st_uid != 0 || realStat.st_uid != 0) {
+    if (linkStat.st_uid != 0 || realStat.st_uid != 0)
+    {
         return ShowExceptionInfo("symlink or its target is not owned by root!");
     }
 
     return true;
 }
 
-STATIC bool CheckFileSubset(const char* filePath, const size_t filePathLen,
-    const size_t maxFileSizeMb)
+STATIC bool CheckFileSubset(const char *filePath, const size_t filePathLen, const size_t maxFileSizeMb)
 {
     const unsigned long long maxFileSizeB = maxFileSizeMb * 1024 * 1024;
     int iLoop;
-    if ((filePathLen > PATH_MAX) || (filePathLen <= 0)) { // 长度越界
+    char *str = NULL;
+    if ((filePathLen > PATH_MAX) || (filePathLen <= 0))
+    {  // 长度越界
+        str = FormatLogMessage("filePathLen out of bounds! filePath: %s", filePath != NULL ? filePath : "(null)");
+        Logger(str, LEVEL_ERROR, SCREEN_YES);
+        free(str);
+        str = NULL;
         return ShowExceptionInfo("filePathLen out of bounds!");
     }
-    for (iLoop = 0; iLoop < filePathLen; iLoop++) {
-        if (!IsValidChar(filePath[iLoop])) { // 非法字符
+    for (iLoop = 0; iLoop < filePathLen; iLoop++)
+    {
+        if (!IsValidChar(filePath[iLoop]))
+        {  // 非法字符
+            str = FormatLogMessage("filePath has an illegal character '%c' in path: %s", filePath[iLoop], filePath);
+            Logger(str, LEVEL_ERROR, SCREEN_YES);
+            free(str);
+            str = NULL;
             return ShowExceptionInfo("filePath has an illegal character!");
         }
     }
     struct stat fileStat;
-    if (lstat(filePath, &fileStat) != 0) {
+    if (lstat(filePath, &fileStat) != 0)
+    {
+        str = FormatLogMessage("filePath does not exist! filePath: %s", filePath);
+        Logger(str, LEVEL_ERROR, SCREEN_YES);
+        free(str);
+        str = NULL;
         return ShowExceptionInfo("filePath does not exist!");
     }
-    if (!g_allowLink && S_ISLNK(fileStat.st_mode) != 0) { // 存在软链接
-        if (!CheckSymlinkOwner(filePath)) {
+    if (!g_allowLink && S_ISLNK(fileStat.st_mode) != 0)
+    {  // 存在软链接
+        if (!CheckSymlinkOwner(filePath))
+        {
             return false;
         }
     }
-    if (fileStat.st_size >= maxFileSizeB) { // 文件大小超限
+    if (fileStat.st_size >= maxFileSizeB)
+    {  // 文件大小超限
+        str = FormatLogMessage("fileSize out of bounds! filePath: %s", filePath);
+        Logger(str, LEVEL_ERROR, SCREEN_YES);
+        free(str);
+        str = NULL;
         return ShowExceptionInfo("fileSize out of bounds!");
     }
     return true;
@@ -375,46 +446,61 @@ STATIC bool CheckFileSubset(const char* filePath, const size_t filePathLen,
 
 bool GetFileSubsetAndCheck(const char *basePath, const size_t basePathLen)
 {
-    if (basePath == NULL) {
+    if (basePath == NULL)
+    {
         return ShowExceptionInfo("path is null!");
     }
     DIR *dir = NULL;
     struct dirent *ptr = NULL;
     char base[PATH_MAX] = {0};
 
-    if ((dir = opendir(basePath)) == NULL) {
+    if ((dir = opendir(basePath)) == NULL)
+    {
         return ShowExceptionInfo("Open dir error!");
     }
-    while ((ptr = readdir(dir)) != NULL) {
-        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
+    while ((ptr = readdir(dir)) != NULL)
+    {
+        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0)
+        {
             continue;
         }
         memset_s(base, PATH_MAX, 0, PATH_MAX);
-        if (strcpy_s(base, PATH_MAX, basePath) != 0) {
+        if (strcpy_s(base, PATH_MAX, basePath) != 0)
+        {
             closedir(dir);
             return ShowExceptionInfo("Strcpy failed!");
         }
-        if (strcat_sp(base, PATH_MAX, "/") != 0) {
-                closedir(dir);
-                return ShowExceptionInfo("Strcat failed!");
-        }
-        if (strcat_sp(base, PATH_MAX, ptr->d_name) != 0) {
+        if (strcat_sp(base, PATH_MAX, "/") != 0)
+        {
             closedir(dir);
             return ShowExceptionInfo("Strcat failed!");
         }
-        if (ptr->d_type == DT_REG) { // 文件
-            const size_t maxFileSizeMb = 150; // max 150 MB
-            if (!CheckFileSubset(base, strlen(base), maxFileSizeMb)) {
+        if (strcat_sp(base, PATH_MAX, ptr->d_name) != 0)
+        {
+            closedir(dir);
+            return ShowExceptionInfo("Strcat failed!");
+        }
+        if (ptr->d_type == DT_REG)
+        {                                      // 文件
+            const size_t maxFileSizeMb = 150;  // max 150 MB
+            if (!CheckFileSubset(base, strlen(base), maxFileSizeMb))
+            {
                 closedir(dir);
                 return false;
             }
-        } else if (!g_allowLink && ptr->d_type == DT_LNK) { // 软链接
-            if (!CheckSymlinkOwner(base)) {
+        }
+        else if (!g_allowLink && ptr->d_type == DT_LNK)
+        {  // 软链接
+            if (!CheckSymlinkOwner(base))
+            {
                 closedir(dir);
                 return false;
-                }
-        } else if (ptr->d_type == DT_DIR) { // 目录
-            if (!GetFileSubsetAndCheck(base, strlen(base))) {
+            }
+        }
+        else if (ptr->d_type == DT_DIR)
+        {  // 目录
+            if (!GetFileSubsetAndCheck(base, strlen(base)))
+            {
                 closedir(dir);
                 return false;
             }
@@ -424,12 +510,6 @@ bool GetFileSubsetAndCheck(const char *basePath, const size_t basePathLen)
     return true;
 }
 
-bool GetAllowLink(void)
-{
-    return g_allowLink;
-}
+bool GetAllowLink(void) { return g_allowLink; }
 
-void SetAllowLink(bool value)
-{
-    g_allowLink = value;
-}
+void SetAllowLink(bool value) { g_allowLink = value; }
