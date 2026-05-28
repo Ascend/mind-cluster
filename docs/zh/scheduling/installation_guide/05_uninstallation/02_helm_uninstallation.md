@@ -122,7 +122,7 @@
     namespace "mindx-dl" deleted
     ```
 
-5. 删除日志文件。参考[创建日志目录](../02_installation/manual_installation/01_preparing_for_installation.md#创建日志目录)章节，在对应节点上删除集群调度组件的日志目录。以ClusterD为例，请确认后再删除。
+5. 删除日志文件。参考[创建日志目录](../../developer_guide/installation_deployment/manual_installation/01_preparing_for_installation.md#创建日志目录)章节，在对应节点上删除集群调度组件的日志目录。以ClusterD为例，请确认后再删除。
 
     ```bash
     rm -rf /var/log/mindx-dl/clusterd

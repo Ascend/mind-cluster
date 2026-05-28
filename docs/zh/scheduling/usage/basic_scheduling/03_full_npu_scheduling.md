@@ -4,7 +4,7 @@
 
 **前提条件<a name="section52051339787"></a>**
 
-- 在使用整卡调度特性前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../installation_guide//02_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
+- 在使用整卡调度特性前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
     - 调度器（Volcano或其他调度器）
     - Ascend Device Plugin
     - Ascend Docker Runtime

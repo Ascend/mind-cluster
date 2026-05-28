@@ -4,7 +4,7 @@
 
 ## 前提条件
 
-已完成[（可选）使用Volcano交换机亲和性调度](../../installation_guide/02_installation/manual_installation/05_volcano.md#可选使用volcano交换机亲和性调度)。
+已完成[（可选）使用Volcano交换机亲和性调度](../../developer_guide/installation_deployment/manual_installation/05_volcano.md#可选使用volcano交换机亲和性调度)。
 
 ## 操作步骤
 
