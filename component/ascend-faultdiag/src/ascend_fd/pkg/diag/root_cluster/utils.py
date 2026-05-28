@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+# pylint: disable=too-many-lines
 import logging
 from collections import Counter
 from datetime import datetime
@@ -30,9 +31,14 @@ from ascend_fd.utils.status import InfoNotFoundError, InnerError
 from ascend_fd.model.node_info import FaultFilterTime
 from ascend_fd.pkg.parse.root_cluster.parser import RemoteInfo
 from ascend_fd.pkg.diag.root_cluster import fault_description
-from ascend_fd.pkg.diag.message import (MULTI_RANK_NOTE_MSG, UNKNOWN_ROOT_ERROR_RANK, SOME_DEVICE_FAILED,
-                                        NO_GROUP_RANK_INFO_NOTE)
+from ascend_fd.pkg.diag.message import (
+    MULTI_RANK_NOTE_MSG,
+    UNKNOWN_ROOT_ERROR_RANK,
+    SOME_DEVICE_FAILED,
+    NO_GROUP_RANK_INFO_NOTE,
+)
 from ascend_fd.model.cfg import DiagCFG
+from ascend_fd.utils.net_tools import IPAddress
 
 rc_logger = logging.getLogger("ROOT_CLUSTER")
 lb = get_label_for_language()
@@ -92,7 +98,7 @@ class Device:
         if self.worker_name == "worker-NA":
             return "Unknown Device"
         if self.device_id == NEGATIVE_ONE and self.device_table:
-            for identifier_name in self.identifier_map.keys():
+            for identifier_name in self.identifier_map:
                 device_id = self.device_table.get_lack_device_id(identifier_name, self.worker_name, self.pid)
                 return f"{self.worker_name} device-{device_id}"
             return f"{self.worker_name} device-Unknown"
@@ -140,8 +146,14 @@ class Device:
             return
         self.logic_device_id = base_info.logic_device_id
         self.phy_device_id = base_info.phy_device_id
-        self.device_ip = base_info.device_ip
-        self.server_id = base_info.server_id
+        device_ip = base_info.device_ip
+        if device_ip and not IPAddress.is_valid_ip(device_ip):
+            device_ip = ""
+        self.device_ip = device_ip
+        server_id = base_info.server_id
+        if server_id and not IPAddress.is_valid_ip(server_id):
+            server_id = ""
+        self.server_id = server_id
 
     def update_error_info(self, error_info: PlogErrorInfo, resuming_training_time):
         """
@@ -167,8 +179,10 @@ class Device:
         self.timeout_error_events_list.sort(key=lambda event: event.error_time)
         for single_timeout_event in self.timeout_error_events_list:
             # if first is normal and have other type error, use the other type error
-            if not self.first_timeout_error_event \
-                    or self.first_timeout_error_event.error_type == regular_table.TIMEOUT_NORMAL:
+            if (
+                not self.first_timeout_error_event
+                or self.first_timeout_error_event.error_type == regular_table.TIMEOUT_NORMAL
+            ):
                 self.first_timeout_error_event = single_timeout_event
             if not single_timeout_event.identifier:
                 if single_timeout_event.error_type == regular_table.TIMEOUT_NOTIFY:
@@ -179,8 +193,10 @@ class Device:
                 single_timeout_event.identifier = self.device_table.max_rank_num_identifier.get("identifier_name")
             # record timeout info for identifier and type
             index_field = (single_timeout_event.identifier, single_timeout_event.error_type)
-            if index_field not in self.timeout_error_map \
-                    or self.timeout_error_map.get(index_field).error_time > single_timeout_event.error_time:
+            if (
+                index_field not in self.timeout_error_map
+                or self.timeout_error_map.get(index_field).error_time > single_timeout_event.error_time
+            ):
                 self.timeout_error_map.update({index_field: single_timeout_event})
 
     def get_identifier_name_from_tag(self, tag_name):
@@ -244,6 +260,7 @@ class Identifier:
     This class is used to store information about a Identifier.
     Includes Identifier name, rank num, root device and rank id list.
     """
+
     RECORD_RANK_NUM_LINE = 8  # a log line record 8 rank_ids
 
     def __init__(self, identifier_name=regular_table.DEFAULT_IDENTIFIER, rank_num=int(NEGATIVE_ONE)):
@@ -287,8 +304,9 @@ class Identifier:
             if str(rank_id) not in self.get_rank_id_list():
                 lost_rank_list.append(rank_id)
             if len(lost_rank_list) == self.RECORD_RANK_NUM_LINE:
-                rc_logger.warning("Not found these rank id %s in communication identifier[%s].",
-                                  lost_rank_list, self.name)
+                rc_logger.warning(
+                    "Not found these rank id %s in communication identifier[%s].", lost_rank_list, self.name
+                )
                 lost_rank_list.clear()
         if lost_rank_list:
             rc_logger.warning("Not found these rank id %s in communication identifier[%s].", lost_rank_list, self.name)
@@ -307,9 +325,10 @@ class DeviceTable:
         """
         DeviceTable: Use to store device information for the entire training.
         """
-        self.worker_list = list()
+        self.worker_list = []
         self.max_rank_num_identifier = {
-            "rank_num": int(NEGATIVE_ONE), "identifier_name": regular_table.DEFAULT_IDENTIFIER
+            "rank_num": int(NEGATIVE_ONE),
+            "identifier_name": regular_table.DEFAULT_IDENTIFIER,
         }
         self.identifier_dict: Dict[str, Identifier] = {}
 
@@ -319,8 +338,8 @@ class DeviceTable:
         self.device_id_instance_map = dict()
         self.vNic_ip_dev_id_relation = dict()
 
-        self.err_device = list()
-        self.no_err_device = list()
+        self.err_device = []
+        self.no_err_device = []
 
         self.cqe_link_map = {}
         self.timeouts = {regular_table.CONNECT_TIMEOUT: 120, regular_table.EXEC_TIMEOUT: 1800}
@@ -368,7 +387,7 @@ class DeviceTable:
             self.server_device_map.update({(device.server_id, device.device_id): device})
         if device.phy_device_id:
             self.device_id_instance_map.update({(device.worker_name, device.phy_device_id): device})
-        if device.device_ip:
+        if device.device_ip and IPAddress.is_valid_ip(device.device_ip):
             self.device_ip_map.update({device.device_ip: device})
         if device.is_error():
             self.err_device.append(device)
@@ -406,7 +425,7 @@ class DeviceTable:
             if device == store_device or device.worker_name != store_device.worker_name:
                 continue
             store_device_rank_id = identifier_instance.device_rank_id_map.get(store_device, NEGATIVE_ONE)
-            if store_device_rank_id != NEGATIVE_ONE and store_device.device_id != NEGATIVE_ONE:
+            if NEGATIVE_ONE not in (store_device_rank_id, store_device.device_id):
                 device_rank_id = identifier_instance.device_rank_id_map.get(device, NEGATIVE_ONE)
                 if device_rank_id == NEGATIVE_ONE:
                     continue
@@ -428,7 +447,7 @@ class DeviceTable:
         Update the timeout param
         :param timeout_param: timeout param value dict
         """
-        for key in self.timeouts.keys():
+        for key in self.timeouts:
             timeout_val_str = timeout_param.get(key)
             if timeout_val_str:
                 self.timeouts.update({key: int(timeout_val_str)})
@@ -454,6 +473,8 @@ class DeviceTable:
                 continue
             remote_device = self.get_device_by_server_device_id(remote_info.server_ip, remote_info.phy_device_id)
             if remote_device == UNKNOWN_DEVICE or not remote_device.device_ip:
+                continue
+            if not IPAddress.is_valid_ip(device.device_ip) or not IPAddress.is_valid_ip(remote_device.device_ip):
                 continue
             relation_map[device.device_ip] = remote_device.device_ip
         return relation_map
@@ -489,11 +510,14 @@ class BaseChecker:
         """
         pass
 
-    def format_output(self, resuming_training_time=regular_table.MIN_TIME,
-                      start_train_time=regular_table.MIN_TIME,
-                      end_train_time=regular_table.MAX_TIME,
-                      scene=None,
-                      board_sn_exist=False) -> RCDiagResult:
+    def format_output(
+        self,
+        resuming_training_time=regular_table.MIN_TIME,
+        start_train_time=regular_table.MIN_TIME,
+        end_train_time=regular_table.MAX_TIME,
+        scene=None,
+        board_sn_exist=False,
+    ) -> RCDiagResult:
         """
         Format the diag result
         :param resuming_training_time: the last resuming training time
@@ -535,7 +559,7 @@ class BaseChecker:
             fault_description_list=[],
             mindie_error_device=self.mindie_error_device,
             show_device_info=self._add_original_plog(),
-            detect_workers_devices=detect_workers_devices
+            detect_workers_devices=detect_workers_devices,
         )
 
     def _get_detect_worker_device_map(self):
@@ -572,12 +596,14 @@ class BaseChecker:
             return device_info
         show_log = show_device.error_logs_show
         if show_log:
-            device_info.update({
-                "device_type": device_type,
-                "device": str(show_device),
-                "plog_file_path": show_device.log_file_path,
-                "error_log": "".join(show_log)  # the origin log list has "\n"
-            })
+            device_info.update(
+                {
+                    "device_type": device_type,
+                    "device": str(show_device),
+                    "plog_file_path": show_device.log_file_path,
+                    "error_log": "".join(show_log),  # the origin log list has "\n"
+                }
+            )
         return device_info
 
 
@@ -593,7 +619,7 @@ class RemoteRelation:
 
         self.traversed_device_map = dict()
         self.traversed_num = 0
-        self.remote_links = list()
+        self.remote_links = []
         self.cycle_or_last_devices = []
         self.last_unknown_device = Device()
 
@@ -634,7 +660,7 @@ class RemoteRelation:
             self._traverse_remote_cycle(self.in_degree_greater_than_one_set.pop(), self.remote_relation)
             return fault_description.ALL_NOTIFY_ERROR_NOT_TIMEOUT_REMOTE_CYCLE, [Device()], self.remote_links
         # all device in the loop, all device with in-degree is 1
-        if self.remote_relation.keys() and all([len(dst_list) == 1 for dst_list in self.remote_relation.values()]):
+        if self.remote_relation.keys() and all(len(dst_list) == 1 for dst_list in self.remote_relation.values()):
             self._traverse_remote_cycle(list(self.remote_relation.keys())[0], self.remote_relation)
             return fault_description.ALL_NOTIFY_ERROR_NOT_TIMEOUT_REMOTE_CYCLE, [Device()], self.remote_links
         return None, [], []
@@ -675,8 +701,9 @@ class RemoteRelation:
         first_appear_index = -1
         while True:
             if traversed_num > self.MAX_TRAVERSED_NUM:
-                rc_logger.warning('notify or socket remote traversal times exceeds MAX_TRAVERSED_NUM, '
-                                  'the traversal stops.')
+                rc_logger.warning(
+                    'notify or socket remote traversal times exceeds MAX_TRAVERSED_NUM, the traversal stops.'
+                )
                 break
             cur_device_str = str(cur_device)
             self.remote_links.append(cur_device_str)
@@ -703,6 +730,7 @@ class TimeoutErrorOfIdentifier:
     """
     Used to save the 5 type timeout error info in an identifier
     """
+
     identifier = Identifier()
     error_type = ""
     first_time = '9999-12-31-23:59:59.999999'
@@ -720,7 +748,7 @@ class TimeoutErrorOfIdentifier:
         :param device: device on which a timeout evnet occurs
         :param device_table: Device Table
         """
-        if remote_info.device_ip:
+        if remote_info.device_ip and IPAddress.is_valid_ip(remote_info.device_ip):
             # 根据device_ip找对端设备
             remote_device = device_table.device_ip_map.get(remote_info.device_ip)
             if remote_device:
@@ -809,17 +837,17 @@ class TimeoutErrorOfIdentifier:
             # if index is digit, sorted. if index not is digit, put it in the back
             index_sort_list = sorted(index_dict.keys(), key=lambda x: (0, int(x)) if x.isdigit() else (1, x))
             min_index_device = index_dict.get(index_sort_list[0])
-            description = fault_description.ALL_NOTIFY_ERROR_NOT_TIMEOUT_INDEX_ERR.format(timeout,
-                                                                                          index_sort_list,
-                                                                                          index_sort_list[0])
+            description = fault_description.ALL_NOTIFY_ERROR_NOT_TIMEOUT_INDEX_ERR.format(
+                timeout, index_sort_list, index_sort_list[0]
+            )
             return min_index_device, description
         if len(tag_dict) > 1:
             tag_sort_list = sorted(tag_dict.items(), key=lambda x: len(x[1]))
             min_tag = tag_sort_list[0][0]
             min_tag_device = tag_sort_list[0][1]
-            description = fault_description.ALL_NOTIFY_ERROR_NOT_TIMEOUT_TAG_ERR.format(timeout,
-                                                                                        list(tag_dict.keys()),
-                                                                                        min_tag)
+            description = fault_description.ALL_NOTIFY_ERROR_NOT_TIMEOUT_TAG_ERR.format(
+                timeout, list(tag_dict.keys()), min_tag
+            )
             return min_tag_device, description
         return [], None
 
@@ -828,6 +856,7 @@ class ErrorChecker(BaseChecker):
     """
     Checker for Error log
     """
+
     timeout_error_info_map = {}  # each dict is {(identifier_name, timeout_type): TimeoutErrorOfIdentifier()}
     # the connected device dict. eg. {identifier_name: connected_success_devices_set}, only use for root info timeout
     connected_device_with_identifier = {}
@@ -1024,7 +1053,7 @@ class ErrorChecker(BaseChecker):
             regular_table.TIMEOUT_SOCKET: self._check_socket_timeout,
             regular_table.TIMEOUT_NOTIFY: self._check_notify_timeout,
             regular_table.TIMEOUT_FFTS: self._check_notify_timeout,
-            regular_table.TIMEOUT_ROOT_INFO: self._check_init_timeout
+            regular_table.TIMEOUT_ROOT_INFO: self._check_init_timeout,
         }
         if not timeout_error_info:  # No timeout errors occurred in the communication domain
             return False
@@ -1041,8 +1070,10 @@ class ErrorChecker(BaseChecker):
             timeout_type = regular_table.TIMEOUT_SOCKET
         first_error_time = timeout_error_info.first_time
         last_error_time = timeout_error_info.last_time
-        interval_times = (datetime.strptime(last_error_time, '%Y-%m-%d-%H:%M:%S.%f') -
-                          datetime.strptime(first_error_time, '%Y-%m-%d-%H:%M:%S.%f')).total_seconds()
+        interval_times = (
+            datetime.strptime(last_error_time, '%Y-%m-%d-%H:%M:%S.%f')
+            - datetime.strptime(first_error_time, '%Y-%m-%d-%H:%M:%S.%f')
+        ).total_seconds()
         func = func_map.get(timeout_type)
         if not func:
             return False
@@ -1101,7 +1132,8 @@ class ErrorChecker(BaseChecker):
         if min_tls_diff_rank:
             self.fault_description = fault_description.TLS_SWITCH_DIFFERENT.format(
                 minority_tls_status[0],
-                majority_tls_status[0], )
+                majority_tls_status[0],
+            )
             self.root_devices = list(min_tls_diff_rank)
             return
         # If some ranks do not report this error, these ranks are the root cause node.
@@ -1115,7 +1147,8 @@ class ErrorChecker(BaseChecker):
             return
 
         self.root_devices, self.remote_links = error_identifier_info.remote_relation.check_socket_remote_relation(
-            error_identifier_info.first_device, self.cfg.parsed_saver)
+            error_identifier_info.first_device, self.cfg.parsed_saver
+        )
         timeout_scope = PART if no_this_err_devices else ALL
         self.fault_description = fault_description.ALL_SOCKET_ERROR_NOT_TIMEOUT.format(timeout_scope, timeout)
 
@@ -1147,8 +1180,9 @@ class ErrorChecker(BaseChecker):
                 self.fault_description = description
                 self.root_devices = root_device
                 return
-            self.fault_description, self.root_devices, self.remote_links = \
+            self.fault_description, self.root_devices, self.remote_links = (
                 error_identifier_info.remote_relation.check_notify_remote_relation()
+            )
             if self.device_table.no_group_rank_information_flag:
                 self.note_msg.append(NO_GROUP_RANK_INFO_NOTE)
         if not self.fault_description:
@@ -1179,13 +1213,16 @@ class ErrorChecker(BaseChecker):
         for device_ip in device_ip_list:
             target_rank = self.device_table.get_device_by_device_ip(device_ip)
             if target_rank != Device():
-                self.device_links.append("{} device-{} -> {} device-{}".format
-                                         (rank.worker_name, str(rank.device_id), target_rank.worker_name,
-                                          str(target_rank.device_id)))
+                self.device_links.append(
+                    "{} device-{} -> {} device-{}".format(
+                        rank.worker_name, str(rank.device_id), target_rank.worker_name, str(target_rank.device_id)
+                    )
+                )
                 err_rank.add(target_rank)
             else:
                 self.device_links.append(
-                    "{} device-{} -> {}".format(rank.worker_name, str(rank.device_id), str(device_ip)))
+                    "{} device-{} -> {}".format(rank.worker_name, str(rank.device_id), str(device_ip))
+                )
                 if SOME_DEVICE_FAILED not in self.note_msg:
                     self.note_msg.append(SOME_DEVICE_FAILED)
         return err_rank
@@ -1198,8 +1235,9 @@ class ErrorChecker(BaseChecker):
         for device in self.device_table.err_device:
             for identifier_type_key, timeout_event in device.timeout_error_map.items():
                 identifier_name, timeout_type = identifier_type_key
-                err_identifier_info = self.timeout_error_info_map.setdefault(identifier_type_key,
-                                                                             TimeoutErrorOfIdentifier())
+                err_identifier_info = self.timeout_error_info_map.setdefault(
+                    identifier_type_key, TimeoutErrorOfIdentifier()
+                )
                 err_identifier_info.identifier = self.device_table.identifier_dict.get(identifier_name, Identifier())
                 err_identifier_info.error_type = timeout_type
                 # Update the timeout event info

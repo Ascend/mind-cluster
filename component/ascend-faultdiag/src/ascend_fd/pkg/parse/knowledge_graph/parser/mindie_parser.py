@@ -26,6 +26,7 @@ from ascend_fd.model.node_info import DeviceInfo
 from ascend_fd.model.parse_info import SingleFileParseInfo, FilesParseInfo
 from ascend_fd.utils.regular_table import MINDIE_SOURCE, KG_MAX_TIME
 from ascend_fd.utils.tool import MultiProcessJob, check_and_format_time_str
+from ascend_fd.utils.net_tools import IPAddress
 from ascend_fd.pkg.parse.parser_saver import LogInfoSaver
 from ascend_fd.pkg.parse.knowledge_graph.parser.file_parser import FileParser, EventStorage
 
@@ -75,7 +76,10 @@ def find_device_info(log_line: str, device_info: DeviceInfo):
             device_info.logic_device_id = detail_info
             continue
         if "local_device_ip" in split_item:
-            device_info.device_ip = detail_info
+            if IPAddress.is_valid_ip(detail_info):
+                device_info.device_ip = detail_info
+            else:
+                device_info.device_ip = ""
     return bool(device_info.device_id and device_info.logic_device_id and device_info.device_ip)
 
 
@@ -84,7 +88,19 @@ class MindieParser(FileParser):
     TARGET_FILE_PATTERNS = "mindie_log_path"
     SOURCE_FILE = MINDIE_SOURCE
     FILENAME_REGEX = re.compile(r"mindie-[a-z-_]{1,15}_\d{1,7}_(\d{12,18})(?:\.\d{2})?.log")
-    IP_REGEX = re.compile(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b')
+    IP_REGEX = re.compile(
+        r'\b(?:\d{1,3}\.){3}\d{1,3}\b|'
+        r'(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|'
+        r'(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|'
+        r'(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|'
+        r'(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|'
+        r'(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|'
+        r'(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|'
+        r'[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}|'
+        r'::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}|'
+        r'(?:[0-9a-fA-F]{1,4}:){1,7}:|'
+        r'::'
+    )
     mindie_parse_info = MindIEParseInfo()
 
     def __init__(self, params):
@@ -108,16 +124,18 @@ class MindieParser(FileParser):
         if self.is_sdk_input:
             results = dict()
             for idx, file_source in enumerate(sorted(file_list)):
-                results.update({
-                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}": self._parse_file(file_source)
-                })
+                results.update(
+                    {f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}": self._parse_file(file_source)}
+                )
         else:
-            filtered_file_list = sorted((file for file in file_list if self._extract_log_time(file)),
-                                        key=self._extract_log_time)
+            filtered_file_list = sorted(
+                (file for file in file_list if self._extract_log_time(file)), key=self._extract_log_time
+            )
             multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_list), task_id=task_id)
             for idx, file_source in enumerate(filtered_file_list):
-                multiprocess_job.add_security_job(f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}",
-                                                  self._parse_file, file_source)
+                multiprocess_job.add_security_job(
+                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}", self._parse_file, file_source
+                )
             results, _ = multiprocess_job.join_and_get_results()
         kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
 
@@ -154,7 +172,9 @@ class MindieParser(FileParser):
         """
         if not self.container_ip and "localIp is" in log_line:
             # 日志格式:[endpoint] useTls is 0, localIp is 192.168.208.84, port is 10003
-            self.container_ip = log_line.split("localIp is ")[-1].strip().split(",")[0]
+            container_ip = log_line.split("localIp is ")[-1].strip().split(",")[0]
+            if IPAddress.is_valid_ip(container_ip):
+                self.container_ip = container_ip
 
     def add_link_error_info(self, link_error_info, log_line):
         """
@@ -163,6 +183,7 @@ class MindieParser(FileParser):
         :param log_line: log line
         """
         ips = self.IP_REGEX.findall(log_line)
+        ips = [ip for ip in ips if IPAddress.is_valid_ip(ip)]
         if len(ips) < NUM_TWO:
             return
         link_error_info.setdefault(ips[0], set()).add(ips[1])
@@ -181,6 +202,7 @@ class MindieParser(FileParser):
         if not (link_error_happened_flag or pull_kv_error_happened_flag):
             return
         ips = self.IP_REGEX.findall(log_line)
+        ips = [ip for ip in ips if IPAddress.is_valid_ip(ip)]
         if len(ips) < NUM_TWO:
             return
         if link_error_happened_flag:
@@ -200,7 +222,7 @@ class MindieParser(FileParser):
         end_index = line.find("]")
         occur_time = ""
         if 0 <= start_index < end_index:
-            occur_time = line[start_index + 1: end_index]
+            occur_time = line[start_index + 1 : end_index]
         if occur_time:
             occur_time = occur_time.replace(",", ".")
             return check_and_format_time_str(occur_time, self.timezone_trans_flag)

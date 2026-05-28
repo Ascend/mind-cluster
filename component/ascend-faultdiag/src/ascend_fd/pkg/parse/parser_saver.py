@@ -32,6 +32,7 @@ from ascend_fd.configuration.config import CUSTOM_CONFIG_PATH
 from ascend_fd.model.mindie_info import MindIEParseResult, MindIEDiagResult
 from ascend_fd.pkg.customize.custom_config.config_info import get_config_info, ConfigInfo, CustomFileInfo
 from ascend_fd.utils import regular_table
+from ascend_fd.utils.net_tools import IPAddress
 from ascend_fd.utils.status import ParamError, InnerError, PathError, FileNotExistError
 from ascend_fd.utils.tool import (
     safe_walk,
@@ -1526,11 +1527,11 @@ class ParsedDataSaver:
                 base_info = pid_info.get("base", dict())
                 phy_device_id = base_info.get("phy_device_id", "")
                 device_ip = base_info.get("device_ip")
-                if device_ip:
+                if device_ip and IPAddress.is_valid_ip(device_ip):
                     device_id = phy_device_id or base_info.get("logic_device_id", "")
                     self.infer_groups_device_map.update({device_ip: (worker_name, device_id)})
                 vNic_ip = base_info.get("vNic_ip")
-                if vNic_ip:
+                if vNic_ip and IPAddress.is_valid_ip(vNic_ip):
                     self.infer_groups_device_map.update({vNic_ip: (worker_name, phy_device_id)})
 
     def get_worker_plog_dict(self):

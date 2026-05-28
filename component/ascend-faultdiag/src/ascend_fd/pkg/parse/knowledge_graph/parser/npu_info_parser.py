@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+# pylint: disable=too-many-lines
 import os
 import re
 import logging
@@ -28,12 +29,23 @@ from ascend_fd.pkg.parse.parser_saver import LogInfoSaver
 from ascend_fd.utils.regular_table import DATETIME_REGEX, KG_MAX_TIME, NPU_INFO_SOURCE
 from ascend_fd.utils.status import FileNotExistError, InfoIncorrectError
 from ascend_fd.utils.tool import safe_read_open_with_size
+from ascend_fd.utils.net_tools import IPAddress
 from ascend_fd.pkg.parse.knowledge_graph.parser.file_parser import FileParser
 from ascend_fd.pkg.diag.root_cluster.utils import NEGATIVE_ONE
-from ascend_fd.utils.fault_code import LINK_DOWN_FAULT, HBM_ABNORMAL_FAULT, ABNORMAL_FEC_MODE_FAULT, \
-    GENERAL_NET_HEALTH_FAULT, OPTICAL_MODULE_NOT_PRESENT, PHYSICAL_CARD_DROPPING, \
-    SOFTWARE_CARD_DROPPING, IP_NOT_CONFIG_FAULT, OPTICAL_POWER_FAULT, OPTICAL_MODULE_NOT_RX_OR_TX_FAULT, \
-    OPTICAL_MODULE_OUT_OF_LOCK_FAULT, NPU_DRIVER_FAULT
+from ascend_fd.utils.fault_code import (
+    LINK_DOWN_FAULT,
+    HBM_ABNORMAL_FAULT,
+    ABNORMAL_FEC_MODE_FAULT,
+    GENERAL_NET_HEALTH_FAULT,
+    OPTICAL_MODULE_NOT_PRESENT,
+    PHYSICAL_CARD_DROPPING,
+    SOFTWARE_CARD_DROPPING,
+    IP_NOT_CONFIG_FAULT,
+    OPTICAL_POWER_FAULT,
+    OPTICAL_MODULE_NOT_RX_OR_TX_FAULT,
+    OPTICAL_MODULE_OUT_OF_LOCK_FAULT,
+    NPU_DRIVER_FAULT,
+)
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
 LOGIC_ID_CONFIG: Dict[Tuple[str, str], str] = dict()
@@ -200,15 +212,19 @@ class PairInfoParser(ABC):
 
 
 class HBMInfoParser(PairInfoParser):
-    CHIP_MODEL_PARSER = NpuInfoLineParser(id_regex=r"npu-smi info -i (\d{1,3}) -c (\d)",
-                                          info_regex=r"npu-smi info -i \d{1,3} -c \d -t board",
-                                          detail_regex=r"\s{2}Chip Name\s{22}: (\w{1,15})",
-                                          detail_func=None)
+    CHIP_MODEL_PARSER = NpuInfoLineParser(
+        id_regex=r"npu-smi info -i (\d{1,3}) -c (\d)",
+        info_regex=r"npu-smi info -i \d{1,3} -c \d -t board",
+        detail_regex=r"\s{2}Chip Name\s{22}: (\w{1,15})",
+        detail_func=None,
+    )
 
-    HBM_INFO_PARSER = NpuInfoLineParser(id_regex=r"npu-smi info -i (\d{1,3})(?: -c (\d))?",
-                                        info_regex=r"npu-smi info -i \d{1,3}(?: -c \d)? -t usages",
-                                        detail_regex=r"\s{2}HBM Capacity\(MB\)\s{15}: (\d{4,6})",
-                                        detail_func=None)
+    HBM_INFO_PARSER = NpuInfoLineParser(
+        id_regex=r"npu-smi info -i (\d{1,3})(?: -c (\d))?",
+        info_regex=r"npu-smi info -i \d{1,3}(?: -c \d)? -t usages",
+        detail_regex=r"\s{2}HBM Capacity\(MB\)\s{15}: (\d{4,6})",
+        detail_func=None,
+    )
 
     RATED_HBM_DICT = {
         "300I A2": 32768,
@@ -221,13 +237,10 @@ class HBMInfoParser(PairInfoParser):
         "910B2": 65536,
         "910B3": 65536,
         "910B4": 32768,
-        "Ascend910_939": 65536
+        "Ascend910_939": 65536,
     }
 
     HBM_ABNORMAL_THRESHOLD = 0.95
-
-    def __init__(self, end_time: str):
-        super().__init__(end_time)
 
     def parse_pair_info(self, distinguishable_info_dict: dict, definitive_info_dict: dict, event_message: str):
         """
@@ -257,13 +270,15 @@ class HBMInfoParser(PairInfoParser):
         hbm = definitive_info_dict.get("detail_info", ["0"])[0]
         # lower than 95% of rated hbm are considered as abnormal
         if int(hbm) < int(self.RATED_HBM_DICT.get(model, 0)) * self.HBM_ABNORMAL_THRESHOLD:
-            event_list.append({
-                "occur_time": self.end_time,
-                "key_info": definitive_info_dict.get("key_info"),
-                "event_code": HBM_ABNORMAL_FAULT,
-                "source_device": npu_id,
-                "source_file": "npu_info_before/after.txt"
-            })
+            event_list.append(
+                {
+                    "occur_time": self.end_time,
+                    "key_info": definitive_info_dict.get("key_info"),
+                    "event_code": HBM_ABNORMAL_FAULT,
+                    "source_device": npu_id,
+                    "source_file": "npu_info_before/after.txt",
+                }
+            )
         return event_list
 
 
@@ -272,14 +287,18 @@ class OpticalInfoParser(PairInfoParser):
 
     def __init__(self, end_time: str):
         super().__init__(end_time)
-        self.optical_info_parse = NpuInfoLineParser(id_regex=r"hccn_tool -i (\d{1,3})",
-                                                    info_regex=r"hccn_tool -i \d{1,3} -optical -g",
-                                                    detail_regex="",
-                                                    detail_func=self.regex_detail_func)
-        self.board_info_parse = NpuInfoLineParser(id_regex=r"npu-smi info -i (\d{1,3}) -c (\d)",
-                                                  info_regex=r"npu-smi info -i \d{1,3} -c \d -t board",
-                                                  detail_regex=r"\s{2}Board ID\s{23}: (\w{4})",
-                                                  detail_func=None)
+        self.optical_info_parse = NpuInfoLineParser(
+            id_regex=r"hccn_tool -i (\d{1,3})",
+            info_regex=r"hccn_tool -i \d{1,3} -optical -g",
+            detail_regex="",
+            detail_func=self.regex_detail_func,
+        )
+        self.board_info_parse = NpuInfoLineParser(
+            id_regex=r"npu-smi info -i (\d{1,3}) -c (\d)",
+            info_regex=r"npu-smi info -i \d{1,3} -c \d -t board",
+            detail_regex=r"\s{2}Board ID\s{23}: (\w{4})",
+            detail_func=None,
+        )
 
     @staticmethod
     def _regex_power(type_str: str, desc) -> tuple:
@@ -383,22 +402,26 @@ class OpticalInfoParser(PairInfoParser):
             return event_list
         detail_info = definitive_info_dict.get("detail_info", [])
         for event_code, key_info in detail_info:
-            event_list.append({
-                "occur_time": self.end_time,
-                "key_info": key_info,
-                "event_code": event_code,
-                "source_device": npu_id,
-                "source_file": "npu_info_before/after.txt"
-            })
+            event_list.append(
+                {
+                    "occur_time": self.end_time,
+                    "key_info": key_info,
+                    "event_code": event_code,
+                    "source_device": npu_id,
+                    "source_file": "npu_info_before/after.txt",
+                }
+            )
         return event_list
 
 
 class NetHealthInfoParser(GeneralInfoParser):
-    NET_HEALTH_PARSER = NpuInfoLineParser(id_regex=r"hccn_tool -i (\d{1,3})",
-                                          info_regex=r"hccn_tool -i \d{1,3} -net_health -g",
-                                          detail_regex=r"net health status: "
-                                                       r"(\w{6}\s\w{2}\s\w{3}|\w{4,7}\s\w{4,8}|\w{4,11})",
-                                          detail_func=None)
+    NET_HEALTH_PARSER = NpuInfoLineParser(
+        id_regex=r"hccn_tool -i (\d{1,3})",
+        info_regex=r"hccn_tool -i \d{1,3} -net_health -g",
+        detail_regex=r"net health status: "
+        r"(\w{6}\s\w{2}\s\w{3}|\w{4,7}\s\w{4,8}|\w{4,11})",
+        detail_func=None,
+    )
 
     def __init__(self, end_time: str):
         super().__init__(end_time)
@@ -440,16 +463,18 @@ class NetHealthInfoParser(GeneralInfoParser):
                 "event_code": GENERAL_NET_HEALTH_FAULT,
                 "complement": net_health_info.get("detail_info"),
                 "source_device": net_health_info.get("npu_id"),
-                "source_file": "npu_info_before/after.txt"
+                "source_file": "npu_info_before/after.txt",
             }
         return {}
 
 
 class FecModeParser(GeneralInfoParser):
-    FEC_INFO_PARSER = NpuInfoLineParser(id_regex=r"hccn_tool -i (\d{1,3})",
-                                        info_regex=r"hccn_tool -i \d{1,3} -fec -g",
-                                        detail_regex=r"fec mode: (\w{2}) FEC mode",
-                                        detail_func=None)
+    FEC_INFO_PARSER = NpuInfoLineParser(
+        id_regex=r"hccn_tool -i (\d{1,3})",
+        info_regex=r"hccn_tool -i \d{1,3} -fec -g",
+        detail_regex=r"fec mode: (\w{2}) FEC mode",
+        detail_func=None,
+    )
 
     def __init__(self, end_time: str):
         super().__init__(end_time)
@@ -489,17 +514,19 @@ class FecModeParser(GeneralInfoParser):
                 "key_info": fec_mode_info.get("key_info"),
                 "event_code": ABNORMAL_FEC_MODE_FAULT,
                 "source_device": fec_mode_info.get("npu_id"),
-                "source_file": "npu_info_before/after.txt"
+                "source_file": "npu_info_before/after.txt",
             }
         return {}
 
 
 class LinkInfoParse(GeneralInfoParser):
-    LINK_DOWN_PARSERS = NpuInfoLineParser(id_regex=r"hccn_tool -i (\d{1,3})",
-                                          info_regex=r"hccn_tool -i \d{1,3} -link_stat -g",
-                                          detail_regex=r"\[devid \d{1,3}\]    (\w{3} \w{3} .?[0-9] [0-9]{2}:[0-9]{2}:"
-                                                       r"[0-9]{2} [0-9]{4})    LINK (DOWN|UP)",
-                                          detail_func=None)
+    LINK_DOWN_PARSERS = NpuInfoLineParser(
+        id_regex=r"hccn_tool -i (\d{1,3})",
+        info_regex=r"hccn_tool -i \d{1,3} -link_stat -g",
+        detail_regex=r"\[devid \d{1,3}\]    (\w{3} \w{3} .?[0-9] [0-9]{2}:[0-9]{2}:"
+        r"[0-9]{2} [0-9]{4})    LINK (DOWN|UP)",
+        detail_func=None,
+    )
 
     def __init__(self, end_time: str):
         super().__init__(end_time)
@@ -548,13 +575,15 @@ class LinkInfoParse(GeneralInfoParser):
             occur_before = compare_dict.get(npu_id, "")
             occur_time = self._check_before_and_after(occur_before, occur_after)
             if occur_time:
-                event_dict_list.append({
-                    "occur_time": occur_time,
-                    "source_device": npu_id,
-                    "key_info": event_dict.get("key_info"),
-                    "event_code": LINK_DOWN_FAULT,
-                    "source_file": "npu_info_before/after.txt"
-                })
+                event_dict_list.append(
+                    {
+                        "occur_time": occur_time,
+                        "source_device": npu_id,
+                        "key_info": event_dict.get("key_info"),
+                        "event_code": LINK_DOWN_FAULT,
+                        "source_file": "npu_info_before/after.txt",
+                    }
+                )
         return event_dict_list
 
     def _check_before_and_after(self, before_list, after_list):
@@ -567,7 +596,7 @@ class LinkInfoParse(GeneralInfoParser):
         if not before_list or before_list[0] not in after_list:
             check_list = after_list
         else:
-            check_list = after_list[:after_list.index(before_list[0])]
+            check_list = after_list[: after_list.index(before_list[0])]
         pre_record = None
         # check list: [(time, UP/DOWN),...]
         for record in check_list:
@@ -588,10 +617,12 @@ class LinkInfoParse(GeneralInfoParser):
 
 
 class HealthInfoParser(GeneralInfoParser):
-    HEALTH_CODE_PARSERS = NpuInfoLineParser(id_regex=r"npu-smi info -i (\d{1,3}) -c (\d)",
-                                            info_regex=r"npu-smi info -i \d{1,3} -c \d -t health",
-                                            detail_regex=r"(Error Code\s{1,100}: .[a-zA-Z0-9 ]{1,100})",
-                                            detail_func=lambda p: p.split(": ")[1])  # index 1 is used to get Error Code
+    HEALTH_CODE_PARSERS = NpuInfoLineParser(
+        id_regex=r"npu-smi info -i (\d{1,3}) -c (\d)",
+        info_regex=r"npu-smi info -i \d{1,3} -c \d -t health",
+        detail_regex=r"(Error Code\s{1,100}: .[a-zA-Z0-9 ]{1,100})",
+        detail_func=lambda p: p.split(": ")[1],
+    )  # index 1 is used to get Error Code
 
     def __init__(self, end_time: str):
         super().__init__(end_time)
@@ -618,15 +649,15 @@ class HealthInfoParser(GeneralInfoParser):
         empty_default_value = "NA"
         event_list = []
         if len(before_list) != len(after_list):
-            kg_logger.warning("The before npu health info list's length not equal to "
-                              "the after npu health info list.")
+            kg_logger.warning("The before npu health info list's length not equal to the after npu health info list.")
             return event_list
         before_list.sort(key=lambda x: x.get(npu_id_key, NEGATIVE_ONE))
         after_list.sort(key=lambda x: x.get(npu_id_key, NEGATIVE_ONE))
         for err_before, err_after in zip(before_list, after_list):
             if err_before.get(npu_id_key, NEGATIVE_ONE) != err_after.get(npu_id_key, NEGATIVE_ONE):
-                kg_logger.warning("The npu id in the before npu info and after file do not match, "
-                                  "please check the npu info files.")
+                kg_logger.warning(
+                    "The npu id in the before npu info and after file do not match, please check the npu info files."
+                )
                 continue
 
             err_before_detail_info = err_before.get(detail_info_str, [empty_default_value])
@@ -638,25 +669,32 @@ class HealthInfoParser(GeneralInfoParser):
                 continue
             for error_code in error_code_add:
                 error_code = error_code if error_code.startswith("0x") else "0x" + error_code
-                event_list.append({"event_code": error_code,
-                                   "occur_time": self.end_time,
-                                   "source_device": err_after.get(npu_id_key),
-                                   "key_info": err_after.get("key_info"),
-                                   "source_file": "npu_info_before/after.txt"
-                                   })
+                event_list.append(
+                    {
+                        "event_code": error_code,
+                        "occur_time": self.end_time,
+                        "source_device": err_after.get(npu_id_key),
+                        "key_info": err_after.get("key_info"),
+                        "source_file": "npu_info_before/after.txt",
+                    }
+                )
         return event_list
 
 
 class PhysicalCardInfoParser(GeneralInfoParser):
-    CARD_STATUS_PARSER = NpuInfoLineParser(id_regex=r"(lspci \| grep acce)",
-                                           info_regex=r"lspci \| grep acce",
-                                           detail_regex=r"(\w{2}:\w{2}\.\w{1})",
-                                           detail_func=None)
+    CARD_STATUS_PARSER = NpuInfoLineParser(
+        id_regex=r"(lspci \| grep acce)",
+        info_regex=r"lspci \| grep acce",
+        detail_regex=r"(\w{2}:\w{2}\.\w{1})",
+        detail_func=None,
+    )
 
-    BOARD_INFO_PARSER = NpuInfoLineParser(id_regex=r"npu-smi info -i (\d{1,3})(?: -c (\d))?",
-                                          info_regex=r"npu-smi info -i \d{1,3}(?: -c \d)? -t board",
-                                          detail_regex=r"\s{2}PCIe Bus Info\s{18}: 0000:(\w{2}:\w{2}.\w{1})",
-                                          detail_func=str.lower)
+    BOARD_INFO_PARSER = NpuInfoLineParser(
+        id_regex=r"npu-smi info -i (\d{1,3})(?: -c (\d))?",
+        info_regex=r"npu-smi info -i \d{1,3}(?: -c \d)? -t board",
+        detail_regex=r"\s{2}PCIe Bus Info\s{18}: 0000:(\w{2}:\w{2}.\w{1})",
+        detail_func=str.lower,
+    )
 
     def __init__(self, end_time: str):
         super().__init__(end_time)
@@ -703,24 +741,28 @@ class PhysicalCardInfoParser(GeneralInfoParser):
         if len(cards_before.get("detail_info", [])) > len(cards_after.get("detail_info", [])):
             dropping_cards = self._obtain_physical_dropping_cards(cards_before, cards_after, self.info_dict)
             for card in dropping_cards:
-                event_list.append({
-                    "occur_time": self.end_time,
-                    "key_info": cards_after.get("key_info"),
-                    "event_code": PHYSICAL_CARD_DROPPING,
-                    "complement": [",".join(dropping_cards)],
-                    "source_device": card,
-                    "source_file": "npu_info_before/after.txt"
-                })
+                event_list.append(
+                    {
+                        "occur_time": self.end_time,
+                        "key_info": cards_after.get("key_info"),
+                        "event_code": PHYSICAL_CARD_DROPPING,
+                        "complement": [",".join(dropping_cards)],
+                        "source_device": card,
+                        "source_file": "npu_info_before/after.txt",
+                    }
+                )
         return event_list
 
 
 class SoftwareCardInfoParser(GeneralInfoParser):
-    BOARD_CMD_ERROR_PARSER = NpuInfoLineParser(id_regex=r"npu-smi info -i (\d{1,3})(?: -c (\d))?",
-                                               info_regex=r"npu-smi info -i \d{1,3}(?: -c \d)? -t board",
-                                               detail_regex=r"(npu-smi info -i \d{1,3}(?: -c \d)? -t board\n"
-                                                            r"Invalid card id.\n"
-                                                            r"Error parameter of (?:-i|-c)\n)",
-                                               detail_func=None)
+    BOARD_CMD_ERROR_PARSER = NpuInfoLineParser(
+        id_regex=r"npu-smi info -i (\d{1,3})(?: -c (\d))?",
+        info_regex=r"npu-smi info -i \d{1,3}(?: -c \d)? -t board",
+        detail_regex=r"(npu-smi info -i \d{1,3}(?: -c \d)? -t board\n"
+        r"Invalid card id.\n"
+        r"Error parameter of (?:-i|-c)\n)",
+        detail_func=None,
+    )
 
     def __init__(self, end_time: str):
         super().__init__(end_time)
@@ -751,23 +793,26 @@ class SoftwareCardInfoParser(GeneralInfoParser):
                 if npu_id not in npu_id_before:
                     dropping_cards.add(npu_id)
             for card in dropping_cards:
-                event_list.append({
-                    "occur_time": self.end_time,
-                    "key_info": "\n".join(err_info_after[0].get("detail_info")),
-                    "event_code": SOFTWARE_CARD_DROPPING,
-                    "complement": [",".join(dropping_cards)],
-                    "source_device": card,
-                    "source_file": "npu_info_before/after.txt"
-                })
+                event_list.append(
+                    {
+                        "occur_time": self.end_time,
+                        "key_info": "\n".join(err_info_after[0].get("detail_info")),
+                        "event_code": SOFTWARE_CARD_DROPPING,
+                        "complement": [",".join(dropping_cards)],
+                        "source_device": card,
+                        "source_file": "npu_info_before/after.txt",
+                    }
+                )
         return event_list
 
 
 class IpInfoParser(GeneralInfoParser):
-    IP_INFO_PARSER = NpuInfoLineParser(id_regex=r"hccn_tool -i (\d{1,3})",
-                                       info_regex=r"hccn_tool -i \d{1,3} -ip -g",
-                                       detail_regex=r"ipaddr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\n"
-                                                    r"netmask:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})",
-                                       detail_func=None)
+    IP_INFO_PARSER = NpuInfoLineParser(
+        id_regex=r"hccn_tool -i (\d{1,3})",
+        info_regex=r"hccn_tool -i \d{1,3} -ip(?: -inet6)? -g",
+        detail_regex=r"(?:ipaddr:(.+?)\n\s*\n?netmask|ipv6_address:(.+?)\n\s*\n?prefix_length):(.+?)(?:\n|$)",
+        detail_func=None,
+    )
 
     def __init__(self, end_time: str):
         super().__init__(end_time)
@@ -784,9 +829,9 @@ class IpInfoParser(GeneralInfoParser):
             return
         if not self.IP_INFO_PARSER.desc:
             return
-        self.info_dict.setdefault(name, []).append({
-            "npu_id": self.IP_INFO_PARSER.npu_id, "key_info": self.IP_INFO_PARSER.desc
-        })
+        self.info_dict.setdefault(name, []).append(
+            {"npu_id": self.IP_INFO_PARSER.npu_id, "key_info": self.IP_INFO_PARSER.desc}
+        )
 
     def processing_info(self) -> list:
         """
@@ -799,80 +844,120 @@ class IpInfoParser(GeneralInfoParser):
             event_list.extend(ip_events)
         return event_list
 
+    def _create_ip_fault_event(self, npu_id: str, key_info: str) -> dict:
+        return {
+            "occur_time": self.end_time,
+            "key_info": key_info,
+            "event_code": IP_NOT_CONFIG_FAULT,
+            "source_device": npu_id,
+            "source_file": "npu_info_before/after.txt",
+        }
+
     def _contrast_ip_info(self, ip_info_list: list) -> list:
         """
         Check the consistency of the first three segments of ip address and netmask
         :param ip_info_list: list of ip info dict
         :return: event list
         """
+        MATCH_LEN = 3
         ip_events = []
         if not ip_info_list:
             return ip_events
-        ip_list = []
-        netmask_list = []
-        define_key_info = ("执行以下命令无结果：\n/usr/local/Ascend/driver/tools/hccn_tool -i ${device id} -ip -g\n"
-                           "预期执行示例：\n/usr/local/Ascend/driver/tools/hccn_tool -i ${device id} -ip -g\n"
-                           "ipaddr:*.*.*.*\nnetmask:*.*.*.*")
+        define_key_info = (
+            "执行以下命令无结果：\n"
+            "IPv4: /usr/local/Ascend/driver/tools/hccn_tool -i ${device id} -ip -g\n"
+            "IPv6: /usr/local/Ascend/driver/tools/hccn_tool -i ${device id} -ip -inet6 -g\n"
+            "预期执行示例：\n"
+            "IPv4:\nipaddr:*.*.*.*\nnetmask:*.*.*.*\n"
+            "IPv6:\nipv6_address:*::*\nprefix_length:*"
+        )
         for ip_info in ip_info_list:
             detail_info = ip_info.get("detail_info")
-            if detail_info:
-                netmask_list.append(detail_info[0][1])
-                ip_list.append(detail_info[0][0])
+            npu_id = ip_info.get("npu_id", "Unknown")
+            if not detail_info or len(detail_info[0]) != MATCH_LEN:
+                ip_events.append(self._create_ip_fault_event(npu_id, define_key_info))
                 continue
-            ip_events.append({
-                "occur_time": self.end_time,
-                "key_info": define_key_info,
-                "event_code": IP_NOT_CONFIG_FAULT,
-                "source_device": ip_info.get("npu_id", "Unknown"),
-                "source_file": "npu_info_before/after.txt"
-            })
+            match_result = detail_info[0]
+            ipv4_addr, ipv6_addr, mask_or_prefix = match_result[0], match_result[1], match_result[2]
+            valid_ipv4 = IPAddress.is_ipv4(ipv4_addr)
+            valid_ipv6 = IPAddress.is_ipv6(ipv6_addr)
+            if not (valid_ipv4 or valid_ipv6):
+                invalid_addr = ipv4_addr or ipv6_addr
+                addr_type = "IPv6" if ipv6_addr and not ipv4_addr else "IP"
+                ip_events.append(
+                    self._create_ip_fault_event(
+                        npu_id, f"Invalid {addr_type} address configured for device {npu_id}: {invalid_addr}"
+                    )
+                )
+            elif valid_ipv4 and not IPAddress.is_valid_ip(mask_or_prefix):
+                ip_events.append(
+                    self._create_ip_fault_event(
+                        npu_id, f"Invalid netmask configured for device {npu_id}: {mask_or_prefix}"
+                    )
+                )
         return ip_events
 
 
 class VersionInfoParser(GeneralInfoParser):
-    DRIVER_VERSION_PARSER = NpuInfoLineParser(id_regex=r"(cat /usr/local/Ascend/driver/version.info)",
-                                              info_regex=r"cat /usr/local/Ascend/driver/version.info",
-                                              detail_regex=r"Version=([A-Za-z0-9\.]{1,20})",
-                                              detail_func=None)
+    DRIVER_VERSION_PARSER = NpuInfoLineParser(
+        id_regex=r"(cat /usr/local/Ascend/driver/version.info)",
+        info_regex=r"cat /usr/local/Ascend/driver/version.info",
+        detail_regex=r"Version=([A-Za-z0-9\.]{1,20})",
+        detail_func=None,
+    )
 
-    FIRM_VERSION_PARSER = NpuInfoLineParser(id_regex=r"(cat /usr/local/Ascend/firmware/version.info)",
-                                            info_regex=r"cat /usr/local/Ascend/firmware/version.info",
-                                            detail_regex=r"Version=([A-Za-z0-9\.]{1,20})",
-                                            detail_func=None)
+    FIRM_VERSION_PARSER = NpuInfoLineParser(
+        id_regex=r"(cat /usr/local/Ascend/firmware/version.info)",
+        info_regex=r"cat /usr/local/Ascend/firmware/version.info",
+        detail_regex=r"Version=([A-Za-z0-9\.]{1,20})",
+        detail_func=None,
+    )
 
-    NNAE_VERSION_PARSER = NpuInfoLineParser(id_regex=r"(cat /usr/local/Ascend/nnae/latest/ascend_nnae_install.info)",
-                                            info_regex=r"cat /usr/local/Ascend/nnae/latest/ascend_nnae_install.info",
-                                            detail_regex=r"version=([A-Za-z0-9\.]{1,20})",
-                                            detail_func=None)
+    NNAE_VERSION_PARSER = NpuInfoLineParser(
+        id_regex=r"(cat /usr/local/Ascend/nnae/latest/ascend_nnae_install.info)",
+        info_regex=r"cat /usr/local/Ascend/nnae/latest/ascend_nnae_install.info",
+        detail_regex=r"version=([A-Za-z0-9\.]{1,20})",
+        detail_func=None,
+    )
 
-    CAAN_X86_64_VERSION_PARSER = NpuInfoLineParser(id_regex=r"(cat /usr/local/Ascend/ascend-toolkit/latest/"
-                                                            r"x86_84-linux/ascend_toolkit_install.info)",
-                                                   info_regex=r"cat /usr/local/Ascend/ascend-toolkit/latest/"
-                                                              r"x86_84-linux/ascend_toolkit_install.info",
-                                                   detail_regex=r"version=([A-Za-z0-9\.]{1,20})",
-                                                   detail_func=None)
+    CAAN_X86_64_VERSION_PARSER = NpuInfoLineParser(
+        id_regex=r"(cat /usr/local/Ascend/ascend-toolkit/latest/"
+        r"x86_84-linux/ascend_toolkit_install.info)",
+        info_regex=r"cat /usr/local/Ascend/ascend-toolkit/latest/"
+        r"x86_84-linux/ascend_toolkit_install.info",
+        detail_regex=r"version=([A-Za-z0-9\.]{1,20})",
+        detail_func=None,
+    )
 
-    CAAN_AARCH64_VERSION_PARSER = NpuInfoLineParser(id_regex=r"(cat /usr/local/Ascend/ascend-toolkit/latest/"
-                                                             r"aarch64-linux/ascend_toolkit_install.info)",
-                                                    info_regex=r"cat /usr/local/Ascend/ascend-toolkit/latest/"
-                                                               r"aarch64-linux/ascend_toolkit_install.info",
-                                                    detail_regex=r"version=([A-Za-z0-9\.]{1,20})",
-                                                    detail_func=None)
+    CAAN_AARCH64_VERSION_PARSER = NpuInfoLineParser(
+        id_regex=r"(cat /usr/local/Ascend/ascend-toolkit/latest/"
+        r"aarch64-linux/ascend_toolkit_install.info)",
+        info_regex=r"cat /usr/local/Ascend/ascend-toolkit/latest/"
+        r"aarch64-linux/ascend_toolkit_install.info",
+        detail_regex=r"version=([A-Za-z0-9\.]{1,20})",
+        detail_func=None,
+    )
 
-    PYTORCH_VERSION_PARSER = NpuInfoLineParser(id_regex=r'(pip list \| grep "torch ")',
-                                               info_regex=r'pip list \| grep "torch "',
-                                               detail_regex=r"[\d\.]{1,10}",
-                                               detail_func=None)
+    PYTORCH_VERSION_PARSER = NpuInfoLineParser(
+        id_regex=r'(pip list \| grep "torch ")',
+        info_regex=r'pip list \| grep "torch "',
+        detail_regex=r"[\d\.]{1,10}",
+        detail_func=None,
+    )
 
-    TORCH_NPU_VERSION_PARSER = NpuInfoLineParser(id_regex=r'(pip list \| grep torch-npu)',
-                                                 info_regex=r'pip list \| grep torch-npu',
-                                                 detail_regex=r"[a-zA-Z\d\.]{1,30}",
-                                                 detail_func=None)
+    TORCH_NPU_VERSION_PARSER = NpuInfoLineParser(
+        id_regex=r'(pip list \| grep torch-npu)',
+        info_regex=r'pip list \| grep torch-npu',
+        detail_regex=r"[a-zA-Z\d\.]{1,30}",
+        detail_func=None,
+    )
 
-    MINDSPORE_VERSION_PARSER = NpuInfoLineParser(id_regex=r'(pip list \| grep "mindspore ")',
-                                                 info_regex=r'pip list \| grep "mindspore "',
-                                                 detail_regex=r"[\d\.]{1,10}",
-                                                 detail_func=None)
+    MINDSPORE_VERSION_PARSER = NpuInfoLineParser(
+        id_regex=r'(pip list \| grep "mindspore ")',
+        info_regex=r'pip list \| grep "mindspore "',
+        detail_regex=r"[\d\.]{1,10}",
+        detail_func=None,
+    )
 
     def __init__(self):
         super().__init__()
@@ -923,11 +1008,13 @@ class VersionInfoParser(GeneralInfoParser):
 
 
 class NpuSmiInfoParser(GeneralInfoParser):
-    NPU_SMI_INFO_PARSER = NpuInfoLineParser(id_regex=r"(/usr/local/bin/npu-smi info)",
-                                            info_regex=r"/usr/local/bin/npu-smi info$|/usr/local/bin/npu-smi info\n",
-                                            detail_regex=r"npu-smi [A-Za-z0-9\.]{0,20}\s{0,30}Version: [A-Za-z0-9\.]{"
-                                                         r"0,20}",
-                                            detail_func=None)
+    NPU_SMI_INFO_PARSER = NpuInfoLineParser(
+        id_regex=r"(/usr/local/bin/npu-smi info)",
+        info_regex=r"/usr/local/bin/npu-smi info$|/usr/local/bin/npu-smi info\n",
+        detail_regex=r"npu-smi [A-Za-z0-9\.]{0,20}\s{0,30}Version: [A-Za-z0-9\.]{"
+        r"0,20}",
+        detail_func=None,
+    )
 
     def __init__(self, end_time: str):
         super().__init__(end_time)
@@ -953,13 +1040,15 @@ class NpuSmiInfoParser(GeneralInfoParser):
         for info in chain(*self.info_dict.values()):
             if info.get("detail_info"):
                 continue
-            event_list.append({
-                "occur_time": self.end_time,
-                "key_info": define_key_info + info.get("key_info", ""),
-                "event_code": NPU_DRIVER_FAULT,
-                "source_device": "Unknown",
-                "source_file": "npu_info_before/after.txt"
-            })
+            event_list.append(
+                {
+                    "occur_time": self.end_time,
+                    "key_info": define_key_info + info.get("key_info", ""),
+                    "event_code": NPU_DRIVER_FAULT,
+                    "source_device": "Unknown",
+                    "source_file": "npu_info_before/after.txt",
+                }
+            )
         return event_list
 
 
@@ -1000,13 +1089,6 @@ class NpuInfoParser(FileParser):
     DEVICE_INFO_CMD = "npu-smi info -m"
     DATETIME_PATTERN = re.compile(DATETIME_REGEX)
 
-    def __init__(self, params):
-        """
-        The NPU Info parser.
-        Note: This parser does not filter by time.
-        """
-        super().__init__(params)
-
     def parse(self, parse_ctx: KGParseCtx, task_id):
         """
         Parse log file
@@ -1025,20 +1107,23 @@ class NpuInfoParser(FileParser):
         self.is_sdk_input = parse_ctx.is_sdk_input
         for file_source in npu_info:
             filename = self._get_filename(file_source)
-            is_npu_before = (self.is_sdk_input and filename == "npu_info_before.txt") or \
-                            (filename == "npu_info_before.txt" and os.path.exists(file_source))
+            is_npu_before = (self.is_sdk_input and filename == "npu_info_before.txt") or (
+                filename == "npu_info_before.txt" and os.path.exists(file_source)
+            )
             if is_npu_before:
                 snippets_param[kwd_before], self.start_time = self._split_into_snippets(file_source)
                 continue
-            is_npu_after = (self.is_sdk_input and filename == "npu_info_after.txt") or \
-                           (filename == "npu_info_after.txt" and os.path.exists(file_source))
+            is_npu_after = (self.is_sdk_input and filename == "npu_info_after.txt") or (
+                filename == "npu_info_after.txt" and os.path.exists(file_source)
+            )
             if is_npu_after:
                 snippets_param[kwd_after], self.end_time = self._split_into_snippets(file_source)
                 if self.is_sdk_input:
                     file_time_after = getattr(file_source, "modification_time", "") or KG_MAX_TIME
                 else:
-                    file_time_after = datetime.fromtimestamp(
-                        os.path.getmtime(file_source)).strftime("%Y-%m-%d %H:%M:%S.%f")
+                    file_time_after = datetime.fromtimestamp(os.path.getmtime(file_source)).strftime(
+                        "%Y-%m-%d %H:%M:%S.%f"
+                    )
         if kwd_before not in snippets_param or kwd_after not in snippets_param:
             kg_logger.warning("The npu info files is incomplete. The before or after file does not exist.")
             raise FileNotExistError("The npu info files is incomplete. The before or after file does not exist.")
@@ -1049,10 +1134,19 @@ class NpuInfoParser(FileParser):
                 ConfigInitializer.initialize_config(log_before[device_info_log_idx])
         self._update_train_time()
         end_time = self.params.get("end_time") or file_time_after  # have end_time, use end_time as occur_time
-        for parser in [LinkInfoParse(end_time), HealthInfoParser(end_time), HBMInfoParser(end_time),
-                       IpInfoParser(end_time), PhysicalCardInfoParser(end_time), SoftwareCardInfoParser(end_time),
-                       OpticalInfoParser(end_time), FecModeParser(end_time), NetHealthInfoParser(end_time),
-                       VersionInfoParser(), NpuSmiInfoParser(end_time)]:
+        for parser in [
+            LinkInfoParse(end_time),
+            HealthInfoParser(end_time),
+            HBMInfoParser(end_time),
+            IpInfoParser(end_time),
+            PhysicalCardInfoParser(end_time),
+            SoftwareCardInfoParser(end_time),
+            OpticalInfoParser(end_time),
+            FecModeParser(end_time),
+            NetHealthInfoParser(end_time),
+            VersionInfoParser(),
+            NpuSmiInfoParser(end_time),
+        ]:
             events_list.extend(parser.parse(snippets_param))
         return events_list, {}
 
@@ -1064,8 +1158,7 @@ class NpuInfoParser(FileParser):
             if line.startswith(self.DATETIME_STR):
                 date_time_str = self.DATETIME_PATTERN.search(line)
                 date_time = date_time_str[0] if date_time_str else date_time
-            if any(line.startswith(cmd_prefix) for cmd_prefix in self.COMMAND_PREFIX_SET) \
-                    and current_snippet.strip():
+            if any(line.startswith(cmd_prefix) for cmd_prefix in self.COMMAND_PREFIX_SET) and current_snippet.strip():
                 snippet_list.append(current_snippet.strip())
                 current_snippet = line
                 continue

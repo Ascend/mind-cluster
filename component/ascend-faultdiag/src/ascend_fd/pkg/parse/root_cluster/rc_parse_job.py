@@ -41,6 +41,7 @@ from ascend_fd.utils.regular_table import (
     TLS_SWITCH,
     HCCL_IP_INFO,
     HCCL_IPADDR,
+    HCCL_IPADDR_V6_PATTERN,
     MAX_TIME,
     MIN_TIME,
     HOST_SN,
@@ -50,6 +51,7 @@ from ascend_fd.utils.regular_table import (
     SERVER_INFO_FILE,
     PRODUCT_SYS_SN,
 )
+from ascend_fd.utils.net_tools import IPAddress
 from ascend_fd.configuration.config import RC_PARSER_DUMP_NAME
 from ascend_fd.pkg.parse.root_cluster.parser import PidFileParser
 
@@ -353,11 +355,14 @@ def parse_npu_info_file(npu_info_file):
             #     netmask:x.x.x.x
             hccl_info_re = re.search(HCCL_IP_INFO, event_message)
             ipaddr_re = re.search(HCCL_IPADDR, event_message)
+            if not ipaddr_re:
+                ipaddr_re = re.search(HCCL_IPADDR_V6_PATTERN, event_message)
             if not hccl_info_re or not ipaddr_re:
                 continue
             device_id = hccl_info_re[1]
             device_ip = ipaddr_re[1]
-            device_to_rank[device_id] = device_ip
+            if IPAddress.is_valid_ip(device_ip):
+                device_to_rank[device_id] = device_ip
 
     return device_to_rank
 
