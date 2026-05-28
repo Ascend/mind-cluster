@@ -492,8 +492,6 @@ const (
 	HotResetClose = -1
 	// HotResetInfer using infer chip hot reset
 	HotResetInfer = 0
-	// HotResetTrainOnLine using train chip hot reset online
-	HotResetTrainOnLine = 1
 	// HotResetTrainOffLine using train chip hot reset offline
 	HotResetTrainOffLine = 2
 	// BootStartFinish chip hot reset finish

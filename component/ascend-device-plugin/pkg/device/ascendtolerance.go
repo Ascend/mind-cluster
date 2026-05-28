@@ -38,31 +38,13 @@ import (
 	"ascend-common/common-utils/hwlog"
 )
 
-var processPolicyTable = map[string]int{
-	common.EmptyError:          common.EmptyErrorLevel,
-	common.IgnoreError:         common.IgnoreErrorLevel,
-	common.RestartRequestError: common.RestartRequestErrorLevel,
-	common.RestartError:        common.RestartErrorLevel,
-	common.FreeResetError:      common.FreeResetErrorLevel,
-	common.ResetError:          common.ResetErrorLevel,
-	common.IsolateError:        common.IsolateErrorLevel,
-}
-
 // HotResetManager hot reset manager
 type HotResetManager interface {
 	GetResetDevNumOnce() (int, error)
 	GetDevIdList(string) []int32
-	GetTaskDevFaultInfoList(string) ([]*common.TaskDevInfo, error)
-	GetTaskPod(string) (v1.Pod, error)
-	GetAllTaskDevFaultInfoList() map[string][]*common.TaskDevInfo
 	GetDevProcessPolicy(string) string
-	GetTaskProcessPolicy(string) (string, int, error)
 	GetDevListInReset() map[int32]struct{}
-	GetDevListByPolicyLevel([]*common.TaskDevInfo, int) (map[int32]struct{}, error)
-	GetNeedResetDevMap([]*common.TaskDevInfo) (map[int32]int32, error)
 	GetGlobalDevFaultInfo(logicID int32) (*common.DevFaultInfo, error)
-	GetTaskResetInfo([]*common.TaskDevInfo, string, string, string) (*common.TaskResetInfo, error)
-	GetTaskFaultRankInfo([]*common.TaskDevInfo) (*common.TaskFaultInfo, error)
 	GetFaultDev2PodMap() (map[int32]v1.Pod, error)
 	GetTaskNameByPod(pod v1.Pod) string
 	GenerateTaskDevFaultInfoList(devIdList []int32, rankIndex string) ([]*common.TaskDevInfo, error)
@@ -72,16 +54,6 @@ type HotResetManager interface {
 	UpdateTaskDevFaultInfoCache(map[string][]*common.TaskDevInfo) error
 	UpdateTaskPodCache(map[string]v1.Pod) error
 	UpdateFreeTask(map[string]struct{}, map[string][]int32)
-	SetTaskInReset(string) error
-	SetDevInReset(int32) error
-	SetAllDevInReset(info *common.TaskResetInfo) error
-	UnSetTaskInReset(string) error
-	UnSetDevInReset(int32) error
-	UnSetAllDevInReset(*common.TaskResetInfo) error
-	IsCurNodeTaskInReset(string) bool
-	IsExistFaultyDevInTask(string) bool
-	DeepCopyDevInfo(*common.TaskDevInfo) *common.TaskDevInfo
-	DeepCopyDevFaultInfoList([]*common.TaskDevInfo) []*common.TaskDevInfo
 	SyncResetCM(context.Context, *kubeclient.ClientK8s)
 	GetCMFromCache(string) (*v1.ConfigMap, error)
 }
@@ -524,31 +496,6 @@ func (hrt *HotResetTools) GetResetDevNumOnce() (int, error) {
 	}
 	return hrt.resetDevNumOnce, nil
 }
-
-// GetTaskDevFaultInfoList return task device fault info list
-func (hrt *HotResetTools) GetTaskDevFaultInfoList(taskName string) ([]*common.TaskDevInfo, error) {
-	taskDevFaultInfoList, ok := hrt.allTaskDevFaultInfo[taskName]
-	if !ok {
-		return nil, fmt.Errorf("task %s is not in task device fault info list cache", taskName)
-	}
-	return taskDevFaultInfoList, nil
-}
-
-// GetTaskPod return task pod
-func (hrt *HotResetTools) GetTaskPod(taskName string) (v1.Pod, error) {
-	pod, ok := hrt.taskPod[taskName]
-	if !ok {
-		return v1.Pod{}, fmt.Errorf("task %s is not in task pod cache", taskName)
-	}
-	return pod, nil
-}
-
-// GetAllTaskDevFaultInfoList return all task device fault info list
-func (hrt *HotResetTools) GetAllTaskDevFaultInfoList() map[string][]*common.TaskDevInfo {
-	return hrt.allTaskDevFaultInfo
-}
-
-// GetDevListInReset return the logic id list of device in reset
 func (hrt *HotResetTools) GetDevListInReset() map[int32]struct{} {
 	return hrt.resetDev
 }
@@ -579,29 +526,6 @@ func (hrt *HotResetTools) GetDevProcessPolicy(faultType string) string {
 		return common.IsolateError
 	}
 }
-
-// GetTaskProcessPolicy return a task process policy
-func (hrt *HotResetTools) GetTaskProcessPolicy(taskName string) (string, int, error) {
-	devFaultInfoList, ok := hrt.allTaskDevFaultInfo[taskName]
-	if !ok {
-		return "", -1, fmt.Errorf("this task is not in the cache")
-	}
-	var processPolicy string
-	var processPolicyLevel int
-	for _, devFaultInfo := range devFaultInfoList {
-		devPolicyLevel, ok := processPolicyTable[devFaultInfo.Policy]
-		if !ok {
-			return "", -1, fmt.Errorf("invalid policy of device fault info in task %s", taskName)
-		}
-		if devPolicyLevel > processPolicyLevel {
-			processPolicy = devFaultInfo.Policy
-			processPolicyLevel = devPolicyLevel
-		}
-	}
-	return processPolicy, processPolicyLevel, nil
-}
-
-// GetDevIdList convert device str to device logic id list
 func (hrt *HotResetTools) GetDevIdList(devStr string) []int32 {
 	var phyIDs []int32
 	for _, deviceName := range strings.Split(devStr, common.CommaSepDev) {
@@ -614,124 +538,6 @@ func (hrt *HotResetTools) GetDevIdList(devStr string) []int32 {
 	}
 	return phyIDs
 }
-
-// GetDevListByPolicyLevel return the dev list by policy level
-func (hrt *HotResetTools) GetDevListByPolicyLevel(devFaultInfoList []*common.TaskDevInfo,
-	policyLevel int) (map[int32]struct{}, error) {
-	devList := make(map[int32]struct{})
-	for _, devFaultInfo := range devFaultInfoList {
-		policyType, ok := processPolicyTable[devFaultInfo.Policy]
-		if !ok {
-			err := fmt.Errorf("invalid policy str of device %d", devFaultInfo.LogicId)
-			hwlog.RunLog.Error(err)
-			return nil, err
-		}
-		if policyType >= policyLevel {
-			if _, ok := devList[devFaultInfo.LogicId]; !ok {
-				devList[devFaultInfo.LogicId] = struct{}{}
-			}
-		}
-	}
-	return devList, nil
-}
-
-// GetNeedResetDevMap return device logic id list to be reset
-func (hrt *HotResetTools) GetNeedResetDevMap(devFaultInfoList []*common.TaskDevInfo) (map[int32]int32, error) {
-	needResetDevMap := make(map[int32]int32)
-	resetDevNumOnce, err := hrt.GetResetDevNumOnce()
-	if err != nil {
-		hwlog.RunLog.Error(err)
-		return nil, err
-	}
-	for _, devFaultInfo := range devFaultInfoList {
-		policyType, ok := processPolicyTable[devFaultInfo.Policy]
-		if !ok {
-			err := fmt.Errorf("invalid policy str of device %d", devFaultInfo.LogicId)
-			hwlog.RunLog.Error(err)
-			return nil, err
-		}
-		if policyType == common.RestartErrorLevel || policyType == common.ResetErrorLevel ||
-			policyType == common.RestartRequestErrorLevel {
-			resetIndex := devFaultInfo.LogicId / int32(resetDevNumOnce)
-			if _, ok := needResetDevMap[devFaultInfo.LogicId]; !ok {
-				needResetDevMap[resetIndex*int32(resetDevNumOnce)] = devFaultInfo.LogicId
-			}
-		}
-	}
-	return needResetDevMap, nil
-}
-
-// GetTaskResetInfo return the detail reset info of task to process
-func (hrt *HotResetTools) GetTaskResetInfo(devFaultInfoList []*common.TaskDevInfo, policy, initPolicy,
-	status string) (*common.TaskResetInfo, error) {
-	faultRing := make(map[int]struct{}, common.RingSum)
-	var rankList = make([]*common.TaskDevInfo, 0)
-	resetDevNumOnce, err := hrt.GetResetDevNumOnce()
-	if err != nil {
-		hwlog.RunLog.Error(err)
-		return nil, err
-	}
-	for _, devFaultInfo := range devFaultInfoList {
-		policyType, ok := processPolicyTable[devFaultInfo.Policy]
-		if !ok {
-			err := fmt.Errorf("invalid policy str of device %d", devFaultInfo.LogicId)
-			hwlog.RunLog.Error(err)
-			return nil, err
-		}
-		if policyType != common.RestartErrorLevel && policyType != common.ResetErrorLevel &&
-			policyType != common.RestartRequestErrorLevel {
-			continue
-		}
-		ringStartIndex := int(devFaultInfo.LogicId) / resetDevNumOnce
-		faultRing[ringStartIndex] = struct{}{}
-	}
-	for _, devInfo := range devFaultInfoList {
-		ringIndex := int(devInfo.LogicId) / resetDevNumOnce
-		if _, ok := faultRing[ringIndex]; !ok {
-			continue
-		}
-		newDevInfo := hrt.DeepCopyDevInfo(devInfo)
-		newDevInfo.Policy = policy
-		newDevInfo.InitialPolicy = initPolicy
-		newDevInfo.Status = status
-		rankList = append(rankList, newDevInfo)
-	}
-	return &common.TaskResetInfo{
-		RankList: rankList,
-	}, nil
-}
-
-// GetTaskFaultRankInfo return the fault rank info of task to update fault cm
-func (hrt *HotResetTools) GetTaskFaultRankInfo(devFaultInfoList []*common.TaskDevInfo) (*common.TaskFaultInfo, error) {
-	taskFaultInfo := &common.TaskFaultInfo{
-		FaultRank: make([]int, 0),
-	}
-	faultRing := make(map[int]struct{}, common.RingSum)
-	resetDevNumOnce, err := hrt.GetResetDevNumOnce()
-	if err != nil {
-		hwlog.RunLog.Error(err)
-		return nil, err
-	}
-	for _, devFaultInfo := range devFaultInfoList {
-		policy := processPolicyTable[devFaultInfo.Policy]
-		if policy != common.RestartErrorLevel && policy != common.ResetErrorLevel &&
-			policy != common.RestartRequestErrorLevel {
-			continue
-		}
-		ringStartIndex := int(devFaultInfo.LogicId) / resetDevNumOnce
-		faultRing[ringStartIndex] = struct{}{}
-	}
-	for _, devInfo := range devFaultInfoList {
-		ringIndex := int(devInfo.LogicId) / resetDevNumOnce
-		if _, ok := faultRing[ringIndex]; !ok {
-			continue
-		}
-		taskFaultInfo.FaultRank = append(taskFaultInfo.FaultRank, devInfo.RankId)
-	}
-	return taskFaultInfo, nil
-}
-
-// GetFaultDev2PodMap return map which contains fault device and pod
 func (hrt *HotResetTools) GetFaultDev2PodMap() (map[int32]v1.Pod, error) {
 	if hrt.faultDev2PodMap == nil {
 		return nil, fmt.Errorf("no valid faultDev2PodMap here")
@@ -871,123 +677,4 @@ func (hrt *HotResetTools) isTaskDevListChange(taskName string, newTaskDevList ma
 	}
 	return common.Int32Join(hrt.allTaskDevList[taskName], common.UnderLine) !=
 		common.Int32Join(newTaskDevList[taskName], common.UnderLine)
-}
-
-// IsCurNodeTaskInReset check whether the current task is being reset on the current node
-func (hrt *HotResetTools) IsCurNodeTaskInReset(taskName string) bool {
-	if _, ok := hrt.resetTask[taskName]; !ok {
-		return false
-	}
-	return true
-}
-
-// IsExistFaultyDevInTask check if any fault device exist on current task
-func (hrt *HotResetTools) IsExistFaultyDevInTask(taskName string) bool {
-	if _, ok := hrt.allTaskDevList[taskName]; !ok {
-		hwlog.RunLog.Warnf("task: %s is not exist in cache", taskName)
-		return false
-	}
-	for _, pod := range hrt.faultDev2PodMap {
-		taskNameInPod, ok := pod.Annotations[common.ResetTaskNameKey]
-		if !ok {
-			taskNameInPod, ok = pod.Labels[common.ResetTaskNameKeyInLabel]
-			if !ok {
-				hwlog.RunLog.Error("failed to get task name by task key in IsExistFaultyDevInTask")
-				return false
-			}
-		}
-		if taskNameInPod == taskName {
-			hwlog.RunLog.Infof("faulty device exists in task: %s", taskName)
-			return true
-		}
-	}
-
-	return false
-}
-
-// SetTaskInReset set a task to the reset state
-func (hrt *HotResetTools) SetTaskInReset(taskName string) error {
-	if _, ok := hrt.resetTask[taskName]; ok {
-		return fmt.Errorf("task %s is resetting", taskName)
-	}
-	hrt.resetTask[taskName] = struct{}{}
-	hwlog.RunLog.Infof("set task %s to reset state, reset tasks is %v", taskName, hrt.resetTask)
-	return nil
-}
-
-// SetDevInReset set a device to the reset state
-func (hrt *HotResetTools) SetDevInReset(devId int32) error {
-	if _, ok := hrt.resetDev[devId]; ok {
-		return fmt.Errorf("dev %d is resetting", devId)
-	}
-	hrt.resetDev[devId] = struct{}{}
-	return nil
-}
-
-// SetAllDevInReset set all device in a task to the reset state
-func (hrt *HotResetTools) SetAllDevInReset(resetInfo *common.TaskResetInfo) error {
-	if resetInfo == nil {
-		return fmt.Errorf("resetInfo is nil")
-	}
-	for _, devInfo := range resetInfo.RankList {
-		if err := hrt.SetDevInReset(devInfo.LogicId); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// UnSetDevInReset unset a device in a task to leave the reset state
-func (hrt *HotResetTools) UnSetDevInReset(devId int32) error {
-	if _, ok := hrt.resetDev[devId]; !ok {
-		return fmt.Errorf("device %d is not resetting", devId)
-	}
-	delete(hrt.resetDev, devId)
-	return nil
-}
-
-// UnSetAllDevInReset unset all device in a task to leave the reset state
-func (hrt *HotResetTools) UnSetAllDevInReset(resetInfo *common.TaskResetInfo) error {
-	if resetInfo == nil {
-		return fmt.Errorf("resetInfo is nil")
-	}
-	for _, devInfo := range resetInfo.RankList {
-		if err := hrt.UnSetDevInReset(devInfo.LogicId); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// UnSetTaskInReset unset a task to leave the reset state
-func (hrt *HotResetTools) UnSetTaskInReset(taskName string) error {
-	if _, ok := hrt.resetTask[taskName]; !ok {
-		return fmt.Errorf("task %s is not in reset task cache", taskName)
-	}
-	delete(hrt.resetTask, taskName)
-	hwlog.RunLog.Infof("success to delete task reset cache for %s, reset tasks is %v", taskName, hrt.resetTask)
-	return nil
-}
-
-// DeepCopyDevInfo copy device info deeply
-func (hrt *HotResetTools) DeepCopyDevInfo(devInfo *common.TaskDevInfo) *common.TaskDevInfo {
-	if devInfo == nil {
-		return nil
-	}
-	return &common.TaskDevInfo{
-		RankId:       devInfo.RankId,
-		DevFaultInfo: devInfo.DevFaultInfo,
-	}
-}
-
-// DeepCopyDevFaultInfoList copy device fault info list deeply
-func (hrt *HotResetTools) DeepCopyDevFaultInfoList(devFaultInfoList []*common.TaskDevInfo) []*common.TaskDevInfo {
-	var newDevFaultInfoList []*common.TaskDevInfo
-	for _, devFaultInfo := range devFaultInfoList {
-		newDevFaultInfoList = append(newDevFaultInfoList, &common.TaskDevInfo{
-			RankId:       devFaultInfo.RankId,
-			DevFaultInfo: devFaultInfo.DevFaultInfo,
-		})
-	}
-	return newDevFaultInfoList
 }

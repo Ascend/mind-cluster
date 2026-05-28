@@ -78,8 +78,7 @@ var (
 		"computing power splitting function, only support "+api.Ascend910+" and "+api.Ascend310P)
 	use310PMixedInsert = flag.Bool(api.Use310PMixedInsert, false, "Whether to use mixed insert "+
 		api.Ascend310PMix+" card mode")
-	hotReset = flag.Int("hotReset", -1, "set hot reset mode: -1-close, 0-infer, "+
-		"1-train-online, 2-train-offline")
+	hotReset      = flag.Int("hotReset", -1, "set hot reset mode: -1-close, 0-infer, 2-train-offline")
 	shareDevCount = flag.Uint("shareDevCount", 1, "share device function, enable the func by setting "+
 		"a value greater than 1, range is [1, 100], only support inference product")
 	linkdownTimeout = flag.Int64("linkdownTimeout", defaultLinkdownTimeout, "linkdown timeout duration, "+
@@ -218,7 +217,7 @@ func checkSoftShareDevConfigDir() bool {
 
 func checkHotResetMode() bool {
 	switch *hotReset {
-	case common.HotResetClose, common.HotResetInfer, common.HotResetTrainOnLine, common.HotResetTrainOffLine:
+	case common.HotResetClose, common.HotResetInfer, common.HotResetTrainOffLine:
 		return true
 	default:
 		hwlog.RunLog.Error("hot reset mode param invalid")
