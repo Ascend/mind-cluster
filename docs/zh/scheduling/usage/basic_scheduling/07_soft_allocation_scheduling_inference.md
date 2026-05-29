@@ -57,7 +57,7 @@
 
 2. ClusterD读取device-info-cm和node-info-cm中的信息后，将信息写入cluster-info-cm。
 3. 用户通过kubectl或者其他深度学习平台下发acjob任务。
-4. Ascend Operator为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
+4. Ascend Operator为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/docs/v1.9.0/Concepts/podgroup)。
 5. Ascend Operator为任务创建相应的Pod，并在容器中注入集合通信所需环境变量。
 6. volcano-scheduler根据节点的芯片AICore百分比总量和芯片高带宽内存总量以及该节点上已部署Pod的annotation已使用信息为任务选择合适节点，并在Pod的annotation上写入选择的芯片信息。
 7. kubelet创建容器时，调用Ascend Device Plugin挂载芯片及芯片共享所需文件，Ascend Device Plugin或volcano-scheduler在Pod的annotation上写入芯片信息。Ascend Docker Runtime协助挂载相应资源。

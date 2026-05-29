@@ -162,7 +162,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="p55362825414"><a name="p55362825414"></a><a name="p55362825414"></a>true</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p3537285549"><a name="p3537285549"></a><a name="p3537285549"></a>是否启用“gang”策略调度，默认开启。开启时根据任务指定的调度器进行任务调度。“gang”策略调度说明请参见<a href="https://volcano.sh/zh/docs/v1-7-0/plugins/" target="_blank" rel="noopener noreferrer">开源Volcano官方文档</a>。</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p3537285549"><a name="p3537285549"></a><a name="p3537285549"></a>是否启用“gang”策略调度，默认开启。开启时根据任务指定的调度器进行任务调度。“gang”策略调度说明请参见<a href="https://volcano.sh/docs/v1.9.0/Scheduler/Plugins" target="_blank" rel="noopener noreferrer">开源Volcano官方文档</a>。</p>
 <a name="ul1161205685015"></a><a name="ul1161205685015"></a><ul id="ul1161205685015"><li>true：启用“gang”策略调度。<p id="p1469315258274"><a name="p1469315258274"></a><a name="p1469315258274"></a>使用Job级别弹性扩缩容功能时，需将本字段的取值设置为true。</p>
 </li><li>false：不启用“gang”策略调度。</li></ul>
 </td>

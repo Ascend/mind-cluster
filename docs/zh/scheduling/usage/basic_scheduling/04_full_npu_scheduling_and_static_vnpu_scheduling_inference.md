@@ -77,7 +77,7 @@ acjob任务原理图如[图1](#fig36890512379)所示。
 
 2. ClusterD读取device-info-cm和node-info-cm中信息后，将信息写入cluster-info-cm。
 3. 用户通过kubectl或者其他深度学习平台下发acjob任务。
-4. Ascend Operator为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
+4. Ascend Operator为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/docs/v1.9.0/Concepts/podgroup)。
 5. Ascend Operator为任务创建相应的Pod，并在容器中注入集合通信所需环境变量。
 6. volcano-scheduler根据节点和芯片拓扑信息为任务选择合适节点，并在Pod的annotation上写入选择的芯片信息。整卡调度写入整卡信息。
 7. kubelet创建容器时，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin或volcano-scheduler在Pod的annotation上写入芯片信息。Ascend Docker Runtime协助挂载相应资源。
@@ -106,7 +106,7 @@ vcjob任务的原理图如[图2](#fig8231124765)所示。
 
 2. ClusterD读取device-info-cm和node-info-cm中信息后，将信息写入cluster-info-cm。
 3. 用户通过kubectl或者其他深度学习平台下发vcjob任务。
-4. volcano-controller为任务创建相应PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
+4. volcano-controller为任务创建相应PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/docs/v1.9.0/Concepts/podgroup)。
 5. 当集群资源满足任务要求时，volcano-controller创建任务Pod。
 6. volcano-scheduler根据节点和芯片拓扑信息为任务选择合适节点，并在Pod的annotation上写入选择的芯片信息。
 7. kubelet创建容器时，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin在Pod的annotation上写入芯片信息。Ascend Docker Runtime协助挂载相应资源。
@@ -131,7 +131,7 @@ deploy任务原理图如[图3](#fig178781320593)所示。
 2. ClusterD读取device-info-cm和node-info-cm中信息后，将信息写入cluster-info-cm。
 3. 用户通过kubectl或者其他深度学习平台下发deploy任务。
 4. kube-controller为任务创建相应Pod。
-5. volcano-controller创建任务PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
+5. volcano-controller创建任务PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/docs/v1.9.0/Concepts/podgroup)。
 6. volcano-scheduler根据节点和芯片拓扑信息为任务选择合适节点，并在Pod的annotation上写入选择的芯片信息。
 7. kubelet创建容器时，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin在Pod的annotation上写入芯片信息。Ascend Docker Runtime协助挂载相应资源。
 

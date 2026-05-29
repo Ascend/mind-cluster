@@ -12,7 +12,7 @@
 
 2. ClusterD读取device-info-cm和node-info-cm中的信息后，将信息整合到cluster-info-cm中。
 3. 用户通过kubectl或者其他深度学习平台下发Infer Operator组件的InferServiceSet推理任务，Infer Operator根据推理任务的配置生成Deployment、Statefulset等子工作负载，再由对应的子工作负载生成多个推理服务的任务Pod。
-4. Infer Operator根据推理任务的配置为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参见[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
+4. Infer Operator根据推理任务的配置为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参见[开源Volcano官方文档](https://volcano.sh/docs/v1.9.0/Concepts/podgroup)。
 5. volcano-scheduler根据节点内存、CPU及标签、亲和性为Pod选择合适的节点，并在Pod的annotation上写入选择的芯片信息以及节点硬件信息。
 6. kubelet创建容器时，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin或volcano-scheduler在Pod的annotation上写入芯片和节点硬件信息。Ascend Docker Runtime协助挂载相应资源。
 

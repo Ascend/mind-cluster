@@ -251,7 +251,7 @@
     <p id="p1814102416419"><a name="p1814102416419"></a><a name="p1814102416419"></a>v1.7.0-v<span id="ph616117387810"><a name="ph616117387810"></a><a name="ph616117387810"></a>26.0.0</span></p>
     <p id="p9814824342"><a name="p9814824342"></a><a name="p9814824342"></a>v1.9.0-v<span id="ph57147381283"><a name="ph57147381283"></a><a name="ph57147381283"></a>26.0.0</span></p>
     </td>
-    <td class="cellrowborder" rowspan="3" valign="top" width="19.67%" headers="mcps1.2.5.1.4 "><p id="p18131924748"><a name="p18131924748"></a><a name="p18131924748"></a>管理节点</p>
+    <td class="cellrowborder" rowspan="4" valign="top" width="19.67%" headers="mcps1.2.5.1.4 "><p id="p18131924748"><a name="p18131924748"></a><a name="p18131924748"></a>管理节点</p>
     <p id="p1081314241741"><a name="p1081314241741"></a><a name="p1081314241741"></a></p>
     </td>
     </tr>
@@ -260,6 +260,13 @@
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1381415241342"><a name="p1381415241342"></a><a name="p1381415241342"></a><a href="https://www.hiascend.com/developer/ascendhub/detail/a066319600634cf6a1e522856a63a1c5" target="_blank" rel="noopener noreferrer">ascend-operator</a></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1881412416419"><a name="p1881412416419"></a><a name="p1881412416419"></a>v<span id="ph19259839285"><a name="ph19259839285"></a><a name="ph19259839285"></a>26.0.0</span></p>
+    </td>
+    </tr>
+    <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Infer Operator</p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p><a href="https://www.hiascend.com/developer/ascendhub/detail/13f3dee71712420d8b583b9275c04899" target="_blank" rel="noopener noreferrer">infer-operator</a></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.0.0</p>
     </td>
     </tr>
     <tr id="row1381419241342"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1814324740"><a name="p1814324740"></a><a name="p1814324740"></a><span id="ph88147247419"><a name="ph88147247419"></a><a name="ph88147247419"></a>ClusterD</span></p>
@@ -303,6 +310,8 @@
 
         ```shell       
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:v26.0.0 ascend-operator:v26.0.0
+
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:v26.0.0 infer-operator:v26.0.0
         
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:v26.0.0 npu-exporter:v26.0.0
         
@@ -321,6 +330,7 @@
 
         ```shell
         docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:v26.0.0
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:v26.0.0
         docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:v26.0.0
         docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.0.0
         # 使用1.9.0版本的Volcano，需要将镜像tag修改为v1.9.0-v26.0.0
