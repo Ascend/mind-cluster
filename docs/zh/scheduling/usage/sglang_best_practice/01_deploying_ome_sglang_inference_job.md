@@ -12,7 +12,7 @@
 
 2. ClusterD读取device-info-cm和node-info-cm中的信息后，将信息整合到cluster-info-cm中。
 3. 用户通过kubectl或者其他深度学习平台下发OME框架的SGLang推理任务，OME根据推理任务的配置生成Deployment或者LeaderWorkerSet（LWS）的子工作负载，再由对应的子工作负载生成多个推理服务的任务Pod。关于Deployment或者LeaderWorkerSet的详细说明，可以参见[OME文档](https://ome-projects.github.io/ome/docs/concepts/inference_service/)。
-4. volcano-controller或者LeaderWorkerSet为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参见[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。PodGroup生成策略如下：
+4. volcano-controller或者LeaderWorkerSet为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参见[开源Volcano官方文档](https://volcano.sh/docs/v1.9.0/Concepts/podgroup)。PodGroup生成策略如下：
     
    OME框架下存在如下两种不同类型的PodGroup映射方式：
    - 对于实例不跨机（Deployment场景）的任务，由OME创建的需要NPU的一个Deployment包含一个类型（P/D）的全部实例，对应的PodGroup由volcano-controller创建和管理生命周期。单个PodGroup下管理该类型实例的全部Pod，一个Pod对应一个推理实例。

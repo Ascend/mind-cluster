@@ -5,7 +5,7 @@
 **前提条件<a name="section52051339787"></a>**
 
 - 确保环境中有配置相应的存储方案，比如使用NFS（Network File System），用户可以参见[安装NFS](../../common_operations.md#安装nfs)进行操作。
-- 在使用整卡调度或静态vNPU调度特性前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../installation_guide//03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
+- 在使用整卡调度或静态vNPU调度特性前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)章节进行操作。
     - 调度器（Volcano或其他调度器）
     - Ascend Device Plugin
     - Ascend Docker Runtime
@@ -75,7 +75,7 @@ acjob任务原理图如[图1](#fig5188536014)所示。
 
 2. ClusterD读取device-info-cm和node-info-cm中信息后，将信息写入cluster-info-cm。
 3. 用户通过kubectl或者其他深度学习平台下发acjob任务。
-4. Ascend Operator为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
+4. Ascend Operator为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/docs/v1.9.0/Concepts/podgroup)。
 5. Ascend Operator为任务创建相应的Pod，并在容器中注入集合通信所需环境变量。
 6. volcano-scheduler根据节点和芯片拓扑信息为任务选择合适节点，并在Pod的annotation上写入选择的芯片信息。
     - 整卡调度写入整卡信息。
@@ -104,7 +104,7 @@ vcjob任务的原理图如[图2](#fig8717151315416)所示。
 
 2. ClusterD读取device-info-cm和node-info-cm中信息后，将信息写入cluster-info-cm。
 3. 用户通过kubectl或者其他深度学习平台下发vcjob任务。
-4. volcano-controller为任务创建相应PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
+4. volcano-controller为任务创建相应PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/docs/v1.9.0/Concepts/podgroup)。
 5. 当集群资源满足任务要求时，volcano-controller创建任务Pod。
 6. volcano-scheduler根据节点和芯片拓扑信息为任务选择合适节点，并在Pod的annotation上写入选择的芯片信息。
     - 整卡调度写入整卡信息。
@@ -134,7 +134,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 2. ClusterD读取device-info-cm和node-info-cm中信息后，将信息写入cluster-info-cm。
 3. 用户通过kubectl或者其他深度学习平台下发deploy任务。
 4. kube-controller为任务创建相应Pod。
-5. volcano-controller创建任务PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
+5. volcano-controller创建任务PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/docs/v1.9.0/Concepts/podgroup)。
 6. volcano-scheduler根据节点和芯片拓扑信息为任务选择合适节点，并在Pod的annotation上写入选择的芯片信息。
     - 整卡调度写入整卡信息。
     - 静态vNPU调度写入vNPU相关信息。

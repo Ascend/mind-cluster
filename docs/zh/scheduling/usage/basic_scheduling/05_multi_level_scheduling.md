@@ -46,7 +46,7 @@
   - 中间节点：代表不同层级的资源聚合（如机架、交换机等）。
   - 叶子节点：代表具体的计算资源（服务器）。
 
-  资源树中的网络层级可以参考Volcano的[网络拓扑感知调度](https://volcano.sh/en/docs/network_topology_aware_scheduling/)特性中的HyperNode定义。
+  资源树中的网络层级可以参考Volcano的[网络拓扑感知调度](https://volcano.sh/docs/keyfeatures/networktopologyaware/)特性中的HyperNode定义。
 
   **图 1**  资源树样例<a name="fig69396965487duoji"></a>  
   ![](../../../figures/scheduling/资源树.PNG "资源树")

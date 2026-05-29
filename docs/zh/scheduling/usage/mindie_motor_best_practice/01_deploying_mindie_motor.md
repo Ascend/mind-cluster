@@ -16,7 +16,7 @@
 
 2. ClusterD读取device-info-cm和node-info-cm中信息后，将信息整合到cluster-info-cm中。
 3. 用户通过kubectl或者其他深度学习平台下发不使用NPU卡的MS Controller、MS Coordinator以及数个使用NPU卡的MindIE Server任务。
-4. Ascend Operator为任务创建相应的podGroup。关于podGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/zh/docs/v1-9-0/podgroup/)。
+4. Ascend Operator为任务创建相应的podGroup。关于podGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/docs/v1.9.0/Concepts/podgroup)。
 5. Ascend Operator为任务创建相应的Pod，并注入MindIE Server服务启动所需的环境变量。关于环境变量的详细说明请参见[Ascend Operator注入的训练环境变量](../../api/environment_variable_description.md#ascend-operator环境变量说明)。
 6. 对于MS Controller、MS Coordinator任务，volcano-scheduler根据节点内存、CPU及标签、亲和性选择合适节点。对于MindIE Server任务volcano-scheduler还会参考芯片拓扑信息为其选择合适节点，并在Pod的annotation上写入选择的芯片信息以及节点硬件信息。
 7. kubelet创建容器时，对于MindIE Server任务，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin或volcano-scheduler在Pod的annotation上写入芯片和节点硬件信息。Ascend Docker Runtime协助挂载相应资源。
