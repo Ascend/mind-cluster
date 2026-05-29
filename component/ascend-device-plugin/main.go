@@ -56,8 +56,6 @@ const (
 
 var (
 	fdFlag          = flag.Bool("fdFlag", false, "Whether to use fd system to manage device (default false)")
-	useAscendDocker = flag.Bool(api.UseAscendDocker, true, "Whether to use npu docker. "+
-		"This parameter will be deprecated in future versions")
 	volcanoType = flag.Bool("volcanoType", false,
 		"Specifies whether to use volcano for scheduling ")
 	version     = flag.Bool("version", false, "Output version information")
@@ -307,7 +305,6 @@ func main() {
 func setParameters() {
 	common.ParamOption = common.Option{
 		GetFdFlag:             *fdFlag,
-		UseAscendDocker:       *useAscendDocker,
 		UseVolcanoType:        *volcanoType,
 		AutoStowingDevs:       *autoStowing,
 		ListAndWatchPeriod:    *listWatchPeriod,
@@ -328,20 +325,20 @@ func setParameters() {
 }
 
 func setUseAscendDocker() {
-	*useAscendDocker = true
+	useAscendDocker := true
 	ascendDocker := os.Getenv(api.AscendDockerRuntimeEnv)
 	if ascendDocker != "True" {
-		*useAscendDocker = false
+		useAscendDocker = false
 		hwlog.RunLog.Debugf("get docker runtime from env is: %#v", ascendDocker)
 	}
 	if common.ParamOption.Use310PMixedInsert {
-		*useAscendDocker = false
+		useAscendDocker = false
 		hwlog.RunLog.Debugf("mixed insert mode do not use npu docker")
 	}
 	if len(common.ParamOption.ProductTypes) == 1 && common.ParamOption.ProductTypes[0] == common.Atlas200ISoc {
-		*useAscendDocker = false
+		useAscendDocker = false
 	}
 
-	common.ParamOption.UseAscendDocker = *useAscendDocker
-	hwlog.RunLog.Infof("device-plugin set npu docker as: %v", *useAscendDocker)
+	common.ParamOption.UseAscendDocker = useAscendDocker
+	hwlog.RunLog.Infof("device-plugin set npu docker as: %v", useAscendDocker)
 }

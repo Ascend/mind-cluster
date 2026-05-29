@@ -134,7 +134,6 @@
                 cpu: 500m
             command: [ "/bin/bash", "-c", "--"]
             args: [ "device-plugin
-                     -useAscendDocker=true
                      <strong>-volcanoType=true                    # 重调度场景下必须使用Volcano
                      -autoStowing=true                    # 是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于Atlas 训练系列产品
                      -listWatchPeriod=5                   # 设置健康状态检查周期，范围[3,1800]，单位为秒
@@ -331,7 +330,6 @@
 |-fdFlag|bool|false|边缘场景标志，是否使用FusionDirector系统来管理设备。<ul><li>true：使用FusionDirector。</li><li>false：不使用FusionDirector。</li></ul>|
 |-shareDevCount|uint|1|共享设备特性开关，取值范围为1~100。<ul><li>默认值为1，代表不开启共享设备；取值为2~100，表示单颗芯片虚拟化出来的共享设备个数。</li><li>当开启软切分功能，即-softShareDevConfigDir不为空时，该参数取值必须为100。</li></ul><p>支持以下设备，其余设备该参数无效，不影响组件正常启动。</p><ul><li>Atlas 500 A2 智能小站</li><li>Atlas 200I A2 加速模块</li><li>Atlas 200I DK A2 开发者套件</li><li>Atlas 300I Pro 推理卡</li><li>Atlas 300V 视频解析卡</li><li>Atlas 300V Pro 视频解析卡</li></ul><p>若用户使用的是以上支持的Atlas 推理系列产品，需要注意以下问题：</p><ul><li>不支持在使用静态vNPU调度、动态vNPU调度、推理卡故障恢复和推理卡故障重调度等特性下使用共享设备功能。</li><li>单任务的请求资源数必须为1，不支持分配多芯片和跨芯片使用的场景。</li><li>依赖驱动开启共享模式，设置device-share为true，详细操作步骤和说明请参见《Atlas 中心推理卡 26.0.RC1 npu-smi 命令参考》中的“[设置指定设备的指定芯片的容器共享模式](https://support.huawei.com/enterprise/zh/doc/EDOC1100568418/445c1e00)”章节。</li></ul>|
 |-edgeLogFile|string|/var/alog/AtlasEdge_log/devicePlugin.log|边缘场景日志文件。fdFlag设置为true时生效。<p>单个日志文件超过20 MB时会触发自动转储功能，文件大小上限不支持修改。</p>|
-|-useAscendDocker|bool|true|默认为true，容器引擎是否使用Ascend Docker Runtime。开启K8s的CPU绑核功能时，需要卸载Ascend Docker Runtime并重启容器引擎。取值说明如下：<ul><li>true：使用Ascend Docker Runtime。</li><li>false：不使用Ascend Docker Runtime。</li></ul><p>MindCluster 5.0.RC1及以上版本只支持自动获取运行模式，不接受指定。</p>|
 |-use310PMixedInsert|bool|false|是否使用混插模式。<ul><li>true：使用混插模式。</li><li>false：不使用混插模式。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>仅支持服务器混插Atlas 300I Pro 推理卡、Atlas 300V 视频解析卡、Atlas 300V Pro 视频解析卡。</li><li>服务器混插模式下不支持Volcano调度模式。</li><li>服务器混插模式不支持虚拟化实例。</li><li>服务器混插模式不支持故障重调度场景。</li><li>服务器混插模式不支持Ascend Docker Runtime。</li><li>非混插模式下，上报给K8s资源名称不变。<ul><li>非混插模式上报的资源名称格式为huawei.com/Ascend310P。</li><li>混插模式上报的资源名称格式为：huawei.com/Ascend310P-V、huawei.com/Ascend310P-VPro和huawei.com/Ascend310P-IPro。</li></ul></li></ul></div></div>|
 |-volcanoType|bool|false|是否使用Volcano进行调度，当前已支持Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas 推理系列产品和推理服务器（插Atlas 300I 推理卡）芯片。<ul><li>true：使用Volcano。</li><li>false：不使用Volcano。</li></ul>|
 |-presetVirtualDevice|bool|true|虚拟化功能开关。<ul><li>设置为true时，表示使用静态虚拟化。</li><li>设置为false时，表示使用动态虚拟化。需要同步开启Volcano，即设置-volcanoType参数为true。</li></ul>|
