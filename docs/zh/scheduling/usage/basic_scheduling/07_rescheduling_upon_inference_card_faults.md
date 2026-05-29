@@ -203,7 +203,7 @@
         spec:
           schedulerName: volcano
           nodeSelector:
-            host-arch: huawei-arm           # Select the os arch. If the os arch is x86, change it to huawei-x86.
+            example-key: example-value    # 可选值，用户可根据实际需求配置nodeSelector
     ...
     ```
 

@@ -163,7 +163,6 @@ func initFaultNodeToCmByFaultNode(fNode *FaultNode) FaultNodeInfoToCm {
 		NodeName:            fNode.NodeName,
 		UnhealthyNPU:        fNode.UnhealthyNPU,
 		NetworkUnhealthyNPU: fNode.NetworkUnhealthyNPU,
-		NodeDEnable:         fNode.NodeDEnable,
 		NodeHealthState:     fNode.NodeHealthState,
 		UpdateTime:          fNode.UpdateTime,
 	}

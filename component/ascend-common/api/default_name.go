@@ -111,6 +111,18 @@ const (
 	Ascend310PMinuxPrefix = "Ascend310P-"
 )
 
+// accelerator label values
+const (
+	// Accelerator910Label accelerator label value for 910/910B/910A3
+	Accelerator910Label = "huawei-Ascend910"
+	// Accelerator310Label accelerator label value for 310
+	Accelerator310Label = "huawei-Ascend310"
+	// Accelerator310PLabel accelerator label value for 310P
+	Accelerator310PLabel = "huawei-Ascend310P"
+	// AcceleratorNPULabel accelerator label value for A5 and other npu
+	AcceleratorNPULabel = "huawei-npu"
+)
+
 // device plugin
 const (
 	// Use310PMixedInsert use 310P Mixed insert

@@ -20,6 +20,8 @@ metadata:
     framework: pytorch
     ring-controller.atlas: ascend-910b
     tor-affinity: "null" #该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不适用。large-model-schema表示大模型任务，normal-schema 普通任务
+  annotations:
+      huawei.com/schedule_policy: "chip8-node8"
 spec:
   schedulerName: volcano   # work when enableGangScheduling is true
   runPolicy:
@@ -47,8 +49,7 @@ spec:
                           - default-test-pytorch
                   topologyKey: kubernetes.io/hostname
           nodeSelector:
-            host-arch: huawei-arm
-            accelerator-type: card-910b-2 # depend on your device model, 910bx8 is module-910b-8 ,910bx16 is module-910b-16
+            example-key: example-value    # 示例值，用户可根据调度意图自行配置nodeSelector
           containers:
           - name: ascend # do not modify
             image: pytorch-test:latest         # training framework image， which can be modified
@@ -135,8 +136,7 @@ spec:
                           - default-test-pytorch
                   topologyKey: kubernetes.io/hostname
           nodeSelector:
-            host-arch: huawei-arm
-            accelerator-type: card-910b-2 # depend on your device model, 910bx8 is module-910b-8 ,910bx16 is module-910b-16
+            example-key: example-value    # 示例值，用户可根据调度意图自行配置nodeSelector
           containers:
           - name: ascend # do not modify
             image: pytorch-test:latest                # training framework image， which can be modified

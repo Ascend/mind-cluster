@@ -1372,11 +1372,11 @@ func TestAddHookPatch1(t *testing.T) {
 		convey.Convey("01-deviceList is nil, should return nil", func() {
 			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &specs.Spec{}, nil), convey.ShouldBeNil)
 		})
-		testIn := make([]int, 1)
+		testInstance := make([]int, 1)
 		convey.Convey("02-Executable error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(os.Executable, testStr, testError)
 			defer patch.Reset()
-			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &specs.Spec{}, &testIn), convey.ShouldBeError)
+			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &specs.Spec{}, &testInstance), convey.ShouldBeError)
 		})
 		patches := gomonkey.ApplyFuncReturn(os.Executable, testStr, nil).
 			ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, nil)
@@ -1384,7 +1384,7 @@ func TestAddHookPatch1(t *testing.T) {
 		convey.Convey("03-Stat error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, testError)
 			defer patch.Reset()
-			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &specs.Spec{}, &testIn), convey.ShouldBeError)
+			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &specs.Spec{}, &testInstance), convey.ShouldBeError)
 		})
 		patches.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil)
 		convey.Convey("04-over MaxCommandLength, should return error", func() {
@@ -1393,7 +1393,7 @@ func TestAddHookPatch1(t *testing.T) {
 					Prestart: make([]specs.Hook, MaxCommandLength+1),
 				},
 			}
-			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &testSp, &testIn), convey.ShouldBeError)
+			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &testSp, &testInstance), convey.ShouldBeError)
 		})
 		convey.Convey("05-hook path contains hookCli, should return error", func() {
 			testSp := specs.Spec{
@@ -1406,7 +1406,7 @@ func TestAddHookPatch1(t *testing.T) {
 					Env: make([]string, MaxCommandLength+1),
 				},
 			}
-			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &testSp, &testIn), convey.ShouldBeError)
+			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &testSp, &testInstance), convey.ShouldBeError)
 		})
 	})
 }
@@ -1418,7 +1418,7 @@ func TestAddHookPatch2(t *testing.T) {
 			ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, nil).
 			ApplyFuncReturn(os.Stat, mockFileInfo{}, nil)
 		defer patches.Reset()
-		testIn := make([]int, 1)
+		testInstance := make([]int, 1)
 		testSp := specs.Spec{
 			Hooks: &specs.Hooks{
 				Prestart: []specs.Hook{specs.Hook{
@@ -1432,13 +1432,13 @@ func TestAddHookPatch2(t *testing.T) {
 		convey.Convey("06-CreateVDevice error, return error", func() {
 			patch := gomonkey.ApplyFuncReturn(dcmi.CreateVDevice, dcmi.VDeviceInfo{}, testError)
 			defer patch.Reset()
-			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &testSp, &testIn), convey.ShouldBeError)
+			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &testSp, &testInstance), convey.ShouldBeError)
 		})
 		patches.ApplyFuncReturn(dcmi.CreateVDevice, dcmi.VDeviceInfo{VdeviceID: 0}, nil)
 		convey.Convey("07-success, should return nil", func() {
 			patch := gomonkey.ApplyFuncReturn(updateEnvAndPostHook, nil)
 			defer patch.Reset()
-			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &testSp, &testIn), convey.ShouldBeNil)
+			convey.So(addHook(&dcmi.NpuV1Worker{DcMgr: &dcmi.DcV1Manager{}}, &testSp, &testInstance), convey.ShouldBeNil)
 		})
 	})
 }
@@ -1603,6 +1603,95 @@ func TestGetDeviceTypeByChipName5(t *testing.T) {
 			assert.EqualValues(t, tt.expected, devType)
 		})
 	}
+}
+
+func TestIsMountByRuntimeForDP(t *testing.T) {
+	convey.Convey("test isMountByRuntimeForDP", t, func() {
+		convey.Convey("01-env not set, should return false", func() {
+			env := []string{"PATH=/usr/bin", "HOME=/root"}
+			convey.So(isMountByRuntimeForDP(env), convey.ShouldBeFalse)
+		})
+		convey.Convey("02-env set to true, should return true", func() {
+			env := []string{"PATH=/usr/bin", "MOUNT_BY_RUNTIME_FOR_DP=true"}
+			convey.So(isMountByRuntimeForDP(env), convey.ShouldBeTrue)
+		})
+		convey.Convey("03-env set to empty string, should return true", func() {
+			env := []string{"PATH=/usr/bin", "MOUNT_BY_RUNTIME_FOR_DP="}
+			convey.So(isMountByRuntimeForDP(env), convey.ShouldBeTrue)
+		})
+		convey.Convey("04-env has invalid format, should return false", func() {
+			env := []string{"PATH=/usr/bin", "INVALID_NO_EQUALS"}
+			convey.So(isMountByRuntimeForDP(env), convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestAddDPMountsToSpec(t *testing.T) {
+	convey.Convey("test addDPMountsToSpec", t, func() {
+		convey.Convey("01-spec is nil, should return without error", func() {
+			addDPMountsToSpec(nil)
+		})
+		convey.Convey("02-host paths exist and not already mounted, should add mounts", func() {
+			spec := &specs.Spec{Mounts: []specs.Mount{}}
+			patch := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil)
+			defer patch.Reset()
+			addDPMountsToSpec(spec)
+			convey.So(len(spec.Mounts), convey.ShouldEqual, len(dpMountConfigs))
+			for _, cfg := range dpMountConfigs {
+				found := false
+				for _, m := range spec.Mounts {
+					if m.Destination == cfg.containerPath {
+						found = true
+						convey.So(m.Source, convey.ShouldEqual, cfg.hostPath)
+						convey.So(m.Type, convey.ShouldEqual, "bind")
+						if cfg.readOnly {
+							convey.So(m.Options, convey.ShouldContain, "ro")
+						}
+						break
+					}
+				}
+				convey.So(found, convey.ShouldBeTrue)
+			}
+		})
+		convey.Convey("03-host path not existing, should skip that mount", func() {
+			spec := &specs.Spec{Mounts: []specs.Mount{}}
+			patch := gomonkey.ApplyFunc(os.Stat, func(path string) (os.FileInfo, error) {
+				if path == dockerSockHostPath {
+					return mockFileInfo{}, nil
+				}
+				return nil, os.ErrNotExist
+			})
+			defer patch.Reset()
+			addDPMountsToSpec(spec)
+			convey.So(len(spec.Mounts), convey.ShouldEqual, 1)
+			convey.So(spec.Mounts[0].Destination, convey.ShouldEqual, dockerSockContainerPath)
+		})
+		convey.Convey("04-mount already exists in spec, should not duplicate", func() {
+			spec := &specs.Spec{
+				Mounts: []specs.Mount{
+					{Destination: dockerSockContainerPath, Source: "/other/source", Type: "bind"},
+				},
+			}
+			patch := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil)
+			defer patch.Reset()
+			addDPMountsToSpec(spec)
+			dockerSockCount := 0
+			for _, m := range spec.Mounts {
+				if m.Destination == dockerSockContainerPath {
+					dockerSockCount++
+				}
+			}
+			convey.So(dockerSockCount, convey.ShouldEqual, 1)
+			convey.So(len(spec.Mounts), convey.ShouldEqual, len(dpMountConfigs))
+		})
+		convey.Convey("05-all host paths not existing, should add no mounts", func() {
+			spec := &specs.Spec{Mounts: []specs.Mount{}}
+			patch := gomonkey.ApplyFuncReturn(os.Stat, nil, os.ErrNotExist)
+			defer patch.Reset()
+			addDPMountsToSpec(spec)
+			convey.So(len(spec.Mounts), convey.ShouldEqual, 0)
+		})
+	})
 }
 
 // TestGetCommonManagerDevices tests the function getCommonManagerDevices

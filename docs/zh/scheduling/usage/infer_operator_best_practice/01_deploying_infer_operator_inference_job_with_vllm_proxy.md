@@ -78,6 +78,8 @@ spec:
               ring-controller.atlas: ascend-910b # 标识产品类型
           spec:
             schedulerName: volcano # 指定调度器为Volcano
+            nodeSelector:
+              example-key: example-value    # 示例值，用户可根据调度意图自行配置nodeSelector
             containers:
             - name: prefill
               image: vllm-ascend:xxx # 自定义vllm镜像名
@@ -293,13 +295,6 @@ spec:
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><p >取值为<span class="parmvalue" >“volcano”</span>。</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >配置调度器为<span >Volcano</span>。</p>
-</td>
-</tr>
-<tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >（可选）host-arch</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><ul ><li><span >Arm</span>环境：<span >huawei-arm</span></li><li><span >x86_64</span>环境：<span >huawei-x86</span></li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >需要运行训练任务的节点架构，请根据实际修改。</p>
 </td>
 </tr>
 <tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >pod-rescheduling</p>

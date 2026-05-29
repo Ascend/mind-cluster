@@ -35,6 +35,16 @@ spec:
       nodeSelector:
         masterselector: dls-master-node
       serviceAccountName: infer-operator-manager
+      initContainers:
+        - name: init-log-setup
+          image: infer-operator:latest
+          command: ['sh', '-c', 'mkdir -p /var/log/mindx-dl && chmod 755 /var/log/mindx-dl && chown root:root /var/log/mindx-dl && mkdir -p /var/log/mindx-dl/infer-operator && chmod 750 /var/log/mindx-dl/infer-operator && chown 9000:9000 /var/log/mindx-dl/infer-operator']
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false
+          volumeMounts:
+            - name: infer-operator-log
+              mountPath: /var/log
       containers:
         - command: [ "/bin/bash", "-c", "--"]
           args: [ "infer-operator
@@ -59,13 +69,14 @@ spec:
           volumeMounts:
             - name: infer-operator-log
               mountPath: /var/log/mindx-dl/infer-operator
+              subPath: mindx-dl/infer-operator
             - name: localtime
               mountPath: /etc/localtime
               readOnly: true
       volumes:
         - name: infer-operator-log
           hostPath:
-            path: /var/log/mindx-dl/infer-operator
+            path: /var/log
             type: Directory
         - name: localtime
           hostPath:

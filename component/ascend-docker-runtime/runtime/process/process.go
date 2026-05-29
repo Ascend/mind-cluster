@@ -60,7 +60,28 @@ const (
 
 	// void indicates that the NPU card does not need to be mounted
 	void = "void"
+
+	mountByRuntimeForDPEnv = "MOUNT_BY_RUNTIME_FOR_DP"
+
+	dockerSockHostPath      = "/run/docker.sock"
+	dockerSockContainerPath = "/run/docker.sock"
+	dockerDirHostPath       = "/run/docker"
+	dockerDirContainerPath  = "/run/docker"
+	containerdHostPath      = "/run/containerd"
+	containerdContainerPath = "/run/containerd"
 )
+
+type dpMountConfig struct {
+	hostPath      string
+	containerPath string
+	readOnly      bool
+}
+
+var dpMountConfigs = []dpMountConfig{
+	{dockerSockHostPath, dockerSockContainerPath, true},
+	{dockerDirHostPath, dockerDirContainerPath, true},
+	{containerdHostPath, containerdContainerPath, true},
+}
 
 var (
 	hookCliPath     = hookCli
@@ -218,6 +239,56 @@ func addAscendDockerEnv(spec *specs.Spec) {
 		return
 	}
 	spec.Process.Env = append(spec.Process.Env, useAscendDocker)
+}
+
+func isMountByRuntimeForDP(env []string) bool {
+	for i := len(env) - 1; i >= 0; i-- {
+		words := strings.SplitN(env[i], "=", kvPairSize)
+		if len(words) != kvPairSize {
+			continue
+		}
+		if words[0] == mountByRuntimeForDPEnv {
+			return true
+		}
+	}
+	return false
+}
+
+func addDPMountsToSpec(spec *specs.Spec) {
+	if spec == nil {
+		return
+	}
+	hwlog.RunLog.Warn("add device-plugin mount points")
+	for _, cfg := range dpMountConfigs {
+		if _, err := os.Stat(cfg.hostPath); err != nil {
+			hwlog.RunLog.Warnf("dp mount host path %s does not exist, skip", cfg.hostPath)
+			continue
+		}
+
+		alreadyMounted := false
+		for _, m := range spec.Mounts {
+			if m.Destination == cfg.containerPath {
+				alreadyMounted = true
+				break
+			}
+		}
+		if alreadyMounted {
+			hwlog.RunLog.Warnf("dp mount host path %s has been mounted, skip", cfg.hostPath)
+			continue
+		}
+
+		options := []string{"rbind", "rprivate"}
+		if cfg.readOnly {
+			options = append(options, "ro")
+		}
+
+		spec.Mounts = append(spec.Mounts, specs.Mount{
+			Destination: cfg.containerPath,
+			Source:      cfg.hostPath,
+			Type:        "bind",
+			Options:     options,
+		})
+	}
 }
 
 func addHook(w dcmi.WorkerInterface, spec *specs.Spec, deviceIdList *[]int) error {
@@ -707,7 +778,7 @@ func modifySpecFile(path string) error {
 func readSpecFile(path string) (*specs.Spec, error) {
 	stat, err := os.Stat(path)
 	if err != nil {
-		return nil, fmt.Errorf("spec file doesnt exist %s: %v", path, err)
+		return nil, fmt.Errorf("spec file does not exist %s: %v", path, err)
 	}
 	jsonFile, err := os.OpenFile(path, os.O_RDWR, stat.Mode())
 	if err != nil {
@@ -750,6 +821,9 @@ func processDevicesAndHooks(spec *specs.Spec) error {
 		}
 	}
 	addAscendDockerEnv(spec)
+	if isMountByRuntimeForDP(spec.Process.Env) {
+		addDPMountsToSpec(spec)
+	}
 	return nil
 }
 

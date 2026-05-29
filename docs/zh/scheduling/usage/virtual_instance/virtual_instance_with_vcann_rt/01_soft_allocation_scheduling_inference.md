@@ -142,7 +142,6 @@
              ...
                nodeSelector:
                  huawei.com/scheduler.chip1softsharedev.enable: "true"  #选择支持软切分虚拟化功能的节点部署Ascend Device Plugin
-                 accelerator: huawei-Ascend910
                serviceAccountName: ascend-device-plugin-sa-910
                containers:
                ...
@@ -184,7 +183,6 @@
              ...
                nodeSelector:
                  huawei.com/scheduler.chip1softsharedev.enable: "false"  #选择不支持软切分虚拟化功能的节点部署Ascend Device Plugin
-                 accelerator: huawei-Ascend910
                serviceAccountName: ascend-device-plugin-sa-910
            ...
          ```
@@ -319,8 +317,7 @@
             spec:
               automountServiceAccountToken: false
               nodeSelector:
-                host-arch: huawei-arm
-                accelerator-type: module-910b-8 # depend on your device model, 910bx8 is module-910b-8 ,910bx16 is module-910b-16
+                example-key: example-value    # 示例值，用户可根据调度意图自行配置nodeSelector
               containers:
                 - name: ascend # do not modify
                   image: pytorch-test:latest         # training framework image， which can be modified

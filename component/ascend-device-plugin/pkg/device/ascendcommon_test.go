@@ -392,7 +392,7 @@ func TestGetNPUsByShareMode(t *testing.T) {
 func TestAssembleShareModeDevices(t *testing.T) {
 	tool := mockAscendTools()
 	convey.Convey("test assembleShareModeDevices", t, func() {
-		// 01-get npu by share mode success, update npuDevs ans devTypes
+		// 01-get npu by share mode success, update npuDevs and devTypes
 		mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{ShareCount: 1})
 		defer mockOption.Reset()
 		davinCiDev := common.DavinCiDev{LogicID: 1, PhyID: 1, CardID: 1, IP: "127.0.0.1"}
@@ -402,56 +402,6 @@ func TestAssembleShareModeDevices(t *testing.T) {
 		convey.So(len(*npuDevs) == 1, convey.ShouldBeTrue)
 		convey.So(len(*devTypes) == 1, convey.ShouldBeTrue)
 		convey.So((*npuDevs)[0].IP == "127.0.0.1", convey.ShouldBeTrue)
-	})
-}
-
-// TestSetDeviceUsage for test SetDeviceUsage
-func TestSetDeviceUsage(t *testing.T) {
-	tool := mockAscendTools()
-	convey.Convey("test SetDeviceUsage", t, func() {
-		devLoginID := int32(2)
-		convey.Convey("01-node info is nil, should return error", func() {
-			mockGetNodeMethod := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-				"GetNode", func(_ *kubeclient.ClientK8s) (*v1.Node, error) {
-					return nil, errors.New("node is nil")
-				})
-			defer mockGetNodeMethod.Reset()
-			convey.So(tool.SetDeviceUsage(devLoginID), convey.ShouldNotBeNil)
-		})
-		convey.Convey("02-Nodes are used for inference, should return nil", func() {
-			node := getMockNode()
-			node.Labels[common.ServerUsageLabelKey] = common.Infer
-			mockGetNodeMethod := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-				"GetNode", func(_ *kubeclient.ClientK8s) (*v1.Node, error) { return node, nil })
-			defer mockGetNodeMethod.Reset()
-			convey.So(tool.SetDeviceUsage(devLoginID), convey.ShouldBeNil)
-		})
-		node := getMockNode()
-		node.Labels[common.ServerUsageLabelKey] = common.Train
-		mockGetNodeMethod := gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
-			"GetNode", func(_ *kubeclient.ClientK8s) (*v1.Node, error) { return node, nil })
-		defer mockGetNodeMethod.Reset()
-		convey.Convey("03-get board error, should return error", func() {
-			mockGetServerBoardIdMethod := gomonkey.ApplyMethod(reflect.TypeOf(new(AscendTools)),
-				"GetServerBoardId", func(_ *AscendTools, devLogicID int32) (uint32, error) {
-					return 0, errors.New("get board error")
-				})
-			defer mockGetServerBoardIdMethod.Reset()
-			convey.So(tool.SetDeviceUsage(devLoginID), convey.ShouldNotBeNil)
-		})
-		convey.Convey("get board success", func() {
-			boardID := uint32(0x3c)
-			patch := gomonkey.ApplyMethod(reflect.TypeOf(new(AscendTools)),
-				"GetServerBoardId", func(_ *AscendTools, devLogicID int32) (uint32, error) { return boardID, nil })
-			defer patch.Reset()
-			convey.Convey("04-devType is not Ascend910B, should return nil", func() {
-				convey.So(tool.SetDeviceUsage(devLoginID), convey.ShouldBeNil)
-			})
-			convey.Convey("05-devType is Ascend910B, should return nil", func() {
-				patch.ApplyMethodReturn(tool.dmgr, "GetDevType", api.Ascend910B)
-				convey.So(tool.SetDeviceUsage(devLoginID), convey.ShouldBeNil)
-			})
-		})
 	})
 }
 
@@ -1444,12 +1394,12 @@ func TestGetUsedDevices(t *testing.T) {
 		expectedOutput sets.String
 	}{
 		{
-			name:           "01-nil input, should return emtpy sets.String",
+			name:           "01-nil input, should return empty sets.String",
 			input:          nil,
 			expectedOutput: sets.NewString(),
 		},
 		{
-			name: "02-no devices used, should return emtpy sets.String",
+			name: "02-no devices used, should return empty sets.String",
 			input: []*common.NpuDevice{
 				{DeviceName: "device0", PodUsed: false},
 				{DeviceName: "device1", PodUsed: false},

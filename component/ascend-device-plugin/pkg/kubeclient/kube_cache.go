@@ -38,7 +38,6 @@ var (
 	podCache            = map[types.UID]*podInfo{}
 	lock                = sync.Mutex{}
 	nodeServerIp        string
-	serverUsageLabel    string
 	nodeDeviceInfoCache *common.NodeDeviceInfoCache
 )
 
@@ -252,29 +251,6 @@ func (ki *ClientK8s) GetNodeIpCache() (string, error) {
 	}
 	nodeServerIp = nodeIp
 	return nodeIp, nil
-}
-
-// GetServerUsageLabelCache get node label:server-usage, and cache it in memory, if label updated, restart is required
-// if server-usage label is set return the value of label
-// if server-usage label is not set return 'unknown'
-func (ki *ClientK8s) GetServerUsageLabelCache() (string, error) {
-	if serverUsageLabel != "" {
-		hwlog.RunLog.Debugf("get node server usage label from cache,label:%s", serverUsageLabel)
-		return serverUsageLabel, nil
-	}
-	node, err := ki.GetNode()
-	if err != nil {
-		return "", err
-	}
-	label, ok := node.Labels[common.ServerUsageLabelKey]
-	if !ok {
-		serverUsageLabel = "unknown"
-		hwlog.RunLog.Errorf("failed to get server-usage label")
-		return "unknown", nil
-	}
-	serverUsageLabel = label
-	hwlog.RunLog.Debugf("update node server usage label ,label:%s", serverUsageLabel)
-	return serverUsageLabel, nil
 }
 
 // GetDeviceInfoCMCache get device info configMap with cache

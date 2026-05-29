@@ -312,7 +312,7 @@ func TestNpuDevToResetDev(t *testing.T) {
 // TestCanBeReset an ut for function canBeReset
 func TestCanBeReset(t *testing.T) {
 	manager := createFake910Manager()
-	manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train, common.Ascend910BRingsNumTrain)
+	manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Ascend910BRingsNumTrain)
 	convey.Convey("exec ut function canBeReset", t, func() {
 		convey.Convey("A3 device can reset, should return true", func() {
 			common.ParamOption.RealCardType = api.Ascend910A3
@@ -461,7 +461,7 @@ func TestIsChipActive(t *testing.T) {
 // TestExecHotReset an ut for function execHotReset
 func TestExecHotReset(t *testing.T) {
 	manager := createFake910Manager()
-	manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train, common.Ascend910BRingsNumTrain)
+	manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Ascend910BRingsNumTrain)
 	devInfo := mockSingleDevFaultInfo()
 	common.ParamOption.RealCardType = api.Ascend910B
 	convey.Convey("exec ut function execHotReset", t, func() {
@@ -590,7 +590,7 @@ func TestGetAssociatedLogicIDs(t *testing.T) {
 }
 func TestIsRingResetComplete(t *testing.T) {
 	manager := createFake910Manager()
-	manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train, common.Ascend910BRingsNumTrain)
+	manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Ascend910BRingsNumTrain)
 	common.ParamOption.RealCardType = api.Ascend910B
 	var logicID int32 = 0
 	convey.Convey("exec ut function isRingResetComplete", t, func() {
@@ -919,8 +919,6 @@ func TestExecRescan(t *testing.T) {
 // TestIsNeedBlockAllDevice ut for method isNeedBlockAllDevice,using new board id
 func TestIsNeedBlockAllDevice(t *testing.T) {
 
-	patch := mockGetServerUsageLabelCache()
-	defer patch.Reset()
 	GetServerBoardIdPatch := mockGetServerBoardId(A800IA2WithHccs)
 	defer GetServerBoardIdPatch.Reset()
 
@@ -930,8 +928,6 @@ func TestIsNeedBlockAllDevice(t *testing.T) {
 // TestIsNeedBlockAllDevice ut for method isNeedBlockAllDevice,using old board id
 func TestIsNeedBlockAllDeviceUsOldBoardId(t *testing.T) {
 
-	patch := mockGetServerUsageLabelCache()
-	defer patch.Reset()
 	GetServerBoardIdPatch := mockGetServerBoardId(A800IA2WithHccsOld)
 	defer GetServerBoardIdPatch.Reset()
 
@@ -968,8 +964,6 @@ func doTestIsNeedBlockAllDevice(t *testing.T) {
 
 // TestNoNeedToBlock test need block all device with none hccs A800IA2
 func TestNoNeedToBlock(t *testing.T) {
-	patch := mockGetServerUsageLabelCache()
-	defer patch.Reset()
 	GetServerBoardIdPatch := mockGetServerBoardId(common.A800IA2NoneHccsBoardId)
 	defer GetServerBoardIdPatch.Reset()
 
@@ -978,8 +972,6 @@ func TestNoNeedToBlock(t *testing.T) {
 
 // TestNoNeedToBlock test need block all device with none hccs A800IA2,using old board id
 func TestNoNeedToBlockUsingOldId(t *testing.T) {
-	patch := mockGetServerUsageLabelCache()
-	defer patch.Reset()
 	GetServerBoardIdPatch := mockGetServerBoardId(common.A800IA2NoneHccsBoardIdOld)
 	defer GetServerBoardIdPatch.Reset()
 
@@ -1010,8 +1002,6 @@ func doTestNoNeedToBlock(t *testing.T) {
 }
 
 func TestNodeNeedToBlockWithNotHandleErr(t *testing.T) {
-	patch := mockGetServerUsageLabelCache()
-	defer patch.Reset()
 	GetServerBoardIdPatch := mockGetServerBoardId(A800IA2WithHccs)
 	defer GetServerBoardIdPatch.Reset()
 
@@ -1019,8 +1009,6 @@ func TestNodeNeedToBlockWithNotHandleErr(t *testing.T) {
 }
 
 func TestNodeNeedToBlockWithNotHandleErrUsingOldId(t *testing.T) {
-	patch := mockGetServerUsageLabelCache()
-	defer patch.Reset()
 	GetServerBoardIdPatch := mockGetServerBoardId(A800IA2WithHccsOld)
 	defer GetServerBoardIdPatch.Reset()
 
@@ -1055,11 +1043,6 @@ func mockGetServerBoardId(devLogicID int) *gomonkey.Patches {
 	return gomonkey.ApplyMethodReturn(&AscendTools{}, "GetServerBoardId", uint32(devLogicID), nil)
 }
 
-func mockGetServerUsageLabelCache() *gomonkey.Patches {
-	return gomonkey.
-		ApplyMethodReturn(&kubeclient.ClientK8s{}, "GetServerUsageLabelCache",
-			common.Infer, nil)
-}
 func mockGetDeviceNetWorkHealth(code uint32, err error) *gomonkey.Patches {
 	return gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
 		"GetDeviceNetWorkHealth", code, err)
@@ -1311,7 +1294,7 @@ func mockSetTaskDevInfoCacheFuncData1() []v1.Pod {
 
 func mockSetTaskDevInfoCacheFuncData2() []v1.Pod {
 	annotationError := map[string]string{
-		api.HuaweiAscend910:  api.Ascend910 + "-4," + api.Ascend910 + "-5," + api.Ascend910 + "-6",
+		api.HuaweiAscend910:  api.Ascend910 + "-4," + api.Ascend910 + "-5," + api.Ascend910 + "-6," + api.Ascend910 + "-7",
 		api.PodRankIndexAnno: "1.2",
 	}
 	labelSuccess := map[string]string{
@@ -1425,12 +1408,11 @@ func TestIsReSchedulingScene(t *testing.T) {
 			resetDevNumOnce: common.Ascend910RingsNum,
 		}
 		convey.Convey("02-device usage is not train, should return false", func() {
-			ret := manager.isReSchedulingScene(npuCount)
+			ret := manager.isReSchedulingScene(4)
 			convey.So(ret, convey.ShouldBeFalse)
 		})
 		convey.Convey("03-is rescheduling scene, should return true", func() {
-			manager.AscendTools.deviceUsage = common.Train
-			ret := manager.isReSchedulingScene(npuCount)
+			ret := manager.isReSchedulingScene(3)
 			convey.So(ret, convey.ShouldBeTrue)
 		})
 	})
@@ -1810,7 +1792,7 @@ func TestCanResetDeviceByLogicID(t *testing.T) {
 func TestGetResetIndex(t *testing.T) {
 	convey.Convey("test getResetIndex", t, func() {
 		manager := createFake910Manager()
-		manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train, common.Ascend910BRingsNumTrain)
+		manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Ascend910BRingsNumTrain)
 		dev := &common.NpuDevice{}
 		convey.Convey("01-A3, get idx success, should return nil", func() {
 			patch1 := gomonkey.ApplyPrivateMethod(manager, "getResetIndexForA3",
@@ -1898,8 +1880,7 @@ func TestGetDevFaultInfo(t *testing.T) {
 	for _, tt := range tests {
 		convey.Convey("test getDevFaultInfo", t, func() {
 			manager := createFake910Manager()
-			manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Train,
-				common.Ascend910BRingsNumTrain)
+			manager.hotResetManager = newTestHotResetManager(api.Ascend910A, common.Ascend910BRingsNumTrain)
 			patches := gomonkey.NewPatches()
 			defer patches.Reset()
 			patches.ApplyMethod(manager.hotResetManager, "GetGlobalDevFaultInfo",

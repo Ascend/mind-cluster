@@ -29,6 +29,8 @@
             tor-affinity: "normal-schema" #该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不使用该特性。large-model-schema表示大模型任务或填充任务，normal-schema表示普通任务
             pod-rescheduling: "on"     # 开启Pod级别重调度
             subHealthyStrategy: "ignore"  # 忽略健康状态为亚健康的节点，后续任务在亲和性调度上不优先调度该节点
+          annotations:
+            huawei.com/schedule_policy: "chip8-node16" # 调度策略
         spec:
           schedulerName: volcano    # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
           runPolicy:
@@ -48,8 +50,7 @@
                 spec:
                   terminationGracePeriodSeconds: 360  #容器收到SIGTERM到被K8s强制停止经历的时间
                   nodeSelector:
-                    host-arch: huawei-x86          # Atlas 200T A2 Box16 异构子框只有x86_64架构
-                    accelerator-type: module-{xxx}b-16   # 节点类型
+                    example-key: example-value    # 示例值，用户可根据调度意图自行配置nodeSelector
                   containers:
                   - name: ascend     # 不能修改
         ...
@@ -71,8 +72,7 @@
                   affinity:
         ...
                   nodeSelector:
-                    host-arch: huawei-x86      # Atlas 200T A2 Box16 异构子框只有x86_64架构
-                    accelerator-type: module-{xxx}b-16   # 节点类型
+                    example-key: example-value    # 示例值，用户可根据调度意图自行配置nodeSelector
                   containers:
                   - name: ascend      # 不能修改
         ...
@@ -116,6 +116,8 @@
             tor-affinity: "normal-schema" #该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不使用该特性。large-model-schema表示大模型任务或填充任务，normal-schema表示普通任务
             pod-rescheduling: "on"     # 开启Pod级别重调度
             subHealthyStrategy: "ignore"     # 忽略健康状态为亚健康的节点，后续任务在亲和性调度上不优先调度该节点
+          annotations:
+            huawei.com/schedule_policy: "chip4-node8"
         ...
         spec:
           policies:  # 使用重调度功能时，无需修改 policies 内容
@@ -148,8 +150,7 @@
                         huawei.com/Ascend910: 8          # 目前需要和上面requests保持一致
         ...
                     nodeSelector:
-                      host-arch: huawei-arm               # 可选值，根据实际情况填写
-                      accelerator-type: module      #调度到Atlas 800 训练服务器节点上
+                      example-key: example-value    # 可选值，用户可根据实际需求配置nodeSelector
         ...
                 restartPolicy: Never   # 容器重启策略
         ```

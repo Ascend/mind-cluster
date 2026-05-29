@@ -105,7 +105,7 @@ func (c *ConfigMapReporter) constructNodeInfoCM() *v1.ConfigMap {
 		hwlog.RunLog.Errorf("marshal node info cache failed, error: %v", err)
 		return nil
 	}
-	return &v1.ConfigMap{
+	cm := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      c.client.NodeInfoName,
 			Namespace: api.DLNamespace,
@@ -114,6 +114,27 @@ func (c *ConfigMapReporter) constructNodeInfoCM() *v1.ConfigMap {
 		Data: map[string]string{
 			api.NodeInfoCMDataKey: string(data),
 			"updateTime":          time.Now().Format(time.RFC3339),
+		},
+	}
+	c.setOwnerReference(cm)
+	return cm
+}
+
+func (c *ConfigMapReporter) setOwnerReference(cm *v1.ConfigMap) {
+	if cm == nil {
+		return
+	}
+	ds, err := c.client.GetDaemonSet(common.NodeDDaemonSetName, api.DLNamespace)
+	if err != nil {
+		hwlog.RunLog.Warnf("get noded daemonset failed, skip setting owner reference, err: %v", err)
+		return
+	}
+	cm.ObjectMeta.OwnerReferences = []metav1.OwnerReference{
+		{
+			APIVersion: "apps/v1",
+			Kind:       "DaemonSet",
+			Name:       ds.Name,
+			UID:        ds.UID,
 		},
 	}
 }

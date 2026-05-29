@@ -80,41 +80,9 @@ func (tp *NPUHandler) SetNPUTopologyToPodFn(task *api.TaskInfo, top []int, node 
 	task.Pod.Annotations[util.PodPredicateTime] = tmp
 	klog.V(util.LogDebugLev).Infof("%s setNPUTopologyToPod %s==%v top:%s, topReal:%s.", tp.GetPluginName(),
 		task.Name, tmp, topologyStr, topologyRealStr)
-	tp.setHardwareTypeToPod(task, node)
 	tp.setRealUsedNpuToPod(task, top, topologyRealStr, node)
 	tp.setRankIndex(task)
 	tp.setSchedulerShareAnnoToPod(task, node)
-}
-
-func (tp *NPUHandler) setHardwareTypeToPod(task *api.TaskInfo, node plugin.NPUNode) {
-	memory, ok := node.Label[nPUChipMemoryKey]
-	if !ok {
-		klog.V(util.LogDebugLev).Infof("task(%s/%s) node.Label[%s] not exist",
-			task.Namespace, task.Name, nPUChipMemoryKey)
-		return
-	}
-	accelerator, ok := node.Label[util.AcceleratorType]
-	if !ok {
-		klog.V(util.LogDebugLev).Infof("task(%s/%s) node.Label[%s] not exist",
-			task.Namespace, task.Name, util.AcceleratorType)
-		return
-	}
-
-	usage, ok := node.Label[serverUsageKey]
-	if !ok {
-		klog.V(util.LogDebugLev).Infof("task(%s/%s) node.Label[%s] not exist",
-			task.Namespace, task.Name, serverUsageKey)
-		return
-	}
-	// Special requirements for large EP scenarios
-	if accelerator == util.Module910bx8AcceleratorType && usage == inferUsage {
-		task.Pod.Annotations[podUsedHardwareTypeKey] = fmt.Sprintf("%s-%s", hardwareType800IA2, memory)
-		return
-	}
-
-	if accelerator == util.Module910A3x16AcceleratorType && usage == inferUsage {
-		task.Pod.Annotations[podUsedHardwareTypeKey] = fmt.Sprintf("%s-%s", hardwareType800IA3, memory)
-	}
 }
 
 func (tp *NPUHandler) setRealUsedNpuToPod(task *api.TaskInfo, top []int, topologyStr string, node plugin.NPUNode) {

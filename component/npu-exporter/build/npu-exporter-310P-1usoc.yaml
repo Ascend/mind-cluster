@@ -53,6 +53,16 @@ spec:
       nodeSelector:
         workerselector: dls-worker-node
         servertype: soc
+      initContainers:
+      - name: init-log-setup
+        image: npu-exporter:v5.0.RC1
+        command: ['sh', '-c', 'mkdir -p /var/log/mindx-dl && chmod 755 /var/log/mindx-dl && chown root:root /var/log/mindx-dl && mkdir -p /var/log/mindx-dl/npu-exporter && chmod 750 /var/log/mindx-dl/npu-exporter && chown root:root /var/log/mindx-dl/npu-exporter']
+        securityContext:
+          runAsUser: 0
+          runAsNonRoot: false
+        volumeMounts:
+          - name: log-npu-exporter
+            mountPath: /var/log
       containers:
       - name: npu-exporter
         image: npu-exporter:v5.0.RC1
@@ -78,6 +88,7 @@ spec:
         volumeMounts:
           - name: log-npu-exporter
             mountPath: /var/log/mindx-dl/npu-exporter
+            subPath: mindx-dl/npu-exporter
           - name: localtime
             mountPath: /etc/localtime
             readOnly: true
@@ -119,7 +130,7 @@ spec:
       volumes:
         - name: log-npu-exporter
           hostPath:
-            path: /var/log/mindx-dl/npu-exporter
+            path: /var/log
             type: Directory
         - name: localtime
           hostPath:

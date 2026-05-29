@@ -205,11 +205,6 @@ func (fNode *FaultNode) updateFaultNodesAttr(node *plugin.NPUNode) {
 }
 
 func (fNode *FaultNode) setNodeHealthyByNodeD(node *plugin.NPUNode) {
-	if !fNode.isNodeDEnabled(node) {
-		fNode.setNodeDValue(false)
-		return
-	}
-	fNode.setNodeDValue(true)
 	// 2. to judge if noded has reported node unhealthy
 	healthyStatus, ok := node.Annotation[util.NodeHealthyStatusKey]
 	if !ok {
@@ -259,23 +254,6 @@ func (fNode *FaultNode) setNodeHealthyByCardHealth(node *plugin.NPUNode) {
 	}
 }
 
-func (fNode *FaultNode) isNodeDEnabled(node *plugin.NPUNode) bool {
-	value, ok := node.Label[nodeDEnableKey]
-	if !ok {
-		return false
-	}
-
-	switch value {
-	case nodeDEnableOnValue:
-		return true
-	case nodeDEnableOffValue:
-		return false
-	default:
-		klog.V(util.LogDebugLev).Infof("isEnableFaultNode not support %s.", value)
-		return false
-	}
-}
-
 // getL1LinkDownCards get the l1 link down npu list from node.DeviceInfo
 func (fNode *FaultNode) getL1LinkDownCards() []string {
 	var cards []string
@@ -285,10 +263,6 @@ func (fNode *FaultNode) getL1LinkDownCards() []string {
 		}
 	}
 	return cards
-}
-
-func (fNode *FaultNode) setNodeDValue(value bool) {
-	fNode.NodeDEnable = value
 }
 
 func (fNode *FaultNode) setIsFaultNodeValue(value bool) {
@@ -348,7 +322,6 @@ func newFaultNodeDefault(nodeName string, updateTime int64) *FaultNode {
 		NetworkUnhealthyNPU: nil,
 		DpuUnhealthyNPU:     nil,
 		IsFaultNode:         false,
-		NodeDEnable:         false,
 		NodeHealthState:     NodeHealthy,
 		FaultCards:          nil,
 		FaultDeviceList:     []FaultDeviceList{},

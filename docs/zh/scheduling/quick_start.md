@@ -56,7 +56,6 @@
 
     # 为NPU节点添加必要标签（ 将worker01替换为实际节点名）
     kubectl label nodes worker01 workerselector=dls-worker-node
-    kubectl label nodes worker01 accelerator=huawei-Ascend910
     ```
 
 4. 部署Ascend Device Plugin
@@ -306,10 +305,6 @@
         ```shell
         kubectl label nodes worker01 node-role.kubernetes.io/worker=worker
         kubectl label nodes worker01 workerselector=dls-worker-node
-        kubectl label nodes worker01 host-arch=huawei-arm
-        kubectl label nodes worker01 accelerator=huawei-Ascend910
-        kubectl label nodes worker01 accelerator-type=module-{xxx}b-8     #填写芯片型号数值
-        kubectl label nodes worker01 nodeDEnable=on
         ```
 
     3. 执行以下命令，为**管理节点**创建节点标签（如节点名称为“master01”）。
@@ -335,43 +330,13 @@
         useradd -d /home/hwMindX -u 9000 -m -s /usr/sbin/nologin hwMindX
         ```
 
-6. 创建日志目录。不支持用户自定义日志目录。
-    >[!NOTE]
-    >
-    >创建日志目录时需要sudo权限。
-    1. 依次执行以下命令，在**计算节点**创建日志目录。
-
-        ```shell
-        mkdir -m 755 /var/log/mindx-dl
-        chown root:root /var/log/mindx-dl
-        mkdir -m 750 /var/log/mindx-dl/devicePlugin
-        chown root:root /var/log/mindx-dl/devicePlugin
-        mkdir -m 750 /var/log/mindx-dl/noded
-        chown hwMindX:hwMindX /var/log/mindx-dl/noded
-        ```
-
-    2. 依次执行以下命令，在**管理节点**创建日志目录。
-
-        ```shell
-        mkdir -m 755 /var/log/mindx-dl
-        chown root:root /var/log/mindx-dl
-        mkdir -m 750 /var/log/mindx-dl/volcano-controller
-        chown hwMindX:hwMindX /var/log/mindx-dl/volcano-controller
-        mkdir -m 750 /var/log/mindx-dl/volcano-scheduler
-        chown hwMindX:hwMindX /var/log/mindx-dl/volcano-scheduler
-        mkdir -m 750 /var/log/mindx-dl/ascend-operator
-        chown hwMindX:hwMindX /var/log/mindx-dl/ascend-operator
-        mkdir -m 750 /var/log/mindx-dl/clusterd
-        chown hwMindX:hwMindX /var/log/mindx-dl/clusterd
-        ```
-
-7. 在任意节点执行以下命令，创建命名空间。
+6. 在任意节点执行以下命令，创建命名空间。
 
     ```shell
     kubectl create ns mindx-dl
     ```
 
-8. 安装组件。
+7. 安装组件。
     1. 依次执行以下命令，在计算节点的宿主机上安装Ascend Docker Runtime。
 
         ```shell

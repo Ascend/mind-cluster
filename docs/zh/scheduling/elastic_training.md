@@ -1025,7 +1025,7 @@
                     huawei.com/Ascend910: 8          # 目前需要和上面requests保持一致
     ...
                 nodeSelector:
-                  host-arch: huawei-arm       # 可选值，根据实际情况填写
+                  example-key: example-value    # 可选值，用户可根据实际需求配置nodeSelector
     ...
     ```
 

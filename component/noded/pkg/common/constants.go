@@ -20,6 +20,8 @@ const (
 	FaultConfigCMName = "mindx-dl-node-fault-config"
 	// NodeInfoCMNamePrefix the name prefix of node info config map
 	NodeInfoCMNamePrefix = "mindx-dl-nodeinfo-"
+	// NodeDDaemonSetName the name of noded daemonset
+	NodeDDaemonSetName = "noded"
 	// RegexNodeNameKey the regex key of node name
 	RegexNodeNameKey = "nodeName"
 	// RegexFaultCodeKey the regex key of code str

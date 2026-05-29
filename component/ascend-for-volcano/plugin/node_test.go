@@ -173,7 +173,7 @@ func buildNodePredicateTest() []nodePredicateTest {
 					Jobs: map[api.JobID]SchedulerJob{tTasks[0].Job: {policyHandler: New(PluginName)}},
 					Nodes: map[string]NPUNode{"haha": {
 						CommonNode: CommonNode{
-							Label:      map[string]string{util.NodeDEnableKey: util.NodeDEnableOnValue},
+							Label:      map[string]string{util.NodeHealthyStatusKey: util.PreSeparateFaultCode},
 							Annotation: map[string]string{util.NodeHealthyStatusKey: util.PreSeparateFaultCode},
 						}}}}}},
 			args:    nodePredicateArgs{taskInfo: tTasks[0], nodeInfo: tNode},
