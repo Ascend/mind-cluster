@@ -79,7 +79,6 @@ func (r *InstanceSetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	}
 	if !(instanceSet.DeletionTimestamp == nil || instanceSet.DeletionTimestamp.IsZero()) {
 		hwlog.RunLog.Infof("instanceSet %s is being deleted", req.NamespacedName)
-		r.rescheduler.CleanupWithInstanceSetDeletion(instanceSet.Name)
 		return ctrl.Result{}, nil
 	}
 
@@ -376,7 +375,7 @@ func NewInstanceSetReconciler(
 // SetupWithManager sets up the controller with the Manager.
 func (r *InstanceSetReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) error {
 	controller := ctrl.NewControllerManagedBy(mgr).
-		For(&apiv1.InstanceSet{}).
+		For(&apiv1.InstanceSet{}, builder.WithPredicates(instanceSetPredicate(r))).
 		Owns(&appsv1.Deployment{}, builder.WithPredicates(WorkLoadPredicate())).
 		Owns(&appsv1.StatefulSet{}, builder.WithPredicates(WorkLoadPredicate())).
 		Owns(&corev1.Service{}, builder.WithPredicates(WorkLoadPredicate())).
@@ -417,6 +416,24 @@ func (r *InstanceSetReconciler) doRescheduling(ctx context.Context, instanceSet 
 		}
 	}
 	return nil
+}
+
+func instanceSetPredicate(ir *InstanceSetReconciler) predicate.Predicate {
+	return predicate.Funcs{
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			return true
+		},
+		CreateFunc: func(e event.CreateEvent) bool {
+			return true
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			instanceSet, ok := e.Object.(*apiv1.InstanceSet)
+			if ok {
+				ir.rescheduler.CleanupWithInstanceSetDeletion(instanceSet.Name)
+			}
+			return true
+		},
+	}
 }
 
 func WorkLoadPredicate() predicate.Predicate {
