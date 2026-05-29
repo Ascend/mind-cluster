@@ -85,64 +85,22 @@ func TestFaultNodeGetAllNPUCardsFromDeviceInfo(t *testing.T) {
 	}
 }
 
-type faultSetNodeHealthyByNodeDTests struct {
-	name   string
-	fields FaultNode
-	node   *plugin.NPUNode
-	want   string
-}
-
-func buildSetNodeHealthyByNodeDTestCases() []faultSetNodeHealthyByNodeDTests {
-	fakeNode0 := fakeNPUNodeNilDeviceInfo("node0")
-	fakeNode1 := fakeNPUNodeNilDeviceInfo("node1")
-	fakeNode2 := fakeNPUNodeNilDeviceInfo("node2")
-	addFakeNodeLabel(fakeNode0, nodeDEnableKey, nodeDEnableOffValue)
-	addFakeNodeLabel(fakeNode1, nodeDEnableKey, nodeDEnableOnValue)
-	addFakeNodeLabel(fakeNode2, nodeDEnableKey, nodeDEnableOnValue)
-	addFakeNodeAnnotation(fakeNode2, util.NodeHealthyStatusKey, util.NodeUnHealthy)
-	test1 := faultSetNodeHealthyByNodeDTests{
-		name:   "nodeDEnable is off, skip set node healthy",
-		fields: *fakeTestFaultNodeNodeHealthy("node0"),
-		node:   fakeNode0,
-		want:   NodeHealthy,
-	}
-	test2 := faultSetNodeHealthyByNodeDTests{
-		name:   "nodedNodeHealtyStatus is healthy, set node healthy",
-		fields: *fakeTestFaultNodeNodeHealthy("node1"),
-		node:   fakeNode1,
-		want:   NodeHealthy,
-	}
-	test3 := faultSetNodeHealthyByNodeDTests{
-		name:   "nodedNodeHealtyStatus is unhealthy, set node unhealthy",
-		fields: *fakeTestFaultNodeNodeHealthy("node2"),
-		node:   fakeNode2,
-		want:   NodeUnhealthy,
-	}
-	tests := []faultSetNodeHealthyByNodeDTests{test1, test2, test3}
-	return tests
-}
-
-// TestSetNodeHealthyByNodeD test for node healthy by nodeD
 func TestSetNodeHealthyByNodeD(t *testing.T) {
-	tests := buildSetNodeHealthyByNodeDTestCases()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			fNode := tt.fields
-			fNode.setNodeHealthyByNodeD(tt.node)
-			if fNode.NodeHealthState != tt.want {
-				t.Errorf("setNodeHealthyByNodeD() NodeHealthState %v, want %v", fNode.NodeHealthState, tt.want)
-				return
-			}
-		})
-	}
-}
-
-// addFakeNodeLabel add fake node label
-func addFakeNodeLabel(nodeInf *plugin.NPUNode, name string, label string) {
-	nodeInf.Label[name] = label
-}
-
-// addFakeNodeLabel add fake node label
-func addFakeNodeAnnotation(nodeInf *plugin.NPUNode, name string, anno string) {
-	nodeInf.Annotation[name] = anno
+	t.Run("01-setNodeHealthyByNodeD() annotation has NodeUnHealthy, set node unhealthy", func(t *testing.T) {
+		fNode := *fakeTestFaultNodeNodeHealthy("node0")
+		node := fakeNPUNodeNilDeviceInfo("node0")
+		node.Annotation[util.NodeHealthyStatusKey] = util.NodeUnHealthy
+		fNode.setNodeHealthyByNodeD(node)
+		if fNode.NodeHealthState != NodeUnhealthy {
+			t.Errorf("setNodeHealthyByNodeD() NodeHealthState %v, want %v", fNode.NodeHealthState, NodeUnhealthy)
+		}
+	})
+	t.Run("02-setNodeHealthyByNodeD() annotation not exist, do nothing", func(t *testing.T) {
+		fNode := *fakeTestFaultNodeNodeHealthy("node1")
+		node := fakeNPUNodeNilDeviceInfo("node1")
+		fNode.setNodeHealthyByNodeD(node)
+		if fNode.NodeHealthState != NodeHealthy {
+			t.Errorf("setNodeHealthyByNodeD() NodeHealthState %v, want %v", fNode.NodeHealthState, NodeHealthy)
+		}
+	})
 }

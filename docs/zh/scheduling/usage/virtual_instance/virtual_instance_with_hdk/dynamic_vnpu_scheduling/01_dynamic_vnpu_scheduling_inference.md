@@ -428,7 +428,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
         spec:
           schedulerName: volcano              # 需要使用MindCluster的调度器Volcano
           nodeSelector:
-            host-arch: huawei-arm
+            example-key: example-value    # 示例值，用户可根据调度意图自行配置nodeSelector
           containers:
             - image: ubuntu-infer:v1   # 示例镜像
     ...

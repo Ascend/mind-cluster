@@ -50,6 +50,15 @@ import (
 
 var resourceVersion = ""
 
+var acceleratorLabelMap = map[string]string{
+	api.Ascend910:   api.Accelerator910Label,
+	api.Ascend910B:  api.Accelerator910Label,
+	api.Ascend910A3: api.Accelerator910Label,
+	api.Ascend910A5: api.AcceleratorNPULabel,
+	api.Ascend310:   api.Accelerator310Label,
+	api.Ascend310P:  api.Accelerator310PLabel,
+}
+
 const (
 	memoryRadix                  = 1024
 	nodeAnnotationUpdateInterval = 60
@@ -305,7 +314,7 @@ func (hdm *HwDevManager) getNewNodeLabel(node *v1.Node) (map[string]string, erro
 		}
 	}
 
-	if common.ParamOption.RealCardType == api.Ascend910B && hdm.manager.GetDeviceUsage() == common.Infer {
+	if common.ParamOption.RealCardType == api.Ascend910B {
 		// only auto label 300IA2 with910B card
 		if boardInfo.BoardId == common.A300IA2BoardId || boardInfo.BoardId == common.A300IA2GB64BoardId {
 			newLabelMap[common.AcceleratorTypeKey] = api.A300IA2Label
@@ -314,9 +323,20 @@ func (hdm *HwDevManager) getNewNodeLabel(node *v1.Node) (map[string]string, erro
 	if common.IsContainAll300IDuo() {
 		newLabelMap[common.InferCardKey] = api.A300IDuoLabel
 	}
+	hdm.setAcceleratorLabel(newLabelMap)
 	hdm.addTopologyLabel(newLabelMap)
 
 	return newLabelMap, nil
+}
+
+func (hdm *HwDevManager) setAcceleratorLabel(newLabelMap map[string]string) {
+	if newLabelMap == nil {
+		hwlog.RunLog.Error("label map is nil")
+		return
+	}
+	if v, ok := acceleratorLabelMap[common.ParamOption.RealCardType]; ok {
+		newLabelMap[api.AcceleratorLabelKey] = v
+	}
 }
 
 func (hdm *HwDevManager) addTopologyLabel(newLabelMap map[string]string) {
@@ -402,9 +422,6 @@ func (hdm *HwDevManager) setAllDeviceAndType() error {
 	}
 	if len(hdm.allInfo.AllDevs) == 0 {
 		return fmt.Errorf("no devices found")
-	}
-	if err = hdm.manager.SetDeviceUsage(hdm.allInfo.AllDevs[0].LogicID); err != nil {
-		return err
 	}
 	hdm.groupDevice = device.ClassifyDevices(hdm.allInfo.AllDevs, hdm.allInfo.AllDevTypes)
 	return nil
@@ -858,55 +875,18 @@ func (hdm *HwDevManager) resetCommonInferCard(devType string, devices []*common.
 		return
 	}
 
-	usage, boardId, err := hdm.getServerUsageAndBoardId()
+	boardId, err := hdm.manager.GetServerBoardId(hdm.allInfo.AllDevs[common.FirstDevice].LogicID)
 	if err != nil {
 		hwlog.RunLog.Error(err)
 		return
 	}
 
-	// A800IA2 server, node labeled with server-usage=infer
-	if usage == common.Infer {
-		// server without hccs is 0x33 or 0x3c, 0x28, 0x29
-		if boardId == common.A800IA2NoneHccsBoardId || boardId == common.A800IA2NoneHccsBoardIdOld ||
-			boardId == common.A300IA2BoardId || boardId == common.A300IA2GB64BoardId {
-			hdm.ResetWithoutHccsServer(devType, devices, prClient)
-			return
-		}
-		hdm.ResetHccsServer(devType, devices, prClient)
+	if boardId == common.A800IA2NoneHccsBoardId || boardId == common.A800IA2NoneHccsBoardIdOld ||
+		boardId == common.A300IA2BoardId || boardId == common.A300IA2GB64BoardId {
+		hdm.ResetWithoutHccsServer(devType, devices, prClient)
 		return
 	}
-	for _, device := range devices {
-		if device.Health == v1beta1.Healthy {
-			continue
-		}
-		if !hdm.isPodRemove(devType, device, prClient) {
-			continue
-		}
-		if !hdm.checkNoProc(device.LogicID) {
-			continue
-		}
-		hdm.hotReset(device, []*common.NpuDevice{device})
-	}
-}
-
-func (hdm *HwDevManager) getServerUsageAndBoardId() (string, uint32, error) {
-	boardId, err := hdm.manager.GetServerBoardId(hdm.allInfo.AllDevs[common.FirstDevice].LogicID)
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get node board info, err: %s", err.Error())
-		return "", common.EmptyBoardId, err
-	}
-
-	client := hdm.manager.GetKubeClient()
-	if client == nil {
-		return "", common.EmptyBoardId, fmt.Errorf("k8s client is nil")
-	}
-	// try to get server-usage label
-	usage, err := client.GetServerUsageLabelCache()
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get server usage")
-		return "", common.EmptyBoardId, err
-	}
-	return usage, boardId, nil
+	hdm.ResetHccsServer(devType, devices, prClient)
 }
 
 // ResetWithoutHccsServer reset server without hccs, which can reset one card at one time
@@ -915,7 +895,7 @@ func (hdm *HwDevManager) ResetWithoutHccsServer(devType string, devices []*commo
 		inReset := hdm.manager.GetIfCardsInResetting(device.LogicID)
 		resetFailedTimes := hdm.manager.GetResetFailedTimes(device.LogicID)
 		if device.Health == v1beta1.Healthy {
-			hwlog.RunLog.Warnf("Ascend910-%d is health, would not reset", device.LogicID)
+			hwlog.RunLog.Debugf("Ascend910-%d is health, would not reset", device.LogicID)
 			continue
 		}
 		if inReset {

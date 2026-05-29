@@ -295,8 +295,8 @@ metadata:
     ring-controller.atlas: ascend-{xxx}b  # 标识产品类型
     podgroup-sched-enable: "true"  # 仅在集群使用openFuyao定制Kubernetes和volcano-ext组件场景下配置。取值为字符串"true"时，表示开启批量调度功能；取值为其他字符串时，表示批量调度功能不生效，使用普通调度；若不配置该参数，表示批量调度功能不生效，使用普通调度。
   annotations:
-huawei.com/schedule_policy: multilevel # 配置调度策略为多级调度策略
-huawei.com/affinity-config: level1=2,level2=4 # 按照任务实际需求配置不同层级的网络组大小
+    huawei.com/schedule_policy: multilevel # 配置调度策略为多级调度策略
+    huawei.com/affinity-config: level1=2,level2=4 # 按照任务实际需求配置不同层级的网络组大小
 spec:
   schedulerName: volcano  # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
   runPolicy:
@@ -314,8 +314,7 @@ spec:
             ring-controller.atlas: ascend-{xxx}b
         spec:
           nodeSelector:
-            host-arch: huawei-arm      # 可选值，根据实际情况填写
-            accelerator-type: module-a3-8-super-pod    # 可选值，请根据实际硬件形态填写
+            example-key: example-value    # 示例值，用户可根据调度意图自行配置nodeSelector
           containers:
           - name: ascend  # 必须为ascend，不能修改
             image: pytorch-test:latest      # 训练基础镜像
@@ -345,7 +344,7 @@ spec:
             ring-controller.atlas: ascend-{xxx}b
         spec:
           nodeSelector:
-            host-arch: huawei-arm      # 可选值，根据实际情况填写
+            example-key: example-value    # 可选值，用户可根据实际需求配置nodeSelector
           containers:
           - name: ascend  # 必须为ascend，不能修改
             image: pytorch-test:latest      # 训练基础镜像

@@ -52,7 +52,7 @@ spec:
     spec:
       schedulerName: volcano         # Use the Volcano scheduler to schedule jobs.
       nodeSelector:
-        host-arch: huawei-arm        # Configure the label based on the actual job.
+        example-key: example-value    # 可选值，用户可根据实际需求配置nodeSelector
       containers:
         - image: ubuntu:18.04      # Training framework image, which can be modified.
           name: mindspore
@@ -62,7 +62,7 @@ spec:
             limits:
               huawei.com/Ascend910: 16                                                # The value must be consistent with that in requests.</pre>
 
-> [!NOTE] 
+> [!NOTE]
 >
 >- 如果一个PodGroup被创建，则spec中的调度配置将覆盖其生成的Pod上的labels/annotations配置。
 >- 对于可以生成PodGroup的资源，在PodGroup上配置对应的调度策略也可以实现亲和性调度能力。

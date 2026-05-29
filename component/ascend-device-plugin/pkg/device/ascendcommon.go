@@ -75,7 +75,6 @@ type AscendTools struct {
 	client       *kubeclient.ClientK8s
 	dmgr         devmanager.DeviceInterface
 	name         string
-	deviceUsage  string
 	unHealthyKey string
 	devCount     int32
 	healthDevice sets.String
@@ -124,8 +123,6 @@ type DevManager interface {
 	CreateVirtualDevice(int32, string) (string, error)
 	DestroyVirtualDevice(string) error
 	GetChipAiCoreCount() (int32, error)
-	SetDeviceUsage(int32) error
-	GetDeviceUsage() string
 	SetSuperPodID(superPodID int32)
 	GetSuperPodID() int32
 	SetServerIndex(serverIndex int32)
@@ -937,10 +934,6 @@ func (tool *AscendTools) getDeviceListIP(devices []string, deviceType string) (m
 	}
 	devicesWithIP := make(map[int]string, len(devices))
 	for _, id := range ascendDevices {
-		if tool.deviceUsage == common.Infer {
-			devicesWithIP[id] = api.DeviceIPEmptyCodeStr
-			continue
-		}
 		deviceIP, err := tool.GetDeviceIP(deviceType, id)
 		if err != nil {
 			devicesWithIP[id] = api.DeviceIPErrorCodeStr // set error ip if get ip failed, it will due to ranktable generator in some scenario
@@ -1428,48 +1421,6 @@ func (tool *AscendTools) assembleShareModeDevices(davinCiDev common.DavinCiDev, 
 	device := tool.getNPUsByShareMode(davinCiDev)
 	*devices = append(*devices, device...)
 	*deviceTypes = append(*deviceTypes, tool.name)
-}
-
-// SetDeviceUsage set usage of device according to board info
-func (tool *AscendTools) SetDeviceUsage(devLogicID int32) error {
-	devType := tool.dmgr.GetDevType()
-	if strings.HasPrefix(devType, api.Ascend310) {
-		tool.deviceUsage = common.Infer
-		return nil
-	}
-
-	node, err := tool.client.GetNode()
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get node %s info, err: %s", tool.client.NodeName, err.Error())
-		return fmt.Errorf("failed to get node info")
-	}
-
-	boardId, err := tool.GetServerBoardId(devLogicID)
-	if err != nil {
-		hwlog.RunLog.Errorf("%v", err)
-		return fmt.Errorf("set device usage error")
-	}
-
-	// A800IA2 with has to label the node as server-usage:infer to divide with A800T
-	if serverUsage, ok := node.Labels[common.ServerUsageLabelKey]; ok && serverUsage == common.Infer {
-		tool.deviceUsage = common.Infer
-		return nil
-	}
-
-	// A800IA2 without hccs can be auto set usage as infer
-	if devType == api.Ascend910B && (boardId == common.A300IA2BoardId || boardId == common.A300IA2GB64BoardId ||
-		boardId == npuCommon.Atlas200LA2ZQBoardId || boardId == common.A800IA2NoneHccsBoardId || boardId == common.A800IA2NoneHccsBoardIdOld) {
-		tool.deviceUsage = common.Infer
-		return nil
-	}
-
-	tool.deviceUsage = common.Train
-	return nil
-}
-
-// GetDeviceUsage return usage of device, infer or train
-func (tool *AscendTools) GetDeviceUsage() string {
-	return tool.deviceUsage
 }
 
 // GetServerBoardId get server board id

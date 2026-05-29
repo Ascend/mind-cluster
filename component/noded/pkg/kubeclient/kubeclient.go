@@ -22,6 +22,7 @@ import (
 	"os"
 	"time"
 
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -200,4 +201,13 @@ func (ck *ClientK8s) GetNodeWithCache() (*v1.Node, error) {
 		localNode = nodeInfo
 	}
 	return nodeInfo, err
+}
+
+// GetDaemonSet get daemonset by name and namespace
+func (ck *ClientK8s) GetDaemonSet(name, namespace string) (*appsv1.DaemonSet, error) {
+	ds, err := ck.ClientSet.AppsV1().DaemonSets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return ds, nil
 }

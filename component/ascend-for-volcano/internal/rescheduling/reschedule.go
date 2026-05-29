@@ -527,9 +527,6 @@ func (reScheduler *ReScheduler) AddFaultNodeWithSession() {
 		faultNode.updateFaultNodesFromDeviceInfo(&npuNode)
 		faultNode.updateFaultNodesAttr(&npuNode)
 		tmpFaultNodes[name] = faultNode
-		if !faultNode.NodeDEnable {
-			addfaultNodeErrors.Add(name, errors.New("isNodeDEnabled: the node label of nodeDEnable=on is not set"))
-		}
 	}
 	addfaultNodeErrors.Print()
 	reScheduler.setFaultNodes(tmpFaultNodes)

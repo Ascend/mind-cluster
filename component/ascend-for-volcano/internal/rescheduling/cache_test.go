@@ -355,7 +355,6 @@ func TestGetFaultNodeToCm(t *testing.T) {
 					UnhealthyNPU:        []string{"Ascend910-0"},
 					NetworkUnhealthyNPU: nil,
 					IsFaultNode:         true,
-					NodeDEnable:         true,
 					NodeHealthState:     NodeCardUnhealthy,
 					FaultCards: []FaultCard{
 						*fakeTestFaultCardUnhealthy("Ascend910-0", "node0", NodeCardUnhealthy),

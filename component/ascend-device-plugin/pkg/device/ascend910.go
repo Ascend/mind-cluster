@@ -143,7 +143,7 @@ func (hnm *HwAscend910Manager) GetNPUs() (common.NpuAllInfo, error) {
 // GraceTolerance process training task with device fault gracefully
 func (hnm *HwAscend910Manager) GraceTolerance(ctx context.Context, classifyDevs map[string][]*common.NpuDevice) {
 	hotResetManagerInitOnce.Do(func() {
-		hnm.hotResetManager = NewHotResetManager(hnm.GetDeviceUsage(), len(classifyDevs[hnm.name]), hnm.boardId)
+		hnm.hotResetManager = NewHotResetManager(len(classifyDevs[hnm.name]), hnm.boardId)
 		if hnm.hotResetManager == nil {
 			hwlog.RunLog.Error("hot reset manager is nil")
 			return
@@ -702,12 +702,6 @@ func (hnm *HwAscend910Manager) updateDeviceInfo(oldDevInfo, newDevInfo map[strin
 }
 
 func (hnm *HwAscend910Manager) isNeedBlockAllDevice(faultDevices []common.DeviceFault) bool {
-	usage, err := hnm.GetKubeClient().GetServerUsageLabelCache()
-	if err != nil {
-		hwlog.RunLog.Errorf("failed to get server usage label, err: %s", err.Error())
-		return false
-	}
-	// only A800IA2 hccs server with fault device will return true
 	boardId, err := hnm.GetServerBoardId(common.FirstDevice)
 	if err != nil {
 		return false
@@ -718,7 +712,7 @@ func (hnm *HwAscend910Manager) isNeedBlockAllDevice(faultDevices []common.Device
 			needBlockErr = true
 		}
 	}
-	if usage == common.Infer && boardId != common.A800IA2NoneHccsBoardId &&
+	if boardId != common.A800IA2NoneHccsBoardId &&
 		boardId != common.A800IA2NoneHccsBoardIdOld &&
 		(needBlockErr || hnm.GetIfCardsInResetting(common.FirstDevice)) {
 		return true
@@ -901,13 +895,8 @@ func (hnm *HwAscend910Manager) setTaskDevInfoCache() error {
 			continue
 		}
 		rankIndex, ok := pod.Annotations[api.PodRankIndexAnno]
-		if common.ParamOption.RealCardType == api.Ascend910B && hnm.GetDeviceUsage() == common.Infer {
+		if !ok {
 			rankIndex = common.InferRankIndex
-		} else {
-			if !ok {
-				hwlog.RunLog.Warn("failed to get rank index by rank index key")
-				continue
-			}
 		}
 		taskListUsedDevice[taskName] = struct{}{}
 		newTaskDevListCache[taskName] = devIdList
@@ -966,7 +955,7 @@ func (hnm *HwAscend910Manager) isReSchedulingScene(npuCount int) bool {
 		return false
 	}
 
-	if hnm.GetDeviceUsage() == common.Train && npuCount < resetDevNumOnce {
+	if npuCount < resetDevNumOnce {
 		return true
 	}
 

@@ -146,7 +146,7 @@ const (
 	// NodeHealthyStatusKey  is the key of node healthy status from configmap data of noded and clusterD
 	NodeHealthyStatusKey = "NodeHealthyStatus"
 	// NodeSubHealthy means there is some fault on the node which is reported by nodeD, but will not immediately
-	// make node unhealthy, this status will prevent new task schduled on this node and reschedule will not consider
+	// make node unhealthy, this status will prevent new task scheduled on this node and reschedule will not consider
 	// this node
 	NodeSubHealthy = "SubHealthy"
 	// NodeUnHealthy is the node unhealthy status reported by nodeD configmap, switch info CM and clusterD,
@@ -154,11 +154,6 @@ const (
 	NodeUnHealthy = "UnHealthy"
 	// NodeHealthyByNodeD is the node healthy status reported by nodeD configmap
 	NodeHealthyByNodeD = "Healthy"
-	// NodeDEnableKey indicates if the label has been set
-	NodeDEnableKey = "nodeDEnable"
-	// NodeDEnableOnValue the value of NodeDEnableKey, which means nodeD has been enabled
-	NodeDEnableOnValue = "on"
-
 	// PreSeparateFaultCode  PreSeparate fault Code
 	PreSeparateFaultCode = "PreSeparate"
 

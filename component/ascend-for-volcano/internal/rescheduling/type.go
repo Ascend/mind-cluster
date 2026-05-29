@@ -63,10 +63,6 @@ const (
 	// JobOffElasticScheduling job not enabled with elastic scheduling
 	JobOffElasticScheduling = "off"
 
-	nodeDEnableKey      = "nodeDEnable"
-	nodeDEnableOnValue  = "on"
-	nodeDEnableOffValue = "off"
-
 	// CmFaultNodeKind key in configmap which saves the FaultNode cache
 	CmFaultNodeKind = "fault-node"
 	// CmFaultJob910bx2Kind key in configmap which saves the 910bx2 FaultJob cache
@@ -199,7 +195,6 @@ type FaultNodeInfoToCm struct {
 	NodeName            string
 	UnhealthyNPU        []string
 	NetworkUnhealthyNPU []string
-	NodeDEnable         bool
 	NodeHealthState     string
 	UpdateTime          int64
 }
@@ -271,7 +266,6 @@ type FaultNode struct {
 	NetworkUnhealthyNPU     []string
 	DpuUnhealthyNPU         []string
 	IsFaultNode             bool
-	NodeDEnable             bool
 	NodeHealthState         string
 	FaultCards              []FaultCard
 	HasSwitchSubHealthFault bool

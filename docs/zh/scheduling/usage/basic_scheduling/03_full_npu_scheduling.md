@@ -990,6 +990,8 @@ deploy任务原理图如[图3](#fig06571541566)所示。
           labels:
             ring-controller.atlas: ascend-{xxx}b
             fault-scheduling: "force"
+          annotations:
+            huawei.com/schedule_policy: chip8-node8
         spec:
         ...
             template:
@@ -1014,8 +1016,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                       - name: localtime                  # 容器时间必须与主机时间一致
                         mountPath: /etc/localtime
                 nodeSelector:
-                  host-arch: huawei-arm                  # 根据实际情况进行配置
-                  accelerator-type: module-{xxx}b-8      # Atlas 800I A2 推理服务器
+                  example-key: example-value    # 示例值，用户可根据调度意图自行配置nodeSelector
                 volumes:
                 - name: localtime
                   hostPath:

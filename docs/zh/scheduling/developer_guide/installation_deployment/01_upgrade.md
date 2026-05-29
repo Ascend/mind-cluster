@@ -1,4 +1,4 @@
-﻿# 手动升级<a name="ZH-CN_TOPIC_0000002479226452"></a>
+# 手动升级<a name="ZH-CN_TOPIC_0000002479226452"></a>
 
 ## 升级说明<a name="ZH-CN_TOPIC_0000002511346381"></a>
 
@@ -345,13 +345,85 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
         ...
         ```
 
+## 升级Ascend Device Plugin<a name="ZH-CN_TOPIC_0000002511346402"></a>
+
+**前提条件**
+
+- 已完成[升级环境检查](#升级说明)。
+
+**注意事项**
+
+- 升级Ascend Device Plugin之前，需先升级Ascend Docker Runtime至26.1.0及以上版本。
+- 如果不升级Ascend Docker Runtime、未使用Ascend Docker Runtime或使用非默认挂载路径，则需要在Ascend Device Plugin的部署YAML中取消以下volumeMounts和volumes的注释并按需修改：
+
+  volumeMounts部分：
+
+  ```yaml
+          - name: docker-sock  # if container runtime is containerd, delete this volumeMount, else do not modify
+            mountPath: /run/docker.sock
+            readOnly: true
+          - name: docker-dir  # if container runtime is containerd, delete this volumeMount, else do not modify
+            mountPath: /run/docker
+            readOnly: true
+          - name: containerd
+            mountPath: /run/containerd
+            readOnly: true
+  ```
+
+  volumes部分：
+
+  ```yaml
+        - name: docker-sock    # if container runtime is containerd, delete this volumeMount, else do not modify
+          hostPath:            # if your sock file is not in /run/docker.sock, please modify it, not support symbolic link
+            path: /run/docker.sock
+        - name: docker-dir     # if container runtime is containerd, delete this volumeMount, else do not modify
+          hostPath:            # if your docker dir is not in /run/docker, please modify it, not support symbolic link
+            path: /run/docker
+        - name: containerd
+          hostPath:
+            path: /run/containerd
+  ```
+
+**升级步骤**
+
+1. 以root用户登录管理节点。
+2. 进入Ascend Device PluginYAML配置文件所在目录（如：" /home/ascend-device-plugin"）。
+
+    ```shell
+    cd /home/ascend-device-plugin
+    ```
+
+3. 在Ascend Device Plugin组件安装环境下，执行以下命令，卸载旧版本Ascend Device Plugin。
+
+    ```shell
+    kubectl delete -f device-plugin-volcano-v{version}.yaml
+    ```
+
+4. 删除旧版本Ascend Device Plugin的DaemonSet。
+
+    先查询Ascend Device Plugin的DaemonSet名称：
+
+    ```shell
+    kubectl get ds -A | grep ascend-device-plugin
+    ```
+
+    如果查询结果显示没有ascend-device-plugin的DaemonSet了跳过此步骤；若还有，则根据查询结果删除对应的DaemonSet，例如：
+
+    ```shell
+    kubectl delete ds -n kube-system ascend-device-plugin-daemonset-910
+    ```
+
+5. 安装新版本Ascend Device Plugin。
+
+    详细步骤请参见[手动安装Ascend Device Plugin](manual_installation/04_ascend_device_plugin.md)。
+
 ## 升级其他组件<a name="ZH-CN_TOPIC_0000002511346401"></a>
 
 **前提条件<a name="section176591058124515"></a>**
 
 - 已完成[升级环境检查](#升级说明)。
 
-- 如需升级NPU Exporter、Ascend Device Plugin、Volcano、ClusterD、Ascend Operator、Infer Operator和NodeD组件，需卸载旧版本后，再执行新版本的安装步骤。
+- 如需升级NPU Exporter、Volcano、ClusterD、Ascend Operator、Infer Operator和NodeD组件，需卸载旧版本后，再执行新版本的安装步骤。
 
 **注意事项**
 

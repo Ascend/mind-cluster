@@ -304,11 +304,7 @@ func TestGetNewNodeLabel(t *testing.T) {
 		convey.So(err.Error(), convey.ShouldEqual, "chip info error")
 	})
 	convey.Convey("test getNewNodeLabel success", t, func() {
-		mockGetDeviceUsage := gomonkey.ApplyMethod(&device.AscendTools{}, "GetDeviceUsage",
-			func(_ *device.AscendTools) string {
-				return common.Infer
-			})
-		defer mockGetDeviceUsage.Reset()
+		common.ParamOption.RealCardType = api.Ascend310
 		mockGetBoardInfo := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
 			"GetBoardInfo", func(_ *devmanager.DeviceManagerMock, _ int32) (npuCommon.BoardInfo, error) {
 				return npuCommon.BoardInfo{BoardId: common.A300IA2BoardId}, nil
@@ -322,8 +318,10 @@ func TestGetNewNodeLabel(t *testing.T) {
 		mockIsContainAll300IDuo := gomonkey.ApplyFuncReturn(common.IsContainAll300IDuo, true)
 		defer mockIsContainAll300IDuo.Reset()
 		labelMap, err := hdm.getNewNodeLabel(testNode)
-		convey.So(labelMap, convey.ShouldResemble, map[string]string{common.InferCardKey: api.A300IDuoLabel,
-			common.ChipNameLabel: "testName", api.NPUChipMemoryLabel: "0G", common.DcmiDriverVersion: "v1"})
+		convey.So(labelMap, convey.ShouldResemble, map[string]string{
+			api.AcceleratorLabelKey: api.Accelerator310Label,
+			common.InferCardKey:     api.A300IDuoLabel,
+			common.ChipNameLabel:    "testName", common.DcmiDriverVersion: "v1"})
 		convey.So(err, convey.ShouldBeNil)
 	})
 }
@@ -448,6 +446,68 @@ func TestAddTopologyLabel_A5_AllNegative(t *testing.T) {
 		convey.Convey("01-should not write any topology label", func() {
 			newLabelMap := make(map[string]string)
 			hdm.addTopologyLabel(newLabelMap)
+			convey.So(len(newLabelMap), convey.ShouldEqual, 0)
+		})
+	})
+}
+
+func TestSetAcceleratorLabel_NilMap(t *testing.T) {
+	convey.Convey("Test setAcceleratorLabel: newLabelMap is nil", t, func() {
+		hdm := &HwDevManager{}
+		hdm.setAcceleratorLabel(nil)
+	})
+}
+
+func TestSetAcceleratorLabel_AllCardTypes(t *testing.T) {
+	convey.Convey("Test setAcceleratorLabel: all card types", t, func() {
+		hdm := &HwDevManager{}
+
+		convey.Convey("01-Ascend910 should set huawei-Ascend910", func() {
+			common.ParamOption.RealCardType = api.Ascend910
+			newLabelMap := make(map[string]string)
+			hdm.setAcceleratorLabel(newLabelMap)
+			convey.So(newLabelMap[api.AcceleratorLabelKey], convey.ShouldEqual, api.Accelerator910Label)
+		})
+
+		convey.Convey("02-Ascend910B should set huawei-Ascend910", func() {
+			common.ParamOption.RealCardType = api.Ascend910B
+			newLabelMap := make(map[string]string)
+			hdm.setAcceleratorLabel(newLabelMap)
+			convey.So(newLabelMap[api.AcceleratorLabelKey], convey.ShouldEqual, api.Accelerator910Label)
+		})
+
+		convey.Convey("03-Ascend910A3 should set huawei-Ascend910", func() {
+			common.ParamOption.RealCardType = api.Ascend910A3
+			newLabelMap := make(map[string]string)
+			hdm.setAcceleratorLabel(newLabelMap)
+			convey.So(newLabelMap[api.AcceleratorLabelKey], convey.ShouldEqual, api.Accelerator910Label)
+		})
+
+		convey.Convey("04-Ascend910A5 should set huawei-npu", func() {
+			common.ParamOption.RealCardType = api.Ascend910A5
+			newLabelMap := make(map[string]string)
+			hdm.setAcceleratorLabel(newLabelMap)
+			convey.So(newLabelMap[api.AcceleratorLabelKey], convey.ShouldEqual, api.AcceleratorNPULabel)
+		})
+
+		convey.Convey("05-Ascend310 should set huawei-Ascend310", func() {
+			common.ParamOption.RealCardType = api.Ascend310
+			newLabelMap := make(map[string]string)
+			hdm.setAcceleratorLabel(newLabelMap)
+			convey.So(newLabelMap[api.AcceleratorLabelKey], convey.ShouldEqual, api.Accelerator310Label)
+		})
+
+		convey.Convey("06-Ascend310P should set huawei-Ascend310P", func() {
+			common.ParamOption.RealCardType = api.Ascend310P
+			newLabelMap := make(map[string]string)
+			hdm.setAcceleratorLabel(newLabelMap)
+			convey.So(newLabelMap[api.AcceleratorLabelKey], convey.ShouldEqual, api.Accelerator310PLabel)
+		})
+
+		convey.Convey("07-unknown card type should not set accelerator label", func() {
+			common.ParamOption.RealCardType = "UnknownType"
+			newLabelMap := make(map[string]string)
+			hdm.setAcceleratorLabel(newLabelMap)
 			convey.So(len(newLabelMap), convey.ShouldEqual, 0)
 		})
 	})
@@ -1040,26 +1100,17 @@ func TestResetCommonInferCard(t *testing.T) {
 			hdm.resetCommonInferCard("devType", devices, &PodResource{})
 		})
 		patch := gomonkey.ApplyMethodReturn(hdm.manager, "GetServerBoardId", uint32(common.A800IA2NoneHccsBoardId),
-			nil).ApplyMethodReturn(&mockDevManager{}, "GetKubeClient", &kubeclient.ClientK8s{}).ApplyMethodReturn(
-			&kubeclient.ClientK8s{}, "GetServerUsageLabelCache", common.Infer, nil)
+			nil).ApplyMethodReturn(&mockDevManager{}, "GetKubeClient", &kubeclient.ClientK8s{})
 		defer patch.Reset()
-		convey.Convey("When usage is Infer and boardId is A800IA2NoneHccsBoardId, call ResetWithoutHccsServer", func() {
+		convey.Convey("When boardId is A800IA2NoneHccsBoardId, call ResetWithoutHccsServer", func() {
 			patch1 := gomonkey.ApplyMethod(hdm, "ResetWithoutHccsServer",
 				func(_ *HwDevManager, _ string, _ []*common.NpuDevice, _ *PodResource) {})
 			defer patch1.Reset()
 			hdm.resetCommonInferCard("devType", devices, &PodResource{})
 		})
-		convey.Convey("When usage is Infer and boardId is not A800IA2NoneHccsBoardId, call ResetHccsServer", func() {
+		convey.Convey("When boardId is not A800IA2NoneHccsBoardId, call ResetHccsServer", func() {
 			patch1 := gomonkey.ApplyMethodReturn(hdm.manager, "GetServerBoardId", uint32(0), nil).ApplyMethod(hdm,
 				"ResetHccsServer", func(_ *HwDevManager, _ string, _ []*common.NpuDevice, _ *PodResource) {})
-			defer patch1.Reset()
-			hdm.resetCommonInferCard("devType", devices, &PodResource{})
-		})
-		convey.Convey("When usage is not Infer, call hotReset for unhealthy devices", func() {
-			patch1 := gomonkey.ApplyMethodReturn(&kubeclient.ClientK8s{}, "GetServerUsageLabelCache", "otherUsage",
-				nil).ApplyMethod(hdm.manager, "SetCardsInResetting",
-				func(_ *device.HwAscend310Manager, _ int32, _ bool) {}).ApplyMethod(hdm.manager, "SetResetFailedTimes",
-				func(_ *device.HwAscend310Manager, _ int32, _ int) {})
 			defer patch1.Reset()
 			hdm.resetCommonInferCard("devType", devices, &PodResource{})
 		})

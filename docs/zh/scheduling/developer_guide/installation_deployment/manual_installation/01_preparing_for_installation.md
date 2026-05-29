@@ -1,4 +1,4 @@
-﻿# 安装前准备<a name="ZH-CN_TOPIC_0000002479386432"></a>
+# 安装前准备<a name="ZH-CN_TOPIC_0000002479386432"></a>
 
 ## 创建用户<a name="ZH-CN_TOPIC_0000002511346353"></a>
 
@@ -19,8 +19,7 @@
      useradd -d /home/hwMindX -u 9000 -m -s /sbin/nologin hwMindX
      usermod -a -G HwHiAiUser hwMindX
      ```
-
-2. 使用环境中已有用户：需执行 <code>usermod -a -G HwHiAiUser <i>{your_username}</i></code>，并修改对应组件的Dockerfile，将Dockerfile里`useradd`命令中的UID替换为已有用户的UID。
+2. 使用环境中已有用户：需执行 <code>usermod -a -G HwHiAiUser <i>{your_username}</i></code>，并修改对应组件的Dockerfile和yaml文件，将Dockerfile里`useradd`命令中的UID替换为已有用户的UID，将组件yaml文件initContainer命令中的`chown 9000:9000`修改为对应的UID:GID。
 
 >[!NOTE]
 >
@@ -98,7 +97,9 @@
 </tbody>
 </table>
 
-## 创建日志目录<a name="ZH-CN_TOPIC_0000002511346417"></a>
+## （可选）创建日志目录<a name="ZH-CN_TOPIC_0000002511346417"></a>
+
+Elastic Agent、TaskD、Resilience Controller之外的其他组件安装可跳过本章节。
 
 在对应节点创建组件日志父目录和各组件的日志目录，并设置目录对应属主和权限。
 
@@ -256,158 +257,25 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
 
     >[!NOTE]
     >- [表1](#table202738181704)中各节点标签的详细说明请参见[K8s原生对象说明](../../../api/k8s.md)章节。
-    >- 请按[表1](#table202738181704)，根据节点类型和产品类型，配置所列出的所有标签。
-    >- 下文的\{_xxx_\}即取“910”字符作为芯片型号数值。
+    >- 请按[表1](#table202738181704)，根据节点类型，配置所列出的所有标签。
 
     **表 1**  节点对应的标签信息
 
     <a name="table202738181704"></a>
-    <table><thead align="left"><tr id="row627331819017"><th class="cellrowborder" valign="top" width="31.840000000000003%" id="mcps1.2.4.1.1"><p id="p19273918201"><a name="p19273918201"></a><a name="p19273918201"></a>节点类型</p>
+    <table><thead align="left"><tr id="row627331819017"><th class="cellrowborder" valign="top" width="40%" id="mcps1.2.3.1.1"><p id="p19273918201"><a name="p19273918201"></a><a name="p19273918201"></a>节点类型</p>
     </th>
-    <th class="cellrowborder" valign="top" width="25.96%" id="mcps1.2.4.1.2"><p id="p3273218803"><a name="p3273218803"></a><a name="p3273218803"></a>产品类型</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="42.199999999999996%" id="mcps1.2.4.1.3"><p id="p19273118301"><a name="p19273118301"></a><a name="p19273118301"></a>标签</p>
+    <th class="cellrowborder" valign="top" width="60%" id="mcps1.2.3.1.2"><p id="p19273118301"><a name="p19273118301"></a><a name="p19273118301"></a>标签</p>
     </th>
     </tr>
     </thead>
-    <tbody><tr id="row227451815011"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p142747189017"><a name="p142747189017"></a><a name="p142747189017"></a>管理节点</p>
+    <tbody><tr id="row227451815011"><td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.3.1.1 "><p id="p142747189017"><a name="p142747189017"></a><a name="p142747189017"></a>管理节点</p>
     </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p102741181908"><a name="p102741181908"></a><a name="p102741181908"></a>-</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><p id="p1227417181004"><a name="p1227417181004"></a><a name="p1227417181004"></a>masterselector=dls-master-node</p>
+    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.3.1.2 "><p id="p1227417181004"><a name="p1227417181004"></a><a name="p1227417181004"></a>masterselector=dls-master-node</p>
     </td>
     </tr>
-    <tr id="row127412189015"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p14274118905"><a name="p14274118905"></a><a name="p14274118905"></a>计算节点</p>
-    <p id="p203704324914"><a name="p203704324914"></a><a name="p203704324914"></a></p>
-    <p id="p4371534493"><a name="p4371534493"></a><a name="p4371534493"></a></p>
+    <tr id="row127412189015"><td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.3.1.1 "><p id="p14274118905"><a name="p14274118905"></a><a name="p14274118905"></a>计算节点</p>
     </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p627418181808"><a name="p627418181808"></a><a name="p627418181808"></a><span id="ph42747181102"><a name="ph42747181102"></a><a name="ph42747181102"></a>Atlas 800 训练服务器（NPU满配）</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul727421813014"></a><a name="ul727421813014"></a><ul id="ul727421813014"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row19274318806"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p742615141511"><a name="p742615141511"></a><a name="p742615141511"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p027411181309"><a name="p027411181309"></a><a name="p027411181309"></a><span id="ph127517181101"><a name="ph127517181101"></a><a name="ph127517181101"></a>Atlas 800 训练服务器（NPU半配）</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul22751618203"></a><a name="ul22751618203"></a><ul id="ul22751618203"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=half</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row92751018202"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p554271313169"><a name="p554271313169"></a><a name="p554271313169"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p527551818016"><a name="p527551818016"></a><a name="p527551818016"></a><span id="ph1427511188015"><a name="ph1427511188015"></a><a name="ph1427511188015"></a>Atlas 800T A2 训练服务器</span>或<span id="ph102750181803"><a name="ph102750181803"></a><a name="ph102750181803"></a>Atlas 900 A2 PoD 集群基础单元</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul32752181202"></a><a name="ul32752181202"></a><ul id="ul32752181202"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-<span id="ph12761718301"><a name="ph12761718301"></a><a name="ph12761718301"></a><em id="zh-cn_topic_0000001519959665_i1489729141619"><a name="zh-cn_topic_0000001519959665_i1489729141619"></a><a name="zh-cn_topic_0000001519959665_i1489729141619"></a>{xxx}</em></span>b-8</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row8394133819129"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p1237115354918"><a name="p1237115354918"></a><a name="p1237115354918"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p2039613891219"><a name="p2039613891219"></a><a name="p2039613891219"></a><span id="ph077885871817"><a name="ph077885871817"></a><a name="ph077885871817"></a>Atlas 900 A3 SuperPoD 超节点</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul3874134511121"></a><a name="ul3874134511121"></a><ul id="ul3874134511121"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-a3-16-super-pod</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p><span>Atlas 9000 A3 SuperPoD 集群算力系统</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul3874134511121"></a><a name="ul3874134511121"></a><ul id="ul3874134511121"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-a3-8-super-pod</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row69181319336"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p738423163315"><a name="p738423163315"></a><a name="p738423163315"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p1584884715522"><a name="p1584884715522"></a><a name="p1584884715522"></a><span id="ph126247155413"><a name="ph126247155413"></a><a name="ph126247155413"></a>A200T A3 Box8 超节点服务器</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul537611425289"></a><a name="ul537611425289"></a><ul id="ul537611425289"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li></ul>
-    <a name="ul13263154872811"></a><a name="ul13263154872811"></a><ul id="ul13263154872811"><li>host-arch=huawei-x86或host-arch=huawei-arm</li><li>accelerator=huawei-Ascend910</li></ul>
-    <a name="ul17911532280"></a><a name="ul17911532280"></a><ul id="ul17911532280"><li>accelerator-type=module-a3-16</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row271845218270"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p188095589274"><a name="p188095589274"></a><a name="p188095589274"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p164951627162819"><a name="p164951627162819"></a><a name="p164951627162819"></a><span id="ph19495127162814"><a name="ph19495127162814"></a><a name="ph19495127162814"></a>Atlas 800I A3 超节点服务器</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul16834964293"></a><a name="ul16834964293"></a><ul id="ul16834964293"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li></ul>
-    <a name="ul128341660299"></a><a name="ul128341660299"></a><ul id="ul128341660299"><li>host-arch=huawei-x86或host-arch=huawei-arm</li><li>accelerator=huawei-Ascend910</li></ul>
-    <a name="ul168341764299"></a><a name="ul168341764299"></a><ul id="ul168341764299"><li>accelerator-type=module-a3-16</li><li>server-usage=infer</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p><span>Atlas 800T A3 超节点服务器</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><ul><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li></ul><ul><li>host-arch=huawei-x86或host-arch=huawei-arm</li><li>accelerator=huawei-Ascend910</li></ul><ul><li>accelerator-type=module-a3-16</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row42763185011"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p16530201015713"><a name="p16530201015713"></a><a name="p16530201015713"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p19276111815011"><a name="p19276111815011"></a><a name="p19276111815011"></a><span id="ph152766181106"><a name="ph152766181106"></a><a name="ph152766181106"></a>Atlas 800I A2 推理服务器</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul72766183018"></a><a name="ul72766183018"></a><ul id="ul72766183018"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-<span id="ph2027661812017"><a name="ph2027661812017"></a><a name="ph2027661812017"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_1"><a name="zh-cn_topic_0000001519959665_i1489729141619_1"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_1"></a>{xxx}</em></span>b-8</li><li>server-usage=infer</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row1468510421395"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p868624283911"><a name="p868624283911"></a><a name="p868624283911"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p534220145119"><a name="p534220145119"></a><a name="p534220145119"></a><span id="ph56342369338"><a name="ph56342369338"></a><a name="ph56342369338"></a>A200I A2 Box 异构组件</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul19511133318489"></a><a name="ul19511133318489"></a><ul id="ul19511133318489"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-<span id="ph175351194911"><a name="ph175351194911"></a><a name="ph175351194911"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_2"><a name="zh-cn_topic_0000001519959665_i1489729141619_2"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_2"></a>{xxx}</em></span>b-8</li><li>server-usage=infer</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row13277101813019"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p356115645715"><a name="p356115645715"></a><a name="p356115645715"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p122778182014"><a name="p122778182014"></a><a name="p122778182014"></a><span id="ph3277518801"><a name="ph3277518801"></a><a name="ph3277518801"></a>Atlas 200T A2 Box16 异构子框</span></p>
-    <p id="p1993115373112"><a name="p1993115373112"></a><a name="p1993115373112"></a><span id="ph10949202261219"><a name="ph10949202261219"></a><a name="ph10949202261219"></a>Atlas 200I A2 Box16 异构子框</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul15277318601"></a><a name="ul15277318601"></a><ul id="ul15277318601"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=module-<span id="ph52776181604"><a name="ph52776181604"></a><a name="ph52776181604"></a><em id="zh-cn_topic_0000001519959665_i1489729141619_3"><a name="zh-cn_topic_0000001519959665_i1489729141619_3"></a><a name="zh-cn_topic_0000001519959665_i1489729141619_3"></a>{xxx}</em></span>b-16</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row1627716183019"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p556216614577"><a name="p556216614577"></a><a name="p556216614577"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p32771718506"><a name="p32771718506"></a><a name="p32771718506"></a><span id="ph162771318306"><a name="ph162771318306"></a><a name="ph162771318306"></a>训练服务器（插<span id="ph4277131818016"><a name="ph4277131818016"></a><a name="ph4277131818016"></a>Atlas 300T 训练卡</span>）</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul72771181601"></a><a name="ul72771181601"></a><ul id="ul72771181601"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend910</li><li>accelerator-type=card</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row62791418607"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p45625617576"><a name="p45625617576"></a><a name="p45625617576"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p122793182008"><a name="p122793182008"></a><a name="p122793182008"></a>推理服务器（插<span id="ph19279181811010"><a name="ph19279181811010"></a><a name="ph19279181811010"></a>Atlas 300I 推理卡</span>）</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul127919181101"></a><a name="ul127919181101"></a><ul id="ul127919181101"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend310</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row72822181005"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p165621264571"><a name="p165621264571"></a><a name="p165621264571"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p16282118603"><a name="p16282118603"></a><a name="p16282118603"></a><span id="ph182828181802"><a name="ph182828181802"></a><a name="ph182828181802"></a>Atlas 推理系列产品</span>（除<span id="ph828261816012"><a name="ph828261816012"></a><a name="ph828261816012"></a>Atlas 200I SoC A1 核心板</span>）</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul162825182010"></a><a name="ul162825182010"></a><ul id="ul162825182010"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend310P</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr id="row328212184011"><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p id="p20562266579"><a name="p20562266579"></a><a name="p20562266579"></a>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p id="p228281818011"><a name="p228281818011"></a><a name="p228281818011"></a><span id="ph928241810010"><a name="ph928241810010"></a><a name="ph928241810010"></a><span id="ph122828181609"><a name="ph122828181609"></a><a name="ph122828181609"></a>Atlas 200I SoC A1 核心板</span></span></p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3 "><a name="ul202825181508"></a><a name="ul202825181508"></a><ul id="ul202825181508"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-Ascend310P</li><li>servertype=soc</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p>Atlas 350 标卡</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3"><ul><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-npu</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p>Atlas 850 系列硬件产品</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3"><ul><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-npu</li><li>（可选）nodeDEnable=on</li></ul>
-    </td>
-    </tr>
-    <tr><td class="cellrowborder" valign="top" width="31.840000000000003%" headers="mcps1.2.4.1.1 "><p>计算节点</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.96%" headers="mcps1.2.4.1.2 "><p>Atlas 950 SuperPoD</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.4.1.3"><ul><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>host-arch=huawei-arm或host-arch=huawei-x86</li><li>accelerator=huawei-npu</li><li>（可选）nodeDEnable=on</li></ul>
+    <td class="cellrowborder" valign="top" width="60%" headers="mcps1.2.3.1.2 "><a name="ul727421813014"></a><a name="ul727421813014"></a><ul id="ul727421813014"><li>node-role.kubernetes.io/worker=worker</li><li>workerselector=dls-worker-node</li><li>servertype=soc（可选，仅Atlas 200I SoC A1 核心板需要打该标签）</li></ul>
     </td>
     </tr>
     </tbody>

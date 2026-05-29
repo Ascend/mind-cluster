@@ -48,11 +48,13 @@ spec:
                 <strong>fault-scheduling: "force"</strong>
                 <strong>#pod-rescheduling: "on"   # 若podGroupSize均为1则需配置该标签，podGroupSize大于1时，无需配置</strong>
                 <strong>fault-retry-times: "10"</strong>
+              annotations:
+                <strong>huawei.com/schedule_policy: "chip2-node8"</strong>
             spec:
               <strong>schedulerName: volcano  # 指定调度器</strong>
               <strong>restartPolicy: Never</strong>
               nodeSelector:
-                accelerator-type: module-910b-8
+                example-key: example-value    # 示例值，用户可根据调度意图自行配置nodeSelector
               containers:
                 - name: prefill
 ...
@@ -76,9 +78,11 @@ spec:
                 <strong>fault-scheduling: "force"</strong>
                 <strong>#pod-rescheduling: "on"   # 若podGroupSize均为1则需配置该标签，podGroupSize大于1时，无需配置</strong>
                 <strong>fault-retry-times: "10"</strong>
+              annotations:
+                <strong>huawei.com/schedule_policy: "chip2-node8"</strong>
             spec:
               nodeSelector:
-                accelerator-type: module-910b-8
+                example-key: example-value    # 示例值，用户可根据调度意图自行配置nodeSelector
               <strong>schedulerName: volcano</strong>
               <strong>restartPolicy: Never</strong>
               containers:

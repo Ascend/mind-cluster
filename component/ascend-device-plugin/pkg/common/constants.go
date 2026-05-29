@@ -356,9 +356,6 @@ const (
 	ServerTypeLabelKey = "servertype"
 	// AcceleratorTypeKey the node label key of accelerator type
 	AcceleratorTypeKey = "accelerator-type"
-	// ServerUsageLabelKey is to indicate the usage of server
-	// is infer or training, currently only related to A800IA2 infer server
-	ServerUsageLabelKey = "server-usage"
 	// InferCardKey the node label key of infer card
 	InferCardKey = "infer-card-type"
 	// LabelValueRegex k8s label value regex (max 63 characters)
@@ -863,10 +860,10 @@ const (
 	SoftShareDevNPUInfoConfigParentDirSplitLen = 2
 )
 
-
 var (
 	Ascend910ResetGoroutine = &sync.Map{}
 )
+
 const (
 	// EveryNetworkQueryDuration indicate query network info per five minute
 	EveryNetworkQueryDuration = 5

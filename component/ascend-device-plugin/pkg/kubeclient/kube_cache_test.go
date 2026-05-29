@@ -428,61 +428,6 @@ func TestGetNodeIpCache(t *testing.T) {
 	})
 }
 
-// TestGetServerUsageLabelCache test case for get server usage
-func TestGetServerUsageLabelCache(t *testing.T) {
-	client, err := newTestClientK8s()
-	if err != nil {
-		t.Fatal("TestGetServerUsageLabelCache init kubernetes failed")
-	}
-	convey.Convey("test get node failed", t, func() {
-		patch := gomonkey.ApplyMethodReturn(&ClientK8s{}, "GetNode", &v1.Node{}, fmt.Errorf("get node error"))
-		defer patch.Reset()
-		usage, err := client.GetServerUsageLabelCache()
-		convey.So(usage, convey.ShouldEqual, "")
-		convey.So(err.Error(), convey.ShouldEqual, "get node error")
-	})
-	patch := gomonkey.ApplyMethodReturn(&ClientK8s{}, "GetNode", &v1.Node{
-		ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{}},
-	}, nil)
-	defer patch.Reset()
-	convey.Convey("test usage label", t, func() {
-		serverUsageLabel = "test usage label"
-		usage, err := client.GetServerUsageLabelCache()
-		convey.So(usage, convey.ShouldEqual, "test usage label")
-		convey.So(err, convey.ShouldBeNil)
-		serverUsageLabel = ""
-	})
-	convey.Convey("test no usage label", t, func() {
-		usage, err := client.GetServerUsageLabelCache()
-		convey.So(usage == "unknown", convey.ShouldBeTrue)
-		convey.So(err, convey.ShouldBeNil)
-	})
-}
-
-// TestGetA800IA2Label test case for get a800 ia2 label
-func TestGetA800IA2Label(t *testing.T) {
-	client, err := newTestClientK8s()
-	if err != nil {
-		t.Fatal("TestGetA800IA2Label init kubernetes failed")
-	}
-	node := &v1.Node{
-		ObjectMeta: metav1.ObjectMeta{
-			Labels: make(map[string]string),
-			Name:   "node",
-		},
-	}
-	node.Labels[common.ServerUsageLabelKey] = common.Infer
-	patch := gomonkey.ApplyMethodReturn(&ClientK8s{}, "GetNode", node, nil)
-	defer patch.Reset()
-	convey.Convey("test usage label with infer", t, func() {
-		serverUsageLabel = ""
-		usage, err := client.GetServerUsageLabelCache()
-		fmt.Printf("usage: %s\n", usage)
-		convey.So(usage == common.Infer, convey.ShouldBeTrue)
-		convey.So(err, convey.ShouldBeNil)
-	})
-}
-
 // TestCheckPodInCache01 test case for check pod in cache
 func TestCheckPodInCache01(t *testing.T) {
 	client, err := newTestClientK8s()

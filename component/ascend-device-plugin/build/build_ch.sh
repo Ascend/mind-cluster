@@ -79,10 +79,8 @@ function change_mod() {
 
 function sedName() {
     modify_files=(
-      "$CUR_DIR"/ascendplugin-910.yaml
+      "$CUR_DIR"/ascendplugin.yaml
       "$CUR_DIR"/ascendplugin-volcano.yaml
-      "$CUR_DIR"/ascendplugin-310P.yaml
-      "$CUR_DIR"/ascendplugin-310P-volcano.yaml
     )
     for cur_file in "${modify_files[@]}"
     do
@@ -109,10 +107,8 @@ function modify_version() {
     sedName
 
     cp "$CUR_DIR"/Dockerfile "$TOP_DIR"/output/
-    cp "$CUR_DIR"/ascendplugin-910.yaml "$TOP_DIR"/output/device-plugin-A2G-"${build_version}".yaml
+    cp "$CUR_DIR"/ascendplugin.yaml "$TOP_DIR"/output/device-plugin-"${build_version}".yaml
     cp "$CUR_DIR"/ascendplugin-volcano.yaml "$TOP_DIR"/output/device-plugin-volcano-"${build_version}".yaml
-    cp "$CUR_DIR"/ascendplugin-310P.yaml "$TOP_DIR"/output/device-plugin-I2-"${build_version}".yaml
-    cp "$CUR_DIR"/ascendplugin-310P-volcano.yaml "$TOP_DIR"/output/device-plugin-I2-volcano-"${build_version}".yaml
 
     cp "$CUR_DIR"/faultCode.json "$TOP_DIR"/output/faultCode.json
     cp "$CUR_DIR"/faultCustomization.json "$TOP_DIR"/output/faultCustomization.json

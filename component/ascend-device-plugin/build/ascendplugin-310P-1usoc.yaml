@@ -77,9 +77,19 @@ spec:
           effect: NoSchedule
       priorityClassName: "system-node-critical"
       nodeSelector:
-        accelerator: huawei-Ascend310P
+        workerselector: dls-worker-node
         servertype: soc
       serviceAccountName: ascend-device-plugin-sa-310p
+      initContainers:
+        - name: init-log-setup
+          image: ascend-k8sdeviceplugin:v3.0.0
+          command: ['sh', '-c', 'mkdir -p /var/log/mindx-dl && chmod 755 /var/log/mindx-dl && chown root:root /var/log/mindx-dl && mkdir -p /var/log/mindx-dl/devicePlugin && chmod 750 /var/log/mindx-dl/devicePlugin && chown root:root /var/log/mindx-dl/devicePlugin']
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false
+          volumeMounts:
+            - name: log-path
+              mountPath: /var/log
       containers:
         - image: ascend-k8sdeviceplugin:v3.0.0
           name: device-plugin-01
@@ -102,6 +112,7 @@ spec:
               readOnly: true
             - name: log-path
               mountPath: /var/log/mindx-dl/devicePlugin
+              subPath: mindx-dl/devicePlugin
             - name: pod-resource
               mountPath: /var/lib/kubelet/pod-resources
             - name: tmp
@@ -125,6 +136,8 @@ spec:
               mountPath: /etc/localtime
               readOnly: true
           env:
+            - name: MOUNT_BY_RUNTIME_FOR_DP
+              value: "true"
             - name: NODE_NAME
               valueFrom:
                 fieldRef:
@@ -142,7 +155,7 @@ spec:
             path: /usr/local/Ascend/driver
         - name: log-path
           hostPath:
-            path: /var/log/mindx-dl/devicePlugin
+            path: /var/log
             type: Directory
         - name: pod-resource
           hostPath:
