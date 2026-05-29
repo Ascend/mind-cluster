@@ -825,7 +825,9 @@
     fec mode: rs FEC mode
     ```
 
-- 执行以下命令，查询IP及掩码信息。
+- 执行以下命令，查询IP及相关信息。
+
+  - IPv4：
 
     ```shell
     /usr/local/Ascend/driver/tools/hccn_tool -i ${device_id} -ip -g
@@ -836,6 +838,19 @@
     ```ColdFusion
     ipaddr:10.xx.xx.10
     netmask:255.255.255.0
+    ```
+
+  - IPv6：
+
+    ```shell
+    /usr/local/Ascend/driver/tools/hccn_tool -i ${device_id} -ip -inet6 -g
+    ```
+
+    回显如下：
+
+    ```ColdFusion
+    ipv6_address:127::xx
+    prefix_length:xx
     ```
 
 - 执行以下命令，查询收发报文统计信息。
@@ -876,7 +891,7 @@
     [device 0]    Tue Jun  6 16:31:55 2023    LINK UP
     ```
 
-    文件存储示例如下，示例仅为0卡存储示例，请用户采集所有卡的信息。
+    文件存储示例如下，示例仅为0卡存储示例，请用户采集所有卡的信息（以下仅为IPv4信息，请根据需要自行查询IPv6信息）。
 
     ```ColdFusion
     /usr/local/Ascend/driver/tools/hccn_tool -i 0 -net_health -g
@@ -1791,7 +1806,9 @@ nic_rx_all_oct_num:482237805
         fec mode: rs FEC mode
         ```
 
-    - 执行以下命令，查询IP及掩码信息。
+    - 执行以下命令，查询IP及相关信息。
+
+      - IPv4：
 
         ```shell
         /usr/local/Ascend/driver/tools/hccn_tool -i ${device_id} -ip -g
@@ -1802,6 +1819,19 @@ nic_rx_all_oct_num:482237805
         ```ColdFusion
         ipaddr:10.xx.xx.10
         netmask:255.255.255.0
+        ```
+
+      - IPv6：
+
+        ```shell
+        /usr/local/Ascend/driver/tools/hccn_tool -i ${device_id} -ip -inet6 -g
+        ```
+
+        回显如下：
+
+        ```ColdFusion
+        ipv6_address:127::xx
+        prefix_length:xx
         ```
 
     - 执行以下命令，查询收发报文统计信息。
@@ -1842,7 +1872,7 @@ nic_rx_all_oct_num:482237805
         [device 0]    Tue Jun  6 16:31:55 2023    LINK UP
         ```
 
-        文件存储示例如下，示例仅为0卡存储示例，请用户采集所有卡的信息。
+        文件存储示例如下，示例仅为0卡存储示例，请用户采集所有卡的信息（以下仅为IPv4信息，请根据需要自行查询IPv6信息）。
 
         ```ColdFusion
         /usr/local/Ascend/driver/tools/hccn_tool -i 0 -net_health -g

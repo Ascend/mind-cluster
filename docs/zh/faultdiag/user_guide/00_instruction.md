@@ -7,8 +7,7 @@
 
 ## 支持的场景<a name="section12381154319315"></a>
 
-- MindCluster Ascend FaultDiag工具仅支持对整机满卡训练及推理任务提供故障诊断能力，若非满卡训练及推理场景执行诊断可能导致故障根因定位错误或失败。
-- MindCluster Ascend FaultDiag工具当前仅支持IPv4，不支持使用IPv6。
+MindCluster Ascend FaultDiag工具仅支持对整机满卡训练及推理任务提供故障诊断能力，若非满卡训练及推理场景执行诊断可能导致故障根因定位错误或失败。
 
 ## 系统时间说明<a name="section98531395015"></a>
 
