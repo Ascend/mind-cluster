@@ -28,7 +28,6 @@
                     cpu: 500m
                 command: [ "/bin/bash", "-c", "--"]
                 args: [ "device-plugin
-                         -useAscendDocker=true
                          <strong>-volcanoType=true                    # 重调度场景下必须使用Volcano</strong>
                          <strong>-autoStowing=true                    # 是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于Atlas 训练系列产品</strong>
                          <strong>-listWatchPeriod=5                   # 设置健康状态检查周期，范围[3,1800]；单位为秒</strong>
@@ -59,7 +58,6 @@
                     cpu: 500m
                 command: [ "/bin/bash", "-c", "--"]
                 args: [ "device-plugin
-                         -useAscendDocker=true
                          -volcanoType=true                    # 重调度场景下必须使用Volcano
                          -autoStowing=true                    # 是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于Atlas 训练系列产品
                          <strong>-hotReset=1 # 开启优雅容错模式，系统会尝试自动复位故障芯片</strong>

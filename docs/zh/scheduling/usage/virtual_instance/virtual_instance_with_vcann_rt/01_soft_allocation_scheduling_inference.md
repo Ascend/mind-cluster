@@ -91,7 +91,7 @@
        ```Yaml
        ...
 
-               args: [ "device-plugin  -useAscendDocker=true -volcanoType=true -presetVirtualDevice=true
+               args: [ "device-plugin -volcanoType=true -presetVirtualDevice=true
                  -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0 -shareDevCount=100 -softShareDevConfigDir=/share_device/ -useSingleDieMode=true" ]   # 只有Atlas A3 推理系列产品使用软切分虚拟化功能时，才需增加-useSingleDieMode=true
              ...
                volumeMounts:
@@ -147,7 +147,7 @@
                containers:
                ...
                  command: [ "/bin/bash", "-c", "--"]
-                 args: [ "device-plugin  -useAscendDocker=true -volcanoType=true -presetVirtualDevice=true
+                 args: [ "device-plugin -volcanoType=true -presetVirtualDevice=true
                  -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0 -shareDevCount=100 -softShareDevConfigDir=/share_device/" ]
                ...
                  volumeMounts:

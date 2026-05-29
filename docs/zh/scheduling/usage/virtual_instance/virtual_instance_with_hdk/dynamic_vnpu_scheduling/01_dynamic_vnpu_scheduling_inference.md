@@ -59,7 +59,7 @@
 
        ```Yaml
        ...
-       args: [ "device-plugin  -useAscendDocker=true -volcanoType=true -presetVirtualDevice=false
+       args: [ "device-plugin -volcanoType=true -presetVirtualDevice=false
                   -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0" ]
        ...
        ```
