@@ -1004,3 +1004,38 @@ func getTestServiceSpec() v1.ServiceSpec {
 		},
 	}
 }
+
+func TestInstanceSetPredicate(t *testing.T) {
+	convey.Convey("Given an InstanceSetReconciler", t, func() {
+		ir := &InstanceSetReconciler{}
+
+		// Mock CleanupWithInstanceSetDeletion method
+		patches := gomonkey.ApplyMethod(ir.rescheduler, "CleanupWithInstanceSetDeletion",
+			func(_ *rescheduling.Rescheduler, name string) {
+			})
+		defer patches.Reset()
+
+		convey.Convey("When creating predicate", func() {
+			pred := instanceSetPredicate(ir)
+
+			convey.Convey("Then UpdateFunc should return true", func() {
+				updateEvent := event.UpdateEvent{}
+				convey.So(pred.Update(updateEvent), convey.ShouldBeTrue)
+			})
+
+			convey.Convey("Then CreateFunc should return true", func() {
+				createEvent := event.CreateEvent{}
+				convey.So(pred.Create(createEvent), convey.ShouldBeTrue)
+			})
+
+			convey.Convey("Then DeleteFunc should return true and call cleanup", func() {
+				deleteEvent := event.DeleteEvent{
+					Object: &v1.InstanceSet{
+						ObjectMeta: metav1.ObjectMeta{Name: "test-instance"},
+					},
+				}
+				convey.So(pred.Delete(deleteEvent), convey.ShouldBeTrue)
+			})
+		})
+	})
+}

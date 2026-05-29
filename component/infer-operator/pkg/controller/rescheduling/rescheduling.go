@@ -83,37 +83,7 @@ func (r *Rescheduler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) er
 	podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: r.handlePodUpdate,
 	})
-	go r.retryTimesMapPeriodicCleanup(ctx)
 	return nil
-}
-
-func (r *Rescheduler) retryTimesMapPeriodicCleanup(ctx context.Context) {
-	ticker := time.NewTicker(r.cleanupInterval)
-	defer ticker.Stop()
-	hwlog.RunLog.Infof("Started periodic cleanup fault retry times map with interval %v",
-		r.cleanupInterval)
-	for {
-		select {
-		case <-ticker.C:
-			r.cleanupWithTimeout()
-		case <-ctx.Done():
-			hwlog.RunLog.Infof("Stopping periodic cleanup fault retry times map due to context cancellation")
-			return
-		}
-	}
-}
-
-func (r *Rescheduler) cleanupWithTimeout() {
-	r.Lock()
-	defer r.Unlock()
-	hwlog.RunLog.Infof("Performing cleanup fault retry times map with timeout")
-	// clean up faultWorkLoad that not in faultWorkLoadMap each day
-	for currentFaultWorkLoad, _ := range r.faultRetryTimesMap {
-		_, ok := r.faultWorkLoadMap[currentFaultWorkLoad]
-		if !ok {
-			delete(r.faultRetryTimesMap, currentFaultWorkLoad)
-		}
-	}
 }
 
 func (r *Rescheduler) CleanupWithInstanceSetDeletion(instanceSetName string) {
