@@ -29,6 +29,7 @@
 >- HwHiAiUser是驱动或CANN软件包所需的软件运行用户。
 >- 执行**getent passwd**命令，查看所有物理机（存储节点、管理节点、计算节点）和容器内，HwHiAiUser的UID和GID是否一致，且都为1000。如果被占用可能会导致服务不可用，可以参见[用户UID或GID被占用](https://gitcode.com/Ascend/mind-cluster/issues/337)章节进行处理。
 >- 如果不在宿主机上创建用户，Dockerfile会默认在容器内创建UID为9000的用户，容器内进程以该UID运行并映射到宿主机，需确保宿主机上该UID未被其他用户占用。
+>- 针对容器启动用户为hwMindX的组件，组件的YAML文件中如果有`runAsUser`、`runAsGroup`、`fsGroup`等字段，请确保已将其值修改为实际使用的UID和GID。`runAsUser`需指定为实际使用的UID，`runAsGroup`、`fsGroup`需指定为实际使用的GID。
 
 **表 1**  组件用户说明
 
