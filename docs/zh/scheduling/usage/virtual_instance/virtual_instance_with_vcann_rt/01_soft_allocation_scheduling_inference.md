@@ -198,6 +198,7 @@
 
 - Atlas A2 推理系列产品
 - Atlas A3 推理系列产品
+- Atlas 350 标卡
 
 ### 使用流程
 
@@ -276,11 +277,29 @@
 1. 获取相应的YAML文件。
 
     **表 3**  YAML说明
-
-    |任务类型|硬件型号|YAML名称|获取链接|
-    |--|--|--|--|
-    |Ascend Job|<ul><li>Atlas A2 推理系列产品</li><li>Atlas A3 推理系列产品</li></ul>|pytorch_acjob_infer_<i>\{xxx\}</i>b_softsharedev.yaml|[获取YAML](https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.0.0/samples/inference/volcano/pytorch_acjob_infer_910b_softsharedev.yaml)|
-
+    <table>
+    <thead align="left">
+    <tr>
+    <th class="cellrowborder" align="center" valign="center" width="22%"><p>任务类型</p></th>
+    <th class="cellrowborder" align="center" valign="center" width="47%"><p>硬件型号</p></th>
+    <th class="cellrowborder" align="center" valign="center" width="21%"><p>YAML名称</p></th>
+    <th class="cellrowborder" align="center" valign="center" width="10%"><p>获取链接</p></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+    <td class="cellrowborder" rowspan="2" align="center" valign="center" width="22%"><p>Ascend Job</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p>Atlas A2 推理系列产品、Atlas A3 推理系列产品</p></td>
+    <td class="cellrowborder" align="center" valign="center"  width="21%"><p>pytorch_acjob_infer_910b_softsharedev.yaml</p></td>
+    <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.0.0/samples/inference/volcano/pytorch_acjob_infer_910b_softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
+    </tr>
+    <tr>
+    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 标卡</p></td>
+    <td class="cellrowborder" align="center" valign="center"  width="21%"><p>pytorch_acjob_infer_950_softsharedev.yaml</p></td>
+    <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/inference/volcano/samples/inference/volcano/pytorch_acjob_infer_950_softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
+    </tr>
+    </tbody>
+    </table>
 2. 将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
 
     在Atlas 800I A2 推理服务器上，以pytorch_acjob_infer_910b_softsharedev.yaml为例，申请芯片AICore百分比为50%，芯片高带宽内存量为2048MB，软切分策略为fixed-share的参数配置示例如下。yaml配置参考请参考[YAML配置说明](../../../api/yaml_configuration.md#yaml_configuration)。
@@ -349,7 +368,7 @@
                     <strong>- name: libpreload # 软切分动态库地址</strong>
                       <strong>mountPath: /opt/enpu/vcann-rt/lib/libvruntime.so</strong>
                     <strong>- name: preload # preload配置文件地址</strong>
-                      <strong>mountPath: ${preload_path}/ld.so.preload</strong>
+                      <strong>mountPath: /etc/ld.so.preload</strong>
               volumes:
                 - name: ascend-driver
                   hostPath:
@@ -365,7 +384,7 @@
                     <strong>path: /opt/enpu/vcann-rt/lib/libvruntime.so</strong>
                 <strong>- name: preload # preload配置文件地址</strong>
                   <strong>hostPath:</strong>
-                    <strong>path: ${preload_path}/ld.so.preload</strong>
+                    <strong>path: ${preload_path}/ld.so.preload</strong> # 主机侧ld.so.preload文件的路径用户可自定义，文档后续内容中使用${preload_path}表示，容器内为固定路径/etc/ld.so.preload。不建议将ld.so.preload文件放置在主机的/etc目录，否则将在主机侧预加载软切分动态库，可能影响主机侧业务。
     </pre>
 
 >[!NOTE]
