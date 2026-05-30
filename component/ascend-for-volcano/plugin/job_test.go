@@ -23,7 +23,7 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"volcano.sh/apis/pkg/apis/scheduling"
@@ -1063,13 +1063,15 @@ func TestGetJobInfoAllocatedTaskNum(t *testing.T) {
 }
 
 type validJobFnTest struct {
-	name string
-	sJob SchedulerJob
-	want bool
+	name    string
+	sJob    SchedulerJob
+	want    bool
+	wantNil bool
 }
 
 func buildValidJobFnTestCases() []validJobFnTest {
 	fakeTaskNum := int32(util.NPUIndex1)
+	fakeTask := map[api.TaskID]util.NPUTask{"test-pod": {}}
 	return []validJobFnTest{
 		{
 			name: "01 will return false when job is deployment and task is not ready",
@@ -1081,8 +1083,54 @@ func buildValidJobFnTestCases() []validJobFnTest {
 			name: "02 will return true when job is deployment and task is  ready",
 			sJob: SchedulerJob{Owner: OwnerInfo{OwnerReference: metav1.OwnerReference{Kind: ReplicaSetType},
 				Replicas: &fakeTaskNum}, SchedulerJobAttr: util.SchedulerJobAttr{
-				NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{"test-pod": {}}}}},
+				NPUJob: &util.NPUJob{Tasks: fakeTask}},
+			},
 			want: false,
+		},
+		{
+			name: "03 virtual device Ascend910-2c with policyHandler skips ValidNPUJob",
+			sJob: SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					ComJob: util.ComJob{MinAvailable: 1},
+					NPUJob: &util.NPUJob{
+						ReqNPUName: "huawei.com/Ascend910-2c",
+						ReqNPUNum:  1,
+						Tasks:      fakeTask,
+					},
+				},
+				policyHandler: New(util.NPU910CardName),
+			},
+			wantNil: true,
+		},
+		{
+			name: "04 virtual device Ascend310P-1c with policyHandler skips ValidNPUJob",
+			sJob: SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					ComJob: util.ComJob{MinAvailable: 1},
+					NPUJob: &util.NPUJob{
+						ReqNPUName: "huawei.com/Ascend310P-1c",
+						ReqNPUNum:  1,
+						Tasks:      fakeTask,
+					},
+				},
+				policyHandler: New(util.NPU910CardName),
+			},
+			wantNil: true,
+		},
+		{
+			name: "05 regular NPU with policyHandler calls ValidNPUJob and passes",
+			sJob: SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					ComJob: util.ComJob{MinAvailable: 1},
+					NPUJob: &util.NPUJob{
+						ReqNPUName: "huawei.com/Ascend910",
+						ReqNPUNum:  1,
+						Tasks:      fakeTask,
+					},
+				},
+				policyHandler: New(util.NPU910CardName),
+			},
+			wantNil: true,
 		},
 	}
 }
@@ -1090,7 +1138,14 @@ func buildValidJobFnTestCases() []validJobFnTest {
 func TestValidJobFn(t *testing.T) {
 	for _, tt := range buildValidJobFnTestCases() {
 		t.Run(tt.name, func(t *testing.T) {
-			if result := tt.sJob.validJobFn(); result != nil && !reflect.DeepEqual(result.Pass, tt.want) {
+			result := tt.sJob.validJobFn()
+			if tt.wantNil {
+				if result != nil {
+					t.Errorf("validJobFn() = %v, want nil", result)
+				}
+				return
+			}
+			if result != nil && !reflect.DeepEqual(result.Pass, tt.want) {
 				t.Errorf("validJobFn() = %v, want %v", result.Pass, tt.want)
 			}
 		})
