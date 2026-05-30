@@ -436,9 +436,17 @@ func (s *FaultRecoverService) preHandleFaultInfo(jobId string, faultInfo *consta
 	const logDomain = "preHandleFaultInfo"
 	currentServerMap, podToServerMap := getJobServerInfos(jobId)
 	currentFaultServerMap := make(map[string]bool)
+	notReadyServerMap := make(map[string]bool)
 	newFaultDevice := make([]constant.FaultDevice, 0)
 	newFaultList := make([]constant.FaultRank, 0)
 	for _, device := range faultInfo.FaultDevice {
+		if device.DeviceType == constant.FaultTypeNode && device.FaultCode == "" &&
+			device.DeviceId == constant.EmptyDeviceId {
+			hwlog.RunLog.Infof("jobId=%s, skip node not ready fault device on server [%s]",
+				jobId, device.ServerName)
+			notReadyServerMap[device.ServerName] = true
+			continue
+		}
 		if !currentServerMap[device.ServerName] {
 			hwlog.RunLog.WarnfWithLimit(logDomain, jobId+device.ServerName,
 				"jobId=%s, fault device [%s] is not in current server list", jobId, device.ServerName)
@@ -458,6 +466,11 @@ func (s *FaultRecoverService) preHandleFaultInfo(jobId string, faultInfo *consta
 	for _, fault := range faultInfo.FaultList {
 		actualServerName, ok := podToServerMap[fault.PodUid]
 		if !ok { // pending pod, ignore
+			continue
+		}
+		if fault.FaultCode == "" && notReadyServerMap[actualServerName] {
+			hwlog.RunLog.Infof("jobId=%s, skip node not ready fault rank for pod [%s] on server [%s]",
+				jobId, fault.PodUid, actualServerName)
 			continue
 		}
 		logUniqueKey := jobId + fault.PodUid + "notRunningOnFaultServer"

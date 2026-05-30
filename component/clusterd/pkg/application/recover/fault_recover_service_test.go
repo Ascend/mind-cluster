@@ -43,6 +43,7 @@ const (
 	testRankId1     = "rank1"
 	testRankId2     = "rank2"
 	testRankId3     = "rank3"
+	testFaultCode   = "E10001"
 	emptyString     = ""
 )
 
@@ -1005,11 +1006,11 @@ func buildPreHandleFaultInfoTestCases1() []preHandleFaultInfoTestCase {
 			jobId: testJobID1,
 			faultInfo: constant.JobFaultInfo{
 				FaultList: []constant.FaultRank{
-					{PodUid: testPodUid1, RankId: testRankId1},
+					{PodUid: testPodUid1, RankId: testRankId1, FaultCode: testFaultCode},
 				},
 				FaultDevice: []constant.FaultDevice{
-					{ServerName: testServerName1},
-					{ServerName: testServerName3},
+					{ServerName: testServerName1, FaultCode: testFaultCode},
+					{ServerName: testServerName3, FaultCode: testFaultCode},
 				},
 			},
 			mockServerMap: map[string]bool{
@@ -1034,11 +1035,11 @@ func buildPreHandleFaultInfoTestCases2() []preHandleFaultInfoTestCase {
 			jobId: testJobID1,
 			faultInfo: constant.JobFaultInfo{
 				FaultList: []constant.FaultRank{
-					{PodUid: testPodUid1, RankId: testRankId1},
-					{PodUid: testPodUid2, RankId: testRankId2},
-					{PodUid: testPodUid3, RankId: testRankId3},
+					{PodUid: testPodUid1, RankId: testRankId1, FaultCode: testFaultCode},
+					{PodUid: testPodUid2, RankId: testRankId2, FaultCode: testFaultCode},
+					{PodUid: testPodUid3, RankId: testRankId3, FaultCode: testFaultCode},
 				},
-				FaultDevice: []constant.FaultDevice{{ServerName: testServerName1}},
+				FaultDevice: []constant.FaultDevice{{ServerName: testServerName1, FaultCode: testFaultCode}},
 			},
 			mockServerMap: map[string]bool{testServerName1: true, testServerName2: true},
 			mockPodToServerMap: map[string]string{
@@ -1052,10 +1053,10 @@ func buildPreHandleFaultInfoTestCases2() []preHandleFaultInfoTestCase {
 			jobId: testJobID1,
 			faultInfo: constant.JobFaultInfo{
 				FaultList: []constant.FaultRank{
-					{PodUid: testPodUid1, RankId: testRankId1},
-					{PodUid: testPodUid2, RankId: testRankId2},
+					{PodUid: testPodUid1, RankId: testRankId1, FaultCode: testFaultCode},
+					{PodUid: testPodUid2, RankId: testRankId2, FaultCode: testFaultCode},
 				},
-				FaultDevice: []constant.FaultDevice{{ServerName: testServerName1}},
+				FaultDevice: []constant.FaultDevice{{ServerName: testServerName1, FaultCode: testFaultCode}},
 			},
 			mockServerMap:          map[string]bool{testServerName1: true},
 			mockPodToServerMap:     map[string]string{testPodUid1: testServerName1},
@@ -1064,10 +1065,36 @@ func buildPreHandleFaultInfoTestCases2() []preHandleFaultInfoTestCase {
 	}
 }
 
+func buildPreHandleFaultInfoTestCases3() []preHandleFaultInfoTestCase {
+	return []preHandleFaultInfoTestCase{
+		{
+			name:  "should filter node not ready fault device and fault rank",
+			jobId: testJobID1,
+			faultInfo: constant.JobFaultInfo{
+				FaultList: []constant.FaultRank{
+					{PodUid: testPodUid1, RankId: testRankId1, FaultCode: testFaultCode},
+					{PodUid: testPodUid1, RankId: testRankId2, FaultCode: ""},
+				},
+				FaultDevice: []constant.FaultDevice{
+					{ServerName: testServerName1, FaultCode: testFaultCode, DeviceType: constant.FaultTypeNPU},
+					{ServerName: testServerName1, FaultCode: "", DeviceType: constant.FaultTypeNode, DeviceId: constant.EmptyDeviceId},
+				},
+			},
+			mockServerMap: map[string]bool{testServerName1: true},
+			mockPodToServerMap: map[string]string{
+				testPodUid1: testServerName1,
+			},
+			expectedFaultDeviceLen: 1,
+			expectedFaultListLen:   1,
+		},
+	}
+}
+
 func TestPreHandleFaultInfo(t *testing.T) {
 	var testCases []preHandleFaultInfoTestCase
 	testCases = append(testCases, buildPreHandleFaultInfoTestCases1()...)
 	testCases = append(testCases, buildPreHandleFaultInfoTestCases2()...)
+	testCases = append(testCases, buildPreHandleFaultInfoTestCases3()...)
 	for _, tc := range testCases {
 		convey.Convey(tc.name, t, func() {
 			service := &FaultRecoverService{}
