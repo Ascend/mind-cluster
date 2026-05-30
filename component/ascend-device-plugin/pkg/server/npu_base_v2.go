@@ -55,16 +55,16 @@ var rankLevelInfoKeyArrMap = map[string][]string{
 }
 
 const (
-	size50M        = 50 * 1024 * 1024
-	addrTypeEID    = "EID"
-	addrTypeIPV4   = "IPV4"
-	decimal        = 10
-	hexadecimal    = 16
-	addrNumsLength = 2
-	dieIdMaskNum   = 0x04
-	portIdMaskNum  = 0x7F
-	rightShiftLen  = 3
-    podPlanePortCount = 6
+	size50M           = 50 * 1024 * 1024
+	addrTypeEID       = "EID"
+	addrTypeIPV4      = "IPV4"
+	decimal           = 10
+	hexadecimal       = 16
+	addrNumsLength    = 2
+	dieIdMaskNum      = 0x04
+	portIdMaskNum     = 0x7F
+	rightShiftLen     = 3
+	podPlanePortCount = 6
 )
 
 // level1 (superpod) Port groups
@@ -79,8 +79,8 @@ var (
 	PodLevel1UpperHalfPortsDie1 = []int{1, 2}
 	// PodLevel1UpperHalfPortsDie0 defines the port list for pod Level‑1 (upper half, Die 0).
 	PodLevel1UpperHalfPortsDie0 = []int{0, 1, 2, 3, 4, 5}
-	// PodLevel1HalfGroupBoundary defines the split point
-	PodLevel1HalfGroupBoundary = 4
+	// PodNpuGroupCount defines pod npu group count
+	PodNpuGroupCount = 2
 )
 
 var npuBase *NpuBase
@@ -105,6 +105,7 @@ type ProductBase struct {
 	topoFilePath   string
 	cardType       string
 	mainBoardId    int
+	maxNpuCount    int
 	topoInfo       *TopoInfo
 }
 
@@ -567,9 +568,10 @@ type PodLevel1Config struct {
 // getPodLevel1Config returns the Level1 configuration for a pod scene based on configuration tables
 func (n *NpuBase) getPodLevel1Config(phyID int) []PodLevel1Config {
 	mainBoardId := n.productInfo.mainBoardId
-
+	maxNpuCountPerNode := n.productInfo.maxNpuCount
+	PodLevel1HalfGroupBoundary := maxNpuCountPerNode / PodNpuGroupCount
 	if (mainBoardId == api.Atlas9501DMainBoardID || mainBoardId == api.Atlas950MainBoardID) &&
-		(phyID%api.NpuCountPerNode) < PodLevel1HalfGroupBoundary {
+		(phyID%maxNpuCountPerNode) < PodLevel1HalfGroupBoundary {
 		return []PodLevel1Config{
 			{Die: common.DieID0, Fe: common.UrmaFeId2, Ports: PodLevel1LowerHalfPortsDie0},
 			{Die: common.DieID1, Fe: common.UrmaFeId2, Ports: PodLevel1LowerHalfPortsDie1},
@@ -577,7 +579,7 @@ func (n *NpuBase) getPodLevel1Config(phyID int) []PodLevel1Config {
 	}
 
 	if (mainBoardId == api.Atlas9501DMainBoardID || mainBoardId == api.Atlas950MainBoardID) &&
-		(phyID%api.NpuCountPerNode) >= PodLevel1HalfGroupBoundary {
+		(phyID%maxNpuCountPerNode) >= PodLevel1HalfGroupBoundary {
 		return []PodLevel1Config{
 			{Die: common.DieID1, Fe: common.UrmaFeId2, Ports: PodLevel1UpperHalfPortsDie1},
 			{Die: common.DieID0, Fe: common.UrmaFeId2, Ports: PodLevel1UpperHalfPortsDie0},
@@ -718,7 +720,7 @@ func (n *NpuBase) buildServerLevel2Parsed(parsed []*ParsedUrma) []api.RankAddrIt
 	return nil
 }
 
-func (n *NpuBase) buildPodRankAddrListParsed(level int, dev *common.NpuDevice, parsed []*ParsedUrma, ) []api.RankAddrItem {
+func (n *NpuBase) buildPodRankAddrListParsed(level int, dev *common.NpuDevice, parsed []*ParsedUrma) []api.RankAddrItem {
 	switch level {
 	case api.RankLevel0:
 		return n.buildPodLevel0Parsed(dev, parsed)
@@ -732,7 +734,9 @@ func (n *NpuBase) buildPodRankAddrListParsed(level int, dev *common.NpuDevice, p
 func (n *NpuBase) buildPodLevel0Parsed(dev *common.NpuDevice, parsed []*ParsedUrma) []api.RankAddrItem {
 	keep := func(p *ParsedUrma) bool {
 		die := p.Die
-		phyMod := int(dev.PhyID) % api.NpuCountPerNode
+		maxNpuCountPerNode := n.productInfo.maxNpuCount
+		PodLevel1HalfGroupBoundary := maxNpuCountPerNode / PodNpuGroupCount
+		phyMod := int(dev.PhyID) % maxNpuCountPerNode
 		if phyMod < PodLevel1HalfGroupBoundary && die == common.DieID1 {
 			return false
 		}

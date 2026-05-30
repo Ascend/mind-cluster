@@ -54,6 +54,11 @@ func (hdm *HwDevManager) getProductInfo() *ProductBase {
 	if hdm.manager == nil {
 		return nil
 	}
+	dmgr := hdm.manager.GetDmgr()
+	if dmgr == nil {
+		return nil
+	}
+	mainBoardId := int(dmgr.GetMainBoardId())
 	return &ProductBase{
 		superPodSize:   uint32(hdm.manager.GetSuperPodSize()),
 		superPodID:     uint32(hdm.manager.GetSuperPodID()),
@@ -62,7 +67,8 @@ func (hdm *HwDevManager) getProductInfo() *ProductBase {
 		superPodType:   uint8(hdm.manager.GetSuperPodType()),
 		nodeInternalIP: hdm.manager.GetNodeInternalIPInK8s(),
 		cardType:       common.ParamOption.CardType,
-		mainBoardId:    int(hdm.manager.GetDmgr().GetMainBoardId()),
+		mainBoardId:    mainBoardId,
+		maxNpuCount:    npuCommon.GetMaxNpuCountPerNode(mainBoardId),
 	}
 }
 

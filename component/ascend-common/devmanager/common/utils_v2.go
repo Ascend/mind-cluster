@@ -19,6 +19,8 @@ package common
 
 import (
 	"strings"
+
+	"ascend-common/api"
 )
 
 const (
@@ -29,4 +31,18 @@ const (
 // Is910A5Chip current chip is 910A5 or not
 func Is910A5Chip(chipName string) bool {
 	return len(chipName) <= chipNameMaxLen && strings.HasPrefix(chipName, prefix91095)
+}
+
+var maxNpuCountOverride = map[int]int{
+	A5UBXMainBoardId: 16,
+	A5TXMainBoardId:  4,
+	A5DYMainBoardId:  4,
+}
+
+// GetMaxNpuCountPerNode default value is 8
+func GetMaxNpuCountPerNode(mainBoardId int) int {
+	if count, ok := maxNpuCountOverride[mainBoardId]; ok {
+		return count
+	}
+	return api.NpuCountPerNode
 }
