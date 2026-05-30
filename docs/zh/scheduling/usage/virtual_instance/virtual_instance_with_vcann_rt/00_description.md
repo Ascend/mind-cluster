@@ -16,11 +16,30 @@
 **表 1**  产品支持情况说明
 
 <a name="table32786155236vcann"></a>
-
-|产品系列|支持的场景|虚拟化方式|是否支持|
-|--|--|--|--|
-|<term>Atlas A2 推理系列产品</term><ul><li>Atlas 800I A2 推理服务器</li></ul>|在物理机生成软切分配置文件，挂载NPU和位置文件到容器|软切分虚拟化|是|
-|<term>Atlas A3 推理系列产品</term><ul><li>Atlas 800I A3 超节点服务器</li></ul>|在物理机生成软切分配置文件，挂载NPU和位置文件到容器|软切分虚拟化|是|
+<table>
+<thead align="left">
+<tr>
+<th class="cellrowborder" align="center" valign="center" width="30%"><p>产品系列</p></th>
+<th class="cellrowborder" align="center" valign="center" width="40%"><p>支持的场景</p></th>
+<th class="cellrowborder" align="center" valign="center" width="15%"><p>虚拟化方式</p></th>
+<th class="cellrowborder" align="center" valign="center" width="15%"><p>是否支持</p></th>
+</tr>
+</thead>
+<tbody align="left">
+<tr>
+<td class="cellrowborder" valign="top" width="30%"><term>Atlas A2 推理系列产品</term><ul><li>Atlas 800I A2 推理服务器</li></ul></td>
+<td class="cellrowborder" rowspan="3" valign="center" width="40%"><p>在物理机生成软切分配置文件，挂载NPU和位置文件到容器</p></td>
+<td class="cellrowborder" rowspan="3" align="center" valign="center" width="15%"><p>软切分虚拟化</p></td>
+<td class="cellrowborder" rowspan="3" align="center" valign="center" width="10%"><p>是</p></td>
+</tr>
+<tr>
+<td class="cellrowborder" valign="top" width="30%"><term>Atlas A3 推理系列产品</term><ul><li>Atlas 800I A3 超节点服务器</li></ul></td>
+</tr>
+<tr>
+<td class="cellrowborder" valign="top" width="30%"><term>Atlas 350 标卡</term></td>
+</tr>
+</tbody>
+</table>
 
 ## 使用说明<a name="section1296713336303vcann"></a>
 
