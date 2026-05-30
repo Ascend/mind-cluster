@@ -21,7 +21,7 @@ const (
 	// MaxUBEIDByteLen max eid bytes len for device ub port
 	MaxUBEIDByteLen = 128 / 8
 
-	// MaxUBCNAByteLen max cna bytes len for device ub port
+	// MaxUBCNAByteLen max bytes len of common network address for device ub port
 	MaxUBCNAByteLen = 32 / 8
 
 	// A5300IBoardId board id of 300I A5
@@ -37,4 +37,11 @@ const (
 	MaxDieID = 2
 	// MaxPortID ascend 950 port max id
 	MaxPortID = 9
+
+	// A5UBXMainBoardId Customized device for UBX，mainboard id is 0x44
+	A5UBXMainBoardId = 0x44
+	// A5TXMainBoardId Customized device for Yinhe，mainboard id is 0x46
+	A5TXMainBoardId = 0x46
+	// A5DYMainBoardId Customized device for DaYu，mainboard id is 0x48
+	A5DYMainBoardId = 0x48
 )

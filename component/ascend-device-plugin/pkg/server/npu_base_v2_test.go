@@ -678,6 +678,7 @@ func TestGetPodLevel1Config(t *testing.T) {
 		n := &NpuBase{
 			productInfo: &ProductBase{mainBoardId: api.Atlas950MainBoardID},
 		}
+		n.productInfo.maxNpuCount = apiCommon.GetMaxNpuCountPerNode(n.productInfo.mainBoardId)
 		cfg := n.getPodLevel1Config(1) // lower half
 		convey.So(cfg, convey.ShouldNotBeNil)
 		convey.So(cfg[0].Die, convey.ShouldEqual, common.DieID0)
@@ -738,6 +739,7 @@ func TestBuildPodRankAddrListParsed(t *testing.T) {
 		n := &NpuBase{
 			productInfo: &ProductBase{mainBoardId: api.Atlas9501DMainBoardID},
 		}
+		n.productInfo.maxNpuCount = apiCommon.GetMaxNpuCountPerNode(n.productInfo.mainBoardId)
 		dev := &common.NpuDevice{PhyID: 1}
 		parsed := []*ParsedUrma{
 			{Die: 0, Fe: common.UrmaFeId2, PgEid: "pg"},
@@ -749,7 +751,9 @@ func TestBuildPodRankAddrListParsed(t *testing.T) {
 
 func TestBuildPodLevel0Parsed(t *testing.T) {
 	convey.Convey("test buildPodLevel0Parsed", t, func() {
-		n := &NpuBase{}
+		n := &NpuBase{
+			productInfo: &ProductBase{maxNpuCount: api.NpuCountPerNode},
+		}
 		dev := &common.NpuDevice{PhyID: 1}
 		parsed := []*ParsedUrma{
 			{
@@ -767,6 +771,7 @@ func TestBuildPodLevel1Parsed(t *testing.T) {
 		n := &NpuBase{
 			productInfo: &ProductBase{mainBoardId: api.Atlas9501DMainBoardID},
 		}
+		n.productInfo.maxNpuCount = apiCommon.GetMaxNpuCountPerNode(n.productInfo.mainBoardId)
 		dev := &common.NpuDevice{PhyID: 1}
 		parsed := []*ParsedUrma{
 			{Die: 0, Fe: common.UrmaFeId2, PgEid: "pg"},
