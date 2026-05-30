@@ -15,6 +15,8 @@
 // Package common for common function
 package common
 
+import "time"
+
 const (
 	// FaultConfigCMName the name of fault config map
 	FaultConfigCMName = "mindx-dl-node-fault-config"
@@ -137,14 +139,20 @@ const (
 	IpmiProcess = "ipmi"
 	// ConfigProcess config process key
 	ConfigProcess = "config"
+	// DtfsProcess dtfs process map key
+	DtfsProcess = "dtfs"
 	// PluginMonitorIpmi plugin monitor ipmi
 	PluginMonitorIpmi = "ipmi_monitor"
 	// PluginMonitorDpc plugin monitor dpc
 	PluginMonitorDpc = "dpc_monitor"
+	// PluginMonitorDtfs plugin monitor dtfs
+	PluginMonitorDtfs = "dtfs_monitor"
 	// PluginMonitorCm plugin monitor cm
 	PluginMonitorCm = "cm_monitor"
 	// PluginControlFault plugin control fault
 	PluginControlFault = "fault_monitor"
+	// PluginControlDtfs plugin control dtfs
+	PluginControlDtfs = "dtfs_control"
 )
 
 const (
@@ -159,4 +167,56 @@ const (
 	Decimal = 10
 	// Bit32Size 32
 	Bit32Size = 32
+)
+
+const (
+	CheckPeriod        = 5 * time.Second
+	ExcludePermissions = 0133
+	RootUID            = 0
+	MaxInstNumber      = 20
+
+	DtfsFilePath         = "/user/mind-cluster/dtfsstatus/dtfsstatus"
+	DtfsProcessErrorKey  = "DTFS_PROCESS_ERROR"
+	DtfsLinkErrorKey     = "DTFS_LINK_ERROR"
+	DtfsHealthy          = 0
+	DtfsError            = -1
+	DtfsLogDomain        = "dtfs_check_file_error"
+	DtfsLogDomainId      = 0
+	DtfsInstResultIndex  = 1
+	DtfsErrorTypeIndex   = 1
+	DtfsErrorResultIndex = 2
+
+	DpcFilePath         = "/user/mind-cluster/dpcstatus/dpc_status_check"
+	DpcLogDomain        = "dpc_check_file_error"
+	DpcLogDomainId      = 0
+	DpcInternalErrorKey = "DPC_INTERNAL_ERROR"
+	DpcInternalHealthy  = 0
+	DpcInternalError    = -12
+	DpcProcessErrorKey  = "DPC_PROCESS_ERROR"
+	DpcProcessHealthy   = 0
+	DpcProcessError     = -1
+	DpcInstResultIndex  = 1
+	DpcErrorTypeIndex   = 1
+	DpcErrorResultIndex = 2
+	DpcMonitorTimeOut   = 60 * time.Second
+)
+
+const (
+	PublicFaultVersion    = "1.0"
+	FaultAssertionRecover = "recover"
+	FaultAssertionOccur   = "occur"
+	FaultType             = "Node"
+
+	DtfsFaultResource    = "dtfsStorage"
+	DtfsProcessErrorId   = "DTFS_PROCESS"
+	DtfsLinkErrorId      = "DTFS_LINK"
+	DtfsProcessFaultCode = "110001022"
+	DtfsLinkFaultCode    = "110001023"
+
+	DpcFaultResource    = "dpcStorage"
+	DpcMemoryErrorId    = "DPC_MEMORY"
+	DpcProcessErrorId   = "DPC_PROCESS"
+	DpcProcessFaultCode = "110001020"
+	DpcMemoryFaultCode  = "110001021"
+	MemoryErrorTimeOut  = 10 * 60 * time.Second
 )

@@ -419,3 +419,97 @@ func TestLoopUBPingMeshListForCardCsv(t *testing.T) {
 		convey.So(callCount, convey.ShouldEqual, destNum)
 	})
 }
+
+func TestLoopUBPingMeshListForCardCsvWriteError(t *testing.T) {
+	convey.Convey("Test loopUBPingMeshListForCardCsv when csv write fails", t, func() {
+		info := &common.HccspingMeshInfo{
+			UBPingMeshInfoList: []common.UBPingMeshInfo{
+				{
+					DestNum: 1,
+					SrcEIDs: common.Eid{Raw: [common.EidByteSize]byte{0, 1}},
+					DstEIDList: []common.Eid{
+						{Raw: [common.EidByteSize]byte{0, 1}},
+					},
+					SucPktNum:  []uint{1},
+					FailPktNum: []uint{0},
+					MinTime:    []int{1},
+					MaxTime:    []int{1},
+					AvgTime:    []int{1},
+				},
+			},
+		}
+
+		var callCount int
+		patches := gomonkey.ApplyMethod(&csv.Writer{}, "Write", func(_ *csv.Writer, record []string) error {
+			callCount++
+			return errors.New("write failed")
+		})
+		defer patches.Reset()
+
+		m := &manager{}
+		csvWriter := csv.NewWriter(nil)
+
+		m.loopUBPingMeshListForCardCsv(info, 1, csvWriter)
+
+		convey.So(callCount, convey.ShouldEqual, 1)
+	})
+}
+
+func TestWriteForCardA5(t *testing.T) {
+	convey.Convey("Test writeForCardA5", t, func() {
+		m := makeManager()
+		infos := map[uint]*common.HccspingMeshInfo{
+			taskID0: mockUBHccspingMeshInfo(),
+		}
+		m.writeForCardA5(physicID1, infos)
+	})
+}
+
+func TestWriteForCardToCsvA5(t *testing.T) {
+	convey.Convey("Test writeForCardToCsvA5", t, func() {
+		m := makeManager()
+		infos := map[uint]*common.HccspingMeshInfo{
+			taskID0: mockUBHccspingMeshInfo(),
+		}
+
+		var callCount int
+		patches := gomonkey.ApplyMethod(&csv.Writer{}, "Write", func(_ *csv.Writer, record []string) error {
+			callCount++
+			return nil
+		})
+		defer patches.Reset()
+
+		csvWriter := csv.NewWriter(nil)
+		m.writeForCardToCsvA5(csvWriter, infos)
+		convey.So(callCount, convey.ShouldBeGreaterThan, 0)
+	})
+}
+
+func TestLoopUBPingMeshListForCardSuccess(t *testing.T) {
+	convey.Convey("Test loopUBPingMeshListForCard with successful json marshal", t, func() {
+		testSrcEID := common.Eid{Raw: [common.EidByteSize]byte{1, 0}}
+		testDstEID := common.Eid{Raw: [common.EidByteSize]byte{0, 1}}
+
+		info := &common.HccspingMeshInfo{
+			UBPingMeshInfoList: []common.UBPingMeshInfo{
+				{
+					DestNum: 1,
+					SrcEIDs: testSrcEID,
+					DstEIDList: []common.Eid{
+						testDstEID,
+					},
+					SucPktNum:    []uint{1},
+					FailPktNum:   []uint{0},
+					MaxTime:      []int{10},
+					MinTime:      []int{1},
+					AvgTime:      []int{5},
+					Tp95Time:     []int{8},
+					ReplyStatNum: []int{1},
+					PingTotalNum: []int{1},
+				},
+			},
+		}
+		m := makeManager()
+		m.loopUBPingMeshListForCard(info)
+	})
+}

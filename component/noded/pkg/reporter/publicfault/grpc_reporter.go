@@ -19,6 +19,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 	"nodeD/pkg/grpcclient"
+	"nodeD/pkg/grpcclient/pubfault"
 )
 
 const clusterdSvcName = "clusterd-grpc-svc.mindx-dl.svc.cluster.local:8899"
@@ -34,7 +35,7 @@ func NewGrpcReporter() *GrpcReporter {
 
 // Report send fault device info by grpc
 func (c *GrpcReporter) Report(fcInfo *common.FaultAndConfigInfo) {
-	if fcInfo == nil || fcInfo.PubFaultInfo == nil {
+	if fcInfo == nil || fcInfo.PubFaultInfo == nil || len(fcInfo.PubFaultInfo) == 0 {
 		return
 	}
 	client, err := grpcclient.New(clusterdSvcName)
@@ -43,11 +44,14 @@ func (c *GrpcReporter) Report(fcInfo *common.FaultAndConfigInfo) {
 		return
 	}
 	defer client.SafeClose()
-	_, err = client.SendToPubFaultCenter(fcInfo.PubFaultInfo)
-	if err != nil {
-		hwlog.RunLog.Errorf("send to pub fault failed, err is %v", err)
-		return
+	for _, pubFaultInfo := range fcInfo.PubFaultInfo {
+		_, err = client.SendToPubFaultCenter(pubFaultInfo)
+		if err != nil {
+			hwlog.RunLog.Errorf("send to pub fault failed, err is %v", err)
+		}
 	}
+	// Whether the message is sent successfully or not, it will be cleared
+	fcInfo.PubFaultInfo = []*pubfault.PublicFaultRequest{}
 }
 
 // Init initialize grpc client

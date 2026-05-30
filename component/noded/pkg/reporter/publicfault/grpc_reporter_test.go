@@ -58,7 +58,7 @@ func TestReport(t *testing.T) {
 			}).ApplyMethodReturn(&grpcclient.Client{}, "SendToPubFaultCenter",
 				&pubfault.RespStatus{}, errors.New(""))
 			reporter.Report(&common.FaultAndConfigInfo{
-				PubFaultInfo: &pubfault.PublicFaultRequest{},
+				PubFaultInfo: []*pubfault.PublicFaultRequest{{}},
 			})
 			convey.So(clientNewCalled, convey.ShouldBeTrue)
 		})

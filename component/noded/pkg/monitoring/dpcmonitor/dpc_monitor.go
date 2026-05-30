@@ -40,27 +40,6 @@ var (
 	lastUploadTime int64
 )
 
-const (
-	dpcFilePath         = "/user/mind-cluster/dpcstatus/dpc_status_check"
-	checkPeriod         = 5 * time.Second
-	logDomain           = "dpc_check_file_error"
-	logDomainId         = 0
-	maxSearchLine       = 20
-	dpcInternalErrorKey = "DPC_INTERNAL_ERROR"
-	dpcInternalHealthy  = 0
-	dpcInternalError    = -12
-	dpcProcessErrorKey  = "DPC_PROCESS_ERROR"
-	dpcProcessHealthy   = 0
-	dpcProcessError     = -1
-	dpcInstResultIndex  = 1
-	dpcErrorTypeIndex   = 1
-	dpcErrorResultIndex = 2
-
-	excludePermissions = 0133
-	rootUID            = 0
-	memoryErrorTimeOut = 60 * time.Second
-)
-
 // DpcEventMonitor monitor fault on server by dpc
 type DpcEventMonitor struct {
 	stopChan chan struct{}
@@ -103,13 +82,14 @@ func (i *DpcEventMonitor) Monitoring() {
 			hwlog.RunLog.Info("receive stop signal, ipmi monitor shut down...")
 			return
 		default:
-			time.Sleep(checkPeriod)
+			time.Sleep(common.CheckPeriod)
 			newDpcMap, err := getStatusFromFile()
 			if err != nil {
-				hwlog.RunLog.ErrorfWithLimit(logDomain, logDomainId, "get dpc status failed, err is %v", err)
+				hwlog.RunLog.ErrorfWithLimit(common.DpcLogDomain,
+					common.DpcLogDomainId, "get dpc status failed, err is %v", err)
 				continue
 			}
-			hwlog.ResetErrCnt(logDomain, logDomainId)
+			hwlog.ResetErrCnt(common.DpcLogDomain, common.DpcLogDomainId)
 			newDpcMap = setNewDpcMapTime(newDpcMap)
 			if isSame(newDpcMap) {
 				continue
@@ -147,7 +127,7 @@ func setNewDpcMapTime(newDpcMap map[int]common.DpcStatus) map[int]common.DpcStat
 }
 
 func isSame(newDpcMap map[int]common.DpcStatus) bool {
-	if lastUploadTime == 0 || time.Now().UnixMilli()-lastUploadTime > memoryErrorTimeOut.Milliseconds() {
+	if lastUploadTime == 0 || time.Now().UnixMilli()-lastUploadTime > common.DpcMonitorTimeOut.Milliseconds() {
 		return false
 	}
 	if len(newDpcMap) != len(dpcMap) {
@@ -166,7 +146,7 @@ func isSame(newDpcMap map[int]common.DpcStatus) bool {
 }
 
 func getStatusFromFile() (map[int]common.DpcStatus, error) {
-	absPath, err := utils.CheckOwnerAndPermission(dpcFilePath, excludePermissions, rootUID)
+	absPath, err := utils.CheckOwnerAndPermission(common.DpcFilePath, common.ExcludePermissions, common.RootUID)
 	if err != nil {
 		return nil, fmt.Errorf("the filePath is invalid: %v", err)
 	}
@@ -184,7 +164,7 @@ func getStatusFromFile() (map[int]common.DpcStatus, error) {
 	count := 0
 	newDpcMap := make(map[int]common.DpcStatus)
 	for s.Scan() {
-		if count > maxSearchLine {
+		if count > common.MaxInstNumber {
 			break
 		}
 		count++
@@ -202,8 +182,8 @@ func readInstStatus(s *bufio.Scanner) (int, common.DpcStatus, error) {
 	var err error
 	var dpcStatus common.DpcStatus
 	text := s.Text()
-	if instMatch := instRegex.FindStringSubmatch(text); len(instMatch) > dpcInstResultIndex {
-		inst, err = strconv.Atoi(instMatch[dpcInstResultIndex])
+	if instMatch := instRegex.FindStringSubmatch(text); len(instMatch) > common.DpcInstResultIndex {
+		inst, err = strconv.Atoi(instMatch[common.DpcInstResultIndex])
 		if err != nil {
 			return 0, common.DpcStatus{}, err
 		}
@@ -214,7 +194,7 @@ func readInstStatus(s *bufio.Scanner) (int, common.DpcStatus, error) {
 		return 0, common.DpcStatus{}, errors.New("get status failed")
 	}
 	text2 := s.Text()
-	if status, err := getStatusByText(text2, dpcInternalErrorKey); err != nil {
+	if status, err := getStatusByText(text2, common.DpcInternalErrorKey); err != nil {
 		return 0, common.DpcStatus{}, err
 	} else {
 		dpcStatus.MemoryError = status
@@ -223,7 +203,7 @@ func readInstStatus(s *bufio.Scanner) (int, common.DpcStatus, error) {
 		return 0, common.DpcStatus{}, errors.New("get status failed")
 	}
 	text3 := s.Text()
-	if status, err := getStatusByText(text3, dpcProcessErrorKey); err != nil {
+	if status, err := getStatusByText(text3, common.DpcProcessErrorKey); err != nil {
 		return 0, common.DpcStatus{}, err
 	} else {
 		dpcStatus.ProcessError = status
@@ -233,11 +213,11 @@ func readInstStatus(s *bufio.Scanner) (int, common.DpcStatus, error) {
 
 func getStatusByText(text string, key string) (bool, error) {
 	errMatch := errRegex.FindStringSubmatch(text)
-	if len(errMatch) <= dpcErrorResultIndex {
+	if len(errMatch) <= common.DpcErrorResultIndex {
 		return false, errors.New("get status failed, not match regex")
 	}
-	fileKey := errMatch[dpcErrorTypeIndex]
-	value, err := strconv.Atoi(errMatch[dpcErrorResultIndex])
+	fileKey := errMatch[common.DpcErrorTypeIndex]
+	value, err := strconv.Atoi(errMatch[common.DpcErrorResultIndex])
 	if err != nil {
 		return false, err
 	}
@@ -245,18 +225,18 @@ func getStatusByText(text string, key string) (bool, error) {
 		return false, errors.New("get status failed, key is invalid")
 	}
 	switch key {
-	case dpcInternalErrorKey:
-		if value == dpcInternalError {
+	case common.DpcInternalErrorKey:
+		if value == common.DpcInternalError {
 			return true, nil
-		} else if value == dpcInternalHealthy {
+		} else if value == common.DpcInternalHealthy {
 			return false, nil
 		} else {
 			return false, errors.New("get DPC_INTERNAL_ERROR failed, value is invalid")
 		}
-	case dpcProcessErrorKey:
-		if value == dpcProcessError {
+	case common.DpcProcessErrorKey:
+		if value == common.DpcProcessError {
 			return true, nil
-		} else if value == dpcProcessHealthy {
+		} else if value == common.DpcProcessHealthy {
 			return false, nil
 		} else {
 			return false, errors.New("get DPC_PROCESS_ERROR failed, value is invalid")

@@ -23,10 +23,12 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"nodeD/pkg/common"
 	"nodeD/pkg/control/dpccontrol"
+	"nodeD/pkg/control/dtfscontrol"
 	"nodeD/pkg/control/faultcontrol"
 	"nodeD/pkg/kubeclient"
 	"nodeD/pkg/monitoring/config"
 	"nodeD/pkg/monitoring/dpcmonitor"
+	"nodeD/pkg/monitoring/dtfsmonitor"
 	"nodeD/pkg/monitoring/ipmimonitor"
 	"nodeD/pkg/reporter/cmreporter"
 	"nodeD/pkg/reporter/publicfault"
@@ -37,7 +39,7 @@ var (
 )
 
 const (
-	processNum = 3
+	processNum = 4
 	retryTime  = 3
 )
 
@@ -57,9 +59,11 @@ func InitPlugin(ctx context.Context) error {
 	ipmiEventMonitor := ipmimonitor.NewIpmiEventMonitor()
 	configmapEventMonitor := config.NewFaultConfigurator(kubeclient.GetK8sClient())
 	dpcEventMonitor := dpcmonitor.NewDpcEventMonitor(ctx)
+	dtfsEventMonitor := dtfsmonitor.NewDtfsEventMonitor(ctx)
 
 	nodeController := faultcontrol.NewNodeController()
 	dpcController := dpccontrol.NewDpcController()
+	dtfsController := dtfscontrol.NewDtfsController()
 
 	configMapReporter := cmreporter.NewConfigMapReporter(kubeclient.GetK8sClient())
 	pfReporter := publicfault.NewGrpcReporter()
@@ -77,6 +81,11 @@ func InitPlugin(ctx context.Context) error {
 	processPluginMap[common.DpcProcess] = Plugin{
 		monitor:   dpcEventMonitor,
 		controls:  []common.PluginControl{dpcController},
+		reporters: []common.PluginReporter{pfReporter},
+	}
+	processPluginMap[common.DtfsProcess] = Plugin{
+		monitor:   dtfsEventMonitor,
+		controls:  []common.PluginControl{dtfsController},
 		reporters: []common.PluginReporter{pfReporter},
 	}
 	if err := startAllMonitor(); err != nil {
@@ -114,7 +123,7 @@ func GetReporterPlugins(processType string) []common.PluginReporter {
 
 // GetAllProcessType get all process type
 func GetAllProcessType() []string {
-	return []string{common.IpmiProcess, common.ConfigProcess}
+	return []string{common.IpmiProcess, common.ConfigProcess, common.DpcProcess, common.DtfsProcess}
 }
 
 // GetAllLoopProcessType get all loop process type

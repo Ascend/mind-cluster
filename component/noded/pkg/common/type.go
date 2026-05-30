@@ -42,7 +42,8 @@ type FaultAndConfigInfo struct {
 	FaultDevInfo *FaultDevInfo
 	FaultConfig  *FaultConfig
 	DpcStatusMap map[int]DpcStatus
-	PubFaultInfo *pubfault.PublicFaultRequest
+	DtfsStatus   DtfsStatus
+	PubFaultInfo []*pubfault.PublicFaultRequest
 }
 
 // FaultDevInfo fault device info
@@ -106,10 +107,16 @@ type PluginControl interface {
 	Name() string
 }
 
-// DpcStatus the dpc status
+// DpcStatus dpc status
 type DpcStatus struct {
 	ProcessError     bool
 	ProcessErrorTime int64
 	MemoryError      bool
 	MemoryErrorTime  int64
+}
+
+// DtfsStatus dtfs status
+type DtfsStatus struct {
+	ProcessError bool
+	LinkError    bool
 }
