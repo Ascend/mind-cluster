@@ -27,13 +27,17 @@ from ascend_fd_tk.core.model.switch import SwitchInfo, InterfaceFullInfo
 
 
 class ClusterInfoCache(JsonObj):
-
-    def __init__(self, hosts_info: Dict[str, HostInfo] = None, bmcs_info: Dict[str, BmcInfo] = None,
-                 swis_info: Dict[str, SwitchInfo] = None):
+    def __init__(
+        self,
+        hosts_info: Dict[str, HostInfo] = None,
+        bmcs_info: Dict[str, BmcInfo] = None,
+        swis_info: Dict[str, SwitchInfo] = None,
+    ):
         self.hosts_info: Dict[str, HostInfo] = hosts_info or {}
         self.bmcs_info: Dict[str, BmcInfo] = bmcs_info or {}
         self.swis_info: Dict[str, SwitchInfo] = swis_info or {}
-        self._swi_info_name_map = {swi_info.name: swi_info for swi_info in self.swis_info.values()}
+        # 交换机名字和交换机信息映射关系
+        self.swi_info_name_map = {}
         self._chassis_mappings: ChassisMapping = None
         # 后续通过客户类型修改阈值
         self._threshold: Type[OpticalModuleThreshold] = OpticalModuleThreshold
@@ -46,7 +50,7 @@ class ClusterInfoCache(JsonObj):
     def init_diag_data(self):
         l1_swi_server_mappings = self._build_l1_swi_server_mappings()
         self._chassis_mappings = ChassisMapping(l1_swi_server_mappings)
-        self._swi_info_name_map = {swi_info.name: swi_info for swi_info in self.swis_info.values()}
+        self.swi_info_name_map = {swi_info.name: swi_info for swi_info in self.swis_info.values()}
 
     def get_threshold(self):
         return self._threshold
@@ -75,11 +79,11 @@ class ClusterInfoCache(JsonObj):
 
     # 找对端交换机
     def find_peer_swi(self, peer_device: str) -> SwitchInfo:
-        return self._swi_info_name_map.get(peer_device)
+        return self.swi_info_name_map.get(peer_device)
 
     # 找对端端口信息
     def find_peer_swi_interface_info(
-            self, peer_device: str, peer_interface: str
+        self, peer_device: str, peer_interface: str
     ) -> Tuple[SwitchInfo, InterfaceFullInfo]:
         peer_device_info = self.find_peer_swi(peer_device)
         if not peer_device_info:
@@ -88,7 +92,7 @@ class ClusterInfoCache(JsonObj):
 
     # 根据接口全量信息找对端端口
     def find_peer_swi_interface_info_by_if_info(
-            self, interface_full_info: InterfaceFullInfo
+        self, interface_full_info: InterfaceFullInfo
     ) -> Tuple[SwitchInfo, InterfaceFullInfo]:
         if not interface_full_info.interface_mapping:
             return None, None
@@ -121,9 +125,13 @@ class ClusterInfoCache(JsonObj):
                 if not host_info:
                     continue
                 bmc_info = self.find_bmc_info_by_sn_num(host_info.sn_num)
-                mapping = L1SwiServerMapping(switch_info.swi_id, switch_info.name,
-                                             host_info and host_info.server_index,
-                                             host_info and host_info.host_id, bmc_info and bmc_info.bmc_id)
+                mapping = L1SwiServerMapping(
+                    switch_info.swi_id,
+                    switch_info.name,
+                    host_info and host_info.server_index,
+                    host_info and host_info.host_id,
+                    bmc_info and bmc_info.bmc_id,
+                )
                 l1_swi_server_mappings.append(mapping)
                 break
         return l1_swi_server_mappings

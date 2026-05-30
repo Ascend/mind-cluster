@@ -18,7 +18,7 @@
 import re
 from typing import List
 
-from ascend_fd_tk.core.common import diag_enum
+from ascend_fd_tk.core.common import constants, diag_enum
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.config import port_mapping_config
 from ascend_fd_tk.core.config.chip_port_range import tiancheng_cpu_port_list
@@ -26,13 +26,11 @@ from ascend_fd_tk.core.config.port_mapping_config import L1InterfacePortMapping
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
 from ascend_fd_tk.core.model.bmc import BmcInfo
-from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
 from ascend_fd_tk.core.model.cluster_mapping import L1SwiServerMapping
 from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
 
 
 class CpuBoardUbcInfo(JsonObj):
-
     def __init__(self, cpu_id="", ubc_id="", macro_id="", cud_board_id=""):
         self.cpu_id = cpu_id
         self.ubc_id = ubc_id
@@ -48,18 +46,16 @@ class HccsLinkDegradedAnalyzer(Analyzer):
         r"{1,2})"
     )
 
-    def __init__(self, cluster_info: ClusterInfoCache):
-        super().__init__(cluster_info)
-
-        # 找到该cpu对端的1520端口
-
+    # 找到该cpu对端的1520端口
     @staticmethod
     def _find_cpu_peer_swi_port(cpu_board_ubc_info: CpuBoardUbcInfo) -> L1InterfacePortMapping:
         port_mapping_config_instance = port_mapping_config.get_port_mapping_config_instance()
         for mapping_info in port_mapping_config_instance.l1_interface_port_map.values():
-            if mapping_info.xpu == diag_enum.XPU.CPU.value and \
-                    mapping_info.xpu_id == cpu_board_ubc_info.cpu_id and \
-                    mapping_info.macro == cpu_board_ubc_info.macro_id:
+            if (
+                mapping_info.xpu == diag_enum.XPU.CPU.value
+                and mapping_info.xpu_id == cpu_board_ubc_info.cpu_id
+                and mapping_info.macro == cpu_board_ubc_info.macro_id
+            ):
                 return mapping_info
         return None
 
@@ -83,11 +79,13 @@ class HccsLinkDegradedAnalyzer(Analyzer):
             diag_result = DiagResult(
                 [
                     Domain(diag_enum.DeviceType.L1_SWITCH, chassis_mapping.l1_swi_ip),
-                    Domain(diag_enum.DeviceType.SWI_PORT, port_mapping.swi_port)
+                    Domain(diag_enum.DeviceType.SWI_PORT, port_mapping.swi_port),
                 ],
                 f"Cpu{event_info.cpu_id} UBC{event_info.ubc_id} macro{event_info.macro_id} "
                 f"CPU board {event_info.cud_board_id}与L1端口之间发生故障",
-                f"建议检查L1端口或cpu板抽屉", err_code=self._ERROR_CODE
+                "建议检查L1端口或cpu板抽屉",
+                err_code=self._ERROR_CODE,
+                fault_type=constants.FAULT_TYPE_BMC,
             )
             result.append(diag_result)
         # 板级别的分析
@@ -101,10 +99,12 @@ class HccsLinkDegradedAnalyzer(Analyzer):
                 diag_result = DiagResult(
                     [
                         Domain(diag_enum.DeviceType.L1_SWITCH, chassis_mapping.l1_swi_ip),
-                        Domain(diag_enum.DeviceType.SWI_CHIP, str(swi_chip_id))
+                        Domain(diag_enum.DeviceType.SWI_CHIP, str(swi_chip_id)),
                     ],
-                    f"L1交换芯片所有端口异常",
-                    f"建议检查L1交换板或2个CPU抽屉", err_code=self._ERROR_CODE
+                    "L1交换芯片所有端口异常",
+                    "建议检查L1交换板或2个CPU抽屉",
+                    err_code=self._ERROR_CODE,
+                    fault_type=constants.FAULT_TYPE_BMC,
                 )
                 result.append(diag_result)
         return result

@@ -17,6 +17,7 @@
 import collections
 from typing import List, Dict
 
+from ascend_fd_tk.core.common import constants
 from ascend_fd_tk.core.common.diag_enum import HCCSProxyModule, HccsPackErrorCnt, DeviceType
 from ascend_fd_tk.core.config import port_mapping_config
 from ascend_fd_tk.core.context.register import register_analyzer
@@ -85,20 +86,21 @@ class HCCSCommonAnalyzer(Analyzer):
             lcne_info.lp_direction_miss = hccs_route_miss.lp_direction_miss
             lcne_info.nc_direction_miss = hccs_route_miss.nc_direction_miss
 
-            lcne_info.link_status = swi_info.hccs_info.get_link_status_by_chip_port(lcne_info.chip_id,
-                                                                                    lcne_info.port_id)
+            lcne_info.link_status = swi_info.hccs_info.get_link_status_by_chip_port(
+                lcne_info.chip_id, lcne_info.port_id
+            )
 
             lp_id_using_cnt = swi_info.hccs_info.get_package_block_by_condition(
-                lcne_info.chip_id, lcne_info.port_id, HCCSProxyModule.LP.value, HccsPackErrorCnt.LP_PACK_STUACK.value)
+                lcne_info.chip_id, lcne_info.port_id, HCCSProxyModule.LP.value, HccsPackErrorCnt.LP_PACK_STUACK.value
+            )
             rp_id_using_cnt = swi_info.hccs_info.get_package_block_by_condition(
-                lcne_info.chip_id, lcne_info.port_id, HCCSProxyModule.RP.value, HccsPackErrorCnt.RP_PACK_STUACK.value)
+                lcne_info.chip_id, lcne_info.port_id, HCCSProxyModule.RP.value, HccsPackErrorCnt.RP_PACK_STUACK.value
+            )
             lcne_info.lp_id_using_cnt = lp_id_using_cnt if lp_id_using_cnt else 0
             lcne_info.rp_id_using_cnt = rp_id_using_cnt if rp_id_using_cnt else 0
 
             lcne_info_list.append(lcne_info)
-        self.lcne_infos.update({
-            server_id: {item.interface: item for item in lcne_info_list}
-        })
+        self.lcne_infos.update({server_id: {item.interface: item for item in lcne_info_list}})
 
     def get_lcne_info(self, server_id: str, interface: str):
         single_server_lcne_infos = self.lcne_infos.get(server_id, {})
@@ -124,7 +126,8 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
 
     def filter_rp_tx_timeout_interface(self, swi_info: SwitchInfo, server_id: str, proxy_timeout_interface: str):
         timeout_addr_list = swi_info.hccs_info.get_timeout_detail_by_condition(
-            proxy_timeout_interface, "REMOTE_PROXY", "TX_TIMEOUT")
+            proxy_timeout_interface, "REMOTE_PROXY", "TX_TIMEOUT"
+        )
         if not timeout_addr_list:
             return {}
         timeout_interfaces = []
@@ -134,19 +137,19 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
                 if not local_addr_mapping:
                     continue
                 interface = self.port_mapping_config.find_interface(
-                    proxy_timeout_interface, local_addr_mapping.xpu_id, local_addr_mapping.chip_id)
+                    proxy_timeout_interface, local_addr_mapping.xpu_id, local_addr_mapping.chip_id
+                )
                 timeout_interfaces.append(GlobalInterface(server_id, interface))
             else:
                 global_addr_mapping = self.port_mapping_config.find_global_addr_port_mapping(timeout_addr)
                 if not global_addr_mapping:
                     continue
                 interface = self.port_mapping_config.find_interface(
-                    proxy_timeout_interface, global_addr_mapping.npu_id, global_addr_mapping.chip_id)
+                    proxy_timeout_interface, global_addr_mapping.npu_id, global_addr_mapping.chip_id
+                )
                 timeout_interfaces.append(GlobalInterface(global_addr_mapping.server_id, interface))
         rp_tx_timeout_interfaces = {}
-        rp_tx_timeout_interfaces.update({
-            GlobalInterface(server_id, proxy_timeout_interface): timeout_interfaces
-        })
+        rp_tx_timeout_interfaces.update({GlobalInterface(server_id, proxy_timeout_interface): timeout_interfaces})
         return rp_tx_timeout_interfaces
 
     def check_local_interface(self, swi_info: SwitchInfo, lcne_info: LCNEInfo):
@@ -154,23 +157,48 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
         if not lcne_info:
             return diag_results
         local_domain = [
+            # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
             Domain(DeviceType.SWITCH.value, swi_info.swi_id),
-            Domain(DeviceType.SWI_PORT.value, str(lcne_info))
+            Domain(DeviceType.SWI_PORT.value, str(lcne_info)),
         ]
         if self.check_long_link_down(swi_info.date_time, lcne_info):
-            diag_results.append(DiagResult(local_domain, "交换机端口长期down", "排查交换机端口link状态信息"))
+            diag_results.append(
+                DiagResult(
+                    local_domain,
+                    "交换机端口长期down",
+                    "排查交换机端口link状态信息",
+                    fault_type=constants.FAULT_TYPE_SWITCH,
+                )
+            )
         if self.check_link_up_down():
-            diag_results.append(DiagResult(local_domain, "交换机端口闪断", "排查交换机端口link状态信息"))
+            diag_results.append(
+                DiagResult(
+                    local_domain, "交换机端口闪断", "排查交换机端口link状态信息", fault_type=constants.FAULT_TYPE_SWITCH
+                )
+            )
         if lcne_info.is_rp_pack_block():
-            diag_results.append(DiagResult(local_domain, f"[{local_domain.__str__()}]rp窝包",
-                                           f"排查否存在信仰证反压异常"))
+            diag_results.append(
+                DiagResult(
+                    local_domain,
+                    f"[{str(local_domain)}]rp窝包",
+                    "排查否存在信仰证反压异常",
+                    fault_type=constants.FAULT_TYPE_SWITCH,
+                )
+            )
         elif lcne_info.is_voq_pack_block():
-            diag_results.append(DiagResult(local_domain, f"[{local_domain.__str__()}]voq窝包",
-                                           f"排查否存在信仰证反压异常"))
+            diag_results.append(
+                DiagResult(
+                    local_domain,
+                    f"[{str(local_domain)}]voq窝包",
+                    "排查否存在信仰证反压异常",
+                    fault_type=constants.FAULT_TYPE_SWITCH,
+                )
+            )
         return diag_results
 
-    def check_remote_interfaces(self, swi_info: SwitchInfo, local_lcne_info: LCNEInfo,
-                                remote_interfaces: List[GlobalInterface]):
+    def check_remote_interfaces(
+        self, swi_info: SwitchInfo, local_lcne_info: LCNEInfo, remote_interfaces: List[GlobalInterface]
+    ):
         diag_results = []
         for remote_interface in remote_interfaces:
             remote_lcne_info = self.get_lcne_info(remote_interface.server_id, remote_interface.interface_name)
@@ -178,27 +206,43 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
                 continue
             remote_domain = [
                 Domain(DeviceType.SWITCH.value, swi_info.swi_id),
-                Domain(DeviceType.SWI_PORT.value, remote_lcne_info.__str__())
+                Domain(DeviceType.SWI_PORT.value, str(remote_lcne_info)),
             ]
             if remote_lcne_info.is_lp_route_miss():
-                diag_results.append(DiagResult(remote_domain,
-                                               f"[{remote_lcne_info.__str__()}] lp方向路由miss",
-                                               f"[{remote_lcne_info.__str__()}] -> [{local_lcne_info.__str__()}]"))
+                diag_results.append(
+                    DiagResult(
+                        remote_domain,
+                        f"[{str(remote_lcne_info)}] lp方向路由miss",
+                        f"[{str(remote_lcne_info)}] -> [{str(local_lcne_info)}]",
+                        fault_type=constants.FAULT_TYPE_SWITCH,
+                    )
+                )
             if remote_lcne_info.is_lp_pack_block():
-                diag_results.append(DiagResult(remote_domain,
-                                               f"[{remote_lcne_info.__str__()}]lp窝包",
-                                               f"[{remote_lcne_info.__str__()}] -> [{local_lcne_info.__str__()}]"))
+                diag_results.append(
+                    DiagResult(
+                        remote_domain,
+                        f"[{str(remote_lcne_info)}]lp窝包",
+                        f"[{str(remote_lcne_info)}] -> [{str(local_lcne_info)}]",
+                        fault_type=constants.FAULT_TYPE_SWITCH,
+                    )
+                )
             elif remote_lcne_info.is_voq_pack_block():
-                diag_results.append(DiagResult(remote_domain,
-                                               f"[{remote_lcne_info.__str__()}]voq窝包",
-                                               f"[{remote_lcne_info.__str__()}] -> [{local_lcne_info.__str__()}]"))
+                diag_results.append(
+                    DiagResult(
+                        remote_domain,
+                        f"[{str(remote_lcne_info)}]voq窝包",
+                        f"[{str(remote_lcne_info)}] -> [{str(local_lcne_info)}]",
+                        fault_type=constants.FAULT_TYPE_SWITCH,
+                    )
+                )
             # 排查L2
             if local_lcne_info.server_id != remote_interface.server_id:
                 diag_results.extend(self.l2_diag(local_lcne_info, remote_lcne_info))
         return diag_results
 
-    def rp_tx_timeout_diag(self, rp_tx_timeout_interfaces: Dict[GlobalInterface, List[GlobalInterface]],
-                           swi_info: SwitchInfo):
+    def rp_tx_timeout_diag(
+        self, rp_tx_timeout_interfaces: Dict[GlobalInterface, List[GlobalInterface]], swi_info: SwitchInfo
+    ):
         diag_results = []
         for interface, remote_interfaces in rp_tx_timeout_interfaces.items():
             # rp端口问题
@@ -220,11 +264,13 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
                 if proxy_timeout.is_rp_tx_timeout_happend():
                     domain = [
                         Domain(DeviceType.SWITCH.value, swi_info.swi_id),
-                        Domain(DeviceType.SWI_PORT.value, proxy_timeout.interface)
+                        Domain(DeviceType.SWI_PORT.value, proxy_timeout.interface),
                     ]
                     fault_info = f"HCCS RP TX超时，超时次数：{proxy_timeout.rp_tx}"
                     suggestion = "交换机端口长期down、端口闪断、窝包或者路由miss"
-                    diag_results.append(DiagResult(domain, fault_info, suggestion))
+                    diag_results.append(
+                        DiagResult(domain, fault_info, suggestion, fault_type=constants.FAULT_TYPE_SWITCH)
+                    )
 
             swi_server_info = self.chassis_mappings.find_mapping_by_l1_swi_ip(swi_info.swi_id)
             if not swi_server_info or not swi_server_info.server_super_pod_id:

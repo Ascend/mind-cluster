@@ -17,6 +17,7 @@
 
 from typing import List
 
+from ascend_fd_tk.core.common import constants
 from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
@@ -37,8 +38,7 @@ class HostOpticalStatusAnalyzer(Analyzer):
         result = []
         for host_info in self.cluster_info.hosts_info.values():
             for chip_info in host_info.npu_chip_info.values():
-                is_healthy = (chip_info.net_health and
-                              chip_info.net_health != th.NET_HEALTH_THRESHOLD.normal_alarm_th)
+                is_healthy = chip_info.net_health and chip_info.net_health != th.NET_HEALTH_THRESHOLD.normal_alarm_th
                 is_up = chip_info.link_status and chip_info.link_status != th.LINK_STATUS_THRESHOLD.normal_alarm_th
                 if is_healthy or is_up:
                     domain = [
@@ -49,8 +49,11 @@ class HostOpticalStatusAnalyzer(Analyzer):
                     fault_desc = self._FAULT_DESC.format(chip_info.net_health or 'NA', chip_info.link_status or 'NA')
                     hccn_lldp_info = chip_info.hccn_lldp_info
                     if hccn_lldp_info and hccn_lldp_info.system_name_tlv:
-                        fault_desc += self._PEER_PORT_INFO.format(hccn_lldp_info.system_name_tlv,
-                                                                  hccn_lldp_info.port_id_tlv)
-                    diag_result = DiagResult(domain, fault_info=fault_desc, suggestion=self._SUGGESTION)
+                        fault_desc += self._PEER_PORT_INFO.format(
+                            hccn_lldp_info.system_name_tlv, hccn_lldp_info.port_id_tlv
+                        )
+                    diag_result = DiagResult(
+                        domain, fault_info=fault_desc, suggestion=self._SUGGESTION, fault_type=constants.FAULT_TYPE_HOST
+                    )
                     result.append(diag_result)
         return result

@@ -17,19 +17,15 @@
 
 from typing import List
 
-from ascend_fd_tk.core.common import diag_enum
+from ascend_fd_tk.core.common import constants, diag_enum
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
-from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
 from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
 
 
 @register_analyzer
 class HccsSerdesAnalyzer(Analyzer):
     _POWER_ERR_CODE_PREFIX = "0x380"
-
-    def __init__(self, cluster_info: ClusterInfoCache):
-        super().__init__(cluster_info)
 
     def analyse(self) -> List[DiagResult]:
         results = []
@@ -45,8 +41,10 @@ class HccsSerdesAnalyzer(Analyzer):
                 if not fault_desc_list:
                     continue
                 fault_desc = f"交换芯片：{info.chip_id}，端口：{info.port_id}" + ",".join(fault_desc_list)
-                domains = [Domain(diag_enum.DeviceType.SWITCH.value, swi_info.swi_id),
-                           Domain(diag_enum.DeviceType.SWI_PORT.value, info.swi_port_id)]
-                res = DiagResult(domains, fault_desc, "请检查端口故障")
+                domains = [
+                    Domain(diag_enum.DeviceType.SWITCH.value, swi_info.swi_id),
+                    Domain(diag_enum.DeviceType.SWI_PORT.value, info.swi_port_id),
+                ]
+                res = DiagResult(domains, fault_desc, "请检查端口故障", fault_type=constants.FAULT_TYPE_SWITCH)
                 results.append(res)
         return results

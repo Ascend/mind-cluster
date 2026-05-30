@@ -16,6 +16,7 @@
 # ==============================================================================
 from typing import List
 
+from ascend_fd_tk.core.common import constants
 from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.hccs.hccs_rp_tx_analyzer import HCCSCommonAnalyzer
@@ -28,7 +29,6 @@ from ascend_fd_tk.core.model.hccs import ProxyTimeoutStatis
 
 @register_analyzer
 class HCCSAnalyzer(HCCSCommonAnalyzer):
-
     def __init__(self, cluster_info: ClusterInfoCache):
         super().__init__(cluster_info)
         self.data_init()
@@ -51,36 +51,54 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
         diag_results = []
         swi_server_info = self.chassis_mappings.find_mapping_by_l1_swi_ip(swi_info.swi_id)
         if not swi_server_info or not swi_server_info.server_super_pod_id:
-            DIAG_LOGGER.warning(f"交换机[{swi_info.swi_id}]与服务器映射关系缺失")
+            DIAG_LOGGER.warning("交换机[%s]与服务器映射关系缺失", swi_info.swi_id)
             return diag_results
 
         swi_lcne_infos = self.lcne_infos.get(swi_server_info.server_super_pod_id)
         if not swi_lcne_infos:
-            DIAG_LOGGER.warning(f"交换机[{swi_info.swi_id}]端口信息采集缺失")
+            DIAG_LOGGER.warning("交换机[%s]端口信息采集缺失", swi_info.swi_id)
             return diag_results
         for interface in rx_timeout_interfaces:
             lcne_info = swi_lcne_infos.get(interface.interface)
             if not lcne_info:
                 continue
             domain = [
+                # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
                 Domain(DeviceType.SWITCH.value, swi_info.swi_id),
-                Domain(DeviceType.SWI_PORT.value, str(lcne_info))
+                Domain(DeviceType.SWI_PORT.value, str(lcne_info)),
             ]
             if self.check_long_link_down(swi_info.date_time, lcne_info):
-                diag_results.append(DiagResult(domain, "交换机端口长期down", "排查交换机端口link状态信息"))
+                diag_results.append(
+                    DiagResult(
+                        domain,
+                        "交换机端口长期down",
+                        "排查交换机端口link状态信息",
+                        fault_type=constants.FAULT_TYPE_SWITCH,
+                    )
+                )
                 continue
             if self.check_link_up_down():
-                diag_results.append(DiagResult(domain, "交换机端口闪断", "排查交换机端口link状态信息"))
+                diag_results.append(
+                    DiagResult(
+                        domain, "交换机端口闪断", "排查交换机端口link状态信息", fault_type=constants.FAULT_TYPE_SWITCH
+                    )
+                )
                 continue
             if lcne_info.is_lane_error():
-                diag_results.append(DiagResult(domain, "交换机链路降lane", "排查交换机链路降lane"))
+                diag_results.append(
+                    DiagResult(
+                        domain, "交换机链路降lane", "排查交换机链路降lane", fault_type=constants.FAULT_TYPE_SWITCH
+                    )
+                )
                 continue
             # 设备异常
             domain = [
                 Domain(DeviceType.SERVER.value, swi_server_info.server_ip),
-                Domain(DeviceType.XPU.value, str(lcne_info))
+                Domain(DeviceType.XPU.value, str(lcne_info)),
             ]
-            diag_results.append(DiagResult(domain, "xpu设备异常", "排查对应端口所连CPU/NPU异常"))
+            diag_results.append(
+                DiagResult(domain, "xpu设备异常", "排查对应端口所连CPU/NPU异常", fault_type=constants.FAULT_TYPE_SWITCH)
+            )
         return diag_results
 
     def analyse(self) -> List[DiagResult]:
@@ -92,10 +110,10 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
             for rx_timeout_interface in rx_timeout_interfaces:
                 domain = [
                     Domain(DeviceType.SWITCH.value, swi_info.swi_id),
-                    Domain(DeviceType.SWI_PORT.value, rx_timeout_interface.interface)
+                    Domain(DeviceType.SWI_PORT.value, rx_timeout_interface.interface),
                 ]
                 fault_info = f"HCCS RX超时，超时次数：{rx_timeout_interface.rp_rx + rx_timeout_interface.lp_tx}"
                 suggestion = "交换机端口长期down、端口闪断、链路降lane或者对应端口所连XPU异常"
-                diag_results.append(DiagResult(domain, fault_info, suggestion))
+                diag_results.append(DiagResult(domain, fault_info, suggestion, fault_type=constants.FAULT_TYPE_SWITCH))
             diag_results.extend(self.rx_timeout_diag(rx_timeout_interfaces, swi_info))
         return diag_results

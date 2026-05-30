@@ -55,8 +55,11 @@ class PortSnrDestAnalyzer(Analyzer):
                 if port_snr.xpu and port_mapping.xpu_id:
                     peer_port = f"对端{port_snr.xpu}{port_mapping.xpu_id}端口，"
 
-                diag_res = DiagResult(domain,
-                                      f"{peer_port}lane {port_snr.lane_id} {check_res}",
-                                      "请检查端口是否脏污")
+                diag_res = DiagResult(
+                    domain,
+                    f"{peer_port}lane {port_snr.lane_id} {check_res}",
+                    "请检查端口是否脏污",
+                    fault_type=constants.FAULT_TYPE_SWITCH,
+                )
                 diag_results.append(diag_res)
         return diag_results

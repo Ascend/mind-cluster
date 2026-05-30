@@ -18,25 +18,23 @@
 import re
 from typing import List
 
+from ascend_fd_tk.core.common import constants
 from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
-from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
 from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
 
 
 @register_analyzer
 class LaneReductionAnalyzer(Analyzer):
-    _ERR_CODE = 0xf10509
+    _ERR_CODE = 0xF10509
 
     _IF_PATTERN = re.compile(r"EntPhysicalName=([^,]+)")
     _LANE_REDUCTION_DESC_TEMPLATE = "端口{}发生降lane"
 
-    def __init__(self, cluster_info: ClusterInfoCache):
-        super().__init__(cluster_info)
-
     def analyse(self) -> List[DiagResult]:
         result = []
+        # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
         for swi_info in self.cluster_info.swis_info.values():
             interface_full_infos = swi_info.interface_full_infos
             for alarm_info in swi_info.active_alarm_info:
@@ -53,7 +51,12 @@ class LaneReductionAnalyzer(Analyzer):
                 _, peer_info = self.cluster_info.find_peer_swi_interface_info_by_if_info(if_info)
                 if peer_info:
                     fault_desc += f"，对端端口信息：{peer_info.get_inspection_interface_info()}"
-                res = DiagResult([Domain(DeviceType.SWITCH, swi_info.swi_id), Domain(DeviceType.SWI_PORT, if_name)],
-                                 fault_info=fault_desc, suggestion=f"请检查端口", err_code=alarm_info.alarm_id)
+                res = DiagResult(
+                    [Domain(DeviceType.SWITCH, swi_info.swi_id), Domain(DeviceType.SWI_PORT, if_name)],
+                    fault_info=fault_desc,
+                    suggestion="请检查端口",
+                    err_code=alarm_info.alarm_id,
+                    fault_type=constants.FAULT_TYPE_SWITCH,
+                )
                 result.append(res)
         return result

@@ -16,23 +16,20 @@
 # ==============================================================================
 from typing import List
 
-from ascend_fd_tk.core.common import diag_enum
+from ascend_fd_tk.core.common import constants, diag_enum
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
-from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
 from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
 from ascend_fd_tk.core.model.host import HostInfo
 
 
 class HostLoopbackAnalyzer(Analyzer):
-
-    def __init__(self, cluster_info: ClusterInfoCache):
-        super().__init__(cluster_info)
-
     @staticmethod
     def get_npu_chip_domain(ip, npu_id, chip_id):
-        return [Domain(diag_enum.DeviceType.SERVER, ip),
-                Domain(diag_enum.DeviceType.NPU, npu_id),
-                Domain(diag_enum.DeviceType.CHIP, chip_id), ]
+        return [
+            Domain(diag_enum.DeviceType.SERVER, ip),
+            Domain(diag_enum.DeviceType.NPU, npu_id),
+            Domain(diag_enum.DeviceType.CHIP, chip_id),
+        ]
 
     def analyse(self) -> List[DiagResult]:
         hosts_info = self.cluster_info.hosts_info
@@ -50,15 +47,21 @@ class HostLoopbackAnalyzer(Analyzer):
             if not loopback_info.host_input_enable:
                 return results
             if not loopback_info.host_input_link_stat.is_first_record_up():
-                results.append(DiagResult(
-                    self.get_npu_chip_domain(host_info.host_id, loopback_info.npu_id, loopback_info.chip_phy_id),
-                    "本端环回类型1后端口down，诊断为本端故障",
-                    "建议交叉模组、线缆，如果有CDR板需要做CDR环回"
-                ))
+                results.append(
+                    DiagResult(
+                        self.get_npu_chip_domain(host_info.host_id, loopback_info.npu_id, loopback_info.chip_phy_id),
+                        "本端环回类型1后端口down，诊断为本端故障",
+                        "建议交叉模组、线缆，如果有CDR板需要做CDR环回",
+                        fault_type=constants.FAULT_TYPE_HOST,
+                    )
+                )
             if loopback_info.media_output_enable and loopback_info.media_output_link_stat.is_first_record_up():
-                results.append(DiagResult(
-                    self.get_npu_chip_domain(host_info.host_id, loopback_info.npu_id, loopback_info.chip_phy_id),
-                    "本端环回类型1后端口up，环回类型2后端口down，诊断为本端端口光模块故障/赃污",
-                    "建议排查本端端口光模块故障/赃污"
-                ))
+                results.append(
+                    DiagResult(
+                        self.get_npu_chip_domain(host_info.host_id, loopback_info.npu_id, loopback_info.chip_phy_id),
+                        "本端环回类型1后端口up，环回类型2后端口down，诊断为本端端口光模块故障/赃污",
+                        "建议排查本端端口光模块故障/赃污",
+                        fault_type=constants.FAULT_TYPE_HOST,
+                    )
+                )
         return results

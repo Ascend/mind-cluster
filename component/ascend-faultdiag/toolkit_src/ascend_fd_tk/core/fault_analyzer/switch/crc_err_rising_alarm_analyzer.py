@@ -18,16 +18,15 @@
 import re
 from typing import List
 
+from ascend_fd_tk.core.common import constants
 from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
-from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
 from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
 
 
 class CrcErrInfo(JsonObj):
-
     def __init__(self, err_statistics="", crc_threshold="", crc_interval="", if_name=""):
         self.err_statistics = err_statistics
         self.crc_threshold = crc_threshold
@@ -37,18 +36,18 @@ class CrcErrInfo(JsonObj):
 
 @register_analyzer
 class CrcRisingCheckItem(Analyzer):
-    _ERR_CODE = 0x081300bc
-    _CRC_ERR_INFO_PATTERN = re.compile(r"hwIfMonitorCrcErrorStatistics=(?P<err_statistics>\d+), *"
-                                       r"hwIfMonitorCrcErrorThreshold=(?P<crc_threshold>\d+), *"
-                                       r"hwIfMonitorCrcErrorInterval=(?P<crc_interval>\d+), *"
-                                       r"(hwIfMonitorName|EthPhysicalName|InterfaceName)=(?P<if_name>[^ ,)]+)")
+    _ERR_CODE = 0x081300BC
+    _CRC_ERR_INFO_PATTERN = re.compile(
+        r"hwIfMonitorCrcErrorStatistics=(?P<err_statistics>\d+), *"
+        r"hwIfMonitorCrcErrorThreshold=(?P<crc_threshold>\d+), *"
+        r"hwIfMonitorCrcErrorInterval=(?P<crc_interval>\d+), *"
+        r"(hwIfMonitorName|EthPhysicalName|InterfaceName)=(?P<if_name>[^ ,)]+)"
+    )
     _ERR_DESC_TEMPLATE = "端口{} CRC快速增长告警统计次数{}，阈值{}"
-
-    def __init__(self, cluster_info: ClusterInfoCache):
-        super().__init__(cluster_info)
 
     def analyse(self) -> List[DiagResult]:
         result = []
+        # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
         for swi_info in self.cluster_info.swis_info.values():
             interface_full_infos = swi_info.interface_full_infos
             for alarm_info in swi_info.active_alarm_info:
@@ -62,16 +61,25 @@ class CrcRisingCheckItem(Analyzer):
                 if not if_info:
                     continue
                 local_if_info = if_info.get_inspection_interface_info()
-                fault_info = self._ERR_DESC_TEMPLATE.format(crc_err_info.if_name, crc_err_info.err_statistics,
-                                                            crc_err_info.crc_threshold)
+                fault_info = self._ERR_DESC_TEMPLATE.format(
+                    crc_err_info.if_name, crc_err_info.err_statistics, crc_err_info.crc_threshold
+                )
                 _, peer_interface_info = self.cluster_info.find_peer_swi_interface_info_by_if_info(if_info)
                 if peer_interface_info:
-                    fault_info += f"，对端设备{peer_interface_info.device_name}，对端端口{peer_interface_info.interface}"
+                    fault_info += (
+                        f"，对端设备{peer_interface_info.device_name}，对端端口{peer_interface_info.interface}"
+                    )
                 domain = [
                     Domain(DeviceType.SWITCH, local_if_info.device_name),
-                    Domain(DeviceType.SWI_PORT, local_if_info.interface)
+                    Domain(DeviceType.SWI_PORT, local_if_info.interface),
                 ]
                 result.append(
-                    DiagResult(domain, fault_info=fault_info, suggestion="请检查端口", err_code=alarm_info.alarm_id)
+                    DiagResult(
+                        domain,
+                        fault_info=fault_info,
+                        suggestion="请检查端口",
+                        err_code=alarm_info.alarm_id,
+                        fault_type=constants.FAULT_TYPE_SWITCH,
+                    )
                 )
         return result

@@ -18,10 +18,10 @@
 import re
 from typing import List
 
+from ascend_fd_tk.core.common import constants
 from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
-from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
 from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
 from ascend_fd_tk.core.model.switch import SwitchInfo
 
@@ -30,9 +30,6 @@ from ascend_fd_tk.core.model.switch import SwitchInfo
 class OpticalInvalidAnalyzer(Analyzer):
     _LOS_ALARM_ERR_CODE = 0x8130059
     _LOS_ALARM_ERR_PATTERN = re.compile(r"EntPhysicalName=([^,]+).*Reason=([^)]+)")
-
-    def __init__(self, cluster_info: ClusterInfoCache):
-        super().__init__(cluster_info)
 
     def analyse(self) -> List[DiagResult]:
         results = []
@@ -55,7 +52,12 @@ class OpticalInvalidAnalyzer(Analyzer):
                 Domain(DeviceType.SWITCH, switch_info.swi_id),
                 Domain(DeviceType.SWI_PORT, ifname),
             ]
-            res = DiagResult(domain, f"光模块链路Los告警，原因：{reason}", "请检查光模块",
-                             err_code=alarm_info.alarm_id)
+            res = DiagResult(
+                domain,
+                f"光模块链路Los告警，原因：{reason}",
+                "请检查光模块",
+                err_code=alarm_info.alarm_id,
+                fault_type=constants.FAULT_TYPE_SWITCH,
+            )
             results.append(res)
         return results

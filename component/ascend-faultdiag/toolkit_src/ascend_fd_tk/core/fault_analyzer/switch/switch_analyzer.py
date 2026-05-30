@@ -17,6 +17,7 @@
 import re
 from typing import List, Dict, Set
 
+from ascend_fd_tk.core.common import constants
 from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
@@ -31,10 +32,18 @@ _DIAG_LOGGER = logger.DIAG_LOGGER
 
 
 class AbnormalInfo:
-    def __init__(self, switch_name: str, interface_name: str, rx_power_alarm: List[str] = None,
-                 tx_power_alarm: List[str] = None, rx_power_warn: List[str] = None,
-                 tx_power_warn: List[str] = None, snr: List[str] = None, bias_warn: List[str] = None,
-                 bias_alarm: List[str] = None):
+    def __init__(
+        self,
+        switch_name: str,
+        interface_name: str,
+        rx_power_alarm: List[str] = None,
+        tx_power_alarm: List[str] = None,
+        rx_power_warn: List[str] = None,
+        tx_power_warn: List[str] = None,
+        snr: List[str] = None,
+        bias_warn: List[str] = None,
+        bias_alarm: List[str] = None,
+    ):
         self.switch_name = switch_name
         self.interface_name = interface_name
         self.rx_power_alarm = rx_power_alarm or []
@@ -52,16 +61,9 @@ class SwitchAnalyzer(Analyzer):
 
     def __init__(self, cluster_info: ClusterInfoCache):
         super().__init__(cluster_info)
-        self.switches_info_by_name = self.init_switches_info()
         self.analyzed_switch_names: Set[str] = set()
+        # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
         self.fault_check = OpticalFaultChecker(cluster_info.get_threshold())
-
-    def init_switches_info(self):
-        # 获取交换机名称和交换机信息映射关系
-        switches_info_by_name = {}
-        for switch_info in self.cluster_info.swis_info.values():
-            switches_info_by_name.update({switch_info.name: switch_info})
-        return switches_info_by_name
 
     def analyse(self) -> List[DiagResult]:
         diag_results = []
@@ -87,8 +89,9 @@ class SwitchAnalyzer(Analyzer):
             self.analyzed_switch_names.add(analyzed_tag)
             local_domain = [Domain(DeviceType.SWITCH, switch_info.name), Domain(DeviceType.SWI_PORT, interface)]
             # 获取对端信息（对端交换机信息+对端交换机端口光模块信息）
-            remote_optical_module_info, remote_domain = self.get_remote_info(interface_mapping_by_name, interface,
-                                                                             switch_info.name)
+            remote_optical_module_info, remote_domain = self.get_remote_info(
+                interface_mapping_by_name, interface, switch_info.name
+            )
             if not remote_optical_module_info and remote_domain is None:
                 # 与host侧相连或者已经分析
                 continue
@@ -101,47 +104,66 @@ class SwitchAnalyzer(Analyzer):
             res_list.extend(self.fault_analyze_single_ended(optical_module_info, domain_list))
         return res_list
 
-    def get_remote_info(self, interface_mapping_by_name: Dict[str, DeviceInterface], local_interface_name: str,
-                        switch_name: str):
+    def get_remote_info(
+        self, interface_mapping_by_name: Dict[str, DeviceInterface], local_interface_name: str, switch_name: str
+    ):
         remove_device = interface_mapping_by_name.get(local_interface_name)
         if not remove_device:
-            _DIAG_LOGGER.warning(f"未收集到交换机[{switch_name}]端口[{local_interface_name}]的对端信息")
+            _DIAG_LOGGER.warning("未收集到交换机[%s]端口[%s]的对端信息", switch_name, local_interface_name)
             return None, []
-        remote_domain = [Domain(DeviceType.SWITCH, remove_device.device_name),
-                         Domain(DeviceType.SWI_PORT, remove_device.interface)]
+        remote_domain = [
+            Domain(DeviceType.SWITCH, remove_device.device_name),
+            Domain(DeviceType.SWI_PORT, remove_device.interface),
+        ]
         if self._MAC_DIR_REGEX.match(remove_device.interface):
             # 与host侧相连
             return None, None
         remote_analyzed_tag = f"{remove_device.device_name}:{remove_device.interface}"
         if remote_analyzed_tag in self.analyzed_switch_names:
             return None, None
-        remote_switch = self.switches_info_by_name.get(remove_device.device_name)
+        remote_switch = self.cluster_info.find_peer_swi(remove_device.device_name)
         if not remote_switch:
             # 有对端信息但未找到对端交换机，日志警告
-            _DIAG_LOGGER.warning(f"未收集到对端交换机[{remove_device.device_name}]信息")
+            _DIAG_LOGGER.warning("未收集到对端交换机[%s]信息", remove_device.device_name)
             return None, remote_domain
         interface_full_info = remote_switch.interface_full_infos.get(remove_device.interface)
         remote_optical_module_info = interface_full_info.get_optical_module_info()
         if not remote_optical_module_info:
             _DIAG_LOGGER.warning(
-                f"未收集到对端交换机[{remove_device.device_name}]端口[{remove_device.interface}]的光模块信息"
+                "未收集到对端交换机[%s]端口[%s]的光模块信息", remove_device.device_name, remove_device.interface
             )
         return remote_optical_module_info, remote_domain
 
     def fault_analyze_single_ended(self, optical_module_info: OpticalModuleInfo, domain_list: List[Domain]):
         res_list = []
-        res_list.extend(self.fault_check.power_analyze_single_ended(optical_module_info, domain_list))
-        res_list.extend(self.fault_check.snr_analyze_single_ended(optical_module_info, domain_list))
-        res_list.extend(self.fault_check.bias_analyze_single_ended(optical_module_info, domain_list))
+        res_list.extend(
+            self.fault_check.power_analyze_single_ended(
+                optical_module_info, domain_list, fault_type=constants.FAULT_TYPE_SWITCH
+            )
+        )
+        res_list.extend(
+            self.fault_check.snr_analyze_single_ended(
+                optical_module_info, domain_list, fault_type=constants.FAULT_TYPE_SWITCH
+            )
+        )
+        res_list.extend(
+            self.fault_check.bias_analyze_single_ended(
+                optical_module_info, domain_list, fault_type=constants.FAULT_TYPE_SWITCH
+            )
+        )
         return res_list
 
-    def fault_analyze_double_ended(self, local_info: OpticalModuleInfo, remote_info: OpticalModuleInfo,
-                                   domain_list: List[Domain]) -> List[DiagResult]:
+    def fault_analyze_double_ended(
+        self, local_info: OpticalModuleInfo, remote_info: OpticalModuleInfo, domain_list: List[Domain]
+    ) -> List[DiagResult]:
         res_list = []
-        # power分析
-        res_list.extend(self.fault_check.power_analyze(local_info, remote_info, domain_list))
-        # snr分析
-        res_list.extend(self.fault_check.snr_analyze(local_info, remote_info, domain_list))
-        # 电流分析
-        res_list.extend(self.fault_check.bias_analyze(local_info, remote_info, domain_list))
+        res_list.extend(
+            self.fault_check.power_analyze(local_info, remote_info, domain_list, fault_type=constants.FAULT_TYPE_SWITCH)
+        )
+        res_list.extend(
+            self.fault_check.snr_analyze(local_info, remote_info, domain_list, fault_type=constants.FAULT_TYPE_SWITCH)
+        )
+        res_list.extend(
+            self.fault_check.bias_analyze(local_info, remote_info, domain_list, fault_type=constants.FAULT_TYPE_SWITCH)
+        )
         return res_list

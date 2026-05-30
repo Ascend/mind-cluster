@@ -16,21 +16,17 @@
 # ==============================================================================
 from typing import List
 
-from ascend_fd_tk.core.common import diag_enum
+from ascend_fd_tk.core.common import constants
+from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.common.constants import BIT_ERROR_RATE_LIMIT
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
-from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
 from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
 from ascend_fd_tk.utils.helpers import to_float
 
 
 @register_analyzer
 class BitErrRateAnalyzer(Analyzer):
-
-    def __init__(self, cluster_info: ClusterInfoCache):
-        super().__init__(cluster_info)
-
     def analyse(self) -> List[DiagResult]:
         diag_results = []
         for swi in self.cluster_info.swis_info.values():
@@ -39,12 +35,15 @@ class BitErrRateAnalyzer(Analyzer):
                 if not success or bit_err_rate_f <= BIT_ERROR_RATE_LIMIT:
                     continue
                 domain = [
-                    Domain(diag_enum.DeviceType.SWITCH.value, f"{swi.name} {swi.swi_id}"),
-                    Domain(diag_enum.DeviceType.SWI_PORT.value, f"{data.interface_name}"),
+                    Domain(DeviceType.SWITCH.value, f"{swi.name} {swi.swi_id}"),
+                    Domain(DeviceType.SWI_PORT.value, f"{data.interface_name}"),
                 ]
-                diag_results.append(DiagResult(
-                    domain,
-                    f"BER误码率{data.bit_err_rate}大于阈值{BIT_ERROR_RATE_LIMIT}。",
-                    "请检查端口是否脏污")
+                diag_results.append(
+                    DiagResult(
+                        domain,
+                        f"BER误码率{data.bit_err_rate}大于阈值{BIT_ERROR_RATE_LIMIT}。",
+                        "请检查端口是否脏污",
+                        fault_type=constants.FAULT_TYPE_SWITCH,
+                    )
                 )
         return diag_results

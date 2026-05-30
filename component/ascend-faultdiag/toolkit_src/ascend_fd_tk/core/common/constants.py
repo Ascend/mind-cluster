@@ -69,5 +69,10 @@ SYS_INT_MIN_SIZE = -sys.maxsize - 1
 SYS_FLOAT_MAX_SIZE = float('inf')
 SYS_FLOAT_MIN_SIZE = float('-inf')
 
+# 故障所属类型
+FAULT_TYPE_BMC = "bmc"
+FAULT_TYPE_HOST = "host"
+FAULT_TYPE_SWITCH = "switch"
+
 # 通用路径
 TOOL_BMC_LOG_COLLECT_DIR_NAME = "dump_info"

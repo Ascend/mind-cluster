@@ -16,7 +16,7 @@
 # ==============================================================================
 from typing import List
 
-from ascend_fd_tk.core.common import diag_enum
+from ascend_fd_tk.core.common import constants, diag_enum
 from ascend_fd_tk.core.common.constants import KEY_IIC_ERROR, KEY_UNCORR_CW, UNCORR_CW_THRESHOLD, KEY_PCS_LINK
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
@@ -38,9 +38,11 @@ class HostAnalyzer(Analyzer):
 
     @staticmethod
     def get_npu_chip_domain(ip, npu_id, chip_id):
-        return [Domain(diag_enum.DeviceType.SERVER, ip),
-                Domain(diag_enum.DeviceType.NPU, npu_id),
-                Domain(diag_enum.DeviceType.CHIP, chip_id)]
+        return [
+            Domain(diag_enum.DeviceType.SERVER, ip),
+            Domain(diag_enum.DeviceType.NPU, npu_id),
+            Domain(diag_enum.DeviceType.CHIP, chip_id),
+        ]
 
     @staticmethod
     def _analyze_optical_status(domain_list: List[Domain], npu_chip_info: NpuChipInfo) -> List[DiagResult]:
@@ -49,20 +51,41 @@ class HostAnalyzer(Analyzer):
             return []
         if not optical_info.is_optical_present():
             return [
-                DiagResult(domain_list, f"光模块未在位，状态：{optical_info.present or 'NA'}",
-                           "光模块可能松动，请重新插拔光模块")]
+                DiagResult(
+                    domain_list,
+                    f"光模块未在位，状态：{optical_info.present or 'NA'}",
+                    "光模块可能松动，请重新插拔光模块",
+                    fault_type=constants.FAULT_TYPE_HOST,
+                )
+            ]
         if optical_info.control_link_unreachable:
-            return [DiagResult(domain_list, "光模块Control link unreachable", "光模块可能故障，请联系技术支持人员")]
+            return [
+                DiagResult(
+                    domain_list,
+                    "光模块Control link unreachable",
+                    "光模块可能故障，请联系技术支持人员",
+                    fault_type=constants.FAULT_TYPE_HOST,
+                )
+            ]
         if not optical_info.is_high_power_enable():
             fault_info = f"光模块处于低功率模式，high power enable reg:{optical_info.high_power_enable_reg}"
-            return [DiagResult(domain_list, fault_info, "光模块处于低功率模式，建议打开高功率模式")]
+            return [
+                DiagResult(
+                    domain_list,
+                    fault_info,
+                    "光模块处于低功率模式，建议打开高功率模式",
+                    fault_type=constants.FAULT_TYPE_HOST,
+                )
+            ]
 
         dfx_cfg_info = npu_chip_info.hccn_dfx_cfg
         if not dfx_cfg_info:
             return []
         if dfx_cfg_info.is_tx_disable():
             fault_info = f"光模块处于关光状态，tx disable status：{dfx_cfg_info.tx_disable_status}"
-            return [DiagResult(domain_list, fault_info, "建议保证光模块为开光状态")]
+            return [
+                DiagResult(domain_list, fault_info, "建议保证光模块为开光状态", fault_type=constants.FAULT_TYPE_HOST)
+            ]
         return []
 
     @staticmethod
@@ -113,7 +136,7 @@ class HostAnalyzer(Analyzer):
         abn_power_infos = "\n".join(abn_rx_power_infos + abn_tx_power_infos)
         fault_info = f"光模块光功率异常，{abn_power_infos}"
         suggestion = "光功率异常，建议排查Los/Lol"
-        return [DiagResult(domain_list, fault_info, suggestion)]
+        return [DiagResult(domain_list, fault_info, suggestion, fault_type=constants.FAULT_TYPE_HOST)]
 
     def _analyze_optical_snr(self, domain_list: List[Domain], optical_info: OpticalModuleInfo) -> List[DiagResult]:
         diag_results = []
@@ -123,12 +146,12 @@ class HostAnalyzer(Analyzer):
         if abn_snr_infos:
             fault_info = f"光模块SNR异常：\n{abn_snr_infos}"
             suggestion = "建议更换交换机侧光模块"
-            diag_results.append(DiagResult(domain_list, fault_info, suggestion))
+            diag_results.append(DiagResult(domain_list, fault_info, suggestion, fault_type=constants.FAULT_TYPE_HOST))
         diff_value_desc = optical_info.get_lane_diff_desc()
         if diff_value_desc:
             fault_info = f"光模块SNR LANE间差值异常：{diff_value_desc}"
             suggestion = "光模块SNR LANE间差值异常，优先排查SNR异常的LANE"
-            diag_results.append(DiagResult(domain_list, fault_info, suggestion))
+            diag_results.append(DiagResult(domain_list, fault_info, suggestion, fault_type=constants.FAULT_TYPE_HOST))
         return diag_results
 
     def _analyze_cdr(self, domain_list: List[Domain], npu_chip_info: NpuChipInfo) -> List[DiagResult]:
@@ -136,22 +159,27 @@ class HostAnalyzer(Analyzer):
         cdr_snr_info = npu_chip_info.cdr_snr_info
         if not cdr_snr_info:
             return diag_results
-        fault_info = cdr_snr_info.get_snr_abnormal_desc(self._threshold.CDR_HOST_SNR_DB,
-                                                        self._threshold.CDR_MEDIA_SNR_DB)
+        fault_info = cdr_snr_info.get_snr_abnormal_desc(
+            self._threshold.CDR_HOST_SNR_DB, self._threshold.CDR_MEDIA_SNR_DB
+        )
         if not fault_info:
             return diag_results
         suggestion = "CDR SNR异常，请根据SNR异常排查NPU侧或者光模块"
-        diag_results.append(DiagResult(domain_list, fault_info, suggestion))
+        diag_results.append(DiagResult(domain_list, fault_info, suggestion, fault_type=constants.FAULT_TYPE_HOST))
         return diag_results
 
-    def _analyze_uncorr_cw_cnt_fault(self, domain_list: List[Domain], uncorr_cw_cnt_infos: List[FindResult],
-                                     npu_chip_info: NpuChipInfo) -> List[DiagResult]:
+    def _analyze_uncorr_cw_cnt_fault(
+        self, domain_list: List[Domain], uncorr_cw_cnt_infos: List[FindResult], npu_chip_info: NpuChipInfo
+    ) -> List[DiagResult]:
         diag_results = []
         uncorr_cw_cnt_list = []
         for uncorr_cw_cnt_info in uncorr_cw_cnt_infos:
             uncorr_cw_cnt = UncorrCwCntInfo.from_dict(uncorr_cw_cnt_info.info_dict)
-            if (uncorr_cw_cnt.device_id != npu_chip_info.chip_phy_id or uncorr_cw_cnt.die_id != npu_chip_info.chip_id or
-                    uncorr_cw_cnt.count_check()):
+            if (
+                uncorr_cw_cnt.device_id != npu_chip_info.chip_phy_id
+                or uncorr_cw_cnt.die_id != npu_chip_info.chip_id
+                or uncorr_cw_cnt.count_check()
+            ):
                 continue
             uncorr_cw_cnt_list.append(uncorr_cw_cnt)
         if not uncorr_cw_cnt_list:
@@ -162,10 +190,14 @@ class HostAnalyzer(Analyzer):
             second_item = DateObj(uncorr_cw_cnt_list[i + self.NUM_TWO].date_time, "%Y-%m-%d-%H:%M:%S.%f")
             # 连续3次>10、24小时出现多次>10且伴随闪断、24小时出现1~2次>100且伴随闪断
             if first_item.diff_seconds(second_item) < UNCORR_CW_THRESHOLD:
-                fault_info = (f"持续连续3次出现uncorr_cw_cnt > 10，发生时间：{uncorr_cw_cnt_list[i].date_time}，"
-                              f"{uncorr_cw_cnt_list[i + 1].date_time}，{uncorr_cw_cnt_list[i + self.NUM_TWO].date_time}")
+                fault_info = (
+                    f"持续连续3次出现uncorr_cw_cnt > 10，发生时间：{uncorr_cw_cnt_list[i].date_time}，"
+                    f"{uncorr_cw_cnt_list[i + 1].date_time}，{uncorr_cw_cnt_list[i + self.NUM_TWO].date_time}"
+                )
                 suggestion = "连续3次出现uncorr_cw_cnt > 10，请优先排查光纤脏污，然后排查两端光模块"
-                diag_results.append(DiagResult(domain_list, fault_info, suggestion))
+                diag_results.append(
+                    DiagResult(domain_list, fault_info, suggestion, fault_type=constants.FAULT_TYPE_HOST)
+                )
                 return diag_results
         return diag_results
 
@@ -182,8 +214,12 @@ class HostAnalyzer(Analyzer):
             if npu_chip_info:
                 domain_list = self.get_npu_chip_domain(host_info.host_id, npu_chip_info.npu_id, chip_phy_id)
             else:
-                domain_list = [Domain(diag_enum.DeviceType.SERVER, host_info.host_id),
-                               Domain(diag_enum.DeviceType.CHIP, chip_phy_id)]
+                domain_list = [
+                    Domain(diag_enum.DeviceType.SERVER, host_info.host_id),
+                    Domain(diag_enum.DeviceType.CHIP, chip_phy_id),
+                ]
             fault_info = "检测到IIC异常：trans status[0x40]，error status[0x10]，NPU板载光模块转接器可能存在故障"
-            diag_results.append(DiagResult(domain_list, fault_info, "建议更换NPU板载光模块转接器"))
+            diag_results.append(
+                DiagResult(domain_list, fault_info, "建议更换NPU板载光模块转接器", fault_type=constants.FAULT_TYPE_HOST)
+            )
         return diag_results

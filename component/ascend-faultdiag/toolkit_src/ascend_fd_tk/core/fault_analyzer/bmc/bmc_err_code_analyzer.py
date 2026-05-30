@@ -16,6 +16,7 @@
 # ==============================================================================
 from typing import List
 
+from ascend_fd_tk.core.common import constants
 from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
@@ -27,7 +28,6 @@ from ascend_fd_tk.utils import helpers
 
 @register_analyzer
 class BmcErrCodeAnalyzer(Analyzer):
-
     def __init__(self, cluster_info: ClusterInfoCache):
         super().__init__(cluster_info)
         self._err_code_event_map = dict()
@@ -61,7 +61,13 @@ class BmcErrCodeAnalyzer(Analyzer):
                 fault_info = self._get_fault_info(bmc_info.sn_num, err_code_event, bmc_sel)
                 domain_list = self._get_domain_list(bmc_info.bmc_id, err_code_event, bmc_sel.event_description)
                 results.append(
-                    DiagResult(domain_list, fault_info, err_code_event.handle_suggestion, bmc_sel.event_code)
+                    DiagResult(
+                        domain_list,
+                        fault_info,
+                        err_code_event.handle_suggestion,
+                        bmc_sel.event_code,
+                        fault_type=constants.FAULT_TYPE_BMC,
+                    )
                 )
         return results
 
@@ -78,6 +84,8 @@ class BmcErrCodeAnalyzer(Analyzer):
         host_info = self.cluster_info.find_host_info_by_sn_num(sn_num)
         if host_info:
             fault_info_list.append(f"{DeviceType.SERVER.value}{host_info.host_id}:")
-        fault_info_list.append(f"{err_code_event.err_desc}，\n原始故障描述：{bmc_sel.event_description}，"
-                               f"\n故障发生时间：{bmc_sel.generation_time}")
+        fault_info_list.append(
+            f"{err_code_event.err_desc}，\n原始故障描述：{bmc_sel.event_description}，"
+            f"\n故障发生时间：{bmc_sel.generation_time}"
+        )
         return "".join(fault_info_list)
