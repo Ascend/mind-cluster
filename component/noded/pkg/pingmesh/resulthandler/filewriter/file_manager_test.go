@@ -637,5 +637,361 @@ func TestSuperDeviceIDToIP(t *testing.T) {
 		convey.Convey("should return empty string for invalid input", func() {
 			convey.So(superDeviceIDToIP("abc"), convey.ShouldEqual, "")
 		})
+		convey.Convey("should return valid IP for valid sdid", func() {
+			result := superDeviceIDToIP(sdid1)
+			convey.So(result, convey.ShouldNotBeEmpty)
+			convey.So(result, convey.ShouldStartWith, "192.")
+		})
+	})
+}
+
+func TestGetWriter(t *testing.T) {
+	convey.Convey("Test GetWriter", t, func() {
+		convey.Convey("should return nil when manager is nil", func() {
+			var m *manager = nil
+			convey.So(m.GetWriter(), convey.ShouldBeNil)
+		})
+		convey.Convey("should return writer when manager is not nil", func() {
+			logger := &hwlog.CustomLogger{}
+			patch := patchNewCustomLogger(logger, nil)
+			defer patch.Reset()
+			cfg := &Config{Path: "testPath", SuperPodId: superPod0, ServerIndex: serverIndex0}
+			fm := New(cfg)
+			convey.So(fm.GetWriter(), convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func TestHandlePingMeshInfoNilManager(t *testing.T) {
+	convey.Convey("Test HandlePingMeshInfo with nil manager", t, func() {
+		var m *manager = nil
+		err := m.HandlePingMeshInfo(&types.HccspingMeshResult{})
+		convey.So(err, convey.ShouldNotBeNil)
+	})
+}
+
+func TestWriteForCard(t *testing.T) {
+	convey.Convey("Test writeForCard", t, func() {
+		m := makeManager()
+		destAddrList := []types.PingItem{
+			{
+				SrcType:      0,
+				DstType:      0,
+				PktSize:      common.MinPktSize,
+				SrcCardPhyId: physicID1Int,
+				SrcAddr:      sdid1,
+				DstAddr:      physicID2Ip1,
+			},
+		}
+		infos := map[uint]*common.HccspingMeshInfo{
+			taskID0: mockHccspingMeshInfo(),
+		}
+		m.writeForCard(physicID1, destAddrList, infos)
+	})
+}
+
+func TestWriteForCardWithNilInfo(t *testing.T) {
+	convey.Convey("Test writeForCard with nil info in infos map", t, func() {
+		m := makeManager()
+		destAddrList := []types.PingItem{
+			{
+				SrcType:      0,
+				DstType:      0,
+				PktSize:      common.MinPktSize,
+				SrcCardPhyId: physicID1Int,
+				SrcAddr:      physicID1Ip1,
+				DstAddr:      physicID2Ip1,
+			},
+		}
+		infos := map[uint]*common.HccspingMeshInfo{
+			taskID0: nil,
+		}
+		m.writeForCard(physicID1, destAddrList, infos)
+	})
+}
+
+func TestWriteForCardToCsv(t *testing.T) {
+	convey.Convey("Test writeForCardToCsv", t, func() {
+		m := makeManager()
+		destAddrList := []types.PingItem{
+			{
+				SrcType:      0,
+				DstType:      0,
+				PktSize:      common.MinPktSize,
+				SrcCardPhyId: physicID1Int,
+				SrcAddr:      physicID1Ip1,
+				DstAddr:      physicID2Ip1,
+			},
+		}
+		infos := map[uint]*common.HccspingMeshInfo{
+			taskID0: {
+				DstAddr:      []string{physicID2Ip1},
+				SucPktNum:    []uint{1},
+				FailPktNum:   []uint{1},
+				MaxTime:      []int{1},
+				MinTime:      []int{1},
+				AvgTime:      []int{1},
+				TP95Time:     []int{1},
+				ReplyStatNum: []int{1},
+				PingTotalNum: []int{1},
+				DestNum:      1,
+			},
+		}
+
+		var callCount int
+		patches := gomonkey.ApplyMethod(&csv.Writer{}, "Write", func(_ *csv.Writer, record []string) error {
+			callCount++
+			return nil
+		})
+		defer patches.Reset()
+
+		csvWriter := csv.NewWriter(nil)
+		m.writeForCardToCsv(csvWriter, destAddrList, infos)
+		convey.So(callCount, convey.ShouldBeGreaterThan, 0)
+	})
+}
+
+func TestWriteForCardToCsvWithNilInfo(t *testing.T) {
+	convey.Convey("Test writeForCardToCsv with nil info", t, func() {
+		m := makeManager()
+		destAddrList := []types.PingItem{}
+		infos := map[uint]*common.HccspingMeshInfo{
+			taskID0: nil,
+		}
+
+		var callCount int
+		patches := gomonkey.ApplyMethod(&csv.Writer{}, "Write", func(_ *csv.Writer, record []string) error {
+			callCount++
+			return nil
+		})
+		defer patches.Reset()
+
+		csvWriter := csv.NewWriter(nil)
+		m.writeForCardToCsv(csvWriter, destAddrList, infos)
+		convey.So(callCount, convey.ShouldEqual, 0)
+	})
+}
+
+func TestWriteForCardToCsvWriteError(t *testing.T) {
+	convey.Convey("Test writeForCardToCsv when csv write fails", t, func() {
+		m := makeManager()
+		destAddrList := []types.PingItem{
+			{
+				SrcType:      0,
+				DstType:      0,
+				PktSize:      common.MinPktSize,
+				SrcCardPhyId: physicID1Int,
+				SrcAddr:      physicID1Ip1,
+				DstAddr:      physicID2Ip1,
+			},
+		}
+		infos := map[uint]*common.HccspingMeshInfo{
+			taskID0: {
+				DstAddr:      []string{physicID2Ip1},
+				SucPktNum:    []uint{1},
+				FailPktNum:   []uint{1},
+				MaxTime:      []int{1},
+				MinTime:      []int{1},
+				AvgTime:      []int{1},
+				TP95Time:     []int{1},
+				ReplyStatNum: []int{1},
+				PingTotalNum: []int{1},
+				DestNum:      1,
+			},
+		}
+
+		var callCount int
+		patches := gomonkey.ApplyMethod(&csv.Writer{}, "Write", func(_ *csv.Writer, record []string) error {
+			callCount++
+			return errors.New("write failed")
+		})
+		defer patches.Reset()
+
+		csvWriter := csv.NewWriter(nil)
+		m.writeForCardToCsv(csvWriter, destAddrList, infos)
+		convey.So(callCount, convey.ShouldBeGreaterThan, 0)
+	})
+}
+
+func TestGetPingItemByDestAddrNotFound(t *testing.T) {
+	convey.Convey("Test getPingItemByDestAddr when dest addr not found", t, func() {
+		dstAddrList := []types.PingItem{
+			{
+				SrcType:      0,
+				DstType:      0,
+				PktSize:      common.MinPktSize,
+				SrcCardPhyId: physicID1Int,
+				SrcAddr:      physicID1Ip1,
+				DstAddr:      "other-addr",
+			},
+		}
+		_, err := getPingItemByDestAddr(dstAddrList, physicID2Ip1)
+		convey.So(err, convey.ShouldNotBeNil)
+	})
+}
+
+func TestGetPingItemByDestAddrWithSDID(t *testing.T) {
+	convey.Convey("Test getPingItemByDestAddr with sdid as dstAddr", t, func() {
+		testSdid := "1"
+		expectedIP := superDeviceIDToIP(testSdid)
+		dstAddrList := []types.PingItem{
+			{
+				SrcType:      0,
+				DstType:      0,
+				PktSize:      common.MinPktSize,
+				SrcCardPhyId: physicID1Int,
+				SrcAddr:      testSdid,
+				DstAddr:      testSdid,
+			},
+		}
+		item, err := getPingItemByDestAddr(dstAddrList, expectedIP)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(item.SrcAddr, convey.ShouldEqual, testSdid)
+	})
+}
+
+func TestPrepareResultFilePathsWithAppendMode(t *testing.T) {
+	convey.Convey("Test prepareResultFilePaths with appendMode true", t, func() {
+		m := makeManager()
+		appendMode := true
+		tmpDir := os.TempDir()
+		expectedCsv := filepath.Join(tmpDir, rasNetSubPath, fmt.Sprintf("super-pod-%s", m.superPodId),
+			fmt.Sprintf("ping_result_%s.csv", m.serverIndex))
+		expectedCsvBak := filepath.Join(tmpDir, rasNetSubPath, fmt.Sprintf("super-pod-%s", m.superPodId),
+			fmt.Sprintf("ping_result_%s.csv-bak", m.serverIndex))
+
+		patch := gomonkey.ApplyFunc(slownet.GetRasNetRootPath, func() (string, error) {
+			return tmpDir, nil
+		})
+		defer patch.Reset()
+
+		checkPathOutputs := []gomonkey.OutputCell{
+			{Values: gomonkey.Params{"path", nil}},
+			{Values: gomonkey.Params{"path", nil}},
+		}
+		patchCheck := gomonkey.ApplyFuncSeq(utils.CheckPath, checkPathOutputs)
+		defer patchCheck.Reset()
+
+		existOutputs := []gomonkey.OutputCell{
+			{Values: gomonkey.Params{true}},
+			{Values: gomonkey.Params{true}},
+		}
+		patchExists := gomonkey.ApplyFuncSeq(utils.IsLexist, existOutputs)
+		defer patchExists.Reset()
+
+		csvFile, csvBackFile, err := m.prepareResultFilePaths(appendMode)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(csvFile, convey.ShouldEqual, expectedCsv)
+		convey.So(csvBackFile, convey.ShouldEqual, expectedCsvBak)
+	})
+}
+
+func TestPrepareResultFilePathsRemoveFailed(t *testing.T) {
+	convey.Convey("Test prepareResultFilePaths when remove backup file fails", t, func() {
+		m := makeManager()
+		appendMode := false
+		tmpDir := os.TempDir()
+
+		patch := gomonkey.ApplyFunc(slownet.GetRasNetRootPath, func() (string, error) {
+			return tmpDir, nil
+		})
+		defer patch.Reset()
+
+		checkPathOutputs := []gomonkey.OutputCell{
+			{Values: gomonkey.Params{"path", nil}},
+		}
+		patchCheck := gomonkey.ApplyFuncSeq(utils.CheckPath, checkPathOutputs)
+		defer patchCheck.Reset()
+
+		patchExists := gomonkey.ApplyFuncReturn(utils.IsLexist, true)
+		defer patchExists.Reset()
+
+		patchRemove := gomonkey.ApplyFuncReturn(os.Remove, errors.New("remove failed"))
+		defer patchRemove.Reset()
+
+		csvFile, csvBackFile, err := m.prepareResultFilePaths(appendMode)
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(csvFile, convey.ShouldBeEmpty)
+		convey.So(csvBackFile, convey.ShouldBeEmpty)
+	})
+}
+
+func TestPrepareResultFilePathsRenameFailed(t *testing.T) {
+	convey.Convey("Test prepareResultFilePaths when rename file fails", t, func() {
+		m := makeManager()
+		appendMode := false
+		tmpDir := os.TempDir()
+
+		patch := gomonkey.ApplyFunc(slownet.GetRasNetRootPath, func() (string, error) {
+			return tmpDir, nil
+		})
+		defer patch.Reset()
+
+		checkPathOutputs := []gomonkey.OutputCell{
+			{Values: gomonkey.Params{"path", nil}},
+			{Values: gomonkey.Params{"path", nil}},
+		}
+		patchCheck := gomonkey.ApplyFuncSeq(utils.CheckPath, checkPathOutputs)
+		defer patchCheck.Reset()
+
+		existOutputs := []gomonkey.OutputCell{
+			{Values: gomonkey.Params{false}},
+			{Values: gomonkey.Params{true}},
+		}
+		patchExists := gomonkey.ApplyFuncSeq(utils.IsLexist, existOutputs)
+		defer patchExists.Reset()
+
+		patchRename := gomonkey.ApplyFuncReturn(os.Rename, errors.New("rename failed"))
+		defer patchRename.Reset()
+
+		csvFile, csvBackFile, err := m.prepareResultFilePaths(appendMode)
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(csvFile, convey.ShouldBeEmpty)
+		convey.So(csvBackFile, convey.ShouldBeEmpty)
+	})
+}
+
+func TestPrepareResultFilePathsCsvPathInvalid(t *testing.T) {
+	convey.Convey("Test prepareResultFilePaths when csv path is invalid", t, func() {
+		m := makeManager()
+		appendMode := false
+		tmpDir := os.TempDir()
+
+		patch := gomonkey.ApplyFunc(slownet.GetRasNetRootPath, func() (string, error) {
+			return tmpDir, nil
+		})
+		defer patch.Reset()
+
+		checkPathOutputs := []gomonkey.OutputCell{
+			{Values: gomonkey.Params{"path", nil}},
+			{Values: gomonkey.Params{"", errors.New("csv path invalid")}},
+		}
+		patchCheck := gomonkey.ApplyFuncSeq(utils.CheckPath, checkPathOutputs)
+		defer patchCheck.Reset()
+
+		patchExists := gomonkey.ApplyFuncReturn(utils.IsLexist, false)
+		defer patchExists.Reset()
+
+		csvFile, csvBackFile, err := m.prepareResultFilePaths(appendMode)
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(csvFile, convey.ShouldBeEmpty)
+		convey.So(csvBackFile, convey.ShouldBeEmpty)
+	})
+}
+
+func TestCalcAvgLossRate(t *testing.T) {
+	convey.Convey("Test calcAvgLossRate", t, func() {
+		convey.Convey("should return 0.000 when total is 0", func() {
+			result := calcAvgLossRate(0, 0)
+			convey.So(result, convey.ShouldEqual, "0.000")
+		})
+		convey.Convey("should return correct rate", func() {
+			result := calcAvgLossRate(8, 2)
+			convey.So(result, convey.ShouldEqual, "0.200")
+		})
+		convey.Convey("should return 1.000 when all fail", func() {
+			result := calcAvgLossRate(0, 10)
+			convey.So(result, convey.ShouldEqual, "1.000")
+		})
 	})
 }

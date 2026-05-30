@@ -136,17 +136,17 @@ func TestIsSame(t *testing.T) {
 func TestGetStatusByText(t *testing.T) {
 	convey.Convey("Test getStatusByText", t, func() {
 		convey.Convey("should handle DPC_INTERNAL_ERROR healthy", func() {
-			status, err := getStatusByText("DPC_INTERNAL_ERROR: 0", dpcInternalErrorKey)
+			status, err := getStatusByText("DPC_INTERNAL_ERROR: 0", common.DpcInternalErrorKey)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(status, convey.ShouldBeFalse)
 		})
 		convey.Convey("should handle DPC_INTERNAL_ERROR error", func() {
-			status, err := getStatusByText("DPC_INTERNAL_ERROR: -12", dpcInternalErrorKey)
+			status, err := getStatusByText("DPC_INTERNAL_ERROR: -12", common.DpcInternalErrorKey)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(status, convey.ShouldBeTrue)
 		})
 		convey.Convey("should handle invalid format", func() {
-			_, err := getStatusByText("invalid text", dpcInternalErrorKey)
+			_, err := getStatusByText("invalid text", common.DpcInternalErrorKey)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})

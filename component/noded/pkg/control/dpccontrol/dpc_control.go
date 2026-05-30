@@ -23,25 +23,9 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
-	"ascend-common/devmanager"
 	"nodeD/pkg/common"
+	"nodeD/pkg/device"
 	"nodeD/pkg/grpcclient/pubfault"
-)
-
-const (
-	publicFaultVersion    = "1.0"
-	faultResource         = "dpcStorage"
-	faultAssertionRecover = "recover"
-	faultAssertionOccur   = "occur"
-	faultType             = "Node"
-
-	dpcMemoryErrorId  = "DPC_MEMORY"
-	dpcProcessErrorId = "DPC_PROCESS"
-
-	processFaultCode = "110001020"
-	memoryFaultCode  = "110001021"
-
-	memoryErrorTimeOut = 10 * 60 * time.Second
 )
 
 var (
@@ -74,26 +58,26 @@ func (dc *Controller) Control(faultDevInfo *common.FaultAndConfigInfo) *common.F
 	newDpcProcessStatus := getNewDpcProcessStatus(newDpcStatusMap)
 	if newDpcProcessStatus != dpcProcessError || isFirst {
 		dpcProcessError = newDpcProcessStatus
-		faults = append(faults, constructDpcError(dpcProcessError, dpcProcessErrorId, processFaultCode))
+		faults = append(faults,
+			constructDpcError(dpcProcessError, common.DpcProcessErrorId, common.DpcProcessFaultCode))
 	}
 	newDpcMemoryStatus := getNewDpcMemoryStatus(newDpcStatusMap)
 	if newDpcMemoryStatus != dpcMemoryError || isFirst {
 		dpcMemoryError = newDpcMemoryStatus
-		faults = append(faults, constructDpcError(dpcMemoryError, dpcMemoryErrorId, memoryFaultCode))
+		faults = append(faults, constructDpcError(dpcMemoryError, common.DpcMemoryErrorId, common.DpcMemoryFaultCode))
 	}
 	isFirst = false
 	if len(faults) == 0 {
 		return faultDevInfo
 	}
-	if faultDevInfo.PubFaultInfo == nil {
-		faultDevInfo.PubFaultInfo = &pubfault.PublicFaultRequest{
-			Version:   publicFaultVersion,
-			Id:        string(uuid.NewUUID()),
-			Timestamp: time.Now().UnixMilli(),
-			Resource:  faultResource,
-		}
+	publicFault := &pubfault.PublicFaultRequest{
+		Version:   common.PublicFaultVersion,
+		Id:        string(uuid.NewUUID()),
+		Timestamp: time.Now().UnixMilli(),
+		Resource:  common.DpcFaultResource,
 	}
-	faultDevInfo.PubFaultInfo.Faults = faults
+	publicFault.Faults = faults
+	faultDevInfo.PubFaultInfo = append(faultDevInfo.PubFaultInfo, publicFault)
 	return faultDevInfo
 }
 
@@ -102,7 +86,7 @@ func getNewDpcMemoryStatus(newStatusMap map[int]common.DpcStatus) bool {
 	if dpcMemoryError {
 		for _, newStatus := range newStatusMap {
 			if newStatus.MemoryError || newStatus.MemoryErrorTime == 0 ||
-				time.Since(time.UnixMilli(newStatus.MemoryErrorTime)) < memoryErrorTimeOut {
+				time.Since(time.UnixMilli(newStatus.MemoryErrorTime)) < common.MemoryErrorTimeOut {
 				return true
 			}
 		}
@@ -111,7 +95,7 @@ func getNewDpcMemoryStatus(newStatusMap map[int]common.DpcStatus) bool {
 		// old status is false(healthy), should any new status is true and keep ten minutes, then return true(error)
 		for _, newStatus := range newStatusMap {
 			if newStatus.MemoryError && newStatus.MemoryErrorTime != 0 &&
-				time.Since(time.UnixMilli(newStatus.MemoryErrorTime)) >= memoryErrorTimeOut {
+				time.Since(time.UnixMilli(newStatus.MemoryErrorTime)) >= common.MemoryErrorTimeOut {
 				return true
 			}
 		}
@@ -120,15 +104,15 @@ func getNewDpcMemoryStatus(newStatusMap map[int]common.DpcStatus) bool {
 }
 
 func constructDpcError(errorStatus bool, id string, faultCode string) *pubfault.Fault {
-	assertion := faultAssertionRecover
+	assertion := common.FaultAssertionRecover
 	if errorStatus {
-		assertion = faultAssertionOccur
+		assertion = common.FaultAssertionOccur
 	}
 	nodeName := os.Getenv(api.NodeNameEnv)
 	return &pubfault.Fault{
 		Assertion:     assertion,
 		FaultId:       common.GenerateFaultID(nodeName, id),
-		FaultType:     faultType,
+		FaultType:     common.FaultType,
 		FaultCode:     faultCode,
 		FaultTime:     time.Now().UnixMilli(),
 		FaultLocation: map[string]string{},
@@ -142,14 +126,10 @@ func constructDpcError(errorStatus bool, id string, faultCode string) *pubfault.
 }
 
 func getNodeCardId() []int32 {
-	dm, err := devmanager.GetDeviceManager(common.ParamOption.DeviceResetTimeout)
-	if err != nil {
-		hwlog.RunLog.Errorf("get dev manager failed, err is %v", err)
-		return []int32{int32(0)}
-	}
+	dm := device.GetDeviceManager()
 	cardNum, cardList, err := dm.GetCardList()
 	if err != nil {
-		hwlog.RunLog.Error(err)
+		hwlog.RunLog.Errorf("get card list error %v", err)
 		return []int32{int32(0)}
 	}
 	if cardNum == 0 {

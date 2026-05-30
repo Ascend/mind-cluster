@@ -4,9 +4,9 @@
     "SubHealthFaultCodes":["010001001","010001004","310001005","210001007","210001008","210001009", "110001010",
       "110001020","110001021","010001002"],
     "SeparateNPUCodes":["220001001","220001002","220001003","220001004","220001005","220001006","220001007","120001001","020001001"],
-    "PreSeparateNPUCodes":[]
+    "PreSeparateNPUCodes":["110001022","110001023"]
   },
   "publicFaultResource": [
-    "CCAE","fd-online","pingmesh","Netmind", "dpcStorage"
+    "CCAE","fd-online","pingmesh","Netmind","dpcStorage","dtfsStorage"
   ]
 }
