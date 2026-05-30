@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
@@ -666,6 +666,12 @@ func (sJob SchedulerJob) validJobFn() *api.ValidateResult {
 		}
 		return nil
 	}
+
+	if (ascend910VirtualDevNameReg.MatchString(sJob.ReqNPUName) || ascend310VirtualDevNameReg.MatchString(sJob.ReqNPUName)) {
+		klog.V(util.LogInfoLev).Infof("%s valid ok, virtual device %s.", sJob.Name, sJob.ReqNPUName)
+		return nil
+	}
+
 	if result := sJob.policyHandler.ValidNPUJob(); result != nil {
 		klog.V(util.LogErrorLev).Infof("%s validNPUJob failed:%s.", PluginName, result.Message)
 		return result
