@@ -1,4 +1,4 @@
-/* Copyright(C) 2025-2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2025-2026. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -36,50 +36,44 @@ const (
 	opticalMetricsNum = 9
 )
 
+func newOpticalTestCase(name string, devType string, mainBoardId uint32, expected bool) isSupportedTestCase {
+	return isSupportedTestCase{
+		name:           name,
+		collectorType:  &OpticalCollector{},
+		devType:        devType,
+		mainBoardId:    mainBoardId,
+		isTrainingCard: true,
+		expectedResult: expected,
+	}
+}
+
 func init() {
 	colcommon.NpuDevPortInfos.SetPortMap(mockPorts)
 	colcommon.NpuDevPortInfos.Init()
 }
 
-// TestOpticalCollectorIsSupported test OpticalCollector IsSupported
+// TestOpticalCollectorIsSupported
 func TestOpticalCollectorIsSupported(t *testing.T) {
-	n := mockNewNpuCollector()
-	cases := []testCase{
-		buildTestCase("NetworkCollector: testIsSupported on Ascend910A3", &OpticalCollector{}, api.Ascend910A3, true),
-		buildTestCase("NetworkCollector: testIsSupported on Ascend910A5", &OpticalCollector{}, api.Ascend910A5, true),
+	npuCollector := mockNewNpuCollector()
+	testCases := []isSupportedTestCase{
+		newOpticalTestCase("Ascend910A3, training card => true", api.Ascend910A3, 0, true),
+		newOpticalTestCase("Ascend910A5, Atlas950MainBoardID => false", api.Ascend910A5, api.Atlas950MainBoardID, false),
+		newOpticalTestCase("Ascend910A5, daYuMainBoardId => true", api.Ascend910A5, daYuMainBoardId, true),
+		newOpticalTestCase("Ascend910A5, yinHeMainBoardId => true", api.Ascend910A5, yinHeMainBoardId, true),
+		newOpticalTestCase("Ascend910A5, ubxMainBoardId => true", api.Ascend910A5, ubxMainBoardId, true),
 	}
 
-	for _, c := range cases {
+	for _, testCase := range testCases {
 		patches := gomonkey.NewPatches()
-		convey.Convey(c.name, t, func() {
+		convey.Convey(testCase.name, t, func() {
 			defer patches.Reset()
-			patches.ApplyMethodReturn(n.Dmgr, "GetMainBoardId", uint32(api.Atlas850MainBoardID2))
-			patches.ApplyMethodReturn(n.Dmgr, "GetDevType", c.deviceType)
-			patches.ApplyMethodReturn(n.Dmgr, "IsTrainingCard", true)
-			isSupported := c.collectorType.IsSupported(n)
-			convey.So(isSupported, convey.ShouldEqual, c.expectValue)
+			colcommon.DevType = testCase.devType
+			patches.ApplyMethodReturn(npuCollector.Dmgr, "IsTrainingCard", testCase.isTrainingCard)
+			patches.ApplyMethodReturn(npuCollector.Dmgr, "GetMainBoardId", testCase.mainBoardId)
+			isSupported := testCase.collectorType.IsSupported(npuCollector)
+			convey.So(isSupported, convey.ShouldEqual, testCase.expectedResult)
 		})
-	}
-}
-
-// TestOpticalCollectorIsSupported2 test OpticalCollector IsSupported
-func TestOpticalCollectorIsSupported2(t *testing.T) {
-	n := mockNewNpuCollector()
-	cases := []testCase{
-		buildTestCase("NetworkCollector: testIsSupported on Ascend910A3", &OpticalCollector{}, api.Ascend910A3, true),
-		buildTestCase("NetworkCollector: testIsSupported on Ascend910A5", &OpticalCollector{}, api.Ascend910A5, false),
-	}
-
-	for _, c := range cases {
-		colcommon.DevType = c.deviceType
-		patches := gomonkey.NewPatches()
-		convey.Convey(c.name, t, func() {
-			defer patches.Reset()
-			patches.ApplyMethodReturn(n.Dmgr, "GetMainBoardId", uint32(api.Atlas9501DMainBoardID))
-			patches.ApplyMethodReturn(n.Dmgr, "IsTrainingCard", true)
-			isSupported := c.collectorType.IsSupported(n)
-			convey.So(isSupported, convey.ShouldEqual, c.expectValue)
-		})
+		colcommon.DevType = ""
 	}
 }
 

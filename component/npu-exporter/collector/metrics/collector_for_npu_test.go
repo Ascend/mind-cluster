@@ -44,15 +44,27 @@ const (
 	apiCallFailedMsg = "api call failed"
 )
 
+// TestIsSupportNetworkHealthDevices
 func TestIsSupportNetworkHealthDevices(t *testing.T) {
-	convey.Convey("TestIsSupportNetworkHealthDevices", t, func() {
-		result := isSupportNetworkHealthDevices(api.Ascend910A3, 0)
-		convey.So(result, convey.ShouldEqual, true)
-		result = isSupportNetworkHealthDevices(api.Ascend910A5, api.Atlas9501DMainBoardID)
-		convey.So(result, convey.ShouldEqual, true)
-		result = isSupportNetworkHealthDevices(api.Ascend910A5, api.Atlas3504PMainBoardID)
-		convey.So(result, convey.ShouldEqual, false)
-	})
+	cases := []struct {
+		name        string
+		devType     string
+		mainBoardId uint32
+		expected    bool
+	}{
+		{"Ascend910A3, 0 => true", api.Ascend910A3, 0, true},
+		{"Ascend910A5, Atlas9501DMainBoardID => true", api.Ascend910A5, api.Atlas9501DMainBoardID, true},
+		{"Ascend910A5, Atlas3504PMainBoardID => false", api.Ascend910A5, api.Atlas3504PMainBoardID, false},
+		{"Ascend910A5, daYuMainBoardId => true", api.Ascend910A5, daYuMainBoardId, true},
+		{"Ascend910A5, yinHeMainBoardId => true", api.Ascend910A5, yinHeMainBoardId, true},
+		{"Ascend910A5, ubxMainBoardId => true", api.Ascend910A5, ubxMainBoardId, true},
+	}
+	for _, c := range cases {
+		convey.Convey(c.name, t, func() {
+			result := isSupportNetworkHealthDevices(c.devType, c.mainBoardId)
+			convey.So(result, convey.ShouldEqual, c.expected)
+		})
+	}
 }
 
 func TestBuildDefaultMultiUtilInfo(t *testing.T) {
