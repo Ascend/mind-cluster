@@ -67,6 +67,7 @@ func TestIsVJob(t *testing.T) {
 func TestNPUJobIsNPUJob(t *testing.T) {
 	type fields struct {
 		ReqNPUName string
+		ReqNPUNum  int
 	}
 	tests := []struct {
 		name   string
@@ -74,20 +75,43 @@ func TestNPUJobIsNPUJob(t *testing.T) {
 		want   bool
 	}{
 		{
-			name:   "01-IsNPUJob npu job",
+			name:   "01-IsNPUJob npu job with AscendNPUCore resource.",
 			fields: fields{ReqNPUName: AscendNPUCore},
 			want:   true,
 		},
 		{
-			name:   "02-IsNPUJob not npu job",
+			name:   "02-IsNPUJob not npu job with empty name.",
 			fields: fields{ReqNPUName: ""},
 			want:   false,
+		},
+		{
+			name:   "03-IsNPUJob annotation-based NPU job with ReqNPUNum=0.",
+			fields: fields{ReqNPUName: NPU910CardName, ReqNPUNum: 0},
+			want:   true,
+		},
+		{
+			name:   "04-IsNPUJob normal NPU job with Ascend310P.",
+			fields: fields{ReqNPUName: NPU310PCardName, ReqNPUNum: 8},
+			want:   true,
+		},
+		{
+			name:   "05-IsNPUJob nil NPUJob.",
+			fields: fields{ReqNPUName: ""},
+			want:   false,
+		},
+		{
+			name:   "06-IsNPUJob dynamic VNPU job (npu-core).",
+			fields: fields{ReqNPUName: AscendNPUCore, ReqNPUNum: 4},
+			want:   true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			nJob := &NPUJob{
-				ReqNPUName: tt.fields.ReqNPUName,
+			var nJob *NPUJob
+			if tt.name != "05-IsNPUJob nil NPUJob." {
+				nJob = &NPUJob{
+					ReqNPUName: tt.fields.ReqNPUName,
+				}
 			}
 			if got := nJob.IsNPUJob(); got != tt.want {
 				t.Errorf("IsNPUJob() = %v, want %v", got, tt.want)

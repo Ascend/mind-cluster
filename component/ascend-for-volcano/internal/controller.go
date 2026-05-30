@@ -90,6 +90,13 @@ func (c *Controller) ValidNPUJob() *api.ValidateResult {
 		err := errors.New(util.ArgumentError)
 		return &api.ValidateResult{Pass: false, Reason: err.Error(), Message: err.Error()}
 	}
+	if len(c.PolicyHandler) == 0 {
+		return &api.ValidateResult{
+			Pass:    false,
+			Reason:  util.NotSupportPolicyReason,
+			Message: "no policy handler registered, NPU type may be invalid",
+		}
+	}
 	for _, handler := range c.PolicyHandler {
 		if result := handler.ValidNPUJob(); result != nil && !result.Pass {
 			return result

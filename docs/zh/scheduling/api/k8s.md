@@ -123,6 +123,7 @@
 |huawei.com/scheduler.softShareDev.policy|标记当前Pod执行的软切分任务的策略。|<ul><li>fixed-share</li><li>elastic</li><li>best-effort</li></ul>|Volcano、Ascend Device Plugin|
 |huawei.com/affinity-config|配置任务的多级调度的亲和性层级。|<p>level1=x,level2=y,...</p><p>其中x,y...为对应的网络层级子任务大小。</p><p>该字段用于配置任务的多级调度的亲和性层级。</p><p>要求满足格式为leveli=ni样式的字符串的拼接，中间使用英文逗号分隔。其中，i为网络层级序号，ni为该网络层级子任务的副本数量。例如，对于总副本数量为8的任务“level1=2,level2=4”，表示任务Pod中每2个Pod分配到有相同level1标签的节点上，每4个Pod分配到有相同level2标签的节点上。</p><p>网络层级配置需要满足以下要求：<ul><li>任务层级大于1层时，层级n的值必须是n-1的整数倍。</li><li>任务总副本数量必须是所有层级的整数倍。</li><li>任务层级配置必须从level1开始，从小到大连续的。</li></ul></p>|Volcano|
 |huawei.com/schedule_policy|指定调度策略。|目前支持[表3 huawei.com/schedule\_policy配置说明](./volcano.md#podgroup)中的配置。|Volcano|
+|volcano.sh/schedule.plugin|当MinResources中未配置NPU资源时，通过此annotation声明任务使用的NPU类型，使Volcano仍然按NPU亲和性调度规则进行调度。|取值为NPU类型名称，例如：Ascend910、Ascend310P、Ascend310。|Volcano|
 
 ## Node annotation<a name="section9144358124519"></a>
 

@@ -228,4 +228,6 @@ const (
 	PodTypeKey = "podType"
 	// PodTypeBackup pod type value for backup pods in hot-switch
 	PodTypeBackup = "backup"
+	// SchedulePluginAnno used in pod annotation when npu-affinity-schedule is needed
+	SchedulePluginAnno = "volcano.sh/schedule.plugin"
 )
