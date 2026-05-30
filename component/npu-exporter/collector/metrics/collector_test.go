@@ -1,4 +1,4 @@
-/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2025-2026. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -40,6 +40,9 @@ const (
 	num5                    = 5
 	mockContainerName       = "mockContainerName"
 	maxChipNum        int32 = 8
+	daYuMainBoardId         = 0x44
+	yinHeMainBoardId        = 0x46
+	ubxMainBoardId          = 0x48
 )
 
 var (
@@ -66,6 +69,15 @@ type testCase struct {
 	expectValue   bool
 }
 
+type isSupportedTestCase struct {
+	name           string
+	collectorType  colcommon.MetricsCollector
+	devType        string
+	mainBoardId    uint32
+	isTrainingCard bool
+	expectedResult bool
+}
+
 func buildTestCase(name string, collectorType colcommon.MetricsCollector, deviceType string,
 	expectValue bool) testCase {
 	return testCase{
@@ -85,24 +97,28 @@ func TestIsSupported(t *testing.T) {
 		buildTestCase("DdrCollector: testIsSupported on Ascend910", &DdrCollector{}, api.Ascend910, true),
 		buildTestCase("DdrCollector: testIsSupported on Ascend910B", &DdrCollector{}, api.Ascend910B, false),
 		buildTestCase("DdrCollector: testIsSupported on Ascend910A3", &DdrCollector{}, api.Ascend910A3, false),
+		buildTestCase("DdrCollector: testIsSupported on Ascend910A5", &DdrCollector{}, api.Ascend910A5, false),
 
 		buildTestCase("HccsCollector: testIsSupported on Ascend310", &HccsCollector{}, api.Ascend310, false),
 		buildTestCase("HccsCollector: testIsSupported on Ascend310P", &HccsCollector{}, api.Ascend310P, false),
 		buildTestCase("HccsCollector: testIsSupported on Ascend910", &HccsCollector{}, api.Ascend910, false),
 		buildTestCase("HccsCollector: testIsSupported on Ascend910B", &HccsCollector{}, api.Ascend910B, true),
 		buildTestCase("HccsCollector: testIsSupported on Ascend910A3", &HccsCollector{}, api.Ascend910A3, true),
+		buildTestCase("HccsCollector: testIsSupported on Ascend910A5", &HccsCollector{}, api.Ascend910A5, false),
 
 		buildTestCase("SioCollector: testIsSupported on Ascend310", &SioCollector{}, api.Ascend310, false),
 		buildTestCase("SioCollector: testIsSupported on Ascend310P", &SioCollector{}, api.Ascend310P, false),
 		buildTestCase("SioCollector: testIsSupported on Ascend910", &SioCollector{}, api.Ascend910, false),
 		buildTestCase("SioCollector: testIsSupported on Ascend910B", &SioCollector{}, api.Ascend910B, false),
 		buildTestCase("SioCollector: testIsSupported on Ascend910A3", &SioCollector{}, api.Ascend910A3, true),
+		buildTestCase("SioCollector: testIsSupported on Ascend910A5", &SioCollector{}, api.Ascend910A5, true),
 
 		buildTestCase("VnpuCollector: testIsSupported on Ascend310", &VnpuCollector{}, api.Ascend310, false),
 		buildTestCase("VnpuCollector: testIsSupported on Ascend310P", &VnpuCollector{}, api.Ascend310P, true),
 		buildTestCase("VnpuCollector: testIsSupported on Ascend910", &VnpuCollector{}, api.Ascend910, false),
 		buildTestCase("VnpuCollector: testIsSupported on Ascend910B", &VnpuCollector{}, api.Ascend910B, false),
 		buildTestCase("VnpuCollector: testIsSupported on Ascend910A3", &VnpuCollector{}, api.Ascend910A3, false),
+		buildTestCase("VnpuCollector: testIsSupported on Ascend910A5", &VnpuCollector{}, api.Ascend910A5, false),
 	}
 
 	for _, c := range cases {
