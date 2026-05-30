@@ -1047,14 +1047,87 @@ func buildConfigLevelCases() []configLevelCase {
 
 func TestGetConfigLevel(t *testing.T) {
 	for _, tt := range buildConfigLevelCases() {
+			t.Run(tt.name, func(t *testing.T) {
+				got, err := getConfigLevel(tt.levelConfig)
+				if (err != nil) != tt.wantErr {
+					t.Errorf("getConfigLevel() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if !tt.wantErr && len(got) != tt.wantLen {
+					t.Errorf("getConfigLevel() len = %v, want %v", len(got), tt.wantLen)
+				}
+			})
+		}
+	}
+
+type initJobsFromSsnTest struct {
+	name       string
+	ssn        *framework.Session
+	jobsInSsn  []*api.JobInfo
+	wantJobIn  bool
+}
+
+func buildInitJobsFromSsnTestCases() []initJobsFromSsnTest {
+	return []initJobsFromSsnTest{
+		{
+			name: "01-NPU job with MinResource NPU>0 is kept.",
+			ssn: test.FakeNormalSSN(test.FakeConfigurations()),
+			jobsInSsn: func() []*api.JobInfo {
+				j := test.FakeJobInfoByName("npuJob", 1)
+				return []*api.JobInfo{j}
+			}(),
+			wantJobIn: true,
+		},
+		{
+			name: "02-NPU job with annotation-based NPU (ReqNPUNum=0) is kept.",
+			ssn: test.FakeNormalSSN(test.FakeConfigurations()),
+			jobsInSsn: func() []*api.JobInfo {
+				j := test.FakeNormalTestJob("annoNPUJob", 1)
+				j.PodGroup.Annotations = map[string]string{
+					util.SchedulePluginAnno: util.Ascend910,
+				}
+				j.TotalRequest.ScalarResources = map[v1.ResourceName]float64{}
+				j.PodGroup.Spec.MinResources = &v1.ResourceList{}
+				return []*api.JobInfo{j}
+			}(),
+			wantJobIn: true,
+		},
+		{
+			name: "03-Job with annotation-based NPU (ReqNPUNum=0) gets policy handler.",
+			ssn: test.FakeNormalSSN(test.FakeConfigurations()),
+			jobsInSsn: func() []*api.JobInfo {
+				j := test.FakeNormalTestJob("annoNPUJob2", 1)
+				j.PodGroup.Annotations = map[string]string{
+					util.SchedulePluginAnno: util.Ascend310P,
+				}
+				j.TotalRequest.ScalarResources = map[v1.ResourceName]float64{}
+				j.PodGroup.Spec.MinResources = &v1.ResourceList{}
+				return []*api.JobInfo{j}
+			}(),
+			wantJobIn: true,
+		},
+	}
+}
+
+func TestInitJobsFromSsn(t *testing.T) {
+	patch1 := PatchGetCm(TorNodeCMName, "kube-system", test.FakeTorNodeData())
+	defer patch1.Reset()
+	for _, tt := range buildInitJobsFromSsnTestCases() {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getConfigLevel(tt.levelConfig)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getConfigLevel() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			for _, job := range tt.jobsInSsn {
+				test.AddJobInfoIntoSsn(tt.ssn, job)
 			}
-			if !tt.wantErr && len(got) != tt.wantLen {
-				t.Errorf("getConfigLevel() len = %v, want %v", len(got), tt.wantLen)
+			handler := newDefaultHandler()
+			initNormalsHandlerBySsnFunc(tt.ssn, handler.InitVolcanoFrameFromSsn,
+				handler.InitNodesFromSsn, handler.InitJobsFromSsn)
+			for _, job := range tt.jobsInSsn {
+				_, exists := handler.Jobs[job.UID]
+				if tt.wantJobIn && !exists {
+					t.Errorf("InitJobsFromSsn() job %s should be in handler.Jobs", job.UID)
+				}
+				if !tt.wantJobIn && exists {
+					t.Errorf("InitJobsFromSsn() job %s should NOT be in handler.Jobs", job.UID)
+				}
 			}
 		})
 	}

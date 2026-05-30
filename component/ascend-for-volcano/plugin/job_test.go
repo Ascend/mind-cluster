@@ -291,6 +291,22 @@ type getVCJobReqNPUTypeFromJobInfoTest struct {
 func buildGetVCJobReqNPUTypeFromJobInfoTest() []getVCJobReqNPUTypeFromJobInfoTest {
 	tJob1 := test.FakeNormalTestJob("test1", 1)
 	test.SetFakeJobRequestSource(tJob1, util.NPU910CardName, util.NPUIndex8)
+	tJob := test.FakeNormalTestJob("test1", 1)
+	tJob.PodGroup.Annotations = map[string]string{
+		util.SchedulePluginAnno: util.Ascend910,
+	}
+	tJob310P := test.FakeNormalTestJob("test1", 1)
+	tJob310P.PodGroup.Annotations = map[string]string{
+		util.SchedulePluginAnno: util.Ascend310P,
+	}
+	tJobMinResWithAnno := test.FakeNormalTestJob("test1", 1)
+	test.SetFakeJobRequestSource(tJobMinResWithAnno, util.NPU910CardName, util.NPUIndex4)
+	tJobMinResWithAnno.PodGroup.Annotations = map[string]string{
+		util.SchedulePluginAnno: util.Ascend310P,
+	}
+	tJobNoMinResNoAnno := test.FakeNormalTestJob("test1", 1)
+	tJobNoMinResNoAnno.TotalRequest.ScalarResources = map[v1.ResourceName]float64{}
+	tJobNoMinResNoAnno.PodGroup.Spec.MinResources = &v1.ResourceList{}
 	tests := []getVCJobReqNPUTypeFromJobInfoTest{
 		{
 			name:    "01-GetVCJobReqNPUTypeFromJobInfo nil job test.",
@@ -300,10 +316,38 @@ func buildGetVCJobReqNPUTypeFromJobInfoTest() []getVCJobReqNPUTypeFromJobInfoTes
 			wantErr: true,
 		},
 		{
+			name:    "02-GetVCJobReqNPUTypeFromJobInfo annotation Ascend910 test.",
+			args:    getVCJobReqNPUTypeFromJobInfoArgs{vcJob: tJob},
+			want:    util.NPU910CardName,
+			want1:   0,
+			wantErr: false,
+		},
+		{
 			name:    "03-GetVCJobReqNPUTypeFromJobInfo ok test.",
 			args:    getVCJobReqNPUTypeFromJobInfoArgs{vcJob: tJob1},
 			want:    util.NPU910CardName,
 			want1:   util.NPUIndex8,
+			wantErr: false,
+		},
+		{
+			name:    "04-GetVCJobReqNPUTypeFromJobInfo annotation Ascend310P test.",
+			args:    getVCJobReqNPUTypeFromJobInfoArgs{vcJob: tJob310P},
+			want:    util.NPU310PCardName,
+			want1:   0,
+			wantErr: false,
+		},
+		{
+			name:    "05-GetVCJobReqNPUTypeFromJobInfo MinResource overrides annotation test.",
+			args:    getVCJobReqNPUTypeFromJobInfoArgs{vcJob: tJobMinResWithAnno},
+			want:    util.NPU910CardName,
+			want1:   util.NPUIndex4,
+			wantErr: false,
+		},
+		{
+			name:    "06-GetVCJobReqNPUTypeFromJobInfo no NPU resource and no annotation test.",
+			args:    getVCJobReqNPUTypeFromJobInfoArgs{vcJob: tJobNoMinResNoAnno},
+			want:    "",
+			want1:   0,
 			wantErr: false,
 		},
 	}
@@ -440,6 +484,23 @@ func buildJobValidTest() []jobValidTest {
 	tJob3 := test.FakeNormalTestJob("testJob", 1)
 	test.AddTestJobLabel(tJob3, "haha", "who")
 	fakeRsNum := int32(util.NPUIndex1)
+	tJobAnnoNPU := test.FakeNormalTestJob("testJob", 1)
+	tJobAnnoNPU.PodGroup.Annotations = map[string]string{
+		util.SchedulePluginAnno: util.Ascend910,
+	}
+	tJobAnnoNPU.TotalRequest.ScalarResources = map[v1.ResourceName]float64{}
+	tJobAnnoNPU.PodGroup.Spec.MinResources = &v1.ResourceList{}
+	var jobAnnoNPUFirstTaskID api.TaskID
+	for tid := range tJobAnnoNPU.Tasks {
+		jobAnnoNPUFirstTaskID = tid
+		break
+	}
+	tJobAnnoInvalid := test.FakeNormalTestJob("testJob", 1)
+	tJobAnnoInvalid.PodGroup.Annotations = map[string]string{
+		util.SchedulePluginAnno: "InvalidType",
+	}
+	tJobAnnoInvalid.TotalRequest.ScalarResources = map[v1.ResourceName]float64{}
+	tJobAnnoInvalid.PodGroup.Spec.MinResources = &v1.ResourceList{}
 	tests := []jobValidTest{
 		{
 			name:   "01-JobValid not job test.",
@@ -473,6 +534,46 @@ func buildJobValidTest() []jobValidTest {
 							NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{}}}},
 					}}}},
 			args: jobValidArgs{obj: tJob},
+			want: &api.ValidateResult{Pass: false, Reason: util.NotEnoughPodReason,
+				Message: "job  task num 0 less than replicas 1"},
+		},
+		{
+			name: "05-JobValid annotation-based NPU job passes validation.",
+			fields: fields{NPUPlugins: make(sets.String),
+				ScheduleEnv: ScheduleEnv{ClusterCache: ClusterCache{
+					Jobs: map[api.JobID]SchedulerJob{tJobAnnoNPU.UID: {
+						SchedulerJobAttr: util.SchedulerJobAttr{
+							ComJob: util.ComJob{MinAvailable: 1},
+							NPUJob: &util.NPUJob{
+								ReqNPUName: util.NPU910CardName,
+								ReqNPUNum:  0,
+								Tasks:      map[api.TaskID]util.NPUTask{jobAnnoNPUFirstTaskID: {ReqNPUNum: 8}},
+							},
+						},
+						policyHandler: New(util.NPU910CardName),
+					}},
+				}},
+			},
+			args: jobValidArgs{obj: tJobAnnoNPU},
+			want: nil,
+		},
+		{
+			name: "06-JobValid annotation-based NPU job with no policyHandler is rejected.",
+			fields: fields{NPUPlugins: make(sets.String),
+				ScheduleEnv: ScheduleEnv{ClusterCache: ClusterCache{
+					Jobs: map[api.JobID]SchedulerJob{tJobAnnoNPU.UID: {
+						SchedulerJobAttr: util.SchedulerJobAttr{
+							ComJob: util.ComJob{MinAvailable: 1},
+							NPUJob: &util.NPUJob{
+								ReqNPUName: util.NPU910CardName,
+								ReqNPUNum:  0,
+								Tasks:      map[api.TaskID]util.NPUTask{},
+							},
+						},
+					}},
+				}},
+			},
+			args: jobValidArgs{obj: tJobAnnoNPU},
 			want: &api.ValidateResult{Pass: false, Reason: util.NotEnoughPodReason,
 				Message: "job  task num 0 less than replicas 1"},
 		},
@@ -712,17 +813,22 @@ type initTest struct {
 
 func buildInitTest() []initTest {
 	tJob := test.FakeNormalTestJob("haha", 1)
+	handler := &ScheduleHandler{
+		PolicyBuilder: func() SchedulerPluginNeed {
+			return nil
+		},
+	}
 	tests := []initTest{
 		{
 			name:    "01-init vcJob nil test.",
 			fields:  schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{}},
-			args:    initArgs{vcJob: nil},
+			args:    initArgs{vcJob: nil, sHandle: handler},
 			wantErr: true,
 		},
 		{
 			name:    "02-init plugin not register test.",
 			fields:  schedulerJobFields{SchedulerJobAttr: util.SchedulerJobAttr{}},
-			args:    initArgs{vcJob: tJob},
+			args:    initArgs{vcJob: tJob, sHandle: handler},
 			wantErr: false,
 		},
 	}
@@ -1003,6 +1109,117 @@ func TestValidVirtualDevJob(t *testing.T) {
 			t.Errorf("validVirtualDevJob() = %v, want %v", got.Pass, false)
 		}
 	})
+}
+
+func TestIsJobSupportByPlugin(t *testing.T) {
+	tests := []struct {
+		name string
+		sJob SchedulerJob
+		want bool
+	}{
+		{
+			name: "01-ReqNPUNum is zero returns true.",
+			sJob: SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{ReqNPUNum: 0, ReqNPUName: util.NPU910CardName},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "02-ReqNPUNum > 0 with valid plugin name returns true.",
+			sJob: SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{ReqNPUNum: util.NPUIndex8, ReqNPUName: util.NPU910CardName},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "03-ReqNPUNum > 0 with empty plugin name returns false.",
+			sJob: SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{ReqNPUNum: util.NPUIndex8, ReqNPUName: ""},
+				},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.sJob.isJobSupportByPlugin(); got != tt.want {
+				t.Errorf("isJobSupportByPlugin() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+type initSelfPluginByJobInfoTest struct {
+	name       string
+	sJob       SchedulerJob
+	hasBuilder bool
+	wantNil    bool
+}
+
+func buildInitSelfPluginByJobInfoTestCases() []initSelfPluginByJobInfoTest {
+	return []initSelfPluginByJobInfoTest{
+		{
+			name: "01-NPU job with ReqNPUNum=0 gets policyHandler.",
+			sJob: SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{ReqNPUName: util.NPU910CardName, ReqNPUNum: 0},
+				},
+			},
+			hasBuilder: true,
+			wantNil:    false,
+		},
+		{
+			name: "02-NPU job with ReqNPUNum>0 gets policyHandler.",
+			sJob: SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{ReqNPUName: util.NPU910CardName, ReqNPUNum: util.NPUIndex8},
+				},
+			},
+			hasBuilder: true,
+			wantNil:    false,
+		},
+		{
+			name: "03-Non-NPU job gets no policyHandler.",
+			sJob: SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{ReqNPUName: "", ReqNPUNum: 0},
+				},
+			},
+			hasBuilder: true,
+			wantNil:    true,
+		},
+		{
+			name: "04-nil SchedulerJob is safe.",
+			sJob: SchedulerJob{},
+			wantNil:    true,
+		},
+	}
+}
+
+func TestInitSelfPluginByJobInfo(t *testing.T) {
+	for _, tt := range buildInitSelfPluginByJobInfoTestCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			var builder PolicyBuilder
+			if tt.hasBuilder {
+				builder = func() SchedulerPluginNeed {
+					return New(util.NPU910CardName)
+				}
+			}
+			handler := &ScheduleHandler{PolicyBuilder: builder}
+			tt.sJob.initSelfPluginByJobInfo(handler)
+			if tt.wantNil && tt.sJob.policyHandler != nil {
+				t.Errorf("initSelfPluginByJobInfo() policyHandler = %v, want nil", tt.sJob.policyHandler)
+			}
+			if !tt.wantNil && tt.sJob.policyHandler == nil {
+				t.Errorf("initSelfPluginByJobInfo() policyHandler = nil, want non-nil")
+			}
+		})
+	}
 }
 
 func TestRecordJobPendingMessage(t *testing.T) {

@@ -190,7 +190,7 @@ func getJobAnnotationFromJobInfo(jobInfo *api.JobInfo) map[string]string {
 
 // GetVCJobReqNPUTypeFromJobInfo get job request resource, only NPU.
 func GetVCJobReqNPUTypeFromJobInfo(vcJob *api.JobInfo) (string, int, error) {
-	if vcJob == nil || vcJob.TotalRequest == nil {
+	if vcJob == nil || vcJob.TotalRequest == nil || vcJob.PodGroup == nil {
 		klog.V(util.LogInfoLev).Infof("GetVCJobReqNPUTypeFromJobInfo nil job's parameter.")
 		return "", 0, errors.New("nil parameter")
 	}
@@ -202,6 +202,11 @@ func GetVCJobReqNPUTypeFromJobInfo(vcJob *api.JobInfo) (string, int, error) {
 			return string(k), int(v / util.NPUHexKilo), nil
 		}
 	}
+
+	if v, ok := vcJob.PodGroup.Annotations[util.SchedulePluginAnno]; ok {
+		return util.HwPreName + v, 0, nil
+	}
+
 	klog.V(util.LogDebugLev).Infof("GetVCJobReqNPUTypeFromJobInfo %+v.", vcMinResource.ScalarResources)
 	return "", 0, nil
 }
@@ -272,8 +277,7 @@ func (sJob *SchedulerJob) initSelfPluginByJobInfo(sHandle *ScheduleHandler) {
 	if sJob == nil {
 		return
 	}
-
-	if sJob.ReqNPUNum > 0 {
+	if sJob.NPUJob.IsNPUJob() {
 		sJob.policyHandler = sHandle.PolicyBuilder()
 	}
 }

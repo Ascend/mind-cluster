@@ -149,6 +149,15 @@
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>
 </tr>
+	<tr id="row_schedule_plugin_1"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_schedule_plugin_1"><a name="p_schedule_plugin_1"></a><a name="p_schedule_plugin_1"></a>volcano.sh/schedule.plugin</p>
+	</td>
+	<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>当MinResources中未配置NPU资源时，通过此annotation声明任务使用的NPU类型，使Volcano仍然按NPU亲和性调度规则进行调度。</p>
+	</td>
+	<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p>取值为NPU类型名称，例如：Ascend910、Ascend310P、Ascend310。</p>
+	</td>
+	<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+	</td>
+	</tr>
 </tbody>
 </table>
 
@@ -350,6 +359,15 @@
 <td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
 </td>
 </tr>
+	<tr id="row_schedule_plugin_2"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p_schedule_plugin_2"><a name="p_schedule_plugin_2"></a><a name="p_schedule_plugin_2"></a>volcano.sh/schedule.plugin</p>
+	</td>
+	<td class="cellrowborder" valign="top" width="24.169999999999998%" headers="mcps1.2.5.1.2 "><p>当MinResources中未配置NPU资源时，通过此annotation声明任务使用的NPU类型，使Volcano仍然按NPU亲和性调度规则进行调度。</p>
+	</td>
+	<td class="cellrowborder" valign="top" width="27.450000000000003%" headers="mcps1.2.5.1.3 "><p>取值为NPU类型名称，例如：Ascend910、Ascend310P、Ascend310。</p>
+	</td>
+	<td class="cellrowborder" valign="top" width="23.380000000000003%" headers="mcps1.2.5.1.4 "><p><span>Volcano</span></p>
+	</td>
+	</tr>
 </tbody>
 </table>
 

@@ -93,12 +93,6 @@ func (reScheduler *ReScheduler) GetRunningJobs(ssn *framework.Session) map[api.J
 			klog.V(util.LogWarningLev).Infof("job %s not in session, skip", jobInfo.UID)
 			continue
 		}
-		// req type is not current card type
-		if schedulerJob.ReqNPUNum == 0 && schedulerJob.NPUJob.IsNPUJob() {
-			klog.V(util.LogWarningLev).Infof("job %s requires npu %d is illegal, skip",
-				schedulerJob.Name, schedulerJob.ReqNPUNum)
-			continue
-		}
 		myJobs[jobInfo.UID] = jobInfo
 	}
 	return myJobs
