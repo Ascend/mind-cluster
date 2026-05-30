@@ -2174,22 +2174,8 @@ func (ctl *EventController) recoverInPlaceFaultAssociateSameNodeRank(faultRankId
 func (ctl *EventController) getAllFaultRanks() ([]*pb.FaultRank, []string, error) {
 	var allFaults []*pb.FaultRank
 	var allFaultRanks []string
-	if ctl.tpBlockRescheduleScene() {
-		allFaults, allFaultRanks = ctl.normalFaultAssociateRescheduledPods()
-	} else {
-		allFaults, allFaultRanks = ctl.normalFaultAssociateSameNodeRank()
-	}
+	allFaults, allFaultRanks = ctl.normalFaultAssociateSameNodeRank()
 	return allFaults, allFaultRanks, nil
-}
-
-func (ctl *EventController) tpBlockRescheduleScene() bool {
-	pg, err := kube.RetryGetPodGroup(ctl.jobInfo.PgName, ctl.jobInfo.Namespace, constant.GetPodGroupTimes)
-	if err != nil {
-		hwlog.RunLog.Errorf("kube get pod group err, err=%v", err)
-		return false
-	}
-	tpBlock, ok := pg.Annotations[constant.TpBlock]
-	return ok && slices.Contains(validTpBlock, tpBlock) && !ctl.restartFaultProcess
 }
 
 // normalFaultAssociateRescheduledPods calculate fault ranks in rescheduled pods
