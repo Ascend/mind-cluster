@@ -14,7 +14,7 @@
     docker pull prom/prometheus:v2.10.0
     ```
 
-    >[!NOTE] 
+    >[!NOTE]
     >- 获取镜像前，请确保能够正常访问互联网。
     >- 若不使用集群调度提供的prometheus.yaml，需要参考该YAML在相应位置加上app: prometheus字段，否则可能出现NPU Exporter连接超时。
 
@@ -43,7 +43,7 @@
             source_labels: [__meta_kubernetes_namespace]
             regex: npu-exporter
           - source_labels: [__meta_kubernetes_pod_node_name]
-            target_label: job
+            target_label: job    # 默认将k8s的nodeName映射为指标标签中的job标签，可按需修改。
             replacement: ${1}
     ...
     ```
@@ -64,7 +64,7 @@
     回显如下，表示安装成功。
 
     ```ColdFusion
-    [root@centos check_env]# kubectl apply -f prometheus.yaml 
+    [root@centos check_env]# kubectl apply -f prometheus.yaml
     clusterrole.rbac.authorization.k8s.io/prometheus created
     serviceaccount/prometheus created
     clusterrolebinding.rbac.authorization.k8s.io/prometheus created
@@ -101,7 +101,7 @@
     git clone https://github.com/prometheus-operator/kube-prometheus.git
     ```
 
-    >[!NOTE] 
+    >[!NOTE]
     >- 请根据[官方文档](https://github.com/prometheus-operator/kube-prometheus/tree/release-0.7)的兼容性列表，获取与K8s配套的Prometheus Operator源码分支。
     >- 若已经安装Prometheus Operator和Prometheus，可以直接执行[步骤4](#li15822115020428)。
 
@@ -169,12 +169,12 @@
 4. <a name="li15822115020428"></a>NPU Exporter通过Prometheus Operator对接Prometheus。
     1. 获取[npu-exporter-svc.yaml](https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.0.0/samples/utils/prometheus/prometheus_operator/npu-exporter-svc.yaml)和[servicemonitor.yaml](https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.0.0/samples/utils/prometheus/prometheus_operator/servicemonitor.yaml)。
 
-        >[!NOTE] 
+        >[!NOTE]
         >若已经提前安装Prometheus，需要确保servicemonitor.yaml的以下字段，和已经部署的Prometheus中serviceMonitorSelector配置的matchLabels标签一致。
         >
         >```Yaml
         >...
-        >  labels:                               
+        >  labels:
         >    serviceMonitorSelector: prometheus
         >...
         >```
@@ -193,14 +193,14 @@
             kind: Service
             metadata:
               namespace: npu-exporter   # 命名空间为npu-exporter
-              name: npu-exporter             
-              labels:                        
+              name: npu-exporter
+              labels:
                 app: npu-exporter-svc   # NPU Exporter service的标签
             spec:
               type: ClusterIP
               ports:
               - port: 8082             # NPU Exporter的服务端口号
-                targetPort: 8082      
+                targetPort: 8082
             ...
             ```
 
@@ -217,7 +217,7 @@
                 matchNames:
                 - npu-exporter                                   # 命名空间为npu-exporter
               selector:
-                matchLabels:                                     
+                matchLabels:
                   app: npu-exporter-svc                          # NPU Exporter service的标签
             ```
 
