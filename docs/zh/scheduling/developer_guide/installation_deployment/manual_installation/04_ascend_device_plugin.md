@@ -2,7 +2,7 @@
 
 - 使用整卡调度、静态vNPU调度、动态vNPU调度、断点续训、弹性训练、推理卡故障恢复或推理卡故障重调度的用户，必须在计算节点安装Ascend Device Plugin。
 - 仅使用容器化支持和资源监测的用户，可以不安装Ascend Device Plugin，请直接跳过本章节。
-- 安装Ascend Device Plugin之前，需要先安装Ascend Docker Runtime。Ascend Device Plugin会自动感知节点中是否已经安装Ascend Docker Runtime。
+- 若用户需要Ascend Docker Runtime组件，需要先安装Ascend Docker Runtime，再安装Ascend Device Plugin。
 
 ## 使用约束<a name="section1362795652416"></a>
 
@@ -186,7 +186,7 @@
            path: /var/lib/kubelet/device-plugins
     ...</pre>
 
-7. （可选）根据容器运行时类型，修改Ascend Device Plugin组件的启动YAML中的挂载配置。
+7. （可选）如果未安装Ascend Docker Runtime，则需手动挂载docker或者containerd的sock文件，根据运行时类型，示例分别如下：
 
     - 如果容器运行时为Docker，保留docker-sock和docker-dir挂载配置，示例如下：
 
@@ -215,7 +215,7 @@
               path: /run/containerd
         ```
 
-    - 如果容器运行时为containerd，删除docker-sock和docker-dir挂载配置，保留containerd挂载配置。示例如下：
+    - 如果容器运行时为containerd，不需要docker-sock和docker-dir挂载配置，保留containerd挂载配置。示例如下：
 
         ```Yaml
         volumeMounts:
@@ -231,9 +231,9 @@
         ```
 
     >[!NOTE]
-    >- 如果docker.sock文件路径不是/run/docker.sock，请在volumes中修改为实际路径，不支持使用符号链接。
-    >- 如果docker目录不是/var/run/docker，请在volumes中修改为实际路径，不支持使用符号链接。
-    >- 如果containerd目录不是/run/containerd，请在volumes中修改为实际路径，不支持使用符号链接。
+    >- 如果docker.sock文件路径不是/run/docker.sock，请在volumes中修改为实际路径，不支持使用软连接。
+    >- 如果docker目录不是/run/docker，请在volumes中修改为实际路径，不支持使用软连接。
+    >- 如果containerd目录不是/run/containerd，请在volumes中修改为实际路径，不支持使用软连接。
 
 8. 在K8s管理节点上各YAML对应路径下执行以下命令，启动Ascend Device Plugin。
 
