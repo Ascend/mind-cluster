@@ -17,6 +17,7 @@
 
 from typing import List
 
+from ascend_fd_tk.core.common import constants
 from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
@@ -28,7 +29,6 @@ from ascend_fd_tk.utils import helpers
 
 @register_analyzer
 class BmcOpticalAnalyzer(Analyzer):
-
     def __init__(self, cluster_info: ClusterInfoCache):
         super().__init__(cluster_info)
         self.threshold = self.cluster_info.get_threshold()
@@ -48,8 +48,7 @@ class BmcOpticalAnalyzer(Analyzer):
                 optical_module_info = bmc_npu_info.get_optical_module_info()
                 if not optical_module_info or not optical_module_info.lane_power_infos:
                     continue
-                domain = [Domain(DeviceType.BMC, bmc_info.bmc_id),
-                          Domain(DeviceType.NPU, bmc_npu_info.npu_id)]
+                domain = [Domain(DeviceType.BMC, bmc_info.bmc_id), Domain(DeviceType.NPU, bmc_npu_info.npu_id)]
                 if bmc_npu_info.chip_id:
                     domain.append(Domain(DeviceType.CHIP, bmc_npu_info.chip_id))
                 # 此处仅记录linkdown数据, 所以有光模块信息即可认为存在故障
@@ -60,14 +59,18 @@ class BmcOpticalAnalyzer(Analyzer):
                 res_list.append(self._check_lox(optical_module_info.rx_los, "Rx", "los"))
                 res_list = [res for res in res_list if res]
                 fault_info = "\n".join(res_list)
-                results.append(DiagResult(domain, fault_info, "请检查端口是否存在脏污"))
+                results.append(
+                    DiagResult(domain, fault_info, "请检查端口是否存在脏污", fault_type=constants.FAULT_TYPE_BMC)
+                )
         return results
 
     def _check_lane_power_info(self, lane_power_info: LanePowerInfo) -> List[str]:
-        res_list = [self.threshold.TX_POWER_THRESHOLD_CONFIG_MW.check_value_str(lane_power_info.tx_power),
-                    self.threshold.RX_POWER_THRESHOLD_CONFIG_MW.check_value_str(lane_power_info.rx_power),
-                    self.threshold.TX_BIAS_MA.check_value_str(lane_power_info.bias),
-                    self.threshold.HOST_SNR_DB.check_value_str(lane_power_info.host_snr),
-                    self.threshold.MEDIA_SNR_DB.check_value_str(lane_power_info.media_snr)]
+        res_list = [
+            self.threshold.TX_POWER_THRESHOLD_CONFIG_MW.check_value_str(lane_power_info.tx_power),
+            self.threshold.RX_POWER_THRESHOLD_CONFIG_MW.check_value_str(lane_power_info.rx_power),
+            self.threshold.TX_BIAS_MA.check_value_str(lane_power_info.bias),
+            self.threshold.HOST_SNR_DB.check_value_str(lane_power_info.host_snr),
+            self.threshold.MEDIA_SNR_DB.check_value_str(lane_power_info.media_snr),
+        ]
         res_list = [f"lane{lane_power_info.lane_id}: {res}" for res in res_list if res]
         return res_list

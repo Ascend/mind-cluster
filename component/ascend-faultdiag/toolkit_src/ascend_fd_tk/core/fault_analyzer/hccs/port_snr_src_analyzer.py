@@ -16,7 +16,7 @@
 # ==============================================================================
 from typing import List
 
-from ascend_fd_tk.core.common import diag_enum
+from ascend_fd_tk.core.common import constants, diag_enum
 from ascend_fd_tk.core.config import port_mapping_config
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
@@ -26,7 +26,6 @@ from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
 
 @register_analyzer
 class PortSnrSrcAnalyzer(Analyzer):
-
     def __init__(self, cluster_info: ClusterInfoCache):
         super().__init__(cluster_info)
         self.swis_info = {k: v for k, v in cluster_info.swis_info.items() if v.hccs_info}
@@ -42,12 +41,16 @@ class PortSnrSrcAnalyzer(Analyzer):
                 ]
                 for abnormal_lane_snr in port_snr.abnormal_lane_snr:
                     check_res = self.cluster_info.get_threshold().CDR_HOST_SNR_LINE.check_value_str(
-                        abnormal_lane_snr.snr_value)
+                        abnormal_lane_snr.snr_value
+                    )
                     if not check_res:
                         continue
-                    diag_results.append(DiagResult(
-                        domain,
-                        f"{abnormal_lane_snr.lane_name} {check_res}",
-                        "请检查端口是否脏污")
+                    diag_results.append(
+                        DiagResult(
+                            domain,
+                            f"{abnormal_lane_snr.lane_name} {check_res}",
+                            "请检查端口是否脏污",
+                            fault_type=constants.FAULT_TYPE_SWITCH,
+                        )
                     )
         return diag_results

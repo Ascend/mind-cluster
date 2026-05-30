@@ -21,7 +21,6 @@ from ascend_fd_tk.core.common.json_obj import JsonObj
 
 
 class Domain(JsonObj):
-
     def __init__(self, domain_type, value):
         self.value = value
         self.domain_type = domain_type
@@ -31,12 +30,14 @@ class Domain(JsonObj):
 
 
 class DiagResult(JsonObj):
-
-    def __init__(self, domain: List[Domain], fault_info: str = "", suggestion: str = "", err_code=""):
+    def __init__(
+        self, domain: List[Domain], fault_info: str = "", suggestion: str = "", err_code="", fault_type: str = ""
+    ):
         self.domain = domain or []
         self.fault_info = fault_info
         self.suggestion = suggestion
         self.err_code = err_code
+        self.fault_type = fault_type
 
     def get_domain_desc(self):
         if isinstance(self.domain, list):
@@ -49,4 +50,5 @@ class DiagResult(JsonObj):
             "故障码": self.err_code,
             "故障信息": self.fault_info,
             "处理建议": self.suggestion,
+            "故障类型": self.fault_type,
         }

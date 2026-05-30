@@ -17,16 +17,16 @@
 
 from typing import List
 
+from ascend_fd_tk.core.common import constants
 from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
-from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
 from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
+from ascend_fd_tk.core.model.switch import SwiOpticalModel
 
 
 class CheckItemInfo(JsonObj):
-
     def __init__(self, subfix: str, normal_value: str, is_multi_lane: bool, desc: str):
         self.subfix = subfix
         self.normal_value = normal_value
@@ -44,38 +44,46 @@ class OpStateFlagDiagInfoAnalyzer(Analyzer):
     _CHECK_ITEMS = [
         CheckItemInfo("Flag", "Normal", True, "收发光指标"),
         CheckItemInfo("Datapath State", "Active", True, "通道状态"),
-        CheckItemInfo("Module State", "Ready", False, "功率模式")
+        CheckItemInfo("Module State", "Ready", False, "功率模式"),
     ]
-
-    def __init__(self, cluster_info: ClusterInfoCache):
-        super().__init__(cluster_info)
 
     def analyse(self) -> List[DiagResult]:
         results = []
         for swi_info in self.cluster_info.swis_info.values():
             for op_model in swi_info.optical_models:
-                fault_info_list = []
-                for diag_info in op_model.state_flag_diag_infos:
-                    for check_item in self._CHECK_ITEMS:
-                        if diag_info.items.endswith(check_item.subfix):
-                            check_states = diag_info.status.split(self._SEPARATOR) if check_item.is_multi_lane else [
-                                diag_info.status]
-                            cur_fault_info = []
-                            for idx, check_state in enumerate(check_states):
-                                check_state = str(check_state).strip()
-                                if check_state != check_item.normal_value:
-                                    lane_info = f"{('lane' + str(idx) + ' ') if check_item.is_multi_lane else ''}"
-                                    lane_fault_info = (f"{lane_info}{check_item.desc} {diag_info.items}"
-                                                       f"值异常：{check_state}，预期为：{check_item.normal_value}")
-                                    cur_fault_info.append(lane_fault_info)
-                            fault_info_list.extend(cur_fault_info)
-                            break
+                fault_info_list = self._collect_fault_info(op_model)
                 if not fault_info_list:
                     continue
-                domain = [Domain(DeviceType.SWITCH, swi_info.swi_id),
-                          Domain(DeviceType.SWI_PORT, op_model.interface_name)]
+                domain = [
+                    Domain(DeviceType.SWITCH, swi_info.swi_id),
+                    Domain(DeviceType.SWI_PORT, op_model.interface_name),
+                ]
                 lane_fault_info = '\n'.join(fault_info_list)
                 fault_info = f"端口{op_model.interface_name} flag信息异常：\n{lane_fault_info}"
-                result = DiagResult(domain, fault_info, "请检查端口")
+                result = DiagResult(domain, fault_info, "请检查端口", fault_type=constants.FAULT_TYPE_SWITCH)
                 results.append(result)
         return results
+
+    def _collect_fault_info(self, op_model: SwiOpticalModel) -> List[str]:
+        fault_info_list = []
+        for diag_info in op_model.state_flag_diag_infos:
+            for check_item in self._CHECK_ITEMS:
+                if not diag_info.items.endswith(check_item.subfix):
+                    continue
+                check_states = (
+                    diag_info.status.split(self._SEPARATOR) if check_item.is_multi_lane else [diag_info.status]
+                )
+                cur_fault_info = []
+                for idx, check_state in enumerate(check_states):
+                    check_state = str(check_state).strip()
+                    if check_state == check_item.normal_value:
+                        continue
+                    lane_info = f"{('lane' + str(idx) + ' ') if check_item.is_multi_lane else ''}"
+                    lane_fault_info = (
+                        f"{lane_info}{check_item.desc} {diag_info.items}"
+                        f"值异常：{check_state}，预期为：{check_item.normal_value}"
+                    )
+                    cur_fault_info.append(lane_fault_info)
+                fault_info_list.extend(cur_fault_info)
+                break
+        return fault_info_list
