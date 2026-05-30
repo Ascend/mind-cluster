@@ -1551,6 +1551,27 @@ relationFaultCustomization.json、faultDuration.json为系统配置文件，若�
 <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p182781654132815"><a name="p182781654132815"></a><a name="p182781654132815"></a>SubHealthFault</p>
 </td>
 </tr>
+<tr id="row7277125616280"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p5277123492816"><a name="p5277123492816"></a><a name="p5277123492816"></a>120001001</p>
+</td>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="p7277855532820"><a name="p7277855532820"></a><a name="p7277855532820"></a>文件系统容量不足</p>
+</td>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p182123454132815"><a name="p182123454132815"></a><a name="p182123454132815"></a>SeparateNPU</p>
+</td>
+</tr>
+<tr id="row7277125966280"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p5277258692816"><a name="p5277258692816"></a><a name="p5277258692816"></a>010001002</p>
+</td>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="p7277819132820"><a name="p7277819132820"></a><a name="p7277819132820"></a>HBM多bit ECC错误（重启）</p>
+</td>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p182723412132815"><a name="p182723412132815"></a><a name="p182723412132815"></a>SubHealthFault</p>
+</td>
+</tr>
+<tr id="row1233115416280"><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p id="p5837135492816"><a name="p5837135492816"></a><a name="p5837135492816"></a>020001001</p>
+</td>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p id="p7272364132820"><a name="p7272364132820"></a><a name="p7272364132820"></a>HBM多bit ECC错误（隔离）</p>
+</td>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p182723454132815"><a name="p182723454132815"></a><a name="p182723454132815"></a>SeparateNPU</p>
+</td>
+</tr>
 </tbody>
 </table>
 
