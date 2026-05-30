@@ -1081,24 +1081,31 @@ func TestResetCommonInferCard(t *testing.T) {
 	devices := []*common.NpuDevice{{DeviceName: "device1", Health: v1beta1.Healthy},
 		{DeviceName: "device2", Health: v1beta1.Unhealthy}}
 	convey.Convey("Test resetCommonInferCard", t, func() {
+		tmpRealCardType := common.ParamOption.RealCardType
+		defer func() { common.ParamOption.RealCardType = tmpRealCardType }()
 		convey.Convey("card type is A3", func() {
-			patch := gomonkey.ApplyGlobalVar(&common.ParamOption.RealCardType, api.Ascend910A3)
-			defer patch.Reset()
+			common.ParamOption.RealCardType = api.Ascend910A3
 			npuDeviceList := []*common.NpuDevice{{LogicID: 0, Health: v1beta1.Healthy}}
 			hdm.resetCommonInferCard("devType", npuDeviceList, nil)
 			convey.ShouldBeFalse(hdm.manager.GetIfCardsInResetting(0))
 		})
-		convey.Convey("When hdm is nil or allInfo.AllDevs is empty, log error and return", func() {
+		convey.Convey("When hdm is nil, log error and return", func() {
+			var nilHdm *HwDevManager
+			nilHdm.resetCommonInferCard("devType", devices, &PodResource{})
+		})
+		convey.Convey("When allInfo.AllDevs is empty, log error and return", func() {
 			tmpAllDevs := hdm.allInfo.AllDevs
 			hdm.allInfo.AllDevs = []common.NpuDevice{}
 			hdm.resetCommonInferCard("devType", devices, &PodResource{})
 			hdm.allInfo.AllDevs = tmpAllDevs
 		})
 		convey.Convey("When getServerUsageAndBoardId fails, log error and return", func() {
+			common.ParamOption.RealCardType = api.Ascend910B
 			patch := gomonkey.ApplyMethodReturn(hdm.manager, "GetServerBoardId", uint32(0), errors.New("error"))
 			defer patch.Reset()
 			hdm.resetCommonInferCard("devType", devices, &PodResource{})
 		})
+		common.ParamOption.RealCardType = api.Ascend910B
 		patch := gomonkey.ApplyMethodReturn(hdm.manager, "GetServerBoardId", uint32(common.A800IA2NoneHccsBoardId),
 			nil).ApplyMethodReturn(&mockDevManager{}, "GetKubeClient", &kubeclient.ClientK8s{})
 		defer patch.Reset()
@@ -1108,10 +1115,66 @@ func TestResetCommonInferCard(t *testing.T) {
 			defer patch1.Reset()
 			hdm.resetCommonInferCard("devType", devices, &PodResource{})
 		})
-		convey.Convey("When boardId is not A800IA2NoneHccsBoardId, call ResetHccsServer", func() {
+		convey.Convey("When boardId is A800IA2NoneHccsBoardIdOld, call ResetWithoutHccsServer", func() {
+			patch1 := gomonkey.ApplyMethodReturn(hdm.manager, "GetServerBoardId",
+				uint32(common.A800IA2NoneHccsBoardIdOld), nil).
+				ApplyMethod(hdm, "ResetWithoutHccsServer",
+					func(_ *HwDevManager, _ string, _ []*common.NpuDevice, _ *PodResource) {})
+			defer patch1.Reset()
+			hdm.resetCommonInferCard("devType", devices, &PodResource{})
+		})
+		convey.Convey("When boardId is A300IA2BoardId, call ResetWithoutHccsServer", func() {
+			patch1 := gomonkey.ApplyMethodReturn(hdm.manager, "GetServerBoardId",
+				uint32(common.A300IA2BoardId), nil).
+				ApplyMethod(hdm, "ResetWithoutHccsServer",
+					func(_ *HwDevManager, _ string, _ []*common.NpuDevice, _ *PodResource) {})
+			defer patch1.Reset()
+			hdm.resetCommonInferCard("devType", devices, &PodResource{})
+		})
+		convey.Convey("When boardId is A300IA2GB64BoardId, call ResetWithoutHccsServer", func() {
+			patch1 := gomonkey.ApplyMethodReturn(hdm.manager, "GetServerBoardId",
+				uint32(common.A300IA2GB64BoardId), nil).
+				ApplyMethod(hdm, "ResetWithoutHccsServer",
+					func(_ *HwDevManager, _ string, _ []*common.NpuDevice, _ *PodResource) {})
+			defer patch1.Reset()
+			hdm.resetCommonInferCard("devType", devices, &PodResource{})
+		})
+		convey.Convey("When boardId is not NoneHccsBoardId, call ResetHccsServer", func() {
 			patch1 := gomonkey.ApplyMethodReturn(hdm.manager, "GetServerBoardId", uint32(0), nil).ApplyMethod(hdm,
 				"ResetHccsServer", func(_ *HwDevManager, _ string, _ []*common.NpuDevice, _ *PodResource) {})
 			defer patch1.Reset()
+			hdm.resetCommonInferCard("devType", devices, &PodResource{})
+		})
+		common.ParamOption.RealCardType = api.Ascend310P
+		convey.Convey("When card type is not A3 or 910B and device is healthy, should skip reset", func() {
+			healthyDevices := []*common.NpuDevice{{LogicID: 0, Health: v1beta1.Healthy}}
+			hdm.resetCommonInferCard("devType", healthyDevices, &PodResource{})
+		})
+		convey.Convey("When card type is not A3 or 910B and isPodRemove returns false, should skip reset", func() {
+			patch1 := gomonkey.ApplyPrivateMethod(hdm, "isPodRemove",
+				func(_ *HwDevManager, _ string, _ *common.NpuDevice, _ *PodResource) bool { return false })
+			defer patch1.Reset()
+			hdm.resetCommonInferCard("devType", devices, &PodResource{})
+		})
+		convey.Convey("When card type is not A3 or 910B and checkNoProc returns false, should skip reset", func() {
+			patch1 := gomonkey.ApplyPrivateMethod(hdm, "isPodRemove",
+				func(_ *HwDevManager, _ string, _ *common.NpuDevice, _ *PodResource) bool { return true })
+			defer patch1.Reset()
+			patch2 := gomonkey.ApplyPrivateMethod(hdm, "checkNoProc",
+				func(_ *HwDevManager, _ int) bool { return false })
+			defer patch2.Reset()
+			hdm.resetCommonInferCard("devType", devices, &PodResource{})
+		})
+		convey.Convey("When card type is not A3 or 910B and all checks pass, should call hotReset", func() {
+			patch1 := gomonkey.ApplyPrivateMethod(hdm, "isPodRemove",
+				func(_ *HwDevManager, _ string, _ *common.NpuDevice, _ *PodResource) bool { return true })
+			defer patch1.Reset()
+			patch2 := gomonkey.ApplyPrivateMethod(hdm, "checkNoProc",
+				func(_ *HwDevManager, _ int) bool { return true })
+			defer patch2.Reset()
+			patch3 := gomonkey.ApplyPrivateMethod(hdm, "hotReset",
+				func(_ *HwDevManager, _ *common.NpuDevice, _ []*common.NpuDevice) {})
+			defer patch3.Reset()
 			hdm.resetCommonInferCard("devType", devices, &PodResource{})
 		})
 	})

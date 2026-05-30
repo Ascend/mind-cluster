@@ -875,18 +875,32 @@ func (hdm *HwDevManager) resetCommonInferCard(devType string, devices []*common.
 		return
 	}
 
-	boardId, err := hdm.manager.GetServerBoardId(hdm.allInfo.AllDevs[common.FirstDevice].LogicID)
-	if err != nil {
-		hwlog.RunLog.Error(err)
+	if common.ParamOption.RealCardType == api.Ascend910B {
+		boardId, err := hdm.manager.GetServerBoardId(hdm.allInfo.AllDevs[common.FirstDevice].LogicID)
+		if err != nil {
+			hwlog.RunLog.Error(err)
+			return
+		}
+		if boardId == common.A800IA2NoneHccsBoardId || boardId == common.A800IA2NoneHccsBoardIdOld ||
+			boardId == common.A300IA2BoardId || boardId == common.A300IA2GB64BoardId {
+			hdm.ResetWithoutHccsServer(devType, devices, prClient)
+			return
+		}
+		hdm.ResetHccsServer(devType, devices, prClient)
 		return
 	}
-
-	if boardId == common.A800IA2NoneHccsBoardId || boardId == common.A800IA2NoneHccsBoardIdOld ||
-		boardId == common.A300IA2BoardId || boardId == common.A300IA2GB64BoardId {
-		hdm.ResetWithoutHccsServer(devType, devices, prClient)
-		return
+	for _, device := range devices {
+		if device.Health == v1beta1.Healthy {
+			continue
+		}
+		if !hdm.isPodRemove(devType, device, prClient) {
+			continue
+		}
+		if !hdm.checkNoProc(device.LogicID) {
+			continue
+		}
+		hdm.hotReset(device, []*common.NpuDevice{device})
 	}
-	hdm.ResetHccsServer(devType, devices, prClient)
 }
 
 // ResetWithoutHccsServer reset server without hccs, which can reset one card at one time
