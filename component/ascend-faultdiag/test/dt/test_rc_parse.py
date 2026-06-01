@@ -112,6 +112,44 @@ class TestA5RootInfoDetect(unittest.TestCase):
 
         self.assertEqual(parser.device_ip, "")
 
+    def test_parse_line_multiple_updates_takes_latest(self):
+        first_line = (
+            "[RootInfoDetect] nRanks[4], rank[0] entry flat topo detect, "
+            "rootinfo: host ip[10.0.0.1] port[30000] netMode[HrtNetworkMode::HDC] "
+            "identifier[test_id_1], deviceLogicId[3], devPhyId[9]"
+        )
+        second_line = (
+            "[RootInfoDetect] nRanks[4], rank[1] entry flat topo detect, "
+            "rootinfo: host ip[10.0.0.2] port[40000] netMode[HrtNetworkMode::HDC] "
+            "identifier[test_id_2], deviceLogicId[7], devPhyId[15]"
+        )
+        parser = self._create_parser()
+        parser.parse_line(first_line)
+        self.assertEqual(parser.logic_device_id, "3")
+        self.assertEqual(parser.phy_device_id, "9")
+        parser.parse_line(second_line)
+        self.assertEqual(parser.logic_device_id, "7")
+        self.assertEqual(parser.phy_device_id, "15")
+
+    def test_same_logic_id_different_phy_id_takes_latest(self):
+        first_line = (
+            "[RootInfoDetect] nRanks[4], rank[0] entry flat topo detect, "
+            "rootinfo: host ip[10.0.0.1] port[30000] netMode[HrtNetworkMode::HDC] "
+            "identifier[test_id_1], deviceLogicId[3], devPhyId[9]"
+        )
+        second_line = (
+            "[RootInfoDetect] nRanks[4], rank[1] entry flat topo detect, "
+            "rootinfo: host ip[10.0.0.2] port[40000] netMode[HrtNetworkMode::HDC] "
+            "identifier[test_id_2], deviceLogicId[3], devPhyId[21]"
+        )
+        parser = self._create_parser()
+        parser.parse_line(first_line)
+        self.assertEqual(parser.logic_device_id, "3")
+        self.assertEqual(parser.phy_device_id, "9")
+        parser.parse_line(second_line)
+        self.assertEqual(parser.logic_device_id, "3")
+        self.assertEqual(parser.phy_device_id, "21")
+
     def test_parse_line_rank_num_not_integer(self):
         line = (
             "[RootInfoDetect] nRanks[abc], rank[2] entry flat topo detect, "
