@@ -55,7 +55,7 @@
 
       YAML启动说明如下：
 
-      K8s集群中存在使用Atlas 推理系列产品的节点，需要在device-plugin-310P-volcano-v\{version\}中将“presetVirtualDevice”字段修改为“false”（协同Volcano使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
+      需要在device-plugin-volcano-v\{version\}.yaml中将“presetVirtualDevice”字段修改为“false”（协同Volcano使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
 
        ```Yaml
        ...
