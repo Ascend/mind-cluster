@@ -16,16 +16,17 @@
 #ifndef OCK_TTP_COMMON_H
 #define OCK_TTP_COMMON_H
 
-#include <cstdint>
-#include <algorithm>
-#include <cstdlib>
-#include <unistd.h>
 #include <semaphore.h>
+#include <unistd.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <cstdlib>
+
 #include "../framework/file_utils.h"
-#include "common_utils.h"
-#include "common_messages.h"
 #include "common_locks.h"
 #include "common_loggers.h"
+#include "common_messages.h"
 #include "common_referable.h"
 #include "pthread_timedwait.h"
 #include "read_write_lock_guard.h"

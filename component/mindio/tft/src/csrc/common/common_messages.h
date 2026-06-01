@@ -19,6 +19,7 @@
 
 #include "common_constants.h"
 #include "common_macros.h"
+#include "common_utils.h"
 
 using MResult = int32_t;
 

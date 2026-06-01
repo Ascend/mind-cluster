@@ -72,4 +72,4 @@ repos:
           - "--style={BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 120, BreakBeforeBraces: Allman}"
           - "--verbose"
           - "-i"
-        exclude: ^build/|tests/third_party/
+        exclude: ^build/|tests/third_party/|mindio/
