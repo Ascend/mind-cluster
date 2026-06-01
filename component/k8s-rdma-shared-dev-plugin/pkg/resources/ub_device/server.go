@@ -1,23 +1,26 @@
-/* Copyright(C) 2026. Huawei Technologies Co.,Ltd. All rights reserved.
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*/
+// Copyright 2025 NVIDIA CORPORATION & AFFILIATES
+// Modified by Huawei Technologies Co.,Ltd in 2026
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
 
 // Package ub_device for ub device info
 package ub_device
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -25,13 +28,12 @@ import (
 	"sync"
 	"time"
 
-	"context"
-
 	grpc "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	pluginapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 	registerapi "k8s.io/kubelet/pkg/apis/pluginregistration/v1"
 
+	"ascend-common/common-utils/hwlog"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/cdi"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
@@ -74,10 +76,10 @@ func NewUbResourceServer(config *types.UserConfig, devices []types.Device, watch
 	socketSuffix string, useCdi bool) (UbResourceServer, error) {
 
 	if config.RdmaHcaMax < 0 {
-		return nil, fmt.Errorf("error: Invalid value for rdmaHcaMax < 0: %d", config.RdmaHcaMax)
+		return nil, fmt.Errorf("invalid value for rdmaHcaMax < 0: %d", config.RdmaHcaMax)
 	}
 	if config.ResourcePrefix == "" {
-		return nil, fmt.Errorf("error: Empty resourcePrefix")
+		return nil, fmt.Errorf("empty resourcePrefix")
 	}
 
 	deviceSpec := getUbDevicesSpec(devices)
@@ -91,7 +93,7 @@ func NewUbResourceServer(config *types.UserConfig, devices []types.Device, watch
 	resourceName := fmt.Sprintf("%s/%s", config.ResourcePrefix, config.ResourceName)
 	socketName := fmt.Sprintf("%s.%s", filepath.Base(config.ResourceName), socketSuffix)
 	socketPath := filepath.Join(sockDir, socketName)
-	log.Printf("socketPath: %s", socketPath)
+	hwlog.RunLog.Infof("socketPath: %s", socketPath)
 
 	return &ubResourceServer{
 		resourceName:    resourceName,
@@ -114,7 +116,7 @@ func NewUbResourceServer(config *types.UserConfig, devices []types.Device, watch
 
 func createUbVirtualDevices(rdmaHcaMax int, deviceSpec []*pluginapi.DeviceSpec, resourceName string) []*pluginapi.Device {
 	if len(deviceSpec) == 0 {
-		log.Printf("Warning: no devicesSpec, create empty resource server for %s", resourceName)
+		hwlog.RunLog.Warnf("no devicesSpec, create empty resource server for %s", resourceName)
 		return []*pluginapi.Device{}
 	}
 
@@ -131,7 +133,7 @@ func createUbVirtualDevices(rdmaHcaMax int, deviceSpec []*pluginapi.DeviceSpec, 
 // Start starts the UB device server
 func (rs *ubResourceServer) Start() error {
 	_ = rs.cleanup()
-	log.Printf("starting %s device plugin endpoint at: %s\n", rs.resourceName, rs.socketName)
+	hwlog.RunLog.Infof("starting %s device plugin endpoint at: %s\n", rs.resourceName, rs.socketName)
 	rs.rsConnector.CreateServer()
 	sock, err := rs.rsConnector.Listen("unix", rs.socketPath)
 	if err != nil {
@@ -151,7 +153,7 @@ func (rs *ubResourceServer) Start() error {
 	}
 	rs.rsConnector.Close(conn)
 
-	log.Printf("%s device plugin endpoint started serving", rs.resourceName)
+	hwlog.RunLog.Infof("%s device plugin endpoint started serving", rs.resourceName)
 
 	if !rs.watchMode {
 		if err = rs.register(); err != nil {
@@ -165,7 +167,7 @@ func (rs *ubResourceServer) Start() error {
 
 // Stop stops the UB device server
 func (rs *ubResourceServer) Stop() error {
-	log.Printf("stopping %s device plugin server...", rs.resourceName)
+	hwlog.RunLog.Infof("stopping %s device plugin server...", rs.resourceName)
 	if rs.rsConnector == nil || rs.rsConnector.GetServer() == nil {
 		return nil
 	}
@@ -185,7 +187,7 @@ func (rs *ubResourceServer) Stop() error {
 
 // Restart restarts the UB device server
 func (rs *ubResourceServer) Restart() error {
-	log.Printf("restarting %s device plugin server...", rs.resourceName)
+	hwlog.RunLog.Infof("restarting %s device plugin server...", rs.resourceName)
 	if rs.rsConnector == nil || rs.rsConnector.GetServer() == nil {
 		return fmt.Errorf("grpc server instance not found for %s", rs.resourceName)
 	}
@@ -227,16 +229,16 @@ func (rs *ubResourceServer) Watch() {
 		select {
 		case stop := <-rs.stopWatcher:
 			if stop {
-				log.Printf("kubelet watcher stopped for server %s", rs.socketPath)
+				hwlog.RunLog.Infof("kubelet watcher stopped for server %s", rs.socketPath)
 				return
 			}
 		default:
 			_, err := os.Lstat(rs.socketPath)
 			if err != nil {
-				log.Printf("warning: server endpoint not found %s", rs.socketName)
-				log.Printf("warning: most likely Kubelet restarted")
+				hwlog.RunLog.Warnf("server endpoint not found %s", rs.socketName)
+				hwlog.RunLog.Warn("most likely Kubelet restarted")
 				if err := rs.Restart(); err != nil {
-					log.Printf("error: unable to restart server %v", err)
+					hwlog.RunLog.Errorf("unable to restart server %v", err)
 				}
 			}
 		}
@@ -272,16 +274,16 @@ func (rs *ubResourceServer) UpdateDevices(devices []types.Device) {
 
 // ListAndWatch lists available UB devices and watches for changes
 func (rs *ubResourceServer) ListAndWatch(e *pluginapi.Empty, s pluginapi.DevicePlugin_ListAndWatchServer) error {
-	log.Printf("ListAndWatch called by kubelet for: %s", rs.resourceName)
+	hwlog.RunLog.Infof("ListAndWatch called by kubelet for: %s", rs.resourceName)
 
 	rs.mutex.RLock()
 	devs := rs.devs
-	log.Printf("Updating \"%s\" devices", rs.resourceName)
+	hwlog.RunLog.Infof("Updating \"%s\" devices", rs.resourceName)
 	if err := s.Send(&pluginapi.ListAndWatchResponse{Devices: devs}); err != nil {
 		rs.mutex.RUnlock()
 		return err
 	}
-	log.Printf("exposing \"%d\" devices", len(devs))
+	hwlog.RunLog.Infof("exposing \"%d\" devices", len(devs))
 	rs.mutex.RUnlock()
 
 	// Watch for device updates
@@ -290,15 +292,15 @@ func (rs *ubResourceServer) ListAndWatch(e *pluginapi.Empty, s pluginapi.DeviceP
 		case <-rs.updateResource:
 			rs.mutex.RLock()
 			devs = rs.devs
-			log.Printf("Updating \"%s\" devices", rs.resourceName)
+			hwlog.RunLog.Infof("Updating \"%s\" devices", rs.resourceName)
 			if err := s.Send(&pluginapi.ListAndWatchResponse{Devices: devs}); err != nil {
 				rs.mutex.RUnlock()
 				return err
 			}
-			log.Printf("exposing \"%d\" devices", len(devs))
+			hwlog.RunLog.Infof("exposing \"%d\" devices", len(devs))
 			rs.mutex.RUnlock()
 		case <-s.Context().Done():
-			log.Printf("ListAndWatch stream closed for: %s", rs.resourceName)
+			hwlog.RunLog.Infof("ListAndWatch stream closed for: %s", rs.resourceName)
 			return nil
 		}
 	}
@@ -357,7 +359,7 @@ func (rs *ubResourceServer) GetInfo(ctx context.Context, req *registerapi.InfoRe
 // NotifyRegistrationStatus notifies plugin of registration status
 func (rs *ubResourceServer) NotifyRegistrationStatus(ctx context.Context, status *registerapi.RegistrationStatus) (*registerapi.RegistrationStatusResponse, error) {
 	if !status.PluginRegistered {
-		log.Printf("UB device plugin %s registration failed: %s", rs.resourceName, status.Error)
+		hwlog.RunLog.Infof("UB device plugin %s registration failed: %s", rs.resourceName, status.Error)
 	}
 	return &registerapi.RegistrationStatusResponse{}, nil
 }
@@ -372,9 +374,9 @@ func getUbDevicesSpec(devices []types.Device) []*pluginapi.DeviceSpec {
 		if len(rdmaDeviceSpec) == 0 {
 			// Use type assertion to get UB device-specific information
 			if ubDevice, ok := device.(types.UbDevice); ok {
-				log.Printf("Warning: non-Rdma UB Device %s\n", ubDevice.GetUbID())
+				hwlog.RunLog.Warnf("non-Rdma UB Device %s\n", ubDevice.GetUbID())
 			} else {
-				log.Printf("Warning: non-Rdma Device %s\n", device.GetName())
+				hwlog.RunLog.Warnf("non-Rdma Device %s\n", device.GetName())
 			}
 		}
 		devicesSpec = append(devicesSpec, rdmaDeviceSpec...)
@@ -429,7 +431,7 @@ func (rsc *resourcesServerPort) Stop() {
 	select {
 	case <-done:
 	case <-time.After(5 * time.Second):
-		log.Printf("warning: gRPC server Stop() timed out after 5s, forcing shutdown")
+		hwlog.RunLog.Warnf("gRPC server Stop() timed out after 5s, forcing shutdown")
 	}
 }
 

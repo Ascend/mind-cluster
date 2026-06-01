@@ -21,13 +21,13 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"time"
 
 	"github.com/vishvananda/netlink"
 
+	"ascend-common/common-utils/hwlog"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/utils"
 )
@@ -105,33 +105,33 @@ func NewCoreResourceManager(configFile string, defaultResourcePrefix string, soc
 
 // ReadConfig reads configuration from file
 func (crm *coreResourceManager) ReadConfig() error {
-	log.Println("Reading", crm.configFile)
+	hwlog.RunLog.Infof("Reading:%v", crm.configFile)
 	raw, err := os.ReadFile(crm.configFile)
 	if err != nil {
-		log.Printf("Warning: Failed to read config file %s: %v", crm.configFile, err)
-		log.Println("Using default configuration")
+		hwlog.RunLog.Warnf("Failed to read config file %s: %v", crm.configFile, err)
+		hwlog.RunLog.Info("Using default configuration")
 		return crm.useDefaultConfig()
 	}
 
 	config := &types.UserConfigList{}
 	if err := json.Unmarshal(raw, config); err != nil {
-		log.Printf("Warning: Failed to parse config file %s: %v", crm.configFile, err)
-		log.Println("Using default configuration")
+		hwlog.RunLog.Warnf("Failed to parse config file %s: %v", crm.configFile, err)
+		hwlog.RunLog.Info("Using default configuration")
 		return crm.useDefaultConfig()
 	}
 
-	log.Printf("loaded config: %+v \n", config.ConfigList)
+	hwlog.RunLog.Infof("loaded config: %+v \n", config.ConfigList)
 
 	// if periodic update is not set then use the default value
 	if config.PeriodicUpdateInterval == nil {
-		log.Println("no periodic update interval is set, use default interval 60 seconds")
+		hwlog.RunLog.Info("no periodic update interval is set, use default interval 60 seconds")
 		crm.PeriodicUpdateInterval = defaultPeriodicUpdateInterval
 	} else {
 		PeriodicUpdateInterval := *config.PeriodicUpdateInterval
 		if PeriodicUpdateInterval == 0 {
-			log.Println("warning: periodic update interval is 0, no periodic update will run")
+			hwlog.RunLog.Warnf("periodic update interval is 0, no periodic update will run")
 		} else {
-			log.Printf("periodic update interval: %+d \n", PeriodicUpdateInterval)
+			hwlog.RunLog.Infof("periodic update interval: %+d \n", PeriodicUpdateInterval)
 		}
 		crm.PeriodicUpdateInterval = time.Duration(PeriodicUpdateInterval) * time.Second
 	}
@@ -175,13 +175,13 @@ func (crm *coreResourceManager) ValidateConfigs() error {
 	for _, conf := range crm.configList {
 		// check if name contains acceptable characters
 		if !validResourceName(conf.ResourceName) {
-			return fmt.Errorf("error: resource name \"%s\" contains invalid characters", conf.ResourceName)
+			return fmt.Errorf("resource name \"%s\" contains invalid characters", conf.ResourceName)
 		}
 		// check resource names are unique
 		_, ok := resourceName[conf.ResourceName]
 		if ok {
 			// resource name already exist
-			return fmt.Errorf("error: resource name \"%s\" already exists", conf.ResourceName)
+			return fmt.Errorf("resource name \"%s\" already exists", conf.ResourceName)
 		}
 		// If prefix is not configured - use the default one
 		if conf.ResourcePrefix == "" {
@@ -189,17 +189,17 @@ func (crm *coreResourceManager) ValidateConfigs() error {
 		}
 
 		if !validResourcePrefix(conf.ResourcePrefix) {
-			return fmt.Errorf("error: resource prefix \"%s\" contains invalid characters, "+
+			return fmt.Errorf("resource prefix \"%s\" contains invalid characters, "+
 				"must be a valid DNS subdomain (lowercase alphanumeric, hyphens, dots only)", conf.ResourcePrefix)
 		}
 
 		if conf.RdmaHcaMax < 0 {
-			return fmt.Errorf("error: Invalid value for rdmaHcaMax < 0: %d", conf.RdmaHcaMax)
+			return fmt.Errorf("invalid value for rdmaHcaMax < 0: %d", conf.RdmaHcaMax)
 		}
 
 		isEmptySelector := utils.IsEmptySelector(&(conf.Selectors))
 		if isEmptySelector && len(conf.Devices) == 0 {
-			return fmt.Errorf("error: configuration mismatch. neither \"selectors\" nor \"devices\" fields exits," +
+			return fmt.Errorf("configuration mismatch. neither \"selectors\" nor \"devices\" fields exits," +
 				" it is recommended to use the new “selectors” field")
 		}
 
@@ -207,7 +207,7 @@ func (crm *coreResourceManager) ValidateConfigs() error {
 		if !isEmptySelector && len(conf.Devices) > 0 {
 			return fmt.Errorf("configuration mismatch. Cannot specify both \"selectors\" and \"devices\" fields")
 		} else if isEmptySelector { // If no "selector" then use devices as IfNames selector
-			log.Println("Warning: \"devices\" field is deprecated, it is recommended to use the new “selectors” field")
+			hwlog.RunLog.Warn("\"devices\" field is deprecated, it is recommended to use the new “selectors” field")
 			conf.Selectors.IfNames = conf.Devices
 		}
 
@@ -222,7 +222,7 @@ func (crm *coreResourceManager) ValidateRdmaSystemMode() error {
 	mode, err := netlink.RdmaSystemGetNetnsMode()
 	if err != nil {
 		if err.Error() == "invalid argument" {
-			log.Printf("too old kernel to get RDMA subsystem")
+			hwlog.RunLog.Info("too old kernel to get RDMA subsystem")
 			return nil
 		}
 
@@ -239,7 +239,7 @@ func (crm *coreResourceManager) ValidateRdmaSystemMode() error {
 func (crm *coreResourceManager) InitServers() error {
 	// This is a placeholder implementation
 	// Device-specific resource managers should override this method
-	log.Println("CoreResourceManager.InitServers() called")
+	hwlog.RunLog.Info("CoreResourceManager.InitServers() called")
 	return nil
 }
 
@@ -285,7 +285,7 @@ func (crm *coreResourceManager) PeriodicUpdate() func() {
 			for {
 				select {
 				case <-ticker.C:
-					log.Println("periodic update triggered")
+					hwlog.RunLog.Info("periodic update triggered")
 					// This should be overridden by device-specific managers
 				case <-stopChan:
 					ticker.Stop()
