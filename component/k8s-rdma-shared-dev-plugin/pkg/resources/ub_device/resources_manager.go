@@ -17,7 +17,6 @@ package ub_device
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,6 +24,7 @@ import (
 
 	"github.com/vishvananda/netlink"
 
+	"ascend-common/common-utils/hwlog"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/cdi"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/core"
@@ -81,7 +81,7 @@ func (rm *ubResourceManager) DiscoverHostDevices() error {
 	rm.deviceList = []*UbDeviceInfo{}
 
 	if _, err := os.Stat(common.SysBusUb); os.IsNotExist(err) {
-		log.Printf("UB devices directory %s does not exist, no UB devices found", common.SysBusUb)
+		hwlog.RunLog.Infof("UB devices directory %s does not exist, no UB devices found", common.SysBusUb)
 		return nil
 	}
 
@@ -94,14 +94,14 @@ func (rm *ubResourceManager) DiscoverHostDevices() error {
 		deviceDir := filepath.Join(common.SysBusUb, entry.Name())
 
 		if info, err := rm.readUbDeviceInfo(deviceDir, entry.Name()); err == nil {
-			log.Printf("DiscoverHostDevices(): UB device found: %-12s	%-8s	%-8s	%-20s	%-8s",
+			hwlog.RunLog.Infof("DiscoverHostDevices(): UB device found: %-12s	%-8s	%-8s	%-20s	%-8s",
 				info.UbID, info.Vendor, info.DeviceID, info.Driver, info.IfName)
 			rm.deviceList = append(rm.deviceList, info)
 		}
 	}
 
 	if len(rm.deviceList) == 0 {
-		log.Println("Warning: DiscoverHostDevices(): no UB devices found")
+		hwlog.RunLog.Warn("DiscoverHostDevices(): no UB devices found")
 	}
 
 	return nil
@@ -147,12 +147,12 @@ func (rm *ubResourceManager) readUbNetInfo(deviceDir, ubID string) (string, stri
 
 	ifName := netEntries[0].Name()
 	if len(netEntries) > 1 {
-		log.Printf("Warning: found several net names for UB device %s, using first name %s", ubID, ifName)
+		hwlog.RunLog.Warnf("found several net names for UB device %s, using first name %s", ubID, ifName)
 	}
 
 	link, err := rm.netlinkManager.LinkByName(ifName)
 	if err != nil {
-		log.Printf("Warning: unable to get link info for UB device %s net %s: %v", ubID, ifName, err)
+		hwlog.RunLog.Warnf("unable to get link info for UB device %s net %s: %v", ubID, ifName, err)
 		return ifName, ""
 	}
 
@@ -175,7 +175,7 @@ func (rm *ubResourceManager) GetDevices() []types.Device {
 		); err == nil {
 			devices = append(devices, device)
 		} else {
-			log.Printf("Error creating UB device: %v", err)
+			hwlog.RunLog.Infof("Error creating UB device: %v", err)
 		}
 	}
 	return devices
@@ -184,15 +184,17 @@ func (rm *ubResourceManager) GetDevices() []types.Device {
 // InitServers initializes the resource servers for UB devices
 func (rm *ubResourceManager) InitServers() error {
 	for _, config := range rm.GetConfigList() {
-		log.Printf("UB Resource Config: %+v\n", config)
+		hwlog.RunLog.Infof("UB Resource Config: %+v\n", config)
 		devices := rm.GetDevices()
 		filteredDevices := rm.GetFilteredDevices(devices, &config.Selectors)
-		log.Printf("UB resource %s: total devices=%d, filtered devices=%d", config.ResourceName, len(devices), len(filteredDevices))
+		hwlog.RunLog.Infof("UB resource %s: total devices=%d, filtered devices=%d", config.ResourceName,
+			len(devices), len(filteredDevices))
 
 		rm.setUbNicsUp(filteredDevices)
 
 		if len(filteredDevices) == 0 {
-			log.Printf("Warning: no UB devices in device pool, creating empty resource server for %s", config.ResourceName)
+			hwlog.RunLog.Warnf("no UB devices in device pool, creating empty resource server for %s",
+				config.ResourceName)
 		}
 
 		if rm.GetUseCdi() {
@@ -219,11 +221,11 @@ func (rm *ubResourceManager) setUbNicsUp(devices []types.Device) {
 		}
 		link, err := rm.netlinkManager.LinkByName(ubDev.GetIfName())
 		if err != nil {
-			log.Printf("Warning: InitServers(): unable to get NIC info for UB device %s: %s", ubDev.GetUbID(), err)
+			hwlog.RunLog.Warnf("InitServers(): unable to get NIC info for UB device %s: %s", ubDev.GetUbID(), err)
 			continue
 		}
 		if err := rm.netlinkManager.LinkSetUp(link); err != nil {
-			log.Printf("Warning: InitServers(): unable to set NIC %s to up state: %s", ubDev.GetIfName(), err)
+			hwlog.RunLog.Warnf("InitServers(): unable to set NIC %s to up state: %s", ubDev.GetIfName(), err)
 		}
 	}
 }
@@ -241,7 +243,7 @@ func (rm *ubResourceManager) PeriodicUpdate() func() {
 	interval := rm.GetPeriodicUpdateInterval()
 
 	if interval > 0 {
-		log.Printf("Starting periodic update for UB devices with interval %v", interval)
+		hwlog.RunLog.Infof("Starting periodic update for UB devices with interval %v", interval)
 		go rm.runPeriodicUpdate(interval, stopChan, done)
 	} else {
 		close(done)
@@ -263,9 +265,9 @@ func (rm *ubResourceManager) runPeriodicUpdate(interval time.Duration, stopChan 
 	for {
 		select {
 		case <-ticker.C:
-			log.Println("Performing periodic update for UB devices")
+			hwlog.RunLog.Info("Performing periodic update for UB devices")
 			if err := rm.DiscoverHostDevices(); err != nil {
-				log.Printf("Error discovering UB devices during periodic update: %v", err)
+				hwlog.RunLog.Errorf("Error discovering UB devices during periodic update: %v", err)
 				continue
 			}
 
@@ -277,7 +279,7 @@ func (rm *ubResourceManager) runPeriodicUpdate(interval time.Duration, stopChan 
 				rs.UpdateDevices(filteredDevices)
 			}
 		case <-stopChan:
-			log.Println("Stopping periodic update for UB devices")
+			hwlog.RunLog.Info("Stopping periodic update for UB devices")
 			return
 		}
 	}
