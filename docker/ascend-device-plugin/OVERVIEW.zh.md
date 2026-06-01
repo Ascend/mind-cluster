@@ -129,29 +129,11 @@ kubectl label nodes <node-name> host-arch=huawei-arm
 将 YAML 文件中镜像的 `{tag}` 替换为实际标签。
 
 ```bash
-# 推理服务器（插Atlas 300I 推理卡）上不使用Volcano的配置文件。
-kubectl apply -f device-plugin-310-{version}.yaml
+# 除了Atlas 200I SoC A1 核心板之外的产品上不使用Volcano的配置文件。
+kubectl apply -f device-plugin-{version}.yaml
 
-# 推理服务器（插Atlas 300I 推理卡）上使用Volcano的配置文件。
-kubectl apply -f device-plugin-310-volcano-{version}.yaml
-
-# 除了Atlas 200I SoC A1 核心板之外的Atlas 推理系列产品上不使用Volcano的配置文件。
-kubectl apply -f device-plugin-310P-{version}.yaml
-
-# 除了Atlas 200I SoC A1 核心板之外的Atlas 推理系列产品上使用Volcano的配置文件。
-kubectl apply -f device-plugin-310P-volcano-{version}.yaml
-
-# Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件上不使用Volcano的配置文件。
-kubectl apply -f device-plugin-910-{version}.yaml
-
-# Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件上使用Volcano的配置文件。
-kubectl apply -f device-plugin-910-volcano-{version}.yaml
-
-# Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD上不使用Volcano的配置文件。
-kubectl apply -f device-plugin-npu-{version}.yaml
-
-# Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD上使用Volcano的配置文件。
-kubectl apply -f device-plugin-npu-volcano-{version}.yaml
+# 除了Atlas 200I SoC A1 核心板之外的产品上使用Volcano的配置文件。
+kubectl apply -f device-plugin-volcano-{version}.yaml
 ```
 
 5. 验证部署

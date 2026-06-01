@@ -277,25 +277,13 @@
 
         YAML启动说明如下：
 
-        - K8s集群中存在使用Atlas 推理系列产品节点（Ascend Device Plugin独立工作，不使用Volcano调度器）。
+        - K8s集群中存在使用Atlas 推理系列产品节点、Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品、Atlas A2 推理系列产品、Atlas A3 推理系列产品节点（Ascend Device Plugin独立工作，不配合Volcano和Ascend Operator使用）。
 
             ```shell
-            kubectl apply -f device-plugin-310P-v{version}.yaml
+            kubectl apply -f device-plugin-v{version}.yaml
             ```
 
-        - K8s集群中存在使用Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品、Atlas A2 推理系列产品、Atlas A3 推理系列产品节点（Ascend Device Plugin独立工作，不配合Volcano和Ascend Operator使用）。
-
-            ```shell
-            kubectl apply -f device-plugin-910-v{version}.yaml
-            ```
-
-        - K8s集群中存在使用Atlas 推理系列产品节点（使用Volcano调度器，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
-
-            ```shell
-            kubectl apply -f device-plugin-310P-volcano-v{version}.yaml
-            ```
-
-        - K8s集群中存在使用Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品、Atlas A2 推理系列产品、Atlas A3 推理系列产品节点（配合Volcano和Ascend Operator使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
+        - K8s集群中存在使用Atlas 推理系列产品节点、Atlas 训练系列产品、Atlas A2 训练系列产品、Atlas A3 训练系列产品、Atlas A2 推理系列产品、Atlas A3 推理系列产品节点（配合Volcano和Ascend Operator使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
 
             ```shell
             kubectl apply -f device-plugin-volcano-v{version}.yaml

@@ -99,16 +99,10 @@
 
     | YAML文件列表                                                  | 说明                                                                                                  |
     |-----------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
-    | device-plugin-310-v<i>\{version\}</i>.yaml                | 推理服务器（插Atlas 300I 推理卡）上不使用Volcano的配置文件。                                                             |
-    | device-plugin-310-volcano-v<i>\{version\}</i>.yaml        | 推理服务器（插Atlas 300I 推理卡）上使用Volcano的配置文件。                                                              |
     | device-plugin-310P-1usoc-v<i>\{version\}</i>.yaml         | Atlas 200I SoC A1 核心板上不使用Volcano的配置文件。                                                              |
     | device-plugin-310P-1usoc-volcano-v<i>\{version\}</i>.yaml | Atlas 200I SoC A1 核心板上使用Volcano的配置文件。                                                               |
-    | device-plugin-310P-v<i>\{version\}</i>.yaml               | 除了Atlas 200I SoC A1 核心板之外的Atlas 推理系列产品上不使用Volcano的配置文件。                                             |
-    | device-plugin-310P-volcano-v<i>\{version\}</i>.yaml       | 除了Atlas 200I SoC A1 核心板之外的Atlas 推理系列产品上使用Volcano的配置文件。                                              |
-    | device-plugin-910-v<i>\{version\}</i>.yaml                | Atlas 训练系列产品、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 训练系列产品</term>或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件上不使用Volcano的配置文件。 |
-    | device-plugin-volcano-v<i>\{version\}</i>.yaml            | Atlas 训练系列产品、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 训练系列产品</term>或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件上使用Volcano的配置文件。  |
-    | device-plugin-npu-v<i>\{version\}</i>.yaml                | Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD上不使用Volcano的配置文件。                                  |
-    | device-plugin-npu-volcano-v<i>\{version\}</i>.yaml        | Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD上使用Volcano的配置文件。                                   |
+    | device-plugin-v<i>\{version\}</i>.yaml                | 除了Atlas 200I SoC A1 核心板之外的其他产品上不使用Volcano的配置文件。 |
+    | device-plugin-volcano-v<i>\{version\}</i>.yaml            | 除了Atlas 200I SoC A1 核心板之外的其他产品上使用Volcano的配置文件。  |
 
 3. 如不修改组件启动参数，可跳过本步骤。否则，根据实际情况修改Ascend Device Plugin的启动参数。启动参数请参见[表3](#table1064314568229)，可执行<b>./device-plugin -h</b>查看参数说明。
     - 在Atlas 200I SoC A1 核心板节点上，修改启动脚本“run\_for\_310P\_1usoc.sh”中Ascend Device Plugin的启动参数。修改完后需在所有Atlas 200I SoC A1 核心板节点上重新制作镜像，或者将本节点镜像重新制作后分发到其余所有Atlas 200I SoC A1 核心板节点。
@@ -237,40 +231,16 @@
 
 8. 在K8s管理节点上各YAML对应路径下执行以下命令，启动Ascend Device Plugin。
 
-    - K8s集群中存在使用Atlas 训练系列产品、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 训练系列产品</term>或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件的节点（配合Volcano使用，支持虚拟化实例，YAML默认开启静态虚拟化）。
+    - K8s集群中存在使用除Atlas 200I SoC A1 核心板之外的节点（配合Volcano使用，支持虚拟化实例，YAML默认开启静态虚拟化）。
 
         ```shell
         kubectl apply -f device-plugin-volcano-v{version}.yaml
         ```
 
-    - K8s集群中存在使用Atlas 训练系列产品、<term>Atlas A2 训练系列产品</term>、<term>Atlas A3 训练系列产品</term>或Atlas 800I A2 推理服务器、A200I A2 Box 异构组件的节点（Ascend Device Plugin独立工作，不配合Volcano使用）。
+    - K8s集群中存在使用除Atlas 200I SoC A1 核心板之外的节点（Ascend Device Plugin独立工作，不配合Volcano使用）。
 
         ```shell
-        kubectl apply -f device-plugin-910-v{version}.yaml
-        ```
-
-    - K8s集群中存在使用推理服务器（插Atlas 300I 推理卡）的节点（使用Volcano调度器）。
-
-        ```shell
-        kubectl apply -f device-plugin-310-volcano-v{version}.yaml
-        ```
-
-    - K8s集群中存在使用推理服务器（插Atlas 300I 推理卡）的节点（Ascend Device Plugin独立工作，不使用Volcano调度器）。
-
-        ```shell
-        kubectl apply -f device-plugin-310-v{version}.yaml
-        ```
-
-    - K8s集群中存在使用Atlas 推理系列产品的节点（使用Volcano调度器，支持虚拟化实例，YAML默认开启静态虚拟化）。
-
-        ```shell
-        kubectl apply -f device-plugin-310P-volcano-v{version}.yaml
-        ```
-
-    - K8s集群中存在使用Atlas 推理系列产品的节点（Ascend Device Plugin独立工作，不使用Volcano调度器）。
-
-        ```shell
-        kubectl apply -f device-plugin-310P-v{version}.yaml
+        kubectl apply -f device-plugin-v{version}.yaml
         ```
 
     - K8s集群中存在使用Atlas 200I SoC A1 核心板的节点（使用Volcano调度器）。

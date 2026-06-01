@@ -29,15 +29,15 @@
     **cd** _/home/mind-cluster/component/_**ascend-device-plugin/build/**
 
      2.1 中心侧场景编译device-plugin（构建镜像，容器启动设备插件场景）
-        
+
         chmod +x build.sh
-        
+
         ./build.sh
-        
+
      2.2 边侧场景编译device-plugin（二进制启动设备插件场景）
-        
+
         chmod +x build_edge.sh
-            
+
         ./build_edge.sh
 
    3.  执行以下命令，查看**output**生成的软件列表。
@@ -50,11 +50,7 @@
        -r-x------ 1 root root 59349656  4月 29 09:28 device-plugin*
        -r-------- 1 root root     5555  4月 29 09:28 device-plugin-310P-1usoc-v6.0.0.yaml
        -r-------- 1 root root     5555  4月 29 09:28 device-plugin-310P-1usoc-volcano-v6.0.0.yaml
-       -r-------- 1 root root     4962  4月 29 09:28 device-plugin-310P-v6.0.0.yaml
-       -r-------- 1 root root     5090  4月 29 09:28 device-plugin-310P-volcano-v6.0.0.yaml
-       -r-------- 1 root root     4566  4月 29 09:28 device-plugin-310-v6.0.0.yaml
-       -r-------- 1 root root     4588  4月 29 09:28 device-plugin-310-volcano-v6.0.0.yaml
-       -r-------- 1 root root     5024  4月 29 09:28 device-plugin-910-v6.0.0.yaml
+       -r-------- 1 root root     5024  4月 29 09:28 device-plugin-v6.0.0.yaml
        -r-------- 1 root root     5644  4月 29 09:28 device-plugin-volcano-v6.0.0.yaml
        -r-------- 1 root root      786  4月 29 09:28 Dockerfile
        -r-------- 1 root root     1074  4月 29 09:28 Dockerfile-310P-1usoc
@@ -64,14 +60,11 @@
        -r-------- 1 root root     1017  4月 29 09:28 SwitchFaultCode.json
        ```
 
-    >   ![](doc/figures/icon-note.gif) **说明：** 
-       1、“ascend-device-plugin/build“目录下的**ascendplugin-910.yaml**文件在“ascend-device-plugin/output/“下生成的对应文件为**device-plugin-910-v6.0.0.yaml**，作用是更新版本号。
+    >   ![](doc/figures/icon-note.gif) **说明：**
+       1、“ascend-device-plugin/build“目录下的**ascendplugin.yaml**文件在“ascend-device-plugin/output/“下生成的对应文件为**device-plugin-v6.0.0.yaml**，作用是更新版本号。
        2、边侧场景编译仅生成device-plugin二进制文件
 
 
 # 说明
 
 1. 当前容器方式部署本组件，本组件的认证鉴权方式为ServiceAccount， 该认证鉴权方式为ServiceAccount的token明文显示，建议用户自行进行安全加强。
-
-
-
