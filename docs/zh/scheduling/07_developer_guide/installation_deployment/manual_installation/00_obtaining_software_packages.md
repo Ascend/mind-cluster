@@ -338,7 +338,7 @@
 </tr>
 <tr id="row687220595818"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p088099175818"><a name="p088099175818"></a><a name="p088099175818"></a>noded-dpc-v<em id="i15881291587"><a name="i15881291587"></a><a name="i15881291587"></a>{version}</em>.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1988119185816"><a name="p1988119185816"></a><a name="p1988119185816"></a>如需使用<a href="../../../04_usage/resumable_training/01_solutions_principles.md#节点故障">dpc故障检测功能</a>，使用本配置文件启动<span id="ph143091154131112"><a name="ph143091154131112"></a><a name="ph143091154131112"></a>NodeD</span>。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1988119185816"><a name="p1988119185816"></a><a name="p1988119185816"></a>如需使用共享存储故障检测功能，使用本配置文件启动<span id="ph143091154131112"><a name="ph143091154131112"></a><a name="ph143091154131112"></a>NodeD</span>。</p>
 </td>
 </tr>
 <tr id="row33201227121219"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p832011273124"><a name="p832011273124"></a><a name="p832011273124"></a>NodeDConfiguration.json</p>

@@ -110,6 +110,8 @@ spec:
               mountPath: /user/cluster-info/profiling
             - name: dpcstatus
               mountPath: /user/mind-cluster/dpcstatus
+            - name: dtfsstatus
+              mountPath: /user/mind-cluster/dtfsstatus
       volumes:
         - name: log-noded
           hostPath:
@@ -136,3 +138,6 @@ spec:
         - name: dpcstatus
           hostPath:
             path: /proc/odcs
+        - name: dtfsstatus
+          hostPath:
+            path: /proc/dtfs

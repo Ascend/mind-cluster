@@ -1,5 +1,5 @@
 # User-defined parameters
-enableDpc: true
+enableDpcOrDtfs: true
 
 image:
   repository: ""

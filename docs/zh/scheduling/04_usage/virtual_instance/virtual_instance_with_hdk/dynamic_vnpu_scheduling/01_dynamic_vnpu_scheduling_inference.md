@@ -295,9 +295,9 @@ vcjob任务原理图如[图2](#fig1918122131712)所示。
 1. 集群调度组件定期上报节点和芯片信息。
     - kubelet上报节点芯片数量到节点对象（node）中。
     - Ascend Device Plugin定期上报AICore数量到Node中。
-    - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
+    - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息到node-info-cm中，将共享存储故障上报到ClusterD的公共故障中。
 
-2. ClusterD读取device-info-cm和node-info-cm中信息后，将信息分别写入cluster-info-device-cm和cluster-info-node-cm中。
+2. ClusterD读取device-info-cm和node-info-cm中的信息，以及公共故障信息后，将信息整合到cluster-info-cm中。
 3. 用户通过kubectl或者其他深度学习平台下发vcjob任务。
 4. volcano-controller为任务创建相应PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/docs/v1.9.0/Concepts/podgroup)。
 5. 当集群资源满足任务要求时，volcano-controller创建任务Pod。
@@ -315,8 +315,8 @@ deploy任务原理图如[图3](#fig349112913199)所示。
 
 1. 集群调度组件定期上报节点和芯片信息。
     - Ascend Device Plugin定期上报AICore数量到Node中。
-    - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
-2. ClusterD读取device-info-cm和node-info-cm中信息后，将信息分别写入cluster-info-device-cm和cluster-info-node-cm中。
+    - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息到node-info-cm中，将共享存储故障上报到ClusterD的公共故障中。
+2. ClusterD读取device-info-cm和node-info-cm中的信息，以及公共故障信息后，将信息整合到cluster-info-cm中。
 3. 用户通过kubectl或者其他深度学习平台下发deploy任务。
 4. kube-controller为任务创建相应Pod。
 5. volcano-controller创建任务PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/docs/v1.9.0/Concepts/podgroup)。
