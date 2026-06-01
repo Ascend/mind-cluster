@@ -87,7 +87,7 @@ class SwitchAnalyzer(Analyzer):
             if not optical_module_info:
                 continue
             self.analyzed_switch_names.add(analyzed_tag)
-            local_domain = [Domain(DeviceType.SWITCH, switch_info.name), Domain(DeviceType.SWI_PORT, interface)]
+            local_domain = [Domain(DeviceType.SWITCH, switch_info.swi_id), Domain(DeviceType.SWI_PORT, interface)]
             # 获取对端信息（对端交换机信息+对端交换机端口光模块信息）
             remote_optical_module_info, remote_domain = self.get_remote_info(
                 interface_mapping_by_name, interface, switch_info.name

@@ -21,7 +21,6 @@ from ascend_fd_tk.core.collect.parser.host_parser import HostParser
 
 
 class TestHostParser(unittest.TestCase):
-
     def test_parse_optical_info(self):
         # 测试parse_optical_info方法 - 正常情况
         cmd_res = """TX Power0: -10.0 dBm
@@ -167,13 +166,13 @@ Interface: eth0"""
 CDR Host SNR Lane2: 11.0 dB
 CDR Media SNR Lane1: 9.5 dB
 CDR Media SNR Lane2: 10.0 dB"""
-        result = HostParser.parse_hccn_tool_cdr(cmd_res)
+        result = HostParser.parse_hccn_tool_cdr_snr(cmd_res)
         self.assertIsNotNone(result)
         self.assertEqual(result.cdr_host_snr_lane1, "10.5")
 
         # 测试parse_hccn_tool_cdr方法 - 空结果
         cmd_res_empty = ""
-        result = HostParser.parse_hccn_tool_cdr(cmd_res_empty)
+        result = HostParser.parse_hccn_tool_cdr_snr(cmd_res_empty)
         self.assertIsNone(result)
 
 

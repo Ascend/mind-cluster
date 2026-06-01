@@ -38,13 +38,12 @@ class BmcDumpLogParser(DumpLogDirParser):
         os.path.join("AppDump", "CpuMem", "NpuIO", "optical_module_history_info_log.csv"),
     ]
 
-    def __init__(self, root_dir: str, parse_dir: str):
-        super().__init__(root_dir, parse_dir)
-
     def parse(self) -> dict:
         parse_data = CliOutputParsedData()
         for config, path in self._BMC_CONFIGS.items():
             config_file_path = os.path.join(self.parse_dir, path)
+            if not os.path.exists(config_file_path):
+                continue
             with open(config_file_path, "r", encoding="utf-8") as f:
                 file_lines = f.readlines()
             if config == BmcDumpLogDataType.BMC_IP.name:

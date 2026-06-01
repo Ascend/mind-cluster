@@ -18,12 +18,21 @@
 from ascend_fd_tk.core.collect.base import Collector, log_collect_async_event
 from ascend_fd_tk.core.collect.fetcher.host_fetcher import HostFetcher
 from ascend_fd_tk.core.collect.parser.host_parser import HostParser
-from ascend_fd_tk.core.model.host import HostInfo, NpuChipInfo, HCCNOpticalInfo, HCCNLinkStatInfo, HCCNStatInfo, \
-    HCCNLLDPInfo, HccnPortHccsInfo, SpodInfo, CdrSnrInfo, HCCNDfxCfgInfo
+from ascend_fd_tk.core.model.host import (
+    HostInfo,
+    NpuChipInfo,
+    HCCNOpticalInfo,
+    HCCNLinkStatInfo,
+    HCCNStatInfo,
+    HCCNLLDPInfo,
+    HccnPortHccsInfo,
+    SpodInfo,
+    CdrSnrInfo,
+    HCCNDfxCfgInfo,
+)
 
 
 class HostCollector(Collector):
-
     def __init__(self, fetcher: HostFetcher):
         self.fetcher = fetcher
         self.parser = HostParser()
@@ -52,26 +61,39 @@ class HostCollector(Collector):
                 duplex = await self.fetcher.fetch_roce_duplex(chip_phy_id)
                 net_health = await self.collect_hccn_tool_net_health(chip_phy_id)
                 link_status = await self.collect_hccn_tool_link_status(chip_phy_id)
-                cdr_snr_info = await self.collect_hccn_tool_cdr(chip_phy_id)
+                cdr_snr_info = await self.collect_hccn_tool_cdr_snr(chip_phy_id)
                 hccn_dfx_cfg = await self.collect_hccn_dfx_cfg(chip_phy_id)
                 if server_superpod_id is None and spod_info:
                     server_superpod_id = spod_info.super_pod_id
                 if server_index is None and spod_info:
                     server_index = spod_info.server_index
-                npu_chip_info[chip_phy_id] = NpuChipInfo(hccn_lldp_info=hccn_lldp_info,
-                                                         hccn_optical_info=hccn_optical_info,
-                                                         hccn_link_stat_info=hccn_link_stat_info,
-                                                         hccn_stat_info=hccn_stat_info,
-                                                         hccs_info=hccs_info,
-                                                         spod_info=spod_info,
-                                                         npu_type=npu_type, npu_id=npu_id, chip_id=chip_id,
-                                                         chip_phy_id=chip_phy_id, speed=speed, duplex=duplex,
-                                                         net_health=net_health, link_status=link_status,
-                                                         cdr_snr_info=cdr_snr_info, hccn_dfx_cfg=hccn_dfx_cfg)
-        host_info = HostInfo(host_id, sn_num, hostname=host_name,
-                             server_superpod_id=server_superpod_id, server_index=server_index,
-                             msnpureport_log=msnpureport_log,
-                             npu_chip_info=npu_chip_info)
+                npu_chip_info[chip_phy_id] = NpuChipInfo(
+                    hccn_lldp_info=hccn_lldp_info,
+                    hccn_optical_info=hccn_optical_info,
+                    hccn_link_stat_info=hccn_link_stat_info,
+                    hccn_stat_info=hccn_stat_info,
+                    hccs_info=hccs_info,
+                    spod_info=spod_info,
+                    npu_type=npu_type,
+                    npu_id=npu_id,
+                    chip_id=chip_id,
+                    chip_phy_id=chip_phy_id,
+                    speed=speed,
+                    duplex=duplex,
+                    net_health=net_health,
+                    link_status=link_status,
+                    cdr_snr_info=cdr_snr_info,
+                    hccn_dfx_cfg=hccn_dfx_cfg,
+                )
+        host_info = HostInfo(
+            host_id,
+            sn_num,
+            hostname=host_name,
+            server_superpod_id=server_superpod_id,
+            server_index=server_index,
+            msnpureport_log=msnpureport_log,
+            npu_chip_info=npu_chip_info,
+        )
         return host_info
 
     async def get_id(self) -> str:
@@ -117,9 +139,9 @@ class HostCollector(Collector):
         recv = await self.fetcher.fetch_hccn_tool_link_status(chip_phy_id)
         return self.parser.parse_hccn_tool_link_status(recv)
 
-    async def collect_hccn_tool_cdr(self, chip_phy_id) -> CdrSnrInfo:
-        recv = await self.fetcher.fetch_hccn_tool_cdr(chip_phy_id)
-        return self.parser.parse_hccn_tool_cdr(recv)
+    async def collect_hccn_tool_cdr_snr(self, chip_phy_id) -> CdrSnrInfo:
+        recv = await self.fetcher.fetch_hccn_tool_cdr_snr(chip_phy_id)
+        return self.parser.parse_hccn_tool_cdr_snr(recv)
 
     async def collect_hccn_dfx_cfg(self, chip_phy_id) -> HCCNDfxCfgInfo:
         recv = await self.fetcher.fetch_hccn_dfx_cfg(chip_phy_id)

@@ -49,8 +49,8 @@ class BmcOpticalAnalyzer(Analyzer):
                 if not optical_module_info or not optical_module_info.lane_power_infos:
                     continue
                 domain = [Domain(DeviceType.BMC, bmc_info.bmc_id), Domain(DeviceType.NPU, bmc_npu_info.npu_id)]
-                if bmc_npu_info.chip_id:
-                    domain.append(Domain(DeviceType.CHIP, bmc_npu_info.chip_id))
+                if bmc_npu_info.chip_phy_id:
+                    domain.append(Domain(DeviceType.CHIP, bmc_npu_info.chip_phy_id))
                 # 此处仅记录linkdown数据, 所以有光模块信息即可认为存在故障
                 res_list = [f"NPU存在linkdown，记录时间{optical_module_info.log_time}，可能为闪断或硬件故障"]
                 for lane_power_info in optical_module_info.lane_power_infos:

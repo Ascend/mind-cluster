@@ -23,17 +23,13 @@ from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.base import SshFetcher
 from ascend_fd_tk.core.log_parser.base import FindResult
 from ascend_fd_tk.core.log_parser.parse_config import msnpureport_log_config
 from ascend_fd_tk.core.log_parser.remote_log_parser import RemoteLogPyScriptParser
-from ascend_fd_tk.utils.executors import AsyncSSHExecutor, CmdTask
+from ascend_fd_tk.utils.executors import CmdTask
 from ascend_fd_tk.utils import logger
 
 _CONSOLE_LOGGER = logger.CONSOLE_LOGGER
 
 
 class HostSshFetcher(SshFetcher, HostFetcher):
-
-    def __init__(self, executor: AsyncSSHExecutor):
-        super().__init__(executor)
-
     async def fetch_id(self):
         return self.executor.host
 
@@ -60,7 +56,7 @@ class HostSshFetcher(SshFetcher, HostFetcher):
             if command_res.is_success():
                 command_stdout = command_res.stdout
             else:
-                _CONSOLE_LOGGER.info("执行失败：", command_res.stderr)
+                _CONSOLE_LOGGER.info("执行失败：%s", command_res.stderr)
         except Exception as e:
             _CONSOLE_LOGGER.info(e)
         npu_mapping = {}
@@ -120,15 +116,15 @@ class HostSshFetcher(SshFetcher, HostFetcher):
         return ""
 
     async def fetch_hccs_info(self, npu_id, chip_id) -> str:
-        command_res = await self.executor.run_cmd(
-            CmdTask("npu-smi info -t hccs -i {} -c {}".format(npu_id, chip_id)))
+        command_res = await self.executor.run_cmd(CmdTask("npu-smi info -t hccs -i {} -c {}".format(npu_id, chip_id)))
         if command_res.is_success():
             return command_res.stdout
         return ""
 
     async def fetch_spod_info(self, npu_id, chip_id) -> str:
         command_res = await self.executor.run_cmd(
-            CmdTask("npu-smi info -t spod-info -i {} -c {}".format(npu_id, chip_id)))
+            CmdTask("npu-smi info -t spod-info -i {} -c {}".format(npu_id, chip_id))
+        )
         if command_res.is_success():
             return command_res.stdout
         return ""
@@ -167,7 +163,7 @@ class HostSshFetcher(SshFetcher, HostFetcher):
             return cmd_res.stdout
         return ""
 
-    async def fetch_hccn_tool_cdr(self, chip_phy_id) -> str:
+    async def fetch_hccn_tool_cdr_snr(self, chip_phy_id) -> str:
         cmd_res = await self.executor.run_cmd(CmdTask(f"hccn_tool -i {chip_phy_id} -scdr -t 5"))
         if cmd_res.is_success():
             return cmd_res.stdout

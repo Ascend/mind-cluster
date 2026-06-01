@@ -19,12 +19,19 @@ from typing import List, Dict
 from ascend_fd_tk.core.collect.base import Collector, log_collect_async_event
 from ascend_fd_tk.core.collect.fetcher.switch_fetcher import SwitchFetcher
 from ascend_fd_tk.core.collect.parser.switch_parser import SwitchParser
-from ascend_fd_tk.core.model.switch import SwitchInfo, InterfaceBrief, SwiOpticalModel, InterfaceMapping, AlarmInfo, \
-    InterfaceInfo, BitErrRate, TransceiverInfo
+from ascend_fd_tk.core.model.switch import (
+    SwitchInfo,
+    InterfaceBrief,
+    SwiOpticalModel,
+    InterfaceMapping,
+    AlarmInfo,
+    InterfaceInfo,
+    BitErrRate,
+    TransceiverInfo,
+)
 
 
 class SwitchCollector(Collector):
-
     def __init__(self, fetcher: SwitchFetcher):
         self.fetcher = fetcher
         self.parser = SwitchParser()
@@ -44,16 +51,20 @@ class SwitchCollector(Collector):
         date_time = await self.coll_datetime()
         bit_error_rate_list = await self.coll_bit_error_rate()
         transceiver_infos = await self.coll_transceiver_info()
-        switch_info = SwitchInfo(switch_name, switch_ip, sn=sn,
-                                 optical_models=optical_models,
-                                 interface_briefs=interface_briefs,
-                                 active_alarm_info=active_alarm_info,
-                                 history_alarm_info=history_alarm_info,
-                                 interface_info=interface_info,
-                                 interface_mapping=interface_mapping,
-                                 date_time=date_time,
-                                 bit_error_rate=bit_error_rate_list,
-                                 transceiver_infos=transceiver_infos, )
+        switch_info = SwitchInfo(
+            switch_name,
+            switch_ip,
+            sn=sn,
+            optical_models=optical_models,
+            interface_briefs=interface_briefs,
+            active_alarm_info=active_alarm_info,
+            history_alarm_info=history_alarm_info,
+            interface_info=interface_info,
+            interface_mapping=interface_mapping,
+            date_time=date_time,
+            bit_error_rate=bit_error_rate_list,
+            transceiver_infos=transceiver_infos,
+        )
         return switch_info
 
     async def get_id(self) -> str:
@@ -68,9 +79,10 @@ class SwitchCollector(Collector):
         return self.parser.parse_interface_brief(interface_brief_str)
 
     async def coll_optical_module_info(self, interface_briefs: List[InterfaceBrief]) -> List[SwiOpticalModel]:
+        # 在线
         opt_module_info = await self.fetcher.fetch_optical_module_info(interface_briefs)
         table_parse_list = self.parser.parse_opt_module_info_from_table(opt_module_info, interface_briefs)
-
+        # 离线
         switch_log_info = await self.fetcher.fetch_switch_log_info()
         port_mapping = await self.coll_port_mapping()
         line_parse_list = self.parser.parse_opt_module_info_from_line(switch_log_info, port_mapping)
@@ -85,15 +97,19 @@ class SwitchCollector(Collector):
         return self.parser.parse_lldp_nei_brief(lldp_nei_brief)
 
     async def coll_active_alarms(self) -> List[AlarmInfo]:
+        # 在线
         active_alarms = await self.fetcher.fetch_active_alarms()
         active_alarms_objs = self.parser.parse_alarms(active_alarms)
+        # 离线
         active_alarms_verbose = await self.fetcher.fetch_active_alarms_verbose()
         active_alarms_verbose_objs = self.parser.parse_alarm_verbose(active_alarms_verbose)
         return active_alarms_objs + active_alarms_verbose_objs
 
     async def coll_history_alarms(self) -> List[AlarmInfo]:
+        # 在线
         history_alarms = await self.fetcher.fetch_history_alarms()
         result = self.parser.parse_alarms(history_alarms)
+        # 离线
         history_alarms_verbose = await self.fetcher.fetch_history_alarms_verbose()
         result.extend(self.parser.parse_alarm_verbose(history_alarms_verbose))
         return result

@@ -22,7 +22,6 @@ from ascend_fd_tk.core.collect.parser.hccs_parser import HccsParser
 
 
 class TestHccsParser(unittest.TestCase):
-
     def test_parse_hccs_proxy_response_statistics(self):
         # 测试parse_hccs_proxy_response_statistics方法
         cmd_res = """Interface  RemoteProxyMiss  RemoteProxyRxTimeout  RemoteProxyTxTimeout  LocalProxyMiss  LocalProxyRxTimeout  LocalProxyTxTimeout
@@ -35,13 +34,12 @@ enp1       0                0                     5                      0      
         self.assertEqual(result[0].rp_rx, 10)
         self.assertEqual(result[1].rp_tx, 5)
 
-    @patch('ascend_fd_tk.core.collect.parser.hccs_parser.HccsParser._parse_hccs_proxy_response_detail_interfaces')
+    @patch('ascend_fd_tk.core.collect.parser.hccs_parser.HccsParser.parse_hccs_proxy_response_detail_interfaces')
     def test_parse_hccs_proxy_response_detail_interfaces(self, mock_parse):
         # 测试parse_hccs_proxy_response_detail_interfaces方法
         mock_parse.return_value = []
         cmd_res = "display hccs proxy enp0\ndisplay hccs proxy enp1"
-        mock_records = [MagicMock(interface="enp0"), MagicMock(interface="enp1")]
-        result = HccsParser.parse_hccs_proxy_response_detail_interfaces(cmd_res, mock_records)
+        result = HccsParser.parse_hccs_proxy_response_detail_interfaces(cmd_res)
         self.assertEqual(len(result), 0)
         mock_parse.assert_called()
 
@@ -58,7 +56,9 @@ enp1       0          0          0"""
     @patch('ascend_fd_tk.core.collect.parser.hccs_parser.port_mapping_config')
     def test_parse_link_status(self, mock_port_config):
         # 测试parse_link_status方法
-        mock_port_config.get_port_mapping_config_instance.return_value.find_swi_port.return_value = MagicMock(swi_port="port1")
+        mock_port_config.get_port_mapping_config_instance.return_value.find_swi_port.return_value = MagicMock(
+            swi_port="port1"
+        )
         cmd_res = "display for info\nindex | record\n1 | 2026-02-01 10:00:00 LINK UP\n2 | 2026-02-01 11:00:00 LINK DOWN\n\n\ndisplay for info\nindex | record\n1 | 2026-02-01 12:00:00 LINK UP"
         result = HccsParser.parse_link_status(cmd_res)
         self.assertEqual(len(result), 3)

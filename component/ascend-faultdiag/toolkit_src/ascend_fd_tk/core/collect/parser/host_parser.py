@@ -18,8 +18,17 @@
 import re
 
 from ascend_fd_tk.core.common.constants import CMD_EXEC_SUCCESS
-from ascend_fd_tk.core.model.host import HCCNOpticalInfo, HCCNLinkStatInfo, HCCNLinkHistory, HCCNStatInfo, \
-    HCCNLLDPInfo, HccnPortHccsInfo, SpodInfo, CdrSnrInfo, HCCNDfxCfgInfo
+from ascend_fd_tk.core.model.host import (
+    HCCNOpticalInfo,
+    HCCNLinkStatInfo,
+    HCCNLinkHistory,
+    HCCNStatInfo,
+    HCCNLLDPInfo,
+    HccnPortHccsInfo,
+    SpodInfo,
+    CdrSnrInfo,
+    HCCNDfxCfgInfo,
+)
 from ascend_fd_tk.utils.form_parser import FormParser
 
 
@@ -128,7 +137,7 @@ class HostParser:
         return ""
 
     @classmethod
-    def parse_hccn_tool_cdr(cls, cmd_res: str) -> CdrSnrInfo:
+    def parse_hccn_tool_cdr_snr(cls, cmd_res: str) -> CdrSnrInfo:
         if not cmd_res or not cmd_res.strip():
             return None
         return CdrSnrInfo.from_dict(FormParser().parse(cmd_res))

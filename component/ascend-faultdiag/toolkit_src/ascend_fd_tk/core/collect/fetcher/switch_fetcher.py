@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# pylint: disable=R0801
 # Copyright 2026 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,12 +21,11 @@ from typing import List
 
 from ascend_fd_tk.core.collect.fetcher.base import Fetcher
 from ascend_fd_tk.core.log_parser.base import FindResult
-from ascend_fd_tk.core.model.hccs import ProxyTimeoutStatis, HccsChipPortSnr, HccsSerdesDumpInfo
+from ascend_fd_tk.core.model.hccs import HccsChipPortSnr, HccsSerdesDumpInfo
 from ascend_fd_tk.core.model.switch import InterfaceBrief, PortDownStatus
 
 
 class SwitchFetcher(Fetcher):
-
     @abc.abstractmethod
     async def init_fetcher(self):
         pass
@@ -87,9 +87,7 @@ class SwitchFetcher(Fetcher):
         return ""
 
     @abc.abstractmethod
-    async def fetch_hccs_proxy_response_detail_interfaces(
-            self, proxy_response_error_records: List[ProxyTimeoutStatis]
-    ) -> str:
+    async def fetch_hccs_proxy_response_detail_interfaces(self) -> str:
         return ""
 
     @abc.abstractmethod

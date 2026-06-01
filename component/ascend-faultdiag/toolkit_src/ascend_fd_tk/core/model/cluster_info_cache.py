@@ -42,6 +42,11 @@ class ClusterInfoCache(JsonObj):
         # 后续通过客户类型修改阈值
         self._threshold: Type[OpticalModuleThreshold] = OpticalModuleThreshold
 
+    def sort_info(self):
+        self.hosts_info = dict(sorted(self.hosts_info.items(), key=lambda info: info[1].host_id))
+        self.bmcs_info = dict(sorted(self.bmcs_info.items(), key=lambda info: info[1].bmc_id))
+        self.swis_info = dict(sorted(self.swis_info.items(), key=lambda info: info[1].swi_id))
+
     def update(self, cache: "ClusterInfoCache"):
         self.hosts_info.update(cache.hosts_info)
         self.bmcs_info.update(cache.bmcs_info)

@@ -25,7 +25,6 @@ from ascend_fd_tk.core.log_parser.base import FindResult
 
 
 class HostDumpLogFetcher(HostFetcher):
-
     def __init__(self, parse_dir: str, parsed_data: CliOutputParsedData):
         self.parse_dir = parse_dir
         self.parsed_data = parsed_data
@@ -83,7 +82,7 @@ class HostDumpLogFetcher(HostFetcher):
     async def fetch_hccn_tool_net_health(self, chip_phy_id) -> str:
         return self.parsed_data.fetch_data_by_chip_phy_id(ToolLogCollectionDataType.NET_HEALTH, chip_phy_id)
 
-    async def fetch_hccn_tool_cdr(self, chip_phy_id) -> str:
+    async def fetch_hccn_tool_cdr_snr(self, chip_phy_id) -> str:
         return self.parsed_data.fetch_data_by_chip_phy_id(ToolLogCollectionDataType.CDR_SNR, chip_phy_id)
 
     async def fetch_hccn_dfx_cfg(self, chip_phy_id) -> str:
