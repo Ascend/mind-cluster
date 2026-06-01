@@ -129,29 +129,11 @@ Select the appropriate YAML file based on the Ascend processor model:
 Replace `{tag}` in the YAML file with the actual image tag.
 
 ```bash
-# Configuration file for inference servers (with Atlas 300I inference cards) without Volcano.
-kubectl apply -f device-plugin-310-{version}.yaml
+# Configuration file for products excluding Atlas 200I SoC A1 core board without Volcano.
+kubectl apply -f device-plugin-{version}.yaml
 
-# Configuration file for inference servers (with Atlas 300I inference cards) with Volcano.
-kubectl apply -f device-plugin-310-volcano-{version}.yaml
-
-# Configuration file for Atlas inference series products (excluding Atlas 200I SoC A1 core board) without Volcano.
-kubectl apply -f device-plugin-310P-{version}.yaml
-
-# Configuration file for Atlas inference series products (excluding Atlas 200I SoC A1 core board) with Volcano.
-kubectl apply -f device-plugin-310P-volcano-{version}.yaml
-
-# Configuration file for Atlas training series products, Atlas A2 training series products, Atlas A3 training series products, Atlas 800I A2 inference servers, or A200I A2 Box heterogeneous components without Volcano.
-kubectl apply -f device-plugin-910-{version}.yaml
-
-# Configuration file for Atlas training series products, Atlas A2 training series products, Atlas A3 training series products, Atlas 800I A2 inference servers, or A200I A2 Box heterogeneous components with Volcano.
-kubectl apply -f device-plugin-910-volcano-{version}.yaml
-
-# Configuration file for Atlas 350 standard cards, Atlas 850 series hardware products, and Atlas 950 SuperPoD without Volcano.
-kubectl apply -f device-plugin-npu-{version}.yaml
-
-# Configuration file for Atlas 350 standard cards, Atlas 850 series hardware products, and Atlas 950 SuperPoD with Volcano.
-kubectl apply -f device-plugin-npu-volcano-{version}.yaml
+# Configuration file for products excluding Atlas 200I SoC A1 core board with Volcano.
+kubectl apply -f device-plugin-volcano-{version}.yaml
 ```
 
 5. Verify deployment

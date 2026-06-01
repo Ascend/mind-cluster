@@ -127,13 +127,13 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p2907182417816"><a name="p2907182417816"></a><a name="p2907182417816"></a>自定义指标组配置文件。</p>
 </td>
 </tr>
-<tr id="row10465947499"><td class="cellrowborder" rowspan="21" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p349233264112"><a name="p349233264112"></a><a name="p349233264112"></a><span id="ph522114212719"><a name="ph522114212719"></a><a name="ph522114212719"></a>Ascend Device Plugin</span></p>
+<tr id="row10465947499"><td class="cellrowborder" rowspan="15" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p349233264112"><a name="p349233264112"></a><a name="p349233264112"></a><span id="ph522114212719"><a name="ph522114212719"></a><a name="ph522114212719"></a>Ascend Device Plugin</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="24.310000000000002%" headers="mcps1.2.5.1.2 "><p id="p246510417491"><a name="p246510417491"></a><a name="p246510417491"></a>device-plugin</p>
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p34651145494"><a name="p34651145494"></a><a name="p34651145494"></a><span id="ph1024012311247"><a name="ph1024012311247"></a><a name="ph1024012311247"></a>Ascend Device Plugin</span>二进制文件。</p>
 </td>
-<td class="cellrowborder" rowspan="21" align="left" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p578044431010"><a name="p578044431010"></a><a name="p578044431010"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="15" align="left" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p578044431010"><a name="p578044431010"></a><a name="p578044431010"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 <p id="p17810448103"><a name="p17810448103"></a><a name="p17810448103"></a></p>
 <p id="p178144410101"><a name="p178144410101"></a><a name="p178144410101"></a></p>
 </td>
@@ -196,24 +196,14 @@
 </div></div>
 </td>
 </tr>
-<tr id="row15301532123217"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p364901073616"><a name="p364901073616"></a><a name="p364901073616"></a>device-plugin-310-v<em id="i10364134551714"><a name="i10364134551714"></a><a name="i10364134551714"></a>{version}</em>.yaml</p>
+<tr id="row3124540173214"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p891215422516"><a name="p891215422516"></a><a name="p891215422516"></a>device-plugin-<em id="i201964115579"><a name="i201964115579"></a><a name="i201964115579"></a>v{version}</em>.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1032715441283"><a name="p1032715441283"></a><a name="p1032715441283"></a>推理服务器（插<span id="ph163696166292"><a name="ph163696166292"></a><a name="ph163696166292"></a>Atlas 300I 推理卡</span>）上不使用<span id="ph183921109162"><a name="ph183921109162"></a><a name="ph183921109162"></a>Volcano</span>的配置文件。</p>
-</td>
-</tr>
-<tr id="row1317496692"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p18536134319468"><a name="p18536134319468"></a><a name="p18536134319468"></a>device-plugin-310-volcano-<em id="i6536134324615"><a name="i6536134324615"></a><a name="i6536134324615"></a>v{version}</em>.yaml</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p11536543194616"><a name="p11536543194616"></a><a name="p11536543194616"></a>推理服务器（插<span id="ph0536443144614"><a name="ph0536443144614"></a><a name="ph0536443144614"></a>Atlas 300I 推理卡</span>）上使用<span id="ph1353694310467"><a name="ph1353694310467"></a><a name="ph1353694310467"></a>Volcano</span>的配置文件。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p723164185113"><a name="p723164185113"></a><a name="p723164185113"></a>除Atlas 200I SoC A1 核心板外不使用<span id="ph988012132113"><a name="ph988012132113"></a><a name="ph988012132113"></a>Volcano</span>的配置文件。</p>
 </td>
 </tr>
-<tr id="row1100173517329"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p168332200511"><a name="p168332200511"></a><a name="p168332200511"></a>device-plugin-310P-v<em id="i3556348201713"><a name="i3556348201713"></a><a name="i3556348201713"></a>{version}</em>.yaml</p>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>device-plugin-volcano-<em id="i201964115579"><a name="i201964115579"></a><a name="i201964115579"></a>v{version}</em>.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p075418583017"><a name="p075418583017"></a><a name="p075418583017"></a>除了Atlas 200I SoC A1 核心板之外的<span id="ph1623844892113"><a name="ph1623844892113"></a><a name="ph1623844892113"></a>Atlas 推理系列产品</span>设备上不使用<span id="ph1868725712201"><a name="ph1868725712201"></a><a name="ph1868725712201"></a>Volcano</span>的配置文件。</p>
-</td>
-</tr>
-<tr id="row6435172313911"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1310865514615"><a name="p1310865514615"></a><a name="p1310865514615"></a>device-plugin-310P-volcano-<em id="i141081555114614"><a name="i141081555114614"></a><a name="i141081555114614"></a>v{version}</em>.yaml</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p610885574617"><a name="p610885574617"></a><a name="p610885574617"></a>除了Atlas 200I SoC A1 核心板之外的<span id="ph16108155134618"><a name="ph16108155134618"></a><a name="ph16108155134618"></a>Atlas 推理系列产品</span>设备上使用<span id="ph1110885524616"><a name="ph1110885524616"></a><a name="ph1110885524616"></a>Volcano</span>的配置文件。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>除Atlas 200I SoC A1 核心板外使用<span id="ph988012132113"><a name="ph988012132113"></a><a name="ph988012132113"></a>Volcano</span>的配置文件。</p>
 </td>
 </tr>
 <tr id="row349515251394"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p111089552466"><a name="p111089552466"></a><a name="p111089552466"></a>device-plugin-310P-1usoc-<em id="i210811554462"><a name="i210811554462"></a><a name="i210811554462"></a>v{version}</em>.yaml</p>
@@ -224,26 +214,6 @@
 <tr id="row79263271099"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p138727813478"><a name="p138727813478"></a><a name="p138727813478"></a>device-plugin-310P-1usoc-volcano-v<em id="i1987218834713"><a name="i1987218834713"></a><a name="i1987218834713"></a>{version}</em>.yaml</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1687216824716"><a name="p1687216824716"></a><a name="p1687216824716"></a><span id="ph18721785476"><a name="ph18721785476"></a><a name="ph18721785476"></a>Atlas 200I SoC A1 核心板</span>上使用<span id="ph787228144715"><a name="ph787228144715"></a><a name="ph787228144715"></a>Volcano</span>的配置文件。</p>
-</td>
-</tr>
-<tr id="row1761512372323"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p3890224115110"><a name="p3890224115110"></a><a name="p3890224115110"></a>device-plugin-910-v<em id="i14676173911711"><a name="i14676173911711"></a><a name="i14676173911711"></a>{version}</em>.yaml</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p690919143714"><a name="p690919143714"></a><a name="p690919143714"></a><span id="ph327965117217"><a name="ph327965117217"></a><a name="ph327965117217"></a>Atlas 训练系列产品</span>或<span id="ph155178916436"><a name="ph155178916436"></a><a name="ph155178916436"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 训练系列产品</term></span>上不使用<span id="ph12340165912011"><a name="ph12340165912011"></a><a name="ph12340165912011"></a>Volcano</span>的配置文件。</p>
-</td>
-</tr>
-<tr id="row3124540173214"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p891215422516"><a name="p891215422516"></a><a name="p891215422516"></a>device-plugin-volcano-<em id="i201964115579"><a name="i201964115579"></a><a name="i201964115579"></a>v{version}</em>.yaml</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p723164185113"><a name="p723164185113"></a><a name="p723164185113"></a><span id="ph5477154313217"><a name="ph5477154313217"></a><a name="ph5477154313217"></a>Atlas 训练系列产品</span>或<span id="ph1962393802018"><a name="ph1962393802018"></a><a name="ph1962393802018"></a><term id="zh-cn_topic_0000001519959665_term57208119917_1"><a name="zh-cn_topic_0000001519959665_term57208119917_1"></a><a name="zh-cn_topic_0000001519959665_term57208119917_1"></a>Atlas A2 训练系列产品</term></span>上使用<span id="ph988012132113"><a name="ph988012132113"></a><a name="ph988012132113"></a>Volcano</span>的配置文件。</p>
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>device-plugin-npu-<em id="i201964115579"><a name="i201964115579"></a><a name="i201964115579"></a>v{version}</em>.yaml</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD上不使用Volcano的配置文件。</p>
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>device-plugin-npu-volcano-<em id="i201964115579"><a name="i201964115579"></a><a name="i201964115579"></a>v{version}</em>.yaml</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD上使用Volcano的配置文件。</p>
 </td>
 </tr>
 <tr id="row15450141514209"><td class="cellrowborder" rowspan="8" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p10503112473412"><a name="p10503112473412"></a><a name="p10503112473412"></a><span id="ph5971324183414"><a name="ph5971324183414"></a><a name="ph5971324183414"></a>Volcano</span></p>
