@@ -482,12 +482,12 @@ class BaseInfoParser:
         )
         if logic_device_id == INVALID_ID:
             logic_device_id = ""
-        self.logic_device_id = self.logic_device_id or logic_device_id
+        self.logic_device_id = logic_device_id or self.logic_device_id
 
         phy_device_id = filter_single_rank_info(line, regular_table.SOCKET_PHY_ID_INFO)
         if phy_device_id == INVALID_ID:
             phy_device_id = ""
-        self.phy_device_id = self.phy_device_id or phy_device_id
+        self.phy_device_id = phy_device_id or self.phy_device_id
 
         host_ip = filter_single_rank_info(line, regular_table.HOST_IP_INFO)
         if host_ip != INVALID_IP and IPAddress.is_valid_ip(host_ip):
