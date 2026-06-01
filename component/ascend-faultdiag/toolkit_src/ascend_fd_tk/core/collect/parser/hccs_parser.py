@@ -20,18 +20,27 @@ from typing import List
 from ascend_fd_tk.core.common import diag_enum, constants
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.config import port_mapping_config
-from ascend_fd_tk.core.model.hccs import ProxyTimeoutStatis, InterfaceProxyResponseDetail, HccsRouteMiss, \
-    PortLinkStatusRecord, HccsPortStatistic, HccsPortInvalidDrop, PortCreditBackPressure, InterfaceSnr, LaneSnr, \
-    LaneInfo, HccsMapTable, HccsChipPortSnr
+from ascend_fd_tk.core.model.hccs import (
+    ProxyTimeoutStatis,
+    InterfaceProxyResponseDetail,
+    HccsRouteMiss,
+    PortLinkStatusRecord,
+    HccsPortStatistic,
+    HccsPortInvalidDrop,
+    PortCreditBackPressure,
+    InterfaceSnr,
+    LaneSnr,
+    LaneInfo,
+    HccsMapTable,
+    HccsChipPortSnr,
+)
 from ascend_fd_tk.core.model.switch import PortDownStatus
-from ascend_fd_tk.utils import helpers
 from ascend_fd_tk.utils.helpers import to_int
 from ascend_fd_tk.utils.logger import DIAG_LOGGER
 from ascend_fd_tk.utils.table_parser import TableParser
 
 
 class PortStatisticInfo(JsonObj):
-
     def __init__(self, chip_id="", port_id="", module_id=""):
         self.chip_id = chip_id
         self.port_id = port_id
@@ -54,23 +63,8 @@ class HccsParser:
     }
 
     _PORT_STATISTIC_PATTERN = re.compile(
-        r'enp s 1 c (?P<chip_id>\d{1,5}) "get port statistic count port (?P<port_id>\d{1,5}) module "(?P<module_id>\d{1,5})"')
-
-    @staticmethod
-    def _parse_hccs_proxy_response_detail_interfaces(interface: str, recv: str):
-        titles_dict = {
-            "proxy_type": "ProxyType",
-            "response_type": "ResponseType",
-            "address": "Address",
-            "collect_time": "CollectTime"
-        }
-        proxy_timeout_detail = TableParser.parse(recv, titles_dict, {}, 1)
-        res = []
-        for timeout_detail in proxy_timeout_detail:
-            detail = InterfaceProxyResponseDetail.from_dict(timeout_detail)
-            detail.interface = interface
-            res.append(detail)
-        return res
+        r'enp s 1 c (?P<chip_id>\d{1,5}) "get port statistic count port (?P<port_id>\d{1,5}) module "(?P<module_id>\d{1,5})"'
+    )
 
     @classmethod
     def parse_hccs_proxy_response_statistics(cls, cmd_res: str) -> List[ProxyTimeoutStatis]:
@@ -81,26 +75,37 @@ class HccsParser:
             "rp_tx": "RemoteProxyTxTimeout",
             "lp_miss": "LocalProxyMiss",
             "lp_rx": "LocalProxyRxTimeout",
-            "lp_tx": "LocalProxyTxTimeout"
+            "lp_tx": "LocalProxyTxTimeout",
         }
         proxy_timeout_statistics = TableParser.parse(cmd_res, titles_dict, {}, 1)
         proxy_timeout_statistics = [ProxyTimeoutStatis.from_dict(item) for item in proxy_timeout_statistics]
-        error_records = [item
-                         for item in proxy_timeout_statistics
-                         if item.is_rx_timeout_happend() or item.is_rp_tx_timeout_happend()]
+        error_records = [
+            item for item in proxy_timeout_statistics if item.is_rx_timeout_happend() or item.is_rp_tx_timeout_happend()
+        ]
         return error_records
 
     @classmethod
-    def parse_hccs_proxy_response_detail_interfaces(
-            cls, all_cmd_res: str, proxy_response_error_records: List[ProxyTimeoutStatis]
-    ) -> List[InterfaceProxyResponseDetail]:
-        if not proxy_response_error_records:
-            return []
-        cmd_res_list = helpers.split_str(all_cmd_res, "display hccs proxy")
-        result = []
-        for cmd_res, record in zip(cmd_res_list, proxy_response_error_records):
-            result.extend(cls._parse_hccs_proxy_response_detail_interfaces(record.interface, cmd_res))
-        return result
+    def parse_hccs_proxy_response_detail_interfaces(cls, all_cmd_res: str) -> List[InterfaceProxyResponseDetail]:
+        titles_dict = {
+            "interface": "Interface",
+            "proxy_type": "ProxyType",
+            "response_type": "ResponseType",
+            "address": "Address",
+            "collect_time": "CollectTime",
+            "detail": "Detail",
+        }
+        proxy_timeout_detail = TableParser.parse(all_cmd_res, titles_dict, {}, 1)
+        res = []
+        temp_interface = ""
+        for timeout_detail in proxy_timeout_detail:
+            detail = InterfaceProxyResponseDetail.from_dict(timeout_detail)
+            if detail.interface:
+                temp_interface = detail.interface
+                res.append(detail)
+            elif temp_interface and detail.collect_time and detail.proxy_type:
+                detail.interface = temp_interface
+                res.append(detail)
+        return res
 
     @classmethod
     def parse_hccs_route_miss(cls, cmd_res: str) -> List[HccsRouteMiss]:
@@ -108,7 +113,7 @@ class HccsParser:
             'interface': 'Interface',
             'rp_direction_miss': 'RpDirection',
             'lp_direction_miss': 'LpDirection',
-            'nc_direction_miss': 'NcDirection'
+            'nc_direction_miss': 'NcDirection',
         }
         route_miss_statistics = TableParser.parse(cmd_res, titles_dict, separate_title_content_lines_num=1)
         route_miss_statistics_objs = [HccsRouteMiss.from_dict(item) for item in route_miss_statistics]
@@ -120,17 +125,14 @@ class HccsParser:
         if not cmd_res:
             return []
         chip_parts = cmd_res.split("display for info")
-        titles_dict = {
-            'index': 'index',
-            'record': 'record'
-        }
+        titles_dict = {'index': 'index', 'record': 'record'}
         link_info_list = []
         port_mapping_config_instance = port_mapping_config.get_port_mapping_config_instance()
         for chip_idx, item in enumerate(chip_parts[1:]):
             record_parts = re.split(r"[\r\n]{3,}", item.strip())
             for port_idx, record in enumerate(record_parts):
                 # 数据太多了,每个先保留4行
-                for table in TableParser.parse(record, titles_dict)[:cls.SAVE_NUM]:
+                for table in TableParser.parse(record, titles_dict)[: cls.SAVE_NUM]:
                     record = PortLinkStatusRecord.from_dict(table)
                     record.interface = str(port_idx)
                     record.chip = str(chip_idx)
@@ -142,10 +144,7 @@ class HccsParser:
 
     @classmethod
     def parse_port_statistics_chip_info(cls, cmd_res: str) -> List[HccsPortStatistic]:
-        titles_dict = {
-            'dfx_state_name': 'Dfx_StatName',
-            'dfx_result': 'Dfx_Result'
-        }
+        titles_dict = {'dfx_state_name': 'Dfx_StatName', 'dfx_result': 'Dfx_Result'}
         res = []
         port_info_cmd_res_list = [part for part in cmd_res.strip().split("display for info") if part.strip()]
         for port_info_cmd_res in port_info_cmd_res_list:
@@ -165,12 +164,7 @@ class HccsParser:
 
     @classmethod
     def parse_hccs_port_invalid_drop(cls, cmd_res: str) -> List[HccsPortInvalidDrop]:
-        titles_dict = {
-            "ub_instance": "Ub-instance",
-            "link_group": "link-group",
-            "rplp": "RPLP",
-            "nc": "NC"
-        }
+        titles_dict = {"ub_instance": "Ub-instance", "link_group": "link-group", "rplp": "RPLP", "nc": "NC"}
         table = TableParser.parse(cmd_res, titles_dict, {}, 1)
         return [HccsPortInvalidDrop.from_dict(item) for item in table]
 
@@ -199,8 +193,15 @@ class HccsParser:
     @classmethod
     def parse_interface_snr(cls, cmd_res: str) -> List[InterfaceSnr]:
         titles_dict = {
-            "interface_name": "interfaceName", "lane1": "lane1", "lane2": "lane2", "lane3": "lane3", "lane4": "lane4",
-            "lane5": "lane5", "lane6": "lane6", "lane7": "lane7", "lane8": "lane8",
+            "interface_name": "interfaceName",
+            "lane1": "lane1",
+            "lane2": "lane2",
+            "lane3": "lane3",
+            "lane4": "lane4",
+            "lane5": "lane5",
+            "lane6": "lane6",
+            "lane7": "lane7",
+            "lane8": "lane8",
         }
         end_sign = "------------"
         parse_data_list = TableParser.parse(cmd_res, titles_dict, separate_title_content_lines_num=1, end_sign=end_sign)
@@ -229,10 +230,7 @@ class HccsParser:
 
     @classmethod
     def parse_hccs_map_table(cls, cmd_res: str) -> List[HccsMapTable]:
-        titles_dict = {
-            "port": "Interface", "start_addr": "StartAddr",
-            "end_addr": "EndAddr", "base_eid": "BaseEid"
-        }
+        titles_dict = {"port": "Interface", "start_addr": "StartAddr", "end_addr": "EndAddr", "base_eid": "BaseEid"}
         mapping_config_instance = port_mapping_config.get_port_mapping_config_instance()
         tables = TableParser.parse(cmd_res, titles_dict, {}, 1)
         for table in tables:
@@ -260,13 +258,14 @@ class HccsParser:
                 port_snr = HccsChipPortSnr.from_dict(row)
                 port_snr.swi_chip_id = match.group(1)
                 port_snr.port_id = match.group(2)
-                port_mapping_instance = port_mapping_config_instance.find_swi_port(str(port_snr.swi_chip_id),
-                                                                                   phy_id=str(port_snr.port_id))
+                port_mapping_instance = port_mapping_config_instance.find_swi_port(
+                    str(port_snr.swi_chip_id), phy_id=str(port_snr.port_id)
+                )
                 if port_mapping_instance:
                     port_snr.swi_port = port_mapping_instance.swi_port
                     port_snr.xpu = port_mapping_instance.xpu
                 else:
-                    DIAG_LOGGER.warning(f"未找到chip: {port_snr.swi_chip_id} port: {port_snr.port_id}对应的端口")
+                    DIAG_LOGGER.warning("未找到chip: %s port: %s对应的端口", port_snr.swi_chip_id, port_snr.port_id)
                 res.append(port_snr)
         return res
 
@@ -282,7 +281,7 @@ class HccsParser:
                 swi_port = port_mapping_instance.swi_port
                 xpu = port_mapping_instance.xpu
             else:
-                DIAG_LOGGER.warning(f"未找到chip: {swi_chip_id} port: {port_id}对应的端口")
+                DIAG_LOGGER.warning("未找到chip: %s port: %s对应的端口", swi_chip_id, port_id)
                 continue
             for lane_info in port_down_status.lane_infos:
                 port_snr = HccsChipPortSnr()

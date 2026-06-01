@@ -35,6 +35,7 @@ a = Analysis(
     datas=[
         # 配置文件
         *convert_tree_to_datas('ascend_fd_tk/core/config', 'ascend_fd_tk/core/config'),
+        ('ascend_fd_tk/conn.ini', 'ascend_fd_tk'),
         # prase_script要传到远端
         *convert_tree_to_datas('ascend_fd_tk/core/log_parser', 'ascend_fd_tk/core/log_parser'),
         # 注册制需要源文件

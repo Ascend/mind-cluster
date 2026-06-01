@@ -51,7 +51,7 @@ class PortLanePowerDiffAnalyzer(Analyzer):
                 domain = [
                     Domain(DeviceType.SERVER, host_info.host_id),
                     Domain(DeviceType.NPU, npu_chip_info.npu_id),
-                    Domain(DeviceType.CHIP, npu_chip_info.chip_id),
+                    Domain(DeviceType.CHIP, npu_chip_info.chip_phy_id),
                 ]
                 res = self._generate_diag_result(domain, optical_module_info.lane_power_infos, "host")
                 if not res:
@@ -87,8 +87,8 @@ class PortLanePowerDiffAnalyzer(Analyzer):
                     Domain(DeviceType.BMC, bmc_info.bmc_id),
                     Domain(DeviceType.NPU, bmc_npu_info.npu_id),
                 ]
-                if bmc_npu_info.chip_id:
-                    domain.append(Domain(DeviceType.CHIP, bmc_npu_info.chip_id))
+                if bmc_npu_info.chip_phy_id:
+                    domain.append(Domain(DeviceType.CHIP, bmc_npu_info.chip_phy_id))
                 res = self._generate_diag_result(domain, optical_module_info.lane_power_infos, "bmc")
                 if not res:
                     continue

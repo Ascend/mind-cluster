@@ -21,19 +21,19 @@ from ascend_fd_tk.core.collect.collect_config import SwiCliOutputDataType
 from ascend_fd_tk.core.collect.fetcher.dump_log_fetcher.cli_output_parsed_data import CliOutputParsedData
 from ascend_fd_tk.core.collect.fetcher.switch_fetcher import SwitchFetcher
 from ascend_fd_tk.core.log_parser.base import FindResult
-from ascend_fd_tk.core.model.hccs import HccsMapTable, HccsChipPortSnr, ProxyTimeoutStatis, HccsSerdesDumpInfo
+from ascend_fd_tk.core.model.hccs import HccsMapTable, HccsChipPortSnr, HccsSerdesDumpInfo
 from ascend_fd_tk.core.model.switch import InterfaceBrief, PortDownStatus
 from ascend_fd_tk.utils import list_tool
 
 
 class SwiCliOutputFetcher(SwitchFetcher):
-
     def __init__(self, parsed_data: CliOutputParsedData):
         self.parsed_data = parsed_data
 
     async def fetch_id(self) -> str:
-        return (self.parsed_data.fetch_data_by_name(SwiCliOutputDataType.SWI_IP.name) or
-                self.parsed_data.fetch_data_by_name(SwiCliOutputDataType.SWI_NAME.name))
+        return self.parsed_data.fetch_data_by_name(
+            SwiCliOutputDataType.SWI_IP.name
+        ) or self.parsed_data.fetch_data_by_name(SwiCliOutputDataType.SWI_NAME.name)
 
     async def fetch_interface_lane_information(self) -> str:
         return self.parsed_data.fetch_data_by_name(SwiCliOutputDataType.HCCS_IF_LANE_INFO.name)
@@ -87,9 +87,7 @@ class SwiCliOutputFetcher(SwitchFetcher):
     async def fetch_hccs_proxy_response_statistics(self) -> str:
         return self.parsed_data.fetch_data_by_name(SwiCliOutputDataType.HCCS_PROXY_RESP_STATISTIC.name)
 
-    async def fetch_hccs_proxy_response_detail_interfaces(
-            self, proxy_response_error_records: List[ProxyTimeoutStatis]
-    ) -> str:
+    async def fetch_hccs_proxy_response_detail_interfaces(self) -> str:
         return self.parsed_data.fetch_data_by_name(SwiCliOutputDataType.HCCS_PROXY_RESP_DETAIL.name)
 
     async def fetch_hccs_route_miss(self) -> str:

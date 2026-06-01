@@ -23,17 +23,13 @@ from ascend_fd_tk.core.collect.fetcher.switch_fetcher import SwitchFetcher
 from ascend_fd_tk.core.common import constants, diag_enum
 from ascend_fd_tk.core.config import chip_port_range
 from ascend_fd_tk.core.log_parser.base import FindResult
-from ascend_fd_tk.core.model.hccs import ProxyTimeoutStatis, HccsChipPortSnr, HccsSerdesDumpInfo
+from ascend_fd_tk.core.model.hccs import HccsChipPortSnr, HccsSerdesDumpInfo
 from ascend_fd_tk.core.model.switch import InterfaceBrief, PortDownStatus
-from ascend_fd_tk.utils.executors import AsyncSSHExecutor, CmdTask
+from ascend_fd_tk.utils.executors import CmdTask
 from ascend_fd_tk.utils.table_parser import TableParser
 
 
 class SwiSshFetcher(SshFetcher, SwitchFetcher):
-
-    def __init__(self, executor: AsyncSSHExecutor):
-        super().__init__(executor)
-
     async def init_fetcher(self):
         await self.executor.run_cmd(CmdTask("n", timeout=1))
         await self.executor.run_cmd(CmdTask("sys", timeout=1))
@@ -107,15 +103,8 @@ class SwiSshFetcher(SshFetcher, SwitchFetcher):
         cmd_res = await self.executor.run_cmd(CmdTask("display hccs proxy response statistics | no-more"))
         return cmd_res.stdout
 
-    async def fetch_hccs_proxy_response_detail_interfaces(
-            self, proxy_response_error_records: List[ProxyTimeoutStatis]
-    ) -> str:
-        all_cmd_list = []
-        for record in proxy_response_error_records:
-            cmd = f"display hccs proxy response detail interface {record.interface} | no-more"
-            all_cmd_list.append(cmd)
-        all_cmd_str = "\n".join(all_cmd_list)
-        all_cmd_res = await self.executor.run_cmd(CmdTask(all_cmd_str))
+    async def fetch_hccs_proxy_response_detail_interfaces(self) -> str:
+        all_cmd_res = await self.executor.run_cmd(CmdTask("display hccs proxy response detail | no-more"))
         return all_cmd_res.stdout
 
     async def fetch_hccs_route_miss(self) -> str:
@@ -136,11 +125,12 @@ class SwiSshFetcher(SshFetcher, SwitchFetcher):
             all_cmd_list = []
             for port_id in chip_port_range.tiancheng_xpu_port_list[chip_id]:
                 for proxy_module in diag_enum.HCCSProxyModule:
-                    cmd = (f'display for info enp s 1 c {chip_id} "get port statistic count port {port_id} module'
-                           f' {proxy_module.value} type 0 path 2" | no-more')
+                    cmd = (
+                        f'display for info enp s 1 c {chip_id} "get port statistic count port {port_id} module'
+                        f' {proxy_module.value} type 0 path 2" | no-more'
+                    )
                     all_cmd_list.append(cmd)
-            task = CmdTask("\n".join([cmd for cmd in all_cmd_list]), end_sign="", timeout=8,
-                           timeout_once=0.4)
+            task = CmdTask("\n".join(all_cmd_list), end_sign="", timeout=8, timeout_once=0.4)
             cmd_res = await self.executor.run_cmd(task)
             total_res.append(cmd_res.stdout)
         return "".join(total_res)
@@ -156,11 +146,7 @@ class SwiSshFetcher(SshFetcher, SwitchFetcher):
     # 以下内容可能不会会被采集, 不必分离解析部分
     async def has_hccs(self) -> bool:
         cmd_res = await self.executor.run_cmd(CmdTask("display hccs eid ub-instance 0 | no-more"))
-        titles_dict = {
-            "ub_instance": "Ub-instance",
-            "interface": "Interface",
-            "eid": "EID"
-        }
+        titles_dict = {"ub_instance": "Ub-instance", "interface": "Interface", "eid": "EID"}
         table = TableParser.parse(cmd_res.stdout, titles_dict, {}, 1)
         return len(table) > 0
 
@@ -173,14 +159,13 @@ class SwiSshFetcher(SshFetcher, SwitchFetcher):
             for port_id in chip_port_range.tiancheng_cpu_port_list[swi_chip_id]:
                 cmd = f'display for info enp s 1 c {swi_chip_id} "get port snr port-id {port_id}"'
                 all_cmd_info_list.append(cmd)
-            task = CmdTask("\n".join([cmd_info for cmd_info in all_cmd_info_list]), timeout=5,
-                           timeout_once=0.4)
+            task = CmdTask("\n".join(all_cmd_info_list), timeout=5, timeout_once=0.4)
             cmd_res = await self.executor.run_cmd(task)
             return cmd_res.stdout
         return ""
 
     async def fetch_hccs_map_table(self) -> str:
-        task = CmdTask(f"display hccs decode and map table | in MAP_TABLE | no-more")
+        task = CmdTask("display hccs decode and map table | in MAP_TABLE | no-more")
         cmd_res = await self.executor.run_cmd(task)
         return cmd_res.stdout
 
@@ -201,20 +186,26 @@ class SwiSshFetcher(SshFetcher, SwitchFetcher):
         cdr_los_pattern = re.compile(r"CDR_LOS = (\d+)")
         rx_dig_csr119_value_pattern = re.compile(r"RX_DIG_CSR119: ?(\w+)")
         for port_snr in port_snr_list:
-            src_cmd = (f'display for info enp s 1 c {port_snr.swi_chip_id} "get port serdes dump-info macro-id'
-                       f' {port_snr.port_id} lane-id {port_snr.lane_id} hilink ')
+            src_cmd = (
+                f'display for info enp s 1 c {port_snr.swi_chip_id} "get port serdes dump-info macro-id'
+                f' {port_snr.port_id} lane-id {port_snr.lane_id} hilink '
+            )
             cdr_cmd = src_cmd + f'{HiLinkType.SERDES_INFO.value}" | no-more | in ^LOS_STATUS.*CDR_LOS'
             ds_cmd = src_cmd + f'{HiLinkType.DS.value}" | no-more | in RX_DIG_CSR119'
             all_cmd = "\n".join([cdr_cmd, ds_cmd])
             cmd_res = await self.executor.run_cmd(CmdTask(all_cmd))
-            result = HccsSerdesDumpInfo(chip_id=port_snr.swi_chip_id, port_id=port_snr.port_id,
-                                        land_id=port_snr.lane_id, swi_port_id=port_snr.swi_port)
+            result = HccsSerdesDumpInfo(
+                chip_id=port_snr.swi_chip_id,
+                port_id=port_snr.port_id,
+                land_id=port_snr.lane_id,
+                swi_port_id=port_snr.swi_port,
+            )
             cdr_los_search = cdr_los_pattern.search(cmd_res.stdout)
             if cdr_los_search:
                 result.cdr_los = cdr_los_search.group(1)
             rx_dig_search = rx_dig_csr119_value_pattern.search(cmd_res.stdout)
             if rx_dig_search:
-                result.rx_dig_CSR119 = rx_dig_search.group(1)
+                result.csr119_data = rx_dig_search.group(1)
             if cdr_los_search or rx_dig_search:
                 results.append(result)
         return results

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# pylint: disable=R0801
 # Copyright 2026 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,7 +39,6 @@ _DEFAULT_NPU_MAPPING = _build_default_npu_mapping()
 
 
 class HostFetcher(Fetcher):
-
     @abc.abstractmethod
     async def fetch_hostname(self) -> str:
         pass
@@ -100,7 +100,7 @@ class HostFetcher(Fetcher):
         return ""
 
     @abc.abstractmethod
-    async def fetch_hccn_tool_cdr(self, chip_phy_id) -> str:
+    async def fetch_hccn_tool_cdr_snr(self, chip_phy_id) -> str:
         return ""
 
     @abc.abstractmethod

@@ -20,13 +20,23 @@ from typing import List
 from ascend_fd_tk.core.collect.base import Collector, log_collect_async_event
 from ascend_fd_tk.core.collect.fetcher.switch_fetcher import SwitchFetcher
 from ascend_fd_tk.core.collect.parser.hccs_parser import HccsParser
-from ascend_fd_tk.core.model.hccs import HccsInfo, ProxyTimeoutStatis, InterfaceProxyResponseDetail, HccsRouteMiss, \
-    PortLinkStatusRecord, HccsPortStatistic, HccsPortInvalidDrop, PortCreditBackPressure, InterfaceSnr, LaneInfo, \
-    HccsMapTable, HccsChipPortSnr
+from ascend_fd_tk.core.model.hccs import (
+    HccsInfo,
+    ProxyTimeoutStatis,
+    InterfaceProxyResponseDetail,
+    HccsRouteMiss,
+    PortLinkStatusRecord,
+    HccsPortStatistic,
+    HccsPortInvalidDrop,
+    PortCreditBackPressure,
+    InterfaceSnr,
+    LaneInfo,
+    HccsMapTable,
+    HccsChipPortSnr,
+)
 
 
 class HccsCollector(Collector):
-
     def __init__(self, fetcher: SwitchFetcher):
         self.fetcher = fetcher
         self.parser = HccsParser()
@@ -36,8 +46,7 @@ class HccsCollector(Collector):
         if not await self.fetcher.has_hccs():
             return None
         proxy_response_error_records = await self.coll_hccs_proxy_response_statistics()
-        proxy_response_detail_interfaces = await self.coll_hccs_proxy_response_detail_interfaces(
-            proxy_response_error_records)
+        proxy_response_detail_interfaces = await self.coll_hccs_proxy_response_detail_interfaces()
         hccs_route_miss = await self.coll_hccs_route_miss()
         link_status_records = await self.coll_link_status()
         hccs_port_statistic = await self.coll_port_statistic()
@@ -60,7 +69,7 @@ class HccsCollector(Collector):
             hccs_map_table_list=hccs_map_table_list,
             interface_snr_list=interface_snr_list,
             lane_info_list=lane_info_list,
-            serdes_dump_info_list=serdes_dump_info_list
+            serdes_dump_info_list=serdes_dump_info_list,
         )
 
     async def get_id(self) -> str:
@@ -74,11 +83,9 @@ class HccsCollector(Collector):
         cmd_res = await self.fetcher.fetch_hccs_proxy_response_statistics()
         return self.parser.parse_hccs_proxy_response_statistics(cmd_res)
 
-    async def coll_hccs_proxy_response_detail_interfaces(
-            self, proxy_response_error_records: List[ProxyTimeoutStatis]
-    ) -> List[InterfaceProxyResponseDetail]:
-        cmd_res = await self.fetcher.fetch_hccs_proxy_response_detail_interfaces(proxy_response_error_records)
-        return self.parser.parse_hccs_proxy_response_detail_interfaces(cmd_res, proxy_response_error_records)
+    async def coll_hccs_proxy_response_detail_interfaces(self) -> List[InterfaceProxyResponseDetail]:
+        cmd_res = await self.fetcher.fetch_hccs_proxy_response_detail_interfaces()
+        return self.parser.parse_hccs_proxy_response_detail_interfaces(cmd_res)
 
     async def coll_hccs_route_miss(self) -> List[HccsRouteMiss]:
         cmd_res = await self.fetcher.fetch_hccs_route_miss()
@@ -109,9 +116,10 @@ class HccsCollector(Collector):
         return self.parser.parse_hccs_map_table(cmd_res)
 
     async def coll_hccs_port_snr(self) -> List[HccsChipPortSnr]:
+        # 在线
         cmd_res = await self.fetcher.fetch_port_snr()
         port_snr_table_list = self.parser.parse_hccs_port_snr_table(cmd_res)
-
+        # 离线
         switch_log_info = await self.fetcher.fetch_port_down_status()
         port_snr_line_list = self.parser.parse_hccs_port_snr_line(switch_log_info)
         return port_snr_table_list + port_snr_line_list

@@ -20,7 +20,6 @@ from typing import Dict, Type
 
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.common.path import CommonPath
-from ascend_fd_tk.core.context.diag_ctx import DiagCtx
 from ascend_fd_tk.core.model.bmc import BmcInfo
 from ascend_fd_tk.core.model.host import HostInfo
 from ascend_fd_tk.core.model.switch import SwitchInfo
@@ -29,10 +28,6 @@ from ascend_fd_tk.utils.file_tool import convert_log_path
 
 
 class LoadCache(DiagService):
-
-    def __init__(self, diag_ctx: DiagCtx):
-        super().__init__(diag_ctx)
-
     @staticmethod
     def _load_cache(cache_dir: str, cache_type_class: Type[JsonObj], cache_obj_map: Dict):
         cache_dir = convert_log_path(cache_dir)
@@ -59,4 +54,6 @@ class LoadCache(DiagService):
         self._load_cache(CommonPath.COLLECT_BMC_CACHE_DIR, BmcInfo, cache.bmcs_info)
         self._load_cache(CommonPath.COLLECT_SWITCH_CACHE_DIR, SwitchInfo, cache.swis_info)
         self._load_cache(CommonPath.COLLECT_HOST_CACHE_DIR, HostInfo, cache.hosts_info)
+        # 排序，屏蔽系统原生读取顺序差异，也保证后续分析有序
+        cache.sort_info()
         cache.init_diag_data()
