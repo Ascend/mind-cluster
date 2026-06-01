@@ -1572,6 +1572,20 @@ relationFaultCustomization.json、faultDuration.json为系统配置文件，若�
 <td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p id="p182723454132815"><a name="p182723454132815"></a><a name="p182723454132815"></a>SeparateNPU</p>
 </td>
 </tr>
+<tr ><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p ><a name="p5277135492816"></a><a name="p5277135492816"></a>110001022</p>
+</td>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p><a name="p7277854132820"></a><a name="p7277854132820"></a>共享存储DTFS进程异常</p>
+</td>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p><a name="p182781654132815"></a><a name="p182781654132815"></a>PreSeparateNPU</p>
+</td>
+</tr>
+<tr ><td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.1 "><p ><a name="p5277135492816"></a><a name="p5277135492816"></a>110001023</p>
+</td>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.2 "><p><a name="p7277854132820"></a><a name="p7277854132820"></a>共享存储DTFS链接异常</p>
+</td>
+<td class="cellrowborder" valign="top" width="33.33333333333333%" headers="mcps1.2.4.1.3 "><p><a name="p182781654132815"></a><a name="p182781654132815"></a>PreSeparateNPU</p>
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -1610,7 +1624,7 @@ relationFaultCustomization.json、faultDuration.json为系统配置文件，若�
         "PreSeparateNPUCodes":[]
       },
       "publicFaultResource": [
-        "CCAE", "fd-online", "pingmesh", "Netmind", "dpcStorage"
+        "CCAE", "fd-online", "pingmesh", "Netmind", "dpcStorage", "dtfsStorage"
       ]
     }
     ```
@@ -1636,7 +1650,7 @@ relationFaultCustomization.json、faultDuration.json为系统配置文件，若�
         "PreSeparateNPUCodes":[]
       },
       "publicFaultResource": [
-        "CCAE", "fd-online", "pingmesh", "Netmind", "dpcStorage", "XXX"
+        "CCAE", "fd-online", "pingmesh", "Netmind", "dpcStorage", "dtfsStorage", "XXX"
       ]
     }
     ```

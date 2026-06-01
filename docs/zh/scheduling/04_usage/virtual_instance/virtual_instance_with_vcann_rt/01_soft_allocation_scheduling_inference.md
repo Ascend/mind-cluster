@@ -222,9 +222,9 @@
 
         上报软切分NPU信息。将芯片的物理ID上报到device-info-cm中；可调度的芯片百分比总量（allocatable）、已使用的芯片百分比数量（allocated）和芯片的基础信息（device ip和super\_device\_ip）上报到Node中，用于软切分调度。
 
-    - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
+    - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息到node-info-cm中，将共享存储故障上报到ClusterD的公共故障中。
 
-2. ClusterD读取device-info-cm和node-info-cm中的信息后，将信息写入cluster-info-cm。
+2. ClusterD读取device-info-cm和node-info-cm中的信息，以及公共故障信息后，将信息整合到cluster-info-cm中。
 3. 用户通过kubectl或者其他深度学习平台下发acjob任务。
 4. Ascend Operator为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/docs/v1.9.0/Concepts/podgroup)。
 5. Ascend Operator为任务创建相应的Pod，并在容器中注入集合通信所需环境变量。

@@ -126,7 +126,7 @@ version.BuildInfo{Version:"v3.17.0", GitCommit:"065003584b62a79f329070a946936374
 
    noded:
      enabled: true                                                         # 是否安装noded组件
-     enableDpc: false                                                       # 是否启用DPC功能
+     enableDpcOrDtfs: false                                                # 是否启用共享存储故障检测功能
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/noded"      # noded组件镜像名，请根据实际情况修改
        tag: "v26.1.0"                                                      # noded组件镜像标签，请根据实际情况修改
@@ -242,9 +242,9 @@ version.BuildInfo{Version:"v3.17.0", GitCommit:"065003584b62a79f329070a946936374
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>表示是否启用noded组件。</p></td>
   </tr>
   <tr>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>noded.enableDpc</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>noded.enableDpcOrDtfs</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为false</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>表示是否开启dpc功能。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>表示是否开启共享存储故障检测功能。</p></td>
   </tr>
   <tr>
     <td class="cellrowborder" rowspan="2" valign="center" headers="mcps1.2.5.1.1 "><p>npu-exporter</p></td>

@@ -8,9 +8,9 @@
 
         对于包含片上内存的芯片，Ascend Device Plugin启动时上报芯片内存情况，见node-label说明；上报整卡信息，将芯片的物理ID上报到device-info-cm中；可调度的芯片总数量（allocatable）、已使用的芯片数量（allocated）和芯片的基础信息（device ip和super\_device\_ip）上报到node中，用于整卡调度。
 
-    - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息、节点DPC共享存储故障信息到node-info-cm中。
+    - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息到node-info-cm中，将共享存储故障上报到ClusterD的公共故障中。
 
-2. ClusterD读取device-info-cm和node-info-cm中的信息后，将信息整合到cluster-info-cm中。
+2. ClusterD读取device-info-cm和node-info-cm中的信息，以及公共故障信息后，将信息整合到cluster-info-cm中。
 3. 用户通过kubectl或者其他深度学习平台下发OME框架的SGLang推理任务，OME根据推理任务的配置生成Deployment或者LeaderWorkerSet（LWS）的子工作负载，再由对应的子工作负载生成多个推理服务的任务Pod。关于Deployment或者LeaderWorkerSet的详细说明，可以参见[OME文档](https://ome-projects.github.io/ome/docs/concepts/inference_service/)。
 4. volcano-controller或者LeaderWorkerSet为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参见[开源Volcano官方文档](https://volcano.sh/docs/v1.9.0/Concepts/podgroup)。PodGroup生成策略如下：
 

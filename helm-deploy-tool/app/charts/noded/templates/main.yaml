@@ -1,9 +1,9 @@
-{{- if and .Values.enableDpc (not (eq (kindOf .Values.enableDpc) "bool")) -}}
-  {{- fail (printf "enableDpc must be a boolean value, got %s: %v" (kindOf .Values.enableDpc) .Values.enableDpc) -}}
+{{- if and .Values.enableDpcOrDtfs (not (eq (kindOf .Values.enableDpcOrDtfs) "bool")) -}}
+  {{- fail (printf "enableDpcOrDtfs must be a boolean value, got %s: %v" (kindOf .Values.enableDpcOrDtfs) .Values.enableDpcOrDtfs) -}}
 {{- end -}}
 
 {{- $key := "default" -}}
-{{- if eq (.Values.enableDpc | toString)  "true" -}}
+{{- if eq (.Values.enableDpcOrDtfs | toString)  "true" -}}
 {{- $key = "dpc" -}}
 {{- end -}}
 

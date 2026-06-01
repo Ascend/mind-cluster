@@ -175,7 +175,7 @@ const (
 	RootUID            = 0
 	MaxInstNumber      = 20
 
-	DtfsFilePath         = "/user/mind-cluster/dtfsstatus/dtfsstatus"
+	DtfsFilePath         = "/user/mind-cluster/dtfsstatus/dtfs_status_check"
 	DtfsProcessErrorKey  = "DTFS_PROCESS_ERROR"
 	DtfsLinkErrorKey     = "DTFS_LINK_ERROR"
 	DtfsHealthy          = 0

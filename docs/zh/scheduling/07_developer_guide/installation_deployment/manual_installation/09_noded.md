@@ -48,18 +48,28 @@
     >- 当K8s APIServer请求压力变大时，可根据实际情况增大间隔时间，以减轻APIServer压力。
 
 5. 在管理节点的YAML所在路径，执行以下命令，启动NodeD。
-    - 不使用[dpc故障检测](../../../04_usage/resumable_training/01_solutions_principles.md#节点故障)功能，请执行以下命令。
+    - 不使用[共享存储故障检测](../../../04_usage/resumable_training/01_solutions_principles.md#节点故障)功能，请执行以下命令。
 
         ```shell
         kubectl apply -f noded-v{version}.yaml
         ```
 
-    - 如果环境已部署Scale-Out Storage DPC 24.2.0及以上版本，并且使用[dpc故障检测](../../../04_usage/resumable_training/01_solutions_principles.md#节点故障)功能，则执行以下命令，启动NodeD。
+    - 如果环境需要使用共享存储检测功能，则执行以下命令，启动NodeD。
 
         ```shell
         kubectl apply -f noded-dpc-v{version}.yaml
         ```
-
+        该yaml包含DPC和DTFS两种共享存储的故障检测，yaml中的路径为默认路径，可以根据共享存储状态输出文件的实际路径修改
+        ```ColdFusion
+      volumes:
+        ...
+        - name: dpcstatus
+          hostPath:
+            path: /proc/odcs
+        - name: dtfsstatus
+          hostPath:
+            path: /proc/dtfs
+        ```
         启动示例如下：
 
         ```ColdFusion
