@@ -17,10 +17,10 @@
 #ifndef OCK_TTP_TYPES_H
 #define OCK_TTP_TYPES_H
 
+#include <set>
+
 #include "common_constants.h"
 #include "securec.h"
-
-using namespace ock::ttp;
 
 namespace ock {
 namespace ttp {
