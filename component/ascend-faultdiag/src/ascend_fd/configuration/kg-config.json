@@ -8576,7 +8576,10 @@
             },
             "source_file": "NPU_OS",
             "regex": {
-                "in": ["Event id=0x80c98001"]
+                "in": [
+                    ["Event id=0x80c98001"],
+                    ["event_id=0x80c98001"]
+                ]
             }
         },
         "0x80CB8000": {
@@ -8601,7 +8604,8 @@
             "regex": {
                 "in": [
                     ["event_id:  [0x80cb8000]"],
-                    ["Event id=0x80cb8000"]
+                    ["Event id=0x80cb8000"],
+                    ["event_id=0x80cb8000"]
                 ]
             }
         },
@@ -8625,7 +8629,8 @@
             "regex": {
                 "in": [
                     ["event_id:  [0x80cb8001]"],
-                    ["Event id=0x80cb8001"]
+                    ["Event id=0x80cb8001"],
+                    ["event_id=0x80cb8001"]
                 ]
             }
         },
@@ -8649,7 +8654,8 @@
             "regex": {
                 "in": [
                     ["event_id:  [0x80ad8009]"],
-                    ["Event id=0x80ad8009"]
+                    ["Event id=0x80ad8009"],
+                    ["event_id=0x80ad8009"]
                 ]
             }
         },
@@ -8671,7 +8677,10 @@
             },
             "source_file": "NPU_OS",
             "regex": {
-                "in": ["Event id=0x80f38000"]
+                "in": [
+                    ["Event id=0x80f38000"],
+                    ["event_id=0x80f38000"]
+                ]
             }
         },
         "0x80F78C02": {
@@ -8692,7 +8701,10 @@
             },
             "source_file": "NPU_OS",
             "regex": {
-                "in": ["Event id=0x80f78c02"]
+                "in": [
+                    ["Event id=0x80f78c02"],
+                    ["event_id=0x80f78c02"]
+                ]
             }
         },
         "0x80F78C03": {
@@ -8713,7 +8725,10 @@
             },
             "source_file": "NPU_OS",
             "regex": {
-                "in": ["Event id=0x80f78c03"]
+                "in": [
+                    ["Event id=0x80f78c03"],
+                    ["event_id=0x80f78c03"]
+                ]
             }
         },
         "0x80F78C04": {
@@ -8734,7 +8749,10 @@
             },
             "source_file": "NPU_OS",
             "regex": {
-                "in": ["Event id=0x80f78c04"]
+                "in": [
+                    ["Event id=0x80f78c04"],
+                    ["event_id=0x80f78c04"]
+                ]
             }
         },
         "0x8C2FA009": {
@@ -8755,7 +8773,10 @@
             },
             "source_file": "NPU_OS",
             "regex": {
-                "in": ["Event id=0x8c2fa009"]
+                "in": [
+                    ["Event id=0x8c2fa009"],
+                    ["event_id=0x8c2fa009"]
+                ]
             }
         },
         "0x80CF8000": {
@@ -8778,7 +8799,8 @@
             "regex": {
                 "in": [
                     ["event_id:  [0x80cf8000]"],
-                    ["Event id=0x80cf8000"]
+                    ["Event id=0x80cf8000"],
+                    ["event_id=0x80cf8000"]
                 ]
             }
         },
@@ -8802,7 +8824,8 @@
             "regex": {
                 "in": [
                     ["event_id:  [0x80a84e00]"],
-                    ["Event id=0x80a84e00"]
+                    ["Event id=0x80a84e00"],
+                    ["event_id=0x80a84e00"]
                 ]
             }
         },
@@ -8826,7 +8849,8 @@
             "regex": {
                 "in": [
                     ["event_id:  [0x80818c06]"],
-                    ["Event id=0x80818c06"]
+                    ["Event id=0x80818c06"],
+                    ["event_id=0x80818c06"]
                 ]
             }
         },
@@ -8850,7 +8874,8 @@
             "regex": {
                 "in": [
                     ["event_id:  [0x80818c05]"],
-                    ["Event id=0x80818c05"]
+                    ["Event id=0x80818c05"],
+                    ["event_id=0x80818c05"]
                 ]
             }
         },
@@ -8872,7 +8897,10 @@
             },
             "source_file": "NPU_OS",
             "regex": {
-                "in": ["Event id=0x81b18605"]
+                "in": [
+                    ["Event id=0x81b18605"],
+                    ["event_id=0x81b18605"]
+                ]
             }
         },
         "AISW_PyTorch_Env_01": {
