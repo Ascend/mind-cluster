@@ -16,13 +16,13 @@
 # ==============================================================================
 from typing import List
 
-from ascend_fd_tk.core.common import constants
 from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
 from ascend_fd_tk.core.fault_analyzer.bmc.bmc_err_code_config import _ERR_CODE_EVENT_LIST
 from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
-from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
+from ascend_fd_tk.core.model.cluster_mapping import DEFAULT_NPU_PHY_MAPPING
+from ascend_fd_tk.core.model.diag_result import DiagResult, BmcDomain
 from ascend_fd_tk.utils import helpers
 
 
@@ -35,21 +35,27 @@ class BmcErrCodeAnalyzer(Analyzer):
             self._err_code_event_map.setdefault(event.err_code, []).append(event)
 
     @staticmethod
-    def _get_domain_list(bmc_id, err_code_event, bmc_sel_event_description):
-        domain = [Domain(DeviceType.BMC.value, bmc_id)]
+    def _parse_domain_fields(bmc_id, err_code_event, bmc_sel_event_description):
+        npu_id = ""
+        chip_phy_id = ""
         if not err_code_event.err_info_pattern:
-            return domain
+            return bmc_id, npu_id, chip_phy_id
         search_data = err_code_event.err_info_pattern.search(bmc_sel_event_description)
         if not search_data:
-            return domain
+            return bmc_id, npu_id, chip_phy_id
         hardware_info = search_data.groupdict()
-        npu = hardware_info.get("npu") or hardware_info.get("npu1") or hardware_info.get("npu2")
-        chip = hardware_info.get("chip")
-        if npu:
-            domain.append(Domain(DeviceType.NPU.value, npu))
-        if chip:
-            domain.append(Domain(DeviceType.CHIP.value, chip))
-        return domain
+        npu_id = hardware_info.get("npu") or hardware_info.get("npu1") or hardware_info.get("npu2")
+        chip_id = hardware_info.get("chip")  # 1-2
+        if not npu_id:
+            return bmc_id, npu_id, chip_phy_id
+        npu_id = str(int(npu_id) - 1)
+        if not chip_id:
+            return bmc_id, npu_id, chip_phy_id
+        chip_id = str(int(chip_id) - 1)
+        npu_info = DEFAULT_NPU_PHY_MAPPING.get((npu_id, chip_id))
+        if npu_info:
+            chip_phy_id = npu_info.chip_phy_id
+        return bmc_id, npu_id, chip_phy_id
 
     def analyse(self) -> List[DiagResult]:
         results = []
@@ -59,14 +65,19 @@ class BmcErrCodeAnalyzer(Analyzer):
                 if not err_code_event:
                     continue
                 fault_info = self._get_fault_info(bmc_info.sn_num, err_code_event, bmc_sel)
-                domain_list = self._get_domain_list(bmc_info.bmc_id, err_code_event, bmc_sel.event_description)
+                bmc_id, npu_id, chip_phy_id = self._parse_domain_fields(
+                    bmc_info.bmc_id, err_code_event, bmc_sel.event_description
+                )
                 results.append(
                     DiagResult(
-                        domain_list,
-                        fault_info,
-                        err_code_event.handle_suggestion,
-                        bmc_sel.event_code,
-                        fault_type=constants.FAULT_TYPE_BMC,
+                        domain=BmcDomain(
+                            bmc_id=bmc_id,
+                            npu_id=npu_id,
+                            chip_phy_id=chip_phy_id,
+                        ),
+                        fault_info=fault_info,
+                        suggestion=err_code_event.handle_suggestion,
+                        err_code=bmc_sel.event_code,
                     )
                 )
         return results

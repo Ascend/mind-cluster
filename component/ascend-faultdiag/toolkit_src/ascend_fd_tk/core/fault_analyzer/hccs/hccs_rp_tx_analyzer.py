@@ -17,14 +17,13 @@
 import collections
 from typing import List, Dict
 
-from ascend_fd_tk.core.common import constants
-from ascend_fd_tk.core.common.diag_enum import HCCSProxyModule, HccsPackErrorCnt, DeviceType
+from ascend_fd_tk.core.common.diag_enum import HCCSProxyModule, HccsPackErrorCnt
 from ascend_fd_tk.core.config import port_mapping_config
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
 from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
 from ascend_fd_tk.core.model.cluster_mapping import ChassisMapping
-from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
+from ascend_fd_tk.core.model.diag_result import DiagResult, SwitchDomain
 from ascend_fd_tk.core.model.hccs import LCNEInfo
 from ascend_fd_tk.core.model.switch import SwitchInfo
 from ascend_fd_tk.utils.date_tool import DateObj
@@ -156,42 +155,38 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
         diag_results = []
         if not lcne_info:
             return diag_results
-        local_domain = [
-            # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
-            Domain(DeviceType.SWITCH.value, swi_info.swi_id),
-            Domain(DeviceType.SWI_PORT.value, str(lcne_info)),
-        ]
+        # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
         if self.check_long_link_down(swi_info.date_time, lcne_info):
             diag_results.append(
                 DiagResult(
-                    local_domain,
-                    "交换机端口长期down",
-                    "排查交换机端口link状态信息",
-                    fault_type=constants.FAULT_TYPE_SWITCH,
+                    domain=SwitchDomain(swi_id=swi_info.swi_id, interface=lcne_info.interface),
+                    fault_info="交换机端口长期down",
+                    suggestion="排查交换机端口link状态信息",
                 )
             )
+        # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
         if self.check_link_up_down():
             diag_results.append(
                 DiagResult(
-                    local_domain, "交换机端口闪断", "排查交换机端口link状态信息", fault_type=constants.FAULT_TYPE_SWITCH
+                    domain=SwitchDomain(swi_id=swi_info.swi_id, interface=lcne_info.interface),
+                    fault_info="交换机端口闪断",
+                    suggestion="排查交换机端口link状态信息",
                 )
             )
         if lcne_info.is_rp_pack_block():
             diag_results.append(
                 DiagResult(
-                    local_domain,
-                    f"[{str(local_domain)}]rp窝包",
-                    "排查否存在信仰证反压异常",
-                    fault_type=constants.FAULT_TYPE_SWITCH,
+                    domain=SwitchDomain(swi_id=swi_info.swi_id, interface=lcne_info.interface),
+                    fault_info=f"[{str(lcne_info)}]rp窝包",
+                    suggestion="排查否存在信仰证反压异常",
                 )
             )
         elif lcne_info.is_voq_pack_block():
             diag_results.append(
                 DiagResult(
-                    local_domain,
-                    f"[{str(local_domain)}]voq窝包",
-                    "排查否存在信仰证反压异常",
-                    fault_type=constants.FAULT_TYPE_SWITCH,
+                    domain=SwitchDomain(swi_id=swi_info.swi_id, interface=lcne_info.interface),
+                    fault_info=f"[{str(lcne_info)}]voq窝包",
+                    suggestion="排查否存在信仰证反压异常",
                 )
             )
         return diag_results
@@ -204,35 +199,28 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
             remote_lcne_info = self.get_lcne_info(remote_interface.server_id, remote_interface.interface_name)
             if not remote_lcne_info:
                 continue
-            remote_domain = [
-                Domain(DeviceType.SWITCH.value, swi_info.swi_id),
-                Domain(DeviceType.SWI_PORT.value, str(remote_lcne_info)),
-            ]
             if remote_lcne_info.is_lp_route_miss():
                 diag_results.append(
                     DiagResult(
-                        remote_domain,
-                        f"[{str(remote_lcne_info)}] lp方向路由miss",
-                        f"[{str(remote_lcne_info)}] -> [{str(local_lcne_info)}]",
-                        fault_type=constants.FAULT_TYPE_SWITCH,
+                        domain=SwitchDomain(swi_id=swi_info.swi_id, interface=remote_lcne_info.interface),
+                        fault_info=f"[{str(remote_lcne_info)}] lp方向路由miss",
+                        suggestion=f"[{str(remote_lcne_info)}] -> [{str(local_lcne_info)}]",
                     )
                 )
             if remote_lcne_info.is_lp_pack_block():
                 diag_results.append(
                     DiagResult(
-                        remote_domain,
-                        f"[{str(remote_lcne_info)}]lp窝包",
-                        f"[{str(remote_lcne_info)}] -> [{str(local_lcne_info)}]",
-                        fault_type=constants.FAULT_TYPE_SWITCH,
+                        domain=SwitchDomain(swi_id=swi_info.swi_id, interface=remote_lcne_info.interface),
+                        fault_info=f"[{str(remote_lcne_info)}]lp窝包",
+                        suggestion=f"[{str(remote_lcne_info)}] -> [{str(local_lcne_info)}]",
                     )
                 )
             elif remote_lcne_info.is_voq_pack_block():
                 diag_results.append(
                     DiagResult(
-                        remote_domain,
-                        f"[{str(remote_lcne_info)}]voq窝包",
-                        f"[{str(remote_lcne_info)}] -> [{str(local_lcne_info)}]",
-                        fault_type=constants.FAULT_TYPE_SWITCH,
+                        domain=SwitchDomain(swi_id=swi_info.swi_id, interface=remote_lcne_info.interface),
+                        fault_info=f"[{str(remote_lcne_info)}]voq窝包",
+                        suggestion=f"[{str(remote_lcne_info)}] -> [{str(local_lcne_info)}]",
                     )
                 )
             # 排查L2
@@ -262,15 +250,10 @@ class HCCSAnalyzer(HCCSCommonAnalyzer):
         for swi_info in self.swis_info.values():
             for proxy_timeout in swi_info.hccs_info.proxy_timeout_statis:
                 if proxy_timeout.is_rp_tx_timeout_happend():
-                    domain = [
-                        Domain(DeviceType.SWITCH.value, swi_info.swi_id),
-                        Domain(DeviceType.SWI_PORT.value, proxy_timeout.interface),
-                    ]
+                    domain = SwitchDomain(swi_id=swi_info.swi_id, interface=proxy_timeout.interface)
                     fault_info = f"HCCS RP TX超时，超时次数：{proxy_timeout.rp_tx}"
                     suggestion = "交换机端口长期down、端口闪断、窝包或者路由miss"
-                    diag_results.append(
-                        DiagResult(domain, fault_info, suggestion, fault_type=constants.FAULT_TYPE_SWITCH)
-                    )
+                    diag_results.append(DiagResult(domain=domain, fault_info=fault_info, suggestion=suggestion))
 
             swi_server_info = self.chassis_mappings.find_mapping_by_l1_swi_ip(swi_info.swi_id)
             if not swi_server_info or not swi_server_info.server_super_pod_id:

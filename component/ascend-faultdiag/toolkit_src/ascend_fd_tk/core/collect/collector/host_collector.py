@@ -46,45 +46,47 @@ class HostCollector(Collector):
         npu_type = await self.collect_npu_type()
         sn_num = await self.fetcher.fetch_sn_num()
         npu_chip_info = {}
+        # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
         server_superpod_id = None
         server_index = None
         # 取值范围说明：npu_id: 0-7; chip_id: 0-1; chip_phy_id: 0-15
-        for npu_id, chips in npu_mapping.items():
-            for chip_id, chip_phy_id in chips.items():
-                hccn_optical_info = await self.collect_optical_info(chip_phy_id)
-                hccn_link_stat_info = await self.collect_link_stat_info(chip_phy_id)
-                hccn_stat_info = await self.collect_stat_info(chip_phy_id)
-                hccn_lldp_info = await self.collect_lldp_info(chip_phy_id)
-                hccs_info = await self.collect_hccs_info(npu_id, chip_id)
-                spod_info = await self.collect_spod_info(npu_id, chip_id)
-                speed = await self.collect_roce_speed(chip_phy_id)
-                duplex = await self.fetcher.fetch_roce_duplex(chip_phy_id)
-                net_health = await self.collect_hccn_tool_net_health(chip_phy_id)
-                link_status = await self.collect_hccn_tool_link_status(chip_phy_id)
-                cdr_snr_info = await self.collect_hccn_tool_cdr_snr(chip_phy_id)
-                hccn_dfx_cfg = await self.collect_hccn_dfx_cfg(chip_phy_id)
-                if server_superpod_id is None and spod_info:
-                    server_superpod_id = spod_info.super_pod_id
-                if server_index is None and spod_info:
-                    server_index = spod_info.server_index
-                npu_chip_info[chip_phy_id] = NpuChipInfo(
-                    hccn_lldp_info=hccn_lldp_info,
-                    hccn_optical_info=hccn_optical_info,
-                    hccn_link_stat_info=hccn_link_stat_info,
-                    hccn_stat_info=hccn_stat_info,
-                    hccs_info=hccs_info,
-                    spod_info=spod_info,
-                    npu_type=npu_type,
-                    npu_id=npu_id,
-                    chip_id=chip_id,
-                    chip_phy_id=chip_phy_id,
-                    speed=speed,
-                    duplex=duplex,
-                    net_health=net_health,
-                    link_status=link_status,
-                    cdr_snr_info=cdr_snr_info,
-                    hccn_dfx_cfg=hccn_dfx_cfg,
-                )
+        for chip_phy_id, npu_info in npu_mapping.items():
+            npu_id = npu_info.npu_id
+            chip_id = npu_info.chip_id
+            hccn_optical_info = await self.collect_optical_info(chip_phy_id)
+            hccn_link_stat_info = await self.collect_link_stat_info(chip_phy_id)
+            hccn_stat_info = await self.collect_stat_info(chip_phy_id)
+            hccn_lldp_info = await self.collect_lldp_info(chip_phy_id)
+            hccs_info = await self.collect_hccs_info(npu_id, chip_id)
+            spod_info = await self.collect_spod_info(npu_id, chip_id)
+            speed = await self.collect_roce_speed(chip_phy_id)
+            duplex = await self.fetcher.fetch_roce_duplex(chip_phy_id)
+            net_health = await self.collect_hccn_tool_net_health(chip_phy_id)
+            link_status = await self.collect_hccn_tool_link_status(chip_phy_id)
+            cdr_snr_info = await self.collect_hccn_tool_cdr_snr(chip_phy_id)
+            hccn_dfx_cfg = await self.collect_hccn_dfx_cfg(chip_phy_id)
+            if server_superpod_id is None and spod_info:
+                server_superpod_id = spod_info.super_pod_id
+            if server_index is None and spod_info:
+                server_index = spod_info.server_index
+            npu_chip_info[chip_phy_id] = NpuChipInfo(
+                hccn_lldp_info=hccn_lldp_info,
+                hccn_optical_info=hccn_optical_info,
+                hccn_link_stat_info=hccn_link_stat_info,
+                hccn_stat_info=hccn_stat_info,
+                hccs_info=hccs_info,
+                spod_info=spod_info,
+                npu_type=npu_type,
+                npu_id=npu_id,
+                chip_id=chip_id,
+                chip_phy_id=chip_phy_id,
+                speed=speed,
+                duplex=duplex,
+                net_health=net_health,
+                link_status=link_status,
+                cdr_snr_info=cdr_snr_info,
+                hccn_dfx_cfg=hccn_dfx_cfg,
+            )
         host_info = HostInfo(
             host_id,
             sn_num,

@@ -29,6 +29,7 @@ from ascend_fd_tk.core.report.threshold_report import ThresholdConfig, create_th
 @dataclass
 class SwitchOpticalModuleData:
     """交换机光模块数据类，用于存储交换机间端口连接光模块信息"""
+
     # 本端交换机信息
     local_switch_name: str
     local_switch_id: str
@@ -123,7 +124,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
         return data
 
     @staticmethod
-    def _create_header_config() -> Tuple[Dict[str, str], List[str]]:
+    def _create_header_config() -> Tuple[Dict[str, str], List[Dict[str, List[str]]]]:
         """
         创建header映射和顺序
 
@@ -135,13 +136,11 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "local_switch_id": "本端交换机ID",
             "local_switch_sn": "本端交换机SN",
             "local_interface": "本端接口",
-
             # 本端光模块信息
             "local_optical_vendor": "本端光模块厂商",
             "local_optical_model": "本端光模块型号",
             "local_optical_sn": "本端光模块SN",
             "local_optical_temp": "本端光模块温度",
-
             # 本端Lane信息
             "local_tx_power0": "本端TX Power Lane 0",
             "local_rx_power0": "本端RX Power Lane 0",
@@ -155,19 +154,16 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "local_tx_power3": "本端TX Power Lane 3",
             "local_rx_power3": "本端RX Power Lane 3",
             "local_snr_lane3": "本端SNR Lane 3",
-
             # 对端交换机信息
             "peer_switch_name": "对端交换机名称",
             "peer_switch_id": "对端交换机ID",
             "peer_switch_sn": "对端交换机SN",
             "peer_interface": "对端接口",
-
             # 对端光模块信息
             "peer_optical_vendor": "对端光模块厂商",
             "peer_optical_model": "对端光模块型号",
             "peer_optical_sn": "对端光模块SN",
             "peer_optical_temp": "对端光模块温度",
-
             # 对端Lane信息
             "peer_tx_power0": "对端TX Power Lane 0",
             "peer_rx_power0": "对端RX Power Lane 0",
@@ -180,43 +176,67 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "peer_snr_lane2": "对端SNR Lane 2",
             "peer_tx_power3": "对端TX Power Lane 3",
             "peer_rx_power3": "对端RX Power Lane 3",
-            "peer_snr_lane3": "对端SNR Lane 3"
+            "peer_snr_lane3": "对端SNR Lane 3",
         }
 
-        # 定义header顺序，将相关信息分组显示
-        header_order = [
-            # 本端交换机和接口信息
-            "本端交换机名称", "本端交换机ID", "本端交换机SN", "本端接口",
-
-            # 本端光模块基本信息
-            "本端光模块厂商", "本端光模块型号", "本端光模块SN", "本端光模块温度",
-
-            # 本端光模块Lane信息
-            "本端TX Power Lane 0", "本端RX Power Lane 0", "本端SNR Lane 0",
-            "本端TX Power Lane 1", "本端RX Power Lane 1", "本端SNR Lane 1",
-            "本端TX Power Lane 2", "本端RX Power Lane 2", "本端SNR Lane 2",
-            "本端TX Power Lane 3", "本端RX Power Lane 3", "本端SNR Lane 3",
-
-            # 对端交换机和接口信息
-            "对端交换机名称", "对端交换机ID", "对端交换机SN", "对端接口",
-
-            # 对端光模块基本信息
-            "对端光模块厂商", "对端光模块型号", "对端光模块SN", "对端光模块温度",
-
-            # 对端光模块Lane信息
-            "对端TX Power Lane 0", "对端RX Power Lane 0", "对端SNR Lane 0",
-            "对端TX Power Lane 1", "对端RX Power Lane 1", "对端SNR Lane 1",
-            "对端TX Power Lane 2", "对端RX Power Lane 2", "对端SNR Lane 2",
-            "对端TX Power Lane 3", "对端RX Power Lane 3", "对端SNR Lane 3"
+        # 创建合并的header配置
+        merged_headers = [
+            {
+                "本端交换机侧": [
+                    "本端交换机名称",
+                    "本端交换机ID",
+                    "本端交换机SN",
+                    "本端接口",
+                    "本端光模块厂商",
+                    "本端光模块型号",
+                    "本端光模块SN",
+                    "本端光模块温度",
+                    "本端TX Power Lane 0",
+                    "本端RX Power Lane 0",
+                    "本端SNR Lane 0",
+                    "本端TX Power Lane 1",
+                    "本端RX Power Lane 1",
+                    "本端SNR Lane 1",
+                    "本端TX Power Lane 2",
+                    "本端RX Power Lane 2",
+                    "本端SNR Lane 2",
+                    "本端TX Power Lane 3",
+                    "本端RX Power Lane 3",
+                    "本端SNR Lane 3",
+                ],
+                "对端交换机侧": [
+                    "对端交换机名称",
+                    "对端交换机ID",
+                    "对端交换机SN",
+                    "对端接口",
+                    "对端光模块厂商",
+                    "对端光模块型号",
+                    "对端光模块SN",
+                    "对端光模块温度",
+                    "对端TX Power Lane 0",
+                    "对端RX Power Lane 0",
+                    "对端SNR Lane 0",
+                    "对端TX Power Lane 1",
+                    "对端RX Power Lane 1",
+                    "对端SNR Lane 1",
+                    "对端TX Power Lane 2",
+                    "对端RX Power Lane 2",
+                    "对端SNR Lane 2",
+                    "对端TX Power Lane 3",
+                    "对端RX Power Lane 3",
+                    "对端SNR Lane 3",
+                ],
+            }
         ]
 
-        return header_mapping, header_order
+        return header_mapping, merged_headers
 
     def generate_sheet(self) -> None:
         """
         生成交换机间端口连接光模块信息Excel Sheet
         """
         # 收集光模块数据
+        # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
         optical_module_data_list = self._collect_optical_module_data()
 
         # 如果没有数据，跳过生成Sheet
@@ -226,24 +246,22 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
         # 创建阈值配置
         threshold_configs = self._create_threshold_configs()
 
-        # 创建header映射和顺序
-        header_mapping, header_order = self._create_header_config()
+        # 创建header映射和合并header
+        header_mapping, merged_headers = self._create_header_config()
 
         # 创建报告Sheet
         sheet = create_threshold_report(
             sheet_name="交换机间端口连接光模块信息",
+            # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
             data_list=optical_module_data_list,
             header_mapping=header_mapping,
-            header_order=header_order,
             threshold_configs=threshold_configs,
-            na_rep="-"
+            na_rep="-",
+            merged_headers=merged_headers,
         )
 
         # 生成Excel
-        generate_threshold_excel(
-            excel_gen=self.excel_gen,
-            sheets=[sheet]
-        )
+        generate_threshold_excel(excel_gen=self.excel_gen, sheets=[sheet])
 
     def _collect_optical_module_data(self) -> List[SwitchOpticalModuleData]:
         """
@@ -310,13 +328,11 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     local_switch_id=switch_info.swi_id,
                     local_switch_sn=switch_info.sn,
                     local_interface=local_interface,
-
                     # 本端光模块信息
                     local_optical_vendor=local_optical_data.get("optical_vendor", ""),
                     local_optical_model=local_optical_data.get("optical_model", ""),
                     local_optical_sn=local_optical_data.get("optical_sn", ""),
                     local_optical_temp=local_optical_data.get("optical_temp", ""),
-
                     # 本端Lane信息
                     local_tx_power0=local_optical_data.get("tx_power0", ""),
                     local_rx_power0=local_optical_data.get("rx_power0", ""),
@@ -330,19 +346,16 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     local_tx_power3=local_optical_data.get("tx_power3", ""),
                     local_rx_power3=local_optical_data.get("rx_power3", ""),
                     local_snr_lane3=local_optical_data.get("snr_lane3", ""),
-
                     # 对端交换机信息
                     peer_switch_name=peer_switch.name if peer_switch else peer_switch_name,
                     peer_switch_id=peer_switch.swi_id if peer_switch else "",
                     peer_switch_sn=peer_switch.sn if peer_switch else "",
                     peer_interface=peer_interface,
-
                     # 对端光模块信息
                     peer_optical_vendor=peer_optical_data.get("optical_vendor", ""),
                     peer_optical_model=peer_optical_data.get("optical_model", ""),
                     peer_optical_sn=peer_optical_data.get("optical_sn", ""),
                     peer_optical_temp=peer_optical_data.get("optical_temp", ""),
-
                     # 对端Lane信息
                     peer_tx_power0=peer_optical_data.get("tx_power0", ""),
                     peer_rx_power0=peer_optical_data.get("rx_power0", ""),
@@ -355,13 +368,14 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     peer_snr_lane2=peer_optical_data.get("snr_lane2", ""),
                     peer_tx_power3=peer_optical_data.get("tx_power3", ""),
                     peer_rx_power3=peer_optical_data.get("rx_power3", ""),
-                    peer_snr_lane3=peer_optical_data.get("snr_lane3", "")
+                    peer_snr_lane3=peer_optical_data.get("snr_lane3", ""),
                 )
-
+                # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
                 data_list.append(data)
 
         return data_list
 
+    # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
     def _create_threshold_configs(self) -> List[ThresholdConfig]:
         """
         创建阈值配置
@@ -375,131 +389,110 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             ThresholdConfig(
                 field_name="local_tx_power0",
                 threshold=threshold_cls.TX_POWER_THRESHOLD_CONFIG_DBM,
-                display_name="本端TX Power Lane 0"
+                display_name="本端TX Power Lane 0",
             ),
             ThresholdConfig(
                 field_name="local_tx_power1",
                 threshold=threshold_cls.TX_POWER_THRESHOLD_CONFIG_DBM,
-                display_name="本端TX Power Lane 1"
+                display_name="本端TX Power Lane 1",
             ),
             ThresholdConfig(
                 field_name="local_tx_power2",
                 threshold=threshold_cls.TX_POWER_THRESHOLD_CONFIG_DBM,
-                display_name="本端TX Power Lane 2"
+                display_name="本端TX Power Lane 2",
             ),
             ThresholdConfig(
                 field_name="local_tx_power3",
                 threshold=threshold_cls.TX_POWER_THRESHOLD_CONFIG_DBM,
-                display_name="本端TX Power Lane 3"
+                display_name="本端TX Power Lane 3",
             ),
-
             # 本端RX Power阈值（dBm）
             ThresholdConfig(
                 field_name="local_rx_power0",
                 threshold=threshold_cls.RX_POWER_THRESHOLD_CONFIG_DBM,
-                display_name="本端RX Power Lane 0"
+                display_name="本端RX Power Lane 0",
             ),
             ThresholdConfig(
                 field_name="local_rx_power1",
                 threshold=threshold_cls.RX_POWER_THRESHOLD_CONFIG_DBM,
-                display_name="本端RX Power Lane 1"
+                display_name="本端RX Power Lane 1",
             ),
             ThresholdConfig(
                 field_name="local_rx_power2",
                 threshold=threshold_cls.RX_POWER_THRESHOLD_CONFIG_DBM,
-                display_name="本端RX Power Lane 2"
+                display_name="本端RX Power Lane 2",
             ),
             ThresholdConfig(
                 field_name="local_rx_power3",
                 threshold=threshold_cls.RX_POWER_THRESHOLD_CONFIG_DBM,
-                display_name="本端RX Power Lane 3"
+                display_name="本端RX Power Lane 3",
             ),
-
             # 本端SNR阈值（dB）
             ThresholdConfig(
-                field_name="local_snr_lane0",
-                threshold=threshold_cls.HOST_SNR_DB,
-                display_name="本端SNR Lane 0"
+                field_name="local_snr_lane0", threshold=threshold_cls.HOST_SNR_DB, display_name="本端SNR Lane 0"
             ),
             ThresholdConfig(
-                field_name="local_snr_lane1",
-                threshold=threshold_cls.HOST_SNR_DB,
-                display_name="本端SNR Lane 1"
+                field_name="local_snr_lane1", threshold=threshold_cls.HOST_SNR_DB, display_name="本端SNR Lane 1"
             ),
             ThresholdConfig(
-                field_name="local_snr_lane2",
-                threshold=threshold_cls.HOST_SNR_DB,
-                display_name="本端SNR Lane 2"
+                field_name="local_snr_lane2", threshold=threshold_cls.HOST_SNR_DB, display_name="本端SNR Lane 2"
             ),
             ThresholdConfig(
-                field_name="local_snr_lane3",
-                threshold=threshold_cls.HOST_SNR_DB,
-                display_name="本端SNR Lane 3"
+                field_name="local_snr_lane3", threshold=threshold_cls.HOST_SNR_DB, display_name="本端SNR Lane 3"
             ),
-
             # 对端TX Power阈值（dBm）
             ThresholdConfig(
                 field_name="peer_tx_power0",
                 threshold=threshold_cls.TX_POWER_THRESHOLD_CONFIG_DBM,
-                display_name="对端TX Power Lane 0"
+                display_name="对端TX Power Lane 0",
             ),
             ThresholdConfig(
                 field_name="peer_tx_power1",
                 threshold=threshold_cls.TX_POWER_THRESHOLD_CONFIG_DBM,
-                display_name="对端TX Power Lane 1"
+                display_name="对端TX Power Lane 1",
             ),
             ThresholdConfig(
                 field_name="peer_tx_power2",
                 threshold=threshold_cls.TX_POWER_THRESHOLD_CONFIG_DBM,
-                display_name="对端TX Power Lane 2"
+                display_name="对端TX Power Lane 2",
             ),
             ThresholdConfig(
                 field_name="peer_tx_power3",
                 threshold=threshold_cls.TX_POWER_THRESHOLD_CONFIG_DBM,
-                display_name="对端TX Power Lane 3"
+                display_name="对端TX Power Lane 3",
             ),
-
             # 对端RX Power阈值（dBm）
             ThresholdConfig(
                 field_name="peer_rx_power0",
                 threshold=threshold_cls.RX_POWER_THRESHOLD_CONFIG_DBM,
-                display_name="对端RX Power Lane 0"
+                display_name="对端RX Power Lane 0",
             ),
             ThresholdConfig(
                 field_name="peer_rx_power1",
                 threshold=threshold_cls.RX_POWER_THRESHOLD_CONFIG_DBM,
-                display_name="对端RX Power Lane 1"
+                display_name="对端RX Power Lane 1",
             ),
             ThresholdConfig(
                 field_name="peer_rx_power2",
                 threshold=threshold_cls.RX_POWER_THRESHOLD_CONFIG_DBM,
-                display_name="对端RX Power Lane 2"
+                display_name="对端RX Power Lane 2",
             ),
             ThresholdConfig(
                 field_name="peer_rx_power3",
                 threshold=threshold_cls.RX_POWER_THRESHOLD_CONFIG_DBM,
-                display_name="对端RX Power Lane 3"
+                display_name="对端RX Power Lane 3",
             ),
-
             # 对端SNR阈值（dB）
             ThresholdConfig(
-                field_name="peer_snr_lane0",
-                threshold=threshold_cls.HOST_SNR_DB,
-                display_name="对端SNR Lane 0"
+                field_name="peer_snr_lane0", threshold=threshold_cls.HOST_SNR_DB, display_name="对端SNR Lane 0"
             ),
             ThresholdConfig(
-                field_name="peer_snr_lane1",
-                threshold=threshold_cls.HOST_SNR_DB,
-                display_name="对端SNR Lane 1"
+                field_name="peer_snr_lane1", threshold=threshold_cls.HOST_SNR_DB, display_name="对端SNR Lane 1"
             ),
             ThresholdConfig(
-                field_name="peer_snr_lane2",
-                threshold=threshold_cls.HOST_SNR_DB,
-                display_name="对端SNR Lane 2"
+                field_name="peer_snr_lane2", threshold=threshold_cls.HOST_SNR_DB, display_name="对端SNR Lane 2"
             ),
             ThresholdConfig(
-                field_name="peer_snr_lane3",
-                threshold=threshold_cls.HOST_SNR_DB,
-                display_name="对端SNR Lane 3"
-            )
+                field_name="peer_snr_lane3", threshold=threshold_cls.HOST_SNR_DB, display_name="对端SNR Lane 3"
+            ),
         ]

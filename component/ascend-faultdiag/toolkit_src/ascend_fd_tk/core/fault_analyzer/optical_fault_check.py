@@ -15,9 +15,9 @@
 # limitations under the License.
 # ==============================================================================
 
-from typing import List
+from typing import List, Union
 
-from ascend_fd_tk.core.model.diag_result import Domain, DiagResult
+from ascend_fd_tk.core.model.diag_result import DiagResult, HostDomain, SwitchDomain
 from ascend_fd_tk.core.model.optical_module import OpticalModuleInfo
 
 
@@ -77,8 +77,27 @@ class OpticalFaultChecker:
             0b01: ("对端光模块电流异常。", "建议更换对端光模块。"),
         }
 
+    @staticmethod
+    def get_single_description(domain: Union[HostDomain, SwitchDomain], abn_infos: str):
+        local_domain_desc = "->".join(domain.get_local_domain())
+        remote_domain = domain.get_peer_domain()
+        remote_domain_desc = f"[{'->'.join(remote_domain)}]" if remote_domain else ""
+        return f"\n本端[{local_domain_desc}]：\n  {abn_infos}\n对端{remote_domain_desc}：NA"
+
+    @staticmethod
+    def get_double_description(domain: Union[HostDomain, SwitchDomain], local_abn_infos: str, remote_abn_infos: str):
+        local_domain_desc = "->".join(domain.get_local_domain())
+        remote_domain = domain.get_peer_domain()
+        remote_domain_desc = f"[{'->'.join(remote_domain)}]" if remote_domain else ""
+        local_desc, remote_desc = "", ""
+        if local_abn_infos:
+            local_desc = f"\n本端[{local_domain_desc}]：\n  {local_abn_infos}"
+        if remote_abn_infos:
+            remote_desc = f"：\n  {remote_abn_infos}"
+        return f"{local_desc}\n对端{remote_domain_desc}{remote_desc}"
+
     def power_analyze_single_ended(
-        self, info: OpticalModuleInfo, domain_list: List[Domain], fault_type: str = ""
+        self, domain: Union[HostDomain, SwitchDomain], info: OpticalModuleInfo
     ) -> List[DiagResult]:
         abn_rx_power_infos, abn_tx_power_infos = info.get_abnormal_power_infos(self._threshold)
         if not abn_rx_power_infos and not abn_tx_power_infos:
@@ -86,38 +105,34 @@ class OpticalFaultChecker:
         description, suggest = self._check_single_power_value(bool(abn_rx_power_infos), bool(abn_tx_power_infos))
         if not description or not suggest:
             return []
-        abn_power_infos = "\n".join(abn_rx_power_infos + abn_tx_power_infos)
-        description = f"{description}\n本端：{abn_power_infos}\n对端：NA"
-        return [DiagResult(domain_list, f"光模块光功率异常：{description}", suggest, fault_type=fault_type)]
+        abn_power_infos = "\n ".join(abn_rx_power_infos + abn_tx_power_infos)
+        fault_info = f"光模块光功率异常：{description}{self.get_single_description(domain, abn_power_infos)}"
+        return [DiagResult(domain=domain, fault_info=fault_info, suggestion=suggest)]
 
     def snr_analyze_single_ended(
-        self, info: OpticalModuleInfo, domain_list: List[Domain], fault_type: str = ""
+        self, domain: Union[HostDomain, SwitchDomain], info: OpticalModuleInfo
     ) -> List[DiagResult]:
-        res_list = []
         abnormal_snr_infos = info.get_abnormal_snr_infos(self._threshold.HOST_SNR_DB, self._threshold.MEDIA_SNR_DB)
         if abnormal_snr_infos:
-            description = f"本端信噪比SNR异常，未收集到对端信息。\n本端：{abnormal_snr_infos}\n对端：NA"
+            fault_info = (
+                f"本端信噪比SNR异常，未收集到对端信息。{self.get_single_description(domain, abnormal_snr_infos)}"
+            )
             suggest = "建议收集对端信息并排查。"
-            res_list.append(DiagResult(domain_list, description, suggest, fault_type=fault_type))
-        return res_list
+            return [DiagResult(domain=domain, fault_info=fault_info, suggestion=suggest)]
+        return []
 
     def bias_analyze_single_ended(
-        self, info: OpticalModuleInfo, domain_list: List[Domain], fault_type: str = ""
+        self, domain: Union[HostDomain, SwitchDomain], info: OpticalModuleInfo
     ) -> List[DiagResult]:
-        res_list = []
         abnormal_bias_infos = info.get_abnormal_bias_infos(self._threshold.TX_BIAS_MA)
         if abnormal_bias_infos:
-            description = f"本端电流异常，未收集到对端信息。\n本端：{abnormal_bias_infos}\n对端：NA"
+            fault_info = f"本端电流异常，未收集到对端信息。{self.get_single_description(domain, abnormal_bias_infos)}"
             suggest = "建议更换本端光模块或者收集对端信息并排查。"
-            res_list.append(DiagResult(domain_list, description, suggest, fault_type=fault_type))
-        return res_list
+            return [DiagResult(domain=domain, fault_info=fault_info, suggestion=suggest)]
+        return []
 
     def power_analyze(
-        self,
-        local_info: OpticalModuleInfo,
-        remote_info: OpticalModuleInfo,
-        domain_list: List[Domain],
-        fault_type: str = "",
+        self, domain: Union[HostDomain, SwitchDomain], local_info: OpticalModuleInfo, remote_info: OpticalModuleInfo
     ) -> List[DiagResult]:
         local_abn_rx_power_infos, local_abn_tx_power_infos = local_info.get_abnormal_power_infos(self._threshold)
         remote_abn_rx_power_infos, remote_abn_tx_power_infos = remote_info.get_abnormal_power_infos(self._threshold)
@@ -129,22 +144,14 @@ class OpticalFaultChecker:
         )
         if not description or not suggest:
             return []
-        local_desc, remote_desc = "", ""
-        if local_abn_rx_power_infos or local_abn_tx_power_infos:
-            local_abn_power_infos = "\n".join(local_abn_rx_power_infos + local_abn_tx_power_infos)
-            local_desc = f"\n本端：{local_abn_power_infos}"
-        if remote_abn_rx_power_infos or remote_abn_tx_power_infos:
-            remote_abn_power_infos = "\n".join(remote_abn_rx_power_infos + remote_abn_tx_power_infos)
-            remote_desc = f"\n对端：{remote_abn_power_infos}"
-        fault_info = f"光模块光功率异常：{description}{local_desc}{remote_desc}"
-        return [DiagResult(domain_list, fault_info, suggest, fault_type=fault_type)]
+        local_abn_power_infos = "\n  ".join(local_abn_rx_power_infos + local_abn_tx_power_infos)
+        remote_abn_power_infos = "\n  ".join(remote_abn_rx_power_infos + remote_abn_tx_power_infos)
+        double_description = self.get_double_description(domain, local_abn_power_infos, remote_abn_power_infos)
+        fault_info = f"光模块光功率异常：{description}{double_description}"
+        return [DiagResult(domain=domain, fault_info=fault_info, suggestion=suggest)]
 
     def snr_analyze(
-        self,
-        local_info: OpticalModuleInfo,
-        remote_info: OpticalModuleInfo,
-        domain_list: List[Domain],
-        fault_type: str = "",
+        self, domain: Union[HostDomain, SwitchDomain], local_info: OpticalModuleInfo, remote_info: OpticalModuleInfo
     ) -> List[DiagResult]:
         local_abn_snr_infos = local_info.get_abnormal_snr_infos(
             self._threshold.HOST_SNR_DB, self._threshold.MEDIA_SNR_DB
@@ -155,31 +162,19 @@ class OpticalFaultChecker:
         description, suggest = self._check_snr_value(bool(local_abn_snr_infos), bool(remote_abn_snr_infos))
         if not description or not suggest:
             return []
-        local_desc, remote_desc = "", ""
-        if local_abn_snr_infos:
-            local_desc = f"\n本端：{local_abn_snr_infos}"
-        if remote_abn_snr_infos:
-            remote_desc = f"\n对端：{remote_abn_snr_infos}"
-        return [DiagResult(domain_list, f"{description}{local_desc}{remote_desc}", suggest, fault_type=fault_type)]
+        double_description = self.get_double_description(domain, local_abn_snr_infos, remote_abn_snr_infos)
+        return [DiagResult(domain=domain, fault_info=f"{description}{double_description}", suggestion=suggest)]
 
     def bias_analyze(
-        self,
-        local_info: OpticalModuleInfo,
-        remote_info: OpticalModuleInfo,
-        domain_list: List[Domain],
-        fault_type: str = "",
+        self, domain: Union[HostDomain, SwitchDomain], local_info: OpticalModuleInfo, remote_info: OpticalModuleInfo
     ) -> List[DiagResult]:
         local_abn_bias_infos = local_info.get_abnormal_bias_infos(self._threshold.TX_BIAS_MA)
         remote_abn_bias_infos = remote_info.get_abnormal_bias_infos(self._threshold.TX_BIAS_MA)
         description, suggest = self._check_bias_value(bool(local_abn_bias_infos), bool(remote_abn_bias_infos))
         if not description or not suggest:
             return []
-        local_desc, remote_desc = "", ""
-        if local_abn_bias_infos:
-            local_desc = f"\n本端：{local_abn_bias_infos}"
-        if remote_abn_bias_infos:
-            remote_desc = f"\n对端：{remote_abn_bias_infos}"
-        return [DiagResult(domain_list, f"{description}{local_desc}{remote_desc}", suggest, fault_type=fault_type)]
+        double_description = self.get_double_description(domain, local_abn_bias_infos, remote_abn_bias_infos)
+        return [DiagResult(domain=domain, fault_info=f"{description}{double_description}", suggestion=suggest)]
 
     def _check_power_value(
         self,

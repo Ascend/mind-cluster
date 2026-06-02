@@ -18,11 +18,9 @@
 import re
 from typing import List
 
-from ascend_fd_tk.core.common import constants
-from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
-from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
+from ascend_fd_tk.core.model.diag_result import DiagResult, SwitchDomain
 from ascend_fd_tk.core.model.switch import SwitchInfo
 
 
@@ -48,16 +46,11 @@ class OpticalInvalidAnalyzer(Analyzer):
                 continue
             ifname = search.group(1)
             reason = search.group(2)
-            domain = [
-                Domain(DeviceType.SWITCH, switch_info.swi_id),
-                Domain(DeviceType.SWI_PORT, ifname),
-            ]
             res = DiagResult(
-                domain,
-                f"光模块链路Los告警，原因：{reason}",
-                "请检查光模块",
+                domain=SwitchDomain(swi_id=switch_info.swi_id, interface=ifname),
+                fault_info=f"光模块链路Los告警，原因：{reason}",
+                suggestion="请检查光模块",
                 err_code=alarm_info.alarm_id,
-                fault_type=constants.FAULT_TYPE_SWITCH,
             )
             results.append(res)
         return results

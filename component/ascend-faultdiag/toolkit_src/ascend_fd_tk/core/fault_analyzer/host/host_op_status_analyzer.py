@@ -17,11 +17,9 @@
 
 from typing import List
 
-from ascend_fd_tk.core.common import constants
-from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
-from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
+from ascend_fd_tk.core.model.diag_result import DiagResult, HostDomain
 from ascend_fd_tk.utils import logger
 
 _DIAG_LOGGER = logger.DIAG_LOGGER
@@ -41,19 +39,17 @@ class HostOpticalStatusAnalyzer(Analyzer):
                 is_healthy = chip_info.net_health and chip_info.net_health != th.NET_HEALTH_THRESHOLD.normal_alarm_th
                 is_up = chip_info.link_status and chip_info.link_status != th.LINK_STATUS_THRESHOLD.normal_alarm_th
                 if is_healthy or is_up:
-                    domain = [
-                        Domain(DeviceType.SERVER, host_info.host_id),
-                        Domain(DeviceType.NPU, chip_info.npu_id),
-                        Domain(DeviceType.CHIP, chip_info.chip_phy_id),
-                    ]
                     fault_desc = self._FAULT_DESC.format(chip_info.net_health or 'NA', chip_info.link_status or 'NA')
                     hccn_lldp_info = chip_info.hccn_lldp_info
                     if hccn_lldp_info and hccn_lldp_info.system_name_tlv:
                         fault_desc += self._PEER_PORT_INFO.format(
                             hccn_lldp_info.system_name_tlv, hccn_lldp_info.port_id_tlv
                         )
-                    diag_result = DiagResult(
-                        domain, fault_info=fault_desc, suggestion=self._SUGGESTION, fault_type=constants.FAULT_TYPE_HOST
+                    domain = HostDomain(
+                        host_id=host_info.host_id,
+                        npu_id=chip_info.npu_id,
+                        chip_phy_id=chip_info.chip_phy_id,
                     )
+                    diag_result = DiagResult(domain=domain, fault_info=fault_desc, suggestion=self._SUGGESTION)
                     result.append(diag_result)
         return result

@@ -18,7 +18,7 @@
 import re
 from typing import List
 
-from ascend_fd_tk.core.common import constants, diag_enum
+from ascend_fd_tk.core.common import diag_enum
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.config import port_mapping_config
 from ascend_fd_tk.core.config.chip_port_range import tiancheng_cpu_port_list
@@ -27,7 +27,7 @@ from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
 from ascend_fd_tk.core.model.bmc import BmcInfo
 from ascend_fd_tk.core.model.cluster_mapping import L1SwiServerMapping
-from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
+from ascend_fd_tk.core.model.diag_result import DiagResult, SwitchDomain
 
 
 class CpuBoardUbcInfo(JsonObj):
@@ -77,15 +77,11 @@ class HccsLinkDegradedAnalyzer(Analyzer):
             if not port_mapping:
                 continue
             diag_result = DiagResult(
-                [
-                    Domain(diag_enum.DeviceType.L1_SWITCH, chassis_mapping.l1_swi_ip),
-                    Domain(diag_enum.DeviceType.SWI_PORT, port_mapping.swi_port),
-                ],
-                f"Cpu{event_info.cpu_id} UBC{event_info.ubc_id} macro{event_info.macro_id} "
+                domain=SwitchDomain(swi_id=chassis_mapping.l1_swi_ip, interface=port_mapping.swi_port),
+                fault_info=f"Cpu{event_info.cpu_id} UBC{event_info.ubc_id} macro{event_info.macro_id} "
                 f"CPU board {event_info.cud_board_id}与L1端口之间发生故障",
-                "建议检查L1端口或cpu板抽屉",
+                suggestion="建议检查L1端口或cpu板抽屉",
                 err_code=self._ERROR_CODE,
-                fault_type=constants.FAULT_TYPE_BMC,
             )
             result.append(diag_result)
         # 板级别的分析
@@ -97,14 +93,10 @@ class HccsLinkDegradedAnalyzer(Analyzer):
                     swi_chip_err_ports.add(port_mapping)
             if cpu_port_set == swi_chip_err_ports:
                 diag_result = DiagResult(
-                    [
-                        Domain(diag_enum.DeviceType.L1_SWITCH, chassis_mapping.l1_swi_ip),
-                        Domain(diag_enum.DeviceType.SWI_CHIP, str(swi_chip_id)),
-                    ],
-                    "L1交换芯片所有端口异常",
-                    "建议检查L1交换板或2个CPU抽屉",
+                    domain=SwitchDomain(swi_id=chassis_mapping.l1_swi_ip, interface=str(swi_chip_id)),
+                    fault_info="L1交换芯片所有端口异常",
+                    suggestion="建议检查L1交换板或2个CPU抽屉",
                     err_code=self._ERROR_CODE,
-                    fault_type=constants.FAULT_TYPE_BMC,
                 )
                 result.append(diag_result)
         return result

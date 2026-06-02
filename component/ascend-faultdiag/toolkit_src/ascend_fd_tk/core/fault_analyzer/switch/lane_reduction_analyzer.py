@@ -18,11 +18,9 @@
 import re
 from typing import List
 
-from ascend_fd_tk.core.common import constants
-from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
-from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
+from ascend_fd_tk.core.model.diag_result import DiagResult, SwitchDomain
 
 
 @register_analyzer
@@ -52,11 +50,10 @@ class LaneReductionAnalyzer(Analyzer):
                 if peer_info:
                     fault_desc += f"，对端端口信息：{peer_info.get_inspection_interface_info()}"
                 res = DiagResult(
-                    [Domain(DeviceType.SWITCH, swi_info.swi_id), Domain(DeviceType.SWI_PORT, if_name)],
+                    domain=SwitchDomain(swi_id=swi_info.swi_id, interface=if_name),
                     fault_info=fault_desc,
                     suggestion="请检查端口",
                     err_code=alarm_info.alarm_id,
-                    fault_type=constants.FAULT_TYPE_SWITCH,
                 )
                 result.append(res)
         return result

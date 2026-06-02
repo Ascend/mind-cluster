@@ -350,7 +350,7 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             header_mapping=header_mapping,
             threshold_configs=threshold_configs,
             na_rep="-",
-            header_order=[],
+            merged_headers=merged_headers,
         )
 
         # 生成Excel

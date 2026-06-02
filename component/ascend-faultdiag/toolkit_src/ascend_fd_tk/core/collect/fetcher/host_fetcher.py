@@ -21,21 +21,7 @@ from typing import List
 
 from ascend_fd_tk.core.collect.fetcher.base import Fetcher
 from ascend_fd_tk.core.log_parser.base import FindResult
-
-
-def _build_default_npu_mapping():
-    npu_size = 8
-    chip_size = 2
-    result = {}
-    for npu_id in range(npu_size):
-        tmp_dict = {}
-        result[str(npu_id)] = tmp_dict
-        for chip_id in range(chip_size):
-            tmp_dict[str(chip_id)] = str(npu_id * 2 + chip_id)
-    return result
-
-
-_DEFAULT_NPU_MAPPING = _build_default_npu_mapping()
+from ascend_fd_tk.core.model.cluster_mapping import DEFAULT_NPU_MAPPING
 
 
 class HostFetcher(Fetcher):
@@ -45,7 +31,7 @@ class HostFetcher(Fetcher):
 
     @abc.abstractmethod
     async def fetch_npu_mapping(self) -> dict:
-        return _DEFAULT_NPU_MAPPING
+        return DEFAULT_NPU_MAPPING
 
     @abc.abstractmethod
     async def fetch_optical_info(self, chip_phy_id) -> str:

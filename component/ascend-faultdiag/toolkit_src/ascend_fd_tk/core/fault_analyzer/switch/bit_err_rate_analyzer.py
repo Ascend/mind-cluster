@@ -16,12 +16,10 @@
 # ==============================================================================
 from typing import List
 
-from ascend_fd_tk.core.common import constants
-from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.common.constants import BIT_ERROR_RATE_LIMIT
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
-from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
+from ascend_fd_tk.core.model.diag_result import DiagResult, SwitchDomain
 from ascend_fd_tk.utils.helpers import to_float
 
 
@@ -34,16 +32,11 @@ class BitErrRateAnalyzer(Analyzer):
                 success, bit_err_rate_f = to_float(data.bit_err_rate)
                 if not success or bit_err_rate_f <= BIT_ERROR_RATE_LIMIT:
                     continue
-                domain = [
-                    Domain(DeviceType.SWITCH.value, f"{swi.name} {swi.swi_id}"),
-                    Domain(DeviceType.SWI_PORT.value, f"{data.interface_name}"),
-                ]
                 diag_results.append(
                     DiagResult(
-                        domain,
-                        f"BER误码率{data.bit_err_rate}大于阈值{BIT_ERROR_RATE_LIMIT}。",
-                        "请检查端口是否脏污",
-                        fault_type=constants.FAULT_TYPE_SWITCH,
+                        domain=SwitchDomain(swi_id=swi.swi_id, interface=data.interface_name),
+                        fault_info=f"BER误码率{data.bit_err_rate}大于阈值{BIT_ERROR_RATE_LIMIT}。",
+                        suggestion="请检查端口是否脏污",
                     )
                 )
         return diag_results
