@@ -205,6 +205,17 @@ func ReplaceDeviceInfoPublicName(resourceType string, deviceList map[string]stri
 	deviceName string, reasonCm string) (map[string]string, string, string) {
 	devName := devNameMap[resourceType]
 	if len(devName.DevicePublicNamePre) == 0 {
+		if !oldDeviceTypes[common.ParamOption.RealCardType] {
+			newDeviceList := make(map[string]string, len(deviceList))
+			for key, value := range deviceList {
+				newKey := strings.ReplaceAll(key, api.HuaweiAscend910, api.HuaweiNPU)
+				newValue := getResourceNamePrefix(value)
+				newDeviceList[newKey] = newValue
+			}
+			newDeviceName := getResourceNamePrefix(deviceName)
+			newReasonCm := getResourceNamePrefix(reasonCm)
+			return newDeviceList, newDeviceName, newReasonCm
+		}
 		return deviceList, deviceName, reasonCm
 	}
 	newDeviceList := make(map[string]string, len(deviceList))
