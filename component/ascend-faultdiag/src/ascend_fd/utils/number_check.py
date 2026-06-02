@@ -15,14 +15,21 @@
 # limitations under the License.
 # ==============================================================================
 
-COMPLEMENT = "complement"
-ERROR_CODE = "error_code"
-SUPER_POD_SCENE = "super_pod"
-DEFAULT_YEAR = "1900"
-AI_CPU = "AI CPU"
-TRANSPORT_INIT_ERROR = "Transport init error"
 
-DEVICE_LOGIC_ID = "deviceLogicId"
-DEV_PHY_ID = "devPhyId"
-LOGIC_DEV_ID = "logicDevId"
-PHY_DEV_ID = "phydevId"
+class NumberCheck:
+    """Utility class for number validation checks"""
+
+    @staticmethod
+    def is_non_negative_integer(value) -> bool:
+        """
+        Check if value represents a non-negative integer (greater than or equal to 0)
+        :param value: string or other type to check
+        :return: True if value can be converted to int and >= 0, False otherwise
+        """
+        if not value or not str(value).strip():
+            return False
+        try:
+            int_value = int(str(value).strip())
+            return int_value >= 0
+        except (ValueError, TypeError):
+            return False

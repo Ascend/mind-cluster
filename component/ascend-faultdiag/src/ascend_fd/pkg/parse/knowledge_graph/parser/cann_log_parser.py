@@ -29,6 +29,8 @@ from ascend_fd.pkg.parse.blacklist.blacklist_op import BlackListManager
 from ascend_fd.pkg.parse.root_cluster.parser import filter_single_rank_info
 from ascend_fd.utils.fault_code import RUNTIME_AICORE_EXECUTE_FAULT, AISW_CANN_MEMORY_INFO
 from ascend_fd.utils.regular_table import CANN_PLOG_SOURCE, CANN_DEVICE_SOURCE
+from ascend_fd.utils.comm_valid import process_device_id
+from ascend_fd.utils.constant.str_const import DEVICE_LOGIC_ID, DEV_PHY_ID, LOGIC_DEV_ID, PHY_DEV_ID
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
 DEFAULT_EXEC_TIMEOUT = 1800
@@ -86,25 +88,26 @@ class CANNLogParser(FileParser):
             logic_device_id = filter_single_rank_info(line, regular_table.ENTRY_DEVICE_INFO)
             phy_device_id = filter_single_rank_info(line, regular_table.SOCKET_PHY_ID_INFO)
             return (
-                logic_device_id if logic_device_id != NEGATIVE_ONE else "",
-                phy_device_id if phy_device_id != NEGATIVE_ONE else "",
+                process_device_id(logic_device_id, line, DEVICE_LOGIC_ID, NEGATIVE_ONE, kg_logger),
+                process_device_id(phy_device_id, line, DEV_PHY_ID, NEGATIVE_ONE, kg_logger),
             )
         if regular_table.ENTRY_ROOT_INFO in line:
             logic_device_id = filter_single_rank_info(line, regular_table.ENTRY_DEVICE_INFO)
-            if logic_device_id != NEGATIVE_ONE:
-                return logic_device_id, ""
+            validated_logic_id = process_device_id(logic_device_id, line, DEVICE_LOGIC_ID, NEGATIVE_ONE, kg_logger)
+            if validated_logic_id:
+                return validated_logic_id, ""
         if regular_table.RANK_NUM_INFO in line and regular_table.RANK_INFO in line:
             logic_device_id = filter_single_rank_info(line, regular_table.OLD_DEVICE_INFO) or filter_single_rank_info(
                 line, regular_table.LOGIC_DEVICE_INFO
             )
             phy_device_id = filter_single_rank_info(line, regular_table.PHY_DEVICE_INFO)
             return (
-                logic_device_id if logic_device_id != NEGATIVE_ONE else "",
-                phy_device_id if phy_device_id != NEGATIVE_ONE else "",
+                process_device_id(logic_device_id, line, LOGIC_DEV_ID, NEGATIVE_ONE, kg_logger),
+                process_device_id(phy_device_id, line, PHY_DEV_ID, NEGATIVE_ONE, kg_logger),
             )
         if regular_table.TOTAL_RANK_INFO in line and regular_table.SERVER_ID_INFO in line:
             logic_device_id = filter_single_rank_info(line, regular_table.LOGIC_DEVICE_INFO)
-            return logic_device_id, ""
+            return process_device_id(logic_device_id, line, LOGIC_DEV_ID, NEGATIVE_ONE, kg_logger), ""
         return "", ""
 
     @staticmethod
@@ -138,7 +141,6 @@ class CANNLogParser(FileParser):
         self.resuming_training_time = parse_ctx.resuming_training_time
         self.is_sdk_input = parse_ctx.is_sdk_input
         device_info_map = getattr(parse_ctx, "device_info_map", {})
-        kg_logger.info("%s files parse job started.", self.SOURCE_FILE)
         if self.is_sdk_input:
             results = dict()
             for pid, file_list in pid_file_item:

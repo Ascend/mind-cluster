@@ -14,8 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+import logging
 import string
 
+from ascend_fd.utils.number_check import NumberCheck
 from ascend_fd.utils.tool import white_check
 
 LINE_WHITE_LIST = string.digits + string.ascii_letters + string.punctuation + " "
@@ -57,3 +59,20 @@ def char_check(input_value, length_range, white_list, allow_zh=False):
     if len(input_value) < length_range[0] or len(input_value) > length_range[1]:
         return False
     return white_check(input_value, white_list, allow_zh)
+
+
+def process_device_id(value, line: str, id_name: str, invalid_value, logger: logging.Logger):
+    """
+    Validate and process device ID value (common utility function)
+    :param value: raw device ID value from log parsing
+    :param line: original log line for logging
+    :param id_name: name of the ID field for logging (e.g., 'devPhyId', 'deviceLogicId')
+    :param invalid_value: the value that indicates an invalid/empty device ID (e.g., -1, "-1")
+    :param logger: logger instance to use for warning messages
+    :return: validated device ID string, or empty string if invalid
+    """
+    if not value or value == invalid_value:
+        return ""
+    if not NumberCheck.is_non_negative_integer(value):
+        logger.warning("Except %s non-negative integer, but got: %s, origin line: %s", id_name, value, line.strip())
+    return value

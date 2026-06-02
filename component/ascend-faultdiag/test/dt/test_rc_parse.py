@@ -14,9 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-import unittest
 import os
 import tempfile
+import unittest
+import unittest.mock
 
 from ascend_fd.pkg.parse.root_cluster.parser import PidFileParser, BaseInfoParser, ErrorParser
 from ascend_fd.pkg.parse.root_cluster.rc_parse_job import parse_npu_info_file
@@ -242,6 +243,136 @@ class TestResolvePhyDeviceId(unittest.TestCase):
         parser.logic_device_id = "7"
         parser._resolve_phy_device_id()
         self.assertEqual(parser.phy_device_id, "7")
+
+
+class TestPhyDeviceIdValidation(unittest.TestCase):
+    """Test cases for phy_device_id non-negative integer validation in BaseInfoParser"""
+
+    def _create_parser(self):
+        return BaseInfoParser({}, BlackListManager())
+
+    def test_valid_positive_phy_device_id_accepted(self):
+        """Test that valid positive phy_device_id values are accepted"""
+        from ascend_fd.utils.regular_table import SOCKET_PHY_ID_INFO
+
+        parser = self._create_parser()
+        valid_ids = ["1", "5", "10", "100", "999"]
+
+        for current_phy_id in valid_ids:
+            with self.subTest(phy_id=current_phy_id):
+                parser.re_init()
+                with unittest.mock.patch(
+                    'ascend_fd.pkg.parse.root_cluster.parser.filter_single_rank_info'
+                ) as mock_filter:
+
+                    def mock_side_effect(line, pattern, phy_id=current_phy_id):
+                        if pattern == SOCKET_PHY_ID_INFO:
+                            return phy_id
+                        return ""
+
+                    mock_filter.side_effect = mock_side_effect
+                    parser._parse_a5_root_info("test line")
+                    self.assertEqual(
+                        parser.phy_device_id, current_phy_id, f"phy_device_id {current_phy_id} should be accepted"
+                    )
+
+    def test_zero_phy_device_id_accepted(self):
+        """Test that zero is accepted as a valid non-negative integer (no warning)"""
+        parser = self._create_parser()
+        parser.re_init()
+
+        with unittest.mock.patch('ascend_fd.pkg.parse.root_cluster.parser.filter_single_rank_info') as mock_filter:
+            mock_filter.return_value = "0"
+            parser._parse_a5_root_info("test line devPhyId[0]")
+            self.assertEqual(parser.phy_device_id, "0", "Zero should be accepted as a valid device ID")
+
+    def test_negative_phy_device_id_rejected(self):
+        """Test that -1 is rejected, but other negative numbers return value with warning"""
+        parser = self._create_parser()
+
+        parser.re_init()
+        with unittest.mock.patch('ascend_fd.pkg.parse.root_cluster.parser.filter_single_rank_info') as mock_filter:
+            mock_filter.return_value = "-1"
+            parser._parse_a5_root_info("test line devPhyId[-1]")
+            self.assertEqual(parser.phy_device_id, "", "-1 should be rejected as INVALID_ID")
+
+        parser.re_init()
+        with unittest.mock.patch('ascend_fd.pkg.parse.root_cluster.parser.filter_single_rank_info') as mock_filter:
+            mock_filter.return_value = "-100"
+            with self.assertLogs('ROOT_CLUSTER', level='WARNING') as cm:
+                parser._parse_a5_root_info("test line devPhyId[-100]")
+            self.assertEqual(parser.phy_device_id, "-100", "Other negative values are returned with warning")
+            self.assertTrue(
+                any("Except devPhyId non-negative integer" in msg and "-100" in msg for msg in cm.output),
+                "Warning should be logged for negative value",
+            )
+
+    def test_invalid_id_constant_rejected(self):
+        """Test that INVALID_ID (-1) is rejected"""
+        from ascend_fd.pkg.parse.root_cluster.parser import INVALID_ID
+
+        parser = self._create_parser()
+        parser.re_init()
+
+        with unittest.mock.patch('ascend_fd.pkg.parse.root_cluster.parser.filter_single_rank_info') as mock_filter:
+            mock_filter.return_value = INVALID_ID
+            parser._parse_a5_root_info("test line devPhyId[-1]")
+            self.assertEqual(parser.phy_device_id, "", "INVALID_ID (-1) should be rejected")
+
+    def test_non_numeric_phy_device_id_rejected(self):
+        """Test that non-numeric strings are returned with warning (except empty/None)"""
+        parser = self._create_parser()
+        non_numeric_values = ["abc", "", None, "12.34", "NaN"]
+
+        for value in non_numeric_values:
+            with self.subTest(value=value):
+                parser.re_init()
+                with unittest.mock.patch(
+                    'ascend_fd.pkg.parse.root_cluster.parser.filter_single_rank_info'
+                ) as mock_filter:
+                    mock_filter.return_value = value
+                    if not value:  # Empty or None should be rejected
+                        parser._parse_a5_root_info("test line")
+                        self.assertEqual(parser.phy_device_id, "", f"Empty/None value {repr(value)} should be rejected")
+                    else:  # Non-empty non-numeric values are returned with warning
+                        with self.assertLogs('ROOT_CLUSTER', level='WARNING'):
+                            parser._parse_a5_root_info("test line")
+                        expected_result = str(value)
+                        self.assertEqual(
+                            parser.phy_device_id,
+                            expected_result,
+                            f"Non-numeric value {repr(value)} should be returned with warning",
+                        )
+
+    def test_zero_phy_device_id_accepted_no_warning(self):
+        """Test that zero is accepted without triggering warning log"""
+        parser = self._create_parser()
+        parser.re_init()
+
+        with unittest.mock.patch('ascend_fd.pkg.parse.root_cluster.parser.filter_single_rank_info') as mock_filter:
+            mock_filter.return_value = "0"
+            parser._parse_a5_root_info("test line devPhyId[0]")
+            self.assertEqual(parser.phy_device_id, "0", "Zero should be accepted")
+
+    def test_non_numeric_phy_device_id_with_warning_log(self):
+        """Test that non-numeric values trigger warning logs with details"""
+        parser = self._create_parser()
+        non_numeric_values = ["abc", "12.34"]
+
+        for value in non_numeric_values:
+            with self.subTest(value=value):
+                parser.re_init()
+                with unittest.mock.patch(
+                    'ascend_fd.pkg.parse.root_cluster.parser.filter_single_rank_info'
+                ) as mock_filter:
+                    mock_filter.return_value = value
+                    with self.assertLogs('ROOT_CLUSTER', level='WARNING') as cm:
+                        parser._parse_a5_root_info(f"test line devPhyId[{value}]")
+                    self.assertEqual(parser.phy_device_id, value, f"Non-numeric {repr(value)} should be returned")
+                    self.assertTrue(
+                        any("Except devPhyId non-negative integer" in msg and str(value) in msg for msg in cm.output),
+                        f"Warning should contain value {repr(value)}",
+                    )
 
 
 class TestTransportErrorPattern(unittest.TestCase):

@@ -16,6 +16,7 @@
 # ==============================================================================
 import re
 import os
+import logging
 from datetime import datetime, timedelta
 from typing import List, Union
 
@@ -30,7 +31,7 @@ from ascend_fd.model.parse_info import (
     RankInfo,
 )
 from ascend_fd.utils import regular_table
-from ascend_fd.utils.constant.str_const import TRANSPORT_INIT_ERROR
+from ascend_fd.utils.constant.str_const import TRANSPORT_INIT_ERROR, DEVICE_LOGIC_ID, DEV_PHY_ID
 from ascend_fd.utils.regular_table import (
     ERROR_CQE_LATEST,
     ERROR_CQE_LATEST_SPLIT,
@@ -41,7 +42,10 @@ from ascend_fd.utils.regular_table import (
 )
 from ascend_fd.utils.tool import safe_write_open, SHOW_LINES_NUM, get_log_module_and_time, safe_read_line
 from ascend_fd.utils.net_tools import IPAddress
+from ascend_fd.utils.comm_valid import process_device_id
 from ascend_fd.pkg.parse.blacklist.blacklist_op import BlackListManager
+
+rc_logger = logging.getLogger("ROOT_CLUSTER")
 
 INVALID_ID = "-1"  # nosec
 INVALID_IP = "0.0.0.0"  # nosec
@@ -480,13 +484,11 @@ class BaseInfoParser:
         logic_device_id = filter_single_rank_info(line, regular_table.ENTRY_DEVICE_INFO) or filter_single_rank_info(
             line, regular_table.LOGIC_DEVICE_INFO
         )
-        if logic_device_id == INVALID_ID:
-            logic_device_id = ""
+        logic_device_id = process_device_id(logic_device_id, line, DEVICE_LOGIC_ID, INVALID_ID, rc_logger)
         self.logic_device_id = logic_device_id or self.logic_device_id
 
         phy_device_id = filter_single_rank_info(line, regular_table.SOCKET_PHY_ID_INFO)
-        if phy_device_id == INVALID_ID:
-            phy_device_id = ""
+        phy_device_id = process_device_id(phy_device_id, line, DEV_PHY_ID, INVALID_ID, rc_logger)
         self.phy_device_id = phy_device_id or self.phy_device_id
 
         host_ip = filter_single_rank_info(line, regular_table.HOST_IP_INFO)
