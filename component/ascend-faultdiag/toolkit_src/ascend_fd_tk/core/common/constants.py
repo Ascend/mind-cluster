@@ -52,8 +52,8 @@ SNR_LANE_DIFF_THRESHOLD = 3
 # 功率lane间差阈值
 POWER_LANE_DIFF_THRESHOLD = 3
 
-# 最大NPU数
-MAX_NPU_SIZE = 16
+# 最大NPU Phy-ID
+MAX_NPU_PHY_SIZE = 16
 # 不可救无法连续发现的判定时间（单位s）
 UNCORR_CW_THRESHOLD = 11 * 60
 # 1天（单位s）

@@ -15,13 +15,13 @@
 # limitations under the License.
 # ==============================================================================
 
-from typing import List
+from typing import List, Tuple, Dict
 
+from ascend_fd_tk.core.common.constants import MAX_NPU_PHY_SIZE
 from ascend_fd_tk.core.common.json_obj import JsonObj
 
 
 class L1SwiServerMapping(JsonObj):
-
     def __init__(self, l1_swi_ip: str, l1_swi_name: str, server_super_pod_id: str, server_ip: str, bmc_ip: str):
         self.l1_swi_ip = l1_swi_ip
         self.l1_swi_name = l1_swi_name
@@ -32,7 +32,6 @@ class L1SwiServerMapping(JsonObj):
 
 # 机框映射关系 l1->服务器->bmc
 class ChassisMapping(JsonObj):
-
     def __init__(self, l1_swi_server_mappings: List[L1SwiServerMapping] = None):
         self.l1_swi_server_mappings = l1_swi_server_mappings or []
 
@@ -53,3 +52,36 @@ class ChassisMapping(JsonObj):
             if mapping.server_ip == server_ip:
                 return mapping
         return None
+
+
+class DefaultNPUInfo(JsonObj):
+    def __init__(self, npu_id="", chip_id="", chip_phy_id=""):
+        self.npu_id = npu_id
+        self.chip_id = chip_id
+        self.chip_phy_id = chip_phy_id
+
+    @classmethod
+    def build_default_npu_mapping(cls) -> Tuple[Dict[str, "DefaultNPUInfo"], Dict[Tuple[str, str], "DefaultNPUInfo"]]:
+        """
+        获取默认的NPU 映射关系
+        'npu_id': [0-7]
+        'chip_id': [0-1]
+        'chip_phy_id': [0-15]
+        """
+        default_npu_mapping = {}
+        default_npu_phy_mapping = {}
+        die_num = 2
+        for chip_phy_id in range(MAX_NPU_PHY_SIZE):
+            npu_id = str(chip_phy_id // die_num)
+            chip_id = str(chip_phy_id % die_num)
+            chip_phy_id = str(chip_phy_id)
+            default_npu_mapping.update(
+                {chip_phy_id: DefaultNPUInfo(npu_id=npu_id, chip_id=chip_id, chip_phy_id=chip_phy_id)}
+            )
+            default_npu_phy_mapping.update(
+                {(npu_id, chip_id): DefaultNPUInfo(npu_id=npu_id, chip_id=chip_id, chip_phy_id=chip_phy_id)}
+            )
+        return default_npu_mapping, default_npu_phy_mapping
+
+
+DEFAULT_NPU_MAPPING, DEFAULT_NPU_PHY_MAPPING = DefaultNPUInfo.build_default_npu_mapping()
