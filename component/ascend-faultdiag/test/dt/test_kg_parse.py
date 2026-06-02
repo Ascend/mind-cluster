@@ -498,8 +498,35 @@ class TestGetDeviceIdFromLine(unittest.TestCase):
             "clusterInfo: rootinfo host ip[10.0.0.1] identifier[test_id], logicDevId[-1]"
         )
         logic_id, phy_id = CANNLogParser.get_device_id_from_line(line)
-        self.assertEqual(logic_id, "-1")
+        self.assertEqual(logic_id, "", "NEGATIVE_ONE (-1) should be filtered out")
         self.assertEqual(phy_id, "")
+
+    def test_zero_device_id_accepted(self):
+        """Test that zero is accepted as a valid non-negative integer (no warning)"""
+        line = (
+            "[RootInfoDetect] nRanks[8], rank[0] entry flat topo detect, "
+            "rootinfo: host ip[10.0.0.1] port[20000] netMode[HrtNetworkMode::HDC] "
+            "identifier[test_id], deviceLogicId[0], devPhyId[15]"
+        )
+        logic_id, phy_id = CANNLogParser.get_device_id_from_line(line)
+        self.assertEqual(logic_id, "0", "Zero should be accepted as a valid device ID")
+        self.assertEqual(phy_id, "15")
+
+    def test_non_numeric_logic_device_id_rejected_with_warning(self):
+        """Test that non-numeric values are returned with detailed warning"""
+        line = (
+            "[RootInfoDetect] nRanks[8], rank[0] entry flat topo detect, "
+            "rootinfo: host ip[10.0.0.1] port[20000] netMode[HrtNetworkMode::HDC] "
+            "identifier[test_id], deviceLogicId[abc], devPhyId[15]"
+        )
+        with self.assertLogs('KNOWLEDGE_GRAPH', level='WARNING') as cm:
+            logic_id, phy_id = CANNLogParser.get_device_id_from_line(line)
+        self.assertEqual(logic_id, "abc", "Non-numeric value is returned but warning should be logged")
+        self.assertEqual(phy_id, "15")
+        self.assertTrue(
+            any("Except deviceLogicId non-negative integer" in msg and "abc" in msg for msg in cm.output),
+            "Warning should mention non-numeric value 'abc'",
+        )
 
     def test_non_matching_line(self):
         line = "[INFO] Some random log line without any device info keywords"
@@ -657,3 +684,100 @@ class TestContrastIpInfo(unittest.TestCase):
         event_sources = [e["source_device"] for e in events]
         self.assertIn("2", event_sources)
         self.assertIn("3", event_sources)
+
+
+class TestCannLogParserPhyDeviceIdValidation(unittest.TestCase):
+    """Test cases for phy_device_id non-negative integer validation in CANNLogParser"""
+
+    def test_valid_positive_phy_device_id_root_info_detect(self):
+        """Test that valid positive phy_device_id is accepted in ROOT_INFO_DETECT path"""
+        valid_ids = ["1", "5", "10", "100"]
+
+        for phy_id in valid_ids:
+            with self.subTest(phy_id=phy_id):
+                logic_id, phy_id_result = CANNLogParser.get_device_id_from_line(
+                    f"test [RootInfoDetect] devPhyId[{phy_id}]"
+                )
+                self.assertEqual(phy_id_result, phy_id, f"phy_device_id {phy_id} should be accepted")
+
+    def test_zero_phy_device_id_accepted(self):
+        """Test that zero is accepted as a valid non-negative integer (no warning)"""
+        _, phy_id = CANNLogParser.get_device_id_from_line("test [RootInfoDetect] devPhyId[0]")
+        self.assertEqual(phy_id, "0", "Zero should be accepted as a valid phy_device_id")
+
+    def test_negative_phy_device_id_rejected_root_info_detect(self):
+        """Test that -1 is rejected, but other negative numbers return value with warning"""
+        negative_ids = ["-1", "-100"]
+
+        for phy_id in negative_ids:
+            with self.subTest(phy_id=phy_id):
+                if phy_id == "-1":
+                    _, phy_id_result = CANNLogParser.get_device_id_from_line(
+                        f"test [RootInfoDetect] devPhyId[{phy_id}]"
+                    )
+                    self.assertEqual(phy_id_result, "", f"Negative {phy_id} should be rejected")
+                else:
+                    with self.assertLogs('KNOWLEDGE_GRAPH', level='WARNING') as cm:
+                        _, phy_id_result = CANNLogParser.get_device_id_from_line(
+                            f"test [RootInfoDetect] devPhyId[{phy_id}]"
+                        )
+                    self.assertTrue(any("Except devPhyId non-negative integer" in msg for msg in cm.output))
+                    self.assertEqual(phy_id_result, phy_id, f"Negative {phy_id} should be returned with warning")
+
+    def test_non_numeric_phy_device_id_returned_with_warning(self):
+        """Test that non-numeric values are returned with detailed warning"""
+        non_numeric_values = ["abc", "12.34", "NaN"]
+
+        for value in non_numeric_values:
+            with self.subTest(value=value):
+                with self.assertLogs('KNOWLEDGE_GRAPH', level='WARNING') as cm:
+                    _, phy_id = CANNLogParser.get_device_id_from_line(f"test [RootInfoDetect] devPhyId[{value}]")
+                self.assertEqual(phy_id, value, f"Non-numeric '{value}' should be returned with warning")
+                self.assertTrue(
+                    any("Except devPhyId non-negative integer" in msg and value in msg for msg in cm.output),
+                    f"Warning should mention non-numeric value '{value}'",
+                )
+
+    def test_valid_positive_phy_device_id_rank_info(self):
+        """Test that valid positive phy_device_id is accepted in RANK_INFO path"""
+        valid_ids = ["1", "5", "10", "100"]
+
+        for phy_id in valid_ids:
+            with self.subTest(phy_id=phy_id):
+                logic_id, phy_id_result = CANNLogParser.get_device_id_from_line(
+                    f"test rankNum[16] rank[0] phydevId[{phy_id}]"
+                )
+                self.assertEqual(phy_id_result, phy_id, f"phy_device_id {phy_id} should be accepted in RANK_INFO path")
+
+    def test_zero_phy_device_id_accepted_rank_info(self):
+        """Test that zero is accepted in RANK_INFO path (no warning)"""
+        _, phy_id = CANNLogParser.get_device_id_from_line("test rankNum[16] rank[0] phydevId[0]")
+        self.assertEqual(phy_id, "0", "Zero should be accepted in RANK_INFO path")
+
+    def test_negative_phy_device_id_rejected_rank_info(self):
+        """Test that negative numbers are rejected in RANK_INFO path"""
+        _, phy_id = CANNLogParser.get_device_id_from_line("test rankNum[16] rank[0] phydevId[-1]")
+        self.assertEqual(phy_id, "", "Negative -1 should be rejected in RANK_INFO path")
+
+    def test_valid_logic_device_id_accepted(self):
+        """Test that valid logic_device_id values (including 0) are accepted"""
+        valid_ids = ["0", "1", "5", "10", "100"]
+
+        for logic_id in valid_ids:
+            with self.subTest(logic_id=logic_id):
+                logic_id_result, _ = CANNLogParser.get_device_id_from_line(
+                    f"test [RootInfoDetect] deviceLogicId[{logic_id}]"
+                )
+                self.assertEqual(logic_id_result, logic_id, f"logic_device_id {logic_id} should be accepted")
+
+    def test_negative_one_logic_device_id_rejected(self):
+        """Test that -1 is rejected for logic_device_id"""
+        logic_id, _ = CANNLogParser.get_device_id_from_line("test [RootInfoDetect] deviceLogicId[-1]")
+        self.assertEqual(logic_id, "", "-1 should be rejected as logic_device_id")
+
+    def test_non_numeric_logic_device_id_returned_with_warning(self):
+        """Test that non-numeric logic_device_id triggers warning and returns value"""
+        with self.assertLogs('KNOWLEDGE_GRAPH', level='WARNING') as cm:
+            logic_id, _ = CANNLogParser.get_device_id_from_line("test [RootInfoDetect] deviceLogicId[abc]")
+        self.assertEqual(logic_id, "abc", "Non-numeric value should be returned with warning")
+        self.assertTrue(any("Except deviceLogicId non-negative integer" in msg for msg in cm.output))
