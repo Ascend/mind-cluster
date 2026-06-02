@@ -106,27 +106,27 @@ hccl.json:
       "device_id": 0,  // 物理ID
       "level_list": [
         {
-          "net_layer": 0,   // 通信层级
-          "net_instance_id": "xx",          // 组网ID
+          "net_layer": 0,   // 通信层级，0层描述框内通信，1层描述超节点内通信(非超节点场景没有此层，大网层级作为1层)，2层描述UBoE通信类型
+          "net_instance_id": "xx",   // 组网ID，同一通信层级(net_layer)的唯一标识
           "net_type": "TOPO_FILE_DESC",     // 网络类型，值为TOPO_FILE_DESC和CLOS，TOPO_FILE_DESC代表从文件中查询网络类型，CLOS代表clos网络
-          "net_attr": "",                   // 组网层级
+          "net_attr": "",                   // 组网层级，留空
           "rank_addr_list": [
             {
               "addr_type": "EID",           // 地址类型
               "addr": "....",               // 地址值
               "ports": ["x/x"],             // NPU端口列表
-              "plane_id": "1"               // 网络平面
+              "plane_id": "xx"              // 网络平面ID
             },
             ...
             {
               "addr_type": "EID",
               "addr": "....",
               "ports": ["x/x"],
-              "plane_id": "1"
+              "plane_id": "xx"
             },
-
           ]
-        }
+        },
+        ...
       ]
     }
   ]
