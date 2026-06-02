@@ -20,7 +20,7 @@ from enum import Enum
 from typing import List, Dict, Any, Optional
 
 from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Border, Side
+from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl.utils import get_column_letter
 
 from . import logger
@@ -30,6 +30,7 @@ _CONSOLE_LOGGER = logger.CONSOLE_LOGGER
 
 class Color(Enum):
     """颜色枚举类"""
+
     # 基本颜色
     RED = "FF0000"
     GREEN = "00FF00"
@@ -44,6 +45,9 @@ class Color(Enum):
     LIGHT_GRAY = "C0C0C0"
     GRAY = "808080"
     DARK_GRAY = "404040"
+    LIGHT_BLUE = "B4C6E7"  # 蓝色 个性 1 淡色 60%
+    LIGHT_ORANGE = "F8CBAD"  # 橙色 个性 6 淡色 60%
+    LIGHT_TEAL = "B7DEE8"  # 水绿色 个性 5 淡色 60%
 
     # 业务相关颜色
     SUCCESS = "00FF00"  # 成功 - 绿色
@@ -55,6 +59,9 @@ class Color(Enum):
     LIGHT_SUCCESS = "E6F9E6"  # 柔和成功 - 浅绿色
     LIGHT_WARNING = "FFF3CD"  # 柔和警告 - 浅黄色
     LIGHT_ERROR = "F8D7DA"  # 柔和错误 - 浅红色
+
+
+_COLOR_LIST = [Color.LIGHT_BLUE.value, Color.LIGHT_ORANGE.value, Color.LIGHT_TEAL.value]
 
 
 class CellStyle:
@@ -127,6 +134,7 @@ class ExcelGenerator:
     """
     Excel文件生成器，支持将多个List[dict]数据写入不同的sheet
     """
+
     DEFAULT_BORDER = "thin"
     DEFAULT_COLOR = "000000"
 
@@ -143,8 +151,47 @@ class ExcelGenerator:
             left=Side(border_style=self.DEFAULT_BORDER, color=self.DEFAULT_COLOR),
             right=Side(border_style=self.DEFAULT_BORDER, color=self.DEFAULT_COLOR),
             top=Side(border_style=self.DEFAULT_BORDER, color=self.DEFAULT_COLOR),
-            bottom=Side(border_style=self.DEFAULT_BORDER, color=self.DEFAULT_COLOR)
+            bottom=Side(border_style=self.DEFAULT_BORDER, color=self.DEFAULT_COLOR),
         )
+
+    @staticmethod
+    def _merge_cells(sheet, sheet_info):
+        data = sheet_info['data']
+        columns = sheet_info['columns']
+        na_rep = sheet_info['na_rep']
+        merge_columns = sheet_info['merge_columns']
+        # 数据行从第2行开始
+        data_start_row = 2
+        data_start_row = sheet_info.get('data_start_row', data_start_row)
+        for col_name in merge_columns:
+            if col_name not in columns:
+                continue
+            # Excel列索引从1开始
+            col_idx = columns.index(col_name) + 1
+
+            # 合并相同值的单元格
+            if not data:
+                continue
+
+            start_row = data_start_row
+            current_value = data[0].get(col_name, na_rep)
+
+            for data_idx in range(1, len(data)):
+                next_value = data[data_idx].get(col_name, na_rep)
+                current_row = data_start_row + data_idx
+                if next_value != current_value:
+                    # 合并从start_row到row_idx-1的单元格
+                    if start_row < current_row - 1:
+                        sheet.merge_cells(
+                            start_row=start_row, start_column=col_idx, end_row=current_row - 1, end_column=col_idx
+                        )
+                    # 更新起始行和当前值
+                    start_row = current_row
+                    current_value = next_value
+            # 合并最后一组相同值的单元格
+            last_data_row = data_start_row + len(data) - 1
+            if start_row < last_data_row:
+                sheet.merge_cells(start_row=start_row, start_column=col_idx, end_row=last_data_row, end_column=col_idx)
 
     @staticmethod
     def _get_cell_value_and_style(cell_data, na_rep: str):
@@ -162,9 +209,18 @@ class ExcelGenerator:
 
         return cell_data, CellStyle()
 
-    def add_sheet(self, sheet_name: str, data: List[Dict[str, Any]],
-                  columns: Optional[List[str]] = None, flatten: bool = False,
-                  sep: str = '_', na_rep: str = '', header_widths: Optional[Dict[str, int]] = None):
+    def add_sheet(
+        self,
+        sheet_name: str,
+        data: List[Dict[str, Any]],
+        columns: Optional[List[str]] = None,
+        flatten: bool = False,
+        sep: str = '_',
+        na_rep: str = '',
+        header_widths: Optional[Dict[str, int]] = None,
+        merge_columns: Optional[List[str]] = None,
+        merged_headers: Optional[List[Dict[str, List[str]]]] = None,
+    ):
         """
         添加一个sheet的数据
         :param sheet_name: sheet名称
@@ -174,6 +230,8 @@ class ExcelGenerator:
         :param sep: 嵌套键的连接符（展平时使用）
         :param na_rep: 空值替换字符串（默认空字符串）
         :param header_widths: 自定义列宽，格式为 {列名: 宽度}，优先级高于自动调整
+        :param merge_columns: 需要合并相同值的列名列表
+        :param merged_headers: 合并的header配置列表，每个元素为 {合并单元格内容: [要合并的列名列表]}
         """
         if not data:
             raise ValueError("输入的数据列表不能为空")
@@ -194,16 +252,20 @@ class ExcelGenerator:
             all_cols = get_all_columns(processed_data, flatten=False)
             invalid_cols = [col for col in columns if col not in all_cols]
             if invalid_cols:
-                _CONSOLE_LOGGER.info(f"警告：自定义列中存在不存在的键：{invalid_cols}（将输出空值）")
+                _CONSOLE_LOGGER.info("警告：自定义列中存在不存在的键：%s（将输出空值）", str(invalid_cols))
 
         # 保存sheet数据
-        self.sheets_data.append({
-            'sheet_name': sheet_name,
-            'data': processed_data,
-            'columns': columns,
-            'na_rep': na_rep,
-            'header_widths': header_widths or {}
-        })
+        self.sheets_data.append(
+            {
+                'sheet_name': sheet_name,
+                'data': processed_data,
+                'columns': columns,
+                'na_rep': na_rep,
+                'header_widths': header_widths or {},
+                'merge_columns': merge_columns or [],
+                'merged_headers': merged_headers or [],
+            }
+        )
 
     def generate_excel(self, output_path: str):
         """
@@ -229,34 +291,42 @@ class ExcelGenerator:
             # 创建sheet
             sheet = self.workbook.create_sheet(title=sheet_name)
 
+            # 写入合并的header（第一行开始）
+            merged_headers = sheet_info.get('merged_headers', [])
+            header_row = 1
+            if merged_headers:
+                header_row = len(merged_headers) + 1
+                self._merge_header(sheet, merged_headers, columns)
+
             # 写入表头
             for col_idx, col_name in enumerate(columns, 1):
-                cell = sheet.cell(row=1, column=col_idx, value=col_name)
+                cell = sheet.cell(row=header_row, column=col_idx, value=col_name)
                 # 设置表头样式
                 cell.font = Font(bold=True)
                 # 添加边框
                 cell.border = self.default_border
 
             # 写入数据行
-            for row_idx, row_data in enumerate(data, 2):
+            data_start_row = header_row + 1
+            sheet_info['data_start_row'] = data_start_row
+            for row_idx, row_data in enumerate(data, data_start_row):
                 for col_idx, col_name in enumerate(columns, 1):
                     cell_data = row_data.get(col_name, na_rep)
                     value, style = self._get_cell_value_and_style(cell_data, na_rep)
 
                     # 设置单元格值
                     cell = sheet.cell(row=row_idx, column=col_idx, value=value)
-
                     # 添加边框
                     cell.border = self.default_border
+                    # 设置对齐方式
+                    cell.alignment = Alignment(horizontal='left', vertical='center')
 
                     # 应用单元格样式
                     if style:
                         # 设置背景颜色
                         if style.bg_color:
                             cell.fill = PatternFill(
-                                start_color=style.bg_color.value,
-                                end_color=style.bg_color.value,
-                                fill_type="solid"
+                                start_color=style.bg_color.value, end_color=style.bg_color.value, fill_type="solid"
                             )
                         # 设置字体颜色
                         if style.font_color:
@@ -268,8 +338,10 @@ class ExcelGenerator:
                                 bold=current_font.bold,
                                 italic=current_font.italic,
                                 underline=current_font.underline,
-                                color=style.font_color.value
+                                color=style.font_color.value,
                             )
+
+            self._merge_cells(sheet, sheet_info)
 
             # 设置列宽
             for col_idx in range(1, len(columns) + 1):
@@ -284,8 +356,7 @@ class ExcelGenerator:
                     max_length = 0
                     # 检查表头长度
                     max_length = max(max_length, len(str(column_name)))
-                    # 检查数据长度
-                    for row_idx in range(2, len(data) + 2):
+                    for row_idx in range(data_start_row, data_start_row + len(data)):
                         cell_value = str(sheet[f"{column_letter}{row_idx}"].value)
                         max_length = max(max_length, len(cell_value))
                     # 设置列宽（加一点边距）
@@ -294,23 +365,45 @@ class ExcelGenerator:
         # 保存Excel文件
         try:
             self.workbook.save(output_path)
-            _CONSOLE_LOGGER.info(f"Excel文件已生成：{output_path}（共 {len(self.sheets_data)} 个sheet）")
-        except Exception as e:
-            raise Exception(f"生成Excel文件到：{output_path} 失败，可能是已打开文件占用，异常：{e}") from e
+            _CONSOLE_LOGGER.info("Excel文件已生成：%s（共 %d 个sheet）", output_path, len(self.sheets_data))
+        except OSError as e:
+            raise OSError(f"生成Excel文件到：{output_path} 失败，可能是已打开文件占用，异常：{e}") from e
         finally:
             # 关闭工作簿
             self.workbook.close()
 
+    def _merge_header(self, sheet, merged_headers, columns):
+        for header_row_idx, header_config in enumerate(merged_headers, 1):
+            for idx, (header_text, column_names) in enumerate(header_config.items()):
+                # 找到这些列在columns中的索引
+                col_indices = [columns.index(col) + 1 for col in column_names if col in columns]
+                if col_indices:
+                    # 合并单元格
+                    start_col = min(col_indices)
+                    end_col = max(col_indices)
+                    sheet.merge_cells(
+                        start_row=header_row_idx, start_column=start_col, end_row=header_row_idx, end_column=end_col
+                    )
+                    # 设置合并单元格的值和样式
+                    cell = sheet.cell(row=header_row_idx, column=start_col, value=header_text)
+                    cell.font = Font(bold=True)
+                    cell.border = self.default_border
+                    cell.alignment = Alignment(horizontal='center', vertical='center')
+                    color_idx = idx % len(_COLOR_LIST)
+                    cell.fill = PatternFill(
+                        fill_type='solid', start_color=_COLOR_LIST[color_idx], end_color=_COLOR_LIST[color_idx]
+                    )
+
 
 def dict_list_to_excel(
-        dict_list: List[Dict[str, Any]],
-        output_path: str,
-        sheet_name: str = "Sheet1",
-        columns: Optional[List[str]] = None,
-        flatten: bool = False,
-        sep: str = '_',
-        na_rep: str = '',
-        header_widths: Optional[Dict[str, int]] = None
+    dict_list: List[Dict[str, Any]],
+    output_path: str,
+    sheet_name: str = "Sheet1",
+    columns: Optional[List[str]] = None,
+    flatten: bool = False,
+    sep: str = '_',
+    na_rep: str = '',
+    header_widths: Optional[Dict[str, int]] = None,
 ) -> None:
     """
     便捷函数：将单个List[dict]转换为Excel文件

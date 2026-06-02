@@ -18,12 +18,10 @@
 import re
 from typing import List
 
-from ascend_fd_tk.core.common import constants
-from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
-from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
+from ascend_fd_tk.core.model.diag_result import DiagResult, SwitchDomain
 
 
 class CrcErrInfo(JsonObj):
@@ -66,20 +64,13 @@ class CrcRisingCheckItem(Analyzer):
                 )
                 _, peer_interface_info = self.cluster_info.find_peer_swi_interface_info_by_if_info(if_info)
                 if peer_interface_info:
-                    fault_info += (
-                        f"，对端设备{peer_interface_info.device_name}，对端端口{peer_interface_info.interface}"
-                    )
-                domain = [
-                    Domain(DeviceType.SWITCH, local_if_info.device_name),
-                    Domain(DeviceType.SWI_PORT, local_if_info.interface),
-                ]
+                    fault_info += f"，对端设备{peer_interface_info.device_id}，对端端口{peer_interface_info.interface}"
                 result.append(
                     DiagResult(
-                        domain,
+                        domain=SwitchDomain(swi_id=local_if_info.device_id, interface=local_if_info.interface),
                         fault_info=fault_info,
                         suggestion="请检查端口",
                         err_code=alarm_info.alarm_id,
-                        fault_type=constants.FAULT_TYPE_SWITCH,
                     )
                 )
         return result

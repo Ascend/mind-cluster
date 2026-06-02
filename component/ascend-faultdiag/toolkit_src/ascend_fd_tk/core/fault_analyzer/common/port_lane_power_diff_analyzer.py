@@ -21,7 +21,7 @@ from ascend_fd_tk.core.common import constants
 from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
-from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
+from ascend_fd_tk.core.model.diag_result import DiagResult, HostDomain, SwitchDomain, BmcDomain
 from ascend_fd_tk.core.model.optical_module import LanePowerInfo
 from ascend_fd_tk.utils import helpers
 
@@ -48,12 +48,12 @@ class PortLanePowerDiffAnalyzer(Analyzer):
                 optical_module_info = npu_chip_info.get_optical_module_info()
                 if not optical_module_info:
                     continue
-                domain = [
-                    Domain(DeviceType.SERVER, host_info.host_id),
-                    Domain(DeviceType.NPU, npu_chip_info.npu_id),
-                    Domain(DeviceType.CHIP, npu_chip_info.chip_phy_id),
-                ]
-                res = self._generate_diag_result(domain, optical_module_info.lane_power_infos, "host")
+                domain = HostDomain(
+                    host_id=host_info.host_id,
+                    npu_id=npu_chip_info.npu_id,
+                    chip_phy_id=npu_chip_info.chip_phy_id,
+                )
+                res = self._generate_diag_result(domain, optical_module_info.lane_power_infos)
                 if not res:
                     continue
                 results.append(res)
@@ -66,11 +66,8 @@ class PortLanePowerDiffAnalyzer(Analyzer):
                 optical_module_info = interface_full_info.get_optical_module_info()
                 if not optical_module_info:
                     continue
-                domain = [
-                    Domain(DeviceType.SWITCH, swi_info.swi_id),
-                    Domain(DeviceType.SWI_PORT, interface_full_info.interface),
-                ]
-                res = self._generate_diag_result(domain, optical_module_info.lane_power_infos, "switch")
+                domain = SwitchDomain(swi_id=swi_info.swi_id, interface=interface_full_info.interface)
+                res = self._generate_diag_result(domain, optical_module_info.lane_power_infos)
                 if not res:
                     continue
                 results.append(res)
@@ -83,21 +80,18 @@ class PortLanePowerDiffAnalyzer(Analyzer):
                 optical_module_info = bmc_npu_info.get_optical_module_info()
                 if not optical_module_info:
                     continue
-                domain = [
-                    Domain(DeviceType.BMC, bmc_info.bmc_id),
-                    Domain(DeviceType.NPU, bmc_npu_info.npu_id),
-                ]
-                if bmc_npu_info.chip_phy_id:
-                    domain.append(Domain(DeviceType.CHIP, bmc_npu_info.chip_phy_id))
-                res = self._generate_diag_result(domain, optical_module_info.lane_power_infos, "bmc")
+                domain = BmcDomain(
+                    bmc_id=bmc_info.bmc_id,
+                    npu_id=bmc_npu_info.npu_id,
+                    chip_phy_id=bmc_npu_info.chip_phy_id or "",
+                )
+                res = self._generate_diag_result(domain, optical_module_info.lane_power_infos)
                 if not res:
                     continue
                 results.append(res)
         return results
 
-    def _generate_diag_result(
-        self, domain: list[Domain], lane_power_infos: List[LanePowerInfo], fault_type: str = ""
-    ) -> DiagResult:
+    def _generate_diag_result(self, domain, lane_power_infos: List[LanePowerInfo]) -> DiagResult:
         check_results = [
             self._check_lane_power_diff(lane_power_infos, "tx_power_dbm", DeviceType.TX_PORT.value),
             self._check_lane_power_diff(lane_power_infos, "rx_power_dbm", DeviceType.RX_PORT.value),
@@ -105,8 +99,7 @@ class PortLanePowerDiffAnalyzer(Analyzer):
         if not any(check_results):
             return None
         fault_info = "\n".join(check_results)
-        res = DiagResult(domain, fault_info, "请检查端口", fault_type=fault_type)
-        return res
+        return DiagResult(domain=domain, fault_info=fault_info, suggestion="请检查端口")
 
     def _check_lane_power_diff(self, lane_power_infos: List[LanePowerInfo], attr: str, port_type: str) -> str:
         origin_attr = attr.replace("_dbm", "")

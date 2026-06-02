@@ -27,6 +27,7 @@ T = TypeVar('T')
 
 class ThresholdColorMap(Enum):
     """阈值状态与颜色的映射关系"""
+
     NORMAL = Color.LIGHT_SUCCESS
     LOW_THRESHOLD_ALARM = Color.LIGHT_ERROR
     LOW_THRESHOLD_WARN = Color.LIGHT_WARNING
@@ -39,6 +40,7 @@ class ThresholdColorMap(Enum):
 @dataclass
 class ThresholdConfig:
     """阈值配置类，用于配置某个字段的阈值信息"""
+
     field_name: str  # 对象中的字段名
     threshold: Threshold  # 对应的阈值对象
     display_name: Optional[str] = None  # 显示在Excel中的列名
@@ -57,19 +59,26 @@ class ThresholdConfig:
 @dataclass
 class ReportSheet(Generic[T]):
     """报告Sheet类，对应Excel中的一个Sheet"""
+
     sheet_name: str  # Sheet名称
     data_list: List[T]  # 数据列表
     header_mapping: Dict[str, str]  # header与对象字段的映射关系 {field_name: header_name}
     header_order: List[str]  # header的顺序（使用header_name）
+    merge_columns: List[str]  # 确定需要合并的列（故障域列）
     threshold_configs: List[ThresholdConfig]  # 阈值配置列表
     na_rep: str = ""  # 空值替换字符串
     header_widths: Optional[Dict[str, int]] = field(default_factory=dict)  # 列宽配置
+    merged_headers: Optional[List[Dict[str, List[str]]]] = field(default_factory=list)  # 合并的header配置
 
     def __post_init__(self):
         # 验证header_order中的header是否都在header_mapping.values()中
         for header in self.header_order:
             if header not in self.header_mapping.values():
                 raise ValueError(f"header_order中的{header}不在{self.header_mapping.values()}中")
+
+        # 如果header_order为空，使用header_mapping.values()的顺序作为默认顺序
+        if not self.header_order:
+            self.header_order = list(self.header_mapping.values())
 
         # 验证threshold_configs中的field_name是否都在header_mapping.keys()中
         for config in self.threshold_configs:
@@ -79,7 +88,6 @@ class ReportSheet(Generic[T]):
         # 更新header_mapping以包含单位信息
         new_header_mapping = {}
         header_name_map = {}  # 记录原始header_name到新header_name的映射
-
         for field_name, header_name in self.header_mapping.items():
             # 检查是否有阈值配置
             config = next((c for c in self.threshold_configs if c.field_name == field_name), None)
@@ -97,6 +105,13 @@ class ReportSheet(Generic[T]):
         for header_name in self.header_order:
             new_header_order.append(header_name_map.get(header_name, header_name))
 
+        # 更新merged_headers以包含单位信息
+        for header in self.merged_headers:
+            for header_name, column_list in header.items():
+                new_column_list = []
+                for column_name in column_list:
+                    new_column_list.append(header_name_map.get(column_name, column_name))
+                header[header_name] = new_column_list
         # 更新属性
         self.header_mapping = new_header_mapping
         self.header_order = new_header_order
@@ -105,6 +120,7 @@ class ReportSheet(Generic[T]):
 @dataclass
 class ReportData:
     """报告数据类，用于封装报告的所有数据"""
+
     sheets: List[ReportSheet] = field(default_factory=list)  # 所有Sheet数据
 
     def add_sheet(self, sheet: ReportSheet) -> None:
@@ -118,6 +134,16 @@ class ReportGenerator:
     def __init__(self, excel_gen: Optional[ExcelGenerator] = None):
         self.excel_gen = excel_gen or ExcelGenerator()
         self.report_data = ReportData()
+
+    @staticmethod
+    def _get_comparator(th_status: ThresholdStatus) -> str:
+        if th_status in (ThresholdStatus.HIGH_THRESHOLD_ALARM, ThresholdStatus.HIGH_THRESHOLD_WARN):
+            return ">"
+        if th_status in (ThresholdStatus.LOW_THRESHOLD_ALARM, ThresholdStatus.LOW_THRESHOLD_WARN):
+            return "<"
+        if th_status in (ThresholdStatus.NOT_EQUAL_THRESHOLD_ALARM, ThresholdStatus.NOT_EQUAL_THRESHOLD_WARN):
+            return "!="
+        return "=="
 
     @staticmethod
     def _get_field_value(obj: Any, field_name: str) -> Any:
@@ -155,7 +181,9 @@ class ReportGenerator:
                 data=styled_data,
                 columns=sheet.header_order,
                 na_rep=sheet.na_rep,
-                header_widths=sheet.header_widths
+                header_widths=sheet.header_widths,
+                merge_columns=sheet.merge_columns,
+                merged_headers=sheet.merged_headers,
             )
 
         # 生成Excel文件
@@ -165,73 +193,45 @@ class ReportGenerator:
         else:
             return self.excel_gen
 
+    def _build_styled_cell(self, value, config: ThresholdConfig, na_rep: str) -> StyledCell:
+        value_str = config.value_converter(value) if value is not None else na_rep
+        if not value_str or value_str == na_rep:
+            return StyledCell(value_str)
+        th_status, th_value = config.threshold.check_value(value_str)
+        color = ThresholdColorMap[th_status.name].value
+        display_value = value_str
+        if th_status != ThresholdStatus.NORMAL and th_value:
+            comparator = self._get_comparator(th_status)
+            display_value = f"{value_str} | {comparator} {th_value}"
+        return StyledCell(display_value, CellStyle(bg_color=color))
+
     def _convert_to_styled_dict(self, sheet: ReportSheet) -> List[Dict[str, Any]]:
-        """将数据列表转换为带样式的字典列表，用于Excel生成"""
-        styled_data = []
-
-        # 创建阈值配置映射 {field_name: ThresholdConfig}
         threshold_config_map = {config.field_name: config for config in sheet.threshold_configs}
-
+        styled_data = []
         for obj in sheet.data_list:
             row_data = {}
             for field_name, header_name in sheet.header_mapping.items():
-                # 获取字段值
                 value = self._get_field_value(obj, field_name)
-
-                # 应用阈值检查和样式
                 if field_name in threshold_config_map:
-                    config = threshold_config_map[field_name]
-                    # 使用值转换器转换值
-                    value_str = config.value_converter(value) if value is not None else sheet.na_rep
-
-                    # 检查阈值
-                    if not value_str or value_str == sheet.na_rep:
-                        # 空值，不应用颜色
-                        color = None
-                        display_value = value_str
-                    else:
-                        th_status, th_value = config.threshold.check_value(value_str)
-                        # 获取颜色
-                        color = ThresholdColorMap[th_status.name].value
-
-                        # 格式化显示内容
-                        display_value = value_str
-                        if th_status != ThresholdStatus.NORMAL and th_value:
-                            # 根据阈值状态确定比较符号
-                            if th_status in [ThresholdStatus.HIGH_THRESHOLD_ALARM, ThresholdStatus.HIGH_THRESHOLD_WARN]:
-                                comparator = ">"
-                            elif th_status in [ThresholdStatus.LOW_THRESHOLD_ALARM, ThresholdStatus.LOW_THRESHOLD_WARN]:
-                                comparator = "<"
-                            elif th_status in [ThresholdStatus.NOT_EQUAL_THRESHOLD_ALARM,
-                                               ThresholdStatus.NOT_EQUAL_THRESHOLD_WARN]:
-                                comparator = "!="
-                            else:
-                                comparator = "=="
-                            # 格式化显示为 "value | > threshold" 或 "value | < threshold" 或 "value | != threshold"
-                            display_value = f"{value_str} | {comparator} {th_value}"
-
-                    # 创建带样式的单元格
-                    if color:
-                        row_data[header_name] = StyledCell(display_value, CellStyle(bg_color=color))
-                    else:
-                        row_data[header_name] = StyledCell(display_value)
+                    row_data[header_name] = self._build_styled_cell(
+                        value, threshold_config_map[field_name], sheet.na_rep
+                    )
                 else:
-                    # 普通字段，不应用样式
                     row_data[header_name] = value if value is not None else sheet.na_rep
-
             styled_data.append(row_data)
-
         return styled_data
 
 
 def create_threshold_report(
-        sheet_name: str,
-        data_list: List[Any],
-        header_mapping: Dict[str, str],
-        header_order: List[str],
-        threshold_configs: List[ThresholdConfig],
-        na_rep: str = "",
-        header_widths: Optional[Dict[str, int]] = None
+    sheet_name: str,
+    data_list: List[Any],
+    header_mapping: Dict[str, str],
+    threshold_configs: List[ThresholdConfig],
+    na_rep: str = "",
+    header_widths: Optional[Dict[str, int]] = None,
+    header_order: List[str] = None,
+    merge_columns: List[str] = None,
+    merged_headers: Optional[List[Dict[str, List[str]]]] = None,
 ) -> ReportSheet:
     """创建阈值报告Sheet的便捷函数"""
     return ReportSheet(
@@ -239,16 +239,18 @@ def create_threshold_report(
         data_list=data_list or [],
         header_mapping=header_mapping or {},
         header_order=header_order or [],
+        merge_columns=merge_columns or [],
         threshold_configs=threshold_configs or [],
         na_rep=na_rep,
-        header_widths=header_widths or {}
+        header_widths=header_widths or {},
+        merged_headers=merged_headers or [],
     )
 
 
 def generate_threshold_excel(
-        output_path: Optional[str] = None,
-        sheets: Optional[List[ReportSheet]] = None,
-        excel_gen: Optional[ExcelGenerator] = None
+    output_path: Optional[str] = None,
+    sheets: Optional[List[ReportSheet]] = None,
+    excel_gen: Optional[ExcelGenerator] = None,
 ) -> Optional[ExcelGenerator]:
     """生成阈值Excel报告的便捷函数
 
@@ -260,9 +262,8 @@ def generate_threshold_excel(
     report_gen = ReportGenerator(excel_gen=excel_gen)
 
     # 添加所有Sheet
-    if sheets:
-        for sheet in sheets:
-            report_gen.add_sheet(sheet)
+    for sheet in sheets:
+        report_gen.add_sheet(sheet)
 
     # 生成Excel报告
     return report_gen.generate_excel(output_path=output_path)

@@ -17,10 +17,9 @@
 
 from typing import List
 
-from ascend_fd_tk.core.common import constants, diag_enum
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
-from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
+from ascend_fd_tk.core.model.diag_result import DiagResult, HostDomain
 from ascend_fd_tk.core.model.switch import SwitchInfo
 from ascend_fd_tk.utils import logger
 
@@ -29,14 +28,6 @@ LOGGER = logger.DIAG_LOGGER
 
 @register_analyzer
 class RocePortAnalyzer(Analyzer):
-    @staticmethod
-    def _get_npu_chip_domain(ip, npu_id, chip_id):
-        return [
-            Domain(diag_enum.DeviceType.SERVER, ip),
-            Domain(diag_enum.DeviceType.NPU, npu_id),
-            Domain(diag_enum.DeviceType.CHIP, chip_id),
-        ]
-
     def analyse(self) -> List[DiagResult]:
         result = []
         for host_info in self.cluster_info.hosts_info.values():
@@ -44,10 +35,13 @@ class RocePortAnalyzer(Analyzer):
                 peer_roce_swi = npu_chip_info.hccn_lldp_info
                 if not peer_roce_swi or not peer_roce_swi.system_name_tlv:
                     diag_result = DiagResult(
-                        self._get_npu_chip_domain(host_info.host_id, npu_chip_info.npu_id, npu_chip_info.chip_phy_id),
-                        "未采集到NPU光模块对端lldp信息",
-                        "请检查是否插上光模块或未连接交换机",
-                        fault_type=constants.FAULT_TYPE_HOST,
+                        domain=HostDomain(
+                            host_id=host_info.host_id,
+                            npu_id=npu_chip_info.npu_id,
+                            chip_phy_id=npu_chip_info.chip_phy_id,
+                        ),
+                        fault_info="未采集到NPU光模块对端lldp信息",
+                        suggestion="请检查是否插上光模块或未连接交换机",
                     )
                     LOGGER.warning("%s %s", diag_result.get_domain_desc(), diag_result.fault_info)
                     continue
@@ -73,15 +67,16 @@ class RocePortAnalyzer(Analyzer):
                         or peer_roce_port_info.duplex.lower() != npu_chip_info.duplex.lower()
                     ):
                         diag_result = DiagResult(
-                            self._get_npu_chip_domain(
-                                host_info.host_id, npu_chip_info.npu_id, npu_chip_info.chip_phy_id
+                            domain=HostDomain(
+                                host_id=host_info.host_id,
+                                npu_id=npu_chip_info.npu_id,
+                                chip_phy_id=npu_chip_info.chip_phy_id,
                             ),
-                            f"NPU端口与对端交换机：{peer_roce_swi.system_name_tlv}，"
+                            fault_info=f"NPU端口与对端交换机：{peer_roce_swi.system_name_tlv}，"
                             f"ip：{peer_roce_swi_info.swi_id}，端口{peer_roce_swi.port_id_tlv}连接信息不相同，"
                             f"本端Speed：{npu_chip_info.speed}，Duplex：{npu_chip_info.duplex}。"
                             f"对端Speed：{peer_roce_port_info.speed}，Duplex：{peer_roce_port_info.duplex}",
-                            "请保持两端设置一致",
-                            fault_type=constants.FAULT_TYPE_HOST,
+                            suggestion="请保持两端设置一致",
                         )
                         result.append(diag_result)
                     break

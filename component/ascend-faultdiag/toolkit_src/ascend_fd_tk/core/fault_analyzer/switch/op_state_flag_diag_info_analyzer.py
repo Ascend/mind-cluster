@@ -17,12 +17,10 @@
 
 from typing import List
 
-from ascend_fd_tk.core.common import constants
-from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
-from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
+from ascend_fd_tk.core.model.diag_result import DiagResult, SwitchDomain
 from ascend_fd_tk.core.model.switch import SwiOpticalModel
 
 
@@ -54,13 +52,13 @@ class OpStateFlagDiagInfoAnalyzer(Analyzer):
                 fault_info_list = self._collect_fault_info(op_model)
                 if not fault_info_list:
                     continue
-                domain = [
-                    Domain(DeviceType.SWITCH, swi_info.swi_id),
-                    Domain(DeviceType.SWI_PORT, op_model.interface_name),
-                ]
                 lane_fault_info = '\n'.join(fault_info_list)
                 fault_info = f"端口{op_model.interface_name} flag信息异常：\n{lane_fault_info}"
-                result = DiagResult(domain, fault_info, "请检查端口", fault_type=constants.FAULT_TYPE_SWITCH)
+                result = DiagResult(
+                    domain=SwitchDomain(swi_id=swi_info.swi_id, interface=op_model.interface_name),
+                    fault_info=fault_info,
+                    suggestion="请检查端口",
+                )
                 results.append(result)
         return results
 

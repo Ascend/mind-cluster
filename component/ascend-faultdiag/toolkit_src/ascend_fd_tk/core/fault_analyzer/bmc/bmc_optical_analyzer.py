@@ -17,12 +17,10 @@
 
 from typing import List
 
-from ascend_fd_tk.core.common import constants
-from ascend_fd_tk.core.common.diag_enum import DeviceType
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
 from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
-from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
+from ascend_fd_tk.core.model.diag_result import DiagResult, BmcDomain
 from ascend_fd_tk.core.model.optical_module import LanePowerInfo
 from ascend_fd_tk.utils import helpers
 
@@ -48,9 +46,6 @@ class BmcOpticalAnalyzer(Analyzer):
                 optical_module_info = bmc_npu_info.get_optical_module_info()
                 if not optical_module_info or not optical_module_info.lane_power_infos:
                     continue
-                domain = [Domain(DeviceType.BMC, bmc_info.bmc_id), Domain(DeviceType.NPU, bmc_npu_info.npu_id)]
-                if bmc_npu_info.chip_phy_id:
-                    domain.append(Domain(DeviceType.CHIP, bmc_npu_info.chip_phy_id))
                 # 此处仅记录linkdown数据, 所以有光模块信息即可认为存在故障
                 res_list = [f"NPU存在linkdown，记录时间{optical_module_info.log_time}，可能为闪断或硬件故障"]
                 for lane_power_info in optical_module_info.lane_power_infos:
@@ -60,7 +55,15 @@ class BmcOpticalAnalyzer(Analyzer):
                 res_list = [res for res in res_list if res]
                 fault_info = "\n".join(res_list)
                 results.append(
-                    DiagResult(domain, fault_info, "请检查端口是否存在脏污", fault_type=constants.FAULT_TYPE_BMC)
+                    DiagResult(
+                        domain=BmcDomain(
+                            bmc_id=bmc_info.bmc_id,
+                            npu_id=bmc_npu_info.npu_id,
+                            chip_phy_id=bmc_npu_info.chip_phy_id or "",
+                        ),
+                        fault_info=fault_info,
+                        suggestion="请检查端口是否存在脏污",
+                    )
                 )
         return results
 

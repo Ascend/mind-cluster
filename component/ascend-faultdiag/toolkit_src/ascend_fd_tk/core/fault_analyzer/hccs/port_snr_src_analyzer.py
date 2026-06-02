@@ -16,12 +16,11 @@
 # ==============================================================================
 from typing import List
 
-from ascend_fd_tk.core.common import constants, diag_enum
 from ascend_fd_tk.core.config import port_mapping_config
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
 from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
-from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
+from ascend_fd_tk.core.model.diag_result import DiagResult, SwitchDomain
 
 
 @register_analyzer
@@ -35,10 +34,6 @@ class PortSnrSrcAnalyzer(Analyzer):
         diag_results = []
         for swi in self.swis_info.values():
             for port_snr in swi.hccs_info.interface_snr_list:
-                domain = [
-                    Domain(diag_enum.DeviceType.SWITCH.value, f"{swi.name} {swi.swi_id}"),
-                    Domain(diag_enum.DeviceType.SWI_PORT.value, f"{port_snr.interface_name}"),
-                ]
                 for abnormal_lane_snr in port_snr.abnormal_lane_snr:
                     check_res = self.cluster_info.get_threshold().CDR_HOST_SNR_LINE.check_value_str(
                         abnormal_lane_snr.snr_value
@@ -47,10 +42,9 @@ class PortSnrSrcAnalyzer(Analyzer):
                         continue
                     diag_results.append(
                         DiagResult(
-                            domain,
-                            f"{abnormal_lane_snr.lane_name} {check_res}",
-                            "请检查端口是否脏污",
-                            fault_type=constants.FAULT_TYPE_SWITCH,
+                            domain=SwitchDomain(swi_id=swi.swi_id, interface=port_snr.interface_name),
+                            fault_info=f"{abnormal_lane_snr.lane_name} {check_res}",
+                            suggestion="请检查端口是否脏污",
                         )
                     )
         return diag_results

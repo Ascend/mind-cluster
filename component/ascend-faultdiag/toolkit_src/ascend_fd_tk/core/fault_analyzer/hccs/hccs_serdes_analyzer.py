@@ -17,10 +17,9 @@
 
 from typing import List
 
-from ascend_fd_tk.core.common import constants, diag_enum
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
-from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
+from ascend_fd_tk.core.model.diag_result import DiagResult, SwitchDomain
 
 
 @register_analyzer
@@ -41,10 +40,6 @@ class HccsSerdesAnalyzer(Analyzer):
                 if not fault_desc_list:
                     continue
                 fault_desc = f"交换芯片：{info.chip_id}，端口：{info.port_id}" + ",".join(fault_desc_list)
-                domains = [
-                    Domain(diag_enum.DeviceType.SWITCH.value, swi_info.swi_id),
-                    Domain(diag_enum.DeviceType.SWI_PORT.value, info.swi_port_id),
-                ]
-                res = DiagResult(domains, fault_desc, "请检查端口故障", fault_type=constants.FAULT_TYPE_SWITCH)
-                results.append(res)
+                domain = SwitchDomain(swi_id=swi_info.swi_id, interface=info.swi_port_id)
+                results.append(DiagResult(domain=domain, fault_info=fault_desc, suggestion="请检查端口故障"))
         return results

@@ -14,13 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
 from typing import List
 
-from ascend_fd_tk.core.common import constants, diag_enum
 from ascend_fd_tk.core.context.register import register_analyzer
 from ascend_fd_tk.core.fault_analyzer.base import Analyzer
 from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
-from ascend_fd_tk.core.model.diag_result import DiagResult, Domain
+from ascend_fd_tk.core.model.diag_result import DiagResult, HostDomain
 from ascend_fd_tk.core.fault_analyzer.optical_fault_check import OpticalFaultChecker
 from ascend_fd_tk.core.model.host import NpuChipInfo
 from ascend_fd_tk.core.model.optical_module import OpticalModuleInfo
@@ -46,76 +46,44 @@ class InterHostFaultAnalyzer(Analyzer):
                     continue
                 # 本端光模块信息
                 optical_module_info = chip_info.get_optical_module_info()
-                local_domain = [
-                    Domain(diag_enum.DeviceType.SERVER, host_info.host_id),
-                    Domain(diag_enum.DeviceType.NPU, chip_info.npu_id),
-                    Domain(diag_enum.DeviceType.CHIP, chip_info.chip_phy_id),
-                ]
-                # 对端光模块信息
-                remote_optical_module_info, remote_domain = self.get_remote_info(host_info.host_id, chip_info)
-                domain_list = local_domain + remote_domain
+                remote_optical_module_info, domain = self._get_remote_optical_info(host_info.host_id, chip_info)
                 if not remote_optical_module_info:
                     # 未找到对端信息，只分析本端信息
-                    diag_results.extend(self.fault_analyze_single_ended(optical_module_info, domain_list))
+                    diag_results.extend(self.fault_check.power_analyze_single_ended(domain, optical_module_info))
+                    diag_results.extend(self.fault_check.snr_analyze_single_ended(domain, optical_module_info))
+                    diag_results.extend(self.fault_check.bias_analyze_single_ended(domain, optical_module_info))
                     continue
-                diag_results.extend(
-                    self.inter_host_analyzer(optical_module_info, remote_optical_module_info, domain_list)
-                )
+                diag_results.extend(self.inter_host_analyzer(domain, optical_module_info, remote_optical_module_info))
         return diag_results
 
-    def get_remote_info(self, host_id: str, chip_info: NpuChipInfo):
+    def _get_remote_optical_info(self, host_id: str, chip_info: NpuChipInfo):
+        domain = HostDomain(host_id=host_id, npu_id=chip_info.npu_id, chip_phy_id=chip_info.chip_phy_id)
         lldp_info = chip_info.hccn_lldp_info
-        switch_name = lldp_info.system_name_tlv
-        port_name = lldp_info.port_id_tlv
+        switch_name = lldp_info.system_name_tlv if lldp_info else ""
+        port_name = lldp_info.port_id_tlv if lldp_info else ""
         if not lldp_info or not switch_name or not port_name:
             _DIAG_LOGGER.warning(
                 "未收集到%s，npu_id：%s，chip_id：%s的对端信息", host_id, chip_info.npu_id, chip_info.chip_id
             )
-            return None, []
-        remote_domain = [
-            Domain(diag_enum.DeviceType.ROCE_SWITCH, switch_name),
-            Domain(diag_enum.DeviceType.SWI_PORT, port_name),
-        ]
+            return None, domain
+        domain.peer_switch_id = switch_name
+        domain.peer_interface = port_name
         remote_switch = self.cluster_info.find_peer_swi(switch_name)
         if not remote_switch:
             _DIAG_LOGGER.warning("未收集到对端交换机[%s]信息", switch_name)
-            return None, remote_domain
+            return None, domain
         interface_full_info = remote_switch.interface_full_infos.get(port_name)
         if not interface_full_info or not interface_full_info.swi_optical_model:
             _DIAG_LOGGER.warning("未收集到对端交换机[%s]端口[%s]的光模块信息", switch_name, port_name)
-            return None, remote_domain
-        return interface_full_info.get_optical_module_info(), remote_domain
+            return None, domain
+        return interface_full_info.get_optical_module_info(), domain
 
     def inter_host_analyzer(
-        self, local_info: OpticalModuleInfo, remote_info: OpticalModuleInfo, domain_list: List[Domain]
+        self, domain: HostDomain, local_info: OpticalModuleInfo, remote_info: OpticalModuleInfo
     ) -> List[DiagResult]:
+        # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
         res_list = []
-        res_list.extend(
-            self.fault_check.power_analyze(local_info, remote_info, domain_list, fault_type=constants.FAULT_TYPE_HOST)
-        )
-        res_list.extend(
-            self.fault_check.snr_analyze(local_info, remote_info, domain_list, fault_type=constants.FAULT_TYPE_HOST)
-        )
-        res_list.extend(
-            self.fault_check.bias_analyze(local_info, remote_info, domain_list, fault_type=constants.FAULT_TYPE_HOST)
-        )
-        return res_list
-
-    def fault_analyze_single_ended(self, optical_module_info: OpticalModuleInfo, domain_list: List[Domain]):
-        res_list = []
-        res_list.extend(
-            self.fault_check.power_analyze_single_ended(
-                optical_module_info, domain_list, fault_type=constants.FAULT_TYPE_HOST
-            )
-        )
-        res_list.extend(
-            self.fault_check.snr_analyze_single_ended(
-                optical_module_info, domain_list, fault_type=constants.FAULT_TYPE_HOST
-            )
-        )
-        res_list.extend(
-            self.fault_check.bias_analyze_single_ended(
-                optical_module_info, domain_list, fault_type=constants.FAULT_TYPE_HOST
-            )
-        )
+        res_list.extend(self.fault_check.power_analyze(domain, local_info, remote_info))
+        res_list.extend(self.fault_check.snr_analyze(domain, local_info, remote_info))
+        res_list.extend(self.fault_check.bias_analyze(domain, local_info, remote_info))
         return res_list

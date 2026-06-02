@@ -25,7 +25,6 @@ from ascend_fd_tk.core.model.host import HostInfo, NpuChipLoopBackInfo
 
 
 class HostLoopbackCollector(HostCollector):
-
     def __init__(self, fetcher: HostFetcher):
         super().__init__(fetcher)
         self.server_superpod_id = ""
@@ -38,25 +37,31 @@ class HostLoopbackCollector(HostCollector):
         host_id = await self.fetcher.fetch_id()
         npu_mapping = await self.fetcher.fetch_npu_mapping()
         sn_num = await self.fetcher.fetch_sn_num()
+        # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
         server_superpod_id = None
         server_index = None
-        for npu_id, chips in npu_mapping.items():
-            for chip_id, chip_phy_id in chips.items():
-                hccn_optical_info = await self.collect_optical_info(chip_phy_id)
-                hccn_lldp_info = await self.collect_lldp_info(chip_phy_id)
-                spod_info = await self.collect_spod_info(npu_id, chip_id)
-                if not self.server_superpod_id and spod_info:
-                    self.server_superpod_id = spod_info.super_pod_id
-                if not self.server_index and spod_info:
-                    self.server_index = spod_info.server_index
-                loopback_info = NpuChipLoopBackInfo(hccn_lldp_info=hccn_lldp_info,
-                                                    hccn_optical_info=hccn_optical_info,
-                                                    spod_info=spod_info,
-                                                    npu_id=npu_id, chip_id=chip_id, chip_phy_id=chip_phy_id)
-                self.same_npu_loopback_map.setdefault(npu_id, []).append(loopback_info)
-                optical_sn = loopback_info.hccn_optical_info.vendor_serial_number
-                if optical_sn:
-                    self.same_sn_npu_ids_map.setdefault(optical_sn, []).append(loopback_info.npu_id)
+        for chip_phy_id, npu_info in npu_mapping.items():
+            npu_id = npu_info.npu_id
+            chip_id = npu_info.chip_id
+            hccn_optical_info = await self.collect_optical_info(chip_phy_id)
+            hccn_lldp_info = await self.collect_lldp_info(chip_phy_id)
+            spod_info = await self.collect_spod_info(npu_id, chip_id)
+            if not self.server_superpod_id and spod_info:
+                self.server_superpod_id = spod_info.super_pod_id
+            if not self.server_index and spod_info:
+                self.server_index = spod_info.server_index
+            loopback_info = NpuChipLoopBackInfo(
+                hccn_lldp_info=hccn_lldp_info,
+                hccn_optical_info=hccn_optical_info,
+                spod_info=spod_info,
+                npu_id=npu_id,
+                chip_id=chip_id,
+                chip_phy_id=chip_phy_id,
+            )
+            self.same_npu_loopback_map.setdefault(npu_id, []).append(loopback_info)
+            optical_sn = loopback_info.hccn_optical_info.vendor_serial_number
+            if optical_sn:
+                self.same_sn_npu_ids_map.setdefault(optical_sn, []).append(loopback_info.npu_id)
 
         # 去重
         same_sn_npu_ids_tuple = {tuple(sorted(npu_ids)) for npu_ids in self.same_sn_npu_ids_map.values()}
@@ -69,9 +74,15 @@ class HostLoopbackCollector(HostCollector):
         for npu_id in npu_mapping.keys():
             await self.collect_optical_loopback_enable(npu_id, OpticalLoopbackMode.NO_LOOPBACK.value)
 
-        host_info = HostInfo(host_id, sn_num, server_superpod_id=server_superpod_id, server_index=server_index,
-                             loopback_info_list=[loopback_info for sublist in self.same_npu_loopback_map.values() for
-                                                 loopback_info in sublist])
+        host_info = HostInfo(
+            host_id,
+            sn_num,
+            server_superpod_id=server_superpod_id,
+            server_index=server_index,
+            loopback_info_list=[
+                loopback_info for sublist in self.same_npu_loopback_map.values() for loopback_info in sublist
+            ],
+        )
         return host_info
 
     async def enable_optical_loopback(self, same_sn_npu_ids: List[str]):

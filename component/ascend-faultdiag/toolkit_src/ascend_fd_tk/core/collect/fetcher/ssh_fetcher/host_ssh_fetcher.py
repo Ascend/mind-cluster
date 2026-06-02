@@ -23,6 +23,7 @@ from ascend_fd_tk.core.collect.fetcher.ssh_fetcher.base import SshFetcher
 from ascend_fd_tk.core.log_parser.base import FindResult
 from ascend_fd_tk.core.log_parser.parse_config import msnpureport_log_config
 from ascend_fd_tk.core.log_parser.remote_log_parser import RemoteLogPyScriptParser
+from ascend_fd_tk.core.model.cluster_mapping import DefaultNPUInfo
 from ascend_fd_tk.utils.executors import CmdTask
 from ascend_fd_tk.utils import logger
 
@@ -69,10 +70,9 @@ class HostSshFetcher(SshFetcher, HostFetcher):
                 chip_phy_id = parts[3]
                 chip_name = parts[4]
                 if chip_name != 'Mcu' and npu_id != '-':
-                    if npu_id not in npu_mapping:
-                        npu_mapping[npu_id] = {}
-                    npu_mapping[npu_id][chip_id] = chip_phy_id
-
+                    npu_mapping.update(
+                        {chip_phy_id: DefaultNPUInfo(npu_id=npu_id, chip_id=chip_id, chip_phy_id=chip_phy_id)}
+                    )
         return npu_mapping
 
     async def fetch_optical_info(self, chip_phy_id) -> str:
