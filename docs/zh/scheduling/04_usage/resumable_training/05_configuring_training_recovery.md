@@ -61,7 +61,7 @@ RUN sed -i '/import os/i import taskd.python.adaptor.patch' $(pip3 show torch | 
 
 **准备任务YAML<a name="zh-cn_topic_0000002112026142_section2671124124612"></a>**
 
-在训练任务YAML中，新增以下字段，开启进程级别恢复。recover-strategy是训练进程恢复使用的策略，其中的dump代表开启临终CKPT。在ports中增加ttp-port为8000，增加TaskD通信使用的端口9601。
+在训练任务YAML中，新增以下字段，开启进程级别恢复，并修改必要的配置。recover-strategy是训练进程恢复使用的策略，其中的dump代表开启临终CKPT。在ports中增加ttp-port为8000，增加TaskD通信使用的端口9601。
 
 临终CKPT保存可以作为进程级别恢复流程中的一个策略，名为“dump”策略，设置到recover-strategy中。示例如下。
 
@@ -79,34 +79,42 @@ metadata:
 
 ...
 spec:
-   replicaSpecs:
-      Master:
-         template:
-            spec:
-              containers:
-                 env:
-                   <strong>- name: TTP_PORT</strong>
-                     <strong>value: "8000"</strong>
-                 args: […]
-                 ports:
-                   <strong>- containerPort: 8000</strong>
-                     <strong>name: ttp-port</strong>
-                   <strong>- containerPort: 9601</strong>
-                     <strong>name: taskd-port</strong>
-     ...
-     Worker:
-        template:
-          spec:
-            containers:
-               env:
-                 <strong>- name: TTP_PORT</strong>
-                   <strong>value: "8000"</strong>
-               args: […]
-               ports:
-                 <strong>- containerPort: 8000</strong>
-                   <strong>name: ttp-port</strong>
-                 <strong>- containerPort: 9601</strong>
-                   <strong>name: taskd-port</strong>
+  replicaSpecs:
+    Master:
+      template:
+        spec:
+          containers:
+            env:
+              <strong>- name: TTP_PORT                      # 用于临终遗言通信，请注意上下保持一致</strong>
+                <strong>value: "8000"</strong>
+              <strong>- name: POD_IP                        # 配置MindIO的通信地址。</strong>
+                <strong>valueFrom:</strong>
+                <strong>fieldRef:</strong>
+                    <strong>fieldPath: status.podIP         # 用于MindIO通信，如果不配置此参数会影响训练任务的正常拉起。</strong>
+            args: […]
+            ports:
+              <strong>- containerPort: 8000                 # 用于临终遗言通信，请注意上下保持一致</strong>
+                <strong>name: ttp-port</strong>
+              <strong>- containerPort: 9601                 # 在所有的Pod下增加TaskD通信使用的端口9601</strong>
+                <strong>name: taskd-port</strong>
+      ...
+    Worker:
+      template:
+        spec:
+          containers:
+            env:
+              <strong>- name: TTP_PORT                       # 用于临终遗言通信，请注意上下保持一致</strong>
+                <strong>value: "8000"</strong>
+              <strong>- name: POD_IP                         # 配置MindIO的通信地址。</strong>
+                <strong>valueFrom:</strong>
+                  <strong>fieldRef:</strong>
+                    <strong>fieldPath: status.podIP          # 用于MindIO通信，如果不配置此参数会影响训练任务的正常拉起。</strong>
+              args: […]
+              ports:
+                <strong>- containerPort: 8000                # 用于临终遗言通信，请注意上下保持一致</strong>
+                  <strong>name: ttp-port</strong>
+                <strong>- containerPort: 9601                # 在所有的Pod下增加TaskD通信使用的端口9601</strong>
+                  <strong>name: taskd-port</strong>
  ...</pre>
 
 **适配训练脚本<a name="zh-cn_topic_0000002112026142_section058501610462"></a>**

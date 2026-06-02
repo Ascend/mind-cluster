@@ -2,7 +2,7 @@
 
 - [特性说明](./00_feature_description.md)
 - [方案和原理](./01_solutions_principles.md)
-- [准备K8s和共享存储](./02_preparing_kubernetes_and_shared_storage.md)
+- [准备集群环境](./02_preparing_cluster_environment.md)
 - [（可选）配置故障检测级别](./03_configuring_fault_detection_levels.md)
 - [配置故障处理](./04_configuring_fault_handling_policies.md)
 - [配置恢复加速](./05_configuring_training_recovery.md)
