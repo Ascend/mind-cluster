@@ -136,7 +136,7 @@ def replace_block(lines, i, result_lines, container_map, keyword):
 
     replaced = [
         indent + "{{- if .Values." + vp + keyword + " }}",
-        indent + keyword + ": {{ .Values." + vp + keyword + " }}",
+        indent + keyword + ": {{ .Values." + vp + keyword + " | toJson }}",
         indent + "{{- else }}",
         original_block,
         indent + "{{- end }}",
