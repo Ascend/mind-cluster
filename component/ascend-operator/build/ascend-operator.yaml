@@ -42,7 +42,8 @@ spec:
                    --kubeApiBurst=800
                    --enableGangScheduling=true
                    --logFile=/var/log/mindx-dl/ascend-operator/ascend-operator.log
-                   --logLevel=0" ]
+                   --logLevel=0
+                   --enable-healthz=true --healthz-address=11252" ]
           image: ascend-operator:latest
           name: manager
           resources:
@@ -52,6 +53,15 @@ spec:
             requests:
               cpu: 2000m
               memory: 3Gi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 11252
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

@@ -37,6 +37,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/agreement"
+	"ascend-common/common-utils/healthz"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/limiter"
 	"ascend-common/devmanager"
@@ -70,6 +71,7 @@ var (
 	hccsBWProfilingTime int
 	pollInterval        time.Duration
 	deviceResetTimeout  int
+	hzFlags             = healthz.RegisterFlags()
 )
 
 const (
@@ -120,9 +122,16 @@ func main() {
 		fmt.Printf("NPU-exporter version: %s \n", versions.BuildVersion)
 		return
 	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	err := logger.InitLogger(platform)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
+		return
+	}
+	if err := hzFlags.Serve(ctx); err != nil {
+		logger.Errorf("failed to start healthz server: %v", err)
 		return
 	}
 	err = paramValid(platform)
@@ -148,7 +157,6 @@ func main() {
 	plugins.RegisterPlugin()
 	config.Register(colcommon.Collector)
 
-	ctx, cancel := context.WithCancel(context.Background())
 	wg := &sync.WaitGroup{}
 	colcommon.InitCardInfo(wg, ctx, colcommon.Collector)
 	colcommon.StartContainerInfoCollect(ctx, cancel, wg, colcommon.Collector)

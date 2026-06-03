@@ -101,6 +101,15 @@ spec:
               memory: 500Mi
               cpu: 500m
           command: [ "/bin/bash", "-c", "/run_for_310P_1usoc.sh"]
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 11251
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
           securityContext:
             privileged: true
           imagePullPolicy: Never

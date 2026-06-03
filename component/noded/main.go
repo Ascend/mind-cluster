@@ -24,6 +24,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/agreement"
+	"ascend-common/common-utils/healthz"
 	"ascend-common/common-utils/hwlog"
 	fdol "ascend-faultdiag-online"
 	"nodeD/pkg/common"
@@ -81,6 +82,7 @@ var (
 	resultMaxAge int
 	// deviceResetTimeout device reset timeout duration
 	deviceResetTimeout int
+	hzFlags            = healthz.RegisterFlags()
 )
 
 func main() {
@@ -94,6 +96,10 @@ func main() {
 	// init hwlog
 	if err := hwlog.InitRunLogger(hwLogConfig, ctx); err != nil {
 		fmt.Printf("hwlog init failed, error is %v\n", err)
+		return
+	}
+	if err := hzFlags.Serve(ctx); err != nil {
+		hwlog.RunLog.Errorf("failed to start healthz server: %v", err)
 		return
 	}
 	if !checkParameters() {

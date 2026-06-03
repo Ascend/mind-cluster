@@ -28,5 +28,4 @@ export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/Ascend/driver/lib64/driver:/usr
 # the host is openEuler, so the parameters "endpoint" and "containerd" are set to adapt to "-containerMode=docker" in default
 # in openEuler os, the path of parameters "endpoint" and "containerd" are not in the default place
 echo -e "[INFO]\t $(date +"%F %T:%N")\t start npu-exporter server"
-/usr/local/bin/npu-exporter -port=8082 -ip=0.0.0.0 -updateTime=5 -logFile=/var/log/mindx-dl/npu-exporter/npu-exporter.log -logLevel=0 -containerMode=docker -endpoint=/run/dockershim.sock -containerd=/run/docker/containerd/containerd.sock
-
+/usr/local/bin/npu-exporter -port=8082 -ip=0.0.0.0 -updateTime=5 -logFile=/var/log/mindx-dl/npu-exporter/npu-exporter.log -logLevel=0 -containerMode=docker -endpoint=/run/dockershim.sock -containerd=/run/docker/containerd/containerd.sock --enable-healthz=true --healthz-address=11256

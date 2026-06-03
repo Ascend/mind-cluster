@@ -76,7 +76,16 @@ spec:
         command: [ "/bin/bash", "-c", "--"]
         # pair firstly
         args: [ "umask 027;npu-exporter -port=8082 -ip=0.0.0.0  -updateTime=5
-                 -logFile=/var/log/mindx-dl/npu-exporter/npu-exporter.log -logLevel=0 -containerMode=docker" ]
+                 -logFile=/var/log/mindx-dl/npu-exporter/npu-exporter.log -logLevel=0 -containerMode=docker --enable-healthz=true --healthz-address=11256" ]
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 11256
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3
         securityContext:
           privileged: true
           readOnlyRootFilesystem: true

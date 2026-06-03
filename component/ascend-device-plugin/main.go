@@ -29,6 +29,7 @@ import (
 	"Ascend-device-plugin/pkg/topology"
 	"ascend-common/api"
 	"ascend-common/common-utils/agreement"
+	"ascend-common/common-utils/healthz"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 )
@@ -95,6 +96,7 @@ var (
 	softShareDevConfigDir = flag.String("softShareDevConfigDir", "", "soft share device config dir")
 	useSingleDieMode      = flag.Bool("useSingleDieMode", false,
 		"A3 card whether to use single die mode")
+	hzFlags = healthz.RegisterFlags()
 )
 
 var (
@@ -276,6 +278,10 @@ func main() {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	if err := initLogModule(ctx); err != nil {
+		return
+	}
+	if err := hzFlags.Serve(ctx); err != nil {
+		hwlog.RunLog.Errorf("failed to start healthz server: %v", err)
 		return
 	}
 	if !checkParam() {

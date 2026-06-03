@@ -45,5 +45,4 @@ su - HwDmUser -c "export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/:/usr/li
 
 export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/add-ons:/usr/local/Ascend/driver/lib64:/usr/local/dcmi
 echo -e "[INFO]\t $(date +"%F %T:%N")\t start device plugin server"
-/usr/local/bin/device-plugin -useAscendDocker=false -volcanoType=true -presetVirtualDevice=true -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0
-
+/usr/local/bin/device-plugin -useAscendDocker=false -volcanoType=true -presetVirtualDevice=true -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0 --enable-healthz=true --healthz-address=11251

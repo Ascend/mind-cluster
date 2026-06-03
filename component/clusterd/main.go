@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/keepalive"
 
 	"ascend-common/common-utils/agreement"
+	"ascend-common/common-utils/healthz"
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/conf"
 	"clusterd/pkg/application/faultmanager"
@@ -57,6 +58,7 @@ var (
 		constant.BusinessGrpcReq: rate.NewLimiter(rate.Every(time.Second/constant.QpsLimit), constant.QpsLimit),
 	}
 	useProxy bool
+	hzFlags  = healthz.RegisterFlags()
 )
 
 func limitQPS(ctx context.Context, req interface{},
@@ -148,6 +150,10 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	if err := initLogger(ctx); err != nil {
 		fmt.Printf("logger init failed: %v\n", err)
+		return
+	}
+	if err := hzFlags.Serve(ctx); err != nil {
+		hwlog.RunLog.Errorf("failed to start healthz server: %v", err)
 		return
 	}
 	if !checkParameters() {
