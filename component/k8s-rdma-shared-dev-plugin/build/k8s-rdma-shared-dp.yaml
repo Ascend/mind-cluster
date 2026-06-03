@@ -37,15 +37,25 @@ spec:
     spec:
       hostNetwork: true
       priorityClassName: system-node-critical
-      tolerations:
-        - effect: NoSchedule
-          operator: Exists
+      nodeSelector:
+        workerselector: dls-worker-node # for node with atlas 950/850 use ,the node must have ub rdma
+      initContainers:
+        - name: init-log-setup
+          image: k8s-rdma-shared-dp:v26.0.0
+          command: ['sh', '-c', 'mkdir -p /var/log/mindx-dl && chmod 755 /var/log/mindx-dl && chown root:root /var/log/mindx-dl && mkdir -p /var/log/mindx-dl/k8s-rdma-shared-dp && chmod 750 /var/log/mindx-dl/k8s-rdma-shared-dp && chown root:root /var/log/mindx-dl/k8s-rdma-shared-dp']
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false
+          volumeMounts:
+            - name: log-k8s-rdma-shared-dp
+              mountPath: /var/log
       containers:
-        - image: image_name:tag
+        - image: k8s-rdma-shared-dp:v26.0.0
           name: k8s-rdma-shared-dp-ds
           imagePullPolicy: IfNotPresent
           securityContext:
             privileged: true
+            readOnlyRootFilesystem: true
           volumeMounts:
             - name: device-plugin
               mountPath: /var/lib/kubelet/device-plugins
@@ -57,6 +67,9 @@ spec:
               mountPath: /sys
             - name: infiniband
               mountPath: /dev/infiniband
+            - name: log-k8s-rdma-shared-dp
+              mountPath: /var/log/mindx-dl/k8s-rdma-shared-dp
+              subPath: mindx-dl/k8s-rdma-shared-dp
       volumes:
         - name: device-plugin
           hostPath:
@@ -77,3 +90,7 @@ spec:
         - name: infiniband
           hostPath:
             path: /dev/infiniband/
+        - name: log-k8s-rdma-shared-dp
+          hostPath:
+            path: /var/log
+            type: Directory

@@ -262,7 +262,7 @@ func (rs *ubResourceServer) UpdateDevices(devices []types.Device) {
 	}()
 
 	newDeviceSpec := getUbDevicesSpec(devices)
-	if !common.DevicesChanged(rs.deviceSpec, newDeviceSpec) {
+	if common.DevicesChanged(rs.deviceSpec, newDeviceSpec) {
 		rs.deviceSpec = newDeviceSpec
 		needUpdate = true
 	}
