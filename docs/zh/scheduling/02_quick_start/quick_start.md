@@ -2,8 +2,8 @@
 
 本文档提供两种快速入门场景，帮助您快速上手Ascend NPU集群调度：
 
-- **10分钟极简入门**：仅部署Ascend Device Plugin，使用Kubernetes原生调度器调度普通Pod，快速验证NPU资源调度能力，适合初学者快速体验。
-- **完整训练业务入门**：部署完整的集群调度组件（NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator），以PyTorch训练任务为例，体验端到端的分布式训练流程。
+- **10分钟极简入门**：仅部署Ascend Device Plugin和Ascend Docker Runtime，使用Kubernetes原生调度器调度普通Pod，快速验证NPU资源调度能力，适合初学者快速体验。
+- **完整训练业务入门**：部署完整的集群调度组件（NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator），以PyTorch训练任务为例，体验端到端的训练流程。
 
 您可以根据实际需求选择合适的入门路径。
 
@@ -20,13 +20,13 @@
     >
     >- 参见[《Ascend Training Solution 版本配套表》](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-training-solution-pid-258915853/software)，确认固件与驱动的版本与集群调度组件是否配套。
     >- NPU驱动和固件版本可通过**npu-smi info -t board -i** <i>NPU ID</i>命令查询。回显信息中的“Software Version”字段值表示NPU驱动版本，“Firmware Version”字段值表示NPU固件版本。
-    >- 下文的<i>\{xxx\}</i>即取“910”字符作为芯片型号数值。
 
 ## 10分钟快速入门
 
 本教程将指导您在 **10分钟内** 完成最简化的Ascend NPU集群调度环境搭建，仅使用：
 
 - **Ascend Device Plugin** - NPU设备发现与资源上报
+- **Ascend Docker Runtime** - NPU设备等资源挂载能力
 - **Kubernetes原生调度器** - 无需额外调度组件
 - **普通Pod** - 快速验证NPU调度能力
 
@@ -51,42 +51,59 @@
 3. 为NPU节点添加标签
 
     ```shell
-    # 获取节点名称
-    kubectl get nodes
-
-    # 为NPU节点添加必要标签（ 将worker01替换为实际节点名）
-    kubectl label nodes worker01 workerselector=dls-worker-node
+    # 为NPU节点添加必要标签
+    kubectl label nodes -A workerselector=dls-worker-node
     ```
 
-4. 部署Ascend Device Plugin
+4. 部署Ascend Docker Runtime和Ascend Device Plugin
 
-    1. 拉取Device Plugin镜像
+    1. 部署Ascend Docker Runtime
+
+        ```shell
+        VERSION=26.1.0
+        mkdir -p /tmp/Ascend-docker-runtime
+        cd /tmp/Ascend-docker-runtime
+        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-docker-runtime_${VERSION}_linux-aarch64.run
+        chmod +x Ascend-docker-runtime_${VERSION}_linux-aarch64.run
+        ./Ascend-docker-runtime_${VERSION}_linux-aarch64.run --install
+        systemctl daemon-reload && systemctl restart docker
+        ```
+
+        回显示例如下则表示安装成功
+
+        ```CodeFusion
+        Uncompressing ascend-docker-runtime  100%
+        [INFO]: installing ascend-docker-runtime
+        ...
+        [INFO] ascend-docker-runtime install success
+        ```
+
+    2. 拉取Device Plugin镜像
 
         ```shell
         # 从华为云镜像仓拉取Device Plugin镜像
-        docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.0.0
+        docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION}
 
         # 为镜像添加本地标签
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.0.0 ascend-k8sdeviceplugin:v26.0.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION} ascend-k8sdeviceplugin:v${VERSION}
         ```
 
-    2. 部署Device Plugin
+    3. 部署Ascend Device Plugin
 
         ```shell
         # 拉取配置文件
-        mkdir /tmp/devicePlugin
+        mkdir -p /tmp/devicePlugin
         cd /tmp/devicePlugin
-        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip
-        unzip Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip
+        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-device-plugin_${VERSION}_linux-aarch64.zip
+        unzip Ascend-mindxdl-device-plugin_${VERSION}_linux-aarch64.zip
 
-        # 部署Device Plugin
-        kubectl apply -f device-plugin-910-v26.0.0.yaml
+        # 部署Device Plugin，若VERSION低于26.1.0版本，yaml文件为device-plugin-910-v${VERSION}.yaml
+        kubectl apply -f device-plugin-v${VERSION}.yaml
         ```
 
-    3. 验证部署
+        查看Device Plugin Pod状态
 
         ```shell
-        # 查看Device Plugin Pod状态
         kubectl get pod -n kube-system
 
         # 预期输出
@@ -100,7 +117,7 @@
 
         ```shell
         # 查看节点的NPU资源
-        kubectl describe node worker01 | grep -A 10 "huawei.com/Ascend910"
+        kubectl describe node -A | grep "huawei.com/Ascend910"
 
         # 预期输出（显示可用的NPU数量）
         huawei.com/Ascend910:     8
@@ -119,25 +136,15 @@
     metadata:
       name: npu-test
     spec:
-      nodeSelector:
-        workerselector: dls-worker-node
       containers:
       - name: npu-container
-        image: ubuntu:22.04
+        image: ubuntu:22.04          # 测试pod镜像，可以自定义
         command: ["/bin/bash", "-c", "sleep 3600"]
         resources:
           limits:
             huawei.com/Ascend910: 1  # 请求1个NPU卡
           requests:
             huawei.com/Ascend910: 1
-        volumeMounts:
-        - name: ascend-driver
-          mountPath: /usr/local/Ascend/driver
-          readOnly: true
-      volumes:
-      - name: ascend-driver
-        hostPath:
-          path: /usr/local/Ascend/driver
     ```
 
 2. 部署测试Pod
@@ -174,8 +181,8 @@
     # 删除测试Pod
     kubectl delete pod npu-test
 
-    # 删除Device Plugin（如需）
-    kubectl delete -f device-plugin-910-v26.0.0.yaml
+    # 删除Device Plugin，若VERSION低于26.1.0版本，yaml文件为device-plugin-910-v${VERSION}.yaml
+    kubectl delete -f device-plugin-v${VERSION}.yaml
     ```
 
 6. 常见问题
@@ -187,7 +194,7 @@
 
 ## 训练业务快速入门
 
-本章节以待安装设备为两台Atlas 800T A2 训练服务器（一台作为管理节点、一台作为计算节点）为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。
+本章节以依然以一台Atlas 800T A2 AArch64训练服务器为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。
 
 ### 操作说明<a name="section17940333114314"></a>
 
@@ -200,187 +207,75 @@
 
 ### 安装组件<a name="section1837511531098"></a>
 
-以下步骤命令均以待安装设备Atlas 800T A2 训练服务器为例，如需了解所有组件的详细安装步骤和参数说明请参见[安装](../07_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)。
+以下步骤命令均以一台Atlas 800T A2 训练服务器为例，如需了解所有组件的详细安装步骤和参数说明请参见[安装](../07_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)。
 
-1. 以root用户登录计算或管理节点，创建组件安装目录。
-    1. 依次执行以下命令，在**计算节点**创建安装目录。以下目录仅为示例，请以实际为准。
+1. 创建节点标签。
 
-        ```shell
-        mkdir /tmp/noded
-        mkdir /tmp/devicePlugin
-        mkdir /tmp/Ascend-docker-runtime
-        ```
-
-    2. 依次执行以下命令，在**管理节点**创建安装目录。以下目录仅为示例，请以实际为准。
+    1. 依次执行以下命令，为**计算节点**创建节点标签（如节点名称为“worker01”）。
 
         ```shell
-        mkdir /tmp/ascend-volcano
-        mkdir /tmp/ascend-operator
-        mkdir /tmp/clusterd
+        kubectl label nodes -A node-role.kubernetes.io/worker=worker workerselector=dls-worker-node masterselector=dls-master-node --overwrite
         ```
 
-2. 下载软件包。以AArch64架构为例，用户需根据实际情况下载对应架构的软件包。
-    1. 依次执行以下命令，在**计算节点**获取NodeD、Ascend Device Plugin和Ascend Docker Runtime组件安装包并解压。
-
-        ```shell
-        cd /tmp/noded
-        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-noded_26.0.0_linux-aarch64.zip
-        unzip Ascend-mindxdl-noded_26.0.0_linux-aarch64.zip
-
-        cd /tmp/devicePlugin
-        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip
-        unzip Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip
-
-        cd /tmp/Ascend-docker-runtime
-        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-docker-runtime_26.0.0_linux-aarch64.run
-        ```
-
-    2. 在**管理节点**依次执行以下命令，获取Volcano、ClusterD和Ascend Operator组件安装包。
-
-        ```shell
-        cd /tmp/ascend-volcano
-        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip
-        unzip Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip
-
-        cd /tmp/ascend-operator
-        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-ascend-operator_26.0.0_linux-aarch64.zip
-        unzip Ascend-mindxdl-ascend-operator_26.0.0_linux-aarch64.zip
-
-        cd /tmp/clusterd
-        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-clusterd_26.0.0_linux-aarch64.zip
-        unzip Ascend-mindxdl-clusterd_26.0.0_linux-aarch64.zip
-        ```
-
-3. 拉取组件镜像。
-    1. 依次执行以下命令，在**计算节点**拉取组件镜像。
-
-        ```shell
-        cd /tmp/noded
-        docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:v26.0.0
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:v26.0.0 noded:v26.0.0
-
-        cd /tmp/devicePlugin
-        docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.0.0
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.0.0 ascend-k8sdeviceplugin:v26.0.0
-        ```
-
-    2. 依次执行以下命令，在**管理节点**制作组件镜像。
-
-        ```shell
-        cd /tmp/ascend-volcano/volcano-v1.7.0
-        docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:v1.7.0-v26.0.0
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:v1.7.0-v26.0.0 volcanosh/vc-scheduler:v1.7.0-v26.0.0
-
-        docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:v1.7.0-v26.0.0
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:v1.7.0-v26.0.0 volcanosh/vc-controller-manager:v1.7.0-v26.0.0
-
-        cd /tmp/ascend-operator
-        docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:v26.0.0
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:v26.0.0 ascend-operator:v26.0.0
-
-        cd /tmp/clusterd
-        docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:v26.0.0
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:v26.0.0 clusterd:v26.0.0
-        ```
-
-4. 创建节点标签。
+2. 安装组件。以AArch64架构为例，用户需根据实际情况下载对应架构的软件包。
     >[!NOTE]
     >
-    >若执行创建节点标签命令时提示"already has a value ... and --overwrite is false"，说明该标签已存在，可使用--overwrite覆盖。
-    1. 在K8s管理节点执行以下命令，查询节点名称。
+    >快速入门以helm快捷部署为例，要求MindCluster版本为26.1.0及以上，可以参考安装部署章节的helm部署。
+
+    1. 安装Ascend Docker Runtime。
 
         ```shell
-        kubectl get node
-        ```
-
-        回显示例如下：
-
-        ```CodeFusion
-        NAME       STATUS   ROLES           AGE   VERSION
-        worker01   Ready    worker    23h   v1.17.3
-        ```
-
-    2. 依次执行以下命令，为**计算节点**创建节点标签（如节点名称为“worker01”）。
-
-        ```shell
-        kubectl label nodes worker01 node-role.kubernetes.io/worker=worker
-        kubectl label nodes worker01 workerselector=dls-worker-node
-        ```
-
-    3. 执行以下命令，为**管理节点**创建节点标签（如节点名称为“master01”）。
-
-        ```shell
-        kubectl label nodes master01 masterselector=dls-master-node
-        ```
-
-5. 创建用户。
-    >[!NOTE]
-    >
-    >创建用户时需要sudo权限。
-    1. 依次执行以下命令，在**计算节点**创建用户名。
-
-        ```shell
-        useradd -d /home/hwMindX -u 9000 -m -s /usr/sbin/nologin hwMindX
-        usermod -a -G HwHiAiUser hwMindX
-        ```
-
-    2. 执行以下命令，在**管理节点**创建用户名。
-
-        ```shell
-        useradd -d /home/hwMindX -u 9000 -m -s /usr/sbin/nologin hwMindX
-        ```
-
-6. 在任意节点执行以下命令，创建命名空间。
-
-    ```shell
-    kubectl create ns mindx-dl
-    ```
-
-7. 安装组件。
-    1. 依次执行以下命令，在计算节点的宿主机上安装Ascend Docker Runtime。
-
-        ```shell
+        VERSION=26.1.0
         cd /tmp/Ascend-docker-runtime
-        chmod u+x Ascend-docker-runtime_26.0.0_linux-aarch64.run
-        ./Ascend-docker-runtime_26.0.0_linux-aarch64.run --install
+        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-docker-runtime_${VERSION}_linux-aarch64.run
+        chmod +x Ascend-docker-runtime_${VERSION}_linux-aarch64.run
+        ./Ascend-docker-runtime_${VERSION}_linux-aarch64.run --install
         systemctl daemon-reload && systemctl restart docker
         ```
 
-    2. 在**计算节点**，依次执行以下命令，安装组件。
+    2. 通过helm安装NodeD、Ascend Device Plugin、Volcano、ClusterD、Ascend Operator组件。
 
         ```shell
-        cd /tmp/noded
-        kubectl apply -f noded-v26.0.0.yaml
+        mkdir /tmp/helm
+        cd /tmp/helm
+        wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-helm-deploy-tool_${VERSION}_linux.zip
+        unzip Ascend-helm-deploy-tool_${VERSION}_linux.zip
+        helm install mindcluster-crds mindcluster-crds-deploy-tool-*.tgz
+        helm install mindcluster mindcluster-deploy-tool-*.tgz
+        ```
+    3. 验证安装结果
+        1. helm安装回显如下，则安装成功。
 
-        cd /tmp/devicePlugin
-        kubectl apply -f device-plugin-volcano-v26.0.0.yaml
+        ```ColdFusion
+        Release "mindcluster-crds" does not exist. Installing it now.
+        NAME: mindcluster-crds
+        LAST DEPLOYED: ...
+        NAMESPACE: mindx-dl
+        STATUS: deployed
+        REVISION: 1
+        TEST SUITE: None
         ```
 
-    3. 在**管理节点**，依次执行以下命令，安装组件。
+        ```ColdFusion
+        Release "mindcluster" does not exist. Installing it now.
+        NAME: mindcluster
+        LAST DEPLOYED: ...
+        NAMESPACE: mindx-dl
+        STATUS: deployed
+        REVISION: 1
+        TEST SUITE: None
+        ```
+
+        2. 验证组件是否正常运行，以NodeD组件为例。
 
         ```shell
-        cd /tmp/ascend-operator
-        kubectl apply -f ascend-operator-v26.0.0.yaml
+        # 查看NodeD Pod状态
+        kubectl get pod -n mindx-dl
 
-        cd /tmp/ascend-volcano/volcano-v1.7.0  # 使用1.9.0版本Volcano需要修改为v1.9.0
-        kubectl apply -f volcano-v1.7.0.yaml
-
-        cd /tmp/clusterd
-        kubectl apply -f clusterd-v26.0.0.yaml
-        ```
-
-    4. 执行以下命令，查看组件是否启动成功。
-
-        ```shell
-        kubectl get pod -A
-        ```
-
-        以clusterd组件为例，回显示例如下，出现**Running**表示组件启动成功。
-
-        ```CodeFusion
-        NAME                              READY   STATUS    RESTARTS   AGE
+        # 预期输出
+        NAME                                  READY   STATUS    RESTARTS   AGE
         ...
-        clusterd-fd6t8                       1/1     Running   0          74s
+        noded-694474f599-54w6b                1/1     Running   0          11s
         ...
         ```
 
@@ -388,7 +283,7 @@
 
 1. 准备镜像。
 
-    从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)根据系统架构（ARM/x86_64），下载24.0.X版本的ascend-pytorch训练镜像。镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
+    从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)下载24.0.X版本的ascend-pytorch训练镜像。镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
 
     ```shell
     docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-pytorch:24.0.0-A2-2.1.0-ubuntu20.04
@@ -396,7 +291,7 @@
     ```
 2. 训练任务准备。
 
-    1. 下载[PyTorch代码仓](https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/cv/classification/ResNet50_ID4149_for_PyTorch)中master分支的“ResNet50_ID4149_for_PyTorch”作为训练代码。下载的训练代码解压到“/data/atlas_dls/public/code/”路径下。
+    1. 通过如下命令下载[PyTorch代码仓](https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/cv/classification/ResNet50_ID4149_for_PyTorch)中master分支的“ResNet50_ID4149_for_PyTorch”作为训练代码，并解压到“/data/atlas_dls/public/code/”路径下。
 
         ```shell
         mkdir -p /data/atlas_dls/public/code/
@@ -410,18 +305,16 @@
         ```shell
         mkdir /data/atlas_dls/public/dataset/resnet50/imagenet
         cd /data/atlas_dls/public/dataset/resnet50/imagenet
-        root@ubuntu:/data/atlas_dls/public/dataset/resnet50/imagenet# pwd
         ```
 
-    3. 进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](../06_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，
-   获取“samples/train/basic-training/without-ranktable/pytorch”目录中的train_start.sh，放在“/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts”路径下。
+    3. 通过如下命令获取[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库的“samples/train/basic-training/without-ranktable/pytorch”目录中的train_start.sh，放在“/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts”路径下。
 
         ```shell
         mkdir /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
         cd /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
         wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/train_start.sh
         ```
-    4. 准备任务YAML。进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](../06_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/basic-training/without-ranktable/pytorch”目录下的“pytorch_standalone_acjob_quickstart.yaml”文件。示例默认为单机单卡任务。
+    4. 通过如下命令获取[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库“samples/train/basic-training/without-ranktable/pytorch”目录下的“pytorch_standalone_acjob_quickstart.yaml”文件。示例默认为单机单卡任务。
 
         ```shell
         cd /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
@@ -431,13 +324,13 @@
 3. 执行以下命令，下发单机单卡任务。
 
     ```shell
-    kubectl apply -f pytorch_standalone_acjob_quickstart.yaml
+    kubectl apply -f /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts/pytorch_standalone_acjob_quickstart.yaml
     ```
 
 4. 执行以下命令，查看Pod运行情况。
 
     ```shell
-    kubectl get pod --all-namespaces -o wide
+    kubectl get pod -A -o wide
     ```
 
     回显示例如下，出现Running表示任务正常运行。
@@ -454,12 +347,6 @@
 5. 查看训练结果。
 
     1. 在任意节点执行如下命令，查看训练结果。
-
-        ```shell
-        kubectl logs -n  命名空间名称 pod名称
-        ```
-
-        如：
 
         ```shell
         kubectl logs -n default default-test-pytorch-master-0
