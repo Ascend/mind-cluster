@@ -460,8 +460,8 @@ func (r *InferServiceReconciler) newInstanceSet(is *apiv1.InferService, role api
 	if is.Spec.SchedulingStrategy != nil && is.Spec.SchedulingStrategy.Type != "" {
 		labels[common.PrioritySchedulingStrategyLabelKey] = is.Spec.SchedulingStrategy.Type
 	} else {
-		// Default to Sequential scheduling strategy if not specified
-		labels[common.PrioritySchedulingStrategyLabelKey] = common.SchedulingStrategySequential
+		// Default to Parallel scheduling strategy if not specified
+		labels[common.PrioritySchedulingStrategyLabelKey] = common.SchedulingStrategyParallel
 	}
 
 	if is.Spec.SchedulingStrategy != nil && is.Spec.SchedulingStrategy.Type == common.SchedulingStrategyPriority {

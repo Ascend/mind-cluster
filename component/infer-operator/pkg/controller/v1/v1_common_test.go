@@ -73,7 +73,7 @@ func CreateTestInstanceSet(name, namespace string, replicas int32) *v1.InstanceS
 				common.InferServiceNameLabelKey:           "test-service",
 				common.InstanceSetNameLabelKey:            "test-role",
 				common.OperatorNameKey:                    common.TrueBool,
-				common.PrioritySchedulingStrategyLabelKey: common.SchedulingStrategySequential,
+				common.PrioritySchedulingStrategyLabelKey: common.SchedulingStrategyParallel,
 			},
 		},
 		Spec: v1.InstanceSetSpec{

@@ -172,10 +172,10 @@ func TestShouldScheduleWhenMultipleRolesHaveSameHighestPriority(t *testing.T) {
 	})
 }
 
-// TestShouldScheduleWhenSchedulingStrategyIsSequential tests the ShouldSchedule function.
-func TestShouldScheduleWhenSchedulingStrategyIsSequential(t *testing.T) {
-	convey.Convey("Should return true when scheduling strategy is sequential", t, func() {
-		instanceSet := createPriorityInstanceSet("test-role", common.SchedulingStrategySequential, false)
+// TestShouldScheduleWhenSchedulingStrategyIsParallel tests the ShouldSchedule function.
+func TestShouldScheduleWhenSchedulingStrategyIsParallel(t *testing.T) {
+	convey.Convey("Should return true when scheduling strategy is parallel", t, func() {
+		instanceSet := createPriorityInstanceSet("test-role", common.SchedulingStrategyParallel, false)
 		fakeClient := createFakeClient(instanceSet)
 
 		ctx := context.Background()

@@ -40,7 +40,7 @@ func ShouldSchedule(ctx context.Context, k8sClient client.Client, instanceSet *v
 	switch schedulingStrategy {
 	case common.SchedulingStrategyPriority:
 		return shouldScheduleWithPriority(ctx, k8sClient, instanceSet)
-	case common.SchedulingStrategySequential:
+	case common.SchedulingStrategyParallel:
 		return true, nil
 	default:
 		return false, fmt.Errorf("unknown scheduling strategy %s", schedulingStrategy)
