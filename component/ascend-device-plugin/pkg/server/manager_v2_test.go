@@ -1,4 +1,4 @@
-/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2026. Huawei Technologies Co.,Ltd. All rights reserved.
 +   Licensed under the Apache License, Version 2.0 (the "License");
 +   you may not use this file except in compliance with the License.
 +   You may obtain a copy of the License at
@@ -18,6 +18,8 @@ package server
 import (
 	"context"
 	"fmt"
+	"net"
+	"os"
 	"reflect"
 	"testing"
 
@@ -286,5 +288,317 @@ func TestGetSuperPodType(t *testing.T) {
 			manager: devMgr,
 		}
 		convey.So(hdm.GetSuperPodType(), convey.ShouldEqual, common.SuperPodTypeAbnormal)
+	})
+}
+
+const (
+	testConfigPath    = "/tmp/test-npu-nic-mapping.json"
+	testIPv4Address   = "192.168.1.100"
+	testIPv6Address   = "2001:db8::1"
+	testLoopbackIPv4  = "127.0.0.1"
+	testLoopbackIPv6  = "::1"
+	testLinkLocalIPv4 = "169.254.1.1"
+	testLinkLocalIPv6 = "fe80::1"
+	testNicName       = "eth0"
+	testNicName2      = "eth1"
+)
+
+func createTestConfig(content string) error {
+	return os.WriteFile(testConfigPath, []byte(content), 0644)
+}
+
+func removeTestConfig() {
+	os.Remove(testConfigPath)
+	resetConfigCache()
+}
+
+func resetConfigCache() {
+	npuNicMappingCache = nil
+	npuNicMappingErr = nil
+}
+
+func TestGetIPAddressType_ShouldReturnIPv4_WhenIPv4Address(t *testing.T) {
+	convey.Convey("TestGetIPAddressType should return IPv4", t, func() {
+		tests := []struct {
+			name     string
+			input    string
+			expected string
+		}{
+			{"standard IPv4", testIPv4Address, addrTypeIPV4},
+			{"loopback IPv4", testLoopbackIPv4, addrTypeIPV4},
+			{"link-local IPv4", testLinkLocalIPv4, addrTypeIPV4},
+			{"invalid IP defaults to IPv4", "invalid-ip", addrTypeIPV4},
+		}
+
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				result := getIPAddressType(tt.input)
+				convey.So(result, convey.ShouldEqual, tt.expected)
+			})
+		}
+	})
+}
+
+func TestGetIPAddressType_ShouldReturnIPv6_WhenIPv6Address(t *testing.T) {
+	convey.Convey("TestGetIPAddressType should return IPv6", t, func() {
+		tests := []struct {
+			name     string
+			input    string
+			expected string
+		}{
+			{"standard IPv6", testIPv6Address, addrTypeIPV6},
+			{"loopback IPv6", testLoopbackIPv6, addrTypeIPV6},
+			{"link-local IPv6", testLinkLocalIPv6, addrTypeIPV6},
+			{"full IPv6", "2001:0db8:85a3:0000:0000:8a2e:0370:7334", addrTypeIPV6},
+		}
+
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				result := getIPAddressType(tt.input)
+				convey.So(result, convey.ShouldEqual, tt.expected)
+			})
+		}
+	})
+}
+
+func TestGetInterfaceIPs_ShouldReturnEmpty_WhenInterfaceNotFound(t *testing.T) {
+	convey.Convey("TestGetInterfaceIPs should return empty", t, func() {
+		tests := []struct {
+			name    string
+			nicName string
+		}{
+			{"non-existent interface", "nonexistent0"},
+			{"empty interface name", ""},
+		}
+
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				result := getInterfaceIPs(tt.nicName)
+				convey.So(result, convey.ShouldBeEmpty)
+			})
+		}
+	})
+}
+
+func TestGetInterfaceIPs_ShouldReturnValidIPs_WhenInterfaceExists(t *testing.T) {
+	convey.Convey("TestGetInterfaceIPs should return valid IPs", t, func() {
+		tests := []struct {
+			name      string
+			ipAddrs   []net.Addr
+			wantCount int
+		}{
+			{"only IPv4", []net.Addr{&net.IPNet{IP: net.ParseIP(testIPv4Address)}}, 1},
+			{"only IPv6", []net.Addr{&net.IPNet{IP: net.ParseIP(testIPv6Address)}}, 1},
+			{"skip loopback", []net.Addr{
+				&net.IPNet{IP: net.ParseIP(testLoopbackIPv4)},
+				&net.IPNet{IP: net.ParseIP(testIPv4Address)},
+			}, 1},
+			{"skip link-local", []net.Addr{
+				&net.IPNet{IP: net.ParseIP(testLinkLocalIPv4)},
+				&net.IPNet{IP: net.ParseIP(testIPv4Address)},
+			}, 1},
+		}
+
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				iface := &net.Interface{Index: 1, Name: testNicName}
+				patches := gomonkey.NewPatches()
+				patches.ApplyFuncReturn(net.InterfaceByName, iface, nil)
+				patches.ApplyMethodReturn(iface, "Addrs", tt.ipAddrs, nil)
+				defer patches.Reset()
+
+				result := getInterfaceIPs(testNicName)
+				convey.So(len(result), convey.ShouldEqual, tt.wantCount)
+			})
+		}
+	})
+}
+
+func TestGetInterfaceIPsByPriority_ShouldReturnFirstValidIP_WhenMultipleInterfaces(t *testing.T) {
+	convey.Convey("TestGetInterfaceIPsByPriority should return first valid IP", t, func() {
+		tests := []struct {
+			name     string
+			nicNames []string
+			ipMap    map[string][]string
+			wantIP   string
+			wantErr  bool
+		}{
+			{"first nic has IP", []string{testNicName, testNicName2},
+				map[string][]string{testNicName: {testIPv4Address}}, testIPv4Address, false},
+			{"second nic has IP when first empty", []string{testNicName, testNicName2},
+				map[string][]string{testNicName2: {testIPv6Address}}, testIPv6Address, false},
+			{"all nics empty", []string{testNicName, testNicName2},
+				map[string][]string{}, "", true},
+		}
+
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				patches := gomonkey.ApplyFunc(getInterfaceIPs, func(nicName string) []string {
+					return tt.ipMap[nicName]
+				})
+				defer patches.Reset()
+
+				result, err := getInterfaceIPsByPriority(tt.nicNames)
+				convey.So(err != nil, convey.ShouldEqual, tt.wantErr)
+				convey.So(result, convey.ShouldEqual, tt.wantIP)
+			})
+		}
+	})
+}
+
+func TestGetNpuToNicNames_ShouldReturnNicList_WhenNpuIdExists(t *testing.T) {
+	convey.Convey("TestGetNpuToNicNames should return NIC list", t, func() {
+		tests := []struct {
+			name     string
+			mapping  *NpuNicMapping
+			npuId    int
+			wantNics []string
+			wantErr  bool
+		}{
+			{name: "npuId 0 exists",
+				mapping: &NpuNicMapping{
+					NpuNics: []NpuNicItem{{NpuId: 0, NicNames: []string{"eth0", "eth1"}}},
+				},
+				npuId:    0,
+				wantNics: []string{"eth0", "eth1"},
+				wantErr:  false,
+			},
+			{name: "npuId 1 exists",
+				mapping: &NpuNicMapping{
+					NpuNics: []NpuNicItem{{NpuId: 1, NicNames: []string{"eth2"}}},
+				},
+				npuId:    1,
+				wantNics: []string{"eth2"},
+				wantErr:  false,
+			},
+			{name: "npuId not found",
+				mapping: &NpuNicMapping{
+					NpuNics: []NpuNicItem{{NpuId: 0, NicNames: []string{"eth0"}}},
+				},
+				npuId:    2,
+				wantNics: nil,
+				wantErr:  true,
+			},
+		}
+
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				npuNicMappingCache = tt.mapping
+				npuNicMappingErr = nil
+				result, err := getNpuToNicNames(tt.npuId)
+				convey.So(err != nil, convey.ShouldEqual, tt.wantErr)
+				if !tt.wantErr {
+					convey.So(result, convey.ShouldResemble, tt.wantNics)
+				}
+			})
+		}
+	})
+}
+
+func TestGetNpuToNicNames_ShouldReturnNil_WhenConfigNotExists(t *testing.T) {
+	convey.Convey("TestGetNpuToNicNames should return nil when config not exists", t, func() {
+		// 直接设置缓存变量为 nil
+		npuNicMappingCache = nil
+		npuNicMappingErr = nil
+		result, err := getNpuToNicNames(0)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(result, convey.ShouldBeNil)
+	})
+}
+
+func TestGetNpuToNicNames_ShouldReturnCachedResult_WhenConfigAlreadyLoaded(t *testing.T) {
+	convey.Convey("TestGetNpuToNicNames should return cached result", t, func() {
+		npuNicMappingCache = &NpuNicMapping{
+			NpuNics: []NpuNicItem{{NpuId: 0, NicNames: []string{"cached-eth"}}},
+		}
+		npuNicMappingErr = nil
+
+		result, _ := getNpuToNicNames(0)
+		convey.So(result, convey.ShouldResemble, []string{"cached-eth"})
+	})
+}
+
+func TestGetROCEAddrList_ShouldReturnEmpty_WhenDeviceNil(t *testing.T) {
+	convey.Convey("TestGetROCEAddrList should return empty when device is nil", t, func() {
+		result := (&HwDevManager{}).getROCEAddrList(nil)
+		convey.So(result, convey.ShouldBeEmpty)
+	})
+}
+
+func TestGetROCEAddrList_ShouldReturnAddr_WhenConfigAndInterfaceValid(t *testing.T) {
+	convey.Convey("TestGetROCEAddrList should return addr when config valid", t, func() {
+		dev := &common.NpuDevice{PhyID: 0}
+		nicNames := []string{testNicName}
+
+		patches := gomonkey.NewPatches()
+		patches.ApplyFuncReturn(getNpuToNicNames, nicNames, nil)
+		patches.ApplyFuncReturn(getInterfaceIPsByPriority, testIPv6Address, nil)
+		defer patches.Reset()
+
+		result := (&HwDevManager{}).getROCEAddrList(dev)
+		convey.So(len(result), convey.ShouldEqual, 1)
+		convey.So(result[0].AddrType, convey.ShouldEqual, addrTypeIPV6)
+		convey.So(result[0].Addr, convey.ShouldEqual, testIPv6Address)
+	})
+}
+
+func TestGetROCEAddrList_ShouldUseLegacy_WhenConfigNotAvailable(t *testing.T) {
+	hdmType := reflect.TypeOf(&HwDevManager{})
+
+	convey.Convey("TestGetROCEAddrList should use legacy when config not available", t, func() {
+		dev := &common.NpuDevice{PhyID: 0}
+
+		patches := gomonkey.NewPatches()
+		patches.ApplyFuncReturn(getNpuToNicNames, nil, nil)
+		patches.ApplyPrivateMethod(hdmType, "getROCEAddrListLegacy", func(*HwDevManager, *common.NpuDevice) []api.RankAddrItem {
+			return []api.RankAddrItem{{AddrType: addrTypeIPV4, Addr: testIPv4Address}}
+		})
+		defer patches.Reset()
+
+		result := (&HwDevManager{}).getROCEAddrList(dev)
+		convey.So(len(result), convey.ShouldEqual, 1)
+		convey.So(result[0].Addr, convey.ShouldEqual, testIPv4Address)
+	})
+}
+
+func TestGetROCEAddrListLegacy_ShouldReturnAddr_WhenDpuInfoValid(t *testing.T) {
+	hdmType := reflect.TypeOf(&HwDevManager{})
+
+	convey.Convey("TestGetROCEAddrListLegacy should return addr when DPU info valid", t, func() {
+		tests := []struct {
+			name    string
+			ipList  []string
+			wantLen int
+		}{
+			{"single IPv4", []string{testIPv4Address}, 1},
+			{"single IPv6", []string{testIPv6Address}, 1},
+			{"mixed", []string{testIPv4Address, testIPv6Address}, 2},
+		}
+
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				patches := gomonkey.ApplyPrivateMethod(hdmType, "getNpuCorrespDpuInfo", func(*HwDevManager, *common.NpuDevice) ([]string, error) {
+					return tt.ipList, nil
+				})
+				defer patches.Reset()
+
+				result := (&HwDevManager{}).getROCEAddrListLegacy(&common.NpuDevice{})
+				convey.So(len(result), convey.ShouldEqual, tt.wantLen)
+			})
+		}
+	})
+}
+
+func TestGetROCEAddrListLegacy_ShouldReturnEmpty_WhenDpuInfoError(t *testing.T) {
+	hdmType := reflect.TypeOf(&HwDevManager{})
+
+	convey.Convey("TestGetROCEAddrListLegacy should return empty when DPU info error", t, func() {
+		patches := gomonkey.ApplyPrivateMethod(hdmType, "getNpuCorrespDpuInfo", func(*HwDevManager, *common.NpuDevice) ([]string, error) {
+			return nil, os.ErrNotExist
+		})
+		defer patches.Reset()
+
+		result := (&HwDevManager{}).getROCEAddrListLegacy(&common.NpuDevice{})
+		convey.So(result, convey.ShouldBeEmpty)
 	})
 }

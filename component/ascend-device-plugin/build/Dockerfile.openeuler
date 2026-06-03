@@ -18,6 +18,7 @@ COPY ./SwitchFaultCode.json /usr/local/
 COPY ./deviceNameCustomization.json /usr/local/
 COPY ./hangDetectionConfig.json /usr/local/
 COPY ./agreement.txt /usr/local/
+COPY ./npu-nic-mapping.json /user/mindx-dl/npu/
 
 RUN chmod 550 /usr/local/bin/device-plugin &&\
     chmod 550 /usr/local/bin &&\
@@ -27,6 +28,7 @@ RUN chmod 550 /usr/local/bin/device-plugin &&\
     chmod 440 /usr/local/deviceNameCustomization.json &&\
     chmod 440 /usr/local/hangDetectionConfig.json &&\
     chmod 440 /usr/local/agreement.txt &&\
+    chmod 440 /user/mindx-dl/npu/npu-nic-mapping.json &&\
     chmod 750 /home/HwHiAiUser &&\
     echo 'umask 027' >> /etc/profile &&\
     echo 'source /etc/profile' >> ~/.bashrc

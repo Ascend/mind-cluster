@@ -104,6 +104,7 @@ function modify_version() {
     cp "$CUR_DIR"/SwitchFaultCode.json "$TOP_DIR"/output/SwitchFaultCode.json
     cp "$CUR_DIR"/hangDetectionConfig.json "$TOP_DIR"/output/hangDetectionConfig.json
     cp "$CUR_DIR"/agreement.txt "$TOP_DIR"/output/agreement.txt
+    cp "$CUR_DIR"/npu-nic-mapping.json "$TOP_DIR"/output/npu-nic-mapping.json
 
     sed -i "s#output/device-plugin#device-plugin#" "$TOP_DIR"/output/Dockerfile
 }

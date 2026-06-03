@@ -16,7 +16,10 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
+	"net"
+	"sync"
 
 	"k8s.io/api/core/v1"
 
@@ -24,7 +27,27 @@ import (
 	"Ascend-device-plugin/pkg/device"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
+	"ascend-common/common-utils/utils"
 	npuCommon "ascend-common/devmanager/common"
+)
+
+const npuNicMappingConfigPath = "/user/mindx-dl/npu/npu-nic-mapping.json"
+
+// NpuNicMapping is npu nic mapping config
+type NpuNicMapping struct {
+	NpuNics []NpuNicItem `json:"npuNics"`
+}
+
+// NpuNicItem is npu nic item
+type NpuNicItem struct {
+	NpuId    int      `json:"npuId"`
+	NicNames []string `json:"nicNames"`
+}
+
+var (
+	npuNicMappingCache     *NpuNicMapping
+	npuNicMappingCacheOnce sync.Once
+	npuNicMappingErr       error
 )
 
 func (hdm *HwDevManager) getCardType() (string, error) {
@@ -192,8 +215,144 @@ func (hdm *HwDevManager) getRankAddrListOriginal(level int, dev *common.NpuDevic
 	return rankAddrList
 }
 
+func getNpuNicMappingCache() (*NpuNicMapping, error) {
+	npuNicMappingCacheOnce.Do(func() {
+		data, err := utils.LoadFile(npuNicMappingConfigPath)
+		if err != nil {
+			npuNicMappingErr = fmt.Errorf("read config file error: %v", err)
+			return
+		}
+
+		if data == nil {
+			hwlog.RunLog.Warnf("npu-nic-mapping config file not found: %s", npuNicMappingConfigPath)
+			npuNicMappingCache = nil
+			return
+		}
+
+		var mapping NpuNicMapping
+		if err = json.Unmarshal(data, &mapping); err != nil {
+			npuNicMappingErr = fmt.Errorf("parse config file error: %v", err)
+			return
+		}
+
+		npuNicMappingCache = &mapping
+		hwlog.RunLog.Infof("npu-nic-mapping config loaded: %v", mapping)
+	})
+
+	return npuNicMappingCache, npuNicMappingErr
+}
+
+func getIPAddressType(ip string) string {
+	parsedIP := net.ParseIP(ip)
+	if parsedIP == nil {
+		return addrTypeIPV4 // default IPv4
+	}
+	if parsedIP.To4() != nil {
+		return addrTypeIPV4
+	}
+	return addrTypeIPV6
+}
+
+func getInterfaceIPsByPriority(nicNames []string) (string, error) {
+	for _, nicName := range nicNames {
+		ips := getInterfaceIPs(nicName)
+		if len(ips) > 0 {
+			return ips[0], nil
+		}
+		hwlog.RunLog.Warnf("interface %s has no valid IP address, checking next interface", nicName)
+	}
+	return "", fmt.Errorf("no valid IP address found for any interface: %v", nicNames)
+}
+
+func getInterfaceIPs(nicName string) []string {
+	var ips []string
+	iface, err := net.InterfaceByName(nicName)
+	if err != nil {
+		hwlog.RunLog.Errorf("get interface %s error: %v", nicName, err)
+		return ips
+	}
+
+	addrs, err := iface.Addrs()
+	if err != nil || len(addrs) == 0 {
+		hwlog.RunLog.Errorf("get interface %s addrs error: %v", nicName, err)
+		return ips
+	}
+
+	for _, addr := range addrs {
+		ipNet, ok := addr.(*net.IPNet)
+		if !ok {
+			continue
+		}
+		ip := ipNet.IP
+		// IsLoopback: IPv4(127.0.0.1) and IPv6(::1)
+		// IsLinkLocalUnicast: IPv4(169.254.0.0/16) and IPv6(fe80::/10)
+		// IsLinkLocalMulticast: IPv6(ff02::/16)
+		if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
+			continue
+		}
+		ips = append(ips, ip.String())
+	}
+	return ips
+}
+
+func getNpuToNicNames(npuId int) ([]string, error) {
+	mapping, err := getNpuNicMappingCache()
+	if err != nil {
+		return nil, err
+	}
+
+	if mapping == nil {
+		return nil, nil
+	}
+
+	for _, item := range mapping.NpuNics {
+		if item.NpuId == npuId {
+			return item.NicNames, nil
+		}
+	}
+
+	return nil, fmt.Errorf("npuId %d not found in mapping", npuId)
+}
+
 // getROCEAddrList get RoCE addr list of device in A5
 func (hdm *HwDevManager) getROCEAddrList(dev *common.NpuDevice) []api.RankAddrItem {
+	if dev == nil {
+		hwlog.RunLog.Error("device is nil")
+		return []api.RankAddrItem{}
+	}
+
+	npuId := int(dev.PhyID % common.NpuNum)
+	nicNames, err := getNpuToNicNames(npuId)
+	if err != nil {
+		hwlog.RunLog.Warnf("get npu %d nic names failed: %v, using legacy dpu info", npuId, err)
+		return hdm.getROCEAddrListLegacy(dev)
+	}
+
+	if nicNames == nil {
+		hwlog.RunLog.Warnf("npu-nic-mapping config not found, using legacy dpu info")
+		return hdm.getROCEAddrListLegacy(dev)
+	}
+
+	ip, err := getInterfaceIPsByPriority(nicNames)
+	if err != nil {
+		hwlog.RunLog.Errorf("get roce addr list failed: %v", err)
+		return []api.RankAddrItem{}
+	}
+
+	addrType := getIPAddressType(ip)
+	hwlog.RunLog.Infof("get RoCE addr for NPU %d: %s (type: %s)", npuId, ip, addrType)
+
+	return []api.RankAddrItem{
+		{
+			AddrType: addrType,
+			Addr:     ip,
+			Ports:    []string{},
+			PlaneId:  api.DefaultRandAddrPlaneID,
+		},
+	}
+}
+
+func (hdm *HwDevManager) getROCEAddrListLegacy(dev *common.NpuDevice) []api.RankAddrItem {
 	dpuIPList, err := hdm.getNpuCorrespDpuInfo(dev)
 	if err != nil {
 		hwlog.RunLog.Errorf("get roce addr list failed, err: %v", err)
@@ -202,8 +361,9 @@ func (hdm *HwDevManager) getROCEAddrList(dev *common.NpuDevice) []api.RankAddrIt
 
 	rankAddrList := make([]api.RankAddrItem, 0)
 	for _, ip := range dpuIPList {
+		addrType := getIPAddressType(ip)
 		rankAddrList = append(rankAddrList, api.RankAddrItem{
-			AddrType: "IPV4",
+			AddrType: addrType,
 			Addr:     ip,
 			Ports:    []string{},
 			PlaneId:  api.DefaultRandAddrPlaneID,
