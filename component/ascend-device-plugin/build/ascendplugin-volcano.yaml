@@ -97,6 +97,7 @@ spec:
       nodeSelector:
         workerselector: dls-worker-node
       serviceAccountName: ascend-device-plugin-sa
+      hostPID: true
       initContainers:
       - name: init-log-setup
         image: ascend-k8sdeviceplugin:v3.0.0

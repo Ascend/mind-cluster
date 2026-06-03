@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
@@ -1683,6 +1683,7 @@ func (hdm *HwDevManager) mendSubscribeFaultEvents() {
 			hdm.manager.HandleDropCardFaultEvents(npuDevice)
 			hdm.manager.HandleLostChipFaultEvents(npuDevice, initLogicIDs)
 			hdm.manager.HandleLostNetworkFaultEvents(npuDevice, initLogicIDs)
+			hdm.manager.HandleHangCardFaultEvents(npuDevice)
 		}
 	}
 }

@@ -1,0 +1,12 @@
+{
+    "HangDetection": {
+        "Enabled": true,
+        "Threshold": {
+            "AICoreUtilization": 5,
+            "HbmMemoryDelta": 0,
+            "TrafficDelta": 100,
+            "CPUTimeDelta": 5,
+            "DetectDuration": 5
+        }
+    }
+}
