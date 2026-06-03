@@ -30,9 +30,10 @@ ATTR_CATE = "attribute"
 
 
 def escape_string(s: str) -> str:
-    return (s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n"))
+    return s.replace("\\", "\\\\").replace(r"\"", "\\\"").replace("\n", "\\n")
 
 
+# pylint: disable=W1401
 def refactor_attribute_dict(value_dict):
     """
     处理 attribute 字典：
@@ -52,6 +53,7 @@ def refactor_attribute_dict(value_dict):
             new_attribute[key] = str(value)
 
     return new_attribute
+
 
 def refactor_knowledge_repository(json_data):
     data = json_data.setdefault("knowledge-repository", {})
@@ -89,8 +91,8 @@ def kg_config_convert_cpp():
     if not args.input_file or not args.output_path:
         echo_logger.info("No parameter provided.")
         return
-    echo_logger.info(f"The value of --input_file is: %s", args.input_file)
-    echo_logger.info(f"The value of --output_path is: %s", args.output_path)
+    echo_logger.info("The value of --input_file is: %s", args.input_file)
+    echo_logger.info("The value of --output_path is: %s", args.output_path)
 
     with open(args.input_file, 'r', encoding="utf-8") as file:
         data = json.load(file)
@@ -110,12 +112,13 @@ def kg_config_convert_cpp():
         json_char_len = len(json_char_list)
         code_name = event_code.replace("_", "")
         fault_diag_lib_cpp += f"\tstatic int char{code_name}[] = {{{', '.join(json_char_list)}}};\n"
-        fault_diag_lib_cpp += f"\tg_faultDiag[\"{event_code}\"] = " \
-                              f"FaultDiagSpace::FaultDiagEvent(char{code_name}, {json_char_len});\n"
+        fault_diag_lib_cpp += (
+            f"\tg_faultDiag[\"{event_code}\"] = FaultDiagSpace::FaultDiagEvent(char{code_name}, {json_char_len});\n"
+        )
         source_file = event_attribute.get("source_file")
         if source_file:
             fault_diag_lib_cpp += f"\tg_faultCode[\"{source_file}\"].push_back(\"{event_code}\");\n"
-    fault_diag_lib_cpp += f"\tInitAcSearchers();\n"
+    fault_diag_lib_cpp += "\tInitAcSearchers();\n"
     fault_diag_lib_cpp += "}\n"
 
     # 强制指定 UTF-8 写文件，避免 ARM/x86 差异

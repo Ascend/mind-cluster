@@ -100,13 +100,13 @@ if __name__ == "__main__":
         '"ascend-rc-parser.json"': '"rc-parser.json"',
         '"ascend-kg-parser.json"': '"kg-parser.json"',
         '"ascend-kg-analyzer.json"': '"kg-analyzer.json"',
-        '"aicore-error-code-config-zh.json"': '"aicore-error-code-config-en.json"'
+        '"aicore-error-code-config-zh.json"': '"aicore-error-code-config-en.json"',
     }
     replace_keywords(config_path, replace_map, [])
 
     import_prefix_replacements = {
         f"from {args.old}.": f"from {args.new}.",
-        f"import {args.old}.": f"import {args.new}."
+        f"import {args.old}.": f"import {args.new}.",
     }
     recursively_remove_sensitives_in_python_file(args.path, import_prefix_replacements)
 
@@ -119,7 +119,7 @@ if __name__ == "__main__":
         "_Ascend": "",
         "_HW": "",
         '"Ascend-Docker-Runtime"': '"Docker-Runtime"',
-        '"AscendBackend"': '"Backend"'
+        '"AscendBackend"': '"Backend"',
     }
     replace_keywords(kg_config_path, kg_config_replacements, [])
 

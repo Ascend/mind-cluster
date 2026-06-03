@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 from setuptools import find_packages
 
-from ascend_fd.utils.tool import safe_write_open, safe_read_open
+from ascend_fd.utils.tool import safe_write_open
 
 
 def clean():
@@ -48,9 +48,7 @@ def write_version_info(mode, version):
 
 def get_platform():
     system_info = platform.machine() or 'unknown'
-    target_plat = {
-        'AMD64': 'x86_64'
-    }
+    target_plat = {'AMD64': 'x86_64'}
     res_plat = target_plat.get(system_info)
     return res_plat or system_info
 
@@ -82,31 +80,21 @@ def get_setup_config(mode, version):
         "python_requires": ">=3.7",
         "platforms": get_platform(),
         "packages": find_packages(),
-        "install_requires": [
-            "ply>=3.11"
-        ],
+        "install_requires": ["ply>=3.11"],
     }
 
     if mode == "en":
         config = {
             "name": "alan-faultdiag",
             "description": "alan fault diag",
-            "entry_points": {
-                "console_scripts": [
-                    "alan-fd=alan_fd.cli:main"
-                ]
-            }
+            "entry_points": {"console_scripts": ["alan-fd=alan_fd.cli:main"]},
         }
     else:
         config = {
             "name": "ascend-faultdiag",
             "description": "ascend fault diag",
             "author": "Huawei Technologies Co., Ltd",
-            "entry_points": {
-                "console_scripts": [
-                    "ascend-fd=ascend_fd.cli:main"
-                ]
-            }
+            "entry_points": {"console_scripts": ["ascend-fd=ascend_fd.cli:main"]},
         }
 
     config.update(common_config)

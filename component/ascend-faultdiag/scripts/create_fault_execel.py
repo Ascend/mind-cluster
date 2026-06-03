@@ -90,8 +90,15 @@ class EventSummary:
         worksheet = self.workbook.active
         worksheet.title = '根因设备分析故障事件'
 
-        columns = ["一级分类(class)", "二级分类(component)", "三级分类(module)", "故障事件编号", '故障事件名称',
-                   "故障事件原因", "处理建议"]
+        columns = [
+            "一级分类(class)",
+            "二级分类(component)",
+            "三级分类(module)",
+            "故障事件编号",
+            '故障事件名称',
+            "故障事件原因",
+            "处理建议",
+        ]
 
         self.set_header_format(worksheet, columns)
 
@@ -105,8 +112,15 @@ class EventSummary:
             cause_zh_data = attr_data.get("cause_zh")
             description_zh_data = attr_data.get("description_zh")
             suggestion_zh = attr_data.get("suggestion_zh")
-            all_data = [class_data, component_data, module_data, code, cause_zh_data, description_zh_data,
-                        str(suggestion_zh)]
+            all_data = [
+                class_data,
+                component_data,
+                module_data,
+                code,
+                cause_zh_data,
+                description_zh_data,
+                str(suggestion_zh),
+            ]
 
             worksheet.append(all_data)
             # record the maximum length of data in each column
@@ -179,12 +193,10 @@ class EventSummary:
 
 
 if __name__ == "__main__":
-    """
-    生成资料故障诊断类型附件。
-    1、表中code列是为了方便资料查找，归档时需提醒资料同事删除
-    2、安装三方依赖：
-        pip3 install ply
-        pip3 install openpyxl
-    """
+    # 生成资料故障诊断类型附件。
+    # 1、表中code列是为了方便资料查找，归档时需提醒资料同事删除
+    # 2、安装三方依赖：
+    #    pip3 install ply
+    #    pip3 install openpyxl
     event_summary = EventSummary()
     event_summary.create_sheet("MindCluster 26.0.0 故障诊断类型.xlsx")

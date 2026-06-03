@@ -146,9 +146,9 @@ bash build/build.sh
     ```
 
 **日志清洗**
-- 步骤1：上传日志至服务器。  
-    上传至服务器任意目录（例如/home），以使用-i参数为例，将所有日志汇总至同一采集目录下进行清洗，目录结构示例如下。  
-    Host主机侧：  
+- 步骤1：上传日志至服务器。
+    上传至服务器任意目录（例如/home），以使用-i参数为例，将所有日志汇总至同一采集目录下进行清洗，目录结构示例如下。
+    Host主机侧：
     ```
     采集目录
     |-- messages         # 主机侧操作系统日志
@@ -158,7 +158,7 @@ bash build/build.sh
             |-- vmcore_dmesg.txt     # 系统崩溃时保存的Host侧内核消息日志文件
     |-- sysmonitor.log       # 主机侧系统监测日志
     |-- rank-0.txt      # 训练控制台日志
-    ... 
+    ...
     |-- rank-7.txt      # 训练控制台日志
     |-- process_log          # CANN应用侧原始日志，目录名需为process_log
     |-- device_log           # Device侧日志，目录名需为device_log
@@ -168,7 +168,7 @@ bash build/build.sh
         |-- ascend-docker-runtime              # Ascend Docker Runtime组件日志
         |-- volcano-scheduler              # Volcano中的volcano-scheduler组件日志
         |-- volcano-controller              # Volcano中的volcano-controller组件日志
-    
+
         |-- npu-exporter              # NPU Exporter组件日志
     |-- mindie               # MindIE组件日志
         |-- log
@@ -193,26 +193,26 @@ bash build/build.sh
     These job ['模块1', '模块2'...] succeeded.
     The parse job is complete.
     ```
-- 步骤4：日志转储  
+- 步骤4：日志转储
 将每台服务器的清洗输出目录下所有文件进行集中转储，转储目录结构如下。
     ```
-    诊断输入目录        
-        |--清洗输出目录1 
+    诊断输入目录
+        |--清洗输出目录1
            |--plog-parser-{pid}-{0/1}.log        # 根因节点分析清洗后日志，包括error、trace等关键信息，按Pid分别保存，{0/1}代表该{pid}的plog日志有/无错误日志
            |--device_ip_info.json                # 设备IP信息
            |--ascend-kg-parser.json              # 故障事件分析清洗结果，推理引擎输入文件
            |--ascend-kg-analyzer.json            # 故障事件分析清洗结果
-           |--ascend-rc-parser.json              # 根因节点分析清洗结果   
-           |--mindie-cluster-info.json           # MindIE Pod控制台日志清洗结果 
-           |--server-info.json.json              # MindIE组件日志清洗结果 
-                   
+           |--ascend-rc-parser.json              # 根因节点分析清洗结果
+           |--mindie-cluster-info.json           # MindIE Pod控制台日志清洗结果
+           |--server-info.json.json              # MindIE组件日志清洗结果
+
         |--清洗输出目录2
            |--plog-parser-{pid}-{0/1}.log
            |--device_ip_info.json
            |--ascend-kg-parser.json
-           |--ascend-kg-analyzer.json               
+           |--ascend-kg-analyzer.json
            |--ascend-rc-parser.json
-           |--server-info.json.json              
+           |--server-info.json.json
         ...
         |--清洗输出目录n
     ```
@@ -224,7 +224,7 @@ bash build/build.sh
     ```
 - 步骤二：执行命令进行故障诊断
     ```shell
-    ascend-fd diag -i 诊断输入目录 -o 诊断结果输出目录 
+    ascend-fd diag -i 诊断输入目录 -o 诊断结果输出目录
     ```
     诊断回显样例以及关键参数说明请见：[故障诊断](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG038.html)
 
@@ -263,8 +263,8 @@ API参考详见：[API参考](https://www.hiascend.com/document/detail/zh/mindcl
 | 状态          | 时间     | 说明                                                      |
 |-------------|--------|---------------------------------------------------------|
 | 计划          | 1-3个月  | 计划特性                                                    |
-| 开发          | 3个月    | 开发新特性并修复问题，定期发布新版本                                      | 
-| 维护          | 3-12个月 | 常规分支维护3个月，长期支持分支维护12个月。对重大BUG进行修复，不合入新特性，并视BUG的影响发布补丁版本 | 
+| 开发          | 3个月    | 开发新特性并修复问题，定期发布新版本                                      |
+| 维护          | 3-12个月 | 常规分支维护3个月，长期支持分支维护12个月。对重大BUG进行修复，不合入新特性，并视BUG的影响发布补丁版本 |
 | 生命周期终止（EOL） | N/A    | 分支不再接受任何修改                                              |
 
 # 版本维护策略
