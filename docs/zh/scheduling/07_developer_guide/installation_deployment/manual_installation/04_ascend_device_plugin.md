@@ -319,4 +319,8 @@
 |-deviceResetTimeout|int|60|组件启动时，若芯片数量不足，等待驱动上报完整芯片的最大时长，单位为秒，取值范围为10~600。<ul><li>Atlas A2 训练系列产品、Atlas 800I A2 推理服务器、A200I A2 Box 异构组件：建议配置为150秒。</li><li>Atlas A3 训练系列产品、A200T A3 Box8 超节点服务器、Atlas 800I A3 超节点服务器：建议配置为360秒。</li><li>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD：建议配置为600秒。</li></ul>|
 |-softShareDevConfigDir|string|""|软切分虚拟化场景配置目录。该配置目录需要在安装Ascend Device Plugin之前在根目录下手动创建。使用软切分功能时，需要配置该参数。|
 |-useSingleDieMode|bool|false|<term>Atlas A3 推理系列产品</term>是否开启单die直通模式。<ul><li>true：开启单die直通模式。</li><li>false：关闭单die直通模式。</li></ul>使用软切分虚拟化功能时，该参数必须配置为true。|
+|--enable-healthz|bool|false|是否启用健康检查服务。K8s部署时由组件YAML配置启用（true）。<ul><li>true：启用。</li><li>false：禁用。</li></ul>|
+|--healthz-address|string|11251|健康检查服务侦听端口号，取值范围 1025~65535。K8s部署时由组件YAML配置为11251。若指定端口被占用，组件启动失败。|
+|--tls-cert-file|string|""|HTTPS 证书文件路径。为空则使用 HTTP 协议。与 --tls-private-key-file 必须同时配置或同时为空。配置方法及安全注意事项请参见<a href="../../../06_references/security_hardening.md#健康探针安全加固">健康探针安全加固</a>。|
+|--tls-private-key-file|string|""|HTTPS 私钥文件路径。为空则使用 HTTP 协议。与 --tls-cert-file 必须同时配置或同时为空。|
 |-h或者-help|无|无|显示帮助信息。|

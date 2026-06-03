@@ -202,6 +202,43 @@
 <a name="ul1354220213192"></a><a name="ul1354220213192"></a><ul id="ul1354220213192"><li><span id="ph278017516257"><a name="ph278017516257"></a><a name="ph278017516257"></a><term id="zh-cn_topic_0000001519959665_term57208119917"><a name="zh-cn_topic_0000001519959665_term57208119917"></a><a name="zh-cn_topic_0000001519959665_term57208119917"></a>Atlas A2 训练系列产品</term></span>、<span id="ph13163257131918"><a name="ph13163257131918"></a><a name="ph13163257131918"></a>Atlas 800I A2 推理服务器</span>、<span id="ph10930753142211"><a name="ph10930753142211"></a><a name="ph10930753142211"></a>A200I A2 Box 异构组件</span>：建议配置为150秒。</li><li><span id="ph531432344210"><a name="ph531432344210"></a><a name="ph531432344210"></a><term id="zh-cn_topic_0000001519959665_term26764913715"><a name="zh-cn_topic_0000001519959665_term26764913715"></a><a name="zh-cn_topic_0000001519959665_term26764913715"></a>Atlas A3 训练系列产品</term></span>、<span id="ph1692713816224"><a name="ph1692713816224"></a><a name="ph1692713816224"></a>A200T A3 Box8 超节点服务器</span>、<span id="ph18760103420211"><a name="ph18760103420211"></a><a name="ph18760103420211"></a>Atlas 800I A3 超节点服务器</span>：建议配置为360秒。</li><li><span>Atlas 350 标卡</span>、<span id="ph1692713816224"><a name="ph1692713816224"></a><a name="ph1692713816224"></a>Atlas 850 系列硬件产品</span>、<span id="ph18760103420211"><a name="ph18760103420211"></a><a name="ph18760103420211"></a>Atlas 950 SuperPoD</span>：建议配置为600秒。</li></ul>
 </td>
 </tr>
+<tr id="rowhz001"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="phz001"><a name="phz001"></a><a name="phz001"></a>--enable-healthz</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="phz001b"><a name="phz001b"></a><a name="phz001b"></a>bool</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="phz001c"><a name="phz001c"></a><a name="phz001c"></a>false</p>
+</td>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="phz001d"><a name="phz001d"></a><a name="phz001d"></a>是否启用健康检查服务。K8s部署时由组件YAML配置启用（true）</p>
+<a name="ulhz001"></a><a name="ulhz001"></a><ul id="ulhz001"><li>true：启用。</li><li>false：禁用。</li></ul>
+</td>
+</tr>
+<tr id="rowhz002"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="phz002"><a name="phz002"></a><a name="phz002"></a>--healthz-address</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="phz002b"><a name="phz002b"></a><a name="phz002b"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="phz002c"><a name="phz002c"></a><a name="phz002c"></a>11251</p>
+</td>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="phz002d"><a name="phz002d"></a><a name="phz002d"></a>健康检查服务侦听端口号，取值范围 1025~65535。K8s部署时由组件YAML配置为11255。若指定端口被占用，组件启动失败。</p>
+</td>
+</tr>
+<tr id="rowhz003"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="phz003"><a name="phz003"></a><a name="phz003"></a>--tls-cert-file</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="phz003b"><a name="phz003b"></a><a name="phz003b"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="phz003c"><a name="phz003c"></a><a name="phz003c"></a>""</p>
+</td>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="phz003d"><a name="phz003d"></a><a name="phz003d"></a>HTTPS 证书文件路径。为空则使用 HTTP 协议。与 --tls-private-key-file 必须同时配置或同时为空。配置方法及安全注意事项请参见<a href="../../../06_references/security_hardening.md#健康探针安全加固">健康探针安全加固</a>。</p>
+</td>
+</tr>
+<tr id="rowhz004"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="phz004"><a name="phz004"></a><a name="phz004"></a>--tls-private-key-file</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="phz004b"><a name="phz004b"></a><a name="phz004b"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="phz004c"><a name="phz004c"></a><a name="phz004c"></a>""</p>
+</td>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="phz004d"><a name="phz004d"></a><a name="phz004d"></a>HTTPS 私钥文件路径。为空则使用 HTTP 协议。与 --tls-cert-file 必须同时配置或同时为空。</p>
+</td>
+</tr>
 <tr id="row10282191492316"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p4283714172316"><a name="p4283714172316"></a><a name="p4283714172316"></a>-h或者-help</p>
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p82838147233"><a name="p82838147233"></a><a name="p82838147233"></a>无</p>
