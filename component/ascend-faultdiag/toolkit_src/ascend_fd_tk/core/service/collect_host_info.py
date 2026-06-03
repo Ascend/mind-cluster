@@ -16,15 +16,10 @@
 # ==============================================================================
 
 from ascend_fd_tk.core.collect.collector.host_collector import HostCollector
-from ascend_fd_tk.core.context.diag_ctx import DiagCtx
 from ascend_fd_tk.core.service.base import DiagService
 
 
 class CollectHostsInfo(DiagService):
-
-    def __init__(self, diag_ctx: DiagCtx):
-        super().__init__(diag_ctx)
-
     async def run(self):
         if not self.diag_ctx.host_fetchers:
             return
@@ -33,4 +28,5 @@ class CollectHostsInfo(DiagService):
             async_tasks.append(HostCollector(fetcher).collect())
         for task in async_tasks:
             host_info = await task
+            self.diag_ctx.location_config.enrich_host_info(host_info)
             self.diag_ctx.cache.hosts_info.update({host_info.host_id: host_info})

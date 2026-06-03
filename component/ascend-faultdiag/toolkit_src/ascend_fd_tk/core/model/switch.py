@@ -27,8 +27,16 @@ from ascend_fd_tk.utils import helpers
 
 
 class InterfaceBrief(JsonObj):
-    def __init__(self, interface: str = "", phy: str = "", protocol: str = "", in_uti: str = "", out_uti: str = "",
-                 in_errors: str = "", out_errors: str = ""):
+    def __init__(
+        self,
+        interface: str = "",
+        phy: str = "",
+        protocol: str = "",
+        in_uti: str = "",
+        out_uti: str = "",
+        in_errors: str = "",
+        out_errors: str = "",
+    ):
         self.interface = interface
         self.phy = phy
         self.protocol = protocol
@@ -39,8 +47,16 @@ class InterfaceBrief(JsonObj):
 
 
 class OpticalModelBaseInfo(JsonObj):
-    def __init__(self, items: str = "", value: str = "", high_alarm: str = "", low_alarm: str = "", high_warn: str = "",
-                 low_warn: str = "", status: str = ""):
+    def __init__(
+        self,
+        items: str = "",
+        value: str = "",
+        high_alarm: str = "",
+        low_alarm: str = "",
+        high_warn: str = "",
+        low_warn: str = "",
+        status: str = "",
+    ):
         self.items = items
         self.value = value
         self.high_alarm = high_alarm
@@ -58,7 +74,6 @@ class OpticalModelBaseInfo(JsonObj):
 
 
 class OpticalStateFlagDiagInfo(JsonObj):
-
     def __init__(self, items="", status=""):
         self.items = items
         self.status = status
@@ -72,8 +87,12 @@ class SwiOpticalModel(JsonObj):
     _HOST_SNR = "HostSNR"
     _MAX_LANE_SIZE = 8
 
-    def __init__(self, interface_name: str = "", base_info: List[OpticalModelBaseInfo] = None,
-                 state_flag_diag_infos: List[OpticalStateFlagDiagInfo] = None):
+    def __init__(
+        self,
+        interface_name: str = "",
+        base_info: List[OpticalModelBaseInfo] = None,
+        state_flag_diag_infos: List[OpticalStateFlagDiagInfo] = None,
+    ):
         self.interface_name = interface_name
         self.base_info: List[OpticalModelBaseInfo] = base_info or []
         self.state_flag_diag_infos: List[OpticalStateFlagDiagInfo] = state_flag_diag_infos or []
@@ -121,9 +140,15 @@ class InterfaceMapping(JsonObj):
 
 
 class AlarmInfo(JsonObj):
-
-    def __init__(self, alarm_id: str = "", severity: str = "", date_time: str = "", description: str = "",
-                 start_time="", clear_time=""):
+    def __init__(
+        self,
+        alarm_id: str = "",
+        severity: str = "",
+        date_time: str = "",
+        description: str = "",
+        start_time="",
+        clear_time="",
+    ):
         self.alarm_id = alarm_id
         self.alarm_id_int = helpers.parse_hex(alarm_id)
         self.severity = severity
@@ -137,7 +162,6 @@ class AlarmInfo(JsonObj):
 
 
 class ManufactureInfo(JsonObj):
-
     def __init__(self, manu_serial_number=""):
         self.manu_serial_number = manu_serial_number
 
@@ -147,7 +171,6 @@ class ManufactureInfo(JsonObj):
 
 
 class TransceiverDiagInfo(JsonObj):
-
     def __init__(self, bias_current_m_a="", current_rx_power_d_bm="", current_tx_power_d_bm=""):
         self.bias_current_m_a = bias_current_m_a
         self.current_rx_power_d_bm = current_rx_power_d_bm
@@ -159,7 +182,6 @@ class TransceiverDiagInfo(JsonObj):
 
 
 class DiagEnhancedInfo(JsonObj):
-
     def __init__(self, odsp_junction_temperature_celsius="", optical_snr=""):
         self.odsp_junction_temperature_celsius = odsp_junction_temperature_celsius
         self.optical_snr = optical_snr
@@ -172,9 +194,13 @@ class DiagEnhancedInfo(JsonObj):
 class TransceiverInfo(JsonObj):
     _LANE_PATTERN = re.compile(r"([\d.-]{1,7})\|([\d.-]{1,7}) {1,7}\(Lane(\d{1,2})\|Lane(\d{1,2})\)")
 
-    def __init__(self, interface="", manufacture_information: ManufactureInfo = ManufactureInfo(),
-                 diagnostic_information: TransceiverDiagInfo = None,
-                 diagnostic_enhanced_information: DiagEnhancedInfo = None):
+    def __init__(
+        self,
+        interface="",
+        manufacture_information: ManufactureInfo = ManufactureInfo(),
+        diagnostic_information: TransceiverDiagInfo = None,
+        diagnostic_enhanced_information: DiagEnhancedInfo = None,
+    ):
         self.interface = interface
         self.manufacture_information = manufacture_information
         self.diagnostic_information = diagnostic_information
@@ -195,8 +221,12 @@ class TransceiverInfo(JsonObj):
         if self.diagnostic_enhanced_information:
             media_snrs = self._parse_lanes(self.diagnostic_enhanced_information.optical_snr)
 
-        lanes_map = {"bais_lanes": bais_lanes, "cur_tx_powers": cur_tx_powers, "cur_rx_powers": cur_rx_powers,
-                     "media_snrs": media_snrs}
+        lanes_map = {
+            "bais_lanes": bais_lanes,
+            "cur_tx_powers": cur_tx_powers,
+            "cur_rx_powers": cur_rx_powers,
+            "media_snrs": media_snrs,
+        }
         max_len = len(max(lanes_map.values(), key=len))
         max_len_lanes = {k: v for k, v in lanes_map.items() if len(v) == max_len}
         if not max_len_lanes:
@@ -232,7 +262,6 @@ class TransceiverInfo(JsonObj):
 
 
 class InterfaceInfo(JsonObj):
-
     def __init__(self, interface_name="", speed="", duplex=""):
         self.interface_name = interface_name
         self.speed = speed
@@ -244,17 +273,19 @@ class InterfaceInfo(JsonObj):
 
 
 class InterfaceFullInfo(JsonObj, OpticalModule):
-
-    def __init__(self, interface: str,
-                 device_sn: str = "",
-                 device_id: str = "",
-                 device_name: str = "",
-                 interface_info: InterfaceInfo = None,
-                 transceiver_info: TransceiverInfo = None,
-                 interface_mapping: InterfaceMapping = None,
-                 bit_err_rate: BitErrRate = None,
-                 swi_optical_model: SwiOpticalModel = None,
-                 interface_brief: InterfaceBrief = None):
+    def __init__(
+        self,
+        interface: str,
+        device_sn: str = "",
+        device_id: str = "",
+        device_name: str = "",
+        interface_info: InterfaceInfo = None,
+        transceiver_info: TransceiverInfo = None,
+        interface_mapping: InterfaceMapping = None,
+        bit_err_rate: BitErrRate = None,
+        swi_optical_model: SwiOpticalModel = None,
+        interface_brief: InterfaceBrief = None,
+    ):
         self.interface = interface
         self.device_name = device_name
         self.device_id = device_id
@@ -275,8 +306,9 @@ class InterfaceFullInfo(JsonObj, OpticalModule):
         lane_power_infos = self.swi_optical_model and self.swi_optical_model.get_lane_power_infos()
         if not lane_power_infos:
             lane_power_infos = self.transceiver_info.get_lane_power_infos()
-        self._optical_module_info = OpticalModuleInfo(lane_power_infos, self.transceiver_info and
-                                                      self.transceiver_info.manufacture_information.manu_serial_number)
+        self._optical_module_info = OpticalModuleInfo(
+            lane_power_infos, self.transceiver_info and self.transceiver_info.manufacture_information.manu_serial_number
+        )
         return self._optical_module_info
 
     def get_inspection_interface_info(self) -> InspectionInterfaceInfo:
@@ -285,7 +317,7 @@ class InterfaceFullInfo(JsonObj, OpticalModule):
             device_id=self.device_id,
             device_sn=self.device_sn,
             interface=self.interface,
-            interface_sn=self._get_sn_num()
+            interface_sn=self._get_sn_num(),
         )
 
     def _get_sn_num(self):
@@ -302,7 +334,6 @@ class PortMapping(JsonObj):
 
 
 class PortDownStatusLaneInfo(JsonObj):
-
     def __init__(self, lane_id="", snr="", data_rate="", tx_amp_ctl_en="", los_status=""):
         self.lane_id = lane_id
         self.snr = snr
@@ -320,9 +351,15 @@ class PortDownStatusLaneInfo(JsonObj):
 
 
 class PortDownStatus(JsonObj):
-
-    def __init__(self, swi_chip_id="", port_id="", date="", crc_error_cnt="", frc_error_cnt="",
-                 lane_infos: List[PortDownStatusLaneInfo] = None):
+    def __init__(
+        self,
+        swi_chip_id="",
+        port_id="",
+        date="",
+        crc_error_cnt="",
+        frc_error_cnt="",
+        lane_infos: List[PortDownStatusLaneInfo] = None,
+    ):
         self.swi_chip_id = swi_chip_id
         self.port_id = port_id
         self.date = date
@@ -332,19 +369,29 @@ class PortDownStatus(JsonObj):
 
 
 class SwitchInfo(JsonObj):
-    def __init__(self, name: str, swi_id: str, sn="", optical_models: List[SwiOpticalModel] = None,
-                 interface_briefs: List[InterfaceBrief] = None,
-                 interface_mapping: List[InterfaceMapping] = None,
-                 active_alarm_info: List[AlarmInfo] = None,
-                 history_alarm_info: List[AlarmInfo] = None,
-                 interface_info: List[InterfaceInfo] = None,
-                 hccs_info: HccsInfo = None,
-                 date_time: str = "",
-                 bit_error_rate: List[BitErrRate] = None,
-                 transceiver_infos: List[TransceiverInfo] = None):
+    def __init__(
+        self,
+        name: str,
+        swi_id: str,
+        sn="",
+        room_name="",
+        cabinet_id="",
+        optical_models: List[SwiOpticalModel] = None,
+        interface_briefs: List[InterfaceBrief] = None,
+        interface_mapping: List[InterfaceMapping] = None,
+        active_alarm_info: List[AlarmInfo] = None,
+        history_alarm_info: List[AlarmInfo] = None,
+        interface_info: List[InterfaceInfo] = None,
+        hccs_info: HccsInfo = None,
+        date_time: str = "",
+        bit_error_rate: List[BitErrRate] = None,
+        transceiver_infos: List[TransceiverInfo] = None,
+    ):
         self.sn = sn
         self.name = name
         self.swi_id = swi_id  # 设备的唯一标志, 可以是IP, 名称, SN号
+        self.room_name = room_name
+        self.cabinet_id = cabinet_id
         self.optical_models = optical_models or []
         self.interface_briefs = interface_briefs or []
         self.interface_mapping = interface_mapping or []
@@ -369,17 +416,22 @@ class SwitchInfo(JsonObj):
                 device_id=self.swi_id,
                 device_sn=self.sn,
                 device_name=self.name,
-                interface_info=list_tool.find_first(self.interface_info,
-                                                    lambda info: info.interface_name == interface),
-                transceiver_info=list_tool.find_first(self.transceiver_infos,
-                                                      lambda info: info.interface == interface),
-                interface_mapping=list_tool.find_first(self.interface_mapping,
-                                                       lambda info: info.local_interface_name == interface),
-                bit_err_rate=list_tool.find_first(self.bit_error_rate,
-                                                  lambda rate: rate.interface_name == interface),
-                swi_optical_model=list_tool.find_first(self.optical_models,
-                                                       lambda rate: rate.interface_name == interface),
-                interface_brief=interface_brief
+                interface_info=list_tool.find_first(
+                    self.interface_info, lambda info, iface=interface: info.interface_name == iface
+                ),
+                transceiver_info=list_tool.find_first(
+                    self.transceiver_infos, lambda info, iface=interface: info.interface == iface
+                ),
+                interface_mapping=list_tool.find_first(
+                    self.interface_mapping, lambda info, iface=interface: info.local_interface_name == iface
+                ),
+                bit_err_rate=list_tool.find_first(
+                    self.bit_error_rate, lambda rate, iface=interface: rate.interface_name == iface
+                ),
+                swi_optical_model=list_tool.find_first(
+                    self.optical_models, lambda rate, iface=interface: rate.interface_name == iface
+                ),
+                interface_brief=interface_brief,
             )
             interface_full_info[interface] = full_info
         self._interface_full_infos = interface_full_info

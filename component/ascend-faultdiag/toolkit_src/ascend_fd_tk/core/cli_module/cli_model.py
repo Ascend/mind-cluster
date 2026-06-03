@@ -39,9 +39,6 @@ _CONSOLE_LOGGER = logger.CONSOLE_LOGGER
 class HelpCliModel(CliModel):
     _SPACE_SIZE = 6
 
-    def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
-        super().__init__(diag_ctx, cli_ctx)
-
     @classmethod
     def get_key(cls) -> str:
         return "help"
@@ -59,9 +56,6 @@ class HelpCliModel(CliModel):
 
 
 class ExitCliModel(CliModel):
-    def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
-        super().__init__(diag_ctx, cli_ctx)
-
     @classmethod
     def get_key(cls) -> str:
         return "exit"
@@ -75,9 +69,6 @@ class ExitCliModel(CliModel):
 
 
 class ClearCliModel(CliModel):
-    def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
-        super().__init__(diag_ctx, cli_ctx)
-
     @classmethod
     def get_key(cls) -> str:
         return "clear"
@@ -86,14 +77,11 @@ class ClearCliModel(CliModel):
         return "清屏"
 
     def run_task(self, *args) -> str:
-        os.system('cls' if os.name == 'nt' else 'clear')
+        os.system('cls' if os.name == 'nt' else 'clear')  # nosec B605  硬编码命令，无注入风险
         return ""
 
 
 class AboutCliModel(CliModel):
-    def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
-        super().__init__(diag_ctx, cli_ctx)
-
     @classmethod
     def get_key(cls) -> str:
         return "about"
@@ -108,10 +96,6 @@ class AboutCliModel(CliModel):
 
 
 class GuideCliModel(CliModel):
-
-    def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
-        super().__init__(diag_ctx, cli_ctx)
-
     @classmethod
     def get_key(cls) -> str:
         return "guide"
@@ -123,43 +107,93 @@ class GuideCliModel(CliModel):
         return f"""
         一. 采集内容准备
         请根据故障设备自行按需选择要采集的设备信息或需要导入的日志，可以不导入全量设备信息或日志。按需设置以下在线或离线采集分析的任意地址。
-        
+
         1. 在线采集准备
         若需要在线采集设备信息，请使用 " {SetConnConfigCliModel.get_key()} " 命令设置设备信息，具体配置可使用" {SetConnConfigCliModel.get_key()} ? "查看详情
-        
+
         2. 离线日志解析准备
         2.1 设置服务器日志目录地址
         请使用 " {SetHostDumpLogDirCliModel.get_key()} " 命令设置设备信息，具体配置可使用" {SetHostDumpLogDirCliModel.get_key()} ? "查看详情
-        
+
         2.2 设置BMC日志目录地址
         请使用 " {SetBmcDumpLogDirCliModel.get_key()} " 命令设置设备信息，具体配置可使用" {SetBmcDumpLogDirCliModel.get_key()} ? "查看详情
-        
+
         2.2 设置交换机回显文本目录地址
         请使用 " {SetSwiDumpLogDirCliModel.get_key()} " 命令设置设备信息，具体配置可使用"{SetSwiDumpLogDirCliModel.get_key()} ? "查看详情
-        
+
         3. 默认读取路径
         当未手动设置以上文件或目录时,工具会自动读取执行路径下的以下默认文件或目录
         连接配置: conn.ini
         BMC日志目录: bmc_dump_log
         Host日志目录: host_dump_log
-        交换机日志目录: switch_dump_log        
-        
+        交换机日志目录: switch_dump_log
+
         二. 启动采集/分析 & 诊断
         执行 " {AutoCollectDiagCliModel.get_key()} " 启动在线采集/离线分析并诊断
-        
+
         三. 清理缓存
         本工具支持分批采集统一诊断，所以会单次诊断完后会留有缓存，若已完成诊断任务，请使用 " {ClearCacheCliModel.get_key()} " 清理缓存(若无法有效清理，请使用管理员模式打开工具)，避免影响下次诊断结果
- 
-        总结: 
+
+        总结:
         1. 先用 " {SetConnConfigCliModel.get_key()} " 设置要访问的设备ip配置文件或用 " {SetBmcDumpLogDirCliModel.get_key()} "，" {SetHostDumpLogDirCliModel.get_key()} "，" {SetSwiDumpLogDirCliModel.get_key()} "设置离线日志目录，或直接将日志放到默认目录下
-        2. 以上至少有一项设置存在即可使用 " {AutoCollectDiagCliModel.get_key()} " 采集/分析并诊断输出报告        
+        2. 以上至少有一项设置存在即可使用 " {AutoCollectDiagCliModel.get_key()} " 采集/分析并诊断输出报告
         """
 
 
-class SetConnConfigCliModel(DetailedCliModel):
-    def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
-        super().__init__(diag_ctx, cli_ctx)
+class SetConfigDirCliModel(DetailedCliModel):
+    @staticmethod
+    def is_support_param():
+        return True
 
+    @staticmethod
+    def check_input_path(*args) -> str:
+        if not args:
+            return "目录路径为空，请重新设置"
+        dir_path = convert_log_path(args[0])
+        if not dir_path:
+            return "目录%s不存在，请重新设置" % args[0]
+        if not os.path.isdir(dir_path):
+            return "路径%s不是目录，请重新设置" % args[0]
+        return ""
+
+    @classmethod
+    def get_key(cls) -> str:
+        return "set_config_dir"
+
+    def get_help(self) -> str:
+        return '设置配置文件目录路径，支持 " %s <目录路径> " 设置，或 " %s ? " 查看详情' % (
+            self.get_key(),
+            self.get_key(),
+        )
+
+    def get_detail(self) -> str:
+        return """
+        设置配置文件目录路径，目录中可包含以下配置文件：
+
+        1. 机房位置配置文件：LLD.xlsx
+           - "灵衢L1网络对应关系" Sheet：包含列 服务器、机房名称、机柜编号、L1名称、L1_IP
+           - "灵衢L2网络对应关系" Sheet：包含列 设备名、机房名称、机柜编号、管理IP配置
+
+        通过 " %s <目录路径> " 设置后，工具会自动扫描目录中的配置文件并加载
+        """ % self.get_key()
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "action",
+            metavar='actions',
+            help="?(%s)=查看%s详细信息；目录路径=设置配置文件目录路径" % ("？", self.get_key()),
+        )
+
+    def run_task(self, *args) -> str:
+        check_res = self.check_input_path(*args)
+        if check_res:
+            return check_res
+        dir_path = convert_log_path(args[0])
+        self.diag_ctx.read_from_dir(dir_path)
+        return f"设置成功，配置目录：{dir_path}"
+
+
+class SetConnConfigCliModel(DetailedCliModel):
     @staticmethod
     def is_support_param():
         return True
@@ -185,32 +219,33 @@ class SetConnConfigCliModel(DetailedCliModel):
     def get_detail(self) -> str:
         return f"""
         配置文件内容结构样例
-        ============== 样例开始 ============== 
-        
+        ============== 样例开始 ==============
+
         [host]
         # port指定端口，不写默认为22，username指定用户名，password指定密码，private_key指定私钥文件
         1.1.1.1 port="22" username="root" private_key="~/.shh/your_private_key"
-        1.1.2.1 port="22" username="root" password="321" 
-        
+        1.1.2.1 port="22" username="root" password="321"
+
         [bmc]
         1.1.1.2 username="Administrator" password="123"
-        
+
         [switch]
         # 支持ip1-ip2 ip段方式填写(需保证账号密码相同)，通过step设置步长，如1.1.1.1-1.1.1.5 step=2 则得到1.1.1.1, 1.1.1.3, 1.1.1.5
         1.1.1.3-1.1.1.10 step=1 username="root" password="123"
-        
+
         [config]
         # 支持设置全局的私钥文件
         private_key="~/.shh/your_private_key"
-        
+
         ============== 样例结束 ==============
-        
+
         请在本机根据以上文件内容结构，编写需要远程连接的设备信息，保存到文件中。通过 " {self.get_key()} <文件地址> " 设置该文件后，工具会在 " {AutoCollectDiagCliModel.get_key()} " 命令下自动登录设备在线采集信息
         """
 
     def add_arguments(self, parser):
-        parser.add_argument("action", metavar='actions',
-                            help=f"?(？)=查看{self.get_key()}详细信息；文件路径=设置连接配置文件路径")
+        parser.add_argument(
+            "action", metavar='actions', help=f"?(？)=查看{self.get_key()}详细信息；文件路径=设置连接配置文件路径"
+        )
 
     def run_task(self, *args) -> str:
         check_res = self.check_input_path(*args)
@@ -226,10 +261,6 @@ class SetConnConfigCliModel(DetailedCliModel):
 
 
 class SetHostDumpLogDirCliModel(DetailedCliModel):
-
-    def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
-        super().__init__(diag_ctx, cli_ctx)
-
     @staticmethod
     def is_support_param():
         return True
@@ -242,8 +273,12 @@ class SetHostDumpLogDirCliModel(DetailedCliModel):
         return f'设置服务器导出日志目录，支持 " {self.get_key()} <目录> " 设置目录，或 " {self.get_key()} ? " 查看详情'
 
     def add_arguments(self, parser):
-        parser.add_argument("action", nargs='?', metavar='actions',
-                            help=f"?(？)=查看{self.get_key()}详细信息；文件路径=设置服务器导出日志目录")
+        parser.add_argument(
+            "action",
+            nargs='?',
+            metavar='actions',
+            help=f"?(？)=查看{self.get_key()}详细信息；文件路径=设置服务器导出日志目录",
+        )
 
     def get_detail(self) -> str:
         return f"""
@@ -251,7 +286,7 @@ class SetHostDumpLogDirCliModel(DetailedCliModel):
         1. A3device日志一键采集脚本<version>.sh
         2. link_down_collect_<version>.sh
         3. tool_log_collection_out_version_all_<version>.sh (以上脚本获取请联系昇腾维护，或@wang-ruiju)
-                
+
         通过以上方式采集的日志压缩包，统一放到一个目录中，通过此命令 " {self.get_key()} <目录> " 设置目录，工具会在 " {AutoCollectDiagCliModel.get_key()} " 命令下自动解压分析日志信息
         """
 
@@ -264,10 +299,6 @@ class SetHostDumpLogDirCliModel(DetailedCliModel):
 
 
 class SetBmcDumpLogDirCliModel(DetailedCliModel):
-
-    def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
-        super().__init__(diag_ctx, cli_ctx)
-
     @staticmethod
     def is_support_param():
         return True
@@ -280,15 +311,16 @@ class SetBmcDumpLogDirCliModel(DetailedCliModel):
         return f'设置BMC导出日志目录，支持 " {self.get_key()} <目录> " 设置目录，或 " {self.get_key()} ? " 查看详情'
 
     def add_arguments(self, parser):
-        parser.add_argument("action", nargs='?', metavar='actions',
-                            help=f"?(？)=查看{self.get_key()}详细信息；文件路径=设置MBC日志目录")
+        parser.add_argument(
+            "action", nargs='?', metavar='actions', help=f"?(？)=查看{self.get_key()}详细信息；文件路径=设置MBC日志目录"
+        )
 
     def get_detail(self) -> str:
         return f"""
         设置BMC导出日志目录，支持以下方式导出的日志tar.gz包
         1. 手动通过bmc网页 '一键收集' 按钮下载
         2. 通过命令 `ipmcget -d diaginfo` 采集的日志
-        
+
         通过以上方式采集的日志压缩包，统一放到一个目录中，通过此命令 " {self.get_key()} <目录> " 设置目录，工具会在 " {AutoCollectDiagCliModel.get_key()} " 命令下自动解压分析日志信息
         """
 
@@ -301,10 +333,6 @@ class SetBmcDumpLogDirCliModel(DetailedCliModel):
 
 
 class SetSwiDumpLogDirCliModel(DetailedCliModel):
-
-    def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
-        super().__init__(diag_ctx, cli_ctx)
-
     @staticmethod
     def is_support_param():
         return True
@@ -314,18 +342,24 @@ class SetSwiDumpLogDirCliModel(DetailedCliModel):
         return "set_switch_dump_log"
 
     def get_help(self) -> str:
-        return f'设置交换机命令回显导出目录，支持 " {self.get_key()} <目录> " 设置目录，或 " {self.get_key()} ? " 查看详情'
+        return (
+            f'设置交换机命令回显导出目录，支持 " {self.get_key()} <目录> " 设置目录，或 " {self.get_key()} ? " 查看详情'
+        )
 
     def add_arguments(self, parser):
-        parser.add_argument("action", nargs='?', metavar='actions',
-                            help=f"?(？)=查看{self.get_key()}详细信息；文件路径=设置交换机日志目录")
+        parser.add_argument(
+            "action",
+            nargs='?',
+            metavar='actions',
+            help=f"?(？)=查看{self.get_key()}详细信息；文件路径=设置交换机日志目录",
+        )
 
     def get_detail(self) -> str:
         return f"""
         设置交换机命令回显/日志导出目录，支持以下方式导出的信息(当前仅支持华为交换机)
         1. 使用交换机 ' display diagnostic-information <filename> ' 命令导出命令回显结果集(推荐，信息较全)
         2. 查询关键命令后直接复制shell回显页面，导出文本文件(必须执行display current-configuration获取交换机信息，否则工具无法匹配)
-        3. 使用交换机 ' collect diagnostic-information ' 命令导出的日志zip包 
+        3. 使用交换机 ' collect diagnostic-information ' 命令导出的日志zip包
         将以上方式采集的文本文件统一放到一个目录中，通过此命令 " {self.get_key()} <目录> " 设置目录，工具会在 " {AutoCollectDiagCliModel.get_key()} " 命令下自动分析文本信息
         """
 
@@ -338,10 +372,6 @@ class SetSwiDumpLogDirCliModel(DetailedCliModel):
 
 
 class CollectBmcDumpInfoLog(CliModel):
-
-    def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
-        super().__init__(diag_ctx, cli_ctx)
-
     @classmethod
     def get_key(cls) -> str:
         return "collect_bmc_dump_info"
@@ -355,10 +385,6 @@ class CollectBmcDumpInfoLog(CliModel):
 
 
 class AutoCollectCliModel(DetailedCliModel):
-
-    def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
-        super().__init__(diag_ctx, cli_ctx)
-
     @classmethod
     def get_key(cls) -> str:
         return "auto_collect"
@@ -366,6 +392,7 @@ class AutoCollectCliModel(DetailedCliModel):
     def get_help(self) -> str:
         return "启动自动信息采集，支持离线、在线采集，适用于不同网络平面分批收集"
 
+    # pylint: disable=useless-parent-delegation  # 父类是抽象方法，子类必须实现
     def get_detail(self) -> str:
         return super().get_detail()
 
@@ -375,10 +402,6 @@ class AutoCollectCliModel(DetailedCliModel):
 
 
 class AutoInspection(DetailedCliModel):
-
-    def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
-        super().__init__(diag_ctx, cli_ctx)
-
     @classmethod
     def get_key(cls) -> str:
         return "auto_inspection"
@@ -387,6 +410,7 @@ class AutoInspection(DetailedCliModel):
         return "启动巡检结果诊断，适用于分批收集后统一诊断"
 
     def get_detail(self) -> str:
+        # pylint: disable=useless-parent-delegation
         all_customer_types = "\n".join(customer.value for customer in list(Customer))
         return f"""
         使用 " auto_collect " 完成后，启动该命令进行巡检结果诊断。
@@ -396,9 +420,13 @@ class AutoInspection(DetailedCliModel):
         """
 
     def add_arguments(self, parser):
-        parser.add_argument("action", nargs='?', choices=['?', '？'] + [member.value for member in Customer],
-                            metavar='actions',
-                            help=f"?(？)=查看{self.get_key()}详细信息；客户类型=指定客户类型；无参数=采用默认客户类型")
+        parser.add_argument(
+            "action",
+            nargs='?',
+            choices=['?', '？'] + [member.value for member in Customer],
+            metavar='actions',
+            help=f"?(？)=查看{self.get_key()}详细信息；客户类型=指定客户类型；无参数=采用默认客户类型",
+        )
 
     def run_task(self, *args) -> str:
         if not args:
@@ -413,10 +441,6 @@ class AutoInspection(DetailedCliModel):
 
 
 class AutoDiagCliModel(DetailedCliModel):
-
-    def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
-        super().__init__(diag_ctx, cli_ctx)
-
     @classmethod
     def get_key(cls) -> str:
         return "auto_diag"
@@ -424,6 +448,7 @@ class AutoDiagCliModel(DetailedCliModel):
     def get_help(self) -> str:
         return "启动自动诊断，适用于分批收集后统一诊断"
 
+    # pylint: disable=useless-parent-delegation  # 父类是抽象方法，子类必须实现
     def get_detail(self) -> str:
         return super().get_detail()
 
@@ -437,10 +462,6 @@ class AutoDiagCliModel(DetailedCliModel):
 
 
 class AutoCollectDiagCliModel(CliModel):
-
-    def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
-        super().__init__(diag_ctx, cli_ctx)
-
     @classmethod
     def get_key(cls) -> str:
         return "auto_collect_diag"
@@ -459,10 +480,6 @@ class AutoCollectDiagCliModel(CliModel):
 
 
 class ClearCacheCliModel(CliModel):
-
-    def __init__(self, diag_ctx: DiagCtx, cli_ctx: CliCtx):
-        super().__init__(diag_ctx, cli_ctx)
-
     @classmethod
     def get_key(cls) -> str:
         return "clear_cache"

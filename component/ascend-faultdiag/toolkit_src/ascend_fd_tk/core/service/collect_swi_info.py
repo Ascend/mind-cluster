@@ -17,14 +17,10 @@
 import asyncio
 
 from ascend_fd_tk.core.collect.collector.switch_collector import SwitchCollector
-from ascend_fd_tk.core.context.diag_ctx import DiagCtx
 from ascend_fd_tk.core.service.base import DiagService
 
 
 class CollectSwiInfo(DiagService):
-    def __init__(self, diag_ctx: DiagCtx):
-        super().__init__(diag_ctx)
-
     async def run(self):
         if not self.diag_ctx.switch_fetchers:
             return
@@ -34,5 +30,6 @@ class CollectSwiInfo(DiagService):
         switch_info_list = await asyncio.gather(*async_tasks)
         switch_info_dict = {}
         for switch_info in switch_info_list:
+            self.diag_ctx.location_config.enrich_switch_info(switch_info)
             switch_info_dict.update({switch_info.swi_id: switch_info})
         self.diag_ctx.cache.swis_info = switch_info_dict

@@ -47,6 +47,8 @@ class HostReportData(DiagReportData):
     sn_num: str = ""  # 主机SN
     npu_id: str = ""  # NPU ID
     chip_phy_id: str = ""  # 物理芯片ID
+    room_name: str = ""  # 机房名称
+    cabinet_id: str = ""  # 机柜编号
 
 
 @dataclass
@@ -67,6 +69,8 @@ class SwitchReportData(DiagReportData):
     sn_num: str = ""  # 交换机SN
     swi_name: str = ""  # 交换机名
     interface: str = ""  # 交换机端口
+    room_name: str = ""  # 机房名称
+    cabinet_id: str = ""  # 机柜编号
 
 
 class DiagReportSheetGenerator(BaseSheetGenerator):
@@ -111,11 +115,13 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
                 "host_id": "主机ID",
                 "hostname": "主机名",
                 "sn_num": "SN",
+                "room_name": "机房名称",
+                "cabinet_id": "机柜编号",
                 "npu_id": "NPU ID",
                 "chip_phy_id": "物理芯片ID",
                 **base_mapping,
             }
-            merge_columns.extend(["主机ID", "主机名", "SN", "NPU ID", "物理芯片ID"])
+            merge_columns.extend(["主机ID", "主机名", "SN", "机房名称", "机柜编号", "NPU ID", "物理芯片ID"])
         elif sheet_type == constants.FAULT_TYPE_BMC:
             header_mapping = {
                 "bmc_id": "BMC ID",
@@ -130,10 +136,12 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
                 "swi_name": "交换机名称",
                 "swi_id": "交换机ID",
                 "sn_num": "SN",
+                "room_name": "机房名称",
+                "cabinet_id": "机柜编号",
                 "interface": "端口",
                 **base_mapping,
             }
-            merge_columns.extend(["交换机名称", "交换机ID", "SN", "端口"])
+            merge_columns.extend(["交换机名称", "交换机ID", "SN", "机房名称", "机柜编号", "端口"])
         else:
             header_mapping = base_mapping
         return header_mapping, merge_columns
@@ -209,6 +217,8 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         if host_info:
             data.hostname = host_info.hostname
             data.sn_num = host_info.sn_num
+            data.room_name = host_info.room_name
+            data.cabinet_id = host_info.cabinet_id
         return data
 
     def _get_bmc_sheet_data(self, diag_result: DiagResult) -> BmcReportData:
@@ -231,4 +241,6 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         if swi_info:
             data.sn_num = swi_info.sn
             data.swi_name = swi_info.name
+            data.room_name = swi_info.room_name
+            data.cabinet_id = swi_info.cabinet_id
         return data

@@ -19,7 +19,6 @@ import os.path
 import time
 
 from ascend_fd_tk.core.common.path import CommonPath
-from ascend_fd_tk.core.context.diag_ctx import DiagCtx
 from ascend_fd_tk.core.service.base import DiagService
 from ascend_fd_tk.utils.logger import DIAG_LOGGER
 from ascend_fd_tk.utils.excel_tool import ExcelGenerator
@@ -29,17 +28,14 @@ from ascend_fd_tk.core.report.sheet.switch_optical_module_sheet import SwitchOpt
 
 
 class GenerateDiagReport(DiagService):
-    def __init__(self, diag_ctx: DiagCtx):
-        super().__init__(diag_ctx)
-
     @staticmethod
     def _open_excel_windows(file_path):
         """在 Windows 系统上打开 Excel 文件"""
         if os.name == 'nt':  # Windows
             try:
-                os.startfile(file_path)
+                os.startfile(file_path)  # pylint: disable=no-member
             except Exception as e:
-                DIAG_LOGGER.error(f"打开文件失败：{e}")
+                DIAG_LOGGER.error("打开文件失败：%s", str(e))
 
     async def run(self):
         # 收集诊断结果
@@ -65,7 +61,7 @@ class GenerateDiagReport(DiagService):
             diag_report_sheet = DiagReportSheetGenerator(
                 cluster_info=self.diag_ctx.cache,
                 excel_gen=excel_gen,
-                diag_results=diag_results
+                diag_results=diag_results,
             )
             diag_report_sheet.generate_sheet()
 
@@ -73,7 +69,7 @@ class GenerateDiagReport(DiagService):
             DIAG_LOGGER.info("正在生成光模块信息Sheet...")
             optical_module_sheet = HostToSwitchOpticalModuleSheetGenerator(
                 cluster_info=self.diag_ctx.cache,
-                excel_gen=excel_gen
+                excel_gen=excel_gen,
             )
             optical_module_sheet.generate_sheet()
 
@@ -81,19 +77,19 @@ class GenerateDiagReport(DiagService):
             DIAG_LOGGER.info("正在生成交换机间端口连接光模块信息Sheet...")
             switch_optical_module_sheet = SwitchOpticalModuleSheetGenerator(
                 cluster_info=self.diag_ctx.cache,
-                excel_gen=excel_gen
+                excel_gen=excel_gen,
             )
             switch_optical_module_sheet.generate_sheet()
 
             # 保存Excel文件
-            DIAG_LOGGER.info(f"正在保存诊断报告到：{excel_file_path}...")
+            DIAG_LOGGER.info("正在保存诊断报告到：%s...", excel_file_path)
             excel_gen.generate_excel(excel_file_path)
 
-            DIAG_LOGGER.info(f"诊断报告生成完成：{excel_file_path}")
+            DIAG_LOGGER.info("诊断报告生成完成：%s", excel_file_path)
 
             # 尝试打开Excel文件
             self._open_excel_windows(excel_file_path)
 
         except Exception as e:
-            DIAG_LOGGER.error(f"生成诊断报告失败：{e}")
+            DIAG_LOGGER.error("生成诊断报告失败：%s", str(e))
             raise e

@@ -35,6 +35,8 @@ class SwitchOpticalModuleData:
     local_switch_id: str
     local_switch_sn: str
     local_interface: str
+    local_room_name: str = ""
+    local_cabinet_id: str = ""
 
     # 本端光模块信息
     local_optical_vendor: str = ""
@@ -61,6 +63,8 @@ class SwitchOpticalModuleData:
     peer_switch_id: str = ""
     peer_switch_sn: str = ""
     peer_interface: str = ""
+    peer_room_name: str = ""
+    peer_cabinet_id: str = ""
 
     # 对端光模块信息
     peer_optical_vendor: str = ""
@@ -136,6 +140,8 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "local_switch_id": "本端交换机ID",
             "local_switch_sn": "本端交换机SN",
             "local_interface": "本端接口",
+            "local_room_name": "机房名称",
+            "local_cabinet_id": "机柜编号",
             # 本端光模块信息
             "local_optical_vendor": "本端光模块厂商",
             "local_optical_model": "本端光模块型号",
@@ -159,6 +165,8 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "peer_switch_id": "对端交换机ID",
             "peer_switch_sn": "对端交换机SN",
             "peer_interface": "对端接口",
+            "peer_room_name": "对端机房名称",
+            "peer_cabinet_id": "对端机柜编号",
             # 对端光模块信息
             "peer_optical_vendor": "对端光模块厂商",
             "peer_optical_model": "对端光模块型号",
@@ -187,6 +195,8 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     "本端交换机ID",
                     "本端交换机SN",
                     "本端接口",
+                    "机房名称",
+                    "机柜编号",
                     "本端光模块厂商",
                     "本端光模块型号",
                     "本端光模块SN",
@@ -209,6 +219,8 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     "对端交换机ID",
                     "对端交换机SN",
                     "对端接口",
+                    "对端机房名称",
+                    "对端机柜编号",
                     "对端光模块厂商",
                     "对端光模块型号",
                     "对端光模块SN",
@@ -328,6 +340,8 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     local_switch_id=switch_info.swi_id,
                     local_switch_sn=switch_info.sn,
                     local_interface=local_interface,
+                    local_room_name=switch_info.room_name or "",
+                    local_cabinet_id=switch_info.cabinet_id or "",
                     # 本端光模块信息
                     local_optical_vendor=local_optical_data.get("optical_vendor", ""),
                     local_optical_model=local_optical_data.get("optical_model", ""),
@@ -351,6 +365,8 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     peer_switch_id=peer_switch.swi_id if peer_switch else "",
                     peer_switch_sn=peer_switch.sn if peer_switch else "",
                     peer_interface=peer_interface,
+                    peer_room_name=peer_switch.room_name if peer_switch else "",
+                    peer_cabinet_id=peer_switch.cabinet_id if peer_switch else "",
                     # 对端光模块信息
                     peer_optical_vendor=peer_optical_data.get("optical_vendor", ""),
                     peer_optical_model=peer_optical_data.get("optical_model", ""),

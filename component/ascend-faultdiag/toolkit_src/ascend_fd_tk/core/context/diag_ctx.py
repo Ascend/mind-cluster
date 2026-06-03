@@ -28,6 +28,7 @@ from ascend_fd_tk.core.common.constants import CPU_UTILIZATION_RATIO
 from ascend_fd_tk.core.common.path import CommonPath, ConfigPath
 from ascend_fd_tk.core.config.conn_config import DeviceConfigParser
 from ascend_fd_tk.core.config.dump_log_dir_config import DumpLogDirConfig
+from ascend_fd_tk.core.config.location_config import LocationConfig, LldConfigReader
 from ascend_fd_tk.core.config.tool_config import ToolConfig
 from ascend_fd_tk.core.crypto.crypto import RootKeyCrypto
 from ascend_fd_tk.core.crypto.key_generator import KeyGenerator
@@ -39,10 +40,10 @@ from ascend_fd_tk.utils.file_tool import convert_log_path
 
 
 class DiagCtx:
-
     def __init__(self):
         self.conn_config = None
         self.dump_log_dir_config = DumpLogDirConfig()
+        self.location_config = LocationConfig()
         self.tool_config = ToolConfig()
         self.host_fetchers: Dict[str, HostFetcher] = {}
         self.switch_fetchers: Dict[str, SwitchFetcher] = {}
@@ -64,7 +65,7 @@ class DiagCtx:
     def encrypt_conn_config(self, config_path=CommonPath.CUR_PATH_CONN_CONFIG_PATH):
         config_abs_path = convert_log_path(config_path) or convert_log_path(ConfigPath.CONN_CONFIG_DEFAULT_PATH)
         # 读取配置文件内容
-        with open(config_abs_path, 'r') as f:
+        with open(config_abs_path, 'r', encoding='utf-8') as f:
             config_content = f.read()
 
         # 加密配置文件内容
@@ -75,7 +76,7 @@ class DiagCtx:
             os.makedirs(CommonPath.TOOL_HOME)
 
         # 保存加密后的配置到TOOL_HOME目录
-        with open(CommonPath.ENCRYPTED_CONN_CONFIG_PATH, 'w') as f:
+        with open(CommonPath.ENCRYPTED_CONN_CONFIG_PATH, 'w', encoding='utf-8') as f:
             f.write(encrypted_content)
 
     def load_conn_config(self):
@@ -84,7 +85,7 @@ class DiagCtx:
             return "加密配置文件不存在"
         try:
             # 从加密缓存加载
-            with open(conn_config_abs_path, 'r') as f:
+            with open(conn_config_abs_path, 'r', encoding='utf-8') as f:
                 encrypted_data = f.read()
             # 解密数据
             decrypted_data = self.crypto.decrypt_with_salt(encrypted_data)
@@ -94,3 +95,8 @@ class DiagCtx:
             return ""
         except Exception as e:
             return str(e)
+
+    def read_from_dir(self, dir_path: str):
+        config = LldConfigReader().read_from_dir(dir_path)
+        if config is not None:
+            self.location_config = config

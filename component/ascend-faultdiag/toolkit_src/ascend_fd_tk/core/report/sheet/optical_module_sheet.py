@@ -91,12 +91,16 @@ class HostToSwitchOpticalModuleData:
     host_media_snr_lane3: str  # 主机侧Media SNR Lane 3
 
     # 主机侧端口信息（有默认值的字段开始）
+    room_name: str = ""  # 机房名称
+    cabinet_id: str = ""  # 机柜编号
     host_port: str = ""  # 主机侧端口
 
     # 对端交换机信息
     peer_switch_name: str = ""  # 对端交换机名称
     peer_switch_id: str = ""  # 对端交换机ID
     peer_switch_sn: str = ""  # 对端交换机序列号
+    peer_switch_room_name: str = ""  # 对端交换机机房名称
+    peer_switch_cabinet_id: str = ""  # 对端交换机机柜编号
 
     # 对端交换机端口信息
     peer_switch_port: str = ""  # 对端交换机端口
@@ -142,6 +146,8 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "host_id": "主机ID",
             "host_name": "主机名",
             "host_sn": "主机SN",
+            "room_name": "机房名称",
+            "cabinet_id": "机柜编号",
             # NPU芯片信息
             "npu_id": "NPU ID",
             "chip_id": "芯片ID",
@@ -191,6 +197,8 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "peer_switch_name": "对端交换机名称",
             "peer_switch_id": "对端交换机ID",
             "peer_switch_sn": "对端交换机SN",
+            "peer_switch_room_name": "对端交换机机房名称",
+            "peer_switch_cabinet_id": "对端交换机机柜编号",
             # 对端交换机端口信息
             "peer_switch_port": "对端交换机端口",
             "peer_switch_port_speed": "对端交换机端口速度",
@@ -223,6 +231,8 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     "主机ID",
                     "主机名",
                     "主机SN",
+                    "机房名称",
+                    "机柜编号",
                     "NPU ID",
                     "芯片ID",
                     "物理芯片ID",
@@ -265,6 +275,8 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     "对端交换机名称",
                     "对端交换机ID",
                     "对端交换机SN",
+                    "对端交换机机房名称",
+                    "对端交换机机柜编号",
                     "对端交换机端口",
                     "对端交换机端口速度",
                     "对端交换机端口双工模式",
@@ -304,6 +316,8 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "host_id": host_id,
             "host_name": host_info.hostname or "",
             "host_sn": host_info.sn_num or "",
+            "room_name": host_info.room_name or "",
+            "cabinet_id": host_info.cabinet_id or "",
             "npu_id": npu_chip_info.npu_id or "",
             "chip_id": npu_chip_info.chip_id or "",
             "chip_phy_id": npu_chip_info.chip_phy_id or "",
@@ -321,7 +335,7 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "host_link_status": npu_chip_info.link_status or "",
             "host_link_up_count": getattr(link_stat_info, 'link_up_count', ""),
             "host_link_down_count": getattr(link_stat_info, 'link_down_count', ""),
-            **{k if k.startswith("host_") else f"host_{k}": v for k, v in lane_data.items()},
+            **lane_data,
         }
 
     def generate_sheet(self) -> None:
@@ -363,18 +377,18 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
         for i in range(self.LANE_NUM):
             if i < len(lane_infos):
                 lane = lane_infos[i]
-                lane_data[f"tx_power{i}"] = lane.tx_power or ""
-                lane_data[f"rx_power{i}"] = lane.rx_power or ""
-                lane_data[f"tx_bias{i}"] = lane.bias or ""
+                lane_data[f"host_tx_power{i}"] = lane.tx_power or ""
+                lane_data[f"host_rx_power{i}"] = lane.rx_power or ""
+                lane_data[f"host_tx_bias{i}"] = lane.bias or ""
                 lane_data[f"host_snr_lane{i}"] = lane.host_snr or ""
-                lane_data[f"media_snr_lane{i}"] = lane.media_snr or ""
+                lane_data[f"host_media_snr_lane{i}"] = lane.media_snr or ""
             else:
                 # 如果lane信息不足，使用空字符串填充
-                lane_data[f"tx_power{i}"] = ""
-                lane_data[f"rx_power{i}"] = ""
-                lane_data[f"tx_bias{i}"] = ""
+                lane_data[f"host_tx_power{i}"] = ""
+                lane_data[f"host_rx_power{i}"] = ""
+                lane_data[f"host_tx_bias{i}"] = ""
                 lane_data[f"host_snr_lane{i}"] = ""
-                lane_data[f"media_snr_lane{i}"] = ""
+                lane_data[f"host_media_snr_lane{i}"] = ""
         return lane_data
 
     def _get_peer_switch_info(self, npu_chip_info: NpuChipInfo):
@@ -398,6 +412,8 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
     def _build_peer_switch_data(self, peer_switch, peer_interface_info) -> Dict[str, str]:
         peer_switch_id = getattr(peer_switch, 'swi_id', "") if peer_switch else ""
         peer_switch_sn = getattr(peer_switch, 'sn', "") if peer_switch else ""
+        peer_switch_room_name = getattr(peer_switch, 'room_name', "") if peer_switch else ""
+        peer_switch_cabinet_id = getattr(peer_switch, 'cabinet_id', "") if peer_switch else ""
         peer_port_speed = ""
         peer_port_duplex = ""
         peer_port_status = ""
@@ -423,6 +439,8 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
         return {
             "peer_switch_id": peer_switch_id,
             "peer_switch_sn": peer_switch_sn,
+            "peer_switch_room_name": peer_switch_room_name,
+            "peer_switch_cabinet_id": peer_switch_cabinet_id,
             "peer_switch_port_speed": peer_port_speed,
             "peer_switch_port_duplex": peer_port_duplex,
             "peer_switch_port_status": peer_port_status,
