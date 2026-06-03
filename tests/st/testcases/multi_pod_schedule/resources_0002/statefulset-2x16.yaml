@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: default-test-statefulset
+  namespace: default
+spec:
+  clusterIP: None
+  selector:
+    deploy-name: default-test-statefulset-2pod-16npu
+  ports:
+    - port: 2222
+      name: ascendjob-port
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: default-test-statefulset-2pod-16npu
+  labels:
+    ring-controller.atlas: ascend-910b
+  annotations:
+    sp-block: "32"
+spec:
+  serviceName: default-test-statefulset
+  replicas: 2
+  selector:
+    matchLabels:
+      deploy-name: default-test-statefulset-2pod-16npu
+      ring-controller.atlas: ascend-910b
+  template:
+    metadata:
+      labels:
+        deploy-name: default-test-statefulset-2pod-16npu
+        ring-controller.atlas: ascend-910b
+    spec:
+      schedulerName: volcano
+      nodeSelector:
+        host-arch: huawei-arm
+        accelerator-type: module-a3-16-super-pod
+      containers:
+        - name: ascend # do not modify
+          image: ubuntu:22.04
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: XDL_IP                                       # IP address of the physical node, which is used to identify the node where the pod is running
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+                # ASCEND_VISIBLE_DEVICES env variable is used by ascend-docker-runtime when in the whole card scheduling scene with volcano scheduler. please delete it when in the static vNPU scheduling scene or without volcano.
+            - name: framework
+              value: "Pytorch"
+            - name: ASCEND_VISIBLE_DEVICES
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['huawei.com/Ascend910']               # The value must be the same as resources.request
+                # Memory simulation configuration
+            - name: PYTORCH_NPU_ALLOC_CONF
+              value: expandable_segments:False
+          command: # training command, which can be modified
+            - /bin/bash
+            - -c
+          args: [ "sleep 10000;" ]
+          ports: # default value containerPort: 2222 name: ascendjob-port if not set
+            - containerPort: 2222         # determined by user
+              name: ascendjob-port        # do not modify
+          resources:
+            limits:
+              huawei.com/Ascend910: 16
+            requests:
+              huawei.com/Ascend910: 16
+          volumeMounts:
+            - name: localtime
+              mountPath: /etc/localtime
+      volumes:
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
