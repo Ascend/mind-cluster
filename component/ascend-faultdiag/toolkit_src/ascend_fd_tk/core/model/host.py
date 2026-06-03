@@ -18,8 +18,14 @@
 import re
 from typing import List, Dict
 
-from ascend_fd_tk.core.common.constants import NPU_LINK_DOWN, NPU_LONG_DOWN_TIME, NPU_LINK_UP, HIGH_POWER_ENABLE, \
-    OP_PRESENT, OP_TX_DISABLE_STATUS
+from ascend_fd_tk.core.common.constants import (
+    NPU_LINK_DOWN,
+    NPU_LONG_DOWN_TIME,
+    NPU_LINK_UP,
+    HIGH_POWER_ENABLE,
+    OP_PRESENT,
+    OP_TX_DISABLE_STATUS,
+)
 from ascend_fd_tk.core.common.diag_enum import TimeFormat, PowerUnitType
 from ascend_fd_tk.core.common.json_obj import JsonObj
 from ascend_fd_tk.core.log_parser.base import FindResult
@@ -32,19 +38,56 @@ NUMERIC_PATTERN = re.compile(r'([+-]?\d*\.?\d+)')
 
 
 class HCCNOpticalInfo(JsonObj):
-
-    def __init__(self, present="", temperature="", high_power_enable_reg="", vendor_name="", vendor_part_number="",
-                 vendor_serial_number="", vendor_org_unique_id="", xsfp_identifier="", xsfp_wave_length="",
-                 manufact_date_code="", vcc="",
-                 tx_power0="", rx_power0="", tx_power1="", rx_power1="", tx_power2="", rx_power2="", tx_power3="",
-                 rx_power3="", vcc_high_thres="",
-                 vcc_low_thres="", temp_high_thres="", temp_low_thres="",
-                 tx_power_high_thres="", tx_power_low_thres="", rx_power_high_thres="", rx_power_low_thres="",
-                 tx_bias0="", tx_bias1="", tx_bias2="", tx_bias3="", tx_los_flag="",
-                 rx_los_flag="", tx_lo_l_flag="", rx_lo_l_flag="",
-                 host_snr_lane0="", host_snr_lane1="", host_snr_lane2="", host_snr_lane3="",
-                 media_snr_lane0="", media_snr_lane1="", media_snr_lane3="", media_snr_lane2="",
-                 physical_code="", vendor_rev="", specification_compliance="", control_link_unreachable=False):
+    def __init__(
+        self,
+        present="",
+        temperature="",
+        high_power_enable_reg="",
+        vendor_name="",
+        vendor_part_number="",
+        vendor_serial_number="",
+        vendor_org_unique_id="",
+        xsfp_identifier="",
+        xsfp_wave_length="",
+        manufact_date_code="",
+        vcc="",
+        tx_power0="",
+        rx_power0="",
+        tx_power1="",
+        rx_power1="",
+        tx_power2="",
+        rx_power2="",
+        tx_power3="",
+        rx_power3="",
+        vcc_high_thres="",
+        vcc_low_thres="",
+        temp_high_thres="",
+        temp_low_thres="",
+        tx_power_high_thres="",
+        tx_power_low_thres="",
+        rx_power_high_thres="",
+        rx_power_low_thres="",
+        tx_bias0="",
+        tx_bias1="",
+        tx_bias2="",
+        tx_bias3="",
+        tx_los_flag="",
+        rx_los_flag="",
+        tx_lo_l_flag="",
+        rx_lo_l_flag="",
+        host_snr_lane0="",
+        host_snr_lane1="",
+        host_snr_lane2="",
+        host_snr_lane3="",
+        media_snr_lane0="",
+        media_snr_lane1="",
+        media_snr_lane3="",
+        media_snr_lane2="",
+        physical_code="",
+        vendor_rev="",
+        specification_compliance="",
+        control_link_unreachable=False,
+    ):
         self.present = present
         self.temperature = self.extract_numeric_value(temperature)
         self.high_power_enable_reg = high_power_enable_reg
@@ -108,10 +151,12 @@ class HCCNOpticalInfo(JsonObj):
         return True
 
     def is_low_tx_power(self) -> bool:
-        return (self.tx_power0 < self.tx_power_low_thres
-                or self.tx_power1 < self.tx_power_low_thres
-                or self.tx_power2 < self.tx_power_low_thres
-                or self.tx_power3 < self.tx_power_low_thres)
+        return (
+            self.tx_power0 < self.tx_power_low_thres
+            or self.tx_power1 < self.tx_power_low_thres
+            or self.tx_power2 < self.tx_power_low_thres
+            or self.tx_power3 < self.tx_power_low_thres
+        )
 
     def is_high_power_enable(self) -> bool:
         return self.high_power_enable_reg == HIGH_POWER_ENABLE
@@ -254,14 +299,17 @@ class SpodInfo(JsonObj):
 
 
 class CdrSnrInfo(JsonObj):
-    def __init__(self, cdr_host_snr_lane1="",
-                 cdr_host_snr_lane2="",
-                 cdr_host_snr_lane3="",
-                 cdr_host_snr_lane4="",
-                 cdr_media_snr_lane1="",
-                 cdr_media_snr_lane2="",
-                 cdr_media_snr_lane3="",
-                 cdr_media_snr_lane4=""):
+    def __init__(
+        self,
+        cdr_host_snr_lane1="",
+        cdr_host_snr_lane2="",
+        cdr_host_snr_lane3="",
+        cdr_host_snr_lane4="",
+        cdr_media_snr_lane1="",
+        cdr_media_snr_lane2="",
+        cdr_media_snr_lane3="",
+        cdr_media_snr_lane4="",
+    ):
         self.cdr_host_snr_lane1 = cdr_host_snr_lane1
         self.cdr_host_snr_lane2 = cdr_host_snr_lane2
         self.cdr_host_snr_lane3 = cdr_host_snr_lane3
@@ -293,10 +341,21 @@ class CdrSnrInfo(JsonObj):
 
 
 class HCCNStatExtraInfo(JsonObj):
-
-    def __init__(self, cw_total_cnt="", cw_before_correct_cnt="", cw_correct_cnt="", cw_uncorrect_cnt="", cw_bad_cnt="",
-                 trans_total_bit="", cw_total_correct_bit="", rx_full_drop_cnt="", pcs_err_cnt="",
-                 rx_send_app_good_pkts="", rx_send_app_bad_pkts="", correcting_bit_rate=""):
+    def __init__(
+        self,
+        cw_total_cnt="",
+        cw_before_correct_cnt="",
+        cw_correct_cnt="",
+        cw_uncorrect_cnt="",
+        cw_bad_cnt="",
+        trans_total_bit="",
+        cw_total_correct_bit="",
+        rx_full_drop_cnt="",
+        pcs_err_cnt="",
+        rx_send_app_good_pkts="",
+        rx_send_app_bad_pkts="",
+        correcting_bit_rate="",
+    ):
         self.cw_total_cnt = cw_total_cnt
         self.cw_before_correct_cnt = cw_before_correct_cnt
         self.cw_correct_cnt = cw_correct_cnt
@@ -316,29 +375,57 @@ class HCCNStatExtraInfo(JsonObj):
 
 
 class HCCNStatInfo(JsonObj):
-
-    def __init__(self, mac_rx_mac_pause_num="", mac_tx_mac_pause_num="", mac_tx_pfc_pkt_num="",
-                 mac_tx_pfc_pri0_pkt_num="",
-                 mac_tx_pfc_pri1_pkt_num="", mac_tx_pfc_pri2_pkt_num="", mac_tx_pfc_pri3_pkt_num="",
-                 mac_tx_pfc_pri4_pkt_num="",
-                 mac_tx_pfc_pri5_pkt_num="", mac_tx_pfc_pri6_pkt_num="", mac_tx_pfc_pri7_pkt_num="",
-                 mac_rx_pfc_pkt_num="", mac_rx_pfc_pri0_pkt_num="", mac_rx_pfc_pri1_pkt_num="",
-                 mac_rx_pfc_pri2_pkt_num="",
-                 mac_rx_pfc_pri3_pkt_num="", mac_rx_pfc_pri4_pkt_num="", mac_rx_pfc_pri5_pkt_num="",
-                 mac_rx_pfc_pri6_pkt_num="",
-                 mac_rx_pfc_pri7_pkt_num="", mac_tx_total_pkt_num="", mac_tx_total_oct_num="", mac_tx_bad_pkt_num="",
-                 mac_tx_bad_oct_num="", mac_rx_total_pkt_num="", mac_rx_total_oct_num="", mac_rx_bad_pkt_num="",
-                 mac_rx_bad_oct_num="",
-                 max_rx_fcs_err_pkt_num="", roce_rx_rc_pkt_num="", roce_rx_all_pkt_num="", roce_rx_err_pkt_num="",
-                 roce_tx_rc_pkt_num="", roce_tx_all_pkt_num="", roce_tx_err_pkt_num="", roce_cqe_num="",
-                 roce_rx_cnp_pkt_num="",
-                 roce_tx_cnp_pkt_num="", roce_unexpected_ack_num="", roce_out_of_order_num="",
-                 roce_verificaton_err_num="",
-                 roce_qp_status_err_num="",
-                 roce_new_pkt_rty_num="", roce_ecn_db_num="", nic_tx_all_pkg_num="", nic_tx_all_oct_num="",
-                 nic_rx_all_pkg_num="",
-                 nic_rx_all_oct_num="",
-                 ):
+    def __init__(
+        self,
+        mac_rx_mac_pause_num="",
+        mac_tx_mac_pause_num="",
+        mac_tx_pfc_pkt_num="",
+        mac_tx_pfc_pri0_pkt_num="",
+        mac_tx_pfc_pri1_pkt_num="",
+        mac_tx_pfc_pri2_pkt_num="",
+        mac_tx_pfc_pri3_pkt_num="",
+        mac_tx_pfc_pri4_pkt_num="",
+        mac_tx_pfc_pri5_pkt_num="",
+        mac_tx_pfc_pri6_pkt_num="",
+        mac_tx_pfc_pri7_pkt_num="",
+        mac_rx_pfc_pkt_num="",
+        mac_rx_pfc_pri0_pkt_num="",
+        mac_rx_pfc_pri1_pkt_num="",
+        mac_rx_pfc_pri2_pkt_num="",
+        mac_rx_pfc_pri3_pkt_num="",
+        mac_rx_pfc_pri4_pkt_num="",
+        mac_rx_pfc_pri5_pkt_num="",
+        mac_rx_pfc_pri6_pkt_num="",
+        mac_rx_pfc_pri7_pkt_num="",
+        mac_tx_total_pkt_num="",
+        mac_tx_total_oct_num="",
+        mac_tx_bad_pkt_num="",
+        mac_tx_bad_oct_num="",
+        mac_rx_total_pkt_num="",
+        mac_rx_total_oct_num="",
+        mac_rx_bad_pkt_num="",
+        mac_rx_bad_oct_num="",
+        max_rx_fcs_err_pkt_num="",
+        roce_rx_rc_pkt_num="",
+        roce_rx_all_pkt_num="",
+        roce_rx_err_pkt_num="",
+        roce_tx_rc_pkt_num="",
+        roce_tx_all_pkt_num="",
+        roce_tx_err_pkt_num="",
+        roce_cqe_num="",
+        roce_rx_cnp_pkt_num="",
+        roce_tx_cnp_pkt_num="",
+        roce_unexpected_ack_num="",
+        roce_out_of_order_num="",
+        roce_verificaton_err_num="",
+        roce_qp_status_err_num="",
+        roce_new_pkt_rty_num="",
+        roce_ecn_db_num="",
+        nic_tx_all_pkg_num="",
+        nic_tx_all_oct_num="",
+        nic_rx_all_pkg_num="",
+        nic_rx_all_oct_num="",
+    ):
         self.mac_rx_mac_pause_num = mac_rx_mac_pause_num
         self.mac_tx_mac_pause_num = mac_tx_mac_pause_num
         self.mac_tx_pfc_pkt_num = mac_tx_pfc_pkt_num
@@ -419,17 +506,25 @@ class RfLfPcsLinkInfo(JsonObj):
 
 
 class NpuChipInfo(JsonObj, OpticalModule):
-
-    def __init__(self, hccn_lldp_info: HCCNLLDPInfo = None,
-                 hccn_optical_info: HCCNOpticalInfo = None,
-                 hccn_link_stat_info: HCCNLinkStatInfo = None,
-                 hccn_stat_info: HCCNStatInfo = None,
-                 hccn_dfx_cfg: HCCNDfxCfgInfo = None,
-                 hccs_info: HccnPortHccsInfo = None,
-                 spod_info: SpodInfo = None,
-                 cdr_snr_info: CdrSnrInfo = None,
-                 npu_type="", npu_id="", chip_id="", chip_phy_id="", speed="", duplex="", net_health="",
-                 link_status=""):
+    def __init__(
+        self,
+        hccn_lldp_info: HCCNLLDPInfo = None,
+        hccn_optical_info: HCCNOpticalInfo = None,
+        hccn_link_stat_info: HCCNLinkStatInfo = None,
+        hccn_stat_info: HCCNStatInfo = None,
+        hccn_dfx_cfg: HCCNDfxCfgInfo = None,
+        hccs_info: HccnPortHccsInfo = None,
+        spod_info: SpodInfo = None,
+        cdr_snr_info: CdrSnrInfo = None,
+        npu_type="",
+        npu_id="",
+        chip_id="",
+        chip_phy_id="",
+        speed="",
+        duplex="",
+        net_health="",
+        link_status="",
+    ):
         self.hccn_lldp_info = hccn_lldp_info
         self.hccn_optical_info = hccn_optical_info
         self.hccn_link_stat_info = hccn_link_stat_info
@@ -456,18 +551,42 @@ class NpuChipInfo(JsonObj, OpticalModule):
             return None
         op_info = self.hccn_optical_info
         lane_power_infos = [
-            LanePowerInfo("0", tx_power=op_info.tx_power0, rx_power=op_info.rx_power0, bias=op_info.tx_bias0,
-                          media_snr=op_info.media_snr_lane0, host_snr=op_info.host_snr_lane0,
-                          power_unit_type=PowerUnitType.MW),
-            LanePowerInfo("1", tx_power=op_info.tx_power1, rx_power=op_info.rx_power1, bias=op_info.tx_bias1,
-                          media_snr=op_info.media_snr_lane1, host_snr=op_info.host_snr_lane1,
-                          power_unit_type=PowerUnitType.MW),
-            LanePowerInfo("2", tx_power=op_info.tx_power2, rx_power=op_info.rx_power2, bias=op_info.tx_bias2,
-                          media_snr=op_info.media_snr_lane2, host_snr=op_info.host_snr_lane2,
-                          power_unit_type=PowerUnitType.MW),
-            LanePowerInfo("3", tx_power=op_info.tx_power3, rx_power=op_info.rx_power3, bias=op_info.tx_bias3,
-                          media_snr=op_info.media_snr_lane3, host_snr=op_info.host_snr_lane3,
-                          power_unit_type=PowerUnitType.MW),
+            LanePowerInfo(
+                "0",
+                tx_power=op_info.tx_power0,
+                rx_power=op_info.rx_power0,
+                bias=op_info.tx_bias0,
+                media_snr=op_info.media_snr_lane0,
+                host_snr=op_info.host_snr_lane0,
+                power_unit_type=PowerUnitType.MW,
+            ),
+            LanePowerInfo(
+                "1",
+                tx_power=op_info.tx_power1,
+                rx_power=op_info.rx_power1,
+                bias=op_info.tx_bias1,
+                media_snr=op_info.media_snr_lane1,
+                host_snr=op_info.host_snr_lane1,
+                power_unit_type=PowerUnitType.MW,
+            ),
+            LanePowerInfo(
+                "2",
+                tx_power=op_info.tx_power2,
+                rx_power=op_info.rx_power2,
+                bias=op_info.tx_bias2,
+                media_snr=op_info.media_snr_lane2,
+                host_snr=op_info.host_snr_lane2,
+                power_unit_type=PowerUnitType.MW,
+            ),
+            LanePowerInfo(
+                "3",
+                tx_power=op_info.tx_power3,
+                rx_power=op_info.rx_power3,
+                bias=op_info.tx_bias3,
+                media_snr=op_info.media_snr_lane3,
+                host_snr=op_info.host_snr_lane3,
+                power_unit_type=PowerUnitType.MW,
+            ),
         ]
         self._optical_module_info = OpticalModuleInfo(lane_power_infos, op_info.vendor_serial_number)
 
@@ -475,16 +594,22 @@ class NpuChipInfo(JsonObj, OpticalModule):
 
 
 class NpuChipLoopBackInfo(JsonObj):
-    def __init__(self, hccn_lldp_info: HCCNLLDPInfo = None,
-                 hccn_optical_info: HCCNOpticalInfo = None,
-                 spod_info: SpodInfo = None,
-                 host_input_link_stat: HCCNLinkStatInfo = None,
-                 media_output_link_stat: HCCNLinkStatInfo = None,
-                 host_input_enable=False,
-                 media_output_enable=False,
-                 host_output_enable=False,
-                 media_input_enable=False,
-                 npu_type="", npu_id="", chip_id="", chip_phy_id=""):
+    def __init__(
+        self,
+        hccn_lldp_info: HCCNLLDPInfo = None,
+        hccn_optical_info: HCCNOpticalInfo = None,
+        spod_info: SpodInfo = None,
+        host_input_link_stat: HCCNLinkStatInfo = None,
+        media_output_link_stat: HCCNLinkStatInfo = None,
+        host_input_enable=False,
+        media_output_enable=False,
+        host_output_enable=False,
+        media_input_enable=False,
+        npu_type="",
+        npu_id="",
+        chip_id="",
+        chip_phy_id="",
+    ):
         # 基本信息
         self.hccn_lldp_info = hccn_lldp_info
         self.hccn_optical_info = hccn_optical_info
@@ -504,13 +629,19 @@ class NpuChipLoopBackInfo(JsonObj):
 
 
 class NpuInfo(JsonObj):
-
-    def __init__(self, hccn_lldp_info: Dict[str, HCCNLLDPInfo], hccn_optical_info: Dict[str, HCCNOpticalInfo] = None,
-                 hccn_link_stat_info: Dict[str, HCCNLinkStatInfo] = None,
-                 hccn_stat_info: Dict[str, HCCNStatInfo] = None,
-                 hccs_info: Dict[str, HccnPortHccsInfo] = None,
-                 spod_info: Dict[str, SpodInfo] = None,
-                 npu_type="", npu_id="", speed="", duplex=""):
+    def __init__(
+        self,
+        hccn_lldp_info: Dict[str, HCCNLLDPInfo],
+        hccn_optical_info: Dict[str, HCCNOpticalInfo] = None,
+        hccn_link_stat_info: Dict[str, HCCNLinkStatInfo] = None,
+        hccn_stat_info: Dict[str, HCCNStatInfo] = None,
+        hccs_info: Dict[str, HccnPortHccsInfo] = None,
+        spod_info: Dict[str, SpodInfo] = None,
+        npu_type="",
+        npu_id="",
+        speed="",
+        duplex="",
+    ):
         self.hccn_lldp_info = hccn_lldp_info or {}
         self.hccn_optical_info = hccn_optical_info or {}
         self.hccn_link_stat_info = hccn_link_stat_info or {}
@@ -524,13 +655,24 @@ class NpuInfo(JsonObj):
 
 
 class HostInfo(JsonObj):
-    def __init__(self, host_id: str, sn_num: str, hostname="", server_superpod_id="", server_index="",
-                 msnpureport_log: List[FindResult] = None,
-                 npu_chip_info: Dict[str, NpuChipInfo] = None,
-                 loopback_info_list: List[NpuChipLoopBackInfo] = None):
+    def __init__(
+        self,
+        host_id: str,
+        sn_num: str,
+        hostname="",
+        room_name="",
+        cabinet_id="",
+        server_superpod_id="",
+        server_index="",
+        msnpureport_log: List[FindResult] = None,
+        npu_chip_info: Dict[str, NpuChipInfo] = None,
+        loopback_info_list: List[NpuChipLoopBackInfo] = None,
+    ):
         self.host_id = host_id
         self.sn_num = sn_num
         self.hostname = hostname
+        self.room_name = room_name
+        self.cabinet_id = cabinet_id
         self.server_superpod_id = server_superpod_id
         self.server_index = server_index
         self.msnpureport_log = msnpureport_log or []
