@@ -748,6 +748,93 @@ TaskD运行后，会启动gRPC客户端与ClusterD进行gRPC通信，同时TaskD
 
 Elastic Agent的安全加固请参见[TaskD安全加固](#taskd安全加固)章节。
 
+## 健康探针安全加固<a name="ZH-CN_TOPIC_0000002511346405"></a>
+
+各组件（Ascend Device Plugin、Ascend Operator、ClusterD、Infer Operator、NodeD、NPU Exporter）均内置HTTP健康探针服务，用于K8s livenessProbe机制探测组件存活状态。默认使用HTTP协议。
+
+> [!NOTE]
+> Kubelet在执行HTTPS探针时**不校验服务端证书**，因此仅开启HTTPS探针对K8s probe场景无额外安全增益。仅在外部系统需要调用健康探针接口且需要验证服务端身份时（例如第三方监控系统、自定义健康检查脚本），才有必要配置探针的HTTPS。
+
+### 适用场景
+
+- 外部监控系统通过HTTPS调用组件健康接口，需要验证服务端证书合法性
+- 安全合规要求所有HTTP服务必须使用加密通信
+
+若不满足上述场景，使用默认HTTP配置即可，无需进行以下操作。
+
+### 配置步骤
+
+**1. 准备证书和私钥**
+
+用户需自行生成或获取TLS证书和私钥文件。证书SAN须包含目标节点的域名或IP地址。证书和私钥由用户自行管理和定期更新，MindCluster不提供证书生成或自动轮换能力。
+
+**2. 创建K8s Secret**
+
+将证书和私钥存入Secret：
+
+```bash
+kubectl create secret generic <component>-healthz-tls \
+  --from-file=tls.crt=/path/to/cert.pem \
+  --from-file=tls.key=/path/to/key.pem \
+  -n <namespace>
+```
+
+**3. 修改组件部署YAML**
+
+在组件部署YAML中完成以下修改：
+
+- 挂载Secret到容器（`volumeMounts` + `volumes`）
+- 在容器启动参数中追加 `--tls-cert-file` 和 `--tls-private-key-file`
+- 修改 `livenessProbe.httpGet.scheme` 为 `HTTPS`
+
+完整示例（以ClusterD为例，在原启动参数末尾追加TLS参数）：
+
+```yaml
+spec:
+  containers:
+  - name: clusterd
+    image: clusterd:latest
+    args:
+    - "/usr/local/bin/clusterd -logFile=/var/log/mindx-dl/clusterd/clusterd.log -logLevel=0 --enable-healthz=true --healthz-address=11253 --tls-cert-file=/etc/healthz-tls/tls.crt --tls-private-key-file=/etc/healthz-tls/tls.key"
+    volumeMounts:
+    - name: healthz-tls
+      mountPath: /etc/healthz-tls
+      readOnly: true
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 11253
+        scheme: HTTPS
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+  volumes:
+  - name: healthz-tls
+    secret:
+      secretName: clusterd-healthz-tls
+```
+
+各组件默认端口如下：
+
+| 组件 | 默认端口 |
+|------|---------|
+| Ascend Device Plugin | 11251 |
+| Ascend Operator | 11252 |
+| ClusterD | 11253 |
+| Infer Operator | 11254 |
+| NodeD | 11255 |
+| NPU Exporter | 11256 |
+
+### 安全风险
+
+>[!WARNING]
+>
+>- 私钥以**明文**形式存储在K8s Secret中，存在泄露风险。建议通过K8s RBAC严格限制Secret的访问权限。
+>- 证书过期后探针服务将不可用，需手动更新Secret并重启Pod，建议在到期前预留足够的更换时间。
+>- 禁止将证书和私钥直接写入组件YAML文件或ConfigMap中，以免通过版本管理工具泄露。
+>- Kubelet的HTTPS探针不校验证书，探针本身的存活检测不受证书过期或证书不匹配的影响，但外部调用方会因证书问题无法验证服务端身份。
+
 ## 查看命令行操作记录<a name="ZH-CN_TOPIC_0000002524473029"></a>
 
 命令行操作日志记录在系统history中。

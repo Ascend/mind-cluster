@@ -486,3 +486,41 @@ Ascend Device Plugin从驱动获取到故障码后，将根据故障码对设备
 |RestartRequestFault|业务运行失败，需要重新执行业务请求。|停止当前训练任务，隔离节点，进行任务重调度。|
 |ResetFault|业务运行失败。|停止当前训练任务，隔离节点，进行任务重调度。|
 |SeparateFault|业务运行失败，需更换器件或板卡。|停止当前训练任务，隔离节点，进行任务重调度。|
+
+## 健康探针<a name="ZH-CN_TOPIC_healthz_device_plugin"></a>
+
+Ascend Device Plugin启动组件内的HTTP健康探针服务，用于K8s livenessProbe机制探测组件存活状态。探针服务与业务逻辑解耦，使用独立端口（默认 11251）。
+
+**表 2**  健康探针接口
+
+| 项目 | 说明 |
+|------|------|
+| 路径 | `/` |
+| 方法 | GET |
+| 默认端口 | 11251 |
+| 协议 | HTTP（正确配置--tls-cert-file和--tls-private-key-file参数时为HTTPS） |
+
+**表 3**  响应说明
+
+| 状态码 | 触发条件 | 说明 |
+|--------|---------|------|
+| 200 OK | 组件正常运行 | 响应体为 `ok` |
+| 404 Not Found | 请求路径非 `/` | 探针只响应根路径 |
+| 405 Method Not Allowed | 请求方法非 GET | K8s livenessProbe默认使用GET，正常不会触发 |
+| 503 Service Unavailable | 注册了自定义健康检查回调且检查失败 | 响应体包含具体错误信息 |
+
+**K8s livenessProbe配置示例：**
+
+```yaml
+livenessProbe:
+  httpGet:
+    path: /
+    port: 11251
+    scheme: HTTP
+  initialDelaySeconds: 30
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 3
+```
+
+> 探针参数说明详见[启动参数表](../07_developer_guide/installation_deployment/manual_installation/04_ascend_device_plugin.md#参数说明)。
