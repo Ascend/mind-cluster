@@ -37,6 +37,7 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
+	"Ascend-device-plugin/pkg/device/hangdetection"
 	"Ascend-device-plugin/pkg/kubeclient"
 	"Ascend-device-plugin/pkg/next/devicefactory/customname"
 	"ascend-common/api"
@@ -1669,6 +1670,7 @@ func (tool *AscendTools) HandleHangCardFaultEvents(device *common.NpuDevice) {
 	if device == nil {
 		return
 	}
+	hangdetection.DetectHangFault(device.LogicID, tool.dmgr)
 }
 
 // HandleLostChipFaultEvents handle chip fault events that may be lost by the fault subscription interface
