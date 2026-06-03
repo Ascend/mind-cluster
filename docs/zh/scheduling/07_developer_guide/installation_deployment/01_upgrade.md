@@ -113,7 +113,7 @@
 
     - （可选）**检查其他组件**。参考[组件状态确认](../../03_installation_guide/03_confirming_status.md)，确认集群中节点是否安装了相应组件。
 
-4. （可选）若尚未安装MindCluster集群调度组件，请参考[安装部署](manual_installation/00_obtaining_software_packages.md)章节先安装组件，TaskD的安装步骤请参考[制作镜像](../../04_usage/resumable_training/07_using_resumable_training_on_the_cli.md#制作镜像)章节。
+4. （可选）若尚未安装MindCluster集群调度组件，请参考[安装部署](manual_installation/00_obtaining_software_packages.md)章节先安装组件，TaskD的安装步骤请参考[制作镜像](../../04_usage/resumable_training/03_using_resumable_training_on_the_cli.md#制作镜像)章节。
 
 ## 升级Ascend Docker Runtime<a name="ZH-CN_TOPIC_0000002479226420"></a>
 

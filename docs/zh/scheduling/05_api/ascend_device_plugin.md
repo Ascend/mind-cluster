@@ -346,7 +346,7 @@ deviceNameCustomization.json支持自定义设备名称。编译Ascend Device Pl
 
 **faultCode.json中的故障级别<a name="section579455712489"></a>**
 
-断点续训针对芯片故障的不同级别进行分级处理。若用户需要修改故障码的故障级别，操作指导请参见[（可选）配置芯片故障级别](../04_usage/resumable_training/03_configuring_fault_detection_levels.md#可选配置芯片故障级别)。
+断点续训针对芯片故障的不同级别进行分级处理。若用户需要修改故障码的故障级别，操作指导请参见[（可选）配置芯片故障级别](../04_usage/resumable_training/configuration/01_configuring_fault_detection_levels.md#可选配置芯片故障级别)。
 
 Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对设备及业务的影响将故障划分为以下几种级别，详细说明请参见[表1](#table7618951152212)。
 
@@ -424,7 +424,8 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 </td>
 <td class="cellrowborder" valign="top" width="35.78%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002171521445_p1354813311915"><a name="zh-cn_topic_0000002171521445_p1354813311915"></a><a name="zh-cn_topic_0000002171521445_p1354813311915"></a>根据任务YAML中配置的subHealthyStrategy参数取值进行处理，详细请参见<a href="./yaml_configuration.md">表1 YAML参数说明</a>。</p>
 </td>
-<td class="cellrowborder" valign="top" width="20.349999999999998%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002171521445_p3352524125220"><a name="zh-cn_topic_0000002171521445_p3352524125220"></a><a name="zh-cn_topic_0000002171521445_p3352524125220"></a>当芯片出现亚健康故障时，需根据<a href="../04_usage/resumable_training/06_configuring_the_job_yaml_file.md#任务yaml配置示例">配置YAML</a>策略进行处理。</p>
+<td class="cellrowborder" valign="top" width="20.349999999999998%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002171521445_p3352524125220"><a name="zh-cn_topic_0000002171521445_p3352524125220"></a><a name="zh-cn_topic_0000002171521445_p3352524125220"></a>当芯片出现亚健康故障时，需根据<a href="../04_usage/resumable_training/configuration/02_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002511426471">配置亚健康热切</a>进行处理。</p>
+
 <div class="note" id="zh-cn_topic_0000002171521445_note7936204710536"><a name="zh-cn_topic_0000002171521445_note7936204710536"></a><a name="zh-cn_topic_0000002171521445_note7936204710536"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002171521445_p15222114115810"><a name="zh-cn_topic_0000002171521445_p15222114115810"></a><a name="zh-cn_topic_0000002171521445_p15222114115810"></a>如果后续芯片出现其他级别故障，此时SubHealthFault</p>
 <p id="zh-cn_topic_0000002171521445_p109369476532"><a name="zh-cn_topic_0000002171521445_p109369476532"></a><a name="zh-cn_topic_0000002171521445_p109369476532"></a>处理策略不影响其他级别的故障处理。</p>
 </div></div>
@@ -471,7 +472,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 
 ## 自定义灵衢设备故障<a name="ZH-CN_TOPIC_0000002511426735"></a>
 
-断点续训针对灵衢总线设备故障的不同级别进行分级处理。若用户需要修改故障码的故障级别，操作指导请参见[（可选）配置总线设备故障级别](../04_usage/resumable_training/03_configuring_fault_detection_levels.md#可选配置总线设备故障级别)。
+断点续训针对灵衢总线设备故障的不同级别进行分级处理。若用户需要修改故障码的故障级别，操作指导请参见[（可选）配置总线设备故障级别](../04_usage/resumable_training/configuration/01_configuring_fault_detection_levels.md#可选配置总线设备故障级别)。
 
 Ascend Device Plugin从驱动获取到故障码后，将根据故障码对设备及业务的影响将故障划分为以下五种级别并进行相应的重调度处理，详细说明请参见[表1](#table212253274720)。
 

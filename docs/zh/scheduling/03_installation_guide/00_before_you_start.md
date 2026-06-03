@@ -2,7 +2,7 @@
 
 在安装组件前，用户需详细阅读[简介](../01_introduction/00_overview.md)章节，了解集群调度各组件功能详细的说明，并根据要使用的特性选择安装相应的组件。
 
-Elastic Agent、TaskD和MindIO组件需部署在容器内，详细安装步骤请参见[制作镜像](../04_usage/resumable_training/07_using_resumable_training_on_the_cli.md#制作镜像)。
+Elastic Agent、TaskD和MindIO组件需部署在容器内，详细安装步骤请参见[制作镜像](../04_usage/resumable_training/03_using_resumable_training_on_the_cli.md#制作镜像)。
 
 >[!NOTE]
 >Resilience Controller和Elastic Agent组件已经日落，Resilience Controller相关内容将于2026年9月30日的版本删除；Elastic Agent相关内容将于2026年12月30日的版本删除。
