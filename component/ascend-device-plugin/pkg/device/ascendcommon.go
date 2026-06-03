@@ -28,7 +28,7 @@ import (
 	"time"
 
 	"golang.org/x/time/rate"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -147,6 +147,7 @@ type DevManager interface {
 	GetResetFailedTimes(int32) int
 	SetResetFailedTimes(int32, int)
 	HandleDropCardFaultEvents(*common.NpuDevice)
+	HandleHangCardFaultEvents(*common.NpuDevice)
 	HandleLostChipFaultEvents(*common.NpuDevice, []int32)
 	HandleLostNetworkFaultEvents(*common.NpuDevice, []int32)
 	LogFaultModeChange(*common.NpuDevice, []int32, string)
@@ -1662,6 +1663,12 @@ func (tool *AscendTools) checkCardDropFault(logicID int32) bool {
 	}
 
 	return false
+}
+
+func (tool *AscendTools) HandleHangCardFaultEvents(device *common.NpuDevice) {
+	if device == nil {
+		return
+	}
 }
 
 // HandleLostChipFaultEvents handle chip fault events that may be lost by the fault subscription interface

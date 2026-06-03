@@ -102,6 +102,7 @@ function modify_version() {
     cp "$CUR_DIR"/faultCustomization.json "$TOP_DIR"/output/faultCustomization.json
     cp "$CUR_DIR"/deviceNameCustomization.json "$TOP_DIR"/output/deviceNameCustomization.json
     cp "$CUR_DIR"/SwitchFaultCode.json "$TOP_DIR"/output/SwitchFaultCode.json
+    cp "$CUR_DIR"/hangDetectionConfig.json "$TOP_DIR"/output/hangDetectionConfig.json
     cp "$CUR_DIR"/agreement.txt "$TOP_DIR"/output/agreement.txt
 
     sed -i "s#output/device-plugin#device-plugin#" "$TOP_DIR"/output/Dockerfile

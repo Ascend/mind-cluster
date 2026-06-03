@@ -74,6 +74,8 @@ const (
 	DeviceNotReadyErrCode = -8012
 	// CardDropFaultCode card drop fault code
 	CardDropFaultCode = 0x40F84E00
+	// HangFaultCode NPU hang fault code
+	HangFaultCode = 0x200001002
 	// RetError return error when the function failed
 	RetError = -1
 	// Percent constant of 100
