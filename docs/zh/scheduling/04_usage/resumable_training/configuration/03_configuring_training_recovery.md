@@ -2,7 +2,7 @@
 
 ## 配置周期性CKPT保存<a name="ZH-CN_TOPIC_0000002479226552"></a>
 
-本章节将指导用户了解周期性CKPT保存的关键步骤。周期性CKPT保存的特性介绍请参见[周期性CKPT保存](./01_solutions_principles.md#周期性ckpt保存)。
+本章节将指导用户了解周期性CKPT保存的关键步骤。周期性CKPT保存的特性介绍请参见[周期性CKPT保存](../01_solutions_principles.md#周期性ckpt保存)。
 
 **配置存储CKPT加载<a name="zh-cn_topic_0000002111866386_section1296017551704"></a>**
 
@@ -43,7 +43,7 @@ spec:
 
 ## 配置临终CKPT保存<a name="ZH-CN_TOPIC_0000002479226544"></a>
 
-本章节将指导用户了解临终CKPT保存的关键步骤。临终CKPT保存的特性介绍请参见[临终CKPT保存](./01_solutions_principles.md#临终ckpt保存)。
+本章节将指导用户了解临终CKPT保存的关键步骤。临终CKPT保存的特性介绍请参见[临终CKPT保存](../01_solutions_principles.md#临终ckpt保存)。
 
 **构建镜像<a name="zh-cn_topic_0000002112026142_section26738428458"></a>**
 
@@ -135,7 +135,7 @@ spec:
         ```
 
         >[!NOTE]
-        >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../05_api/taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
+        >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../../05_api/taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
 
     2. 在训练脚本中增加以下代码拉起TaskD Manager。
 
@@ -179,7 +179,7 @@ spec:
 
 ## 配置参数面传参恢复<a name="ZH-CN_TOPIC_0000002479386502"></a>
 
-当前仅支持在进程级别重调度和进程级在线恢复特性中使用该能力，按照[配置进程级别重调度](./04_configuring_fault_handling_policies.md#配置进程级别重调度)和[配置进程级在线恢复](./04_configuring_fault_handling_policies.md#配置进程级在线恢复)特性适配后默认开启该能力。
+当前仅支持在进程级别重调度和进程级在线恢复特性中使用该能力，按照[配置进程级别重调度](./02_configuring_fault_handling_policies.md#配置进程级别重调度)和[配置进程级在线恢复](./02_configuring_fault_handling_policies.md#配置进程级在线恢复)特性适配后默认开启该能力。
 
 **（可选）关闭参数面传参恢复<a name="zh-cn_topic_0000002181310402_section199132050405"></a>**
 
@@ -266,7 +266,7 @@ spec:
 # env for breakpoint ckpt
 export RESUME_MODE_ENABLE=1
 <br>
-export HCCL_ASYNC_ERROR_HANDLING=0  <strong id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_b177584103519"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_b177584103519"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_b177584103519"></a>          </strong># 该环境变量的详细说明请参见<a href="../../05_api/environment_variable_description.md#taskd环境变量说明">TaskD环境变量说明</a></pre>
+export HCCL_ASYNC_ERROR_HANDLING=0  <strong id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_b177584103519"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_b177584103519"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_b177584103519"></a>          </strong># 该环境变量的详细说明请参见<a href="../../../05_api/environment_variable_description.md#taskd环境变量说明">TaskD环境变量说明</a></pre>
 </td>
 </tr>
 </tbody>
@@ -409,7 +409,7 @@ Parallel Store多线程建链优化：PyTorch框架创建通信组时，使用TC
     </tr>
     <tr id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_row171741155133719"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.4.1"><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p131751155143719"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p131751155143719"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p131751155143719"></a>关键操作</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p14233123161113"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p14233123161113"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p14233123161113"></a>安装和使用<span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph7901201365813"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph7901201365813"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph7901201365813"></a>MindIO</span>组件，请参见<span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph12306119151316"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph12306119151316"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph12306119151316"></a><a href="../../06_references/optimizing_saving_and_loading_checkpoints/01_product_description.md">Checkpoint保存与加载优化</a></span>。</p>
+    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p14233123161113"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p14233123161113"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p14233123161113"></a>安装和使用<span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph7901201365813"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph7901201365813"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph7901201365813"></a>MindIO</span>组件，请参见<span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph12306119151316"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph12306119151316"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph12306119151316"></a><a href="../../../06_references/optimizing_saving_and_loading_checkpoints/01_product_description.md">Checkpoint保存与加载优化</a></span>。</p>
     </td>
     </tr>
     </tbody>
@@ -437,7 +437,7 @@ Parallel Store多线程建链优化：PyTorch框架创建通信组时，使用TC
     </tr>
     <tr id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_row9632219868"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.4.1"><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1763218197619"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1763218197619"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1763218197619"></a>关键操作</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1223164710116"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1223164710116"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1223164710116"></a>安装和使用<span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph648515775810"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph648515775810"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph648515775810"></a>MindIO</span>组件，请参见<span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph758864121412"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph758864121412"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph758864121412"></a><a href="../../06_references/optimizing_saving_and_loading_checkpoints/01_product_description.md">Checkpoint保存与加载优化</a></span>。</p>
+    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1223164710116"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1223164710116"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_p1223164710116"></a>安装和使用<span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph648515775810"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph648515775810"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph648515775810"></a>MindIO</span>组件，请参见<span id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph758864121412"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph758864121412"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_ph758864121412"></a><a href="../../../06_references/optimizing_saving_and_loading_checkpoints/01_product_description.md">Checkpoint保存与加载优化</a></span>。</p>
     </td>
     </tr>
     </tbody>
@@ -569,7 +569,7 @@ context:
     </tr>
     <tr id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_row136069278219"><th class="firstcol" valign="top" width="19.98%" id="mcps1.2.3.4.1"><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p5606527102113"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p5606527102113"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p5606527102113"></a>关键操作</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18606182742112"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18606182742112"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18606182742112"></a>安装和使用<span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph9523194885915"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph9523194885915"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph9523194885915"></a>MindIO</span>组件，请参见<span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph12306119151316"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph12306119151316"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph12306119151316"></a><a href="../../06_references/optimizing_saving_and_loading_checkpoints/01_product_description.md">Checkpoint保存与加载优化</a></span>。</p>
+    <td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18606182742112"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18606182742112"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18606182742112"></a>安装和使用<span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph9523194885915"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph9523194885915"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph9523194885915"></a>MindIO</span>组件，请参见<span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph12306119151316"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph12306119151316"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph12306119151316"></a><a href="../../../06_references/optimizing_saving_and_loading_checkpoints/01_product_description.md">Checkpoint保存与加载优化</a></span>。</p>
     </td>
     </tr>
     </tbody>
@@ -597,7 +597,7 @@ context:
     </tr>
     <tr id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_row196071127102110"><th class="firstcol" valign="top" width="20%" id="mcps1.2.3.4.1"><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p7607327172119"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p7607327172119"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p7607327172119"></a>关键操作</p>
     </th>
-    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"></a>安装和使用<span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"></a>MindIO</span>组件，请参见<span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"></a><a href="../../06_references/optimizing_saving_and_loading_checkpoints/01_product_description.md">Checkpoint保存与加载优化</a></span>。</p>
+    <td class="cellrowborder" valign="top" width="80%" headers="mcps1.2.3.4.1 "><p id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_p18336173418590"></a>安装和使用<span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph19467185545916"></a>MindIO</span>组件，请参见<span id="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"></a><a name="zh-cn_topic_0000002128524426_zh-cn_topic_0000002053878705_ph235818092220"></a><a href="../../../06_references/optimizing_saving_and_loading_checkpoints/01_product_description.md">Checkpoint保存与加载优化</a></span>。</p>
     </td>
     </tr>
     </tbody>
@@ -653,9 +653,9 @@ test_tensor = torch.ones(1).to(f'npu:{rank}') * (rank + 1)  # 构建一个测试
 torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  # 在通信组X执行all reduce算子
 ```
 
-## 配置亚健康主动CKPT保存<a name="zh-cn_topic_0000002202737289_zh-cn_topic_0000001951258657_section1048332432310"></a>
+## 配置亚健康主动CKPT保存<a name="subHealthCkptSave"></a>
 
-如果希望任务发生亚健康故障时保存临终遗言，需修改任务YAML，配置亚健康策略为“graceExit”，故障恢复策略为“dump”，其余启动脚本、任务YAML配置可参见[配置临终CKPT保存](./05_configuring_training_recovery.md#配置临终ckpt保存)修改。此功能需确保TaskD和ClusterD可以正常使用。
+如果希望任务发生亚健康故障时保存临终遗言，需修改任务YAML，配置亚健康策略为“graceExit”，故障恢复策略为“dump”，其余启动脚本、任务YAML配置可参见[配置临终CKPT保存](#ZH-CN_TOPIC_0000002479226544)修改。此功能需确保TaskD和ClusterD可以正常使用。
 
 ```Yaml
 ...

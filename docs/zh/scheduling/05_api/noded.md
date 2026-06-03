@@ -21,7 +21,7 @@
 
 ## 自定义节点故障<a name="ZH-CN_TOPIC_0000002479386802"></a>
 
-NodeD组件的配置文件NodeDConfiguration.json为系统配置文件，若用户无特殊需求，请勿随意修改。若用户需要修改故障码的故障级别，可以通过由NodeDConfiguration.json创建的mindx-dl-node-fault-config文件实现，操作指导请参见[（可选）配置节点硬件故障级别](../04_usage/resumable_training/03_configuring_fault_detection_levels.md#可选配置节点硬件故障级别)。
+NodeD组件的配置文件NodeDConfiguration.json为系统配置文件，若用户无特殊需求，请勿随意修改。若用户需要修改故障码的故障级别，可以通过由NodeDConfiguration.json创建的mindx-dl-node-fault-config文件实现，操作指导请参见[（可选）配置节点硬件故障级别](../04_usage/resumable_training/configuration/01_configuring_fault_detection_levels.md#可选配置节点硬件故障级别)。
 
 **表 1**  故障说明
 

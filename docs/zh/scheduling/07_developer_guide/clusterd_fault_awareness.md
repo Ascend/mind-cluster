@@ -68,7 +68,7 @@ data:
 |id|消息唯一标识| 8到128个字符的字符串，支持大小写字母、数字、中划线（-）、下划线（_）和点（.），保证唯一性。                                                                                                                                                                                                                                   |string|是|
 |timestamp|消息发送的时间戳| 时间戳（单位：ms），13位数字，必须在2025-01-01T00:00:00Z之后。                                                                                                                                                                                                                                         |int64|是|
 |version|消息版本号| 取值为1.0。                                                                                                                                                                                                                                                                             |string|是|
-|resource|故障发送方| 默认配置为CCAE、fd-online、pingmesh、Netmind、dpcStorage、dtfsStorage。<ul><li>公共故障的故障发送方，必须存在于故障配置文件的publicFaultResource中。</li><li>对于新增的故障发送方，需要将其手动配置到故障配置文件中。详细说明请参见[（可选）配置公共故障的级别和发送方](../04_usage/resumable_training/03_configuring_fault_detection_levels.md#可选配置公共故障的级别和发送方)。</li></ul> |string|是|
+|resource|故障发送方| 默认配置为CCAE、fd-online、pingmesh、Netmind、dpcStorage、dtfsStorage。<ul><li>公共故障的故障发送方，必须存在于故障配置文件的publicFaultResource中。</li><li>对于新增的故障发送方，需要将其手动配置到故障配置文件中。详细说明请参见[（可选）配置公共故障的级别和发送方](../04_usage/resumable_training/configuration/01_configuring_fault_detection_levels.md#可选配置公共故障的级别和发送方)。</li></ul> |string|是|
 |faults|故障内容| 切片，长度>0且≤100。                                                                                                                                                                                                                                                                       |[]object, [fault](#fault0023698)|是|
 
 **表 2**  fault字段说明
@@ -79,7 +79,7 @@ data:
 |--|--|--|--|--|
 |faultId|故障实例ID|8到128个字符的字符串，支持大小写字母、数字、中划线（-）、下划线（_）和点（.），保证唯一性。<p>同一个故障实例，faultId需要保证唯一性。</p>|string|是|
 |faultType|故障类型|取值为NPU、Node、Network或Storage。<ul><li>NPU：芯片故障。</li><li>Node：节点故障。</li><li>Network：网络故障。</li><li>Storage：存储故障。</li></ul>该字段在cluster-info-cm中展示为"PublicFault"。|string|是|
-|faultCode|故障码|用户可以自定义，9位唯一即可。<ul><li>接入断点续训的故障码，必须存在于故障配置文件的publicFaultCode中。</li><li>对于新增的故障码，需要在故障配置文件配置其故障级别。详细说明请参见[（可选）配置公共故障的级别和发送方](../04_usage/resumable_training/03_configuring_fault_detection_levels.md#可选配置公共故障的级别和发送方)。</li><li>故障码建议遵循故障码说明表中的规则定义，方便后续维护。</li><li>若一张NPU先后出现两个相同的故障码，在cluster-info-cm中fault_code字段将同时记录2个相同的故障码。</li></ul>|string|是|
+|faultCode|故障码|用户可以自定义，9位唯一即可。<ul><li>接入断点续训的故障码，必须存在于故障配置文件的publicFaultCode中。</li><li>对于新增的故障码，需要在故障配置文件配置其故障级别。详细说明请参见[（可选）配置公共故障的级别和发送方](../04_usage/resumable_training/configuration/01_configuring_fault_detection_levels.md#可选配置公共故障的级别和发送方)。</li><li>故障码建议遵循故障码说明表中的规则定义，方便后续维护。</li><li>若一张NPU先后出现两个相同的故障码，在cluster-info-cm中fault_code字段将同时记录2个相同的故障码。</li></ul>|string|是|
 |faultTime|故障产生时间|时间戳（单位：ms），13位数字，必须在2025-01-01T00:00:00Z之后。<ul><li>无论是故障产生还是故障消除，该字段均为故障产生时间。</li><li>该字段在cluster-info-cm中以秒为单位展示。</li></ul>|int64|是|
 |assertion|故障状态|取值为occur、recover或once。<ul><li>occur：故障产生。</li><li>recover：故障恢复。</li><li>once：一次性事件。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>公共故障消除需要将相应故障的recover事件写入ConfigMap中，不能通过删除ConfigMap的形式实现。</li><li>对于一次性事件，几秒钟之后故障会自动清除。</li></ul></div></div>|string|是|
 |faultLocation|故障定位信息|故障源信息，长度≤10，map的key长度≤16，value长度≤128。eg. key: npuIp, value: ip|map[string]string|否|
@@ -127,4 +127,4 @@ rpc SendPublicFault(PublicFaultRequest) returns (RespStatus){}
 ## 相关参考
 
 - 公共故障接口的完整API定义请参见[公共故障接口](../05_api/clusterd/03_public_fault_apis.md)。
-- 配置公共故障的级别和发送方请参见[（可选）配置公共故障的级别和发送方](../04_usage/resumable_training/03_configuring_fault_detection_levels.md#可选配置公共故障的级别和发送方)。
+- 配置公共故障的级别和发送方请参见[（可选）配置公共故障的级别和发送方](../04_usage/resumable_training/configuration/01_configuring_fault_detection_levels.md#可选配置公共故障的级别和发送方)。

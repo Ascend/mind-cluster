@@ -290,7 +290,7 @@ NPU Exporter
 
 1. 安装组件请参见[安装部署](../07_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[断点续训](../04_usage/resumable_training/00_feature_description.md)章节进行操作。
-3. TaskD需安装在容器内，详细请参见[制作镜像](../04_usage/resumable_training/07_using_resumable_training_on_the_cli.md#制作镜像)章节。
+3. TaskD需安装在容器内，详细请参见[制作镜像](../04_usage/resumable_training/03_using_resumable_training_on_the_cli.md#制作镜像)章节。
 4. MindIO ACP的详细介绍及安装步骤请参见[Checkpoint保存与加载优化](../06_references/optimizing_saving_and_loading_checkpoints/01_product_description.md)章节。
 5. MindIO TFT的详细介绍及安装步骤请参见[故障恢复加速](../06_references/fault_recovery_acceleration/01_product_description.md)。
 

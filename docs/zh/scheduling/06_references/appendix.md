@@ -1130,8 +1130,8 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 
 #### PyTorch场景适配示例（基于MindSpeed-LLM）<a name="ZH-CN_TOPIC_0000002511426361"></a>
 
-1. 搭建训练环境，拉起训练，详细请参见[PyTorch场景适配示例（基于MindSpeed-LLM）](../04_usage/resumable_training/07_using_resumable_training_on_the_cli.md#适配示例)。
-2. 开启进程级在线恢复，详细请参见[配置进程级在线恢复](../04_usage/resumable_training/04_configuring_fault_handling_policies.md#配置进程级在线恢复)。
+1. 搭建训练环境，拉起训练，详细请参见[PyTorch场景适配示例（基于MindSpeed-LLM）](../04_usage/resumable_training/03_using_resumable_training_on_the_cli.md#适配示例)。
+2. 开启进程级在线恢复，详细请参见[配置进程级在线恢复](../04_usage/resumable_training/configuration/02_configuring_fault_handling_policies.md#配置进程级在线恢复)。
 3. 在“QWEN3\_for\_PyTorch\_2.7\_code/mindspeed\_llm/training/training.py”代码中增加如下加粗内容，打桩注入故障，新增代码根据环境变量“RAISE\_UCE\_ERROR\_STEP\_AND\_RANK”获取注入故障迭代位置和故障rank信息。
 
     <pre codetype="Python">
@@ -1175,8 +1175,8 @@ Containerd安装流程请参见[官方资料](https://github.com/containerd/cont
 
 #### MindSpore场景适配示例（基于MindFormers）<a name="ZH-CN_TOPIC_0000002511346369"></a>
 
-1. 搭建训练环境，拉起训练，详细请参见[MindSpore场景适配示例（基于MindFormers）](../04_usage/resumable_training/07_using_resumable_training_on_the_cli.md#适配示例)。
-2. 开启进程级在线恢复，详细请参见[配置进程级在线恢复](../04_usage/resumable_training/04_configuring_fault_handling_policies.md#配置进程级在线恢复)。
+1. 搭建训练环境，拉起训练，详细请参见[MindSpore场景适配示例（基于MindFormers）](../04_usage/resumable_training/03_using_resumable_training_on_the_cli.md#适配示例)。
+2. 开启进程级在线恢复，详细请参见[配置进程级在线恢复](../04_usage/resumable_training/configuration/02_configuring_fault_handling_policies.md#配置进程级在线恢复)。
 3. 在“QWEN3\_for\_MS\_code/mindformers/core/callback/callback.py”代码中增加如下加粗内容，打桩注入故障。
 
     <pre codetype="Python">
