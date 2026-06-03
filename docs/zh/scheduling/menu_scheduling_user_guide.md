@@ -90,6 +90,8 @@
     - [使用前必读](./04_usage/infer_operator_best_practice/00_before_you_start.md)
     - [基于vLLM Proxy部署Infer Operator推理任务](./04_usage/infer_operator_best_practice/01_deploying_infer_operator_inference_job_with_vllm_proxy.md)
     - [基于MindIE PyMotor部署Infer Operator推理任务](./04_usage/infer_operator_best_practice/02_deploying_infer_operator_inference_job_with_mindie_pymotor.md)
+    - [配置推理任务优先级调度](./04_usage/infer_operator_best_practice/03_configuring_priority_scheduling.md)
+    - [配置推理任务实例级重调度](./04_usage/infer_operator_best_practice/04_configuring_rescheduling_inference_job.md)
 - [API参考](./05_api/README.md)
   - [NPU Exporter](./05_api/npu_exporter/menu_npu_exporter.md)
     - [NPU Exporter主页](./05_api/npu_exporter/00_npu_exporter_home_page.md)
