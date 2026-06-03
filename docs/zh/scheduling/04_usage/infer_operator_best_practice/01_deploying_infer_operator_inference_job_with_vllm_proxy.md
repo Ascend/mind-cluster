@@ -61,8 +61,6 @@ spec:
       metadata:
         labels:
           infer.huawei.com/gang-schedule: 'false' # 关闭gang调度，开启时会为每一个workload实例创建PodGroup
-        annotations:
-          huawei.com/schedule_policy: chip8-node8 # 根据硬件形态设置
       spec:
         replicas: 1 # prefill中workload的pod副本数
         podManagementPolicy: Parallel # 此配置可不填，当workload为StatefulSet，且infer.huawei.com/gang-schedule为true时，需配置为Parallel
@@ -76,6 +74,8 @@ spec:
               fault-scheduling: 'grace' # 开启重调度
               fault-retry-times: '10'
               ring-controller.atlas: ascend-910b # 标识产品类型
+            annotations:
+              huawei.com/schedule_policy: chip8-node8 # 根据硬件形态设置
           spec:
             schedulerName: volcano # 指定调度器为Volcano
             nodeSelector:
@@ -98,8 +98,6 @@ spec:
       metadata:
         labels:
           infer.huawei.com/gang-schedule: 'false' # 关闭gang调度，开启时会为每一个workload实例创建PodGroup
-        annotations:
-          huawei.com/schedule_policy: chip8-node8 # 根据硬件形态设置
       spec:
         replicas: 1 # decode中workload的pod副本数
         podManagementPolicy: Parallel # 此配置可不填，当workload为StatefulSet，且infer.huawei.com/gang-schedule为true时，需配置为Parallel
@@ -113,6 +111,8 @@ spec:
               fault-scheduling: 'grace' # 开启重调度
               fault-retry-times: '10'
               ring-controller.atlas: ascend-910b # 标识产品类型
+            annotations:
+              huawei.com/schedule_policy: chip8-node8 # 根据硬件形态设置
           spec:
             schedulerName: volcano # 指定调度器为Volcano
             containers:
@@ -127,125 +127,6 @@ spec:
               ... # 补充容器必要的挂载项与运行命令
     - name: router  # router定义
       replicas: 1   # router副本数
-      services:     # router services定义，此处定义的service在一个角色范围内仅创建一个
-      - name: vllm-router-service
-        spec:
-          ports:    # service的端口定义
-          - port: 1026
-            protocol: TCP
-            targetPort: 1026
-          selector:
-            app: test-router # 用户自定义，需要与下面labels中app配置保持一致
-          type: ClusterIP
-      workload:     # router中实例的CRD类型信息
-        apiVersion: apps/v1
-        kind: Deployment # workload类型，当前支持StatefulSet/Deployment
-      spec:
-        replicas: 1 # router中workload的pod副本数
-        selector:
-          matchLabels:
-            app: test-router # 用户自定义，需要与下面labels中app配置保持一致
-        template:
-          metadata:
-            labels:
-              app: test-router # 用户自定义，需要与下面labels中app配置保持一致
-          spec:
-            schedulerName: volcano # 指定调度器为Volcano
-            containers:
-            - name: router
-              image: xxx:yyy # 自定义镜像名
-              ... # 补充容器必要的挂载项与运行命令
-```
-
-Infer Operator使用缩P保D特性需要开启优先级调度与实例级重调度，适配示例如下：
-
-```Yaml
-apiVersion: mindcluster.huawei.com/v1
-kind: InferServiceSet
-metadata:
-  name: "my-test"
-  namespace: default
-spec:
-  replicas: 1 # 推理服务副本数
-  template:
-    schedulingStrategy: # 将type配置为Priority开启优先级调度
-      type: Priority
-    roles:
-    - name: prefill # prefill定义
-      replicas: 1   # prefill副本数
-      priority: 2   # prefill的优先级配置，值越小优先级越高，仅开启优先级调度时生效
-      workload:     # prefill中实例的CRD类型信息
-        apiVersion: apps/v1
-        kind: StatefulSet # workload类型，当前支持StatefulSet/Deployment
-      metadata:
-        labels:
-          infer.huawei.com/gang-schedule: 'false' # 关闭gang调度，开启时会为每一个workload实例创建PodGroup
-        annotations:
-          huawei.com/schedule_policy: chip8-node8 # 根据硬件形态设置
-      spec:
-        replicas: 1 # prefill中workload的pod副本数
-        podManagementPolicy: Parallel # 此配置可不填，当workload为StatefulSet，且infer.huawei.com/gang-schedule为true时，需配置为Parallel
-        selector:
-          matchLabels:
-            app: test-prefill # 用户自定义，需要与下面labels中app配置保持一致
-        template:
-          metadata:
-            labels:
-              app: test-prefill # 用户自定义，需要与下面labels中app配置保持一致
-              fault-scheduling: 'external-force' # 开启实例级重调度
-              fault-retry-times: '10'
-              ring-controller.atlas: ascend-910b # 标识产品类型
-          spec:
-            schedulerName: volcano # 指定调度器为Volcano
-            containers:
-            - name: prefill
-              image: vllm-ascend:xxx # 自定义vllm镜像名
-              ...
-              resources:
-                requests:
-                  huawei.com/Ascend910: 8
-                limits:
-                  huawei.com/Ascend910: 8
-              ... # 补充容器必要的挂载项与运行命令
-    - name: decode  # decode定义
-      replicas: 1   # decode副本数
-      priority: 1   # decode的优先级配置，值越小优先级越高，仅开启优先级调度时生效
-      workload:     # decode中实例的CRD类型信息
-        apiVersion: apps/v1
-        kind: StatefulSet # workload类型，当前支持StatefulSet/Deployment
-      metadata:
-        labels:
-          infer.huawei.com/gang-schedule: 'false' # 关闭gang调度，开启时会为每一个workload实例创建PodGroup
-        annotations:
-          huawei.com/schedule_policy: chip8-node8 # 根据硬件形态设置
-      spec:
-        replicas: 1 # decode中workload的pod副本数
-        podManagementPolicy: Parallel # 此配置可不填，当workload为StatefulSet，且infer.huawei.com/gang-schedule为true时，需配置为Parallel
-        selector:
-          matchLabels:
-            app: test-decode # 用户自定义，需要与下面labels中app配置保持一致
-        template:
-          metadata:
-            labels:
-              app: test-decode # 用户自定义，需要与下面labels中app配置保持一致
-              fault-scheduling: 'external-force' # 开启实例级重调度
-              fault-retry-times: '10'
-              ring-controller.atlas: ascend-910b # 标识产品类型
-          spec:
-            schedulerName: volcano # 指定调度器为Volcano
-            containers:
-            - name: decode
-              image: vllm-ascend:xxx # 自定义vllm镜像名
-              ...
-              resources:
-                requests:
-                  huawei.com/Ascend910: 8
-                limits:
-                  huawei.com/Ascend910: 8
-              ... # 补充容器必要的挂载项与运行命令
-    - name: router  # router定义
-      replicas: 1   # router副本数
-      priority: 3   # router的优先级配置，值越小优先级越高，仅开启优先级调度时生效
       services:     # router services定义，此处定义的service在一个角色范围内仅创建一个
       - name: vllm-router-service
         spec:
@@ -310,7 +191,7 @@ spec:
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 ">
 <ul ><li><span >Parallel</span>：并发调度，默认调度方式，并发创建所有实例。</li><li><span >Priority</span>: 优先级调度，按照优先级顺序依次创建不同角色实例。</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >使用缩P保D特性时必须开启优先级调度，并配置decode实例优先级高于prefill实例，以确保高优先级实例先与低优先级实例被调度。</p>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >当需要适配其他服务化平台使用缩P保D特性时，必须开启优先级调度，并配置decode实例优先级高于prefill实例，以确保高优先级实例先与低优先级实例被调度。</p>
 <p>优先级的配置见priority字段说明。</p>
 </td>
 </tr>
@@ -319,7 +200,7 @@ spec:
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 ">
 数字，取值范围为1-32。
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >该字段值越小，优先级越高。当使用缩P保D特性时，建议配置：prefill角色的priority值 > decode角色的priority值。</p>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >仅开启优先级调度时生效，该字段值越小，优先级越高。PD分离场景下，建议配置：prefill角色的priority值 > decode角色的priority值。</p>
 </td>
 </tr>
 <tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >infer.huawei.com/gang-schedule</p>
@@ -339,17 +220,10 @@ spec:
 </tr>
 <tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >huawei.com/Ascend910</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><ul ><li><span >Atlas 800I A2 推理服务器</span>：8</li><li><span >Atlas 800I A3 超节点服务器</span>: 16</li></ul>
+<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><ul ><li><span >Atlas 800I A2 推理服务器</span>：1-8</li><li><span >Atlas 800I A3 超节点服务器</span>: 1-16</li><li><span >Atlas 350 标卡（节点内8卡）</span>: 1-8</li><li><span >Atlas 350 标卡（节点内16卡）</span>: 1-16</li><li><span >Atlas 850 系列硬件产品</span>: 1-8</li><li><span >Atlas 950 SuperPoD</span>: 1-8</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >请求的NPU数量。当前仅支持整机调度，请根据实际硬件卡数进行修改。</p>
-</td>
-</tr>
-<tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >env[name==ASCEND_VISIBLE_DEVICES].valueFrom.fieldRef.fieldPath</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><p >取值为metadata.annotations['huawei.com/Ascend910']，和环境上实际的芯片类型保持一致。</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p ><span >Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>
-<p >该参数只支持使用<span >Volcano</span>调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >请求的NPU数量。当前仅支持整机调度，请根据实际硬件卡数与需求卡数进行修改。</p>
+<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD需将参数名称修改为huawei.com/npu。</div></div>
 </td>
 </tr>
 <tr ><td class="cellrowborder" rowspan="7" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >fault-scheduling</p>
@@ -427,7 +301,7 @@ inferserviceset.mindcluster.huawei.com/my-test created
    ```ColdFusion
    NAME                                  READY   STATUS    RESTARTS   AGE
    my-test-0-decode-0-0                  1/1     Running   0          2s
-   my-test-0-prefill1-0-0                1/1     Running   0          2s
+   my-test-0-prefill-0-0                1/1     Running   0          2s
    my-test-0-router-0-584bd5c9f9-vhwsm   1/1     Running   0          2s
    ```
 
@@ -442,7 +316,7 @@ inferserviceset.mindcluster.huawei.com/my-test created
    ```ColdFusion
    NAME                 AGE
    my-test-0-decode     69s
-   my-test-0-prefill1   69s
+   my-test-0-prefill   69s
    my-test-0-router     69s
    ```
 
@@ -501,7 +375,7 @@ curl http://<routing-podip>:8080/v1/completions \
 >   ```ColdFusion
 >   NAME                                  READY   STATUS    RESTARTS   AGE   IP             NODE                   NOMINATED NODE   READINESS GATES
 >   my-test-0-decode-0-0                  1/1     Running   0          5s    10.244.2.83    test-cluster-worker3   <none>           <none>
->   my-test-0-prefill1-0-0                1/1     Running   0          5s    10.244.3.100   test-cluster-worker    <none>           <none>
+>   my-test-0-prefill-0-0                1/1     Running   0          5s    10.244.3.100   test-cluster-worker    <none>           <none>
 >   my-test-0-router-0-584bd5c9f9-xpj28   1/1     Running   0          5s    10.244.1.92    test-cluster-worker2   <none>           <none>
 >   ```
 
@@ -611,7 +485,7 @@ inferserviceset.mindcluster.huawei.com "my-test" deleted
        ```ColdFusion
        NAME                               READY   STATUS    RESTARTS   AGE
        qwen-0-decode-0-0                  1/1     Running   0          2s
-       qwen-0-prefill1-0-0                1/1     Running   0          2s
+       qwen-0-prefill-0-0                1/1     Running   0          2s
        qwen-0-router-0-584bd5c9f9-vhwsm   1/1     Running   0          2s
        ```
 
@@ -626,7 +500,7 @@ inferserviceset.mindcluster.huawei.com "my-test" deleted
        ```ColdFusion
        NAME              AGE
        qwen-0-decode     69s
-       qwen-0-prefill1   69s
+       qwen-0-prefill   69s
        qwen-0-router     69s
        ```
 
@@ -681,7 +555,7 @@ inferserviceset.mindcluster.huawei.com "my-test" deleted
    >   ```ColdFusion
    >   NAME                               READY   STATUS    RESTARTS   AGE   IP             NODE                   NOMINATED NODE   READINESS GATES
    >   qwen-0-decode-0-0                  1/1     Running   0          5s    10.244.2.83    test-cluster-worker3   <none>           <none>
-   >   qwen-0-prefill1-0-0                1/1     Running   0          5s    10.244.3.100   test-cluster-worker    <none>           <none>
+   >   qwen-0-prefill-0-0                1/1     Running   0          5s    10.244.3.100   test-cluster-worker    <none>           <none>
    >   qwen-0-router-0-584bd5c9f9-xpj28   1/1     Running   0          5s    10.244.1.92    test-cluster-worker2   <none>           <none>
    >   ```
    >
