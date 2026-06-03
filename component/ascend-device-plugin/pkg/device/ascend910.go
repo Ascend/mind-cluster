@@ -661,18 +661,6 @@ func (hnm *HwAscend910Manager) updateDeviceInfo(oldDevInfo, newDevInfo map[strin
 	newDevInfo[common.GetAscend910Key("")] = newAscend910
 	newDevInfo[common.GetAscend910Key(api.CmRecoveringSuffix)] = common.ToString(devStatusSet.RecoveringDevices,
 		common.CommaSepDev)
-	// hnm.isNeedBlockAllDevice: server is A800IA2 with hccs and there are fault devices or is already in resetting,
-	// no more pod should be scheduled to this node cause all npu resetting is on the way
-	// if reset failed more than ResetRetryTimes times, will no longer try to reset server
-	if common.ParamOption.HotReset == common.HotResetInfer &&
-		hnm.GetResetFailedTimes(common.FirstDevice) <= common.MaxResetTimes &&
-		hnm.isNeedBlockAllDevice(devStatusSet.DeviceFault) {
-
-		newDevInfo[common.GetAscend910Key("")] = ""
-		newDevInfo[common.GetAscend910Key(api.CmRecoveringSuffix)] = common.ToString(devStatusSet.AllDevices,
-			common.CommaSepDev)
-		hwlog.RunLog.Warnf("all device on node have been cleared, due to resetting all devices in process")
-	}
 
 	newDevInfo[common.GetAscend910Key(api.CmCardUnhealthySuffix)] = common.ToString(devStatusSet.UnHealthyDevice,
 		common.CommaSepDev)

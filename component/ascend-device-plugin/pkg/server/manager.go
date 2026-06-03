@@ -41,6 +41,7 @@ import (
 	"Ascend-device-plugin/pkg/device/dpucontrol"
 	"Ascend-device-plugin/pkg/kubeclient"
 	"Ascend-device-plugin/pkg/next/devicefactory/customname"
+	"Ascend-device-plugin/pkg/plugin/builtin"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
@@ -80,6 +81,7 @@ type HwDevManager struct {
 	dpuManager       *dpucontrol.DpuFilter
 	ManagerLock      sync.Mutex
 	ContainerRuntime string
+	unifiedResetMgr  *UnifiedHotResetManager
 }
 
 type shareDevResourceQuota struct {
@@ -602,7 +604,7 @@ func (hdm *HwDevManager) handleDeviceInfoUpdate(ctx context.Context, initTime *t
 	// if node annotation has reset fail devices but all devices are healthy, clear node annotation
 	hdm.checkNodeResetInfo()
 	hdm.useVolcanoNotify()
-	hdm.chipHotReset()
+	hdm.unifiedHotReset()
 	common.DelOnceRecoverFault(hdm.groupDevice)
 	common.DelOnceFrequencyFault()
 	common.Synchronize = true
@@ -817,14 +819,12 @@ func (hdm *HwDevManager) pluginNotify(classifyDev []*common.NpuDevice, devType s
 }
 
 func (hdm *HwDevManager) notifyToK8s(ctx context.Context, initTime *time.Time) {
-	hdm.isSupportGraceTolerance()
 	oldGroupDevice := deepCopyGroupDevice(hdm.groupDevice)
 	hdm.manager.UpdateHealth(hdm.groupDevice, hdm.allInfo.AICoreDevs, hdm.RunMode)
 	if hdm.manager.GetDmgr().GetDevType() == api.Ascend910A5 {
 		hdm.updateDpuHealthy(hdm.groupDevice)
 	}
-	// If hot reset is used, the health of the device being reset is set here to healthy
-	hdm.graceTolerance(ctx, hdm.groupDevice)
+
 	isDevStateChange := hdm.manager.GetChange(hdm.groupDevice, oldGroupDevice)
 
 	for devType, isChanged := range isDevStateChange {
@@ -844,6 +844,26 @@ func (hdm *HwDevManager) notifyToK8s(ctx context.Context, initTime *time.Time) {
 		}
 		hdm.pluginNotify(hdm.groupDevice[devType], devType)
 	}
+}
+
+// InitUnifiedResetMgr initializes the unified hot reset manager
+func (hdm *HwDevManager) InitUnifiedResetMgr() error {
+	if hdm.unifiedResetMgr != nil {
+		return nil
+	}
+	hdm.unifiedResetMgr = NewUnifiedHotResetManager(
+		hdm.manager.GetDmgr(), hdm.manager, hdm.manager.GetKubeClient())
+	pm, err := builtin.InitPluginManager(hdm.manager.GetDmgr(), hdm.manager.GetKubeClient())
+	if err != nil {
+		hwlog.RunLog.Errorf("init plugin manager failed: %v", err)
+		return err
+	}
+	hdm.unifiedResetMgr.SetPluginManager(pm)
+	return nil
+}
+
+func (hdm *HwDevManager) unifiedHotReset() {
+	hdm.unifiedResetMgr.UnifiedHotReset(hdm.groupDevice)
 }
 
 func (hdm *HwDevManager) chipHotReset() {
