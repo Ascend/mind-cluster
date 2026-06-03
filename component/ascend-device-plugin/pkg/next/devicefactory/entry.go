@@ -43,5 +43,8 @@ func InitFunction() (*server.HwDevManager, error) {
 		hdm.SwitchDevManager = switchDevM
 		common.ParamOption.EnableSwitchFault = true
 	}
+	if err := hdm.InitUnifiedResetMgr(); err != nil {
+		return nil, err
+	}
 	return hdm, nil
 }

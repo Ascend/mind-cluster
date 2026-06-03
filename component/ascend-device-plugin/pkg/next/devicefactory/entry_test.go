@@ -44,6 +44,7 @@ func TestInitFunction(t *testing.T) {
 		convey.Convey("test initDevManager success and NewHwDevManager success, err should be nil", func() {
 			p1 := gomonkey.ApplyFuncReturn(initDevManager, mockDevManager, nil, nil)
 			p1.ApplyFuncReturn(server.NewHwDevManager, &server.HwDevManager{})
+			p1.ApplyMethodReturn(&server.HwDevManager{}, "InitUnifiedResetMgr", nil)
 			defer p1.Reset()
 			_, err := InitFunction()
 			convey.So(err, convey.ShouldBeNil)
@@ -51,6 +52,7 @@ func TestInitFunction(t *testing.T) {
 		convey.Convey("test switchDevM is not nil, EnableSwitchFault should be true", func() {
 			p1 := gomonkey.ApplyFuncReturn(initDevManager, mockDevManager, &deviceswitch.SwitchDevManager{}, nil)
 			p1.ApplyFuncReturn(server.NewHwDevManager, &server.HwDevManager{})
+			p1.ApplyMethodReturn(&server.HwDevManager{}, "InitUnifiedResetMgr", nil)
 			defer p1.Reset()
 			_, _ = InitFunction()
 			convey.So(common.ParamOption.EnableSwitchFault, convey.ShouldBeTrue)
