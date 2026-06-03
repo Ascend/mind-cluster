@@ -58,6 +58,8 @@ const (
 	InferServiceSetNameLabelKey = LabelKeyPrefix + "inferserviceset-name"
 	// InferServiceIndexLabelKey is the label key of the infer service index
 	InferServiceIndexLabelKey = LabelKeyPrefix + "inferservice-index"
+	// RoleNameLabelKey is the label key of the role name (e.g. prefill, decode)
+	RoleNameLabelKey = LabelKeyPrefix + "role-name"
 
 	// InstanceIndexEnvKey is env key used to identify instance index
 	InstanceIndexEnvKey = "INSTANCE_INDEX"
@@ -161,6 +163,11 @@ const (
 	SchedulingStrategyParallel         = "Parallel"
 	SchedulingStrategyPriority         = "Priority"
 	PrioritySchedulingStrategyLabelKey = LabelKeyPrefix + "priority-scheduling-strategy"
+)
+
+const (
+	// ScalingPolicyTypeHPA means the scaling policy is HorizontalPodAutoscaler
+	ScalingPolicyTypeHPA = "HPA"
 )
 
 const (

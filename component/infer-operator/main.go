@@ -26,6 +26,7 @@ import (
 	"k8s.io/api/admission/v1beta1"
 	"k8s.io/api/apiserverinternal/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -69,6 +70,7 @@ func init() {
 	utilruntime.Must(v1alpha1.AddToScheme(runtimeScheme))
 	utilruntime.Must(v1beta1.AddToScheme(runtimeScheme))
 	utilruntime.Must(appsv1.AddToScheme(runtimeScheme))
+	utilruntime.Must(autoscalingv2.AddToScheme(runtimeScheme))
 	utilruntime.Must(corev1.AddToScheme(runtimeScheme))
 	utilruntime.Must(scheme.AddToScheme(runtimeScheme))
 

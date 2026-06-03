@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"infer-operator/pkg/controller/rescheduling"
+	"infer-operator/pkg/controller/scaling"
 	"reflect"
 	"testing"
 
@@ -63,6 +64,7 @@ func TestInstanceSetReconcilerReconcile1(t *testing.T) {
 			reconciler := &InstanceSetReconciler{
 				Client:             fakeClient,
 				WorkLoadReconciler: workLoadReconciler,
+				ScalingManager:     scaling.NewScalingManager(fakeClient, GetScheme()),
 			}
 
 			patches := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "validate",
@@ -72,11 +74,16 @@ func TestInstanceSetReconcilerReconcile1(t *testing.T) {
 				func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return nil })
 			defer patches2.Reset()
 			patches3 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "updateStatus",
-				func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return nil })
+				func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error {
+					return nil
+				})
 			defer patches3.Reset()
 			patches4 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "doRescheduling",
 				func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return nil })
 			defer patches4.Reset()
+			patches5 := gomonkey.ApplyMethodReturn(reconciler.ScalingManager, "ReconcileScalingResource",
+				&v1.ScalingResourceStatus{}, nil)
+			defer patches5.Reset()
 
 			ctx := context.Background()
 			req := reconcile.Request{
@@ -175,9 +182,11 @@ func TestInstanceSetReconcilerReconcile3(t *testing.T) {
 			fakeClient := NewFakeClient(instanceSet).Build()
 
 			workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+			sm := scaling.NewScalingManager(fakeClient, GetScheme())
 			reconciler := &InstanceSetReconciler{
 				Client:             fakeClient,
 				WorkLoadReconciler: workLoadReconciler,
+				ScalingManager:     sm,
 			}
 
 			patches := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "validate",
@@ -212,9 +221,11 @@ func TestInstanceSetReconcilerReconcile4(t *testing.T) {
 			fakeClient := NewFakeClient(instanceSet).Build()
 
 			workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+			sm := scaling.NewScalingManager(fakeClient, GetScheme())
 			reconciler := &InstanceSetReconciler{
 				Client:             fakeClient,
 				WorkLoadReconciler: workLoadReconciler,
+				ScalingManager:     sm,
 			}
 
 			patches := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "validate",
@@ -255,6 +266,7 @@ func TestInstanceSetReconcilerReconcile5(t *testing.T) {
 			reconciler := &InstanceSetReconciler{
 				Client:             fakeClient,
 				WorkLoadReconciler: workLoadReconciler,
+				ScalingManager:     scaling.NewScalingManager(fakeClient, GetScheme()),
 			}
 
 			patches := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "validate",
@@ -273,6 +285,9 @@ func TestInstanceSetReconcilerReconcile5(t *testing.T) {
 			patches4 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "doRescheduling",
 				func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return nil })
 			defer patches4.Reset()
+			patches5 := gomonkey.ApplyMethodReturn(reconciler.ScalingManager, "ReconcileScalingResource",
+				&v1.ScalingResourceStatus{}, nil)
+			defer patches5.Reset()
 
 			ctx := context.Background()
 			req := reconcile.Request{
@@ -307,6 +322,7 @@ func TestInstanceSetReconcilerReconcileWithRequeueError(t *testing.T) {
 				Client:             fakeClient,
 				WorkLoadReconciler: workLoadReconciler,
 				rescheduler:        rescheduler,
+				ScalingManager:     scaling.NewScalingManager(fakeClient, GetScheme()),
 			}
 
 			patches := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "validate",
@@ -321,6 +337,9 @@ func TestInstanceSetReconcilerReconcileWithRequeueError(t *testing.T) {
 					return nil
 				})
 			defer patches3.Reset()
+			patches4 := gomonkey.ApplyMethodReturn(reconciler.ScalingManager, "ReconcileScalingResource",
+				&v1.ScalingResourceStatus{}, nil)
+			defer patches4.Reset()
 
 			ctx := context.Background()
 			req := reconcile.Request{
@@ -852,6 +871,7 @@ func TestGetNewStatus(t *testing.T) {
 			convey.So(newStatus.Conditions[0].Type, convey.ShouldEqual, string(common.InstanceSetReady))
 			convey.So(newStatus.Conditions[0].Status, convey.ShouldEqual, metav1.ConditionTrue)
 			convey.So(newStatus.Conditions[0].Reason, convey.ShouldEqual, "AllWorkLoadReady")
+			convey.So(newStatus.ScalingResourceStatus, convey.ShouldBeNil)
 		})
 	})
 }
@@ -883,6 +903,7 @@ func TestGetNewStatus2(t *testing.T) {
 			convey.So(newStatus.Conditions[0].Type, convey.ShouldEqual, string(common.InstanceSetReady))
 			convey.So(newStatus.Conditions[0].Status, convey.ShouldEqual, metav1.ConditionFalse)
 			convey.So(newStatus.Conditions[0].Reason, convey.ShouldEqual, "ReplicasNotReady")
+			convey.So(newStatus.ScalingResourceStatus, convey.ShouldBeNil)
 		})
 
 		convey.Convey("Should return error when InstanceReady fails", func() {
@@ -1036,6 +1057,258 @@ func TestInstanceSetPredicate(t *testing.T) {
 				}
 				convey.So(pred.Delete(deleteEvent), convey.ShouldBeTrue)
 			})
+		})
+	})
+}
+
+func TestReconcileScalingResources(t *testing.T) {
+	convey.Convey("TestReconcileScalingResources", t, func() {
+		convey.Convey("ScalingManager returns error", func() {
+			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+			fakeClient := NewFakeClient(instanceSet).Build()
+			sm := scaling.NewScalingManager(fakeClient, GetScheme())
+			bufferSize := 10
+			reconciler := &InstanceSetReconciler{
+				Client:             fakeClient,
+				WorkLoadReconciler: workload.NewWorkLoadReconciler(fakeClient),
+				ScalingManager:     sm,
+				Recorder:           record.NewFakeRecorder(bufferSize),
+			}
+
+			scalingErr := errors.New("scaling reconcile error")
+			patches := gomonkey.ApplyMethodReturn(sm, "ReconcileScalingResource",
+				(*v1.ScalingResourceStatus)(nil), scalingErr)
+			defer patches.Reset()
+
+			ctx := context.Background()
+			_, err := reconciler.reconcileScalingResources(ctx, instanceSet)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("ScalingManager returns nil status", func() {
+			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+			fakeClient := NewFakeClient(instanceSet).Build()
+			sm := scaling.NewScalingManager(fakeClient, GetScheme())
+			reconciler := &InstanceSetReconciler{
+				Client:             fakeClient,
+				WorkLoadReconciler: workload.NewWorkLoadReconciler(fakeClient),
+				ScalingManager:     sm,
+			}
+
+			patches := gomonkey.ApplyMethodReturn(sm, "ReconcileScalingResource",
+				(*v1.ScalingResourceStatus)(nil), nil)
+			defer patches.Reset()
+
+			ctx := context.Background()
+			status, err := reconciler.reconcileScalingResources(ctx, instanceSet)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(status, convey.ShouldBeNil)
+		})
+
+		convey.Convey("ScalingManager returns status", func() {
+			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+			fakeClient := NewFakeClient(instanceSet).Build()
+			sm := scaling.NewScalingManager(fakeClient, GetScheme())
+			reconciler := &InstanceSetReconciler{
+				Client:             fakeClient,
+				WorkLoadReconciler: workload.NewWorkLoadReconciler(fakeClient),
+				ScalingManager:     sm,
+			}
+
+			expectedStatus := &v1.ScalingResourceStatus{
+				Type:    "HPA",
+				Name:    "test-hpa",
+				Ready:   true,
+				Message: "HPA is ready",
+			}
+			patches := gomonkey.ApplyMethodReturn(sm, "ReconcileScalingResource",
+				expectedStatus, nil)
+			defer patches.Reset()
+
+			ctx := context.Background()
+			status, err := reconciler.reconcileScalingResources(ctx, instanceSet)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(status, convey.ShouldResemble, expectedStatus)
+		})
+	})
+}
+
+func TestUpdateStatusWithScaling(t *testing.T) {
+	convey.Convey("TestUpdateStatusWithScaling", t, func() {
+		convey.Convey("nil instanceSet", func() {
+			fakeClient := NewFakeClient().Build()
+			reconciler := &InstanceSetReconciler{
+				Client:             fakeClient,
+				WorkLoadReconciler: workload.NewWorkLoadReconciler(fakeClient),
+			}
+			err := reconciler.updateStatus(context.Background(), nil)
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("status unchanged", func() {
+			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+			fakeClient := NewFakeClient(instanceSet).Build()
+			workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+			reconciler := &InstanceSetReconciler{
+				Client:             fakeClient,
+				WorkLoadReconciler: workLoadReconciler,
+			}
+
+			patches := gomonkey.ApplyMethodReturn(workLoadReconciler, "InstanceReady", 0, nil)
+			defer patches.Reset()
+
+			ctx := context.Background()
+			err := reconciler.updateStatus(ctx, instanceSet)
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("success with nil scalingStatus", func() {
+			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+			fakeClient := NewFakeClient(instanceSet).Build()
+			workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+			reconciler := &InstanceSetReconciler{
+				Client:             fakeClient,
+				WorkLoadReconciler: workLoadReconciler,
+			}
+
+			patches := gomonkey.ApplyMethodReturn(workLoadReconciler, "InstanceReady", 1, nil)
+			defer patches.Reset()
+
+			ctx := context.Background()
+			err := reconciler.updateStatus(ctx, instanceSet)
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("success with scalingStatus", func() {
+			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+			fakeClient := NewFakeClient(instanceSet).Build()
+			workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+			reconciler := &InstanceSetReconciler{
+				Client:             fakeClient,
+				WorkLoadReconciler: workLoadReconciler,
+			}
+
+			patches := gomonkey.ApplyMethodReturn(workLoadReconciler, "InstanceReady", 1, nil)
+			defer patches.Reset()
+
+			scalingStatus := &v1.ScalingResourceStatus{
+				Type:    "HPA",
+				Name:    "test-hpa",
+				Ready:   true,
+				Message: "HPA is ready",
+			}
+			instanceSet.Status.ScalingResourceStatus = scalingStatus
+			ctx := context.Background()
+			err := reconciler.updateStatus(ctx, instanceSet)
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("getNewStatus error", func() {
+			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+			fakeClient := NewFakeClient(instanceSet).Build()
+			workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+			reconciler := &InstanceSetReconciler{
+				Client:             fakeClient,
+				WorkLoadReconciler: workLoadReconciler,
+			}
+
+			mockErr := errors.New("instance ready error")
+			patches := gomonkey.ApplyMethodReturn(workLoadReconciler, "InstanceReady", 0, mockErr)
+			defer patches.Reset()
+
+			ctx := context.Background()
+			err := reconciler.updateStatus(ctx, instanceSet)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("get latest instanceSet error", func() {
+			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+			fakeClient := NewFakeClient(instanceSet).Build()
+			workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+			reconciler := &InstanceSetReconciler{
+				Client:             fakeClient,
+				WorkLoadReconciler: workLoadReconciler,
+			}
+
+			patches := gomonkey.ApplyMethodReturn(workLoadReconciler, "InstanceReady", 1, nil)
+			defer patches.Reset()
+			mockErr := errors.New("get error")
+			patches2 := gomonkey.ApplyMethodReturn(reconciler.Client, "Get", mockErr)
+			defer patches2.Reset()
+
+			ctx := context.Background()
+			err := reconciler.updateStatus(ctx, instanceSet)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("status update error", func() {
+			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+			fakeClient := NewFakeClient(instanceSet).Build()
+			workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+			reconciler := &InstanceSetReconciler{
+				Client:             fakeClient,
+				WorkLoadReconciler: workLoadReconciler,
+			}
+
+			patches := gomonkey.ApplyMethodReturn(workLoadReconciler, "InstanceReady", 1, nil)
+			defer patches.Reset()
+
+			mockErr := errors.New("failed to update status")
+			patches2 := gomonkey.ApplyMethodFunc(reconciler.Client, "Status", func() client.StatusWriter {
+				return &mockStatusWriter{updateErr: mockErr}
+			})
+			defer patches2.Reset()
+
+			ctx := context.Background()
+			err := reconciler.updateStatus(ctx, instanceSet)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func TestReconcileScalingResourcesError(t *testing.T) {
+	convey.Convey("TestReconcile ReconcileScalingResources error path", t, func() {
+		convey.Convey("Should return error when reconcileScalingResources fails", func() {
+			instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+			fakeClient := NewFakeClient(instanceSet).Build()
+
+			workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+			sm := scaling.NewScalingManager(fakeClient, GetScheme())
+			reconciler := &InstanceSetReconciler{
+				Client:             fakeClient,
+				WorkLoadReconciler: workLoadReconciler,
+				ScalingManager:     sm,
+				Recorder:           record.NewFakeRecorder(10),
+			}
+
+			patches := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "validate",
+				func(_ *InstanceSetReconciler, is *v1.InstanceSet) error { return nil })
+			defer patches.Reset()
+			patches2 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "reconcileWorkLoads",
+				func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return nil })
+			defer patches2.Reset()
+			patches3 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "doRescheduling",
+				func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return nil })
+			defer patches3.Reset()
+			patches4 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "updateStatus",
+				func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return nil })
+			defer patches4.Reset()
+
+			scalingErr := errors.New("scaling reconcile error")
+			patches5 := gomonkey.ApplyMethodReturn(sm, "ReconcileScalingResource",
+				(*v1.ScalingResourceStatus)(nil), scalingErr)
+			defer patches5.Reset()
+
+			ctx := context.Background()
+			req := reconcile.Request{
+				NamespacedName: types.NamespacedName{
+					Name:      "test-instance",
+					Namespace: "default",
+				},
+			}
+
+			_, err := reconciler.Reconcile(ctx, req)
+			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
 }

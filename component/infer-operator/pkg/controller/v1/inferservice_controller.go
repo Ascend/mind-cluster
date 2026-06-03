@@ -377,7 +377,17 @@ func (r *InferServiceReconciler) updateExistInstanceSets(ctx context.Context, is
 				return err
 			}
 
+			scalingManaged := r.isManagedByScalingController(latestInstanceSet)
+			preservedReplicas := latestInstanceSet.Spec.Replicas
+
 			latestInstanceSet.Spec = instanceSet.Spec
+
+			if scalingManaged {
+				latestInstanceSet.Spec.Replicas = preservedReplicas
+				hwlog.RunLog.Infof("InstanceSet %s/%s is managed by scaling controller, preserving current replicas %d",
+					latestInstanceSet.Namespace, latestInstanceSet.Name, *preservedReplicas)
+			}
+
 			return r.client.Update(ctx, latestInstanceSet)
 		})
 		if err != nil {
@@ -395,10 +405,24 @@ func (r *InferServiceReconciler) instanceSetUpdated(instanceSet *apiv1.InstanceS
 	if instanceSet == nil {
 		return false
 	}
-	if !reflect.DeepEqual(instanceSet.Spec, role) {
-		return true
+
+	if r.isManagedByScalingController(instanceSet) {
+		return r.specChangedExcludingReplicas(instanceSet.Spec, role)
 	}
-	return false
+
+	return !reflect.DeepEqual(instanceSet.Spec, role)
+}
+
+func (r *InferServiceReconciler) isManagedByScalingController(instanceSet *apiv1.InstanceSet) bool {
+	return instanceSet.Spec.ScalingPolicy != nil && instanceSet.Spec.ScalingPolicy.Type == common.ScalingPolicyTypeHPA
+}
+
+func (r *InferServiceReconciler) specChangedExcludingReplicas(currentSpec, desiredSpec apiv1.InstanceSetSpec) bool {
+	currentCopy := *currentSpec.DeepCopy()
+	desiredCopy := *desiredSpec.DeepCopy()
+
+	currentCopy.Replicas = desiredCopy.Replicas
+	return !reflect.DeepEqual(currentCopy, desiredCopy)
 }
 
 func (r *InferServiceReconciler) deleteInstanceSets(ctx context.Context, is *apiv1.InferService, instanceSets []*apiv1.InstanceSet) error {
