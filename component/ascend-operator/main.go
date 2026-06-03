@@ -33,6 +33,7 @@ import (
 
 	"ascend-common/api"
 	"ascend-common/common-utils/agreement"
+	"ascend-common/common-utils/healthz"
 	"ascend-common/common-utils/hwlog"
 	mindxdlv1 "ascend-operator/pkg/api/v1"
 	"ascend-operator/pkg/controllers/v1"
@@ -55,7 +56,8 @@ var (
 	// QPS to use while talking with kubernetes api-server
 	QPS float64
 	// Burst to use while talking with kubernetes api-server
-	Burst int
+	Burst   int
+	hzFlags = healthz.RegisterFlags()
 )
 
 func init() {
@@ -69,6 +71,9 @@ func init() {
 }
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	flag.IntVar(&hwLogConfig.LogLevel, "logLevel", 0,
 		"Log level, -1-debug, 0-info, 1-warning, 2-error, 3-critical(default 0)")
 	flag.IntVar(&hwLogConfig.MaxAge, "maxAge", hwlog.DefaultMinSaveAge,
@@ -92,8 +97,13 @@ func main() {
 		return
 	}
 
-	if err := hwlog.InitRunLogger(hwLogConfig, context.Background()); err != nil {
+	if err := hwlog.InitRunLogger(hwLogConfig, ctx); err != nil {
 		fmt.Printf("%s init failed, error is %v\n", api.LogModuleName, err)
+		return
+	}
+
+	if err := hzFlags.Serve(ctx); err != nil {
+		hwlog.RunLog.Errorf("failed to start healthz server: %v", err)
 		return
 	}
 

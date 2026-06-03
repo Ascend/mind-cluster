@@ -40,6 +40,7 @@ import (
 	volcanov1beta1 "volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
 	"ascend-common/common-utils/agreement"
+	"ascend-common/common-utils/healthz"
 	"ascend-common/common-utils/hwlog"
 	"infer-operator/pkg/api/v1"
 	"infer-operator/pkg/common"
@@ -59,6 +60,7 @@ var (
 	BuildVersion string
 	// BuildName is the name of build package
 	BuildName string
+	hzFlags   = healthz.RegisterFlags()
 )
 
 func init() {
@@ -134,6 +136,10 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	if err := hwlog.InitRunLogger(hwLogConfig, ctx); err != nil {
 		fmt.Printf("unable to init run logger: %v\n", err)
+		os.Exit(1)
+	}
+	if err := hzFlags.Serve(ctx); err != nil {
+		hwlog.RunLog.Errorf("failed to start healthz server: %v", err)
 		os.Exit(1)
 	}
 	go signalCatch(cancel)

@@ -123,7 +123,16 @@ spec:
                   fieldPath: status.podIP
           imagePullPolicy: Never
           command: [ "/bin/bash", "-c", "--"]
-          args: [ "/usr/local/bin/clusterd -logFile=/var/log/mindx-dl/clusterd/clusterd.log -logLevel=0" ]
+          args: [ "/usr/local/bin/clusterd -logFile=/var/log/mindx-dl/clusterd/clusterd.log -logLevel=0 --enable-healthz=true --healthz-address=11253" ]
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 11253
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

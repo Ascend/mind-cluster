@@ -76,6 +76,15 @@ spec:
         imagePullPolicy: Never
         command: [ "/bin/bash", "-c", "/run_for_310P_1usoc.sh"]
         # pair firstly
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 11256
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3
         securityContext:
           privileged: true
           readOnlyRootFilesystem: true

@@ -120,7 +120,16 @@ spec:
             cpu: 500m
         command: [ "/bin/bash", "-c", "--"]
         args: [ "device-plugin -volcanoType=true -presetVirtualDevice=true
-                 -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0" ]
+                 -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0 --enable-healthz=true --healthz-address=11251" ]
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 11251
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3
         securityContext:
           privileged: true
           readOnlyRootFilesystem: true

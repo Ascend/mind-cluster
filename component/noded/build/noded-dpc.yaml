@@ -88,7 +88,16 @@ spec:
                   fieldPath: status.hostIP
           imagePullPolicy: Never
           command: [ "/bin/bash", "-c", "--"]
-          args: [ "/usr/local/bin/noded -logFile=/var/log/mindx-dl/noded/noded.log -logLevel=0" ]
+          args: [ "/usr/local/bin/noded -logFile=/var/log/mindx-dl/noded/noded.log -logLevel=0 --enable-healthz=true --healthz-address=11255" ]
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 11255
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
           securityContext:
             readOnlyRootFilesystem: true
             privileged: true
