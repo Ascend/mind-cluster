@@ -58,6 +58,7 @@ const (
 	size50M           = 50 * 1024 * 1024
 	addrTypeEID       = "EID"
 	addrTypeIPV4      = "IPV4"
+	addrTypeIPV6      = "IPV6"
 	decimal           = 10
 	hexadecimal       = 16
 	addrNumsLength    = 2
