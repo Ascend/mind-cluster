@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -47,6 +48,7 @@ import (
 	"infer-operator/pkg/common"
 	util "infer-operator/pkg/common/client-go"
 	"infer-operator/pkg/controller/rescheduling"
+	"infer-operator/pkg/controller/scaling"
 	"infer-operator/pkg/controller/schedule"
 	"infer-operator/pkg/controller/workload"
 )
@@ -57,6 +59,7 @@ type InstanceSetReconciler struct {
 	workload.PodGroupManager
 	Scheme             *runtime.Scheme
 	WorkLoadReconciler *workload.WorkLoadReconciler
+	ScalingManager     *scaling.ScalingManager
 	Recorder           record.EventRecorder
 	SupportPodGroup    bool
 	rescheduler        *rescheduling.Rescheduler
@@ -95,29 +98,41 @@ func (r *InstanceSetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			instanceSet.Namespace, instanceSet.Name, err)
 	}
 	// 4. reconcile workloads
-	err = r.reconcileWorkLoads(ctx, instanceSet)
-	if common.IsRequeueError(err) || err == nil {
-		// 5. update status
+	workloadErr := r.reconcileWorkLoads(ctx, instanceSet)
+
+	// 5. reconcile scaling resources
+	scalingStatus, scalingErr := r.reconcileScalingResources(ctx, instanceSet)
+	if scalingErr != nil {
+		hwlog.RunLog.Errorf("unable to reconcile scaling resources for InstanceSet %s/%s, error: %v",
+			req.Namespace, req.Name, scalingErr)
+	}
+
+	if common.IsRequeueError(workloadErr) || workloadErr == nil {
+		// 6. update status
+		instanceSet.Status.ScalingResourceStatus = scalingStatus
 		if err := r.updateStatus(ctx, instanceSet); err != nil {
 			hwlog.RunLog.Errorf("unable to update status %s/%s, error: %v", req.Namespace, req.Name, err)
 			return ctrl.Result{}, err
 		}
-		if common.IsRequeueError(err) {
+		if scalingErr != nil {
+			return ctrl.Result{}, scalingErr
+		}
+		if common.IsRequeueError(workloadErr) {
 			hwlog.RunLog.Warnf("reconcile workloads of InstanceSet %s/%s error: %v, will requeue this request",
-				req.Namespace, req.Name, err)
+				req.Namespace, req.Name, workloadErr)
 			return ctrl.Result{RequeueAfter: common.DefaultReEnqueueInterval}, nil
 		}
 		return ctrl.Result{}, nil
 	}
 
-	if apierrors.IsConflict(err) {
+	if apierrors.IsConflict(workloadErr) {
 		hwlog.RunLog.Warnf("conflict error when reconcile workloads of InstanceSet %s/%s, "+
-			"will requeue immediately, error: %v", req.Namespace, req.Name, err)
+			"will requeue immediately, error: %v", req.Namespace, req.Name, workloadErr)
 		return ctrl.Result{Requeue: true}, nil
 	}
 	hwlog.RunLog.Errorf("reconcile workloads of InstanceSet %s/%s error: %v",
-		req.Namespace, req.Name, err)
-	return ctrl.Result{}, err
+		req.Namespace, req.Name, workloadErr)
+	return ctrl.Result{}, workloadErr
 }
 
 func (r *InstanceSetReconciler) reconcileWorkLoads(ctx context.Context, instanceSet *apiv1.InstanceSet) error {
@@ -142,6 +157,26 @@ func (r *InstanceSetReconciler) reconcileWorkLoads(ctx context.Context, instance
 	}
 
 	return r.reconcileWorkloadInstances(ctx, instanceSet, indexer)
+}
+
+func (r *InstanceSetReconciler) reconcileScalingResources(
+	ctx context.Context,
+	instanceSet *apiv1.InstanceSet,
+) (*apiv1.ScalingResourceStatus, error) {
+	scalingStatus, err := r.ScalingManager.ReconcileScalingResource(ctx, instanceSet)
+	if err != nil {
+		r.Recorder.Eventf(instanceSet, corev1.EventTypeWarning, "ScalingResourceReconcileError",
+			"Failed to reconcile scaling resource: %v", err)
+		return nil, err
+	}
+
+	if scalingStatus != nil {
+		hwlog.RunLog.Infof("InstanceSet %s/%s scaling resource status: type=%s, name=%s, ready=%v, message=%s",
+			instanceSet.Namespace, instanceSet.Name,
+			scalingStatus.Type, scalingStatus.Name, scalingStatus.Ready, scalingStatus.Message)
+	}
+
+	return scalingStatus, nil
 }
 
 func (r *InstanceSetReconciler) checkOrCreateService(
@@ -366,6 +401,7 @@ func NewInstanceSetReconciler(
 		Scheme:             mgr.GetScheme(),
 		PodGroupManager:    workload.NewVolcanoPodGroupManager(mgr.GetClient()),
 		WorkLoadReconciler: workLoadReconciler,
+		ScalingManager:     scaling.NewScalingManager(mgr.GetClient(), mgr.GetScheme()),
 		Recorder:           recorder,
 		SupportPodGroup:    false,
 		rescheduler:        rescheduler,
@@ -379,6 +415,7 @@ func (r *InstanceSetReconciler) SetupWithManager(ctx context.Context, mgr ctrl.M
 		Owns(&appsv1.Deployment{}, builder.WithPredicates(WorkLoadPredicate())).
 		Owns(&appsv1.StatefulSet{}, builder.WithPredicates(WorkLoadPredicate())).
 		Owns(&corev1.Service{}, builder.WithPredicates(WorkLoadPredicate())).
+		Owns(&autoscalingv2.HorizontalPodAutoscaler{}, builder.WithPredicates(scalingResourcePredicate())).
 		Named(common.InstanceSetControllerName)
 	// if PodGroup exists, support PodGroup
 	if err := util.CRDExists(ctx, mgr.GetAPIReader(), common.VolcanoPodGroupCrdName); err == nil {
@@ -460,6 +497,20 @@ func PodGroupPredicate() predicate.Predicate {
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			// skip update event
 			return false
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			return true
+		},
+	}
+}
+
+func scalingResourcePredicate() predicate.Predicate {
+	return predicate.Funcs{
+		CreateFunc: func(e event.CreateEvent) bool {
+			return false
+		},
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			return true
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
 			return true

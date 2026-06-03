@@ -42,6 +42,12 @@ type ServiceSpec struct {
 	Spec        corev1.ServiceSpec `json:"spec,omitempty"`
 }
 
+// ScalingPolicy defines the scaling policy for InstanceSet
+type ScalingPolicy struct {
+	Type string               `json:"type,omitempty"`
+	Spec runtime.RawExtension `json:"spec,omitempty"`
+}
+
 // InstanceSetSpec defines the desired state of InstanceSet
 type InstanceSetSpec struct {
 	Name               string               `json:"name,omitempty"`
@@ -50,15 +56,29 @@ type InstanceSetSpec struct {
 	WorkloadTypeMeta   WorkloadType         `json:"workload,omitempty"`
 	WorkloadObjectMeta ObjectMeta           `json:"metadata,omitempty"`
 	InstanceSpec       runtime.RawExtension `json:"spec,omitempty"`
+	ScalingPolicy      *ScalingPolicy       `json:"scalingPolicy,omitempty"`
 	Priority           *int32               `json:"priority,omitempty"`
 }
 
 // InstanceSetStatus defines the observed state of InstanceSet
 type InstanceSetStatus struct {
-	ObservedGeneration int64              `json:"observedGeneration,omitempty"`
-	ReadyReplicas      int32              `json:"readyReplicas,omitempty"`
-	Replicas           int32              `json:"replicas,omitempty"`
-	Conditions         []metav1.Condition `json:"conditions,omitempty"`
+	ObservedGeneration    int64                  `json:"observedGeneration,omitempty"`
+	ReadyReplicas         int32                  `json:"readyReplicas,omitempty"`
+	Replicas              int32                  `json:"replicas,omitempty"`
+	Conditions            []metav1.Condition     `json:"conditions,omitempty"`
+	ScalingResourceStatus *ScalingResourceStatus `json:"scalingResourceStatus,omitempty"`
+}
+
+// ScalingResourceStatus defines the observed state of scaling resources
+type ScalingResourceStatus struct {
+	// Type indicates the scaling resource type (e.g., HPA)
+	Type string `json:"type,omitempty"`
+	// Name indicates the scaling resource name
+	Name string `json:"name,omitempty"`
+	// Ready indicates whether the scaling resource is ready
+	Ready bool `json:"ready,omitempty"`
+	// Message provides additional information about the scaling resource status
+	Message string `json:"message,omitempty"`
 }
 
 // InstanceSet is the Schema for the instancesets API

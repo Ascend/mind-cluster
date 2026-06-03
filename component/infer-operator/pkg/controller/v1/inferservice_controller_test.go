@@ -356,6 +356,20 @@ func TestUpdateExistInstanceSets(t *testing.T) {
 			convey.So(err, convey.ShouldBeNil)
 		})
 
+		convey.Convey("get error", func() {
+			patch := gomonkey.ApplyMethodFunc(fakeClient, "Get",
+				func(_ context.Context, _ types.NamespacedName, _ client.Object) error {
+					return errors.New("get error")
+				})
+			defer patch.Reset()
+
+			ist := &apiv1.InstanceSet{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			}
+			err := reconciler.updateExistInstanceSets(context.Background(), is, []*apiv1.InstanceSet{ist})
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
 		convey.Convey("update error", func() {
 			patch := gomonkey.ApplyMethodFunc(fakeClient, "Update",
 				func(_ context.Context, _ client.Object, _ ...client.UpdateOption) error {
@@ -370,7 +384,7 @@ func TestUpdateExistInstanceSets(t *testing.T) {
 			convey.So(err, convey.ShouldNotBeNil)
 		})
 
-		convey.Convey("success", func() {
+		convey.Convey("success without HPA", func() {
 			ist := &apiv1.InstanceSet{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 				Spec:       apiv1.InstanceSetSpec{Name: "role1"},
@@ -380,6 +394,71 @@ func TestUpdateExistInstanceSets(t *testing.T) {
 
 			err = reconciler.updateExistInstanceSets(context.Background(), is, []*apiv1.InstanceSet{ist})
 			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("HPA managed preserves replicas", func() {
+			existingReplicas := int32(5)
+			ist := &apiv1.InstanceSet{
+				ObjectMeta: metav1.ObjectMeta{Name: "hpa-test", Namespace: "default"},
+				Spec: apiv1.InstanceSetSpec{
+					Name:     "role1",
+					Replicas: &existingReplicas,
+					ScalingPolicy: &apiv1.ScalingPolicy{
+						Type: common.ScalingPolicyTypeHPA,
+					},
+				},
+			}
+			err := fakeClient.Create(context.Background(), ist)
+			convey.So(err, convey.ShouldBeNil)
+
+			desiredReplicas := int32(3)
+			desiredIst := &apiv1.InstanceSet{
+				ObjectMeta: metav1.ObjectMeta{Name: "hpa-test", Namespace: "default"},
+				Spec: apiv1.InstanceSetSpec{
+					Name:     "role1",
+					Replicas: &desiredReplicas,
+				},
+			}
+			err = reconciler.updateExistInstanceSets(context.Background(), is, []*apiv1.InstanceSet{desiredIst})
+			convey.So(err, convey.ShouldBeNil)
+
+			updatedIst := &apiv1.InstanceSet{}
+			err = fakeClient.Get(context.Background(), types.NamespacedName{
+				Name: "hpa-test", Namespace: "default",
+			}, updatedIst)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(*updatedIst.Spec.Replicas, convey.ShouldEqual, 5)
+		})
+
+		convey.Convey("non-HPA managed overwrites replicas", func() {
+			existingReplicas := int32(5)
+			ist := &apiv1.InstanceSet{
+				ObjectMeta: metav1.ObjectMeta{Name: "non-hpa-test", Namespace: "default"},
+				Spec: apiv1.InstanceSetSpec{
+					Name:     "role1",
+					Replicas: &existingReplicas,
+				},
+			}
+			err := fakeClient.Create(context.Background(), ist)
+			convey.So(err, convey.ShouldBeNil)
+
+			desiredReplicas := int32(3)
+			desiredIst := &apiv1.InstanceSet{
+				ObjectMeta: metav1.ObjectMeta{Name: "non-hpa-test", Namespace: "default"},
+				Spec: apiv1.InstanceSetSpec{
+					Name:     "role1",
+					Replicas: &desiredReplicas,
+				},
+			}
+			err = reconciler.updateExistInstanceSets(context.Background(), is, []*apiv1.InstanceSet{desiredIst})
+			convey.So(err, convey.ShouldBeNil)
+
+			updatedIst := &apiv1.InstanceSet{}
+			err = fakeClient.Get(context.Background(), types.NamespacedName{
+				Name: "non-hpa-test", Namespace: "default",
+			}, updatedIst)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(*updatedIst.Spec.Replicas, convey.ShouldEqual, 3)
 		})
 	})
 }
@@ -986,5 +1065,227 @@ func TestFilterInstanceSetEventsGenericFunc(t *testing.T) {
 		filter := filterInstanceSetEvents()
 		result := filter.GenericFunc(event.GenericEvent{})
 		convey.So(result, convey.ShouldBeFalse)
+	})
+}
+
+func TestIsManagedByHPA(t *testing.T) {
+	convey.Convey("TestIsManagedByHPA", t, func() {
+		reconciler := &InferServiceReconciler{}
+
+		convey.Convey("nil ScalingPolicy", func() {
+			ist := &apiv1.InstanceSet{
+				Spec: apiv1.InstanceSetSpec{
+					ScalingPolicy: nil,
+				},
+			}
+			convey.So(reconciler.isManagedByScalingController(ist), convey.ShouldBeFalse)
+		})
+
+		convey.Convey("HPA type", func() {
+			ist := &apiv1.InstanceSet{
+				Spec: apiv1.InstanceSetSpec{
+					ScalingPolicy: &apiv1.ScalingPolicy{
+						Type: common.ScalingPolicyTypeHPA,
+					},
+				},
+			}
+			convey.So(reconciler.isManagedByScalingController(ist), convey.ShouldBeTrue)
+		})
+
+		convey.Convey("non-HPA type", func() {
+			ist := &apiv1.InstanceSet{
+				Spec: apiv1.InstanceSetSpec{
+					ScalingPolicy: &apiv1.ScalingPolicy{
+						Type: "Other",
+					},
+				},
+			}
+			convey.So(reconciler.isManagedByScalingController(ist), convey.ShouldBeFalse)
+		})
+
+		convey.Convey("empty type", func() {
+			ist := &apiv1.InstanceSet{
+				Spec: apiv1.InstanceSetSpec{
+					ScalingPolicy: &apiv1.ScalingPolicy{
+						Type: "",
+					},
+				},
+			}
+			convey.So(reconciler.isManagedByScalingController(ist), convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestSpecChangedExcludingReplicas(t *testing.T) {
+	convey.Convey("TestSpecChangedExcludingReplicas", t, func() {
+		reconciler := &InferServiceReconciler{}
+
+		convey.Convey("identical spec", func() {
+			replicas := int32(3)
+			current := apiv1.InstanceSetSpec{
+				Name:     "role1",
+				Replicas: &replicas,
+			}
+			desired := apiv1.InstanceSetSpec{
+				Name:     "role1",
+				Replicas: &replicas,
+			}
+			convey.So(reconciler.specChangedExcludingReplicas(current, desired), convey.ShouldBeFalse)
+		})
+
+		convey.Convey("only replicas differ", func() {
+			currentReplicas := int32(3)
+			desiredReplicas := int32(5)
+			current := apiv1.InstanceSetSpec{
+				Name:     "role1",
+				Replicas: &currentReplicas,
+			}
+			desired := apiv1.InstanceSetSpec{
+				Name:     "role1",
+				Replicas: &desiredReplicas,
+			}
+			convey.So(reconciler.specChangedExcludingReplicas(current, desired), convey.ShouldBeFalse)
+		})
+
+		convey.Convey("name differs", func() {
+			replicas := int32(3)
+			current := apiv1.InstanceSetSpec{
+				Name:     "role1",
+				Replicas: &replicas,
+			}
+			desired := apiv1.InstanceSetSpec{
+				Name:     "role2",
+				Replicas: &replicas,
+			}
+			convey.So(reconciler.specChangedExcludingReplicas(current, desired), convey.ShouldBeTrue)
+		})
+
+		convey.Convey("name and replicas differ", func() {
+			currentReplicas := int32(3)
+			desiredReplicas := int32(5)
+			current := apiv1.InstanceSetSpec{
+				Name:     "role1",
+				Replicas: &currentReplicas,
+			}
+			desired := apiv1.InstanceSetSpec{
+				Name:     "role2",
+				Replicas: &desiredReplicas,
+			}
+			convey.So(reconciler.specChangedExcludingReplicas(current, desired), convey.ShouldBeTrue)
+		})
+
+		convey.Convey("scaling policy differs", func() {
+			replicas := int32(3)
+			current := apiv1.InstanceSetSpec{
+				Name:     "role1",
+				Replicas: &replicas,
+			}
+			desired := apiv1.InstanceSetSpec{
+				Name:     "role1",
+				Replicas: &replicas,
+				ScalingPolicy: &apiv1.ScalingPolicy{
+					Type: common.ScalingPolicyTypeHPA,
+				},
+			}
+			convey.So(reconciler.specChangedExcludingReplicas(current, desired), convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestInstanceSetUpdated(t *testing.T) {
+	convey.Convey("TestInstanceSetUpdated", t, func() {
+		reconciler := &InferServiceReconciler{}
+
+		convey.Convey("nil instanceSet", func() {
+			role := apiv1.InstanceSetSpec{Name: "role1"}
+			convey.So(reconciler.instanceSetUpdated(nil, role), convey.ShouldBeFalse)
+		})
+
+		convey.Convey("spec unchanged", func() {
+			replicas := int32(3)
+			ist := &apiv1.InstanceSet{
+				Spec: apiv1.InstanceSetSpec{
+					Name:     "role1",
+					Replicas: &replicas,
+				},
+			}
+			role := apiv1.InstanceSetSpec{
+				Name:     "role1",
+				Replicas: &replicas,
+			}
+			convey.So(reconciler.instanceSetUpdated(ist, role), convey.ShouldBeFalse)
+		})
+
+		convey.Convey("spec changed", func() {
+			replicas := int32(3)
+			ist := &apiv1.InstanceSet{
+				Spec: apiv1.InstanceSetSpec{
+					Name:     "role1",
+					Replicas: &replicas,
+				},
+			}
+			role := apiv1.InstanceSetSpec{
+				Name:     "role2",
+				Replicas: &replicas,
+			}
+			convey.So(reconciler.instanceSetUpdated(ist, role), convey.ShouldBeTrue)
+		})
+
+		convey.Convey("HPA managed only replicas changed", func() {
+			currentReplicas := int32(5)
+			desiredReplicas := int32(3)
+			ist := &apiv1.InstanceSet{
+				Spec: apiv1.InstanceSetSpec{
+					Name:     "role1",
+					Replicas: &currentReplicas,
+					ScalingPolicy: &apiv1.ScalingPolicy{
+						Type: common.ScalingPolicyTypeHPA,
+					},
+				},
+			}
+			role := apiv1.InstanceSetSpec{
+				Name:     "role1",
+				Replicas: &desiredReplicas,
+				ScalingPolicy: &apiv1.ScalingPolicy{
+					Type: common.ScalingPolicyTypeHPA,
+				},
+			}
+			convey.So(reconciler.instanceSetUpdated(ist, role), convey.ShouldBeFalse)
+		})
+
+		convey.Convey("HPA managed name and replicas changed", func() {
+			currentReplicas := int32(5)
+			desiredReplicas := int32(3)
+			ist := &apiv1.InstanceSet{
+				Spec: apiv1.InstanceSetSpec{
+					Name:     "role1",
+					Replicas: &currentReplicas,
+					ScalingPolicy: &apiv1.ScalingPolicy{
+						Type: common.ScalingPolicyTypeHPA,
+					},
+				},
+			}
+			role := apiv1.InstanceSetSpec{
+				Name:     "role2",
+				Replicas: &desiredReplicas,
+			}
+			convey.So(reconciler.instanceSetUpdated(ist, role), convey.ShouldBeTrue)
+		})
+
+		convey.Convey("non-HPA managed replicas changed", func() {
+			currentReplicas := int32(5)
+			desiredReplicas := int32(3)
+			ist := &apiv1.InstanceSet{
+				Spec: apiv1.InstanceSetSpec{
+					Name:     "role1",
+					Replicas: &currentReplicas,
+				},
+			}
+			role := apiv1.InstanceSetSpec{
+				Name:     "role1",
+				Replicas: &desiredReplicas,
+			}
+			convey.So(reconciler.instanceSetUpdated(ist, role), convey.ShouldBeTrue)
+		})
 	})
 }
