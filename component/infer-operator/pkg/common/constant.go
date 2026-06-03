@@ -158,7 +158,7 @@ const (
 
 const (
 	PriorityLabelKey                   = LabelKeyPrefix + "priority"
-	SchedulingStrategySequential       = "Sequential"
+	SchedulingStrategyParallel         = "Parallel"
 	SchedulingStrategyPriority         = "Priority"
 	PrioritySchedulingStrategyLabelKey = LabelKeyPrefix + "priority-scheduling-strategy"
 )
