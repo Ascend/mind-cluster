@@ -134,6 +134,12 @@ rules:
   - apiGroups: [ "apps" ]
     resources: [ "deployments", "statefulsets", "replicasets"]
     verbs: [ "create", "list", "watch", "delete", "get", "patch", "update" ]
+  - apiGroups: [ "autoscaling" ]
+    resources: [ "horizontalpodautoscalers" ]
+    verbs: [ "create", "list", "watch", "delete", "get", "patch", "update" ]
+  - apiGroups: [ "external.metrics.k8s.io" ]
+    resources: [ "*" ]
+    verbs: [ "get", "list", "watch" ]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -601,6 +607,14 @@ spec:
                           description: spec is the raw extension spec of the workload
                           type: object
                           x-kubernetes-preserve-unknown-fields: true
+                        scalingPolicy:
+                          properties:
+                            type:
+                              type: string
+                            spec:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                          type: object
                         workload:
                           description: workload defines the type of workload
                           properties:
@@ -1152,6 +1166,14 @@ spec:
                       description: spec is the raw extension spec of the workload
                       type: object
                       x-kubernetes-preserve-unknown-fields: true
+                    scalingPolicy:
+                      properties:
+                        type:
+                          type: string
+                        spec:
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
+                      type: object
                     workload:
                       description: workload defines the type of workload
                       properties:
@@ -1698,6 +1720,14 @@ spec:
                 description: spec is the raw extension spec of the workload
                 type: object
                 x-kubernetes-preserve-unknown-fields: true
+              scalingPolicy:
+                properties:
+                  type:
+                    type: string
+                  spec:
+                    type: object
+                    x-kubernetes-preserve-unknown-fields: true
+                type: object
               workload:
                 description: workload defines the type of workload
                 properties:
@@ -1797,9 +1827,29 @@ spec:
                 description: replicas is the total number of replicas for this InstanceSet.
                 format: int32
                 type: integer
+              scalingResourceStatus:
+                description: ScalingResourceStatus defines the observed state of scaling resources
+                properties:
+                  type:
+                    description: Type indicates the scaling resource type (e.g. HPA)
+                    type: string
+                  name:
+                    description: Name indicates the scaling resource name
+                    type: string
+                  ready:
+                    description: Ready indicates whether the scaling resource is ready
+                    type: boolean
+                  message:
+                    description: Message provides additional information about the scaling resource status
+                    type: string
+                type: object
             type: object
         type: object
     served: true
     storage: true
     subresources:
       status: {}
+      scale:
+        specReplicasPath: .spec.replicas
+        statusReplicasPath: .status.replicas
+        labelSelectorPath: .status.labelSelector
