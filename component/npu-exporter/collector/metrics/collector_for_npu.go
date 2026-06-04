@@ -1,4 +1,4 @@
-/* Copyright(C) 2025-2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2025-2026. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -17,7 +17,6 @@ package metrics
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -583,24 +582,19 @@ func collectUtilV2(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCac
 }
 
 func setNetHealthStatus(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCache) {
-	chip.NetHealthStatus = colcommon.Abnormal
+	chip.NetHealthStatus = colcommon.NotReport
 	if !dmgr.IsTrainingCard() {
 		return
 	}
+	chip.NetHealthStatus = getNetworkHealthy(logicID, dmgr)
+}
 
+func getNetworkHealthy(logicID int32, dmgr devmanager.DeviceInterface) string {
 	netCode, err := dmgr.GetDeviceNetWorkHealth(logicID)
 	logger.Debugf("chip %d network healthy code is %d", logicID, netCode)
 	if err != nil {
-		netCode = math.MaxUint32
+		return colcommon.Unknown
 	}
-	chip.NetHealthStatus = getNetworkHealthy(netCode)
-}
-
-func getNetworkHealthy(netCode uint32) string {
-	if netCode == math.MaxUint32 {
-		return colcommon.Abnormal
-	}
-
 	if netCode == common.NetworkInit || netCode == common.NetworkSuccess {
 		return colcommon.Healthy
 	}
@@ -610,21 +604,26 @@ func getNetworkHealthy(netCode uint32) string {
 
 func getHealth(logicID int32, dmgr devmanager.DeviceInterface) string {
 	health, err := dmgr.GetDeviceHealth(logicID)
-	if err != nil || health != 0 {
+	if err != nil {
+		return colcommon.Unknown
+	}
+	if health != 0 {
 		return colcommon.UnHealthy
 	}
 	return colcommon.Healthy
 }
 
 func getHealthCode(health string) int {
-	if health == colcommon.Abnormal {
-		return common.RetError
+	if health == colcommon.NotReport {
+		return common.UnRetError
 	}
-
+	if health == colcommon.Unknown {
+		return common.FailedValue
+	}
 	if colcommon.Healthy == health {
-		return 1
+		return colcommon.HealthyCode
 	}
-	return 0
+	return colcommon.UnhealthyCode
 }
 
 func setProcessInfo(logicID int32, dmgr devmanager.DeviceInterface, hwChip *chipCache) {

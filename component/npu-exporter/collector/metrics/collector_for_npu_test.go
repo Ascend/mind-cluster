@@ -550,3 +550,150 @@ func TestUpdateMachineInfoCardMetric(t *testing.T) {
 		})
 	}
 }
+
+const (
+	testLogicID           = int32(0)
+	testHealthCode        = 0
+	testNetworkHealthCode = 0
+)
+
+type getNetworkHealthyTestCase struct {
+	name         string
+	logicID      int32
+	netCode      uint32
+	getNetErr    error
+	expectStatus string
+}
+
+func buildGetNetworkHealthyTestCases() []getNetworkHealthyTestCase {
+	return []getNetworkHealthyTestCase{
+		{
+			name:         "should return Unknown when GetDeviceNetWorkHealth fails",
+			logicID:      testLogicID,
+			netCode:      0,
+			getNetErr:    errors.New(apiCallFailedMsg),
+			expectStatus: colcommon.Unknown,
+		},
+		{
+			name:         "should return Healthy when netCode is NetworkInit",
+			logicID:      testLogicID,
+			netCode:      common.NetworkInit,
+			getNetErr:    nil,
+			expectStatus: colcommon.Healthy,
+		},
+		{
+			name:         "should return Healthy when netCode is NetworkSuccess",
+			logicID:      testLogicID,
+			netCode:      common.NetworkSuccess,
+			getNetErr:    nil,
+			expectStatus: colcommon.Healthy,
+		},
+		{
+			name:         "should return UnHealthy when netCode is other value",
+			logicID:      testLogicID,
+			netCode:      1,
+			getNetErr:    nil,
+			expectStatus: colcommon.UnHealthy,
+		},
+	}
+}
+
+func TestGetNetworkHealthy(t *testing.T) {
+	for _, tt := range buildGetNetworkHealthyTestCases() {
+		convey.Convey(tt.name, t, func() {
+			dmgr := &devmanager.DeviceManager{}
+			patches := gomonkey.ApplyMethodReturn(dmgr, "GetDeviceNetWorkHealth", tt.netCode, tt.getNetErr)
+			defer patches.Reset()
+
+			result := getNetworkHealthy(tt.logicID, dmgr)
+			convey.So(result, convey.ShouldEqual, tt.expectStatus)
+		})
+	}
+}
+
+type getHealthTestCase struct {
+	name         string
+	logicID      int32
+	healthCode   uint32
+	getHealthErr error
+	expectStatus string
+}
+
+func buildGetHealthTestCases() []getHealthTestCase {
+	return []getHealthTestCase{
+		{
+			name:         "should return Unknown when GetDeviceHealth fails",
+			logicID:      testLogicID,
+			healthCode:   0,
+			getHealthErr: errors.New(apiCallFailedMsg),
+			expectStatus: colcommon.Unknown,
+		},
+		{
+			name:         "should return Healthy when health is 0",
+			logicID:      testLogicID,
+			healthCode:   0,
+			getHealthErr: nil,
+			expectStatus: colcommon.Healthy,
+		},
+		{
+			name:         "should return UnHealthy when health is not 0",
+			logicID:      testLogicID,
+			healthCode:   1,
+			getHealthErr: nil,
+			expectStatus: colcommon.UnHealthy,
+		},
+	}
+}
+
+func TestGetHealth(t *testing.T) {
+	for _, tt := range buildGetHealthTestCases() {
+		convey.Convey(tt.name, t, func() {
+			dmgr := &devmanager.DeviceManager{}
+			patches := gomonkey.ApplyMethodReturn(dmgr, "GetDeviceHealth", tt.healthCode, tt.getHealthErr)
+			defer patches.Reset()
+
+			result := getHealth(tt.logicID, dmgr)
+			convey.So(result, convey.ShouldEqual, tt.expectStatus)
+		})
+	}
+}
+
+type getHealthCodeTestCase struct {
+	name         string
+	healthStatus string
+	expectCode   int
+}
+
+func buildGetHealthCodeTestCases() []getHealthCodeTestCase {
+	return []getHealthCodeTestCase{
+		{
+			name:         "should return UnRetError when health is NotReport",
+			healthStatus: colcommon.NotReport,
+			expectCode:   common.UnRetError,
+		},
+		{
+			name:         "should return FailedValue when health is Unknown",
+			healthStatus: colcommon.Unknown,
+			expectCode:   common.FailedValue,
+		},
+		{
+			name:         "should return HealthyCode when health is Healthy",
+			healthStatus: colcommon.Healthy,
+			expectCode:   colcommon.HealthyCode,
+		},
+		{
+			name:         "should return UnhealthyCode when health is UnHealthy",
+			healthStatus: colcommon.UnHealthy,
+			expectCode:   colcommon.UnhealthyCode,
+		},
+	}
+}
+
+func TestGetHealthCode(t *testing.T) {
+	for _, tt := range buildGetHealthCodeTestCases() {
+		convey.Convey(tt.name, t, func() {
+			result := getHealthCode(tt.healthStatus)
+			convey.So(result, convey.ShouldEqual, tt.expectCode)
+		})
+	}
+}

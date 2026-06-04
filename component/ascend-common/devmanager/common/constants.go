@@ -136,7 +136,7 @@ const (
 	FailedMetricValue = -1
 
 	// FailedValue for failed value
-	FailedValue = 0xffffffff
+	FailedValue = math.MaxInt32
 
 	// MaxErrorCodeLen max length of error code for Prometheus
 	MaxErrorCodeLen = 10

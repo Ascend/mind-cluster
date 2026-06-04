@@ -176,7 +176,7 @@ func (c *NetworkCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colc
 			doUpdateMetricWithValidateNum(ch, timestamp, netInfo.LinkStatInfo.LinkUPNum, cardLabel, npuChipLinkUpNum)
 		}
 		if validateNotNilForEveryElement(netInfo.LinkStatusInfo) {
-			doUpdateMetricWithValidateNum(ch, timestamp, float64(hccn.GetLinkStatusCode(netInfo.LinkStatusInfo.LinkState)),
+			doUpdateMetricWithValidateNum(ch, timestamp, float64(getLinkStatusCode(netInfo.LinkStatusInfo.LinkState)),
 				cardLabel, descLinkStatus)
 		}
 	}
@@ -223,7 +223,7 @@ func (c *NetworkCollector) UpdateTelegraf(fieldsMap map[string]map[string]interf
 		}
 		if validateNotNilForEveryElement(extInfo.LinkStatusInfo) {
 			doUpdateTelegrafWithValidateNum(fieldMap, descLinkStatus,
-				float64(hccn.GetLinkStatusCode(extInfo.LinkStatusInfo.LinkState)), "")
+				float64(getLinkStatusCode(extInfo.LinkStatusInfo.LinkState)), "")
 		}
 	}
 	return fieldsMap
@@ -237,7 +237,7 @@ func collectNetworkInfo(phyID int32) common.NpuNetInfo {
 		hwlog.ResetErrCnt(colcommon.DomainForLinkState, phyID)
 	} else {
 		logErrMetricsWithLimit(colcommon.DomainForLinkState, phyID, err)
-		newNetInfo.LinkStatusInfo.LinkState = colcommon.Abnormal
+		newNetInfo.LinkStatusInfo.LinkState = colcommon.Unknown
 	}
 
 	if tx, rx, err := hccn.GetNPUInterfaceTraffic(phyID); err == nil {
@@ -286,7 +286,7 @@ func collectNetworkNpuInfo(logicID int32) []*common.NpuNetInfo {
 				hwlog.ResetErrCnt(fmt.Sprint(colcommon.DomainForLinkState, dieID, portID), logicID)
 			} else {
 				logWarnMetricsWithLimit(fmt.Sprint(colcommon.DomainForLinkState, dieID, portID), logicID, dieID, portID, err)
-				netInfo.LinkStatusInfo.LinkState = colcommon.Abnormal
+				netInfo.LinkStatusInfo.LinkState = colcommon.Unknown
 			}
 			if tx, rx, err := hccn.GetNPUInterfaceTrafficNpu(logicID, int32(dieID), int32(portID), int32(bandwidthTime)); err == nil {
 				netInfo.BandwidthInfo.RxValue = rx
@@ -317,7 +317,7 @@ func promUpdateNetInfo(ch chan<- prometheus.Metric, cache netInfoNPUCache, times
 	}
 	for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
 		if validateNotNilForEveryElement(netInfo[i].LinkStatusInfo) {
-			doUpdateMetricWithValidateNum(ch, timestamp, float64(hccn.GetLinkStatusCode(netInfo[i].LinkStatusInfo.LinkState)),
+			doUpdateMetricWithValidateNum(ch, timestamp, float64(getLinkStatusCode(netInfo[i].LinkStatusInfo.LinkState)),
 				cardLabel, linkStatusDesc[i])
 		}
 		if validateNotNilForEveryElement(netInfo[i].BandwidthInfo) {
@@ -338,7 +338,7 @@ func telegrafUpdateNetInfo(cache netInfoNPUCache, fieldMap map[string]interface{
 	for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
 		if validateNotNilForEveryElement(netInfo[i].LinkStatusInfo) {
 			doUpdateTelegrafWithValidateNum(fieldMap, linkStatusDesc[i],
-				float64(hccn.GetLinkStatusCode(netInfo[i].LinkStatusInfo.LinkState)), "")
+				float64(getLinkStatusCode(netInfo[i].LinkStatusInfo.LinkState)), "")
 		}
 		if validateNotNilForEveryElement(netInfo[i].BandwidthInfo) {
 			doUpdateTelegrafWithValidateNum(fieldMap, bandwidthTxDesc[i], netInfo[i].BandwidthInfo.TxValue, "")
@@ -367,4 +367,18 @@ func initNpuNetWorkDesc() {
 				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
 		}
 	}
+}
+
+// getLinkStatusCode return union link status code
+func getLinkStatusCode(status string) int {
+	if status == colcommon.NotReport {
+		return common.UnRetError
+	}
+	if status == colcommon.Unknown {
+		return common.FailedValue
+	}
+	if status == colcommon.LinkUp {
+		return colcommon.HealthyCode
+	}
+	return colcommon.UnhealthyCode
 }
