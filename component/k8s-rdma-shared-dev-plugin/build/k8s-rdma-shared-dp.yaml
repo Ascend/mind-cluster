@@ -1,4 +1,34 @@
 apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: rdma-shared-dp-sa
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: rdma-shared-dp-cm-role
+  namespace: kube-system
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "create", "update", "delete", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rdma-shared-dp-cm-rb
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: rdma-shared-dp-cm-role
+subjects:
+  - kind: ServiceAccount
+    name: rdma-shared-dp-sa
+    namespace: kube-system
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: rdma-devices
@@ -7,6 +37,7 @@ data:
   config.json: |
     {
       "periodicUpdateInterval": 300,
+      "faultDetectPeriod": 5,
       "configList": [
         {
           "resourcePrefix": "huawei.com",
@@ -37,6 +68,7 @@ spec:
     spec:
       hostNetwork: true
       priorityClassName: system-node-critical
+      serviceAccountName: rdma-shared-dp-sa
       nodeSelector:
         workerselector: dls-worker-node # for node with atlas 950/850 use ,the node must have ub rdma
       initContainers:
@@ -70,6 +102,16 @@ spec:
             - name: log-k8s-rdma-shared-dp
               mountPath: /var/log/mindx-dl/k8s-rdma-shared-dp
               subPath: mindx-dl/k8s-rdma-shared-dp
+            - name: hinicadmdfx5
+              mountPath: /usr/bin/hinicadmdfx5
+              readOnly: true
+            - name: hinic-log
+              mountPath: /var/log/hinic5
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
       volumes:
         - name: device-plugin
           hostPath:
@@ -94,3 +136,11 @@ spec:
           hostPath:
             path: /var/log
             type: Directory
+        - name: hinicadmdfx5
+          hostPath:
+            path: /usr/bin/hinicadmdfx5
+            type: File
+        - name: hinic-log
+          hostPath:
+            path: /var/log/hinic5
+            type: DirectoryOrCreate

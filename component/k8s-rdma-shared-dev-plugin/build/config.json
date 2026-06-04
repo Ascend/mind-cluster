@@ -1,5 +1,6 @@
 {
   "periodicUpdateInterval": 300,
+  "faultDetectPeriod": 5,
   "configList": [
     {
       "resourcePrefix": "huawei.com",

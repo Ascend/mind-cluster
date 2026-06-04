@@ -65,6 +65,7 @@ type UserConfig struct {
 // UserConfigList config list for servers
 type UserConfigList struct {
 	PeriodicUpdateInterval *int         `json:"periodicUpdateInterval"`
+	FaultDetectPeriod      *int         `json:"faultDetectPeriod,omitempty"`
 	ConfigList             []UserConfig `json:"configList"`
 }
 

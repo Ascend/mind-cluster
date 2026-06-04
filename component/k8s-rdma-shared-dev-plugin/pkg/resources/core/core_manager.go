@@ -28,6 +28,8 @@ import (
 	"github.com/vishvananda/netlink"
 
 	"ascend-common/common-utils/hwlog"
+
+	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/utils"
 )
@@ -74,6 +76,8 @@ type CoreResourceManager interface {
 	GetUseCdi() bool
 	// GetPeriodicUpdateInterval returns the periodic update interval
 	GetPeriodicUpdateInterval() time.Duration
+	// GetFaultDetectPeriod returns the fault detect period
+	GetFaultDetectPeriod() int
 }
 
 // coreResourceManager implements CoreResourceManager interface
@@ -87,6 +91,7 @@ type coreResourceManager struct {
 	netlinkManager         types.NetlinkManager
 	PeriodicUpdateInterval time.Duration
 	useCdi                 bool
+	faultDetectPeriod      int
 }
 
 // NewCoreResourceManager returns a new instance of CoreResourceManager
@@ -136,10 +141,20 @@ func (crm *coreResourceManager) ReadConfig() error {
 		crm.PeriodicUpdateInterval = time.Duration(PeriodicUpdateInterval) * time.Second
 	}
 
+	// set fault detect period
+	if config.FaultDetectPeriod == nil {
+		crm.faultDetectPeriod = common.InvalidFaultDetectionPeriod
+		hwlog.RunLog.Warnf("no fault detection period is set, fault detection disabled")
+	} else {
+		crm.faultDetectPeriod = *config.FaultDetectPeriod
+		hwlog.RunLog.Infof("fault detect period: %+d \n", crm.faultDetectPeriod)
+	}
+
 	crm.configList = make([]*types.UserConfig, len(config.ConfigList))
 	for i := range config.ConfigList {
 		crm.configList[i] = &config.ConfigList[i]
 	}
+
 	return nil
 }
 
@@ -308,6 +323,11 @@ func (crm *coreResourceManager) GetConfigList() []*types.UserConfig {
 // SetConfigList sets the list of configurations
 func (crm *coreResourceManager) SetConfigList(configs []*types.UserConfig) {
 	crm.configList = configs
+}
+
+// GetFaultDetectPeriod returns the fault detect period
+func (crm *coreResourceManager) GetFaultDetectPeriod() int {
+	return crm.faultDetectPeriod
 }
 
 // GetResourceServers returns the list of resource servers

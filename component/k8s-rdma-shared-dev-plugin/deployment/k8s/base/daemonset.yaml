@@ -14,23 +14,29 @@ spec:
     spec:
       hostNetwork: true
       priorityClassName: system-node-critical
+      serviceAccountName: rdma-shared-dp-sa
       containers:
-      - image: ghcr.io/mellanox/k8s-rdma-shared-dev-plugin
-        name: k8s-rdma-shared-dp-ds
-        imagePullPolicy: IfNotPresent
-        securityContext:
-          privileged: true
-        volumeMounts:
-          - name: device-plugin
-            mountPath: /var/lib/kubelet/device-plugins
-            readOnly: false
-          - name: plugins-registry
-            mountPath: /var/lib/kubelet/plugins_registry
-            readOnly: false
-          - name: config
-            mountPath: /k8s-rdma-shared-dev-plugin
-          - name: devs
-            mountPath: /dev/
+        - image: ghcr.io/mellanox/k8s-rdma-shared-dev-plugin
+          name: k8s-rdma-shared-dp-ds
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: device-plugin
+              mountPath: /var/lib/kubelet/device-plugins
+              readOnly: false
+            - name: plugins-registry
+              mountPath: /var/lib/kubelet/plugins_registry
+              readOnly: false
+            - name: config
+              mountPath: /k8s-rdma-shared-dev-plugin
+            - name: devs
+              mountPath: /dev/
       volumes:
         - name: device-plugin
           hostPath:
@@ -42,8 +48,8 @@ spec:
           configMap:
             name: rdma-devices
             items:
-            - key: config.json
-              path: config.json
+              - key: config.json
+                path: config.json
         - name: devs
           hostPath:
             path: /dev/

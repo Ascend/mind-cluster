@@ -48,6 +48,10 @@ const (
 	CheckDpuCardDrop = "check_dpu_card_drop"
 )
 
+func validateSysfsPath(resolvedPath string) bool {
+	return strings.HasPrefix(resolvedPath, "/sys/")
+}
+
 // FaultConfig represents a fault configuration item
 type FaultConfig struct {
 	Name        string `json:"name"`
@@ -129,7 +133,11 @@ func RunFaultChecks(config *FaultConfigList, hcas []string) []FaultResult {
 
 	for _, fault := range config.Faults {
 		if fault.Name == "dpu_card_drop" {
-			result, details := runCheck(fault, "")
+			hca := ""
+			if len(hcas) > 0 {
+				hca = hcas[0]
+			}
+			result, details := runCheck(fault, hca)
 			results = append(results, FaultResult{
 				Fault:   fault,
 				HCA:     "",
@@ -173,12 +181,12 @@ func checkHcaPort(hca string) (string, string) {
 	statePath := fmt.Sprintf("%s/%s/ports/1/state", common.SysClassInfiniband, hca)
 	physStatePath := fmt.Sprintf("%s/%s/ports/1/phys_state", common.SysClassInfiniband, hca)
 
-	state, err := utils.ReadLimitBytes(statePath, readLimitBytes)
+	state, err := utils.ReadLimitBytesWithSymlink(statePath, readLimitBytes, validateSysfsPath)
 	if err != nil {
 		return "false", fmt.Sprintf("port state: UNKNOWN, port phys_state: UNKNOWN")
 	}
 
-	physState, err := utils.ReadLimitBytes(physStatePath, readLimitBytes)
+	physState, err := utils.ReadLimitBytesWithSymlink(physStatePath, readLimitBytes, validateSysfsPath)
 	if err != nil {
 		return "false", fmt.Sprintf("port state: %s, port phys_state: UNKNOWN", strings.TrimSpace(string(state)))
 	}
@@ -238,7 +246,7 @@ func findBondByEthName(ethName string) (string, []string, error) {
 
 func getBondSlaves(bondName string) ([]string, error) {
 	slavesPath := filepath.Join(common.SysClassNet, bondName, "bonding", "slaves")
-	slavesContent, err := utils.ReadLimitBytes(slavesPath, readLimitBytes)
+	slavesContent, err := utils.ReadLimitBytesWithSymlink(slavesPath, readLimitBytes, validateSysfsPath)
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +278,7 @@ func checkBondSlavesState(bondName string, slaves []string, hca string) (string,
 
 func isEthPortDown(ifName string) bool {
 	operstatePath := filepath.Join(common.SysClassNet, ifName, "operstate")
-	operstate, err := utils.ReadLimitBytes(operstatePath, readLimitBytes)
+	operstate, err := utils.ReadLimitBytesWithSymlink(operstatePath, readLimitBytes, validateSysfsPath)
 	if err != nil {
 		return false
 	}
@@ -308,7 +316,7 @@ func StartFaultDetection(ctx context.Context, hcaList []string, faultDetectPerio
 			hwlog.RunLog.Info("Fault detection goroutine stopped")
 			return
 		case <-ticker.C:
-			hwlog.RunLog.Info("Starting fault detection...")
+			hwlog.RunLog.Debug("Starting fault detection...")
 			config, err := LoadFaultConfig()
 			if err != nil {
 				hwlog.RunLog.Errorf("Failed to load fault config: %v", err)
