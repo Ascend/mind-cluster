@@ -1,0 +1,36 @@
+FROM openeuler/openeuler:24.03-lts AS build
+
+ARG VERSION=26.1.0
+ARG TARGETPLATFORM
+
+RUN yum update -y &&\
+    yum install -y wget unzip &&\
+    yum clean all &&\
+    rm -rf /var/cache/yum &&\
+    rm -rf /tmp/* &&\
+    ARCH=$(case "${TARGETPLATFORM}" in \
+        "linux/amd64") echo "x86_64" ;; \
+        "linux/arm64") echo "aarch64" ;; \
+        *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
+    esac) &&\
+    wget https://gitcode.com/ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-k8s-rdma-shared-dev-plugin_${VERSION}_linux-${ARCH}.zip &&\
+    unzip Ascend-mindxdl-k8s-rdma-shared-dev-plugin_${VERSION}_linux-${ARCH}.zip -d /build
+
+FROM openeuler/openeuler:24.03-lts
+
+RUN yum install -y shadow &&\
+    yum clean all &&\
+    rm -rf /var/cache/yum &&\
+    usermod root -s /usr/sbin/nologin
+
+COPY --from=build /build/k8s-rdma-shared-dp /usr/local/bin/k8s-rdma-shared-dp
+COPY --from=build /build/agreement.txt /usr/local/
+
+RUN chmod 550 /usr/local/bin/k8s-rdma-shared-dp &&\
+    chmod 440 /usr/local/agreement.txt &&\
+    chmod 550 /etc/rdma-plugin/fault_detection.sh &&\
+    sed -i 's/\r$//' /etc/rdma-plugin/fault_detection.sh &&\
+    echo 'umask 027' >> /etc/profile &&\
+    echo 'source /etc/profile' >> ~/.bashrc
+
+ENTRYPOINT ["/bin/bash", "-c", "cat /usr/local/agreement.txt; exec /usr/local/bin/k8s-rdma-shared-dp"]
