@@ -8,13 +8,10 @@
 
 - [最新消息](#最新消息)
 - [简介](#简介)
-- [目录结构](#目录结构)
 - [版本说明](#版本说明)
 - [兼容性信息](#兼容性信息)
-- [环境部署](#环境部署)
-- [快速入门](#快速入门)
+- [用户指南](#用户指南)
 - [特性介绍](#特性介绍)
-- [API参考](#api参考)
 - [FAQ](#faq)
 - [安全声明](#安全声明)
 - [分支维护策略](#分支维护策略)
@@ -29,250 +26,19 @@
 - [2026.04.15]: 🚀 支持故障后处理策略配置
 - [2026.04.15]: 🚀 支持A2\A3设备的软切分
 - [2026.04.15]: 🚀 推理支持交换机亲和性
-- [2026.04.15]: 🚀 verl支持异步保存
-- [2026.04.15]: 🚀 clusterd的心跳频率修改
 - [2026.04.15]: 🚀 RoCE网络故障隔离和恢复机制增强
 - [2026.04.15]: 🚀 人工隔离芯片准确性增强
 - [2026.04.15]: 🚀 支持天工组网亲和性调度
-- [2026.04.15]: 🚀 作业信息订阅接口优化
-- [2026.04.15]: 🚀 volcano日志优化
 - [2026.04.15]: 🚀 支持隔离芯片自动解除隔离
 - [2026.04.15]: 🚀 支持任务调度异常原因统计
 - [2026.04.15]: 🚀 支持A2\A3设备的硬切分
 - [2026.04.15]: 🚀 npu-exporter支持根据文件上报自定义指标
-- [2026.04.15]: 🚀 npu-exporter新增NPU利用率指标
-- [2026.04.15]: 🚀 进程级重调度NPU硬件故障处理流程优化
-- [2026.04.15]: 🚀 进程级重调度故障处理增强
 
 
 # 简介
 
-    MindCluster（AI集群系统软件）是支持NPU（昇腾AI处理器）训练和推理硬件的深度学习组件，使能构建集群全流程运行，提供NPU集群作业调度、运维监测、故障恢复等功能。深度学习平台开发厂商可以减少底层资源调度相关软件开发工作量，快速使能合作伙伴基于MindCluster开发深度学习平台。
+MindCluster（AI集群系统软件）是支持NPU（昇腾AI处理器）训练和推理硬件的深度学习组件，使能构建集群全流程运行，提供NPU集群作业调度、运维监测、故障恢复等功能。深度学习平台开发厂商可以减少底层资源调度相关软件开发工作量，快速使能合作伙伴基于MindCluster开发深度学习平台。
 
-# 目录结构
-
-```text
-├─ build
-└─ component
-   ├─ ascend-common
-   │  ├─ api
-   │  │  ├─ ascend-operator
-   │  │  │  ├─ apis
-   │  │  │  │  └─ batch
-   │  │  │  │     └─ v1
-   │  │  │  └─ client
-   │  │  │     ├─ clientset
-   │  │  │     │  └─ versioned
-   │  │  │     │     ├─ scheme
-   │  │  │     │     └─ typed
-   │  │  │     │        └─ batch
-   │  │  │     │           └─ v1
-   │  │  │     ├─ informers
-   │  │  │     │  └─ externalversions
-   │  │  │     │     ├─ batch
-   │  │  │     │     │  └─ v1
-   │  │  │     │     └─ internalinterfaces
-   │  │  │     └─ listers
-   │  │  │        └─ batch
-   │  │  │           └─ v1
-   │  │  └─ slownet
-   │  ├─ common-utils
-   │  │  ├─ cache
-   │  │  ├─ ethtool
-   │  │  ├─ hwlog
-   │  │  ├─ limiter
-   │  │  ├─ rand
-   │  │  └─ utils
-   │  └─ devmanager
-   │     ├─ common
-   │     ├─ dcmi
-   │     └─ hccn
-   ├─ ascend-device-plugin
-   │  ├─ build
-   │  ├─ doc
-   │  │  └─ figures
-   │  └─ pkg
-   │     ├─ common
-   │     ├─ device
-   │     │  └─ deviceswitch
-   │     ├─ kubeclient
-   │     ├─ next
-   │     │  └─ deviceswitch
-   │     │      └─ customname
-   │     └─ server
-   ├─ ascend-docker-runtime
-   │  ├─ assets
-   │  ├─ build
-   │  │  ├─ libboundscheck
-   │  │  ├─ makeself-header
-   │  │  └─ scripts
-   │  ├─ cli
-   │  │  ├─ src
-   │  │  └─ test
-   │  │     ├─ dt
-   │  │     └─ dt_go
-   │  ├─ destroy
-   │  │  └─ src
-   │  ├─ hook
-   │  │  └─ process
-   │  ├─ install
-   │  │  └─ process
-   │  ├─ mindxcheckutils
-   │  ├─ opensource
-   │  ├─ output
-   │  ├─ platform
-   │  └─ runtime
-   │     ├─ dcmi
-   │     └─ process
-   ├─ ascend-faultdiag-online
-   │   └─ pkg
-   │       ├─algo_src
-   │       │  ├─ netfault
-   │       │  └─ slownode
-   │       ├─ core
-   │       ├─ model
-   │       ├─ register
-   │       ├─ service
-   │       └─ utils
-   ├─ ascend-faultdiag
-   │  ├─build
-   │  ├─platform
-   │  ├─src
-   │  │  ├─ascend_fd
-   │  │  │  ├─configuration
-   │  │  │  ├─controller
-   │  │  │  ├─lib
-   │  │  │  ├─model
-   │  │  │  ├─module
-   │  │  │  │  └─mindie_trace_parser
-   │  │  │  ├─pkg
-   │  │  │  │  ├─customize
-   │  │  │  │  │  ├─custom_config
-   │  │  │  │  │  └─custom_entity
-   │  │  │  │  ├─diag
-   │  │  │  │  │  ├─knowledge_graph
-   │  │  │  │  │  │  ├─kg_engine
-   │  │  │  │  │  │  │  ├─graph
-   │  │  │  │  │  │  │  └─model
-   │  │  │  │  │  ├─network_congestion
-   │  │  │  │  │  ├─node_anomaly
-   │  │  │  │  │  │  ├─npu_anomaly
-   │  │  │  │  │  │  └─resource_preemption
-   │  │  │  │  │  │      └─utils
-   │  │  │  │  │  └─root_cluster
-   │  │  │  │  ├─parse
-   │  │  │  │  │  ├─blacklist
-   │  │  │  │  │  ├─knowledge_graph
-   │  │  │  │  │  │  ├─parser
-   │  │  │  │  │  │  └─utils
-   │  │  │  │  │  ├─network_congestion
-   │  │  │  │  │  ├─node_anomaly
-   │  │  │  │  │  └─root_cluster
-   │  │  │  ├─sdk
-   │  │  │  ├─utils
-   │  │  │  │  ├─constant
-   │  │  │  │  ├─fast_parser
-   │  │  │  │  └─timehub
-   │  │  │  └─wrapper
-   │  ├─test
-   │  │  ├─custom_operation
-   │  │  ├─dt
-   │  │  └─st
-   │  ├─scripts
-   │  │   ├─exp_covert
-   │  │   │  └─exp_lib_dir
-   │  │   └─local_diag
-   │  └─toolkit_src
-   ├─ ascend-for-volcano
-   │  ├─ build
-   │  ├─ common
-   │       ├─ k8s
-   │       └─ util
-   │  ├─ config
-   │  ├─ doc
-   │       └─ figures
-   │  ├─ internal
-   │  │    ├─ npu
-   │  │    │  ├─ ascend310
-   │  │    │  │  ├─ card310x4
-   │  │    │  │  └─ chip310x4
-   │  │    │  ├─ ascend310p
-   │  │    │  │  ├─ card310px2
-   │  │    │  │  ├─ chip310px2
-   │  │    │  │  └─ vnpu
-   │  │    │  ├─ ascend910
-   │  │    │  │  ├─ ascend910a3
-   │  │    │  │  │  ├─ module910a3x16
-   │  │    │  │  │  └─ superpod
-   │  │    │  │  ├─ ascend910b
-   │  │    │  │  │  ├─ module910bx16
-   │  │    │  │  │  └─ vnpu
-   │  │    │  │  └─ ascend910old
-   │  │    │  │     └─ module910x8
-   │  │    │  ├─ base
-   │  │    │  └─ vnpu
-   │  │    ├─ nslb
-   │  │    ├─ rescheduling
-   │  │    └─ test
-   │  ├─ output
-   │  ├─ plugin
-   │  ├─ test
-   │  └─ testdata
-   │     └─ tor
-   ├─ ascend-operator
-   │  ├─ build
-   │  └─ pkg
-   │    ├─ api
-   │    │  └─ v1
-   │    ├─ controllers
-   │    │  ├─ scaling
-   │    │  └─ v1
-   │    ├─ ranktable
-   │    │  ├─ common
-   │    │  ├─ generator
-   │    │  ├─ utils
-   │    │  ├─ v1
-   │    │  └─ v1dot2
-   │    ├─ testtool
-   │    └─ utils
-   ├─ clusterd
-   │  ├─ build
-   │  └─ pkg
-   ├─ container-manager
-   │  ├─ build
-   │  └─ pkg
-   │    ├─ command
-   │    ├─ common
-   │    ├─ container
-   │    │  ├─ app
-   │    │  └─ domain
-   │    ├─ devmgr
-   │    ├─ fault
-   │    │  ├─ app
-   │    │  └─ domain
-   │    ├─ reset
-   │    │  ├─ app
-   │    │  └─ domain
-   │    └─ workflow
-   ├─ noded
-   │  ├─ build
-   │  └─ pkg
-   ├─ npu-exporter
-   │  ├─ build
-   │  ├─ cmd
-   │  ├─ collector
-   │  ├─ platforms
-   │  ├─ plugins
-   │  ├─ tuils
-   │  └─ versions
-   ├─ taskd
-   │  ├─ build
-   │  ├─ plugins
-   │  ├─ taskd
-   │  ├─ tests
-   │  ├─ venv
-   │  └─ Scripts
-```
 
 # 版本说明
 
@@ -282,70 +48,12 @@ MindCluster版本配套详情请参考：[版本配套详情](/docs/zh/release_n
 
 MindCluster基础调度特性与断点续训特性支持的框架：Pytorch、MindSpore。
 
-# 环境部署
 
-介绍MindCluster的编译及安装方式。
-
-## MindCluster集群调度
-
-### 编译
-
-1. 拉取mind-cluster整体源码，例如放在/home目录下。
-
-2. 修改组件版本配置文件/home/mind-cluster/build/service_config.ini中mind-cluster-version字段值为所需编译版本，默认值如下：
-
-        mind-cluster-version=6.0.0
-
-3. 执行以下命令，进入/home/mind-cluster/build目录，选择构建脚本执行：
-
-        cd /home/mind-cluster/build
-
-        dos2unix *.sh && chmod +x *.sh
-
-        ./build_all.sh $GOPATH
-
-4. 执行完成后进入/home/mind-cluster，在各组件“output”目录下生成编译完成的文件。
-
-5. 此处使用的go版本为1.21。
-
-### 组件安装
-
-在安装和使用集群调度组件前，用户需要提前了解[集群调度组件的特性](./docs/zh/scheduling/introduction/00_overview.md)，并根据具体特性的特点和功能，选择需要使用的特性并[安装相应的组件](./docs/zh/scheduling/installation_guide/03_installation/manual_installation/00_obtaining_software_packages.md)。
-
-## MindCluster Ascend FaultDiag
-
-MindCluster Ascend FaultDiag支持的Python版本需≥3.7。在安装MindCluster Ascend FaultDiag前，请检查依赖的Python版本是否满足要求。
-
-### 编译与构建
-
-#### 环境要求
-
-- Python版本≥3.7.5
-- scikit-learn>=1.3.0
-- pandas>=1.3.5
-- numpy>=1.21.6,<2.0.0
-- joblib>=1.2.0,<1.5.0
-- ply>=3.11
-
-#### 构建
-
-请先克隆仓库，然后在项目根目录执行构建脚本：
-
-```shell
-git clone https://gitcode.com/Ascend/mind-cluster.git
-cd mind-cluster/component/ascend-faultdiag
-bash build/build.sh
-```
-
-### 组件安装
-
-详细请参见[安装MindCluster Ascend FaultDiag](./docs/zh/faultdiag/installation_guide.md)。
-
-# 快速入门
+# 使用指南
 
 ## MindCluster集群调度
 
-MindCluster将以单台Atlas 800T A2 训练服务器（同时作为管理节点和计算节点）为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。具体操作请参考：[快速入门](./docs/zh/scheduling/quick_start.md)。
+MindCluster将以单台Atlas 800T A2 训练服务器（同时作为管理节点和计算节点）为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。具体操作请参考：[集群调度用户指南](./docs/zh/scheduling/menu_scheduling_user_guide.md)。
 
 ## MindCluster Ascend FaultDiag
 
@@ -382,11 +90,6 @@ MindCluster具体特性介绍如下：
 | 故障事件清洗及诊断 | [link](./docs/zh/faultdiag/user_guide/12_cleaning_and_diagnosing_fault_events.md) | ✅        |
 | 自定义配置文件   | [link](./docs/zh/faultdiag/user_guide/13_customizing_a_configuration_file.md) | ✅        |
 
-# API参考
-
-MindCluster集群调度API参考请参见：[API参考](./docs/zh/scheduling/api/npu_exporter/00_npu_exporter_home_page.md)。
-
-MindCluster Ascend FaultDiag API参考请参见：[API参考](./docs/zh/faultdiag/api/README.md)。
 
 # FAQ
 
@@ -425,6 +128,7 @@ MindCluster Ascend FaultDiag相关FAQ请参见：[FAQ](./docs/zh/faultdiag/faq.m
 | 版本       | 维护策略 | 当前状态 | 发布日期       | 后续状态               | EOL日期      |
 |----------|------|------|------------|--------------------|------------|
 | master   | 长期支持 | 开发   | 在研分支，不发布   |         | -          |
+| v26.0.0   | 常规分支 | 维护   | 2026-04-15   |         | 2026-07-15          |
 | v7.3.0   | 长期支持 | 维护   | 2026-01-13   |         | 2026-12-30        |
 | v7.2.RC1 | 常规分支 | 维护   | 2025-10-25 | 预计2026/1/25起进入无维护状态 | 2025-10-27 |
 | v7.1.RC1 | 常规分支 | EOL   | 2025-07-24 |           | 2025-10-24 |
