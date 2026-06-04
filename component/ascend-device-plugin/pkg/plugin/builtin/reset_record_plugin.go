@@ -35,6 +35,8 @@ const (
 	hotResetStartReason    = "HotResetStart"
 	hotResetCompleteReason = "HotResetComplete"
 	hotResetFailedReason   = "HotResetFailed"
+	invalidFaultDevID      = -1
+	invalidTokensLeft      = -1
 )
 
 type ResetRecordPlugin struct {
@@ -63,8 +65,9 @@ func (p *ResetRecordPlugin) PreReset(_ context.Context, deviceList []plugin.Rese
 			Namespace: api.KubeNS,
 			Name:      fmt.Sprintf("%s.%d.reset.start", p.nodeName, now.UnixMilli()),
 		},
-		Type:      v1.EventTypeWarning,
-		Message:   fmt.Sprintf("hot reset start, nodeName:%s, devices:%s, time:%s", p.nodeName, devIDs, now.Format(common.TimeFormat)),
+		Type: v1.EventTypeWarning,
+		Message: fmt.Sprintf("hot reset start, nodeName:%s, ringDevs:%s, faultDev:%d, tokensLeft:%d, time:%s",
+			p.nodeName, devIDs, getFaultDevID(deviceList), getFaultTokensLeft(deviceList), now.Format(common.TimeFormat)),
 		EventTime: metav1.MicroTime{Time: now},
 		Reason:    hotResetStartReason,
 		Action:    hotResetStartReason,
@@ -124,4 +127,22 @@ func formatDeviceList(deviceList []plugin.ResetDevice) string {
 		ids = append(ids, fmt.Sprintf("%d", dev.LogicID))
 	}
 	return strings.Join(ids, ",")
+}
+
+func getFaultDevID(deviceList []plugin.ResetDevice) int32 {
+	for _, dev := range deviceList {
+		if dev.IsFaultDev {
+			return dev.LogicID
+		}
+	}
+	return invalidFaultDevID
+}
+
+func getFaultTokensLeft(deviceList []plugin.ResetDevice) int32 {
+	for _, dev := range deviceList {
+		if dev.IsFaultDev {
+			return dev.TokensLeft
+		}
+	}
+	return invalidTokensLeft
 }

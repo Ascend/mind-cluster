@@ -332,6 +332,14 @@ func (m *UnifiedHotResetManager) confirmAndPrepareReset(ringDevs []*common.NpuDe
 
 func (m *UnifiedHotResetManager) executeReset(ringDevs []*common.NpuDevice, faultDev *common.NpuDevice) {
 	resetDevices := m.convertToResetDevices(ringDevs)
+	tokensLeft := int32(m.tokenBucket.GetTokens(faultDev.LogicID))
+	for i := range resetDevices {
+		if resetDevices[i].LogicID == faultDev.LogicID {
+			resetDevices[i].IsFaultDev = true
+			resetDevices[i].TokensLeft = tokensLeft
+			break
+		}
+	}
 	ctx := context.Background()
 
 	hwlog.RunLog.Infof("executing PreReset for device %d", faultDev.LogicID)
