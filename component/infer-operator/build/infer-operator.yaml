@@ -1827,6 +1827,9 @@ spec:
                 description: replicas is the total number of replicas for this InstanceSet.
                 format: int32
                 type: integer
+              labelSelector:
+                description: labelSelector is the label selector for the pods managed by this InstanceSet.
+                type: string
               scalingResourceStatus:
                 description: ScalingResourceStatus defines the observed state of scaling resources
                 properties:

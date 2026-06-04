@@ -871,6 +871,9 @@ func TestGetNewStatus(t *testing.T) {
 			convey.So(newStatus.Conditions[0].Type, convey.ShouldEqual, string(common.InstanceSetReady))
 			convey.So(newStatus.Conditions[0].Status, convey.ShouldEqual, metav1.ConditionTrue)
 			convey.So(newStatus.Conditions[0].Reason, convey.ShouldEqual, "AllWorkLoadReady")
+			convey.So(newStatus.LabelSelector, convey.ShouldEqual, fmt.Sprintf("%s=%s,%s=%s",
+				common.InferServiceNameLabelKey, indexer.ServiceName,
+				common.InstanceSetNameLabelKey, indexer.InstanceSetKey))
 			convey.So(newStatus.ScalingResourceStatus, convey.ShouldBeNil)
 		})
 	})
@@ -903,6 +906,9 @@ func TestGetNewStatus2(t *testing.T) {
 			convey.So(newStatus.Conditions[0].Type, convey.ShouldEqual, string(common.InstanceSetReady))
 			convey.So(newStatus.Conditions[0].Status, convey.ShouldEqual, metav1.ConditionFalse)
 			convey.So(newStatus.Conditions[0].Reason, convey.ShouldEqual, "ReplicasNotReady")
+			convey.So(newStatus.LabelSelector, convey.ShouldEqual, fmt.Sprintf("%s=%s,%s=%s",
+				common.InferServiceNameLabelKey, indexer.ServiceName,
+				common.InstanceSetNameLabelKey, indexer.InstanceSetKey))
 			convey.So(newStatus.ScalingResourceStatus, convey.ShouldBeNil)
 		})
 

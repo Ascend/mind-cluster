@@ -312,6 +312,9 @@ func (r *InstanceSetReconciler) getNewStatus(
 	newStatus = *instanceSet.Status.DeepCopy()
 	newStatus.Replicas = *instanceSet.Spec.Replicas
 	newStatus.ObservedGeneration = instanceSet.Generation
+	newStatus.LabelSelector = fmt.Sprintf("%s=%s,%s=%s",
+		common.InferServiceNameLabelKey, indexer.ServiceName,
+		common.InstanceSetNameLabelKey, indexer.InstanceSetKey)
 	readyReplicas, err := r.WorkLoadReconciler.InstanceReady(ctx, instanceSet, indexer)
 	if err != nil {
 		hwlog.RunLog.Errorf("get ready replicas of instanceSet %s/%s error: %v",

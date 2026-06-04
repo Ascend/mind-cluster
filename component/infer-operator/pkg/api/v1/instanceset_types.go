@@ -65,6 +65,7 @@ type InstanceSetStatus struct {
 	ObservedGeneration    int64                  `json:"observedGeneration,omitempty"`
 	ReadyReplicas         int32                  `json:"readyReplicas,omitempty"`
 	Replicas              int32                  `json:"replicas,omitempty"`
+	LabelSelector         string                 `json:"labelSelector,omitempty"`
 	Conditions            []metav1.Condition     `json:"conditions,omitempty"`
 	ScalingResourceStatus *ScalingResourceStatus `json:"scalingResourceStatus,omitempty"`
 }
