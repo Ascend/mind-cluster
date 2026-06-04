@@ -141,8 +141,8 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p20169193819546"><a name="p20169193819546"></a><a name="p20169193819546"></a><span id="ph1169163818542"><a name="ph1169163818542"></a><a name="ph1169163818542"></a><span id="ph11169203811544"><a name="ph11169203811544"></a><a name="ph11169203811544"></a>昇腾AI处理器</span></span>健康状态。</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p316933865416"><a name="p316933865416"></a><a name="p316933865416"></a>取值为0或</p>
-<a name="ul1016913885417"></a><a name="ul1016913885417"></a><ul id="ul1016913885417"><li>1：健康</li><li>0：不健康</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p316933865416"><a name="p316933865416"></a><a name="p316933865416"></a>取值为0、1或-1</p>
+<a name="ul1016913885417"></a><a name="ul1016913885417"></a><ul id="ul1016913885417"><li>1：健康</li><li>0：不健康</li><li>-1：未知(dcmi接口调用失败)</li></ul>
 </td>
 </tr>
 <tr id="row10385175935311"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p316943810545"><a name="p316943810545"></a><a name="p316943810545"></a>NPU</p>
@@ -246,8 +246,8 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </td>
 <td class="cellrowborder" valign="top" width="22.3%" headers="mcps1.2.6.1.3 "><p id="p395385413282"><a name="p395385413282"></a><a name="p395385413282"></a><span id="ph1395316544284"><a name="ph1395316544284"></a><a name="ph1395316544284"></a><span id="ph3953105462815"><a name="ph3953105462815"></a><a name="ph3953105462815"></a>昇腾AI处理器</span>的网络健康状态</span>。</p>
 </td>
-<td class="cellrowborder" valign="top" width="19.68%" headers="mcps1.2.6.1.4 "><p id="p169536543281"><a name="p169536543281"></a><a name="p169536543281"></a>取值为0或1</p>
-<a name="ul1695355411281"></a><a name="ul1695355411281"></a><ul id="ul1695355411281"><li>1：健康，可以连通</li><li>0：不健康，无法连通</li></ul>
+<td class="cellrowborder" valign="top" width="19.68%" headers="mcps1.2.6.1.4 "><p id="p169536543281"><a name="p169536543281"></a><a name="p169536543281"></a>取值为0、1或-1</p>
+<a name="ul1695355411281"></a><a name="ul1695355411281"></a><ul id="ul1695355411281"><li>1：健康，可以连通</li><li>0：不健康，无法连通</li><li>-1：未知，dcmi接口调用失败</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="23.94%" headers="mcps1.2.6.1.5 "><a name="ul195418540284"></a><a name="ul195418540284"></a><ul id="ul195418540284"><li>Atlas 训练系列产品</li><li>Atlas A2 训练系列产品</li><li>Atlas A3 训练系列产品</li><li><span id="ph79376229499"><a name="ph79376229499"></a><a name="ph79376229499"></a>Atlas 800I A2 推理服务器</span></li><li><span id="ph288515314573"><a name="ph288515314573"></a><a name="ph288515314573"></a>A200I A2 Box 异构组件</span></li></ul>
 </td>
@@ -401,8 +401,8 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p1187142891114"><a name="p1187142891114"></a><a name="p1187142891114"></a><span id="ph91871728141110"><a name="ph91871728141110"></a><a name="ph91871728141110"></a><span id="ph7187132813117"><a name="ph7187132813117"></a><a name="ph7187132813117"></a>昇腾AI处理器</span></span>的网口Link状态。</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p1118714283116"><a name="p1118714283116"></a><a name="p1118714283116"></a>取值为0或1</p>
-<a name="ul5187128201110"></a><a name="ul5187128201110"></a><ul id="ul5187128201110"><li>1：UP</li><li>0：DOWN</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p1118714283116"><a name="p1118714283116"></a><a name="p1118714283116"></a>取值为0、1或-1</p>
+<a name="ul5187128201110"></a><a name="ul5187128201110"></a><ul id="ul5187128201110"><li>1：UP</li><li>0：DOWN</li><li>-1：未知(dcmi接口调用失败)</li></ul>
 </td>
 </tr>
 <tr id="row7330418111118"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p10187122819116"><a name="p10187122819116"></a><a name="p10187122819116"></a>Network</p>
@@ -429,7 +429,7 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 </td>
 <td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口Link状态。</p><p>其中，X为Udie ID，Y为Port ID。</p>
 </td>
-<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>取值为0或1</p><ul><li>1：UP</li><li>0：DOWN</li></ul>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>取值为0、1或-1</p><ul><li>1：UP</li><li>0：DOWN</li><li>-1：未知(dcmi接口调用失败)</li></ul>
 </td>
 <td class="cellrowborder" rowspan="4" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><ul><li>Atlas 350 标卡（4Pmesh互联）</li><li>Atlas 850 系列硬件产品</li><li>Atlas 950 SuperPoD</li></ul>
 </td>

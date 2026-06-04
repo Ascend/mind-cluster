@@ -44,6 +44,10 @@ func validateNum(num float64) bool {
 func doUpdateTelegrafWithValidateNum(fieldMap map[string]interface{}, desc *prometheus.Desc,
 	value float64, extInfo string) {
 	if validateNum(value) {
+		// collect failed, set value to -1
+		if value == common.FailedValue {
+			value = common.FailedMetricValue
+		}
 		doUpdateTelegraf(fieldMap, desc, value, extInfo)
 	}
 }

@@ -242,8 +242,8 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p1253882563818"><a name="p1253882563818"></a><a name="p1253882563818"></a><a href="#table191895615241">标签1</a></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p18162911154611"><a name="p18162911154611"></a><a name="p18162911154611"></a>取值为0或1</p>
-<a name="ul1216271124619"></a><a name="ul1216271124619"></a><ul id="ul1216271124619"><li>1：健康</li><li>0：不健康</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p18162911154611"><a name="p18162911154611"></a><a name="p18162911154611"></a>取值为0、1或-1</p>
+<a name="ul1216271124619"></a><a name="ul1216271124619"></a><ul id="ul1216271124619"><li>1：健康</li><li>0：不健康</li><li>-1：未知(dcmi接口调用失败)</li></ul>
 </td>
 </tr>
 <tr id="row68995374572"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p id="p4931350175717"><a name="p4931350175717"></a><a name="p4931350175717"></a>NPU</p>
@@ -373,8 +373,8 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.7.1.4 "><p id="p8469192218177"><a name="p8469192218177"></a><a name="p8469192218177"></a><a href="#table191895615241">标签1</a></p>
 </td>
-<td class="cellrowborder" valign="top" width="10.77%" headers="mcps1.2.7.1.5 "><p id="p1146982211711"><a name="p1146982211711"></a><a name="p1146982211711"></a>取值为0或1</p>
-<a name="ul1469162261710"></a><a name="ul1469162261710"></a><ul id="ul1469162261710"><li>1：健康，可以连通</li><li>0：不健康，无法连通</li></ul>
+<td class="cellrowborder" valign="top" width="10.77%" headers="mcps1.2.7.1.5 "><p id="p1146982211711"><a name="p1146982211711"></a><a name="p1146982211711"></a>取值为0、1或-1</p>
+<a name="ul1469162261710"></a><a name="ul1469162261710"></a><ul id="ul1469162261710"><li>1：健康，可以连通</li><li>0：不健康，无法连通</li><li>-1：未知，dcmi接口调用失败</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="20.13%" headers="mcps1.2.7.1.6 "><a name="ul221951194615"></a><a name="ul221951194615"></a><ul id="ul221951194615"><li>Atlas 训练系列产品</li><li>Atlas A2 训练系列产品</li><li>Atlas A3 训练系列产品</li><li><span id="ph1067265144615"><a name="ph1067265144615"></a><a name="ph1067265144615"></a>A200I A2 Box 异构组件</span></li><li><span id="ph16900101265315"><a name="ph16900101265315"></a><a name="ph16900101265315"></a>Atlas 800I A2 推理服务器</span></li></ul>
 <p id="p1858910113463"><a name="p1858910113463"></a><a name="p1858910113463"></a></p>
@@ -552,8 +552,8 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.1.7.1.4 "><p id="p62411497407"><a name="p62411497407"></a><a name="p62411497407"></a><a href="#table191895615241">标签1</a></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.1.7.1.5 "><p id="p18658038144417"><a name="p18658038144417"></a><a name="p18658038144417"></a>取值为0或1</p>
-<a name="ul136589389444"></a><a name="ul136589389444"></a><ul id="ul136589389444"><li>1：UP</li><li>0：DOWN</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.1.7.1.5 "><p id="p18658038144417"><a name="p18658038144417"></a><a name="p18658038144417"></a>取值为0、1或-1</p>
+<a name="ul136589389444"></a><a name="ul136589389444"></a><ul id="ul136589389444"><li>1：UP</li><li>0：DOWN</li><li>-1：未知(dcmi接口调用失败)</li></ul>
 </td>
 </tr>
 <tr id="row128958179146"><td class="cellrowborder" valign="top" headers="mcps1.1.7.1.1 "><p id="p1895101717145"><a name="p1895101717145"></a><a name="p1895101717145"></a>Network</p>
@@ -586,7 +586,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签1</a></p>
 </td>
-<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>取值为0或1</p><ul><li>1：UP</li><li>0：DOWN</li></ul>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>取值为0、1或-1</p><ul><li>1：UP</li><li>0：DOWN</li><li>-1：未知(dcmi接口调用失败)</li></ul>
 </td>
 <td class="cellrowborder" rowspan="4" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><ul><li>Atlas 350 标卡（4Pmesh互联）</li><li>Atlas 850 系列硬件产品</li><li>Atlas 950 SuperPoD</li></ul>
 </td>

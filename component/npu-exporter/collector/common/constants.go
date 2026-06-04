@@ -31,8 +31,15 @@ const (
 	Healthy = "Healthy"
 	// UnHealthy status of unhealth
 	UnHealthy = "UnHealthy"
-	// Abnormal status of Abnormal
-	Abnormal = "Abnormal"
+	// Unknown status of Unknown
+	Unknown = "Unknown"
+	// NotReport status of NotReport
+	NotReport = "NotReport"
+
+	// HealthyCode healthy code
+	HealthyCode = 1
+	// UnhealthyCode unhealthy code
+	UnhealthyCode = 0
 
 	// LinkUp npu interface up
 	LinkUp = "UP"

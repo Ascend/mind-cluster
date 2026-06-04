@@ -158,3 +158,48 @@ func TestPromUpdateNetInfo(t *testing.T) {
 		})
 	})
 }
+
+type getLinkStatusCodeTestCase struct {
+	name        string
+	status      string
+	expectCode int
+}
+
+func buildGetLinkStatusCodeTestCases() []getLinkStatusCodeTestCase {
+	return []getLinkStatusCodeTestCase{
+		{
+			name:        "should return UnRetError when status is NotReport",
+			status:      colcommon.NotReport,
+			expectCode: common.UnRetError,
+		},
+		{
+			name:        "should return FailedValue when status is Unknown",
+			status:      colcommon.Unknown,
+			expectCode: common.FailedValue,
+		},
+		{
+			name:        "should return HealthyCode when status is LinkUp",
+			status:      colcommon.LinkUp,
+			expectCode: colcommon.HealthyCode,
+		},
+		{
+			name:        "should return UnhealthyCode when status is LinkDown",
+			status:      colcommon.LinkDown,
+			expectCode: colcommon.UnhealthyCode,
+		},
+		{
+			name:        "should return UnhealthyCode when status is other value",
+			status:      "other",
+			expectCode: colcommon.UnhealthyCode,
+		},
+	}
+}
+
+func TestGetLinkStatusCode(t *testing.T) {
+	for _, tt := range buildGetLinkStatusCodeTestCases() {
+		convey.Convey(tt.name, t, func() {
+			result := getLinkStatusCode(tt.status)
+			convey.So(result, convey.ShouldEqual, tt.expectCode)
+		})
+	}
+}
