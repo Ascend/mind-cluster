@@ -924,7 +924,27 @@ func (tool *AscendTools) getDcmiDeviceIP(logicID int32) (string, error) {
 	return deviceIp, nil
 }
 
-func (tool *AscendTools) getDeviceListIP(devices []string, deviceType string) (map[int]string, error) {
+func buildLogicToPhyMap(allDevices []common.NpuDevice) map[int]int {
+	m := make(map[int]int)
+	for _, dev := range allDevices {
+		m[int(dev.LogicID)] = int(dev.PhyID)
+	}
+	return m
+}
+
+func convertLogicToPhyIDWithLog(id int, logic2phy map[int]int) (int, error) {
+	if common.ParamOption.RealCardType != api.Ascend910A5 {
+		return id, nil
+	}
+	phyID, ok := logic2phy[id]
+	if !ok {
+		return id, fmt.Errorf("failed to convert logicID %d to phyID: mapping not found", id)
+	}
+	return phyID, nil
+}
+
+func (tool *AscendTools) getDeviceListIP(devices []string, deviceType string,
+	allDevices []common.NpuDevice) (map[int]string, error) {
 	ascendRuntimeOptions := ""
 	if common.IsVirtualDev(deviceType) {
 		ascendRuntimeOptions = common.VirtualDev
@@ -934,16 +954,22 @@ func (tool *AscendTools) getDeviceListIP(devices []string, deviceType string) (m
 		hwlog.RunLog.Errorf("get device list id err: %v", err)
 		return nil, err
 	}
+	logic2phy := buildLogicToPhyMap(allDevices)
 	devicesWithIP := make(map[int]string, len(devices))
 	for _, id := range ascendDevices {
-		deviceIP, err := tool.GetDeviceIP(deviceType, id)
+		mappedID, err := convertLogicToPhyIDWithLog(id, logic2phy)
 		if err != nil {
-			devicesWithIP[id] = api.DeviceIPErrorCodeStr // set error ip if get ip failed, it will due to ranktable generator in some scenario
+			hwlog.RunLog.Errorf("convert logicID %d to phyID failed: %v", id, err)
+			return nil, err
+		}
+		deviceIP, err := tool.GetDeviceIP(deviceType, mappedID)
+		if err != nil {
+			devicesWithIP[mappedID] = api.DeviceIPErrorCodeStr // set error ip if get ip failed, it will due to ranktable generator in some scenario
 			hwlog.RunLog.Warnf("get device %d ip err: %v, set error ip %s",
-				id, err, api.DeviceIPErrorCodeStr)
+				mappedID, err, api.DeviceIPErrorCodeStr)
 			continue
 		}
-		devicesWithIP[id] = deviceIP
+		devicesWithIP[mappedID] = deviceIP
 	}
 	return devicesWithIP, nil
 }
@@ -959,7 +985,7 @@ func (tool *AscendTools) getConfigAnno(podDev *common.PodDeviceInfo, deviceType,
 		hwlog.RunLog.Errorf("get device list id failed, error: %v", err)
 		return "", errors.New("get device list id failed")
 	}
-	ascendVisibleDevices, err := tool.getDeviceListIP(podDev.RealDevice, deviceType)
+	ascendVisibleDevices, err := tool.getDeviceListIP(podDev.RealDevice, deviceType, allDevices)
 	if err != nil {
 		hwlog.RunLog.Errorf("get device list ip failed, error: %v", err)
 		return "", errors.New("get device list ip failed")

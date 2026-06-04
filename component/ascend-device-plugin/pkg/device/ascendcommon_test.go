@@ -1755,3 +1755,90 @@ func TestUpdateNodeDeviceInfoRateLimit(t *testing.T) {
 		}
 	})
 }
+
+func TestBuildLogicToPhyMap(t *testing.T) {
+	convey.Convey("test buildLogicToPhyMap", t, func() {
+		all := []common.NpuDevice{
+			{LogicID: 0, PhyID: 10},
+			{LogicID: 1, PhyID: 11},
+			{LogicID: 2, PhyID: 12},
+		}
+
+		m := buildLogicToPhyMap(all)
+
+		convey.So(m[0], convey.ShouldEqual, 10)
+		convey.So(m[1], convey.ShouldEqual, 11)
+		convey.So(m[2], convey.ShouldEqual, 12)
+	})
+}
+
+func TestConvertLogicToPhyIDWithLog(t *testing.T) {
+	convey.Convey("test convertLogicToPhyIDWithLog", t, func() {
+
+		logic2phy := map[int]int{
+			0: 10,
+			1: 11,
+		}
+
+		convey.Convey("not A5, return logicID", func() {
+			common.ParamOption.RealCardType = api.Ascend910B
+			id, err := convertLogicToPhyIDWithLog(1, logic2phy)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(id, convey.ShouldEqual, 1)
+		})
+
+		convey.Convey("A5 and mapping exists", func() {
+			common.ParamOption.RealCardType = api.Ascend910A5
+			id, err := convertLogicToPhyIDWithLog(1, logic2phy)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(id, convey.ShouldEqual, 11)
+		})
+
+		convey.Convey("A5 but mapping missing", func() {
+			common.ParamOption.RealCardType = api.Ascend910A5
+			id, err := convertLogicToPhyIDWithLog(99, logic2phy)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(id, convey.ShouldEqual, 99)
+		})
+	})
+}
+
+func TestGetDeviceListIP(t *testing.T) {
+	tool := &AscendTools{name: api.Ascend910}
+
+	convey.Convey("test getDeviceListIP", t, func() {
+		common.ParamOption.RealCardType = api.Ascend910A5
+		mockGetDeviceListID := gomonkey.ApplyFunc(
+			common.GetDeviceListID,
+			func(devices []string, opt string) (map[int]int, []int, error) {
+				return nil, []int{0, 1}, nil
+			})
+		defer mockGetDeviceListID.Reset()
+
+		mockGetDeviceIP := gomonkey.ApplyMethod(
+			reflect.TypeOf(new(AscendTools)),
+			"GetDeviceIP",
+			func(_ *AscendTools, deviceType string, phyID int) (string, error) {
+				if phyID == 10 {
+					return "1.1.1.1", nil
+				}
+				if phyID == 11 {
+					return "2.2.2.2", nil
+				}
+				return "", fmt.Errorf("unexpected phyID %d", phyID)
+			})
+		defer mockGetDeviceIP.Reset()
+
+		allDevices := []common.NpuDevice{
+			{LogicID: 0, PhyID: 10},
+			{LogicID: 1, PhyID: 11},
+		}
+
+		devices := []string{"0", "1"}
+		res, err := tool.getDeviceListIP(devices, api.Ascend910, allDevices)
+
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(res[10], convey.ShouldEqual, "1.1.1.1")
+		convey.So(res[11], convey.ShouldEqual, "2.2.2.2")
+	})
+}
