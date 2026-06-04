@@ -19,7 +19,7 @@ import asyncio
 import os
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
-from typing import List, Dict, Callable
+from typing import List, Dict, Callable, Optional
 
 from ascend_fd_tk.core.collect.fetcher.bmc_fetcher import BmcFetcher
 from ascend_fd_tk.core.collect.fetcher.host_fetcher import HostFetcher
@@ -36,6 +36,7 @@ from ascend_fd_tk.core.log_parser.base import LogParsePattern
 from ascend_fd_tk.core.model.cluster_info_cache import ClusterInfoCache
 from ascend_fd_tk.core.model.diag_result import DiagResult
 from ascend_fd_tk.core.model.inspection import InspectionErrorItem
+from ascend_fd_tk.core.root_cause.filter import RootCauseFilter
 from ascend_fd_tk.utils.file_tool import convert_log_path
 
 
@@ -52,6 +53,7 @@ class DiagCtx:
         self.cache = ClusterInfoCache()
         self.diag_result: List[DiagResult] = []
         self.inspection_result: List[InspectionErrorItem] = []
+        self.root_cause_filter: Optional[RootCauseFilter] = None
         self.process_pool = ProcessPoolExecutor(max_workers=int(os.cpu_count() * CPU_UTILIZATION_RATIO))
         self.crypto = RootKeyCrypto(KeyGenerator().generate_complex_password())
 

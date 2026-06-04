@@ -20,12 +20,14 @@
 """
 
 from dataclasses import dataclass
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 
 from ascend_fd_tk.core.common import constants
 from ascend_fd_tk.core.model.diag_result import DiagResult
 from ascend_fd_tk.core.report.sheet.base import BaseSheetGenerator
 from ascend_fd_tk.core.report.threshold_report import ThresholdConfig, create_threshold_report, generate_threshold_excel
+from ascend_fd_tk.core.root_cause.constants import UNKNOWN_ROOT_CAUSE
+from ascend_fd_tk.core.root_cause.filter import RootCauseFilter
 
 
 @dataclass
@@ -36,6 +38,7 @@ class DiagReportData:
     fault_code: str = ""  # 故障码
     fault_info: str = ""  # 故障信息
     solution: str = ""  # 处理建议
+    root_cause_status: str = ""  # 是否链路故障根因
 
 
 @dataclass
@@ -76,7 +79,22 @@ class SwitchReportData(DiagReportData):
 class DiagReportSheetGenerator(BaseSheetGenerator):
     """诊断报告Sheet生成器"""
 
-    def __init__(self, cluster_info, excel_gen=None, diag_results: List[DiagResult] = None):
+    _TWO_ROW = 2
+    _TAB_COLOR_DIAG = "9DC3E6"
+
+    SHEET_MAPPING = {
+        constants.FAULT_TYPE_HOST: "带内故障分析(Host)",
+        constants.FAULT_TYPE_BMC: "带外故障分析(BMC)",
+        constants.FAULT_TYPE_SWITCH: "交换机故障分析(L1&L2&RoCE)",
+    }
+
+    def __init__(
+        self,
+        cluster_info,
+        excel_gen=None,
+        diag_results: List[DiagResult] = None,
+        root_cause_filter: Optional[RootCauseFilter] = None,
+    ):
         """
         初始化诊断报告Sheet生成器
 
@@ -86,6 +104,7 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         """
         super().__init__(cluster_info, excel_gen)
         self.diag_results = diag_results or []
+        self._root_cause_filter = root_cause_filter
 
     @staticmethod
     def _create_threshold_configs() -> List[ThresholdConfig]:
@@ -97,18 +116,19 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         return []
 
     @staticmethod
-    def _create_header_config(sheet_type: str) -> Tuple[Dict[str, str], List[str]]:
+    def _create_header_config(sheet_type: str) -> Dict[str, str]:
         """
-        创建header映射和顺序
+        创建header映射
 
         :param sheet_type: sheet类型，支持"host", "bmc", "switch"
-        :return: (header_mapping, header_order)
-            header_mapping: {field_name: header_name}
-            header_order: [header_name]
+        :return: header_mapping
         """
-        # 基础字段（只包含故障码、故障信息、处理建议）
-        base_mapping = {"fault_code": "故障码", "fault_info": "故障信息", "solution": "处理建议"}
-        merge_columns = ["处理建议"]
+        base_mapping = {
+            "fault_code": "故障码",
+            "fault_info": "故障信息",
+            "solution": "处理建议",
+            "root_cause_status": "是否链路故障根因",
+        }
 
         if sheet_type == constants.FAULT_TYPE_HOST:
             header_mapping = {
@@ -121,7 +141,6 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
                 "chip_phy_id": "物理芯片ID",
                 **base_mapping,
             }
-            merge_columns.extend(["主机ID", "主机名", "SN", "机房名称", "机柜编号", "NPU ID", "物理芯片ID"])
         elif sheet_type == constants.FAULT_TYPE_BMC:
             header_mapping = {
                 "bmc_id": "BMC ID",
@@ -130,7 +149,6 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
                 "chip_phy_id": "物理芯片ID",
                 **base_mapping,
             }
-            merge_columns.extend(["BMC ID", "SN", "NPU ID", "物理芯片ID"])
         elif sheet_type == constants.FAULT_TYPE_SWITCH:
             header_mapping = {
                 "swi_name": "交换机名称",
@@ -141,10 +159,21 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
                 "interface": "端口",
                 **base_mapping,
             }
-            merge_columns.extend(["交换机名称", "交换机ID", "SN", "机房名称", "机柜编号", "端口"])
         else:
             header_mapping = base_mapping
-        return header_mapping, merge_columns
+        return header_mapping
+
+    @staticmethod
+    def _get_merge_col_titles(sheet_type: str) -> List[str]:
+        """获取需要合并的列标题列表"""
+        base_titles = ["处理建议", "是否链路故障根因"]
+        if sheet_type == constants.FAULT_TYPE_HOST:
+            return base_titles + ["主机ID", "主机名", "SN", "机房名称", "机柜编号", "NPU ID", "物理芯片ID"]
+        elif sheet_type == constants.FAULT_TYPE_BMC:
+            return base_titles + ["BMC ID", "SN", "NPU ID", "物理芯片ID"]
+        elif sheet_type == constants.FAULT_TYPE_SWITCH:
+            return base_titles + ["交换机名称", "交换机ID", "SN", "机房名称", "机柜编号", "端口"]
+        return base_titles
 
     def generate_sheet(self) -> None:
         """
@@ -160,19 +189,22 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         # 创建阈值配置（诊断报告可能不需要阈值检查）
         threshold_configs = self._create_threshold_configs()
         sheets = []
-        for sheet_name, data_list in diag_report_category_data.items():
+        for sheet_type, data_list in diag_report_category_data.items():
             if data_list:
                 # 按故障域排序，确保相同故障域的行在一起
                 sorted_data = sorted(data_list, key=lambda x: x.fault_domain)
-                # 创建header映射和顺序
-                header_mapping, merge_columns = self._create_header_config(sheet_name)
+                # 创建header映射
+                header_mapping = self._create_header_config(sheet_type)
+                # 计算合并范围
+                merge_cells = self._compute_merge_ranges(sorted_data, header_mapping, sheet_type)
                 sheet = create_threshold_report(
-                    sheet_name=sheet_name,
+                    sheet_name=self.SHEET_MAPPING.get(sheet_type, ""),
                     data_list=sorted_data,
                     header_mapping=header_mapping,
-                    merge_columns=merge_columns,
                     threshold_configs=threshold_configs,
                     na_rep="-",
+                    merge_cells=merge_cells,
+                    tab_color=self._TAB_COLOR_DIAG,
                 )
                 sheets.append(sheet)
         # 生成Excel
@@ -204,6 +236,9 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
             data.fault_info = diag_result.fault_info
             data.fault_code = diag_result.err_code
             data.solution = diag_result.suggestion
+            data.root_cause_status = UNKNOWN_ROOT_CAUSE
+            if self._root_cause_filter:
+                data.root_cause_status = self._root_cause_filter.get_root_cause_status(diag_result.domain)
             sheet_category_data[diag_result.fault_type].append(data)
         return sheet_category_data
 
@@ -244,3 +279,40 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
             data.room_name = swi_info.room_name
             data.cabinet_id = swi_info.cabinet_id
         return data
+
+    def _compute_merge_ranges(
+        self,
+        data_list: List[DiagReportData],
+        header_mapping: Dict[str, str],
+        sheet_type: str,
+    ) -> List[Tuple[int, int, int, int]]:
+        """计算诊断报告的合并区域
+
+        按故障域(fault_domain)分组，对同一组内连续相同的行合并指定列。
+        合并范围格式: (start_row, start_col, end_row, end_col)
+        """
+        if not data_list:
+            return []
+
+        title_to_col = {title: idx + 1 for idx, title in enumerate(header_mapping.values())}
+        merge_titles = self._get_merge_col_titles(sheet_type)
+        merge_col_indices = [title_to_col[t] for t in merge_titles if t in title_to_col]
+
+        merge_ranges = []
+        i = 0
+        while i < len(data_list):
+            fault_domain = data_list[i].fault_domain
+            j = i + 1
+            while j < len(data_list) and data_list[j].fault_domain == fault_domain:
+                # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
+                j += 1
+
+            if j - i > 1:
+                start_row = i + self._TWO_ROW
+                end_row = j + 1
+                for col in merge_col_indices:
+                    merge_ranges.append((start_row, col, end_row, col))
+
+            i = j
+
+        return merge_ranges

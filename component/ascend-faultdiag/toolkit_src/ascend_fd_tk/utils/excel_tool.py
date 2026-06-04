@@ -17,7 +17,7 @@
 
 import os
 from enum import Enum
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
@@ -156,42 +156,15 @@ class ExcelGenerator:
 
     @staticmethod
     def _merge_cells(sheet, sheet_info):
-        data = sheet_info['data']
-        columns = sheet_info['columns']
-        na_rep = sheet_info['na_rep']
-        merge_columns = sheet_info['merge_columns']
-        # 数据行从第2行开始
-        data_start_row = 2
-        data_start_row = sheet_info.get('data_start_row', data_start_row)
-        for col_name in merge_columns:
-            if col_name not in columns:
-                continue
-            # Excel列索引从1开始
-            col_idx = columns.index(col_name) + 1
-
-            # 合并相同值的单元格
-            if not data:
-                continue
-
-            start_row = data_start_row
-            current_value = data[0].get(col_name, na_rep)
-
-            for data_idx in range(1, len(data)):
-                next_value = data[data_idx].get(col_name, na_rep)
-                current_row = data_start_row + data_idx
-                if next_value != current_value:
-                    # 合并从start_row到row_idx-1的单元格
-                    if start_row < current_row - 1:
-                        sheet.merge_cells(
-                            start_row=start_row, start_column=col_idx, end_row=current_row - 1, end_column=col_idx
-                        )
-                    # 更新起始行和当前值
-                    start_row = current_row
-                    current_value = next_value
-            # 合并最后一组相同值的单元格
-            last_data_row = data_start_row + len(data) - 1
-            if start_row < last_data_row:
-                sheet.merge_cells(start_row=start_row, start_column=col_idx, end_row=last_data_row, end_column=col_idx)
+        # 处理精确指定的合并范围
+        for merge_range in sheet_info.get('merge_cells', []):
+            min_row, min_col, max_row, max_col = merge_range
+            sheet.merge_cells(
+                start_row=min_row,
+                start_column=min_col,
+                end_row=max_row,
+                end_column=max_col,
+            )
 
     @staticmethod
     def _get_cell_value_and_style(cell_data, na_rep: str):
@@ -218,8 +191,9 @@ class ExcelGenerator:
         sep: str = '_',
         na_rep: str = '',
         header_widths: Optional[Dict[str, int]] = None,
-        merge_columns: Optional[List[str]] = None,
         merged_headers: Optional[List[Dict[str, List[str]]]] = None,
+        merge_cells: Optional[List[Tuple[int, int, int, int]]] = None,
+        tab_color: Optional[str] = None,
     ):
         """
         添加一个sheet的数据
@@ -230,8 +204,10 @@ class ExcelGenerator:
         :param sep: 嵌套键的连接符（展平时使用）
         :param na_rep: 空值替换字符串（默认空字符串）
         :param header_widths: 自定义列宽，格式为 {列名: 宽度}，优先级高于自动调整
-        :param merge_columns: 需要合并相同值的列名列表
         :param merged_headers: 合并的header配置列表，每个元素为 {合并单元格内容: [要合并的列名列表]}
+        :param merge_cells: 单元格合并范围列表，每个元素为 (min_row, min_col, max_row, max_col)，
+                            行号从1开始(1=表头)，列号从1开始
+        :param tab_color: Sheet标签颜色，十六进制颜色值，如 "4472C4"
         """
         if not data:
             raise ValueError("输入的数据列表不能为空")
@@ -262,8 +238,9 @@ class ExcelGenerator:
                 'columns': columns,
                 'na_rep': na_rep,
                 'header_widths': header_widths or {},
-                'merge_columns': merge_columns or [],
                 'merged_headers': merged_headers or [],
+                'merge_cells': merge_cells or [],
+                'tab_color': tab_color,
             }
         )
 
@@ -290,6 +267,11 @@ class ExcelGenerator:
 
             # 创建sheet
             sheet = self.workbook.create_sheet(title=sheet_name)
+
+            # 设置Sheet标签颜色
+            tab_color = sheet_info.get('tab_color')
+            if tab_color:
+                sheet.sheet_properties.tabColor = tab_color
 
             # 写入合并的header（第一行开始）
             merged_headers = sheet_info.get('merged_headers', [])

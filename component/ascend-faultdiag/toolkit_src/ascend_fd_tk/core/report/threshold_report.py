@@ -17,7 +17,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict, Any, Optional, TypeVar, Generic
+from typing import List, Dict, Any, Optional, TypeVar, Generic, Tuple
 
 from ascend_fd_tk.core.model.threshold import Threshold, ThresholdStatus
 from ascend_fd_tk.utils.excel_tool import ExcelGenerator, Color, CellStyle, StyledCell
@@ -64,11 +64,12 @@ class ReportSheet(Generic[T]):
     data_list: List[T]  # 数据列表
     header_mapping: Dict[str, str]  # header与对象字段的映射关系 {field_name: header_name}
     header_order: List[str]  # header的顺序（使用header_name）
-    merge_columns: List[str]  # 确定需要合并的列（故障域列）
     threshold_configs: List[ThresholdConfig]  # 阈值配置列表
     na_rep: str = ""  # 空值替换字符串
     header_widths: Optional[Dict[str, int]] = field(default_factory=dict)  # 列宽配置
     merged_headers: Optional[List[Dict[str, List[str]]]] = field(default_factory=list)  # 合并的header配置
+    merge_cells: Optional[List[Tuple[int, int, int, int]]] = field(default_factory=list)
+    tab_color: Optional[str] = None  # Sheet标签颜色，十六进制颜色值
 
     def __post_init__(self):
         # 验证header_order中的header是否都在header_mapping.values()中
@@ -182,8 +183,9 @@ class ReportGenerator:
                 columns=sheet.header_order,
                 na_rep=sheet.na_rep,
                 header_widths=sheet.header_widths,
-                merge_columns=sheet.merge_columns,
                 merged_headers=sheet.merged_headers,
+                merge_cells=sheet.merge_cells,
+                tab_color=sheet.tab_color,
             )
 
         # 生成Excel文件
@@ -230,8 +232,9 @@ def create_threshold_report(
     na_rep: str = "",
     header_widths: Optional[Dict[str, int]] = None,
     header_order: List[str] = None,
-    merge_columns: List[str] = None,
     merged_headers: Optional[List[Dict[str, List[str]]]] = None,
+    merge_cells: Optional[List[Tuple[int, int, int, int]]] = None,
+    tab_color: Optional[str] = None,
 ) -> ReportSheet:
     """创建阈值报告Sheet的便捷函数"""
     return ReportSheet(
@@ -239,11 +242,12 @@ def create_threshold_report(
         data_list=data_list or [],
         header_mapping=header_mapping or {},
         header_order=header_order or [],
-        merge_columns=merge_columns or [],
         threshold_configs=threshold_configs or [],
         na_rep=na_rep,
         header_widths=header_widths or {},
         merged_headers=merged_headers or [],
+        merge_cells=merge_cells or [],
+        tab_color=tab_color,
     )
 
 
