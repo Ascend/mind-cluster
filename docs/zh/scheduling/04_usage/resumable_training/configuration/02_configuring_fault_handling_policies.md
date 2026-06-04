@@ -748,7 +748,7 @@ export MS_ENABLE_TFT="{RSC:1}"      # MindSpore场景下配置此字段开启优
         command: [ "/bin/bash", "-c", "--"]
         args: [ "device-plugin
                  -volcanoType=true                    # 重调度场景下必须使用Volcano
-                 -autoStowing=true                    # 是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于Atlas 训练系列产品
+                 -autoStowing=true                    # 该字段已日落。是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于Atlas 训练系列产品
                  -listWatchPeriod=5                   # 设置健康状态检查周期，范围[3,1800]；单位为秒
                  -hotReset=1      # 使用断点续训时，可以在Job级或Pod级重调度的基础上，开启热复位功能，使用优雅容错模式
                  -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log
