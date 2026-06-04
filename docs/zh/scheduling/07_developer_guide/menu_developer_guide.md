@@ -14,6 +14,7 @@
     - [NodeD](./installation_deployment/manual_installation/09_noded.md)
     - [Resilience Controller](./installation_deployment/manual_installation/10_resilience_controller.md)
     - [Container Manager](./installation_deployment/manual_installation/11_container-manager.md)
+    - [K8s RDMA Shared Dev Plugin](./installation_deployment/manual_installation/12_k8s_rdma_shared_dev_plugin.md)
   - [手动升级](installation_deployment/01_upgrade.md)
   - [手动卸载](installation_deployment/01_uninstallation.md)
 - [自定义指标开发](./custom_metrics_development.md)

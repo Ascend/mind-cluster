@@ -9,7 +9,6 @@ COPY fault_code.json /etc/rdma-plugin/
 COPY fault_detection.sh /etc/rdma-plugin/
 
 RUN chmod 550 /usr/local/bin/k8s-rdma-shared-dp &&\
-    chmod 550 /usr/local/bin &&\
     chmod 440 /usr/local/agreement.txt &&\
     chmod 440 /etc/rdma-plugin/config.json &&\
     chmod 550 /etc/rdma-plugin/fault_detection.sh &&\
