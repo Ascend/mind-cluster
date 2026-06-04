@@ -21,11 +21,13 @@ import (
 )
 
 type ResetDevice struct {
-	LogicID  int32
-	CardID   int32
-	DeviceID int32
-	PhyID    int32
-	CardType string
+	LogicID    int32
+	CardID     int32
+	DeviceID   int32
+	PhyID      int32
+	CardType   string
+	IsFaultDev bool
+	TokensLeft int32
 }
 
 type HookCaps struct {
