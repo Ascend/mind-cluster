@@ -16,16 +16,24 @@
 package fault
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
+)
+
+var (
+	faultTimeCache   = make(map[string]int64)
+	faultTimeCacheMu sync.Mutex
 )
 
 // HCAInfo represents basic information about an HCA device
@@ -185,9 +193,15 @@ func BuildDPUInfoCfg(results []FaultResult) DpuInfoCfg {
 	hcaFaultMap := buildHcaFaultMap(results)
 	hcaBasicMap := buildHcaBasicMap(results)
 
-	for hcaName, basicInfo := range hcaBasicMap {
+	hcaNames := make([]string, 0, len(hcaBasicMap))
+	for hcaName := range hcaBasicMap {
+		hcaNames = append(hcaNames, hcaName)
+	}
+	sort.Strings(hcaNames)
+
+	for _, hcaName := range hcaNames {
 		faults := getHcaFaults(hcaName, hcaFaultMap)
-		cfg.DPUInfo.DPUList = append(cfg.DPUInfo.DPUList, buildDPUItem(hcaName, basicInfo, faults))
+		cfg.DPUInfo.DPUList = append(cfg.DPUInfo.DPUList, buildDPUItem(hcaName, hcaBasicMap[hcaName], faults))
 	}
 
 	cfg.UpdateTime = time.Now()
@@ -196,19 +210,39 @@ func BuildDPUInfoCfg(results []FaultResult) DpuInfoCfg {
 
 func buildHcaFaultMap(results []FaultResult) map[string][]FaultDetail {
 	hcaFaultMap := make(map[string][]FaultDetail)
+	activeKeys := make(map[string]bool)
+
+	faultTimeCacheMu.Lock()
+	defer faultTimeCacheMu.Unlock()
 
 	for _, fr := range results {
 		if fr.HCA == "" || fr.Result != "true" {
 			continue
 		}
 
+		cacheKey := fmt.Sprintf("%s:%s", fr.HCA, fr.Fault.FaultCode)
+		activeKeys[cacheKey] = true
+
+		detectTime, exists := faultTimeCache[cacheKey]
+		if !exists {
+			detectTime = getCurrentTimeMs()
+			faultTimeCache[cacheKey] = detectTime
+			hwlog.RunLog.Infof("New fault detected: HCA=%s, FaultCode=%s, Time=%d", fr.HCA, fr.Fault.FaultCode, detectTime)
+		}
+
 		faultDetail := FaultDetail{
 			FaultCode:   fr.Fault.FaultCode,
-			Time:        getCurrentTimeMs(),
+			Time:        detectTime,
 			Description: fr.Fault.Description,
 			FaultLevel:  fr.Fault.FaultLevel,
 		}
 		hcaFaultMap[fr.HCA] = append(hcaFaultMap[fr.HCA], faultDetail)
+	}
+
+	for cacheKey := range faultTimeCache {
+		if !activeKeys[cacheKey] {
+			delete(faultTimeCache, cacheKey)
+		}
 	}
 
 	return hcaFaultMap
@@ -262,7 +296,7 @@ func buildDPUItem(hcaName string, basicInfo hcaBasicInfo, faults []FaultDetail) 
 
 // ReadFile reads a file and returns its content as a trimmed string
 func ReadFile(path string) string {
-	data, err := utils.ReadLimitBytes(path, 1024)
+	data, err := utils.ReadLimitBytesWithSymlink(path, 1024, validateSysfsPath)
 	if err != nil {
 		return ""
 	}

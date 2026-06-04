@@ -27,6 +27,8 @@ import (
 
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
+
+	"ascend-common/api"
 )
 
 var (
@@ -135,4 +137,14 @@ func GetPCIDevDriver(pciAddr string) (string, error) {
 		return "", fmt.Errorf("error getting driver info for device %s %v", pciAddr, err)
 	}
 	return filepath.Base(driverInfo), nil
+}
+
+// GetNodeName retrieves the current node name from the environment variable NODE_NAME
+// which is set by Kubernetes downward API in DaemonSet Pod spec
+func GetNodeName() (string, error) {
+	nodeName := os.Getenv(api.NodeNameEnv)
+	if nodeName == "" {
+		return "", fmt.Errorf("the env variable whose key is NODE_NAME must be set")
+	}
+	return nodeName, nil
 }

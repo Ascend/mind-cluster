@@ -18,9 +18,13 @@ package common
 import "time"
 
 const (
-	DefaultConfigFilePath = "/k8s-rdma-shared-dev-plugin/config.json"
-	WatchWaitTime         = 5 * time.Second
-	Infiniband            = "infiniband"
-	SysBusUb              = "/sys/bus/ub/devices"
-	KubeEndPoint          = "kubelet.sock"
+	DefaultConfigFilePath       = "/k8s-rdma-shared-dev-plugin/config.json"
+	WatchWaitTime               = 5 * time.Second
+	Infiniband                  = "infiniband"
+	SysBusUb                    = "/sys/bus/ub/devices"
+	SysClassInfiniband          = "/sys/class/infiniband"
+	SysClassNet                 = "/sys/class/net"
+	KubeEndPoint                = "kubelet.sock"
+	MinFaultDetectionPeriod     = 1
+	InvalidFaultDetectionPeriod = 0
 )

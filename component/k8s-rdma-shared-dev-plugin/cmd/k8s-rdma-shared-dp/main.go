@@ -44,6 +44,11 @@ import (
 	"syscall"
 
 	"ascend-common/common-utils/hwlog"
+
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+
+	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/fault"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/core"
@@ -92,7 +97,7 @@ func initFlags() {
 
 	// Bind both -version and -v to the same variable
 	flag.BoolVar(&versionOpt, "version", false, "Show application version")
-	flag.BoolVar(&versionOpt, "v", false, "Show application version (short)")
+	flag.BoolVar(&versionOpt, "v", false, "Show application version")
 
 	// Other command line flags using value variables
 	flag.StringVar(&configFilePath, "config-file", common.DefaultConfigFilePath, "Path to device plugin config file")
@@ -282,9 +287,47 @@ func main() {
 	}
 
 	hwlog.RunLog.Info("Enabled servers started.")
+
+	// Start fault detection with HCA list from discovered devices
+	var hcaList []string
+	faultDetectPeriod := 0
+
+	// Get HCA list and faultDetectPeriod from UB devices
+	if enableUb {
+		if ubRm, ok := rm.(ub_device.UbResourceManager); ok {
+			hcaList = ubRm.GetHCANames()
+			hwlog.RunLog.Infof("Fault detection HCA list from UB devices: %v", hcaList)
+		} else {
+			hwlog.RunLog.Warnf("Warning: Resource manager is not of type UbResourceManager, cannot get HCA names")
+		}
+	}
+
+	faultDetectPeriod = tempCoreManager.GetFaultDetectPeriod()
+	if faultDetectPeriod >= common.MinFaultDetectionPeriod {
+		hwlog.RunLog.Infof("Fault detection period configured: %d seconds", faultDetectPeriod)
+		hwlog.RunLog.Info("Fault detection started.")
+
+		// Initialize K8s clientset once at startup, reuse globally
+		k8sConfig, err := rest.InClusterConfig()
+		if err != nil {
+			hwlog.RunLog.Errorf("Failed to get in-cluster config for fault reporting: %v", err)
+		} else {
+			k8sClient, err := kubernetes.NewForConfig(k8sConfig)
+			if err != nil {
+				hwlog.RunLog.Errorf("Failed to create k8s client for fault reporting: %v", err)
+			} else {
+				// Start two separate goroutines: one for detection, one for reporting
+				// Both share the same ctx for lifecycle management
+				go fault.StartFaultDetection(ctx, hcaList, faultDetectPeriod)
+				go fault.StartFaultReporting(ctx, k8sClient)
+			}
+		}
+	} else {
+		hwlog.RunLog.Warnf("Fault detection disabled, period is set to %d, min period is %d", faultDetectPeriod, common.MinFaultDetectionPeriod)
+	}
+
 	hwlog.RunLog.Info("Listening for term signals")
 	hwlog.RunLog.Info("Starting OS watcher.")
-
 	signalsNotifier := resources.NewSignalNotifier(syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	sigs := signalsNotifier.Notify()
 
@@ -298,6 +341,7 @@ func main() {
 			}
 		default:
 			hwlog.RunLog.Infof("Received signal \"%v\", shutting down.", s)
+			cancel() // Cancel ctx to stop all goroutines
 			if stopPeriodicUpdate != nil {
 				stopPeriodicUpdate()
 			}

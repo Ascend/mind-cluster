@@ -59,10 +59,14 @@ function mv_file() {
   cp "${TOP_DIR}"/build/${DOCKER_FILE_NAME} "${TOP_DIR}"/output
   cp "${TOP_DIR}"/build/Dockerfile.openeuler "${TOP_DIR}"/output
   cp "${TOP_DIR}"/build/agreement.txt "${TOP_DIR}"/output
+  cp "${TOP_DIR}"/pkg/fault/config/fault_code.json "${TOP_DIR}"/output/fault_code.json
+  cp "${TOP_DIR}"/pkg/fault/scripts/fault_detection.sh "${TOP_DIR}"/output/fault_detection.sh
+  sed -i 's/\r$//' "${TOP_DIR}"/output/fault_detection.sh
   sed -i "s/k8s-rdma-shared-dp:.*/k8s-rdma-shared-dp:${build_version}/" "${TOP_DIR}"/output/k8s-rdma-shared-dp-"${build_version}".yaml
   sed -i "s/K8sRdmaSharedDp Version .*/K8sRdmaSharedDp Version ${build_version}/" "${TOP_DIR}"/output/agreement.txt
   chmod 400 "${TOP_DIR}"/output/*
   chmod 500 "${TOP_DIR}"/output/${OUTPUT_NAME}
+  chmod 500 "${TOP_DIR}"/output/fault_detection.sh
 
 }
 

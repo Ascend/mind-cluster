@@ -22,13 +22,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vishvananda/netlink"
-
-	"ascend-common/common-utils/hwlog"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/cdi"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/core"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
+	"github.com/vishvananda/netlink"
+
+	"ascend-common/common-utils/hwlog"
 )
 
 const (
@@ -42,7 +42,7 @@ const (
 // UbResourceManager for UB device plugin
 type UbResourceManager interface {
 	types.ResourceManager
-	// Additional UB-specific methods can be added here
+	GetHCANames() []string
 }
 
 // ubResourceManager implements UbResourceManager interface
@@ -234,6 +234,22 @@ func (rm *ubResourceManager) setUbNicsUp(devices []types.Device) {
 func (rm *ubResourceManager) GetFilteredDevices(devices []types.Device, selector *types.Selectors) []types.Device {
 	// Use core package's GetFilteredDevices function
 	return core.GetFilteredDevices(devices, selector)
+}
+
+// GetHCANames returns all HCA names discovered from UB devices
+func (rm *ubResourceManager) GetHCANames() []string {
+	hcaNames := []string{}
+	for _, dev := range rm.deviceList {
+		infinibandDir := filepath.Join(common.SysBusUb, dev.UbID, "infiniband")
+		entries, err := os.ReadDir(infinibandDir)
+		if err != nil {
+			continue
+		}
+		for _, entry := range entries {
+			hcaNames = append(hcaNames, entry.Name())
+		}
+	}
+	return hcaNames
 }
 
 // PeriodicUpdate returns a function that updates UB devices periodically

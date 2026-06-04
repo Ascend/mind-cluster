@@ -1,0 +1,40 @@
+{
+  "faults": [
+    {
+      "name": "ub_port_down",
+      "description": "RoCE device unavailable, need to switch NIC and IP.",
+      "faultcode": "21000022",
+      "faultlevel": "SeparateDPU",
+      "check_method": "check_ub_port"
+    },
+    {
+      "name": "ub_lane_down",
+      "description": "Data plane lane degraded. No NIC or IP switch needed.",
+      "faultcode": "21000023",
+      "faultlevel": "SubHealthFault",
+      "check_method": "check_ub_lane"
+    },
+    {
+      "name": "hca_port_down",
+      "description": "Host to network fault. Need to switch IP after fault.",
+      "faultcode": "21000024",
+      "faultlevel": "SeparateDPU",
+      "check_method": "check_hca_port"
+    },
+    {
+      "name": "bond_member_down",
+      "description": "In Bond scenario, only one member fails. Bandwidth halved, can continue with SubHealth without IP switch.",
+      "faultcode": "22000025",
+      "faultlevel": "SubHealthFault",
+      "check_method": "check_bond_member"
+    },
+    {
+      "name": "dpu_card_drop",
+      "description": "DPU card missing.",
+      "faultcode": "22000026",
+      "faultlevel": "SeparateDPU",
+      "check_method": "check_dpu_card_drop",
+      "depends_on": "enableDropCardCheck"
+    }
+  ]
+}
