@@ -21,16 +21,17 @@ from ascend_fd_tk.core.context.diag_ctx import DiagCtx
 from ascend_fd_tk.core.service.auto_diag import AutoDiag
 from ascend_fd_tk.core.service.generate_diag_report import GenerateDiagReport
 from ascend_fd_tk.core.service.load_cache import LoadCache
+from ascend_fd_tk.core.service.root_cause_analysis import RootCauseAnalysis
 
 
 class AutoDiagCluster:
-
     def __init__(self, diag_ctx=DiagCtx()):
         self.diag_ctx = diag_ctx
 
     async def main(self):
         await LoadCache(self.diag_ctx).run()
         await AutoDiag(self.diag_ctx).run()
+        await RootCauseAnalysis(self.diag_ctx).run()
         await GenerateDiagReport(self.diag_ctx).run()
         # 清空缓存
         self.diag_ctx.diag_result = []

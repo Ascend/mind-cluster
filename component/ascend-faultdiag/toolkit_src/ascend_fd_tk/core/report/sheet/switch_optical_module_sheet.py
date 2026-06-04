@@ -90,6 +90,8 @@ class SwitchOpticalModuleData:
 class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
     """交换机间端口连接光模块信息报告Sheet生成器"""
 
+    TABLE_COLOR = "A9D18E"
+
     @staticmethod
     def _get_optical_module_data(interface_full_info) -> Dict[str, str]:
         """
@@ -139,9 +141,9 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "local_switch_name": "本端交换机名称",
             "local_switch_id": "本端交换机ID",
             "local_switch_sn": "本端交换机SN",
-            "local_interface": "本端接口",
-            "local_room_name": "机房名称",
-            "local_cabinet_id": "机柜编号",
+            "local_interface": "本端端口",
+            "local_room_name": "本端机房名称",
+            "local_cabinet_id": "本端机柜编号",
             # 本端光模块信息
             "local_optical_vendor": "本端光模块厂商",
             "local_optical_model": "本端光模块型号",
@@ -164,7 +166,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             "peer_switch_name": "对端交换机名称",
             "peer_switch_id": "对端交换机ID",
             "peer_switch_sn": "对端交换机SN",
-            "peer_interface": "对端接口",
+            "peer_interface": "对端端口",
             "peer_room_name": "对端机房名称",
             "peer_cabinet_id": "对端机柜编号",
             # 对端光模块信息
@@ -194,7 +196,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     "本端交换机名称",
                     "本端交换机ID",
                     "本端交换机SN",
-                    "本端接口",
+                    "本端端口",
                     "机房名称",
                     "机柜编号",
                     "本端光模块厂商",
@@ -218,7 +220,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                     "对端交换机名称",
                     "对端交换机ID",
                     "对端交换机SN",
-                    "对端接口",
+                    "对端端口",
                     "对端机房名称",
                     "对端机柜编号",
                     "对端光模块厂商",
@@ -270,6 +272,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             threshold_configs=threshold_configs,
             na_rep="-",
             merged_headers=merged_headers,
+            tab_color=self.TABLE_COLOR,
         )
 
         # 生成Excel
@@ -328,7 +331,7 @@ class SwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
                 # 收集对端光模块信息（即使没有找到对端交换机或接口，也要继续展示本端信息）
                 peer_optical_data = {}
                 if peer_switch:
-                    # 获取对端接口信息
+                    # 获取对端端口信息
                     peer_interface_full_info = peer_switch.interface_full_infos.get(peer_interface)
                     if peer_interface_full_info:
                         peer_optical_data = self._get_optical_module_data(peer_interface_full_info)

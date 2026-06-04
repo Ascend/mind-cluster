@@ -17,84 +17,71 @@
 
 from dataclasses import dataclass, field
 import os
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 from openpyxl import load_workbook
 
+from ascend_fd_tk.core.model.host import HostInfo
+from ascend_fd_tk.core.model.switch import SwitchInfo
 from ascend_fd_tk.utils.logger import DIAG_LOGGER
 
 
 @dataclass
 class HostLocationInfo:
     host_name: str = ""
+    host_sn: str = ""
     room_name: str = ""
     cabinet_id: str = ""
     l1_switch_name: str = ""
     l1_switch_ip: str = ""
+    l1_switch_sn: str = ""
 
 
 @dataclass
 class SwitchLocationInfo:
+    sn: str = ""
     room_name: str = ""
     cabinet_id: str = ""
-    l2_switch_name: str = ""
-    l2_switch_ip: str = ""
+    switch_name: str = ""
+    switch_ip: str = ""
 
 
 @dataclass
 class LocationConfig:
-    host_location_map: Dict[str, HostLocationInfo] = field(default_factory=dict)
-    switch_location_map: Dict[str, SwitchLocationInfo] = field(default_factory=dict)
+    host_name_location_map: Dict[str, HostLocationInfo] = field(default_factory=dict)
+    host_sn_location_map: Dict[str, HostLocationInfo] = field(default_factory=dict)
 
-    def get_host_room_name(self, host_name: str) -> str:
-        info = self.host_location_map.get(host_name)
-        return info.room_name if info else ""
+    switch_sn_location_map: Dict[str, SwitchLocationInfo] = field(default_factory=dict)
+    switch_ip_location_map: Dict[str, SwitchLocationInfo] = field(default_factory=dict)
+    switch_name_location_map: Dict[str, SwitchLocationInfo] = field(default_factory=dict)
 
-    def get_host_cabinet_id(self, host_name: str) -> str:
-        info = self.host_location_map.get(host_name)
-        return info.cabinet_id if info else ""
+    def enrich_host_info(self, host_info: HostInfo):
+        if host_info:
+            host_info.room_name, host_info.cabinet_id = self._find_host_location(host_info.sn_num, host_info.hostname)
 
-    def get_switch_room_name(self, switch_identifier: str) -> str:
-        info = self._find_switch_location(switch_identifier)
-        return info.room_name if info else ""
+    def enrich_switch_info(self, switch_info: SwitchInfo):
+        if switch_info:
+            switch_info.room_name, switch_info.cabinet_id = self._find_switch_location(
+                switch_info.sn, switch_info.swi_id, switch_info.name
+            )
 
-    def get_switch_cabinet_id(self, switch_identifier: str) -> str:
-        info = self._find_switch_location(switch_identifier)
-        return info.cabinet_id if info else ""
-
-    def enrich_host_info(self, host_info):
-        if host_info.hostname:
-            host_info.room_name = self.get_host_room_name(host_info.hostname)
-            host_info.cabinet_id = self.get_host_cabinet_id(host_info.hostname)
-
-    def enrich_switch_info(self, switch_info):
-        if switch_info.name:
-            switch_info.room_name = self.get_switch_room_name(switch_info.name)
-            switch_info.cabinet_id = self.get_switch_cabinet_id(switch_info.name)
-
-    def _find_switch_location(self, switch_identifier: str) -> Optional[SwitchLocationInfo]:
-        info = self.switch_location_map.get(switch_identifier)
+    def _find_host_location(self, input_sn: str, input_name: str) -> Tuple[str, str]:
+        """查找主机位置信息，查找顺序: SN -> name"""
+        info = self.host_sn_location_map.get(input_sn) or self.host_name_location_map.get(input_name)
         if info:
-            return info
-        for key, loc_info in self.switch_location_map.items():
-            if loc_info.l2_switch_name == switch_identifier:
-                return loc_info
-        return None
+            return info.room_name, info.cabinet_id
+        return "", ""
 
-    def to_dict(self):
-        return {
-            "host_location_map": {k: v.__dict__ for k, v in self.host_location_map.items()},
-            "switch_location_map": {k: v.__dict__ for k, v in self.switch_location_map.items()},
-        }
-
-    @classmethod
-    def from_dict(cls, data: Dict):
-        config = cls()
-        for k, v in data.get("host_location_map", {}).items():
-            config.host_location_map[k] = HostLocationInfo(**v)
-        for k, v in data.get("switch_location_map", {}).items():
-            config.switch_location_map[k] = SwitchLocationInfo(**v)
-        return config
+    def _find_switch_location(self, input_sn: str, input_ip: str, input_name: str) -> Tuple[str, str]:
+        """查找交换机位置信息，查找顺序: SN -> IP -> name"""
+        info = (
+            self.switch_sn_location_map.get(input_sn)
+            or self.switch_ip_location_map.get(input_ip)
+            or self.switch_name_location_map.get(input_name)
+        )
+        if info:
+            return info.room_name, info.cabinet_id
+        return "", ""
 
 
 class LldConfigReader:
@@ -137,13 +124,11 @@ class LldConfigReader:
 
     def _read(self, wb) -> LocationConfig:
         config = LocationConfig()
-        config.host_location_map = self._read_l1_sheet(wb)
-        config.switch_location_map = self._read_l2_sheet(wb)
-        host_count = len(config.host_location_map)
-        switch_count = len(config.switch_location_map)
-        DIAG_LOGGER.info(
-            "加载 %d 条%s信息，%d 条%s信息", host_count, self.L1_SHEET_NAME, switch_count, self.L2_SHEET_NAME
-        )
+        self._read_l1_sheet(wb, config)
+        self._read_l2_sheet(wb, config)
+        host_count = len(config.host_name_location_map)
+        switch_count = len(config.switch_name_location_map)
+        DIAG_LOGGER.info("加载 %d 条服务器信息，%d 条交换机信息", host_count, switch_count)
         return config
 
     def _iter_sheet_rows(self, wb, sheet_name: str, expected_cols: list):
@@ -164,38 +149,61 @@ class LldConfigReader:
             values = [str(cell or "").strip() if cell else "" for cell in row]
             yield col_idx, values
 
-    def _read_l1_sheet(self, wb) -> Dict[str, HostLocationInfo]:
-        result = {}
+    def _read_l1_sheet(self, wb, config: LocationConfig):
         for col_idx, values in self._iter_sheet_rows(
-            wb, self.L1_SHEET_NAME, ["服务器", "机房名称", "机柜编号", "L1名称", "L1_IP"]
+            wb, self.L1_SHEET_NAME, ["服务器", "主机SN", "机房名称", "机柜编号", "L1名称", "L1_IP", "L1_SN"]
         ):
             host_name = values[col_idx["服务器"]] if "服务器" in col_idx else ""
-            if not host_name:
-                continue
-            result[host_name] = HostLocationInfo(
+            host_sn = values[col_idx["主机SN"]] if "主机SN" in col_idx else ""
+            room_name = values[col_idx["机房名称"]] if "机房名称" in col_idx else ""
+            cabinet_id = values[col_idx["机柜编号"]] if "机柜编号" in col_idx else ""
+            l1_switch_name = values[col_idx["L1名称"]] if "L1名称" in col_idx else ""
+            l1_switch_ip = values[col_idx["L1_IP"]] if "L1_IP" in col_idx else ""
+            l1_switch_sn = values[col_idx["L1_SN"]] if "L1_SN" in col_idx else ""
+            host_location_info = HostLocationInfo(
                 host_name=host_name,
-                room_name=values[col_idx["机房名称"]] if "机房名称" in col_idx else "",
-                cabinet_id=values[col_idx["机柜编号"]] if "机柜编号" in col_idx else "",
-                l1_switch_name=values[col_idx["L1名称"]] if "L1名称" in col_idx else "",
-                l1_switch_ip=values[col_idx["L1_IP"]] if "L1_IP" in col_idx else "",
+                host_sn=host_sn,
+                room_name=room_name,
+                cabinet_id=cabinet_id,
+                l1_switch_name=l1_switch_name,
+                l1_switch_ip=l1_switch_ip,
+                l1_switch_sn=l1_switch_sn,
             )
-        return result
+            if host_name:
+                config.host_name_location_map.update({host_name: host_location_info})
+            if host_sn:
+                config.host_sn_location_map.update({host_sn: host_location_info})
+            switch_location_info = SwitchLocationInfo(
+                sn=l1_switch_sn,
+                room_name=room_name,
+                cabinet_id=cabinet_id,
+                switch_name=l1_switch_name,
+                switch_ip=l1_switch_ip,
+            )
+            if l1_switch_sn:
+                config.switch_sn_location_map.update({l1_switch_sn: switch_location_info})
+            if l1_switch_ip:
+                config.switch_ip_location_map.update({l1_switch_ip: switch_location_info})
+            if l1_switch_name:
+                config.switch_name_location_map.update({l1_switch_name: switch_location_info})
 
-    def _read_l2_sheet(self, wb) -> Dict[str, SwitchLocationInfo]:
-        result = {}
+    def _read_l2_sheet(self, wb, config: LocationConfig):
         for col_idx, values in self._iter_sheet_rows(
-            wb, self.L2_SHEET_NAME, ["设备名", "机房名称", "机柜编号", "管理IP配置"]
+            wb, self.L2_SHEET_NAME, ["设备名", "SN", "机房名称", "机柜编号", "管理IP配置"]
         ):
             switch_ip = values[col_idx["管理IP配置"]] if "管理IP配置" in col_idx else ""
             switch_name = values[col_idx["设备名"]] if "设备名" in col_idx else ""
-            if not switch_ip and not switch_name:
-                continue
-            loc_info = SwitchLocationInfo(
+            switch_sn = values[col_idx["SN"]] if "SN" in col_idx else ""
+            switch_location_info = SwitchLocationInfo(
+                sn=switch_sn,
                 room_name=values[col_idx["机房名称"]] if "机房名称" in col_idx else "",
                 cabinet_id=values[col_idx["机柜编号"]] if "机柜编号" in col_idx else "",
-                l2_switch_name=switch_name,
-                l2_switch_ip=switch_ip,
+                switch_name=switch_name,
+                switch_ip=switch_ip,
             )
-            key = switch_ip if switch_ip else switch_name
-            result[key] = loc_info
-        return result
+            if switch_sn:
+                config.switch_sn_location_map.update({switch_sn: switch_location_info})
+            if switch_ip:
+                config.switch_ip_location_map.update({switch_ip: switch_location_info})
+            if switch_name:
+                config.switch_name_location_map.update({switch_name: switch_location_info})

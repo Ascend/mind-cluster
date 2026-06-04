@@ -133,6 +133,7 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
     """主机到交换机光模块信息报告Sheet生成器"""
 
     LANE_NUM = 4
+    TABLE_COLOR = "A9D18E"
 
     @staticmethod
     def _create_header_config() -> Tuple[Dict[str, str], List[Dict[str, List[str]]]]:
@@ -365,6 +366,7 @@ class HostToSwitchOpticalModuleSheetGenerator(BaseSheetGenerator):
             threshold_configs=threshold_configs,
             na_rep="-",
             merged_headers=merged_headers,
+            tab_color=self.TABLE_COLOR,
         )
 
         # 生成Excel

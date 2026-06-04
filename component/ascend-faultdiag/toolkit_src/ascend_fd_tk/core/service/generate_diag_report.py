@@ -24,6 +24,7 @@ from ascend_fd_tk.utils.logger import DIAG_LOGGER
 from ascend_fd_tk.utils.excel_tool import ExcelGenerator
 from ascend_fd_tk.core.report.sheet.diag_report_sheet import DiagReportSheetGenerator
 from ascend_fd_tk.core.report.sheet.optical_module_sheet import HostToSwitchOpticalModuleSheetGenerator
+from ascend_fd_tk.core.report.sheet.signal_link_mapping_sheet import SignalLinkMappingSheetGenerator
 from ascend_fd_tk.core.report.sheet.switch_optical_module_sheet import SwitchOpticalModuleSheetGenerator
 
 
@@ -56,16 +57,21 @@ class GenerateDiagReport(DiagService):
         excel_file_path = os.path.join(CommonPath.REPORT_DIR, excel_file_name)
 
         try:
-            # 生成诊断报告Sheet
-            DIAG_LOGGER.info("正在生成诊断报告Sheet...")
+            DIAG_LOGGER.info("正在生成链路分析Sheet...")
+            signal_link_mapping_sheet = SignalLinkMappingSheetGenerator(
+                cluster_info=self.diag_ctx.cache, excel_gen=excel_gen, root_cause_filter=self.diag_ctx.root_cause_filter
+            )
+            signal_link_mapping_sheet.generate_sheet()
+
+            DIAG_LOGGER.info("正在生成故障诊断报告Sheet...")
             diag_report_sheet = DiagReportSheetGenerator(
                 cluster_info=self.diag_ctx.cache,
                 excel_gen=excel_gen,
                 diag_results=diag_results,
+                root_cause_filter=self.diag_ctx.root_cause_filter,
             )
             diag_report_sheet.generate_sheet()
 
-            # 生成光模块信息Sheet
             DIAG_LOGGER.info("正在生成光模块信息Sheet...")
             optical_module_sheet = HostToSwitchOpticalModuleSheetGenerator(
                 cluster_info=self.diag_ctx.cache,
@@ -73,7 +79,6 @@ class GenerateDiagReport(DiagService):
             )
             optical_module_sheet.generate_sheet()
 
-            # 生成交换机间端口连接光模块信息Sheet
             DIAG_LOGGER.info("正在生成交换机间端口连接光模块信息Sheet...")
             switch_optical_module_sheet = SwitchOpticalModuleSheetGenerator(
                 cluster_info=self.diag_ctx.cache,
@@ -81,10 +86,8 @@ class GenerateDiagReport(DiagService):
             )
             switch_optical_module_sheet.generate_sheet()
 
-            # 保存Excel文件
             DIAG_LOGGER.info("正在保存诊断报告到：%s...", excel_file_path)
             excel_gen.generate_excel(excel_file_path)
-
             DIAG_LOGGER.info("诊断报告生成完成：%s", excel_file_path)
 
             # 尝试打开Excel文件
