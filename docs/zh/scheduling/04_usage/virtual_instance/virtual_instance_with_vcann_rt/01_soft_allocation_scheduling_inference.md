@@ -23,7 +23,13 @@
 </thead>
 <tbody><tr><td class="cellrowborder" rowspan="4" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p>通用说明</p>
 </td>
-<td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 "><p>分配的芯片信息会在PodGroup的label中体现出来，关于PodGroup label的详细说明请参见<a href="../../../05_api/volcano.md#podgroup">PodGroup label</a>中的如下参数：<ul><li>huawei.com/scheduler.softShareDev.aicoreQuota</li><li>huawei.com/scheduler.softShareDev.hbmQuota</li><li>huawei.com/scheduler.softShareDev.policy</li></ul></p>
+<td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 ">
+<p>分配的芯片信息会在PodGroup的如下label中体现出来，关于PodGroup label的详细说明请参见<a href="../../../05_api/volcano.md#podgroup">PodGroup label</a>中的如下参数：
+<ul>
+<li>huawei.com/scheduler.softShareDev.aicoreQuota：取值为1-100，表示软切分任务请求的AICore百分比。</li>
+<li>huawei.com/scheduler.softShareDev.hbmQuota：取值为1-maxHBM，其中maxHBM为通过npu-smi info命令查询出的HBM-Usage(MB)中HBM的值，表示软切分任务请求的高带宽内存量。</li>
+<li>huawei.com/scheduler.softShareDev.policy：取值为fixed-share（固定配额模式）、elastic（弹性模式）、best-effort（争抢模式），表示软切分任务的策略</li>
+</ul></p>
 </td>
 </tr>
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>软切分功能必须配合vCANN-RT使用。</p>
@@ -87,6 +93,7 @@
     虚拟化实例涉及修改相关参数的集群调度组件为Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
 
     1. 在device-plugin-volcano-v\{version\}.yaml中添加-shareDevCount=100 -softShareDevConfigDir=/share_device/，其中/share_device/由用户手动创建。当Atlas A3 推理系列产品使用软切分虚拟化功能时，需额外增加启动参数-useSingleDieMode=true。
+    2. 在device-plugin-volcano-v\{version\}.yaml中volumeMounts和volumes增加名为enpu-config-dir和share-device-config-dir的挂载项，其中enpu-config-dir的路径固定为/etc/enpu/，用于存放生成的软切分虚拟化任务的配置文件npu_info.config，share-device-config-dir的路径需与-softShareDevConfigDir参数值保持一致，用于存放软切分虚拟化任务的共享内存配置文件。
 
        ```Yaml
        ...
@@ -124,7 +131,7 @@
        |-softShareDevConfigDir|string|""|软切分虚拟化场景配置目录。|
        |-useSingleDieMode|bool|false|Atlas A3 推理系列产品是否开启单die直通模式。<ul><li>true：开启单die直通模式。</li><li>false：关闭单die直通模式。</li></ul>使用软切分虚拟化功能时，该参数必须配置为true。|
 
-    2. （可选）针对软切分虚拟化功能和非软切分虚拟化功能混合部署场景，需要对Ascend Device Plugin的YAML进行如下修改。
+    3. （可选）针对软切分虚拟化功能和非软切分虚拟化功能混合部署场景，需要对Ascend Device Plugin的YAML进行如下修改。
 
        - 在支持软切分虚拟化功能的节点上安装支持软切分功能的Ascend Device Plugin，将device-plugin-volcano-v\{version\}.yaml拷贝为softsharedev-device-plugin-volcano-v\{version\}.yaml。softsharedev-device-plugin-volcano-v\{version\}.yaml修改如下：
 
@@ -315,7 +322,7 @@
         fault-scheduling: "force"
         <strong>huawei.com/scheduler.softShareDev.aicoreQuota: "50" # 软切分任务请求的芯片AICore百分比，单位为%</strong>
         <strong>huawei.com/scheduler.softShareDev.hbmQuota: "2048" # 软切分任务请求的芯片高带宽内存量，单位为MB</strong>
-        <strong>huawei.com/scheduler.softShareDev.policy: "fixed-share" # 软切分策略，取值为fixed-share、elastic和best-effort</strong>
+        <strong>huawei.com/scheduler.softShareDev.policy: "fixed-share" # 软切分策略，取值为fixed-share（固定配额模式）、elastic（弹性模式）、best-effort（争抢模式）</strong>
       annotations:
         <strong>huawei.com/schedule_policy: "chip1-softShareDev" # 软切分场景Volcano调度策略</strong>
     spec:
