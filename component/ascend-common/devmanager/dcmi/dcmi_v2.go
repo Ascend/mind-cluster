@@ -842,13 +842,19 @@ func (d *DcV2Manager) DcGetUrmaDevEidListAll(logicID int32) ([]common.UrmaDevice
 			"logicID(%d)", feCnt, MaxUrmaDevCnt, logicID)
 	}
 
-	infos := make([]common.UrmaDeviceInfo, feCnt)
+	infos := make([]common.UrmaDeviceInfo, 0, feCnt)
 	for index := int32(0); index < feCnt; index++ {
 		eidInfo, err := d.DcGetUrmaDevEidList(logicID, index)
 		if err != nil || eidInfo == nil {
-			return []common.UrmaDeviceInfo{}, err
+			hwlog.RunLog.Debugf("skip: logicID %d, index %d, err=%v, eidInfo_nil=%v",
+				logicID, index, err, eidInfo == nil)
+			continue
 		}
-		infos[index] = *eidInfo
+		infos = append(infos, *eidInfo)
+	}
+
+	if len(infos) == 0 {
+		return []common.UrmaDeviceInfo{}, fmt.Errorf("no valid urma device found for logicID %d", logicID)
 	}
 	return infos, nil
 }
