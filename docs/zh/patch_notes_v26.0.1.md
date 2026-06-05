@@ -78,6 +78,16 @@
 |Ascend HDK| <ul><li>Atlas 350 标卡：1.0.RC1</li><li>其他产品：26.0.RC1</li></ul> |[华为support](https://support.huawei.com/carrierindex/zh/hwe/index.html)，或在[昇腾社区](https://www.hiascend.com/zh/developer/download)下载|
 |CANN|9.0.0|[华为support](https://support.huawei.com/carrierindex/zh/hwe/index.html)，或在[昇腾社区](https://www.hiascend.com/zh/developer/download)下载|
 
+### 版本兼容性说明
+
+MindCluster各组件需要配套使用，请勿跨版本混用各组件。
+
+**表 2**  软件版本兼容性说明
+
+|MindCluster软件版本|MindCluster待升级版本|CANN版本兼容性|Ascend HDK版本兼容性|FrameworkPTAdapter版本兼容性|MindSpore版本兼容性|
+|--|--|--|--|--|--|
+|MindCluster 26.0.1|<ul><li>MindCluster 7.0.RC1及补丁版本</li><li>MindCluster 7.1.RC1及补丁版本</li><li>MindCluster 7.2.RC1及补丁版本</li><li>MindCluster 7.3.0及补丁版本</li></ul>|<ul><li>CANN 8.5.0及补丁版本</li><li>CANN 9.0.0及补丁版本</li></ul>|<ul><li>Ascend HDK 25.5.0及补丁版本</li><li>Ascend HDK 26.0.RC1及补丁版本</li><li>Ascend HDK 1.0.RC1及补丁版本</li></ul>|<ul><li>FrameworkPTAdapter 7.3.0及补丁版本</li><li>FrameworkPTAdapter 26.0.0及补丁版本</li></ul>|<ul><li>MindSpore 2.7.2及补丁版本</li><li>MindSpore 2.9.0及补丁版本</li></ul>|
+
 ### 病毒扫描结果 
 
 病毒扫描通过。
@@ -88,7 +98,6 @@
 
 - 解决了在某些场景下，cluster-info-switch和cluster-info-node ConfigMap更新错误的问题。
 - 解决了Atlas 350 标卡device-info ConfigMap中上报芯片名称错误的问题。
-- 解决了Atlas A3场景L1-1520到NPU降lane至1/4故障时偶现无法获取到对应故障信息的问题。
 - 解决了Atlas 350 标卡Ascend Docker Runtime挂载设备时校验驱动中存在软链接导致的挂载失败问题。
 
 ## 遗留问题
