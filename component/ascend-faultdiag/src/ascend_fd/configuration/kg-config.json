@@ -23410,13 +23410,13 @@
                 "class": "Hardware",
                 "component": "BMC",
                 "module": "LCNE",
-                "cause_zh": "LCNE设备无法正常运行",
-                "description_zh": "周期性从CPLD获取LCNE心跳寄存器。",
+                "cause_zh": "LCNE心跳丢失",
+                "description_zh": "LCNE心跳丢失，设备无法正常运行。",
                 "suggestion_zh": [
                     "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
                 ],
-                "cause_en": "The LCNE device cannot run properly",
-                "description_en": "Periodically obtains the LCNE heartbeat register from the CPLD.",
+                "cause_en": "LCNE heartbeat lost",
+                "description_en": "LCNE heartbeat lost, the LCNE device cannot run properly.",
                 "suggestion_en": [
                     "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
                 ]
@@ -23431,13 +23431,13 @@
                 "class": "Hardware",
                 "component": "BMC",
                 "module": "LCNE",
-                "cause_zh": "LCNE出现紧急问题，可能危及系统正常运行，需要紧急处理",
-                "description_zh": "BMC监控LCNE上报告警。",
+                "cause_zh": "芯片NE健康状态紧急告警",
+                "description_zh": "LCNE出现紧急问题，可能危及系统正常运行，需要紧急处理。",
                 "suggestion_zh": [
                     "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
                 ],
-                "cause_en": "An emergency issue occurs in the LCNE, which may endanger the normal operation of the system and requires urgent handling",
-                "description_en": "BMC monitors alarms reported by the LCNE.",
+                "cause_en": "Chip NE health critical alarm",
+                "description_en": "An emergency issue occurs in the LCNE, which may endanger the normal operation of the system and requires urgent handling.",
                 "suggestion_en": [
                     "1. There is a business judgment server that isolates the server when business operations are affected. If there are no business operations, the server is directly isolated."
                 ]
