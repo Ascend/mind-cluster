@@ -19,6 +19,7 @@ package util
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -31,8 +32,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"ascend-common/common-utils/hwlog"
 	"infer-operator/pkg/common"
 )
+
+func TestMain(m *testing.M) {
+	hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background())
+	m.Run()
+}
 
 var (
 	two   = 2
@@ -374,4 +381,132 @@ func (m *mockInformer) LastSyncResourceVersion() string {
 
 func (m *mockInformer) AddIndexers(indexers toolscache.Indexers) error {
 	return nil
+}
+
+func TestInitCMInformer(t *testing.T) {
+	convey.Convey("Test InitCMInformer", t, func() {
+		convey.Convey("Should return error when GetInformerForKind fails", func() {
+			mockCache := &mockCache{shouldError: true}
+			ctx := context.Background()
+
+			err := InitCMInformer(ctx, mockCache)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("Should successfully initialize CM informer", func() {
+			patches := gomonkey.NewPatches()
+			defer patches.Reset()
+
+			mockCache := &mockCache{shouldError: false}
+			ctx := context.Background()
+
+			handlerCalled := false
+			patches.ApplyFunc(addInferOperatorCfgEventHandler, func(_ *cache.Informer) {
+				handlerCalled = true
+			})
+
+			err := InitCMInformer(ctx, mockCache)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(handlerCalled, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestGetCurrentNamespace(t *testing.T) {
+	convey.Convey("Test getCurrentNamespace", t, func() {
+		convey.Convey("Should return default namespace when file not found", func() {
+			namespace := getCurrentNamespace()
+			convey.So(namespace, convey.ShouldEqual, common.DefaultNamespace)
+		})
+	})
+}
+
+func TestInferOperatorCfgHandlerWithDifferentOperators(t *testing.T) {
+	convey.Convey("Test inferOperatorCfgHandler with different operators", t, func() {
+		defer func() {
+			inferOperatorCfgEventFuncs = []func(interface{}, interface{}, string){}
+		}()
+
+		convey.Convey("Should handle AddOperator", func() {
+			operatorReceived := ""
+			AddInferOperatorCfgEventFuncs(func(_, _ interface{}, operator string) {
+				operatorReceived = operator
+			})
+			inferOperatorCfgHandler(nil, nil, common.AddOperator)
+			convey.So(operatorReceived, convey.ShouldEqual, common.AddOperator)
+		})
+
+		convey.Convey("Should handle UpdateOperator", func() {
+			operatorReceived := ""
+			AddInferOperatorCfgEventFuncs(func(_, _ interface{}, operator string) {
+				operatorReceived = operator
+			})
+			inferOperatorCfgHandler(nil, nil, common.UpdateOperator)
+			convey.So(operatorReceived, convey.ShouldEqual, common.UpdateOperator)
+		})
+
+		convey.Convey("Should handle DeleteOperator", func() {
+			operatorReceived := ""
+			AddInferOperatorCfgEventFuncs(func(_, _ interface{}, operator string) {
+				operatorReceived = operator
+			})
+			inferOperatorCfgHandler(nil, nil, common.DeleteOperator)
+			convey.So(operatorReceived, convey.ShouldEqual, common.DeleteOperator)
+		})
+
+		convey.Convey("Should handle unknown operator", func() {
+			operatorReceived := ""
+			AddInferOperatorCfgEventFuncs(func(_, _ interface{}, operator string) {
+				operatorReceived = operator
+			})
+			inferOperatorCfgHandler(nil, nil, "unknown")
+			convey.So(operatorReceived, convey.ShouldEqual, "unknown")
+		})
+	})
+}
+
+func TestFilterInferOperatorCfgWithNilObject(t *testing.T) {
+	convey.Convey("Test filterInferOperatorCfg with nil object", t, func() {
+		result := filterInferOperatorCfg(nil)
+		convey.So(result, convey.ShouldBeFalse)
+	})
+}
+
+func TestAddInferOperatorCfgEventHandlerWithEventHandlers(t *testing.T) {
+	convey.Convey("Test addInferOperatorCfgEventHandler event handlers", t, func() {
+		mockInformerImpl := &mockInformer{}
+		var mockInformer cache.Informer = mockInformerImpl
+
+		addInferOperatorCfgEventHandler(&mockInformer)
+
+		convey.Convey("Should have FilteringResourceEventHandler", func() {
+			convey.So(len(mockInformerImpl.handlers), convey.ShouldEqual, 1)
+		})
+	})
+}
+
+func TestInferOperatorCfgEventFuncsConcurrency(t *testing.T) {
+	convey.Convey("Test inferOperatorCfgEventFuncs concurrency safety", t, func() {
+		defer func() {
+			inferOperatorCfgEventFuncs = []func(interface{}, interface{}, string){}
+		}()
+
+		var callCount int32
+		AddInferOperatorCfgEventFuncs(func(_, _ interface{}, _ string) {
+			atomic.AddInt32(&callCount, 1)
+		})
+
+		done := make(chan bool)
+		for i := 0; i < 10; i++ {
+			go func() {
+				inferOperatorCfgHandler(nil, nil, common.AddOperator)
+				done <- true
+			}()
+		}
+
+		for i := 0; i < 10; i++ {
+			<-done
+		}
+		convey.So(atomic.LoadInt32(&callCount), convey.ShouldEqual, 10)
+	})
 }

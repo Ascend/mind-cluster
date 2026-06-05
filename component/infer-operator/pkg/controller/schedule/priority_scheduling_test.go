@@ -311,3 +311,135 @@ func createPriorityInstanceSet(roleName, prioritySchedulingStrategy string, isRe
 	}
 	return instanceSet
 }
+
+func TestShouldScheduleWithMaxPriority(t *testing.T) {
+	convey.Convey("Test ShouldSchedule with max priority value", t, func() {
+		maxPriority := common.MaxRoleTypeCount
+		roles := []v1.InstanceSetSpec{
+			{Name: "test-role", Replicas: func() *int32 { r := int32(1); return &r }(), Priority: func() *int32 { p := int32(maxPriority); return &p }()},
+		}
+		inferService := createPriorityInferServiceWithRoles(roles)
+		instanceSet := createPriorityInstanceSet("test-role", common.SchedulingStrategyPriority, false)
+		fakeClient := createFakeClient(instanceSet, inferService)
+
+		ctx := context.Background()
+		shouldSchedule, err := ShouldSchedule(ctx, fakeClient, instanceSet)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(shouldSchedule, convey.ShouldBeTrue)
+	})
+}
+
+func TestShouldScheduleWithZeroPriority(t *testing.T) {
+	convey.Convey("Test ShouldSchedule with zero priority", t, func() {
+		roles := []v1.InstanceSetSpec{
+			{Name: "test-role", Replicas: func() *int32 { r := int32(1); return &r }(), Priority: func() *int32 { p := int32(0); return &p }()},
+		}
+		inferService := createPriorityInferServiceWithRoles(roles)
+		instanceSet := createPriorityInstanceSet("test-role", common.SchedulingStrategyPriority, false)
+		fakeClient := createFakeClient(instanceSet, inferService)
+
+		ctx := context.Background()
+		shouldSchedule, err := ShouldSchedule(ctx, fakeClient, instanceSet)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(shouldSchedule, convey.ShouldBeTrue)
+	})
+}
+
+func TestShouldScheduleWithNegativePriority(t *testing.T) {
+	convey.Convey("Test ShouldSchedule with negative priority", t, func() {
+		roles := []v1.InstanceSetSpec{
+			{Name: "test-role", Replicas: func() *int32 { r := int32(1); return &r }(), Priority: func() *int32 { p := int32(-1); return &p }()},
+		}
+		inferService := createPriorityInferServiceWithRoles(roles)
+		instanceSet := createPriorityInstanceSet("test-role", common.SchedulingStrategyPriority, false)
+		fakeClient := createFakeClient(instanceSet, inferService)
+
+		ctx := context.Background()
+		shouldSchedule, err := ShouldSchedule(ctx, fakeClient, instanceSet)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(shouldSchedule, convey.ShouldBeTrue)
+	})
+}
+
+func TestShouldScheduleAllRolesReady(t *testing.T) {
+	convey.Convey("Test ShouldSchedule when all roles are ready", t, func() {
+		roles := []v1.InstanceSetSpec{
+			{Name: "role1", Replicas: func() *int32 { r := int32(1); return &r }(), Priority: func() *int32 { p := int32(1); return &p }()},
+			{Name: "role2", Replicas: func() *int32 { r := int32(1); return &r }(), Priority: func() *int32 { p := int32(2); return &p }()},
+		}
+		inferService := createPriorityInferServiceWithRoles(roles)
+		instanceSet1 := createPriorityInstanceSet("role1", common.SchedulingStrategyPriority, true)
+		instanceSet1.UID = "uid-1"
+		instanceSet2 := createPriorityInstanceSet("role2", common.SchedulingStrategyPriority, true)
+		instanceSet2.UID = "uid-2"
+		fakeClient := createFakeClient(instanceSet1, instanceSet2, inferService)
+
+		ctx := context.Background()
+		shouldSchedule, err := ShouldSchedule(ctx, fakeClient, instanceSet1)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(shouldSchedule, convey.ShouldBeFalse)
+	})
+}
+
+func TestFindHighestPriorityOfNotReadyRoleEdgeCases(t *testing.T) {
+	convey.Convey("Test findHighestPriorityOfNotReadyRole edge cases", t, func() {
+		convey.Convey("Should return AllReadyPriority when no roles defined", func() {
+			inferService := createTestInferService("test-service", "default")
+			inferService.Spec.Roles = []v1.InstanceSetSpec{}
+			instanceSetMap := map[string]*v1.InstanceSet{}
+
+			priority := findHighestPriorityOfNotReadyRole(inferService, instanceSetMap)
+			convey.So(priority, convey.ShouldEqual, AllReadyPriority)
+		})
+
+		convey.Convey("Should handle role with nil priority", func() {
+			inferService := createTestInferService("test-service", "default")
+			inferService.Spec.Roles = []v1.InstanceSetSpec{
+				{Name: "role1", Replicas: func() *int32 { r := int32(1); return &r }(), Priority: nil},
+			}
+			instanceSetMap := map[string]*v1.InstanceSet{}
+
+			priority := findHighestPriorityOfNotReadyRole(inferService, instanceSetMap)
+			convey.So(priority, convey.ShouldEqual, common.DefaultPriority)
+		})
+	})
+}
+
+func TestGetPriorityEdgeCases(t *testing.T) {
+	convey.Convey("Test getPriority edge cases", t, func() {
+		convey.Convey("Should handle role with nil priority and other fields", func() {
+			role := &v1.InstanceSetSpec{
+				Name:     "test-role",
+				Replicas: func() *int32 { r := int32(5); return &r }(),
+				Priority: nil,
+			}
+			priority := getPriority(role)
+			convey.So(priority, convey.ShouldEqual, common.DefaultPriority)
+		})
+	})
+}
+
+func TestShouldScheduleWithMissingInferService(t *testing.T) {
+	convey.Convey("Test ShouldSchedule when InferService is missing", t, func() {
+		instanceSet := createPriorityInstanceSet("test-role", common.SchedulingStrategyPriority, false)
+		fakeClient := createFakeClient(instanceSet)
+
+		ctx := context.Background()
+		shouldSchedule, err := ShouldSchedule(ctx, fakeClient, instanceSet)
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(shouldSchedule, convey.ShouldBeFalse)
+	})
+}
+
+func TestShouldScheduleWithEmptyRoles(t *testing.T) {
+	convey.Convey("Test ShouldSchedule when InferService has empty roles", t, func() {
+		inferService := createPriorityInferServiceWithRoles([]v1.InstanceSetSpec{})
+		instanceSet := createPriorityInstanceSet("test-role", common.SchedulingStrategyPriority, false)
+		fakeClient := createFakeClient(instanceSet, inferService)
+
+		ctx := context.Background()
+		shouldSchedule, err := ShouldSchedule(ctx, fakeClient, instanceSet)
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(shouldSchedule, convey.ShouldBeFalse)
+	})
+}

@@ -27,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/labels"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -882,6 +883,174 @@ func TestManageInferServicesErrors(t *testing.T) {
 			defer patch.Reset()
 			err := reconciler.manageInferServices(context.Background(), iss, nil, nil, []*apiv1.InferService{is})
 			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func TestISSUpdateStatus(t *testing.T) {
+	convey.Convey("Test updateStatus for InferServiceSet", t, func() {
+		scheme := runtime.NewScheme()
+		apiv1.AddToScheme(scheme)
+		fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
+		reconciler := &InferServiceSetReconciler{client: fakeClient, scheme: scheme}
+
+		convey.Convey("Should return nil for nil InferServiceSet", func() {
+			err := reconciler.updateStatus(context.Background(), nil, nil)
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should return nil when status unchanged", func() {
+			replicas := int32(1)
+			iss := &apiv1.InferServiceSet{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+				Spec:       apiv1.InferServiceSetSpec{Replicas: &replicas},
+				Status:     apiv1.InferServiceSetStatus{Replicas: replicas, ReadyReplicas: 0},
+			}
+			err := fakeClient.Create(context.Background(), iss)
+			convey.So(err, convey.ShouldBeNil)
+
+			isList := &apiv1.InferServiceList{}
+			err = reconciler.updateStatus(context.Background(), iss, isList)
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
+func TestISSUpdateExistInferServices(t *testing.T) {
+	convey.Convey("Test updateExistInferServices for InferServiceSet", t, func() {
+		scheme := runtime.NewScheme()
+		apiv1.AddToScheme(scheme)
+		fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
+		reconciler := &InferServiceSetReconciler{client: fakeClient, scheme: scheme}
+
+		convey.Convey("Should return nil for nil InferServiceSet", func() {
+			err := reconciler.updateExistInferServices(context.Background(), nil, nil)
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should successfully update existing InferService", func() {
+			iss := &apiv1.InferServiceSet{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+				Spec: apiv1.InferServiceSetSpec{
+					InferServiceTemplate: apiv1.InferServiceSpec{
+						Roles: []apiv1.InstanceSetSpec{{Name: "new-role"}},
+					},
+				},
+			}
+			is := &apiv1.InferService{
+				ObjectMeta: metav1.ObjectMeta{Name: "test-0", Namespace: "default"},
+				Spec:       apiv1.InferServiceSpec{Roles: []apiv1.InstanceSetSpec{{Name: "old-role"}}},
+			}
+			err := fakeClient.Create(context.Background(), is)
+			convey.So(err, convey.ShouldBeNil)
+
+			err = reconciler.updateExistInferServices(context.Background(), iss, []*apiv1.InferService{is})
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
+func TestISSReconcile(t *testing.T) {
+	convey.Convey("Test InferServiceSet Reconcile main flow", t, func() {
+		scheme := runtime.NewScheme()
+		apiv1.AddToScheme(scheme)
+		fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
+		reconciler := &InferServiceSetReconciler{client: fakeClient, scheme: scheme}
+
+		req := ctrl.Request{
+			NamespacedName: types.NamespacedName{Name: "test", Namespace: "default"},
+		}
+
+		convey.Convey("Should return error when getInferServiceSet fails", func() {
+			patch := gomonkey.ApplyPrivateMethod(reconciler, "getInferServiceSet",
+				func(_ context.Context, _ ctrl.Request) (*apiv1.InferServiceSet, error) {
+					return nil, errors.New("get error")
+				})
+			defer patch.Reset()
+
+			_, err := reconciler.Reconcile(context.Background(), req)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("Should return nil when InferServiceSet not found", func() {
+			patch := gomonkey.ApplyPrivateMethod(reconciler, "getInferServiceSet",
+				func(_ context.Context, _ ctrl.Request) (*apiv1.InferServiceSet, error) {
+					return nil, nil
+				})
+			defer patch.Reset()
+
+			result, err := reconciler.Reconcile(context.Background(), req)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(result.RequeueAfter, convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("Should return error when validate fails", func() {
+			replicas := int32(0)
+			iss := &apiv1.InferServiceSet{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+				Spec:       apiv1.InferServiceSetSpec{Replicas: &replicas},
+			}
+			err := fakeClient.Create(context.Background(), iss)
+			convey.So(err, convey.ShouldBeNil)
+
+			_, err = reconciler.Reconcile(context.Background(), req)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("Should return error when listInferServices fails", func() {
+			replicas := int32(1)
+			iss := &apiv1.InferServiceSet{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+				Spec:       apiv1.InferServiceSetSpec{Replicas: &replicas},
+			}
+			err := fakeClient.Create(context.Background(), iss)
+			convey.So(err, convey.ShouldBeNil)
+
+			patch := gomonkey.ApplyPrivateMethod(reconciler, "listInferServices",
+				func(_ context.Context, _ *apiv1.InferServiceSet) (*apiv1.InferServiceList, labels.Selector, error) {
+					return nil, nil, errors.New("list error")
+				})
+			defer patch.Reset()
+
+			_, err = reconciler.Reconcile(context.Background(), req)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func TestISSUpdateInferServiceSetStatus(t *testing.T) {
+	convey.Convey("Test updateInferServiceSetStatus for InferServiceSet", t, func() {
+		scheme := runtime.NewScheme()
+		apiv1.AddToScheme(scheme)
+		fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
+		reconciler := &InferServiceSetReconciler{client: fakeClient, scheme: scheme}
+
+		replicas := int32(1)
+		iss := &apiv1.InferServiceSet{
+			ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			Spec:       apiv1.InferServiceSetSpec{Replicas: &replicas},
+		}
+		err := fakeClient.Create(context.Background(), iss)
+		convey.So(err, convey.ShouldBeNil)
+
+		selector := labels.SelectorFromSet(labels.Set{
+			common.InferServiceSetNameLabelKey: iss.Name,
+		})
+
+		convey.Convey("Should return error when List fails", func() {
+			patch := gomonkey.ApplyMethodFunc(fakeClient, "List",
+				func(_ context.Context, _ client.ObjectList, _ ...client.ListOption) error {
+					return errors.New("list error")
+				})
+			defer patch.Reset()
+
+			err := reconciler.updateInferServiceSetStatus(context.Background(), iss, selector)
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("Should successfully update status", func() {
+			err := reconciler.updateInferServiceSetStatus(context.Background(), iss, selector)
+			convey.So(err, convey.ShouldBeNil)
 		})
 	})
 }
