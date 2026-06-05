@@ -39,6 +39,7 @@ from ascend_fd.utils.regular_table import (
     ERROR_CQE_NEW,
     ERROR_CQE_SPLIT,
     ERROR_CQE_NEW_SPLIT,
+    IPV6_ADDR_PATTERN,
 )
 from ascend_fd.utils.tool import safe_write_open, SHOW_LINES_NUM, get_log_module_and_time, safe_read_line
 from ascend_fd.utils.net_tools import IPAddress
@@ -760,7 +761,7 @@ class ErrorParser:
         # get dest_ip(rank_id) and src_ip(rank_id)
         if "| no connect |" not in line and "| time out |" not in line:
             return
-        regex = re.compile(r"\|\s{1,5}(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\((\d{1,5})\)")
+        regex = re.compile(r"\|\s{1,5}((?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|%s))\((\d{1,5})\)" % IPV6_ADDR_PATTERN)
         device_ip_rank_id = regex.findall(line)
         link_num = 2  # src and dest
         if len(device_ip_rank_id) != link_num:

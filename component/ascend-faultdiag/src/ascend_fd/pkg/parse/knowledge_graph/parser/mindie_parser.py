@@ -24,7 +24,7 @@ from ascend_fd.model.context import KGParseCtx
 from ascend_fd.model.mindie_info import MindIEParseInfo, MindIELinkErrorInfo, MindIEPullKVErrorInfo
 from ascend_fd.model.node_info import DeviceInfo
 from ascend_fd.model.parse_info import SingleFileParseInfo, FilesParseInfo
-from ascend_fd.utils.regular_table import MINDIE_SOURCE, KG_MAX_TIME
+from ascend_fd.utils.regular_table import MINDIE_SOURCE, KG_MAX_TIME, IPV6_ADDR_PATTERN
 from ascend_fd.utils.tool import MultiProcessJob, check_and_format_time_str
 from ascend_fd.utils.net_tools import IPAddress
 from ascend_fd.pkg.parse.parser_saver import LogInfoSaver
@@ -88,19 +88,7 @@ class MindieParser(FileParser):
     TARGET_FILE_PATTERNS = "mindie_log_path"
     SOURCE_FILE = MINDIE_SOURCE
     FILENAME_REGEX = re.compile(r"mindie-[a-z-_]{1,15}_\d{1,7}_(\d{12,18})(?:\.\d{2})?.log")
-    IP_REGEX = re.compile(
-        r'\b(?:\d{1,3}\.){3}\d{1,3}\b|'
-        r'(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|'
-        r'(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|'
-        r'(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|'
-        r'(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|'
-        r'(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|'
-        r'(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|'
-        r'[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}|'
-        r'::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}|'
-        r'(?:[0-9a-fA-F]{1,4}:){1,7}:|'
-        r'::'
-    )
+    IP_REGEX = re.compile(r'\b(?:\d{1,3}\.){3}\d{1,3}\b|' + IPV6_ADDR_PATTERN)
     mindie_parse_info = MindIEParseInfo()
 
     def __init__(self, params):

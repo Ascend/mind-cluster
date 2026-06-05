@@ -41,7 +41,8 @@ from ascend_fd.utils.regular_table import (
     TLS_SWITCH,
     HCCL_IP_INFO,
     HCCL_IPADDR,
-    HCCL_IPADDR_V6_PATTERN,
+    HCCL_IP_INFO_V6,
+    HCCL_IPV6_ADDR,
     MAX_TIME,
     MIN_TIME,
     HOST_SN,
@@ -336,6 +337,7 @@ def get_lcne_switch_info(lcne_log):
 def parse_npu_info_file(npu_info_file):
     """
     Parse npu_info_before(after).txt file
+    Support both IPv4 (ipaddr:x.x.x.x) and IPv6 (ipv6_address:xxxx) formats.
     """
     device_to_rank = dict()
     with safe_read_open(npu_info_file, "r", encoding="UTF-8") as file_stream:
@@ -343,7 +345,7 @@ def parse_npu_info_file(npu_info_file):
         event_message_list = content.split("\n\n")
         for event_message in event_message_list:
             event_message = event_message.strip()
-            if "ipaddr" not in event_message:
+            if "ipaddr" not in event_message and "ipv6_address" not in event_message:
                 continue
             # examples of some contents in the npu_info_before(after).txt file
             #     hccn_tool -i 0 -ip -g
@@ -353,13 +355,24 @@ def parse_npu_info_file(npu_info_file):
             #     hccn_tool -i 1 -ip -g
             #     ipaddr:x.x.x.x
             #     netmask:x.x.x.x
-            hccl_info_re = re.search(HCCL_IP_INFO, event_message)
-            ipaddr_re = re.search(HCCL_IPADDR, event_message)
-            if not ipaddr_re:
-                ipaddr_re = re.search(HCCL_IPADDR_V6_PATTERN, event_message)
-            if not hccl_info_re or not ipaddr_re:
+            #
+            #     hccn_tool -i 0 -ip -inet6 -g
+            #     ipv6_address:2001:0db8::1
+            #     prefix_length:64
+            #
+            #     hccn_tool -i 1 -ip -inet6 -g
+            #     ipv6_address:2001:0db8::2
+            #     prefix_length:64
+
+            # Try IPv4 patterns first, then IPv6
+            hccl_info_re = re.search(HCCL_IP_INFO, event_message) or re.search(HCCL_IP_INFO_V6, event_message)
+            if not hccl_info_re:
                 continue
             device_id = hccl_info_re[1]
+
+            ipaddr_re = re.search(HCCL_IPADDR, event_message) or re.search(HCCL_IPV6_ADDR, event_message)
+            if not ipaddr_re:
+                continue
             device_ip = ipaddr_re[1]
             if IPAddress.is_valid_ip(device_ip):
                 device_to_rank[device_id] = device_ip
