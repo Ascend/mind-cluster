@@ -106,6 +106,25 @@
 
 ## 配置命令
 
+### set_config_dir
+
+**命令功能**
+
+设置配置文件的目录。目前仅支持[LLD.xlsx](../../resource/LLD.xlsx)配置文件。
+
+**命令格式**
+
+| 命令格式 | 描述 |
+|---------|------|
+| set_config_dir <i><文件目录></i> | 设置配置文件的目录。 |
+| set_config_dir ? | 查看详细信息。 |
+
+**参数说明**
+
+|参数|说明|
+|---|---|
+|<i><文件目录></i>|配置文件的目录。|
+
 ### set_conn_config
 
 **命令功能**
@@ -131,7 +150,7 @@
 [host]
 # port指定端口,不写默认为22, username指定用户名, password指定密码, private_key指定私钥文件
 1.1.1.1 port="22" username="root" private_key="~/.ssh/your_private_key"
-1.1.2.1 port="22" username="root" password="321" 
+1.1.2.1 port="22" username="root" password="321"
 
 [bmc]
 1.1.1.2 username="Administrator" password="123"
