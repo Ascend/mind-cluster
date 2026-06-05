@@ -528,13 +528,13 @@ class TestParseNpuInfoFile(unittest.TestCase):
 
     def test_ipv6_ipaddr_extraction(self):
         content = (
-            "hccn_tool -i 0 -ip -g\n"
-            "ipaddr:2001:db8::1\n"
-            "netmask:ffff:ffff::\n"
+            "hccn_tool -i 0 -ip -inet6 -g\n"
+            "ipv6_address:2001:db8::1\n"
+            "prefix_length:64\n"
             "\n"
-            "hccn_tool -i 2 -ip -g\n"
-            "ipaddr:fe80::1\n"
-            "netmask:ffff::\n"
+            "hccn_tool -i 2 -ip -inet6 -g\n"
+            "ipv6_address:fe80::1\n"
+            "prefix_length:64\n"
         )
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as tmp_file:
             tmp_file.write(content)
@@ -572,9 +572,9 @@ class TestParseNpuInfoFile(unittest.TestCase):
             "ipaddr:192.168.1.100\n"
             "netmask:255.255.255.0\n"
             "\n"
-            "hccn_tool -i 1 -ip -g\n"
-            "ipaddr:fe80::1\n"
-            "netmask:ffff::\n"
+            "hccn_tool -i 1 -ip -inet6 -g\n"
+            "ipv6_address:fe80::1\n"
+            "prefix_length:64\n"
         )
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as tmp_file:
             tmp_file.write(content)
@@ -597,3 +597,162 @@ class TestParseNpuInfoFile(unittest.TestCase):
             self.assertEqual(result, {})
         finally:
             os.unlink(tmp_file.name)
+
+    def test_ipv6_inet6_ipv6_address_extraction(self):
+        content = (
+            "hccn_tool -i 0 -ip -inet6 -g\n"
+            "ipv6_address:2001:0db8:85a3:0000:0000:8a2e:c0a8:01c5\n"
+            "prefix_length:64\n"
+            "\n"
+            "hccn_tool -i 2 -ip -inet6 -g\n"
+            "ipv6_address:2001:db8::1\n"
+            "prefix_length:64\n"
+        )
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as tmp_file:
+            tmp_file.write(content)
+
+        try:
+            result = parse_npu_info_file(tmp_file.name)
+
+            self.assertEqual(result, {"0": "2001:0db8:85a3:0000:0000:8a2e:c0a8:01c5", "2": "2001:db8::1"})
+        finally:
+            os.unlink(tmp_file.name)
+
+    def test_mixed_ipv4_and_inet6_extraction(self):
+        content = (
+            "hccn_tool -i 0 -ip -g\n"
+            "ipaddr:192.168.1.100\n"
+            "netmask:255.255.255.0\n"
+            "\n"
+            "hccn_tool -i 1 -ip -inet6 -g\n"
+            "ipv6_address:2001:0db8:85a3:0000:0000:8a2e:c0a8:01c6\n"
+            "prefix_length:64\n"
+        )
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as tmp_file:
+            tmp_file.write(content)
+
+        try:
+            result = parse_npu_info_file(tmp_file.name)
+
+            self.assertEqual(result, {"0": "192.168.1.100", "1": "2001:0db8:85a3:0000:0000:8a2e:c0a8:01c6"})
+        finally:
+            os.unlink(tmp_file.name)
+
+
+class TestSocketTimeoutIpMatch(unittest.TestCase):
+    """Test cases for IPv4/IPv6 address extraction in socket timeout error parsing"""
+
+    def _create_error_parser(self):
+        return ErrorParser(BlackListManager())
+
+    def test_ipv4_no_connect_extracts_remote_info(self):
+        parser = self._create_error_parser()
+        # First set the flag via connection failure line
+        parser._filter_socket_timeout_error_from_log(
+            "[ERROR] HCCL(26252):the connection failure between this device",
+            "2025-01-24-11:24:17.476916",
+        )
+        line = "   |  192.168.1.197(1)   |   192.168.1.198(0)   |  client  | no connect |"
+        parser._filter_socket_timeout_error_from_log(line, "2025-01-24-11:24:17.476916")
+
+        self.assertTrue(parser.socket_error_data_cache.exist_data_flag)
+        self.assertEqual(len(parser.socket_error_data_cache.remote_info), 1)
+        self.assertEqual(parser.socket_error_data_cache.remote_info[0].device_ip, "192.168.1.197")
+        self.assertEqual(parser.socket_error_data_cache.remote_info[0].phy_device_id, "")
+
+    def test_ipv4_time_out_extracts_remote_info(self):
+        parser = self._create_error_parser()
+        line = "   |  10.0.0.5(3)   |   10.0.0.6(2)   |  server  | time out |"
+        parser._filter_socket_timeout_error_from_log(line, "2025-01-24-11:25:00.000000")
+
+        self.assertEqual(len(parser.socket_error_data_cache.remote_info), 1)
+        self.assertEqual(parser.socket_error_data_cache.remote_info[0].device_ip, "10.0.0.5")
+
+    def test_ipv6_full_format_no_connect_extracts_remote_info(self):
+        parser = self._create_error_parser()
+        parser._filter_socket_timeout_error_from_log(
+            "[ERROR] HCCL(26252):the connection failure between this device",
+            "2025-01-24-11:24:17.476943",
+        )
+        line = (
+            "   |  2001:0db8:85a3:0000:0000:8a2e:c0a8:01c5(1)"
+            "   |   2001:0db8:85a3:0000:0000:8a2e:c0a8:01c6(0)   |  client  | no connect |"
+        )
+        parser._filter_socket_timeout_error_from_log(line, "2025-01-24-11:24:17.476943")
+
+        self.assertTrue(parser.socket_error_data_cache.exist_data_flag)
+        self.assertEqual(len(parser.socket_error_data_cache.remote_info), 1)
+        self.assertEqual(
+            parser.socket_error_data_cache.remote_info[0].device_ip,
+            "2001:0db8:85a3:0000:0000:8a2e:c0a8:01c5",
+        )
+
+    def test_ipv6_compressed_format_no_connect_extracts_remote_info(self):
+        parser = self._create_error_parser()
+        parser._filter_socket_timeout_error_from_log(
+            "[ERROR] HCCL(26252):the connection failure between this device",
+            "2025-01-24-11:24:17.476943",
+        )
+        line = "   |  2001:db8::c0a8:01c5(1)   |   2001:db8::c0a8:01c6(0)   |  client  | no connect |"
+        parser._filter_socket_timeout_error_from_log(line, "2025-01-24-11:24:17.476943")
+
+        self.assertEqual(len(parser.socket_error_data_cache.remote_info), 1)
+        self.assertEqual(parser.socket_error_data_cache.remote_info[0].device_ip, "2001:db8::c0a8:01c5")
+
+    def test_ipv6_compressed_leading_double_colon_no_connect(self):
+        parser = self._create_error_parser()
+        parser._filter_socket_timeout_error_from_log(
+            "[ERROR] HCCL(26252):the connection failure between this device",
+            "2025-01-24-11:24:17.476943",
+        )
+        line = "   |  2001:db8:0:0:0:ff00:42:8329(1)   |   2001:db8:0:0:0:ff00:42:8330(0)   |  client  | no connect |"
+        parser._filter_socket_timeout_error_from_log(line, "2025-01-24-11:24:17.476943")
+
+        self.assertEqual(len(parser.socket_error_data_cache.remote_info), 1)
+        self.assertEqual(parser.socket_error_data_cache.remote_info[0].device_ip, "2001:db8:0:0:0:ff00:42:8329")
+
+    def test_ipv6_compressed_trailing_no_connect(self):
+        parser = self._create_error_parser()
+        parser._filter_socket_timeout_error_from_log(
+            "[ERROR] HCCL(26252):the connection failure between this device",
+            "2025-01-24-11:24:17.476943",
+        )
+        line = "   |  fe80::1(1)   |   fe80::2(0)   |  client  | no connect |"
+        parser._filter_socket_timeout_error_from_log(line, "2025-01-24-11:24:17.476943")
+
+        self.assertEqual(len(parser.socket_error_data_cache.remote_info), 1)
+        self.assertEqual(parser.socket_error_data_cache.remote_info[0].device_ip, "fe80::1")
+
+    def test_no_match_keyword_skipped(self):
+        parser = self._create_error_parser()
+        line = "   |  192.168.1.197(1)   |   192.168.1.198(0)   |  client  | connected |"
+        parser._filter_socket_timeout_error_from_log(line, "2025-01-24-11:24:17.476943")
+
+        self.assertFalse(parser.socket_error_data_cache.exist_data_flag)
+        self.assertEqual(len(parser.socket_error_data_cache.remote_info), 0)
+
+    def test_single_ip_match_early_return(self):
+        parser = self._create_error_parser()
+        line = "   |  192.168.1.197(1)   |   unknown(0)   |  client  | no connect |"
+        parser._filter_socket_timeout_error_from_log(line, "2025-01-24-11:24:17.476943")
+
+        # Only 1 match (not 2), should early return without adding remote_info
+        self.assertEqual(len(parser.socket_error_data_cache.remote_info), 0)
+
+    def test_connection_failure_line_sets_flag_only(self):
+        parser = self._create_error_parser()
+        line = "[ERROR] HCCL(26252):the connection failure between this device and target device may be due to..."
+        parser._filter_socket_timeout_error_from_log(line, "2025-01-24-11:24:17.476943")
+
+        self.assertTrue(parser.socket_error_data_cache.exist_data_flag)
+        self.assertEqual(len(parser.socket_error_data_cache.remote_info), 0)
+
+    def test_p2p_timeout_with_phy_id_adds_remote_info(self):
+        parser = self._create_error_parser()
+        line = "[ERROR] connected p2p timeout remote physic id:5"
+        parser._filter_socket_timeout_error_from_log(line, "2025-01-24-11:24:17.476943")
+
+        self.assertTrue(parser.socket_error_data_cache.exist_data_flag)
+        self.assertEqual(len(parser.socket_error_data_cache.remote_info), 1)
+        self.assertEqual(parser.socket_error_data_cache.remote_info[0].device_ip, "")
+        self.assertEqual(parser.socket_error_data_cache.remote_info[0].phy_device_id, "5")
