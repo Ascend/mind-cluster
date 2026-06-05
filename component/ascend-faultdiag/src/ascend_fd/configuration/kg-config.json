@@ -16140,32 +16140,6 @@
                 "in": ["Send model timeout, tsdaemon will kill aicpu-sd process, model id"]
             }
         },
-        "AISW_CANN_AICPU_08": {
-            "attribute": {
-                "class": "Software/User",
-                "component": "CANN",
-                "module": "AICPU",
-                "cause_zh": "AICPU算子任务输入参数错误",
-                "description_zh": "可能原因如下：\n  a. 输入参数校验出错（包括shape，取值，数据类型，format等）；\n  b. 异步算子访问队列失败；\n  c. 算子执行出错（内部计算逻辑出错）；\n  d. 涉及内存操作的算子，内存分配/释放/访问失败。",
-                "suggestion_zh": [
-                    "1. 重新拉起业务，或需要联系工程师处理；"
-                ],
-                "cause_en": "The input parameters of the AICPU operator task are incorrect",
-                "description_en": "Possible causes are as follows:\n  a. An error occurs during input parameter verification (including the shape, value, data type, and format).\n  b. The asynchronous operator fails to access the queue.\n  c. Operator execution error (internal compute logic error).\n  d. Memory allocation, release, or access fails for operators involving memory operations.",
-                "suggestion_en": [
-                    "1. Restart the service, or contact engineers."
-                ]
-            },
-            "rule": [
-                {"dst_code": "AISW_PyTorch_Train_15"},
-                {"dst_code": "AISW_CANN_Runtime_033"},
-                {"dst_code": "AISW_CANN_ERRCODE_Custom_EZ9999"}
-            ],
-            "source_file": "CANN_Device",
-            "regex": {
-                "in": ["Aicpu engine process failed, result[","opName["]
-            }
-        },
         "AISW_CANN_AICPU_12": {
             "attribute": {
                 "class": "Software",
