@@ -146,6 +146,319 @@ func TestInstanceSetReconcilerReconcile2(t *testing.T) {
 	})
 }
 
+func TestUpdateStatusForScalingSuccess(t *testing.T) {
+	convey.Convey("should update ScalingResourceStatus and LabelSelector", t, func() {
+		instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+		fakeClient := NewFakeClient(instanceSet).Build()
+		reconciler := &InstanceSetReconciler{Client: fakeClient}
+
+		scalingStatus := &v1.ScalingResourceStatus{
+			Type: "HPA", Name: "test-hpa", Ready: true, Message: "HPA is ready",
+		}
+
+		ctx := context.Background()
+		err := reconciler.updateStatusForScaling(ctx, instanceSet, scalingStatus)
+		convey.So(err, convey.ShouldBeNil)
+
+		updatedInstanceSet := &v1.InstanceSet{}
+		_ = fakeClient.Get(ctx, types.NamespacedName{Name: "test-instance", Namespace: "default"}, updatedInstanceSet)
+		convey.So(updatedInstanceSet.Status.ScalingResourceStatus, convey.ShouldResemble, scalingStatus)
+		expectedLabelSelector := fmt.Sprintf("%s=%s,%s=%s",
+			common.InferServiceNameLabelKey, instanceSet.Labels[common.InferServiceNameLabelKey],
+			common.InstanceSetNameLabelKey, instanceSet.Labels[common.InstanceSetNameLabelKey])
+		convey.So(updatedInstanceSet.Status.LabelSelector, convey.ShouldEqual, expectedLabelSelector)
+	})
+}
+
+func TestUpdateStatusForScalingSkipUnchanged(t *testing.T) {
+	convey.Convey("should skip update when ScalingResourceStatus and LabelSelector unchanged", t, func() {
+		instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+		scalingStatus := &v1.ScalingResourceStatus{
+			Type: "HPA", Name: "test-hpa", Ready: true, Message: "HPA is ready",
+		}
+		instanceSet.Status.ScalingResourceStatus = scalingStatus
+		instanceSet.Status.LabelSelector = fmt.Sprintf("%s=%s,%s=%s",
+			common.InferServiceNameLabelKey, instanceSet.Labels[common.InferServiceNameLabelKey],
+			common.InstanceSetNameLabelKey, instanceSet.Labels[common.InstanceSetNameLabelKey])
+
+		fakeClient := NewFakeClient(instanceSet).Build()
+		reconciler := &InstanceSetReconciler{Client: fakeClient}
+
+		ctx := context.Background()
+		err := reconciler.updateStatusForScaling(ctx, instanceSet, scalingStatus)
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func TestUpdateStatusForScalingStatusChanged(t *testing.T) {
+	convey.Convey("should update when ScalingResourceStatus changed", t, func() {
+		instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+		instanceSet.Status.ScalingResourceStatus = &v1.ScalingResourceStatus{
+			Type: "HPA", Name: "old-hpa", Ready: false, Message: "HPA not ready",
+		}
+		instanceSet.Status.LabelSelector = fmt.Sprintf("%s=%s,%s=%s",
+			common.InferServiceNameLabelKey, instanceSet.Labels[common.InferServiceNameLabelKey],
+			common.InstanceSetNameLabelKey, instanceSet.Labels[common.InstanceSetNameLabelKey])
+
+		fakeClient := NewFakeClient(instanceSet).Build()
+		reconciler := &InstanceSetReconciler{Client: fakeClient}
+
+		newStatus := &v1.ScalingResourceStatus{
+			Type: "HPA", Name: "new-hpa", Ready: true, Message: "HPA is ready",
+		}
+
+		ctx := context.Background()
+		err := reconciler.updateStatusForScaling(ctx, instanceSet, newStatus)
+		convey.So(err, convey.ShouldBeNil)
+
+		updatedInstanceSet := &v1.InstanceSet{}
+		_ = fakeClient.Get(ctx, types.NamespacedName{Name: "test-instance", Namespace: "default"}, updatedInstanceSet)
+		convey.So(updatedInstanceSet.Status.ScalingResourceStatus, convey.ShouldResemble, newStatus)
+	})
+}
+
+func TestUpdateStatusForScalingLabelSelectorChanged(t *testing.T) {
+	convey.Convey("should update when LabelSelector changed", t, func() {
+		instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+		instanceSet.Status.ScalingResourceStatus = &v1.ScalingResourceStatus{
+			Type: "HPA", Name: "test-hpa", Ready: true,
+		}
+		instanceSet.Status.LabelSelector = "old-label-selector"
+
+		fakeClient := NewFakeClient(instanceSet).Build()
+		reconciler := &InstanceSetReconciler{Client: fakeClient}
+
+		ctx := context.Background()
+		err := reconciler.updateStatusForScaling(ctx, instanceSet, instanceSet.Status.ScalingResourceStatus)
+		convey.So(err, convey.ShouldBeNil)
+
+		updatedInstanceSet := &v1.InstanceSet{}
+		_ = fakeClient.Get(ctx, types.NamespacedName{Name: "test-instance", Namespace: "default"}, updatedInstanceSet)
+		expectedLabelSelector := fmt.Sprintf("%s=%s,%s=%s",
+			common.InferServiceNameLabelKey, instanceSet.Labels[common.InferServiceNameLabelKey],
+			common.InstanceSetNameLabelKey, instanceSet.Labels[common.InstanceSetNameLabelKey])
+		convey.So(updatedInstanceSet.Status.LabelSelector, convey.ShouldEqual, expectedLabelSelector)
+	})
+}
+
+func TestUpdateStatusForScalingGetError(t *testing.T) {
+	convey.Convey("should return error when getting InstanceSet fails", t, func() {
+		instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+		fakeClient := NewFakeClient(instanceSet).Build()
+		reconciler := &InstanceSetReconciler{Client: fakeClient}
+
+		patches := gomonkey.ApplyMethodReturn(reconciler.Client, "Get", errors.New("failed to get instanceset"))
+		defer patches.Reset()
+
+		scalingStatus := &v1.ScalingResourceStatus{Type: "HPA", Name: "test-hpa", Ready: true}
+
+		ctx := context.Background()
+		err := reconciler.updateStatusForScaling(ctx, instanceSet, scalingStatus)
+		convey.So(err, convey.ShouldNotBeNil)
+	})
+}
+
+func TestUpdateStatusForScalingUpdateError(t *testing.T) {
+	convey.Convey("should return error when status update fails", t, func() {
+		instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+		fakeClient := NewFakeClient(instanceSet).Build()
+		reconciler := &InstanceSetReconciler{Client: fakeClient}
+
+		patches := gomonkey.ApplyMethodFunc(reconciler.Client, "Status", func() client.StatusWriter {
+			return &mockStatusWriter{updateErr: errors.New("failed to update status")}
+		})
+		defer patches.Reset()
+
+		scalingStatus := &v1.ScalingResourceStatus{Type: "HPA", Name: "test-hpa", Ready: true}
+
+		ctx := context.Background()
+		err := reconciler.updateStatusForScaling(ctx, instanceSet, scalingStatus)
+		convey.So(err, convey.ShouldNotBeNil)
+	})
+}
+
+func TestUpdateStatusForScalingNilStatus(t *testing.T) {
+	convey.Convey("should handle nil scalingStatus", t, func() {
+		instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+		instanceSet.Status.ScalingResourceStatus = &v1.ScalingResourceStatus{
+			Type: "HPA", Name: "old-hpa", Ready: true,
+		}
+
+		fakeClient := NewFakeClient(instanceSet).Build()
+		reconciler := &InstanceSetReconciler{Client: fakeClient}
+
+		ctx := context.Background()
+		err := reconciler.updateStatusForScaling(ctx, instanceSet, nil)
+		convey.So(err, convey.ShouldBeNil)
+
+		updatedInstanceSet := &v1.InstanceSet{}
+		_ = fakeClient.Get(ctx, types.NamespacedName{Name: "test-instance", Namespace: "default"}, updatedInstanceSet)
+		convey.So(updatedInstanceSet.Status.ScalingResourceStatus, convey.ShouldBeNil)
+	})
+}
+
+func newTestReconcilerForScaling(fakeClient client.Client) *InstanceSetReconciler {
+	return &InstanceSetReconciler{
+		Client:             fakeClient,
+		WorkLoadReconciler: workload.NewWorkLoadReconciler(fakeClient),
+		ScalingManager:     scaling.NewScalingManager(fakeClient, GetScheme()),
+	}
+}
+
+func patchReconcilerBasics(r *InstanceSetReconciler) []*gomonkey.Patches {
+	var allPatches []*gomonkey.Patches
+	methods := map[string]interface{}{
+		"validate":           func(_ *InstanceSetReconciler, is *v1.InstanceSet) error { return nil },
+		"reconcileWorkLoads": func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return nil },
+		"updateStatus":       func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return nil },
+		"doRescheduling":     func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet) error { return nil },
+	}
+	for name, fn := range methods {
+		p := gomonkey.ApplyPrivateMethod(reflect.TypeOf(r), name, fn)
+		allPatches = append(allPatches, p)
+	}
+	return allPatches
+}
+
+func resetAllPatches(allPatches []*gomonkey.Patches) {
+	for _, p := range allPatches {
+		p.Reset()
+	}
+}
+
+func TestReconcileCallsUpdateStatusForScalingOnSuccess(t *testing.T) {
+	convey.Convey("should call updateStatusForScaling when scalingErr is nil", t, func() {
+		instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+		fakeClient := NewFakeClient(instanceSet).Build()
+		reconciler := newTestReconcilerForScaling(fakeClient)
+		allPatches := patchReconcilerBasics(reconciler)
+		defer resetAllPatches(allPatches)
+
+		scalingStatus := &v1.ScalingResourceStatus{Type: "HPA", Name: "test-hpa", Ready: true}
+		patches5 := gomonkey.ApplyMethodReturn(reconciler.ScalingManager, "ReconcileScalingResource", scalingStatus, nil)
+		defer patches5.Reset()
+
+		called := false
+		patches6 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "updateStatusForScaling",
+			func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet, status *v1.ScalingResourceStatus) error {
+				called = true
+				convey.So(status, convey.ShouldResemble, scalingStatus)
+				return nil
+			})
+		defer patches6.Reset()
+
+		ctx := context.Background()
+		req := reconcile.Request{NamespacedName: types.NamespacedName{Name: "test-instance", Namespace: "default"}}
+		_, err := reconciler.Reconcile(ctx, req)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(called, convey.ShouldBeTrue)
+	})
+}
+
+func TestReconcileSkipsUpdateStatusForScalingOnError(t *testing.T) {
+	convey.Convey("should not call updateStatusForScaling when scalingErr is not nil", t, func() {
+		instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+		fakeClient := NewFakeClient(instanceSet).Build()
+		reconciler := newTestReconcilerForScaling(fakeClient)
+		reconciler.Recorder = record.NewFakeRecorder(10)
+		allPatches := patchReconcilerBasics(reconciler)
+		defer resetAllPatches(allPatches)
+
+		patches5 := gomonkey.ApplyMethodReturn(reconciler.ScalingManager, "ReconcileScalingResource",
+			(*v1.ScalingResourceStatus)(nil), errors.New("scaling reconcile error"))
+		defer patches5.Reset()
+
+		called := false
+		patches6 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "updateStatusForScaling",
+			func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet, status *v1.ScalingResourceStatus) error {
+				called = true
+				return nil
+			})
+		defer patches6.Reset()
+
+		ctx := context.Background()
+		req := reconcile.Request{NamespacedName: types.NamespacedName{Name: "test-instance", Namespace: "default"}}
+		_, err := reconciler.Reconcile(ctx, req)
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(called, convey.ShouldBeFalse)
+	})
+}
+
+func TestReconcileContinuesWhenUpdateStatusForScalingFails(t *testing.T) {
+	convey.Convey("should continue when updateStatusForScaling fails", t, func() {
+		instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+		fakeClient := NewFakeClient(instanceSet).Build()
+		reconciler := newTestReconcilerForScaling(fakeClient)
+		allPatches := patchReconcilerBasics(reconciler)
+		defer resetAllPatches(allPatches)
+
+		scalingStatus := &v1.ScalingResourceStatus{Type: "HPA", Name: "test-hpa", Ready: true}
+		patches5 := gomonkey.ApplyMethodReturn(reconciler.ScalingManager, "ReconcileScalingResource", scalingStatus, nil)
+		defer patches5.Reset()
+
+		patches6 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "updateStatusForScaling",
+			func(_ *InstanceSetReconciler, ctx context.Context, is *v1.InstanceSet, status *v1.ScalingResourceStatus) error {
+				return errors.New("update scaling status failed")
+			})
+		defer patches6.Reset()
+
+		ctx := context.Background()
+		req := reconcile.Request{NamespacedName: types.NamespacedName{Name: "test-instance", Namespace: "default"}}
+		result, err := reconciler.Reconcile(ctx, req)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(result, convey.ShouldResemble, reconcile.Result{})
+	})
+}
+
+func TestUpdateStatusPreservesScalingFieldsFromServer(t *testing.T) {
+	convey.Convey("updateStatus should preserve ScalingResourceStatus and LabelSelector from server", t, func() {
+		instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+		scalingStatus := &v1.ScalingResourceStatus{
+			Type: "HPA", Name: "test-hpa", Ready: true, Message: "HPA is ready",
+		}
+		instanceSet.Status.ScalingResourceStatus = scalingStatus
+		instanceSet.Status.LabelSelector = fmt.Sprintf("%s=%s,%s=%s",
+			common.InferServiceNameLabelKey, instanceSet.Labels[common.InferServiceNameLabelKey],
+			common.InstanceSetNameLabelKey, instanceSet.Labels[common.InstanceSetNameLabelKey])
+
+		fakeClient := NewFakeClient(instanceSet).Build()
+		workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+		reconciler := &InstanceSetReconciler{Client: fakeClient, WorkLoadReconciler: workLoadReconciler}
+
+		patches := gomonkey.ApplyMethodReturn(workLoadReconciler, "InstanceReady", 1, nil)
+		defer patches.Reset()
+
+		ctx := context.Background()
+		err := reconciler.updateStatus(ctx, instanceSet)
+		convey.So(err, convey.ShouldBeNil)
+
+		updatedInstanceSet := &v1.InstanceSet{}
+		_ = fakeClient.Get(ctx, types.NamespacedName{Name: "test-instance", Namespace: "default"}, updatedInstanceSet)
+		convey.So(updatedInstanceSet.Status.ScalingResourceStatus, convey.ShouldResemble, scalingStatus)
+		convey.So(updatedInstanceSet.Status.LabelSelector, convey.ShouldEqual, instanceSet.Status.LabelSelector)
+	})
+}
+
+func TestUpdateStatusPreservesNilScalingFieldsFromServer(t *testing.T) {
+	convey.Convey("updateStatus should preserve nil ScalingResourceStatus from server", t, func() {
+		instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+		fakeClient := NewFakeClient(instanceSet).Build()
+		workLoadReconciler := workload.NewWorkLoadReconciler(fakeClient)
+		reconciler := &InstanceSetReconciler{Client: fakeClient, WorkLoadReconciler: workLoadReconciler}
+
+		patches := gomonkey.ApplyMethodReturn(workLoadReconciler, "InstanceReady", 1, nil)
+		defer patches.Reset()
+
+		ctx := context.Background()
+		err := reconciler.updateStatus(ctx, instanceSet)
+		convey.So(err, convey.ShouldBeNil)
+
+		updatedInstanceSet := &v1.InstanceSet{}
+		_ = fakeClient.Get(ctx, types.NamespacedName{Name: "test-instance", Namespace: "default"}, updatedInstanceSet)
+		convey.So(updatedInstanceSet.Status.ScalingResourceStatus, convey.ShouldBeNil)
+	})
+}
+
 // TestInstanceSetReconcilerReconcile3 tests the Reconcile method of InstanceSetReconciler.
 func TestInstanceSetReconcilerReconcile3(t *testing.T) {
 	convey.Convey("Test InstanceSetReconciler Reconcile method", t, func() {
@@ -871,9 +1184,6 @@ func TestGetNewStatus(t *testing.T) {
 			convey.So(newStatus.Conditions[0].Type, convey.ShouldEqual, string(common.InstanceSetReady))
 			convey.So(newStatus.Conditions[0].Status, convey.ShouldEqual, metav1.ConditionTrue)
 			convey.So(newStatus.Conditions[0].Reason, convey.ShouldEqual, "AllWorkLoadReady")
-			convey.So(newStatus.LabelSelector, convey.ShouldEqual, fmt.Sprintf("%s=%s,%s=%s",
-				common.InferServiceNameLabelKey, indexer.ServiceName,
-				common.InstanceSetNameLabelKey, indexer.InstanceSetKey))
 			convey.So(newStatus.ScalingResourceStatus, convey.ShouldBeNil)
 		})
 	})
@@ -906,9 +1216,6 @@ func TestGetNewStatus2(t *testing.T) {
 			convey.So(newStatus.Conditions[0].Type, convey.ShouldEqual, string(common.InstanceSetReady))
 			convey.So(newStatus.Conditions[0].Status, convey.ShouldEqual, metav1.ConditionFalse)
 			convey.So(newStatus.Conditions[0].Reason, convey.ShouldEqual, "ReplicasNotReady")
-			convey.So(newStatus.LabelSelector, convey.ShouldEqual, fmt.Sprintf("%s=%s,%s=%s",
-				common.InferServiceNameLabelKey, indexer.ServiceName,
-				common.InstanceSetNameLabelKey, indexer.InstanceSetKey))
 			convey.So(newStatus.ScalingResourceStatus, convey.ShouldBeNil)
 		})
 
