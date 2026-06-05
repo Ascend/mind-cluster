@@ -97,19 +97,22 @@ func (r *InstanceSetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		hwlog.RunLog.Warnf("InstanceSet %s/%s rescheduling failed, continue to reconcile workloads, error: %v",
 			instanceSet.Namespace, instanceSet.Name, err)
 	}
-	// 4. reconcile workloads
-	workloadErr := r.reconcileWorkLoads(ctx, instanceSet)
-
-	// 5. reconcile scaling resources
+	// 4. reconcile scaling resources, anyway it will continue to reconcile workloads
 	scalingStatus, scalingErr := r.reconcileScalingResources(ctx, instanceSet)
-	if scalingErr != nil {
+	if scalingErr == nil {
+		if err := r.updateStatusForScaling(ctx, instanceSet, scalingStatus); err != nil {
+			hwlog.RunLog.Errorf("unable to update scaling status for InstanceSet %s/%s, error: %v",
+				req.Namespace, req.Name, err)
+		}
+	} else {
 		hwlog.RunLog.Errorf("unable to reconcile scaling resources for InstanceSet %s/%s, error: %v",
 			req.Namespace, req.Name, scalingErr)
 	}
 
+	// 5. reconcile workloads
+	workloadErr := r.reconcileWorkLoads(ctx, instanceSet)
 	if common.IsRequeueError(workloadErr) || workloadErr == nil {
 		// 6. update status
-		instanceSet.Status.ScalingResourceStatus = scalingStatus
 		if err := r.updateStatus(ctx, instanceSet); err != nil {
 			hwlog.RunLog.Errorf("unable to update status %s/%s, error: %v", req.Namespace, req.Name, err)
 			return ctrl.Result{}, err
@@ -269,6 +272,40 @@ func (r *InstanceSetReconciler) validate(instanceSet *apiv1.InstanceSet) error {
 	return nil
 }
 
+func (r *InstanceSetReconciler) updateStatusForScaling(
+	ctx context.Context,
+	instanceSet *apiv1.InstanceSet,
+	scalingStatus *apiv1.ScalingResourceStatus,
+) error {
+	labelSelector := fmt.Sprintf("%s=%s,%s=%s",
+		common.InferServiceNameLabelKey, instanceSet.Labels[common.InferServiceNameLabelKey],
+		common.InstanceSetNameLabelKey, instanceSet.Labels[common.InstanceSetNameLabelKey])
+
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		latestInstanceSet := &apiv1.InstanceSet{}
+		if err := r.Get(ctx, types.NamespacedName{Name: instanceSet.Name, Namespace: instanceSet.Namespace},
+			latestInstanceSet); err != nil {
+			hwlog.RunLog.Errorf("get latestInstanceSet %s/%s for scaling status update error: %v",
+				instanceSet.Namespace, instanceSet.Name, err)
+			return err
+		}
+		if reflect.DeepEqual(latestInstanceSet.Status.ScalingResourceStatus, scalingStatus) &&
+			latestInstanceSet.Status.LabelSelector == labelSelector {
+			return nil
+		}
+		latestInstanceSet.Status.ScalingResourceStatus = scalingStatus
+		latestInstanceSet.Status.LabelSelector = labelSelector
+		if err := r.Status().Update(ctx, latestInstanceSet); err != nil {
+			hwlog.RunLog.Errorf("update latestInstanceSet %s/%s scaling status error: %v",
+				instanceSet.Namespace, instanceSet.Name, err)
+			return err
+		}
+		hwlog.RunLog.Infof("update latestInstanceSet %s/%s scaling status successfully",
+			instanceSet.Namespace, instanceSet.Name)
+		return nil
+	})
+}
+
 func (r *InstanceSetReconciler) updateStatus(ctx context.Context, instanceSet *apiv1.InstanceSet) error {
 	if instanceSet == nil {
 		return nil
@@ -293,7 +330,12 @@ func (r *InstanceSetReconciler) updateStatus(ctx context.Context, instanceSet *a
 				instanceSet.Namespace, instanceSet.Name, err)
 			return err
 		}
+		// ensure that updateStatus does not overwrite the value updated by updateStatusForScaling
+		savedScalingStatus := latestInstanceSet.Status.ScalingResourceStatus
+		savedLabelSelector := latestInstanceSet.Status.LabelSelector
 		latestInstanceSet.Status = newStatus
+		latestInstanceSet.Status.ScalingResourceStatus = savedScalingStatus
+		latestInstanceSet.Status.LabelSelector = savedLabelSelector
 		if err := r.Status().Update(ctx, latestInstanceSet); err != nil {
 			hwlog.RunLog.Errorf("update latestInstanceSet %s/%s status error: %v",
 				instanceSet.Namespace, instanceSet.Name, err)
@@ -312,9 +354,6 @@ func (r *InstanceSetReconciler) getNewStatus(
 	newStatus = *instanceSet.Status.DeepCopy()
 	newStatus.Replicas = *instanceSet.Spec.Replicas
 	newStatus.ObservedGeneration = instanceSet.Generation
-	newStatus.LabelSelector = fmt.Sprintf("%s=%s,%s=%s",
-		common.InferServiceNameLabelKey, indexer.ServiceName,
-		common.InstanceSetNameLabelKey, indexer.InstanceSetKey)
 	readyReplicas, err := r.WorkLoadReconciler.InstanceReady(ctx, instanceSet, indexer)
 	if err != nil {
 		hwlog.RunLog.Errorf("get ready replicas of instanceSet %s/%s error: %v",
