@@ -1145,6 +1145,150 @@ func TestRescheduler_CleanupWithInstanceSetDeletion(t *testing.T) {
 			convey.So(exists, convey.ShouldBeTrue)
 			convey.So(rescheduler.faultRetryTimesMap[testWorkLoad3], convey.ShouldEqual, 5)
 		})
+	})
+}
 
+func TestRescheduler_RetryTimesExhausted(t *testing.T) {
+	convey.Convey("Test Rescheduler when retry times exhausted", t, func() {
+		fakeClient := newFakeClient()
+		rescheduler := NewRescheduler(fakeClient, common.FaultRetryTimesCleanupInterval)
+		instanceSet := createTestInstanceSet("test-is", "default", nil)
+		faultMap := make(map[faultWorkLoad]string)
+		faultWorkLoadKey := faultWorkLoad{
+			NamespacedName:  types.NamespacedName{Namespace: "default", Name: "test-workload"},
+			instanceSetName: instanceSet.Name,
+		}
+		faultMap[faultWorkLoadKey] = common.CommonUnhealthyStatus + "-" + common.PodFailed
+		rescheduler.faultRetryTimesMap[faultWorkLoadKey] = 0
+
+		err := rescheduler.deleteFaultWorkLoad(context.Background(), instanceSet, createMockWorkLoadHandler(), faultMap)
+		convey.So(err, convey.ShouldBeNil)
+
+		rescheduler.Lock()
+		retryTimes, exists := rescheduler.faultRetryTimesMap[faultWorkLoadKey]
+		rescheduler.Unlock()
+		convey.So(exists, convey.ShouldBeTrue)
+		convey.So(retryTimes, convey.ShouldEqual, 0)
+	})
+}
+
+func TestRescheduler_MultipleFaultWorkLoads(t *testing.T) {
+	convey.Convey("Test Rescheduler with multiple fault workloads", t, func() {
+		fakeClient := newFakeClient()
+		rescheduler := NewRescheduler(fakeClient, common.FaultRetryTimesCleanupInterval)
+		instanceSet := createTestInstanceSet("test-is", "default", nil)
+		factory := &workload.WorkLoadHandlerFactory{}
+
+		mockHandler := &mockWorkLoadHandler{
+			workLoadList: []workload.WorkLoadInterface{
+				&mockWorkLoadInterface{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "workload-1",
+						Namespace: "default",
+					},
+					replicas: 1,
+					ready:    true,
+				},
+				&mockWorkLoadInterface{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "workload-2",
+						Namespace: "default",
+					},
+					replicas: 1,
+					ready:    false,
+				},
+			},
+			returnError: false,
+		}
+
+		patches := gomonkey.ApplyMethodReturn(factory, "GetWorkLoadHandler", mockHandler, nil)
+		defer patches.Reset()
+
+		rescheduler.SetWorkLoadHandlerFactory(factory)
+
+		faultWorkLoadKey1 := faultWorkLoad{
+			NamespacedName:  types.NamespacedName{Namespace: "default", Name: "workload-1"},
+			instanceSetName: instanceSet.Name,
+		}
+		faultWorkLoadKey2 := faultWorkLoad{
+			NamespacedName:  types.NamespacedName{Namespace: "default", Name: "workload-2"},
+			instanceSetName: instanceSet.Name,
+		}
+		rescheduler.faultWorkLoadMap[faultWorkLoadKey1] = common.CommonUnhealthyStatus
+		rescheduler.faultWorkLoadMap[faultWorkLoadKey2] = common.CommonUnhealthyStatus
+		rescheduler.faultRetryTimesMap[faultWorkLoadKey1] = 3
+		rescheduler.faultRetryTimesMap[faultWorkLoadKey2] = 5
+
+		result, err := rescheduler.DoRescheduling(context.Background(), instanceSet)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(len(result), convey.ShouldEqual, 1)
+
+		rescheduler.Lock()
+		_, exists1 := rescheduler.faultWorkLoadMap[faultWorkLoadKey1]
+		_, exists2 := rescheduler.faultWorkLoadMap[faultWorkLoadKey2]
+		rescheduler.Unlock()
+		convey.So(exists1, convey.ShouldBeFalse)
+		convey.So(exists2, convey.ShouldBeFalse)
+	})
+}
+
+func TestRescheduler_HandlePodUpdateWithValidPod(t *testing.T) {
+	convey.Convey("Test handlePodUpdate with valid fault pod", t, func() {
+		instanceSet := createTestInstanceSet("test-service-test-role", "default", nil)
+		fakeClient := newFakeClient(instanceSet)
+		rescheduler := NewRescheduler(fakeClient, common.FaultRetryTimesCleanupInterval)
+		factory := &workload.WorkLoadHandlerFactory{}
+		rescheduler.SetWorkLoadHandlerFactory(factory)
+
+		newPod := createTestPod("test-pod", "default", map[string]string{
+			common.PodStatusAnnotationKey: common.CommonUnhealthyStatus,
+		}, map[string]string{
+			common.OperatorNameKey:          common.TrueBool,
+			common.InferServiceNameLabelKey: "test-service",
+			common.InstanceSetNameLabelKey:  "test-role",
+			common.InstanceIndexLabelKey:    "0",
+		})
+
+		patches := gomonkey.ApplyMethodReturn(factory, "GetWorkLoadHandler", createMockWorkLoadHandler(), nil)
+		defer patches.Reset()
+
+		rescheduler.handlePodUpdate(nil, newPod)
+
+		expectedFaultWorkLoad := faultWorkLoad{
+			NamespacedName:  types.NamespacedName{Namespace: "default", Name: "test-service-test-role-0"},
+			instanceSetName: "test-service-test-role",
+		}
+		rescheduler.Lock()
+		_, exists := rescheduler.faultWorkLoadMap[expectedFaultWorkLoad]
+		rescheduler.Unlock()
+		convey.So(exists, convey.ShouldBeTrue)
+	})
+}
+
+func TestRescheduler_ProcessPriorityWithHighPriority(t *testing.T) {
+	convey.Convey("Test processPrioritySetting with high priority", t, func() {
+		fakeClient := newFakeClient()
+		rescheduler := NewRescheduler(fakeClient, common.FaultRetryTimesCleanupInterval)
+		highPriority := int32(1)
+		instanceSet := createTestInstanceSet("test-is", "default", &highPriority)
+		instanceSet.Labels[common.PrioritySchedulingStrategyLabelKey] = common.SchedulingStrategyPriority
+
+		result, err := rescheduler.processPrioritySetting(context.Background(), instanceSet, createMockWorkLoadHandler())
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(result, convey.ShouldNotBeNil)
+	})
+}
+
+func TestRescheduler_ProcessPriorityWithLowPriority(t *testing.T) {
+	convey.Convey("Test processPrioritySetting with low priority", t, func() {
+		fakeClient := newFakeClient()
+		rescheduler := NewRescheduler(fakeClient, common.FaultRetryTimesCleanupInterval)
+		lowPriority := int32(100)
+		instanceSet := createTestInstanceSet("test-is", "default", &lowPriority)
+		instanceSet.Labels[common.PrioritySchedulingStrategyLabelKey] = common.SchedulingStrategyPriority
+
+		result, err := rescheduler.processPrioritySetting(context.Background(), instanceSet, createMockWorkLoadHandler())
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(result, convey.ShouldNotBeNil)
 	})
 }

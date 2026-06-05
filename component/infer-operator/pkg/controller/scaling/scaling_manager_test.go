@@ -754,3 +754,200 @@ func TestReconcileHPAWithExternalMetricAndLabels(t *testing.T) {
 		convey.So(createdHPA.Spec.Metrics[0].External.Metric.Selector.MatchLabels[common.RoleNameLabelKey], convey.ShouldEqual, "role1")
 	})
 }
+
+func TestReconcileHPAWithEmptyMetrics(t *testing.T) {
+	convey.Convey("TestReconcileHPA with empty metrics", t, func() {
+		scheme := buildTestScheme()
+		fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
+		mgr := NewScalingManager(fakeClient, scheme)
+
+		min := int32(1)
+		hpaSpec := &autoscalingv2.HorizontalPodAutoscalerSpec{
+			MinReplicas: &min,
+			MaxReplicas: 10,
+			Metrics:     []autoscalingv2.MetricSpec{},
+		}
+		raw, _ := json.Marshal(hpaSpec)
+
+		instanceSet := buildTestInstanceSet("test", "default", &apiv1.ScalingPolicy{
+			Type: common.ScalingPolicyTypeHPA,
+			Spec: runtime.RawExtension{Raw: raw},
+		})
+
+		status, err := mgr.ReconcileScalingResource(context.Background(), instanceSet)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(status.Ready, convey.ShouldBeTrue)
+	})
+}
+
+func TestReconcileHPAWithZeroMaxReplicas(t *testing.T) {
+	convey.Convey("TestReconcileHPA with zero max replicas", t, func() {
+		scheme := buildTestScheme()
+		fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
+		mgr := NewScalingManager(fakeClient, scheme)
+
+		min := int32(0)
+		hpaSpec := &autoscalingv2.HorizontalPodAutoscalerSpec{
+			MinReplicas: &min,
+			MaxReplicas: 0,
+			Metrics:     []autoscalingv2.MetricSpec{},
+		}
+		raw, _ := json.Marshal(hpaSpec)
+
+		instanceSet := buildTestInstanceSet("test", "default", &apiv1.ScalingPolicy{
+			Type: common.ScalingPolicyTypeHPA,
+			Spec: runtime.RawExtension{Raw: raw},
+		})
+
+		status, err := mgr.ReconcileScalingResource(context.Background(), instanceSet)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(status.Ready, convey.ShouldBeTrue)
+
+		createdHPA := &autoscalingv2.HorizontalPodAutoscaler{}
+		err = fakeClient.Get(context.Background(), types.NamespacedName{
+			Name: "test-scaler", Namespace: "default",
+		}, createdHPA)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(createdHPA.Spec.MaxReplicas, convey.ShouldEqual, 0)
+	})
+}
+
+func TestReconcileHPAWithLargeMaxReplicas(t *testing.T) {
+	convey.Convey("TestReconcileHPA with large max replicas", t, func() {
+		scheme := buildTestScheme()
+		fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
+		mgr := NewScalingManager(fakeClient, scheme)
+
+		min := int32(1)
+		maxReplicas := int32(100000)
+		hpaSpec := &autoscalingv2.HorizontalPodAutoscalerSpec{
+			MinReplicas: &min,
+			MaxReplicas: maxReplicas,
+			Metrics:     []autoscalingv2.MetricSpec{},
+		}
+		raw, _ := json.Marshal(hpaSpec)
+
+		instanceSet := buildTestInstanceSet("test", "default", &apiv1.ScalingPolicy{
+			Type: common.ScalingPolicyTypeHPA,
+			Spec: runtime.RawExtension{Raw: raw},
+		})
+
+		status, err := mgr.ReconcileScalingResource(context.Background(), instanceSet)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(status.Ready, convey.ShouldBeTrue)
+
+		createdHPA := &autoscalingv2.HorizontalPodAutoscaler{}
+		err = fakeClient.Get(context.Background(), types.NamespacedName{
+			Name: "test-scaler", Namespace: "default",
+		}, createdHPA)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(createdHPA.Spec.MaxReplicas, convey.ShouldEqual, maxReplicas)
+	})
+}
+
+func TestCleanupScalingResourceWithMultipleHPAs(t *testing.T) {
+	convey.Convey("TestCleanupScalingResource with multiple HPAs", t, func() {
+		scheme := buildTestScheme()
+		fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
+		mgr := NewScalingManager(fakeClient, scheme)
+
+		instanceSet := buildTestInstanceSet("test", "default", nil)
+
+		hpa1 := &autoscalingv2.HorizontalPodAutoscaler{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-scaler-1",
+				Namespace: "default",
+				Labels: map[string]string{
+					ScalingResourceOwnedByInstanceSet: "test",
+				},
+			},
+		}
+		hpa2 := &autoscalingv2.HorizontalPodAutoscaler{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-scaler-2",
+				Namespace: "default",
+				Labels: map[string]string{
+					ScalingResourceOwnedByInstanceSet: "test",
+				},
+			},
+		}
+		err := fakeClient.Create(context.Background(), hpa1)
+		convey.So(err, convey.ShouldBeNil)
+		err = fakeClient.Create(context.Background(), hpa2)
+		convey.So(err, convey.ShouldBeNil)
+
+		status, err := mgr.cleanupScalingResource(context.Background(), instanceSet)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(status, convey.ShouldBeNil)
+
+		hpaList := &autoscalingv2.HorizontalPodAutoscalerList{}
+		err = fakeClient.List(context.Background(), hpaList)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(len(hpaList.Items), convey.ShouldEqual, 0)
+	})
+}
+
+func TestReconcileHPAWithMultipleMetrics(t *testing.T) {
+	convey.Convey("TestReconcileHPA with multiple metrics", t, func() {
+		scheme := buildTestScheme()
+		fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
+		mgr := NewScalingManager(fakeClient, scheme)
+
+		min := int32(1)
+		hpaSpec := &autoscalingv2.HorizontalPodAutoscalerSpec{
+			MinReplicas: &min,
+			MaxReplicas: 10,
+			Metrics: []autoscalingv2.MetricSpec{
+				{
+					Type: autoscalingv2.ResourceMetricSourceType,
+					Resource: &autoscalingv2.ResourceMetricSource{
+						Name: "cpu",
+						Target: autoscalingv2.MetricTarget{
+							Type:               autoscalingv2.UtilizationMetricType,
+							AverageUtilization: ptrTo[int32](80),
+						},
+					},
+				},
+				{
+					Type: autoscalingv2.ResourceMetricSourceType,
+					Resource: &autoscalingv2.ResourceMetricSource{
+						Name: "memory",
+						Target: autoscalingv2.MetricTarget{
+							Type:               autoscalingv2.UtilizationMetricType,
+							AverageUtilization: ptrTo[int32](70),
+						},
+					},
+				},
+				{
+					Type: autoscalingv2.ExternalMetricSourceType,
+					External: &autoscalingv2.ExternalMetricSource{
+						Metric: autoscalingv2.MetricIdentifier{
+							Name: "qps",
+						},
+					},
+				},
+			},
+		}
+		raw, _ := json.Marshal(hpaSpec)
+
+		instanceSet := buildTestInstanceSet("test", "default", &apiv1.ScalingPolicy{
+			Type: common.ScalingPolicyTypeHPA,
+			Spec: runtime.RawExtension{Raw: raw},
+		})
+		instanceSet.Labels = map[string]string{
+			common.InferServiceNameLabelKey: "myservice-0",
+			common.InstanceSetNameLabelKey:  "role1",
+		}
+
+		status, err := mgr.ReconcileScalingResource(context.Background(), instanceSet)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(status.Ready, convey.ShouldBeTrue)
+
+		createdHPA := &autoscalingv2.HorizontalPodAutoscaler{}
+		err = fakeClient.Get(context.Background(), types.NamespacedName{
+			Name: "test-scaler", Namespace: "default",
+		}, createdHPA)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(len(createdHPA.Spec.Metrics), convey.ShouldEqual, 3)
+	})
+}
