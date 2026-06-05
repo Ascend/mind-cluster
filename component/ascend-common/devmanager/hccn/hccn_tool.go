@@ -37,6 +37,8 @@ const (
 	LinkUp string = "UP"
 	// LinkDown npu interface down
 	LinkDown string = "DOWN"
+	// BondingPortName npu bonding port name
+	BondingPortName string = "ETH"
 
 	opticalPartLen  = 2
 	eleventhIndex   = 11
@@ -682,4 +684,103 @@ func parseDeviceRow(trimmedLine string) (int, int, error) {
 	}
 
 	return uDieID, portID, nil
+}
+
+// GetUBOEBondingStatus get UBOE bonding port status
+func GetUBOEBondingStatus(logicID int32) (string, error) {
+	args := []string{"-g", "-dev_info", "-i", strconv.Itoa(int(logicID))}
+	// command example: hccn_tool -g -dev_info -i 0
+	// output example:
+	// +--------+--------+--------+----------+-------------+------------+
+	// | UdieID | PortID | Speed  | PortType | Link Status | Media Type |
+	// +--------+--------+--------+----------+-------------+------------+
+	// | 0      | 4      | 200    | ETH      | DOWN        | Electrical |
+	// +--------+--------+--------+----------+-------------+------------+
+	outStr, err := getInfoFromHccnTool(args...)
+	if err != nil {
+		return "", buildHccnErrA5("npu dev info", err)
+	}
+
+	// First, log the full output for debugging
+	hwlog.RunLog.Debugf("Full hccn_tool output: %s", outStr)
+
+	// Split output into lines and parse table data
+	lines := strings.Split(outStr, "\n")
+	result, err := confirmAllPortDown(lines)
+	if err != nil {
+		return "", buildHccnErrA5("npu dev info", err)
+	}
+
+	return result, nil
+}
+
+// confirmAllPortDown to check if 2 ports are down or up
+func confirmAllPortDown(lines []string) (string, error) {
+	result := false
+	isInTable := false
+	separatorCount := 0
+
+	for _, line := range lines {
+		trimmedLine := strings.TrimSpace(line)
+		if trimmedLine == "" {
+			// Skip empty lines
+			continue
+		}
+
+		// Handle table separator lines
+		if strings.HasPrefix(trimmedLine, "+-") {
+			separatorCount++
+			if separatorCount == firstIndex {
+				isInTable = true
+			} else if separatorCount == threePart {
+				hwlog.RunLog.Debugf("Found end of first table, stopping parsing")
+				break
+			}
+			continue
+		}
+
+		// Process table data lines
+		if !isInTable || !strings.HasPrefix(trimmedLine, "|") {
+			continue
+		}
+		// Skip header row
+		lineLower := strings.ToLower(trimmedLine)
+		if !strings.Contains(lineLower, strings.ToLower(BondingPortName)) {
+			continue
+		}
+
+		// Parse device row data
+		ret, err := checkPortStatus(trimmedLine)
+		if err != nil {
+			hwlog.RunLog.Warnf("Skipping invalid row: %s", trimmedLine)
+			return "", err
+		}
+		result = ret || result
+	}
+
+	if result {
+		return common.NPUNetworkLinkUpStatus, nil
+	}
+	return common.NPUNetworkLinkDownStatus, nil
+}
+
+// checkPortStatus extracts and validates UdieID and PortID from a single table row
+func checkPortStatus(trimmedLine string) (bool, error) {
+	// Extract columns from table row
+	rowData := strings.TrimPrefix(trimmedLine, "|")
+	rowData = strings.TrimSuffix(rowData, "|")
+	columns := strings.Split(rowData, "|")
+	for i, col := range columns {
+		columns[i] = strings.TrimSpace(col)
+	}
+
+	// Validate columns
+	if len(columns) < fifthIndex || columns[threePart] == "" || columns[fourthIndex] == "" {
+		return false, fmt.Errorf("insufficient or empty columns")
+	}
+
+	if columns[threePart] == BondingPortName {
+		return columns[fourthIndex] == common.NPUNetworkLinkUpStatus, nil
+	}
+	return false, nil
 }

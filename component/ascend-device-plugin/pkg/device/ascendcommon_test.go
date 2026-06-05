@@ -1842,3 +1842,137 @@ func TestGetDeviceListIP(t *testing.T) {
 		convey.So(res[11], convey.ShouldEqual, "2.2.2.2")
 	})
 }
+
+func TestHandleUBOELinkDownCheck(t *testing.T) {
+	tools := mockAscendTools()
+
+	convey.Convey("test HandleUBOELinkDownCheck", t, func() {
+		convey.Convey("NilDevice", func() {
+			var devices []*common.NpuDevice
+			tools.HandleUBOELinkDownCheck(nil, &devices)
+			convey.So(len(devices), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("NonServerBoardID", func() {
+			// Reset board ID to non-server board ID
+			tools.boardId = 999 // Non-server board ID
+			device := &common.NpuDevice{
+				LogicID: 1,
+				PhyID:   1,
+			}
+			var devices []*common.NpuDevice
+			tools.HandleUBOELinkDownCheck(device, &devices)
+			// Should not modify device or call dmgr methods since board ID is not in server list
+			convey.So(len(devices), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("UBOEPortDownCode1", func() {
+			// Reset board ID to server board ID
+			tools.boardId = api.Atlas950MainBoardID
+
+			device := &common.NpuDevice{
+				LogicID: 1,
+				PhyID:   1,
+			}
+
+			// Mock dmgr to return UBOEPortDownCode1
+			mockDmgrWithSpecificFault := &devmanager.DeviceManagerMock{}
+			mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
+				"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, []int64, error) {
+					return 1, []int64{common.UBOEPortDownCode1}, nil
+				})
+			defer mockGetDeviceAllErrorCode.Reset()
+			tools.dmgr = mockDmgrWithSpecificFault
+
+			var devices []*common.NpuDevice
+			tools.HandleUBOELinkDownCheck(device, &devices)
+			convey.So(len(devices), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("UBOEPortDownCode2", func() {
+			tools.boardId = api.Atlas950MainBoardID
+
+			device := &common.NpuDevice{
+				LogicID: 1,
+				PhyID:   1,
+			}
+
+			mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
+				"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, []int64, error) {
+					return 1, []int64{common.UBOEPortDownCode2}, nil
+				})
+			defer mockGetDeviceAllErrorCode.Reset()
+
+			var devices []*common.NpuDevice
+			tools.HandleUBOELinkDownCheck(device, &devices)
+			convey.So(len(devices), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("NoUBOEFaultCodes", func() {
+			tools.boardId = api.Atlas950MainBoardID
+
+			device := &common.NpuDevice{
+				LogicID: 1,
+				PhyID:   1,
+			}
+
+			mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
+				"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, []int64, error) {
+					return 1, []int64{1234}, nil
+				})
+			defer mockGetDeviceAllErrorCode.Reset()
+			var devices []*common.NpuDevice
+			tools.HandleUBOELinkDownCheck(device, &devices)
+			convey.So(len(devices), convey.ShouldEqual, 0)
+		})
+	})
+}
+
+func TestAscendTools_DoHandleUboeLinkDownCheck(t *testing.T) {
+	convey.Convey("Test DoHandleUboeLinkDownCheck function", t, func() {
+		tool := mockAscendTools()
+
+		convey.Convey("When devices slice is empty", func() {
+			var devices []*common.NpuDevice
+			tool.DoHandleUboeLinkDownCheck(devices)
+			faultInfoMap := common.GetAndCleanFaultInfo()
+			convey.So(len(faultInfoMap) == 0, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("When devices slice has elements", func() {
+			device1 := &common.NpuDevice{
+				LogicID: 1,
+			}
+			device2 := &common.NpuDevice{
+				LogicID: 2,
+			}
+			devices := []*common.NpuDevice{device1, device2}
+			mockGetDeviceList := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
+				"GetDeviceList", func(_ *devmanager.DeviceManagerMock) (int32, []int32, error) {
+					return 8, []int32{1, 2}, nil
+				})
+			defer mockGetDeviceList.Reset()
+			tool.DoHandleUboeLinkDownCheck(devices)
+			faultInfoMap := common.GetAndCleanFaultInfo()
+			convey.So(len(faultInfoMap) == 2, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("When devices slice has full card", func() {
+			device1 := &common.NpuDevice{
+				LogicID: 1,
+			}
+			device2 := &common.NpuDevice{
+				LogicID: 2,
+			}
+			devices := []*common.NpuDevice{device1, device2}
+			mockGetDeviceList := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
+				"GetDeviceList", func(_ *devmanager.DeviceManagerMock) (int32, []int32, error) {
+					return 2, []int32{1, 2}, nil
+				})
+			defer mockGetDeviceList.Reset()
+			tool.DoHandleUboeLinkDownCheck(devices)
+			faultInfoMap := common.GetAndCleanFaultInfo()
+			convey.So(faultInfoMap[1][0].EventID, convey.ShouldEqual, npuCommon.UBOESubHealFaultCode)
+		})
+	})
+}

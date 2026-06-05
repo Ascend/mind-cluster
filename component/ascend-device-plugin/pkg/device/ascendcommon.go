@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -33,7 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
-	"k8s.io/utils/strings/slices"
+	slicesutil "k8s.io/utils/strings/slices"
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
@@ -157,6 +158,8 @@ type DevManager interface {
 	GetAssociatedLogicIDs(logicID, cardID, deviceID int32) ([]int32, error)
 	SetDpu(string, []common.DpuCMData, map[string][]string)
 	LoadDeviceInfoCm(ctx context.Context)
+	HandleUBOELinkDownCheck(device *common.NpuDevice, devices *[]*common.NpuDevice)
+	DoHandleUboeLinkDownCheck(devices []*common.NpuDevice)
 }
 
 // SetDmgr set devmanager
@@ -682,13 +685,14 @@ func (tool *AscendTools) getUsedDevices(subClassDevices []*common.NpuDevice) set
 func (tool *AscendTools) groupDevsByStatus(subClassDevices []*common.NpuDevice, runMode string) common.DevStatusSet {
 	healthDevice, totalUHDevices, totalNetworkUHDevices, totalDpuUHDevices, totalRCDevices :=
 		sets.String{}, sets.String{}, sets.String{}, sets.String{}, sets.String{}
-	deviceFaults := make([]common.DeviceFault, 0, common.GeneralMapSize)
+	devicesFaults := make([]common.DeviceFault, 0, common.GeneralMapSize)
 	allDevices := sets.NewString()
 	for _, device := range subClassDevices {
 		allDevices.Insert(device.DeviceName)
-		deviceFaults = append(deviceFaults, tool.getDeviceFaults(device)...)
+		deviceFaults := tool.getDeviceFaults(device)
+		devicesFaults = append(devicesFaults, deviceFaults...)
 		if tool.dmgr.GetDevType() == api.Ascend910A5 && device.DpuHealth == api.DpuSubHealthy {
-			deviceFaults = append(deviceFaults, tool.getDpuFaults(device.DeviceName)...)
+			devicesFaults = append(devicesFaults, tool.getDpuFaults(device.DeviceName)...)
 		}
 		if device.NetworkHealth == v1beta1.Unhealthy {
 			totalNetworkUHDevices.Insert(device.DeviceName)
@@ -715,14 +719,14 @@ func (tool *AscendTools) groupDevsByStatus(subClassDevices []*common.NpuDevice, 
 	hwlog.RunLog.Debugf("total unhealthy devices %#v", totalUHDevices)
 	hwlog.RunLog.Debugf("total network unhealthy devices %#v", totalNetworkUHDevices)
 	hwlog.RunLog.Debugf("total recovering devices %#v", totalRCDevices)
-	hwlog.RunLog.Debugf("device fault list is %#v", deviceFaults)
+	hwlog.RunLog.Debugf("device fault list is %#v", devicesFaults)
 	return common.DevStatusSet{
 		HealthDevices:      healthDevice,
 		UnHealthyDevice:    totalUHDevices,
 		NetUnHealthyDevice: totalNetworkUHDevices,
 		DpuUnHealthyDevice: totalDpuUHDevices,
 		RecoveringDevices:  totalRCDevices,
-		DeviceFault:        deviceFaults,
+		DeviceFault:        devicesFaults,
 		AllDevices:         allDevices,
 	}
 }
@@ -1186,7 +1190,7 @@ func (tool *AscendTools) npuIsUsedNow(deviceName string) bool {
 			continue
 		}
 		deviceStrList := strings.Split(tmpNpu, common.CommaSepDev)
-		if slices.Index(deviceStrList, deviceName) != -1 {
+		if slicesutil.Index(deviceStrList, deviceName) != -1 {
 			return true
 		}
 	}
@@ -1731,6 +1735,105 @@ func (tool *AscendTools) generateChipFaultEventsBasedOnFaultCacheChange(device *
 		hwlog.RunLog.Info("generate chip fault event based on chip fault cache change")
 		common.DoSaveDevFaultInfo(chipFaultEvent, false)
 	}
+}
+
+// HandleUBOELinkDownCheck handle UBOE link down fault events
+func (tool *AscendTools) HandleUBOELinkDownCheck(device *common.NpuDevice, devices *[]*common.NpuDevice) {
+	if device == nil {
+		return
+	}
+	serverPodIdList := sets.NewInt(api.Atlas950MainBoardID, api.Atlas9501DMainBoardID, api.Atlas850MainBoardID, api.Atlas850MainBoardID2, api.Atlas850MainBoardID3)
+	if !serverPodIdList.Has(int(tool.dmgr.GetMainBoardId())) {
+		return
+	}
+	_, errCodes, err := tool.dmgr.GetDeviceAllErrorCode(device.LogicID)
+	if err != nil {
+		hwlog.RunLog.Errorf("get device fault failed logic: %d, err: %v", device.LogicID, err)
+		return
+	}
+	if slices.Contains(errCodes, common.UBOEPortDownCode1) {
+
+		*devices = append(*devices, device)
+		return
+	}
+	if slices.Contains(errCodes, common.UBOEPortDownCode2) {
+		tool.generateUboeBondingFaultEvents(device)
+		return
+	}
+}
+
+// DoHandleUboeLinkDownCheck handle link down fault events by all devices
+func (tool *AscendTools) DoHandleUboeLinkDownCheck(devices []*common.NpuDevice) {
+	if len(devices) == 0 {
+		return
+	}
+	tool.generateOrdinaryUboeFaultEvents(devices)
+}
+
+func (tool *AscendTools) generateOrdinaryUboeFaultEvents(devices []*common.NpuDevice) {
+	devNum, _, err := tool.dmgr.GetDeviceList()
+	if err != nil {
+		hwlog.RunLog.Errorf("get device list failed, err: %v", err)
+		return
+	}
+	var eventID int64
+	if devNum != int32(len(devices)) {
+		eventID = npuCommon.UBOESeparateFaultCode
+	} else {
+		eventID = npuCommon.UBOESubHealFaultCode
+	}
+	for _, device := range devices {
+		faultInfo := npuCommon.DevFaultInfo{
+			EventID:         eventID,
+			LogicID:         device.LogicID,
+			Assertion:       npuCommon.FaultOccur,
+			AlarmRaisedTime: time.Now().Unix(),
+		}
+		hwlog.RunLog.Infof("report UBOE fault, logicID=%d, faultCode=0x%X", device.LogicID, eventID)
+		common.DoSaveDevFaultInfo(faultInfo, false)
+	}
+}
+
+func (tool *AscendTools) generateUboeBondingFaultEvents(device *common.NpuDevice) {
+	bondingStatus := queryBondingPortStatus(device)
+	var eventID int64
+	if bondingStatus == npuCommon.NPUNetworkLinkUpStatus {
+		eventID = npuCommon.UBOESubHealFaultCode
+	} else {
+		eventID = npuCommon.UBOEPreSeparateFaultCode
+	}
+	faultInfo := npuCommon.DevFaultInfo{
+		EventID:         eventID,
+		LogicID:         device.LogicID,
+		Assertion:       npuCommon.FaultOccur,
+		AlarmRaisedTime: time.Now().Unix(),
+	}
+	hwlog.RunLog.Infof("report UBOE fault, logicID=%d, faultCode=0x%X", device.LogicID, eventID)
+	common.DoSaveDevFaultInfo(faultInfo, false)
+}
+
+func queryBondingPortStatus(device *common.NpuDevice) string {
+	phyID := device.PhyID
+	networkLimiter, ok := networkLimiterMap[phyID]
+	if !ok {
+		hwlog.RunLog.Infof("init device %d network limiter", phyID)
+		networkLimiter = rate.NewLimiter(
+			rate.Every(common.EveryNetworkQueryDuration*time.Minute/common.NetworkQueryRateLimit),
+			common.NetworkQueryRateLimit)
+		networkLimiterMap[phyID] = networkLimiter
+	}
+	linkStatusCache, ok := networkStatusCache[phyID]
+	if !networkLimiter.Allow() && ok {
+		return linkStatusCache
+	}
+	linkStatus, err := hccn.GetUBOEBondingStatus(phyID)
+	if err != nil {
+		hwlog.RunLog.Errorf("get device %d bonding port status failed, err: %v", phyID, err)
+		networkStatusCache[phyID] = npuCommon.NPUNetworkLinkDownStatus
+		return npuCommon.NPUNetworkLinkDownStatus
+	}
+	networkStatusCache[phyID] = linkStatus
+	return linkStatus
 }
 
 // HandleLostNetworkFaultEvents handle network fault events that may be lost by the fault subscription interface
