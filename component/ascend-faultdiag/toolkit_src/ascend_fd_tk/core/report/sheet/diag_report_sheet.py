@@ -20,7 +20,7 @@
 """
 
 from dataclasses import dataclass
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Union
 
 from ascend_fd_tk.core.common import constants
 from ascend_fd_tk.core.model.diag_result import DiagResult
@@ -82,11 +82,23 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
     _TWO_ROW = 2
     _TAB_COLOR_DIAG = "9DC3E6"
 
-    SHEET_MAPPING = {
+    _SHEET_MAPPING = {
         constants.FAULT_TYPE_HOST: "带内故障分析(Host)",
         constants.FAULT_TYPE_BMC: "带外故障分析(BMC)",
         constants.FAULT_TYPE_SWITCH: "交换机故障分析(L1&L2&RoCE)",
     }
+
+    # 每种sheet类型的实体排序属性（同时也是实体分组键）
+    _ENTITY_SORT_ATTRS: Dict[str, List[str]] = {
+        constants.FAULT_TYPE_HOST: ["host_id", "npu_id", "chip_phy_id"],
+        constants.FAULT_TYPE_BMC: ["bmc_id", "npu_id", "chip_phy_id"],
+        constants.FAULT_TYPE_SWITCH: ["swi_id", "interface"],
+    }
+
+    # 故障列属性（不参与实体合并）
+    _FAULT_ATTRS = {"fault_code", "fault_info", "solution", "root_cause_status"}
+    # 第二级合并的故障列属性
+    _FAULT_MERGE_ATTRS = ["solution", "root_cause_status"]
 
     def __init__(
         self,
@@ -163,17 +175,29 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
             header_mapping = base_mapping
         return header_mapping
 
-    @staticmethod
-    def _get_merge_col_titles(sheet_type: str) -> List[str]:
-        """获取需要合并的列标题列表"""
-        base_titles = ["处理建议", "是否链路故障根因"]
-        if sheet_type == constants.FAULT_TYPE_HOST:
-            return base_titles + ["主机ID", "主机名", "SN", "机房名称", "机柜编号", "NPU ID", "物理芯片ID"]
-        elif sheet_type == constants.FAULT_TYPE_BMC:
-            return base_titles + ["BMC ID", "SN", "NPU ID", "物理芯片ID"]
-        elif sheet_type == constants.FAULT_TYPE_SWITCH:
-            return base_titles + ["交换机名称", "交换机ID", "SN", "机房名称", "机柜编号", "端口"]
-        return base_titles
+    @classmethod
+    def _get_entity_merge_titles(cls, sheet_type: str) -> List[str]:
+        """第一级合并列标题：从header_mapping中排除故障列，自动推导"""
+        header_mapping = cls._create_header_config(sheet_type)
+        return [title for attr, title in header_mapping.items() if attr not in cls._FAULT_ATTRS]
+
+    @classmethod
+    def _get_fault_merge_titles(cls) -> List[str]:
+        """第二级合并列标题：在实体合并基础上按故障域分组"""
+        header_mapping = cls._create_header_config(sheet_type="")
+        return [header_mapping[attr] for attr in cls._FAULT_MERGE_ATTRS if attr in header_mapping]
+
+    @classmethod
+    def _get_sort_key(cls, data: Union[HostReportData, BmcReportData, SwitchReportData], sheet_type: str) -> Tuple:
+        """获取排序键：实体属性 + fault_domain"""
+        sort_attrs = cls._ENTITY_SORT_ATTRS.get(sheet_type, [])
+        return tuple(getattr(data, attr, "") for attr in sort_attrs) + (data.fault_domain,)
+
+    @classmethod
+    def _get_entity_key(cls, data: Union[HostReportData, BmcReportData, SwitchReportData], sheet_type: str) -> Tuple:
+        """获取实体分组键（第一级合并依据）"""
+        sort_attrs = cls._ENTITY_SORT_ATTRS.get(sheet_type, [])
+        return tuple(getattr(data, attr, "") for attr in sort_attrs)
 
     def generate_sheet(self) -> None:
         """
@@ -191,14 +215,14 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         sheets = []
         for sheet_type, data_list in diag_report_category_data.items():
             if data_list:
-                # 按故障域排序，确保相同故障域的行在一起
-                sorted_data = sorted(data_list, key=lambda x: x.fault_domain)
+                # 按实体+故障域排序，确保相同实体的行相邻
+                sorted_data = sorted(data_list, key=lambda x, st=sheet_type: self._get_sort_key(x, st))
                 # 创建header映射
                 header_mapping = self._create_header_config(sheet_type)
-                # 计算合并范围
+                # 计算合并范围（两级合并）
                 merge_cells = self._compute_merge_ranges(sorted_data, header_mapping, sheet_type)
                 sheet = create_threshold_report(
-                    sheet_name=self.SHEET_MAPPING.get(sheet_type, ""),
+                    sheet_name=self._SHEET_MAPPING.get(sheet_type, ""),
                     data_list=sorted_data,
                     header_mapping=header_mapping,
                     threshold_configs=threshold_configs,
@@ -286,33 +310,59 @@ class DiagReportSheetGenerator(BaseSheetGenerator):
         header_mapping: Dict[str, str],
         sheet_type: str,
     ) -> List[Tuple[int, int, int, int]]:
-        """计算诊断报告的合并区域
+        """计算诊断报告的合并区域（两级合并）
 
-        按故障域(fault_domain)分组，对同一组内连续相同的行合并指定列。
-        合并范围格式: (start_row, start_col, end_row, end_col)
+        第一级：按实体分组，合并实体列（主机ID、主机名、SN等）
+        第二级：在实体组内按 fault_domain 分组，合并故障列（处理建议、是否根因）
         """
         if not data_list:
             return []
 
         title_to_col = {title: idx + 1 for idx, title in enumerate(header_mapping.values())}
-        merge_titles = self._get_merge_col_titles(sheet_type)
-        merge_col_indices = [title_to_col[t] for t in merge_titles if t in title_to_col]
+        entity_col_indices = [title_to_col[t] for t in self._get_entity_merge_titles(sheet_type) if t in title_to_col]
+        fault_col_indices = [title_to_col[t] for t in self._get_fault_merge_titles() if t in title_to_col]
 
         merge_ranges = []
-        i = 0
-        while i < len(data_list):
-            fault_domain = data_list[i].fault_domain
-            j = i + 1
-            while j < len(data_list) and data_list[j].fault_domain == fault_domain:
-                # pylint: disable=duplicate-code  # 已与同类分析器复用逻辑，忽略重复警告
-                j += 1
+        group_start = 0
+        while group_start < len(data_list):
+            group_end = self._find_entity_group_end(data_list, group_start, sheet_type)
+            # 第一级：合并实体列
+            if group_end - group_start > 1:
+                for col in entity_col_indices:
+                    merge_ranges.append((group_start + self._TWO_ROW, col, group_end + 1, col))
+            # 第二级：在实体组内按故障域分组，合并故障列
+            merge_ranges.extend(
+                self._compute_fault_merge_in_group(data_list, group_start, group_end, fault_col_indices)
+            )
+            group_start = group_end
 
-            if j - i > 1:
-                start_row = i + self._TWO_ROW
-                end_row = j + 1
-                for col in merge_col_indices:
-                    merge_ranges.append((start_row, col, end_row, col))
+        return merge_ranges
 
-            i = j
+    def _find_entity_group_end(self, data_list: List[DiagReportData], group_start: int, sheet_type: str) -> int:
+        """查找实体分组的结束位置（不含），返回第一个不属于当前实体的行索引"""
+        entity_key = self._get_entity_key(data_list[group_start], sheet_type)
+        group_end = group_start + 1
+        while group_end < len(data_list) and self._get_entity_key(data_list[group_end], sheet_type) == entity_key:
+            group_end += 1
+        return group_end
 
+    def _compute_fault_merge_in_group(
+        self,
+        data_list: List[DiagReportData],
+        group_start: int,
+        group_end: int,
+        fault_col_indices: List[int],
+    ) -> List[Tuple[int, int, int, int]]:
+        """在实体组内按 fault_domain 分组，计算故障列的合并范围"""
+        merge_ranges = []
+        seg_start = group_start
+        while seg_start < group_end:
+            fault_domain = data_list[seg_start].fault_domain
+            seg_end = seg_start + 1
+            while seg_end < group_end and data_list[seg_end].fault_domain == fault_domain:
+                seg_end += 1
+            if seg_end - seg_start > 1:
+                for col in fault_col_indices:
+                    merge_ranges.append((seg_start + self._TWO_ROW, col, seg_end + 1, col))
+            seg_start = seg_end
         return merge_ranges
