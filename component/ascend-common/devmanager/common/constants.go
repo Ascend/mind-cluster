@@ -76,6 +76,12 @@ const (
 	CardDropFaultCode = 0x40F84E00
 	// HangFaultCode NPU hang fault code
 	HangFaultCode = 0x200001002
+	// UBOESeparateFaultCode UBOE separate fault code
+	UBOESeparateFaultCode = 0x020001002
+	// UBOEPreSeparateFaultCode UBOE pre separate fault code
+	UBOEPreSeparateFaultCode = 0x110001024
+	// UBOESubHealFaultCode UBOE sub heal fault code
+	UBOESubHealFaultCode = 0x110000002
 	// RetError return error when the function failed
 	RetError = -1
 	// Percent constant of 100

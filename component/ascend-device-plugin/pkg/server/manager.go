@@ -665,7 +665,6 @@ func (hdm *HwDevManager) ListenDevice(ctx context.Context) {
 	defer ticker.Stop()
 	triggerTicker := time.NewTicker(time.Second)
 	defer triggerTicker.Stop()
-
 	for {
 		select {
 		case _, ok := <-ctx.Done():
@@ -1693,18 +1692,21 @@ func getFaultCodeCMPollInterval(configMap *v1.ConfigMap) int {
 func (hdm *HwDevManager) mendSubscribeFaultEvents() {
 	initLogicIDs := common.GetAndCleanLogicID()
 	for _, npuDevices := range hdm.groupDevice {
+		var uboeDownDevices []*common.NpuDevice
 		for _, npuDevice := range npuDevices {
+
 			if common.SubscribeFailed {
 				hdm.manager.LogFaultModeChange(npuDevice, initLogicIDs, common.Polling)
 			} else {
 				hdm.manager.LogFaultModeChange(npuDevice, initLogicIDs, common.Subscribe)
 			}
-
 			hdm.manager.HandleDropCardFaultEvents(npuDevice)
 			hdm.manager.HandleLostChipFaultEvents(npuDevice, initLogicIDs)
 			hdm.manager.HandleLostNetworkFaultEvents(npuDevice, initLogicIDs)
+			hdm.manager.HandleUBOELinkDownCheck(npuDevice, &uboeDownDevices)
 			hdm.manager.HandleHangCardFaultEvents(npuDevice)
 		}
+		hdm.manager.DoHandleUboeLinkDownCheck(uboeDownDevices)
 	}
 }
 
