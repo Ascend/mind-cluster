@@ -565,6 +565,11 @@ func (fJob *FaultJob) updateFaultJobWhenNewPodError(jobInfo *api.JobInfo) {
 		if fTask.IsFaultTask {
 			continue
 		}
+		if fTask.IsSoftwareFault {
+			fJob.FaultTasks[i].IsFaultTask = true
+			fJob.FaultTasks[i].faultType = ProcessException
+			continue
+		}
 		if _, ok := newFailedTask[fTask.TaskUID]; ok {
 			fJob.FaultTasks[i].IsFaultTask = true
 			fJob.FaultTasks[i].faultType = PodFailed
