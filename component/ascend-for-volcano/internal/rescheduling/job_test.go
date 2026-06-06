@@ -824,6 +824,34 @@ func TestIsFailedTask(t *testing.T) {
 	})
 }
 
+func TestUpdateFaultJobWhenNewPodError(t *testing.T) {
+	t.Run("01-updateFaultJobWhenNewPodError return when labels not meet", func(t *testing.T) {
+		fJob := &FaultJob{
+			Labels:     map[string]string{},
+			FaultTasks: []FaultTask{{IsSoftwareFault: true}},
+		}
+		jobInfo := &api.JobInfo{}
+		fJob.updateFaultJobWhenNewPodError(jobInfo)
+		if fJob.FaultTasks[0].IsFaultTask {
+			t.Errorf("updateFaultJobWhenNewPodError() should return early, IsFaultTask should be false")
+		}
+	})
+
+	t.Run("02-updateFaultJobWhenNewPodError skip when IsFaultTask already true", func(t *testing.T) {
+		fJob := &FaultJob{
+			Labels: map[string]string{util.ProcessRecoverEnable: util.EnableFunc},
+			FaultTasks: []FaultTask{
+				{IsFaultTask: true, IsSoftwareFault: true},
+			},
+		}
+		jobInfo := &api.JobInfo{}
+		fJob.updateFaultJobWhenNewPodError(jobInfo)
+		if !fJob.FaultTasks[0].IsFaultTask {
+			t.Errorf("updateFaultJobWhenNewPodError() IsFaultTask should remain true")
+		}
+	})
+}
+
 type setFaultRetryTimeOfJobCase struct {
 	name           string
 	fJob           *FaultJob
@@ -833,8 +861,8 @@ type setFaultRetryTimeOfJobCase struct {
 func buildSetFaultRetryTimeOfJobCases() []setFaultRetryTimeOfJobCase {
 	return []setFaultRetryTimeOfJobCase{
 		{
-			name: "01-setFaultRetryTimeOfJob with no fault-retry-times label",
-			fJob: &FaultJob{JobUID: "test-job-1", Labels: map[string]string{}},
+			name:           "01-setFaultRetryTimeOfJob with no fault-retry-times label",
+			fJob:           &FaultJob{JobUID: "test-job-1", Labels: map[string]string{}},
 			wantRetryTimes: 0,
 		},
 		{
@@ -1349,7 +1377,7 @@ func buildNeedRescheduleAdvCases() []multiLevelCase {
 				SchedulerJobAttr: util.SchedulerJobAttr{
 					ComJob: util.ComJob{Annotation: map[string]string{}},
 					NPUJob: &util.NPUJob{
-						NPUTaskNum:    3,
+						NPUTaskNum:     3,
 						AffinityBlocks: map[string]int{"level1": 2},
 						Tasks: map[api.TaskID]util.NPUTask{
 							"t0":       {Annotation: map[string]string{}},

@@ -120,6 +120,8 @@ const (
 	DeviceFaultCmKeySuffix = "-Fault"
 	// PodFailed the state of failed pod
 	PodFailed = "pod-failed"
+	// ProcessException the state of failed process in the pod
+	ProcessException = "process-exception"
 	// PodHealthy the state of healthy pod
 	PodHealthy = "pod-healthy"
 
