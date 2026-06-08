@@ -211,11 +211,11 @@ func convertSuperPodInfo(cSuperPodInfo C.struct_dcmi_spod_info) common.CgoSuperP
 		SuperPodId:   uint32(cSuperPodInfo.super_pod_id),
 		ServerId:     uint32(cSuperPodInfo.server_id),
 		RackId:       uint32(cSuperPodInfo.chassis_id),
-		SuperPodType: uint8(cSuperPodInfo.super_pod_type),
+		SuperPodType: uint32(cSuperPodInfo.super_pod_type),
 	}
 
 	for i := uint32(0); i < DcmiSpodReserveLen; i++ {
-		superPodInfo.Reserve = append(superPodInfo.Reserve, uint8(cSuperPodInfo.reserve[i]))
+		superPodInfo.Reserve = append(superPodInfo.Reserve, uint32(cSuperPodInfo.reserve[i]))
 	}
 
 	return superPodInfo

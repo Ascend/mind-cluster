@@ -397,8 +397,8 @@ extern "C"
         /* chassis_id for A5 */
         unsigned int chassis_id;
         /* super_pod_type for A5 */
-        unsigned char super_pod_type;
-        unsigned char reserve[27];
+        unsigned int super_pod_type;
+        unsigned int reserve[6];
     };
 
     struct dcmi_dms_fault_event

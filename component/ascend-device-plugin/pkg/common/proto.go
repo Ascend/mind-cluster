@@ -287,8 +287,8 @@ type SuperPodInfo struct {
 	ServerId   int32
 	RackId     int32
 	// SuperPodType for A5
-	SuperPodType int8
-	Reserve      []int8
+	SuperPodType int32
+	Reserve      []int32
 }
 
 // Get310PProductType get 310P product type

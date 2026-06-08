@@ -233,7 +233,7 @@ func TestRasTopoWriteTask(t *testing.T) {
 
 		patches.ApplyFunc(slownet.GetRasNetRootPath, func() (string, error) { return "/mock/path", nil })
 		patches.ApplyMethod(&server.HwDevManager{}, "GetSuperPodID", func(_ *server.HwDevManager) int32 { return 0 })
-		patches.ApplyMethod(&server.HwDevManager{}, "GetSuperPodType", func(_ *server.HwDevManager) int8 { return 0 })
+		patches.ApplyMethod(&server.HwDevManager{}, "GetSuperPodType", func(_ *server.HwDevManager) int32 { return 0 })
 		patches.ApplyMethod(&server.HwDevManager{}, "GetRackID", func(_ *server.HwDevManager) int32 { return 0 })
 		manager := device.NewHwAscend910Manager()
 		manager.SetServerIndex(1)
@@ -264,7 +264,7 @@ func TestRasTopoWriteTask2(t *testing.T) {
 
 		patches.ApplyFunc(slownet.GetRasNetRootPath, func() (string, error) { return "/mock/path", nil })
 		patches.ApplyMethod(&server.HwDevManager{}, "GetSuperPodID", func(_ *server.HwDevManager) int32 { return 0 })
-		patches.ApplyMethod(&server.HwDevManager{}, "GetSuperPodType", func(_ *server.HwDevManager) int8 { return 0 })
+		patches.ApplyMethod(&server.HwDevManager{}, "GetSuperPodType", func(_ *server.HwDevManager) int32 { return 0 })
 		patches.ApplyMethod(&server.HwDevManager{}, "GetRackID", func(_ *server.HwDevManager) int32 { return 0 })
 		manager := device.NewHwAscend910Manager()
 		manager.SetServerIndex(1)
@@ -295,7 +295,7 @@ func TestRasTopoWriteTask3(t *testing.T) {
 
 		patches.ApplyFunc(slownet.GetRasNetRootPath, func() (string, error) { return "/mock/path", fmt.Errorf("err") })
 		patches.ApplyMethod(&server.HwDevManager{}, "GetSuperPodID", func(_ *server.HwDevManager) int32 { return 0 })
-		patches.ApplyMethod(&server.HwDevManager{}, "GetSuperPodType", func(_ *server.HwDevManager) int8 { return 0 })
+		patches.ApplyMethod(&server.HwDevManager{}, "GetSuperPodType", func(_ *server.HwDevManager) int32 { return 0 })
 		patches.ApplyMethod(&server.HwDevManager{}, "GetRackID", func(_ *server.HwDevManager) int32 { return 0 })
 		manager := device.NewHwAscend910Manager()
 		manager.SetServerIndex(1)
@@ -327,7 +327,7 @@ func TestRasTopoWriteTask4(t *testing.T) {
 
 		patches.ApplyFunc(slownet.GetRasNetRootPath, func() (string, error) { return "/mock/path", nil })
 		patches.ApplyMethod(&server.HwDevManager{}, "GetSuperPodID", func(_ *server.HwDevManager) int32 { return 0 })
-		patches.ApplyMethod(&server.HwDevManager{}, "GetSuperPodType", func(_ *server.HwDevManager) int8 { return 0 })
+		patches.ApplyMethod(&server.HwDevManager{}, "GetSuperPodType", func(_ *server.HwDevManager) int32 { return 0 })
 		patches.ApplyMethod(&server.HwDevManager{}, "GetRackID", func(_ *server.HwDevManager) int32 { return 0 })
 		manager := device.NewHwAscend910Manager()
 		manager.SetServerIndex(1)
@@ -362,7 +362,7 @@ func TestRasTopoWriteTask5(t *testing.T) {
 
 		patches.ApplyFunc(slownet.GetRasNetRootPath, func() (string, error) { return "/mock/path", fmt.Errorf("err") })
 		patches.ApplyMethod(&server.HwDevManager{}, "GetSuperPodID", func(_ *server.HwDevManager) int32 { return 0 })
-		patches.ApplyMethod(&server.HwDevManager{}, "GetSuperPodType", func(_ *server.HwDevManager) int8 { return 0 })
+		patches.ApplyMethod(&server.HwDevManager{}, "GetSuperPodType", func(_ *server.HwDevManager) int32 { return 0 })
 		patches.ApplyMethod(&server.HwDevManager{}, "GetRackID", func(_ *server.HwDevManager) int32 { return 0 })
 		manager := device.NewHwAscend910Manager()
 		manager.SetServerIndex(1)

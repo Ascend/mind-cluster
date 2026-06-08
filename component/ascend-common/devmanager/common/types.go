@@ -175,8 +175,8 @@ type CgoSuperPodInfo struct {
 	// RackId for A5
 	RackId uint32
 	// SuperPodType for A5
-	SuperPodType uint8
-	Reserve      []uint8
+	SuperPodType uint32
+	Reserve      []uint32
 }
 
 // VirtualDevInfo virtual device infos
