@@ -30,7 +30,7 @@ import (
 	"ascend-common/common-utils/utils"
 )
 
-var topoFilePathMap = map[int8]string{
+var topoFilePathMap = map[int32]string{
 	common.ProductTypeServer:    common.Server8PTopoPath,
 	common.ProductType1D:        common.Pod1DTopoPath,
 	common.ProductType2D:        common.Pod2DTopoPath,
@@ -39,7 +39,7 @@ var topoFilePathMap = map[int8]string{
 }
 
 var superPodId int32
-var superPodType int8
+var superPodType int32
 var rackId int32
 var serverIndex int32
 

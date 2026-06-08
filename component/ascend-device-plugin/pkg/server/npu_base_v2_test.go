@@ -103,7 +103,7 @@ func init() {
 func TestGetTopoFileInfoCheckFile(t *testing.T) {
 	convey.Convey("test HwDevManager method getTopoFileInfo check file", t, func() {
 		convey.Convey("01-getTopoPath failed", func() {
-			var invalidSuperPodType uint8 = math.MaxUint8
+			var invalidSuperPodType uint32 = math.MaxUint32
 			p := ProductBase{superPodType: invalidSuperPodType}
 			_, err := p.getTopoFileInfo()
 			convey.So(err.Error(), convey.ShouldEqual,

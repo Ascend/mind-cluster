@@ -16,12 +16,12 @@
 package device
 
 // SetSuperPodType setting the type of super pod
-func (tool *AscendTools) SetSuperPodType(superPodType int8) {
+func (tool *AscendTools) SetSuperPodType(superPodType int32) {
 	tool.superPodType = superPodType
 }
 
 // GetSuperPodType getting the type of super pod
-func (tool *AscendTools) GetSuperPodType() int8 {
+func (tool *AscendTools) GetSuperPodType() int32 {
 	return tool.superPodType
 }
 

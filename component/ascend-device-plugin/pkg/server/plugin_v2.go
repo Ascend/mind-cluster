@@ -48,7 +48,7 @@ func (ps *PluginServer) setHcclTopoFilePathEnv(resp *v1beta1.ContainerAllocateRe
 	hwlog.RunLog.Errorf("get hccl topo file path failed, Product type<%s>", common.ParamOption.CardType)
 }
 
-func (ps *PluginServer) getProductTypeKey(cardType string, allNPUInfo common.NpuAllInfo) int8 {
+func (ps *PluginServer) getProductTypeKey(cardType string, allNPUInfo common.NpuAllInfo) int32 {
 	switch cardType {
 	case common.A5300ICardName:
 		return common.ProductType1PCard
@@ -60,6 +60,6 @@ func (ps *PluginServer) getProductTypeKey(cardType string, allNPUInfo common.Npu
 			hwlog.RunLog.Errorf("set hccl topo file path failed, get super pod info err<%v>", err)
 			return -1
 		}
-		return int8(superPodInfo.SuperPodType)
+		return int32(superPodInfo.SuperPodType)
 	}
 }

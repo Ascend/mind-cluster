@@ -436,7 +436,7 @@ func (hdm *HwDevManager) getSuperPodInfo() common.SuperPodInfo {
 		ServerId:     common.ServerIdAbnormal,
 		RackId:       common.RackIdAbnormal,
 		SuperPodType: common.SuperPodTypeAbnormal,
-		Reserve:      make([]int8, 0),
+		Reserve:      make([]int32, 0),
 	}
 	for _, npuDevices := range hdm.groupDevice {
 		for _, npuDevice := range npuDevices {
@@ -459,10 +459,10 @@ func (hdm *HwDevManager) getSuperPodInfo() common.SuperPodInfo {
 				SuperPodId:   int32(superPodInfo.SuperPodId),
 				ServerId:     int32(superPodInfo.ServerId),
 				RackId:       int32(superPodInfo.RackId),
-				SuperPodType: int8(superPodInfo.SuperPodType),
+				SuperPodType: int32(superPodInfo.SuperPodType),
 			}
 			for i := 0; i < len(superPodInfo.Reserve); i++ {
-				result.Reserve = append(result.Reserve, int8(superPodInfo.Reserve[i]))
+				result.Reserve = append(result.Reserve, int32(superPodInfo.Reserve[i]))
 			}
 		}
 	}

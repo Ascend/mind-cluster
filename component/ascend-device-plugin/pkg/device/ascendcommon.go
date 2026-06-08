@@ -86,7 +86,7 @@ type AscendTools struct {
 	// rackID for A5
 	rackID int32
 	// superPodType for A5
-	superPodType int8
+	superPodType int32
 	// superPodSize for A5
 	superPodSize int32
 	// nodeInternalIP for A5
@@ -130,9 +130,9 @@ type DevManager interface {
 	SetServerIndex(serverIndex int32)
 	GetServerIndex() int32
 	// SetSuperPodType for A5
-	SetSuperPodType(int8)
+	SetSuperPodType(int32)
 	// GetSuperPodType for A5
-	GetSuperPodType() int8
+	GetSuperPodType() int32
 	// SetSuperPodSize for A5
 	SetSuperPodSize(int32)
 	// GetSuperPodSize for A5

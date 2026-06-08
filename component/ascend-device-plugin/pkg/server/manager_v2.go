@@ -87,7 +87,7 @@ func (hdm *HwDevManager) getProductInfo() *ProductBase {
 		superPodID:     uint32(hdm.manager.GetSuperPodID()),
 		serverIndex:    uint32(hdm.manager.GetServerIndex()),
 		chassisID:      uint32(hdm.manager.GetRackID()),
-		superPodType:   uint8(hdm.manager.GetSuperPodType()),
+		superPodType:   uint32(hdm.manager.GetSuperPodType()),
 		nodeInternalIP: hdm.manager.GetNodeInternalIPInK8s(),
 		cardType:       common.ParamOption.CardType,
 		mainBoardId:    mainBoardId,
@@ -388,7 +388,7 @@ func (hdm *HwDevManager) GetSuperPodID() int32 {
 }
 
 // GetSuperPodType get type of current super pod
-func (hdm *HwDevManager) GetSuperPodType() int8 {
+func (hdm *HwDevManager) GetSuperPodType() int32 {
 	return hdm.manager.GetSuperPodType()
 }
 

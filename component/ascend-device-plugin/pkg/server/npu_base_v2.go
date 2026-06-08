@@ -35,7 +35,7 @@ import (
 	apiCommon "ascend-common/devmanager/common"
 )
 
-var hcclTopoFilePathMap = map[int8]string{
+var hcclTopoFilePathMap = map[int32]string{
 	common.ProductTypeServer:    common.Server8PTopoPath,
 	common.ProductType1D:        common.Pod1DTopoPath,
 	common.ProductType2D:        common.Pod2DTopoPath,
@@ -101,7 +101,7 @@ type ProductBase struct {
 	superPodID     uint32
 	serverIndex    uint32
 	chassisID      uint32
-	superPodType   uint8
+	superPodType   uint32
 	nodeInternalIP string
 	topoFilePath   string
 	cardType       string
@@ -234,7 +234,7 @@ func (p *ProductBase) getTopoPath() (string, error) {
 	if p.cardType == common.A54P300ICardName {
 		return hcclTopoFilePathMap[common.ProductType4PCard], nil
 	}
-	path, exist := hcclTopoFilePathMap[int8(p.superPodType)]
+	path, exist := hcclTopoFilePathMap[int32(p.superPodType)]
 	if !exist {
 		return "", fmt.Errorf("super pod type:<%d> topo path not exist", p.superPodType)
 	}
