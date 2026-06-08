@@ -18,8 +18,20 @@ from dataclasses import dataclass, fields
 
 from ascend_fd.model.node_info import FaultFilterTime
 from ascend_fd.utils import regular_table
-from ascend_fd.pkg.parse.parser_saver import ProcessLogSaver, EnvInfoSaver, TrainLogSaver, HostLogSaver, BMCLogSaver, \
-    LCNELogSaver, DevLogSaver, DlLogSaver, AMCTLogSaver, MindieLogSaver, ParsedDataSaver, CustomLogSaver
+from ascend_fd.pkg.parse.parser_saver import (
+    ProcessLogSaver,
+    EnvInfoSaver,
+    TrainLogSaver,
+    HostLogSaver,
+    BMCLogSaver,
+    LCNELogSaver,
+    DevLogSaver,
+    DlLogSaver,
+    AMCTLogSaver,
+    MindieLogSaver,
+    ParsedDataSaver,
+    CustomLogSaver,
+)
 
 
 @dataclass
@@ -27,6 +39,7 @@ class DiagCFG:
     """
     Diag Config
     """
+
     task_id: str
     input_path: str
     output_path: str
@@ -40,6 +53,7 @@ class ParseCFG:
     """
     Parse Config
     """
+
     task_id: str
     input_path: str
     output_path: str
@@ -68,7 +82,7 @@ class ParseCFG:
             for f in fields(cls):
                 if f.name in kwargs:
                     continue
-                if f.type == type(saver):
+                if f.type is type(saver):
                     kwargs[f.name] = saver
                     break
 
@@ -77,13 +91,7 @@ class ParseCFG:
         """
         Automatically allocating saver to config
         """
-        kwargs = {
-            "task_id": task_id,
-            "input_path": "",
-            "output_path": "",
-            "lcne_log": "",
-            "bmc_log": ""
-        }
+        kwargs = {"task_id": task_id, "input_path": "", "output_path": "", "lcne_log": "", "bmc_log": ""}
         cls.config_saver(kwargs, saver_list)
         return cls(**kwargs)
 

@@ -28,20 +28,31 @@ from ascend_fd.pkg.parse.knowledge_graph.utils.data_descriptor import DataDescri
 from ascend_fd.pkg.parse.knowledge_graph.parser.cann_log_parser import CANNPlogParser, CANNDeviceLogParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.npu_info_parser import NpuInfoParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.file_parser import FileParser
-from ascend_fd.pkg.parse.knowledge_graph.parser.host_os_parser import HostMsgParser, HostDMesgParser, \
-    HostSysMonParser, HostVmCoreParser
+from ascend_fd.pkg.parse.knowledge_graph.parser.host_os_parser import (
+    HostMsgParser,
+    HostDMesgParser,
+    HostSysMonParser,
+    HostVmCoreParser,
+)
 from ascend_fd.pkg.parse.knowledge_graph.parser.train_log_parser import TrainLogParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.device_plugin_parser import DevicePluginParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.noded_log_parser import NodeDLogParser
-from ascend_fd.pkg.parse.knowledge_graph.parser.npu_device_parse import NpuHistoryLogParser, NpuOsLogParser, \
-    NpuDeviceLogParser
+from ascend_fd.pkg.parse.knowledge_graph.parser.npu_device_parse import (
+    NpuHistoryLogParser,
+    NpuOsLogParser,
+    NpuDeviceLogParser,
+)
 from ascend_fd.pkg.parse.knowledge_graph.parser.volcano_parser import VolcanoSchedulerParser, VolcanoControllerParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.common_dl_parser import DockerRuntimeParser, NpuExporterParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.amct_log_parser import AMCTLogParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.mindie_parser import MindieParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.lcne_parser import LCNEParser
-from ascend_fd.pkg.parse.knowledge_graph.parser.bmc_parser import BMCParser, BMCLogDumpParser, BMCDeviceDumpParser, \
-    BMCAppDumpParser
+from ascend_fd.pkg.parse.knowledge_graph.parser.bmc_parser import (
+    BMCParser,
+    BMCLogDumpParser,
+    BMCDeviceDumpParser,
+    BMCAppDumpParser,
+)
 from ascend_fd.pkg.parse.knowledge_graph.parser.bus_parser import BusParser
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
@@ -52,27 +63,40 @@ def _collect_parser(parser_name: str, parser_collect_result: dict):
     return parser_name, parser_collect_result
 
 
-class PackageParser(object):
-    DEFAULT_PRIMARY_PARSERS = [CANNPlogParser, BMCParser, LCNEParser, BMCLogDumpParser,
-                               BMCDeviceDumpParser, BMCAppDumpParser, NpuInfoParser]
+class PackageParser:
+    DEFAULT_PRIMARY_PARSERS = [
+        CANNPlogParser,
+        BMCParser,
+        LCNEParser,
+        BMCLogDumpParser,
+        BMCDeviceDumpParser,
+        BMCAppDumpParser,
+        NpuInfoParser,
+    ]
     MAX_POOL_SIZE = 20
 
-    def __init__(self, kg_parse_ctx: KGParseCtx, primary_parsers: list = None, other_parsers: list = None,
-                 parse_conf: dict = None):
+    def __init__(
+        self,
+        kg_parse_ctx: KGParseCtx,
+        primary_parsers: list = None,
+        other_parsers: list = None,
+        parse_conf: dict = None,
+    ):
         """
         Log parser base class
         :param kg_parse_ctx: kg parse ctx
         """
-        super(PackageParser, self).__init__()
+        super().__init__()
         self.kg_parse_ctx = kg_parse_ctx
 
-        self.primary_parsers = list()
-        self.other_parsers = list()
+        self.primary_parsers = []
+        self.other_parsers = []
         self.desc = DataDescriptor()
         self.params = {
             "default_conf": ParseRegexMap([KNOWLEDGE_GRAPH_CONF]).get_parse_regex(),
             "user_conf": ParseRegexMap([DEFAULT_USER_CONF]).get_parse_regex()
-            if parse_conf is None else ParseRegexMap([DEFAULT_USER_CONF], sdk_config_repo=parse_conf).get_parse_regex()
+            if parse_conf is None
+            else ParseRegexMap([DEFAULT_USER_CONF], sdk_config_repo=parse_conf).get_parse_regex(),
         }
         self.add_primary_parsers(primary_parsers)
         self.add_other_parsers(other_parsers)
@@ -100,27 +124,47 @@ class PackageParser(object):
         """
         for parser_cls in parser_cls_list:
             if not issubclass(parser_cls, FileParser):
-                kg_logger.error(f"The {parser_cls} must be sub-class of FileParser.")
-                raise InnerError(f"The {parser_cls} must be sub-class of FileParser.")
+                kg_logger.error("The %s must be sub-class of FileParser.", parser_cls)
+                raise InnerError("The %s must be sub-class of FileParser." % parser_cls)
             target_parser_list.append(parser_cls(self.params))
 
     def add_primary_parsers(self, input_parser_list: list = None):
         """
         Add parsers to the primary parsers list
         """
-        parser_cls_list = input_parser_list if input_parser_list is not None \
-            else self.DEFAULT_PRIMARY_PARSERS
+        parser_cls_list = input_parser_list if input_parser_list is not None else self.DEFAULT_PRIMARY_PARSERS
         self.add_parser(self.primary_parsers, parser_cls_list)
 
     def add_other_parsers(self, input_parser_list: list = None):
         """
         Add parsers to the other parsers list
         """
-        parser_cls_list = input_parser_list if input_parser_list is not None \
-            else [CANNDeviceLogParser, HostMsgParser, HostDMesgParser, HostSysMonParser, HostVmCoreParser,
-                  TrainLogParser, NpuHistoryLogParser, NpuOsLogParser, NpuDeviceLogParser, NodeDLogParser,
-                  DevicePluginParser, VolcanoSchedulerParser, VolcanoControllerParser, DockerRuntimeParser,
-                  NpuExporterParser, AMCTLogParser, MindieParser, CustomLogParser, BusParser, MindIOLogParser]
+        parser_cls_list = (
+            input_parser_list
+            if input_parser_list is not None
+            else [
+                CANNDeviceLogParser,
+                HostMsgParser,
+                HostDMesgParser,
+                HostSysMonParser,
+                HostVmCoreParser,
+                TrainLogParser,
+                NpuHistoryLogParser,
+                NpuOsLogParser,
+                NpuDeviceLogParser,
+                NodeDLogParser,
+                DevicePluginParser,
+                VolcanoSchedulerParser,
+                VolcanoControllerParser,
+                DockerRuntimeParser,
+                NpuExporterParser,
+                AMCTLogParser,
+                MindieParser,
+                CustomLogParser,
+                BusParser,
+                MindIOLogParser,
+            ]
+        )
         self.add_parser(self.other_parsers, parser_cls_list)
 
     def parse(self, task_id):
@@ -156,8 +200,7 @@ class PackageParser(object):
             try:
                 result, parser_err_dict = parser.parse(self.kg_parse_ctx, task_id)
             except Exception as error:
-                kg_logger.warning("The %s parser parse log failed. The reason is: %s",
-                                  parser.__class__.__name__, error)
+                kg_logger.warning("The %s parser parse log failed. The reason is: %s", parser.__class__.__name__, error)
                 execution_err.update({parser.__class__.__name__: str(error)})
             else:
                 if isinstance(result, FilesParseInfo):
@@ -181,8 +224,7 @@ class PackageParser(object):
             parser_name = parser.__class__.__name__
             collect_result = collect_results.get(parser_name, {})
             if isinstance(collect_result, Exception):
-                kg_logger.warning("The %s parser filter events failed. The reason is: %s",
-                                  parser_name, collect_result)
+                kg_logger.warning("The %s parser filter events failed. The reason is: %s", parser_name, collect_result)
                 execution_err.update({parser_name: str(collect_result)})
                 continue
             parse_result = collect_result.get("parse_result", [])
@@ -208,8 +250,7 @@ class PackageParser(object):
         for parser in self.other_parsers:
             parser_name = parser.__class__.__name__
             p = multiprocessing.Process(
-                target=self._collect_worker,
-                args=(parser, parser_name, self.kg_parse_ctx, task_id, result_dict)
+                target=self._collect_worker, args=(parser, parser_name, self.kg_parse_ctx, task_id, result_dict)
             )
             p.start()
             processes.append((parser_name, p))
@@ -228,10 +269,7 @@ class PackageParser(object):
             parser_name = parser.__class__.__name__
             try:
                 parse_result, err_dict = parser.parse(self.kg_parse_ctx, "")
-                results[parser_name] = {
-                    "parse_result": parse_result,
-                    "err_dict": err_dict
-                }
+                results[parser_name] = {"parse_result": parse_result, "err_dict": err_dict}
             except Exception as e:
                 results[parser_name] = e
         return results
@@ -243,9 +281,6 @@ class PackageParser(object):
         """
         try:
             parse_result, err_dict = parser.parse(kg_parse_ctx, task_id)
-            result_dict[parser_name] = {
-                "parse_result": parse_result,
-                "err_dict": err_dict
-            }
+            result_dict[parser_name] = {"parse_result": parse_result, "err_dict": err_dict}
         except Exception as e:
             result_dict[parser_name] = e

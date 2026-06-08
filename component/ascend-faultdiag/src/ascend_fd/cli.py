@@ -22,10 +22,24 @@ import argparse
 
 from ascend_fd.configuration.config import NAME, COMPONENT
 from ascend_fd.controller import router
-from ascend_fd.utils.tool import (get_version, file_check, dir_check, file_or_dir_check, str_param_len_check,
-                                  code_check, write_path_check, ITEM_CHOICES, init_echo_log, init_home_path,
-                                  init_operation_log, init_run_log, clean_run_log_path, clean_child_process,
-                                  DIAG_CHOICES, generate_task_id)
+from ascend_fd.utils.tool import (
+    get_version,
+    file_check,
+    dir_check,
+    file_or_dir_check,
+    str_param_len_check,
+    code_check,
+    write_path_check,
+    ITEM_CHOICES,
+    init_echo_log,
+    init_home_path,
+    init_operation_log,
+    init_run_log,
+    clean_run_log_path,
+    clean_child_process,
+    DIAG_CHOICES,
+    generate_task_id,
+)
 
 op_logger = logging.getLogger("FD_OP")
 echo = logging.getLogger("ECHO")
@@ -98,8 +112,7 @@ def command_line():
     add_diag_arguments(diag_cmd)
 
     parse_black_cmd = sub_arg.add_parser("blacklist", help="filter invalid CANN logs by blacklist for parsing")
-    parse_black_cmd.add_argument("--force", action="store_true",
-                                 help="Force option after operation delete or file")
+    parse_black_cmd.add_argument("--force", action="store_true", help="Force option after operation delete or file")
     parse_black_cmd_group = parse_black_cmd.add_mutually_exclusive_group(required=True)
     add_blacklist_arguments(parse_black_cmd_group)
 
@@ -112,124 +125,183 @@ def command_line():
 def add_custom_config(sub_arg):
     config_cmd = sub_arg.add_parser("config", help="custom configuration parsing files")
     config_cmd_group = config_cmd.add_mutually_exclusive_group(required=True)
-    config_cmd_group.add_argument("-u", "--update", type=file_check, metavar='path',
-                                  help="update the path of the configuration file (in JSON format), "
-                                       "use this file to update the user-defined configuration information")
-    config_cmd_group.add_argument("-c", "--check", action="store_true",
-                                  help="verify the validity of user-defined configuration file")
-    config_cmd_group.add_argument("-s", "--show", action="store_true",
-                                  help="show the user-defined configuration content")
+    config_cmd_group.add_argument(
+        "-u",
+        "--update",
+        type=file_check,
+        metavar='path',
+        help="update the path of the configuration file (in JSON format), "
+        "use this file to update the user-defined configuration information",
+    )
+    config_cmd_group.add_argument(
+        "-c", "--check", action="store_true", help="verify the validity of user-defined configuration file"
+    )
+    config_cmd_group.add_argument(
+        "-s", "--show", action="store_true", help="show the user-defined configuration content"
+    )
 
 
 def add_blacklist_arguments(parse_black_cmd_group):
-    parse_black_cmd_group.add_argument("-a", "--add", type=str_param_len_check, nargs='+', metavar='',
-                                       help="add blacklist keywords, "
-                                            "need to set keywords, "
-                                            "if there are multiple keywords, use blank space to separate, "
-                                            "e.g. --add 'ERROR' 'No Such File or directory'")
-    parse_black_cmd_group.add_argument("-d", "--delete", type=int, nargs='+', metavar='',
-                                       help="delete blacklist by id,"
-                                            "if there are multiple items to be deleted, use blank space to separate")
-    parse_black_cmd_group.add_argument("-s", "--show", action='store_true',
-                                       help="show blacklist")
-    parse_black_cmd_group.add_argument("-f", "--file", type=file_check,
-                                       help="input the custom file to overwrite the default json")
+    parse_black_cmd_group.add_argument(
+        "-a",
+        "--add",
+        type=str_param_len_check,
+        nargs='+',
+        metavar='',
+        help="add blacklist keywords, "
+        "need to set keywords, "
+        "if there are multiple keywords, use blank space to separate, "
+        "e.g. --add 'ERROR' 'No Such File or directory'",
+    )
+    parse_black_cmd_group.add_argument(
+        "-d",
+        "--delete",
+        type=int,
+        nargs='+',
+        metavar='',
+        help="delete blacklist by id,if there are multiple items to be deleted, use blank space to separate",
+    )
+    parse_black_cmd_group.add_argument("-s", "--show", action='store_true', help="show blacklist")
+    parse_black_cmd_group.add_argument(
+        "-f", "--file", type=file_check, help="input the custom file to overwrite the default json"
+    )
 
 
 def add_diag_arguments(diag_cmd):
-    diag_cmd.add_argument("-i", "--input_path", type=dir_check, required=True, metavar='',
-                          help="the input path of parsed data file")
-    diag_cmd.add_argument("-p", "--performance", action="store_true",
-                          help="Indicates whether the performance evaluation module is enabled. If this parameter is "
-                               "specified, diag jobs related to node anomaly and network congestion are executed.")
-    diag_cmd.add_argument("-o", "--output_path", type=write_path_check, required=True, metavar='',
-                          help="the output path of diag result file")
-    diag_cmd.add_argument("-s", "--scene", choices=DIAG_CHOICES, default="host",
-                          help="diag scene: %(choices)s")
+    diag_cmd.add_argument(
+        "-i", "--input_path", type=dir_check, required=True, metavar='', help="the input path of parsed data file"
+    )
+    diag_cmd.add_argument(
+        "-p",
+        "--performance",
+        action="store_true",
+        help="Indicates whether the performance evaluation module is enabled. If this parameter is "
+        "specified, diag jobs related to node anomaly and network congestion are executed.",
+    )
+    diag_cmd.add_argument(
+        "-o",
+        "--output_path",
+        type=write_path_check,
+        required=True,
+        metavar='',
+        help="the output path of diag result file",
+    )
+    diag_cmd.add_argument("-s", "--scene", choices=DIAG_CHOICES, default="host", help="diag scene: %(choices)s")
 
 
 def add_parse_arguments(parse_cmd):
-    parse_cmd.add_argument("-i", "--input_path", type=dir_check, metavar='',
-                           help="the input path of origin data file")
-    parse_cmd.add_argument("--bmc_log", type=dir_check, metavar='',
-                           help="the input path of bmc log file")
-    parse_cmd.add_argument("--lcne_log", type=dir_check, metavar='',
-                           help="the input path of lcne log file")
-    parse_cmd.add_argument("--host_log", type=dir_check, metavar='',
-                           help="the input path of host log file")
-    parse_cmd.add_argument("--device_log", type=dir_check, metavar='',
-                           help="the input path of device log file")
-    parse_cmd.add_argument("--train_log", type=file_or_dir_check, nargs='+', metavar='',
-                           help="the input paths or names of train log file")
-    parse_cmd.add_argument("--process_log", type=dir_check, metavar='',
-                           help="the input path of process log file")
-    parse_cmd.add_argument("--env_check", type=dir_check, metavar='',
-                           help="the input path of environment check file")
-    parse_cmd.add_argument("--dl_log", type=dir_check, metavar='',
-                           help="the input path of mindx-dl log file")
-    parse_cmd.add_argument("--mindie_log", type=dir_check, metavar='',
-                           help="the input path of mindie log file")
-    parse_cmd.add_argument("--amct_log", type=dir_check, metavar='',
-                           help="the input path of amct log file")
-    parse_cmd.add_argument("--bus_log", type=dir_check, metavar='',
-                           help="the input path of bus log file")
-    parse_cmd.add_argument("--custom_log", type=dir_check, metavar='',
-                           help="the input path of custom log file")
-    parse_cmd.add_argument("-p", "--performance", action="store_true",
-                           help="Indicates whether the performance evaluation module is enabled. If this parameter is "
-                                "specified, parse jobs related to node anomaly and network congestion are executed.")
-    parse_cmd.add_argument("-o", "--output_path", type=write_path_check, required=True, metavar='',
-                           help="the output path of parsed data file")
+    parse_cmd.add_argument("-i", "--input_path", type=dir_check, metavar='', help="the input path of origin data file")
+    parse_cmd.add_argument("--bmc_log", type=dir_check, metavar='', help="the input path of bmc log file")
+    parse_cmd.add_argument("--lcne_log", type=dir_check, metavar='', help="the input path of lcne log file")
+    parse_cmd.add_argument("--host_log", type=dir_check, metavar='', help="the input path of host log file")
+    parse_cmd.add_argument("--device_log", type=dir_check, metavar='', help="the input path of device log file")
+    parse_cmd.add_argument(
+        "--train_log", type=file_or_dir_check, nargs='+', metavar='', help="the input paths or names of train log file"
+    )
+    parse_cmd.add_argument("--process_log", type=dir_check, metavar='', help="the input path of process log file")
+    parse_cmd.add_argument("--env_check", type=dir_check, metavar='', help="the input path of environment check file")
+    parse_cmd.add_argument("--dl_log", type=dir_check, metavar='', help="the input path of mindx-dl log file")
+    parse_cmd.add_argument("--mindie_log", type=dir_check, metavar='', help="the input path of mindie log file")
+    parse_cmd.add_argument("--amct_log", type=dir_check, metavar='', help="the input path of amct log file")
+    parse_cmd.add_argument("--bus_log", type=dir_check, metavar='', help="the input path of bus log file")
+    parse_cmd.add_argument("--custom_log", type=dir_check, metavar='', help="the input path of custom log file")
+    parse_cmd.add_argument(
+        "-p",
+        "--performance",
+        action="store_true",
+        help="Indicates whether the performance evaluation module is enabled. If this parameter is "
+        "specified, parse jobs related to node anomaly and network congestion are executed.",
+    )
+    parse_cmd.add_argument(
+        "-o",
+        "--output_path",
+        type=write_path_check,
+        required=True,
+        metavar='',
+        help="the output path of parsed data file",
+    )
 
 
 def add_entity_cmd(sub_arg):
     entity_cmd = sub_arg.add_parser("entity", help="perform operations on the user-defined faulty entity.")
     op_group = entity_cmd.add_mutually_exclusive_group(required=True)
-    op_group.add_argument("-u", "--update", type=file_check, metavar='path',
-                          help="the path of updated data file (json format). "
-                               "Use file to update the user-defined fault entity")
-    op_group.add_argument("-d", "--delete", type=code_check, nargs="+", metavar='code',
-                          help="the fault entity code need to be deleted. "
-                               "One or multiple codes can be transferred. Use spaces to separate multiple codes.")
-    op_group.add_argument("-s", "--show", type=code_check, nargs="*", metavar='code',
-                          help="the fault entity code need to be shown. "
-                               "One or multiple codes can be transferred. Use spaces to separate multiple codes.")
-    op_group.add_argument("-c", "--check", type=file_check, metavar='path',
-                          help="the path of the user-defined fault entity file which need to check.")
-    entity_cmd.add_argument("--item", choices=ITEM_CHOICES, nargs="+", metavar='item',
-                            help="the entity item need to be shown, support 'attribute', 'rule' and 'regex'. "
-                                 "Use spaces to separate multiple items. Only used with '-s --show'. "
-                                 "Default 'attr rule regex', show all items.")
-    entity_cmd.add_argument("-f", "--force", action="store_true",
-                            help="indicates whether to skip the deletion confirmation step and forcibly execute "
-                                 "delete command. Only used with '-d --delete'. "
-                                 "Default false, re-confirmation is required.")
+    op_group.add_argument(
+        "-u",
+        "--update",
+        type=file_check,
+        metavar='path',
+        help="the path of updated data file (json format). Use file to update the user-defined fault entity",
+    )
+    op_group.add_argument(
+        "-d",
+        "--delete",
+        type=code_check,
+        nargs="+",
+        metavar='code',
+        help="the fault entity code need to be deleted. "
+        "One or multiple codes can be transferred. Use spaces to separate multiple codes.",
+    )
+    op_group.add_argument(
+        "-s",
+        "--show",
+        type=code_check,
+        nargs="*",
+        metavar='code',
+        help="the fault entity code need to be shown. "
+        "One or multiple codes can be transferred. Use spaces to separate multiple codes.",
+    )
+    op_group.add_argument(
+        "-c",
+        "--check",
+        type=file_check,
+        metavar='path',
+        help="the path of the user-defined fault entity file which need to check.",
+    )
+    entity_cmd.add_argument(
+        "--item",
+        choices=ITEM_CHOICES,
+        nargs="+",
+        metavar='item',
+        help="the entity item need to be shown, support 'attribute', 'rule' and 'regex'. "
+        "Use spaces to separate multiple items. Only used with '-s --show'. "
+        "Default 'attr rule regex', show all items.",
+    )
+    entity_cmd.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help="indicates whether to skip the deletion confirmation step and forcibly execute "
+        "delete command. Only used with '-d --delete'. "
+        "Default false, re-confirmation is required.",
+    )
 
 
 def add_single_diag_cmd(sub_arg):
     single_diag_cmd = sub_arg.add_parser("single-diag", help="single parse and diag log files")
-    single_diag_cmd.add_argument("-i", "--input_path", type=dir_check, metavar='',
-                                 help="the input path of origin data file")
-    single_diag_cmd.add_argument("--host_log", type=dir_check, metavar='',
-                                 help="the input path of host log file")
-    single_diag_cmd.add_argument("--device_log", type=dir_check, metavar='',
-                                 help="the input path of device log file")
-    single_diag_cmd.add_argument("--train_log", type=file_or_dir_check, nargs='+', metavar='',
-                                 help="the input paths or names of train log file")
-    single_diag_cmd.add_argument("--process_log", type=dir_check, metavar='',
-                                 help="the input path of process log file")
-    single_diag_cmd.add_argument("--env_check", type=dir_check, metavar='',
-                                 help="the input path of environment check file")
-    single_diag_cmd.add_argument("--dl_log", type=dir_check, metavar='',
-                                 help="the input path of mindx-dl log file")
-    single_diag_cmd.add_argument("--mindie_log", type=dir_check, metavar='',
-                                 help="the input path of mindie log file")
-    single_diag_cmd.add_argument("--amct_log", type=dir_check, metavar='',
-                                 help="the input path of amct log file")
-    single_diag_cmd.add_argument("--bus_log", type=dir_check, metavar='',
-                                 help="the input path of bus log file")
-    single_diag_cmd.add_argument("-o", "--output_path", type=write_path_check, required=True, metavar='',
-                                 help="the output path of diag result file")
+    single_diag_cmd.add_argument(
+        "-i", "--input_path", type=dir_check, metavar='', help="the input path of origin data file"
+    )
+    single_diag_cmd.add_argument("--host_log", type=dir_check, metavar='', help="the input path of host log file")
+    single_diag_cmd.add_argument("--device_log", type=dir_check, metavar='', help="the input path of device log file")
+    single_diag_cmd.add_argument(
+        "--train_log", type=file_or_dir_check, nargs='+', metavar='', help="the input paths or names of train log file"
+    )
+    single_diag_cmd.add_argument("--process_log", type=dir_check, metavar='', help="the input path of process log file")
+    single_diag_cmd.add_argument(
+        "--env_check", type=dir_check, metavar='', help="the input path of environment check file"
+    )
+    single_diag_cmd.add_argument("--dl_log", type=dir_check, metavar='', help="the input path of mindx-dl log file")
+    single_diag_cmd.add_argument("--mindie_log", type=dir_check, metavar='', help="the input path of mindie log file")
+    single_diag_cmd.add_argument("--amct_log", type=dir_check, metavar='', help="the input path of amct log file")
+    single_diag_cmd.add_argument("--bus_log", type=dir_check, metavar='', help="the input path of bus log file")
+    single_diag_cmd.add_argument(
+        "-o",
+        "--output_path",
+        type=write_path_check,
+        required=True,
+        metavar='',
+        help="the output path of diag result file",
+    )
 
 
 def show_version():
