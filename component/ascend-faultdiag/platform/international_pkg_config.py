@@ -32,7 +32,7 @@ def recursively_remove_sensitives_in_python_file(base_path: str, keyword_replace
                 if file_path.endswith("package_parser.py"):
                     # remove the import and usages of npu_info_parser.py
                     npu_info_parser_skip_kwds = [["from", "import", "NpuInfoParser"]]
-                    npu_info_import_replacement = {", NpuInfoParser]": "]"}
+                    npu_info_import_replacement = {"NpuInfoParser,": ""}
                     replace_keywords(file_path, npu_info_import_replacement, npu_info_parser_skip_kwds)
                 if file_path.endswith("regular_table.py"):
                     # remove the constant of NpuInfoParser
