@@ -591,3 +591,168 @@ func TestDeviceManagerGetDevType(t *testing.T) {
 		convey.So(manager.GetDevType(), convey.ShouldEqual, "Ascend910")
 	})
 }
+
+const (
+	testUtilLogicID    = int32(0)
+	testUtilCardID     = int32(0)
+	testUtilDeviceID   = int32(0)
+	testUtilAicUtil    = uint32(50)
+	testUtilAivUtil    = uint32(60)
+	testUtilAicoreUtil = uint32(70)
+	testUtilNpuUtil    = uint32(80)
+)
+
+type getDeviceUtilizationRateV2PeriodTestCase struct {
+	name         string
+	logicID      int32
+	setupPatches func(*DeviceManager) *gomonkey.Patches
+	expectError  bool
+	expectedInfo common.DcmiMultiUtilizationInfo
+}
+
+func buildGetDeviceUtilizationRateV2PeriodTestCases() []getDeviceUtilizationRateV2PeriodTestCase {
+	return []getDeviceUtilizationRateV2PeriodTestCase{
+		{
+			name:    "should return error when getCardIdAndDeviceId failed",
+			logicID: testUtilLogicID,
+			setupPatches: func(dm *DeviceManager) *gomonkey.Patches {
+				return gomonkey.ApplyPrivateMethod(reflect.TypeOf(dm), "getCardIdAndDeviceId",
+					func(*DeviceManager, int32) (int32, int32, error) {
+						return common.RetError, common.RetError, errors.New(getIdFailedMsg)
+					})
+			},
+			expectError: true,
+		},
+		{
+			name:    "should return error when DcGetDeviceUtilizationRateV2Period failed",
+			logicID: testUtilLogicID,
+			setupPatches: func(dm *DeviceManager) *gomonkey.Patches {
+				return gomonkey.NewPatches().
+					ApplyPrivateMethod(reflect.TypeOf(dm), "getCardIdAndDeviceId",
+						func(*DeviceManager, int32) (int32, int32, error) {
+							return testUtilCardID, testUtilDeviceID, nil
+						}).
+					ApplyMethodReturn(dm.DcMgr, "DcGetDeviceUtilizationRateV2Period",
+						dcmi.BuildErrNpuMultiUtilizationInfo(), errors.New(dcmiFailedMsg))
+			},
+			expectError: true,
+		},
+		{
+			name:    "should return success when all operations succeed",
+			logicID: testUtilLogicID,
+			setupPatches: func(dm *DeviceManager) *gomonkey.Patches {
+				return gomonkey.NewPatches().
+					ApplyPrivateMethod(reflect.TypeOf(dm), "getCardIdAndDeviceId",
+						func(*DeviceManager, int32) (int32, int32, error) {
+							return testUtilCardID, testUtilDeviceID, nil
+						}).
+					ApplyMethodReturn(dm.DcMgr, "DcGetDeviceUtilizationRateV2Period",
+						common.DcmiMultiUtilizationInfo{
+							AicUtil:    testUtilAicUtil,
+							AivUtil:    testUtilAivUtil,
+							AicoreUtil: testUtilAicoreUtil,
+							NpuUtil:    testUtilNpuUtil,
+						}, nil)
+			},
+			expectError: false,
+			expectedInfo: common.DcmiMultiUtilizationInfo{
+				AicUtil:    testUtilAicUtil,
+				AivUtil:    testUtilAivUtil,
+				AicoreUtil: testUtilAicoreUtil,
+				NpuUtil:    testUtilNpuUtil,
+			},
+		},
+	}
+}
+
+func TestGetDeviceUtilizationRateV2Period(t *testing.T) {
+	for _, tt := range buildGetDeviceUtilizationRateV2PeriodTestCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			dm := &DeviceManager{DcMgr: &dcmi.DcManager{}}
+			var patches *gomonkey.Patches
+			if tt.setupPatches != nil {
+				patches = tt.setupPatches(dm)
+				defer patches.Reset()
+			}
+			result, err := dm.GetDeviceUtilizationRateV2Period(tt.logicID)
+			if tt.expectError {
+				convey.Convey("", t, func() {
+					convey.So(err, convey.ShouldNotBeNil)
+				})
+			} else {
+				convey.Convey("", t, func() {
+					convey.So(err, convey.ShouldBeNil)
+					convey.So(result.AicUtil, convey.ShouldEqual, tt.expectedInfo.AicUtil)
+					convey.So(result.AivUtil, convey.ShouldEqual, tt.expectedInfo.AivUtil)
+					convey.So(result.AicoreUtil, convey.ShouldEqual, tt.expectedInfo.AicoreUtil)
+					convey.So(result.NpuUtil, convey.ShouldEqual, tt.expectedInfo.NpuUtil)
+				})
+			}
+		})
+	}
+}
+
+type getDeviceUtilizationRateCommonTestCase struct {
+	name         string
+	logicID      int32
+	setupPatches func(*DeviceManager) *gomonkey.Patches
+	expectError  bool
+	expectedInfo common.DcmiMultiUtilizationInfo
+}
+
+func buildGetDeviceUtilizationRateCommonTestCases() []getDeviceUtilizationRateCommonTestCase {
+	return []getDeviceUtilizationRateCommonTestCase{
+		{
+			name:    "should use V2Period when available",
+			logicID: testUtilLogicID,
+			setupPatches: func(dm *DeviceManager) *gomonkey.Patches {
+				return gomonkey.NewPatches().
+					ApplyPrivateMethod(reflect.TypeOf(dm), "getCardIdAndDeviceId",
+						func(*DeviceManager, int32) (int32, int32, error) {
+							return testUtilCardID, testUtilDeviceID, nil
+						}).
+					ApplyMethodReturn(dm.DcMgr, "DcGetDeviceUtilizationRateV2Period",
+						common.DcmiMultiUtilizationInfo{
+							AicUtil:    testUtilAicUtil,
+							AivUtil:    testUtilAivUtil,
+							AicoreUtil: testUtilAicoreUtil,
+							NpuUtil:    testUtilNpuUtil,
+						}, nil)
+			},
+			expectError: false,
+			expectedInfo: common.DcmiMultiUtilizationInfo{
+				AicUtil:    testUtilAicUtil,
+				AivUtil:    testUtilAivUtil,
+				AicoreUtil: testUtilAicoreUtil,
+				NpuUtil:    testUtilNpuUtil,
+			},
+		},
+	}
+}
+
+func TestGetDeviceUtilizationRateCommon(t *testing.T) {
+	for _, tt := range buildGetDeviceUtilizationRateCommonTestCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			dm := &DeviceManager{DcMgr: &dcmi.DcManager{}}
+			var patches *gomonkey.Patches
+			if tt.setupPatches != nil {
+				patches = tt.setupPatches(dm)
+				defer patches.Reset()
+			}
+			result, err := dm.GetDeviceUtilizationRateCommon(tt.logicID)
+			if tt.expectError {
+				convey.Convey("", t, func() {
+					convey.So(err, convey.ShouldNotBeNil)
+				})
+			} else {
+				convey.Convey("", t, func() {
+					convey.So(err, convey.ShouldBeNil)
+					convey.So(result.AicUtil, convey.ShouldEqual, tt.expectedInfo.AicUtil)
+					convey.So(result.AivUtil, convey.ShouldEqual, tt.expectedInfo.AivUtil)
+					convey.So(result.AicoreUtil, convey.ShouldEqual, tt.expectedInfo.AicoreUtil)
+					convey.So(result.NpuUtil, convey.ShouldEqual, tt.expectedInfo.NpuUtil)
+				})
+			}
+		})
+	}
+}

@@ -57,6 +57,8 @@ var (
 	VectorCore = DeviceType{Code: 12, Name: "VectorCore"}
 	// Overall Overall utilization rate of NPU
 	Overall = DeviceType{Code: 13, Name: "Overall"}
+	// AICube AICube utilization rate of NPU
+	AICube = DeviceType{Code: 14, Name: "AICube"}
 )
 
 // DeviceType for frequency
@@ -149,6 +151,9 @@ const (
 
 	// DcmiRetryInterval call dcmi retry interval
 	DcmiRetryInterval = 5
+
+	// NotSupportErrorCode for not support error code
+	NotSupportErrorCode = "-8255"
 )
 
 const (

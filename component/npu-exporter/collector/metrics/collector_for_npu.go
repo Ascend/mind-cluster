@@ -168,49 +168,16 @@ type BaseInfoCollector struct {
 }
 
 func (c *BaseInfoCollector) PreCollect(n *colcommon.NpuCollector, chipList []colcommon.HuaWeiAIChip) {
-	if n.Dmgr.GetDevType() != common.Ascend910B && n.Dmgr.GetDevType() != common.Ascend910A3 {
-		// only A2 and A3 support use new api (dcmi_get_device_multi_utilization_rate)
+	if n.Dmgr.GetDevType() != common.Ascend910B &&
+		n.Dmgr.GetDevType() != common.Ascend910A3 &&
+		n.Dmgr.GetDevType() != common.Ascend910A5 {
+		// only A2、A3 and A5 support use new api (dcmi_get_device_multi_utilization_rate、dcmi_get_device_multi_utilization_rate)
 		c.realGetDeviceUtilizationRateInfoFunc = collectUtilV1
 		logger.Infof("devType %v does not support get device utilization by v2 api, "+
 			"will use v1 api to get utilization info", utils.MaskDevType(n.Dmgr.GetDevType()))
 		return
 	}
-	if len(chipList) == 0 {
-		// default to use v1 api
-		logger.Infof("chip list is empty, will use v1 api to get utilization info")
-		c.realGetDeviceUtilizationRateInfoFunc = collectUtilV1
-		return
-	}
-	chipOne := chipList[0]
-
-	// Both failed, retry 3 times with 2s interval
-	const retryTimes = 3
-	const retryInterval = 2 * time.Second
-	var success bool
-	var err1, err2 error
-	for i := 0; i < retryTimes; i++ {
-		_, err1 = n.Dmgr.GetDeviceUtilizationRateV2(chipOne.LogicID)
-		if err1 == nil {
-			logger.Infof("get device utilization by v2 api succeeded, will use v2 api to get utilization info")
-			c.realGetDeviceUtilizationRateInfoFunc = collectUtilV2
-			success = true
-			break
-		}
-		_, err2 = n.Dmgr.GetDeviceUtilizationRate(chipOne.LogicID, common.AICore)
-		if err2 == nil {
-			logger.Infof("get device utilization by v1 api succeeded, will use v1 api to get utilization info")
-			c.realGetDeviceUtilizationRateInfoFunc = collectUtilV1
-			success = true
-			break
-		}
-		time.Sleep(retryInterval)
-	}
-	// If still failed after retries, set to nil and log error
-	if !success {
-		logger.Errorf("get device utilization info failed after trying both v2 api and v1 api with 3 retries, "+
-			"err1: %v, err2: %v", err1, err2)
-		c.realGetDeviceUtilizationRateInfoFunc = nil
-	}
+	c.realGetDeviceUtilizationRateInfoFunc = collectUtilCommon
 }
 
 // Describe collects the base info of the chip
@@ -517,8 +484,7 @@ func collectUtil(c *BaseInfoCollector, logicID int32, dmgr devmanager.DeviceInte
 		return
 	}
 	buildDefaultMultiUtilInfo(chip)
-	err := fmt.Errorf("realGetDeviceUtilizationRateInfoFunc is nil when get utilization info, " +
-		"maybe both DcGetDeviceUtilizationRateV1 and GetDeviceUtilizationRateV2 are unreachable")
+	err := fmt.Errorf("realGetDeviceUtilizationRateInfoFunc is nil when get utilization info ")
 	handleErr(err, "utilization", 0)
 }
 
@@ -572,9 +538,9 @@ func collectUtilV1(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCac
 		logger.LogOptions{Domain: "cubeUtil", ID: devType, MaxCounts: 1}, msg, utils.MaskDevType(devType))
 }
 
-func collectUtilV2(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCache) {
-	multiUtilInfo, err := dmgr.GetDeviceUtilizationRateV2(logicID)
-	handleErr(err, "multiUtilInfo", logicID)
+func collectUtilCommon(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCache) {
+	multiUtilInfo, err := dmgr.GetDeviceUtilizationRateCommon(logicID)
+	handleErr(err, "multiUtilInfoPeriod", logicID)
 	chip.Utilization = int(multiUtilInfo.AicoreUtil)
 	chip.OverallUtilization = int(multiUtilInfo.NpuUtil)
 	chip.VectorUtilization = int(multiUtilInfo.AivUtil)

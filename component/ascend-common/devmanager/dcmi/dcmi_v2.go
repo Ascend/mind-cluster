@@ -63,6 +63,19 @@ package dcmi
         CALL_FUNC(dcmiv2_get_device_utilization_rate,dev_id,input_type,utilization_rate)
     }
 
+    static int (*dcmiv2_get_device_multi_utilization_rate_func)(int dev_id,
+					struct dcmi_multi_utilization_info *util_info);
+    static int dcmiv2_get_device_multi_utilization_rate(int dev_id, struct dcmi_multi_utilization_info *util_info){
+        CALL_FUNC(dcmiv2_get_device_multi_utilization_rate,dev_id,util_info)
+    }
+
+    static int (*dcmiv2_get_device_multi_utilization_rate_period_func)(int dev_id,
+					struct dcmi_multi_utilization_info *util_info);
+    static int dcmiv2_get_device_multi_utilization_rate_period(int dev_id,
+					struct dcmi_multi_utilization_info *util_info){
+        CALL_FUNC(dcmiv2_get_device_multi_utilization_rate_period,dev_id,util_info)
+    }
+
     static int (*dcmiv2_get_device_temperature_func)(int dev_id, int *temperature);
     static int dcmiv2_get_device_temperature(int dev_id, int *temperature){
         CALL_FUNC(dcmiv2_get_device_temperature,dev_id,temperature)
@@ -269,6 +282,8 @@ package dcmi
         dcmiv2_get_device_type_func = dlsym(dcmiHandle,"dcmiv2_get_device_type");
         dcmiv2_get_device_health_func = dlsym(dcmiHandle,"dcmiv2_get_device_health");
         dcmiv2_get_device_utilization_rate_func = dlsym(dcmiHandle,"dcmiv2_get_device_utilization_rate");
+        dcmiv2_get_device_multi_utilization_rate_func = dlsym(dcmiHandle,"dcmiv2_get_device_multi_utilization_rate");
+        dcmiv2_get_device_multi_utilization_rate_period_func = dlsym(dcmiHandle,"dcmiv2_get_device_multi_utilization_rate_period");
         dcmiv2_get_device_temperature_func = dlsym(dcmiHandle,"dcmiv2_get_device_temperature");
         dcmiv2_get_device_voltage_func = dlsym(dcmiHandle,"dcmiv2_get_device_voltage");
         dcmiv2_get_device_power_info_func = dlsym(dcmiHandle,"dcmiv2_get_device_power_info");
@@ -337,6 +352,8 @@ type DcV2DriverInterface interface {
 	DcGetDeviceHealth(logicID int32) (int32, error)
 	DcGetDeviceNetWorkHealth(logicID int32) (uint32, error)
 	DcGetDeviceUtilizationRate(logicID int32, devType common.DeviceType) (int32, error)
+	DcGetDeviceUtilizationRateV2(logicID int32) (common.DcmiMultiUtilizationInfo, error)
+	DcGetDeviceUtilizationRateV2Period(logicID int32) (common.DcmiMultiUtilizationInfo, error)
 	DcGetDeviceTemperature(logicID int32) (int32, error)
 	DcGetDeviceVoltage(logicID int32) (float32, error)
 	DcGetDevicePowerInfo(logicID int32) (float32, error)
@@ -506,6 +523,32 @@ func (d *DcV2Manager) DcGetDeviceUtilizationRate(logicID int32, devType common.D
 			"utilization (name: %v, code:%d): %d", logicID, devType.Name, devType.Code, uint32(rate))
 	}
 	return int32(rate), nil
+}
+
+// DcGetDeviceUtilizationRateV2 get device utilization rate
+func (d *DcV2Manager) DcGetDeviceUtilizationRateV2(logicID int32) (common.DcmiMultiUtilizationInfo, error) {
+	if !common.IsValidLogicIDOrPhyID(logicID) {
+		return BuildErrNpuMultiUtilizationInfo(), fmt.Errorf("logicID(%d) is invalid", logicID)
+	}
+	var multiUtilizationInfo C.struct_dcmi_multi_utilization_info
+	if retCode := C.dcmiv2_get_device_multi_utilization_rate(C.int(logicID),
+		&multiUtilizationInfo); int32(retCode) != common.Success {
+		return BuildErrNpuMultiUtilizationInfo(), buildDcmiV2Err(logicID, "npu multi utilization info", retCode)
+	}
+	return ConvertNpuMultiUtilizationInfo(multiUtilizationInfo), nil
+}
+
+// DcGetDeviceUtilizationRateV2Period get device utilization rate period
+func (d *DcV2Manager) DcGetDeviceUtilizationRateV2Period(logicID int32) (common.DcmiMultiUtilizationInfo, error) {
+	if !common.IsValidLogicIDOrPhyID(logicID) {
+		return BuildErrNpuMultiUtilizationInfo(), fmt.Errorf("logicID(%d) is invalid", logicID)
+	}
+	var multiUtilizationInfo C.struct_dcmi_multi_utilization_info
+	if retCode := C.dcmiv2_get_device_multi_utilization_rate_period(C.int(logicID),
+		&multiUtilizationInfo); int32(retCode) != common.Success {
+		return BuildErrNpuMultiUtilizationInfo(), buildDcmiV2Err(logicID, "npu multi utilization info period", retCode)
+	}
+	return ConvertNpuMultiUtilizationInfo(multiUtilizationInfo), nil
 }
 
 // DcGetDeviceTemperature get device temperature
