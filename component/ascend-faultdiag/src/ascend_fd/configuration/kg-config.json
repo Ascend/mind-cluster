@@ -3984,7 +3984,6 @@
             "regex": {
                 "in": [
                     ["Node Type=0x70;","Sensor Type=0xc;","event_state=1)"],
-                    ["Hardware Error","section_type: memory error"],
                     ["Event id=0x80e01801"],
                     ["event_id:  [0x80e01801]"],
                     ["event_id=0x80e01801"]
@@ -4013,10 +4012,6 @@
                     "c. If the alarm severity is \"GENERAL_WARN\", exit the AI task and perform the task again."
                 ]
             },
-            "rule": [
-                {"dst_code": "0x80E01801"},
-                {"dst_code": "0x80E18400"}
-            ],
             "source_file": "NPU_OS",
             "regex": {
                 "in": [
