@@ -44,6 +44,8 @@ type DeviceInterface interface {
 	GetDeviceNetWorkHealth(logicID int32) (uint32, error)
 	GetDeviceUtilizationRate(logicID int32, deviceType common.DeviceType) (uint32, error)
 	GetDeviceUtilizationRateV2(logicID int32) (common.DcmiMultiUtilizationInfo, error)
+	GetDeviceUtilizationRateV2Period(logicID int32) (common.DcmiMultiUtilizationInfo, error)
+	GetDeviceUtilizationRateCommon(logicID int32) (common.DcmiMultiUtilizationInfo, error)
 	GetDeviceTemperature(logicID int32) (int32, error)
 	GetDeviceVoltage(logicID int32) (float32, error)
 	GetDevicePowerInfo(logicID int32) (float32, error)
@@ -154,6 +156,10 @@ type DeviceManager struct {
 	dcmiApiVersion string
 	// mainBoardId used to distinguish between A900A3SuperPod and A9000A3SuperPod
 	mainBoardId uint32
+	// utilizationFuncCache manages utilization function cache
+	utilizationFuncCache utilizationFuncCache
+	// unsupportedDeviceTypeCache manages unsupported device types
+	unsupportedDeviceTypeCache unsupportedDeviceTypeCache
 }
 
 type deviceCommonInitManager struct {
@@ -553,6 +559,11 @@ func (d *DeviceManager) GetDeviceNetWorkHealth(logicID int32) (uint32, error) {
 
 // GetDeviceUtilizationRate get npu device utilization
 func (d *DeviceManager) GetDeviceUtilizationRate(logicID int32, deviceType common.DeviceType) (uint32, error) {
+	// Check if device type is already known to be unsupported
+	if d.unsupportedDeviceTypeCache.isUnsupported(deviceType.Code) {
+		return common.UnRetError, fmt.Errorf("device type %s is not supported (cached)", deviceType.Name)
+	}
+
 	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
 	if err != nil {
 		hwlog.RunLog.Error(err)
@@ -560,6 +571,10 @@ func (d *DeviceManager) GetDeviceUtilizationRate(logicID int32, deviceType commo
 	}
 	rate, err := d.DcMgr.DcGetDeviceUtilizationRate(cardID, deviceID, deviceType)
 	if err != nil {
+		// Check if error indicates device type is unsupported (-8255)
+		if strings.Contains(err.Error(), common.NotSupportErrorCode) {
+			d.unsupportedDeviceTypeCache.markAsUnsupported(deviceType.Code)
+		}
 		return common.UnRetError, err
 	}
 
@@ -571,8 +586,8 @@ func (d *DeviceManager) GetDeviceUtilizationRateV2(logicID int32) (common.DcmiMu
 	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
 	if err != nil {
 		hwlog.RunLog.Error(err)
-		return dcmi.BuildErrNpuMultiUtilizationInfo(), fmt.Errorf("failed to get multi utilization by logicID(%d)",
-			logicID)
+		return dcmi.BuildErrNpuMultiUtilizationInfo(),
+			fmt.Errorf("failed to get cardId and deviceId by logicID(%d)", logicID)
 	}
 	res, err := d.DcMgr.DcGetDeviceUtilizationRateV2(cardID, deviceID)
 	if err != nil {
@@ -580,6 +595,47 @@ func (d *DeviceManager) GetDeviceUtilizationRateV2(logicID int32) (common.DcmiMu
 	}
 
 	return res, nil
+}
+
+// GetDeviceUtilizationRateV2Period get npu device utilization v2 period
+func (d *DeviceManager) GetDeviceUtilizationRateV2Period(logicID int32) (common.DcmiMultiUtilizationInfo, error) {
+	cardID, deviceID, err := d.getCardIdAndDeviceId(logicID)
+	if err != nil {
+		hwlog.RunLog.Error(err)
+		return dcmi.BuildErrNpuMultiUtilizationInfo(),
+			fmt.Errorf("failed to get cardId and deviceId by logicID(%d)", logicID)
+	}
+	res, err := d.DcMgr.DcGetDeviceUtilizationRateV2Period(cardID, deviceID)
+	if err != nil {
+		return dcmi.BuildErrNpuMultiUtilizationInfo(), err
+	}
+
+	return res, nil
+}
+
+// GetDeviceUtilizationRateCommon get npu device utilization common
+func (d *DeviceManager) GetDeviceUtilizationRateCommon(logicID int32) (common.DcmiMultiUtilizationInfo, error) {
+	if fn := d.utilizationFuncCache.get(); fn != nil {
+		return fn(logicID)
+	}
+
+	return d.determineAndCacheUtilizationFunc(logicID)
+}
+
+// determineAndCacheUtilizationFunc determines the best utilization function and caches it
+func (d *DeviceManager) determineAndCacheUtilizationFunc(logicID int32) (common.DcmiMultiUtilizationInfo, error) {
+	fn, res, err := determineUtilizationFunc(logicID, []utilizationCandidate{
+		{fn: d.GetDeviceUtilizationRateV2Period, dcmiApiName: "dcmi_get_device_multi_utilization_rate_period"},
+		{fn: d.GetDeviceUtilizationRateV2, dcmiApiName: "dcmi_get_device_multi_utilization_rate"},
+		{fn: d.getDeviceUtilizationRateV1, dcmiApiName: "dcmi_get_device_utilization_rate"},
+	})
+	d.utilizationFuncCache.set(fn)
+	return res, err
+}
+
+// getDeviceUtilizationRateV1 gets utilization by calling GetDeviceUtilizationRate 4 times
+func (d *DeviceManager) getDeviceUtilizationRateV1(logicID int32) (common.DcmiMultiUtilizationInfo, error) {
+	return getDeviceUtilizationRateV1Common(logicID, d.GetDeviceUtilizationRate)
 }
 
 // GetDeviceTemperature get npu device temperature

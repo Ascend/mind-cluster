@@ -46,6 +46,10 @@ type DeviceManagerV2 struct {
 	dcmiApiVersion string
 	// mainBoardId used to distinguish different products
 	mainBoardId uint32
+	// utilizationFuncCache manages utilization function cache
+	utilizationFuncCache utilizationFuncCache
+	// unsupportedDeviceTypeCache manages unsupported device types
+	unsupportedDeviceTypeCache unsupportedDeviceTypeCache
 }
 
 type deviceCommonInitManagerV2 struct {
@@ -360,8 +364,17 @@ func (d *DeviceManagerV2) GetDeviceNetWorkHealth(logicID int32) (uint32, error) 
 
 // GetDeviceUtilizationRate get npu device utilization
 func (d *DeviceManagerV2) GetDeviceUtilizationRate(logicID int32, deviceType common.DeviceType) (uint32, error) {
+	// Check if device type is already known to be unsupported
+	if d.unsupportedDeviceTypeCache.isUnsupported(deviceType.Code) {
+		return common.UnRetError, fmt.Errorf("device type %s is not supported (cached)", deviceType.Name)
+	}
+
 	rate, err := d.DcMgr.DcGetDeviceUtilizationRate(logicID, deviceType)
 	if err != nil {
+		// Check if error indicates device type is unsupported (-8255)
+		if strings.Contains(err.Error(), common.NotSupportErrorCode) {
+			d.unsupportedDeviceTypeCache.markAsUnsupported(deviceType.Code)
+		}
 		return common.UnRetError, err
 	}
 
@@ -370,8 +383,46 @@ func (d *DeviceManagerV2) GetDeviceUtilizationRate(logicID int32, deviceType com
 
 // GetDeviceUtilizationRateV2 get npu device utilization v2
 func (d *DeviceManagerV2) GetDeviceUtilizationRateV2(logicID int32) (common.DcmiMultiUtilizationInfo, error) {
-	return dcmi.BuildErrNpuMultiUtilizationInfo(), fmt.Errorf("getDeviceUtilizationRateV2 by logicID(%d) %s",
-		logicID, errNotSupportedInDcmiV2)
+	res, err := d.DcMgr.DcGetDeviceUtilizationRateV2(logicID)
+	if err != nil {
+		return dcmi.BuildErrNpuMultiUtilizationInfo(), err
+	}
+
+	return res, nil
+}
+
+// GetDeviceUtilizationRateV2Period get npu device utilization v2 period
+func (d *DeviceManagerV2) GetDeviceUtilizationRateV2Period(logicID int32) (common.DcmiMultiUtilizationInfo, error) {
+	res, err := d.DcMgr.DcGetDeviceUtilizationRateV2Period(logicID)
+	if err != nil {
+		return dcmi.BuildErrNpuMultiUtilizationInfo(), err
+	}
+
+	return res, nil
+}
+
+// GetDeviceUtilizationRateCommon get npu device utilization common
+func (d *DeviceManagerV2) GetDeviceUtilizationRateCommon(logicID int32) (common.DcmiMultiUtilizationInfo, error) {
+	if fn := d.utilizationFuncCache.get(); fn != nil {
+		return fn(logicID)
+	}
+	return d.determineAndCacheUtilizationFunc(logicID)
+}
+
+// determineAndCacheUtilizationFunc determines the best utilization function and caches it
+func (d *DeviceManagerV2) determineAndCacheUtilizationFunc(logicID int32) (common.DcmiMultiUtilizationInfo, error) {
+	fn, res, err := determineUtilizationFunc(logicID, []utilizationCandidate{
+		{fn: d.GetDeviceUtilizationRateV2Period, dcmiApiName: "dcmiv2_get_device_multi_utilization_rate_period"},
+		{fn: d.GetDeviceUtilizationRateV2, dcmiApiName: "dcmiv2_get_device_multi_utilization_rate"},
+		{fn: d.getDeviceUtilizationRateV1, dcmiApiName: "dcmiv2_get_device_utilization_rate"},
+	})
+	d.utilizationFuncCache.set(fn)
+	return res, err
+}
+
+// getDeviceUtilizationRateV1 gets utilization by calling GetDeviceUtilizationRate 4 times
+func (d *DeviceManagerV2) getDeviceUtilizationRateV1(logicID int32) (common.DcmiMultiUtilizationInfo, error) {
+	return getDeviceUtilizationRateV1Common(logicID, d.GetDeviceUtilizationRate)
 }
 
 // GetDeviceTemperature get npu device temperature

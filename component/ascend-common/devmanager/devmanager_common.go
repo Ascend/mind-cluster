@@ -21,6 +21,8 @@ import (
 	"ascend-common/devmanager/dcmi"
 	"errors"
 	"fmt"
+	"strings"
+	"sync"
 	"time"
 )
 
@@ -39,6 +41,14 @@ const (
 	DcmiApiV1 = "dcmi"
 	// DcmiApiV2 for the dcmiv2_xxx api
 	DcmiApiV2 = "dcmiv2"
+)
+
+const (
+	// util index for getDeviceUtilizationRateV1Common
+	aicoreUtilIndex = iota
+	aivUtilIndex
+	npuUtilIndex
+	aicUtilIndex
 )
 
 var deviceCommonSetManagerList = []DeviceCommonSetInterface{
@@ -150,4 +160,113 @@ func AutoInit(dType string, resetTimeout int) (DeviceInterface, error) {
 		hwlog.RunLog.Debugf("auto init product types failed, err: %s", err)
 	}
 	return devMgr, nil
+}
+
+// unsupportedDeviceTypeCache manages unsupported device types for device managers
+type unsupportedDeviceTypeCache struct {
+	unsupported map[int32]bool
+	mu          sync.Mutex
+}
+
+func (c *unsupportedDeviceTypeCache) isUnsupported(deviceTypeCode int32) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.unsupported == nil {
+		return false
+	}
+	return c.unsupported[deviceTypeCode]
+}
+
+func (c *unsupportedDeviceTypeCache) markAsUnsupported(deviceTypeCode int32) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.unsupported == nil {
+		c.unsupported = make(map[int32]bool)
+	}
+	c.unsupported[deviceTypeCode] = true
+}
+
+// utilizationFuncCache manages utilization function cache for device managers
+type utilizationFuncCache struct {
+	fn func(int32) (common.DcmiMultiUtilizationInfo, error)
+	mu sync.Mutex
+}
+
+func (c *utilizationFuncCache) get() func(int32) (common.DcmiMultiUtilizationInfo, error) {
+	c.mu.Lock()
+	fn := c.fn
+	c.mu.Unlock()
+	return fn
+}
+
+func (c *utilizationFuncCache) set(fn func(int32) (common.DcmiMultiUtilizationInfo, error)) {
+	if fn != nil {
+		c.mu.Lock()
+		c.fn = fn
+		c.mu.Unlock()
+	}
+}
+
+// determineUtilizationFunc determines and returns the best utilization function
+type utilizationCandidate struct {
+	fn          func(int32) (common.DcmiMultiUtilizationInfo, error)
+	dcmiApiName string
+}
+
+func determineUtilizationFunc(logicID int32, candidates []utilizationCandidate,
+) (func(int32) (common.DcmiMultiUtilizationInfo, error), common.DcmiMultiUtilizationInfo, error) {
+	for i, candidate := range candidates {
+		res, err := candidate.fn(logicID)
+		if err == nil {
+			hwlog.RunLog.Infof("%s interface is available, will use this interface to get utilization rate", candidate.dcmiApiName)
+			return candidate.fn, res, nil
+		}
+		if i < len(candidates)-1 {
+			hwlog.RunLog.Warnf("utilization func %s failed, try next, err: %v", candidate.dcmiApiName, err)
+		}
+	}
+	return nil, dcmi.BuildErrNpuMultiUtilizationInfo(), fmt.Errorf("all utilization functions failed, logicID(%d)", logicID)
+}
+
+// getDeviceUtilizationRateV1Common gets utilization by calling GetDeviceUtilizationRate 4 times
+func getDeviceUtilizationRateV1Common(logicID int32,
+	getRateFunc func(int32, common.DeviceType) (uint32, error)) (common.DcmiMultiUtilizationInfo, error) {
+
+	deviceTypes := []common.DeviceType{
+		common.AICore,
+		common.VectorCore,
+		common.Overall,
+		common.AICube,
+	}
+
+	results := make([]uint32, len(deviceTypes))
+	errs := make([]error, len(deviceTypes))
+	allFailed := true
+
+	for i, devType := range deviceTypes {
+		results[i], errs[i] = getRateFunc(logicID, devType)
+		if errs[i] == nil {
+			allFailed = false
+			hwlog.ResetErrCnt(devType.Name, logicID)
+		} else {
+			// Don't print error again if it's a cached unsupported device type
+			if !strings.Contains(errs[i].Error(), "is not supported (cached)") {
+				hwlog.RunLog.ErrorfWithLimit(devType.Name, logicID,
+					"get %s utilization rate failed, logicID(%d), err: %v", devType.Name, logicID, errs[i])
+			}
+		}
+	}
+
+	if allFailed {
+		return dcmi.BuildErrNpuMultiUtilizationInfo(), fmt.Errorf("all GetDeviceUtilizationRate calls failed, logicID(%d)", logicID)
+	}
+
+	return common.DcmiMultiUtilizationInfo{
+		AicoreUtil: results[aicoreUtilIndex],
+		AivUtil:    results[aivUtilIndex],
+		NpuUtil:    results[npuUtilIndex],
+		AicUtil:    results[aicUtilIndex],
+	}, nil
 }

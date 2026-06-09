@@ -87,17 +87,9 @@ type baseInfoPreCollectTestCase struct {
 }
 
 func buildBaseInfoPreCollectTestCases() []baseInfoPreCollectTestCase {
-	cases := buildBaseInfoPreCollectBasicTestCases()
-	cases = append(cases, buildBaseInfoPreCollectV2SuccessTestCases()...)
-	cases = append(cases, buildBaseInfoPreCollectV1FallbackTestCases()...)
-	cases = append(cases, buildBaseInfoPreCollectBothFailTestCases()...)
-	return cases
-}
-
-func buildBaseInfoPreCollectBasicTestCases() []baseInfoPreCollectTestCase {
 	return []baseInfoPreCollectTestCase{
 		{
-			name:     "should use v1 api when devType is not 910B or 910A3",
+			name:     "should use v1 api when devType is not 910B, 910A3 or 910A5",
 			devType:  common.Ascend910,
 			chipList: []colcommon.HuaWeiAIChip{{LogicID: testLogicID0}},
 			setupPatches: func(dmgr *devmanager.DeviceManager) *gomonkey.Patches {
@@ -110,83 +102,42 @@ func buildBaseInfoPreCollectBasicTestCases() []baseInfoPreCollectTestCase {
 			},
 		},
 		{
-			name:     "should return early when chipList is empty",
+			name:     "should use common api when devType is 910B",
 			devType:  common.Ascend910B,
-			chipList: []colcommon.HuaWeiAIChip{},
+			chipList: []colcommon.HuaWeiAIChip{{LogicID: testLogicID0}},
 			setupPatches: func(dmgr *devmanager.DeviceManager) *gomonkey.Patches {
 				return gomonkey.ApplyMethodReturn(dmgr, "GetDevType", common.Ascend910B)
 			},
 			expectFunc: func(c *BaseInfoCollector) bool {
 				return c.realGetDeviceUtilizationRateInfoFunc != nil &&
 					reflect.ValueOf(c.realGetDeviceUtilizationRateInfoFunc).Pointer() ==
-						reflect.ValueOf(collectUtilV1).Pointer()
+						reflect.ValueOf(collectUtilCommon).Pointer()
 			},
 		},
-	}
-}
-
-func buildBaseInfoPreCollectV2SuccessTestCases() []baseInfoPreCollectTestCase {
-	return []baseInfoPreCollectTestCase{
 		{
-			name:     "should use v2 api when GetDeviceUtilizationRateV2 succeeds",
-			devType:  common.Ascend910B,
+			name:     "should use common api when devType is 910A3",
+			devType:  common.Ascend910A3,
 			chipList: []colcommon.HuaWeiAIChip{{LogicID: testLogicID0}},
 			setupPatches: func(dmgr *devmanager.DeviceManager) *gomonkey.Patches {
-				patches := gomonkey.NewPatches()
-				patches.ApplyMethodReturn(dmgr, "GetDevType", common.Ascend910B)
-				patches.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRateV2",
-					common.DcmiMultiUtilizationInfo{}, nil)
-				return patches
+				return gomonkey.ApplyMethodReturn(dmgr, "GetDevType", common.Ascend910A3)
 			},
 			expectFunc: func(c *BaseInfoCollector) bool {
 				return c.realGetDeviceUtilizationRateInfoFunc != nil &&
 					reflect.ValueOf(c.realGetDeviceUtilizationRateInfoFunc).Pointer() ==
-						reflect.ValueOf(collectUtilV2).Pointer()
+						reflect.ValueOf(collectUtilCommon).Pointer()
 			},
 		},
-	}
-}
-
-func buildBaseInfoPreCollectV1FallbackTestCases() []baseInfoPreCollectTestCase {
-	return []baseInfoPreCollectTestCase{
 		{
-			name:     "should use v1 api when v2 fails but v1 succeeds",
-			devType:  common.Ascend910B,
+			name:     "should use common api when devType is 910A5",
+			devType:  common.Ascend910A5,
 			chipList: []colcommon.HuaWeiAIChip{{LogicID: testLogicID0}},
 			setupPatches: func(dmgr *devmanager.DeviceManager) *gomonkey.Patches {
-				patches := gomonkey.NewPatches()
-				patches.ApplyMethodReturn(dmgr, "GetDevType", common.Ascend910B)
-				patches.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRateV2",
-					common.DcmiMultiUtilizationInfo{}, errors.New(apiCallFailedMsg))
-				patches.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRate", testAICoreUtil, nil)
-				return patches
+				return gomonkey.ApplyMethodReturn(dmgr, "GetDevType", common.Ascend910A5)
 			},
 			expectFunc: func(c *BaseInfoCollector) bool {
 				return c.realGetDeviceUtilizationRateInfoFunc != nil &&
 					reflect.ValueOf(c.realGetDeviceUtilizationRateInfoFunc).Pointer() ==
-						reflect.ValueOf(collectUtilV1).Pointer()
-			},
-		},
-	}
-}
-
-func buildBaseInfoPreCollectBothFailTestCases() []baseInfoPreCollectTestCase {
-	return []baseInfoPreCollectTestCase{
-		{
-			name:     "should set func to nil when both v2 and v1 fail after retries",
-			devType:  common.Ascend910B,
-			chipList: []colcommon.HuaWeiAIChip{{LogicID: testLogicID0}},
-			setupPatches: func(dmgr *devmanager.DeviceManager) *gomonkey.Patches {
-				patches := gomonkey.NewPatches()
-				patches.ApplyMethodReturn(dmgr, "GetDevType", common.Ascend910B)
-				patches.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRateV2",
-					common.DcmiMultiUtilizationInfo{}, errors.New(apiCallFailedMsg))
-				patches.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRate",
-					uint32(0), errors.New(apiCallFailedMsg))
-				return patches
-			},
-			expectFunc: func(c *BaseInfoCollector) bool {
-				return c.realGetDeviceUtilizationRateInfoFunc == nil
+						reflect.ValueOf(collectUtilCommon).Pointer()
 			},
 		},
 	}
@@ -227,8 +178,8 @@ func buildCollectUtilTestCases() []collectUtilTestCase {
 			name:    "should call realGetDeviceUtilizationRateInfoFunc when it is not nil",
 			logicID: testLogicID0,
 			setupPatches: func(c *BaseInfoCollector, dmgr *devmanager.DeviceManager) *gomonkey.Patches {
-				c.realGetDeviceUtilizationRateInfoFunc = collectUtilV2
-				return gomonkey.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRateV2",
+				c.realGetDeviceUtilizationRateInfoFunc = collectUtilCommon
+				return gomonkey.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRateCommon",
 					common.DcmiMultiUtilizationInfo{
 						AicUtil:    testAicUtil,
 						AivUtil:    testAivUtil,
@@ -358,7 +309,7 @@ func TestCollectUtilV1(t *testing.T) {
 	})
 }
 
-type collectUtilV2TestCase struct {
+type collectUtilCommonTestCase struct {
 	name          string
 	logicID       int32
 	setupPatches  func(*devmanager.DeviceManager) *gomonkey.Patches
@@ -369,13 +320,13 @@ type collectUtilV2TestCase struct {
 	expectError   bool
 }
 
-func buildCollectUtilV2TestCases() []collectUtilV2TestCase {
-	return []collectUtilV2TestCase{
+func buildcollectUtilCommonTestCases() []collectUtilCommonTestCase {
+	return []collectUtilCommonTestCase{
 		{
 			name:    "should collect all utilizations successfully when api succeeds",
 			logicID: testLogicID0,
 			setupPatches: func(dmgr *devmanager.DeviceManager) *gomonkey.Patches {
-				return gomonkey.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRateV2",
+				return gomonkey.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRateCommon",
 					common.DcmiMultiUtilizationInfo{
 						AicUtil:    testAicUtil,
 						AivUtil:    testAivUtil,
@@ -393,7 +344,7 @@ func buildCollectUtilV2TestCases() []collectUtilV2TestCase {
 			name:    "should set zero values when api fails",
 			logicID: testLogicID0,
 			setupPatches: func(dmgr *devmanager.DeviceManager) *gomonkey.Patches {
-				return gomonkey.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRateV2",
+				return gomonkey.ApplyMethodReturn(dmgr, "GetDeviceUtilizationRateCommon",
 					common.DcmiMultiUtilizationInfo{}, errors.New(apiCallFailedMsg))
 			},
 			expectUtil:    0,
@@ -405,9 +356,9 @@ func buildCollectUtilV2TestCases() []collectUtilV2TestCase {
 	}
 }
 
-func TestCollectUtilV2(t *testing.T) {
-	convey.Convey("TestCollectUtilV2", t, func() {
-		for _, tt := range buildCollectUtilV2TestCases() {
+func TestcollectUtilCommon(t *testing.T) {
+	convey.Convey("TestcollectUtilCommon", t, func() {
+		for _, tt := range buildcollectUtilCommonTestCases() {
 			convey.Convey(tt.name, func() {
 				dmgr := &devmanager.DeviceManager{}
 				chip := &chipCache{}
@@ -416,7 +367,7 @@ func TestCollectUtilV2(t *testing.T) {
 					patches = tt.setupPatches(dmgr)
 					defer patches.Reset()
 				}
-				collectUtilV2(tt.logicID, dmgr, chip)
+				collectUtilCommon(tt.logicID, dmgr, chip)
 				convey.So(chip.Utilization, convey.ShouldEqual, tt.expectUtil)
 				convey.So(chip.OverallUtilization, convey.ShouldEqual, tt.expectOverall)
 				convey.So(chip.VectorUtilization, convey.ShouldEqual, tt.expectVector)
