@@ -18,7 +18,6 @@ import (
 	"clusterd/pkg/application/faultmanager"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/device"
-	"clusterd/pkg/domain/dpu"
 	"clusterd/pkg/domain/faultdomain"
 	"clusterd/pkg/domain/node"
 	"clusterd/pkg/domain/switchinfo"
@@ -75,16 +74,12 @@ func Report(ctx context.Context) {
 			case constant.SwitchProcessType:
 				switchArr := switchinfo.GetSafeData(faultmanager.QuerySwitchInfoToReport())
 				updateSwitchInfoCm(switchArr)
-			case constant.DpuProcessType:
-				dpuArr := dpu.GetSafeData(faultmanager.QueryDpuInfoToReport())
-				updateDpuInfoCM(dpuArr)
 			case constant.AllProcessType:
 				deviceArr := device.GetSafeData(faultdomain.AdvanceFaultMapToOriginalFaultMap[*constant.DeviceInfo](
 					faultmanager.QueryDeviceInfoToReport()))
 				nodeArr := node.GetData(faultmanager.QueryNodeInfoToReport())
 				switchArr := switchinfo.GetSafeData(faultmanager.QuerySwitchInfoToReport())
-				dpuArr := dpu.GetSafeData(faultmanager.QueryDpuInfoToReport())
-				updateAllCm(deviceArr, nodeArr, switchArr, dpuArr)
+				updateAllCm(deviceArr, nodeArr, switchArr)
 			default:
 				hwlog.RunLog.Errorf("unhandled type %d", whichToReport)
 			}
@@ -138,11 +133,10 @@ func StopReport() {
 	}
 }
 
-func updateAllCm(deviceArr, nodeArr, switchArr, dpuArr []string) {
+func updateAllCm(deviceArr, nodeArr, switchArr []string) {
 	updateSwitchInfoCm(switchArr)
 	updateNodeInfoCm(nodeArr)
 	updateDeviceInfoCm(deviceArr)
-	updateDpuInfoCM(dpuArr)
 }
 
 func updateSwitchInfoCm(switchArr []string) {
@@ -183,12 +177,6 @@ func updateDeviceInfoCm(deviceArr []string) {
 			cmContent = deviceArr[i]
 		}
 		updateConfig(cmName, cmContent)
-	}
-}
-
-func updateDpuInfoCM(dpuArr []string) {
-	for i := 0; i < len(dpuArr); i++ {
-		updateConfig(constant.ClusterDpuInfo+strconv.Itoa(i), dpuArr[i])
 	}
 }
 

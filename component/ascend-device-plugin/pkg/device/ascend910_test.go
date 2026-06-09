@@ -133,7 +133,7 @@ func mockWriteDeviceInfoDataIntoCM() *gomonkey.Patches {
 	return gomonkey.ApplyMethod(reflect.TypeOf(new(kubeclient.ClientK8s)),
 		"WriteDeviceInfoDataIntoCM", func(_ *kubeclient.ClientK8s,
 			nodeDeviceData *common.NodeDeviceInfoCache, manuallySeparateNPU string,
-			_ common.SwitchFaultInfo, dpuInfo common.DpuInfo, cm string) (*common.NodeDeviceInfoCache, error) {
+			_ common.SwitchFaultInfo, cm string) (*common.NodeDeviceInfoCache, error) {
 			return &common.NodeDeviceInfoCache{}, nil
 		})
 }
@@ -2201,21 +2201,6 @@ func TestIsShouldCheckNet(t *testing.T) {
 			defer patch.Reset()
 			result := manager.isShouldCheckNet(0)
 			convey.So(result, convey.ShouldBeTrue)
-		})
-	})
-}
-
-func TestSetDpu(t *testing.T) {
-	convey.Convey("test SetDpu", t, func() {
-		manager := createFake910Manager()
-		convey.Convey("01-should set dpu info correctly", func() {
-			dpuList := []common.DpuCMData{{Name: "dpu0"}}
-			npuToDpusMap := map[string][]string{"npu0": {"dpu0"}}
-			manager.SetDpu("pcie", dpuList, npuToDpusMap)
-			convey.So(manager.dpu.BusType, convey.ShouldEqual, "pcie")
-			convey.So(manager.dpu.DPUList, convey.ShouldHaveLength, 1)
-			convey.So(manager.dpu.NpuToDpusMap, convey.ShouldHaveLength, 1)
-			convey.So(manager.dpu.UpdateTime, convey.ShouldBeGreaterThan, 0)
 		})
 	})
 }

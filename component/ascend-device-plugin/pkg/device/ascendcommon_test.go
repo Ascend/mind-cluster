@@ -102,7 +102,6 @@ func deepCopyGroupDevice(groupDevice map[string][]*common.NpuDevice) map[string]
 				DeviceName:             npuDevice.DeviceName,
 				Health:                 npuDevice.Health,
 				NetworkHealth:          npuDevice.NetworkHealth,
-				DpuHealth:              npuDevice.DpuHealth,
 				IP:                     npuDevice.IP,
 				LogicID:                npuDevice.LogicID,
 				PhyID:                  npuDevice.PhyID,
@@ -610,7 +609,6 @@ func TestAssembleVirtualDevices(t *testing.T) {
 			DeviceName:    fmt.Sprintf("%s-%d-%d", common.Ascend910vir16, vDevIDNum, phyIDNum),
 			Health:        v1beta1.Healthy,
 			NetworkHealth: v1beta1.Healthy,
-			DpuHealth:     v1beta1.Healthy,
 			LogicID:       logicIDNum,
 			PhyID:         phyIDNum,
 		}
@@ -921,7 +919,6 @@ func TestAssemble310PMixedPhyDevices(t *testing.T) {
 			DeviceName:    fmt.Sprintf("%s-%d", productTypeMap[atlas300VPro], phyIDNum),
 			Health:        v1beta1.Healthy,
 			NetworkHealth: v1beta1.Healthy,
-			DpuHealth:     v1beta1.Healthy,
 			LogicID:       logicIDNum,
 			PhyID:         phyIDNum,
 		}
@@ -1488,40 +1485,6 @@ func TestGetNodeDeviceInfoCache(t *testing.T) {
 	})
 }
 
-// the DpuHealth of a device is SubHealthy, `getDeviceFaults` should return the `DeviceFault`
-func TestAscendToolsGetDpuFaults(t *testing.T) {
-	t.Run("getDpuFaults", func(t *testing.T) {
-		tool := &AscendTools{}
-		device := &common.NpuDevice{
-			DpuHealth:  api.DpuSubHealthy,
-			DeviceName: "Ascend910-0",
-		}
-		eventId := int64(common.DpuSubHealthCode)
-		faultCode := strings.ToUpper(strconv.FormatInt(eventId, common.BaseDec))
-		// For FaultTime compare, should be placed together
-		got := tool.getDpuFaults(device.DeviceName)
-		faultTimeAndLevel := common.FaultTimeAndLevel{
-			FaultTime:  got[0].FaultTimeAndLevelMap[faultCode].FaultTime,
-			FaultLevel: common.NotHandleFault,
-		}
-		faultTimeAndLevelMap := make(map[string]common.FaultTimeAndLevel)
-		faultTimeAndLevelMap[faultCode] = faultTimeAndLevel
-		want := []common.DeviceFault{{
-			FaultType:            common.DpuSubHealth,
-			NPUName:              device.DeviceName,
-			LargeModelFaultLevel: common.NotHandleFault,
-			FaultLevel:           common.NotHandleFault,
-			FaultHandling:        common.NotHandleFault,
-			FaultCode:            faultCode,
-			FaultTimeAndLevelMap: faultTimeAndLevelMap,
-		},
-		}
-		if !reflect.DeepEqual(got, want) {
-			t.Errorf("getDeviceFaults() = %v, want %v", got, want)
-		}
-	})
-}
-
 type filterSoftShareDevicesTestCase struct {
 	name            string
 	mockSupportSoft bool
@@ -1677,8 +1640,7 @@ func TestUpdateNodeDeviceInfoRateLimit(t *testing.T) {
 			ApplyFuncReturn(common.CopyUpgradeFaultCache, common.UpgradeFaultReasonMap[common.LogicId]{}).
 			ApplyPrivateMethod(tool, "writeDeviceInfoCm",
 				func(_ *AscendTools, _ string, _ map[string]string,
-					_ common.UpgradeFaultReasonMap[common.LogicId], _ common.SwitchFaultInfo,
-					_ common.DpuInfo) (bool, error) {
+					_ common.UpgradeFaultReasonMap[common.LogicId], _ common.SwitchFaultInfo) (bool, error) {
 					writeCmCalled = true
 					return true, nil
 				}).
@@ -1746,7 +1708,7 @@ func TestUpdateNodeDeviceInfoRateLimit(t *testing.T) {
 				writeCmCalled = false
 				updateFuncCalled = false
 				condSucceeded = false
-				err := tool.UpdateNodeDeviceInfo(common.DevStatusSet{}, common.DpuInfo{}, tt.updateFunc)
+				err := tool.UpdateNodeDeviceInfo(common.DevStatusSet{}, tt.updateFunc)
 				convey.So(err, convey.ShouldBeNil)
 				convey.So(writeCmCalled, convey.ShouldEqual, tt.wantWriteCm)
 				convey.So(condSucceeded, convey.ShouldEqual, tt.wantCondSucceed)

@@ -26,7 +26,6 @@ import (
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
 	"clusterd/pkg/domain/device"
-	"clusterd/pkg/domain/dpu"
 	"clusterd/pkg/domain/node"
 	"clusterd/pkg/domain/pingmeshconfig"
 	"clusterd/pkg/domain/publicfault"
@@ -36,7 +35,6 @@ import (
 
 var (
 	cmDeviceFuncs    = map[string][]func(*constant.DeviceInfo, *constant.DeviceInfo, string){}
-	cmDpuFuncs       = map[string][]func(*constant.DpuInfoCM, *constant.DpuInfoCM, string){}
 	cmNodeFuncs      = map[string][]func(*constant.NodeInfo, *constant.NodeInfo, string){}
 	cmSwitchFuncs    = map[string][]func(*constant.SwitchInfo, *constant.SwitchInfo, string){}
 	cmPubFaultFuncs  = map[string][]func(*api.PubFaultInfo, *api.PubFaultInfo, string){}
@@ -115,7 +113,6 @@ func StopInformer() {
 // CleanFuncs clean funcs when loss-leader
 func CleanFuncs() {
 	cmDeviceFuncs = map[string][]func(*constant.DeviceInfo, *constant.DeviceInfo, string){}
-	cmDpuFuncs = map[string][]func(*constant.DpuInfoCM, *constant.DpuInfoCM, string){}
 	cmNodeFuncs = map[string][]func(*constant.NodeInfo, *constant.NodeInfo, string){}
 	cmSwitchFuncs = map[string][]func(*constant.SwitchInfo, *constant.SwitchInfo, string){}
 	cmPubFaultFuncs = map[string][]func(*api.PubFaultInfo, *api.PubFaultInfo, string){}
@@ -198,15 +195,6 @@ func AddCmNodeFunc(business string, func1 ...func(*constant.NodeInfo, *constant.
 	}
 
 	cmNodeFuncs[business] = append(cmNodeFuncs[business], func1...)
-}
-
-// AddCmDpuFunc add dpu func, map by business
-func AddCmDpuFunc(business string, func1 ...func(*constant.DpuInfoCM, *constant.DpuInfoCM, string)) {
-	if _, ok := cmDpuFuncs[business]; !ok {
-		cmDpuFuncs[business] = []func(*constant.DpuInfoCM, *constant.DpuInfoCM, string){}
-	}
-
-	cmDpuFuncs[business] = append(cmDpuFuncs[business], func1...)
 }
 
 // AddCmConfigPingMeshFunc add configmap func of pingmesh config
@@ -569,9 +557,6 @@ func cmDeviceHandler(oldObj interface{}, newObj interface{}, operator string) {
 	if _, ok := newCm.Data[api.SwitchInfoCMDataKey]; ok {
 		cmSwitchHandler(oldCm, newCm, operator)
 	}
-	if _, ok := newCm.Data[api.DpuInfoCMDataKey]; ok {
-		cmDpuHandler(oldCm, newCm, operator)
-	}
 }
 
 func cmNodeHandler(oldObj interface{}, newObj interface{}, operator string) {
@@ -639,28 +624,6 @@ func cmSwitchHandler(oldCm *v1.ConfigMap, newCm *v1.ConfigMap, operator string) 
 		}
 		for _, cmFunc := range cmFuncs {
 			cmFunc(oldSwitchInfoForBusiness, newSwitchInfoForBusiness, operator)
-		}
-		index++
-	}
-}
-
-func cmDpuHandler(oldCm *v1.ConfigMap, newCm *v1.ConfigMap, operator string) {
-	var newDpuList *constant.DpuInfoCM
-	var err error
-
-	newDpuList, err = dpu.ParseDpuInfoCM(newCm)
-	if err != nil {
-		hwlog.RunLog.Errorf("%s parse new CM error: %v", api.DpuLogPrefix, err)
-		return
-	}
-	index := 0
-	for _, cmFuncs := range cmDpuFuncs {
-		newDpuListForBusiness := newDpuList
-		if index > 0 {
-			newDpuListForBusiness = dpu.DeepCopy(newDpuList)
-		}
-		for _, cmFunc := range cmFuncs {
-			cmFunc(&constant.DpuInfoCM{}, newDpuListForBusiness, operator)
 		}
 		index++
 	}

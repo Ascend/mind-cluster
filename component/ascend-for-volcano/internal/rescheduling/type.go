@@ -100,8 +100,6 @@ const (
 	CardUnhealthy = "Unhealthy"
 	// CardNetworkUnhealthy represents a network unhealthy card
 	CardNetworkUnhealthy = "NetworkUnhealthy"
-	// CardDpuUnhealthy represents a dpu unhealthy card
-	CardDpuUnhealthy = "DPUUnhealthy"
 	// NodeHealthy represents node is available for scheduling
 	NodeHealthy = "Healthy"
 	// NodeUnhealthy represents node is unhealthy
@@ -110,8 +108,6 @@ const (
 	NodeCardUnhealthy = "CardUnhealthy"
 	// NodeCardNetworkUnhealthy represents node is unhealthy because of card is network unhealthy
 	NodeCardNetworkUnhealthy = "CardNetworkUnhealthy"
-	// NodeCardDpuUnhealthy represents node is unhealthy because of card correspond dpu is unhealthy
-	NodeCardDpuUnhealthy = "CardDpuUnhealthy"
 	// NoFaultJobsErr none fault jobs
 	NoFaultJobsErr = "none fault jobs to be restarted in cache"
 	// JobRecovery Name of cm for recovery
@@ -266,7 +262,6 @@ type FaultNode struct {
 	UpdateTime              int64
 	UnhealthyNPU            []string
 	NetworkUnhealthyNPU     []string
-	DpuUnhealthyNPU         []string
 	IsFaultNode             bool
 	NodeHealthState         string
 	FaultCards              []FaultCard

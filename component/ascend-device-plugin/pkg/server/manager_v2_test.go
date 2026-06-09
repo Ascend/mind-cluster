@@ -29,7 +29,6 @@ import (
 
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device"
-	"Ascend-device-plugin/pkg/device/dpucontrol"
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager"
@@ -95,85 +94,6 @@ type stubDevMgr struct {
 	eidErr   error
 	uboeIP   string
 	uboeErr  error
-}
-
-// TestGetDpuInfo test get npu info
-func TestGetDpuInfo(t *testing.T) {
-	convey.Convey("Test getNpuCorrespDpuInfo", t, func() {
-		hdm := &HwDevManager{
-			dpuManager: &dpucontrol.DpuFilter{},
-		}
-
-		testNpuDevice := &common.NpuDevice{
-			PhyID: 5, // Test physical ID
-		}
-
-		convey.Convey("When NPU with DPU infos is nil", func() {
-			hdm.dpuManager.NpuWithDpuInfos = nil
-
-			ipAddrs, err := hdm.getNpuCorrespDpuInfo(testNpuDevice)
-			convey.So(ipAddrs, convey.ShouldBeNil)
-			convey.So(err, convey.ShouldNotBeNil)
-			convey.So(err.Error(), convey.ShouldEqual, "dpu infos is empty")
-		})
-
-		convey.Convey("When NPU with DPU infos exists", func() {
-			npuId := testNpuDevice.PhyID % common.NpuNum
-			expectedIpAddrs := []string{"10.0.0.1", "10.0.0.2"}
-
-			hdm.dpuManager.NpuWithDpuInfos = []dpucontrol.NpuWithDpuInfo{
-				{
-					NpuId: npuId,
-					DpuInfo: []dpucontrol.BaseDpuInfo{
-						{DpuIP: expectedIpAddrs[0]},
-						{DpuIP: expectedIpAddrs[1]},
-					},
-				},
-				{
-					NpuId: npuId + 1, // Different NPU ID
-					DpuInfo: []dpucontrol.BaseDpuInfo{
-						{DpuIP: "10.0.1.1"},
-					},
-				},
-			}
-
-			convey.Convey("Should return correct DPU IPs for matching NPU ID", func() {
-				ipAddrs, err := hdm.getNpuCorrespDpuInfo(testNpuDevice)
-				convey.So(err, convey.ShouldBeNil)
-				convey.So(ipAddrs, convey.ShouldResemble, expectedIpAddrs)
-			})
-		})
-	})
-}
-
-// TestGetDpuInfo2 test get dpu info part2
-func TestGetDpuInfo2(t *testing.T) {
-	convey.Convey("Test getNpuInfo", t, func() {
-		hdm := &HwDevManager{
-			dpuManager: &dpucontrol.DpuFilter{},
-		}
-		testNpuDevice := &common.NpuDevice{
-			PhyID: 5, // Test physical ID
-		}
-		convey.Convey("When no matching NPU ID found", func() {
-			hdm.dpuManager.NpuWithDpuInfos = []dpucontrol.NpuWithDpuInfo{
-				{
-					NpuId: 99, // Non-matching ID
-					DpuInfo: []dpucontrol.BaseDpuInfo{
-						{DpuIP: "10.0.1.1"},
-					},
-				},
-			}
-
-			expectedNpuId := testNpuDevice.PhyID % common.NpuNum
-			expectedErr := fmt.Errorf("get npu %d correspond dpuinfos error", expectedNpuId)
-
-			ipAddrs, err := hdm.getNpuCorrespDpuInfo(testNpuDevice)
-			convey.So(ipAddrs, convey.ShouldBeNil)
-			convey.So(err, convey.ShouldNotBeNil)
-			convey.So(err.Error(), convey.ShouldEqual, expectedErr.Error())
-		})
-	})
 }
 
 // TestHwDevManagerMethodGetDevManager test hwdev get dev manager
@@ -520,7 +440,7 @@ func TestGetNpuToNicNames_ShouldReturnCachedResult_WhenConfigAlreadyLoaded(t *te
 
 func TestGetROCEAddrList_ShouldReturnEmpty_WhenDeviceNil(t *testing.T) {
 	convey.Convey("TestGetROCEAddrList should return empty when device is nil", t, func() {
-		result := (&HwDevManager{}).getROCEAddrList(nil)
+		result := (&HwDevManager{}).getROCEAddrList(nil, 8)
 		convey.So(result, convey.ShouldBeEmpty)
 	})
 }
@@ -535,70 +455,9 @@ func TestGetROCEAddrList_ShouldReturnAddr_WhenConfigAndInterfaceValid(t *testing
 		patches.ApplyFuncReturn(getInterfaceIPsByPriority, testIPv6Address, nil)
 		defer patches.Reset()
 
-		result := (&HwDevManager{}).getROCEAddrList(dev)
+		result := (&HwDevManager{}).getROCEAddrList(dev, 8)
 		convey.So(len(result), convey.ShouldEqual, 1)
 		convey.So(result[0].AddrType, convey.ShouldEqual, addrTypeIPV6)
 		convey.So(result[0].Addr, convey.ShouldEqual, testIPv6Address)
-	})
-}
-
-func TestGetROCEAddrList_ShouldUseLegacy_WhenConfigNotAvailable(t *testing.T) {
-	hdmType := reflect.TypeOf(&HwDevManager{})
-
-	convey.Convey("TestGetROCEAddrList should use legacy when config not available", t, func() {
-		dev := &common.NpuDevice{PhyID: 0}
-
-		patches := gomonkey.NewPatches()
-		patches.ApplyFuncReturn(getNpuToNicNames, nil, nil)
-		patches.ApplyPrivateMethod(hdmType, "getROCEAddrListLegacy", func(*HwDevManager, *common.NpuDevice) []api.RankAddrItem {
-			return []api.RankAddrItem{{AddrType: addrTypeIPV4, Addr: testIPv4Address}}
-		})
-		defer patches.Reset()
-
-		result := (&HwDevManager{}).getROCEAddrList(dev)
-		convey.So(len(result), convey.ShouldEqual, 1)
-		convey.So(result[0].Addr, convey.ShouldEqual, testIPv4Address)
-	})
-}
-
-func TestGetROCEAddrListLegacy_ShouldReturnAddr_WhenDpuInfoValid(t *testing.T) {
-	hdmType := reflect.TypeOf(&HwDevManager{})
-
-	convey.Convey("TestGetROCEAddrListLegacy should return addr when DPU info valid", t, func() {
-		tests := []struct {
-			name    string
-			ipList  []string
-			wantLen int
-		}{
-			{"single IPv4", []string{testIPv4Address}, 1},
-			{"single IPv6", []string{testIPv6Address}, 1},
-			{"mixed", []string{testIPv4Address, testIPv6Address}, 2},
-		}
-
-		for _, tt := range tests {
-			convey.Convey(tt.name, func() {
-				patches := gomonkey.ApplyPrivateMethod(hdmType, "getNpuCorrespDpuInfo", func(*HwDevManager, *common.NpuDevice) ([]string, error) {
-					return tt.ipList, nil
-				})
-				defer patches.Reset()
-
-				result := (&HwDevManager{}).getROCEAddrListLegacy(&common.NpuDevice{})
-				convey.So(len(result), convey.ShouldEqual, tt.wantLen)
-			})
-		}
-	})
-}
-
-func TestGetROCEAddrListLegacy_ShouldReturnEmpty_WhenDpuInfoError(t *testing.T) {
-	hdmType := reflect.TypeOf(&HwDevManager{})
-
-	convey.Convey("TestGetROCEAddrListLegacy should return empty when DPU info error", t, func() {
-		patches := gomonkey.ApplyPrivateMethod(hdmType, "getNpuCorrespDpuInfo", func(*HwDevManager, *common.NpuDevice) ([]string, error) {
-			return nil, os.ErrNotExist
-		})
-		defer patches.Reset()
-
-		result := (&HwDevManager{}).getROCEAddrListLegacy(&common.NpuDevice{})
-		convey.So(result, convey.ShouldBeEmpty)
 	})
 }

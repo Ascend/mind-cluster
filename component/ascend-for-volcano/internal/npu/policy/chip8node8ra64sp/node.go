@@ -55,9 +55,6 @@ func (tp *chip8node8ra64sp) getUsableTopFromNode(node plugin.NPUNode) ([]int, er
 		return nil, err
 	}
 
-	// Filter DPU fault cards
-	nodeTop = tp.filterDpuFault(nodeTop, node)
-
 	return nodeTop, nil
 }
 

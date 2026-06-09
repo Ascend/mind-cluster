@@ -866,13 +866,13 @@ func (d *DcManager) DcStartHccsPingMesh(cardID int32, deviceID int32, portID int
 	if err := common.IsValidHccspingMeshOperate(operate); err != nil {
 		return fmt.Errorf("operate(%v) is invalid, err: %v", operate, err)
 	}
-	dtsAddrLsit := [ipAddrListLen]C.char{0}
-	for i := 0; i < len(operate.DstAddr) && i < len(dtsAddrLsit); i++ {
-		dtsAddrLsit[i] = C.char(operate.DstAddr[i])
+	dstAddrList := [ipAddrListLen]C.char{0}
+	for i := 0; i < len(operate.DstAddr) && i < len(dstAddrList); i++ {
+		dstAddrList[i] = C.char(operate.DstAddr[i])
 	}
 
 	op := C.struct_dcmi_hccsping_mesh_operate{
-		dst_addr_list: dtsAddrLsit,
+		dst_addr_list: dstAddrList,
 		pkt_size:      C.int(operate.PktSize),
 		pkt_send_num:  C.int(operate.PktSendNum),
 		pkt_interval:  C.int(operate.PktInterval),
@@ -2454,16 +2454,6 @@ func (d *DcManager) DcGetCardElabelV2(cardID int32) (common.ElabelInfo, error) {
 		ManufacturerDate: C.GoString(&elabelInfo.manufacturer_date[0]),
 		SerialNumber:     C.GoString(&elabelInfo.serial_number[0]),
 	}, nil
-}
-
-// DcGetDeviceIdInCard get npu deviceId with cardId for A5
-func (d *DcManager) DcGetDeviceIdInCard(cardID int32) (int32, error) {
-	var cDeviceIdMax, cMcuId, cCpuId C.int
-	if retCode := C.dcmi_get_device_id_in_card(C.int(cardID), &cDeviceIdMax, &cMcuId,
-		&cCpuId); int32(retCode) != common.Success {
-		return 0, fmt.Errorf("cardID(%d):get DeviceId info failed,error code: %v", cardID, retCode)
-	}
-	return int32(cDeviceIdMax), nil
 }
 
 // DcGetMultiDiePolicy get multi die policy

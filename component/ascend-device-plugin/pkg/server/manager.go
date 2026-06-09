@@ -38,7 +38,6 @@ import (
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
-	"Ascend-device-plugin/pkg/device/dpucontrol"
 	"Ascend-device-plugin/pkg/kubeclient"
 	"Ascend-device-plugin/pkg/next/devicefactory/customname"
 	"Ascend-device-plugin/pkg/plugin/builtin"
@@ -78,7 +77,6 @@ type HwDevManager struct {
 	RunMode          string
 	WorkMode         string
 	baseNPUInfo      map[string]*common.NpuBaseInfo
-	dpuManager       *dpucontrol.DpuFilter
 	ManagerLock      sync.Mutex
 	ContainerRuntime string
 	unifiedResetMgr  *UnifiedHotResetManager
@@ -93,7 +91,6 @@ type shareDevResourceQuota struct {
 // NewHwDevManager function is used to new a dev manager.
 func NewHwDevManager(devM devmanager.DeviceInterface) *HwDevManager {
 	var hdm HwDevManager
-	hdm.dpuManager = &dpucontrol.DpuFilter{}
 	if err := hdm.setAscendManager(devM); err != nil {
 		hwlog.RunLog.Errorf("init hw dev manager failed, err: %v", err)
 		return nil
@@ -373,11 +370,6 @@ func (hdm *HwDevManager) addTopologyLabel(newLabelMap map[string]string) {
 }
 
 func (hdm *HwDevManager) getNpuBaseInfo() map[string]*common.NpuBaseInfo {
-	if common.ParamOption.RealCardType == api.Ascend910A5 {
-		if err := hdm.dpuManager.SaveDpuConfToNode(hdm.manager.GetDmgr()); err != nil {
-			hwlog.RunLog.Errorf("%s failed to save dpu info to node, err: %v", api.DpuLogPrefix, err)
-		}
-	}
 	ipMap := make(map[string]*common.NpuBaseInfo, len(hdm.allInfo.AllDevs))
 	for index, dev := range hdm.allInfo.AllDevs {
 		tmpDev := dev
@@ -546,7 +538,6 @@ func (hdm *HwDevManager) updateDeviceHealth(curAllDevs []common.NpuDevice) {
 		if index, exist := lastAllDevs[dev.DeviceName]; exist && index < len(hdm.allInfo.AllDevs) {
 			curAllDevs[i].Health = hdm.allInfo.AllDevs[index].Health
 			curAllDevs[i].NetworkHealth = hdm.allInfo.AllDevs[index].NetworkHealth
-			curAllDevs[i].DpuHealth = hdm.allInfo.AllDevs[index].DpuHealth
 			curAllDevs[i].FaultCodes = hdm.allInfo.AllDevs[index].FaultCodes
 			curAllDevs[i].AlarmRaisedTime = hdm.allInfo.AllDevs[index].AlarmRaisedTime
 			curAllDevs[i].NetworkFaultCodes = hdm.allInfo.AllDevs[index].NetworkFaultCodes
@@ -774,7 +765,6 @@ func deepCopyGroupDevice(groupDevice map[string][]*common.NpuDevice) map[string]
 				DeviceName:             npuDevice.DeviceName,
 				Health:                 npuDevice.Health,
 				NetworkHealth:          npuDevice.NetworkHealth,
-				DpuHealth:              npuDevice.DpuHealth,
 				IP:                     npuDevice.IP,
 				LogicID:                npuDevice.LogicID,
 				PhyID:                  npuDevice.PhyID,
@@ -820,9 +810,6 @@ func (hdm *HwDevManager) pluginNotify(classifyDev []*common.NpuDevice, devType s
 func (hdm *HwDevManager) notifyToK8s(ctx context.Context, initTime *time.Time) {
 	oldGroupDevice := deepCopyGroupDevice(hdm.groupDevice)
 	hdm.manager.UpdateHealth(hdm.groupDevice, hdm.allInfo.AICoreDevs, hdm.RunMode)
-	if hdm.manager.GetDmgr().GetDevType() == api.Ascend910A5 {
-		hdm.updateDpuHealthy(hdm.groupDevice)
-	}
 
 	isDevStateChange := hdm.manager.GetChange(hdm.groupDevice, oldGroupDevice)
 

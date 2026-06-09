@@ -19,7 +19,6 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/domain/device"
-	"clusterd/pkg/domain/dpu"
 	"clusterd/pkg/domain/node"
 	"clusterd/pkg/domain/switchinfo"
 	"clusterd/pkg/interface/kube"
@@ -62,7 +61,7 @@ func TestUpdateCmWithEmpty(t *testing.T) {
 				clientSet.CoreV1().ConfigMaps(cm.Namespace).Create(context.TODO(), cm, metav1.CreateOptions{})
 			})
 			defer mockUpdateConfig.Reset()
-			updateAllCm([]string{"device"}, []string{"node"}, []string{"switch"}, []string{"dpu"})
+			updateAllCm([]string{"device"}, []string{"node"}, []string{"switch"})
 			cm, err := clientSet.CoreV1().ConfigMaps("vcjob").Get(context.TODO(),
 				"test-cm", metav1.GetOptions{})
 			convey.So(err, convey.ShouldBeNil)
@@ -92,7 +91,6 @@ func TestReport(t *testing.T) {
 		updateChan <- constant.DeviceProcessType
 		updateChan <- constant.NodeProcessType
 		updateChan <- constant.SwitchProcessType
-		updateChan <- constant.DpuProcessType
 
 		go Report(ctx)
 		time.Sleep(time2s)
@@ -112,12 +110,9 @@ func TestUpdateAllCm(t *testing.T) {
 		switchArr := switchinfo.GetSafeData(map[string]*constant.SwitchInfo{
 			"test": {},
 		})
-		dpuArr := dpu.GetSafeData(map[string]*constant.DpuInfoCM{
-			"test": {},
-		})
 		gomonkey.ApplyFunc(kube.UpdateConfigMap, func(cm *v1.ConfigMap) (*v1.ConfigMap, error) {
 			return nil, nil
 		})
-		updateAllCm(deviceArr, nodeArr, switchArr, dpuArr)
+		updateAllCm(deviceArr, nodeArr, switchArr)
 	})
 }

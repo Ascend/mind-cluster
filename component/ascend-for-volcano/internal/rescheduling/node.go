@@ -109,12 +109,6 @@ func (fNode *FaultNode) getNetworkUnhealthyCardsFromDeviceInfo(node *plugin.NPUN
 	return fNode.getNodeNPUsByKey(node, networkUnhealthyCardName)
 }
 
-// getDpuUnhealthyCardsFromDeviceInfo get dpuUnhealthyCard from device info
-func (fNode *FaultNode) getDpuUnhealthyCardsFromDeviceInfo(node *plugin.NPUNode) ([]string, error) {
-	dpuUnhealthyCardName := fmt.Sprintf("%s-%s", fNode.NPUName, CardDpuUnhealthy) // ["Ascend910-1"]
-	return fNode.getNodeNPUsByKey(node, dpuUnhealthyCardName)
-}
-
 func (fCard *FaultCard) isCardUnhealthy(unHealthyList []string) bool {
 	return util.IsSliceContain(fCard.NPUName, unHealthyList)
 }
@@ -146,15 +140,6 @@ func (fNode *FaultNode) updateFaultNodesFromDeviceInfo(node *plugin.NPUNode) {
 	if len(tmpNetworkUnhealthyNPUs) > 0 {
 		klog.V(util.LogInfoLev).Infof("node %s Network-unhealthy cards from device info: %v",
 			node.Name, tmpNetworkUnhealthyNPUs)
-	}
-
-	tmpDpuUnhealthyNPUs, err := fNode.getDpuUnhealthyCardsFromDeviceInfo(node)
-	if err != nil {
-		klog.V(util.LogWarningLev).Infof("getDpuUnhealthyCardsFromDeviceInfo: %s", util.SafePrint(err))
-	}
-	fNode.setDpuUnhealthyNPUList(tmpDpuUnhealthyNPUs)
-	if len(tmpDpuUnhealthyNPUs) > 0 {
-		klog.V(util.LogInfoLev).Infof("node %s DPU unhealthy cards from device info: %v", node.Name, tmpDpuUnhealthyNPUs)
 	}
 
 	deviceFaultReason, err := fNode.getNodeDeviceFaultFromDeviceInfo(node)
@@ -285,10 +270,6 @@ func (fNode *FaultNode) setNetworkUnhealthyNPUList(value []string) {
 	fNode.NetworkUnhealthyNPU = value
 }
 
-func (fNode *FaultNode) setDpuUnhealthyNPUList(value []string) {
-	fNode.DpuUnhealthyNPU = value
-}
-
 func (fNode *FaultNode) setFaultCards(value []FaultCard) {
 	fNode.FaultCards = value
 }
@@ -320,7 +301,6 @@ func newFaultNodeDefault(nodeName string, updateTime int64) *FaultNode {
 		UpdateTime:          updateTime,
 		UnhealthyNPU:        nil,
 		NetworkUnhealthyNPU: nil,
-		DpuUnhealthyNPU:     nil,
 		IsFaultNode:         false,
 		NodeHealthState:     NodeHealthy,
 		FaultCards:          nil,

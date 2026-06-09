@@ -105,13 +105,16 @@ func (hdm *HwDevManager) getLevelList(dev *common.NpuDevice) []api.RankLevel {
 		hwlog.RunLog.Error("input parameter dev is empty")
 		return nil
 	}
-	npuBase.productInfo = hdm.getProductInfo()
+	if npuBase.productInfo = hdm.getProductInfo(); npuBase.productInfo == nil {
+		return nil
+	}
 	if err := npuBase.SetUrmaDeviceInfoByHdm(hdm, dev); err != nil {
 		hwlog.RunLog.Errorf("set urma device info by hdm failed for LogicID(%d) phyID(%d), err: %v",
 			dev.LogicID, dev.PhyID, err)
 		// a5 standard card no mesh scene, there is no urma device and eid info, should generate rank table level_list
 	}
 
+	maxNpuCount := npuBase.productInfo.maxNpuCount
 	infoKeyArr := npuBase.getRankLevelInfoKeyArr()
 	levelList := make([]api.RankLevel, 0)
 	for level := 0; level < len(infoKeyArr); level++ {
@@ -119,7 +122,7 @@ func (hdm *HwDevManager) getLevelList(dev *common.NpuDevice) []api.RankLevel {
 		if infoKey == "" {
 			continue
 		}
-		rankAddrList := hdm.getRankAddrList(level, dev)
+		rankAddrList := hdm.getRankAddrList(level, dev, maxNpuCount)
 		if len(rankAddrList) == 0 {
 			hwlog.RunLog.Warnf("rank addr list is empty for LogicID(%d) phyID(%d) level(%d) netType(%s)",
 				dev.LogicID, dev.PhyID, level, infoKey)
@@ -141,7 +144,7 @@ func (hdm *HwDevManager) getLevelList(dev *common.NpuDevice) []api.RankLevel {
 }
 
 // getRankAddrList for get the rank addr list in rant table for A5
-func (hdm *HwDevManager) getRankAddrList(level int, dev *common.NpuDevice) []api.RankAddrItem {
+func (hdm *HwDevManager) getRankAddrList(level int, dev *common.NpuDevice, maxNpuNum int) []api.RankAddrItem {
 	if dev == nil {
 		return nil
 	}
@@ -152,7 +155,7 @@ func (hdm *HwDevManager) getRankAddrList(level int, dev *common.NpuDevice) []api
 
 	// RoCE：same logic for both server and pod
 	if level == api.RankLevel3 {
-		return hdm.getROCEAddrList(dev)
+		return hdm.getROCEAddrList(dev, maxNpuNum)
 	}
 
 	// Standcard: keep the original logic
@@ -315,22 +318,21 @@ func getNpuToNicNames(npuId int) ([]string, error) {
 }
 
 // getROCEAddrList get RoCE addr list of device in A5
-func (hdm *HwDevManager) getROCEAddrList(dev *common.NpuDevice) []api.RankAddrItem {
+func (hdm *HwDevManager) getROCEAddrList(dev *common.NpuDevice, maxNpuNum int) []api.RankAddrItem {
 	if dev == nil {
 		hwlog.RunLog.Error("device is nil")
 		return []api.RankAddrItem{}
 	}
-
-	npuId := int(dev.PhyID % common.NpuNum)
+	npuId := int(dev.PhyID % int32(maxNpuNum))
 	nicNames, err := getNpuToNicNames(npuId)
 	if err != nil {
-		hwlog.RunLog.Warnf("get npu %d nic names failed: %v, using legacy dpu info", npuId, err)
-		return hdm.getROCEAddrListLegacy(dev)
+		hwlog.RunLog.Warnf("get npu %d nic names failed: %v, returning empty addr list", npuId, err)
+		return []api.RankAddrItem{}
 	}
 
 	if nicNames == nil {
-		hwlog.RunLog.Warnf("npu-nic-mapping config not found, using legacy dpu info")
-		return hdm.getROCEAddrListLegacy(dev)
+		hwlog.RunLog.Warnf("npu-nic-mapping config not found, returning empty addr list")
+		return []api.RankAddrItem{}
 	}
 
 	ip, err := getInterfaceIPsByPriority(nicNames)
@@ -350,26 +352,6 @@ func (hdm *HwDevManager) getROCEAddrList(dev *common.NpuDevice) []api.RankAddrIt
 			PlaneId:  api.DefaultRandAddrPlaneID,
 		},
 	}
-}
-
-func (hdm *HwDevManager) getROCEAddrListLegacy(dev *common.NpuDevice) []api.RankAddrItem {
-	dpuIPList, err := hdm.getNpuCorrespDpuInfo(dev)
-	if err != nil {
-		hwlog.RunLog.Errorf("get roce addr list failed, err: %v", err)
-		return []api.RankAddrItem{}
-	}
-
-	rankAddrList := make([]api.RankAddrItem, 0)
-	for _, ip := range dpuIPList {
-		addrType := getIPAddressType(ip)
-		rankAddrList = append(rankAddrList, api.RankAddrItem{
-			AddrType: addrType,
-			Addr:     ip,
-			Ports:    []string{},
-			PlaneId:  api.DefaultRandAddrPlaneID,
-		})
-	}
-	return rankAddrList
 }
 
 // GetDevManager get device manager instance
@@ -411,23 +393,4 @@ func (hdm *HwDevManager) SetNodeInternalIPInK8s(node *v1.Node) {
 	}
 	hdm.manager.SetNodeInternalIPInK8s(internalIP)
 	return
-}
-
-// getNpuCorrespDpuInfo get npu dpu info
-func (hdm *HwDevManager) getNpuCorrespDpuInfo(dev *common.NpuDevice) ([]string, error) {
-	if hdm.dpuManager.NpuWithDpuInfos == nil {
-		return nil, fmt.Errorf("dpu infos is empty")
-	}
-	npuPhyId := dev.PhyID
-	npuId := npuPhyId % common.NpuNum
-	var ipAddrs []string
-	for _, NpuWithDpuInfo := range hdm.dpuManager.NpuWithDpuInfos {
-		if NpuWithDpuInfo.NpuId == npuId {
-			for _, DpuInfo := range NpuWithDpuInfo.DpuInfo {
-				ipAddrs = append(ipAddrs, DpuInfo.DpuIP)
-			}
-			return ipAddrs, nil
-		}
-	}
-	return nil, fmt.Errorf("get npu %d correspond dpuinfos error", npuId)
 }
