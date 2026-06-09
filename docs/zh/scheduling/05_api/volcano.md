@@ -2,19 +2,9 @@
 
 ## 获取集群调度组件信息<a name="ZH-CN_TOPIC_0000002479386860"></a>
 
-- VolcanoJob接口由开源组件Volcano提供，MindCluster修改了VolcanoJob接口的Annotations字段，如[表1](#table177621954014)所示。其他接口未改动，了解开源Volcano的详细说明请参见Volcano开源社区。
-
-    **表 1**  Annotations参数说明
-
-    <a name="table177621954014"></a>
-
-    |参数名称|说明|取值|
-    |--|--|--|
-    |distributed|由Resilience Controller写入和使用，标记job是否为分布式任务。|true|
-
 - 对于volcano-scheduler和volcano-controller组件Pod开放的接口（开源组件本身定义），做出如下说明。
 
-    **表 2** 集群调度Volcano组件开放接口列表
+    **表 1** 集群调度Volcano组件开放接口列表
 
     <a name="zh-cn_topic_0000001446965056_table173071368477"></a>
 
@@ -37,8 +27,7 @@
 |名称|作用|取值|使用组件|
 |--|--|--|--|
 |ring-controller.atlas|标识Atlas的Pod|<ul><li>ascend-npu</li><li>ascend-910</li><li>ascend-<span><em>{xxx}</em></span>b</li></ul>|Ascend Device Plugin、Ascend Operator、Volcano|
-|fault-scheduling|任务故障重调度开关|grace、force、off|Volcano、Resilience Controller|
-|elastic-scheduling|任务弹性调度开关|on|Volcano、Resilience Controller|
+|fault-scheduling|任务故障重调度开关|grace、force、off|Volcano|
 |fault-retry-times|任务发生业务面故障可以重调度的次数|0-100|Volcano、Ascend Operator|
 |tor-affinity|交换机亲和性策略|<ul><li>normal-schema</li><li>large-model-schema</li><li>null</li></ul>|Volcano|
 |npu-310-strategy|标记推理服务器（插Atlas 300I 推理卡）调度策略|<ul><li>card</li><li>chip</li></ul>|Volcano|
@@ -215,15 +204,6 @@
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p5358950291"><a name="p5358950291"></a><a name="p5358950291"></a>grace、force、off</p>
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p10358105012913"><a name="p10358105012913"></a><a name="p10358105012913"></a><span id="ph635812501497"><a name="ph635812501497"></a><a name="ph635812501497"></a>Volcano</span>、<span id="ph183581350898"><a name="ph183581350898"></a><a name="ph183581350898"></a>Resilience Controller</span></p>
-</td>
-</tr>
-<tr id="row03591501297"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p143599501394"><a name="p143599501394"></a><a name="p143599501394"></a>elastic-scheduling</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="p1235917508916"><a name="p1235917508916"></a><a name="p1235917508916"></a>任务弹性调度开关</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="p1135910503918"><a name="p1135910503918"></a><a name="p1135910503918"></a>on</p>
-</td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="p1735916501991"><a name="p1735916501991"></a><a name="p1735916501991"></a><span id="ph93613501992"><a name="ph93613501992"></a><a name="ph93613501992"></a>Resilience Controller</span>、<span id="ph53614501198"><a name="ph53614501198"></a><a name="ph53614501198"></a>Volcano</span></p>
 </td>
 </tr>
 <tr id="row103614504912"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p6361950695"><a name="p6361950695"></a><a name="p6361950695"></a>fault-retry-times</p>
