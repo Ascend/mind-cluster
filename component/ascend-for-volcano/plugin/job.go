@@ -260,7 +260,7 @@ func InitJobNPUTasks(vcJob *api.JobInfo) map[api.TaskID]util.NPUTask {
 			NodeName:    taskInf.NodeName,
 			Annotation:  taskInf.Pod.Annotations,
 			PodStatus:   taskInf.Pod.Status.Phase,
-			TaskSpecKey: taskInf.GetTaskSpecKey(),
+			TaskSpecKey: getTaskID(taskInf.Pod),
 		}
 		if taskInf.Pod.DeletionTimestamp != nil {
 			terminatingPodNum++
@@ -269,7 +269,19 @@ func InitJobNPUTasks(vcJob *api.JobInfo) map[api.TaskID]util.NPUTask {
 	if terminatingPodNum != 0 {
 		return resultMap
 	}
+
 	return updateTaskNotUsedHcclRankIndex(resultMap, usedRanks)
+}
+
+func getTaskID(pod *v1.Pod) api.TaskID {
+	if pod == nil {
+		return ""
+	}
+	if ts, found := pod.Annotations[util.TaskSpecAnno]; found && len(ts) != 0 {
+		return api.TaskID(ts)
+	}
+
+	return ""
 }
 
 // initSelfPluginByJobInfo init job's policyHandler, the deal plugin.

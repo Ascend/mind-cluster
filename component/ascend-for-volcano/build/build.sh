@@ -1,6 +1,6 @@
 #!/bin/bash
 # Perform build volcano-huawei-npu-scheduler plugin
-# Copyright @ Huawei Technologies CO., Ltd. 2020-2022. All rights reserved
+# Copyright @ Huawei Technologies CO., Ltd. 2020-2026. All rights reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,21 +17,25 @@
 
 set -e
 
-# BASE_VER only support v1.7.0 or v1.9.0
+# BASE_VER supports v1.7.0, v1.9.0, and 1.10+
 if [ ! -n "$1" ]; then
-    BASE_VER=v1.7.0
+    BASE_VER=v1.12.0
 else
     BASE_VER=$1
 fi
 
 echo "Build Version is ${BASE_VER}"
 
-DEFAULT_VER='v6.0.0'
+DEFAULT_VER='v26.1.0'
 TOP_DIR=${GOPATH}/src/volcano.sh/volcano/
 BASE_PATH=${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/
 CMD_PATH=${GOPATH}/src/volcano.sh/volcano/cmd/
 PKG_PATH=volcano.sh/volcano/pkg
 DATE=$(date "+%Y-%m-%d %H:%M:%S")
+
+function is_1.9_plus() {
+    [[ "$BASE_VER" != "v1.7.0" ]]
+}
 
 function parse_version() {
     version_file="${TOP_DIR}"/service_config.ini
@@ -72,13 +76,11 @@ function df_print_agreement() {
     DOCKERFILES=("${BASE_PATH}"/output/Dockerfile*)
     for dockerfile in "${DOCKERFILES[@]}"; do
         if [ -f "$dockerfile" ]; then
-            # Insert COPY agreement.txt with a blank line after FROM
             if ! grep -q "^COPY agreement.txt /usr/local/" "$dockerfile"; then
                 sed -i '/^COPY /a COPY agreement.txt /usr/local/' "$dockerfile"
                 echo "Inserted COPY agreement.txt after COPY in ${dockerfile}"
             fi
 
-            # Add ENTRYPOINT at the end with leading newline
             if ! grep -q 'ENTRYPOINT \["/bin/sh", "-c", "cat /usr/local/agreement.txt; exec /bin/sh"\]' "$dockerfile"; then
                 printf '\n%s\n' 'ENTRYPOINT ["/bin/sh", "-c", "cat /usr/local/agreement.txt; exec /bin/sh"]' >> "$dockerfile"
                 echo "Added ENTRYPOINT to ${dockerfile}"
@@ -95,6 +97,45 @@ function replace_code() {
     fi
 }
 
+function replace_klog_version() {
+    cd $BASE_PATH
+    find . -type f ! -path './.git*/*' ! -path './doc/*' -exec sed -i 's/k8s.io\/klog\"/k8s.io\/klog\/v2\"/g' {} +
+}
+
+function replace_node_predicate() {
+    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
+    sed -i "s/api.NodeInfo) error {/api.NodeInfo) (\[\]\*api.Status, error) {/g" "$REPLACE_FILE"
+    sed -i "s/return predicateErr/return \[\]\*api.Status{}, predicateErr/g" "$REPLACE_FILE"
+}
+
+function replace_node_score() {
+    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/actions/allocate/allocate.go"
+    if [[ "$BASE_VER" == "v1.7.0" ]];then
+          sed -i '
+          /case len(candidateNodes) == 1:/ {
+              N
+              N
+              s/case len(candidateNodes) == 1:.*\n.*\n.*/            default:/
+          }' "$REPLACE_FILE"
+      return
+    fi
+    sed -i '
+    /case len(nodes) == 1:/ {
+        N
+        N
+        s/case len(nodes) == 1:.*\n.*\n.*/            default:/
+    }' "$REPLACE_FILE"
+}
+
+function replace_k8s_version() {
+    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/go.mod"
+    if [[ "$BASE_VER" == "v1.7.0" ]];then
+      sed -i "s/1.25.0/1.25.14/g" "$REPLACE_FILE"
+      return
+    fi
+    echo "volcano version is $BASE_VER, will not change go.mod codes"
+}
+
 function build() {
     echo "Build Architecture is" "${REL_ARCH}"
 
@@ -109,8 +150,8 @@ function build() {
     export CGO_CFLAGS="-fstack-protector-all -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
     export CGO_CPPFLAGS="-fstack-protector-all -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
     export CC=/usr/local/musl/bin/musl-gcc
-    export CGO_ENABLED=0
 
+    export CGO_ENABLED=1
     go build -mod=mod -buildmode=pie -ldflags "-s -linkmode=external -extldflags=-Wl,-z,now
       -X '${PKG_PATH}/version.Built=${DATE}' -X '${PKG_PATH}/version.Version=${BASE_VER}'" \
       -o vc-controller-manager "${CMD_PATH}"/controller-manager
@@ -139,56 +180,18 @@ function build() {
     chmod 400 "${BASE_PATH}"/output/volcano-*.yaml
 }
 
-function replace_node_predicate() {
-    if [[ "$BASE_VER" == "v1.7.0" ]];then
-      return
-    fi
-    cd $BASE_PATH
-    find . -type f ! -path './.git*/*' ! -path './doc/*' -exec sed -i 's/k8s.io\/klog\"/k8s.io\/klog\/v2\"/g' {} +
-    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
-    sed -i "s/api.NodeInfo) error {/api.NodeInfo) (\[\]\*api.Status, error) {/g" "$REPLACE_FILE"
-    sed -i "s/return predicateErr/return \[\]\*api.Status{}, predicateErr/g" "$REPLACE_FILE"
-}
-
-function replace_node_score() {
-    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/actions/allocate/allocate.go"
-    if [[ "$BASE_VER" == "v1.7.0" ]];then
-          sed -i '
-          /case len(candidateNodes) == 1:/ {
-              N
-              N
-              s/case len(candidateNodes) == 1:.*\n.*\n.*/            default:/
-          }' "$REPLACE_FILE"
-      return
-    fi
-    if [[ "$BASE_VER" == "v1.9.0" ]];then
-          sed -i '
-          /case len(nodes) == 1:/ {
-              N
-              N
-              s/case len(nodes) == 1:.*\n.*\n.*/            default:/
-          }' "$REPLACE_FILE"
-       return
-    fi
-    echo "volcano version is $BASE_VER, will not change allocate.go codes"
-}
-
-function replace_k8s_version() {
-    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/go.mod"
-    if [[ "$BASE_VER" == "v1.7.0" ]];then
-      sed -i "s/1.25.0/1.25.14/g" "$REPLACE_FILE"
-      return
-    fi
-    echo "volcano version is $BASE_VER, will not change go.mod codes"
-}
-
 function main() {
   clean
   copy_yaml
   copy_agreement
   df_print_agreement
   replace_code
-  replace_node_predicate
+  if is_1.9_plus; then
+    replace_klog_version
+  fi
+  if [[ "$BASE_VER" == "v1.9.0" ]]; then
+    replace_node_predicate
+  fi
   replace_node_score
   replace_k8s_version
   build
