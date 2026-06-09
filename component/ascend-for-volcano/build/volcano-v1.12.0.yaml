@@ -12,258 +12,6 @@ metadata:
   labels:
     kubernetes.io/metadata.name: volcano-monitoring
 ---
-# Source: volcano/templates/admission.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: volcano-admission
-  namespace: volcano-system
----
-# Source: volcano/templates/admission.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: volcano-admission-configmap
-  namespace: volcano-system
-data:
-  volcano-admission.conf: |
-    #resourceGroups:
-    #- resourceGroup: management                    # set the resource group name
-    #  object:
-    #    key: namespace                             # set the field and the value to be matched
-    #    value:
-    #    - mng-ns-1
-    #  schedulerName: default-scheduler             # set the scheduler for patching
-    #  tolerations:                                 # set the tolerations for patching
-    #  - effect: NoSchedule
-    #    key: taint
-    #    operator: Exists
-    #  labels:
-    #    volcano.sh/nodetype: management           # set the nodeSelector for patching
-    #- resourceGroup: cpu
-    #  object:
-    #    key: annotation
-    #    value:
-    #    - "volcano.sh/resource-group: cpu"
-    #  schedulerName: volcano
-    #  labels:
-    #    volcano.sh/nodetype: cpu
-    #- resourceGroup: gpu                          # if the object is unsetted, default is:  the key is annotation,
-    #  schedulerName: volcano                      # the annotation key is fixed and is "volcano.sh/resource-group", The corresponding value is the resourceGroup field
-    #  labels:
-    #    volcano.sh/nodetype: gpu
----
-# Source: volcano/templates/admission.yaml
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: volcano-admission
-rules:
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["admissionregistration.k8s.io"]
-    resources: ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
-    verbs: ["get", "list", "watch", "create", "update"]
-  # Rules below is used generate admission service secret
-  - apiGroups: ["certificates.k8s.io"]
-    resources: ["certificatesigningrequests"]
-    verbs: ["get", "list", "create", "delete"]
-  - apiGroups: ["certificates.k8s.io"]
-    resources: ["certificatesigningrequests/approval"]
-    verbs: ["create", "update"]
-  - apiGroups: ["scheduling.incubator.k8s.io", "scheduling.volcano.sh"]
-    resources: ["queues"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["services"]
-    verbs: ["get"]
-  - apiGroups: ["scheduling.incubator.k8s.io", "scheduling.volcano.sh"]
-    resources: ["podgroups"]
-    verbs: ["get", "list", "watch"]
----
-# Source: volcano/templates/admission.yaml
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: volcano-admission-role
-subjects:
-  - kind: ServiceAccount
-    name: volcano-admission
-    namespace: volcano-system
-roleRef:
-  kind: ClusterRole
-  name: volcano-admission
-  apiGroup: rbac.authorization.k8s.io
----
-# Source: volcano/templates/admission.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: volcano-admission
-  name: volcano-admission-service
-  namespace: volcano-system
-spec:
-  ports:
-    - port: 443
-      protocol: TCP
-      targetPort: 8443
-  selector:
-    app: volcano-admission
-  sessionAffinity: None
----
-# Source: volcano/templates/admission.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: volcano-admission
-  name: volcano-admission
-  namespace: volcano-system
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: volcano-admission
-  template:
-    metadata:
-      labels:
-        app: volcano-admission
-    spec:
-      securityContext:
-        seLinuxOptions:
-          level: s0:c123,c456
-        seccompProfile:
-          type: RuntimeDefault
-      serviceAccount: volcano-admission
-      priorityClassName: system-cluster-critical
-      containers:
-        - args:
-            - --enabled-admission=/jobs/mutate,/jobs/validate,/podgroups/validate,/queues/mutate,/queues/validate,/hypernodes/validate
-            - --tls-cert-file=/admission.local.config/certificates/tls.crt
-            - --tls-private-key-file=/admission.local.config/certificates/tls.key
-            - --ca-cert-file=/admission.local.config/certificates/ca.crt
-            - --admission-conf=/admission.local.config/configmap/volcano-admission.conf
-            - --webhook-namespace=volcano-system
-            - --webhook-service-name=volcano-admission-service
-            - --enable-healthz=true
-            - --logtostderr
-            - --port=8443
-            - -v=4
-            - 2>&1
-          image: docker.io/volcanosh/vc-webhook-manager:v1.12.3
-          imagePullPolicy: Always
-          name: admission
-          volumeMounts:
-            - mountPath: /admission.local.config/certificates
-              name: admission-certs
-              readOnly: true
-            - mountPath: /admission.local.config/configmap
-              name: admission-config
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              add:
-              - DAC_OVERRIDE
-              drop:
-              - ALL
-            runAsNonRoot: true
-            runAsUser: 1000
-      volumes:
-        - name: admission-certs
-          secret:
-            defaultMode: 420
-            secretName: volcano-admission-secret
-        - name: admission-config
-          configMap:
-            name: volcano-admission-configmap
----
-# Source: volcano/templates/admission-init.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: volcano-admission-init
-  namespace: volcano-system
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-    "helm.sh/hook-weight": "0"
----
-# Source: volcano/templates/admission-init.yaml
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: volcano-admission-init
-  namespace: volcano-system
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-    "helm.sh/hook-weight": "0"
-rules:
-  - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["create", "patch", "get"]
----
-# Source: volcano/templates/admission-init.yaml
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: volcano-admission-init-role
-  namespace: volcano-system
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-    "helm.sh/hook-weight": "0"
-subjects:
-  - kind: ServiceAccount
-    name: volcano-admission-init
-    namespace: volcano-system
-roleRef:
-  kind: Role
-  name: volcano-admission-init
-  apiGroup: rbac.authorization.k8s.io
----
-# Source: volcano/templates/admission-init.yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: volcano-admission-init
-  namespace: volcano-system
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-    "helm.sh/hook-weight": "5" # set a higher weight to reserve buffers.
-  labels:
-    app: volcano-admission-init
-spec:
-  backoffLimit: 3
-  template:
-    spec:
-      securityContext:
-        seLinuxOptions:
-          level: s0:c123,c456
-        seccompProfile:
-          type: RuntimeDefault
-      serviceAccountName: volcano-admission-init
-      priorityClassName: system-cluster-critical
-      restartPolicy: Never
-      containers:
-        - name: main
-          image: docker.io/volcanosh/vc-webhook-manager:v1.12.3
-          imagePullPolicy: Always
-          command: ["./gen-admission-secret.sh", "--service", "volcano-admission-service", "--namespace",
-                    "volcano-system", "--secret", "volcano-admission-secret"]
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              add:
-              - DAC_OVERRIDE
-              drop:
-              - ALL
-            runAsNonRoot: true
-            runAsUser: 1000
----
 # Source: volcano/templates/batch_v1alpha1_job.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -4544,42 +4292,81 @@ spec:
         app: volcano-controller
     spec:
       securityContext:
+        fsGroup: 9000
         seLinuxOptions:
           level: s0:c123,c456
         seccompProfile:
           type: RuntimeDefault
       serviceAccount: volcano-controllers
       priorityClassName: system-cluster-critical
+      nodeSelector:
+        masterselector: dls-master-node
+      initContainers:
+        - name: init-log-setup
+          image: volcanosh/vc-controller-manager:v1.9.0
+          command: ['sh', '-c', 'mkdir -p /var/log/mindx-dl && chmod 755 /var/log/mindx-dl && chown root:root /var/log/mindx-dl && mkdir -p /var/log/mindx-dl/volcano-controller && chmod 750 /var/log/mindx-dl/volcano-controller && chown 9000:9000 /var/log/mindx-dl/volcano-controller']
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false
+          volumeMounts:
+            - name: device-volcanocontroller
+              mountPath: /var/log
       containers:
         - name: volcano-controllers
-          image: docker.io/volcanosh/vc-controller-manager:v1.12.3
-          args:
-            - --logtostderr
-            - --enable-healthz=true
-            - --enable-metrics=true
-            - --leader-elect=false
-            - --kube-api-qps=50
-            - --kube-api-burst=100
-            - --worker-threads=3
-            - --worker-threads-for-gc=5
-            - --worker-threads-for-podgroup=5
-            - -v=4
-            - 2>&1
-          imagePullPolicy: Always
+          image: volcanosh/vc-controller-manager:v1.12.0
+          command: [ "/bin/ash" ]
+          args: [ "-c", "umask 027;/vc-controller-manager
+                     --kube-api-qps=800
+                     --kube-api-burst=800
+                     --enable-healthz=true
+                     --enable-metrics=true
+                     --worker-threads=6
+                     --worker-threads=3
+                     --logtostderr=false
+                     --worker-threads-for-gc=5
+                     --worker-threads-for-podgroup=5
+                     --log_dir=/var/log/mindx-dl/volcano-controller
+                     --log_file=/var/log/mindx-dl/volcano-controller/volcano-controller.log
+                     -v=4 2>&1" ]
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              memory: 3Gi
+              cpu: 2000m
+            limits:
+              memory: 3Gi
+              cpu: 2000m
           securityContext:
-              allowPrivilegeEscalation: false
-              capabilities:
-                add:
-                - DAC_OVERRIDE
-                drop:
-                - ALL
-              runAsNonRoot: true
-              runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsUser: 9000
+            runAsGroup: 9000
+            capabilities:
+              add:
+              - DAC_OVERRIDE
+              drop:
+              - ALL
+            runAsNonRoot: true
           env:
           - name: KUBE_POD_NAMESPACE
             value: volcano-system
           - name: HELM_RELEASE_NAME
             value: volcano
+          volumeMounts:
+            - name: device-volcanocontroller
+              mountPath: /var/log/mindx-dl/volcano-controller
+              subPath: mindx-dl/volcano-controller
+            - name: localtime
+              mountPath: /etc/localtime
+              readOnly: true
+      volumes:
+        - name: device-volcanocontroller
+          hostPath:
+            path: /var/log
+            type: Directory
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
 ---
 # Source: volcano/templates/scheduler.yaml
 apiVersion: v1
@@ -4600,17 +4387,30 @@ data:
     tiers:
     - plugins:
       - name: priority
+        enableNodeOrder: false
       - name: gang
-        enablePreemptable: false
+        enableNodeOrder: false
       - name: conformance
+        enableNodeOrder: false
+      - name: volcano-npu_v6.0.RC1_linux-x86_64
     - plugins:
-      - name: overcommit
       - name: drf
-        enablePreemptable: false
+        enableNodeOrder: false
       - name: predicates
+        enableNodeOrder: false
+        arguments:
+          predicate.GPUSharingEnable: false
+          predicate.GPUNumberEnable: false
       - name: proportion
+        enableNodeOrder: false
       - name: nodeorder
       - name: binpack
+        enableNodeOrder: false
+    configurations:
+      - name: init-params
+        arguments: {"grace-over-time":"900","presetVirtualDevice":"true","nslb-version":"1.0","shared-tor-num":"2",
+    "useClusterInfoManager":"true","self-maintain-available-card":"true","super-pod-size": "48", "reserve-nodes": "2",
+    "forceEnqueue": "true"}
 ---
 # Source: volcano/templates/scheduler.yaml
 kind: ClusterRole
@@ -4632,12 +4432,15 @@ rules:
     verbs: ["create", "list", "watch", "update", "patch"]
   - apiGroups: [""]
     resources: ["pods"]
-    verbs: ["get", "list", "watch", "patch", "delete"]
+    verbs: ["create", "get", "list", "watch", "update", "patch", "bind", "delete"]
   - apiGroups: [""]
     resources: ["pods/status"]
     verbs: ["update"]
   - apiGroups: [""]
     resources: ["pods/binding"]
+    verbs: ["create"]
+  - apiGroups: [""]
+    resources: ["bindings"]
     verbs: ["create"]
   - apiGroups: [""]
     resources: ["persistentvolumeclaims"]
@@ -4680,10 +4483,13 @@ rules:
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["configmaps"]
-    verbs: ["get", "create", "delete", "update"]
+    verbs: ["get", "create", "delete", "update", "list", "watch"]
   - apiGroups: ["apps"]
     resources: ["daemonsets", "replicasets", "statefulsets"]
     verbs: ["list", "watch", "get"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get"]
   - apiGroups: ["coordination.k8s.io"]
     resources: ["leases"]
     verbs: ["get", "create", "update", "watch"]
@@ -4752,51 +4558,94 @@ spec:
         app: volcano-scheduler
     spec:
       securityContext:
+        fsGroup: 9000
         seLinuxOptions:
           level: s0:c123,c456
         seccompProfile:
           type: RuntimeDefault
       serviceAccount: volcano-scheduler
       priorityClassName: system-cluster-critical
+      nodeSelector:
+        masterselector: dls-master-node
+      initContainers:
+        - name: init-log-setup
+          image: volcanosh/vc-scheduler:v1.12.0
+          command: ['sh', '-c', 'mkdir -p /var/log/mindx-dl && chmod 755 /var/log/mindx-dl && chown root:root /var/log/mindx-dl && mkdir -p /var/log/mindx-dl/volcano-scheduler && chmod 750 /var/log/mindx-dl/volcano-scheduler && chown 9000:9000 /var/log/mindx-dl/volcano-scheduler']
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false
+          volumeMounts:
+            - name: scheduler-config-log
+              mountPath: /var/log
       containers:
         - name: volcano-scheduler
-          image: docker.io/volcanosh/vc-scheduler:v1.12.3
-          args:
-            - --logtostderr
-            - --scheduler-conf=/volcano.scheduler/volcano-scheduler.conf
-            - --enable-healthz=true
-            - --enable-metrics=true
-            - --leader-elect=false
-            - --kube-api-qps=2000
-            - --kube-api-burst=2000
-            - --schedule-period=1s
-            - --node-worker-threads=20
-            - -v=3
-            - 2>&1
+          image: volcanosh/vc-scheduler:v1.12.0
+          command: ["/bin/ash"]
+          args: [ "-c", "umask 027; /vc-scheduler
+                            --scheduler-conf=/volcano.scheduler/volcano-scheduler.conf
+                            --plugins-dir=plugins
+                            --logtostderr=false
+                            --leader-elect=false
+                            --enable-healthz=true
+                            --enable-metrics=true
+                            --kube-api-qps=2000
+                            --kube-api-burst=2000
+                            --schedule-period=1s
+                            --percentage-nodes-to-find=100
+                            --node-worker-threads=20
+                            --log_dir=/var/log/mindx-dl/volcano-scheduler
+                            --log_file=/var/log/mindx-dl/volcano-scheduler/volcano-scheduler.log
+                            -v=3 2>&1" ]
           env:
             - name: DEBUG_SOCKET_DIR
               value: /tmp/klog-socks
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              memory: 4Gi
+              cpu: 5500m
+            limits:
+              memory: 8Gi
+              cpu: 5500m
           volumeMounts:
             - name: scheduler-config
               mountPath: /volcano.scheduler
+              readOnly: true
+            - name: scheduler-config-log
+              mountPath: /var/log/mindx-dl/volcano-scheduler
+              subPath: mindx-dl/volcano-scheduler
             - name: klog-sock
               mountPath: /tmp/klog-socks
+            - name: localtime
+              mountPath: /etc/localtime
+              readOnly: true
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsUser: 9000
+            runAsGroup: 9000
             capabilities:
               add:
               - DAC_OVERRIDE
               drop:
               - ALL
             runAsNonRoot: true
-            runAsUser: 1000
       volumes:
+        volumes:
         - name: scheduler-config
           configMap:
+            defaultMode: 0004
             name: volcano-scheduler-configmap
+        - name: scheduler-config-log
+          hostPath:
+            path: /var/log
+            type: Directory
         - name: klog-sock
-          emptyDir: {}
+          hostPath:
+            path: /tmp/klog-socks
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
 ---
 # Source: volcano/templates/scheduling_v1beta1_podgroup.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -5519,231 +5368,6 @@ spec:
     storage: true
     subresources:
       status: {}
----
-# Source: volcano/templates/webhooks.yaml
-apiVersion: admissionregistration.k8s.io/v1
-kind: MutatingWebhookConfiguration
-metadata:
-  name: volcano-admission-service-queues-mutate
-webhooks:
-  - admissionReviewVersions:
-      - v1
-    clientConfig:
-      service:
-        name: volcano-admission-service
-        namespace: volcano-system
-        path: /queues/mutate
-        port: 443
-    failurePolicy: Fail
-    matchPolicy: Equivalent
-    name: mutatequeue.volcano.sh
-    namespaceSelector:
-      matchExpressions:
-        - key: kubernetes.io/metadata.name
-          operator: NotIn
-          values:
-            - volcano-system
-            - kube-system
-    objectSelector: {}
-    reinvocationPolicy: Never
-    rules:
-      - apiGroups:
-          - scheduling.volcano.sh
-        apiVersions:
-          - v1beta1
-        operations:
-          - CREATE
-        resources:
-          - queues
-        scope: '*'
-    sideEffects: NoneOnDryRun
-    timeoutSeconds: 10
----
-# Source: volcano/templates/webhooks.yaml
-apiVersion: admissionregistration.k8s.io/v1
-kind: MutatingWebhookConfiguration
-metadata:
-  name: volcano-admission-service-jobs-mutate
-webhooks:
-  - admissionReviewVersions:
-      - v1
-    clientConfig:
-      service:
-        name: volcano-admission-service
-        namespace: volcano-system
-        path: /jobs/mutate
-        port: 443
-    failurePolicy: Fail
-    matchPolicy: Equivalent
-    name: mutatejob.volcano.sh
-    namespaceSelector:
-      matchExpressions:
-        - key: kubernetes.io/metadata.name
-          operator: NotIn
-          values:
-            - volcano-system
-            - kube-system
-    objectSelector: {}
-    reinvocationPolicy: Never
-    rules:
-      - apiGroups:
-          - batch.volcano.sh
-        apiVersions:
-          - v1alpha1
-        operations:
-          - CREATE
-        resources:
-          - jobs
-        scope: '*'
-    sideEffects: NoneOnDryRun
-    timeoutSeconds: 10
----
-# Source: volcano/templates/webhooks.yaml
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingWebhookConfiguration
-metadata:
-  name: volcano-admission-service-jobs-validate
-webhooks:
-  - admissionReviewVersions:
-      - v1
-    clientConfig:
-      service:
-        name: volcano-admission-service
-        namespace: volcano-system
-        path: /jobs/validate
-        port: 443
-    failurePolicy: Fail
-    matchPolicy: Equivalent
-    name: validatejob.volcano.sh
-    namespaceSelector:
-      matchExpressions:
-        - key: kubernetes.io/metadata.name
-          operator: NotIn
-          values:
-            - volcano-system
-            - kube-system
-    objectSelector: {}
-    rules:
-      - apiGroups:
-          - batch.volcano.sh
-        apiVersions:
-          - v1alpha1
-        operations:
-          - CREATE
-          - UPDATE
-        resources:
-          - jobs
-        scope: '*'
-    sideEffects: NoneOnDryRun
-    timeoutSeconds: 10
----
-# Source: volcano/templates/webhooks.yaml
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingWebhookConfiguration
-metadata:
-  name: volcano-admission-service-queues-validate
-webhooks:
-  - admissionReviewVersions:
-      - v1
-    clientConfig:
-      service:
-        name: volcano-admission-service
-        namespace: volcano-system
-        path: /queues/validate
-        port: 443
-    failurePolicy: Fail
-    matchPolicy: Equivalent
-    name: validatequeue.volcano.sh
-    namespaceSelector:
-      matchExpressions:
-        - key: kubernetes.io/metadata.name
-          operator: NotIn
-          values:
-            - volcano-system
-            - kube-system
-    objectSelector: {}
-    rules:
-      - apiGroups:
-          - scheduling.volcano.sh
-        apiVersions:
-          - v1beta1
-        operations:
-          - CREATE
-          - UPDATE
-          - DELETE
-        resources:
-          - queues
-        scope: '*'
-    sideEffects: NoneOnDryRun
-    timeoutSeconds: 10
----
-# Source: volcano/templates/webhooks.yaml
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingWebhookConfiguration
-metadata:
-  name: volcano-admission-service-podgroups-validate
-webhooks:
-  - admissionReviewVersions:
-      - v1
-    clientConfig:
-      service:
-        name: volcano-admission-service
-        namespace: volcano-system
-        path: /podgroups/validate
-        port: 443
-    failurePolicy: Fail
-    matchPolicy: Equivalent
-    name: validatepodgroup.volcano.sh
-    namespaceSelector:
-      matchExpressions:
-        - key: kubernetes.io/metadata.name
-          operator: NotIn
-          values:
-            - volcano-system
-            - kube-system
-    objectSelector: {}
-    rules:
-      - apiGroups:
-          - scheduling.volcano.sh
-        apiVersions:
-          - v1beta1
-        operations:
-          - CREATE
-        resources:
-          - podgroups
-        scope: '*'
-    sideEffects: NoneOnDryRun
-    timeoutSeconds: 10
----
-# Source: volcano/templates/webhooks.yaml
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingWebhookConfiguration
-metadata:
-  name: volcano-admission-service-hypernodes-validate
-webhooks:
-  - admissionReviewVersions:
-      - v1
-    clientConfig:
-      service:
-        name: volcano-admission-service
-        namespace: volcano-system
-        path: /hypernodes/validate
-        port: 443
-    failurePolicy: Fail
-    matchPolicy: Equivalent
-    name: validatehypernodes.volcano.sh
-    rules:
-      - apiGroups:
-          - topology.volcano.sh
-        apiVersions:
-          - v1alpha1
-        operations:
-          - CREATE
-          - UPDATE
-        resources:
-          - hypernodes
-    sideEffects: None
-    timeoutSeconds: 10
 ---
 # Source: jobflow/templates/flow_v1alpha1_jobflows.yaml
 apiVersion: apiextensions.k8s.io/v1

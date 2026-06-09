@@ -1277,6 +1277,53 @@ func TestInitSelfPluginByJobInfo(t *testing.T) {
 	}
 }
 
+func TestGetTaskID(t *testing.T) {
+	tests := []struct {
+		name string
+		pod  *v1.Pod
+		want api.TaskID
+	}{
+		{
+			name: "01-nil pod returns empty",
+			pod:  nil,
+			want: "",
+		},
+		{
+			name: "02-pod without annotations returns empty",
+			pod:  &v1.Pod{},
+			want: "",
+		},
+		{
+			name: "03-pod without TaskSpecAnno returns empty",
+			pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				"other-key": "other-value",
+			}}},
+			want: "",
+		},
+		{
+			name: "04-TaskSpecAnno with empty value returns empty",
+			pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				util.TaskSpecAnno: "",
+			}}},
+			want: "",
+		},
+		{
+			name: "05-TaskSpecAnno with valid value returns TaskID",
+			pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				util.TaskSpecAnno: "task-spec-1",
+			}}},
+			want: "task-spec-1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getTaskID(tt.pod); got != tt.want {
+				t.Errorf("getTaskID() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestRecordJobPendingMessage(t *testing.T) {
 	sjob := ScheduleHandler{
 		ScheduleEnv: ScheduleEnv{
