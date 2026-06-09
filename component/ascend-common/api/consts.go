@@ -236,8 +236,6 @@ const (
 	CmCardUnhealthySuffix = "-Unhealthy"
 	// CmCardNetworkUnhealthySuffix NetworkUnhealthy Suffix
 	CmCardNetworkUnhealthySuffix = "-NetworkUnhealthy"
-	// CmCardDPUUnhealthySuffix DPUUnhealthy Suffix
-	CmCardDPUUnhealthySuffix = "-DPUUnhealthy"
 	// CmFaultListSuffix FaultList Suffix
 	CmFaultListSuffix = "-Fault"
 )

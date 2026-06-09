@@ -58,7 +58,6 @@ var (
 // HwAscend910Manager manages huawei Ascend910 devices.
 type HwAscend910Manager struct {
 	AscendTools
-	dpu             common.DpuInfo
 	hotResetManager HotResetManager
 }
 
@@ -640,7 +639,7 @@ func (hnm *HwAscend910Manager) getBusyChipListFromPod(podList *v1.PodList) []str
 // DoWithVolcanoListAndWatch ascend910 affinity scheduling
 func (hnm *HwAscend910Manager) DoWithVolcanoListAndWatch(classifyDevs map[string][]*common.NpuDevice, chipMemory int) {
 	devStatusSet := hnm.getDevStatesDevSet(classifyDevs, chipMemory)
-	if err := hnm.UpdateNodeDeviceInfo(devStatusSet, hnm.dpu, hnm.updateDeviceInfo); err != nil {
+	if err := hnm.UpdateNodeDeviceInfo(devStatusSet, hnm.updateDeviceInfo); err != nil {
 		hwlog.RunLog.Errorf("update device info failed, err: %v", err)
 	}
 }
@@ -665,8 +664,6 @@ func (hnm *HwAscend910Manager) updateDeviceInfo(oldDevInfo, newDevInfo map[strin
 	newDevInfo[common.GetAscend910Key(api.CmCardUnhealthySuffix)] = common.ToString(devStatusSet.UnHealthyDevice,
 		common.CommaSepDev)
 	newDevInfo[common.GetAscend910Key(api.CmCardNetworkUnhealthySuffix)] = common.ToString(newNetUHDevSets,
-		common.CommaSepDev)
-	newDevInfo[common.GetAscend910Key(api.CmCardDPUUnhealthySuffix)] = common.ToString(devStatusSet.DpuUnHealthyDevice,
 		common.CommaSepDev)
 	var data []byte
 	if data = common.MarshalData(devStatusSet.DeviceFault); len(data) == 0 {
@@ -1336,14 +1333,4 @@ func (hnm *HwAscend910Manager) isDevShouldBeIsolate(faultyDevLogicId int32) bool
 	}
 
 	return false
-}
-
-// SetDpu writes dpuInfo into HwAscend910Manager
-func (hnm *HwAscend910Manager) SetDpu(busType string, dpuList []common.DpuCMData, npuToDpusMap map[string][]string) {
-	hnm.dpu = common.DpuInfo{
-		BusType:      busType,
-		DPUList:      dpuList,
-		NpuToDpusMap: npuToDpusMap,
-		UpdateTime:   time.Now().Unix(),
-	}
 }

@@ -131,7 +131,6 @@ func addResourceFunc() {
 	kube.AddCmSwitchFunc(constant.Resource, faultmanager.SwitchInfoCollector)
 	kube.AddCmNodeFunc(constant.Resource, faultmanager.NodeCollector)
 	kube.AddCmDeviceFunc(constant.Resource, faultmanager.DeviceInfoCollector)
-	kube.AddCmDpuFunc(constant.Resource, faultmanager.DpuInfoCollector)
 	// UpdateNodeInfoCache must be before pingmesh
 	kube.AddNodeFunc(constant.Resource, node.UpdateNodeInfoCache)
 	kube.AddCmConfigPingMeshFunc(constant.Resource, pingmesh.ConfigCollector)

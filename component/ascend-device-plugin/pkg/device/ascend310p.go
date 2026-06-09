@@ -99,7 +99,7 @@ func (hnm *HwAscend310PManager) GetNPUs() (common.NpuAllInfo, error) {
 func (hnm *HwAscend310PManager) DoWithVolcanoListAndWatch(classifyDevs map[string][]*common.NpuDevice, chipMemory int) {
 	devStatusSet := hnm.getDevStatesDevSet(classifyDevs, chipMemory)
 
-	if err := hnm.UpdateNodeDeviceInfo(devStatusSet, common.DpuInfo{}, hnm.updateDeviceInfo); err != nil {
+	if err := hnm.UpdateNodeDeviceInfo(devStatusSet, hnm.updateDeviceInfo); err != nil {
 		hwlog.RunLog.Errorf("update device info failed, err: %v", err)
 	}
 }
@@ -128,9 +128,4 @@ func (hnm *HwAscend310PManager) GraceTolerance(context.Context, map[string][]*co
 // GetAssociatedLogicIDs get associated logic id list, not supported currently
 func (hnm *HwAscend310PManager) GetAssociatedLogicIDs(logicID, cardID, deviceID int32) ([]int32, error) {
 	return nil, nil
-}
-
-// SetDpu writes dpuInfo into DeviceManager, not supported currently
-func (hnm *HwAscend310PManager) SetDpu(string, []common.DpuCMData, map[string][]string) {
-	return
 }

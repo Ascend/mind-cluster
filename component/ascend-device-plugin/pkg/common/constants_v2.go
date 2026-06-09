@@ -28,29 +28,6 @@ const (
 	DevA5 = "A5"
 )
 
-// for DPU subHealth report
-const (
-	// exist one dpu fault for one npu
-	OneDpuFault = 1
-)
-
-const (
-	// NpuIdxCorrespDpuRangeMiddle npu index middle value
-	NpuIdxCorrespDpuRangeMiddle = 4
-	// DpuSlotIdx1 dpusolt index
-	DpuSlotIdx1 = "1"
-	// DpuSlotIdx2 dpusolt index
-	DpuSlotIdx2 = "2"
-	// DpuSlotIdx9 dpusolt index
-	DpuSlotIdx9 = "9"
-	// DpuSlotIdx10 dpusolt index
-	DpuSlotIdx10 = "10"
-	// DpuIpAddrsLen dpu ipaddrs num
-	DpuIpAddrsLen = 2
-	// NpuNum one node have 8 npu
-	NpuNum = 8
-)
-
 const (
 	// A5300IBoardId board id of 300I A5 with chip specification 1
 	A5300IBoardId = 0x1a

@@ -37,7 +37,6 @@ func New(name string) *chip8node8ra64sp {
 	m.SetMaxNodeNPUNum(nodeNPUNum)
 	m.SetIsNetworkFaultAttention(true)
 	m.netUnhealthyKey = networkUnhealthyNPU
-	m.dpuUnhealthyKey = dpuUnhealthyNPU
 	m.faultNPUKey = faultNPU
 	// 1024 npu = 16 racks * 64 npu
 	m.uBMemRackNum = uBMemRackNumber

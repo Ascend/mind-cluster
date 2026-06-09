@@ -56,7 +56,7 @@ const (
 )
 
 var (
-	fdFlag          = flag.Bool("fdFlag", false, "Whether to use fd system to manage device (default false)")
+	fdFlag      = flag.Bool("fdFlag", false, "Whether to use fd system to manage device (default false)")
 	volcanoType = flag.Bool("volcanoType", false,
 		"Specifies whether to use volcano for scheduling ")
 	version     = flag.Bool("version", false, "Output version information")
@@ -297,7 +297,6 @@ func main() {
 	hdm.DoSetMultiDiePolicyForA3()
 	setUseAscendDocker()
 	go hdm.ListenDevice(ctx)
-	go hdm.ListenDpu(ctx)
 	// start goroutine to dump topo of rack A5 for ras
 	go topology.RasTopoWriteTask(ctx, hdm)
 	duplicatedetector.CheckDuplicateDevices(ctx, &types.DetectorConfig{

@@ -35,7 +35,6 @@ const (
 	npuNumber8 = 8
 
 	networkUnhealthyNPU = util.NPUCardName + "-NetworkUnhealthy"
-	dpuUnhealthyNPU     = util.NPUCardName + "-DPUUnhealthy"
 	faultNPU            = util.NPUCardName + "-Fault"
 	nodeNum1            = 1
 

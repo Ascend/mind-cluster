@@ -107,7 +107,6 @@ type NpuDevice struct {
 	DeviceName             string
 	Health                 string
 	NetworkHealth          string
-	DpuHealth              string
 	CardDrop               bool
 	IP                     string
 	LogicID                int32
@@ -211,7 +210,6 @@ type FileWatch struct {
 type DevStatusSet struct {
 	UnHealthyDevice    sets.String
 	NetUnHealthyDevice sets.String
-	DpuUnHealthyDevice sets.String
 	HealthDevices      sets.String
 	RecoveringDevices  sets.String
 	FreeHealthyDevice  map[string]sets.String

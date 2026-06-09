@@ -18,7 +18,6 @@ package common
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -413,7 +412,6 @@ func FakeAiCoreDevice(dev DavinCiDev, aiCoreDevices *[]*NpuDevice) {
 			DeviceName:    fmt.Sprintf("%s-%d", AiCoreResourceName, aiCoreDevCount),
 			Health:        v1beta1.Healthy,
 			NetworkHealth: v1beta1.Healthy,
-			DpuHealth:     v1beta1.Healthy,
 			PhyID:         dev.PhyID,
 			LogicID:       dev.LogicID,
 		})
@@ -494,24 +492,6 @@ func DeepEqualSwitchFaultInfo(this, other SwitchFaultInfo) bool {
 		return false
 	}
 	if this.NodeStatus != other.NodeStatus {
-		return false
-	}
-	return true
-}
-
-// DeepEqualDpuInfo compare two DpuInfo (only A5)
-func DeepEqualDpuInfo(this, other DpuInfo) bool {
-	// not a5 not need judge
-	if ParamOption.RealCardType != api.Ascend910A5 {
-		return true
-	}
-	if this.BusType != other.BusType {
-		return false
-	}
-	if !reflect.DeepEqual(this.DPUList, other.DPUList) {
-		return false
-	}
-	if !reflect.DeepEqual(this.NpuToDpusMap, other.NpuToDpusMap) {
 		return false
 	}
 	return true

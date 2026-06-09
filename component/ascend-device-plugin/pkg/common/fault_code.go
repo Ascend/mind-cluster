@@ -57,8 +57,6 @@ const (
 	CardUnhealthy = "CardUnhealthy"
 	// CardNetworkUnhealthy  fault is caused by card network unhealthy
 	CardNetworkUnhealthy = "CardNetworkUnhealthy"
-	// DpuSubHealth  fault is caused by existing fault in the primary/backup 1825 dpu
-	DpuSubHealth = "DpuSubhealthy"
 	// LinkDownFaultCode linkdown fault code
 	LinkDownFaultCode = 0x81078603
 	// UBOEPortDownCode1 uboe port down fault code
@@ -69,8 +67,6 @@ const (
 	ResetFinishFaultCode = 0x8C2FA009
 	// CardDropFaultCode card drop fault code
 	CardDropFaultCode = 0x40F84E00
-	// DpuSubHealthCode card exists fault in the primary/backup 1825 dpu fault code
-	DpuSubHealthCode = 200001001
 	// faultCodeFilePath load the path for fault code
 	faultCodeFilePath = "/usr/local/faultCode.json"
 	// faultCustomizationFilePath load the path for fault customization

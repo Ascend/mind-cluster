@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -190,10 +189,9 @@ func (ki *ClientK8s) GetUpgradeFaultReasonFromDeviceInfo(
 
 // WriteDeviceInfoDataIntoCM write deviceinfo into config map
 func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(nodeDeviceData *common.NodeDeviceInfoCache, manuallySeparateNPU string,
-	switchInfo common.SwitchFaultInfo, dpuInfo common.DpuInfo, reasonCm string) (*common.NodeDeviceInfoCache, error) {
+	switchInfo common.SwitchFaultInfo, reasonCm string) (*common.NodeDeviceInfoCache, error) {
 	nodeDeviceData.CheckCode = common.MakeDataHash(nodeDeviceData.DeviceInfo)
-	var data, switchData, dpuData []byte
-	dpuOpen := !reflect.DeepEqual(dpuInfo, common.DpuInfo{})
+	var data, switchData []byte
 	if data = common.MarshalData(nodeDeviceData); len(data) == 0 {
 		return nil, fmt.Errorf("marshal nodeDeviceData failed")
 	}
@@ -215,12 +213,6 @@ func (ki *ClientK8s) WriteDeviceInfoDataIntoCM(nodeDeviceData *common.NodeDevice
 			common.DeviceInfoCmUpgradeFaultReasonKey:  reasonCm,
 			common.DeviceInfoCMManuallySeparateNPUKey: manuallySeparateNPU,
 			common.DescriptionKey:                     common.DescriptionValue}
-		if dpuOpen {
-			if dpuData = common.MarshalData(dpuInfo); len(dpuData) == 0 {
-				return nil, fmt.Errorf("marshal DpuDeviceData failed")
-			}
-			deviceInfoCM.Data[api.DpuInfoCMDataKey] = string(dpuData)
-		}
 	case api.Ascend910A3:
 		deviceInfoCM.Data = map[string]string{
 			api.DeviceInfoCMDataKey:                   string(data),

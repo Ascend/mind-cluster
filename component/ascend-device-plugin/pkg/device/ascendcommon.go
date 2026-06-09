@@ -103,7 +103,6 @@ type AscendTools struct {
 	lastSwitchFaultInfo       common.SwitchFaultInfo
 	lastUsedChipsByProcess    sets.String
 	lastUsedChipsContainerMap map[string]sets.String
-	lastDpuInfo               common.DpuInfo
 }
 
 // DevManager interface for manager device
@@ -156,7 +155,6 @@ type DevManager interface {
 	GetDeviceIP(deviceType string, phyID int) (string, error)
 	WriteFaultToEvent(ctx context.Context)
 	GetAssociatedLogicIDs(logicID, cardID, deviceID int32) ([]int32, error)
-	SetDpu(string, []common.DpuCMData, map[string][]string)
 	LoadDeviceInfoCm(ctx context.Context)
 	HandleUBOELinkDownCheck(device *common.NpuDevice, devices *[]*common.NpuDevice)
 	DoHandleUboeLinkDownCheck(devices []*common.NpuDevice)
@@ -335,7 +333,7 @@ func (tool *AscendTools) asyncReleaseAutoFill(ctx context.Context, autoFillPhyId
 }
 
 // UpdateNodeDeviceInfo update device info
-func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet, dpuInfo common.DpuInfo,
+func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet,
 	updateDeviceInfoFunc func(map[string]string, map[string]string, common.DevStatusSet) error) error {
 	tool.checkAndInitNodeDeviceInfo()
 	waitErr := wait.PollImmediate(common.Interval*time.Second, common.Timeout*time.Second, func() (bool, error) {
@@ -373,22 +371,20 @@ func (tool *AscendTools) UpdateNodeDeviceInfo(devStatusSet common.DevStatusSet, 
 		dataSame := compareDeviceList(deviceList, newDeviceList) &&
 			common.DeepEqualSwitchFaultInfo(switchFaultInfo, tool.lastSwitchFaultInfo) &&
 			manuallySeparateNPU == tool.lastManuallySeparateNPU &&
-			reasonCache.Equals(tool.lastUpgradeFaultReason) &&
-			common.DeepEqualDpuInfo(dpuInfo, tool.lastDpuInfo)
+			reasonCache.Equals(tool.lastUpgradeFaultReason)
 
 		if dataSame && time.Since(tool.lastUpdateTimeStamp) < defaultUpdateTimeInterval*time.Minute {
 			hwlog.RunLog.Debug("device info is not changed and timeDiff less than 5 minutes, no need to update")
 			return true, nil
 		}
 
-		return tool.writeDeviceInfoCm(manuallySeparateNPU, newDeviceList, reasonCache, switchFaultInfo, dpuInfo)
+		return tool.writeDeviceInfoCm(manuallySeparateNPU, newDeviceList, reasonCache, switchFaultInfo)
 	})
 	return waitErr
 }
 
 func (tool *AscendTools) writeDeviceInfoCm(manuallySeparateNPU string, newDeviceList map[string]string,
-	reasonCache common.UpgradeFaultReasonMap[common.LogicId], switchFaultInfo common.SwitchFaultInfo,
-	dpuInfo common.DpuInfo) (bool, error) {
+	reasonCache common.UpgradeFaultReasonMap[common.LogicId], switchFaultInfo common.SwitchFaultInfo) (bool, error) {
 
 	reasonCm, err := reasonCache.ConvertCacheToCm(tool.GetDmgr().GetPhysicIDFromLogicID)
 	if err != nil {
@@ -403,12 +399,12 @@ func (tool *AscendTools) writeDeviceInfoCm(manuallySeparateNPU string, newDevice
 	}
 	nodeDeviceData := tool.getNodeDeviceInfoCache(newDeviceList)
 	if err = tool.client.WriteDeviceInfoDataIntoCMCache(nodeDeviceData, manuallySeparateNPU,
-		switchFaultInfo, dpuInfo, reasonCmStr); err != nil {
+		switchFaultInfo, reasonCmStr); err != nil {
 		hwlog.RunLog.Errorf("write device info failed: %v", err)
 		err = fmt.Errorf("write device info failed: %v", err)
 		return false, err
 	}
-	tool.updateLastInfo(manuallySeparateNPU, switchFaultInfo, dpuInfo, reasonCache)
+	tool.updateLastInfo(manuallySeparateNPU, switchFaultInfo, reasonCache)
 	hwlog.RunLog.Infof("write deviceInfo into configMap cache success, time is %s",
 		tool.lastUpdateTimeStamp.Format(time.RFC3339))
 	removedReasonEvent := common.GetAndCleanRemovedReasonEvent()
@@ -435,12 +431,11 @@ func (tool *AscendTools) getNodeDeviceInfoCache(newDeviceList map[string]string)
 }
 
 func (tool *AscendTools) updateLastInfo(manuallySeparateNPU string, switchFaultInfo common.SwitchFaultInfo,
-	dpuInfo common.DpuInfo, reasonCache common.UpgradeFaultReasonMap[common.LogicId]) {
+	reasonCache common.UpgradeFaultReasonMap[common.LogicId]) {
 	tool.lastUpdateTimeStamp = time.Now()
 	tool.lastManuallySeparateNPU = manuallySeparateNPU
 	tool.lastSwitchFaultInfo = switchFaultInfo
 	tool.lastUpgradeFaultReason = reasonCache
-	tool.lastDpuInfo = dpuInfo
 }
 
 func (tool *AscendTools) checkAndInitNodeDeviceInfo() {
@@ -503,7 +498,6 @@ func (tool *AscendTools) assembleNpuDeviceStruct(deviType, deviceName string,
 		DeviceName:    deviceName,
 		Health:        v1beta1.Healthy,
 		NetworkHealth: v1beta1.Healthy,
-		DpuHealth:     v1beta1.Healthy,
 		LogicID:       davinCiDev.LogicID,
 		PhyID:         davinCiDev.PhyID,
 		CardID:        davinCiDev.CardID,
@@ -636,8 +630,8 @@ func (tool *AscendTools) filterSoftShareDevices(
 func (tool *AscendTools) getDevStatesDevSet(classifyDevs map[string][]*common.NpuDevice,
 	chipMemory int) common.DevStatusSet {
 	totalFreeDevices := make(map[string]sets.String, len(classifyDevs))
-	totalUHDevices, totalNetUHDevices, totalDpuUHDevices, podUsedDev, totalRCDevices :=
-		sets.String{}, sets.String{}, sets.String{}, sets.String{}, sets.String{}
+	totalUHDevices, totalNetUHDevices, podUsedDev, totalRCDevices :=
+		sets.String{}, sets.String{}, sets.String{}, sets.String{}
 	totalDeviceFaults := make([]common.DeviceFault, 0, common.GeneralMapSize)
 	allDevices := sets.String{}
 	if !common.ParamOption.PresetVDevice {
@@ -655,7 +649,6 @@ func (tool *AscendTools) getDevStatesDevSet(classifyDevs map[string][]*common.Np
 		totalFreeDevices[devType] = freeDevs
 		totalUHDevices = totalUHDevices.Union(partDevStatusSet.UnHealthyDevice)
 		totalNetUHDevices = totalNetUHDevices.Union(partDevStatusSet.NetUnHealthyDevice)
-		totalDpuUHDevices = totalDpuUHDevices.Union(partDevStatusSet.DpuUnHealthyDevice)
 		totalRCDevices = totalRCDevices.Union(partDevStatusSet.RecoveringDevices)
 		totalDeviceFaults = append(totalDeviceFaults, partDevStatusSet.DeviceFault...)
 	}
@@ -663,7 +656,6 @@ func (tool *AscendTools) getDevStatesDevSet(classifyDevs map[string][]*common.Np
 		FreeHealthyDevice:  totalFreeDevices,
 		UnHealthyDevice:    totalUHDevices,
 		NetUnHealthyDevice: totalNetUHDevices,
-		DpuUnHealthyDevice: totalDpuUHDevices,
 		RecoveringDevices:  totalRCDevices,
 		DeviceFault:        totalDeviceFaults,
 		AllDevices:         allDevices,
@@ -683,22 +675,16 @@ func (tool *AscendTools) getUsedDevices(subClassDevices []*common.NpuDevice) set
 }
 
 func (tool *AscendTools) groupDevsByStatus(subClassDevices []*common.NpuDevice, runMode string) common.DevStatusSet {
-	healthDevice, totalUHDevices, totalNetworkUHDevices, totalDpuUHDevices, totalRCDevices :=
-		sets.String{}, sets.String{}, sets.String{}, sets.String{}, sets.String{}
+	healthDevice, totalUHDevices, totalNetworkUHDevices, totalRCDevices :=
+		sets.String{}, sets.String{}, sets.String{}, sets.String{}
 	devicesFaults := make([]common.DeviceFault, 0, common.GeneralMapSize)
 	allDevices := sets.NewString()
 	for _, device := range subClassDevices {
 		allDevices.Insert(device.DeviceName)
 		deviceFaults := tool.getDeviceFaults(device)
 		devicesFaults = append(devicesFaults, deviceFaults...)
-		if tool.dmgr.GetDevType() == api.Ascend910A5 && device.DpuHealth == api.DpuSubHealthy {
-			devicesFaults = append(devicesFaults, tool.getDpuFaults(device.DeviceName)...)
-		}
 		if device.NetworkHealth == v1beta1.Unhealthy {
 			totalNetworkUHDevices.Insert(device.DeviceName)
-		}
-		if device.DpuHealth == v1beta1.Unhealthy {
-			totalDpuUHDevices.Insert(device.DeviceName)
 		}
 		if device.Status == common.NPUResettingStatus {
 			totalRCDevices.Insert(device.DeviceName)
@@ -724,7 +710,6 @@ func (tool *AscendTools) groupDevsByStatus(subClassDevices []*common.NpuDevice, 
 		HealthDevices:      healthDevice,
 		UnHealthyDevice:    totalUHDevices,
 		NetUnHealthyDevice: totalNetworkUHDevices,
-		DpuUnHealthyDevice: totalDpuUHDevices,
 		RecoveringDevices:  totalRCDevices,
 		DeviceFault:        devicesFaults,
 		AllDevices:         allDevices,
@@ -775,29 +760,6 @@ func (tool *AscendTools) combineFaultTimeMaps(timeoutFaultLevelAndTime,
 		combineMap[key] = value
 	}
 	return combineMap
-}
-
-// getDpuFaults get dpu fault info list
-func (tool *AscendTools) getDpuFaults(deviceName string) []common.DeviceFault {
-	deviceFaults := make([]common.DeviceFault, 0, common.MapSizeTwo)
-	eventId := int64(common.DpuSubHealthCode)
-	faultTimeAndLevel := common.FaultTimeAndLevel{
-		FaultTime:  time.Now().UnixMilli(),
-		FaultLevel: common.NotHandleFault,
-	}
-	faultTimeAndLevelMap := make(map[string]common.FaultTimeAndLevel)
-	faultCode := strings.ToUpper(strconv.FormatInt(eventId, common.BaseDec))
-	faultTimeAndLevelMap[faultCode] = faultTimeAndLevel
-	deviceFaults = append(deviceFaults, common.DeviceFault{
-		FaultType:            common.DpuSubHealth,
-		NPUName:              deviceName,
-		LargeModelFaultLevel: common.NotHandleFault,
-		FaultLevel:           common.NotHandleFault,
-		FaultHandling:        common.NotHandleFault,
-		FaultCode:            faultCode,
-		FaultTimeAndLevelMap: faultTimeAndLevelMap,
-	})
-	return deviceFaults
 }
 
 // getDeviceFaults get device fault list
@@ -1099,7 +1061,6 @@ func setAICoreHealthyIfVNpu(groupDevice map[string][]*common.NpuDevice, aiCoreDe
 	for _, device := range aiCoreDevs {
 		device.Health = logicDeviceMap[device.LogicID].Health
 		device.NetworkHealth = logicDeviceMap[device.LogicID].NetworkHealth
-		device.DpuHealth = logicDeviceMap[device.LogicID].DpuHealth
 		device.FaultCodes = logicDeviceMap[device.LogicID].FaultCodes
 		device.AlarmRaisedTime = logicDeviceMap[device.LogicID].AlarmRaisedTime
 		device.NetworkFaultCodes = logicDeviceMap[device.LogicID].NetworkFaultCodes

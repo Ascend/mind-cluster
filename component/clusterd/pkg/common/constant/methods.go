@@ -6,7 +6,6 @@ package constant
 import (
 	"fmt"
 	"maps"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -67,10 +66,6 @@ func (cm *AdvanceDeviceFaultCm) AddFaultAndFix(addFault DeviceFault) {
 			if !slices.Contains(cm.NetworkUnhealthy, addFault.NPUName) {
 				cm.NetworkUnhealthy = append(cm.NetworkUnhealthy, addFault.NPUName)
 			}
-		} else if addFault.FaultType == CardDPUUnhealthy {
-			if !slices.Contains(cm.DPUUnhealthy, addFault.NPUName) {
-				cm.DPUUnhealthy = append(cm.DPUUnhealthy, addFault.NPUName)
-			}
 		} else {
 			hwlog.RunLog.Errorf("unrecognizable fault type %s", addFault.FaultType)
 		}
@@ -112,15 +107,12 @@ func (cm *AdvanceDeviceFaultCm) DelFaultAndFix(delFault DeviceFault) {
 	deviceFaults := cm.FaultDeviceList[delFault.NPUName]
 	delFromCardUnhealthy := true
 	delFromCardNetworkUnhealthy := true
-	delFromCardDPUUnhealthy := true
 	for _, devFault := range deviceFaults {
 		if !slices.Contains(normalFaultLevel, devFault.FaultLevel) {
 			if devFault.FaultType == CardUnhealthy || devFault.FaultType == PublicFaultType {
 				delFromCardUnhealthy = false
 			} else if devFault.FaultType == CardNetworkUnhealthy {
 				delFromCardNetworkUnhealthy = false
-			} else if devFault.FaultType == CardDPUUnhealthy {
-				delFromCardDPUUnhealthy = false
 			} else {
 				hwlog.RunLog.Errorf("unrecognizable fault type %s", devFault.FaultType)
 			}
@@ -131,9 +123,6 @@ func (cm *AdvanceDeviceFaultCm) DelFaultAndFix(delFault DeviceFault) {
 	}
 	if delFromCardNetworkUnhealthy {
 		cm.NetworkUnhealthy = util.DeleteStringSliceItem(cm.NetworkUnhealthy, delFault.NPUName)
-	}
-	if delFromCardDPUUnhealthy {
-		cm.DPUUnhealthy = util.DeleteStringSliceItem(cm.DPUUnhealthy, delFault.NPUName)
 	}
 }
 
@@ -167,7 +156,6 @@ func (cm *AdvanceDeviceFaultCm) IsSame(another ConfigMapInterface) bool {
 		slices.Equal(cm.Recovering, thatCm.Recovering) &&
 		slices.Equal(cm.CardUnHealthy, thatCm.CardUnHealthy) &&
 		slices.Equal(cm.NetworkUnhealthy, thatCm.NetworkUnhealthy) &&
-		slices.Equal(cm.DPUUnhealthy, thatCm.DPUUnhealthy) &&
 		maps.EqualFunc(cm.FaultDeviceList, thatCm.FaultDeviceList, eq)
 }
 
@@ -263,15 +251,6 @@ func (cm *AdvanceDeviceFaultCm) GetNetworkUnhealthyKey() string {
 	return api.ResourceNamePrefix + cm.DeviceType + api.CmCardNetworkUnhealthySuffix
 }
 
-// GetDPUUnhealthyKey return cm DPUUnhealthyKey
-func (cm *AdvanceDeviceFaultCm) GetDPUUnhealthyKey() string {
-	if cm == nil {
-		hwlog.RunLog.Error("cm is nil")
-		return ""
-	}
-	return api.ResourceNamePrefix + cm.DeviceType + api.CmCardDPUUnhealthySuffix
-}
-
 // GetFaultDeviceListKey return cm FaultDeviceListKey
 func (cm *AdvanceDeviceFaultCm) GetFaultDeviceListKey() string {
 	if cm == nil {
@@ -288,15 +267,6 @@ func (cm *AdvanceDeviceFaultCm) GetAvailableDeviceListKey() string {
 		return ""
 	}
 	return api.ResourceNamePrefix + cm.DeviceType
-}
-
-// GetCmName get configmap name of dpu info
-func (cm *DpuInfoCM) GetCmName() string {
-	if cm == nil {
-		hwlog.RunLog.Error("cm is nil")
-		return ""
-	}
-	return cm.CmName
 }
 
 // GetCmName get configmap name of device info
@@ -324,31 +294,6 @@ func (cm *NodeInfo) GetCmName() string {
 		return ""
 	}
 	return cm.CmName
-}
-
-// IsSame compare with another cm
-func (cm *DpuInfoCM) IsSame(another ConfigMapInterface) bool {
-	anotherDpuInfo, ok := another.(*DpuInfoCM)
-	if !ok {
-		hwlog.RunLog.Warnf("%s compare with cm which is not DpuInfoCM", api.DpuLogPrefix)
-		return false
-	}
-
-	if cm == nil && anotherDpuInfo == nil {
-		return true
-	}
-	if cm == nil || anotherDpuInfo == nil {
-		return false
-	}
-	if len(cm.DPUList) != len(anotherDpuInfo.DPUList) {
-		return false
-	}
-	return reflect.DeepEqual(cm.DPUList, anotherDpuInfo.DPUList)
-}
-
-// UpdateFaultReceiveTime update fault receive time
-func (cm *DpuInfoCM) UpdateFaultReceiveTime(oldInfo ConfigMapInterface) {
-	return
 }
 
 // IsSame compare with another cm

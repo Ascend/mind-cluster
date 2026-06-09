@@ -35,14 +35,12 @@ func (center *faultProcessCenter) Process() {
 	cmprocess.SwitchCenter.Process()
 	cmprocess.DeviceCenter.Process()
 	cmprocess.NodeCenter.Process()
-	cmprocess.DpuCenter.Process()
 	jobprocess.FaultJobCenter.Process()
 	// notify volcano after notify fault recover service to fix the bug: push original node fault to the new pod
 	jobprocess.FaultJobCenter.NotifySubscriber()
 	cmprocess.SwitchCenter.NotifySubscriber()
 	cmprocess.DeviceCenter.NotifySubscriber()
 	cmprocess.NodeCenter.NotifySubscriber()
-	cmprocess.DpuCenter.NotifySubscriber()
 }
 
 func (center *faultProcessCenter) notifyFaultCenterProcess(whichToProcess int) {
@@ -73,9 +71,6 @@ func (center *faultProcessCenter) Work(ctx context.Context) {
 				case constant.SwitchProcessType:
 					cmprocess.SwitchCenter.Process()
 					cmprocess.SwitchCenter.NotifySubscriber()
-				case constant.DpuProcessType:
-					cmprocess.DpuCenter.Process()
-					cmprocess.DpuCenter.NotifySubscriber()
 				default:
 					hwlog.RunLog.Errorf("wrong number %d to process", whichToProcess)
 				}
@@ -95,13 +90,10 @@ func (center *faultProcessCenter) Register(ch chan int, whichToRegister int) {
 		cmprocess.NodeCenter.Register(ch)
 	case constant.DeviceProcessType:
 		cmprocess.DeviceCenter.Register(ch)
-	case constant.DpuProcessType:
-		cmprocess.DpuCenter.Register(ch)
 	case constant.AllProcessType:
 		cmprocess.SwitchCenter.Register(ch)
 		cmprocess.NodeCenter.Register(ch)
 		cmprocess.DeviceCenter.Register(ch)
-		cmprocess.DpuCenter.Register(ch)
 	default:
 		hwlog.RunLog.Errorf("Wrong number %d, cannot decide which to register", whichToRegister)
 	}
@@ -136,15 +128,6 @@ func QueryNodeInfoToReport() map[string]*constant.NodeInfo {
 	return cmprocess.NodeCenter.GetProcessedCm()
 }
 
-// QueryDpuInfoToReport query dpu info to report
-func QueryDpuInfoToReport() map[string]*constant.DpuInfoCM {
-	infos := cmprocess.DpuCenter.GetProcessedCm()
-	for _, info := range infos {
-		info.UpdateTime = time.Now().Unix()
-	}
-	return infos
-}
-
 // DeviceInfoCollector collects device info
 func DeviceInfoCollector(oldDevInfo, newDevInfo *constant.DeviceInfo, operator string) {
 	collector.DeviceInfoCollector(oldDevInfo, newDevInfo, operator)
@@ -153,11 +136,6 @@ func DeviceInfoCollector(oldDevInfo, newDevInfo *constant.DeviceInfo, operator s
 // SwitchInfoCollector collects switchinfo info of 900A3
 func SwitchInfoCollector(oldSwitchInfo, newSwitchInfo *constant.SwitchInfo, operator string) {
 	collector.SwitchInfoCollector(oldSwitchInfo, newSwitchInfo, operator)
-}
-
-// DpuInfoCollector collects dpu info
-func DpuInfoCollector(oldInfo, newInfo *constant.DpuInfoCM, operator string) {
-	collector.DpuInfoCollector(oldInfo, newInfo, operator)
 }
 
 // NodeCollector collects node info

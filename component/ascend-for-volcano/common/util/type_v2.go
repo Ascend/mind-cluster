@@ -53,30 +53,6 @@ const (
 	ServerIndexKey = "serverIndex"
 )
 
-// for DPU
-const (
-	// DpuFault indicates a DPU fault
-	DpuFault = "DpuFault"
-	// DpuHealthy indicates a DPU healthy
-	DpuHealthy = "DPUHealthy"
-	// DpuLogPrefix DPU log prefix
-	DpuLogPrefix = "[DPU controller]"
-	// UbDPULength DPU length in ub
-	UbDPULength = 2
-	// UbType indicates ub
-	UbType = "ub"
-	// PcieType indicates pcie
-	PcieType = "pcie"
-	// FirstDpu first dpu
-	FirstDpu = 0
-	// SecondDpu second dpu
-	SecondDpu = 1
-	// DpuMaxNum dpu max num
-	DpuMaxNum = 8
-	// EmptyNPUToDPUMapLen length of empty npu to dpu map
-	EmptyNPUToDPUMapLen = 0
-)
-
 // RankLevel for rank table level info
 type RankLevel struct {
 	// Level for the level index in rank table

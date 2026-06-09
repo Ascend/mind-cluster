@@ -17,26 +17,6 @@ limitations under the License.
 // Package api common const
 package api
 
-// for DPU
-const (
-	// DpuLogPrefix  log prefix for dpu feature
-	DpuLogPrefix = "[DPU controller]"
-	// DpuStatusDown dpu status down
-	DpuStatusDown = "down"
-	// DpuStatusUp dpu status up
-	DpuStatusUp = "up"
-	// DpuSubHealthy status for Device
-	DpuSubHealthy = "SubHealthy"
-	// DpuInfoCMDataKey device-info-cm data key, record Dpu info
-	DpuInfoCMDataKey = "DpuInfoCfg"
-	// DpuInfoCMDpuListKey mindcluster-dpuinfo-cm data key, record dpuList
-	DpuInfoCMDpuListKey = "DpuList"
-	// DpuInfoCMBusTypeKey mindcluster-dpuinfo-cm data key, record dpu busType
-	DpuInfoCMBusTypeKey = "BusType"
-	// DpuInfoCMNpuToDpusMapKey mindcluster-dpuinfo-cm data key, record relationship between npu and dpu
-	DpuInfoCMNpuToDpusMapKey = "NpuToDpusMap"
-)
-
 // Device Type
 const (
 	// A5PodType a5 pod type
