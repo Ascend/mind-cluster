@@ -457,7 +457,7 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
 
 |环境变量名称|功能|取值|说明|
 |--|--|--|--|
-|TASKD_LOG_PATH|指定TaskD组件运行日志的落盘路径。|字符串|如未指定使用默认的./taskd_log/taskd.log-worker-{*RANK*}，即当前执行路径下的taskd_log目录。<p><i>\{RANK\}</i>为当前训练进程的全局Rank号。</p>|
+|TASKD_LOG_PATH|指定TaskD组件运行日志的落盘路径。|字符串|如未指定则使用默认路径：./taskd_log/，即当前执行路径下的taskd_log目录，根据节点不同配置生成以下日志：<ul><li>manager.log：TaskD Manager日志</li><li>taskd.log：TaskD python侧日志</li><li>agent-{*RANK*}.log：TaskD Agent日志</li><li>taskd-proxy-{*RANK*}-{*TIMESTAMP*}.log：TaskD Proxy日志</li><li>taskd-worker-{*RANK*}.log：TaskD Worker日志</li></ul><p><i>\{RANK\}</i>为当前训练进程的全局Rank号，<i>\{TIMESTAMP\}</i>为时间戳。</p>|
 |TASKD_FILE_LOG_LEVEL|指定需要记录到日志文件的日志等级。|字符串|取值为：<ul><li>DEBUG：调试信息</li><li>INFO：一般信息（默认级别）</li><li>WARNING：警告信息</li><li>ERROR：错误信息</li></ul>|
 |TASKD_STD_LOG_LEVEL|指定需要打印的日志等级。|字符串|取值为：<ul><li>DEBUG：调试信息</li><li>INFO：一般信息（默认级别）</li><li>WARNING：警告信息</li><li>ERROR：错误信息</li></ul>|
 |TASKD_LOG_STDOUT|指定日志是否需要打印。|bool|取值为True或False。不配置默认为True。|
