@@ -255,6 +255,9 @@ func TestUpdateTelegraf(t *testing.T) {
 		mockRoceCache(n, chips, colcommon.GetCacheKey(&RoceCollector{}))
 		mockSioCache(n, chips, colcommon.GetCacheKey(&SioCollector{}))
 		fieldsMap := make(map[string]map[string]interface{})
+		fieldsMap[colcommon.GeneralDevTagKey] = make(map[string]interface{})
+		fieldsMap[colcommon.KeyForMetricsWithCustomLabels] = make(map[string]interface{})
+		fieldsMap[colcommon.KeyForTextMetrics] = make(map[string]interface{})
 
 		for _, c := range collectorChain {
 			c.UpdateTelegraf(fieldsMap, n, containerInfos, chips)
@@ -425,17 +428,14 @@ func mockChipCache(n *colcommon.NpuCollector, chips []colcommon.HuaWeiAIChip, ca
 	localCache := sync.Map{}
 	for _, chip := range chips {
 		localCache.Store(chip.PhyId, chipCache{chip: chip, timestamp: time.Now(),
-			HealthStatus:       "Healthy",
-			ErrorCodes:         []int64{0},
-			Utilization:        0,
-			OverallUtilization: 0,
-			VectorUtilization:  0,
-			Temperature:        0,
-			Power:              0,
-			Voltage:            0,
-			AICoreCurrentFreq:  0,
-			NetHealthStatus:    "Healthy",
-			DevProcessInfo:     mockProcessInfo(),
+			HealthStatus:      "Healthy",
+			ErrorCodes:        []int64{0},
+			Temperature:       0,
+			Power:             0,
+			Voltage:           0,
+			AICoreCurrentFreq: 0,
+			NetHealthStatus:   "Healthy",
+			DevProcessInfo:    mockProcessInfo(),
 		})
 	}
 	colcommon.UpdateCache[chipCache](n, cacheKey, &localCache)
@@ -537,6 +537,8 @@ func initChain() {
 	collectorChain = []colcommon.MetricsCollector{
 		&HccsCollector{},
 		&BaseInfoCollector{},
+		&NodeBaseCollector{},
+		&UbCollector{},
 		&SioCollector{},
 		&VersionCollector{},
 		&HbmCollector{},

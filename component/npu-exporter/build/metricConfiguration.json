@@ -1,15 +1,17 @@
 [
-  {"metricsGroup": "nodeBase", "state": "ON"},
-  {"metricsGroup": "ddr", "state": "ON"},
-  {"metricsGroup": "hccs", "state": "ON"},
-  {"metricsGroup": "npu", "state": "ON"},
-  {"metricsGroup": "network", "state": "ON"},
-  {"metricsGroup": "pcie", "state": "ON"},
-  {"metricsGroup": "roce", "state": "ON"},
-  {"metricsGroup": "sio", "state": "ON"},
-  {"metricsGroup": "vnpu", "state": "ON"},
-  {"metricsGroup": "version", "state": "ON"},
-  {"metricsGroup": "optical", "state": "ON"},
-  {"metricsGroup": "hbm", "state": "ON"},
-  {"metricsGroup": "ub", "state": "ON"}
+  {"metricsGroup": "version", "state": "ON", "intervalSeconds": -1},
+  {"metricsGroup": "utilization", "state": "ON", "intervalSeconds": 1},
+  {"metricsGroup": "npu", "state": "ON", "intervalSeconds": 5},
+  {"metricsGroup": "ddr", "state": "ON", "intervalSeconds": 10},
+  {"metricsGroup": "sio", "state": "ON", "intervalSeconds": 60},
+  {"metricsGroup": "hbm", "state": "ON", "intervalSeconds": 60},
+  {"metricsGroup": "hccs", "state": "ON", "intervalSeconds": 60},
+  {"metricsGroup": "pcie", "state": "ON", "intervalSeconds": 60},
+  {"metricsGroup": "vnpu", "state": "ON", "intervalSeconds": 60},
+  {"metricsGroup": "nodeBase", "state": "ON", "intervalSeconds": 86400},
+
+  {"metricsGroup": "roce", "state": "ON", "intervalSeconds": 60},
+  {"metricsGroup": "optical", "state": "ON", "intervalSeconds": 60},
+  {"metricsGroup": "network", "state": "ON", "intervalSeconds": 60},
+  {"metricsGroup": "ub", "state": "ON", "intervalSeconds": 60}
 ]

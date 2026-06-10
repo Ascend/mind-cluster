@@ -1,4 +1,4 @@
-/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2026. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -19,6 +19,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -146,7 +147,22 @@ func UpdateCache[T any](n *NpuCollector, cacheKey string, localCache *sync.Map) 
 		return true
 	})
 
-	err = n.cache.Set(cacheKey, cacheInfo, n.cacheTime)
+	// Calculate cache TTL based on collector interval: TTL = interval * 2
+	interval := GetCollectorInterval(cacheKey, defaultGroupInterval)
+	var ttl time.Duration
+	if interval == collectOnceInterval {
+		// For one-time collection, use a reasonable default TTL (10 minutes)
+		ttl = -1
+	} else {
+		ttl = interval * 2
+	}
+
+	// set min cache ttl is 60s
+	if ttl < defaultGroupInterval {
+		ttl = defaultGroupInterval
+	}
+
+	err = n.cache.Set(cacheKey, cacheInfo, ttl)
 	if noNeedToPrintUpdateLog[cacheKey] {
 		return
 	}

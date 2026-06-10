@@ -26,7 +26,8 @@ RUN yum install -y shadow &&\
 
 COPY --from=build /build/npu-exporter /usr/local/bin/npu-exporter
 COPY --from=build /build/run_for_310P_1usoc.sh /
-COPY --from=build /build/metricConfiguration.json /build/pluginConfiguration.json /build/agreement.txt /usr/local/
+COPY --from=build /build/agreement.txt /usr/local/
+COPY --from=build /build/metricConfiguration.json /build/pluginConfiguration.json /user/mind-cluster/npu-exporter-config/
 
 RUN chown root:root /usr/local/bin/npu-exporter &&\
     chmod 750 -R /home/HwHiAiUser &&\

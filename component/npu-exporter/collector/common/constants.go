@@ -57,7 +57,7 @@ const (
 	initSize                  = 8
 	tickerFailedPattern       = "%s ticker failed, task shutdown"
 	// UpdateCachePattern Update cache pattern
-	UpdateCachePattern     = "update Cache,key is %s"
+	UpdateCachePattern     = "update Cache, key is %s"
 	connectRefusedMaxRetry = 3
 )
 

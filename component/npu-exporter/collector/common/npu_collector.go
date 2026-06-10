@@ -1,4 +1,4 @@
-/* Copyright(C) 2021-2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2021-2026. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -51,12 +51,15 @@ var (
 	updateTimeForCardIds = time.Minute
 
 	npuInfoCache sync.Map
+
+	chainsMu sync.RWMutex
 )
 
 const (
-	maxCollectTimeout = 10 * time.Second
-	pcieDomain        = "PcieDomain"
-	fetchTimeout      = "FetchTimeoutError"
+	maxCollectTimeout              = 10 * time.Second
+	tickerIntervalForContainerInfo = 5 * time.Second
+	pcieDomain                     = "PcieDomain"
+	fetchTimeout                   = "FetchTimeoutError"
 )
 
 // fetchPcieOptions for control pcie error logs num
@@ -74,7 +77,35 @@ type NpuCollector struct {
 	Dmgr          devmanager.DeviceInterface
 }
 
-// NewNpuCollector create a new collector
+// GetUpdateTime returns the updateTime duration configured in NpuCollector.
+// updateTime > 0 indicates legacy compatibility mode where all collectors use a unified interval;
+// updateTime == 0 indicates using per-group configured intervalSeconds.
+func (n *NpuCollector) GetUpdateTime() time.Duration {
+	return n.updateTime
+}
+
+// SetChains atomically replaces the three collector chains (single, multi, plugin).
+func SetChains(single, multi, plugin []MetricsCollector) {
+	chainsMu.Lock()
+	defer chainsMu.Unlock()
+
+	ChainForSingleGoroutine = single
+	ChainForMultiGoroutine = multi
+	ChainForCustomPlugin = plugin
+}
+
+// GetChainsSnapshot returns a shallow copy of the current three collector chains.
+func GetChainsSnapshot() (single, multi, plugin []MetricsCollector) {
+	chainsMu.RLock()
+	defer chainsMu.RUnlock()
+
+	single = append([]MetricsCollector(nil), ChainForSingleGoroutine...)
+	multi = append([]MetricsCollector(nil), ChainForMultiGoroutine...)
+	plugin = append([]MetricsCollector(nil), ChainForCustomPlugin...)
+	return single, multi, plugin
+}
+
+// NewNpuCollector creates and initializes an NpuCollector instance.
 func NewNpuCollector(cacheTime time.Duration, updateTime time.Duration,
 	deviceParser *container.DevicesParser, dmgr devmanager.DeviceInterface) *NpuCollector {
 	CommonCollector := &NpuCollector{
@@ -88,7 +119,7 @@ func NewNpuCollector(cacheTime time.Duration, updateTime time.Duration,
 	return CommonCollector
 }
 
-// StartCollect start collect
+// StartCollect starts all collector goroutines. First initializes the chip list cache,
 func StartCollect(group *sync.WaitGroup, ctx context.Context, n *NpuCollector) {
 	npuChipInfoInitAtFirstTime(n)
 	startCollectSingleGoroutine(group, ctx, n)
@@ -100,33 +131,28 @@ func startCollectForPluginGoroutine(group *sync.WaitGroup, ctx context.Context, 
 	group.Add(1)
 	go func() {
 		defer group.Done()
-		ticker := time.NewTicker(n.updateTime)
-		defer ticker.Stop()
-		goroutinePreCollect(ChainForCustomPlugin, n)
-		defer goroutinePostCollect(ChainForCustomPlugin, n)
-		runPluginCollect(ctx, n, ticker)
+		runCollectorLoop(ctx, n, collectorLoopOptions{
+			loadChain: func() []MetricsCollector {
+				_, _, pluginChain := GetChainsSnapshot()
+				return pluginChain
+			},
+			onStop: func() {
+				logger.Info("received the stop signal, stop plugin collect")
+			},
+			runDueCollectors: func(dueCollectors []MetricsCollector) {
+				logger.Debugf("start to collect plugin info, collectors: %v", getCollectorNames(dueCollectors))
+				begin := time.Now()
+				collectPluginMetricsFor(n, dueCollectors)
+				logger.Infof("end to collect plugin info, collectors: %v, time cost: %v",
+					getCollectorNames(dueCollectors), time.Since(begin))
+			},
+		})
 	}()
 }
 
-func runPluginCollect(ctx context.Context, n *NpuCollector, ticker *time.Ticker) {
-	for {
-		select {
-		case <-ctx.Done():
-			logger.Info("received the stop signal,stop plugin collect")
-			return
-		default:
-			collectPluginMetrics(n)
-			if _, ok := <-ticker.C; !ok {
-				logger.Errorf(tickerFailedPattern, "handling plugin collectors")
-				return
-			}
-		}
-	}
-}
-
-func collectPluginMetrics(n *NpuCollector) {
+func collectPluginMetricsFor(n *NpuCollector, collectors []MetricsCollector) {
 	chipList := getChipListCache(n)
-	for _, c := range ChainForCustomPlugin {
+	for _, c := range collectors {
 		resultChan := make(chan struct{}, 1)
 		go func(cur MetricsCollector) {
 			cur.CollectToCache(n, chipList)
@@ -150,31 +176,27 @@ func startCollectForMultiGoroutine(group *sync.WaitGroup, ctx context.Context, n
 	for _, chip := range chips {
 		go func(chip HuaWeiAIChip) {
 			defer group.Done()
-			runChipCollector(ctx, n, chip)
+			runCollectorLoop(ctx, n, collectorLoopOptions{
+				loadChain: func() []MetricsCollector {
+					_, multiChain, _ := GetChainsSnapshot()
+					return multiChain
+				},
+				onStop: func() {
+					logger.Infof("received the stop signal, stop collect network info of npu(%d)", chip.LogicID)
+				},
+				runDueCollectors: func(dueCollectors []MetricsCollector) {
+					logger.Debug("start to collect npu info by hccn_tool, phyID: %v, collectors: %v",
+						chip.PhyId, getCollectorNames(dueCollectors))
+					begin := time.Now()
+					singleChipSlice := []HuaWeiAIChip{chip}
+					for _, c := range dueCollectors {
+						c.CollectToCache(n, singleChipSlice)
+					}
+					logger.Infof("end to collect npu info by hccn_tool, phyID: %v, collectors: %v, time cost: %v",
+						chip.PhyId, getCollectorNames(dueCollectors), time.Since(begin))
+				},
+			})
 		}(chip)
-	}
-}
-
-func runChipCollector(ctx context.Context, n *NpuCollector, chip HuaWeiAIChip) {
-	ticker := time.NewTicker(n.updateTime)
-	defer ticker.Stop()
-	goroutinePreCollect(ChainForMultiGoroutine, n)
-	defer goroutinePostCollect(ChainForMultiGoroutine, n)
-	for {
-		select {
-		case <-ctx.Done():
-			logger.Infof("received the stop signal,stop collect network info of npu(%d)", chip.LogicID)
-			return
-		default:
-			singleChipSlice := []HuaWeiAIChip{chip}
-			for _, c := range ChainForMultiGoroutine {
-				c.CollectToCache(n, singleChipSlice)
-			}
-			if _, ok := <-ticker.C; !ok {
-				logger.Errorf(tickerFailedPattern, "collect for multigroutine ")
-				return
-			}
-		}
 	}
 }
 
@@ -195,30 +217,88 @@ func startCollectSingleGoroutine(group *sync.WaitGroup, ctx context.Context, n *
 	group.Add(1)
 	go func() {
 		defer group.Done()
-		ticker := time.NewTicker(n.updateTime)
-		defer ticker.Stop()
-		goroutinePreCollect(ChainForSingleGoroutine, n)
-		defer goroutinePostCollect(ChainForSingleGoroutine, n)
-		for {
-			select {
-			case <-ctx.Done():
-				logger.Info("received the stop signal,stop npu base info collect")
-				return
-			default:
-				logger.Info("start to collect npu info by dcmi")
+		runCollectorLoop(ctx, n, collectorLoopOptions{
+			loadChain: func() []MetricsCollector {
+				singleChain, _, _ := GetChainsSnapshot()
+				return singleChain
+			},
+			onStop: func() {
+				logger.Info("received the stop signal, stop npu base info collect")
+			},
+			runDueCollectors: func(dueCollectors []MetricsCollector) {
+				logger.Debugf("start to collect npu info by dcmi, collectors: %v", getCollectorNames(dueCollectors))
 				begin := time.Now()
 				chipList := getChipListCache(n)
-				for _, c := range ChainForSingleGoroutine {
+				for _, c := range dueCollectors {
 					c.CollectToCache(n, chipList)
 				}
-				logger.Infof("end to collect npu info by dcmi, time cost :%v", time.Since(begin))
-				if _, ok := <-ticker.C; !ok {
-					logger.Errorf(tickerFailedPattern, "handling all collectors")
-					return
-				}
-			}
-		}
+				logger.Infof("end to collect npu info by dcmi, collectors: %v, time cost: %v",
+					getCollectorNames(dueCollectors), time.Since(begin))
+			},
+		})
 	}()
+}
+
+func getCollectorNames(collectors []MetricsCollector) interface{} {
+	var names []string
+	for _, c := range collectors {
+		names = append(names, GetCacheKey(c))
+	}
+	return names
+}
+
+// collectorLoopOptions configures the behavior of the collector loop.
+type collectorLoopOptions struct {
+	loadChain        func() []MetricsCollector
+	onStop           func()
+	runDueCollectors func([]MetricsCollector)
+}
+
+// runCollectorLoop is the core event loop for all collector goroutines.
+func runCollectorLoop(ctx context.Context, n *NpuCollector, opts collectorLoopOptions) {
+	currentChain := opts.loadChain()
+	goroutinePreCollect(currentChain, n)
+	defer func() {
+		goroutinePostCollect(currentChain, n)
+	}()
+
+	schedule := buildSchedule(currentChain)
+	schedule.markAllDue()
+
+	reloadCh := subscribeConfigReload()
+	defer unsubscribeConfigReload(reloadCh)
+
+	for {
+		result := waitForNextSignal(ctx, schedule.nextWaitDuration(), reloadCh)
+		if result == wakeByContext {
+			if opts.onStop != nil {
+				opts.onStop()
+			}
+			return
+		}
+		if result == wakeByConfigReload {
+			handleConfigReload(&currentChain, &schedule, n, opts)
+			drainReloadSignal(reloadCh)
+			continue
+		}
+		// wakeByTimer: timer expired, execute due collectors
+		now := time.Now()
+		dueCollectors := schedule.popDue(now)
+		if len(dueCollectors) == 0 {
+			continue
+		}
+		opts.runDueCollectors(dueCollectors)
+		schedule.updateNext(dueCollectors, now)
+	}
+}
+
+func handleConfigReload(currentChain *[]MetricsCollector, schedule *collectorSchedule,
+	n *NpuCollector, opts collectorLoopOptions) {
+	goroutinePostCollect(*currentChain, n)
+	*currentChain = opts.loadChain()
+	goroutinePreCollect(*currentChain, n)
+	*schedule = buildSchedule(*currentChain)
+	schedule.markAllDue()
 }
 
 // npuChipInfoInitAtFirstTime When first enter, the cache data is empty,
@@ -228,12 +308,12 @@ func npuChipInfoInitAtFirstTime(n *NpuCollector) {
 		_, err := n.cache.Get(npuListCacheKey)
 		if err != nil {
 			logger.Debug("no cache in first time, start to collect chip list and rebuild cache")
-
+			begin := time.Now()
 			npuInfo := getNPUChipList(n.Dmgr)
-			if err := n.cache.Set(npuListCacheKey, npuInfo, n.cacheTime); err != nil {
+			if err := n.cache.Set(npuListCacheKey, npuInfo, -1); err != nil {
 				logger.Error(err)
 			} else {
-				logger.Infof(UpdateCachePattern, npuListCacheKey)
+				logger.Infof(UpdateCachePattern+", collect time cost: %v", npuListCacheKey, time.Since(begin))
 			}
 			logger.Debug("rebuild cache successfully")
 		}
@@ -255,11 +335,12 @@ func InitCardInfo(group *sync.WaitGroup, ctx context.Context, n *NpuCollector) {
 				logger.Info("received the stop signal,stop card info collect")
 				return
 			default:
+				begin := time.Now()
 				npuInfo := getNPUChipList(n.Dmgr)
-				if err := n.cache.Set(npuListCacheKey, npuInfo, n.cacheTime); err != nil {
+				if err := n.cache.Set(npuListCacheKey, npuInfo, -1); err != nil {
 					logger.Error(err)
 				} else {
-					logger.Infof(UpdateCachePattern, npuListCacheKey)
+					logger.Infof(UpdateCachePattern+", collect time cost: %v", npuListCacheKey, time.Since(begin))
 				}
 				if _, ok := <-ticker.C; !ok {
 					logger.Errorf(tickerFailedPattern, npuListCacheKey)

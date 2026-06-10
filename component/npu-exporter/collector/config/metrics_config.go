@@ -18,9 +18,12 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
+	"sort"
+	"strings"
+	"time"
 
-	"ascend-common/common-utils/utils"
 	"huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/metrics"
 	"huawei.com/npu-exporter/v6/utils/logger"
@@ -29,15 +32,15 @@ import (
 var (
 	// singleGoroutineMap metrics in this map will be collected in single goroutine
 	singleGoroutineMap = map[string]common.MetricsCollector{
-		groupHccs:           &metrics.HccsCollector{},
-		groupNpu:            &metrics.BaseInfoCollector{},
-		groupSio:            &metrics.SioCollector{},
-		groupVersion:        &metrics.VersionCollector{},
-		groupHbm:            &metrics.HbmCollector{},
-		groupDDR:            &metrics.DdrCollector{},
-		groupVnpu:           &metrics.VnpuCollector{},
-		groupPcie:           &metrics.PcieCollector{},
-		groupNodeBase:       &metrics.NodeBaseCollector{},
+		groupHccs:     &metrics.HccsCollector{},
+		groupNpu:      &metrics.BaseInfoCollector{},
+		groupSio:      &metrics.SioCollector{},
+		groupVersion:  &metrics.VersionCollector{},
+		groupHbm:      &metrics.HbmCollector{},
+		groupDDR:      &metrics.DdrCollector{},
+		groupVnpu:     &metrics.VnpuCollector{},
+		groupPcie:     &metrics.PcieCollector{},
+		groupNodeBase: &metrics.NodeBaseCollector{},
 	}
 	// multiGoroutineMap metrics in this map will be collected in multi goroutine
 	multiGoroutineMap = map[string]common.MetricsCollector{
@@ -48,32 +51,17 @@ var (
 	}
 	// pluginCollectorMap metrics in this map will be collected in plugin goroutine
 	pluginCollectorMap = map[string]common.MetricsCollector{}
-	presetConfigs      = make([]map[string]string, 0)
-	pluginConfigs      = make([]map[string]string, 0)
-
-	defaultPresetConfigs = []map[string]string{
-		{metricsGroup: groupNodeBase, state: stateOn},
-		{metricsGroup: groupDDR, state: stateOn},
-		{metricsGroup: groupHccs, state: stateOn},
-		{metricsGroup: groupNpu, state: stateOn},
-		{metricsGroup: groupNetwork, state: stateOn},
-		{metricsGroup: groupPcie, state: stateOn},
-		{metricsGroup: groupRoce, state: stateOn},
-		{metricsGroup: groupSio, state: stateOn},
-		{metricsGroup: groupVnpu, state: stateOn},
-		{metricsGroup: groupVersion, state: stateOn},
-		{metricsGroup: groupOptical, state: stateOn},
-		{metricsGroup: groupHbm, state: stateOn},
-		{metricsGroup: groupUb, state: stateOn},
-	}
-	defaultPluginConfigs = []map[string]string{
-		{metricsGroup: groupText, state: stateOn},
-	}
+	presetConfigs      = make([]MetricsGroupConfig, 0)
+	pluginConfigs      = make([]MetricsGroupConfig, 0)
 )
 
 const (
-	metricsGroup = "metricsGroup"
-	state        = "state"
+	defaultIntervalSeconds = 60
+	intervalSeconds1       = 1
+	intervalSeconds5       = 5
+	intervalSeconds10      = 10
+	intervalSeconds30      = 30
+	maxIntervalSeconds     = 86400 // 1 day = 24 * 60 * 60 seconds
 
 	groupDDR     = "ddr"
 	groupHccs    = "hccs"
@@ -87,18 +75,71 @@ const (
 	groupOptical = "optical"
 	groupHbm     = "hbm"
 	// groupText represents text-based metrics collected by plugin collectors
-	groupText           = "text"
-	groupUb             = "ub"
-	groupNodeBase       = "nodeBase"
+	groupText        = "text"
+	groupUb          = "ub"
+	groupNodeBase    = "nodeBase"
+	groupUtilization = "utilization"
 
 	stateOn  = "ON"
 	stateOFF = "OFF"
 )
 
-const (
-	PresetConfigPath = "/usr/local/metricConfiguration.json"
-	PluginConfigPath = "/usr/local/pluginConfiguration.json"
+var (
+	defaultPresetConfigs = []MetricsGroupConfig{
+		// dcmi
+		buildDefaultConfig(groupVersion, stateOn, -1),
+		buildDefaultConfig(groupUtilization, stateOn, 1),
+		buildDefaultConfig(groupNpu, stateOn, intervalSeconds5),
+		buildDefaultConfig(groupDDR, stateOn, intervalSeconds10),
+		buildDefaultConfig(groupSio, stateOn, defaultIntervalSeconds),
+		buildDefaultConfig(groupHbm, stateOn, defaultIntervalSeconds),
+		buildDefaultConfig(groupHccs, stateOn, defaultIntervalSeconds),
+		buildDefaultConfig(groupPcie, stateOn, defaultIntervalSeconds),
+		buildDefaultConfig(groupVnpu, stateOn, defaultIntervalSeconds),
+		buildDefaultConfig(groupNodeBase, stateOn, defaultIntervalSeconds),
+		// hccn_tool
+		buildDefaultConfig(groupRoce, stateOn, defaultIntervalSeconds),
+		buildDefaultConfig(groupOptical, stateOn, defaultIntervalSeconds),
+		buildDefaultConfig(groupNetwork, stateOn, defaultIntervalSeconds),
+		buildDefaultConfig(groupUb, stateOn, defaultIntervalSeconds),
+	}
+	defaultPluginConfigs = []MetricsGroupConfig{
+		buildDefaultConfig(groupText, stateOn, defaultIntervalSeconds),
+	}
 )
+
+const (
+	// PresetConfigPath is the path to the preset metrics configuration file.
+	// NOTE: Changed from "/usr/local/metricConfiguration.json" to "/user/mind-cluster/npu-exporter-config/metricConfiguration.json"
+	// to support ConfigMap hot-reload without subPath or items. This is a compatibility change that needs to be documented
+	// in detailed design documents.
+	PresetConfigPath = "/user/mind-cluster/npu-exporter-config/metricConfiguration.json"
+	// PluginConfigPath is the path to the plugin metrics configuration file.
+	// NOTE: Same compatibility change as PresetConfigPath.
+	PluginConfigPath = "/user/mind-cluster/npu-exporter-config/pluginConfiguration.json"
+)
+
+// MetricsGroupConfig represents the configuration of a metrics group
+type MetricsGroupConfig struct {
+	MetricsGroup string `json:"metricsGroup"`
+	State        string `json:"state"`
+	// IntervalSeconds is the collection interval in seconds.
+	// Uses pointer type to distinguish "not configured" from "configured as 0":
+	//   - nil: not configured, use default value
+	//   - points to 0: explicitly set to 0, treated as invalid
+	//   - points to -1: collect only once
+	//   - points to other values: use the configured value
+	IntervalSeconds *int `json:"intervalSeconds,omitempty"`
+}
+
+// buildDefaultConfig creates a MetricsGroupConfig with the specified metrics group name, state, and interval.
+func buildDefaultConfig(metricsGroup string, state string, intervalSeconds int) MetricsGroupConfig {
+	return MetricsGroupConfig{
+		MetricsGroup:    metricsGroup,
+		State:           state,
+		IntervalSeconds: &intervalSeconds,
+	}
+}
 
 func loadConfiguration() {
 	if fileBytes := loadFromFile(PresetConfigPath); fileBytes == nil {
@@ -116,14 +157,17 @@ func loadConfiguration() {
 }
 
 func loadFromFile(filePath string) []byte {
-	fileBytes, err := utils.LoadFile(filePath)
+	// K8s ConfigMap uses symlink mechanism:
+	//   metricConfiguration.json -> ..data/metricConfiguration.json
+	fileBytes, err := os.ReadFile(filePath)
 	if err != nil {
+		logger.Warnf("read config file %s failed: %v", filePath, err)
 		return nil
 	}
 	return fileBytes
 }
 
-func initConfiguration(fileBytes []byte, configs *[]map[string]string) {
+func initConfiguration(fileBytes []byte, configs *[]MetricsGroupConfig) {
 	if err := json.Unmarshal(fileBytes, configs); err != nil {
 		logger.Errorf("unmarshal config byte failed: %v", err)
 		return
@@ -151,48 +195,131 @@ func DeletePluginCollector(name string) {
 	delete(pluginCollectorMap, name)
 }
 
-// Register register collector to cache
+// collectorIntervalEntry records the name and collection interval of a single collector for merged logging
+type collectorIntervalEntry struct {
+	name     string
+	interval time.Duration
+}
+
+func logCollectorIntervals(entries []collectorIntervalEntry) {
+	if len(entries) == 0 {
+		return
+	}
+	// Group by interval, key is interval, value is list of collector names
+	groups := make(map[time.Duration][]string)
+	for _, e := range entries {
+		groups[e.interval] = append(groups[e.interval], e.name)
+	}
+	// Extract and sort all intervals for ordered output
+	intervals := make([]time.Duration, 0, len(groups))
+	for iv := range groups {
+		intervals = append(intervals, iv)
+	}
+	sort.Slice(intervals, func(i, j int) bool { return intervals[i] < intervals[j] })
+	for _, iv := range intervals {
+		names := groups[iv]
+		sort.Strings(names)
+		if iv == common.CollectOnceInterval() {
+			logger.Infof("collect once: %v", strings.Join(names, ", "))
+		} else {
+			logger.Infof("collect interval %v: %v", iv, strings.Join(names, ", "))
+		}
+	}
+}
+
+func resolveInterval(configIntervalSeconds *int, fallbackInterval time.Duration) time.Duration {
+	if fallbackInterval > 0 {
+		return fallbackInterval
+	}
+	if configIntervalSeconds == nil {
+		// Not configured, use default interval
+		return time.Duration(defaultIntervalSeconds) * time.Second
+	}
+	if *configIntervalSeconds == -1 {
+		return common.CollectOnceInterval()
+	}
+	if *configIntervalSeconds == 0 {
+		// Explicitly set to 0, treated as invalid
+		return common.DisabledInterval()
+	}
+	if *configIntervalSeconds > maxIntervalSeconds || *configIntervalSeconds < -1 {
+		return common.DisabledInterval()
+	}
+	return time.Duration(*configIntervalSeconds) * time.Second
+}
+
+// validatedConfig holds the validated result of a single metrics group config
+type validatedConfig struct {
+	name     string
+	interval time.Duration
+}
+
+// validateConfigs validates configs and resolves collection intervals.
+// It logs state and interval info, and skips invalid or disabled configs.
+func validateConfigs(configs []MetricsGroupConfig, fallbackInterval time.Duration, logPrefix string) []validatedConfig {
+	results := make([]validatedConfig, 0, len(configs))
+	for _, config := range configs {
+		name := config.MetricsGroup
+		if strings.ToUpper(config.State) != stateOn {
+			logger.Infof("%-18s [%-13v] is off", logPrefix, name)
+			continue
+		}
+		var intervalStr string
+		if config.IntervalSeconds == nil {
+			intervalStr = fmt.Sprintf("not set, will use default %v", defaultIntervalSeconds)
+		} else {
+			intervalStr = fmt.Sprintf("%d", *config.IntervalSeconds)
+		}
+		logger.Infof("%-18s [%-13v] is on, collect interval is %vs", logPrefix, name, intervalStr)
+		interval := resolveInterval(config.IntervalSeconds, fallbackInterval)
+		if interval == common.DisabledInterval() {
+			logger.Warnf("%-18s [%-13v] has invalid intervalSeconds %v, disabled", logPrefix, name, intervalStr)
+			continue
+		}
+		results = append(results, validatedConfig{name: name, interval: interval})
+	}
+	return results
+}
+
+// matchCollectors matches validated configs against the collector map and returns
+// the matched collectors and their interval entries.
+func matchCollectors(validated []validatedConfig, collectorMap map[string]common.MetricsCollector,
+	n *common.NpuCollector) ([]common.MetricsCollector, []collectorIntervalEntry) {
+
+	collectors := make([]common.MetricsCollector, 0)
+	entries := make([]collectorIntervalEntry, 0)
+	for _, vc := range validated {
+		collector, exist := collectorMap[vc.name]
+		if exist && collector.IsSupported(n) {
+			common.SetCollectorInterval(common.GetCacheKey(collector), vc.interval)
+			collectors = append(collectors, collector)
+			entries = append(entries, collectorIntervalEntry{name: vc.name, interval: vc.interval})
+		}
+	}
+	return collectors, entries
+}
+
+// Register registers collectors to cache. It loads configuration files, determines the collection interval
 func Register(n *common.NpuCollector) {
 	loadConfiguration()
 
-	for _, config := range presetConfigs {
-		metricsGroupName := config[metricsGroup]
+	fallbackInterval := n.GetUpdateTime()
 
-		if config[state] != stateOn {
-			logger.Infof("metricsGroup [%v] is off", metricsGroupName)
-			continue
-		}
-		logger.Infof("metricsGroup [%v] is on", metricsGroupName)
-		collector, exist := singleGoroutineMap[metricsGroupName]
-		if exist && collector.IsSupported(n) {
-			common.ChainForSingleGoroutine = append(common.ChainForSingleGoroutine, collector)
-		}
+	presetValidated := validateConfigs(presetConfigs, fallbackInterval, "metricsGroup")
+	pluginValidated := validateConfigs(pluginConfigs, fallbackInterval, "plugin collector")
 
-		collector, exist = multiGoroutineMap[metricsGroupName]
-		if exist && collector.IsSupported(n) {
-			common.ChainForMultiGoroutine = append(common.ChainForMultiGoroutine, collector)
-		}
-	}
+	newSingle, singleEntries := matchCollectors(presetValidated, singleGoroutineMap, n)
+	newMulti, multiEntries := matchCollectors(presetValidated, multiGoroutineMap, n)
+	newPlugin, pluginEntries := matchCollectors(pluginValidated, pluginCollectorMap, n)
 
-	for _, config := range pluginConfigs {
-		metricsGroupName := config[metricsGroup]
+	allEntries := append(append(singleEntries, multiEntries...), pluginEntries...)
+	logCollectorIntervals(allEntries)
+	common.SetChains(newSingle, newMulti, newPlugin)
+	common.NotifyConfigReload()
 
-		if config[state] != stateOn {
-			logger.Infof("plugin collector [%v] is off", metricsGroupName)
-			continue
-		}
-		logger.Infof("plugin collector [%v] is on", metricsGroupName)
-		collector, exist := pluginCollectorMap[metricsGroupName]
-		if exist && collector.IsSupported(n) {
-			logger.Infof("add plugin collector:%v", metricsGroupName)
-			common.ChainForCustomPlugin = append(common.ChainForCustomPlugin, collector)
-		}
-
-	}
-
-	logger.Infof("ChainForSingleGoroutine:%#v", common.ChainForSingleGoroutine)
-	logger.Infof("ChainForMultiGoroutine:%#v", common.ChainForMultiGoroutine)
-	logger.Infof("ChainForCustomPlugin:%#v", common.ChainForCustomPlugin)
+	logger.Infof("ChainForSingleGoroutine:%#v", newSingle)
+	logger.Infof("ChainForMultiGoroutine:%#v", newMulti)
+	logger.Infof("ChainForCustomPlugin:%#v", newPlugin)
 }
 
 // UnRegister delete collector from chain

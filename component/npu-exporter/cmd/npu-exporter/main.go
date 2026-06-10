@@ -1,4 +1,4 @@
-/* Copyright(C) 2021-2023. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2021-2026. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -76,7 +76,7 @@ var (
 
 const (
 	portConst               = 8082
-	updateTimeConst         = 5
+	deviceParserTimeout     = 5
 	cacheTime               = 100 * time.Second
 	portLeft                = 1025
 	portRight               = 40000
@@ -151,7 +151,7 @@ func main() {
 	if err := deviceParser.Init(); err != nil {
 		logger.Errorf("failed to init devices parser: %v", err)
 	}
-	deviceParser.Timeout = time.Duration(updateTime) * time.Second
+	deviceParser.Timeout = time.Duration(deviceParserTimeout) * time.Second
 
 	colcommon.Collector = colcommon.NewNpuCollector(cacheTime, time.Duration(updateTime)*time.Second, deviceParser, dmgr)
 	plugins.RegisterPlugin()
@@ -160,6 +160,8 @@ func main() {
 	wg := &sync.WaitGroup{}
 	colcommon.InitCardInfo(wg, ctx, colcommon.Collector)
 	colcommon.StartContainerInfoCollect(ctx, cancel, wg, colcommon.Collector)
+
+	config.StartDynamicReload(ctx, colcommon.Collector)
 
 	colcommon.StartCollect(wg, ctx, colcommon.Collector)
 	switch platform {
@@ -320,8 +322,10 @@ func paramValidInPrometheus() error {
 }
 
 func checkUpdateTime() error {
-	if updateTime > oneMinute || updateTime < 1 {
-		return errors.New("the updateTime is invalid")
+	if updateTime > oneMinute || updateTime < 0 {
+		logger.Warnf("the updateTime %d is invalid, it will be ignored and use intervalSeconds "+
+			"per metricsGroup instead", updateTime)
+		updateTime = 0
 	}
 	return nil
 }
@@ -413,8 +417,9 @@ func init() {
 		"The server port of the http service,range[1025-40000]")
 	flag.StringVar(&ip, "ip", "",
 		"The listen ip of the service,0.0.0.0 is not recommended when install on Multi-NIC host")
-	flag.IntVar(&updateTime, "updateTime", updateTimeConst,
-		"Interval (seconds) to update the npu metrics cache,range[1-60]")
+	flag.IntVar(&updateTime, "updateTime", 0,
+		"Interval (seconds) to update the npu metrics cache,range[1-60]. "+
+			"0 or not set means use intervalSeconds per metricsGroup")
 	flag.BoolVar(&version, "version", false,
 		"If true,query the version of the program (default false)")
 	flag.StringVar(&containerMode, "containerMode", containerModeDocker,

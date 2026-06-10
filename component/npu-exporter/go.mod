@@ -5,11 +5,12 @@ go 1.18
 require (
 	ascend-common v0.0.0
 	github.com/agiledragon/gomonkey/v2 v2.8.0
+	github.com/fsnotify/fsnotify v1.6.0
 	github.com/golang/protobuf v1.5.3
 	github.com/influxdata/telegraf v1.26.3
 	github.com/prometheus/client_golang v1.15.0
 	github.com/smartystreets/goconvey v1.6.4
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.4
 	google.golang.org/grpc v1.57.2
 	google.golang.org/protobuf v1.30.0
 	k8s.io/cri-api v0.25.13
@@ -31,7 +32,6 @@ require (
 	github.com/coreos/go-semver v0.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.15.0 // indirect
-	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
