@@ -28,6 +28,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/cache"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 )
 
@@ -178,6 +179,8 @@ type DynamicParameters struct {
 
 	// check the original value from configuration when schedule in a5
 	SuperPodSizeFromConf int
+	// PreferPreviousNode enables "prefer previous node" feature
+	PreferPreviousNode bool
 }
 
 // ScheduleCache the plugin defined caches saving cm data
@@ -202,6 +205,8 @@ type ClusterCache struct {
 	Nodes        map[string]NPUNode
 	Tors         *TorList
 	SuperPodInfo *SuperPodInfo
+	// AffinityCache survives across sessions; used by policy layer to prefer original nodes
+	AffinityCache *cache.PodNodeAffinityCache
 }
 
 // JobScheduleInfoRecorder some info need recorded in job scheduling
@@ -233,6 +238,7 @@ type ScheduleHandler struct {
 	PolicyBuilder   PolicyBuilder
 	FaultHandle     FaultHandler
 	PredicatedNodes map[api.JobID]sets.String
+	AffinityCache   *cache.PodNodeAffinityCache
 	ScheduleEnv
 	CheckResult
 }

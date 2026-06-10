@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	"k8s.io/klog"
+	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
@@ -67,6 +68,39 @@ func (reScheduler *ReScheduler) Execute(env *plugin.ScheduleEnv, ssn *framework.
 }
 
 // PreStopAction post-processing actions for re-scheduling
+// IsNodeFault returns true if the node has any registered fault.
+func (reScheduler *ReScheduler) IsNodeFault(nodeName string) bool {
+	cache := GetReSchedulerCache()
+	if cache == nil {
+		return false
+	}
+	fNode, exists := cache.FaultNodes[nodeName]
+	if !exists {
+		return false
+	}
+	return fNode.IsFaultNode || fNode.HasCardSubHealthFault || fNode.HasSwitchSubHealthFault
+}
+
+// IsFaultTaskByRank returns true if the given rank was recorded as a fault
+// task in the fault job cache. Uses the fault snapshot rather than real-time
+// node health, so recovered nodes are still recognized during rescheduling.
+func (reScheduler *ReScheduler) IsFaultTaskByRank(jobID api.JobID, rankIndex string) bool {
+	cache := GetReSchedulerCache()
+	if cache == nil {
+		return false
+	}
+	fJob, exists := cache.FaultJobs[jobID]
+	if !exists || fJob == nil || !fJob.IsFaultJob {
+		return false
+	}
+	for _, ft := range fJob.FaultTasks {
+		if ft.IsFaultTask && ft.NodeRankIndex == rankIndex {
+			return true
+		}
+	}
+	return false
+}
+
 func (reScheduler *ReScheduler) PreStopAction(env *plugin.ScheduleEnv) error {
 	if reScheduler == nil || env == nil {
 		return fmt.Errorf("reSchedule not enabled or nil env: %s", util.ArgumentError)

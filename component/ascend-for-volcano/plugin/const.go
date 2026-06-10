@@ -158,8 +158,10 @@ const (
 	GraceOverTimeKey  = "grace-over-time"
 	minGraceOverTime  = 2
 	maxGraceOverTime  = 3600
-	reserveNodesKey   = "reserve-nodes"
-	sizeOfSuperPodKey = "super-pod-size"
+	reserveNodesKey              = "reserve-nodes"
+	sizeOfSuperPodKey            = "super-pod-size"
+	preferPreviousNodeKey        = "prefer-previous-node" // enable prefer previous node feature
+	defaultPreferPreviousScore   = 4.0                    // +4 score bonus for original node
 )
 
 const (
