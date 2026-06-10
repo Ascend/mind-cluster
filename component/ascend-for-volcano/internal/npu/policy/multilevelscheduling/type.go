@@ -71,6 +71,5 @@ const (
 	blockInvalidReason        = "block config is invalid"
 	scoreForNode              = 100000000
 	maxNodeNpu                = 16
-	sessionsForSinglePod      = 6
 	defaultFragmentScoreScale = 10
 )

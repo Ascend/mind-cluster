@@ -67,11 +67,11 @@ func (reScheduler *ReScheduler) singlePodReschedulingUpgradeFor910A5(jobInfo *ap
 	}
 
 	_, ok = jobInfo.PodGroup.Annotations[util.SuperPodAnnoKey]
-	if fJob.PendingSessionNum == spPendingTimes && ok {
+	if fJob.PendingSessionNum == util.SpPendingTimes && ok {
 		fJob.DeleteExecutedFlag = false
 	}
 
-	if fJob.PendingSessionNum == pendingTimes {
+	if fJob.PendingSessionNum == util.PendingTimes {
 		fJob.DeleteExecutedFlag = false
 	}
 }
@@ -95,7 +95,7 @@ func (reScheduler *ReScheduler) processPendingRules(jobInfo *api.JobInfo, fJob *
 	}
 
 	// set PendingSessionNum to 6 when process rescheduling is failed
-	if fJob.PendingSessionNum == spPendingTimes {
+	if fJob.PendingSessionNum == util.SpPendingTimes {
 		fJob.PendingSessionNum = processPendingTimes
 	}
 

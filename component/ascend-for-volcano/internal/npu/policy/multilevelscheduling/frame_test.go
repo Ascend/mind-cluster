@@ -18,6 +18,7 @@ package multilevelscheduling
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -246,17 +247,14 @@ func TestScoreBestNPUNodes(t *testing.T) {
 }
 
 func TestScoreBestNPUNodes_JobReady(t *testing.T) {
-	mh := newTestHandler()
+	mh := newTestHandlerWithNodes()
 	jobReady := true
 	job := newTestSchedulerJob()
 	job.JobReadyTag = &jobReady
 	job.SuperPods = map[string][]plugin.SuperNode{"0": {{Name: "node0"}}}
 	mh.ScheduleEnv.Jobs = map[api.JobID]plugin.SchedulerJob{"job1": job}
 	task := &api.TaskInfo{Name: testTaskName, Job: "job1", Pod: &v1.Pod{}}
-	patch := gomonkey.ApplyFunc(getHcclRankIndex, func(*api.TaskInfo, plugin.SchedulerJob) (int, error) { return 0, nil }).
-		ApplyFunc(getL1Ranks, func(map[string][]plugin.SuperNode, int) (string, int, error) { return "0", 0, nil })
-	defer patch.Reset()
-	err := mh.ScoreBestNPUNodes(task, []*api.NodeInfo{{Name: testNodeName}}, map[string]float64{"node0": 0})
+	err := mh.ScoreBestNPUNodes(task, []*api.NodeInfo{{Name: "node0"}}, map[string]float64{"node0": 0})
 	if err != nil {
 		t.Errorf("ScoreBestNPUNodes() unexpected error: %v", err)
 	}
@@ -317,7 +315,7 @@ func TestSelectNodesForMultiLevelJob(t *testing.T) {
 				Levels: []util.ResourceTreeLevel{{Type: util.LevelTypeNode}}}}, nil
 		}).ApplyFunc(Schedule, func(*util.ResourceTree, []util.TaskTreeLevel) (*util.TaskTree, error) {
 		return &util.TaskTree{TaskNode: &util.TaskNode{ResourceNodeName: "r"}}, nil
-	}).ApplyFunc(plugin.GetSuperNodeMapFromTaskTree, func(*util.TaskTree) (map[string][]plugin.SuperNode, error) {
+	}).ApplyFunc(plugin.GetSuperNodeMapFromTaskTree, func(*util.TaskTree, map[string][]plugin.SuperNode) (map[string][]plugin.SuperNode, error) {
 		return map[string][]plugin.SuperNode{"0": {{Name: "node0"}}}, nil
 	})
 	defer patch.Reset()
@@ -341,7 +339,7 @@ func TestSelectNodesForMultiLevelJob_OnlyL1(t *testing.T) {
 				Levels: []util.ResourceTreeLevel{{Type: util.LevelTypeNode}}}}, nil
 		}).ApplyFunc(Schedule, func(*util.ResourceTree, []util.TaskTreeLevel) (*util.TaskTree, error) {
 		return &util.TaskTree{TaskNode: &util.TaskNode{ResourceNodeName: "r"}}, nil
-	}).ApplyFunc(plugin.GetSuperNodeMapFromTaskTree, func(*util.TaskTree) (map[string][]plugin.SuperNode, error) {
+	}).ApplyFunc(plugin.GetSuperNodeMapFromTaskTree, func(*util.TaskTree, map[string][]plugin.SuperNode) (map[string][]plugin.SuperNode, error) {
 		return map[string][]plugin.SuperNode{"0": {{Name: "node0"}}}, nil
 	})
 	defer patch.Reset()
@@ -366,7 +364,7 @@ func TestTryScheduleInStrictRules(t *testing.T) {
 				Levels: []util.ResourceTreeLevel{{Type: util.LevelTypeNode}}}}, nil
 		}).ApplyFunc(Schedule, func(*util.ResourceTree, []util.TaskTreeLevel) (*util.TaskTree, error) {
 		return &util.TaskTree{TaskNode: &util.TaskNode{ResourceNodeName: "r"}}, nil
-	}).ApplyFunc(plugin.GetSuperNodeMapFromTaskTree, func(*util.TaskTree) (map[string][]plugin.SuperNode, error) {
+	}).ApplyFunc(plugin.GetSuperNodeMapFromTaskTree, func(*util.TaskTree, map[string][]plugin.SuperNode) (map[string][]plugin.SuperNode, error) {
 		return map[string][]plugin.SuperNode{"0": {{Name: "node0"}}}, nil
 	})
 	defer patch.Reset()
@@ -389,7 +387,7 @@ func TestScheduleMultipleLevelPodsForJob(t *testing.T) {
 				Levels: []util.ResourceTreeLevel{{Type: util.LevelTypeNode}}}}, nil
 		}).ApplyFunc(Schedule, func(*util.ResourceTree, []util.TaskTreeLevel) (*util.TaskTree, error) {
 		return &util.TaskTree{TaskNode: &util.TaskNode{ResourceNodeName: "r"}}, nil
-	}).ApplyFunc(plugin.GetSuperNodeMapFromTaskTree, func(*util.TaskTree) (map[string][]plugin.SuperNode, error) {
+	}).ApplyFunc(plugin.GetSuperNodeMapFromTaskTree, func(*util.TaskTree, map[string][]plugin.SuperNode) (map[string][]plugin.SuperNode, error) {
 		return map[string][]plugin.SuperNode{"0": {{Name: "node0"}}}, nil
 	})
 	defer patch.Reset()
@@ -439,67 +437,56 @@ func TestScheduleMultipleLevelPodsForJob_NoValidTaskTree(t *testing.T) {
 	}
 }
 
-func TestTryScheduleTaskInSingleTree(t *testing.T) {
-	mh := newTestHandler()
+func TestTryScheduleTaskInSingleTree_Schedule(t *testing.T) {
+	mh := newTestHandlerWithNodes()
 	mh.taskLevels = []util.TaskTreeLevel{{Name: "l0", ReqNode: 1}}
-	tree := &util.ResourceTree{Name: "t", ResourceNode: &util.ResourceNode{Name: "r"},
-		Levels: []util.ResourceTreeLevel{{Type: util.LevelTypeNode, ReservedNode: 0}}}
-	patch := gomonkey.ApplyFunc(Schedule, func(*util.ResourceTree, []util.TaskTreeLevel) (*util.TaskTree, error) {
-		return &util.TaskTree{TaskNode: &util.TaskNode{}}, nil
-	})
-	defer patch.Reset()
-	tt, err := mh.tryScheduleTaskInSingleTree(newTestTask(testTaskName), tree)
-	if err != nil || tt == nil {
-		t.Errorf("tryScheduleTaskInSingleTree() got err=%v, tt=%v", err, tt)
+	mh.FrameAttr.ResourceLevelsInfo = map[string][]util.ResourceTreeLevel{
+		util.DefaultTopoTree: {{Type: util.LevelTypeTree, ReservedNode: 0}, {Type: util.LevelTypeNode, ReservedNode: 0}},
 	}
-}
-
-func TestTryScheduleTaskInSingleTree_Reschedule(t *testing.T) {
-	mh := newTestHandler()
-	mh.taskLevels = []util.TaskTreeLevel{{Name: "l0", ReqNode: 1}}
-	mh.SuperPodInfo = &plugin.SuperPodInfo{
-		SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-		SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{"job1": {"t1": "node0"}},
-	}
-	tree := &util.ResourceTree{Name: "t", ResourceNode: &util.ResourceNode{Name: "r"},
-		Levels: []util.ResourceTreeLevel{{Type: util.LevelTypeNode, ReservedNode: 0}}}
+	jobReady := true
+	job := plugin.SchedulerJob{JobReadyTag: &jobReady}
+	mh.ScheduleEnv.Jobs = map[api.JobID]plugin.SchedulerJob{"job1": job}
+	mh.SuperPodInfo = &plugin.SuperPodInfo{SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{}}
 	task := &api.TaskInfo{Name: testTaskName, Job: "job1", Pod: &v1.Pod{}}
-	patch := gomonkey.ApplyFunc(getFaultJob, func(api.JobID) (*rescheduling.FaultJob, bool) {
-		return &rescheduling.FaultJob{IsFaultJob: true, JobUID: "job1"}, true
-	}).ApplyFunc(plugin.GetTaskTreeFromSuperNodeMap,
-		func(map[string][]plugin.SuperNode, []util.TaskTreeLevel, []util.ResourceTreeLevel, map[string]plugin.NPUNode) (*util.TaskTree, error) {
-			return &util.TaskTree{TaskNode: &util.TaskNode{}}, nil
-		}).ApplyFunc(Reschedule, func(*util.ResourceTree, *util.TaskTree, []string) (*util.TaskTree, error) {
-		return &util.TaskTree{TaskNode: &util.TaskNode{}}, nil
-	})
-	defer patch.Reset()
-	tt, err := mh.tryScheduleTaskInSingleTree(task, tree)
-	if err != nil || tt == nil {
-		t.Errorf("tryScheduleTaskInSingleTree() got err=%v, tt=%v", err, tt)
-	}
-}
-
-func TestRescheduleHandler(t *testing.T) {
-	mh := newTestHandler()
-	mh.taskLevels = []util.TaskTreeLevel{{Name: "l0", ReqNode: 1}}
-	mh.SuperPodInfo = &plugin.SuperPodInfo{
-		SuperPodReschdInfo:        map[api.JobID]map[string][]plugin.SuperNode{},
-		SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{"job1": {"t1": "node0"}},
-	}
-	tree := &util.ResourceTree{Name: "t", ResourceNode: &util.ResourceNode{Name: "r"},
-		Levels: []util.ResourceTreeLevel{{Type: util.LevelTypeNode, ReservedNode: 0}}}
-	task := &api.TaskInfo{Name: testTaskName, Job: "job1", Pod: &v1.Pod{}}
-	fJob := &rescheduling.FaultJob{IsFaultJob: true, JobUID: "job1", SuperPods: map[string][]plugin.SuperNode{}}
-	patch := gomonkey.ApplyFunc(plugin.GetTaskTreeFromSuperNodeMap,
-		func(map[string][]plugin.SuperNode, []util.TaskTreeLevel, []util.ResourceTreeLevel, map[string]plugin.NPUNode) (*util.TaskTree, error) {
-			return &util.TaskTree{TaskNode: &util.TaskNode{}}, nil
-		}).ApplyFunc(Reschedule, func(*util.ResourceTree, *util.TaskTree, []string) (*util.TaskTree, error) {
-		return &util.TaskTree{TaskNode: &util.TaskNode{}}, nil
-	})
-	defer patch.Reset()
-	_, err := mh.reschedule(fJob, task, tree)
+	nodes := []*api.NodeInfo{{Name: "node0"}}
+	_, err := mh.scheduleMultipleLevelPodsForJob(task, nodes)
 	if err != nil {
-		t.Errorf("reschedule() unexpected error: %v", err)
+		t.Errorf("scheduleMultipleLevelPodsForJob() unexpected error: %v", err)
+	}
+}
+
+func TestRescheduleWithSuperPods(t *testing.T) {
+	mh := newTestHandler()
+	mh.taskLevels = []util.TaskTreeLevel{{Name: "l0", ReqNode: 1}}
+	mh.Nodes = map[string]plugin.NPUNode{
+		"node0": {CommonNode: plugin.CommonNode{Name: "node0"}},
+		"node2": {CommonNode: plugin.CommonNode{Name: "node2"}},
+	}
+	mh.FrameAttr.ResourceLevelsInfo = map[string][]util.ResourceTreeLevel{
+		util.DefaultTopoTree: {{Type: util.LevelTypeTree, ReservedNode: 0}, {Type: util.LevelTypeNode, ReservedNode: 0}},
+	}
+	tree := &util.ResourceTree{Name: "t", ResourceNode: &util.ResourceNode{Name: "r"},
+		Levels: []util.ResourceTreeLevel{{Type: util.LevelTypeNode, ReservedNode: 0}}}
+	ctx := &rescheduleContext{
+		task:         &api.TaskInfo{Name: testTaskName, Job: "job1", Pod: &v1.Pod{}},
+		superPods:    map[string][]plugin.SuperNode{"0": {{Name: "node0", TopoTreeName: util.DefaultTopoTree}, {TopoTreeName: util.DefaultTopoTree}}},
+		missingNodes: []string{"node1"},
+	}
+	nodes := []*api.NodeInfo{{Name: "node0"}, {Name: "node2"}}
+	patch := gomonkey.ApplyFunc(plugin.GetResourceTrees,
+		func(map[string]plugin.NPUNode, map[string][]util.ResourceTreeLevel, []util.TaskTreeLevel) ([]*util.ResourceTree, error) {
+			return []*util.ResourceTree{tree}, nil
+		}).ApplyFunc(plugin.GetTaskTreeFromSuperNodeMap,
+		func(map[string][]plugin.SuperNode, []util.TaskTreeLevel, []util.ResourceTreeLevel, map[string]plugin.NPUNode) (*util.TaskTree, error) {
+			return &util.TaskTree{TaskNode: &util.TaskNode{}}, nil
+		}).ApplyFunc(Reschedule,
+		func(*util.ResourceTree, *util.TaskTree, []string) (*util.TaskTree, error) {
+			return &util.TaskTree{TaskNode: &util.TaskNode{}}, nil
+		})
+	defer patch.Reset()
+	_, err := mh.rescheduleWithSuperPods(ctx, nodes, 0)
+	if err != nil {
+		t.Errorf("rescheduleWithSuperPods() unexpected error: %v", err)
 	}
 }
 
@@ -669,40 +656,6 @@ func TestSelectNodeFromCache_WithPodGroup(t *testing.T) {
 	sMap := map[string]float64{"node0": 0}
 	task := &api.TaskInfo{Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{util.TaskSpecAnno: "spec"}}}}
 	mh.selectNodeFromCache(job, task, sMap)
-}
-
-func TestIfPodLevelRescheduling_False(t *testing.T) {
-	fJob := &rescheduling.FaultJob{PendingSessionNum: 0}
-	sJob := &plugin.SchedulerJob{SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{"t1": {}}}}}
-	sJob.SchedulingTaskNum = 1
-	patch := gomonkey.ApplyMethod(reflect.TypeOf(&rescheduling.FaultJob{}), "IsJobSingleRescheduling",
-		func(*rescheduling.FaultJob, *plugin.SchedulerJob) bool { return false }).
-		ApplyMethod(reflect.TypeOf(&rescheduling.FaultJob{}), "IsProcessReschedulingJob",
-			func(*rescheduling.FaultJob, *plugin.SchedulerJob) bool { return false })
-	defer patch.Reset()
-	if ifPodLevelRescheduling(fJob, sJob) {
-		t.Error("ifPodLevelRescheduling() should return false")
-	}
-}
-
-func TestUpdateSuperNodesForPodLevelRescheduling(t *testing.T) {
-	nodes := map[string][]plugin.SuperNode{"0": {{Name: "n0"}, {Name: "n1"}}}
-	task := &api.TaskInfo{Name: testTaskName, Job: "job1"}
-	job := plugin.SchedulerJob{SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{"t1": {}}}}}
-	patch := gomonkey.ApplyFunc(getFaultJob, func(api.JobID) (*rescheduling.FaultJob, bool) {
-		return &rescheduling.FaultJob{IsFaultJob: true, PendingSessionNum: 0, SuperPods: nodes}, true
-	}).ApplyFunc(getHcclRankIndex, func(*api.TaskInfo, plugin.SchedulerJob) (int, error) { return 0, nil }).
-		ApplyFunc(getL1Ranks, func(map[string][]plugin.SuperNode, int) (string, int, error) { return "0", 0, nil }).
-		ApplyMethod(reflect.TypeOf(&rescheduling.FaultJob{}), "IsJobSingleRescheduling",
-			func(*rescheduling.FaultJob, *plugin.SchedulerJob) bool { return true })
-	defer patch.Reset()
-	updateSuperNodesForPodLevelRescheduling(nodes, task, job)
-}
-
-func TestUpdateSuperNodesForPodLevelRescheduling_NilNodes(t *testing.T) {
-	task := &api.TaskInfo{Name: testTaskName, Job: "job1"}
-	job := plugin.SchedulerJob{}
-	updateSuperNodesForPodLevelRescheduling(nil, task, job)
 }
 
 func TestMultilevelHandler_SetPluginName(t *testing.T) {
@@ -923,5 +876,319 @@ func TestScoreNodeBatchForReadyJob_BackupPod(t *testing.T) {
 	mh.scoreNodeBatchForReadyJob(task, job, sMap)
 	if sMap["nodeA"] <= 0 {
 		t.Errorf("scoreNodeBatchForReadyJob() should score backup pod's node, got %f", sMap["nodeA"])
+	}
+}
+
+func TestIsCachedSuperPodsValid(t *testing.T) {
+	mh := newTestHandlerWithNodes()
+	cases := []struct {
+		name      string
+		superPods map[string][]plugin.SuperNode
+		nodes     []*api.NodeInfo
+		tasks     map[api.TaskID]util.NPUTask
+		want      bool
+	}{
+		{
+			"all_in_candidate_set",
+			map[string][]plugin.SuperNode{"0": {{Name: "node0"}, {Name: "node1"}}},
+			[]*api.NodeInfo{{Name: "node0"}, {Name: "node1"}},
+			nil, true,
+		},
+		{
+			"node_missing_from_candidates",
+			map[string][]plugin.SuperNode{"0": {{Name: "node0"}}},
+			[]*api.NodeInfo{{Name: "node1"}},
+			nil, false,
+		},
+		{
+			"running_pod_skipped",
+			map[string][]plugin.SuperNode{"0": {{Name: "node0"}}},
+			[]*api.NodeInfo{},
+			map[api.TaskID]util.NPUTask{"t1": {NodeName: "node0"}},
+			true,
+		},
+		{
+			"empty_superpods",
+			map[string][]plugin.SuperNode{},
+			[]*api.NodeInfo{{Name: "node0"}},
+			nil, true,
+		},
+		{
+			"mixed_running_and_missing",
+			map[string][]plugin.SuperNode{"0": {{Name: "node0"}, {Name: "node1"}}},
+			[]*api.NodeInfo{{Name: "node0"}},
+			map[api.TaskID]util.NPUTask{"t1": {NodeName: "node1"}},
+			true,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			tasks := tc.tasks
+			if tasks == nil {
+				tasks = map[api.TaskID]util.NPUTask{}
+			}
+			job := &plugin.SchedulerJob{
+				SuperPods:        tc.superPods,
+				SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{Tasks: tasks}},
+			}
+			if got := mh.isCachedSuperPodsValid(job, tc.nodes); got != tc.want {
+				t.Errorf("isCachedSuperPodsValid() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestRemoveAll(t *testing.T) {
+	src := map[string]struct{}{"a": {}, "b": {}, "c": {}}
+	got := removeAll(src, []string{"b", "c"})
+	if len(got) != 1 {
+		t.Fatalf("removeAll() len=%d, want 1", len(got))
+	}
+	if _, ok := got["a"]; !ok {
+		t.Error("removeAll() should keep 'a'")
+	}
+}
+
+func TestRemoveAll_EmptyRemove(t *testing.T) {
+	src := map[string]struct{}{"a": {}, "b": {}}
+	got := removeAll(src, nil)
+	if len(got) != 2 {
+		t.Errorf("removeAll(nil) len=%d, want 2", len(got))
+	}
+}
+
+func TestRemoveAll_EmptySrc(t *testing.T) {
+	got := removeAll(map[string]struct{}{}, []string{"a"})
+	if len(got) != 0 {
+		t.Errorf("removeAll(empty) len=%d, want 0", len(got))
+	}
+}
+
+func TestTryUseCachedSuperPods(t *testing.T) {
+	mh := newTestHandlerWithNodes()
+	task := &api.TaskInfo{Name: testTaskName, Job: "job1", Pod: &v1.Pod{}}
+	candidateNodes := []*api.NodeInfo{{Name: "node0"}, {Name: "node1"}}
+
+	t.Run("empty_superpods", func(t *testing.T) {
+		job := &plugin.SchedulerJob{}
+		if mh.tryUseCachedSuperPods(job, task, candidateNodes) {
+			t.Error("empty SuperPods should return false")
+		}
+	})
+	t.Run("already_verified", func(t *testing.T) {
+		job := &plugin.SchedulerJob{
+			SuperPods:         map[string][]plugin.SuperNode{"0": {{Name: "node0"}}},
+			SuperPodsVerified: true,
+		}
+		if !mh.tryUseCachedSuperPods(job, task, candidateNodes) {
+			t.Error("Verified should return true")
+		}
+	})
+	t.Run("not_verified_cache_valid", func(t *testing.T) {
+		job := &plugin.SchedulerJob{
+			SuperPods:        map[string][]plugin.SuperNode{"0": {{Name: "node0"}}},
+			SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{}}},
+		}
+		if !mh.tryUseCachedSuperPods(job, task, candidateNodes) {
+			t.Error("valid cache should return true and set Verified")
+		}
+		if !job.SuperPodsVerified {
+			t.Error("should set SuperPodsVerified to true")
+		}
+	})
+	t.Run("not_verified_cache_stale", func(t *testing.T) {
+		job := &plugin.SchedulerJob{
+			SuperPods:        map[string][]plugin.SuperNode{"0": {{Name: "nodeX"}}},
+			SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{Tasks: map[api.TaskID]util.NPUTask{}}},
+		}
+		if mh.tryUseCachedSuperPods(job, task, candidateNodes) {
+			t.Error("stale cache should return false")
+		}
+		if !job.SuperPodsVerified {
+			t.Error("should set SuperPodsVerified to true even on stale")
+		}
+	})
+}
+
+func TestGetHistoricalHealthyNodeNames(t *testing.T) {
+	superPods := map[string][]plugin.SuperNode{
+		"0": {{Name: "node0"}, {Name: "node1"}},
+		"1": {{Name: "node2"}, {Name: ""}},
+	}
+	faultNodes := []string{"node1"}
+	pinned := getHistoricalHealthyNodeNames(superPods, faultNodes)
+	if len(pinned) != 2 {
+		t.Errorf("len=%d, want 2", len(pinned))
+	}
+	for _, n := range []string{"node0", "node2"} {
+		if _, ok := pinned[n]; !ok {
+			t.Errorf("missing healthy node %s", n)
+		}
+	}
+}
+
+func TestFilterOutAvailableNodes(t *testing.T) {
+	nodes := []*api.NodeInfo{{Name: "node0"}, {Name: "node2"}}
+	got := filterOutAvailableNodes([]string{"node0", "node1", "node2", "node3"}, nodes)
+	if len(got) != 2 {
+		t.Fatalf("len=%d, want 2", len(got))
+	}
+	remaining := map[string]struct{}{got[0]: {}, got[1]: {}}
+	for _, expected := range []string{"node1", "node3"} {
+		if _, ok := remaining[expected]; !ok {
+			t.Errorf("missing %s", expected)
+		}
+	}
+}
+
+func TestGetMissingNodesFromJob(t *testing.T) {
+	mh := newTestHandler()
+	superPods := map[string][]plugin.SuperNode{
+		"0": {{Name: "node0"}, {Name: "node1"}},
+		"1": {{Name: "node2"}, {Name: "node3"}},
+	}
+
+	t.Run("all_pending", func(t *testing.T) {
+		tasks := map[api.TaskID]util.NPUTask{
+			"t0": {PodStatus: v1.PodPending, Annotation: map[string]string{plugin.PodRankIndexKey: "0"}},
+			"t1": {PodStatus: v1.PodPending, Annotation: map[string]string{plugin.PodRankIndexKey: "1"}},
+			"t3": {PodStatus: v1.PodPending, Annotation: map[string]string{plugin.PodRankIndexKey: "3"}},
+		}
+		patch := gomonkey.ApplyFunc(getL1Ranks, func(sp map[string][]plugin.SuperNode, rank int) (string, int, error) {
+			switch rank {
+			case 0:
+				return "0", 0, nil
+			case 1:
+				return "0", 1, nil
+			case 3:
+				return "1", 1, nil
+			}
+			return "", 0, fmt.Errorf("unexpected rank %d", rank)
+		})
+		defer patch.Reset()
+		got := mh.getMissingNodesFromJob(superPods, tasks)
+		if len(got) != 3 {
+			t.Fatalf("len=%d, want 3", len(got))
+		}
+		expect := map[string]struct{}{"node0": {}, "node1": {}, "node3": {}}
+		for _, n := range got {
+			if _, ok := expect[n]; !ok {
+				t.Errorf("unexpected node %s", n)
+			}
+		}
+	})
+
+	t.Run("mixed_status", func(t *testing.T) {
+		tasks := map[api.TaskID]util.NPUTask{
+			"t0": {PodStatus: v1.PodPending, Annotation: map[string]string{plugin.PodRankIndexKey: "0"}},
+			"t1": {PodStatus: v1.PodRunning, Annotation: map[string]string{plugin.PodRankIndexKey: "1"}},
+		}
+		patch := gomonkey.ApplyFunc(getL1Ranks, func(sp map[string][]plugin.SuperNode, rank int) (string, int, error) {
+			return "0", rank, nil
+		})
+		defer patch.Reset()
+		got := mh.getMissingNodesFromJob(superPods, tasks)
+		if len(got) != 1 || got[0] != "node0" {
+			t.Errorf("got=%v, want [node0]", got)
+		}
+	})
+
+	t.Run("no_rank_annotation", func(t *testing.T) {
+		tasks := map[api.TaskID]util.NPUTask{
+			"t0": {PodStatus: v1.PodPending, Annotation: map[string]string{}},
+		}
+		got := mh.getMissingNodesFromJob(superPods, tasks)
+		if len(got) != 0 {
+			t.Errorf("len=%d, want 0", len(got))
+		}
+	})
+}
+
+func TestIsFaultRankZero(t *testing.T) {
+	jobs := map[api.JobID]plugin.SchedulerJob{
+		"job1": {SuperPods: map[string][]plugin.SuperNode{"0": {{Name: "n0"}}}}}
+
+	t.Run("rank_zero", func(t *testing.T) {
+		task := &api.TaskInfo{Name: testTaskName, Job: "job1", Pod: &v1.Pod{}}
+		patch := gomonkey.ApplyFunc(getHcclRankIndex, func(*api.TaskInfo, plugin.SchedulerJob) (int, error) { return 0, nil })
+		defer patch.Reset()
+		if !isFaultRankZero(task, jobs) {
+			t.Error("rank 0 should return true")
+		}
+	})
+
+	t.Run("rank_nonzero", func(t *testing.T) {
+		task := &api.TaskInfo{Name: testTaskName, Job: "job1", Pod: &v1.Pod{}}
+		patch := gomonkey.ApplyFunc(getHcclRankIndex, func(*api.TaskInfo, plugin.SchedulerJob) (int, error) { return 3, nil })
+		defer patch.Reset()
+		if isFaultRankZero(task, jobs) {
+			t.Error("rank 3 should return false")
+		}
+	})
+
+	t.Run("job_not_found", func(t *testing.T) {
+		task := &api.TaskInfo{Name: testTaskName, Job: "nonexistent", Pod: &v1.Pod{}}
+		if isFaultRankZero(task, jobs) {
+			t.Error("missing job should return false")
+		}
+	})
+}
+
+func TestGetCachedJobSuperPods(t *testing.T) {
+	t.Run("fault_job_priority", func(t *testing.T) {
+		mh := newTestHandler()
+		fJob := &rescheduling.FaultJob{IsFaultJob: true, SuperPods: map[string][]plugin.SuperNode{"0": {{Name: "fault_node"}}}}
+		faultCache := rescheduling.GetReSchedulerCache()
+		if faultCache == nil {
+			t.Skip("rescheduling cache not initialized")
+		}
+		faultCache.FaultJobs = map[api.JobID]*rescheduling.FaultJob{"job1": fJob}
+		mh.ScheduleEnv.Jobs = map[api.JobID]plugin.SchedulerJob{
+			"job1": {SuperPods: map[string][]plugin.SuperNode{"0": {{Name: "job_node"}}}},
+		}
+		defer func() { faultCache.FaultJobs = nil }()
+
+		got := mh.getCachedJobSuperPods(&api.TaskInfo{Job: "job1"})
+		if len(got) == 0 || got["0"][0].Name != "fault_node" {
+			t.Errorf("should prefer FaultJob SuperPods, got %v", got)
+		}
+	})
+
+	t.Run("falls_back_to_job", func(t *testing.T) {
+		mh := newTestHandler()
+		mh.ScheduleEnv.Jobs = map[api.JobID]plugin.SchedulerJob{
+			"job1": {SuperPods: map[string][]plugin.SuperNode{"0": {{Name: "job_node"}}}},
+		}
+		got := mh.getCachedJobSuperPods(&api.TaskInfo{Job: "job1"})
+		if len(got) == 0 || got["0"][0].Name != "job_node" {
+			t.Errorf("should fall back to job SuperPods, got %v", got)
+		}
+	})
+
+	t.Run("no_data", func(t *testing.T) {
+		mh := newTestHandler()
+		got := mh.getCachedJobSuperPods(&api.TaskInfo{Job: "job1"})
+		if got != nil {
+			t.Errorf("should return nil, got %v", got)
+		}
+	})
+}
+
+func TestScheduleFromAllNodes(t *testing.T) {
+	mh := newTestHandlerWithNodes()
+	mh.taskLevels = []util.TaskTreeLevel{{Name: "l0", ReqNode: 1}}
+	mh.FrameAttr.ResourceLevelsInfo = map[string][]util.ResourceTreeLevel{
+		util.DefaultTopoTree: {{Type: util.LevelTypeTree, ReservedNode: 0}, {Type: util.LevelTypeNode, ReservedNode: 0}},
+	}
+	mh.SuperPodInfo = &plugin.SuperPodInfo{SuperPodMapFaultTaskNodes: map[api.JobID]map[string]string{}}
+	mh.ScheduleEnv.Jobs = map[api.JobID]plugin.SchedulerJob{"job1": {}}
+
+	task := &api.TaskInfo{Name: testTaskName, Job: "job1", Pod: &v1.Pod{}}
+	sm, err := mh.scheduleFromAllNodes(task, []*api.NodeInfo{{Name: "node0"}})
+	if err != nil {
+		t.Errorf("scheduleFromAllNodes() unexpected error: %v", err)
+	}
+	if sm == nil || len(sm) == 0 {
+		t.Error("scheduleFromAllNodes() should return non-empty supernode map")
 	}
 }

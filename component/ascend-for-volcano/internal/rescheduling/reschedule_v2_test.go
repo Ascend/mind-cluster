@@ -72,7 +72,7 @@ func buildSinglePodReschedulingUpgradeFor910A5Test2() SinglePodReschedulingUpgra
 			},
 		},
 		fJob: &FaultJob{
-			PendingSessionNum: spPendingTimes,
+			PendingSessionNum: util.SpPendingTimes,
 			JobUID:            "job2",
 		},
 		reScheduler: &ReScheduler{
@@ -80,7 +80,7 @@ func buildSinglePodReschedulingUpgradeFor910A5Test2() SinglePodReschedulingUpgra
 				"job2": {},
 			},
 		},
-		wantPending: spPendingTimes + 1,
+		wantPending: util.SpPendingTimes + 1,
 		wantDelete:  false,
 	}
 }
@@ -97,7 +97,7 @@ func buildSinglePodReschedulingUpgradeFor910A5Test3() SinglePodReschedulingUpgra
 			},
 		},
 		fJob: &FaultJob{
-			PendingSessionNum: pendingTimes,
+			PendingSessionNum: util.PendingTimes,
 			JobUID:            "job3",
 		},
 		reScheduler: &ReScheduler{
@@ -105,7 +105,7 @@ func buildSinglePodReschedulingUpgradeFor910A5Test3() SinglePodReschedulingUpgra
 				"job3": {},
 			},
 		},
-		wantPending: pendingTimes + 1,
+		wantPending: util.PendingTimes + 1,
 		wantDelete:  false,
 	}
 }

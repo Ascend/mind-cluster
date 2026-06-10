@@ -231,3 +231,10 @@ const (
 	// SchedulePluginAnno used in pod annotation when npu-affinity-schedule is needed
 	SchedulePluginAnno = "volcano.sh/schedule.plugin"
 )
+
+const (
+	// PendingTimes max pending sessions before upgrading rescheduling level to job level
+	PendingTimes = 12
+	// SpPendingTimes max pending sessions before upgrading rescheduling level to logic super-pod
+	SpPendingTimes = 6
+)

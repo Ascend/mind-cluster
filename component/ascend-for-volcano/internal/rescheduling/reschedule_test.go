@@ -1544,7 +1544,7 @@ func TestReSchedulerUseAnnotation02(t *testing.T) {
 		vcJob := plugin.SchedulerJob{}
 		vcJob.NPUJob = &util.NPUJob{}
 		fJob := &FaultJob{
-			PendingSessionNum: pendingTimes,
+			PendingSessionNum: util.PendingTimes,
 		}
 		reScheduler := &ReScheduler{Jobs: map[api.JobID]plugin.SchedulerJob{jobID: vcJob},
 			DealReSchedulerCache: &DealReSchedulerCache{}}

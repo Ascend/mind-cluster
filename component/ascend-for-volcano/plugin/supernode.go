@@ -132,8 +132,11 @@ func GetHealthyNPUNodes(npuNodes map[string]NPUNode, nodes []*api.NodeInfo) map[
 	return healthyNPUNodes
 }
 
-// GetSuperNodeMapFromTaskTree gets level1 logic group map from task tree
-func GetSuperNodeMapFromTaskTree(taskTree *util.TaskTree) (map[string][]SuperNode, error) {
+// GetSuperNodeMapFromTaskTree gets level1 logic group map from task tree.
+// cachedSuperPods (from job.SuperPods or faultJob.SuperPods) is used as a template:
+// nodes that existed in the previous scheduling are placed at their original rank
+// positions, preserving rank→node correspondence when nodes are still available.
+func GetSuperNodeMapFromTaskTree(taskTree *util.TaskTree, cachedSuperPods map[string][]SuperNode) (map[string][]SuperNode, error) {
 	converter := taskTreeConverter{
 		firstLevelLogicGroup: make(map[string][]SuperNode),
 		taskLevels:           taskTree.Levels,
@@ -142,12 +145,63 @@ func GetSuperNodeMapFromTaskTree(taskTree *util.TaskTree) (map[string][]SuperNod
 
 	var startRank int
 	err := converter.buildSuperNodeMap(taskTree.TaskNode, 0, startRank, make(map[string]string, len(converter.resourceLevels)))
-	for _, nodes := range converter.firstLevelLogicGroup {
+	if err != nil {
+		return nil, err
+	}
+	// Place each node at its original localRank position using cached SuperPods. Cached nodes are placed at exact rank positions; new nodes fill remaining slots. This preserves
+	// rank→node correspondence when groups are fully or partially new.
+	sortNodesByCachedRank(converter.firstLevelLogicGroup, cachedSuperPods)
+	return converter.firstLevelLogicGroup, nil
+}
+
+// sortNodesByCachedRank places nodes at their original rank positions using
+// the cached SuperPods as a template. Each group is first sorted lexicographically
+// by name to establish a deterministic baseline. Then cached nodes are moved to
+// their exact historical localRank positions, and remaining new nodes fill the
+// leftover slots in sorted order. This preserves rank→node correspondence while
+// keeping the result deterministic even when groups are partially or fully new.
+func sortNodesByCachedRank(groups map[string][]SuperNode, cachedSuperPods map[string][]SuperNode) {
+	for _, nodes := range groups {
 		sort.Slice(nodes, func(i, j int) bool {
 			return nodes[i].Name < nodes[j].Name
 		})
 	}
-	return converter.firstLevelLogicGroup, err
+	if len(cachedSuperPods) == 0 {
+		return
+	}
+	for groupID, cachedNodes := range cachedSuperPods {
+		nodes, exists := groups[groupID]
+		if !exists || len(nodes) == 0 {
+			continue
+		}
+		unplaced := make(map[string]SuperNode, len(nodes))
+		for _, node := range nodes {
+			unplaced[node.Name] = node
+		}
+		sorted := make([]SuperNode, len(cachedNodes))
+		for i, cachedNode := range cachedNodes {
+			if node, found := unplaced[cachedNode.Name]; found {
+				sorted[i] = node
+				delete(unplaced, cachedNode.Name)
+			}
+		}
+		fillPos := 0
+		for _, node := range nodes {
+			if _, stillUnplaced := unplaced[node.Name]; !stillUnplaced {
+				continue
+			}
+			for fillPos < len(sorted) && sorted[fillPos].Name != "" {
+				fillPos++
+			}
+			if fillPos < len(sorted) {
+				sorted[fillPos] = node
+			} else {
+				sorted = append(sorted, node)
+			}
+			fillPos++
+		}
+		groups[groupID] = sorted
+	}
 }
 
 // GetTaskTreeFromSuperNodeMap gets task tree from super pod map
@@ -189,17 +243,25 @@ func (ttc *taskTreeConverter) buildSuperNodeMap(
 
 	nodeTopoMap[topoKey] = taskNode.ResourceNodeName
 	if depth+1 >= len(ttc.taskLevels) {
-		logicFirstGroupStr := strconv.Itoa(startRank / ttc.getLogicGroupSize())
+		logicGroupSize := ttc.getLogicGroupSize()
+		logicFirstGroupStr := strconv.Itoa(startRank / logicGroupSize)
 		logicFirstGroup, ok := ttc.firstLevelLogicGroup[logicFirstGroupStr]
 		if !ok {
-			logicFirstGroup = make([]SuperNode, 0, ttc.getLogicGroupSize())
+			logicFirstGroup = make([]SuperNode, logicGroupSize)
 		}
 		superNode, err := getSuperNode(nodeTopoMap)
 		if err != nil {
 			return err
 		}
-
-		ttc.firstLevelLogicGroup[logicFirstGroupStr] = append(logicFirstGroup, superNode)
+		localRank := startRank % logicGroupSize
+		if localRank < len(logicFirstGroup) {
+			if logicFirstGroup[localRank].Name != "" {
+				klog.V(util.LogWarningLev).Infof("superNode at localRank %d overwritten: old=%s new=%s",
+					localRank, logicFirstGroup[localRank].Name, superNode.Name)
+			}
+			logicFirstGroup[localRank] = superNode
+		}
+		ttc.firstLevelLogicGroup[logicFirstGroupStr] = logicFirstGroup
 		return nil
 	}
 

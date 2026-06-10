@@ -318,7 +318,7 @@ func TestIsJobGraceDeleteSuccess(t *testing.T) {
 	})
 	t.Run("02-isJobGraceDeleteSuccess return true when jobInfo.PodGroup.Labels is not nil",
 		func(t *testing.T) {
-			fJob.PendingSessionNum = spPendingTimes
+			fJob.PendingSessionNum = util.SpPendingTimes
 			jobInfo.Tasks = map[api.TaskID]*api.TaskInfo{
 				mockTaskUID: {Pod: &v1.Pod{}},
 			}
@@ -512,7 +512,7 @@ func initIsNormalTaskCanBeDeleteArgs() isNormalTaskCanBeDeleteArgs {
 	fJob := &FaultJob{
 		JobUID:             mockJobUID,
 		SubHealthyStrategy: util.SubHealthyForceExit,
-		PendingSessionNum:  spPendingTimes,
+		PendingSessionNum:  util.SpPendingTimes,
 	}
 	dpi := &deletePodInfo{
 		isMasterFault: false,
@@ -1025,7 +1025,7 @@ func buildIsMasterFaultWithSuperPodJob() []testIsMasterFault {
 			name: "master rank in logic super pod after 6 sessions return true",
 			dpi:  &deletePodInfo{isSuperPod: true, ids: []string{testMockSpId}},
 			fJob: FaultJob{
-				PendingSessionNum: spPendingTimes,
+				PendingSessionNum: util.SpPendingTimes,
 				FaultTasks:        []FaultTask{{NodeName: fakeNodeName, NodeRankIndex: util.Rank0}},
 				SuperPods:         fakeSuperPod,
 			},
@@ -1045,7 +1045,7 @@ func buildIsMasterFaultWithSuperPodJob() []testIsMasterFault {
 			name: "non-master rank after 6 sessions return false",
 			dpi:  &deletePodInfo{isSuperPod: true},
 			fJob: FaultJob{
-				PendingSessionNum: spPendingTimes,
+				PendingSessionNum: util.SpPendingTimes,
 				FaultTasks:        []FaultTask{{NodeName: fakeNodeName}},
 				SuperPods:         fakeSuperPod,
 			},
@@ -1233,7 +1233,7 @@ func buildIsMasterFaultCases() []isMasterFaultCase {
 		},
 		{
 			name: "05-super pod master fault",
-			fJob: &FaultJob{PendingSessionNum: spPendingTimes, FaultTasks: []FaultTask{{NodeName: fakeNodeName, NodeRankIndex: util.Rank0, Labels: map[string]string{}}},
+			fJob: &FaultJob{PendingSessionNum: util.SpPendingTimes, FaultTasks: []FaultTask{{NodeName: fakeNodeName, NodeRankIndex: util.Rank0, Labels: map[string]string{}}},
 				SuperPods: map[string][]plugin.SuperNode{"0": {{Name: fakeNodeName}}}},
 			dpi: &deletePodInfo{isSuperPod: true, ids: []string{"0"}}, isNpuJob: true, want: true,
 		},

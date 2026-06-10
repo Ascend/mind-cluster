@@ -133,7 +133,7 @@ func TestReSchedulerPreStartAction(t *testing.T) {
 			}
 			tt.ssn.Jobs["vcjob/pg0"].Tasks = map[api.TaskID]*api.TaskInfo{}
 			tt.ssn.Jobs["vcjob/pg0"].PodGroup.Labels = map[string]string{util.SinglePodTag: util.EnableFunc}
-			reScheduler.FaultJobs["vcjob/pg0"].PendingSessionNum = pendingTimes - 1
+			reScheduler.FaultJobs["vcjob/pg0"].PendingSessionNum = util.PendingTimes - 1
 			reScheduler.synCacheFaultJobWithSession(tt.ssn)
 		})
 	}

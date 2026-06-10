@@ -365,7 +365,7 @@ func buildSuperNodeMapFromTaskTreeCases() []superNodeMapFromTaskTreeCase {
 func TestGetSuperNodeMapFromTaskTree(t *testing.T) {
 	for _, tt := range buildSuperNodeMapFromTaskTreeCases() {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetSuperNodeMapFromTaskTree(tt.taskTree)
+			got, err := GetSuperNodeMapFromTaskTree(tt.taskTree, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetSuperNodeMapFromTaskTree() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -378,6 +378,58 @@ func TestGetSuperNodeMapFromTaskTree(t *testing.T) {
 				t.Errorf("GetSuperNodeMapFromTaskTree() total = %v, want %v", total, tt.wantTotal)
 			}
 		})
+	}
+}
+
+func TestSortNodesByCachedRank_NoCache(t *testing.T) {
+	groups := map[string][]SuperNode{
+		"0": {{Name: "node-c"}, {Name: "node-a"}, {Name: "node-b"}},
+		"1": {{Name: "node-z"}, {Name: ""}, {Name: "node-m"}},
+	}
+	sortNodesByCachedRank(groups, nil)
+
+	g0 := groups["0"]
+	if g0[0].Name != "node-a" || g0[1].Name != "node-b" || g0[2].Name != "node-c" {
+		t.Errorf("group 0 not sorted: got [%s,%s,%s], want [node-a,node-b,node-c]",
+			g0[0].Name, g0[1].Name, g0[2].Name)
+	}
+
+	g1 := groups["1"]
+	if g1[0].Name != "" || g1[1].Name != "node-m" || g1[2].Name != "node-z" {
+		t.Errorf("group 1 not sorted: got [%s,%s,%s], want [\"\",node-m,node-z]",
+			g1[0].Name, g1[1].Name, g1[2].Name)
+	}
+}
+
+func TestSortNodesByCachedRank_WithCache(t *testing.T) {
+	groups := map[string][]SuperNode{
+		"0": {{Name: "node-c"}, {Name: "node-a"}, {Name: "node-b"}},
+	}
+	cached := map[string][]SuperNode{
+		"0": {{Name: "node-a"}, {Name: "node-b"}, {Name: "node-c"}},
+	}
+	sortNodesByCachedRank(groups, cached)
+
+	g0 := groups["0"]
+	if g0[0].Name != "node-a" || g0[1].Name != "node-b" || g0[2].Name != "node-c" {
+		t.Errorf("group 0 not reordered by cache: got [%s,%s,%s], want [node-a,node-b,node-c]",
+			g0[0].Name, g0[1].Name, g0[2].Name)
+	}
+}
+
+func TestSortNodesByCachedRank_WithCachePartial(t *testing.T) {
+	groups := map[string][]SuperNode{
+		"0": {{Name: "node-b"}, {Name: "node-d"}, {Name: "node-c"}},
+	}
+	cached := map[string][]SuperNode{
+		"0": {{Name: "node-a"}, {Name: "node-b"}, {Name: "node-c"}},
+	}
+	sortNodesByCachedRank(groups, cached)
+
+	g0 := groups["0"]
+	if g0[0].Name != "node-d" || g0[1].Name != "node-b" || g0[2].Name != "node-c" {
+		t.Errorf("group 0: got [%s,%s,%s], want [node-d,node-b,node-c]",
+			g0[0].Name, g0[1].Name, g0[2].Name)
 	}
 }
 

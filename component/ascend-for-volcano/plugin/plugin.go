@@ -52,6 +52,14 @@ type SchedulerPluginNeed interface {
 	InitMyJobPlugin(util.SchedulerJobAttr, ScheduleEnv) error
 }
 
+// BackupPodAllocatedHook is an optional interface for policy handlers that need
+// to update internal state when a hot-switch backup pod is allocated.
+// Only multi-level scheduling implements this to refresh SuperPods with the
+// backup pod's node, since the original fault pod will be deleted.
+type BackupPodAllocatedHook interface {
+	OnBackupPodAllocated(task *api.TaskInfo, job *SchedulerJob, nodeName string)
+}
+
 // SchedulerPlugin for volcano-npu plugin has function.
 type SchedulerPlugin interface {
 	SchedulerPluginBase
