@@ -28,6 +28,7 @@ import (
 	"volcano.sh/volcano/pkg/scheduler/api"
 
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/internal/consts"
 )
 
 // NPUAllocateFunc Allocate npu and called by volcano frame.
@@ -80,6 +81,14 @@ func (sHandle ScheduleHandler) NPUAllocateFunc(task *api.TaskInfo) {
 	if sHandle.AffinityCache != nil && vcJob.Owner.UID != "" {
 		if rankIndex, ok := task.Pod.Annotations[PodRankIndexKey]; ok && rankIndex != "" {
 			sHandle.AffinityCache.RecordAssignment(vcJob.Owner.UID, rankIndex, nodeName)
+		}
+	}
+
+	// For hot-switch backup pods, notify the policy handler so it can update
+	// internal state (e.g. SuperPods) with the backup pod's new node.
+	if _, isBackup := task.Pod.Annotations[consts.BackupSourcePodNameKey]; isBackup {
+		if hook, ok := vcJob.policyHandler.(BackupPodAllocatedHook); ok {
+			hook.OnBackupPodAllocated(task, &vcJob, nodeName)
 		}
 	}
 

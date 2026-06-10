@@ -111,12 +111,13 @@ var (
 type SchedulerJob struct {
 	util.SchedulerJobAttr
 	UnscheduledReason
-	policyHandler   SchedulerPluginNeed
-	JobReadyTag     *bool
-	SuperPods       map[string][]SuperNode
-	Owner           OwnerInfo
-	BatchOrderError error
-	EnqueueError    error
+	policyHandler     SchedulerPluginNeed
+	JobReadyTag       *bool
+	SuperPods         map[string][]SuperNode
+	SuperPodsVerified bool // true after first pod validates/recomputes SuperPods this session
+	Owner             OwnerInfo
+	BatchOrderError   error
+	EnqueueError      error
 	A5Fields
 }
 

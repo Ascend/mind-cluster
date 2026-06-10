@@ -110,7 +110,7 @@ func (fJob *FaultJob) isJobGraceDeleteSuccess(jobInfo *api.JobInfo, tag910A5 boo
 
 	if len(fJob.Labels) != 0 && (fJob.Labels[util.SinglePodTag] == util.EnableFunc ||
 		fJob.Labels[util.ProcessRecoverEnable] == util.EnableFunc) &&
-		(tag910A5 || fJob.PendingSessionNum != pendingTimes) {
+		(tag910A5 || fJob.PendingSessionNum != util.PendingTimes) {
 		klog.V(util.LogInfoLev).Info("grace deletion for pod-level rescheduling complete")
 		return true
 	}
@@ -256,7 +256,7 @@ func (fJob *FaultJob) getNeedReschedulePods(
 		}
 		faultNodeMap[task.NodeName] = struct{}{}
 	}
-	reschedulingLevel := fJob.PendingSessionNum / spPendingTimes
+	reschedulingLevel := fJob.PendingSessionNum / util.SpPendingTimes
 	if reschedulingLevel > len(taskTree.Levels)-1 {
 		reschedulingLevel = len(taskTree.Levels) - 1
 	}
@@ -342,7 +342,7 @@ func (fJob *FaultJob) isMasterFaultWithSuperPodJob(dpi *deletePodInfo, isNpuJob 
 		if !isMasterRank(task, isNpuJob) {
 			continue
 		}
-		if fJob.PendingSessionNum >= spPendingTimes && fJob.inTheSameVSuperPod(dpi.ids, task.NodeName) {
+		if fJob.PendingSessionNum >= util.SpPendingTimes && fJob.inTheSameVSuperPod(dpi.ids, task.NodeName) {
 			return true
 		}
 	}
@@ -434,7 +434,7 @@ func (fJob *FaultJob) isNormalTaskCanBeDelete(fTask FaultTask, schedulerJob *plu
 		}
 		// single pod rescheduling stage, delete no pod
 		// virtual super pod rescheduling stage, delete all virtual super pod where fault task in
-		if fJob.PendingSessionNum < spPendingTimes {
+		if fJob.PendingSessionNum < util.SpPendingTimes {
 			return false
 		} else if !fJob.isContainTask(dpi.ids, fTask.NodeName, env) {
 			return false
@@ -519,7 +519,7 @@ func (fJob *FaultJob) updateSuperPodsReschdInfo(env plugin.ScheduleEnv) {
 
 // IsJobSingleRescheduling valid job.
 func (fJob *FaultJob) IsJobSingleRescheduling(sJob *plugin.SchedulerJob) bool {
-	if sJob.Label[util.SinglePodTag] == util.EnableFunc && fJob.PendingSessionNum < pendingTimes {
+	if sJob.Label[util.SinglePodTag] == util.EnableFunc && fJob.PendingSessionNum < util.PendingTimes {
 		return true
 	}
 	return false

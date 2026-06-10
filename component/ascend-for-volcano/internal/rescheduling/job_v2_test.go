@@ -408,7 +408,7 @@ func buildJudgeJobIsMasterFaultTestCase4() JudgeJobIsMasterFaultTest {
 		FaultTasks: []FaultTask{
 			{IsFaultTask: false, NodeRankIndex: "0", NodeName: "node1"},
 		},
-		PendingSessionNum: spPendingTimes,
+		PendingSessionNum: util.SpPendingTimes,
 		SuperPods: map[string][]plugin.SuperNode{
 			"vsp1": {{Name: "node1"}},
 		},
@@ -639,7 +639,7 @@ func buildSkipThisTaskTestCase2() skipThisTaskTestCase {
 func buildSkipThisTaskTestCase3() skipThisTaskTestCase {
 	var tmpPatch *gomonkey.Patches = nil
 	fJob := &FaultJob{}
-	fJob.PendingSessionNum = spPendingTimes
+	fJob.PendingSessionNum = util.SpPendingTimes
 	schedulerJob := &plugin.SchedulerJob{}
 	schedulerJob.Label = map[string]string{
 		util.SinglePodTag: util.EnableFunc,
@@ -762,8 +762,8 @@ func buildSkipThisTaskTestCase8() skipThisTaskTestCase {
 	return skipThisTaskTestCase{
 		name: "08-SkipThisTask pod-rescheduling-skip",
 		fJob: &FaultJob{
-			ReScheduleLimit:   "",           // allowUpgradePodRescheduling() returns true
-			PendingSessionNum: pendingTimes, // Set to a value >= spPendingTimes
+			ReScheduleLimit:   "",                // allowUpgradePodRescheduling() returns true
+			PendingSessionNum: util.PendingTimes, // Set to a value >= spPendingTimes
 			FaultTasks:        []FaultTask{{IsFaultTask: true, NodeName: "test-node"}},
 		},
 		cacheFuncBefore: func() {},

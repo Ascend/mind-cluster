@@ -429,11 +429,11 @@ func (reScheduler *ReScheduler) singlePodReschedulingUpgrade(fJob *FaultJob) {
 	fJob.PendingSessionNum++
 
 	job, ok := reScheduler.Jobs[fJob.JobUID]
-	if ok && (job.IsSuperPodJob() || job.IsMultiLevelJob()) && fJob.PendingSessionNum == spPendingTimes {
+	if ok && (job.IsSuperPodJob() || job.IsMultiLevelJob()) && fJob.PendingSessionNum == util.SpPendingTimes {
 		fJob.DeleteExecutedFlag = false
 	}
 
-	if fJob.PendingSessionNum == pendingTimes {
+	if fJob.PendingSessionNum == util.PendingTimes {
 		fJob.DeleteExecutedFlag = false
 	}
 }

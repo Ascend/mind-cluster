@@ -138,8 +138,6 @@ const (
 
 const (
 	getNoneJobsErr           = "get none jobs"
-	pendingTimes             = 12
-	spPendingTimes           = 6
 	processPendingTimes      = 5
 	tpPendingTimes           = 3
 	singleThreadDeletePodNum = 200

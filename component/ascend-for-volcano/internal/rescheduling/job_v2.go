@@ -148,7 +148,7 @@ func (fJob *FaultJob) judgeJobIsMasterFault(vSuperPodIds []string) {
 			fJob.IsMasterFault = true
 			return
 		}
-		if fJob.PendingSessionNum >= spPendingTimes && fJob.inTheSameVSuperPod(vSuperPodIds, fTask.NodeName) {
+		if fJob.PendingSessionNum >= util.SpPendingTimes && fJob.inTheSameVSuperPod(vSuperPodIds, fTask.NodeName) {
 			klog.V(util.LogInfoLev).Infof("master pod and fault task is in the same vsuperpod")
 			fJob.IsMasterFault = true
 			return
@@ -269,11 +269,11 @@ func (fJob *FaultJob) podReschedulingSkipTask(dpi *deletePodInfo, fTask FaultTas
 			klog.V(util.LogInfoLev).Infof("skip because %s rescheduling is the first stage", fJob.JobName)
 			return true
 		}
-		if fJob.PendingSessionNum < spPendingTimes && !fJob.inTheSameTpBlock(fTask) {
+		if fJob.PendingSessionNum < util.SpPendingTimes && !fJob.inTheSameTpBlock(fTask) {
 			klog.V(util.LogInfoLev).Infof("skip because %s and fault task is not inTheSameTpBlock", fTask.TaskName)
 			return true
 		}
-		if fJob.PendingSessionNum < pendingTimes && !fJob.inTheSameVSuperPod(dpi.ids, fTask.NodeName) {
+		if fJob.PendingSessionNum < util.PendingTimes && !fJob.inTheSameVSuperPod(dpi.ids, fTask.NodeName) {
 			klog.V(util.LogInfoLev).Infof("skip because %s and fault task is not inTheSameVSuperPod", fTask.TaskName)
 			return true
 		}
