@@ -37,7 +37,7 @@ import (
 const (
 	idleWaitSeconds        = 60
 	bootStatusPollInterval = 1 * time.Second
-	bootStatusPollTimeout  = 150 * time.Second
+	bootStatusPollTimeout  = 350 * time.Second
 )
 
 type UnifiedHotResetManager struct {
@@ -101,7 +101,7 @@ func (m *UnifiedHotResetManager) UnifiedHotReset(groupDevice map[string][]*commo
 		}
 		if !m.tokenBucket.HasToken(dev.LogicID) {
 			hwlog.RunLog.Warnf("device %d token exhausted, need external ops", dev.LogicID)
-			m.markNeedExternalOps(dev.LogicID)
+			m.markNeedExternalOps(dev)
 			continue
 		}
 		if !m.confirmAndPrepareReset(ringDevs, faultDev) {
@@ -112,18 +112,18 @@ func (m *UnifiedHotResetManager) UnifiedHotReset(groupDevice map[string][]*commo
 }
 
 func (m *UnifiedHotResetManager) checkDeviceRecovered(groupDevice map[string][]*common.NpuDevice) {
-	var recoveredIDs []int32
+	var recoveredDevs []*common.NpuDevice
 	for _, devices := range groupDevice {
 		for _, dev := range devices {
 			if dev.Health == v1beta1.Healthy {
 				hwlog.RunLog.Debugf("checkDeviceRecovered: device %d recovered to healthy", dev.LogicID)
 				m.idleTimeMgr.DeleteIdleTime(dev.LogicID)
-				recoveredIDs = append(recoveredIDs, dev.LogicID)
+				recoveredDevs = append(recoveredDevs, dev)
 			}
 		}
 	}
-	if len(recoveredIDs) > 0 {
-		m.clearNeedExternalOps(recoveredIDs)
+	if len(recoveredDevs) > 0 {
+		m.clearNeedExternalOps(recoveredDevs)
 	}
 }
 
@@ -141,7 +141,8 @@ func (m *UnifiedHotResetManager) filterFaultDevices(groupDevice map[string][]*co
 					continue
 				}
 				if faultType == common.SeparateNPU || faultType == common.ManuallySeparateNPU {
-					m.markNeedExternalOpsForL6(dev)
+					hwlog.RunLog.Warnf("device %d is L6 isolated", dev.LogicID)
+					m.markNeedExternalOps(dev)
 					continue
 				}
 				if faultType == common.NormalNPU || faultType == common.SubHealthFault {
@@ -417,48 +418,38 @@ func (m *UnifiedHotResetManager) convertToResetDevices(devs []*common.NpuDevice)
 	return result
 }
 
-func (m *UnifiedHotResetManager) markNeedExternalOps(logicID int32) {
-	hwlog.RunLog.Warnf("markNeedExternalOps: device %d, marking node annotation", logicID)
-	cardID, deviceID, err := m.dmgr.GetCardIDDeviceID(logicID)
-	if err != nil {
-		hwlog.RunLog.Errorf("get card id and device id failed, logicID: %d, err: %v", logicID, err)
-		return
-	}
+func (m *UnifiedHotResetManager) markNeedExternalOps(dev *common.NpuDevice) {
+	hwlog.RunLog.Warnf("markNeedExternalOps: device %d, marking node annotation", dev.LogicID)
 	resetInfo := device.ResetInfo{
 		ManualResetDevs: []device.ResetDevice{
-			{LogicID: logicID, CardId: cardID, DeviceId: deviceID},
+			{LogicID: dev.LogicID, CardId: dev.CardID, DeviceId: dev.DeviceID, PhyID: dev.PhyID},
 		},
 	}
 	device.WriteResetInfo(resetInfo, device.WMAppend, true)
 }
 
-func (m *UnifiedHotResetManager) markNeedExternalOpsForL6(dev *common.NpuDevice) {
-	hwlog.RunLog.Warnf("device %d is L6 isolated, marking manual reset annotation", dev.LogicID)
-	resetInfo := device.ResetInfo{
-		ManualResetDevs: []device.ResetDevice{
-			{LogicID: dev.LogicID, CardId: dev.CardID, DeviceId: dev.DeviceID,
-				PhyID: dev.PhyID},
-		},
+func (m *UnifiedHotResetManager) clearNeedExternalOps(devs []*common.NpuDevice) {
+	var logicIDs []int32
+	for _, dev := range devs{
+		logicIDs = append(logicIDs, dev.LogicID)
 	}
-	device.WriteResetInfo(resetInfo, device.WMAppend, true)
-}
-
-func (m *UnifiedHotResetManager) clearNeedExternalOps(logicIDs []int32) {
 	resetInfo := device.ReadResetInfo()
 	needClear := filterOpsDevices(resetInfo, logicIDs)
 	if len(needClear) == 0 {
 		return
 	}
 	hwlog.RunLog.Infof("step0: clearing ops annotation for %d devices: %v", len(needClear), needClear)
+	needClearSet := make(map[int32]struct{}, len(needClear))
+	for _, id := range needClear{
+		needClearSet[id] = struct{}{}
+	}
 	var delDevs []device.ResetDevice
-	for _, logicID := range needClear {
-		cardID, deviceID, err := m.dmgr.GetCardIDDeviceID(logicID)
-		if err != nil {
-			hwlog.RunLog.Errorf("get card id and device id failed, logicID: %d, err: %v", logicID, err)
+	for _, dev := range devs {
+		if _, ok := needClearSet[dev.LogicID]; !ok{
 			continue
 		}
 		delDevs = append(delDevs, device.ResetDevice{
-			LogicID: logicID, CardId: cardID, DeviceId: deviceID,
+			LogicID: dev.LogicID, CardId: dev.CardID, DeviceId: dev.DeviceID, PhyID: dev.PhyID,
 		})
 	}
 	if len(delDevs) == 0 {
