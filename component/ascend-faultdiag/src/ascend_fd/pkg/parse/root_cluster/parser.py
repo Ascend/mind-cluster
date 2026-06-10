@@ -40,6 +40,8 @@ from ascend_fd.utils.regular_table import (
     ERROR_CQE_SPLIT,
     ERROR_CQE_NEW_SPLIT,
     IPV6_ADDR_PATTERN,
+    ERROR_CQE_A5,
+    ERROR_CQE_A5_SPLIT,
 )
 from ascend_fd.utils.tool import safe_write_open, SHOW_LINES_NUM, get_log_module_and_time, safe_read_line
 from ascend_fd.utils.net_tools import IPAddress
@@ -292,7 +294,9 @@ class BaseInfoParser:
             return True
         # 超时信息
         for cate, keyword in self.DEFAULT_TIMEOUT_SET_KEYWORD.items():
-            if regular_table.EXTERNAL_INPUT_KEYWORD in line and keyword in line:
+            if (
+                regular_table.EXTERNAL_INPUT_KEYWORD in line or regular_table.HCCL_ENV_KEYWORD_A5 in line
+            ) and keyword in line:
                 self._parse_default_timeout_set_info(line, cate)
                 return True
         for cate, keyword in self.TIMEOUT_KEYWORD.items():
@@ -573,6 +577,9 @@ class ErrorParser:
     }
     _Transport_error_info_pattern_v4 = re.compile(r"remoteIpAddr\[(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/(\d)]")
     _Transport_error_info_pattern_v6 = re.compile(r"remoteIpAddr\[([0-9a-fA-F:]+?)/(\d)]")
+    _SOCKET_EID_RANK_INFO_PATTERN = re.compile(r"(\d{1,3})\s{1,5}\|\s{1,5}IpAddress\[eid\[([0-9a-f:]{1,50})]")
+    # src and dest
+    _LINK_NUM = 2
 
     def __init__(self, blacklist_manager: BlackListManager):
         self.first_error_time = regular_table.MAX_TIME  # default max time
@@ -652,15 +659,17 @@ class ErrorParser:
         Filter the cqe error link info from log
         :return:
         """
-        for keyword, split_key in zip([ERROR_CQE, ERROR_CQE_NEW], [ERROR_CQE_SPLIT, ERROR_CQE_NEW_SPLIT]):
+        for keyword, split_key in zip(
+            [ERROR_CQE, ERROR_CQE_NEW, ERROR_CQE_A5], [ERROR_CQE_SPLIT, ERROR_CQE_NEW_SPLIT, ERROR_CQE_A5_SPLIT]
+        ):
             if keyword in line:
-                cqe_ip = filter_single_rank_info(line, split_key)
+                cqe_remote_info = filter_single_rank_info(line, split_key)
                 if ERROR_CQE_LATEST in line:
                     key_log = line.split(ERROR_CQE_LATEST)[-1]
-                    cqe_ip = filter_single_rank_info(key_log, ERROR_CQE_LATEST_SPLIT)
-                if not cqe_ip:
+                    cqe_remote_info = filter_single_rank_info(key_log, ERROR_CQE_LATEST_SPLIT)
+                if not cqe_remote_info:
                     return
-                self.cqe_links.add(cqe_ip)
+                self.cqe_links.add(cqe_remote_info)
 
     def _filter_root_info_timeout_error_from_log(self, line: str, err_time: str):
         """
@@ -758,13 +767,25 @@ class ErrorParser:
             phy_device_id = split_info_list[1].strip(" .\n")
             self.socket_error_data_cache.add_remote_info(RemoteInfo("", phy_device_id))
             return
+        if "channel connect timeout after" in line and "sec, channelNum" in line:
+            self.socket_error_data_cache.exist_data_flag = True
+            self.socket_error_data_cache.add_error_type(regular_table.TIMEOUT_SOCKET, err_time)
+            self.socket_error_data_cache.add_key_info(line)
+            return
+        if "IpAddress[eid[" in line and "ChannelStatus:" in line:
+            self.socket_error_data_cache.add_error_type(regular_table.TIMEOUT_SOCKET, err_time)
+            self.socket_error_data_cache.add_key_info(line)
+            eid_rank_id_list = self._SOCKET_EID_RANK_INFO_PATTERN.findall(line)
+            if len(eid_rank_id_list) == self._LINK_NUM:
+                self.socket_error_data_cache.add_remote_info(RemoteInfo(eid=eid_rank_id_list[-1][-1]))
+            return
+
         # get dest_ip(rank_id) and src_ip(rank_id)
         if "| no connect |" not in line and "| time out |" not in line:
             return
         regex = re.compile(r"\|\s{1,5}((?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|%s))\((\d{1,5})\)" % IPV6_ADDR_PATTERN)
         device_ip_rank_id = regex.findall(line)
-        link_num = 2  # src and dest
-        if len(device_ip_rank_id) != link_num:
+        if len(device_ip_rank_id) != self._LINK_NUM:
             return
         self.socket_error_data_cache.add_error_type(regular_table.TIMEOUT_SOCKET, err_time)
         self.socket_error_data_cache.add_key_info(line)

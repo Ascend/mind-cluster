@@ -29,14 +29,21 @@ from ascend_fd.utils.tool import safe_read_json, collect_parse_results, MultiPro
 from ascend_fd.model.cfg import DiagCFG
 from ascend_fd.pkg.parse.root_cluster.rc_parse_job import check_device_id_repeat
 from ascend_fd.pkg.parse.root_cluster.parser import PidFileParser
-from ascend_fd.pkg.diag.root_cluster.utils import ErrorChecker, InvalidDeviceChecker, NoPlogChecker, Device, \
-    DeviceTable, Identifier, NoValidPlogInfoErrorChecker, ResumingTrainingInvalidBaseInfoChecker
+from ascend_fd.pkg.diag.root_cluster.utils import (
+    ErrorChecker,
+    InvalidDeviceChecker,
+    NoPlogChecker,
+    Device,
+    DeviceTable,
+    Identifier,
+    NoValidPlogInfoErrorChecker,
+    ResumingTrainingInvalidBaseInfoChecker,
+)
 
 rc_logger = logging.getLogger("ROOT_CLUSTER")
 
 
 class RCDiagWorker:
-
     def __init__(self, cfg: DiagCFG = None, sdk_input: dict = None):
         """
         Init rc diag job
@@ -49,7 +56,7 @@ class RCDiagWorker:
         """
         self.cfg = cfg
         self.pid_find_flag = False
-        self.rc_parser_find_flag = True if sdk_input else False  # rc-parser.json文件是否存在标记
+        self.rc_parser_find_flag = bool(sdk_input)  # rc-parser.json文件是否存在标记
         self.cluster_training_flag = False  # flag for cluster training job
         self.device_table = DeviceTable()
         self.resuming_training_time = regular_table.MIN_TIME
@@ -121,16 +128,23 @@ class RCDiagWorker:
         self._check_integrity_of_rank_in_identifier()
         if not self.pid_find_flag:
             rc_logger.warning("No valid PID information is found in the parser json file.")
-            err_checker = NoValidPlogInfoErrorChecker(self.device_table) if self.rc_parser_find_flag \
+            err_checker = (
+                NoValidPlogInfoErrorChecker(self.device_table)
+                if self.rc_parser_find_flag
                 else NoPlogChecker(self.device_table)
+            )
         else:
             err_checker = self._generate_checker()
         err_checker.check()
         # 添加 MindIE 建链故障设备
         self.add_mindie_error_device(err_checker)
-        return err_checker.format_output(self.resuming_training_time, self.start_train_time,
-                                         self.end_train_time, self.cfg.parsed_saver.scene,
-                                         self.cfg.parsed_saver.board_sn_exist_tag)
+        return err_checker.format_output(
+            self.resuming_training_time,
+            self.start_train_time,
+            self.end_train_time,
+            self.cfg.parsed_saver.scene,
+            self.cfg.parsed_saver.board_sn_exist_tag,
+        )
 
     def add_aicpu_notify_wait_relation(self, aicpu_notify_wait_dict):
         identifier_rank_to_device_ip = self.device_table.identifier_rank_to_device_ip
@@ -195,16 +209,16 @@ class RCDiagWorker:
         """
         for worker_name in sorted(worker_parser_dict.keys()):
             rc_parser_dict = worker_parser_dict.get(worker_name, {})
-            worker_resuming_training_time, worker_recovery_time = \
-                self._fetch_worker_lever_parameters(worker_name, rc_parser_dict)
+            worker_resuming_training_time, worker_recovery_time = self._fetch_worker_lever_parameters(
+                worker_name, rc_parser_dict
+            )
             # if any worker has not been recovered, then recovery time would be ignored
             if self.all_worker_has_recovered and not worker_recovery_time:
                 self.all_worker_has_recovered = False
                 self.recovery_time = regular_table.MIN_TIME
             if self.all_worker_has_recovered and worker_recovery_time > self.recovery_time:
                 self.recovery_time = worker_recovery_time
-            if worker_resuming_training_time > self.resuming_training_time:
-                self.resuming_training_time = worker_resuming_training_time
+            self.resuming_training_time = max(self.resuming_training_time, worker_resuming_training_time)
 
         # if all workers have recovered, then the latest recovery time would influence the latest resuming training time
         if self.all_worker_has_recovered:
@@ -258,8 +272,12 @@ class RCDiagWorker:
             rc_parser_file = path_list[0] if path_list else ""
             if not os.path.exists(rc_parser_file):
                 device_info_dict = self.cfg.parsed_saver.get_device_info_from_json(worker_name)
-                multiprocess_job.add_security_job(worker_name, self._parse_plog_for_old_version,
-                                                  plog_parsed_dict.get(worker_name, []), device_info_dict)
+                multiprocess_job.add_security_job(
+                    worker_name,
+                    self._parse_plog_for_old_version,
+                    plog_parsed_dict.get(worker_name, []),
+                    device_info_dict,
+                )
                 continue
             self.rc_parser_find_flag = True
             worker_parser_dict.update({worker_name: safe_read_json(rc_parser_file)})
@@ -318,11 +336,14 @@ class RCDiagWorker:
             self.cluster_training_flag = True
             rank_num = rank_info.rank_num
             identifier_instance = self.device_table.identifier_dict.setdefault(
-                identifier_name, Identifier(identifier_name, rank_num))
+                identifier_name, Identifier(identifier_name, rank_num)
+            )
             if identifier_name != regular_table.DEFAULT_IDENTIFIER and identifier_instance.rank_num != rank_num:
                 # the identifier info in two plogs are not same
-                error_msg = (f"The identifier [{identifier_name}] have two different rank num values "
-                             f"({identifier_instance.rank_num} and {rank_num}).")
+                error_msg = (
+                    f"The identifier [{identifier_name}] have two different rank num values "
+                    f"({identifier_instance.rank_num} and {rank_num})."
+                )
                 rc_logger.error(error_msg)
                 raise InfoIncorrectError(error_msg)
             identifier_instance.rank_num = rank_num
@@ -332,13 +353,23 @@ class RCDiagWorker:
             identifier_instance.update_device(device_instance, rank_info.rank_id)
             self.device_table.update_max_identifier(identifier_name, rank_num)
             self.device_table.identifier_rank_to_device_ip.update(
-                {"{}:{}".format(identifier_name, rank_info.rank_id): device_instance.device_ip})
+                {"{}:{}".format(identifier_name, rank_info.rank_id): device_instance.device_ip}
+            )
+            for eid_info in rank_info.eid_plane_list:
+                if not eid_info.eid:
+                    continue
+                device_instance.eid_plane_map.update({eid_info.eid: eid_info.plane_id})
+                self.device_table.eid_device_map.update({eid_info.eid: device_instance})
         # record the root rank info to identifier
         for identifier_name in info.base.root_list:
             if identifier_name not in self.device_table.identifier_dict:
                 rc_logger.warning(
                     "The identifier [%s] has root rank: worker[%s] pid[%s]. But no related information "
-                    "is found in this device's log.", identifier_name, worker_name, info.pid)
+                    "is found in this device's log.",
+                    identifier_name,
+                    worker_name,
+                    info.pid,
+                )
                 continue
             self.device_table.identifier_dict.get(identifier_name).root_device = device_instance
         self.device_table.update_timeout(info.base.timeout_param)
@@ -407,11 +438,11 @@ class RCDiagWorker:
             if resume_time > end_train_time:
                 continue
             # check if any base info is re inited but no further base info filled in
-            if resume_time != regular_table.MIN_TIME and \
-                    all(not bool(value) for value in pid_info.get("base", {}).values()):
+            if resume_time != regular_table.MIN_TIME and all(
+                not bool(value) for value in pid_info.get("base", {}).values()
+            ):
                 self.lack_base_info_device_set.add(Device(pid, worker_name, self.device_table))
-            if resume_time > latest_resumable_starting_time:
-                latest_resumable_starting_time = resume_time
+            latest_resumable_starting_time = max(latest_resumable_starting_time, resume_time)
             if all_pid_has_recovered_flag and recovery_time > latest_recovery_time:
                 latest_recovery_time = recovery_time
         # if all pids has recovered, return both time records

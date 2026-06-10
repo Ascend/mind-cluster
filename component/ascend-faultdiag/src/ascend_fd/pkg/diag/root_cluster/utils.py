@@ -27,6 +27,7 @@ from ascend_fd.utils import regular_table
 from ascend_fd.utils.constant.num_util import TEN_THOUSAND
 from ascend_fd.utils.constant.str_const import SUPER_POD_SCENE, AI_CPU
 from ascend_fd.utils.i18n import get_label_for_language
+from ascend_fd.utils.regular_table import GENERATION_SIGN_A5
 from ascend_fd.utils.status import InfoNotFoundError, InnerError
 from ascend_fd.model.node_info import FaultFilterTime
 from ascend_fd.pkg.parse.root_cluster.parser import RemoteInfo
@@ -72,6 +73,8 @@ class Device:
         self.log_file_path = ""
         self.normal_logs_show = []
         self.error_logs_show = []
+        self.generation_info = ""
+        self.eid_plane_map = {}
         # save device rank id in each identifier. e.g {identifier_name: {rank_num: xxx, rank_id: xxx}}
         self.identifier_map = dict()
 
@@ -154,6 +157,7 @@ class Device:
         if server_id and not IPAddress.is_valid_ip(server_id):
             server_id = ""
         self.server_id = server_id
+        self.generation_info = base_info.generation_info
 
     def update_error_info(self, error_info: PlogErrorInfo, resuming_training_time):
         """
@@ -353,6 +357,7 @@ class DeviceTable:
         # ai cpu notify wait relation
         self.aicpu_notify_wait_relation = {}
         self.transport_init_error_flag = False
+        self.eid_device_map = {}
 
     def update_max_identifier(self, identifier_name: str, rank_num: int):
         """
@@ -687,7 +692,11 @@ class RemoteRelation:
             return root_devices, self.remote_links
 
         # 都找不到直接打印对端设备ip
-        self.remote_links.append(self.last_unknown_device.device_ip)
+        if first_device.generation_info == GENERATION_SIGN_A5:
+            eid_list = list(self.last_unknown_device.eid_plane_map.keys())
+            self.remote_links.append("; ".join(eid_list))
+        else:
+            self.remote_links.append(self.last_unknown_device.device_ip)
         return root_devices, self.remote_links
 
     def _traverse_remote_cycle(self, start_device: Device, relation_map):
@@ -748,6 +757,10 @@ class TimeoutErrorOfIdentifier:
         :param device: device on which a timeout evnet occurs
         :param device_table: Device Table
         """
+        if remote_info.eid and device.generation_info == regular_table.GENERATION_SIGN_A5:
+            remote_device = device_table.eid_device_map.get(remote_info.eid)
+            if remote_device:
+                return remote_device
         if remote_info.device_ip and IPAddress.is_valid_ip(remote_info.device_ip):
             # 根据device_ip找对端设备
             remote_device = device_table.device_ip_map.get(remote_info.device_ip)
@@ -770,9 +783,12 @@ class TimeoutErrorOfIdentifier:
             remote_device.phy_device_id = remote_info.phy_device_id
             return remote_device
 
-        # 未找到对端设备，保存未知设备的device_ip
+        # 未找到对端设备，保存未知设备的device_ip/eid
         remote_device = Device()
-        remote_device.device_ip = remote_info.device_ip
+        if device.generation_info == regular_table.GENERATION_SIGN_A5:
+            remote_device.eid_plane_map.update({remote_info.eid: ""})
+        else:
+            remote_device.device_ip = remote_info.device_ip
         return remote_device
 
     def update_event(self, timeout_event: TimeoutEvent, device: Device, device_table: DeviceTable):
@@ -1003,9 +1019,9 @@ class ErrorChecker(BaseChecker):
             return False
 
         err_devices = set()
-        for device, device_ip_list in sorted(self.device_table.cqe_link_map.items(), key=lambda x: x[0].err_time):
+        for device, remote_unique_ids in sorted(self.device_table.cqe_link_map.items(), key=lambda x: x[0].err_time):
             err_devices.add(device)
-            target_err_devices = self._add_device_links(device, device_ip_list)
+            target_err_devices = self._add_device_links(device, remote_unique_ids)
             err_devices.update(target_err_devices)
 
         self.root_devices = cqe_from_one_device() or list(err_devices)
@@ -1200,18 +1216,18 @@ class ErrorChecker(BaseChecker):
             all_time_out_devices |= error_identifier_info.error_devices
         return all_time_out_devices
 
-    def _add_device_links(self, rank: Device, device_ip_list: list):
+    def _add_device_links(self, rank: Device, remote_unique_ids: List[str]):
         """
         Add device to device_links
         :param rank: Rank instance
-        :param device_ip_list: device ip list
+        :param remote_unique_ids: unique id of remote device, A5: eid; A2/A3: device_ip
         :return err_rank: the set to record error ranks
         """
         err_rank = set()
-        if not device_ip_list:
-            return err_rank
-        for device_ip in device_ip_list:
-            target_rank = self.device_table.get_device_by_device_ip(device_ip)
+        for unique_id in remote_unique_ids:
+            target_rank = self.device_table.get_device_by_device_ip(unique_id)
+            if rank.generation_info == GENERATION_SIGN_A5:
+                target_rank = self.device_table.eid_device_map.get(unique_id, Device())
             if target_rank != Device():
                 self.device_links.append(
                     "{} device-{} -> {} device-{}".format(
@@ -1221,7 +1237,7 @@ class ErrorChecker(BaseChecker):
                 err_rank.add(target_rank)
             else:
                 self.device_links.append(
-                    "{} device-{} -> {}".format(rank.worker_name, str(rank.device_id), str(device_ip))
+                    "{} device-{} -> {}".format(rank.worker_name, str(rank.device_id), str(unique_id))
                 )
                 if SOME_DEVICE_FAILED not in self.note_msg:
                     self.note_msg.append(SOME_DEVICE_FAILED)
