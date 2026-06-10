@@ -318,10 +318,11 @@ func ShareDev() bool {
 		(ParamOption.RealCardType == api.Ascend310B || ParamOption.RealCardType == api.Ascend310P)
 }
 
-// WithoutRoCEDev indicate device has not RoCE
-func WithoutRoCEDev() bool {
-	return ParamOption.RealCardType == api.Ascend310B || ParamOption.RealCardType == api.Ascend310P ||
-		ParamOption.RealCardType == api.Ascend310 || ParamOption.RealCardType == api.Ascend910A5
+// WithoutParameterPlane indicate device has no parameter plane
+func WithoutParameterPlane() bool {
+	return ParamOption.RealCardType == api.Ascend310B ||
+		ParamOption.RealCardType == api.Ascend310P ||
+		ParamOption.RealCardType == api.Ascend310
 }
 
 // IsVirtualDev used to judge whether a physical device or a virtual device

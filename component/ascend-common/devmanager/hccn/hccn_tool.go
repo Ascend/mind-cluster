@@ -686,8 +686,8 @@ func parseDeviceRow(trimmedLine string) (int, int, error) {
 	return uDieID, portID, nil
 }
 
-// GetUBOEBondingStatus get UBOE bonding port status
-func GetUBOEBondingStatus(logicID int32) (string, error) {
+// GetUBOEBondingPortUpCount get UBOE bonding port up count
+func GetUBOEBondingPortUpCount(logicID int32) (int, error) {
 	args := []string{"-g", "-dev_info", "-i", strconv.Itoa(int(logicID))}
 	// command example: hccn_tool -g -dev_info -i 0
 	// output example:
@@ -698,7 +698,7 @@ func GetUBOEBondingStatus(logicID int32) (string, error) {
 	// +--------+--------+--------+----------+-------------+------------+
 	outStr, err := getInfoFromHccnTool(args...)
 	if err != nil {
-		return "", buildHccnErrA5("npu dev info", err)
+		return 0, buildHccnErrA5("npu dev info", err)
 	}
 
 	// First, log the full output for debugging
@@ -706,17 +706,16 @@ func GetUBOEBondingStatus(logicID int32) (string, error) {
 
 	// Split output into lines and parse table data
 	lines := strings.Split(outStr, "\n")
-	result, err := confirmAllPortDown(lines)
+	result, err := getEthPortUpCount(lines)
 	if err != nil {
-		return "", buildHccnErrA5("npu dev info", err)
+		return 0, buildHccnErrA5("npu dev info", err)
 	}
-
 	return result, nil
 }
 
-// confirmAllPortDown to check if 2 ports are down or up
-func confirmAllPortDown(lines []string) (string, error) {
-	result := false
+// getEthPortUpCount to get the number of eth up ports
+func getEthPortUpCount(lines []string) (int, error) {
+	result := 0
 	isInTable := false
 	separatorCount := 0
 
@@ -750,18 +749,16 @@ func confirmAllPortDown(lines []string) (string, error) {
 		}
 
 		// Parse device row data
-		ret, err := checkPortStatus(trimmedLine)
+		up, err := checkPortStatus(trimmedLine)
 		if err != nil {
 			hwlog.RunLog.Warnf("Skipping invalid row: %s", trimmedLine)
-			return "", err
+			return 0, err
 		}
-		result = ret || result
+		if up {
+			result += 1
+		}
 	}
-
-	if result {
-		return common.NPUNetworkLinkUpStatus, nil
-	}
-	return common.NPUNetworkLinkDownStatus, nil
+	return result, nil
 }
 
 // checkPortStatus extracts and validates UdieID and PortID from a single table row

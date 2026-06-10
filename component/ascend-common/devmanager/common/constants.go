@@ -318,4 +318,10 @@ const (
 	NPUNetworkLinkDownStatus = "DOWN"
 	// NPUNetworkLinkUpStatus indicate the network status of up
 	NPUNetworkLinkUpStatus = "UP"
+	// NetWorkPortAllDownCount indicate the network port all down count
+	NetWorkPortAllDownCount = 0
+	// RoceNetWorkPortAllUpCount indicate the network port all up count
+	RoceNetWorkPortAllUpCount = 1
+	// UBOENetWorkPortAllUpCount indicate the network port all up count for UBOE
+	UBOENetWorkPortAllUpCount = 2
 )
