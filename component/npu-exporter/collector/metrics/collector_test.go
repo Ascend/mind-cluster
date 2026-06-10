@@ -220,6 +220,7 @@ func TestUpdatePrometheus(t *testing.T) {
 		mockHccsCache(n, chips, colcommon.GetCacheKey(&HccsCollector{}))
 		mockNetInfoCache(n, chips, colcommon.GetCacheKey(&NetworkCollector{}))
 		mockChipCache(n, chips, colcommon.GetCacheKey(&BaseInfoCollector{}))
+		mockChipUtilizationCache(n, chips, colcommon.GetCacheKey(&UtilizationCollector{}))
 		mockOpticalCache(n, chips, colcommon.GetCacheKey(&OpticalCollector{}))
 		mockPcieCache(n, chips, colcommon.GetCacheKey(&PcieCollector{}))
 		mockRoceCache(n, chips, colcommon.GetCacheKey(&RoceCollector{}))
@@ -250,6 +251,7 @@ func TestUpdateTelegraf(t *testing.T) {
 		mockHccsCache(n, chips, colcommon.GetCacheKey(&HccsCollector{}))
 		mockNetInfoCache(n, chips, colcommon.GetCacheKey(&NetworkCollector{}))
 		mockChipCache(n, chips, colcommon.GetCacheKey(&BaseInfoCollector{}))
+		mockChipUtilizationCache(n, chips, colcommon.GetCacheKey(&UtilizationCollector{}))
 		mockOpticalCache(n, chips, colcommon.GetCacheKey(&OpticalCollector{}))
 		mockPcieCache(n, chips, colcommon.GetCacheKey(&PcieCollector{}))
 		mockRoceCache(n, chips, colcommon.GetCacheKey(&RoceCollector{}))
@@ -441,6 +443,18 @@ func mockChipCache(n *colcommon.NpuCollector, chips []colcommon.HuaWeiAIChip, ca
 	colcommon.UpdateCache[chipCache](n, cacheKey, &localCache)
 }
 
+func mockChipUtilizationCache(n *colcommon.NpuCollector, chips []colcommon.HuaWeiAIChip, cacheKey string) {
+	localCache := sync.Map{}
+	for _, chip := range chips {
+		localCache.Store(chip.PhyId, chipUtilizationCache{chip: chip, timestamp: time.Now(),
+			Utilization:        0,
+			OverallUtilization: 0,
+			VectorUtilization:  0,
+		})
+	}
+	colcommon.UpdateCache[chipUtilizationCache](n, cacheKey, &localCache)
+}
+
 func mockProcessInfo() *common.DevProcessInfo {
 	return &common.DevProcessInfo{
 		ProcNum:      1,
@@ -538,6 +552,7 @@ func initChain() {
 		&HccsCollector{},
 		&BaseInfoCollector{},
 		&NodeBaseCollector{},
+		&UtilizationCollector{},
 		&UbCollector{},
 		&SioCollector{},
 		&VersionCollector{},
