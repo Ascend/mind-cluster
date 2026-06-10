@@ -65,6 +65,13 @@ type FaultHandler interface {
 	ScoreBestNPUNodes(*api.TaskInfo, map[string]float64)
 	UseAnnotation(*api.TaskInfo)
 	PreStopAction(*ScheduleEnv) error
+	// IsNodeFault returns true if the node has any registered fault
+	// (hard fault, card sub-health, or switch sub-health).
+	IsNodeFault(nodeName string) bool
+	// IsFaultTaskByRank returns true if the given rank was recorded as a fault
+	// task in the fault job cache. Uses the fault snapshot rather than
+	// real-time node health.
+	IsFaultTaskByRank(jobID api.JobID, rankIndex string) bool
 }
 
 // SchedulerBaseAttr for all volcano-npu plugin.

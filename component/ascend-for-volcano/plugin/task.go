@@ -74,6 +74,15 @@ func (sHandle ScheduleHandler) NPUAllocateFunc(task *api.TaskInfo) {
 	if sHandle.FaultHandle != nil {
 		sHandle.FaultHandle.UseAnnotation(task)
 	}
+
+	// Record pod-to-node mapping for "prefer previous node" scheduling.
+	// The cache internally saves the old Node as a rollback anchor (Previous field).
+	if sHandle.AffinityCache != nil && vcJob.Owner.UID != "" {
+		if rankIndex, ok := task.Pod.Annotations[PodRankIndexKey]; ok && rankIndex != "" {
+			sHandle.AffinityCache.RecordAssignment(vcJob.Owner.UID, rankIndex, nodeName)
+		}
+	}
+
 	klog.V(util.LogDebugLev).Infof("%s %s useAnnotation node [%s]'s top.", PluginName, util.SafePrint(task.Name), nodeName)
 }
 
@@ -99,6 +108,21 @@ func (sHandle *ScheduleHandler) NPUDeallocateFunc(task *api.TaskInfo) {
 		return
 	}
 	sHandle.releaseAnnotation(task, vcJob, node)
+
+	// When the task status is Pending (allocation rollback / unpipeline), the
+	// cache entry written by NPUAllocateFunc is stale — the pod never actually
+	// ran on this node. RollbackAssignment restores the previous assignment
+	// if one exists, or removes the entry entirely if this was a first-time assignment.
+	// When the task is Releasing (evicted by preempt/reclaim), keep the cache
+	// so the pod can be rescheduled back to its original node to reuse images.
+	if task.Status == api.Pending {
+		if sHandle.AffinityCache != nil && vcJob.Owner.UID != "" {
+			if rankIndex, ok := task.Pod.Annotations[PodRankIndexKey]; ok && rankIndex != "" {
+				sHandle.AffinityCache.RollbackAssignment(vcJob.Owner.UID, rankIndex)
+			}
+		}
+	}
+
 	klog.V(util.LogDebugLev).Infof("%s %s NPUDeallocateFunc node [%s]'s top.",
 		PluginName, util.SafePrint(task.Name), nodeName)
 }
