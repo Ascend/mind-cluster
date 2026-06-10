@@ -281,16 +281,6 @@ func (c *Client) supervisor() {
 
 func (c *Client) processJobSummary(stream job.Job_SubscribeJobSummarySignalListClient) {
 	for {
-		if c.callbacks.Len() == 0 {
-			hwlog.RunLog.Info("[FD-OL]detected callbacks are empty, close job summary register")
-			if err := stream.CloseSend(); err != nil {
-				hwlog.RunLog.Errorf("[FD-OL]close job summary register failed: %v", err)
-				time.Sleep(time.Second)
-				continue
-			}
-			c.closeSignal <- struct{}{}
-			return
-		}
 		data, err := stream.Recv()
 		if err != nil {
 			hwlog.RunLog.Errorf("[FD-OL]job summary stream closed by server: %v", err)
