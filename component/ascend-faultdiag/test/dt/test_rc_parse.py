@@ -756,3 +756,25 @@ class TestSocketTimeoutIpMatch(unittest.TestCase):
         self.assertEqual(len(parser.socket_error_data_cache.remote_info), 1)
         self.assertEqual(parser.socket_error_data_cache.remote_info[0].device_ip, "")
         self.assertEqual(parser.socket_error_data_cache.remote_info[0].phy_device_id, "5")
+
+
+class TestSocketTimeoutEidChannelStatus(unittest.TestCase):
+    """Test cases for IpAddress[eid[ + ChannelStatus: branch in socket timeout error parsing"""
+
+    def _create_error_parser(self):
+        return ErrorParser(BlackListManager())
+
+    def test_full_link_with_distinct_eids_records_last_one(self):
+        parser = self._create_error_parser()
+        line = (
+            "3  |  IpAddress[eid[0000:0000:0000:0000:0000:0000:0000:0001]"
+            "   7  |  IpAddress[eid[0000:0000:0000:0000:0000:0000:0000:0002]   ChannelStatus: down"
+        )
+        err_time = "2025-01-24-11:24:17.476943"
+        parser._filter_socket_timeout_error_from_log(line, err_time)
+
+        self.assertEqual(len(parser.socket_error_data_cache.remote_info), 1)
+        self.assertEqual(
+            parser.socket_error_data_cache.remote_info[0].eid,
+            "0000:0000:0000:0000:0000:0000:0000:0002",
+        )
