@@ -59,10 +59,10 @@ const (
 	CardNetworkUnhealthy = "CardNetworkUnhealthy"
 	// LinkDownFaultCode linkdown fault code
 	LinkDownFaultCode = 0x81078603
-	// UBOEPortDownCode1 uboe port down fault code
-	UBOEPortDownCode1 = 0x81B18603
-	// UBOEPortDownCode2 uboe port down fault code
-	UBOEPortDownCode2 = 0x81078607
+	// UBPortDownCode uboe port down fault code
+	UBPortDownCode = 0x81B18603
+	// UBOEPortDownCode uboe port down fault code
+	UBOEPortDownCode = 0x81078607
 	// ResetFinishFaultCode reset finish fault code
 	ResetFinishFaultCode = 0x8C2FA009
 	// CardDropFaultCode card drop fault code
@@ -142,8 +142,10 @@ var (
 	FaultDurationTypeSet = sets.NewString(NotHandleFault, RestartRequest, RestartBusiness, FreeRestartNPU,
 		RestartNPU, PreSeparateNPU, SeparateNPU, SubHealthFault)
 	// NetworkFaultCodes is a set that contains all the network fault codes
-	NetworkFaultCodes = sets.NewInt64(LinkDownFaultCode)
-	limiter           = rate.NewLimiter(rate.Every(1*time.Minute/FaultCallBackRateLimit), FaultCallBackRateLimit)
+	NetworkFaultCodes = sets.NewInt64(LinkDownFaultCode, UBOEPortDownCode, UBPortDownCode)
+	// ParameterPlaneFaultCodes is a set that contains all the parameter plane fault codes
+	ParameterPlaneFaultCodes = sets.NewInt64(LinkDownFaultCode, UBOEPortDownCode)
+	limiter                  = rate.NewLimiter(rate.Every(1*time.Minute/FaultCallBackRateLimit), FaultCallBackRateLimit)
 )
 
 // fault customization

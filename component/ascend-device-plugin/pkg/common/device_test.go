@@ -365,15 +365,14 @@ func TestConvertToSwitchLevelStr(t *testing.T) {
 	}
 }
 
-// TestWithoutRoCEDev tests the function WithoutRoCEDev
+// TestWithoutRoCEDev tests the function WithoutParameterPlane
 func TestWithoutRoCEDev(t *testing.T) {
-	convey.Convey("test WithoutRoCEDev", t, func() {
+	convey.Convey("test WithoutParameterPlane", t, func() {
 		testWithoutRoCEDevAscend310(t)
 		testWithoutRoCEDevAscend310P(t)
 		testWithoutRoCEDevAscend310B(t)
 		testWithoutRoCEDevAscend910(t)
 		testWithoutRoCEDevAscend910A3(t)
-		testWithoutRoCEDevAscend910A5(t)
 		testWithoutRoCEDevEmpty(t)
 		testWithoutRoCEDevUnknown(t)
 	})
@@ -384,7 +383,7 @@ func testWithoutRoCEDevAscend310(t *testing.T) {
 	convey.Convey("Ascend310 card type, should return true", func() {
 		ParamOption = Option{RealCardType: api.Ascend310}
 		defer func() { ParamOption = Option{} }()
-		result := WithoutRoCEDev()
+		result := WithoutParameterPlane()
 		convey.So(result, convey.ShouldBeTrue)
 	})
 }
@@ -394,7 +393,7 @@ func testWithoutRoCEDevAscend310P(t *testing.T) {
 	convey.Convey("Ascend310P card type, should return true", func() {
 		ParamOption = Option{RealCardType: api.Ascend310P}
 		defer func() { ParamOption = Option{} }()
-		result := WithoutRoCEDev()
+		result := WithoutParameterPlane()
 		convey.So(result, convey.ShouldBeTrue)
 	})
 }
@@ -404,7 +403,7 @@ func testWithoutRoCEDevAscend310B(t *testing.T) {
 	convey.Convey("Ascend310B card type, should return true", func() {
 		ParamOption = Option{RealCardType: api.Ascend310B}
 		defer func() { ParamOption = Option{} }()
-		result := WithoutRoCEDev()
+		result := WithoutParameterPlane()
 		convey.So(result, convey.ShouldBeTrue)
 	})
 }
@@ -414,7 +413,7 @@ func testWithoutRoCEDevAscend910(t *testing.T) {
 	convey.Convey("Ascend910 card type, should return false", func() {
 		ParamOption = Option{RealCardType: api.Ascend910}
 		defer func() { ParamOption = Option{} }()
-		result := WithoutRoCEDev()
+		result := WithoutParameterPlane()
 		convey.So(result, convey.ShouldBeFalse)
 	})
 }
@@ -424,18 +423,8 @@ func testWithoutRoCEDevAscend910A3(t *testing.T) {
 	convey.Convey("Ascend910A3 card type, should return false", func() {
 		ParamOption = Option{RealCardType: api.Ascend910A3}
 		defer func() { ParamOption = Option{} }()
-		result := WithoutRoCEDev()
+		result := WithoutParameterPlane()
 		convey.So(result, convey.ShouldBeFalse)
-	})
-}
-
-// testWithoutRoCEDevAscend910A5 tests Ascend910A5 card type
-func testWithoutRoCEDevAscend910A5(t *testing.T) {
-	convey.Convey("Ascend910A5 card type, should return false", func() {
-		ParamOption = Option{RealCardType: api.Ascend910A5}
-		defer func() { ParamOption = Option{} }()
-		result := WithoutRoCEDev()
-		convey.So(result, convey.ShouldBeTrue)
 	})
 }
 
@@ -444,7 +433,7 @@ func testWithoutRoCEDevEmpty(t *testing.T) {
 	convey.Convey("empty card type, should return false", func() {
 		ParamOption = Option{RealCardType: ""}
 		defer func() { ParamOption = Option{} }()
-		result := WithoutRoCEDev()
+		result := WithoutParameterPlane()
 		convey.So(result, convey.ShouldBeFalse)
 	})
 }
@@ -454,7 +443,7 @@ func testWithoutRoCEDevUnknown(t *testing.T) {
 	convey.Convey("unknown card type, should return false", func() {
 		ParamOption = Option{RealCardType: "UnknownCard"}
 		defer func() { ParamOption = Option{} }()
-		result := WithoutRoCEDev()
+		result := WithoutParameterPlane()
 		convey.So(result, convey.ShouldBeFalse)
 	})
 }
