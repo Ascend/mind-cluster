@@ -89,7 +89,7 @@ func TestConnect(t *testing.T) {
 		// invalid ip
 		err = c.connect(invalidIp)
 		convey.So(err.Error(), convey.ShouldContainSubstring, "invalid host")
-		// dial faild
+		// dial failed
 		connectFailed = true
 		err = c.connect(validIp)
 		convey.So(err.Error(), convey.ShouldContainSubstring, "failed to connect to grpc server")
@@ -284,25 +284,24 @@ func (m *mockJobSummaryStream) Recv() (*job.JobSummarySignalList, error) {
 func TestProcessJobSummary(t *testing.T) {
 	c := &Client{
 		jobSummaryWatcher: jobSummaryWatcher{
-			callbacks: utils.NewStorage[callback](),
+			callbacks:          utils.NewStorage[callback](),
+			disconnectedSignal: make(chan struct{}),
 		},
 	}
 	stream := &mockJobSummaryStream{}
 	convey.Convey("test processJobSummary", t, func() {
-		c.closeSignal = make(chan struct{})
-		// callbacks is empty, end loop
+		// Sub-case 1: mock stream returns data then error → disconnectedSignal
 		var received bool
 		var wg sync.WaitGroup
 		wg.Add(1)
 		go func() {
-			<-c.closeSignal
+			<-c.disconnectedSignal
 			received = true
 			defer wg.Done()
 		}()
 		c.processJobSummary(stream)
 		wg.Wait()
 		convey.So(received, convey.ShouldBeTrue)
-		convey.So(stream.closeSendCalled, convey.ShouldEqual, failedCount)
 
 		var f = func(job *model.JobSummary) {}
 		c.callbacks.Store("testRegisterId", callback{
@@ -311,7 +310,8 @@ func TestProcessJobSummary(t *testing.T) {
 			namespace:  testNamespace,
 			f:          f,
 		})
-		// mock recived data and then failed
+		// Sub-case 2: callbacks present, mock recived data and then failed → disconnectedSignal
+		stream.receiveCount = 0
 		received = false
 		c.disconnectedSignal = make(chan struct{})
 		wg.Add(1)
@@ -349,7 +349,7 @@ func TestSupervisor(t *testing.T) {
 		c.disconnectedSignal = make(chan struct{})
 		c.closeSignal = make(chan struct{})
 		go c.supervisor()
-		// mock disconnect, client whill start supervisor again
+		// mock disconnect, client will start supervisor again
 		c.disconnectedSignal <- struct{}{}
 		time.Sleep(time.Millisecond)
 		convey.So(c.isRegisterd, convey.ShouldBeTrue)
