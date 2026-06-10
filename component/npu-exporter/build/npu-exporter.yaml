@@ -75,7 +75,7 @@ spec:
         imagePullPolicy: Never
         command: [ "/bin/bash", "-c", "--"]
         # pair firstly
-        args: [ "umask 027;npu-exporter -port=8082 -ip=0.0.0.0  -updateTime=5
+        args: [ "umask 027;npu-exporter -port=8082 -ip=0.0.0.0
                  -logFile=/var/log/mindx-dl/npu-exporter/npu-exporter.log -logLevel=0 -containerMode=docker --enable-healthz=true --healthz-address=11256" ]
         livenessProbe:
           httpGet:

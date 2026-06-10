@@ -283,37 +283,17 @@ func patchCollectToCache() *gomonkey.Patches {
 func TestStartCollectForMultiGoroutine(t *testing.T) {
 	n := mockNewNpuCollector()
 	wg := sync.WaitGroup{}
-	ChainForMultiGoroutine = []MetricsCollector{
+	SetChains([]MetricsCollector{}, []MetricsCollector{
 		&MetricsCollectorAdapter{},
 		&MetricsCollectorAdapter{},
-	}
+	}, []MetricsCollector{})
 	patches := patchCollectToCache()
 	defer patches.Reset()
 	patches.ApplyFuncReturn(getChipListCache, []HuaWeiAIChip{createChip()})
 	convey.Convey("TestStartCollectForMultiGoroutine", t, func() {
 		ctx, cancel := context.WithCancel(context.Background())
 		startCollectForMultiGoroutine(&wg, ctx, n)
-		time.Sleep(n.updateTime)
-		cancel()
-		data, err := n.cache.Get(mockKey)
-		convey.So(err, convey.ShouldBeNil)
-		value, ok := data.(string)
-		convey.So(ok, convey.ShouldBeTrue)
-		convey.So(value, convey.ShouldEqual, mockValue)
-	})
-}
-
-func TestRunChipCollector(t *testing.T) {
-	n := mockNewNpuCollector()
-	patches := patchCollectToCache()
-	defer patches.Reset()
-	convey.Convey("TestRunChipCollector", t, func() {
-		ctx, cancel := context.WithCancel(context.Background())
-		tickCh := make(chan time.Time)
-		patches.ApplyFuncReturn(time.NewTicker, &time.Ticker{C: tickCh})
-		close(tickCh)
-		go runChipCollector(ctx, n, createChip())
-		time.Sleep(n.updateTime)
+		time.Sleep(200 * time.Millisecond)
 		cancel()
 		data, err := n.cache.Get(mockKey)
 		convey.So(err, convey.ShouldBeNil)
@@ -326,15 +306,15 @@ func TestRunChipCollector(t *testing.T) {
 func TestStartCollectSingleGoroutine(t *testing.T) {
 	n := mockNewNpuCollector()
 	wg := sync.WaitGroup{}
-	ChainForSingleGoroutine = []MetricsCollector{
+	SetChains([]MetricsCollector{
 		&MetricsCollectorAdapter{},
-	}
+	}, []MetricsCollector{}, []MetricsCollector{})
 	patches := patchCollectToCache()
 	defer patches.Reset()
 	convey.Convey("TestStartCollectSingleGoroutine", t, func() {
 		ctx, cancel := context.WithCancel(context.Background())
 		startCollectSingleGoroutine(&wg, ctx, n)
-		time.Sleep(n.updateTime)
+		time.Sleep(200 * time.Millisecond)
 		cancel()
 		data, err := n.cache.Get(mockKey)
 		convey.So(err, convey.ShouldBeNil)
@@ -796,5 +776,24 @@ func clearCache() {
 	npuInfoCache.Range(func(key, value interface{}) bool {
 		npuInfoCache.Delete(key)
 		return true
+	})
+}
+
+func TestGetUpdateTime(t *testing.T) {
+	convey.Convey("should return updateTime when set", t, func() {
+		n := &NpuCollector{updateTime: 10 * time.Second}
+		convey.So(n.GetUpdateTime(), convey.ShouldEqual, 10*time.Second)
+	})
+}
+
+func TestSetChainsAndGetChainsSnapshot(t *testing.T) {
+	convey.Convey("should set and get chains correctly", t, func() {
+		origSingle, origMulti, origPlugin := GetChainsSnapshot()
+		defer SetChains(origSingle, origMulti, origPlugin)
+		SetChains(nil, nil, nil)
+		single, multi, plugin := GetChainsSnapshot()
+		convey.So(single, convey.ShouldBeNil)
+		convey.So(multi, convey.ShouldBeNil)
+		convey.So(plugin, convey.ShouldBeNil)
 	})
 }

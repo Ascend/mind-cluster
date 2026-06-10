@@ -49,19 +49,6 @@ var (
 		api.Atlas3504PMainBoardID: true,
 	}
 
-	notSupportedVectorUtilDevices = map[string]bool{
-		common.Ascend910: true,
-	}
-	supportedOverallUtilDevices = map[string]bool{
-		common.Ascend910B:  true,
-		common.Ascend910A3: true,
-		common.Ascend910A5: true,
-	}
-	supportedCubeDevices = map[string]bool{
-		common.Ascend910B:  true,
-		common.Ascend910A3: true,
-	}
-
 	supportedCardNumDevices = map[string]bool{
 		api.Ascend310P:  true,
 		api.Ascend910A:  true,
@@ -74,13 +61,9 @@ var (
 	machineInfoNPUDesc  = colcommon.BuildDescWithLabel("machine_npu_nums", "Amount of npu installed on the machine.", nil)
 	machineInfoCardDesc = prometheus.NewDesc("machine_card_nums", "Amount of card installed on the machine.", nil, nil)
 
-	descUtil       = colcommon.BuildDesc("npu_chip_info_utilization", "the ai core utilization")
-	descOverUtil   = colcommon.BuildDesc("npu_chip_info_overall_utilization", "the overall utilization of npu")
-	descVectorUtil = colcommon.BuildDesc("npu_chip_info_vector_utilization", "the vector utilization")
-	descCubeUtil   = colcommon.BuildDesc("npu_chip_info_cube_utilization", "the cube utilization")
-	descTemp       = colcommon.BuildDesc("npu_chip_info_temperature", "the npu temperature")
-	descPower      = colcommon.BuildDesc("npu_chip_info_power", "the npu power")
-	descVoltage    = colcommon.BuildDesc("npu_chip_info_voltage", "the npu voltage")
+	descTemp    = colcommon.BuildDesc("npu_chip_info_temperature", "the npu temperature")
+	descPower   = colcommon.BuildDesc("npu_chip_info_power", "the npu power")
+	descVoltage = colcommon.BuildDesc("npu_chip_info_voltage", "the npu voltage")
 
 	descAICoreFreq = colcommon.BuildDesc("npu_chip_info_aicore_current_freq",
 		"the npu ai core current frequency, unit is 'MHz'")
@@ -101,9 +84,6 @@ var (
 	descNPUProduct = colcommon.BuildDescWithLabel("npu_chip_info_product_type", "the npu product_type information",
 		cardLabelForProduct)
 
-	// container (vnpu not support this metrics), only report to prometheus
-	npuCtrUtilization = colcommon.BuildDesc("container_npu_utilization",
-		"npu ai core utilization in container, unit is '%'")
 	npuCtrTotalMemory = colcommon.BuildDesc("container_npu_total_memory",
 		"npu total memory in container, unit is 'MB'")
 	npuCtrUsedMemory = colcommon.BuildDesc("container_npu_used_memory",
@@ -139,14 +119,6 @@ type chipCache struct {
 	HealthStatus string `json:"health_status"`
 	// the all error codes of the chip
 	ErrorCodes []int64 `json:"error_codes"`
-	// the utilization of the chip
-	Utilization int `json:"utilization"`
-	// the overall utilization of the chip
-	OverallUtilization int `json:"overall_utilization"`
-	// the vector utilization of the chip
-	VectorUtilization int `json:"vector_utilization"`
-	// the cube utilization of the chip
-	CubeUtilization int `json:"cube_utilization"`
 	// the temperature of the chip
 	Temperature int `json:"temperature"`
 	// the work power of the chip
@@ -164,20 +136,6 @@ type chipCache struct {
 // BaseInfoCollector collects the base info of the chip
 type BaseInfoCollector struct {
 	colcommon.MetricsCollectorAdapter
-	realGetDeviceUtilizationRateInfoFunc func(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCache)
-}
-
-func (c *BaseInfoCollector) PreCollect(n *colcommon.NpuCollector, chipList []colcommon.HuaWeiAIChip) {
-	if n.Dmgr.GetDevType() != common.Ascend910B &&
-		n.Dmgr.GetDevType() != common.Ascend910A3 &&
-		n.Dmgr.GetDevType() != common.Ascend910A5 {
-		// only A2、A3 and A5 support use new api (dcmi_get_device_multi_utilization_rate、dcmi_get_device_multi_utilization_rate)
-		c.realGetDeviceUtilizationRateInfoFunc = collectUtilV1
-		logger.Infof("devType %v does not support get device utilization by v2 api, "+
-			"will use v1 api to get utilization info", utils.MaskDevType(n.Dmgr.GetDevType()))
-		return
-	}
-	c.realGetDeviceUtilizationRateInfoFunc = collectUtilCommon
 }
 
 // Describe collects the base info of the chip
@@ -185,10 +143,6 @@ func (c *BaseInfoCollector) Describe(ch chan<- *prometheus.Desc) {
 	// base info
 	ch <- machineInfoNPUDesc
 	ch <- machineInfoCardDesc
-	ch <- descUtil
-	ch <- descVectorUtil
-	ch <- descCubeUtil
-	ch <- descOverUtil
 	ch <- descTemp
 	ch <- descPower
 	ch <- descVoltage
@@ -202,7 +156,6 @@ func (c *BaseInfoCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- descNetworkStatus
 	// container
 	ch <- npuCtrInfo
-	ch <- npuCtrUtilization
 	ch <- npuCtrTotalMemory
 	ch <- npuCtrUsedMemory
 
@@ -237,6 +190,13 @@ func (c *BaseInfoCollector) CollectToCache(n *colcommon.NpuCollector, chipList [
 		if err != nil {
 			errCodes = make([]int64, 0)
 		}
+		if len(errCodes) > 0 {
+			var errCodesInHex []string
+			for _, errCode := range errCodes {
+				errCodesInHex = append(errCodesInHex, strings.ToUpper(strconv.FormatInt(errCode, 16)))
+			}
+			logger.Warnf("there are error(s) on chip(logicID: %v), errorCodes: %v", logicID, errCodesInHex)
+		}
 
 		cache := &chipCache{
 			chip:              chip,
@@ -247,7 +207,6 @@ func (c *BaseInfoCollector) CollectToCache(n *colcommon.NpuCollector, chipList [
 			ErrorCodes:        errCodes,
 		}
 		collectPower(logicID, dmgr, cache)
-		collectUtil(c, logicID, dmgr, cache)
 		if isSupportNetworkHealthDevices(n.Dmgr.GetDevType(), chip.MainBoardId) {
 			setNetHealthStatus(logicID, dmgr, cache)
 		}
@@ -300,10 +259,6 @@ func (c *BaseInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *col
 		doUpdateMetricWithValidateNum(ch, timestamp, float64(cache.Voltage), cardLabel, descVoltage)
 		doUpdateMetricWithValidateNum(ch, timestamp, float64(cache.AICoreCurrentFreq), cardLabel, descAICoreFreq)
 		doUpdateMetricWithValidateNum(ch, timestamp, float64(cache.Temperature), cardLabel, descTemp)
-		doUpdateMetricWithValidateNum(ch, timestamp, float64(cache.Utilization), cardLabel, descUtil)
-		doUpdateMetricWithValidateNum(ch, timestamp, float64(cache.OverallUtilization), cardLabel, descOverUtil)
-		doUpdateMetricWithValidateNum(ch, timestamp, float64(cache.VectorUtilization), cardLabel, descVectorUtil)
-		doUpdateMetricWithValidateNum(ch, timestamp, float64(cache.CubeUtilization), cardLabel, descCubeUtil)
 		doUpdateMetricWithValidateNum(ch, timestamp, 1, cardLabel, descNpuName)
 		doUpdateMetricWithValidateNum(ch, timestamp, float64(getHealthCode(cache.HealthStatus)), cardLabel, descHealthStatus)
 		if isSupportNetworkHealthDevices(n.Dmgr.GetDevType(), cache.chip.MainBoardId) {
@@ -351,14 +306,6 @@ func updateContainerInfo(ch chan<- prometheus.Metric, containerInfo container.De
 	// based on chipType , container_npu_total_memory、container_npu_used_memory reported in hbm or ddr group
 	doUpdateMetric(ch, chip.timestamp, 1, append(cardLabel, containerInfo.ID, strings.Join(containerName, "_")),
 		npuCtrInfo)
-
-	// vnpu not support this metrics
-	vDevActivityInfo := chipWithVnpu.VDevActivityInfo
-	if vDevActivityInfo != nil && common.IsValidVDevID(vDevActivityInfo.VDevID) {
-		return
-	}
-
-	doUpdateMetricWithValidateNum(ch, chip.timestamp, float64(chip.Utilization), cardLabel, npuCtrUtilization)
 }
 
 func updateErrorCodesInfo(ch chan<- prometheus.Metric, chip *chipCache, timestamp time.Time, cardLabel []string) {
@@ -419,10 +366,6 @@ func (c *BaseInfoCollector) UpdateTelegraf(fieldsMap map[string]map[string]inter
 		doUpdateTelegrafWithValidateNum(fieldMap, descPower, float64(cache.Power), "")
 		doUpdateTelegrafWithValidateNum(fieldMap, descVoltage, float64(cache.Voltage), "")
 		doUpdateTelegrafWithValidateNum(fieldMap, descAICoreFreq, float64(cache.AICoreCurrentFreq), "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descUtil, float64(cache.Utilization), "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descVectorUtil, float64(cache.VectorUtilization), "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descCubeUtil, float64(cache.CubeUtilization), "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descOverUtil, float64(cache.OverallUtilization), "")
 		doUpdateTelegrafWithValidateNum(fieldMap, descHealthStatus, float64(getHealthCode(cache.HealthStatus)), "")
 		if isSupportNetworkHealthDevices(n.Dmgr.GetDevType(), chip.MainBoardId) {
 			doUpdateTelegrafWithValidateNum(fieldMap, descNetworkStatus, float64(getHealthCode(cache.NetHealthStatus)), "")
@@ -476,75 +419,6 @@ func updateProcessInfoForTelegraf(chip *chipCache, fieldMap map[string]interface
 		procInfo := devProcessInfo.DevProcArray[i]
 		doUpdateTelegraf(fieldMap, descDevProcessInfo, procInfo.MemUsage, "_"+strconv.Itoa(int(procInfo.Pid)))
 	}
-}
-
-func collectUtil(c *BaseInfoCollector, logicID int32, dmgr devmanager.DeviceInterface, chip *chipCache) {
-	if c.realGetDeviceUtilizationRateInfoFunc != nil {
-		c.realGetDeviceUtilizationRateInfoFunc(logicID, dmgr, chip)
-		return
-	}
-	buildDefaultMultiUtilInfo(chip)
-	err := fmt.Errorf("realGetDeviceUtilizationRateInfoFunc is nil when get utilization info ")
-	handleErr(err, "utilization", 0)
-}
-
-func buildDefaultMultiUtilInfo(chip *chipCache) {
-	chip.Utilization = -1
-	chip.OverallUtilization = -1
-	chip.VectorUtilization = -1
-	chip.CubeUtilization = -1
-}
-
-func collectUtilV1(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCache) {
-	buildDefaultMultiUtilInfo(chip)
-	// aicore
-	util, err := dmgr.GetDeviceUtilizationRate(logicID, common.AICore)
-	handleErr(err, colcommon.DomainForAICoreUtilization, logicID)
-	chip.Utilization = int(util)
-
-	devType := dmgr.GetDevType()
-	// ai vector
-	if !notSupportedVectorUtilDevices[devType] {
-		// only 910A does not support input type 12
-		vecUtil, err := dmgr.GetDeviceUtilizationRate(logicID, common.VectorCore)
-		handleErr(err, colcommon.DomainForVectorCoreUtilization, logicID)
-		chip.VectorUtilization = int(vecUtil)
-	} else {
-		logger.LogfWithOptions(logger.WarnLevel, logger.LogOptions{Domain: "vectorUtil", ID: devType, MaxCounts: 1},
-			"%v does not support utilization of vector", utils.MaskDevType(devType))
-	}
-
-	// overall
-	if supportedOverallUtilDevices[devType] {
-		// only A2/A3 support input type 13
-		// A5 some product type support 13 , and some product type does not
-		overAllUtil, err := dmgr.GetDeviceUtilizationRate(logicID, common.Overall)
-		handleErr(err, colcommon.DomainForOverallUtilization, logicID)
-		chip.OverallUtilization = int(overAllUtil)
-	} else {
-		logger.LogfWithOptions(logger.WarnLevel, logger.LogOptions{Domain: "overallUtil", ID: devType, MaxCounts: 1},
-			"%v does not support utilization of overall", utils.MaskDevType(devType))
-	}
-
-	// ai cube
-	msg := ""
-	if supportedCubeDevices[devType] {
-		// input type 14 is not supported when v2 api is not available
-		msg = "%v does not support utilization of cube when v2 api is not available"
-	} else {
-		msg = "%v does not support utilization of cube"
-	}
-	logger.LogfWithOptions(logger.WarnLevel,
-		logger.LogOptions{Domain: "cubeUtil", ID: devType, MaxCounts: 1}, msg, utils.MaskDevType(devType))
-}
-
-func collectUtilCommon(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCache) {
-	multiUtilInfo, err := dmgr.GetDeviceUtilizationRateCommon(logicID)
-	handleErr(err, "multiUtilInfoPeriod", logicID)
-	chip.Utilization = int(multiUtilInfo.AicoreUtil)
-	chip.OverallUtilization = int(multiUtilInfo.NpuUtil)
-	chip.VectorUtilization = int(multiUtilInfo.AivUtil)
-	chip.CubeUtilization = int(multiUtilInfo.AicUtil)
 }
 
 func setNetHealthStatus(logicID int32, dmgr devmanager.DeviceInterface, chip *chipCache) {

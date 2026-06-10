@@ -55,7 +55,7 @@ func StartContainerInfoCollect(ctx context.Context, cancelFunc context.CancelFun
 				}
 			}
 		}
-		ticker := time.NewTicker(n.updateTime)
+		ticker := time.NewTicker(tickerIntervalForContainerInfo)
 		defer ticker.Stop()
 
 		for {

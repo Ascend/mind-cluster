@@ -67,10 +67,11 @@ func (npu *WatchNPU) Gather(acc telegraf.Accumulator) error {
 
 	containerMap := common.GetContainerNPUInfo(npu.collector)
 	chips := common.GetChipListWithVNPU(npu.collector)
+	single, multi, plugin := common.GetChainsSnapshot()
 
-	fieldsMap = npu.gatherChain(fieldsMap, common.ChainForSingleGoroutine, containerMap, chips)
-	fieldsMap = npu.gatherChain(fieldsMap, common.ChainForMultiGoroutine, containerMap, chips)
-	fieldsMap = npu.gatherChain(fieldsMap, common.ChainForCustomPlugin, containerMap, chips)
+	fieldsMap = npu.gatherChain(fieldsMap, single, containerMap, chips)
+	fieldsMap = npu.gatherChain(fieldsMap, multi, containerMap, chips)
+	fieldsMap = npu.gatherChain(fieldsMap, plugin, containerMap, chips)
 
 	handleGeneralMetrics(acc, fieldsMap, devName, devTagValue)
 	handleMetricsWithCustomLabels(acc, fieldsMap)
@@ -90,8 +91,8 @@ func (npu *WatchNPU) Gather(acc telegraf.Accumulator) error {
 
 func handleTextMetrics(acc telegraf.Accumulator, fieldsMap map[string]map[string]interface{}) {
 	textMetrics := fieldsMap[common.KeyForTextMetrics]
-	for key, datas := range textMetrics {
-		data, ok := datas.(common.TelegrafData)
+	for key, metric := range textMetrics {
+		data, ok := metric.(common.TelegrafData)
 		if !ok {
 			continue
 		}
@@ -102,8 +103,8 @@ func handleTextMetrics(acc telegraf.Accumulator, fieldsMap map[string]map[string
 
 func handleMetricsWithCustomLabels(acc telegraf.Accumulator, fieldsMap map[string]map[string]interface{}) {
 	metrics := fieldsMap[common.KeyForMetricsWithCustomLabels]
-	for _, datas := range metrics {
-		data, ok := datas.(common.TelegrafData)
+	for _, metric := range metrics {
+		data, ok := metric.(common.TelegrafData)
 		if !ok {
 			continue
 		}
