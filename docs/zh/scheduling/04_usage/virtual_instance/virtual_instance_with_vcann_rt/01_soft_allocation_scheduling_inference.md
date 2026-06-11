@@ -139,7 +139,7 @@
          apiVersion: apps/v1
          kind: DaemonSet
          metadata:
-           name: ascend-device-plugin-daemonset-910-softShareDev #标识Ascend Device Plugin在软切分虚拟化功能和非软切分虚拟化功能混合部署场景下支持软切分虚拟化功能
+           name: ascend-device-plugin-daemonset-softShareDev #标识Ascend Device Plugin在软切分虚拟化功能和非软切分虚拟化功能混合部署场景下支持软切分虚拟化功能
            namespace: kube-system
          spec:
            ...
@@ -149,7 +149,7 @@
              ...
                nodeSelector:
                  huawei.com/scheduler.chip1softsharedev.enable: "true"  #选择支持软切分虚拟化功能的节点部署Ascend Device Plugin
-               serviceAccountName: ascend-device-plugin-sa-910
+               serviceAccountName: ascend-device-plugin-sa
                containers:
                ...
                  command: [ "/bin/bash", "-c", "--"]
@@ -180,7 +180,7 @@
          apiVersion: apps/v1
          kind: DaemonSet
          metadata:
-           name: ascend-device-plugin-daemonset-910 #标识Ascend Device Plugin在软切分虚拟化功能和非软切分虚拟化功能混合部署场景下不支持软切分虚拟化功能
+           name: ascend-device-plugin-daemonset #标识Ascend Device Plugin在软切分虚拟化功能和非软切分虚拟化功能混合部署场景下不支持软切分虚拟化功能
            namespace: kube-system
          spec:
            ...
@@ -190,7 +190,7 @@
              ...
                nodeSelector:
                  huawei.com/scheduler.chip1softsharedev.enable: "false"  #选择不支持软切分虚拟化功能的节点部署Ascend Device Plugin
-               serviceAccountName: ascend-device-plugin-sa-910
+               serviceAccountName: ascend-device-plugin-sa
            ...
          ```
 

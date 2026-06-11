@@ -37,7 +37,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol4232523123116"></a><a name="ol4232523123116"></a><ol id="ol4232523123116"><li>在物理机划分vNPU的步骤请参见<a href="./static_vnpu_scheduling/01_creating_vnpu.md">创建vNPU</a>。</li><li>挂载vNPU到容器的步骤请参见<a href="./static_vnpu_scheduling/02_mounting_vnpu_static.md">挂载vNPU（静态虚拟化）</a>或<a href="./dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md">动态vNPU调度（推理）</a>。</li></ol>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><ul><li>静态虚拟化</li><li>动态虚拟化：<ul><li>使用Ascend Docker Runtime挂载</li><li>使用Kubernetes挂载</li></ul></li></ul>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><ul><li>静态虚拟化</li><li>动态虚拟化</li></ul>
 </td>
 </tr>
 <tr id="row131012387307"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1010133833013"><a name="p1010133833013"></a><a name="p1010133833013"></a>在物理机划分vNPU，挂载vNPU到虚拟机，在虚拟机内将vNPU挂载到容器</p>
@@ -51,7 +51,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><a name="ol441318447318"></a><a name="ol441318447318"></a><ol id="ol441318447318"><li>在物理机直通NPU到虚拟机的步骤请参见<span id="ph970622925815"><a name="ph970622925815"></a><a name="ph970622925815"></a>《Atlas 系列硬件产品 26.0.RC1 虚拟机配置指南》的“安装虚拟机&gt;配置NPU直通虚拟机&gt;<a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100568653/2689d3e6" target="_blank" rel="noopener noreferrer">NPU直通虚拟机</a>”章节</span>。</li><li>在虚拟机内划分vNPU步骤请参见<a href="./static_vnpu_scheduling/01_creating_vnpu.md">创建vNPU</a>。</li><li>将vNPU挂载到虚拟机内的容器的步骤请参见<a href="./static_vnpu_scheduling/02_mounting_vnpu_static.md">挂载vNPU（静态虚拟化）</a>或<a href="./dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md">动态vNPU调度（推理）</a>。</li></ol>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><ul><li>静态虚拟化</li><li>动态虚拟化：<ul><li>使用Ascend Docker Runtime挂载</li><li>使用Kubernetes挂载</li></ul></li></ul>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><ul><li>静态虚拟化</li><li>动态虚拟化</li></ul>
 </td>
 </tr>
 </tbody>
