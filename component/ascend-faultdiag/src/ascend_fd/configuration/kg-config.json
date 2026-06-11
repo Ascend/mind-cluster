@@ -23803,6 +23803,357 @@
             "regex": {
                 "in": ["data type","of","is not supported"]
             }
+        },
+        "AISW_VLLM_DPLB_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM",
+                "module": "DPLB",
+                "cause_zh": "DPLB配置检查失败",
+                "description_zh": "vllm serve拉起命令中DPLB配置参数缺失：\n1.开启data-parallel-hybrid-lb但未设置data-parallel-size-local \n2. 开启data-parallel-external-lb 但未设置 data-parallel-rank \n3.开启data-parallel-hybrid-lb或data-parallel-external-lb但未设置data-parallel-size或设置<2。",
+                "suggestion_zh": [
+                    "1. 在vLLM启动参数中，提供日志中提到的DPLB参数，具体可以参考vLLM社区文档：",
+                    "  https://docs.vllm.ai/en/latest/cli/serve/?h=hyb#parallelconfig",
+                    " 或特性文档：",
+                    "https://github.com/vllm-project/vllm/blob/main/docs/serving/data_parallel_deployment.md"
+                ],
+                "cause_en": "DPLB configuration check failure",
+                "description_en": "Missing DPLB configuration parameters in the vllm serve startup command: \n1. data-parallel-hybrid-lb is enabled but data-parallel-size-local is not set. \n2. data-parallel-external-lb is enabled but data-parallel-rank is not set. \n3. data-parallel-hybrid-lb or data-parallel-external-lb is enabled but data-parallel-size is not set or is set to less than 2.",
+                "suggestion_en": [
+                    "1. In the vLLM startup parameters, provide the DPLB parameters mentioned in the log. For details, please refer to the vLLM community documentation:",
+                    "  https://docs.vllm.ai/en/latest/cli/serve/?h=hyb#parallelconfig",
+                    " or the feature documentation:",
+                    "https://github.com/vllm-project/vllm/blob/main/docs/serving/data_parallel_deployment.md"
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": [
+                    ["data_parallel_start_local must be set to use data_parallel_hybrid_lb"],
+                    ["data_parallel_rank or node_rank must be specified if data_parallel_external_lb is enable"],
+                    ["data_parallel_external_lb can only be set when data_parallel_size > 1"]
+                ]
+            }
+        },
+        "AISW_VLLM_SCHEDULER_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM",
+                "module": "Scheduler",
+                "cause_zh": "Scheduler相关参数解析失败",
+                "description_zh": "vllm 拉起命令中scheduler调度参数配置有误：手动配置--scheduling-policy，但调度策略不支持（目前只支持fcfs,priority）。",
+                "suggestion_zh": [
+                    "1. 在vLLM启动参数中，配置正确的scheduling-policy(fcfs,priority),具体可参考参数配置文档：",
+                    "  https://github.com/vllm-project/vllm/blob/main/docs/usage/v1_guide.md"
+                ],
+                "cause_en": "Scheduler parameter parsing failure",
+                "description_en": "Incorrect scheduler parameter configuration in the vllm launch command: manually configured --scheduling-policy, but the scheduling policy is not supported (currently only fcfs and priority are supported).",
+                "suggestion_en": [
+                    "1. In the vLLM startup parameters, configure the correct scheduling-policy (fcfs, priority). For details, please refer to the parameter configuration documentation:",
+                    "  https://github.com/vllm-project/vllm/blob/main/docs/usage/v1_guide.md"
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["vllm serve", "error", "argument", "--scheduling-policy", "invalid choice"]
+            }
+        },
+        "AISW_VLLM_SAMPLER_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM",
+                "module": "sampler",
+                "cause_zh": "logitsprocess插件加载失败",
+                "description_zh": "vllm serve拉起命令中配置的--logits-processors无法加载。",
+                "suggestion_zh": [
+                    "1. 编写自定义logits_processor类，继承自vllm.v1.sample.logits_processor.LogitsProcessor，可参考vllm/examples/feature/logits_processor中DummyLogitsProcessor的写法；",
+                    "2. 检查vllm 启动参数中模块名称配置正确，具体可以参考vLLM社区文档：",
+                    " https://docs.vllm.ai/en/latest/design/logits_processors/",
+                    "或者特性文档 ",
+                    " https://github.com/vllm-project/vllm/blob/main/docs/features/custom_logitsprocs.md"
+                ],
+                "cause_en": "Failed to load logitsprocess plugin",
+                "description_en": "The --logits-processors configured in the vllm serve command cannot be loaded.",
+                "suggestion_en": [
+                    "1. Write a custom logits_processor class that inherits from vllm.v1.sample.logits_processor.LogitsProcessor. You can refer to the implementation of DummyLogitsProcessor in vllm/examples/feature/logits_processor.",
+                    "2. Ensure the module name is correctly configured in the vllm startup parameters. For details, please refer to the vLLM community documentation:",
+                    " https://docs.vllm.ai/en/latest/design/logits_processors/",
+                    "or the feature documentation:",
+                    " https://github.com/vllm-project/vllm/blob/main/docs/features/custom_logitsprocs.md"
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["NPUModelRunner init failed", "Failed to load", "LogitsProcessor plugin"]
+            }
+        },
+        "AISW_VLLM_ENGINE_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM",
+                "module": "engine",
+                "cause_zh": "kv_cache初始化失败",
+                "description_zh": "vllm 拉起命令中配置的--num-gpu-blocks-override数量不足。",
+                "suggestion_zh": [
+                    "1. 确保分配足够数量的gpu-block, 如果不确定则不指定由profiling自动计算，可参考社区文档：",
+                    " https://docs.vllm.com.cn/en/latest/cli/serve/?h=num+gpu#cacheconfig"
+                ],
+                "cause_en": "KV cache initialization failure",
+                "description_en": "Insufficient number of --num-gpu-blocks-override configured in the vllm startup command.",
+                "suggestion_en": [
+                    "1. Ensure a sufficient number of gpu-blocks are allocated. If you are unsure about the exact number, do not specify this parameter and let the profiling process calculate it automatically. For details, please refer to the community documentation:",
+                    " https://docs.vllm.com.cn/en/latest/cli/serve/?h=num+gpu#cacheconfig"
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["ValueError", "No available memory for the cache blocks", "gpu_memory_utilization", "initializing the engine"]
+            }
+        },
+        "AISW_VLLM_ENGINE_002": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM",
+                "module": "engine",
+                "cause_zh": "device初始化失败",
+                "description_zh": "npu内存不足。",
+                "suggestion_zh": [
+                    "1. 使用npu-smi info查看当前机器占卡情况，作适当清理；",
+                    "2. 使用ASCEND_RT_VISIBLE_DEVICES环境变量指定卡号；"
+                ],
+                "cause_en": "Device initialization failure",
+                "description_en": "Insufficient NPU memory.",
+                "suggestion_en": [
+                    "1. Use `npu-smi info` to check the current device usage on the machine and perform appropriate cleanup.",
+                    "2. Use the ASCEND_RT_VISIBLE_DEVICES environment variable to specify the device ID."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["Free memory on device", "less than desired GPU memory utilization", " Decrease GPU memory utilization or reduce GPU memory used by other processes"]
+            }
+        },
+        "AISW_VLLM_ASCEND_QUANTIZATION_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM-ASCEND",
+                "module": "quantization",
+                "cause_zh": "模型权重不含共享专家时开启multistream_overlap_gate参数",
+                "description_zh": "同时满足如下两个条件，会触发该问题：\n1、在推理引擎启动命令中，用户开启multistream_overlap_gate配置为True。\n2、模型权重不含共享专家的MOE类模型（例如Mixtral）。",
+                "suggestion_zh": [
+                    "1. 在启动参数删除multistream_overlap_gate；"
+                ],
+                "cause_en": "Enabling multistream_overlap_gate parameter when model weights do not contain shared experts",
+                "description_en": "This issue is triggered when the following two conditions are met simultaneously: 1. The user enables multistream_overlap_gate (sets it to True) in the inference engine startup command. 2. The model is a Mixture of Experts (MoE) model whose weights do not contain shared experts (e.g., Mixtral).",
+                "suggestion_en": [
+                    "1. Remove the multistream_overlap_gate parameter from the startup parameters."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["vllm-ascend", "W8A8_DYNAMIC", "flash_common3 context is required"]
+            }
+        },
+        "AISW_VLLM_ASCEND_QUANTIZATION_002": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM-ASCEND",
+                "module": "quantization",
+                "cause_zh": "MOE模型开启MC2通算融合功能时初始化all2all通信域失败",
+                "description_zh": "1、MOE类模型MC2环境变量VLLM_ASCEND_ENABLE_FUSED_MC2 设置为1，开启了通算融合功能。\n2、系统检查到MC2算子用到的alltoall通信域名称为空。一般是底层通信域创建过程出现故障导致。MC2 group对象缺少device_group或backend相关属性，导致无法获取HCCL通信名。",
+                "suggestion_zh": [
+                    "1. 参考CANN产品文档中《HCCL性能测试工具》，通过测试allToall算子hccl性能判断是否底层通信出现故障;",
+                    "2. 如果部署了CCAE，参考CCAE对应的产品文档进行故障诊断和故障排除;"
+                ],
+                "cause_en": "Failed to initialize the all2all communication domain when enabling the MC2 fused computation feature for MoE models",
+                "description_en": "1. The MC2 environment variable VLLM_ASCEND_ENABLE_FUSED_MC2 for the MoE model is set to 1, enabling the fused computation feature. 2. The system detects that the alltoall communication domain name used by the MC2 operator is empty. This is generally caused by a failure during the underlying communication domain creation process. The MC2 group object lacks device_group or backend related attributes, preventing the retrieval of the HCCL communication name.",
+                "suggestion_en": [
+                    "1. Refer to the 'HCCL Performance Testing Tool' in the CANN product documentation to test the HCCL performance of the allToall operator and determine if there is an underlying communication failure.",
+                    "2. If CCAE is deployed, refer to the corresponding CCAE product documentation for fault diagnosis and troubleshooting."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["MC2 group metadata unavailable"]
+            }
+        },
+        "AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM-ASCEND",
+                "module": "mooncake",
+                "cause_zh": "Mooncake配置文件配置错误导致KV Connector初始化失败",
+                "description_zh": "MOONCAKE_CONFIG_PATH配置的json文件不存在或路径错误。",
+                "suggestion_zh": [
+                    "1. 确认配置文件路径正确：ls -la /home/vllm-code/FaultPatternLibrary/mooncake2.json；",
+                    "2. 若路径错误，修正 MOONCAKE_CONFIG_PATH 环境变量；",
+                    "3. 若文件缺失，创建正确的配置文件或从备份恢复；",
+                    "4. 确认文件权限至少为644（当前用户可读）；",
+                    "5. 更详细信息参考：",
+                    " https://docs.vllm.ai/projects/ascend/zh-cn/latest/user_guide/feature_guide/kv_pool.html"
+                ],
+                "cause_en": "KV Connector initialization failure due to Mooncake configuration file error",
+                "description_en": "The JSON file configured in MOONCAKE_CONFIG_PATH does not exist or the path is incorrect",
+                "suggestion_en": [
+                    "1. Verify the configuration file path is correct: ls -la /home/vllm-code/FaultPatternLibrary/mooncake2.json.",
+                    "2. If the path is incorrect, correct the MOONCAKE_CONFIG_PATH environment variable.",
+                    "3. If the file is missing, create a proper configuration file or restore from backup.",
+                    "4. Ensure file permissions are at least 644 (readable by current user).",
+                    "5. For more details, refer to:",
+                    " https://docs.vllm.ai/projects/ascend/zh-cn/latest/user_guide/feature_guide/kv_pool.html"
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["RuntimeError", "Worker failed with error", "No such file or directory"]
+            }
+        },
+        "EPLB-FM004": {
+            "attribute": {
+                "class": "Software",
+                "component": "MINDIE",
+                "module": "SD",
+                "cause_zh": "EPLB认证密钥不一致",
+                "description_zh": "scheduler和worker使用的EPLB_AUTH_KEY不一致。",
+                "suggestion_zh": [
+                    "1. 调用方需统一scheduler和worker的auth_key；"
+                ],
+                "cause_en": "EPLB authentication key mismatch",
+                "description_en": "The EPLB_AUTH_KEY used by scheduler and worker is inconsistent",
+                "suggestion_en": [
+                    "1. The caller needs to unify the auth_key between scheduler and worker."
+                ]
+            },
+            "source_file": "MindIE",
+            "regex": {
+                "in": ["AuthenticationError"]
+            }
+        },
+        "EPLB-FM005": {
+            "attribute": {
+                "class": "Software",
+                "component": "MINDIE",
+                "module": "SD",
+                "cause_zh": "EPLB Profile任务入队失败",
+                "description_zh": "instruction_queue已满scheduler或worker消费速度低于生产速度。",
+                "suggestion_zh": [
+                    "1. 系统继续推理但EPLB更新可能滞后；"
+                ],
+                "cause_en": "EPLB Profile task enqueue failure",
+                "description_en": "The instruction_queue is full, or the scheduler/worker consumption speed is lower than the production speed",
+                "suggestion_en": [
+                    "1. The system continues inference but EPLB updates may be delayed."
+                ]
+            },
+            "source_file": "MindIE",
+            "regex": {
+                "in": ["EPLB profile task enqueue failed"]
+            }
+        },
+        "EPLB-FM006": {
+            "attribute": {
+                "class": "Software",
+                "component": "MINDIE",
+                "module": "SD",
+                "cause_zh": "EPLB Scheduler处理上报失败",
+                "description_zh": "rank上报字段缺失，moe_layer_idx越界，队列状态与world_size不匹配。",
+                "suggestion_zh": [
+                    "1. 调用方需修复worker上报字段和scheduler参数；"
+                ],
+                "cause_en": "EPLB Scheduler report processing failure",
+                "description_en": "Missing fields in rank report, moe_layer_idx out of bounds, or queue state does not match world_size",
+                "suggestion_en": [
+                    "1. The caller needs to fix the worker report fields and scheduler parameters."
+                ]
+            },
+            "source_file": "MindIE",
+            "regex": {
+                "in": ["EPLB scheduler failed"]
+            }
+        },
+        "EPLB-FM007": {
+            "attribute": {
+                "class": "Software",
+                "component": "MINDIE",
+                "module": "SD",
+                "cause_zh": "EPLB专家初始放置失败",
+                "description_zh": "没有设备满足单个专家的内存预算要求。",
+                "suggestion_zh": [
+                    "1. 调用方需调整world_size、expert_num、redundant或专家权重规模；"
+                ],
+                "cause_en": "EPLB expert initial placement failure",
+                "description_en": "No device satisfies the memory budget requirement for a single expert",
+                "suggestion_en": [
+                    "1. The caller needs to adjust world_size, expert_num, redundant, or expert weight size."
+                ]
+            },
+            "source_file": "MindIE",
+            "regex": {
+                "in": ["Expert initial placement failed"]
+            }
+        },
+        "EPLB-FM008": {
+            "attribute": {
+                "class": "Software",
+                "component": "MINDIE",
+                "module": "SD",
+                "cause_zh": "EPLB共享专家放置失败",
+                "description_zh": "共享专家内存需求超过至少一张设备预算。",
+                "suggestion_zh": [
+                    "1. 调用方需降低共享专家大小或提高单卡专家预算；"
+                ],
+                "cause_en": "EPLB shared expert placement failure",
+                "description_en": "The shared expert memory requirement exceeds the budget of at least one device",
+                "suggestion_en": [
+                    "1. The caller needs to reduce the shared expert size or increase the per-device expert budget."
+                ]
+            },
+            "source_file": "MindIE",
+            "regex": {
+                "in": ["Shared expert placement failed"]
+            }
+        },
+        "EPLB-FM009": {
+            "attribute": {
+                "class": "Software",
+                "component": "MINDIE",
+                "module": "SD",
+                "cause_zh": "EPLB专家交换状态不一致",
+                "description_zh": "device_to_expert缺少待交换设备rank覆盖或布局状态构造异常。",
+                "suggestion_zh": [
+                    "1. 调用方需检查rank覆盖和device_to_expert构造；"
+                ],
+                "cause_en": "EPLB expert exchange state inconsistency",
+                "description_en": "device_to_expert is missing the rank coverage for devices to be exchanged, or the layout state construction is abnormal",
+                "suggestion_en": [
+                    "1. The caller needs to check the rank coverage and device_to_expert construction."
+                ]
+            },
+            "source_file": "MindIE",
+            "regex": {
+                "in": ["Expert exchange failed"]
+            }
+        },
+        "EPLB-FM011": {
+            "attribute": {
+                "class": "Software",
+                "component": "MINDIE",
+                "module": "SD",
+                "cause_zh": "EPLB未知任务指令",
+                "description_zh": "instruction_queue混入非TaskPayload对象或不支持的TaskType。",
+                "suggestion_zh": [
+                    "1. 调用方需修正任务构造路径；"
+                ],
+                "cause_en": "EPLB unknown task instruction",
+                "description_en": "A non-TaskPayload object or unsupported TaskType has been mixed into the instruction_queue",
+                "suggestion_en": [
+                    "1. The caller needs to fix the task construction path."
+                ]
+            },
+            "source_file": "MindIE",
+            "regex": {
+                "in": ["Unknown instruction ignored"]
+            }
         }
     }
 }
