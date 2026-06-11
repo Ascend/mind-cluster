@@ -1,108 +1,282 @@
 # 使用helm升级<a name="ZH-CN_TOPIC_0000002479226453"></a>
 
-## 升级说明<a name="section_upgrade_desc"></a>
+## 升级说明<a name="section_helm_upgrade_desc"></a>
 
-本文档介绍如何通过helm升级mindcluster组件。支持使用helm升级的mindcluster组件包括：
+本文档介绍如何通过helm升级mindcluster组件。
 
-- ascend-device-plugin
-- ascend-operator
-- ascend-for-volcano
-- clusterd
-- noded
-- npu-exporter
-- infer-operator
+**使用约束**
+- 仅支持使用helm 3.x版本。
+- 支持使用helm升级的组件包括：
+    - Ascend Device Plugin
+    - Ascend Operator
+    - Volcano
+    - ClusterD
+    - NodeD
+    - NPU Exporter
+    - Infer Operator
+- 升级Ascend Docker Runtime、Container Manager、TaskD和MindIO组件请参考[手动升级](../../07_developer_guide/installation_deployment/01_upgrade.md#ZH-CN_TOPIC_0000002479226452)章节操作。
 
->[!NOTE]
->
->- 仅支持使用helm 3.x版本进行升级。
->- docker-runtime、taskd和container-manager等组件不支持通过helm管理，请参考[手动升级](01_manual_upgrade.md)对应组件章节进行升级。
->- 升级前请确认集群中无正在使用mindcluster组件管理的工作负载，避免业务中断。
+## 升级前准备<a name="section_helm_upgrade_prepare"></a>
+1. 在管理节点安装helm命令<a name="zh-cn_centerIC_0000002511346381_install_prepare_helm"></a>。若环境中已经存在helm 3.x版本，可以跳过此步骤。
+   - 安装helm前请参考[Helm版本支持策略](https://v3.helm.sh/zh/docs/v3/topics/version_skew/)查询helm与k8s间的版本兼容性，根据实际情况选择helm版本。
+   - 请参考[helm安装文档](https://helm.sh/zh/docs/v3/intro/install)，在管理节点安装helm命令。
 
-## 确认组件是否通过helm管理<a name="section_check_helm_upgrade"></a>
+   安装成功后，执行如下命令检查helm版本：
+   ```bash
+   helm version
+   ```
+   回显示例如下：
+   ```bash
+   version.BuildInfo{Version:"v3.17.0", GitCommit:"065003584b62a79f329070a946936374936021d6", GitTreeState:"clean",    GoVersion:"go1.19.5"}
+   ```
 
-在执行升级前，请先确认待升级的组件是否已通过helm管理，以选择对应的升级方式。
-
-1. 以root用户登录K8s管理节点。
-
-2. 执行以下命令，查看当前集群中通过helm管理的Release列表。
-
-    ```bash
-    helm list -A
-    ```
-
-3. 根据回显结果判断组件的安装方式。
-
-    - 若回显中存在名称为**mindcluster**和**mindcluster-crds**的Release，且STATUS为**deployed**，表示组件已通过helm管理，请参见[helm upgrade升级](#section_helm_upgrade)进行升级。
-    - 若回显中不存在上述Release，表示组件未通过helm管理，请参见[接管资源后升级](#section_kubectl_to_helm)进行升级。
-
-## 接管资源后升级<a name="section_kubectl_to_helm"></a>
-
-若组件是通过kubectl手动安装的，尚未纳入helm管理，需要先接管资源，再使用helm install升级到新版本。请先从[MindCluster 发行版](https://gitcode.com/Ascend/mind-cluster/releases)页面下载对应版本的部署工具压缩包Ascend-helm-deploy-tool_{version}_linux.zip并解压，获取add_helm_meta.sh脚本和tgz安装包。
-1. 执行以下命令，接管资源并安装新版本组件。
->[!NOTE]
->
->- 若需要自定义参数配置，可参考[yaml默认配置](../02_installation/helm_installation.md#默认配置)分别创建crds-values.yaml和values.yaml文件，在升级时使用`-f crds-values.yaml`和`-f values.yaml`指定。参数说明请参考[参数说明](../02_installation/helm_installation.md#参数说明)章节。
-   - **helm 3.17以下版本**：使用add_helm_meta.sh脚本为已有资源添加helm元数据后，再执行helm install。
+2. 确认组件是否通过helm管理<a name="section_check_helm_upgrade"></a>。在执行升级前，需先确认待升级的组件是否已通过helm管理，以选择对应的升级方式。
+   1. 登录K8s管理节点，执行以下命令，查看当前集群中通过helm管理的Release列表。
 
        ```bash
-       dos2unix add_helm_meta.sh && chmod +x add_helm_meta.sh
-       bash add_helm_meta.sh all
-       helm install mindcluster-crds mindcluster-crds-deploy-tool-{chart_version}.tgz # 可增加-f crds-values.yaml指定自定义参数
-       helm install mindcluster mindcluster-deploy-tool-{chart_version}.tgz # 可增加-f values.yaml指定自定义参数
+       helm list -A
        ```
-
-   - **helm 3.17及以上版本**：除上述方式外，还可在helm install时通过--takeover-ship参数自动接管已有资源。
-
+       回显示例如下：
        ```bash
-       helm install mindcluster-crds mindcluster-crds-deploy-tool-{chart_version}.tgz --takeover-ship # 可增加-f crds-values.yaml指定自定义参数
-       helm install mindcluster mindcluster-deploy-tool-{chart_version}.tgz --takeover-ship # 可增加-f values.yaml指定自定义参数
+       NAME               NAMESPACE   REVISION  UPDATED                                  STATUS       CHART                                        APP VERSION
+       mindcluster        default    1         2026-03-24 15:30:00.000000000 +0800 CST  deployed  mindcluster-deploy-tool-1.1.   0                26.1.0
+       mindcluster-crds   default    1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-1.1.0           26.1.0
        ```
- 2. 确认组件升级状态，请参考[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)章节。
 
-## helm upgrade升级<a name="section_helm_upgrade"></a>
+   2. 根据回显结果判断组件的升级方式。
+       - 若回显中存在名称为**mindcluster**和**mindcluster-crds**的Release，且STATUS为**deployed**，表示组件已通过helm管理，请参见   [helm upgrade升级组件](#section_helm_upgrade)小节进行升级。
+       - 若回显中不存在上述Release信息，表示组件未通过helm管理，请参考[helm install升级组件](#section_kubectl_to_helm)小节进行升级。
 
-若组件已通过helm安装并纳入helm管理，可直接使用helm upgrade升级到新版本。请先从[MindCluster 发行版](https://gitcode.com/Ascend/mind-cluster/releases)页面下载对应版本的部署工具压缩包Ascend-helm-deploy-tool_{version}_linux.zip并解压，获取tgz安装包。
+## helm install升级组件<a name="section_kubectl_to_helm"></a>
 
->[!NOTE]
->
->- 若需要自定义参数配置，可参考[yaml默认配置](../02_installation/helm_installation.md#默认配置)分别创建crds-values.yaml和values.yaml文件，在升级时使用`-f crds-values.yaml`和`-f values.yaml`指定。参数说明请参考[参数说明](../02_installation/helm_installation.md#参数说明)章节。
-
-1. 升级mindcluster crd资源和应用组件。
+若组件是通过kubectl手动安装的，尚未纳入helm管理，需要先给组件资源添加helm元数据，再使用helm install安装Release实例，从而将组件升级到新版本。
+1. 下载并解压部署工具：
+    ```bash
+    # 请用户自行将命令中的{version}替换为对应版本号，如26.1.0
+    wget https://gitcode.com/Ascend/mind-cluster/releases/download/v{version}/Ascend-helm-deploy-tool_{version}_linux.zip
+    unzip Ascend-helm-deploy-tool_{version}_linux.zip
+    ```
+    解压后的各文件用途请参考[表4](../02_installation/helm_installation.md#table15274931175244)，文件列表回显示例如下：
 
     ```bash
-    helm upgrade mindcluster-crds mindcluster-crds-deploy-tool-{chart_version}.tgz # 可增加-f crds-values.yaml指定自定义参数
-    helm upgrade mindcluster mindcluster-deploy-tool-{chart_version}.tgz # 可增加-f values.yaml指定自定义参数
+    -r-------- 1 root root  2026 Mar 24 15:25 mindcluster-crds-deploy-tool-{chart_version}.tgz
+    -r-------- 1 root root  2026 Mar 24 15:25 mindcluster-deploy-tool-{chart_version}.tgz
+    -rw-r--r-- 1 root root  2026 Mar 24 15:25 add_helm_meta.sh
     ```
-2. 确认组件升级状态，请参考[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)章节。
+2. 执行以下命令，为已有资源添加helm元数据。用户根据自身使用情况，选择下面其中一种场景的命令执行即可。
+    - 若用户只部署了部分组件，只需要为已部署组件添加helm元数据，可参考[表4](../02_installation/helm_installation.md#table15274931175244)获取脚本参数说明，以下命令以ascend-device-plugin组件和namespace为例：
+      ```bash
+      dos2unix add_helm_meta.sh && chmod +x add_helm_meta.sh
+      bash add_helm_meta.sh ascend-device-plugin ns # 给ascend-device-plugin和namespce添加helm元数据
+      ```
+    - 给所有组件的资源添加helm元数据：
+      ```bash
+      dos2unix add_helm_meta.sh && chmod +x add_helm_meta.sh
+      bash add_helm_meta.sh all
+      ```
+    回显示例如下，表示添加helm元数据成功：
+    ```bash
+    ...
+    ============ Done ==============
+    ```
 
-## 版本回退<a name="section_rollback"></a>
+3. 安装mindcluster crd的Release实例。
+    > [!NOTE]
+      >- 以下三个组件包含crd：Ascend Operator、Volcano和Infer Operator。若用户不需要升级这三个组件，可跳过此步骤。
+      >- 若组件升级前后两个版本的crd定义有变更: 1. 需先升级crd，再升级应用组件; 2. 可能会导致工作负载中断，请用户在升级前确认。
+      >- 请用户按需选择**默认配置安装**或**自定义配置安装**其中一种方式进行操作即可。
+   - **默认配置安装**：若[crd默认配置](../02_installation/helm_installation.md#default_crds_yaml_install_config)符合用户需求，可执行如下命令。
+       ```bash
+       #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
+       helm install mindcluster-crds mindcluster-crds-deploy-tool-{chart_version}.tgz --dry-run
+       # 正式执行安装
+       helm install mindcluster-crds mindcluster-crds-deploy-tool-{chart_version}.tgz
+       ```
+   - **自定义配置安装**。若[crd默认配置](../02_installation/helm_installation.md#default_crds_yaml_install_config)不符合用户需求，请创建crds-values.yaml文件，将[crd默认配置](../02_installation/helm_installation.md#default_crds_yaml_install_config)的yaml内容复制到crds-values.yaml文件中，修改相关配置后执行如下命令。
+       ```bash
+       #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
+       helm install mindcluster-crds mindcluster-crds-deploy-tool-{chart_version}.tgz -f crds-values.yaml --dry-run
+       # 正式执行安装
+       helm install mindcluster-crds mindcluster-crds-deploy-tool-{chart_version}.tgz -f crds-values.yaml
+       ```
+       回显如下，表示安装成功
+       ```bash
+       Release "mindcluster-crds" does not exist. Installing it now.
+       NAME: mindcluster-crds
+       LAST DEPLOYED: ...
+       NAMESPACE: default
+       STATUS: deployed
+       REVISION: 1
+       TEST SUITE: None
+       ```
+4. 安装mindcluster应用组件的Release实例。
+    > [!NOTE]
+    >- **默认配置安装**方式会从昇腾镜像仓库下载应用组件的镜像。若用户节点无法连接互联网且本地未缓存镜像，可能会升级失败。
+    >- 请用户按需选择**默认配置安装**或**自定义配置安装**其中一种方式进行操作即可。
+   - **默认配置安装**：若[应用组件默认配置](../02_installation/helm_installation.md#default_app_yaml_install_config)符合用户需求，可执行如下命令。
 
-若升级后组件运行异常，可通过helm的回退功能恢复到升级前的版本。版本回退仅适用于通过helm upgrade升级的组件，helm会记录每次升级的Revision历史。首次使用helm install安装的组件无历史Revision，无法回退，可通过卸载后重新安装旧版本进行恢复。
+       ```bash
+       #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
+       helm install mindcluster mindcluster-deploy-tool-{chart_version}.tgz --dry-run
+       # 正式执行安装
+       helm install mindcluster mindcluster-deploy-tool-{chart_version}.tgz
+       ```
+   - **自定义配置安装**。若[应用组件默认配置](../02_installation/helm_installation.md#default_app_yaml_install_config)不符合用户需求，请创建values.yaml文件，将[应用组件默认配置](../02_installation/helm_installation.md#default_app_yaml_install_config)的yaml内容复制到values.yaml文件中，修改相关配置后执行如下命令。
+       ```bash
+       #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
+       helm install mindcluster mindcluster-deploy-tool-{chart_version}.tgz -f values.yaml --dry-run
+       # 正式执行安装
+       helm install mindcluster mindcluster-deploy-tool-{chart_version}.tgz -f values.yaml
+       ```
+       回显如下，表示安装成功
+       ```bash
+       Release "mindcluster" does not exist. Installing it now.
+       NAME: mindcluster
+       LAST DEPLOYED: ...
+       NAMESPACE: default
+       STATUS: deployed
+       REVISION: 1
+       TEST SUITE: None
+       ```
+ 5. 确认组件升级状态，请参考[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)章节。
+ 6. 若升级后，组件状态异常，可排查异常原因，然后按照如下处理进行方案：
+    - 修改配置后参考[helm upgrade升级组件](#section_helm_upgrade)小节重新升级。
+    - [使用helm卸载](../05_uninstallation/02_helm_uninstallation.md#ZH-CN_TOPIC_0000002511426390)组件后，重新[使用helm安装](../02_installation/helm_installation.md#ZH-CN_centerIC_0000002479226452)组件。此方法可能会导致工作负载中断，请用户在升级前确认。
+
+## helm upgrade升级组件<a name="section_helm_upgrade"></a>
+
+若组件已通过helm安装并纳入helm管理，可直接使用helm upgrade升级到新版本。
+1. 下载并解压部署工具。
+    ```bash
+    # 请用户自行将命令中的{version}替换为对应版本号，如26.1.0
+    wget https://gitcode.com/Ascend/mind-cluster/releases/download/v{version}/Ascend-helm-deploy-tool_{version}_linux.zip
+    unzip Ascend-helm-deploy-tool_{version}_linux.zip
+    ```
+    解压后的各文件用途请参考[表4](../02_installation/helm_installation.md#table15274931175244)，文件列表回显示例如下：
+    ```bash
+    -r-------- 1 root root  2026 Mar 24 15:25 mindcluster-crds-deploy-tool-{chart_version}.tgz
+    -r-------- 1 root root  2026 Mar 24 15:25 mindcluster-deploy-tool-{chart_version}.tgz
+    -rw-r--r-- 1 root root  2026 Mar 24 15:25 add_helm_meta.sh
+    ```
+2. 升级mindcluster crd的Release实例。
+    > [!NOTE]
+      >- 以下三个组件包含crd：Ascend Operator、Volcano和Infer Operator。若用户不需要升级这三个组件，可跳过此步骤。
+      >- 若组件升级前后两个版本的crd定义有变更：1. 需先升级crd，再升级应用组件；2. 可能会导致工作负载中断，请用户在升级前确认。
+      >- 请用户按需选择**默认配置升级**或**自定义配置升级**其中一种方式进行操作即可。
+   - **默认配置升级**：若[crd默认配置](../02_installation/helm_installation.md#default_crds_yaml_install_config)符合用户需求，可执行如下命令。
+       ```bash
+       #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
+       helm upgrade mindcluster-crds mindcluster-crds-deploy-tool-{chart_version}.tgz --dry-run
+       # 正式执行升级
+       helm upgrade mindcluster-crds mindcluster-crds-deploy-tool-{chart_version}.tgz
+       ```
+   - **自定义配置升级**。若[crd默认配置](../02_installation/helm_installation.md#default_crds_yaml_install_config)不符合用户需求，请创建crds-values.yaml文件，将[crd默认配置](../02_installation/helm_installation.md#default_crds_yaml_install_config)的yaml内容复制到crds-values.yaml文件中，修改相关配置后执行如下命令。
+      > [!IMPORTANT]
+        >- 若只升级单个组件，crds-values.yaml中其他已安装组件的配置请保持与安装时的配置一致，不能将其他已安装组件的Enabled参数设置为false，否则对应组件的资源会被删掉！
+      ```bash
+      #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
+      helm upgrade mindcluster-crds mindcluster-crds-deploy-tool-{chart_version}.tgz -f crds-values.yaml --dry-run
+      # 正式执行升级
+      helm upgrade mindcluster-crds mindcluster-crds-deploy-tool-{chart_version}.tgz -f crds-values.yaml
+      ```
+       回显示例如下：
+       ```bash
+       Release "mindcluster-crds" has been upgraded. Happy Helming!
+       NAME: mindcluster-crds
+       LAST DEPLOYED: ...
+       NAMESPACE: default
+       STATUS: deployed
+       REVISION: 2
+       TEST SUITE: None
+       ```
+3. 升级mindcluster应用组件的Release实例。
+   > [!NOTE]
+   >- **默认配置升级**会从昇腾镜像仓库下载应用组件的镜像。若用户节点无法连接互联网且本地未缓存镜像，可能会升级失败。
+   >- 请用户按需选择**默认配置升级**或**自定义配置升级**其中一种方式进行操作即可。
+   - **默认配置升级**：若[应用组件默认配置](../02_installation/helm_installation.md#default_app_yaml_install_config)符合用户需求，可执行如下命令。
+       ```bash
+       #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
+       helm upgrade mindcluster mindcluster-deploy-tool-{chart_version}.tgz --dry-run
+       # 正式执行升级
+       helm upgrade mindcluster mindcluster-deploy-tool-{chart_version}.tgz
+       ```
+   - **自定义配置升级**。若[应用组件默认配置](../02_installation/helm_installation.md#default_app_yaml_install_config)不符合用户需求，请创建values.yaml文件，将[应用组件默认配置](../02_installation/helm_installation.md#default_app_yaml_install_config)的yaml内容复制到values.yaml文件中，修改相关配置后执行如下命令。
+       > [!IMPORTANT]
+          >- 若只升级单个组件，values.yaml中其他已安装组件的配置请保持与安装时的配置一致，不能将其他已安装组件的Enabled参数设置为false，否则对应组件的资源会被删掉！
+       ```bash
+       #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
+       helm upgrade mindcluster mindcluster-deploy-tool-{chart_version}.tgz -f values.yaml --dry-run
+       # 正式执行升级
+       helm upgrade mindcluster mindcluster-deploy-tool-{chart_version}.tgz -f values.yaml
+       ```
+       回显示例如下：
+       ```bash
+       Release "mindcluster" has been upgraded. Happy Helming!
+       NAME: mindcluster
+       LAST DEPLOYED: ...
+       NAMESPACE: default
+       STATUS: deployed
+       REVISION: 2
+       TEST SUITE: None
+       ```
+4. 确认组件升级状态，请参考[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)章节。
+5. 若升级后，组件状态异常，可排查异常原因，然后按照如下处理进行方案：
+   - 参考[版本回退](#section_helm_rollback)小节回退到升级前的版本。
+   - 修改配置后重新[使用helm upgrade升级](#section_helm_upgrade)。
+   - [使用helm卸载](../05_uninstallation/02_helm_uninstallation.md#ZH-CN_TOPIC_0000002511426390)组件后，重新[使用helm安装](../02_installation/helm_installation.md#ZH-CN_centerIC_0000002479226452)组件。此方法可能会导致工作负载中断，请用户在升级前确认。
+
+## 版本回退<a name="section_helm_rollback"></a>
+
+若升级后组件运行异常，可通过helm的回退功能恢复到升级前的版本。版本回退仅适用于通过helm upgrade升级过的Release实例，helm会记录每次升级的Revision历史。
 
 1. 执行以下命令，查看Release的升级历史。
+   - 查看应用组件Release实例的升级历史：
 
-    ```bash
-    helm history mindcluster
-    ```
+      ```bash
+      helm history mindcluster
+      ```
 
-    回显示例如下：
+      回显示例如下：
 
-    ```bash
-    REVISION  UPDATED                   STATUS      CHART                                APP VERSION  DESCRIPTION
-    1         2026-03-24 15:30:00.000   superseded  mindcluster-deploy-tool-1.0.0        26.0.0       Install complete
-    2         2026-03-25 10:00:00.000   deployed    mindcluster-deploy-tool-1.1.0        26.1.0       Upgrade complete
-    ```
+      ```bash
+      REVISION  UPDATED                   STATUS      CHART                                APP VERSION  DESCRIPTION
+      1         2026-03-24 15:30:00.000   superseded  mindcluster-deploy-tool-1.0.0        26.0.0       Install complete
+      2         2026-03-25 10:00:00.000   deployed    mindcluster-deploy-tool-1.1.0        26.1.0       Upgrade complete
+      ```
+    - 查看组件crd的Release实例的升级历史：
+      ```bash
+      helm history mindcluster-crds
+      ```
 
-2. 执行以下命令，回退到指定的Revision版本。以回退到REVISION 1为例：
+      回显示例如下：
 
-    ```bash
-    helm rollback mindcluster 1
-    ```
+      ```bash
+      REVISION  UPDATED                   STATUS      CHART                                APP VERSION  DESCRIPTION
+      1         2026-03-24 15:30:00.000   superseded  mindcluster-crds-deploy-tool-1.0.0        26.0.0       Install complete
+      2         2026-03-25 10:00:00.000   deployed    mindcluster-crds-deploy-tool-1.1.0        26.1.0       Upgrade complete
+      ```
+    >[!NOTE]
+    >
+    >- Helm 的 REVISION 是一个简单的递增整数，它的核心作用就是记录和回滚：每次应用变更都会生成一个新的 REVISION，需要时可以通过 REVISION 号快速恢复到过去的任意稳定版本，从而实现应用发布的可追溯和故障快速恢复。
 
-    若crd资源也需要回退：
+2. 执行以下命令，回退crd到指定Revision版本。以回退到REVISION 1为例：
 
     ```bash
     helm rollback mindcluster-crds 1
     ```
+    回显示例如下：
+    ```bash
+    Rollback was a success! Happy Helming!
+    ```
 
-3. 确认组件运行状态，请参考[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)章节。
+3. 执行以下命令，回退应用到指定的Revision版本。以回退到REVISION 1为例：
+
+    ```bash
+    helm rollback mindcluster 1
+    ```
+    回显示例如下：
+    ```bash
+    Rollback was a sucess! Happy Helming!
+    ```
+
+4. 确认组件运行状态，请参考[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)章节。
