@@ -30,6 +30,7 @@ import (
 	pluginapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"ascend-common/common-utils/hwlog"
+
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/cdi"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/core"
@@ -363,10 +364,173 @@ func TestReadUbNetInfoNoNetDir(t *testing.T) {
 	defer patches.Reset()
 
 	convey.Convey("When net directory does not exist", t, func() {
-		ifName, linkType := rm.readUbNetInfo("/fake/ub0", "ub0")
+		ifName, linkType := rm.readUbNetInfo("/sys/bus/ub/devices/ub0", "ub0")
 		convey.Convey("Then empty values should be returned", func() {
 			convey.So(ifName, convey.ShouldEqual, "")
 			convey.So(linkType, convey.ShouldEqual, "")
+		})
+	})
+}
+
+func TestReadFirstDirEntryInvalidPath(t *testing.T) {
+	convey.Convey("When dir path is not under /sys/", t, func() {
+		name, count, err := readFirstDirEntry("/tmp/fake/dir")
+		convey.Convey("Then error should be returned", func() {
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(name, convey.ShouldEqual, "")
+			convey.So(count, convey.ShouldEqual, 0)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "not under /sys/")
+		})
+	})
+}
+
+func TestReadFirstDirEntryPathTraversal(t *testing.T) {
+	convey.Convey("When dir path contains traversal", t, func() {
+		name, count, err := readFirstDirEntry("/sys/bus/ub/../../etc/passwd")
+		convey.Convey("Then error should be returned due to path escape", func() {
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(name, convey.ShouldEqual, "")
+			convey.So(count, convey.ShouldEqual, 0)
+		})
+	})
+}
+
+func TestReadFirstDirEntryReadDirError(t *testing.T) {
+	convey.Convey("When os.ReadDir returns an error", t, func() {
+		patches := gomonkey.ApplyFunc(os.ReadDir, func(name string) ([]os.DirEntry, error) {
+			return nil, os.ErrPermission
+		})
+		defer patches.Reset()
+
+		name, count, err := readFirstDirEntry("/sys/bus/ub/devices/ub0/infiniband")
+		convey.Convey("Then error should be returned", func() {
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(name, convey.ShouldEqual, "")
+			convey.So(count, convey.ShouldEqual, 0)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "failed to read dir")
+		})
+	})
+}
+
+func TestReadFirstDirEntryEmptyDir(t *testing.T) {
+	convey.Convey("When directory is empty", t, func() {
+		patches := gomonkey.ApplyFunc(os.ReadDir, func(name string) ([]os.DirEntry, error) {
+			return []os.DirEntry{}, nil
+		})
+		defer patches.Reset()
+
+		name, count, err := readFirstDirEntry("/sys/bus/ub/devices/ub0/infiniband")
+		convey.Convey("Then error should be returned", func() {
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(name, convey.ShouldEqual, "")
+			convey.So(count, convey.ShouldEqual, 0)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "no entries found")
+		})
+	})
+}
+
+func TestReadFirstDirEntrySingleEntry(t *testing.T) {
+	convey.Convey("When directory has a single entry", t, func() {
+		entry := &mockDirEntry{name: "ib0", isDir: false}
+		patches := gomonkey.ApplyFunc(os.ReadDir, func(name string) ([]os.DirEntry, error) {
+			return []os.DirEntry{entry}, nil
+		})
+		defer patches.Reset()
+
+		name, count, err := readFirstDirEntry("/sys/bus/ub/devices/ub0/infiniband")
+		convey.Convey("Then first entry name and count should be returned", func() {
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(name, convey.ShouldEqual, "ib0")
+			convey.So(count, convey.ShouldEqual, 1)
+		})
+	})
+}
+
+func TestReadFirstDirEntryMultipleEntries(t *testing.T) {
+	convey.Convey("When directory has multiple entries", t, func() {
+		entries := []os.DirEntry{
+			&mockDirEntry{name: "ib0", isDir: false},
+			&mockDirEntry{name: "ib1", isDir: false},
+		}
+		patches := gomonkey.ApplyFunc(os.ReadDir, func(name string) ([]os.DirEntry, error) {
+			return entries, nil
+		})
+		defer patches.Reset()
+
+		name, count, err := readFirstDirEntry("/sys/bus/ub/devices/ub0/infiniband")
+		convey.Convey("Then first entry name and total count should be returned", func() {
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(name, convey.ShouldEqual, "ib0")
+			convey.So(count, convey.ShouldEqual, 2)
+		})
+	})
+}
+
+func TestReadUbDeviceNameReadDirError(t *testing.T) {
+	rm := newTestUbResourceManager()
+
+	patches := gomonkey.ApplyFunc(os.ReadDir, func(name string) ([]os.DirEntry, error) {
+		return nil, os.ErrPermission
+	})
+	defer patches.Reset()
+
+	convey.Convey("When infiniband dir read fails", t, func() {
+		result := rm.readUbDeviceName("/sys/bus/ub/devices/ub0", "ub0")
+		convey.Convey("Then empty string should be returned", func() {
+			convey.So(result, convey.ShouldEqual, "")
+		})
+	})
+}
+
+func TestReadUbDeviceNameEmptyDir(t *testing.T) {
+	rm := newTestUbResourceManager()
+
+	patches := gomonkey.ApplyFunc(os.ReadDir, func(name string) ([]os.DirEntry, error) {
+		return []os.DirEntry{}, nil
+	})
+	defer patches.Reset()
+
+	convey.Convey("When infiniband dir is empty", t, func() {
+		result := rm.readUbDeviceName("/sys/bus/ub/devices/ub0", "ub0")
+		convey.Convey("Then empty string should be returned", func() {
+			convey.So(result, convey.ShouldEqual, "")
+		})
+	})
+}
+
+func TestReadUbDeviceNameSingleEntry(t *testing.T) {
+	rm := newTestUbResourceManager()
+	ibEntry := &mockDirEntry{name: "ub0_0", isDir: false}
+
+	patches := gomonkey.ApplyFunc(os.ReadDir, func(name string) ([]os.DirEntry, error) {
+		return []os.DirEntry{ibEntry}, nil
+	})
+	defer patches.Reset()
+
+	convey.Convey("When infiniband dir has a single entry", t, func() {
+		result := rm.readUbDeviceName("/sys/bus/ub/devices/ub0", "ub0")
+		convey.Convey("Then the entry name should be returned", func() {
+			convey.So(result, convey.ShouldEqual, "ub0_0")
+		})
+	})
+}
+
+func TestReadUbDeviceNameMultipleEntries(t *testing.T) {
+	rm := newTestUbResourceManager()
+	entries := []os.DirEntry{
+		&mockDirEntry{name: "ub0_0", isDir: false},
+		&mockDirEntry{name: "ub0_1", isDir: false},
+	}
+
+	patches := gomonkey.ApplyFunc(os.ReadDir, func(name string) ([]os.DirEntry, error) {
+		return entries, nil
+	})
+	defer patches.Reset()
+
+	convey.Convey("When infiniband dir has multiple entries", t, func() {
+		result := rm.readUbDeviceName("/sys/bus/ub/devices/ub0", "ub0")
+		convey.Convey("Then the first entry name should be returned", func() {
+			convey.So(result, convey.ShouldEqual, "ub0_0")
 		})
 	})
 }
@@ -380,7 +544,7 @@ func TestReadUbNetInfoEmptyNetDir(t *testing.T) {
 	defer patches.Reset()
 
 	convey.Convey("When net directory is empty", t, func() {
-		ifName, linkType := rm.readUbNetInfo("/fake/ub0", "ub0")
+		ifName, linkType := rm.readUbNetInfo("/sys/bus/ub/devices/ub0", "ub0")
 		convey.Convey("Then empty values should be returned", func() {
 			convey.So(ifName, convey.ShouldEqual, "")
 			convey.So(linkType, convey.ShouldEqual, "")
@@ -403,7 +567,7 @@ func TestReadUbNetInfoSuccess(t *testing.T) {
 	defer patches.Reset()
 
 	convey.Convey("When net directory has entries", t, func() {
-		ifName, linkType := rm.readUbNetInfo("/fake/ub0", "ub0")
+		ifName, linkType := rm.readUbNetInfo("/sys/bus/ub/devices/ub0", "ub0")
 		convey.Convey("Then ifName and linkType should be returned", func() {
 			convey.So(ifName, convey.ShouldEqual, "enp0s1")
 			convey.So(linkType, convey.ShouldEqual, "eth")
@@ -425,7 +589,7 @@ func TestReadUbNetInfoLinkByNameError(t *testing.T) {
 	defer patches.Reset()
 
 	convey.Convey("When LinkByName fails", t, func() {
-		ifName, linkType := rm.readUbNetInfo("/fake/ub0", "ub0")
+		ifName, linkType := rm.readUbNetInfo("/sys/bus/ub/devices/ub0", "ub0")
 		convey.Convey("Then ifName should be returned with empty linkType", func() {
 			convey.So(ifName, convey.ShouldEqual, "enp0s1")
 			convey.So(linkType, convey.ShouldEqual, "")

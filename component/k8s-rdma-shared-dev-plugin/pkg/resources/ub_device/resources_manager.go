@@ -22,13 +22,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/vishvananda/netlink"
+
+	"ascend-common/common-utils/hwlog"
+
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/cdi"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/core"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
-	"github.com/vishvananda/netlink"
-
-	"ascend-common/common-utils/hwlog"
 )
 
 const (
@@ -94,7 +95,7 @@ func (rm *ubResourceManager) DiscoverHostDevices() error {
 		deviceDir := filepath.Join(common.SysBusUb, entry.Name())
 
 		if info, err := rm.readUbDeviceInfo(deviceDir, entry.Name()); err == nil {
-			hwlog.RunLog.Infof("DiscoverHostDevices(): UB device found: %-12s	%-8s	%-8s	%-20s	%-8s",
+			hwlog.RunLog.Debugf("DiscoverHostDevices(): UB device found: %-12s	%-8s	%-8s	%-20s	%-8s",
 				info.UbID, info.Vendor, info.DeviceID, info.Driver, info.IfName)
 			rm.deviceList = append(rm.deviceList, info)
 		}
@@ -127,9 +128,11 @@ func (rm *ubResourceManager) readUbDeviceInfo(deviceDir, ubID string) (*UbDevice
 
 	ifName, linkType := rm.readUbNetInfo(deviceDir, ubID)
 
+	deviceName := rm.readUbDeviceName(deviceDir, ubID)
+
 	return &UbDeviceInfo{
 		UbID:       ubID,
-		DeviceName: ubID,
+		DeviceName: deviceName,
 		Vendor:     vendor,
 		DeviceID:   deviceID,
 		Driver:     driver,
@@ -138,15 +141,46 @@ func (rm *ubResourceManager) readUbDeviceInfo(deviceDir, ubID string) (*UbDevice
 	}, nil
 }
 
+func readFirstDirEntry(dir string) (string, int, error) {
+	cleanedDir := filepath.Clean(dir)
+	if !strings.HasPrefix(cleanedDir, "/sys/") {
+		return "", 0, fmt.Errorf("invalid dir path %s: not under /sys/", dir)
+	}
+
+	entries, err := os.ReadDir(cleanedDir)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to read dir %s: %v", dir, err)
+	}
+	if len(entries) == 0 {
+		return "", 0, fmt.Errorf("no entries found in %s", dir)
+	}
+	return entries[0].Name(), len(entries), nil
+}
+
+func (rm *ubResourceManager) readUbDeviceName(deviceDir, ubID string) string {
+	infinibandDir := filepath.Join(deviceDir, "infiniband")
+	deviceName, entryCount, err := readFirstDirEntry(infinibandDir)
+	if err != nil {
+		hwlog.RunLog.Debugf("failed to read infiniband dir for UB device %s: %v", ubID, err)
+		return ""
+	}
+
+	if entryCount > 1 {
+		hwlog.RunLog.Warnf("found several infiniband files for UB device %s in %s, using first name %s",
+			ubID, deviceDir, deviceName)
+	}
+	return deviceName
+}
+
 func (rm *ubResourceManager) readUbNetInfo(deviceDir, ubID string) (string, string) {
 	netDir := filepath.Join(deviceDir, "net")
-	netEntries, err := os.ReadDir(netDir)
-	if err != nil || len(netEntries) == 0 {
+	ifName, entryCount, err := readFirstDirEntry(netDir)
+	if err != nil {
+		hwlog.RunLog.Debugf("failed to read net dir for UB device %s: %v", ubID, err)
 		return "", ""
 	}
 
-	ifName := netEntries[0].Name()
-	if len(netEntries) > 1 {
+	if entryCount > 1 {
 		hwlog.RunLog.Warnf("found several net names for UB device %s, using first name %s", ubID, ifName)
 	}
 
@@ -175,7 +209,7 @@ func (rm *ubResourceManager) GetDevices() []types.Device {
 		); err == nil {
 			devices = append(devices, device)
 		} else {
-			hwlog.RunLog.Infof("Error creating UB device: %v", err)
+			hwlog.RunLog.Debugf("new UB device failed: %v", err.Error())
 		}
 	}
 	return devices
@@ -189,6 +223,12 @@ func (rm *ubResourceManager) InitServers() error {
 		filteredDevices := rm.GetFilteredDevices(devices, &config.Selectors)
 		hwlog.RunLog.Infof("UB resource %s: total devices=%d, filtered devices=%d", config.ResourceName,
 			len(devices), len(filteredDevices))
+		for i, dev := range filteredDevices {
+			ubDev := dev.(types.UbDevice)
+			hwlog.RunLog.Debugf("filtered device[%d]: name=%s, deviceName=%s, vendor=%s, deviceID=%s, ifName=%s,"+
+				" linkType=%s", i, ubDev.GetName(), ubDev.GetDeviceName(), ubDev.GetVendor(), ubDev.GetDeviceID(),
+				ubDev.GetIfName(), ubDev.GetLinkType())
+		}
 
 		rm.setUbNicsUp(filteredDevices)
 

@@ -10,7 +10,6 @@ RUN usermod root -s /usr/sbin/nologin
 
 COPY ./k8s-rdma-shared-dp /usr/local/bin
 COPY ./agreement.txt /usr/local/
-COPY ./config.json /etc/rdma-plugin/
 COPY ./fault_code.json /etc/rdma-plugin/
 COPY ./fault_detection.sh /etc/rdma-plugin/
 

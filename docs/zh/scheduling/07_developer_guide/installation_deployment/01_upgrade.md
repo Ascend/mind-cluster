@@ -423,7 +423,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 - 已完成[升级环境检查](#升级说明)。
 
-- 如需升级NPU Exporter、Volcano、ClusterD、Ascend Operator、Infer Operator和NodeD组件，需卸载旧版本后，再执行新版本的安装步骤。
+- 如需升级NPU Exporter、Volcano、K8s Rdma Shared Dev Plugin、ClusterD、Ascend Operator、Infer Operator和NodeD组件，需卸载旧版本后，再执行新版本的安装步骤。
 
 **注意事项**
 
