@@ -27,13 +27,13 @@
 
     <a name="table1654283920393"></a>
 
-    |类型|描述|
-    |--|--|
-    |id|设备ID。通过<b>npu-smi info -l</b>命令查出的NPU ID即为设备ID。|
-    |chip_id|芯片ID。通过<b>npu-smi info -m</b>命令查出的Chip ID即为芯片ID。|
-    |vnpu_config|虚拟化实例模板名称，详细请参见[虚拟化模板](../03_virtualization_templates.md)中表1的“虚拟化实例模板”列。|
-    |vnpu_id|<p>指定需要创建的vNPU的ID。</p><ul><li>首次创建可以不指定该参数，由系统默认分配。若重启后业务需要使用重启前的vnpu_id，可以使用-v参数指定重启前的vnpu_id进行恢复。</li><li>取值范围：<ul><li>Atlas 推理系列产品<p>vnpu_id的取值范围为[phy_id \* 16 + 100, phy_id \* 16+107]。</p></li><li>Atlas 训练系列产品<p>vnpu_id的取值范围为[phy_id \* 16 + 100, phy_id \* 16+115]。</p></li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">phy_id表示芯片物理ID，可通过执行<strong>ls /dev/davinci*</strong>命令获取芯片的物理ID。例如/dev/davinci0，表示芯片的物理ID为0。</div></div></li><li>vnpu_id传入4294967295时表示不指定虚拟设备号。</li><li>同一台服务器内不可重复创建相同vnpu_id的vNPU。</li></ul>|
-    |vgroup_id|虚拟资源组vGroup的ID，取值范围为0~3。<p>vGroup是指虚拟化时NPU根据用户指定的虚拟化模板划分出虚拟资源组vGroup，每个vGroup包含若干AICore、AICPU、片上内存、DVPP资源。</p><p>仅<span>Atlas 推理系列产品</span>支持本参数。</p>|
+    |类型| 描述                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+    |--|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+    |id| 设备ID。通过<b>npu-smi info -m</b>命令查出的NPU ID即为设备ID。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+    |chip_id| 芯片ID。通过<b>npu-smi info -m</b>命令查出的Chip ID即为芯片ID。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+    |vnpu_config| 虚拟化实例模板名称，详细请参见[虚拟化模板](../03_virtualization_templates.md)中表1的“虚拟化实例模板”列。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+    |vnpu_id| <p>指定需要创建的vNPU的ID。</p><ul><li>首次创建可以不指定该参数，由系统默认分配。若重启后业务需要使用重启前的vnpu_id，可以使用-v参数指定重启前的vnpu_id进行恢复。</li><li>取值范围：<ul><li>Atlas 推理系列产品<p>vnpu_id的取值范围为[phy_id \* 16 + 100, phy_id \* 16+107]。</p></li><li>Atlas 训练系列产品<p>vnpu_id的取值范围为[phy_id \* 16 + 100, phy_id \* 16+115]。</p></li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">phy_id表示芯片物理ID，可通过执行<strong>ls /dev/davinci*</strong>命令获取芯片的物理ID。例如/dev/davinci0，表示芯片的物理ID为0。</div></div></li><li>vnpu_id传入4294967295时表示不指定虚拟设备号。</li><li>同一台服务器内不可重复创建相同vnpu_id的vNPU。</li></ul> |
+    |vgroup_id| 虚拟资源组vGroup的ID，取值范围为0~3。<p>vGroup是指虚拟化时NPU根据用户指定的虚拟化模板划分出虚拟资源组vGroup，每个vGroup包含若干AICore、AICPU、片上内存、DVPP资源。</p><p>仅<span>Atlas 推理系列产品</span>支持本参数。</p>                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
     使用示例如下：
 
@@ -89,10 +89,10 @@
 
     <a name="table1585213289319"></a>
 
-    |类型|描述|
-    |--|--|
-    |id|设备ID。通过<b>npu-smi info -l</b>命令查出的NPU ID即为设备ID。|
-    |chip_id|芯片ID。通过<b>npu-smi info -m</b>命令查出的Chip ID即为芯片ID。|
+    |类型| 描述                                               |
+    |--|--------------------------------------------------|
+    |id| 设备ID。通过<b>npu-smi info -m</b>命令查出的NPU ID即为设备ID。  |
+    |chip_id| 芯片ID。通过<b>npu-smi info -m</b>命令查出的Chip ID即为芯片ID。 |
 
     执行如下命令查询vNPU信息。以下命令表示查询设备0中编号为0的芯片的vNPU信息。
 
