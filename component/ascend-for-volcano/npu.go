@@ -177,13 +177,6 @@ func jobPipelined(obj interface{}, tp *huaweiNPUPlugin) int {
 	if !*job.JobReadyTag {
 		return util.Reject
 	}
-	// Gang check: don't allow pipelining unless enough tasks
-	// are already allocated to satisfy the MinAvailable constraint.
-	// Uses job.MinAvailable (adjusted for ReplicaSet replicas) rather
-	// than ji.MinAvailable (which is always 1 for ReplicaSet jobs).
-	if ji.ReadyTaskNum()+ji.WaitingTaskNum() < job.MinAvailable {
-		return util.Reject
-	}
 	return util.Abstain
 }
 
