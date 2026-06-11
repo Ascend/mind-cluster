@@ -46,7 +46,7 @@
     docker run --rm -it -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_ALLOW_LINK=True {image-name:tag} /bin/bash
     ```
 
-容器启动后，在容器内外执行以下命令检查相应设备和驱动是否挂载成功，每台机型具体的挂载目录参考[Ascend Docker Runtime默认挂载内容](../../06_references/appendix.md#ascend-docker-runtime默认挂载内容)。命令示例如下：
+容器启动后，在容器内外执行以下命令检查相应设备和驱动是否挂载成功，每台机型具体的挂载目录参考[Ascend Docker Runtime默认挂载内容](../../07_references/appendix.md#ascend-docker-runtime默认挂载内容)。命令示例如下：
 
 ```shell
 ls /dev | grep davinci* && ls /dev | grep devmm_svm && ls /dev | grep hisi_hdc && ls /usr/local/Ascend/driver && ls /usr/local/ |grep dcmi && ls /usr/local/bin

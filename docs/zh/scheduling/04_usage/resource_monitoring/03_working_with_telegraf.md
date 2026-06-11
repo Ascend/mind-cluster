@@ -1,6 +1,6 @@
 # 通过Telegraf使用<a name="ZH-CN_TOPIC_0000002479227042"></a>
 
-本章节指导用户安装部署Telegraf软件，并通过Telegraf查看资源监测的相关数据信息，数据信息的相关说明可参见[Telegraf数据信息说明](../../05_api/npu_exporter/02_telegraf_data_description.md)章节。
+本章节指导用户安装部署Telegraf软件，并通过Telegraf查看资源监测的相关数据信息，数据信息的相关说明可参见[Telegraf数据信息说明](../../06_api/npu_exporter/02_telegraf_data_description.md)章节。
 
 ## 二进制集成Telegraf<a name="section31082142614"></a>
 
@@ -41,7 +41,7 @@
     |-maxBackups|int|30|转储后日志文件保留个数上限，取值范围为1~30，单位为个。|否|
     |-profilingTime|int|200|配置采集PCIe带宽时间，单位为毫秒，取值范围为1~2000。|否|
     |-deviceResetTimeout|int|60|组件启动时，若芯片数量不足，等待驱动上报完整芯片的最大时长，单位为秒，取值范围为10~600。<ul><li>Atlas A2 训练系列产品、Atlas 800I A2 推理服务器、A200I A2 Box 异构组件：建议配置为150秒。</li><li>Atlas A3 训练系列产品、A200T A3 Box8 超节点服务器、Atlas 800I A3 超节点服务器：建议配置为360秒。</li><li>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD：建议配置为600秒。</li></ul>|否|
-    |-textMetricsFilePath|string|无|指定自定义指标文件的路径，其约束说明详细请参见[约束说明](../../05_api/npu_exporter/03_custom_metrics_file.md#约束说明)。|否|
+    |-textMetricsFilePath|string|无|指定自定义指标文件的路径，其约束说明详细请参见[约束说明](../../06_api/npu_exporter/03_custom_metrics_file.md#约束说明)。|否|
 
 3. （可选）如果没有安装Telegraf，需执行以下步骤安装Telegraf。
     - **离线安装（推荐）**

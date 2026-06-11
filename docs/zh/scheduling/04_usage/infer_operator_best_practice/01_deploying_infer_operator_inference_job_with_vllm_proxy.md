@@ -39,7 +39,7 @@
 
 **选择YAML示例**
 
-当前，基于vLLM Proxy的Infer Operator推理任务由InferServiceSet自定义CRD部署，Infer Operator的部署请参见[安装部署](../../07_developer_guide/installation_deployment/manual_installation/07_infer_operator.md)。
+当前，基于vLLM Proxy的Infer Operator推理任务由InferServiceSet自定义CRD部署，Infer Operator的部署请参见[安装部署](../../05_developer_guide/installation_deployment/manual_installation/07_infer_operator.md)。
 
 以下是一个适配示例，用户可根据需求进行修改。
 
@@ -213,7 +213,7 @@ spec:
 </tr>
 <tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >huawei.com/schedule_policy</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 ">取值可参考<a href="../../05_api/volcano.md#podgroup">参数说明</a>中表3对该字段的说明。
+<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 ">取值可参考<a href="../../06_api/volcano.md#podgroup">参数说明</a>中表3对该字段的说明。
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >根据需要运行训练任务的节点类型，选取不同的值。</p>
 </td>

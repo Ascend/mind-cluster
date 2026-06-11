@@ -4,14 +4,14 @@
 
 **前提条件<a name="section52051339787"></a>**
 
-- 在使用整卡调度特性前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../07_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
+- 在使用整卡调度特性前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
     - 调度器（Volcano或其他调度器）
     - Ascend Device Plugin
     - Ascend Docker Runtime
     - Ascend Operator
     - ClusterD
     - NodeD
-- 针对故障恢复场景，需要确保每个节点都有任务运行所需的模型脚本信息，建议使用共享存储方案，比如NFS（Network File System），用户可以参见[安装NFS](../../06_references/common_operations.md#安装nfs)。
+- 针对故障恢复场景，需要确保每个节点都有任务运行所需的模型脚本信息，建议使用共享存储方案，比如NFS（Network File System），用户可以参见[安装NFS](../../07_references/common_operations.md#安装nfs)。
 - 针对训练场景：
   - 针对超大规模集群调度场景，支持批量创建Pod和批量调度功能。
       - 若要使用批量创建Pod功能，安装Ascend Operator组件时需使用openFuyao定制Kubernetes组件。
@@ -160,15 +160,15 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 - 可选择以下方式中的一种来获取镜像：
   - （推荐）从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)下载：根据系统架构（ARM/x86\_64）下载配套驱动版本的基础镜像。基于基础镜像进行修改，将容器中默认用户修改为root（21.0.4版本之后基础镜像默认用户为非root）。基础镜像中不包含训练脚本、推理模型、代码等文件，用户需要根据自己的需求进行定制化修改（如加入脚本代码、模型等）后才能使用。
-  - 基于下载基础镜像做个性化配置：再[使用Dockerfile对其进行修改](../../06_references/common_operations.md#使用dockerfile构建容器镜像pytorch)。
-  - 从头开始定制用户自己的镜像：制作过程请参考[制作镜像](../../06_references/common_operations.md#制作镜像)中制作容器相关章节。
+  - 基于下载基础镜像做个性化配置：再[使用Dockerfile对其进行修改](../../07_references/common_operations.md#使用dockerfile构建容器镜像pytorch)。
+  - 从头开始定制用户自己的镜像：制作过程请参考[制作镜像](../../07_references/common_operations.md#制作镜像)中制作容器相关章节。
 
   >[!NOTE]
   >完成定制化修改后，用户可以给镜像重命名，以便管理和使用。
 
 **加固镜像<a name="zh-cn_topic_0000001609314597_section8425732111611"></a>**
 
-下载或者制作的基础镜像可以进行安全加固，提升镜像安全性，可参见[容器安全加固](../../06_references/security_hardening.md#容器安全加固)章节进行操作。
+下载或者制作的基础镜像可以进行安全加固，提升镜像安全性，可参见[容器安全加固](../../07_references/security_hardening.md#容器安全加固)章节进行操作。
 
 ### 脚本适配<a name="ZH-CN_TOPIC_0000002511347097"></a>
 
@@ -229,7 +229,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
             torch.npu.conv.allow_hf32 = False
             torch.npu.matmul.allow_hf32 = False</pre>
 
-6. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../06_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/without-ranktable/pytorch”目录中的train\_start.sh，在“/data/atlas\_dls/public/code/ResNet50\_ID4149\_for\_PyTorch/scripts”路径下，构造如下的目录结构。
+6. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../07_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/without-ranktable/pytorch”目录中的train\_start.sh，在“/data/atlas\_dls/public/code/ResNet50\_ID4149\_for\_PyTorch/scripts”路径下，构造如下的目录结构。
 
     ```text
     root@ubuntu:/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts#
@@ -268,7 +268,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 4. 在本地解压[步骤1](#zh-cn_topic_0000001558834814_li1141932513379)中下载的训练代码，将“models/official/cv/”下的“ResNet”目录重命名为“ResNet50\_for\_MindSpore\_2.0\_code”。后续步骤以“ResNet50\_for\_MindSpore\_2.0\_code”目录为例。
 5. 将ResNet50\_for\_MindSpore\_2.0\_code文件上传至环境“/data/atlas\_dls/public/code/”路径下。
-6. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../06_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/without-ranktable/mindspore”目录中的“train\_start.sh”文件，结合训练代码中“scripts”目录，在host上构造如下的目录结构。
+6. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../07_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/without-ranktable/mindspore”目录中的“train\_start.sh”文件，结合训练代码中“scripts”目录，在host上构造如下的目录结构。
 
     ```text
     root@ubuntu:/data/atlas_dls/public/code/ResNet50_for_MindSpore_2.0_code/scripts/#
@@ -344,7 +344,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
         ```
 
 4. 将[步骤1](#zh-cn_topic_0000001558834798_li1298552813512)中下载的训练代码解压到本地，将解压后的训练代码中“ModelZoo-PyTorch/PyTorch/built-in/cv/classification/ResNet50\_ID4149\_for\_PyTorch”目录上传至环境，如“/data/atlas\_dls/public/code/”路径下。
-5. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../06_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/ranktable”目录中的train\_start.sh、rank\_table.sh和utils.sh文件，在“/data/atlas\_dls/public/code/ResNet50\_ID4149\_for\_PyTorch/scripts”路径下，构造如下的目录结构。
+5. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../07_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/ranktable”目录中的train\_start.sh、rank\_table.sh和utils.sh文件，在“/data/atlas\_dls/public/code/ResNet50\_ID4149\_for\_PyTorch/scripts”路径下，构造如下的目录结构。
 
     ```text
     root@ubuntu:/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts#
@@ -385,7 +385,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 4. 在本地解压[步骤1](#zh-cn_topic_0000001558834798_li1141932513379)中下载的训练代码，将“models/official/cv/”下的“ResNet”目录重命名为“ResNet50\_for\_MindSpore\_2.0\_code”。后续步骤以“ResNet50\_for\_MindSpore\_2.0\_code”目录为例。
 5. 将ResNet50\_for\_MindSpore\_2.0\_code文件上传至环境“/data/atlas\_dls/public/code/”路径下。
-6. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../06_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/ranktable”目录中的“train\_start.sh”、“utils.sh”和“rank\_table.sh”文件，结合训练代码中“scripts”目录，在host上构造如下的目录结构。
+6. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../07_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支。获取“samples/train/basic-training/ranktable”目录中的“train\_start.sh”、“utils.sh”和“rank\_table.sh”文件，结合训练代码中“scripts”目录，在host上构造如下的目录结构。
 
     ```text
     root@ubuntu:/data/atlas_dls/public/code/ResNet50_for_MindSpore_2.0_code/scripts/#
@@ -410,11 +410,11 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 - 若当前环境使用的是<term>Atlas A2 训练系列产品</term>，选择[表1](#table529015783811)获取相应的YAML示例。
 
-    根据[表1](#table529015783811)获取示例YAML后，Atlas 800T A2 训练服务器、Atlas 200T A2 Box16 异构子框和A200T A3 Box8 超节点服务器可基于[acjob任务yaml参数说明](../../05_api/yaml_configuration.md#acjob)给出的参数说明进行修改适配。
+    根据[表1](#table529015783811)获取示例YAML后，Atlas 800T A2 训练服务器、Atlas 200T A2 Box16 异构子框和A200T A3 Box8 超节点服务器可基于[acjob任务yaml参数说明](../../06_api/yaml_configuration.md#acjob)给出的参数说明进行修改适配。
 
 - 若当前环境使用的是Atlas 训练系列产品，选择[表2](#table18698184918261)获取相应的YAML示例。
 
-    根据[表2](#table18698184918261)获取示例YAML后，服务器（插Atlas 300T 训练卡）可基于Atlas 800 训练服务器的YAML，以及参考[acjob任务yaml参数说明](../../05_api/yaml_configuration.md#acjob)给出的参数说明进行修改适配。
+    根据[表2](#table18698184918261)获取示例YAML后，服务器（插Atlas 300T 训练卡）可基于Atlas 800 训练服务器的YAML，以及参考[acjob任务yaml参数说明](../../06_api/yaml_configuration.md#acjob)给出的参数说明进行修改适配。
 
 - 若当前环境使用的是<term>Atlas A3 训练系列产品</term>，选择[表3](#table57051049102614)获取相应的YAML示例。
 
@@ -667,7 +667,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 - 若当前环境使用的是<term>Atlas A2 训练系列产品</term>，选择[表5](#table62591594016)获取相应的YAML示例。
 
-    根据[表5](#table62591594016)获取示例YAML后，Atlas 800T A2 训练服务器、Atlas 200T A2 Box16 异构子框和A200T A3 Box8 超节点服务器可基于[YAML配置说明](../../05_api/yaml_configuration.md#yaml_configuration)给出的参数说明进行修改适配。
+    根据[表5](#table62591594016)获取示例YAML后，Atlas 800T A2 训练服务器、Atlas 200T A2 Box16 异构子框和A200T A3 Box8 超节点服务器可基于[YAML配置说明](../../06_api/yaml_configuration.md#yaml_configuration)给出的参数说明进行修改适配。
 
 - 若当前环境使用的是Atlas 训练系列产品，选择[表6](#table21811158146)获取相应的YAML示例。
 - 若当前环境使用的是Atlas 950 训练系列产品，选择[表7](#table950yaml)获取相应的YAML示例。
@@ -907,8 +907,8 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 本章节提供使用整卡调度配置YAML的操作示例。在操作前，用户需要了解YAML示例的参数说明，再进行操作。
 
-- 使用Ascend Job的用户，请参考[acjob任务yaml参数说明](../../05_api/yaml_configuration.md#acjob)。
-- 使用Volcano Job的用户，请参考[vcjob任务yaml参数说明](../../05_api/yaml_configuration.md#vcjob)。
+- 使用Ascend Job的用户，请参考[acjob任务yaml参数说明](../../06_api/yaml_configuration.md#acjob)。
+- 使用Volcano Job的用户，请参考[vcjob任务yaml参数说明](../../06_api/yaml_configuration.md#vcjob)。
 
 #### 配置YAML<a name="ZH-CN_TOPIC_0000002511347101"></a>
 
@@ -1366,7 +1366,7 @@ xx "xxx" deleted
 集成操作中会涉及到很多接口，请用户根据实际情况去相关官网了解接口的详细信息，本文档不再进行二次说明。
 
 - K8s相关接口请根据编程语言找到对应的K8s的[官方API库](https://github.com/kubernetes-client)了解相关内容。
-- Ascend Job可参考[acjob任务yaml参数说明](../../05_api/yaml_configuration.md#acjob)中的参数说明，了解相关内容。
+- Ascend Job可参考[acjob任务yaml参数说明](../../06_api/yaml_configuration.md#acjob)中的参数说明，了解相关内容。
 - Volcano Job相关接口可参见《云容器实例 API参考》中“[创建Volcano Job](https://support.huaweicloud.com/api-cci/createBatchVolcanoShV1alpha1NamespacedJob.html)”章节了解相关内容。
 - 下文的\{_xxx_\}即取“910”字符作为芯片型号数值。
 
@@ -1670,7 +1670,7 @@ xx "xxx" deleted
 
 **集成后使用<a name="section1027912153611"></a>**
 
-1. 制作相应的镜像，可参考[制作镜像](../../06_references/common_operations.md#制作镜像)章节进行操作。
+1. 制作相应的镜像，可参考[制作镜像](../../07_references/common_operations.md#制作镜像)章节进行操作。
 2. 完成相应的脚本适配，可参考[脚本适配](#脚本适配)章节进行操作。
 3. 创建任务。
 4. 运行任务。可通过平台配置并创建任务，下发任务后查看结果。

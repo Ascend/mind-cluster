@@ -17,11 +17,11 @@
 2. ClusterD读取device-info-cm和node-info-cm中的信息，以及公共故障中的信息后，将信息写入cluster-info-cm。
 3. 用户通过kubectl或者其他深度学习平台下发不使用NPU卡的MS Controller、MS Coordinator以及数个使用NPU卡的MindIE Server任务。
 4. Ascend Operator为任务创建相应的podGroup。关于podGroup的详细说明，可以参考[开源Volcano官方文档](https://volcano.sh/docs/v1.9.0/Concepts/podgroup)。
-5. Ascend Operator为任务创建相应的Pod，并注入MindIE Server服务启动所需的环境变量。关于环境变量的详细说明请参见[Ascend Operator注入的训练环境变量](../../05_api/environment_variable_description.md#ascend-operator环境变量说明)。
+5. Ascend Operator为任务创建相应的Pod，并注入MindIE Server服务启动所需的环境变量。关于环境变量的详细说明请参见[Ascend Operator注入的训练环境变量](../../06_api/environment_variable_description.md#ascend-operator环境变量说明)。
 6. 对于MS Controller、MS Coordinator任务，volcano-scheduler根据节点内存、CPU及标签、亲和性选择合适节点。对于MindIE Server任务volcano-scheduler还会参考芯片拓扑信息为其选择合适节点，并在Pod的annotation上写入选择的芯片信息以及节点硬件信息。
 7. kubelet创建容器时，对于MindIE Server任务，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin或volcano-scheduler在Pod的annotation上写入芯片和节点硬件信息。Ascend Docker Runtime协助挂载相应资源。
 8. Ascend Operator读取每个MindIE Server任务Pod的annotation信息，生成各自的集合通信文件hccl.json，以ConfigMap形式存储在etcd中。
-9. ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json对应ConfigMap的变化，实时生成global-ranktable。关于global-ranktable的详细说明请参见[SubscribeRankTable](../../05_api/clusterd/05_service_configuration_apis.md#subscriberanktable)中“global-ranktable文件说明”部分。
+9. ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json对应ConfigMap的变化，实时生成global-ranktable。关于global-ranktable的详细说明请参见[SubscribeRankTable](../../06_api/clusterd/05_service_configuration_apis.md#subscriberanktable)中“global-ranktable文件说明”部分。
 10. MS Controller启动后，与ClusterD建立通信，通过gRPC接口订阅global-ranktable的变化。
 
 ## 通过命令行使用<a name="ZH-CN_TOPIC_0000002511426327"></a>
@@ -286,7 +286,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 </td>
 <td class="cellrowborder" valign="top" width="36.26%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p5524103317257"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p5524103317257"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p5524103317257"></a>表示当前MindIE Motor推理任务在Ascend Job任务中的角色，取值包括mindie-ms-controller、mindie-ms-coordinator、mindie-ms-server。</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><ul id="zh-cn_topic_0000002329010086_ul139591420161415"><li>acjob的任务YAML同时包含jobID和app这2个字段时，<span id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph1566531814589"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph1566531814589"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph1566531814589"></a>Ascend Operator</span>组件会自动传入环境变量MINDX_TASK_ID、APP_TYPE、MINDX_SERVER_IP及MINDX_SERVER_DOMAIN，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见<a href="../../05_api/environment_variable_description.md#ascend-operator环境变量说明">Ascend Operator注入的训练环境变量</a>。</li><li>该参数仅支持在<span id="ph0338135542520"><a name="ph0338135542520"></a><a name="ph0338135542520"></a>Atlas 800I A2 推理服务器</span>、<span id="zh-cn_topic_0000002329010086_ph2790182618303"><a name="zh-cn_topic_0000002329010086_ph2790182618303"></a><a name="zh-cn_topic_0000002329010086_ph2790182618303"></a>Atlas 800I A3 超节点服务器</span>上使用。</li></ul>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><ul id="zh-cn_topic_0000002329010086_ul139591420161415"><li>acjob的任务YAML同时包含jobID和app这2个字段时，<span id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph1566531814589"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph1566531814589"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ph1566531814589"></a>Ascend Operator</span>组件会自动传入环境变量MINDX_TASK_ID、APP_TYPE、MINDX_SERVER_IP及MINDX_SERVER_DOMAIN，并将其标识为MindIE推理任务。</li><li>关于以上环境变量的详细说明请参见<a href="../../06_api/environment_variable_description.md#ascend-operator环境变量说明">Ascend Operator注入的训练环境变量</a>。</li><li>该参数仅支持在<span id="ph0338135542520"><a name="ph0338135542520"></a><a name="ph0338135542520"></a>Atlas 800I A2 推理服务器</span>、<span id="zh-cn_topic_0000002329010086_ph2790182618303"><a name="zh-cn_topic_0000002329010086_ph2790182618303"></a><a name="zh-cn_topic_0000002329010086_ph2790182618303"></a>Atlas 800I A3 超节点服务器</span>上使用。</li></ul>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002329010086_row17549141912"><td class="cellrowborder" valign="top" width="27.18%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_p7754191171915"><a name="zh-cn_topic_0000002329010086_p7754191171915"></a><a name="zh-cn_topic_0000002329010086_p7754191171915"></a>mx-consumer-cim</p>
@@ -575,7 +575,7 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 
 ### global-ranktable说明<a name="ZH-CN_TOPIC_0000002479226414"></a>
 
-ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json对应ConfigMap的变化，实时生成global-ranktable。global-ranktable中部分字段来自hccl.json文件，关于hccl.json文件的详细说明请参见[hccl.json文件说明](../../05_api/hccl.json_file_description.md)。
+ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json对应ConfigMap的变化，实时生成global-ranktable。global-ranktable中部分字段来自hccl.json文件，关于hccl.json文件的详细说明请参见[hccl.json文件说明](../../06_api/hccl.json_file_description.md)。
 
 - <term>Atlas A2 训练系列产品</term>global-ranktable示例如下。
 

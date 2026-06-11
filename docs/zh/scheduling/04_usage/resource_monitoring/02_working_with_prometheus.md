@@ -1,13 +1,13 @@
 # 通过Prometheus使用<a name="ZH-CN_TOPIC_0000002511426931"></a>
 
-本章节指导用户安装部署Prometheus相关软件，并通过Prometheus查看资源监测的相关数据信息，数据信息的相关说明可参见[Prometheus Metrics接口](../../05_api/npu_exporter/01_prometheus_metrics_api.md)章节。
+本章节指导用户安装部署Prometheus相关软件，并通过Prometheus查看资源监测的相关数据信息，数据信息的相关说明可参见[Prometheus Metrics接口](../../06_api/npu_exporter/01_prometheus_metrics_api.md)章节。
 
 - [直接对接Prometheus](#zh-cn_topic_0000001447284876_section875071183215)：NPU Exporter可以直接将NPU设备的数据信息导入到Prometheus中，无需额外的中间件或代理，架构更加简单。
 - [通过Prometheus Operator对接Prometheus](#section1031014512341)：NPU Exporter通过Prometheus Operator插件对接Prometheus，帮助用户快速、简便地实现Prometheus服务的平台化，提高监测系统的可靠性和可维护性。
 
 ## 直接对接Prometheus<a name="zh-cn_topic_0000001447284876_section875071183215"></a>
 
-1. 进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](../../06_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/utils/prometheus/base”目录下的prometheus.yaml文件。
+1. 进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](../../07_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/utils/prometheus/base”目录下的prometheus.yaml文件。
 2. <a name="zh-cn_topic_0000001447284876_li127175170321"></a>在管理节点执行以下命令获取镜像。
 
     ```shell
@@ -135,7 +135,7 @@
         ```
 
 3. 安装Prometheus。
-    1. <a name="li601241164212"></a>进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](../../06_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/utils/prometheus/base”目录下的prometheus.yaml文件。
+    1. <a name="li601241164212"></a>进入[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库，根据[mindcluster-deploy开源仓版本说明](../../07_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/utils/prometheus/base”目录下的prometheus.yaml文件。
     2. 将[步骤1](#li601241164212)中获取到的prometheus.yaml上传至环境任意路径。
     3. 在“prometheus.yaml”存放路径，执行以下命令，安装Prometheus。
 

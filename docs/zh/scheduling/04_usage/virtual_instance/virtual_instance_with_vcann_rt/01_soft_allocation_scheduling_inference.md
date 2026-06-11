@@ -24,7 +24,7 @@
 <tbody><tr><td class="cellrowborder" rowspan="4" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p>通用说明</p>
 </td>
 <td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 ">
-<p>分配的芯片信息会在PodGroup的如下label中体现出来，关于PodGroup label的详细说明请参见<a href="../../../05_api/volcano.md#podgroup">PodGroup label</a>中的如下参数：
+<p>分配的芯片信息会在PodGroup的如下label中体现出来，关于PodGroup label的详细说明请参见<a href="../../../06_api/volcano.md#podgroup">PodGroup label</a>中的如下参数：
 <ul>
 <li>huawei.com/scheduler.softShareDev.aicoreQuota：取值为1-100，表示软切分任务请求的AICore百分比。</li>
 <li>huawei.com/scheduler.softShareDev.hbmQuota：取值为1-maxHBM，其中maxHBM为通过npu-smi info命令查询出的HBM-Usage(MB)中HBM的值，表示软切分任务请求的高带宽内存量。</li>
@@ -71,7 +71,7 @@
 
 ### 前提条件
 
-使用软切分调度特性，需要确保已经安装如下组件；若没有安装，可以参考[安装部署](../../../07_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
+使用软切分调度特性，需要确保已经安装如下组件；若没有安装，可以参考[安装部署](../../../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 
 - Volcano
 - Ascend Device Plugin
@@ -88,7 +88,7 @@
     在软切分虚拟化功能和非软切分虚拟化功能混合部署场景下，若节点不支持软切分虚拟化功能，则需要为节点增加标签huawei.com/scheduler.chip1softsharedev.enable=false。
 
 2. 需要先获取"Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run"，安装容器引擎插件。
-3. 参见[安装部署](../../../07_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节，完成各组件的安装。
+3. 参见[安装部署](../../../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节，完成各组件的安装。
 
     虚拟化实例涉及修改相关参数的集群调度组件为Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
 
@@ -253,13 +253,13 @@
     >[!NOTE]
     >基础镜像中不包含推理模型、脚本等文件，因此，用户需要根据自己的需求进行定制化修改（如加入推理脚本代码、模型等）后才能使用。
 
-- （可选）可基于推理基础镜像定制用户自己的推理镜像，制作过程请参见[使用Dockerfile构建推理镜像](../../../06_references/common_operations.md#使用dockerfile构建推理镜像)。
+- （可选）可基于推理基础镜像定制用户自己的推理镜像，制作过程请参见[使用Dockerfile构建推理镜像](../../../07_references/common_operations.md#使用dockerfile构建推理镜像)。
 
     完成定制化修改后，用户可以给推理镜像重命名，以便管理和使用。
 
 **加固镜像**
 
-下载或者制作的推理基础镜像可以进行安全加固，提升镜像安全性，可参见[容器安全加固](../../../06_references/security_hardening.md#容器安全加固)章节进行操作。
+下载或者制作的推理基础镜像可以进行安全加固，提升镜像安全性，可参见[容器安全加固](../../../07_references/security_hardening.md#容器安全加固)章节进行操作。
 
 ### 脚本适配<a name="ZH-CN_TOPIC_000000251134706701"></a>
 
@@ -303,13 +303,13 @@
     <tr>
     <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 标卡</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>pytorch_acjob_infer_950_softsharedev.yaml</p></td>
-    <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/inference/volcano/samples/inference/volcano/pytorch_acjob_infer_950_softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
+    <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/inference/volcano/pytorch_acjob_infer_950_softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
     </tbody>
     </table>
 2. 将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
 
-    在Atlas 800I A2 推理服务器上，以pytorch_acjob_infer_910b_softsharedev.yaml为例，申请芯片AICore百分比为50%，芯片高带宽内存量为2048MB，软切分策略为fixed-share的参数配置示例如下。yaml配置参考请参考[YAML配置说明](../../../05_api/yaml_configuration.md#yaml_configuration)。
+    在Atlas 800I A2 推理服务器上，以pytorch_acjob_infer_910b_softsharedev.yaml为例，申请芯片AICore百分比为50%，芯片高带宽内存量为2048MB，软切分策略为fixed-share的参数配置示例如下。yaml配置参考请参考[YAML配置说明](../../../06_api/yaml_configuration.md#yaml_configuration)。
 
     <pre codetype="yaml">
     apiVersion: mindxdl.gitee.com/v1
