@@ -233,6 +233,7 @@ class KGParseFilePath(JsonObj):
         lcne_log_path: List = None,
         bus_log_path: List = None,
         custom_log_list: List = None,
+        pymotor_vllm_log_path: List = None,
     ):
         self.plog_path = plog_path or {}
         self.device_log_path = device_log_path or {}
@@ -261,6 +262,7 @@ class KGParseFilePath(JsonObj):
         self.lcne_log_path = lcne_log_path or []
         self.bus_log_path = bus_log_path or []
         self.custom_log_list = custom_log_list or []
+        self.pymotor_vllm_log_path = pymotor_vllm_log_path or []
 
     def get_all_path(self):
         all_path_list = []

@@ -65,6 +65,7 @@ def command_line():
       --amct_log, the input path of amct log file
       --custom_log, the input path of custom log file
       --bus_log, the input path of bus log file
+      --pymotor_vllm_log, the input path of PyMotor + vLLM log file (shared directory)
     3. diag
       -i, --input_path, the input path of parsed data file.
       -o, --output_path, the output path of diag result file.
@@ -99,6 +100,7 @@ def command_line():
       --mindie_log, the input path of mindie log file
       --amct_log, the input path of amct log file
       --bus_log, the input path of bus log file
+      --pymotor_vllm_log, the input path of pymotor vllm log file
     """
     args = argparse.ArgumentParser(add_help=True, description=f"{NAME.capitalize()} Fault Diag")
     sub_arg = args.add_subparsers(dest="cmd", required=True)
@@ -206,6 +208,12 @@ def add_parse_arguments(parse_cmd):
     parse_cmd.add_argument("--bus_log", type=dir_check, metavar='', help="the input path of bus log file")
     parse_cmd.add_argument("--custom_log", type=dir_check, metavar='', help="the input path of custom log file")
     parse_cmd.add_argument(
+        "--pymotor_vllm_log",
+        type=dir_check,
+        metavar="",
+        help="the input path of PyMotor + vLLM log file (shared directory)",
+    )
+    parse_cmd.add_argument(
         "-p",
         "--performance",
         action="store_true",
@@ -294,6 +302,12 @@ def add_single_diag_cmd(sub_arg):
     single_diag_cmd.add_argument("--mindie_log", type=dir_check, metavar='', help="the input path of mindie log file")
     single_diag_cmd.add_argument("--amct_log", type=dir_check, metavar='', help="the input path of amct log file")
     single_diag_cmd.add_argument("--bus_log", type=dir_check, metavar='', help="the input path of bus log file")
+    single_diag_cmd.add_argument(
+        "--pymotor_vllm_log",
+        type=dir_check,
+        metavar='',
+        help="the input path of pymotor vllm log file",
+    )
     single_diag_cmd.add_argument(
         "-o",
         "--output_path",

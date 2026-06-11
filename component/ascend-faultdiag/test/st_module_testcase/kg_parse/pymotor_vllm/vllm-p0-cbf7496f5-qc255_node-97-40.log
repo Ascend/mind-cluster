@@ -1,0 +1,28 @@
+Current node role: ROLE=prefill
+jemalloc found at: /usr/lib/aarch64-linux-gnu/libjemalloc.so.2
+LD_PRELOAD is set successfully.
+Using hccl_tools.py to generate ranktable.json...
+2026-05-26 15:15:48,667 - INFO - start /mnt/configmap/hccl_tools.py
+2026-05-26 15:15:48,668 - INFO - Detected visible_devices: ['0', '1', '10', '11', '12', '13', '14', '15', '2', '3', '4', '5', '6', '7', '8', '9']
+2026-05-26 15:15:48,694 - INFO - Detected hardware_type: HardwareType.A3
+2026-05-26 15:15:48,694 - INFO - host_ip: 127.0.0.1
+2026-05-26 15:15:48,694 - INFO - pod_ip: 192.168.222.203
+2026-05-26 15:15:49,051 - INFO - device_id: 0, device_ip_info: ['ipaddr:10.0.245.11\n', 'netmask:255.255.255.0\n']
+2026-05-26 15:15:49,603 - INFO - device_id: 0, super_device_id: ['\tSDID                           : 167772160\n', '\tSuper Pod Size                 : 384\n', '\tSuper Pod ID                   : 0\n', '\tServer Index                   : 40\n']
+2026-05-26 15:15:50,285 - INFO - device_id: 1, device_ip_info: ['ipaddr:10.0.244.11\n', 'netmask:255.255.255.0\n']
+2026-05-26 15:15:50,814 - INFO - device_id: 1, super_device_id: ['\tSDID                           : 167837697\n', '\tSuper Pod Size                 : 384\n', '\tSuper Pod ID                   : 0\n', '\tServer Index                   : 40\n']
+2026-05-26 15:15:51,175 - INFO - device_id: 10, device_ip_info: ['ipaddr:10.0.245.16\n', 'netmask:255.255.255.0\n']
+2026-05-26 15:15:51,763 - INFO - device_id: 10, super_device_id: ['\tSDID                           : 169082890\n', '\tSuper Pod Size                 : 384\n', '\tSuper Pod ID                   : 0\n', '\tServer Index                   : 40\n']
+2026-05-26 15:15:52,795 - INFO - device_id: 11, device_ip_info: ['ipaddr:10.0.244.16\n', 'netmask:255.255.255.0\n']
+2026-05-26 15:15:53,361 - INFO - device_id: 11, super_device_id: ['\tSDID                           : 169148427\n', '\tSuper Pod Size                 : 384\n', '\tSuper Pod ID                   : 0\n', '\tServer Index                   : 40\n']
+2026-05-26 15:15:54,156 - INFO - device_id: 12, device_ip_info: ['ipaddr:10.0.245.17\n', 'netmask:255.255.255.0\n']
+2026-05-26 15:15:54,671 - INFO - device_id: 12, super_device_id: ['\tSDID                           : 169345036\n', '\tSuper Pod Size                 : 384\n', '\tSuper Pod ID                   : 0\n', '\tServer Index                   : 40\n']
+2026-05-26 15:16:20  [INFO][root][logger.py:170][proc:MainProcess]  Internal logs of pod will be saved to /root/ascend/log/qwen/mindie-hxy_20260526151544/motor, will mounted to host /root/ascend/log
+2026-05-26 15:16:20  [INFO][root][logger.py:170][proc:MainProcess]  Internal logs of pod will be saved to /root/ascend/log/qwen/mindie-hxy_20260526151544/motor, will mounted to host /root/ascend/log
+2026-05-26 15:16:20  [INFO][root][logger.py:246][proc:MainProcess]  Logging reconfigured with level: INFO
+2026-05-26 15:16:20  [INFO][config][controller.py:229][proc:MainProcess]  Loading configuration file: /usr/local/Ascend/pyMotor/conf/user_config.json
+2026-05-26 15:16:20  [INFO][config][controller.py:231][proc:MainProcess]  Successfully loaded configuration file: /usr/local/Ascend/pyMotor/conf/user_config.json
+2026-05-26 15:16:20  [INFO][config][controller.py:236][proc:MainProcess]  Configuration loading completed
+2026-05-26 15:16:20  [INFO][config][node_manager.py:211][proc:MainProcess]  Loading configuration files: config=/usr/local/Ascend/pyMotor/conf/user_config.json
+2026-05-26 15:16:20  [INFO][config][node_manager.py:221][proc:MainProcess]  Successfully loaded config file: /usr/local/Ascend/pyMotor/conf/user_config.json
+2026-05-26 15:16:20  [INFO][config][node_manager.py:236][proc:MainProcess]  Configuration loading completed

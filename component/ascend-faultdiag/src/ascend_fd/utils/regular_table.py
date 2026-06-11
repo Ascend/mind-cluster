@@ -240,6 +240,23 @@ NPU_INFO_SOURCE = "NPU_INFO"
 DMI_DECODE_SOURCE = "DMI_DECODE"
 MINDIE_CLUSTER_SOURCE = "MINDIE_CLUSTER"
 CUSTOM_LOG_SOURCE = "CustomLog"
+PYMOTOR_VLLM_SOURCE = "PyMotor_vLLM_Log"
+
+# Filename patterns for log file matching (used by PyMotorVLLMParser)
+# vLLM logs: vllm-*.log (may contain mixed vLLM + PyMotor NodeManager/EngineServer content)
+VLLM_FILENAME_PATTERN = r"^vllm-[a-z0-9_-]+.*\.log$"
+# PyMotor component logs: mindie-motor-*.log (controller, coordinator, etc.)
+PYMOTOR_FILENAME_PATTERN = r"^mindie-motor-[a-z0-9_-]+.*\.log$"
+
+DEVICE_ID_PATTERN = r"device_id:\s*(\d+)"
+IPADDR_PATTERN = r"ipaddr:([^\n']+)"
+NETMASK_PATTERN = r"netmask:([^\n']+)"
+
+# Common IP pattern (IPv4 | IPv6), used by HOST_IP_PATTERN / POD_IP_PATTERN
+IP_COMMON_PATTERN = r"\b(?:\d{1,3}\.){3}\d{1,3}\b|" + IPV6_ADDR_PATTERN
+
+HOST_IP_PATTERN = r"host_ip:\s*(" + IP_COMMON_PATTERN + r")"
+POD_IP_PATTERN = r"pod_ip:\s*(" + IP_COMMON_PATTERN + r")"
 
 # composite switch chip info source for devicePlugin and LCNE
 COMPOSITE_SWITCH_CHIP_SOURCE = "DL_DevicePlugin | LCNELog"
@@ -269,6 +286,7 @@ SUPPORTED_SOURCE_FILE_LIST = [
     BMC_DEVICE_DUMP_SOURCE,
     BMC_LOG_DUMP_SOURCE,
     LCNE_SOURCE,
+    PYMOTOR_VLLM_SOURCE,
 ]
 
 # saver to source file map
@@ -291,6 +309,7 @@ SAVER_TO_SOURCE_FILE_MAP = {
     "BMCLogSaver": [BMC_SOURCE, BMC_APP_DUMP_SOURCE, BMC_DEVICE_DUMP_SOURCE, BMC_LOG_DUMP_SOURCE],
     "LCNELogSaver": [LCNE_SOURCE],
     "AMCTLogSaver": [AMCT_SOURCE],
+    "PyMotorVLLMLogSaver": [PYMOTOR_VLLM_SOURCE],
 }
 
 OS_FAULT_PREFIX = "Comp_OS"

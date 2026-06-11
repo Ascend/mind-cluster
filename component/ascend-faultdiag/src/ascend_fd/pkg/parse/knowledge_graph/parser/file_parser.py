@@ -44,7 +44,7 @@ class FileParser(ABC):
         """
         Log file parser base class
         """
-        super(FileParser, self).__init__()
+        super().__init__()
         self.params = params
         self.regex_conf = params.get("default_conf", {})
         self.default_conf = self.regex_conf.get(self.SOURCE_FILE, {})
@@ -77,8 +77,7 @@ class FileParser(ABC):
                 kg_logger.warning("UTF-8 decode failed, try to decode by latin-1")
                 yield from FileParser._yield_log_by_file(file_source, encoding="latin-1")
         elif isinstance(file_source, LogInfoSaver):
-            for line in file_source.log_lines:
-                yield line
+            yield from file_source.log_lines
 
     @staticmethod
     def _yield_log_by_file(file_source, encoding="UTF-8"):
@@ -195,8 +194,9 @@ class FileParser(ABC):
             return False
         return timezone_config.get_trans_flag_by_type(self._type)
 
-    def supplement_common_info(self, event_dict: dict, file_source: Union[str, LogInfoSaver], occur_time: str,
-                               specified_type: str = ""):
+    def supplement_common_info(
+        self, event_dict: dict, file_source: Union[str, LogInfoSaver], occur_time: str, specified_type: str = ""
+    ):
         """
         Supplement absent common info
         :param event_dict: event dict for fault
@@ -209,11 +209,13 @@ class FileParser(ABC):
                 event_dict.update({"source_device": file_source.device_id_str})
             else:
                 event_dict.update({"source_device": "Unknown"})
-        event_dict.update({
-            "source_file": self._get_source_file(file_source),
-            "occur_time": occur_time,
-            "type": specified_type or self.SOURCE_FILE
-        })
+        event_dict.update(
+            {
+                "source_file": self._get_source_file(file_source),
+                "occur_time": occur_time,
+                "type": specified_type or self.SOURCE_FILE,
+            }
+        )
 
     def find_log(self, parse_filepath: KGParseFilePath):
         """
@@ -292,6 +294,7 @@ class EventStorage:
     """
     Used to store all events of the same group
     """
+
     TRAIN_FRAMEWORK = {"PT": "AISW_PyTorch", "MS": "AISW_MindSpore"}
     OCCUR_TIME = "occur_time"
 

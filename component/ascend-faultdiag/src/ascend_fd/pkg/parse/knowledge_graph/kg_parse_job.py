@@ -97,6 +97,7 @@ class SaverCollector:
             lcne_log_path=self.safe_get("lcne_log_saver", "get_lcne_log_list", default=[]),
             bus_log_path=self.safe_get("lcne_log_saver", "get_bus_log_dict", default={}),
             custom_log_list=self.safe_get("custom_log_saver", "get_custom_log_list", default=[]),
+            pymotor_vllm_log_path=self.safe_get("pymotor_vllm_log_saver", "get_pymotor_vllm_log_list", default=[]),
         )
         # sdk断点续训时间属性需要在self.plog_dict后。（先要plog解析时间）
         self.parse_ctx = KGParseCtx(
