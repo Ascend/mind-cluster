@@ -28,7 +28,6 @@ import (
 	"github.com/vishvananda/netlink"
 
 	"ascend-common/common-utils/hwlog"
-
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/types"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/utils"

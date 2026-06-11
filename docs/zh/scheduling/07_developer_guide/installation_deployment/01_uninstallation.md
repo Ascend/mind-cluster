@@ -2,7 +2,7 @@
 
 - 卸载Ascend Docker Runtime组件，请参见[卸载Ascend Docker Runtime](#section6134163311244)进行操作。
 - 卸载Container Manager组件，请参见[卸载Container Manager组件](#section1461059103619)进行操作。
-- 卸载NPU Exporter、Ascend Device Plugin、Volcano、ClusterD、Ascend Operator、Infer Operator、NodeD和Resilience Controller，请参见[卸载其他组件](#section6361146202520)。
+- 卸载NPU Exporter、Ascend Device Plugin、K8s Rdma Shared Dev Plugin、Volcano、ClusterD、Ascend Operator、Infer Operator、NodeD和Resilience Controller，请参见[卸载其他组件](#section6361146202520)。
 
 ## 卸载Ascend Docker Runtime<a name="section6134163311244"></a>
 

@@ -43,11 +43,10 @@ import (
 	"strings"
 	"syscall"
 
-	"ascend-common/common-utils/hwlog"
-
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
+	"ascend-common/common-utils/hwlog"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/fault"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
@@ -217,73 +216,16 @@ func main() {
 
 	// Initialize and start PCI device manager if enabled
 	if enablePci {
-		hwlog.RunLog.Info("Initializing PCI device resource manager")
-		rm = resources.NewResourceManager(configFilePath, useCdi)
-
-		hwlog.RunLog.Info("Reading PCI device configs")
-		if err := rm.ReadConfig(); err != nil {
-			hwlog.RunLog.Errorf("%s", err.Error())
-		}
-
-		hwlog.RunLog.Info("Validating PCI device configs")
-		if err := rm.ValidateConfigs(); err != nil {
-			hwlog.RunLog.Errorf("Exiting.. one or more invalid PCI configuration(s) given: %v", err)
-		}
-
-		hwlog.RunLog.Info("Validating RDMA system mode")
-		if err := rm.ValidateRdmaSystemMode(); err != nil {
-			hwlog.RunLog.Errorf("Exiting.. can not change RDMA system mode: %v", err)
-		}
-
-		hwlog.RunLog.Info("Discovering PCI host devices")
-		if err := rm.DiscoverHostDevices(); err != nil {
-			hwlog.RunLog.Errorf("Error: error discovering PCI host devices %v \n", err)
-		}
-
-		hwlog.RunLog.Info("Initializing PCI resource servers")
-		if err := rm.InitServers(); err != nil {
-			hwlog.RunLog.Errorf("Error: initializing PCI resource servers %v \n", err)
-		}
-
-		hwlog.RunLog.Info("Starting PCI servers...")
-		if err := rm.StartAllServers(); err != nil {
-			hwlog.RunLog.Errorf("Error: starting PCI resource servers %v\n", err.Error())
-		}
-
-		stopPeriodicUpdate = rm.PeriodicUpdate()
+		rm, stopPeriodicUpdate = initAndStartDevices("PCI", func() types.ResourceManager {
+			return resources.NewResourceManager(configFilePath, useCdi)
+		})
 	}
 
 	// Initialize and start UB device manager if enabled
 	if enableUb {
-		hwlog.RunLog.Info("Initializing UB device resource manager")
-		rm = ub_device.NewUbResourceManager(configFilePath, useCdi)
-
-		hwlog.RunLog.Info("Reading UB device configs")
-		if err := rm.ReadConfig(); err != nil {
-			hwlog.RunLog.Errorf("%s", err.Error())
-		}
-
-		hwlog.RunLog.Info("Validating UB device configs")
-		if err := rm.ValidateConfigs(); err != nil {
-			hwlog.RunLog.Errorf("Exiting.. one or more invalid UB configuration(s) given: %v", err)
-		}
-
-		hwlog.RunLog.Info("Discovering UB host devices")
-		if err := rm.DiscoverHostDevices(); err != nil {
-			hwlog.RunLog.Errorf("Error: error discovering UB host devices %v \n", err)
-		}
-
-		hwlog.RunLog.Info("Initializing UB resource servers")
-		if err := rm.InitServers(); err != nil {
-			hwlog.RunLog.Errorf("Error: initializing UB resource servers %v \n", err)
-		}
-
-		hwlog.RunLog.Info("Starting UB servers...")
-		if err := rm.StartAllServers(); err != nil {
-			hwlog.RunLog.Errorf("Error: starting UB resource servers %v\n", err.Error())
-		}
-
-		stopPeriodicUpdate = rm.PeriodicUpdate()
+		rm, stopPeriodicUpdate = initAndStartDevices("UB", func() types.ResourceManager {
+			return ub_device.NewUbResourceManager(configFilePath, useCdi)
+		})
 	}
 
 	hwlog.RunLog.Info("Enabled servers started.")
@@ -349,4 +291,37 @@ func main() {
 			return
 		}
 	}
+}
+
+func initAndStartDevices(deviceType string, createRm func() types.ResourceManager) (types.ResourceManager, func()) {
+	hwlog.RunLog.Infof("Initializing %s device resource manager", deviceType)
+	rm := createRm()
+
+	if err := rm.ReadConfig(); err != nil {
+		hwlog.RunLog.Errorf("%s", err.Error())
+	}
+
+	if err := rm.ValidateConfigs(); err != nil {
+		hwlog.RunLog.Errorf("Exiting.. one or more invalid %s configuration(s) given: %v", deviceType, err)
+	}
+
+	if deviceType == "PCI" {
+		if err := rm.ValidateRdmaSystemMode(); err != nil {
+			hwlog.RunLog.Errorf("Exiting.. can not change RDMA system mode: %v", err)
+		}
+	}
+
+	if err := rm.DiscoverHostDevices(); err != nil {
+		hwlog.RunLog.Errorf("Error: error discovering %s host devices %v \n", deviceType, err)
+	}
+
+	if err := rm.InitServers(); err != nil {
+		hwlog.RunLog.Errorf("Error: initializing %s resource servers %v \n", deviceType, err)
+	}
+
+	if err := rm.StartAllServers(); err != nil {
+		hwlog.RunLog.Errorf("Error: starting %s resource servers %v\n", deviceType, err.Error())
+	}
+
+	return rm, rm.PeriodicUpdate()
 }

@@ -25,6 +25,8 @@ RUN yum install -y shadow &&\
 
 COPY --from=build /build/k8s-rdma-shared-dp /usr/local/bin/k8s-rdma-shared-dp
 COPY --from=build /build/agreement.txt /usr/local/
+COPY --from=build /build/fault_code.json /etc/rdma-plugin/
+COPY --from=build /build/fault_detection.sh /etc/rdma-plugin/
 
 RUN chmod 550 /usr/local/bin/k8s-rdma-shared-dp &&\
     chmod 440 /usr/local/agreement.txt &&\

@@ -493,6 +493,54 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>MindIO组件二进制文件。</p>
 </td>
 </tr>
+<tr id="row1597060117211"><td class="cellrowborder" rowspan="8" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p2597060117211"><a name="p2597060117211"></a><a name="p2597060117211"></a><span id="ph1597060117211"><a name="ph1597060117211"></a><a name="ph1597060117211"></a>K8s RDMA Shared Dev Plugin</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="24.310000000000002%" headers="mcps1.2.5.1.2 "><p id="p3597060117211"><a name="p3597060117211"></a><a name="p3597060117211"></a>k8s-rdma-shared-dp</p>
+</td>
+<td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p4597060117211"><a name="p4597060117211"></a><a name="p4597060117211"></a><span id="ph2597060117211"><a name="ph2597060117211"></a><a name="ph2597060117211"></a>K8s RDMA Shared Dev Plugin</span>二进制文件。</p>
+</td>
+<td class="cellrowborder" rowspan="8" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p5597060117211"><a name="p5597060117211"></a><a name="p5597060117211"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+</td>
+</tr>
+<tr id="row2597060117212"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1597060117212"><a name="p1597060117212"></a><a name="p1597060117212"></a>Dockerfile</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p2597060117212"><a name="p2597060117212"></a><a name="p2597060117212"></a>基础镜像为Ubuntu的<span id="ph3597060117212"><a name="ph3597060117212"></a><a name="ph3597060117212"></a>K8s RDMA Shared Dev Plugin</span>镜像构建文本文件。</p>
+</td>
+</tr>
+<tr id="row2597060117213"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1597060117213"><a name="p1597060117213"></a><a name="p1597060117213"></a>Dockerfile.openeuler</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p2597060117213"><a name="p2597060117213"></a><a name="p2597060117213"></a>基础镜像为openEuler的<span id="ph3597060117213"><a name="ph3597060117213"></a><a name="ph3597060117213"></a>K8s RDMA Shared Dev Plugin</span>镜像构建文本文件。</p>
+</td>
+</tr>
+<tr id="row2597060117214"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1597060117214"><a name="p1597060117214"></a><a name="p1597060117214"></a>agreement.txt</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p2597060117214"><a name="p2597060117214"></a><a name="p2597060117214"></a>镜像许可协议。</p>
+</td>
+</tr>
+<tr id="row2597060117215"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1597060117215"><a name="p1597060117215"></a><a name="p1597060117215"></a>k8s-rdma-shared-dev-plugin-v<em id="i1597060117215"><a name="i1597060117215"></a><a name="i1597060117215"></a>{version}</em>.yaml</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p2597060117215"><a name="p2597060117215"></a><a name="p2597060117215"></a><span id="ph4597060117215"><a name="ph4597060117215"></a><a name="ph4597060117215"></a>K8s RDMA Shared Dev Plugin</span>的启动配置文件。</p>
+</td>
+</tr>
+<tr id="row2597060117216"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1597060117216"><a name="p1597060117216"></a><a name="p1597060117216"></a>config.json</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p2597060117216"><a name="p2597060117216"></a><a name="p2597060117216"></a><span id="ph3597060117216"><a name="ph3597060117216"></a><a name="ph3597060117216"></a>K8s RDMA Shared Dev Plugin</span>设备配置文件。</p>
+</td>
+</tr>
+<tr id="row2597060117217"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1597060117217"><a name="p1597060117217"></a><a name="p1597060117217"></a>fault_code.json</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p2597060117217"><a name="p2597060117217"></a><a name="p2597060117217"></a>故障码配置文件。</p>
+<div class="notice" id="note1597060117217"><a name="note1597060117217"></a><a name="note1597060117217"></a><span class="noticetitle"> 须知： </span><div class="noticebody"><p id="p3597060117217"><a name="p3597060117217"></a><a name="p3597060117217"></a>系统配置文件，请勿随意修改，否则可能会导致系统故障处理功能出错。</p>
+</div></div>
+</td>
+</tr>
+<tr id="row2597060117218"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1597060117218"><a name="p1597060117218"></a><a name="p1597060117218"></a>fault_detection.sh</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p2597060117218"><a name="p2597060117218"></a><a name="p2597060117218"></a>故障检测脚本。</p>
+<div class="notice" id="note1597060117218"><a name="note1597060117218"></a><a name="note1597060117218"></a><span class="noticetitle"> 须知： </span><div class="noticebody"><p id="p3597060117218"><a name="p3597060117218"></a><a name="p3597060117218"></a>系统配置文件，请勿随意修改，否则可能会导致系统故障处理功能出错。</p>
+</div></div>
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -513,7 +561,7 @@
 
 ## 开源组件源码<a name="section149534517468"></a>
 
-集群调度提供Ascend Docker Runtime、NPU Exporter、Ascend Device Plugin、Volcano、Ascend Operator、NodeD和ClusterD等开源组件。如果用户需要了解源码或定制开发组件，则可根据[表2](#table978944123012)获取相应组件源码。
+集群调度提供Ascend Docker Runtime、NPU Exporter、Ascend Device Plugin、K8s Rdma Shared Dev Plugin、Volcano、Ascend Operator、NodeD和ClusterD等开源组件。如果用户需要了解源码或定制开发组件，则可根据[表2](#table978944123012)获取相应组件源码。
 
 **表 2**  获取组件源码
 
@@ -532,3 +580,4 @@
 |Container Manager|<https://gitcode.com/Ascend/mind-cluster/tree/master/component/container-manager>|
 |Infer Operator|<https://gitcode.com/Ascend/mind-cluster/tree/master/component/infer-operator>|
 |MindIO|<https://gitcode.com/Ascend/mind-cluster/tree/master/component/mindio>|
+|K8s RDMA Shared Dev Plugin|<https://gitcode.com/Ascend/mind-cluster/tree/master/component/k8s-rdma-shared-dev-plugin>|
