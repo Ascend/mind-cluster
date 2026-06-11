@@ -14,7 +14,7 @@
  */
 
 #include <cerrno>
- 
+
 #include "securec.h"
 
 #include "file_check_utils.h"
@@ -63,6 +63,13 @@ void NdsFileDriver::UnInitialize()
         return;
     }
     NdsCloseFunc();
+    dlclose(ndsDriverDyLib);
+    ndsDriverDyLib = nullptr;
+    NdsOpenFunc = nullptr;
+    NdsCloseFunc = nullptr;
+    ndsRegisterFunc = nullptr;
+    ndsDeregisterFunc = nullptr;
+    ndsReadFunc = nullptr;
     ndsInited = false;
     ndsAvailable = false;
 }
@@ -76,45 +83,53 @@ int NdsFileDriver::InitNdsFileDriver() noexcept
         return -1;
     }
 
-    auto ndsDriverDyLib = dlopen(DPC_NDS_FILE, RTLD_LAZY | RTLD_LOCAL);
-    if (ndsDriverDyLib == nullptr) {
+    if (ndsDriverDyLib != nullptr) {
+        dlclose(ndsDriverDyLib);
+        ndsDriverDyLib = nullptr;
+    }
+
+    auto dyLib = dlopen(DPC_NDS_FILE, RTLD_LAZY | RTLD_LOCAL);
+    if (dyLib == nullptr) {
         LOG_WARN("dlopen occurs error, nds lib not found or glibc version is too low.");
         return -1;
     }
+
     do {
-        NdsOpenFunc = reinterpret_cast<NdsFileError_t (*)()>(dlsym(ndsDriverDyLib, "NdsFileDriverOpen"));
+        NdsOpenFunc = reinterpret_cast<NdsFileError_t (*)()>(dlsym(dyLib, "NdsFileDriverOpen"));
         if (NdsOpenFunc == nullptr) {
             break;
         }
-        NdsCloseFunc = reinterpret_cast<NdsFileError_t (*)()>(dlsym(ndsDriverDyLib, "NdsFileDriverClose"));
+        NdsCloseFunc = reinterpret_cast<NdsFileError_t (*)()>(dlsym(dyLib, "NdsFileDriverClose"));
         if (NdsCloseFunc == nullptr) {
             break;
         }
         ndsRegisterFunc = reinterpret_cast<NdsFileError_t (*)(NdsFileHandle_t * fh, NdsFileDescr_t * descr)>(
-            dlsym(ndsDriverDyLib, "NdsFileHandleRegister"));
+            dlsym(dyLib, "NdsFileHandleRegister"));
         if (ndsRegisterFunc == nullptr) {
             break;
         }
         ndsDeregisterFunc =
-            reinterpret_cast<void (*)(NdsFileHandle_t fh)>(dlsym(ndsDriverDyLib, "NdsFileHandleDeregister"));
+            reinterpret_cast<void (*)(NdsFileHandle_t fh)>(dlsym(dyLib, "NdsFileHandleDeregister"));
         if (ndsDeregisterFunc == nullptr) {
             break;
         }
         ndsReadFunc = reinterpret_cast<ssize_t (*)(NdsFileHandle_t fh, void *ptr_base, size_t size, off_t file_offset,
-            off_t ptr_offset)>(dlsym(ndsDriverDyLib, "NdsFileRead"));
+            off_t ptr_offset)>(dlsym(dyLib, "NdsFileRead"));
         if (ndsReadFunc == nullptr) {
             break;
         }
     } while (false);
     if (ndsReadFunc == nullptr) {
-        dlclose(ndsDriverDyLib);
+        dlclose(dyLib);
         NdsOpenFunc = nullptr;
         NdsCloseFunc = nullptr;
         ndsRegisterFunc = nullptr;
         ndsDeregisterFunc = nullptr;
-        LOG_WARN("ndsDriverDyLib dlopen symbol invalid.");
+        LOG_WARN("dyLib dlopen symbol invalid.");
         return -1;
     }
+
+    ndsDriverDyLib = dyLib;
     return 0;
 }
 

@@ -67,6 +67,7 @@ private:
     std::mutex ndsMutex;
     bool ndsInited = false;
     bool ndsAvailable = false;
+    void* ndsDriverDyLib = nullptr;
 
     std::unordered_map<int, NdsFileHandle_t> mNdsHandle;
 

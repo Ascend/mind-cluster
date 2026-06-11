@@ -127,6 +127,7 @@ RunTask *TimerExecutor::RemoveWaitingTask(uint64_t taskId) noexcept
     hashByIdTasks.erase(pos);
     if (task != nullptr) {
         timeOrderTasks.erase(std::make_pair(task->timeoutNs, task->taskId));
+        leftTaskCnt.fetch_sub(1U);
     }
 
     return task;
