@@ -32,8 +32,8 @@ RUN chown root:root /usr/local/bin/npu-exporter &&\
     chmod 500 /run_for_310P_1usoc.sh &&\
     chmod 550 /usr/local/bin/ &&\
     chmod 500 /usr/local/bin/npu-exporter &&\
-    chmod 440 /usr/local/metricConfiguration.json &&\
-    chmod 440 /usr/local/pluginConfiguration.json &&\
+    chmod 440 /user/mind-cluster/npu-exporter-config/metricConfiguration.json &&\
+    chmod 440 /user/mind-cluster/npu-exporter-config/pluginConfiguration.json &&\
     chmod 440 /usr/local/agreement.txt &&\
     echo 'umask 027' >> /etc/profile && \
     echo 'source /etc/profile' >> ~/.bashrc
