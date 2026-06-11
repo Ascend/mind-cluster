@@ -14,7 +14,7 @@
     - ClusterD
     - NodeD
 
-- 若没有安装，可以参考[安装部署](../../07_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
+- 若没有安装，可以参考[安装部署](../../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 
 **使用方式<a name="zh-cn_topic_0000001559979444_section91871616135119"></a>**
 
@@ -65,13 +65,13 @@
     >[!NOTE]
     >基础镜像中不包含推理模型、脚本等文件，因此，用户需要根据自己的需求进行定制化修改（如加入推理脚本代码、模型等）后才能使用。
 
-- （可选）如果用户需要更个性化的推理环境，可基于已下载的推理基础镜像，再[使用Dockerfile对其进行修改](../../06_references/common_operations.md#使用dockerfile构建容器镜像pytorch)。
+- （可选）如果用户需要更个性化的推理环境，可基于已下载的推理基础镜像，再[使用Dockerfile对其进行修改](../../07_references/common_operations.md#使用dockerfile构建容器镜像pytorch)。
 
     完成定制化修改后，用户可以给推理镜像重命名，以便管理和使用。
 
 **加固镜像<a name="zh-cn_topic_0000001609173557_zh-cn_topic_0000001558675566_section1294572963118"></a>**
 
-下载或者制作的推理基础镜像可以进行安全加固，提升镜像安全性，可参见[容器安全加固](../../06_references/security_hardening.md#容器安全加固)章节进行操作。
+下载或者制作的推理基础镜像可以进行安全加固，提升镜像安全性，可参见[容器安全加固](../../07_references/security_hardening.md#容器安全加固)章节进行操作。
 
 ### 脚本适配<a name="ZH-CN_TOPIC_0000002479227172"></a>
 

@@ -66,4 +66,4 @@ spec:
 >
 >- 如果一个PodGroup被创建，则spec中的调度配置将覆盖其生成的Pod上的labels/annotations配置。
 >- 对于可以生成PodGroup的资源，在PodGroup上配置对应的调度策略也可以实现亲和性调度能力。
->- 常用的Label与Annotation对照表请参见[PodGroup](../../../05_api/volcano.md#podgroup)/[Pod](../../../05_api/volcano.md#pod)。
+>- 常用的Label与Annotation对照表请参见[PodGroup](../../../06_api/volcano.md#podgroup)/[Pod](../../../06_api/volcano.md#pod)。

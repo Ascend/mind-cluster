@@ -202,12 +202,12 @@
 
 |操作步骤|操作说明|更多参考|
 |--|--|--|
-|[安装组件](#section1837511531098)|以Atlas 800T A2 训练服务器为例，手把手带您在昇腾设备上快速安装集群调度组件。|更多安装集群调度组件的参数说明和操作步骤，请参考[安装部署](../07_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节。|
+|[安装组件](#section1837511531098)|以Atlas 800T A2 训练服务器为例，手把手带您在昇腾设备上快速安装集群调度组件。|更多安装集群调度组件的参数说明和操作步骤，请参考[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节。|
 |[下发训练任务](#section106493419399)|以一个简单的PyTorch训练任务为例，让您快速了解训练任务下发的操作流程。|更多下发训练任务的参数说明和操作步骤，请参考[基础调度](../04_usage/basic_scheduling/00_feature_description.md)章节。|
 
 ### 安装组件<a name="section1837511531098"></a>
 
-以下步骤命令均以一台Atlas 800T A2 训练服务器为例，如需了解所有组件的详细安装步骤和参数说明请参见[安装](../07_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)。
+以下步骤命令均以一台Atlas 800T A2 训练服务器为例，如需了解所有组件的详细安装步骤和参数说明请参见[安装](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)。
 
 1. 创建节点标签。
 
@@ -243,41 +243,42 @@
         helm install mindcluster-crds mindcluster-crds-deploy-tool-*.tgz
         helm install mindcluster mindcluster-deploy-tool-*.tgz
         ```
-    3. 验证安装结果
+
+    3. 验证安装结果。
         1. helm安装回显如下，则安装成功。
 
-        ```ColdFusion
-        Release "mindcluster-crds" does not exist. Installing it now.
-        NAME: mindcluster-crds
-        LAST DEPLOYED: ...
-        NAMESPACE: mindx-dl
-        STATUS: deployed
-        REVISION: 1
-        TEST SUITE: None
-        ```
+            ```ColdFusion
+            Release "mindcluster-crds" does not exist. Installing it now.
+            NAME: mindcluster-crds
+            LAST DEPLOYED: ...
+            NAMESPACE: mindx-dl
+            STATUS: deployed
+            REVISION: 1
+            TEST SUITE: None
+            ```
 
-        ```ColdFusion
-        Release "mindcluster" does not exist. Installing it now.
-        NAME: mindcluster
-        LAST DEPLOYED: ...
-        NAMESPACE: mindx-dl
-        STATUS: deployed
-        REVISION: 1
-        TEST SUITE: None
-        ```
+            ```ColdFusion
+            Release "mindcluster" does not exist. Installing it now.
+            NAME: mindcluster
+            LAST DEPLOYED: ...
+            NAMESPACE: mindx-dl
+            STATUS: deployed
+            REVISION: 1
+            TEST SUITE: None
+            ```
 
         2. 验证组件是否正常运行，以NodeD组件为例。
 
-        ```shell
-        # 查看NodeD Pod状态
-        kubectl get pod -n mindx-dl
+            ```shell
+            # 查看NodeD Pod状态
+            kubectl get pod -n mindx-dl
 
-        # 预期输出
-        NAME                                  READY   STATUS    RESTARTS   AGE
-        ...
-        noded-694474f599-54w6b                1/1     Running   0          11s
-        ...
-        ```
+            # 预期输出
+            NAME                                  READY   STATUS    RESTARTS   AGE
+            ...
+            noded-694474f599-54w6b                1/1     Running   0          11s
+            ...
+            ```
 
 ### 下发训练任务<a name="section106493419399"></a>
 
@@ -289,6 +290,7 @@
     docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-pytorch:24.0.0-A2-2.1.0-ubuntu20.04
     docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-pytorch:24.0.0-A2-2.1.0-ubuntu20.04 ascend-pytorch:24.0.0-A2-2.1.0-ubuntu20.04
     ```
+
 2. 训练任务准备。
 
     1. 通过如下命令下载[PyTorch代码仓](https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/cv/classification/ResNet50_ID4149_for_PyTorch)中master分支的“ResNet50_ID4149_for_PyTorch”作为训练代码，并解压到“/data/atlas_dls/public/code/”路径下。
@@ -300,6 +302,7 @@
         unzip ResNet50_ID4149_for_PyTorch.zip
         mv ModelZoo-PyTorch-master-PyTorch-built-in-cv-classification-ResNet50_ID4149_for_PyTorch ResNet50_ID4149_for_PyTorch
         ```
+
     2. 自行准备ResNet-50对应的数据集，使用时请遵守对应规范，将数据集上传到“/data/atlas_dls/public/dataset/resnet50/imagenet”。
 
         ```shell
@@ -314,6 +317,7 @@
         cd /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
         wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/train_start.sh
         ```
+
     4. 通过如下命令获取[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库“samples/train/basic-training/without-ranktable/pytorch”目录下的“pytorch_standalone_acjob_quickstart.yaml”文件。示例默认为单机单卡任务。
 
         ```shell

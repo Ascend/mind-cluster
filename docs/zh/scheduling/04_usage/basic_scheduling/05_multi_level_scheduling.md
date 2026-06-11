@@ -4,7 +4,7 @@
 
 **前提条件<a name="section52051339787duoji"></a>**
 
-在命令行场景下使用多级调度特性前，需要确保已经安装如下组件，若没有安装，可以参考[安装部署](../../07_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。多级调度特性仅支持使用Volcano作为调度器，不支持使用其他调度器。
+在命令行场景下使用多级调度特性前，需要确保已经安装如下组件，若没有安装，可以参考[安装部署](../../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。多级调度特性仅支持使用Volcano作为调度器，不支持使用其他调度器。
 
 - Volcano
 - Ascend Device Plugin
@@ -270,7 +270,7 @@ Ascend Device Plugin组件会通过昇腾硬件驱动自动获取有效的节点
 
 #### YAML参数说明<a name="ZH-CN_TOPIC_000000251196386duoji"></a>
 
-本章节仅提供多级调度需要使用的YAML参数，详细的任务YAML参数说明请参见[acjob任务yaml参数说明](../../05_api/yaml_configuration.md#acjob)。
+本章节仅提供多级调度需要使用的YAML参数，详细的任务YAML参数说明请参见[acjob任务yaml参数说明](../../06_api/yaml_configuration.md#acjob)。
 
 **表 1**  YAML参数说明
 

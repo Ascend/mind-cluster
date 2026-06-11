@@ -144,7 +144,7 @@
 
     3. 按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
 
-6. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../06_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/inference/without-k8s/”目录下的启动脚本infer\_start.sh，放在节点目录“/data/atlas\_dls/public/infer/script/Qwen3-1.7B/”下，并对infer\_start.sh脚本进行编辑。
+6. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../07_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/inference/without-k8s/”目录下的启动脚本infer\_start.sh，放在节点目录“/data/atlas\_dls/public/infer/script/Qwen3-1.7B/”下，并对infer\_start.sh脚本进行编辑。
 
     1. 打开infer\_start.sh脚本。
 

@@ -8,7 +8,7 @@ Ascend Docker Runtime会为用户默认挂载驱动以及基础配置文件“/e
     cd /etc/ascend-docker-runtime.d/
     ```
 
-    该目录下已存在基础配置文件base.list，内容即Ascend Docker Runtime默认挂载内容，具体可参见[Ascend Docker Runtime默认挂载内容](../../06_references/appendix.md#ascend-docker-runtime默认挂载内容)，原则上不允许用户修改base.list文件。
+    该目录下已存在基础配置文件base.list，内容即Ascend Docker Runtime默认挂载内容，具体可参见[Ascend Docker Runtime默认挂载内容](../../07_references/appendix.md#ascend-docker-runtime默认挂载内容)，原则上不允许用户修改base.list文件。
 
 2. 创建新的配置文件，文件名可自定义（如hostlog.list）。
 

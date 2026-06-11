@@ -48,7 +48,7 @@
 
 启动命令相关参数如[表1](#table5134121862415)所示。
 
-容器启动后，可执行以下命令检查相应设备和驱动是否挂载成功，每台机型具体的挂载目录参考[Ascend Docker Runtime默认挂载内容](../../06_references/appendix.md#ascend-docker-runtime默认挂载内容)。命令示例如下：
+容器启动后，可执行以下命令检查相应设备和驱动是否挂载成功，每台机型具体的挂载目录参考[Ascend Docker Runtime默认挂载内容](../../07_references/appendix.md#ascend-docker-runtime默认挂载内容)。命令示例如下：
 
 ```shell
 ls /dev | grep davinci* && ls /dev | grep devmm_svm && ls /dev | grep hisi_hdc && ls /usr/local/Ascend/driver && ls /usr/local/ |grep dcmi && ls /usr/local/bin

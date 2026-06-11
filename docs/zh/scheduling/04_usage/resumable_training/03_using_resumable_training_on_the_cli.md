@@ -116,7 +116,7 @@
 
 [MindSpeed-LLM](https://gitcode.com/Ascend/MindSpeed-LLM/tree/2.3.0)作为昇腾大模型训练框架，旨在为昇腾芯片提供端到端的大语言模型训练方案，包含分布式预训练、分布式指令微调、分布式偏好对齐以及对应的开发工具链。[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/1.0.0/docs/USER_GUIDE.md)包括了仓库拉取、环境搭建与大模型训练等章节，制作MindSpeed-LLM训练框架镜像可以结合本章节和[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/1.0.0/docs/USER_GUIDE.md)。
 
-断点续训可以基于基础训练镜像制作，基础训练镜像的制作可参考[使用Dockerfile构建容器镜像（PyTorch）](../../06_references/common_operations.md#使用dockerfile构建容器镜像pytorch)章节进行操作。
+断点续训可以基于基础训练镜像制作，基础训练镜像的制作可参考[使用Dockerfile构建容器镜像（PyTorch）](../../07_references/common_operations.md#使用dockerfile构建容器镜像pytorch)章节进行操作。
 
 本章节结合基础训练镜像的制作步骤，展示基于Ubuntu 20.04来构建训练镜像。
 
@@ -458,7 +458,7 @@
 
 [MindSpore Transformers文档](https://www.mindspore.cn/mindformers/docs/zh-CN/r1.3.0/start/overview.html)的快速入门包括了安装与快速启动章节，可以在镜像制作时参考。
 
-训练镜像可以基于基础训练镜像，结合MindFormers文档自行制作，基础训练镜像的制作可参考[使用Dockerfile构建容器镜像（MindSpore）](../../06_references/common_operations.md#使用dockerfile构建容器镜像mindspore)章节进行操作。
+训练镜像可以基于基础训练镜像，结合MindFormers文档自行制作，基础训练镜像的制作可参考[使用Dockerfile构建容器镜像（MindSpore）](../../07_references/common_operations.md#使用dockerfile构建容器镜像mindspore)章节进行操作。
 
 本章节结合基础训练镜像的制作步骤，展示基于Ubuntu 20.04来构建训练镜像。
 
@@ -813,7 +813,7 @@
 >[!NOTE]
 >
 >- 为保证优雅容错与进程级在线恢复功能的正常使用，请将K8s集群master节点与worker节点的时钟保持一致。
->- 断点续训展示的组件代码为开源代码，其中涉及到相关安全说明请参见[安全说明](../../06_references/appendix.md#安全说明)。
+>- 断点续训展示的组件代码为开源代码，其中涉及到相关安全说明请参见[安全说明](../../07_references/appendix.md#安全说明)。
 >- 下文中模型示例代码可能与实际版本存在差异，请以实际版本代码为准。
 >- 模型的参数配置，根据模型仓的模型配置以实际情况来写。若修改不当，可能会引发不可预知的问题。
 >- 若训练过程中出现“Failed to bind the IP port. Reason: The IP address and port have been bound already”报错，可以按照如下进行配置，详情请参见《CANN 环境变量参考》中的“[HCCL_HOST_SOCKET_PORT_RANGE](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/envvar/envref_07_0143.html)”章节。
@@ -901,7 +901,7 @@
         >export LD_PRELOAD="/usr/local/lib/python3.10/dist-packages/scikit_learn.libs/libgomp-947d5fa1.so.1.0.0"
         >```
 
-5. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../06_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3”目录下的train\_start.sh文件，在管理节点构造成如下的目录结构。
+5. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../07_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3”目录下的train\_start.sh文件，在管理节点构造成如下的目录结构。
 
     ```text
     root@ubuntu:/data/atlas_dls/public/code/QWEN3_for_PyTorch_2.7_code/scripts#
@@ -949,7 +949,7 @@
             ```
 
             >[!NOTE]
-            >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../05_api/taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
+            >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../06_api/taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
 
         2. 在训练脚本中增加以下代码，拉起TaskD  Manager。
 
@@ -1069,7 +1069,7 @@
             ```
 
             >[!NOTE]
-            >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../05_api/taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
+            >manager.py文件中的参数详细说明请参见[def init\_taskd\_manager\(config:dict\) -\> bool:](../../06_api/taskd/04_taskd_manager_apis.md#def-init_taskd_managerconfigdict---bool)。
 
         2. 在训练脚本中增加以下代码拉起TaskD  Manager。在以下代码中，前两条语句的作用是将安装TaskD后libtaskd.so的路径配置到环境变量LD\_PRELOAD中。如果这两条语句配置不成功，可通过手动执行pip show taskd命令获取Location的值拼接上/taskd/python/cython\_api/libs/libtaskd.so，然后通过export设置。
 
