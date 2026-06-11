@@ -70,7 +70,7 @@ type FaultConfigList struct {
 // FaultResult represents the result of a fault check
 type FaultResult struct {
 	Fault   FaultConfig
-	HCA     string
+	Hca     string
 	Result  string
 	Details string
 }
@@ -140,7 +140,7 @@ func RunFaultChecks(config *FaultConfigList, hcas []string) []FaultResult {
 			result, details := runCheck(fault, hca)
 			results = append(results, FaultResult{
 				Fault:   fault,
-				HCA:     "",
+				Hca:     "",
 				Result:  result,
 				Details: details,
 			})
@@ -151,7 +151,7 @@ func RunFaultChecks(config *FaultConfigList, hcas []string) []FaultResult {
 			result, details := runCheck(fault, hca)
 			results = append(results, FaultResult{
 				Fault:   fault,
-				HCA:     hca,
+				Hca:     hca,
 				Result:  result,
 				Details: details,
 			})
@@ -202,7 +202,7 @@ func checkHcaPort(hca string) (string, string) {
 }
 
 func checkBondMember(hca string) (string, string) {
-	ethName := GetHCAEthName(hca)
+	ethName := GetHcaEthName(hca)
 	if ethName == "" {
 		return "false", fmt.Sprintf("cannot get eth name for hca %s", hca)
 	}
@@ -289,32 +289,24 @@ func checkDpuCardDrop(hca string) (string, string) {
 	return runShellFunction(FaultScriptPath, "check_dpu_card_drop", hca)
 }
 
-// LogFaults logs the detected faults at ERROR level
-func LogFaults(results []FaultResult) {
-	for _, result := range results {
-		if result.Result == "true" {
-			hcaLabel := result.HCA
-			if hcaLabel == "" {
-				hcaLabel = "GLOBAL"
-			}
-			hwlog.RunLog.Errorf("FAULT DETECTED: HCA=%s, Code=%s, Level=%s, Description=%s",
-				hcaLabel, result.Fault.FaultCode, result.Fault.FaultLevel, result.Fault.Description)
-			hwlog.RunLog.Errorf("Details: %s", result.Details)
-		}
-	}
-}
-
 // StartFaultDetection starts the fault detection loop
 // It periodically runs fault checks and sends results to the faultResultChan for reporting
-func StartFaultDetection(ctx context.Context, hcaList []string, faultDetectPeriod int) {
+// getHcaList is called on startup and whenever rediscoverCh signals to refresh the cached HCA list
+func StartFaultDetection(ctx context.Context, getHcaList func() []string, rediscoverCh <-chan struct{}, faultDetectPeriod int) {
 	ticker := time.NewTicker(time.Duration(faultDetectPeriod) * time.Second)
 	defer ticker.Stop()
+
+	hcaList := getHcaList()
+	hwlog.RunLog.Infof("Fault detection started with %d HCAs", len(hcaList))
 
 	for {
 		select {
 		case <-ctx.Done():
 			hwlog.RunLog.Info("Fault detection goroutine stopped")
 			return
+		case <-rediscoverCh:
+			hcaList = getHcaList()
+			hwlog.RunLog.Infof("HCA list refreshed, now has %d HCAs", len(hcaList))
 		case <-ticker.C:
 			hwlog.RunLog.Debug("Starting fault detection...")
 			config, err := LoadFaultConfig()
@@ -324,9 +316,6 @@ func StartFaultDetection(ctx context.Context, hcaList []string, faultDetectPerio
 			}
 
 			results := RunFaultChecks(config, hcaList)
-
-			LogFaults(results)
-
 			dpuCfg := BuildDPUInfoCfg(results)
 			// Non-blocking send to reporter goroutine
 			select {

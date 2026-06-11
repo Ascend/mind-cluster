@@ -35,8 +35,8 @@ function get_port_width_info() {
 		return
 	fi
 
-	cap=$(echo $link_line | grep -oP "(?<=cap 0x)[0-9a-fA-F]+")
-	cur=$(echo $link_line | grep -oP "(?<=cur 0x)[0-9a-fA-F]+")
+	cap=$(echo "$link_line" | grep -oP "width:\(cap 0x\K[0-9a-fA-F]+")
+	cur=$(echo "$link_line" | grep -oP "width:\(cap 0x[0-9a-fA-F]+,cur 0x\K[0-9a-fA-F]+")
 
 	cap_dec=$((16#$cap))
 	cur_dec=$((16#$cur))
@@ -62,7 +62,8 @@ function check_ub_port() {
 	port_down_list=""
 	down_count=0
 
-	ports=$(echo "$output" | grep -E "^ core" | awk '{print $4}')
+	ports=$(echo "$output" | grep -E "core.*port" | awk '{print $4}')
+	total_ports=$(echo "$ports" | wc -w)
 	for port in $ports; do
 		port_hex=$(echo $port | sed 's/port0x//')
 		port_num=$(echo $port | sed 's/port//')
@@ -74,7 +75,7 @@ function check_ub_port() {
 		fi
 	done
 
-	if [[ $down_count -ge 1 && $down_count -le 2 ]]; then
+	if [[ $down_count -eq $total_ports && $down_count -gt 0 ]]; then
 		result="true"
 	fi
 
@@ -103,7 +104,7 @@ function check_ub_lane() {
 	result="false"
 	lane_down_ports=""
 
-	ports=$(echo "$output" | grep -E "^ core" | awk '{print $4}')
+	ports=$(echo "$output" | grep -E "core.*port" | awk '{print $4}')
 	for port in $ports; do
 		port_hex=$(echo $port | sed 's/port0x//')
 		port_num=$(echo $port | sed 's/port//')

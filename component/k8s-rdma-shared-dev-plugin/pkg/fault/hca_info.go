@@ -36,9 +36,9 @@ var (
 	faultTimeCacheMu sync.Mutex
 )
 
-// HCAInfo represents basic information about an HCA device
-type HCAInfo struct {
-	HCA       string
+// HcaInfo represents basic information about an HCA device
+type HcaInfo struct {
+	Hca       string
 	State     string
 	PhysState string
 }
@@ -76,8 +76,8 @@ type DpuInfoCfg struct {
 	UpdateTime time.Time `json:"UpdateTime"`
 }
 
-// GetHCADeviceID retrieves the device ID of the specified HCA device
-func GetHCADeviceID(hca string) string {
+// GetHcaDeviceID retrieves the device ID of the specified HCA device
+func GetHcaDeviceID(hca string) string {
 	deviceID := ReadFile(filepath.Join(common.SysClassInfiniband, hca, "device/device"))
 	if deviceID != "" && !strings.HasPrefix(deviceID, "0x") {
 		deviceID = "0x" + deviceID
@@ -85,8 +85,8 @@ func GetHCADeviceID(hca string) string {
 	return deviceID
 }
 
-// GetHCAVendor retrieves the vendor ID of the specified HCA device
-func GetHCAVendor(hca string) string {
+// GetHcaVendor retrieves the vendor ID of the specified HCA device
+func GetHcaVendor(hca string) string {
 	vendor := ReadFile(filepath.Join(common.SysClassInfiniband, hca, "device/vendor"))
 	if vendor != "" && !strings.HasPrefix(vendor, "0x") {
 		vendor = "0x" + vendor
@@ -98,8 +98,8 @@ func getCurrentTimeMs() int64 {
 	return time.Now().UnixMilli()
 }
 
-// GetHCAEthName retrieves the Ethernet interface name associated with the specified HCA device
-func GetHCAEthName(hca string) string {
+// GetHcaEthName retrieves the Ethernet interface name associated with the specified HCA device
+func GetHcaEthName(hca string) string {
 	if ethName := getEthNameFromInfiniband(hca); ethName != "" {
 		return ethName
 	}
@@ -152,8 +152,8 @@ func getEthNameFromInfiniband(hca string) string {
 	return ""
 }
 
-// GetHCAIpAddr retrieves the IP address associated with the specified Ethernet interface
-func GetHCAIpAddr(ethName string) string {
+// GetHcaIpAddr retrieves the IP address associated with the specified Ethernet interface
+func GetHcaIpAddr(ethName string) string {
 	if ethName == "" {
 		return ""
 	}
@@ -216,18 +216,20 @@ func buildHcaFaultMap(results []FaultResult) map[string][]FaultDetail {
 	defer faultTimeCacheMu.Unlock()
 
 	for _, fr := range results {
-		if fr.HCA == "" || fr.Result != "true" {
+		if fr.Hca == "" || fr.Result != "true" {
 			continue
 		}
 
-		cacheKey := fmt.Sprintf("%s:%s", fr.HCA, fr.Fault.FaultCode)
+		cacheKey := fmt.Sprintf("%s:%s", fr.Hca, fr.Fault.FaultCode)
 		activeKeys[cacheKey] = true
 
 		detectTime, exists := faultTimeCache[cacheKey]
 		if !exists {
 			detectTime = getCurrentTimeMs()
 			faultTimeCache[cacheKey] = detectTime
-			hwlog.RunLog.Infof("New fault detected: HCA=%s, FaultCode=%s, Time=%d", fr.HCA, fr.Fault.FaultCode, detectTime)
+			hwlog.RunLog.Errorf("New fault detected: Hca=%s, Code=%s, Level=%s, Description=%s, Time=%d",
+				fr.Hca, fr.Fault.FaultCode, fr.Fault.FaultLevel, fr.Fault.Description, detectTime)
+			hwlog.RunLog.Errorf("Details: %s", fr.Details)
 		}
 
 		faultDetail := FaultDetail{
@@ -236,7 +238,7 @@ func buildHcaFaultMap(results []FaultResult) map[string][]FaultDetail {
 			Description: fr.Fault.Description,
 			FaultLevel:  fr.Fault.FaultLevel,
 		}
-		hcaFaultMap[fr.HCA] = append(hcaFaultMap[fr.HCA], faultDetail)
+		hcaFaultMap[fr.Hca] = append(hcaFaultMap[fr.Hca], faultDetail)
 	}
 
 	for cacheKey := range faultTimeCache {
@@ -252,27 +254,27 @@ func buildHcaBasicMap(results []FaultResult) map[string]hcaBasicInfo {
 	hcaBasicMap := make(map[string]hcaBasicInfo)
 
 	for _, fr := range results {
-		if fr.HCA == "" {
+		if fr.Hca == "" {
 			continue
 		}
 
-		if _, exists := hcaBasicMap[fr.HCA]; exists {
+		if _, exists := hcaBasicMap[fr.Hca]; exists {
 			continue
 		}
 
-		hcaBasicMap[fr.HCA] = buildHcaBasicInfo(fr.HCA)
+		hcaBasicMap[fr.Hca] = buildHcaBasicInfo(fr.Hca)
 	}
 
 	return hcaBasicMap
 }
 
 func buildHcaBasicInfo(hca string) hcaBasicInfo {
-	ethName := GetHCAEthName(hca)
+	ethName := GetHcaEthName(hca)
 	return hcaBasicInfo{
-		DeviceID: GetHCADeviceID(hca),
-		VendorID: GetHCAVendor(hca),
+		DeviceID: GetHcaDeviceID(hca),
+		VendorID: GetHcaVendor(hca),
 		EthName:  ethName,
-		IpAddr:   GetHCAIpAddr(ethName),
+		IpAddr:   GetHcaIpAddr(ethName),
 	}
 }
 
