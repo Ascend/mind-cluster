@@ -40,6 +40,7 @@ int DfsBackupInitiator::MultiCopyFileToUfs(uint64_t taskId, const std::string &p
     auto memfsFd = MemFsApi::OpenFile(path, O_RDONLY, 0);
     if (memfsFd < 0) {
         BKG_LOG_ERROR("open file(" << path.c_str() << ") failed(" << errno << " : " << strerror(errno) << ")");
+        MDogCloseFile(fd, false);
         return -1;
     }
 

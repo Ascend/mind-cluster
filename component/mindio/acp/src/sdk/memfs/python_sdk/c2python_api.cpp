@@ -197,12 +197,16 @@ int NdsReadableFile::Initialize() noexcept
     NdsFileError_t status = g_ndsDriver->RegisterHandler(fd);
     if (status.err != NDS_FILE_SUCCESS) {
         LOG_ERROR("[nds] Register handler fd: " << fd << " error:" << status.err);
+        close(fd);
+        fd = -1;
         return -1;
     }
 
     struct stat fileStat {};
     if (fstat(fd, &fileStat) != 0) {
         LOG_ERROR("[nds] Get file stat failed:" << errno << ":" << strerror(errno));
+        close(fd);
+        fd = -1;
         return -1;
     }
     fileSize = fileStat.st_size;

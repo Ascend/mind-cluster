@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "background_log.h"
 #include "backup_file_view.h"
 
 using namespace ock::bg::backup;
@@ -46,6 +47,10 @@ BackupFileView::~BackupFileView() noexcept
 
 bool BackupFileView::AddFile(const std::string &path, const FileMeta &meta, FileMeta &old) const noexcept
 {
+    if (viewBuckets == nullptr) {
+        BKG_LOG_DEBUG("The initialization of BackupFileView is incorrect, viewBuckets is nullptr.");
+        return false;
+    }
     auto hashCode = std::hash<std::string>{}(path);
     auto bucketIndex = (static_cast<uint32_t>(hashCode) & BUCKET_COUNT_MASK);
     auto &bucket = viewBuckets[bucketIndex];
@@ -66,6 +71,10 @@ bool BackupFileView::AddFile(const std::string &path, const FileMeta &meta, File
 
 bool BackupFileView::RemoveFile(const std::string &path, int64_t inode) const noexcept
 {
+    if (viewBuckets == nullptr) {
+        BKG_LOG_DEBUG("The initialization of BackupFileView is incorrect, viewBuckets is nullptr.");
+        return false;
+    }
     auto hashCode = std::hash<std::string>{}(path);
     auto bucketIndex = (static_cast<uint32_t>(hashCode) & BUCKET_COUNT_MASK);
     auto &bucket = viewBuckets[bucketIndex];
@@ -84,6 +93,10 @@ bool BackupFileView::RemoveFile(const std::string &path, int64_t inode) const no
 
 bool BackupFileView::GetFile(const std::string &path, FileMeta &meta) const noexcept
 {
+    if (viewBuckets == nullptr) {
+        BKG_LOG_DEBUG("The initialization of BackupFileView is incorrect, viewBuckets is nullptr.");
+        return false;
+    }
     auto hashCode = std::hash<std::string>{}(path);
     auto bucketIndex = (static_cast<uint32_t>(hashCode) & BUCKET_COUNT_MASK);
     auto &bucket = viewBuckets[bucketIndex];
@@ -102,6 +115,10 @@ bool BackupFileView::GetFile(const std::string &path, FileMeta &meta) const noex
 
 bool BackupFileView::UpdateFile(const std::string &path, int64_t expectInode, const FileMeta &meta) const noexcept
 {
+    if (viewBuckets == nullptr) {
+        BKG_LOG_DEBUG("The initialization of BackupFileView is incorrect, viewBuckets is nullptr.");
+        return false;
+    }
     auto hashCode = std::hash<std::string>{}(path);
     auto bucketIndex = (static_cast<uint32_t>(hashCode) & BUCKET_COUNT_MASK);
     auto &bucket = viewBuckets[bucketIndex];
@@ -120,6 +137,10 @@ bool BackupFileView::UpdateFile(const std::string &path, int64_t expectInode, co
 
 bool BackupFileView::RefreshBackupTime(const std::string &path, int64_t expectInode) const noexcept
 {
+    if (viewBuckets == nullptr) {
+        BKG_LOG_DEBUG("The initialization of BackupFileView is incorrect, viewBuckets is nullptr.");
+        return false;
+    }
     auto hashCode = std::hash<std::string>{}(path);
     auto bucketIndex = (static_cast<uint32_t>(hashCode) & BUCKET_COUNT_MASK);
     auto &bucket = viewBuckets[bucketIndex];
