@@ -151,7 +151,7 @@ func UpdateCache[T any](n *NpuCollector, cacheKey string, localCache *sync.Map) 
 	interval := GetCollectorInterval(cacheKey, defaultGroupInterval)
 	var ttl time.Duration
 	if interval == collectOnceInterval {
-		// For one-time collection, use a reasonable default TTL (10 minutes)
+		// means never overdue
 		ttl = -1
 	} else {
 		ttl = interval * 2

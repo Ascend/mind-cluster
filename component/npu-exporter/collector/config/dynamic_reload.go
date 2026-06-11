@@ -96,7 +96,11 @@ func handleFsEvent(ev fsnotify.Event, configDir string, reloadTimer **time.Timer
 	if !isRelevantEvent(ev, configDir) {
 		return
 	}
-	logger.Infof("detected config change: %s", ev.Name)
+	if filepath.Base(ev.Name) == "..data" {
+		logger.Infof("detected config change: ConfigMap update")
+	} else {
+		logger.Infof("detected config change: %s", ev.Name)
+	}
 	*reloadTimer = time.NewTimer(reloadDelay)
 }
 
@@ -120,14 +124,9 @@ func isRelevantEvent(ev fsnotify.Event, configDir string) bool {
 		return ev.Op&(fsnotify.Write|fsnotify.Create|fsnotify.Rename) != 0
 	}
 
-	// Case 2: ..data symlink Rename (K8s ConfigMap)
+	// Case 2: ..data symbol links Rename/Create
 	if baseName == "..data" {
-		return ev.Op&fsnotify.Rename != 0
-	}
-
-	// Case 3: Timestamp directory Create (K8s ConfigMap)
-	if len(baseName) > 2 && baseName[0] == '.' && baseName[1] != '.' {
-		return ev.Op&fsnotify.Create != 0
+		return ev.Op&(fsnotify.Rename|fsnotify.Create) != 0
 	}
 
 	return false

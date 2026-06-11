@@ -38,11 +38,10 @@ func init() {
 }
 
 const (
-	testConfigDir    = "/user/mind-cluster/npu-exporter-config"
-	testFileName     = "metricConfiguration.json"
-	testPluginFile   = "pluginConfiguration.json"
-	testDataSymlink  = "..data"
-	testTimestampDir = ".2026_06_09_08_30_00"
+	testConfigDir   = "/user/mind-cluster/npu-exporter-config"
+	testFileName    = "metricConfiguration.json"
+	testPluginFile  = "pluginConfiguration.json"
+	testDataSymlink = "..data"
 )
 
 // isRelevantEventCase is one table entry for testing isRelevantEvent.
@@ -77,14 +76,18 @@ func TestIsRelevantEventForK8sConfigMap(t *testing.T) {
 	cases := []isRelevantEventCase{
 		{name: "should return true when ..data symlink is renamed",
 			eventName: testDataSymlink, eventOp: fsnotify.Rename, expect: true},
-		{name: "should return true when timestamp directory is created",
-			eventName: testTimestampDir, eventOp: fsnotify.Create, expect: true},
+		{name: "should return true when ..data symlink is created",
+			eventName: testDataSymlink, eventOp: fsnotify.Create, expect: true},
 		{name: "should return false when ..data symlink is written",
 			eventName: testDataSymlink, eventOp: fsnotify.Write, expect: false},
-		{name: "should return false when ..data symlink is created",
-			eventName: testDataSymlink, eventOp: fsnotify.Create, expect: false},
-		{name: "should return false when timestamp directory is written",
-			eventName: testTimestampDir, eventOp: fsnotify.Write, expect: false},
+		{name: "should return false when ..data symlink is removed",
+			eventName: testDataSymlink, eventOp: fsnotify.Remove, expect: false},
+		{name: "should return false when ..data symlink is chmod",
+			eventName: testDataSymlink, eventOp: fsnotify.Chmod, expect: false},
+		{name: "should return false when timestamp directory is created",
+			eventName: "..2026_06_09_08_30_00", eventOp: fsnotify.Create, expect: false},
+		{name: "should return false when timestamp directory with double dot is created",
+			eventName: "..2026_06_11_16_35_44.3381415300", eventOp: fsnotify.Create, expect: false},
 	}
 	runIsRelevantEventCases(t, cases)
 }
@@ -191,14 +194,9 @@ func TestIsRelevantEventWhenBaseNamePatterns(t *testing.T) {
 		eventOp        fsnotify.Op
 		expectedResult bool
 	}{
-		{name: "should return true for dotfile starting with dot but not double dot",
+		{name: "should return false for dotfile starting with single dot",
 			baseName:       ".hidden",
 			eventOp:        fsnotify.Create,
-			expectedResult: true,
-		},
-		{name: "should return false for dotfile when operation is write",
-			baseName:       ".hidden",
-			eventOp:        fsnotify.Write,
 			expectedResult: false,
 		},
 		{name: "should return false for double dot directory",
@@ -206,9 +204,19 @@ func TestIsRelevantEventWhenBaseNamePatterns(t *testing.T) {
 			eventOp:        fsnotify.Create,
 			expectedResult: false,
 		},
-		{name: "should return false for ..data when operation is not rename",
+		{name: "should return true for ..data when operation is create",
 			baseName:       "..data",
 			eventOp:        fsnotify.Create,
+			expectedResult: true,
+		},
+		{name: "should return true for ..data when operation is rename",
+			baseName:       "..data",
+			eventOp:        fsnotify.Rename,
+			expectedResult: true,
+		},
+		{name: "should return false for ..data when operation is write",
+			baseName:       "..data",
+			eventOp:        fsnotify.Write,
 			expectedResult: false,
 		},
 	}

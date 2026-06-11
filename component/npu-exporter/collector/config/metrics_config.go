@@ -97,7 +97,7 @@ var (
 		buildDefaultConfig(groupHccs, stateOn, defaultIntervalSeconds),
 		buildDefaultConfig(groupPcie, stateOn, defaultIntervalSeconds),
 		buildDefaultConfig(groupVnpu, stateOn, defaultIntervalSeconds),
-		buildDefaultConfig(groupNodeBase, stateOn, defaultIntervalSeconds),
+		buildDefaultConfig(groupNodeBase, stateOn, maxIntervalSeconds),
 		// hccn_tool
 		buildDefaultConfig(groupRoce, stateOn, defaultIntervalSeconds),
 		buildDefaultConfig(groupOptical, stateOn, defaultIntervalSeconds),
