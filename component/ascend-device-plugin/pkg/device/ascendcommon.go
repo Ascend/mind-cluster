@@ -967,7 +967,7 @@ func (tool *AscendTools) getConfigAnno(podDev *common.PodDeviceInfo, deviceType,
 		DeviceType:  deviceType,
 		SuperPodID:  tool.GetSuperPodID(),
 		RackId:      tool.GetRackID(),
-		ServerIndex: string(tool.GetServerIndex()),
+		ServerIndex: fmt.Sprintf("%d", tool.GetServerIndex()),
 		ServerIP:    hostIp,
 	}
 	configuration := common.GetPodConfiguration(phyDevMapVirtualDev, ascendVisibleDevices,

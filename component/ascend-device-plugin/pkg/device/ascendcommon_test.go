@@ -1063,6 +1063,19 @@ func TestGetDevStatesDevSet(t *testing.T) {
 	})
 }
 
+func TestGetServerIndex(t *testing.T) {
+	convey.Convey("test GetServerIndex", t, func() {
+		tool := mockAscendTools()
+		convey.Convey("default serverIndex should be 0", func() {
+			convey.So(tool.GetServerIndex(), convey.ShouldEqual, int32(0))
+		})
+		convey.Convey("should return the value set by SetServerIndex", func() {
+			tool.SetServerIndex(3)
+			convey.So(tool.GetServerIndex(), convey.ShouldEqual, int32(3))
+		})
+	})
+}
+
 func mockAscendTools() AscendTools {
 	return AscendTools{name: api.Ascend910, client: &kubeclient.ClientK8s{}, dmgr: &devmanager.DeviceManagerMock{}}
 }
