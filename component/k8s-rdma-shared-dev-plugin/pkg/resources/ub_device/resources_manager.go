@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/vishvananda/netlink"
@@ -43,7 +44,8 @@ const (
 // UbResourceManager for UB device plugin
 type UbResourceManager interface {
 	types.ResourceManager
-	GetHCANames() []string
+	GetHcaNames() []string
+	GetHcaDiscoverChan() <-chan struct{}
 }
 
 // ubResourceManager implements UbResourceManager interface
@@ -52,6 +54,9 @@ type ubResourceManager struct {
 	deviceList     []*UbDeviceInfo
 	netlinkManager types.NetlinkManager
 	rds            types.RdmaDeviceSpec
+	rediscoverCh   chan struct{}
+	cachedHcaNames []string
+	hcaNamesMu     sync.RWMutex
 }
 
 // UbDeviceInfo holds information about a UB device
@@ -74,6 +79,7 @@ func NewUbResourceManager(configFile string, useCdi bool) UbResourceManager {
 		deviceList:          []*UbDeviceInfo{},
 		netlinkManager:      &netlinkManager{},
 		rds:                 newUbRdmaDeviceSpec(common.RequiredRdmaDevices),
+		rediscoverCh:        make(chan struct{}, 1),
 	}
 }
 
@@ -217,6 +223,7 @@ func (rm *ubResourceManager) GetDevices() []types.Device {
 
 // InitServers initializes the resource servers for UB devices
 func (rm *ubResourceManager) InitServers() error {
+	hcaNames := make([]string, 0)
 	for _, config := range rm.GetConfigList() {
 		hwlog.RunLog.Infof("UB Resource Config: %+v\n", config)
 		devices := rm.GetDevices()
@@ -224,10 +231,14 @@ func (rm *ubResourceManager) InitServers() error {
 		hwlog.RunLog.Infof("UB resource %s: total devices=%d, filtered devices=%d", config.ResourceName,
 			len(devices), len(filteredDevices))
 		for i, dev := range filteredDevices {
-			ubDev := dev.(types.UbDevice)
+			ubDev, ok := dev.(types.UbDevice)
+			if !ok {
+				continue
+			}
 			hwlog.RunLog.Debugf("filtered device[%d]: name=%s, deviceName=%s, vendor=%s, deviceID=%s, ifName=%s,"+
 				" linkType=%s", i, ubDev.GetName(), ubDev.GetDeviceName(), ubDev.GetVendor(), ubDev.GetDeviceID(),
 				ubDev.GetIfName(), ubDev.GetLinkType())
+			hcaNames = append(hcaNames, ubDev.GetDeviceName())
 		}
 
 		rm.setUbNicsUp(filteredDevices)
@@ -249,6 +260,9 @@ func (rm *ubResourceManager) InitServers() error {
 		}
 		rm.AddResourceServer(rs)
 	}
+	rm.hcaNamesMu.Lock()
+	rm.cachedHcaNames = hcaNames
+	rm.hcaNamesMu.Unlock()
 
 	return nil
 }
@@ -276,20 +290,17 @@ func (rm *ubResourceManager) GetFilteredDevices(devices []types.Device, selector
 	return core.GetFilteredDevices(devices, selector)
 }
 
-// GetHCANames returns all HCA names discovered from UB devices
-func (rm *ubResourceManager) GetHCANames() []string {
-	hcaNames := []string{}
-	for _, dev := range rm.deviceList {
-		infinibandDir := filepath.Join(common.SysBusUb, dev.UbID, "infiniband")
-		entries, err := os.ReadDir(infinibandDir)
-		if err != nil {
-			continue
-		}
-		for _, entry := range entries {
-			hcaNames = append(hcaNames, entry.Name())
-		}
-	}
-	return hcaNames
+// GetHcaDiscoverChan returns a channel that receives a signal when UB devices are re-discovered
+func (rm *ubResourceManager) GetHcaDiscoverChan() <-chan struct{} {
+	return rm.rediscoverCh
+}
+
+// GetHcaNames returns HCA names from UB devices filtered by configured selectors
+// Results are cached, initialized by InitServers and refreshed by runPeriodicUpdate
+func (rm *ubResourceManager) GetHcaNames() []string {
+	rm.hcaNamesMu.RLock()
+	defer rm.hcaNamesMu.RUnlock()
+	return rm.cachedHcaNames
 }
 
 // PeriodicUpdate returns a function that updates UB devices periodically
@@ -329,10 +340,26 @@ func (rm *ubResourceManager) runPeriodicUpdate(interval time.Duration, stopChan 
 
 			resourceServers := rm.GetResourceServers()
 			configList := rm.GetConfigList()
+			hcaNames := make([]string, 0)
 			for index, rs := range resourceServers {
 				devices := rm.GetDevices()
 				filteredDevices := rm.GetFilteredDevices(devices, &configList[index].Selectors)
 				rs.UpdateDevices(filteredDevices)
+				for _, dev := range filteredDevices {
+					ubDev, ok := dev.(types.UbDevice)
+					if !ok {
+						continue
+					}
+					hcaNames = append(hcaNames, ubDev.GetDeviceName())
+				}
+			}
+			rm.hcaNamesMu.Lock()
+			rm.cachedHcaNames = hcaNames
+			rm.hcaNamesMu.Unlock()
+
+			select {
+			case rm.rediscoverCh <- struct{}{}:
+			default:
 			}
 		case <-stopChan:
 			hwlog.RunLog.Info("Stopping periodic update for UB devices")

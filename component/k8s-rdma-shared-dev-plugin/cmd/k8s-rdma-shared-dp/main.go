@@ -226,47 +226,15 @@ func main() {
 		rm, stopPeriodicUpdate = initAndStartDevices("UB", func() types.ResourceManager {
 			return ub_device.NewUbResourceManager(configFilePath, useCdi)
 		})
+
+		if ubRm, ok := rm.(ub_device.UbResourceManager); ok {
+			startFaultDetection(ctx, ubRm, tempCoreManager.GetFaultDetectPeriod())
+		} else {
+			hwlog.RunLog.Error("Resource manager is not of type UbResourceManager, skipping fault detection")
+		}
 	}
 
 	hwlog.RunLog.Info("Enabled servers started.")
-
-	// Start fault detection with HCA list from discovered devices
-	var hcaList []string
-	faultDetectPeriod := 0
-
-	// Get HCA list and faultDetectPeriod from UB devices
-	if enableUb {
-		if ubRm, ok := rm.(ub_device.UbResourceManager); ok {
-			hcaList = ubRm.GetHCANames()
-			hwlog.RunLog.Infof("Fault detection HCA list from UB devices: %v", hcaList)
-		} else {
-			hwlog.RunLog.Warnf("Warning: Resource manager is not of type UbResourceManager, cannot get HCA names")
-		}
-	}
-
-	faultDetectPeriod = tempCoreManager.GetFaultDetectPeriod()
-	if faultDetectPeriod >= common.MinFaultDetectionPeriod {
-		hwlog.RunLog.Infof("Fault detection period configured: %d seconds", faultDetectPeriod)
-		hwlog.RunLog.Info("Fault detection started.")
-
-		// Initialize K8s clientset once at startup, reuse globally
-		k8sConfig, err := rest.InClusterConfig()
-		if err != nil {
-			hwlog.RunLog.Errorf("Failed to get in-cluster config for fault reporting: %v", err)
-		} else {
-			k8sClient, err := kubernetes.NewForConfig(k8sConfig)
-			if err != nil {
-				hwlog.RunLog.Errorf("Failed to create k8s client for fault reporting: %v", err)
-			} else {
-				// Start two separate goroutines: one for detection, one for reporting
-				// Both share the same ctx for lifecycle management
-				go fault.StartFaultDetection(ctx, hcaList, faultDetectPeriod)
-				go fault.StartFaultReporting(ctx, k8sClient)
-			}
-		}
-	} else {
-		hwlog.RunLog.Warnf("Fault detection disabled, period is set to %d, min period is %d", faultDetectPeriod, common.MinFaultDetectionPeriod)
-	}
 
 	hwlog.RunLog.Info("Listening for term signals")
 	hwlog.RunLog.Info("Starting OS watcher.")
@@ -324,4 +292,32 @@ func initAndStartDevices(deviceType string, createRm func() types.ResourceManage
 	}
 
 	return rm, rm.PeriodicUpdate()
+}
+
+func startFaultDetection(ctx context.Context, ubRm ub_device.UbResourceManager, faultDetectPeriod int) {
+	hwlog.RunLog.Infof("Fault detection HCA list from UB devices: %v", ubRm.GetHcaNames())
+
+	if faultDetectPeriod < common.MinFaultDetectionPeriod {
+		hwlog.RunLog.Warnf("Fault detection disabled, period %d below min %d",
+			faultDetectPeriod, common.MinFaultDetectionPeriod)
+		return
+	}
+
+	hwlog.RunLog.Infof("Fault detection period: %d seconds, starting...", faultDetectPeriod)
+
+	k8sConfig, err := rest.InClusterConfig()
+	if err != nil {
+		hwlog.RunLog.Errorf("Failed to get in-cluster config for fault reporting: %v", err)
+		return
+	}
+	k8sClient, err := kubernetes.NewForConfig(k8sConfig)
+	if err != nil {
+		hwlog.RunLog.Errorf("Failed to create k8s client for fault reporting: %v", err)
+		return
+	}
+
+	go fault.StartFaultDetection(ctx, func() []string {
+		return ubRm.GetHcaNames()
+	}, ubRm.GetHcaDiscoverChan(), faultDetectPeriod)
+	go fault.StartFaultReporting(ctx, k8sClient)
 }

@@ -37,6 +37,8 @@ const (
 	faultReporterNamespace = "kube-system"
 	cmNamePrefix           = "dpuinfo-"
 	dpuInfoCfgKey          = "DpuInfoCfg"
+	cmLabelKey             = "huawei.com/consumer.clusterd"
+	cmLabelValue           = "true"
 	forceUpdateInterval    = 5 * time.Minute
 )
 
@@ -83,8 +85,11 @@ func ReportToConfigMap(dpuCfg DpuInfoCfg) error {
 // Following the clusterd pattern: Create first, then Update if already exists
 func CreateOrUpdateConfigMap(cmName, cfgJSONStr string) error {
 	cm := &v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{Name: cmName},
-		Data:       map[string]string{dpuInfoCfgKey: cfgJSONStr},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   cmName,
+			Labels: map[string]string{cmLabelKey: cmLabelValue},
+		},
+		Data: map[string]string{dpuInfoCfgKey: cfgJSONStr},
 	}
 
 	cmClient := k8sClientset.CoreV1().ConfigMaps(faultReporterNamespace)
