@@ -1200,8 +1200,9 @@
 
 **强化学习后训练场景适配示例（基于Verl）<a name="section1335017512276"></a>**
 
-MindCluster仅支持Verl框架Job级别和Pod级别重调度，其中Pod级别重调度仅支持GRPO算法。Verl的训练任务被Ray集群所管理，为适配MindCluster的Ascend
-Job任务部署，每个Worker节点上部署一个Pod，Pod内承载该Ray集群上的所有进程。Ray集群的head节点为Master Pod，head节点启动Ray集群，其他Worker Pod启动后加入Ray集群，然后由head节点提交任务。
+MindCluster仅支持Verl框架Job级别和Pod级别重调度，其中Pod级别重调度仅支持GRPO算法。
+Verl的训练任务被Ray集群所管理，为适配MindCluster的Ascend Job任务部署，每个Worker节点上部署一个Worker Pod，Pod内承载该Ray集群上的所有进程。
+当前MindCluster支持Verl主控分离部署，Ray集群的head节点为Master Pod，head节点启动Ray集群，其他Worker Pod启动后加入Ray集群，然后由head节点提交任务。
 
 下面以两台Atlas 900 A3 SuperPoD 超节点为例，说明具体操作步骤。
 

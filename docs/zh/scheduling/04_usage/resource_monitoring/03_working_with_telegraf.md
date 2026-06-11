@@ -7,15 +7,8 @@
 >[!NOTE]
 >除了二进制集成外，集群调度支持通过修改NPU Exporter开源代码，集成Telegraf源码。
 
-1. （可选）如果没有创建NPU Exporter的日志目录，需要依次执行以下命令，创建日志目录。
-
-    ```shell
-    mkdir -m 750 /var/log/mindx-dl/npu-exporter
-    chown hwMindX:hwMindX /var/log/mindx-dl/npu-exporter
-    ```
-
-2. 从[昇腾社区](https://www.hiascend.com/zh/developer/download/community/result?module=dl+cann)获取NPU Exporter软件包，并从中解压出NPU Exporter二进制文件npu-exporter，并上传至环境任意路径（如“/home/npu\_plugin”）。
-3. 执行以下命令，创建npu\_plugin.conf文件。
+1. 从[昇腾社区](https://www.hiascend.com/zh/developer/download/community/result?module=dl+cann)获取NPU Exporter软件包，并从中解压出NPU Exporter二进制文件npu-exporter，并上传至环境任意路径（如“/home/npu\_plugin”）。
+2. 执行以下命令，创建npu\_plugin.conf文件。
 
     ```shell
     vi npu_plugin.conf
@@ -50,7 +43,7 @@
     |-deviceResetTimeout|int|60|组件启动时，若芯片数量不足，等待驱动上报完整芯片的最大时长，单位为秒，取值范围为10~600。<ul><li>Atlas A2 训练系列产品、Atlas 800I A2 推理服务器、A200I A2 Box 异构组件：建议配置为150秒。</li><li>Atlas A3 训练系列产品、A200T A3 Box8 超节点服务器、Atlas 800I A3 超节点服务器：建议配置为360秒。</li><li>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD：建议配置为600秒。</li></ul>|否|
     |-textMetricsFilePath|string|无|指定自定义指标文件的路径，其约束说明详细请参见[约束说明](../../05_api/npu_exporter/03_custom_metrics_file.md#约束说明)。|否|
 
-4. （可选）如果没有安装Telegraf，需执行以下步骤安装Telegraf。
+3. （可选）如果没有安装Telegraf，需执行以下步骤安装Telegraf。
     - **离线安装（推荐）**
         1. 进入[Telegraf下载页面](https://github.com/influxdata/telegraf/releases)。
         2. 选择需要安装的版本，完成下载，如：telegraf-1.34.3\_linux\_arm64.tar.gz。
@@ -72,7 +65,7 @@
 
         3. 拷贝弹框中的安装命令到待安装设备上，执行命令，完成安装。
 
-5. 执行以下命令，运行Telegraf。
+4. 执行以下命令，运行Telegraf。
     - 如使用离线安装，请执行以下命令运行Telegraf。
 
         ```shell
