@@ -64,8 +64,10 @@ var (
 	allFaultInfo           = make(chan npuCommon.DevFaultInfo, common.WriteEventChanLenLimit)
 	faultEventLimiter      = rate.NewLimiter(
 		rate.Every(time.Minute/common.WriteEventRateLimit), common.WriteEventRateLimit)
-	networkLimiterMap  = make(map[int32]*rate.Limiter, common.GeneralMapSize)
-	networkStatusCache = make(map[int32]networkStatus, common.GeneralMapSize)
+	networkLimiterMap          = make(map[int32]*rate.Limiter, common.GeneralMapSize)
+	networkStatusCache         = make(map[int32]networkStatus, common.GeneralMapSize)
+	withUBOEDevicesMainBoardID = sets.NewInt(api.Atlas950MainBoardID, api.Atlas9501DMainBoardID,
+		api.Atlas850MainBoardID, api.Atlas850MainBoardID2, api.Atlas850MainBoardID3)
 )
 
 const (
@@ -1708,8 +1710,7 @@ func (tool *AscendTools) HandleUBOELinkDownCheck(device *common.NpuDevice, devic
 	if device == nil {
 		return
 	}
-	serverPodIdList := sets.NewInt(api.Atlas950MainBoardID, api.Atlas9501DMainBoardID, api.Atlas850MainBoardID, api.Atlas850MainBoardID2, api.Atlas850MainBoardID3)
-	if !serverPodIdList.Has(int(tool.dmgr.GetMainBoardId())) {
+	if !tool.withUBOEDevice() {
 		return
 	}
 	_, errCodes, err := tool.dmgr.GetDeviceAllErrorCode(device.LogicID)
@@ -1818,7 +1819,12 @@ func (tool *AscendTools) generateNetworkFaultEventsBasedOnFaultCacheChange(devic
 
 func (tool *AscendTools) queryParameterPlaneStatusWithoutFaultCode(faultCodes []int64, device *common.NpuDevice) []int64 {
 	newFaultCodes := faultCodes
-	if len(faultCodes) != 0 || common.WithoutParameterPlane() {
+	// Some scene which is not necessary to query the network status:
+	// 1. A fault code that is not empty means that a fault event can be obtained.
+	// 2. 310 series equipment without parameter plane
+	// 3. A5 series equipment without UBOE Device
+	if len(faultCodes) != 0 || common.WithoutParameterPlane() ||
+		(tool.dmgr.GetDevType() == api.Ascend910A5 && !tool.withUBOEDevice()) {
 		return newFaultCodes
 	}
 	linkStatus := tool.getParameterPlaneStatusCache(device.PhyID)
@@ -1909,4 +1915,8 @@ func getUboeNetworkStatus(phyID int32) networkStatus {
 		upPortsNum: upCnt,
 	}
 	return networkStatusCache[phyID]
+}
+
+func (tool *AscendTools) withUBOEDevice() bool {
+	return withUBOEDevicesMainBoardID.Has(int(tool.dmgr.GetMainBoardId()))
 }

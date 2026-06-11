@@ -1857,6 +1857,58 @@ func TestGetDeviceListIP(t *testing.T) {
 	})
 }
 
+func TestWithUBOEDevice(t *testing.T) {
+	convey.Convey("test withUBOEDevice", t, func() {
+		convey.Convey("return true when main board id is Atlas950MainBoardID", func() {
+			patches := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+				"GetMainBoardId", uint32(api.Atlas950MainBoardID))
+			defer patches.Reset()
+			tools := mockAscendTools()
+			convey.So(tools.withUBOEDevice(), convey.ShouldBeTrue)
+		})
+
+		convey.Convey("return true when main board id is Atlas9501DMainBoardID", func() {
+			patches := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+				"GetMainBoardId", uint32(api.Atlas9501DMainBoardID))
+			defer patches.Reset()
+			tools := mockAscendTools()
+			convey.So(tools.withUBOEDevice(), convey.ShouldBeTrue)
+		})
+
+		convey.Convey("return true when main board id is Atlas850MainBoardID", func() {
+			patches := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+				"GetMainBoardId", uint32(api.Atlas850MainBoardID))
+			defer patches.Reset()
+			tools := mockAscendTools()
+			convey.So(tools.withUBOEDevice(), convey.ShouldBeTrue)
+		})
+
+		convey.Convey("return true when main board id is Atlas850MainBoardID2", func() {
+			patches := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+				"GetMainBoardId", uint32(api.Atlas850MainBoardID2))
+			defer patches.Reset()
+			tools := mockAscendTools()
+			convey.So(tools.withUBOEDevice(), convey.ShouldBeTrue)
+		})
+
+		convey.Convey("return true when main board id is Atlas850MainBoardID3", func() {
+			patches := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+				"GetMainBoardId", uint32(api.Atlas850MainBoardID3))
+			defer patches.Reset()
+			tools := mockAscendTools()
+			convey.So(tools.withUBOEDevice(), convey.ShouldBeTrue)
+		})
+
+		convey.Convey("return false when main board id is not in UBOE set", func() {
+			patches := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
+				"GetMainBoardId", uint32(0xFF))
+			defer patches.Reset()
+			tools := mockAscendTools()
+			convey.So(tools.withUBOEDevice(), convey.ShouldBeFalse)
+		})
+	})
+}
+
 func TestHandleUBOELinkDownCheck(t *testing.T) {
 	tools := mockAscendTools()
 
