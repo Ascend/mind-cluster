@@ -20,6 +20,7 @@
     - BMC日志
     - LCNE日志
     - Bus日志
+    - PyMotor/vLLM日志
 
 ## 日志路径映射关系<a name="section1246617719225"></a>
 

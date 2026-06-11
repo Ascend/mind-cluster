@@ -60,6 +60,13 @@
             |-- npu_7_details.csv       # NPU网口统计监测指标文件
             |-- npu_info_before/after.txt  # 训练及推理前或后NPU环境检查文件
             |-- host_metrics_{core_num}.json # 主机资源监测指标文件
+        |-- pymotor_vllm_log            # PyMotor/vLLM日志
+            |-- 20260606_142020         # 时间戳目录
+                |-- mindie-motor-controller-6db947f75f-t6l9n_node-97-37.log     # MindIE-PyMotor Controller日志
+                |-- mindie-motor-controller-cddf4dc94-ml7lx_node-97-37.log      # MindIE-PyMotor Controller日志
+                |-- mindie-motor-coordinator-f977fb6d9-nr2l9_node-97-40.log     # MindIE-PyMotor Coordinator日志
+                |-- vllm-d0-cbf7496f5-qc255_node-97-40.log                      # vLLM D日志
+                |-- vllm-p0-5fd4ff6c94-2fzmq_node-97-42.log                     # vLLM P日志
         ```
 
     - BMC侧日志目录结构如下所示。
@@ -386,6 +393,36 @@
         <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>采集目录/lcne/*/log.log</p>
         </td>
         </tr>
+        <tr><td class="cellrowborder" rowspan="4" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p>MPyMotor/vLLM日志</p>
+        </td>
+        <td class="cellrowborder" valign="top" width="21.26%" headers="mcps1.2.5.1.2 "><p>mindie-motor-controller-*.log</p>
+        </td>
+        <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p>MindIE-PyMotor Controller日志</p>
+        </td>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>采集目录/pymotor_vllm_log/<em>{time}</em>/mindie-motor-controller-*.log</p>
+        </td>
+        </tr>
+        <tr><td class="cellrowborder" valign="top" width="21.26%" headers="mcps1.2.5.1.2 "><p>mindie-motor-coordinator-*.log</p>
+        </td>
+        <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p>MindIE-PyMotor Coordinator日志</p>
+        </td>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>采集目录/pymotor_vllm_log/<em>{time}</em>/mindie-motor-coordinator-*.log</p>
+        </td>
+        </tr>
+        <tr><td class="cellrowborder" valign="top" width="21.26%" headers="mcps1.2.5.1.2 "><p>vllm-d0-*.log</p>
+        </td>
+        <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p>vLLM D日志</p>
+        </td>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>采集目录/pymotor_vllm_log/<em>{time}</em>/vllm-d0-*.log</p>
+        </td>
+        </tr>
+        <tr><td class="cellrowborder" valign="top" width="21.26%" headers="mcps1.2.5.1.2 "><p>vllm-p0-*.log</p>
+        </td>
+        <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p>vLLM P日志</p>
+        </td>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>采集目录/pymotor_vllm_log/<em>{time}</em>/vllm-p0-*.log</p>
+        </td>
+        </tr>
         </tbody>
         </table>
 
@@ -452,6 +489,11 @@
            |-- amct_{framework}.log
     |-- ${--bus_log参数指定路径}
            |-- log.log
+    |-- ${--pymotor_vllm_log参数指定路径}
+           |-- pymotor_vllm_log/{time}/mindie-motor-controller-*.log
+           |-- pymotor_vllm_log/{time}/mindie-motor-coordinator-*.log
+           |-- pymotor_vllm_log/{time}/vllm-d0-*.log
+           |-- pymotor_vllm_log/{time}/vllm-p0-*.log
     ```
 
     <a name="table192794861215"></a>
@@ -718,6 +760,36 @@
     <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p>Ascend 950代际LCNE组件日志</p>
     </td>
     <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>${--bus_log}/lcne/*/log.log</p>
+    </td>
+    </tr>
+    <tr><td class="cellrowborder" rowspan="4" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p>PyMotor/vLLM日志</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="21.26%" headers="mcps1.2.5.1.2 "><p>mindie-motor-controller-*.log</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p>MindIE-PyMotor Controller日志</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>${--pymotor_vllm_log}/pymotor_vllm_log/<em>{time}</em>/mindie-motor-controller-*.log</p>
+    </td>
+    </tr>
+    <tr><td class="cellrowborder" valign="top" width="21.26%" headers="mcps1.2.5.1.2 "><p>mindie-motor-coordinator-*.log</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p>MindIE-PyMotor Coordinator日志</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>${--pymotor_vllm_log}/pymotor_vllm_log/<em>{time}</em>/mindie-motor-coordinator-*.log</p>
+    </td>
+    </tr>
+    <tr><td class="cellrowborder" valign="top" width="21.26%" headers="mcps1.2.5.1.2 "><p>vllm-d0-*.log</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p>vLLM D日志</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>${--pymotor_vllm_log}/pymotor_vllm_log/<em>{time}</em>/vllm-d0-*.log</p>
+    </td>
+    </tr>
+    <tr><td class="cellrowborder" valign="top" width="21.26%" headers="mcps1.2.5.1.2 "><p>vllm-p0-*.log</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p>vLLM P日志</p>
+    </td>
+    <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>${--pymotor_vllm_log}/pymotor_vllm_log/<em>{time}</em>/vllm-p0-*.log</p>
     </td>
     </tr>
     </tbody>
@@ -2700,3 +2772,15 @@ Ascend 950代际LCNE组件运行时，会产生相关日志文件。
 
 - 方式一：进入Ascend 950代际1213后台，在“/opt/vrpv8/home/logfile”目录下获取log.log日志。
 - 方式二：进入Ascend 950代际1213前台，执行<b>collect diagnostic information</b>命令采集日志后，从Ascend 950代际1213后台的“/opt/vrpv8/home/logfile”目录下获取diagnostic_information_*.zip压缩日志文件。需要手动解压所有压缩日志。
+
+### PyMotor/vLLM日志
+
+**文件说明**
+
+- 文件说明：MindIE-PyMotor、vLLM、vLLM-Ascend运行产生的日志。
+- 命名约束：mindie-motor-controller-\*.log、mindie-motor-coordinator-\*.log、vllm-d0-\*.log、vllm-p0-\*.log
+- 存放路径约束：存储到“采集目录/pymotor_vllm_log/<i>{时间戳目录}</i>/”下。
+
+**采集方式说明**
+
+MindIE-PyMotor部署完成后，会自动启动MindIE-PyMotor、vLLM和vLLM-Ascend日志的收集，MindIE-PyMotor部署详细请参见[MindIE-PyMotor部署](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/service_deployment/pd_disaggregation_deployment.md#%E6%89%A7%E8%A1%8C%E9%83%A8%E7%BD%B2%EF%BC%88deploypy%EF%BC%89)。

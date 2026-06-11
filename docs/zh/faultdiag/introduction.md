@@ -83,7 +83,7 @@ MindCluster Ascend FaultDiag的使用流程如下表所示。
 
 全量应用场景方案以下图为例，用户需要在所有训练或推理设备中安装MindCluster Ascend FaultDiag组件，当训练或推理任务结束后，每台设备需要收集上述所有日志及指标数据信息，然后使用MindCluster Ascend FaultDiag的清洗功能进行过滤、提取有效信息，最后将所有设备的原始日志及指标信息和清洗结果转储到AI集群运维平台，平台使用MindCluster Ascend FaultDiag的诊断功能分析故障根因。同时，支持用户自定义故障实体或对CANN应用类日志中的ERROR报错信息进行屏蔽。
 
-**图 1**  全量应用场景方案<a name="fig21091944182810"></a>  
+**图 1**  全量应用场景方案<a name="fig21091944182810"></a>
 ![](../figures/faultdiag/全量应用场景方案.png "全量应用场景方案")
 
 在全量场景中，待采集日志及指标数据信息对应的数据来源以及数据用途如[表1](#table7211162233417)所示。
@@ -107,6 +107,7 @@ MindCluster Ascend FaultDiag的使用流程如下表所示。
 |AMCT组件日志|AMCT进行模型压缩流程产生的日志|模型压缩|用于AMCT工具故障事件分析|
 |MindIE Pod控制台日志|MindIE Pod控制台日志|推理任务|用于根因节点分析|
 |MindIO组件日志|MindIO组件产生的日志|训练&推理任务|用于故障事件分析|
+|PyMotor/vLLM日志|MindIE-PyMotor、vLLM和vLLM-Ascend产生的日志|推理任务|用于故障事件分析|
 
 >[!NOTE]
 >所有日志及指标数据对应的采集方法参见[日志采集](./user_guide/03_collecting_logs.md)章节。
@@ -117,7 +118,7 @@ MindCluster Ascend FaultDiag的使用流程如下表所示。
 
 基础应用场景方案如下图所示，用户需要在所有训练或推理设备中安装MindCluster Ascend FaultDiag组件。当训练或推理任务结束后，每台设备需要至少收集训练或推理日志和CANN应用类日志，然后使用MindCluster Ascend FaultDiag的清洗功能过滤、提取有效信息，最后将所有设备的原始日志和清洗结果转储到同一通用设备上，用户使用MindCluster Ascend FaultDiag的诊断功能分析故障根因。同时，支持用户自定义故障实体或对CANN应用类日志中的ERROR报错信息进行屏蔽。
 
-**图 2**  基础应用场景方案<a name="fig3750917713"></a>  
+**图 2**  基础应用场景方案<a name="fig3750917713"></a>
 ![](../figures/faultdiag/基础应用场景方案.png "基础应用场景方案")
 
 待采集日志及指标数据信息对应的数据来源以及数据用途如下表所示。

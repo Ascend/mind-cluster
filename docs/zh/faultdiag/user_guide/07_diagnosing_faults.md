@@ -15,6 +15,10 @@
         ```
 
         诊断训练任务异常退出问题，回显示例如下：
+        >[!NOTE]
+        >当未找到对端设备时，不同产品形态的根因节点链展示不同：
+        >- Atlas A2/A3 系列产品：展示对端设备IP。
+        >- Ascend 950代际产品：展示对端设备EID。
 
         ```ColdFusion
         The diag job starts. Please wait. Job id: [****], run log file is [****].
