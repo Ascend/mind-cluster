@@ -43,7 +43,7 @@ from ascend_fd.utils.regular_table import (
     ERROR_CQE_A5,
     ERROR_CQE_A5_SPLIT,
 )
-from ascend_fd.utils.tool import safe_write_open, SHOW_LINES_NUM, get_log_module_and_time, safe_read_line
+from ascend_fd.utils.tool import safe_write_open, SHOW_LINES_NUM, get_log_module_and_time, safe_read_open
 from ascend_fd.utils.net_tools import IPAddress
 from ascend_fd.utils.comm_valid import process_device_id
 from ascend_fd.pkg.parse.blacklist.blacklist_op import BlackListManager
@@ -131,14 +131,21 @@ class PidFileParser:
             self._parse_line(line, module, log_time)
 
     def _parse_file(self, file_path: str):
+        """
+        Parse a file of one pid
+        """
         if not os.path.isfile(file_path):
             return
-        for line in safe_read_line(file_path):
-            try:
-                module, log_time = get_log_module_and_time(line)
-            except IndexError:
-                continue  # If error, mean the log format is incorrect. Skip this line
-            self._parse_line(line, module, log_time)
+        with safe_read_open(file_path, "r", encoding="UTF-8") as file_stream:
+            while True:
+                line = file_stream.readline()
+                if not line:
+                    break
+                try:
+                    module, log_time = get_log_module_and_time(line)
+                except IndexError:
+                    continue  # If error, mean the log format is incorrect. Skip this line
+                self._parse_line(line, module, log_time)
 
     def _parse_line(self, line, module, log_time):
         """
