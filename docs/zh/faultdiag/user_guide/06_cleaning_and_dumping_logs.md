@@ -1,6 +1,6 @@
 # 日志清洗与转储<a name="ZH-CN_TOPIC_0000001541788946"></a>
 
->[!NOTE] 
+>[!NOTE]
 >
 >- 清洗命令指定的输出目录磁盘空间需大于5G，空间不足可能导致部分清洗结果丢失，进而导致诊断结果异常或不准确。
 >- MindCluster Ascend FaultDiag在清洗时会读取用户采集的日志文件及监测指标文件，请用户自行确认目录中无敏感信息，避免信息泄露。
@@ -75,7 +75,7 @@
             |-- ascend-docker-runtime              # Ascend Docker Runtime组件日志
             |-- volcano-scheduler              # Volcano中的volcano-scheduler组件日志
             |-- volcano-controller              # Volcano中的volcano-controller组件日志
-        
+
             |-- npu-exporter              # NPU Exporter组件日志
             |-- ttp_log                   # MindIO组件日志
         |-- mindie               # MindIE组件日志
@@ -90,10 +90,17 @@
              ...
             |-- npu_smi_7_details.csv   # NPU状态监测指标文件
             |-- npu_0_details.csv       # NPU网口统计监测指标文件
-             ...    
+             ...
             |-- npu_7_details.csv       # NPU网口统计监测指标文件
             |-- npu_info_before/after.txt  # 训练前或后NPU网口
             |-- host_metrics_{core_num}.json # 主机资源监测指标文件
+        |-- pymotor_vllm_log            # PyMotor/vLLM日志
+            |-- 20260606_142020         # 时间戳目录
+                |-- mindie-motor-controller-6db947f75f-t6l9n_node-97-37.log     # MindIE-PyMotor Controller日志
+                |-- mindie-motor-controller-cddf4dc94-ml7lx_node-97-37.log      # MindIE-PyMotor Controller日志
+                |-- mindie-motor-coordinator-f977fb6d9-nr2l9_node-97-40.log     # MindIE-PyMotor Coordinator日志
+                |-- vllm-d0-cbf7496f5-qc255_node-97-40.log                      # vLLM D日志
+                |-- vllm-p0-5fd4ff6c94-2fzmq_node-97-42.log                     # vLLM P日志
         ```
 
     - BMC及LCNE侧：
@@ -105,7 +112,7 @@
         ascend-fd parse --bmc_log 解压后的单节点BMC日志目录 -o 清洗结果输出目录
         ```
 
-        >[!NOTE] 
+        >[!NOTE]
         >- 使用CCAE进行日志收集，可参考[灵衢日志采集](https://support.huawei.com/hedex/hdx.do?docid=EDOC1100485430&id=ZH-CN_TOPIC_0000002240474597)。
         >- 使用Computing Toolkit进行日志收集，可参考[《Computing Toolkit 用户指南》](https://support.huawei.com/carrier/productNewOffering?col=product&path=PBI1-262732867/PBI1-262735884/PBI1-261914673/PBI1-264314551)\>使用Computing Toolkit\>日志收集\>使用指导\>服务器（BMC）、IES、SWITCH日志收集。
 
@@ -132,7 +139,7 @@
     清洗输出目录结构：
 
     ```text
-    └── 清洗输出目录 
+    └── 清洗输出目录
        ├── ascend-kg-parser.json        # 故障事件分析清洗结果，推理引擎输入文件
        ├── ascend-kg-analyzer.json      # 故障事件分析清洗结果
        ├── ascend-rc-parser.json        # 根因节点分析清洗结果
@@ -152,8 +159,8 @@
     将每台服务器的清洗输出目录下所有文件进行集中转储，转储目录结构如下。
 
     ```text
-    诊断输入目录        
-        |--清洗输出目录1 
+    诊断输入目录
+        |--清洗输出目录1
            |--plog-parser-{pid}-{0/1}.log        # 根因节点分析清洗后日志，包括error、trace等关键信息，按Pid分别保存
            |--nic_clean.csv                      # 网络拥塞清洗输出结果
            |--nad_clean.csv                      # 计算降频清洗输出结果
@@ -162,25 +169,25 @@
            |--device_ip_info.json                # 设备IP信息
            |--ascend-kg-parser.json              # 故障事件分析清洗结果，推理引擎输入文件
            |--ascend-kg-analyzer.json            # 故障事件分析清洗结果
-           |--ascend-rc-parser.json              # 根因节点分析清洗结果   
-           |--mindie-cluster-info.json           # MindIE Pod控制台日志清洗结果 
-           |--server-info.json                   # MindIE组件日志清洗结果 
-                   
+           |--ascend-rc-parser.json              # 根因节点分析清洗结果
+           |--mindie-cluster-info.json           # MindIE Pod控制台日志清洗结果
+           |--server-info.json                   # MindIE组件日志清洗结果
+
         |--清洗输出目录2
-           |--plog-parser-{pid}-{0/1}.log        
-           |--nic_clean.csv  
-           |--nad_clean.csv  
-           |--mem_used.csv  
+           |--plog-parser-{pid}-{0/1}.log
+           |--nic_clean.csv
+           |--nad_clean.csv
+           |--mem_used.csv
            |--process_{core_num}.csv
            |--device_ip_info.json
            |--ascend-kg-parser.json
-           |--ascend-kg-analyzer.json               
+           |--ascend-kg-analyzer.json
            |--ascend-rc-parser.json
            |--server-info.json                   ...
         |--清洗输出目录n
     ```
 
->[!NOTE] 
+>[!NOTE]
 >
 >- 清洗输出目录的名称建议修改为能标识出设备节点信息的目录名，例如：host1-192.168.x.x。
 >- MindIE Pod控制台日志清洗结果仅需在一个节点内存储即可。
