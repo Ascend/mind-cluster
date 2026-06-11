@@ -29,6 +29,7 @@ from ascend_fd.pkg.parse.parser_saver import (
     DlLogSaver,
     AMCTLogSaver,
     MindieLogSaver,
+    PyMotorVLLMLogSaver,
     ParsedDataSaver,
     CustomLogSaver,
 )
@@ -71,6 +72,7 @@ class ParseCFG:
     bmc_log_saver: BMCLogSaver = None
     lcne_log_saver: LCNELogSaver = None
     custom_log_saver: CustomLogSaver = None
+    pymotor_vllm_log_saver: PyMotorVLLMLogSaver = None
 
     @property
     def is_sdk_input(self):

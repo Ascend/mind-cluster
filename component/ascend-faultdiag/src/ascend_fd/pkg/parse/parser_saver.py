@@ -1641,3 +1641,43 @@ class CustomLogSaver(BaseLogSaver):
             matched_info = MatchedCustomInfo(sdk_custom_log_map=self.log_map)
             self.custom_info_list.append(matched_info)
         return self.custom_info_list
+
+
+class PyMotorVLLMLogSaver(BaseLogSaver):
+    """
+    Saver for PyMotor + vLLM logs from shared log directory.
+
+    Collects both vllm-*.log (vLLM + PyMotor NodeManager/EngineServer)
+    and mindie-motor-*.log (PyMotor controller/coordinator) files.
+    """
+
+    LOG_TYPE = "pymotor_vllm log"
+    CENTRALIZED_STORAGE_DIRECTORY = "pymotor_vllm_log"
+    CMD_ARG_KEYS = ["pymotor_vllm_log"]
+
+    def __init__(self):
+        super().__init__()
+        self.pymotor_vllm_log_list = []
+
+    def filter_log(self, file_dir: str):
+        """
+        Filter vLLM and PyMotor log files from shared directory.
+        :param file_dir: directory containing vllm-*.log and mindie-motor-*.log
+        """
+        if not file_dir or not os.path.isdir(file_dir):
+            return
+        for root, _, files in safe_walk(file_dir):
+            for filename in files:
+                if re.match(regular_table.VLLM_FILENAME_PATTERN, filename) or re.match(
+                    regular_table.PYMOTOR_FILENAME_PATTERN, filename
+                ):
+                    self.pymotor_vllm_log_list.append(os.path.join(root, filename))
+
+    def get_pymotor_vllm_log_list(self):
+        """
+        Get list of PyMotor/vLLM log file paths.
+        :return: list of file paths
+        """
+        if self.is_sdk_input:
+            return self.log_map.get(regular_table.PYMOTOR_VLLM_SOURCE, [])
+        return self.pymotor_vllm_log_list

@@ -46,6 +46,7 @@ from ascend_fd.pkg.parse.knowledge_graph.parser.volcano_parser import VolcanoSch
 from ascend_fd.pkg.parse.knowledge_graph.parser.common_dl_parser import DockerRuntimeParser, NpuExporterParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.amct_log_parser import AMCTLogParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.mindie_parser import MindieParser
+from ascend_fd.pkg.parse.knowledge_graph.parser.pymotor_vllm_parser import PyMotorVLLMParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.lcne_parser import LCNEParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.bmc_parser import (
     BMCParser,
@@ -160,6 +161,7 @@ class PackageParser:
                 NpuExporterParser,
                 AMCTLogParser,
                 MindieParser,
+                PyMotorVLLMParser,
                 CustomLogParser,
                 BusParser,
                 MindIOLogParser,
