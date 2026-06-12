@@ -34,6 +34,7 @@ public:
         int32_t condInitRet = pthread_cond_init(&condTimeChecker, &cattr);
         int32_t mutexInitRet = pthread_mutex_init(&timeCheckerMutex, nullptr);
         if (attrInitRet || setLockRet || condInitRet || mutexInitRet) {
+            pthread_condattr_destroy(&cattr);
             return TTP_ERROR;
         }
         return TTP_OK;

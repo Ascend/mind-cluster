@@ -50,17 +50,17 @@ bool AccDataBuffer::AllocIfNeed(uint32_t newSize) noexcept
 
     if (data_ == nullptr) {
         memSize_ = std::max(memSize_, newSize);
-        data_ = static_cast<uint8_t *>(malloc(memSize_));
+        data_ = new (std::nothrow) uint8_t[memSize_];
         return data_ != nullptr;
     }
 
     if (newSize > memSize_) {
         /* free old and malloc new one */
-        free(data_);
+        delete[] data_;
         data_ = nullptr;
 
         memSize_ = std::max(memSize_, newSize);
-        data_ = static_cast<uint8_t *>(malloc(memSize_));
+        data_ = new (std::nothrow) uint8_t[memSize_];
         return data_ != nullptr;
     }
 
