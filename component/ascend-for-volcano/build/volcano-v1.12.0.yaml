@@ -4471,10 +4471,10 @@ rules:
     verbs: ["get", "list", "watch", "create", "delete", "update"]
   - apiGroups: ["scheduling.incubator.k8s.io", "scheduling.volcano.sh"]
     resources: ["queues/status"]
-    verbs: ["update"]
+    verbs: ["update", "patch"]
   - apiGroups: ["scheduling.incubator.k8s.io", "scheduling.volcano.sh"]
-    resources: ["podgroups"]
-    verbs: ["list", "watch", "update"]
+    resources: ["podgroups", "podgroups/status"]
+    verbs: ["list", "watch", "update", "patch"]
   - apiGroups: ["nodeinfo.volcano.sh"]
     resources: ["numatopologies"]
     verbs: ["get", "list", "watch", "delete"]
@@ -4631,7 +4631,6 @@ spec:
               - ALL
             runAsNonRoot: true
       volumes:
-        volumes:
         - name: scheduler-config
           configMap:
             defaultMode: 0004

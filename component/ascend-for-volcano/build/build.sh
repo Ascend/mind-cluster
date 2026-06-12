@@ -103,10 +103,16 @@ function replace_klog_version() {
 }
 
 function replace_node_predicate() {
-    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
-    sed -i "s/api.NodeInfo) error {/api.NodeInfo) (\[\]\*api.Status, error) {/g" "$REPLACE_FILE"
-    sed -i "s/return predicateErr/return \[\]\*api.Status{}, predicateErr/g" "$REPLACE_FILE"
-}
+ 	     REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
+ 	     # Change closure signature from error to ([]*api.Status, error)
+ 	     sed -i "s/api.NodeInfo) error {/api.NodeInfo) (\[\]\*api.Status, error) {/g" "$REPLACE_FILE"
+ 	     # Change convertToNPUFitError return type from error to ([]*api.Status, error)
+ 	     sed -i "s/predicateErr error) error {/predicateErr error) (\[\]\*api.Status, error) {/g" "$REPLACE_FILE"
+ 	     # Change return predicateErr to return []*api.Status{}, predicateErr in convertToNPUFitError
+ 	     sed -i "s/return predicateErr/return \[\]\*api.Status{}, predicateErr/g" "$REPLACE_FILE"
+ 	     # Change return nil to return nil, nil in the addPredicateFn closure
+ 	     sed -i '/predicateFn.*passed/,/return nil/s/return nil/return nil, nil/' "$REPLACE_FILE"
+ 	 }
 
 function replace_node_score() {
     REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/actions/allocate/allocate.go"
