@@ -366,7 +366,7 @@ spec:
     >- “dp\_size”需要为“podGroupSize”的整数倍。
     >- 当“dp\_size”设置为“1”时，“distributed\_dp”只能为“false”，大于“1”时才能设置为“true”。
 
-8. （可选）创建任务名称空间，vllm-test为“config/stormservice-config.yaml”设置的“app\_namespace”。如果“app\_namespace”为“default”或未设置，可以不创建名称空间。
+8. （可选）创建任务命名空间，vllm-test为“config/stormservice-config.yaml”设置的“app\_namespace”。如果“app\_namespace”为“default”或未设置，可以不创建命名空间。
 
     ```shell
     kubectl create ns vllm-test

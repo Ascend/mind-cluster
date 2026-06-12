@@ -278,7 +278,7 @@ spec:
     2. 按“i”进入编辑模式，按实际情况修改文件中的字段。
     3. 按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
 
-6. （可选）创建任务名称空间。"xxx"为“config/isvc-config.yaml”设置的“app\_namespace”。如果“app\_namespace”为“default”或未设置，可以不创建名称空间。
+6. （可选）创建任务命名空间。"xxx"为“config/isvc-config.yaml”设置的“app\_namespace”。如果“app\_namespace”为“default”或未设置，可以不创建命名空间。
 
     ```shell
     kubectl create ns xxx
