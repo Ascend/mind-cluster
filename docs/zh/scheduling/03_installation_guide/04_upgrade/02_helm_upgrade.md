@@ -14,7 +14,7 @@
     - NodeD
     - NPU Exporter
     - Infer Operator
-- 升级Ascend Docker Runtime、Container Manager、TaskD和MindIO组件请参考[手动升级](../../07_developer_guide/installation_deployment/01_upgrade.md#ZH-CN_TOPIC_0000002479226452)章节操作。
+- 升级Ascend Docker Runtime、Container Manager、TaskD和MindIO组件请参考[手动升级](../../05_developer_guide/installation_deployment/01_upgrade.md#ZH-CN_TOPIC_0000002479226452)章节操作。
 
 ## 升级前准备<a name="section_helm_upgrade_prepare"></a>
 1. 在管理节点安装helm命令<a name="zh-cn_centerIC_0000002511346381_install_prepare_helm"></a>。若环境中已经存在helm 3.x版本，可以跳过此步骤。
