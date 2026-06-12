@@ -462,6 +462,11 @@ AccResult AccTcpSslHelper::CertVerify(X509 *cert)
 
     // The length of the private key of the verification certificate
     EVP_PKEY* pkey = OpenSslApiWrapper::X509GetPubkey(cert);
+    if (pkey == nullptr) {
+        LOG_ERROR("Failed to get public key from certificate");
+        return ACC_ERROR;
+    }
+
     int keyLength = OpenSslApiWrapper::EvpPkeyBits(pkey);
     if (keyLength < MIN_PRIVATE_KEY_CONTENT_BIT_LEN) {
         LOG_ERROR("Certificate key length is too short, key length < " << MIN_PRIVATE_KEY_CONTENT_BIT_LEN);
