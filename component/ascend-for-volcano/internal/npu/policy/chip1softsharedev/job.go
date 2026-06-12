@@ -60,11 +60,6 @@ func (tp *chip1softsharedev) checkSoftShareDevResource(reqResource softShareDevR
 		return fmt.Errorf("%s check share device job(%s) valid failed, aicoreQuota: %v not in range [1,100]",
 			tp.GetPluginName(), tp.Name, reqResource.aicoreQuota)
 	}
-	if tp.ReqNPUNum/tp.NPUTaskNum != reqResource.aicoreQuota {
-		return fmt.Errorf("%s check share device job(%s) valid failed, aicoreQuota: %v not equal to "+
-			"tp.ReqNPUNum/tp.NPUTaskNum: %v", tp.GetPluginName(), tp.Name, reqResource.aicoreQuota,
-			tp.ReqNPUNum/tp.NPUTaskNum)
-	}
 	if reqResource.hbmQuota < util.MinHbmQuota {
 		return fmt.Errorf("%s check share device job(%s) valid failed, hbmQuota: %v less than 1",
 			tp.GetPluginName(), tp.Name, reqResource.hbmQuota)
