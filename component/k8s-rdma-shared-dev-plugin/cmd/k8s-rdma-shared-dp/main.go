@@ -46,6 +46,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
+	"ascend-common/common-utils/healthz"
 	"ascend-common/common-utils/hwlog"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/fault"
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources"
@@ -84,6 +85,9 @@ var (
 	version = "master@git"
 	commit  = "unknown commit"
 	date    = "unknown date"
+
+	// Healthz config - will be initialized in initFlags() after FlagSet replacement
+	hzFlags *healthz.Config
 )
 
 func printVersionString() string {
@@ -93,6 +97,9 @@ func printVersionString() string {
 func initFlags() {
 	// Init command line flags to clear vendor packages' flags, especially in init()
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+
+	// Register healthz flags after replacing FlagSet to avoid losing them
+	hzFlags = healthz.RegisterFlags()
 
 	// Bind both -version and -v to the same variable
 	flag.BoolVar(&versionOpt, "version", false, "Show application version")
@@ -171,6 +178,11 @@ func main() {
 	defer cancel()
 
 	if err := initLogModule(ctx); err != nil {
+		return
+	}
+
+	if err := hzFlags.Serve(ctx); err != nil {
+		hwlog.RunLog.Errorf("failed to start healthz server: %v", err)
 		return
 	}
 
