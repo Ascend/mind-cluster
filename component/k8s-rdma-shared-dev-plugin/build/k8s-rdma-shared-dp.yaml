@@ -85,6 +85,18 @@ spec:
         - image: k8s-rdma-shared-dp:v26.0.0
           name: k8s-rdma-shared-dp-ds
           imagePullPolicy: IfNotPresent
+          command: [ "/bin/bash", "-c", "--" ]
+          args: [ "k8s-rdma-shared-dp -config-file=/k8s-rdma-shared-dev-plugin/config.json
+                  -logFile=/var/log/mindx-dl/k8s-rdma-shared-dp/k8s-rdma-shared-dp.log -logLevel=0 --enable-healthz=true --healthz-address=11257" ]
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 11257
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
           securityContext:
             privileged: true
             readOnlyRootFilesystem: true

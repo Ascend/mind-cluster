@@ -35,4 +35,4 @@ RUN chmod 550 /usr/local/bin/k8s-rdma-shared-dp &&\
     echo 'umask 027' >> /etc/profile &&\
     echo 'source /etc/profile' >> ~/.bashrc
 
-ENTRYPOINT ["/bin/bash", "-c", "cat /usr/local/agreement.txt; exec /usr/local/bin/k8s-rdma-shared-dp"]
+ENTRYPOINT ["/bin/bash", "-c", "cat /usr/local/agreement.txt; exec /bin/bash"]

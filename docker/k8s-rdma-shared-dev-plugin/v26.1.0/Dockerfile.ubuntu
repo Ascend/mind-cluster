@@ -36,4 +36,4 @@ WORKDIR /etc/rdma-plugin
 
 LABEL io.k8s.display-name="RDMA Shared Device Plugin"
 
-ENTRYPOINT ["/bin/bash", "-c", "cat /usr/local/agreement.txt; exec /usr/local/bin/k8s-rdma-shared-dp"]
+ENTRYPOINT ["/bin/bash", "-c", "cat /usr/local/agreement.txt; exec /bin/bash"]
