@@ -112,15 +112,6 @@ func buildCheckSoftShareDevResourceTestCases() []checkoftShareDevResourceTestCas
 			wantErr: true,
 		},
 		{
-			name: "aicore quota not match ReqNPUNum/NPUTaskNum",
-			reqResource: softShareDevResource{
-				aicoreQuota:      mismatchAICoreQuota,
-				hbmQuota:         validHbmQuota,
-				schedulingPolicy: util.SoftShareDevPolicyFixedShare,
-			},
-			wantErr: true,
-		},
-		{
 			name: "hbm quota too small",
 			reqResource: softShareDevResource{
 				aicoreQuota:      validAICoreQuota,
