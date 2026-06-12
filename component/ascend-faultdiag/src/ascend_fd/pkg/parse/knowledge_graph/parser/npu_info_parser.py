@@ -814,6 +814,16 @@ class IpInfoParser(GeneralInfoParser):
         detail_func=None,
     )
 
+    _IP_FAULT_HINT = (
+        "执行以下命令无结果：\n"
+        "IPv4: /usr/local/Ascend/driver/tools/hccn_tool -i ${device id} -ip -g\n"
+        "IPv6: /usr/local/Ascend/driver/tools/hccn_tool -i ${device id} -ip -inet6 -g\n"
+        "预期执行示例：\n"
+        "IPv4:\nipaddr:*.*.*.*\nnetmask:*.*.*.*\n"
+        "IPv6:\nipv6_address:*::*\nprefix_length:*"
+    )
+    MATCH_LEN = 3
+
     def __init__(self, end_time: str):
         super().__init__(end_time)
 
@@ -855,47 +865,40 @@ class IpInfoParser(GeneralInfoParser):
 
     def _contrast_ip_info(self, ip_info_list: list) -> list:
         """
-        Check the consistency of the first three segments of ip address and netmask
-        :param ip_info_list: list of ip info dict
-        :return: event list
+        Validate each card's IP and enforce cross-card IP version uniformity.
+        Rule: if any card has IPv4 → all must have IPv4; else if any has IPv6 → all must have IPv6.
+        Cards without a valid IP under the dominant version get a single 'missing' event.
         """
-        MATCH_LEN = 3
         ip_events = []
-        if not ip_info_list:
-            return ip_events
-        define_key_info = (
-            "执行以下命令无结果：\n"
-            "IPv4: /usr/local/Ascend/driver/tools/hccn_tool -i ${device id} -ip -g\n"
-            "IPv6: /usr/local/Ascend/driver/tools/hccn_tool -i ${device id} -ip -inet6 -g\n"
-            "预期执行示例：\n"
-            "IPv4:\nipaddr:*.*.*.*\nnetmask:*.*.*.*\n"
-            "IPv6:\nipv6_address:*::*\nprefix_length:*"
-        )
+        npu_ids = {ip_info.get("npu_id", "Unknown") for ip_info in ip_info_list}
+        card_ipv4 = {npu_id: False for npu_id in npu_ids}
+        card_ipv6 = {npu_id: False for npu_id in npu_ids}
         for ip_info in ip_info_list:
-            detail_info = ip_info.get("detail_info")
             npu_id = ip_info.get("npu_id", "Unknown")
-            if not detail_info or len(detail_info[0]) != MATCH_LEN:
-                ip_events.append(self._create_ip_fault_event(npu_id, define_key_info))
+            detail_info = ip_info.get("detail_info")
+            if not detail_info or len(detail_info[0]) != self.MATCH_LEN:
                 continue
-            match_result = detail_info[0]
-            ipv4_addr, ipv6_addr, mask_or_prefix = match_result[0], match_result[1], match_result[2]
-            valid_ipv4 = IPAddress.is_ipv4(ipv4_addr)
-            valid_ipv6 = IPAddress.is_ipv6(ipv6_addr)
-            if not (valid_ipv4 or valid_ipv6):
-                invalid_addr = ipv4_addr or ipv6_addr
-                addr_type = "IPv6" if ipv6_addr and not ipv4_addr else "IP"
-                ip_events.append(
-                    self._create_ip_fault_event(
-                        npu_id, f"Invalid {addr_type} address configured for device {npu_id}: {invalid_addr}"
-                    )
-                )
-            elif valid_ipv4 and not IPAddress.is_valid_ip(mask_or_prefix):
-                ip_events.append(
-                    self._create_ip_fault_event(
-                        npu_id, f"Invalid netmask configured for device {npu_id}: {mask_or_prefix}"
-                    )
-                )
+            ipv4_addr, ipv6_addr, mask_or_prefix = detail_info[0]
+            if IPAddress.is_ipv4(ipv4_addr):
+                card_ipv4[npu_id] = True
+                if not IPAddress.is_valid_ip(mask_or_prefix):
+                    ip_events.append(self._create_ip_fault_event(npu_id, f"Invalid netmask: {mask_or_prefix}"))
+            if IPAddress.is_ipv6(ipv6_addr):
+                card_ipv6[npu_id] = True
+
+        any_v4, any_v6 = any(card_ipv4.values()), any(card_ipv6.values())
+        for npu_id, has_v4 in card_ipv4.items():
+            if any_v4 and not has_v4:
+                ip_events.append(self._create_ip_fault_event(npu_id, self._missing_ip_msg(npu_id, "IPv4")))
+            elif not any_v4 and any_v6 and not card_ipv6[npu_id]:
+                ip_events.append(self._create_ip_fault_event(npu_id, self._missing_ip_msg(npu_id, "IPv6")))
+            elif not any_v4 and not any_v6:
+                ip_events.append(self._create_ip_fault_event(npu_id, self._IP_FAULT_HINT))
         return ip_events
+
+    @staticmethod
+    def _missing_ip_msg(npu_id: str, ip_version: str) -> str:
+        return f"Device {npu_id} missing {ip_version} (other cards have {ip_version})"
 
 
 class VersionInfoParser(GeneralInfoParser):

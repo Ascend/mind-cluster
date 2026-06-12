@@ -622,7 +622,7 @@ class TestContrastIpInfo(unittest.TestCase):
         self.assertEqual(len(events), 1)
         self.assertEqual(events[0]["event_code"], IP_NOT_CONFIG_FAULT)
         self.assertEqual(events[0]["source_device"], "0")
-        self.assertIn("Invalid IP address configured", events[0]["key_info"])
+        self.assertIn("hccn_tool", events[0]["key_info"])
 
     def test_invalid_ipv4_netmask_generates_event(self):
         parser = self._create_parser()
@@ -634,7 +634,7 @@ class TestContrastIpInfo(unittest.TestCase):
         self.assertEqual(len(events), 1)
         self.assertEqual(events[0]["event_code"], IP_NOT_CONFIG_FAULT)
         self.assertEqual(events[0]["source_device"], "1")
-        self.assertIn("Invalid netmask configured", events[0]["key_info"])
+        self.assertIn("Invalid netmask", events[0]["key_info"])
 
     def test_invalid_ipv6_address_generates_event(self):
         parser = self._create_parser()
@@ -646,7 +646,7 @@ class TestContrastIpInfo(unittest.TestCase):
         self.assertEqual(len(events), 1)
         self.assertEqual(events[0]["event_code"], IP_NOT_CONFIG_FAULT)
         self.assertEqual(events[0]["source_device"], "2")
-        self.assertIn("Invalid IPv6 address configured", events[0]["key_info"])
+        self.assertIn("hccn_tool", events[0]["key_info"])
 
     def test_empty_detail_info_generates_event_with_ipv6_cmd(self):
         parser = self._create_parser()
@@ -680,10 +680,133 @@ class TestContrastIpInfo(unittest.TestCase):
         ]
         events = parser._contrast_ip_info(ip_info_list)
 
-        self.assertEqual(len(events), 2)
         event_sources = [e["source_device"] for e in events]
+        self.assertIn("1", event_sources)
         self.assertIn("2", event_sources)
         self.assertIn("3", event_sources)
+        missing_events = [e for e in events if "missing" in e["key_info"]]
+        self.assertEqual(len(missing_events), 3)
+
+    def test_cross_card_all_ipv4_consistent(self):
+        parser = self._create_parser()
+        ip_info_list = [
+            {"npu_id": "0", "detail_info": [("192.168.1.1", "", "255.255.255.0")]},
+            {"npu_id": "1", "detail_info": [("10.0.0.1", "", "255.255.0.0")]},
+            {"npu_id": "2", "detail_info": [("172.16.0.1", "", "255.255.0.0")]},
+        ]
+        events = parser._contrast_ip_info(ip_info_list)
+        self.assertEqual(events, [])
+
+    def test_cross_card_all_ipv6_consistent(self):
+        parser = self._create_parser()
+        ip_info_list = [
+            {"npu_id": "0", "detail_info": [(None, "2001:db8::1", "64")]},
+            {"npu_id": "1", "detail_info": [(None, "fe80::1", "64")]},
+        ]
+        events = parser._contrast_ip_info(ip_info_list)
+        self.assertEqual(events, [])
+
+    def test_cross_card_ipv4_priority_card2_missing_ipv4(self):
+        parser = self._create_parser()
+        ip_info_list = [
+            {"npu_id": "0", "detail_info": [("127.0.0.1", "", "255.255.255.0")]},
+            {"npu_id": "1", "detail_info": [("", "127::1", "128")]},
+        ]
+        events = parser._contrast_ip_info(ip_info_list)
+        missing_events = [e for e in events if "missing IPv4" in e["key_info"]]
+        self.assertEqual(len(missing_events), 1)
+        self.assertEqual(missing_events[0]["source_device"], "1")
+
+    def test_cross_card_only_ipv6_card2_missing_ipv6(self):
+        parser = self._create_parser()
+        ip_info_list = [
+            {"npu_id": "0", "detail_info": [("", "fe80::1", "64")]},
+            {"npu_id": "1", "detail_info": [("", "", "")]},
+        ]
+        events = parser._contrast_ip_info(ip_info_list)
+        missing_events = [e for e in events if "missing IPv6" in e["key_info"]]
+        self.assertEqual(len(missing_events), 1)
+        self.assertEqual(missing_events[0]["source_device"], "1")
+
+    def test_cross_card_both_have_ipv4_and_ipv6_no_missing(self):
+        parser = self._create_parser()
+        ip_info_list = [
+            {"npu_id": "0", "detail_info": [("192.168.1.1", "2001:db8::1", "255.255.255.0")]},
+            {"npu_id": "1", "detail_info": [("10.0.0.1", "fe80::1", "255.255.0.0")]},
+        ]
+        events = parser._contrast_ip_info(ip_info_list)
+        self.assertEqual(events, [])
+
+    def test_cross_card_empty_addr_no_valid_ips_anywhere(self):
+        parser = self._create_parser()
+        ip_info_list = [
+            {"npu_id": "0", "detail_info": [("", "", "")]},
+            {"npu_id": "1", "detail_info": [("", "", "")]},
+        ]
+        events = parser._contrast_ip_info(ip_info_list)
+        hint_events = [e for e in events if "hccn_tool" in e["key_info"]]
+        self.assertEqual(len(hint_events), 2)
+
+    def _make_ip_info(self, npu_id, ipv4_addr, ipv6_addr, mask="255.255.255.0"):
+        return {"npu_id": str(npu_id), "detail_info": [(ipv4_addr, ipv6_addr, mask)]}
+
+    def _make_empty(self, npu_id):
+        return {"npu_id": str(npu_id)}
+
+    def test_ipv4_all_ok_ipv6_missing_no_event(self):
+        data = [self._make_ip_info(i, f"10.0.{i}.1", "") for i in range(4)]
+        events = self._create_parser()._contrast_ip_info(data)
+        self.assertEqual(events, [])
+
+    def test_ipv4_bad_card_ipv6_missing_reports_bad(self):
+        data = [
+            self._make_ip_info(0, "10.0.0.1", ""),
+            self._make_ip_info(1, "not_an_ip", ""),
+            self._make_ip_info(2, "10.0.0.3", ""),
+        ]
+        events = self._create_parser()._contrast_ip_info(data)
+        bad = [e for e in events if e["source_device"] == "1" and "missing IPv4" in e["key_info"]]
+        self.assertEqual(len(bad), 1)
+
+    def test_ipv4_missing_ipv6_all_ok_no_event(self):
+        data = [self._make_ip_info(i, "", f"2001:db8::{i}") for i in range(3)]
+        events = self._create_parser()._contrast_ip_info(data)
+        self.assertEqual(events, [])
+
+    def test_ipv4_missing_ipv6_bad_reports_bad(self):
+        data = [
+            self._make_ip_info(0, "", "fe80::1"),
+            self._make_ip_info(1, "", "bad_ipv6"),
+            self._make_ip_info(2, "", "fe80::2"),
+        ]
+        events = self._create_parser()._contrast_ip_info(data)
+        bad = [e for e in events if e["source_device"] == "1" and "missing IPv6" in e["key_info"]]
+        self.assertEqual(len(bad), 1)
+
+    def test_mixed_both_ok_no_event(self):
+        data = [
+            self._make_ip_info(0, "10.0.0.1", "2001:db8::1"),
+            self._make_ip_info(1, "10.0.0.2", "fe80::1"),
+        ]
+        events = self._create_parser()._contrast_ip_info(data)
+        self.assertEqual(events, [])
+
+    def test_mixed_ipv4_bad_ipv6_ok_reports_bad(self):
+        data = [
+            self._make_ip_info(0, "10.0.0.1", "2001:db8::1"),
+            self._make_ip_info(1, "bad_ip", "fe80::1"),
+        ]
+        events = self._create_parser()._contrast_ip_info(data)
+        bad = [e for e in events if e["source_device"] == "1" and "missing IPv4" in e["key_info"]]
+        self.assertEqual(len(bad), 1)
+
+    def test_mixed_ipv4_ok_ipv6_bad_no_event(self):
+        data = [
+            self._make_ip_info(0, "10.0.0.1", "2001:db8::1"),
+            self._make_ip_info(1, "10.0.0.2", "bad_ipv6"),
+        ]
+        events = self._create_parser()._contrast_ip_info(data)
+        self.assertEqual(events, [])
 
 
 class TestCannLogParserPhyDeviceIdValidation(unittest.TestCase):
