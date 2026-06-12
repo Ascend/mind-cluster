@@ -12,12 +12,12 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     - NodeD
     - NPU Exporter
     - Infer Operator
-- 安装Container Manager组件请参考[手动安装Container Manager](../../07_developer_guide/installation_deployment/manual_installation/11_container-manager.md#ZH-CN_TOPIC_0000002524428759)章节。
+- 安装Container Manager组件请参考[手动安装Container Manager](../../05_developer_guide/installation_deployment/manual_installation/11_container-manager.md#ZH-CN_TOPIC_0000002524428759)章节。
 - TaskD和MindIO安装在业务容器中，不在本章节涉及的组件范围内。
 
 ## 安装前准备<a name="ZH-CN_centerIC_0000002511346381_install_prepare"></a>
 1. 安装Ascend Docker Runtime<a name="zh-cn_centerIC_0000002511346381_install_prepare_docker_runtime"></a>。
-   - 若未安装过Ascend Docker Runtime，请参考[手动安装Ascend Docker Runtime](../../07_developer_guide/installation_deployment/manual_installation/02_ascend_docker_runtime.md#ZH-CN_TOPIC_0000002479226434)章节，在所有节点上安装此组件。
+   - 若未安装过Ascend Docker Runtime，请参考[手动安装Ascend Docker Runtime](../../05_developer_guide/installation_deployment/manual_installation/02_ascend_docker_runtime.md#ZH-CN_TOPIC_0000002479226434)章节，在所有节点上安装此组件。
    - 请参照[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002511426307)章节，在所有安装了该组件的节点上确认Ascend Docker Runtime的状态。
 
 2. 在管理节点安装helm命令<a name="zh-cn_centerIC_0000002511346381_install_prepare_helm"></a>。若环境中已经存在helm 3.x版本，可以跳过此步骤。
@@ -36,11 +36,13 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 ## 执行安装<a name="ZH-CN_centerIC_0000002511346381_install_exec"></a>
 
 安装步骤如下
-1. 参考[创建节点标签](../../07_developer_guide/installation_deployment/manual_installation/01_preparing_for_installation.md#ZH-CN_TOPIC_0000002511426279)小节，给节点打标签。
+1. 参考[创建节点标签](../../05_developer_guide/installation_deployment/manual_installation/01_preparing_for_installation.md#ZH-CN_TOPIC_0000002511426279)小节，给节点打标签。
 
-2. 组件yaml文件initContainer命令会自动创建日志路径，用户无需手动创建。组件默认日志路径可参考[集群调度组件日志路径列表](../../07_developer_guide/installation_deployment/manual_installation/01_preparing_for_installation.md#table957112617314)。
+> [!NOTE]
+>- 默认日志路径无需用户手动创建，组件yaml文件initContainer命令会自动创建，默认日志路径可参考[集群调度组件日志路径列表](../../05_developer_guide/installation_deployment/manual_installation/01_preparing_for_installation.md#table957112617314)。
+>- 宿主机上可不新创建用户，只需要保证没有其他用户占用UID为9000的情况即可，用户信息可参考[创建用户](../../05_developer_guide/installation_deployment/manual_installation/01_preparing_for_installation.md#ZH-CN_TOPIC_0000002511346353)。
 
-3. 获取mindcluster helm部署工具。
+2. 获取mindcluster helm部署工具。
     - 下载部署工具。
       ```bash
       # 请用户自行将命令中的{version}替换为对应版本号，如26.1.0
@@ -65,7 +67,7 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
       > {chart_version}表示helm chart版本，如1.1.0。
       > 解压后的文件用途请参考[表4](#table15274931175244)。
 
-4. 使用helm安装mindcluster组件所需的Custom Resource Definitions（CRDs，自定义资源定义）的Release实例。
+3. 使用helm安装mindcluster组件所需的Custom Resource Definitions（CRDs，自定义资源定义）的Release实例。
     > [!NOTE]
       >- 以下三个组件包含crd：Ascend Operator、Volcano和Infer Operator。若用户不需要安装这三个组件，可跳过此步骤。
       >- 请用户按需选择**默认配置安装**或**自定义配置安装**其中一种方式进行操作即可。
@@ -93,7 +95,7 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
       REVISION: 1
       TEST SUITE: None
       ```
-5. 使用helm安装mindcluster应用组件的Release实例。
+4. 使用helm安装mindcluster应用组件的Release实例。
     > [!NOTE]
     >- **默认配置安装方式**会从昇腾镜像仓库下载应用组件的镜像。若用户节点无法连接互联网且本地未缓存镜像，可能会导致安装失败。
     >- 请用户按需选择**默认配置安装**或**自定义配置安装**其中一种方式进行操作即可。
@@ -135,8 +137,8 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
       REVISION: 1
       TEST SUITE: None
       ```
-6. 参考[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)章节确认组件安装状态。
-7. 若组件状态异常，请确认检查安装配置是否正确，排查异常原因后重新安装。
+5. 参考[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)章节确认组件安装状态。
+6. 若组件状态异常，请确认检查安装配置是否正确，排查异常原因后重新安装。
    - 重新安装前执行如下命令卸载相关资源。
      ```bash
      helm uninstall mindcluster-crds # 命令卸载crd
