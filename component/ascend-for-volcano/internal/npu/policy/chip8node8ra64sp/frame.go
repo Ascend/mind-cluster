@@ -147,8 +147,9 @@ func (tp *chip8node8ra64sp) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.N
 
 	defer tp.scoreNodesForJob(&job, task, sMap)
 
-	// already selected nodes for this job, don't do that again
-	if tp.isJobCacheSuperPod(&job, task) {
+	if job.VerifyCachedSuperPods(nodes, tp.FrameAttr.PreferPreviousNode) {
+		klog.V(util.LogDebugLev).Infof("%s ScoreBestNPUNodes %s: job is ready, skip", tp.GetPluginName(),
+			task.Name)
 		return nil
 	}
 
@@ -164,6 +165,7 @@ func (tp *chip8node8ra64sp) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.N
 		return err
 	}
 	*job.JobReadyTag = true
+	job.SuperPodsVerified = true
 	job.SuperPods = selectedSpBlock
 	klog.V(util.LogInfoLev).Infof("selectedNodes in every sp-block information:%v", selectedSpBlock)
 

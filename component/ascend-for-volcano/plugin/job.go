@@ -1,5 +1,5 @@
 /*
-Copyright(C)2020-2023. Huawei Technologies Co.,Ltd. All rights reserved.
+Copyright(C)2020-2026. Huawei Technologies Co.,Ltd. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
@@ -54,6 +54,52 @@ func (sJob *SchedulerJob) init(vcJob *api.JobInfo, sHandle *ScheduleHandler) err
 
 	sJob.initSelfPluginByJobInfo(sHandle)
 	return nil
+}
+
+func (sJob *SchedulerJob) VerifyCachedSuperPods(nodes []*api.NodeInfo, preferPreviousNode bool) bool {
+	if !*sJob.JobReadyTag || len(sJob.SuperPods) == 0 {
+		return false
+	}
+	if sJob.SuperPodsVerified {
+		return true
+	}
+	sJob.SuperPodsVerified = true
+	if sJob.IsCachedSuperPodsValid(nodes) && preferPreviousNode {
+		klog.V(util.LogInfoLev).Infof("job <%s> cached super pods are still available, "+
+			"schedule directly from cache, super pods num: %d", sJob.Name, len(sJob.SuperPods))
+		return true
+	}
+	klog.V(util.LogInfoLev).Infof("job <%s> cached super pods are invalid or prefer-previous-node is disabled, "+
+		"need to reschedule, preferPreviousNode: %v, super pods num: %d",
+		sJob.Name, preferPreviousNode, len(sJob.SuperPods))
+	return false
+}
+
+// IsCachedSuperPodsValid checks that all cached SuperPod nodes exist in the
+// current candidate node set. Nodes where pods are still running are excluded
+// because they are naturally occupied and absent from the candidate set.
+func (sJob *SchedulerJob) IsCachedSuperPodsValid(nodes []*api.NodeInfo) bool {
+	nodeSet := make(map[string]struct{}, len(nodes))
+	for _, n := range nodes {
+		nodeSet[n.Name] = struct{}{}
+	}
+	runningNodes := make(map[string]struct{})
+	for _, task := range sJob.Tasks {
+		if task.NodeName != "" {
+			runningNodes[task.NodeName] = struct{}{}
+		}
+	}
+	for _, sp := range sJob.SuperPods {
+		for _, sn := range sp {
+			if _, running := runningNodes[sn.Name]; running {
+				continue
+			}
+			if _, ok := nodeSet[sn.Name]; !ok {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // Determine if the selectors are exactly equal.
@@ -679,7 +725,7 @@ func (sJob SchedulerJob) validJobFn() *api.ValidateResult {
 		return nil
 	}
 
-	if (ascend910VirtualDevNameReg.MatchString(sJob.ReqNPUName) || ascend310VirtualDevNameReg.MatchString(sJob.ReqNPUName)) {
+	if ascend910VirtualDevNameReg.MatchString(sJob.ReqNPUName) || ascend310VirtualDevNameReg.MatchString(sJob.ReqNPUName) {
 		klog.V(util.LogInfoLev).Infof("%s valid ok, virtual device %s.", sJob.Name, sJob.ReqNPUName)
 		return nil
 	}
