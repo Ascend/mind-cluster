@@ -1,5 +1,5 @@
 /*
-Copyright(C)2020-2022. Huawei Technologies Co.,Ltd. All rights reserved.
+Copyright(C)2020-2026. Huawei Technologies Co.,Ltd. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -1249,9 +1249,9 @@ func buildInitSelfPluginByJobInfoTestCases() []initSelfPluginByJobInfoTest {
 			wantNil:    true,
 		},
 		{
-			name: "04-nil SchedulerJob is safe.",
-			sJob: SchedulerJob{},
-			wantNil:    true,
+			name:    "04-nil SchedulerJob is safe.",
+			sJob:    SchedulerJob{},
+			wantNil: true,
 		},
 	}
 }
@@ -1427,6 +1427,393 @@ func TestUpdateTaskNotUsedHcclRankIndex(t *testing.T) {
 			if len(got) != len(tt.want) {
 				t.Errorf("updateTaskNotUsedHcclRankIndex() length = %v, want %v", len(got), len(tt.want))
 				return
+			}
+		})
+	}
+}
+
+func TestVerifyCachedSuperPods(t *testing.T) {
+	trueVal := true
+	falseVal := false
+
+	tests := []struct {
+		name               string
+		sJob               *SchedulerJob
+		nodes              []*api.NodeInfo
+		preferPreviousNode bool
+		want               bool
+		wantVerified       bool
+	}{
+		{
+			name: "01-JobReadyTag is false, return false",
+			sJob: &SchedulerJob{
+				JobReadyTag: &falseVal,
+				SuperPods: map[string][]SuperNode{
+					"sp1": {{Name: "node1", SuperPodID: 0}},
+				},
+				SuperPodsVerified: false,
+			},
+			nodes:              []*api.NodeInfo{{Name: "node1"}},
+			preferPreviousNode: true,
+			want:               false,
+			wantVerified:       false,
+		},
+		{
+			name: "02-SuperPods is empty, return false",
+			sJob: &SchedulerJob{
+				JobReadyTag:       &trueVal,
+				SuperPods:         map[string][]SuperNode{},
+				SuperPodsVerified: false,
+			},
+			nodes:              []*api.NodeInfo{{Name: "node1"}},
+			preferPreviousNode: true,
+			want:               false,
+			wantVerified:       false,
+		},
+		{
+			name: "03-SuperPodsVerified already true, return true (early return)",
+			sJob: &SchedulerJob{
+				JobReadyTag: &trueVal,
+				SuperPods: map[string][]SuperNode{
+					"sp1": {{Name: "node1", SuperPodID: 0}},
+				},
+				SuperPodsVerified: true,
+			},
+			nodes:              []*api.NodeInfo{},
+			preferPreviousNode: true,
+			want:               true,
+			wantVerified:       true,
+		},
+		{
+			name: "04-cache valid and preferPreviousNode true, return true",
+			sJob: &SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{
+						Tasks: map[api.TaskID]util.NPUTask{},
+					},
+				},
+				JobReadyTag: &trueVal,
+				SuperPods: map[string][]SuperNode{
+					"sp1": {{Name: "node1", SuperPodID: 0}},
+				},
+				SuperPodsVerified: false,
+			},
+			nodes:              []*api.NodeInfo{{Name: "node1"}},
+			preferPreviousNode: true,
+			want:               true,
+			wantVerified:       true,
+		},
+		{
+			name: "05-cache valid but preferPreviousNode is false, return false",
+			sJob: &SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{
+						Tasks: map[api.TaskID]util.NPUTask{},
+					},
+				},
+				JobReadyTag: &trueVal,
+				SuperPods: map[string][]SuperNode{
+					"sp1": {{Name: "node1", SuperPodID: 0}},
+				},
+				SuperPodsVerified: false,
+			},
+			nodes:              []*api.NodeInfo{{Name: "node1"}},
+			preferPreviousNode: false,
+			want:               false,
+			wantVerified:       true,
+		},
+		{
+			name: "06-cache invalid, node not in candidate set, return false",
+			sJob: &SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{
+						Tasks: map[api.TaskID]util.NPUTask{},
+					},
+				},
+				JobReadyTag: &trueVal,
+				SuperPods: map[string][]SuperNode{
+					"sp1": {{Name: "node1", SuperPodID: 0}},
+				},
+				SuperPodsVerified: false,
+			},
+			nodes:              []*api.NodeInfo{{Name: "node2"}},
+			preferPreviousNode: true,
+			want:               false,
+			wantVerified:       true,
+		},
+		{
+			name: "07-SuperPod node is running (task has NodeName), skip check, return true",
+			sJob: &SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{
+						Tasks: map[api.TaskID]util.NPUTask{
+							"task1": {NodeName: "node1"},
+						},
+					},
+				},
+				JobReadyTag: &trueVal,
+				SuperPods: map[string][]SuperNode{
+					"sp1": {{Name: "node1", SuperPodID: 0}},
+				},
+				SuperPodsVerified: false,
+			},
+			nodes:              []*api.NodeInfo{{Name: "node2"}},
+			preferPreviousNode: true,
+			want:               true,
+			wantVerified:       true,
+		},
+		{
+			name: "08-multiple SuperPods with mixed running and new nodes, all candidates exist",
+			sJob: &SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{
+						Tasks: map[api.TaskID]util.NPUTask{
+							"task1": {NodeName: "node1"},
+						},
+					},
+				},
+				JobReadyTag: &trueVal,
+				SuperPods: map[string][]SuperNode{
+					"sp1": {{Name: "node1", SuperPodID: 0}},
+					"sp2": {{Name: "node2", SuperPodID: 1}},
+				},
+				SuperPodsVerified: false,
+			},
+			nodes:              []*api.NodeInfo{{Name: "node2"}, {Name: "node3"}},
+			preferPreviousNode: true,
+			want:               true,
+			wantVerified:       true,
+		},
+		{
+			name: "09-multiple SuperPods, one node missing from candidates, return false",
+			sJob: &SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{
+						Tasks: map[api.TaskID]util.NPUTask{
+							"task1": {NodeName: "node1"},
+						},
+					},
+				},
+				JobReadyTag: &trueVal,
+				SuperPods: map[string][]SuperNode{
+					"sp1": {{Name: "node1", SuperPodID: 0}},
+					"sp2": {{Name: "node2", SuperPodID: 1}},
+				},
+				SuperPodsVerified: false,
+			},
+			nodes:              []*api.NodeInfo{{Name: "node3"}},
+			preferPreviousNode: true,
+			want:               false,
+			wantVerified:       true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.sJob.VerifyCachedSuperPods(tt.nodes, tt.preferPreviousNode)
+			if got != tt.want {
+				t.Errorf("VerifyCachedSuperPods() = %v, want %v", got, tt.want)
+			}
+			if tt.sJob.SuperPodsVerified != tt.wantVerified {
+				t.Errorf("SuperPodsVerified = %v, want %v", tt.sJob.SuperPodsVerified, tt.wantVerified)
+			}
+		})
+	}
+}
+
+func TestIsCachedSuperPodsValid(t *testing.T) {
+	tests := []struct {
+		name  string
+		sJob  *SchedulerJob
+		nodes []*api.NodeInfo
+		want  bool
+	}{
+		{
+			name: "01-empty nodes and empty SuperPods returns true",
+			sJob: &SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{
+						Tasks: map[api.TaskID]util.NPUTask{},
+					},
+				},
+				SuperPods: map[string][]SuperNode{},
+			},
+			nodes: []*api.NodeInfo{},
+			want:  true,
+		},
+		{
+			name: "02-empty nodes but all SuperPod nodes are running, return true",
+			sJob: &SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{
+						Tasks: map[api.TaskID]util.NPUTask{
+							"task1": {NodeName: "node1"},
+						},
+					},
+				},
+				SuperPods: map[string][]SuperNode{
+					"sp1": {{Name: "node1", SuperPodID: 0}},
+				},
+			},
+			nodes: []*api.NodeInfo{},
+			want:  true,
+		},
+		{
+			name: "03-empty nodes with non-running SuperPod node, return false",
+			sJob: &SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{
+						Tasks: map[api.TaskID]util.NPUTask{},
+					},
+				},
+				SuperPods: map[string][]SuperNode{
+					"sp1": {{Name: "node1", SuperPodID: 0}},
+				},
+			},
+			nodes: []*api.NodeInfo{},
+			want:  false,
+		},
+		{
+			name: "04-all SuperPod nodes in candidate set, return true",
+			sJob: &SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{
+						Tasks: map[api.TaskID]util.NPUTask{},
+					},
+				},
+				SuperPods: map[string][]SuperNode{
+					"sp1": {{Name: "node1", SuperPodID: 0}},
+				},
+			},
+			nodes: []*api.NodeInfo{{Name: "node1"}, {Name: "node2"}},
+			want:  true,
+		},
+		{
+			name: "05-SuperPod node not in candidate set, return false",
+			sJob: &SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{
+						Tasks: map[api.TaskID]util.NPUTask{},
+					},
+				},
+				SuperPods: map[string][]SuperNode{
+					"sp1": {{Name: "node1", SuperPodID: 0}},
+				},
+			},
+			nodes: []*api.NodeInfo{{Name: "node2"}},
+			want:  false,
+		},
+		{
+			name: "06-mixed running and candidate nodes, all covered, return true",
+			sJob: &SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{
+						Tasks: map[api.TaskID]util.NPUTask{
+							"task1": {NodeName: "node1"},
+						},
+					},
+				},
+				SuperPods: map[string][]SuperNode{
+					"sp1": {{Name: "node1", SuperPodID: 0}},
+					"sp2": {{Name: "node2", SuperPodID: 1}},
+				},
+			},
+			nodes: []*api.NodeInfo{{Name: "node2"}},
+			want:  true,
+		},
+		{
+			name: "07-mixed running and missing node, return false",
+			sJob: &SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{
+						Tasks: map[api.TaskID]util.NPUTask{
+							"task1": {NodeName: "node1"},
+						},
+					},
+				},
+				SuperPods: map[string][]SuperNode{
+					"sp1": {{Name: "node1", SuperPodID: 0}},
+					"sp2": {{Name: "node2", SuperPodID: 1}},
+				},
+			},
+			nodes: []*api.NodeInfo{{Name: "node3"}},
+			want:  false,
+		},
+		{
+			name: "08-multiple SuperNodes in one SuperPod, all valid, return true",
+			sJob: &SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{
+						Tasks: map[api.TaskID]util.NPUTask{},
+					},
+				},
+				SuperPods: map[string][]SuperNode{
+					"sp1": {
+						{Name: "node1", SuperPodID: 0},
+						{Name: "node2", SuperPodID: 0},
+					},
+				},
+			},
+			nodes: []*api.NodeInfo{{Name: "node1"}, {Name: "node2"}},
+			want:  true,
+		},
+		{
+			name: "09-multiple SuperNodes in one SuperPod, one missing, return false",
+			sJob: &SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{
+						Tasks: map[api.TaskID]util.NPUTask{},
+					},
+				},
+				SuperPods: map[string][]SuperNode{
+					"sp1": {
+						{Name: "node1", SuperPodID: 0},
+						{Name: "node2", SuperPodID: 0},
+					},
+				},
+			},
+			nodes: []*api.NodeInfo{{Name: "node1"}},
+			want:  false,
+		},
+		{
+			name: "10-all SuperPod nodes running on different nodes, empty candidate set, return true",
+			sJob: &SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{
+						Tasks: map[api.TaskID]util.NPUTask{
+							"task1": {NodeName: "node1"},
+							"task2": {NodeName: "node2"},
+						},
+					},
+				},
+				SuperPods: map[string][]SuperNode{
+					"sp1": {{Name: "node1", SuperPodID: 0}},
+					"sp2": {{Name: "node2", SuperPodID: 1}},
+				},
+			},
+			nodes: []*api.NodeInfo{},
+			want:  true,
+		},
+		{
+			name: "11-nil Tasks field is safe, returns true with empty SuperPods",
+			sJob: &SchedulerJob{
+				SuperPods: map[string][]SuperNode{},
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{
+						Tasks: map[api.TaskID]util.NPUTask{},
+					},
+				},
+			},
+			nodes: []*api.NodeInfo{},
+			want:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.sJob.IsCachedSuperPodsValid(tt.nodes)
+			if got != tt.want {
+				t.Errorf("IsCachedSuperPodsValid() = %v, want %v", got, tt.want)
 			}
 		})
 	}

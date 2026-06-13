@@ -195,11 +195,12 @@ func (tp *chip8node8sp) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeI
 		}
 	}()
 
-	if *job.JobReadyTag && len(job.SuperPods) != 0 {
+	if job.VerifyCachedSuperPods(nodes, tp.FrameAttr.PreferPreviousNode) {
 		klog.V(util.LogDebugLev).Infof("%s ScoreBestNPUNodes %s: job is ready, skip", tp.GetPluginName(),
 			task.Name)
 		return nil
 	}
+
 	klog.V(util.LogInfoLev).Infof("%s ScoreBestNPUNodes npuTaskNum: %d, nodes: %d, schedulingTaskNum: %d, "+
 		"total task: %d", tp.GetPluginName(), tp.NPUTaskNum, len(nodes), tp.SchedulingTaskNum, tp.NPUTaskNum)
 	if tp.NPUTaskNum == 1 {
@@ -218,6 +219,7 @@ func (tp *chip8node8sp) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeI
 	}
 	*job.JobReadyTag = true
 	job.SuperPods = selectedNodes
+	job.SuperPodsVerified = true
 	for id, sp := range selectedNodes {
 		for _, node := range sp {
 			tp.nodeVPodId[node.Name] = id

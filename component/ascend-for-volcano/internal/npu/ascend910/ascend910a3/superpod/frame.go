@@ -258,7 +258,7 @@ func (tp *module910SuperPod) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.
 	defer func() {
 		tp.selectNodeFromCache(&job, task, sMap)
 	}()
-	if *job.JobReadyTag && len(job.SuperPods) != 0 {
+	if job.VerifyCachedSuperPods(nodes, tp.FrameAttr.PreferPreviousNode) {
 		klog.V(util.LogDebugLev).Infof("%s ScoreBestNPUNodes %s: job is ready, skip", tp.GetPluginName(),
 			task.Name)
 		return nil
@@ -280,6 +280,7 @@ func (tp *module910SuperPod) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.
 	logSelectedNodes(job, selectedNodes)
 	*job.JobReadyTag = true
 	job.SuperPods = selectedNodes
+	job.SuperPodsVerified = true
 	for id, sp := range selectedNodes {
 		for _, node := range sp {
 			tp.nodeVPodId[node.Name] = id
@@ -465,6 +466,7 @@ func (tp *module910SuperPod) selectSuperPodForJob(task *api.TaskInfo, nodes []*a
 	for i := 0; i < totalRequiredSuperPod; i++ {
 		vSuperPodID[strconv.Itoa(i)] = false
 	}
+
 	selectNodes, err := tp.selectNodesForFaultJob(task, totalNodes, vSuperPodID, sMap, nodes)
 	if err != nil {
 		return nil, err
