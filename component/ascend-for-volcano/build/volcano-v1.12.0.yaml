@@ -4386,13 +4386,17 @@ data:
     actions: "enqueue, allocate, backfill"
     tiers:
     - plugins:
-      - name: priority
-        enableNodeOrder: false
       - name: gang
+        enableNodeOrder: false
+        enablePreemptable: false
+        enableReclaimable: false
+      - name: volcano-npu_v6.0.RC1_linux-x86_64
+        enablePreemptable: true
+        enableReclaimable: true
+      - name: priority
         enableNodeOrder: false
       - name: conformance
         enableNodeOrder: false
-      - name: volcano-npu_v6.0.RC1_linux-x86_64
     - plugins:
       - name: drf
         enableNodeOrder: false
