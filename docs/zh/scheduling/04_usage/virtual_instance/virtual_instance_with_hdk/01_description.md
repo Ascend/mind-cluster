@@ -168,7 +168,7 @@
 - 静态虚拟化、动态虚拟化基于HDK实现，通过HDK接口将芯片切分成vNPU后，挂载到容器中使用。
 - 如果使用动态虚拟化功能，请直接参见[动态vNPU调度(推理)](./dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md)章节，不需要提前使用npu-smi命令创建vNPU。
 - 如果使用静态虚拟化功能，需要先参见[创建vNPU](./static_vnpu_scheduling/01_creating_vnpu.md)，再进行挂载到容器操作。
-- npu-smi工具相关命令的详细说明请参见《Atlas A3 中心推理和训练硬件 26.0.RC1 npu-smi 命令参考》中的“[昇腾虚拟化实例（AVI）相关命令](https://support.huawei.com/enterprise/zh/doc/EDOC1100568420/690dda6e)”章节。
+- npu-smi工具相关命令的详细说明请参见《Atlas A3 中心推理和训练硬件 npu-smi 命令参考》中的“[昇腾虚拟化实例（AVI）相关命令](https://support.huawei.com/enterprise/zh/doc/EDOC1100568420/690dda6e)”章节。
 
 ## 使用约束<a name="section911013420264"></a>
 

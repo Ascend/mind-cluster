@@ -2,9 +2,10 @@
 
 ## 卸载说明<a name="section_uninstall_desc"></a>
 
-本文档介绍如何通过helm卸载mindcluster组件。
+本文档介绍如何通过helm卸载MindCluster组件。
 
 **使用约束**
+
 - 仅支持使用helm 3.x版本。
 - 支持使用helm卸载的组件包括：
   - Ascend Device Plugin
@@ -18,19 +19,24 @@
 - TaskD和MindIO安装在业务容器中，不在本章节涉及的组件范围内。
 
 ## 卸载前准备<a name="section_helm_upgrade_prepare"></a>
+
 1. 在管理节点安装helm命令<a name="zh-cn_centerIC_0000002511346381_install_prepare_helm"></a>。若环境中已经存在helm 3.x版本，可以跳过此步骤。
-   - 安装helm前请参考[Helm版本支持策略](https://v3.helm.sh/zh/docs/v3/topics/version_skew/)查询helm与k8s间的版本兼容性，根据实际情况选择helm版本。
-   - 请参考[helm安装文档](https://helm.sh/zh/docs/v3/intro/install)，在管理节点安装helm命令。
+   - 安装helm前请参考[Helm版本支持策略](https://v3.helm.sh/zh/docs/v3/topics/version_skew/)查询helm与K8s间的版本兼容性，根据实际情况选择helm版本。
+   - 请参考[Helm安装文档](https://helm.sh/zh/docs/v3/intro/install)，在管理节点安装helm命令。
 
    安装成功后，执行如下命令检查helm版本：
+
    ```bash
    helm version
    ```
+
    回显示例如下：
-   ```bash
+
+   ```ColdFusion
    version.BuildInfo{Version:"v3.17.0", GitCommit:"065003584b62a79f329070a946936374936021d6", GitTreeState:"clean",    GoVersion:"go1.19.5"}
    ```
-2. 确认组件是否通过helm管理<a name="section_check_helm"></a>
+
+2. 确认组件是否通过helm管理<a name="section_check_helm"></a>。
    1. 登录K8s管理节点，执行以下命令，查看当前集群中通过helm管理的Release列表。
 
        ```bash
@@ -39,7 +45,7 @@
 
        回显示例如下：
 
-       ```bash
+       ```ColdFusion
        NAME               NAMESPACE   REVISION  UPDATED                                  STATUS       CHART                                        APP VERSION
        mindcluster        default    1         2026-03-24 15:30:00.000000000 +0800 CST  deployed  mindcluster-deploy-tool-1.1.   0                26.1.0
        mindcluster-crds   default    1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-1.1.0           26.1.0
@@ -54,7 +60,7 @@
 >[!NOTE]
 >
 >- 卸载操作需要在K8s管理节点执行。
->- 卸载前请确认集群中无正在使用mindcluster组件管理的工作负载，避免业务中断。
+>- 卸载前请确认集群中无正在使用MindCluster组件管理的工作负载，避免业务中断。
 
 1. （可选）关闭pingmesh灵衢网络检测。
     1. 登录环境，进入NodeD解压目录。
@@ -67,12 +73,10 @@
     3. 修改activate字段的取值。
         - 如果超节点ID在pingmesh-config文件中，修改该超节点ID字段下的activate为off。
         - 如果超节点ID不在pingmesh-config文件中，可通过以下2种方式进行设置。
-            - 在配置文件中新增该超节点信息，并将activate为off。
+            - 在配置文件中新增该超节点信息，并将activate设置为off。
             - 删除pingmesh-config文件中所有超节点的信息，并将global配置中activate字段的值设置为off。
 
-2. 卸载mindcluster应用组件。
-
-    执行以下命令，卸载mindcluster应用组件。
+2. 卸载MindCluster应用组件。
 
     ```bash
     helm uninstall mindcluster
@@ -84,7 +88,7 @@
     release "mindcluster" uninstalled
     ```
 
-3. 卸载mindcluster crd资源。
+3. 卸载MindCluster crd资源。
 
     执行以下命令，卸载mindcluster crd资源。
 
@@ -94,7 +98,7 @@
 
     回显示例如下，表示卸载成功。
 
-    ```bash
+    ```ColdFusion
     release "mindcluster-crds" uninstalled
     ```
 
@@ -118,18 +122,18 @@
 
 6. 确认卸载结果。
 
-    执行以下命令，确认Release已被删除。
+    1. 执行以下命令，确认Release已被删除。
 
-    ```bash
-    helm list -A
-    ```
+       ```bash
+       helm list -A
+       ```
 
-    若回显中不存在mindcluster和mindcluster-crds相关的Release，表示卸载成功。
+       若回显中不存在mindcluster和mindcluster-crds相关的Release，表示卸载成功。
 
-    执行以下命令，确认相关Pod已被删除。
+    2. 执行以下命令，确认相关Pod已被删除。
 
-    ```bash
-    kubectl get pods -n mindx-dl
-    ```
+       ```bash
+       kubectl get pods -n mindx-dl
+       ```
 
-    若回显提示命名空间不存在或无相关Pod，表示组件已卸载完成。
+       若回显中提示命名空间不存在或无相关Pod，表示组件已卸载完成。

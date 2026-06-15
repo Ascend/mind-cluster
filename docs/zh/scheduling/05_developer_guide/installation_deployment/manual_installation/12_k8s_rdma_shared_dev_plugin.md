@@ -1,11 +1,11 @@
 # K8s RDMA Shared Dev Plugin<a name="ZH-CN_TOPIC_0000002524312661"></a>
 
-- 使用 UB RDMA 网络功能时，建议安装 K8s RDMA Shared Dev Plugin。
+- 使用UB RDMA网络功能时，建议安装K8s RDMA Shared Dev Plugin。
 - 仅使用基础容器化支持和资源监测的用户，可以不安装该组件，请直接跳过本章节。
 
 ## 操作步骤<a name="section135381552125415"></a>
 
-1. 以 root 用户登录各计算节点，并执行以下命令查看镜像和版本号是否正确。
+1. 以root用户登录各计算节点，并执行以下命令查看镜像和版本号是否正确。
 
     ```shell
     docker images | grep k8s-rdma-shared-dev-plugin
@@ -20,10 +20,9 @@
    - 是，执行[步骤2](#li26221441299)。
    - 否，请参见[准备镜像](./01_preparing_for_installation.md#准备镜像)，完成镜像制作和分发。
 
-2. <a name="li26221441299"></a>将 K8s RDMA Shared Dev Plugin 软件包解压目录下的 YAML 文件，拷贝到 K8s 管理节点上任意目录。</span>
-3. 如不修改组件启动参数，可跳过本步骤。否则，请根据实际情况修改 YAML 文件中 K8s RDMA Shared Dev Plugin
-   的启动参数。启动参数请参见[表1](#table1862682843615)，可执行 **./k8s-rdma-shared-dp -h** 查看参数说明。
-4. 在管理节点的 YAML 所在路径，执行以下命令，启动 K8s RDMA Shared Dev Plugin。
+2. <a name="li26221441299"></a>将K8s RDMA Shared Dev Plugin软件包解压目录下的YAML文件，拷贝到K8s管理节点上任意目录。
+3. 如不修改组件启动参数，可跳过本步骤。否则，请根据实际情况修改YAML文件中K8s RDMA Shared Dev Plugin的启动参数。启动参数请参见[表1](#table1862682843615)，可执行<b>./k8s-rdma-shared-dp -h</b>查看参数说明。
+4. 在管理节点的YAML所在路径，执行以下命令，启动K8s RDMA Shared Dev Plugin。
 
     ```shell
     kubectl apply -f k8s-rdma-shared-dev-plugin-v{version}.yaml
@@ -55,15 +54,14 @@
 
 > [!NOTE]
 >
->- 安装组件后，组件的 Pod 状态不为
+>- 安装组件后，组件的Pod状态不为
    Running，可参考[组件Pod状态不为Running](https://gitcode.com/Ascend/mind-cluster/issues/342)章节进行处理。
->- 安装组件后，组件的 Pod 状态为
-   ContainerCreating，可参考[集群调度组件Pod处于ContainerCreating状态](https://gitcode.com/Ascend/mind-cluster/issues/343)
-   章节进行处理。
+>- 安装组件后，组件的Pod状态为
+   ContainerCreating，可参考[集群调度组件Pod处于ContainerCreating状态](https://gitcode.com/Ascend/mind-cluster/issues/343)章节进行处理。
 
 ## 参数说明<a name="section1851191618363"></a>
 
-**表 1** K8s RDMA Shared Dev Plugin 启动参数
+**表 1** K8s RDMA Shared Dev Plugin启动参数
 
 <a name="table1862682843615"></a>
 <table><thead align="left"><tr id="row462602873615"><th class="cellrowborder" valign="top" width="25%" id="mcps1.2.5.1.1"><p id="p14626028143612"><a name="p14626028143612"></a><a name="p14626028143612"></a>参数</p>
@@ -82,7 +80,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p1962732833612"><a name="p1962732833612"></a><a name="p1962732833612"></a>false</p>
 </td>
-<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p146279281369"><a name="p146279281369"></a><a name="p146279281369"></a>查询当前 <span id="ph1437310218484"><a name="ph1437310218484"></a><a name="ph1437310218484"></a>K8s RDMA Shared Dev Plugin</span> 的版本号，该参数为标志位，无需跟值。使用示例：./k8s-rdma-shared-dp -version 或 ./k8s-rdma-shared-dp -v</p>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p146279281369"><a name="p146279281369"></a><a name="p146279281369"></a>查询当前K8s RDMA Shared Dev Plugin的版本号，该参数为标志位，无需跟值。使用示例：./k8s-rdma-shared-dp -version或./k8s-rdma-shared-dp -v</p>
 </td>
 </tr>
 <tr id="row15627928153619"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1627328103617"><a name="p1627328103617"></a><a name="p1627328103617"></a>-logLevel</p>
@@ -128,7 +126,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p19894131961514"><a name="p19894131961514"></a><a name="p19894131961514"></a><span id="ph67327379153"><a name="ph67327379153"></a><a name="ph67327379153"></a>/etc/kubernetes/kubelet-plugins.d/device-plugins/rdma_shared_dev_plugin.json</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p589551971512"><a name="p589551971512"></a><a name="p589551971512"></a><span id="ph4556742141518"><a name="ph4556742141518"></a><a name="ph4556742141518"></a>配置文件路径，用于指定 RDMA 设备的选择器配置。</span></p>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p589551971512"><a name="p589551971512"></a><a name="p589551971512"></a><span id="ph4556742141518"><a name="ph4556742141518"></a><a name="ph4556742141518"></a>配置文件路径，用于指定RDMA设备的选择器配置。</span></p>
 </td>
 </tr>
 <tr id="row68317556190"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p0894319101522"><a name="p0894319101522"></a><a name="p0894319101522"></a><span id="ph96781327191520"><a name="ph96781327191520"></a><a name="ph96781327191520"></a>-use-cdi</span></p>
@@ -137,12 +135,11 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p19894131961516"><a name="p19894131961516"></a><a name="p19894131961516"></a><span id="ph67327379155"><a name="ph67327379155"></a><a name="ph67327379155"></a>false</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p589551971514"><a name="p589551971514"></a><a name="p589551971514"></a><span id="ph4556742141520"><a name="ph4556742141520"></a><a name="ph4556742141520"></a>是否使用 CDI（Container Device Interface）模式向容器注册设备，该参数为标志位，无需跟值。使用示例：./k8s-rdma-shared-dp -use-cdi</span></p>
-<p id="p589551971515"><a name="p589551971515"></a><a name="p589551971515"></a><div class="notebody"><p id="p946415413282"><a name="p946415413282"></a><a name="p946415413282"></a>UB 类型的 RDMA 设备不支持 CDI 模式，当检测到 UB 设备时会自动禁用 CDI。</p>
-</div>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p589551971514"><a name="p589551971514"></a><a name="p589551971514"></a><span id="ph4556742141520"><a name="ph4556742141520"></a><a name="ph4556742141520"></a>是否使用CDI（Container Device Interface）模式向容器注册设备，该参数为标志位，无需跟值。使用示例：./k8s-rdma-shared-dp -use-cdi</span></p>
+<p>UB类型的RDMA设备不支持CDI模式，当检测到UB设备时会自动禁用CDI。</p>
 </td>
 </tr>
-<tr id="row10282191492318"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p8283714172318"><a name="p8283714172318"></a><a name="p8283714172318"></a>-h 或者 -help</p>
+<tr id="row10282191492318"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p8283714172318"><a name="p8283714172318"></a><a name="p8283714172318"></a>-h或者-help</p>
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p82838147235"><a name="p82838147235"></a><a name="p82838147235"></a>无</p>
 </td>
