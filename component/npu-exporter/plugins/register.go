@@ -26,7 +26,7 @@ func RegisterPlugin() {
 	registerPlugin("text", &TextMetricsInfoCollector{})
 
 	// Add custom plugin，pluginName should be consistent with the name in pluginConfiguration.json
-	// The path of the pluginConfiguration.json file must be /usr/local/pluginConfiguration.json
+	// The path of the pluginConfiguration.json file must be /user/mind-cluster/npu-exporter-config/pluginConfiguration.json
 }
 
 func registerPlugin(pluginName string, c common.MetricsCollector) {
