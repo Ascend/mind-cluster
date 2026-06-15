@@ -412,6 +412,154 @@ func TestJobPipelined(t *testing.T) {
 			}(),
 			want: util.Abstain,
 		},
+		{
+			name: "05-total tasks less than MinAvailable, should reject",
+			job: func() *api.JobInfo {
+				ji := api.NewJobInfo("test-job-uid")
+				t1 := api.NewTaskInfo(&v1.Pod{})
+				t1.UID = "task1"
+				t1.TransactionContext.Status = api.Pipelined
+				ji.AddTaskInfo(t1)
+				t2 := api.NewTaskInfo(&v1.Pod{})
+				t2.UID = "task2"
+				t2.TransactionContext.Status = api.Pipelined
+				ji.AddTaskInfo(t2)
+				return ji
+			}(),
+			plg: func() *huaweiNPUPlugin {
+				p := &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{}}
+				p.Scheduler.Jobs = map[api.JobID]plugin.SchedulerJob{
+					"test-job-uid": {
+						JobReadyTag: boolPointer(true),
+						SchedulerJobAttr: util.SchedulerJobAttr{
+							ComJob: util.ComJob{MinAvailable: 3},
+						},
+					},
+				}
+				return p
+			}(),
+			want: util.Reject,
+		},
+		{
+			name: "06-total tasks equals MinAvailable, should abstain",
+			job: func() *api.JobInfo {
+				ji := api.NewJobInfo("test-job-uid")
+				t1 := api.NewTaskInfo(&v1.Pod{})
+				t1.UID = "task1"
+				t1.TransactionContext.Status = api.Pipelined
+				ji.AddTaskInfo(t1)
+				t2 := api.NewTaskInfo(&v1.Pod{})
+				t2.UID = "task2"
+				t2.TransactionContext.Status = api.Allocated
+				ji.AddTaskInfo(t2)
+				t3 := api.NewTaskInfo(&v1.Pod{})
+				t3.UID = "task3"
+				t3.TransactionContext.Status = api.Pipelined
+				ji.AddTaskInfo(t3)
+				return ji
+			}(),
+			plg: func() *huaweiNPUPlugin {
+				p := &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{}}
+				p.Scheduler.Jobs = map[api.JobID]plugin.SchedulerJob{
+					"test-job-uid": {
+						JobReadyTag: boolPointer(true),
+						SchedulerJobAttr: util.SchedulerJobAttr{
+							ComJob: util.ComJob{MinAvailable: 3},
+						},
+					},
+				}
+				return p
+			}(),
+			want: util.Abstain,
+		},
+		{
+			name: "07-total tasks exceeds MinAvailable, should abstain",
+			job: func() *api.JobInfo {
+				ji := api.NewJobInfo("test-job-uid")
+				t1 := api.NewTaskInfo(&v1.Pod{})
+				t1.UID = "task1"
+				t1.TransactionContext.Status = api.Running
+				ji.AddTaskInfo(t1)
+				t2 := api.NewTaskInfo(&v1.Pod{})
+				t2.UID = "task2"
+				t2.TransactionContext.Status = api.Running
+				ji.AddTaskInfo(t2)
+				t3 := api.NewTaskInfo(&v1.Pod{})
+				t3.UID = "task3"
+				t3.TransactionContext.Status = api.Pipelined
+				ji.AddTaskInfo(t3)
+				t4 := api.NewTaskInfo(&v1.Pod{})
+				t4.UID = "task4"
+				t4.TransactionContext.Status = api.Pipelined
+				ji.AddTaskInfo(t4)
+				return ji
+			}(),
+			plg: func() *huaweiNPUPlugin {
+				p := &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{}}
+				p.Scheduler.Jobs = map[api.JobID]plugin.SchedulerJob{
+					"test-job-uid": {
+						JobReadyTag: boolPointer(true),
+						SchedulerJobAttr: util.SchedulerJobAttr{
+							ComJob: util.ComJob{MinAvailable: 3},
+						},
+					},
+				}
+				return p
+			}(),
+			want: util.Abstain,
+		},
+		{
+			name: "08-BestEffort Pending task counts as ready, meets MinAvailable",
+			job: func() *api.JobInfo {
+				ji := api.NewJobInfo("test-job-uid")
+				t1 := api.NewTaskInfo(&v1.Pod{})
+				t1.UID = "task1"
+				t1.TransactionContext.Status = api.Pipelined
+				ji.AddTaskInfo(t1)
+				t2 := api.NewTaskInfo(&v1.Pod{})
+				t2.UID = "task2"
+				t2.TransactionContext.Status = api.Pipelined
+				ji.AddTaskInfo(t2)
+				t3 := api.NewTaskInfo(&v1.Pod{})
+				t3.UID = "task3"
+				t3.TransactionContext.Status = api.Pending
+				t3.BestEffort = true
+				ji.AddTaskInfo(t3)
+				return ji
+			}(),
+			plg: func() *huaweiNPUPlugin {
+				p := &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{}}
+				p.Scheduler.Jobs = map[api.JobID]plugin.SchedulerJob{
+					"test-job-uid": {
+						JobReadyTag: boolPointer(true),
+						SchedulerJobAttr: util.SchedulerJobAttr{
+							ComJob: util.ComJob{MinAvailable: 3},
+						},
+					},
+				}
+				return p
+			}(),
+			want: util.Abstain,
+		},
+		{
+			name: "09-MinAvailable is zero, should abstain",
+			job: func() *api.JobInfo {
+				return api.NewJobInfo("test-job-uid")
+			}(),
+			plg: func() *huaweiNPUPlugin {
+				p := &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{}}
+				p.Scheduler.Jobs = map[api.JobID]plugin.SchedulerJob{
+					"test-job-uid": {
+						JobReadyTag: boolPointer(true),
+						SchedulerJobAttr: util.SchedulerJobAttr{
+							ComJob: util.ComJob{MinAvailable: 0},
+						},
+					},
+				}
+				return p
+			}(),
+			want: util.Abstain,
+		},
 	}
 	for _, tc := range testCases {
 		got := jobPipelined(tc.job, tc.plg)

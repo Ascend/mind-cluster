@@ -114,6 +114,11 @@ function replace_node_predicate() {
  	     sed -i '/predicateFn.*passed/,/return nil/s/return nil/return nil, nil/' "$REPLACE_FILE"
  	 }
 
+function replace_job_pipelined() {
+    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
+    sed -i "s/ji.WaitingTaskNum()+ji.ReadyTaskNum() < job.MinAvailable/ji.WaitingTaskNum()+ji.ReadyTaskNum()+ji.PendingBestEffortTaskNum() < job.MinAvailable/g" "$REPLACE_FILE"
+}
+
 function replace_node_score() {
     REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/actions/allocate/allocate.go"
     if [[ "$BASE_VER" == "v1.7.0" ]];then
@@ -194,6 +199,7 @@ function main() {
   replace_code
   if is_1.9_plus; then
     replace_klog_version
+    replace_job_pipelined
   fi
   if [[ "$BASE_VER" == "v1.9.0" ]]; then
     replace_node_predicate

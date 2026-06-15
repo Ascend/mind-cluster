@@ -177,6 +177,11 @@ func jobPipelined(obj interface{}, tp *huaweiNPUPlugin) int {
 	if !*job.JobReadyTag {
 		return util.Reject
 	}
+	klog.V(util.LogInfoLev).Infof("job %s/%s WaitingTaskNum: %d, ReadyTaskNum: %d, MinAvailable: %d", ji.Namespace,
+		ji.Name, ji.WaitingTaskNum(), ji.ReadyTaskNum(), job.MinAvailable)
+	if ji.WaitingTaskNum()+ji.ReadyTaskNum() < job.MinAvailable {
+		return util.Reject
+	}
 	return util.Abstain
 }
 
