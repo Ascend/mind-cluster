@@ -10956,7 +10956,7 @@
                 "class": "Software",
                 "component": "CANN",
                 "module": "DRV",
-                "cause_zh": "文件发送失败_device侧oom，或者文件数量超过阈值",
+                "cause_zh": "文件发送失败_device侧OOM，或者文件数量超过阈值",
                 "description_zh": "device侧内存不足，申请缓存失败；或者device侧目录下文件数量超过阈值等。",
                 "suggestion_zh": [
                     "1. 需要排查device侧是否内存不足，或者文件数量超过阈值等；"
@@ -23802,6 +23802,992 @@
             "source_file": "CANN_Plog",
             "regex": {
                 "in": ["data type","of","is not supported"]
+            }
+        },
+        "AISW_CANN_DRV_ESCH_015": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "host与device事件发送失败",
+                "description_zh": "调用接口halEschedSubmitEventSync失败，失败原因主要是2个可能：\na. 消息处理超时。\nb. 消息发送失败。",
+                "suggestion_zh": [
+                    "1. 若是超时，则要分析下接收端是否消息有收到，若收到，可以考虑业务发送方重试或增大超时门限配置；",
+                    "2. 若是返回错误码62即接收进程不存在，则要分析下时序，或者device是否目的进程异常退出了；",
+                    "3. 重新拉起业务；"
+                ],
+                "cause_en": "Failed to send host and device events.",
+                "description_en": "The halEschedSubmitEventSync interface fails to be invoked. The possible causes are as follows: \na. Message processing times out.\nb. Message sending fails.",
+                "suggestion_en": [
+                    "1. If a timeout occurs, it is necessary to analyze whether the receiving end has received the message. If the message has been received, the business sender can consider retrying or increasing the timeout threshold configuration.",
+                    "2. If error code 62 is returned, indicating that the receiving process does not exist, it is necessary to analyze the timing sequence or whether the device's destination process has abnormally exited.",
+                    "3. Restart the business process."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    ["halEschedSubmitEventSync", "Sync event not success"],
+                    ["Sync event failed"],
+                    ["Unable to invoke the halEschedSubmitEvent"]
+                ]
+            }
+        },
+        "AISW_CANN_DRV_HDC_026": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "HDC发送数据失败",
+                "description_zh": "调用halHdcSend/halHdcFastSend接口发送数据失败，失败原因如下：\na. HDC的发送缓存内存申请失败。\nb. PCIe驱动模块传输数据失败。",
+                "suggestion_zh": [
+                    "1. 业务发送方重试；",
+                    "2. 重新拉起业务；",
+                    "3. 系统重启；"
+                ],
+                "cause_en": "The HDC fails to send data.",
+                "description_en": "Failed to invoke the halHdcSend or halHdcFastSend interface to send data. The failure cause is as follows: \na. The HDC fails to apply for the transmit buffer memory.\nb. The PCIe drive module fails to transmit data.",
+                "suggestion_en": [
+                    "1. The service sender retryes.",
+                    "2. Restart the service.",
+                    "3. Restart the system."
+                ]
+            },
+            "source_file": "CANN_Plog | OS",
+            "regex": {
+                "in": [
+                    ["halHdcSend", "HDC send failed"],
+                    ["Input parameter pMsg is NULL"],
+                    ["Input parameter pSession is NULL"],
+                    ["Failed to send wr"],
+                    ["len exceed max segment"],
+                    ["Failed to post jfs send wr"]
+                ]
+            }
+        },
+        "AISW_CANN_DRV_HDC_027": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "HDC接收数据失败",
+                "description_zh": "调用接口halHdcRecv/halHdcFastRecv失败，失败原因如下：\na. 为接收数据的申请存放空间时，申请内存失败；\nb. PCIe驱动模块故障无法接收数据。",
+                "suggestion_zh": [
+                    "1. 业务发送方重试；",
+                    "2. 重新拉起业务；",
+                    "3. 系统重启；"
+                ],
+                "cause_en": "HDC receiving data failed.",
+                "description_en": "Failed to invoke the halHdcRecv/halHdcFastRecv interface. The failure cause is as follows: \na. The memory application fails when the storage space is applied for for the received data.\nb. The PCIe drive module is faulty and cannot receive data.",
+                "suggestion_en": [
+                    "1. The service sender retryes.",
+                    "2. Restart the service.",
+                    "3. Restart the system."
+                ]
+            },
+            "source_file": "CANN_Plog | OS",
+            "regex": {
+                "in": ["drvHdcRecvMsgLen", "msg_length too large", "Call malloc failed", "Failed to poll jfc", "type="]
+            }
+        },
+        "AISW_CANN_DRV_HDC_028": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "创建HDC会话客户端失败",
+                "description_zh": "调用drvHdcClientCreate接口失败，原因如：系统内存不足，导致创建客户端结构体资源失败。",
+                "suggestion_zh": [
+                    "1. 这种一般是没有内存了，或者发生了OOM，需要整系统排查；"
+                ],
+                "cause_en": "Failed to create the HDC session client.",
+                "description_en": "Failed to invoke the drvHdcClientCreate interface. The possible causes: The system memory is insufficient. As a result, the client structure resource fails to be created.",
+                "suggestion_en": [
+                    "1. This generally indicates that there is no memory left, or an OOM (Out of Memory) has occurred. A comprehensive system check is required."
+                ]
+            },
+            "source_file": "CANN_Plog | OS",
+            "regex": {
+                "in": [
+                    ["drvHdcClientCreateParaChecker", "Input parameter pClient is NULL"],
+                    ["drvHdcClientCreateParaChecker", "Input parameter maxSessionNum is error"],
+                    ["drvHdcClientCreateParaChecker", "Input parameter serviceType is error"],
+                    ["drvHdcClientCreateParaChecker", "Input parameter flag is error"],
+                    ["Call malloc failed"]
+                ]
+            }
+        },
+        "AISW_CANN_DRV_HDC_029": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "创建HDC服务端失败",
+                "description_zh": "调用接口drvHdcServerCreate创建HDC服务端失败，失败原因如下：\na. 系统内存不足，导致为HDC服务端资源申请内存失败。\nb. 没有空闲的服务器资源可以用户创建HDC服务端。",
+                "suggestion_zh": [
+                    "1. 排查业务是否有同进程拉起多个type相同的server；",
+                    "2. 排查事件调度设备上线情况；",
+                    "3. 排查业务是否OOM；",
+                    "4. 重启进程；",
+                    "5. 系统重启；"
+                ],
+                "cause_en": "Failed to create the HDC server.",
+                "description_en": "The drvHdcServerCreate API fails to be invoked to create the HDC server. The failure cause is as follows: \na. The system memory is insufficient. As a result, memory application for HDC server resources fails.\nb. If there are no idle server resources, you can create an HDC server.",
+                "suggestion_en": [
+                    "1. Check whether the service has multiple servers of the same type started by the same process.",
+                    "2. Check the status of event scheduling and device online status.",
+                    "3. Check whether the service has experienced OOM (Out of Memory).",
+                    "4. Restart the process.",
+                    "5. System restart."
+                ]
+            },
+            "source_file": "CANN_Plog | OS",
+            "regex": {
+                "in": [
+                    ["drv_hdc_pcie_server_create", "HDC init", "set service level failed", "Call malloc failed"],
+                    ["hdcUbServerCreate", "Cannot find hdcdrv dev", "hdc_link_event_pre_init failed in server create"]
+                ]
+            }
+        },
+        "AISW_CANN_DRV_HDC_030": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "在HDC服务端接收新的HDC会话连接请求失败",
+                "description_zh": "调用drvHdcSessionAccept接口出现失败，失败原因如下：\na. 系统内存不足，导致内存申请失败。\nb. 通过PCIe驱动模块回复HDC会话连接请求的应答消息失败。",
+                "suggestion_zh": [
+                    "1. 排查是否OOM；",
+                    "2. 排查业务在对侧是否起了同类型type的server，没起则拉起server后重试；",
+                    "3. 排查session是否已经耗尽；",
+                    "4. 系统重启；"
+                ],
+                "cause_en": "Failed to receive a new HDC session connection request on the HDC server.",
+                "description_en": "Calling the drvHdcSessionAccept interface fails, with the following reasons for the failure: \na. Insufficient system memory, leading to a failure in memory allocation.\nb. Failure to respond to the HDC session connection request through the PCIe driver module.",
+                "suggestion_en": [
+                    "1. Check whether OOM (Out of Memory) has occurred.",
+                    "2. Check whether the service on the other side has started a server of the same type. If not, start the server and try again.",
+                    "3. Check whether the session has been exhausted.",
+                    "4. Restart the system."
+                ]
+            },
+            "source_file": "CANN_Plog | OS",
+            "regex": {
+                "in": [
+                    ["drv_hdc_pcie_session_accept", "Accept failed", "Call malloc failed"],
+                    ["hdcdrv_accept", "Reply message send failed", "Remote session has closed"],
+                    ["hdc_ub_accept", "halEschedSubmitEventToThread failed", "Init UB context failed"]
+                ]
+            }
+        },
+        "AISW_CANN_DRV_HDC_031": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "客户端发起会话连接请求失败",
+                "description_zh": "客户端调用接口drvHdcSessionConnect失败。\na. 没有空闲的客户端会话资源用于发起会话连接请求。\nb. PCIe驱动模块传输会话连接请求失败。\nc. 服务端没有返回会话连接请求消息的应答消息。",
+                "suggestion_zh": [
+                    "1. 排查是否OOM；",
+                    "2. 排查业务对侧进程是否已经提前异常退出；",
+                    "3. 排查session是否已经耗尽；",
+                    "4. 系统重启；"
+                ],
+                "cause_en": "The client fails to initiate a session connection request.",
+                "description_en": "Client fails to call the interface drvHdcSessionConnect.\na. There are no idle client session resources available to initiate a session connection request.\nb. The PCIe driver module fails to transmit the session connection request.\nc. The server does not return a response message for the session connection request.",
+                "suggestion_en": [
+                    "1. Check whether OOM (Out of Memory) has occurred.",
+                    "2. Check whether the peer process of the business side has already exited abnormally in advance.",
+                    "3. Check whether the session has already been exhausted.",
+                    "4. System restart."
+                ]
+            },
+            "source_file": "CANN_Plog | OS",
+            "regex": {
+                "in": [
+                    ["hdcdrv_connect", "No session resources available", "Wait_reply unsuccessful"],
+                    ["hdcdrv_cmd_alloc_connect_session", "session alloc failed", "Remote ub resource init failed", "check remote side log"],
+                    ["hdc_ub_connect", "halEschedSubmitEvent failed"],
+                    ["hdc_check_connect_wait", "Remote ub resource init failed", "check remote side log"]
+                ]
+            }
+        },
+        "AISW_CANN_DRV_SVM_041": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "drvMemcpy svm内存拷贝失败，ub驱动异常",
+                "description_zh": "ub驱动异常。",
+                "suggestion_zh": [
+                    "1. ub驱动排查故障原因；"
+                ],
+                "cause_en": "drvMemcpy SVM memory copy failed, ub driver exception",
+                "description_en": "UB driver exception.",
+                "suggestion_en": [
+                    "1. UB driver troubleshooting to identify the cause of the issue."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    ["Urma wait jfc failed", "(i=", "jfs=", "jfc="],
+                    ["Urma poll jfc failed", "(i=", "ret_cnt=", "status=", "jfs=", "jfc="]
+                ]
+            }
+        },
+        "AISW_CANN_DRV_SVM_042": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "halShmemOpenHandleByDevId 打开共享内存失败，管控面ubmem配置下发异常",
+                "description_zh": "ubdrv获取ub decoder信息失败。",
+                "suggestion_zh": [
+                    "1. 管控面排查ubmem相关配置是否正确；"
+                ],
+                "cause_en": "halShmemOpenHandleByDevId failed to open shared memory, abnormal configuration delivery of ubmem on the management plane",
+                "description_en": "The ubdrv fails to obtain the ub decoder information.",
+                "suggestion_en": [
+                    "1. On the management plane, check whether the ubmem-related configurations are correct."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["Mem map failed"]
+            }
+        },
+        "AISW_CANN_DRV_TS_018": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "CQ处理不及时，导致SQ反压，任务拥塞",
+                "description_zh": "CQ处理不及时。",
+                "suggestion_zh": [
+                    "1. sqe下发返回DRV_ERROR_NO_RESOURCES；"
+                ],
+                "cause_en": "CQ processing is not timely, causing SQ backpressure and task congestion.",
+                "description_en": "Untimely handling of CQ.",
+                "suggestion_en": [
+                    "1. DRV_ERROR_NO_RESOURCES is returned after the sqe is delivered."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["No idle credit"]
+            }
+        },
+        "AISW_CANN_DRV_TS_026": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "下发计算任务失败",
+                "description_zh": "一、在host侧调用TSDRV驱动HAL接口下发任务，失败原因有如下：\na. HOST与Device间的通信链路中断，导致Tsdrv无法通知Device侧芯片去读取芯片的SQ。\nb. D芯片上的TSFW或者STARS读取SQ内容失败。\n二、在Device侧调用TSDRV驱动HAL接口下发任务，失败原因有如下：\na. D芯片上的TSFW或者STARS读取SQ内容失败。",
+                "suggestion_zh": [
+                    "1. 分析下发任务失败的原因；"
+                ],
+                "cause_en": "Failed to deliver the computing task.",
+                "description_en": "1. Invoke the HAL interface of the TSDRV driver on the host to deliver a task. The failure causes are as follows:\na. The communication link between the host and the device is interrupted. As a result, the Tsdrv cannot instruct the chip on the device side to read the SQ of the chip.\nb. The TSFW or STARS on chip D fails to read the SQ content.\n2. On the device side, call the HAL interface of the TSDRV driver to deliver a task. The failure causes are as follows:\na. The TSFW or STARS on chip D fails to read the SQ content.",
+                "suggestion_en": [
+                    "1. Analyze the reasons for the failure to issue tasks."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["Failed to write with notify", "trs_post_jfs_wr_with_db"]
+            }
+        },
+        "AISW_CANN_DRV_TS_027": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "接收CQE失败",
+                "description_zh": "a. 接收不到cqe，cqe丢失。\nb. 接收到cqe内容不正确。",
+                "suggestion_zh": [
+                    "1. 分析接收cqe失败的原因；"
+                ],
+                "cause_en": "Failed to receive CQE",
+                "description_en": "a. Unable to receive CQEs; CQEs are lost.\nb. Received CQEs contain incorrect content.",
+                "suggestion_en": [
+                    "1. Analyze the reasons for the failure to receive CQEs."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["Cmd 20 warn", "trs_dev_ioctl"]
+            }
+        },
+        "AISW_CANN_HCCL_028": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "集合通信",
+                "cause_zh": "QP建链失败",
+                "description_zh": "HCCL算子加载失败：在通信算子加载时，会在节点间，需要直接通信的两卡之间，创建RDMA通信需要使用的QP，并使用socket完成QP之间的建链。可能原因：对端进程异常退出。",
+                "suggestion_zh": [
+                    "1. 检查对端异常退出原因；"
+                ],
+                "cause_en": "QP link establishment failed",
+                "description_en": "HCCL operator loading failed: During the loading of communication operators, a QP (Queue Pair) required for RDMA communication needs to be created between nodes and between two GPUs that require direct communication. The socket is then used to establish a connection between the QPs. Possible causes include: The peer process abnormally exited.",
+                "suggestion_en": [
+                    "1. Check the reason for the abnormal exit of the peer end."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["Connect][Qp]get qp status timeout_=", "qp_status="]
+            }
+        },
+        "AISW_CANN_OS_003": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "OS",
+                "cause_zh": "进程加组失败",
+                "description_zh": "进程加组接口调用失败，可能的原因如下：\na. 目标组id无效或者不存在。\nb. 内存不足，导致无法申请资源。\nc. 组数量达到上限。",
+                "suggestion_zh": [
+                    "1. 记录错误日志；"
+                ],
+                "cause_en": "The process fails to be added to the group.",
+                "description_en": "The interface for adding a process to a group fails to be invoked. The possible causes are as follows:\na. The target group ID is invalid or does not exist.\nb. Resources cannot be applied for due to insufficient memory.\nc. The number of groups reaches the upper limit.",
+                "suggestion_en": [
+                     "1. Record error logs."
+                ]
+            },
+            "source_file": "NPU_History",
+            "regex": {
+                "in": [
+                    ["task already in target group("],
+                    ["add group:", "group(", "reaches max process num"]
+                ]
+            }
+        },
+        "AISW_CANN_OS_004": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "OS",
+                "cause_zh": "申请共享内存失败",
+                "description_zh": "进程或者模块通过sharepool申请共享内存失败的可能原因如下：\na. 系统内存不足，无法满足申请需求。\nb. 资源组被销毁。\nc. 申请大页时，无连续内存。",
+                "suggestion_zh": [
+                    "1. 记录错误日志；"
+                ],
+                "cause_en": "Failed to apply for the shared memory.",
+                "description_en": "A process or module fails to apply for shared memory through the sharepool. The possible causes are as follows:\na. The system memory is insufficient to meet the application requirements.\nb. The resource group is destroyed.\nc. No contiguous memory is available when a huge page is applied for.",
+                "suggestion_en": [
+                    "1. Record error logs."
+                ]
+            },
+            "source_file": "NPU_History",
+            "regex": {
+                "in": [
+                    ["allocation failed due to mm populate failed(potential no enough memory when"],
+                    ["allocation failed", "can't find group("]
+                ]
+            }
+        },
+        "AISW_CANN_OS_005": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "OS",
+                "cause_zh": "用户态内存映射到内核态失败",
+                "description_zh": "进程调用接口共享内存到内核模块，可能的失败的原因：\na. 进程中其他线程异常，发生coredump。\nb. 内存不足，申请资源失败。",
+                "suggestion_zh": [
+                    "1. 记录内核日志；"
+                ],
+                "cause_en": "User-mode memory mapping fails to be mapped to kernel mode.",
+                "description_en": "The process invokes the interface to share the memory to the kernel module. The possible causes are as follows:\na. Other threads in the process are abnormal and core dump occurs.\nb. The memory is insufficient and resource application fails.",
+                "suggestion_en": [
+                    "1. Record kernel logs."
+                ]
+            },
+           "source_file": "NPU_History",
+            "regex": {
+                "in": ["target mm is exiting"]
+            }
+        },
+        "AISW_CANN_QOS_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "QOS",
+                "cause_zh": "UB 内存带宽控制失效",
+                "description_zh": "a. UB控制器MPAMID没有配置正确。\nb. FE-id范围配置错误。",
+                "suggestion_zh": [
+                    "1. 记录错误日志；"
+                ],
+                "cause_en": "UB Memory Bandwidth Control Failure",
+                "description_en": "a. The MPAMID of the UB controller is incorrectly configured.\nb. The FE ID range is incorrectly configured.",
+                "suggestion_en": [
+                    "1. Record error logs."
+                ]
+            },
+            "source_file": "NPU_History",
+            "regex": {
+                "in": ["[QOS][ERROR][dms_set_qos_config:", "set bandwidth config fail", "ret"]
+            }
+        },
+        "AISW_CANN_QOS_004": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "QOS",
+                "cause_zh": "闭环流控反压无效",
+                "description_zh": "软件配置问题，没有正确配置MATA/SIO/UB的反压水线及各个加速器的反压响应。",
+                "suggestion_zh": [
+                    "1. 记录错误日志；"
+                ],
+                "cause_en": "Closed-loop flow control backpressure is ineffective",
+                "description_en": "Software configuration issue: The backpressure waterline for MATA/SIO/UB and the backpressure response of each accelerator were not correctly configured.",
+                "suggestion_en": [
+                    "1. Record error logs."
+                ]
+            },
+            "source_file": "NPU_History",
+            "regex": {
+                "in": ["[QOS][ERROR][dms_set_qos_config:", "set allow config fail", "ret"]
+            }
+        },
+        "AISW_CANN_STARS_004": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "任务调度",
+                "cause_zh": "中断后处理卡住",
+                "description_zh": "a. 加速器异常后处理中polling加速器状态时，芯片状态长期无法变为预期状态，导致stars_drv线程卡住。\nb. 中断后处理中调用其它drv的API接口时，其它drv内部处理卡住。\nc. 访问竞争资源时锁卡死。",
+                "suggestion_zh": [
+                    "1. 根据sqe_type获取当前的任务类型；",
+                    "2. 查看该加速的的异常复位流程；",
+                    "3. 明确该加速在polling过程中超时；"
+                ],
+                "cause_en": "Post-interruption processing gets stuck",
+                "description_en": "a. After an accelerator exception occurs during post-processing, polling the accelerator status, the chip status remains unable to transition to the expected state for an extended period. This causes the stars_drv thread to get stuck.\nb. During post-processing after an interruption, when calling the API interface of another drv, the internal processing of the other drv gets stuck.\nc. When accessing a contention resource, the lock gets stuck.",
+                "suggestion_en": [
+                    "1. Obtain the current task type based on sqe_type.",
+                    "2. Examine the abnormal reset process of this acceleration.",
+                    "3. Clarify that this acceleration experiences a timeout during the polling process."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    ["timeout", "polling count="],
+                    ["PrintTaskErrorMsg:", "Task run failed"]
+                ]
+            }
+        },
+        "AISW_CANN_STARS_005": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "任务调度",
+                "cause_zh": "芯片模块初始化失败2",
+                "description_zh": "a. AIC/AIV初始化、软复位异常。\nb. SDMA通道初始化失败。\nc. PCIe通道初始化失败。\nd. STARS初始化失败。",
+                "suggestion_zh": [
+                    "1. 根据sqe_type确定具体的算子类型；",
+                    "2. 首先查看该加速器的pool0_enable有没有使能；",
+                    "3. 发现加速器的pool0_enable没有使能，确定为加速器没有加入pool中；"
+                ],
+                "cause_en": "Chip module initialization failed 2",
+                "description_en": "a. AIC/AIV initialization, warm reset exception.\nb. SDMA channel initialization failed.\nc. PCIe channel initialization failed.\nd. STARS initialization failed.",
+                "suggestion_en": [
+                    "1. Determine the specific operator type based on sqe_type.",
+                    "2. First, check whether the pool0_enable of the accelerator is enabled.",
+                    "3. If it is found that the pool0_enable of the accelerator is not enabled, it is determined that the accelerator has not been added to the pool."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    ["The ping head is valid", "head sqe_type="],
+                    ["PrintTaskErrorMsg:", "Task run failed"]
+                ]
+            }
+        },
+        "AISW_CANN_TSD_10": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "TSD",
+                "cause_zh": "HDC连接中断",
+                "description_zh": "socket断链。",
+                "suggestion_zh": [
+                    "1. 查看日志确认是否算子超时或进程退出。若算子超时则可调大超时时间。若进程退出需要联系工程师处理；"
+                ],
+                "cause_en": "HDC connection interrupted",
+                "description_en": "Socket connection broken.",
+                "suggestion_en": [
+                    "1. Check the logs to confirm whether the operator has timed out or the process has exited. If the operator has timed out, you can increase the timeout duration. If the process has exited, you need to contact an engineer for handling."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": [
+                    ["Receive no msg by socket closed"],
+                    ["Receive no msg by hdc down"]
+                ]
+            }
+        },
+        "AISW_UB_URMA_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "URMA",
+                "cause_zh": "交换TP信息失败",
+                "description_zh": "公知jetty建链失败，UB传输失败，交换得到信息异常。",
+                "suggestion_zh": [
+                    "1. 记录错误日志；"
+                ],
+                "cause_en": "Failed to exchange TP information",
+                "description_en": "It is widely known that Jetty fails to establish a connection, UB transmission fails, and the information obtained through the exchange is abnormal.",
+                "suggestion_en": [
+                    "1. Record error logs."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["Failed to exchange tp info", "ret:"]
+            }
+        },
+        "AISW_UB_URMA_005": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "URMA",
+                "cause_zh": "TPN或者TPGN或者DA的ID用尽",
+                "description_zh": "TP超出TP Range范围、硬件资源耗尽。",
+                "suggestion_zh": [
+                    "1. 记录错误日志；"
+                ],
+                "cause_en": "TPN or TPGN or DA's ID exhaustion",
+                "description_en": "The TP exceeds the TP range, and hardware resources are exhausted.",
+                "suggestion_en": [
+                    "1. Record error logs."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["Failed to get tp list", "ret:" ]
+            }
+        },
+        "AISW_UB_URMA_007": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "URMA",
+                "cause_zh": "调用驱动接口写TP异常",
+                "description_zh": "驱动接口返回异常、驱动无响应。",
+                "suggestion_zh": [
+                    "1. 记录错误日志；"
+                ],
+                "cause_en": "Calling the driver interface to write TP results in an exception.",
+                "description_en": "The driver interface returns an exception, and the driver does not respond.",
+                "suggestion_en": [
+                    "1. Record error logs."
+                ]
+            },
+            "source_file": "CANN_Plog",
+            "regex": {
+                "in": ["Failed to active tp", "ret:"]
+            }
+        },
+        "AISW_CANN_DRV_PCIE_046": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "DMA或BAR传输的数据错误",
+                "description_zh": "DMA或BAR传输的数据错误，系统重启。",
+                "suggestion_zh": [
+                    "1. 系统重启；"
+                ],
+                "cause_en": "Data error in DMA or BAR transmission",
+                "description_en": "Data error in DMA or BAR transmission, system restart.",
+                "suggestion_en": [
+                    "1. System restart."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": [
+                    ["agentdrv_rx_msg_record_resq_time"],
+                    ["DMA copy failed"]
+                ]
+            }
+        },
+        "AISW_CANN_DRV_PCIE_047": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "HOST侧DMA通道初始化失败",
+                "description_zh": "HOST侧PCIe驱动初始化HOST侧需要使用的DMA通道失败，失败原因有如下：\na. PCIe链路故障，初始化消息无法通过BAR空间发送到Device侧。\nb. Device侧PCIe驱动没有正常工作，无法处理来自HOST侧的DMA初始化消息。\nc. PCIe驱动的管理DMA通道不可用，无法执行从HOST侧搬移数据到Device侧。",
+                "suggestion_zh": [
+                    "1. 系统重启；"
+                ],
+                "cause_en": "Host-side DMA channel initialization failed.",
+                "description_en": "The PCIe driver on the host side fails to initialize the DMA channel required by the host side. The failure causes are as follows:\na. The PCIe link is faulty, and initialization messages cannot be sent to the device through the BAR space.\nb. The PCIe driver on the device side does not work properly and cannot process the DMA initialization message from the host side.\nc. The management DMA channel of the PCIe driver is unavailable, and data cannot be migrated from the host side to the device side.",
+                "suggestion_en": [
+                    "1. System restart."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": [
+                    ["devdrv_dma_init"],
+                    ["Dma chan init failed", "(dev_id", "Dma device init"]
+                ]
+            }
+        },
+        "AISW_CANN_DRV_PCIE_048": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "使用HOT RESET接口复位D芯片设备",
+                "description_zh": "使用PCIE驱动模块的HOT RESET接口发起D芯片复位，复位失败原因有如下：\na. PCIE链路不正常，链路不通，OS内核返回失败错误给PCIE驱动模块。\nb. 在一条PCIE总线上有两个PCIE设备，OS内核返回失败错误给PCIE驱动模块。",
+                "suggestion_zh": [
+                    "1. 重试复位；",
+                    "2. 系统重启；"
+                ],
+                "cause_en": "Reset the D chip by using the HOT RESET interface.",
+                "description_en": "When the HOT RESET interface of the PCIe driver module is used to reset the D chip, the reset failure causes are as follows:\na. If the PCIe link is abnormal, the OS kernel returns a failure error to the PCIe driver module.\nb. When two PCIe devices exist on a PCIe bus, the OS kernel returns a failure error to the PCIe driver module.",
+                "suggestion_en": [
+                    "1. Retry reset.",
+                    "2. System restart."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["Pcie bridge bus reset fail", "bus->self is NULL.Can not hotreset"]
+            }
+        },
+        "AISW_CANN_DRV_PCIE_049": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "使用PCIe DMA功能传输数据失败",
+                "description_zh": "PCIe驱动模块使用PCIe DMA在HOST与Device间传输数据的时候，数据传输失败。原因有如下：\na. DMA的SQE描述符填写错误，填写了非法的SQE描述符。\nb. DMA的SQ内存地址初始化错误，配置给DMA的SQ内存地址无法被DMA引擎识别。\nc. PCIe链路错误，导致DMA的数据搬移指令无法在PCIe链路上传输。",
+                "suggestion_zh": [
+                    "1. DMA发送重试；",
+                    "2. 系统重启；"
+                ],
+                "cause_en": "Failed to transfer data using the PCIe DMA function.",
+                "description_en": "When the PCIe drive module uses the PCIe DMA to transmit data between the host and the device, the data fails to be transmitted. The reasons are as follows:\na. The SQE descriptor of the DMA module is incorrectly filled. An invalid SQE descriptor is filled.\nb. The SQ memory address of the DMA is initialized incorrectly. As a result, the SQ memory address configured for the DMA cannot be identified by the DMA engine.\nc. The PCIe link is faulty. As a result, the DMA data transfer command cannot be transmitted over the PCIe link.",
+                "suggestion_en": [
+                    "1. DMA send retry.",
+                    "2. System restart."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["Dma copy failed", "(dev_id="]
+            }
+        },
+        "AISW_CANN_DRV_PCIE_050": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "数据流量过大，带宽跑满出现拥塞",
+                "description_zh": "业务发送方重试处理。",
+                "suggestion_zh": [
+                    "1. 业务发送方重试处理；"
+                ],
+                "cause_en": "The traffic volume is too heavy and the bandwidth is full, causing congestion.",
+                "description_en": "Retry processing by the service sender.",
+                "suggestion_en": [
+                    "1. Retry processing by the service sender."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["Time out", "(dev_id="]
+            }
+        },
+        "AISW_CANN_DRV_PCIE_052": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "通过BAR空间读写跨片地址失败",
+                "description_zh": "HOST侧通过BAR空间读写Device侧的地址空间或者Device侧通过BAR空间访问HOST侧的地址失败，原因如下：\na. PCIe链路或者PCIe控制器异常导致芯片load/stored指令无法在PCIe链路上传输；\nb. RX ATU和TX ATU映射配置错误。",
+                "suggestion_zh": [
+                    "1. 业务方需要确认enable p2p；",
+                    "2. 确认host侧服务器是否支持p2p能力；"
+                ],
+                "cause_en": "Failed to read/write inter-chip addresses through BAR space.",
+                "description_en": "The host fails to read or write the address space on the device side through the BAR space or access the address on the host side through the BAR space. The possible causes are as follows:\na. The PCIe link or PCIe controller is abnormal. As a result, the load/stored instructions of the chip cannot be transmitted over the PCIe link.\nb. The mapping between the RX ATU and TX ATU is incorrectly configured.",
+                "suggestion_en": [
+                    "1. The business party needs to confirm enabling p2p.",
+                    "2. Confirm whether the host-side server supports p2p capability."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": [
+                    ["p2p dst_device not exist"],
+                    ["agentdrv_p2p_msg_chan_send"]
+                ]
+            }
+        },
+        "AISW_CANN_DRV_TS_020": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "HOST TSDRV与Device TSDRV间通信失败",
+                "description_zh": "HOST TSDRV与Device TSDRV间通信失败原因是HOST与Device间的PCIE链路故障导致。",
+                "suggestion_zh": [
+                    "1. 检查通信故障原因；"
+                ],
+                "cause_en": "Communication between the host TSDRV and the device TSDRV fails.",
+                "description_en": "The reason for the communication failure between HOST TSDRV and Device TSDRV is due to a fault in the PCIe link between the HOST and the Device.",
+                "suggestion_en": [
+                    "1. Check the cause of communication failure."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["Send msg failed"]
+            }
+        },
+        "AISW_CANN_DRV_TS_021": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "HOST TSDRV与TSFW通信失败， TSDRV往mailbox里写请求数据，但是TSFW没有应答",
+                "description_zh": "HOST TSDRV与TSFW通信失败， TSDRV往mailbox里写请求数据，但是TSFW没有应答，原因有：\na. TSFW没有处理请求，没有回复应答。\nb. mailbox没有成功初始化，TSDRV写mailbox失败。",
+                "suggestion_zh": [
+                    "1. 检查通信故障原因；",
+                    "2. ts检查没有处理mailbox消息的原因；"
+                ],
+                "cause_en": "HOST TSDRV failed to communicate with TSFW. TSDRV wrote a request for data into the mailbox, but TSFW did not respond.",
+                "description_en": "The communication between the host TSDRV and the TSFW fails. The TSDRV writes request data to the mailbox, but the TSFW does not respond. The possible causes are as follows:\na. The TSFW does not process the request and does not return a response.\nb. The mailbox fails to be initialized, and the TSDRV fails to write data to the mailbox.",
+                "suggestion_en": [
+                    "1. Check the cause of the communication failure.",
+                    "2. TS check the reason why mailbox messages are not being processed."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["Msg send warn", "trs_soft_mbox_send"]
+            }
+        },
+        "AISW_CANN_DRV_TS_028": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "申请SQ,CQ资源失败",
+                "description_zh": "一、在host侧调用TSDRV驱动HAL接口申请SQ,CQ资源失败，失败原因有如下：\na. HOST与Device间的PCIe链路不通，导致HOST侧tsdrv无法与Device侧tsdrv通信而从Device侧获取新的SQ,CQ资源。\nb. Device侧TSDRV驱动模块初始化失败，KO没有成功插入或者资源初始化没有成功。\n二、在Device侧调用TSDRV驱动HAL接口申请SQ,CQ资源失败，失败原因有如下：\na. Device侧TSDRV驱动模块初始化失败，KO没有成功插入或者资源初始化没有成功。",
+                "suggestion_zh": [
+                    "1. 用户检查资源申请和释放情况，不要申请超过算力上限的资源；"
+                ],
+                "cause_en": "Failed to apply for SQ and CQ resources.",
+                "description_en": "1. On the host side, call the HAL interface of the TSDRV driver to apply for SQ and CQ resources. The failure causes are as follows:\na. The PCIe link between the host and the device is disconnected. As a result, the tsdrv on the host side cannot communicate with the tsdrv on the device side and obtain new SQ and CQ resources from the device side.\nb. The TSDRV drive module on the device side fails to be initialized. The KO fails to be inserted or resources fail to be initialized.\n2. On the device side, call the HAL interface of the TSDRV driver to apply for the SQ and CQ resources. The failure causes are as follows:\na. The TSDRV drive module on the device side fails to be initialized. The KO fails to be inserted or resources fail to be initialized.",
+                "suggestion_en": [
+                    "1. Users should check the status of resource requests and releases. Do not request resources that exceed the computing power limit."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["Alloc chan failed", "trs_hw_sqcq_alloc_pair"]
+            }
+        },
+        "AISW_CANN_DRV_TS_029": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "申请Stream ID ,Model ID，Notify ID资源失败",
+                "description_zh": "一、在host侧调用TSDRV驱动HAL接口申请ID资源失败，失败原因有如下：\na. HOST与Device间的PCIe链路不通，导致HOST侧tsdrv无法与Device侧tsdrv通信而从Device侧获取新的ID资源。\nb. Device侧TSDRV驱动模块初始化失败，KO没有成功插入或者资源初始化没有成功。\n二、在Device侧调用TSDRV驱动HAL接口申请SQ,CQ资源失败，失败原因有如下：\na. Device侧TSDRV驱动模块初始化失败，KO没有成功插入或者资源初始化没有成功。",
+                "suggestion_zh": [
+                    "1. 用户检查资源申请和释放情况，不要申请超过算力上限的资源；"
+                ],
+                "cause_en": "Failed to apply for Stream ID, Model ID, and Notify ID resources.",
+                "description_en": "1. Failed to invoke the HAL interface of the TSDRV driver to apply for ID resources on the host side. The failure causes are as follows:\na. The PCIe link between the host and the device is disconnected. As a result, the tsdrv on the host side cannot communicate with the tsdrv on the device side and obtain new ID resources from the device side.\nb. The TSDRV drive module on the device side fails to be initialized. The KO fails to be inserted or resources fail to be initialized.\n2. On the device side, call the HAL interface of the TSDRV driver to apply for the SQ and CQ resources. The failure causes are as follows:\na. The TSDRV drive module on the device side fails to be initialized. The KO fails to be inserted or resources fail to be initialized.",
+                "suggestion_en": [
+                    "1. Users should check the status of resource requests and releases. Do not request resources that exceed the computing power limit."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["Alloc res id failed", "trs_res_id_alloc"]
+            }
+        },
+        "AISW_CANN_DRV_TS_030": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "资源泄露",
+                "description_zh": "ts处理回收的mailbox超时。",
+                "suggestion_zh": [
+                    "1. 用户检查资源申请和释放情况，不要申请超过算力上限的资源；"
+                ],
+                "cause_en": "Resource leak",
+                "description_en": "Timeout occurs when the TS processes the reclaimed mailbox.",
+                "suggestion_en": [
+                    "1. Users should check the status of resource requests and releases. Do not request resources that exceed the computing power limit."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["Recycle warn", "_trs_release_by_exit_stage"]
+            }
+        },
+        "AISW_CANN_DRV_TS_032": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "释放SQ,CQ资源失败",
+                "description_zh": "非法sqid/cqid。",
+                "suggestion_zh": [
+                    "1. 检查id是否已经申请过；"
+                ],
+                "cause_en": "Failed to release SQ and CQ resources.",
+                "description_en": "Illegal sqid/cqid.",
+                "suggestion_en": [
+                    "1. Check whether the ID has been applied for."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": [
+                    ["pair_mode_free_para_check", "Not proc sq"],
+                    ["pair_mode_free_para_check", "Not proc cq"]
+                ]
+            }
+        },
+        "AISW_CANN_DRV_TS_033": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "释放Stream ID, Model ID，Notify ID资源失败",
+                "description_zh": "非法id。",
+                "suggestion_zh": [
+                    "1. 检查id是否已经申请过；"
+                ],
+                "cause_en": "Failed to release the Stream ID, Model ID, and Notify ID resources.",
+                "description_en": "Illegal ID.",
+                "suggestion_en": [
+                    "1. Check whether the ID has been applied for."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["Not proc res", "trs_proc_del_res"]
+            }
+        },
+        "AISW_CANN_DRV_VNIC_007": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "HOST侧mac地址配置失败",
+                "description_zh": "失败原因有：\na. 打开mac配置文件'/etc/d-pcivnic.conf'失败，可能是文件不存在。\nb. mac配置文件里的mac地址格式错误或者没有mac内容。导致解释mac地址失败。\nc. 把mac地址发送到device侧失败，可能是PCIe的通路异常。",
+                "suggestion_zh": [
+                    "1. 重试复位；",
+                    "2. 系统重启；"
+                ],
+                "cause_en": "Failed to configure the MAC address on the host side.",
+                "description_en": "The reasons for failure are as follows:\na. Failed to open the mac configuration file '/etc/d-pcivnic.conf'. The possible reason is that the file does not exist.\nb. The MAC address format in the mac configuration file is incorrect, or there is no MAC content. This results in a failure to interpret the MAC address.\nc. Failed to send the MAC address to the device side. The possible reason is that the PCIe communication path is abnormal.",
+                "suggestion_en": [
+                    "1. Retry reset.",
+                    "2. System restart."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["pcivnic using default MAC"]
+            }
+        },
+        "AISW_CANN_DRV_VNIC_008": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "HOST侧创建vnic 设备失败",
+                "description_zh": "在OS系统内没有看到名字类似“endvnic”的VNIC设备：原因有如下：\na. VNIC KO插入失败，没有完成vnic初始化instance接口的初始化。\nb. PCIe驱动初始化失败，没有调用vnic的初始化instance接口。",
+                "suggestion_zh": [
+                    "1. 重试复位；",
+                    "2. 更换配套版本；"
+                ],
+                "cause_en": "Failed to create a vNIC on the host.",
+                "description_en": "The vNIC whose name is similar to endvnic is not displayed in the OS system. The possible causes are as follows:\na. The VNIC KO fails to be inserted. The initialization of the VNIC initialization instance interface is not complete.\nb. The PCIe driver fails to be initialized, and the instance initialization interface of the vnic is not invoked.",
+                "suggestion_en": [
+                    "1. Retry and reset.",
+                    "2. Replace with the corresponding version."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": [
+                    ["instance device netdev fail"],
+                    ["add pcidev failed"],
+                    ["register_common_msg failed"]
+                ]
+            }
+        },
+        "AISW_CANN_DRV_VNIC_009": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "跨server数据异常",
+                "description_zh": "a. 对端ip没配置。\nb. hccs通路异常。\nc. ip配置不在同一个网段中。",
+                "suggestion_zh": [
+                    "1. 重试发送；",
+                    "2. 系统复位重启；"
+                ],
+                "cause_en": "Cross-server data anomaly",
+                "description_en": "a. The peer IP address is not configured.\nb. The HCCS channel is abnormal.\nc. The IP configurations are not in the same network segment.",
+                "suggestion_en": [
+                    "1. Send the message again.",
+                    "2. The system is restarted."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": [
+                    ["s2s msg send fail"],
+                    ["pcivnic_s2s_send_proc"]
+                ]
+            }
+        },
+        "AISW_CANN_DRV_VNIC_010": {
+            "attribute": {
+                "class": "Software",
+                "component": "CANN",
+                "module": "Drv",
+                "cause_zh": "通过VNIC传输数据失败",
+                "description_zh": "失败原因有：\na. PCIe驱动模块通过DMA传输失败。\nb. IP/MAC地址配置错误导致消息路由失败。\nc. 接收端接收异常，把协议栈缓存占满，反向积压发送端buffer，导致发送失败。",
+                "suggestion_zh": [
+                    "1. 重试发送；",
+                    "2. 系统复位重启；"
+                ],
+                "cause_en": "Failed to transmit data through VNIC",
+                "description_en": "The failure causes are as follows:\na. The PCIe drive module fails to be transferred through the DMA.\nb. Message routing fails due to incorrect IP/MAC address configuration.\nc. The receiving end is abnormal and the buffer of the protocol stack is fully occupied. As a result, the buffer of the sending end is stacked on the reverse side, causing the sending failure.",
+                "suggestion_en": [
+                    "1. Send the message again.",
+                    "2. The system is restarted."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": [
+                    ["rx alloc skb failed"],
+                    ["tx queue full"]
+                ]
             }
         },
         "AISW_VLLM_DPLB_001": {
