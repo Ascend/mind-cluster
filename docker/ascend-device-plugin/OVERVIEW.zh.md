@@ -4,7 +4,7 @@
 
 ## 快速参考
 
-- Ascend Device Plugin 由 [MindCluster 代码仓](https://gitcode.com/Ascend/mind-cluster)  维护
+- Ascend Device Plugin 由 [MindCluster 代码仓](https://gitcode.com/Ascend/mind-cluster) 维护
 - 从哪里获取帮助
     - [MindCluster 代码仓](https://gitcode.com/Ascend/mind-cluster)
     - [MindCluster 昇腾社区](https://www.hiascend.com/document/detail/zh/mindcluster/2600/clustersched/dlug/docs/zh/scheduling/introduction.md)
@@ -32,13 +32,6 @@ Kubernetes 需要感知资源信息来实现对资源信息的调度。除基础
 
 - **网络故障监控**：从灵衢驱动中订阅灵衢网络故障信息，并将网络状态上报给 kubelet，同时将灵衢网络状态和具体故障信息上报给资源调度的上层服务。
 
-### 组件上下游依赖
-
-1. 从 DCMI 中获取芯片的类型、数量、健康状态信息，或者下发芯片复位命令。
-2. 上报芯片的类型、数量和状态给 kubelet。
-3. 上报芯片的类型、数量和具体故障信息给 ClusterD。
-4. 将调度器选中的芯片信息，以环境变量的方式告知给 Ascend Docker Runtime。
-
 ---
 
 ## 支持的 Tags 及 Dockerfile 链接
@@ -47,21 +40,19 @@ Kubernetes 需要感知资源信息来实现对资源信息的调度。除基础
 
 Tag 遵循以下格式：
 
-```shell
-<版本>-<操作系统>
+```
+<版本>
 ```
 
-| 字段     | 示例值           | 说明                         |
-|--------|---------------|----------------------------|
-| `版本`   | `v26.1.0`     | Ascend Device Plugin组件版本   |
-| `操作系统` | `ubuntu22.04` | Ascend Device Plugin镜像操作系统 |
+| 字段 | 示例值                           | 说明                      |
+|---|-------------------------------|-------------------------|
+| `版本` | `v26.0.0` | Ascend Device Plugin 版本号 |
 
-### Ascend Device Plugin 26.1.0
+### Ascend Device Plugin 26.0.0
 
-| Tag                      | Dockerfile                                      | 镜像内容                                                  |
-|--------------------------|-------------------------------------------------|-------------------------------------------------------|
-| `v26.1.0-ubuntu22.04`    | [Dockerfile.ubuntu](v26.1.0/Dockerfile.ubuntu) | Ascend Device Plugin组件v26.1.0版本操作系统为ubuntu22.04的镜像    |
-| `v26.1.0-openeuler24.03` | [Dockerfile.openeuler](v26.1.0/Dockerfile.openeuler) | Ascend Device Plugin组件v26.1.0版本操作系统为openeuler24.03的镜像 |
+| Tag        | Dockerfile                                                                                                          | 镜像内容                                               |
+|------------|---------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|
+| `v26.0.0`  | [Dockerfile](https://gitcode.com/Ascend/mind-cluster/blob/v26.0.0/component/ascend-device-plugin/build/Dockerfile)  | Ascend Device Plugin v26.0.0 (基础操作系统Ubuntu 22.04)  |
 
 ---
 
@@ -72,7 +63,7 @@ Tag 遵循以下格式：
 #### 软件依赖
 
 | 软件名称 | 支持的版本 | 安装位置 | 说明 |
-| -- | -- | -- | -- |
+|---|---|---|---|
 | Kubernetes | 1.17.x~1.34.x（推荐使用1.19.x及以上版本） | 所有节点 | 了解 K8s 的使用请参见 [Kubernetes 文档](https://kubernetes.io/zh-cn/docs/) |
 | Docker | 18.09.x~28.5.1 | 所有节点 | 可从 [Docker 社区或官网](https://docs.docker.com/engine/install/) 获取 |
 | Containerd | 1.4.x~2.1.4（推荐使用1.6.x版本） | 所有节点 | 可从 Containerd 的 [官网](https://containerd.io/downloads/) 获取 |
@@ -81,7 +72,7 @@ Tag 遵循以下格式：
 #### 硬件规格要求
 
 | 名称 | 要求 |
-| -- | -- |
+|---|---|
 | CPU | 0.5核 |
 | 内存 | 0.5GB |
 
@@ -89,44 +80,62 @@ Tag 遵循以下格式：
 
 宿主机已安装驱动和固件，详情请参见《CANN 软件安装指南》中的"[安装NPU驱动和固件](https://www.hiascend.com/document/detail/zh/canncommercial/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian)"章节（商用版）或"[安装NPU驱动和固件](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler)"章节（社区版）。
 
-### 如何本地构建
+### 在线获取 Ascend Device Plugin 镜像
 
-```bash
-docker build --no-cache -t ascend-k8sdeviceplugin:{tag} ./ -f Dockerfile.{os}
-```
-> **注意**：
-> - TARGETPLATFORM 是 Docker BuildKit 提供的全局内置参数，用于获取当前构建的目标平台（如 linux/amd64、linux/arm64）。
-> - 只有启用 BuildKit，才会自动注入这个变量。旧版 Docker / 默认关闭 BuildKit 的环境，构建时不存在这个变量，需要在运行构建指令前通过 <b>export DOCKER_BUILDKIT=1</b> 临时启用。
+1. 拉取官方镜像
 
-### 部署 Ascend Device Plugin
-
-1. 拉取镜像
-
+拉取昇腾镜像仓库提供的 Ascend Device Plugin 镜像，替换 {tag} 为实际版本号（推荐 v26.0.0）。
 ```bash
 docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:{tag}
 ```
 
 2. 修改镜像标签
 
+为拉取的官方镜像重新打本地标签，统一本地镜像命名规范，方便后续运维管理。
 ```bash
 docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:{tag} ascend-k8sdeviceplugin:{tag}
 ```
 
-3. 给节点打标签
+### 本地构建（可选）
 
-根据昇腾处理器型号查询需要打的标签：
+以下以 linux-aarch64 架构、v26.0.0 版本为例，提供完整的本地镜像构建步骤:
 
+1. 下载官方发布的组件安装包
+
+```shell
+wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip
+```
+
+2. 解压安装包至自定义目录
+
+```shell
+unzip Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64
+```
+
+3. 进入解压后的工作目录
+
+```shell
+cd Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64
+```
+
+4. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
+```bash
+docker build --no-cache -t ascend-k8sdeviceplugin:v26.0.0 ./ -f Dockerfile
+```
+
+### 部署 Ascend Device Plugin
+
+1. 给 Kubernetes 节点打标签
+
+根据节点搭载的昇腾处理器型号，为对应节点添加标签，用于集群调度匹配，替换 <node-name> 为实际节点名称。
 ```bash
 # 示例：为 Ascend 910 节点打标签
 kubectl label nodes <node-name> accelerator=huawei-Ascend910
-kubectl label nodes <node-name> host-arch=huawei-arm
 ```
 
-4. 启动 Ascend Device Plugin
+2. 启动 Ascend Device Plugin
 
-根据昇腾处理器型号选择对应的 YAML 文件：
-
-将 YAML 文件中镜像的 `{tag}` 替换为实际标签。
+根据设备型号及调度需求选择对应的 YAML 资源文件，部署前需将 YAML 文件内的镜像 `{tag}` 替换为实际使用的镜像版本
 
 ```bash
 # 除了Atlas 200I SoC A1 核心板之外的产品上不使用Volcano的配置文件。
@@ -136,17 +145,21 @@ kubectl apply -f device-plugin-{version}.yaml
 kubectl apply -f device-plugin-volcano-{version}.yaml
 ```
 
-5. 验证部署
+3. 验证部署
 
 ```bash
 kubectl get pods -A | grep device-plugin
 ```
 
-6. 检查节点资源
+预期结果：对应命名空间下的 device-plugin 相关 Pod 状态为 Running。
+
+4. 检查节点资源
 
 ```bash
 kubectl describe node <npu-node-name> | grep "huawei.com/Ascend"
 ```
+
+预期结果：可正常展示节点的 huawei.com/Ascend 资源容量与可分配资源数值。
 
 ---
 
@@ -159,6 +172,6 @@ kubectl describe node <npu-node-name> | grep "huawei.com/Ascend"
 
 ## 许可证
 
-查看这些镜像中包含的 Mind 系列软件的[许可证信息](https://www.hiascend.com/document/detail/zh/mindcluster/600/clustersched/introduction/schedulingsd/mxdlug_005.html)。
+查看这些镜像中包含的 Mind 系列软件的[许可证信息](https://www.hiascend.com/zh/legal/softlicense)。
 
 与所有容器镜像一样，预装软件包（Python、系统库等）可能受其自身许可证约束。

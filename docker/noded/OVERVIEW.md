@@ -4,30 +4,30 @@
 
 ## Quick Reference
 
-- NodeD is maintained by [MindCluster Code Repository](https://gitcode.com/Ascend/mind-cluster)
+- NodeD is maintained by [MindCluster Repository](https://gitcode.com/Ascend/mind-cluster)
 - Where to get help
-    - [MindCluster Code Repository](https://gitcode.com/Ascend/mind-cluster)
-    - [MindCluster Ascend Community](https://www.hiascend.com/document/detail/zh/mindcluster/2600/clustersched/dlug/docs/zh/scheduling/introduction.md)
+    - [MindCluster Repository](https://gitcode.com/Ascend/mind-cluster)
+    - [MindCluster Atlas Community](https://www.hiascend.com/document/detail/zh/mindcluster/2600/clustersched/dlug/docs/zh/scheduling/introduction.md)
     - [Issue Tracker](https://gitcode.com/Ascend/mind-cluster/issues)
 
 ---
 
 ## NodeD
 
-NodeD is a MindCluster cluster scheduling component deployed on compute nodes. It detects node abnormal states, retrieves CPU, memory, and disk fault information from IPMI, and reports it to ClusterD.
+NodeD is one of the MindCluster cluster scheduling components, deployed on compute nodes. It detects abnormal node states, retrieves CPU, memory, and disk fault information from IPMI, and reports it to ClusterD.
 
 ### Use Cases
 
-When a node's CPU, memory, or disk experiences certain faults, training tasks will fail. To allow training tasks to exit quickly when a node fault occurs and prevent new tasks from being scheduled to faulty nodes, MindCluster provides the NodeD component for detecting node abnormalities.
+When certain faults occur in a node's CPU, memory, or disk, training jobs will fail. To enable training jobs to exit quickly when node faults occur and prevent new jobs from being scheduled to faulty nodes, MindCluster provides the NodeD component for detecting node abnormalities.
 
 ### Features
 
-- Retrieves node abnormalities from IPMI and reports them to the upper-level scheduling service.
-- Periodically sends node fault information to the upper-level scheduling service.
+- Retrieves node abnormalities from IPMI and reports them to the upper-level resource scheduling service.
+- Periodically sends node fault information to the upper-level resource scheduling service.
 
 ### Upstream and Downstream Dependencies
 
-1. Retrieves CPU, memory, and disk fault information from IPMI on compute nodes.
+1. Retrieves CPU, memory, and disk fault information of compute nodes from IPMI.
 2. Reports CPU, memory, and disk fault information of compute nodes to ClusterD.
 
 ---
@@ -38,21 +38,19 @@ When a node's CPU, memory, or disk experiences certain faults, training tasks wi
 
 Tags follow this format:
 
-```shell
-<version>-<os>
+```
+<version>
 ```
 
 | Field | Example | Description |
-| -- | -- | -- |
-| `version` | `v26.1.0` | NodeD component version |
-| `os` | `ubuntu22.04` | NodeD image operating system |
+|---|---|---|
+| `version` | `v26.0.0` | NodeD version |
 
-### NodeD 26.1.0
+### NodeD 26.0.0
 
 | Tag | Dockerfile | Image Content |
-| --- | ----------- | -------- |
-| `v26.1.0-ubuntu22.04` | [Dockerfile.ubuntu](v26.1.0/Dockerfile.ubuntu) | NodeD v26.1.0 image for Ubuntu 22.04 |
-| `v26.1.0-openeuler24.03` | [Dockerfile.openeuler](v26.1.0/Dockerfile.openeuler) | NodeD v26.1.0 image for openEuler 24.03 |
+|-----|------------|---------------|
+| `v26.0.0` | [Dockerfile](https://gitcode.com/Ascend/mind-cluster/blob/v26.0.0/component/noded/build/Dockerfile) | NodeD v26.0.0 (Ubuntu 22.04) |
 
 ---
 
@@ -63,29 +61,22 @@ Tags follow this format:
 #### Software Dependencies
 
 | Software | Supported Versions | Installation Location | Description |
-| -- | -- | -- | -- |
+|---|---|---|---|
 | Kubernetes | 1.17.x~1.34.x (1.19.x or later recommended) | All nodes | See [Kubernetes Documentation](https://kubernetes.io/docs/) |
-| ClusterD | Same version as NodeD | Management nodes | Fault information reported by NodeD is aggregated by ClusterD |
+| ClusterD | Same version as NodeD | Management nodes | Fault information reported by NodeD is aggregated and processed by ClusterD |
 
 #### Hardware Requirements
 
 | Resource | Requirement |
-| -- | -- |
+|---|---|
 | CPU | 0.5 cores |
 | Memory | 0.3 GB |
 
-### How to Build Locally
+### Obtain NodeD Image Online
 
-```bash
-docker build --no-cache -t noded:{tag} ./ -f Dockerfile.{os}
-```
-> **Note**:
-> - TARGETPLATFORM is a global built-in parameter provided by Docker BuildKit, used to obtain the target platform of the current build, such as linux/amd64 and linux/arm64.
-> - This variable is automatically injected only when BuildKit is enabled. It will not be available in older Docker versions or environments with BuildKit disabled by default. Run <b>export DOCKER_BUILDKIT=1</b> to enable it temporarily before executing build commands.
+1. Pull the official image
 
-### Deploy NodeD
-
-1. Pull the image
+Pull the NodeD image from AscendHub, replacing {tag} with the actual version (v26.0.0 recommended).
 
 ```bash
 docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:{tag}
@@ -93,35 +84,77 @@ docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:{tag}
 
 2. Retag the image
 
+Retag the official image with a local tag for consistent naming and easier operations management.
+
 ```bash
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:{tag} noded:{version}
+docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:{tag} noded:{tag}
 ```
 
-3. Start NodeD
+### Build Locally (Optional)
 
-Replace `{tag}` in the noded-{version}.yaml file with the actual image tag.
+The following example uses linux-aarch64 architecture and v26.0.0 version:
+
+1. Download the officially released component package
+
+```shell
+wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-noded_26.0.0_linux-aarch64.zip
+```
+
+2. Extract the package to a custom directory
+
+```shell
+unzip Ascend-mindxdl-noded_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-noded_26.0.0_linux-aarch64
+```
+
+3. Enter the extracted working directory
+
+```shell
+cd Ascend-mindxdl-noded_26.0.0_linux-aarch64
+```
+
+4. Build the Docker image locally (disable cache to ensure a clean build)
+
+```bash
+docker build --no-cache -t noded:v26.0.0 ./ -f Dockerfile
+```
+
+### Deploy NodeD
+
+1. Label Kubernetes nodes
+
+Add labels to the corresponding nodes for cluster scheduling matching. Replace <node-name> with the actual node name.
+
+```bash
+kubectl label nodes <node-name> workerselector=dls-worker-node
+```
+
+2. Start NodeD
+
+Before deployment, replace the image `{tag}` in the YAML file with the actual image version.
 
 ```bash
 kubectl apply -f noded-{version}.yaml
 ```
 
-4. Verify deployment
+3. Verify deployment
 
 ```bash
 kubectl get pods -A | grep noded
 ```
 
+Expected result: The noded related Pods in the corresponding namespace should be in Running state.
+
 ---
 
 ## Supported Hardware
 
-For descriptions of supported Ascend hardware models, please refer to the official documentation:
+For descriptions of currently supported Atlas hardware models, please refer to the official documentation:
 [Supported Product Formats and OS List](https://gitcode.com/Ascend/mind-cluster/blob/master/docs/zh/scheduling/introduction.md#%E6%94%AF%E6%8C%81%E7%9A%84%E4%BA%A7%E5%93%81%E5%BD%A2%E6%80%81%E5%92%8Cos%E6%B8%85%E5%8D%95)
 
 ---
 
 ## License
 
-View the [license information](https://www.hiascend.com/document/detail/en/mindcluster/600/clustersched/introduction/schedulingsd/mxdlug_005.html) for the Mind series software contained in these images.
+View the [license information](https://www.hiascend.com/en/legal/softlicense) for the Mind series software contained in these images.
 
 As with all container images, pre-installed software packages (Python, system libraries, etc.) may be subject to their respective license agreements.
