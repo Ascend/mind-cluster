@@ -45,15 +45,13 @@ Tag 遵循以下格式：
 
 | 字段   | 示例值               | 说明                       |
 |------|-------------------|--------------------------|
-| `版本`   | `v26.1.0`     | Infer Operator组件版本   |
-| `操作系统` | `ubuntu22.04` | Infer Operator镜像操作系统 |
+| `版本`   | `v26.0.0`     | Infer Operator组件版本   |
 
 ### Infer Operator 26.1.0
 
-| Tag | Dockerfile | 镜像内容 |
-| --- | ----------- | -------- |
-| `v26.1.0-ubuntu22.04`    | [Dockerfile.ubuntu](v26.1.0/Dockerfile.ubuntu) | Infer Operator组件v26.1.0版本操作系统为ubuntu22.04的镜像    |
-| `v26.1.0-openeuler24.03` | [Dockerfile.openeuler](v26.1.0/Dockerfile.openeuler) | Infer Operator组件v26.1.0版本操作系统为openeuler24.03的镜像 |
+| Tag | Dockerfile | 镜像内容                                        |
+| --- | ----------- |---------------------------------------------|
+| `v26.1.0`    | [Dockerfile](https://gitcode.com/Ascend/mind-cluster/blob/v26.0.0/component/infer-operator/build/Dockerfile) | Infer Operator v26.1.0(基础操作系统Ubuntu 22.04) |
 
 ---
 
@@ -76,30 +74,52 @@ Tag 遵循以下格式：
 | CPU | 2核 |
 | 内存 | 2GB |
 
-### 如何本地构建
+### 在线获取 Infer Operator 镜像
 
-```bash
-docker build --no-cache -t infer-operator:{tag} ./ -f Dockerfile.{os}
-```
-> **注意**：
-> - TARGETPLATFORM 是 Docker BuildKit 提供的全局内置参数，用于获取当前构建的目标平台（如 linux/amd64、linux/arm64）。
-> - 只有启用 BuildKit，才会自动注入这个变量。旧版 Docker / 默认关闭 BuildKit 的环境，构建时不存在这个变量，需要在运行构建指令前通过 <b>export DOCKER_BUILDKIT=1</b> 临时启用。
+1. 拉取官方镜像
 
-### 部署 Infer Operator
-
-1. 拉取镜像
-
+拉取昇腾镜像仓库提供的 Infer Operator 镜像，替换 {tag} 为实际版本号（推荐 v26.0.0）。
 ```bash
 docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:{tag}
 ```
 
 2. 修改镜像标签
 
+为拉取的官方镜像重新打本地标签，统一本地镜像命名规范，方便后续运维管理。
 ```bash
 docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:{tag} infer-operator:{tag}
 ```
 
-3. 启动 Infer Operator
+### 本地构建（可选）
+
+以下以 linux-aarch64 架构、v26.0.0 版本为例，提供完整的本地镜像构建步骤:
+
+1. 下载官方发布的组件安装包
+
+```shell
+wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-infer-operator_26.0.0_linux-aarch64.zip
+```
+
+2. 解压安装包至自定义目录
+
+```shell
+unzip Ascend-mindxdl-infer-operator_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-infer-operator_26.0.0_linux-aarch64
+```
+
+3. 进入解压后的工作目录
+
+```shell
+cd Ascend-mindxdl-infer-operator_26.0.0_linux-aarch64
+```
+
+4. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
+```bash
+docker build --no-cache -t infer-operator:v26.0.0 ./ -f Dockerfile
+```
+
+### 部署 Infer Operator
+
+1. 启动 Infer Operator
 
 将 infer-operator-{version}.yaml 文件中镜像的 `{tag}` 替换为实际标签。
 
@@ -107,11 +127,13 @@ docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:{tag} infer
 kubectl apply -f infer-operator-{version}.yaml
 ```
 
-4. 验证部署
+2. 验证部署
 
 ```bash
 kubectl get pods -A | grep infer-operator
 ```
+
+预期结果：对应命名空间下的 infer-operator 相关 Pod 状态为 Running。
 
 ---
 
@@ -124,6 +146,6 @@ kubectl get pods -A | grep infer-operator
 
 ## 许可证
 
-查看这些镜像中包含的 Mind 系列软件的[许可证信息](https://www.hiascend.com/document/detail/zh/mindcluster/600/clustersched/introduction/schedulingsd/mxdlug_005.html)。
+查看这些镜像中包含的 Mind 系列软件的[许可证信息](https://www.hiascend.com/zh/legal/softlicense)。
 
 与所有容器镜像一样，预装软件包（Python、系统库等）可能受其自身许可证约束。

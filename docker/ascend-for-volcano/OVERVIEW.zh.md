@@ -67,21 +67,25 @@ Tag 遵循以下格式：
 | 字段     | 示例值       | 说明                      |
 |--------|-----------|-------------------------|
 | `组件版本` | `v1.7.0`  | Volcano 组件版本 |
-| `昇腾调度插件版本` | `v26.1.0` | 昇腾NPU调度插件版本             |
+| `昇腾调度插件版本` | `v26.0.0` | 昇腾NPU调度插件版本             |
 
-### Ascend for Volcano 26.1.0（Volcano v1.9.0）
+### Ascend for Volcano 26.0.0（Volcano v1.9.0）
 
-| Tag                     | Dockerfile | 镜像内容 |
-|-------------------------| ----------- | -------- |
-| `v1.9.0-v26.1.0` | [Dockerfile-scheduler](volcano-v1.9.0/v26.1.0/Dockerfile-scheduler) | Volcano调度器v26.1.0版本镜像（含昇腾NPU调度插件，基于Volcano v1.9.0） |
-| `v1.9.0-v26.1.0`         | [Dockerfile-controller](volcano-v1.9.0/v26.1.0/Dockerfile-controller) | Volcano控制器v26.1.0版本镜像（基于Volcano v1.9.0） |
+以 linux-aarch64 架构为例： Ascend for Volcano组件安装包下载：[Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip](https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip)
 
-### Ascend for Volcano 26.1.0（Volcano v1.7.0）
+| Tag                     | Dockerfile(安装包内文件路径)                                                  | 镜像内容 |
+|-------------------------|-----------------------------------------------------------------------| -------- |
+| `v1.9.0-v26.0.0` | volcano-v1.9.0/Dockerfile-scheduler | Volcano调度器v26.0.0版本镜像（含昇腾NPU调度插件，基于Volcano v1.9.0） |
+| `v1.9.0-v26.0.0`         | volcano-v1.9.0/Dockerfile-controller | Volcano控制器v26.0.0版本镜像（基于Volcano v1.9.0） |
 
-| Tag             | Dockerfile | 镜像内容 |
-|-----------------| ----------- | -------- |
-| `v1.7.0-v26.1.0` | [Dockerfile-scheduler](volcano-v1.7.0/v26.1.0/Dockerfile-scheduler) | Volcano调度器v26.1.0版本镜像（含昇腾NPU调度插件，基于Volcano v1.7.0） |
-| `v1.7.0-v26.1.0` | [Dockerfile-controller](volcano-v1.7.0/v26.1.0/Dockerfile-controller) | Volcano控制器v26.1.0版本镜像（基于Volcano v1.7.0） |
+### Ascend for Volcano 26.0.0（Volcano v1.7.0）
+
+以 linux-aarch64 架构为例： Ascend for Volcano组件安装包下载：[Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip](https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip)
+
+| Tag             | Dockerfile(安装包内文件路径)                                                  | 镜像内容 |
+|-----------------|-----------------------------------------------------------------------| -------- |
+| `v1.7.0-v26.0.0` | volcano-v1.7.0/Dockerfile-scheduler | Volcano调度器v26.0.0版本镜像（含昇腾NPU调度插件，基于Volcano v1.7.0） |
+| `v1.7.0-v26.0.0` | volcano-v1.7.0/Dockerfile-controller | Volcano控制器v26.0.0版本镜像（基于Volcano v1.7.0） |
 
 ---
 
@@ -106,48 +110,76 @@ Tag 遵循以下格式：
 | Volcano Controller CPU | 2核 | 2核 | 2.5核 |
 | Volcano Controller 内存 | 2.5GB | 3GB | 4GB |
 
-### 如何本地构建
-
-```bash
-# 构建调度器镜像
-docker build --no-cache -t  volcanosh/vc-scheduler:{tag} ./  -f Dockerfile-scheduler
-
-# 构建控制器镜像
-docker build --no-cache -t volcanosh/vc-controller-manager:{tag} ./  -f Dockerfile-controller
-```
-> **注意**：
-> - TARGETPLATFORM 是 Docker BuildKit 提供的全局内置参数，用于获取当前构建的目标平台（如 linux/amd64、linux/arm64）。
-> - 只有启用 BuildKit，才会自动注入这个变量。旧版 Docker / 默认关闭 BuildKit 的环境，构建时不存在这个变量，需要在运行构建指令前通过 <b>export DOCKER_BUILDKIT=1</b> 临时启用。
-
-### 部署 Ascend for Volcano
+### 在线获取 Ascend for Volcano 镜像
 
 1. 拉取镜像
 
+拉取昇腾镜像仓库提供的 Ascend for Volcano 相关镜像，替换 {tag} 为实际版本对应的Tag（推荐 v1.9.0-v26.0.0）。
+
 ```bash
 docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{tag}
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/volcano-controller:{tag}
+docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{tag}
 ```
 
 2. 修改镜像标签
 
+为拉取的官方镜像重新打本地标签，统一本地镜像命名规范，方便后续运维管理。
+
 ```bash
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/volcano-scheduler:{tag} volcanosh/vc-scheduler:{tag}
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/volcano-controller:{tag} volcanosh/vc-controller-manager:{tag}
+docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{tag} volcanosh/vc-scheduler:{tag}
+docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{tag} volcanosh/vc-controller-manager:{tag}
 ```
 
-3. 启动 Volcano
 
-将 YAML 文件中镜像的 `{tag}` 替换为实际标签。
+### 本地构建(可选)
+
+以下以 linux-aarch64 架构、基于Volcano v1.9.0 含昇腾NPU调度插件 v26.0.0 版本为例，提供完整的本地镜像构建步骤:
+
+1. 下载官方发布的组件安装包
+
+```shell
+wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip
+```
+
+2. 解压安装包至自定义目录
+
+```shell
+unzip Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-volcano_26.0.0_linux-aarch64
+```
+
+3. 进入解压后的工作目录
+
+```shell
+cd Ascend-mindxdl-volcano_26.0.0_linux-aarch64/volcano-v1.9.0
+```
+
+4. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
+
+```bash
+# 构建调度器镜像
+docker build --no-cache -t  volcanosh/vc-scheduler:v1.9.0 ./  -f Dockerfile-scheduler
+
+# 构建控制器镜像
+docker build --no-cache -t volcanosh/vc-controller-manager:v1.9.0 ./  -f Dockerfile-controller
+```
+
+### 部署 Ascend for Volcano
+
+1. 启动 Volcano
+
+YAML文件名中 `{version}` 替换为实际版本（当前使用的volcano版本为 v1.9.0），部署前需将 YAML 文件内的镜像 `{tag}` 替换为实际使用的镜像版本。
 
 ```bash
 kubectl apply -f volcano-{version}.yaml
 ```
 
-4. 验证部署
+2. 验证部署
 
 ```bash
 kubectl get pods -A | grep volcano
 ```
+
+预期结果：对应命名空间下的 volcano 相关 Pod 状态为 Running。
 
 ---
 
@@ -160,6 +192,6 @@ kubectl get pods -A | grep volcano
 
 ## 许可证
 
-查看这些镜像中包含的 Mind 系列软件的[许可证信息](https://www.hiascend.com/document/detail/zh/mindcluster/600/clustersched/introduction/schedulingsd/mxdlug_005.html)。
+查看这些镜像中包含的 Mind 系列软件的[许可证信息](https://www.hiascend.com/zh/legal/softlicense)。
 
 与所有容器镜像一样，预装软件包（Python、系统库等）可能受其自身许可证约束。

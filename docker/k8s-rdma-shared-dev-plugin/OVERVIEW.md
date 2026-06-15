@@ -145,6 +145,6 @@ PCI and UB type DPU network cards
 
 ## License
 
-View the [license information](https://www.hiascend.com/document/detail/en/mindcluster/600/clustersched/introduction/schedulingsd/mxdlug_005.html) for the Mind series software contained in these images.
+View the [license information](https://www.hiascend.com/en/legal/softlicense) for the Mind series software contained in these images.
 
 As with all container images, pre-installed software packages (Python, system libraries, etc.) may be subject to their respective license agreements.

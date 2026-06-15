@@ -145,6 +145,6 @@ PCI和UB类型的DPU网卡
 
 ## 许可证
 
-查看这些镜像中包含的 Mind 系列软件的 [许可证信息](https://www.hiascend.com/document/detail/en/mindcluster/600/clustersched/introduction/schedulingsd/mxdlug_005.html)。
+查看这些镜像中包含的 Mind 系列软件的 [许可证信息](https://www.hiascend.com/zh/legal/softlicense)。
 
 与所有容器镜像一样，预安装的软件包（Python、系统库等）可能受其各自许可协议的约束。
