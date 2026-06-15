@@ -1,5 +1,5 @@
 # User-configurable parameters
-npuType: 910
+is310P1usoc: false
 volcanoType: true
 image:
   repository: ""
@@ -17,4 +17,3 @@ args: ""
 command: ""
 
 # Built-in parameters
-supportedNpuType: ["npu", "910", "310", "310P", "310P-1usoc"]

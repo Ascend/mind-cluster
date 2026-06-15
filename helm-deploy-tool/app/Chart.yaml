@@ -39,3 +39,7 @@ dependencies:
     version: 1.1.0
     repository: ""
     condition: ascend-device-plugin.enabled
+  - name: k8s-rdma-shared-dev-plugin
+    version: 1.1.0
+    repository: ""
+    condition: k8s-rdma-shared-dev-plugin.enabled

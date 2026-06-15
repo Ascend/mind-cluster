@@ -190,9 +190,15 @@ def process_file(file_path, container_map=None, version=None):
     lines = content.split("\n")
     result = []
     i = 0
+    in_init_containers = False
 
     while i < len(lines):
         line = lines[i]
+
+        if re.match(r"^\s*initContainers:\s*$", line):
+            in_init_containers = True
+        elif re.match(r"^\s*containers:\s*$", line):
+            in_init_containers = False
 
         skip_end = skip_template_block(lines, i)
         if skip_end is not None:
@@ -227,7 +233,7 @@ def process_file(file_path, container_map=None, version=None):
             continue
 
         cmd_result = replace_block(lines, i, result, container_map, "command")
-        if cmd_result:
+        if cmd_result and not in_init_containers:
             cmd_indent = len(lines[i]) - len(lines[i].lstrip())
             if not has_following_args(lines, i, cmd_indent):
                 result.extend(cmd_result["replaced"])

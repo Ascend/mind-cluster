@@ -1,20 +1,19 @@
-{{- if not (has (toString .Values.npuType) .Values.supportedNpuType) -}}
-  {{- fail (printf "npuType %s is not supported, please select from %v" .Values.npuType .Values.supportedNpuType) -}}
+{{- if and .Values.is310P1usoc (not (eq (kindOf .Values.is310P1usoc) "bool")) -}}
+  {{- fail (printf "is310P1usoc must be a boolean value, got %s: %v" (kindOf .Values.is310P1usoc) .Values.is310P1usoc) -}}
 {{- end -}}
 
 {{- if and .Values.volcanoType (not (eq (kindOf .Values.volcanoType) "bool")) -}}
   {{- fail (printf "volcanoType must be a boolean value, got %s: %v" (kindOf .Values.volcanoType) .Values.volcanoType) -}}
 {{- end -}}
 
-{{- $npuType := (toString .Values.npuType) | default "default" -}}
-{{- $volcanoType := (toString .Values.volcanoType) | default "true" -}}
-{{- $volcanoSuffix := "" -}}
-{{- if eq $volcanoType "true" -}}
-  {{- $volcanoSuffix = "-volcano" -}}
-{{- end -}}
-
-{{- $dirKey := printf "%s%s" $npuType $volcanoSuffix -}}
-{{- if and (eq $volcanoType "true") (eq $npuType "910") -}}
+{{- $is310P1usoc := .Values.is310P1usoc -}}
+{{- $volcanoType := .Values.volcanoType -}}
+{{- $dirKey := "default" -}}
+{{- if and $is310P1usoc $volcanoType -}}
+  {{- $dirKey = "310P-1usoc-volcano" -}}
+{{- else if and $is310P1usoc (not $volcanoType) -}}
+  {{- $dirKey = "310P-1usoc" -}}
+{{- else if and (not $is310P1usoc) $volcanoType -}}
   {{- $dirKey = "volcano" -}}
 {{- end -}}
 

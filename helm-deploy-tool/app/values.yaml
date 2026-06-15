@@ -51,9 +51,16 @@ infer-operator:
 
 ascend-device-plugin:
   enabled: true
-  npuType: 910 # NPU type, values include npu, 910, 310, 310P, 310P-1usoc
+  is310P1usoc: false # Whether it is 310P-1usoc
   volcanoType: true # Whether to use volcano for scheduling
   image:
     repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin"
+    tag: "v26.1.0"
+    pullPolicy: "IfNotPresent"
+
+k8s-rdma-shared-dev-plugin:
+  enabled: false
+  image:
+    repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/k8s-rdma-shared-dp"
     tag: "v26.1.0"
     pullPolicy: "IfNotPresent"

@@ -15,6 +15,7 @@
     - NodeD
     - NPU Exporter
     - Infer Operator
+    - K8s RDMA Shared Dev Plugin
 - 升级Ascend Docker Runtime、Container Manager、TaskD和MindIO组件请参考[手动升级](../../05_developer_guide/installation_deployment/01_upgrade.md#ZH-CN_TOPIC_0000002479226452)章节操作。
 
 ## 升级前准备<a name="section_helm_upgrade_prepare"></a>
@@ -71,24 +72,15 @@
     ```ColdFusion
     -r-------- 1 root root  2026 Mar 24 15:25 mindcluster-crds-deploy-tool-{chart_version}.tgz
     -r-------- 1 root root  2026 Mar 24 15:25 mindcluster-deploy-tool-{chart_version}.tgz
-    -rw-r--r-- 1 root root  2026 Mar 24 15:25 add_helm_meta.sh
+    -rw-r--r-- 1 root root  2026 Mar 24 15:25 helm_tool.sh
     ```
-
-2. 执行以下命令，为已有资源添加helm元数据。用户根据自身使用情况，选择下面其中一种场景的命令执行即可。
-    - 若用户只部署了部分组件，只需要为已部署组件添加helm元数据，可参考[表4](../02_installation/helm_installation.md#table15274931175244)获取脚本参数说明，以下命令以ascend-device-plugin组件和namespace为例：
-
-      ```bash
-      dos2unix add_helm_meta.sh && chmod +x add_helm_meta.sh
-      bash add_helm_meta.sh ascend-device-plugin ns # 给ascend-device-plugin和namespce添加helm元数据
-      ```
-
-    - 为所有组件的资源添加helm元数据：
-
-      ```bash
-      dos2unix add_helm_meta.sh && chmod +x add_helm_meta.sh
-      bash add_helm_meta.sh all
-      ```
-
+2. 执行以下命令，为已有资源添加helm元数据。
+    ```bash
+    sed -i 's/\r$//' helm_tool.sh && chmod +x helm_tool.sh
+    #（可选）查看脚本命令参数
+    bash helm_tool.sh --help
+    bash helm_tool.sh --all # 给资源添加helm元数据，并且删除ascend-device-plugin组件v26.1.0版本前的daemonset。用户可使用--help查看脚本命令参数，然后根据需求设置参数。
+    ```
     回显示例如下，表示添加helm元数据成功：
 
     ```ColdFusion
@@ -97,7 +89,7 @@
     ```
 
 3. 安装MindCluster crd的Release实例。
-    > [!NOTE]
+      > [!NOTE]
     >- 以下三个组件包含crd：Ascend Operator、Volcano和Infer Operator。若用户不需要升级这三个组件，可跳过此步骤。
     >- 若组件升级前后两个版本的crd定义有变更：
     >   1. 需先升级crd，再升级应用组件;
@@ -189,7 +181,7 @@
     ```ColdFusion
     -r-------- 1 root root  2026 Mar 24 15:25 mindcluster-crds-deploy-tool-{chart_version}.tgz
     -r-------- 1 root root  2026 Mar 24 15:25 mindcluster-deploy-tool-{chart_version}.tgz
-    -rw-r--r-- 1 root root  2026 Mar 24 15:25 add_helm_meta.sh
+    -rw-r--r-- 1 root root  2026 Mar 24 15:25 helm_tool.sh
     ```
 
 2. 升级MindCluster crd的Release实例。
