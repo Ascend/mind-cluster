@@ -41,7 +41,7 @@
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>目前任务的每个Pod请求的NPU数量为1个。物理上使用的NPU数量为1，但任务YAML中请求的NPU数量需要与huawei.com/scheduler.softShareDev.aicoreQuota配置保持一致。</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" rowspan="4" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p>特性支持的场景</p>
+<tr><td class="cellrowborder" rowspan="5" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p>特性支持的场景</p>
 </td>
 <td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 "><p>支持多副本，但多副本中的每个Pod所使用的NPU软切分策略必须一致。</p>
 </td>
@@ -55,6 +55,9 @@
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>支持集群中软切分虚拟化功能和非软切分虚拟化功能混合部署的场景。</p>
 </td>
 </tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>当前软切分特性仅支持acjob任务类型。</p>
+</td>
+</tr>
 <tr><td class="cellrowborder" rowspan="3" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p>特性不支持的场景</p>
 </td>
 <td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 "><p>不支持不同芯片在一个任务内混用。</p>
@@ -63,7 +66,7 @@
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>任务运行过程中，不支持卸载Volcano。</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>不支持与Docker场景的操作混用。</p>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>开启了软切分特性的节点，仅允许通过Ascend for Volcano调度使用，不允许通过原生调度器、docker等方式使用。</p>
 </td>
 </tr>
 </tbody>
@@ -87,7 +90,7 @@
 
     在软切分虚拟化功能和非软切分虚拟化功能混合部署场景下，若节点不支持软切分虚拟化功能，则需要为节点增加标签huawei.com/scheduler.chip1softsharedev.enable=false。
 
-2. 需要先获取"Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run"，安装容器引擎插件。
+2. 获取"Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run"，安装容器引擎插件。
 3. 参见[安装部署](../../../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节，完成各组件的安装。
 
     虚拟化实例涉及修改相关参数的集群调度组件为Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
@@ -139,7 +142,7 @@
          apiVersion: apps/v1
          kind: DaemonSet
          metadata:
-           name: ascend-device-plugin-daemonset-softShareDev #标识Ascend Device Plugin在软切分虚拟化功能和非软切分虚拟化功能混合部署场景下支持软切分虚拟化功能
+           name: ascend-device-plugin-daemonset-softsharedev #标识Ascend Device Plugin在软切分虚拟化功能和非软切分虚拟化功能混合部署场景下支持软切分虚拟化功能
            namespace: kube-system
          spec:
            ...
@@ -240,6 +243,51 @@
 
 ## 通过命令行使用（Volcano）<a name="ZH-CN_TOPIC_00000024792271456"></a>
 
+### 环境准备
+主机侧通过`npu-smi`工具开启容器共享模式，可支持多个容器挂载同一设备。若设备未开启容器共享模式，则只能挂载到单个容器。若配合MindCluster使用，要求整节点开启容器共享模式。
+
+```shell
+# Atlas A2 / A3 推理系列产品：设置容器共享模式
+npu-smi set -t device-share -i ${id} -c ${chip_id} -d ${value}
+# Ascend 950PR 产品：设置容器共享模式
+npu-smi set -t device-share -i ${id} -d ${value}
+
+# 查询设备容器共享模式
+npu-smi info -t device-share -i ${id}
+```
+
+**表 4 参数说明**
+
+|参数|参数选项|说明|
+|:---|:---|:---|
+|id|设备id|通过`npu-smi info -m`命令查询获取的NPU ID即为设备id。|
+|chip_id|芯片id|通过`npu-smi info -m`命令查询获取的Chip ID即为芯片id。|
+|value|<ul>默认值：禁用<li>禁用(0)</li><li>使能(1)</li></ul>|容器共享模式使能状态。|
+
+以Ascend 950PR 产品为例：
+开启设备0所有芯片的容器共享模式，查询设备0容器共享模式。
+
+  ```shell
+  npu-smi set -t device-share -i 0 -d 1
+  npu-smi info -t device-share -i 0
+  ```
+
+主机侧可设置容器共享持久化使能状态。若持久化功能为开启状态，则重启系统后设备的容器共享模式使能状态与重启前保持一致。
+
+```shell
+npu-smi set -t device-share-cfg-recover -d ${value}
+```
+
+**表 5 参数说明**
+
+|参数|参数选项|说明|
+|:---|:---|:---|
+|value|<ul>默认值：禁用<li>禁用(0)</li><li>使能(1)</li></ul>|容器共享持久化使能状态。|
+
+### 准备vCANN-RT
+
+参照 [vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md#%E6%BA%90%E7%A0%81%E8%8E%B7%E5%8F%96) 官方文档指引，完成vCANN-RT的编译与配置操作。
+
 ### 制作镜像<a name="ZH-CN_TOPIC_0000002511427026"></a>
 
 **获取推理镜像**
@@ -276,7 +324,7 @@
 ### 准备任务YAML<a name="ZH-CN_TOPIC_00000024793871220102"></a>
 
 >[!NOTE]
->如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载"/dev"目录下的设备。其他目录（如"/usr"）用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
+>如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载NPU芯片设备备。用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
 >因为Atlas 200I SoC A1 核心板场景不支持Ascend Docker Runtime，用户也无需修改YAML文件。
 
 **操作步骤<a name="zh-cn_topic_0000001558853680_zh-cn_topic_0000001609074213_section14665181617334"></a>**
@@ -395,7 +443,7 @@
     </pre>
 
 >[!NOTE]
-><term>Atlas A3 推理系列产品</term>下发软切分虚拟化任务时，在任务容器中，/dev/实际挂载1个die，但是执行<b>npu-smi info</b>命令查询显示挂载了2个die。回显示例如下：
+><term>Atlas A3 推理系列产品</term>下发软切分虚拟化任务时，在任务容器中，/dev下实际只会挂载1个die（即1个davinci设备），但是执行<b>npu-smi info</b>命令查询会显示挂载了2个die，此为正常现象。回显示例如下：
 >
 > ```ColdFusion
 > +-----------------------------------------------------------------------------------------------+
@@ -440,7 +488,7 @@ ascendjob.mindxdl.gitee.com/default-infer-test-pytorch-910b created
 >[!NOTE]
 >如果下发任务成功后，又修改了任务YAML，需要先执行kubectl delete -f <i>XXX</i>.yaml命令删除原任务，再重新下发任务。
 
-### 查看任务进程<a name="ZH-CN_TOPIC_00000025113470710203"></a>
+### 查看任务进程（以A2系列产品为例）<a name="ZH-CN_TOPIC_00000025113470710203"></a>
 
 **操作步骤**
 
