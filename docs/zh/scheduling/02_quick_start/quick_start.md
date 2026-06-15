@@ -13,7 +13,7 @@
 
 - 所有节点已安装Kubernetes，支持的版本为1.17.x\~1.34.x。（如需安装Volcano组件，请安装1.19.x及以上版本的Kubernetes，具体Kubernetes版本请参见[Volcano官网中对应的Kubernetes版本](https://github.com/volcano-sh/volcano/blob/master/README.md#kubernetes-compatibility)）。如需获取软件包，请参见[Kubernetes社区](https://kubernetes.io/zh-cn/docs/setup/)。
 - 所有节点已安装Docker，支持的版本为18.09.x\~28.5.1。如需获取软件包，请参见[Docker社区或官网](https://docs.docker.com/engine/install/)。
-- 所有节点已经安装配套的固件与驱动。Atlas 800T A2 训练服务器固件和驱动安装步骤请参见《[Atlas A2 中心推理和训练硬件 26.0.RC1 NPU驱动和固件安装指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100568434/426cffd9)》。
+- 所有节点已经安装配套的固件与驱动。Atlas 800T A2 训练服务器固件和驱动安装步骤请参见《[Atlas A2 中心推理和训练硬件 NPU驱动和固件安装指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100568434/426cffd9)》。
 - 检查主机上[npu-smi](https://support.huawei.com/enterprise/zh/doc/EDOC1100568421/426cffd9)以及[hccn_tool工具](https://support.huawei.com/enterprise/zh/doc/EDOC1100568362/426cffd9)是否可正常运行。
 
     >[!NOTE]

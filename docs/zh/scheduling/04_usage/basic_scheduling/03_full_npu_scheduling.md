@@ -31,13 +31,13 @@
 
 **支持的产品形态<a name="section169961844182917"></a>**
 
-- 支持以下产品使用**整卡调度**。
-    - 950系列产品
-    - A3系列产品
-    - A2系列产品
-    - 训练系列产品
-    - 推理系列产品
-    - 200I推理产品
+支持以下产品使用**整卡调度**。
+    - Ascend 950代际产品
+    - Atlas A3 系列产品
+    - Atlas A2 系列产品
+    - Atlas 训练系列产品
+    - Atlas 推理系列产品
+    - Atlas 200I推理产品
 
 **使用流程<a name="section5640184231810"></a>**
 
@@ -46,23 +46,7 @@
 通过命令行使用Volcano和其他调度器的使用流程一致。使用其他调度器准备任务YAML需要参考[通过命令行使用（其他调度器）](#通过命令行使用其他调度器)章节创建任务YAML。使用其他调度器的其余操作和使用Volcano一致，可以参考[通过命令行使用（Volcano）](#通过命令行使用volcano)进行操作。
 
 **图 1**  整卡调度使用流程<a name="fig107864120214"></a>
-
-```mermaid
-graph TD
-  Start([开始]) --> MakeImage[制作镜像]:::rectStyle
-  MakeImage --> ScriptAdapt[脚本适配]:::rectStyle
-  ScriptAdapt --> PrepareYaml[准备任务yaml]:::rectStyle
-  PrepareYaml --> SubmitJob[下发任务]:::rectStyle
-  SubmitJob --> CheckProcess[（可选）查看任务进程]:::rectStyle
-  CheckProcess --> CheckResult[查看调度结果]:::rectStyle
-  CheckResult --> DeleteJob[（可选）删除任务]:::rectStyle
-  DeleteJob --> End([结束])
-
-  %% 样式定义
-  style Start fill:#686d75,stroke:#686d75,stroke-width:1px,color:#fff
-  style End fill:#686d75,stroke:#686d75,stroke-width:1px,color:#fff
-  classDef rectStyle fill:#c2d5fe,stroke:#c2d5fe,stroke-width:1px,color:#000,rx:4,ry:4;
-```
+![](../../../figures/scheduling/整卡调度使用流程.PNG "整卡调度使用流程")
 
 1. 脚本适配时，用户可根据实际情况选择通过环境变量或文件配置资源信息。
 2. 在准备任务YAML时，下发的任务YAML需要根据具体的NPU型号，选择不同的YAML进行修改适配。选择YAML时可以参考[准备任务YAML](#准备任务yaml)，根据实际情况选择合适的YAML。

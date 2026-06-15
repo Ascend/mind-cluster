@@ -2,21 +2,22 @@
 
 ## 获取集群调度组件信息<a name="ZH-CN_TOPIC_0000002479386860"></a>
 
-- 对于volcano-scheduler和volcano-controller组件Pod开放的接口（开源组件本身定义），做出如下说明。
+对于volcano-scheduler和volcano-controller组件Pod开放的接口（开源组件本身定义），做出如下说明。
 
-    **表 1** 集群调度Volcano组件开放接口列表
+**表 1** 集群调度Volcano组件开放接口列表
 
-    <a name="zh-cn_topic_0000001446965056_table173071368477"></a>
+<a name="zh-cn_topic_0000001446965056_table173071368477"></a>
 
-    |访问方式|协议|方法|作用|所属组件|
-    |--|--|--|--|--|
-    |`http://podIP:11251/healthz`|http|Get|健康检查端口|volcano-controller|
-    |`http://podIP:11251/healthz`|http|Get|健康检查端口|volcano-scheduler|
-    |`http://volcano-scheduler-serviceIP:8080/metrics`|http|Get|Prometheus信息收集端口|volcano-scheduler|
+|访问方式|协议|方法|作用|所属组件|
+|--|--|--|--|--|
+|`http://podIP:11251/healthz`|http|Get|健康检查端口|volcano-controller|
+|`http://podIP:11251/healthz`|http|Get|健康检查端口|volcano-scheduler|
+|`http://volcano-scheduler-serviceIP:8080/metrics`|http|Get|Prometheus信息收集端口|volcano-scheduler|
 
-    >[!NOTE]
-    >- 为保证Volcano健康检查端口和Prometheus信息收集端口的正常访问，请在安装Volcano时，将YAML中的--enable-healthz参数和--enable-metrics参数的值设置为“true”，详细修改方法可参见[安装Volcano](../05_developer_guide/installation_deployment/manual_installation/05_volcano.md#安装volcano)中“步骤7”。
-    >- 华为云的CCI服务提供了更为详细的VolcanoJob说明，可参见《云容器实例 API参考》中“[创建Volcano Job](https://support.huaweicloud.com/api-cci/createBatchVolcanoShV1alpha1NamespacedJob.html)”章节了解相关内容。
+>[!NOTE]
+>
+>- 为保证Volcano健康检查端口和Prometheus信息收集端口的正常访问，请在安装Volcano时，将YAML中的--enable-healthz参数和--enable-metrics参数的值设置为“true”，详细修改方法可参见[安装Volcano](../05_developer_guide/installation_deployment/manual_installation/05_volcano.md#安装volcano)中“步骤7”。
+>- 华为云的CCI服务提供了更为详细的VolcanoJob说明，可参见《云容器实例 API参考》中“[创建Volcano Job](https://support.huaweicloud.com/api-cci/createBatchVolcanoShV1alpha1NamespacedJob.html)”章节了解相关内容。
 
 ## PodGroup<a name="ZH-CN_TOPIC_0000002479226832"></a>
 

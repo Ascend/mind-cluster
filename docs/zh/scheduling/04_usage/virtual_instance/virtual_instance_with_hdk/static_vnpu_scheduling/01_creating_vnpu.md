@@ -5,7 +5,7 @@
 - 当使用**动态虚拟化**时，无需提前创建vNPU，请跳过本节，直接在容器拉起时按以下要求进行参数配置。
     - 使用Ascend Docker Runtime：参考[动态vNPU调度（推理）](../dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md)，通过ASCEND\_VISIBLE\_DEVICES和ASCEND\_VNPU\_SPECS参数从物理芯片上虚拟化出多个vNPU并挂载至容器。
     - 使用MindCluster集群调度组件（Ascend Device Plugin和Volcano）：参考[动态vNPU调度（推理）](../dynamic_vnpu_scheduling/01_dynamic_vnpu_scheduling_inference.md)，运行任务时自动按照配置要求调用接口创建vNPU。
-- 以下创建vNPU相关的npu-smi命令使用方法及参数说明详细请参见《Atlas A3 中心推理和训练硬件 26.0.RC1 npu-smi 命令参考》中的“[昇腾虚拟化实例（AVI）相关命令](https://support.huawei.com/enterprise/zh/doc/EDOC1100568420/690dda6e)”章节。
+- 以下创建vNPU相关的npu-smi命令使用方法及参数说明详细请参见《Atlas A3 中心推理和训练硬件 npu-smi 命令参考》中的“[昇腾虚拟化实例（AVI）相关命令](https://support.huawei.com/enterprise/zh/doc/EDOC1100568420/690dda6e)”章节。
 
 ## 创建vNPU方法<a name="section206799361399"></a>
 
