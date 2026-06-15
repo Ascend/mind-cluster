@@ -52,9 +52,10 @@
 
 ## 使用约束<a name="section911013420264vcann"></a>
 
+- 软切分虚拟化功能仅支持acjob任务类型。
 - 在软切分虚拟化场景下，一个容器只能挂载一个NPU。
 - 任务YAML中requests对应的数据表示请求的NPU的AICore百分比，不是真实NPU卡数。
 - <term>Atlas A3 推理系列产品</term>使用软切分虚拟化功能时，必须开启单die直通模式，即在Ascend Device Plugin的YAML中，增加启动参数-useSingleDieMode=true。
 - 物理NPU软切分虚拟化后，仅支持将物理NPU挂载到容器，不支持将该物理NPU直通到虚拟机。
 - 在软切分虚拟化场景下，如果所有容器都挂载了相同的物理NPU，则该物理NPU必须采用相同的软切分策略。
-- 对于<term>Atlas A2 推理系列产品</term>/<term>Atlas A3 推理系列产品</term>，一个Device上最多只能支持63个用户进程，Host最多只能支持Device个数\*63个进程，详情请参见[使用约束](https://www.hiascend.com/document/detail/zh/canncommercial/900/programug/acldevg/aclcppdevg_000222.html)。
+- 由于硬件设备的限制(可以参考昇腾社区[使用约束](https://www.hiascend.com/document/detail/zh/canncommercial/900/programug/acldevg/aclcppdevg_000222.html))，建议vCANN-RT最大切分数量不超过单个device支持的最大用户进程数。
