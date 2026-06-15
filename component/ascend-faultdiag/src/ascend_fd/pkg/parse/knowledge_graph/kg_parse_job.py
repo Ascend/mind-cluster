@@ -80,6 +80,7 @@ class SaverCollector:
             host_vmcore_dmesg_path=self.safe_get("host_log_saver", "get_vmcore_dmesg_log", default=[]),
             hisi_logs_path=self.safe_get("dev_log_saver", "get_hisi_logs_list", default=[]),
             slog_path=self.safe_get("dev_log_saver", "get_slog_dict", default={}),
+            slog_host_path=self.safe_get("dev_log_saver", "get_slog_host_list", default=[]),
             noded_log_path=self.safe_get("dl_log_saver", "get_noded_list", default=[]),
             device_plugin_path=self.safe_get("dl_log_saver", "get_device_plugin_list", default=[]),
             volcano_scheduler_path=self.safe_get("dl_log_saver", "get_volcano_scheduler_list", default=[]),

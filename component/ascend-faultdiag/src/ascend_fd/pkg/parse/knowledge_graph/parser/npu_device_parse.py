@@ -25,7 +25,7 @@ from ascend_fd.model.context import KGParseCtx
 from ascend_fd.pkg.parse.knowledge_graph.parser.file_parser import FileParser, EventStorage
 from ascend_fd.utils import regular_table
 from ascend_fd.utils.fault_code import FIBER_OR_COPPER_LINK_FAULT
-from ascend_fd.utils.regular_table import NPU_OS_SOURCE, NPU_DEVICE_SOURCE, NPU_HISTORY_SOURCE
+from ascend_fd.utils.regular_table import NPU_OS_SOURCE, NPU_DEVICE_SOURCE, NPU_HISTORY_SOURCE, NPU_HOST_SOURCE
 from ascend_fd.utils.tool import MultiProcessJob, check_and_format_time_str
 from ascend_fd.pkg.parse.parser_saver import LogInfoSaver
 
@@ -38,13 +38,6 @@ TS_PATTERN = re.compile(r'^(\d{14})-\d{9}$')
 
 
 class BaseNpuLogParser(FileParser):
-
-    def __init__(self, params):
-        """
-        NPU Device Log info parser
-        """
-        super().__init__(params)
-
     @staticmethod
     def _get_occur_time(line, dir_name) -> str:
         pass
@@ -66,7 +59,7 @@ class BaseNpuLogParser(FileParser):
         # use bisect to get the start time file and end time file index, obtaining logs in the Training Time Range
         start_idx = max(bisect.bisect(log_list, start_file) - 1, 0)
         end_idx = bisect.bisect(log_list, end_file)
-        return log_list[start_idx: end_idx]
+        return log_list[start_idx:end_idx]
 
     def parse(self, parse_ctx: KGParseCtx, task_id):
         pass
@@ -83,16 +76,21 @@ class BaseNpuLogParser(FileParser):
         if self.is_sdk_input:
             results = dict()
             for idx, file_source in enumerate(file_source_list):
-                results.update({
-                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}":
-                        self._parse_single_file(file_source)
-                })
+                results.update(
+                    {
+                        f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}": self._parse_single_file(
+                            file_source
+                        )
+                    }
+                )
         else:
-            multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_source_list),
-                                               task_id=task_id)
+            multiprocess_job = MultiProcessJob("KNOWLEDGE_GRAPH", pool_size=len(file_source_list), task_id=task_id)
             for idx, file_source in enumerate(file_source_list):
-                multiprocess_job.add_security_job(f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}",
-                                                  self._parse_single_file, file_source)
+                multiprocess_job.add_security_job(
+                    f"{self.SOURCE_FILE}_ID-{idx}_{self._get_filename(file_source)}",
+                    self._parse_single_file,
+                    file_source,
+                )
             results, _ = multiprocess_job.join_and_get_results()
         for event_list in results.values():
             events_list.extend(event_list)
@@ -137,7 +135,7 @@ class BaseNpuLogParser(FileParser):
     def _determine_device_id(self, file_source):
         dir_name = os.path.dirname(file_source.path) if self.is_sdk_input else os.path.dirname(file_source)
         device_file_name = ""
-        if self.SOURCE_FILE == NPU_HISTORY_SOURCE or self.SOURCE_FILE == NPU_DEVICE_SOURCE:
+        if self.SOURCE_FILE in (NPU_HISTORY_SOURCE, NPU_DEVICE_SOURCE):
             device_file_name = os.path.basename(dir_name)
         if self.SOURCE_FILE == NPU_OS_SOURCE:
             device_file_name = os.path.basename(os.path.dirname(os.path.dirname(dir_name)))
@@ -164,7 +162,7 @@ class NpuHistoryLogParser(BaseNpuLogParser):
         :param line: log line
         :return: time info
         """
-        time_str = line[line.find("[") + 1: line.find("]")]
+        time_str = line[line.find("[") + 1 : line.find("]")]
         occur_time = check_and_format_time_str(time_str.strip())
         if not occur_time:
             time_str = NpuHistoryLogParser._extract_timestamp_from_dir(dir_name)
@@ -185,7 +183,7 @@ class NpuHistoryLogParser(BaseNpuLogParser):
             idx = parts.index("hisi_logs")
         except ValueError:
             return ""
-        for segment in parts[idx + 1:]:
+        for segment in parts[idx + 1 :]:
             match = TS_PATTERN.match(segment)
             if match:
                 return match.group(1)
@@ -206,7 +204,6 @@ class NpuHistoryLogParser(BaseNpuLogParser):
 
 
 class NpuSlogParser(BaseNpuLogParser):
-
     @staticmethod
     def _get_occur_time(line, dir_name):
         """
@@ -217,7 +214,7 @@ class NpuSlogParser(BaseNpuLogParser):
         :param line: log line
         :return: time info
         """
-        time_str = line[line.find(":") + 1:].strip()
+        time_str = line[line.find(":") + 1 :].strip()
         time_str = time_str.split(" ")[0]
         return check_and_format_time_str(time_str.strip())
 
@@ -274,3 +271,33 @@ class NpuOsLogParser(NpuSlogParser):
 class NpuDeviceLogParser(NpuSlogParser):
     TARGET_FILE_PATTERNS = "slog_path"
     SOURCE_FILE = NPU_DEVICE_SOURCE
+
+
+class NpuHostLogParser(NpuSlogParser):
+    TARGET_FILE_PATTERNS = "slog_host_path"
+    SOURCE_FILE = NPU_HOST_SOURCE
+
+    @staticmethod
+    def _get_occur_time(line, dir_name):
+        """
+        Get the time info form line.
+        line e.g:
+        [2025-04-16-03:08:13.818489] [ascend] [drv_pcie] xxx
+        :param line: log line
+        :return: time info
+        """
+        time_str = line.split(']')[0].lstrip('[')
+        return check_and_format_time_str(time_str.strip())
+
+    def parse(self, parse_ctx: KGParseCtx, task_id):
+        """
+        Parse host logs file, contain host_kernel.log
+        :param parse_ctx: knowledge graph parser context
+        :param task_id: the task unique id
+        :return: host logs parse result
+        """
+        self.start_time = self.params.get("start_time")
+        self.end_time = self.params.get("end_time")
+        self.resuming_training_time = parse_ctx.resuming_training_time
+        self.is_sdk_input = parse_ctx.is_sdk_input
+        return self.process_parse_file_list(self.find_log(parse_ctx.parse_file_path), task_id)

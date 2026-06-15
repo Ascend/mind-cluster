@@ -834,6 +834,7 @@ class DevLogSaver(BaseLogSaver):
         super().__init__()
         self.slog_dict = dict()
         self.hisi_logs_list = []
+        self.slog_host_list = []
 
     def filter_log(self, file_dir: str):
         """
@@ -870,6 +871,13 @@ class DevLogSaver(BaseLogSaver):
             self._filter_sdk_slog()
         return self.slog_dict
 
+    def get_slog_host_list(self):
+        """
+        Get the files in the host directory of slog
+        :return: device slog host files list
+        """
+        return self.slog_host_list
+
     def _filter_sdk_slog(self):
         """
         Filter slog for slog saved by sdk
@@ -888,7 +896,7 @@ class DevLogSaver(BaseLogSaver):
         for file_list in self.slog_dict.values():
             file_list.sort()
 
-    def _filter_hisi_logs(self, hisi_logs_path):
+    def _filter_hisi_logs(self, hisi_logs_path: str):
         """
         Filter the hisi_logs
         :param hisi_logs_path: the hisi logs path
@@ -905,7 +913,7 @@ class DevLogSaver(BaseLogSaver):
                 self.hisi_logs_list.append(history_path)
             self._filter_hisi_logs_in_device_dir(os.path.join(hisi_logs_path, device_dir))
 
-    def _filter_hisi_logs_in_device_dir(self, device_dir):
+    def _filter_hisi_logs_in_device_dir(self, device_dir: str):
         """
         Filter the hisi_logs in device_dir
         :param device_dir:  device dir in the hisi logs path
@@ -921,7 +929,7 @@ class DevLogSaver(BaseLogSaver):
                 if os.path.exists(target_path) and os.path.isfile(target_path):
                     self.hisi_logs_list.append(target_path)
 
-    def _filter_slog(self, slog_path):
+    def _filter_slog(self, slog_path: str):
         """
         Filter the slog
         :param slog_path: the slog path
@@ -930,11 +938,15 @@ class DevLogSaver(BaseLogSaver):
             return
         for dev_os_dir in safe_list_dir(slog_path):
             dev_os_path = os.path.join(slog_path, dev_os_dir)
+            if dev_os_dir == "host":
+                for file_name in safe_list_dir(dev_os_path):
+                    if file_name == "host_kernel.log":
+                        self.slog_host_list.append(os.path.join(dev_os_path, file_name))
             if not dev_os_dir.startswith(regular_table.DEV_OS_INFO) or not os.path.isdir(dev_os_path):
                 continue
             self._update_slog_dev_os_files(dev_os_path)
 
-    def _update_slog_dev_os_files(self, dev_os_path):
+    def _update_slog_dev_os_files(self, dev_os_path: str):
         """
         Update the log dir and log list in slog
         :param dev_os_path: dev os dir path in slog
@@ -952,7 +964,7 @@ class DevLogSaver(BaseLogSaver):
                 dir_list = safe_list_dir(dir_path)
                 self.slog_dict.update({dir_path: sorted(dir_list)})
 
-    def _update_device_dir(self, device_path):
+    def _update_device_dir(self, device_path: str):
         """
         Update the log dir and log list in debug or run
         :param device_path: dev os dir path in debug or run

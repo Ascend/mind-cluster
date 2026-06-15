@@ -41,6 +41,7 @@ from ascend_fd.pkg.parse.knowledge_graph.parser.npu_device_parse import (
     NpuHistoryLogParser,
     NpuOsLogParser,
     NpuDeviceLogParser,
+    NpuHostLogParser,
 )
 from ascend_fd.pkg.parse.knowledge_graph.parser.volcano_parser import VolcanoSchedulerParser, VolcanoControllerParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.common_dl_parser import DockerRuntimeParser, NpuExporterParser
@@ -153,6 +154,7 @@ class PackageParser:
                 NpuHistoryLogParser,
                 NpuOsLogParser,
                 NpuDeviceLogParser,
+                NpuHostLogParser,
                 NodeDLogParser,
                 DevicePluginParser,
                 VolcanoSchedulerParser,
