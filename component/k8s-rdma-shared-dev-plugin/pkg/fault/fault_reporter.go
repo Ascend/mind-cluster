@@ -124,6 +124,10 @@ func isDpuInfoCfgEqual(a, b *DpuInfoCfg) bool {
 		}
 	}
 
+	if !reflect.DeepEqual(a.DPUInfo.NodeEvent, b.DPUInfo.NodeEvent) {
+		return false
+	}
+
 	return true
 }
 

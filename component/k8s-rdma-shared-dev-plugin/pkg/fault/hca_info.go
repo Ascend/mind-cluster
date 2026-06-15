@@ -29,6 +29,7 @@ import (
 	"ascend-common/common-utils/utils"
 
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
+	util "github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/utils"
 )
 
 var (
@@ -61,6 +62,12 @@ type DPUItem struct {
 	FaultList []FaultDetail `json:"FaultList"`
 }
 
+// NodeEvent represents node-level fault events (e.g. DPU card missing)
+type NodeEvent struct {
+	NodeName  string        `json:"NodeName"`
+	FaultList []FaultDetail `json:"FaultList"`
+}
+
 type hcaBasicInfo struct {
 	DeviceID string
 	VendorID string
@@ -71,7 +78,8 @@ type hcaBasicInfo struct {
 // DpuInfoCfg represents the DPU information configuration structure
 type DpuInfoCfg struct {
 	DPUInfo struct {
-		DPUList []DPUItem `json:"DPUList"`
+		DPUList   []DPUItem  `json:"DPUList"`
+		NodeEvent *NodeEvent `json:"NodeEvent"`
 	} `json:"DPUInfo"`
 	UpdateTime time.Time `json:"UpdateTime"`
 }
@@ -204,6 +212,7 @@ func BuildDPUInfoCfg(results []FaultResult) DpuInfoCfg {
 		cfg.DPUInfo.DPUList = append(cfg.DPUInfo.DPUList, buildDPUItem(hcaName, hcaBasicMap[hcaName], faults))
 	}
 
+	cfg.DPUInfo.NodeEvent = buildNodeEvent(results)
 	cfg.UpdateTime = time.Now()
 	return cfg
 }
@@ -242,6 +251,9 @@ func buildHcaFaultMap(results []FaultResult) map[string][]FaultDetail {
 	}
 
 	for cacheKey := range faultTimeCache {
+		if strings.HasPrefix(cacheKey, "node:") {
+			continue
+		}
 		if !activeKeys[cacheKey] {
 			delete(faultTimeCache, cacheKey)
 		}
@@ -283,6 +295,57 @@ func getHcaFaults(hcaName string, hcaFaultMap map[string][]FaultDetail) []FaultD
 		return faults
 	}
 	return []FaultDetail{}
+}
+
+func buildNodeEvent(results []FaultResult) *NodeEvent {
+	faultTimeCacheMu.Lock()
+	defer faultTimeCacheMu.Unlock()
+
+	nodeFaults := make([]FaultDetail, 0)
+	activeKeys := make(map[string]bool)
+	for _, fr := range results {
+		if fr.Hca != "" || fr.Result != "true" {
+			continue
+		}
+
+		cacheKey := fmt.Sprintf("node:%s", fr.Fault.FaultCode)
+		activeKeys[cacheKey] = true
+
+		detectTime, exists := faultTimeCache[cacheKey]
+		if !exists {
+			detectTime = getCurrentTimeMs()
+			faultTimeCache[cacheKey] = detectTime
+			hwlog.RunLog.Errorf("Node fault detected: Code=%s, Level=%s, Description=%s, Time=%d",
+				fr.Fault.FaultCode, fr.Fault.FaultLevel, fr.Fault.Description, detectTime)
+			hwlog.RunLog.Errorf("Fault result details: %s", fr.Details)
+		}
+
+		nodeFaults = append(nodeFaults, FaultDetail{
+			FaultCode:   fr.Fault.FaultCode,
+			Time:        detectTime,
+			Description: fr.Fault.Description,
+			FaultLevel:  fr.Fault.FaultLevel,
+		})
+	}
+
+	for cacheKey := range faultTimeCache {
+		if !strings.HasPrefix(cacheKey, "node:") {
+			continue
+		}
+		if !activeKeys[cacheKey] {
+			delete(faultTimeCache, cacheKey)
+		}
+	}
+
+	nodeName, err := util.GetNodeName()
+	if err != nil {
+		hwlog.RunLog.Errorf("Failed to get node name for NodeEvent: %v", err)
+		return nil
+	}
+	return &NodeEvent{
+		NodeName:  nodeName,
+		FaultList: nodeFaults,
+	}
 }
 
 func buildDPUItem(hcaName string, basicInfo hcaBasicInfo, faults []FaultDetail) DPUItem {
