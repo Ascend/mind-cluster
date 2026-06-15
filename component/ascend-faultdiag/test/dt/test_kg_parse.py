@@ -29,6 +29,7 @@ from ascend_fd.pkg.parse.knowledge_graph.parser.npu_device_parse import (
     NpuOsLogParser,
     NpuDeviceLogParser,
     NpuHistoryLogParser,
+    NpuHostLogParser,
 )
 from ascend_fd.pkg.parse.knowledge_graph.parser.train_log_parser import TrainLogParser
 from ascend_fd.pkg.parse.knowledge_graph.parser.cann_log_parser import CANNPlogParser, CANNLogParser
@@ -149,6 +150,10 @@ class KgParseTestCase(unittest.TestCase):
                     TESTCASE_KG_PARSE_INPUT, "hisi_logs", "device-1", "20241204162140-590391000", "log", "kernel.log"
                 )
             ]
+        }
+        self.npu_host_parser = NpuHostLogParser(self.params)
+        self.npu_host_kernel_input_file_dict = {
+            TESTCASE_KG_PARSE_INPUT: [os.path.join(TESTCASE_KG_PARSE_INPUT, "slog", "host", "host_kernel.log")]
         }
         self.device_plugin_parser = DevicePluginParser(self.params)
         self.device_plugin_file_list = [
@@ -288,6 +293,11 @@ class KgParseTestCase(unittest.TestCase):
         file_path = self.npu_history_input_file_dict.get(TESTCASE_KG_PARSE_INPUT, [])[0]
         event_result_list = self.npu_history_parser._parse_single_file(file_path)
         self.assertEqual("Test_NPU_History_Code_1", event_result_list[0][EVENT_CODE])
+
+    def test_npu_host_kernel_parse_func(self):
+        file_path = self.npu_host_kernel_input_file_dict.get(TESTCASE_KG_PARSE_INPUT, [])[0]
+        event_result_list = self.npu_host_parser._parse_single_file(file_path)
+        self.assertEqual("AISW_CANN_DRV_PCIE_046", event_result_list[0][EVENT_CODE])
 
     def test_npu_0x40f84e00(self):
         parse_ctx = KGParseCtx(

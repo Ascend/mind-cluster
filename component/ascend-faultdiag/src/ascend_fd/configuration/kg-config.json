@@ -17110,12 +17110,12 @@
                 "component": "CANN",
                 "module": "DVPP",
                 "cause_zh": "VDEC模块依赖的模块没有加载或初始化",
-                "description_zh": "系统内部错误：\n1、HDC通道未初始化成功，比如调用hi_mpi_sys_init失败；\n2、内部的tlv节点数目超过阈值；\n3、获取device id失败；\n4、内部其他错误，如初始化资源失败。",
+                "description_zh": "系统内部错误：\na. HDC通道未初始化成功，比如调用hi_mpi_sys_init失败；\nb. 内部的tlv节点数目超过阈值；\nc. 获取device id失败；\nd. 内部其他错误，如初始化资源失败。",
                 "suggestion_zh": [
                     "1. 查看日志明确处理方法；"
                 ],
                 "cause_en": "The module on which the VDEC module depends is not loaded or initialized",
-                "description_en": "Internal system error:\n1. The HDC channel fails to be initialized, for example, hi_mpi_sys_init fails to be called.\n2. The number of internal TLV nodes exceeds the threshold.\n3. Failed to obtain the device ID.\n4. Other internal errors, such as resource initialization failure.",
+                "description_en": "Internal system error:\na. The HDC channel fails to be initialized, for example, hi_mpi_sys_init fails to be called.\nb. The number of internal TLV nodes exceeds the threshold.\nc. Failed to obtain the device ID.\nd. Other internal errors, such as resource initialization failure.",
                 "suggestion_en": [
                     "1. Check the logs and specify the handling method."
                 ]
@@ -24790,6 +24790,394 @@
                 ]
             }
         },
+        "AISW_UB_CDMA_002": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB",
+                "module": "CDMA",
+                "cause_zh": "jfs/jfc创建失败",
+                "description_zh": "a. 内存不足，jfs和jfc ctx申请失败。\nb. 参数错误。\nc. mailbox cmd执行失败。\nd. 硬件故障，上报B类异常。\ne. jfs数量超过规格。",
+                "suggestion_zh": [
+                    "1. 记录错误日志，需要联系工程师处理；"
+                ],
+                "cause_en": "Failed to create jfs/jfc",
+                "description_en": "a. Insufficient memory, JFS and JFC CTX allocation failed.\nb. Parameter error.\nc. Mailbox command execution failed.\nd. Hardware failure, reported as Class B exception.\ne. Number of JFSs exceeds the specification.",
+                "suggestion_en": [
+                    "1. Record error logs, and it is necessary to contact an engineer for handling."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": [
+                    ["create jfs failed"],
+                    ["create jfc failed"]
+                ]
+            }
+        },
+        "AISW_UB_CDMA_003": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB",
+                "module": "CDMA",
+                "cause_zh": "jfs/jfc释放失败",
+                "description_zh": "a. 内存使用过程释放内存。\nb. 硬件正在复位状态。",
+                "suggestion_zh": [
+                    "1. 记录错误日志，需要联系工程师处理；"
+                ],
+                "cause_en": "Failed to release the jfs/jfc.",
+                "description_en": "a. During the memory usage process, release the memory.\nb. The hardware is in the reset state.",
+                "suggestion_en": [
+                    "1. Record error logs, and it is necessary to contact an engineer for handling."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": [
+                    ["jfs delete failed"],
+                    ["jfc delete failed"]
+                ]
+            }
+        },
+        "AISW_UB_CDMA_004": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB",
+                "module": "CDMA",
+                "cause_zh": "ctrlq通信异常",
+                "description_zh": "a. ctrlq队列满；\nb. ctrlq未产生中断；\nc. 消息格式不兼容。\nd. 海量中断上报 。\ne. ctrlq消息超时。",
+                "suggestion_zh": [
+                    "1. 记录错误日志，需要联系工程师处理；"
+                ],
+                "cause_en": "ctrlq communication anomaly",
+                "description_en": "a. ctrlq queue is full.\nb. ctrlq has not generated an interrupt.\nc. message format is incompatible.\nd. massive interrupt reports.\ne. ctrlq message timeout.",
+                "suggestion_en": [
+                    "1. Record error logs, and it is necessary to contact an engineer for handling."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["ctrlq send msg failed"]
+            }
+        },
+        "AISW_UB_CDMA_007": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB",
+                "module": "CDMA",
+                "cause_zh": "鉴权失败",
+                "description_zh": "SEID与DEID鉴权失败。",
+                "suggestion_zh": [
+                    "1. 记录错误日志，需要联系工程师处理；"
+                ],
+                "cause_en": "Authentication failed",
+                "description_en": "SEID and DEID authentication failed.",
+                "suggestion_en": [
+                    "1. Record error logs, and it is necessary to contact an engineer for handling."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["cqe status abnormal"]
+            }
+        },
+        "AISW_UB_CDMA_008": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB",
+                "module": "CDMA",
+                "cause_zh": "参数合法性校验失败",
+                "description_zh": "WQE字段不合法。",
+                "suggestion_zh": [
+                    "1. 记录错误日志，需要联系工程师处理；"
+                ],
+                "cause_en": "Parameter validity verification failed",
+                "description_en": "Invalid WQE field.",
+                "suggestion_en": [
+                    "1. Record error logs, and it is necessary to contact an engineer for handling."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["cdma invalid opcode"]
+            }
+        },
+        "AISW_UB_CDMA_011": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB",
+                "module": "CDMA",
+                "cause_zh": "IMP故障",
+                "description_zh": "a. IMP启动失败。\nb. cmdq超时。\nc. CMDQ队列满。",
+                "suggestion_zh": [
+                    "1. 记录错误日志，需要联系工程师处理；"
+                ],
+                "cause_en": "IMP failure",
+                "description_en": "a. The IMP fails to be started.\nb. The cmdq times out.\nc. The CMDQ queue is full.",
+                "suggestion_en": [
+                    "1. Record error logs, and it is necessary to contact an engineer for handling."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["upgrade jfs ctx failed"]
+            }
+        },
+        "AISW_UB_UMMU_007": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB",
+                "module": "UMMU",
+                "cause_zh": "芯片执行TLBi异常",
+                "description_zh": "a. 软件命令填写错误。\nb. 芯片命令执行超时。\nc. 命令队列异常。",
+                "suggestion_zh": [
+                    "1. 记录错误日志，需要联系工程师处理；"
+                ],
+                "cause_en": "The TLBi execution is abnormal.",
+                "description_en": "a. Incorrect software command entry.\nb. Chip command execution timeout.\nc. Abnormal command queue.",
+                "suggestion_en": [
+                    "1. Record error logs, and it is necessary to contact an engineer for handling."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["Global Error", "MCMDQ error", "(cons 0x"]
+            }
+        },
+        "AISW_UB_UMMU_008": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB",
+                "module": "UMMU",
+                "cause_zh": "外部输入异常",
+                "description_zh": "a. 输入地址、权限信息非法。\nb. e-bit/tokenvalue信息不匹配。",
+                "suggestion_zh": [
+                    "1. 记录错误日志；"
+                ],
+                "cause_en": "External input anomaly",
+                "description_en": "a. The input address and permission information are illegal.\nb. The e-bit/token value information does not match.",
+                "suggestion_en": [
+                    "1. Record error logs."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": [
+                    ["data_base must be 4K aligned"],
+                    ["Check grant info failed", "Granted addr info(token_check=", "token_count=", "permission=", "e_bit=", "target addr info(token_check=", "permission=", "e_bit="]
+                ]
+            },
+            "rule": [
+                {"dst_code": "AISW_UB_UMMU_010"}
+            ]
+        },
+        "AISW_UB_UMMU_009": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB",
+                "module": "UMMU",
+                "cause_zh": "芯片查表异常",
+                "description_zh": "a. 芯片故障。\nb. 访问到cache中残留的数据。\nc. 内存上的权限表内容被修改，访问到脏数据。",
+                "suggestion_zh": [
+                    "1. 需要联系工程师处理（这种属于要么是芯片问题，要么是驱动未刷plb，实际不会发生）；"
+                ],
+                "cause_en": "Chip table lookup anomaly",
+                "description_en": "a. Chip failure.\nb. Accessing residual data in the cache.\nc. The content of the permission table on the memory is modified, leading to access of dirty data.",
+                "suggestion_en": [
+                    "1. It is necessary to contact an engineer for handling (this type of issue is either a chip problem or the driver has not been flashed with plb, which in practice will not occur)."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": [
+                    ["event 0x09", "received:"],
+                    ["event 0x11", "received:"],
+                    ["event 0x03", "received:"],
+                    ["event 0x07", "received:"]
+                ]
+            }
+        },
+        "AISW_UB_UMMU_010": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB",
+                "module": "UMMU",
+                "cause_zh": "地址授权失败",
+                "description_zh": "a. 授权地址未按页粒度大小对齐。\nb. 同一tid授权所需权限表内存不足。\nc. 同一tid授权与释放tid并发问题。\nd. 授权区域与之前授权区域重叠。",
+                "suggestion_zh": [
+                    "1. 记录错误日志；"
+                ],
+                "cause_en": "Address authorization failed",
+                "description_en": "a. The authorized address is not aligned according to the page granularity size.\nb. Insufficient memory in the permission table required for authorization of the same tid.\nc. Concurrency issues between authorization and tid release for the same tid.\nd. The authorized area overlaps with the previously authorized area.",
+                "suggestion_en": [
+                    "1. Record error logs."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": [
+                    ["alloc", "failed"],
+                    ["data_base must be 4K aligned"],
+                    ["Check grant info failed", "Granted addr info(token_check=", "token_count=", "permission=", "e_bit=", "target addr info(token_check=", "permission=", "e_bit="]
+                ]
+            }
+        },
+        "AISW_UB_UMMU_011": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB",
+                "module": "UMMU",
+                "cause_zh": "地址解授权失败",
+                "description_zh": "a. 解授权地址与授权时不一致。\nb. tokenvalue参数不匹配。\nc. 解授权与释放tid并发问题。",
+                "suggestion_zh": [
+                    "1. 记录错误日志；"
+                ],
+                "cause_en": "Address deauthorization failed",
+                "description_en": "a. The address for revoking authorization is inconsistent with the address at the time of authorization.\nb. The tokenvalue parameter does not match.\nc. Concurrency issues between revoking authorization and releasing tid.",
+                "suggestion_en": [
+                    "1. Record error logs."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": [
+                    ["Find target address range failed"],
+                    ["Token not match"],
+                    ["Map", "info is null"]
+                ]
+            }
+        },
+        "AISW_UB_UMMU_012": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB",
+                "module": "UMMU",
+                "cause_zh": "权限表分配失败",
+                "description_zh": "a. tid超规格。\nb. 系统内存不足。",
+                "suggestion_zh": [
+                    "1. 记录错误日志；"
+                ],
+                "cause_en": "Permission table allocation failed",
+                "description_en": "a. The tid exceeds the specification.\nb. The system memory is insufficient.",
+                "suggestion_en": [
+                    "1. Record error logs."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["alloc normal tid failed"]
+            }
+        },
+        "AISW_UB_UMMU_013": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB",
+                "module": "UMMU",
+                "cause_zh": "UMMU设备初始化失败",
+                "description_zh": "a. BIOS上报UMMU设备节点信息有误。\nb. 探测UMMU硬件能力信息失败。\nc. 向IOMMU框架注册UMMU设备失败。",
+                "suggestion_zh": [
+                    "1. 记录错误日志；"
+                ],
+                "cause_en": "Failed to initialize the UMMU.",
+                "description_en": "a. The BIOS reports incorrect information about the UMMU device node.\nb. Failed to detect the hardware capability information of the UMMU.\nc. Failed to register the UMMU device with the IOMMU framework.",
+                "suggestion_en": [
+                    "1. Record error logs."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": [
+                    ["acpi get devices err", "status["],
+                    ["register to ummu core failed", "ret="]
+                ]
+            }
+        },
+        "AISW_UB_UMMU_014": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB",
+                "module": "UMMU",
+                "cause_zh": "中断申请失败",
+                "description_zh": "a. 未分配UMMU deviceID。\nb. 系统中断资源不足。",
+                "suggestion_zh": [
+                    "1. 记录错误日志；"
+                ],
+                "cause_en": "Interrupt request failed",
+                "description_en": "a. Unallocated UMMU device ID.\nb. Insufficient interrupt resources in the system.",
+                "suggestion_en": [
+                    "1. Record error logs."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["acpi get devices err", "status["]
+            }
+        },
+        "AISW_UB_UMMU_015": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB",
+                "module": "UMMU",
+                "cause_zh": "配置表内存分配失败",
+                "description_zh": "a. 芯片能力超规格下限或者上限。\nb. 系统内存资源不足。",
+                "suggestion_zh": [
+                    "1. 记录错误日志；"
+                ],
+                "cause_en": "Memory allocation for the configuration table failed.",
+                "description_en": "a. The chip's capability exceeds the lower limit of the specification or upper limit.\nb. Insufficient system memory resources.",
+                "suggestion_en": [
+                    "1. Record error logs."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["alloc", "failed"]
+            },
+            "rule": [
+                {"dst_code": "AISW_UB_UMMU_010"}
+            ]
+        },
+        "AISW_UB_UMMU_016": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB",
+                "module": "UMMU",
+                "cause_zh": "地址映射失败",
+                "description_zh": "a. 映射地址及大小未按页粒度对齐。\nb. 页面属性配置错误。\nc. 地址映射区域与实际申请内存区域不一致。",
+                "suggestion_zh": [
+                    "1. 记录错误日志；"
+                ],
+                "cause_en": "Address mapping failed",
+                "description_en": "a. The mapped address and size are not aligned according to the page granularity.\nb. The page attribute configuration is incorrect.\nc. The address mapping area does not match the actual memory area requested.",
+                "suggestion_en": [
+                    "1. Record error logs."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["unaligned:", "iova 0x", "pa", "size 0x", "min_pagesz 0x"]
+            }
+        },
+        "AISW_UB_UMMU_018": {
+            "attribute": {
+                "class": "Software",
+                "component": "UB",
+                "module": "UMMU",
+                "cause_zh": "页表创建失败",
+                "description_zh": "a. 分配参数非法。\nb. 系统内存不足。",
+                "suggestion_zh": [
+                    "1. 记录错误日志；"
+                ],
+                "cause_en": "Page table creation failed",
+                "description_en": "a. The allocation parameter is invalid.\nb. The system memory is insufficient.",
+                "suggestion_en": [
+                    "1. Record error logs."
+                ]
+            },
+            "source_file": "NPU_Host",
+            "regex": {
+                "in": ["page allocation failure"]
+            }
+        },
         "AISW_VLLM_DPLB_001": {
             "attribute": {
                 "class": "Software",
@@ -24925,12 +25313,12 @@
                 "component": "VLLM-ASCEND",
                 "module": "quantization",
                 "cause_zh": "模型权重不含共享专家时开启multistream_overlap_gate参数",
-                "description_zh": "同时满足如下两个条件，会触发该问题：\n1、在推理引擎启动命令中，用户开启multistream_overlap_gate配置为True。\n2、模型权重不含共享专家的MOE类模型（例如Mixtral）。",
+                "description_zh": "同时满足如下两个条件，会触发该问题：\na. 在推理引擎启动命令中，用户开启multistream_overlap_gate配置为True。\nb. 模型权重不含共享专家的MOE类模型（例如Mixtral）。",
                 "suggestion_zh": [
                     "1. 在启动参数删除multistream_overlap_gate；"
                 ],
                 "cause_en": "Enabling multistream_overlap_gate parameter when model weights do not contain shared experts",
-                "description_en": "This issue is triggered when the following two conditions are met simultaneously: 1. The user enables multistream_overlap_gate (sets it to True) in the inference engine startup command. 2. The model is a Mixture of Experts (MoE) model whose weights do not contain shared experts (e.g., Mixtral).",
+                "description_en": "This issue is triggered when the following two conditions are met simultaneously: \na. The user enables multistream_overlap_gate (sets it to True) in the inference engine startup command. \nb. The model is a Mixture of Experts (MoE) model whose weights do not contain shared experts (e.g., Mixtral).",
                 "suggestion_en": [
                     "1. Remove the multistream_overlap_gate parameter from the startup parameters."
                 ]
@@ -24946,13 +25334,13 @@
                 "component": "VLLM-ASCEND",
                 "module": "quantization",
                 "cause_zh": "MOE模型开启MC2通算融合功能时初始化all2all通信域失败",
-                "description_zh": "1、MOE类模型MC2环境变量VLLM_ASCEND_ENABLE_FUSED_MC2 设置为1，开启了通算融合功能。\n2、系统检查到MC2算子用到的alltoall通信域名称为空。一般是底层通信域创建过程出现故障导致。MC2 group对象缺少device_group或backend相关属性，导致无法获取HCCL通信名。",
+                "description_zh": "a. MOE类模型MC2环境变量VLLM_ASCEND_ENABLE_FUSED_MC2 设置为1，开启了通算融合功能。\nb. 系统检查到MC2算子用到的alltoall通信域名称为空。一般是底层通信域创建过程出现故障导致。MC2 group对象缺少device_group或backend相关属性，导致无法获取HCCL通信名。",
                 "suggestion_zh": [
                     "1. 参考CANN产品文档中《HCCL性能测试工具》，通过测试allToall算子hccl性能判断是否底层通信出现故障;",
                     "2. 如果部署了CCAE，参考CCAE对应的产品文档进行故障诊断和故障排除;"
                 ],
                 "cause_en": "Failed to initialize the all2all communication domain when enabling the MC2 fused computation feature for MoE models",
-                "description_en": "1. The MC2 environment variable VLLM_ASCEND_ENABLE_FUSED_MC2 for the MoE model is set to 1, enabling the fused computation feature. 2. The system detects that the alltoall communication domain name used by the MC2 operator is empty. This is generally caused by a failure during the underlying communication domain creation process. The MC2 group object lacks device_group or backend related attributes, preventing the retrieval of the HCCL communication name.",
+                "description_en": "a. The MC2 environment variable VLLM_ASCEND_ENABLE_FUSED_MC2 for the MoE model is set to 1, enabling the fused computation feature. \nb. The system detects that the alltoall communication domain name used by the MC2 operator is empty. This is generally caused by a failure during the underlying communication domain creation process. The MC2 group object lacks device_group or backend related attributes, preventing the retrieval of the HCCL communication name.",
                 "suggestion_en": [
                     "1. Refer to the 'HCCL Performance Testing Tool' in the CANN product documentation to test the HCCL performance of the allToall operator and determine if there is an underlying communication failure.",
                     "2. If CCAE is deployed, refer to the corresponding CCAE product documentation for fault diagnosis and troubleshooting."

@@ -1,0 +1,2 @@
+[2025-04-16-03:08:13.704312] [ascend] [drv_pcie] [INFO] [devdrv_init_dev_num 2248] <systemd-udevd:4853:4853> Findout device. (index=7; device=d105; dev_num=0)
+[2025-04-16-03:08:13.704360] [ascend] [drv_pcie] [INFO] [devdrv_init_dev_num 2248] <systemd-udevd:4853:4853> DMA copy failed

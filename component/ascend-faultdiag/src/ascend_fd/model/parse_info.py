@@ -216,6 +216,7 @@ class KGParseFilePath(JsonObj):
         host_vmcore_dmesg_path: List = None,
         hisi_logs_path: List = None,
         slog_path: Dict = None,
+        slog_host_path: List = None,
         noded_log_path: List = None,
         device_plugin_path: List = None,
         volcano_scheduler_path: List = None,
@@ -245,6 +246,7 @@ class KGParseFilePath(JsonObj):
         self.host_vmcore_dmesg_path = host_vmcore_dmesg_path or []
         self.hisi_logs_path = hisi_logs_path or []
         self.slog_path = slog_path or {}
+        self.slog_host_path = slog_host_path or []
         self.noded_log_path = noded_log_path or []
         self.device_plugin_path = device_plugin_path or []
         self.volcano_scheduler_path = volcano_scheduler_path or []
