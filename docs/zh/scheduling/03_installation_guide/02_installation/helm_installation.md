@@ -15,6 +15,7 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     - NodeD
     - NPU Exporter
     - Infer Operator
+    - K8s RDMA Shared Dev Plugin
 - 安装Container Manager组件请参考[手动安装Container Manager](../../05_developer_guide/installation_deployment/manual_installation/11_container-manager.md#ZH-CN_TOPIC_0000002524428759)章节。
 - TaskD和MindIO安装在业务容器中，不在本章节涉及的组件范围内。
 
@@ -67,7 +68,7 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
       ```bash
       -r-------- 1 root root  2026 Mar 24 15:25 mindcluster-crds-deploy-tool-{chart_version}.tgz
       -r-------- 1 root root  2026 Mar 24 15:25 mindcluster-deploy-tool-{chart_version}.tgz
-      -rw-r--r-- 1 root root  2026 Mar 24 15:25 add_helm_meta.sh
+      -rw-r--r-- 1 root root  2026 Mar 24 15:25 helm_tool.sh
       ```
       > [!NOTE]
       > {version}表示mindcluster版本，如26.1.0。
@@ -183,64 +184,71 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
    ```yaml
    # 安装应用组件时的默认yaml配置如下
    clusterd:
-     enabled: true                                                         # 是否安装clusterD组件
+     enabled: true                                                         # 安装ClusterD组件
      image:
-       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd"   # clusterD组件镜像名，请根据实际情况修改
-       tag: "v26.1.0"                                                      # clusterD组件镜像标签，请根据实际情况修改
-       pullPolicy: "IfNotPresent"                                          # clusterD组件镜像拉取策略，请根据实际情况修改
+       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd"   # ClusterD组件镜像名，请根据实际情况修改
+       tag: "v26.1.0"                                                      # ClusterD组件镜像标签，请根据实际情况修改
+       pullPolicy: "IfNotPresent"                                          # ClusterD组件镜像拉取策略，请根据实际情况修改
 
    noded:
-     enabled: true                                                         # 是否安装noded组件
+     enabled: true                                                         # 安装NodeD组件
      enableDpcOrDtfs: false                                                # 是否启用共享存储故障检测功能
      image:
-       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/noded"      # noded组件镜像名，请根据实际情况修改
-       tag: "v26.1.0"                                                      # noded组件镜像标签，请根据实际情况修改
-       pullPolicy: "IfNotPresent"                                          # noded组件镜像拉取策略，请根据实际情况修改
+       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/noded"      # NodeD组件镜像名，请根据实际情况修改
+       tag: "v26.1.0"                                                      # NodeD组件镜像标签，请根据实际情况修改
+       pullPolicy: "IfNotPresent"                                          # NodeD组件镜像拉取策略，请根据实际情况修改
 
    npu-exporter:
-     enabled: true                                                         # 是否安装npu-exporter组件
+     enabled: true                                                         # 安装NPU Exporter组件
      is310P1usoc: false                                                    # 产品是否为Atlas 200I SoC A1 核心板
      image:
-       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter" # npu-exporter组件镜像名，请根据实际情况修改
-       tag: "v26.1.0"                                                      # npu-exporter组件镜像标签，请根据实际情况修改
-       pullPolicy: "IfNotPresent"                                          # npu-exporter组件镜像拉取策略，请根据实际情况修改
+       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter" # NPU Exporter组件镜像名，请根据实际情况修改
+       tag: "v26.1.0"                                                      # NPU Exporter组件镜像标签，请根据实际情况修改
+       pullPolicy: "IfNotPresent"                                          # NPU Exporter组件镜像拉取策略，请根据实际情况修改
 
    ascend-operator:
-     enabled: true                                                         # 是否安装ascend-operator组件
+     enabled: true                                                         # 安装Ascend Operator组件
      image:
-       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator" # ascend-operator组件镜像名，请根据实际情况修改
-       tag: "v26.1.0"                                                      # ascend-operator组件镜像标签，请根据实际情况修改
-       pullPolicy: "IfNotPresent"                                          # ascend-operator组件镜像拉取策略，请根据实际情况修改
+       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator" # Ascend Operator组件镜像名，请根据实际情况修改
+       tag: "v26.1.0"                                                      # Ascend Operator组件镜像标签，请根据实际情况修改
+       pullPolicy: "IfNotPresent"                                          # Ascend Operator组件镜像拉取策略，请根据实际情况修改
 
    ascend-for-volcano:
-     enabled: true                                                         # 是否安装ascend-for-volcano组件
+     enabled: true                                                         # 安装Volcano组件
      volcanoVersion: "v1.7.0"                                              # 设置要安装的Volcano版本
      scheduler:
        image:
-         repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler"      # vc-scheduler组件镜像名，请根据实际情况修改
-         tag: "v1.7.0-v26.1.0"                                                      # vc-scheduler组件镜像标签
-         pullPolicy: "IfNotPresent"                                                 # vc-scheduler组件镜像拉取策略
+         repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler"      # Volcano Scheduler组件镜像名，请根据实际情况修改
+         tag: "v1.7.0-v26.1.0"                                                      # Volcano Scheduler组件镜像标签
+         pullPolicy: "IfNotPresent"                                                 # Volcano Scheduler组件镜像拉取策略
      controller:
        image:
-         repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager" # vc-controller-manager组件镜像名，请根据实际情况修改
-         tag: "v1.7.0-v26.1.0"                                                          # vc-controller-manager组件镜像标签，请根据实际情况修改
-         pullPolicy: "IfNotPresent"                                                     # vc-controller-manager组件镜像拉取策略
+         repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager" # Volcano Controller组件镜像名，请根据实际情况修改
+         tag: "v1.7.0-v26.1.0"                                                          # Volcano Controller组件镜像标签，请根据实际情况修改
+         pullPolicy: "IfNotPresent"                                                     # Volcano Controller组件镜像拉取策略
 
    infer-operator:
-     enabled: true                                                         # 是否安装infer-operator组件
+     enabled: true                                                         # 安装Infer Operator组件
      image:
-       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator" # infer-operator组件镜像名，请根据实际情况修改
-       tag: "v26.1.0"                                                      # infer-operator组件镜像标签，请根据实际情况修改
-       pullPolicy: "IfNotPresent"                                          # infer-operator组件镜像拉取策略，请根据实际情况修改
+       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator" # Infer Operator组件镜像名，请根据实际情况修改
+       tag: "v26.1.0"                                                      # Infer Operator组件镜像标签，请根据实际情况修改
+       pullPolicy: "IfNotPresent"                                          # Infer Operator组件镜像拉取策略，请根据实际情况修改
 
    ascend-device-plugin:
-     enabled: true                                                         # 是否安装ascend-device-plugin组件
+     enabled: true                                                         # 安装Ascend Device Plugin组件
      is310P1usoc: false                                                    # 产品是否为Atlas 200I SoC A1 核心板
      volcanoType: true                                                     # 是否使用volcano进行调度，请根据实际情况修改
      image:
-       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin" # ascend-k8sdeviceplugin组件镜像名，请根据实际情况修改
-       tag: "v26.1.0"                                                                  # ascend-k8sdeviceplugin组件镜像标签，请根据实际情况修改
-       pullPolicy: "IfNotPresent"                                                      # ascend-k8sdeviceplugin组件镜像拉取策略，请根据实际情况修改
+       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin" # Ascend Device Plugin组件镜像名，请根据实际情况修改
+       tag: "v26.1.0"                                                                  # Ascend Device Plugin组件镜像标签，请根据实际情况修改
+       pullPolicy: "IfNotPresent"                                                      # Ascend Device Plugin组件镜像拉取策略，请根据实际情况修改
+
+   k8s-rdma-shared-dev-plugin:
+     enabled: false                                                           # 不安装K8s RDMA Shared Dev Plugin组件
+     image:
+       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/k8s-rdma-shared-dp" # K8s RDMA Shared Dev Plugin组件镜像名，请根据实际情况修改
+       tag: "v26.1.0"                                                              # K8s RDMA Shared Dev Plugin组件镜像标签，请根据实际情况修改
+       pullPolicy: "IfNotPresent"                                                  # K8s RDMA Shared Dev Plugin组件镜像拉取策略，请根据实际情况修改
    ```
 
 ## 参数说明
@@ -258,27 +266,27 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 </thead>
 <tbody>
   <tr>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>ascend-operator</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>Ascend Operator</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-operator-crds.enabled</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为true</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用ascend-operator的crd。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用Ascend Operator组件的crd。</p></td>
   </tr>
   <tr>
-    <td class="cellrowborder" rowspan="2" valign="center" headers="mcps1.2.5.1.1 "><p>ascend-for-volcano</p></td>
+    <td class="cellrowborder" rowspan="2" valign="center" headers="mcps1.2.5.1.1 "><p>Volcano</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-for-volcano-crds.enabled</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为true</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用volcano的crd。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用Volcano组件的crd。</p></td>
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-for-volcano-crds.volcanoVersion</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p><p>string</p>取值包括：<ul><li>v1.7.0</li><li>v1.9.0</li></ul></p><p>默认值为v1.7.0</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>选择volcano的crd版本。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p><p>string</p><ul><li>v1.7.0</li><li>v1.9.0</li></ul></p><p>默认值为v1.7.0</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>选择Volcano版本。</p></td>
   </tr>
   <tr>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>infer-operator</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>Infer Operator</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>infer-operator-crds.enabled</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为true</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用infer-operator的crd。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用Infer Operator组件的crd。</p></td>
   </tr>
 </tbody>
 </table>
@@ -296,16 +304,16 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 </thead>
 <tbody>
   <tr>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>clusterd</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>ClusterD</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>clusterd.enabled</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为true</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用clusterd组件。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用ClusterD组件。</p></td>
   </tr>
   <tr>
-    <td class="cellrowborder" rowspan="2" valign="center" headers="mcps1.2.5.1.1 "><p>noded</p></td>
+    <td class="cellrowborder" rowspan="2" valign="center" headers="mcps1.2.5.1.1 "><p>NodeD</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>noded.enabled</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为true</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用noded组件。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用NodeD组件。</p></td>
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>noded.enableDpcOrDtfs</p></td>
@@ -313,10 +321,10 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示开启共享存储故障检测功能。</p></td>
   </tr>
   <tr>
-    <td class="cellrowborder" rowspan="2" valign="center" headers="mcps1.2.5.1.1 "><p>npu-exporter</p></td>
+    <td class="cellrowborder" rowspan="2" valign="center" headers="mcps1.2.5.1.1 "><p>NPU Exporter</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>npu-exporter.enabled</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为true</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用npu-exporter组件。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用NPU Exporter组件。</p></td>
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>npu-exporter.is310P1usoc</p></td>
@@ -324,16 +332,16 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示产品为Atlas 200I SoC A1 核心板。</p></td>
   </tr>
   <tr>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>ascend-operator</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>Ascend Operator</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-operator.enabled</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为true</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用ascend-operator组件。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用Ascend Operator组件。</p></td>
   </tr>
   <tr>
-    <td class="cellrowborder" rowspan="2" valign="center" headers="mcps1.2.5.1.1 "><p>ascend-for-volcano</p></td>
+    <td class="cellrowborder" rowspan="2" valign="center" headers="mcps1.2.5.1.1 "><p>Volcano</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-for-volcano.enabled</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为true</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用volcano组件。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用Volcano组件。</p></td>
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-for-volcano.volcanoVersion</p></td>
@@ -341,16 +349,16 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>选择启用的volcano版本。</p></td>
   </tr>
   <tr>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>infer-operator</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>Infer Operator</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>infer-operator.enabled</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为true</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用infer-operator组件。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用Infer Operator组件。</p></td>
   </tr>
   <tr>
-    <td class="cellrowborder" rowspan="3" valign="center" headers="mcps1.2.5.1.1 "><p>ascend-device-plugin</p></td>
+    <td class="cellrowborder" rowspan="3" valign="center" headers="mcps1.2.5.1.1 "><p>Ascend Device Plugin</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-device-plugin.enabled</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为true</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用ascend-device-plugin组件。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用Ascend Device Plugin组件。</p></td>
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-device-plugin.is310P1usoc</p></td>
@@ -361,6 +369,12 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-device-plugin.volcanoType</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为true</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示使用volcano进行调度。</p></td>
+  </tr>
+  <tr>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>K8s RDMA Shared Dev Plugin</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>k8s-rdma-shared-dev-plugin.enabled</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为false</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用K8s RDMA Shared Dev Plugin组件。</p></td>
   </tr>
 </tbody>
 </table>
@@ -420,7 +434,8 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 </table>
 
 >[!NOTE]
->[表3](#table15274931175243)中`<component>`取值为：clusterd、noded、npu-exporter、ascend-operator、ascend-for-volcano.scheduler、ascend-for-volcano.controller、infer-operator、ascend-device-plugin。
+>- 表3中`<component>`取值为：clusterd、noded、npu-exporter、ascend-operator、**ascend-for-volcano.scheduler**、**ascend-for-volcano.controller**、infer-operator、ascend-device-plugin、k8s-rdma-shared-dev-plugin。
+>- 表3中的参数中，K8s RDMA Shared Dev Plugin组件仅能设置k8s-rdma-shared-dev-plugin.image.repository，k8s-rdma-shared-dev-plugin.image.tag和k8s-rdma-shared-dev-plugin.image.tag三种参数。
 
 **表 4**  Helm部署工具压缩包文件列表说明
 <a name="table15274931175244"></a>
@@ -444,9 +459,9 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>用户可配置的安装参数说明可参见<a href="#table15274931175242">表2</a>和<a href="#table15274931175243">表3</a>。</p></td>
   </tr>
   <tr>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>add_helm_meta.sh</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>用于为各组件资源添加helm chart元数据的脚本，仅在升级时使用。</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>使用方法：bash add_helm_meta.sh [component1] [component2] ... </p><p>其中，component可以设置为：<ul><li>ascend-operator</li><li>ascend-device-plugin</li><li>ascend-for-volcano</li><li>clusterd</li><li>noded</li><li>npu-exporter</li><li>infer-operator</li><li>ns</li><li>all</li></ul></p><p>其中，设置为"ns"表示为命名空间"mindx-dl"和"cluster-system"添加元数据；设置为"all"表示为以上所有组件资源和命名空间添加元数据；设置为其余组件名表示为对应组件的资源添加元数据。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>helm_tool.sh</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>作用包括：<ul><li><p>给各组件资源添加helm chart元数据的脚本。</p></li><li>删除Ascend Device Plugin组件26.1.0版本前的DaemonSet资源</li></ul></p><p>仅在升级时使用。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 ">脚本会为以下资源打上helm 元数据，包括：<ul><li>Ascend Operator组件相关资源</li><li>Ascend Device Plugin组件相关资源</li><li>Volcano组件相关资源</li><li>ClusterD组件相关资源</li><li>NodeD组件相关资源</li><li>NPU Exporter组件相关资源</li><li>Infer Operator组件相关资源</li><li>K8s RDMA Shared Dev Plugin组件相关资源</li><li>命令空间，包括"mindx-dl"和"cluster-system"</li></ul></td>
   </tr>
 </tbody>
 </table>

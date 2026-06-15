@@ -45,6 +45,7 @@ spec:
                    --logLevel=0
                    --enable-healthz=true --healthz-address=11252" ]
           image: ascend-operator:latest
+          imagePullPolicy: Never
           name: manager
           resources:
             limits:

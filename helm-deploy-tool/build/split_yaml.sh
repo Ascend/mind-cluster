@@ -88,18 +88,19 @@ process_component() {
     fi
 }
 
-declare -A COMPONENT_PATTERNS=(
-    ["infer-operator"]="infer-operator*.yaml"
-    ["ascend-device-plugin"]="ascendplugin-*.yaml"
-    ["clusterd"]="clusterd*.yaml"
-    ["noded"]="noded*.yaml"
-    ["ascend-operator"]="ascend-operator*.yaml"
-    ["npu-exporter"]="npu-exporter*.yaml"
-    ["ascend-for-volcano"]="volcano*.yaml"
+declare -A COMPONENT_YAML_PREFIX=(
+    ["infer-operator"]="infer-operator"
+    ["ascend-device-plugin"]="ascendplugin"
+    ["clusterd"]="clusterd"
+    ["noded"]="noded"
+    ["ascend-operator"]="ascend-operator"
+    ["npu-exporter"]="npu-exporter"
+    ["ascend-for-volcano"]="volcano"
+    ["k8s-rdma-shared-dev-plugin"]="k8s-rdma-shared-dp"
 )
 
-for component in "${!COMPONENT_PATTERNS[@]}"; do
-    pattern="${COMPONENT_PATTERNS[$component]}"
+for component in "${!COMPONENT_YAML_PREFIX[@]}"; do
+    pattern="${COMPONENT_YAML_PREFIX[$component]}*.yaml"
     build_dir="${COMPONENT_BASE_DIR}/${component}/build"
 
     shopt -s nullglob
@@ -109,16 +110,8 @@ for component in "${!COMPONENT_PATTERNS[@]}"; do
     for yaml_file in "${files[@]}"; do
         base=$(basename "${yaml_file}" .yaml)
         variant="default"
-        if [[ "${component}" == "ascend-device-plugin" ]]; then
-            variant="${base#ascendplugin-}"
-        elif [[ "${component}" == "ascend-for-volcano" ]]; then
-            variant="${base#volcano-}"
-        else
-            if [[ "${component}" == "${base}" ]]; then
-                variant="default"
-            else
-              variant="${base#${component}-}"
-            fi
+        if [[ "${COMPONENT_YAML_PREFIX[$component]}" != "${base}" ]]; then
+            variant="${base#${COMPONENT_YAML_PREFIX[$component]}-}"
         fi
         process_component "${yaml_file}" "${component}" "${variant}"
     done

@@ -2,7 +2,7 @@
 volcanoVersion: "v1.7.0"
 
 # Built-in parameters
-supportedVolcanoVersion: ["v1.7.0", "v1.9.0"]
+supportedVolcanoVersion: ["v1.7.0", "v1.9.0", "v1.12.0"]
 
 renderVersions:
   v1.7.0:
@@ -19,3 +19,12 @@ renderVersions:
     numatopologiesNodeinfo: "yamls/v1.9.0/CustomResourceDefinition-numatopologies.nodeinfo.volcano.sh.yaml"
     podgroupsScheduling: "yamls/v1.9.0/CustomResourceDefinition-podgroups.scheduling.volcano.sh.yaml"
     queuesScheduling: "yamls/v1.9.0/CustomResourceDefinition-queues.scheduling.volcano.sh.yaml"
+  v1.12.0:
+    commandsBus: "yamls/v1.12.0/CustomResourceDefinition-commands.bus.volcano.sh.yaml"
+    hypernodes: "yamls/v1.12.0/CustomResourceDefinition-hypernodes.topology.volcano.sh.yaml"
+    jobflows: "yamls/v1.12.0/CustomResourceDefinition-jobflows.flow.volcano.sh.yaml"
+    jobsBatch: "yamls/v1.12.0/CustomResourceDefinition-jobs.batch.volcano.sh.yaml"
+    jobtemplatesFlow: "yamls/v1.12.0/CustomResourceDefinition-jobtemplates.flow.volcano.sh.yaml"
+    numatopologiesNodeinfo: "yamls/v1.12.0/CustomResourceDefinition-numatopologies.nodeinfo.volcano.sh.yaml"
+    podgroupsScheduling: "yamls/v1.12.0/CustomResourceDefinition-podgroups.scheduling.volcano.sh.yaml"
+    queuesScheduling: "yamls/v1.12.0/CustomResourceDefinition-queues.scheduling.volcano.sh.yaml"

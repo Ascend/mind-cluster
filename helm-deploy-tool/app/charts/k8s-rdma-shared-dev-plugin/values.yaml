@@ -1,0 +1,7 @@
+# User-defined parameters
+image:
+  repository: ""
+  tag: ""
+  pullPolicy: ""
+
+args: ""

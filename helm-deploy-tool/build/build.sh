@@ -41,6 +41,8 @@ function update_version() {
   sed -i "s/name: volcano-npu_v6.0.RC1_linux-x86_64/name: ${REL_NPU_PLUGIN}/" "${TOP_DIR}/app/charts/ascend-for-volcano/yamls/${BASE_VER}"/ConfigMap-*.yaml
   BASE_VER=v1.9.0
   sed -i "s/name: volcano-npu_v6.0.RC1_linux-x86_64/name: ${REL_NPU_PLUGIN}/" "${TOP_DIR}/app/charts/ascend-for-volcano/yamls/${BASE_VER}"/ConfigMap-*.yaml
+  BASE_VER=v1.12.0
+  sed -i "s/name: volcano-npu_v6.0.RC1_linux-x86_64/name: ${REL_NPU_PLUGIN}/" "${TOP_DIR}/app/charts/ascend-for-volcano/yamls/${BASE_VER}"/ConfigMap-*.yaml
 }
 
 function replace_yaml_value() {
@@ -53,7 +55,7 @@ function helm_package() {
 }
 
 function mv_file() {
-  cp "${TOP_DIR}"/build/add_helm_meta.sh "${TOP_DIR}"/output
+  cp "${TOP_DIR}"/build/helm_tool.sh "${TOP_DIR}"/output
   cp "${TOP_DIR}"/build/*.tgz "${TOP_DIR}"/output
 }
 
