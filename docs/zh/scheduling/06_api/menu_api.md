@@ -13,6 +13,7 @@
   - [MindIO TFT接口](./mindio/00_mindio_tft_apis.md)
   - [MindIO ACP接口](./mindio/01_mindio_acp_apis.md)
 - [Infer Operator](./infer_operator.md)
+- [K8s RDMA Shared Dev Plugin](k8s_rdma_shared_dev_plugin.md)
 - [K8s原生对象说明](k8s.md)
 - [环境变量说明](environment_variable_description.md)
 - [hccl.json文件说明](hccl.json_file_description.md)

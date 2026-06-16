@@ -139,7 +139,43 @@
 <p>UB类型的RDMA设备不支持CDI模式，当检测到UB设备时会自动禁用CDI。</p>
 </td>
 </tr>
-<tr id="row10282191492318"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p8283714172318"><a name="p8283714172318"></a><a name="p8283714172318"></a>-h或者-help</p>
+<tr id="row10282191492319"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p8283714172319"><a name="p8283714172319"></a><a name="p8283714172319"></a>--enable-healthz</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p828381472319"><a name="p828381472319"></a><a name="p828381472319"></a>bool</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p828341482319"><a name="p828341482319"></a><a name="p828341482319"></a>false</p>
+</td>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p828311432319"><a name="p828311432319"></a><a name="p828311432319"></a>是否启用健康检查服务。K8s部署时由组件YAML配置启用（true）。<ul><li>true：启用。</li><li>false：禁用。</li></ul></p>
+</td>
+</tr>
+<tr id="row10282191492320"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p8283714172320"><a name="p8283714172320"></a><a name="p8283714172320"></a>--healthz-address</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p828381472320"><a name="p828381472320"></a><a name="p828381472320"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p828341482320"><a name="p828341482320"></a><a name="p828341482320"></a>11251</p>
+</td>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p828311432320"><a name="p828311432320"></a><a name="p828311432320"></a>健康检查服务侦听端口号，取值范围 1025~65535。K8s部署时由组件YAML配置为11257。若指定端口被占用，组件启动失败。</p>
+</td>
+</tr>
+<tr id="row10282191492321"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p8283714172321"><a name="p8283714172321"></a><a name="p8283714172321"></a>--tls-cert-file</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p828381472321"><a name="p828381472321"></a><a name="p828381472321"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p828341482321"><a name="p828341482321"></a><a name="p828341482321"></a>""</p>
+</td>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p828311432321"><a name="p828311432321"></a><a name="p828311432321"></a>HTTPS 证书文件路径。为空则使用 HTTP 协议。与 --tls-private-key-file 必须同时配置或同时为空。</p>
+</td>
+</tr>
+<tr id="row10282191492322"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p8283714172322"><a name="p8283714172322"></a><a name="p8283714172322"></a>--tls-private-key-file</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p828381472322"><a name="p828381472322"></a><a name="p828381472322"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p828341482322"><a name="p828341482322"></a><a name="p828341482322"></a>""</p>
+</td>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p828311432322"><a name="p828311432322"></a><a name="p828311432322"></a>HTTPS 私钥文件路径。为空则使用 HTTP 协议。与 --tls-cert-file 必须同时配置或同时为空。</p>
+</td>
+</tr>
+<tr id="row10282191492318"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p8283714172318"><a name="p8283714172318"></a><a name="p8283714172318"></a>-h 或者 -help</p>
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p82838147235"><a name="p82838147235"></a><a name="p82838147235"></a>无</p>
 </td>
