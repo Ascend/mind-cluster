@@ -490,7 +490,7 @@ Ascend Device Plugin从驱动获取到故障码后，将根据故障码对设备
 
 ## 健康探针<a name="ZH-CN_TOPIC_healthz_device_plugin"></a>
 
-Ascend Device Plugin启动组件内的HTTP健康探针服务，用于K8s livenessProbe机制探测组件存活状态。探针服务与业务逻辑解耦，使用独立端口（默认 11251）。
+Ascend Device Plugin启动组件内的HTTP健康探针服务，用于K8s livenessProbe机制探测组件存活状态。
 
 **表 2**  健康探针接口
 

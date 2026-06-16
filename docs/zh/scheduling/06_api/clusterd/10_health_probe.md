@@ -1,6 +1,6 @@
 # 健康探针<a name="ZH-CN_TOPIC_healthz_clusterd"></a>
 
-ClusterD启动组件内的HTTP健康探针服务，用于K8s livenessProbe机制探测组件存活状态。探针服务与ClusterD的业务gRPC服务解耦，使用独立端口（默认 11251）。
+ClusterD启动组件内的HTTP健康探针服务，用于K8s livenessProbe机制探测组件存活状态。探针服务与ClusterD的业务gRPC服务解耦，使用独立端口。
 
 **表 1**  健康探针接口
 
