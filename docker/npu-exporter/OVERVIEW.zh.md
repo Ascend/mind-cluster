@@ -68,6 +68,7 @@ Tag 遵循以下格式：
 | Kubernetes | 1.17.x~1.34.x（推荐使用1.19.x及以上版本） | 所有节点 | 了解 K8s 的使用请参见 [Kubernetes 文档](https://kubernetes.io/zh-cn/docs/) |
 | Prometheus | 建议使用最新稳定版本 | 监控节点 | NPU Exporter 适配 Prometheus 钩子函数提供监控数据 |
 | 昇腾AI处理器驱动和固件 | 请参见版本配套表 | 计算节点 | 请参见《CANN 软件安装指南》中的"安装NPU驱动和固件"章节 |
+| UMDK软件包    | 请参见版本配套表 | 计算节点 | 针对Atlas 850 系列硬件产品、Atlas 950 SuperPod产品，在构建镜像时需要 |
 
 #### 硬件规格要求
 

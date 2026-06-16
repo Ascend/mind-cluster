@@ -64,6 +64,7 @@ Tag 遵循以下格式：
 | -- | -- | -- | -- |
 | Kubernetes | 1.17.x~1.34.x（推荐使用1.19.x及以上版本） | 所有节点 | 了解 K8s 的使用请参见 [Kubernetes 文档](https://kubernetes.io/zh-cn/docs/) |
 | ClusterD | 与 NodeD 同版本 | 管理节点 | NodeD 上报的故障信息由 ClusterD 汇总处理 |
+| UMDK软件包    | 请参见版本配套表 | 计算节点 | 针对Atlas 850 系列硬件产品、Atlas 950 SuperPod产品，在构建镜像时需要 |
 
 #### 硬件规格要求
 

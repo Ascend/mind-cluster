@@ -68,6 +68,7 @@ Tags follow this format:
 | Kubernetes | 1.17.x~1.34.x (1.19.x or later recommended) | All nodes | See [Kubernetes Documentation](https://kubernetes.io/docs/) |
 | Prometheus | Latest stable version recommended | Monitoring nodes | NPU Exporter adapts Prometheus hook functions to provide monitoring data |
 | Atlas AI Processor Driver and Firmware | See version compatibility table | Compute nodes | See "Installing NPU Driver and Firmware" in the CANN Software Installation Guide |
+| UMDK software package | See version compatibility table | Compute nodes | Necessary for Atlas 850、Atlas 950 SuperPod Products |
 
 #### Hardware Requirements
 

@@ -2077,3 +2077,101 @@ Events:  <none>
 
     >[!NOTE]
     >当集群规模超过1000节点时，cluster-info-device-和mindx-dl-switchinfo-对应的ConfigMap会进行分片。每个cluster-info-device-或mindx-dl-switchinfo-最多包含1000个节点的设备信息。针对此种场景，需要对所有cluster-info-device-的ConfigMap都执行步骤1和步骤3的查询操作，找到目标节点的详细信息，才能确认该节点的可用芯片信息。
+
+## 容器基础镜像集成UMDK安装指导<a name="ZH-CN_TOPIC_0000002516255288"></a>
+
+1. 从[华为云镜像仓地址](https://mirrors.huaweicloud.com/openeuler/)的unifiedbus/umdk目录，下载UMDK软件包，以umdk-urma-*.aarch64.rpm.tar.gz为例。
+2. 以root用户登录服务器。
+3. 创建/home/umdk目录，将UMDK软件包上传到该目录下。
+   ```shell
+   mkdir -p /home/umdk
+   ```
+4. 进入/home/umdk目录，执行以下步骤准备Dockerfile文件。
+    1. 执行以下命令创建Dockerfile文件（文件名示例“Dockerfile”）。
+
+        ```shell
+        vi Dockerfile
+        ```
+
+    2. 在文件中新增UMDK安装的相关指令。
+       - openEuler容器基础镜像，以openEuler 24.03-lts版本为例。
+            ```Dockerfile
+            FROM openeuler/openeuler:24.03-lts
+
+            ARG UMDK_PKG=""
+            COPY ./${UMDK_PKG} /tmp
+
+            RUN yum update -y && \
+                yum install -y wget unzip shadow libnl3-devel && \
+                if [ -n "${UMDK_PKG}" ] && [ -f "/tmp/${UMDK_PKG}" ]; then \
+                    echo "installing umdk from /tmp/${UMDK_PKG}"; \
+                    mkdir /tmp/umdk_pkgs; \
+                    tar -mzxf "/tmp/${UMDK_PKG}" -C /tmp/umdk_pkgs; \
+                    rpm -ivh /tmp/umdk_pkgs/*.rpm; \
+                else \
+                    echo "warning: umdk package not provided, install from yum"; \
+                    yum install -y umdk-urma-bin umdk-urma-devel umdk-urma-lib umdk-urma-tools; \
+                fi && \
+                yum clean all && \
+                rm -rf /var/cache/yum && \
+                rm -rf /tmp/*
+            ```
+       - Ubuntu容器基础镜像，以Ubuntu 24.04版本为例。
+           ```Dockerfile
+           FROM ubuntu:24.04
+
+           ARG UMDK_PKG=""
+
+           COPY ./${UMDK_PKG} /tmp/
+
+           RUN apt update && \
+               apt install -y libnl-3-dev libnl-genl-3-dev && \
+               if [ -n "${UMDK_PKG}" ] && [ -f "/tmp/${UMDK_PKG}" ]; then \
+                   echo "installing umdk from /tmp/${UMDK_PKG}"; \
+                   mkdir /tmp/umdk_pkgs; \
+                   tar -mzxf "/tmp/${UMDK_PKG}" -C /tmp/umdk_pkgs ; \
+                   dpkg -i /tmp/umdk_pkgs/*.deb; \
+               else \
+                   echo "error: umdk package not provided"; \
+                   exit 1; \
+              fi && \
+              apt-get clean && \
+              rm -rf /var/lib/apt/lists/* && \
+              rm -rf /tmp/*
+           ```
+    3. 将新增内容写入Dockerfile文件后执行:wq命令保存内容。
+
+5. 进入Dockerfile文件所在目录，执行镜像构建指令，构建镜像。注意不要遗漏命令结尾的“.”。
+    ```shell
+    docker build [OPTIONS] -t 镜像名_系统架构:镜像tag --build-arg UMDK_PKG=UMDK软件包名 .
+    ```
+   命令解释如下表所示。
+
+   **表 1**  命令参数说明
+
+   <a name="zh_table47051919193112"></a>
+
+   |参数| 说明                        |
+   |--|---------------------------|
+   |<em>OPTIONS</em>| “--no-cache”选项：不使用缓存重建镜像。 |
+   |-t| 指定镜像名称。                   |
+   |<em>镜像名</em><em>_系统架构:</em><em>镜像tag</em>| 镜像名称与标签，请用户根据实际情况写入。      |
+   |--build-arg UMDK_PKG| 指定UMDK软件包名。               |
+
+    例如：
+   ```shell
+   docker build --no-cache -t urma_aarch64:oe_2403lts --build-arg UMDK_PKG=umdk-urma-25.12.0-B090.sp4.aarch64.rpm.tar.gz .
+   ```
+   当出现“Successfully built xxx”表示镜像构建成功。
+6. 构建完成后，执行以下命令查看镜像信息。
+
+    ```shell
+    docker images
+    ```
+
+   回显示例如下。
+
+    ```ColdFusion
+    REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+    urma_aarch64        oe_2403lts          d82746acd7f1        26 minutes ago      200MB
+    ```

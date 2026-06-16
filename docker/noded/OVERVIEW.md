@@ -64,6 +64,7 @@ Tags follow this format:
 |---|---|---|---|
 | Kubernetes | 1.17.x~1.34.x (1.19.x or later recommended) | All nodes | See [Kubernetes Documentation](https://kubernetes.io/docs/) |
 | ClusterD | Same version as NodeD | Management nodes | Fault information reported by NodeD is aggregated and processed by ClusterD |
+| UMDK software package| See version compatibility table | Compute nodes | Necessary for Atlas 850、Atlas 950 SuperPod Products |
 
 #### Hardware Requirements
 
