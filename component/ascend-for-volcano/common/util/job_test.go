@@ -324,8 +324,64 @@ func TestIsSuperPodJob(t *testing.T) {
 				t.Errorf("isSuperPodJob() err, want true while return false")
 			}
 		})
+	t.Run("07-nil receiver should return false",
+		func(t *testing.T) {
+			var attr *SchedulerJobAttr
+			if attr.IsSuperPodJob() {
+				t.Errorf("isSuperPodJob() err, want false while return true")
+			}
+		})
+	t.Run("08-isSuperPodJob true, when schedule-policy is chip8-node8-sp",
+		func(t *testing.T) {
+			attr := SchedulerJobAttr{ComJob: ComJob{Annotation: map[string]string{
+				SchedulePolicyAnnoKey: Chip8Node8Sp,
+			}}}
+			if !attr.IsSuperPodJob() {
+				t.Errorf("isSuperPodJob() err, want true while return false")
+			}
+		})
+	t.Run("09-isSuperPodJob true, when schedule-policy is chip8-node8-ra64-sp",
+		func(t *testing.T) {
+			attr := SchedulerJobAttr{ComJob: ComJob{Annotation: map[string]string{
+				SchedulePolicyAnnoKey: Chip8Node8Ra64Sp,
+			}}}
+			if !attr.IsSuperPodJob() {
+				t.Errorf("isSuperPodJob() err, want true while return false")
+			}
+		})
+	t.Run("10-isSuperPodJob true, when accelerator-type is module-a3-8-super-pod",
+		func(t *testing.T) {
+			attr := SchedulerJobAttr{ComJob: ComJob{Selector: map[string]string{
+				AcceleratorType: Module910A3x8SuperPodAcceleratorType,
+			}}}
+			if !attr.IsSuperPodJob() {
+				t.Errorf("isSuperPodJob() err, want true while return false")
+			}
+		})
+	t.Run("11-isSuperPodJob false, when annotation is empty map and no selector",
+		func(t *testing.T) {
+			attr := SchedulerJobAttr{ComJob: ComJob{Annotation: map[string]string{}}}
+			if attr.IsSuperPodJob() {
+				t.Errorf("isSuperPodJob() err, want false while return true")
+			}
+		})
+	t.Run("12-isSuperPodJob false, when selector has no accelerator-type key",
+		func(t *testing.T) {
+			attr := SchedulerJobAttr{ComJob: ComJob{Selector: map[string]string{"foo": "bar"}}}
+			if attr.IsSuperPodJob() {
+				t.Errorf("isSuperPodJob() err, want false while return true")
+			}
+		})
+	t.Run("13-isSuperPodJob false, when selector has wrong accelerator-type",
+		func(t *testing.T) {
+			attr := SchedulerJobAttr{ComJob: ComJob{Selector: map[string]string{
+				AcceleratorType: "unknown-accelerator",
+			}}}
+			if attr.IsSuperPodJob() {
+				t.Errorf("isSuperPodJob() err, want false while return true")
+			}
+		})
 }
-
 
 type countBackupTasksCase struct {
 	name  string

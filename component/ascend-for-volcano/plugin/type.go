@@ -118,6 +118,10 @@ type SchedulerJob struct {
 	Owner             OwnerInfo
 	BatchOrderError   error
 	EnqueueError      error
+	// PrefNodeMap caches rank→nodeName for this owner, pre-loaded from
+	// AffinityCache during session init. Scoring reads from this snapshot
+	// without querying the cache again. nil means no prior knowledge.
+	PrefNodeMap map[int]string
 	A5Fields
 }
 

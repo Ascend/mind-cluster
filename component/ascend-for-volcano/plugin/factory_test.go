@@ -20,7 +20,6 @@ Package plugin is using for HuaWei Ascend pin affinity schedule.
 package plugin
 
 import (
-	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -755,6 +754,140 @@ func createTaskOrderFnTask(jobId string, taskNum int) []*api.TaskInfo {
 	return tTask
 }
 
+func createTaskOrderFnCasesOfPreferPreviousNode(
+	jobIdStr string, task1, task2 *api.TaskInfo) []taskOrderFnTest {
+
+	jobId := api.JobID(jobIdStr)
+	schedulerJob := fakeSchedulerJobEmptyTask(jobIdStr, "")
+	schedulerJob.Owner = OwnerInfo{OwnerReference: metav1.OwnerReference{UID: "owner-uid"}}
+
+	bothHaveNodeCache := cache.NewPodNodeAffinityCache()
+	bothHaveNodeCache.RecordAssignment(types.UID("owner-uid"), "0", "node-a")
+	bothHaveNodeCache.RecordAssignment(types.UID("owner-uid"), "1", "node-b")
+
+	onlyFirstHasNodeCache := cache.NewPodNodeAffinityCache()
+	onlyFirstHasNodeCache.RecordAssignment(types.UID("owner-uid"), "0", "node-a")
+
+	onlySecondHasNodeCache := cache.NewPodNodeAffinityCache()
+	onlySecondHasNodeCache.RecordAssignment(types.UID("owner-uid"), "1", "node-b")
+
+	neitherHasNodeCache := cache.NewPodNodeAffinityCache()
+
+	sameNodeCache := cache.NewPodNodeAffinityCache()
+	sameNodeCache.RecordAssignment(types.UID("owner-uid"), "0", "node-a")
+	sameNodeCache.RecordAssignment(types.UID("owner-uid"), "1", "node-a")
+
+	return []taskOrderFnTest{
+		{
+			name: "07-TaskOrderFn PreferPreviousNode: both have preferred nodes, l goes first",
+			fields: fields{
+				ScheduleEnv: ScheduleEnv{
+					ClusterCache: ClusterCache{
+						Jobs:          map[api.JobID]SchedulerJob{jobId: schedulerJob},
+						AffinityCache: bothHaveNodeCache,
+					},
+					FrameAttr: VolcanoFrame{ConfigParameters: ConfigParameters{
+						DynamicParameters: DynamicParameters{PreferPreviousNode: true}},
+					},
+				},
+			},
+			args: taskOrderFnArgs{l: task1, r: task2},
+			want: -1,
+		},
+		{
+			name: "08-TaskOrderFn PreferPreviousNode: task with node goes first (l has node)",
+			fields: fields{
+				ScheduleEnv: ScheduleEnv{
+					ClusterCache: ClusterCache{
+						Jobs:          map[api.JobID]SchedulerJob{jobId: schedulerJob},
+						AffinityCache: onlyFirstHasNodeCache,
+					},
+					FrameAttr: VolcanoFrame{ConfigParameters: ConfigParameters{
+						DynamicParameters: DynamicParameters{PreferPreviousNode: true}},
+					},
+				},
+			},
+			args: taskOrderFnArgs{l: task1, r: task2},
+			want: -1,
+		},
+		{
+			name: "09-TaskOrderFn PreferPreviousNode: task with node goes first (r has node)",
+			fields: fields{
+				ScheduleEnv: ScheduleEnv{
+					ClusterCache: ClusterCache{
+						Jobs:          map[api.JobID]SchedulerJob{jobId: schedulerJob},
+						AffinityCache: onlySecondHasNodeCache,
+					},
+					FrameAttr: VolcanoFrame{ConfigParameters: ConfigParameters{
+						DynamicParameters: DynamicParameters{PreferPreviousNode: true}},
+					},
+				},
+			},
+			args: taskOrderFnArgs{l: task1, r: task2},
+			want: 1,
+		},
+		{
+			name: "10-TaskOrderFn PreferPreviousNode: neither has node, same priority",
+			fields: fields{
+				ScheduleEnv: ScheduleEnv{
+					ClusterCache: ClusterCache{
+						Jobs:          map[api.JobID]SchedulerJob{jobId: schedulerJob},
+						AffinityCache: neitherHasNodeCache,
+					},
+					FrameAttr: VolcanoFrame{ConfigParameters: ConfigParameters{
+						DynamicParameters: DynamicParameters{PreferPreviousNode: true}},
+					},
+				},
+			},
+			args: taskOrderFnArgs{l: task1, r: task2},
+			want: 0,
+		},
+		{
+			name: "11-TaskOrderFn PreferPreviousNode: both have same node, same priority",
+			fields: fields{
+				ScheduleEnv: ScheduleEnv{
+					ClusterCache: ClusterCache{
+						Jobs:          map[api.JobID]SchedulerJob{jobId: schedulerJob},
+						AffinityCache: sameNodeCache,
+					},
+					FrameAttr: VolcanoFrame{ConfigParameters: ConfigParameters{
+						DynamicParameters: DynamicParameters{PreferPreviousNode: true}},
+					},
+				},
+			},
+			args: taskOrderFnArgs{l: task1, r: task2},
+			want: 0,
+		},
+	}
+}
+
+func createTaskOrderFnCasesOfResolveRankIndexFallback(
+	jobIdStr string, taskNoAnno, taskWithAnno *api.TaskInfo) []taskOrderFnTest {
+
+	jobId := api.JobID(jobIdStr)
+	schedulerJob := fakeSchedulerJobEmptyTask(jobIdStr, "")
+	schedulerJob.Label[PodGroupScheduleKey] = PodGroupScheduleValue
+	schedulerJob.NPUJob.Tasks = map[api.TaskID]util.NPUTask{
+		taskNoAnno.UID: {Index: 3},
+	}
+
+	return []taskOrderFnTest{
+		{
+			name: "12-TaskOrderFn resolveRankIndex: fallback to vcJob.Tasks (rank 3 vs rank 1)",
+			fields: fields{
+				ScheduleEnv: ScheduleEnv{
+					ClusterCache: ClusterCache{
+						Jobs: map[api.JobID]SchedulerJob{jobId: schedulerJob},
+					},
+					FrameAttr: VolcanoFrame{},
+				},
+			},
+			args: taskOrderFnArgs{l: taskNoAnno, r: taskWithAnno},
+			want: 1,
+		},
+	}
+}
+
 func buildTaskOrderFnTest() []taskOrderFnTest {
 	jobIdStr := "job1"
 	tTask := createTaskOrderFnTask(jobIdStr, util.NPUIndex2)
@@ -765,6 +898,13 @@ func buildTaskOrderFnTest() []taskOrderFnTest {
 		tTask[util.NPUIndex0], tTask[util.NPUIndex1])...)
 	tests = append(tests, createTaskOrderFnCasesOfCompareTask(jobIdStr,
 		tTask[util.NPUIndex0], tTask[util.NPUIndex1])...)
+	tests = append(tests, createTaskOrderFnCasesOfPreferPreviousNode(jobIdStr,
+		tTask[util.NPUIndex0], tTask[util.NPUIndex1])...)
+	noAnnoTask := test.FakeNormalTestTask("no-anno-pod", "node1", jobIdStr)
+	noAnnoTask.UID = "t-no-anno"
+	noAnnoTask.Job = api.JobID(jobIdStr)
+	tests = append(tests, createTaskOrderFnCasesOfResolveRankIndexFallback(jobIdStr,
+		noAnnoTask, tTask[util.NPUIndex1])...)
 	return tests
 }
 
@@ -876,8 +1016,9 @@ func TestTaskOrderFn(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sHandle := &ScheduleHandler{
-				NPUPlugins:  tt.fields.NPUPlugins,
-				ScheduleEnv: tt.fields.ScheduleEnv,
+				NPUPlugins:    tt.fields.NPUPlugins,
+				ScheduleEnv:   tt.fields.ScheduleEnv,
+				AffinityCache: tt.fields.ScheduleEnv.ClusterCache.AffinityCache,
 			}
 			if got := sHandle.TaskOrderFn(tt.args.l, tt.args.r); got != tt.want {
 				t.Errorf("TaskOrderFn() = %v, want %v", got, tt.want)
@@ -1161,10 +1302,7 @@ func (f *fakeFaultHandle) IsFaultTaskByRank(jobID api.JobID, rankIndex string) b
 }
 
 func TestAddPreferPreviousNodeScore(t *testing.T) {
-	prefCache := cache.NewPodNodeAffinityCache()
-	prefCache.RecordAssignment(types.UID("owner-uid"), "0", "node1")
-	prefCache.RecordAssignment(types.UID("owner-uid"), "1", "node2")
-
+	prefMap := map[int]string{0: "node1", 1: "node2"}
 	baseScoreMap := func() map[string]float64 {
 		return map[string]float64{"node1": 8.0, "node2": 7.5, "node3": 7.0, "node4": 6.0}
 	}
@@ -1172,17 +1310,18 @@ func TestAddPreferPreviousNodeScore(t *testing.T) {
 		Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{PodRankIndexKey: "0"}}},
 		Job: "job1",
 	}
-	normalVcJob := SchedulerJob{
-		Owner: OwnerInfo{OwnerReference: metav1.OwnerReference{UID: "owner-uid"}},
-		SchedulerJobAttr: util.SchedulerJobAttr{
-			NPUJob: &util.NPUJob{NPUTaskNum: 2, Tasks: fakeTasksForRank()},
-		},
+	vcJobWithPrefMap := func(pref map[int]string) SchedulerJob {
+		return SchedulerJob{
+			Owner: OwnerInfo{OwnerReference: metav1.OwnerReference{UID: "owner-uid"}},
+			SchedulerJobAttr: util.SchedulerJobAttr{
+				NPUJob: &util.NPUJob{NPUTaskNum: 2, Tasks: fakeTasksForRank()},
+			},
+			PrefNodeMap: pref,
+		}
 	}
-	enabledFrame := func(cache *cache.PodNodeAffinityCache) *ScheduleHandler {
+	enabledFrame := func() *ScheduleHandler {
 		return &ScheduleHandler{
-			AffinityCache: cache,
 			ScheduleEnv: ScheduleEnv{
-				ClusterCache: ClusterCache{AffinityCache: cache},
 				FrameAttr: VolcanoFrame{ConfigParameters: ConfigParameters{
 					DynamicParameters: DynamicParameters{PreferPreviousNode: true}},
 				},
@@ -1201,7 +1340,7 @@ func TestAddPreferPreviousNodeScore(t *testing.T) {
 	}{
 		{
 			name:    "01-superpod job returns early",
-			sHandle: enabledFrame(prefCache),
+			sHandle: enabledFrame(),
 			task:    baseTask,
 			vcJob: SchedulerJob{
 				SchedulerJobAttr: util.SchedulerJobAttr{
@@ -1215,44 +1354,108 @@ func TestAddPreferPreviousNodeScore(t *testing.T) {
 		{
 			name: "02-prefer-previous-node disabled returns early",
 			sHandle: &ScheduleHandler{
-				AffinityCache: prefCache,
 				ScheduleEnv: ScheduleEnv{
-					ClusterCache: ClusterCache{AffinityCache: prefCache},
 					FrameAttr: VolcanoFrame{ConfigParameters: ConfigParameters{
 						DynamicParameters: DynamicParameters{PreferPreviousNode: false}},
 					},
 				},
 			},
 			task:      baseTask,
-			vcJob:     normalVcJob,
+			vcJob:     vcJobWithPrefMap(prefMap),
 			wantNode1: 8.0,
 			wantNode2: 7.5,
 		},
 		{
-			name:      "03-preferred node at max score unchanged",
-			sHandle:   enabledFrame(prefCache),
+			name:    "03-multilevel job returns early",
+			sHandle: enabledFrame(),
+			task:    baseTask,
+			vcJob: SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					ComJob: util.ComJob{Annotation: map[string]string{util.SchedulePolicyAnnoKey: util.MultiLevel}},
+					NPUJob: &util.NPUJob{NPUTaskNum: 2},
+				},
+			},
+			wantNode1: 8.0,
+			wantNode2: 7.5,
+		},
+		{
+			name:      "04-nil task returns early",
+			sHandle:   enabledFrame(),
+			task:      nil,
+			vcJob:     vcJobWithPrefMap(prefMap),
+			wantNode1: 8.0,
+			wantNode2: 7.5,
+		},
+		{
+			name:      "05-empty scoreMap returns early",
+			sHandle:   enabledFrame(),
 			task:      baseTask,
-			vcJob:     normalVcJob,
-			wantNode1: 8.0,
-			wantNode2: 7.5,
+			vcJob:     vcJobWithPrefMap(prefMap),
+			scoreMap:  map[string]float64{},
+			wantNode1: 0,
+			wantNode2: 0,
 		},
 		{
-			name:    "04-preferred node not in scoreMap penalizes others",
-			sHandle: enabledFrame(prefCache),
+			name:    "06-empty rank index returns early",
+			sHandle: enabledFrame(),
 			task: &api.TaskInfo{
-				Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{PodRankIndexKey: "1"}}},
+				Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}}},
 				Job: "job1",
 			},
-			vcJob:     normalVcJob,
-			wantNode1: -1 * math.MaxFloat64,
-			wantNode2: 7.0,
-			scoreMap:  map[string]float64{"node1": 8.0, "node3": 7.0, "node4": 6.0},
+			vcJob: SchedulerJob{
+				Owner: OwnerInfo{OwnerReference: metav1.OwnerReference{UID: "owner-uid"}},
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{NPUTaskNum: 2, Tasks: map[api.TaskID]util.NPUTask{}},
+				},
+			},
+			wantNode1: 8.0,
+			wantNode2: 7.5,
 		},
 		{
-			name:    "03b-preferred node below max gets boosted",
-			sHandle: enabledFrame(prefCache),
+			name:    "07-no PrefNodeMap returns early",
+			sHandle: enabledFrame(),
 			task:    baseTask,
-			vcJob:   normalVcJob,
+			vcJob: SchedulerJob{
+				Owner: OwnerInfo{OwnerReference: metav1.OwnerReference{UID: "owner-uid"}},
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					NPUJob: &util.NPUJob{NPUTaskNum: 2, Tasks: fakeTasksForRank()},
+				},
+			},
+			wantNode1: 8.0,
+			wantNode2: 7.5,
+		},
+		{
+			name:      "08-empty PrefNodeMap returns early",
+			sHandle:   enabledFrame(),
+			task:      baseTask,
+			vcJob:     vcJobWithPrefMap(map[int]string{}),
+			wantNode1: 8.0,
+			wantNode2: 7.5,
+		},
+		{
+			name:    "09-invalid rank string returns early",
+			sHandle: enabledFrame(),
+			task: &api.TaskInfo{
+				Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{PodRankIndexKey: "abc"}}},
+				Job: "job1",
+			},
+			vcJob:     vcJobWithPrefMap(prefMap),
+			wantNode1: 8.0,
+			wantNode2: 7.5,
+		},
+		{
+			name:      "10-nonfault: selfNode in scoreMap gets boosted",
+			sHandle:   enabledFrame(),
+			task:      baseTask,
+			vcJob:     vcJobWithPrefMap(prefMap),
+			wantNode1: 8.0 + defaultPreferPreviousScore,
+			wantNode2: 7.5,
+		},
+		{
+			name:    "11-nonfault: selfNode below max gets boosted",
+			sHandle: enabledFrame(),
+			task:    baseTask,
+			vcJob:   vcJobWithPrefMap(prefMap),
 			scoreMap: func() map[string]float64 {
 				return map[string]float64{"node1": 6.0, "node2": 7.5, "node3": 7.0, "node4": 6.0}
 			}(),
@@ -1260,20 +1463,100 @@ func TestAddPreferPreviousNodeScore(t *testing.T) {
 			wantNode2: 7.5,
 		},
 		{
-			name:    "05-new pod without cache entry penalizes others",
-			sHandle: enabledFrame(prefCache),
+			name:    "12-nonfault: rank1 selfNode=node2 gets boosted",
+			sHandle: enabledFrame(),
 			task: &api.TaskInfo{
-				Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{PodRankIndexKey: "3"}}},
+				Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{PodRankIndexKey: "1"}}},
 				Job: "job1",
+			},
+			vcJob:     vcJobWithPrefMap(prefMap),
+			wantNode1: 8.0,
+			wantNode2: 8.0 + defaultPreferPreviousScore,
+			scoreMap:  map[string]float64{"node1": 8.0, "node2": 6.0, "node3": 7.0, "node4": 6.0},
+		},
+		{
+			name:    "13-nonfault: selfNode not in map, boost best otherNode",
+			sHandle: enabledFrame(),
+			task: &api.TaskInfo{
+				Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{PodRankIndexKey: "1"}}},
+				Job: "job1",
+			},
+			vcJob:     vcJobWithPrefMap(prefMap),
+			scoreMap:  map[string]float64{"node1": 8.0, "node3": 7.0, "node4": 6.0},
+			wantNode1: 8.0,
+			wantNode2: 8.0 + defaultPreferPreviousScore,
+		},
+		{
+			name:    "14-nonfault: rank not in prefMap, boost best otherNode",
+			sHandle: enabledFrame(),
+			task: &api.TaskInfo{
+				Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{PodRankIndexKey: "5"}}},
+				Job: "job1",
+			},
+			vcJob:     vcJobWithPrefMap(prefMap),
+			wantNode1: 8.0,
+			scoreMap:  map[string]float64{"node1": 8.0, "node3": 7.0, "node4": 6.0},
+			wantNode2: 8.0 + defaultPreferPreviousScore,
+		},
+		{
+			name:    "15-nonfault: no selfNode/otherNodes, boost best peerNode",
+			sHandle: enabledFrame(),
+			task: &api.TaskInfo{
+				Pod: &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{PodRankIndexKey: "5"}}},
+				Job: "job1",
+			},
+			vcJob:     vcJobWithPrefMap(prefMap),
+			scoreMap:  map[string]float64{"node1": 8.0, "node2": 7.0},
+			wantNode1: 8.0 + defaultPreferPreviousScore,
+			wantNode2: 7.0,
+		},
+		{
+			name: "16-fault: boost best otherNode",
+			sHandle: func() *ScheduleHandler {
+				h := enabledFrame()
+				h.FaultHandle = &mockFaultHandler{faultByRank: true}
+				return h
+			}(),
+			task:      baseTask,
+			scoreMap:  map[string]float64{"node1": 8.0, "node3": 7.0, "node4": 6.0},
+			vcJob:     vcJobWithPrefMap(prefMap),
+			wantNode1: 8.0,
+			wantNode2: 8.0 + defaultPreferPreviousScore,
+		},
+		{
+			name: "17-fault: no otherNodes, fallback to selfNode",
+			sHandle: func() *ScheduleHandler {
+				h := enabledFrame()
+				h.FaultHandle = &mockFaultHandler{faultByRank: true}
+				return h
+			}(),
+			task:  baseTask,
+			vcJob: vcJobWithPrefMap(prefMap),
+			scoreMap: func() map[string]float64 {
+				return map[string]float64{"node1": 8.0, "node2": 7.5}
+			}(),
+			wantNode1: 8.0 + defaultPreferPreviousScore,
+			wantNode2: 7.5,
+		},
+		{
+			name:    "18-rank resolved from task index fallback gets boosted",
+			sHandle: enabledFrame(),
+			task: &api.TaskInfo{
+				Pod:  &v1.Pod{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}}},
+				Job:  "job1",
+				UID:  "t1",
+				Name: "task1",
 			},
 			vcJob: SchedulerJob{
 				Owner: OwnerInfo{OwnerReference: metav1.OwnerReference{UID: "owner-uid"}},
 				SchedulerJobAttr: util.SchedulerJobAttr{
-					NPUJob: &util.NPUJob{NPUTaskNum: 4, Tasks: fakeTasksForRank()},
+					NPUJob: &util.NPUJob{NPUTaskNum: 2, Tasks: fakeTasksForRank()},
 				},
+				PrefNodeMap: prefMap,
 			},
-			wantNode1: -1 * math.MaxFloat64,
-			wantNode2: -1 * math.MaxFloat64,
+			scoreMap:  map[string]float64{"node1": 8.0, "node2": 6.0, "node3": 7.0, "node4": 6.0},
+			wantNode1: 8.0,
+			wantNode2: 8.0 + defaultPreferPreviousScore,
 		},
 	}
 	for _, tt := range tests {
@@ -1282,6 +1565,7 @@ func TestAddPreferPreviousNodeScore(t *testing.T) {
 			if tt.scoreMap != nil {
 				sm = tt.scoreMap
 			}
+
 			tt.sHandle.addPreferPreviousNodeScore(tt.task, sm, tt.vcJob)
 			if sm["node1"] != tt.wantNode1 {
 				t.Errorf("node1 = %v, want %v", sm["node1"], tt.wantNode1)
@@ -1296,37 +1580,6 @@ func TestAddPreferPreviousNodeScore(t *testing.T) {
 		})
 	}
 }
-
-func TestPenalizeOtherPreferredNodes(t *testing.T) {
-	tests := []struct {
-		name    string
-		prefMap map[int]string
-		myRank  int
-		want1   float64
-		want2   float64
-		want3   float64
-	}{
-		{name: "01-only self rank is no-op", prefMap: map[int]string{0: "node1"}, myRank: 0, want1: 8.0, want2: 7.0, want3: 6.0},
-		{name: "02-other ranks get -MaxFloat64", prefMap: map[int]string{0: "node1", 1: "node2", 2: "node3"}, myRank: 0, want1: 8.0, want2: -1 * math.MaxFloat64, want3: -1 * math.MaxFloat64},
-		{name: "03-non-preferred unaffected", prefMap: map[int]string{0: "node1", 1: "node2"}, myRank: 0, want1: 8.0, want2: -1 * math.MaxFloat64, want3: 6.0},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sm := map[string]float64{"node1": 8.0, "node2": 7.0, "node3": 6.0, "node4": 5.0}
-			(&ScheduleHandler{}).penalizeOtherPreferredNodes(sm, tt.prefMap, tt.myRank)
-			if sm["node1"] != tt.want1 {
-				t.Errorf("node1 = %v, want %v", sm["node1"], tt.want1)
-			}
-			if sm["node2"] != tt.want2 {
-				t.Errorf("node2 = %v, want %v", sm["node2"], tt.want2)
-			}
-			if sm["node3"] != tt.want3 {
-				t.Errorf("node3 = %v, want %v", sm["node3"], tt.want3)
-			}
-		})
-	}
-}
-
 func TestIsFaultPod(t *testing.T) {
 	baseJob := SchedulerJob{SchedulerJobAttr: util.SchedulerJobAttr{NPUJob: &util.NPUJob{Tasks: fakeTasksForRank()}}}
 	tests := []struct {
@@ -1426,4 +1679,20 @@ func fakeTasksForRank() map[api.TaskID]util.NPUTask {
 		"t1": {Annotation: map[string]string{PodRankIndexKey: "1"}, Index: 1},
 		"t2": {Annotation: map[string]string{PodRankIndexKey: "2"}, Index: 2},
 	}
+}
+
+// mockFaultHandler implements FaultHandler for testing, allowing control over
+// IsFaultTaskByRank return value without importing the rescheduling package.
+type mockFaultHandler struct {
+	faultByRank bool
+}
+
+func (m *mockFaultHandler) Execute(*ScheduleEnv, *framework.Session) error      { return nil }
+func (m *mockFaultHandler) CheckNodeNPUByTask(*api.TaskInfo, *NPUNode) error    { return nil }
+func (m *mockFaultHandler) ScoreBestNPUNodes(*api.TaskInfo, map[string]float64) {}
+func (m *mockFaultHandler) UseAnnotation(*api.TaskInfo)                         {}
+func (m *mockFaultHandler) PreStopAction(*ScheduleEnv) error                    { return nil }
+func (m *mockFaultHandler) IsNodeFault(nodeName string) bool                    { return false }
+func (m *mockFaultHandler) IsFaultTaskByRank(jobID api.JobID, rankIndex string) bool {
+	return m.faultByRank
 }

@@ -119,7 +119,7 @@ func (sJob *SchedulerJobAttr) IsSuperPodJob() bool {
 		// schedule policy has the highest priority.
 		// SchedulePolicySuperPod is not supported yet, if added, this part need add a true value branch.
 		if policy, ok := sJob.ComJob.Annotation[SchedulePolicyAnnoKey]; ok {
-			return policy == Chip2Node16Sp || policy == Chip2Node8Sp
+			return policy == Chip2Node16Sp || policy == Chip2Node8Sp || policy == Chip8Node8Sp || policy == Chip8Node8Ra64Sp
 		}
 		// for a3 config compatibility
 		if _, ok := sJob.ComJob.Annotation[SuperPodAnnoKey]; ok {

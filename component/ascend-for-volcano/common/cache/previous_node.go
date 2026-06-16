@@ -130,20 +130,27 @@ func (c *PodNodeAffinityCache) GetPreferredNode(ownerUID types.UID, rankIndex st
 	return ""
 }
 
-// GetPreferredNodeMap returns rank→nodeName for a rank range [startRank, endRank).
+// GetPreferredNodeMap returns all cached rank→nodeName entries for the given owner.
 // The returned map uses integer rank as key for direct position-based reordering.
-// Returns nil if the owner has no cached entries in this range.
-func (c *PodNodeAffinityCache) GetPreferredNodeMap(ownerUID types.UID, startRank, endRank int) map[int]string {
+// Returns nil if the owner has no cached entries.
+func (c *PodNodeAffinityCache) GetPreferredNodeMap(ownerUID types.UID) map[int]string {
 	ownerKey := string(ownerUID)
 	rankNodes, ok := c.OwnerToRankNodes[ownerKey]
 	if !ok {
 		return nil
 	}
-	result := make(map[int]string, endRank-startRank)
-	for rank := startRank; rank < endRank; rank++ {
-		if entry, ok := rankNodes[strconv.Itoa(rank)]; ok && entry.Node != "" {
-			result[rank] = entry.Node
+	result := make(map[int]string, len(rankNodes))
+	for rankStr, entry := range rankNodes {
+		if entry.Node == "" {
+			continue
 		}
+		rank, err := strconv.Atoi(rankStr)
+		if err != nil {
+			klog.V(util.LogDebugLev).Infof("affinity cache: skip invalid rank key %s for owner %s",
+				rankStr, ownerKey)
+			continue
+		}
+		result[rank] = entry.Node
 	}
 	if len(result) == 0 {
 		return nil

@@ -24,7 +24,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 
@@ -419,16 +418,25 @@ func (sHandle *ScheduleHandler) initAffinityCache() {
 			}
 		}
 		klog.V(util.LogInfoLev).Info("affinity cache: initialized new in-memory cache from running pods")
-		return
+	} else {
+		// Refresh timestamps for active owners so TTL counts from last seen session.
+		for _, job := range sHandle.Jobs {
+			if job.Owner.UID != "" {
+				sHandle.AffinityCache.RefreshOwner(job.Owner.UID)
+			}
+		}
+		// Evict owners not seen within TTL (PG deleted long ago)
+		sHandle.AffinityCache.EvictExpired(cache.DefaultTTL)
 	}
-	// Refresh timestamps for active owners so TTL counts from last seen session.
-	for _, job := range sHandle.Jobs {
+
+	// Pre-load PrefNodeMap for each active job so scoring reads from this
+	// snapshot without querying the cache again during session scheduling.
+	for jobID, job := range sHandle.Jobs {
 		if job.Owner.UID != "" {
-			sHandle.AffinityCache.RefreshOwner(job.Owner.UID)
+			job.PrefNodeMap = sHandle.AffinityCache.GetPreferredNodeMap(job.Owner.UID)
+			sHandle.Jobs[jobID] = job
 		}
 	}
-	// Evict owners not seen within TTL (PG deleted long ago)
-	sHandle.AffinityCache.EvictExpired(cache.DefaultTTL)
 }
 
 // getRankFromTask extracts the rank index string from a task, preferring the
@@ -614,34 +622,34 @@ func (sHandle *ScheduleHandler) TaskOrderFn(InterfaceA interface{}, InterfaceB i
 		klog.V(util.LogDebugLev).Infof("TaskOrderFn (%s/%s): job is not exist", taskInfoA.Namespace, taskInfoA.Name)
 		return taskOrderSamePriority
 	}
-	// Fault pods (whose original node is faulted) are ordered after healthy pods,
-	// so healthy pods can claim their preferred nodes first.
-	lFault := sHandle.isFaultPod(taskInfoA, job)
-	rFault := sHandle.isFaultPod(taskInfoB, job)
-	if lFault != rFault {
-		if lFault {
+
+	rRankId := sHandle.resolveRankIndex(taskInfoB, job)
+	lRankId := sHandle.resolveRankIndex(taskInfoA, job)
+
+	podGroupEnable, exist := job.Label[PodGroupScheduleKey]
+	if exist && podGroupEnable == PodGroupScheduleValue {
+		lRank, lErr := strconv.Atoi(lRankId)
+		rRank, rErr := strconv.Atoi(rRankId)
+		if lErr != nil || rErr != nil {
+			return taskOrderSamePriority
+		}
+		if lRank < rRank {
+			return taskOrderHighPriority
+		}
+		return taskOrderLowPriority
+
+	}
+	if sHandle.FrameAttr.PreferPreviousNode {
+		lNode := sHandle.AffinityCache.GetPreferredNode(job.Owner.UID, lRankId)
+		rNode := sHandle.AffinityCache.GetPreferredNode(job.Owner.UID, rRankId)
+		if lNode != rNode {
+			if lNode != "" {
+				return taskOrderHighPriority
+			}
 			return taskOrderLowPriority
 		}
-		return taskOrderHighPriority
 	}
-	podGroupEnable, exist := job.Label[PodGroupScheduleKey]
-	if !exist || podGroupEnable != PodGroupScheduleValue {
-		return taskOrderSamePriority
-	}
-
-	rRankId, err := sHandle.obtainTaskRankId(taskInfoB)
-	if err != nil {
-		return taskOrderSamePriority
-	}
-	lRankId, err := sHandle.obtainTaskRankId(taskInfoA)
-	if err != nil {
-		return taskOrderSamePriority
-	}
-
-	if lRankId < rRankId {
-		return taskOrderHighPriority
-	}
-	return taskOrderLowPriority
+	return taskOrderSamePriority
 }
 
 // isFaultPod returns true if the task's rank is recorded as a fault task in
@@ -656,37 +664,6 @@ func (sHandle *ScheduleHandler) isFaultPod(task *api.TaskInfo, job SchedulerJob)
 		return false
 	}
 	return sHandle.FaultHandle.IsFaultTaskByRank(task.Job, rankIndex)
-}
-
-// penalizeOtherPreferredNodes assigns the minimum possible score to nodes
-// preferred by other ranks, effectively eliminating them from consideration.
-// This prevents a pod that cannot return to its own preferred node from
-// stealing another pod's preferred node — it must pick an unpreferred node.
-func (sHandle *ScheduleHandler) penalizeOtherPreferredNodes(
-	scoreMap map[string]float64, prefMap map[int]string, myRank int) {
-
-	if len(scoreMap) == 0 || len(prefMap) == 0 {
-		klog.V(util.LogInfoLev).Infof("len of scoreMap(%d) of prefMap(%d) is 0", len(scoreMap), len(prefMap))
-		return
-	}
-
-	// Collect nodes preferred by other ranks (exclude self)
-	otherNodes := make(map[string]struct{})
-	for rank, nodeName := range prefMap {
-		if rank == myRank {
-			continue
-		}
-		otherNodes[nodeName] = struct{}{}
-	}
-	if len(otherNodes) == 0 {
-		return
-	}
-
-	for nodeName := range scoreMap {
-		if _, ok := otherNodes[nodeName]; ok {
-			scoreMap[nodeName] = -1 * math.MaxFloat64
-		}
-	}
 }
 
 // resolveRankIndex returns the rank for a task, trying the pod annotation
@@ -774,63 +751,182 @@ func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 	return scoreMap, nil
 }
 
-// addPreferPreviousNodeScore ensures the pod's previous node gets the highest
-// score among all candidates that satisfy mandatory constraints. This reflects
-// the design principle that for a pod that has already run, returning to its
-// original node (to reuse cached images, avoiding 5-20 min pull time) is the
-// top priority — higher than resource balance or fragmentation concerns.
+// addPreferPreviousNodeScore boosts a node in the score map based on
+// pod-to-node affinity from prior scheduling sessions.
+//
+// Score map nodes are divided into three categories:
+//   - selfNode:  the current pod's previous node (from PrefNodeMap[myRank])
+//   - peerNodes: nodes previously used by other pods of the same job
+//   - otherNodes: all remaining nodes
+//
+// Scoring rules:
+//
+//	Fault pod:
+//	  1. otherNodes → boost the best-scoring otherNode
+//	  2. selfNode   → fallback: boost selfNode if it is still in scoreMap
+//
+//	Non-fault pod:
+//	  1. selfNode   → boost selfNode if in scoreMap
+//	  2. otherNodes → boost the best-scoring otherNode
+//	  3. peerNodes  → boost the best-scoring peerNode (lowest priority)
 func (sHandle *ScheduleHandler) addPreferPreviousNodeScore(
 	task *api.TaskInfo, scoreMap map[string]float64, vcJob SchedulerJob) {
 
 	if vcJob.IsSuperPodJob() || vcJob.IsMultiLevelJob() {
+		klog.V(util.LogDebugLev).Infof("addPreferPreviousNodeScore: skip, job %s is super-pod or multi-level",
+			vcJob.Name)
 		return
 	}
 
 	if !sHandle.FrameAttr.PreferPreviousNode {
+		klog.V(util.LogDebugLev).Info("addPreferPreviousNodeScore: skip, prefer-previous-node is disabled")
 		return
 	}
-	if sHandle.AffinityCache == nil || task == nil || len(scoreMap) == 0 || vcJob.Owner.UID == "" {
+	if task == nil || len(scoreMap) == 0 {
+		klog.V(util.LogDebugLev).Infof("addPreferPreviousNodeScore: skip, task=%v scoreMapLen=%d",
+			task != nil, len(scoreMap))
 		return
 	}
 
-	ownerUID := vcJob.Owner.UID
 	rankIndex := sHandle.resolveRankIndex(task, vcJob)
 	if rankIndex == "" {
+		klog.V(util.LogDebugLev).Infof("addPreferPreviousNodeScore: skip, task %s has no rank index",
+			task.Name)
 		return
 	}
 
-	// Fetch all rank→node preferences once; used for both own-node lookup
-	// and the penalty pass below.
-	prefMap := sHandle.AffinityCache.GetPreferredNodeMap(ownerUID, 0, vcJob.NPUTaskNum)
+	prefMap := vcJob.PrefNodeMap
+	if prefMap == nil || len(prefMap) == 0 {
+		klog.V(util.LogDebugLev).Infof("addPreferPreviousNodeScore: skip, no PrefNodeMap for "+
+			"owner=%s", vcJob.Owner.UID)
+		return
+	}
+
 	myRank, err := strconv.Atoi(rankIndex)
 	if err != nil {
 		klog.V(util.LogWarningLev).Infof("convert task %s rank %s failed", task.Name, rankIndex)
 		return
 	}
 
-	preferredNode := ""
-	if prefMap != nil {
-		preferredNode = prefMap[myRank]
-	}
+	sHandle.applyPreviousNodePreference(task, scoreMap, prefMap, myRank, vcJob)
+}
 
-	_, exists := scoreMap[preferredNode]
+// applyPreviousNodePreference categorizes scoreMap nodes and applies a scoring
+// bonus according to the fault/non-fault priority rules.
+func (sHandle *ScheduleHandler) applyPreviousNodePreference(
+	task *api.TaskInfo, scoreMap map[string]float64, prefMap map[int]string,
+	myRank int, vcJob SchedulerJob) {
 
-	if sHandle.isFaultPod(task, vcJob) || preferredNode == "" || !exists {
-		sHandle.penalizeOtherPreferredNodes(scoreMap, prefMap, myRank)
+	cat := categorizeNodes(scoreMap, prefMap, myRank)
+	bonus := cat.maxScore + defaultPreferPreviousScore
+
+	if sHandle.isFaultPod(task, vcJob) {
+		sHandle.boostFaultPod(task, scoreMap, cat, bonus, myRank)
 		return
 	}
+	sHandle.boostNonFaultPod(task, scoreMap, cat, bonus, myRank)
+}
 
-	var maxScore float64
-	for _, s := range scoreMap {
-		if s > maxScore {
-			maxScore = s
+// nodeCategories holds the three-class partition of scoreMap nodes plus the
+// global max score across all entries.
+type nodeCategories struct {
+	selfNode   string
+	peerNodes  map[string]float64
+	otherNodes map[string]float64
+	maxScore   float64
+}
+
+// categorizeNodes partitions scoreMap into selfNode / peerNodes / otherNodes
+// and returns the global max score.
+func categorizeNodes(scoreMap map[string]float64, prefMap map[int]string, myRank int) nodeCategories {
+	cat := nodeCategories{selfNode: prefMap[myRank]}
+
+	peerSet := make(map[string]struct{})
+	for rank, node := range prefMap {
+		if rank != myRank {
+			peerSet[node] = struct{}{}
 		}
 	}
-	if scoreMap[preferredNode] < maxScore {
-		scoreMap[preferredNode] = maxScore + defaultPreferPreviousScore
+
+	cat.peerNodes = make(map[string]float64)
+	cat.otherNodes = make(map[string]float64)
+
+	for nodeName, score := range scoreMap {
+		if score > cat.maxScore {
+			cat.maxScore = score
+		}
+		if nodeName == cat.selfNode {
+			continue
+		}
+		if _, isPeer := peerSet[nodeName]; isPeer {
+			cat.peerNodes[nodeName] = score
+		} else {
+			cat.otherNodes[nodeName] = score
+		}
 	}
-	klog.V(util.LogDebugLev).Infof("addPreferPreviousNodeScore: task %s rank=%d node=%s score=%.0f (max=%.0f)",
-		task.Name, myRank, preferredNode, scoreMap[preferredNode], maxScore)
+	return cat
+}
+
+// boostFaultPod applies the fault-pod scoring rules: prefer otherNodes first,
+// fall back to selfNode if no other nodes are available.
+func (sHandle *ScheduleHandler) boostFaultPod(
+	task *api.TaskInfo, scoreMap map[string]float64,
+	cat nodeCategories, bonus float64, myRank int) {
+
+	if best := nodeWithMaxScore(cat.otherNodes); best != "" {
+		scoreMap[best] = bonus
+		klog.V(util.LogDebugLev).Infof("addPreferPreviousNodeScore: fault pod task=%s rank=%d "+
+			"boosted otherNode=%s score=%.0f", task.Name, myRank, best, bonus)
+		return
+	}
+	if cat.selfNode != "" {
+		if _, exists := scoreMap[cat.selfNode]; exists {
+			scoreMap[cat.selfNode] = bonus
+			klog.V(util.LogDebugLev).Infof("addPreferPreviousNodeScore: fault pod task=%s rank=%d "+
+				"fallback selfNode=%s score=%.0f", task.Name, myRank, cat.selfNode, bonus)
+		}
+	}
+}
+
+// boostNonFaultPod applies the non-fault-pod scoring rules: selfNode first,
+// then otherNodes, then peerNodes (lowest priority).
+func (sHandle *ScheduleHandler) boostNonFaultPod(
+	task *api.TaskInfo, scoreMap map[string]float64,
+	cat nodeCategories, bonus float64, myRank int) {
+
+	if cat.selfNode != "" {
+		if _, exists := scoreMap[cat.selfNode]; exists {
+			scoreMap[cat.selfNode] = bonus
+			klog.V(util.LogDebugLev).Infof("addPreferPreviousNodeScore: task=%s rank=%d "+
+				"boosted selfNode=%s score=%.0f", task.Name, myRank, cat.selfNode, bonus)
+			return
+		}
+	}
+	if best := nodeWithMaxScore(cat.otherNodes); best != "" {
+		scoreMap[best] = bonus
+		klog.V(util.LogDebugLev).Infof("addPreferPreviousNodeScore: task=%s rank=%d "+
+			"boosted otherNode=%s score=%.0f", task.Name, myRank, best, bonus)
+		return
+	}
+	if best := nodeWithMaxScore(cat.peerNodes); best != "" {
+		scoreMap[best] = bonus
+		klog.V(util.LogDebugLev).Infof("addPreferPreviousNodeScore: task=%s rank=%d "+
+			"boosted peerNode=%s score=%.0f", task.Name, myRank, best, bonus)
+	}
+}
+
+// nodeWithMaxScore returns the node name with the highest score in the given
+// map, or empty string if the map is empty.
+func nodeWithMaxScore(nodes map[string]float64) string {
+	var best string
+	var max float64
+	for name, score := range nodes {
+		if best == "" || score > max {
+			best = name
+			max = score
+		}
+	}
+	return best
 }
 
 // getConfigurationByKey called by GetConfigFromSchedulerConfigMap
