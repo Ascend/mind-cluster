@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/smartystreets/goconvey/convey"
@@ -482,6 +483,48 @@ func TestPluginManager_BuildHookCache_DisabledPlugin(t *testing.T) {
 			convey.So(len(pre), convey.ShouldEqual, 0)
 			convey.So(len(custom), convey.ShouldEqual, 0)
 			convey.So(len(after), convey.ShouldEqual, 0)
+		})
+	})
+}
+
+func TestExecuteHookWithTimeout(t *testing.T) {
+	convey.Convey("test executeHookWithTimeout", t, func() {
+		convey.Convey("01-hook completes within timeout returns result", func() {
+			err := executeHookWithTimeout(context.Background(), 5*time.Second,
+				func(ctx context.Context) error {
+					return testErr
+				})
+			convey.So(err, convey.ShouldEqual, testErr)
+		})
+		convey.Convey("02-hook exceeds timeout returns timeout error", func() {
+			err := executeHookWithTimeout(context.Background(), 50*time.Millisecond,
+				func(ctx context.Context) error {
+					select {
+					case <-ctx.Done():
+						return ctx.Err()
+					case <-time.After(5 * time.Second):
+						return nil
+					}
+				})
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "timeout")
+		})
+		convey.Convey("03-hook respects context cancellation", func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			go func() {
+				time.Sleep(10 * time.Millisecond)
+				cancel()
+			}()
+			err := executeHookWithTimeout(ctx, 5*time.Second,
+				func(ctx context.Context) error {
+					select {
+					case <-ctx.Done():
+						return ctx.Err()
+					case <-time.After(5 * time.Second):
+						return nil
+					}
+				})
+			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
 }

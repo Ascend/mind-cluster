@@ -289,6 +289,29 @@ func (pm *PluginManager) OnConfigChange() {
 	pm.BuildHookCache()
 }
 
+type hookResult struct {
+	err error
+}
+
+func executeHookWithTimeout(ctx context.Context, timeout time.Duration,
+	hookFn func(context.Context) error) error {
+
+	resultCh := make(chan hookResult, 1)
+	hookCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	go func() {
+		resultCh <- hookResult{err: hookFn(hookCtx)}
+	}()
+
+	select {
+	case result := <-resultCh:
+		return result.err
+	case <-hookCtx.Done():
+		return fmt.Errorf("plugin execution timeout after %v", timeout)
+	}
+}
+
 func (pm *PluginManager) ExecutePreReset(ctx context.Context, deviceList []ResetDevice) {
 	pm.mu.RLock()
 	chain := make([]HotResetPlugin, len(pm.preResetChain))
@@ -296,10 +319,10 @@ func (pm *PluginManager) ExecutePreReset(ctx context.Context, deviceList []Reset
 	pm.mu.RUnlock()
 
 	for _, p := range chain {
-		pluginCtx, cancel := context.WithTimeout(ctx, PreResetTimeout)
 		hwlog.RunLog.Infof("plugin %s PreReset start", p.Name())
-		err := p.PreReset(pluginCtx, deviceList)
-		cancel()
+		err := executeHookWithTimeout(ctx, PreResetTimeout, func(hookCtx context.Context) error {
+			return p.PreReset(hookCtx, deviceList)
+		})
 		if err != nil {
 			hwlog.RunLog.Warnf("plugin %s PreReset failed: %v", p.Name(), err)
 		}
@@ -317,10 +340,10 @@ func (pm *PluginManager) ExecuteCustomReset(ctx context.Context, deviceList []Re
 	}
 	err := resetErr
 	for _, p := range chain {
-		pluginCtx, cancel := context.WithTimeout(ctx, CustomResetTimeout)
 		hwlog.RunLog.Infof("plugin %s CustomReset start", p.Name())
-		err = p.CustomReset(pluginCtx, deviceList, err)
-		cancel()
+		err = executeHookWithTimeout(ctx, CustomResetTimeout, func(hookCtx context.Context) error {
+			return p.CustomReset(hookCtx, deviceList, err)
+		})
 		if err != nil {
 			hwlog.RunLog.Warnf("plugin %s CustomReset failed: %v", p.Name(), err)
 		}
@@ -335,10 +358,10 @@ func (pm *PluginManager) ExecuteAfterReset(ctx context.Context, deviceList []Res
 	pm.mu.RUnlock()
 
 	for _, p := range chain {
-		pluginCtx, cancel := context.WithTimeout(ctx, AfterResetTimeout)
 		hwlog.RunLog.Infof("plugin %s AfterReset start", p.Name())
-		err := p.AfterReset(pluginCtx, deviceList, resetErr)
-		cancel()
+		err := executeHookWithTimeout(ctx, AfterResetTimeout, func(hookCtx context.Context) error {
+			return p.AfterReset(hookCtx, deviceList, resetErr)
+		})
 		if err != nil {
 			hwlog.RunLog.Warnf("plugin %s AfterReset failed: %v", p.Name(), err)
 		}

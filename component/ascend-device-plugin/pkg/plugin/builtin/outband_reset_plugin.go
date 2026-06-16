@@ -46,7 +46,7 @@ func (p *OutBandResetPlugin) Name() string {
 	return outbandResetPluginName
 }
 
-func (p *OutBandResetPlugin) CustomReset(_ context.Context, deviceList []plugin.ResetDevice,
+func (p *OutBandResetPlugin) CustomReset(ctx context.Context, deviceList []plugin.ResetDevice,
 	resetErr error) error {
 	if resetErr == nil {
 		return nil
@@ -64,7 +64,7 @@ func (p *OutBandResetPlugin) CustomReset(_ context.Context, deviceList []plugin.
 			hwlog.RunLog.Errorf("out band reset failed for logicID %d: %v", dev.LogicID, err)
 			continue
 		}
-		if err := p.waitRingResetComplete(deviceList); err != nil {
+		if err := p.waitRingResetComplete(ctx, deviceList); err != nil {
 			lastErr = err
 			hwlog.RunLog.Errorf("wait ring boot failed for logicID %d: %v", dev.LogicID, err)
 			continue
@@ -74,7 +74,7 @@ func (p *OutBandResetPlugin) CustomReset(_ context.Context, deviceList []plugin.
 	return lastErr
 }
 
-func (p *OutBandResetPlugin) waitRingResetComplete(deviceList []plugin.ResetDevice) error {
+func (p *OutBandResetPlugin) waitRingResetComplete(ctx context.Context, deviceList []plugin.ResetDevice) error {
 	deadline := time.Now().Add(outBandBootPollTimeout)
 	for {
 		if p.allDevicesBooted(deviceList) {
@@ -83,7 +83,11 @@ func (p *OutBandResetPlugin) waitRingResetComplete(deviceList []plugin.ResetDevi
 		if time.Now().After(deadline) {
 			return fmt.Errorf("wait ring boot complete timeout, devices: %d", len(deviceList))
 		}
-		time.Sleep(1 * time.Second)
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("context cancelled while waiting ring boot: %w", ctx.Err())
+		case <-time.After(1 * time.Second):
+		}
 	}
 }
 

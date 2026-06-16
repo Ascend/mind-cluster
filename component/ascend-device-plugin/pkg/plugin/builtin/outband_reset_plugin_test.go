@@ -108,7 +108,7 @@ func TestOutBandResetPlugin_CustomReset_A3BootTimeout(t *testing.T) {
 		ctx := context.Background()
 		devs := []plugin.ResetDevice{{LogicID: 0, CardType: api.Ascend910A3}}
 		patchWait := gomonkey.ApplyPrivateMethod(p, "waitRingResetComplete",
-			func(_ *OutBandResetPlugin, _ []plugin.ResetDevice) error {
+			func(_ *OutBandResetPlugin, _ context.Context, _ []plugin.ResetDevice) error {
 				return errors.New("boot timeout")
 			})
 		defer patchWait.Reset()
