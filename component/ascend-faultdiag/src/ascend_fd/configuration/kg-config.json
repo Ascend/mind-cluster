@@ -23426,7 +23426,7 @@
                 "class": "Hardware",
                 "component": "BMC",
                 "module": "LCNE",
-                "cause_zh": "芯片NE健康状态紧急告警",
+                "cause_zh": "LCNE健康状态紧急告警",
                 "description_zh": "LCNE出现紧急问题，可能危及系统正常运行，需要紧急处理。",
                 "suggestion_zh": [
                     "1. 有业务判断服务器业务受损后隔离服务器，没有业务则直接隔离服务器；"
