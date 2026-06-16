@@ -198,8 +198,8 @@ class TestA5RootInfoDetect(unittest.TestCase):
         parser = self._create_parser()
         parser.parse_line(line)
 
-        self.assertIn("0", parser.rank_eid_plane_info)
-        self.assertEqual(len(parser.rank_eid_plane_info["0"]), 1)
+        self.assertIn(("0", "identifier-NA"), parser.rank_eid_plane_info)
+        self.assertEqual(len(parser.rank_eid_plane_info[("0", "identifier-NA")]), 1)
 
 
 class TestResolvePhyDeviceId(unittest.TestCase):
