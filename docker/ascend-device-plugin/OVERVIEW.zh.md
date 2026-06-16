@@ -68,6 +68,7 @@ Tag 遵循以下格式：
 | Docker | 18.09.x~28.5.1 | 所有节点 | 可从 [Docker 社区或官网](https://docs.docker.com/engine/install/) 获取 |
 | Containerd | 1.4.x~2.1.4（推荐使用1.6.x版本） | 所有节点 | 可从 Containerd 的 [官网](https://containerd.io/downloads/) 获取 |
 | 昇腾AI处理器驱动和固件 | 请参见版本配套表 | 计算节点 | 请参见《CANN 软件安装指南》中的"安装NPU驱动和固件"章节 |
+| UMDK软件包      | 请参见版本配套表 | 计算节点 | 针对Atlas 850 系列硬件产品、Atlas 950 SuperPod产品，在构建镜像时需要 |
 
 #### 硬件规格要求
 

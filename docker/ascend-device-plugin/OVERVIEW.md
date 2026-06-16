@@ -68,6 +68,7 @@ Tags follow this format:
 | Docker | 18.09.x~28.5.1 | All nodes | Available from [Docker](https://docs.docker.com/engine/install/) |
 | Containerd | 1.4.x~2.1.4 (1.6.x recommended) | All nodes | Available from [Containerd](https://containerd.io/downloads/) |
 | Atlas AI Processor Driver and Firmware | See version compatibility table | Compute nodes | See "Installing NPU Driver and Firmware" in the CANN Software Installation Guide |
+| UMDK software package                  | See version compatibility table | Compute nodes | Necessary for Atlas 850、Atlas 950 SuperPod Products                              |
 
 #### Hardware Requirements
 
