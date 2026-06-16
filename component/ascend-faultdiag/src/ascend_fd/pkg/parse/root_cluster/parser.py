@@ -196,8 +196,11 @@ class PidFileParser:
 
     def _check_repeat_line(self, line):
         """
-        Check and skip the repeat line and
+        Check and skip the repeat line
         """
+        # A5 清洗rank_id和eid对应关系日志行是重复的，需排除在外
+        if regular_table.EID_PLANE_INFO in line:
+            return False
         feature = line.split("[", 2)[-1]
         if feature in self.repeat_filter_set:
             return True
@@ -262,10 +265,11 @@ class BaseInfoParser:
         self.rank_map = {}
         self.root_for_identifiers = set()
         self.server_name = ""
-        # {"rank_id": [EidPlaneInfo()]}
+        # {(rank_id, identifier_name): [EidPlaneInfo()]}
         self.rank_eid_plane_info = {}
         self.generation_info = regular_table.DEFAULT_GENERATION_SIGN
         self.timeout_params = {}
+        self.current_identifier_name = regular_table.DEFAULT_IDENTIFIER
 
     def re_init(self):
         """
@@ -312,6 +316,7 @@ class BaseInfoParser:
                 return True
         if regular_table.TIMEOUT_KEYWORD_A5 in line:
             self._parse_a5_timeout_info(line)
+            return True
         # EID 信息
         if regular_table.EID_PLANE_INFO in line:
             self._parse_eid_plane_id(line)
@@ -344,7 +349,7 @@ class BaseInfoParser:
             rank_id = rank_info.get("rank_id")
             if rank_id:
                 data = RankInfo.from_dict(rank_info)
-                data.eid_plane_list = self.rank_eid_plane_info.get(rank_id, [])
+                data.eid_plane_list = self.rank_eid_plane_info.get((rank_id, identifier_name), [])
                 plog_base_info.rank_map[identifier_name] = data
         return plog_base_info
 
@@ -453,6 +458,8 @@ class BaseInfoParser:
         identifier_name = (
             filter_single_rank_info(line, regular_table.IDENTIFIER_INFO) or regular_table.DEFAULT_IDENTIFIER
         )
+        if identifier_name != regular_table.DEFAULT_IDENTIFIER:
+            self.current_identifier_name = identifier_name
         rank_id = filter_single_rank_info(line, regular_table.RANK_INFO)
         if rank_id:
             self.rank_map.setdefault(identifier_name, dict()).update({"rank_id": rank_id})
@@ -482,6 +489,8 @@ class BaseInfoParser:
         identifier_name = filter_single_rank_info(line, regular_table.IDENTIFIER_INFO)
         if not identifier_name:
             identifier_name = regular_table.DEFAULT_IDENTIFIER
+        if identifier_name != regular_table.DEFAULT_IDENTIFIER:
+            self.current_identifier_name = identifier_name
         rank_id = filter_single_rank_info(line, regular_table.RANK_INFO)
         if rank_id:
             self.rank_map.setdefault(identifier_name, dict()).update({"rank_id": rank_id})
@@ -531,6 +540,8 @@ class BaseInfoParser:
         identifier_name = (
             filter_single_rank_info(line, regular_table.IDENTIFIER_INFO) or regular_table.DEFAULT_IDENTIFIER
         )
+        if identifier_name != regular_table.DEFAULT_IDENTIFIER:
+            self.current_identifier_name = identifier_name
         rank_id = filter_single_rank_info(line, regular_table.RANK_INFO)
         rank_num_str = filter_single_rank_info(line, regular_table.RANK_NUM_INFO) or filter_single_rank_info(
             line, regular_table.TOTAL_RANK_INFO
@@ -574,7 +585,9 @@ class BaseInfoParser:
         eid = filter_single_rank_info(line, regular_table.EID_ID_INFO)
         plane_id = filter_single_rank_info(line, regular_table.PLANE_ID_INFO)
         if rank_id and eid and plane_id:
-            self.rank_eid_plane_info.setdefault(rank_id, []).append(EidPlaneInfo(eid, plane_id))
+            self.rank_eid_plane_info.setdefault((rank_id, self.current_identifier_name), []).append(
+                EidPlaneInfo(eid, plane_id)
+            )
 
 
 class ErrorParser:
