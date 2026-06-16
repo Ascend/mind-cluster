@@ -11,6 +11,7 @@ COPY ./faultCustomization.json /usr/local/
 COPY ./SwitchFaultCode.json /usr/local/
 COPY ./deviceNameCustomization.json /usr/local/
 COPY ./hangDetectionConfig.json /usr/local/
+COPY ./hotResetPluginConfiguration.json /usr/local/
 COPY ./agreement.txt /usr/local/
 COPY ./npu-nic-mapping.json /user/mindx-dl/npu/
 
@@ -21,6 +22,7 @@ RUN chmod 550 /usr/local/bin/device-plugin &&\
     chmod 440 /usr/local/SwitchFaultCode.json &&\
     chmod 440 /usr/local/deviceNameCustomization.json &&\
     chmod 440 /usr/local/hangDetectionConfig.json &&\
+    chmod 440 /usr/local/hotResetPluginConfiguration.json &&\
     chmod 440 /usr/local/agreement.txt &&\
     chmod 440 /user/mindx-dl/npu/npu-nic-mapping.json &&\
     chmod 750 /home/HwHiAiUser &&\

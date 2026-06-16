@@ -57,7 +57,7 @@ func (p *ResetRecordPlugin) Name() string {
 	return resetRecordPluginName
 }
 
-func (p *ResetRecordPlugin) PreReset(_ context.Context, deviceList []plugin.ResetDevice) error {
+func (p *ResetRecordPlugin) PreReset(ctx context.Context, deviceList []plugin.ResetDevice) error {
 	devIDs := formatDeviceList(deviceList)
 	now := time.Now()
 	event := &v1.Event{
@@ -85,7 +85,7 @@ func (p *ResetRecordPlugin) PreReset(_ context.Context, deviceList []plugin.Rese
 	return nil
 }
 
-func (p *ResetRecordPlugin) AfterReset(_ context.Context, deviceList []plugin.ResetDevice,
+func (p *ResetRecordPlugin) AfterReset(ctx context.Context, deviceList []plugin.ResetDevice,
 	resetErr error) error {
 	devIDs := formatDeviceList(deviceList)
 	now := time.Now()

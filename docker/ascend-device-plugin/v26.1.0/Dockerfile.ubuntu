@@ -31,7 +31,7 @@ ENV LD_LIBRARY_PATH /usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib6
 
 COPY --from=build /build/device-plugin /usr/local/bin/device-plugin
 COPY --from=build /build/run_for_310P_1usoc.sh /
-COPY --from=build /build/faultCode.json /build/faultCustomization.json /build/SwitchFaultCode.json /build/deviceNameCustomization.json /build/agreement.txt /build/hangDetectionConfig.json /usr/local/
+COPY --from=build /build/faultCode.json /build/faultCustomization.json /build/SwitchFaultCode.json /build/deviceNameCustomization.json /build/agreement.txt /build/hangDetectionConfig.json /build/hotResetPluginConfiguration.json /usr/local/
 
 RUN chmod 550 /usr/local/bin/device-plugin &&\
     chmod 550 /usr/local/bin &&\
@@ -40,6 +40,7 @@ RUN chmod 550 /usr/local/bin/device-plugin &&\
     chmod 440 /usr/local/SwitchFaultCode.json &&\
     chmod 440 /usr/local/deviceNameCustomization.json &&\
     chmod 440 /usr/local/hangDetectionConfig.json &&\
+    chmod 440 /usr/local/hotResetPluginConfiguration.json &&\
     chmod 440 /usr/local/agreement.txt &&\
     chmod 750 /home/HwHiAiUser &&\
     chmod 500 /run_for_310P_1usoc.sh &&\

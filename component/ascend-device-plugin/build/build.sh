@@ -105,6 +105,7 @@ function modify_version() {
     cp "$CUR_DIR"/hangDetectionConfig.json "$TOP_DIR"/output/hangDetectionConfig.json
     cp "$CUR_DIR"/agreement.txt "$TOP_DIR"/output/agreement.txt
     cp "$CUR_DIR"/npu-nic-mapping.json "$TOP_DIR"/output/npu-nic-mapping.json
+    cp "$CUR_DIR"/hotResetPluginConfiguration.json "$TOP_DIR"/output/hotResetPluginConfiguration.json
 
     sed -i "s#output/device-plugin#device-plugin#" "$TOP_DIR"/output/Dockerfile
 }

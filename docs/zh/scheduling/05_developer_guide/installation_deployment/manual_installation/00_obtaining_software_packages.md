@@ -127,13 +127,13 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p2907182417816"><a name="p2907182417816"></a><a name="p2907182417816"></a>自定义指标组配置文件。</p>
 </td>
 </tr>
-<tr id="row10465947499"><td class="cellrowborder" rowspan="15" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p349233264112"><a name="p349233264112"></a><a name="p349233264112"></a><span id="ph522114212719"><a name="ph522114212719"></a><a name="ph522114212719"></a>Ascend Device Plugin</span></p>
+<tr id="row10465947499"><td class="cellrowborder" rowspan="16" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p349233264112"><a name="p349233264112"></a><a name="p349233264112"></a><span id="ph522114212719"><a name="ph522114212719"></a><a name="ph522114212719"></a>Ascend Device Plugin</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="24.310000000000002%" headers="mcps1.2.5.1.2 "><p id="p246510417491"><a name="p246510417491"></a><a name="p246510417491"></a>device-plugin</p>
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p34651145494"><a name="p34651145494"></a><a name="p34651145494"></a><span id="ph1024012311247"><a name="ph1024012311247"></a><a name="ph1024012311247"></a>Ascend Device Plugin</span>二进制文件。</p>
 </td>
-<td class="cellrowborder" rowspan="15" align="left" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p578044431010"><a name="p578044431010"></a><a name="p578044431010"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="16" align="left" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p578044431010"><a name="p578044431010"></a><a name="p578044431010"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 <p id="p17810448103"><a name="p17810448103"></a><a name="p17810448103"></a></p>
 <p id="p178144410101"><a name="p178144410101"></a><a name="p178144410101"></a></p>
 </td>
@@ -194,6 +194,11 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p2013151475812"><a name="p2013151475812"></a><a name="p2013151475812"></a>自定义设备名称配置文件。</p>
 <div class="notice" id="note3110378817"><a name="note3110378817"></a><a name="note3110378817"></a><span class="noticetitle"> 须知： </span><div class="noticebody"><p id="p211163719817"><a name="p211163719817"></a><a name="p211163719817"></a>系统配置文件，请勿随意修改，否则可能会导致系统故障处理、设备纳管功能出错。</p>
 </div></div>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>hotResetPluginConfiguration.json</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>热复位插件配置文件，用于控制热复位插件的启用状态。</p>
 </td>
 </tr>
 <tr id="row3124540173214"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p891215422516"><a name="p891215422516"></a><a name="p891215422516"></a>device-plugin-<em id="i201964115579"><a name="i201964115579"></a><a name="i201964115579"></a>v{version}</em>.yaml</p>
