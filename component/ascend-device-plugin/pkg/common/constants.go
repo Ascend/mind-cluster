@@ -535,6 +535,8 @@ const (
 	ResetTaskNameKey = "volcano.sh/job-name"
 	// ResetTaskNameKeyInLabel for obtain the reset task name when using operator
 	ResetTaskNameKeyInLabel = "training.kubeflow.org/job-name"
+	// DeploymentNameKeyInLabel for obtain the deployment name
+	DeploymentNameKeyInLabel = "deploy-name"
 )
 
 const (
