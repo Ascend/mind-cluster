@@ -667,4 +667,24 @@ TEST_F(TestMemFsApi, test_preload_progress_view_interface)
 
     PreloadProgressView::Wait(1, path);
 }
+
+TEST_F(TestMemFsApi, test_alloc_data_blocks_overflow_rejected)
+{
+    std::string path = "/TestAllocDataBlocks_Overflow.txt";
+    int validFlags = O_CREAT | O_TRUNC | O_WRONLY;
+    mode_t mode = 0644;
+    auto fd = MemFsApi::OpenFile(path, validFlags, mode);
+    ASSERT_TRUE(fd > 0);
+
+    uint64_t overflowBytes = UINT64_MAX;
+    std::vector<uint64_t> blocks;
+    uint64_t blockSize = 0;
+    int ret = MemFsApi::AllocDataBlocks(fd, overflowBytes, blocks, blockSize);
+    ASSERT_EQ(ret, -1);
+    ASSERT_EQ(errno, EINVAL);
+    ASSERT_TRUE(blocks.empty());
+
+    int close = MemFsApi::CloseFile(fd);
+    ASSERT_EQ(close, 0);
+}
 }

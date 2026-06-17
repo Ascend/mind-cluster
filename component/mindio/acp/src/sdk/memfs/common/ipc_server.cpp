@@ -191,8 +191,6 @@ int32_t IpcServer::NewChannel(const std::string &ipPort, const ChannelPtr &newCh
 {
     MFS_LOG_INFO("a new channel from " << ipPort << " payload " << payload);
 
-    auto &config = ServiceConfigure::GetInstance().GetIpcMessageConfig();
-    MFS_LOG_INFO("Client authorEnabled:" << config.authorEnabled << ", authorEncrypted:" << config.authorEncrypted);
     HLOG_AUDIT("system", "connect from client", "", "success");
 
     if (!NewConnectionCheckLimit()) {
@@ -206,31 +204,6 @@ int32_t IpcServer::NewChannel(const std::string &ipPort, const ChannelPtr &newCh
     }
 
     RefreshTimeoutForChannel(newChannel);
-    return MFS_OK;
-}
-
-int32_t IpcServer::CheckConnectUser(pid_t pid, uid_t user, gid_t group) const
-{
-    auto &config = ServiceConfigure::GetInstance();
-    if (!config.GetIpcMessageConfig().permitSuperUser && user == 0) {
-        MFS_LOG_WARN("a new channel from pid(" << pid << ") super user not allowed.");
-        return MFS_ERROR;
-    }
-
-    if (!config.GetMemFsConfig().multiGroupEnabled) {
-        if (user == serverRunUid || user == 0 || group == serverRunGid) {
-            return MFS_OK;
-        }
-
-        auto userGroupCache = UserGroupCache::GetSystemInstance();
-        if (userGroupCache != nullptr && userGroupCache->UserInGroup(user, serverRunGid)) {
-            return MFS_OK;
-        }
-
-        MFS_LOG_WARN("a new channel from pid(" << pid << ") user(" << user << ") group(" << group << ") not allowed.");
-        return MFS_ERROR;
-    }
-
     return MFS_OK;
 }
 

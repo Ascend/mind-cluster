@@ -90,8 +90,6 @@ private:
 
     int32_t NewChannel(const std::string &ipPort, const ChannelPtr &newChannel, const std::string &payload);
 
-    int32_t CheckConnectUser(pid_t pid, uid_t user, gid_t group) const;
-
     void ChannelBroken(const ChannelPtr &ch);
 
     int32_t RequestReceived(ServiceContext &ctx);
