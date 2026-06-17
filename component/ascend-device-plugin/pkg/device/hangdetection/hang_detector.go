@@ -17,6 +17,7 @@ package hangdetection
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"fmt"
 	"os"
@@ -58,56 +59,55 @@ type HangDetector struct {
 }
 
 var (
-	once                 sync.Once
-	hangDetector         = &HangDetector{npuDevPortInfos: make(map[int][]int)}
-	lastHangDetectTime   = make(map[int32]time.Time)
-	lastHangDetectTimeMu sync.Mutex
-	hangStateMap         = make(map[int32]*HangState)
-	hangStateMapMu       sync.Mutex
-	clkTck               = int64(100)
+	hangDetector   = &HangDetector{npuDevPortInfos: make(map[int][]int)}
+	hangStateMap   = make(map[int32]*HangState)
+	hangStateMapMu sync.Mutex
+	clkTck         = int64(100)
+
+	npuFaultCacheMu sync.Mutex
+	npuFaultCache   = make([]*npuCommon.DevFaultInfo, 0)
+
+	logicIdMap = sync.Map{}
 )
 
-// DetectHangFault performs one round of hang detection for a single NPU
-func DetectHangFault(logicID int32, dmgr devmanager.DeviceInterface) {
-	if dmgr == nil || !shouldHangDetect(logicID) {
+// StartHangDetectionProducer starts a background goroutine that periodically collects hang detection metrics for every registered logicID
+func StartHangDetectionProducer(ctx context.Context, dmgr devmanager.DeviceInterface) {
+	if dmgr == nil {
+		hwlog.RunLog.Error("hang detection producer start failed: dmgr is nil")
 		return
 	}
-	once.Do(func() {
-		hangDetector.dmgr = dmgr
+	hangDetector.dmgr = dmgr
+	npuDevPortInfos, err := hangDetector.getNpuDevNetPortInfos()
+	if err != nil {
+		hwlog.RunLog.Errorf("hang detection get NPU port info failed: %v", err)
+	}
+	if npuDevPortInfos != nil {
+		hangDetector.npuDevPortInfos = npuDevPortInfos
+	}
 
-		setClkTck()
+	setClkTck()
+	common.LoadHangDetectionConfigFromFile()
 
-		npuDevPortInfos, err := hangDetector.getNpuDevNetPortInfos()
-		if err != nil {
-			hwlog.RunLog.Errorf("hang detection get NPU port info failed: %v", err)
-		}
-		if npuDevPortInfos != nil {
-			hangDetector.npuDevPortInfos = npuDevPortInfos
-		}
-
-		common.LoadHangDetectionConfigFromFile()
-	})
-	hwlog.RunLog.Debugf("hang detection start, logicID=%d", logicID)
-	hangDetector.detectNPU(logicID)
-	hwlog.RunLog.Debugf("hang detection end, logicID=%d", logicID)
+	runHangDetectionProducer(ctx)
 }
 
-func shouldHangDetect(logicID int32) bool {
-	if !common.IsHangDetectionEnabled() {
-		hangDetector.npuHangEventDisappear(logicID, nil)
-		hwlog.RunLog.Debugf("hang detection disabled, logicID=%d", logicID)
-		return false
+func runHangDetectionProducer(ctx context.Context) {
+	hwlog.RunLog.Info("hang detection producer start")
+	ticker := time.NewTicker(hangDetectInterval * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			hwlog.RunLog.Info("hang detection producer stop")
+			return
+		case <-ticker.C:
+			for _, logicID := range snapshotRegisteredLogicIDs() {
+				hwlog.RunLog.Debugf("hang detection start, logicID=%d", logicID)
+				hangDetector.detectNPU(logicID)
+				hwlog.RunLog.Debugf("hang detection end, logicID=%d", logicID)
+			}
+		}
 	}
-
-	// 60s interval detection
-	lastHangDetectTimeMu.Lock()
-	defer lastHangDetectTimeMu.Unlock()
-	lastTime, ok := lastHangDetectTime[logicID]
-	if ok && time.Since(lastTime) < hangDetectInterval*time.Second {
-		return false
-	}
-	lastHangDetectTime[logicID] = time.Now()
-	return true
 }
 
 func (hd *HangDetector) getNpuDevNetPortInfos() (map[int][]int, error) {
@@ -132,6 +132,11 @@ func (hd *HangDetector) getNpuDevNetPortInfos() (map[int][]int, error) {
 
 // DetectNPU performs one round of hang detection for a single NPU
 func (hd *HangDetector) detectNPU(logicID int32) {
+	if !common.IsHangDetectionEnabled() {
+		hwlog.RunLog.Debugf("hang detection disabled, logicID=%d", logicID)
+		hd.npuHangEventDisappear(logicID, nil)
+		return
+	}
 	procInfo, err := hd.dmgr.GetDevProcessInfo(logicID)
 	if err != nil || procInfo == nil {
 		hwlog.RunLog.Errorf("hang detection get process info failed, logicID=%d: %v", logicID, err)
@@ -249,8 +254,8 @@ func (hd *HangDetector) collectCPUTime(procInfo *npuCommon.DevProcessInfo, metri
 
 func (hd *HangDetector) isHangConditionMet(logicID int32, curMetrics *HangMetrics) bool {
 	state := hd.getOrCreateHangState(logicID)
-	isHangConditionMet := false
 	lastMetric := state.Metrics
+	isHangConditionMet := false
 	if lastMetric != nil {
 		threshold := common.GetHangDetectionThreshold()
 
@@ -319,7 +324,7 @@ func (hd *HangDetector) reportHangFault(logicID int32) {
 		AlarmRaisedTime: time.Now().Unix(),
 	}
 	hwlog.RunLog.Infof("report NPU hang fault, logicID=%d, faultCode=0x%X", logicID, npuCommon.HangFaultCode)
-	common.DoSaveDevFaultInfo(faultInfo, false)
+	appendHangFaultCache(&faultInfo)
 }
 
 func (hd *HangDetector) reportHangRecover(logicID int32) {
@@ -330,7 +335,7 @@ func (hd *HangDetector) reportHangRecover(logicID int32) {
 		AlarmRaisedTime: time.Now().Unix(),
 	}
 	hwlog.RunLog.Infof("report NPU hang recover, logicID=%d, faultCode=0x%X", logicID, npuCommon.HangFaultCode)
-	common.DoSaveDevFaultInfo(faultInfo, true)
+	appendHangFaultCache(&faultInfo)
 }
 
 func (hd *HangDetector) getOrCreateHangState(logicID int32) *HangState {
@@ -404,4 +409,33 @@ func getSysClockTicks() (int64, error) {
 		}
 	}
 	return 0, err
+}
+
+// GetAndCleanAllHangFaultCache returns all DevFaultInfo cache for the given logicID
+func GetAndCleanAllHangFaultCache() []*npuCommon.DevFaultInfo {
+	npuFaultCacheMu.Lock()
+	defer npuFaultCacheMu.Unlock()
+	ret := npuFaultCache
+	npuFaultCache = make([]*npuCommon.DevFaultInfo, 0, len(ret))
+	return ret
+}
+
+func appendHangFaultCache(faultInfo *npuCommon.DevFaultInfo) {
+	npuFaultCacheMu.Lock()
+	defer npuFaultCacheMu.Unlock()
+	npuFaultCache = append(npuFaultCache, faultInfo)
+}
+
+// RegisterLogicIDForProducer registers the given logicID for hang detection producer
+func RegisterLogicIDForProducer(logicID int32) {
+	logicIdMap.Store(logicID, struct{}{})
+}
+
+func snapshotRegisteredLogicIDs() []int32 {
+	logicIDs := make([]int32, 0)
+	logicIdMap.Range(func(key, value any) bool {
+		logicIDs = append(logicIDs, key.(int32))
+		return true
+	})
+	return logicIDs
 }

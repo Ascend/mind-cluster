@@ -20,6 +20,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -55,13 +56,13 @@ func init() {
 }
 
 func resetHangState() {
-	lastHangDetectTimeMu.Lock()
-	lastHangDetectTime = make(map[int32]time.Time)
-	lastHangDetectTimeMu.Unlock()
-
 	hangStateMapMu.Lock()
 	hangStateMap = make(map[int32]*HangState)
 	hangStateMapMu.Unlock()
+
+	npuFaultCacheMu.Lock()
+	npuFaultCache = make([]*npuCommon.DevFaultInfo, 0)
+	npuFaultCacheMu.Unlock()
 }
 
 func newTestHangDetector() *HangDetector {
@@ -69,44 +70,6 @@ func newTestHangDetector() *HangDetector {
 		dmgr:            &devmanager.DeviceManager{},
 		npuDevPortInfos: make(map[int][]int),
 	}
-}
-
-// TestShouldHangDetect for test shouldHangDetect
-func TestShouldHangDetect(t *testing.T) {
-	convey.Convey("test shouldHangDetect", t, func() {
-		resetHangState()
-
-		convey.Convey("01-when hang detection is disabled, should return false", func() {
-			patches := gomonkey.ApplyFuncReturn(common.IsHangDetectionEnabled, false)
-			defer patches.Reset()
-			result := shouldHangDetect(mockLogicID)
-			convey.So(result, convey.ShouldBeFalse)
-		})
-
-		convey.Convey("03-when within interval, should return false", func() {
-			patches := gomonkey.ApplyFuncReturn(common.IsHangDetectionEnabled, true)
-			defer patches.Reset()
-
-			lastHangDetectTimeMu.Lock()
-			lastHangDetectTime[mockLogicID] = time.Now()
-			lastHangDetectTimeMu.Unlock()
-
-			result := shouldHangDetect(mockLogicID)
-			convey.So(result, convey.ShouldBeFalse)
-		})
-
-		convey.Convey("04-when interval has passed, should return true", func() {
-			patches := gomonkey.ApplyFuncReturn(common.IsHangDetectionEnabled, true)
-			defer patches.Reset()
-
-			lastHangDetectTimeMu.Lock()
-			lastHangDetectTime[mockLogicID] = time.Now().Add(-(hangDetectInterval + 1) * time.Second)
-			lastHangDetectTimeMu.Unlock()
-
-			result := shouldHangDetect(mockLogicID)
-			convey.So(result, convey.ShouldBeTrue)
-		})
-	})
 }
 
 // TestDetectNPU for test detectNPU
@@ -467,18 +430,14 @@ func TestReportHangFault(t *testing.T) {
 	convey.Convey("test reportHangFault", t, func() {
 		hd := newTestHangDetector()
 
-		convey.Convey("should call DoSaveDevFaultInfo with FaultOccur", func() {
-			called := false
-			patches := gomonkey.ApplyFunc(common.DoSaveDevFaultInfo, func(info npuCommon.DevFaultInfo, _ bool) {
-				called = true
-				convey.So(info.LogicID, convey.ShouldEqual, mockLogicID)
-				convey.So(info.EventID, convey.ShouldEqual, npuCommon.HangFaultCode)
-				convey.So(info.Assertion, convey.ShouldEqual, npuCommon.FaultOccur)
-			})
-			defer patches.Reset()
-
+		convey.Convey("should append fault with FaultOccur to cache", func() {
+			resetHangState()
 			hd.reportHangFault(mockLogicID)
-			convey.So(called, convey.ShouldBeTrue)
+			faultInfos := GetAndCleanAllHangFaultCache()
+			convey.So(len(faultInfos), convey.ShouldEqual, 1)
+			convey.So(faultInfos[0].LogicID, convey.ShouldEqual, mockLogicID)
+			convey.So(faultInfos[0].Assertion, convey.ShouldEqual, npuCommon.FaultOccur)
+			convey.So(faultInfos[0].EventID, convey.ShouldEqual, npuCommon.HangFaultCode)
 		})
 	})
 }
@@ -488,18 +447,14 @@ func TestReportHangRecover(t *testing.T) {
 	convey.Convey("test reportHangRecover", t, func() {
 		hd := newTestHangDetector()
 
-		convey.Convey("should call DoSaveDevFaultInfo with FaultRecover", func() {
-			called := false
-			patches := gomonkey.ApplyFunc(common.DoSaveDevFaultInfo, func(info npuCommon.DevFaultInfo, _ bool) {
-				called = true
-				convey.So(info.LogicID, convey.ShouldEqual, mockLogicID)
-				convey.So(info.EventID, convey.ShouldEqual, npuCommon.HangFaultCode)
-				convey.So(info.Assertion, convey.ShouldEqual, npuCommon.FaultRecover)
-			})
-			defer patches.Reset()
-
+		convey.Convey("should append fault with FaultRecover to cache", func() {
+			resetHangState()
 			hd.reportHangRecover(mockLogicID)
-			convey.So(called, convey.ShouldBeTrue)
+			faultInfos := GetAndCleanAllHangFaultCache()
+			convey.So(len(faultInfos), convey.ShouldEqual, 1)
+			convey.So(faultInfos[0].LogicID, convey.ShouldEqual, mockLogicID)
+			convey.So(faultInfos[0].Assertion, convey.ShouldEqual, npuCommon.FaultRecover)
+			convey.So(faultInfos[0].EventID, convey.ShouldEqual, npuCommon.HangFaultCode)
 		})
 	})
 }
@@ -547,20 +502,99 @@ func TestSetClkTckAndGetSysClockTicks(t *testing.T) {
 	})
 }
 
-// TestDetectHangFault for test DetectHangFault
-func TestDetectHangFault(t *testing.T) {
-	convey.Convey("test DetectHangFault", t, func() {
-		resetHangState()
+// TestGetAndCleanAllHangFaultCache for test GetAndCleanAllHangFaultCache
+func TestGetAndCleanAllHangFaultCache(t *testing.T) {
+	convey.Convey("test GetAndCleanAllHangFaultCache", t, func() {
+		convey.Convey("when cache is empty, should return empty slice", func() {
+			resetHangState()
+			faultInfos := GetAndCleanAllHangFaultCache()
+			convey.So(len(faultInfos), convey.ShouldEqual, 0)
+		})
 
+		convey.Convey("when cache has entries, should return all and clear cache", func() {
+			resetHangState()
+			hd := newTestHangDetector()
+			hd.reportHangFault(mockLogicID)
+			hd.reportHangRecover(mockLogicID)
+
+			faultInfos := GetAndCleanAllHangFaultCache()
+			convey.So(len(faultInfos), convey.ShouldEqual, 2)
+
+			faultInfos2 := GetAndCleanAllHangFaultCache()
+			convey.So(len(faultInfos2), convey.ShouldEqual, 0)
+		})
+	})
+}
+
+// TestRegisterLogicIDForProducer for test RegisterLogicIDForProducer
+func TestRegisterLogicIDForProducer(t *testing.T) {
+	convey.Convey("test RegisterLogicIDForProducer", t, func() {
+		convey.Convey("should register logicID and snapshot returns it", func() {
+			logicIdMap = sync.Map{}
+			RegisterLogicIDForProducer(mockLogicID)
+			logicIDs := snapshotRegisteredLogicIDs()
+			convey.So(len(logicIDs), convey.ShouldEqual, 1)
+			convey.So(logicIDs[0], convey.ShouldEqual, mockLogicID)
+		})
+
+		convey.Convey("should not duplicate logicID", func() {
+			logicIdMap = sync.Map{}
+			RegisterLogicIDForProducer(mockLogicID)
+			RegisterLogicIDForProducer(mockLogicID)
+			logicIDs := snapshotRegisteredLogicIDs()
+			convey.So(len(logicIDs), convey.ShouldEqual, 1)
+		})
+	})
+}
+
+// TestStartHangDetectionProducer for test StartHangDetectionProducer
+func TestStartHangDetectionProducer(t *testing.T) {
+	convey.Convey("test StartHangDetectionProducer", t, func() {
 		convey.Convey("when dmgr is nil, should return immediately", func() {
-			DetectHangFault(mockLogicID, nil)
-		})
-
-		convey.Convey("when shouldHangDetect returns false, should return immediately", func() {
-			patches := gomonkey.ApplyFuncReturn(common.IsHangDetectionEnabled, false)
+			called := false
+			patches := gomonkey.ApplyFunc(runHangDetectionProducer,
+				func(ctx context.Context) { called = true })
 			defer patches.Reset()
-
-			DetectHangFault(mockLogicID, nil)
+			StartHangDetectionProducer(context.Background(), nil)
+			convey.So(called, convey.ShouldBeFalse)
 		})
+
+		convey.Convey("when dmgr is not nil, should start producer", func() {
+			hangDetector = &HangDetector{npuDevPortInfos: make(map[int][]int)}
+			called := false
+			patches := gomonkey.ApplyPrivateMethod(hangDetector, "getNpuDevNetPortInfos",
+				func(*HangDetector) (map[int][]int, error) { return nil, fmt.Errorf("mock error") }).
+				ApplyFuncReturn(common.LoadHangDetectionConfigFromFile).
+				ApplyFunc(runHangDetectionProducer, func(ctx context.Context) {
+					called = true
+				})
+			defer patches.Reset()
+			StartHangDetectionProducer(context.Background(), &devmanager.DeviceManager{})
+			convey.So(called, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestRunHangDetectionProducer(t *testing.T) {
+	convey.Convey("test runHangDetectionProducer", t, func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		called := false
+		secondCh := make(chan time.Time, 1)
+		patches := gomonkey.ApplyPrivateMethod(hangDetector, "detectNPU",
+			func(*HangDetector, int32) { called = true }).
+			ApplyFunc(time.NewTicker, func(d time.Duration) *time.Ticker {
+				return &time.Ticker{C: secondCh}
+			})
+		defer patches.Reset()
+		RegisterLogicIDForProducer(mockLogicID)
+		const sleepTime = 100 * time.Millisecond
+		go func() {
+			secondCh <- time.Now()
+			time.Sleep(sleepTime)
+			cancel()
+		}()
+		runHangDetectionProducer(ctx)
+		convey.So(called, convey.ShouldBeTrue)
 	})
 }
