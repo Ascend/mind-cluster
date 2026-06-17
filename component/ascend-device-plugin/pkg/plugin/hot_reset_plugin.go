@@ -38,25 +38,23 @@ type HookCaps struct {
 
 type HotResetPlugin interface {
 	Name() string
-	PreReset(ctx context.Context, deviceList []ResetDevice) error
+	PreReset(ctx context.Context, deviceList []ResetDevice)
 	CustomReset(ctx context.Context, deviceList []ResetDevice, resetErr error) error
-	AfterReset(ctx context.Context, deviceList []ResetDevice, resetErr error) error
+	AfterReset(ctx context.Context, deviceList []ResetDevice, resetErr error)
 }
 
 type HotResetPluginAdapter struct{}
 
 func (a *HotResetPluginAdapter) Name() string { return "" }
 
-func (a *HotResetPluginAdapter) PreReset(_ context.Context, _ []ResetDevice) error {
-	return nil
+func (a *HotResetPluginAdapter) PreReset(_ context.Context, _ []ResetDevice) {
 }
 
 func (a *HotResetPluginAdapter) CustomReset(_ context.Context, _ []ResetDevice, resetErr error) error {
 	return resetErr
 }
 
-func (a *HotResetPluginAdapter) AfterReset(_ context.Context, _ []ResetDevice, _ error) error {
-	return nil
+func (a *HotResetPluginAdapter) AfterReset(_ context.Context, _ []ResetDevice, _ error) {
 }
 
 const (
