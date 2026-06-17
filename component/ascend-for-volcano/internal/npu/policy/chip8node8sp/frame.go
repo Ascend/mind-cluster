@@ -26,7 +26,7 @@ import (
 	"strconv"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog"
 
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -1197,6 +1197,15 @@ func (tp *chip8node8sp) checkSpBlockGtZero() bool {
 	}
 	klog.V(util.LogErrorLev).Infof("sp-block is less than 0")
 	return false
+}
+
+// Preemptable override: SuperPod scheduling policy does not support preemption
+func (tp *chip8node8sp) Preemptable(preemptor *api.TaskInfo, preemptees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	klog.V(util.LogInfoLev).Infof("%s Preemptable: SuperPod policy does not support preemption, "+
+		"preemptor<%s> preemptees<%d> node<%s>, Abstain",
+		tp.GetPluginName(), preemptor.Name, len(preemptees), vcNode.Name)
+	return nil, false
 }
 
 func getSuperPodRanks(job plugin.SchedulerJob, rank int) (string, int) {

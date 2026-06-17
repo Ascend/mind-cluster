@@ -172,7 +172,8 @@ func buildcheckNodeNPUByTaskTestCases02() []checkNodeNPUByTaskTestCase {
 					},
 				},
 			},
-			WantErr: errors.New("checkNodeNPUByTask the npus on this node don't satisfy the schedulable topology err: node don't have enough npu resource, req<8>, idle<2>"),
+			WantErr: fmt.Errorf("checkNodeNPUByTask %s err: %s node don't have enough resource, req<8>, idle<2>",
+				util.NodeNotMeetTopologyWarning, util.NPUResourceShortageError),
 		},
 		{
 			Name:          "05-CheckNodeNPUByTask return err when node has no req npu",
@@ -188,7 +189,8 @@ func buildcheckNodeNPUByTaskTestCases02() []checkNodeNPUByTaskTestCase {
 					},
 				},
 			},
-			WantErr: errors.New("checkNodeNPUByTask the npus on this node don't satisfy the schedulable topology err: node don't have enough npu resource, req<8>, idle<3>"),
+			WantErr: fmt.Errorf("checkNodeNPUByTask %s err: %s node don't have enough resource, req<8>, idle<3>",
+				util.NodeNotMeetTopologyWarning, util.NPUResourceShortageError),
 		},
 	}
 }

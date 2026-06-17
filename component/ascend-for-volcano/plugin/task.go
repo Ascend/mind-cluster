@@ -21,9 +21,10 @@ package plugin
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
@@ -69,7 +70,8 @@ func (sHandle ScheduleHandler) NPUAllocateFunc(task *api.TaskInfo) {
 	}
 	vcNode := vcJob.policyHandler.UseAnnotation(task, node)
 	if vcNode != nil {
-		// update node.
+		npuResName := v1.ResourceName(vcJob.ReqNPUName)
+		sHandle.updateChipCountAfterAllocate(task, vcNode, npuResName)
 		sHandle.Nodes[nodeName] = *vcNode
 	}
 	if sHandle.FaultHandle != nil {
@@ -117,6 +119,8 @@ func (sHandle *ScheduleHandler) NPUDeallocateFunc(task *api.TaskInfo) {
 		return
 	}
 	sHandle.releaseAnnotation(task, vcJob, node)
+	npuResName := v1.ResourceName(vcJob.ReqNPUName)
+	sHandle.updateChipCountAfterDeallocate(task, nodeName, npuResName)
 
 	// When the task status is Pending (allocation rollback / unpipeline), the
 	// cache entry written by NPUAllocateFunc is stale — the pod never actually
@@ -179,9 +183,14 @@ func (sHandle *ScheduleHandler) releaseAnnotation(task *api.TaskInfo, vcJob Sche
 	sHandle.Nodes[vcNode.Name] = vcNode
 	klog.V(util.LogDebugLev).Infof("%s releaseAnnotation %s's %s on %s,new top:[%s].", PluginName, task.Name,
 		reqStr, vcNode.Name, reqStr+","+value)
+	if task.Status == api.Pending {
+		delete(task.Pod.Annotations, util.AscendNPUPodRealUse)
+		delete(task.Pod.Annotations, vcTask.ReqNPUName)
+		delete(task.Pod.Annotations, util.Pod910DeviceKey)
+		return
+	}
 	tmpNode := vcJob.policyHandler.ReleaseAnnotation(task, vcNode)
 	if tmpNode != nil {
-		// update node.
 		sHandle.Nodes[vcNode.Name] = *tmpNode
 	}
 	delete(task.Pod.Annotations, util.AscendNPUPodRealUse)
@@ -203,4 +212,158 @@ func updatePodPendingReason(task *api.TaskInfo, reasonTmp string) {
 		}
 	}
 	task.Pod.Status.Conditions = append(task.Pod.Status.Conditions, condition)
+}
+
+func (sHandle *ScheduleHandler) updateChipCountAfterAllocate(task *api.TaskInfo, vcNode *NPUNode,
+	npuResName v1.ResourceName) {
+	if sHandle == nil || task == nil || vcNode == nil {
+		return
+	}
+	chipIDs := getAllocatedChipIDsFromPod(task.Pod, vcNode)
+	for _, chipID := range chipIDs {
+		chip, ok := vcNode.Chips[chipID]
+		if !ok {
+			continue
+		}
+		chip.PodMap[string(task.Pod.UID)] = task.Pod
+	}
+	if len(chipIDs) > 0 && npuResName != "" {
+		if vcNode.Idle == nil {
+			vcNode.Idle = make(map[v1.ResourceName]float64)
+		}
+		vcNode.Idle[npuResName] -= float64(len(chipIDs)) * util.NPUHexKilo
+		if vcNode.Idle[npuResName] < 0 {
+			klog.V(util.LogWarningLev).Infof("updateChipCountAfterAllocate: node<%s> Idle[%s] went negative"+
+				" after allocating %d chips, clamping to 0", vcNode.Name, npuResName, len(chipIDs))
+			vcNode.Idle[npuResName] = 0
+		}
+	}
+}
+
+func (sHandle *ScheduleHandler) updateChipCountAfterDeallocate(task *api.TaskInfo, nodeName string,
+	npuResName v1.ResourceName) {
+	if sHandle == nil || task == nil {
+		return
+	}
+	vcNode, ok := sHandle.Nodes[nodeName]
+	if !ok {
+		return
+	}
+	chipIDs := getAllocatedChipIDsFromPod(task.Pod, &vcNode)
+	podUID := string(task.Pod.UID)
+	for _, chipID := range chipIDs {
+		chip, chipOK := vcNode.Chips[chipID]
+		if !chipOK {
+			continue
+		}
+		delete(chip.PodMap, podUID)
+	}
+	if len(chipIDs) > 0 && npuResName != "" {
+		if vcNode.Idle == nil {
+			vcNode.Idle = make(map[v1.ResourceName]float64)
+		}
+		vcNode.Idle[npuResName] += float64(len(chipIDs)) * util.NPUHexKilo
+		allocatable := vcNode.Allocate[npuResName]
+		if vcNode.Idle[npuResName] > allocatable {
+			klog.V(util.LogWarningLev).Infof("updateChipCountAfterDeallocate: node<%s> Idle[%s] exceeded"+
+				" Allocatable after deallocating %d chips, clamping to Allocatable", vcNode.Name, npuResName, len(chipIDs))
+			vcNode.Idle[npuResName] = allocatable
+		}
+	}
+	sHandle.Nodes[nodeName] = vcNode
+}
+
+func getAllocatedChipIDsFromPod(pod *v1.Pod, vcNode *NPUNode) []int {
+	chipIDs := make([]int, 0)
+	if pod == nil || vcNode == nil {
+		return chipIDs
+	}
+	coreNameStr, ok := pod.Annotations[util.AscendNPUCore]
+	if !ok {
+		return chipIDs
+	}
+	if isPodWholeCardFromAscendCore(coreNameStr) {
+		physicsIDs, err := getCardPhysicsIDFromAscendCore(pod, true)
+		if err != nil {
+			return chipIDs
+		}
+		return physicsIDs
+	}
+	physicsIDs, err := getCardPhysicsIDFromAscendCore(pod, false)
+	if err != nil {
+		vnpuIDStr := coreNameStr
+		if split := strings.Split(coreNameStr, "-"); len(split) > 0 {
+			vnpuIDStr = split[0]
+		}
+		id, atoiErr := strconv.Atoi(vnpuIDStr)
+		if atoiErr != nil {
+			return chipIDs
+		}
+		return []int{id}
+	}
+	return physicsIDs
+}
+
+func canFreeChip(chip *VChip, preempteeSet map[string]struct{}) bool {
+	if len(chip.PodMap) == 0 {
+		return true
+	}
+	for podUID := range chip.PodMap {
+		if _, found := preempteeSet[podUID]; !found {
+			return false
+		}
+	}
+	return true
+}
+
+func CalcCardFreeCount(vcNode *NPUNode, preemptees []*api.TaskInfo, maxCardNPUNum int) map[int]int {
+	if vcNode == nil || maxCardNPUNum <= 0 {
+		klog.V(util.LogInfoLev).Infof("CalcCardFreeCount: invalid args, vcNode nil=%v maxCardNPUNum=%d",
+			vcNode == nil, maxCardNPUNum)
+		return nil
+	}
+	preempteeSet := make(map[string]struct{}, len(preemptees))
+	for _, pe := range preemptees {
+		preempteeSet[string(pe.Pod.UID)] = struct{}{}
+	}
+	cardFreeCount := make(map[int]int)
+	for chipID, chip := range vcNode.Chips {
+		if _, unhealthy := vcNode.UnhealthyChipIds[chipID]; unhealthy {
+			continue
+		}
+		if canFreeChip(chip, preempteeSet) {
+			cardID := chipID / maxCardNPUNum
+			cardFreeCount[cardID]++
+		}
+	}
+	klog.V(util.LogInfoLev).Infof("CalcCardFreeCount: node<%s> maxCardNPUNum<%d> preemptees<%d> "+
+		"cardFreeCount=%v", vcNode.Name, maxCardNPUNum, len(preemptees), cardFreeCount)
+	return cardFreeCount
+}
+
+func FilterPreempteesByFeasibleCards(vcNode *NPUNode, preemptees []*api.TaskInfo,
+	feasibleCards map[int]struct{}, maxCardNPUNum int) []*api.TaskInfo {
+
+	if vcNode == nil || len(feasibleCards) == 0 || maxCardNPUNum <= 0 {
+		klog.V(util.LogInfoLev).Infof("FilterPreempteesByFeasibleCards: invalid args, vcNode nil=%v "+
+			"feasibleCards=%d maxCardNPUNum=%d", vcNode == nil, len(feasibleCards), maxCardNPUNum)
+		return nil
+	}
+	var filtered []*api.TaskInfo
+	for _, pe := range preemptees {
+		chipIDs := getAllocatedChipIDsFromPod(pe.Pod, vcNode)
+		onFeasibleCard := false
+		for _, cid := range chipIDs {
+			if _, ok := feasibleCards[cid/maxCardNPUNum]; ok {
+				onFeasibleCard = true
+				break
+			}
+		}
+		if onFeasibleCard {
+			filtered = append(filtered, pe)
+		}
+	}
+	klog.V(util.LogInfoLev).Infof("FilterPreempteesByFeasibleCards: node<%s> feasibleCards=%d "+
+		"preemptees<%d> filtered<%d>", vcNode.Name, len(feasibleCards), len(preemptees), len(filtered))
+	return filtered
 }

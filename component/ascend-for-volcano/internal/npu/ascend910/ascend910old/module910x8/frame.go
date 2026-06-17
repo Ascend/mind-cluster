@@ -23,8 +23,9 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sort"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
@@ -40,6 +41,7 @@ func New(name string) base.AscendHandler {
 	m.SetAnnoName(util.NPU910CardName)
 	m.SetAnnoPreVal(util.NPU910CardNamePre)
 	m.SetMaxNodeNPUNum(nodeNPUNumber)
+	m.SetMaxCardNPUNum(npuNumPerHccs)
 	m.netUnhealthyKey = networkUnhealthyNPU
 	m.SetNpuNumInvalidMap(map[int]struct{}{util.NPUIndex3: {}, util.NPUIndex5: {}, util.NPUIndex6: {},
 		util.NPUIndex7: {}})
@@ -169,7 +171,7 @@ func (tp *module910x8) selectNPUFromNode(task *api.TaskInfo, node plugin.NPUNode
 		if len(nodeTop) == nodeNPUNumber {
 			return nodeTop, nil
 		}
-		err = fmt.Errorf("node<%s> top<%v> can not meet task req<%d>", node.Name, nodeTop, taskNPUNum)
+		err = fmt.Errorf("%s node<%s> topo<%v> can not meet task req<%d>", util.NPUResourceShortageError, node.Name, nodeTop, taskNPUNum)
 		klog.V(util.LogErrorLev).Infof("%s selectNPUFromNode err: %s", tp.GetPluginName(), err.Error())
 		return nil, err
 	}
@@ -190,7 +192,81 @@ func (tp *module910x8) selectNPUFromNode(task *api.TaskInfo, node plugin.NPUNode
 			return rightHccsArray[:taskNPUNum], nil
 		}
 	}
-	err = fmt.Errorf("node<%s> top<%v> can not meet task req<%d>", node.Name, len(nodeTop), taskNPUNum)
+	err = fmt.Errorf("%s node<%s> topo<%v> can not meet task req<%d>", util.NPUResourceShortageError, node.Name, len(nodeTop), taskNPUNum)
 	klog.V(util.LogErrorLev).Infof("%s selectNPUFromNode err: %s", tp.GetPluginName(), err.Error())
 	return nil, err
+}
+
+func (tp *module910x8) Preemptable(preemptor *api.TaskInfo, preemptees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	if tp == nil || preemptor == nil || vcNode == nil || len(preemptees) == 0 {
+		klog.V(util.LogInfoLev).Infof("Preemptable: invalid arguments, handler nil=%v preemptor nil=%v "+
+			"vcNode nil=%v preemptees=%d", tp == nil, preemptor == nil, vcNode == nil, len(preemptees))
+		return nil, false
+	}
+	maxCardNPUNum := tp.GetMaxCardNPUNum()
+	if maxCardNPUNum <= 0 {
+		klog.V(util.LogInfoLev).Infof("Preemptable: maxCardNPUNum is 0")
+		return nil, false
+	}
+	reqNPUNum, err := tp.GetTaskReqNPUNum(preemptor)
+	if err != nil || reqNPUNum <= 0 {
+		klog.V(util.LogInfoLev).Infof("Preemptable: invalid reqNPUNum %d, err %v", reqNPUNum, err)
+		return nil, false
+	}
+
+	klog.V(util.LogInfoLev).Infof("Preemptable(910A): task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
+		"preemptees<%d>", preemptor.Name, reqNPUNum, maxCardNPUNum, vcNode.Name, len(preemptees))
+
+	cardFreeCount := plugin.CalcCardFreeCount(vcNode, preemptees, maxCardNPUNum)
+	if len(cardFreeCount) == 0 {
+		klog.V(util.LogInfoLev).Infof("Preemptable(910A): no free cards on node<%s>", vcNode.Name)
+		return nil, false
+	}
+
+	if reqNPUNum <= maxCardNPUNum {
+		klog.V(util.LogInfoLev).Infof("Preemptable(910A): task<%s> req<%d> <= maxCardNPUNum<%d>, single HCCS",
+			preemptor.Name, reqNPUNum, maxCardNPUNum)
+		type cardInfo struct {
+			id        int
+			freeCount int
+		}
+		cards := make([]cardInfo, 0, len(cardFreeCount))
+		for id, fc := range cardFreeCount {
+			if fc >= reqNPUNum {
+				cards = append(cards, cardInfo{id, fc})
+			}
+		}
+		if len(cards) == 0 {
+			klog.V(util.LogInfoLev).Infof("Preemptable(910A): no single HCCS group with freeCount>=%d on node<%s>",
+				reqNPUNum, vcNode.Name)
+			return nil, false
+		}
+		sort.Slice(cards, func(i, j int) bool { return cards[i].id < cards[j].id })
+		feasibleCards := make(map[int]struct{})
+		feasibleCards[cards[0].id] = struct{}{}
+		klog.V(util.LogInfoLev).Infof("Preemptable(910A): task<%s> selected HCCS group<%d> with freeCount<%d>",
+			preemptor.Name, cards[0].id, cards[0].freeCount)
+		return plugin.FilterPreempteesByFeasibleCards(vcNode, preemptees, feasibleCards, maxCardNPUNum), true
+	}
+
+	if reqNPUNum == tp.MaxNodeNPUNum {
+		klog.V(util.LogInfoLev).Infof("Preemptable(910A): task<%s> req<%d> == MaxNodeNPUNum<%d>, need both HCCS",
+			preemptor.Name, reqNPUNum, tp.MaxNodeNPUNum)
+		leftFree := cardFreeCount[0]
+		rightFree := cardFreeCount[1]
+		if leftFree < maxCardNPUNum || rightFree < maxCardNPUNum {
+			klog.V(util.LogInfoLev).Infof("Preemptable(910A): not both HCCS groups fully free: left<%d/%d> right<%d/%d>",
+				leftFree, maxCardNPUNum, rightFree, maxCardNPUNum)
+			return nil, false
+		}
+		feasibleCards := map[int]struct{}{0: {}, 1: {}}
+		klog.V(util.LogInfoLev).Infof("Preemptable(910A): task<%s> both HCCS groups fully free on node<%s>",
+			preemptor.Name, vcNode.Name)
+		return plugin.FilterPreempteesByFeasibleCards(vcNode, preemptees, feasibleCards, maxCardNPUNum), true
+	}
+
+	klog.V(util.LogInfoLev).Infof("Preemptable(910A): task<%s> req<%d> is not a valid 910A task size, not feasible",
+		preemptor.Name, reqNPUNum)
+	return nil, false
 }

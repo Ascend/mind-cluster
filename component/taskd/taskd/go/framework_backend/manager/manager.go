@@ -367,7 +367,12 @@ func (m *BaseManager) subscribeProfiling(conn *grpc.ClientConn, retryTime time.D
 	})
 	if err != nil {
 		hwlog.RunLog.Errorf("register Cluster profiling fail, err: %v", err)
-		go m.subscribeProfiling(conn, retryTime+1)
+		select {
+		case <-m.svcCtx.Done():
+			return
+		default:
+			go m.subscribeProfiling(conn, retryTime+1)
+		}
 		return
 	}
 	m.profilingFromClusterD.Store(true)

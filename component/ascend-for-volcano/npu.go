@@ -26,11 +26,12 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog"
+
+	v1 "k8s.io/api/core/v1"
 	"volcano.sh/apis/pkg/apis/scheduling"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
@@ -97,10 +98,14 @@ func (tp *huaweiNPUPlugin) OnSessionOpen(ssn *framework.Session) {
 	})
 
 	ssn.AddJobOrderFn(tp.Name(), func(l interface{}, r interface{}) int {
-		return jobOrderFn(l, r)
+		return jobOrderFn(l, r, tp.Scheduler)
 	})
 
 	addBatchNodeOrderFn(ssn, tp)
+
+	addPreemptableFn(ssn, tp)
+
+	addReclaimableFn(ssn, tp)
 
 	ssn.AddJobReadyFn(tp.Name(), func(obj interface{}) bool {
 		return jobReady(obj, tp)
@@ -155,12 +160,67 @@ func (tp *huaweiNPUPlugin) OnSessionClose(ssn *framework.Session) {
 func addPredicateFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 	// check job npu resource, if illegal return failed
 	ssn.AddPredicateFn(tp.Name(), func(taskInfo *api.TaskInfo, nodeInfo *api.NodeInfo) error {
+		klog.V(util.LogInfoLev).Infof("predicateFn: task<%s> on node<%s>", taskInfo.Name, nodeInfo.Name)
 		predicateErr := tp.Scheduler.NodePredicate(taskInfo, nodeInfo)
 		if predicateErr != nil {
 			tp.Scheduler.NodePredicateErrors.Add(taskInfo.Job, nodeInfo.Name, predicateErr)
+			return convertToNPUFitError(tp, taskInfo, nodeInfo, predicateErr)
 		}
-		return predicateErr
+		klog.V(util.LogInfoLev).Infof("predicateFn: task<%s> on node<%s> passed", taskInfo.Name, nodeInfo.Name)
+		return nil
 	})
+}
+
+func convertToNPUFitError(tp *huaweiNPUPlugin, taskInfo *api.TaskInfo,
+	nodeInfo *api.NodeInfo, predicateErr error) error {
+	if isNPUSchedulableByPreemption(tp, taskInfo, nodeInfo, predicateErr) {
+		klog.V(util.LogInfoLev).Infof("predicate: task<%s> on node<%s> is unschedulable but preemptable, "+
+			"can schedule after preempting lower priority tasks, reason: %s",
+			taskInfo.Name, nodeInfo.Name, predicateErr.Error())
+		return predicateErr
+	}
+	klog.V(util.LogInfoLev).Infof("predicate: task<%s> on node<%s> is unschedulable and unresolvable, "+
+		"preemption cannot help, reason: %s",
+		taskInfo.Name, nodeInfo.Name, predicateErr.Error())
+	return predicateErr
+}
+
+func isNPUSchedulableByPreemption(tp *huaweiNPUPlugin, taskInfo *api.TaskInfo,
+	nodeInfo *api.NodeInfo, predicateErr error) bool {
+	if !isResourceShortageError(predicateErr) {
+		klog.V(util.LogInfoLev).Infof("isNPUSchedulableByPreemption: task<%s> node<%s> not resource shortage err: %s",
+			taskInfo.Name, nodeInfo.Name, predicateErr.Error())
+		return false
+	}
+	vcNode, ok := tp.Scheduler.Nodes[nodeInfo.Name]
+	if !ok {
+		klog.V(util.LogInfoLev).Infof("isNPUSchedulableByPreemption: node<%s> not found in cache", nodeInfo.Name)
+		return false
+	}
+	vcJob, ok := tp.Scheduler.Jobs[taskInfo.Job]
+	if !ok {
+		klog.V(util.LogInfoLev).Infof("isNPUSchedulableByPreemption: job<%s> not found in cache", taskInfo.Job)
+		return false
+	}
+	if vcJob.NPUJob == nil {
+		klog.V(util.LogInfoLev).Infof("isNPUSchedulableByPreemption: job<%s> is not NPU job", taskInfo.Job)
+		return false
+	}
+	vcTask, ok := vcJob.NPUJob.Tasks[taskInfo.UID]
+	if !ok {
+		klog.V(util.LogInfoLev).Infof("isNPUSchedulableByPreemption: task<%s> not found in NPU job", taskInfo.Name)
+		return false
+	}
+	_, total, _ := vcNode.GetChipCount(v1.ResourceName(vcTask.ReqNPUName))
+	result := vcTask.ReqNPUNum <= total
+	klog.V(util.LogInfoLev).Infof("isNPUSchedulableByPreemption: task<%s> req<%d> total<%d> on node<%s>, preemptable=%v",
+		taskInfo.Name, vcTask.ReqNPUNum, total, nodeInfo.Name, result)
+	return result
+}
+
+func isResourceShortageError(err error) bool {
+	msg := err.Error()
+	return strings.Contains(msg, util.NPUResourceShortageError)
 }
 
 func jobPipelined(obj interface{}, tp *huaweiNPUPlugin) int {
@@ -187,6 +247,7 @@ func jobPipelined(obj interface{}, tp *huaweiNPUPlugin) int {
 
 func addBatchNodeOrderFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 	ssn.AddBatchNodeOrderFn(tp.Name(), func(task *api.TaskInfo, nodes []*api.NodeInfo) (map[string]float64, error) {
+		klog.V(util.LogInfoLev).Infof("batchNodeOrderFn: task<%s> scoring %d nodes", task.Name, len(nodes))
 		_, ok := tp.Scheduler.PredicatedNodes[task.Job]
 		if !ok {
 			tp.Scheduler.PredicatedNodes[task.Job] = sets.String{}
@@ -197,8 +258,112 @@ func addBatchNodeOrderFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 		score, err := tp.Scheduler.BatchNodeOrderFn(task, nodes)
 		if err != nil {
 			tp.Scheduler.BatchOrderError[task.Job] = err
+			klog.V(util.LogInfoLev).Infof("batchNodeOrderFn: task<%s> scoring error: %v", task.Name, err)
 		}
+		klog.V(util.LogInfoLev).Infof("batchNodeOrderFn: task<%s> scored %d nodes", task.Name, len(score))
 		return score, nil
+	})
+}
+
+func addPreemptableFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
+	ssn.AddPreemptableFn(tp.Name(), func(preemptor *api.TaskInfo, preemptees []*api.TaskInfo) ([]*api.TaskInfo, int) {
+		klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> evaluating %d preemptees", preemptor.Name, len(preemptees))
+		vcJob, ok := tp.Scheduler.Jobs[preemptor.Job]
+		if !ok || vcJob.NPUJob == nil || vcJob.GetPolicyHandler() == nil {
+			klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> job not found or not NPU job, Abstain",
+				preemptor.Name)
+			return nil, util.Abstain
+		}
+		vcTask, ok := vcJob.NPUJob.Tasks[preemptor.UID]
+		if !ok || vcTask.ReqNPUNum <= 0 {
+			klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> not found or reqNPU<=0, Abstain",
+				preemptor.Name)
+			return nil, util.Abstain
+		}
+		maxCardNPUNum := vcJob.GetPolicyHandler().GetMaxCardNPUNum()
+		if maxCardNPUNum <= 0 {
+			klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> maxCardNPUNum=0, Abstain", preemptor.Name)
+			return nil, util.Abstain
+		}
+
+		if len(preemptees) == 0 {
+			klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> no preemptees, Abstain", preemptor.Name)
+			return nil, util.Abstain
+		}
+		nodeName := preemptees[0].NodeName
+		if nodeName == "" {
+			klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> preemptee has no node, Abstain",
+				preemptor.Name)
+			return nil, util.Abstain
+		}
+		vcNode, ok := tp.Scheduler.Nodes[nodeName]
+		if !ok {
+			klog.V(util.LogInfoLev).Infof("preemptableFn: node<%s> not found in cache, Abstain", nodeName)
+			return nil, util.Abstain
+		}
+
+		klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
+			"preemptees<%d>", preemptor.Name, vcTask.ReqNPUNum, maxCardNPUNum, nodeName, len(preemptees))
+		filtered, ok := vcJob.GetPolicyHandler().Preemptable(preemptor, preemptees, &vcNode)
+		if !ok || len(filtered) == 0 {
+			klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> on node<%s> no feasible victims, Abstain",
+				preemptor.Name, nodeName)
+			return nil, util.Abstain
+		}
+		klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> on node<%s>, filtered %d/%d preemptees, Permit",
+			preemptor.Name, nodeName, len(filtered), len(preemptees))
+		return filtered, util.Permit
+	})
+}
+
+func addReclaimableFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
+	ssn.AddReclaimableFn(tp.Name(), func(reclaimer *api.TaskInfo, reclaimees []*api.TaskInfo) ([]*api.TaskInfo, int) {
+		klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> evaluating %d reclaimees", reclaimer.Name, len(reclaimees))
+		vcJob, ok := tp.Scheduler.Jobs[reclaimer.Job]
+		if !ok || vcJob.NPUJob == nil || vcJob.GetPolicyHandler() == nil {
+			klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> job not found or not NPU job, Abstain",
+				reclaimer.Name)
+			return nil, util.Abstain
+		}
+		vcTask, ok := vcJob.NPUJob.Tasks[reclaimer.UID]
+		if !ok || vcTask.ReqNPUNum <= 0 {
+			klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> not found or reqNPU<=0, Abstain",
+				reclaimer.Name)
+			return nil, util.Abstain
+		}
+		maxCardNPUNum := vcJob.GetPolicyHandler().GetMaxCardNPUNum()
+		if maxCardNPUNum <= 0 {
+			klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> maxCardNPUNum=0, Abstain", reclaimer.Name)
+			return nil, util.Abstain
+		}
+
+		if len(reclaimees) == 0 {
+			klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> no reclaimees, Abstain", reclaimer.Name)
+			return nil, util.Abstain
+		}
+		nodeName := reclaimees[0].NodeName
+		if nodeName == "" {
+			klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> reclaimee has no node, Abstain",
+				reclaimer.Name)
+			return nil, util.Abstain
+		}
+		vcNode, ok := tp.Scheduler.Nodes[nodeName]
+		if !ok {
+			klog.V(util.LogInfoLev).Infof("reclaimableFn: node<%s> not found in cache, Abstain", nodeName)
+			return nil, util.Abstain
+		}
+
+		klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
+			"reclaimees<%d>", reclaimer.Name, vcTask.ReqNPUNum, maxCardNPUNum, nodeName, len(reclaimees))
+		filtered, ok := vcJob.GetPolicyHandler().Preemptable(reclaimer, reclaimees, &vcNode)
+		if !ok || len(filtered) == 0 {
+			klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> on node<%s> no feasible victims, Abstain",
+				reclaimer.Name, nodeName)
+			return nil, util.Abstain
+		}
+		klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> on node<%s>, filtered %d/%d reclaimees, Permit",
+			reclaimer.Name, nodeName, len(filtered), len(reclaimees))
+		return filtered, util.Permit
 	})
 }
 
@@ -222,6 +387,8 @@ func addEventHandler(ssn *framework.Session, tp *huaweiNPUPlugin) {
 				klog.V(util.LogErrorLev).Infof("AllocateFunc event nil.")
 				return
 			}
+			klog.V(util.LogInfoLev).Infof("AllocateFunc: task<%s> on node<%s>",
+				event.Task.Name, event.Task.NodeName)
 			tp.Scheduler.NPUAllocateFunc(event.Task)
 		},
 		DeallocateFunc: func(event *framework.Event) {
@@ -229,6 +396,8 @@ func addEventHandler(ssn *framework.Session, tp *huaweiNPUPlugin) {
 				klog.V(util.LogErrorLev).Infof("DeallocateFunc event nil.")
 				return
 			}
+			klog.V(util.LogInfoLev).Infof("DeallocateFunc: task<%s> on node<%s>",
+				event.Task.Name, event.Task.NodeName)
 			tp.Scheduler.NPUDeallocateFunc(event.Task)
 		},
 	})
@@ -314,7 +483,18 @@ func getNpuNum(ssn *framework.Session, tp *huaweiNPUPlugin, npuName string) int 
 	return tNpuNum
 }
 
-func jobOrderFn(interfaceA interface{}, interfaceB interface{}) int {
+// isFragileJob judges whether a job is fragile (ready task num <= minAvailable).
+// For NPU jobs, use the plugin's MinAvailable from annotation; otherwise fall back to framework's.
+func isFragileJob(jobInfo *api.JobInfo, sHandle *plugin.ScheduleHandler) bool {
+	if sHandle != nil {
+		if vcJob, ok := sHandle.Jobs[jobInfo.UID]; ok && vcJob.IsNPUJob() {
+			return jobInfo.ReadyTaskNum() <= vcJob.MinAvailable
+		}
+	}
+	return jobInfo.ReadyTaskNum() <= jobInfo.MinAvailable
+}
+
+func jobOrderFn(interfaceA interface{}, interfaceB interface{}, sHandle *plugin.ScheduleHandler) int {
 	jobInfoA, ok := interfaceA.(*api.JobInfo)
 	if !ok {
 		klog.V(util.LogDebugLev).Infof("jobOrderFn failed, object is not JobInfo")
@@ -324,6 +504,18 @@ func jobOrderFn(interfaceA interface{}, interfaceB interface{}) int {
 	if !ok {
 		klog.V(util.LogDebugLev).Infof("jobOrderFn failed, object is not JobInfo")
 		return util.JobOrderSamePriority
+	}
+	aFragile := isFragileJob(jobInfoA, sHandle)
+	bFragile := isFragileJob(jobInfoB, sHandle)
+	if aFragile && !bFragile {
+		klog.V(util.LogInfoLev).Infof("jobOrderFn: job<%s> is fragile, job<%s> is not, A high priority",
+			jobInfoA.Name, jobInfoB.Name)
+		return util.JobOrderHighPriority
+	}
+	if !aFragile && bFragile {
+		klog.V(util.LogInfoLev).Infof("jobOrderFn: job<%s> is not fragile, job<%s> is fragile, A low priority",
+			jobInfoA.Name, jobInfoB.Name)
+		return util.JobOrderLowPriority
 	}
 	var lNum, rNum = 0, 0
 	var err error = nil
@@ -349,9 +541,8 @@ func jobOrderFn(interfaceA interface{}, interfaceB interface{}) int {
 		return util.JobOrderLowPriority
 	} else if lNum < rNum {
 		return util.JobOrderHighPriority
-	} else {
-		return util.JobOrderSamePriority
 	}
+	return util.JobOrderSamePriority
 }
 
 func updatePgAnnotation(ssn *framework.Session) {

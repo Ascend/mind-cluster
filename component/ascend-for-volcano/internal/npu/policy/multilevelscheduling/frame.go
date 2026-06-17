@@ -23,7 +23,7 @@ import (
 	"sort"
 	"strconv"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog"
 
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -993,6 +993,15 @@ func (mh *MultilevelHandler) checkNodeForHotSwitch(task *api.TaskInfo, node plug
 	klog.V(util.LogInfoLev).Infof("%s checkNodeForHotSwitch: backup pod %s passed validation, "+
 		"logicL1Rank=%s, node=%s", mh.GetPluginName(), task.Name, ctx.logicL1Rank, node.Name)
 	return nil
+}
+
+// Preemptable override: multilevel scheduling policy does not support preemption
+func (mh *MultilevelHandler) Preemptable(preemptor *api.TaskInfo, preemptees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	klog.V(util.LogInfoLev).Infof("%s Preemptable: multilevel scheduling policy does not support preemption, "+
+		"preemptor<%s> preemptees<%d> node<%s>, Abstain",
+		mh.GetPluginName(), preemptor.Name, len(preemptees), vcNode.Name)
+	return nil, false
 }
 
 // getL1LabelFromCache returns the L1 label key and its value by looking up the fault node in the cluster cache.

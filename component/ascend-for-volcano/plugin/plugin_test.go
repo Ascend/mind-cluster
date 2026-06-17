@@ -124,6 +124,18 @@ func (tp *ascendTest) PreStartAction(ssn *framework.Session) error {
 	return nil
 }
 
+func (tp *ascendTest) GetMaxCardNPUNum() int {
+	return 0
+}
+
+func (tp *ascendTest) Preemptable(_ *api.TaskInfo, _ []*api.TaskInfo, _ *NPUNode) ([]*api.TaskInfo, bool) {
+	return nil, false
+}
+
+func (tp *ascendTest) Reclaimable(_ *api.TaskInfo, _ []*api.TaskInfo, _ *NPUNode) ([]*api.TaskInfo, bool) {
+	return nil, false
+}
+
 func fakeResetCmInfos() map[string]string {
 	resetInfos := TaskResetInfo{}
 

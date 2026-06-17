@@ -70,7 +70,7 @@ func (tp *module910x8) getNodeBestScore(taskNPUNum int, npuTop []int) (int, erro
 		return bestScore, fmt.Errorf("node top<%v> is invalid", npuTop)
 	}
 
-	var err = fmt.Errorf("node top<%v> is not meet task req npu<%d>", npuTop, taskNPUNum)
+	var err = fmt.Errorf("%s node top<%v> is not meet task req npu<%d>", util.NPUResourceShortageError, npuTop, taskNPUNum)
 	if taskNPUNum == nodeNPUNumber {
 		if len(npuTop) == nodeNPUNumber {
 			return 0, nil

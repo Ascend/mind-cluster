@@ -125,6 +125,13 @@ type SchedulerJob struct {
 	A5Fields
 }
 
+func (sj *SchedulerJob) GetPolicyHandler() SchedulerPluginNeed {
+	if sj == nil {
+		return nil
+	}
+	return sj.policyHandler
+}
+
 // OwnerInfo the owner info of job
 type OwnerInfo struct {
 	v1.OwnerReference

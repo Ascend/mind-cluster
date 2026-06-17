@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
@@ -40,6 +40,7 @@ func New(name string) base.AscendHandler {
 	m.SetAnnoName(util.NPU910CardName)
 	m.SetAnnoPreVal(util.NPU910CardNamePre)
 	m.SetMaxNodeNPUNum(nodeNPUNumber)
+	m.SetMaxCardNPUNum(nodeNPUNumber / util.NPUIndex2)
 	m.SetNpuNumInvalidMap(map[int]struct{}{util.NPUIndex9: {}, util.NPUIndex11: {}, util.NPUIndex13: {},
 		util.NPUIndex15: {}})
 	m.SetIsNetworkFaultAttention(true)

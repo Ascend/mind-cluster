@@ -18,6 +18,7 @@ package chip4nodex
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -33,6 +34,7 @@ func New(name string) base.AscendHandler {
 	klog.V(util.LogInfoLev).Infof("chip4nodex card type =%s", name)
 	num := getNPUNumByHandler(name)
 	m.SetMaxNodeNPUNum(num)
+	m.SetMaxCardNPUNum(cardsNumPerMesh)
 	m.SetPluginName(name)
 	m.SetAnnoName(util.NPUCardName)
 	m.SetAnnoPreVal(util.NPUCardNamePre)
@@ -151,7 +153,7 @@ func (tp *chip4nodex) selectNPUFromNode(task *api.TaskInfo, node plugin.NPUNode)
 		return nil, err
 	}
 	if len(nodeTop) < taskNPUNum {
-		err = fmt.Errorf("node<%s> top<%v> can not meet task req<%d>", node.Name, len(nodeTop), taskNPUNum)
+		err = fmt.Errorf("%s node<%s> top<%v> can not meet task req<%d>", util.NPUResourceShortageError, node.Name, len(nodeTop), taskNPUNum)
 		klog.V(util.LogErrorLev).Infof("ScoreBestNPUNodes err: %s", err)
 		return nil, err
 	}
@@ -159,6 +161,72 @@ func (tp *chip4nodex) selectNPUFromNode(task *api.TaskInfo, node plugin.NPUNode)
 		return tp.selectNPUIn4Pmesh(taskNPUNum, nodeTop), nil
 	}
 	return nodeTop[:taskNPUNum], nil
+}
+
+// Preemptable override: 4P mesh affinity requires complete mesh groups
+func (tp *chip4nodex) Preemptable(preemptor *api.TaskInfo, preemptees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	if tp == nil || preemptor == nil || vcNode == nil || len(preemptees) == 0 {
+		klog.V(util.LogInfoLev).Infof("Preemptable: invalid arguments, handler nil=%v preemptor nil=%v "+
+			"vcNode nil=%v preemptees=%d", tp == nil, preemptor == nil, vcNode == nil, len(preemptees))
+		return nil, false
+	}
+	maxCardNPUNum := tp.GetMaxCardNPUNum()
+	if maxCardNPUNum <= 0 {
+		klog.V(util.LogInfoLev).Infof("Preemptable: maxCardNPUNum is 0")
+		return nil, false
+	}
+	reqNPUNum, err := tp.GetTaskReqNPUNum(preemptor)
+	if err != nil || reqNPUNum <= 0 {
+		klog.V(util.LogInfoLev).Infof("Preemptable: invalid reqNPUNum %d, err %v", reqNPUNum, err)
+		return nil, false
+	}
+
+	klog.V(util.LogInfoLev).Infof("Preemptable(chip4nodex): task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
+		"preemptees<%d>", preemptor.Name, reqNPUNum, maxCardNPUNum, vcNode.Name, len(preemptees))
+
+	cardFreeCount := plugin.CalcCardFreeCount(vcNode, preemptees, maxCardNPUNum)
+	if len(cardFreeCount) == 0 {
+		klog.V(util.LogInfoLev).Infof("Preemptable(chip4nodex): no free cards on node<%s>", vcNode.Name)
+		return nil, false
+	}
+
+	// 4P mesh affinity: only select complete mesh groups (freeCount == maxCardNPUNum)
+	if is4PmeshAffinity(reqNPUNum) && reqNPUNum >= maxCardNPUNum {
+		klog.V(util.LogInfoLev).Infof("Preemptable(chip4nodex): task<%s> 4P mesh affinity, need complete meshes",
+			preemptor.Name)
+		type meshInfo struct {
+			id        int
+			freeCount int
+		}
+		var fullMeshes []meshInfo
+		for id, fc := range cardFreeCount {
+			if fc == maxCardNPUNum {
+				fullMeshes = append(fullMeshes, meshInfo{id, fc})
+			}
+		}
+		neededMeshes := (reqNPUNum + maxCardNPUNum - 1) / maxCardNPUNum
+		klog.V(util.LogInfoLev).Infof("Preemptable(chip4nodex): task<%s> fullMeshes<%d> neededMeshes<%d>",
+			preemptor.Name, len(fullMeshes), neededMeshes)
+		if len(fullMeshes) < neededMeshes {
+			klog.V(util.LogInfoLev).Infof("Preemptable(chip4nodex): not enough full meshes: %d < %d on node<%s>",
+				len(fullMeshes), neededMeshes, vcNode.Name)
+			return nil, false
+		}
+		sort.Slice(fullMeshes, func(i, j int) bool { return fullMeshes[i].id < fullMeshes[j].id })
+		feasibleCards := make(map[int]struct{})
+		for i := 0; i < neededMeshes; i++ {
+			feasibleCards[fullMeshes[i].id] = struct{}{}
+		}
+		klog.V(util.LogInfoLev).Infof("Preemptable(chip4nodex): task<%s> selected %d meshes on node<%s>, feasible",
+			preemptor.Name, neededMeshes, vcNode.Name)
+		return plugin.FilterPreempteesByFeasibleCards(vcNode, preemptees, feasibleCards, maxCardNPUNum), true
+	}
+
+	// Non-affinity path (5/6/7 etc): use default cross-card aggregation
+	klog.V(util.LogInfoLev).Infof("Preemptable(chip4nodex): task<%s> non-affinity path, fallback to default",
+		preemptor.Name)
+	return tp.NPUHandler.Preemptable(preemptor, preemptees, vcNode)
 }
 
 // ReleaseAnnotation Used to release allocated resources

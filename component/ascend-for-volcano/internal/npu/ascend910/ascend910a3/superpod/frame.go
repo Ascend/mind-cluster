@@ -26,7 +26,7 @@ import (
 	"strconv"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
 
@@ -1233,4 +1233,13 @@ func printNodeTree(totalNodes map[int32]superPod) string {
 		message += fmt.Sprintf("super-pod-id: %d, node count: %d detail: %v, ", id, len(sp), sp.NodeNames())
 	}
 	return message
+}
+
+// Preemptable override: SuperPod cannot be a preemptor
+func (tp *module910SuperPod) Preemptable(preemptor *api.TaskInfo, preemptees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	klog.V(util.LogInfoLev).Infof("%s Preemptable: SuperPod cannot be a preemptor, "+
+		"preemptor<%s> preemptees<%d> node<%s>, Abstain",
+		tp.GetPluginName(), preemptor.Name, len(preemptees), vcNode.Name)
+	return nil, false
 }
