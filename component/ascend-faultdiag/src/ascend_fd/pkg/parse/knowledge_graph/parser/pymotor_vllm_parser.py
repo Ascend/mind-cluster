@@ -23,7 +23,7 @@ from typing import Union
 
 from ascend_fd.model.context import KGParseCtx
 from ascend_fd.model.node_info import DeviceInfo
-from ascend_fd.model.parse_info import SingleFileParseInfo, FilesParseInfo
+from ascend_fd.model.parse_info import SingleFileParseInfo
 from ascend_fd.utils.regular_table import (
     PYMOTOR_VLLM_SOURCE,
     KG_MAX_TIME,
@@ -109,9 +109,8 @@ class PyMotorVLLMParser(FileParser):
         file_list = self.find_log(parse_ctx.parse_file_path)
         file_list = [f for f in file_list if self._is_accepted_file(os.path.basename(f))]
 
-        files_parse_info = FilesParseInfo([], [])
         if not file_list:
-            return files_parse_info, {}
+            return [], {}
 
         results = dict()
         pv_start_time, pv_end_time = "", ""
@@ -130,10 +129,8 @@ class PyMotorVLLMParser(FileParser):
 
         kg_logger.info("%s files parse job is complete.", self.SOURCE_FILE)
 
+        event_list = []
         for result in results.values():
-            if not files_parse_info.container_ip:
-                files_parse_info.container_ip = result.container_ip
-            filtered_events = []
             for event in result.event_list:
                 event_time = event.get("occur_time", "")
                 if not event_time:
@@ -142,12 +139,9 @@ class PyMotorVLLMParser(FileParser):
                     continue
                 if intersect_end_time and event_time > intersect_end_time:
                     continue
-                filtered_events.append(event)
-            files_parse_info.event_list.extend(filtered_events)
-            if result.device_info:
-                files_parse_info.device_info_list.append(result.device_info)
+                event_list.append(event)
 
-        return files_parse_info, {}
+        return event_list, {}
 
     def get_log_time(self, line):
         """
