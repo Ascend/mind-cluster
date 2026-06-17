@@ -43,6 +43,10 @@ class SwiCliOutputTxtParser(SwitchOutputParser):
 
     # 找名字
     def find_name(self, file_content: str):
+        """
+        获取名字，来源于设备终端输入命令前的前缀（一般代表节点名、服务器编号、设备标识）
+        eg：<RCK A-2>
+        """
         search = self._NAME_PATTERN.search(file_content)
         if search:
             self.parse_data.add_data([SwiCliOutputDataType.SWI_NAME.name], search.group(1))
