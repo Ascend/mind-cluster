@@ -305,6 +305,12 @@ int MemFsApi::AllocDataBlocks(int fd, uint64_t bytes, std::vector<uint64_t> &blo
         return -1;
     }
 
+    if (bytes > UINT64_MAX - blockSize + 1) {
+        MFS_LOG_DEBUG("requested bytes " << bytes << " exceeds safe maximum, blockSize " << blockSize);
+        errno = EINVAL;
+        return -1;
+    }
+
     auto blockCount = (bytes + blockSize - 1UL) / blockSize;
     if (!AllocateMultiBlocks(bmm, blockCount, blocks)) {
         errno = ENOMEM;
