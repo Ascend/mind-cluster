@@ -127,13 +127,13 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p2907182417816"><a name="p2907182417816"></a><a name="p2907182417816"></a>自定义指标组配置文件。</p>
 </td>
 </tr>
-<tr id="row10465947499"><td class="cellrowborder" rowspan="16" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p349233264112"><a name="p349233264112"></a><a name="p349233264112"></a><span id="ph522114212719"><a name="ph522114212719"></a><a name="ph522114212719"></a>Ascend Device Plugin</span></p>
+<tr id="row10465947499"><td class="cellrowborder" rowspan="17" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p349233264112"><a name="p349233264112"></a><a name="p349233264112"></a><span id="ph522114212719"><a name="ph522114212719"></a><a name="ph522114212719"></a>Ascend Device Plugin</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="24.310000000000002%" headers="mcps1.2.5.1.2 "><p id="p246510417491"><a name="p246510417491"></a><a name="p246510417491"></a>device-plugin</p>
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p34651145494"><a name="p34651145494"></a><a name="p34651145494"></a><span id="ph1024012311247"><a name="ph1024012311247"></a><a name="ph1024012311247"></a>Ascend Device Plugin</span>二进制文件。</p>
 </td>
-<td class="cellrowborder" rowspan="16" align="left" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p578044431010"><a name="p578044431010"></a><a name="p578044431010"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="17" align="left" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p578044431010"><a name="p578044431010"></a><a name="p578044431010"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 <p id="p17810448103"><a name="p17810448103"></a><a name="p17810448103"></a></p>
 <p id="p178144410101"><a name="p178144410101"></a><a name="p178144410101"></a></p>
 </td>
@@ -219,6 +219,11 @@
 <tr id="row79263271099"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p138727813478"><a name="p138727813478"></a><a name="p138727813478"></a>device-plugin-310P-1usoc-volcano-v<em id="i1987218834713"><a name="i1987218834713"></a><a name="i1987218834713"></a>{version}</em>.yaml</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1687216824716"><a name="p1687216824716"></a><a name="p1687216824716"></a><span id="ph18721785476"><a name="ph18721785476"></a><a name="ph18721785476"></a>Atlas 200I SoC A1 核心板</span>上使用<span id="ph787228144715"><a name="ph787228144715"></a><a name="ph787228144715"></a>Volcano</span>的配置文件。</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>npu-nic-mapping.json</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>A5场景下，NPU卡与1825网卡映射关系默认配置文件。</p>
 </td>
 </tr>
 <tr id="row15450141514209"><td class="cellrowborder" rowspan="8" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p10503112473412"><a name="p10503112473412"></a><a name="p10503112473412"></a><span id="ph5971324183414"><a name="ph5971324183414"></a><a name="ph5971324183414"></a>Volcano</span></p>
@@ -475,13 +480,18 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p19571193910118"><a name="p19571193910118"></a><a name="p19571193910118"></a>断点续训特性二进制文件。</p>
 </td>
 </tr>
-<tr id="row1646165211919"><td class="cellrowborder" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p1646275210917"><a name="p1646275210917"></a><a name="p1646275210917"></a><span id="ph65811069214"><a name="ph65811069214"></a><a name="ph65811069214"></a>Container Manager</span></p>
+<tr id="row1646165211919"><td class="cellrowborder" rowspan="2" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p id="p1646275210917"><a name="p1646275210917"></a><a name="p1646275210917"></a><span id="ph65811069214"><a name="ph65811069214"></a><a name="ph65811069214"></a>Container Manager</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="24.310000000000002%" headers="mcps1.2.5.1.2 "><p id="p10462352896"><a name="p10462352896"></a><a name="p10462352896"></a>container-manager</p>
 </td>
 <td class="cellrowborder" valign="top" width="35.25%" headers="mcps1.2.5.1.3 "><p id="p1846275218911"><a name="p1846275218911"></a><a name="p1846275218911"></a><span id="ph762521420387"><a name="ph762521420387"></a><a name="ph762521420387"></a>Container Manager</span>组件二进制文件。</p>
 </td>
-<td class="cellrowborder" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p12618122171614"><a name="p12618122171614"></a><a name="p12618122171614"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="2" valign="top" width="10.000000000000002%" headers="mcps1.2.5.1.4 "><p id="p12618122171614"><a name="p12618122171614"></a><a name="p12618122171614"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>deploy.sh</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>container-manager系统服务部署脚本。</p>
 </td>
 </tr>
 <tr><td class="cellrowborder" rowspan="2" valign="top" width="30.440000000000005%" headers="mcps1.2.5.1.1 "><p>MindIO</p>
