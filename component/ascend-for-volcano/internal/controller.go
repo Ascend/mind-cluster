@@ -176,6 +176,15 @@ func (c *Controller) Preemptable(preemptor *api.TaskInfo, preemptees []*api.Task
 	return nil, false
 }
 
+// Reclaimable delegate reclaim logic to policy handlers
+func (c *Controller) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	if c == nil || len(c.PolicyHandler) == 0 {
+		return nil, false
+	}
+	return c.PolicyHandler[0].Reclaimable(reclaimer, reclaimees, vcNode)
+}
+
 // ReleaseAnnotation release annotation
 func (c *Controller) ReleaseAnnotation(task *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
 	if c == nil || task == nil || len(node.Annotation) == 0 {

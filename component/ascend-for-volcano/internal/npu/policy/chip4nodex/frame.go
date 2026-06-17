@@ -229,6 +229,72 @@ func (tp *chip4nodex) Preemptable(preemptor *api.TaskInfo, preemptees []*api.Tas
 	return tp.NPUHandler.Preemptable(preemptor, preemptees, vcNode)
 }
 
+// Reclaimable override: same strategy as preempt for chip4nodex.
+func (tp *chip4nodex) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	if tp == nil || reclaimer == nil || vcNode == nil || len(reclaimees) == 0 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable: invalid arguments, handler nil=%v reclaimer nil=%v "+
+			"vcNode nil=%v reclaimees=%d", tp == nil, reclaimer == nil, vcNode == nil, len(reclaimees))
+		return nil, false
+	}
+	maxCardNPUNum := tp.GetMaxCardNPUNum()
+	if maxCardNPUNum <= 0 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable: maxCardNPUNum is 0")
+		return nil, false
+	}
+	reqNPUNum, err := tp.GetTaskReqNPUNum(reclaimer)
+	if err != nil || reqNPUNum <= 0 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable: invalid reqNPUNum %d, err %v", reqNPUNum, err)
+		return nil, false
+	}
+
+	klog.V(util.LogInfoLev).Infof("Reclaimable(chip4nodex): task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
+		"reclaimees<%d>", reclaimer.Name, reqNPUNum, maxCardNPUNum, vcNode.Name, len(reclaimees))
+
+	cardFreeCount := plugin.CalcCardFreeCount(vcNode, reclaimees, maxCardNPUNum)
+	if len(cardFreeCount) == 0 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable(chip4nodex): no free cards on node<%s>", vcNode.Name)
+		return nil, false
+	}
+
+	// 4P mesh affinity: only select complete mesh groups (freeCount == maxCardNPUNum)
+	if is4PmeshAffinity(reqNPUNum) && reqNPUNum >= maxCardNPUNum {
+		klog.V(util.LogInfoLev).Infof("Reclaimable(chip4nodex): task<%s> 4P mesh affinity, need complete meshes",
+			reclaimer.Name)
+		type meshInfo struct {
+			id        int
+			freeCount int
+		}
+		var fullMeshes []meshInfo
+		for id, fc := range cardFreeCount {
+			if fc == maxCardNPUNum {
+				fullMeshes = append(fullMeshes, meshInfo{id, fc})
+			}
+		}
+		neededMeshes := (reqNPUNum + maxCardNPUNum - 1) / maxCardNPUNum
+		klog.V(util.LogInfoLev).Infof("Reclaimable(chip4nodex): task<%s> fullMeshes<%d> neededMeshes<%d>",
+			reclaimer.Name, len(fullMeshes), neededMeshes)
+		if len(fullMeshes) < neededMeshes {
+			klog.V(util.LogInfoLev).Infof("Reclaimable(chip4nodex): not enough full meshes: %d < %d on node<%s>",
+				len(fullMeshes), neededMeshes, vcNode.Name)
+			return nil, false
+		}
+		sort.Slice(fullMeshes, func(i, j int) bool { return fullMeshes[i].id < fullMeshes[j].id })
+		feasibleCards := make(map[int]struct{})
+		for i := 0; i < neededMeshes; i++ {
+			feasibleCards[fullMeshes[i].id] = struct{}{}
+		}
+		klog.V(util.LogInfoLev).Infof("Reclaimable(chip4nodex): task<%s> selected %d meshes on node<%s>, feasible",
+			reclaimer.Name, neededMeshes, vcNode.Name)
+		return plugin.FilterPreempteesByFeasibleCards(vcNode, reclaimees, feasibleCards, maxCardNPUNum), true
+	}
+
+	// Non-affinity path: fallback to base Reclaimable
+	klog.V(util.LogInfoLev).Infof("Reclaimable(chip4nodex): task<%s> non-affinity path, fallback to default",
+		reclaimer.Name)
+	return tp.NPUHandler.Reclaimable(reclaimer, reclaimees, vcNode)
+}
+
 // ReleaseAnnotation Used to release allocated resources
 func (tp *chip4nodex) ReleaseAnnotation(_ *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
 	return &node

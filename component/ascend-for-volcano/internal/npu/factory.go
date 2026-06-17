@@ -137,7 +137,8 @@ func initCard910ByBaseHandler() {
 	}
 	card910Factory[module910bx8Name] = func() base.AscendHandler {
 		return base.New(util.NPU910CardName, base.WithAnnoPreVal(util.NPU910CardNamePre),
-			base.WithMaxNodeNum(util.NPUIndex8), base.WithNetworkFault(true))
+			base.WithMaxNodeNum(util.NPUIndex8), base.WithMaxCardNum(util.NPUIndex8),
+			base.WithNetworkFault(true))
 	}
 	card910Factory[util.Ascend800ia5x8SchedulerName] = func() base.AscendHandler {
 		return base.New(util.NPU910CardName, base.WithAnnoPreVal(util.NPU910CardNamePre),
@@ -156,11 +157,13 @@ func initCard910ByBaseHandler() {
 	}
 	card910Factory[chip4nodex.SchedulePolicy1Px8] = func() base.AscendHandler {
 		return base.New(chip4nodex.SchedulePolicy1Px8, base.WithAnnoPreVal(util.NPU910CardNamePre),
-			base.WithMaxNodeNum(util.NPUIndex8), base.WithAnnoName(util.NPUCardName))
+			base.WithMaxNodeNum(util.NPUIndex8), base.WithAnnoName(util.NPUCardName),
+			base.WithMaxCardNum(util.NPUIndex8))
 	}
 	card910Factory[chip4nodex.SchedulePolicy1Px16] = func() base.AscendHandler {
 		return base.New(chip4nodex.SchedulePolicy1Px16, base.WithAnnoPreVal(util.NPU910CardNamePre),
-			base.WithMaxNodeNum(util.NPUIndex16), base.WithAnnoName(util.NPUCardName))
+			base.WithMaxNodeNum(util.NPUIndex16), base.WithAnnoName(util.NPUCardName),
+			base.WithMaxCardNum(util.NPUIndex16))
 	}
 	card910Factory[chip1softsharedev.SchedulePolicySoftShareDev] = func() base.AscendHandler {
 		return base.New(chip1softsharedev.SchedulePolicySoftShareDev, base.WithAnnoPreVal(util.NPU910CardNamePre),

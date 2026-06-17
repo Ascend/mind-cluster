@@ -204,6 +204,14 @@ func (tp *chip1softsharedev) Preemptable(preemptor *api.TaskInfo, preemptees []*
 	return nil, false
 }
 
+func (tp *chip1softsharedev) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	klog.V(util.LogInfoLev).Infof("%s Reclaimable: soft share dev policy does not support reclaim, "+
+		"reclaimer<%s> reclaimees<%d> node<%s>, Abstain",
+		tp.GetPluginName(), reclaimer.Name, len(reclaimees), vcNode.Name)
+	return nil, false
+}
+
 // ReleaseAnnotation Release used resource.
 func (tp *chip1softsharedev) ReleaseAnnotation(_ *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
 	return &node

@@ -313,3 +313,85 @@ func (ab *Base910b) Preemptable(preemptor *api.TaskInfo, preemptees []*api.TaskI
 		preemptor.Name, vcNode.Name)
 	return plugin.FilterPreempteesByFeasibleCards(vcNode, preemptees, feasibleCards, maxCardNPUNum), true
 }
+
+// Reclaimable override: same strategy as preempt for 910B.
+func (ab *Base910b) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	if ab == nil || reclaimer == nil || vcNode == nil || len(reclaimees) == 0 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable: invalid arguments, handler nil=%v reclaimer nil=%v "+
+			"vcNode nil=%v reclaimees=%d", ab == nil, reclaimer == nil, vcNode == nil, len(reclaimees))
+		return nil, false
+	}
+	maxCardNPUNum := ab.GetMaxCardNPUNum()
+	if maxCardNPUNum <= 0 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable: maxCardNPUNum is 0")
+		return nil, false
+	}
+	reqNPUNum, err := ab.GetTaskReqNPUNum(reclaimer)
+	if err != nil || reqNPUNum <= 0 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable: invalid reqNPUNum %d, err %v", reqNPUNum, err)
+		return nil, false
+	}
+
+	klog.V(util.LogInfoLev).Infof("Reclaimable(910B): task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
+		"reclaimees<%d>", reclaimer.Name, reqNPUNum, maxCardNPUNum, vcNode.Name, len(reclaimees))
+
+	cardFreeCount := plugin.CalcCardFreeCount(vcNode, reclaimees, maxCardNPUNum)
+	if len(cardFreeCount) == 0 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable(910B): no free cards on node<%s>", vcNode.Name)
+		return nil, false
+	}
+
+	// reqNPUNum <= maxCardNPUNum: single HCCS group is enough
+	if reqNPUNum <= maxCardNPUNum {
+		klog.V(util.LogInfoLev).Infof("Reclaimable(910B): task<%s> req<%d> <= maxCardNPUNum<%d>, single HCCS",
+			reclaimer.Name, reqNPUNum, maxCardNPUNum)
+		type cardInfo struct {
+			id        int
+			freeCount int
+		}
+		cards := make([]cardInfo, 0, len(cardFreeCount))
+		for id, fc := range cardFreeCount {
+			if fc >= reqNPUNum {
+				cards = append(cards, cardInfo{id, fc})
+			}
+		}
+		if len(cards) == 0 {
+			klog.V(util.LogInfoLev).Infof("Reclaimable(910B): no single HCCS group with freeCount>=%d on node<%s>",
+				reqNPUNum, vcNode.Name)
+			return nil, false
+		}
+		feasibleCards := make(map[int]struct{})
+		feasibleCards[cards[0].id] = struct{}{}
+		klog.V(util.LogInfoLev).Infof("Reclaimable(910B): task<%s> selected HCCS group<%d> with freeCount<%d>",
+			reclaimer.Name, cards[0].id, cards[0].freeCount)
+		return plugin.FilterPreempteesByFeasibleCards(vcNode, reclaimees, feasibleCards, maxCardNPUNum), true
+	}
+
+	// reqNPUNum > maxCardNPUNum: need cross-HCCS
+	leftFree := cardFreeCount[0]
+	rightFree := cardFreeCount[1]
+	totalFree := leftFree + rightFree
+	klog.V(util.LogInfoLev).Infof("Reclaimable(910B): task<%s> needs cross-HCCS, leftFree<%d> rightFree<%d> "+
+		"totalFree<%d> req<%d>", reclaimer.Name, leftFree, rightFree, totalFree, reqNPUNum)
+	if totalFree < reqNPUNum {
+		klog.V(util.LogInfoLev).Infof("Reclaimable(910B): totalFree<%d> < req<%d>, not feasible",
+			totalFree, reqNPUNum)
+		return nil, false
+	}
+	// cross-HCCS constraint: min(leftFree, rightFree)*2 >= reqNPUNum
+	minFree := leftFree
+	if rightFree < minFree {
+		minFree = rightFree
+	}
+	if minFree*util.NPUIndex2 < reqNPUNum {
+		klog.V(util.LogInfoLev).Infof("Reclaimable(910B): cross-HCCS constraint not met: min(%d,%d)*2=%d < req %d",
+			leftFree, rightFree, minFree*util.NPUIndex2, reqNPUNum)
+		return nil, false
+	}
+	// Both HCCS groups are feasible
+	feasibleCards := map[int]struct{}{0: {}, 1: {}}
+	klog.V(util.LogInfoLev).Infof("Reclaimable(910B): task<%s> cross-HCCS feasible on node<%s>",
+		reclaimer.Name, vcNode.Name)
+	return plugin.FilterPreempteesByFeasibleCards(vcNode, reclaimees, feasibleCards, maxCardNPUNum), true
+}

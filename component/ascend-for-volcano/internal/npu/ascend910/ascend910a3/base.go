@@ -205,3 +205,87 @@ func (tp *Base910A3) Preemptable(preemptor *api.TaskInfo, preemptees []*api.Task
 		preemptor.Name, neededDies, vcNode.Name)
 	return plugin.FilterPreempteesByFeasibleCards(vcNode, preemptees, feasibleCards, maxCardNPUNum), true
 }
+
+// Reclaimable override: same strategy as preempt for 910A3.
+func (tp *Base910A3) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	if tp == nil || reclaimer == nil || vcNode == nil || len(reclaimees) == 0 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable: invalid arguments, handler nil=%v reclaimer nil=%v "+
+			"vcNode nil=%v reclaimees=%d", tp == nil, reclaimer == nil, vcNode == nil, len(reclaimees))
+		return nil, false
+	}
+	maxCardNPUNum := tp.GetMaxCardNPUNum()
+	if maxCardNPUNum <= 0 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable: maxCardNPUNum is 0")
+		return nil, false
+	}
+	reqNPUNum, err := tp.GetTaskReqNPUNum(reclaimer)
+	if err != nil || reqNPUNum <= 0 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable: invalid reqNPUNum %d, err %v", reqNPUNum, err)
+		return nil, false
+	}
+
+	klog.V(util.LogInfoLev).Infof("Reclaimable(910A3): task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
+		"reclaimees<%d>", reclaimer.Name, reqNPUNum, maxCardNPUNum, vcNode.Name, len(reclaimees))
+
+	cardFreeCount := plugin.CalcCardFreeCount(vcNode, reclaimees, maxCardNPUNum)
+	if len(cardFreeCount) == 0 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable(910A3): no free cards on node<%s>", vcNode.Name)
+		return nil, false
+	}
+
+	// Single chip: any Die with freeCount >= 1 is fine
+	if reqNPUNum == 1 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable(910A3): task<%s> single chip, any Die with freeCount>=1",
+			reclaimer.Name)
+		type cardInfo struct {
+			id        int
+			freeCount int
+		}
+		cards := make([]cardInfo, 0, len(cardFreeCount))
+		for id, fc := range cardFreeCount {
+			if fc >= 1 {
+				cards = append(cards, cardInfo{id, fc})
+			}
+		}
+		if len(cards) == 0 {
+			klog.V(util.LogInfoLev).Infof("Reclaimable(910A3): no Die with freeCount>=1 on node<%s>", vcNode.Name)
+			return nil, false
+		}
+		feasibleCards := make(map[int]struct{})
+		feasibleCards[cards[0].id] = struct{}{}
+		klog.V(util.LogInfoLev).Infof("Reclaimable(910A3): task<%s> selected Die<%d> with freeCount<%d>",
+			reclaimer.Name, cards[0].id, cards[0].freeCount)
+		return plugin.FilterPreempteesByFeasibleCards(vcNode, reclaimees, feasibleCards, maxCardNPUNum), true
+	}
+
+	// Multi-chip: only select complete Dies (freeCount == maxCardNPUNum)
+	klog.V(util.LogInfoLev).Infof("Reclaimable(910A3): task<%s> multi-chip, need complete Dies only",
+		reclaimer.Name)
+	type dieInfo struct {
+		id        int
+		freeCount int
+	}
+	var fullDies []dieInfo
+	for id, fc := range cardFreeCount {
+		if fc == maxCardNPUNum {
+			fullDies = append(fullDies, dieInfo{id, fc})
+		}
+	}
+	neededDies := (reqNPUNum + maxCardNPUNum - 1) / maxCardNPUNum
+	klog.V(util.LogInfoLev).Infof("Reclaimable(910A3): task<%s> fullDies<%d> neededDies<%d>",
+		reclaimer.Name, len(fullDies), neededDies)
+	if len(fullDies) < neededDies {
+		klog.V(util.LogInfoLev).Infof("Reclaimable(910A3): not enough full Dies: %d < %d on node<%s>",
+			len(fullDies), neededDies, vcNode.Name)
+		return nil, false
+	}
+	sort.Slice(fullDies, func(i, j int) bool { return fullDies[i].id < fullDies[j].id })
+	feasibleCards := make(map[int]struct{})
+	for i := 0; i < neededDies; i++ {
+		feasibleCards[fullDies[i].id] = struct{}{}
+	}
+	klog.V(util.LogInfoLev).Infof("Reclaimable(910A3): task<%s> selected %d Dies on node<%s>, feasible",
+		reclaimer.Name, neededDies, vcNode.Name)
+	return plugin.FilterPreempteesByFeasibleCards(vcNode, reclaimees, feasibleCards, maxCardNPUNum), true
+}

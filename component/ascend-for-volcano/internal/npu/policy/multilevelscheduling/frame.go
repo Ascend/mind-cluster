@@ -1004,6 +1004,14 @@ func (mh *MultilevelHandler) Preemptable(preemptor *api.TaskInfo, preemptees []*
 	return nil, false
 }
 
+func (mh *MultilevelHandler) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	klog.V(util.LogInfoLev).Infof("%s Reclaimable: multilevel scheduling policy does not support reclaim, "+
+		"reclaimer<%s> reclaimees<%d> node<%s>, Abstain",
+		mh.GetPluginName(), reclaimer.Name, len(reclaimees), vcNode.Name)
+	return nil, false
+}
+
 // getL1LabelFromCache returns the L1 label key and its value by looking up the fault node in the cluster cache.
 // The cachedNode.TopoTreeName is guaranteed non-empty (at least DefaultTopoTree) because it was set
 // during reBuildMultiLevelSchedulingCache from the node's actual label.
