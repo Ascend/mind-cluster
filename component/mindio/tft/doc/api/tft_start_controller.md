@@ -29,7 +29,7 @@ mindio_ttp.framework_ttp.tft_start_controller(bind_ip: str, port: int, enable_tl
 </td>
 <td class="cellrowborder" valign="top" width="29.959999999999997%" headers="mcps1.1.5.1.3 "><p id="zh-cn_topic_0000001976021314_p051718465599"><a name="zh-cn_topic_0000001976021314_p051718465599"></a><a name="zh-cn_topic_0000001976021314_p051718465599"></a>Controller对外提供服务的IP地址或域名。</p>
 </td>
-<td class="cellrowborder" valign="top" width="30.04%" headers="mcps1.1.5.1.4 "><p id="zh-cn_topic_0000001976021314_p351713468599"><a name="zh-cn_topic_0000001976021314_p351713468599"></a><a name="zh-cn_topic_0000001976021314_p351713468599"></a>符合IP地址规范的IPv4地址，位于集群节点IP地址中，禁止全零IP地址，支持域名。</p>
+<td class="cellrowborder" valign="top" width="30.04%" headers="mcps1.1.5.1.4 "><p id="zh-cn_topic_0000001976021314_p351713468599"><a name="zh-cn_topic_0000001976021314_p351713468599"></a><a name="zh-cn_topic_0000001976021314_p351713468599"></a>符合IP地址规范的IPv4/IPv6地址，位于集群节点IP地址中，禁止全零IP地址，支持域名。</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000001976021314_row84334589522"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.1.5.1.1 "><p id="zh-cn_topic_0000001976021314_p951717468592"><a name="zh-cn_topic_0000001976021314_p951717468592"></a><a name="zh-cn_topic_0000001976021314_p951717468592"></a>port</p>
@@ -66,4 +66,3 @@ mindio_ttp.framework_ttp.tft_start_controller(bind_ip: str, port: int, enable_tl
 ## 返回值<a name="zh-cn_topic_0000001976021314_section8785165291317"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-
