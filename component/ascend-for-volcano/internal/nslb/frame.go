@@ -120,3 +120,8 @@ func (th *TorHandler) Preemptable(_ *api.TaskInfo, _ []*api.TaskInfo, _ *plugin.
 	klog.V(util.LogInfoLev).Infof("%s Preemptable: NSLB policy does not support preemption", th.GetPluginName())
 	return nil, false
 }
+
+func (th *TorHandler) Reclaimable(_ *api.TaskInfo, _ []*api.TaskInfo, _ *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	klog.V(util.LogInfoLev).Infof("%s Reclaimable: NSLB policy does not support reclaim", th.GetPluginName())
+	return nil, false
+}

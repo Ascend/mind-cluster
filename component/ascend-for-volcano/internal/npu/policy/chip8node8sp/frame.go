@@ -1218,6 +1218,14 @@ func (tp *chip8node8sp) Preemptable(preemptor *api.TaskInfo, preemptees []*api.T
 	return nil, false
 }
 
+func (tp *chip8node8sp) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	klog.V(util.LogInfoLev).Infof("%s Reclaimable: SuperPod policy does not support reclaim, "+
+		"reclaimer<%s> reclaimees<%d> node<%s>, Abstain",
+		tp.GetPluginName(), reclaimer.Name, len(reclaimees), vcNode.Name)
+	return nil, false
+}
+
 func getSuperPodRanks(job plugin.SchedulerJob, rank int) (string, int) {
 	// 1. Collect and sort all SuperPod ranks
 	sortedRanks := make([]int, 0, len(job.SuperPods))

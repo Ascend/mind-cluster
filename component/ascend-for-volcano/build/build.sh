@@ -1,19 +1,19 @@
-#!/bin/bash
-# Perform build volcano-huawei-npu-scheduler plugin
-# Copyright @ Huawei Technologies CO., Ltd. 2020-2026. All rights reserved
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ============================================================================
+ #!/bin/bash
+ # Perform build volcano-huawei-npu-scheduler plugin
+ # Copyright @ Huawei Technologies CO., Ltd. 2020-2026. All rights reserved
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
+ # you may not use this file except in compliance with the License.
+ # You may obtain a copy of the License at
+ #
+ # http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ # ============================================================================
 
 set -e
 
@@ -103,16 +103,30 @@ function replace_klog_version() {
 }
 
 function replace_node_predicate() {
- 	     REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
- 	     # Change closure signature from error to ([]*api.Status, error)
- 	     sed -i "s/api.NodeInfo) error {/api.NodeInfo) (\[\]\*api.Status, error) {/g" "$REPLACE_FILE"
- 	     # Change convertToNPUFitError return type from error to ([]*api.Status, error)
- 	     sed -i "s/predicateErr error) error {/predicateErr error) (\[\]\*api.Status, error) {/g" "$REPLACE_FILE"
- 	     # Change return predicateErr to return []*api.Status{}, predicateErr in convertToNPUFitError
- 	     sed -i "s/return predicateErr/return \[\]\*api.Status{}, predicateErr/g" "$REPLACE_FILE"
- 	     # Change return nil to return nil, nil in the addPredicateFn closure
- 	     sed -i '/predicateFn.*passed/,/return nil/s/return nil/return nil, nil/' "$REPLACE_FILE"
- 	 }
+    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
+
+    # 1. Change closure signature: error -> ([]*api.Status, error)
+    sed -i "s/api.NodeInfo) error {/api.NodeInfo) (\[\]\*api.Status, error) {/g" "$REPLACE_FILE"
+
+    # 2. Change convertToNPUFitError signature: error -> ([]*api.Status, error)
+    sed -i "s/predicateErr error) error {/predicateErr error) (\[\]\*api.Status, error) {/g" "$REPLACE_FILE"
+
+    # 3. Replace return api.NewFitErrWithStatus(...) with return []*api.Status{}, predicateErr
+    #    Assumes the return statements are on a single line (as in your example).
+    #    Matches up to the semicolon.
+    sed -i '/return api\.NewFitErrWithStatus/,/})/c\       return []*api.Status{}, predicateErr' "$REPLACE_FILE"
+
+    # 4. Change return nil to return nil, nil inside the addPredicateFn closure
+    #    Uses range from the line containing "passed" to the line containing "return nil"
+    sed -i '/predicateFn.*passed/,/return nil/s/return nil/return nil, nil/' "$REPLACE_FILE"
+}
+
+function replace_node_predicate_v17() {
+    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
+
+    sed -i '/return api\.NewFitErrWithStatus/,/})/c\       return predicateErr' "$REPLACE_FILE"
+    sed -i '/predicateFn.*passed/,/return nil/s/return nil/return nil/' "$REPLACE_FILE"
+}
 
 function replace_job_pipelined() {
     REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
@@ -203,6 +217,8 @@ function main() {
   fi
   if [[ "$BASE_VER" == "v1.9.0" ]]; then
     replace_node_predicate
+  elif [[ "$BASE_VER" == "v1.7.0" ]]; then
+    replace_node_predicate_v17
   fi
   replace_node_score
   replace_k8s_version

@@ -26,12 +26,12 @@ import (
 	"strings"
 	"time"
 
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog"
 
-	v1 "k8s.io/api/core/v1"
 	"volcano.sh/apis/pkg/apis/scheduling"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
@@ -177,12 +177,18 @@ func convertToNPUFitError(tp *huaweiNPUPlugin, taskInfo *api.TaskInfo,
 		klog.V(util.LogInfoLev).Infof("predicate: task<%s> on node<%s> is unschedulable but preemptable, "+
 			"can schedule after preempting lower priority tasks, reason: %s",
 			taskInfo.Name, nodeInfo.Name, predicateErr.Error())
-		return predicateErr
+		return api.NewFitErrWithStatus(taskInfo, nodeInfo, &api.Status{
+			Code:   api.Unschedulable,
+			Reason: predicateErr.Error(),
+		})
 	}
 	klog.V(util.LogInfoLev).Infof("predicate: task<%s> on node<%s> is unschedulable and unresolvable, "+
 		"preemption cannot help, reason: %s",
 		taskInfo.Name, nodeInfo.Name, predicateErr.Error())
-	return predicateErr
+	return api.NewFitErrWithStatus(taskInfo, nodeInfo, &api.Status{
+		Code:   api.UnschedulableAndUnresolvable,
+		Reason: predicateErr.Error(),
+	})
 }
 
 func isNPUSchedulableByPreemption(tp *huaweiNPUPlugin, taskInfo *api.TaskInfo,
@@ -355,7 +361,7 @@ func addReclaimableFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 
 		klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
 			"reclaimees<%d>", reclaimer.Name, vcTask.ReqNPUNum, maxCardNPUNum, nodeName, len(reclaimees))
-		filtered, ok := vcJob.GetPolicyHandler().Preemptable(reclaimer, reclaimees, &vcNode)
+		filtered, ok := vcJob.GetPolicyHandler().Reclaimable(reclaimer, reclaimees, &vcNode)
 		if !ok || len(filtered) == 0 {
 			klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> on node<%s> no feasible victims, Abstain",
 				reclaimer.Name, nodeName)

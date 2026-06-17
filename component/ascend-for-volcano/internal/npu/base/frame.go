@@ -70,6 +70,13 @@ func WithNetworkFault(enable bool) Option {
 	}
 }
 
+// WithMaxCardNum build AscendHandler WithMaxCardNum
+func WithMaxCardNum(num int) Option {
+	return func(h AscendHandler) {
+		h.SetMaxCardNPUNum(num)
+	}
+}
+
 // New return npu plugin
 func New(name string, opts ...Option) AscendHandler {
 	m := &NPUHandler{}
@@ -368,6 +375,81 @@ func (tp *NPUHandler) Preemptable(preemptor *api.TaskInfo, preemptees []*api.Tas
 	}
 	klog.V(util.LogInfoLev).Infof("Preemptable: task<%s> on node<%s>, filtered %d/%d preemptees, feasible",
 		preemptor.Name, vcNode.Name, len(filtered), len(preemptees))
+	return filtered, true
+}
+
+// Reclaimable default reclaim logic: same cross-card aggregation strategy as preempt.
+func (tp *NPUHandler) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	if tp == nil || reclaimer == nil || vcNode == nil || len(reclaimees) == 0 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable: invalid arguments, handler nil=%v reclaimer nil=%v "+
+			"vcNode nil=%v reclaimees=%d", tp == nil, reclaimer == nil, vcNode == nil, len(reclaimees))
+		return nil, false
+	}
+	maxCardNPUNum := tp.GetMaxCardNPUNum()
+	if maxCardNPUNum <= 0 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable: invalid maxCardNPUNum<%d>", maxCardNPUNum)
+		return nil, false
+	}
+	reqNPUNum, err := tp.GetTaskReqNPUNum(reclaimer)
+	if err != nil || reqNPUNum <= 0 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable: invalid reqNPUNum %d, err %v", reqNPUNum, err)
+		return nil, false
+	}
+
+	klog.V(util.LogInfoLev).Infof("Reclaimable: task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
+		"reclaimees<%d>", reclaimer.Name, reqNPUNum, maxCardNPUNum, vcNode.Name, len(reclaimees))
+
+	cardFreeCount := plugin.CalcCardFreeCount(vcNode, reclaimees, maxCardNPUNum)
+	if len(cardFreeCount) == 0 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable: no free cards after reclaimees removed on node<%s>",
+			vcNode.Name)
+		return nil, false
+	}
+
+	totalFree := 0
+	for _, fc := range cardFreeCount {
+		totalFree += fc
+	}
+	if totalFree < reqNPUNum {
+		klog.V(util.LogInfoLev).Infof("Reclaimable: totalFree<%d> < reqNPUNum<%d> on node<%s>, not feasible",
+			totalFree, reqNPUNum, vcNode.Name)
+		return nil, false
+	}
+
+	type cardInfo struct {
+		id        int
+		freeCount int
+	}
+	cards := make([]cardInfo, 0, len(cardFreeCount))
+	for id, fc := range cardFreeCount {
+		if fc > 0 {
+			cards = append(cards, cardInfo{id, fc})
+		}
+	}
+	sort.Slice(cards, func(i, j int) bool { return cards[i].freeCount > cards[j].freeCount })
+
+	remaining := reqNPUNum
+	feasibleCards := make(map[int]struct{})
+	for _, c := range cards {
+		if remaining <= 0 {
+			break
+		}
+		feasibleCards[c.id] = struct{}{}
+		remaining -= c.freeCount
+	}
+
+	klog.V(util.LogInfoLev).Infof("Reclaimable: task<%s> on node<%s>, selected %d feasible cards, "+
+		"remaining need<%d>", reclaimer.Name, vcNode.Name, len(feasibleCards), remaining)
+
+	filtered := plugin.FilterPreempteesByFeasibleCards(vcNode, reclaimees, feasibleCards, maxCardNPUNum)
+	if len(filtered) == 0 {
+		klog.V(util.LogInfoLev).Infof("Reclaimable: task<%s> on node<%s>, no reclaimees on feasible cards",
+			reclaimer.Name, vcNode.Name)
+		return nil, false
+	}
+	klog.V(util.LogInfoLev).Infof("Reclaimable: task<%s> on node<%s>, filtered %d/%d reclaimees, feasible",
+		reclaimer.Name, vcNode.Name, len(filtered), len(reclaimees))
 	return filtered, true
 }
 

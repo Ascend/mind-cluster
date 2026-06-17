@@ -304,6 +304,14 @@ func (tp *chip8node8ra64sp) Preemptable(preemptor *api.TaskInfo, preemptees []*a
 	return nil, false
 }
 
+func (tp *chip8node8ra64sp) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	klog.V(util.LogInfoLev).Infof("%s Reclaimable: SuperPod policy does not support reclaim, "+
+		"reclaimer<%s> reclaimees<%d> node<%s>, Abstain",
+		tp.GetPluginName(), reclaimer.Name, len(reclaimees), vcNode.Name)
+	return nil, false
+}
+
 func (tp *chip8node8ra64sp) addNewStrategyToChain(from strategyKey, dist strategyKey) {
 	if tp.nextStrategyChain == nil {
 		tp.nextStrategyChain = make(map[strategyKey]strategyKey)
