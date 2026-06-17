@@ -42,6 +42,7 @@ import (
 	"Ascend-device-plugin/pkg/device"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/kubeclient"
+	"Ascend-device-plugin/pkg/next/devicefactory/customname"
 	"Ascend-device-plugin/pkg/plugin"
 	"Ascend-device-plugin/pkg/plugin/builtin"
 	"ascend-common/api"
@@ -1346,6 +1347,148 @@ func TestGetFaultCodeCMPollInterval(t *testing.T) {
 				convey.So(result, convey.ShouldEqual, tc.expected)
 			})
 		}
+	})
+}
+
+func mockGetNewNodeAnnotationDeps(superPodInfo common.SuperPodInfo, cardType string) []*gomonkey.Patches {
+	patches := make([]*gomonkey.Patches, 0, 4)
+	p1 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "getCardType",
+		func(_ *HwDevManager) (string, error) { return cardType, nil })
+	patches = append(patches, p1)
+	p2 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "getNpuBaseInfo",
+		func(_ *HwDevManager) map[string]*common.NpuBaseInfo { return map[string]*common.NpuBaseInfo{} })
+	patches = append(patches, p2)
+	p3 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "getSuperPodInfo",
+		func(_ *HwDevManager) common.SuperPodInfo { return superPodInfo })
+	patches = append(patches, p3)
+	p4 := gomonkey.ApplyFuncReturn(customname.ReplaceDevicePublicName, "")
+	patches = append(patches, p4)
+	return patches
+}
+
+func resetPatches(patches []*gomonkey.Patches) {
+	for _, p := range patches {
+		p.Reset()
+	}
+}
+
+func TestGetNewNodeAnnotation_NonA5NoRackID(t *testing.T) {
+	common.ParamOption.RealCardType = api.Ascend910B
+	patches := mockGetNewNodeAnnotationDeps(common.SuperPodInfo{
+		SuperPodId: testNegativeSuperPodId, ServerId: testNegativeServerIdx, RackId: int32(0),
+		SuperPodType: common.ProductTypeServer,
+	}, "")
+	defer resetPatches(patches)
+
+	convey.Convey("should not contain rackID when RealCardType is Ascend910B", t, func() {
+		hdm := &HwDevManager{}
+		annotationMap, err := hdm.getNewNodeAnnotation(&v1.Node{})
+		convey.So(err, convey.ShouldBeNil)
+		_, hasRackID := annotationMap[api.RackIDKey]
+		convey.So(hasRackID, convey.ShouldBeFalse)
+	})
+}
+
+func TestGetNewNodeAnnotation_A5PodHasRackID(t *testing.T) {
+	common.ParamOption.RealCardType = api.Ascend910A5
+	patches := mockGetNewNodeAnnotationDeps(common.SuperPodInfo{
+		SuperPodId: testSuperPodId, ServerId: testServerIndex, RackId: testRackId,
+		SuperPodType: common.ProductType2D,
+	}, "")
+	defer resetPatches(patches)
+
+	convey.Convey("should contain rackID when RealCardType is Ascend910A5 and superPodType is Pod", t, func() {
+		hdm := &HwDevManager{}
+		annotationMap, err := hdm.getNewNodeAnnotation(&v1.Node{})
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(annotationMap[api.RackIDKey], convey.ShouldEqual, strconv.Itoa(int(testRackId)))
+		convey.So(annotationMap[common.SuperPodIDKey], convey.ShouldEqual, strconv.Itoa(int(testSuperPodId)))
+		convey.So(annotationMap[serverIndexKey], convey.ShouldEqual, strconv.Itoa(int(testServerIndex)))
+	})
+}
+
+func TestGetNewNodeAnnotation_A5ServerNoRackID(t *testing.T) {
+	common.ParamOption.RealCardType = api.Ascend910A5
+	patches := mockGetNewNodeAnnotationDeps(common.SuperPodInfo{
+		SuperPodId: testSuperPodId, ServerId: testServerIndex, RackId: testRackId,
+		SuperPodType: common.ProductTypeServer,
+	}, "")
+	defer resetPatches(patches)
+
+	convey.Convey("should not contain rackID when RealCardType is Ascend910A5 and superPodType is Server", t, func() {
+		hdm := &HwDevManager{}
+		annotationMap, err := hdm.getNewNodeAnnotation(&v1.Node{})
+		convey.So(err, convey.ShouldBeNil)
+		_, hasRackID := annotationMap[api.RackIDKey]
+		convey.So(hasRackID, convey.ShouldBeFalse)
+	})
+}
+
+func TestGetNewNodeAnnotation_A5CardNoRackID(t *testing.T) {
+	common.ParamOption.RealCardType = api.Ascend910A5
+	patches := mockGetNewNodeAnnotationDeps(common.SuperPodInfo{
+		SuperPodId: testSuperPodId, ServerId: testServerIndex, RackId: testRackId,
+		SuperPodType: common.ProductType1PCard,
+	}, "")
+	defer resetPatches(patches)
+
+	convey.Convey("should not contain rackID when RealCardType is Ascend910A5 and superPodType is Card", t, func() {
+		hdm := &HwDevManager{}
+		annotationMap, err := hdm.getNewNodeAnnotation(&v1.Node{})
+		convey.So(err, convey.ShouldBeNil)
+		_, hasRackID := annotationMap[api.RackIDKey]
+		convey.So(hasRackID, convey.ShouldBeFalse)
+	})
+}
+
+func TestGetNewNodeAnnotation_CardTypeNotEmpty(t *testing.T) {
+	common.ParamOption.RealCardType = api.Ascend910A5
+	patches := mockGetNewNodeAnnotationDeps(common.SuperPodInfo{
+		SuperPodId: testSuperPodId, ServerId: testServerIndex, RackId: testRackId,
+		SuperPodType: common.ProductType2D,
+	}, "testCardType")
+	defer resetPatches(patches)
+
+	convey.Convey("should contain cardType when getCardType returns non-empty", t, func() {
+		hdm := &HwDevManager{}
+		annotationMap, err := hdm.getNewNodeAnnotation(&v1.Node{})
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(annotationMap[cardTypeKey], convey.ShouldEqual, "testCardType")
+	})
+}
+
+func TestGetNewNodeAnnotation_MarshalError(t *testing.T) {
+	common.ParamOption.RealCardType = api.Ascend910B
+	p1 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "getCardType",
+		func(_ *HwDevManager) (string, error) { return "", nil })
+	defer p1.Reset()
+	p2 := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(HwDevManager)), "getNpuBaseInfo",
+		func(_ *HwDevManager) map[string]*common.NpuBaseInfo { return map[string]*common.NpuBaseInfo{} })
+	defer p2.Reset()
+	p3 := gomonkey.ApplyFuncReturn(json.Marshal, []byte{}, fmt.Errorf("marshal error"))
+	defer p3.Reset()
+
+	convey.Convey("should return error when json.Marshal fails", t, func() {
+		hdm := &HwDevManager{}
+		_, err := hdm.getNewNodeAnnotation(&v1.Node{})
+		convey.So(err, convey.ShouldNotBeNil)
+	})
+}
+
+func TestGetNewNodeAnnotation_A3NoRackID(t *testing.T) {
+	common.ParamOption.RealCardType = api.Ascend910A3
+	patches := mockGetNewNodeAnnotationDeps(common.SuperPodInfo{
+		SuperPodId: testSuperPodId, ServerId: testServerIndex, RackId: int32(0),
+		SuperPodType: common.ProductTypeServer,
+	}, "")
+	defer resetPatches(patches)
+
+	convey.Convey("should not contain rackID when RealCardType is Ascend910A3", t, func() {
+		hdm := &HwDevManager{}
+		annotationMap, err := hdm.getNewNodeAnnotation(&v1.Node{})
+		convey.So(err, convey.ShouldBeNil)
+		_, hasRackID := annotationMap[api.RackIDKey]
+		convey.So(hasRackID, convey.ShouldBeFalse)
 	})
 }
 
