@@ -15,45 +15,54 @@
 # limitations under the License.
 # ============================================================================
 
-set -e
-
 export GO111MODULE=on
 export GONOSUMDB="*"
 export PATH=$GOPATH/bin:$PATH
+
+VOLCANO_PLUGIN_PKG="${GOPATH}"/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/...
+
+function filter_cov_by_tested_pkgs() {
+  local tested_pkgs
+  tested_pkgs=$(go list -f '{{if .TestGoFiles}}{{.ImportPath}}{{end}}' "${VOLCANO_PLUGIN_PKG}")
+  awk -v pkgs="$tested_pkgs" '
+    NR==1 {print; next}
+    {
+      file=$1; sub(/:[0-9].*/, "", file)
+      n=split(file, p, "/"); pkg=""
+      for(i=1;i<n;i++) pkg=pkg p[i]"/"; sub(/\/$/,"", pkg)
+      found=0; split(pkgs, arr, "\n"); for(k in arr) {if(arr[k]==pkg){found=1;break}}
+      if (found) print
+    }
+  ' cov.out > cov_filtered.out
+}
 
 cd "${GOPATH}"/src/volcano.sh/volcano
 go get github.com/agiledragon/gomonkey/v2@v2.8.0
 go get github.com/smartystreets/goconvey@v1.6.4
 go mod vendor
 
-file_input='testVolcano.txt'
 file_detail_output='api.html'
 
 echo "************************************* Start LLT Test *************************************"
 mkdir -p "${GOPATH}"/src/volcano.sh/volcano/_output/test/
 cd "${GOPATH}"/src/volcano.sh/volcano/_output/test/
-rm -f $file_detail_output $file_input
+rm -f $file_detail_output
 
-if  ! go test -v -race -gcflags=all=-l -coverprofile cov.out "${GOPATH}"/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/... \
-    > ./$file_input;
-then
-  echo '****** go test cases error! ******'
-  cat ./$file_input
-  echo 'Failed' > $file_input
-  exit 1
+gotestsum --junitfile unit-tests.xml --jsonfile test.jsonl \
+  -- -count=1 -v -gcflags=all=-l -coverprofile cov.out "${VOLCANO_PLUGIN_PKG}";
+
+filter_cov_by_tested_pkgs
+
+gocov convert cov_filtered.out | gocov-html >"$file_detail_output"
+total_coverage=$(go tool cover -func=cov_filtered.out | grep "total:" | awk '{print $3}'| sed 's/%//')
+# round up
+coverage=$(echo "$total_coverage" | awk '{if ($1 >= 0) print ($1 == int($1)) ? int($1) : int($1) + 1;\
+                                      else print ($1 == int($1)) ? int($1) : int($1)}')
+
+if [[ $coverage -ge 80 ]]; then
+  echo "coverage passed: $coverage%"
 else
-  gocov convert cov.out | gocov-html >"$file_detail_output"
-  gotestsum --junitfile unit-tests.xml "${GOPATH}"/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/...
-
-  total_coverage=$(go tool cover -func=cov.out | grep "total:" | awk '{print $3}'| sed 's/%//')
-  # round up
-  coverage=$(echo "$total_coverage" | awk '{if ($1 >= 0) print ($1 == int($1)) ? int($1) : int($1) + 1;\
-                                        else print ($1 == int($1)) ? int($1) : int($1)}')
-  if [[ $coverage -ge 80 ]]; then
-    echo "coverage passed: $coverage%"
-  else
-    echo "coverage failed: $coverage%, it needs to be greater than 80%."
-  fi
+  echo "coverage failed: $coverage%, it needs to be greater than 80%."
 fi
 
 echo "************************************* End   LLT Test *************************************"

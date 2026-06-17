@@ -1,6 +1,6 @@
 module container-manager
 
-go 1.21
+go 1.26
 
 require (
 	ascend-common v0.0.0

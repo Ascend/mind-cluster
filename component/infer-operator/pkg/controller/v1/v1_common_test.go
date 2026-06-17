@@ -55,11 +55,15 @@ type mockStatusWriter struct {
 	updateErr error
 }
 
-func (m *mockStatusWriter) Update(context.Context, client.Object, ...client.UpdateOption) error {
+func (m *mockStatusWriter) Create(context.Context, client.Object, client.Object, ...client.SubResourceCreateOption) error {
+	return nil
+}
+
+func (m *mockStatusWriter) Update(context.Context, client.Object, ...client.SubResourceUpdateOption) error {
 	return m.updateErr
 }
 
-func (m *mockStatusWriter) Patch(context.Context, client.Object, client.Patch, ...client.PatchOption) error {
+func (m *mockStatusWriter) Patch(context.Context, client.Object, client.Patch, ...client.SubResourcePatchOption) error {
 	return nil
 }
 

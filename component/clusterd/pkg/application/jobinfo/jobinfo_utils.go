@@ -17,6 +17,7 @@
 package jobinfo
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -84,6 +85,6 @@ func BuildJobSignalFromJobInfo(jobInfo constant.JobInfo, hccl, operator string) 
 
 func logAndReturnError(format string, args ...interface{}) error {
 	errMsg := fmt.Sprintf(format, args...)
-	hwlog.RunLog.Errorf(errMsg)
-	return fmt.Errorf(errMsg)
+	hwlog.RunLog.Error(errMsg)
+	return errors.New(errMsg)
 }

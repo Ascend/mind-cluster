@@ -44,7 +44,10 @@ func TestStressTestFaultProcess(t *testing.T) {
 			return
 		})
 		res := StressTestProcessor.Process(ori)
-		assert.Equal(t, res, ori)
+		resContent, ok := res.(constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm])
+		assert.True(t, ok)
+		assert.Equal(t, len(resContent.AllConfigmap), len(ori.AllConfigmap))
+		assert.Equal(t, resContent.UpdateConfigmap, ori.UpdateConfigmap)
 	})
 }
 

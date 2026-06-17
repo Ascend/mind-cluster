@@ -48,7 +48,6 @@ function build() {
               -X main.BuildVersion=${build_version}_linux-${os_type} \
               -buildid none \
               -s \
-              -linkmode=external \
               -extldflags=-Wl,-z,relro,-z,now,-z,noexecstack" \
               -o "${output_name}"  \
               -trimpath

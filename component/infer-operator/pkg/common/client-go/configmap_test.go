@@ -186,8 +186,9 @@ func TestAddInferOperatorCfgEventHandler(t *testing.T) {
 			mockInformerImpl := &mockInformer{}
 			var mockInformer cache.Informer = mockInformerImpl
 
-			patches.ApplyMethodFunc(mockInformerImpl, "AddEventHandler", func(h toolscache.ResourceEventHandler) {
+			patches.ApplyMethodFunc(mockInformerImpl, "AddEventHandler", func(h toolscache.ResourceEventHandler) (toolscache.ResourceEventHandlerRegistration, error) {
 				called = true
+				return nil, nil
 			})
 
 			addInferOperatorCfgEventHandler(&mockInformer)
@@ -208,8 +209,9 @@ func TestAddInferOperatorCfgEventHandler(t *testing.T) {
 			var mockInformer cache.Informer = mockInformerImpl
 			var capturedHandler toolscache.ResourceEventHandler
 
-			patches.ApplyMethodFunc(mockInformerImpl, "AddEventHandler", func(h toolscache.ResourceEventHandler) {
+			patches.ApplyMethodFunc(mockInformerImpl, "AddEventHandler", func(h toolscache.ResourceEventHandler) (toolscache.ResourceEventHandlerRegistration, error) {
 				capturedHandler = h
+				return nil, nil
 			})
 
 			addInferOperatorCfgEventHandler(&mockInformer)
@@ -350,7 +352,7 @@ func (m *mockCache) IndexField(ctx context.Context, obj client.Object, field str
 	return nil
 }
 
-func (m *mockCache) Get(ctx context.Context, key client.ObjectKey, obj client.Object) error {
+func (m *mockCache) Get(ctx context.Context, key client.ObjectKey, obj client.Object, opts ...client.GetOption) error {
 	return nil
 }
 
@@ -363,12 +365,14 @@ type mockInformer struct {
 	handlers []toolscache.ResourceEventHandler
 }
 
-func (m *mockInformer) AddEventHandler(handler toolscache.ResourceEventHandler) {
+func (m *mockInformer) AddEventHandler(handler toolscache.ResourceEventHandler) (toolscache.ResourceEventHandlerRegistration, error) {
 	m.handlers = append(m.handlers, handler)
+	return nil, nil
 }
 
-func (m *mockInformer) AddEventHandlerWithResyncPeriod(handler toolscache.ResourceEventHandler, resyncPeriod time.Duration) {
+func (m *mockInformer) AddEventHandlerWithResyncPeriod(handler toolscache.ResourceEventHandler, resyncPeriod time.Duration) (toolscache.ResourceEventHandlerRegistration, error) {
 	m.handlers = append(m.handlers, handler)
+	return nil, nil
 }
 
 func (m *mockInformer) HasSynced() bool {
@@ -380,6 +384,10 @@ func (m *mockInformer) LastSyncResourceVersion() string {
 }
 
 func (m *mockInformer) AddIndexers(indexers toolscache.Indexers) error {
+	return nil
+}
+
+func (m *mockInformer) RemoveEventHandler(handle toolscache.ResourceEventHandlerRegistration) error {
 	return nil
 }
 

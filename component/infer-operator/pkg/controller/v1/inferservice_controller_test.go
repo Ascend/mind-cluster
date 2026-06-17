@@ -358,7 +358,7 @@ func TestUpdateExistInstanceSets(t *testing.T) {
 
 		convey.Convey("get error", func() {
 			patch := gomonkey.ApplyMethodFunc(fakeClient, "Get",
-				func(_ context.Context, _ types.NamespacedName, _ client.Object) error {
+				func(_ context.Context, _ types.NamespacedName, _ client.Object, _ ...client.GetOption) error {
 					return errors.New("get error")
 				})
 			defer patch.Reset()
