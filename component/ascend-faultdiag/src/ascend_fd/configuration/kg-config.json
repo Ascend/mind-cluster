@@ -25382,6 +25382,90 @@
                 "in": ["RuntimeError", "Worker failed with error", "No such file or directory"]
             }
         },
+        "AISW_VLLM_ASCEND_SAMPLER_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM-ASCEND",
+                "module": "Sampler",
+                "cause_zh": "Triton-Ascend算子不可用，回退PyTorch模式，导致Sampler性能降低",
+                "description_zh": "a、vllm-ascend的采样惩罚计算和拒绝采样模块在NPU上依赖Triton-Ascend编译框架来提供高性能kernel，而当前环境中没有安装Triton-Ascend。\nb、当前 CANN 版本不可用，导致Triton-Ascend不可用。",
+                "suggestion_zh": [
+                    "1. 安装Triton-Ascend：参考requirements.txt安装正确版本的triton；",
+                    "2. 确认当前 CANN 版本符合要求：",
+                    " https://docs.vllm.ai/projects/ascend/zh-cn/latest/installation.html#requirements",
+                    "3. 若Triton确实不可用，此为预期降级行为（功能正常但性能下降），可接受；"
+                ],
+                "cause_en": "Triton-Ascend operators unavailable, falling back to PyTorch mode, causing Sampler performance degradation",
+                "description_en": "a. The sampling penalty calculation and rejection sampling modules of vllm-ascend rely on the Triton-Ascend compilation framework to provide high-performance kernels on NPU when Triton-Ascend is not installed in the environment.\nb. The current CANN version is incompatible, making Triton-Ascend unavailable.",
+                "suggestion_en": [
+                    "1. Install Triton-Ascend: Refer to requirements.txt to install the correct version of triton.",
+                    "2. Confirm that the current CANN version meets the requirements:",
+                    " https://docs.vllm.ai/projects/ascend/en/latest/installation.html#requirements",
+                    "3. If Triton is indeed unavailable, this is expected degradation behavior (functionality works but performance drops), which is acceptable."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": [
+                    ["sample", "sampler", "Triton not available", "falling back to vLLM default penalty implementation", "Penalty performance may be degraded on NPU"],
+                    ["sample", "rejection_sampler", "Triton not available", "falling back to vLLM default penalty implementation in rejection sampler", "Rejection sampling performance may be degraded on NPU"]
+                ]
+            }
+        },
+        "AISW_VLLM_ASCEND_EPLB_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM-ASCEND",
+                "module": "EPLB",
+                "cause_zh": "单卡运行与dynamic_eplb配置冲突，导致Worker初始化失败",
+                "description_zh": "专家并行负载均衡（EPLB）的设计约束为ep_size > 1（需跨NPU迁移专家权重）。当检测到--additional-config '{\"eplb_config\": {\"dynamic_eplb\": true}}' 配置但当前ep_size=1时，系统判定为参数语义冲突并拒绝执行。",
+                "suggestion_zh": [
+                    "1. 如果使用单卡，ep_size=1时不支持EPLB，关闭dynamic_eplb即可；",
+                    "2. 如果使用多卡部署，需EPLB功能，使用EP > 1的多卡部署；",
+                    "3. 具体可以参考特性文档：",
+                    " https://docs.vllm.ai/projects/ascend/zh-cn/latest/user_guide/feature_guide/eplb_swift_balancer.html"
+                ],
+                "cause_en": "Single-card execution conflicts with dynamic_eplb configuration, causing Worker initialization failure",
+                "description_en": "Expert Parallel Load Balancing (EPLB) has a design constraint of ep_size > 1 (requires expert weight migration across NPUs). When --additional-config '{\"eplb_config\": {\"dynamic_eplb\": true}}' is detected with current ep_size=1, the system determines this as a parameter semantic conflict and rejects execution.",
+                "suggestion_en": [
+                    "1. If using a single card, EPLB is not supported when ep_size=1; disable dynamic_eplb.",
+                    "2. If using multi-card deployment and need EPLB functionality, use EP > 1 multi-card deployment.",
+                    "3. Refer to the feature documentation:",
+                    " https://docs.vllm.ai/projects/ascend/en/latest/user_guide/feature_guide/eplb_swift_balancer.html"
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["AssertionError", "EPLB must used in expert parallelism"]
+            }
+        },
+        "AISW_VLLM_ASCEND_SPECDECODE_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM-ASCEND",
+                "module": "SpecDecode",
+                "cause_zh": "配置不支持的推测解码方法，导致Worker初始化失败",
+                "description_zh": "用户在启动命令--speculative-config中指定了一个vllm-ascend不支持的推测解码方法名（method）。例如：当用户拼写错误（如把eagle3写成eagle_3）或使用了社区版本才支持的方法名时，系统找不到匹配的推测解码器，直接在启动阶段报错退出，服务无法运行。",
+                "suggestion_zh": [
+                    "1. 检查--speculative-config中method字段的拼写是否正确；",
+                    "2. 确认使用的方法在vllm-ascend中受支持；",
+                    "3. 具体参考vllm-ascend文档确认正确的method名称，文档地址：",
+                    " https://docs.vllm.ai/projects/ascend/zh-cn/latest/user_guide/feature_guide/speculative_decoding.html"
+                ],
+                "cause_en": "Unsupported speculative decoding method configured, causing Worker initialization failure",
+                "description_en": "The user specified a speculative decoding method name (method) in --speculative-config that is not supported by vllm-ascend. For example, when there is a typo (e.g., writing eagle_3 instead of eagle3) or using a method name only supported in the community version, the system cannot find a matching speculative decoder and exits with an error during startup, preventing service operation.",
+                "suggestion_en": [
+                    "1. Check if the method field spelling in --speculative-config is correct.",
+                    "2. Confirm that the method used is supported in vllm-ascend.",
+                    "3. Refer to vllm-ascend documentation to confirm the correct method name. Documentation URL:",
+                    " https://docs.vllm.ai/projects/ascend/en/latest/user_guide/feature_guide/speculative_decoding.html"
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["ValueError", "Unknown speculative decoding method"]
+            }
+        },
         "EPLB-FM004": {
             "attribute": {
                 "class": "Software",
