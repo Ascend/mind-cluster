@@ -1,6 +1,6 @@
 display license esn
 
-dis cu | in sysname
+display current-configuration | n
 
 dis int b | no-more
 
