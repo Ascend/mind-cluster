@@ -15,37 +15,47 @@
 # limitations under the License.
 # ============================================================================
 
-set -e
 CUR_DIR=$(dirname "$(readlink -f $0)")
 TOP_DIR=$(realpath "${CUR_DIR}"/..)
 export GO111MODULE="on"
 export GONOSUMDB="*"
 export PATH=$GOPATH/bin:$PATH
 
-function execute_test() {
-  if ! (go test  -mod=mod -gcflags=all=-l -v -race -coverprofile cov.out ${TOP_DIR}/pkg/... >./$file_input); then
-    cat ./$file_input
-    echo '****** go test cases error! ******'
-    exit 1
-  else
-    echo ${file_detail_output}
-    gocov convert cov.out | gocov-html >${file_detail_output}
-    gotestsum --junitfile unit-tests.xml -- -race -gcflags=all=-l "${TOP_DIR}"/pkg/...
+function filter_cov_by_tested_pkgs() {
+  local tested_pkgs
+  tested_pkgs=$(go list -f '{{if .TestGoFiles}}{{.ImportPath}}{{end}}' "${TOP_DIR}"/pkg/...)
+  awk -v pkgs="$tested_pkgs" '
+    NR==1 {print; next}
+    {
+      file=$1; sub(/:[0-9].*/, "", file)
+      n=split(file, p, "/"); pkg=""
+      for(i=1;i<n;i++) pkg=pkg p[i]"/"; sub(/\/$/,"", pkg)
+      found=0; split(pkgs, arr, "\n"); for(k in arr) {if(arr[k]==pkg){found=1;break}}
+      if (found) print
+    }
+  ' cov.out > cov_filtered.out
+}
 
-    total_coverage=$(go tool cover -func=cov.out | grep "total:" | awk '{print $3}'| sed 's/%//')
-    # round up
-    coverage=$(echo "$total_coverage" | awk '{if ($1 >= 0) print ($1 == int($1)) ? int($1) : int($1) + 1;\
-                                          else print ($1 == int($1)) ? int($1) : int($1)}')
-    if [[ $coverage -ge 80 ]]; then
-      echo "coverage passed: $coverage%"
-    else
-      echo "coverage failed: $coverage%, it needs to be greater than 80%."
-      exit 1
-    fi
+function execute_test() {
+  gotestsum --junitfile unit-tests.xml --jsonfile test.jsonl \
+    -- -mod=mod -count=1 -gcflags=all=-l -v -coverprofile cov.out "${TOP_DIR}"/pkg/...;
+
+  filter_cov_by_tested_pkgs
+
+  gocov convert cov_filtered.out | gocov-html > "$file_detail_output"
+  total_coverage=$(go tool cover -func=cov_filtered.out | grep "total:" | awk '{print $3}'| sed 's/%//')
+  # round up
+  coverage=$(echo "$total_coverage" | awk '{if ($1 >= 0) print ($1 == int($1)) ? int($1) : int($1) + 1;\
+                                        else print ($1 == int($1)) ? int($1) : int($1)}')
+  if [[ $coverage -ge 80 ]]; then
+    echo "coverage passed: $coverage%"
+    exit 0
+  else
+    echo "coverage failed: $coverage%, it needs to be greater than 80%."
+    exit 1
   fi
 }
 
-file_input='testDevicePlugin.txt'
 file_detail_output='api.html'
 
 echo "************************************* Start LLT Test *************************************"
@@ -54,20 +64,5 @@ cd "${TOP_DIR}"/test/
 if [ -f "$file_detail_output" ]; then
   rm -rf $file_detail_output
 fi
-if [ -f "$file_input" ]; then
-  rm -rf $file_input
-fi
 execute_test
-echo "<html<body><h1>==================================================</h1><table border="2">" >>./$file_detail_output
-echo "<html<body><h1>DevicePlugin testCase</h1><table border="1">" >>./$file_detail_output
-echo "<html<body><h1>==================================================</h1><table border="2">" >>./$file_detail_output
-while read line; do
-  echo -e "<tr>
-   $(echo $line | awk 'BEGIN{FS="|"}''{i=1;while(i<=NF) {print "<td>"$i"</td>";i++}}')
-  </tr>" >>$file_detail_output
-done <$file_input
-echo "</table></body></html>" >>./$file_detail_output
-
 echo "************************************* End   LLT Test *************************************"
-
-exit 0

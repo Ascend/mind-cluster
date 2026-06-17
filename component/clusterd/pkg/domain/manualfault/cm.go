@@ -118,7 +118,7 @@ func (c *Cache) AddSeparateDev(faultInfo FaultInfo) {
 
 	info, ok := c.manualInfo[faultInfo.NodeName]
 	if !ok {
-		hwlog.RunLog.Infof(addMsg)
+		hwlog.RunLog.Info(addMsg)
 		c.manualInfo[faultInfo.NodeName] = NodeCmInfo{
 			Total:  []string{faultInfo.DevName},
 			Detail: map[string][]DevCmInfo{faultInfo.DevName: {devInfo}},
@@ -127,7 +127,7 @@ func (c *Cache) AddSeparateDev(faultInfo FaultInfo) {
 	}
 
 	if !utils.Contains(info.Total, faultInfo.DevName) {
-		hwlog.RunLog.Infof(addMsg)
+		hwlog.RunLog.Info(addMsg)
 		info.Total = append(info.Total, faultInfo.DevName)
 		info.Detail[faultInfo.DevName] = []DevCmInfo{devInfo}
 		c.manualInfo[faultInfo.NodeName] = info
@@ -137,7 +137,7 @@ func (c *Cache) AddSeparateDev(faultInfo FaultInfo) {
 	for idx, fault := range info.Detail[faultInfo.DevName] {
 		if fault.FaultCode == faultInfo.FaultCode {
 			found = true
-			hwlog.RunLog.Infof(updateMsg)
+			hwlog.RunLog.Info(updateMsg)
 			fault.LastSeparateTime = faultInfo.ReceiveTime
 			// need to write it back
 			info.Detail[faultInfo.DevName][idx] = fault
@@ -145,7 +145,7 @@ func (c *Cache) AddSeparateDev(faultInfo FaultInfo) {
 		}
 	}
 	if !found {
-		hwlog.RunLog.Infof(addMsg)
+		hwlog.RunLog.Info(addMsg)
 		info.Detail[faultInfo.DevName] = append(info.Detail[faultInfo.DevName], devInfo)
 		c.manualInfo[faultInfo.NodeName] = info
 	}

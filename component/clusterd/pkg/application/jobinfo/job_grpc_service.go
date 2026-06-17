@@ -198,23 +198,19 @@ func (s *JobServer) checkRequestValidityAndLimit(req *job.ClientInfo) (*clientSt
 	hwlog.RunLog.Infof("role: %v call subscribe method, clientId: %s", req.Role, req.ClientId)
 	cltState, exists := s.clients[req.ClientId]
 	if !exists {
-		errMsg := fmt.Sprintf("invalid clientId: %s, please register first", req.ClientId)
-		return nil, fmt.Errorf(errMsg)
+		return nil, fmt.Errorf("invalid clientId: %s, please register first", req.ClientId)
 	}
 	if cltState.role != req.Role {
-		errMsg := fmt.Sprintf("invalid role: %s, please check role first", req.Role)
-		return nil, fmt.Errorf(errMsg)
+		return nil, fmt.Errorf("invalid role: %s, please check role first", req.Role)
 	}
 	activeCountPtr, ok := s.roleActiveSubscriptions[req.Role]
 	if !ok {
-		errMsg := fmt.Sprintf("role %s not in active subscription map", req.Role)
-		return nil, fmt.Errorf(errMsg)
+		return nil, fmt.Errorf("role %s not in active subscription map", req.Role)
 	}
 	activeCount := int(activeCountPtr.Load())
 	if activeCount >= constant.MaxClientPerRole && cltState.ctx == nil {
-		errMsg := fmt.Sprintf("role %s exceeded max subscription limit: current %d, max %d",
+		return nil, fmt.Errorf("role %s exceeded max subscription limit: current %d, max %d",
 			req.Role, activeCount, constant.MaxClientPerRole)
-		return nil, fmt.Errorf(errMsg)
 	}
 	return cltState, nil
 }

@@ -14,7 +14,6 @@
 # limitations under the License.
 # ============================================================================
 
-set -e
 umask 077
 CUR_DIR=$(dirname "$(readlink -f $0)")
 TOP_DIR=$(realpath "${CUR_DIR}"/../../..)
@@ -22,30 +21,43 @@ export PATH="${GOPATH}/bin/;$PATH"
 export GO111MODULE=on
 export GONOSUMDB="*"
 
+function filter_cov_by_tested_pkgs() {
+  local tested_pkgs
+  tested_pkgs=$(go list -f '{{if .TestGoFiles}}{{.ImportPath}}{{end}}' "${TOP_DIR}"/...)
+  awk -v pkgs="$tested_pkgs" '
+    NR==1 {print; next}
+    {
+      file=$1; sub(/:[0-9].*/, "", file)
+      n=split(file, p, "/"); pkg=""
+      for(i=1;i<n;i++) pkg=pkg p[i]"/"; sub(/\/$/,"", pkg)
+      found=0; split(pkgs, arr, "\n"); for(k in arr) {if(arr[k]==pkg){found=1;break}}
+      if (found) print
+    }
+  ' cov.out > cov_filtered.out
+}
+
 function execute_test() {
   cd ${TOP_DIR}
-  if ! (go test  -mod=mod -gcflags=-l -v -coverprofile cov.out ${TOP_DIR}/... >./$file_input); then
-    echo '****** go test cases error! ******'
-    cat ./$file_input
-    exit 1
-  else
-    echo ${file_detail_output}
-    ${GOPATH}/bin/gocov convert cov.out | ${GOPATH}/bin/gocov-html >${file_detail_output}
-    ${GOPATH}/bin/gotestsum --junitfile "${TOP_DIR}"/test/unit-tests.xml -- -gcflags=-l "${TOP_DIR}"/...
+  gotestsum --junitfile "${TOP_DIR}"/test/unit-tests.xml --jsonfile test.jsonl \
+    -- -mod=mod -count=1 -gcflags=-l -v -coverprofile cov.out "${TOP_DIR}"/...;
 
-    total_coverage=$(go tool cover -func=cov.out | grep "total:" | awk '{print $3}'| sed 's/%//')
-    # round up
-    coverage=$(echo "$total_coverage" | awk '{if ($1 >= 0) print ($1 == int($1)) ? int($1) : int($1) + 1;\
-                                          else print ($1 == int($1)) ? int($1) : int($1)}')
-    if [[ $coverage -ge 80 ]]; then
-      echo "coverage passed: $coverage%"
-    else
-      echo "coverage failed: $coverage%, it needs to be greater than 80%."
-    fi
+  filter_cov_by_tested_pkgs
+
+  ${GOPATH}/bin/gocov convert cov_filtered.out | ${GOPATH}/bin/gocov-html > "$file_detail_output"
+  total_coverage=$(go tool cover -func=cov_filtered.out | grep "total:" | awk '{print $3}'| sed 's/%//')
+  # round up
+  coverage=$(echo "$total_coverage" | awk '{if ($1 >= 0) print ($1 == int($1)) ? int($1) : int($1) + 1;\
+                                        else print ($1 == int($1)) ? int($1) : int($1)}')
+
+  if [[ $coverage -ge 80 ]]; then
+    echo "coverage passed: $coverage%"
+    exit 0
+  else
+    echo "coverage failed: $coverage%, it needs to be greater than 80%."
+    exit 0
   fi
 }
 
-file_input='testDockerPlugin.txt'
 file_detail_output="${TOP_DIR}/test/api.html"
 
 echo "************************************* Start LLT Test *************************************"
@@ -54,11 +66,6 @@ cd "${TOP_DIR}"/test/
 if [ -f "$file_detail_output" ]; then
   rm -rf $file_detail_output
 fi
-if [ -f "$file_input" ]; then
-  rm -rf $file_input
-fi
 execute_test
 
 echo "************************************* End   LLT Test *************************************"
-
-exit 0

@@ -238,7 +238,7 @@ func (hrt *HotResetTools) writeCmToFileWhilePodAdd(pod *v1.Pod, event kubeclient
 		hwlog.RunLog.Warnf("failed to create reset configmap dir for pod %s, err: %v", pod.Name, err)
 	}
 
-	dataTraceCm, err := hrt.GetCMFromCache(fmt.Sprintf(pod.GetNamespace() + "/" + common.DataTraceCmPrefix + jobName))
+	dataTraceCm, err := hrt.GetCMFromCache(pod.GetNamespace() + "/" + common.DataTraceCmPrefix + jobName)
 	if err != nil {
 		hwlog.RunLog.Warnf("failed to get cm cache for pod %s", pod.Name)
 	} else {
@@ -247,7 +247,7 @@ func (hrt *HotResetTools) writeCmToFileWhilePodAdd(pod *v1.Pod, event kubeclient
 		}
 	}
 
-	resetCm, err := hrt.GetCMFromCache(fmt.Sprintf(pod.GetNamespace() + "/" + common.ResetInfoCMNamePrefix + jobName))
+	resetCm, err := hrt.GetCMFromCache(pod.GetNamespace() + "/" + common.ResetInfoCMNamePrefix + jobName)
 	if err != nil {
 		_, ok := hrt.noResetCmPodKeys[event.Key]
 		if !ok {

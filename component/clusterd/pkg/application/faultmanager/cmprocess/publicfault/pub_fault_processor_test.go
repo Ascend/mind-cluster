@@ -109,8 +109,8 @@ func testCommon() {
 		UpdateConfigmap: nil,
 	}
 	resContent := PubFaultProcessor.Process(content).(constant.OneConfigmapContent[*constant.AdvanceDeviceFaultCm])
-	hwlog.RunLog.Infof(util.ObjToString(resContent.AllConfigmap))
-	hwlog.RunLog.Infof(
+	hwlog.RunLog.Info(util.ObjToString(resContent.AllConfigmap))
+	hwlog.RunLog.Info(
 		util.ObjToString(faultdomain.GetAdvanceFaultCm[*constant.AdvanceDeviceFaultCm](expDeviceInfo2)))
 	sortDeviceFaultList(resContent.AllConfigmap)
 	result := resContent.AllConfigmap

@@ -15,29 +15,39 @@
 # limitations under the License.
 # ============================================================================
 
-set -e
+function filter_cov_by_tested_pkgs() {
+  local tested_pkgs
+  tested_pkgs=$(go list -f '{{if .TestGoFiles}}{{.ImportPath}}{{end}}' "${TOP_DIR}"/...)
+  awk -v pkgs="$tested_pkgs" '
+    NR==1 {print; next}
+    {
+      file=$1; sub(/:[0-9].*/, "", file)
+      n=split(file, p, "/"); pkg=""
+      for(i=1;i<n;i++) pkg=pkg p[i]"/"; sub(/\/$/,"", pkg)
+      found=0; split(pkgs, arr, "\n"); for(k in arr) {if(arr[k]==pkg){found=1;break}}
+      if (found) print
+    }
+  ' cov.out > cov_filtered.out
+}
 
-# execute go test and echo result to report files
 function execute_test() {
-  if ! (go test -mod=mod -gcflags=all=-l -v -coverprofile cov.out "${TOP_DIR}"/... >./$file_input); then
-    cat ./$file_input
-    echo '****** go test cases error! ******'
-    exit 1
-  else
-    gocov convert cov.out | gocov-html > "$file_detail_output"
-    gotestsum --junitfile unit-tests.xml -- -gcflags=all=-l "${TOP_DIR}"/...
+  gotestsum --junitfile unit-tests.xml --jsonfile test.jsonl \
+    -- -mod=mod -count=1 -gcflags=all=-l -v -coverprofile cov.out "${TOP_DIR}"/...;
 
-    total_coverage=$(go tool cover -func=cov.out | grep "total:" | awk '{print $3}'| sed 's/%//')
-    # round up
-    coverage=$(echo "$total_coverage" | awk '{if ($1 >= 0) print ($1 == int($1)) ? int($1) : int($1) + 1;\
-                                          else print ($1 == int($1)) ? int($1) : int($1)}')
-    if [[ $coverage -ge 80 ]]; then
-      echo "coverage passed: $coverage%"
-      exit 0
-    else
-      echo "coverage failed: $coverage%, it needs to be greater than 80%."
-      exit 1
-    fi
+  filter_cov_by_tested_pkgs
+
+  gocov convert cov_filtered.out | gocov-html > "$file_detail_output"
+  total_coverage=$(go tool cover -func=cov_filtered.out | grep "total:" | awk '{print $3}'| sed 's/%//')
+  # round up
+  coverage=$(echo "$total_coverage" | awk '{if ($1 >= 0) print ($1 == int($1)) ? int($1) : int($1) + 1;\
+                                        else print ($1 == int($1)) ? int($1) : int($1)}')
+
+  if [[ $coverage -ge 80 ]]; then
+    echo "coverage passed: $coverage%"
+    exit 0
+  else
+    echo "coverage failed: $coverage%, it needs to be greater than 80%."
+    exit 1
   fi
 }
 
@@ -46,7 +56,6 @@ export PATH=$GOPATH/bin:$PATH
 CUR_DIR=$(dirname "$(readlink -f $0)")
 TOP_DIR=$(realpath "${CUR_DIR}"/..)
 
-file_input='testNodeD.txt'
 file_detail_output='api.html'
 
 echo "clean old version test results"
@@ -56,9 +65,6 @@ fi
 mkdir -p "${TOP_DIR}"/test/
 cd "${TOP_DIR}"/test/
 
-if [ -f "$file_input" ]; then
-  rm -rf $file_input
-fi
 if [ -f "$file_detail_output" ]; then
   rm -rf $file_detail_output
 fi

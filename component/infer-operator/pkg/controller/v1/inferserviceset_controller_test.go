@@ -867,7 +867,7 @@ func TestManageInferServicesErrors(t *testing.T) {
 			err := fakeClient.Create(context.Background(), is)
 			convey.So(err, convey.ShouldBeNil)
 			patch := gomonkey.ApplyMethodFunc(fakeClient, "Get",
-				func(_ context.Context, _ types.NamespacedName, _ client.Object) error {
+				func(_ context.Context, _ types.NamespacedName, _ client.Object, _ ...client.GetOption) error {
 					return errors.New("get error")
 				})
 			defer patch.Reset()

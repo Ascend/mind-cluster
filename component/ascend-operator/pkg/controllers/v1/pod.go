@@ -849,7 +849,7 @@ func (r *ASJobReconciler) setRestartPolicy(job *mindxdlv1.AscendJob, podTemplate
 	// the pod template. We recommend to set it from the replica level.
 	if podTemplateSpec.Spec.RestartPolicy != corev1.RestartPolicy("") {
 		errMsg := "Restart policy in pod template will be overwritten by restart policy in replica spec"
-		hwlog.RunLog.Warnf(errMsg)
+		hwlog.RunLog.Warn(errMsg)
 		r.Recorder.Event(job, corev1.EventTypeWarning, podTemplateRestartPolicyReason, errMsg)
 	}
 

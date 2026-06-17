@@ -83,7 +83,7 @@ const (
 
 type fakeReader struct{}
 
-func (f fakeReader) Get(ctx context.Context, key client.ObjectKey, obj client.Object) error {
+func (f fakeReader) Get(ctx context.Context, key client.ObjectKey, obj client.Object, opts ...client.GetOption) error {
 	return nil
 }
 
@@ -147,7 +147,9 @@ type fakeClient struct{}
 
 // Get This function is part of the fakeClient struct
 // and retrieves an object from the client based on the given parameters.
-func (c *fakeClient) Get(_ context.Context, _ client.ObjectKey, _ client.Object) error { return nil }
+func (c *fakeClient) Get(_ context.Context, _ client.ObjectKey, _ client.Object, _ ...client.GetOption) error {
+	return nil
+}
 
 // List This function is part of the fakeClient struct and lists objects from the client based on the given parameters.
 func (c *fakeClient) List(_ context.Context, _ client.ObjectList, _ ...client.ListOption) error {
@@ -182,22 +184,29 @@ func (c *fakeClient) DeleteAllOf(_ context.Context, _ client.Object, _ ...client
 
 type fakeStatusWriter struct{}
 
-func (f *fakeStatusWriter) Update(_ context.Context, _ client.Object, _ ...client.UpdateOption) error {
+func (f *fakeStatusWriter) Create(_ context.Context, _ client.Object, _ client.Object, _ ...client.SubResourceCreateOption) error {
 	return nil
 }
 
-func (f *fakeStatusWriter) Patch(_ context.Context, _ client.Object, _ client.Patch, _ ...client.PatchOption) error {
+func (f *fakeStatusWriter) Update(_ context.Context, _ client.Object, _ ...client.SubResourceUpdateOption) error {
+	return nil
+}
+
+func (f *fakeStatusWriter) Patch(_ context.Context, _ client.Object, _ client.Patch, _ ...client.SubResourcePatchOption) error {
 	return nil
 }
 
 // Status This function is part of the fakeClient struct and returns a status based on the given parameters.
-func (c *fakeClient) Status() client.StatusWriter { return &fakeStatusWriter{} }
+func (c *fakeClient) Status() client.SubResourceWriter { return &fakeStatusWriter{} }
 
 // Scheme This function is part of the fakeClient struct and returns a scheme based on the given parameters.
 func (c *fakeClient) Scheme() *runtime.Scheme { return nil }
 
 // RESTMapper This function is part of the fakeClient struct and returns a rest mapper based on the given parameters.
 func (c *fakeClient) RESTMapper() meta.RESTMapper { return nil }
+
+// SubResource This function is part of the fakeClient struct and returns a subresource client.
+func (c *fakeClient) SubResource(_ string) client.SubResourceClient { return nil }
 
 // fakeRecorder This struct is a fake recorder struct used to mock the behavior of a kubernetes recorder.
 type fakeRecorder struct{}
@@ -655,7 +664,7 @@ func TestHandleNewPodDeleted1(t *testing.T) {
 		}
 		patch := gomonkey.NewPatches()
 		defer patch.Reset()
-		patch.ApplyMethodFunc(r.Client, "Get", func(_ context.Context, _ client.ObjectKey, obj client.Object) error {
+		patch.ApplyMethodFunc(r.Client, "Get", func(_ context.Context, _ client.ObjectKey, obj client.Object, _ ...client.GetOption) error {
 			obj.SetAnnotations(map[string]string{
 				api.InHotSwitchFlowKey:  api.InHotSwitchFlowValue,
 				api.BackupNewPodNameKey: "test-pod",
@@ -683,7 +692,7 @@ func TestHandleNewPodDeleted2(t *testing.T) {
 
 		patch := gomonkey.NewPatches()
 		defer patch.Reset()
-		patch.ApplyMethodFunc(r.Client, "Get", func(_ context.Context, _ client.ObjectKey, obj client.Object) error {
+		patch.ApplyMethodFunc(r.Client, "Get", func(_ context.Context, _ client.ObjectKey, obj client.Object, _ ...client.GetOption) error {
 			obj.SetAnnotations(map[string]string{
 				api.InHotSwitchFlowKey:  api.InHotSwitchFlowValue,
 				api.BackupNewPodNameKey: "test-pod",
