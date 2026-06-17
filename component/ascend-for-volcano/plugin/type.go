@@ -104,6 +104,7 @@ var (
 		util.SuperPodFitAnnoKey,
 		util.MinAvailableKey,
 		util.RecoverPolicyPathKey,
+		util.InferServiceScheduleAnnoKey,
 	}
 )
 

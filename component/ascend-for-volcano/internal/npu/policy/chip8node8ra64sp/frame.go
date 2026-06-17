@@ -46,6 +46,7 @@ func New(name string) *chip8node8ra64sp {
 
 func (tp *chip8node8ra64sp) PreStartAction(_ *framework.Session) error {
 	tp.isUBMemScene = tp.Annotation[uBMemory] == uBMemoryRequire
+	tp.isInferServiceJob = tp.isInferServiceJobCheck()
 	tp.nextStrategyChain = map[strategyKey]strategyKey{
 		RackSchedule:     SuperPodSchedule,
 		SuperPodSchedule: MulSuperPodsSchedule,
@@ -158,7 +159,17 @@ func (tp *chip8node8ra64sp) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.N
 	}
 
 	tp.isSoftSuperPodAffinity = tp.Label[superPodAffinity] == softRequire
-	selectedSpBlock, err := tp.selectNodesForJob(task, nodes)
+	tp.isInferServiceJob = tp.isInferServiceJobCheck()
+
+	var selectedSpBlock map[string][]plugin.SuperNode
+	var err error
+
+	if tp.isInferServiceJob {
+		selectedSpBlock, err = tp.selectNodesForInferService(task, nodes)
+	} else {
+		selectedSpBlock, err = tp.selectNodesForJob(task, nodes)
+	}
+
 	job.TpBlock = tp.tpBlock
 	if err != nil {
 		*job.JobReadyTag = false

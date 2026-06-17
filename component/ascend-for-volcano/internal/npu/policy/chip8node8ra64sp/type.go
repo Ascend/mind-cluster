@@ -28,6 +28,8 @@ type chip8node8ra64sp struct {
 	jobParams
 	uBMemParams
 	isSoftSuperPodAffinity bool
+	isInferServiceJob      bool
+	inferServiceID         string
 	// the chain to find the next strategy
 	nextStrategyChain map[strategyKey]strategyKey
 }
@@ -44,7 +46,21 @@ const (
 	SuperPodSchedule = "SuperPodSchedule"
 	// MulSuperPodsSchedule the multiple superPod schedule strategy selecting nodes in multiple superPods
 	MulSuperPodsSchedule = "MultiSuperPodsSchedule"
+	// InferServiceSchedule the inference service affinity schedule strategy
+	InferServiceSchedule strategyKey = "InferServiceSchedule"
 )
+
+type inferServiceRackInfo struct {
+	rackID     int32
+	superPodID int32
+	freeNodes  int
+}
+
+type inferServiceSPInfo struct {
+	superPodID  int32
+	idleRackNum int
+	freeNodeNum int
+}
 
 type jobParams struct {
 	spBlock         int

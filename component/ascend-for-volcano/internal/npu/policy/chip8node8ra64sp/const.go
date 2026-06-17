@@ -63,4 +63,6 @@ const (
 	TaskSpecAnno = "volcano.sh/task-spec"
 	// SchedulerType the type of Scheduler for mindspore
 	SchedulerType string = "scheduler"
+
+	inferServiceIDLabelKey = "inferserviceid"
 )
