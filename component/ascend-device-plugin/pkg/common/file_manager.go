@@ -16,11 +16,11 @@
 package common
 
 import (
-	"ascend-common/api"
 	"fmt"
 	"os"
 	"path/filepath"
 
+	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 )
@@ -133,8 +133,8 @@ func RemoveDataTraceFileAndDir(namespace, jobName string) error {
 }
 
 // RemoveSoftShareDeviceFileAndDir remove soft share device file and dir
-func RemoveSoftShareDeviceFileAndDir(namespace, jobName string) error {
-	softShareDeviceDirName := fmt.Sprintf("%s%s", api.SoftShareDeviceConfigDir, namespace+"."+jobName)
+func RemoveSoftShareDeviceFileAndDir(nsJobName string) error {
+	softShareDeviceDirName := fmt.Sprintf("%s%s", api.SoftShareDeviceConfigDir, nsJobName)
 	if !filepath.IsAbs(softShareDeviceDirName) {
 		return fmt.Errorf("the path %s is not an absolute path", softShareDeviceDirName)
 	}

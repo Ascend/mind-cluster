@@ -906,7 +906,7 @@ func (ps *PluginServer) doWithVolcanoSchedule(requestDevices []string) ([]string
 	if npuInfoConfigDir != "" {
 		podKey := fmt.Sprintf("%s/%s", oldestPod.Namespace, oldestPod.Name)
 		jobName := common.GetJobNameOfPod(oldestPod)
-		ps.softShareJobs.Store(podKey, jobName)
+		ps.softShareJobs.Store(podKey, oldestPod.Namespace+"."+jobName)
 	}
 	return allocateDevices, npuInfoConfigDir, nil
 }
@@ -1213,13 +1213,34 @@ func (ps *PluginServer) handleSoftSharePodDelete(obj interface{}) {
 	if !ok {
 		return
 	}
-	jobName, ok := value.(string)
+	nsJobName, ok := value.(string)
 	if !ok {
 		return
 	}
-	if rmErr := common.RemoveSoftShareDeviceFileAndDir(pod.Namespace, jobName); rmErr != nil {
+	if ps.isJobNameStillInUse(nsJobName) {
+		hwlog.RunLog.Infof("nsJob %s is still in use by other pods, skip removing dir",
+			nsJobName)
+		return
+	}
+	if rmErr := common.RemoveSoftShareDeviceFileAndDir(nsJobName); rmErr != nil {
 		hwlog.RunLog.Errorf("failed to remove soft share device file: %v", rmErr)
 	}
+}
+
+func (ps *PluginServer) isJobNameStillInUse(nsJobName string) bool {
+	found := false
+	ps.softShareJobs.Range(func(k, v interface{}) bool {
+		storedNsJobName, ok := v.(string)
+		if !ok {
+			return true
+		}
+		if storedNsJobName == nsJobName {
+			found = true
+			return false
+		}
+		return true
+	})
+	return found
 }
 
 func (ps *PluginServer) getDieIDFromPhysicID(physicID int) (string, error) {

@@ -1925,6 +1925,7 @@ type handleSoftSharePodDeleteTestCase struct {
 	obj                interface{}
 	preStorePodKey     string
 	preStoreJobName    string
+	extraStorePods     map[string]string
 	expectRemoveCalled bool
 	expectKeyDeleted   bool
 }
@@ -1936,7 +1937,7 @@ func buildHandleSoftSharePodDeleteTestCases() []handleSoftSharePodDeleteTestCase
 			supportSoftShare:   false,
 			obj:                &v1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "pod1"}},
 			preStorePodKey:     "default/pod1",
-			preStoreJobName:    "job1",
+			preStoreJobName:    "default.job1",
 			expectRemoveCalled: false,
 			expectKeyDeleted:   false,
 		},
@@ -1945,7 +1946,7 @@ func buildHandleSoftSharePodDeleteTestCases() []handleSoftSharePodDeleteTestCase
 			supportSoftShare:   true,
 			obj:                "not-a-pod",
 			preStorePodKey:     "default/pod1",
-			preStoreJobName:    "job1",
+			preStoreJobName:    "default.job1",
 			expectRemoveCalled: false,
 			expectKeyDeleted:   false,
 		},
@@ -1954,7 +1955,7 @@ func buildHandleSoftSharePodDeleteTestCases() []handleSoftSharePodDeleteTestCase
 			supportSoftShare:   true,
 			obj:                &v1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "unknown-pod"}},
 			preStorePodKey:     "default/other-pod",
-			preStoreJobName:    "other-job",
+			preStoreJobName:    "default.other-job",
 			expectRemoveCalled: false,
 			expectKeyDeleted:   false,
 		},
@@ -1963,7 +1964,7 @@ func buildHandleSoftSharePodDeleteTestCases() []handleSoftSharePodDeleteTestCase
 			supportSoftShare:   true,
 			obj:                &v1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "pod1"}},
 			preStorePodKey:     "default/pod1",
-			preStoreJobName:    "job1",
+			preStoreJobName:    "default.job1",
 			expectRemoveCalled: true,
 			expectKeyDeleted:   true,
 		},
@@ -1972,7 +1973,47 @@ func buildHandleSoftSharePodDeleteTestCases() []handleSoftSharePodDeleteTestCase
 			supportSoftShare:   true,
 			obj:                &v1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "pod1"}},
 			preStorePodKey:     "default/pod1",
-			preStoreJobName:    "job1",
+			preStoreJobName:    "default.job1",
+			expectRemoveCalled: true,
+			expectKeyDeleted:   true,
+		},
+		{
+			name:               "job still in use by other pod, should not remove dir but delete key",
+			supportSoftShare:   true,
+			obj:                &v1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "pod1"}},
+			preStorePodKey:     "default/pod1",
+			preStoreJobName:    "default.job1",
+			extraStorePods:     map[string]string{"default/pod2": "default.job1"},
+			expectRemoveCalled: false,
+			expectKeyDeleted:   true,
+		},
+		{
+			name:               "job still in use by multiple other pods, should not remove dir but delete key",
+			supportSoftShare:   true,
+			obj:                &v1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "pod1"}},
+			preStorePodKey:     "default/pod1",
+			preStoreJobName:    "default.job1",
+			extraStorePods:     map[string]string{"default/pod2": "default.job1", "default/pod3": "default.job1"},
+			expectRemoveCalled: false,
+			expectKeyDeleted:   true,
+		},
+		{
+			name:               "different job name in other pods, should remove dir and delete key",
+			supportSoftShare:   true,
+			obj:                &v1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "pod1"}},
+			preStorePodKey:     "default/pod1",
+			preStoreJobName:    "default.job1",
+			extraStorePods:     map[string]string{"default/pod2": "default.job2"},
+			expectRemoveCalled: true,
+			expectKeyDeleted:   true,
+		},
+		{
+			name:               "same job name in different namespace, should remove dir and delete key",
+			supportSoftShare:   true,
+			obj:                &v1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "pod1"}},
+			preStorePodKey:     "default/pod1",
+			preStoreJobName:    "default.job1",
+			extraStorePods:     map[string]string{"other-ns/pod2": "other-ns.job1"},
 			expectRemoveCalled: true,
 			expectKeyDeleted:   true,
 		},
@@ -1996,7 +2037,7 @@ func TestHandleSoftSharePodDelete(t *testing.T) {
 					removeErr = errors.New("remove failed")
 				}
 				patchRemove := gomonkey.ApplyFunc(common.RemoveSoftShareDeviceFileAndDir,
-					func(namespace, jobName string) error {
+					func(nsJobName string) error {
 						removeCalled = true
 						return removeErr
 					})
@@ -2004,6 +2045,9 @@ func TestHandleSoftSharePodDelete(t *testing.T) {
 
 				if tt.preStorePodKey != "" && tt.preStoreJobName != "" {
 					ps.softShareJobs.Store(tt.preStorePodKey, tt.preStoreJobName)
+				}
+				for k, v := range tt.extraStorePods {
+					ps.softShareJobs.Store(k, v)
 				}
 
 				ps.handleSoftSharePodDelete(tt.obj)
@@ -2024,5 +2068,64 @@ func TestHandleSoftSharePodDelete(t *testing.T) {
 				}
 			})
 		}
+	})
+}
+
+func TestIsJobNameStillInUse(t *testing.T) {
+	convey.Convey("test isJobNameStillInUse", t, func() {
+		ps := &PluginServer{
+			softShareJobs: sync.Map{},
+		}
+
+		convey.Convey("empty softShareJobs, should return false", func() {
+			result := ps.isJobNameStillInUse("default.job1")
+			convey.So(result, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("same nsJobName exists, should return true", func() {
+			ps.softShareJobs.Store("default/pod2", "default.job1")
+			result := ps.isJobNameStillInUse("default.job1")
+			convey.So(result, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("different nsJobName, should return false", func() {
+			ps.softShareJobs = sync.Map{}
+			ps.softShareJobs.Store("default/pod2", "default.job2")
+			result := ps.isJobNameStillInUse("default.job1")
+			convey.So(result, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("multiple pods with same nsJobName, should return true", func() {
+			ps.softShareJobs = sync.Map{}
+			ps.softShareJobs.Store("default/pod2", "default.job2")
+			ps.softShareJobs.Store("default/pod3", "default.job1")
+			ps.softShareJobs.Store("other-ns/pod4", "other-ns.job1")
+			result := ps.isJobNameStillInUse("default.job1")
+			convey.So(result, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("multiple pods but none match nsJobName, should return false", func() {
+			ps.softShareJobs = sync.Map{}
+			ps.softShareJobs.Store("default/pod2", "default.job2")
+			ps.softShareJobs.Store("default/pod3", "default.job3")
+			ps.softShareJobs.Store("other-ns/pod4", "other-ns.job1")
+			result := ps.isJobNameStillInUse("default.job1")
+			convey.So(result, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("value is not string type, should be skipped and return false", func() {
+			ps.softShareJobs = sync.Map{}
+			ps.softShareJobs.Store("default/pod2", 12345)
+			result := ps.isJobNameStillInUse("default.job1")
+			convey.So(result, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("mixed valid and invalid values, should only check valid ones", func() {
+			ps.softShareJobs = sync.Map{}
+			ps.softShareJobs.Store("default/pod2", 12345)
+			ps.softShareJobs.Store("default/pod3", "default.job1")
+			result := ps.isJobNameStillInUse("default.job1")
+			convey.So(result, convey.ShouldBeTrue)
+		})
 	})
 }
