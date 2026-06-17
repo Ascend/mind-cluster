@@ -40,6 +40,8 @@ type chip8node8sp struct {
 	spBlock                int
 	nodeVPodId             map[string]string
 	isSoftSuperPodAffinity bool
+	isInferServiceJob      bool
+	inferServiceID         string
 }
 
 const (
@@ -66,7 +68,26 @@ const (
 
 	// SchedulePolicy8Px8Sp the label 8p-8-sp
 	SchedulePolicy8Px8Sp = "8p-8-sp"
+
+	inferServiceIDLabelKey = "inferserviceid"
+
+	inferServiceGroupSameSP  = 1
+	inferServiceGroupOtherSP = 2
 )
+
+type inferServiceSPInfo struct {
+	superPodID  int32
+	freeNodeNum int
+}
+
+type inferServicePQItem struct {
+	superPodID int32
+	freeNodes  int
+	group      int
+	index      int
+}
+
+type inferServicePQ []*inferServicePQItem
 
 type superPodInfo struct {
 	firstLevel     remainderTopType

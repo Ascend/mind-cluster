@@ -212,7 +212,17 @@ func (tp *chip8node8sp) ScoreBestNPUNodes(task *api.TaskInfo, nodes []*api.NodeI
 		return fmt.Errorf("not enough node, npuTaskNum: %d, nodes: %d", tp.NPUTaskNum, len(nodes))
 	}
 
-	selectedNodes, err := tp.selectSuperPodForJob(task, nodes, sMap)
+	tp.isInferServiceJob = tp.isInferServiceJobCheck()
+
+	var selectedNodes map[string][]plugin.SuperNode
+	var err error
+
+	if tp.isInferServiceJob {
+		selectedNodes, err = tp.selectNodesForInferService(task, nodes)
+	} else {
+		selectedNodes, err = tp.selectSuperPodForJob(task, nodes, sMap)
+	}
+
 	if err != nil {
 		*job.JobReadyTag = false
 		return err
