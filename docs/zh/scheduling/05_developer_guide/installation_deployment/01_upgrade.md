@@ -69,24 +69,23 @@
         ```
 
 2. （可选）检查pingmesh灵衢网络检测开关是否已关闭。
-    1. 登录环境，进入NodeD解压目录。
-    2. 执行以下命令编辑pingmesh-config文件。
+    1. 执行以下命令编辑pingmesh-config ConfigMap。
 
         ```shell
         kubectl edit cm -n cluster-system   pingmesh-config
         ```
 
-        如果回显如下所示，表示pingmesh灵衢网络检测开关已关闭。无需执行[步骤3](#li1427143773119)。
+        如果回显如下所示，表示pingmesh灵衢网络检测开关已关闭。无需执行[步骤2](#li1427143773119)。
 
         ```ColdFusion
         Error from server (NotFound): configmaps "pingmesh-config" not found
         ```
 
-    3. <a name="li1427143773119"></a>（可选）修改activate字段的取值。
-        - 如果超节点ID在pingmesh-config文件中，修改该超节点ID字段下的activate为off。
-        - 如果超节点ID不在pingmesh-config文件中，可通过以下2种方式进行设置。
-            - 在配置文件中新增该超节点信息，并将activate为off。
-            - 删除pingmesh-config文件中所有超节点的信息，并将global配置中activate字段的值设置为off。
+    2. <a name="li1427143773119"></a>（可选）修改activate字段的取值。
+        - 如果超节点ID在pingmesh-config ConfigMap中，修改该超节点ID字段下的activate为off。
+        - 如果超节点ID不在pingmesh-config ConfigMap中，可通过以下2种方式进行设置。
+            - 在pingmesh-config ConfigMap中新增该超节点信息，并将activate为off。
+            - 删除pingmesh-config ConfigMap中所有超节点的信息，并将global配置中activate字段的值设置为off。
 
 3. 检查已安装的MindCluster组件。
     - （可选）**检查TaskD组件**。执行以下命令进入容器内部，查看TaskD组件安装状态。
