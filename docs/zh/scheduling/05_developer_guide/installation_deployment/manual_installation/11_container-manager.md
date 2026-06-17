@@ -1,5 +1,8 @@
 ﻿# Container Manager<a name="ZH-CN_TOPIC_0000002524428759"></a>
 
+> [!NOTE]
+> Container Manager仅适用于无K8s的场景。在K8s场景下，故障检测与恢复功能由ClusterD、Ascend Device Plugin、Volcano等组件协同提供，无需安装Container Manager。
+
 Container Manager组件直接在物理机上通过二进制方式运行，提供容器生命周期管理、故障检测与恢复功能。
 
 ## 操作步骤

@@ -13,7 +13,7 @@
 |容器恢复|该特性具有容器恢复功能，用户可配置容器启停的策略，针对故障级别配置为RestartRequestCodes、RestartBusinessCodes、FreeRestartNPUCodes和RestartNPUCodes的故障，故障发生时将容器停止，故障恢复后重新将容器拉起。|[容器恢复](#容器恢复)|
 
 >[!NOTE]
->本特性不适用于算力虚拟化场景，不支持共享设备特性及混插模式。
+>本特性不适用于算力虚拟化场景，不支持共享设备特性及混插模式。特权容器需通过设备配置或ASCEND_VISIBLE_DEVICES环境变量显式挂载NPU才会被管理。
 
 ## 故障检测<a name="ZH-CN_TOPIC_0000002518738073"></a>
 
@@ -226,3 +226,4 @@ Container Manager在感知到芯片处于RestartRequest、RestartBusiness、Free
 >- Container Manager仅恢复由它本身停止的容器。
 >- 上述涉及到的容器启停过程中的容器状态，仅为Container Manager自定义，非容器运行时给出的官方定义。
 >- 在containerd场景下，如果容器的task不存在，则会停止失败。
+>- 容器恢复通过设备配置或ASCEND_VISIBLE_DEVICES环境变量识别NPU挂载，容器拉起时必须显式配置。
