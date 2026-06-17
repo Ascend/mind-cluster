@@ -57,7 +57,7 @@ func (p *ResetRecordPlugin) Name() string {
 	return resetRecordPluginName
 }
 
-func (p *ResetRecordPlugin) PreReset(ctx context.Context, deviceList []plugin.ResetDevice) error {
+func (p *ResetRecordPlugin) PreReset(ctx context.Context, deviceList []plugin.ResetDevice) {
 	devIDs := formatDeviceList(deviceList)
 	now := time.Now()
 	event := &v1.Event{
@@ -82,11 +82,10 @@ func (p *ResetRecordPlugin) PreReset(ctx context.Context, deviceList []plugin.Re
 	if _, err := p.client.CreateEvent(event); err != nil {
 		hwlog.RunLog.Warnf("create hot reset start event failed: %v", err)
 	}
-	return nil
 }
 
 func (p *ResetRecordPlugin) AfterReset(ctx context.Context, deviceList []plugin.ResetDevice,
-	resetErr error) error {
+	resetErr error) {
 	devIDs := formatDeviceList(deviceList)
 	now := time.Now()
 	eventType := v1.EventTypeNormal
@@ -118,7 +117,6 @@ func (p *ResetRecordPlugin) AfterReset(ctx context.Context, deviceList []plugin.
 	if _, err := p.client.CreateEvent(event); err != nil {
 		hwlog.RunLog.Warnf("create hot reset end event failed: %v", err)
 	}
-	return nil
 }
 
 func formatDeviceList(deviceList []plugin.ResetDevice) string {

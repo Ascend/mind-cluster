@@ -321,7 +321,8 @@ func (pm *PluginManager) ExecutePreReset(ctx context.Context, deviceList []Reset
 	for _, p := range chain {
 		hwlog.RunLog.Infof("plugin %s PreReset start", p.Name())
 		err := executeHookWithTimeout(ctx, PreResetTimeout, func(hookCtx context.Context) error {
-			return p.PreReset(hookCtx, deviceList)
+			p.PreReset(hookCtx, deviceList)
+			return nil
 		})
 		if err != nil {
 			hwlog.RunLog.Warnf("plugin %s PreReset failed: %v", p.Name(), err)
@@ -360,7 +361,8 @@ func (pm *PluginManager) ExecuteAfterReset(ctx context.Context, deviceList []Res
 	for _, p := range chain {
 		hwlog.RunLog.Infof("plugin %s AfterReset start", p.Name())
 		err := executeHookWithTimeout(ctx, AfterResetTimeout, func(hookCtx context.Context) error {
-			return p.AfterReset(hookCtx, deviceList, resetErr)
+			p.AfterReset(hookCtx, deviceList, resetErr)
+			return nil
 		})
 		if err != nil {
 			hwlog.RunLog.Warnf("plugin %s AfterReset failed: %v", p.Name(), err)

@@ -56,17 +56,15 @@ func TestResetRecordPlugin_PreReset(t *testing.T) {
 	convey.Convey("test ResetRecordPlugin PreReset", t, func() {
 		p := &ResetRecordPlugin{client: &kubeclient.ClientK8s{}, nodeName: "test-node"}
 		ctx := context.Background()
-		convey.Convey("01-returns nil when event created successfully", func() {
+		convey.Convey("01-executes without error when event created successfully", func() {
 			mockCreate := gomonkey.ApplyMethodReturn(p.client, "CreateEvent", &v1.Event{}, nil)
 			defer mockCreate.Reset()
-			err := p.PreReset(ctx, []plugin.ResetDevice{{LogicID: 0}})
-			convey.So(err, convey.ShouldBeNil)
+			p.PreReset(ctx, []plugin.ResetDevice{{LogicID: 0}})
 		})
-		convey.Convey("02-returns nil when CreateEvent fails", func() {
+		convey.Convey("02-executes without error when CreateEvent fails", func() {
 			mockCreate := gomonkey.ApplyMethodReturn(p.client, "CreateEvent", (*v1.Event)(nil), resetRecordTestErr)
 			defer mockCreate.Reset()
-			err := p.PreReset(ctx, []plugin.ResetDevice{{LogicID: 0}})
-			convey.So(err, convey.ShouldBeNil)
+			p.PreReset(ctx, []plugin.ResetDevice{{LogicID: 0}})
 		})
 	})
 }
@@ -75,17 +73,15 @@ func TestResetRecordPlugin_AfterReset(t *testing.T) {
 	convey.Convey("test ResetRecordPlugin AfterReset", t, func() {
 		p := &ResetRecordPlugin{client: &kubeclient.ClientK8s{}, nodeName: "test-node"}
 		ctx := context.Background()
-		convey.Convey("01-returns nil when resetErr is nil and event created successfully", func() {
+		convey.Convey("01-executes without error when resetErr is nil and event created successfully", func() {
 			mockCreate := gomonkey.ApplyMethodReturn(p.client, "CreateEvent", &v1.Event{}, nil)
 			defer mockCreate.Reset()
-			err := p.AfterReset(ctx, []plugin.ResetDevice{{LogicID: 0}}, nil)
-			convey.So(err, convey.ShouldBeNil)
+			p.AfterReset(ctx, []plugin.ResetDevice{{LogicID: 0}}, nil)
 		})
-		convey.Convey("02-returns nil when resetErr is not nil and event created successfully", func() {
+		convey.Convey("02-executes without error when resetErr is not nil and event created successfully", func() {
 			mockCreate := gomonkey.ApplyMethodReturn(p.client, "CreateEvent", &v1.Event{}, nil)
 			defer mockCreate.Reset()
-			err := p.AfterReset(ctx, []plugin.ResetDevice{{LogicID: 0}}, resetRecordTestErr)
-			convey.So(err, convey.ShouldBeNil)
+			p.AfterReset(ctx, []plugin.ResetDevice{{LogicID: 0}}, resetRecordTestErr)
 		})
 	})
 }

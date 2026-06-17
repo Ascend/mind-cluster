@@ -50,16 +50,14 @@ func init() {
 
 func (p *testPlugin) Name() string { return p.name }
 
-func (p *testPlugin) PreReset(_ context.Context, _ []ResetDevice) error {
-	return nil
+func (p *testPlugin) PreReset(_ context.Context, _ []ResetDevice) {
 }
 
 func (p *testPlugin) CustomReset(_ context.Context, _ []ResetDevice, resetErr error) error {
 	return resetErr
 }
 
-func (p *testPlugin) AfterReset(_ context.Context, _ []ResetDevice, _ error) error {
-	return nil
+func (p *testPlugin) AfterReset(_ context.Context, _ []ResetDevice, _ error) {
 }
 
 func init() {
