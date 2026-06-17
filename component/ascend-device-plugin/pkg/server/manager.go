@@ -268,7 +268,12 @@ func (hdm *HwDevManager) getNewNodeAnnotation(oldNode *v1.Node) (map[string]stri
 	annotationMap[common.SuperPodIDKey] = strconv.Itoa(int(hdm.getSuperPodInfo().SuperPodId))
 	annotationMap[serverIndexKey] = strconv.Itoa(int(hdm.getSuperPodInfo().ServerId))
 	annotationMap[serverTypeKey] = getDevType(common.ParamOption.RealCardType)
-	annotationMap[api.RackIDKey] = strconv.Itoa(int(hdm.getSuperPodInfo().RackId))
+	if common.ParamOption.RealCardType == api.Ascend910A5 {
+		superPodType := hdm.getSuperPodInfo().SuperPodType
+		if superPodType == common.ProductType1D || superPodType == common.ProductType2D {
+			annotationMap[api.RackIDKey] = strconv.Itoa(int(hdm.getSuperPodInfo().RackId))
+		}
+	}
 
 	return annotationMap, nil
 }
