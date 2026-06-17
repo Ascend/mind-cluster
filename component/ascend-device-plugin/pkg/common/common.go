@@ -667,14 +667,17 @@ func GetJobNameOfPod(pod *v1.Pod) string {
 	if pod == nil {
 		return ""
 	}
-	taskName, ok := pod.Labels[ResetTaskNameKey]
-	if !ok {
-		taskName, ok = pod.Labels[ResetTaskNameKeyInLabel]
-		if !ok {
-			return ""
+	var jobLabelKeys = []string{
+		ResetTaskNameKey,
+		ResetTaskNameKeyInLabel,
+		DeploymentNameKeyInLabel,
+	}
+	for _, key := range jobLabelKeys {
+		if val, exists := pod.Labels[key]; exists {
+			return val
 		}
 	}
-	return taskName
+	return ""
 }
 
 // GetSyncMapLen get sync map length

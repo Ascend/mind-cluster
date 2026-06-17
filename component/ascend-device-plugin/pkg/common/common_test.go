@@ -688,44 +688,62 @@ func TestCheckDeviceName(t *testing.T) {
 	})
 }
 
+// newTestPod creates a test Pod instance with specified labels
+func newTestPod(labels map[string]string) *v1.Pod {
+	return &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels: labels,
+		},
+	}
+}
+
 // TestGetJobNameOfPod
 func TestGetJobNameOfPod(t *testing.T) {
-	convey.Convey("test GetJobNameOfPod", t, func() {
+	convey.Convey("Test GetJobNameOfPod function", t, func() {
 		const fakeJobName = "job1"
-		convey.Convey("pod is nil", func() {
-			jobName := GetJobNameOfPod(nil)
-			convey.ShouldEqual(jobName, "")
+		convey.Convey("Pod pointer is nil", func() {
+			res := GetJobNameOfPod(nil)
+			convey.So(res, convey.ShouldEqual, "")
 		})
-		convey.Convey("pod has vcjob name", func() {
-			pod := &v1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						ResetTaskNameKey: fakeJobName,
-					},
-				},
-			}
-			jobName := GetJobNameOfPod(pod)
-			convey.ShouldEqual(jobName, fakeJobName)
+
+		convey.Convey("Label ResetTaskNameKey exists (highest priority)", func() {
+			pod := newTestPod(map[string]string{ResetTaskNameKey: fakeJobName})
+			res := GetJobNameOfPod(pod)
+			convey.So(res, convey.ShouldEqual, fakeJobName)
 		})
-		convey.Convey("pod has acjob name", func() {
-			pod := &v1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						ResetTaskNameKeyInLabel: fakeJobName,
-					},
-				},
-			}
-			jobName := GetJobNameOfPod(pod)
-			convey.ShouldEqual(jobName, fakeJobName)
+
+		convey.Convey("Label ResetTaskNameKeyInLabel exists (second priority)", func() {
+			pod := newTestPod(map[string]string{ResetTaskNameKeyInLabel: fakeJobName})
+			res := GetJobNameOfPod(pod)
+			convey.So(res, convey.ShouldEqual, fakeJobName)
 		})
-		convey.Convey("pod has no name", func() {
-			pod := &v1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{},
-				},
-			}
-			jobName := GetJobNameOfPod(pod)
-			convey.ShouldEqual(jobName, "")
+
+		convey.Convey("Label DeploymentNameKeyInLabel exists (lowest priority)", func() {
+			pod := newTestPod(map[string]string{DeploymentNameKeyInLabel: fakeJobName})
+			res := GetJobNameOfPod(pod)
+			convey.So(res, convey.ShouldEqual, fakeJobName)
+		})
+
+		convey.Convey("Multiple target labels exist, verify priority rule", func() {
+			pod := newTestPod(map[string]string{
+				ResetTaskNameKey:         fakeJobName,
+				ResetTaskNameKeyInLabel:  "other-job",
+				DeploymentNameKeyInLabel: "other-job2",
+			})
+			res := GetJobNameOfPod(pod)
+			convey.So(res, convey.ShouldEqual, fakeJobName)
+		})
+
+		convey.Convey("No target labels exist, return empty string", func() {
+			pod := newTestPod(map[string]string{"other-label": "val"})
+			res := GetJobNameOfPod(pod)
+			convey.So(res, convey.ShouldEqual, "")
+		})
+
+		convey.Convey("Pod has empty label map, return empty string", func() {
+			pod := newTestPod(map[string]string{})
+			res := GetJobNameOfPod(pod)
+			convey.So(res, convey.ShouldEqual, "")
 		})
 	})
 }
