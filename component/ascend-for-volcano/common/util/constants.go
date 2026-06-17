@@ -101,6 +101,14 @@ const (
 	SuperPodFitAnnoKey = "sp-fit"
 )
 
+// constants for inference service
+const (
+	// InferServiceScheduleAnnoKey annotation key to enable inference service affinity scheduling
+	InferServiceScheduleAnnoKey = "huawei.com/infer_service_schedule"
+	// InferServiceScheduleEnable annotation value to enable inference service affinity scheduling
+	InferServiceScheduleEnable = "true"
+)
+
 // value of schedule_policy annotation
 const (
 	Chip1Node2         = "chip1-node2"         // 910a card
