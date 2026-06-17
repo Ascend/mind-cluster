@@ -31,13 +31,14 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/time/rate"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
 	"Ascend-device-plugin/pkg/common"
+	"Ascend-device-plugin/pkg/device/hangdetection"
 	"Ascend-device-plugin/pkg/kubeclient"
 	"ascend-common/api"
 	"ascend-common/devmanager"
@@ -2042,6 +2043,32 @@ func TestAscendTools_DoHandleUboeLinkDownCheck(t *testing.T) {
 			tool.DoHandleUboeLinkDownCheck(devices)
 			faultInfoMap := common.GetAndCleanFaultInfo()
 			convey.So(faultInfoMap[1][0].EventID, convey.ShouldEqual, npuCommon.UBOESubHealFaultCode)
+		})
+	})
+}
+
+func TestHandleHangCardFaultEvents(t *testing.T) {
+	convey.Convey("test HandleHangCardFaultEvents", t, func() {
+		tool := mockAscendTools()
+		convey.Convey("when devices is empty, should return immediately", func() {
+			tool.HandleHangCardFaultEvents(nil)
+		})
+		convey.Convey("when devices is not empty, should register logicIDs and process fault cache", func() {
+			hangdetection.RegisterLogicIDForProducer(int32(1))
+			devFault1 := &npuCommon.DevFaultInfo{LogicID: 1, EventID: npuCommon.HangFaultCode, Assertion: npuCommon.FaultOccur}
+			called := false
+			patches := gomonkey.ApplyFunc(common.DoSaveDevFaultInfo, func(faultInfo npuCommon.DevFaultInfo, _ bool) {
+				if faultInfo.LogicID == devFault1.LogicID {
+					convey.So(faultInfo.Assertion, convey.ShouldEqual, devFault1.Assertion)
+				}
+				called = true
+			}).ApplyFunc(hangdetection.GetAndCleanAllHangFaultCache, func() []*npuCommon.DevFaultInfo {
+				return []*npuCommon.DevFaultInfo{devFault1}
+			})
+			defer patches.Reset()
+			devices := []*common.NpuDevice{{LogicID: 1}}
+			tool.HandleHangCardFaultEvents(devices)
+			convey.So(called, convey.ShouldBeTrue)
 		})
 	})
 }

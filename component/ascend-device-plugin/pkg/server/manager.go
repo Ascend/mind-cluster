@@ -38,6 +38,7 @@ import (
 	"Ascend-device-plugin/pkg/common"
 	"Ascend-device-plugin/pkg/device"
 	"Ascend-device-plugin/pkg/device/deviceswitch"
+	"Ascend-device-plugin/pkg/device/hangdetection"
 	"Ascend-device-plugin/pkg/kubeclient"
 	"Ascend-device-plugin/pkg/next/devicefactory/customname"
 	"Ascend-device-plugin/pkg/plugin/builtin"
@@ -651,6 +652,9 @@ func (hdm *HwDevManager) ListenDevice(ctx context.Context) {
 
 	// report device fault to k8s event
 	go hdm.manager.WriteFaultToEvent(ctx)
+
+	hdm.startFaultProducer(ctx)
+
 	initTime := time.Now()
 	ticker := time.NewTicker(time.Duration(common.ParamOption.ListAndWatchPeriod) * time.Second)
 	defer ticker.Stop()
@@ -1691,9 +1695,9 @@ func (hdm *HwDevManager) mendSubscribeFaultEvents() {
 			hdm.manager.HandleLostChipFaultEvents(npuDevice, initLogicIDs)
 			hdm.manager.HandleLostNetworkFaultEvents(npuDevice, initLogicIDs)
 			hdm.manager.HandleUBOELinkDownCheck(npuDevice, &uboeDownDevices)
-			hdm.manager.HandleHangCardFaultEvents(npuDevice)
 		}
 		hdm.manager.DoHandleUboeLinkDownCheck(uboeDownDevices)
+		hdm.manager.HandleHangCardFaultEvents(npuDevices)
 	}
 }
 
@@ -1781,4 +1785,9 @@ func (hdm *HwDevManager) DoSetMultiDiePolicyForA3() {
 	if err := hdm.manager.GetDmgr().SetMultiDiePolicy(dcmi.MultiDieIndep); err != nil {
 		hwlog.RunLog.Warnf("do set multi die policy %v failed, err: %v", dcmi.MultiDieIndep, err)
 	}
+}
+
+func (hdm *HwDevManager) startFaultProducer(ctx context.Context) {
+	// start the hang detection fault producer
+	go hangdetection.StartHangDetectionProducer(ctx, hdm.manager.GetDmgr())
 }

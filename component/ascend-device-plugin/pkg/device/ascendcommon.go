@@ -155,7 +155,7 @@ type DevManager interface {
 	GetResetFailedTimes(int32) int
 	SetResetFailedTimes(int32, int)
 	HandleDropCardFaultEvents(*common.NpuDevice)
-	HandleHangCardFaultEvents(*common.NpuDevice)
+	HandleHangCardFaultEvents([]*common.NpuDevice)
 	HandleLostChipFaultEvents(*common.NpuDevice, []int32)
 	HandleLostNetworkFaultEvents(*common.NpuDevice, []int32)
 	LogFaultModeChange(*common.NpuDevice, []int32, string)
@@ -1664,11 +1664,26 @@ func (tool *AscendTools) checkCardDropFault(logicID int32) bool {
 	return false
 }
 
-func (tool *AscendTools) HandleHangCardFaultEvents(device *common.NpuDevice) {
-	if device == nil {
+var registerHangOnce sync.Once
+
+// HandleHangCardFaultEvents handle hang card fault events
+func (tool *AscendTools) HandleHangCardFaultEvents(devices []*common.NpuDevice) {
+	if len(devices) == 0 {
 		return
 	}
-	hangdetection.DetectHangFault(device.LogicID, tool.dmgr)
+	registerHangOnce.Do(func() {
+		for _, device := range devices {
+			hangdetection.RegisterLogicIDForProducer(device.LogicID)
+		}
+	})
+
+	hwlog.RunLog.Debugf("load hang fault start")
+	for _, faultInfo := range hangdetection.GetAndCleanAllHangFaultCache() {
+		if faultInfo != nil {
+			common.DoSaveDevFaultInfo(*faultInfo, faultInfo.Assertion != npuCommon.FaultOccur)
+		}
+	}
+	hwlog.RunLog.Debugf("load hang fault end")
 }
 
 // HandleLostChipFaultEvents handle chip fault events that may be lost by the fault subscription interface
