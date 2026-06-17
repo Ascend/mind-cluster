@@ -638,7 +638,7 @@ func TestJobOrderFn(t *testing.T) {
 	tests := mockJobOrderTestCase()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := jobOrderFn(tt.job1, tt.job2)
+			got := jobOrderFn(tt.job1, tt.job2, sHandler)
 			if got != tt.want {
 				t.Errorf("jobOrderFn got %v, want %v", got, tt.want)
 			}

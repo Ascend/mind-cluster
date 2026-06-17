@@ -31,13 +31,14 @@ func (tp *chip4nodex) judgeNodeAndTaskNPU(taskNPU int, nodeTop []int) error {
 		if judgeNodeAndTaskNpuIn4Pmesh(taskNPU, nodeTop) {
 			return nil
 		}
-		return fmt.Errorf("node topo does not meet task in 4Pmesh affinity, require(%d), available %v", taskNPU, nodeTop)
+		return fmt.Errorf("%s node topo does not meet task in 4Pmesh affinity, require(%d), available %v",
+			util.NPUResourceShortageError, taskNPU, nodeTop)
 	}
 	// do not need 4Pmesh affinity
 	if taskNPU <= len(nodeTop) {
 		return nil
 	}
-	return fmt.Errorf("node topo does not meet task require(%d), available %v", taskNPU, nodeTop)
+	return fmt.Errorf("%s node topo does not meet task require(%d), available %v", util.NPUResourceShortageError, taskNPU, nodeTop)
 }
 
 // validNPUJob check the job req npu num and mode
@@ -240,7 +241,7 @@ func selectNPUMultiMesh(taskNPUNum int, nodeTop []int) []int {
 		}
 	}
 	if len(ret) < taskNPUNum {
-		klog.V(util.LogErrorLev).Infof("nodeTop %v do not satisify taskNPUNum %d", nodeTop, taskNPUNum)
+		klog.V(util.LogErrorLev).Infof("nodeTop %v do not satisfy taskNPUNum %d", nodeTop, taskNPUNum)
 		return nil
 	}
 	return ret
@@ -289,7 +290,7 @@ func selectNPUinSingleMesh(taskNPUNum int, nodeTop []int) []int {
 	}
 
 	if len(ret) < taskNPUNum {
-		klog.V(util.LogErrorLev).Infof("nodeTop %v do not satisify taskNPUNum %d", nodeTop, taskNPUNum)
+		klog.V(util.LogErrorLev).Infof("nodeTop %v do not satisfy taskNPUNum %d", nodeTop, taskNPUNum)
 		return nil
 	}
 	return ret

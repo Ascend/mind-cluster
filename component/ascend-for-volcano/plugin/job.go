@@ -927,7 +927,7 @@ func (sJob *SchedulerJob) checkNodeNum(taskInfo *api.TaskInfo, vcNode NPUNode) e
 		return fmt.Errorf("not have %s", vcTask.ReqNPUName)
 	}
 	if int(nodeNPUNum/util.NPUHexKilo) < vcTask.ReqNPUNum {
-		return fmt.Errorf("node not meet task request %s:%d", vcTask.ReqNPUName, vcTask.ReqNPUNum)
+		return fmt.Errorf("%s %s:%d", util.NPUResourceShortageError, vcTask.ReqNPUName, vcTask.ReqNPUNum)
 	}
 	return nil
 }

@@ -22,6 +22,7 @@ package base
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -248,6 +249,13 @@ func (tp *NPUHandler) SetMaxCardNPUNum(num int) {
 	tp.MaxCardNPUNum = num
 }
 
+func (tp *NPUHandler) GetMaxCardNPUNum() int {
+	if tp == nil {
+		return 0
+	}
+	return tp.MaxCardNPUNum
+}
+
 // JudgeNodeAndTaskNPU judge node and task npu num
 func (tp *NPUHandler) JudgeNodeAndTaskNPU(taskNPU int, nodeNPUTopology []int) error {
 	if tp == nil {
@@ -259,8 +267,8 @@ func (tp *NPUHandler) JudgeNodeAndTaskNPU(taskNPU int, nodeNPUTopology []int) er
 
 	if len(nodeNPUTopology) < taskNPU {
 		klog.V(util.LogWarningLev).Infof("judgeNodeAndTaskNPU node don't have enough resource, req<%d>, idle<%d>", taskNPU, len(nodeNPUTopology))
-		return fmt.Errorf("node don't have enough npu resource, req<%d>, idle<%d>",
-			taskNPU, len(nodeNPUTopology))
+		return fmt.Errorf("%s node don't have enough resource, req<%d>, idle<%d>",
+			util.NPUResourceShortageError, taskNPU, len(nodeNPUTopology))
 	}
 
 	return nil
@@ -282,10 +290,85 @@ func (tp *NPUHandler) SelectNPUFromNode(task *api.TaskInfo, node plugin.NPUNode)
 		return nil, fmt.Errorf("selectNPUFromNode err: %s", err.Error())
 	}
 	if len(nodeTop) < taskNPUNum {
-		return nil, fmt.Errorf("selectNPUFromNode node<%s> npu<%v> not meet task req num<%d>",
-			node.Name, nodeTop, taskNPUNum)
+		return nil, fmt.Errorf("%s selectNPUFromNode node<%s> top<%v> not meet task req<%d>",
+			util.NPUResourceShortageError, node.Name, nodeTop, taskNPUNum)
 	}
 	return nodeTop[:taskNPUNum], nil
+}
+
+// Preemptable default preempt logic: cross-card aggregation strategy
+func (tp *NPUHandler) Preemptable(preemptor *api.TaskInfo, preemptees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	if tp == nil || preemptor == nil || vcNode == nil || len(preemptees) == 0 {
+		klog.V(util.LogInfoLev).Infof("Preemptable: invalid arguments, handler nil=%v preemptor nil=%v "+
+			"vcNode nil=%v preemptees=%d", tp == nil, preemptor == nil, vcNode == nil, len(preemptees))
+		return nil, false
+	}
+	maxCardNPUNum := tp.GetMaxCardNPUNum()
+	if maxCardNPUNum <= 0 {
+		klog.V(util.LogInfoLev).Infof("Preemptable: maxCardNPUNum is 0")
+		return nil, false
+	}
+	reqNPUNum, err := tp.GetTaskReqNPUNum(preemptor)
+	if err != nil || reqNPUNum <= 0 {
+		klog.V(util.LogInfoLev).Infof("Preemptable: invalid reqNPUNum %d, err %v", reqNPUNum, err)
+		return nil, false
+	}
+
+	klog.V(util.LogInfoLev).Infof("Preemptable: task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
+		"preemptees<%d>", preemptor.Name, reqNPUNum, maxCardNPUNum, vcNode.Name, len(preemptees))
+
+	cardFreeCount := plugin.CalcCardFreeCount(vcNode, preemptees, maxCardNPUNum)
+	if len(cardFreeCount) == 0 {
+		klog.V(util.LogInfoLev).Infof("Preemptable: no free cards after preemptees removed on node<%s>",
+			vcNode.Name)
+		return nil, false
+	}
+
+	totalFree := 0
+	for _, fc := range cardFreeCount {
+		totalFree += fc
+	}
+	if totalFree < reqNPUNum {
+		klog.V(util.LogInfoLev).Infof("Preemptable: totalFree<%d> < reqNPUNum<%d> on node<%s>, not feasible",
+			totalFree, reqNPUNum, vcNode.Name)
+		return nil, false
+	}
+
+	type cardInfo struct {
+		id        int
+		freeCount int
+	}
+	cards := make([]cardInfo, 0, len(cardFreeCount))
+	for id, fc := range cardFreeCount {
+		if fc > 0 {
+			cards = append(cards, cardInfo{id, fc})
+		}
+	}
+	sort.Slice(cards, func(i, j int) bool { return cards[i].freeCount > cards[j].freeCount })
+
+	remaining := reqNPUNum
+	feasibleCards := make(map[int]struct{})
+	for _, c := range cards {
+		if remaining <= 0 {
+			break
+		}
+		feasibleCards[c.id] = struct{}{}
+		remaining -= c.freeCount
+	}
+
+	klog.V(util.LogInfoLev).Infof("Preemptable: task<%s> on node<%s>, selected %d feasible cards, "+
+		"remaining need<%d>", preemptor.Name, vcNode.Name, len(feasibleCards), remaining)
+
+	filtered := plugin.FilterPreempteesByFeasibleCards(vcNode, preemptees, feasibleCards, maxCardNPUNum)
+	if len(filtered) == 0 {
+		klog.V(util.LogInfoLev).Infof("Preemptable: task<%s> on node<%s>, no preemptees on feasible cards",
+			preemptor.Name, vcNode.Name)
+		return nil, false
+	}
+	klog.V(util.LogInfoLev).Infof("Preemptable: task<%s> on node<%s>, filtered %d/%d preemptees, feasible",
+		preemptor.Name, vcNode.Name, len(filtered), len(preemptees))
+	return filtered, true
 }
 
 // ReleaseAnnotation release annotation

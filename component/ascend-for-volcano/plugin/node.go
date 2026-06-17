@@ -27,7 +27,7 @@ import (
 	"strconv"
 	"strings"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog"
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -92,6 +92,14 @@ type VNode struct {
 	ValidVNode bool
 	// Chip type 910B1/910B2C/910B3/910B4
 	ChipType string
+}
+
+// GetChipCount get chip count of npu node.
+func (n *NPUNode) GetChipCount(npuResourceName v1.ResourceName) (free, total, occupied int) {
+	total = int(n.Allocate[npuResourceName] / util.NPUHexKilo)
+	free = int(n.Idle[npuResourceName] / util.NPUHexKilo)
+	occupied = total - free
+	return
 }
 
 // VChip vnpu chip class

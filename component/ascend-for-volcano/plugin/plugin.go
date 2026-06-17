@@ -50,6 +50,8 @@ type SchedulerPluginNeed interface {
 	ReleaseAnnotation(*api.TaskInfo, NPUNode) *NPUNode
 	PreStartAction(ssn *framework.Session) error
 	InitMyJobPlugin(util.SchedulerJobAttr, ScheduleEnv) error
+	GetMaxCardNPUNum() int
+	Preemptable(preemptor *api.TaskInfo, preemptees []*api.TaskInfo, vcNode *NPUNode) ([]*api.TaskInfo, bool)
 }
 
 // BackupPodAllocatedHook is an optional interface for policy handlers that need

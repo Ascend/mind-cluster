@@ -284,6 +284,15 @@ func (tp *chip8node8ra64sp) scoreNodesForJob(job *plugin.SchedulerJob, task *api
 	tp.scoreNodeForReadyJob(task, job, sMap)
 }
 
+// Preemptable override: SuperPod scheduling policy does not support preemption
+func (tp *chip8node8ra64sp) Preemptable(preemptor *api.TaskInfo, preemptees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	klog.V(util.LogInfoLev).Infof("%s Preemptable: SuperPod policy does not support preemption, "+
+		"preemptor<%s> preemptees<%d> node<%s>, Abstain",
+		tp.GetPluginName(), preemptor.Name, len(preemptees), vcNode.Name)
+	return nil, false
+}
+
 func (tp *chip8node8ra64sp) addNewStrategyToChain(from strategyKey, dist strategyKey) {
 	if tp.nextStrategyChain == nil {
 		tp.nextStrategyChain = make(map[strategyKey]strategyKey)

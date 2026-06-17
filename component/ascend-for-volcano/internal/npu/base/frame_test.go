@@ -220,7 +220,7 @@ func buildCheckNodeNPUByTaskTestCase4() checkNodeNPUByTaskTestCase {
 				Annotation: map[string]string{util.NPU310PCardName: "Ascend310P-0, Ascend310P-1"},
 			},
 		},
-		WantErr: fmt.Errorf("node don't have enough npu resource, req<2>, idle<0>"),
+		WantErr: fmt.Errorf("%s node don't have enough resource, req<2>, idle<0>", util.NPUResourceShortageError),
 	}
 }
 
@@ -234,7 +234,7 @@ func buildCheckNodeNPUByTaskTestCase5() checkNodeNPUByTaskTestCase {
 				Annotation: map[string]string{util.NPU310PCardName: "Ascend310P-0"},
 			},
 		},
-		WantErr: errors.New("node don't have enough npu resource, req<2>, idle<1>"),
+		WantErr: fmt.Errorf("%s node don't have enough resource, req<2>, idle<1>", util.NPUResourceShortageError),
 	}
 }
 
@@ -384,7 +384,7 @@ func buildJudgeNodeAndTaskNPUTestCases() []judgeNodeAndTaskNPUTestCase {
 			Name:    "03-JudgeNodeAndTaskNPU return err when node not meet task npu num",
 			TaskNPU: util.NPUIndex2,
 			NodeTop: []int{0},
-			WantErr: errors.New("node don't have enough npu resource, req<2>, idle<1>"),
+			WantErr: fmt.Errorf("%s node don't have enough resource, req<2>, idle<1>", util.NPUResourceShortageError),
 		},
 	}
 }

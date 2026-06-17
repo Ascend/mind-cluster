@@ -195,6 +195,15 @@ func (tp *chip1softsharedev) selectNPUFromNode(task *api.TaskInfo, node plugin.N
 	return filterNodeTop, nil
 }
 
+// Preemptable override: soft share dev policy does not support preemption
+func (tp *chip1softsharedev) Preemptable(preemptor *api.TaskInfo, preemptees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	klog.V(util.LogInfoLev).Infof("%s Preemptable: soft share dev policy does not support preemption, "+
+		"preemptor<%s> preemptees<%d> node<%s>, Abstain",
+		tp.GetPluginName(), preemptor.Name, len(preemptees), vcNode.Name)
+	return nil, false
+}
+
 // ReleaseAnnotation Release used resource.
 func (tp *chip1softsharedev) ReleaseAnnotation(_ *api.TaskInfo, node plugin.NPUNode) *plugin.NPUNode {
 	return &node
