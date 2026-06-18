@@ -165,7 +165,7 @@
 - 静态虚拟化、动态虚拟化基于HDK实现，通过HDK接口将芯片切分成vNPU后，挂载到容器中使用。
 - 如果使用动态虚拟化功能，请直接参见[动态虚拟化](./06_mounting_vnpu.md#动态虚拟化)章节，不需要提前使用npu-smi命令创建vNPU。
 - 如果使用静态虚拟化功能，需要先参见[创建vNPU](./04_creating_vnpu.md)，再进行挂载到容器操作。
-- npu-smi工具相关命令的详细说明请参见《Atlas A3 中心推理和训练硬件 26.0.RC1 npu-smi 命令参考》中的“[昇腾虚拟化实例（AVI）相关命令](https://support.huawei.com/enterprise/zh/doc/EDOC1100568420/690dda6e)”章节。
+- npu-smi工具相关命令的详细说明请参见《Atlas A3 中心推理和训练硬件 npu-smi 命令参考》中的“[昇腾虚拟化实例（AVI）相关命令](https://support.huawei.com/enterprise/zh/doc/EDOC1100568420/690dda6e)”章节。
 
 ## 使用约束<a name="section911013420264"></a>
 
@@ -180,3 +180,4 @@
     3. 执行**ipmcset -d npuworkmode -v 0**命令设置NPU芯片的工作模式为AMP模式。
 
     查询和设置NPU芯片工作模式的详细介绍请参见《[Atlas 800 训练服务器 iBMC用户指南（型号 9000）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583)》中的“命令行介绍 \> 服务器命令 \>  [查询和设置NPU芯片工作模式（npuworkmode）](https://support.huawei.com/enterprise/zh/doc/EDOC1100136583/b6e6ed5a)”章节。
+- NPU在虚拟化实例场景下，由于虚拟化后vNPU硬件资源（如算力、运行内存等）变为整个NPU的N分之一，以及在不同vNPU之间轮询调度等原因，模型性能相较物理机会有一定比例的下降，最终性能取决于用户对OS、模型、算子等的适配和系统调优。

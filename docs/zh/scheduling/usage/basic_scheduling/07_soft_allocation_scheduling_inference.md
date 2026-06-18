@@ -64,6 +64,42 @@
 
 ## 通过命令行使用（Volcano）<a name="ZH-CN_TOPIC_00000024792271456"></a>
 
+### 环境准备
+
+主机侧通过`npu-smi`工具开启容器共享模式，可支持多个容器挂载同一设备。若设备未开启容器共享模式，则只能挂载到单个容器。若配合MindCluster使用，要求整节点开启容器共享模式。
+
+```shell
+# 设置容器共享模式
+npu-smi set -t device-share -i ${id} -c ${chip_id} -d ${value}
+
+# 查询设备容器共享模式
+npu-smi info -t device-share -i ${id}
+```
+
+**表 1 参数说明**
+
+|参数|说明|
+|---|---|
+|id|设备ID。通过`npu-smi info -m`命令查询获取的NPU ID即为设备ID。|
+|chip_id|芯片ID。通过`npu-smi info -m`命令查询获取的Chip ID即为芯片ID。|
+|value|容器共享模式启动状态。<ul><li>0：关闭</li><li>1：开启</li></ul>默认为关闭状态。|
+
+主机侧可设置容器共享持久化启动状态。若持久化功能为开启状态，则重启系统后设备的容器共享模式启动状态与重启前保持一致。
+
+```shell
+npu-smi set -t device-share-cfg-recover -d ${value}
+```
+
+**表 2 参数说明**
+
+|参数|说明|
+|---|---|
+|value|容器共享持久化启动状态。<ul><li>0：关闭</li><li>1：开启</li></ul>默认为关闭状态。|
+
+### 准备vCANN-RT
+
+参考[vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md#%E6%BA%90%E7%A0%81%E8%8E%B7%E5%8F%96)官方文档，完成vCANN-RT的编译与配置操作。
+
 ### 制作镜像<a name="ZH-CN_TOPIC_0000002511427026"></a>
 
 **获取推理镜像**
@@ -99,9 +135,10 @@
 
 ### 准备任务YAML<a name="ZH-CN_TOPIC_00000024793871220102"></a>
 
->[!NOTE]  
->如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载“/dev”目录下的设备。其他目录（如“/usr”）用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
->因为Atlas 200I SoC A1 核心板场景不支持Ascend Docker Runtime，用户也无需修改YAML文件。
+>[!NOTE]
+> 
+>- 如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载NPU芯片设备。用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
+>- 因为Atlas 200I SoC A1 核心板场景不支持Ascend Docker Runtime，用户也无需修改YAML文件。
 
 **操作步骤<a name="zh-cn_topic_0000001558853680_zh-cn_topic_0000001609074213_section14665181617334"></a>**
 

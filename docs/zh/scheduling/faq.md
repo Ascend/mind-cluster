@@ -17,7 +17,7 @@
 
 **问题描述<a name="section89018461129"></a>**
 
-Kubernetes 1.25.10及以上版本，集群调度组件不支持vNPU的恢复功能。该功能的详细说明和操作指导请参见《Atlas 中心推理卡 26.0.RC1 npu-smi 命令参考》中的“昇腾虚拟化实例（AVI）相关命令 \>  [设置vNPU的配置恢复使能状态](https://support.huawei.com/enterprise/zh/doc/EDOC1100568418/d1e009e6)”章节。
+Kubernetes 1.25.10及以上版本，集群调度组件不支持vNPU的恢复功能。该功能的详细说明和操作指导请参见《Atlas 中心推理卡 npu-smi 命令参考》中的“昇腾虚拟化实例（AVI）相关命令 \>  [设置vNPU的配置恢复使能状态](https://support.huawei.com/enterprise/zh/doc/EDOC1100568418/d1e009e6)”章节。
 
 **原因分析<a name="section1175235326"></a>**
 
