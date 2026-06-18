@@ -877,14 +877,14 @@ func (sHandle *ScheduleHandler) boostFaultPod(
 
 	if best := nodeWithMaxScore(cat.otherNodes); best != "" {
 		scoreMap[best] = bonus
-		klog.V(util.LogDebugLev).Infof("addPreferPreviousNodeScore: fault pod task=%s rank=%d "+
+		klog.V(util.LogInfoLev).Infof("addPreferPreviousNodeScore: fault pod task=%s rank=%d "+
 			"boosted otherNode=%s score=%.0f", task.Name, myRank, best, bonus)
 		return
 	}
 	if cat.selfNode != "" {
 		if _, exists := scoreMap[cat.selfNode]; exists {
 			scoreMap[cat.selfNode] = bonus
-			klog.V(util.LogDebugLev).Infof("addPreferPreviousNodeScore: fault pod task=%s rank=%d "+
+			klog.V(util.LogInfoLev).Infof("addPreferPreviousNodeScore: fault pod task=%s rank=%d "+
 				"fallback selfNode=%s score=%.0f", task.Name, myRank, cat.selfNode, bonus)
 		}
 	}
@@ -899,20 +899,20 @@ func (sHandle *ScheduleHandler) boostNonFaultPod(
 	if cat.selfNode != "" {
 		if _, exists := scoreMap[cat.selfNode]; exists {
 			scoreMap[cat.selfNode] = bonus
-			klog.V(util.LogDebugLev).Infof("addPreferPreviousNodeScore: task=%s rank=%d "+
+			klog.V(util.LogInfoLev).Infof("addPreferPreviousNodeScore: task=%s rank=%d "+
 				"boosted selfNode=%s score=%.0f", task.Name, myRank, cat.selfNode, bonus)
 			return
 		}
 	}
 	if best := nodeWithMaxScore(cat.otherNodes); best != "" {
 		scoreMap[best] = bonus
-		klog.V(util.LogDebugLev).Infof("addPreferPreviousNodeScore: task=%s rank=%d "+
+		klog.V(util.LogInfoLev).Infof("addPreferPreviousNodeScore: task=%s rank=%d "+
 			"boosted otherNode=%s score=%.0f", task.Name, myRank, best, bonus)
 		return
 	}
 	if best := nodeWithMaxScore(cat.peerNodes); best != "" {
 		scoreMap[best] = bonus
-		klog.V(util.LogDebugLev).Infof("addPreferPreviousNodeScore: task=%s rank=%d "+
+		klog.V(util.LogInfoLev).Infof("addPreferPreviousNodeScore: task=%s rank=%d "+
 			"boosted peerNode=%s score=%.0f", task.Name, myRank, best, bonus)
 	}
 }

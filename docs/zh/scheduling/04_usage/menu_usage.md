@@ -10,3 +10,4 @@
 - [SGLang推理任务最佳实践](./sglang_best_practice/menu_sglang_best_practice.md)
 - [vLLM推理任务最佳实践](./vllm_best_practice/menu_vllm_best_practice.md)
 - [Infer Operator推理任务最佳实践](./infer_operator_best_practice/menu_infer_operator_best_practice.md)
+- [任务交替运行最佳实践](./task_alternation/menu_task_alternation.md)
