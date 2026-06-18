@@ -60,7 +60,7 @@
         kubectl apply -f noded-dpc-v{version}.yaml
         ```
 
-        该yaml包含DPC和DTFS两种共享存储的故障检测，yaml中的路径为默认路径，可以根据共享存储状态输出文件的实际路径修改。
+        该yaml包含DPC和DTFS两种共享存储的故障检测。若节点只有DPC客户端，则删除“dtfsstatus”及其子项。若节点只有DTFS客户端，则删除“dpcstatus”及其子项
 
         ```ColdFusion
       volumes:

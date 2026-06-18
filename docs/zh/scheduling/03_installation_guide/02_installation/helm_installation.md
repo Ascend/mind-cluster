@@ -192,7 +192,7 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 
    noded:
      enabled: true                                                         # 安装NodeD组件
-     enableDpcOrDtfs: false                                                # 是否启用共享存储故障检测功能
+     enabledStorageCheck: ""                                                # 开启的共享存储故障检测类型，为空表示不开启
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/noded"      # NodeD组件镜像名，请根据实际情况修改
        tag: "v26.1.0"                                                      # NodeD组件镜像标签，请根据实际情况修改
@@ -316,9 +316,9 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示启用NodeD组件。</p></td>
   </tr>
   <tr>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>noded.enableDpcOrDtfs</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为false</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>设置为true表示开启共享存储故障检测功能。</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>noded.enabledStorageCheck</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为空</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>开启的共享存储故障检测类型，值域包括""、"dpc"、"dtfs"、"dpc,dtfs"。</p></td>
   </tr>
   <tr>
     <td class="cellrowborder" rowspan="2" valign="center" headers="mcps1.2.5.1.1 "><p>NPU Exporter</p></td>

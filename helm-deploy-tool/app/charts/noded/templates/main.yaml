@@ -1,9 +1,7 @@
-{{- if and .Values.enableDpcOrDtfs (not (eq (kindOf .Values.enableDpcOrDtfs) "bool")) -}}
-  {{- fail (printf "enableDpcOrDtfs must be a boolean value, got %s: %v" (kindOf .Values.enableDpcOrDtfs) .Values.enableDpcOrDtfs) -}}
-{{- end -}}
+{{- $value := .Values.enabledStorageCheck -}}
 
 {{- $key := "default" -}}
-{{- if eq (.Values.enableDpcOrDtfs | toString)  "true" -}}
+{{- if or (eq $value "dpc") (eq $value "dtfs") (eq $value "dpc,dtfs") (eq $value "dtfs,dpc") -}}
 {{- $key = "dpc" -}}
 {{- end -}}
 

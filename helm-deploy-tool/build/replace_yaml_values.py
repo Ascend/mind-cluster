@@ -23,6 +23,11 @@ CONTAINER_NAME_MAP = {
     "volcano-controllers": "controller",
 }
 
+VOLUME_ENTRY_MAP = {
+    "dpcstatus": "dpc",
+    "dtfsstatus": "dtfs",
+}
+
 REPLACE_RULES = [
     {
         "pattern": re.compile(r"^(\s*-?\s*)image:\s+([^:\s]+):(\S+)\s*$"),
@@ -145,6 +150,56 @@ def replace_block(lines, i, result_lines, container_map, keyword):
     return {"replaced": replaced, "count": info["count"]}
 
 
+def collect_volume_entry(lines, i):
+    line = lines[i]
+    if "{{" in line:
+        return None
+    m = re.match(r"^(\s+)-\s+name:\s+(\S+)\s*$", line)
+    if not m:
+        return None
+
+    indent = m.group(1)
+    name = m.group(2)
+    if name not in VOLUME_ENTRY_MAP:
+        return None
+
+    collected = [line]
+    j = i + 1
+    while j < len(lines):
+        next_line = lines[j]
+        next_stripped = next_line.lstrip()
+        if not next_stripped or next_stripped.startswith("#"):
+            j += 1
+            collected.append(next_line)
+            continue
+        next_indent = len(next_line) - len(next_stripped)
+        if next_indent <= len(indent):
+            break
+        collected.append(next_line)
+        j += 1
+
+    return {"indent": indent, "name": name, "lines": collected, "count": len(collected)}
+
+
+def replace_volume_entry(lines, i, result_lines, container_map):
+    info = collect_volume_entry(lines, i)
+    if info is None:
+        return None
+
+    indent = info["indent"]
+    name = info["name"]
+    keyword = VOLUME_ENTRY_MAP[name]
+    original_block = "\n".join(info["lines"])
+
+    replaced = [
+        indent + '{{- if contains "' + keyword + '" .Values.enabledStorageCheck }}',
+        original_block,
+        indent + "{{- end }}",
+    ]
+
+    return {"replaced": replaced, "count": info["count"]}
+
+
 def has_following_args(lines, i, keyword_indent):
     j = i + 1
     while j < len(lines):
@@ -224,6 +279,12 @@ def process_file(file_path, container_map=None, version=None):
         if res_block:
             result.extend(res_block)
             i += 3
+            continue
+
+        volume_result = replace_volume_entry(lines, i, result, container_map)
+        if volume_result:
+            result.extend(volume_result["replaced"])
+            i += volume_result["count"]
             continue
 
         args_result = replace_block(lines, i, result, container_map, "args")
