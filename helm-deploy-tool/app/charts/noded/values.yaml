@@ -1,5 +1,11 @@
 # User-defined parameters
-enableDpcOrDtfs: true
+# enabledStorageCheck - Shared storage clients to enable detection for
+# Can be set to:
+# - "": disable shared storage detection, use basic noded.yaml (default)
+# - "dpc": enable only dpcstatus mount
+# - "dtfs": enable only dtfsstatus mount
+# - "dpc,dtfs": enable both dpcstatus and dtfsstatus mounts
+enabledStorageCheck: ""
 
 image:
   repository: ""

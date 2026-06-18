@@ -7,7 +7,7 @@ clusterd:
 
 noded:
   enabled: true
-  enableDpcOrDtfs: false # Whether to enable DPC or DTFS
+  enabledStorageCheck: "" # Shared storage clients to enable detection for, Can be set to "dpc"、"dtfs"、"dpc,dtfs"
   image:
     repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/noded"
     tag: "v26.1.0"
