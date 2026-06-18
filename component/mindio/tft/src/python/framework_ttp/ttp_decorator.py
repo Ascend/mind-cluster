@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Exception Handler related classes and functions."""
+
+# ruff: noqa fmt: off pylint: skip-file
 import os
 import gc
 import re
@@ -70,18 +72,21 @@ need_pause_cond_ = threading.Condition()
 
 class PauseType(Enum):
     """Pause train type."""
+
     PAUSE = 1
     RAISE = 2
 
 
 class OptimizerType(Enum):
     """Optimizer type."""
+
     ATTENTION = 0
     MOE = 1
 
 
 class Action(Enum):
     """wait next action return type"""
+
     RETRY = 0
     EXIT = 1
 
@@ -198,7 +203,6 @@ class SaveHandler:
         return RET_OK
 
     def set_repair_rollback_config(self, args: ttp_c2python_api.RepairContext):
-
         repair_type, step, optim_idxs = args.type, args.step, args.group_idx
         src_ranks, dest_ranks, rank_list, zit_param = args.src_rank, args.dst_rank, args.rank_list, args.zit_param
         save_handler.set_repair_step(step)
@@ -214,7 +218,7 @@ class SaveHandler:
             "repair_type": repair_type,
             "src": src_ranks,
             "dst": dest_ranks,
-            "rank_list": rank_list
+            "rank_list": rank_list,
         }
 
         self._repair_step = step
@@ -308,7 +312,7 @@ class SaveHandler:
                 else:
                     self._fm_rename_call(self._dump_step, self._args)
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
+                ttp_logger.LOGGER.exception("An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
@@ -321,14 +325,14 @@ class SaveHandler:
             try:
                 self._fm_exit_call(self._exit_ctx)
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
+                ttp_logger.LOGGER.exception("An error occurred: %s", str(e))
 
     def execute_stop(self):
         try:
             set_device()
             self._fm_stop_call(self._args, self._stop_ctx)
         except Exception as e:
-            ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
+            ttp_logger.LOGGER.exception("An error occurred: %s", str(e))
             return RET_ERROR
         return RET_OK
 
@@ -337,7 +341,7 @@ class SaveHandler:
             set_device()
             ret = self._fm_clean_call(uce_error_, self._args, self._clean_ctx)
         except Exception as e:
-            ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
+            ttp_logger.LOGGER.exception("An error occurred: %s", str(e))
             return RET_EXCEPTION
         return ret
 
@@ -345,10 +349,16 @@ class SaveHandler:
         if self._fm_repair_call is not None:
             try:
                 set_device()
-                self._fm_repair_call(self._repair_step, self._need_rebuild, self._error_ranks, self._repair_info,
-                                     self._args, self._repair_ctx)
+                self._fm_repair_call(
+                    self._repair_step,
+                    self._need_rebuild,
+                    self._error_ranks,
+                    self._repair_info,
+                    self._args,
+                    self._repair_ctx,
+                )
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
+                ttp_logger.LOGGER.exception("An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
@@ -358,7 +368,7 @@ class SaveHandler:
                 set_device()
                 self._fm_rollback_call(self._repair_step, self._args, self._rollback_ctx)
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
+                ttp_logger.LOGGER.exception("An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
@@ -367,7 +377,7 @@ class SaveHandler:
             try:
                 self._fm_zit_downgrade_rebuild_call(comm_groups[1], comm_groups[0], self._args, zit_param)
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
+                ttp_logger.LOGGER.exception("An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
@@ -376,7 +386,7 @@ class SaveHandler:
             try:
                 self._fm_zit_upgrade_rebuild_call(rank_list, self._args, zit_param)
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
+                ttp_logger.LOGGER.exception("An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
@@ -385,18 +395,23 @@ class SaveHandler:
             try:
                 self._fm_zit_upgrade_rollback_call(self._repair_step, self._args, self._zit_param)
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
+                ttp_logger.LOGGER.exception("An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
     def execute_zit_upgrade_repair(self):
         if self._fm_zit_upgrade_repair_call is not None:
             try:
-                self._fm_zit_upgrade_repair_call(self._repair_step, self._need_rebuild, self._error_ranks,
-                                                 self._repair_info,
-                                                 self._args, self._zit_param)
+                self._fm_zit_upgrade_repair_call(
+                    self._repair_step,
+                    self._need_rebuild,
+                    self._error_ranks,
+                    self._repair_info,
+                    self._args,
+                    self._zit_param,
+                )
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
+                ttp_logger.LOGGER.exception("An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
@@ -423,7 +438,7 @@ class SaveHandler:
                 with torch.npu.stream(sync_stream_):
                     self._fm_save_ckpt_call(self._dump_step, self._dump_info, self._args, self._save_ckpt_ctx)
         except Exception as e:
-            ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
+            ttp_logger.LOGGER.exception("An error occurred: %s", str(e))
             ttp_c2python_api.set_dump_status(RET_ERROR)
             return
         ttp_c2python_api.set_dump_status(RET_OK)
@@ -434,7 +449,7 @@ class SaveHandler:
                 set_device()
                 self._fm_rebuild_group_call(fault_ranks, self._args, self._rebuild_group_ctx)
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
+                ttp_logger.LOGGER.exception("An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
@@ -444,7 +459,7 @@ class SaveHandler:
                 set_device()
                 self._fm_sync_stream_call()
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"An error occurred: %s", str(e))
+                ttp_logger.LOGGER.exception("An error occurred: %s", str(e))
                 return RET_ERROR
         return RET_OK
 
@@ -487,14 +502,12 @@ def save_checkpoint_callback(step: int, repairId: int, optimidxs: list, ranks: l
     """
     global repair_id_
     repair_id_ = repairId
-    ttp_logger.LOGGER.info("rank:%s set dump config step:%s, repairId:%s, optimidxs:%s, ranks:%s",
-                           rank_, step, repairId, optimidxs, ranks)
+    ttp_logger.LOGGER.info(
+        "rank:%s set dump config step:%s, repairId:%s, optimidxs:%s, ranks:%s", rank_, step, repairId, optimidxs, ranks
+    )
     save_info = []
     for list_idx, rank_list in enumerate(ranks):
-        save_info.append({
-            "type": optimidxs[list_idx],
-            "ranks": rank_list
-        })
+        save_info.append({"type": optimidxs[list_idx], "ranks": rank_list})
     save_handler.set_dump_config(step, save_info)
     save_thread = threading.Thread(target=save_data_thread)
     save_thread.start()
@@ -563,7 +576,7 @@ def launch_tcp_store_server(url: str, world_size: int):
     try:
         store, _, _ = next(_rendezvous_helper(url, 0, world_size))
     except Exception:
-        ttp_logger.LOGGER.error(f"launch tcp store server failed. world_size:")
+        ttp_logger.LOGGER.error("launch tcp store server failed. world_size:")
         return RET_ERROR
     ttp_logger.LOGGER.info(f"start tcp store server success, world_size:{world_size}, url:{url}")
     return RET_OK
@@ -571,13 +584,14 @@ def launch_tcp_store_server(url: str, world_size: int):
 
 def _process_group_name(ranks, use_hashed_name):
     from torch.distributed.distributed_c10d import _world
+
     global repair_id_, rank_
     if use_hashed_name:
         # The hashlib.sha1 is used only as a hash algorithm to prevent group name conflicts.
         # It is irrelevant to the encryption of sensitive information.
-        pg_name = hashlib.sha1(bytes("_".join(map(str, ranks)), "utf-8")).hexdigest() + '_' + str(repair_id_)
+        pg_name = hashlib.sha1(bytes("_".join(map(str, ranks)), "utf-8")).hexdigest() + '_' + str(repair_id_)  # nosec
         while pg_name in _world.pg_names.values():
-            pg_name = hashlib.sha1(bytes(pg_name + "_", "utf-8")).hexdigest()
+            pg_name = hashlib.sha1(bytes(pg_name + "_", "utf-8")).hexdigest()  # nosec
         ttp_logger.LOGGER.debug(f"[new group] rank:{rank_} repair_id_:{repair_id_} ranks:{ranks} pg_name:{pg_name}")
     else:
         if ranks == []:
@@ -663,8 +677,9 @@ def tft_pause_train(cur_step: int):
         ttp_logger.LOGGER.error(f"pause train failed, cur_step: {cur_step} invalid!")
         return
     global need_pause_, need_pause_cond_, pause_step_
-    ttp_logger.LOGGER.debug(f"[pause] rank: {rank_} need_pause_: {need_pause_}, "
-                            f"pause_step_: {pause_step_}, cur_step:{cur_step}. ")
+    ttp_logger.LOGGER.debug(
+        f"[pause] rank: {rank_} need_pause_: {need_pause_}, pause_step_: {pause_step_}, cur_step:{cur_step}. "
+    )
     with need_pause_cond_:
         if need_pause_ in [PauseType.PAUSE, PauseType.RAISE] and pause_step_ <= cur_step:
             ttp_logger.LOGGER.info("[pause] training paused, rank:%s", rank_)
@@ -752,8 +767,9 @@ def tft_set_optimizer_replica(rank: int, replica_info: list):
         tmp_replica_cnt = replica_dict.get('replica_cnt', None)
         tmp_replica_shift = replica_dict.get('replica_shift', None)
 
-        valid_flag = (isinstance(tmp_rank_list, list) and isinstance(tmp_replica_cnt, int) and
-                      isinstance(tmp_replica_shift, int))
+        valid_flag = (
+            isinstance(tmp_rank_list, list) and isinstance(tmp_replica_cnt, int) and isinstance(tmp_replica_shift, int)
+        )
         if not valid_flag:
             raise Exception(f"set_optimizer_replica failed, rank:{rank}, replica_info is invalid")
         for element in tmp_rank_list:
@@ -812,7 +828,7 @@ def get_local_ip(master_ip, local_ip):
     try:
         ips1 = master_ip.split('.')
         base = int(ips1[0]) * 256 + int(ips1[1])
-        cmd = os.popen('hostname -I')
+        cmd = os.popen('hostname -I')  # nosec
         ip_list = cmd.read().strip().split(' ')
         cmd.close()
         for ip in ip_list:
@@ -828,7 +844,7 @@ def get_local_ip(master_ip, local_ip):
             return ip_list[0]
         else:
             return local_ip
-    except Exception as e:
+    except Exception:
         return local_ip
 
 
@@ -843,29 +859,39 @@ def handle_l2_hbm_error(err_str):
     hbm_error_time = get_l2_hbm_error_time(err_str)
     can_repair = tft_can_do_uce_repair(hbm_error_time)
     start_time, end_time = get_update_start_end_time()
-    ttp_logger.LOGGER.info(f"rank:{rank_} occur l2 cache hbm error time: {hbm_error_time},"
-                           f"optimizer start update time: {start_time}, end update time:{end_time}")
+    ttp_logger.LOGGER.info(
+        f"rank:{rank_} occur l2 cache hbm error time: {hbm_error_time},"
+        f"optimizer start update time: {start_time}, end update time:{end_time}"
+    )
     return "HBM MULTI BIT ECC can repair" if can_repair else "HBM MULTI BIT ECC can't repair"
 
 
-fault_handles = {"UCE ERROR": lambda x: "UCE ERROR" if save_handler.enable_retry() else "OTHER",
-                 "HBM MULTI BIT ECC": handle_l2_hbm_error,
-                 "FORCE STOP": lambda x: "FORCE STOP",
-                 "ARF FINISH": lambda x: "ARF FINISH",
-                 "STEP FINISH": lambda x: "STEP FINISH",
-                 "HCCL OP RETRY FAILED": lambda x: "HCCL OP RETRY FAILED" if save_handler.enable_retry() else "OTHER",
-                 "SUSPECT REMOTE ERROR": lambda x: "SUSPECT REMOTE ERROR" if save_handler.enable_retry() else "OTHER"}
+fault_handles = {
+    "UCE ERROR": lambda x: "UCE ERROR" if save_handler.enable_retry() else "OTHER",
+    "HBM MULTI BIT ECC": handle_l2_hbm_error,
+    "FORCE STOP": lambda x: "FORCE STOP",
+    "ARF FINISH": lambda x: "ARF FINISH",
+    "STEP FINISH": lambda x: "STEP FINISH",
+    "HCCL OP RETRY FAILED": lambda x: "HCCL OP RETRY FAILED" if save_handler.enable_retry() else "OTHER",
+    "SUSPECT REMOTE ERROR": lambda x: "SUSPECT REMOTE ERROR" if save_handler.enable_retry() else "OTHER",
+    "UB LINK ERROR": lambda x: "UB LINK ERROR" if save_handler.enable_retry() else "OTHER",
+    "HCCS LINK ERROR": lambda x: "HCCS LINK ERROR" if save_handler.enable_retry() else "OTHER",
+}
 
 
-fault_types = {"FORCE STOP": "RS_NORMAL",
-               "UCE ERROR": "RS_UCE",
-               "HBM MULTI BIT ECC can repair": "RS_UCE",
-               "HBM MULTI BIT ECC can't repair": "RS_UCE_CORRUPTED",
-               "ARF FINISH": "RS_PREREPAIR_FINISH",
-               "STEP FINISH": "RS_STEP_FINISH",
-               "HCCL OP RETRY FAILED": "RS_HCCL_FAILED",
-               "SUSPECT REMOTE ERROR": "RS_HCCL_FAILED",
-               "OTHER": "RS_UNKNOWN"}
+fault_types = {
+    "FORCE STOP": "RS_NORMAL",
+    "UCE ERROR": "RS_UCE",
+    "HBM MULTI BIT ECC can repair": "RS_UCE",
+    "HBM MULTI BIT ECC can't repair": "RS_UCE_CORRUPTED",
+    "ARF FINISH": "RS_PREREPAIR_FINISH",
+    "STEP FINISH": "RS_STEP_FINISH",
+    "HCCL OP RETRY FAILED": "RS_HCCL_FAILED",
+    "SUSPECT REMOTE ERROR": "RS_HCCL_FAILED",
+    "UB LINK ERROR": "RS_HCCL_FAILED",
+    "HCCS LINK ERROR": "RS_HCCL_FAILED",
+    "OTHER": "RS_UNKNOWN",
+}
 
 
 def tft_register_exception_handler(fault_pattern: str, fault_type: str, fault_handle: Callable):
@@ -935,12 +961,13 @@ def tft_exception_handler(func: Callable):
                         exception = fault_handles[pattern](err_str)
                         break
 
-                ttp_logger.LOGGER.warning(f"rank:%s catch %s exception, error_code:%s，"
-                                          f" ex instance:%s", rank_, exception, error_code, err_str)
+                ttp_logger.LOGGER.warning(
+                    "rank:%s catch %s exception, error_code:%s， ex instance:%s", rank_, exception, error_code, err_str
+                )
                 report_and_wait(exception, error_code)
                 wait_next = True
             except Exception as e:
-                ttp_logger.LOGGER.exception(f"rank:%s catch other exception, ex instance:%s", rank_, str(e))
+                ttp_logger.LOGGER.exception("rank:%s catch other exception, ex instance:%s", rank_, str(e))
                 tft_report_error(ReportState.RS_UNKNOWN.value, error_code)
                 raise e
             finally:
@@ -965,21 +992,31 @@ def tft_exception_handler(func: Callable):
                 memory_reserved_after = torch_npu.npu.memory_reserved() / byte_to_gb
                 max_memory_reserved_after = torch_npu.npu.max_memory_reserved() / byte_to_gb
 
-                ttp_logger.LOGGER.info(f"[memory] rank:{rank_}"
-                                       f", memory_allocated_before:{format(memory_allocated_before, '.4f')} GB"
-                                       f", max_memory_allocated_before:{format(max_memory_allocated_before, '.4f')} GB"
-                                       f", memory_reserved_before:{format(memory_reserved_before, '.4f')} GB"
-                                       f", max_memory_reserved_before:{format(max_memory_reserved_before, '.4f')} GB"
-                                       f", memory_allocated_after:{format(memory_allocated_after, '.4f')} GB"
-                                       f", max_memory_allocated_after:{format(max_memory_allocated_after, '.4f')} GB"
-                                       f", memory_reserved_after:{format(memory_reserved_after, '.4f')} GB"
-                                       f", max_memory_reserved_after:{format(max_memory_reserved_after, '.4f')} GB")
+                ttp_logger.LOGGER.info(
+                    f"[memory] rank:{rank_}"
+                    f", memory_allocated_before:{format(memory_allocated_before, '.4f')} GB"
+                    f", max_memory_allocated_before:{format(max_memory_allocated_before, '.4f')} GB"
+                    f", memory_reserved_before:{format(memory_reserved_before, '.4f')} GB"
+                    f", max_memory_reserved_before:{format(max_memory_reserved_before, '.4f')} GB"
+                    f", memory_allocated_after:{format(memory_allocated_after, '.4f')} GB"
+                    f", max_memory_allocated_after:{format(max_memory_allocated_after, '.4f')} GB"
+                    f", memory_reserved_after:{format(memory_reserved_after, '.4f')} GB"
+                    f", max_memory_reserved_after:{format(max_memory_reserved_after, '.4f')} GB"
+                )
 
     return wrapper
 
 
-def tft_init_processor(rank: int, world_size: int, enable_local_copy: bool, enable_tls=True,
-                       tls_info='', enable_uce=True, enable_arf=False, enable_zit=False):
+def tft_init_processor(
+    rank: int,
+    world_size: int,
+    enable_local_copy: bool,
+    enable_tls=True,
+    tls_info='',
+    enable_uce=True,
+    enable_arf=False,
+    enable_zit=False,
+):
     """
     init processor
     set checkpoint callback function use to ckpt when have train task failed
@@ -1006,8 +1043,9 @@ def tft_init_processor(rank: int, world_size: int, enable_local_copy: bool, enab
     else:
         device_ = ms.context.get_context("device_id")
 
-    ret = ttp_c2python_api.init_processor(rank, world_size, enable_local_copy, enable_tls,
-                                          tls_info, enable_uce, enable_arf, enable_zit)
+    ret = ttp_c2python_api.init_processor(
+        rank, world_size, enable_local_copy, enable_tls, tls_info, enable_uce, enable_arf, enable_zit
+    )
     if ret != RET_OK:
         ttp_logger.LOGGER.error(f"init processor {rank_} failed, error:{ret}")
         wrap_exit()
@@ -1127,9 +1165,9 @@ def check_pytorch_version():
         return [int(c) if c.isdigit() else c for c in re.split(r'(\d+)', version)]
 
     if version_prefix == '2.1.0' and (cast_version_number(version_parts[3]) < cast_version_number('post11')):
-        ttp_logger.LOGGER.warning(f"Current PTA version may not support reinit_process_group API")
+        ttp_logger.LOGGER.warning("Current PTA version may not support reinit_process_group API")
         return False
-    ttp_logger.LOGGER.debug(f"Current PTA version support reinit_process_group API")
+    ttp_logger.LOGGER.debug("Current PTA version support reinit_process_group API")
     return True
 
 
@@ -1184,11 +1222,11 @@ def tft_set_step_args(args):
     set args after every train step
     """
     if args is None:
-        ttp_logger.LOGGER.warning(f"set step args input param is None")
+        ttp_logger.LOGGER.warning("set step args input param is None")
         return
 
     if mindio_export_function_version in ["MindSpeed", "MindSpeed-LLM"]:
-        ttp_logger.LOGGER.warning(f"MindSpeed or MindSpeed-LLM no need set args")
+        ttp_logger.LOGGER.warning("MindSpeed or MindSpeed-LLM no need set args")
         return
 
     save_handler.set_model_config(args)
@@ -1211,8 +1249,11 @@ def tft_report_error(error_type: ReportState, error_code=''):
         notify_stop_callback_return()
     elif error_type == ReportState.RS_NORMAL.value:
         notify_stop_callback_return()
-    elif error_type in [ReportState.RS_STEP_FINISH.value, ReportState.RS_INIT_FINISH.value,
-                        ReportState.RS_PREREPAIR_FINISH.value]:
+    elif error_type in [
+        ReportState.RS_STEP_FINISH.value,
+        ReportState.RS_INIT_FINISH.value,
+        ReportState.RS_PREREPAIR_FINISH.value,
+    ]:
         pass
     else:
         ttp_logger.LOGGER.error(f"rank:{rank_} catch other exception")
@@ -1352,7 +1393,7 @@ def tft_get_repair_type():
 
 def tft_register_decrypt_handler(decryptor: Callable):
     if decryptor is None:
-        ttp_logger.LOGGER.info(f"tft_register_decrypt_handler: decryptor is None")
+        ttp_logger.LOGGER.info("tft_register_decrypt_handler: decryptor is None")
         return
     if not callable(decryptor):
         ttp_logger.LOGGER.error("tft_register_decrypt_handler: func must be a callable")
@@ -1364,3 +1405,4 @@ def tft_register_decrypt_handler(decryptor: Callable):
 
 
 atexit.register(tft_destroy_processor)
+# fmt: on
