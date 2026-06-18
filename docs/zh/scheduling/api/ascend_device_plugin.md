@@ -429,7 +429,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 <p id="zh-cn_topic_0000002171521445_p109369476532"><a name="zh-cn_topic_0000002171521445_p109369476532"></a><a name="zh-cn_topic_0000002171521445_p109369476532"></a>处理策略不影响其他级别的故障处理。</p>
 </div></div>
 </td>
-<td class="cellrowborder" valign="top" width="24.81%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002171521445_p8352172425218"><a name="zh-cn_topic_0000002171521445_p8352172425218"></a><a name="zh-cn_topic_0000002171521445_p8352172425218"></a>根据策略进行处理</p>
+<td class="cellrowborder" valign="top" width="24.81%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002171521445_p8352172425218"><a name="zh-cn_topic_0000002171521445_p8352172425218"></a><a name="zh-cn_topic_0000002171521445_p8352172425218"></a>暂不处理</p>
 </td>
 </tr>
 </tbody>

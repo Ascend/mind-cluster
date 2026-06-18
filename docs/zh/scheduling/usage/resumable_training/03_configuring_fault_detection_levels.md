@@ -162,7 +162,7 @@
 <div class="note" id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_note7936204710536"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_note7936204710536"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_note7936204710536"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p15222114115810"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p15222114115810"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p15222114115810"></a>如果后续芯片出现其他级别故障，此时SubHealthFault处理策略不影响其他级别的故障处理。</p>
 </div></div>
 </td>
-<td class="cellrowborder" valign="top" width="21.81%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p8352172425218"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p8352172425218"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p8352172425218"></a>根据策略进行处理。</p>
+<td class="cellrowborder" valign="top" width="21.81%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p8352172425218"><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p8352172425218"></a><a name="zh-cn_topic_0000002395188553_zh-cn_topic_0000002171521445_p8352172425218"></a>暂不处理</p>
 </td>
 </tr>
 </tbody>
@@ -348,7 +348,7 @@ Ascend Device Plugin从驱动获取到芯片故障码后，将根据故障码对
 
 当前faultCustomization.json文件中仅提供对可识别的硬件类故障进行提升故障级别的初始化配置。
 
-24小时内发生3次以下故障，则将芯片故障级别提升至需要人工干预的故障级别ManuallySeparateNPU，详细说明请参见[faultCustomization.json参数说明](#zh-cn_topic_0000002171521445_section33036167576)。
+单个节点在24小时内发生3次以下故障，则将芯片故障级别提升至需要人工干预的故障级别ManuallySeparateNPU，详细说明请参见[faultCustomization.json参数说明](#zh-cn_topic_0000002171521445_section33036167576)。
 
 下面将以故障名称HBMC Ca Parity错误，对应故障码80E18005为例，将当前的故障级别提升至ManuallySeparateNPU（需要人工干预的故障级别），示例如下。
 
