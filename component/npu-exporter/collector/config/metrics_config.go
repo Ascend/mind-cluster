@@ -143,17 +143,19 @@ func buildDefaultConfig(metricsGroup string, state string, intervalSeconds int) 
 }
 
 func loadConfiguration() {
+	presetConfigs = make([]MetricsGroupConfig, 0)
+	pluginConfigs = make([]MetricsGroupConfig, 0)
 	if fileBytes := loadFromFile(PresetConfigPath); fileBytes == nil {
 		logger.Warnf("load config from file %s failed, use default config", PresetConfigPath)
 		presetConfigs = defaultPresetConfigs
 	} else {
-		initConfiguration(fileBytes, &presetConfigs)
+		initConfiguration(fileBytes, &presetConfigs, defaultPresetConfigs)
 	}
 	if fileBytes := loadFromFile(PluginConfigPath); fileBytes == nil {
 		logger.Warnf("load config from file %s failed, use default config", PluginConfigPath)
 		pluginConfigs = defaultPluginConfigs
 	} else {
-		initConfiguration(fileBytes, &pluginConfigs)
+		initConfiguration(fileBytes, &pluginConfigs, defaultPluginConfigs)
 	}
 }
 
@@ -168,9 +170,10 @@ func loadFromFile(filePath string) []byte {
 	return fileBytes
 }
 
-func initConfiguration(fileBytes []byte, configs *[]MetricsGroupConfig) {
+func initConfiguration(fileBytes []byte, configs *[]MetricsGroupConfig, defaultConfigs []MetricsGroupConfig) {
 	if err := json.Unmarshal(fileBytes, configs); err != nil {
-		logger.Errorf("unmarshal config byte failed: %v", err)
+		logger.Errorf("unmarshal config byte failed: %v, use default config", err)
+		*configs = defaultConfigs
 		return
 	}
 }

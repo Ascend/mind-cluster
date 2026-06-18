@@ -40,6 +40,10 @@ var (
 	}
 )
 
+const (
+	double = 2
+)
+
 // BuildDescSlice build desc slice
 func BuildDescSlice(slice *[]*prometheus.Desc, name string, help string) {
 	*slice = append(*slice, BuildDesc(name, help))
@@ -154,11 +158,11 @@ func UpdateCache[T any](n *NpuCollector, cacheKey string, localCache *sync.Map) 
 		// means never overdue
 		ttl = -1
 	} else {
-		ttl = interval * 2
+		ttl = interval * double
 	}
 
 	// set min cache ttl is 60s
-	if ttl < defaultGroupInterval {
+	if ttl != -1 && ttl < defaultGroupInterval {
 		ttl = defaultGroupInterval
 	}
 

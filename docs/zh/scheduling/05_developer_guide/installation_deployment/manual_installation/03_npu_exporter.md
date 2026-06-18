@@ -736,7 +736,7 @@ HostPath挂载的缺点：
 创建 ConfigMap（从文件创建）：
 
 ```bash
-kubectl create ns -n npu-exporter
+kubectl create ns npu-exporter
 kubectl create cm -n npu-exporter npu-exporter-metric-config \
   --from-file=metricConfiguration.json=./metricConfiguration.json \
   --from-file=pluginConfiguration.json=./pluginConfiguration.json
@@ -785,10 +785,10 @@ ConfigMap挂载的缺点：
 ```shell
 # 需先登录到对应服务器
 # prometheus场景
-tail -100f /var/mindx-dl/npu-exporter/npu-exporter.log
+tail -100f /var/log/mindx-dl/npu-exporter/npu-exporter.log
 
 # telegraf场景
-tail -100f /var/mindx-dl/npu-exporter/npu-plugin.log
+tail -100f /var/log/mindx-dl/npu-exporter/npu-plugin.log
 ```
 
 成功加载配置会打印类似日志：
