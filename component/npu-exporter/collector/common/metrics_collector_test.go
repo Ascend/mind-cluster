@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
@@ -175,6 +176,44 @@ func TestUpdateCache(t *testing.T) {
 			})
 		}
 
+	})
+}
+
+const (
+	testCollectOnceKey   = "testCollectOnceKey"
+	testSmallIntervalKey = "testSmallIntervalKey"
+	testSmallInterval    = 1 * time.Second
+)
+
+func TestUpdateCacheTTLWithCollectOnce(t *testing.T) {
+	const key = int32(0)
+	tests := []struct {
+		name     string
+		cacheKey string
+		interval time.Duration
+	}{
+		{name: "should keep ttl -1 when interval is collectOnce",
+			cacheKey: testCollectOnceKey, interval: CollectOnceInterval()},
+		{name: "should set ttl to defaultGroupInterval when interval is small",
+			cacheKey: testSmallIntervalKey, interval: testSmallInterval},
+	}
+	convey.Convey("TestUpdateCacheTTLWithCollectOnce", t, func() {
+		n := mockNewNpuCollector()
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				SetCollectorInterval(tt.cacheKey, tt.interval)
+				defer collectorIntervalMap.Delete(tt.cacheKey)
+				localCache := sync.Map{}
+				localCache.Store(key, "mockValue")
+				UpdateCache[string](n, tt.cacheKey, &localCache)
+				data, err := n.cache.Get(tt.cacheKey)
+				convey.So(err, convey.ShouldBeNil)
+				convey.So(data, convey.ShouldNotBeNil)
+				map2, ok := data.(map[int32]string)
+				convey.So(ok, convey.ShouldBeTrue)
+				convey.So(len(map2), convey.ShouldEqual, 1)
+			})
+		}
 	})
 }
 

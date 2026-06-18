@@ -35,7 +35,14 @@ import (
 )
 
 const (
-	num5 = 5
+	num5                 = 5
+	testDevName          = "ascend"
+	testDevTagValue      = "ascend910"
+	testMetricKey        = "npu_test_metric"
+	testMetricValue      = "1"
+	testMeasurement      = "test-measurement"
+	testVdevID           = "vdev_id"
+	testInvalidValueType = 123
 )
 
 func init() {
@@ -171,6 +178,149 @@ func (m *MockAccumulator) AddError(err error) {
 
 func (m *MockAccumulator) WithTracking(maxTracked int) telegraf.TrackingAccumulator {
 	return nil
+}
+
+func TestHandleGeneralMetrics(t *testing.T) {
+	tests := []struct {
+		name      string
+		metrics   map[string]interface{}
+		expectLen int
+	}{
+		{name: "should skip AddFields and delete key when generalMetrics is empty",
+			metrics: map[string]interface{}{}, expectLen: 0},
+		{name: "should call AddFields and delete key when generalMetrics is not empty",
+			metrics: map[string]interface{}{testMetricKey: testMetricValue}, expectLen: 1},
+	}
+	for _, tt := range tests {
+		convey.Convey(tt.name, t, func() {
+			acc := &MockAccumulator{}
+			fieldsMap := map[string]map[string]interface{}{common.GeneralDevTagKey: tt.metrics}
+			handleGeneralMetrics(acc, fieldsMap, testDevName, testDevTagValue)
+			convey.So(acc.fields, convey.ShouldHaveLength, tt.expectLen)
+			_, exists := fieldsMap[common.GeneralDevTagKey]
+			convey.So(exists, convey.ShouldBeFalse)
+		})
+	}
+}
+
+func TestHandleTextMetrics(t *testing.T) {
+	now := time.Now()
+	tests := []struct {
+		name      string
+		metric    interface{}
+		expectLen int
+	}{
+		{
+			name: "should skip when data.Metrics is empty",
+			metric: common.TelegrafData{Measurement: testMeasurement,
+				Labels:  map[string]string{"device": "test"},
+				Metrics: map[string]interface{}{}, Timestamp: now},
+			expectLen: 0,
+		},
+		{
+			name:      "should skip when metric is not TelegrafData type",
+			metric:    "invalid-type",
+			expectLen: 0,
+		},
+		{
+			name: "should call AddFields when data.Metrics is not empty",
+			metric: common.TelegrafData{Measurement: testMeasurement,
+				Labels:  map[string]string{"device": "test"},
+				Metrics: map[string]interface{}{testMetricKey: testMetricValue}, Timestamp: now},
+			expectLen: 1,
+		},
+		{
+			name:      "should delete KeyForTextMetrics when inner map is empty",
+			metric:    nil,
+			expectLen: 0,
+		},
+	}
+	for _, tt := range tests {
+		convey.Convey(tt.name, t, func() {
+			acc := &MockAccumulator{}
+			fieldsMap := map[string]map[string]interface{}{common.KeyForTextMetrics: {}}
+			if tt.metric != nil {
+				fieldsMap[common.KeyForTextMetrics]["test-key"] = tt.metric
+			}
+			handleTextMetrics(acc, fieldsMap)
+			convey.So(acc.fields, convey.ShouldHaveLength, tt.expectLen)
+			_, exists := fieldsMap[common.KeyForTextMetrics]
+			convey.So(exists, convey.ShouldBeFalse)
+		})
+	}
+}
+
+func TestHandleMetricsWithCustomLabels(t *testing.T) {
+	now := time.Now()
+	tests := []struct {
+		name      string
+		metric    interface{}
+		expectLen int
+	}{
+		{
+			name: "should skip when data.Metrics is empty",
+			metric: common.TelegrafData{Measurement: testMeasurement,
+				Labels:  map[string]string{"device": "test"},
+				Metrics: map[string]interface{}{}, Timestamp: now},
+			expectLen: 0,
+		},
+		{
+			name:      "should skip when metric is not TelegrafData type",
+			metric:    testInvalidValueType,
+			expectLen: 0,
+		},
+		{
+			name: "should call AddFields when data.Metrics is not empty",
+			metric: common.TelegrafData{Measurement: testMeasurement,
+				Labels:  map[string]string{"device": "test"},
+				Metrics: map[string]interface{}{testMetricKey: testMetricValue}, Timestamp: now},
+			expectLen: 1,
+		},
+		{
+			name:      "should delete KeyForMetricsWithCustomLabels when inner map is empty",
+			metric:    nil,
+			expectLen: 0,
+		},
+	}
+	for _, tt := range tests {
+		convey.Convey(tt.name, t, func() {
+			acc := &MockAccumulator{}
+			fieldsMap := map[string]map[string]interface{}{common.KeyForMetricsWithCustomLabels: {}}
+			if tt.metric != nil {
+				fieldsMap[common.KeyForMetricsWithCustomLabels]["test-key"] = tt.metric
+			}
+			handleMetricsWithCustomLabels(acc, fieldsMap)
+			convey.So(acc.fields, convey.ShouldHaveLength, tt.expectLen)
+			_, exists := fieldsMap[common.KeyForMetricsWithCustomLabels]
+			convey.So(exists, convey.ShouldBeFalse)
+		})
+	}
+}
+
+func TestGatherSkipsEmptyFields(t *testing.T) {
+	convey.Convey("should skip AddFields when fields map entry is empty", t, func() {
+		acc := &MockAccumulator{}
+		acc.AddFields(testDevName, map[string]interface{}{testMetricKey: testMetricValue},
+			map[string]string{"device": "test"})
+		devTagValue := "ascend910"
+		fieldsMap := map[string]map[string]interface{}{
+			"0":   {},
+			"1":   {testMetricKey: testMetricValue},
+			"2_3": {},
+		}
+		for key, fields := range fieldsMap {
+			ids := strings.Split(key, "_")
+			devTag := map[string]string{"device": devTagValue + "-" + ids[0]}
+			if len(ids) >= num2 {
+				devTag[testVdevID] = ids[1]
+			}
+			if len(fields) == 0 {
+				continue
+			}
+			acc.AddFields(testDevName, fields, devTag)
+		}
+		convey.So(acc.fields, convey.ShouldHaveLength, 2)
+	})
 }
 
 func TestRemoveLastDashAndSuffix(t *testing.T) {

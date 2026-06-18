@@ -43,10 +43,36 @@ func initChain() {
 }
 
 func TestInitConfiguration(t *testing.T) {
-	convey.Convey("TestInitConfiguration", t, func() {
-		initConfiguration([]byte("test"), &presetConfigs)
-		convey.So(len(presetConfigs), convey.ShouldEqual, 0)
-	})
+	tests := []struct {
+		name          string
+		fileBytes     []byte
+		defaultCfg    []MetricsGroupConfig
+		expectedLen   int
+		expectedGroup string
+	}{
+		{
+			name:          "should use defaultConfigs when unmarshal fails",
+			fileBytes:     []byte("test"),
+			defaultCfg:    defaultPresetConfigs,
+			expectedLen:   len(defaultPresetConfigs),
+			expectedGroup: groupVersion},
+		{
+			name:          "should parse configs when unmarshal succeeds",
+			fileBytes:     []byte(`[{"metricsGroup":"hccs","state":"ON","intervalSeconds":60}]`),
+			defaultCfg:    defaultPresetConfigs,
+			expectedLen:   1,
+			expectedGroup: groupHccs},
+	}
+	for _, tt := range tests {
+		convey.Convey(tt.name, t, func() {
+			configs := make([]MetricsGroupConfig, 0)
+			initConfiguration(tt.fileBytes, &configs, tt.defaultCfg)
+			convey.So(len(configs), convey.ShouldEqual, tt.expectedLen)
+			if len(configs) > 0 {
+				convey.So(configs[0].MetricsGroup, convey.ShouldEqual, tt.expectedGroup)
+			}
+		})
+	}
 }
 
 func TestLoadConfiguration(t *testing.T) {
@@ -81,6 +107,33 @@ func TestLoadConfiguration(t *testing.T) {
 			convey.So(len(presetConfigs), convey.ShouldEqual, len(defaultPresetConfigs))
 			convey.So(len(pluginConfigs), convey.ShouldEqual, len(defaultPluginConfigs))
 		})
+	})
+}
+
+func TestLoadConfigurationReset(t *testing.T) {
+	convey.Convey("should reset presetConfigs and pluginConfigs before loading", t, func() {
+		patches := gomonkey.NewPatches()
+		defer patches.Reset()
+		presetConfigs = []MetricsGroupConfig{
+			buildDefaultConfig("staleGroup", stateOn, testInterval),
+		}
+		pluginConfigs = []MetricsGroupConfig{
+			buildDefaultConfig("stalePlugin", stateOn, testInterval),
+		}
+		patches.ApplyFunc(loadFromFile, func(filePath string) []byte {
+			return nil
+		})
+		loadConfiguration()
+		convey.So(len(presetConfigs), convey.ShouldEqual, len(defaultPresetConfigs))
+		convey.So(len(pluginConfigs), convey.ShouldEqual, len(defaultPluginConfigs))
+		for _, cfg := range presetConfigs {
+			convey.So(cfg.MetricsGroup, convey.ShouldNotEqual, "staleGroup")
+		}
+		for _, cfg := range pluginConfigs {
+			convey.So(cfg.MetricsGroup, convey.ShouldNotEqual, "stalePlugin")
+		}
+		presetConfigs = make([]MetricsGroupConfig, 0)
+		pluginConfigs = make([]MetricsGroupConfig, 0)
 	})
 }
 
@@ -139,8 +192,8 @@ func TestRegister(t *testing.T) {
 		patches.ApplyMethodReturn(&metrics.OpticalCollector{}, "IsSupported", true)
 		patches.ApplyMethodReturn(&metrics.UbCollector{}, "IsSupported", true)
 		patches.ApplyFunc(loadConfiguration, func() {
-			initConfiguration(loadFromFile("../../build/metricConfiguration.json"), &presetConfigs)
-			initConfiguration(loadFromFile("../../build/pluginConfiguration.json"), &pluginConfigs)
+			initConfiguration(loadFromFile("../../build/metricConfiguration.json"), &presetConfigs, defaultPresetConfigs)
+			initConfiguration(loadFromFile("../../build/pluginConfiguration.json"), &pluginConfigs, defaultPluginConfigs)
 		})
 		patches.ApplyFunc(common.InitNpuDevNetPortInfos, func(n *common.NpuCollector) {})
 		Register(n)

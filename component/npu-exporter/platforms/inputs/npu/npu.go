@@ -83,6 +83,9 @@ func (npu *WatchNPU) Gather(acc telegraf.Accumulator) error {
 		if len(ids) >= num2 {
 			devTag["vdev_id"] = ids[1]
 		}
+		if len(fields) == 0 {
+			continue
+		}
 		acc.AddFields(devName, fields, devTag)
 	}
 
@@ -96,6 +99,9 @@ func handleTextMetrics(acc telegraf.Accumulator, fieldsMap map[string]map[string
 		if !ok {
 			continue
 		}
+		if len(data.Metrics) == 0 {
+			continue
+		}
 		acc.AddFields(removeLastDashAndSuffix(key), data.Metrics, data.Labels, data.Timestamp)
 	}
 	delete(fieldsMap, common.KeyForTextMetrics)
@@ -106,6 +112,9 @@ func handleMetricsWithCustomLabels(acc telegraf.Accumulator, fieldsMap map[strin
 	for _, metric := range metrics {
 		data, ok := metric.(common.TelegrafData)
 		if !ok {
+			continue
+		}
+		if len(data.Metrics) == 0 {
 			continue
 		}
 		acc.AddFields(removeLastDashAndSuffix(data.Measurement), data.Metrics, data.Labels, data.Timestamp)
@@ -123,10 +132,12 @@ func removeLastDashAndSuffix(s string) string {
 
 func handleGeneralMetrics(acc telegraf.Accumulator, fieldsMap map[string]map[string]interface{}, devName string, devTagValue string) {
 	generalMetrics := fieldsMap[common.GeneralDevTagKey]
-	acc.AddFields(devName, generalMetrics, map[string]string{"device": devTagValue})
-
 	// after the report is completed, deleted to avoid repeated reporting in the for loop
 	delete(fieldsMap, common.GeneralDevTagKey)
+	if len(generalMetrics) == 0 {
+		return
+	}
+	acc.AddFields(devName, generalMetrics, map[string]string{"device": devTagValue})
 }
 
 func (npu *WatchNPU) gatherChain(fieldsMap map[string]map[string]interface{}, chain []common.MetricsCollector,
