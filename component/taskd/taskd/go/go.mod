@@ -1,6 +1,6 @@
 module taskd
 
-go 1.26
+go 1.21
 
 require (
 	ascend-common v0.0.0
