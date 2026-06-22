@@ -49,6 +49,9 @@ const (
 
 	dockerRuncFile = "docker-runc"
 	runcFile       = "runc"
+
+	CONTAINERD_SNAPSHOT_KEY = "containerd"
+	ROOTFS_DIFF             = "rootfs-diff.tar"
 )
 
 var (
