@@ -78,16 +78,28 @@ def _fault_detail_sort_rule(item: dict):
 class NetCongestionDetector:
     PRE_LABEL_ABNORMAL = 1
     INPUT_COL_NAMES = [
-        'mac_tx_pfc_pkt_num', 'mac_rx_pfc_pkt_num', 'roce_rx_rc_pkt_num', 'roce_rx_all_pkt_num',
-        'roce_tx_rc_pkt_num', 'roce_tx_all_pkt_num', 't_congestion_index', 'r_congestion_index'
+        'mac_tx_pfc_pkt_num',
+        'mac_rx_pfc_pkt_num',
+        'roce_rx_rc_pkt_num',
+        'roce_rx_all_pkt_num',
+        'roce_tx_rc_pkt_num',
+        'roce_tx_all_pkt_num',
+        't_congestion_index',
+        'r_congestion_index',
     ]
     NET_LATEST_MODEL_PATH = os.path.join(CONF_PATH, 'model', "net_rf_model_latest.pt")  # model for sklearn >= 1.3.0
     NET_OLD_MODEL_PATH = os.path.join(CONF_PATH, 'model', "net_rf_model_102.pt")  # model for sklearn < 1.3.0
-    _NET_RF_MODEL_MODULES = frozenset([('sklearn.ensemble._forest', 'RandomForestClassifier'),
-                                       ('sklearn.tree._classes', 'DecisionTreeClassifier'),
-                                       ('joblib.numpy_pickle', 'NumpyArrayWrapper'), ('numpy', 'ndarray'),
-                                       ('numpy', 'dtype'),
-                                       ('numpy.core.multiarray', 'scalar'), ('sklearn.tree._tree', 'Tree')])
+    _NET_RF_MODEL_MODULES = frozenset(
+        [
+            ('sklearn.ensemble._forest', 'RandomForestClassifier'),
+            ('sklearn.tree._classes', 'DecisionTreeClassifier'),
+            ('joblib.numpy_pickle', 'NumpyArrayWrapper'),
+            ('numpy', 'ndarray'),
+            ('numpy', 'dtype'),
+            ('numpy.core.multiarray', 'scalar'),
+            ('sklearn.tree._tree', 'Tree'),
+        ]
+    )
 
     def __init__(self):
         self.worker_num = -1
@@ -96,16 +108,15 @@ class NetCongestionDetector:
 
     @staticmethod
     def _wrap_fault_detail(detect_result: dict):
-        fault_detail = list()
+        fault_detail = []
         for worker, device_list in detect_result.items():
             if len(worker) >= MAX_LEN_WORKER_NAME:
                 worker = worker[:MAX_LEN_WORKER_NAME]
-                net_logger.warning("worker name: %s... exceeds the maximum length limit, it will be truncated.",
-                                   worker[:MAX_LEN_WORKER_NAME_PRINT])
-            fault_detail.append({
-                'worker': worker,
-                'device_list': device_list
-            })
+                net_logger.warning(
+                    "worker name: %s... exceeds the maximum length limit, it will be truncated.",
+                    worker[:MAX_LEN_WORKER_NAME_PRINT],
+                )
+            fault_detail.append({'worker': worker, 'device_list': device_list})
         return sorted(fault_detail, key=_fault_detail_sort_rule)
 
     @staticmethod
@@ -130,15 +141,14 @@ class NetCongestionDetector:
         :param: worker_path_dict: worker path directory, the format of key is "{worker_id}", e.g. "0"
         """
         self.worker_num = len(worker_path_dict)
-        nic_df_list = list()
+        nic_df_list = []
 
         for worker, worker_dir in worker_path_dict.items():
             nic_file = os.path.join(worker_dir, NIC_OUT_FILENAME)
             if not os.path.exists(nic_file):
-                net_logger.warning(f"The %s don't have %s.", worker, NIC_OUT_FILENAME)
+                net_logger.warning("The %s don't have %s.", worker, NIC_OUT_FILENAME)
                 continue
-            nic_df = safe_read_csv(nic_file, dtype=self._get_df_column_type(), header=0,
-                                   encoding='unicode_escape')
+            nic_df = safe_read_csv(nic_file, dtype=self._get_df_column_type(), header=0)
             nic_df["worker_name"] = worker
             if not self._check_nic_df(nic_df, worker):
                 continue
@@ -159,11 +169,14 @@ class NetCongestionDetector:
         """
         detect_result = dict()
 
-        for worker_name, device_name, pre_label in zip(list(data['worker_name']), list(data['device_id']),
-                                                       self.model.predict(data[self.INPUT_COL_NAMES]).astype(int)):
+        for worker_name, device_name, pre_label in zip(
+            list(data['worker_name']),
+            list(data['device_id']),
+            self.model.predict(data[self.INPUT_COL_NAMES]).astype(int),
+        ):
             if pre_label != self.PRE_LABEL_ABNORMAL:
                 continue
-            detect_result.setdefault(worker_name, list()).append(device_name)
+            detect_result.setdefault(worker_name, []).append(device_name)
 
         if not detect_result:
             return NET_DIAG_NORMAL_ENTITY.attribute
@@ -194,13 +207,13 @@ class NetCongestionDetector:
         :return: is the dataframe valid
         """
         if nic_df.empty:
-            net_logger.warning(f"Data in %s is empty.", worker)
+            net_logger.warning("Data in %s is empty.", worker)
             return False
 
         df_columns_name = nic_df.columns.values
         missing_columns = (set(self.INPUT_COL_NAMES) | {"device_id"}) - set(df_columns_name)
         if missing_columns:
-            net_logger.warning(f"Metrics %s don't exist in %s npu_detail.csv.", missing_columns, worker)
+            net_logger.warning("Metrics %s don't exist in %s npu_detail.csv.", missing_columns, worker)
             return False
         return True
 
@@ -213,7 +226,6 @@ class NetCongestionDetector:
 
 
 class RestrictedUnpickler(joblib.numpy_pickle.NumpyUnpickler):
-
     def __init__(self, filename, file_handle, mmap_mode=None, supported_module_set=None):
         super().__init__(filename, file_handle, mmap_mode)
         self._supported_module_set = supported_module_set or {}
