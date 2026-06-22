@@ -27,6 +27,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -1014,4 +1015,37 @@ func getTestStatefulSetSpec() *appsv1.StatefulSetSpec {
 		},
 		ServiceName: "test-service",
 	}
+}
+
+// TestCreateCMForSnapshot tests the createCMForSnapshot
+func TestCreateCMForSnapshot(t *testing.T) {
+	convey.Convey("Test StatefulSetHandler CreateCMForSnapshot method", t, func() {
+		fakeClient := NewFakeClient().Build()
+		handler := NewStatefulSetHandler(fakeClient)
+		instanceSet := CreateTestInstanceSet("test-instance", "default", int32(1))
+		convey.Convey("Should not create configmap when snapshot is disabled", func() {
+			patches := gomonkey.ApplyMethodReturn(handler.client, "Get", nil)
+			defer patches.Reset()
+			err := handler.createCMForSnapshot(context.TODO(), instanceSet, "test")
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should return true for get configmap succeed", func() {
+			instanceSet.Labels[common.ContainerSnapshotLabelKey] = common.TrueBool
+			patches := gomonkey.ApplyMethodReturn(handler.client, "Get", nil)
+			defer patches.Reset()
+			err := handler.createCMForSnapshot(context.TODO(), instanceSet, "test")
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("Should return true for create configmap succeed", func() {
+			instanceSet.Labels[common.ContainerSnapshotLabelKey] = common.TrueBool
+			patches := gomonkey.ApplyMethodReturn(handler.client, "Get", apierrors.NewNotFound(corev1.Resource("configmap"), "test"))
+			defer patches.Reset()
+			patches2 := gomonkey.ApplyMethodReturn(handler.client, "Create", nil)
+			defer patches2.Reset()
+			err := handler.createCMForSnapshot(context.TODO(), instanceSet, "test")
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
 }

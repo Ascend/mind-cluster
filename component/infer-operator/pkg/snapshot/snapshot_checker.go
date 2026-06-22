@@ -38,11 +38,11 @@ type InstanceSetTracker struct {
 	// InstanceSetName is the name of the instance set
 	InstanceSetName string
 	// Namespace is the namespace where the instance set resides
-	Namespace       string
+	Namespace string
 	// SelectLabels are the labels used to select pods of the instance set
 	SelectLabels map[string]string
 	// StartTime is the time when snapshot tracking started
-	StartTime    time.Time
+	StartTime time.Time
 	// Replicas is the number of pod replicas in the workload
 	Replicas int32
 }

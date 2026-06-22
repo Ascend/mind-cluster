@@ -119,7 +119,7 @@ func (r *PodSnapshotReconciler) setPodActiveLabel(ctx context.Context, pod *core
 func (r *PodSnapshotReconciler) updateSnapshotConfigMap(ctx context.Context, pod *corev1.Pod) {
 	instanceSetName := fmt.Sprintf("%s-%s",
 		common.GetInstanceSetNameFromLabels(pod.Labels), pod.Labels[common.InstanceIndexLabelKey])
-	cmName := "snapshot-metadata-" + instanceSetName
+	cmName := common.SnapshotMetadataPrefix + instanceSetName
 
 	cm := &corev1.ConfigMap{}
 	var err error

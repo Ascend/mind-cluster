@@ -50,6 +50,7 @@ import (
 	"infer-operator/pkg/configManager"
 	clusterctrlv1 "infer-operator/pkg/controller/v1"
 	"infer-operator/pkg/controller/workload"
+	"infer-operator/pkg/snapshot"
 )
 
 var (
@@ -178,11 +179,27 @@ func main() {
 		hwlog.RunLog.Errorf("unable to setup infer service reconciler: %v", err)
 		os.Exit(1)
 	}
+	if err := setUpSnapshotControllers(ctx, mgr); err != nil {
+		os.Exit(1)
+	}
 	hwlog.RunLog.Info("starting infer-controller manager")
 	if err := mgr.Start(ctx); err != nil {
 		hwlog.RunLog.Errorf("failed to start infer-controller manager: %v", err)
 		os.Exit(1)
 	}
+}
+
+func setUpSnapshotControllers(ctx context.Context, mgr ctrl.Manager) error {
+	instanceSetSnapshotReconciler := snapshot.NewInstanceSetSnapshotReconciler(mgr)
+	if err := instanceSetSnapshotReconciler.SetupWithManager(mgr); err != nil {
+		hwlog.RunLog.Errorf("unable to setup instance set snapshot reconciler: %v", err)
+	}
+
+	podSnapshotReadinessReconciler := snapshot.NewPodSnapshotReadinessReconciler(mgr)
+	if err := podSnapshotReadinessReconciler.SetupWithManager(mgr); err != nil {
+		hwlog.RunLog.Errorf("unable to setup pod snapshot readiness reconciler: %v", err)
+	}
+	return nil
 }
 
 func cacheBuilder(opts cache.Options) func(config *rest.Config, opts cache.Options) (cache.Cache, error) {

@@ -187,6 +187,14 @@ func (s *StatefulSetHandler) createStatefulSet(
 	}
 	statefulsetSpec.ServiceName = common.GetServiceNameFromIndexer(indexer)
 	common.AddEnvToPodTemplate(&statefulsetSpec.Template, indexer)
+	err = s.createCMForSnapshot(ctx, instanceSet, common.GetWorkLoadNameFromIndexer(indexer))
+	if err != nil {
+		hwlog.RunLog.Errorf("createCMForSnapshot failed: %v", err)
+	}
+	common.AddSnapshotInfoToPodTemplate(&statefulsetSpec.Template, instanceSet,
+		common.SnapshotMetadataPrefix+common.GetWorkLoadNameFromIndexer(indexer))
+	common.AddMetadataVolume(&statefulsetSpec.Template,
+		common.SnapshotMetadataPrefix+common.GetWorkLoadNameFromIndexer(indexer), instanceSet)
 	// 3. create statefulset template
 	newStatefulSet := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -215,6 +223,11 @@ func (s *StatefulSetHandler) createService(
 	indexer common.InstanceIndexer) error {
 	labels := make(map[string]string)
 	labels = common.AddLabelsFromIndexer(labels, indexer)
+	selectLabels := common.DeepCopyLabelsMap(labels)
+	if common.IsContainerSnapshotOn(instanceSet) {
+		// only container snapshot need to add
+		selectLabels[common.ActiveLabelKey] = common.TrueBool
+	}
 	newService := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        common.GetServiceNameFromIndexer(indexer),
@@ -227,7 +240,7 @@ func (s *StatefulSetHandler) createService(
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: "None",
-			Selector:  labels,
+			Selector:  selectLabels,
 			Ports: []corev1.ServicePort{
 				{
 					Name: common.DefaultPortName,
@@ -531,6 +544,58 @@ func (s *StatefulSetHandler) UpdateWorkLoad(
 		if err := s.client.Update(ctx, workload.StatefulSet); err != nil {
 			return fmt.Errorf("failed to update statefulset work load %s/%s: %w", workload.Namespace, workload.Name, err)
 		}
+	}
+	return nil
+}
+
+func (s *StatefulSetHandler) createCMForSnapshot(ctx context.Context, instanceSet *v1.InstanceSet, instanceName string) error {
+	if !common.IsContainerSnapshotOn(instanceSet) {
+		return nil
+	}
+	data := common.SnapshotMetaData{
+		InstanceName: instanceName,
+		Namespace:    instanceSet.Namespace,
+	}
+	dataBytes, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal snapshot metadata: %v", err)
+	}
+	cm := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      common.SnapshotMetadataPrefix + instanceName,
+			Namespace: instanceSet.Namespace,
+			Labels: map[string]string{
+				common.OperatorNameKey: common.TrueBool,
+			},
+			OwnerReferences: []metav1.OwnerReference{
+				*metav1.NewControllerRef(instanceSet, instanceSet.GroupVersionKind()),
+			},
+		},
+		Data: map[string]string{
+			"snapshot_metadata.json":           string(dataBytes),
+			common.GrusSnapshotRestoredFlagKey: "false",
+		},
+	}
+
+	existCM := &corev1.ConfigMap{}
+	err = s.client.Get(ctx, client.ObjectKeyFromObject(cm), existCM)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			err = s.client.Create(ctx, cm)
+			if err != nil {
+				return fmt.Errorf("create configmap failed: %v", err)
+			}
+			return nil
+		}
+		return fmt.Errorf("get configmap failed: %v", err)
+	}
+	existCM.Data = cm.Data
+	if existCM.Labels == nil {
+		existCM.Labels = make(map[string]string)
+	}
+	existCM.Labels[common.OperatorNameKey] = common.TrueBool
+	if err = s.client.Update(ctx, existCM); err != nil {
+		return fmt.Errorf("update configmap failed: %v", err)
 	}
 	return nil
 }

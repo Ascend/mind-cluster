@@ -36,15 +36,15 @@ import (
 // SnapshotStatus represents the status of a snapshot operation
 type SnapshotStatus struct {
 	// SHA256 is the SHA256 hash of the snapshot
-	SHA256          string            `json:"sha256,omitempty"`
+	SHA256 string `json:"sha256,omitempty"`
 	// DirectorySHA256 maps directory names to their SHA256 hashes
 	DirectorySHA256 map[string]string `json:"directorySHA256"`
 	// Status is the current snapshot status
-	Status          string            `json:"status"`
+	Status string `json:"status"`
 	// Timestamp is when the snapshot status was recorded
-	Timestamp       time.Time         `json:"timestamp"`
+	Timestamp time.Time `json:"timestamp"`
 	// Message is an optional status message
-	Message         string            `json:"message,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 // SnapshotMetaData contains metadata about a snapshot
@@ -52,7 +52,7 @@ type SnapshotMetaData struct {
 	// InstanceName is the instance/job name
 	InstanceName string `json:"job_name,omitempty"`
 	// Namespace is the instance namespace
-	Namespace    string `json:"namespace,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
 }
 
 // AddSnapshotInfoToPodTemplate adds snapshot info to pod template
