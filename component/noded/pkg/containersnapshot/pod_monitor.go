@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,6 +37,8 @@ import (
 	"nodeD/pkg/common"
 	"nodeD/pkg/kubeclient"
 )
+
+var semp = newSemaphore(common.MaxCheckpointRequest)
 
 // PodMonitor manage pod monitoring information
 type PodMonitor struct {
@@ -167,6 +170,15 @@ func getContainerID(conID string) string {
 
 func (p *PodMonitor) checkpoint(pod *v1.Pod, podKey string, containerId string, snapshotPath string) {
 	var value string
+	for {
+		err := semp.acquire(containerId)
+		if err == nil {
+			break
+		}
+		hwlog.RunLog.Errorf("acquire token failed: %v, wait and try again", err)
+		time.Sleep(time.Minute)
+	}
+	defer semp.release(containerId)
 	err := doCheckpoint(containerId, snapshotPath, -1)
 	if err != nil {
 		hwlog.RunLog.Errorf("checkpoint %s failed: %v", containerId, err)

@@ -28,6 +28,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	fdol "ascend-faultdiag-online"
 	"nodeD/pkg/common"
+	snapshot "nodeD/pkg/containersnapshot"
 	"nodeD/pkg/control"
 	"nodeD/pkg/device"
 	"nodeD/pkg/kubeclient"
@@ -69,6 +70,7 @@ var (
 	monitorManager  = &monitoring.MonitorManager{}
 	reportManager   = &reporter.ReportManager{}
 	pingmeshManager *pingmesh.Manager
+	podMonitor      = &snapshot.PodMonitor{}
 	version         bool
 	// BuildVersion build version
 	BuildVersion string
@@ -117,7 +119,7 @@ func main() {
 	}
 	go monitorManager.Run(ctx)
 	go configmap.GetCmWatcher().Watch(ctx.Done())
-
+	initPodInformer()
 	if pingmeshManager != nil {
 		go pingmeshManager.Run(ctx)
 	}
@@ -220,6 +222,15 @@ func initFunction(ctx context.Context) error {
 	return nil
 }
 
+func initPodInformer() {
+	if kubeclient.GetK8sClient() == nil {
+		hwlog.RunLog.Errorf("k8s client is nil")
+		return
+	}
+	podMonitor = snapshot.NewPodMonitor(kubeclient.GetK8sClient())
+	go podMonitor.Monitoring()
+}
+
 func signalCatch(cancel context.CancelFunc) {
 	osSignalChan := common.NewSignalWatcher(syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGKILL)
 	if osSignalChan == nil {
@@ -236,5 +247,6 @@ func signalCatch(cancel context.CancelFunc) {
 		cancel()
 		configManager.Stop()
 		monitorManager.Stop()
+		podMonitor.Stop()
 	}
 }
