@@ -220,3 +220,26 @@ const (
 	DpcMemoryFaultCode  = "110001021"
 	MemoryErrorTimeOut  = 10 * 60 * time.Second
 )
+
+const (
+	// SnapshotPath host snapshot save path
+	SnapshotPath = "host_snapshot_path"
+	// SnapshotFinishFlag host snapshot finish flag
+	SnapshotFinishFlag = "host_snapshot_finish_flag"
+	// SnapshotMode snapshot node, save: checkpoint, load: restore
+	SnapshotMode = "snapshot_mode"
+	// Finished host snapshot has finished
+	Finished = "true"
+	// Failed host snapshot failed
+	Failed = "false"
+	// MetaData is meta data of pod
+	MetaData = "metadata"
+	// InferLabel infer pod label key
+	InferLabel = "infer.huawei.com/ascend-infer-operator"
+	// MaxCheckpointRequest the maximum number of concurrent checkpoint requests allowed
+	MaxCheckpointRequest = 8
+	// AscendDockerRuntimePath path of ascend-docker-runtime binary file
+	AscendDockerRuntimePath = "/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime"
+	// SnapshotSaveMode is the snapshot save mode
+	SnapshotSaveMode = "save"
+)

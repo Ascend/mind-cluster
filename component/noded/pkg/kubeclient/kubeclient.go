@@ -189,6 +189,33 @@ func (ck *ClientK8s) AddAnnotation(key, value string) error {
 	return err
 }
 
+// UpdatePodAnnotation update pod annotation by patch pod
+func (ck *ClientK8s) UpdatePodAnnotation(key, value string, pod *v1.Pod) error {
+	if pod == nil {
+		return fmt.Errorf("param pod is nil")
+	}
+	annotation := map[string]string{key: value}
+	newPodMetaData := common.PodMetaData{common.MetaData: common.Data{Annotation: annotation}}
+	podUpdateMetaData, err := json.Marshal(newPodMetaData)
+	if err != nil {
+		hwlog.RunLog.Errorf("failed to marshal the pod meta data, error is %v", err)
+		return err
+	}
+	for i := 0; i < retryTime; i++ {
+		if _, err = ck.ClientSet.CoreV1().Pods(pod.Namespace).Patch(context.Background(),
+			pod.Name, types.StrategicMergePatchType, podUpdateMetaData, metav1.PatchOptions{}); err == nil {
+			return nil
+		}
+		// There is no need to retry if the pod does not exist
+		if errors.IsNotFound(err) {
+			return err
+		}
+		hwlog.RunLog.Warnf("patch pod annotation failed: %v, try again", err)
+		time.Sleep(time.Second)
+	}
+	return fmt.Errorf("patch pod annotation failed, exceeded max number of retries")
+}
+
 // GetNodeWithCache get node resource info in cache or k8s
 func (ck *ClientK8s) GetNodeWithCache() (*v1.Node, error) {
 	if localNode != nil {

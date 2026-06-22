@@ -115,6 +115,14 @@ type DpcStatus struct {
 	MemoryErrorTime  int64
 }
 
+// Data Similar to the K8s metadata structure
+type Data struct {
+	Annotation map[string]string `json:"annotations"`
+}
+
+// PodMetaData pod meta data
+type PodMetaData map[string]Data
+
 // DtfsStatus dtfs status
 type DtfsStatus struct {
 	ProcessError bool

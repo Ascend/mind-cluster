@@ -18,6 +18,8 @@ package utils
 import (
 	"crypto/sha256"
 	"fmt"
+	"strconv"
+	"strings"
 	"unicode"
 
 	"ascend-common/api"
@@ -74,6 +76,24 @@ func IsDigitString(s string) bool {
 		}
 	}
 	return true
+}
+
+// GetLastNumberFromString get last number for string
+// eg："mu-test-0-decode-0-0" -> "0"
+func GetLastNumberFromString(name string) (string, error) {
+	parts := strings.Split(name, "-")
+	if len(parts) == 0 {
+		return "", fmt.Errorf("wrong format of string")
+	}
+
+	lastPart := parts[len(parts)-1]
+
+	_, err := strconv.Atoi(lastPart)
+	if err != nil {
+		return "", fmt.Errorf("no number found at the end of string: %s, %v", name, err)
+	}
+
+	return lastPart, nil
 }
 
 // devTypeMaskMap maps the original devType to the masked devType
