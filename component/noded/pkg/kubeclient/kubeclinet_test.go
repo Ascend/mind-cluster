@@ -160,8 +160,8 @@ func TestClientK8s(t *testing.T) {
 	convey.Convey("test ClientK8s method 'UpdateConfigMap'", t, testUpdateConfigMap)
 	convey.Convey("test ClientK8s method 'CreateOrUpdateConfigMap'", t, testCreateOrUpdateCM)
 	convey.Convey("test ClientK8s method 'DeleteConfigMap'", t, testDeleteConfigMap)
-
 	convey.Convey("test ClientK8s method 'AddAnnotation'", t, testAddAnnotation)
+	convey.Convey("test ClientK8s method 'UpdatePodAnnotation'", t, testUpdatePodAnnotation)
 }
 
 func testAddAnnotation() {
@@ -262,6 +262,39 @@ func testDeleteConfigMap() {
 	})
 	convey.Convey("test method DeleteConfigMap failed, cm not found", func() {
 		err := testK8sClient.DeleteConfigMap("test-namespace-not-found", "test-name-not-found")
+		convey.So(errors2.IsNotFound(err), convey.ShouldBeTrue)
+	})
+}
+
+func testUpdatePodAnnotation() {
+	if testK8sClient == nil {
+		panic("testK8sClient is nil")
+	}
+	convey.Convey("test method UpdatePodAnnotation failed, pod is nil", func() {
+		err := testK8sClient.UpdatePodAnnotation("testKey", "testValue", nil)
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "param pod is nil")
+	})
+	convey.Convey("test method UpdatePodAnnotation failed, marshal error", func() {
+		pod := &v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-pod",
+				Namespace: "default",
+			},
+		}
+		var p1 = gomonkey.ApplyFuncReturn(json.Marshal, nil, testErr)
+		defer p1.Reset()
+		err := testK8sClient.UpdatePodAnnotation("testKey", "testValue", pod)
+		convey.So(err, convey.ShouldResemble, testErr)
+	})
+	convey.Convey("test method UpdatePodAnnotation failed, patch error", func() {
+		pod := &v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-pod-not-exist",
+				Namespace: "default",
+			},
+		}
+		err := testK8sClient.UpdatePodAnnotation("testKey", "testValue", pod)
 		convey.So(errors2.IsNotFound(err), convey.ShouldBeTrue)
 	})
 }
