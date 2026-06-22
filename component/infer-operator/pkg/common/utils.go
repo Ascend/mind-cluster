@@ -119,6 +119,12 @@ func AddEnvToPodTemplate(pod *corev1.PodTemplateSpec, indexer InstanceIndexer) {
 	}
 }
 
+// IsContainerSnapshotOn checks if container snapshot is enabled for the instance set.
+func IsContainerSnapshotOn(instanceSet *v1.InstanceSet) bool {
+	containerSnapshot, ok := instanceSet.Labels[ContainerSnapshotLabelKey]
+	return ok && containerSnapshot == TrueBool
+}
+
 // IsRequeueError checks if the error is a requeue error.
 func IsRequeueError(err error) bool {
 	var reQueueError *RequeueError

@@ -19,6 +19,8 @@ package common
 import (
 	"time"
 
+	"k8s.io/api/core/v1"
+
 	ascendapi "ascend-common/api"
 )
 
@@ -185,4 +187,66 @@ const (
 	DeletingTriggerAnnotationKey = LabelKeyPrefix + "deleting-trigger"
 	// FaultRetryTimesCleanupInterval is the interval of cleanup fault retry times map
 	FaultRetryTimesCleanupInterval = 24 * time.Hour
+)
+
+const (
+	// ContainerSnapshotLabelKey is the label key of the container snapshot
+	ContainerSnapshotLabelKey = LabelKeyPrefix + "container-snapshot"
+	// ActiveLabelKey is the label key to indicate the pod is active
+	ActiveLabelKey = LabelKeyPrefix + "active"
+	// HostSnapshotAnnotationKey is the annotation key of the host snapshot
+	HostSnapshotFlagAnnotationKey = "host_snapshot_finish_flag"
+	// SnapshotModeAnnotationKey is the annotation key of the snapshot mode
+	SnapshotModeAnnotationKey = "snapshot_mode"
+	// HostSnapshotLoadPathEnvKey is env key used to identify host snapshot load path
+	HostSnapshotLoadPathEnvKey = "host_snapshot_load_path"
+	// HostSnapshotSavePathEnvKey is env key used to identify host snapshot save path
+	HostSnapshotSavePathEnvKey = "host_snapshot_save_path"
+	// HostSnapshotDirPathEnvKey is env key used to identify host snapshot dir path
+	HostSnapshotDirPathEnvKey = "host_snapshot_dir_path"
+	// HostSnapshotPathEnvKey is env key used to identify host snapshot path
+	HostSnapshotPathEnvKey = "host_snapshot_path"
+	// NpuSnapshotPathEnvKey is env key used to identify npu snapshot path
+	NpuSnapshotPathEnvKey = "npu_snapshot_path"
+	// PodNameEnvKey is env key used to identify pod name
+	PodNameEnvKey = "pod_name"
+	// GrusSnapshotRestoredFlag is env key used to identify snapshot restore flag
+	GrusSnapshotRestoredFlag = "GRUS_SNAPSHOT_RESTORED_FLAG"
+	// GrusSnapshotRestoredFlagKey is configmap key used to identify snapshot restore flag
+	GrusSnapshotRestoredFlagKey = "GrusSnapshotRestoredFlag"
+	// SnapshotMetadataPrefix snapshot meta data configmap name prefix
+	SnapshotMetadataPrefix = "snapshot-metadata-"
+
+	// SnapshotCheckInterval is the interval for checking snapshot status
+	SnapshotCheckInterval = 5 * time.Second
+	// SnapshotTimeout is the timeout for snapshot operation
+	SnapshotTimeout = 40 * time.Minute
+	// SnapshotStatusFileName is the name of the snapshot status file
+	SnapshotStatusFileName = "snapshot_status.json"
+
+	// HostSnapshotVolumnsName is the name of the host snapshot volume
+	HostSnapshotVolumnsName = "host-snapshot"
+	// NpuSnapshotVolumnsName is the name of the npu snapshot volume
+	NpuSnapshotVolumnsName = "npu-snapshot"
+)
+
+const (
+	// SnapshotStatusSuccess indicates snapshot was created successfully
+	SnapshotStatusSuccess = "success"
+	// SnapshotStatusFailed indicates snapshot creation failed
+	SnapshotStatusFailed = "failed"
+)
+
+const (
+	// PodSnapshotReadyGate is the name of the pod readiness gate for snapshot
+	PodSnapshotReadyGate = LabelKeyPrefix + "snapshot-ready"
+	// PodSnapshotReadyConditionType is the condition type for snapshot readiness
+	PodSnapshotReadyConditionType = v1.PodConditionType(PodSnapshotReadyGate)
+	// SnapshotConfigMapSuffix is the suffix for snapshot configmap name
+	SnapshotConfigMapSuffix = "snapshot-env"
+
+	// SnapshotLoadMode is the snapshot load mode
+	SnapshotLoadMode = "load"
+	// SnapshotSaveMode is the snapshot save mode
+	SnapshotSaveMode = "save"
 )
