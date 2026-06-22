@@ -52,6 +52,7 @@ const (
 
 	CONTAINERD_SNAPSHOT_KEY = "containerd"
 	ROOTFS_DIFF             = "rootfs-diff.tar"
+	LogLevel                = "1"
 )
 
 var (
