@@ -72,12 +72,7 @@
 2. 在K8s管理节点执行以下命令，启动Ascend Device Plugin。
 
     ```shell
-    kubectl apply -f device-plugin-xxx-v{version}.yaml
-    ```
-
-    如在Atlas 训练系列产品环境下启动该组件，示例如下。
-
-    ```shell
+   # {version}请替换为实际版本号，如：26.0.0
     kubectl apply -f device-plugin-volcano-v{version}.yaml
     ```
 
@@ -88,6 +83,7 @@
 1. 进入组件解压目录，执行以下命令，打开NodeD组件的启动YAML文件。
 
     ```shell
+   # {version}请替换为实际版本号，如：26.0.0
     vi noded-v{version}.yaml
     ```
 
@@ -790,7 +786,7 @@
 2. 安装完成后设置环境变量。以安装路径“/usr/local/lib/libjemalloc.so.2”为例。
 
    ```shell
-   export LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
+   export LD_PRELOAD=/usr/local/lib/libjemalloc.so.2:$LD_PRELOAD
    ```
 
 ## 脚本适配<a name="ZH-CN_TOPIC_0000002511426481"></a>
@@ -898,7 +894,7 @@
         >若出现报错：/usr/local/lib/python3.10/dist-packages/sklearn/utils/../../scikit\_learn.libs/libgomp-947d5fa1.so.1.0.0: cannot allocate memory in static TLS block，可执行以下命令预加载libgomp库。
         >
         >```shell
-        >export LD_PRELOAD="/usr/local/lib/python3.10/dist-packages/scikit_learn.libs/libgomp-947d5fa1.so.1.0.0"
+        >export LD_PRELOAD=/usr/local/lib/python3.10/dist-packages/scikit_learn.libs/libgomp-947d5fa1.so.1.0.0:$LD_PRELOAD
         >```
 
 5. 进入“[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)”仓库，根据[mindcluster-deploy开源仓版本说明](../../07_references/appendix.md#mindcluster-deploy开源仓版本说明)进入版本对应分支，获取“samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3”目录下的train\_start.sh文件，在管理节点构造成如下的目录结构。

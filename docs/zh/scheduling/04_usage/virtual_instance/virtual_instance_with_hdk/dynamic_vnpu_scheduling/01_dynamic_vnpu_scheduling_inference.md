@@ -227,7 +227,7 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p9957636276"><a name="p9957636276"></a><a name="p9957636276"></a>Ascend310P-4c.4cpu.dvpp-100-0</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas A2 训练/推理系列产品</p><p>（20/24/25个AICore）</p></td>
+<tr><td class="cellrowborder" rowspan="4" valign="top" headers="mcps1.2.5.1.1 "><p>Atlas A2 训练/推理系列产品</p><p>（20/24个AICore）</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>vir05_1c_16g</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Ascend910-5c.1cpu.16g</p></td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Ascend910-5c.1cpu.16g-100-0</p></td>
