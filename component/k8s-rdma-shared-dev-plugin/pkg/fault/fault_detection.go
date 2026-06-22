@@ -317,17 +317,20 @@ func StartFaultDetection(ctx context.Context, getHcaList func() []string, redisc
 
 			results := RunFaultChecks(config, hcaList)
 			dpuCfg := BuildDPUInfoCfg(results)
-			// Non-blocking send to reporter goroutine
 			select {
 			case faultResultChan <- dpuCfg:
 			default:
 				hwlog.RunLog.Warn("Fault result channel full, dropping oldest result")
-				// Clear old data and send new
 				select {
 				case <-faultResultChan:
 				default:
 				}
-				faultResultChan <- dpuCfg
+				select {
+				case faultResultChan <- dpuCfg:
+				case <-ctx.Done():
+					hwlog.RunLog.Info("Fault detection goroutine stopped during send")
+					return
+				}
 			}
 		}
 	}
