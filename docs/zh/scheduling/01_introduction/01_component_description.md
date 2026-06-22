@@ -352,6 +352,7 @@ Kubernetes需要感知RDMA网络设备资源信息来实现资源调度。为了
 - 支持RDMA设备的热插拔和动态更新。
 - 支持CDI（Container Device Interface）模式，但**UB类型的RDMA设备不支持CDI模式**，当检测到UB设备时会自动禁用CDI。
 - 可配置日志级别、日志备份数量、日志保留天数等日志参数。
+- 可配置故障检测周期，每周期对筛选后的UB设备进行故障检测，并写入 dpuinfo-\<nodename\> configMap。
 
 **组件上下游依赖<a name="section4941922192110"></a>**
 
