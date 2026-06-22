@@ -53,6 +53,11 @@ const (
 	CONTAINERD_SNAPSHOT_KEY = "containerd"
 	ROOTFS_DIFF             = "rootfs-diff.tar"
 	LogLevel                = "1"
+
+	CmdStart      = "start"
+	CmdCreate     = "create"
+	CmdCheckpoint = "checkpoint"
+	CmdResume     = "resume"
 )
 
 var (

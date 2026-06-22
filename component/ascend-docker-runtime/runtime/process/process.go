@@ -22,14 +22,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
-	"syscall"
 
 	"github.com/containerd/containerd/oci"
 	"github.com/opencontainers/runtime-spec/specs-go"
@@ -37,7 +35,9 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/mindxcheckutils"
+	"ascend-docker-runtime/runtime/common"
 	"ascend-docker-runtime/runtime/dcmi"
+	"ascend-docker-runtime/runtime/grus"
 )
 
 const (
@@ -47,8 +47,6 @@ const (
 	MaxCommandLength = 65535
 	hookCli          = "ascend-docker-hook"
 	destroyHookCli   = "ascend-docker-destroy"
-	dockerRuncFile   = "docker-runc"
-	runcFile         = "runc"
 	envLength        = 2
 	kvPairSize       = 2
 	borderNum        = 2
@@ -86,8 +84,6 @@ var dpMountConfigs = []dpMountConfig{
 var (
 	hookCliPath     = hookCli
 	hookDefaultFile = hookDefaultFilePath
-	dockerRuncName  = dockerRuncFile
-	runcName        = runcFile
 	deviceRegx      = fmt.Sprintf(`^(?:%s(%s|%s|%s|%s)|%s)-(\d+)$`, api.Ascend, api.Ascend910No,
 		api.Ascend310BNo, api.Ascend310PNo, api.Ascend310No, api.NPULowerCase)
 
@@ -145,11 +141,6 @@ const (
 	ummu                 = "ummu"
 )
 
-type args struct {
-	bundleDirPath string
-	cmd           string
-}
-
 // GetDeviceTypeByChipName get device type by chipName
 func GetDeviceTypeByChipName(chipName string) string {
 	if strings.Contains(chipName, api.Ascend310BNo) {
@@ -171,21 +162,48 @@ func GetDeviceTypeByChipName(chipName string) string {
 	return ""
 }
 
-func getArgs() (*args, error) {
-	args := &args{}
+func getArgs() (*common.Args, error) {
+	args := &common.Args{}
 
 	for i, param := range os.Args {
 		if param == "--bundle" || param == "-b" {
 			if len(os.Args)-i <= 1 {
 				return nil, fmt.Errorf("bundle option needs an argument")
 			}
-			args.bundleDirPath = os.Args[i+1]
-		} else if param == "create" {
-			args.cmd = param
+			args.Bundle = os.Args[i+1]
+		} else if param == "--image-path" {
+			if len(os.Args)-i <= 1 {
+				return nil, fmt.Errorf("image-path option needs an argument")
+			}
+			args.CkptPath = os.Args[i+1]
+		} else if param == "--root" {
+			if len(os.Args)-i <= 1 {
+				return nil, fmt.Errorf("root option needs an argument")
+			}
+			args.Root = os.Args[i+1]
+		} else if param == "create" || param == "start" || param == "checkpoint" || param == "resume" {
+			args.Cmd = param
 		}
 	}
-
+	args.ContainerID = os.Args[len(os.Args)-1]
 	return args, nil
+}
+
+func updateRoot(a *common.Args) {
+	if a.Root != "" {
+		return
+	}
+	// container engine not support namespace
+	if _, err := os.Stat(common.ContainerdRunRoot + "/" + a.ContainerID); err == nil {
+		a.Root = common.ContainerdRunRoot
+		return
+	}
+
+	a.Root = fmt.Sprintf("%s/default", common.ContainerdRunRoot)
+	_, err := os.Stat(a.Root + "/" + a.ContainerID)
+	if os.IsNotExist(err) {
+		a.Root = fmt.Sprintf("%s/k8s.io", common.ContainerdRunRoot)
+	}
 }
 
 // InitLogModule initializes some logging configuration.
@@ -205,32 +223,6 @@ func InitLogModule(ctx context.Context) error {
 		fmt.Printf("hwlog init failed, error is %v", err)
 		return err
 	}
-	return nil
-}
-
-var execRunc = func() error {
-	tempRuncPath, err := exec.LookPath(dockerRuncName)
-	if err != nil {
-		tempRuncPath, err = exec.LookPath(runcName)
-		if err != nil {
-			return fmt.Errorf("failed to find the path of runc: %v", err)
-		}
-	}
-	runcPath, err := filepath.EvalSymlinks(tempRuncPath)
-	if err != nil {
-		return fmt.Errorf("failed to find realpath of runc %v", err)
-	}
-	if _, err := mindxcheckutils.RealFileChecker(runcPath, true, false, mindxcheckutils.DefaultSize); err != nil {
-		return err
-	}
-
-	if err := mindxcheckutils.ChangeRuntimeLogMode("runtime-run-"); err != nil {
-		return err
-	}
-	if err = syscall.Exec(runcPath, append([]string{runcPath}, os.Args[1:]...), os.Environ()); err != nil {
-		return fmt.Errorf("failed to exec runc: %v", err)
-	}
-
 	return nil
 }
 
@@ -771,7 +763,7 @@ func modifySpecFile(path string) error {
 		return err
 	}
 
-	return writeSpecFile(path, spec)
+	return common.WriteSpecFile(path, spec)
 }
 
 // readSpecFile handles file reading and parsing
@@ -827,55 +819,61 @@ func processDevicesAndHooks(spec *specs.Spec) error {
 	return nil
 }
 
-// writeSpecFile handles file write-back
-func writeSpecFile(path string, spec *specs.Spec) error {
-	jsonFile, err := os.OpenFile(path, os.O_RDWR, 0)
-	if err != nil {
-		return fmt.Errorf("cannot reopen spec file %s: %v", path, err)
-	}
-	defer jsonFile.Close()
-	if err = mindxcheckutils.CheckFileInfo(jsonFile, mindxcheckutils.DefaultSize); err != nil {
-		hwlog.RunLog.Error(err)
-		return err
-	}
-	jsonOutput, err := json.Marshal(spec)
-	if err != nil {
-		return fmt.Errorf("failed to marshal OCI spec file: %v", err)
-	}
-
-	if err = jsonFile.Truncate(0); err != nil {
-		return fmt.Errorf("failed to truncate: %v", err)
-	}
-	if _, err = jsonFile.WriteAt(jsonOutput, 0); err != nil {
-		return fmt.Errorf("failed to write OCI spec file: %v", err)
-	}
-	return nil
-}
-
 // DoProcess does what ascend-docker-runtime is supposed to do before runc being executed.
 func DoProcess() error {
 	args, err := getArgs()
 	if err != nil {
 		return fmt.Errorf("failed to get args: %v", err)
 	}
-
-	if args.cmd != "create" {
-		return execRunc()
-	}
-
-	if args.bundleDirPath == "" {
-		hwlog.RunLog.Warn("get bundleDirPath is empty,try get current working dir from pwd ")
-		args.bundleDirPath, err = os.Getwd()
-		if err != nil {
-			return fmt.Errorf("failed to get current working dir: %v", err)
+	updateRoot(args)
+	if args.Cmd == common.CmdCheckpoint || args.Cmd == common.CmdResume {
+		if err = mindxcheckutils.ChangeRuntimeLogMode("runtime-checkpoint-"); err != nil {
+			hwlog.RunLog.Errorf("change log for checkpoint failed: %v", err)
 		}
 	}
 
-	specFilePath := args.bundleDirPath + "/config.json"
+	cmdHandlers := map[string]func() error{
+		common.CmdStart: func() error {
+			return grus.Sstart(args)
+		},
+		common.CmdCreate: func() error {
+			if args.Bundle == "" {
+				hwlog.RunLog.Warn("get bundleDirPath is empty,try get current working dir from pwd ")
+				args.Bundle, err = os.Getwd()
+				if err != nil {
+					return fmt.Errorf("failed to get current working dir: %v", err)
+				}
+			}
 
-	if err = modifySpecFile(specFilePath); err != nil {
-		return fmt.Errorf("failed to modify spec file %s: %v", specFilePath, err)
+			specFilePath := args.Bundle + "/config.json"
+
+			if err = modifySpecFile(specFilePath); err != nil {
+				return fmt.Errorf("failed to modify spec file %s: %v", specFilePath, err)
+			}
+
+			err = grus.Screate(args)
+			if err == nil {
+				return nil
+			}
+			hwlog.RunLog.Errorf("screate err: %v", err)
+			// only when valid image path/directory is empty or validation failed, continue process
+			if err.Error() != "valid image path is empty" && err.Error() != "valid image path directory is empty" &&
+				!strings.Contains(err.Error(), "image path validation failed") {
+				return err
+			}
+			return common.ExecRunc()
+		},
+		common.CmdCheckpoint: func() error {
+			return grus.Scheckpoint(args)
+		},
+		common.CmdResume: func() error {
+			return grus.Sresume(args)
+		},
 	}
 
-	return execRunc()
+	if handler, ok := cmdHandlers[args.Cmd]; ok {
+		return handler()
+	}
+
+	return common.ExecRunc()
 }

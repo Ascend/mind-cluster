@@ -16,6 +16,7 @@
 package grus
 
 import (
+	"ascend-docker-runtime/runtime/grus/runtime"
 	"fmt"
 	"net"
 	"os"
@@ -640,6 +641,147 @@ func TestValidateSnapshotImagePath(t *testing.T) {
 
 			if result != tt.expectedPath {
 				t.Fatalf("Expected path: %s, got: %s", tt.expectedPath, result)
+			}
+		})
+	}
+}
+
+func TestScreate(t *testing.T) {
+	tests := []struct {
+		name               string
+		args               *common.Args
+		mockReadOCIConfig  bool
+		readOCIConfigErr   error
+		mockRuntimeRestore bool
+		runtimeRestoreErr  error
+		expectedErr        bool
+	}{
+		{
+			name: "bundle is empty",
+			args: &common.Args{
+				Bundle: "",
+			},
+			expectedErr: true,
+		},
+		{
+			name: "readOCIConfig failed",
+			args: &common.Args{
+				ContainerID: "test-container",
+				Root:        "/test/root",
+				Bundle:      "/test/bundle",
+			},
+			mockReadOCIConfig: true,
+			readOCIConfigErr:  fmt.Errorf("read config failed"),
+			expectedErr:       true,
+		},
+		{
+			name: "restore success",
+			args: &common.Args{
+				ContainerID: "test-container",
+				Root:        "/test/root",
+				Bundle:      "/test/bundle",
+			},
+			mockReadOCIConfig:  true,
+			mockRuntimeRestore: true,
+			expectedErr:        false,
+		},
+		{
+			name: "restore failed",
+			args: &common.Args{
+				ContainerID: "test-container",
+				Root:        "/test/root",
+				Bundle:      "/test/bundle",
+			},
+			mockReadOCIConfig:  true,
+			mockRuntimeRestore: true,
+			runtimeRestoreErr:  fmt.Errorf("restore failed"),
+			expectedErr:        true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tempDir, err := os.MkdirTemp("", "screate-test")
+			if err != nil {
+				t.Fatalf("Failed to create temp directory: %v", err)
+			}
+			defer os.RemoveAll(tempDir)
+
+			if tt.args.Bundle != "" {
+				tt.args.Bundle = filepath.Join(tempDir, tt.args.Bundle)
+				if err := os.MkdirAll(tt.args.Bundle, 0755); err != nil {
+					t.Fatalf("Failed to create bundle directory: %v", err)
+				}
+			}
+
+			patches := gomonkey.NewPatches()
+			defer patches.Reset()
+
+			if tt.mockReadOCIConfig {
+				var spec *specs.Spec
+				var err error
+				if tt.readOCIConfigErr != nil {
+					err = tt.readOCIConfigErr
+				} else {
+					spec = &specs.Spec{
+						Root: &specs.Root{
+							Path: "rootfs",
+						},
+						Process: &specs.Process{
+							Env: []string{
+								common.GRUS_SNAPSHOT_IMAGE_PATH + "=" + filepath.Join(tempDir, "snapshot"),
+								common.POD_NAME + "=" + "test-0",
+							},
+						},
+						Mounts: []specs.Mount{},
+					}
+					if err := os.MkdirAll(filepath.Join(tempDir, "snapshot/0"), 0755); err != nil {
+						t.Fatalf("Failed to create snapshot directory: %v", err)
+					}
+					err = os.WriteFile(filepath.Join(tempDir, "snapshot/0", "tempfile"), []byte("content"), 0660)
+					if err != nil {
+						t.Fatalf("Failed to create temp file: %v", err)
+					}
+				}
+				patches.ApplyFunc(readOCIConfig, func(bundlePath string) (*specs.Spec, error) {
+					return spec, err
+				})
+			}
+
+			if tt.mockRuntimeRestore {
+				patches.ApplyMethodFunc(&runtime.RuncRuntime{}, "Restore", func(ckptPath, id, ns string, externalEnvs []string) error {
+					return tt.runtimeRestoreErr
+				})
+			}
+
+			patches.ApplyFunc(rootfsRestore, func(ckptPath, rootfsPath string) error {
+				return nil
+			})
+
+			patches.ApplyFunc(createFlagFile, func(spec *specs.Spec, rootfs string) error {
+				return nil
+			})
+
+			patches.ApplyFunc(prepareLogfile, func(bundlePath string) error {
+				return nil
+			})
+
+			patches.ApplyFunc(getContainerNewIP, func(conID string, config *specs.Spec) ([]string, error) {
+				return nil, nil
+			})
+
+			patches.ApplyFunc(common.ExecRunc, func() error {
+				return nil
+			})
+
+			patches.ApplyFunc(common.WriteSpecFile, func(path string, spec *specs.Spec) error {
+				return nil
+			})
+
+			err = Screate(tt.args)
+
+			if (err != nil) != tt.expectedErr {
+				t.Fatalf("Expected error: %v, got: %v", tt.expectedErr, err != nil)
 			}
 		})
 	}
