@@ -27,12 +27,14 @@ When running distributed training or high-performance computing workloads that r
 - Provides device selection based on vendor, device ID, driver, and interface name
 - Integrates with Kubernetes device plugin framework
 - Supports Container Device Interface (CDI)
+- Write fault detection information to Kubernetes as a ConfigMap
 
 ### Upstream and Downstream Dependencies
 
 1. Detects RDMA devices on compute nodes
 2. Registers with Kubernetes kubelet device plugin framework
 3. Reports device availability to Kubernetes scheduler
+4. Support UB device fault detection
 
 ---
 
@@ -120,20 +122,21 @@ kubectl get pods -A | grep k8s-rdma-shared-dev-plugin
 
 The K8s RDMA Shared Device Plugin can be configured with the following parameters:
 
-| Parameter | Type | Description | Default |
-| -- | -- | -- | -- |
-| `periodicUpdateInterval` | int | Interval (seconds) for periodic device updates | 0 (disabled) |
-| `configList` | array | List of device configurations | [] |
-| `resourceName` | string | Resource name for the device plugin | rdma |
-| `resourcePrefix` | string | Resource prefix | huawei.com |
-| `rdmaHcaMax` | int | Maximum number of RDMA HCA devices | 1000 |
-| `devices` | array | List of device names to include | [] |
-| `selectors.buses` | array | Bus types to filter devices (e.g., "ub" to enable UB devices) | [] |
-| `selectors.vendors` | array | Vendor IDs to filter devices | [] |
-| `selectors.deviceIDs` | array | Device IDs to filter devices | [] |
-| `selectors.drivers` | array | Driver names to filter devices | [] |
-| `selectors.ifNames` | array | Interface names to filter devices | [] |
-| `selectors.linkTypes` | array | Link types to filter devices | [] |
+| Parameter | Type | Description                                                   | Default      |
+| -- | -- |---------------------------------------------------------------|--------------|
+| `periodicUpdateInterval` | int | Interval (seconds) for periodic device updates                | 0 (disabled) |
+| `faultDetectPeriod`      | int | Periodic fault detection interval (seconds)                        | 5 (minimum configuration is 1) |
+| `configList` | array | List of device configurations                                 | []           |
+| `resourceName` | string | Resource name for the device plugin                           | rdma         |
+| `resourcePrefix` | string | Resource prefix                                               | huawei.com   |
+| `rdmaHcaMax` | int | Maximum number of RDMA HCA devices                            | 1000         |
+| `devices` | array | List of device names to include                               | []           |
+| `selectors.buses` | array | Bus types to filter devices (e.g., "ub" to enable UB devices) | []           |
+| `selectors.vendors` | array | Vendor IDs to filter devices                                  | []           |
+| `selectors.deviceIDs` | array | Device IDs to filter devices                                  | []           |
+| `selectors.drivers` | array | Driver names to filter devices                                | []           |
+| `selectors.ifNames` | array | Interface names to filter devices                             | []           |
+| `selectors.linkTypes` | array | Link types to filter devices                                  | []           |
 
 ---
 
