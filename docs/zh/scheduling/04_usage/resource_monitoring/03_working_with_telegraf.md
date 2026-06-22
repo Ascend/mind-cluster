@@ -33,7 +33,7 @@
    |--|--|--|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--|
    |-platform|string|Prometheus| 指定对接平台，取值如下：<ul><li>Prometheus：对接Prometheus</li><li>Telegraf：对接Telegraf</li></ul>                                                                                                                                                                                                  |是|
    |-poll_interval|duration(int)|1s| Telegraf数据上报的间隔时间，此参数在对接Telegraf平台时才起作用，即需要指定-platform=Telegraf时才生效，否则该参数不生效。                                                                                                                                                                                                      |否|
-   |-hccsBWProfilingTime|int|200| HCCS链路带宽采样时长，取值范围[1，1000]，单位为ms。                                                                                                                                                                                                                                                   |否|
+   |-hccsBWProfilingTime|int|200| HCCS链路带宽采样时长，取值范围[1，1000]，单位为毫秒。                                                                                                                                                                                                                                                   |否|
    |-updateTime|int|无| **即将日落，不推荐使用**。全局配置指标更新周期，取值范围为1~60秒。推荐按分组配置指标更新周期，详见[配置文件](../../05_developer_guide/installation_deployment/manual_installation/03_npu_exporter.md#section103551921135917)。<p>兼容性说明：如果配置了updateTime参数，该参数仍然有效，且优先级高于metricConfiguration.json/pluginConfiguration.json配置文件中的intervalSeconds。             |否|
    |-logLevel|int|0| 日志级别：<ul><li>-1：debug</li><li>0：info</li><li>1：warning</li><li>2：error</li><li>3：critical</li></ul>                                                                                                                                                                                |否|
    |-maxAge|int|7| 日志备份时间，取值范围为7~700，单位为天。                                                                                                                                                                                                                                                            |否|
@@ -46,12 +46,12 @@
 3. （可选）如果没有安装Telegraf，需执行以下步骤安装Telegraf。
     - **离线安装（推荐）**
         1. 进入[Telegraf下载页面](https://github.com/influxdata/telegraf/releases)。
-        2. 选择需要安装的版本，完成下载，如：telegraf-1.34.3\_linux\_arm64.tar.gz。
+        2. 选择需要安装的版本，完成下载，如：telegraf-1.34.4\_linux\_arm64.tar.gz。
         3. 将上述安装包上传到服务器的任意路径下。
         4. 在软件包所在目录执行如下命令进行解压。示例如下。
 
             ```shell
-            tar -zxvf telegraf-1.34.3_linux_arm64.tar.gz
+            tar -zxvf telegraf-1.34.4_linux_arm64.tar.gz
             ```
 
         5. 进入解压目录，在./usr/bin路径下找到Telegraf二进制文件，将该文件拷贝到任意路径下（如“/home/npu\_plugin”）。
@@ -82,7 +82,7 @@
 
         ```ColdFusion
         2023-09-15T10:11:31Z I! Loading config file: ../npu_plugin.conf
-        2023-09-15T10:11:31Z I! Starting Telegraf 1.26.0
+        2023-09-15T10:11:31Z I! Starting Telegraf 1.34.4
         2023-09-15T10:11:31Z I! Available plugins: 236 inputs, 9 aggregators, 27 processors, 22 parsers, 57 outputs, 2 secret-stores2023-09-15T10:11:31Z I! Loaded inputs: execd
         2023-09-15T10:11:31Z I! Loaded aggregators:
         2023-09-15T10:11:31Z I! Loaded processors:
