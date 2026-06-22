@@ -39,7 +39,9 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-docker-runtime/mindxcheckutils"
+	"ascend-docker-runtime/runtime/common"
 	"ascend-docker-runtime/runtime/dcmi"
+	"ascend-docker-runtime/runtime/grus"
 )
 
 const (
@@ -81,10 +83,10 @@ func TestArgsIsCreate(t *testing.T) {
 	stub := gomonkey.ApplyGlobalVar(&os.Args, testArgs)
 	defer stub.Reset()
 
-	stub.ApplyFunc(execRunc, func() error {
+	stub.ApplyFunc(common.ExecRunc, func() error {
 		t.Log(execStubLog)
 		return nil
-	})
+	}).ApplyFuncReturn(grus.Screate, errors.New("valid image path is empty"))
 
 	err := DoProcess()
 	assert.NotNil(t, err)
@@ -96,7 +98,7 @@ func TestArgsIsCreateCase1(t *testing.T) {
 	stub := gomonkey.ApplyGlobalVar(&os.Args, testArgs)
 	defer stub.Reset()
 
-	stub.ApplyFunc(execRunc, func() error {
+	stub.ApplyFunc(common.ExecRunc, func() error {
 		t.Log(execStubLog)
 		return nil
 	})
@@ -111,10 +113,10 @@ func TestArgsIsCreateCase2(t *testing.T) {
 	stub := gomonkey.ApplyGlobalVar(&os.Args, testArgs)
 	defer stub.Reset()
 
-	stub.ApplyFunc(execRunc, func() error {
+	stub.ApplyFunc(common.ExecRunc, func() error {
 		t.Log(execStubLog)
 		return nil
-	})
+	}).ApplyFuncReturn(grus.Screate, errors.New("valid image path is empty"))
 
 	err := DoProcess()
 	assert.NotNil(t, err)
@@ -138,10 +140,10 @@ func TestArgsIsCreateCase3(t *testing.T) {
 	stub := gomonkey.ApplyGlobalVar(&os.Args, testArgs)
 	defer stub.Reset()
 
-	stub.ApplyFunc(execRunc, func() error {
+	stub.ApplyFunc(common.ExecRunc, func() error {
 		t.Log(execStubLog)
 		return nil
-	})
+	}).ApplyFuncReturn(grus.Screate, errors.New("valid image path is empty"))
 	err = InitLogModule(context.Background())
 	assert.Nil(t, err)
 	err = DoProcess()
@@ -162,14 +164,14 @@ func TestArgsIsCreateCase4(t *testing.T) {
 	if err != nil {
 		t.Logf("chmod file failed, error: %v", err)
 	}
-	testArgs := []string{"spec", bundleArgStr, needToMkdir}
+	testArgs := []string{"checkpoint", bundleArgStr, needToMkdir}
 	stub := gomonkey.ApplyGlobalVar(&os.Args, testArgs)
 	defer stub.Reset()
 
-	stub.ApplyFunc(execRunc, func() error {
+	stub.ApplyFunc(common.ExecRunc, func() error {
 		t.Log(execStubLog)
 		return nil
-	})
+	}).ApplyFuncReturn(grus.Scheckpoint, nil)
 
 	err = DoProcess()
 	assert.Nil(t, err)
@@ -178,11 +180,12 @@ func TestArgsIsCreateCase4(t *testing.T) {
 // TestDoProcess test the function DoProcess
 func TestDoProcess(t *testing.T) {
 	convey.Convey("test DoProcess", t, func() {
-		testArgs := args{
-			cmd:           "create",
-			bundleDirPath: "",
+		testArgs := common.Args{
+			Cmd:    "create",
+			Bundle: "",
 		}
-		patches := gomonkey.ApplyFuncReturn(getArgs, &testArgs, nil)
+		patches := gomonkey.ApplyFuncReturn(getArgs, &testArgs, nil).
+			ApplyFuncReturn(grus.Screate, errors.New("valid image path is empty"))
 		defer patches.Reset()
 		convey.Convey("01-Getwd error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(os.Getwd, testStr, testError)
@@ -193,7 +196,7 @@ func TestDoProcess(t *testing.T) {
 		patches.ApplyFuncReturn(os.Getwd, testStr, nil)
 		convey.Convey("02-success, should return nil", func() {
 			patch := gomonkey.ApplyFuncReturn(modifySpecFile, nil).
-				ApplyFuncReturn(execRunc, nil)
+				ApplyFuncReturn(common.ExecRunc, nil)
 			defer patch.Reset()
 			err := DoProcess()
 			convey.So(err, convey.ShouldBeNil)
@@ -474,7 +477,7 @@ func TestWriteSpecFile(t *testing.T) {
 		path := "test_spec.json"
 		defer os.Remove(path)
 		convey.Convey("01-open file error, should return error", func() {
-			err := writeSpecFile("/invalid/path", &specs.Spec{})
+			err := common.WriteSpecFile("/invalid/path", &specs.Spec{})
 			convey.So(err, convey.ShouldBeError)
 		})
 		patch := gomonkey.ApplyFuncReturn(os.OpenFile, &os.File{}, nil)
@@ -482,7 +485,7 @@ func TestWriteSpecFile(t *testing.T) {
 		convey.Convey("02-check file info error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(mindxcheckutils.CheckFileInfo, testError)
 			defer patch.Reset()
-			err := writeSpecFile(path, testSpec)
+			err := common.WriteSpecFile(path, testSpec)
 			convey.So(err, convey.ShouldBeError)
 		})
 		patch1 := gomonkey.ApplyFuncReturn(mindxcheckutils.CheckFileInfo, nil)
@@ -490,7 +493,7 @@ func TestWriteSpecFile(t *testing.T) {
 		convey.Convey("03-marshal error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(json.Marshal, []byte{}, testError)
 			defer patch.Reset()
-			err := writeSpecFile(path, testSpec)
+			err := common.WriteSpecFile(path, testSpec)
 			convey.So(err, convey.ShouldBeError)
 		})
 		patch2 := gomonkey.ApplyFuncReturn(json.Marshal, []byte("{}"), nil)
@@ -498,7 +501,7 @@ func TestWriteSpecFile(t *testing.T) {
 		convey.Convey("04-truncate error, should return error", func() {
 			patch := gomonkey.ApplyMethodReturn(new(os.File), "Truncate", testError)
 			defer patch.Reset()
-			err := writeSpecFile(path, testSpec)
+			err := common.WriteSpecFile(path, testSpec)
 			convey.So(err, convey.ShouldBeError)
 		})
 		patch3 := gomonkey.ApplyMethodReturn(new(os.File), "Truncate", nil)
@@ -506,13 +509,13 @@ func TestWriteSpecFile(t *testing.T) {
 		convey.Convey("05-write error, should return error", func() {
 			patch := gomonkey.ApplyMethodReturn(new(os.File), "WriteAt", 0, testError)
 			defer patch.Reset()
-			err := writeSpecFile(path, testSpec)
+			err := common.WriteSpecFile(path, testSpec)
 			convey.So(err, convey.ShouldBeError)
 		})
 		convey.Convey("06-success, should return nil", func() {
 			patch := gomonkey.ApplyMethodReturn(new(os.File), "WriteAt", writeAt, nil)
 			defer patch.Reset()
-			err := writeSpecFile(path, testSpec)
+			err := common.WriteSpecFile(path, testSpec)
 			convey.So(err, convey.ShouldBeNil)
 		})
 	})
@@ -556,11 +559,11 @@ func TestAddHookCase3(t *testing.T) {
 
 // TestExecRunc tests the function execRunc
 func TestExecRunc(t *testing.T) {
-	stub := gomonkey.ApplyGlobalVar(&dockerRuncName, "abc-runc")
-	stub.ApplyGlobalVar(&runcName, "runc123")
+	stub := gomonkey.ApplyGlobalVar(&common.DockerRuncName, "abc-runc")
+	stub.ApplyGlobalVar(&common.RuncName, "runc123")
 	defer stub.Reset()
 
-	err := execRunc()
+	err := common.ExecRunc()
 	assert.NotNil(t, err)
 }
 
@@ -572,32 +575,32 @@ func TestExecRuncPatch1(t *testing.T) {
 		convey.Convey("01-EvalSymlinks error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(filepath.EvalSymlinks, testStr, testError)
 			defer patch.Reset()
-			err := execRunc()
+			err := common.ExecRunc()
 			convey.So(err, convey.ShouldBeError)
 		})
 		patches.ApplyFuncReturn(filepath.EvalSymlinks, testStr, nil)
 		convey.Convey("02-RealFileChecker error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, testError)
 			defer patch.Reset()
-			err := execRunc()
+			err := common.ExecRunc()
 			convey.So(err, convey.ShouldBeError)
 		})
 		patches.ApplyFuncReturn(mindxcheckutils.RealFileChecker, testStr, nil)
 		convey.Convey("03-ChangeRuntimeLogMode error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(mindxcheckutils.ChangeRuntimeLogMode, testError)
 			defer patch.Reset()
-			convey.So(execRunc(), convey.ShouldBeError)
+			convey.So(common.ExecRunc(), convey.ShouldBeError)
 		})
 		patches.ApplyFuncReturn(mindxcheckutils.ChangeRuntimeLogMode, nil)
 		convey.Convey("04-syscall Exec error, should return error", func() {
 			patch := gomonkey.ApplyFuncReturn(syscall.Exec, testError)
 			defer patch.Reset()
-			convey.So(execRunc(), convey.ShouldBeError)
+			convey.So(common.ExecRunc(), convey.ShouldBeError)
 		})
 		convey.Convey("05-success, should return nil", func() {
 			patch := gomonkey.ApplyFuncReturn(syscall.Exec, nil)
 			defer patch.Reset()
-			convey.So(execRunc(), convey.ShouldBeNil)
+			convey.So(common.ExecRunc(), convey.ShouldBeNil)
 		})
 	})
 }
