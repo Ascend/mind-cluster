@@ -38,7 +38,7 @@ spec:
       initContainers:
         - name: init-log-setup
           image: infer-operator:latest
-          command: ['sh', '-c', 'mkdir -p /var/log/mindx-dl && chmod 755 /var/log/mindx-dl && chown root:root /var/log/mindx-dl && mkdir -p /var/log/mindx-dl/infer-operator && chmod 750 /var/log/mindx-dl/infer-operator && chown 9000:9000 /var/log/mindx-dl/infer-operator']
+          command: ['sh', '-c', 'mkdir -p /var/log/mindx-dl && chmod 755 /var/log/mindx-dl && chown root:root /var/log/mindx-dl && mkdir -p /var/log/mindx-dl/infer-operator && chmod 750 /var/log/mindx-dl/infer-operator']
           securityContext:
             runAsUser: 0
             runAsNonRoot: false
@@ -72,9 +72,7 @@ spec:
             failureThreshold: 3
           securityContext:
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            runAsUser: 9000
-            runAsGroup: 9000
+            readOnlyRootFilesystem: false
             capabilities:
               drop: ["All"]
           volumeMounts:
@@ -123,6 +121,9 @@ rules:
   - apiGroups: [""]
     resources: [ "pods" ]
     verbs: [ "create", "list", "watch", "delete", "get", "patch", "update" ]
+  - apiGroups: [""]
+    resources: ["pods/status"]
+    verbs: ["get", "patch", "update"]
   - apiGroups: [ "" ]
     resources: [ "events" ]
     verbs: [ "list", "watch", "create", "patch", "delete" ]

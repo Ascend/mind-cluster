@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/smartystreets/goconvey/convey"
 	corev1 "k8s.io/api/core/v1"
@@ -143,7 +144,6 @@ func TestAddSnapshotEnvToPodTemplate(t *testing.T) {
 
 func TestAddSnapshotEnvToPodTemplate2(t *testing.T) {
 	convey.Convey("Test AddSnapshotEnvToPodTemplate function with existing snapshot", t, func() {
-
 		convey.Convey("Should add env when snapshot exists and is valid", func() {
 			tmpDir, err := os.MkdirTemp("", "snapshot-test-*")
 			convey.So(err, convey.ShouldBeNil)
@@ -592,6 +592,56 @@ func TestValidateSnapshotStatusWithValidData(t *testing.T) {
 			valid, err := ValidateSnapshotStatus(tmpDir)
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(valid, convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestIsSnapshotValid(t *testing.T) {
+	convey.Convey("Test IsSnapshotValid function", t, func() {
+		convey.Convey("Should return false when status file does not exist", func() {
+			valid := IsSnapshotValid("/non/existent/path")
+			convey.So(valid, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("Should return true when snapshot is valid", func() {
+			tmpDir, err := os.MkdirTemp("", "snapshot-test-*")
+			convey.So(err, convey.ShouldBeNil)
+			defer os.RemoveAll(tmpDir)
+
+			testDir := filepath.Join(tmpDir, "testdir")
+			err = os.MkdirAll(testDir, 0755)
+			convey.So(err, convey.ShouldBeNil)
+
+			testFile := filepath.Join(testDir, "test.txt")
+			err = os.WriteFile(testFile, []byte("test content"), 0644)
+			convey.So(err, convey.ShouldBeNil)
+
+			err = WriteSnapshotStatus(tmpDir, SnapshotStatusSuccess, "test message")
+			convey.So(err, convey.ShouldBeNil)
+
+			valid := IsSnapshotValid(tmpDir)
+			convey.So(valid, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestSnapshotStatusStruct(t *testing.T) {
+	convey.Convey("Test SnapshotStatus struct", t, func() {
+		convey.Convey("Should create SnapshotStatus with correct values", func() {
+			now := time.Now()
+			status := SnapshotStatus{
+				SHA256:          "abc123",
+				DirectorySHA256: map[string]string{"dir1": "hash1"},
+				Status:          SnapshotStatusSuccess,
+				Timestamp:       now,
+				Message:         "test message",
+			}
+
+			convey.So(status.SHA256, convey.ShouldEqual, "abc123")
+			convey.So(status.DirectorySHA256["dir1"], convey.ShouldEqual, "hash1")
+			convey.So(status.Status, convey.ShouldEqual, SnapshotStatusSuccess)
+			convey.So(status.Timestamp, convey.ShouldEqual, now)
+			convey.So(status.Message, convey.ShouldEqual, "test message")
 		})
 	})
 }

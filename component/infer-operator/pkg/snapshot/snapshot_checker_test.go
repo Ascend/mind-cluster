@@ -30,6 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"ascend-common/common-utils/hwlog"
@@ -598,6 +599,110 @@ func TestSetAndCleanSnapshot(t *testing.T) {
 			checker.setAndCleanSnapshot("default/test-instance", false, []corev1.Pod{}, tracker,
 				context.TODO(), podList)
 			convey.So(checker.GetTrackerCount(), convey.ShouldEqual, 0)
+		})
+	})
+}
+
+func TestSnapshotCheckerCheckAllInstanceSets(t *testing.T) {
+	convey.Convey("Test SnapshotChecker checkAllInstanceSets method", t, func() {
+		convey.Convey("Should check all tracked InstanceSets", func() {
+			instanceSet1 := createTestInstanceSet("instance1", "default", int32(1))
+			instanceSet2 := createTestInstanceSet("instance2", "ns1", int32(1))
+			fakeClient := newFakeClientBuilder(instanceSet1, instanceSet2).Build()
+			checker := NewSnapshotChecker(fakeClient)
+			checker.Start(context.Background())
+
+			_ = checker.TrackInstanceSet(instanceSet1,
+				map[string]string{"app": "test1"}, int32(1))
+			_ = checker.TrackInstanceSet(instanceSet2,
+				map[string]string{"app": "test2"}, int32(1))
+
+			checker.checkAllInstanceSets()
+			convey.So(checker.GetTrackerCount(), convey.ShouldEqual, 2)
+		})
+	})
+}
+
+type mockStatusWriter struct {
+	patchErr error
+}
+
+func (m *mockStatusWriter) Update(context.Context, client.Object, ...client.UpdateOption) error {
+	return nil
+}
+
+func (m *mockStatusWriter) Patch(context.Context, client.Object, client.Patch, ...client.PatchOption) error {
+	return m.patchErr
+}
+
+func TestGetHostSnapshotPath(t *testing.T) {
+	convey.Convey("Test GetHostSnapshotPath function", t, func() {
+		convey.Convey("Should return correct path when env exists", func() {
+			pod := createTestPod("test-pod", "default", nil)
+
+			path := GetHostSnapshotPath(pod)
+			convey.So(path, convey.ShouldEqual,
+				"/data/snapshot/host/default/test-service-test-role")
+		})
+
+		convey.Convey("Should return empty string when env not found", func() {
+			pod := createTestPod("test-pod", "default", nil)
+			pod.Spec.Containers[0].Env = []corev1.EnvVar{}
+
+			path := GetHostSnapshotPath(pod)
+			convey.So(path, convey.ShouldEqual, "")
+		})
+
+		convey.Convey("Should return empty string when HostPath is nil", func() {
+			pod := createTestPod("test-pod", "default", nil)
+			pod.Spec.Containers[0].Env = []corev1.EnvVar{
+				{
+					Name:  common.HostSnapshotDirPathEnvKey,
+					Value: "",
+				},
+			}
+
+			path := GetHostSnapshotPath(pod)
+			convey.So(path, convey.ShouldEqual, "")
+		})
+	})
+}
+
+func TestInstanceSetTracker(t *testing.T) {
+	convey.Convey("Test InstanceSetTracker struct", t, func() {
+		convey.Convey("Should create tracker with correct values", func() {
+			now := time.Now()
+			tracker := &InstanceSetTracker{
+				InstanceSetName: "test-instance",
+				Namespace:       "default",
+				SelectLabels:    map[string]string{"app": "test"},
+				StartTime:       now,
+				Replicas:        int32(3),
+			}
+
+			convey.So(tracker.InstanceSetName, convey.ShouldEqual, "test-instance")
+			convey.So(tracker.Namespace, convey.ShouldEqual, "default")
+			convey.So(tracker.SelectLabels["app"], convey.ShouldEqual, "test")
+			convey.So(tracker.StartTime, convey.ShouldEqual, now)
+			convey.So(tracker.Replicas, convey.ShouldEqual, int32(3))
+		})
+	})
+}
+
+func TestSnapshotCheckerWithRealSnapshotPath(t *testing.T) {
+	convey.Convey("Test SnapshotChecker with real snapshot path", t, func() {
+		convey.Convey("Should handle snapshot status file operations", func() {
+			tmpDir, err := os.MkdirTemp("", "snapshot-status-test-*")
+			convey.So(err, convey.ShouldBeNil)
+			defer os.RemoveAll(tmpDir)
+
+			statusFile := filepath.Join(tmpDir, common.SnapshotStatusFileName)
+			statusContent := `{"status":"success","timestamp":"2024-01-01T00:00:00Z","message":"test"}`
+			err = os.WriteFile(statusFile, []byte(statusContent), 0644)
+			convey.So(err, convey.ShouldBeNil)
+
+			exists := common.IsSnapshotStatusExists(tmpDir)
+			convey.So(exists, convey.ShouldBeTrue)
 		})
 	})
 }

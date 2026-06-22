@@ -203,6 +203,12 @@ func (r *InstanceSetReconciler) checkOrCreateService(
 	}
 	if apierrors.IsNotFound(err) {
 		labels := common.AddLabelsFromIndexer(instanceSet.Labels, indexer)
+		if common.IsContainerSnapshotOn(instanceSet) {
+			if serviceSpec.Spec.Selector == nil {
+				serviceSpec.Spec.Selector = make(map[string]string)
+			}
+			serviceSpec.Spec.Selector[common.ActiveLabelKey] = common.TrueBool
+		}
 		newService := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        customServiceName,
