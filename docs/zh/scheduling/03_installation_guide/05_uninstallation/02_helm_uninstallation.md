@@ -64,18 +64,17 @@
 >- 卸载前请确认集群中无正在使用MindCluster组件管理的工作负载，避免业务中断。
 
 1. （可选）关闭pingmesh灵衢网络检测。
-    1. 登录环境，进入NodeD解压目录。
-    2. 执行以下命令编辑pingmesh-config文件。
+    1. 执行以下命令编辑pingmesh-config ConfigMap。
 
         ```bash
         kubectl edit cm -n cluster-system pingmesh-config
         ```
 
-    3. 修改activate字段的取值。
-        - 如果超节点ID在pingmesh-config文件中，修改该超节点ID字段下的activate为off。
-        - 如果超节点ID不在pingmesh-config文件中，可通过以下2种方式进行设置。
-            - 在配置文件中新增该超节点信息，并将activate设置为off。
-            - 删除pingmesh-config文件中所有超节点的信息，并将global配置中activate字段的值设置为off。
+    2. 修改activate字段的取值。
+        - 如果超节点ID在pingmesh-config ConfigMap中，修改该超节点ID字段下的activate为off。
+        - 如果超节点ID不在pingmesh-config ConfigMap中，可通过以下2种方式进行设置。
+            - 在pingmesh-config ConfigMap中新增该超节点信息，并将activate设置为off。
+            - 删除pingmesh-config ConfigMap中所有超节点的信息，并将global配置中activate字段的值设置为off。
 
 2. 卸载MindCluster应用组件。
 
@@ -103,19 +102,20 @@
     release "mindcluster-crds" uninstalled
     ```
 
-4. 删除命名空间。若mindx-dl命名空间下已无其他资源，可执行如下命令删除命名空间。删除命名空间会删除该namespace下的所有资源，请确认后再执行。
+4. （可选）删除命名空间。若mindx-dl和cluster-system命名空间下已无其他资源，可执行如下命令删除命名空间。删除命名空间会删除该namespace下的所有资源，请确认后再执行。
 
     ```bash
-    kubectl delete ns mindx-dl
+    kubectl delete ns mindx-dl cluster-system
     ```
 
     回显示例如下：
 
     ```bash
     namespace "mindx-dl" deleted
+    namespace "cluster-system" deleted
     ```
 
-5. 删除日志文件。参考[（可选）创建日志目录](../../05_developer_guide/installation_deployment/manual_installation/01_preparing_for_installation.md#可选创建日志目录)章节，在对应节点上删除集群调度组件的日志目录。以ClusterD为例，请确认后再删除。
+5. （可选）删除日志文件。参考[（可选）创建日志目录](../../05_developer_guide/installation_deployment/manual_installation/01_preparing_for_installation.md#可选创建日志目录)章节，在对应节点上删除集群调度组件的日志目录。以ClusterD为例，请确认后再删除。
 
     ```bash
     rm -rf /var/log/mindx-dl/clusterd

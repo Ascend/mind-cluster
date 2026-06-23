@@ -40,6 +40,7 @@ metadata:
   name: lws-runtime
   annotations:
     sp-block: "16"
+    huawei.com/schedule_policy: "chip2-node16-sp"    # 根据硬件形态设置调度策略
   labels:
     <strong>fault-scheduling: "force"          # 开启重调度功能</strong>
     <strong>pod-rescheduling: "on"             # 开启Pod级重调度</strong>

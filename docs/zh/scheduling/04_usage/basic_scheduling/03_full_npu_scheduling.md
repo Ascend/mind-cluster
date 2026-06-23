@@ -32,12 +32,12 @@
 **支持的产品形态<a name="section169961844182917"></a>**
 
 支持以下产品使用**整卡调度**。
-    - Ascend 950代际产品
-    - Atlas A3 系列产品
-    - Atlas A2 系列产品
-    - Atlas 训练系列产品
-    - Atlas 推理系列产品
-    - Atlas 200I推理产品
+- Ascend 950代际产品
+- Atlas A3 系列产品
+- Atlas A2 系列产品
+- Atlas 训练系列产品
+- Atlas 推理系列产品
+- Atlas 200I推理产品
 
 **使用流程<a name="section5640184231810"></a>**
 
@@ -81,8 +81,6 @@ acjob任务原理图如[图1](#fig5188536014)所示。
 8. Ascend Operator读取Pod的annotation信息，将相关信息写入hccl.json。
 9. 容器读取环境变量或者hccl.json信息，建立通信通道，开始执行任务。
 
-    >[!NOTE]
-    >Ascend Operator当前仅支持为PyTorch任务生成hccl.json。
 
 **vcjob任务<a name="section13884164615313"></a>**
 
@@ -934,6 +932,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
             podgroup-sched-enable: "true"  # 仅在集群使用openFuyao定制Kubernetes和volcano-ext组件场景下配置。取值为字符串"true"时，表示开启批量调度功能；取值为其他字符串时，表示批量调度功能不生效，使用普通调度。若不配置该参数，表示批量调度功能不生效，使用普通调度
           annotations:
             sp-block: "16"  # 需要和申请的芯片数量一致
+            huawei.com/schedule_policy: "chip2-node16-sp"    # 根据硬件形态设置调度策略
         spec:
           schedulerName: volcano  # 当Ascend Operator组件的启动参数enableGangScheduling为true时生效
           runPolicy:

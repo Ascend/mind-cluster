@@ -168,6 +168,7 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
         fault-scheduling: force
       <strong>annotations:</strong>
         <strong>sp-block: "16"         # 增加该annotation，配置方法请参见YAML参数说明</strong>
+        <strong>huawei.com/schedule_policy: "chip2-node16"    # 根据硬件形态设置调度策略</strong>
         huawei.com/schedule.filter.faultCode: "8C1F8608,4C1F8608,80E01801"       # 增加该annotation，配置方法请参见YAML参数说明
         huawei.com/schedule.filter.faultLevel: "RestartRequest"       # 增加该annotation，配置方法请参见YAML参数说明
     spec:
@@ -228,6 +229,7 @@ metadata:
   annotations:
     <strong>sp-block: "16"              # 指定sp-block字段，集群调度组件会在物理超节点的基础上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度</strong>
     <strong>sp-fit: "idlest"            # 超节点调度策略，详细说明请参见YAML参数说明</strong>
+    <strong>huawei.com/schedule_policy: "chip2-node16"    # 根据硬件形态设置调度策略</strong>
 spec:
   schedulerName: volcano   # Ascend Operator启用“gang”调度时所选择的调度器
   runPolicy:
