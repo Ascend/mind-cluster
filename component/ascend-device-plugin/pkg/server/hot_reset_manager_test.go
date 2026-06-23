@@ -524,6 +524,30 @@ func TestGetResetRingDevices(t *testing.T) {
 	})
 }
 
+func TestGetResetRingDevicesDuoCard(t *testing.T) {
+	convey.Convey("test getResetRingDevices for Atlas 300I Duo", t, func() {
+		convey.Convey("should return duo card devices when IsContainAtlas300IDuo is true", func() {
+			devMgr := &device.HwAscend910Manager{}
+			mgr := NewUnifiedHotResetManager(&devmanager.DeviceManagerMock{}, devMgr, nil)
+			oldCardType := common.ParamOption.RealCardType
+			common.ParamOption.RealCardType = "unknown"
+			defer func() { common.ParamOption.RealCardType = oldCardType }()
+			patch := gomonkey.ApplyMethodReturn(devMgr, "GetServerBoardId", uint32(0), nil).
+				ApplyFunc(common.IsContainAtlas300IDuo, func() bool { return true })
+			defer patch.Reset()
+			groupDevice := map[string][]*common.NpuDevice{
+				"Ascend310P": {
+					{LogicID: 0, CardID: 1}, {LogicID: 1, CardID: 1}, {LogicID: 2, CardID: 2},
+				},
+			}
+			faultDev := &common.NpuDevice{LogicID: 0, CardID: 1}
+			ringDevs, fd := mgr.getResetRingDevices(faultDev, groupDevice)
+			convey.So(len(ringDevs), convey.ShouldEqual, 2)
+			convey.So(fd.LogicID, convey.ShouldEqual, 0)
+		})
+	})
+}
+
 func TestConfirmAndPrepareReset_DeviceNotReady(t *testing.T) {
 	convey.Convey("test confirmAndPrepareReset device not ready", t, func() {
 		convey.Convey("device not ready error should continue reset", func() {

@@ -167,10 +167,6 @@ func (m *UnifiedHotResetManager) getResetRingDevices(faultDev *common.NpuDevice,
 	}
 	devType := m.findFaultDevType(faultDev, groupDevice)
 	deviceNum := len(groupDevice[devType])
-	ringSize := m.getRingSize(faultDev, boardId, deviceNum)
-	if ringSize == 1 {
-		return []*common.NpuDevice{faultDev}, faultDev
-	}
 
 	if common.ParamOption.RealCardType == api.Ascend910A3 {
 		return m.getA3AssociatedDevices(faultDev, groupDevice)
@@ -178,6 +174,11 @@ func (m *UnifiedHotResetManager) getResetRingDevices(faultDev *common.NpuDevice,
 
 	if common.IsContainAtlas300IDuo() {
 		return m.getDuoCardDevices(faultDev, groupDevice)
+	}
+
+	ringSize := m.getRingSize(faultDev, boardId, deviceNum)
+	if ringSize == 1 {
+		return []*common.NpuDevice{faultDev}, faultDev
 	}
 
 	return m.getHccsRingDevices(faultDev, ringSize, groupDevice)
@@ -430,7 +431,7 @@ func (m *UnifiedHotResetManager) markNeedExternalOps(dev *common.NpuDevice) {
 
 func (m *UnifiedHotResetManager) clearNeedExternalOps(devs []*common.NpuDevice) {
 	var logicIDs []int32
-	for _, dev := range devs{
+	for _, dev := range devs {
 		logicIDs = append(logicIDs, dev.LogicID)
 	}
 	resetInfo := device.ReadResetInfo()
@@ -440,12 +441,12 @@ func (m *UnifiedHotResetManager) clearNeedExternalOps(devs []*common.NpuDevice) 
 	}
 	hwlog.RunLog.Infof("step0: clearing ops annotation for %d devices: %v", len(needClear), needClear)
 	needClearSet := make(map[int32]struct{}, len(needClear))
-	for _, id := range needClear{
+	for _, id := range needClear {
 		needClearSet[id] = struct{}{}
 	}
 	var delDevs []device.ResetDevice
 	for _, dev := range devs {
-		if _, ok := needClearSet[dev.LogicID]; !ok{
+		if _, ok := needClearSet[dev.LogicID]; !ok {
 			continue
 		}
 		delDevs = append(delDevs, device.ResetDevice{
