@@ -20,18 +20,17 @@
 >- 卸载Ascend Docker Runtime会将Docker或Containerd的默认runtime恢复成runc。
 
 1. （可选）关闭pingmesh灵衢网络检测。
-    1. 登录环境，进入NodeD解压目录。
-    2. 执行以下命令编辑pingmesh-config文件。
+    1. 执行以下命令编辑pingmesh-config ConfigMap。
 
         ```shell
         kubectl edit cm -n cluster-system   pingmesh-config
         ```
 
-    3. 修改activate字段的取值。
-        - 如果超节点ID在pingmesh-config文件中，修改该超节点ID字段下的activate为off。
-        - 如果超节点ID不在pingmesh-config文件中，可通过以下2种方式进行设置。
-            - 在配置文件中新增该超节点信息，并将activate为off。
-            - 删除pingmesh-config文件中所有超节点的信息，并将global配置中activate字段的值设置为off。
+    2. 修改activate字段的取值。
+        - 如果超节点ID在pingmesh-config ConfigMap中，修改该超节点ID字段下的activate为off。
+        - 如果超节点ID不在pingmesh-config ConfigMap中，可通过以下2种方式进行设置。
+            - 在pingmesh-config ConfigMap中新增该超节点信息，并将activate为off。
+            - 删除pingmesh-config ConfigMap中所有超节点的信息，并将global配置中activate字段的值设置为off。
 
 2. <a name="li345320287225"></a>可以选择以下方式中的一种卸载Ascend Docker Runtime软件。
     - 方式一：（推荐）使用软件包卸载
@@ -165,18 +164,17 @@
 支持卸载集群调度组件，用户可以卸载组件后重新安装最新版本组件。通过逐一卸载各组件，并删除对应的命名空间、日志目录、配置文件等，请根据安装方式选择对应的卸载方式。
 
 1. （可选）关闭pingmesh灵衢网络检测。
-    1. 登录环境，进入NodeD解压目录。
-    2. 执行以下命令编辑pingmesh-config文件。
+    1. 执行以下命令编辑pingmesh-config ConfigMap。
 
         ```shell
         kubectl edit cm -n cluster-system   pingmesh-config
         ```
 
-    3. 修改activate字段的取值。
-        - 如果超节点ID在pingmesh-config文件中，修改该超节点ID字段下的activate为off。
-        - 如果超节点ID不在pingmesh-config文件中，可通过以下2种方式进行设置。
-            - 在配置文件中新增该超节点信息，并将activate为off。
-            - 删除pingmesh-config文件中所有超节点的信息，并将global配置中activate字段的值设置为off。
+    2. 修改activate字段的取值。
+        - 如果超节点ID在pingmesh-config ConfigMap中，修改该超节点ID字段下的activate为off。
+        - 如果超节点ID不在pingmesh-config ConfigMap中，可通过以下2种方式进行设置。
+            - 在pingmesh-config ConfigMap中新增该超节点信息，并将activate设置为off。
+            - 删除pingmesh-config ConfigMap中所有超节点的信息，并将global配置中activate字段的值设置为off。
 
 2. 卸载组件。根据组件的安装方式，选择以下对应的卸载方式。
     - 通过镜像方式卸载。各组件卸载方法类似，均为进入该组件配置文件YAML所在目录，并执行删除操作实现，此操作需要在K8s的管理节点操作。以卸载Ascend Device Plugin为例说明，请用户自行完成其余组件卸载。
@@ -225,21 +223,22 @@
             rm -f /usr/local/bin/npu-exporter
             ```
 
-3. 删除命名空间。NPU Exporter的命名空间npu-exporter和Volcano的命名空间volcano-system在卸载组件时就已经同步删除，用户可以跳过本步骤。
+3. （可选）删除命名空间。NPU Exporter的命名空间npu-exporter和Volcano的命名空间volcano-system在卸载组件时就已经同步删除，用户可以跳过本步骤。
 
     执行如下命令，卸载安装集群调度组件时创建的namespace。删除namespace会删除该namespace下的所有资源，请确认后再执行。
 
     ```shell
-    kubectl delete ns mindx-dl
+    kubectl delete ns mindx-dl cluster-system
     ```
 
     回显示例如下：
 
     ```ColdFusion
     namespace "mindx-dl" deleted
+    namespace "cluster-system" deleted
     ```
 
-4. 删除日志文件。参考[创建日志目录](./manual_installation/01_preparing_for_installation.md#可选创建日志目录)章节，在对应节点上删除集群调度组件的日志目录。以ClusterD为例，请确认后再删除。
+4. （可选）删除日志文件。参考[创建日志目录](./manual_installation/01_preparing_for_installation.md#可选创建日志目录)章节，在对应节点上删除集群调度组件的日志目录。以ClusterD为例，请确认后再删除。
 
     ```shell
     rm -rf /var/log/mindx-dl/clusterd

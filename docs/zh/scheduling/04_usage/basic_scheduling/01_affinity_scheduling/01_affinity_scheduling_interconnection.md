@@ -45,7 +45,8 @@ spec:
         <strong>tor-affinity: large-model-schema  # 交换机亲和性调度开关</strong>
         <strong>deploy-name: mindx-dls-test # 生成rankTable必须增加该标签，取值和任务名称保持一致</strong>
       <strong>annotations:</strong>
-        <strong>sp-block: "128"         # 逻辑超节点亲和性调度开关</strong>
+        <strong>sp-block: "128"         # 逻辑超节点大小</strong>
+        <strong>huawei.com/schedule_policy: "chip2-node16-sp"    # 根据硬件形态设置调度策略</strong>
         <strong>huawei.com/recover_policy_path: pod    # Pod级别重调度不升级为Job级开关（当使用vcjob时，需要配置该策略：policies: -event:PodFailed -action:RestartTask）</strong>
         <strong>huawei.com/schedule_minAvailable: "16"  # 任务调度的最小副本数，建议与任务副本数保持一致</strong>
         <strong>huawei.com/skip-ascend-plugin: "enabled"    # 开启后将允许一些特殊任务（如不需要NPU资源的任务）绕过Ascend-for-volcano的默认检查逻辑</strong>

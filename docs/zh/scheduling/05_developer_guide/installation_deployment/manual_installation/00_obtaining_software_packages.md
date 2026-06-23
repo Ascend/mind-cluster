@@ -201,6 +201,11 @@
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>热复位插件配置文件，用于控制热复位插件的启用状态。</p>
 </td>
 </tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>hangDetectionConfig.json</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>任务卡死检测配置文件，用于设置任务卡死检测功能开关和检测指标阈值。</p>
+</td>
+</tr>
 <tr id="row3124540173214"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p891215422516"><a name="p891215422516"></a><a name="p891215422516"></a>device-plugin-<em id="i201964115579"><a name="i201964115579"></a><a name="i201964115579"></a>v{version}</em>.yaml</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p723164185113"><a name="p723164185113"></a><a name="p723164185113"></a>除Atlas 200I SoC A1 核心板外不使用<span id="ph988012132113"><a name="ph988012132113"></a><a name="ph988012132113"></a>Volcano</span>的配置文件。</p>
@@ -266,7 +271,7 @@
 </td>
 </tr>
 <tr id="row8271202512020"><td class="cellrowborder" colspan="2" valign="top" headers="mcps1.2.5.1.2 mcps1.2.5.1.3 "><div class="note" id="note118552026192017"><a name="note118552026192017"></a><a name="note118552026192017"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p89689544619"><a name="p89689544619"></a><a name="p89689544619"></a>请根据<span id="ph1280481810116"><a name="ph1280481810116"></a><a name="ph1280481810116"></a>K8s</span>和开源<span id="ph145451647133910"><a name="ph145451647133910"></a><a name="ph145451647133910"></a>Volcano</span>的兼容性选择合适的版本进行安装<span id="ph14710141210128"><a name="ph14710141210128"></a><a name="ph14710141210128"></a>，具体</span><span id="ph271071215129"><a name="ph271071215129"></a><a name="ph271071215129"></a>版本请参见</span><a href="https://github.com/volcano-sh/volcano/blob/master/README.md#kubernetes-compatibility" target="_blank" rel="noopener noreferrer">Volcano官网中对应的Kubernetes版本</a>。</p>
-<a name="ul422518573615"></a><a name="ul422518573615"></a><ul id="ul422518573615"><li><span id="ph148661501863"><a name="ph148661501863"></a><a name="ph148661501863"></a>Volcano</span> v1.7.0兼容的<span id="ph11728942124314"><a name="ph11728942124314"></a><a name="ph11728942124314"></a>K8s</span>版本范围为1.19.x~1.28.x。</li><li><span id="ph1945014372610"><a name="ph1945014372610"></a><a name="ph1945014372610"></a>Volcano</span> v1.9.0兼容的<span id="ph127281742154313"><a name="ph127281742154313"></a><a name="ph127281742154313"></a>K8s</span>版本范围为1.21.x~1.28.x。</li></ul>
+<a name="ul422518573615"></a><a name="ul422518573615"></a><ul id="ul422518573615"><li><span id="ph148661501863"><a name="ph148661501863"></a><a name="ph148661501863"></a>Volcano</span> v1.7.0兼容的<span id="ph11728942124314"><a name="ph11728942124314"></a><a name="ph11728942124314"></a>K8s</span>版本范围为1.19.x~1.28.x。</li><li><span id="ph1945014372610"><a name="ph1945014372610"></a><a name="ph1945014372610"></a>Volcano</span> v1.9.0兼容的<span id="ph127281742154313"><a name="ph127281742154313"></a><a name="ph127281742154313"></a>K8s</span>版本范围为1.21.x~1.29.x。</li><li><span id="ph148661501864"><a name="ph148661501864"></a><a name="ph148661501864"></a>Volcano</span> v1.12.0兼容的<span id="ph11728942124315"><a name="ph11728942124315"></a><a name="ph11728942124315"></a>K8s</span>版本范围为1.21.x~1.34.x。</li></ul>
 </div></div>
 </td>
 </tr>

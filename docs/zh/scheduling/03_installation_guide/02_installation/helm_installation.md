@@ -279,7 +279,7 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-for-volcano-crds.volcanoVersion</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p><p>string</p><ul><li>v1.7.0</li><li>v1.9.0</li></ul></p><p>默认值为v1.9.0</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p><p>string</p><ul><li>v1.7.0</li><li>v1.9.0</li><li>v1.12.0</li></ul></p><p>默认值为v1.9.0</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>选择Volcano版本。</p></td>
   </tr>
   <tr>
@@ -345,7 +345,7 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-for-volcano.volcanoVersion</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>string</p><p>取值包括：<ul><li>v1.7.0</li><li>v1.9.0</li></ul></p><p>默认值为v1.9.0</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>string</p><p>取值包括：<ul><li>v1.7.0</li><li>v1.9.0</li><li>v1.12.0</li></ul></p><p>默认值为v1.9.0</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>选择启用的volcano版本。</p></td>
   </tr>
   <tr>
@@ -434,8 +434,7 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 </table>
 
 >[!NOTE]
->- 表3中`<component>`取值为：clusterd、noded、npu-exporter、ascend-operator、**ascend-for-volcano.scheduler**、**ascend-for-volcano.controller**、infer-operator、ascend-device-plugin、k8s-rdma-shared-dev-plugin。
->- 表3中的参数中，K8s RDMA Shared Dev Plugin组件仅能设置k8s-rdma-shared-dev-plugin.image.repository，k8s-rdma-shared-dev-plugin.image.tag和k8s-rdma-shared-dev-plugin.image.tag三种参数。
+> 表3中`<component>`取值为：clusterd、noded、npu-exporter、ascend-operator、**ascend-for-volcano.scheduler**、**ascend-for-volcano.controller**、infer-operator、ascend-device-plugin、k8s-rdma-shared-dev-plugin。
 
 **表 4**  Helm部署工具压缩包文件列表说明
 <a name="table15274931175244"></a>
