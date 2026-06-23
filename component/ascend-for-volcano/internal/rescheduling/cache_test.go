@@ -209,10 +209,6 @@ func TestMaxLengthOfRescheduleReason(t *testing.T) {
 	if len(result) > MaxKbOfRescheduleRecords {
 		t.Error("failed to reduce rescheduling reason length")
 	}
-	// directly show the result contain additional info
-	if len(result) > validLengthOfInfo {
-		fmt.Printf("%s", result[:validLengthOfInfo])
-	}
 }
 
 func initDealReSchedulerCache() *DealReSchedulerCache {

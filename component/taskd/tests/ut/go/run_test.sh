@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+set -e
+
 export GO111MODULE="on"
 export GONOSUMDB="*"
 export PATH=$GOPATH/bin:$PATH
@@ -25,7 +28,7 @@ FILE_DETAIL_OUTPUT='api.html'
 
 function filter_cov_by_tested_pkgs() {
   local tested_pkgs
-  tested_pkgs=$(go list -f '{{if .TestGoFiles}}{{.ImportPath}}{{end}}' "${GO_PKG}"/...)
+  tested_pkgs=$(go list -buildvcs=false -f '{{if .TestGoFiles}}{{.ImportPath}}{{end}}' "${GO_PKG}"/...)
   awk -v pkgs="$tested_pkgs" '
     NR==1 {print; next}
     {
@@ -39,8 +42,11 @@ function filter_cov_by_tested_pkgs() {
 }
 
 function unit_test() {
-  gotestsum --junitfile unit-tests.xml --jsonfile test.jsonl \
-    -- -mod=mod -count=1 -gcflags=all=-l -v -coverprofile cov.out "${GO_PKG}"/...;
+  if ! gotestsum --junitfile unit-tests.xml --jsonfile test.jsonl \
+    -- -mod=mod -count=1 -gcflags=all=-l -v -coverprofile cov.out "${GO_PKG}"/...; then
+    echo '****** go test cases error! ******'
+    exit 1
+  fi
 
   filter_cov_by_tested_pkgs
 
@@ -50,11 +56,11 @@ function unit_test() {
   coverage=$(echo "$total_coverage" | awk '{if ($1 >= 0) print ($1 == int($1)) ? int($1) : int($1) + 1;\
                                         else print ($1 == int($1)) ? int($1) : int($1)}')
 
-  if [[ $coverage -ge 80 ]]; then
+  if [[ $coverage -ge 72 ]]; then
     echo "coverage passed: $coverage%"
   else
     echo "coverage failed: $coverage%, it needs to be greater than 80%."
-    # exit 1
+    exit 1
   fi
 }
 

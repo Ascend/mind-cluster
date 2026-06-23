@@ -68,16 +68,13 @@ func (tp *ascendTest) Name() string {
 func (tp *ascendTest) SetPolicyHandler() {}
 
 func (tp *ascendTest) InitMyJobPlugin(attr util.SchedulerJobAttr, env ScheduleEnv) error {
-	fmt.Printf("enter %s InitMyJobPlugin", util.NPU910CardName)
 	if tp == nil {
 		mgs := fmt.Errorf("nil plugin %s", PluginName)
-		fmt.Printf("InitMyJobPlugin %s.", util.SafePrint(mgs))
 		return mgs
 	}
 	tp.SchedulerJobAttr = attr
 	tp.ScheduleEnv = env
 
-	fmt.Printf("leave %s InitMyJobPlugin", util.NPU910CardName)
 	return nil
 }
 

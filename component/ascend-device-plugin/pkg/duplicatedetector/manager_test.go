@@ -15,12 +15,14 @@
 package duplicatedetector
 
 import (
-	"Ascend-device-plugin/pkg/duplicatedetector/containerruntime"
 	"context"
-	"github.com/agiledragon/gomonkey/v2"
+	"errors"
 	"testing"
 	"time"
 
+	"github.com/agiledragon/gomonkey/v2"
+
+	"Ascend-device-plugin/pkg/duplicatedetector/containerruntime"
 	"Ascend-device-plugin/pkg/duplicatedetector/types"
 	"ascend-common/common-utils/hwlog"
 )
@@ -67,6 +69,8 @@ func TestNewManager_ValidConfig(t *testing.T) {
 		CriEndpoint: "unix:///run/docker.sock",
 		RuntimeType: "docker",
 	}
+	patch := gomonkey.ApplyFuncReturn(containerruntime.NewClient, nil, errors.New("mock error"))
+	defer patch.Reset()
 	_, err := NewManager(config)
 	if err == nil {
 		t.Errorf("expected error")

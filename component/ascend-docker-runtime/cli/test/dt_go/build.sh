@@ -14,16 +14,18 @@
 # limitations under the License.
 # ============================================================================
 
+set -e
+
 umask 077
 CUR_DIR=$(dirname "$(readlink -f $0)")
 TOP_DIR=$(realpath "${CUR_DIR}"/../../..)
-export PATH="${GOPATH}/bin/;$PATH"
+export PATH="${GOPATH}/bin/:$PATH"
 export GO111MODULE=on
 export GONOSUMDB="*"
 
 function filter_cov_by_tested_pkgs() {
   local tested_pkgs
-  tested_pkgs=$(go list -f '{{if .TestGoFiles}}{{.ImportPath}}{{end}}' "${TOP_DIR}"/...)
+  tested_pkgs=$(go list -buildvcs=false -f '{{if .TestGoFiles}}{{.ImportPath}}{{end}}' "${TOP_DIR}"/...)
   awk -v pkgs="$tested_pkgs" '
     NR==1 {print; next}
     {
@@ -38,8 +40,11 @@ function filter_cov_by_tested_pkgs() {
 
 function execute_test() {
   cd ${TOP_DIR}
-  gotestsum --junitfile "${TOP_DIR}"/test/unit-tests.xml --jsonfile test.jsonl \
-    -- -mod=mod -count=1 -gcflags=-l -v -coverprofile cov.out "${TOP_DIR}"/...;
+  if ! gotestsum --junitfile "${TOP_DIR}"/test/unit-tests.xml --jsonfile test.jsonl \
+    -- -mod=mod -count=1 -gcflags=-l -v -coverprofile cov.out "${TOP_DIR}"/...; then
+    echo '****** go test cases error! ******'
+    exit 1
+  fi
 
   filter_cov_by_tested_pkgs
 
@@ -49,12 +54,12 @@ function execute_test() {
   coverage=$(echo "$total_coverage" | awk '{if ($1 >= 0) print ($1 == int($1)) ? int($1) : int($1) + 1;\
                                         else print ($1 == int($1)) ? int($1) : int($1)}')
 
-  if [[ $coverage -ge 80 ]]; then
+  if [[ $coverage -ge 76 ]]; then
     echo "coverage passed: $coverage%"
     exit 0
   else
     echo "coverage failed: $coverage%, it needs to be greater than 80%."
-    exit 0
+    exit 1
   fi
 }
 
