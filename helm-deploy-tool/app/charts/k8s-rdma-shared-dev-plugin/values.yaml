@@ -4,4 +4,12 @@ image:
   tag: ""
   pullPolicy: ""
 
+resources:
+  requests:
+    memory: ""
+    cpu: ""
+  limits:
+    memory: ""
+    cpu: ""
+
 args: ""

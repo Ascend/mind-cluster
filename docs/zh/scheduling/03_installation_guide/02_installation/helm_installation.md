@@ -174,7 +174,7 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
      enabled: true              # 安装ascend-operator组件的crd
    ascend-for-volcano-crds:
      enabled: true              # 安装ascend-for-volcano组件的crd
-     volcanoVersion: "v1.7.0"   # volcano crd的版本
+     volcanoVersion: "v1.9.0"   # volcano crd的版本
    infer-operator-crds:
      enabled: true              # 安装infer-operator组件的crd
    ```
@@ -215,16 +215,16 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 
    ascend-for-volcano:
      enabled: true                                                         # 安装Volcano组件
-     volcanoVersion: "v1.7.0"                                              # 设置要安装的Volcano版本
+     volcanoVersion: "v1.9.0"                                              # 设置要安装的Volcano版本
      scheduler:
        image:
          repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler"      # Volcano Scheduler组件镜像名，请根据实际情况修改
-         tag: "v1.7.0-v26.1.0"                                                      # Volcano Scheduler组件镜像标签
+         tag: "v1.9.0-v26.1.0"                                                      # Volcano Scheduler组件镜像标签
          pullPolicy: "IfNotPresent"                                                 # Volcano Scheduler组件镜像拉取策略
      controller:
        image:
          repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager" # Volcano Controller组件镜像名，请根据实际情况修改
-         tag: "v1.7.0-v26.1.0"                                                          # Volcano Controller组件镜像标签，请根据实际情况修改
+         tag: "v1.9.0-v26.1.0"                                                          # Volcano Controller组件镜像标签，请根据实际情况修改
          pullPolicy: "IfNotPresent"                                                     # Volcano Controller组件镜像拉取策略
 
    infer-operator:
@@ -279,7 +279,7 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-for-volcano-crds.volcanoVersion</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p><p>string</p><ul><li>v1.7.0</li><li>v1.9.0</li></ul></p><p>默认值为v1.7.0</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p><p>string</p><ul><li>v1.7.0</li><li>v1.9.0</li></ul></p><p>默认值为v1.9.0</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>选择Volcano版本。</p></td>
   </tr>
   <tr>
@@ -345,7 +345,7 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>ascend-for-volcano.volcanoVersion</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>string</p><p>取值包括：<ul><li>v1.7.0</li><li>v1.9.0</li></ul></p><p>默认值为v1.7.0</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>string</p><p>取值包括：<ul><li>v1.7.0</li><li>v1.9.0</li></ul></p><p>默认值为v1.9.0</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>选择启用的volcano版本。</p></td>
   </tr>
   <tr>

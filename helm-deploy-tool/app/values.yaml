@@ -30,16 +30,16 @@ ascend-operator:
 
 ascend-for-volcano:
   enabled: true
-  volcanoVersion: "v1.7.0" # Volcano version
+  volcanoVersion: "v1.9.0" # Volcano version
   scheduler:
     image:
       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler"
-      tag: "v1.7.0-v26.1.0"
+      tag: "v1.9.0-v26.1.0"
       pullPolicy: "IfNotPresent"
   controller:
     image:
       repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager"
-      tag: "v1.7.0-v26.1.0"
+      tag: "v1.9.0-v26.1.0"
       pullPolicy: "IfNotPresent"
 
 infer-operator:
