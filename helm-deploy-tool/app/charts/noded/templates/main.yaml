@@ -3,6 +3,8 @@
 {{- $key := "default" -}}
 {{- if or (eq $value "dpc") (eq $value "dtfs") (eq $value "dpc,dtfs") (eq $value "dtfs,dpc") -}}
 {{- $key = "dpc" -}}
+{{- else if (eq $value "container-snapshot") -}}
+  {{- $key = "container-snapshot" -}}
 {{- end -}}
 
 {{- $filePath := printf "yamls/%s/**.yaml" $key -}}

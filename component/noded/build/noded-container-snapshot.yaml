@@ -53,13 +53,14 @@ spec:
         seccomp.security.alpha.kubernetes.io/pod: runtime/default
     spec:
       ##### For Kubernetes version 1.19 and above, seccomp is used with securityContext:seccompProfile
-#      securityContext:
-#        seccompProfile:
-#          type: RuntimeDefault
+      #      securityContext:
+      #        seccompProfile:
+      #          type: RuntimeDefault
       nodeSelector:
         workerselector: dls-worker-node
       serviceAccountName: noded
       hostNetwork: true
+      hostPID: true
       initContainers:
         - name: init-log-setup
           image: noded:v6.0.RC1
@@ -89,6 +90,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+            - name: PATH
+              value: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
           imagePullPolicy: Never
           command: [ "/bin/bash", "-c", "--"]
           args: [ "/usr/local/bin/noded -logFile=/var/log/mindx-dl/noded/noded.log -logLevel=0 --enable-healthz=true --healthz-address=11255" ]
@@ -117,8 +120,42 @@ spec:
               readOnly: true
             - name: dev-dir
               mountPath: /dev
+            - name: dev-shm
+              mountPath: /dev/shm
             - name: slownode
               mountPath: /user/cluster-info/profiling
+            - name: image-path
+              mountPath: /user/snapshot
+            - name: ascend-docker-runtime
+              mountPath: /usr/local/Ascend/Ascend-Docker-Runtime
+            - name: runtime-log
+              mountPath: /var/log/ascend-docker-runtime
+            - name: containerd
+              mountPath: /run/containerd
+              mountPropagation: HostToContainer
+            - name: containerd-lib
+              mountPath: /var/lib/containerd
+              readOnly: true
+            - name: runc
+              mountPath: /usr/local/bin/runc
+            - name: criu
+              mountPath: /usr/sbin/criu
+            - name: npu-plugin
+              mountPath: /usr/lib/criu
+            - name: cgroup
+              mountPath: /sys/fs/cgroup
+            - name: systemd
+              mountPath: /run/systemd
+            - name: tmp
+              mountPath: /tmp
+            - name: run
+              mountPath: /run
+            - name: dcmi
+              mountPath: /usr/local/dcmi
+            - name: ascend-driver-include
+              mountPath: /usr/local/Ascend/driver/include
+            - name: var-kubelet
+              mountPath: /var/lib/kubelet
       volumes:
         - name: log-noded
           hostPath:
@@ -138,7 +175,66 @@ spec:
           hostPath:
             path: /dev
             type: Directory
+        - name: dev-shm
+          hostPath:
+            path: /dev/shm
+            type: Directory
         - name: slownode
           hostPath:
             path: /user/cluster-info/profiling
             type: DirectoryOrCreate
+        - name: image-path
+          hostPath:
+            path: /user/snapshot
+            type: Directory
+        - name: ascend-docker-runtime
+          hostPath:
+            path: /usr/local/Ascend/Ascend-Docker-Runtime
+            type: Directory
+        - name: runtime-log
+          hostPath:
+            path: /var/log/ascend-docker-runtime
+            type: Directory
+        - name: containerd
+          hostPath:
+            path: /run/containerd
+            type: Directory
+        - name: containerd-lib
+          hostPath:
+            path: /var/lib/containerd
+            type: Directory
+        - name: runc
+          hostPath:
+            path: /usr/local/bin/runc
+        - name: criu
+          hostPath:
+            path: /usr/sbin/criu
+        - name: npu-plugin
+          hostPath:
+            path: /usr/lib/criu
+            type: Directory
+        - name: cgroup
+          hostPath:
+            path: /sys/fs/cgroup
+            type: Directory
+        - name: systemd
+          hostPath:
+            path: /run/systemd
+            type: Directory
+        - name: tmp
+          hostPath:
+            path: /tmp
+            type: Directory
+        - name: run
+          hostPath:
+            path: /run
+            type: Directory
+        - name: dcmi
+          hostPath:
+            path: /usr/local/dcmi
+        - name: ascend-driver-include
+          hostPath:
+            path: /usr/local/Ascend/driver/include
+        - name: var-kubelet
+          hostPath:
+            path: /var/lib/kubelet
