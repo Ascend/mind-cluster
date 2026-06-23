@@ -3,7 +3,7 @@ ascend-operator-crds:
 
 ascend-for-volcano-crds:
   enabled: true
-  volcanoVersion: "v1.7.0"
+  volcanoVersion: "v1.9.0"
 
 infer-operator-crds:
   enabled: true

@@ -1,5 +1,5 @@
 # User-defined parameters
-volcanoVersion: "v1.7.0"
+volcanoVersion: "v1.9.0"
 
 scheduler:
   image:
