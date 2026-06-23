@@ -32,6 +32,7 @@ echo "Build Architecture is" "${arch}"
 
 sed -i "s/noded:.*/noded:${build_version}/" "${TOP_DIR}"/build/noded.yaml
 sed -i "s/noded:.*/noded:${build_version}/" "${TOP_DIR}"/build/noded-dpc.yaml
+sed -i "s/noded:.*/noded:${build_version}/" "${TOP_DIR}"/build/noded-container-snapshot.yaml
 sed -i "s/NodeD Version .*/NodeD Version ${build_version}/" "${TOP_DIR}"/build/agreement.txt
 
 OUTPUT_NAME="noded"
@@ -63,6 +64,7 @@ function mv_file() {
   mv "${TOP_DIR}/${OUTPUT_NAME}" "${TOP_DIR}"/output
   cp "${TOP_DIR}"/build/noded.yaml "${TOP_DIR}"/output/noded-"${build_version}".yaml
   cp "${TOP_DIR}"/build/noded-dpc.yaml "${TOP_DIR}"/output/noded-dpc-"${build_version}".yaml
+  cp "${TOP_DIR}"/build/noded-container-snapshot.yaml "${TOP_DIR}"/output/noded-container-snapshot-"${build_version}".yaml
   cp "${TOP_DIR}"/build/pingmesh-config.yaml "${TOP_DIR}"/output/pingmesh-config.yaml
   cp "${TOP_DIR}"/build/${DOCKER_FILE_NAME} "${TOP_DIR}"/output
   cp "${TOP_DIR}"/build/Dockerfile.openeuler "${TOP_DIR}"/output
