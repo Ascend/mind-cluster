@@ -169,7 +169,7 @@ func TestSresume(t *testing.T) {
 
 	t.Run("get container's status failed", func(t *testing.T) {
 		patches := gomonkey.ApplyFuncReturn(initRuntimeClient, &runtimeClient{}, nil).
-			ApplyPrivateMethod(&runtimeClient{}, "status", func(containerID string) (*runtime.StateInfo, error) {
+			ApplyPrivateMethod(&runtimeClient{}, "state", func(containerID string) (*runtime.StateInfo, error) {
 				return nil, errors.New("test")
 			})
 		defer patches.Reset()
@@ -181,7 +181,7 @@ func TestSresume(t *testing.T) {
 
 	t.Run("if container not paused, skip resume", func(t *testing.T) {
 		patches := gomonkey.ApplyFuncReturn(initRuntimeClient, &runtimeClient{}, nil).
-			ApplyPrivateMethod(&runtimeClient{}, "status", func(containerID string) (*runtime.StateInfo, error) {
+			ApplyPrivateMethod(&runtimeClient{}, "state", func(containerID string) (*runtime.StateInfo, error) {
 				return &runtime.StateInfo{Status: "test"}, nil
 			})
 		defer patches.Reset()
@@ -193,7 +193,7 @@ func TestSresume(t *testing.T) {
 
 	t.Run("resume failed", func(t *testing.T) {
 		patches := gomonkey.ApplyFuncReturn(initRuntimeClient, &runtimeClient{}, nil).
-			ApplyPrivateMethod(&runtimeClient{}, "status", func(containerID string) (*runtime.StateInfo, error) {
+			ApplyPrivateMethod(&runtimeClient{}, "state", func(containerID string) (*runtime.StateInfo, error) {
 				return &runtime.StateInfo{Status: "paused"}, nil
 			}).
 			ApplyPrivateMethod(&runtimeClient{}, "resume", func(containerID string) error {
@@ -208,7 +208,7 @@ func TestSresume(t *testing.T) {
 
 	t.Run("resume success", func(t *testing.T) {
 		patches := gomonkey.ApplyFuncReturn(initRuntimeClient, &runtimeClient{}, nil).
-			ApplyPrivateMethod(&runtimeClient{}, "status", func(containerID string) (*runtime.StateInfo, error) {
+			ApplyPrivateMethod(&runtimeClient{}, "state", func(containerID string) (*runtime.StateInfo, error) {
 				return &runtime.StateInfo{Status: "paused"}, nil
 			}).
 			ApplyPrivateMethod(&runtimeClient{}, "resume", func(containerID string) error {

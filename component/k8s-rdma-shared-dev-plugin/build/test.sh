@@ -15,9 +15,11 @@
 # limitations under the License.
 # ============================================================================
 
+set -e
+
 function filter_cov_by_tested_pkgs() {
   local tested_pkgs
-  tested_pkgs=$(go list -f '{{if .TestGoFiles}}{{.ImportPath}}{{end}}' "${TOP_DIR}"/pkg/...)
+  tested_pkgs=$(go list -buildvcs=false -f '{{if .TestGoFiles}}{{.ImportPath}}{{end}}' "${TOP_DIR}"/pkg/...)
   if [[ -z "$tested_pkgs" ]]; then
     echo "no test files found under pkg/"
     exit 0
@@ -35,8 +37,11 @@ function filter_cov_by_tested_pkgs() {
 }
 
 function execute_test() {
-  gotestsum --junitfile unit-tests.xml --jsonfile test.jsonl \
-    -- -mod=mod -count=1 -gcflags=all=-l -v -coverprofile cov.out "${TOP_DIR}"/pkg/...;
+  if ! gotestsum --junitfile unit-tests.xml --jsonfile test.jsonl \
+    -- -mod=mod -count=1 -gcflags=all=-l -v -coverprofile cov.out "${TOP_DIR}"/pkg/...; then
+    echo '****** go test cases error! ******'
+    exit 1
+  fi
 
   filter_cov_by_tested_pkgs
 
@@ -46,11 +51,11 @@ function execute_test() {
   coverage=$(echo "$total_coverage" | awk '{if ($1 >= 0) print ($1 == int($1)) ? int($1) : int($1) + 1;\
                                         else print ($1 == int($1)) ? int($1) : int($1)}')
 
-  if [[ $coverage -ge 1 ]]; then
+  if [[ $coverage -ge 60 ]]; then
     echo "coverage passed: $coverage%"
     exit 0
   else
-    echo "coverage failed: $coverage%, it needs to be greater than 1%."
+    echo "coverage failed: $coverage%, it needs to be greater than 60%."
     exit 1
   fi
 }

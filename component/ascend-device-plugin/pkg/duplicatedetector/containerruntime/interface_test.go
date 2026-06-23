@@ -96,6 +96,8 @@ func TestNewClient_UnsupportedRuntime(t *testing.T) {
 }
 
 func TestAutoDetectOciEndpoint(t *testing.T) {
+	patch := gomonkey.ApplyFuncReturn(os.Stat, nil, errors.New("file not found"))
+	defer patch.Reset()
 	endpoint, err := autoDetectOciEndpoint()
 	if err == nil || endpoint != "" {
 		t.Error("expected empty endpoint")

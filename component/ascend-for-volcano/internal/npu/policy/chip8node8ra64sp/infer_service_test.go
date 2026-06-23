@@ -16,7 +16,6 @@ package chip8node8ra64sp
 
 import (
 	"container/heap"
-	"fmt"
 	"testing"
 
 	"volcano.sh/volcano/pkg/scheduler/api"
@@ -387,14 +386,4 @@ func BenchmarkBuildInferServicePriorityQueue(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		tp.buildInferServicePriorityQueue(superPodMap, sameRacks, sameSPs)
 	}
-}
-
-func ExampleCountSPMetrics() {
-	rackGroup := map[int32][]nodeBaseInfo{
-		0: make([]nodeBaseInfo, rackNodeNum),
-		1: make([]nodeBaseInfo, 4),
-	}
-	idle, total := countSPMetrics(rackGroup)
-	fmt.Printf("idle=%d total=%d\n", idle, total)
-	// Output: idle=1 total=12
 }
