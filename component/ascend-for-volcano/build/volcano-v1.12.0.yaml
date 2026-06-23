@@ -4303,7 +4303,7 @@ spec:
         masterselector: dls-master-node
       initContainers:
         - name: init-log-setup
-          image: volcanosh/vc-controller-manager:v1.9.0
+          image: volcanosh/vc-controller-manager:v1.12.0
           command: ['sh', '-c', 'mkdir -p /var/log/mindx-dl && chmod 755 /var/log/mindx-dl && chown root:root /var/log/mindx-dl && mkdir -p /var/log/mindx-dl/volcano-controller && chmod 750 /var/log/mindx-dl/volcano-controller && chown 9000:9000 /var/log/mindx-dl/volcano-controller']
           securityContext:
             runAsUser: 0
