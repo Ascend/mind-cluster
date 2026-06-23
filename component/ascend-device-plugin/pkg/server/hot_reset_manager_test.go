@@ -562,3 +562,196 @@ func TestFilterOpsDevices(t *testing.T) {
 		})
 	})
 }
+
+func TestMarkNeedExternalOps(t *testing.T) {
+	convey.Convey("test markNeedExternalOps", t, func() {
+		convey.Convey("should write reset info with WMAppend", func() {
+			mgr := NewUnifiedHotResetManager(&devmanager.DeviceManagerMock{},
+				&device.HwAscend910Manager{}, nil)
+			dev := &common.NpuDevice{
+				LogicID:  7,
+				CardID:   0,
+				DeviceID: 1,
+				PhyID:    10,
+			}
+			var capturedInfo device.ResetInfo
+			var capturedMode device.WriteMode
+			patch := gomonkey.ApplyFunc(device.WriteResetInfo,
+				func(info device.ResetInfo, mode device.WriteMode, updateNode bool) {
+					capturedInfo = info
+					capturedMode = mode
+				})
+			defer patch.Reset()
+			mgr.markNeedExternalOps(dev)
+			convey.So(capturedMode, convey.ShouldEqual, device.WMAppend)
+			convey.So(len(capturedInfo.ManualResetDevs), convey.ShouldEqual, 1)
+			convey.So(capturedInfo.ManualResetDevs[0].LogicID, convey.ShouldEqual, 7)
+			convey.So(capturedInfo.ManualResetDevs[0].CardId, convey.ShouldEqual, 0)
+			convey.So(capturedInfo.ManualResetDevs[0].DeviceId, convey.ShouldEqual, 1)
+			convey.So(capturedInfo.ManualResetDevs[0].PhyID, convey.ShouldEqual, 10)
+			convey.So(len(capturedInfo.ThirdPartyResetDevs), convey.ShouldEqual, 0)
+		})
+		convey.Convey("should write device with default CardID", func() {
+			mgr := NewUnifiedHotResetManager(&devmanager.DeviceManagerMock{},
+				&device.HwAscend910Manager{}, nil)
+			dev := &common.NpuDevice{
+				LogicID:  3,
+				CardID:   -1,
+				DeviceID: -1,
+				PhyID:    5,
+			}
+			var capturedInfo device.ResetInfo
+			patch := gomonkey.ApplyFunc(device.WriteResetInfo,
+				func(info device.ResetInfo, mode device.WriteMode, updateNode bool) {
+					capturedInfo = info
+				})
+			defer patch.Reset()
+			mgr.markNeedExternalOps(dev)
+			convey.So(capturedInfo.ManualResetDevs[0].CardId, convey.ShouldEqual, -1)
+			convey.So(capturedInfo.ManualResetDevs[0].DeviceId, convey.ShouldEqual, -1)
+			convey.So(capturedInfo.ManualResetDevs[0].PhyID, convey.ShouldEqual, 5)
+		})
+	})
+}
+
+func TestClearNeedExternalOps1(t *testing.T) {
+	convey.Convey("test clearNeedExternalOps", t, func() {
+		convey.Convey("no devices in reset info should return early", func() {
+			mgr := NewUnifiedHotResetManager(&devmanager.DeviceManagerMock{},
+				&device.HwAscend910Manager{}, nil)
+			devs := []*common.NpuDevice{
+				{LogicID: 0, CardID: 0, DeviceID: 0, PhyID: 0},
+			}
+			writeCalled := false
+			patch := gomonkey.ApplyFuncReturn(device.ReadResetInfo, device.ResetInfo{}).
+				ApplyFunc(device.WriteResetInfo,
+					func(_ device.ResetInfo, _ device.WriteMode, _ bool) {
+						writeCalled = true
+					})
+			defer patch.Reset()
+			mgr.clearNeedExternalOps(devs)
+			convey.So(writeCalled, convey.ShouldBeFalse)
+		})
+		convey.Convey("device in ManualResetDevs should be cleared", func() {
+			mgr := NewUnifiedHotResetManager(&devmanager.DeviceManagerMock{},
+				&device.HwAscend910Manager{}, nil)
+			devs := []*common.NpuDevice{
+				{LogicID: 7, CardID: 0, DeviceID: 1, PhyID: 10},
+			}
+			resetInfo := device.ResetInfo{
+				ManualResetDevs: []device.ResetDevice{
+					{LogicID: 7, CardId: 0, DeviceId: 1, PhyID: 10},
+				},
+			}
+			var capturedDelInfo device.ResetInfo
+			var capturedMode device.WriteMode
+			patch := gomonkey.ApplyFuncReturn(device.ReadResetInfo, resetInfo).
+				ApplyFunc(device.WriteResetInfo,
+					func(info device.ResetInfo, mode device.WriteMode, updateNode bool) {
+						capturedDelInfo = info
+						capturedMode = mode
+					})
+			defer patch.Reset()
+			mgr.clearNeedExternalOps(devs)
+			convey.So(capturedMode, convey.ShouldEqual, device.WMDelete)
+			convey.So(len(capturedDelInfo.ManualResetDevs), convey.ShouldEqual, 1)
+			convey.So(capturedDelInfo.ManualResetDevs[0].LogicID, convey.ShouldEqual, 7)
+			convey.So(len(capturedDelInfo.ThirdPartyResetDevs), convey.ShouldEqual, 1)
+			convey.So(capturedDelInfo.ThirdPartyResetDevs[0].LogicID, convey.ShouldEqual, 7)
+		})
+	})
+}
+
+func TestClearNeedExternalOps2(t *testing.T) {
+	convey.Convey("test clearNeedExternalOps", t, func() {
+		convey.Convey("device in ThirdPartyResetDevs should be cleared", func() {
+			mgr := NewUnifiedHotResetManager(&devmanager.DeviceManagerMock{},
+				&device.HwAscend910Manager{}, nil)
+			devs := []*common.NpuDevice{
+				{LogicID: 2, CardID: 1, DeviceID: 0, PhyID: 3},
+			}
+			resetInfo := device.ResetInfo{
+				ThirdPartyResetDevs: []device.ResetDevice{
+					{LogicID: 2, CardId: 1, DeviceId: 0, PhyID: 3},
+				},
+			}
+			var capturedDelInfo device.ResetInfo
+			patch := gomonkey.ApplyFuncReturn(device.ReadResetInfo, resetInfo).
+				ApplyFunc(device.WriteResetInfo,
+					func(info device.ResetInfo, mode device.WriteMode, updateNode bool) {
+						capturedDelInfo = info
+					})
+			defer patch.Reset()
+			mgr.clearNeedExternalOps(devs)
+			convey.So(len(capturedDelInfo.ThirdPartyResetDevs), convey.ShouldEqual, 1)
+			convey.So(capturedDelInfo.ThirdPartyResetDevs[0].LogicID, convey.ShouldEqual, 2)
+			convey.So(len(capturedDelInfo.ManualResetDevs), convey.ShouldEqual, 1)
+		})
+		convey.Convey("device not in reset info should not trigger write", func() {
+			mgr := NewUnifiedHotResetManager(&devmanager.DeviceManagerMock{},
+				&device.HwAscend910Manager{}, nil)
+			devs := []*common.NpuDevice{
+				{LogicID: 5, CardID: 0, DeviceID: 0, PhyID: 5},
+			}
+			resetInfo := device.ResetInfo{
+				ManualResetDevs: []device.ResetDevice{
+					{LogicID: 3, CardId: 0, DeviceId: 0, PhyID: 3},
+				},
+			}
+			writeCalled := false
+			patch := gomonkey.ApplyFuncReturn(device.ReadResetInfo, resetInfo).
+				ApplyFunc(device.WriteResetInfo,
+					func(_ device.ResetInfo, _ device.WriteMode, _ bool) {
+						writeCalled = true
+					})
+			defer patch.Reset()
+			mgr.clearNeedExternalOps(devs)
+			convey.So(writeCalled, convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestClearNeedExternalOps3(t *testing.T) {
+	convey.Convey("test clearNeedExternalOps", t, func() {
+		convey.Convey("multiple devices partial match should only clear matched ones", func() {
+			mgr := NewUnifiedHotResetManager(&devmanager.DeviceManagerMock{},
+				&device.HwAscend910Manager{}, nil)
+			devs := []*common.NpuDevice{
+				{LogicID: 0, CardID: 0, DeviceID: 0, PhyID: 0},
+				{LogicID: 1, CardID: 0, DeviceID: 1, PhyID: 1},
+			}
+			resetInfo := device.ResetInfo{
+				ManualResetDevs: []device.ResetDevice{
+					{LogicID: 0, CardId: 0, DeviceId: 0, PhyID: 0},
+					{LogicID: 1, CardId: 0, DeviceId: 1, PhyID: 1},
+				},
+				ThirdPartyResetDevs: []device.ResetDevice{
+					{LogicID: 0, CardId: 0, DeviceId: 0, PhyID: 0},
+				},
+			}
+			var capturedDelInfo device.ResetInfo
+			patch := gomonkey.ApplyFuncReturn(device.ReadResetInfo, resetInfo).
+				ApplyFunc(device.WriteResetInfo,
+					func(info device.ResetInfo, mode device.WriteMode, updateNode bool) {
+						capturedDelInfo = info
+					})
+			defer patch.Reset()
+			mgr.clearNeedExternalOps(devs)
+			convey.So(len(capturedDelInfo.ManualResetDevs), convey.ShouldEqual, 2)
+			convey.So(len(capturedDelInfo.ThirdPartyResetDevs), convey.ShouldEqual, 2)
+		})
+		convey.Convey("empty devs slice should return early", func() {
+			mgr := NewUnifiedHotResetManager(&devmanager.DeviceManagerMock{},
+				&device.HwAscend910Manager{}, nil)
+			writeCalled := false
+			patch := gomonkey.ApplyFuncReturn(device.ReadResetInfo, device.ResetInfo{}).
+				ApplyFunc(device.WriteResetInfo,
+					func(_ device.ResetInfo, _ device.WriteMode, _ bool) {
+						writeCalled = true
+					})
+			defer patch.Reset()
+			mgr.clearNeedExternalOps(nil)
+			convey.So(writeCalled, convey.ShouldBeFalse)
+		})
+	})
+}
