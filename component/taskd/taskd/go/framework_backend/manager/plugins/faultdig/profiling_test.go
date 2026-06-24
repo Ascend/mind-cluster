@@ -140,7 +140,7 @@ func TestChangeCmd(t *testing.T) {
 	convey.Convey("when change cmd but retry not triggered, then PullMsg returns nil", t, func() {
 		plugin := getProfilingPlugin()
 		plugin.changeCmd(cmd)
-		plugin.retry = retryState{notMeetStart: time.Now().Add(-2 * time.Second)}
+		plugin.retry = retryState{notMeetStart: time.Now().Add(-retryIntervalProfilingCmd / 2)}
 		plugin.workerStatus = workerExecStatus{
 			cmd:                cmd,
 			defaultDomainState: constant.ProfilingWorkerWaitOpenState,
@@ -173,6 +173,133 @@ func TestHandleProfilingResult(t *testing.T) {
 		plugin := getProfilingPlugin()
 		plugin.handleProfilingResult(snapshot)
 		convey.ShouldEqual(len(plugin.workerStatus.workers), 1)
+		convey.ShouldEqual(plugin.workerStatus.workers[worker0Name].DefaultDomain, constant.ProfilingOnStatus)
+		convey.ShouldEqual(plugin.workerStatus.workers[worker0Name].CommDomain, constant.ProfilingOnStatus)
+	})
+}
+
+func TestHandleProfilingResultEmptyDefaultDomain(t *testing.T) {
+	convey.Convey("when defaultDomainStat is empty, then it is treated as Unknown instead of skipped", t, func() {
+		snapshot := storage.SnapShot{
+			WorkerInfos: &storage.WorkerInfos{
+				Workers: map[string]*storage.WorkerInfo{
+					worker0Name: {
+						Status: map[string]string{
+							constant.DefaultDomainStatus: "",
+							constant.CommDomainStatus:    constant.On,
+						},
+					},
+				},
+			},
+		}
+		plugin := getProfilingPlugin()
+		plugin.handleProfilingResult(snapshot)
+		convey.ShouldEqual(len(plugin.workerStatus.workers), 1)
+		convey.ShouldEqual(plugin.workerStatus.workers[worker0Name].DefaultDomain, constant.ProfilingUnknownStatus)
+		convey.ShouldEqual(plugin.workerStatus.workers[worker0Name].CommDomain, constant.ProfilingOnStatus)
+	})
+}
+
+func TestHandleProfilingResultEmptyCommDomain(t *testing.T) {
+	convey.Convey("when commDomainStat is empty, then it is treated as Unknown instead of skipped", t, func() {
+		snapshot := storage.SnapShot{
+			WorkerInfos: &storage.WorkerInfos{
+				Workers: map[string]*storage.WorkerInfo{
+					worker0Name: {
+						Status: map[string]string{
+							constant.DefaultDomainStatus: constant.On,
+							constant.CommDomainStatus:    "",
+						},
+					},
+				},
+			},
+		}
+		plugin := getProfilingPlugin()
+		plugin.handleProfilingResult(snapshot)
+		convey.ShouldEqual(len(plugin.workerStatus.workers), 1)
+		convey.ShouldEqual(plugin.workerStatus.workers[worker0Name].DefaultDomain, constant.ProfilingOnStatus)
+		convey.ShouldEqual(plugin.workerStatus.workers[worker0Name].CommDomain, constant.ProfilingUnknownStatus)
+	})
+}
+
+func TestHandleProfilingResultBothDomainEmpty(t *testing.T) {
+	convey.Convey("when both domain stats are empty, then both are treated as Unknown", t, func() {
+		snapshot := storage.SnapShot{
+			WorkerInfos: &storage.WorkerInfos{
+				Workers: map[string]*storage.WorkerInfo{
+					worker0Name: {
+						Status: map[string]string{
+							constant.DefaultDomainStatus: "",
+							constant.CommDomainStatus:    "",
+						},
+					},
+				},
+			},
+		}
+		plugin := getProfilingPlugin()
+		plugin.handleProfilingResult(snapshot)
+		convey.ShouldEqual(len(plugin.workerStatus.workers), 1)
+		convey.ShouldEqual(plugin.workerStatus.workers[worker0Name].DefaultDomain, constant.ProfilingUnknownStatus)
+		convey.ShouldEqual(plugin.workerStatus.workers[worker0Name].CommDomain, constant.ProfilingUnknownStatus)
+	})
+}
+
+func TestHandleProfilingResultMultipleWorkers(t *testing.T) {
+	convey.Convey("when snapshot has multiple workers, then all workers are updated with full snapshot", t, func() {
+		snapshot := storage.SnapShot{
+			WorkerInfos: &storage.WorkerInfos{
+				Workers: map[string]*storage.WorkerInfo{
+					worker0Name: {
+						Status: map[string]string{
+							constant.DefaultDomainStatus: constant.On,
+							constant.CommDomainStatus:    constant.On,
+						},
+					},
+					worker1Name: {
+						Status: map[string]string{
+							constant.DefaultDomainStatus: constant.Off,
+							constant.CommDomainStatus:    constant.Off,
+						},
+					},
+				},
+			},
+		}
+		plugin := getProfilingPlugin()
+		plugin.workerStatus.cmd = constant.ProfilingDomainCmd{DefaultDomainAble: true, CommDomainAble: true}
+		plugin.handleProfilingResult(snapshot)
+		convey.ShouldEqual(len(plugin.workerStatus.workers), 2)
+		convey.ShouldEqual(plugin.workerStatus.workers[worker0Name].DefaultDomain, constant.ProfilingOnStatus)
+		convey.ShouldEqual(plugin.workerStatus.workers[worker0Name].CommDomain, constant.ProfilingOnStatus)
+		convey.ShouldEqual(plugin.workerStatus.workers[worker1Name].DefaultDomain, constant.ProfilingOffStatus)
+		convey.ShouldEqual(plugin.workerStatus.workers[worker1Name].CommDomain, constant.ProfilingOffStatus)
+	})
+}
+
+func TestHandleProfilingResultUnchangedWorker(t *testing.T) {
+	convey.Convey("when worker status unchanged, full snapshot still includes it in result", t, func() {
+		snapshot := storage.SnapShot{
+			WorkerInfos: &storage.WorkerInfos{
+				Workers: map[string]*storage.WorkerInfo{
+					worker0Name: {
+						Status: map[string]string{
+							constant.DefaultDomainStatus: constant.Off,
+							constant.CommDomainStatus:    constant.Off,
+						},
+					},
+				},
+			},
+		}
+		plugin := getProfilingPlugin()
+		plugin.workerStatus.workers[worker0Name] = constant.ProfilingResult{
+			DefaultDomain: constant.ProfilingOffStatus,
+			CommDomain:    constant.ProfilingOffStatus,
+		}
+		plugin.workerStatus.cmd = constant.ProfilingDomainCmd{DefaultDomainAble: false, CommDomainAble: false}
+		plugin.workerStatus.defaultDomainState = constant.ProfilingWorkerClosedState
+		plugin.workerStatus.commDomainState = constant.ProfilingWorkerClosedState
+		plugin.handleProfilingResult(snapshot)
+		convey.ShouldEqual(len(plugin.workerStatus.workers), 1)
+		convey.ShouldEqual(plugin.workerStatus.workers[worker0Name].DefaultDomain, constant.ProfilingOffStatus)
 	})
 }
 
@@ -221,7 +348,7 @@ func TestCalcNewState(t *testing.T) {
 
 func TestRetryStateUpdate(t *testing.T) {
 	convey.Convey("when cmdChanged is true, then notMeetStart is reset and cmdChanged is set", t, func() {
-		r := retryState{notMeetStart: time.Now().Add(-3 * time.Second)}
+		r := retryState{notMeetStart: time.Now().Add(-retryIntervalProfilingCmd / 2)}
 		status := workerExecStatus{
 			cmd:                constant.ProfilingDomainCmd{DefaultDomainAble: true, CommDomainAble: true},
 			defaultDomainState: constant.ProfilingWorkerWaitOpenState,
@@ -245,7 +372,7 @@ func TestRetryStateUpdate(t *testing.T) {
 	})
 
 	convey.Convey("when cmdChanged is false and status not meet cmd, then notMeetStart is kept if already set", t, func() {
-		originalStart := time.Now().Add(-2 * time.Second)
+		originalStart := time.Now().Add(-retryIntervalProfilingCmd / 2)
 		r := retryState{notMeetStart: originalStart}
 		status := workerExecStatus{
 			cmd:                constant.ProfilingDomainCmd{DefaultDomainAble: true, CommDomainAble: true},
@@ -257,7 +384,7 @@ func TestRetryStateUpdate(t *testing.T) {
 	})
 
 	convey.Convey("when cmdChanged is false and status meets cmd, then notMeetStart is reset", t, func() {
-		r := retryState{notMeetStart: time.Now().Add(-3 * time.Second)}
+		r := retryState{notMeetStart: time.Now().Add(-retryIntervalProfilingCmd / 2)}
 		status := workerExecStatus{
 			cmd:                constant.ProfilingDomainCmd{DefaultDomainAble: true, CommDomainAble: true},
 			defaultDomainState: constant.ProfilingWorkerOpenedState,
@@ -275,12 +402,12 @@ func TestRetryStateExceedLimit(t *testing.T) {
 	})
 
 	convey.Convey("when notMeetStart is within retry interval, then exceedLimit returns false", t, func() {
-		r := retryState{notMeetStart: time.Now().Add(-3 * time.Second)}
+		r := retryState{notMeetStart: time.Now().Add(-retryIntervalProfilingCmd / 2)}
 		convey.ShouldBeFalse(r.exceedLimit())
 	})
 
 	convey.Convey("when notMeetStart exceeds retry interval, then exceedLimit returns true", t, func() {
-		r := retryState{notMeetStart: time.Now().Add(-6 * time.Second)}
+		r := retryState{notMeetStart: time.Now().Add(-(retryIntervalProfilingCmd + time.Second))}
 		convey.ShouldBeTrue(r.exceedLimit())
 	})
 }
@@ -297,12 +424,12 @@ func TestRetryStateShouldPullMsg(t *testing.T) {
 	})
 
 	convey.Convey("when cmdChanged is false and within retry interval, then shouldPullMsg returns false", t, func() {
-		r := retryState{notMeetStart: time.Now().Add(-3 * time.Second)}
+		r := retryState{notMeetStart: time.Now().Add(-retryIntervalProfilingCmd / 2)}
 		convey.ShouldBeFalse(r.shouldPullMsg())
 	})
 
 	convey.Convey("when cmdChanged is false and retry interval exceeded, then shouldPullMsg returns true", t, func() {
-		r := retryState{notMeetStart: time.Now().Add(-6 * time.Second)}
+		r := retryState{notMeetStart: time.Now().Add(-(retryIntervalProfilingCmd + time.Second))}
 		convey.ShouldBeTrue(r.shouldPullMsg())
 	})
 }
@@ -310,7 +437,7 @@ func TestRetryStateShouldPullMsg(t *testing.T) {
 func TestRetryStateMarkPulled(t *testing.T) {
 	convey.Convey("markPulled resets notMeetStart to now and cmdChanged to false", t, func() {
 		r := retryState{
-			notMeetStart: time.Now().Add(-6 * time.Second),
+			notMeetStart: time.Now().Add(-(retryIntervalProfilingCmd + time.Second)),
 			cmdChanged:   true,
 		}
 		beforeMark := time.Now()
@@ -335,7 +462,7 @@ func TestPullMsg(t *testing.T) {
 	convey.Convey("when shouldPullMsg is true via exceedLimit, then returns pullMsg and resets timer", t, func() {
 		plugin := getProfilingPlugin()
 		plugin.pullMsg = []infrastructure.Msg{{Receiver: []string{worker0Name}}}
-		plugin.retry = retryState{notMeetStart: time.Now().Add(-6 * time.Second)}
+		plugin.retry = retryState{notMeetStart: time.Now().Add(-(retryIntervalProfilingCmd + time.Second))}
 		msg, err := plugin.PullMsg()
 		convey.ShouldBeNil(err)
 		convey.ShouldEqual(len(msg), 1)
@@ -359,7 +486,7 @@ func TestPullMsg(t *testing.T) {
 	convey.Convey("when status not meet cmd and shouldPullMsg is false, then returns nil without clearing", t, func() {
 		plugin := getProfilingPlugin()
 		plugin.pullMsg = []infrastructure.Msg{{Receiver: []string{worker0Name}}}
-		plugin.retry = retryState{notMeetStart: time.Now().Add(-2 * time.Second)}
+		plugin.retry = retryState{notMeetStart: time.Now().Add(-retryIntervalProfilingCmd / 2)}
 		plugin.workerStatus = workerExecStatus{
 			cmd:                constant.ProfilingDomainCmd{DefaultDomainAble: true, CommDomainAble: true},
 			defaultDomainState: constant.ProfilingWorkerWaitOpenState,
@@ -375,7 +502,7 @@ func TestPullMsg(t *testing.T) {
 func TestPredicateRetryExceedLimit(t *testing.T) {
 	convey.Convey("when getProfilingCmd fails but retry exceeds interval, then should still candidate", t, func() {
 		plugin := getProfilingPlugin()
-		plugin.retry = retryState{notMeetStart: time.Now().Add(-6 * time.Second)}
+		plugin.retry = retryState{notMeetStart: time.Now().Add(-(retryIntervalProfilingCmd + time.Second))}
 		snapshot := getDemoSnapshot()
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
