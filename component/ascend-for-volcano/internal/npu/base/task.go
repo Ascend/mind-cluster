@@ -150,12 +150,19 @@ func (tp *NPUHandler) setRankIndex(task *api.TaskInfo) {
 		klog.V(util.LogWarningLev).Infof("get job of task %s failed", task.Name)
 		return
 	}
+
+	if task.Pod.Annotations[plugin.PodRankIndexKey] != "" {
+		klog.V(util.LogDebugLev).Infof("task %s already has rankIndex %s, skip setting", task.Name, task.Pod.Annotations[plugin.PodRankIndexKey])
+		return
+	}
+
 	if job.Owner.Kind == plugin.ReplicaSetType {
 		task.Pod.Annotations[plugin.PodRankIndexKey] = strconv.Itoa(job.Tasks[task.UID].Index)
 		klog.V(util.LogInfoLev).Infof("set deploy pod %s rank index to %s", task.Name,
 			task.Pod.Annotations[plugin.PodRankIndexKey])
+		return
 	}
-	if _, ok := tp.Annotation[util.MinAvailableKey]; ok && task.Pod.Annotations[plugin.PodRankIndexKey] == "" {
+	if _, ok := tp.Annotation[util.MinAvailableKey]; ok {
 		task.Pod.Annotations[plugin.PodRankIndexKey] = strconv.Itoa(job.Tasks[task.UID].Index)
 		klog.V(util.LogInfoLev).Infof("set pod %s rank index to %s", task.Name,
 			task.Pod.Annotations[plugin.PodRankIndexKey])
