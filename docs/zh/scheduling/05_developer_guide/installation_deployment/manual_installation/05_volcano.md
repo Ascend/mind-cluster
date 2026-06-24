@@ -400,8 +400,8 @@
     <p id="p_prefer_previous_node_scenarios"><a name="p_prefer_previous_node_scenarios"></a><a name="p_prefer_previous_node_scenarios"></a>该参数对不同任务类型的生效效果如下：</p>
     <p id="p_prefer_previous_node_normal"><a name="p_prefer_previous_node_normal"></a><a name="p_prefer_previous_node_normal"></a><b>普通调度场景：</b></p>
     <a name="ul_prefer_previous_node_normal"></a><a name="ul_prefer_previous_node_normal"></a><ul id="ul_prefer_previous_node_normal"><li>Pod重建时优先调度回原节点，复用节点上已有的容器镜像缓存，避免重新拉取镜像。</li><li>健康Pod回到原节点的优先级最高；故障Pod主动避开原节点，选择其他节点脱离故障域。</li></ul>
-    <p id="p_prefer_previous_node_affinity"><a name="p_prefer_previous_node_affinity"></a><a name="p_prefer_previous_node_affinity"></a><b>节点间亲和调度场景（超节点调度 / 多级调度）：</b></p>
-    <a name="ul_prefer_previous_node_affinity"></a><a name="ul_prefer_previous_node_affinity"></a><ul id="ul_prefer_previous_node_affinity"><li>所有原运行节点存在且健康时，Pod优先调度回原节点。</li><li>原运行节点缺失或故障时，按原有调度逻辑进行调度。</li></ul>
+    <p id="p_prefer_previous_node_affinity"><a name="p_prefer_previous_node_affinity"></a><a name="p_prefer_previous_node_affinity"></a><b>节点间亲和调度场景（超节点调度 / 多级调度 / 框亲和调度）：</b></p>
+    <a name="ul_prefer_previous_node_affinity"></a><a name="ul_prefer_previous_node_affinity"></a><ul id="ul_prefer_previous_node_affinity"><li>非故障重调度场景下（例如被驱逐后重新调度），若上次运行的所有节点仍然可用，每个Pod调度回原节点继续运行。</li><li>故障重调度场景下，调度器按照原有调度逻辑进行节点替换，各调度策略的详细重调度策略请参见<a href="../../../04_usage/basic_scheduling/01_affinity_scheduling/04_node_based_affinity.md">基于节点的亲和性</a>章节。</li></ul>
     </td>
     </tr>
     </tbody>
