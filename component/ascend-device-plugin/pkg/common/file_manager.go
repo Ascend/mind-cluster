@@ -47,28 +47,35 @@ func WriteToFileWithPerm(info, path string, dirPerm, filePerm os.FileMode) error
 
 // CreateFileIfNotExist create file if not exist
 func CreateFileIfNotExist(path string, dirPerm, filePerm os.FileMode) error {
-	if !isFileNotExist(path) {
-		hwlog.RunLog.Infof("file already exists, skip create: %s", path)
-		return nil
-	}
-	if err := prepareFileBeforeWrite(path, dirPerm); err != nil {
-		return err
-	}
-	_, closeFunc, err := openAndCheckFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, filePerm)
-	if err != nil {
-		return err
-	}
-	defer closeFunc()
-	hwlog.RunLog.Infof("create file success: %s", path)
-	return nil
-}
-
-func isFileNotExist(path string) bool {
 	info, err := os.Stat(path)
 	if err == nil {
-		return info.IsDir() == false
+		if !info.IsDir() {
+			hwlog.RunLog.Infof("target file already exists, skip create: %s", path)
+			return nil
+		}
+		// Same path is a directory, conflict with file creation
+		return fmt.Errorf("path conflict: target name is a directory, unable to create file, path=%s", path)
 	}
-	return os.IsNotExist(err)
+	// Handle path not found case, need to create file
+	if os.IsNotExist(err) {
+		// Create parent directories recursively with specified permission
+		if err := prepareFileBeforeWrite(path, dirPerm); err != nil {
+			hwlog.RunLog.Errorf("failed to prepare parent directory, path=%s, err=%v", path, err)
+			return err
+		}
+		// Open file with create/truncate flag, create empty file
+		_, closeFunc, err := openAndCheckFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, filePerm)
+		if err != nil {
+			hwlog.RunLog.Errorf("failed to create and open file, path=%s, err=%v", path, err)
+			return err
+		}
+		// Auto close file descriptor after function exit
+		defer closeFunc()
+		hwlog.RunLog.Infof("create empty file successfully: %s", path)
+		return nil
+	}
+	hwlog.RunLog.Errorf("failed to stat target path, path=%s, err=%v", path, err)
+	return err
 }
 
 func prepareFileBeforeWrite(path string, dirPerm os.FileMode) error {
