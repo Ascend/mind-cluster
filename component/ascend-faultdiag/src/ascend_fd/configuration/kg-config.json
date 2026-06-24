@@ -25382,6 +25382,126 @@
                 "in": ["RuntimeError", "Worker failed with error", "No such file or directory"]
             }
         },
+        "AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_002": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM-ASCEND",
+                "module": "Ascend Store",
+                "cause_zh": "Mooncake配置文件内容错误导致Worker初始化失败",
+                "description_zh": "MOONCAKE_CONFIG_PATH指定的配置文件存在，但内容格式或字段值错误。如master_server_address端口配置为50061，但实际环境变量MOONCAKE_MASTER使用的是10.10.10.1:50061，两者不一致导致Mooncake初始化失败。其他可能原因：JSON格式语法错误、必填字段缺失、字段值类型错误、device_name指定的设备不存在、protocol值不支持等。",
+                "suggestion_zh": [
+                    "1. 查看完整错误堆栈，定位具体配置错误字段；",
+                    "2. 使用python -m json.tool验证JSON格式正确性；",
+                    "3. 确保配置文件中的master_server_address与MOONCAKE_MASTER环境变量完全一致（包括IP和端口）;",
+                    "4. 检查所有必填字段是否完整：local_hostname、metadata_server、protocol、master_server_address；",
+                    "5. 修正配置文件后重新启动服务;"
+                ],
+                "cause_en": "Worker initialization fails due to incorrect Mooncake configuration file content",
+                "description_en": "The configuration file specified by MOONCAKE_CONFIG_PATH exists, but its content format or field values are incorrect. For example, the master_server_address port is set to 50061, while the MOONCAKE_MASTER environment variable uses 10.10.10.1:50061. The inconsistency causes Mooncake initialization to fail. Other possible causes: JSON syntax errors, missing required fields, incorrect field value types, non-existent device specified by device_name, or unsupported protocol values.",
+                "suggestion_en": [
+                    "1. Check the complete error stack to locate the specific incorrect configuration field.",
+                    "2. Use python -m json.tool to verify the JSON format.",
+                    "3. Ensure that master_server_address in the configuration file is fully consistent with the MOONCAKE_MASTER environment variable (including IP and port).",
+                    "4. Check that all required fields are complete: local_hostname, metadata_server, protocol, and master_server_address.",
+                    "5. Correct the configuration file and restart the service."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "opt": [
+                    {
+                        "all": [
+                            ["send request to", "connection refused"],
+                            ["Initialize mooncake failed", "metadata_server", "P2PHANDSHAKE", "Check mooncake config and network"]
+                        ],
+                        "max_lines": 20
+                    }
+                ]
+            }
+        },
+        "AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_003": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM-ASCEND",
+                "module": "Ascend Store",
+                "cause_zh": "Mooncake配置文件中的global_segment_size超出系统合理范围导致初始化失败",
+                "description_zh": "Mooncake配置文件中的global_segment_size字段设置过大，超出系统可用内存范围。如设置为921474836480（约858GB），超过单节点实际可用NPU内存或系统内存大小，导致Mooncake初始化时内存分配失败。global_segment_size用于指定全局内存段大小，必须小于或等于系统可用内存。",
+                "suggestion_zh": [
+                    "1. 检查当前系统可用内存（系统内存和NPU内存）；",
+                    "2. 查看配置文件中global_segment_size的当前值；",
+                    "3. 将global_segment_size修改为不超过系统可用内存的值（建议预留一定余量，参考：",
+                    " https://kvcache-ai.github.io/Mooncake/）；",
+                    "4. 参考产品文档确认推荐的global_segment_size取值范围；",
+                    "5. 修改配置后重新启动vLLM服务;"
+
+                ],
+                "cause_en": "Initialization fails because global_segment_size in the Mooncake configuration file exceeds the reasonable system range",
+                "description_en": "The global_segment_size field in the Mooncake configuration file is set too large, exceeding the available system memory range. For example, if it is set to 921474836480 (approximately 858 GB), which exceeds the available NPU memory or system memory of a single node, Mooncake fails to allocate memory during initialization. global_segment_size specifies the global memory segment size and must be less than or equal to the available system memory.",
+                "suggestion_en": [
+                    "1. Check the current available system memory (system memory and NPU memory).",
+                    "2. Check the current value of global_segment_size in the configuration file.",
+                    "3. Change global_segment_size to a value that does not exceed the available system memory (a certain margin is recommended; refer to https://kvcache-ai.github.io/Mooncake/).",
+                    "4. Refer to the product documentation to confirm the recommended value range of global_segment_size.",
+                    "5. Restart the vLLM service after modifying the configuration."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["Failed to allocate memory", "207001"]
+            }
+        },
+        "AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_004": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM-ASCEND",
+                "module": "mooncake",
+                "cause_zh": "HCCL_BUFFSIZE环境变量设置过小导致WorkerProc初始化失败",
+                "description_zh": "HCCL_BUFFSIZE环境变量设置过小，超出HCCL通信缓冲区的最小要求。如设置为0（单位通常为MB），远小于正常值（通常为200MB或更大）。HCCL_BUFFSIZE用于配置HCCL通信缓冲区大小，该值必须大于HCCL通信所需的最小缓冲区阈值，否则会导致HCCL初始化失败，进而引发WorkerProc后台进程初始化异常。",
+                "suggestion_zh": [
+                    "1. 检查当前 HCCL_BUFFSIZE 环境变量的值；",
+                    "2. 参考 HCCL/CANN 文档确认推荐值（通常为 200~1000 MB），文档：",
+                    " https://www.hiascend.com/document/detail/zh/canncommercial/900/API/hcclug/hcclenvref_07_0005.htm；",
+                    "3. 修改HCCL_BUFFSIZE为推荐范围内的值，如export HCCL_BUFFSIZE=200；",
+                    "4. 根据模型规模和并行配置可能需要适当增大该值；",
+                    "5. 修改配置后重新启动vLLM服务;"
+
+                ],
+                "cause_en": "WorkerProc initialization fails because the HCCL_BUFFSIZE environment variable is set too small",
+                "description_en": "The HCCL_BUFFSIZE environment variable is set too small, below the minimum requirement of the HCCL communication buffer. For example, if it is set to 0 (the unit is usually MB), which is far less than the normal value (usually 200 MB or larger). HCCL_BUFFSIZE configures the HCCL communication buffer size. This value must be greater than the minimum buffer threshold required by HCCL communication. Otherwise, HCCL initialization fails, which further causes the WorkerProc background process initialization to be abnormal.",
+                "suggestion_en": [
+                    "1. Check the current value of the HCCL_BUFFSIZE environment variable.",
+                    "2. Refer to the HCCL/CANN documentation to confirm the recommended value (usually 200 to 1000 MB). Documentation: https://www.hiascend.com/document/detail/zh/canncommercial/900/API/hcclug/hcclenvref_07_0005.htm.",
+                    "3. Change HCCL_BUFFSIZE to a value within the recommended range, for example, export HCCL_BUFFSIZE=200.",
+                    "4. Increase the value as needed based on the model size and parallel configuration.",
+                    "5. Restart the vLLM service after modifying the configuration."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["RuntimeError", " HCCL_BUFFSIZE should be positive"]
+            }
+        },
+        "AISW_VLLM_WEIGHT_LOADRE_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM",
+                "module": "weight_loader",
+                "cause_zh": "模型权重config.json配置文件与实际权重.safetensrors文件不匹配，导致权重加载失败",
+                "description_zh": "模型权重config.json中模型层数、专家数与实际权重不匹配。",
+                "suggestion_zh": [
+                    "1. 从模型仓获取重新获取正确模型权重文件（例如huggingface、model scope）,重新启动推理引擎；"
+                ],
+                "cause_en": "Weight loading fails because the model weight config.json does not match the actual .safetensors weight file",
+                "description_en": "The number of model layers and experts in the model weight config.json does not match the actual weights.",
+                "suggestion_en": [
+                    "1. Obtain the correct model weight files again from a model repository (for example, Hugging Face or ModelScope), and restart the inference engine."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["KeyError", "model.layers", "mlp.experts", "down_proj.weight"]
+            }
+        },
         "AISW_VLLM_ASCEND_SAMPLER_001": {
             "attribute": {
                 "class": "Software",

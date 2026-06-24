@@ -204,5 +204,68 @@ class TestPyMotorVLLMParserIPv6(unittest.TestCase):
             os.unlink(file_path)
 
 
+class TestPyMotorVLLMParserMultiLineFaultMode(unittest.TestCase):
+    """Regression tests for cross-line fault mode matching (all/opt/max_lines)"""
+
+    CONFIG_PATH = os.path.join(
+        os.path.dirname(__file__), '..', '..', 'src', 'ascend_fd', 'configuration', 'kg-config.json'
+    )
+
+    def _load_config(self):
+        from ascend_fd.utils.load_kg_config import ParseRegexMap
+
+        parse_regex = ParseRegexMap(config_pkg_list=[self.CONFIG_PATH]).get_parse_regex()
+        return parse_regex.get(PyMotorVLLMParser.SOURCE_FILE, {})
+
+    def _create_parser(self):
+        config = self._load_config()
+        return PyMotorVLLMParser(
+            {
+                "default_conf": {PyMotorVLLMParser.SOURCE_FILE: config},
+                "user_conf": {},
+            }
+        )
+
+    def _create_temp_file(self, content, prefix="vllm-mooncake"):
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.log', prefix=prefix + "-", delete=False) as tmp_file:
+            tmp_file.write(content)
+            return tmp_file.name
+
+    def test_mooncake_002_cross_line_match(self):
+        """MOONCAKE_002 opt/all groups on different lines must match (regression)"""
+        log_content = (
+            "\x1b[93m2026-06-24 10:46:50.237365 WARNING  \x1b[0m\x1b[0K[3591] "
+            "[client_pool.hpp:445] send request to 80.48.37.140:50060 failed. connection refused. \n"
+            "E20260624 10:46:50.237413  3591 master_client.cpp:234] Client not available \n"
+            "(Worker_TP1 pid=3193) ERROR 06-24 10:46:50 [mooncake_backend.py:146] "
+            "[vllm-ascend] [distributed] - Initialize mooncake failed. ret=-600, "
+            "metadata_server=P2PHANDSHAKE. Check mooncake config and network. \n"
+        )
+        parser = self._create_parser()
+        file_path = self._create_temp_file(log_content)
+        try:
+            result = parser._parse_file(file_path)
+            event_codes = {ev.get("event_code") for ev in result.event_list}
+            self.assertIn("AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_002", event_codes)
+        finally:
+            os.unlink(file_path)
+
+    def test_mooncake_002_no_match_when_group_missing(self):
+        """MOONCAKE_002 must not match when one all-group is absent"""
+        log_content = (
+            "\x1b[93m2026-06-24 10:46:50.237365 WARNING  \x1b[0m\x1b[0K[3591] "
+            "[client_pool.hpp:445] send request to 80.48.37.140:50060 failed. connection refused. \n"
+            "E20260624 10:46:50.237413  3591 master_client.cpp:234] Client not available \n"
+        )
+        parser = self._create_parser()
+        file_path = self._create_temp_file(log_content)
+        try:
+            result = parser._parse_file(file_path)
+            event_codes = {ev.get("event_code") for ev in result.event_list}
+            self.assertNotIn("AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_002", event_codes)
+        finally:
+            os.unlink(file_path)
+
+
 if __name__ == '__main__':
     unittest.main()

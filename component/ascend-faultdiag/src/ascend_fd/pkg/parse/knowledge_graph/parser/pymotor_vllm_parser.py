@@ -35,7 +35,7 @@ from ascend_fd.utils.regular_table import (
     HOST_IP_PATTERN,
     POD_IP_PATTERN,
 )
-from ascend_fd.utils.tool import check_and_format_time_str
+from ascend_fd.utils.tool import check_and_format_time_str, PatternSingleOrMultiLineMatcher
 from ascend_fd.utils.net_tools import IPAddress
 from ascend_fd.pkg.parse.parser_saver import LogInfoSaver
 from ascend_fd.pkg.parse.knowledge_graph.parser.file_parser import (
@@ -82,6 +82,7 @@ class PyMotorVLLMParser(FileParser):
 
     def __init__(self, params):
         super().__init__(params)
+        self.pattern_matcher = PatternSingleOrMultiLineMatcher()
         self.host_ip = ""
         self.pod_ip = ""
         self.device_info_list = []
@@ -224,7 +225,10 @@ class PyMotorVLLMParser(FileParser):
         device_info_collector = {}
         start_time, end_time = "", ""
 
-        for line_num, log_line in enumerate(self._yield_log(file_source), start=1):
+        log_lines = list(self._yield_log(file_source))
+        self.pattern_matcher.log_lines = log_lines
+        for line_num, log_line in enumerate(log_lines, start=1):
+            self.pattern_matcher.update_line_index(line_num - 1)
             occur_time, start_time, end_time = self._process_line(
                 log_line,
                 line_num,

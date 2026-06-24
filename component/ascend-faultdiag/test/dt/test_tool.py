@@ -15,6 +15,7 @@
 # limitations under the License.
 # ==============================================================================
 import argparse
+import io
 import os
 import unittest
 import tempfile
@@ -292,6 +293,358 @@ device-1   1             4          os running
     def test_load_device_info_map_not_found(self):
         """没有 device_info.txt"""
         self.assertEqual(tool.load_device_info_map(["/hisi_logs/device-0/kernel.log"]), {})
+
+
+class TestPatternMatcherAll(unittest.TestCase):
+    """PatternMatcher 的 all 语法测试（单行匹配）"""
+
+    def setUp(self):
+        self.matcher = tool.PatternMatcher()
+
+    def test_all_single_group_same_line(self):
+        """单组关键字在同一行内匹配成功"""
+        self.assertTrue(self.matcher.compare({"all": [["key1", "key2"]]}, "xxx key1 yyy key2 zzz"))
+
+    def test_all_single_group_missing_keyword(self):
+        """单组关键字缺少一个，匹配失败"""
+        self.assertFalse(self.matcher.compare({"all": [["key1", "key2"]]}, "xxx key1 yyy zzz"))
+
+    def test_all_multi_groups_all_matched_same_line(self):
+        """多组关键字全部在同一行匹配成功"""
+        self.assertTrue(self.matcher.compare({"all": [["key1", "key2"], ["key3", "key4"]]}, "key1 key2 key3 key4"))
+
+    def test_all_multi_groups_one_not_matched(self):
+        """多组关键字中有一组未匹配，匹配失败"""
+        self.assertFalse(self.matcher.compare({"all": [["key1", "key2"], ["key3", "key4"]]}, "key1 key2 key3"))
+
+    def test_all_flat_form_single_group(self):
+        """扁平形式 ["k1", "k2"] 等价于 [["k1", "k2"]]"""
+        self.assertTrue(self.matcher.compare({"all": ["key1", "key2"]}, "key1 key2"))
+
+    def test_all_empty(self):
+        """all 为空列表时匹配失败"""
+        self.assertFalse(self.matcher.compare({"all": []}, "key1 key2"))
+
+    def test_all_empty_inner_group_consistency(self):
+        """all 含空内层列表时过滤空组：全空返回 False，部分空按剩余组匹配"""
+        self.assertFalse(self.matcher._match_all([[]], "key1 key2"))
+        self.assertFalse(self.matcher.compare({"all": [[]]}, "key1 key2"))
+        self.assertTrue(self.matcher.compare({"all": [[], ["key1", "key2"]]}, "key1 key2"))
+        self.assertFalse(self.matcher.compare({"all": [[], ["key9"]]}, "key1 key2"))
+
+    def test_all_combined_with_in(self):
+        """all 与 in 共存，in 命中即成功"""
+        self.assertTrue(self.matcher.compare({"in": [["key1"]], "all": [["key3", "key4"]]}, "key1 only"))
+
+    def test_all_combined_with_regex(self):
+        """all 与 regex 共存，regex 命中即成功"""
+        self.assertTrue(self.matcher.compare({"regex": "key1", "all": [["key3", "key4"]]}, "key1 only"))
+
+
+class TestPatternSingleOrMultiLineMatcherAll(unittest.TestCase):
+    """PatternSingleOrMultiLineMatcher 的 all 语法测试（跨行匹配）"""
+
+    @staticmethod
+    def _build_matcher_with_lines(lines, idx=0):
+        matcher = tool.PatternSingleOrMultiLineMatcher(log_lines=lines)
+        matcher.update_line_index(idx)
+        return matcher
+
+    def test_all_multi_groups_cross_line(self):
+        """多组关键字跨行匹配：group1 在当前行，group2 在下一行"""
+        lines = ["key1 key2", "key3 key4", "other line"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        self.assertTrue(matcher.compare({"all": [["key1", "key2"], ["key3", "key4"]]}, lines[0]))
+
+    def test_all_single_group_cross_line(self):
+        """单组关键字跨行匹配：key1 在当前行，key2 在下一行"""
+        lines = ["key1 something", "key2 something", "other"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        self.assertTrue(matcher.compare({"all": [["key1", "key2"]]}, lines[0]))
+
+    def test_all_group_beyond_window(self):
+        """第二组关键字超出 10 行窗口，匹配失败"""
+        lines = ["key1 key2"] + ["filler"] * 10 + ["key3 key4"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        self.assertFalse(matcher.compare({"all": [["key1", "key2"], ["key3", "key4"]]}, lines[0]))
+
+    def test_all_group_within_window(self):
+        """第二组关键字在 10 行窗口内，匹配成功"""
+        lines = ["key1 key2"] + ["filler"] * 8 + ["key3 key4"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        self.assertTrue(matcher.compare({"all": [["key1", "key2"], ["key3", "key4"]]}, lines[0]))
+
+    def test_all_anchor_no_first_keyword_on_current_line(self):
+        """当前行不包含任何组的首关键字，匹配失败（不读取窗口）"""
+        lines = ["no anchor here", "key1 key2", "key3 key4"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        self.assertFalse(matcher.compare({"all": [["key1", "key2"], ["key3", "key4"]]}, lines[0]))
+
+    def test_all_anchor_via_group2_first_keyword(self):
+        """当前行包含 group2 的首关键字作为锚点，两组在窗口内匹配成功"""
+        lines = ["key3 key4", "key1 key2"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        self.assertTrue(matcher.compare({"all": [["key1", "key2"], ["key3", "key4"]]}, lines[0]))
+
+    def test_all_flat_form_multi_line(self):
+        """扁平形式在多行匹配器下跨行匹配成功"""
+        lines = ["key1 abc", "key2 def"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        self.assertTrue(matcher.compare({"all": ["key1", "key2"]}, lines[0]))
+
+    def test_all_with_file_stream(self):
+        """通过 file_stream 进行跨行匹配"""
+        stream = io.StringIO("key1 key2\nkey3 key4\nother\n")
+        matcher = tool.PatternSingleOrMultiLineMatcher(file_stream=stream)
+        self.assertTrue(matcher.compare({"all": [["key1", "key2"], ["key3", "key4"]]}, "key1 key2"))
+
+    def test_all_cross_line_at_different_index(self):
+        """从中间行开始跨行匹配：锚点行后续窗口内包含另一组"""
+        lines = ["filler", "key1 key2", "filler", "key3 key4", "filler"]
+        matcher = self._build_matcher_with_lines(lines, 1)
+        self.assertTrue(matcher.compare({"all": [["key1", "key2"], ["key3", "key4"]]}, lines[1]))
+
+    def test_all_one_group_not_in_window(self):
+        """多组中其中一组在窗口内，另一组完全不在窗口内，匹配失败"""
+        lines = [
+            "key1 key2",
+            "filler",
+            "filler",
+            "filler",
+            "filler",
+            "filler",
+            "filler",
+            "filler",
+            "filler",
+            "filler",
+            "filler",
+            "key3 key4",
+        ]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        self.assertFalse(matcher.compare({"all": [["key1", "key2"], ["key3", "key4"]]}, lines[0]))
+
+    def test_all_max_lines_smaller_window_miss(self):
+        """max_lines 限制窗口为 2 行，第二组在第 3 行（窗口外），匹配失败"""
+        lines = ["key1 key2", "filler", "key3 key4"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        conf = {"all": [["key1", "key2"], ["key3", "key4"]], "max_lines": 2}
+        self.assertFalse(matcher.compare(conf, lines[0]))
+
+    def test_all_max_lines_smaller_window_hit(self):
+        """max_lines 限制窗口为 3 行，第二组在第 3 行（窗口内），匹配成功"""
+        lines = ["key1 key2", "filler", "key3 key4"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        conf = {"all": [["key1", "key2"], ["key3", "key4"]], "max_lines": 3}
+        self.assertTrue(matcher.compare(conf, lines[0]))
+
+    def test_all_max_lines_zero_only_current_line(self):
+        """max_lines 为 0 时只匹配当前行，第二组在下一行匹配失败"""
+        lines = ["key1 key2", "key3 key4"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        conf = {"all": [["key1", "key2"], ["key3", "key4"]], "max_lines": 0}
+        self.assertFalse(matcher.compare(conf, lines[0]))
+
+    def test_all_max_lines_negative_falls_back_to_default(self):
+        """max_lines 小于 0 时回退到默认 10 行，第二组在默认窗口内匹配成功"""
+        lines = ["key1 key2"] + ["filler"] * 8 + ["key3 key4"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        conf = {"all": [["key1", "key2"], ["key3", "key4"]], "max_lines": -1}
+        self.assertTrue(matcher.compare(conf, lines[0]))
+
+    def test_all_max_lines_negative_default_window_boundary(self):
+        """max_lines 小于 0 时回退到默认 10 行，第二组超出默认窗口匹配失败"""
+        lines = ["key1 key2"] + ["filler"] * 10 + ["key3 key4"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        conf = {"all": [["key1", "key2"], ["key3", "key4"]], "max_lines": -5}
+        self.assertFalse(matcher.compare(conf, lines[0]))
+
+    def test_all_max_lines_with_file_stream(self):
+        """max_lines 在 file_stream 模式下生效：窗口为 2 行时第二组在第 3 行匹配失败"""
+        stream = io.StringIO("key1 key2\nfiller\nkey3 key4\nother\n")
+        matcher = tool.PatternSingleOrMultiLineMatcher(file_stream=stream)
+        conf = {"all": [["key1", "key2"], ["key3", "key4"]], "max_lines": 2}
+        self.assertFalse(matcher.compare(conf, "key1 key2"))
+
+    def test_all_max_lines_with_file_stream_hit(self):
+        """max_lines 在 file_stream 模式下生效：窗口为 3 行时第二组在第 3 行匹配成功"""
+        stream = io.StringIO("key1 key2\nfiller\nkey3 key4\nother\n")
+        matcher = tool.PatternSingleOrMultiLineMatcher(file_stream=stream)
+        conf = {"all": [["key1", "key2"], ["key3", "key4"]], "max_lines": 3}
+        self.assertTrue(matcher.compare(conf, "key1 key2"))
+
+    def test_all_max_lines_not_affect_single_line_matcher(self):
+        """max_lines 对单行 PatternMatcher 无影响，仅按同行匹配"""
+        matcher = tool.PatternMatcher()
+        conf = {"all": [["key1", "key2"]], "max_lines": 0}
+        self.assertTrue(matcher.compare(conf, "key1 key2"))
+        self.assertFalse(matcher.compare(conf, "key1 other"))
+
+    def test_all_max_lines_null_falls_back_to_default(self):
+        """max_lines 显式为 null 时回退到默认窗口，不抛 TypeError"""
+        lines = ["key1 key2"] + ["filler"] * 8 + ["key3 key4"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        conf = {"all": [["key1", "key2"], ["key3", "key4"]], "max_lines": None}
+        self.assertTrue(matcher.compare(conf, lines[0]))
+
+    def test_all_empty_inner_group_consistency_multi(self):
+        """多行匹配器下 all 含空内层列表时过滤空组：全空返回 False，部分空按剩余组匹配"""
+        lines = ["key1 key2", "key3 key4"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        self.assertFalse(matcher._match_all([[]], lines[0]))
+        self.assertFalse(matcher.compare({"all": [[]]}, lines[0]))
+        self.assertTrue(matcher.compare({"all": [[], ["key1", "key2"]]}, lines[0]))
+        self.assertFalse(matcher.compare({"all": [[], ["key9"]]}, lines[0]))
+
+
+class TestPatternMatcherOpt(unittest.TestCase):
+    """opt 语法测试：opt 为选项列表，选项间 OR，每选项内部 in/regex/all"""
+
+    def test_opt_single_option_all_matched_same_line(self):
+        """opt 单选项，all 两组关键字同行全部匹配成功"""
+        matcher = tool.PatternMatcher()
+        conf = {"opt": [{"all": [["key1", "key2"], ["key3", "key4"]]}]}
+        self.assertTrue(matcher.compare(conf, "key1 key2 key3 key4"))
+
+    def test_opt_single_option_all_not_matched(self):
+        """opt 单选项，all 缺一组匹配失败"""
+        matcher = tool.PatternMatcher()
+        conf = {"opt": [{"all": [["key1", "key2"], ["key3", "key4"]]}]}
+        self.assertFalse(matcher.compare(conf, "key1 key2 key3"))
+
+    def test_opt_multi_options_first_matches(self):
+        """opt 多选项，第一个选项命中即成功"""
+        matcher = tool.PatternMatcher()
+        conf = {"opt": [{"all": [["key1", "key2"]]}, {"in": [["key3", "key4"]]}]}
+        self.assertTrue(matcher.compare(conf, "key1 key2"))
+
+    def test_opt_multi_options_second_matches(self):
+        """opt 多选项，第一个失败第二个命中即成功（OR 逻辑）"""
+        matcher = tool.PatternMatcher()
+        conf = {"opt": [{"all": [["key1", "key2"]]}, {"in": [["key3", "key4"]]}]}
+        self.assertTrue(matcher.compare(conf, "key3 key4"))
+
+    def test_opt_multi_options_none_matches(self):
+        """opt 多选项，全部不匹配则失败"""
+        matcher = tool.PatternMatcher()
+        conf = {"opt": [{"all": [["key1", "key2"]]}, {"in": [["key3", "key4"]]}]}
+        self.assertFalse(matcher.compare(conf, "unrelated text"))
+
+    def test_opt_empty_list_falls_back_to_top_level(self):
+        """opt 为空列表时回退到顶层 in 匹配（向后兼容）"""
+        matcher = tool.PatternMatcher()
+        conf = {"opt": [], "in": [["key1", "key2"]]}
+        self.assertTrue(matcher.compare(conf, "key1 key2"))
+
+    def test_opt_absent_uses_top_level(self):
+        """无 opt 时使用顶层 in/regex/all（向后兼容）"""
+        matcher = tool.PatternMatcher()
+        self.assertTrue(matcher.compare({"in": [["key1"]]}, "key1"))
+        self.assertTrue(matcher.compare({"all": [["key1", "key2"]]}, "key1 key2"))
+
+    def test_opt_null_does_not_crash(self):
+        """opt 显式为 null 时安全回退到顶层匹配，不抛 TypeError"""
+        matcher = tool.PatternMatcher()
+        self.assertFalse(matcher.compare({"opt": None}, "key1 key2"))
+        self.assertTrue(matcher.compare({"opt": None, "in": [["key1"]]}, "key1"))
+
+    def test_null_fields_does_not_crash(self):
+        """in/regex/all/max_lines 显式为 null 时安全处理，不抛 TypeError"""
+        matcher = tool.PatternMatcher()
+        self.assertFalse(matcher.compare({"in": None}, "key1"))
+        self.assertFalse(matcher.compare({"regex": None}, "key1"))
+        self.assertFalse(matcher.compare({"all": None}, "key1"))
+
+
+class TestPatternSingleOrMultiLineMatcherOpt(unittest.TestCase):
+    """opt 语法在多行匹配器下的跨行匹配测试"""
+
+    @staticmethod
+    def _build_matcher_with_lines(lines, idx=0):
+        matcher = tool.PatternSingleOrMultiLineMatcher(log_lines=lines)
+        matcher.update_line_index(idx)
+        return matcher
+
+    def test_opt_all_cross_line_within_max_lines(self):
+        """opt 选项内 all 两组跨行匹配，max_lines=20 窗口内成功"""
+        lines = ["key1 key2", "filler", "key3 key4"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        conf = {"opt": [{"all": [["key1", "key2"], ["key3", "key4"]], "max_lines": 20}]}
+        self.assertTrue(matcher.compare(conf, lines[0]))
+
+    def test_opt_all_cross_line_beyond_max_lines(self):
+        """opt 选项内 all 第二组超出 max_lines 窗口匹配失败"""
+        lines = ["key1 key2", "filler", "key3 key4"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        conf = {"opt": [{"all": [["key1", "key2"], ["key3", "key4"]], "max_lines": 2}]}
+        self.assertFalse(matcher.compare(conf, lines[0]))
+
+    def test_opt_per_option_max_lines_independent(self):
+        """opt 多选项各自 max_lines 独立：选项1窗口小失败，选项2窗口大成功"""
+        lines = ["key1 key2", "filler", "filler", "key3 key4"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        conf = {
+            "opt": [
+                {"all": [["key1", "key2"], ["key3", "key4"]], "max_lines": 2},
+                {"all": [["key1", "key2"], ["key3", "key4"]], "max_lines": 20},
+            ]
+        }
+        self.assertTrue(matcher.compare(conf, lines[0]))
+
+    def test_opt_real_config_mooncake_002(self):
+        """真实配置 MOONCAKE_002：opt 内 all 两组跨行匹配"""
+        conf = {
+            "opt": [
+                {
+                    "all": [
+                        ["send request to", "connection refused"],
+                        [
+                            "Initialize mooncake failed",
+                            "metadata_server",
+                            "P2PHANDSHAKE",
+                            "Check mooncake config and network",
+                        ],
+                    ],
+                    "max_lines": 20,
+                }
+            ]
+        }
+        lines = [
+            "send request to connection refused",
+            "Initialize mooncake failed",
+            "metadata_server P2PHANDSHAKE",
+            "Check mooncake config and network",
+        ]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        self.assertTrue(matcher.compare(conf, lines[0]))
+
+    def test_opt_real_config_mooncake_002_missing_group(self):
+        """真实配置 MOONCAKE_002：仅一组匹配，all 要求两组故失败"""
+        conf = {
+            "opt": [
+                {
+                    "all": [
+                        ["send request to", "connection refused"],
+                        [
+                            "Initialize mooncake failed",
+                            "metadata_server",
+                            "P2PHANDSHAKE",
+                            "Check mooncake config and network",
+                        ],
+                    ],
+                    "max_lines": 20,
+                }
+            ]
+        }
+        lines = ["send request to connection refused"]
+        matcher = self._build_matcher_with_lines(lines, 0)
+        self.assertFalse(matcher.compare(conf, lines[0]))
+
+    def test_opt_with_file_stream(self):
+        """opt 语法在 file_stream 模式下跨行匹配"""
+        stream = io.StringIO("key1 key2\nfiller\nkey3 key4\nother\n")
+        matcher = tool.PatternSingleOrMultiLineMatcher(file_stream=stream)
+        conf = {"opt": [{"all": [["key1", "key2"], ["key3", "key4"]], "max_lines": 20}]}
+        self.assertTrue(matcher.compare(conf, "key1 key2"))
 
 
 if __name__ == '__main__':
