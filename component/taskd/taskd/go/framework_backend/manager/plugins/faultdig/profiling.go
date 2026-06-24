@@ -224,18 +224,17 @@ func (p *PfPlugin) handleProfilingResult(shot storage.SnapShot) {
 	for workerName, workerInfo := range shot.WorkerInfos.Workers {
 		defaultDomainStat := workerInfo.Status[constant.DefaultDomainStatus]
 		commDomainStat := workerInfo.Status[constant.CommDomainStatus]
-		if defaultDomainStat == "" || commDomainStat == "" {
-			continue
+		if defaultDomainStat == "" {
+			defaultDomainStat = constant.Unknown
+		}
+		if commDomainStat == "" {
+			commDomainStat = constant.Unknown
 		}
 		defaultDomainRes := constant.NewProfilingExecRes(defaultDomainStat)
 		commDomainRes := constant.NewProfilingExecRes(commDomainStat)
-		orgWorkerRes := p.workerStatus.workers[workerName]
-		if defaultDomainRes != orgWorkerRes.DefaultDomain ||
-			commDomainRes != orgWorkerRes.CommDomain {
-			result[workerName] = constant.ProfilingResult{
-				DefaultDomain: defaultDomainRes,
-				CommDomain:    commDomainRes,
-			}
+		result[workerName] = constant.ProfilingResult{
+			DefaultDomain: defaultDomainRes,
+			CommDomain:    commDomainRes,
 		}
 	}
 	p.handleWorkerRes(result)
