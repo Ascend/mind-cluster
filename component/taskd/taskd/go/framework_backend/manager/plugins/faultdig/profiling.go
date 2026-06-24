@@ -18,6 +18,7 @@ package faultdig
 import (
 	"fmt"
 	"sync/atomic"
+	"time"
 
 	"ascend-common/common-utils/hwlog"
 	"taskd/common/constant"
@@ -25,6 +26,8 @@ import (
 	"taskd/framework_backend/manager/infrastructure"
 	"taskd/framework_backend/manager/infrastructure/storage"
 )
+
+const retryIntervalProfilingCmd = 30 * time.Second
 
 type workerExecStatus struct {
 	workers            map[string]constant.ProfilingResult
@@ -63,15 +66,37 @@ func (s *workerExecStatus) calcState(
 	return constant.ProfilingWorkerWaitCloseState
 }
 
+func (s *workerExecStatus) checkStatusMeetCmd() bool {
+	if s.cmd.DefaultDomainAble && s.defaultDomainState != constant.ProfilingWorkerOpenedState {
+		return false
+	}
+	if !s.cmd.DefaultDomainAble && s.defaultDomainState != constant.ProfilingWorkerClosedState {
+		return false
+	}
+	if s.cmd.CommDomainAble && s.commDomainState != constant.ProfilingWorkerOpenedState {
+		return false
+	}
+	if !s.cmd.CommDomainAble && s.commDomainState != constant.ProfilingWorkerClosedState {
+		return false
+	}
+	return true
+}
+
 // PfPlugin Profiling Plugin
 type PfPlugin struct {
 	watchFile    atomic.Bool
 	shot         storage.SnapShot
 	cmd          constant.ProfilingDomainCmd
-	report       map[string]constant.ProfilingResult
 	workerStatus workerExecStatus
 	pullMsg      []infrastructure.Msg
 	workerNum    int
+	retry        retryState
+}
+
+// retryState tracks how long the worker status has been inconsistent with the cmd.
+type retryState struct {
+	notMeetStart time.Time
+	cmdChanged   bool
 }
 
 // Name get pluginName
@@ -85,9 +110,13 @@ func (p *PfPlugin) Predicate(shot storage.SnapShot) (infrastructure.PredicateRes
 	p.workerNum = shot.WorkerNum
 	p.initWorkerStatusMap(shot)
 	cmd, errCmd := p.getProfilingCmd(shot)
-	res, errRes := p.getProfilingResult(shot)
-	if errCmd != nil && errRes != nil {
-		hwlog.RunLog.Debugf("%s Predicate failed, errCmd: %v, errRes: %v", p.Name(), errCmd, errRes)
+	p.handleProfilingResult(shot)
+
+	p.retry.update(errCmd == nil, p.workerStatus)
+	hwlog.RunLog.Debugf("cmd: %v, workerStatus: %v, retry: %v, errCmd: %v", cmd, p.workerStatus, p.retry, errCmd)
+
+	if errCmd != nil && !p.retry.exceedLimit() {
+		hwlog.RunLog.Infof("%s Predicate failed, errCmd: %v", p.Name(), errCmd)
 		return infrastructure.PredicateResult{
 			PluginName:      p.Name(),
 			CandidateStatus: constant.UnselectStatus,
@@ -100,10 +129,6 @@ func (p *PfPlugin) Predicate(shot storage.SnapShot) (infrastructure.PredicateRes
 		p.cmd = cmd
 		hwlog.RunLog.Infof("%s checkout cmd %v", p.Name(), cmd)
 	}
-	if errRes == nil {
-		p.report = res
-		hwlog.RunLog.Infof("%s checkout res %v", p.Name(), res)
-	}
 	return infrastructure.PredicateResult{
 		PluginName:      p.Name(),
 		CandidateStatus: constant.CandidateStatus,
@@ -111,6 +136,46 @@ func (p *PfPlugin) Predicate(shot storage.SnapShot) (infrastructure.PredicateRes
 			constant.ProfilingStream: "",
 		},
 	}, nil
+}
+
+// update tracks how long the worker status has been inconsistent with the cmd.
+// When the cmd is unchanged and the worker status does not meet the cmd, the timer starts;
+// otherwise it resets.
+func (r *retryState) update(cmdChanged bool, status workerExecStatus) {
+	r.cmdChanged = cmdChanged
+	if cmdChanged {
+		r.notMeetStart = time.Time{}
+		return
+	}
+	if !status.checkStatusMeetCmd() {
+		if r.notMeetStart.IsZero() {
+			r.notMeetStart = time.Now()
+		}
+		return
+	}
+	r.notMeetStart = time.Time{}
+}
+
+// exceedLimit reports whether the retry interval has been exceeded since the worker status
+// became inconsistent with the cmd.
+func (r *retryState) exceedLimit() bool {
+	if r.notMeetStart.IsZero() {
+		return false
+	}
+	return time.Since(r.notMeetStart) > retryIntervalProfilingCmd
+}
+
+// shouldPullMsg reports whether the profiling cmd should be (re)sent to workers.
+// It is true when the cmd has just changed, or when the retry interval has been exceeded.
+func (r *retryState) shouldPullMsg() bool {
+	return r.cmdChanged || r.exceedLimit()
+}
+
+// markPulled records that the profiling cmd has been sent to workers,
+// resetting the retry timer for the next potential retry cycle.
+func (r *retryState) markPulled() {
+	r.notMeetStart = time.Now()
+	r.cmdChanged = false
 }
 
 func (p *PfPlugin) initWorkerStatusMap(shot storage.SnapShot) {
@@ -125,10 +190,6 @@ func (p *PfPlugin) initWorkerStatusMap(shot storage.SnapShot) {
 }
 
 func (p *PfPlugin) getProfilingCmd(shot storage.SnapShot) (constant.ProfilingDomainCmd, error) {
-	var switchOff = constant.ProfilingDomainCmd{
-		DefaultDomainAble: false,
-		CommDomainAble:    false,
-	}
 	var defaultDomainCmd = ""
 	var commDomainCmd = ""
 	// If taskd register clusterD, then get profiling cmd from clusterD
@@ -146,19 +207,19 @@ func (p *PfPlugin) getProfilingCmd(shot storage.SnapShot) (constant.ProfilingDom
 		}
 	}
 	if defaultDomainCmd == "" || commDomainCmd == "" {
-		return switchOff, fmt.Errorf("get domain cmd fail")
+		return p.workerStatus.cmd, fmt.Errorf("get domain cmd fail")
 	}
 	newCmd, err := utils.ParseProfilingDomainCmd(defaultDomainCmd, commDomainCmd)
 	if err != nil {
-		return switchOff, err
+		return p.workerStatus.cmd, err
 	}
 	if newCmd == p.workerStatus.cmd {
-		return switchOff, fmt.Errorf("get domain cmd is equal to last cmd")
+		return p.workerStatus.cmd, fmt.Errorf("get domain cmd is equal to last cmd")
 	}
 	return newCmd, nil
 }
 
-func (p *PfPlugin) getProfilingResult(shot storage.SnapShot) (map[string]constant.ProfilingResult, error) {
+func (p *PfPlugin) handleProfilingResult(shot storage.SnapShot) {
 	result := make(map[string]constant.ProfilingResult)
 	for workerName, workerInfo := range shot.WorkerInfos.Workers {
 		defaultDomainStat := workerInfo.Status[constant.DefaultDomainStatus]
@@ -177,10 +238,7 @@ func (p *PfPlugin) getProfilingResult(shot storage.SnapShot) (map[string]constan
 			}
 		}
 	}
-	if len(result) == 0 {
-		return nil, fmt.Errorf("no worker report profiling exec result")
-	}
-	return result, nil
+	p.handleWorkerRes(result)
 }
 
 // Release do nothing now
@@ -190,17 +248,21 @@ func (p *PfPlugin) Release() error {
 
 // Handle resolve snapshot
 func (p *PfPlugin) Handle() (infrastructure.HandleResult, error) {
-	p.handleWorkerRes()
 	p.handleNewCmd()
 	return infrastructure.HandleResult{
 		Stage: constant.HandleStageFinal,
 	}, nil
 }
 
-func (p *PfPlugin) handleWorkerRes() {
-	for workerName, result := range p.report {
-		p.workerStatus.workers[workerName] = result
+func (p *PfPlugin) handleWorkerRes(res map[string]constant.ProfilingResult) {
+	for workerName, workerStatus := range p.workerStatus.workers {
+		newStatus := res[workerName]
+		if workerStatus != newStatus {
+			hwlog.RunLog.Infof("update worker %s profiling status %v to %v", workerName, workerStatus, newStatus)
+			p.workerStatus.workers[workerName] = newStatus
+		}
 	}
+
 	defaultDomainState, commDomainState := p.workerStatus.calcNewState()
 	if p.workerStatus.defaultDomainState != defaultDomainState ||
 		p.workerStatus.commDomainState != commDomainState {
@@ -227,10 +289,19 @@ func (p *PfPlugin) handleNewCmd() {
 
 // PullMsg return Msg
 func (p *PfPlugin) PullMsg() ([]infrastructure.Msg, error) {
-	hwlog.RunLog.Infof("Profiling PullMsg: %s", utils.ObjToString(p.pullMsg))
-	res := p.pullMsg
-	p.pullMsg = make([]infrastructure.Msg, 0)
-	return res, nil
+	switch {
+	case p.retry.shouldPullMsg():
+		hwlog.RunLog.Infof("shouldPullMsg Profiling PullMsg: %s", utils.ObjToString(p.pullMsg))
+		p.retry.markPulled()
+		return p.pullMsg, nil
+	case p.workerStatus.checkStatusMeetCmd():
+		hwlog.RunLog.Info("status meet cmd")
+		p.pullMsg = make([]infrastructure.Msg, 0)
+		return nil, nil
+	default:
+		hwlog.RunLog.Info("waiting...")
+		return nil, nil
+	}
 }
 
 // NewProfilingPlugin return New ProfilingPlugin
@@ -239,7 +310,6 @@ func NewProfilingPlugin() infrastructure.ManagerPlugin {
 		watchFile: atomic.Bool{},
 		shot:      storage.SnapShot{},
 		cmd:       constant.ProfilingDomainCmd{},
-		report:    make(map[string]constant.ProfilingResult),
 		workerStatus: workerExecStatus{
 			workers: make(map[string]constant.ProfilingResult),
 			cmd: constant.ProfilingDomainCmd{
@@ -254,10 +324,9 @@ func NewProfilingPlugin() infrastructure.ManagerPlugin {
 }
 
 func (p *PfPlugin) changeCmd(cmd constant.ProfilingDomainCmd) bool {
-	hwlog.RunLog.Infof("changeCmd: %v", cmd)
 	p.pullMsg = make([]infrastructure.Msg, 0)
 	workers := p.getAllWorkerName()
-	hwlog.RunLog.Debugf("changeCmd, workers: %v,p.workerNum=%v", workers, p.workerNum)
+	hwlog.RunLog.Infof("changeCmd: %v, workers: %v,p.workerNum=%v", cmd, workers, p.workerNum)
 	if len(workers) < p.workerNum {
 		return false
 	}

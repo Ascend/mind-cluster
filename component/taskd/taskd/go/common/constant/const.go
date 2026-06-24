@@ -45,7 +45,7 @@ const (
 	// DefaultMaxAge max age backup file exist
 	DefaultMaxAge = 7
 	// DefaultMaxLineLength max line length in log
-	DefaultMaxLineLength = 1023
+	DefaultMaxLineLength = 102300
 )
 
 const (
@@ -427,8 +427,6 @@ const (
 	RecoverPluginName = "recoverPlugin"
 	// HotSwitchPluginName name of HotSwitchPlugin
 	HotSwitchPluginName = "HotSwitchPlugin"
-	// SingalKillMaster singal kill master
-	SingalKillMaster = "killMaster"
 	// RestartController restart controller
 	RestartController = "restart_controller"
 	// DestroyController destroy controller
