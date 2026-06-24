@@ -117,7 +117,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p16628182814364"><a name="p16628182814364"></a><a name="p16628182814364"></a>3</p>
 </td>
-<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p10628172873610"><a name="p10628172873610"></a><a name="p10628172873610"></a>转储后日志文件保留个数上限，取值范围为1~30，单位为个。</p>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p10628172873610"><a name="p10628172873610"></a><a name="p10628172873610"></a>转储后日志文件保留个数上限，取值范围为1~180，单位为个。</p>
 </td>
 </tr>
 <tr id="row68317556189"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p0894319101521"><a name="p0894319101521"></a><a name="p0894319101521"></a><span id="ph96781327191518"><a name="ph96781327191518"></a><a name="ph96781327191518"></a>-config-file</span></p>

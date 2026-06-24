@@ -21,9 +21,9 @@ import (
 func TestBuildCmData(t *testing.T) {
 	mgr := &OutputMgr{}
 	curJobStatistic := constant.CurrJobStatistic{
-		JobStatistic: map[string]constant.JobStatistic{
-			"job1": {K8sJobID: "job1"},
-			"job2": {K8sJobID: "job2"},
+		JobStatistic: map[string]constant.JobStatisticV2{
+			"job1": {JobStatistic: constant.JobStatistic{K8sJobID: "job1"}},
+			"job2": {JobStatistic: constant.JobStatistic{K8sJobID: "job2"}},
 		},
 	}
 

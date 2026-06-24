@@ -37,7 +37,7 @@ const (
 	defaultBackupPermission = 0400
 	maxCapacity             = 20
 	minSaveVolume           = 1
-	maxSaveVolume           = 30
+	maxSaveVolume           = 180
 	maxSaveTime             = 700
 	minSaveTime             = 7
 )

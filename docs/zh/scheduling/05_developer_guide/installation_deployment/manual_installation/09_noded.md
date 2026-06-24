@@ -192,7 +192,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p16628182814362"><a name="p16628182814362"></a><a name="p16628182814362"></a>30</p>
 </td>
-<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p1062817287368"><a name="p1062817287368"></a><a name="p1062817287368"></a>转储后日志文件保留个数上限，取值范围为1~30，单位为个。</p>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p1062817287368"><a name="p1062817287368"></a><a name="p1062817287368"></a>转储后日志文件保留个数上限，取值范围为1~180，单位为个。</p>
 </td>
 </tr>
 <tr id="row68317556187"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p0894319101519"><a name="p0894319101519"></a><a name="p0894319101519"></a><span id="ph96781327191516"><a name="ph96781327191516"></a><a name="ph96781327191516"></a>-deviceResetTimeout</span></p>

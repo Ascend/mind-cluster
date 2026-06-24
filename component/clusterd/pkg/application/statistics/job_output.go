@@ -62,8 +62,8 @@ func (c *OutputMgr) JobOutput(ctx context.Context) {
 func (c *OutputMgr) buildCmData(curJobStatistic constant.CurrJobStatistic) map[string]string {
 	tmpSlice := make([]constant.JobStatistic, 0, len(curJobStatistic.JobStatistic))
 	cmData := make(map[string]string)
-	for _, jobStc := range curJobStatistic.JobStatistic {
-		tmpSlice = append(tmpSlice, jobStc)
+	for _, jobStcV2 := range curJobStatistic.JobStatistic {
+		tmpSlice = append(tmpSlice, jobStcV2.JobStatistic)
 	}
 	cmData[statistics.JobDataCmKey] = util.ObjToString(tmpSlice)
 	cmData[statistics.TotalJobsCmKey] = strconv.Itoa(len(tmpSlice))

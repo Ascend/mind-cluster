@@ -400,7 +400,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p7552193711192"><a name="p7552193711192"></a><a name="p7552193711192"></a>30</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p555233718199"><a name="p555233718199"></a><a name="p555233718199"></a>转储后日志文件保留个数上限，取值范围为1~30，单位为个。</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="p555233718199"><a name="p555233718199"></a><a name="p555233718199"></a>转储后日志文件保留个数上限，取值范围为1~180，单位为个。</p>
 </td>
 </tr>
 <tr id="row33119022219"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="p1532160192215"><a name="p1532160192215"></a><a name="p1532160192215"></a>-h或者-help</p>

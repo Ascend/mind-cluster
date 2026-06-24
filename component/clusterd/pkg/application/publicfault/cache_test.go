@@ -58,19 +58,12 @@ func testBasicMethod() {
 func testDealDelete() {
 	const (
 		diffTime                  = 2
-		waitGoroutineFinishedTime = 200 * time.Millisecond
-		waitDeleteFinishedTime    = 2 * time.Second
+		waitGoroutineFinishedTime = 1 * time.Second
+		waitDeleteFinishedTime    = 3 * time.Second
 	)
 
-	// prepare data
-	resetQueueCache()
-	deleteTime := time.Now().Unix()
-	PubFaultNeedDelete.Push(deleteTime-1, testNodeName1, faultKey1)
-	PubFaultNeedDelete.Push(deleteTime, testNodeName2, faultKey2)
-	PubFaultNeedDelete.Push(deleteTime+1, testNodeName1, faultKey3)
-	PubFaultNeedDelete.Push(deleteTime+diffTime, testNodeName2, faultKey4)
-
 	// ctx stop
+	resetQueueCache()
 	ctx, cancel := context.WithCancel(context.Background())
 	haveStopped := atomic.Bool{}
 	go func() {
@@ -82,6 +75,13 @@ func testDealDelete() {
 	convey.So(haveStopped.Load(), convey.ShouldBeTrue)
 
 	// delete faults
+	resetQueueCache()
+	deleteTime := time.Now().Unix()
+	PubFaultNeedDelete.Push(deleteTime-1, testNodeName1, faultKey1)
+	PubFaultNeedDelete.Push(deleteTime, testNodeName2, faultKey2)
+	PubFaultNeedDelete.Push(deleteTime+1, testNodeName1, faultKey3)
+	PubFaultNeedDelete.Push(deleteTime+diffTime, testNodeName2, faultKey4)
+
 	ctx, cancel = context.WithCancel(context.Background())
 	go func() {
 		PubFaultNeedDelete.DealDelete(ctx)

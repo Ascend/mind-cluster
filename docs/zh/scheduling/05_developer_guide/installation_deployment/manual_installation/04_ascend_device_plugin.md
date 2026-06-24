@@ -314,7 +314,7 @@
 |-enableSlowNode|bool|false|是否启用慢节点检测（劣化诊断）功能。<ul><li>true：开启。</li><li>false：关闭。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>关于劣化诊断的详细说明请参见《iMaster CCAE 产品文档》的“[劣化诊断](https://support.huawei.com/hedex/hdx.do?docid=EDOC1100445519&amp;id=ZH-CN_TOPIC_0000002147436540)”章节。</p></div></div>|
 |-dealWatchHandler|bool|false|当informer链接因异常结束时，是否需要刷新本地的Pod informer缓存。<ul><li>true：刷新Pod informer缓存。</li><li>false：不刷新Pod informer缓存。</li></ul>|
 |-checkCachedPods|bool|true|是否定期检查缓存中的Pod。默认取值为true，当缓存中的Pod超过1小时没有被更新，Ascend Device Plugin将会主动请求api-server查看Pod情况。<ul><li>true：检查。</li><li>false：不检查。</li></ul>|
-|-maxBackups|int|30|转储后日志文件保留个数上限，取值范围为1~30，单位为个。|
+|-maxBackups|int|30|转储后日志文件保留个数上限，取值范围为1~180，单位为个。|
 |-thirdPartyScanDelay|int|300|<p>Ascend Device Plugin组件启动重新扫描的等待时长。</p><p>Ascend Device Plugin自动复位芯片失败后，会将失败信息写到节点annotation上，三方平台可以根据该信息复位失败的芯片。Ascend Device Plugin组件根据本参数设置的等待时长，等待一段时间后，重新扫描设备。</p><p>仅Atlas 800T A3 超节点服务器支持使用本参数。</p><p>单位：秒。</p>|
 |-deviceResetTimeout|int|60|组件启动时，若芯片数量不足，等待驱动上报完整芯片的最大时长，单位为秒，取值范围为10~600。<ul><li>Atlas A2 训练系列产品、Atlas 800I A2 推理服务器、A200I A2 Box 异构组件：建议配置为150秒。</li><li>Atlas A3 训练系列产品、A200T A3 Box8 超节点服务器、Atlas 800I A3 超节点服务器：建议配置为360秒。</li><li>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD：建议配置为600秒。</li></ul>|
 |-softShareDevConfigDir|string|""|软切分虚拟化场景配置目录。该配置目录需要在安装Ascend Device Plugin之前在根目录下手动创建。使用软切分功能时，需要配置该参数。|

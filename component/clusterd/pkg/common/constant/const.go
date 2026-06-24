@@ -455,4 +455,6 @@ const (
 	// After detecting faults, MindIO requires a delay of three heartbeat intervals(2 seconds each)
 	// before reporting the fault
 	TimeIntervalForFaultReport = 10 * time.Second
+	// MaxTimestampRecords max number of records in timestamp slices
+	MaxTimestampRecords = 1000
 )

@@ -6,6 +6,7 @@ package node
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"k8s.io/api/core/v1"
 
@@ -41,7 +42,20 @@ func ParseNodeInfoCM(obj interface{}) (*constant.NodeInfo, error) {
 	node.NodeStatus = nodeInfoCM.NodeInfo.NodeStatus
 	node.FaultDevList = nodeInfoCM.NodeInfo.FaultDevList
 	node.CmName = nodeCm.Name
+	node.UpdateTime = parseUpdateTime(nodeCm.Data["updateTime"])
 	return &node, nil
+}
+
+func parseUpdateTime(updateTimeStr string) int64 {
+	if updateTimeStr == "" {
+		return 0
+	}
+	parsed, err := time.Parse(time.RFC3339, updateTimeStr)
+	if err != nil {
+		hwlog.RunLog.Warnf("parse updateTime %s failed: %v", updateTimeStr, err)
+		return 0
+	}
+	return parsed.UnixMilli()
 }
 
 // DeepCopy deep copy NodeInfo
