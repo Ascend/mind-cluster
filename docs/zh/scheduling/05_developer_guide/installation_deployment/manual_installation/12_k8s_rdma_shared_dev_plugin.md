@@ -8,13 +8,13 @@
 1. 以root用户登录各计算节点，并执行以下命令查看镜像和版本号是否正确。
 
     ```shell
-    docker images | grep k8s-rdma-shared-dev-plugin
+    docker images | grep k8s-rdma-shared-dp
     ```
 
    回显示例如下：
 
     ```ColdFusion
-    k8s-rdma-shared-dev-plugin         v26.1.0              ef801847acd2        29 minutes ago      133MB
+    k8s-rdma-shared-dp         v26.1.0              ef801847acd2        29 minutes ago      133MB
     ```
 
    - 是，执行[步骤2](#li26221441299)。
@@ -25,16 +25,16 @@
 4. 在管理节点的YAML所在路径，执行以下命令，启动K8s RDMA Shared Dev Plugin。
 
     ```shell
-    kubectl apply -f k8s-rdma-shared-dev-plugin-v{version}.yaml
+    kubectl apply -f k8s-rdma-shared-dp-v{version}.yaml
     ```
 
    启动示例如下：
 
     ```ColdFusion
-    serviceaccount/k8s-rdma-shared-dev-plugin created
+    serviceaccount/k8s-rdma-shared-dp created
     clusterrole.rbac.authorization.k8s.io/pods-rdma-role created
     clusterrolebinding.rbac.authorization.k8s.io/pods-rdma-rolebinding created
-    daemonset.apps/k8s-rdma-shared-dev-plugin created
+    daemonset.apps/rdma-shared-dp-ds created
     ```
 
 5. 执行以下命令，查看组件是否启动成功。
@@ -48,7 +48,7 @@
     ```ColdFusion
     NAME                                             READY   STATUS    RESTARTS    AGE
     ...
-    k8s-rdma-shared-dev-plugin-fd6t8                  1/1    Running      0        74s
+    rdma-shared-dp-ds-fd6t8                           1/1    Running      0        74s
     ...
     ```
 
@@ -124,7 +124,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.2 "><p id="p108941719151516"><a name="p108941719151516"></a><a name="p108941719151516"></a><span id="ph1899563312155"><a name="ph1899563312155"></a><a name="ph1899563312155"></a>string</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p19894131961514"><a name="p19894131961514"></a><a name="p19894131961514"></a><span id="ph67327379153"><a name="ph67327379153"></a><a name="ph67327379153"></a>/etc/kubernetes/kubelet-plugins.d/device-plugins/rdma_shared_dev_plugin.json</span></p>
+<td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p19894131961514"><a name="p19894131961514"></a><a name="p19894131961514"></a><span id="ph67327379153"><a name="ph67327379153"></a><a name="ph67327379153"></a>/k8s-rdma-shared-dev-plugin/config.json</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p589551971512"><a name="p589551971512"></a><a name="p589551971512"></a><span id="ph4556742141518"><a name="ph4556742141518"></a><a name="ph4556742141518"></a>配置文件路径，用于指定RDMA设备的选择器配置。</span></p>
 </td>
@@ -136,7 +136,7 @@
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p19894131961516"><a name="p19894131961516"></a><a name="p19894131961516"></a><span id="ph67327379155"><a name="ph67327379155"></a><a name="ph67327379155"></a>false</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p589551971514"><a name="p589551971514"></a><a name="p589551971514"></a><span id="ph4556742141520"><a name="ph4556742141520"></a><a name="ph4556742141520"></a>是否使用CDI（Container Device Interface）模式向容器注册设备，该参数为标志位，无需跟值。使用示例：./k8s-rdma-shared-dp -use-cdi</span></p>
-<p>UB类型的RDMA设备不支持CDI模式，当检测到UB设备时会自动禁用CDI。</p>
+<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>UB类型的RDMA设备不支持CDI模式，当检测到UB设备时会自动禁用CDI。</p></div></div>
 </td>
 </tr>
 <tr id="row10282191492319"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p8283714172319"><a name="p8283714172319"></a><a name="p8283714172319"></a>--enable-healthz</p>
