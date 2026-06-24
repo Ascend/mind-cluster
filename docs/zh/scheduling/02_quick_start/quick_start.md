@@ -65,7 +65,7 @@
         cd /tmp/Ascend-docker-runtime
         wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-docker-runtime_${VERSION}_linux-aarch64.run
         chmod +x Ascend-docker-runtime_${VERSION}_linux-aarch64.run
-        ./Ascend-docker-runtime_${VERSION}_linux-aarch64.run --install
+        echo Y | ./Ascend-docker-runtime_${VERSION}_linux-aarch64.run --install
         systemctl daemon-reload && systemctl restart docker
         ```
 
@@ -73,7 +73,14 @@
 
         ```CodeFusion
         Uncompressing ascend-docker-runtime  100%
-        [INFO]: installing ascend-docker-runtime
+        Please read the End User License Agreement carefully. Your use of the Huawei Software
+        will be deemed as your acceptance of the constraints mentioned in the Agreement.
+        The full text of the EULA is available at:
+        https://www.hiascend.com/zh/legal/softlicense
+
+        Do you accept the EULA to install Ascend-docker-runtime? [y/N]
+        [INFO] user accepted EULA
+        [INFO] installing ascend-docker-runtime
         ...
         [INFO] ascend-docker-runtime install success
         ```
@@ -194,7 +201,7 @@
 
 ## 训练业务快速入门
 
-本章节以依然以一台Atlas 800T A2 AArch64训练服务器为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。
+本章节依然以一台Atlas 800T A2 AArch64训练服务器为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。
 
 ### 操作说明<a name="section17940333114314"></a>
 
@@ -207,7 +214,7 @@
 
 ### 安装组件<a name="section1837511531098"></a>
 
-以下步骤命令均以一台Atlas 800T A2 训练服务器为例，如需了解所有组件的详细安装步骤和参数说明请参见[安装](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)。
+以下步骤命令均以一台Atlas 800T A2 训练服务器为例，如需了解所有组件的详细安装步骤和参数说明请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)。
 
 1. 创建节点标签。
 
@@ -220,7 +227,7 @@
 2. 安装组件。以AArch64架构为例，用户需根据实际情况下载对应架构的软件包。
     >[!NOTE]
     >
-    >快速入门以helm快捷部署为例，要求MindCluster版本为26.1.0及以上，可以参考安装部署章节的helm部署。
+    >快速入门以helm快捷部署为例，要求MindCluster版本为26.1.0及以上，可以参考安装部署章节的[使用helm安装](../03_installation_guide/02_installation/helm_installation.md)。
 
     1. 安装Ascend Docker Runtime。
 
@@ -229,7 +236,7 @@
         cd /tmp/Ascend-docker-runtime
         wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-docker-runtime_${VERSION}_linux-aarch64.run
         chmod +x Ascend-docker-runtime_${VERSION}_linux-aarch64.run
-        ./Ascend-docker-runtime_${VERSION}_linux-aarch64.run --install
+        echo Y | ./Ascend-docker-runtime_${VERSION}_linux-aarch64.run --install
         systemctl daemon-reload && systemctl restart docker
         ```
 
