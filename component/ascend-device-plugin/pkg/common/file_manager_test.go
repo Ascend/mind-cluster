@@ -187,7 +187,7 @@ func TestRemoveSoftShareDeviceFileAndDir(t *testing.T) {
 func TestCreateFileIfNotExist(t *testing.T) {
 	convey.Convey("TestCreateFileIfNotExist", t, func() {
 		tempDir := t.TempDir()
-		convey.Convey("Case 1: file already exists, should skip create", func() {
+		convey.Convey("when the file already exists, should skip create and return nil", func() {
 			testPath := filepath.Join(tempDir, "exist.txt")
 			f, err := os.OpenFile(testPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, DefaultPerm)
 			convey.So(err, convey.ShouldBeNil)
@@ -196,24 +196,44 @@ func TestCreateFileIfNotExist(t *testing.T) {
 			err = CreateFileIfNotExist(testPath, DefaultPerm, DefaultPerm)
 			convey.So(err, convey.ShouldBeNil)
 		})
-		convey.Convey("Case 2: path is relative, should return error", func() {
+		convey.Convey("when the path is a directory, should return path conflict error", func() {
+			err := CreateFileIfNotExist(tempDir, DefaultPerm, DefaultPerm)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "path conflict")
+		})
+		convey.Convey("when the path is relative, should return not absolute path error", func() {
 			err := CreateFileIfNotExist("relative.txt", DefaultPerm, DefaultPerm)
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(err.Error(), convey.ShouldContainSubstring, "not an absolute path")
 		})
-		convey.Convey("Case 3: directory not exist, should create dir and file", func() {
+		convey.Convey("when parent directories do not exist, should create dir and file", func() {
 			testPath := filepath.Join(tempDir, "a", "b", "c", "test.txt")
 			err := CreateFileIfNotExist(testPath, DefaultPerm, DefaultPerm)
 			convey.So(err, convey.ShouldBeNil)
 			_, statErr := os.Stat(testPath)
 			convey.So(statErr, convey.ShouldBeNil)
 		})
-		convey.Convey("Case 4: path valid, not exist, should create successfully", func() {
+		convey.Convey("when path is valid and not exist, should create successfully", func() {
 			testPath := filepath.Join(tempDir, "create_success.txt")
 			err := CreateFileIfNotExist(testPath, DefaultPerm, DefaultPerm)
 			convey.So(err, convey.ShouldBeNil)
 			_, statErr := os.Stat(testPath)
 			convey.So(statErr, convey.ShouldBeNil)
+		})
+		convey.Convey("when os.Stat returns other error, should return the error", func() {
+			patch := gomonkey.ApplyFuncReturn(os.Stat, nil, errors.New("permission denied"))
+			defer patch.Reset()
+			err := CreateFileIfNotExist("/some/path/file.txt", DefaultPerm, DefaultPerm)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "permission denied")
+		})
+		convey.Convey("when openAndCheckFile fails, should return error", func() {
+			testPath := filepath.Join(tempDir, "softlink_check_fail.txt")
+			patch := gomonkey.ApplyFuncReturn(utils.CheckPath, "", errors.New("soft link check failed"))
+			defer patch.Reset()
+			err := CreateFileIfNotExist(testPath, DefaultPerm, DefaultPerm)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "soft link check failed")
 		})
 	})
 }
