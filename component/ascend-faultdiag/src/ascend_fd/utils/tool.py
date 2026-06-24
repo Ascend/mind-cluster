@@ -330,7 +330,10 @@ class PatternMatcher(BaseMatcher):
 
     def compare(self, conf: dict, text: str) -> bool:
         """
-        Match error patten conf, contain 'in, regex'
+        Match error patten conf, contain 'in, regex, all, opt'
+        "opt" is a list of option dicts. Options are OR'd together; each option is
+        matched by "in OR regex OR all" with its own max_lines. When "opt" is absent
+        or empty, the top-level "in / regex / all" is matched for backward compatibility.
         :param conf: error pattern dict
         :param text: the original string
         :return: indicates whether the matching is successful
@@ -338,7 +341,10 @@ class PatternMatcher(BaseMatcher):
         if self.max_len and len(text) > self.max_len:
             raise InnerError("The compare original text is too long, exceeds %s" % self.max_len)
         conf = conf or {}  # default conf dict
-        return self._match_in(conf.get("in", []), text) or self._match_regex(conf.get("regex", ""), text)
+        for opt_conf in conf.get("opt") or []:
+            if self._match_option(opt_conf or {}, text):
+                return True
+        return self._match_option(conf, text)
 
     def get_attr_info(self, attr_result: dict, line: str, event_code: str) -> dict:
         """
@@ -380,6 +386,49 @@ class PatternMatcher(BaseMatcher):
     def _match_in_for_single_patterns(self, patterns: List[str], text: str) -> bool:
         is_match, _ = self._forward_in(patterns, text)
         return is_match
+
+    def _match_option(self, conf: dict, text: str) -> bool:
+        """
+        Match a single option conf by "in OR regex OR all"
+        :param conf: a single option dict, may contain in/regex/all/max_lines
+        :param text: the original string
+        :return: indicates whether the matching is successful
+        """
+        conf = conf or {}
+        max_lines = conf.get("max_lines", -1)
+        if max_lines is None:
+            max_lines = -1
+        return (
+            self._match_in(conf.get("in") or [], text)
+            or self._match_regex(conf.get("regex") or "", text)
+            or self._match_all(conf.get("all") or [], text, max_lines)
+        )
+
+    def _match_all(self, patterns: list, text: str, max_lines: int = -1) -> bool:  # pylint: disable=unused-argument
+        """
+        Match "all" pattern. Multiple groups of keywords are supported. All groups must be matched.
+        Each group is matched within the same line, and cross-line recognition is supported when the
+        matcher supports multi-line matching. max_lines controls the multiline window size, and a
+        value less than 0 falls back to the default LINE_NUM_OF_MULTILINE_MATCH lines.
+        :param patterns: all pattern keywords, either a single group ["k1", "k2"] or
+                         a list of groups [["k1", "k2"], ["k3", "k4"]]
+        :param text: the original string
+        :param max_lines: max lines for multiline matching, less than 0 means default
+        :return: indicates whether the matching is successful
+        """
+        if not patterns:
+            return False
+        if isinstance(patterns[0], str):
+            patterns_list = [patterns]
+        else:
+            patterns_list = [p for p in patterns if p]
+            if not patterns_list:
+                return False
+        for single_pattern in patterns_list:
+            if self._match_in_for_single_patterns(single_pattern, text):
+                continue
+            return False
+        return True
 
 
 class PatternSingleOrMultiLineMatcher(PatternMatcher):
@@ -439,7 +488,7 @@ class PatternSingleOrMultiLineMatcher(PatternMatcher):
         :return: the multi-line original string
         """
         if self.log_lines is not None:
-            return self._read_multi_line_in_list()
+            return self._read_multi_line_in_list(line_num)
         if not self.file_stream:
             return ""
         buffer_list = [text]
@@ -464,16 +513,17 @@ class PatternSingleOrMultiLineMatcher(PatternMatcher):
             if not self.buffer:
                 self.buffer = self.read_multi_line(line_num, text)
         else:
-            self.buffer = self._read_multi_line_in_list()
+            self.buffer = self._read_multi_line_in_list(line_num)
         is_match, _ = self._forward_in(patterns, self.buffer)
         return is_match
 
-    def _read_multi_line_in_list(self):
+    def _read_multi_line_in_list(self, line_num: int = LINE_NUM_OF_MULTILINE_MATCH):
         """
         Read series of lines through the log line list
+        :param line_num: lines num for reading backwards
         :return: a combined list of multi lines
         """
-        return "\n".join(self.log_lines[self.cur_list_idx : self.cur_list_idx + LINE_NUM_OF_MULTILINE_MATCH])
+        return "\n".join(self.log_lines[self.cur_list_idx : self.cur_list_idx + line_num])
 
     def _match_in_for_single_patterns(self, patterns: List[str], text: str) -> bool:
         """
@@ -488,6 +538,40 @@ class PatternSingleOrMultiLineMatcher(PatternMatcher):
         if unmatched_keyword_id == 0:  # the first keyword was not matched, exiting directly
             return False
         return self._match_multi_line(patterns, text)
+
+    def _match_all(self, patterns: list, text: str, max_lines: int = -1) -> bool:
+        """
+        Match "all" pattern for single-line or multiline. All groups must be matched within
+        the multi-line window forward from the current line. Each group's keywords are matched
+        in order within the window, so a single group can be recognized on the same line or
+        across lines. max_lines controls the window size, and a value less than 0 falls back to
+        the default LINE_NUM_OF_MULTILINE_MATCH lines.
+        The current line must contain the first keyword of at least one group to anchor the
+        matching, which avoids reading the window for every line and is consistent with the
+        "in" trigger semantics.
+        :param patterns: all pattern keywords, either a single group ["k1", "k2"] or
+                         a list of groups [["k1", "k2"], ["k3", "k4"]]
+        :param text: the single-line original string
+        :param max_lines: max lines for multiline matching, less than 0 means default
+        :return: indicates whether the matching is successful
+        """
+        if not patterns:
+            return False
+        if isinstance(patterns[0], str):
+            patterns_list = [patterns]
+        else:
+            patterns_list = [p for p in patterns if p]
+            if not patterns_list:
+                return False
+        if not any(single_pattern and text.find(single_pattern[0]) != -1 for single_pattern in patterns_list):
+            return False
+        line_num = LINE_NUM_OF_MULTILINE_MATCH if max_lines < 0 else max_lines
+        window = self.read_multi_line(line_num, text) or text
+        for single_pattern in patterns_list:
+            is_match, _ = self._forward_in(single_pattern, window)
+            if not is_match:
+                return False
+        return True
 
 
 class MyRotatingFileHandler(logging.handlers.RotatingFileHandler):
