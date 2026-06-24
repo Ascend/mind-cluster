@@ -13,7 +13,7 @@
 - 示例1：启动容器时，挂载物理芯片ID为0的芯片。
 
     ```shell
-    ctr run --runtime io.containerd.runc.v2 --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 {image-name:tag} {containerID} bash
+    ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 {image-name:tag} {containerID} bash
     ```
 
 - 示例2：启动容器时，仅挂载NPU设备和管理设备，不挂载驱动相关目录。
