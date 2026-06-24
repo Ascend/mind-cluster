@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
@@ -57,6 +58,33 @@ func TestParseNodeInfoCM(t *testing.T) {
 			cm.Data[api.NodeInfoCMDataKey] = util.ObjToString(nodeInfoCM)
 			_, err := ParseNodeInfoCM(cm)
 			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
+func TestParseUpdateTime(t *testing.T) {
+	convey.Convey("TestParseUpdateTime", t, func() {
+		convey.Convey("updateTimeStr is empty", func() {
+			result := parseUpdateTime("")
+			convey.So(result, convey.ShouldEqual, 0)
+		})
+		convey.Convey("updateTimeStr is invalid", func() {
+			result := parseUpdateTime("invalid-time")
+			convey.So(result, convey.ShouldEqual, 0)
+		})
+		convey.Convey("updateTimeStr is valid RFC3339, should return milliseconds", func() {
+			timeStr := "2024-01-01T00:00:00Z"
+			parsed, err := time.Parse(time.RFC3339, timeStr)
+			convey.So(err, convey.ShouldBeNil)
+			result := parseUpdateTime(timeStr)
+			convey.So(result, convey.ShouldEqual, parsed.UnixMilli())
+		})
+		convey.Convey("updateTimeStr with timezone offset, should return milliseconds", func() {
+			timeStr := "2024-06-15T08:30:45+08:00"
+			parsed, err := time.Parse(time.RFC3339, timeStr)
+			convey.So(err, convey.ShouldBeNil)
+			result := parseUpdateTime(timeStr)
+			convey.So(result, convey.ShouldEqual, parsed.UnixMilli())
 		})
 	})
 }

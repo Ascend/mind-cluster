@@ -156,6 +156,9 @@ func (processor *jobRankFaultInfoProcessor) findFaultRankForJob(
 				FaultCode: fault.FaultCode, FaultLevel: fault.FaultLevel, DoStepRetry: false,
 				DoRestartInPlace: restartInPlace, DeviceId: deviceInfo.DeviceID,
 			}
+			if faultTimeLevel, ok := fault.FaultTimeAndLevelMap[fault.FaultCode]; ok {
+				faultRank.FaultTime = faultTimeLevel.FaultTime
+			}
 			if faultdomain.IsUceFault(fault.FaultCode) || faultdomain.IsHcclRetryFault(fault.FaultCode) {
 				retryInManagementPlane = true
 				faultRank.DoStepRetry = processor.canDoStepRetry(podInfo.jobId, nodeName, deviceName)
@@ -367,11 +370,13 @@ func getFaultDeviceInfoByRelationFault(jobId, nodeName string, server *constant.
 			faultDevice.SwitchChipId = strconv.FormatUint(uint64(fault.SwitchChipId), constant.FormatBase)
 			faultDevice.SwitchPortId = strconv.FormatUint(uint64(fault.SwitchPortId), constant.FormatBase)
 			faultDevice.SwitchFaultTime = strconv.FormatInt(fault.FaultTime, constant.FormatBase)
+			faultDevice.FaultTime = fault.FaultTime
 		} else if fault.FaultType == constant.DeviceFaultType {
 			targetLength := 2
 			if fields := strings.Split(fault.NPUName, constant.Minus); len(fields) == targetLength {
 				faultDevice = convertToFaultDevice(server, fault.FaultCode, fault.ExecutedStrategy,
 					fields[targetLength-1], constant.FaultTypeNPU)
+				faultDevice.FaultTime = fault.FaultTime
 			} else {
 				hwlog.RunLog.Errorf("jobId %s, node %s, npu name [%s] is invalid",
 					jobId, nodeName, fault.NPUName)
@@ -481,8 +486,10 @@ func getFautDeviceInfoByFaultRank(server *constant.ServerHccl,
 	}
 	faultList := make([]constant.FaultDevice, 0)
 	for _, faultRank := range faultRankList {
-		faultList = append(faultList, convertToFaultDevice(server, faultRank.FaultCode, faultRank.FaultLevel,
-			faultRank.DeviceId, constant.FaultTypeNPU))
+		faultDevice := convertToFaultDevice(server, faultRank.FaultCode, faultRank.FaultLevel,
+			faultRank.DeviceId, constant.FaultTypeNPU)
+		faultDevice.FaultTime = faultRank.FaultTime
+		faultList = append(faultList, faultDevice)
 	}
 	return faultList
 }
@@ -495,8 +502,10 @@ func getFaultDeviceInfoByNodeInfo(server *constant.ServerHccl, nodeInfo *constan
 	for _, faultDev := range nodeInfo.FaultDevList {
 		for _, faultCode := range faultDev.FaultCode {
 			deviceId := strconv.FormatInt(faultDev.DeviceId, constant.FormatBase)
-			faultList = append(faultList, convertToFaultDevice(server, faultCode, faultDev.FaultLevel,
-				deviceId, faultDev.DeviceType))
+			faultDevice := convertToFaultDevice(server, faultCode, faultDev.FaultLevel,
+				deviceId, faultDev.DeviceType)
+			faultDevice.FaultTime = nodeInfo.UpdateTime
+			faultList = append(faultList, faultDevice)
 		}
 	}
 	return faultList
@@ -514,6 +523,7 @@ func getFaultDeviceInfoBySwitchInfo(server *constant.ServerHccl,
 		faultDev.SwitchChipId = strconv.Itoa(int(faultInfo.SwitchChipId))
 		faultDev.SwitchPortId = strconv.Itoa(int(faultInfo.SwitchPortId))
 		faultDev.SwitchFaultTime = strconv.FormatInt(faultInfo.AlarmRaisedTime, constant.FormatBase)
+		faultDev.FaultTime = faultInfo.AlarmRaisedTime
 		faultList = append(faultList, faultDev)
 	}
 	return faultList

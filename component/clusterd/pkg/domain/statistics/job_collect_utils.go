@@ -76,7 +76,7 @@ var (
 func init() {
 	JobStcMgrInst = &JobStcMgr{
 		data: constant.CurrJobStatistic{
-			JobStatistic: make(map[string]constant.JobStatistic),
+			JobStatistic: make(map[string]constant.JobStatisticV2),
 		},
 		mutex:           sync.RWMutex{},
 		version:         InitVersion,
@@ -168,7 +168,7 @@ func (j *JobStcMgr) parseCMData(cmData *v1.ConfigMap) bool {
 	invalidJobCount := 0
 	for _, v := range tmpSlice {
 		if _, exist := jobIds[v.K8sJobID]; exist {
-			j.data.JobStatistic[v.K8sJobID] = v
+			j.data.JobStatistic[v.K8sJobID] = constant.JobStatisticV2{JobStatistic: v}
 		} else {
 			invalidJobCount++
 		}
@@ -177,6 +177,17 @@ func (j *JobStcMgr) parseCMData(cmData *v1.ConfigMap) bool {
 		hwlog.RunLog.Warnf("invalid job count: %d", invalidJobCount)
 	}
 	return true
+}
+
+// UpdateJobStatistic get, modify and set job statistic atomically under write lock
+func (j *JobStcMgr) UpdateJobStatistic(k8sJobID string, fn func(*constant.JobStatisticV2)) {
+	j.mutex.Lock()
+	defer j.mutex.Unlock()
+	if stc, ok := j.data.JobStatistic[k8sJobID]; ok {
+		cp := stc
+		fn(&cp)
+		j.data.JobStatistic[k8sJobID] = cp
+	}
 }
 
 // GetAllJobStatistic get all job statistic data
@@ -196,7 +207,7 @@ func (j *JobStcMgr) GetAllJobStatistic() (constant.CurrJobStatistic, int64) {
 func (j *JobStcMgr) UpdateStcByPGUpdate(jobKey string) {
 	jobInfo, ok := job.GetJobCache(jobKey)
 	if !ok {
-		hwlog.RunLog.Debugf("jobInfo cache is empty, skip update job %s statistc", jobKey)
+		hwlog.RunLog.Debugf("jobInfo cache is empty, skip update job %s statistic", jobKey)
 		return
 	}
 	j.mutex.Lock()
@@ -267,7 +278,7 @@ func (j *JobStcMgr) getOldStopJobStc(jobInfo metav1.Object) string {
 func (j *JobStcMgr) PreDeleteJobStatistic(jobKey string) {
 	jobInfo, ok := job.GetJobCache(jobKey)
 	if !ok {
-		hwlog.RunLog.Debugf("jobInfo cache is empty, skip delete job %s statistc", jobKey)
+		hwlog.RunLog.Debugf("jobInfo cache is empty, skip delete job %s statistic", jobKey)
 		return
 	}
 	j.mutex.Lock()
@@ -293,7 +304,7 @@ func (j *JobStcMgr) DeleteJobStatistic(jobKey string) {
 	defer j.mutex.Unlock()
 	jobStc, ok := j.data.JobStatistic[jobKey]
 	if !ok {
-		hwlog.RunLog.Debugf("job Statistic cache is empty, skip delete job %s statistc", jobKey)
+		hwlog.RunLog.Debugf("job Statistic cache is empty, skip delete job %s statistic", jobKey)
 		return
 	}
 	//  update the stop time if stopTime not exist
@@ -467,20 +478,23 @@ func (j *JobStcMgr) getACJobCreateTimeoutReason(jobKey string) {
 	logs.JobEventLog.Infof("Job Event: %s", util.ObjToString(jobStc))
 }
 
-func initStcJob(jobMeta metav1.Object, jobID string) constant.JobStatistic {
-	jobStc := constant.JobStatistic{
-		CustomJobID:     jobMeta.GetAnnotations()[job.CustomJobID],
-		K8sJobID:        jobID,
-		Status:          job.StatusJobPending,
-		Name:            jobMeta.GetName(),
-		Namespace:       jobMeta.GetNamespace(),
-		ScheduleProcess: jobInit,
+func initStcJob(jobMeta metav1.Object, jobID string) constant.JobStatisticV2 {
+	jobStc := constant.JobStatisticV2{
+		JobStatistic: constant.JobStatistic{
+			CustomJobID:     jobMeta.GetAnnotations()[job.CustomJobID],
+			K8sJobID:        jobID,
+			Status:          job.StatusJobPending,
+			Name:            jobMeta.GetName(),
+			Namespace:       jobMeta.GetNamespace(),
+			ScheduleProcess: jobInit,
+		},
+		Version: constant.VersionStr("2"),
 	}
 	return jobStc
 }
 
 // updateStatistic update job statistic info
-func updateStatistic(jobStc constant.JobStatistic, jobInfo constant.JobInfo) constant.JobStatistic {
+func updateStatistic(jobStc constant.JobStatisticV2, jobInfo constant.JobInfo) constant.JobStatisticV2 {
 	jobStc.Status = jobInfo.Status
 	switch jobInfo.Status {
 	case job.StatusJobPending:
@@ -499,11 +513,15 @@ func updateStatistic(jobStc constant.JobStatistic, jobInfo constant.JobInfo) con
 			jobStc.CardNums = int64(cardNum)
 			jobStc.ScheduleProcess = jobRunning
 			jobStc.ScheduleFailReason = ""
+			jobStc.PodRunningTimestamp = appendTimestamp(jobStc.K8sJobID,
+				jobStc.PodRunningTimestamp, nowTime)
 			return jobStc
 		}
 		// job recover success
 		if jobStc.PodLastFaultTime > jobStc.PodLastRunningTime {
 			jobStc.PodLastRunningTime = nowTime
+			jobStc.PodRunningTimestamp = appendTimestamp(jobStc.K8sJobID,
+				jobStc.PodRunningTimestamp, nowTime)
 			return jobStc
 		}
 	case job.StatusJobCompleted:
@@ -532,4 +550,12 @@ func getIntValue(value string) int {
 		hwlog.RunLog.Errorf("convert value to int error, value is %s", value)
 	}
 	return val
+}
+
+func appendTimestamp(jobID string, timestamps []int64, ts int64) []int64 {
+	if len(timestamps) >= constant.MaxTimestampRecords {
+		hwlog.RunLog.Warnf("job %s PodRunningTimestamp slice length is over %v", jobID, constant.MaxTimestampRecords)
+		timestamps = timestamps[1:]
+	}
+	return append(timestamps, ts)
 }

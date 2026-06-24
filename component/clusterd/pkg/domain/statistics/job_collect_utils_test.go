@@ -41,13 +41,15 @@ func TestLoadConfigMapToCache(t *testing.T) {
 			}, nil
 		})
 		patches.ApplyPrivateMethod(JobStcMgrInst, "parseCMData", func(j *JobStcMgr, _ *v1.ConfigMap) bool {
-			j.data.JobStatistic[testJobID] = constant.JobStatistic{
-				Name:     "test-job",
-				K8sJobID: testJobID,
+			j.data.JobStatistic[testJobID] = constant.JobStatisticV2{
+				JobStatistic: constant.JobStatistic{
+					Name:     "test-job",
+					K8sJobID: testJobID,
+				},
 			}
 			return true
 		})
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		JobStcMgrInst.LoadConfigMapToCache("ns", "cm")
 		assert.Equal(t, 1, len(JobStcMgrInst.data.JobStatistic))
 	})
@@ -58,7 +60,7 @@ func TestLoadConfigMapToCache(t *testing.T) {
 		patches.ApplyFunc(kube.GetConfigMap, func(name, namespace string) (*v1.ConfigMap, error) {
 			return nil, errors.New("cm not found")
 		})
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		JobStcMgrInst.LoadConfigMapToCache("ns", "cm")
 		assert.Equal(t, 0, len(JobStcMgrInst.data.JobStatistic))
 	})
@@ -71,7 +73,7 @@ func TestLoadConfigMapToCache1(t *testing.T) {
 		patches.ApplyFunc(kube.GetConfigMap, func(name, namespace string) (*v1.ConfigMap, error) {
 			return nil, errors.New("get cm failed")
 		})
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		JobStcMgrInst.LoadConfigMapToCache("ns", "cm")
 		assert.Equal(t, 0, len(JobStcMgrInst.data.JobStatistic))
 	})
@@ -79,8 +81,8 @@ func TestLoadConfigMapToCache1(t *testing.T) {
 	t.Run("when parse cm ok", func(t *testing.T) {
 		patches := gomonkey.NewPatches()
 		defer patches.Reset()
-		tmpSlice := make([]constant.JobStatistic, 0)
-		tmpSlice = append(tmpSlice, constant.JobStatistic{K8sJobID: "test-job-key"})
+		tmpSlice := make([]constant.JobStatisticV2, 0)
+		tmpSlice = append(tmpSlice, constant.JobStatisticV2{JobStatistic: constant.JobStatistic{K8sJobID: "test-job-key"}})
 		cmData := &v1.ConfigMap{
 			Data: map[string]string{JobDataCmKey: util.ObjToString(tmpSlice)},
 		}
@@ -91,7 +93,7 @@ func TestLoadConfigMapToCache1(t *testing.T) {
 			return map[string]struct{}{"test-job-key": struct{}{}}
 		})
 
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		JobStcMgrInst.LoadConfigMapToCache("ns", "cm")
 		assert.Equal(t, 1, len(JobStcMgrInst.data.JobStatistic))
 	})
@@ -137,10 +139,10 @@ func TestUpdateJobStcByPGUpdate(t *testing.T) {
 			Key:    jobKey,
 		})
 		defer job.DeleteJobCache(jobKey)
-		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatistic{Status: job.StatusJobPending}
+		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatisticV2{JobStatistic: constant.JobStatistic{Status: job.StatusJobPending}}
 		JobStcMgrInst.UpdateStcByPGUpdate(jobKey)
 		assert.Equal(t, job.StatusJobRunning, JobStcMgrInst.data.JobStatistic[(jobKey)].Status)
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 	})
 
 	t.Run("update get job cache failed,", func(t *testing.T) {
@@ -150,10 +152,10 @@ func TestUpdateJobStcByPGUpdate(t *testing.T) {
 		patches.ApplyFunc(job.GetJobCache, func(key string) (constant.JobInfo, bool) {
 			return constant.JobInfo{}, false
 		})
-		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatistic{Status: job.StatusJobPending}
+		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatisticV2{JobStatistic: constant.JobStatistic{Status: job.StatusJobPending}}
 		JobStcMgrInst.UpdateStcByPGUpdate(jobKey)
 		assert.NotEqual(t, job.StatusJobRunning, JobStcMgrInst.data.JobStatistic[(jobKey)].Status)
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 	})
 
 	t.Run("update get job when get jobStc failed,", func(t *testing.T) {
@@ -163,7 +165,7 @@ func TestUpdateJobStcByPGUpdate(t *testing.T) {
 		patches.ApplyFunc(job.GetJobCache, func(key string) (constant.JobInfo, bool) {
 			return constant.JobInfo{}, true
 		})
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		JobStcMgrInst.UpdateStcByPGUpdate(jobKey)
 		assert.NotEqual(t, job.StatusJobRunning, JobStcMgrInst.data.JobStatistic[(jobKey)].Status)
 	})
@@ -183,16 +185,16 @@ func TestDeleteJobStatistic(t *testing.T) {
 			},
 		}, nil
 	})
-	JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+	JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 
 	t.Run("normal delete", func(t *testing.T) {
-		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatistic{StopTime: 1}
+		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatisticV2{JobStatistic: constant.JobStatistic{StopTime: 1}}
 		JobStcMgrInst.DeleteJobStatistic(jobKey)
 		assert.Equal(t, 0, len(JobStcMgrInst.data.JobStatistic))
 	})
 
 	t.Run("delete when stop time is 0, update stop time", func(t *testing.T) {
-		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatistic{StopTime: 0}
+		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatisticV2{JobStatistic: constant.JobStatistic{StopTime: 0}}
 		JobStcMgrInst.DeleteJobStatistic(jobKey)
 		assert.Equal(t, 0, len(JobStcMgrInst.data.JobStatistic))
 	})
@@ -204,14 +206,14 @@ func TestPreDeleteJobStatistic(t *testing.T) {
 	var jobKey = "test"
 	job.SaveJobCache(jobKey, constant.JobInfo{Status: "failed"})
 	defer job.DeleteJobCache(jobKey)
-	JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatistic{Status: "Running"}
+	JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatisticV2{JobStatistic: constant.JobStatistic{Status: "Running"}}
 	JobStcMgrInst.PreDeleteJobStatistic(jobKey)
 	assert.Equal(t, "failed", JobStcMgrInst.data.JobStatistic[jobKey].Status)
 }
 
 func TestUpdateStatistic(t *testing.T) {
 	now := time.Now().Unix()
-	baseJobStc := constant.JobStatistic{PodFirstRunningTime: 0, PodLastFaultTime: 0}
+	baseJobStc := constant.JobStatisticV2{JobStatistic: constant.JobStatistic{PodFirstRunningTime: 0, PodLastFaultTime: 0}}
 	t.Run("Pending status - no change", func(t *testing.T) {
 		jobInfo := constant.JobInfo{Status: job.StatusJobPending}
 		result := updateStatistic(baseJobStc, jobInfo)
@@ -260,7 +262,7 @@ func TestUpdateStatistic(t *testing.T) {
 func TestCheckPGCreateTimeout(t *testing.T) {
 	var jobKey = "test-key"
 	t.Run("get jobStc failed", func(t *testing.T) {
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		JobStcMgrInst.getPGCreateTimeoutReason(jobKey)
 		assert.Equal(t, 0, len(JobStcMgrInst.data.JobStatistic))
 	})
@@ -271,7 +273,7 @@ func TestCheckPGCreateTimeout(t *testing.T) {
 		patches.ApplyFunc(kube.GetJobEvent, func(namespace, name, jobType string) (*v1.EventList, error) {
 			return &v1.EventList{}, errors.New("error")
 		})
-		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatistic{ScheduleProcess: jobCreated}
+		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatisticV2{JobStatistic: constant.JobStatistic{ScheduleProcess: jobCreated}}
 		JobStcMgrInst.getPGCreateTimeoutReason(jobKey)
 		assert.Contains(t, JobStcMgrInst.data.JobStatistic[jobKey].ScheduleFailReason, "unknown reason")
 
@@ -286,7 +288,7 @@ func TestCheckPGCreateTimeout(t *testing.T) {
 			eList.Items = append(eList.Items, v1.Event{Message: errMsg})
 			return eList, nil
 		})
-		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatistic{ScheduleProcess: jobCreated}
+		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatisticV2{JobStatistic: constant.JobStatistic{ScheduleProcess: jobCreated}}
 		JobStcMgrInst.getPGCreateTimeoutReason(jobKey)
 		assert.Equal(t, errMsg, JobStcMgrInst.data.JobStatistic[jobKey].ScheduleFailReason)
 	})
@@ -306,15 +308,17 @@ func TestAddJobStatistic(t *testing.T) {
 				Namespace: jobNamespace,
 			},
 		}
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
-		JobStcMgrInst.data.JobStatistic[oldJobKey] = constant.JobStatistic{
-			K8sJobID:  oldJobKey,
-			Name:      jobName,
-			Namespace: jobNamespace,
-			StopTime:  time.Now().Unix(),
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
+		JobStcMgrInst.data.JobStatistic[oldJobKey] = constant.JobStatisticV2{
+			JobStatistic: constant.JobStatistic{
+				K8sJobID:  oldJobKey,
+				Name:      jobName,
+				Namespace: jobNamespace,
+				StopTime:  time.Now().Unix(),
+			},
 		}
-		patches.ApplyFunc(initStcJob, func(jobMeta metav1.Object, jobID string) constant.JobStatistic {
-			return constant.JobStatistic{}
+		patches.ApplyFunc(initStcJob, func(jobMeta metav1.Object, jobID string) constant.JobStatisticV2 {
+			return constant.JobStatisticV2{}
 		})
 		JobStcMgrInst.addJobStatistic(jobKey, jobInfo)
 		assert.Equal(t, 1, len(JobStcMgrInst.data.JobStatistic))
@@ -332,29 +336,33 @@ func TestGetOldJobStc(t *testing.T) {
 		},
 	}
 	t.Run("get a old job key", func(t *testing.T) {
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
-		JobStcMgrInst.data.JobStatistic[oldJobKey] = constant.JobStatistic{
-			K8sJobID:  oldJobKey,
-			Name:      jobName,
-			Namespace: jobNamespace,
-			StopTime:  time.Now().Unix(),
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
+		JobStcMgrInst.data.JobStatistic[oldJobKey] = constant.JobStatisticV2{
+			JobStatistic: constant.JobStatistic{
+				K8sJobID:  oldJobKey,
+				Name:      jobName,
+				Namespace: jobNamespace,
+				StopTime:  time.Now().Unix(),
+			},
 		}
 		key := JobStcMgrInst.getOldStopJobStc(jobInfo)
 		assert.Equal(t, oldJobKey, key)
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 	})
 
 	t.Run("get key is null", func(t *testing.T) {
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
-		JobStcMgrInst.data.JobStatistic[oldJobKey] = constant.JobStatistic{
-			K8sJobID:  oldJobKey,
-			Name:      jobName,
-			Namespace: jobNamespace,
-			StopTime:  0,
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
+		JobStcMgrInst.data.JobStatistic[oldJobKey] = constant.JobStatisticV2{
+			JobStatistic: constant.JobStatistic{
+				K8sJobID:  oldJobKey,
+				Name:      jobName,
+				Namespace: jobNamespace,
+				StopTime:  0,
+			},
 		}
 		key := JobStcMgrInst.getOldStopJobStc(jobInfo)
 		assert.Equal(t, "", key)
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 	})
 }
 
@@ -393,9 +401,11 @@ func TestGetIntValue(t *testing.T) {
 func TestJobStcByACJobUpdate(t *testing.T) {
 	t.Run("need check pg create timeout", func(t *testing.T) {
 		jobKey := "test-key"
-		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatistic{
-			K8sJobID:        jobKey,
-			ScheduleProcess: jobInit,
+		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatisticV2{
+			JobStatistic: constant.JobStatistic{
+				K8sJobID:        jobKey,
+				ScheduleProcess: jobInit,
+			},
 		}
 		JobStcMgrInst.CheckTimeoutMap.Range(func(key, value interface{}) bool {
 			JobStcMgrInst.CheckTimeoutMap.Delete(key)
@@ -411,28 +421,32 @@ func TestJobStcByACJobUpdate(t *testing.T) {
 
 func TestUpdateStcByACJobUpdate(t *testing.T) {
 	t.Run("need check pg create timeout", func(t *testing.T) {
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		jobKey := "test-key"
-		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatistic{
-			K8sJobID:        jobKey,
-			ScheduleProcess: jobInit,
+		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatisticV2{
+			JobStatistic: constant.JobStatistic{
+				K8sJobID:        jobKey,
+				ScheduleProcess: jobInit,
+			},
 		}
 		ret := JobStcMgrInst.updateStcByACJobUpdate(jobKey)
 		assert.Equal(t, true, ret)
 	})
 	t.Run("job key not in cache", func(t *testing.T) {
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		jobKey := "test-key"
 		ret := JobStcMgrInst.updateStcByACJobUpdate(jobKey)
 		assert.Equal(t, false, ret)
 	})
 
 	t.Run("job scheduler >=  jobCreated", func(t *testing.T) {
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		jobKey := "test-job"
-		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatistic{
-			K8sJobID:        jobKey,
-			ScheduleProcess: jobCreated,
+		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatisticV2{
+			JobStatistic: constant.JobStatistic{
+				K8sJobID:        jobKey,
+				ScheduleProcess: jobCreated,
+			},
 		}
 		ret := JobStcMgrInst.updateStcByACJobUpdate(jobKey)
 		assert.Equal(t, false, ret)
@@ -442,17 +456,19 @@ func TestUpdateStcByACJobUpdate(t *testing.T) {
 func TestJobStcByJobDelete(t *testing.T) {
 	t.Run("delete job not in cache", func(t *testing.T) {
 		jobKey := "test-key"
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		JobStcMgrInst.JobStcByJobDelete(jobKey)
 		assert.Equal(t, 0, len(JobStcMgrInst.data.JobStatistic))
 	})
 
 	t.Run("delete job , job scheduleProcess <= pgCreated", func(t *testing.T) {
 		jobKey := "test-key"
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
-		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatistic{
-			K8sJobID:        jobKey,
-			ScheduleProcess: jobInit,
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
+		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatisticV2{
+			JobStatistic: constant.JobStatistic{
+				K8sJobID:        jobKey,
+				ScheduleProcess: jobInit,
+			},
 		}
 		JobStcMgrInst.JobStcByJobDelete(jobKey)
 		assert.Equal(t, 0, len(JobStcMgrInst.data.JobStatistic))
@@ -460,11 +476,13 @@ func TestJobStcByJobDelete(t *testing.T) {
 
 	t.Run("delete job in cache, stopTime != 0", func(t *testing.T) {
 		jobKey := "test-key"
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
-		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatistic{
-			K8sJobID:        jobKey,
-			ScheduleProcess: pgRunning,
-			StopTime:        time.Now().Unix(),
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
+		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatisticV2{
+			JobStatistic: constant.JobStatistic{
+				K8sJobID:        jobKey,
+				ScheduleProcess: pgRunning,
+				StopTime:        time.Now().Unix(),
+			},
 		}
 		JobStcMgrInst.JobStcByJobDelete(jobKey)
 		assert.Equal(t, 0, len(JobStcMgrInst.data.JobStatistic))
@@ -483,7 +501,7 @@ func TestJobStcByACJobAdd(t *testing.T) {
 		}
 		SaveJob(jobInfo)
 		defer DeleteJob(jobInfo)
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		JobStcMgrInst.JobStcByACJobCreate(jobKey)
 		assert.Equal(t, 1, len(JobStcMgrInst.data.JobStatistic))
 	})
@@ -501,16 +519,16 @@ func TestJobStcByVCJobAdd(t *testing.T) {
 		}
 		SaveJob(jobInfo)
 		defer DeleteJob(jobInfo)
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		JobStcMgrInst.JobStcByVCJobCreate(jobKey)
 		assert.Equal(t, 1, len(JobStcMgrInst.data.JobStatistic))
 	})
 }
 
 func TestGetAllJobStatistic(t *testing.T) {
-	JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+	JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 	t.Run("get data ok", func(t *testing.T) {
-		JobStcMgrInst.data.JobStatistic["test"] = constant.JobStatistic{Status: "Running"}
+		JobStcMgrInst.data.JobStatistic["test"] = constant.JobStatisticV2{JobStatistic: constant.JobStatistic{Status: "Running"}}
 		JobStcMgrInst.version = 1
 		data, version := JobStcMgrInst.GetAllJobStatistic()
 		assert.Equal(t, "Running", data.JobStatistic["test"].Status)
@@ -519,7 +537,7 @@ func TestGetAllJobStatistic(t *testing.T) {
 	})
 
 	t.Run("change data after get data", func(t *testing.T) {
-		JobStcMgrInst.data.JobStatistic["test"] = constant.JobStatistic{Status: "Running"}
+		JobStcMgrInst.data.JobStatistic["test"] = constant.JobStatisticV2{JobStatistic: constant.JobStatistic{Status: "Running"}}
 		JobStcMgrInst.version = 1
 		data, version := JobStcMgrInst.GetAllJobStatistic()
 		delete(data.JobStatistic, "test")
@@ -532,17 +550,19 @@ func TestGetAllJobStatistic(t *testing.T) {
 func TestCheckACJobCreateTimeout(t *testing.T) {
 	t.Run("acJob not in cache", func(t *testing.T) {
 		jobKey := "test-key"
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		JobStcMgrInst.getACJobCreateTimeoutReason(jobKey)
 		assert.Equal(t, 0, len(JobStcMgrInst.data.JobStatistic))
 	})
 
 	t.Run("acJob create timeout", func(t *testing.T) {
 		jobKey := "test-key"
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
-		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatistic{
-			K8sJobID:        jobKey,
-			ScheduleProcess: jobInit,
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
+		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatisticV2{
+			JobStatistic: constant.JobStatistic{
+				K8sJobID:        jobKey,
+				ScheduleProcess: jobInit,
+			},
 		}
 		JobStcMgrInst.getACJobCreateTimeoutReason(jobKey)
 		assert.Contains(t, JobStcMgrInst.data.JobStatistic[jobKey].ScheduleFailReason, "ascend-Operator")
@@ -553,7 +573,7 @@ func TestCheckJobScheduleTimeout(t *testing.T) {
 	t.Run("check timeout ok", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		JobStcMgrInst.CheckTimeoutMap.Range(func(key, value interface{}) bool {
 			JobStcMgrInst.CheckTimeoutMap.Delete(key)
 			return true
@@ -566,10 +586,12 @@ func TestCheckJobScheduleTimeout(t *testing.T) {
 func TestCheckTimeout(t *testing.T) {
 	t.Run("check timeout ok", func(t *testing.T) {
 		jobKey := "jobKey"
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
-		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatistic{
-			K8sJobID:        jobKey,
-			ScheduleProcess: jobInit,
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
+		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatisticV2{
+			JobStatistic: constant.JobStatistic{
+				K8sJobID:        jobKey,
+				ScheduleProcess: jobInit,
+			},
 		}
 		JobStcMgrInst.CheckTimeoutMap.Store(jobKey, jobCheckInfo{
 			ScheduleChangeTime: time.Now().Unix() - acJobCreateTimeout - acJobCreateTimeout,
@@ -582,28 +604,32 @@ func TestCheckTimeout(t *testing.T) {
 
 func TestUpdateByPGAdd(t *testing.T) {
 	t.Run("need check pg in queue timeout", func(t *testing.T) {
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		jobKey := "test-key"
-		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatistic{
-			K8sJobID:        jobKey,
-			ScheduleProcess: jobInit,
+		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatisticV2{
+			JobStatistic: constant.JobStatistic{
+				K8sJobID:        jobKey,
+				ScheduleProcess: jobInit,
+			},
 		}
 		ret := JobStcMgrInst.updateStcByPGCreate(jobKey)
 		assert.Equal(t, true, ret)
 	})
 	t.Run("job key not in cache", func(t *testing.T) {
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		jobKey := "test-key"
 		ret := JobStcMgrInst.updateStcByPGCreate(jobKey)
 		assert.Equal(t, false, ret)
 	})
 
 	t.Run("job scheduler >=  pgCreated", func(t *testing.T) {
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		jobKey := "test-job"
-		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatistic{
-			K8sJobID:        jobKey,
-			ScheduleProcess: pgCreated,
+		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatisticV2{
+			JobStatistic: constant.JobStatistic{
+				K8sJobID:        jobKey,
+				ScheduleProcess: pgCreated,
+			},
 		}
 		ret := JobStcMgrInst.updateStcByPGCreate(jobKey)
 		assert.Equal(t, false, ret)
@@ -612,11 +638,13 @@ func TestUpdateByPGAdd(t *testing.T) {
 
 func TestUpdateStcByPGAdd(t *testing.T) {
 	t.Run("need check pg in queue timeout", func(t *testing.T) {
-		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatistic)
+		JobStcMgrInst.data.JobStatistic = make(map[string]constant.JobStatisticV2)
 		jobKey := "test-key"
-		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatistic{
-			K8sJobID:        jobKey,
-			ScheduleProcess: jobInit,
+		JobStcMgrInst.data.JobStatistic[jobKey] = constant.JobStatisticV2{
+			JobStatistic: constant.JobStatistic{
+				K8sJobID:        jobKey,
+				ScheduleProcess: jobInit,
+			},
 		}
 		JobStcMgrInst.CheckTimeoutMap.Range(func(key, value interface{}) bool {
 			JobStcMgrInst.CheckTimeoutMap.Delete(key)
@@ -628,4 +656,70 @@ func TestUpdateStcByPGAdd(t *testing.T) {
 		defer JobStcMgrInst.CheckTimeoutMap.Delete(jobKey)
 	})
 
+}
+
+func TestAppendTimestamp(t *testing.T) {
+	t.Run("append to empty slice", func(t *testing.T) {
+		result := appendTimestamp("", nil, 100)
+		assert.Equal(t, []int64{100}, result)
+	})
+
+	t.Run("append to existing slice", func(t *testing.T) {
+		result := appendTimestamp("", []int64{100}, 200)
+		assert.Equal(t, []int64{100, 200}, result)
+	})
+
+	t.Run("overflow sliding window", func(t *testing.T) {
+		var timestamps []int64
+		for i := int64(0); i < constant.MaxTimestampRecords+5; i++ {
+			timestamps = appendTimestamp("", timestamps, i)
+		}
+		assert.Equal(t, constant.MaxTimestampRecords, len(timestamps))
+		assert.Equal(t, int64(5), timestamps[0])
+	})
+}
+
+func TestUpdateStatisticV2Fields(t *testing.T) {
+	t.Run("Running first time appends PodRunningTimestamp", func(t *testing.T) {
+		baseJobStc := constant.JobStatisticV2{JobStatistic: constant.JobStatistic{PodFirstRunningTime: 0}}
+		jobInfo := constant.JobInfo{
+			Status: job.StatusJobRunning,
+			PreServerList: []constant.ServerHccl{
+				{DeviceList: []constant.Device{{DeviceID: "1"}}},
+			},
+		}
+		result := updateStatistic(baseJobStc, jobInfo)
+		assert.Equal(t, 1, len(result.PodRunningTimestamp))
+	})
+
+	t.Run("Running recover appends PodRunningTimestamp", func(t *testing.T) {
+		now := time.Now().Unix()
+		jobStc := constant.JobStatisticV2{
+			JobStatistic: constant.JobStatistic{
+				PodFirstRunningTime: now - 10,
+				PodLastFaultTime:    now - 5,
+				PodLastRunningTime:  0,
+			},
+		}
+		jobInfo := constant.JobInfo{Status: job.StatusJobRunning}
+		result := updateStatistic(jobStc, jobInfo)
+		assert.Equal(t, 1, len(result.PodRunningTimestamp))
+		assert.NotZero(t, result.PodLastRunningTime)
+	})
+
+	t.Run("Failed status updates fault info", func(t *testing.T) {
+		baseJobStc := constant.JobStatisticV2{
+			JobStatistic: constant.JobStatistic{
+				PodLastRunningTime: 100,
+				PodLastFaultTime:   0,
+			},
+		}
+		jobInfo := constant.JobInfo{
+			Status:    job.StatusJobFail,
+			NodeNames: map[string]string{"node1": "node1", "node2": "node2"},
+		}
+		result := updateStatistic(baseJobStc, jobInfo)
+		assert.NotZero(t, result.PodLastFaultTime)
+		assert.Equal(t, int64(1), result.PodFaultTimes)
+	})
 }

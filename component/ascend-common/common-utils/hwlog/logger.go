@@ -36,7 +36,7 @@ const (
 	// DefaultMaxSaveAge the maximum storage duration of backup logs is 700 days
 	DefaultMaxSaveAge = 700
 	// DefaultMaxBackups the default number of backup log
-	DefaultMaxBackups = 30
+	DefaultMaxBackups = 180
 	// LogFileMode log file mode
 	LogFileMode os.FileMode = 0640
 	// BackupLogFileMode backup log file mode
@@ -141,7 +141,7 @@ func validateLogConfigFileMaxSize(config *LogConfig) error {
 
 func validateLogConfigBackups(config *LogConfig) error {
 	if config.MaxBackups <= 0 || config.MaxBackups > DefaultMaxBackups {
-		return fmt.Errorf("the number of backup log file range is (0, 30]")
+		return fmt.Errorf("the number of backup log file range is (0, 180]")
 	}
 	return nil
 }

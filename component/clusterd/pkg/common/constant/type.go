@@ -3,6 +3,8 @@
 // Package constant a series of para
 package constant
 
+import "encoding/json"
+
 // FaultTimeAndLevel of each fault code
 // some fault may not have accurate fault time and level,
 // for example: duration fault use current time as `FaultTime`
@@ -39,7 +41,8 @@ type NodeInfoNoName struct {
 // NodeInfo node info
 type NodeInfo struct {
 	NodeInfoNoName
-	CmName string
+	CmName     string
+	UpdateTime int64 // updateTime parsed from NodeInfo configmap, used as fault timestamp for node-level faults
 }
 
 // FaultDev fault device struct
@@ -105,13 +108,29 @@ type DeviceInfoNoName struct {
 
 // CurrJobStatistic current job statistic information
 type CurrJobStatistic struct {
-	JobStatistic map[string]JobStatistic
+	JobStatistic map[string]JobStatisticV2
 }
 
 // JobNotifyMsg notify msg
 type JobNotifyMsg struct {
 	Operator string
 	JobKey   string
+}
+
+// FaultCodeAndTimestamp hardware fault code with timestamp and location info
+type FaultCodeAndTimestamp struct {
+	FaultCode  string `json:"faultCode,omitempty"`
+	Timestamp  int64  `json:"timestamp,omitempty"`
+	NodeName   string `json:"nodeName,omitempty"`
+	DeviceId   string `json:"deviceId,omitempty"`
+	FaultLevel string `json:"faultLevel,omitempty"`
+}
+
+// PodErrorInfo pod error timestamp and node info
+type PodErrorInfo struct {
+	Timestamp int64  `json:"timestamp,omitempty"`
+	NodeName  string `json:"nodeName,omitempty"`
+	PodName   string `json:"podName,omitempty"`
 }
 
 // JobStatistic job statistic information
@@ -129,6 +148,36 @@ type JobStatistic struct {
 	Status              string `json:"-"`
 	Name                string `json:"-"`
 	Namespace           string `json:"-"`
+}
+
+// VersionStr is a version string type that defaults to "2" when empty during JSON marshaling
+type VersionStr string
+
+// MarshalJSON implements json.Marshaler, defaults to "2" when VersionStr is empty
+func (v VersionStr) MarshalJSON() ([]byte, error) {
+	if v == "" {
+		return json.Marshal("2")
+	}
+	return json.Marshal(string(v))
+}
+
+// UnmarshalJSON implements json.Unmarshaler for VersionStr
+func (v *VersionStr) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	*v = VersionStr(s)
+	return nil
+}
+
+// JobStatisticV2 extends JobStatistic with additional fields for event_job.log
+type JobStatisticV2 struct {
+	JobStatistic
+	Version                VersionStr              `json:"version"`
+	PodRunningTimestamp    []int64                 `json:"podRunningTimestamp,omitempty"`
+	PodErrorTimestamp      []PodErrorInfo          `json:"podErrorTimestamp,omitempty"`
+	FaultCodesAndTimestamp []FaultCodeAndTimestamp `json:"faultCodesAndTimestamp,omitempty"`
 }
 
 // JobInfo : normal job info
@@ -326,6 +375,7 @@ type FaultRank struct {
 	PodRank          string
 	FaultCode        string
 	FaultLevel       string
+	FaultTime        int64 // precise fault occurrence time from DeviceFault.FaultTimeAndLevelMap
 	DoStepRetry      bool
 	DoRestartInPlace bool
 	DeviceId         string // This value will only be filled in when fault type is npu
@@ -349,6 +399,7 @@ type FaultDevice struct {
 	FaultCode       string
 	FaultLevel      string
 	DeviceType      string
+	FaultTime       int64 // precise fault occurrence time from FaultTimeAndLevelMap (chip-level) or UpdateTime (node-level)
 	SwitchChipId    string
 	SwitchPortId    string
 	SwitchFaultTime string

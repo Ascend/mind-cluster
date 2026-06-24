@@ -144,6 +144,9 @@ func (c *Collector) checkJobs() {
 		hwlog.RunLog.Errorf("update scheduling exception configmap failed: %v", err)
 		return
 	}
+	if len(exceptionJobs) == 0 {
+		return
+	}
 	hwlog.RunLog.Infof("updated scheduling exception configmap with %d jobs", len(exceptionJobs))
 }
 

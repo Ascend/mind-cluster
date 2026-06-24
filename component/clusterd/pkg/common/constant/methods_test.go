@@ -4,6 +4,7 @@
 package constant
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -516,6 +517,50 @@ func TestSwitchAddFaultAndFixAndDelFaultAndFix(t *testing.T) {
 			convey.So(len(cm.FaultTimeAndLevelMap), convey.ShouldEqual, 0)
 			convey.So(cm.NodeStatus, convey.ShouldEqual, HealthyState)
 			convey.So(cm.FaultLevel, convey.ShouldEqual, NotHandleFault)
+		})
+	})
+}
+
+func TestJobStatisticV2JSON(t *testing.T) {
+	convey.Convey("Given a JobStatisticV2 instance", t, func() {
+		convey.Convey("When extra fields are empty", func() {
+			jobStc := JobStatisticV2{
+				JobStatistic: JobStatistic{
+					K8sJobID: "test-job-1",
+				},
+			}
+			data, _ := json.Marshal(jobStc)
+			result := string(data)
+			convey.Convey("It should contain version with default value 2", func() {
+				convey.So(result, convey.ShouldContainSubstring, `"version":"2"`)
+				convey.So(result, convey.ShouldNotContainSubstring, "podRunningTimestamp")
+				convey.So(result, convey.ShouldNotContainSubstring, "podErrorTimestamp")
+				convey.So(result, convey.ShouldNotContainSubstring, "faultCodesAndTimestamp")
+			})
+		})
+
+		convey.Convey("When extra fields are populated", func() {
+			jobStc := JobStatisticV2{
+				JobStatistic: JobStatistic{
+					K8sJobID: "test-job-2",
+				},
+				Version:             VersionStr("v2"),
+				PodRunningTimestamp: []int64{100, 200},
+				PodErrorTimestamp: []PodErrorInfo{
+					{Timestamp: 150, NodeName: "node1"},
+				},
+				FaultCodesAndTimestamp: []FaultCodeAndTimestamp{
+					{FaultCode: "80E01801", Timestamp: 160, NodeName: "node1", DeviceId: "0"},
+				},
+			}
+			data, _ := json.Marshal(jobStc)
+			result := string(data)
+			convey.Convey("It should contain all extra fields", func() {
+				convey.So(result, convey.ShouldContainSubstring, `"version":"v2"`)
+				convey.So(result, convey.ShouldContainSubstring, `"podRunningTimestamp":[100,200]`)
+				convey.So(result, convey.ShouldContainSubstring, `"podErrorTimestamp"`)
+				convey.So(result, convey.ShouldContainSubstring, `"faultCodesAndTimestamp"`)
+			})
 		})
 	})
 }

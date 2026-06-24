@@ -12,9 +12,9 @@ import (
 
 const (
 	jobEventLog              = "/var/log/mindx-dl/clusterd/event_job.log"
-	jobEventMaxBackupLogs    = 5
-	jobEventMaxLogLineLength = 2048
-	jobEventMaxAge           = 40
+	jobEventMaxBackupLogs    = 180
+	jobEventMaxLogLineLength = 1048576
+	jobEventMaxAge           = 180
 
 	grpcEventLog           = "/var/log/mindx-dl/clusterd/grpc/grpc_event.log"
 	grpcEventMaxBackupLogs = 14

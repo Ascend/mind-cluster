@@ -1,4 +1,4 @@
-// Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
+// Copyright (c) Huawei Technologies Co., Ltd. 2024-2026. All rights reserved.
 
 // Package jobprocess contain job fault process
 package jobprocess
@@ -9,6 +9,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/application/faultmanager/cmprocess"
+	"clusterd/pkg/application/faultmanager/jobprocess/faultcodeevent"
 	"clusterd/pkg/application/faultmanager/jobprocess/faultrank"
 	"clusterd/pkg/application/faultmanager/jobprocess/relationfault"
 	"clusterd/pkg/common/constant"
@@ -34,12 +35,14 @@ func init() {
 		processorList: []constant.FaultProcessor{
 			relationfault.RelationProcessor,
 			faultrank.JobFaultRankProcessor,
+			faultcodeevent.Processor,
 		},
 		mutex:                sync.Mutex{},
 		subscribeChannelList: make([]*subscriber, 0),
 	}
 }
 
+// Process processes all fault processors in order
 func (fJobCenter *faultJobProcessCenter) Process() {
 	content := constant.AllConfigmapContent{
 		DeviceCm: cmprocess.DeviceCenter.GetProcessedCm(),
@@ -71,6 +74,7 @@ func (fJobCenter *faultJobProcessCenter) Register(ch chan map[string]constant.Jo
 	return nil
 }
 
+// NotifySubscriber notifies all registered subscribers with filtered fault rank infos
 func (fJobCenter *faultJobProcessCenter) NotifySubscriber() {
 	for _, sub := range fJobCenter.subscribeChannelList {
 		if sub.ch == nil {
