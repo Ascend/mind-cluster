@@ -37,3 +37,64 @@ livenessProbe:
 ```
 
 > 探针启动参数说明详见[K8s RDMA Shared Dev Plugin 启动参数](../05_developer_guide/installation_deployment/manual_installation/12_k8s_rdma_shared_dev_plugin.md#参数说明)。
+
+## 配置文件说明<a name="ZH-CN_TOPIC_config_k8s_rdma_shared_dev_plugin"></a>
+
+K8s RDMA Shared Dev Plugin通过`-config-file`参数指定的JSON配置文件配置RDMA设备的选择器，用于发现并上报节点上的RDMA设备资源。配置文件默认路径为`/k8s-rdma-shared-dev-plugin/config.json`，通过ConfigMap（名称为`rdma-devices`）挂载进容器。
+
+**配置文件示例：**
+
+```json
+{
+  "periodicUpdateInterval": 300,
+  "faultDetectPeriod": 5,
+  "configList": [
+    {
+      "resourcePrefix": "huawei.com",
+      "resourceName": "ub_rdma",
+      "rdmaHcaMax": 8,
+      "selectors": {
+        "buses": ["ub"],
+        "vendors": ["0xcc08"],
+        "deviceIDs": ["0x8200"]
+      }
+    }
+  ]
+}
+```
+
+**表 3**  顶层配置字段
+
+| 字段 | 是否必选 | 类型 | 默认值 | 说明                                                           |
+|------|---------|------|--------|--------------------------------------------------------------|
+| periodicUpdateInterval | 否 | int | 60 | 周期性更新设备资源的时间间隔，单位为秒。取值为0时禁用周期性更新设备资源功能；未设置时使用默认值60秒；取值不能小于0。 |
+| faultDetectPeriod | 否 | int | 0 | 故障检测周期，单位为秒，仅对UB类型设备生效。未设置或取值小于1时禁用故障检测功能。                   |
+| configList | 是 | object列表 | - | 资源配置列表，每个元素描述一组RDMA设备的上报规则，列表至少包含1个元素。                       |
+
+configList中每个配置对象的字段说明详见[表4](#table_config_list_k8s_rdma_shared_dev_plugin)。
+
+**表 4**  configList配置字段<a name="table_config_list_k8s_rdma_shared_dev_plugin"></a>
+
+| 字段 | 是否必选 | 类型 | 默认值 | 说明 |
+|------|---------|------|--------|------|
+| resourceName | 是 | string | - | 设备资源名称，在resourcePrefix作用域内必须唯一，仅支持大小写字母、数字和下划线。最终上报给K8s的资源名称格式为`<resourcePrefix>/<resourceName>`。 |
+| resourcePrefix | 否 | string | rdma | 设备资源前缀，需为合法DNS子域名（仅支持小写字母、数字、连字符和点）。 |
+| rdmaHcaMax | 是 | int | - | 设备插件可提供的RDMA资源最大数量，取值不能小于0。 |
+| selectors | 否 | object | - | 设备选择器，用于过滤目标设备，字段说明详见[表5](#table_selectors_k8s_rdma_shared_dev_plugin)。 |
+
+**表 5**  selectors选择器字段<a name="table_selectors_k8s_rdma_shared_dev_plugin"></a>
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| buses | string列表 | 设备总线类型。取值包含`ub`时启用UB设备模式；未配置或取值非`ub`时启用PCI设备模式。UB设备不支持CDI模式。 |
+| vendors | string列表 | 设备厂商十六进制编码，例如`["0xcc08"]`。 |
+| deviceIDs | string列表 | 设备型号十六进制编码，例如`["0x8200"]`。 |
+| drivers | string列表 | 设备驱动名称，例如`["mlx5_core"]`。 |
+| ifNames | string列表 | 网络接口名称，例如`["ib0"]`。 |
+| linkTypes | string列表 | 网络接口链路类型，例如`["ether"]`、`["infiniband"]`。 |
+
+**选择器匹配规则：**
+
+- 同一选择器字段内的多个元素之间为逻辑“或”关系，例如`"vendors": ["15b3", "0xcc08"]`表示匹配厂商为`15b3`或`0xcc08`的设备。
+- 不同选择器字段之间为逻辑“与”关系，例如同时配置`vendors`和`deviceIDs`时，设备需同时满足厂商和型号条件才会被选中。
+- 未配置选择器字段将被忽略，不参与过滤。
