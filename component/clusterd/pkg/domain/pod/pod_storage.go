@@ -47,28 +47,8 @@ func init() {
 
 // SavePod save pod with lock, Please do not add time-consuming code
 func SavePod(podInfo *v1.Pod) {
-	if podInfo == nil {
-		hwlog.RunLog.Error("podInfo is nil")
-		return
-	}
 	podManager.podMapMutex.Lock()
-	if len(podManager.podMap) > maxPodNum {
-		hwlog.RunLog.Errorf("podMap length will exceed %d, pod namespace=%s, name=%s save failed",
-			maxPodNum, podInfo.Namespace, podInfo.Name)
-		return
-	}
-
-	podKey := GetPodKey(podInfo)
-	jobKey := GetJobKeyByPod(podInfo)
-	podManager.podMap[podKey] = *podInfo
-	if podManager.nodePodMap[podInfo.Spec.NodeName] == nil {
-		podManager.nodePodMap[podInfo.Spec.NodeName] = make(map[string]v1.Pod)
-	}
-	podManager.nodePodMap[podInfo.Spec.NodeName][podKey] = *podInfo
-	if podManager.jobPodMap[jobKey] == nil {
-		podManager.jobPodMap[jobKey] = map[string]v1.Pod{}
-	}
-	podManager.jobPodMap[jobKey][podKey] = *podInfo
+	podKey, jobKey := addPodInCache(podInfo)
 	podManager.podMapMutex.Unlock()
 
 	if IsNewPodForHotSwitch(podInfo) {
@@ -80,28 +60,27 @@ func SavePod(podInfo *v1.Pod) {
 	}
 }
 
+// UpdatePod save pod with lock, Please do not add time-consuming code
+func UpdatePod(oldPod *v1.Pod, newPod *v1.Pod) {
+	podManager.podMapMutex.Lock()
+	podKey, jobKey := updatePodInCache(oldPod, newPod)
+	podManager.podMapMutex.Unlock()
+
+	if IsNewPodForHotSwitch(newPod) {
+		if !hasHandled(podKey) && newPod.Status.Phase == v1.PodRunning {
+			hwlog.RunLog.Infof("hotswitch new pod running, jobKey=%s, podName=%s", jobKey, newPod.Name)
+			runningEventChan <- newPod
+			hotSwitchStatusMap.Store(podKey, struct{}{})
+		}
+	}
+}
+
 // DeletePod delete pod with lock, Please do not add time-consuming code
 func DeletePod(podInfo *v1.Pod) {
-	if podInfo == nil {
-		hwlog.RunLog.Error("podInfo is nil")
-		return
-	}
 	podManager.podMapMutex.Lock()
-	delete(podManager.podMap, GetPodKey(podInfo))
-	if podManager.nodePodMap[podInfo.Spec.NodeName] != nil {
-		delete(podManager.nodePodMap[podInfo.Spec.NodeName], GetPodKey(podInfo))
-		if len(podManager.nodePodMap[podInfo.Spec.NodeName]) == 0 {
-			delete(podManager.nodePodMap, podInfo.Spec.NodeName)
-		}
-	}
-	jobKey := GetJobKeyByPod(podInfo)
-	if len(podManager.jobPodMap[jobKey]) > 0 {
-		delete(podManager.jobPodMap[jobKey], GetPodKey(podInfo))
-		if len(podManager.jobPodMap[jobKey]) == 0 {
-			delete(podManager.jobPodMap, jobKey)
-		}
-	}
+	_, jobKey := deletePodInCache(podInfo)
 	podManager.podMapMutex.Unlock()
+
 	value, exists := podInfo.Annotations[api.InHotSwitchFlowKey]
 	if exists && value == api.InHotSwitchFlowValue {
 		hwlog.RunLog.Infof("hotswitch pod deleted, jobKey=%s, podName=%s, phase:%s", jobKey, podInfo.Name, podInfo.Status.Phase)
@@ -215,4 +194,53 @@ func IsBackupPodAfterSourcePodDeleted(name string) bool {
 // DeleteFromBackupPodsMaps delete backup pod from map
 func DeleteFromBackupPodsMaps(name string) {
 	backupPodsAfterSourcePodDeleted.Delete(name)
+}
+
+func updatePodInCache(oldPod *v1.Pod, newPod *v1.Pod) (string, string) {
+	_, _ = deletePodInCache(oldPod)
+	return addPodInCache(newPod)
+}
+
+func addPodInCache(podInfo *v1.Pod) (string, string) {
+	podKey := GetPodKey(podInfo)
+	podManager.podMap[podKey] = *podInfo
+	if podInfo.Spec.NodeName != "" {
+		if podManager.nodePodMap[podInfo.Spec.NodeName] == nil {
+			podManager.nodePodMap[podInfo.Spec.NodeName] = make(map[string]v1.Pod)
+		}
+		podManager.nodePodMap[podInfo.Spec.NodeName][podKey] = *podInfo
+	}
+
+	jobKey := GetJobKeyByPod(podInfo)
+	if jobKey != "" {
+		if podManager.jobPodMap[jobKey] == nil {
+			podManager.jobPodMap[jobKey] = map[string]v1.Pod{}
+		}
+		podManager.jobPodMap[jobKey][podKey] = *podInfo
+	}
+	return podKey, jobKey
+}
+
+func deletePodInCache(podInfo *v1.Pod) (string, string) {
+	podKey := GetPodKey(podInfo)
+	delete(podManager.podMap, podKey)
+	if podInfo.Spec.NodeName != "" {
+		if podManager.nodePodMap[podInfo.Spec.NodeName] != nil {
+			delete(podManager.nodePodMap[podInfo.Spec.NodeName], GetPodKey(podInfo))
+			if len(podManager.nodePodMap[podInfo.Spec.NodeName]) == 0 {
+				delete(podManager.nodePodMap, podInfo.Spec.NodeName)
+			}
+		}
+	}
+
+	jobKey := GetJobKeyByPod(podInfo)
+	if jobKey != "" {
+		if len(podManager.jobPodMap[jobKey]) > 0 {
+			delete(podManager.jobPodMap[jobKey], GetPodKey(podInfo))
+			if len(podManager.jobPodMap[jobKey]) == 0 {
+				delete(podManager.jobPodMap, jobKey)
+			}
+		}
+	}
+	return podKey, jobKey
 }

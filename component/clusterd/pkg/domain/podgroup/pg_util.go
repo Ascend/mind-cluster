@@ -40,7 +40,7 @@ func GetJobKeyAndNameByPG(info *v1beta1.PodGroup) (key, name string) {
 			return string(owner.UID), owner.Name
 		}
 	}
-	hwlog.RunLog.Error("get unique key failed, podGroup don't have controller")
+	hwlog.RunLog.Errorf("get unique key failed, podGroup don't have controller %s/%s", info.Namespace, info.Name)
 	return "", ""
 }
 
