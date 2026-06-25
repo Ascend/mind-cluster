@@ -125,7 +125,7 @@ func parseFlags() {
 		"Whether backup files need to be compressed (default false)")
 	flag.StringVar(&hwLogConfig.LogFileName, "logFile",
 		"/var/log/mindx-dl/infer-operator/infer-operator.log", "Log file path")
-	flag.IntVar(&hwLogConfig.MaxBackups, "maxBackups", hwlog.DefaultMaxBackups,
+	flag.IntVar(&hwLogConfig.MaxBackups, "maxBackups", hwlog.DefaultBackups,
 		"Maximum number of backup log files")
 	flag.Parse()
 }

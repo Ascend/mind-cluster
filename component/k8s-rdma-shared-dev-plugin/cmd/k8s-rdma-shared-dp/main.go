@@ -111,7 +111,7 @@ func initFlags() {
 
 	// Log related flags
 	flag.IntVar(&logLevel, "logLevel", defaultLogLevel, "Log level, -1-debug, 0-info, 1-warning, 2-error, 3-critical (default 0)")
-	flag.IntVar(&logMaxBackups, "maxBackups", defaultLogMaxBackups, "Maximum number of backup log files, range is (0, 30]")
+	flag.IntVar(&logMaxBackups, "maxBackups", defaultLogMaxBackups, "Maximum number of backup log files, range is (0, 180]")
 	flag.IntVar(&logMaxAge, "maxAge", defaultLogMaxAge, "Maximum number of days for backup log files, range [7, 700]")
 	flag.StringVar(&logFile, "logFile", defaultLogFile, "The log file path, if the file size exceeds 20MB, will be rotate")
 }
@@ -140,9 +140,9 @@ func checkLogParams() bool {
 		return false
 	}
 
-	// Check maxBackups: 0 < maxBackups <= 30
-	if logMaxBackups <= 0 || logMaxBackups > 30 {
-		fmt.Printf("Invalid maxBackups %d, range should be (0, 30]\n", logMaxBackups)
+	// Check maxBackups: 0 < maxBackups <= 180
+	if logMaxBackups <= 0 || logMaxBackups > hwlog.DefaultMaxBackups {
+		fmt.Printf("Invalid maxBackups %d, range should be (0, 180]\n", logMaxBackups)
 		return false
 	}
 

@@ -37,6 +37,8 @@ const (
 	DefaultMaxSaveAge = 700
 	// DefaultMaxBackups the default number of backup log
 	DefaultMaxBackups = 180
+	// DefaultBackups the default number of backup log
+	DefaultBackups = 30
 	// LogFileMode log file mode
 	LogFileMode os.FileMode = 0640
 	// BackupLogFileMode backup log file mode

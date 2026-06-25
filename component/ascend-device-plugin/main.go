@@ -71,8 +71,8 @@ var (
 		"Maximum number of days for backup run log files, range [7, 700] days")
 	logFile = flag.String("logFile", defaultLogPath,
 		"The log file path, if the file size exceeds 20MB, will be rotate")
-	logMaxBackups = flag.Int("maxBackups", common.MaxBackups,
-		"Maximum number of backup log files, range is (0, 30]")
+	logMaxBackups = flag.Int("maxBackups", hwlog.DefaultBackups,
+		"Maximum number of backup log files, range is (0, 180]")
 	presetVirtualDevice = flag.Bool("presetVirtualDevice", true, "Open the static of "+
 		"computing power splitting function, only support "+api.Ascend910+" and "+api.Ascend310P)
 	use310PMixedInsert = flag.Bool(api.Use310PMixedInsert, false, "Whether to use mixed insert "+
