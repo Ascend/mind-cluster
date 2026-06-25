@@ -47,8 +47,12 @@ func PodCollector(oldPodInfo, newPodInfo *v1.Pod, operator string) {
 		return
 	}
 	switch operator {
-	case constant.AddOperator, constant.UpdateOperator:
+	case constant.AddOperator:
 		pod.SavePod(newPodInfo)
+		refreshCmWhenPodRescheduleInPlace(oldPodInfo, newPodInfo)
+		recordPodErrorOnFailure(oldPodInfo, newPodInfo, operator)
+	case constant.UpdateOperator:
+		pod.UpdatePod(oldPodInfo, newPodInfo)
 		refreshCmWhenPodRescheduleInPlace(oldPodInfo, newPodInfo)
 		recordPodErrorOnFailure(oldPodInfo, newPodInfo, operator)
 	case constant.DeleteOperator:

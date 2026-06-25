@@ -43,7 +43,11 @@ func SavePodGroup(pgInfo *v1beta1.PodGroup) {
 			maxJobNum, pgInfo.Namespace, pgInfo.Name)
 		return
 	}
-	pgManager.pgMap[GetJobKeyByPG(pgInfo)] = *pgInfo
+	key := GetJobKeyByPG(pgInfo)
+	if key == "" {
+		return
+	}
+	pgManager.pgMap[key] = *pgInfo
 }
 
 // DeletePodGroup delete podGroup with lock, Please do not add time-consuming code

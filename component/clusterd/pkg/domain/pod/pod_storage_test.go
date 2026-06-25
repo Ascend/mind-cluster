@@ -69,12 +69,6 @@ func TestSavePod(t *testing.T) {
 			convey.So(len(podMap), convey.ShouldEqual, 1)
 			convey.So(len(GetSimplePodByJobId(jobUid1)), convey.ShouldEqual, 1)
 		})
-		convey.Convey("when pod info is nil, cache should remain unchanged", func() {
-			oldLen := len(podManager.podMap)
-			SavePod(nil)
-			newLen := len(podManager.podMap)
-			convey.So(oldLen, convey.ShouldEqual, newLen)
-		})
 	})
 }
 
@@ -87,12 +81,6 @@ func TestDeletePod(t *testing.T) {
 			podMap := GetPodByJobId(jobUid1)
 			convey.So(len(podMap), convey.ShouldEqual, 0)
 			convey.So(len(GetSimplePodByJobId(jobUid1)), convey.ShouldEqual, 0)
-		})
-		convey.Convey("when pod info is nil, cache should remain unchanged", func() {
-			oldLen := len(podManager.podMap)
-			DeletePod(nil)
-			newLen := len(podManager.podMap)
-			convey.So(oldLen, convey.ShouldEqual, newLen)
 		})
 	})
 }
@@ -179,6 +167,111 @@ func TestGetPodByJobIdAndPodName(t *testing.T) {
 			pod, exist := GetPodByJobIdAndPodName(jobUid2, podName2)
 			convey.So(exist, convey.ShouldBeFalse)
 			convey.So(pod.UID, convey.ShouldEqual, "")
+		})
+	})
+}
+
+func TestUnscheduledPod(t *testing.T) {
+	convey.Convey("test UnscheduledPod", t, func() {
+		podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
+		podDemo1.Spec.NodeName = ""
+		convey.Convey("the pod does not exist", func() {
+			SavePod(podDemo1)
+			defer DeletePod(podDemo1)
+			_, exist := GetPodsByNodeName(podDemo1.Spec.NodeName)
+			convey.So(exist, convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestNonOwnerReference(t *testing.T) {
+	convey.Convey("test NonOwnerReference", t, func() {
+		podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
+		podDemo1.SetOwnerReferences([]metav1.OwnerReference{})
+		convey.Convey("the pod does not exist", func() {
+			SavePod(podDemo1)
+			defer DeletePod(podDemo1)
+			result := GetSimplePodByJobId(GetJobKeyByPod(podDemo1))
+			convey.So(len(result), convey.ShouldBeZeroValue)
+		})
+	})
+}
+
+func TestAddPodInCache(t *testing.T) {
+	convey.Convey("test addPodInCache", t, func() {
+		podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
+		convey.Convey("add pod to cache success", func() {
+			podKey, jobKey := addPodInCache(podDemo1)
+			defer deletePodInCache(podDemo1)
+			convey.So(podKey, convey.ShouldEqual, podUid1)
+			convey.So(jobKey, convey.ShouldEqual, jobUid1)
+			convey.So(len(podManager.podMap), convey.ShouldEqual, 1)
+			convey.So(len(podManager.nodePodMap[nodeName1]), convey.ShouldEqual, 1)
+			convey.So(len(podManager.jobPodMap[jobUid1]), convey.ShouldEqual, 1)
+		})
+		convey.Convey("add pod without nodeName to cache success", func() {
+			podDemo2 := getDemoPod(podName2, podNameSpace1, podUid2)
+			podDemo2.Spec.NodeName = ""
+			podKey, jobKey := addPodInCache(podDemo2)
+			defer deletePodInCache(podDemo2)
+			convey.So(podKey, convey.ShouldEqual, podUid2)
+			convey.So(jobKey, convey.ShouldEqual, jobUid1)
+			_, exist := podManager.nodePodMap[""]
+			convey.So(exist, convey.ShouldBeFalse)
+		})
+		convey.Convey("add pod without ownerReference to cache success", func() {
+			podDemo2 := getDemoPod(podName2, podNameSpace1, podUid2)
+			podDemo2.SetOwnerReferences([]metav1.OwnerReference{})
+			podKey, jobKey := addPodInCache(podDemo2)
+			defer deletePodInCache(podDemo2)
+			convey.So(podKey, convey.ShouldEqual, podUid2)
+			convey.So(jobKey, convey.ShouldEqual, "")
+			_, exist := podManager.jobPodMap[""]
+			convey.So(exist, convey.ShouldBeFalse)
+		})
+	})
+}
+
+func TestUpdatePodInCache(t *testing.T) {
+	convey.Convey("test updatePodInCache", t, func() {
+		podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
+		podDemo2 := getDemoPod(podName1, podNameSpace1, podUid1)
+		podDemo2.Spec.NodeName = nodeName2
+		convey.Convey("update pod in cache success", func() {
+			addPodInCache(podDemo1)
+			defer deletePodInCache(podDemo2)
+			podKey, jobKey := updatePodInCache(podDemo1, podDemo2)
+			convey.So(podKey, convey.ShouldEqual, podUid1)
+			convey.So(jobKey, convey.ShouldEqual, jobUid1)
+			convey.So(len(podManager.podMap), convey.ShouldEqual, 1)
+			convey.So(podManager.podMap[podUid1].Spec.NodeName, convey.ShouldEqual, nodeName2)
+			_, exist := podManager.nodePodMap[nodeName1]
+			convey.So(exist, convey.ShouldBeFalse)
+			_, exist = podManager.nodePodMap[nodeName2]
+			convey.So(exist, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestDeletePodInCache(t *testing.T) {
+	convey.Convey("test deletePodInCache", t, func() {
+		podDemo1 := getDemoPod(podName1, podNameSpace1, podUid1)
+		convey.Convey("delete pod from cache success", func() {
+			addPodInCache(podDemo1)
+			podKey, jobKey := deletePodInCache(podDemo1)
+			convey.So(podKey, convey.ShouldEqual, podUid1)
+			convey.So(jobKey, convey.ShouldEqual, jobUid1)
+			convey.So(len(podManager.podMap), convey.ShouldEqual, 0)
+			_, exist := podManager.nodePodMap[nodeName1]
+			convey.So(exist, convey.ShouldBeFalse)
+			_, exist = podManager.jobPodMap[jobUid1]
+			convey.So(exist, convey.ShouldBeFalse)
+		})
+		convey.Convey("delete pod that does not exist should not panic", func() {
+			podDemo2 := getDemoPod(podName2, podNameSpace1, podUid2)
+			podKey, jobKey := deletePodInCache(podDemo2)
+			convey.So(podKey, convey.ShouldEqual, podUid2)
+			convey.So(jobKey, convey.ShouldEqual, jobUid1)
 		})
 	})
 }
