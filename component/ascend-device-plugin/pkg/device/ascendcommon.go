@@ -431,8 +431,11 @@ func (tool *AscendTools) getNodeDeviceInfoCache(newDeviceList map[string]string)
 		ServerIndex: tool.GetServerIndex(),
 	}
 	if common.ParamOption.RealCardType == api.Ascend910A5 {
-		rackID := tool.GetRackID()
-		nodeDeviceData.RackID = &rackID
+		superPodType := tool.GetSuperPodType()
+		if superPodType == common.ProductType1D || superPodType == common.ProductType2D {
+			rackID := tool.GetRackID()
+			nodeDeviceData.RackID = &rackID
+		}
 	}
 	return nodeDeviceData
 }
