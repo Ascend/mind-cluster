@@ -9,3 +9,5 @@ Atlas 800I A2 推理服务器、A200I A2 Box 异构组件使用**推理卡故障
 >
 >- 方式一：若设备上不存在HCCS环，执行推理任务中，当NPU出现故障，Ascend Device Plugin等待该NPU空闲后，对该NPU进行复位操作。
 >- 方式二：若设备上存在HCCS环，执行推理任务中，当服务器出现一个或多个故障NPU，Ascend Device Plugin等待环上的NPU全部空闲后，一次性复位环上所有的NPU。
+>
+>热复位恢复无法覆盖所有故障，部分故障可能恢复失败，例如，故障导致掉卡，device OS挂死等故障。
