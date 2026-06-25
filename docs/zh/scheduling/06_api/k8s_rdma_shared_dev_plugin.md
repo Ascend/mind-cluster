@@ -98,3 +98,49 @@ configList中每个配置对象的字段说明详见[表4](#table_config_list_k8
 - 同一选择器字段内的多个元素之间为逻辑“或”关系，例如`"vendors": ["15b3", "0xcc08"]`表示匹配厂商为`15b3`或`0xcc08`的设备。
 - 不同选择器字段之间为逻辑“与”关系，例如同时配置`vendors`和`deviceIDs`时，设备需同时满足厂商和型号条件才会被选中。
 - 未配置选择器字段将被忽略，不参与过滤。
+
+## ConfigMap说明<a name="ZH-CN_TOPIC_configmap_k8s_rdma_shared_dev_plugin"></a>
+
+K8s RDMA Shared Dev Plugin通过配置文件中的`faultDetectPeriod`参数启用故障检测功能，仅对UB类型设备生效。启动故障检测功能后，会将DPU设备的故障信息上报到Kubernetes ConfigMap中。ConfigMap位于`kube-system`命名空间下，名称为`dpuinfo-<node-name>`（其中`<node-name>`为节点名称），Label为`huawei.com/consumer.clusterd=true`。ConfigMap采用强制更新策略：当检测到故障信息发生变化或距离上次更新超过5分钟时，会触发ConfigMap更新。
+
+ConfigMap中Data字段的Key为`DpuInfoCfg`，Value为JSON格式的DPU故障信息，详细说明请参见[表6](#table_dpuconfigmap_k8s_rdma_shared_dev_plugin)。
+
+**表 6**  dpuinfo-\<node-name\> ConfigMap
+<a name="table_dpuconfigmap_k8s_rdma_shared_dev_plugin"></a>
+
+|字段|类型|说明|
+|--|--|--|
+|DPUInfo|对象|DPU设备故障信息。|
+|-DPUList|列表|DPU设备列表。数组中的每个元素描述一个DPU设备的故障信息，详细说明请参见[表7](#table_dpuitem_k8s_rdma_shared_dev_plugin)。|
+|-NodeEvent|对象|节点级故障事件，例如DPU卡脱落等。详细说明请参见[表8](#table_nodeevent_k8s_rdma_shared_dev_plugin)。|
+|UpdateTime|RFC 3339 格式时间戳|当前DPU信息的更新时间，用于标识故障信息的最新上报时间。|
+
+**表 7**  DPUList元素字段说明
+<a name="table_dpuitem_k8s_rdma_shared_dev_plugin"></a>
+
+|字段|类型|说明|
+|--|--|--|
+|HcaName|字符串|HCA设备名称，例如`mlx5_0`。|
+|EthName|字符串|关联的以太网接口名称。|
+|IpAddr|字符串|DPU设备的IP地址。|
+|DeviceID|字符串|设备ID，十六进制格式。|
+|VendorID|字符串|厂商ID，十六进制格式。|
+|FaultList|列表|该DPU设备上的故障明细列表。数组中的每个元素描述一条故障信息，详细说明请参见[表9](#table_faultdetail_k8s_rdma_shared_dev_plugin)。|
+
+**表 8**  NodeEvent字段说明
+<a name="table_nodeevent_k8s_rdma_shared_dev_plugin"></a>
+
+|字段|类型|说明|
+|--|--|--|
+|NodeName|字符串|节点名称。|
+|FaultList|列表|节点级故障明细列表，详细说明请参见[表9](#table_faultdetail_k8s_rdma_shared_dev_plugin)。|
+
+**表 9**  FaultDetail字段说明
+<a name="table_faultdetail_k8s_rdma_shared_dev_plugin"></a>
+
+| 字段          |类型|说明|
+|-------------|--|--|
+| FaultCode   |字符串|故障码，用于标识故障类型。|
+| Time        |Unix毫秒时间戳|故障首次检测时间。|
+| Description |字符串|故障描述信息。|
+| FaultLevel  |字符串|故障等级。|
