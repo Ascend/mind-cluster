@@ -437,8 +437,8 @@ func init() {
 		"Maximum number of days for backup log files, range [7, 700] days")
 	flag.StringVar(&logger.HwLogConfig.LogFileName, logFileStr, defaultLogFile,
 		"Log file path. If the file size exceeds 20MB, will be rotated")
-	flag.IntVar(&logger.HwLogConfig.MaxBackups, maxBackupsStr, hwlog.DefaultMaxBackups,
-		"Maximum number of backup log files, range is (0, 30]")
+	flag.IntVar(&logger.HwLogConfig.MaxBackups, maxBackupsStr, hwlog.DefaultBackups,
+		"Maximum number of backup log files, range is (0, 180]")
 	flag.IntVar(&cacheSize, "cacheSize", limiter.DefaultCacheSize, "the cacheSize for ip limit,"+
 		"range  is [1,1024000],keep default normally")
 	flag.IntVar(&limitIPConn, "limitIPConn", defaultConcurrency, "the tcp connection limit for each Ip,"+

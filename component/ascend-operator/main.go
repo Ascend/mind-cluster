@@ -81,7 +81,7 @@ func main() {
 	flag.BoolVar(&hwLogConfig.IsCompress, "isCompress", false,
 		"Whether backup files need to be compressed (default false)")
 	flag.StringVar(&hwLogConfig.LogFileName, "logFile", api.OperatorLogFilePath, "Log file path")
-	flag.IntVar(&hwLogConfig.MaxBackups, "maxBackups", hwlog.DefaultMaxBackups,
+	flag.IntVar(&hwLogConfig.MaxBackups, "maxBackups", hwlog.DefaultBackups,
 		"Maximum number of backup log files")
 	flag.BoolVar(&enableGangScheduling, "enableGangScheduling", true,
 		"Set true to enable gang scheduling")

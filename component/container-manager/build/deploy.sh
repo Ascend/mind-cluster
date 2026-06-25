@@ -627,7 +627,7 @@ Options:
   --logLevel=<level>        Log level (default: ${DEFAULT_LOG_LEVEL})
                             -1=debug, 0=info, 1=warning, 2=error, 3=critical
   --maxAge=<days>           Log backup retention days (default: ${DEFAULT_MAX_AGE}, range: [7, 700])
-  --maxBackups=<count>      Max backup log files (default: ${DEFAULT_MAX_BACKUPS}, range: (0, 30])
+  --maxBackups=<count>      Max backup log files (default: ${DEFAULT_MAX_BACKUPS}, range: (0, 180])
   --faultConfig=<path>      Custom fault code configuration file path
                             File permission must not exceed 640, must not be a symlink
   --logPath=<path>          Log file path (default: ${DEFAULT_LOG_FILE})

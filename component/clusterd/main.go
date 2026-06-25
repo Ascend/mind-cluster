@@ -236,8 +236,8 @@ func init() {
 		"Maximum number of days for backup run log files, range [7, 700] days")
 	flag.StringVar(&hwLogConfig.LogFileName, "logFile", defaultLogFile,
 		"Run log file path. if the file size exceeds 20MB, will be rotated")
-	flag.IntVar(&hwLogConfig.MaxBackups, "maxBackups", hwlog.DefaultMaxBackups,
-		"Maximum number of backup operator logs, range is (0, 30]")
+	flag.IntVar(&hwLogConfig.MaxBackups, "maxBackups", hwlog.DefaultBackups,
+		"Maximum number of backup operator logs, range is (0, 180]")
 	flag.BoolVar(&useProxy, "useProxy", false, "use local grpc proxy")
 }
 

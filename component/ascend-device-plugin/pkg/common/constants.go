@@ -25,8 +25,6 @@ import (
 const (
 	// Component component name
 	Component = "device-plugin"
-	// MaxBackups log file max backup
-	MaxBackups = 30
 	// MaxAge the log file last time
 	MaxAge = 7
 
