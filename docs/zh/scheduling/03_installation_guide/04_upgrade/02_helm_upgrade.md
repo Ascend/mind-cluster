@@ -47,8 +47,8 @@
 
        ```ColdFusion
        NAME               NAMESPACE   REVISION  UPDATED                                  STATUS       CHART                                        APP VERSION
-       mindcluster        default    1         2026-03-24 15:30:00.000000000 +0800 CST  deployed  mindcluster-deploy-tool-1.1.   0                26.1.0
-       mindcluster-crds   default    1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-1.1.0           26.1.0
+       mindcluster        default    1         2026-03-24 15:30:00.000000000 +0800 CST  deployed  mindcluster-deploy-tool-26.1.0                26.1.0
+       mindcluster-crds   default    1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-26.1.0           26.1.0
        ```
 
    2. 根据回显结果判断组件的升级方式。
@@ -280,8 +280,8 @@
 
       ```ColdFusion
       REVISION  UPDATED                   STATUS      CHART                                APP VERSION  DESCRIPTION
-      1         2026-03-24 15:30:00.000   superseded  mindcluster-deploy-tool-1.0.0        26.0.0       Install complete
-      2         2026-03-25 10:00:00.000   deployed    mindcluster-deploy-tool-1.1.0        26.1.0       Upgrade complete
+      1         2026-03-24 15:30:00.000   superseded  mindcluster-deploy-tool-26.0.0        26.0.0       Install complete
+      2         2026-03-25 10:00:00.000   deployed    mindcluster-deploy-tool-26.1.0        26.1.0       Upgrade complete
       ```
 
     - 查看组件CRD的Release实例的升级历史：
@@ -294,8 +294,8 @@
 
       ```ColdFusion
       REVISION  UPDATED                   STATUS      CHART                                APP VERSION  DESCRIPTION
-      1         2026-03-24 15:30:00.000   superseded  mindcluster-crds-deploy-tool-1.0.0        26.0.0       Install complete
-      2         2026-03-25 10:00:00.000   deployed    mindcluster-crds-deploy-tool-1.1.0        26.1.0       Upgrade complete
+      1         2026-03-24 15:30:00.000   superseded  mindcluster-crds-deploy-tool-26.0.0        26.0.0       Install complete
+      2         2026-03-25 10:00:00.000   deployed    mindcluster-crds-deploy-tool-26.1.0        26.1.0       Upgrade complete
       ```
 
     >[!NOTE]

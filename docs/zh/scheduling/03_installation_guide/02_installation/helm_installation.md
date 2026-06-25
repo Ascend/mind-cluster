@@ -71,8 +71,8 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
       -rw-r--r-- 1 root root  2026 Mar 24 15:25 helm_tool.sh
       ```
       > [!NOTE]
-      > {version}表示mindcluster版本，如26.1.0。
-      > {chart_version}表示helm chart版本，如1.1.0。
+      > {version}表示MindCluster组件版本，如26.1.0。
+      > {chart_version}表示helm chart版本，与MindCluster组件版本保持一致。
       > 解压后的文件用途请参考[表4](#table15274931175244)。
 
 3. 使用helm安装mindcluster组件所需的Custom Resource Definitions（CRDs，自定义资源定义）的Release实例。
@@ -126,14 +126,14 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
         ```yaml
         ...
         ascend-device-plugin:
-        enabled: true
-        is310P1usoc: false
-        volcanoType: true
-        image:
-          repository: "ascend-k8sdeviceplugin" # 修改Ascend Device Plugin镜像名
-          tag: "v26.1.0"
-          pullPolicy: "IfNotPresent"
-        args: [ "device-plugin -volcanoType=true -presetVirtualDevice=true -logFile=/tmp/devicePlugin.log -logLevel=-1 --enable-healthz=true --healthz-address=11251" ] #日志路径改为/tmp/devicePlugin.log，日志级别改为Debug级别。
+          enabled: true
+          is310P1usoc: false
+          volcanoType: true
+          image:
+            repository: "ascend-k8sdeviceplugin" # 修改Ascend Device Plugin镜像名
+            tag: "v26.1.0"
+            pullPolicy: "IfNotPresent"
+          args: [ "device-plugin -volcanoType=true -presetVirtualDevice=true -logFile=/tmp/devicePlugin.log -logLevel=-1 --enable-healthz=true --healthz-address=11251" ] #日志路径改为/tmp/devicePlugin.log，日志级别改为Debug级别。
         ...
         ```
 
@@ -167,7 +167,10 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 
 ## 默认配置
 
-- crd默认配置<a name="default_crds_yaml_install_config"></a>。安装crd时的默认配置如下所示，参数说明可参见[表1](#table15274931175241)。
+- crd默认配置<a name="default_crds_yaml_install_config"></a>。
+    > [!NOTE]
+    >- 默认安装crd的组件包括：Infer Operator、Volcano、Ascend Operator，Volcano版本为v1.9.0。
+    >- 参数说明可参见[表1](#table15274931175241)。
 
    ```yaml
    ascend-operator-crds:
@@ -179,7 +182,11 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
      enabled: true              # 安装infer-operator组件的crd
    ```
 
-- 应用组件默认配置<a name="default_app_yaml_install_config"></a>。参数说明可参见[表2](#table15274931175242)和[表3](#table15274931175243)，其中[表3](#table15274931175243)中的参数未在YAML示例中展示。
+- 应用组件默认配置<a name="default_app_yaml_install_config"></a>。
+    > [!NOTE]
+    >- 默认安装的组件包括：Ascend Device Plugin、Ascend Operator、Volcano、ClusterD、NodeD、NPU Exporter和Infer Operator，Volcano版本为v1.9.0。
+    >- 默认不安装的组件包括：K8s RDMA Shared Dev Plugin。
+    >- 参数说明可参见[表2](#table15274931175242)和[表3](#table15274931175243)，其中[表3](#table15274931175243)中的参数未在下方YAML配置中展示，用户可根据实际情况新增或修改。
 
    ```yaml
    # 安装应用组件时的默认yaml配置如下
@@ -200,7 +207,7 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 
    npu-exporter:
      enabled: true                                                         # 安装NPU Exporter组件
-     is310P1usoc: false                                                    # 产品是否为Atlas 200I SoC A1 核心板
+     is310P1usoc: false                                                    # false表示产品不是Atlas 200I SoC A1 核心板
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter" # NPU Exporter组件镜像名，请根据实际情况修改
        tag: "v26.1.0"                                                      # NPU Exporter组件镜像标签，请根据实际情况修改
@@ -236,15 +243,15 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 
    ascend-device-plugin:
      enabled: true                                                         # 安装Ascend Device Plugin组件
-     is310P1usoc: false                                                    # 产品是否为Atlas 200I SoC A1 核心板
-     volcanoType: true                                                     # 是否使用volcano进行调度，请根据实际情况修改
+     is310P1usoc: false                                                    # false表示产品不是Atlas 200I SoC A1 核心板
+     volcanoType: true                                                     # true表示使用volcano进行调度，请根据实际情况修改
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin" # Ascend Device Plugin组件镜像名，请根据实际情况修改
        tag: "v26.1.0"                                                                  # Ascend Device Plugin组件镜像标签，请根据实际情况修改
        pullPolicy: "IfNotPresent"                                                      # Ascend Device Plugin组件镜像拉取策略，请根据实际情况修改
 
    k8s-rdma-shared-dev-plugin:
-     enabled: false                                                           # 不安装K8s RDMA Shared Dev Plugin组件
+     enabled: false                                                           # false表示不安装K8s RDMA Shared Dev Plugin组件
      image:
        repository: "swr.cn-south-1.myhuaweicloud.com/ascendhub/k8s-rdma-shared-dp" # K8s RDMA Shared Dev Plugin组件镜像名，请根据实际情况修改
        tag: "v26.1.0"                                                              # K8s RDMA Shared Dev Plugin组件镜像标签，请根据实际情况修改
@@ -466,4 +473,4 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 </table>
 
  > [!NOTE]
- > {chart_version}表示helm chart版本，如1.1.0。
+ > {chart_version}表示helm chart版本，与MindCluster组件版本保持一致。
