@@ -10,36 +10,11 @@
     **表 1**  升级方式说明
 
     <a name="table1527494117524"></a>
-    <table><thead align="left"><tr id="row327404115216"><th class="cellrowborder" valign="top" width="17.5%" id="mcps1.2.5.1.1"><p id="p627494165216"><a name="p627494165216"></a><a name="p627494165216"></a>升级方式</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="25.990000000000002%" id="mcps1.2.5.1.2"><p id="p92749419529"><a name="p92749419529"></a><a name="p92749419529"></a>是否支持跨版本升级</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="30.240000000000002%" id="mcps1.2.5.1.3"><p id="p19274134120522"><a name="p19274134120522"></a><a name="p19274134120522"></a>是否需要停止训练/推理任务</p>
-    </th>
-    <th class="cellrowborder" valign="top" width="26.27%" id="mcps1.2.5.1.4"><p id="p15533184405419"><a name="p15533184405419"></a><a name="p15533184405419"></a>参考章节</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody><tr id="row1727434112526"><td class="cellrowborder" valign="top" width="17.5%" headers="mcps1.2.5.1.1 "><p id="p1027414185220"><a name="p1027414185220"></a><a name="p1027414185220"></a>全量升级</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.990000000000002%" headers="mcps1.2.5.1.2 "><p id="p3274841105220"><a name="p3274841105220"></a><a name="p3274841105220"></a>是</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="30.240000000000002%" headers="mcps1.2.5.1.3 "><p id="p927454111524"><a name="p927454111524"></a><a name="p927454111524"></a>是</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="26.27%" headers="mcps1.2.5.1.4 "><p id="p6533944195419"><a name="p6533944195419"></a><a name="p6533944195419"></a><a href="#升级说明">升级说明</a>-<a href="#升级其他组件">升级其他组件</a>章节</p>
-    </td>
-    </tr>
-    <tr id="row8274241115212"><td class="cellrowborder" valign="top" width="17.5%" headers="mcps1.2.5.1.1 "><p id="p202747416524"><a name="p202747416524"></a><a name="p202747416524"></a>升级镜像</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="25.990000000000002%" headers="mcps1.2.5.1.2 "><p id="p1327413412527"><a name="p1327413412527"></a><a name="p1327413412527"></a>否</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="30.240000000000002%" headers="mcps1.2.5.1.3 "><p id="p3274144175214"><a name="p3274144175214"></a><a name="p3274144175214"></a>否</p>
-    </td>
-    <td class="cellrowborder" valign="top" width="26.27%" headers="mcps1.2.5.1.4 "><p id="p25334441543"><a name="p25334441543"></a><a name="p25334441543"></a><a href="#升级镜像">升级镜像</a>章节</p>
-    </td>
-    </tr>
-    </tbody>
-    </table>
+
+    |升级方式|是否支持跨版本升级|是否需要停止训练/推理任务|参考章节|
+    | --- | --- | --- | --- |
+    |全量升级|是|是|[升级说明](#升级说明)\-[升级其他组件](#升级其他组件)章节|
+    |升级镜像|否|否|[升级镜像](#升级镜像)章节|
 
     >[!NOTE]
     >本章节不适用的场景：用户对旧版本MindCluster集群调度组件的源代码（不含配置文件）进行了修改，请分析版本代码差异后再进行升级。
@@ -348,7 +323,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 **前提条件**
 
-- 已完成[升级环境检查](#升级说明)。
+已完成[升级环境检查](#升级说明)。
 
 **注意事项**
 
@@ -386,7 +361,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 **升级步骤**
 
 1. 以root用户登录管理节点。
-2. 进入Ascend Device PluginYAML配置文件所在目录（如：" /home/ascend-device-plugin"）。
+2. 进入Ascend Device Plugin YAML配置文件所在目录（如：" /home/ascend-device-plugin"）。
 
     ```shell
     cd /home/ascend-device-plugin
@@ -406,11 +381,12 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
     kubectl get ds -A | grep ascend-device-plugin
     ```
 
-    如果查询结果显示没有ascend-device-plugin的DaemonSet了跳过此步骤；若还有，则根据查询结果删除对应的DaemonSet，例如：
+    - 如果查询结果显示没有Ascend Device Plugin的DaemonSet，则跳过此步骤。
+    - 若还有Ascend Device Plugin的DaemonSet，则根据查询结果删除对应的DaemonSet，例如：
 
-    ```shell
-    kubectl delete ds -n kube-system ascend-device-plugin-daemonset-910
-    ```
+      ```shell
+      kubectl delete ds -n kube-system ascend-device-plugin-daemonset-910
+      ```
 
 5. 安装新版本Ascend Device Plugin。
 
@@ -430,14 +406,14 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 **升级步骤<a name="section65996266718"></a>**
 
-1. 卸载MindCluster旧版本组件。详情请参见[卸载](01_uninstallation.md)中“卸载其他组件 \> 步骤2”。
+1. 卸载MindCluster旧版本组件。详情请参见[卸载其他组件](01_uninstallation.md#卸载其他组件)中的步骤2。
 2. 参考[获取软件包](manual_installation/00_obtaining_software_packages.md)章节，下载新版本组件安装包。
 3. （可选）准备MindCluster集群调度组件新版本镜像。若新版本组件采用二进制方式安装，可跳过本步骤。
 
     参考[准备镜像](manual_installation/01_preparing_for_installation.md#准备镜像)章节，从昇腾镜像仓库拉取新版本镜像或者制作新版本镜像。注意新版本组件镜像tag要与旧版本组件镜像tag不一致，避免覆盖旧版本组件镜像。
 
 4. <a name="li147194506333"></a>请根据要升级的组件，重新执行手动安装步骤。详细步骤请参见[安装MindCluster新版本组件](manual_installation/00_obtaining_software_packages.md)。
-5. （可选）如需回退老版本，依次执行[卸载](01_uninstallation.md)中“卸载其他组件 \> 步骤2”和[步骤4](#li147194506333)，卸载新版本组件后安装旧版本组件即可。
+5. （可选）如需回退老版本，依次执行[卸载其他组件](01_uninstallation.md#卸载其他组件)中的步骤2和[步骤4](#li147194506333)，卸载新版本组件后安装旧版本组件即可。
 
 ## 升级镜像<a name="ZH-CN_TOPIC_0000002511346311"></a>
 

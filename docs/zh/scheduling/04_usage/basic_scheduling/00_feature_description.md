@@ -2,8 +2,8 @@
 
 基础调度包含如下特性：
 
-- 训练任务：[整卡调度](../../01_introduction/02_feature_description.md#整卡调度)、[静态vNPU调度](../../01_introduction/02_feature_description.md#静态vnpu调度)、[多级调度](../../01_introduction/02_feature_description.md#多级调度)和[弹性训练](../../01_introduction/02_feature_description.md#弹性训练)。若使用断点续训请参见[断点续训](../../04_usage/resumable_training/00_feature_description.md)。
-- 推理任务：[整卡调度](../../01_introduction/02_feature_description.md#整卡调度)、[静态vNPU调度](../../01_introduction/02_feature_description.md#静态vnpu调度)、[动态vNPU调度](../../01_introduction/02_feature_description.md#动态vnpu调度)、[软切分调度](../../01_introduction/02_feature_description.md#软切分调度)、[推理卡故障恢复](../../01_introduction/02_feature_description.md#推理卡故障恢复)和[推理卡故障重调度](../../01_introduction/02_feature_description.md#推理卡故障重调度)。
+- 训练任务：[整卡调度](../../01_introduction/02_feature_description.md#整卡调度)、[多级调度](../../01_introduction/02_feature_description.md#多级调度)。若使用断点续训请参见[断点续训](../../04_usage/resumable_training/00_feature_description.md)。
+- 推理任务：[整卡调度](../../01_introduction/02_feature_description.md#整卡调度)、[推理卡故障恢复](../../01_introduction/02_feature_description.md#推理卡故障恢复)和[推理卡故障重调度](../../01_introduction/02_feature_description.md#推理卡故障重调度)。
 
     不同的特性依赖不同的组件，详细介绍请参见[基础调度](../../01_introduction/02_feature_description.md#基础调度)章节。
 

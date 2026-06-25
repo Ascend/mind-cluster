@@ -320,7 +320,7 @@
 |-softShareDevConfigDir|string|""|软切分虚拟化场景配置目录。该配置目录需要在安装Ascend Device Plugin之前在根目录下手动创建。使用软切分功能时，需要配置该参数。|
 |-useSingleDieMode|bool|false|<term>Atlas A3 推理系列产品</term>是否开启单die直通模式。<ul><li>true：开启单die直通模式。</li><li>false：关闭单die直通模式。</li></ul>使用软切分虚拟化功能时，该参数必须配置为true。|
 |--enable-healthz|bool|false|是否启用健康检查服务。K8s部署时由组件YAML配置启用（true）。<ul><li>true：启用。</li><li>false：禁用。</li></ul>|
-|--healthz-address|string|11251|健康检查服务侦听端口号，取值范围 1025~65535。K8s部署时由组件YAML配置为11251。若指定端口被占用，组件启动失败。|
-|--tls-cert-file|string|""|HTTPS 证书文件路径。为空则使用 HTTP 协议。与 --tls-private-key-file 必须同时配置或同时为空。配置方法及安全注意事项请参见<a href="../../../07_references/security_hardening.md#健康探针安全加固">健康探针安全加固</a>。|
-|--tls-private-key-file|string|""|HTTPS 私钥文件路径。为空则使用 HTTP 协议。与 --tls-cert-file 必须同时配置或同时为空。|
+|--healthz-address|string|11251|健康检查服务侦听端口号，取值范围为1025~65535。K8s部署时由组件YAML配置为11251。若指定端口被占用，组件启动失败。|
+|--tls-cert-file|string|""|HTTPS证书文件路径。为空则使用HTTP协议。与--tls-private-key-file必须同时配置或同时为空。配置方法及安全注意事项请参见[健康探针安全加固](../../../07_references/security_hardening.md#健康探针安全加固)。|
+|--tls-private-key-file|string|""|HTTPS私钥文件路径。为空则使用HTTP协议。与--tls-cert-file必须同时配置或同时为空。|
 |-h或者-help|无|无|显示帮助信息。|

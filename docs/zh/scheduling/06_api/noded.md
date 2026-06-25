@@ -84,4 +84,4 @@ livenessProbe:
   failureThreshold: 3
 ```
 
-> 探针参数说明详见[启动参数表](../05_developer_guide/installation_deployment/manual_installation/09_noded.md#参数说明)。
+探针参数说明详见[启动参数表](../05_developer_guide/installation_deployment/manual_installation/09_noded.md#参数说明)。

@@ -25,39 +25,32 @@
 
 本教程将指导您在 **10分钟内** 完成最简化的Ascend NPU集群调度环境搭建，仅使用：
 
-- **Ascend Device Plugin** - NPU设备发现与资源上报
-- **Ascend Docker Runtime** - NPU设备等资源挂载能力
-- **Kubernetes原生调度器** - 无需额外调度组件
-- **普通Pod** - 快速验证NPU调度能力
+- **Ascend Device Plugin**：NPU设备发现与资源上报
+- **Ascend Docker Runtime**：NPU设备等资源挂载能力
+- **Kubernetes原生调度器**：无需额外调度组件
+- **普通Pod**：快速验证NPU调度能力
 
 ### 安装组件
 
-1. 环境要求
+下面以计算节点为Atlas 800T A2 训练服务器、CPU架构为aarch64为例。
 
-    | 要求 | 说明                |
-    |------|-------------------|
-    | 计算节点 | 以Altlas 800T A2 arm64训练服务器为例    |
-    | 驱动版本 | 配套服务器的Ascend驱动已安装 |
-
-2. 前置检查
-
-    在开始前，请确保NPU驱动已正确安装：
+1. 检查NPU状态，确保与服务器配套的NPU驱动已正确安装。
 
     ```shell
-    # 检查NPU状态，预期输出示例（显示芯片信息）
     npu-smi info
     ```
 
-3. 为NPU节点添加标签
+    若显示芯片信息，说明NPU驱动已正确安装。
+
+2. 为NPU节点添加标签。
 
     ```shell
-    # 为NPU节点添加必要标签
     kubectl label nodes -A workerselector=dls-worker-node
     ```
 
-4. 部署Ascend Docker Runtime和Ascend Device Plugin
+3. 部署Ascend Docker Runtime和Ascend Device Plugin组件。
 
-    1. 部署Ascend Docker Runtime
+    1. 部署Ascend Docker Runtime。
 
         ```shell
         VERSION=26.1.0
@@ -69,7 +62,7 @@
         systemctl daemon-reload && systemctl restart docker
         ```
 
-        回显示例如下则表示安装成功
+        回显示例如下，表示安装成功。
 
         ```CodeFusion
         Uncompressing ascend-docker-runtime  100%
@@ -85,17 +78,17 @@
         [INFO] ascend-docker-runtime install success
         ```
 
-    2. 拉取Device Plugin镜像
+    2. 拉取Ascend Device Plugin镜像。
 
         ```shell
-        # 从华为云镜像仓拉取Device Plugin镜像
+        # 从华为云镜像仓拉取Ascend Device Plugin镜像
         docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION}
 
         # 为镜像添加本地标签
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION} ascend-k8sdeviceplugin:v${VERSION}
         ```
 
-    3. 部署Ascend Device Plugin
+    3. 部署Ascend Device Plugin。
 
         ```shell
         # 拉取配置文件
@@ -108,34 +101,37 @@
         kubectl apply -f device-plugin-v${VERSION}.yaml
         ```
 
-        查看Device Plugin Pod状态
+        查看Ascend Device Plugin Pod的状态。
 
         ```shell
         kubectl get pod -n kube-system
+        ```
 
-        # 预期输出
+        回显示例如下，表示状态正常。
+
+        ```CodeFusion
         NAME                                  READY   STATUS    RESTARTS   AGE
         ...
         ascend-device-plugin-daemonset-d5ctz  1/1     Running   0          11s
         ...
         ```
 
-    4. 验证NPU资源上报
+    4. 查看节点的NPU资源。
 
         ```shell
-        # 查看节点的NPU资源
         kubectl describe node -A | grep "huawei.com/Ascend910"
+        ```
 
-        # 预期输出（显示可用的NPU数量）
+        回显示例如下，正常显示可用的NPU数量。
+
+        ```CodeFusion
         huawei.com/Ascend910:     8
         huawei.com/Ascend910:     8
         ```
 
 ### 调度NPU Pod
 
-1. 创建测试Pod配置文件
-
-    创建 `npu-test-pod.yaml`：
+1. 创建测试Pod配置文件 `npu-test-pod.yaml`。
 
     ```yaml
     apiVersion: v1
@@ -154,13 +150,13 @@
             huawei.com/Ascend910: 1
     ```
 
-2. 部署测试Pod
+2. 部署测试Pod。
 
     ```shell
     kubectl apply -f npu-test-pod.yaml
     ```
 
-3. 验证Pod调度
+3. 验证Pod调度。
 
     ```shell
     # 查看Pod状态
@@ -171,7 +167,7 @@
     npu-test  1/1     Running   0          10s   10.244.1.2   worker01  <none>
     ```
 
-4. 验证NPU访问
+4. 验证NPU访问。
 
     ```shell
     # 进入容器验证NPU可用性
@@ -182,7 +178,7 @@
     npu-smi info
     ```
 
-5. 清理测试资源
+5. 清理测试资源。
 
     ```shell
     # 删除测试Pod
@@ -192,12 +188,12 @@
     kubectl delete -f device-plugin-v${VERSION}.yaml
     ```
 
-6. 常见问题
+**常见问题**
 
-    | 问题 | 原因 | 解决方法 |
-    |------|------|---------|
-    | Pod一直Pending | NPU资源不足或节点标签不匹配 | 检查`kubectl describe pod`和节点标签 |
-    | Device Plugin启动失败 | 驱动路径不正确 | 检查`/usr/local/Ascend/driver`是否存在 |
+| 问题 | 原因 | 解决方法 |
+|------|------|---------|
+| Pod一直Pending | NPU资源不足或节点标签不匹配 | 检查`kubectl describe pod`和节点标签 |
+| Device Plugin启动失败 | 驱动路径不正确 | 检查`/usr/local/Ascend/driver`是否存在 |
 
 ## 训练业务快速入门
 

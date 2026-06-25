@@ -43,28 +43,36 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 
 ## 执行安装<a name="ZH-CN_centerIC_0000002511346381_install_exec"></a>
 
-安装步骤如下
+安装步骤如下：
+
 1. 参考[创建节点标签](../../05_developer_guide/installation_deployment/manual_installation/01_preparing_for_installation.md#ZH-CN_TOPIC_0000002511426279)小节，给节点打标签。
 
-> [!NOTE]
->- 默认日志路径无需用户手动创建，组件yaml文件initContainer命令会自动创建，默认日志路径可参考[集群调度组件日志路径列表](../../05_developer_guide/installation_deployment/manual_installation/01_preparing_for_installation.md#table957112617314)。
->- 宿主机上可不新创建用户，只需要保证没有其他用户占用UID为9000的情况即可，用户信息可参考[创建用户](../../05_developer_guide/installation_deployment/manual_installation/01_preparing_for_installation.md#ZH-CN_TOPIC_0000002511346353)。
+   >[!NOTE]
+   >- 默认日志路径无需用户手动创建，组件yaml文件initContainer命令会自动创建，默认日志路径可参考[集群调度组件日志路径列表](../../05_developer_guide/installation_deployment/manual_installation/01_preparing_for_installation.md#table957112617314)。
+   >- 宿主机上可不新创建用户，只需要保证没有其他用户占用UID为9000的情况即可，用户信息可参考[创建用户](../../05_developer_guide/installation_deployment/manual_installation/01_preparing_for_installation.md#ZH-CN_TOPIC_0000002511346353)。
 
-2. 获取mindcluster helm部署工具。
-    - 下载部署工具。
+2. 获取MindCluster helm部署工具。
+   1. 下载部署工具。
+
       ```bash
       # 请用户自行将命令中的{version}替换为对应版本号，如26.1.0
       wget https://gitcode.com/Ascend/mind-cluster/releases/download/v{version}/Ascend-helm-deploy-tool_{version}_linux.zip
       ```
-    - 解压部署工具压缩包：
+
+   2. 解压部署工具压缩包。
+
       ```bash
       unzip Ascend-helm-deploy-tool_{version}_linux.zip
       ```
-      执行ls -l命令查看解压后的文件：
+
+   3. 查看解压后的文件。
+
       ```bash
       ls -l
       ```
+
       回显如下：
+
       ```bash
       -r-------- 1 root root  2026 Mar 24 15:25 mindcluster-crds-deploy-tool-{chart_version}.tgz
       -r-------- 1 root root  2026 Mar 24 15:25 mindcluster-deploy-tool-{chart_version}.tgz
@@ -108,6 +116,7 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
       REVISION: 1
       TEST SUITE: None
       ```
+
 4. 使用helm安装mindcluster应用组件的Release实例。
     > [!NOTE]
     >- **默认配置安装方式**会从昇腾镜像仓库下载应用组件的镜像。若用户节点无法连接互联网且本地未缓存镜像，可能会导致安装失败。
@@ -157,9 +166,11 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
       REVISION: 1
       TEST SUITE: None
       ```
+
 5. 参考[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)章节确认组件安装状态。
 6. 若组件状态异常，请确认检查安装配置是否正确，排查异常原因后重新安装。
    - 重新安装前执行如下命令卸载相关资源。
+
      ```bash
      helm uninstall mindcluster-crds # 命令卸载crd
      helm uninstall mindcluster # 命令卸载应用组件

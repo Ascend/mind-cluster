@@ -204,12 +204,6 @@
 - 通过命令行使用：安装集群调度组件，通过命令行使用软切分调度特性。
 - 集成后使用：将集群调度组件集成到已有的第三方AI平台或者基于集群调度组件开发的AI平台。
 
-### 支持的产品形态
-
-- Atlas A2 推理系列产品
-- Atlas A3 推理系列产品
-- Atlas 350 标卡
-
 ### 使用流程
 
 通过命令行使用软切分调度特性流程可以参见[图1](#fig24252498666vcann)。
@@ -244,10 +238,11 @@
 ## 通过命令行使用（Volcano）<a name="ZH-CN_TOPIC_00000024792271456"></a>
 
 ### 环境准备
+
 主机侧通过`npu-smi`工具开启容器共享模式，可支持多个容器挂载同一设备。若设备未开启容器共享模式，则只能挂载到单个容器。若配合MindCluster使用，要求整节点开启容器共享模式。
 
 ```shell
-# Atlas A2 / A3 推理系列产品：设置容器共享模式
+# Atlas A2/A3 推理系列产品：设置容器共享模式
 npu-smi set -t device-share -i ${id} -c ${chip_id} -d ${value}
 # Ascend 950PR 产品：设置容器共享模式
 npu-smi set -t device-share -i ${id} -d ${value}
@@ -258,21 +253,21 @@ npu-smi info -t device-share -i ${id}
 
 **表 4 参数说明**
 
-|参数|参数选项|说明|
-|:---|:---|:---|
-|id|设备id|通过`npu-smi info -m`命令查询获取的NPU ID即为设备id。|
-|chip_id|芯片id|通过`npu-smi info -m`命令查询获取的Chip ID即为芯片id。|
-|value|<ul>默认值：禁用<li>禁用(0)</li><li>使能(1)</li></ul>|容器共享模式使能状态。|
+|参数|说明|
+|---|---|
+|id|设备ID。通过`npu-smi info -m`命令查询获取的NPU ID即为设备ID。|
+|chip_id|芯片ID。通过`npu-smi info -m`命令查询获取的Chip ID即为芯片ID。|
+|value|容器共享模式启动状态。<ul><li>0：关闭</li><li>1：开启</li></ul>默认为关闭状态。|
 
 以Ascend 950PR 产品为例：
-开启设备0所有芯片的容器共享模式，查询设备0容器共享模式。
+开启设备0上所有芯片的容器共享模式，查询设备0的容器共享模式。
 
   ```shell
   npu-smi set -t device-share -i 0 -d 1
   npu-smi info -t device-share -i 0
   ```
 
-主机侧可设置容器共享持久化使能状态。若持久化功能为开启状态，则重启系统后设备的容器共享模式使能状态与重启前保持一致。
+主机侧可设置容器共享持久化启动状态。若持久化功能为开启状态，则重启系统后设备的容器共享模式启动状态与重启前保持一致。
 
 ```shell
 npu-smi set -t device-share-cfg-recover -d ${value}
@@ -280,13 +275,13 @@ npu-smi set -t device-share-cfg-recover -d ${value}
 
 **表 5 参数说明**
 
-|参数|参数选项|说明|
-|:---|:---|:---|
-|value|<ul>默认值：禁用<li>禁用(0)</li><li>使能(1)</li></ul>|容器共享持久化使能状态。|
+|参数|说明|
+|---|---|
+|value|容器共享持久化启动状态。<ul><li>0：关闭</li><li>1：开启</li></ul>默认为关闭状态。|
 
 ### 准备vCANN-RT
 
-参照 [vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md#%E6%BA%90%E7%A0%81%E8%8E%B7%E5%8F%96) 官方文档指引，完成vCANN-RT的编译与配置操作。
+参考[vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md#%E6%BA%90%E7%A0%81%E8%8E%B7%E5%8F%96)官方文档，完成vCANN-RT的编译与配置操作。
 
 ### 制作镜像<a name="ZH-CN_TOPIC_0000002511427026"></a>
 
@@ -322,8 +317,9 @@ npu-smi set -t device-share-cfg-recover -d ${value}
 ### 准备任务YAML<a name="ZH-CN_TOPIC_00000024793871220102"></a>
 
 >[!NOTE]
->如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载NPU芯片设备备。用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
->因为Atlas 200I SoC A1 核心板场景不支持Ascend Docker Runtime，用户也无需修改YAML文件。
+>
+>- 如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载NPU芯片设备备。用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
+>- 因为Atlas 200I SoC A1 核心板场景不支持Ascend Docker Runtime，用户也无需修改YAML文件。
 
 **操作步骤<a name="zh-cn_topic_0000001558853680_zh-cn_topic_0000001609074213_section14665181617334"></a>**
 
@@ -342,7 +338,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     <tbody>
     <tr>
     <td class="cellrowborder" rowspan="2" align="center" valign="center" width="22%"><p>Ascend Job</p></td>
-    <td class="cellrowborder" valign="top" width="47%"><p>Atlas A2 推理系列产品、Atlas A3 推理系列产品</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p><term>Atlas A2 推理系列产品</term></p><p><term>Atlas A3 推理系列产品</term></p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>pytorch_acjob_infer_910b_softsharedev.yaml</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.0.0/samples/inference/volcano/pytorch_acjob_infer_910b_softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
@@ -355,7 +351,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     </table>
 2. 将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
 
-    在Atlas 800I A2 推理服务器上，以pytorch_acjob_infer_910b_softsharedev.yaml为例，申请芯片AICore百分比为50%，芯片高带宽内存量为2048MB，软切分策略为fixed-share的参数配置示例如下。yaml配置参考请参考[YAML配置说明](../../../06_api/yaml_configuration.md#yaml_configuration)。
+    在Atlas 800I A2 推理服务器上，以pytorch_acjob_infer_910b_softsharedev.yaml为例，申请芯片AICore百分比为50%，芯片高带宽内存量为2048MB，软切分策略为fixed-share的参数配置示例如下。YAML配置参考请参考[YAML配置说明](../../../06_api/yaml_configuration.md#yaml_configuration)。
 
     <pre codetype="yaml">
     apiVersion: mindxdl.gitee.com/v1

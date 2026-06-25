@@ -149,118 +149,19 @@ spec:
 **表 1**  YAML参数说明
 
 <a name="zh-cn_topic_0000002329010086_table7602101418317"></a>
-<table><thead align="left"><tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row1460212146313"><th class="cellrowborder" valign="top" width="27.16%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p196029147318"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p196029147318"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p196029147318"></a>参数</p>
-</th>
-<th class="cellrowborder" valign="top" width="36.28%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1560213143314"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1560213143314"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1560213143314"></a>取值</p>
-</th>
-<th class="cellrowborder" valign="top" width="36.559999999999995%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p106023141317"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p106023141317"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p106023141317"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row1960421417318"><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p460415143318"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p460415143318"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p460415143318"></a>schedulerName</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p56045145317"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p56045145317"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p56045145317"></a>取值为<span class="parmvalue" id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_parmvalue10604111417319"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_parmvalue10604111417319"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_parmvalue10604111417319"></a>“volcano”</span>。</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p7109162113916"><a name="p7109162113916"></a><a name="p7109162113916"></a>配置调度器为<span id="zh-cn_topic_0000002322062116_ph175881448132716"><a name="zh-cn_topic_0000002322062116_ph175881448132716"></a><a name="zh-cn_topic_0000002322062116_ph175881448132716"></a>Volcano</span>。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row56081214237"><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1960818141031"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1960818141031"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1960818141031"></a>sp-block</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002039339953_p14755536454"><a name="zh-cn_topic_0000002039339953_p14755536454"></a><a name="zh-cn_topic_0000002039339953_p14755536454"></a>指定逻辑超节点芯片数量。</p>
-<p id="p161001559326"><a name="p161001559326"></a><a name="p161001559326"></a>需要是节点芯片数量的整数倍，且P/D实例的总芯片数量是其整数倍。</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p1670155202912"><a name="p1670155202912"></a><a name="p1670155202912"></a>指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于训练任务的亲和性调度。<span id="zh-cn_topic_0000002511347099_ph521204025916"><a name="zh-cn_topic_0000002511347099_ph521204025916"></a><a name="zh-cn_topic_0000002511347099_ph521204025916"></a>若用户未指定该字段，</span><span id="zh-cn_topic_0000002511347099_ph172121408590"><a name="zh-cn_topic_0000002511347099_ph172121408590"></a><a name="zh-cn_topic_0000002511347099_ph172121408590"></a>Volcano</span><span id="zh-cn_topic_0000002511347099_ph192121140135911"><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a><a name="zh-cn_topic_0000002511347099_ph192121140135911"></a>调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。</span></p>
-<p id="p19701652112917"><a name="p19701652112917"></a><a name="p19701652112917"></a>了解详细说明请参见<a href="../basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点">灵衢总线设备节点网络说明</a>。</p>
-<p id="p12461828061"><a name="p12461828061"></a><a name="p12461828061"></a>仅支持在Atlas 800I A3 超节点服务器中使用该字段。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row46101144312"><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1861010140316"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1861010140316"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1861010140316"></a>pod-rescheduling</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul186101614131"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul186101614131"></a><ul id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul186101614131"><li>on：开启<span id="ph164712399403"><a name="ph164712399403"></a><a name="ph164712399403"></a>Pod</span>级别重调度。</li><li>其他值或不使用该字段：关闭<span id="ph126431540134014"><a name="ph126431540134014"></a><a name="ph126431540134014"></a>Pod</span>级别重调度。</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p661016141437"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p661016141437"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p661016141437"></a><span id="ph4287194517407"><a name="ph4287194517407"></a><a name="ph4287194517407"></a>Pod</span>级重调度，表示任务发生故障后，不会删除PodGroup内的所有任务<span id="ph1595595534015"><a name="ph1595595534015"></a><a name="ph1595595534015"></a>Pod</span>，而是将发生故障的<span id="ph750524344015"><a name="ph750524344015"></a><a name="ph750524344015"></a>Pod</span>进行删除，由控制器重新创建新<span id="ph1521154416407"><a name="ph1521154416407"></a><a name="ph1521154416407"></a>Pod</span>后进行重调度。</p>
-<p id="p1745415523710"><a name="p1745415523710"></a><a name="p1745415523710"></a>如果podGroupSize为1，pod-rescheduling需要配置为"on"；podGroupSize大于1时，不配置该参数。</p>
-</td>
-</tr>
-<tr id="row1350395294311"><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="p1950335234319"><a name="p1950335234319"></a><a name="p1950335234319"></a>huawei.com/schedule_minAvailable</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><p id="p7503135219437"><a name="p7503135219437"></a><a name="p7503135219437"></a>数字类型字符串</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p99129343327"><a name="p99129343327"></a><a name="p99129343327"></a>Gang调度策略下最小调度的副本数。在StormService中，</p>
-<a name="ul585819537354"></a><a name="ul585819537354"></a><ul id="ul585819537354"><li>所有podGroupSize为1的实例会组成一个podGroup进行调度，其最小调度的副本数范围为[1, 实例replicas之和]，建议配置为实例replicas之和；</li><li>podGroupSize大于1的实例各自组成一个podGroup，其最小调度副本数范围为[1, podGroupSize]，建议配置为podGroupSize。</li></ul>
-<p id="p550316525433"><a name="p550316525433"></a><a name="p550316525433"></a>例如，prefill实例的podGroupSize为1，decode实例的podGroupSize为2，那么prefill实例的最小调度副本数设置为prefill实例的replicas，decode实例的最小调度副本数设置为decode实例的podGroupSize。</p>
-</td>
-</tr>
-<tr id="row1371059114414"><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="p28155984416"><a name="p28155984416"></a><a name="p28155984416"></a>huawei.com/recover_policy_path</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><p id="p1880125114317"><a name="p1880125114317"></a><a name="p1880125114317"></a>"pod"</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="p8818595449"><a name="p8818595449"></a><a name="p8818595449"></a>pod-rescheduling为"on"时任务执行恢复的路径。设置为"pod"，表明Pod级重调度失败时，不升级到Job级重调度。因为当前podGroup中的每一个Pod都是一个独立的实例，所以其故障处理不能扩散到其他实例。（当使用vcjob时，需要配置该策略：policies: -event:PodFailed -action:RestartTask）</p>
-</td>
-</tr>
 
-<tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row18613714439"><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p196131140315"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p196131140315"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p196131140315"></a>huawei.com/Ascend910</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><a name="ul5849154316123"></a><a name="ul5849154316123"></a><ul id="ul5849154316123"><li><span id="ph20407103618121"><a name="ph20407103618121"></a><a name="ph20407103618121"></a>Atlas 800I A2 推理服务器</span>：8</li><li><span id="zh-cn_topic_0000002329010086_ph747840144217"><a name="zh-cn_topic_0000002329010086_ph747840144217"></a><a name="zh-cn_topic_0000002329010086_ph747840144217"></a>Atlas 900 A3 SuperPoD 超节点</span>、<span id="ph2061955101216"><a name="ph2061955101216"></a><a name="ph2061955101216"></a>Atlas 800I A3 超节点服务器</span>: 16</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 ">
-    <p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p561713141331"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p561713141331"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p561713141331"></a>请求的NPU数量。当前仅支持整机调度，请根据实际硬件卡数进行修改。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row11621414533"><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p894317013244"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p894317013244"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p894317013244"></a>env[name==ASCEND_VISIBLE_DEVICES].valueFrom.fieldRef.fieldPath</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p7622914235"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p7622914235"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p7622914235"></a>取值为metadata.annotations['huawei.com/Ascend910']，和环境上实际的芯片类型保持一致。</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 ">
-    <p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p136226142031"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p136226142031"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p136226142031"></a><span id="zh-cn_topic_0000002362968521_ph230432885618"><a name="zh-cn_topic_0000002362968521_ph230432885618"></a><a name="zh-cn_topic_0000002362968521_ph230432885618"></a>Ascend Docker Runtime</span>会获取该参数值，用于给容器挂载相应类型的NPU。</p>
-    <p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p186225141637"></a>该参数只支持使用<span id="ph123731542141613"><a name="ph123731542141613"></a><a name="ph123731542141613"></a>Volcano</span>调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row662216141939"><td class="cellrowborder" rowspan="5" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p106221514533"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p106221514533"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p106221514533"></a>fault-scheduling</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p206221814637"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p206221814637"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p206221814637"></a>grace</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1462216142314"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1462216142314"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1462216142314"></a>配置任务采用优雅删除模式，并在过程中先优雅删除原<span id="ph12553844101710"><a name="ph12553844101710"></a><a name="ph12553844101710"></a>Pod</span>，15分钟后若还未成功，使用强制删除原<span id="ph1086910463172"><a name="ph1086910463172"></a><a name="ph1086910463172"></a>Pod</span>。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row1262313144314"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p762371419310"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p762371419310"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p762371419310"></a>force</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p562301420319"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p562301420319"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p562301420319"></a>配置任务采用强制删除模式，在过程中强制删除原<span id="ph7477195381711"><a name="ph7477195381711"></a><a name="ph7477195381711"></a>Pod</span>。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row46230146312"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p126231144312"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p126231144312"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p126231144312"></a>off</p>
-</td>
-<td class="cellrowborder" rowspan="3" valign="top" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p26233141317"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p26233141317"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p26233141317"></a>该推理任务不使用故障重调度特性。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row7623191419310"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p11624181414311"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p11624181414311"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p11624181414311"></a>无（无fault-scheduling字段）</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row106241614036"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p9624191420310"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p9624191420310"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p9624191420310"></a>其他值</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row76241014637"><td class="cellrowborder" rowspan="2" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p262451412319"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p262451412319"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p262451412319"></a>fault-retry-times</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p76249141830"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p76249141830"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p76249141830"></a>0 &lt; fault-retry-times</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p9624101418314"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p9624101418314"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p9624101418314"></a>处理业务面故障，必须配置业务面无条件重试的次数。</p>
-</td>
-</tr>
-<tr id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_row06256141536"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1462511141837"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1462511141837"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p1462511141837"></a>无（无fault-retry-times）或0</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p12625914632"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p12625914632"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p12625914632"></a>该任务不使用无条件重试功能，发生业务面故障之后<span id="ph174393280178"><a name="ph174393280178"></a><a name="ph174393280178"></a>Volcano</span>不会主动删除故障的<span id="ph210853715184"><a name="ph210853715184"></a><a name="ph210853715184"></a>Pod</span>。</p>
-</td>
-</tr>
-<tr id="row125252918159"><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p462713149315"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p462713149315"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p462713149315"></a>restartPolicy</p>
-</td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul36271614531"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul36271614531"></a><ul id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_ul36271614531"><li>Never：从不重启</li><li>Always：总是重启</li><li>OnFailure：失败时重启</li><li>ExitCode：根据进程退出码决定是否重启Pod，错误码是1~127时不重启，128~255时重启Pod。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">vcjob类型的训练任务不支持ExitCode。</div></div>
-</li></ul>
-</td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p762813148318"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p762813148318"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_p762813148318"></a>容器重启策略。当配置业务面故障无条件重试时，容器重启策略取值必须为<span class="parmvalue" id="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_parmvalue18628191413311"><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_parmvalue18628191413311"></a><a name="zh-cn_topic_0000002329010086_zh-cn_topic_0000001951418201_parmvalue18628191413311"></a>“Never”</span>。</p>
-</td>
-</tr>
-</tbody>
-</table>
+|参数|取值|说明|
+|---|---|---|
+|schedulerName|取值为“volcano”。|配置调度器为Volcano。|
+|sp-block|指定逻辑超节点芯片数量。<p>需要是节点芯片数量的整数倍，且P/D实例的总芯片数量是其整数倍。</p>|指定sp-block字段，集群调度组件会在物理超节点上根据切分策略划分出逻辑超节点，用于任务的亲和性调度。若用户未指定该字段，Volcano调度时会将此任务的逻辑超节点大小指定为任务配置的NPU总数。<ul><li>了解详细说明请参见[灵衢总线设备节点网络说明](../basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点)。</li><li>仅支持在Atlas 800I A3 超节点服务器中使用该字段。</li></ul>|
+|pod-rescheduling|<ul><li>on：开启Pod级别重调度。</li><li>其他值或不使用该字段：关闭Pod级别重调度。</li></ul>|Pod级重调度，表示任务发生故障后，不会删除PodGroup内的所有任务Pod，而是将发生故障的Pod进行删除，由控制器重新创建新Pod后进行重调度。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">如果podGroupSize为1，pod-rescheduling需要配置为"on"；podGroupSize大于1时，不配置该参数。</div></div>|
+|huawei.com/schedule\_minAvailable|数字类型字符串|Gang调度策略下最小调度的副本数。在StormService中，<ul><li>所有podGroupSize为1的实例会组成一个podGroup进行调度，其最小调度的副本数范围为\[1, 实例replicas之和\]，建议配置为实例replicas之和。</li><li>podGroupSize大于1的实例各自组成一个podGroup，其最小调度副本数范围为\[1, podGroupSize\]，建议配置为podGroupSize。</li></ul>例如，prefill实例的podGroupSize为1，decode实例的podGroupSize为2，那么prefill实例的最小调度副本数设置为prefill实例的replicas，decode实例的最小调度副本数设置为decode实例的podGroupSize。|
+|huawei.com/recover\_policy\_path|"pod"|pod-rescheduling为"on"时任务执行恢复的路径。设置为"pod"，表明Pod级重调度失败时，不升级到Job级重调度。因为当前podGroup中的每一个Pod都是一个独立的实例，所以其故障处理不能扩散到其他实例。（当使用vcjob时，需要配置该策略：policies: -event:PodFailed -action:RestartTask）|
+|huawei.com/Ascend910|<ul><li>Atlas 800I A2 推理服务器：8</li><li>Atlas 900 A3 SuperPoD 超节点、Atlas 800I A3 超节点服务器: 16</li></ul>|请求的NPU数量。当前仅支持整机调度，请根据实际硬件卡数进行修改。|
+|env\[name==ASCEND\_VISIBLE\_DEVICES\].valueFrom.fieldRef.fieldPath|取值为metadata.annotations\['huawei.com/Ascend910'\]，和环境上实际的芯片类型保持一致。| Ascend Docker Runtime会获取该参数值，用于给容器挂载相应类型的NPU。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">该参数只支持使用Volcano调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</div></div>|
+|fault-scheduling|<ul><li>grace：配置任务采用优雅删除模式，并在过程中先优雅删除原Pod，15分钟后若还未成功，使用强制删除原Pod。</li><li>force：配置任务采用强制删除模式，在过程中强制删除原Pod。</li><li>off、无（无fault-scheduling字段）或其他值：该推理任务不使用故障重调度特性。</li></ul>|-|
+|fault-retry-times|<ul><li>0 \< fault-retry-times：处理业务面故障，必须配置业务面无条件重试的次数。</li><li>无（无fault-retry-times）或0：该任务不使用无条件重试功能，发生业务面故障之后Volcano不会主动删除故障的Pod。</li></ul>|-|
+|restartPolicy|<ul><li>Never：从不重启</li><li>Always：总是重启</li><li>OnFailure：失败时重启</li><li>ExitCode：根据进程退出码决定是否重启Pod，错误码是1~127时不重启，128~255时重启Pod。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">vcjob类型的训练任务不支持ExitCode。</div></div></li></ul>|容器重启策略。当配置业务面故障无条件重试时，容器重启策略取值必须为“Never”。|
 
 ### 推理任务的下发、查看与删除<a name="ZH-CN_TOPIC_0000002484213020"></a>
 

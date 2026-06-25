@@ -2,9 +2,9 @@
 
 ## 创建用户<a name="ZH-CN_TOPIC_0000002511346353"></a>
 
-为了减少手工操作，宿主机上可不新创建用户，只需要保证没有其他用户占用UID为9000的情况即可。启动用户为hwMindX的组件（可查阅[表1](#table125971501113)），您可以根据实际情况决定创建用户的方式：
+为了减少手工操作，宿主机上可不新创建用户，只需要保证没有其他用户占用UID为9000的情况即可。启动用户为hwMindX的组件（可查阅[表1](#table125971501113)），提供以下两种方式，您可以根据实际情况选择。
 
-1. 创建用户：（1）用户可按以下命令创建hwMindX用户；（2）也可以创建自定义用户，需将以下命令中的用户名和UID替换为实际值，同时修改对应组件的Dockerfile中`useradd`命令的UID，使其与实际值一致。
+- 创建用户：用户可执行以下命令创建hwMindX用户，也可以创建自定义用户，需将以下命令中的用户名和UID替换为实际值，同时修改对应组件的Dockerfile中`useradd`命令的UID，使其与实际值一致。
 
    - <a name="li1069651515405"></a>Ubuntu操作系统
 
@@ -20,7 +20,7 @@
      usermod -a -G HwHiAiUser hwMindX
      ```
 
-2. 使用环境中已有用户：需执行 <code>usermod -a -G HwHiAiUser <i>{your_username}</i></code>，并修改对应组件的Dockerfile和yaml文件，将Dockerfile里`useradd`命令中的UID替换为已有用户的UID，将组件yaml文件initContainer命令中的`chown 9000:9000`修改为对应的UID:GID。
+- 使用环境中已有用户：需执行 <code>usermod -a -G HwHiAiUser <i>{your_username}</i></code>，并修改对应组件的Dockerfile和YAML文件，将Dockerfile里`useradd`命令中的UID替换为已有用户的UID，将组件YAML文件initContainer命令中的`chown 9000:9000`修改为对应的UID:GID。
 
 >[!NOTE]
 >
@@ -320,8 +320,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
 >- 在K8s所使用的容器运行时中导入镜像。如K8s  1.24以上版本默认使用Containerd作为容器运行时，拉取或者制作完镜像后需要将镜像导入到Containerd中。
 >- NPU Exporter和Ascend Device Plugin的运行用户为root，在对应的Dockerfile中配置了LD\_LIBRARY\_PATH环境变量，其中的值包含了驱动库的相关路径。组件运行时会使用到其中的文件，建议驱动安装时指定的运行用户为root，避免用户不一致带来的提权风险。
 >- 启动用户为hwMindX的组件，若在[创建用户](#ZH-CN_TOPIC_0000002511346353)时使用了自定义用户或已有用户，需在制作镜像前修改对应组件Dockerfile中`useradd`命令的UID，使其与宿主机上的用户UID一致。
->- 针对Atlas 850 系列硬件产品、Atlas 950 SuperPod产品，Ascend Device Plugin、NodeD、NPU Exporter等需要在容器内调用DCMI接口的组件，在构建镜像时，需参考
-   [容器基础镜像集成UMDK安装指导](../../../06_references/common_operations.md#容器基础镜像集成umdk安装指导)，安装UMDK软件包。
+>- 针对Atlas 850 系列硬件产品、Atlas 950 SuperPod产品，Ascend Device Plugin、NodeD、NPU Exporter等需要在容器内调用DCMI接口的组件，在构建镜像时，需参考[容器基础镜像集成UMDK安装指导](../../../07_references/common_operations.md#容器基础镜像集成umdk安装指导)，安装UMDK软件包。
 
 **制作镜像<a name="section106851195114"></a>**
 
