@@ -371,7 +371,8 @@ func TestAddTopologyLabel_ExistingMap_A5(t *testing.T) {
 		mockGetSuperPodInfo := gomonkey.ApplyMethodReturn(device.NewHwAscend910Manager(),
 			"GetSuperPodID", testSuperPodId).
 			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetRackID", testRackId).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetServerIndex", testServerIndex)
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetServerIndex", testServerIndex).
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetSuperPodType", int32(common.ProductType2D))
 		defer mockGetSuperPodInfo.Reset()
 
 		newLabelMap := map[string]string{"existing-label": "value"}
@@ -420,7 +421,8 @@ func TestAddTopologyLabel_A5_NegativeServerIndex(t *testing.T) {
 		mockGetSuperPodInfo := gomonkey.ApplyMethodReturn(device.NewHwAscend910Manager(),
 			"GetSuperPodID", testSuperPodId).
 			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetRackID", testRackId).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetServerIndex", testNegativeServerIdx)
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetServerIndex", testNegativeServerIdx).
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetSuperPodType", int32(common.ProductType2D))
 		defer mockGetSuperPodInfo.Reset()
 
 		convey.Convey("01-should skip serverIndex but write superPodId and rackId labels", func() {
@@ -443,7 +445,8 @@ func TestAddTopologyLabel_A5_AllNegative(t *testing.T) {
 		mockGetSuperPodInfo := gomonkey.ApplyMethodReturn(device.NewHwAscend910Manager(),
 			"GetSuperPodID", testNegativeSuperPodId).
 			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetRackID", testNegativeRackId).
-			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetServerIndex", testNegativeServerIdx)
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetServerIndex", testNegativeServerIdx).
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetSuperPodType", int32(common.ProductType2D))
 		defer mockGetSuperPodInfo.Reset()
 
 		convey.Convey("01-should not write any topology label", func() {
@@ -451,6 +454,48 @@ func TestAddTopologyLabel_A5_AllNegative(t *testing.T) {
 			hdm.addTopologyLabel(newLabelMap)
 			convey.So(len(newLabelMap), convey.ShouldEqual, 0)
 		})
+	})
+}
+
+func TestAddTopologyLabel_A5ServerNoRackId(t *testing.T) {
+	convey.Convey("Test addTopologyLabel: A5 Server type should not add rackid label", t, func() {
+		hdm := &HwDevManager{manager: device.NewHwAscend910Manager()}
+		common.ParamOption.RealCardType = api.Ascend910A5
+
+		mockGetSuperPodInfo := gomonkey.ApplyMethodReturn(device.NewHwAscend910Manager(),
+			"GetSuperPodID", testSuperPodId).
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetRackID", testRackId).
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetServerIndex", testServerIndex).
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetSuperPodType", int32(common.ProductTypeServer))
+		defer mockGetSuperPodInfo.Reset()
+
+		newLabelMap := make(map[string]string)
+		hdm.addTopologyLabel(newLabelMap)
+		convey.So(newLabelMap[npuCommon.TopoLabelSuperPodId], convey.ShouldEqual, strconv.Itoa(int(testSuperPodId)))
+		_, hasRackId := newLabelMap[npuCommon.TopoLabelRackId]
+		convey.So(hasRackId, convey.ShouldBeFalse)
+		convey.So(newLabelMap[npuCommon.TopoLabelServerId], convey.ShouldEqual, strconv.Itoa(int(testServerIndex)))
+	})
+}
+
+func TestAddTopologyLabel_A5CardNoRackId(t *testing.T) {
+	convey.Convey("Test addTopologyLabel: A5 Card type should not add rackid label", t, func() {
+		hdm := &HwDevManager{manager: device.NewHwAscend910Manager()}
+		common.ParamOption.RealCardType = api.Ascend910A5
+
+		mockGetSuperPodInfo := gomonkey.ApplyMethodReturn(device.NewHwAscend910Manager(),
+			"GetSuperPodID", testSuperPodId).
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetRackID", testRackId).
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetServerIndex", testServerIndex).
+			ApplyMethodReturn(device.NewHwAscend910Manager(), "GetSuperPodType", int32(common.ProductType1PCard))
+		defer mockGetSuperPodInfo.Reset()
+
+		newLabelMap := make(map[string]string)
+		hdm.addTopologyLabel(newLabelMap)
+		convey.So(newLabelMap[npuCommon.TopoLabelSuperPodId], convey.ShouldEqual, strconv.Itoa(int(testSuperPodId)))
+		_, hasRackId := newLabelMap[npuCommon.TopoLabelRackId]
+		convey.So(hasRackId, convey.ShouldBeFalse)
+		convey.So(newLabelMap[npuCommon.TopoLabelServerId], convey.ShouldEqual, strconv.Itoa(int(testServerIndex)))
 	})
 }
 

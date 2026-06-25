@@ -1513,9 +1513,10 @@ func TestGetNodeDeviceInfoCache(t *testing.T) {
 			convey.So(cache.ServerIndex, convey.ShouldEqual, serverIndex)
 			convey.So(cache.RackID, convey.ShouldBeNil)
 		})
-		convey.Convey("case 2: A5 get node device info cache have rack id", func() {
+		convey.Convey("case 2: A5 Pod type get node device info cache have rack id", func() {
 			mockRealCardType := common.ParamOption.RealCardType
 			common.ParamOption.RealCardType = api.Ascend910A5
+			tool.SetSuperPodType(common.ProductType2D)
 			defer func() {
 				common.ParamOption.RealCardType = mockRealCardType
 			}()
@@ -1523,6 +1524,30 @@ func TestGetNodeDeviceInfoCache(t *testing.T) {
 			convey.So(cache.SuperPodID, convey.ShouldEqual, superPodID)
 			convey.So(cache.ServerIndex, convey.ShouldEqual, serverIndex)
 			convey.So(*cache.RackID, convey.ShouldEqual, rackID)
+		})
+		convey.Convey("case 3: A5 Server type get node device info cache not have rack id", func() {
+			mockRealCardType := common.ParamOption.RealCardType
+			common.ParamOption.RealCardType = api.Ascend910A5
+			tool.SetSuperPodType(common.ProductTypeServer)
+			defer func() {
+				common.ParamOption.RealCardType = mockRealCardType
+			}()
+			cache := tool.getNodeDeviceInfoCache(make(map[string]string))
+			convey.So(cache.SuperPodID, convey.ShouldEqual, superPodID)
+			convey.So(cache.ServerIndex, convey.ShouldEqual, serverIndex)
+			convey.So(cache.RackID, convey.ShouldBeNil)
+		})
+		convey.Convey("case 4: A5 Card type get node device info cache not have rack id", func() {
+			mockRealCardType := common.ParamOption.RealCardType
+			common.ParamOption.RealCardType = api.Ascend910A5
+			tool.SetSuperPodType(common.ProductType1PCard)
+			defer func() {
+				common.ParamOption.RealCardType = mockRealCardType
+			}()
+			cache := tool.getNodeDeviceInfoCache(make(map[string]string))
+			convey.So(cache.SuperPodID, convey.ShouldEqual, superPodID)
+			convey.So(cache.ServerIndex, convey.ShouldEqual, serverIndex)
+			convey.So(cache.RackID, convey.ShouldBeNil)
 		})
 	})
 }

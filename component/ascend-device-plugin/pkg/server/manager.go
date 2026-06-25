@@ -362,10 +362,13 @@ func (hdm *HwDevManager) addTopologyLabel(newLabelMap map[string]string) {
 			hwlog.RunLog.Infof("npu device add superid label: %d", superPodId)
 			newLabelMap[npuCommon.TopoLabelSuperPodId] = strconv.Itoa(int(superPodId))
 		}
-		rackId := hdm.manager.GetRackID()
-		if int(rackId) >= 0 {
-			hwlog.RunLog.Infof("npu device add rackid label: %d", superPodId)
-			newLabelMap[npuCommon.TopoLabelRackId] = strconv.Itoa(int(rackId))
+		superPodType := hdm.manager.GetSuperPodType()
+		if superPodType == common.ProductType1D || superPodType == common.ProductType2D {
+			rackId := hdm.manager.GetRackID()
+			if int(rackId) >= 0 {
+				hwlog.RunLog.Infof("npu device add rackid label: %d", rackId)
+				newLabelMap[npuCommon.TopoLabelRackId] = strconv.Itoa(int(rackId))
+			}
 		}
 		serverIndex := hdm.manager.GetServerIndex()
 		if int(serverIndex) >= 0 {
