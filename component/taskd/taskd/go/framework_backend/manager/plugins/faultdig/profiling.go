@@ -116,7 +116,7 @@ func (p *PfPlugin) Predicate(shot storage.SnapShot) (infrastructure.PredicateRes
 	hwlog.RunLog.Debugf("cmd: %v, workerStatus: %v, retry: %v, errCmd: %v", cmd, p.workerStatus, p.retry, errCmd)
 
 	if errCmd != nil && !p.retry.exceedLimit() {
-		hwlog.RunLog.Infof("%s Predicate failed, errCmd: %v", p.Name(), errCmd)
+		hwlog.RunLog.Debugf("%s Predicate failed, errCmd: %v", p.Name(), errCmd)
 		return infrastructure.PredicateResult{
 			PluginName:      p.Name(),
 			CandidateStatus: constant.UnselectStatus,
