@@ -96,8 +96,8 @@ validate_max_age() {
 
 validate_max_backups() {
     local backups="$1"
-    if ! [[ "$backups" =~ ^[0-9]+$ ]] || [ "$backups" -lt 1 ] || [ "$backups" -gt 30 ]; then
-        log_error "Invalid max-backups: ${backups}, must be in range (0, 30]"
+    if ! [[ "$backups" =~ ^[0-9]+$ ]] || [ "$backups" -lt 1 ] || [ "$backups" -gt 180 ]; then
+        log_error "Invalid max-backups: ${backups}, must be in range (0, 180]"
         exit 1
     fi
 }
