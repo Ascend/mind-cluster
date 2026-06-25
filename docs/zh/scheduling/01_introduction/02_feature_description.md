@@ -93,6 +93,8 @@ NPU Exporter
 
 芯片间的网络拓扑越复杂，调度逻辑越复杂，详细可以参见[亲和性调度](../04_usage/basic_scheduling/01_affinity_scheduling/00_solution_description.md)。
 
+支持Preempt（抢占）和Reclaim Action（回收）操作。当高优先级任务需要资源时，可回收低优先级任务的资源，实现资源的动态调整和优化分配。关于Preempt和Reclaim Action的详细说明，请参见[Volcano官方网站相关信息](https://volcano.sh/zh/docs/Scheduler/Actions)。
+
 **所需组件<a name="section15655185785119"></a>**
 
 - Volcano
@@ -107,6 +109,7 @@ NPU Exporter
 
 1. 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[整卡调度](../04_usage/basic_scheduling/03_full_npu_scheduling.md)章节进行操作。
+3. Preempt和Reclaim Action的使用样例请参见[任务交替运行最佳实践](../04_usage/task_alternation/00_before_you_start.md)章节进行操作。
 
 ### 多级调度
 
