@@ -373,79 +373,15 @@ Ascend Device Plugin为容器注入相应的环境变量，该环境变量的相
 **表 4** Elastic Agent环境变量说明
 
 <a name="table159711045543"></a>
-<table><thead align="left"><tr id="row109717454411"><th class="cellrowborder" valign="top" width="19.25%" id="mcps1.2.5.1.1"><p id="p1897164513415"><a name="p1897164513415"></a><a name="p1897164513415"></a>环境变量名称</p>
-</th>
-<th class="cellrowborder" valign="top" width="20.72%" id="mcps1.2.5.1.2"><p id="p49711245944"><a name="p49711245944"></a><a name="p49711245944"></a>功能</p>
-</th>
-<th class="cellrowborder" valign="top" width="14.19%" id="mcps1.2.5.1.3"><p id="p119716457417"><a name="p119716457417"></a><a name="p119716457417"></a>取值</p>
-</th>
-<th class="cellrowborder" valign="top" width="45.839999999999996%" id="mcps1.2.5.1.4"><p id="p797164512417"><a name="p797164512417"></a><a name="p797164512417"></a>说明</p>
-</th>
-</tr>
-</thead>
-<tbody><tr id="row1097110458417"><td class="cellrowborder" valign="top" width="19.25%" headers="mcps1.2.5.1.1 "><p id="p16501154910413"><a name="p16501154910413"></a><a name="p16501154910413"></a>ELASTIC_LOG_PATH</p>
-</td>
-<td class="cellrowborder" valign="top" width="20.72%" headers="mcps1.2.5.1.2 "><p id="p174982492048"><a name="p174982492048"></a><a name="p174982492048"></a><span id="ph1272719340716"><a name="ph1272719340716"></a><a name="ph1272719340716"></a>Elastic Agent</span>组件运行日志的落盘路径。</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.19%" headers="mcps1.2.5.1.3 "><p id="p19494949546"><a name="p19494949546"></a><a name="p19494949546"></a>字符串</p>
-</td>
-<td class="cellrowborder" valign="top" width="45.839999999999996%" headers="mcps1.2.5.1.4 "><p id="p1249154918417"><a name="p1249154918417"></a><a name="p1249154918417"></a>配置时需区分该日志的节点名称。参考示例：</p>
-<pre class="screen" id="screen1333264631214"><a name="screen1333264631214"></a><a name="screen1333264631214"></a>ELASTIC_LOG_PATH=/job/code/alllogs/$MINDX_TASK_ID/elasticlogs/elastic-log$XDL_IP-$RANK
-请将<strong id="b1623882751713"><a name="b1623882751713"></a><a name="b1623882751713"></a>$XDL_IP</strong>替换成实际使用的节点IP。
-请将<strong id="b016573418154"><a name="b016573418154"></a><a name="b016573418154"></a>$RANK</strong>替换成实际使用的节点RANK。</pre>
-</td>
-</tr>
-<tr id="row397995514414"><td class="cellrowborder" valign="top" width="19.25%" headers="mcps1.2.5.1.1 "><p id="p16980185594110"><a name="p16980185594110"></a><a name="p16980185594110"></a>ELASTIC_PROCESS_RECOVER_ENABLE</p>
-</td>
-<td class="cellrowborder" valign="top" width="20.72%" headers="mcps1.2.5.1.2 "><p id="p1098015594113"><a name="p1098015594113"></a><a name="p1098015594113"></a><span id="ph1764143514215"><a name="ph1764143514215"></a><a name="ph1764143514215"></a>Elastic Agent</span>侧进程级别重调度、进程级在线恢复、临终CheckPoint恢复功能开关。</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.19%" headers="mcps1.2.5.1.3 "><p id="p09801355144111"><a name="p09801355144111"></a><a name="p09801355144111"></a>字符串</p>
-</td>
-<td class="cellrowborder" valign="top" width="45.839999999999996%" headers="mcps1.2.5.1.4 "><a name="ul1436916744312"></a><a name="ul1436916744312"></a><ul id="ul1436916744312"><li>取值为1：开启本功能。</li><li>其他值：关闭本功能。<p id="p121131599216"><a name="p121131599216"></a><a name="p121131599216"></a>关闭本功能时，MindIO侧相关功能需同时关闭。</p>
-</li></ul>
-</td>
-</tr>
-<tr id="row0615134982716"><td class="cellrowborder" valign="top" width="19.25%" headers="mcps1.2.5.1.1 "><p id="p8615124913271"><a name="p8615124913271"></a><a name="p8615124913271"></a>ENABLE_RESTART_FAULT_PROCESS</p>
-</td>
-<td class="cellrowborder" valign="top" width="20.72%" headers="mcps1.2.5.1.2 "><p id="p8615749132716"><a name="p8615749132716"></a><a name="p8615749132716"></a><span id="ph97981526102819"><a name="ph97981526102819"></a><a name="ph97981526102819"></a>Elastic Agent</span>组件开启进程级别原地恢复功能的开关。</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.19%" headers="mcps1.2.5.1.3 "><p id="p1761620496274"><a name="p1761620496274"></a><a name="p1761620496274"></a>字符串</p>
-</td>
-<td class="cellrowborder" valign="top" width="45.839999999999996%" headers="mcps1.2.5.1.4 "><p id="p20864131183019"><a name="p20864131183019"></a><a name="p20864131183019"></a>取值为“on”或“其他值”。</p>
-<a name="ul0406214203015"></a><a name="ul0406214203015"></a><ul id="ul0406214203015"><li>on：开启本功能</li><li>其他值：关闭本功能</li></ul>
-</td>
-</tr>
-<tr id="row9124131755016"><td class="cellrowborder" valign="top" width="19.25%" headers="mcps1.2.5.1.1 "><p id="p12124161735013"><a name="p12124161735013"></a><a name="p12124161735013"></a>RESTART_FAULT_PROCESS_TYPE</p>
-</td>
-<td class="cellrowborder" valign="top" width="20.72%" headers="mcps1.2.5.1.2 "><p id="p5124191714502"><a name="p5124191714502"></a><a name="p5124191714502"></a><span id="ph17327438155018"><a name="ph17327438155018"></a><a name="ph17327438155018"></a>Elastic Agent</span>通知MindIO重启故障进程的类型。</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.19%" headers="mcps1.2.5.1.3 "><p id="p1412431745018"><a name="p1412431745018"></a><a name="p1412431745018"></a>字符串</p>
-</td>
-<td class="cellrowborder" valign="top" width="45.839999999999996%" headers="mcps1.2.5.1.4 "><p id="p2027133085115"><a name="p2027133085115"></a><a name="p2027133085115"></a>取值为“worker”或“pod”。</p>
-<a name="ul125707417516"></a><a name="ul125707417516"></a><ul id="ul125707417516"><li>worker：不退出Pod，只重启故障进程</li><li>pod：重启Pod</li></ul>
-</td>
-</tr>
-<tr id="row1720115818520"><td class="cellrowborder" valign="top" width="19.25%" headers="mcps1.2.5.1.1 "><p id="p18202188165214"><a name="p18202188165214"></a><a name="p18202188165214"></a>RANK_TABLE_FILE</p>
-</td>
-<td class="cellrowborder" valign="top" width="20.72%" headers="mcps1.2.5.1.2 "><p id="p320288195211"><a name="p320288195211"></a><a name="p320288195211"></a>RankTable文件路径</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.19%" headers="mcps1.2.5.1.3 "><p id="p152028835217"><a name="p152028835217"></a><a name="p152028835217"></a>字符串</p>
-</td>
-<td class="cellrowborder" valign="top" width="45.839999999999996%" headers="mcps1.2.5.1.4 "><p id="p13202589520"><a name="p13202589520"></a><a name="p13202589520"></a>hccl.json文件的路径</p>
-</td>
-</tr>
-<tr id="row1223545210523"><td class="cellrowborder" valign="top" width="19.25%" headers="mcps1.2.5.1.1 "><p id="p4235135275219"><a name="p4235135275219"></a><a name="p4235135275219"></a>PROCESS_RECOVER</p>
-</td>
-<td class="cellrowborder" valign="top" width="20.72%" headers="mcps1.2.5.1.2 "><p id="p72360528528"><a name="p72360528528"></a><a name="p72360528528"></a>进程级别重调度或进程级在线恢复开关</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.19%" headers="mcps1.2.5.1.3 "><p id="p18236165285211"><a name="p18236165285211"></a><a name="p18236165285211"></a>字符串</p>
-</td>
-<td class="cellrowborder" valign="top" width="45.839999999999996%" headers="mcps1.2.5.1.4 "><p id="p4482132175410"><a name="p4482132175410"></a><a name="p4482132175410"></a>取值为“on”或“其他值”。</p>
-<a name="ul4482132110546"></a><a name="ul4482132110546"></a><ul id="ul4482132110546"><li>on：开启本功能</li><li>其他值：关闭本功能</li></ul>
-</td>
-</tr>
-</tbody>
-</table>
+
+|环境变量名称|功能|取值|说明|
+| --- | --- | --- | --- |
+|ELASTIC\_LOG\_PATH|Elastic Agent组件运行日志的落盘路径。|字符串|配置时需区分该日志的节点名称。参考示例：<pre class="screen">ELASTIC_LOG_PATH=/job/code/alllogs/\$MINDX_TASK_ID/elasticlogs/elastic-log\$XDL_IP-\$RANK</pre><ul><li>请将\$XDL_IP替换成实际使用的节点IP。</li><li>请将\$RANK替换成实际使用的节点RANK。</li></ul>|
+|ELASTIC\_PROCESS\_RECOVER\_ENABLE|Elastic Agent侧进程级别重调度、进程级在线恢复、临终CheckPoint恢复功能开关。|字符串|<ul><li>取值为1：开启本功能。</li><li>其他值：关闭本功能。</li></ul>关闭本功能时，MindIO侧相关功能需同时关闭。|
+|ENABLE\_RESTART\_FAULT\_PROCESS|Elastic Agent组件开启进程级别原地恢复功能的开关。|字符串|<ul><li>on：开启本功能。</li><li>其他值：关闭本功能。</li></ul>|
+|RESTART\_FAULT\_PROCESS\_TYPE|Elastic Agent通知MindIO重启故障进程的类型。|字符串|<ul><li>worker：不退出Pod，只重启故障进程。</li><li>pod：重启Pod。</li></ul>|
+|RANK\_TABLE\_FILE|RankTable文件路径。|字符串|hccl.json文件的路径。|
+|PROCESS\_RECOVER|进程级别重调度或进程级在线恢复开关。|字符串|<ul><li>on：开启本功能。</li><li>其他值：关闭本功能。</li></ul>|
 
 ## TaskD环境变量说明<a name="section6616275583"></a>
 

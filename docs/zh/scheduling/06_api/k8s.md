@@ -39,7 +39,7 @@
 
 |node label名称|作用|取值|使用组件|
 |--|--|--|--|
-|accelerator|Device Plugin自动打标，无需用户手动配置|<ul><li>huawei-npu</li><li>huawei-Ascend910</li><li>huawei-Ascend310</li><li>huawei-Ascend310P</li></ul>|Ascend Device Plugin|
+|accelerator|Ascend Device Plugin自动打标签，无需用户手动配置|<ul><li>huawei-npu</li><li>huawei-Ascend910</li><li>huawei-Ascend310</li><li>huawei-Ascend310P</li></ul>|Ascend Device Plugin|
 |masterselector|标识MindCluster的管理节点|dls-master-node|Volcano、Ascend Operator、Resilience Controller、ClusterD|
 |node.kubernetes.io/npu.chip.name|上报当前芯片的具体类型|<ul><li>310</li><li>310P1</li><li>310P2</li><li>310P3</li><li>310P4</li><li>{xxx}A</li><li>910PremiumA</li><li>910ProA</li><li>910ProB</li><li>{xxx}Bx（x可取值为1、2、3、4）</li><li>Ascend950PR</li><li>Ascend950DT</li></ul>|<p>Ascend Device Plugin</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">下文的{*xxx*}即取“910”字符作为芯片型号数值。</div></div>|
 |workerselector|标识MindCluster的计算节点|dls-worker-node|Ascend Device Plugin、NodeD、NPU Exporter|

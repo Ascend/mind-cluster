@@ -7,7 +7,6 @@
 - **降低使用门槛和成本**：多个用户可按需申请NPU资源，共同使用一张NPU卡的算力。
 - **更细粒度的算力分配**：算力软切分方案基于时分复用，实现更细粒度的算力分配。
 
-
 ## 原理介绍<a name="section154002962818vcann"></a>
 
 昇腾NPU硬件资源主要包括AICore（用于AI模型计算）、AICPU和内存等。基于vCANN-RT的虚拟化实例功能的核心原理是：根据用户指定的资源需求，以软切分配置文件的方式，通过vCANN-RT实现按需分配。例如，用户只需50% AICore的算力和2048MB高带宽内存时，系统会创建一个npu_info配置文件，通过vCANN-RT从NPU芯片获取上述资源提供给容器使用。基于vCANN-RT的虚拟化实例方案如[图1 基于vCANN-RT的虚拟化实例方案](#fig987114711574vcann)所示。
@@ -40,7 +39,7 @@
 <td class="cellrowborder" valign="top" width="30%"><term>Atlas A3 推理系列产品</term><ul><li>Atlas 800I A3 超节点服务器</li></ul></td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" width="30%"><term>Atlas 350 标卡</term></td>
+<td class="cellrowborder" valign="top" width="30%">Atlas 350 标卡</td>
 </tr>
 </tbody>
 </table>
@@ -58,4 +57,4 @@
 - **Atlas A3 推理系列产品**使用软切分虚拟化功能时，必须开启单die直通模式，即在Ascend Device Plugin的YAML中，增加启动参数-useSingleDieMode=true。
 - 物理NPU软切分虚拟化后，仅支持将物理NPU挂载到容器，不支持将该物理NPU直通到虚拟机。
 - 在软切分虚拟化场景下，如果所有容器都挂载了相同的物理NPU，则该物理NPU必须采用相同的软切分策略。
-- 由于硬件设备的限制(可以参考昇腾社区[使用约束](https://www.hiascend.com/document/detail/zh/canncommercial/900/programug/acldevg/aclcppdevg_000222.html))，建议vCANN-RT最大切分数量不超过单个device支持的最大用户进程数。
+- 由于硬件设备的限制(可以参考[使用约束](https://www.hiascend.com/document/detail/zh/canncommercial/900/programug/acldevg/aclcppdevg_000222.html))，建议vCANN-RT最大切分数量不超过单个device支持的最大用户进程数。

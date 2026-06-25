@@ -34,4 +34,4 @@ livenessProbe:
   failureThreshold: 3
 ```
 
-> 探针启动参数说明详见[ClusterD 启动参数](../../05_developer_guide/installation_deployment/manual_installation/06_clusterd.md#参数说明)。
+探针启动参数说明详见[ClusterD启动参数](../../05_developer_guide/installation_deployment/manual_installation/06_clusterd.md#参数说明)。

@@ -150,4 +150,4 @@ livenessProbe:
   failureThreshold: 3
 ```
 
-> 探针参数说明详见[启动参数表](../05_developer_guide/installation_deployment/manual_installation/08_ascend_operator.md#参数说明)。
+探针参数说明详见[启动参数表](../05_developer_guide/installation_deployment/manual_installation/08_ascend_operator.md#参数说明)。

@@ -262,13 +262,12 @@ Ascend910-0,host=xxx  npu_chip_link_speed=104857600000i,npu_chip_roce_rx_cnp_pkt
 
 **表 4**  利用率数据信息
 
-| 类别 | 数据信息名称 | 数据信息说明 | 数据信息标签字段 | 单位 | 支持的产品形态 |
-| --- | --- | --- | --- | --- | --- |
-| utilization | npu_chip_info_utilization | 昇腾AI处理器AICore利用率 | [标签1](#table191895615241) | % | Atlas 训练系列产品<br>Atlas A2 训练系列产品<br>Atlas A3 训练系列产品<br>推理服务器（插Atlas 300I 推理卡）<br>Atlas 推理系列产品<br>Atlas 800I A2 推理服务器<br>A200I A2 Box 异构组件<br>Atlas 350 标卡<br>Atlas 850 系列硬件产品<br>Atlas 950 SuperPoD |
-| utilization | npu_chip_info_vector_utilization | 昇腾AI处理器AIVector利用率 | [标签1](#table191895615241) | % | Atlas A2 训练系列产品<br>Atlas A3 训练系列产品<br>推理服务器（插Atlas 300I 推理卡）<br>Atlas 推理系列产品<br>Atlas 800I A2 推理服务器<br>A200I A2 Box 异构组件<br>Atlas 350 标卡<br>Atlas 850 系列硬件产品<br>Atlas 950 SuperPoD |
-| utilization | npu_chip_info_cube_utilization | 昇腾AI处理器AICube利用率 | [标签1](#table191895615241) | % | Atlas A2 训练系列产品<br>Atlas A3 训练系列产品<br>Atlas 800I A2 推理服务器<br>A200I A2 Box 异构组件<br>Atlas 350 标卡<br>Atlas 850 系列硬件产品<br>Atlas 950 SuperPoD |
-| utilization | npu_chip_info_overall_utilization | 昇腾AI处理器整体利用率 | [标签1](#table191895615241) | % | Atlas A2 训练系列产品<br>Atlas A3 训练系列产品<br>Atlas 800I A2 推理服务器<br>A200I A2 Box 异构组件<br>Atlas 350 标卡<br>Atlas 850 系列硬件产品<br>Atlas 950 SuperPoD |
-
+| 类别 | 数据信息名称 | 数据信息说明 | 单位 | 支持的产品形态 |
+| --- | --- | --- | --- | --- |
+| utilization | npu_chip_info_utilization | 昇腾AI处理器AICore利用率 | % |<ul><li>Atlas 训练系列产品</li><li>Atlas A2 训练系列产品</li><li>Atlas A3 训练系列产品</li><li>推理服务器（插Atlas 300I 推理卡）</li><li>Atlas 推理系列产品</li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li>Atlas 350 标卡</li><li>Atlas 850 系列硬件产品</li><li>Atlas 950 SuperPoD</li></ul>|
+| utilization | npu_chip_info_vector_utilization | 昇腾AI处理器AIVector利用率 | % |<ul><li>Atlas A2 训练系列产品</li><li>Atlas A3 训练系列产品</li><li>推理服务器（插Atlas 300I 推理卡）</li><li>Atlas 推理系列产品</li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li>Atlas 350 标卡</li><li>Atlas 850 系列硬件产品</li><li>Atlas 950 SuperPoD</li></ul>|
+| utilization | npu_chip_info_cube_utilization | 昇腾AI处理器AICube利用率| % |<ul><li>Atlas A2 训练系列产品</li><li>Atlas A3 训练系列产品</li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li>Atlas 350 标卡</li><li>Atlas 850 系列硬件产品</li><li>Atlas 950 SuperPoD</li></ul>|
+| utilization | npu_chip_info_overall_utilization | 昇腾AI处理器整体利用率 | % |<ul><li>Atlas A2 训练系列产品</li><li>Atlas A3 训练系列产品</li><li>Atlas 800I A2 推理服务器</li><li>A200I A2 Box 异构组件</li><li>Atlas 350 标卡</li><li>Atlas 850 系列硬件产品</li><li>Atlas 950 SuperPoD</li></ul>|
 
 ## vNPU数据信息<a name="section814111613432"></a>
 

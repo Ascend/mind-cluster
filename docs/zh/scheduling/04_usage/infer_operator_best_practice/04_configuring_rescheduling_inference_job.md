@@ -4,11 +4,11 @@
 
 ## 前提条件
 
-已完成Infer Operator服务部署，详细可参考[部署Infer Operator任务](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md)。
+已完成Infer Operator服务部署，详细请参见[部署Infer Operator任务](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md)。
 
 ## 重调度原理
 
-Infer Operator在部署不同角色的实例时，会创建Deployment/StatefulSet（具体类型取决于配置项workload）对应实例，发生故障时，重调度故障pod对应的整个实例。
+Infer Operator在部署不同角色的实例时，会创建Deployment/StatefulSet（具体类型取决于配置项workload）对应实例，发生故障时，重调度故障Pod对应的整个实例。
 
 当开启优先级调度，高优先级实例发生故障时，先删除Pending状态的低优先级实例，再重新拉起故障的高优先级实例，待高优先级实例拉起成功后，再拉起低优先级实例，以确保资源优先调度给高优先级实例。具体流程如[图1](#fig-priority-reschedule)所示。
 
@@ -20,7 +20,7 @@ Infer Operator在部署不同角色的实例时，会创建Deployment/StatefulSe
 
 ## 配置实例级重调度
 
-Infer operator任务配置实例级重调度示例如下，需修改以下加粗部分配置。相关配置项说明见[YAML参数说明](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md#YAML参数说明)。
+Infer operator任务配置实例级重调度示例如下，需修改以下加粗部分配置。相关配置项说明请参见[YAML参数说明](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md#YAML参数说明)。
 <pre codetype="yaml">
 apiVersion: mindcluster.huawei.com/v1
 kind: InferServiceSet

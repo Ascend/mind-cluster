@@ -4,17 +4,17 @@ Infer Operator支持配置多角色的优先级大小，以确保高优先级角
 
 ## 前提条件
 
-已完成Infer Operator服务部署，详细可参考[部署Infer Operator任务](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md)。
+已完成Infer Operator服务部署，详细请参见[部署Infer Operator任务](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md)。
 
 ## 优先级调度原理
 
-Infer Operator在部署不同角色的实例时，会为每一个实例创建Deployment/StatefulSet（具体类型取决于配置项workload）。当开启优先级调度特性，并配置各角色优先级大小后，Infer Operator会基于各角色的优先级高低，从高到低依次创建对应实例。
+Infer Operator在部署不同角色的实例时，会为每一个实例创建Deployment/StatefulSet（具体类型取决于配置项workload）。当开启优先级调度特性，并配置各角色优先级大小后，Infer Operator会基于各角色的优先级，从高到低依次创建对应实例。
 
 当需要适配其他服务化平台（例如：MindIE PyMotor）开启缩P保D特性时，需要同时配置优先级调度与实例级重调度。
 
 ## 配置优先级调度
 
-Infer operator任务配置实例级重调度示例如下，需修改以下加粗部分配置。相关配置项说明见[YAML参数说明](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md#AML参数说明)。
+Infer operator任务配置实例级重调度示例如下，需修改以下加粗部分配置。相关配置项说明请参见[YAML参数说明](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md#yaml参数说明)。
 <pre codetype="yaml">
 apiVersion: mindcluster.huawei.com/v1
 kind: InferServiceSet

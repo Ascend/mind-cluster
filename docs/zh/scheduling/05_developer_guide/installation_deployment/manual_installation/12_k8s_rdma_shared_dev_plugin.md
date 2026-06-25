@@ -154,7 +154,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p828341482320"><a name="p828341482320"></a><a name="p828341482320"></a>11251</p>
 </td>
-<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p828311432320"><a name="p828311432320"></a><a name="p828311432320"></a>健康检查服务侦听端口号，取值范围 1025~65535。K8s部署时由组件YAML配置为11257。若指定端口被占用，组件启动失败。</p>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p828311432320"><a name="p828311432320"></a><a name="p828311432320"></a>健康检查服务侦听端口号，取值范围为1025~65535。K8s部署时由组件YAML配置为11257。若指定端口被占用，组件启动失败。</p>
 </td>
 </tr>
 <tr id="row10282191492321"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p8283714172321"><a name="p8283714172321"></a><a name="p8283714172321"></a>--tls-cert-file</p>
@@ -163,7 +163,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p828341482321"><a name="p828341482321"></a><a name="p828341482321"></a>""</p>
 </td>
-<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p828311432321"><a name="p828311432321"></a><a name="p828311432321"></a>HTTPS 证书文件路径。为空则使用 HTTP 协议。与 --tls-private-key-file 必须同时配置或同时为空。</p>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p828311432321"><a name="p828311432321"></a><a name="p828311432321"></a>HTTPS证书文件路径。为空则使用HTTP协议。与--tls-private-key-file必须同时配置或同时为空。配置方法及安全注意事项请参见<a href="../../../07_references/security_hardening.md#健康探针安全加固">健康探针安全加固</a>。</p>
 </td>
 </tr>
 <tr id="row10282191492322"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p8283714172322"><a name="p8283714172322"></a><a name="p8283714172322"></a>--tls-private-key-file</p>
@@ -172,7 +172,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p828341482322"><a name="p828341482322"></a><a name="p828341482322"></a>""</p>
 </td>
-<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p828311432322"><a name="p828311432322"></a><a name="p828311432322"></a>HTTPS 私钥文件路径。为空则使用 HTTP 协议。与 --tls-cert-file 必须同时配置或同时为空。</p>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p828311432322"><a name="p828311432322"></a><a name="p828311432322"></a>HTTPS私钥文件路径。为空则使用HTTP协议。与--tls-cert-file必须同时配置或同时为空。</p>
 </td>
 </tr>
 <tr id="row10282191492318"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p8283714172318"><a name="p8283714172318"></a><a name="p8283714172318"></a>-h 或者 -help</p>

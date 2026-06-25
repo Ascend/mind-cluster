@@ -220,7 +220,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz002c"><a name="phz002c"></a><a name="phz002c"></a>11251</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz002d"><a name="phz002d"></a><a name="phz002d"></a>健康检查服务侦听端口号，取值范围 1025~65535。K8s部署时由组件YAML配置为11252。若指定端口被占用，组件启动失败。</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz002d"><a name="phz002d"></a><a name="phz002d"></a>健康检查服务侦听端口号，取值范围为1025~65535。K8s部署时由组件YAML配置为11252。若指定端口被占用，组件启动失败。</p>
 </td>
 </tr>
 <tr id="rowhz003"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz003"><a name="phz003"></a><a name="phz003"></a>--tls-cert-file</p>
@@ -229,7 +229,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz003c"><a name="phz003c"></a><a name="phz003c"></a>""</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz003d"><a name="phz003d"></a><a name="phz003d"></a>HTTPS 证书文件路径。为空则使用 HTTP 协议。与 --tls-private-key-file 必须同时配置或同时为空。配置方法及安全注意事项请参见<a href="../../../07_references/security_hardening.md#健康探针安全加固">健康探针安全加固</a>。</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz003d"><a name="phz003d"></a><a name="phz003d"></a>HTTPS证书文件路径。为空则使用HTTP协议。与--tls-private-key-file必须同时配置或同时为空。配置方法及安全注意事项请参见<a href="../../../07_references/security_hardening.md#健康探针安全加固">健康探针安全加固</a>。</p>
 </td>
 </tr>
 <tr id="rowhz004"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz004"><a name="phz004"></a><a name="phz004"></a>--tls-private-key-file</p>
@@ -238,7 +238,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz004c"><a name="phz004c"></a><a name="phz004c"></a>""</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz004d"><a name="phz004d"></a><a name="phz004d"></a>HTTPS 私钥文件路径。为空则使用 HTTP 协议。与 --tls-cert-file 必须同时配置或同时为空。</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz004d"><a name="phz004d"></a><a name="phz004d"></a>HTTPS私钥文件路径。为空则使用 HTTP 协议。与--tls-cert-file必须同时配置或同时为空。</p>
 </td>
 </tr>
 <tr id="row2615144813463"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="p1061594884617"><a name="p1061594884617"></a><a name="p1061594884617"></a>-h或者-help</p>
