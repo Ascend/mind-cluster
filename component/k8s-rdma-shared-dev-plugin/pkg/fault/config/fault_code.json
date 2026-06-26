@@ -4,7 +4,7 @@
       "name": "ub_port_down",
       "description": "RoCE device unavailable, need to switch NIC and IP.",
       "faultcode": "21000022",
-      "faultlevel": "SeparateDPU",
+      "faultlevel": "SubHealthFault",
       "check_method": "check_ub_port"
     },
     {
