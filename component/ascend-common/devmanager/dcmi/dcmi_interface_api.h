@@ -630,7 +630,8 @@ extern "C"
                                                              struct dcmi_multi_utilization_info *util_info);
 
     DCMIDLLEXPORT int dcmi_get_device_multi_utilization_rate_period(int card_id, int device_id,
-                                                                    struct dcmi_multi_utilization_info *util_info);
+                                                                    struct dcmi_multi_utilization_info *util_info,
+                                                                    int period);
 
     DCMIDLLEXPORT int dcmi_get_device_info(int card_id, int device_id, enum dcmi_main_cmd main_cmd,
                                            unsigned int sub_cmd, void *buf, unsigned int *size);

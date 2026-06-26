@@ -62,7 +62,8 @@ extern "C"
                                                                struct dcmi_multi_utilization_info *util_info);
 
     DCMIDLLEXPORT int dcmiv2_get_device_multi_utilization_rate_period(int dev_id,
-                                                                      struct dcmi_multi_utilization_info *util_info);
+                                                                      struct dcmi_multi_utilization_info *util_info,
+                                                                      int period);
 
     DCMIDLLEXPORT int dcmiv2_get_device_info(int dev_id, enum dcmi_main_cmd main_cmd, unsigned int sub_cmd, void *buf,
                                              unsigned int *size);

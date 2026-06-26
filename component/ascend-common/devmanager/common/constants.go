@@ -96,6 +96,8 @@ const (
 	Abnormal = "Abnormal"
 	// ChannelStateOk means out band channel is ok for resetting
 	ChannelStateOk = 1
+	// DefaultUtilizationRatePeriod default period (1s) for querying device utilization rate
+	DefaultUtilizationRatePeriod = 1
 
 	// HiAIMaxCardID max card id for Ascend chip
 	HiAIMaxCardID = math.MaxInt32

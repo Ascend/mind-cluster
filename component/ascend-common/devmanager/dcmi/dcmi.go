@@ -101,9 +101,10 @@ struct dcmi_hccs_bandwidth_info *hccs_bandwidth_info){
    }
 
    static int (*dcmi_get_device_multi_utilization_rate_period_func)(int card_id, int device_id,
-				struct dcmi_multi_utilization_info *util_info);
-   int dcmi_get_device_multi_utilization_rate_period(int card_id, int device_id, struct dcmi_multi_utilization_info *util_info){
-   	CALL_FUNC(dcmi_get_device_multi_utilization_rate_period,card_id,device_id,util_info)
+				struct dcmi_multi_utilization_info *util_info, int period);
+   int dcmi_get_device_multi_utilization_rate_period(int card_id, int device_id,
+				struct dcmi_multi_utilization_info *util_info, int period){
+   	CALL_FUNC(dcmi_get_device_multi_utilization_rate_period,card_id,device_id,util_info,period)
    }
 
    static int (*dcmi_get_device_temperature_func)(int card_id, int device_id, int *temperature);
@@ -1622,7 +1623,7 @@ func (d *DcManager) DcGetDeviceUtilizationRateV2Period(cardID, deviceID int32) (
 	}
 	var multiUtilizationInfo C.struct_dcmi_multi_utilization_info
 	if retCode := C.dcmi_get_device_multi_utilization_rate_period(C.int(cardID), C.int(deviceID),
-		&multiUtilizationInfo); int32(retCode) != common.Success {
+		&multiUtilizationInfo, C.int(common.DefaultUtilizationRatePeriod)); int32(retCode) != common.Success {
 		return BuildErrNpuMultiUtilizationInfo(),
 			buildDcmiErr(cardID, deviceID, "npu multi utilization info period", retCode)
 	}
