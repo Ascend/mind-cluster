@@ -1647,7 +1647,7 @@ Events:  <none>
 
 ## 容器基础镜像集成UMDK安装指导<a name="ZH-CN_TOPIC_0000002516255288"></a>
 
-1. 从[华为云镜像仓地址](https://mirrors.huaweicloud.com/openeuler/)的unifiedbus/umdk目录，下载UMDK软件包，以umdk-urma-*.aarch64.rpm.tar.gz为例。
+1. 从[华为云镜像仓地址](https://mirrors.huaweicloud.com/ascend/)的archive目录，根据需要下载对应格式的UMDK软件包，以umdk-urma-*.aarch64.rpm.tar.gz为例。
 2. 以root用户登录服务器。
 3. 创建/home/umdk目录，将UMDK软件包上传到该目录下。
 
