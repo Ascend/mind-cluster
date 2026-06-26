@@ -222,3 +222,23 @@ Container Manager
 
 1. 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[一体机特性指南](../04_usage/appliance/01_npu_hardware_fault_detection_and_rectification.md)章节进行操作。
+
+## 容器快照
+
+**功能特点**
+
+本特性实现推理服务的容器快照能力，支持大模型推理服务快速启动和故障场景下的快速恢复。通过MindCluster的Infer Operator、NodeD和Ascend Docker Runtime组件协作，在推理任务完成warm up后生成Host和Device侧快照，在异常删除Pod后通过快照快速恢复服务，将推理服务启动时间从30分钟以上缩短至分钟级。
+
+**所需组件**
+
+- Volcano
+- Ascend Device Plugin
+- Ascend Docker Runtime
+- ClusterD
+- NodeD
+- Infer Operator
+
+**使用说明**
+
+1. 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
+2. 特性使用指导请参见[容器快照部署及使用](../05_developer_guide/container_snapshot_usage.md)章节进行操作。

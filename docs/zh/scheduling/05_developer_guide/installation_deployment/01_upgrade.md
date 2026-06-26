@@ -414,6 +414,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
 
 4. <a name="li147194506333"></a>请根据要升级的组件，重新执行手动安装步骤。详细步骤请参见[安装MindCluster新版本组件](manual_installation/00_obtaining_software_packages.md)。
 5. （可选）如需回退老版本，依次执行[卸载其他组件](01_uninstallation.md#卸载其他组件)中的步骤2和[步骤4](#li147194506333)，卸载新版本组件后安装旧版本组件即可。
+6. 升级26.0.0及之前版本的Infer Operator组件到最新版本时，需删除日志目录重建为root权限或修改日志目录及日志文件权限为root。
 
 ## 升级镜像<a name="ZH-CN_TOPIC_0000002511346311"></a>
 
