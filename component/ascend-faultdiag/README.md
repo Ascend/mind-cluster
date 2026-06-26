@@ -98,8 +98,7 @@ MindCluster Ascend FaultDiag支持的Python版本需≥3.7。在安装MindCluste
 - Python版本≥3.7.5
 - scikit-learn>=1.3.0
 - pandas>=1.3.5
-- numpy>=1.21.6,<2.0.0
-- joblib>=1.2.0,<1.5.0
+- numpy
 - ply>=3.11
 
 ### 构建

@@ -16,21 +16,21 @@
 # ==============================================================================
 import logging
 import os
+import pickle
 import re
 import warnings
-from functools import partial
 
-import joblib
 import numpy as np
 import pandas as pd
 
+from ascend_fd.model.cfg import DiagCFG
+from ascend_fd.pkg.diag.constant import DECISION_TREE_MODULES
 from ascend_fd.pkg.diag.fault_entity import NET_LINK_CONGESTION_FAULT_ENTITY, NET_DIAG_NORMAL_ENTITY
 from ascend_fd.pkg.diag.message import NET_SINGLE_WORKER_MSG
 from ascend_fd.pkg.parse.network_congestion.net_parse_job import safe_read_csv
 from ascend_fd.utils.regular_table import NIC_OUT_FILENAME
 from ascend_fd.utils.status import FileNotExistError, InfoIncorrectError, FileOpenError
 from ascend_fd.utils.tool import CONF_PATH, safe_read_open, check_scikit_learn_version
-from ascend_fd.model.cfg import DiagCFG
 
 warnings.filterwarnings("ignore", category=UserWarning)
 net_logger = logging.getLogger("NET_CONGESTION")
@@ -88,18 +88,6 @@ class NetCongestionDetector:
         'r_congestion_index',
     ]
     NET_LATEST_MODEL_PATH = os.path.join(CONF_PATH, 'model', "net_rf_model_latest.pt")  # model for sklearn >= 1.3.0
-    NET_OLD_MODEL_PATH = os.path.join(CONF_PATH, 'model', "net_rf_model_102.pt")  # model for sklearn < 1.3.0
-    _NET_RF_MODEL_MODULES = frozenset(
-        [
-            ('sklearn.ensemble._forest', 'RandomForestClassifier'),
-            ('sklearn.tree._classes', 'DecisionTreeClassifier'),
-            ('joblib.numpy_pickle', 'NumpyArrayWrapper'),
-            ('numpy', 'ndarray'),
-            ('numpy', 'dtype'),
-            ('numpy.core.multiarray', 'scalar'),
-            ('sklearn.tree._tree', 'Tree'),
-        ]
-    )
 
     def __init__(self):
         self.worker_num = -1
@@ -222,12 +210,12 @@ class NetCongestionDetector:
         Load network congestion model
         """
         check_scikit_learn_version()
-        self.model = safe_joblib_load(self.NET_LATEST_MODEL_PATH, self._NET_RF_MODEL_MODULES)
+        self.model = safe_pickle_load(self.NET_LATEST_MODEL_PATH, DECISION_TREE_MODULES)
 
 
-class RestrictedUnpickler(joblib.numpy_pickle.NumpyUnpickler):
-    def __init__(self, filename, file_handle, mmap_mode=None, supported_module_set=None):
-        super().__init__(filename, file_handle, mmap_mode)
+class RestrictedUnpickler(pickle.Unpickler):
+    def __init__(self, file, supported_module_set=None):
+        super().__init__(file)
         self._supported_module_set = supported_module_set or {}
 
     def find_class(self, module, name):
@@ -235,22 +223,21 @@ class RestrictedUnpickler(joblib.numpy_pickle.NumpyUnpickler):
             raise ImportError("Restricted unpickling; cannot load module: {}, name: {}".format(module, name))
         return super().find_class(module, name)
 
+    def persistent_load(self, pid):
+        raise ImportError("persistent load not allowed")
 
-def safe_joblib_load(model_path: str, supported_module_set):
+
+def safe_pickle_load(model_path: str, supported_module_set):
     """
-    Safe joblib load model
-    Will use safe joblib func to load model
+    Safe load model using standard pickle
     :param model_path: model path
     :param supported_module_set: supported model file module set
     :return: model file
     """
     with safe_read_open(model_path, 'rb') as file_stream:
-        origin_unpickler = joblib.numpy_pickle.NumpyUnpickler
+        unpickler = RestrictedUnpickler(file_stream, supported_module_set)
         try:
-            joblib.numpy_pickle.NumpyUnpickler = partial(RestrictedUnpickler, supported_module_set=supported_module_set)
-            model = joblib.load(file_stream)
+            model = unpickler.load()
         except Exception as err:
             raise FileOpenError(f"Failed to load model {os.path.basename(model_path)}: {err}") from err
-        finally:
-            joblib.numpy_pickle.NumpyUnpickler = origin_unpickler
     return model
