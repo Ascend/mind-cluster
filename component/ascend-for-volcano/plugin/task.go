@@ -231,12 +231,6 @@ func (sHandle *ScheduleHandler) updateChipCountAfterAllocate(task *api.TaskInfo,
 		if vcNode.Idle == nil {
 			vcNode.Idle = make(map[v1.ResourceName]float64)
 		}
-		vcNode.Idle[npuResName] -= float64(len(chipIDs)) * util.NPUHexKilo
-		if vcNode.Idle[npuResName] < 0 {
-			klog.V(util.LogWarningLev).Infof("updateChipCountAfterAllocate: node<%s> Idle[%s] went negative"+
-				" after allocating %d chips, clamping to 0", vcNode.Name, npuResName, len(chipIDs))
-			vcNode.Idle[npuResName] = 0
-		}
 	}
 }
 
@@ -261,13 +255,6 @@ func (sHandle *ScheduleHandler) updateChipCountAfterDeallocate(task *api.TaskInf
 	if len(chipIDs) > 0 && npuResName != "" {
 		if vcNode.Idle == nil {
 			vcNode.Idle = make(map[v1.ResourceName]float64)
-		}
-		vcNode.Idle[npuResName] += float64(len(chipIDs)) * util.NPUHexKilo
-		allocatable := vcNode.Allocate[npuResName]
-		if vcNode.Idle[npuResName] > allocatable {
-			klog.V(util.LogWarningLev).Infof("updateChipCountAfterDeallocate: node<%s> Idle[%s] exceeded"+
-				" Allocatable after deallocating %d chips, clamping to Allocatable", vcNode.Name, npuResName, len(chipIDs))
-			vcNode.Idle[npuResName] = allocatable
 		}
 	}
 	sHandle.Nodes[nodeName] = vcNode
