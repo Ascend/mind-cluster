@@ -66,8 +66,7 @@ var (
 		rate.Every(time.Minute/common.WriteEventRateLimit), common.WriteEventRateLimit)
 	networkLimiterMap          = make(map[int32]*rate.Limiter, common.GeneralMapSize)
 	networkStatusCache         = make(map[int32]networkStatus, common.GeneralMapSize)
-	withUBOEDevicesMainBoardID = sets.NewInt(api.Atlas950MainBoardID, api.Atlas9501DMainBoardID,
-		api.Atlas850MainBoardID, api.Atlas850MainBoardID2, api.Atlas850MainBoardID3)
+	withUBOEDevicesMainBoardID = sets.NewInt(api.Atlas850MainBoardID, api.Atlas850MainBoardID2, api.Atlas850MainBoardID3)
 )
 
 const (
