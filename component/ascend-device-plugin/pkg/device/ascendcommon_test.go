@@ -1885,20 +1885,20 @@ func TestGetDeviceListIP(t *testing.T) {
 
 func TestWithUBOEDevice(t *testing.T) {
 	convey.Convey("test withUBOEDevice", t, func() {
-		convey.Convey("return true when main board id is Atlas950MainBoardID", func() {
+		convey.Convey("return false when main board id is Atlas950MainBoardID", func() {
 			patches := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
 				"GetMainBoardId", uint32(api.Atlas950MainBoardID))
 			defer patches.Reset()
 			tools := mockAscendTools()
-			convey.So(tools.withUBOEDevice(), convey.ShouldBeTrue)
+			convey.So(tools.withUBOEDevice(), convey.ShouldBeFalse)
 		})
 
-		convey.Convey("return true when main board id is Atlas9501DMainBoardID", func() {
+		convey.Convey("return false when main board id is Atlas9501DMainBoardID", func() {
 			patches := gomonkey.ApplyMethodReturn(&devmanager.DeviceManagerMock{},
 				"GetMainBoardId", uint32(api.Atlas9501DMainBoardID))
 			defer patches.Reset()
 			tools := mockAscendTools()
-			convey.So(tools.withUBOEDevice(), convey.ShouldBeTrue)
+			convey.So(tools.withUBOEDevice(), convey.ShouldBeFalse)
 		})
 
 		convey.Convey("return true when main board id is Atlas850MainBoardID", func() {
@@ -1985,7 +1985,7 @@ func TestHandleUBOELinkDownCheck(t *testing.T) {
 		})
 
 		convey.Convey("UBOEPortDownCode", func() {
-			tools.boardId = api.Atlas950MainBoardID
+			tools.boardId = api.Atlas850MainBoardID
 
 			device := &common.NpuDevice{
 				LogicID: 1,
@@ -2004,7 +2004,7 @@ func TestHandleUBOELinkDownCheck(t *testing.T) {
 		})
 
 		convey.Convey("NoUBOEFaultCodes", func() {
-			tools.boardId = api.Atlas950MainBoardID
+			tools.boardId = api.Atlas850MainBoardID
 
 			device := &common.NpuDevice{
 				LogicID: 1,
