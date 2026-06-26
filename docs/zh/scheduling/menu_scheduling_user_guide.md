@@ -118,6 +118,7 @@
   - [自定义指标开发](./05_developer_guide/custom_metrics_development.md)
   - [DP热复位插件开发](./05_developer_guide/dp_hot_reset_plugin_development.md)
   - [公共故障上报](./05_developer_guide/clusterd_fault_awareness.md)
+  - [容器快照部署及使用](./05_developer_guide/container_snapshot_usage.md)
 - [API参考](./06_api/menu_api.md)
   - [NPU Exporter](./06_api/npu_exporter/menu_npu_exporter.md)
     - [NPU Exporter主页](./06_api/npu_exporter/00_npu_exporter_home_page.md)
