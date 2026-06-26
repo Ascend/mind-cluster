@@ -31,7 +31,7 @@ from ascend_fd.model.parse_info import (
     RankInfo,
 )
 from ascend_fd.utils import regular_table
-from ascend_fd.utils.constant.str_const import TRANSPORT_INIT_ERROR, DEVICE_LOGIC_ID, DEV_PHY_ID
+from ascend_fd.utils.constant.str_const import TRANSPORT_INIT_ERROR, DEVICE_LOGIC_ID, DEV_PHY_ID, UNKNOWN_DEVICE_ID
 from ascend_fd.utils.regular_table import (
     ERROR_CQE_LATEST,
     ERROR_CQE_LATEST_SPLIT,
@@ -380,10 +380,10 @@ class BaseInfoParser:
 
     def _resolve_phy_device_id(self):
         """
-        A5 plog 物理 ID 解析回退逻辑:
+        A2/A3 物理 ID 解析回退逻辑:
         1. 如果 phy_device_id 已从日志行中解析到，直接使用
         2. 如果没有 phy_device_id，通过 logic_device_id 到 device_info_map 中查找映射
-        3. 如果没有 device_info_map，将 logic_device_id 当作 device_id
+        3. 如果没有 device_info_map 或无映射，将 logic_device_id 当作 device_id
         """
         if self.phy_device_id or not self.logic_device_id:
             return
@@ -510,6 +510,21 @@ class BaseInfoParser:
 
         phy_device_id = filter_single_rank_info(line, regular_table.SOCKET_PHY_ID_INFO)
         phy_device_id = process_device_id(phy_device_id, line, DEV_PHY_ID, INVALID_ID, rc_logger)
+        # A5 plog: 同一 plog 可能含多卡 RootInfoDetect 行，不能复用旧卡的 phy_device_id。
+        # 本行 phy 无效时，用当前行 logic_device_id 就地从 device_info_map 反查；
+        # 反查仍失败则置 Unknown 并告警，避免与旧 logic 脱钩。
+        # 仅对 A5 (RootInfoDetect) 行生效; A2/A3 (Entry-HcclCommInitRootInfo) 无 devPhyId 字段,
+        # phy 始终为空, 由 get_result 的 _resolve_phy_device_id 兜底。
+        if not phy_device_id and logic_device_id and regular_table.ROOT_INFO_DETECT in line:
+            phy_device_id = self.device_info_map.get(logic_device_id)
+            if not phy_device_id:
+                rc_logger.warning(
+                    "Failed to find phy_id for logic_id=%s from device_info_map: %s, origin line: %s",
+                    logic_device_id,
+                    self.device_info_map,
+                    line,
+                )
+                phy_device_id = UNKNOWN_DEVICE_ID
         self.phy_device_id = phy_device_id or self.phy_device_id
 
         host_ip = filter_single_rank_info(line, regular_table.HOST_IP_INFO)

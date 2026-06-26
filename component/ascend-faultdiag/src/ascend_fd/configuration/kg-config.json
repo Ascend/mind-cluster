@@ -17824,12 +17824,12 @@
                 "component": "CANN",
                 "module": "ACL",
                 "cause_zh": "ACL单算子接口执行失败",
-                "description_zh": "a. 单算子编译失败。 \n  b. 单算子执行超时。 \n  c. device异常。",
+                "description_zh": "a. 单算子编译失败。 \nb. 单算子执行超时。 \nc. device异常。",
                 "suggestion_zh": [
                     "1. 记录错误日志、ERR MSG、API返回错误码；"
                 ],
                 "cause_en": "ACL single-operator interface execution failed",
-                "description_en": "a. Single-operator compilation fails. \n  b. Single-operator execution times out. \n  c. Device exception.",
+                "description_en": "a. Single-operator compilation fails. \nb. Single-operator execution times out. \nc. Device exception.",
                 "suggestion_en": [
                     "1. Error logs and ERR MSG are recorded. Error code returned by the API."
                 ]

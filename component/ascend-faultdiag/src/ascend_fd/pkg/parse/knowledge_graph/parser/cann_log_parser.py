@@ -30,7 +30,7 @@ from ascend_fd.pkg.parse.root_cluster.parser import filter_single_rank_info
 from ascend_fd.utils.fault_code import RUNTIME_AICORE_EXECUTE_FAULT, AISW_CANN_MEMORY_INFO
 from ascend_fd.utils.regular_table import CANN_PLOG_SOURCE, CANN_DEVICE_SOURCE
 from ascend_fd.utils.comm_valid import process_device_id
-from ascend_fd.utils.constant.str_const import DEVICE_LOGIC_ID, DEV_PHY_ID, LOGIC_DEV_ID, PHY_DEV_ID
+from ascend_fd.utils.constant.str_const import DEVICE_LOGIC_ID, DEV_PHY_ID, LOGIC_DEV_ID, PHY_DEV_ID, UNKNOWN_DEVICE_ID
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
 DEFAULT_EXEC_TIMEOUT = 1800
@@ -78,7 +78,7 @@ class CANNLogParser(FileParser):
         return False
 
     @staticmethod
-    def get_device_id_from_line(line):
+    def get_device_id_from_line(line, device_info_map=None):
         """
         Get device id from log line
         :param line: log line
@@ -87,10 +87,20 @@ class CANNLogParser(FileParser):
         if regular_table.ROOT_INFO_DETECT in line:
             logic_device_id = filter_single_rank_info(line, regular_table.ENTRY_DEVICE_INFO)
             phy_device_id = filter_single_rank_info(line, regular_table.SOCKET_PHY_ID_INFO)
-            return (
-                process_device_id(logic_device_id, line, DEVICE_LOGIC_ID, NEGATIVE_ONE, kg_logger),
-                process_device_id(phy_device_id, line, DEV_PHY_ID, NEGATIVE_ONE, kg_logger),
-            )
+            logic_id = process_device_id(logic_device_id, line, DEVICE_LOGIC_ID, NEGATIVE_ONE, kg_logger)
+            phy_id = process_device_id(phy_device_id, line, DEV_PHY_ID, NEGATIVE_ONE, kg_logger)
+            # A5 plog: 如果没有解析到 phy_id, 从 device_info_map 中通过 logic_id 查找
+            if not phy_id and logic_id:
+                phy_id = (device_info_map or {}).get(logic_id)
+                if not phy_id:
+                    kg_logger.warning(
+                        "Failed to find phy_id for logic_id=%s from device_info_map: %s, origin line: %s",
+                        logic_id,
+                        device_info_map,
+                        line,
+                    )
+                    phy_id = UNKNOWN_DEVICE_ID
+            return logic_id, phy_id
         if regular_table.ENTRY_ROOT_INFO in line:
             logic_device_id = filter_single_rank_info(line, regular_table.ENTRY_DEVICE_INFO)
             validated_logic_id = process_device_id(logic_device_id, line, DEVICE_LOGIC_ID, NEGATIVE_ONE, kg_logger)
@@ -229,7 +239,7 @@ class CANNLogParser(FileParser):
                 if self.check_repeat_line(line, repeat_line_set):
                     continue
                 if self.SOURCE_FILE == CANN_PLOG_SOURCE:
-                    logic, phy = self.get_device_id_from_line(line)
+                    logic, phy = self.get_device_id_from_line(line, device_info_map)
                     logic_device_id = logic or logic_device_id
                     phy_device_id = phy or phy_device_id
                 # if a retry occurs(record this key word), all previously obtained fault events of the PID are invalid
@@ -257,9 +267,6 @@ class CANNLogParser(FileParser):
                 if event_dict.get("event_code") == RUNTIME_AICORE_EXECUTE_FAULT and aicore_errcode_record:
                     event_dict.update({"error_code": aicore_errcode_record})
                 event_storage.record_event(event_dict)
-        # A5 plog: 如果没有解析到 phy_device_id，从 device_info_map 中通过 logic_device_id 查找
-        if self.SOURCE_FILE == CANN_PLOG_SOURCE and not phy_device_id and logic_device_id:
-            phy_device_id = (device_info_map or {}).get(logic_device_id, logic_device_id)
         device_id = self._verify_device_id(device_id, phy_device_id, logic_device_id, sdk_device_id)
         event_storage.add_device_id(device_id)
         memory_info_parser.device_id = device_id

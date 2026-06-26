@@ -26,3 +26,5 @@ DEVICE_LOGIC_ID = "deviceLogicId"
 DEV_PHY_ID = "devPhyId"
 LOGIC_DEV_ID = "logicDevId"
 PHY_DEV_ID = "phydevId"
+
+UNKNOWN_DEVICE_ID = "Unknown"

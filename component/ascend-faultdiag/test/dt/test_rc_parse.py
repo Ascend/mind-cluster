@@ -151,6 +151,80 @@ class TestA5RootInfoDetect(unittest.TestCase):
         self.assertEqual(parser.logic_device_id, "3")
         self.assertEqual(parser.phy_device_id, "21")
 
+    def test_phy_missing_uses_device_info_map_with_current_logic(self):
+        """后续行 phy 无效时，用当前行 logic 从 device_info_map 反查，不复用旧卡 phy"""
+        first_line = (
+            "[RootInfoDetect] nRanks[4], rank[0] entry flat topo detect, "
+            "rootinfo: host ip[10.0.0.1] port[30000] netMode[HrtNetworkMode::HDC] "
+            "identifier[test_id_1], deviceLogicId[4], devPhyId[5]"
+        )
+        second_line = (
+            "[RootInfoDetect] nRanks[4], rank[1] entry flat topo detect, "
+            "rootinfo: host ip[10.0.0.2] port[40000] netMode[HrtNetworkMode::HDC] "
+            "identifier[test_id_2], deviceLogicId[2], devPhyId[-1]"
+        )
+        parser = self._create_parser({"2": "9"})
+        parser.parse_line(first_line)
+        self.assertEqual(parser.phy_device_id, "5")
+        parser.parse_line(second_line)
+        self.assertEqual(parser.logic_device_id, "2")
+        self.assertEqual(parser.phy_device_id, "9", "应用当前行 logic=2 反查 map 得到 phy=9，而非沿用旧卡 phy=5")
+
+    def test_phy_missing_no_mapping_returns_unknown(self):
+        """phy 无效且 device_info_map 中无映射时，phy 置 Unknown"""
+        line = (
+            "[RootInfoDetect] nRanks[4], rank[1] entry flat topo detect, "
+            "rootinfo: host ip[10.0.0.2] port[40000] netMode[HrtNetworkMode::HDC] "
+            "identifier[test_id_2], deviceLogicId[7], devPhyId[-1]"
+        )
+        parser = self._create_parser({"2": "9"})
+        parser.parse_line(line)
+        self.assertEqual(parser.logic_device_id, "7")
+        self.assertEqual(parser.phy_device_id, "Unknown", "map 无 logic=7 的映射，phy 置 Unknown")
+
+    def test_phy_missing_no_map_returns_unknown(self):
+        """phy 无效且无 device_info_map 时，phy 置 Unknown"""
+        line = (
+            "[RootInfoDetect] nRanks[4], rank[1] entry flat topo detect, "
+            "rootinfo: host ip[10.0.0.2] port[40000] netMode[HrtNetworkMode::HDC] "
+            "identifier[test_id_2], deviceLogicId[7], devPhyId[-1]"
+        )
+        parser = self._create_parser()
+        parser.parse_line(line)
+        self.assertEqual(parser.logic_device_id, "7")
+        self.assertEqual(parser.phy_device_id, "Unknown", "无 device_info_map，phy 置 Unknown")
+
+    def test_phy_missing_zero_logic_id_triggers_lookup(self):
+        """phy 无效且 logic=0 时，0 是有效 logic，仍应触发反查"""
+        line = (
+            "[RootInfoDetect] nRanks[4], rank[1] entry flat topo detect, "
+            "rootinfo: host ip[10.0.0.2] port[40000] netMode[HrtNetworkMode::HDC] "
+            "identifier[test_id_2], deviceLogicId[0], devPhyId[-1]"
+        )
+        parser = self._create_parser({"0": "11"})
+        parser.parse_line(line)
+        self.assertEqual(parser.logic_device_id, "0")
+        self.assertEqual(parser.phy_device_id, "11", "logic=0 为有效值，应反查 map 得到 phy=11")
+
+    def test_user_scenario_three_lines_multi_card(self):
+        """复现用户实际场景: 3 行 RootInfoDetect，map 仅含 logic=2 的映射"""
+        lines = [
+            "[RootInfoDetect] nRanks[8], rank[4] entry flat topo detect, "
+            "rootinfo: host ip[141.61.48.98] port[60000] netMode[HrtNetworkMode::HDC] "
+            "identifier[id_1], deviceLogicId[4], devPhyId[5]",
+            "[RootInfoDetect] nRanks[8], rank[4] entry flat topo detect, "
+            "rootinfo: host ip[141.61.48.98] port[60000] netMode[HrtNetworkMode::HDC] "
+            "identifier[id_2], deviceLogicId[7], devPhyId[-1]",
+            "[RootInfoDetect] nRanks[8], rank[4] entry flat topo detect, "
+            "rootinfo: host ip[141.61.48.98] port[60000] netMode[HrtNetworkMode::HDC] "
+            "identifier[id_3], deviceLogicId[2], devPhyId[-1]",
+        ]
+        parser = self._create_parser({"2": "9"})
+        for line in lines:
+            parser.parse_line(line)
+        self.assertEqual(parser.logic_device_id, "2")
+        self.assertEqual(parser.phy_device_id, "9", "最终应基于最新 logic=2 反查得到 phy=9")
+
     def test_parse_line_rank_num_not_integer(self):
         line = (
             "[RootInfoDetect] nRanks[abc], rank[2] entry flat topo detect, "

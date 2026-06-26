@@ -17,6 +17,7 @@
 import unittest
 import shutil
 import os
+import tempfile
 
 from ascend_fd.configuration.config import DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF
 from ascend_fd.model.context import KGParseCtx
@@ -914,3 +915,76 @@ class TestCannLogParserPhyDeviceIdValidation(unittest.TestCase):
             logic_id, _ = CANNLogParser.get_device_id_from_line("test [RootInfoDetect] deviceLogicId[abc]")
         self.assertEqual(logic_id, "abc", "Non-numeric value should be returned with warning")
         self.assertTrue(any("Except deviceLogicId non-negative integer" in msg for msg in cm.output))
+
+
+class TestParseFilesOfPidDeviceIdAccumulation(unittest.TestCase):
+    """Test device id accumulation logic in _parse_files_of_pid for A5 plog.
+
+    验证 RootInfoDetect 行的 deviceLogicId 与 devPhyId 成对更新，避免脱钩。
+    """
+
+    @staticmethod
+    def _build_root_info_detect_line(logic_id, phy_id, rank=4, ts="2026-05-29-15:35:18.466.086"):
+        return (
+            f"[INFO] HCCL(662661,python3):{ts} [op_base_v2.cc:1626][662661][RootInfoDetect] "
+            f"nRanks[8], rank[{rank}] entry flat topo detect, rootinfo: host ip[141.61.48.98] "
+            f"port[60000] netMode[HrtNetworkMode::HDC] identifier[141.61.48.98_60000_0_1780040118465151], "
+            f"deviceLogicId[{logic_id}], devPhyId[{phy_id}]"
+        )
+
+    @staticmethod
+    def _run_parse(lines, device_info_map):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            log_path = os.path.join(tmp_dir, "plog-test.log")
+            with open(log_path, "w", encoding="utf-8") as f:
+                f.write("\n".join(lines))
+            parser = CANNPlogParser({"default_conf": {}, "user_conf": {}})
+            _, _, (_pid, device_id) = parser._parse_files_of_pid("test_pid", [log_path], device_info_map)
+            return device_id
+
+    def test_root_info_detect_phy_cleared_when_logic_updates_without_phy(self):
+        """后续 RootInfoDetect 行仅有有效 logic (devPhyId[-1]) 时，应清空旧 phy 并用最新 logic 反查"""
+        lines = [
+            self._build_root_info_detect_line(logic_id=4, phy_id=5, ts="2026-05-29-15:35:18.466.086"),
+            self._build_root_info_detect_line(logic_id=2, phy_id=-1, ts="2026-05-29-15:35:18.611.406"),
+        ]
+        device_info_map = {"2": "3"}  # logic 2 -> phy 3
+        device_id = self._run_parse(lines, device_info_map)
+        self.assertEqual(device_id, "3", "应通过最新 logic=2 反查 device_info_map 得到 phy=3")
+
+    def test_root_info_detect_phy_cleared_no_map_returns_unknown(self):
+        """phy 被清空且 device_info_map 中无映射时，phy_id 返回 Unknown"""
+        lines = [
+            self._build_root_info_detect_line(logic_id=4, phy_id=5, ts="2026-05-29-15:35:18.466.086"),
+            self._build_root_info_detect_line(logic_id=2, phy_id=-1, ts="2026-05-29-15:35:18.611.406"),
+        ]
+        device_id = self._run_parse(lines, {})
+        self.assertEqual(device_id, "Unknown", "无映射时 phy_id 返回 Unknown，由下游根因定位处理")
+
+    def test_root_info_detect_both_valid_latest_wins(self):
+        """两行均含有效 logic+phy 时，最新一行成对生效 (回归)"""
+        lines = [
+            self._build_root_info_detect_line(logic_id=4, phy_id=5, ts="2026-05-29-15:35:18.466.086"),
+            self._build_root_info_detect_line(logic_id=7, phy_id=15, ts="2026-05-29-15:35:18.611.406"),
+        ]
+        device_id = self._run_parse(lines, {})
+        self.assertEqual(device_id, "15", "最新有效行的 phy=15 生效")
+
+    def test_normal_log_lines_after_root_info_do_not_clear_phy(self):
+        """普通业务日志行（不含 device 信息）不应清空已累积的 RootInfoDetect phy"""
+        lines = [
+            self._build_root_info_detect_line(logic_id=4, phy_id=5, ts="2026-05-29-15:35:18.466.086"),
+            "[INFO] HCCL(662661,python3):2026-05-29-15:35:19.000.000 [other.cc:100] normal business log",
+            "[INFO] HCCL(662661,python3):2026-05-29-15:35:20.000.000 [other.cc:200] another normal log",
+        ]
+        device_id = self._run_parse(lines, {})
+        self.assertEqual(device_id, "5", "普通日志行不应清空已累积的 phy=5")
+
+    def test_zero_logic_id_is_valid_and_preserved(self):
+        """logic=0 是合法 device id，应被当作有效值覆盖累积（回归保护，防止误用 falsy 判断）"""
+        lines = [
+            self._build_root_info_detect_line(logic_id=4, phy_id=5, ts="2026-05-29-15:35:18.466.086"),
+            self._build_root_info_detect_line(logic_id=0, phy_id=8, ts="2026-05-29-15:35:18.611.406"),
+        ]
+        device_id = self._run_parse(lines, {})
+        self.assertEqual(device_id, "8", "logic=0 是有效值，应成对更新 phy=8")
