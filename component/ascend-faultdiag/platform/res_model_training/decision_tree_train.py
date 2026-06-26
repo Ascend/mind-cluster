@@ -14,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-import os
 import argparse
+import os
+import pickle
 from typing import List
 
-import joblib
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 
@@ -58,12 +58,12 @@ def decision_tree_train(train_df, saved_model_path, train_feature: List[str] = N
     # Train the model
     model.fit(x_train, y_train)
     # Save model
-    with os.fdopen(os.open(saved_model_path, FLAG, 0o640), 'wb') as model_path:
-        joblib.dump(model, model_path)
+    with os.fdopen(os.open(saved_model_path, FLAG, 0o640), 'wb') as f:
+        pickle.dump(model, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == '__main__':
-    process_pre_df_list = list()
+    process_pre_df_list = []
     for dirname in os.listdir(args.data_path):
         process_df = pd.read_csv(os.path.join(args.data_path, dirname, 'process.csv'))
         process_pre_df = preprocess_data(process_df)

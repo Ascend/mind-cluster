@@ -19,9 +19,10 @@ import os
 
 import pandas as pd
 
+from ascend_fd.pkg.diag.constant import DECISION_TREE_MODULES
+from ascend_fd.pkg.diag.network_congestion.net_diag_job import safe_pickle_load
 from ascend_fd.utils.status import InfoIncorrectError
 from ascend_fd.utils.tool import CONF_PATH, check_scikit_learn_version
-from ascend_fd.pkg.diag.network_congestion.net_diag_job import safe_joblib_load
 
 node_logger = logging.getLogger("NODE_ANOMALY")
 
@@ -36,11 +37,6 @@ class AbnormalDetector:
     MODEL_TYPE = "decision_tree"
     NAME = "base detector"
     FEATURES = set()
-    _DECISION_TREE_MODULES = frozenset([('sklearn.ensemble._forest', 'RandomForestClassifier'),
-                                        ('sklearn.tree._classes', 'DecisionTreeClassifier'),
-                                        ('joblib.numpy_pickle', 'NumpyArrayWrapper'), ('numpy', 'ndarray'),
-                                        ('numpy', 'dtype'),
-                                        ('numpy.core.multiarray', 'scalar'), ('sklearn.tree._tree', 'Tree')])
 
     def model_predict(self, x_pred):
         """
@@ -50,7 +46,7 @@ class AbnormalDetector:
         """
         check_scikit_learn_version()
         model_path = '%s/%s_%s.pkl' % (self.MODEL_PATH, self.MODEL_TYPE, "latest")
-        model = safe_joblib_load(model_path, self._DECISION_TREE_MODULES)
+        model = safe_pickle_load(model_path, DECISION_TREE_MODULES)
         return model.predict(x_pred)
 
     def select_and_predict(self, data):
@@ -65,7 +61,7 @@ class AbnormalDetector:
 
         columns = set(data.columns.array)
         if not self.FEATURES.issubset(columns):
-            node_logger.error(f'Some features[%s] are lost when %s detecting.', self.FEATURES - columns, self.NAME)
+            node_logger.error('Some features[%s] are lost when %s detecting.', self.FEATURES - columns, self.NAME)
             raise InfoIncorrectError(f'Some features[{self.FEATURES - columns}] are lost when {self.NAME} detecting.')
 
         df_selected = data[list(self.FEATURES)]
@@ -119,13 +115,12 @@ class CpuAbnormalDetector(AbnormalDetector):
         :param process_num: the process num
         :return: the CPU result after predict and the abnormal process id
         """
-        result = list()
-        last_time_list = list()
+        result = []
+        last_time_list = []
 
         if process_num == 0:
             node_logger.error('The cpu data incorrect when %s detecting, please check [cpu_affinity].', self.NAME)
-            raise InfoIncorrectError(
-                f'The cpu data incorrect when {self.NAME} detecting. Please check [cpu_affinity].')
+            raise InfoIncorrectError(f'The cpu data incorrect when {self.NAME} detecting. Please check [cpu_affinity].')
 
         for cpu_affinity_list in all_abnormal_cpu:
             # no process is preempted at the current time
@@ -153,7 +148,7 @@ class CpuAbnormalDetector(AbnormalDetector):
         :param current_time: the time to be detected
         :return: abnormal cpu affinities after model detect
         """
-        fetch_index = (self.process_pd["time"] == current_time)
+        fetch_index = self.process_pd["time"] == current_time
         current_time_process_pds = self.process_pd[fetch_index].drop_duplicates(subset="cpu_affinity", keep="first")
 
         if current_time_process_pds.empty:
@@ -164,7 +159,8 @@ class CpuAbnormalDetector(AbnormalDetector):
         if len(predict_flag) == 0:
             node_logger.error('The predict result is empty when %s detecting, please check predict model.', self.NAME)
             raise InfoIncorrectError(
-                f'The predict result is empty when {self.NAME} detecting. Please check predict model.')
+                f'The predict result is empty when {self.NAME} detecting. Please check predict model.'
+            )
 
         cpu_affinity_list = current_time_process_pds["cpu_affinity"].tolist()
         abnormal_cpu_affinities = [cpu_affinity_list[i] for i, flag in enumerate(predict_flag) if flag != 0]
