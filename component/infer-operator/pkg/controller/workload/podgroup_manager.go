@@ -126,6 +126,8 @@ func (v *VolcanoPodGroupManager) createPodGroupForInstance(
 		},
 		Spec: spec,
 	}
+	hwlog.RunLog.Infof("create podgroup<%s/%s> spec: MinMember=%d MinResources=%v",
+		podGroup.Namespace, podGroup.Name, spec.MinMember, spec.MinResources)
 	err := v.client.Create(ctx, podGroup)
 	if err != nil {
 		hwlog.RunLog.Errorf("create podgroup<%s> error: %v", instanceSet.Name, err)

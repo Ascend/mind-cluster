@@ -23,6 +23,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
@@ -386,14 +387,15 @@ func TestNewPodGroupSpec(t *testing.T) {
 	convey.Convey("Test newPodGroupSpec function", t, func() {
 		convey.Convey("Should create PodGroupSpec with correct MinMember", func() {
 			normalReplicas := int32(3)
-			spec := newPodGroupSpec(normalReplicas)
+			spec := newPodGroupSpec(normalReplicas, nil)
 
 			convey.So(spec.MinMember, convey.ShouldEqual, int32(3))
+			convey.So(spec.MinResources, convey.ShouldBeNil)
 		})
 
 		convey.Convey("Should handle zero replicas", func() {
 			zeroReplicas := int32(0)
-			spec := newPodGroupSpec(zeroReplicas)
+			spec := newPodGroupSpec(zeroReplicas, nil)
 
 			convey.So(spec.MinMember, convey.ShouldEqual, int32(0))
 		})
@@ -452,4 +454,8 @@ func (m *mockWorkLoadHandler) Validate(runtime.RawExtension) error {
 
 func (m *mockWorkLoadHandler) GetReplicas(runtime.RawExtension) (int32, error) {
 	return 1, nil
+}
+
+func (m *mockWorkLoadHandler) GetMinResources(runtime.RawExtension) (*corev1.ResourceList, error) {
+	return nil, nil
 }

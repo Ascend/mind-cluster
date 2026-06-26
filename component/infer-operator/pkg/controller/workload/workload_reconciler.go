@@ -19,6 +19,7 @@ package workload
 import (
 	"context"
 
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
@@ -74,12 +75,19 @@ func (r *WorkLoadReconciler) Reconcile(
 	// 2. check or create podgroup
 	useGangScheduling := instanceSet.Labels[common.GangScheduleLabelKey] == common.TrueBool
 	if useGangScheduling {
+		hwlog.RunLog.Infof("instanceSet %s/%s useGangScheduling=true, start podgroup reconcile",
+			instanceSet.Namespace, instanceSet.Name)
 		workloadReplicas, err := workloadHandler.GetReplicas(instanceSet.Spec.InstanceSpec)
 		if err != nil {
 			hwlog.RunLog.Errorf("Failed to get workload replicas: %v", err)
 			return err
 		}
-		podGroupSpec := newPodGroupSpec(workloadReplicas)
+		minResources, err := workloadHandler.GetMinResources(instanceSet.Spec.InstanceSpec)
+		if err != nil {
+			hwlog.RunLog.Errorf("Failed to get min resources: %v", err)
+			return err
+		}
+		podGroupSpec := newPodGroupSpec(workloadReplicas, minResources)
 		_, err = r.PodGroupManager.GetOrCreatePodGroupForInstance(ctx, instanceSet, indexer, podGroupSpec)
 		if err != nil {
 			hwlog.RunLog.Errorf("Failed to create pod group: %v", err)
@@ -145,8 +153,9 @@ func (r *WorkLoadReconciler) GetWorkLoadReconciler(instanceSet *v1.InstanceSet) 
 	return workloadHandler, nil
 }
 
-func newPodGroupSpec(workloadReplicas int32) v1beta1.PodGroupSpec {
+func newPodGroupSpec(minMember int32, minResources *corev1.ResourceList) v1beta1.PodGroupSpec {
 	return v1beta1.PodGroupSpec{
-		MinMember: workloadReplicas,
+		MinMember:    minMember,
+		MinResources: minResources,
 	}
 }
