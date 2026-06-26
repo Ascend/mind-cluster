@@ -25460,7 +25460,7 @@
                 "suggestion_zh": [
                     "1. 检查当前 HCCL_BUFFSIZE 环境变量的值；",
                     "2. 参考 HCCL/CANN 文档确认推荐值（通常为 200~1000 MB），文档：",
-                    " https://www.hiascend.com/document/detail/zh/canncommercial/900/API/hcclug/hcclenvref_07_0005.htm；",
+                    " https://www.hiascend.com/document/detail/zh/canncommercial/900/API/hcclug/hcclenvref_07_0005.html；",
                     "3. 修改HCCL_BUFFSIZE为推荐范围内的值，如export HCCL_BUFFSIZE=200；",
                     "4. 根据模型规模和并行配置可能需要适当增大该值；",
                     "5. 修改配置后重新启动vLLM服务;"
@@ -25470,7 +25470,7 @@
                 "description_en": "The HCCL_BUFFSIZE environment variable is set too small, below the minimum requirement of the HCCL communication buffer. For example, if it is set to 0 (the unit is usually MB), which is far less than the normal value (usually 200 MB or larger). HCCL_BUFFSIZE configures the HCCL communication buffer size. This value must be greater than the minimum buffer threshold required by HCCL communication. Otherwise, HCCL initialization fails, which further causes the WorkerProc background process initialization to be abnormal.",
                 "suggestion_en": [
                     "1. Check the current value of the HCCL_BUFFSIZE environment variable.",
-                    "2. Refer to the HCCL/CANN documentation to confirm the recommended value (usually 200 to 1000 MB). Documentation: https://www.hiascend.com/document/detail/zh/canncommercial/900/API/hcclug/hcclenvref_07_0005.htm.",
+                    "2. Refer to the HCCL/CANN documentation to confirm the recommended value (usually 200 to 1000 MB). Documentation: https://www.hiascend.com/document/detail/zh/canncommercial/900/API/hcclug/hcclenvref_07_0005.html.",
                     "3. Change HCCL_BUFFSIZE to a value within the recommended range, for example, export HCCL_BUFFSIZE=200.",
                     "4. Increase the value as needed based on the model size and parallel configuration.",
                     "5. Restart the vLLM service after modifying the configuration."
@@ -25543,7 +25543,7 @@
                     "1. 如果使用单卡，ep_size=1时不支持EPLB，关闭dynamic_eplb即可；",
                     "2. 如果使用多卡部署，需EPLB功能，使用EP > 1的多卡部署；",
                     "3. 具体可以参考特性文档：",
-                    " https://docs.vllm.ai/projects/ascend/zh-cn/latest/user_guide/feature_guide/eplb_swift_balancer.html"
+                    " https://docs.vllm.ai/projects/ascend/zh-cn/latest/user_guide/feature_guide/expert_parallelism_load_balancer.html"
                 ],
                 "cause_en": "Single-card execution conflicts with dynamic_eplb configuration, causing Worker initialization failure",
                 "description_en": "Expert Parallel Load Balancing (EPLB) has a design constraint of ep_size > 1 (requires expert weight migration across NPUs). When --additional-config '{\"eplb_config\": {\"dynamic_eplb\": true}}' is detected with current ep_size=1, the system determines this as a parameter semantic conflict and rejects execution.",
@@ -25551,7 +25551,7 @@
                     "1. If using a single card, EPLB is not supported when ep_size=1; disable dynamic_eplb.",
                     "2. If using multi-card deployment and need EPLB functionality, use EP > 1 multi-card deployment.",
                     "3. Refer to the feature documentation:",
-                    " https://docs.vllm.ai/projects/ascend/en/latest/user_guide/feature_guide/eplb_swift_balancer.html"
+                    " https://docs.vllm.ai/projects/ascend/en/latest/user_guide/feature_guide/expert_parallelism_load_balancer.html"
                 ]
             },
             "source_file": "PyMotor_vLLM_Log",
