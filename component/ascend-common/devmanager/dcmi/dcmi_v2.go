@@ -70,10 +70,10 @@ package dcmi
     }
 
     static int (*dcmiv2_get_device_multi_utilization_rate_period_func)(int dev_id,
-					struct dcmi_multi_utilization_info *util_info);
+					struct dcmi_multi_utilization_info *util_info, int period);
     static int dcmiv2_get_device_multi_utilization_rate_period(int dev_id,
-					struct dcmi_multi_utilization_info *util_info){
-        CALL_FUNC(dcmiv2_get_device_multi_utilization_rate_period,dev_id,util_info)
+					struct dcmi_multi_utilization_info *util_info, int period){
+        CALL_FUNC(dcmiv2_get_device_multi_utilization_rate_period,dev_id,util_info,period)
     }
 
     static int (*dcmiv2_get_device_temperature_func)(int dev_id, int *temperature);
@@ -545,7 +545,7 @@ func (d *DcV2Manager) DcGetDeviceUtilizationRateV2Period(logicID int32) (common.
 	}
 	var multiUtilizationInfo C.struct_dcmi_multi_utilization_info
 	if retCode := C.dcmiv2_get_device_multi_utilization_rate_period(C.int(logicID),
-		&multiUtilizationInfo); int32(retCode) != common.Success {
+		&multiUtilizationInfo, C.int(common.DefaultUtilizationRatePeriod)); int32(retCode) != common.Success {
 		return BuildErrNpuMultiUtilizationInfo(), buildDcmiV2Err(logicID, "npu multi utilization info period", retCode)
 	}
 	return ConvertNpuMultiUtilizationInfo(multiUtilizationInfo), nil
