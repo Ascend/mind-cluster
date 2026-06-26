@@ -33,6 +33,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"infer-operator/pkg/api/v1"
 	"infer-operator/pkg/common"
+	"infer-operator/pkg/common/utils"
 )
 
 // StatefulSetWorkLoad implements WorkLoad interface for the statefulset
@@ -209,6 +210,12 @@ func (s *StatefulSetHandler) createStatefulSet(
 		Spec: *statefulsetSpec,
 	}
 	// 4. create statefulset
+	if newStatefulSet.Spec.Replicas == nil {
+		return fmt.Errorf("replicas is nil")
+	}
+	replicas := *newStatefulSet.Spec.Replicas
+	hwlog.RunLog.Infof("create statefulset<%s/%s> replicas=%d",
+		newStatefulSet.Namespace, newStatefulSet.Name, replicas)
 	err = s.client.Create(ctx, newStatefulSet)
 	if err != nil {
 		hwlog.RunLog.Errorf("Failed to create StatefulSet<%s>: %v", newStatefulSet.Name, err)
@@ -404,6 +411,20 @@ func (s *StatefulSetHandler) GetReplicas(spec runtime.RawExtension) (int32, erro
 		return common.DefaultReplicas, nil
 	}
 	return *replicas, nil
+}
+
+// GetMinResources calculates the minimal resources required by the statefulset
+// based on its pod template and replicas.
+func (s *StatefulSetHandler) GetMinResources(spec runtime.RawExtension) (*corev1.ResourceList, error) {
+	statefulsetSpec, err := s.parseStatefulSetWithScheme(spec)
+	if err != nil {
+		return nil, err
+	}
+	if statefulsetSpec.Replicas == nil {
+		return nil, fmt.Errorf("replicas is nil")
+	}
+	replicas := *statefulsetSpec.Replicas
+	return utils.CalcMinResources(replicas, statefulsetSpec.Template.Spec), nil
 }
 
 func isStatefulsetReady(sts appsv1.StatefulSet) bool {

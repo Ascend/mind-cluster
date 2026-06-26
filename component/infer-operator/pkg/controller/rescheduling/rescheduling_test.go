@@ -137,6 +137,10 @@ func (m *mockWorkLoadHandler) GetReplicas(runtime.RawExtension) (int32, error) {
 	return 1, nil
 }
 
+func (m *mockWorkLoadHandler) GetMinResources(runtime.RawExtension) (*corev1.ResourceList, error) {
+	return nil, nil
+}
+
 func (m *mockWorkLoadHandler) ListWorkLoad(
 	ctx context.Context,
 	selectLabels map[string]string,

@@ -34,6 +34,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"infer-operator/pkg/api/v1"
 	"infer-operator/pkg/common"
+	"infer-operator/pkg/common/utils"
 )
 
 // DeploymentWorkLoad implements WorkLoad interface for the deployment
@@ -225,6 +226,12 @@ func (d *DeploymentHandler) createDeployment(
 	}
 
 	// 4. create deployment
+	if newDeployment.Spec.Replicas == nil {
+		return fmt.Errorf("replicas is nil")
+	}
+	replicas := *newDeployment.Spec.Replicas
+	hwlog.RunLog.Infof("create deployment<%s/%s> replicas=%d",
+		newDeployment.Namespace, newDeployment.Name, replicas)
 	err = d.client.Create(ctx, newDeployment)
 	if err != nil {
 		hwlog.RunLog.Errorf("Failed to create Deployment<%s>: %v", newDeployment.Name, err)
@@ -416,6 +423,20 @@ func (d *DeploymentHandler) GetReplicas(spec runtime.RawExtension) (int32, error
 		return common.DefaultReplicas, nil
 	}
 	return *replicas, nil
+}
+
+// GetMinResources calculates the minimal resources required by the deployment
+// based on its pod template and replicas.
+func (d *DeploymentHandler) GetMinResources(spec runtime.RawExtension) (*corev1.ResourceList, error) {
+	deploymentSpec, err := d.parseDeploymentWithScheme(spec)
+	if err != nil {
+		return nil, err
+	}
+	if deploymentSpec.Replicas == nil {
+		return nil, fmt.Errorf("replicas is nil")
+	}
+	replicas := *deploymentSpec.Replicas
+	return utils.CalcMinResources(replicas, deploymentSpec.Template.Spec), nil
 }
 
 func isDeploymentReady(deployment appsv1.Deployment) bool {

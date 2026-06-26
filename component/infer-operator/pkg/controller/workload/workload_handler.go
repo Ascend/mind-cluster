@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -65,6 +66,12 @@ type WorkLoadHandler interface {
 	Validate(spec runtime.RawExtension) error
 	// GetReplicas retrieves the number of replicas from the workload specification
 	GetReplicas(spec runtime.RawExtension) (int32, error)
+	// GetMinResources calculates the minimal resources required by the pod group
+	// based on the workload specification. Each handler is responsible for
+	// understanding its own pod template structure (e.g. Deployment/StatefulSet
+	// has a single pod template, while LeaderWorkerSet may have leader and
+	// worker templates) and returning the aggregated resource request.
+	GetMinResources(spec runtime.RawExtension) (*corev1.ResourceList, error)
 	// ListWorkLoad list workloads via selector with filter
 	ListWorkLoad(ctx context.Context, selectLabels map[string]string, namespace string, filters ...WorkLoadFilter) ([]WorkLoadInterface, error)
 	// DeleteWorkLoad fetches workloads match selector and deletes those filtered by filters
