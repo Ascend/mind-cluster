@@ -112,7 +112,63 @@
 
     - 其他类型节点，修改对应启动YAML文件中Ascend Device Plugin的启动参数。
 
-4. （可选）使用**断点续训**（包括进程级恢复）或**弹性训练**时，根据需要使用的故障处理模式，修改Ascend Device Plugin组件的启动YAML。
+4. <a name="step_npu_nic_mapping"></a>（A5可选）若计算节点存在1825网卡（DPU），Ascend Device Plugin通过`npu-nic-mapping.json`读取NPU与1825网卡的连接关系，用于生成A5设备的RoCE通信地址。软件包内的默认配置不一定匹配节点实际拓扑，建议按节点实际情况自行创建映射文件并挂载到容器内。
+
+    - 从驱动侧获取NPU与1825网卡的物理连接关系。
+
+        1825网卡为UB网络设备，在系统中以以太网接口形式存在，执行以下命令可查询各RDMA设备对应的以太网接口名称（例如ens0f0）。
+
+        ```shell
+        ls /sys/class/infiniband/*/device/net/
+        ```
+
+    - 创建本节点的`npu-nic-mapping.json`，按获取的连接关系填写，文件格式如下所示。
+
+        ```json
+        {
+          "npuNics": [
+            {
+              "npuId": 0,
+              "nicNames": ["ens0f0", "ens0f2", "ens1f0"]
+            },
+            {
+              "npuId": 1,
+              "nicNames": ["ens1f0", "ens1f2", "ens0f0"]
+            }
+          ]
+        }
+        ```
+
+        字段说明：
+        - `npuNics`：NPU与网卡的映射列表。
+        - `npuId`：NPU的物理ID，节点上每颗NPU均需配置一条对应记录。
+        - `nicNames`：与该NPU连接的1825网卡接口名称列表，按优先级从高到低排列。组件将依次遍历该列表，使用第一个存在有效IP地址的网卡生成RoCE通信地址。
+
+    - 在Ascend Device Plugin的YAML中增加以下挂载声明，将创建的文件挂载到容器内固定路径`/user/mindx-dl/npu/npu-nic-mapping.json`（该路径不可修改）。
+
+        ```Yaml
+        volumeMounts:
+          ...
+          - name: npu-nic-mapping
+            mountPath: /user/mindx-dl/npu/npu-nic-mapping.json
+            readOnly: true
+          ...
+        volumes:
+          ...
+          - name: npu-nic-mapping
+            hostPath:
+              path: /user/mindx-dl/npu/npu-nic-mapping.json
+              type: File
+          ...
+        ```
+
+        上述`hostPath.path`为文件在计算节点上的实际路径（宿主机路径可调整，但不支持软连接）。
+
+    >[!NOTE]
+    >- 不同节点的NPU与1825网卡物理连接关系可能不同，请按各节点实际拓扑分别创建并挂载。
+    >- 该配置文件在组件启动时读取，修改后需重启组件使配置生效。
+
+5. （可选）使用**断点续训**（包括进程级恢复）或**弹性训练**时，根据需要使用的故障处理模式，修改Ascend Device Plugin组件的启动YAML。
 
     <pre codetype="yaml">
     ...
@@ -139,7 +195,7 @@
               readOnlyRootFilesystem: true
     ...</pre>
 
-5. （可选）使用推理卡故障恢复时，需要配置热复位功能。
+6. （可选）使用推理卡故障恢复时，需要配置热复位功能。
 
     <pre codetype="yaml">
           containers:
@@ -160,7 +216,7 @@
                      -logLevel=0" ]
     ...</pre>
 
-6. （可选）如需更改kubelet的默认端口，则需要修改Ascend Device Plugin组件的启动YAML。示例如下。
+7. （可选）如需更改kubelet的默认端口，则需要修改Ascend Device Plugin组件的启动YAML。示例如下。
 
     <pre codetype="yaml">
       env:
@@ -180,7 +236,7 @@
            path: /var/lib/kubelet/device-plugins
     ...</pre>
 
-7. （可选）如果未安装Ascend Docker Runtime，则需手动挂载docker或者containerd的sock文件，根据运行时类型，示例分别如下：
+8. （可选）如果未安装Ascend Docker Runtime，则需手动挂载docker或者containerd的sock文件，根据运行时类型，示例分别如下：
 
     - 如果容器运行时为Docker，保留docker-sock和docker-dir挂载配置，示例如下：
 
@@ -229,7 +285,7 @@
     >- 如果docker目录不是/run/docker，请在volumes中修改为实际路径，不支持使用软连接。
     >- 如果containerd目录不是/run/containerd，请在volumes中修改为实际路径，不支持使用软连接。
 
-8. 在K8s管理节点上各YAML对应路径下执行以下命令，启动Ascend Device Plugin。
+9. 在K8s管理节点上各YAML对应路径下执行以下命令，启动Ascend Device Plugin。
 
     - K8s集群中存在使用除Atlas 200I SoC A1 核心板之外的节点（配合Volcano使用，支持虚拟化实例，YAML默认开启静态虚拟化）。
 
@@ -267,7 +323,7 @@
     daemonset.apps/ascend-device-plugin-daemonset created
     ```
 
-9. 在K8s管理节点执行以下命令，查看组件是否启动成功。
+10. 在K8s管理节点执行以下命令，查看组件是否启动成功。
 
     ```shell
     kubectl get pod -n kube-system
