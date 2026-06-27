@@ -275,3 +275,9 @@ const (
 	// RasRoceKey the special key of super pod dir
 	RasRoceKey = "roce"
 )
+
+const (
+	RackBlockSchedulingKey        = "ra-block"
+	MaxRackReschedulingRetryTimes = 3
+	RackReschedulingDelayTimeOut  = 3
+)
