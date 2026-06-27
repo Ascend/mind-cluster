@@ -17,6 +17,7 @@
 # pylint: disable=too-many-lines
 import abc
 import argparse
+import contextlib
 import datetime
 import getpass
 import gzip
@@ -32,7 +33,9 @@ import signal
 import string
 import subprocess
 import sys
+import tarfile
 import uuid
+import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict, Type, Optional, Any, Union, Callable
@@ -62,6 +65,7 @@ from ascend_fd.utils.status import (
 
 VERSION_FILE_READ_LIMIT = 100
 MAX_SIZE = 512 * 1024 * 1024
+DECOMPRESS_CHUNK_SIZE = 64 * 1024
 FILES_SIZE_THRESHOLD = 5 * 1024 * 1024 * 1024
 PLOG_SIZE_THRESHOLD = 1 * 1024 * 1024 * 1024
 FILE_MAX_NUM = 1000000
@@ -1666,24 +1670,47 @@ def load_device_info_map(hisi_logs_list: list) -> dict:
     return {}
 
 
+def _validate_compressed_file(file_path: str, suffixes: tuple) -> str:
+    """
+    压缩文件通用前置校验：存在性、符号链接、文件类型、后缀、大小
+    :param file_path: 压缩文件路径
+    :param suffixes: 允许的后缀元组，如 (".gz",) / (".zip",) / (".tar.gz", ".tgz")
+    :return: 校验通过返回 realpath，否则返回 ""
+    """
+    if not os.path.exists(file_path):
+        return ""
+    if os.path.islink(file_path):
+        fd_logger.error("The %s should not be a symbolic link file.", file_path)
+        return ""
+    if not os.path.isfile(file_path) or not file_path.lower().endswith(suffixes):
+        return ""
+    real_path = os.path.realpath(file_path)
+    file_size = os.path.getsize(real_path)
+    if file_size == 0 or file_size > MAX_SIZE:
+        fd_logger.error("File size is empty or exceeds %d MB, path: %s", MAX_SIZE >> MB_SHIFT, real_path)
+        return ""
+    return real_path
+
+
+def _is_safe_member_path(out_dir_abs: str, out_dir_path: str, member_name: str) -> bool:
+    """
+    校验归档成员路径安全性：禁止绝对路径、禁止穿越目标目录
+    :return: 安全返回 True，否则 False
+    """
+    if os.path.isabs(member_name):
+        return False
+    member_path = os.path.abspath(os.path.join(out_dir_path, member_name))
+    return member_path.startswith(out_dir_abs + os.sep)
+
+
 def decompress_gz(gz_file_path: str) -> str:
     """
     解压 .gz 文件，附带完整安全校验
     :param gz_file_path: gz 文件路径
     :return: 成功返回解压后路径，失败返回 ""
     """
-    if not os.path.exists(gz_file_path):
-        return ""
-    if os.path.islink(gz_file_path):
-        fd_logger.error("The %s should not be a symbolic link file.", gz_file_path)
-        return ""
-    if not os.path.isfile(gz_file_path) or not gz_file_path.lower().endswith(".gz"):
-        return ""
-    gz_file_path = os.path.realpath(gz_file_path)
-
-    file_size = os.path.getsize(gz_file_path)
-    if file_size == 0 or file_size > MAX_SIZE:
-        fd_logger.error("File size is empty or exceeds %d MB, path: %s", MAX_SIZE >> MB_SHIFT, gz_file_path)
+    gz_file_path = _validate_compressed_file(gz_file_path, (".gz",))
+    if not gz_file_path:
         return ""
     # 解压到原目录，文件名去掉.gz 后缀
     out_file_path = os.path.splitext(gz_file_path)[0]
@@ -1692,7 +1719,21 @@ def decompress_gz(gz_file_path: str) -> str:
         return ""
     try:
         with gzip.open(gz_file_path, "rb") as f_in, open(out_file_path, "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
+            # 边解压边累计写入大小，防止压缩炸弹在解压过程中写满磁盘
+            total_size = 0
+            while True:
+                chunk = f_in.read(DECOMPRESS_CHUNK_SIZE)
+                if not chunk:
+                    break
+                total_size += len(chunk)
+                if total_size > MAX_SIZE:
+                    f_out.close()
+                    os.remove(out_file_path)
+                    fd_logger.warning(
+                        "Decompressed size exceeds %d MB, aborted: %s", MAX_SIZE >> MB_SHIFT, gz_file_path
+                    )
+                    return ""
+                f_out.write(chunk)
         # 解压后二次校验：判断输出文件是否生成、非空
         out_file_size = os.path.getsize(out_file_path)
         if not os.path.isfile(out_file_path) or out_file_size == 0 or out_file_size > MAX_SIZE:
@@ -1710,3 +1751,131 @@ def decompress_gz(gz_file_path: str) -> str:
         if os.path.exists(out_file_path):
             os.remove(out_file_path)
         return ""
+
+
+def _decompress_archive_to_dir(
+    file_path: str,
+    suffixes: tuple,
+    open_archive: Callable,
+    list_members: Callable,
+    extract_member: Callable,
+    archive_type: str,
+) -> str:
+    """
+    通用归档解压到目录（zip / tar.gz 共用）：前置校验、输出目录冲突检查、
+    成员安全过滤、累计大小防爆、解压、异常清理
+    :param open_archive: callable(file_path) -> 上下文管理器（归档对象）
+    :param list_members: callable(archive) -> iterable[(name, size, is_dir, is_link, member)]
+    :param extract_member: callable(archive, member, out_dir)
+    :param archive_type: "zip" / "tar"，用于日志
+    :return: 成功返回解压后目录路径，失败返回 ""
+    """
+    real_path = _validate_compressed_file(file_path, suffixes)
+    if not real_path:
+        return ""
+    # 解压到原目录下以文件名（去掉压缩后缀）命名的目录
+    lower_path = real_path.lower()
+    if lower_path.endswith(".tar.gz"):
+        out_dir_path = real_path[: -len(".tar.gz")]
+    elif lower_path.endswith(".tgz"):
+        out_dir_path = real_path[: -len(".tgz")]
+    else:
+        out_dir_path = os.path.splitext(real_path)[0]
+    if os.path.exists(out_dir_path):
+        fd_logger.warning("Target dir exists, skipped: %s", out_dir_path)
+        return out_dir_path
+    out_dir_abs = os.path.abspath(out_dir_path)
+    try:
+        with open_archive(real_path) as archive:
+            safe_members = []
+            total_size = 0
+            for name, size, is_dir, is_link, member in list_members(archive):
+                if is_dir:
+                    continue
+                if is_link:
+                    # 跳过符号链接/硬链接条目，避免安全风险
+                    fd_logger.warning("Skip unsafe %s entry (link): %s in %s", archive_type, name, real_path)
+                    continue
+                # 安全校验：跳过绝对路径与路径穿越条目
+                if not _is_safe_member_path(out_dir_abs, out_dir_path, name):
+                    fd_logger.warning(
+                        "Skip unsafe %s entry (absolute path or path traversal): %s in %s",
+                        archive_type,
+                        name,
+                        real_path,
+                    )
+                    continue
+                # 累计大小校验，避免压缩炸弹
+                total_size += size
+                if total_size > MAX_SIZE:
+                    fd_logger.warning(
+                        "%s total extracted size exceeds %d MB, aborted: %s",
+                        archive_type.capitalize(),
+                        MAX_SIZE >> MB_SHIFT,
+                        real_path,
+                    )
+                    return ""
+                safe_members.append(member)
+            if not safe_members:
+                fd_logger.warning("No valid file to extract in %s: %s", archive_type, real_path)
+                return ""
+            os.makedirs(out_dir_path, exist_ok=True)
+            for member in safe_members:
+                extract_member(archive, member, out_dir_path)
+        return out_dir_path
+    except Exception as e:
+        fd_logger.error("Failed to decompress: %s, reason: %s", real_path, str(e))
+        # 异常时清理残留目录
+        if os.path.exists(out_dir_path) and os.path.isdir(out_dir_path):
+            shutil.rmtree(out_dir_path, ignore_errors=True)
+        return ""
+
+
+def decompress_zip(zip_file_path: str) -> str:
+    """
+    解压 .zip 文件，附带完整安全校验
+    :param zip_file_path: zip 文件路径
+    :return: 成功返回解压后目录路径，失败返回 ""
+    """
+
+    @contextlib.contextmanager
+    def open_archive(path):
+        with zipfile.ZipFile(path, "r") as zf:
+            yield zf
+
+    def list_members(zf):
+        return [(m.filename, m.file_size, m.is_dir(), False, m) for m in zf.infolist()]
+
+    return _decompress_archive_to_dir(
+        zip_file_path,
+        (".zip",),
+        open_archive,
+        list_members,
+        lambda zf, m, out: zf.extract(m, out),
+        "zip",
+    )
+
+
+def decompress_tar_gz(tar_gz_file_path: str) -> str:
+    """
+    解压 .tar.gz / .tgz 文件，附带完整安全校验
+    :param tar_gz_file_path: tar.gz 或 tgz 文件路径
+    :return: 成功返回解压后目录路径，失败返回""
+    """
+
+    @contextlib.contextmanager
+    def open_archive(path):
+        with tarfile.open(path, "r:gz") as tf:
+            yield tf
+
+    def list_members(tf):
+        return [(m.name, m.size, m.isdir(), m.issym() or m.islnk(), m) for m in tf.getmembers()]
+
+    return _decompress_archive_to_dir(
+        tar_gz_file_path,
+        (".tar.gz", ".tgz"),
+        open_archive,
+        list_members,
+        lambda tf, m, out: tf.extract(m, out),
+        "tar",
+    )

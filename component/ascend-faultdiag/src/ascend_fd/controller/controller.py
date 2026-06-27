@@ -21,12 +21,27 @@ from typing import Dict, List, Type
 from ascend_fd.controller.job_worker import generate_parse_job, generate_diag_job
 from ascend_fd.pkg.diag.root_cluster import start_rc_diag_job
 from ascend_fd.pkg.diag.root_cluster.mindie_diag_job import MindIEDiagWorker
+from ascend_fd.utils.constant.str_const import SUPER_POD_SCENE
 from ascend_fd.wrapper import PrintWrapper, JsonWrapper
 from ascend_fd.utils.status import InnerError, PathError, ParamError, BaseError
-from ascend_fd.utils.tool import safe_write_open, safe_walk, get_version, get_build_time, MultiProcessJob, \
-    SHOW_IP_MAX, DOUBLE_SEP, SHOE_INFER_GROUP_MAX
-from ascend_fd.pkg.parse.parser_saver import ParsedDataSaver, SaverFactory, BaseLogSaver, HostLogSaver, TrainLogSaver, \
-    CustomLogSaver
+from ascend_fd.utils.tool import (
+    safe_write_open,
+    safe_walk,
+    get_version,
+    get_build_time,
+    MultiProcessJob,
+    SHOW_IP_MAX,
+    DOUBLE_SEP,
+    SHOE_INFER_GROUP_MAX,
+)
+from ascend_fd.pkg.parse.parser_saver import (
+    ParsedDataSaver,
+    SaverFactory,
+    BaseLogSaver,
+    HostLogSaver,
+    TrainLogSaver,
+    CustomLogSaver,
+)
 from ascend_fd.model.cfg import DiagCFG, ParseCFG
 from ascend_fd.pkg.parse.knowledge_graph.kg_parse_job import get_single_parse_data
 from ascend_fd.pkg.diag.knowledge_graph.kg_diag_job import single_diag_job
@@ -42,6 +57,7 @@ class ParseController:
     The parse job controller.
     The input_path needs to be specified to the job directory.
     """
+
     INPUT_DIR_DEPTH = 10
 
     def __init__(self, args):
@@ -55,7 +71,7 @@ class ParseController:
         self.output_path = self._check_output_path_data(args)
         self.performance_flag = False if args.cmd == "single-diag" else args.performance
         self.cfg = self.init_cfg(args)
-        self.origin_results = list()
+        self.origin_results = []
 
     @staticmethod
     def _check_input_cmd(args):
@@ -146,8 +162,9 @@ class ParseController:
         Use multiprocessing to start parse tasks
         """
         logger.info("Component Version: %s. Build time: %s", get_version(), get_build_time())
-        multiprocess_job = MultiProcessJob("FAULT_DIAG", pool_size=4, task_id=self.cfg.task_id,
-                                           daemon=False, failed_raise=False)
+        multiprocess_job = MultiProcessJob(
+            "FAULT_DIAG", pool_size=4, task_id=self.cfg.task_id, daemon=False, failed_raise=False
+        )
         parse_jobs = generate_parse_job(self.performance_flag)
         for job_name, job_func in parse_jobs.items():
             multiprocess_job.add_security_job(job_name, job_func, self.cfg)
@@ -205,6 +222,7 @@ class DiagController:
     """
     The diag job controller
     """
+
     OUT_DIR = "fault_diag_result"
     NORMAL_RC_CODE = 102
 
@@ -219,7 +237,7 @@ class DiagController:
         self.output_path = self.cfg.output_path
         os.makedirs(self.output_path, 0o700, exist_ok=True)
         self.performance_flag = False if args.cmd == "single-diag" else args.performance
-        self.single_diag_flag = True if args.cmd == "single-diag" else False
+        self.single_diag_flag = bool(args.cmd == "single-diag")
         self.origin_results = dict()
         self.failed_details = dict()
 
@@ -267,8 +285,9 @@ class DiagController:
         """
         logger.info("Component Version: %s. Build time: %s", get_version(), get_build_time())
         self._exec_root_cluster_job()  # execute root cluster diag job first
-        multiprocess_job = MultiProcessJob("FAULT_DIAG", pool_size=3, task_id=self.cfg.task_id,
-                                           daemon=False, failed_raise=False)
+        multiprocess_job = MultiProcessJob(
+            "FAULT_DIAG", pool_size=3, task_id=self.cfg.task_id, daemon=False, failed_raise=False
+        )
         diag_jobs = generate_diag_job(self.performance_flag)
         for job_name, job_func in diag_jobs.items():
             multiprocess_job.add_security_job(job_name, job_func, self.cfg)
@@ -312,7 +331,7 @@ class DiagController:
         fault_description = result.fault_description
         if fault_description:
             return
-        raise InnerError(f"Root Cluster diag job failed. Can't get the result.")
+        raise InnerError("Root Cluster diag job failed. Can't get the result.")
 
     def _echo_server_info(self, infer_group_name, echo_show_flag):
         """
@@ -325,9 +344,9 @@ class DiagController:
         show_ip_list = container_ip_list[:SHOW_IP_MAX]
         if len(container_ip_list) > SHOW_IP_MAX:
             show_ip_list.append("...")
-        echo.info(f"\n{DOUBLE_SEP}")
-        echo.info(f"{lb.instance_name}：{infer_group_name}")
-        echo.info(f"{lb.node_name}：{show_ip_list}")
+        echo.info("\n%s", DOUBLE_SEP)
+        echo.info("%s：%s", lb.instance_name, infer_group_name)
+        echo.info("%s：%s", lb.node_name, show_ip_list)
 
     def _export_results(self, results: Dict[str, dict], out_file_name="diag_report.json", echo_show_flag=True):
         """
@@ -340,17 +359,22 @@ class DiagController:
             # don't need the key(job name), job_result is : {Kg/Node/Net: fault_detail_dict}
             self.origin_results.update(job_result)
         out_file = os.path.join(self.output_path, out_file_name)
-        format_table = PrintWrapper(self.origin_results, self.failed_details, self.performance_flag,
-                                    self.single_diag_flag).get_format_table()
+        format_table = PrintWrapper(
+            self.origin_results, self.failed_details, self.performance_flag, self.single_diag_flag
+        ).get_format_table()
         if echo_show_flag:
             echo.info(format_table)
-        json_wrapper = JsonWrapper(self.origin_results, self.failed_details, self.performance_flag,
-                                   self.cfg.task_id, self.single_diag_flag)
+        json_wrapper = JsonWrapper(
+            self.origin_results, self.failed_details, self.performance_flag, self.cfg.task_id, self.single_diag_flag
+        )
         json_wrapper.format_json()
         json_file = json_wrapper.get_format_json()
         with safe_write_open(out_file, mode="w+", encoding="utf-8") as file_stream:
             file_stream.write(json_file)
             file_stream.write('\r\n')
+
+        if self.cfg.parsed_saver.scene == SUPER_POD_SCENE:
+            self.cfg.parsed_saver.super_pod_info_saver.save_to_json(self.output_path, "topo_info.json")
 
 
 class SingleDiagController:

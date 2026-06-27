@@ -24,6 +24,7 @@ from ascend_fd.model.parse_info import PlogPidParseInfo, PlogBaseInfo
 
 from ascend_fd.pkg.diag.root_cluster import fault_description
 from ascend_fd.utils import regular_table
+from ascend_fd.utils.regular_table import DEFAULT_GENERATION_SIGN
 from ascend_fd.utils.status import InfoIncorrectError
 from ascend_fd.utils.tool import safe_read_json, collect_parse_results, MultiProcessJob
 from ascend_fd.model.cfg import DiagCFG
@@ -328,6 +329,8 @@ class RCDiagWorker:
         # device base info
         if not info.base or not info.base.rank_map:
             return None
+        if info.base.generation_info and info.base.generation_info != DEFAULT_GENERATION_SIGN:
+            self.cfg.parsed_saver.super_pod_info_saver.generation_info = info.base.generation_info
         device_instance.update_base_info(info.base)
         # record the identifier info
         for identifier_name, rank_info in info.base.rank_map.items():

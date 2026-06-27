@@ -51,6 +51,7 @@ from ascend_fd.utils.regular_table import (
     LCNE_BOARD_SN,
     SERVER_INFO_FILE,
     PRODUCT_SYS_SN,
+    LCNE_SN,
 )
 from ascend_fd.utils.net_tools import IPAddress
 from ascend_fd.configuration.config import RC_PARSER_DUMP_NAME
@@ -62,6 +63,7 @@ HOST_SN_PATTERN = re.compile(HOST_SN)
 BMC_BOARD_SN_PATTERN = re.compile(BMC_BOARD_SN)
 BMC_COMPLETE_MACHINE_SN_PATTERN = re.compile(BMC_COMPLETE_MACHINE_SN)
 LCNE_BOARD_SN_PATTERN = re.compile(LCNE_BOARD_SN)
+LCNE_SN_PATTERN = re.compile(LCNE_SN)
 
 SERVER_INDEX = "ServerIndex"
 SUPER_POD_ID = "SuperPodId"
@@ -75,9 +77,13 @@ def parse_lcne_info(cfg):
     Parse LCNE info
     :param cfg: parse config
     """
-    board_sn_info = parse_lcne_sn_info(cfg)
+    lcne_sn_dict = {}
+    board_sn_info, sn_info = parse_lcne_sn_info(cfg)
     if board_sn_info:
-        lcne_sn_dict = {BOARD_SERIAL_NUMBER: board_sn_info}
+        lcne_sn_dict.update({BOARD_SERIAL_NUMBER: board_sn_info})
+    if sn_info:
+        lcne_sn_dict.update({SERIAL_NUMBER: sn_info})
+    if lcne_sn_dict:
         safe_generate_or_merge_json_file(os.path.join(cfg.output_path, SERVER_INFO_FILE), lcne_sn_dict)
     lcne_switch_info = parse_lcne_switch_info(cfg)
     if lcne_switch_info:
@@ -234,16 +240,18 @@ def get_host_sn_info(dmidecode_log):
     return ""
 
 
-def get_lcne_sn_info(lcne_log):
+def get_lcne_sn_info(lcne_log, patten):
     """
     Get LCNE serial number info from lcne log file
     """
-    with safe_read_open(lcne_log, "r", encoding="UTF-8") as file_stream:
+    if not lcne_log:
+        return ""
+    with safe_read_open(lcne_log, "r", encoding="UTF-8", errors="replace") as file_stream:
         lines = file_stream.readlines()
         for line in lines:
-            board_sn_match = LCNE_BOARD_SN_PATTERN.search(line.strip())
-            if board_sn_match:
-                return board_sn_match.group(1)
+            sn_match = patten.search(line.strip())
+            if sn_match:
+                return sn_match.group(1)
     return ""
 
 
@@ -475,9 +483,10 @@ def parse_bmc_super_pod_info(cfg):
 
 
 def parse_lcne_sn_info(cfg):
+    sn = get_lcne_sn_info(cfg.lcne_log_saver.get_cpdt_checkcc_log(), LCNE_SN_PATTERN)
     for file in cfg.lcne_log_saver.get_devm_bddvadp_log():
-        return get_lcne_sn_info(file)
-    return ""
+        return get_lcne_sn_info(file, LCNE_BOARD_SN_PATTERN), sn
+    return "", sn
 
 
 def parse_lcne_switch_info(cfg):
