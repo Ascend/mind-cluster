@@ -374,6 +374,74 @@ func TestScoreBestNPUNodesSuccessNoMesh(t *testing.T) {
 	}
 }
 
+func TestSelectFeasibleCardsByMeshAffinitySingleMesh(t *testing.T) {
+	tests := []struct {
+		name          string
+		reqNPUNum     int
+		maxCardNPU    int
+		cardFreeCount map[int]int
+		want          map[int]struct{}
+	}{
+		{name: "non_affinity_5", reqNPUNum: 5, maxCardNPU: 4,
+			cardFreeCount: map[int]int{0: 4, 1: 4}, want: nil},
+		{name: "non_affinity_7", reqNPUNum: 7, maxCardNPU: 4,
+			cardFreeCount: map[int]int{0: 4, 1: 4}, want: nil},
+		{name: "req1_best_fit", reqNPUNum: 1, maxCardNPU: 4,
+			cardFreeCount: map[int]int{0: 2, 1: 1}, want: map[int]struct{}{1: {}}},
+		{name: "req2_best_fit", reqNPUNum: 2, maxCardNPU: 4,
+			cardFreeCount: map[int]int{0: 4, 1: 2}, want: map[int]struct{}{1: {}}},
+		{name: "req3_best_fit", reqNPUNum: 3, maxCardNPU: 4,
+			cardFreeCount: map[int]int{0: 3, 1: 4}, want: map[int]struct{}{0: {}}},
+		{name: "req2_no_fit", reqNPUNum: 2, maxCardNPU: 4,
+			cardFreeCount: map[int]int{0: 1, 1: 1}, want: nil},
+		{name: "req1_tie_by_id", reqNPUNum: 1, maxCardNPU: 4,
+			cardFreeCount: map[int]int{0: 2, 1: 2}, want: map[int]struct{}{0: {}}},
+		{name: "empty_free", reqNPUNum: 2, maxCardNPU: 4,
+			cardFreeCount: map[int]int{}, want: nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := selectFeasibleCardsByMeshAffinity(tt.reqNPUNum, tt.maxCardNPU, tt.cardFreeCount)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("got %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSelectFeasibleCardsByMeshAffinityMultiMesh(t *testing.T) {
+	tests := []struct {
+		name          string
+		reqNPUNum     int
+		maxCardNPU    int
+		cardFreeCount map[int]int
+		want          map[int]struct{}
+	}{
+		{name: "req4_one_full", reqNPUNum: 4, maxCardNPU: 4,
+			cardFreeCount: map[int]int{0: 4, 1: 3}, want: map[int]struct{}{0: {}}},
+		{name: "req8_two_full", reqNPUNum: 8, maxCardNPU: 4,
+			cardFreeCount: map[int]int{0: 4, 1: 4}, want: map[int]struct{}{0: {}, 1: {}}},
+		{name: "req8_not_enough", reqNPUNum: 8, maxCardNPU: 4,
+			cardFreeCount: map[int]int{0: 4, 1: 3}, want: nil},
+		{name: "req12_need_three", reqNPUNum: 12, maxCardNPU: 4,
+			cardFreeCount: map[int]int{0: 4, 1: 4, 2: 4, 3: 2},
+			want:          map[int]struct{}{0: {}, 1: {}, 2: {}}},
+		{name: "req4_no_full", reqNPUNum: 4, maxCardNPU: 4,
+			cardFreeCount: map[int]int{0: 3, 1: 2}, want: nil},
+		{name: "req8_lowest_ids", reqNPUNum: 8, maxCardNPU: 4,
+			cardFreeCount: map[int]int{0: 4, 2: 4, 3: 4},
+			want:          map[int]struct{}{0: {}, 2: {}}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := selectFeasibleCardsByMeshAffinity(tt.reqNPUNum, tt.maxCardNPU, tt.cardFreeCount)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("got %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestSelectNPUFromNodeSuccess(t *testing.T) {
 	task := makeTask("task-sel", threeChips)
 	h := newHandler(SchedulePolicy4Px8, task, threeChips)

@@ -4388,8 +4388,6 @@ data:
     - plugins:
       - name: gang
         enableNodeOrder: false
-        enablePreemptable: false
-        enableReclaimable: false
       - name: volcano-npu_v6.0.RC1_linux-x86_64
         enablePreemptable: true
         enableReclaimable: true
