@@ -204,8 +204,8 @@ const (
 const (
 	// DeviceResetTimeout device reset timeout
 	DeviceResetTimeout = "deviceResetTimeout"
-	// DefaultDeviceResetTimeout default device reset timeout is 60 seconds
-	DefaultDeviceResetTimeout = 60
+	// DefaultDeviceResetTimeout default device reset timeout is 600 seconds
+	DefaultDeviceResetTimeout = 600
 	// MinDeviceResetTimeout min device reset timeout is 10 seconds
 	MinDeviceResetTimeout = 10
 	// MaxDeviceResetTimeout max device reset timeout is 600 seconds

@@ -223,6 +223,7 @@ spec:
         - name: localtime
           hostPath:
             path: /etc/localtime
+
 # Uncomment as needed if you are using an Ascend Docker Runtime version earlier than 26.1.0,
 # not using Ascend Docker Runtime, or using non-default mount paths. Otherwise,
 # the mounts will be handled automatically by Ascend Docker Runtime.
