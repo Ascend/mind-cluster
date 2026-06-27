@@ -17,6 +17,7 @@ package metrics
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"time"
 
@@ -116,7 +117,14 @@ type OpticalCollector struct {
 
 func initNpuOpticalDesc() {
 	// Initialize Npu specific metrics descriptions
-	for dieID, portIDs := range colcommon.NpuDevPortInfos.GetPortMap() {
+	// udie only has 0 and 1, fixed order
+	dieIDs := []int{0, 1}
+	for _, dieID := range dieIDs {
+		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap()[dieID]
+		if !ok || len(portIDs) == 0 {
+			continue
+		}
+		sort.Ints(portIDs)
 		for _, portID := range portIDs {
 			colcommon.BuildDescSlice(&opticalIndexDesc, fmt.Sprint(api.MetricsPrefix, "optical_index_num_",
 				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("the npu link optical index num ",
@@ -353,7 +361,14 @@ func getMainOptInfo(opticalInfo map[string]string) *common.OpticalInfo {
 // Npu specific optical collection functions
 func collectOpticalNpuInfo(logicID int32) []*common.OpticalNpuInfo {
 	var opticalInfos []*common.OpticalNpuInfo
-	for dieID, portIDs := range colcommon.NpuDevPortInfos.GetPortMap() {
+	// udie only has 0 and 1, fixed order
+	dieIDs := []int{0, 1}
+	for _, dieID := range dieIDs {
+		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap()[dieID]
+		if !ok || len(portIDs) == 0 {
+			continue
+		}
+		sort.Ints(portIDs)
 		for _, portID := range portIDs {
 			opticalInfo := &common.OpticalNpuInfo{}
 			if info, err := hccn.GetNpuOpticalInfoNpu(logicID, int32(dieID), int32(portID)); err == nil {
@@ -374,7 +389,7 @@ func promUpdateOpticalInfo(ch chan<- prometheus.Metric, cache opticalNpuCache, t
 	if opticalInfo == nil {
 		return
 	}
-	for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
+	for i := 0; i < len(opticalInfo); i++ {
 		if opticalInfo[i] == nil {
 			continue
 		}
@@ -397,7 +412,7 @@ func telegrafUpdateOpticalInfo(cache opticalNpuCache, fieldMap map[string]interf
 	if opticalInfo == nil {
 		return
 	}
-	for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
+	for i := 0; i < len(opticalInfo); i++ {
 		if opticalInfo[i] == nil {
 			continue
 		}
