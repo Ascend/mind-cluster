@@ -17,6 +17,7 @@ package metrics
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"time"
 
@@ -273,7 +274,14 @@ func collectNetworkInfo(phyID int32) common.NpuNetInfo {
 // Npu specific collection functions
 func collectNetworkNpuInfo(logicID int32) []*common.NpuNetInfo {
 	var newNetInfo []*common.NpuNetInfo
-	for dieID, portIDs := range colcommon.NpuDevPortInfos.GetPortMap() {
+	// udie only has 0 and 1, fixed order
+	dieIDs := []int{0, 1}
+	for _, dieID := range dieIDs {
+		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap()[dieID]
+		if !ok || len(portIDs) == 0 {
+			continue
+		}
+		sort.Ints(portIDs)
 		for _, portID := range portIDs {
 			netInfo := common.NpuNetInfo{
 				LinkStatusInfo: &common.LinkStatusInfo{},
@@ -315,7 +323,7 @@ func promUpdateNetInfo(ch chan<- prometheus.Metric, cache netInfoNPUCache, times
 	if netInfo == nil {
 		return
 	}
-	for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
+	for i := 0; i < len(netInfo); i++ {
 		if validateNotNilForEveryElement(netInfo[i].LinkStatusInfo) {
 			doUpdateMetricWithValidateNum(ch, timestamp, float64(getLinkStatusCode(netInfo[i].LinkStatusInfo.LinkState)),
 				cardLabel, linkStatusDesc[i])
@@ -335,7 +343,7 @@ func telegrafUpdateNetInfo(cache netInfoNPUCache, fieldMap map[string]interface{
 	if netInfo == nil {
 		return
 	}
-	for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
+	for i := 0; i < len(netInfo); i++ {
 		if validateNotNilForEveryElement(netInfo[i].LinkStatusInfo) {
 			doUpdateTelegrafWithValidateNum(fieldMap, linkStatusDesc[i],
 				float64(getLinkStatusCode(netInfo[i].LinkStatusInfo.LinkState)), "")
@@ -351,7 +359,14 @@ func telegrafUpdateNetInfo(cache netInfoNPUCache, fieldMap map[string]interface{
 }
 
 func initNpuNetWorkDesc() {
-	for dieID, portIDs := range colcommon.NpuDevPortInfos.GetPortMap() {
+	// udie only has 0 and 1, fixed order
+	dieIDs := []int{0, 1}
+	for _, dieID := range dieIDs {
+		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap()[dieID]
+		if !ok || len(portIDs) == 0 {
+			continue
+		}
+		sort.Ints(portIDs)
 		for _, portID := range portIDs {
 			colcommon.BuildDescSlice(&linkStatusDesc, fmt.Sprint(api.MetricsPrefix, "link_status_", strconv.Itoa(dieID),
 				"_", strconv.Itoa(portID)), fmt.Sprint("the npu link status ", "dieId:", strconv.Itoa(dieID),

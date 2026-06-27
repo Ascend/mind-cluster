@@ -17,6 +17,7 @@ package metrics
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"time"
 
@@ -143,7 +144,14 @@ var (
 )
 
 func initBuildDesc() {
-	for dieID, portIDs := range colcommon.NpuDevPortInfos.GetPortMap() {
+	// udie only has 0 and 1, fixed order
+	dieIDs := []int{0, 1}
+	for _, dieID := range dieIDs {
+		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap()[dieID]
+		if !ok || len(portIDs) == 0 {
+			continue
+		}
+		sort.Ints(portIDs)
 		for _, portID := range portIDs {
 			// rx
 			initBuildDescRx(dieID, portID)
@@ -231,7 +239,7 @@ func promUpdateUbInfo(ch chan<- prometheus.Metric, cache ubCache,
 	if ubInfo == nil {
 		return
 	}
-	for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
+	for i := 0; i < len(ubInfo); i++ {
 		if ubInfo[i] == nil {
 			continue
 		}
@@ -334,7 +342,7 @@ func telegrafUpdateUbInfo(cache ubCache, fieldMap map[string]interface{}) {
 	if ubInfo == nil {
 		return
 	}
-	for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
+	for i := 0; i < len(ubInfo); i++ {
 		if ubInfo[i] == nil {
 			continue
 		}
@@ -512,7 +520,14 @@ func initBuildDescTx(dieID, portID int) {
 
 func collectUbInfo(logicID int32) []*common.UBInfo {
 	var newUbInfos []*common.UBInfo
-	for dieID, portIDs := range colcommon.NpuDevPortInfos.GetPortMap() {
+	// udie only has 0 and 1, fixed order
+	dieIDs := []int{0, 1}
+	for _, dieID := range dieIDs {
+		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap()[dieID]
+		if !ok || len(portIDs) == 0 {
+			continue
+		}
+		sort.Ints(portIDs)
 		for _, portID := range portIDs {
 			newUbInfos = append(newUbInfos, getUBStatInfo(logicID, dieID, portID))
 		}

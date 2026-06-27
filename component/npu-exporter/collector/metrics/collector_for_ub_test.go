@@ -33,13 +33,18 @@ import (
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 )
 
+var ubTestMockPorts = map[int][]int{
+	0: {1, 2, 3},
+	1: {1, 2, 3},
+}
+
 func init() {
 	hwLogConfig := hwlog.LogConfig{
 		OnlyToStdout: true,
 	}
 	hwlog.InitRunLogger(&hwLogConfig, context.Background())
 
-	colcommon.NpuDevPortInfos.SetPortMap(mockPorts)
+	colcommon.NpuDevPortInfos.SetPortMap(ubTestMockPorts)
 	colcommon.NpuDevPortInfos.Init()
 }
 
@@ -317,7 +322,8 @@ func mockUBCache(n *colcommon.NpuCollector, chips []colcommon.HuaWeiAIChip, cach
 
 func mockUBInfo() []*common.UBInfo {
 	var newUbInfos []*common.UBInfo
-	for i := 0; i < (common.MaxDieID * common.MaxPortID); i++ {
+	// Use NpuDevPortInfos.GetCount() to match the port count configured in ubTestMockPorts
+	for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
 		ubInfos := common.UBInfo{
 			UBCommonStats: initUBCommonStats(),
 			UboeExtensions: &common.UBOEExtensions{
