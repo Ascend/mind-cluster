@@ -37,7 +37,7 @@ import (
 const (
 	idleWaitSeconds        = 60
 	bootStatusPollInterval = 1 * time.Second
-	bootStatusPollTimeout  = 350 * time.Second
+	bootStatusPollTimeout  = 480 * time.Second
 )
 
 type UnifiedHotResetManager struct {
