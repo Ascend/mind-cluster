@@ -163,6 +163,56 @@ func (tp *chip4nodex) selectNPUFromNode(task *api.TaskInfo, node plugin.NPUNode)
 	return nodeTop[:taskNPUNum], nil
 }
 
+// selectFeasibleCardsByMeshAffinity selects feasible mesh cards based on 4P mesh affinity.
+// Returns nil if no feasible cards found.
+func selectFeasibleCardsByMeshAffinity(reqNPUNum, maxCardNPUNum int,
+	cardFreeCount map[int]int) map[int]struct{} {
+	if !is4PmeshAffinity(reqNPUNum) {
+		return nil
+	}
+
+	// Single mesh: task needs fewer NPUs than one mesh provides
+	if reqNPUNum < maxCardNPUNum {
+		var candidates []int
+		for id, fc := range cardFreeCount {
+			if fc >= reqNPUNum {
+				candidates = append(candidates, id)
+			}
+		}
+		if len(candidates) == 0 {
+			return nil
+		}
+		// best-fit: prefer the mesh with the least extra free NPUs
+		sort.Slice(candidates, func(i, j int) bool {
+			extraI := cardFreeCount[candidates[i]] - reqNPUNum
+			extraJ := cardFreeCount[candidates[j]] - reqNPUNum
+			if extraI != extraJ {
+				return extraI < extraJ
+			}
+			return candidates[i] < candidates[j]
+		})
+		return map[int]struct{}{candidates[0]: {}}
+	}
+
+	// Multi mesh: task needs one or more complete meshes
+	var fullMeshIDs []int
+	for id, fc := range cardFreeCount {
+		if fc == maxCardNPUNum {
+			fullMeshIDs = append(fullMeshIDs, id)
+		}
+	}
+	neededMeshes := (reqNPUNum + maxCardNPUNum - 1) / maxCardNPUNum
+	if len(fullMeshIDs) < neededMeshes {
+		return nil
+	}
+	sort.Ints(fullMeshIDs)
+	feasibleCards := make(map[int]struct{}, neededMeshes)
+	for i := 0; i < neededMeshes; i++ {
+		feasibleCards[fullMeshIDs[i]] = struct{}{}
+	}
+	return feasibleCards
+}
+
 // Preemptable override: 4P mesh affinity requires complete mesh groups
 func (tp *chip4nodex) Preemptable(preemptor *api.TaskInfo, preemptees []*api.TaskInfo,
 	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
@@ -191,35 +241,10 @@ func (tp *chip4nodex) Preemptable(preemptor *api.TaskInfo, preemptees []*api.Tas
 		return nil, false
 	}
 
-	// 4P mesh affinity: only select complete mesh groups (freeCount == maxCardNPUNum)
-	if is4PmeshAffinity(reqNPUNum) && reqNPUNum >= maxCardNPUNum {
-		klog.V(util.LogInfoLev).Infof("Preemptable(chip4nodex): task<%s> 4P mesh affinity, need complete meshes",
-			preemptor.Name)
-		type meshInfo struct {
-			id        int
-			freeCount int
-		}
-		var fullMeshes []meshInfo
-		for id, fc := range cardFreeCount {
-			if fc == maxCardNPUNum {
-				fullMeshes = append(fullMeshes, meshInfo{id, fc})
-			}
-		}
-		neededMeshes := (reqNPUNum + maxCardNPUNum - 1) / maxCardNPUNum
-		klog.V(util.LogInfoLev).Infof("Preemptable(chip4nodex): task<%s> fullMeshes<%d> neededMeshes<%d>",
-			preemptor.Name, len(fullMeshes), neededMeshes)
-		if len(fullMeshes) < neededMeshes {
-			klog.V(util.LogInfoLev).Infof("Preemptable(chip4nodex): not enough full meshes: %d < %d on node<%s>",
-				len(fullMeshes), neededMeshes, vcNode.Name)
-			return nil, false
-		}
-		sort.Slice(fullMeshes, func(i, j int) bool { return fullMeshes[i].id < fullMeshes[j].id })
-		feasibleCards := make(map[int]struct{})
-		for i := 0; i < neededMeshes; i++ {
-			feasibleCards[fullMeshes[i].id] = struct{}{}
-		}
-		klog.V(util.LogInfoLev).Infof("Preemptable(chip4nodex): task<%s> selected %d meshes on node<%s>, feasible",
-			preemptor.Name, neededMeshes, vcNode.Name)
+	feasibleCards := selectFeasibleCardsByMeshAffinity(reqNPUNum, maxCardNPUNum, cardFreeCount)
+	if feasibleCards != nil {
+		klog.V(util.LogInfoLev).Infof("Preemptable(chip4nodex): task<%s> mesh affinity feasible on node<%s>",
+			preemptor.Name, vcNode.Name)
 		return plugin.FilterPreempteesByFeasibleCards(vcNode, preemptees, feasibleCards, maxCardNPUNum), true
 	}
 
@@ -257,35 +282,10 @@ func (tp *chip4nodex) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.Tas
 		return nil, false
 	}
 
-	// 4P mesh affinity: only select complete mesh groups (freeCount == maxCardNPUNum)
-	if is4PmeshAffinity(reqNPUNum) && reqNPUNum >= maxCardNPUNum {
-		klog.V(util.LogInfoLev).Infof("Reclaimable(chip4nodex): task<%s> 4P mesh affinity, need complete meshes",
-			reclaimer.Name)
-		type meshInfo struct {
-			id        int
-			freeCount int
-		}
-		var fullMeshes []meshInfo
-		for id, fc := range cardFreeCount {
-			if fc == maxCardNPUNum {
-				fullMeshes = append(fullMeshes, meshInfo{id, fc})
-			}
-		}
-		neededMeshes := (reqNPUNum + maxCardNPUNum - 1) / maxCardNPUNum
-		klog.V(util.LogInfoLev).Infof("Reclaimable(chip4nodex): task<%s> fullMeshes<%d> neededMeshes<%d>",
-			reclaimer.Name, len(fullMeshes), neededMeshes)
-		if len(fullMeshes) < neededMeshes {
-			klog.V(util.LogInfoLev).Infof("Reclaimable(chip4nodex): not enough full meshes: %d < %d on node<%s>",
-				len(fullMeshes), neededMeshes, vcNode.Name)
-			return nil, false
-		}
-		sort.Slice(fullMeshes, func(i, j int) bool { return fullMeshes[i].id < fullMeshes[j].id })
-		feasibleCards := make(map[int]struct{})
-		for i := 0; i < neededMeshes; i++ {
-			feasibleCards[fullMeshes[i].id] = struct{}{}
-		}
-		klog.V(util.LogInfoLev).Infof("Reclaimable(chip4nodex): task<%s> selected %d meshes on node<%s>, feasible",
-			reclaimer.Name, neededMeshes, vcNode.Name)
+	feasibleCards := selectFeasibleCardsByMeshAffinity(reqNPUNum, maxCardNPUNum, cardFreeCount)
+	if feasibleCards != nil {
+		klog.V(util.LogInfoLev).Infof("Reclaimable(chip4nodex): task<%s> mesh affinity feasible on node<%s>",
+			reclaimer.Name, vcNode.Name)
 		return plugin.FilterPreempteesByFeasibleCards(vcNode, reclaimees, feasibleCards, maxCardNPUNum), true
 	}
 
