@@ -17,7 +17,7 @@ import (
 	"github.com/kubeflow/common/pkg/util"
 	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
@@ -34,7 +34,7 @@ import (
 	"clusterd/pkg/domain/podgroup"
 	"clusterd/pkg/domain/statistics"
 	"clusterd/pkg/domain/superpod"
-	"clusterd/pkg/interface/grpc/recover"
+	pb "clusterd/pkg/interface/grpc/recover"
 	"clusterd/pkg/interface/kube"
 )
 
@@ -1673,6 +1673,79 @@ func TestFilterRecoverPodsNodeRankIds_PodUIDNotMatch(t *testing.T) {
 		defer mockGetPod.Reset()
 		ctl.filterRecoverPodsNodeRankIds(signal)
 		convey.So(len(signal.NodeRankIds), convey.ShouldEqual, 0)
+	})
+}
+
+func TestDealWithRackScheduling(t *testing.T) {
+	convey.Convey("Test dealWithRackScheduling", t, func() {
+		ctl := &EventController{jobInfo: common.JobBaseInfo{JobId: "test-job-id"}}
+
+		convey.Convey("01-should return when not A5 job", func() {
+			patch := gomonkey.ApplyFunc(pod.GetPodByJobId,
+				func(jobKey string) map[string]v1.Pod {
+					return map[string]v1.Pod{"pod-1": {Spec: v1.PodSpec{NodeName: "node-1"}}}
+				}).ApplyFunc(superpod.ListClusterDevice,
+				func() []*api.SuperPodDevice {
+					return []*api.SuperPodDevice{{NodeDeviceMap: map[string]*api.NodeDevice{
+						"node-1": {ServerType: api.VersionA3}}}}
+				})
+			defer patch.Reset()
+			ctl.dealWithRackScheduling()
+		})
+
+		convey.Convey("02-should return when no rack block annotation", func() {
+			patch := gomonkey.ApplyFunc(pod.GetPodByJobId,
+				func(jobKey string) map[string]v1.Pod {
+					return map[string]v1.Pod{"pod-1": {Spec: v1.PodSpec{NodeName: "node-1"}}}
+				}).ApplyFunc(superpod.ListClusterDevice,
+				func() []*api.SuperPodDevice {
+					return []*api.SuperPodDevice{{NodeDeviceMap: map[string]*api.NodeDevice{
+						"node-1": {ServerType: api.VersionNPU}}}}
+				}).ApplyFunc(podgroup.GetPodGroup,
+				func(jobKey string) v1beta1.PodGroup { return v1beta1.PodGroup{} })
+			defer patch.Reset()
+			ctl.dealWithRackScheduling()
+		})
+
+		convey.Convey("03-should not loop when pod group already running", func() {
+			patchGetPod := gomonkey.ApplyFuncReturn(pod.GetPodByJobId,
+				map[string]v1.Pod{"pod-1": {Spec: v1.PodSpec{NodeName: "node-1"}}})
+			defer patchGetPod.Reset()
+			patchList := gomonkey.ApplyFuncReturn(superpod.ListClusterDevice,
+				[]*api.SuperPodDevice{{NodeDeviceMap: map[string]*api.NodeDevice{
+					"node-1": {ServerType: api.VersionNPU}}}})
+			defer patchList.Reset()
+			pg := v1beta1.PodGroup{
+				Status: v1beta1.PodGroupStatus{Phase: v1beta1.PodGroupRunning},
+			}
+			pg.Annotations = map[string]string{constant.RackBlockSchedulingKey: "1"}
+			patchPG := gomonkey.ApplyFuncReturn(podgroup.GetPodGroup, pg)
+			defer patchPG.Reset()
+			patchRunning := gomonkey.ApplyFuncReturn(podgroup.JudgeIsRunningByJobKey, true)
+			defer patchRunning.Reset()
+			ctl.dealWithRackScheduling()
+		})
+
+		convey.Convey("04-should break loop after max retry times", func() {
+			patchGetPod := gomonkey.ApplyFuncReturn(pod.GetPodByJobId,
+				map[string]v1.Pod{"pod-1": {Spec: v1.PodSpec{NodeName: "node-1"}}})
+			defer patchGetPod.Reset()
+			patchList := gomonkey.ApplyFuncReturn(superpod.ListClusterDevice,
+				[]*api.SuperPodDevice{{NodeDeviceMap: map[string]*api.NodeDevice{
+					"node-1": {ServerType: api.VersionNPU}}}})
+			defer patchList.Reset()
+			pg := v1beta1.PodGroup{
+				Status: v1beta1.PodGroupStatus{Phase: v1beta1.PodGroupInqueue},
+			}
+			pg.Annotations = map[string]string{constant.RackBlockSchedulingKey: "1"}
+			patchPG := gomonkey.ApplyFuncReturn(podgroup.GetPodGroup, pg)
+			defer patchPG.Reset()
+			patchRunning := gomonkey.ApplyFuncReturn(podgroup.JudgeIsRunningByJobKey, false)
+			defer patchRunning.Reset()
+			patchSleep := gomonkey.ApplyFunc(time.Sleep, func(d time.Duration) {})
+			defer patchSleep.Reset()
+			ctl.dealWithRackScheduling()
+		})
 	})
 }
 

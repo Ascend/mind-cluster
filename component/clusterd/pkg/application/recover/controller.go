@@ -1009,6 +1009,12 @@ func (ctl *EventController) handleNotifyGlobalFault() (string, common.RespCode, 
 	if len(retryFaults) > 0 {
 		return ctl.notifyFaultForRetryFaultCase(retryFaults, normalFaults)
 	}
+
+	// If rack affinity is enabled, pod rescheduling is performed before chassis rescheduling.
+	// A global fault refresh can only be initiated after rack rescheduling is complete;
+	// otherwise, the fault information will be incomplete.
+	ctl.dealWithRackScheduling()
+
 	if isReleased := ctl.dealWithForceRelease(); !isReleased {
 		// "sleep" is used to ensure that the time taken is consistent with the situation of resource release
 		time.Sleep(constant.NotReleaseSleepTime)
@@ -1024,6 +1030,25 @@ func (ctl *EventController) handleNotifyGlobalFault() (string, common.RespCode, 
 		faultmanager.CallbackForReportNoRetryInfo(ctl.jobInfo.JobId, restartPods, time.Now().UnixMilli())
 	}
 	return ctl.notifyFaultForNormalFaultCase(retryFaults, normalFaults)
+}
+
+func (ctl *EventController) dealWithRackScheduling() {
+	if !ctl.isA5Job() {
+		return
+	}
+	pgInfo := podgroup.GetPodGroup(ctl.jobInfo.JobId)
+	if _, ok := pgInfo.Annotations[constant.RackBlockSchedulingKey]; !ok {
+		return
+	}
+	rackReschedulingRetryTimes := 0
+	for !podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) {
+		if rackReschedulingRetryTimes > constant.MaxRackReschedulingRetryTimes {
+			break
+		}
+		rackReschedulingRetryTimes++
+		time.Sleep(time.Duration(constant.RackReschedulingDelayTimeOut) * time.Second)
+	}
+	hwlog.RunLog.Warnf("dealWithRackScheduling exceed max retry times:%v", rackReschedulingRetryTimes)
 }
 
 func (ctl *EventController) dealWithForceRelease() bool {
