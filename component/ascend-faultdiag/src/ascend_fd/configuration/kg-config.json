@@ -25351,6 +25351,77 @@
                 "in": ["MC2 group metadata unavailable"]
             }
         },
+        "AISW_VLLM_ASCEND_QUANTIZATION_003": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM-ASCEND",
+                "module": "quantization",
+                "cause_zh": "推理引擎启动命令中，实际使用的模型权重与框架不匹配",
+                "description_zh": "使用MLA C8特性时，在TP切分后得到的loaded_weight尺寸与目标参数尺寸不一致，可能由checkpoint内容、TP配置或切分逻辑异常导致。",
+                "suggestion_zh": [
+                    "1. 参考vllm-ascend软件文档中的《Model Tutorials》章节，从模型仓获取正确的模型权重文件（例如huggingface、model scope）。《Model Tutorials》章节：",
+                    " https://docs.vllm.ai/projects/ascend/zh-cn/latest/tutorials/models/index.html",
+                    "2. 重新启动推理引擎；"
+                ],
+                "cause_en": "The actual model weights used in the inference engine startup command do not match the framework",
+                "description_en": "When using MLA C8 feature, the loaded_weight size after TP splitting does not match the target parameter size. This may be caused by checkpoint content, TP configuration, or abnormal splitting logic.",
+                "suggestion_en": [
+                    "1. Refer to the \"Model Tutorials\" chapter in the vllm-ascend software documentation, and obtain the correct model weight files from a model repository (e.g., Hugging Face or ModelScope). \"Model Tutorials\" chapter:",
+                    " https://docs.vllm.ai/projects/ascend/en/latest/tutorials/models/index.html",
+                    "2. Restart the inference engine."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["FAKQuant", "Attempted to load weight", "into parameter", "when TP size", "TP rank"]
+            }
+        },
+        "AISW_VLLM_ASCEND_QUANTIZATION_COMPRESSED_TENSORS_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM-ASCEND",
+                "module": "quantization",
+                "cause_zh": "推理引擎启动命令中，量化参数--quantization compressed-tensors和实际使用的模型权重不匹配",
+                "description_zh": "vllm启动命令中，开启了--quantization compressed-tensors，但是权重路径填写了浮点权重路径，与此参数不匹配。",
+                "suggestion_zh": [
+                    "1. 选择使用和CompressedTensors量化参数匹配的模型权重；",
+                    "2. 去掉启动命令中的--quantization compressed-tensors参数，继续使用浮点类型的模型权重；"
+                ],
+                "cause_en": "The quantization parameter --quantization compressed-tensors in the inference engine startup command does not match the actual model weights",
+                "description_en": "In the vllm startup command, --quantization compressed-tensors is enabled, but the weight path points to float weights, which is incompatible with this parameter.",
+                "suggestion_en": [
+                    "1. Select model weights that match the CompressedTensors quantization parameters.",
+                    "2. Remove the --quantization compressed-tensors parameter from the startup command and continue using float-type model weights."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["TypeError", "AscendCompressedTensorsConfig", "missing 3 required positional arguments"]
+            }
+        },
+        "AISW_VLLM_ASCEND_QUANTIZATION_ASCEND_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM-ASCEND",
+                "module": "quantization",
+                "cause_zh": "推理引擎启动命令中，量化参数--quantization ascend和实际使用的模型权重不匹配",
+                "description_zh": "vllm启动命令中，开启了--quantization ascend，但是权重路径填写了浮点权重路径，与此参数不匹配。",
+                "suggestion_zh": [
+                    "1. 选择使用msmodelslim工具量化后的模型权重；",
+                    "2. 去掉启动命令中的--quantization ascend参数，继续使用浮点类型的模型权重；"
+                ],
+                "cause_en": "The quantization parameter --quantization ascend in the inference engine startup command does not match the actual model weights",
+                "description_en": "In the vllm startup command, --quantization ascend is enabled, but the weight path points to float weights, which is incompatible with this parameter.",
+                "suggestion_en": [
+                    "1. Select model weights quantized by the msmodelslim tool.",
+                    "2. Remove the --quantization ascend parameter from the startup command and continue using float-type model weights."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["ModelSlim Quantization Config Not Found"]
+            }
+        },
         "AISW_VLLM_ASCEND_KV_POOL_MOONCAKE_001": {
             "attribute": {
                 "class": "Software",
@@ -25481,7 +25552,7 @@
                 "in": ["RuntimeError", " HCCL_BUFFSIZE should be positive"]
             }
         },
-        "AISW_VLLM_WEIGHT_LOADRE_001": {
+        "AISW_VLLM_WEIGHT_LOADER_001": {
             "attribute": {
                 "class": "Software",
                 "component": "VLLM",
@@ -25489,12 +25560,16 @@
                 "cause_zh": "模型权重config.json配置文件与实际权重.safetensrors文件不匹配，导致权重加载失败",
                 "description_zh": "模型权重config.json中模型层数、专家数与实际权重不匹配。",
                 "suggestion_zh": [
-                    "1. 从模型仓获取重新获取正确模型权重文件（例如huggingface、model scope）,重新启动推理引擎；"
+                    "1. 参考vllm-ascend软件文档中的《Model Tutorials》章节，从模型仓获取正确的模型权重文件（例如huggingface、model scope）。《Model Tutorials》章节：",
+                    " https://docs.vllm.ai/projects/ascend/zh-cn/latest/tutorials/models/index.html",
+                    "2. 重新启动推理引擎；"
                 ],
                 "cause_en": "Weight loading fails because the model weight config.json does not match the actual .safetensors weight file",
                 "description_en": "The number of model layers and experts in the model weight config.json does not match the actual weights.",
                 "suggestion_en": [
-                    "1. Obtain the correct model weight files again from a model repository (for example, Hugging Face or ModelScope), and restart the inference engine."
+                    "1. Refer to the \"Model Tutorials\" chapter in the vllm-ascend software documentation, and obtain the correct model weight files again from a model repository (for example, Hugging Face or ModelScope). \"Model Tutorials\" chapter:",
+                    " https://docs.vllm.ai/projects/ascend/en/latest/tutorials/models/index.html",
+                    "2. Restart the inference engine."
                 ]
             },
             "source_file": "PyMotor_vLLM_Log",
@@ -25559,6 +25634,31 @@
                 "in": ["AssertionError", "EPLB must used in expert parallelism"]
             }
         },
+        "AISW_VLLM_ASCEND_EPLB_002": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM-ASCEND",
+                "module": "EPLB",
+                "cause_zh": "权重为EPLB不支持的量化类型，导致Worker初始化失败",
+                "description_zh": "用户开启了dynamic_eplb功能--additional-config {\"eplb_config\": {\"dynamic_eplb\": true}} EPLB在做专家权重跨卡传输（D2D）时，需要根据模型的量化类型，同步传输量化缩放因子。如果用户使用了较新但尚未适配的量化类型的MoE模型权重，来运行该模型，并同时开启了 EPLB，直接在启动阶段报错退出，服务无法运行。",
+                "suggestion_zh": [
+                    "1. 当前版本解决方案：关闭dynamic_eplb或换用已支持的量化类型模型权重，EPLB具体支持的量化类型，可以参考特性文档《Expert Parallelism Load Balancer (EPLB)》：",
+                    " https://docs.vllm.ai/projects/ascend/zh-cn/latest/user_guide/feature_guide/expert_parallelism_load_balancer.html",
+                    "2. 进一步解决方案：提RFC让dynamic_eplb对新增量化类型进行适配和支持；"
+                ],
+                "cause_en": "Worker initialization fails because the weight uses a quantization type not supported by EPLB",
+                "description_en": "The user has enabled dynamic_eplb with --additional-config {\"eplb_config\": {\"dynamic_eplb\": true}}. During expert weight cross-card transfer (D2D), EPLB needs to synchronously transfer quantization scale factors based on the model's quantization type. If the user runs a MoE model with a newer, unadapted quantization type while EPLB is enabled, the service fails to start immediately.",
+                "suggestion_en": [
+                    "1. Current version workaround: Disable dynamic_eplb or switch to a supported quantization type. For EPLB-supported quantization types, refer to the feature documentation \"Expert Parallelism Load Balancer (EPLB)\":",
+                    " https://docs.vllm.ai/projects/ascend/en/latest/user_guide/feature_guide/expert_parallelism_load_balancer.html",
+                    "2. Long-term solution: Submit an RFC for dynamic_eplb to adapt and support new quantization types."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["ValueError", "EPLB not support"]
+            }
+        },
         "AISW_VLLM_ASCEND_SPECDECODE_001": {
             "attribute": {
                 "class": "Software",
@@ -25584,6 +25684,79 @@
             "source_file": "PyMotor_vLLM_Log",
             "regex": {
                 "in": ["ValueError", "Unknown speculative decoding method"]
+            }
+        },
+        "AISW_PYMOTOR_ENGINESERVER_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "PYMOTOR",
+                "module": "EngineServer",
+                "cause_zh": "NPU阈值配置非法导致虚推禁用",
+                "description_zh": "health_check_config.npu_usage_threshold <=0或>100。",
+                "suggestion_zh": [
+                    "1. 按参考文档修改配置项：",
+                    "  https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/deployment/k8s/pd_disaggregation_deployment.md。",
+                    "2. 重新拉起服务；"
+                ],
+                "cause_en": "Invalid NPU threshold configuration causes virtual inference to be disabled",
+                "description_en": "health_check_config.npu_usage_threshold is <=0 or >100.",
+                "suggestion_en": [
+                    "1. Modify the configuration item according to the reference documentation:",
+                    "  https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/deployment/k8s/pd_disaggregation_deployment.md.",
+                    "2. Restart the service."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["Health check is disabled because npu_usage_threshold", "is abnormal"]
+            }
+        },
+        "AISW_VLLM_WEIGHT_LOADER_SCHEME_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM-ASCEND",
+                "module": "weight_loader",
+                "cause_zh": "不支持用户提供的特定Scheme的modelslim量化权重（例如quant_type=W4A16, layer_type=linear）",
+                "description_zh": "当前模型权重所使用的量化方案（Scheme）暂未适配。目前仅支持 https://github.com/vllm-project/vllm-ascend/tree/main/vllm_ascend/quantization/methods 目录下的部分特定Scheme。",
+                "suggestion_zh": [
+                    "1. 支持的量化类型可以参考社区文档《Model Tutorials》章节：",
+                    "  https://docs.vllm.ai/projects/ascend/zh-cn/latest/tutorials/models/index.html",
+                    "2. 更换支持的量化权重，重新拉起推理服务；"
+                ],
+                "cause_en": "The specific Scheme of modelslim quantization weights provided by the user is not supported (e.g., quant_type=W4A16, layer_type=linear)",
+                "description_en": "The quantization scheme (Scheme) used by the current model weights has not been adapted yet. Currently, only some specific schemes under https://github.com/vllm-project/vllm-ascend/tree/main/vllm_ascend/quantization/methods are supported.",
+                "suggestion_en": [
+                    "1. For supported quantization types, refer to the community documentation \"Model Tutorials\" chapter:",
+                    "  https://docs.vllm.ai/projects/ascend/en/latest/tutorials/models/index.html",
+                    "2. Switch to a supported quantization weight and restart the inference service."
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["NotImplementedError", "Currently, vLLM Ascend doesn't support quant_type"]
+            }
+        },
+        "AISW_VLLM_WEIGHT_LOADER_RFORK_001": {
+            "attribute": {
+                "class": "Software",
+                "component": "VLLM-ASCEND",
+                "module": "weight_loader",
+                "cause_zh": "模型加载器插件RFork运行中缺失transfer_engine依赖组件包（openyuanrong-datasystem）",
+                "description_zh": "环境中缺少yr.datasystem组件的Python whl包，导致RForkWorker初始化时，from yr.datasystem import TransferEngine失败。",
+                "suggestion_zh": [
+                    "1. 参考产品文档，安装openyuanrong-datasystem Python whl 包：",
+                    "  https://docs.vllm.ai/projects/ascend/zh-cn/latest/user_guide/feature_guide/kv_pool.html"
+                ],
+                "cause_en": "Model loader fails during RFork execution due to missing transfer_engine dependency package (openyuanrong-datasystem)",
+                "description_en": "The Python whl package for the yr.datasystem component is missing in the environment, causing RForkWorker initialization to fail with \"from yr.datasystem import TransferEngine\".",
+                "suggestion_en": [
+                    "1. Refer to the product documentation and install the openyuanrong-datasystem Python whl package:",
+                    "  https://docs.vllm.ai/projects/ascend/en/latest/user_guide/feature_guide/kv_pool.html"
+                ]
+            },
+            "source_file": "PyMotor_vLLM_Log",
+            "regex": {
+                "in": ["ModuleNotFoundError", "No module named", "yr"]
             }
         },
         "EPLB-FM004": {
