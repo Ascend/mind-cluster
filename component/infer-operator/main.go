@@ -48,6 +48,7 @@ import (
 	util "infer-operator/pkg/common/client-go"
 	"infer-operator/pkg/common/utils"
 	"infer-operator/pkg/configManager"
+	"infer-operator/pkg/controller/nodepodcleaner"
 	clusterctrlv1 "infer-operator/pkg/controller/v1"
 	"infer-operator/pkg/controller/workload"
 	"infer-operator/pkg/snapshot"
@@ -177,6 +178,11 @@ func main() {
 	inferServiceReconciler := clusterctrlv1.NewInferServiceReconciler(mgr)
 	if err := inferServiceReconciler.SetupWithManager(mgr); err != nil {
 		hwlog.RunLog.Errorf("unable to setup infer service reconciler: %v", err)
+		os.Exit(1)
+	}
+	nodePodCleanerReconciler := nodepodcleaner.NewNodePodCleanerReconciler(mgr)
+	if err := nodePodCleanerReconciler.SetupWithManager(mgr); err != nil {
+		hwlog.RunLog.Errorf("unable to setup node pod cleaner reconciler: %v", err)
 		os.Exit(1)
 	}
 	if err := setUpSnapshotControllers(ctx, mgr); err != nil {
