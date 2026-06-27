@@ -164,10 +164,10 @@ func (d *DeviceManagerV2) WaitDeviceOnline(resetTimeout int) {
 				hwlog.RunLog.Errorf("DeviceManagerV2 init failed, prepare dcmi failed, err: %v", err)
 				return
 			}
-			_, devList, err1 := d.GetDeviceList()
+			dNum, devList, err1 := d.GetDeviceList()
 			devNum, err2 := d.GetAllDeviceCount()
 			if err1 == nil && err2 == nil && int(devNum) == len(devList) {
-				hwlog.RunLog.Infof("DeviceManagerV2 get devList is %v, devList length equal to devNum: %v", devList, devNum)
+				hwlog.RunLog.Infof("DeviceManagerV2 get devList is %v, dNum: %v, devList length equal to devNum: %v", devList, dNum, devNum)
 				break
 			}
 			if diffTime := float64(resetTimeout - currentTime); diffTime > 0 {

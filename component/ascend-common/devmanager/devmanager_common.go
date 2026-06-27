@@ -84,7 +84,7 @@ func DetectDcmiApiVersion(resetTimeout int) (DeviceCommonSetInterface, error) {
 				hwlog.RunLog.Warnf("dcmi api version: %v, init err: %v", devCommonSetMgr.GetDcmiApiVersion(), err)
 			}
 		}
-		time.Sleep(defaultRetryDelay)
+		time.Sleep(time.Second * time.Duration(defaultRetryDelay))
 	}
 	return nil, errors.New(fmt.Sprintf("after %ds, can not find an available dcmi version", resetTimeout))
 }
