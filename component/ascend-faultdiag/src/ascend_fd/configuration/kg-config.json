@@ -25683,7 +25683,7 @@
             },
             "source_file": "PyMotor_vLLM_Log",
             "regex": {
-                "in": ["ValueError", "Unknown speculative decoding method"]
+                "in": ["ValidationError", "validation error for SpeculativeConfig method"]
             }
         },
         "AISW_PYMOTOR_ENGINESERVER_001": {
