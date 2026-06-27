@@ -15,9 +15,12 @@
 # limitations under the License.
 # ==============================================================================
 import argparse
+import gzip
 import io
 import os
+import tarfile
 import unittest
+import zipfile
 import tempfile
 import shutil
 from unittest.mock import patch, MagicMock
@@ -645,6 +648,116 @@ class TestPatternSingleOrMultiLineMatcherOpt(unittest.TestCase):
         matcher = tool.PatternSingleOrMultiLineMatcher(file_stream=stream)
         conf = {"opt": [{"all": [["key1", "key2"], ["key3", "key4"]], "max_lines": 20}]}
         self.assertTrue(matcher.compare(conf, "key1 key2"))
+
+
+class TestDecompress(unittest.TestCase):
+    """decompress_gz / decompress_zip / decompress_tar_gz 测试"""
+
+    def setUp(self):
+        self.temp_dir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def _make_gz(self, name, content=b"hello"):
+        path = os.path.join(self.temp_dir, name)
+        with gzip.open(path, "wb") as f:
+            f.write(content)
+        return path
+
+    def _make_zip(self, name, files):
+        path = os.path.join(self.temp_dir, name)
+        with zipfile.ZipFile(path, "w") as zf:
+            for fname, data in files.items():
+                zf.writestr(fname, data)
+        return path
+
+    def _make_tar_gz(self, name, files):
+        path = os.path.join(self.temp_dir, name)
+        with tarfile.open(path, "w:gz") as tf:
+            for fname, data in files.items():
+                info = tarfile.TarInfo(name=fname)
+                info.size = len(data)
+                tf.addfile(info, io.BytesIO(data))
+        return path
+
+    def test_decompress_gz_success(self):
+        gz_path = self._make_gz("a.log.gz", b"hello world")
+        out = tool.decompress_gz(gz_path)
+        self.assertTrue(out and os.path.isfile(out))
+        with open(out, "rb") as f:
+            self.assertEqual(f.read(), b"hello world")
+
+    def test_decompress_gz_not_exist(self):
+        self.assertEqual(tool.decompress_gz(os.path.join(self.temp_dir, "no.gz")), "")
+
+    def test_decompress_gz_wrong_suffix(self):
+        path = os.path.join(self.temp_dir, "a.txt")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("x")
+        self.assertEqual(tool.decompress_gz(path), "")
+
+    @patch("ascend_fd.utils.tool.MAX_SIZE", 256)
+    def test_decompress_gz_bomb(self):
+        """压缩炸弹：压缩后很小，解压后超过 MAX_SIZE，应被流式拦截"""
+        big_content = b"x" * 1024  # 解压后 1KB，超过 patch 后的 256
+        gz_path = self._make_gz("bomb.log.gz", big_content)
+        out = tool.decompress_gz(gz_path)
+        self.assertEqual(out, "")
+        self.assertFalse(os.path.exists(os.path.join(self.temp_dir, "bomb.log")))
+
+    def test_decompress_zip_success(self):
+        zip_path = self._make_zip("b.zip", {"f1.log": "data1", "sub/f2.log": "data2"})
+        out = tool.decompress_zip(zip_path)
+        self.assertTrue(out and os.path.isdir(out))
+        with open(os.path.join(out, "f1.log"), encoding="utf-8") as f:
+            self.assertEqual(f.read(), "data1")
+        with open(os.path.join(out, "sub", "f2.log"), encoding="utf-8") as f:
+            self.assertEqual(f.read(), "data2")
+
+    def test_decompress_zip_not_exist(self):
+        self.assertEqual(tool.decompress_zip(os.path.join(self.temp_dir, "no.zip")), "")
+
+    def test_decompress_zip_wrong_suffix(self):
+        path = os.path.join(self.temp_dir, "b.txt")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("x")
+        self.assertEqual(tool.decompress_zip(path), "")
+
+    def test_decompress_zip_path_traversal(self):
+        zip_path = self._make_zip("evil.zip", {"../escape.log": "bad"})
+        out = tool.decompress_zip(zip_path)
+        self.assertEqual(out, "")
+        self.assertFalse(os.path.exists(os.path.join(self.temp_dir, "escape.log")))
+
+    def test_decompress_tar_gz_success(self):
+        tar_path = self._make_tar_gz("c.tar.gz", {"f1.log": b"d1", "sub/f2.log": b"d2"})
+        out = tool.decompress_tar_gz(tar_path)
+        self.assertTrue(out and os.path.isdir(out))
+        with open(os.path.join(out, "f1.log"), "rb") as f:
+            self.assertEqual(f.read(), b"d1")
+        with open(os.path.join(out, "sub", "f2.log"), "rb") as f:
+            self.assertEqual(f.read(), b"d2")
+
+    def test_decompress_tgz_success(self):
+        tar_path = self._make_tar_gz("c.tgz", {"f.log": b"x"})
+        out = tool.decompress_tar_gz(tar_path)
+        self.assertTrue(out and os.path.isfile(os.path.join(out, "f.log")))
+
+    def test_decompress_tar_gz_not_exist(self):
+        self.assertEqual(tool.decompress_tar_gz(os.path.join(self.temp_dir, "no.tar.gz")), "")
+
+    def test_decompress_tar_gz_wrong_suffix(self):
+        path = os.path.join(self.temp_dir, "c.txt")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("x")
+        self.assertEqual(tool.decompress_tar_gz(path), "")
+
+    def test_decompress_tar_gz_path_traversal(self):
+        tar_path = self._make_tar_gz("evil.tar.gz", {"../escape.log": b"bad"})
+        out = tool.decompress_tar_gz(tar_path)
+        self.assertEqual(out, "")
+        self.assertFalse(os.path.exists(os.path.join(self.temp_dir, "escape.log")))
 
 
 if __name__ == '__main__':

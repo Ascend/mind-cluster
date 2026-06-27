@@ -28,3 +28,4 @@ LOGIC_DEV_ID = "logicDevId"
 PHY_DEV_ID = "phydevId"
 
 UNKNOWN_DEVICE_ID = "Unknown"
+SLOT_INFO = "slot_"

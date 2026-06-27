@@ -120,6 +120,7 @@ BMC_BOARD_SN = r'Board Serial Number\s{0,10}:\s{0,10}([A-Z0-9]{10,15})'
 PRODUCT_SYS_SN = "System Serial Number"
 BMC_COMPLETE_MACHINE_SN = r'System Serial Number\s{0,2}:\s{0,2}([A-Z0-9]{15,25})'
 LCNE_BOARD_SN = r"\[GetCPUTablebar_code\]outbuf=([A-Z0-9]{10,15})"
+LCNE_SN = r"BarCode=([A-Z0-9]{10,25})"
 DEVICE_ID = r'device-(\d{1,3})'
 DEV_OS_ID = r'dev-os-(\d{1,3})'
 ATTR_INIT_SUCCESS = "attr init success"
@@ -315,3 +316,14 @@ SAVER_TO_SOURCE_FILE_MAP = {
 
 OS_FAULT_PREFIX = "Comp_OS"
 MINDIE_FAULT_PREFIX = "AISW_MindIE"
+
+NPU_CPU_SLOT_ID_MAP = {
+    "018": "014",
+    "019": "015",
+    "020": "016",
+    "021": "017",
+    "023": "028",
+    "024": "029",
+    "025": "030",
+    "026": "031",
+}

@@ -21,18 +21,48 @@ from ascend_fd.model.node_info import FaultFilterTime
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.kg_engine_main import kg_engine_analyze
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.model.package_data import PackageData
 from ascend_fd.pkg.diag.knowledge_graph.kg_engine.model.response import RootCause, Response
-from ascend_fd.pkg.diag.message import MULTI_FAULT_IN_KNOWLEDGE_GRAPH, SOME_SUBTASKS_FAILED, FAULT_CHAINS_NOTE, \
-    FAULT_CHAINS_MAX_NOTE
+from ascend_fd.pkg.diag.message import (
+    MULTI_FAULT_IN_KNOWLEDGE_GRAPH,
+    SOME_SUBTASKS_FAILED,
+    FAULT_CHAINS_NOTE,
+    FAULT_CHAINS_MAX_NOTE,
+)
 from ascend_fd.utils.constant.str_const import SUPER_POD_SCENE
-from ascend_fd.utils.fault_code import KG_DIAGNOSIS_NORMAL, HCCL_FAULT_LIST, DEVICE_CQE_FAULT, LINK_DOWN_FAULT, \
-    LINK_STATUS_CHANGE, PRE_TRACEBACK_FAULT, CANN_ERRCODE_CUSTOM, AISW_CANN_MEMORY_INFO, OOM_CANN_FAULT_LIST, \
-    PRE_SWITCH_FAULT, MINDIE_ERRCODE_COMMON, PRE_SEG_FAULT
+from ascend_fd.utils.fault_code import (
+    KG_DIAGNOSIS_NORMAL,
+    HCCL_FAULT_LIST,
+    DEVICE_CQE_FAULT,
+    LINK_DOWN_FAULT,
+    LINK_STATUS_CHANGE,
+    PRE_TRACEBACK_FAULT,
+    CANN_ERRCODE_CUSTOM,
+    AISW_CANN_MEMORY_INFO,
+    OOM_CANN_FAULT_LIST,
+    PRE_SWITCH_FAULT,
+    MINDIE_ERRCODE_COMMON,
+    PRE_SEG_FAULT,
+)
 from ascend_fd.utils.load_kg_config import EntityAttribute
-from ascend_fd.utils.regular_table import SORT_RULES, LOWEST_PRIORITY_NUM, PRE_COMP_OS_FAULT, PRE_COMP_SWITCH_FAULT, \
-    PRE_AMCT_FAULT, MIN_TIME, MAX_TIME, OS_FAULT_PREFIX, MINDIE_FAULT_PREFIX
+from ascend_fd.utils.regular_table import (
+    SORT_RULES,
+    LOWEST_PRIORITY_NUM,
+    PRE_COMP_OS_FAULT,
+    PRE_COMP_SWITCH_FAULT,
+    PRE_AMCT_FAULT,
+    MIN_TIME,
+    MAX_TIME,
+    OS_FAULT_PREFIX,
+    MINDIE_FAULT_PREFIX,
+)
 from ascend_fd.utils.status import FileNotExistError, InfoNotFoundError, InnerError
-from ascend_fd.utils.tool import MultiProcessJob, get_version, load_json_data, get_component_version, \
-    get_parse_json, collect_parse_results
+from ascend_fd.utils.tool import (
+    MultiProcessJob,
+    get_version,
+    load_json_data,
+    get_component_version,
+    get_parse_json,
+    collect_parse_results,
+)
 from ascend_fd.configuration.config import DEFAULT_USER_CONF, KNOWLEDGE_GRAPH_CONF
 
 kg_logger = logging.getLogger("KNOWLEDGE_GRAPH")
@@ -78,16 +108,16 @@ def start_kg_diag_job(cfg):
     for worker_name, device_list in analyzer_dict.items():
         analyzer_file = _get_analyzer_file(worker_name, parsed_saver)
         if analyzer_file:
-            pre_results, pre_failed_details = pre_analyze_job(worker_name, device_list, analyzer_file,
-                                                              fault_filter_time)
+            pre_results, pre_failed_details = pre_analyze_job(
+                worker_name, device_list, analyzer_file, fault_filter_time
+            )
             # save node and its version info
             version_info[worker_name] = pre_results.get('version_info', dict())
             results.update(pre_results)
             failed_details.update(pre_failed_details)
             continue
         job_name = f"KNOWLEDGE_GRAPH_WORKER_{worker_name}"
-        multiprocess_job.add_security_job(job_name,
-                                          _kg_diag_job, worker_name, device_list, parsed_saver, job_name)
+        multiprocess_job.add_security_job(job_name, _kg_diag_job, worker_name, device_list, parsed_saver, job_name)
     multiprocess_job.failed_raise = not results
     multi_results, multi_failed_details = multiprocess_job.join_and_get_results()
     results.update(multi_results)
@@ -105,20 +135,14 @@ def get_super_pod_analyzer_dict(cfg, parsed_saver):
         instance_key = parsed_saver.infer_instance
         container_ips = parsed_saver.cluster_info.get(instance_key, [])
         infer_workers = {
-            parsed_saver.container_worker_map[ip]
-            for ip in container_ips
-            if ip in parsed_saver.container_worker_map
+            parsed_saver.container_worker_map[ip] for ip in container_ips if ip in parsed_saver.container_worker_map
         }
         worker_mappings = [
             (parsed_saver.bmc_path_dict, get_host_worker_name_by_bmc_worker_name),
-            (parsed_saver.lcne_path_dict, get_host_worker_name_by_lcne_worker_name)
+            (parsed_saver.lcne_path_dict, get_host_worker_name_by_lcne_worker_name),
         ]
         for path_dict, name_func in worker_mappings:
-            filtered = {
-                worker: path
-                for worker, path in path_dict.items()
-                if name_func(worker, cfg) in infer_workers
-            }
+            filtered = {worker: path for worker, path in path_dict.items() if name_func(worker, cfg) in infer_workers}
             analyzer_dict.update(filtered)
     else:
         analyzer_dict.update(parsed_saver.bmc_path_dict)
@@ -137,8 +161,10 @@ def single_diag_job(parsed_data, cfg):
     root_device_causes = parsed_data.get("response", {})
     response = _get_pre_response(root_device_causes, "SINGLE_DIAG_WORKER")
     if response.root_causes:
-        result = {"worker-local": {"worker_name": "worker-local", "root_causes": response.root_causes},
-                  "version_info": get_component_version(parsed_data)}
+        result = {
+            "worker-local": {"worker_name": "worker-local", "root_causes": response.root_causes},
+            "version_info": get_component_version(parsed_data),
+        }
         results.update(result)
     if not response.analyze_success:
         raise InnerError(f"The single-diag analyze failed. The reason is: {response.error}")
@@ -163,7 +189,8 @@ def hand_all_root_cause(results, failed_details, cfg=None):
             container_ip = container_info.get("container_ip", "")
             infer_group = cfg.parsed_saver.ip_infer_group.get(container_ip)
             if (not infer_group or infer_group.infer_group_name != cfg.parsed_saver.infer_instance) and not any(
-                    worker_name.startswith(prefix) for prefix in ["BMC", "LCNE"]):
+                worker_name.startswith(prefix) for prefix in ["BMC", "LCNE"]
+            ):
                 continue
         for code, root_cause in result_dict.get("root_causes", {}).items():
             handle_root_cause(code, root_cause, tmp_code_dict, worker_name)
@@ -188,8 +215,10 @@ def handle_root_cause(code, root_cause, tmp_code_dict, worker_name):
     for event_attr in root_cause.events_attribute or [None]:
         device = event_attr.get("source_device", "Unknown") if event_attr else "Unknown"
         entities_attr = root_cause.entities_attribute
-        if code.startswith((PRE_COMP_OS_FAULT, PRE_COMP_SWITCH_FAULT, PRE_AMCT_FAULT)) or \
-                entities_attr.get("component", "") == "AI Server":
+        if (
+            code.startswith((PRE_COMP_OS_FAULT, PRE_COMP_SWITCH_FAULT, PRE_AMCT_FAULT))
+            or entities_attr.get("component", "") == "AI Server"
+        ):
             root_device = "{}".format(worker_name)
         else:
             root_device = "{} device-{}".format(worker_name, device)
@@ -207,7 +236,7 @@ def handle_root_cause(code, root_cause, tmp_code_dict, worker_name):
             if root_device not in fault_chains_worker:
                 fault_chains_worker.append(root_device)
         # don't add duplicate root_device, adapt scenario e.g. ['worker-0 device-Unknown', 'worker-0 device-Unknown'...]
-        fault_source = tmp_code_dict[code].setdefault("fault_source", list())
+        fault_source = tmp_code_dict[code].setdefault("fault_source", [])
         if root_device not in fault_source:
             fault_source.append(root_device)
 
@@ -227,8 +256,9 @@ def pre_analyze_job(worker_name, root_device_list, kg_analyzer_source, fault_fil
     failed_details = dict()
     results = dict()
     try:
-        response = _check_and_get_results(worker_name, root_device_list, kg_analyzer_source, job_name,
-                                          fault_filter_time)
+        response = _check_and_get_results(
+            worker_name, root_device_list, kg_analyzer_source, job_name, fault_filter_time
+        )
     except Exception as err:
         failed_details.update({job_name: str(err)})
         kg_logger.error(str(err))
@@ -312,8 +342,7 @@ def _get_pre_response(root_device_causes, job_name, fault_filter_time=FaultFilte
             if code == AISW_CANN_MEMORY_INFO and not oom_cann_faults:
                 continue
             root_cause = root_causes.get(code)
-            events_attr_device = _filter_by_resuming_train_time(event.get("events_attribute", []),
-                                                                fault_filter_time)
+            events_attr_device = _filter_by_resuming_train_time(event.get("events_attribute", []), fault_filter_time)
             if not events_attr_device:
                 continue
             chains = event.get("chains", {})
@@ -438,8 +467,9 @@ def _get_analyze_response(root_causes, worker_analyze_flag, job_name):
     _filter_in_device(root_causes)
     resp.analyze_success = worker_analyze_flag
     if not worker_analyze_flag:
-        resp.error = (f"The {job_name} job is executed failed. "
-                      f"Check the subtasks whose names start with {job_name}_device.")
+        resp.error = (
+            f"The {job_name} job is executed failed. Check the subtasks whose names start with {job_name}_device."
+        )
     resp.root_causes = root_causes
     return resp
 
@@ -466,8 +496,12 @@ def _version_check(worker_name, parse_result):
     parse_version = kg_parse_source.get("parse_version", "")
     current_version = get_version()
     if parse_version != current_version:
-        kg_logger.warning("The worker %s parse version %s is inconsistent with the current version %s",
-                          worker_name, parse_version, current_version)
+        kg_logger.warning(
+            "The worker %s parse version %s is inconsistent with the current version %s",
+            worker_name,
+            parse_version,
+            current_version,
+        )
 
 
 def _resp_check(response, worker_name):
@@ -480,8 +514,9 @@ def _resp_check(response, worker_name):
         kg_logger.error("The kg-engine analyze %s failed. The reason is: %s", worker_name, response.error)
         raise InfoNotFoundError(f"The kg-engine analyze {worker_name} failed. The reason is: {response.error}")
     if not response.root_causes:
-        kg_logger.warning("Knowledge graph diagnosis normally, "
-                          "maybe 1. No related faults have occurred, 2. Unknown faults exist")
+        kg_logger.warning(
+            "Knowledge graph diagnosis normally, maybe 1. No related faults have occurred, 2. Unknown faults exist"
+        )
 
 
 def _get_analyzer_file(worker_name, parsed_saver):
@@ -552,7 +587,7 @@ def _filter_and_sort_root_cause(code_dict: dict, cfg):
     fault_chains_flag, max_worker_chains_flag = False, False
     # filter non-root cause code
     _remove_non_root_cause(code_dict)
-    if cfg and cfg.parsed_saver.scene == "super_pod":
+    if cfg and cfg.parsed_saver.scene == SUPER_POD_SCENE:
         filter_super_pod_dict(code_dict, cfg)
     root_cause_list = list(code_dict.values())
     for val in root_cause_list:
@@ -617,14 +652,16 @@ def _format_and_sort_fault_chains(fault_chains_dict: dict) -> list:
 
 
 def get_host_worker_name_by_bmc_worker_name(worker_name, cfg):
-    host_info_instance, _ = cfg.parsed_saver.super_pod_info_saver.find_from_bmc_worker_name(
-        worker_name.split()[0].split(":")[-1])
+    host_info_instance = cfg.parsed_saver.super_pod_info_saver.find_host_by_bmc_worker_name(
+        worker_name.split()[0].split(":")[-1]
+    )
     return host_info_instance and host_info_instance.log_dir.split("/")[1]
 
 
 def get_host_worker_name_by_lcne_worker_name(worker_name, cfg):
-    host_info_instance, _ = cfg.parsed_saver.super_pod_info_saver.find_from_lcne_worker_name(
-        worker_name.split()[0].split(":")[-1])
+    host_info_instance = cfg.parsed_saver.super_pod_info_saver.find_host_by_lcne_worker_name(
+        worker_name.split()[0].split(":")[-1]
+    )
     return host_info_instance and host_info_instance.log_dir.split("/")[1]
 
 
@@ -639,10 +676,13 @@ def filter_super_pod_dict(code_dict: dict, cfg):
     for code_value in code_dict.values():
         for fault_source in code_value.get("fault_source", []):
             worker_name = fault_source.split()[0]
-            if worker_name not in all_host_root_worker and not worker_name.startswith(
-                    "BMC") and not worker_name.startswith("LCNE"):
+            if (
+                worker_name not in all_host_root_worker
+                and not worker_name.startswith("BMC")
+                and not worker_name.startswith("LCNE")
+            ):
                 all_host_root_worker.append(worker_name)
-    all_host_root_worker.extend([root_device for root_device in cfg.root_worker_devices.keys()])
+    all_host_root_worker.extend(list(cfg.root_worker_devices.keys()))
     keys_to_move = generate_keys_to_move(all_host_root_worker, cfg, code_dict)
     for key in keys_to_move:
         code_dict.pop(key, None)
@@ -655,14 +695,14 @@ def generate_keys_to_move(all_host_root_worker, cfg, code_dict):
         for fault_source in code_value.get("fault_source", []):
             worker_name = fault_source.split()[0]
             deal_fault_source_by_worker_name(worker_name, filter_worker_list, cfg, all_host_root_worker, fault_source)
+        # code的fault_source全部需要删除，直接删除整个code
         if len(filter_worker_list) == len(code_value.get("fault_source", [])):
             keys_to_move.append(code_key)
             continue
+        #  code的fault_source部分需要删除，只删除需要删除的fault_source
         if filter_worker_list:
             code_dict[code_key]["fault_source"] = [
-                worker
-                for worker in code_dict[code_key]["fault_source"]
-                if worker not in filter_worker_list
+                worker for worker in code_dict[code_key]["fault_source"] if worker not in filter_worker_list
             ]
     return keys_to_move
 
@@ -695,7 +735,8 @@ def _remove_non_root_cause(code_dict: dict):
 
     # if result contains non-HCCL fault, remove HCCL_FAULT_LIST code.
     if code_keys_without_train_call_faults - set(HCCL_FAULT_LIST):
-        [code_dict.pop(code, None) for code in HCCL_FAULT_LIST]
+        for code in HCCL_FAULT_LIST:
+            code_dict.pop(code, None)
 
     # if result contains LINK_DOWN_FAULT, remove DEVICE_CQE_FAULT code.
     if LINK_DOWN_FAULT in code_dict or LINK_STATUS_CHANGE in code_dict:

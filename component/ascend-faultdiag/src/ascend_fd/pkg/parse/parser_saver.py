@@ -32,7 +32,9 @@ from ascend_fd.configuration.config import CUSTOM_CONFIG_PATH
 from ascend_fd.model.mindie_info import MindIEParseResult, MindIEDiagResult
 from ascend_fd.pkg.customize.custom_config.config_info import get_config_info, ConfigInfo, CustomFileInfo
 from ascend_fd.utils import regular_table
+from ascend_fd.utils.constant.str_const import SUPER_POD_SCENE, SLOT_INFO
 from ascend_fd.utils.net_tools import IPAddress
+from ascend_fd.utils.regular_table import DEFAULT_GENERATION_SIGN, GENERATION_SIGN_A5, NPU_CPU_SLOT_ID_MAP
 from ascend_fd.utils.status import ParamError, InnerError, PathError, FileNotExistError
 from ascend_fd.utils.tool import (
     safe_walk,
@@ -50,6 +52,8 @@ from ascend_fd.utils.tool import (
     WORKER_MAX_NUM,
     check_symlink,
     decompress_gz,
+    decompress_zip,
+    decompress_tar_gz,
 )
 
 logger = logging.getLogger("FAULT_DIAG")
@@ -680,6 +684,15 @@ class BMCLogSaver(BaseLogSaver):
         self.bmc_device_dump_log_list = []
         self.bmc_log_dump_log_list = []
 
+    @staticmethod
+    def pre_decompress_file(file_dir):
+        for root, _, files in safe_walk(file_dir):
+            for file_name in files:
+                file_path = os.path.join(root, file_name)
+                if file_name.endswith(".gz") and file_name.startswith("bmc_slot"):
+                    decompress_tar_gz(file_path)
+                    return
+
     def filter_log(self, file_dir: str):
         """
         Filter the bmc log
@@ -687,6 +700,7 @@ class BMCLogSaver(BaseLogSaver):
         """
         if not file_dir or not os.path.isdir(file_dir):
             return
+        self.pre_decompress_file(file_dir)
         for root, _, files in safe_walk(file_dir):
             for file_name in files:
                 file_path = os.path.join(root, file_name)
@@ -765,11 +779,14 @@ class LCNELogSaver(BaseLogSaver):
     CMD_ARG_KEYS = ["lcne_log", "bus_log"]
 
     DEVM_BDDRVADP_KEY = "devm_bddrvadp.log"
+    CPDT_CHECKCC_LOG = "cpdt_checkcc.log"
     DEVM_BDDRVADP_DIR = "slot_1/tempdir"
+    VARLOG_SLOT_DIR = "varlog/slot_1"
     DIAG_DISPLAY_INFO_KEY = "diag_display_info.txt"
     LOG_PATTERN = r'log_1_\d{13,15}\.log$'
     BUS_DUMP_LOG_PATTERN = re.compile(r"^log_\d{1,3}_\d{14}.log(.zip)?")
     LOG_LOG = "log.log"
+    LOG_ZIP = "log.zip"
 
     def __init__(self):
         """
@@ -778,8 +795,18 @@ class LCNELogSaver(BaseLogSaver):
         super().__init__()
         self.devm_bddvadp_files = []
         self.diag_display_info_files = []
+        self.cpdt_checkcc_log = ""
         self.lcne_log_list = []
         self.bus_log_dict = {}
+
+    @staticmethod
+    def pre_decompress_file(file_dir):
+        for root, _, files in safe_walk(file_dir):
+            for file_name in files:
+                file_path = os.path.join(root, file_name)
+                if "debug" in file_path and file_name.endswith(".zip") and file_name.startswith("ubm_slot"):
+                    decompress_zip(file_path)
+                    return
 
     def filter_log(self, file_dir: str):
         """
@@ -788,20 +815,47 @@ class LCNELogSaver(BaseLogSaver):
         """
         if not file_dir or not os.path.isdir(file_dir):
             return
+        self.pre_decompress_file(file_dir)
         for root, _, files in safe_walk(file_dir):
             for file_name in files:
                 file_path = os.path.join(root, file_name)
                 if file_name == self.DEVM_BDDRVADP_KEY and self.DEVM_BDDRVADP_DIR in file_path:
                     self.devm_bddvadp_files.append(file_path)
                     continue
+                if self.VARLOG_SLOT_DIR in file_path and "varlog.zip" == file_name:
+                    self.collect_cpdt_checkcc_log(file_path)
+                    continue
                 if file_name == self.DIAG_DISPLAY_INFO_KEY:
                     self.diag_display_info_files.append(file_path)
                     continue
                 if file_name.endswith(self.LOG_LOG) or re.fullmatch(self.LOG_PATTERN, file_name):
                     self.lcne_log_list.append(file_path)
-                if file_name == self.LOG_LOG or self.BUS_DUMP_LOG_PATTERN.search(file_name):
+                if (
+                    file_name == self.LOG_LOG
+                    or file_name == self.LOG_ZIP
+                    or self.BUS_DUMP_LOG_PATTERN.search(file_name)
+                ):
                     # 拼接完整路径并添加到当前目录列表
                     self.bus_log_dict.setdefault(root, []).append(os.path.join(root, file_name))
+
+    def collect_cpdt_checkcc_log(self, zip_file_path: str):
+        """
+        Decompress varlog.zip and find the cpdt_checkcc.log file path
+        :param zip_file_path: varlog.zip file path
+        """
+        if not zip_file_path:
+            return
+        output_dir = decompress_zip(zip_file_path)
+        if not output_dir:
+            return
+        for root, _, files in safe_walk(output_dir):
+            for name in files:
+                if name == self.CPDT_CHECKCC_LOG:
+                    self.cpdt_checkcc_log = os.path.join(root, name)
+                    return
+
+    def get_cpdt_checkcc_log(self) -> str:
+        return self.cpdt_checkcc_log
 
     def get_devm_bddvadp_log(self) -> list:
         return self.devm_bddvadp_files
@@ -1229,15 +1283,18 @@ class HostSnInfo:
 
 
 class BMCSNInfo:
-    def __init__(self, log_dir, serial_number, board_serial_number):
+    def __init__(self, slot_id, log_dir, serial_number, board_serial_number):
+        self.slot_id = slot_id
         self.log_dir = log_dir
         self.serial_number = serial_number
         self.board_serial_number = board_serial_number
 
 
 class LCNESNInfo:
-    def __init__(self, log_dir, board_serial_number):
+    def __init__(self, slot_id, log_dir, serial_number, board_serial_number):
+        self.slot_id = slot_id
         self.log_dir = log_dir
+        self.serial_number = serial_number
         self.board_serial_number = board_serial_number
 
 
@@ -1248,10 +1305,26 @@ class EmptyObject:
 
 class SuperpodInfoSaver:
     def __init__(self):
+        """
+        超节点内host、bmc、lcne关联关系：
+        A2/A3：
+            【Host】<----整机SN----->【BMC】<----Board SN----->【UBM】
+        A5：
+            server:
+                【Host】<----整机SN----->【BMC】<----整机SN----->【UBM】
+            pod:
+                【Host】<----整机SN----->【[BMC CPU]<----SlotId----->[BMC NPU]】<----SlotId----->【UBM CPU/NPU】
+        """
+        self.generation_info = DEFAULT_GENERATION_SIGN
         self.host_info_by_sn = {}  # {sn:HostSnInfo}
+
         self.bmc_info_by_board_sn = {}  # {board_sn:BMCSNInfo}
         self.bmc_info_by_sn = {}  # {sn:BMCSNInfo}
+        self.bmc_info_by_slot = {}  # {slot:BMCSNInfo}
+
         self.lcne_info_by_board_sn = {}  # {board_sn:LCNESNInfo}
+        self.lcne_info_by_sn = {}  # {sn:LCNESNInfo}
+        self.lcne_info_by_slot = {}  # {slot:LCNESNInfo}
 
     def add_host_info(self, host_info_instance):
         if host_info_instance.serial_number:
@@ -1262,30 +1335,36 @@ class SuperpodInfoSaver:
             self.bmc_info_by_board_sn[bmc_sn_info_instance.board_serial_number] = bmc_sn_info_instance
         if bmc_sn_info_instance.serial_number:
             self.bmc_info_by_sn[bmc_sn_info_instance.serial_number] = bmc_sn_info_instance
+        if bmc_sn_info_instance.slot_id:
+            self.bmc_info_by_slot[bmc_sn_info_instance.slot_id] = bmc_sn_info_instance
 
     def add_lcne_sn_info(self, lcne_sn_info_instance):
         if lcne_sn_info_instance.board_serial_number:
             self.lcne_info_by_board_sn[lcne_sn_info_instance.board_serial_number] = lcne_sn_info_instance
+        if lcne_sn_info_instance.serial_number:
+            self.lcne_info_by_sn[lcne_sn_info_instance.serial_number] = lcne_sn_info_instance
+        if lcne_sn_info_instance.slot_id:
+            self.lcne_info_by_slot[lcne_sn_info_instance.slot_id] = lcne_sn_info_instance
 
-    def get_related(self, sn_info_instance):
-        if isinstance(sn_info_instance, HostSnInfo):
-            return self._find_from_host(sn_info_instance)
-        elif isinstance(sn_info_instance, BMCSNInfo):
-            return self._find_from_bmc(sn_info_instance)
-        elif isinstance(sn_info_instance, LCNESNInfo):
-            return self._find_from_lcne(sn_info_instance)
-        return None, None
-
-    def find_from_bmc_worker_name(self, bmc_worker_name):
+    def find_host_by_bmc_worker_name(self, bmc_worker_name):
+        # A5 pod
+        if SLOT_INFO in bmc_worker_name and self.generation_info == GENERATION_SIGN_A5:
+            return self._find_from_worker_name(bmc_worker_name)
+        # A5 server or A2/A3
         for bmc_sn_info_instance in self.bmc_info_by_sn.values():
             log_dir_split = bmc_sn_info_instance.log_dir.split("/")
             instance_worker_name = log_dir_split[1] if len(log_dir_split) > 1 else None
             if instance_worker_name == bmc_worker_name:
-                return self._find_from_bmc(bmc_sn_info_instance)
-        return None, None
+                return self.host_info_by_sn.get(bmc_sn_info_instance.serial_number)
+        return None
 
-    def find_from_lcne_worker_name(self, lcne_worker_name):
-        for lcne_sn_info_instance in self.lcne_info_by_board_sn.values():
+    def find_host_by_lcne_worker_name(self, lcne_worker_name):
+        # A5 pod
+        if SLOT_INFO in lcne_worker_name and self.generation_info == GENERATION_SIGN_A5:
+            return self._find_from_worker_name(lcne_worker_name)
+        # A5 server or A2/A3
+        trav_dict = self.lcne_info_by_sn if self.generation_info == GENERATION_SIGN_A5 else self.lcne_info_by_board_sn
+        for lcne_sn_info_instance in trav_dict.values():
             log_dir_split = lcne_sn_info_instance.log_dir.split("/")
             insinstance_worker_name = log_dir_split[1] if len(log_dir_split) > 1 else None
             if insinstance_worker_name == lcne_worker_name:
@@ -1295,36 +1374,62 @@ class SuperpodInfoSaver:
     def save_to_json(self, save_path, file_name):
         topo_infos = []
         # Traverse all bmc_info_by_board_sn as connection hubs
-        for bmc_sn_info_info_instance in self.bmc_info_by_board_sn.values():
+        for host_sn_info_instance in self.host_info_by_sn.values():
+            bmc_sn_info_instance = self.bmc_info_by_sn.get(host_sn_info_instance.serial_number)
+            cpu_npu_slot_id_map = {v: k for k, v in NPU_CPU_SLOT_ID_MAP.items()}
+            top_info_bmc = []
+            top_info_lcne = []
+            if bmc_sn_info_instance and bmc_sn_info_instance.slot_id:
+                # A5 pod
+                cpu_slot_id = bmc_sn_info_instance.slot_id
+                npu_slot_id = cpu_npu_slot_id_map.get(cpu_slot_id, "")
+                cpu_bmc_sn_info_instance = self.bmc_info_by_slot.get(cpu_slot_id)
+                if cpu_bmc_sn_info_instance:
+                    top_info_bmc.append(cpu_bmc_sn_info_instance.__dict__)
+                npu_bmc_sn_info_instance = self.bmc_info_by_slot.get(npu_slot_id)
+                if npu_bmc_sn_info_instance:
+                    top_info_bmc.append(npu_bmc_sn_info_instance.__dict__)
+
+                cpu_lcne_sn_info_instance = self.lcne_info_by_slot.get(cpu_slot_id)
+                if cpu_lcne_sn_info_instance:
+                    top_info_lcne.append(cpu_lcne_sn_info_instance.__dict__)
+                npu_lcne_sn_info_instance = self.lcne_info_by_slot.get(npu_slot_id)
+                if npu_lcne_sn_info_instance:
+                    top_info_lcne.append(npu_lcne_sn_info_instance.__dict__)
+            elif bmc_sn_info_instance:
+                # A5 server or A2/A3
+                top_info_bmc.append(bmc_sn_info_instance.__dict__)
+
+                lcne_sn_info_instance = self.lcne_info_by_board_sn.get(bmc_sn_info_instance.board_serial_number)
+                if self.generation_info == GENERATION_SIGN_A5:
+                    lcne_sn_info_instance = self.lcne_info_by_sn.get(bmc_sn_info_instance.serial_number)
+                if lcne_sn_info_instance:
+                    top_info_lcne.append(lcne_sn_info_instance.__dict__)
             topo_info = {
-                "host": (self.host_info_by_sn.get(bmc_sn_info_info_instance.serial_number) or EmptyObject()).__dict__,
-                "bmc": (bmc_sn_info_info_instance or EmptyObject()).__dict__,
-                "lcne": (
-                    self.lcne_info_by_board_sn.get(bmc_sn_info_info_instance.board_serial_number) or EmptyObject()
-                ).__dict__,
+                "host": (host_sn_info_instance or EmptyObject()).__dict__,
+                "bmc": top_info_bmc,
+                "lcne": top_info_lcne,
             }
             topo_infos.append(topo_info)
         with safe_write_open(os.path.join(save_path, file_name), mode='w+', encoding='utf-8') as file_stream:
             file_stream.write(json.dumps({"super_pod_topo_info": topo_infos}, ensure_ascii=False))
 
-    def _find_from_bmc(self, bmc_sn_info_info_instance):
-        host_info_instance = self.host_info_by_sn.get(bmc_sn_info_info_instance.serial_number)
-        lcne_sn_info_instance = self.lcne_info_by_board_sn.get(bmc_sn_info_info_instance.board_serial_number)
-        return host_info_instance, lcne_sn_info_instance
-
     def _find_from_lcne(self, lcne_sn_info_instance):
         bmc_sn_info_info_instance = self.bmc_info_by_board_sn.get(lcne_sn_info_instance.board_serial_number)
+        if self.generation_info == GENERATION_SIGN_A5:
+            bmc_sn_info_info_instance = self.bmc_info_by_sn.get(lcne_sn_info_instance.serial_number)
         host_info_instance = bmc_sn_info_info_instance and self.host_info_by_sn.get(
             bmc_sn_info_info_instance.serial_number
         )
-        return host_info_instance, bmc_sn_info_info_instance
+        return host_info_instance
 
-    def _find_from_host(self, host_info_instance):
-        bmc_sn_info_info_instance = self.bmc_info_by_sn.get(host_info_instance.serial_number)
-        lcne_sn_info_instance = bmc_sn_info_info_instance and self.lcne_info_by_board_sn.get(
-            bmc_sn_info_info_instance.board_serial_number
-        )
-        return bmc_sn_info_info_instance, lcne_sn_info_instance
+    def _find_from_worker_name(self, worker_name):
+        slot_id = worker_name.split("_")[-1]
+        if slot_id in NPU_CPU_SLOT_ID_MAP:
+            # slot_id是npu板的。需要找到cpu板的slot_id
+            slot_id = NPU_CPU_SLOT_ID_MAP.get(slot_id, "")
+        bmc_sn_info_instance = self.bmc_info_by_slot.get(slot_id)
+        return self.host_info_by_sn.get(bmc_sn_info_instance.serial_number) if bmc_sn_info_instance else None
 
 
 @dataclass
@@ -1394,10 +1499,6 @@ class ParsedDataSaver:
         self.super_pod_info_saver = SuperpodInfoSaver()
         self.init_worker_data()
         self.init_infer_task()
-        if self.scene == "super_pod":
-            fault_diag_result_dir = os.path.join(self.output_path, "fault_diag_result")
-            os.makedirs(fault_diag_result_dir, 0o700, exist_ok=True)
-            self.super_pod_info_saver.save_to_json(fault_diag_result_dir, "topo_info.json")
 
     @staticmethod
     def get_server_info_dict(worker_dir):
@@ -1424,7 +1525,7 @@ class ParsedDataSaver:
                 server_info_dict = safe_read_json(server_info_file)
                 self.board_sn_exist_tag = BOARD_SERIAL_NUMBER in server_info_dict
 
-            if self.scene == "super_pod":
+            if self.scene == SUPER_POD_SCENE:
                 self.init_super_pod(worker_dir)
             else:
                 worker_dir_path = os.path.join(self.data_path, worker_dir)
@@ -1432,7 +1533,7 @@ class ParsedDataSaver:
                     continue
                 self.worker_path_dict.update({worker_dir: worker_dir_path})
                 self.all_worker_path_dict.update({worker_dir: worker_dir_path})
-        if self.scene == "super_pod" and not (self.bmc_dir_exist and self.lcne_dir_exist):
+        if self.scene == SUPER_POD_SCENE and not (self.bmc_dir_exist and self.lcne_dir_exist):
             fd_logger.error(
                 "The bmc or lcne dir not exist in %s, not applicable to super_pod scenario diagnosis.",
                 self.data_path,
@@ -1453,8 +1554,10 @@ class ParsedDataSaver:
                 self.bmc_dir_exist = True
                 self.bmc_path_dict.update({f"BMC:{super_dir}": worker_dir_path})
                 self.all_worker_path_dict.update({f"BMC:{super_dir}": worker_dir_path})
+                slot_id = super_dir.split("_")[-1] if SLOT_INFO in super_dir else ""
                 self.super_pod_info_saver.add_bmc_sn_info(
                     BMCSNInfo(
+                        slot_id,
                         os.path.join(worker_dir, super_dir),
                         server_info_dict.get(SERIAL_NUMBER, ""),
                         server_info_dict.get(BOARD_SERIAL_NUMBER, ""),
@@ -1464,8 +1567,14 @@ class ParsedDataSaver:
                 self.lcne_dir_exist = True
                 self.lcne_path_dict.update({f"LCNE:{super_dir}": worker_dir_path})
                 self.all_worker_path_dict.update({f"LCNE:{super_dir}": worker_dir_path})
+                slot_id = super_dir.split("_")[-1] if SLOT_INFO in super_dir else ""
                 self.super_pod_info_saver.add_lcne_sn_info(
-                    LCNESNInfo(os.path.join(worker_dir, super_dir), server_info_dict.get(BOARD_SERIAL_NUMBER, ""))
+                    LCNESNInfo(
+                        slot_id,
+                        os.path.join(worker_dir, super_dir),
+                        server_info_dict.get(SERIAL_NUMBER, ""),
+                        server_info_dict.get(BOARD_SERIAL_NUMBER, ""),
+                    )
                 )
             else:
                 self.worker_path_dict.update({super_dir: worker_dir_path})
