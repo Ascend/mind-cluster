@@ -218,6 +218,10 @@ func isNPUSchedulableByPreemption(tp *huaweiNPUPlugin, taskInfo *api.TaskInfo,
 		return false
 	}
 	_, total, _ := vcNode.GetChipCount(v1.ResourceName(vcTask.ReqNPUName))
+	// for distributed job, need to remove the net unhealthy npu from total
+	if vcJob.NPUJob.NPUTaskNum > 1 {
+		total = subtractNetUnhealthyNPU(vcNode, vcTask.ReqNPUName, total)
+	}
 	result := vcTask.ReqNPUNum <= total
 	klog.V(util.LogInfoLev).Infof("isNPUSchedulableByPreemption: task<%s> req<%d> total<%d> on node<%s>, preemptable=%v",
 		taskInfo.Name, vcTask.ReqNPUNum, total, nodeInfo.Name, result)
@@ -227,6 +231,29 @@ func isNPUSchedulableByPreemption(tp *huaweiNPUPlugin, taskInfo *api.TaskInfo,
 func isResourceShortageError(err error) bool {
 	msg := err.Error()
 	return strings.Contains(msg, util.NPUResourceShortageError)
+}
+
+// subtractNetUnhealthyNPU subtracts network unhealthy npu count from total chip count.
+func subtractNetUnhealthyNPU(node plugin.NPUNode, reqNPUName string, total int) int {
+	netUnhealthyKey := getNetworkUnhealthyNPUKey(reqNPUName)
+	netUnhealthyStr, ok := node.Annotation[netUnhealthyKey]
+	if !ok || netUnhealthyStr == "" {
+		return total
+	}
+	annoPreVal := util.NPU910CardNamePre
+	if reqNPUName == util.NPUCardName {
+		annoPreVal = util.NPUCardNamePre
+	}
+	netUnhealthyTop := util.ChangeTopToIntArray(netUnhealthyStr, annoPreVal)
+	return total - len(netUnhealthyTop)
+}
+
+// getNetworkUnhealthyNPUKey returns the annotation key for network unhealthy npu.
+func getNetworkUnhealthyNPUKey(reqNPUName string) string {
+	if reqNPUName == util.NPUCardName {
+		return util.NPUCardName + "-NetworkUnhealthy"
+	}
+	return util.HwPreName + util.Ascend910 + "-NetworkUnhealthy"
 }
 
 func jobPipelined(obj interface{}, tp *huaweiNPUPlugin) int {
