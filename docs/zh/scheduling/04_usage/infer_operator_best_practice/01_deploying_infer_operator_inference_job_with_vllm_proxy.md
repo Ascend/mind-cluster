@@ -271,8 +271,14 @@ spec:
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p >该任务不使用无条件重试功能，发生业务面故障之后<span >Volcano</span>不会主动删除故障的<span >Pod</span>。</p>
 </td>
 </tr>
-</tbody>
-</table>
+<tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >scalingPolicy</p>
+</td>
+<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><p >参考<a href="05_configuring_elastic_scaling.md">配置弹性扩缩容策略</a></p>
+</td>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >给对应实例配置基于负载的弹性扩缩容策略。</p>
+</td>
+</tr>
+</tbody></table>
 
 ### 下发任务
 
