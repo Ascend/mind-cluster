@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
@@ -18,7 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"ascend-common/common-utils/hwlog"
-	"infer-operator/pkg/api/v1"
+	v1 "infer-operator/pkg/api/v1"
 	"infer-operator/pkg/common"
 	"infer-operator/pkg/controller/workload"
 )
@@ -626,6 +627,42 @@ func TestRescheduler_recordWorkLoadFault(t *testing.T) {
 			rescheduler.Unlock()
 			convey.So(exists, convey.ShouldBeTrue)
 			convey.So(retryTimes, convey.ShouldEqual, 10)
+		})
+
+		convey.Convey("Should release lock when workload already recorded", func() {
+			pod := createTestPod("test-pod", "default", map[string]string{
+				common.PodStatusAnnotationKey: common.CommonUnhealthyStatus,
+			}, map[string]string{
+				common.InferServiceNameLabelKey: "test-service",
+				common.InstanceSetNameLabelKey:  "test-role",
+				common.InstanceIndexLabelKey:    "0",
+			})
+			workLoadName := "test-service-test-role-0"
+			instanceSetName := "test-service-test-role"
+			expectedFaultWorkLoad := faultWorkLoad{
+				NamespacedName:  types.NamespacedName{Namespace: "default", Name: workLoadName},
+				instanceSetName: instanceSetName,
+			}
+			rescheduler.faultWorkLoadMap[expectedFaultWorkLoad] = common.CommonUnhealthyStatus
+
+			done := rescheduler.recordWorkLoadFault(pod, workLoadName, instanceSetName)
+			convey.So(done, convey.ShouldBeTrue)
+
+			// Regression: early-return path must release the lock.
+			// If the lock leaked, TryLock never succeeds (blocked until
+			// test timeout), and the test fails.
+			locked := make(chan struct{})
+			go func() {
+				rescheduler.Lock()
+				rescheduler.Unlock()
+				close(locked)
+			}()
+			select {
+			case <-locked:
+				convey.So(true, convey.ShouldBeTrue)
+			case <-time.After(3 * time.Second):
+				convey.So("lock leaked after early return", convey.ShouldBeNil)
+			}
 		})
 	})
 }

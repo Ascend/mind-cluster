@@ -214,6 +214,7 @@ func (r *Rescheduler) recordWorkLoadFault(pod *corev1.Pod, workLoadName string, 
 		instanceSetName: instanceSetName,
 	}
 	r.Lock()
+	defer r.Unlock()
 	// if a workload has multi faults, only process the first fault to reschedule workload
 	_, exists := r.faultWorkLoadMap[currentFaultWorkLoad]
 	if exists {
@@ -228,7 +229,6 @@ func (r *Rescheduler) recordWorkLoadFault(pod *corev1.Pod, workLoadName string, 
 			r.faultRetryTimesMap[currentFaultWorkLoad] = retryTimes
 		}
 	}
-	r.Unlock()
 	hwlog.RunLog.Infof("record fault: %s for workload %s/%s",
 		pod.Annotations[common.PodStatusAnnotationKey], pod.Namespace, workLoadName)
 	return false
