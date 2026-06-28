@@ -26,7 +26,7 @@ import (
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
-	"k8s.io/api/core/v1"
+    "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -984,4 +984,148 @@ func TestAddJobValidAndEnqueueFailedCondition(t *testing.T) {
 	if len(conditions) != 1 || conditions[0].Reason != util.JobEnqueueFailedReason {
 		t.Errorf("EnqueueFailed conditon have not been added")
 	}
+}
+
+func TestGetNetworkUnhealthyNPUKey(t *testing.T) {
+	tests := []struct {
+		name       string
+		reqNPUName string
+		want       string
+	}{
+		{
+			name:       "01-NPUCardName returns npu NetworkUnhealthy key",
+			reqNPUName: util.NPUCardName,
+			want:       util.NPUCardName + "-NetworkUnhealthy",
+		},
+		{
+			name:       "02-NPU910CardName returns Ascend910 NetworkUnhealthy key",
+			reqNPUName: util.NPU910CardName,
+			want:       util.HwPreName + util.Ascend910 + "-NetworkUnhealthy",
+		},
+		{
+			name:       "03-other NPU name returns Ascend910 NetworkUnhealthy key",
+			reqNPUName: "huawei.com/Ascend910B",
+			want:       util.HwPreName + util.Ascend910 + "-NetworkUnhealthy",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getNetworkUnhealthyNPUKey(tt.reqNPUName); got != tt.want {
+				t.Errorf("getNetworkUnhealthyNPUKey() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func buildTestNodeWithNetUnhealthy(anno map[string]string, allocateNPU int) plugin.NPUNode {
+	return plugin.NPUNode{
+		CommonNode: plugin.CommonNode{
+			Name: "test-node",
+			Allocate: map[v1.ResourceName]float64{
+				v1.ResourceName(util.NPU910CardName): float64(allocateNPU * util.NPUHexKilo),
+			},
+			Annotation: anno,
+		},
+	}
+}
+
+func buildTestPreemptionPlugin(totalNPU, netUnhealthyCards, npuTaskNum, reqNPUNum int) *huaweiNPUPlugin {
+	npu910Key := util.HwPreName + util.Ascend910 + "-NetworkUnhealthy"
+	anno := map[string]string{}
+	var netUnhealthyStr string
+	for i := 0; i < netUnhealthyCards; i++ {
+		if i > 0 {
+			netUnhealthyStr += ","
+		}
+		netUnhealthyStr += "Ascend910-" + strconv.Itoa(i)
+	}
+	if netUnhealthyStr != "" {
+		anno[npu910Key] = netUnhealthyStr
+	}
+	node := buildTestNodeWithNetUnhealthy(anno, totalNPU)
+	const testTaskUID = api.TaskID("task-uid")
+	p := &huaweiNPUPlugin{Scheduler: &plugin.ScheduleHandler{}}
+	p.Scheduler.Nodes = map[string]plugin.NPUNode{"test-node": node}
+	p.Scheduler.Jobs = map[api.JobID]plugin.SchedulerJob{
+		"test-job": {
+			SchedulerJobAttr: util.SchedulerJobAttr{
+				NPUJob: &util.NPUJob{
+					NPUTaskNum: npuTaskNum, ReqNPUName: util.NPU910CardName, ReqNPUNum: reqNPUNum,
+					Tasks: map[api.TaskID]util.NPUTask{
+						testTaskUID: {ReqNPUName: util.NPU910CardName, ReqNPUNum: reqNPUNum},
+					},
+				},
+			},
+		},
+	}
+	return p
+}
+
+func TestSubtractNetUnhealthyNPU(t *testing.T) {
+	npu910Key := util.HwPreName + util.Ascend910 + "-NetworkUnhealthy"
+	npuKey := util.NPUCardName + "-NetworkUnhealthy"
+	tests := []struct {
+		name, reqNPUName, annoKey, annoVal string
+		total, want                        int
+	}{
+		{"01-no annotation", util.NPU910CardName, "", "", 8, 8},
+		{"02-empty annotation", util.NPU910CardName, npu910Key, "", 8, 8},
+		{"03-910 with 2 unhealthy", util.NPU910CardName, npu910Key, "Ascend910-2,Ascend910-3", 8, 6},
+		{"04-npu with 1 unhealthy", util.NPUCardName, npuKey, "npu-1", 4, 3},
+		{"05-910B uses 910 key", "huawei.com/Ascend910B", npu910Key, "Ascend910-0,Ascend910-5", 16, 14},
+		{"06-all unhealthy", util.NPU910CardName, npu910Key, "Ascend910-0,Ascend910-1,Ascend910-2,Ascend910-3", 4, 0},
+		{"07-910 with 1 unhealthy", util.NPU910CardName, npu910Key, "Ascend910-5", 8, 7},
+		{"08-npu with 3 unhealthy", util.NPUCardName, npuKey, "npu-0,npu-2,npu-3", 4, 1},
+		{"09-910A3 uses 910 key", "huawei.com/Ascend910A3", npu910Key, "Ascend910-1", 16, 15},
+		{"10-zero total no unhealthy", util.NPU910CardName, "", "", 0, 0},
+		{"11-wrong annotation key ignored", util.NPU910CardName, "wrong-key", "Ascend910-0", 8, 8},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			anno := map[string]string{}
+			if tt.annoKey != "" {
+				anno[tt.annoKey] = tt.annoVal
+			}
+			node := plugin.NPUNode{CommonNode: plugin.CommonNode{Annotation: anno}}
+			if got := subtractNetUnhealthyNPU(node, tt.reqNPUName, tt.total); got != tt.want {
+				t.Errorf("subtractNetUnhealthyNPU() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsNPUSchedulableByPreemptionWithNetworkFault(t *testing.T) {
+	const testTaskUID = api.TaskID("task-uid")
+	shortageErr := errors.New(util.NPUResourceShortageError)
+	tests := []struct {
+		name string
+		*npuTaskParam
+		predicateErr error
+		want         bool
+	}{
+		{"01-dist job net fault not enough", &npuTaskParam{npuTaskNum: 2, reqNPUNum: 7, totalNPU: 8, netUnhealthy: 2}, shortageErr, false},
+		{"02-dist job net fault enough", &npuTaskParam{npuTaskNum: 2, reqNPUNum: 4, totalNPU: 8, netUnhealthy: 2}, shortageErr, true},
+		{"03-single task not affected", &npuTaskParam{npuTaskNum: 1, reqNPUNum: 7, totalNPU: 8, netUnhealthy: 2}, shortageErr, true},
+		{"04-not resource shortage err", &npuTaskParam{npuTaskNum: 1, reqNPUNum: 1, totalNPU: 8, netUnhealthy: 0}, errors.New("other"), false},
+		{"05-dist job all cards unhealthy", &npuTaskParam{npuTaskNum: 2, reqNPUNum: 1, totalNPU: 8, netUnhealthy: 8}, shortageErr, false},
+		{"06-dist job no unhealthy enough", &npuTaskParam{npuTaskNum: 2, reqNPUNum: 8, totalNPU: 8, netUnhealthy: 0}, shortageErr, true},
+		{"07-dist job req equals healthy", &npuTaskParam{npuTaskNum: 2, reqNPUNum: 6, totalNPU: 8, netUnhealthy: 2}, shortageErr, true},
+		{"08-dist job req exceeds healthy by 1", &npuTaskParam{npuTaskNum: 2, reqNPUNum: 7, totalNPU: 8, netUnhealthy: 2}, shortageErr, false},
+		{"09-dist job 1 unhealthy card", &npuTaskParam{npuTaskNum: 2, reqNPUNum: 8, totalNPU: 8, netUnhealthy: 1}, shortageErr, false},
+		{"10-single task all unhealthy still ok", &npuTaskParam{npuTaskNum: 1, reqNPUNum: 1, totalNPU: 8, netUnhealthy: 8}, shortageErr, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			plg := buildTestPreemptionPlugin(tt.totalNPU, tt.netUnhealthy, tt.npuTaskNum, tt.reqNPUNum)
+			task := &api.TaskInfo{Name: "task1", UID: testTaskUID, Job: "test-job"}
+			node := &api.NodeInfo{Name: "test-node"}
+			if got := isNPUSchedulableByPreemption(plg, task, node, tt.predicateErr); got != tt.want {
+				t.Errorf("isNPUSchedulableByPreemption() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+type npuTaskParam struct {
+	npuTaskNum, reqNPUNum, totalNPU, netUnhealthy int
 }
