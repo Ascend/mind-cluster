@@ -562,6 +562,9 @@ func (d *DeploymentHandler) DeleteWorkLoad(
 		if err := d.client.Delete(ctx, workload.Deployment); err != nil {
 			return fmt.Errorf("failed to delete deployment work load %s/%s: %w", workload.Namespace, workload.Name, err)
 		}
+		if err := deletePodsForExternalRescheduling(ctx, d.client, workload); err != nil {
+			return err
+		}
 	}
 	return nil
 }

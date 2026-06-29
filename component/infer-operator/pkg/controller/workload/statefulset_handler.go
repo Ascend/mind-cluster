@@ -531,6 +531,9 @@ func (s *StatefulSetHandler) DeleteWorkLoad(
 		if err := s.client.Delete(ctx, workload.StatefulSet); err != nil {
 			return fmt.Errorf("failed to delete statefulset work load %s/%s: %w", workload.Namespace, workload.Name, err)
 		}
+		if err := deletePodsForExternalRescheduling(ctx, s.client, workload); err != nil {
+			return err
+		}
 	}
 	return nil
 }

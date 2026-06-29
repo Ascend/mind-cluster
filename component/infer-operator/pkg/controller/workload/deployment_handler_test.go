@@ -830,6 +830,71 @@ func TestDeploymentHandlerDeleteWorkLoad(t *testing.T) {
 
 			convey.So(err, convey.ShouldNotBeNil)
 		})
+
+		convey.Convey("Should delete pods when external-force mode with matching pods", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			deployment.Labels[common.FaultSchedulingLabelKey] = common.ExternalForceReschedulingValue
+			pod := &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod",
+					Namespace: "default",
+					Labels: map[string]string{
+						common.InferServiceNameLabelKey: "test-service",
+						common.InstanceSetNameLabelKey:  "test-role",
+						common.InstanceIndexLabelKey:    "0",
+					},
+				},
+			}
+			fakeClient := NewFakeClient().WithObjects(deployment, pod).Build()
+			handler := NewDeploymentHandler(fakeClient)
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "Delete", nil)
+			defer patches.Reset()
+
+			err := handler.DeleteWorkLoad(context.Background(), selectLabels, "default")
+
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should succeed when external-force mode but no pods exist", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			deployment.Labels[common.FaultSchedulingLabelKey] = common.ExternalForceReschedulingValue
+			fakeClient := NewFakeClient().WithObjects(deployment).Build()
+			handler := NewDeploymentHandler(fakeClient)
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "Delete", nil)
+			defer patches.Reset()
+
+			err := handler.DeleteWorkLoad(context.Background(), selectLabels, "default")
+
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should log error and continue when pod deletion fails in external-force mode", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			deployment.Labels[common.FaultSchedulingLabelKey] = common.ExternalForceReschedulingValue
+			pod := &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod",
+					Namespace: "default",
+					Labels: map[string]string{
+						common.InferServiceNameLabelKey: "test-service",
+						common.InstanceSetNameLabelKey:  "test-role",
+						common.InstanceIndexLabelKey:    "0",
+					},
+				},
+			}
+			fakeClient := NewFakeClient().WithObjects(deployment, pod).Build()
+			handler := NewDeploymentHandler(fakeClient)
+			mockErr := errors.New("failed to delete pod")
+			patches := gomonkey.ApplyMethodSeq(fakeClient, "Delete", []gomonkey.OutputCell{
+				{Values: gomonkey.Params{nil}, Times: 1},
+				{Values: gomonkey.Params{mockErr}, Times: 1},
+			})
+			defer patches.Reset()
+
+			err := handler.DeleteWorkLoad(context.Background(), selectLabels, "default")
+
+			convey.So(err, convey.ShouldBeNil)
+		})
 	})
 }
 

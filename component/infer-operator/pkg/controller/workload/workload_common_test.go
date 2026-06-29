@@ -17,10 +17,18 @@ limitations under the License.
 package workload
 
 import (
+	"context"
+	"errors"
+	"testing"
+
+	"github.com/agiledragon/gomonkey/v2"
+	"github.com/smartystreets/goconvey/convey"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
@@ -208,4 +216,117 @@ func GetTestIndexer(serviceName, instanceSetKey, instanceIndex string) common.In
 		InstanceSetKey: instanceSetKey,
 		InstanceIndex:  instanceIndex,
 	}
+}
+
+func TestDeletePodsForExternalRescheduling(t *testing.T) {
+	convey.Convey("Test deletePodsForExternalRescheduling function", t, func() {
+		convey.Convey("Should return nil when workload is not external-force mode", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			workload := &DeploymentWorkLoad{Deployment: deployment}
+			fakeClient := NewFakeClient().Build()
+
+			err := deletePodsForExternalRescheduling(context.Background(), fakeClient, workload)
+
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should delete pods when external-force mode with matching pods", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			deployment.Labels[common.FaultSchedulingLabelKey] = common.ExternalForceReschedulingValue
+			workload := &DeploymentWorkLoad{Deployment: deployment}
+			pod := &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod",
+					Namespace: "default",
+					Labels: map[string]string{
+						common.InferServiceNameLabelKey: "test-service",
+						common.InstanceSetNameLabelKey:  "test-role",
+						common.InstanceIndexLabelKey:    "0",
+					},
+				},
+			}
+			fakeClient := NewFakeClient().WithObjects(deployment, pod).Build()
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "Delete", nil)
+			defer patches.Reset()
+
+			err := deletePodsForExternalRescheduling(context.Background(), fakeClient, workload)
+
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should succeed when external-force mode but no pods exist", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			deployment.Labels[common.FaultSchedulingLabelKey] = common.ExternalForceReschedulingValue
+			workload := &DeploymentWorkLoad{Deployment: deployment}
+			fakeClient := NewFakeClient().WithObjects(deployment).Build()
+
+			err := deletePodsForExternalRescheduling(context.Background(), fakeClient, workload)
+
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should return error when pod list fails in external-force mode", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			deployment.Labels[common.FaultSchedulingLabelKey] = common.ExternalForceReschedulingValue
+			workload := &DeploymentWorkLoad{Deployment: deployment}
+			fakeClient := NewFakeClient().Build()
+			mockErr := errors.New("failed to list pods")
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "List", mockErr)
+			defer patches.Reset()
+
+			err := deletePodsForExternalRescheduling(context.Background(), fakeClient, workload)
+
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("Should skip not-found error when deleting pods in external-force mode", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			deployment.Labels[common.FaultSchedulingLabelKey] = common.ExternalForceReschedulingValue
+			workload := &DeploymentWorkLoad{Deployment: deployment}
+			pod := &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod",
+					Namespace: "default",
+					Labels: map[string]string{
+						common.InferServiceNameLabelKey: "test-service",
+						common.InstanceSetNameLabelKey:  "test-role",
+						common.InstanceIndexLabelKey:    "0",
+					},
+				},
+			}
+			fakeClient := NewFakeClient().WithObjects(deployment, pod).Build()
+			notFoundErr := apierrors.NewNotFound(schema.GroupResource{Group: "", Resource: "pods"}, "test-pod")
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "Delete", notFoundErr)
+			defer patches.Reset()
+
+			err := deletePodsForExternalRescheduling(context.Background(), fakeClient, workload)
+
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should log error and continue when pod delete fails in external-force mode", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			deployment.Labels[common.FaultSchedulingLabelKey] = common.ExternalForceReschedulingValue
+			workload := &DeploymentWorkLoad{Deployment: deployment}
+			pod := &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod",
+					Namespace: "default",
+					Labels: map[string]string{
+						common.InferServiceNameLabelKey: "test-service",
+						common.InstanceSetNameLabelKey:  "test-role",
+						common.InstanceIndexLabelKey:    "0",
+					},
+				},
+			}
+			fakeClient := NewFakeClient().WithObjects(deployment, pod).Build()
+			mockErr := errors.New("failed to delete pod")
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "Delete", mockErr)
+			defer patches.Reset()
+
+			err := deletePodsForExternalRescheduling(context.Background(), fakeClient, workload)
+
+			convey.So(err, convey.ShouldBeNil)
+		})
+	})
 }

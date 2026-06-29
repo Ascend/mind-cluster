@@ -175,6 +175,8 @@ const (
 const (
 	// FaultSchedulingLabelKey describe resource deleting policy (force/grace)
 	FaultSchedulingLabelKey = "fault-scheduling"
+	// ExternalForceReschedulingValue describe external force rescheduling mode
+	ExternalForceReschedulingValue = "external-force"
 	// PodStatusAnnotationKey describe pod status of infer service
 	PodStatusAnnotationKey = ascendapi.ResourceNamePrefix + "pod-status"
 	// CommonUnhealthyStatus describe common unhealthy status of infer service pod
