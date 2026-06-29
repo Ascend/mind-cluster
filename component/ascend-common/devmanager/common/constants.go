@@ -19,6 +19,8 @@ import (
 	"math"
 
 	"k8s.io/apimachinery/pkg/util/sets"
+
+	"ascend-common/api"
 )
 
 // DeviceType define device type
@@ -45,6 +47,22 @@ var (
 
 	// a9000A3SuperPodMainBoardIds for A9000 A3 Super Pod Main Board IDs
 	a9000A3SuperPodMainBoardIds = sets.NewInt32(A9000A3SuperPodMainBoardId1, A9000A3SuperPodMainBoardId2)
+
+	// ParameterPlaneDownProtsNumToPreciseFaultCodeMap maps device type to a mapping from ParameterPlaneDownProtsNum
+	// to precise fault code
+	ParameterPlaneDownProtsNumToPreciseFaultCodeMap = map[string]map[int]int64{
+		api.Ascend910A5: {
+			NumberOne: UBOESubHealFaultCode,
+			NumberTwo: UBOEPreSeparateFaultCode,
+		},
+		api.Ascend910: {
+			NumberOne: LinkDownFaultCode,
+		},
+	}
+	// DetailCustomFaultCodesSet detail custom fault codes set
+	DetailCustomFaultCodesSet = sets.NewInt64(UBSeparateFaultCode, UBSubHealFaultCode)
+	// DetailCustomParameterPlaneFaultCodesSet detail custom parameter plane fault codes set
+	DetailCustomParameterPlaneFaultCodesSet = sets.NewInt64(UBOEPreSeparateFaultCode, UBOESubHealFaultCode)
 )
 
 // DeviceType for utilization
@@ -75,15 +93,23 @@ const (
 	// DeviceNotReadyErrCode for dcmi interface device not ready err code
 	DeviceNotReadyErrCode = -8012
 	// CardDropFaultCode card drop fault code
-	CardDropFaultCode = 0x40F84E00
+	CardDropFaultCode int64 = 0x40F84E00
 	// HangFaultCode NPU hang fault code
-	HangFaultCode = 0x200001002
-	// UBOESeparateFaultCode UBOE separate fault code
-	UBOESeparateFaultCode = 0x020001002
+	HangFaultCode int64 = 0x200001002
+	// UBSeparateFaultCode UBOE separate fault code
+	UBSeparateFaultCode int64 = 0x020001002
+	// UBSubHealFaultCode UB sub heal fault code
+	UBSubHealFaultCode int64 = 0x020000002
 	// UBOEPreSeparateFaultCode UBOE pre separate fault code
-	UBOEPreSeparateFaultCode = 0x110001024
+	UBOEPreSeparateFaultCode int64 = 0x110001024
 	// UBOESubHealFaultCode UBOE sub heal fault code
-	UBOESubHealFaultCode = 0x110000002
+	UBOESubHealFaultCode int64 = 0x110000002
+	// LinkDownFaultCode linkdown fault code
+	LinkDownFaultCode int64 = 0x81078603
+	// UBOEPortDownCode uboe port down fault code
+	UBOEPortDownCode int64 = 0x81078607
+	// UBPortDownCode uboe port down fault code
+	UBPortDownCode int64 = 0x81B18603
 	// RetError return error when the function failed
 	RetError = -1
 	// Percent constant of 100
@@ -161,6 +187,9 @@ const (
 const (
 	// BootStartFinish chip hot reset finish
 	BootStartFinish = 16
+
+	NumberOne = 1
+	NumberTwo = 2
 )
 
 const (
@@ -320,10 +349,10 @@ const (
 	NPUNetworkLinkDownStatus = "DOWN"
 	// NPUNetworkLinkUpStatus indicate the network status of up
 	NPUNetworkLinkUpStatus = "UP"
-	// NetWorkPortAllDownCount indicate the network port all down count
-	NetWorkPortAllDownCount = 0
-	// RoceNetWorkPortAllUpCount indicate the network port all up count
-	RoceNetWorkPortAllUpCount = 1
-	// UBOENetWorkPortAllUpCount indicate the network port all up count for UBOE
-	UBOENetWorkPortAllUpCount = 2
+	// PortNoDownCount indicate no port down count
+	PortNoDownCount = 0
+	// RoceParameterPlanePortAllDownCount indicate the network port all up count
+	RoceParameterPlanePortAllDownCount = 1
+	// UBOEParameterPlanePortAllDownCount indicate the network port all up count for UBOE
+	UBOEParameterPlanePortAllDownCount = 2
 )

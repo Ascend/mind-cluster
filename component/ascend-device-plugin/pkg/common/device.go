@@ -318,13 +318,6 @@ func ShareDev() bool {
 		(ParamOption.RealCardType == api.Ascend310B || ParamOption.RealCardType == api.Ascend310P)
 }
 
-// WithoutParameterPlane indicate device has no parameter plane
-func WithoutParameterPlane() bool {
-	return ParamOption.RealCardType == api.Ascend310B ||
-		ParamOption.RealCardType == api.Ascend310P ||
-		ParamOption.RealCardType == api.Ascend310
-}
-
 // IsVirtualDev used to judge whether a physical device or a virtual device
 func IsVirtualDev(devType string) bool {
 	return GetPattern()["vir910"].MatchString(devType) || GetPattern()["vir310p"].MatchString(devType)

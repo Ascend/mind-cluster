@@ -15,6 +15,14 @@
 // Package common define common types
 package common
 
+// UBPort ub port info
+type UBPort struct {
+	UDieId     int
+	PortID     int
+	PortType   string
+	LinkStatus string
+}
+
 // MemoryInfo memory information struct
 type MemoryInfo struct {
 	MemorySize      uint64 `json:"memory_size"`

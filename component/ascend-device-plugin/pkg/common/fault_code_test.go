@@ -242,6 +242,10 @@ func TestGetAndCleanLogicID(t *testing.T) {
 // TestSetNewFaultAndCacheOnceRecoverFault for test SetNewFaultAndCacheOnceRecoverFault
 func TestSetNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 	convey.Convey("test SetNewFaultAndCacheOnceRecoverFault", t, func() {
+		convey.Convey("device is nil, should return directly", func() {
+			SetNewFaultAndCacheOnceRecoverFault(0, nil, nil, sets.NewInt64())
+			convey.So(len(recoverFaultMap), convey.ShouldEqual, 0)
+		})
 		convey.Convey("SetNewFaultAndCacheOnceRecoverFault success", func() {
 			recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
 			logicID := int32(0)
@@ -254,11 +258,28 @@ func TestSetNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 			}
 			device := &NpuDevice{FaultCodes: []int64{1}}
 			expectedFaultCodes, expectedFaultMapLen := []int64{0}, 2
+			originNetworkFaultCodes := NetworkFaultCodes
+			defer func() { NetworkFaultCodes = originNetworkFaultCodes }()
 			NetworkFaultCodes = sets.NewInt64()
 			NetworkFaultCodes.Insert(LinkDownFaultCode)
-			SetNewFaultAndCacheOnceRecoverFault(logicID, faultInfos, device, sets.NewInt64())
+			classified := ClassifyFaultInfos(faultInfos)
+			SetNewFaultAndCacheOnceRecoverFault(logicID, classified[ChipFaultKey], device, sets.NewInt64())
 			convey.So(device.FaultCodes, convey.ShouldResemble, expectedFaultCodes)
 			convey.So(len(recoverFaultMap[logicID]), convey.ShouldEqual, expectedFaultMapLen)
+		})
+		convey.Convey("A950 card type, a950 chip fault steps should be applied", func() {
+			recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			logicID := int32(0)
+			faultInfos := []common.DevFaultInfo{
+				{Assertion: common.FaultOccur, EventID: CardDropFaultCode},
+			}
+			device := &NpuDevice{LogicID: logicID}
+			classified := ClassifyFaultInfos(faultInfos)
+			SetNewFaultAndCacheOnceRecoverFault(logicID, classified[ChipFaultKey], device, sets.NewInt64())
+			convey.So(device.FaultCodes, convey.ShouldContain, CardDropFaultCode)
+			convey.So(device.AlarmRaisedTime, convey.ShouldBeGreaterThan, 0)
 		})
 	})
 }
@@ -290,11 +311,196 @@ func TestSetNetworkNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 			device := &NpuDevice{NetworkFaultCodes: []int64{LinkDownFaultCode}}
 			expectedNetworkFaultCodes := []int64{LinkDownFaultCode, LinkDownFaultCode}
 			expectedRecoverNetworkFaultMapLen := 1
+			originNetworkFaultCodes := NetworkFaultCodes
+			defer func() { NetworkFaultCodes = originNetworkFaultCodes }()
 			NetworkFaultCodes = sets.NewInt64()
 			NetworkFaultCodes.Insert(LinkDownFaultCode)
-			SetNetworkNewFaultAndCacheOnceRecoverFault(logicID, faultInfos, device)
+			classified := ClassifyFaultInfos(faultInfos)
+			SetNetworkNewFaultAndCacheOnceRecoverFault(logicID, classified[ParameterPlaneFaultKey], device)
 			convey.So(device.NetworkFaultCodes, convey.ShouldResemble, expectedNetworkFaultCodes)
 			convey.So(len(recoverNetworkFaultMap[logicID]), convey.ShouldEqual, expectedRecoverNetworkFaultMapLen)
+		})
+		convey.Convey("A950 card type, a950 parameter plane fault steps should be applied", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			recoverNetworkFaultMap = make(map[int32][]int64, GeneralMapSize)
+			logicID := int32(0)
+			faultInfos := []common.DevFaultInfo{
+				{Assertion: common.FaultOccur, EventID: UBOEPortDownCode},
+			}
+			device := &NpuDevice{LogicID: logicID}
+			classified := ClassifyFaultInfos(faultInfos)
+			patchCache := gomonkey.ApplyFuncReturn(cacheUBports, nil)
+			defer patchCache.Reset()
+			patchDownCnt := gomonkey.ApplyFuncReturn(getUBOEDownCnt, 1)
+			defer patchDownCnt.Reset()
+			SetNetworkNewFaultAndCacheOnceRecoverFault(logicID, classified[ParameterPlaneFaultKey], device)
+			convey.So(device.NetworkFaultCodes, convey.ShouldContain, UBOESubHealFaultCode)
+			convey.So(device.NetworkFaultCodes, convey.ShouldContain, UBOEPortDownCode)
+			convey.So(device.NetworkAlarmRaisedTime, convey.ShouldBeGreaterThan, 0)
+		})
+		convey.Convey("A950 card type recover, should remove precise fault codes when no port down", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			recoverNetworkFaultMap = make(map[int32][]int64, GeneralMapSize)
+			logicID := int32(0)
+			faultInfos := []common.DevFaultInfo{
+				{Assertion: common.FaultRecover, EventID: UBOEPortDownCode},
+			}
+			device := &NpuDevice{
+				LogicID:           logicID,
+				NetworkFaultCodes: []int64{UBOEPortDownCode, UBOEPreSeparateFaultCode, UBOESubHealFaultCode},
+			}
+			classified := ClassifyFaultInfos(faultInfos)
+			patchCache := gomonkey.ApplyFuncReturn(cacheUBports, nil)
+			defer patchCache.Reset()
+			patchDownCnt := gomonkey.ApplyFuncReturn(getUBOEDownCnt, common.PortNoDownCount)
+			defer patchDownCnt.Reset()
+			SetNetworkNewFaultAndCacheOnceRecoverFault(logicID, classified[ParameterPlaneFaultKey], device)
+			convey.So(device.NetworkFaultCodes, convey.ShouldBeEmpty)
+			convey.So(len(recoverNetworkFaultMap[logicID]), convey.ShouldEqual, 0)
+		})
+		convey.Convey("A950 card type recover, event not in NetworkFaultCodes should be cached", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			recoverNetworkFaultMap = make(map[int32][]int64, GeneralMapSize)
+			logicID := int32(0)
+			faultInfos := []common.DevFaultInfo{
+				{Assertion: common.FaultRecover, EventID: UBOEPortDownCode},
+				{Assertion: common.FaultOnce, EventID: UBOEPortDownCode},
+			}
+			device := &NpuDevice{LogicID: logicID}
+			classified := ClassifyFaultInfos(faultInfos)
+			patchCache := gomonkey.ApplyFuncReturn(cacheUBports, nil)
+			defer patchCache.Reset()
+			patchDownCnt := gomonkey.ApplyFuncReturn(getUBOEDownCnt, common.PortNoDownCount)
+			defer patchDownCnt.Reset()
+			SetNetworkNewFaultAndCacheOnceRecoverFault(logicID, classified[ParameterPlaneFaultKey], device)
+			convey.So(recoverNetworkFaultMap[logicID], convey.ShouldResemble,
+				[]int64{UBOEPortDownCode, UBOEPortDownCode})
+			convey.So(device.NetworkFaultCodes, convey.ShouldBeEmpty)
+		})
+		convey.Convey("A950 card type recover with port still down, should re-occur precise fault", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			recoverNetworkFaultMap = make(map[int32][]int64, GeneralMapSize)
+			logicID := int32(0)
+			faultInfos := []common.DevFaultInfo{
+				{Assertion: common.FaultRecover, EventID: UBOEPortDownCode},
+			}
+			device := &NpuDevice{
+				LogicID:           logicID,
+				NetworkFaultCodes: []int64{UBOEPortDownCode, UBOEPreSeparateFaultCode, UBOESubHealFaultCode},
+			}
+			classified := ClassifyFaultInfos(faultInfos)
+			patchCache := gomonkey.ApplyFuncReturn(cacheUBports, nil)
+			defer patchCache.Reset()
+			patchDownCnt := gomonkey.ApplyFuncReturn(getUBOEDownCnt, 1)
+			defer patchDownCnt.Reset()
+			SetNetworkNewFaultAndCacheOnceRecoverFault(logicID, classified[ParameterPlaneFaultKey], device)
+			convey.So(device.NetworkFaultCodes, convey.ShouldContain, UBOESubHealFaultCode)
+			convey.So(device.NetworkFaultCodes, convey.ShouldContain, UBOEPortDownCode)
+			convey.So(device.NetworkFaultCodes, convey.ShouldNotContain, UBOEPreSeparateFaultCode)
+		})
+	})
+}
+
+// TestSetHyperPlaneNewFaultAndCacheOnceRecoverFault for test SetHyperPlaneNewFaultAndCacheOnceRecoverFault
+func TestSetHyperPlaneNewFaultAndCacheOnceRecoverFault(t *testing.T) {
+	convey.Convey("test SetHyperPlaneNewFaultAndCacheOnceRecoverFault", t, func() {
+		convey.Convey("device is nil, should return directly", func() {
+			SetHyperPlaneNewFaultAndCacheOnceRecoverFault(0, nil, nil)
+			convey.So(len(recoverFaultMap), convey.ShouldEqual, 0)
+		})
+		convey.Convey("base card type with empty steps, should not modify device", func() {
+			logicID := int32(0)
+			faultInfos := []common.DevFaultInfo{
+				{Assertion: common.FaultOccur, EventID: UBPortDownCode},
+			}
+			device := &NpuDevice{LogicID: logicID}
+			classified := ClassifyFaultInfos(faultInfos)
+			SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID, classified[HyperPlaneFaultKey], device)
+			convey.So(device.FaultCodes, convey.ShouldBeEmpty)
+		})
+		convey.Convey("A950 card type occur, should add precise fault code", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
+			logicID := int32(0)
+			faultInfos := []common.DevFaultInfo{
+				{Assertion: common.FaultOccur, EventID: UBPortDownCode},
+			}
+			device := &NpuDevice{LogicID: logicID}
+			classified := ClassifyFaultInfos(faultInfos)
+			patchCache := gomonkey.ApplyFuncReturn(cacheUBports, nil)
+			defer patchCache.Reset()
+			patchDownCnt := gomonkey.ApplyFuncReturn(getUBDownCnt, 1)
+			defer patchDownCnt.Reset()
+			SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID, classified[HyperPlaneFaultKey], device)
+			convey.So(device.FaultCodes, convey.ShouldContain, UBSeparateFaultCode)
+			convey.So(device.FaultCodes, convey.ShouldContain, UBPortDownCode)
+		})
+		convey.Convey("A950 card type recover, should remove precise fault codes when no port down", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
+			logicID := int32(0)
+			faultInfos := []common.DevFaultInfo{
+				{Assertion: common.FaultRecover, EventID: UBPortDownCode},
+			}
+			device := &NpuDevice{
+				LogicID:    logicID,
+				FaultCodes: []int64{UBPortDownCode, UBSeparateFaultCode, UBSubHealFaultCode},
+			}
+			classified := ClassifyFaultInfos(faultInfos)
+			patchCache := gomonkey.ApplyFuncReturn(cacheUBports, nil)
+			defer patchCache.Reset()
+			patchDownCnt := gomonkey.ApplyFuncReturn(getUBDownCnt, common.PortNoDownCount)
+			defer patchDownCnt.Reset()
+			SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID, classified[HyperPlaneFaultKey], device)
+			convey.So(device.FaultCodes, convey.ShouldBeEmpty)
+			convey.So(len(recoverFaultMap[logicID]), convey.ShouldEqual, 0)
+		})
+		convey.Convey("A950 card type recover, event not in FaultCodes should be cached", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
+			logicID := int32(0)
+			faultInfos := []common.DevFaultInfo{
+				{Assertion: common.FaultRecover, EventID: UBPortDownCode},
+				{Assertion: common.FaultOnce, EventID: UBPortDownCode},
+			}
+			device := &NpuDevice{LogicID: logicID}
+			classified := ClassifyFaultInfos(faultInfos)
+			patchCache := gomonkey.ApplyFuncReturn(cacheUBports, nil)
+			defer patchCache.Reset()
+			patchDownCnt := gomonkey.ApplyFuncReturn(getUBDownCnt, common.PortNoDownCount)
+			defer patchDownCnt.Reset()
+			SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID, classified[HyperPlaneFaultKey], device)
+			convey.So(recoverFaultMap[logicID], convey.ShouldResemble,
+				[]int64{UBPortDownCode, UBPortDownCode})
+			convey.So(device.FaultCodes, convey.ShouldBeEmpty)
+		})
+		convey.Convey("A950 card type recover with port still down, should re-occur precise fault", func() {
+			ParamOption.RealCardType = Ascend910A5
+			defer func() { ParamOption = Option{} }()
+			recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
+			logicID := int32(0)
+			faultInfos := []common.DevFaultInfo{
+				{Assertion: common.FaultRecover, EventID: UBPortDownCode},
+			}
+			device := &NpuDevice{
+				LogicID:    logicID,
+				FaultCodes: []int64{UBPortDownCode, UBSeparateFaultCode, UBSubHealFaultCode},
+			}
+			classified := ClassifyFaultInfos(faultInfos)
+			patchCache := gomonkey.ApplyFuncReturn(cacheUBports, nil)
+			defer patchCache.Reset()
+			patchDownCnt := gomonkey.ApplyFuncReturn(getUBDownCnt, 1)
+			defer patchDownCnt.Reset()
+			SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID, classified[HyperPlaneFaultKey], device)
+			convey.So(device.FaultCodes, convey.ShouldContain, UBSeparateFaultCode)
+			convey.So(device.FaultCodes, convey.ShouldContain, UBPortDownCode)
 		})
 	})
 }

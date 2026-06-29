@@ -39,19 +39,20 @@ const (
 	LinkDown string = "DOWN"
 	// BondingPortName npu bonding port name
 	BondingPortName string = "ETH"
-
-	opticalPartLen  = 2
-	eleventhIndex   = 11
-	threePart       = 3
-	netSpeedPartLen = 2
-	firstIndex      = 1
-	secondIndex     = 2
-	secondLast      = 2
-	fourthIndex     = 4
-	fifthIndex      = 5
-	sixthIndex      = 6
-	linkStatusPart  = 3
-	base64          = 64
+	// UBPortName npu ub port name
+	UBPortName      string = "UB"
+	opticalPartLen         = 2
+	eleventhIndex          = 11
+	threePart              = 3
+	netSpeedPartLen        = 2
+	firstIndex             = 1
+	secondIndex            = 2
+	secondLast             = 2
+	fourthIndex            = 4
+	fifthIndex             = 5
+	sixthIndex             = 6
+	linkStatusPart         = 3
+	base64                 = 64
 
 	cardHealthy = 0
 
@@ -686,8 +687,8 @@ func parseDeviceRow(trimmedLine string) (int, int, error) {
 	return uDieID, portID, nil
 }
 
-// GetUBOEBondingPortUpCount get UBOE bonding port up count
-func GetUBOEBondingPortUpCount(logicID int32) (int, error) {
+// GetAllUBports get all UB ports info
+func GetAllUBports(logicID int32) ([]common.UBPort, error) {
 	args := []string{"-g", "-dev_info", "-i", strconv.Itoa(int(logicID))}
 	// command example: hccn_tool -g -dev_info -i 0
 	// output example:
@@ -698,7 +699,7 @@ func GetUBOEBondingPortUpCount(logicID int32) (int, error) {
 	// +--------+--------+--------+----------+-------------+------------+
 	outStr, err := getInfoFromHccnTool(args...)
 	if err != nil {
-		return 0, buildHccnErrA5("npu dev info", err)
+		return nil, buildHccnErrA5("npu dev info", err)
 	}
 
 	// First, log the full output for debugging
@@ -706,19 +707,18 @@ func GetUBOEBondingPortUpCount(logicID int32) (int, error) {
 
 	// Split output into lines and parse table data
 	lines := strings.Split(outStr, "\n")
-	result, err := getEthPortUpCount(lines)
+	UBports, err := getAllUBPortsFromHccnLines(lines)
 	if err != nil {
-		return 0, buildHccnErrA5("npu dev info", err)
+		return nil, buildHccnErrA5("npu dev info", err)
 	}
-	return result, nil
+	return UBports, nil
 }
 
-// getEthPortUpCount to get the number of eth up ports
-func getEthPortUpCount(lines []string) (int, error) {
-	result := 0
+// getAllUBPortsFromHccnLines parses UB port information from hccn_tool output
+func getAllUBPortsFromHccnLines(lines []string) ([]common.UBPort, error) {
 	isInTable := false
 	separatorCount := 0
-
+	UBports := make([]common.UBPort, 0)
 	for _, line := range lines {
 		trimmedLine := strings.TrimSpace(line)
 		if trimmedLine == "" {
@@ -744,25 +744,22 @@ func getEthPortUpCount(lines []string) (int, error) {
 		}
 		// Skip header row
 		lineLower := strings.ToLower(trimmedLine)
-		if !strings.Contains(lineLower, strings.ToLower(BondingPortName)) {
-			continue
-		}
-
-		// Parse device row data
-		up, err := checkPortStatus(trimmedLine)
-		if err != nil {
-			hwlog.RunLog.Warnf("Skipping invalid row: %s", trimmedLine)
-			return 0, err
-		}
-		if up {
-			result += 1
+		if strings.Contains(lineLower, strings.ToLower(LinkDown)) ||
+			strings.Contains(lineLower, strings.ToLower(LinkUp)) {
+			// Parse device row data
+			ubPort, err := checkPortStatus(trimmedLine)
+			if err != nil {
+				hwlog.RunLog.Warnf("Skipping invalid row: %s", trimmedLine)
+				return make([]common.UBPort, 0), err
+			}
+			UBports = append(UBports, ubPort)
 		}
 	}
-	return result, nil
+	return UBports, nil
 }
 
-// checkPortStatus extracts and validates UdieID and PortID from a single table row
-func checkPortStatus(trimmedLine string) (bool, error) {
+// checkPortStatus extracts and validates UB port Info from a single table row
+func checkPortStatus(trimmedLine string) (common.UBPort, error) {
 	// Extract columns from table row
 	rowData := strings.TrimPrefix(trimmedLine, "|")
 	rowData = strings.TrimSuffix(rowData, "|")
@@ -773,11 +770,20 @@ func checkPortStatus(trimmedLine string) (bool, error) {
 
 	// Validate columns
 	if len(columns) < fifthIndex || columns[threePart] == "" || columns[fourthIndex] == "" {
-		return false, fmt.Errorf("insufficient or empty columns")
+		return common.UBPort{}, fmt.Errorf("insufficient or empty columns")
 	}
-
-	if columns[threePart] == BondingPortName {
-		return columns[fourthIndex] == common.NPUNetworkLinkUpStatus, nil
+	UDieID, err := strconv.Atoi(columns[0])
+	if err != nil {
+		return common.UBPort{}, fmt.Errorf("failed to parse udieID: %s", columns[0])
 	}
-	return false, nil
+	PortID, err := strconv.Atoi(columns[1])
+	if err != nil {
+		return common.UBPort{}, fmt.Errorf("failed to parse portID: %s", columns[1])
+	}
+	return common.UBPort{
+		UDieId:     UDieID,
+		PortID:     PortID,
+		PortType:   columns[threePart],
+		LinkStatus: columns[fourthIndex],
+	}, nil
 }
