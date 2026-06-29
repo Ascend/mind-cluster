@@ -1969,3 +1969,77 @@ func TestHandleHangCardFaultEvents(t *testing.T) {
 		})
 	})
 }
+
+// TestAscendToolsModifyFaultCodesForMultiDevices for test modifyFaultCodesForMultiDevices
+func TestAscendToolsModifyFaultCodesForMultiDevices(t *testing.T) {
+	convey.Convey("test modifyFaultCodesForMultiDevices", t, func() {
+		convey.Convey("base card type, should not modify device fault codes", func() {
+			mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{RealCardType: api.Ascend910})
+			defer mockOption.Reset()
+			tool := mockAscendTools()
+			devices := []*common.NpuDevice{
+				{LogicID: 0, FaultCodes: []int64{common.UBPortDownCode, common.UBSeparateFaultCode}},
+			}
+			originFaultCodes := make([]int64, len(devices[0].FaultCodes))
+			copy(originFaultCodes, devices[0].FaultCodes)
+			tool.modifyFaultCodesForMultiDevices(devices)
+			convey.So(devices[0].FaultCodes, convey.ShouldResemble, originFaultCodes)
+		})
+		convey.Convey("A950 card type, not all devices have UBPortDownCode, should not modify", func() {
+			mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{RealCardType: api.Ascend910A5})
+			defer mockOption.Reset()
+			tool := mockAscendTools()
+			devices := []*common.NpuDevice{
+				{LogicID: 0, FaultCodes: []int64{common.UBPortDownCode, common.UBSeparateFaultCode}},
+				{LogicID: 1, FaultCodes: []int64{common.UBSeparateFaultCode}},
+			}
+			tool.modifyFaultCodesForMultiDevices(devices)
+			convey.So(devices[0].FaultCodes, convey.ShouldResemble,
+				[]int64{common.UBPortDownCode, common.UBSeparateFaultCode})
+			convey.So(devices[1].FaultCodes, convey.ShouldResemble,
+				[]int64{common.UBSeparateFaultCode})
+		})
+		convey.Convey("A950 card type, all devices have UBPortDownCode, should convert separate to sub heal", func() {
+			mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{RealCardType: api.Ascend910A5})
+			defer mockOption.Reset()
+			tool := mockAscendTools()
+			devices := []*common.NpuDevice{
+				{LogicID: 0, FaultCodes: []int64{common.UBPortDownCode, common.UBSeparateFaultCode}},
+				{LogicID: 1,
+					FaultCodes: []int64{common.UBPortDownCode, common.UBSeparateFaultCode, common.UBSubHealFaultCode}},
+			}
+			tool.modifyFaultCodesForMultiDevices(devices)
+			convey.So(devices[0].FaultCodes, convey.ShouldNotContain, common.UBSeparateFaultCode)
+			convey.So(devices[0].FaultCodes, convey.ShouldContain, common.UBSubHealFaultCode)
+			convey.So(devices[0].FaultCodes, convey.ShouldContain, common.UBPortDownCode)
+			convey.So(devices[0].FaultTimeMap[common.UBSeparateFaultCode], convey.ShouldEqual, 0)
+			convey.So(devices[0].FaultTimeMap[common.UBSubHealFaultCode], convey.ShouldBeGreaterThan, 0)
+
+			convey.So(devices[1].FaultCodes, convey.ShouldNotContain, common.UBSeparateFaultCode)
+			convey.So(devices[1].FaultCodes, convey.ShouldContain, common.UBSubHealFaultCode)
+			convey.So(countFaultCode(devices[1].FaultCodes, common.UBSubHealFaultCode), convey.ShouldEqual, 1)
+		})
+		convey.Convey("A950 card type, device is nil, should return directly", func() {
+			mockOption := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{RealCardType: api.Ascend910A5})
+			defer mockOption.Reset()
+			tool := mockAscendTools()
+			devices := []*common.NpuDevice{
+				{LogicID: 0, FaultCodes: []int64{common.UBPortDownCode}},
+				nil,
+			}
+			tool.modifyFaultCodesForMultiDevices(devices)
+			convey.So(devices[0].FaultCodes, convey.ShouldResemble,
+				[]int64{common.UBPortDownCode})
+		})
+	})
+}
+
+func countFaultCode(faultCodes []int64, code int64) int {
+	cnt := 0
+	for _, c := range faultCodes {
+		if c == code {
+			cnt++
+		}
+	}
+	return cnt
+}

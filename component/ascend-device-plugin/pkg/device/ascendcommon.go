@@ -1315,6 +1315,7 @@ func (tool *AscendTools) writeNewFaultCode(deviceMap map[string][]*common.NpuDev
 			tool.flushFaultCodesWithInitForSingleDevice(device, devFaultInfoMap)
 			common.CountFaultDuration(device, devFaultInfoMap)
 		}
+		tool.modifyFaultCodesForMultiDevices(devices)
 		for _, device := range devices {
 			device.Health = tool.isHealthy(device)
 			if runMode == api.Ascend910 {
@@ -1357,6 +1358,10 @@ func (tool *AscendTools) flushFaultCodesWithInitForSingleDevice(device *common.N
 	common.SetNewFaultAndCacheOnceRecoverFault(device.LogicID, classified[common.ChipFaultKey], device, curFaultCodesMap)
 	common.SetNetworkNewFaultAndCacheOnceRecoverFault(device.LogicID, classified[common.ParameterPlaneFaultKey], device)
 	common.SetHyperPlaneNewFaultAndCacheOnceRecoverFault(device.LogicID, classified[common.HyperPlaneFaultKey], device)
+}
+
+func (tool *AscendTools) modifyFaultCodesForMultiDevices(devices []*common.NpuDevice) {
+	common.SetHyperPlaneNewOverallFault(devices)
 }
 
 func moreThanFiveMin(device *common.NpuDevice) bool {

@@ -16,7 +16,6 @@
 package common
 
 import (
-	"ascend-common/devmanager/hccn"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -31,6 +30,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
 	"ascend-common/devmanager/common"
+	"ascend-common/devmanager/hccn"
 )
 
 const (
@@ -1383,6 +1383,23 @@ func SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID int32, hyperPlaneFaul
 	steps := getHyperPlaneFaultPreSteps(logicID, hyperPlaneFaultInfos)
 	if isA950CardType() {
 		steps = append(steps, getA950HyperPlaneFaultSteps(logicID, hyperPlaneFaultInfos, device)...)
+	}
+	for _, step := range steps {
+		step.Do()
+	}
+}
+
+// SetHyperPlaneNewOverallFault set new hyper plane overall fault code and cache once recover hyper plane overall fault
+func SetHyperPlaneNewOverallFault(devices []*NpuDevice) {
+	for _, device := range devices {
+		if device == nil {
+			hwlog.RunLog.Error("param device is nil in SetHyperPlaneNewOverallFault")
+			return
+		}
+	}
+	steps := getHyperPlaneOverallFaultPreSteps(devices)
+	if isA950CardType() {
+		steps = append(steps, getA950HyperPlaneNewOverallFaultSteps(devices)...)
 	}
 	for _, step := range steps {
 		step.Do()
