@@ -5,6 +5,16 @@
 
 Container Manager组件直接在物理机上通过二进制方式运行，提供容器生命周期管理、故障检测与恢复功能。
 
+## 支持的产品形态<a name="section_supported_products"></a>
+
+- 支持以下产品使用故障管理和故障容器的自动恢复功能：
+    - Atlas 训练系列产品
+    - Atlas A2 训练系列产品
+    - Atlas A3 训练系列产品
+    - Atlas 推理系列产品
+    - Atlas A2 推理系列产品
+    - Atlas A3 推理系列产品
+
 ## 操作步骤
 
 使用部署脚本（deploy.sh）进行安装，脚本自动完成二进制拷贝、systemd服务文件生成、服务启停等操作，减少人工配置错误。
