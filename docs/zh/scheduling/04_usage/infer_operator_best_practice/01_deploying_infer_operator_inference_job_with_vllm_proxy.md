@@ -240,12 +240,12 @@ spec:
 </tr>
 <tr ><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p >external-grace</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p >配置任务开启实例级重调度，会强制删除原实例，并级联删除Pod。预留该字段用于实现实例的优雅删除。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p >配置任务开启实例级重调度。Infer Operator先删除workload，K8s级联删除Pod（遵循Pod自身<code>terminationGracePeriodSeconds</code>），Infer Operator按Pod的<code>terminationGracePeriodSeconds</code>启动定时器，超时后强删残留Pod（GracePeriodSeconds=0）。若Pod未配置<code>terminationGracePeriodSeconds</code>，默认等待30秒。</p>
 </td>
 </tr>
 <tr ><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p >external-force</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p >配置任务开启实例级重调度，会强制删除原实例，并级联删除Pod。预留该字段用于实现实例的强制删除。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p >配置任务开启实例级重调度。Infer Operator立即强删workload及Pod（GracePeriodSeconds=0）。<code>terminationGracePeriodSeconds</code>不生效。</p>
 </td>
 </tr>
 <tr ><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p >off</p>

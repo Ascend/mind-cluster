@@ -177,6 +177,10 @@ const (
 	FaultSchedulingLabelKey = "fault-scheduling"
 	// ExternalForceReschedulingValue describe external force rescheduling mode
 	ExternalForceReschedulingValue = "external-force"
+	// ExternalGraceReschedulingValue describe external grace rescheduling mode
+	ExternalGraceReschedulingValue = "external-grace"
+	// DefaultTerminationGracePeriodSeconds is the Kubernetes default grace period for pod termination
+	DefaultTerminationGracePeriodSeconds = 30
 	// PodStatusAnnotationKey describe pod status of infer service
 	PodStatusAnnotationKey = ascendapi.ResourceNamePrefix + "pod-status"
 	// CommonUnhealthyStatus describe common unhealthy status of infer service pod
