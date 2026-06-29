@@ -606,6 +606,7 @@ func (hdm *HwDevManager) handleDeviceInfoUpdate(ctx context.Context, initTime *t
 	hdm.useVolcanoNotify()
 	hdm.unifiedHotReset()
 	common.DelOnceRecoverFault(hdm.groupDevice)
+	common.ClearUBportsInfo(hdm.groupDevice)
 	common.DelOnceFrequencyFault()
 	common.Synchronize = true
 }
@@ -771,6 +772,7 @@ func deepCopyGroupDevice(groupDevice map[string][]*common.NpuDevice) map[string]
 				FaultCodes:             npuDevice.FaultCodes,
 				AlarmRaisedTime:        npuDevice.AlarmRaisedTime,
 				NetworkFaultCodes:      npuDevice.NetworkFaultCodes,
+				UBports:                npuDevice.UBports,
 				NetworkAlarmRaisedTime: npuDevice.NetworkAlarmRaisedTime,
 				FaultTimeMap:           npuDevice.FaultTimeMap,
 				DevType:                npuDevice.DevType,
@@ -1691,7 +1693,6 @@ func getFaultCodeCMPollInterval(configMap *v1.ConfigMap) int {
 func (hdm *HwDevManager) mendSubscribeFaultEvents() {
 	initLogicIDs := common.GetAndCleanLogicID()
 	for _, npuDevices := range hdm.groupDevice {
-		var uboeDownDevices []*common.NpuDevice
 		for _, npuDevice := range npuDevices {
 
 			if common.SubscribeFailed {
@@ -1702,9 +1703,7 @@ func (hdm *HwDevManager) mendSubscribeFaultEvents() {
 			hdm.manager.HandleDropCardFaultEvents(npuDevice)
 			hdm.manager.HandleLostChipFaultEvents(npuDevice, initLogicIDs)
 			hdm.manager.HandleLostNetworkFaultEvents(npuDevice, initLogicIDs)
-			hdm.manager.HandleUBOELinkDownCheck(npuDevice, &uboeDownDevices)
 		}
-		hdm.manager.DoHandleUboeLinkDownCheck(uboeDownDevices)
 		hdm.manager.HandleHangCardFaultEvents(npuDevices)
 	}
 }

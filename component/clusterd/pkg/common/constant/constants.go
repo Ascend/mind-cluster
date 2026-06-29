@@ -6,6 +6,8 @@ package constant
 import (
 	"math"
 	"time"
+
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 const (
@@ -61,16 +63,30 @@ const (
 
 // fault code const
 const (
-	UceFaultCode            = "80E01801"
-	AicFaultCode            = "80C98009"
-	AivFaultCode            = "80CB8009"
-	LinkDownFaultCode       = "81078603"
+	UceFaultCode      = "80E01801"
+	AicFaultCode      = "80C98009"
+	AivFaultCode      = "80CB8009"
+	LinkDownFaultCode = "81078603"
+	// UBOEPreSeparateFaultCode UBOE pre separate fault code
+	UBOEPreSeparateFaultCode = "110001024"
+	// UBOESubHealFaultCode UBOE sub heal fault code
+	UBOESubHealFaultCode = "110000002"
+	// UBOEPortDownCode uboe port down fault code
+	UBOEPortDownCode        = "81078607"
 	SwitchLinkDownFaultCode = "[0x08520003,na,L2,na]"
 	DevCqeFaultCode         = "8C1F8608"
 	HostCqeFaultCode        = "4C1F8608"
 	HcclRetryFaultCode      = "8C1F860B"
 	StressTestHighLevelCode = "80818C05"
 	StressTestLowLevelCode  = "80818C06"
+)
+
+var (
+	ParameterPlaneFaultCodes = sets.NewString(
+		UBOEPortDownCode,
+		UBOEPreSeparateFaultCode,
+		UBOESubHealFaultCode,
+		LinkDownFaultCode)
 )
 
 // fault processor const

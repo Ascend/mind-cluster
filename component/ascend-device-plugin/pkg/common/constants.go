@@ -870,3 +870,9 @@ const (
 	// NetworkQueryRateLimit upper limit rate of query network status per five minute
 	NetworkQueryRateLimit = 1
 )
+
+const (
+	ChipFaultKey           = "Chip"
+	ParameterPlaneFaultKey = "ParameterPlane"
+	HyperPlaneFaultKey     = "HyperPlane"
+)

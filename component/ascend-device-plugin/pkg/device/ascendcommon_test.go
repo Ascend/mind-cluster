@@ -1150,8 +1150,8 @@ func initTestObjects() (*AscendTools, *common.NpuDevice) {
 }
 
 func resetNetWorkLimiter() {
-	networkLimiterMap = make(map[int32]*rate.Limiter, common.GeneralMapSize)
-	networkStatusCache = make(map[int32]networkStatus, common.GeneralMapSize)
+	parameterPlaneLimiterMap = make(map[int32]*rate.Limiter, common.GeneralMapSize)
+	parameterPlaneStatusCache = make(map[int32]parameterPlaneStatus, common.GeneralMapSize)
 }
 
 // testGetDeviceFaultFailed returns closure for get device fault failed scenario
@@ -1203,9 +1203,9 @@ func testNetworkFaultCodesEmptyLinkStatusFailed(tool *AscendTools, device *commo
 				return 0, []int64{}, nil
 			})
 		patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkStatus {
-				return networkStatus{status: npuCommon.NPUNetworkLinkDownStatus,
-					upPortsNum: npuCommon.NetWorkPortAllDownCount}
+			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
+				return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkDownStatus,
+					downPortsNum: npuCommon.PortNoDownCount}
 			})
 		tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
 	}
@@ -1222,35 +1222,9 @@ func testNetworkFaultCodesEmptyHealthyLinkDown(tool *AscendTools, device *common
 				return 0, []int64{}, nil
 			})
 		patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkStatus {
-				return networkStatus{status: npuCommon.NPUNetworkLinkDownStatus,
-					upPortsNum: npuCommon.NetWorkPortAllDownCount}
-			})
-		saveCalled := false
-		patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {
-			saveCalled = true
-		})
-		tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
-		convey.So(saveCalled, convey.ShouldBeTrue)
-	}
-}
-
-// testNetworkFaultCodesEmptyUnhealthyLinkUp returns closure for unhealthy but link up scenario
-func testNetworkFaultCodesEmptyUnhealthyLinkUp(tool *AscendTools, device *common.NpuDevice) func() {
-	return func() {
-		defer resetNetWorkLimiter()
-		device.NetworkHealth = v1beta1.Unhealthy
-		device.NetworkFaultCodes = []int64{common.LinkDownFaultCode}
-		patches := gomonkey.NewPatches()
-		defer patches.Reset()
-		patches.ApplyMethod(&devmanager.DeviceManager{}, "GetDeviceAllErrorCode",
-			func(_ *devmanager.DeviceManager, _ int32) (int32, []int64, error) {
-				return 0, []int64{}, nil
-			})
-		patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkStatus {
-				return networkStatus{status: npuCommon.NPUNetworkLinkUpStatus,
-					upPortsNum: npuCommon.RoceNetWorkPortAllUpCount}
+			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
+				return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkDownStatus,
+					downPortsNum: npuCommon.RoceParameterPlanePortAllDownCount}
 			})
 		saveCalled := false
 		patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {
@@ -1272,9 +1246,9 @@ func testNetworkFaultCodesEmptyHealthMatchLink(tool *AscendTools, device *common
 				return 0, []int64{}, nil
 			})
 		patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkStatus {
-				return networkStatus{status: npuCommon.NPUNetworkLinkUpStatus,
-					upPortsNum: npuCommon.RoceNetWorkPortAllUpCount}
+			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
+				return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
+					downPortsNum: npuCommon.PortNoDownCount}
 			})
 		saveCalled := false
 		patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {
@@ -1299,8 +1273,6 @@ func TestGenerateNetworkFaultEventsBasedOnFaultCacheChange(t *testing.T) {
 			testNetworkFaultCodesEmptyLinkStatusFailed(tool, device))
 		convey.Convey("network fault codes is empty, device healthy but link down",
 			testNetworkFaultCodesEmptyHealthyLinkDown(tool, device))
-		convey.Convey("network fault codes is empty, device unhealthy but link up",
-			testNetworkFaultCodesEmptyUnhealthyLinkUp(tool, device))
 		convey.Convey("network fault codes is empty, device health status matches link status",
 			testNetworkFaultCodesEmptyHealthMatchLink(tool, device))
 		convey.Convey("network limiter initialization",
@@ -1327,9 +1299,9 @@ func testNetworkLimiterInitialization(tool *AscendTools, device *common.NpuDevic
 				return 0, []int64{}, nil
 			})
 		patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkStatus {
-				return networkStatus{status: npuCommon.NPUNetworkLinkUpStatus,
-					upPortsNum: npuCommon.RoceNetWorkPortAllUpCount}
+			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
+				return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
+					downPortsNum: npuCommon.PortNoDownCount}
 			})
 		patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {})
 
@@ -1348,9 +1320,9 @@ func testNetworkLimiterRateLimiting(tool *AscendTools, device *common.NpuDevice)
 				return 0, []int64{}, nil
 			})
 		patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkStatus {
-				return networkStatus{status: npuCommon.NPUNetworkLinkUpStatus,
-					upPortsNum: npuCommon.RoceNetWorkPortAllUpCount}
+			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
+				return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
+					downPortsNum: npuCommon.PortNoDownCount}
 			})
 		patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {})
 
@@ -1370,9 +1342,9 @@ func testNetworkLimiterMultipleDevices(tool *AscendTools, device1, device2 *comm
 				return 0, []int64{}, nil
 			})
 		patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkStatus {
-				return networkStatus{status: npuCommon.NPUNetworkLinkUpStatus,
-					upPortsNum: npuCommon.RoceNetWorkPortAllUpCount}
+			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
+				return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
+					downPortsNum: npuCommon.PortNoDownCount}
 			})
 		patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {})
 
@@ -1623,12 +1595,13 @@ func TestQueryNetworkStatusWithoutRoCEDev(t *testing.T) {
 			convey.So(result, convey.ShouldResemble, faultCodes)
 		})
 
-		// Test case 2: common.WithoutParameterPlane() returns true
+		// Test case 2: AscendTools.WithoutParameterPlane() returns true
 		convey.Convey("When WithoutParameterPlane returns true, should return directly", func() {
 			tool := AscendTools{dmgr: &devmanager.DeviceManagerMock{}}
 			faultCodes := []int64{}
 			device := &common.NpuDevice{DeviceID: 0}
-			patch := gomonkey.ApplyFunc(common.WithoutParameterPlane, func() bool { return true })
+			patch := gomonkey.ApplyMethod(reflect.TypeOf(new(AscendTools)), "WithoutParameterPlane",
+				func(_ *AscendTools) bool { return true })
 			defer patch.Reset()
 			result := tool.queryParameterPlaneStatusWithoutFaultCode(faultCodes, device)
 			convey.So(result, convey.ShouldBeEmpty)
@@ -1639,12 +1612,13 @@ func TestQueryNetworkStatusWithoutRoCEDev(t *testing.T) {
 			tool := AscendTools{dmgr: &devmanager.DeviceManagerMock{}}
 			faultCodes := []int64{}
 			device := &common.NpuDevice{DeviceID: 0, PhyID: 0}
-			patchWithoutRoCE := gomonkey.ApplyFunc(common.WithoutParameterPlane, func() bool { return false })
+			patchWithoutRoCE := gomonkey.ApplyMethod(reflect.TypeOf(new(AscendTools)), "WithoutParameterPlane",
+				func(_ *AscendTools) bool { return false })
 			defer patchWithoutRoCE.Reset()
 			patchGetNetworkStatus := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-				"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkStatus {
-					return networkStatus{status: npuCommon.NPUNetworkLinkUpStatus,
-						upPortsNum: npuCommon.RoceNetWorkPortAllUpCount}
+				"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
+					return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
+						downPortsNum: npuCommon.RoceParameterPlanePortAllDownCount}
 				})
 			defer patchGetNetworkStatus.Reset()
 			result := tool.queryParameterPlaneStatusWithoutFaultCode(faultCodes, device)
@@ -1656,12 +1630,13 @@ func TestQueryNetworkStatusWithoutRoCEDev(t *testing.T) {
 			tool := AscendTools{dmgr: &devmanager.DeviceManagerMock{}}
 			faultCodes := []int64{}
 			device := &common.NpuDevice{DeviceID: 0, PhyID: 0}
-			patchWithoutRoCE := gomonkey.ApplyFunc(common.WithoutParameterPlane, func() bool { return false })
+			patchWithoutRoCE := gomonkey.ApplyMethod(reflect.TypeOf(new(AscendTools)), "WithoutParameterPlane",
+				func(_ *AscendTools) bool { return false })
 			defer patchWithoutRoCE.Reset()
 			patchGetNetworkStatus := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-				"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkStatus {
-					return networkStatus{status: npuCommon.NPUNetworkLinkDownStatus,
-						upPortsNum: npuCommon.NetWorkPortAllDownCount}
+				"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
+					return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkDownStatus,
+						downPortsNum: npuCommon.PortNoDownCount}
 				})
 			defer patchGetNetworkStatus.Reset()
 			result := tool.queryParameterPlaneStatusWithoutFaultCode(faultCodes, device)
@@ -1673,16 +1648,50 @@ func TestQueryNetworkStatusWithoutRoCEDev(t *testing.T) {
 			tool := AscendTools{dmgr: &devmanager.DeviceManagerMock{DevType: api.Ascend910A5}}
 			faultCodes := []int64{}
 			device := &common.NpuDevice{DeviceID: 0, PhyID: 0}
-			patchWithoutRoCE := gomonkey.ApplyFunc(common.WithoutParameterPlane, func() bool { return false })
+			patchWithoutRoCE := gomonkey.ApplyMethod(reflect.TypeOf(new(AscendTools)), "WithoutParameterPlane",
+				func(_ *AscendTools) bool { return false })
 			defer patchWithoutRoCE.Reset()
 			patchGetNetworkStatus := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-				"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkStatus {
-					return networkStatus{status: npuCommon.NPUNetworkLinkUpStatus,
-						upPortsNum: npuCommon.UBOENetWorkPortAllUpCount}
+				"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
+					return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
+						downPortsNum: npuCommon.UBOEParameterPlanePortAllDownCount}
 				})
 			defer patchGetNetworkStatus.Reset()
 			result := tool.queryParameterPlaneStatusWithoutFaultCode(faultCodes, device)
 			convey.So(result, convey.ShouldBeEmpty)
+		})
+	})
+}
+
+// TestWithoutParameterPlane for test WithoutParameterPlane
+func TestWithoutParameterPlane(t *testing.T) {
+	convey.Convey("test WithoutParameterPlane", t, func() {
+		convey.Convey("01-Ascend310 without parameter plane, should return true", func() {
+			tool := AscendTools{dmgr: &devmanager.DeviceManagerMock{DevType: api.Ascend310}}
+			convey.So(tool.WithoutParameterPlane(), convey.ShouldBeTrue)
+		})
+		convey.Convey("02-Ascend310P without parameter plane, should return true", func() {
+			tool := AscendTools{dmgr: &devmanager.DeviceManagerMock{DevType: api.Ascend310P}}
+			convey.So(tool.WithoutParameterPlane(), convey.ShouldBeTrue)
+		})
+		convey.Convey("03-Ascend310B without parameter plane, should return true", func() {
+			tool := AscendTools{dmgr: &devmanager.DeviceManagerMock{DevType: api.Ascend310B}}
+			convey.So(tool.WithoutParameterPlane(), convey.ShouldBeTrue)
+		})
+		convey.Convey("04-Ascend910A5 without UBOE device, should return true", func() {
+			tool := AscendTools{dmgr: &devmanager.DeviceManagerMock{DevType: api.Ascend910A5}}
+			convey.So(tool.WithoutParameterPlane(), convey.ShouldBeTrue)
+		})
+		convey.Convey("05-Ascend910A5 with UBOE device, should return false", func() {
+			tool := AscendTools{dmgr: &devmanager.DeviceManagerMock{DevType: api.Ascend910A5}}
+			patch := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)), "GetMainBoardId",
+				func(_ *devmanager.DeviceManagerMock) uint32 { return api.Atlas850MainBoardID })
+			defer patch.Reset()
+			convey.So(tool.WithoutParameterPlane(), convey.ShouldBeFalse)
+		})
+		convey.Convey("06-Ascend910 with parameter plane, should return false", func() {
+			tool := AscendTools{dmgr: &devmanager.DeviceManagerMock{DevType: api.Ascend910}}
+			convey.So(tool.WithoutParameterPlane(), convey.ShouldBeFalse)
 		})
 	})
 }
@@ -1931,143 +1940,6 @@ func TestWithUBOEDevice(t *testing.T) {
 			defer patches.Reset()
 			tools := mockAscendTools()
 			convey.So(tools.withUBOEDevice(), convey.ShouldBeFalse)
-		})
-	})
-}
-
-func TestHandleUBOELinkDownCheck(t *testing.T) {
-	tools := mockAscendTools()
-
-	convey.Convey("test HandleUBOELinkDownCheck", t, func() {
-		convey.Convey("NilDevice", func() {
-			var devices []*common.NpuDevice
-			tools.HandleUBOELinkDownCheck(nil, &devices)
-			convey.So(len(devices), convey.ShouldEqual, 0)
-		})
-
-		convey.Convey("NonServerBoardID", func() {
-			// Reset board ID to non-server board ID
-			tools.boardId = 999 // Non-server board ID
-			device := &common.NpuDevice{
-				LogicID: 1,
-				PhyID:   1,
-			}
-			var devices []*common.NpuDevice
-			tools.HandleUBOELinkDownCheck(device, &devices)
-			// Should not modify device or call dmgr methods since board ID is not in server list
-			convey.So(len(devices), convey.ShouldEqual, 0)
-		})
-
-		convey.Convey("UBPortDownCode", func() {
-			// Reset board ID to server board ID
-			tools.boardId = api.Atlas850MainBoardID3
-
-			device := &common.NpuDevice{
-				LogicID: 1,
-				PhyID:   1,
-			}
-
-			// Mock dmgr to return UBPortDownCode
-			mockDmgrWithSpecificFault := &devmanager.DeviceManagerMock{}
-			mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
-				"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, []int64, error) {
-					return 1, []int64{common.UBPortDownCode}, nil
-				}).ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
-				"GetMainBoardId", func(_ *devmanager.DeviceManagerMock) uint32 {
-					return api.Atlas850MainBoardID3
-				})
-			defer mockGetDeviceAllErrorCode.Reset()
-			tools.dmgr = mockDmgrWithSpecificFault
-
-			var devices []*common.NpuDevice
-			tools.HandleUBOELinkDownCheck(device, &devices)
-			convey.So(len(devices), convey.ShouldEqual, 1)
-		})
-
-		convey.Convey("UBOEPortDownCode", func() {
-			tools.boardId = api.Atlas850MainBoardID
-
-			device := &common.NpuDevice{
-				LogicID: 1,
-				PhyID:   1,
-			}
-
-			mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
-				"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, []int64, error) {
-					return 1, []int64{common.UBOEPortDownCode}, nil
-				})
-			defer mockGetDeviceAllErrorCode.Reset()
-
-			var devices []*common.NpuDevice
-			tools.HandleUBOELinkDownCheck(device, &devices)
-			convey.So(len(devices), convey.ShouldEqual, 0)
-		})
-
-		convey.Convey("NoUBOEFaultCodes", func() {
-			tools.boardId = api.Atlas850MainBoardID
-
-			device := &common.NpuDevice{
-				LogicID: 1,
-				PhyID:   1,
-			}
-
-			mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
-				"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, []int64, error) {
-					return 1, []int64{1234}, nil
-				})
-			defer mockGetDeviceAllErrorCode.Reset()
-			var devices []*common.NpuDevice
-			tools.HandleUBOELinkDownCheck(device, &devices)
-			convey.So(len(devices), convey.ShouldEqual, 0)
-		})
-	})
-}
-
-func TestAscendTools_DoHandleUboeLinkDownCheck(t *testing.T) {
-	convey.Convey("Test DoHandleUboeLinkDownCheck function", t, func() {
-		tool := mockAscendTools()
-
-		convey.Convey("When devices slice is empty", func() {
-			var devices []*common.NpuDevice
-			tool.DoHandleUboeLinkDownCheck(devices)
-			faultInfoMap := common.GetAndCleanFaultInfo()
-			convey.So(len(faultInfoMap) == 0, convey.ShouldBeFalse)
-		})
-
-		convey.Convey("When devices slice has elements", func() {
-			device1 := &common.NpuDevice{
-				LogicID: 1,
-			}
-			device2 := &common.NpuDevice{
-				LogicID: 2,
-			}
-			devices := []*common.NpuDevice{device1, device2}
-			mockGetDeviceList := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
-				"GetDeviceList", func(_ *devmanager.DeviceManagerMock) (int32, []int32, error) {
-					return 8, []int32{1, 2}, nil
-				})
-			defer mockGetDeviceList.Reset()
-			tool.DoHandleUboeLinkDownCheck(devices)
-			faultInfoMap := common.GetAndCleanFaultInfo()
-			convey.So(len(faultInfoMap) == 2, convey.ShouldBeTrue)
-		})
-
-		convey.Convey("When devices slice has full card", func() {
-			device1 := &common.NpuDevice{
-				LogicID: 1,
-			}
-			device2 := &common.NpuDevice{
-				LogicID: 2,
-			}
-			devices := []*common.NpuDevice{device1, device2}
-			mockGetDeviceList := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
-				"GetDeviceList", func(_ *devmanager.DeviceManagerMock) (int32, []int32, error) {
-					return 2, []int32{1, 2}, nil
-				})
-			defer mockGetDeviceList.Reset()
-			tool.DoHandleUboeLinkDownCheck(devices)
-			faultInfoMap := common.GetAndCleanFaultInfo()
-			convey.So(faultInfoMap[1][0].EventID, convey.ShouldEqual, npuCommon.UBOESubHealFaultCode)
 		})
 	})
 }

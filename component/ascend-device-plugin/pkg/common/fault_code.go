@@ -16,6 +16,7 @@
 package common
 
 import (
+	"ascend-common/devmanager/hccn"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -58,15 +59,23 @@ const (
 	// CardNetworkUnhealthy  fault is caused by card network unhealthy
 	CardNetworkUnhealthy = "CardNetworkUnhealthy"
 	// LinkDownFaultCode linkdown fault code
-	LinkDownFaultCode = 0x81078603
+	LinkDownFaultCode int64 = 0x81078603
 	// UBPortDownCode uboe port down fault code
-	UBPortDownCode = 0x81B18603
+	UBPortDownCode int64 = 0x81B18603
 	// UBOEPortDownCode uboe port down fault code
-	UBOEPortDownCode = 0x81078607
+	UBOEPortDownCode int64 = 0x81078607
+	// UBSeparateFaultCode UBOE separate fault code
+	UBSeparateFaultCode int64 = 0x020001002
+	// UBSubHealFaultCode UB sub heal fault code
+	UBSubHealFaultCode int64 = 0x020000002
+	// UBOEPreSeparateFaultCode UBOE pre separate fault code
+	UBOEPreSeparateFaultCode int64 = 0x110001024
+	// UBOESubHealFaultCode UBOE sub heal fault code
+	UBOESubHealFaultCode int64 = 0x110000002
 	// ResetFinishFaultCode reset finish fault code
-	ResetFinishFaultCode = 0x8C2FA009
+	ResetFinishFaultCode int64 = 0x8C2FA009
 	// CardDropFaultCode card drop fault code
-	CardDropFaultCode = 0x40F84E00
+	CardDropFaultCode int64 = 0x40F84E00
 	// faultCodeFilePath load the path for fault code
 	faultCodeFilePath = "/usr/local/faultCode.json"
 	// faultCustomizationFilePath load the path for fault customization
@@ -142,10 +151,10 @@ var (
 	FaultDurationTypeSet = sets.NewString(NotHandleFault, RestartRequest, RestartBusiness, FreeRestartNPU,
 		RestartNPU, PreSeparateNPU, SeparateNPU, SubHealthFault)
 	// NetworkFaultCodes is a set that contains all the network fault codes
-	NetworkFaultCodes = sets.NewInt64(LinkDownFaultCode, UBOEPortDownCode, UBPortDownCode)
-	// ParameterPlaneFaultCodes is a set that contains all the parameter plane fault codes
-	ParameterPlaneFaultCodes = sets.NewInt64(LinkDownFaultCode, UBOEPortDownCode)
-	limiter                  = rate.NewLimiter(rate.Every(1*time.Minute/FaultCallBackRateLimit), FaultCallBackRateLimit)
+	NetworkFaultCodes = sets.NewInt64(LinkDownFaultCode, UBOEPortDownCode, UBOESubHealFaultCode, UBOEPreSeparateFaultCode)
+	// HyperPlaneFaultCodes is a set that contains all the hyper plane fault codes
+	HyperPlaneFaultCodes = sets.NewInt64(UBPortDownCode, UBSeparateFaultCode, UBSubHealFaultCode)
+	limiter              = rate.NewLimiter(rate.Every(1*time.Minute/FaultCallBackRateLimit), FaultCallBackRateLimit)
 )
 
 // fault customization
@@ -171,6 +180,14 @@ var (
 	hbmTool = NewHbmFaultManager()
 	// autoFillReasonReleaseTimeWindow indicate that some reason is automatic fill should release in future
 	autoFillReasonReleaseTimeWindow int64 = 0
+	// UBOEPreciseFaultCodesMap record UBOE fault codes and its precise sub fault codes
+	UBOEPreciseFaultCodesMap = map[int64]sets.Int64{
+		UBOEPortDownCode: sets.NewInt64(UBOEPortDownCode, UBOEPreSeparateFaultCode, UBOESubHealFaultCode),
+	}
+	// UBPreciseFaultCodesMap record UB fault codes and its precise sub fault codes
+	UBPreciseFaultCodesMap = map[int64]sets.Int64{
+		UBPortDownCode: sets.NewInt64(UBPortDownCode, UBSeparateFaultCode, UBSubHealFaultCode),
+	}
 )
 
 // copyFaultFrequencyConfig creates a copy of fault frequency configuration
@@ -319,6 +336,150 @@ type handleDurationInputPara struct {
 	timeoutStatus  bool
 	duration       int64
 	faultAlarmTime int64
+}
+
+// isA950CardType checks if the current card type is a950 series.
+func isA950CardType() bool {
+	return ParamOption.RealCardType == Ascend910A5
+}
+
+// FaultHandlingStep is a named no-argument function executed as part of a fault handling chain.
+type FaultHandlingStep struct {
+	Name string
+	Do   func()
+}
+
+// faultCategoryFilter defines a filter predicate and the fault category name for classification.
+type faultCategoryFilter struct {
+	name    string
+	matches func(eventID int64) bool
+}
+
+// faultCategoryFilters is the ordered list of fault category filters.
+// Each faultInfo is matched against these filters in order; the first match wins.
+// Unmatched faultInfos fall through to chip fault handling.
+var faultCategoryFilters = []faultCategoryFilter{
+	{name: ParameterPlaneFaultKey, matches: func(eventID int64) bool { return NetworkFaultCodes.Has(eventID) }},
+	{name: HyperPlaneFaultKey, matches: func(eventID int64) bool { return HyperPlaneFaultCodes.Has(eventID) }},
+	// any eventID not matched above
+	{name: ChipFaultKey, matches: func(eventID int64) bool { return true }},
+}
+
+// ClassifyFaultInfos splits faultInfos into categorized groups based on faultCategoryFilters.
+// Returns a map from category name to the matching faultInfos, plus a "chip" category for unmatched.
+func ClassifyFaultInfos(faultInfos []common.DevFaultInfo) map[string][]common.DevFaultInfo {
+	result := map[string][]common.DevFaultInfo{}
+	for _, f := range faultCategoryFilters {
+		result[f.name] = make([]common.DevFaultInfo, 0)
+	}
+	for _, fi := range faultInfos {
+		for _, f := range faultCategoryFilters {
+			if f.matches(fi.EventID) {
+				result[f.name] = append(result[f.name], fi)
+				break
+			}
+		}
+	}
+	return result
+}
+
+// getChipFaultPreSteps returns chip fault pre handling steps commonly.
+func getChipFaultPreSteps(logicID int32, chipFaultInfos []common.DevFaultInfo) []FaultHandlingStep {
+	return []FaultHandlingStep{}
+}
+
+// getBaseChipFaultSteps returns chip fault handling steps for base series cards.
+func getBaseChipFaultSteps(logicID int32, chipFaultInfos []common.DevFaultInfo,
+	curFaultCodesMap sets.Int64, device *NpuDevice) []FaultHandlingStep {
+	return []FaultHandlingStep{
+		{Name: "baseChipFaultRecover", Do: func() { baseChipFaultRecover(logicID, chipFaultInfos, curFaultCodesMap, device) }},
+		{Name: "baseChipFaultOccur", Do: func() { baseChipFaultOccur(chipFaultInfos, device) }},
+	}
+}
+
+// getA950ChipFaultSteps returns chip fault handling steps for a950 series cards.
+func getA950ChipFaultSteps(logicID int32, chipFaultInfos []common.DevFaultInfo,
+	curFaultCodesMap sets.Int64, device *NpuDevice) []FaultHandlingStep {
+	return []FaultHandlingStep{
+		{Name: "a950ChipFaultRecover", Do: func() { a950ChipFaultRecover(logicID, chipFaultInfos, curFaultCodesMap, device) }},
+		{Name: "a950ChipFaultOccur", Do: func() { a950ChipFaultOccur(chipFaultInfos, device) }},
+	}
+}
+
+// getChipFaultPostSteps returns chip fault post handling steps commonly.
+func getChipFaultPostSteps(device *NpuDevice) []FaultHandlingStep {
+	return []FaultHandlingStep{
+		{Name: "updateAlarmTime", Do: func() { setAlarmRaisedTime(device) }},
+	}
+}
+
+// getParameterPlaneFaultPreSteps returns parameter plane fault pre handling steps commonly.
+func getParameterPlaneFaultPreSteps(logicID int32, chipFaultInfos []common.DevFaultInfo) []FaultHandlingStep {
+	return []FaultHandlingStep{}
+}
+
+// getBaseParameterPlaneFaultSteps returns network fault handling steps for base series cards.
+func getBaseParameterPlaneFaultSteps(logicID int32, networkFaultInfos []common.DevFaultInfo,
+	device *NpuDevice) []FaultHandlingStep {
+	return []FaultHandlingStep{
+		{Name: "baseParameterPlaneFaultRecover", Do: func() {
+			baseParameterPlaneFaultRecover(logicID, networkFaultInfos, device)
+		}},
+		{Name: "baseParameterPlaneFaultOccur", Do: func() {
+			baseParameterPlaneFaultOccur(networkFaultInfos, device)
+		}},
+	}
+}
+
+// getA950ParameterPlaneFaultSteps returns parameter plane fault handling steps for a950 series cards.
+func getA950ParameterPlaneFaultSteps(logicID int32, networkFaultInfos []common.DevFaultInfo,
+	device *NpuDevice) []FaultHandlingStep {
+	return []FaultHandlingStep{
+		{Name: "a950ParameterPlaneFaultRecover", Do: func() {
+			a950ParameterPlaneFaultRecover(logicID, networkFaultInfos, device)
+		}},
+		{Name: "a950ParameterPlaneFaultOccur", Do: func() {
+			a950ParameterPlaneFaultOccur(logicID, networkFaultInfos, device)
+		}},
+	}
+}
+
+// getChipFaultPostSteps returns chip fault post handling steps commonly.
+func getParameterPlaneFaultPostSteps(device *NpuDevice) []FaultHandlingStep {
+	return []FaultHandlingStep{
+		{Name: "updateNetworkAlarmTime", Do: func() { setNetworkAlarmRaisedTime(device) }},
+	}
+}
+
+// getHyperPlaneOverallFaultPreSteps returns hyper plane fault pre handling steps commonly.
+func getHyperPlaneFaultPreSteps(logicID int32, hyperPlaneFaultInfos []common.DevFaultInfo) []FaultHandlingStep {
+	return []FaultHandlingStep{}
+}
+
+// getA950HyperPlaneFaultSteps returns hyper plane fault handling steps for a950 series cards.
+func getA950HyperPlaneFaultSteps(logicID int32, hyperPlaneFaultInfos []common.DevFaultInfo,
+	device *NpuDevice) []FaultHandlingStep {
+	return []FaultHandlingStep{
+		{Name: "a950HyperPlaneFaultRecover", Do: func() {
+			a950HyperPlaneFaultRecover(logicID, hyperPlaneFaultInfos, device)
+		}},
+		{Name: "a950HyperPlaneFaultOccur", Do: func() {
+			a950HyperPlaneFaultOccur(logicID, hyperPlaneFaultInfos, device)
+		}},
+	}
+}
+
+// getHyperPlaneOverallFaultPreSteps returns hyper plane overall fault pre handling steps commonly.
+func getHyperPlaneOverallFaultPreSteps(devices []*NpuDevice) []FaultHandlingStep {
+	return []FaultHandlingStep{}
+}
+
+func getA950HyperPlaneNewOverallFaultSteps(devices []*NpuDevice) []FaultHandlingStep {
+	return []FaultHandlingStep{
+		{Name: "a950HyperPlaneNewOverallFaultModify", Do: func() {
+			a950HyperPlaneNewOverallFaultModify(devices)
+		}},
+	}
 }
 
 // DevFaultInfoBasedTimeAscend sort fault queue based on alarmRaisedTime in ascending order
@@ -1173,23 +1334,80 @@ func setNetworkAlarmRaisedTime(device *NpuDevice) {
 }
 
 // SetNewFaultAndCacheOnceRecoverFault set new fault code and cache once recover fault
-func SetNewFaultAndCacheOnceRecoverFault(logicID int32, faultInfos []common.DevFaultInfo, device *NpuDevice,
+func SetNewFaultAndCacheOnceRecoverFault(logicID int32, chipFaultInfos []common.DevFaultInfo, device *NpuDevice,
 	curFaultCodesMap sets.Int64) {
 	if device == nil {
 		hwlog.RunLog.Error("param device is nil in SetNewFaultAndCacheOnceRecoverFault")
 		return
 	}
-	newFaultInfos := faultInfos
+	newChipFaultInfos := chipFaultInfos
 	if _, ok := faultDurationMap[HbmDoubleBitFaultCodeStr]; ok {
-		newFaultInfos = newFaultInfosForHBMErr(logicID, faultInfos)
+		newChipFaultInfos = newFaultInfosForHBMErr(logicID, newChipFaultInfos)
 	}
+	steps := getChipFaultPreSteps(logicID, newChipFaultInfos)
+	if isA950CardType() {
+		steps = append(steps, getA950ChipFaultSteps(logicID, newChipFaultInfos, curFaultCodesMap, device)...)
+	} else {
+		steps = append(steps, getBaseChipFaultSteps(logicID, newChipFaultInfos, curFaultCodesMap, device)...)
+	}
+	steps = append(steps, getChipFaultPostSteps(device)...)
+	for _, step := range steps {
+		step.Do()
+	}
+}
 
-	// it must deal with two 'for', because the fault may recover one moment, in this case,
-	// the recover message and occur message both in faultInfos, this fault cannot be reports outside.
+// SetNetworkNewFaultAndCacheOnceRecoverFault set new network fault code and cache once recover network fault
+func SetNetworkNewFaultAndCacheOnceRecoverFault(logicID int32, networkFaultInfos []common.DevFaultInfo, device *NpuDevice) {
+	if device == nil {
+		hwlog.RunLog.Error("param device is nil in SetNetworkNewFaultAndCacheOnceRecoverFault")
+		return
+	}
+	steps := getParameterPlaneFaultPreSteps(logicID, networkFaultInfos)
+	if isA950CardType() {
+		steps = append(steps, getA950ParameterPlaneFaultSteps(logicID, networkFaultInfos, device)...)
+	} else {
+		steps = append(steps, getBaseParameterPlaneFaultSteps(logicID, networkFaultInfos, device)...)
+	}
+	steps = append(steps, getParameterPlaneFaultPostSteps(device)...)
+	for _, step := range steps {
+		step.Do()
+	}
+}
+
+// SetHyperPlaneNewFaultAndCacheOnceRecoverFault set new hyper plane fault code and cache once recover hyper plane fault
+func SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID int32, hyperPlaneFaultInfos []common.DevFaultInfo, device *NpuDevice) {
+	if device == nil {
+		hwlog.RunLog.Error("param device is nil in SetHyperPlaneNewFaultAndCacheOnceRecoverFault")
+		return
+	}
+	steps := getHyperPlaneFaultPreSteps(logicID, hyperPlaneFaultInfos)
+	if isA950CardType() {
+		steps = append(steps, getA950HyperPlaneFaultSteps(logicID, hyperPlaneFaultInfos, device)...)
+	}
+	for _, step := range steps {
+		step.Do()
+	}
+}
+
+func baseChipFaultOccur(newFaultInfos []common.DevFaultInfo, device *NpuDevice) {
 	for _, faultInfo := range newFaultInfos {
-		if NetworkFaultCodes.Has(faultInfo.EventID) {
-			continue
+		if faultInfo.Assertion == common.FaultOccur || faultInfo.Assertion == common.FaultOnce {
+			device.FaultCodes = append(device.FaultCodes, faultInfo.EventID)
+			updateDeviceFaultTimeMap(device, faultInfo, true)
+			eventIdStr := strings.ToLower(strconv.FormatInt(faultInfo.EventID, Hex))
+			if _, ok := faultDurationMap[eventIdStr]; !ok {
+				insertFrequencyFaultOccur(device.LogicID, faultInfo.EventID, faultInfo.AlarmRaisedTime)
+			}
 		}
+	}
+}
+
+func baseChipFaultRecover(
+	logicID int32,
+	newFaultInfos []common.DevFaultInfo,
+	curFaultCodesMap sets.Int64,
+	device *NpuDevice) {
+	for _, faultInfo := range newFaultInfos {
 		if faultInfo.Assertion == common.FaultRecover {
 			if curFaultCodesMap.Has(faultInfo.EventID) {
 				hwlog.RunLog.Infof("logicID(%d) curFaultCodesMap:%v contains fault code:%v, skip recover",
@@ -1202,20 +1420,20 @@ func SetNewFaultAndCacheOnceRecoverFault(logicID int32, faultInfos []common.DevF
 			recoverFaultMap[logicID] = append(recoverFaultMap[logicID], faultInfo.EventID)
 		}
 	}
-	for _, faultInfo := range newFaultInfos {
-		if NetworkFaultCodes.Has(faultInfo.EventID) {
-			continue
-		}
-		if faultInfo.Assertion == common.FaultOccur || faultInfo.Assertion == common.FaultOnce {
-			device.FaultCodes = append(device.FaultCodes, faultInfo.EventID)
-			updateDeviceFaultTimeMap(device, faultInfo, true)
-			eventIdStr := strings.ToLower(strconv.FormatInt(faultInfo.EventID, Hex))
-			if _, ok := faultDurationMap[eventIdStr]; !ok {
-				insertFrequencyFaultOccur(device.LogicID, faultInfo.EventID, faultInfo.AlarmRaisedTime)
-			}
-		}
-	}
-	setAlarmRaisedTime(device)
+}
+
+func a950ChipFaultOccur(newFaultInfos []common.DevFaultInfo, device *NpuDevice) {
+	// same as baseChipFaultOccur
+	baseChipFaultOccur(newFaultInfos, device)
+}
+
+func a950ChipFaultRecover(
+	logicID int32,
+	newFaultInfos []common.DevFaultInfo,
+	curFaultCodesMap sets.Int64,
+	device *NpuDevice) {
+	// same as baseChipFaultRecover
+	baseChipFaultRecover(logicID, newFaultInfos, curFaultCodesMap, device)
 }
 
 func handleNpuFaultRecover(logicID int32, device *NpuDevice, faultInfo common.DevFaultInfo) {
@@ -1253,19 +1471,6 @@ func updateDeviceFaultTimeMap(device *NpuDevice, faultInfo common.DevFaultInfo, 
 	}
 }
 
-// SetNetworkNewFaultAndCacheOnceRecoverFault set new network fault code and cache once recover network fault
-func SetNetworkNewFaultAndCacheOnceRecoverFault(logicID int32, faultInfos []common.DevFaultInfo, device *NpuDevice) {
-	if device == nil {
-		hwlog.RunLog.Error("param device is nil in SetNetworkNewFaultAndCacheOnceRecoverFault")
-		return
-	}
-	// it must deal with two 'for', because the fault may recover one moment, in this case,
-	// the recover message and occur message both in faultInfos, this fault cannot be reports outside.
-	networkFaultRecoverAndFaultOnceHandle(logicID, faultInfos, device)
-	networkFaultOccurAndFaultOnceHandle(faultInfos, device)
-	setNetworkAlarmRaisedTime(device)
-}
-
 func newFaultInfosForHBMErr(logicID int32, faultInfos []common.DevFaultInfo) []common.DevFaultInfo {
 	var newFaultInfos []common.DevFaultInfo
 	// dealing with Hbm and Aic/Aiv associated faults
@@ -1282,11 +1487,8 @@ func newFaultInfosForHBMErr(logicID int32, faultInfos []common.DevFaultInfo) []c
 	return append(newFaultInfos, hbmTool.aicFaultEventOutQue(logicID)...)
 }
 
-func networkFaultRecoverAndFaultOnceHandle(logicID int32, faultInfos []common.DevFaultInfo, device *NpuDevice) {
+func baseParameterPlaneFaultRecover(logicID int32, faultInfos []common.DevFaultInfo, device *NpuDevice) {
 	for _, faultInfo := range faultInfos {
-		if !NetworkFaultCodes.Has(faultInfo.EventID) {
-			continue
-		}
 		if faultInfo.Assertion == common.FaultRecover {
 			if Int64Tool.Index(device.NetworkFaultCodes, faultInfo.EventID) == -1 {
 				recoverNetworkFaultMap[logicID] = append(recoverNetworkFaultMap[logicID], faultInfo.EventID)
@@ -1309,17 +1511,218 @@ func handleNetworkFaultRecover(device *NpuDevice, faultInfo common.DevFaultInfo)
 	}
 }
 
-func networkFaultOccurAndFaultOnceHandle(faultInfos []common.DevFaultInfo, device *NpuDevice) {
+func a950ParameterPlaneFaultRecover(logicID int32, faultInfos []common.DevFaultInfo, device *NpuDevice) {
 	for _, faultInfo := range faultInfos {
-		if !NetworkFaultCodes.Has(faultInfo.EventID) {
-			continue
+		if faultInfo.Assertion == common.FaultRecover {
+			err := cacheUBports(logicID, device)
+			if err != nil {
+				hwlog.RunLog.Errorf("logicID(%d) cacheUBports failed, err: %v", logicID, err)
+				continue
+			}
+			handleA950NetworkFaultRecover(logicID, device, faultInfo)
+			downCnt := getUBOEDownCnt(device)
+			if downCnt != common.PortNoDownCount {
+				tmpFaultInfo := faultInfo
+				tmpFaultInfo.Assertion = common.FaultOccur
+				a950ParameterPlaneFaultOccur(logicID, []common.DevFaultInfo{tmpFaultInfo}, device)
+			}
 		}
+		if faultInfo.Assertion == common.FaultOnce {
+			recoverNetworkFaultMap[logicID] = append(recoverNetworkFaultMap[logicID], faultInfo.EventID)
+		}
+	}
+}
+
+func handleA950NetworkFaultRecover(logicID int32, device *NpuDevice, faultInfo common.DevFaultInfo) {
+	if Int64Tool.Index(device.NetworkFaultCodes, faultInfo.EventID) == -1 {
+		recoverNetworkFaultMap[logicID] = append(recoverNetworkFaultMap[logicID], faultInfo.EventID)
+	} else {
+		preciseFaultCodesSet, ok := UBOEPreciseFaultCodesMap[faultInfo.EventID]
+		if !ok {
+			hwlog.RunLog.Errorf("logicID(%d) UBOEPreciseFaultCodesMap not found preciseFaultCode(%x)",
+				logicID, faultInfo.EventID)
+			return
+		}
+		for preciseFaultCode := range preciseFaultCodesSet {
+			tmpFaultInfo := faultInfo
+			tmpFaultInfo.EventID = preciseFaultCode
+			updateDeviceFaultTimeMap(device, tmpFaultInfo, false)
+			if Int64Tool.Contains(device.NetworkFaultCodes, preciseFaultCode) {
+				device.NetworkFaultCodes = Int64Tool.Remove(device.NetworkFaultCodes, preciseFaultCode)
+			}
+		}
+	}
+}
+
+func baseParameterPlaneFaultOccur(faultInfos []common.DevFaultInfo, device *NpuDevice) {
+	for _, faultInfo := range faultInfos {
 		if faultInfo.Assertion == common.FaultOccur || faultInfo.Assertion == common.FaultOnce {
 			device.NetworkFaultCodes = append(device.NetworkFaultCodes, faultInfo.EventID)
 			updateDeviceFaultTimeMap(device, faultInfo, true)
 			eventIdStr := strings.ToLower(strconv.FormatInt(faultInfo.EventID, Hex))
 			if _, ok := faultDurationMap[eventIdStr]; !ok {
 				insertFrequencyFaultOccur(device.LogicID, faultInfo.EventID, faultInfo.AlarmRaisedTime)
+			}
+		}
+	}
+}
+
+func a950ParameterPlaneFaultOccur(logicID int32, faultInfos []common.DevFaultInfo, device *NpuDevice) {
+	for _, faultInfo := range faultInfos {
+		if faultInfo.Assertion == common.FaultOccur || faultInfo.Assertion == common.FaultOnce {
+			err := cacheUBports(logicID, device)
+			if err != nil {
+				hwlog.RunLog.Errorf("logicID(%d) cacheUBports failed, err: %v", logicID, err)
+				continue
+			}
+			downCnt := getUBOEDownCnt(device)
+			if downCnt == common.PortNoDownCount {
+				return
+			}
+			preciseFaultMap, ok := common.ParameterPlaneDownProtsNumToPreciseFaultCodeMap[ParamOption.RealCardType]
+			if !ok {
+				hwlog.RunLog.Errorf("not found preciseFaultMap for device type: %s", ParamOption.RealCardType)
+				continue
+			}
+			preciseFaultCode, ok := preciseFaultMap[downCnt]
+			if !ok {
+				hwlog.RunLog.Errorf("not found preciseFaultCode for downCnt: %d", downCnt)
+				continue
+			}
+			tmpFaultInfo := faultInfo
+			tmpFaultInfo.EventID = preciseFaultCode
+			updateDeviceFaultTimeMap(device, tmpFaultInfo, true)
+			device.NetworkFaultCodes = append(device.NetworkFaultCodes, preciseFaultCode)
+			updateDeviceFaultTimeMap(device, faultInfo, true)
+			device.NetworkFaultCodes = append(device.NetworkFaultCodes, faultInfo.EventID)
+		}
+	}
+}
+
+func a950HyperPlaneFaultRecover(logicID int32, hyperPlaneFaultInfos []common.DevFaultInfo, device *NpuDevice) {
+	for _, faultInfo := range hyperPlaneFaultInfos {
+		if faultInfo.Assertion == common.FaultRecover {
+			err := cacheUBports(logicID, device)
+			if err != nil {
+				hwlog.RunLog.Errorf("logicID(%d) cacheUBports failed, err: %v", logicID, err)
+				continue
+			}
+			handleA950HyperPlaneFaultRecover(logicID, device, faultInfo)
+			downCnt := getUBDownCnt(device)
+			if downCnt != common.PortNoDownCount {
+				tmpFaultInfo := faultInfo
+				tmpFaultInfo.Assertion = common.FaultOccur
+				a950HyperPlaneFaultOccur(logicID, []common.DevFaultInfo{tmpFaultInfo}, device)
+			}
+		}
+		if faultInfo.Assertion == common.FaultOnce {
+			recoverFaultMap[logicID] = append(recoverFaultMap[logicID], faultInfo.EventID)
+		}
+	}
+}
+
+func cacheUBports(logicID int32, device *NpuDevice) error {
+	if device.UBports == nil {
+		UBports, err := hccn.GetAllUBports(logicID)
+		if err != nil {
+			return fmt.Errorf("logicID(%d) GetAllUBports failed, err: %v", logicID, err)
+		}
+		device.UBports = UBports
+	}
+	return nil
+}
+
+func getUBOEDownCnt(device *NpuDevice) int {
+	downCnt := 0
+	for _, ubPort := range device.UBports {
+		if ubPort.PortType == hccn.BondingPortName && ubPort.LinkStatus == hccn.LinkDown {
+			downCnt++
+		}
+	}
+	return downCnt
+}
+
+func getUBDownCnt(device *NpuDevice) int {
+	downCnt := 0
+	for _, ubPort := range device.UBports {
+		if ubPort.PortType == hccn.UBPortName && ubPort.LinkStatus == hccn.LinkDown {
+			downCnt++
+		}
+	}
+	return downCnt
+}
+
+func handleA950HyperPlaneFaultRecover(logicID int32, device *NpuDevice, faultInfo common.DevFaultInfo) {
+	if Int64Tool.Index(device.FaultCodes, faultInfo.EventID) == -1 {
+		recoverFaultMap[logicID] = append(recoverFaultMap[logicID], faultInfo.EventID)
+	} else {
+		preciseFaultCodesSet, ok := UBPreciseFaultCodesMap[faultInfo.EventID]
+		if !ok {
+			hwlog.RunLog.Errorf("logicID(%d) UBPreciseFaultCodesMap not found preciseFaultCode(%x)",
+				logicID, faultInfo.EventID)
+			return
+		}
+		for preciseFaultCode := range preciseFaultCodesSet {
+			if Int64Tool.Contains(device.FaultCodes, preciseFaultCode) {
+				tmpFaultInfo := faultInfo
+				tmpFaultInfo.EventID = preciseFaultCode
+				updateDeviceFaultTimeMap(device, tmpFaultInfo, false)
+				device.FaultCodes = Int64Tool.Remove(device.FaultCodes, preciseFaultCode)
+			}
+		}
+	}
+}
+
+func a950HyperPlaneFaultOccur(logicID int32, hyperPlaneFaultInfos []common.DevFaultInfo, device *NpuDevice) {
+	for _, faultInfo := range hyperPlaneFaultInfos {
+		if faultInfo.Assertion == common.FaultOccur || faultInfo.Assertion == common.FaultOnce {
+			err := cacheUBports(logicID, device)
+			if err != nil {
+				hwlog.RunLog.Errorf("logicID(%d) cacheUBports failed, err: %v", logicID, err)
+				continue
+			}
+			downCnt := getUBDownCnt(device)
+			if downCnt == common.PortNoDownCount {
+				return
+			}
+			// if device has UB down port, it has separate fault code
+			preciseFaultCode := UBSeparateFaultCode
+			tmpFaultInfo := faultInfo
+			tmpFaultInfo.EventID = int64(preciseFaultCode)
+			updateDeviceFaultTimeMap(device, tmpFaultInfo, true)
+			device.FaultCodes = append(device.FaultCodes, (int64)(preciseFaultCode))
+			updateDeviceFaultTimeMap(device, faultInfo, true)
+			device.FaultCodes = append(device.FaultCodes, faultInfo.EventID)
+		}
+	}
+}
+
+func a950HyperPlaneNewOverallFaultModify(devices []*NpuDevice) {
+	allHaveHyperPlaneFaultCode := true
+	for _, device := range devices {
+		if !Int64Tool.Contains(device.FaultCodes, UBPortDownCode) {
+			allHaveHyperPlaneFaultCode = false
+		}
+	}
+	// if all device has UB port down fault code, then convert status from separate fault code to sub heal fault code
+	if allHaveHyperPlaneFaultCode {
+		curTime := time.Now().Unix()
+		for _, device := range devices {
+			if Int64Tool.Contains(device.FaultCodes, UBSeparateFaultCode) {
+				device.FaultCodes = Int64Tool.Remove(device.FaultCodes, UBSeparateFaultCode)
+				tmpFaultInfo := common.DevFaultInfo{
+					EventID:         UBSeparateFaultCode,
+					AlarmRaisedTime: curTime,
+				}
+				updateDeviceFaultTimeMap(device, tmpFaultInfo, false)
+			}
+			if !Int64Tool.Contains(device.FaultCodes, UBSubHealFaultCode) {
+				tmpFaultInfo := common.DevFaultInfo{
+					EventID:         UBSubHealFaultCode,
+					AlarmRaisedTime: curTime,
+				}
+				updateDeviceFaultTimeMap(device, tmpFaultInfo, true)
+				device.FaultCodes = append(device.FaultCodes, UBSubHealFaultCode)
 			}
 		}
 	}
@@ -1346,6 +1749,15 @@ func DelOnceRecoverFault(groupDevice map[string][]*NpuDevice) {
 	}
 	recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
 	recoverNetworkFaultMap = make(map[int32][]int64, GeneralMapSize)
+}
+
+// ClearUBportsInfo clear UBports info in device
+func ClearUBportsInfo(groupDevice map[string][]*NpuDevice) {
+	for _, devices := range groupDevice {
+		for _, device := range devices {
+			device.UBports = nil
+		}
+	}
 }
 
 func delOnceRecoverFaultTime(device *NpuDevice, eventId int64) {
