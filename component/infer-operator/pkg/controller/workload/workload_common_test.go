@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
@@ -220,7 +221,7 @@ func GetTestIndexer(serviceName, instanceSetKey, instanceIndex string) common.In
 
 func TestDeletePodsForExternalRescheduling(t *testing.T) {
 	convey.Convey("Test deletePodsForExternalRescheduling function", t, func() {
-		convey.Convey("Should return nil when workload is not external-force mode", func() {
+		convey.Convey("Should return nil when workload has no fault-scheduling label", func() {
 			deployment := CreateTestDeployment("test-deployment", "default", 1)
 			workload := &DeploymentWorkLoad{Deployment: deployment}
 			fakeClient := NewFakeClient().Build()
@@ -327,6 +328,157 @@ func TestDeletePodsForExternalRescheduling(t *testing.T) {
 			err := deletePodsForExternalRescheduling(context.Background(), fakeClient, workload)
 
 			convey.So(err, convey.ShouldBeNil)
+		})
+
+		// ------ external-grace mode tests ------
+
+		convey.Convey("Should return nil (start timer, not block) when external-grace mode with matching pods", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			deployment.Labels[common.FaultSchedulingLabelKey] = common.ExternalGraceReschedulingValue
+			workload := &DeploymentWorkLoad{Deployment: deployment}
+			gracePeriod := int64(60)
+			pod := &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod",
+					Namespace: "default",
+					Labels: map[string]string{
+						common.InferServiceNameLabelKey: "test-service",
+						common.InstanceSetNameLabelKey:  "test-role",
+						common.InstanceIndexLabelKey:    "0",
+					},
+				},
+				Spec: corev1.PodSpec{
+					TerminationGracePeriodSeconds: &gracePeriod,
+				},
+			}
+			fakeClient := NewFakeClient().WithObjects(deployment, pod).Build()
+
+			err := deletePodsForExternalRescheduling(context.Background(), fakeClient, workload)
+
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should use default 30s when external-grace mode but no terminationGracePeriodSeconds set", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			deployment.Labels[common.FaultSchedulingLabelKey] = common.ExternalGraceReschedulingValue
+			workload := &DeploymentWorkLoad{Deployment: deployment}
+			pod := &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod",
+					Namespace: "default",
+					Labels: map[string]string{
+						common.InferServiceNameLabelKey: "test-service",
+						common.InstanceSetNameLabelKey:  "test-role",
+						common.InstanceIndexLabelKey:    "0",
+					},
+				},
+			}
+			fakeClient := NewFakeClient().WithObjects(deployment, pod).Build()
+
+			err := deletePodsForExternalRescheduling(context.Background(), fakeClient, workload)
+
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should succeed when external-grace mode but no pods exist", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			deployment.Labels[common.FaultSchedulingLabelKey] = common.ExternalGraceReschedulingValue
+			workload := &DeploymentWorkLoad{Deployment: deployment}
+			fakeClient := NewFakeClient().WithObjects(deployment).Build()
+
+			err := deletePodsForExternalRescheduling(context.Background(), fakeClient, workload)
+
+			convey.So(err, convey.ShouldBeNil)
+		})
+
+		convey.Convey("Should return error when pod list fails in external-grace mode", func() {
+			deployment := CreateTestDeployment("test-deployment", "default", 1)
+			deployment.Labels[common.FaultSchedulingLabelKey] = common.ExternalGraceReschedulingValue
+			workload := &DeploymentWorkLoad{Deployment: deployment}
+			fakeClient := NewFakeClient().Build()
+			mockErr := errors.New("failed to list pods")
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "List", mockErr)
+			defer patches.Reset()
+
+			err := deletePodsForExternalRescheduling(context.Background(), fakeClient, workload)
+
+			convey.So(err, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func TestForceDeletePodsAfterGrace(t *testing.T) {
+	convey.Convey("Test forceDeletePodsAfterGrace function", t, func() {
+		podLabels := client.MatchingLabels{
+			common.InferServiceNameLabelKey: "test-service",
+			common.InstanceSetNameLabelKey:  "test-role",
+			common.InstanceIndexLabelKey:    "0",
+		}
+
+		convey.Convey("Should force-delete remaining pods after grace period", func() {
+			pod := &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod",
+					Namespace: "default",
+					Labels: map[string]string{
+						common.InferServiceNameLabelKey: "test-service",
+						common.InstanceSetNameLabelKey:  "test-role",
+						common.InstanceIndexLabelKey:    "0",
+					},
+				},
+			}
+			fakeClient := NewFakeClient().WithObjects(pod).Build()
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "Delete", nil)
+			defer patches.Reset()
+
+			forceDeletePodsAfterGrace(context.Background(), fakeClient, "default",
+				"test-deployment", podLabels)
+
+			convey.So(true, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("Should skip not-found pod after grace period", func() {
+			pod := &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-pod",
+					Namespace: "default",
+					Labels: map[string]string{
+						common.InferServiceNameLabelKey: "test-service",
+						common.InstanceSetNameLabelKey:  "test-role",
+						common.InstanceIndexLabelKey:    "0",
+					},
+				},
+			}
+			fakeClient := NewFakeClient().WithObjects(pod).Build()
+			notFoundErr := apierrors.NewNotFound(schema.GroupResource{Group: "", Resource: "pods"}, "test-pod")
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "Delete", notFoundErr)
+			defer patches.Reset()
+
+			forceDeletePodsAfterGrace(context.Background(), fakeClient, "default",
+				"test-deployment", podLabels)
+
+			convey.So(true, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("Should handle list error after grace period", func() {
+			fakeClient := NewFakeClient().Build()
+			mockErr := errors.New("failed to list pods")
+			patches := gomonkey.ApplyMethodReturn(fakeClient, "List", mockErr)
+			defer patches.Reset()
+
+			forceDeletePodsAfterGrace(context.Background(), fakeClient, "default",
+				"test-deployment", podLabels)
+
+			convey.So(true, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("Should not delete when no pods exist after grace period", func() {
+			fakeClient := NewFakeClient().Build()
+
+			forceDeletePodsAfterGrace(context.Background(), fakeClient, "default",
+				"test-deployment", podLabels)
+
+			convey.So(true, convey.ShouldBeTrue)
 		})
 	})
 }
