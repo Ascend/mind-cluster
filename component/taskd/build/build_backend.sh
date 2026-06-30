@@ -42,7 +42,7 @@ function build() {
   go mod tidy
   export CGO_CFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
   export CGO_CPPFLAGS="-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
-  export GOTOOLCHAIN=go1.22.12
+  export GOEXPERIMENT=norandomizedheapbase64
   go build -mod=mod -buildmode=c-shared -ldflags "-X main.BuildName=${output_name} \
               -X main.BuildScene=${build_scene} \
               -X main.BuildVersion=${build_version}_linux-${os_type} \

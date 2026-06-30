@@ -473,12 +473,12 @@ func TestResourceEventHandler(t *testing.T) {
 		expectHandler := cache.FilteringResourceEventHandler{
 			FilterFunc: checkPod,
 			Handler: cache.ResourceEventHandlerFuncs{
-				AddFunc:    handler.OnAdd,
+				AddFunc:    func(obj interface{}) { handler.OnAdd(obj, false) },
 				UpdateFunc: handler.OnUpdate,
 				DeleteFunc: handler.OnDelete,
 			},
 		}
-		handler.OnAdd(testObj)
+		handler.OnAdd(testObj, false)
 		handler.OnUpdate(testOldObj, testObj)
 		handler.OnDelete(testObj)
 		convey.So(handler, convey.ShouldHaveSameTypeAs, expectHandler)
@@ -491,12 +491,12 @@ func TestResourceEventHandler(t *testing.T) {
 		expectHandler := cache.FilteringResourceEventHandler{
 			FilterFunc: checkPod,
 			Handler: cache.ResourceEventHandlerFuncs{
-				AddFunc:    handler.OnAdd,
+				AddFunc:    func(obj interface{}) { handler.OnAdd(obj, false) },
 				UpdateFunc: handler.OnUpdate,
 				DeleteFunc: handler.OnDelete,
 			},
 		}
-		handler.OnAdd(testObj)
+		handler.OnAdd(testObj, false)
 		handler.OnUpdate(testObj, testObj)
 		handler.OnDelete(testObj)
 		convey.So(handler, convey.ShouldHaveSameTypeAs, expectHandler)

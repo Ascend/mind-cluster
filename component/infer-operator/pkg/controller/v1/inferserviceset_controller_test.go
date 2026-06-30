@@ -56,24 +56,20 @@ func TestGetInferServiceSetNotFound(t *testing.T) {
 
 func TestGetInferServiceSetBeingDeleted(t *testing.T) {
 	convey.Convey("TestGetInferServiceSet being deleted", t, func() {
-		scheme := runtime.NewScheme()
-		apiv1.AddToScheme(scheme)
-		fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
-		reconciler := &InferServiceSetReconciler{client: fakeClient}
-
-		req := ctrl.Request{
-			NamespacedName: types.NamespacedName{Name: "test", Namespace: "default"},
-		}
-
 		iss := &apiv1.InferServiceSet{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:              "test",
 				Namespace:         "default",
 				DeletionTimestamp: &metav1.Time{Time: metav1.Now().Time},
+				Finalizers:        []string{"test-finalizer"},
 			},
 		}
-		err := fakeClient.Create(context.Background(), iss)
-		convey.So(err, convey.ShouldBeNil)
+		fakeClient := NewFakeClient(iss).Build()
+		reconciler := &InferServiceSetReconciler{client: fakeClient}
+
+		req := ctrl.Request{
+			NamespacedName: types.NamespacedName{Name: "test", Namespace: "default"},
+		}
 
 		result, err := reconciler.getInferServiceSet(context.Background(), req)
 		convey.So(err, convey.ShouldBeNil)
@@ -891,7 +887,7 @@ func TestISSUpdateStatus(t *testing.T) {
 	convey.Convey("Test updateStatus for InferServiceSet", t, func() {
 		scheme := runtime.NewScheme()
 		apiv1.AddToScheme(scheme)
-		fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
+		fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithStatusSubresource(&apiv1.InferServiceSet{}).Build()
 		reconciler := &InferServiceSetReconciler{client: fakeClient, scheme: scheme}
 
 		convey.Convey("Should return nil for nil InferServiceSet", func() {
@@ -1022,7 +1018,7 @@ func TestISSUpdateInferServiceSetStatus(t *testing.T) {
 	convey.Convey("Test updateInferServiceSetStatus for InferServiceSet", t, func() {
 		scheme := runtime.NewScheme()
 		apiv1.AddToScheme(scheme)
-		fakeClient := fake.NewClientBuilder().WithScheme(scheme).Build()
+		fakeClient := fake.NewClientBuilder().WithScheme(scheme).WithStatusSubresource(&apiv1.InferServiceSet{}).Build()
 		reconciler := &InferServiceSetReconciler{client: fakeClient, scheme: scheme}
 
 		replicas := int32(1)

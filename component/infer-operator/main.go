@@ -93,7 +93,7 @@ func createCacheOptions() (cache.Options, error) {
 
 	return cache.Options{
 		Scheme: runtimeScheme,
-		SelectorsByObject: map[client.Object]cache.ObjectSelector{
+		ByObject: map[client.Object]cache.ByObject{
 			&appsv1.StatefulSet{}: {
 				Label: keyExistsSelector,
 			},

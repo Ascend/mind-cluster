@@ -28,6 +28,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"volcano.sh/apis/pkg/apis/batch/v1alpha1"
 	"volcano.sh/apis/pkg/apis/scheduling/v1beta1"
 
@@ -109,8 +110,10 @@ func main() {
 
 	hwlog.RunLog.Infof("operator starting and the version is %s", BuildVersion)
 	mgr, err := ctrl.NewManager(initKubeConfig(), ctrl.Options{
-		Scheme:             runtimeScheme,
-		MetricsBindAddress: "0",
+		Scheme: runtimeScheme,
+		Metrics: metricsserver.Options{
+			BindAddress: "0",
+		},
 	})
 
 	if err != nil {

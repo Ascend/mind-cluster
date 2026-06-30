@@ -41,7 +41,8 @@ function execute_test() {
 
   filter_cov_by_tested_pkgs
 
-  gocov convert cov_filtered.out | gocov-html > "$file_detail_output"
+  gocov convert cov.out | gocov-html > "$file_detail_output"
+  total_coverage_before_filtered=$(go tool cover -func=cov.out | grep "total:" | awk '{print $3}'| sed 's/%//')
   total_coverage=$(go tool cover -func=cov_filtered.out | grep "total:" | awk '{print $3}'| sed 's/%//')
   # round up
   coverage=$(echo "$total_coverage" | awk '{if ($1 >= 0) print ($1 == int($1)) ? int($1) : int($1) + 1;\
