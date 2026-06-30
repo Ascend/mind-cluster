@@ -39,9 +39,8 @@ function clean() {
 
 function build() {
   cd "${TOP_DIR}/cmd/k8s-rdma-shared-dp"
-  CGO_ENABLED=0
-  GOOS=linux
-  go build -mod=mod -buildmode=pie -ldflags "-s -linkmode=external -extldflags=-Wl,-z,now
+  export CGO_ENABLED=0
+  go build -mod=mod -buildmode=pie -ldflags "-s -bindnow
     -X main.BuildVersion=${build_version}_linux-${arch} \
     -X main.BuildName=${OUTPUT_NAME}" \
     -o ${OUTPUT_NAME}
