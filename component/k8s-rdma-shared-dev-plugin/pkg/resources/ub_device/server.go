@@ -264,6 +264,8 @@ func (rs *ubResourceServer) UpdateDevices(devices []types.Device) {
 	newDeviceSpec := getUbDevicesSpec(devices)
 	if common.DevicesChanged(rs.deviceSpec, newDeviceSpec) {
 		rs.deviceSpec = newDeviceSpec
+		// Recreate devs when device spec changes (e.g., device becomes available after startup)
+		rs.devs = createUbVirtualDevices(rs.rdmaHcaMax, newDeviceSpec, rs.resourceName)
 		needUpdate = true
 	}
 
