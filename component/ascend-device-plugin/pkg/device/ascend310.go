@@ -111,3 +111,8 @@ func (hnm *HwAscend310Manager) GraceTolerance(context.Context, map[string][]*com
 func (hnm *HwAscend310Manager) GetAssociatedLogicIDs(logicID, cardID, deviceID int32) ([]int32, error) {
 	return nil, nil
 }
+
+// SyncCM sync hot reset cm with kubernetes
+func (hnm *HwAscend310Manager) SyncCM(ctx context.Context, classifyDevs map[string][]*common.NpuDevice) {
+	return
+}

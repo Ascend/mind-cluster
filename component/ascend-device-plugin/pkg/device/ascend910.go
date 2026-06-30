@@ -139,8 +139,8 @@ func (hnm *HwAscend910Manager) GetNPUs() (common.NpuAllInfo, error) {
 	return common.NpuAllInfo{AllDevs: allDevices, AICoreDevs: aiCoreDevices, AllDevTypes: allDeviceTypes}, nil
 }
 
-// GraceTolerance process training task with device fault gracefully
-func (hnm *HwAscend910Manager) GraceTolerance(ctx context.Context, classifyDevs map[string][]*common.NpuDevice) {
+// SyncCM sync hot reset cm with kubernetes
+func (hnm *HwAscend910Manager) SyncCM(ctx context.Context, classifyDevs map[string][]*common.NpuDevice) {
 	hotResetManagerInitOnce.Do(func() {
 		hnm.hotResetManager = NewHotResetManager(len(classifyDevs[hnm.name]), hnm.boardId)
 		if hnm.hotResetManager == nil {
@@ -149,6 +149,10 @@ func (hnm *HwAscend910Manager) GraceTolerance(ctx context.Context, classifyDevs 
 		}
 		hnm.hotResetManager.SyncResetCM(ctx, hnm.GetKubeClient())
 	})
+}
+
+// GraceTolerance process training task with device fault gracefully
+func (hnm *HwAscend910Manager) GraceTolerance(ctx context.Context, classifyDevs map[string][]*common.NpuDevice) {
 	if !common.ParamOption.GraceToleranceOn {
 		return
 	}

@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 
@@ -183,6 +184,25 @@ func TestGetPatchLabel(t *testing.T) {
 	})
 }
 
+func TestSyncCM(t *testing.T) {
+	convey.Convey("exec ut function SyncCM", t, func() {
+		hotResetManagerInitOnce = sync.Once{}
+		manager := createFake910Manager()
+		common.ParamOption.RealCardType = api.Ascend910A
+		manager.SetKubeClient(&kubeclient.ClientK8s{NodeName: "NODE_NAME"})
+		patchNew := gomonkey.ApplyFunc(NewHotResetManager,
+			func(_ int, _ uint32) HotResetManager {
+				return &HotResetTools{}
+			})
+		patchSync := gomonkey.ApplyMethod(new(HotResetTools), "SyncResetCM",
+			func(_ *HotResetTools, _ context.Context, _ *kubeclient.ClientK8s) {})
+		defer patchNew.Reset()
+		defer patchSync.Reset()
+		manager.SyncCM(context.TODO(), mockGroupDevice())
+		convey.So(manager.hotResetManager, convey.ShouldNotBeNil)
+	})
+}
+
 // TestGraceTolerance an ut for function GraceTolerance
 func TestGraceTolerance(t *testing.T) {
 	manager := createFake910Manager()
@@ -195,11 +215,11 @@ func TestGraceTolerance(t *testing.T) {
 		mockGetCM := mockGetCM()
 		defer mockGetCM.Reset()
 		defer mockPodList.Reset()
-		patch := gomonkey.ApplyMethod(new(HotResetTools), "SyncResetCM",
-			func(_ *HotResetTools, _ context.Context, _ *kubeclient.ClientK8s) { return })
+		patch := gomonkey.ApplyPrivateMethod(manager, "updateHotResetCache",
+			func(_ *HwAscend910Manager, _ map[string][]*common.NpuDevice) error { return nil })
 		defer patch.Reset()
 		manager.GraceTolerance(context.TODO(), mockGroupDevice())
-		convey.So(manager.hotResetManager, convey.ShouldNotBeNil)
+		convey.So(manager.hotResetManager, convey.ShouldBeNil)
 	})
 }
 
