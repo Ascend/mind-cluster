@@ -33,4 +33,5 @@ type HangState struct {
 	HangCount int32
 	IsFault   bool
 	Metrics   *HangMetrics
+	PIDs      []int32
 }
