@@ -33,7 +33,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/fsnotify/fsnotify"
 	"github.com/smartystreets/goconvey/convey"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -299,21 +299,21 @@ func TestFilterPods1(t *testing.T) {
 		})
 		convey.Convey("annotationTag not exist", func() {
 			pods := []v1.Pod{{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.
-			ResourceRequirements{Limits: v1.ResourceList{}}}}}}}
+				ResourceRequirements{Limits: v1.ResourceList{}}}}}}}
 			res := FilterPods(pods, api.Ascend910, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
 		convey.Convey("annotationTag exist, device is virtual", func() {
 			limits := resource.NewQuantity(1, resource.DecimalExponent)
 			pods := []v1.Pod{{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.
-			ResourceRequirements{Limits: v1.ResourceList{api.ResourceNamePrefix + Ascend910vir2: *limits}}}}}}}
+				ResourceRequirements{Limits: v1.ResourceList{api.ResourceNamePrefix + Ascend910vir2: *limits}}}}}}}
 			res := FilterPods(pods, Ascend910vir2, nil)
 			convey.So(len(res), convey.ShouldEqual, 1)
 		})
 		convey.Convey("limitsDevNum exceeds the upper limit", func() {
 			limits := resource.NewQuantity(MaxDevicesNum*MaxAICoreNum+1, resource.DecimalExponent)
 			pods := []v1.Pod{{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.
-			ResourceRequirements{Limits: v1.ResourceList{api.ResourceNamePrefix + Ascend910vir2: *limits}}}}}}}
+				ResourceRequirements{Limits: v1.ResourceList{api.ResourceNamePrefix + Ascend910vir2: *limits}}}}}}}
 			res := FilterPods(pods, Ascend910vir2, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
@@ -321,7 +321,7 @@ func TestFilterPods1(t *testing.T) {
 			limits := resource.NewQuantity(1, resource.DecimalExponent)
 			pods := []v1.Pod{
 				{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.ResourceRequirements{Limits: v1.
-				ResourceList{api.ResourceNamePrefix + api.Ascend910: *limits}}}}}}}
+					ResourceList{api.ResourceNamePrefix + api.Ascend910: *limits}}}}}}}
 			res := FilterPods(pods, api.Ascend910, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
@@ -329,7 +329,7 @@ func TestFilterPods1(t *testing.T) {
 			limits := resource.NewQuantity(1, resource.DecimalExponent)
 			pods := []v1.Pod{
 				{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.ResourceRequirements{Limits: v1.
-				ResourceList{api.HuaweiAscend910: *limits}}}}},
+					ResourceList{api.HuaweiAscend910: *limits}}}}},
 					ObjectMeta: metav1.ObjectMeta{Name: "test3", Namespace: "test3",
 						Annotations: map[string]string{
 							PodPredicateTime: "1", api.HuaweiAscend910: api.Ascend910 + "-1"}},
@@ -346,7 +346,7 @@ func TestFilterPods2(t *testing.T) {
 		limits := resource.NewQuantity(1, resource.DecimalExponent)
 		pods := []v1.Pod{
 			{Spec: v1.PodSpec{Containers: []v1.Container{{Resources: v1.ResourceRequirements{Limits: v1.
-			ResourceList{api.HuaweiAscend910: *limits}}}}},
+				ResourceList{api.HuaweiAscend910: *limits}}}}},
 				ObjectMeta: metav1.ObjectMeta{Name: "test3", Namespace: "test3",
 					Annotations: map[string]string{
 						PodPredicateTime: "1", api.HuaweiAscend910: api.Ascend910 + "-1"},
@@ -367,7 +367,7 @@ func TestFilterPods2(t *testing.T) {
 		})
 		convey.Convey("Waiting.Message is not nil", func() {
 			pods[0].Status.ContainerStatuses = []v1.ContainerStatus{{State: v1.ContainerState{Waiting: &v1.
-			ContainerStateWaiting{Message: "PreStartContainer check failed"}}}}
+				ContainerStateWaiting{Message: "PreStartContainer check failed"}}}}
 			res := FilterPods(pods, api.Ascend910, nil)
 			convey.So(res, convey.ShouldBeEmpty)
 		})
@@ -1351,6 +1351,23 @@ func TestCalculateMaxVirtualID(t *testing.T) {
 		convey.Convey("When virtualIDs has multiple elements", func() {
 			maxVID := calculateMaxVirtualID([]int{1, num5, num3})
 			convey.So(maxVID, convey.ShouldEqual, num5)
+		})
+	})
+}
+
+func TestSliceEqual(t *testing.T) {
+	convey.Convey("Test SliceEqual", t, func() {
+		convey.Convey("When two slices are equal, should return true", func() {
+			convey.So(SliceEqual[int]([]int{1, 2, 3}, []int{1, 2, 3}), convey.ShouldBeTrue)
+		})
+		convey.Convey("When two slices are both empty, should return true", func() {
+			convey.So(SliceEqual[int]([]int{}, []int{}), convey.ShouldBeTrue)
+		})
+		convey.Convey("When lengths differ, should return false", func() {
+			convey.So(SliceEqual[int]([]int{1, 2}, []int{1, 2, 3}), convey.ShouldBeFalse)
+		})
+		convey.Convey("When same length but different elements, should return false", func() {
+			convey.So(SliceEqual[int]([]int{1, 2, 3}, []int{1, 2, 4}), convey.ShouldBeFalse)
 		})
 	})
 }

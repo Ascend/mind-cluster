@@ -21,6 +21,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -50,6 +51,10 @@ const (
 	rxBusiFlitNum   = "rx_busi_flit_num"
 
 	procAuxvPath = "/proc/%d/auxv"
+
+	rightParenthesis   = ")"
+	postCommUtimeIndex = utimeIndex - 2
+	postCommStimeIndex = stimeIndex - 2
 )
 
 // HangDetector implements NPU hang detection
@@ -149,6 +154,8 @@ func (hd *HangDetector) detectNPU(logicID int32) {
 		return
 	}
 
+	hd.refreHangStateIfProcessChanged(logicID, extractAndSortPids(procInfo))
+
 	var metrics HangMetrics = HangMetrics{}
 	hd.collectMetrics(logicID, procInfo, &metrics)
 	hwlog.RunLog.Debugf("hang detection metrics, logicID=%d, metrics=%v", logicID, metrics)
@@ -158,6 +165,35 @@ func (hd *HangDetector) detectNPU(logicID int32) {
 	} else {
 		hd.npuHangEventDisappear(logicID, &metrics)
 	}
+}
+
+func (hd *HangDetector) refreHangStateIfProcessChanged(logicID int32, curPIDs []int32) {
+	hangStateMapMu.Lock()
+	defer hangStateMapMu.Unlock()
+	state, ok := hangStateMap[logicID]
+	if !ok {
+		state = &HangState{LogicID: logicID}
+		hangStateMap[logicID] = state
+	}
+	if state.PIDs == nil {
+		state.PIDs = curPIDs
+		return
+	}
+	if common.SliceEqual[int32](state.PIDs, curPIDs) {
+		return
+	}
+	hwlog.RunLog.Infof("process set changed, reset hang baseline, logicID=%d", logicID)
+	state.PIDs = curPIDs
+	state.Metrics = nil
+}
+
+func extractAndSortPids(procInfo *npuCommon.DevProcessInfo) []int32 {
+	pids := make([]int32, 0, len(procInfo.DevProcArray))
+	for _, proc := range procInfo.DevProcArray {
+		pids = append(pids, proc.Pid)
+	}
+	sort.Slice(pids, func(i, j int) bool { return pids[i] < pids[j] })
+	return pids
 }
 
 func (hd *HangDetector) collectMetrics(logicID int32, procInfo *npuCommon.DevProcessInfo, metrics *HangMetrics) {
@@ -357,15 +393,21 @@ func getProcessCPUTime(pid int32) (int64, error) {
 	if err != nil {
 		return 0, fmt.Errorf("load proc stat file failed: %v", err)
 	}
-	fields := strings.Fields(string(data))
-	if len(fields) <= stimeIndex {
+	statStr := string(data)
+
+	lastRightParen := strings.LastIndex(statStr, rightParenthesis)
+	if lastRightParen < 0 {
+		return 0, fmt.Errorf("invalid proc stat format for pid %d: missing comm field", pid)
+	}
+	fields := strings.Fields(statStr[lastRightParen+1:])
+	if len(fields) <= postCommStimeIndex {
 		return 0, fmt.Errorf("invalid proc stat format for pid %d", pid)
 	}
-	utime, err := strconv.ParseInt(fields[utimeIndex], common.BaseDec, common.BitSize)
+	utime, err := strconv.ParseInt(fields[postCommUtimeIndex], common.BaseDec, common.BitSize)
 	if err != nil {
 		return 0, fmt.Errorf("parse utime failed: %v", err)
 	}
-	stime, err := strconv.ParseInt(fields[stimeIndex], common.BaseDec, common.BitSize)
+	stime, err := strconv.ParseInt(fields[postCommStimeIndex], common.BaseDec, common.BitSize)
 	if err != nil {
 		return 0, fmt.Errorf("parse stime failed: %v", err)
 	}

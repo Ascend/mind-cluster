@@ -282,6 +282,65 @@ func TestCollectCPUTime(t *testing.T) {
 	})
 }
 
+// TestExtractAndSortPids for test extractAndSortPids
+func TestExtractAndSortPids(t *testing.T) {
+	convey.Convey("test extractAndSortPids", t, func() {
+		convey.Convey("01-when procInfo has multiple pids, should return sorted pids", func() {
+			procInfo := &npuCommon.DevProcessInfo{
+				DevProcArray: []npuCommon.DevProcInfo{{Pid: 3}, {Pid: 1}, {Pid: 2}},
+			}
+			pids := extractAndSortPids(procInfo)
+			convey.So(pids, convey.ShouldResemble, []int32{1, 2, 3})
+		})
+
+		convey.Convey("02-when procInfo has no processes, should return empty slice", func() {
+			procInfo := &npuCommon.DevProcessInfo{DevProcArray: []npuCommon.DevProcInfo{}}
+			pids := extractAndSortPids(procInfo)
+			convey.So(len(pids), convey.ShouldEqual, 0)
+		})
+	})
+}
+
+// TestRefreHangStateIfProcessChanged for test refreHangStateIfProcessChanged
+func TestRefreHangStateIfProcessChanged(t *testing.T) {
+	convey.Convey("test refreHangStateIfProcessChanged", t, func() {
+		hd := newTestHangDetector()
+
+		convey.Convey("01-when state does not exist, should create state and record pids", func() {
+			resetHangState()
+			curPIDs := []int32{1, 2}
+			hd.refreHangStateIfProcessChanged(mockLogicID, curPIDs)
+			state := hd.getOrCreateHangState(mockLogicID)
+			convey.So(state.PIDs, convey.ShouldResemble, curPIDs)
+			convey.So(state.Metrics, convey.ShouldBeNil)
+		})
+
+		convey.Convey("02-when pids unchanged, should not reset metrics", func() {
+			resetHangState()
+			state := hd.getOrCreateHangState(mockLogicID)
+			state.PIDs = []int32{1, 2}
+			state.Metrics = &HangMetrics{CPUTime: cpuTime}
+
+			hd.refreHangStateIfProcessChanged(mockLogicID, []int32{1, 2})
+			state = hd.getOrCreateHangState(mockLogicID)
+			convey.So(state.Metrics, convey.ShouldNotBeNil)
+			convey.So(state.Metrics.CPUTime, convey.ShouldEqual, cpuTime)
+		})
+
+		convey.Convey("03-when pids changed, should reset metrics and record new pids", func() {
+			resetHangState()
+			state := hd.getOrCreateHangState(mockLogicID)
+			state.PIDs = []int32{1, 2}
+			state.Metrics = &HangMetrics{CPUTime: cpuTime}
+
+			hd.refreHangStateIfProcessChanged(mockLogicID, []int32{3, 4})
+			state = hd.getOrCreateHangState(mockLogicID)
+			convey.So(state.PIDs, convey.ShouldResemble, []int32{3, 4})
+			convey.So(state.Metrics, convey.ShouldBeNil)
+		})
+	})
+}
+
 // TestIsHangConditionMet for test isHangConditionMet
 func TestIsHangConditionMet(t *testing.T) {
 	convey.Convey("test isHangConditionMet", t, func() {
@@ -375,10 +434,11 @@ func TestGetOrCreateHangState(t *testing.T) {
 func TestGetProcessCPUTime(t *testing.T) {
 	convey.Convey("test getProcessCPUTime", t, func() {
 		convey.Convey("01-when get current process CPU time, should succeed", func() {
-			utime, stime := int64(11), int64(12)
+			utime, stime := int64(11*clkTck), int64(12*clkTck)
 			patches := gomonkey.ApplyFuncReturn(utils.IsExist, true).
 				ApplyFunc(utils.LoadFile, func(_ string) ([]byte, error) {
-					return []byte("1234 (test) S 1 2 3 4 5 6 7 8 9 10 11 12 100 200 13 14 15"), nil
+					statStr := fmt.Sprintf("1234 (test  test)  S 1 2 3 4 5 6 7 8 9 10 %d %d 100 200 13 14 15", utime, stime)
+					return []byte(statStr), nil
 				})
 			defer patches.Reset()
 
@@ -390,6 +450,33 @@ func TestGetProcessCPUTime(t *testing.T) {
 		convey.Convey("02-when pid does not exist, should return error", func() {
 			_, err := getProcessCPUTime(0)
 			convey.So(err, convey.ShouldNotBeNil)
+		})
+
+		convey.Convey("03-when comm contains nested parentheses, should parse utime and stime", func() {
+			utime, stime := int64(11*clkTck), int64(12*clkTck)
+			patches := gomonkey.ApplyFuncReturn(utils.IsExist, true).
+				ApplyFunc(utils.LoadFile, func(_ string) ([]byte, error) {
+					statStr := fmt.Sprintf("1234 (test (v2)) S 1 2 3 4 5 6 7 8 9 10 %d %d 100 200 13 14 15",
+						utime, stime)
+					return []byte(statStr), nil
+				})
+			defer patches.Reset()
+
+			cpuTime, err := getProcessCPUTime(int32(os.Getpid()))
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(cpuTime, convey.ShouldEqual, (utime+stime)/clkTck)
+		})
+
+		convey.Convey("04-when comm field is missing right parenthesis, should return error", func() {
+			patches := gomonkey.ApplyFuncReturn(utils.IsExist, true).
+				ApplyFunc(utils.LoadFile, func(_ string) ([]byte, error) {
+					return []byte("1234 test S 1 2 3 4 5 6 7 8 9 10 11 12 100 200 13 14 15"), nil
+				})
+			defer patches.Reset()
+
+			_, err := getProcessCPUTime(int32(os.Getpid()))
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(err.Error(), convey.ShouldContainSubstring, "missing comm field")
 		})
 	})
 }
