@@ -774,8 +774,8 @@ func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 func (sHandle *ScheduleHandler) addPreferPreviousNodeScore(
 	task *api.TaskInfo, scoreMap map[string]float64, vcJob SchedulerJob) {
 
-	if vcJob.IsSuperPodJob() || vcJob.IsMultiLevelJob() {
-		klog.V(util.LogDebugLev).Infof("addPreferPreviousNodeScore: skip, job %s is super-pod or multi-level",
+	if vcJob.IsSuperPodJob() || vcJob.IsMultiLevelJob() || vcJob.IsJobHasTorAffinityLabel() {
+		klog.V(util.LogDebugLev).Infof("addPreferPreviousNodeScore: skip, job %s is super-pod or multi-level or nslb",
 			vcJob.Name)
 		return
 	}
