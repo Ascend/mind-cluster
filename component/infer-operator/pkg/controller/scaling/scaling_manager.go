@@ -27,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
@@ -164,24 +165,32 @@ func (m *ScalingManager) updateHPA(
 	existingHPA *autoscalingv2.HorizontalPodAutoscaler,
 	desiredSpec *autoscalingv2.HorizontalPodAutoscalerSpec,
 ) (*apiv1.ScalingResourceStatus, error) {
-	existingHPA.Spec = *desiredSpec
+	hpaName := existingHPA.Name
 
-	if err := m.Update(ctx, existingHPA); err != nil {
-		errMsg := fmt.Sprintf("failed to update HPA %s: %v", existingHPA.Name, err)
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		latestHPA := &autoscalingv2.HorizontalPodAutoscaler{}
+		if err := m.Get(ctx, types.NamespacedName{Name: hpaName, Namespace: instanceSet.Namespace}, latestHPA); err != nil {
+			return err
+		}
+		latestHPA.Spec = *desiredSpec
+		return m.Update(ctx, latestHPA)
+	})
+	if err != nil {
+		errMsg := fmt.Sprintf("failed to update HPA %s: %v", hpaName, err)
 		hwlog.RunLog.Errorf("InstanceSet %s/%s: %s", instanceSet.Namespace, instanceSet.Name, errMsg)
 		return &apiv1.ScalingResourceStatus{
 			Type:    common.ScalingPolicyTypeHPA,
-			Name:    existingHPA.Name,
+			Name:    hpaName,
 			Ready:   false,
 			Message: errMsg,
 		}, err
 	}
 
 	hwlog.RunLog.Infof("InstanceSet %s/%s: updated HPA %s successfully",
-		instanceSet.Namespace, instanceSet.Name, existingHPA.Name)
+		instanceSet.Namespace, instanceSet.Name, hpaName)
 	return &apiv1.ScalingResourceStatus{
 		Type:    common.ScalingPolicyTypeHPA,
-		Name:    existingHPA.Name,
+		Name:    hpaName,
 		Ready:   true,
 		Message: "HPA updated successfully",
 	}, nil
