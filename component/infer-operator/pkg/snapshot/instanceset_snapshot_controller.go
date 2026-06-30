@@ -43,11 +43,11 @@ type InstanceSetSnapshotReconciler struct {
 }
 
 // NewInstanceSetSnapshotReconciler creates a new InstanceSetSnapshotReconciler
-func NewInstanceSetSnapshotReconciler(mgr ctrl.Manager) *InstanceSetSnapshotReconciler {
+func NewInstanceSetSnapshotReconciler(mgr ctrl.Manager, timeout int) *InstanceSetSnapshotReconciler {
 	return &InstanceSetSnapshotReconciler{
 		Client:          mgr.GetClient(),
 		Scheme:          mgr.GetScheme(),
-		SnapshotChecker: NewSnapshotChecker(mgr.GetClient()),
+		SnapshotChecker: NewSnapshotChecker(mgr.GetClient(), timeout),
 	}
 }
 
@@ -86,6 +86,10 @@ func (r *InstanceSetSnapshotReconciler) Reconcile(ctx context.Context, req ctrl.
 	if !r.SnapshotChecker.IsRunning() {
 		r.SnapshotChecker.Start(ctx)
 	}
+
+	trackerKey := r.SnapshotChecker.getInstanceSetKey(instanceSet.Namespace, instanceSet.Name)
+	r.SnapshotChecker.removeTracker(trackerKey)
+
 	if err := r.SnapshotChecker.TrackInstanceSet(instanceSet, selectLabels, *stsSpec.Replicas); err != nil {
 		hwlog.RunLog.Warnf("Failed to track InstanceSet %s/%s for snapshot: %v",
 			instanceSet.Namespace, instanceSet.Name, err)

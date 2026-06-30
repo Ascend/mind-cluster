@@ -53,6 +53,8 @@ type SnapshotMetaData struct {
 	InstanceName string `json:"job_name,omitempty"`
 	// Namespace is the instance namespace
 	Namespace string `json:"namespace,omitempty"`
+	// Checkpoint is the status of snapshot checkpoint
+	Checkpoint string `json:"checkpoint,omitempty"`
 }
 
 // AddSnapshotInfoToPodTemplate adds snapshot info to pod template
@@ -88,8 +90,8 @@ func AddMetadataVolume(pod *corev1.PodTemplateSpec, cmName string, instanceSet *
 				},
 				Items: []corev1.KeyToPath{
 					{
-						Key:  "snapshot_metadata.json",
-						Path: "snapshot_metadata.json",
+						Key:  SnapshotMetadataJson,
+						Path: SnapshotMetadataJson,
 					},
 				},
 			},

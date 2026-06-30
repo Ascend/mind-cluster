@@ -99,7 +99,7 @@ func TestInstanceSetSnapshotReconcilerReconcile(t *testing.T) {
 			fakeClient := getFakeClientBuilder().Build()
 			reconciler := &InstanceSetSnapshotReconciler{
 				Client:          fakeClient,
-				SnapshotChecker: NewSnapshotChecker(fakeClient),
+				SnapshotChecker: NewSnapshotChecker(fakeClient, 0),
 			}
 
 			ctx := context.Background()
@@ -121,7 +121,7 @@ func TestInstanceSetSnapshotReconcilerReconcile(t *testing.T) {
 
 			reconciler := &InstanceSetSnapshotReconciler{
 				Client:          fakeClient,
-				SnapshotChecker: NewSnapshotChecker(fakeClient),
+				SnapshotChecker: NewSnapshotChecker(fakeClient, 0),
 			}
 
 			ctx := context.Background()
@@ -147,7 +147,7 @@ func TestInstanceSetSnapshotReconcilerReconcile2(t *testing.T) {
 
 			reconciler := &InstanceSetSnapshotReconciler{
 				Client:          fakeClient,
-				SnapshotChecker: NewSnapshotChecker(fakeClient),
+				SnapshotChecker: NewSnapshotChecker(fakeClient, 0),
 			}
 
 			ctx := context.Background()
@@ -169,7 +169,7 @@ func TestInstanceSetSnapshotReconcilerReconcile2(t *testing.T) {
 
 			reconciler := &InstanceSetSnapshotReconciler{
 				Client:          fakeClient,
-				SnapshotChecker: NewSnapshotChecker(fakeClient),
+				SnapshotChecker: NewSnapshotChecker(fakeClient, 0),
 			}
 
 			patches := gomonkey.ApplyMethodReturn(reconciler.SnapshotChecker, "TrackInstanceSet",
@@ -297,7 +297,7 @@ func TestNewInstanceSetSnapshotReconciler(t *testing.T) {
 			reconciler := &InstanceSetSnapshotReconciler{
 				Client:          fakeClient,
 				Scheme:          getTestScheme(),
-				SnapshotChecker: NewSnapshotChecker(fakeClient),
+				SnapshotChecker: NewSnapshotChecker(fakeClient, 0),
 			}
 
 			convey.So(reconciler, convey.ShouldNotBeNil)
