@@ -98,13 +98,13 @@ function build_bin()
     export CGO_LDFLAGS="-Wl,-z,now -Wl,-s,--build-id=none -pie"
     mkdir -p ${BUILD}/build/helper/build
     go mod tidy
-    go build -buildmode=pie  -ldflags='-buildid=IdNetCheck -extldflags "-Wl,-z,now" -w -s' -trimpath -o ${BUILD}/build/helper/build/ascend-docker-plugin-install-helper ${INSTALLHELPERSRCDIR}/${INSTALLHELPERSRCNAME}
+    go build -buildmode=pie  -ldflags='-buildid=IdNetCheck -bindnow -w -s' -trimpath -o ${BUILD}/build/helper/build/ascend-docker-plugin-install-helper ${INSTALLHELPERSRCDIR}/${INSTALLHELPERSRCNAME}
 
     echo "make hook"
     [ -d "${HOOKSRCDIR}/build" ] && rm -rf ${HOOKSRCDIR}/build
     mkdir ${HOOKSRCDIR}/build && cd ${HOOKSRCDIR}/build
     go mod tidy
-    go build -buildmode=pie  -ldflags='-buildid=IdNetCheck -extldflags "-Wl,-z,now" -w -s' -trimpath  -o ascend-docker-hook ../${HOOKSRCNAME}
+    go build -buildmode=pie  -ldflags='-buildid=IdNetCheck -bindnow -w -s' -trimpath  -o ascend-docker-hook ../${HOOKSRCNAME}
     echo `pwd`
     ls
 
