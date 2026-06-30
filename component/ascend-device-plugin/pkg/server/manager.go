@@ -592,6 +592,7 @@ func (hdm *HwDevManager) handleDeviceInfoUpdate(ctx context.Context, initTime *t
 		hwlog.RunLog.Error(err)
 		return
 	}
+	hdm.syncCM(ctx, hdm.groupDevice)
 
 	// complete the fault codes that cannot be reported by the event subscribe interface
 	hdm.mendSubscribeFaultEvents()
@@ -1515,6 +1516,12 @@ func (hdm *HwDevManager) subscribeNpuFaultEvent() {
 // graceTolerance start fault tolerance for training tasks
 func (hdm *HwDevManager) graceTolerance(ctx context.Context, groupDevice map[string][]*common.NpuDevice) {
 	hdm.manager.GraceTolerance(ctx, groupDevice)
+	return
+}
+
+// syncCM sync hot reset cm with kubernetes
+func (hdm *HwDevManager) syncCM(ctx context.Context, groupDevice map[string][]*common.NpuDevice) {
+	hdm.manager.SyncCM(ctx, groupDevice)
 	return
 }
 

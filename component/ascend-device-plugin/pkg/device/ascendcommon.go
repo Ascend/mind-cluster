@@ -161,6 +161,7 @@ type DevManager interface {
 	WriteFaultToEvent(ctx context.Context)
 	GetAssociatedLogicIDs(logicID, cardID, deviceID int32) ([]int32, error)
 	LoadDeviceInfoCm(ctx context.Context)
+	SyncCM(context.Context, map[string][]*common.NpuDevice)
 }
 
 // SetDmgr set devmanager
