@@ -1379,6 +1379,47 @@ func TestAddPreferPreviousNodeScore(t *testing.T) {
 			wantNode2: 7.5,
 		},
 		{
+			name:    "03b-tor-affinity-label large-model-schema returns early",
+			sHandle: enabledFrame(),
+			task:    baseTask,
+			vcJob: SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					ComJob: util.ComJob{Label: map[string]string{util.TorAffinityKey: util.LargeModelTag}},
+					NPUJob: &util.NPUJob{NPUTaskNum: 2},
+				},
+			},
+			wantNode1: 8.0,
+			wantNode2: 7.5,
+		},
+		{
+			name:    "03c-tor-affinity-label normal-schema returns early",
+			sHandle: enabledFrame(),
+			task:    baseTask,
+			vcJob: SchedulerJob{
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					ComJob: util.ComJob{Label: map[string]string{util.TorAffinityKey: util.NormalSchema}},
+					NPUJob: &util.NPUJob{NPUTaskNum: 2},
+				},
+			},
+			wantNode1: 8.0,
+			wantNode2: 7.5,
+		},
+		{
+			name:    "03d-tor-affinity-label null does not skip, proceeds to boost",
+			sHandle: enabledFrame(),
+			task:    baseTask,
+			vcJob: SchedulerJob{
+				Owner: OwnerInfo{OwnerReference: metav1.OwnerReference{UID: "owner-uid"}},
+				SchedulerJobAttr: util.SchedulerJobAttr{
+					ComJob: util.ComJob{Label: map[string]string{util.TorAffinityKey: util.NullTag}},
+					NPUJob: &util.NPUJob{NPUTaskNum: 2, Tasks: fakeTasksForRank()},
+				},
+				PrefNodeMap: prefMap,
+			},
+			wantNode1: 8.0 + defaultPreferPreviousScore,
+			wantNode2: 7.5,
+		},
+		{
 			name:      "04-nil task returns early",
 			sHandle:   enabledFrame(),
 			task:      nil,
