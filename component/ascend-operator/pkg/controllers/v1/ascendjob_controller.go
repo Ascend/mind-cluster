@@ -233,7 +233,7 @@ func (r *ASJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 type resourceOption struct {
-	kind          *source.Kind
+	kind          source.Source
 	predicateFunc predicate.Funcs
 }
 
@@ -251,15 +251,16 @@ func (r *ASJobReconciler) watchRelatedResource(c controller.Controller, mgr ctrl
 }
 
 func (r *ASJobReconciler) watchAscendJobRelatedResource(c controller.Controller, mgr ctrl.Manager) error {
-	if err := c.Watch(&source.Kind{Type: &mindxdlv1.AscendJob{}}, &handler.EnqueueRequestForObject{},
+	cache := mgr.GetCache()
+	if err := c.Watch(source.Kind(cache, &mindxdlv1.AscendJob{}), &handler.EnqueueRequestForObject{},
 		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
 	); err != nil {
 		return err
 	}
 	resourceOptions := []*resourceOption{
-		{kind: &source.Kind{Type: &corev1.Pod{}},
+		{kind: source.Kind(cache, &corev1.Pod{}),
 			predicateFunc: predicate.Funcs{DeleteFunc: r.onPodDeleteFunc(), UpdateFunc: r.onPodUpdateFunc()}},
-		{kind: &source.Kind{Type: &corev1.Service{}}},
+		{kind: source.Kind(cache, &corev1.Service{})},
 	}
 
 	if r.Config.EnableGangScheduling {
@@ -272,14 +273,12 @@ func (r *ASJobReconciler) watchAscendJobRelatedResource(c controller.Controller,
 			return mapErr
 		}
 		resourceOptions = append(resourceOptions, &resourceOption{
-			kind: &source.Kind{Type: &v1beta1.PodGroup{}}})
+			kind: source.Kind(cache, &v1beta1.PodGroup{})})
 	}
 
 	for _, src := range resourceOptions {
-		if err := c.Watch(src.kind, &handler.EnqueueRequestForOwner{
-			IsController: true,
-			OwnerType:    &mindxdlv1.AscendJob{},
-		}, src.predicateFunc); err != nil {
+		if err := c.Watch(src.kind, handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(),
+			&mindxdlv1.AscendJob{}, handler.OnlyControllerOwner()), src.predicateFunc); err != nil {
 			return err
 		}
 	}
@@ -287,25 +286,25 @@ func (r *ASJobReconciler) watchAscendJobRelatedResource(c controller.Controller,
 }
 
 func (r *ASJobReconciler) watchVolcanoJobRelatedResource(c controller.Controller, mgr ctrl.Manager) error {
-	if err := c.Watch(&source.Kind{Type: &v1alpha1.Job{}}, &handler.EnqueueRequestForObject{},
+	cache := mgr.GetCache()
+	if err := c.Watch(source.Kind(cache, &v1alpha1.Job{}), &handler.EnqueueRequestForObject{},
 		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
 	); err != nil {
 		return err
 	}
-	return c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1alpha1.Job{},
-	})
+	return c.Watch(source.Kind(cache, &corev1.Pod{}), handler.EnqueueRequestForOwner(mgr.GetScheme(),
+		mgr.GetRESTMapper(), &v1alpha1.Job{}, handler.OnlyControllerOwner()))
 }
 
 func (r *ASJobReconciler) watchDeploymentRelatedResource(c controller.Controller, mgr ctrl.Manager) error {
-	if err := c.Watch(&source.Kind{Type: &appv1.Deployment{}}, &handler.EnqueueRequestForObject{},
+	cache := mgr.GetCache()
+	if err := c.Watch(source.Kind(cache, &appv1.Deployment{}), &handler.EnqueueRequestForObject{},
 		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
 	); err != nil {
 		return err
 	}
-	return c.Watch(&source.Kind{Type: &corev1.Pod{}},
-		handler.EnqueueRequestsFromMapFunc(func(object client.Object) []reconcile.Request {
+	return c.Watch(source.Kind(cache, &corev1.Pod{}),
+		handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, object client.Object) []reconcile.Request {
 			deployPod := false
 			for _, owner := range object.GetOwnerReferences() {
 				if owner.Controller != nil && *owner.Controller && owner.Kind == "ReplicaSet" {
@@ -327,15 +326,14 @@ func (r *ASJobReconciler) watchDeploymentRelatedResource(c controller.Controller
 }
 
 func (r *ASJobReconciler) watchStatefulSetRelatedResource(c controller.Controller, mgr ctrl.Manager) error {
-	if err := c.Watch(&source.Kind{Type: &appv1.StatefulSet{}}, &handler.EnqueueRequestForObject{},
+	cache := mgr.GetCache()
+	if err := c.Watch(source.Kind(cache, &appv1.StatefulSet{}), &handler.EnqueueRequestForObject{},
 		predicate.Funcs{CreateFunc: r.onOwnerCreateFunc(), DeleteFunc: r.onOwnerDeleteFunc()},
 	); err != nil {
 		return err
 	}
-	return c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &appv1.StatefulSet{},
-	})
+	return c.Watch(source.Kind(cache, &corev1.Pod{}), handler.EnqueueRequestForOwner(mgr.GetScheme(),
+		mgr.GetRESTMapper(), &appv1.StatefulSet{}, handler.OnlyControllerOwner()))
 }
 
 func (r *ASJobReconciler) onOwnerCreateFunc() func(event.CreateEvent) bool {

@@ -2532,8 +2532,9 @@ type mockSharedIndexInformer struct {
 	handlerAdded bool
 }
 
-func (m *mockSharedIndexInformer) AddEventHandler(handler cache.ResourceEventHandler) {
+func (m *mockSharedIndexInformer) AddEventHandler(handler cache.ResourceEventHandler) (cache.ResourceEventHandlerRegistration, error) {
 	m.handlerAdded = true
+	return nil, nil
 }
 
 func TestRegisterSoftSharePodDeleteHandler(t *testing.T) {

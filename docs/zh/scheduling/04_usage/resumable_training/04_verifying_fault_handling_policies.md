@@ -427,7 +427,7 @@
    chmod +x build.sh && dos2unix build.sh
    sed -i 's|build_version="v[^"]\+"|build_version="xxx"|g' build.sh  # xxx替换为版本号，如v26.0.0
    sed -i 's|export CGO_ENABLED=0|export CGO_ENABLED=1|g' build.sh  # 开启CGO功能
-   ./build.sh # 编译ClusterD，需要go 1.21及以上版本，建议使用1.21版本
+   ./build.sh # 编译ClusterD，需要go 1.26及以上版本，建议使用1.26版本
    ```
 
    编译成功后，会在“../output/”目录下生成相关文件，可执行如下命令进行查看：

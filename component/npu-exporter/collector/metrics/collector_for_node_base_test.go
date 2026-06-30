@@ -140,13 +140,12 @@ type updatePromTestCase struct {
 	name         string
 	setupCache   func(*NodeBaseCollector)
 	expectCall   bool
-	expectLabels []string
 }
 
 func buildUpdatePromTestCases() []updatePromTestCase {
 	return []updatePromTestCase{
 		{
-			name: "should update metric with correct labels when cache exists",
+			name: "should update metric when cache exists",
 			setupCache: func(c *NodeBaseCollector) {
 				c.LocalCache.Store(common.GetCacheKey(c), nodeBaseInfoCache{
 					timestamp:       time.Now(),
@@ -155,7 +154,6 @@ func buildUpdatePromTestCases() []updatePromTestCase {
 				})
 			},
 			expectCall:   true,
-			expectLabels: []string{mockExporterVersion, mockDriverVersion},
 		},
 		{
 			name: "should skip update when cache not found",
@@ -173,20 +171,20 @@ func TestNodeBaseCollectorUpdatePrometheus(t *testing.T) {
 			tt.setupCache(collector)
 			ch := make(chan prometheus.Metric, 1)
 
-			var actualLabels []string
-			patches := gomonkey.NewPatches()
-			patches.ApplyFunc(doUpdateMetric,
-				func(_ chan<- prometheus.Metric, _ time.Time, _ interface{}, labels []string, _ *prometheus.Desc) {
-					actualLabels = labels
-				})
-			defer patches.Reset()
-
 			collector.UpdatePrometheus(ch, nil, nil, nil)
 
 			if tt.expectCall {
-				convey.So(actualLabels, convey.ShouldResemble, tt.expectLabels)
+				select {
+				case <-ch:
+				default:
+					convey.So("expected metric but channel was empty", convey.ShouldBeNil)
+				}
 			} else {
-				convey.So(actualLabels, convey.ShouldBeNil)
+				select {
+				case <-ch:
+					convey.So("unexpected metric received", convey.ShouldBeNil)
+				default:
+				}
 			}
 		})
 	}

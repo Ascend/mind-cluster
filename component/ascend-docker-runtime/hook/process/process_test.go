@@ -32,7 +32,6 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/opencontainers/runtime-spec/specs-go"
-	"github.com/prashantv/gostub"
 	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 
@@ -67,8 +66,8 @@ func TestDoPrestartHookCase2(t *testing.T) {
 		Rootfs: ".",
 		Env:    []string{api.AscendVisibleDevicesEnv + "=0l-3,5,7"},
 	}
-	stub := gostub.StubFunc(&getContainerConfig, &conCfg, nil)
-	defer stub.Reset()
+	patch := gomonkey.ApplyFuncReturn(getContainerConfig, &conCfg, nil)
+	defer patch.Reset()
 	err := DoPrestartHook()
 	assert.NotNil(t, err)
 }
@@ -80,8 +79,8 @@ func TestDoPrestartHookCase3(t *testing.T) {
 		Rootfs: ".",
 		Env:    []string{"ASCEND_VISIBLE_DEVICE=0-3,5,7"},
 	}
-	stub := gostub.StubFunc(&getContainerConfig, &conCfg, nil)
-	defer stub.Reset()
+	patch := gomonkey.ApplyFuncReturn(getContainerConfig, &conCfg, nil)
+	defer patch.Reset()
 	err := DoPrestartHook()
 	assert.Nil(t, err)
 }
@@ -100,10 +99,10 @@ func TestDoPrestartHookCase4(t *testing.T) {
 	if err != nil {
 		t.Log("failed")
 	}
-	stub := gostub.StubFunc(&getContainerConfig, &conCfg, nil)
-	defer stub.Reset()
-	stub.Stub(&ascendDockerCliName, "")
-	stub.StubFunc(&doExec, nil)
+	patch := gomonkey.ApplyFuncReturn(getContainerConfig, &conCfg, nil).
+		ApplyGlobalVar(&ascendDockerCliName, "").
+		ApplyFuncReturn(doExec, nil)
+	defer patch.Reset()
 	err = DoPrestartHook()
 	assert.NotNil(t, err)
 }
@@ -120,11 +119,11 @@ func TestDoPrestartHookCase5(t *testing.T) {
 		Rootfs: ".",
 		Env:    []string{ascendVisibleDeviceTestStr},
 	}
-	stub := gostub.StubFunc(&getContainerConfig, &conCfg, nil)
-	defer stub.Reset()
-	stub.Stub(&ascendDockerCliName, "clii")
-	stub.Stub(&defaultAscendDockerCliName, "clii")
-	stub.StubFunc(&doExec, nil)
+	patch := gomonkey.ApplyFuncReturn(getContainerConfig, &conCfg, nil).
+		ApplyGlobalVar(&ascendDockerCliName, "clii").
+		ApplyGlobalVar(&defaultAscendDockerCliName, "clii").
+		ApplyFuncReturn(doExec, nil)
+	defer patch.Reset()
 	err := DoPrestartHook()
 	assert.NotNil(t, err)
 }
@@ -320,8 +319,8 @@ func TestGetContainerConfig(t *testing.T) {
 	}
 	defer stateFile.Close()
 
-	stub := gostub.Stub(&containerConfigInputStream, stateFile)
-	defer stub.Reset()
+	patch := gomonkey.ApplyGlobalVar(&containerConfigInputStream, stateFile)
+	defer patch.Reset()
 
 	getContainerConfig()
 }
@@ -452,8 +451,8 @@ func TestDoPrestartHook(t *testing.T) {
 		Rootfs: ".",
 		Env:    []string{api.AscendVisibleDevicesEnv + "=0-3,5,7", api.AscendRuntimeMountsEnv + "=a"},
 	}
-	stub := gostub.StubFunc(&getContainerConfig, &conCfg, nil)
-	defer stub.Reset()
+	patchCfg := gomonkey.ApplyFuncReturn(getContainerConfig, &conCfg, nil)
+	defer patchCfg.Reset()
 	patch := gomonkey.ApplyFunc(os.Stat, func(name string) (os.FileInfo, error) {
 		return &fileInfoMock{}, nil
 	})

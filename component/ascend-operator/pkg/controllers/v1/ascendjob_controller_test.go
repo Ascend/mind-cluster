@@ -28,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/rest"
@@ -36,7 +37,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	configv1alpha1 "sigs.k8s.io/controller-runtime/pkg/config/v1alpha1"
+	"sigs.k8s.io/controller-runtime/pkg/config"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -208,6 +209,14 @@ func (c *fakeClient) RESTMapper() meta.RESTMapper { return nil }
 // SubResource This function is part of the fakeClient struct and returns a subresource client.
 func (c *fakeClient) SubResource(_ string) client.SubResourceClient { return nil }
 
+func (c *fakeClient) GroupVersionKindFor(obj runtime.Object) (schema.GroupVersionKind, error) {
+	return schema.GroupVersionKind{}, nil
+}
+
+func (c *fakeClient) IsObjectNamespaced(obj runtime.Object) (bool, error) {
+	return true, nil
+}
+
 // fakeRecorder This struct is a fake recorder struct used to mock the behavior of a kubernetes recorder.
 type fakeRecorder struct{}
 
@@ -357,7 +366,7 @@ func TestDeleteJob(t *testing.T) {
 
 type fakeManager struct{}
 
-func (f fakeManager) SetFields(i interface{}) error {
+func (f fakeManager) GetHTTPClient() *http.Client {
 	return nil
 }
 
@@ -405,7 +414,7 @@ func (f fakeManager) Elected() <-chan struct{} {
 	return nil
 }
 
-func (f fakeManager) AddMetricsExtraHandler(path string, handler http.Handler) error {
+func (f fakeManager) AddMetricsServerExtraHandler(path string, handler http.Handler) error {
 	return nil
 }
 
@@ -417,7 +426,7 @@ func (f fakeManager) AddReadyzCheck(name string, check healthz.Checker) error {
 	return nil
 }
 
-func (f fakeManager) GetWebhookServer() *webhook.Server {
+func (f fakeManager) GetWebhookServer() webhook.Server {
 	return nil
 }
 
@@ -425,8 +434,8 @@ func (f fakeManager) GetLogger() logr.Logger {
 	return logr.Logger{}
 }
 
-func (f fakeManager) GetControllerOptions() configv1alpha1.ControllerConfigurationSpec {
-	return configv1alpha1.ControllerConfigurationSpec{}
+func (f fakeManager) GetControllerOptions() config.Controller {
+	return config.Controller{}
 }
 
 type fakeController struct{}
@@ -461,9 +470,13 @@ func TestSetupWithManager(t *testing.T) {
 			err := r.SetupWithManager(mgr)
 			convey.So(err, convey.ShouldNotBeNil)
 		})
-		patch1 := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "watchAscendJobRelatedResource",
-			func(*ASJobReconciler, controller.Controller, ctrl.Manager) error { return nil })
-		defer patch1.Reset()
+		patches := gomonkey.ApplyPrivateMethod(new(ASJobReconciler), "watchAscendJobRelatedResource",
+			func(*ASJobReconciler, controller.Controller, ctrl.Manager) error { return nil }).
+			ApplyPrivateMethod(new(ASJobReconciler), "watchVolcanoJobRelatedResource",
+				func(*ASJobReconciler, controller.Controller, ctrl.Manager) error { return nil }).
+			ApplyPrivateMethod(new(ASJobReconciler), "watchStatefulSetRelatedResource",
+				func(*ASJobReconciler, controller.Controller, ctrl.Manager) error { return nil })
+		defer patches.Reset()
 		convey.Convey("02-New controller success should return nil", func() {
 			r := NewReconciler(mgr, true)
 			err := r.SetupWithManager(mgr)

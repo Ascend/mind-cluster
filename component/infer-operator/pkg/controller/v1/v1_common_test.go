@@ -47,7 +47,17 @@ func GetScheme() *runtime.Scheme {
 
 // NewFakeClient returns a new fake client with the given runtime objects
 func NewFakeClient(objects ...runtime.Object) *fake.ClientBuilder {
-	return fake.NewClientBuilder().WithScheme(GetScheme()).WithRuntimeObjects(objects...)
+	builder := fake.NewClientBuilder().WithScheme(GetScheme()).WithRuntimeObjects(objects...)
+	var statusObjects []client.Object
+	for _, obj := range objects {
+		if co, ok := obj.(client.Object); ok {
+			statusObjects = append(statusObjects, co)
+		}
+	}
+	if len(statusObjects) > 0 {
+		builder.WithStatusSubresource(statusObjects...)
+	}
+	return builder
 }
 
 // mockStatusWriter mocks client.StatusWriter interface

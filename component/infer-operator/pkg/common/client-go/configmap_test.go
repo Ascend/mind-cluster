@@ -223,7 +223,7 @@ func TestAddInferOperatorCfgEventHandler(t *testing.T) {
 						Namespace: common.DefaultNamespace,
 					},
 				}
-				capturedHandler.OnAdd(testCM)
+				capturedHandler.OnAdd(testCM, false)
 			}
 			convey.So(filterCalled, convey.ShouldBeTrue)
 		})
@@ -328,7 +328,7 @@ type mockCache struct {
 	shouldError bool
 }
 
-func (m *mockCache) GetInformerForKind(ctx context.Context, gvk schema.GroupVersionKind) (cache.Informer, error) {
+func (m *mockCache) GetInformerForKind(ctx context.Context, gvk schema.GroupVersionKind, opts ...cache.InformerGetOption) (cache.Informer, error) {
 	if m.shouldError {
 		return nil, fmt.Errorf("test error")
 	}
@@ -336,7 +336,7 @@ func (m *mockCache) GetInformerForKind(ctx context.Context, gvk schema.GroupVers
 	return informer, nil
 }
 
-func (m *mockCache) GetInformer(ctx context.Context, obj client.Object) (cache.Informer, error) {
+func (m *mockCache) GetInformer(ctx context.Context, obj client.Object, opts ...cache.InformerGetOption) (cache.Informer, error) {
 	return nil, nil
 }
 
