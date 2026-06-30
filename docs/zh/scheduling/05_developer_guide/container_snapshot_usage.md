@@ -26,7 +26,7 @@
 - 若没有安装，可以参考[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作，其中NodeD、Infer Operator需要修改部分安装步骤。
 
   - NodeD
-     - 需要使用如下的dockerfile制作NodeD镜像，其中需配置能够访问公网的代理
+     - 需要使用如下的dockerfile制作NodeD镜像，其中http_proxy、https_proxy配置为能够访问公网的代理
 
         ```ColdFusion
         FROM openeuler-24.03-lts-sp2:latest
@@ -55,7 +55,7 @@
             echo 'source /etc/profile' >> ~/.bashrc
         ```
 
-     - NodeD的启动yaml需使用组件软件包中容器快照对应yaml，其中快照路径/user/snapshot根据实际情况配置
+     - NodeD的启动yaml需使用组件软件包中容器快照特性对应的noded-container-snapshot.yaml，其中快照路径/user/snapshot根据实际情况配置并为共享存储
 
         ```Yaml
            - name: image-path
@@ -68,7 +68,7 @@
        ```
 
   - Infer Operator
-     - Infer Operator的启动yaml中，添加快照路径挂载项
+     - Infer Operator的启动yaml中添加快照路径挂载项，其中mountPath与hostPath根据实际情况配置并与NodeD的快照路径相同, 此外还可配置快照超时参数（>= 1，单位为分钟）snapshotTimeout，默认60分钟
 
         ```Yaml
            - name: image-path
@@ -78,11 +78,18 @@
              hostPath:
                path: /user/snapshot
                type: Directory
+
+           containers:
+             - command: [ "/bin/bash", "-c", "--"]
+               args: [ "infer-operator
+                       --logFile=/var/log/mindx-dl/infer-operator/infer-operator.log
+                       --logLevel=0 --snapshotTimeout=120
+                       --enable-healthz=true --healthz-address=11254" ]
         ```
 
 **使用说明**
 
-- 容器快照只支持workload为StatefulSet类型任务，且需在该类任务中增加容器快照开启的标签“infer.huawei.com/container-snapshot”，并将其设置为“true”，此外还需在容器环境变量中配置快照路径，如下所示：
+- 容器快照只支持workload为StatefulSet类型任务，且需在该类任务中增加容器快照开启的标签“infer.huawei.com/container-snapshot”，并将其设置为“true”，此外还需在容器环境变量中配置与NodeD相同的快照路径，如下所示：
    ```Yaml
       - name: prefill
         replicas: 1
@@ -110,15 +117,7 @@
 
 ## 使用演示
 
-### 下发任务
-
-在管理节点示例YAML所在路径，执行以下命令，使用YAML下发推理任务。
-
-```shell
-kubectl apply -f XXX.yaml
-```
-
-### 查看任务进程
+### 下发任务成功后查看任务进程
 
 执行以下命令，查看Pod运行状况。
 
@@ -143,6 +142,7 @@ default          my-test-hb-0-hybrid-1-1                      1/1     Running   
 在之前配置的快照路径下查看快照：
 
 ```ColdFusion
+[root@master]# cd /user/snapshot
 [root@master]# ls default/my-test-hb-0-hybrid/
 0 1 snapshot_status.json
 [root@master]# ls default/my-test-hb-0-hybrid/0

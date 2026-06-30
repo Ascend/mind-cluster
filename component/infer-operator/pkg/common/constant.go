@@ -222,14 +222,18 @@ const (
 	GrusSnapshotRestoredFlagKey = "GrusSnapshotRestoredFlag"
 	// SnapshotMetadataPrefix snapshot meta data configmap name prefix
 	SnapshotMetadataPrefix = "snapshot-metadata-"
-
+	// SnapshotMetadataJson snapshot meta data json file name
+	SnapshotMetadataJson = "snapshot_metadata.json"
 	// SnapshotCheckInterval is the interval for checking snapshot status
 	SnapshotCheckInterval = 5 * time.Second
+	// SnapshotTimeoutNum is the number of minute for snapshot timeout
+	SnapshotTimeoutNum = 60
 	// SnapshotTimeout is the timeout for snapshot operation
-	SnapshotTimeout = 40 * time.Minute
+	SnapshotTimeout = SnapshotTimeoutNum * time.Minute
 	// SnapshotStatusFileName is the name of the snapshot status file
 	SnapshotStatusFileName = "snapshot_status.json"
-
+	// SnapshotFinished mark of snapshot finished
+	SnapshotFinished = "done"
 	// HostSnapshotVolumnsName is the name of the host snapshot volume
 	HostSnapshotVolumnsName = "host-snapshot"
 	// NpuSnapshotVolumnsName is the name of the npu snapshot volume

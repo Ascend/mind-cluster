@@ -18,6 +18,7 @@ package snapshot
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -114,7 +115,7 @@ func TestNewSnapshotChecker(t *testing.T) {
 	convey.Convey("Test NewSnapshotChecker function", t, func() {
 		convey.Convey("Should create SnapshotChecker with correct initial values", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 
 			convey.So(checker, convey.ShouldNotBeNil)
 			convey.So(checker.Client, convey.ShouldEqual, fakeClient)
@@ -129,7 +130,7 @@ func TestSnapshotCheckerStart(t *testing.T) {
 	convey.Convey("Test SnapshotChecker Start method", t, func() {
 		convey.Convey("Should set context correctly", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 
 			ctx := context.Background()
 			checker.Start(ctx)
@@ -143,7 +144,7 @@ func TestSnapshotCheckerStop(t *testing.T) {
 	convey.Convey("Test SnapshotChecker Stop method", t, func() {
 		convey.Convey("Should stop running checker and clear trackers", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			checker.Start(context.Background())
 
 			instanceSet := createTestInstanceSet("test-instance", "default", int32(1))
@@ -157,7 +158,7 @@ func TestSnapshotCheckerStop(t *testing.T) {
 
 		convey.Convey("Should handle stop when not running", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 
 			checker.Stop()
 
@@ -170,7 +171,7 @@ func TestSnapshotCheckerTrackInstanceSet(t *testing.T) {
 	convey.Convey("Test SnapshotChecker TrackInstanceSet method", t, func() {
 		convey.Convey("Should return error when instanceSet is nil", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			err := checker.TrackInstanceSet(nil,
 				map[string]string{"app": "test"}, int32(1))
 			convey.So(err, convey.ShouldNotBeNil)
@@ -179,7 +180,7 @@ func TestSnapshotCheckerTrackInstanceSet(t *testing.T) {
 
 		convey.Convey("Should return error when selectLabels is empty", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			instanceSet := createTestInstanceSet("test-instance", "default", int32(1))
 			err := checker.TrackInstanceSet(instanceSet, map[string]string{}, int32(1))
 			convey.So(err, convey.ShouldNotBeNil)
@@ -188,7 +189,7 @@ func TestSnapshotCheckerTrackInstanceSet(t *testing.T) {
 
 		convey.Convey("Should successfully track InstanceSet", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			checker.Start(context.Background())
 			instanceSet := createTestInstanceSet("test-instance", "default", int32(1))
 			selectLabels := map[string]string{
@@ -202,7 +203,7 @@ func TestSnapshotCheckerTrackInstanceSet(t *testing.T) {
 
 		convey.Convey("Should handle duplicate tracking", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			checker.Start(context.Background())
 			instanceSet := createTestInstanceSet("test-instance", "default", int32(1))
 			selectLabels := map[string]string{
@@ -221,7 +222,7 @@ func TestSnapshotCheckerGetInstanceSetKey(t *testing.T) {
 	convey.Convey("Test SnapshotChecker getInstanceSetKey method", t, func() {
 		convey.Convey("Should return correct key format", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 
 			key := checker.getInstanceSetKey("default", "test-instance")
 			convey.So(key, convey.ShouldEqual, "default/test-instance")
@@ -233,7 +234,7 @@ func TestSnapshotCheckerCheckPodSnapshotStatus(t *testing.T) {
 	convey.Convey("Test SnapshotChecker checkPodSnapshotStatus method", t, func() {
 		convey.Convey("Should return false when pod has no annotations", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			pod := createTestPod("test-pod", "default", nil)
 			pod.Annotations = nil
 
@@ -243,7 +244,7 @@ func TestSnapshotCheckerCheckPodSnapshotStatus(t *testing.T) {
 
 		convey.Convey("Should return false when annotation key not exists", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			pod := createTestPod("test-pod", "default", map[string]string{})
 
 			finished := checker.checkPodSnapshotStatus(pod)
@@ -252,7 +253,7 @@ func TestSnapshotCheckerCheckPodSnapshotStatus(t *testing.T) {
 
 		convey.Convey("Should return false when annotation value is not true", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			pod := createTestPod("test-pod", "default", map[string]string{
 				common.HostSnapshotFlagAnnotationKey: common.FalseBool,
 			})
@@ -263,7 +264,7 @@ func TestSnapshotCheckerCheckPodSnapshotStatus(t *testing.T) {
 
 		convey.Convey("Should return true when annotation value is true", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			pod := createTestPod("test-pod", "default", map[string]string{
 				common.HostSnapshotFlagAnnotationKey: common.TrueBool,
 			})
@@ -278,7 +279,7 @@ func TestSnapshotCheckerCleanupSnapshotPath(t *testing.T) {
 	convey.Convey("Test SnapshotChecker cleanupSnapshotPath method", t, func() {
 		convey.Convey("Should return error when snapshot path is empty", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 
 			err := checker.cleanupSnapshotPath("")
 			convey.So(err, convey.ShouldNotBeNil)
@@ -287,7 +288,7 @@ func TestSnapshotCheckerCleanupSnapshotPath(t *testing.T) {
 
 		convey.Convey("Should return nil when path does not exist", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 
 			err := checker.cleanupSnapshotPath("/non/existent/path")
 			convey.So(err, convey.ShouldBeNil)
@@ -295,7 +296,7 @@ func TestSnapshotCheckerCleanupSnapshotPath(t *testing.T) {
 
 		convey.Convey("Should clean up directory but preserve status file", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 
 			tmpDir, err := os.MkdirTemp("", "snapshot-test-*")
 			convey.So(err, convey.ShouldBeNil)
@@ -331,7 +332,7 @@ func TestSnapshotCheckerCleanupSnapshotPath(t *testing.T) {
 
 		convey.Convey("Should handle empty directory", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 
 			tmpDir, err := os.MkdirTemp("", "snapshot-test-*")
 			convey.So(err, convey.ShouldBeNil)
@@ -346,7 +347,7 @@ func TestSnapshotCheckerCleanupSnapshotPath(t *testing.T) {
 
 		convey.Convey("Should preserve only status file when it exists", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 
 			tmpDir, err := os.MkdirTemp("", "snapshot-test-*")
 			convey.So(err, convey.ShouldBeNil)
@@ -369,7 +370,7 @@ func TestSnapshotCheckerRemoveTracker(t *testing.T) {
 	convey.Convey("Test SnapshotChecker removeTracker method", t, func() {
 		convey.Convey("Should successfully remove tracker", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			checker.Start(context.Background())
 
 			instanceSet := createTestInstanceSet("test-instance", "default", int32(1))
@@ -388,7 +389,7 @@ func TestSnapshotCheckerGetTrackerCount(t *testing.T) {
 	convey.Convey("Test SnapshotChecker GetTrackerCount method", t, func() {
 		convey.Convey("Should return correct count", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			checker.Start(context.Background())
 
 			convey.So(checker.GetTrackerCount(), convey.ShouldEqual, 0)
@@ -409,14 +410,14 @@ func TestSnapshotCheckerIsRunning(t *testing.T) {
 	convey.Convey("Test SnapshotChecker IsRunning method", t, func() {
 		convey.Convey("Should return false initially", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 
 			convey.So(checker.IsRunning(), convey.ShouldBeFalse)
 		})
 
 		convey.Convey("Should return true after tracking starts", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			checker.Start(context.Background())
 
 			instanceSet := createTestInstanceSet("test-instance", "default", int32(1))
@@ -427,7 +428,7 @@ func TestSnapshotCheckerIsRunning(t *testing.T) {
 
 		convey.Convey("Should return false after stop", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			checker.Start(context.Background())
 
 			instanceSet := createTestInstanceSet("test-instance", "default", int32(1))
@@ -444,7 +445,7 @@ func TestSnapshotCheckerUpdatePodReadinessGate(t *testing.T) {
 		convey.Convey("Should successfully update pod readiness gate", func() {
 			pod := createTestPod("test-pod", "default", nil)
 			fakeClient := newFakeClientBuilder(pod).Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 
 			ctx := context.Background()
 			err := checker.updatePodReadinessGate(ctx, pod, true)
@@ -454,7 +455,7 @@ func TestSnapshotCheckerUpdatePodReadinessGate(t *testing.T) {
 		convey.Convey("Should return error when patch fails", func() {
 			pod := createTestPod("test-pod", "default", nil)
 			fakeClient := newFakeClientBuilder(pod).Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 
 			patches := gomonkey.ApplyMethodReturn(fakeClient, "Status", &mockStatusWriter{
 				patchErr: errors.New("patch error"),
@@ -473,7 +474,7 @@ func TestSetPodsActiveLabel(t *testing.T) {
 		convey.Convey("Should return nil when pods active label exists", func() {
 			pod := createTestPod("test-pod", "default", nil)
 			fakeClient := newFakeClientBuilder(pod).Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 
 			ctx := context.Background()
 
@@ -485,7 +486,7 @@ func TestSetPodsActiveLabel(t *testing.T) {
 		convey.Convey("Should return nil when patch succeed", func() {
 			pod := createTestPod("test-pod", "default", nil)
 			fakeClient := newFakeClientBuilder(pod).Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 
 			patches := gomonkey.ApplyMethodReturn(fakeClient, "Patch", nil)
 			defer patches.Reset()
@@ -501,7 +502,7 @@ func TestSnapshotCheckerCheckInstanceSetSnapshot(t *testing.T) {
 	convey.Convey("Test SnapshotChecker checkInstanceSetSnapshot method", t, func() {
 		convey.Convey("Should handle non-existent tracker", func() {
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 
 			checker.checkInstanceSetSnapshot("non/existent")
 			convey.So(checker.GetTrackerCount(), convey.ShouldEqual, 0)
@@ -510,7 +511,7 @@ func TestSnapshotCheckerCheckInstanceSetSnapshot(t *testing.T) {
 		convey.Convey("Should handle empty pod list", func() {
 			instanceSet := createTestInstanceSet("test-instance", "default", int32(1))
 			fakeClient := newFakeClientBuilder(instanceSet).Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			checker.Start(context.Background())
 
 			selectLabels := map[string]string{
@@ -526,7 +527,7 @@ func TestSnapshotCheckerCheckInstanceSetSnapshot(t *testing.T) {
 		convey.Convey("Should handle list pods error", func() {
 			instanceSet := createTestInstanceSet("test-instance", "default", int32(1))
 			fakeClient := newFakeClientBuilder(instanceSet).Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			checker.Start(context.Background())
 
 			selectLabels := map[string]string{
@@ -548,7 +549,7 @@ func TestSetAndCleanSnapshot(t *testing.T) {
 		convey.Convey("Should remove tracker when finished", func() {
 			instanceSet := createTestInstanceSet("test-instance", "default", int32(1))
 			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			checker.Start(context.Background())
 			selectLabels := map[string]string{
 				common.InferServiceNameLabelKey: "test-service",
@@ -574,7 +575,7 @@ func TestSetAndCleanSnapshot(t *testing.T) {
 		convey.Convey("Should remove tracker when timeout", func() {
 			instanceSet := createTestInstanceSet("test-instance", "default", int32(1))
 			fakeClient := newFakeClientBuilder(instanceSet).Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			checker.Start(context.Background())
 
 			selectLabels := map[string]string{
@@ -609,7 +610,7 @@ func TestSnapshotCheckerCheckAllInstanceSets(t *testing.T) {
 			instanceSet1 := createTestInstanceSet("instance1", "default", int32(1))
 			instanceSet2 := createTestInstanceSet("instance2", "ns1", int32(1))
 			fakeClient := newFakeClientBuilder(instanceSet1, instanceSet2).Build()
-			checker := NewSnapshotChecker(fakeClient)
+			checker := NewSnapshotChecker(fakeClient, 0)
 			checker.Start(context.Background())
 
 			_ = checker.TrackInstanceSet(instanceSet1,
@@ -707,6 +708,159 @@ func TestSnapshotCheckerWithRealSnapshotPath(t *testing.T) {
 
 			exists := common.IsSnapshotStatusExists(tmpDir)
 			convey.So(exists, convey.ShouldBeTrue)
+		})
+	})
+}
+
+func TestSnapshotCheckerUpdateSnapshotCMCheckpoint(t *testing.T) {
+	convey.Convey("Test SnapshotChecker updateSnapshotCMCheckpoint method", t, func() {
+		convey.Convey("Should handle configmap not found", func() {
+			pod := createTestPod("test-pod", "default", nil)
+			fakeClient := newFakeClientBuilder().Build()
+			checker := NewSnapshotChecker(fakeClient, 0)
+
+			ctx := context.Background()
+			checker.updateSnapshotCMCheckpoint(ctx, pod)
+		})
+
+		convey.Convey("Should handle configmap with empty data", func() {
+			pod := createTestPod("test-pod", "default", nil)
+			cm := &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "snapshot-metadata-test-service-test-role-0",
+					Namespace: "default",
+				},
+				Data: make(map[string]string),
+			}
+			fakeClient := newFakeClientBuilder(pod, cm).Build()
+			checker := NewSnapshotChecker(fakeClient, 0)
+
+			ctx := context.Background()
+			checker.updateSnapshotCMCheckpoint(ctx, pod)
+
+			updatedCM := &corev1.ConfigMap{}
+			err := fakeClient.Get(ctx, client.ObjectKey{
+				Namespace: "default",
+				Name:      "snapshot-metadata-test-service-test-role-0",
+			}, updatedCM)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(len(updatedCM.Data), convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("Should handle configmap with empty snapshot_metadata.json", func() {
+			pod := createTestPod("test-pod", "default", nil)
+			cm := &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "snapshot-metadata-test-service-test-role-0",
+					Namespace: "default",
+				},
+				Data: map[string]string{
+					common.SnapshotMetadataJson: "",
+				},
+			}
+			fakeClient := newFakeClientBuilder(pod, cm).Build()
+			checker := NewSnapshotChecker(fakeClient, 0)
+
+			ctx := context.Background()
+			checker.updateSnapshotCMCheckpoint(ctx, pod)
+
+			updatedCM := &corev1.ConfigMap{}
+			err := fakeClient.Get(ctx, client.ObjectKey{
+				Namespace: "default",
+				Name:      "snapshot-metadata-test-service-test-role-0",
+			}, updatedCM)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(updatedCM.Data[common.SnapshotMetadataJson], convey.ShouldEqual, "")
+		})
+
+		convey.Convey("Should update existing snapshot metadata checkpoint to done", func() {
+			pod := createTestPod("test-pod", "default", nil)
+			originalData := `{"job_name":"test-service","namespace":"default","checkpoint":"running"}`
+			cm := &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "snapshot-metadata-test-service-test-role-0",
+					Namespace: "default",
+				},
+				Data: map[string]string{
+					common.SnapshotMetadataJson: originalData,
+				},
+			}
+			fakeClient := newFakeClientBuilder(pod, cm).Build()
+			checker := NewSnapshotChecker(fakeClient, 0)
+
+			ctx := context.Background()
+			checker.updateSnapshotCMCheckpoint(ctx, pod)
+
+			updatedCM := &corev1.ConfigMap{}
+			err := fakeClient.Get(ctx, client.ObjectKey{
+				Namespace: "default",
+				Name:      "snapshot-metadata-test-service-test-role-0",
+			}, updatedCM)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(updatedCM.Data[common.SnapshotMetadataJson], convey.ShouldNotBeEmpty)
+
+			var checkpointData common.SnapshotMetaData
+			err = json.Unmarshal([]byte(updatedCM.Data[common.SnapshotMetadataJson]), &checkpointData)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(checkpointData.Checkpoint, convey.ShouldEqual, common.SnapshotFinished)
+		})
+
+		convey.Convey("Should handle invalid JSON in snapshot_metadata.json", func() {
+			pod := createTestPod("test-pod", "default", nil)
+			cm := &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "snapshot-metadata-test-service-test-role-0",
+					Namespace: "default",
+				},
+				Data: map[string]string{
+					common.SnapshotMetadataJson: "invalid json",
+				},
+			}
+			fakeClient := newFakeClientBuilder(pod, cm).Build()
+			checker := NewSnapshotChecker(fakeClient, 0)
+
+			ctx := context.Background()
+			checker.updateSnapshotCMCheckpoint(ctx, pod)
+
+			updatedCM := &corev1.ConfigMap{}
+			err := fakeClient.Get(ctx, client.ObjectKey{
+				Namespace: "default",
+				Name:      "snapshot-metadata-test-service-test-role-0",
+			}, updatedCM)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(updatedCM.Data[common.SnapshotMetadataJson], convey.ShouldEqual, "invalid json")
+		})
+
+		convey.Convey("Should handle configmap with other data", func() {
+			pod := createTestPod("test-pod", "default", nil)
+			cm := &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "snapshot-metadata-test-service-test-role-0",
+					Namespace: "default",
+				},
+				Data: map[string]string{
+					"other_key":                 "other_value",
+					common.SnapshotMetadataJson: `{"job_name":"test-service","namespace":"default","checkpoint":"running"}`,
+				},
+			}
+			fakeClient := newFakeClientBuilder(pod, cm).Build()
+			checker := NewSnapshotChecker(fakeClient, 0)
+
+			ctx := context.Background()
+			checker.updateSnapshotCMCheckpoint(ctx, pod)
+
+			updatedCM := &corev1.ConfigMap{}
+			err := fakeClient.Get(ctx, client.ObjectKey{
+				Namespace: "default",
+				Name:      "snapshot-metadata-test-service-test-role-0",
+			}, updatedCM)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(updatedCM.Data["other_key"], convey.ShouldEqual, "other_value")
+
+			var checkpointData common.SnapshotMetaData
+			err = json.Unmarshal([]byte(updatedCM.Data[common.SnapshotMetadataJson]), &checkpointData)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(checkpointData.Checkpoint, convey.ShouldEqual, common.SnapshotFinished)
 		})
 	})
 }

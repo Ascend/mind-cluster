@@ -62,8 +62,9 @@ var (
 	// BuildVersion is the version of build package
 	BuildVersion string
 	// BuildName is the name of build package
-	BuildName string
-	hzFlags   = healthz.RegisterFlags()
+	BuildName       string
+	hzFlags         = healthz.RegisterFlags()
+	snapshotTimeout int
 )
 
 func init() {
@@ -128,6 +129,9 @@ func parseFlags() {
 		"/var/log/mindx-dl/infer-operator/infer-operator.log", "Log file path")
 	flag.IntVar(&hwLogConfig.MaxBackups, "maxBackups", hwlog.DefaultBackups,
 		"Maximum number of backup log files")
+	flag.IntVar(&snapshotTimeout, "snapshotTimeout", common.SnapshotTimeoutNum,
+		"Timeout of the container snapshot checkpoint time(minute), default 60 minutes, "+
+			"snapshotTimeout settings should be greater than 0 and less than 600")
 	flag.Parse()
 }
 
@@ -196,7 +200,7 @@ func main() {
 }
 
 func setUpSnapshotControllers(ctx context.Context, mgr ctrl.Manager) error {
-	instanceSetSnapshotReconciler := snapshot.NewInstanceSetSnapshotReconciler(mgr)
+	instanceSetSnapshotReconciler := snapshot.NewInstanceSetSnapshotReconciler(mgr, snapshotTimeout)
 	if err := instanceSetSnapshotReconciler.SetupWithManager(mgr); err != nil {
 		hwlog.RunLog.Errorf("unable to setup instance set snapshot reconciler: %v", err)
 	}

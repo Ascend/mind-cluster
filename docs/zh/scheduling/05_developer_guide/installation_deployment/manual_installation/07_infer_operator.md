@@ -170,6 +170,15 @@
 <td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz004d"><a name="phz004d"></a><a name="phz004d"></a>HTTPS私钥文件路径。为空则使用HTTP协议。与--tls-cert-file必须同时配置或同时为空。</p>
 </td>
 </tr>
+<tr id="rowhz004"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz004"><a name="phz004"></a><a name="phz004"></a>--snapshotTimeout</p>
+</td>
+<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz004b"><a name="phz004b"></a><a name="phz004b"></a>int</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz004c"><a name="phz004c"></a><a name="phz004c"></a>60</p>
+</td>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz004d"><a name="phz004d"></a><a name="phz004d"></a>容器快照超时时间，取值范围1-600，单位分钟。</p>
+</td>
+</tr>
 <tr id="row2615144813463"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="p1061594884617"><a name="p1061594884617"></a><a name="p1061594884617"></a>-h或者-help</p>
 </td>
 <td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="p16151748144614"><a name="p16151748144614"></a><a name="p16151748144614"></a>无</p>

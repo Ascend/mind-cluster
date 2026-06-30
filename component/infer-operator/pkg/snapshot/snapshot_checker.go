@@ -18,7 +18,9 @@ package snapshot
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"os"
 	"path/filepath"
 	"sync"
@@ -55,14 +57,20 @@ type SnapshotChecker struct {
 	stopCh           chan struct{}
 	running          bool
 	ctx              context.Context
+	snapshotTimeout  time.Duration
 }
 
 // NewSnapshotChecker creates a new SnapshotChecker instance
-func NewSnapshotChecker(k8sClient client.Client) *SnapshotChecker {
+func NewSnapshotChecker(k8sClient client.Client, timeout int) *SnapshotChecker {
+	timeoutDuration := common.SnapshotTimeout
+	if timeoutConfig, err := time.ParseDuration(fmt.Sprintf("%dm", min(max(timeout, 1), 600))); err == nil {
+		timeoutDuration = timeoutConfig
+	}
 	return &SnapshotChecker{
 		Client:           k8sClient,
 		instanceTrackers: make(map[string]*InstanceSetTracker),
 		stopCh:           make(chan struct{}),
+		snapshotTimeout:  timeoutDuration,
 	}
 }
 
@@ -234,12 +242,14 @@ func (sc *SnapshotChecker) setAndCleanSnapshot(trackerKey string, allFinished bo
 			hwlog.RunLog.Errorf("Failed to set active label for pods: %v", err)
 		}
 
+		sc.updateSnapshotCMCheckpoint(ctx, &snapshotPods[0])
+
 		sc.removeTracker(trackerKey)
 		return
 	}
 
 	// clean up snapshot paths if timeout
-	if time.Since(tracker.StartTime) >= common.SnapshotTimeout {
+	if time.Since(tracker.StartTime) >= sc.snapshotTimeout {
 		hwlog.RunLog.Warnf("Snapshot timeout for InstanceSet %s, cleaning up snapshot paths", trackerKey)
 		for _, pod := range podList.Items {
 			snapshotPath := GetHostSnapshotPath(&pod)
@@ -255,6 +265,69 @@ func (sc *SnapshotChecker) setAndCleanSnapshot(trackerKey string, allFinished bo
 		}
 		sc.removeTracker(trackerKey)
 	}
+}
+
+func (sc *SnapshotChecker) updateSnapshotCMCheckpoint(ctx context.Context, pod *corev1.Pod) {
+	instanceSetName := fmt.Sprintf("%s-%s",
+		common.GetInstanceSetNameFromLabels(pod.Labels), pod.Labels[common.InstanceIndexLabelKey])
+	cmName := common.SnapshotMetadataPrefix + instanceSetName
+
+	cm := &corev1.ConfigMap{}
+	var err error
+
+	for attempt := 0; attempt < 3; attempt++ {
+		if attempt > 0 {
+			time.Sleep(time.Millisecond * 1000 * time.Duration(attempt))
+		}
+
+		err = sc.Get(ctx, client.ObjectKey{Namespace: pod.Namespace, Name: cmName}, cm)
+		if err == nil {
+			break
+		}
+	}
+
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			hwlog.RunLog.Errorf("ConfigMap %s/%s not found after retries, it may not be created yet or cache not synced",
+				pod.Namespace, cmName)
+		} else {
+			hwlog.RunLog.Errorf("Failed to get configmap %s/%s after retries: %v", pod.Namespace, cmName, err)
+		}
+		return
+	}
+
+	if cm.Data == nil {
+		cm.Data = make(map[string]string)
+	}
+
+	data, exists := cm.Data[common.SnapshotMetadataJson]
+	if data == "" || !exists {
+		hwlog.RunLog.Error("configmap content error")
+		return
+	}
+
+	var checkpointData common.SnapshotMetaData
+	if err := json.Unmarshal([]byte(data), &checkpointData); err != nil {
+		hwlog.RunLog.Errorf("Failed to unmarshal existing snapshot metadata: %v, will create new one", err)
+		return
+	}
+
+	checkpointData.Checkpoint = common.SnapshotFinished
+
+	checkpointBytes, err := json.Marshal(checkpointData)
+	if err != nil {
+		hwlog.RunLog.Errorf("Failed to marshal checkpoint data: %v", err)
+		return
+	}
+
+	cm.Data[common.SnapshotMetadataJson] = string(checkpointBytes)
+
+	if err := sc.Update(ctx, cm); err != nil {
+		hwlog.RunLog.Errorf("Failed to update configmap %s/%s: %v", pod.Namespace, cmName, err)
+		return
+	}
+
+	hwlog.RunLog.Infof("Updated snapshot configmap %s/%s, set checkpoint to done", pod.Namespace, cmName)
 }
 
 func (sc *SnapshotChecker) checkPodSnapshotStatus(pod *corev1.Pod) bool {

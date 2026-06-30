@@ -579,6 +579,7 @@ func (s *StatefulSetHandler) createCMForSnapshot(ctx context.Context, instanceSe
 	data := common.SnapshotMetaData{
 		InstanceName: instanceName,
 		Namespace:    instanceSet.Namespace,
+		Checkpoint:   "",
 	}
 	dataBytes, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
@@ -596,7 +597,7 @@ func (s *StatefulSetHandler) createCMForSnapshot(ctx context.Context, instanceSe
 			},
 		},
 		Data: map[string]string{
-			"snapshot_metadata.json":           string(dataBytes),
+			common.SnapshotMetadataJson:        string(dataBytes),
 			common.GrusSnapshotRestoredFlagKey: "false",
 		},
 	}
