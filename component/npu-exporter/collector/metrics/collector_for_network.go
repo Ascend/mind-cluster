@@ -274,7 +274,7 @@ func collectNetworkInfo(phyID int32) common.NpuNetInfo {
 // Npu specific collection functions
 func collectNetworkNpuInfo(logicID int32) []*common.NpuNetInfo {
 	var newNetInfo []*common.NpuNetInfo
-	// udie only has 0 and 1, fixed order
+	// udie only has 0 and 1
 	dieIDs := []int{0, 1}
 	for _, dieID := range dieIDs {
 		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap()[dieID]

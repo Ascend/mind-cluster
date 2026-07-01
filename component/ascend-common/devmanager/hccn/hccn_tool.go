@@ -630,7 +630,8 @@ func parseDeviceTable(lines []string) (map[int][]int, error) {
 		// Handle table separator lines
 		if strings.HasPrefix(trimmedLine, "+-") {
 			separatorCount++
-			if separatorCount == firstIndex {
+			// separatorCount==2 means we've passed the header separator, now in data area
+			if separatorCount == secondIndex {
 				isInTable = true
 			} else if separatorCount == threePart {
 				hwlog.RunLog.Debugf("Found end of first table, stopping parsing")
@@ -641,11 +642,6 @@ func parseDeviceTable(lines []string) (map[int][]int, error) {
 
 		// Process table data lines
 		if !isInTable || !strings.HasPrefix(trimmedLine, "|") {
-			continue
-		}
-		// Skip header row
-		lineLower := strings.ToLower(trimmedLine)
-		if !strings.Contains(lineLower, "ub") {
 			continue
 		}
 
