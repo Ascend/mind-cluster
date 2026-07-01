@@ -1710,6 +1710,7 @@ func (hdm *HwDevManager) mendSubscribeFaultEvents() {
 			hdm.manager.HandleDropCardFaultEvents(npuDevice)
 			hdm.manager.HandleLostChipFaultEvents(npuDevice, initLogicIDs)
 			hdm.manager.HandleLostNetworkFaultEvents(npuDevice, initLogicIDs)
+			hdm.manager.HandleLostHyperPlaneFaultEvents(npuDevice, initLogicIDs)
 		}
 		hdm.manager.HandleHangCardFaultEvents(npuDevices)
 	}

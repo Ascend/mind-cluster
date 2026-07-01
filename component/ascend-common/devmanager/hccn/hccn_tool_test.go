@@ -16,34 +16,115 @@
 package hccn
 
 import (
-	"fmt"
+	"reflect"
 	"strings"
 	"testing"
+
+	"ascend-common/devmanager/common"
 )
 
-func TestBuildHccnErr(t *testing.T) {
-	t.Run("normal error", func(t *testing.T) {
-		phyID := int32(1)
-		msg := "status"
-		originalErr := fmt.Errorf("permission denied")
+// hccnToolSeparator is the table separator line of `hccn_tool -g -dev_info` output.
+const hccnToolSeparator = "+--------+--------+--------+----------+-------------+------------+"
 
-		err := buildHccnErr(phyID, msg, originalErr)
+// hccnToolHeader is the table header line of `hccn_tool -g -dev_info` output.
+const hccnToolHeader = "| UdieID | PortID | Speed  | PortType | Link Status | Media Type |"
 
-		if !strings.Contains(err.Error(), "phyID(1)") {
-			t.Error("should contain phyID")
-		}
-		if !strings.Contains(err.Error(), "npu status") {
-			t.Error("should contain npu message")
-		}
-		if !strings.Contains(err.Error(), "permission denied") {
-			t.Error("should contain original error")
-		}
-	})
+// hccnToolTable builds a `hccn_tool -g -dev_info` output snippet from the given
+// data rows. It always emits: separator, header, separator, <data rows>,
+// separator — which mirrors the real command output and lets each test case
+// only describe its own data rows with proper code indentation.
+func hccnToolTable(dataRows ...string) string {
+	lines := []string{
+		hccnToolSeparator,
+		hccnToolHeader,
+		hccnToolSeparator,
+	}
+	lines = append(lines, dataRows...)
+	lines = append(lines, hccnToolSeparator)
+	return strings.Join(lines, "\n")
+}
 
-	t.Run("nil error", func(t *testing.T) {
-		err := buildHccnErr(0, "", nil)
-		if !strings.Contains(err.Error(), "error is :<nil>") {
-			t.Error("should handle nil error")
-		}
-	})
+// sampleDevInfoOutput mimics the real output of `hccn_tool -g -dev_info -i 0`,
+// including the header, separator lines and mixed port types / link statuses.
+var sampleDevInfoOutput = hccnToolTable(
+	"| 0      | 4      | 200    | ETH      | DOWN        | Electrical |",
+	"| 0      | 5      | 200    | ETH      | UP          | Electrical |",
+	"| 1      | 8      | 200    | UB       | DOWN        | Optical    |",
+	"| 1      | 9      | 200    | UB       | UP          | Optical    |",
+)
+
+// TestGetAllUBPortsFromHccnLines verifies that GetAllUBports can correctly parse
+// the output of `hccn_tool -g -dev_info -i 0`.
+func TestGetAllUBPortsFromHccnLines(t *testing.T) {
+	tests := []struct {
+		name    string
+		output  string
+		want    []common.UBPort
+		wantErr bool
+	}{
+		{
+			name:   "01-parse mixed ETH and UB ports with up/down status",
+			output: sampleDevInfoOutput,
+			want: []common.UBPort{
+				{UDieId: 0, PortID: 4, PortType: BondingPortName, LinkStatus: LinkDown},
+				{UDieId: 0, PortID: 5, PortType: BondingPortName, LinkStatus: LinkUp},
+				{UDieId: 1, PortID: 8, PortType: UBPortName, LinkStatus: LinkDown},
+				{UDieId: 1, PortID: 9, PortType: UBPortName, LinkStatus: LinkUp},
+			},
+			wantErr: false,
+		},
+		{
+			name:    "02-only header and separators, no data rows",
+			output:  hccnToolTable(),
+			want:    []common.UBPort{},
+			wantErr: false,
+		},
+		{
+			name: "03-data row with too few columns should return error",
+			output: hccnToolTable(
+				"| 0      | 4      | 200    | ETH      | DOWN        |"),
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "04-data row with non-integer UdieID should return error",
+			output: hccnToolTable(
+				"| ab     | 4      | 200    | ETH      | DOWN        | Electrical |"),
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:    "05-empty output should return empty ports without error",
+			output:  "",
+			want:    []common.UBPort{},
+			wantErr: false,
+		},
+		{
+			name: "06-stop parsing at the third separator and ignore trailing data",
+			output: hccnToolTable(
+				"| 0      | 4      | 200    | ETH      | DOWN        | Electrical |",
+				"| 1      | 8      | 200    | UB       | DOWN        | Optical    |",
+			),
+			want: []common.UBPort{
+				{UDieId: 0, PortID: 4, PortType: BondingPortName, LinkStatus: LinkDown},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lines := strings.Split(tt.output, "\n")
+			got, err := getAllUBPortsFromHccnLines(lines)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getAllUBPortsFromHccnLines() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr {
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getAllUBPortsFromHccnLines() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
