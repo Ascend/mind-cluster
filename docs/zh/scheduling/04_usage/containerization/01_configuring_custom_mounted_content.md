@@ -1,6 +1,6 @@
 # （可选）配置自定义挂载内容<a name="ZH-CN_TOPIC_0000002511427171"></a>
 
-Ascend Docker Runtime会为用户默认挂载驱动以及基础配置文件“/etc/ascend-docker-runtime.d/base.list”中的全部内容。若用户需要挂载文件里的全部路径，则跳过本小节；若用户不需要挂载基础配置文件base.list中的全部内容时，可新增自定义配置文件，减少挂载的内容。自定义配置文件挂载内容须基于base.list文件，操作如下：
+Ascend Docker Runtime会为用户默认挂载驱动以及基础配置文件“/etc/ascend-docker-runtime.d/base.list”中的全部内容，并且Ascend Docker Runtime的默认会检查路径“/usr/local/Ascend/driver/lib64/common”和“/usr/local/Ascend/driver/lib64/driver”，如果存在，则会自动添加到LD_LIBRARY_PATH环境变量中，以便npu-smi info命令自动可用。若用户需要挂载文件里的全部路径，则跳过本小节；若用户不需要挂载基础配置文件base.list中的全部内容时，可新增自定义配置文件，减少挂载的内容。自定义配置文件挂载内容须基于base.list文件，操作如下：
 
 1. 进入配置文件目录。
 

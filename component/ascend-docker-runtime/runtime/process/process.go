@@ -55,6 +55,7 @@ const (
 	useAscendDocker      = api.AscendDockerRuntimeEnv + "=True"
 	ascendVisibleDevices = api.AscendVisibleDevicesEnv
 	ascendRuntimeOptions = api.AscendRuntimeOptionsEnv
+	ldLibraryPathKey     = "LD_LIBRARY_PATH"
 
 	// void indicates that the NPU card does not need to be mounted
 	void = "void"
@@ -94,6 +95,11 @@ var (
 	// managerDevicesMap maps device types to their corresponding manager devices
 	managerDevicesMap = map[string][]string{
 		Ascend910A5: ascend910A5ManagerDevices,
+	}
+	// ascendDriverLibPaths contains the Ascend driver library paths to be added to LD_LIBRARY_PATH
+	ascendDriverLibPaths = []string{
+		"/usr/local/Ascend/driver/lib64/common",
+		"/usr/local/Ascend/driver/lib64/driver",
 	}
 )
 
@@ -231,6 +237,58 @@ func addAscendDockerEnv(spec *specs.Spec) {
 		return
 	}
 	spec.Process.Env = append(spec.Process.Env, useAscendDocker)
+}
+
+func addAscendLibraryPath(spec *specs.Spec) {
+	if spec == nil || spec.Process == nil || spec.Process.Env == nil {
+		return
+	}
+
+	existingPaths := collectExistingLibPaths()
+	if len(existingPaths) == 0 {
+		return
+	}
+
+	for i := len(spec.Process.Env) - 1; i >= 0; i-- {
+		env := spec.Process.Env[i]
+		parts := strings.SplitN(env, "=", kvPairSize)
+		if len(parts) != kvPairSize || parts[0] != ldLibraryPathKey {
+			continue
+		}
+		newPaths := filterNewLibPaths(existingPaths, parts[1])
+		if len(newPaths) == 0 {
+			return
+		}
+		spec.Process.Env[i] = ldLibraryPathKey + "=" + strings.Join(newPaths, ":") + ":" + parts[1]
+		return
+	}
+
+	ascendLibPath := strings.Join(existingPaths, ":")
+	spec.Process.Env = append(spec.Process.Env, ldLibraryPathKey+"="+ascendLibPath)
+}
+
+func collectExistingLibPaths() []string {
+	var paths []string
+	for _, libPath := range ascendDriverLibPaths {
+		if _, err := os.Stat(libPath); err == nil {
+			paths = append(paths, libPath)
+		}
+	}
+	return paths
+}
+
+func filterNewLibPaths(paths []string, existingLD string) []string {
+	existingSet := make(map[string]struct{}, len(paths))
+	for _, p := range strings.Split(existingLD, ":") {
+		existingSet[p] = struct{}{}
+	}
+	filtered := make([]string, 0, len(paths))
+	for _, p := range paths {
+		if _, ok := existingSet[p]; !ok {
+			filtered = append(filtered, p)
+		}
+	}
+	return filtered
 }
 
 func isMountByRuntimeForDP(env []string) bool {
@@ -813,6 +871,7 @@ func processDevicesAndHooks(spec *specs.Spec) error {
 		}
 	}
 	addAscendDockerEnv(spec)
+	addAscendLibraryPath(spec)
 	if isMountByRuntimeForDP(spec.Process.Env) {
 		addDPMountsToSpec(spec)
 	}

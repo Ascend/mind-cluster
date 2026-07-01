@@ -1724,3 +1724,166 @@ func TestGetCommonManagerDevices(t *testing.T) {
 		})
 	})
 }
+
+// TestCollectExistingLibPaths tests collectExistingLibPaths
+func TestCollectExistingLibPaths(t *testing.T) {
+	convey.Convey("test collectExistingLibPaths", t, func() {
+		convey.Convey("01-no paths exist on host, should return empty", func() {
+			patches := gomonkey.ApplyFunc(os.Stat, func(name string) (os.FileInfo, error) {
+				return nil, os.ErrNotExist
+			})
+			defer patches.Reset()
+			paths := collectExistingLibPaths()
+			convey.So(len(paths), convey.ShouldEqual, 0)
+		})
+		convey.Convey("02-all paths exist, should return all", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil)
+			defer patches.Reset()
+			paths := collectExistingLibPaths()
+			convey.So(len(paths), convey.ShouldEqual, len(ascendDriverLibPaths))
+		})
+		convey.Convey("03-partial paths exist, should return existing ones", func() {
+			patches := gomonkey.ApplyFunc(os.Stat, func(name string) (os.FileInfo, error) {
+				if name == ascendDriverLibPaths[0] {
+					return mockFileInfo{}, nil
+				}
+				return nil, os.ErrNotExist
+			})
+			defer patches.Reset()
+			paths := collectExistingLibPaths()
+			convey.So(len(paths), convey.ShouldEqual, 1)
+			convey.So(paths[0], convey.ShouldEqual, ascendDriverLibPaths[0])
+		})
+	})
+}
+
+// TestFilterNewLibPaths tests filterNewLibPaths
+func TestFilterNewLibPaths(t *testing.T) {
+	paths := []string{"/usr/lib/a", "/usr/lib/b", "/usr/lib/c"}
+	convey.Convey("test filterNewLibPaths", t, func() {
+		convey.Convey("01-all paths already in LD_LIBRARY_PATH, should return empty", func() {
+			result := filterNewLibPaths(paths, "/usr/lib/a:/usr/lib/b:/usr/lib/c")
+			convey.So(len(result), convey.ShouldEqual, 0)
+		})
+		convey.Convey("02-no paths in LD_LIBRARY_PATH, should return all", func() {
+			result := filterNewLibPaths(paths, "/usr/lib/x:/usr/lib/y")
+			convey.So(result, convey.ShouldResemble, paths)
+		})
+		convey.Convey("03-partial paths in LD_LIBRARY_PATH, should return missing ones", func() {
+			result := filterNewLibPaths(paths, "/usr/lib/a")
+			convey.So(len(result), convey.ShouldEqual, 2)
+			convey.So(result, convey.ShouldNotContain, "/usr/lib/a")
+		})
+		convey.Convey("04-substring false positive, should not be filtered out", func() {
+			result := filterNewLibPaths(paths, "/usr/lib/a_ext:/usr/lib/b_ext")
+			convey.So(len(result), convey.ShouldEqual, len(paths))
+		})
+	})
+}
+
+// TestAddAscendLibraryPathWhenNilOrEmpty tests addAscendLibraryPath with nil/empty spec
+func TestAddAscendLibraryPathWhenNilOrEmpty(t *testing.T) {
+	convey.Convey("test addAscendLibraryPath nil or empty", t, func() {
+		convey.Convey("01-nil spec, should not panic", func() {
+			convey.So(func() { addAscendLibraryPath(nil) }, convey.ShouldNotPanic)
+		})
+		convey.Convey("02-nil process, should not panic", func() {
+			spec := &specs.Spec{}
+			convey.So(func() { addAscendLibraryPath(spec) }, convey.ShouldNotPanic)
+		})
+		convey.Convey("03-nil env, should not panic", func() {
+			spec := &specs.Spec{Process: &specs.Process{}}
+			convey.So(func() { addAscendLibraryPath(spec) }, convey.ShouldNotPanic)
+		})
+	})
+}
+
+// TestAddAscendLibraryPathWhenNoPaths tests addAscendLibraryPath when no lib paths exist on host
+func TestAddAscendLibraryPathWhenNoPaths(t *testing.T) {
+	convey.Convey("test addAscendLibraryPath no paths", t, func() {
+		convey.Convey("01-no paths exist, env should remain unchanged", func() {
+			patches := gomonkey.ApplyFunc(os.Stat, func(name string) (os.FileInfo, error) {
+				return nil, os.ErrNotExist
+			})
+			defer patches.Reset()
+			spec := &specs.Spec{
+				Process: &specs.Process{
+					Env: []string{strKubeDNSPort53UDPPort, strKubeDNSPort53UDPProto},
+				},
+			}
+			originLen := len(spec.Process.Env)
+			addAscendLibraryPath(spec)
+			convey.So(len(spec.Process.Env), convey.ShouldEqual, originLen)
+		})
+	})
+}
+
+// TestAddAscendLibraryPathWhenNewLD tests addAscendLibraryPath when LD_LIBRARY_PATH not set
+func TestAddAscendLibraryPathWhenNewLD(t *testing.T) {
+	convey.Convey("test addAscendLibraryPath new LD_LIBRARY_PATH", t, func() {
+		convey.Convey("01-no LD_LIBRARY_PATH, should add with existing paths", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil)
+			defer patches.Reset()
+			spec := &specs.Spec{
+				Process: &specs.Process{
+					Env: []string{strKubeDNSPort53UDPPort},
+				},
+			}
+			addAscendLibraryPath(spec)
+			convey.So(len(spec.Process.Env), convey.ShouldEqual, 2)
+			assert.Contains(t, spec.Process.Env[1], ldLibraryPathKey)
+		})
+	})
+}
+
+// TestAddAscendLibraryPathWhenAppend tests addAscendLibraryPath when LD_LIBRARY_PATH exists
+func TestAddAscendLibraryPathWhenAppend(t *testing.T) {
+	convey.Convey("test addAscendLibraryPath append", t, func() {
+		convey.Convey("01-LD_LIBRARY_PATH exists, should prepend new paths", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil)
+			defer patches.Reset()
+			existingLD := "/usr/lib/x:/usr/lib/y"
+			spec := &specs.Spec{
+				Process: &specs.Process{
+					Env: []string{ldLibraryPathKey + "=" + existingLD},
+				},
+			}
+			addAscendLibraryPath(spec)
+			convey.So(len(spec.Process.Env), convey.ShouldEqual, 1)
+			envVal := spec.Process.Env[0]
+			convey.So(envVal, convey.ShouldStartWith, ldLibraryPathKey)
+			convey.So(envVal, convey.ShouldEndWith, existingLD)
+		})
+	})
+}
+
+// TestAddAscendLibraryPathWhenDedup tests addAscendLibraryPath deduplication
+func TestAddAscendLibraryPathWhenDedup(t *testing.T) {
+	convey.Convey("test addAscendLibraryPath dedup", t, func() {
+		convey.Convey("01-all paths already in LD_LIBRARY_PATH, should skip", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil)
+			defer patches.Reset()
+			existingLD := strings.Join(ascendDriverLibPaths, ":")
+			spec := &specs.Spec{
+				Process: &specs.Process{
+					Env: []string{ldLibraryPathKey + "=" + existingLD},
+				},
+			}
+			addAscendLibraryPath(spec)
+			convey.So(spec.Process.Env[0], convey.ShouldEqual, ldLibraryPathKey+"="+existingLD)
+		})
+		convey.Convey("02-partial paths already in LD_LIBRARY_PATH, should add missing", func() {
+			patches := gomonkey.ApplyFuncReturn(os.Stat, mockFileInfo{}, nil)
+			defer patches.Reset()
+			existingLD := ascendDriverLibPaths[0] + ":/usr/lib/x"
+			spec := &specs.Spec{
+				Process: &specs.Process{
+					Env: []string{ldLibraryPathKey + "=" + existingLD},
+				},
+			}
+			addAscendLibraryPath(spec)
+			convey.So(len(spec.Process.Env), convey.ShouldEqual, 1)
+			convey.So(spec.Process.Env[0], convey.ShouldContainSubstring, ascendDriverLibPaths[1])
+		})
+	})
+}
