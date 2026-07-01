@@ -108,7 +108,9 @@ class PyMotorVLLMParser(FileParser):
         plog_end_time = self.params.get("end_time")
 
         file_list = self.find_log(parse_ctx.parse_file_path)
-        file_list = [f for f in file_list if self._is_accepted_file(os.path.basename(f))]
+        # SDK input: file_list contains LogInfoSaver objects, skip filename filtering
+        if not self.is_sdk_input:
+            file_list = [f for f in file_list if self._is_accepted_file(os.path.basename(f))]
 
         if not file_list:
             return [], {}

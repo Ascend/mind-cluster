@@ -204,6 +204,80 @@ class TestPyMotorVLLMParserIPv6(unittest.TestCase):
             os.unlink(file_path)
 
 
+class TestPyMotorVLLMParserSDKInput(unittest.TestCase):
+    """Test that PyMotorVLLMParser works with SDK input (LogInfoSaver objects)"""
+
+    CONFIG_PATH = os.path.join(
+        os.path.dirname(__file__), '..', '..', 'src', 'ascend_fd', 'configuration', 'kg-config.json'
+    )
+
+    def _load_config(self):
+        from ascend_fd.utils.load_kg_config import ParseRegexMap
+
+        parse_regex = ParseRegexMap(config_pkg_list=[self.CONFIG_PATH]).get_parse_regex()
+        return parse_regex.get(PyMotorVLLMParser.SOURCE_FILE, {})
+
+    def _create_parser(self):
+        config = self._load_config()
+        return PyMotorVLLMParser(
+            {
+                "default_conf": {PyMotorVLLMParser.SOURCE_FILE: config},
+                "user_conf": {},
+            }
+        )
+
+    def test_sdk_input_eplb_001(self):
+        """SDK input with LogInfoSaver should match EPLB fault without filename filtering"""
+        from ascend_fd.pkg.parse.parser_saver import LogInfoSaver
+        from ascend_fd.model.context import KGParseCtx
+        from ascend_fd.model.parse_info import KGParseFilePath
+
+        log_saver = LogInfoSaver(
+            source_file="PyMotor_vLLM_Log",
+            path="/log/debug/vllm-2025_202503252036.log",
+            device_id=0,
+            log_lines=[
+                "2026-05-26 15:15:49.409000",
+                "(APIServer pid=2056) AssertionError: EPLB must used in expert parallelism.",
+            ],
+            modification_time="",
+            component="",
+        )
+        parse_file_path = KGParseFilePath(pymotor_vllm_log_path=[log_saver])
+        parse_ctx = KGParseCtx(parse_file_path=parse_file_path, is_sdk_input=True)
+
+        parser = self._create_parser()
+        events, _ = parser.parse(parse_ctx, "test-task")
+
+        event_codes = {ev.get("event_code") for ev in events}
+        self.assertIn("AISW_VLLM_ASCEND_EPLB_001", event_codes)
+
+    def test_sdk_input_no_match(self):
+        """SDK input with irrelevant log lines should produce no events"""
+        from ascend_fd.pkg.parse.parser_saver import LogInfoSaver
+        from ascend_fd.model.context import KGParseCtx
+        from ascend_fd.model.parse_info import KGParseFilePath
+
+        log_saver = LogInfoSaver(
+            source_file="PyMotor_vLLM_Log",
+            path="/log/debug/vllm-normal.log",
+            device_id=0,
+            log_lines=[
+                "2026-05-26 15:15:49.409000",
+                "INFO - Engine running normally",
+            ],
+            modification_time="",
+            component="",
+        )
+        parse_file_path = KGParseFilePath(pymotor_vllm_log_path=[log_saver])
+        parse_ctx = KGParseCtx(parse_file_path=parse_file_path, is_sdk_input=True)
+
+        parser = self._create_parser()
+        events, _ = parser.parse(parse_ctx, "test-task")
+
+        self.assertEqual(len(events), 0)
+
+
 class TestPyMotorVLLMParserMultiLineFaultMode(unittest.TestCase):
     """Regression tests for cross-line fault mode matching (all/opt/max_lines)"""
 
