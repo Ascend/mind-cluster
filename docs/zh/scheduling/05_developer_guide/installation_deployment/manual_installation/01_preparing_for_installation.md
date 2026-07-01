@@ -320,7 +320,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
 >- 在K8s所使用的容器运行时中导入镜像。如K8s  1.24以上版本默认使用Containerd作为容器运行时，拉取或者制作完镜像后需要将镜像导入到Containerd中。
 >- NPU Exporter和Ascend Device Plugin的运行用户为root，在对应的Dockerfile中配置了LD\_LIBRARY\_PATH环境变量，其中的值包含了驱动库的相关路径。组件运行时会使用到其中的文件，建议驱动安装时指定的运行用户为root，避免用户不一致带来的提权风险。
 >- 启动用户为hwMindX的组件，若在[创建用户](#ZH-CN_TOPIC_0000002511346353)时使用了自定义用户或已有用户，需在制作镜像前修改对应组件Dockerfile中`useradd`命令的UID，使其与宿主机上的用户UID一致。
->- 针对Atlas 850 系列硬件产品、Atlas 950 SuperPod产品，Ascend Device Plugin、NodeD、NPU Exporter等需要在容器内调用DCMI接口的组件，在构建镜像时，需参考[容器基础镜像集成UMDK安装指导](../../../07_references/common_operations.md#容器基础镜像集成umdk安装指导)，安装UMDK软件包。
+>- 针对Atlas 850 系列硬件产品、Atlas 950 SuperPod产品，需要在容器内调用驱动DCMI接口的场景，在构建镜像时，需参考[容器基础镜像集成UMDK安装指导](../../../07_references/common_operations.md#容器基础镜像集成umdk安装指导)，安装UMDK软件包。
 
 **制作镜像<a name="section106851195114"></a>**
 
@@ -419,11 +419,11 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     </thead>
     <tbody><tr id="row2098819467246"><td class="cellrowborder" valign="top" width="12.941294129412938%" headers="mcps1.2.5.1.1 "><p id="p179024214293"><a name="p179024214293"></a><a name="p179024214293"></a>其他产品</p>
     </td>
-    <td class="cellrowborder" rowspan="2" valign="top" width="13.081308130813083%" headers="mcps1.2.5.1.2 "><p id="p34169197258"><a name="p34169197258"></a><a name="p34169197258"></a><span id="ph36246385212"><a name="ph36246385212"></a><a name="ph36246385212"></a>Ascend Device Plugin</span></p>
+    <td class="cellrowborder" rowspan="3" valign="top" width="13.081308130813083%" headers="mcps1.2.5.1.2 "><p id="p34169197258"><a name="p34169197258"></a><a name="p34169197258"></a><span id="ph36246385212"><a name="ph36246385212"></a><a name="ph36246385212"></a>Ascend Device Plugin</span></p>
     </td>
     <td class="cellrowborder" valign="top" width="54.76547654765477%" headers="mcps1.2.5.1.3 "><ul><li>基础镜像为Ubuntu的Ascend Device Plugin镜像制作命令。<pre class="screen" id="screen3237730141519"><a name="screen3237730141519"></a><a name="screen3237730141519"></a>docker build --no-cache -t ascend-k8sdeviceplugin:<em id="i02419301157"><a name="i02419301157"></a><a name="i02419301157"></a>{</em><em id="i133991029173612"><a name="i133991029173612"></a><a name="i133991029173612"></a>tag}</em> ./</pre></li><li>基础镜像为openEuler的Ascend Device Plugin镜像制作命令。<pre class="screen">docker build --no-cache -t ascend-k8sdeviceplugin:<em>{</em><em>tag}</em> -f Dockerfile.openeuler ./</pre></li></ul>
     </td>
-    <td class="cellrowborder" rowspan="9" valign="top" width="19.21192119211921%" headers="mcps1.2.5.1.4 "><p id="p10280193431010"><a name="p10280193431010"></a><a name="p10280193431010"></a><em id="i472612293915"><a name="i472612293915"></a><a name="i472612293915"></a>{tag}</em>需要参考软件包上的版本。如：软件包上版本为<span id="ph18653133316811"><a name="ph18653133316811"></a><a name="ph18653133316811"></a>26.0.0</span>，则<em id="i1572610273910"><a name="i1572610273910"></a><a name="i1572610273910"></a>{tag}</em>为v<span id="ph205239348813"><a name="ph205239348813"></a><a name="ph205239348813"></a>26.0.0</span>。</p>
+    <td class="cellrowborder" rowspan="13" valign="top" width="19.21192119211921%" headers="mcps1.2.5.1.4 "><p id="p10280193431010"><a name="p10280193431010"></a><a name="p10280193431010"></a><em id="i472612293915"><a name="i472612293915"></a><a name="i472612293915"></a>{tag}</em>需要参考软件包上的版本。如：软件包上版本为<span id="ph18653133316811"><a name="ph18653133316811"></a><a name="ph18653133316811"></a>26.0.0</span>，则<em id="i1572610273910"><a name="i1572610273910"></a><a name="i1572610273910"></a>{tag}</em>为v<span id="ph205239348813"><a name="ph205239348813"></a><a name="ph205239348813"></a>26.0.0</span>。</p>
     <div class="note" id="note1217913258443"><a name="note1217913258443"></a><a name="note1217913258443"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p11793259444"><a name="p11793259444"></a><a name="p11793259444"></a>请确保Dockerfile-310P-1usoc中HwDmUser和HwBaseUser的<span id="ph18833164913291"><a name="ph18833164913291"></a><a name="ph18833164913291"></a>GID</span>和<span id="ph5530185193011"><a name="ph5530185193011"></a><a name="ph5530185193011"></a>UID</span>与物理机上的保持一致。</p>
     </div></div>
     <p id="p7733142881719"><a name="p7733142881719"></a><a name="p7733142881719"></a></p>
@@ -434,9 +434,14 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><ul><li>基础镜像为Ubuntu的Atlas 200I SoC A1 核心板上Ascend Device Plugin镜像制作命令。<pre class="screen" id="screen11251535101518"><a name="screen11251535101518"></a><a name="screen11251535101518"></a>docker build --no-cache -t<strong id="b412563510158"><a name="b412563510158"></a><a name="b412563510158"></a> </strong>ascend-k8sdeviceplugin:<em id="i14896103963618"><a name="i14896103963618"></a><a name="i14896103963618"></a>{</em><em id="i108961395368"><a name="i108961395368"></a><a name="i108961395368"></a>tag}</em> -f Dockerfile-310P-1usoc ./</pre></li><li>基础镜像为openEuler的Atlas 200I SoC A1 核心板上Ascend Device Plugin镜像制作命令。<pre class="screen">docker build --no-cache -t ascend-k8sdeviceplugin:<em>{</em><em>tag}</em> -f Dockerfile-310P-1usoc.openeuler ./</pre></li></ul>
     </td>
     </tr>
+    <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><a name="p1519601142916"></a><a name="p1519601142916"></a><span id="ph138789131470"><a name="ph138789131470"></a><a name="ph138789131470"></a>Atlas 850 系列硬件产品、Atlas 950 SuperPod产品</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t ascend-k8sdeviceplugin:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>UMDK_PKG参数取值为UMDK软件包文件名，需要从<a href="https://mirrors.huaweicloud.com/ascend/">华为云镜像仓地址</a>的archive目录下载。</p>
+    </td>
+    </tr>
     <tr id="row098844612415"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p3927139182817"><a name="p3927139182817"></a><a name="p3927139182817"></a>其他产品</p>
     </td>
-    <td class="cellrowborder" rowspan="2" valign="top" headers="mcps1.2.5.1.2 "><p id="p114161919102520"><a name="p114161919102520"></a><a name="p114161919102520"></a><span id="ph5113121424115"><a name="ph5113121424115"></a><a name="ph5113121424115"></a>NPU Exporter</span></p>
+    <td class="cellrowborder" rowspan="3" valign="top" headers="mcps1.2.5.1.2 "><p id="p114161919102520"><a name="p114161919102520"></a><a name="p114161919102520"></a><span id="ph5113121424115"><a name="ph5113121424115"></a><a name="ph5113121424115"></a>NPU Exporter</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><ul><li>基础镜像为Ubuntu的NPU Exporter镜像制作命令。<pre class="screen" id="screen194843931520"><a name="screen194843931520"></a><a name="screen194843931520"></a>docker build --no-cache -t npu-exporter:<em id="i1233412449361"><a name="i1233412449361"></a><a name="i1233412449361"></a>{</em><em id="i16334174433615"><a name="i16334174433615"></a><a name="i16334174433615"></a>tag}</em> ./</pre></li><li>基础镜像为openEuler的NPU Exporter镜像制作命令。<pre class="screen">docker build --no-cache -t npu-exporter:<em>{</em><em>tag}</em> -f Dockerfile.openeuler ./</pre></li></ul>
     </td>
@@ -446,7 +451,24 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><ul><li>基础镜像为Ubuntu的Atlas 200I SoC A1 核心板上NPU Exporter镜像制作命令。<pre class="screen" id="screen18159134401518"><a name="screen18159134401518"></a><a name="screen18159134401518"></a>docker build --no-cache -t<strong id="b416024416154"><a name="b416024416154"></a><a name="b416024416154"></a> </strong>npu-exporter:<em id="i1316184923612"><a name="i1316184923612"></a><a name="i1316184923612"></a>{</em><em id="i21616493369"><a name="i21616493369"></a><a name="i21616493369"></a>tag}</em> -f Dockerfile-310P-1usoc ./</pre></li><li>基础镜像为openEuler的Atlas 200I SoC A1 核心板上NPU Exporter镜像制作命令。<pre class="screen">docker build --no-cache -t npu-exporter:<em>{</em><em>tag}</em> -f Dockerfile-310P-1usoc.openeuler ./</pre></li></ul>
     </td>
     </tr>
-    <tr id="row16602529173910"><td class="cellrowborder" rowspan="7" valign="top" headers="mcps1.2.5.1.1 "><p id="p119247391094"><a name="p119247391094"></a><a name="p119247391094"></a>其他产品</p>
+    <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><a name="p1519601142917"></a><a name="p1519601142917"></a><span id="ph138789131471"><a name="ph138789131471"></a><a name="ph138789131471"></a>Atlas 850 系列硬件产品、Atlas 950 SuperPod产品</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t npu-exporter:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>UMDK_PKG参数取值为UMDK软件包文件名，需要从<a href="https://mirrors.huaweicloud.com/ascend/">华为云镜像仓地址</a>的archive目录下载。</p>
+    </td>
+    </tr>
+    <tr id="row098844612416"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p3927139182818"><a name="p3927139182818"></a><a name="p3927139182818"></a>其他产品</p>
+    </td>
+    <td class="cellrowborder" rowspan="2" valign="top" headers="mcps1.2.5.1.2 "><p id="p114161919102521"><a name="p114161919102521"></a><a name="p114161919102521"></a><span id="ph5113121424116"><a name="ph5113121424116"></a><a name="ph5113121424116"></a>NodeD</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><ul><li>基础镜像为Ubuntu的NodeD镜像制作命令。<pre class="screen" id="screen194843931521"><a name="screen194843931521"></a><a name="screen194843931521"></a>docker build --no-cache -t noded:<em id="i1233412449362"><a name="i1233412449362"></a><a name="i1233412449362"></a>{</em><em id="i16334174433616"><a name="i16334174433616"></a><a name="i16334174433616"></a>tag}</em> ./</pre></li><li>基础镜像为openEuler的NodeD镜像制作命令。<pre class="screen">docker build --no-cache -t noded:<em>{</em><em>tag}</em> -f Dockerfile.openeuler ./</pre></li></ul>
+    </td>
+    </tr>
+    <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p><a name="p1519601142918"></a><a name="p1519601142918"></a><span id="ph138789131472"><a name="ph138789131472"></a><a name="ph138789131472"></a>Atlas 850 系列硬件产品、Atlas 950 SuperPod产品</span></p>
+    </td>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen">docker build --no-cache -t noded:<em>{</em><em>tag}</em> --build-arg UMDK_PKG=<em>{</em><em>umdk_pkg}</em> -f Dockerfile.openeuler ./</pre><p>UMDK_PKG参数取值为UMDK软件包文件名，需要从<a href="https://mirrors.huaweicloud.com/ascend/">华为云镜像仓地址</a>的archive目录下载。</p>
+    </td>
+    </tr>
+    <tr id="row16602529173910"><td class="cellrowborder" rowspan="6" valign="top" headers="mcps1.2.5.1.1 "><p id="p119247391094"><a name="p119247391094"></a><a name="p119247391094"></a>其他产品</p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p4603162993920"><a name="p4603162993920"></a><a name="p4603162993920"></a><span id="ph2247144612408"><a name="ph2247144612408"></a><a name="ph2247144612408"></a>Ascend Operator</span></p>
     </td>
@@ -461,11 +483,6 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <tr id="row17988246152414"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1741731972511"><a name="p1741731972511"></a><a name="p1741731972511"></a><span id="ph16157133165316"><a name="ph16157133165316"></a><a name="ph16157133165316"></a>Resilience Controller</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><pre class="screen" id="screen2020115813153"><a name="screen2020115813153"></a><a name="screen2020115813153"></a>docker build --no-cache -t resilience-controller:<em id="i1078611616374"><a name="i1078611616374"></a><a name="i1078611616374"></a>{tag}</em> ./</pre>
-    </td>
-    </tr>
-    <tr id="row139888467245"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p15417131916251"><a name="p15417131916251"></a><a name="p15417131916251"></a><span id="ph78731053479"><a name="ph78731053479"></a><a name="ph78731053479"></a>NodeD</span></p>
-    </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><ul><li>基础镜像为Ubuntu的NodeD镜像制作命令。<pre class="screen" id="screen27324211618"><a name="screen27324211618"></a><a name="screen27324211618"></a>docker build --no-cache -t noded:<em id="i693671211372"><a name="i693671211372"></a><a name="i693671211372"></a>{tag}</em> ./</pre></li><li>基础镜像为openEuler的NodeD镜像制作命令。<pre class="screen">docker build --no-cache -t noded:<em>{tag}</em> -f Dockerfile.openeuler ./</pre></li></ul>
     </td>
     </tr>
     <tr id="row2597060117203"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1597060117203"><a name="p1597060117203"></a><a name="p1597060117203"></a><span id="ph2597060117203"><a name="ph2597060117203"></a><a name="ph2597060117203"></a>K8s RDMA Shared Dev Plugin</span></p>
