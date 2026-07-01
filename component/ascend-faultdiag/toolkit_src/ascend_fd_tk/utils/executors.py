@@ -51,15 +51,23 @@ CALLABLE_PARAM = Optional[Callable[[CommandResult], None]]
 
 
 def default_error_callback(result: CommandResult):
-    msg = (f"Command {result.cmd} failed with return code {result.returncode}, stdout: {result.stdout}, "
-           f"stderr: {result.stderr}")
+    msg = (
+        f"Command {result.cmd} failed with return code {result.returncode}, stdout: {result.stdout}, "
+        f"stderr: {result.stderr}"
+    )
     DIAG_LOGGER.error(msg)
 
 
 class CmdTask:
-
-    def __init__(self, cmd: str, timeout=5, timeout_once=0.2, end_sign="", on_complete: CALLABLE_PARAM = None,
-                 on_failed: CALLABLE_PARAM = default_error_callback):
+    def __init__(
+        self,
+        cmd: str,
+        timeout=5,
+        timeout_once=0.2,
+        end_sign="",
+        on_complete: CALLABLE_PARAM = None,
+        on_failed: CALLABLE_PARAM = default_error_callback,
+    ):
         self.cmd = cmd
         self.timeout = timeout
         self.timeout_once = timeout_once
@@ -97,8 +105,7 @@ class AsyncExecutor(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def upload_file(self, local_path: str, remote_path: str,
-                          permissions: Optional[int] = None) -> None:
+    async def upload_file(self, local_path: str, remote_path: str, permissions: Optional[int] = None) -> None:
         """上传文件"""
         pass
 
@@ -118,22 +125,17 @@ class AsyncCmdExecutor(AsyncExecutor):
         try:
             # 创建子进程执行命令
             proc = await asyncio.create_subprocess_shell(
-                cmd_task.cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                cmd_task.cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
 
             # 等待命令完成并获取输出（带超时）
-            stdout, stderr = await asyncio.wait_for(
-                proc.communicate(),
-                timeout=cmd_task.timeout
-            )
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=cmd_task.timeout)
 
             res = CommandResult(
                 cmd=cmd_task.cmd,
                 returncode=proc.returncode,
                 stdout=stdout.decode().strip(),
-                stderr=stderr.decode().strip()
+                stderr=stderr.decode().strip(),
             )
 
             # 执行回调
@@ -148,18 +150,10 @@ class AsyncCmdExecutor(AsyncExecutor):
             # 超时处理
             proc.terminate()
             return CommandResult(
-                cmd=cmd_task.cmd,
-                returncode=-1,
-                stdout="",
-                stderr=f"Command timed out after {cmd_task.timeout} seconds"
+                cmd=cmd_task.cmd, returncode=-1, stdout="", stderr=f"Command timed out after {cmd_task.timeout} seconds"
             )
         except Exception as e:
-            return CommandResult(
-                cmd=cmd_task.cmd,
-                returncode=-2,
-                stdout="",
-                stderr=f"Execution error: {str(e)}"
-            )
+            return CommandResult(cmd=cmd_task.cmd, returncode=-2, stdout="", stderr=f"Execution error: {str(e)}")
 
     async def run_parallel(self, cmd_tasks: List[CmdTask]) -> List[CommandResult]:
         """并行执行多个本地命令"""
@@ -178,6 +172,7 @@ class AsyncCmdExecutor(AsyncExecutor):
         """本地文件复制（模拟下载）"""
         # 实际场景可能是从网络位置下载到本地
         import shutil
+
         loop = asyncio.get_event_loop()
 
         def _copy_sync():
@@ -189,10 +184,10 @@ class AsyncCmdExecutor(AsyncExecutor):
 
         await loop.run_in_executor(None, _copy_sync)
 
-    async def upload_file(self, local_path: str, remote_path: str,
-                          permissions: Optional[int] = None) -> None:
+    async def upload_file(self, local_path: str, remote_path: str, permissions: Optional[int] = None) -> None:
         """本地文件复制（模拟上传）"""
         import shutil
+
         loop = asyncio.get_event_loop()
 
         def _copy_sync():
@@ -216,9 +211,18 @@ class AsyncSSHExecutor(AsyncExecutor):
     - 不添加额外超时错误信息
     """
 
-    def __init__(self, host: str, port: int = 22, username: str = "root", password: Optional[str] = None,
-                 private_key: Optional[str] = None, passphrase: Optional[str] = None, timeout: float = 10.0,
-                 look_for_keys: bool = True, allow_agent: bool = True):
+    def __init__(
+        self,
+        host: str,
+        port: int = 22,
+        username: str = "root",
+        password: Optional[str] = None,
+        private_key: Optional[str] = None,
+        passphrase: Optional[str] = None,
+        timeout: float = 10.0,
+        look_for_keys: bool = True,
+        allow_agent: bool = True,
+    ):
         """初始化SSH连接参数"""
         super().__init__(host)
         self.host = host
@@ -251,7 +255,7 @@ class AsyncSSHExecutor(AsyncExecutor):
             try:
                 private_key_obj = paramiko.RSAKey.from_private_key_file(private_key_path, passphrase)
             except SSHException as err:
-                DIAG_LOGGER.warning(f"Ed25519密钥和RSA密钥加载失败[{private_key}]：{str(err)}")
+                DIAG_LOGGER.warning("Ed25519密钥和RSA密钥加载失败[%s]：%s", private_key, str(err))
         return private_key_obj
 
     def ensure_shell_session(self):
@@ -272,13 +276,8 @@ class AsyncSSHExecutor(AsyncExecutor):
 
         start_time = time.time()
         exit_code, stdout, stderr = await loop.run_in_executor(None, _run_sync)
-        DIAG_LOGGER.info(f"Host: {self.host}, cmd: {cmd_task.cmd} cost {time.time() - start_time} seconds")
-        result = CommandResult(
-            cmd=cmd_task.cmd,
-            returncode=exit_code,
-            stdout=stdout or "",
-            stderr=stderr or ""
-        )
+        DIAG_LOGGER.info("Host: %s, cmd: %s cost %.3f seconds", self.host, cmd_task.cmd, time.time() - start_time)
+        result = CommandResult(cmd=cmd_task.cmd, returncode=exit_code, stdout=stdout or "", stderr=stderr or "")
 
         # 执行回调
         if result.is_success() and cmd_task.on_complete:
@@ -297,6 +296,7 @@ class AsyncSSHExecutor(AsyncExecutor):
             prompt = self.last_prompt
 
             try:
+
                 def _sync_exec():
                     all_stdout = []
                     all_stderr = []
@@ -338,20 +338,10 @@ class AsyncSSHExecutor(AsyncExecutor):
                 loop = asyncio.get_event_loop()
                 exit_code, stdout, stderr = await loop.run_in_executor(None, _sync_exec)
 
-                return CommandResult(
-                    cmd=task.cmd,
-                    returncode=exit_code,
-                    stdout=stdout,
-                    stderr=stderr
-                )
+                return CommandResult(cmd=task.cmd, returncode=exit_code, stdout=stdout, stderr=stderr)
 
             except Exception as e:
-                return CommandResult(
-                    cmd=task.cmd,
-                    returncode=-1,
-                    stdout="",
-                    stderr=f"并行执行错误: {str(e)}"
-                )
+                return CommandResult(cmd=task.cmd, returncode=-1, stdout="", stderr=f"并行执行错误: {str(e)}")
             finally:
                 channel.close()
                 ssh.close()
@@ -359,8 +349,7 @@ class AsyncSSHExecutor(AsyncExecutor):
         tasks = [_parallel_task(task) for task in cmd_tasks]
         return await asyncio.gather(*tasks)
 
-    async def upload_file(self, local_path: str, remote_path: str,
-                          permissions: Optional[int] = None) -> None:
+    async def upload_file(self, local_path: str, remote_path: str, permissions: Optional[int] = None) -> None:
         """
         异步上传文件（SCP模式）
         :param local_path: 本地文件路径
@@ -378,11 +367,7 @@ class AsyncSSHExecutor(AsyncExecutor):
                 # 使用SCPClient上传
                 with SCPClient(self.ssh_client.get_transport()) as scp:
                     # 上传文件（preserve_times=True 保留文件时间戳）
-                    scp.put(
-                        local_path,
-                        remote_path=remote_path,
-                        preserve_times=True
-                    )
+                    scp.put(local_path, remote_path=remote_path, preserve_times=True)
 
                 # 设置权限（如果指定）
                 if permissions is not None:
@@ -416,7 +401,7 @@ class AsyncSSHExecutor(AsyncExecutor):
                     scp.get(
                         remote_path=remote_path,
                         local_path=local_path,
-                        preserve_times=True  # 保留文件时间戳
+                        preserve_times=True,  # 保留文件时间戳
                     )
 
         # 在 executor 中执行同步操作
@@ -452,7 +437,7 @@ class AsyncSSHExecutor(AsyncExecutor):
         ssh = self._connect_with_password()
         if ssh:
             return ssh
-        DIAG_LOGGER.error(f"{self.username}@{self.host}:{self.port} 密钥和密码方式都登录失败")
+        DIAG_LOGGER.error("%s@%s:%s 密钥和密码方式都登录失败", self.username, self.host, self.port)
         return None
 
     def _connect_with_key(self) -> paramiko.SSHClient:
@@ -468,13 +453,15 @@ class AsyncSSHExecutor(AsyncExecutor):
                 pkey=self.private_key_obj,
                 timeout=self.timeout,
                 look_for_keys=self.look_for_keys,
-                allow_agent=self.allow_agent
+                allow_agent=self.allow_agent,
             )
             return ssh
         except NoValidConnectionsError:
-            DIAG_LOGGER.warning(f"密钥方式登录：无法连接到 {self.host}:{self.port}")
+            DIAG_LOGGER.warning("密钥方式登录：无法连接到 %s:%s", self.host, self.port)
         except SSHException as e:
-            DIAG_LOGGER.warning(f"密钥方式登录：SSH连接 {self.host}:{self.port} 失败：{str(e)}")
+            DIAG_LOGGER.warning("密钥方式登录：SSH连接 %s:%s 失败：%s", self.host, self.port, str(e))
+        except Exception as e:
+            DIAG_LOGGER.warning("密钥方式登录：%s:%s 未知异常，异常详情：%s", self.host, self.port, str(e))
         return None
 
     def _connect_with_password(self) -> paramiko.SSHClient:
@@ -488,13 +475,15 @@ class AsyncSSHExecutor(AsyncExecutor):
                 password=self.password,
                 timeout=self.timeout,
                 look_for_keys=self.look_for_keys,
-                allow_agent=self.allow_agent
+                allow_agent=self.allow_agent,
             )
             return ssh
         except NoValidConnectionsError:
-            DIAG_LOGGER.warning(f"密码方式登录：无法连接到 {self.host}:{self.port}")
+            DIAG_LOGGER.warning("密码方式登录：无法连接到 %s:%s", self.host, self.port)
         except SSHException as e:
-            DIAG_LOGGER.warning(f"密码方式登录：SSH连接 {self.host}:{self.port} 失败：{str(e)}")
+            DIAG_LOGGER.warning("密码方式登录：SSH连接 %s:%s 失败：%s", self.host, self.port, str(e))
+        except Exception as e:
+            DIAG_LOGGER.warning("密码方式登录：%s:%s 未知异常，异常详情：%s", self.host, self.port, str(e))
         return None
 
     def _create_shell_channel(self, ssh: paramiko.SSHClient) -> paramiko.Channel:
