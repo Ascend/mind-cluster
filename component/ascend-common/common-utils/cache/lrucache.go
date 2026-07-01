@@ -22,6 +22,8 @@ import (
 	"math"
 	"sync"
 	"time"
+
+	"ascend-common/common-utils/utils"
 )
 
 const (
@@ -62,9 +64,10 @@ type ConcurrencyLRUCache struct {
 }
 
 // Set create or update an element using key
-//      key:    The identity of an element
-//      value:  new value of the element
-//      expireTime:    expire time, positive int64 or -1 which means never overdue
+//
+//	key:    The identity of an element
+//	value:  new value of the element
+//	expireTime:    expire time, positive int64 or -1 which means never overdue
 func (cl *ConcurrencyLRUCache) Set(key string, value interface{}, expireTime time.Duration) error {
 	if cl == nil || cl.cacheBuket[0] == nil {
 		return notInitErr
@@ -80,10 +83,11 @@ func (cl *ConcurrencyLRUCache) Set(key string, value interface{}, expireTime tim
 }
 
 // Get get the value of a cached element by key. If key do not exist, this function will return nil and an error msg
-//      key:    The identity of an element
-//      return:
-//          value:  the cached value, nil if key do not exist
-//          err:    error info, nil if value is not nil
+//
+//	key:    The identity of an element
+//	return:
+//	    value:  the cached value, nil if key do not exist
+//	    err:    error info, nil if value is not nil
 func (cl *ConcurrencyLRUCache) Get(key string) (interface{}, error) {
 	if cl == nil || cl.cacheBuket[0] == nil {
 		return nil, notInitErr
@@ -220,7 +224,7 @@ func pkgElement(ele *cacheEle, value interface{}, expireTime time.Duration) {
 		ele.expireTime = negInt64One
 		return
 	}
-	ele.expireTime = time.Now().UnixNano() + int64(expireTime)
+	ele.expireTime = utils.NowMono() + int64(expireTime)
 }
 
 func (c *lruCache) getValue(key string) (interface{}, error) {
@@ -239,7 +243,7 @@ func (c *lruCache) getValue(key string) (interface{}, error) {
 		c.safeDeleteByKey(key, v)
 		return nil, errors.New("cacheElement convert failed")
 	}
-	if ele.expireTime != negInt64One && time.Now().UnixNano() > ele.expireTime {
+	if ele.expireTime != negInt64One && utils.NowMono() > ele.expireTime {
 		// if  cache expired
 		c.safeDeleteByKey(key, v)
 		return nil, errors.New("the key was expired")
@@ -277,7 +281,7 @@ func (c *lruCache) setIfNotExist(key string, value interface{}, expireTime time.
 		return false
 	}
 	c.MoveToFront(v)
-	if ele.expireTime == negInt64One || time.Now().UnixNano() < ele.expireTime {
+	if ele.expireTime == negInt64One || utils.NowMono() < ele.expireTime {
 		return false
 	}
 	// if  cache expired
@@ -303,7 +307,7 @@ func (c *lruCache) increment(key string, expireTime time.Duration) (int64, error
 		return int64One, nil
 	}
 	c.MoveToFront(v)
-	if ele.expireTime == negInt64One || time.Now().UnixNano() < ele.expireTime {
+	if ele.expireTime == negInt64One || utils.NowMono() < ele.expireTime {
 		newValue, ok := ele.data.(int64)
 		if !ok || newValue == math.MaxInt64 {
 			return 0, fmt.Errorf("the cache value is not valid, ok:%v", ok)
@@ -336,7 +340,7 @@ func (c *lruCache) decrement(key string, expireTime time.Duration) (int64, error
 		return negInt64One, nil
 	}
 	c.MoveToFront(v)
-	if ele.expireTime == negInt64One || time.Now().UnixNano() < ele.expireTime {
+	if ele.expireTime == negInt64One || utils.NowMono() < ele.expireTime {
 		newValue, ok := ele.data.(int64)
 		if !ok || newValue == math.MinInt64 {
 			return 0, fmt.Errorf("the cache value is not valid, ok:%v", ok)
@@ -363,7 +367,7 @@ func (c *lruCache) setInner(key string, value interface{}, expireTime time.Durat
 		expireTime: negInt64One,
 	}
 	if expireTime != time.Duration(negInt64One) {
-		newElem.expireTime = time.Now().UnixNano() + int64(expireTime)
+		newElem.expireTime = utils.NowMono() + int64(expireTime)
 	}
 	e := c.PushFront(newElem)
 	c.elemIndex[key] = e
