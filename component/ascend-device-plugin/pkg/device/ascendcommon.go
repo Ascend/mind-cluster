@@ -861,6 +861,9 @@ func (tool *AscendTools) getVirtualDevice(logicID int32) (npuCommon.VirtualDevIn
 
 // GetDeviceIP get device ip
 func (tool *AscendTools) GetDeviceIP(deviceType string, phyID int) (string, error) {
+	if tool.dmgr.GetDevType() == api.Ascend910A5 {
+		return "", nil
+	}
 	if common.IsVirtualDev(deviceType) {
 		return api.DeviceIPDefaultCodeStr, nil
 	}

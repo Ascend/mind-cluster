@@ -68,9 +68,6 @@ extern "C"
     DCMIDLLEXPORT int dcmiv2_get_device_info(int dev_id, enum dcmi_main_cmd main_cmd, unsigned int sub_cmd, void *buf,
                                              unsigned int *size);
 
-    DCMIDLLEXPORT int dcmiv2_get_device_ip(int dev_id, enum dcmi_port_type input_type, int port_id,
-                                           struct dcmi_ip_addr *ip, struct dcmi_ip_addr *mask);
-
     DCMIDLLEXPORT int dcmiv2_get_device_network_health(int dev_id, enum dcmi_rdfx_detect_result *result);
 
     DCMIDLLEXPORT int dcmiv2_get_chip_phy_id_by_dev_id(unsigned int dev_id, unsigned int *phyid);
