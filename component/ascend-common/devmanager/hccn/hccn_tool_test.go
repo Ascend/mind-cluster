@@ -128,3 +128,48 @@ func TestGetAllUBPortsFromHccnLines(t *testing.T) {
 		})
 	}
 }
+
+// TestParseDeviceTable tests the parseDeviceTable function.
+func TestParseDeviceTable(t *testing.T) {
+	tests := []struct {
+		name    string
+		lines   []string
+		want    map[int][]int
+		wantErr bool
+	}{
+		{
+			name:  "parse mixed ETH and UB ports",
+			lines: strings.Split(sampleDevInfoOutput, "\n"),
+			want:  map[int][]int{0: {4, 5}, 1: {8, 9}},
+		},
+		{
+			name:    "stop at third separator",
+			lines:   strings.Split(hccnToolTable("| 0 | 4 | 200 | ETH | DOWN | Electrical |"), "\n"),
+			want:    map[int][]int{0: {4}},
+			wantErr: false,
+		},
+		{
+			name:    "empty lines",
+			lines:   []string{},
+			wantErr: true,
+		},
+		{
+			name:    "only header no data",
+			lines:   strings.Split(hccnToolTable(), "\n"),
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseDeviceTable(tt.lines)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("parseDeviceTable() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseDeviceTable() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
