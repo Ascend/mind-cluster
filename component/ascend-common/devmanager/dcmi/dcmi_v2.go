@@ -124,13 +124,6 @@ package dcmi
         CALL_FUNC(dcmiv2_get_dev_id_by_chip_phy_id,phyid,dev_id)
     }
 
-    static int (*dcmiv2_get_device_ip_func)(int dev_id, enum dcmi_port_type input_type, int port_id,
-        struct dcmi_ip_addr *ip, struct dcmi_ip_addr *mask);
-    static int dcmiv2_get_device_ip(int dev_id, enum dcmi_port_type input_type, int port_id,
-        struct dcmi_ip_addr *ip, struct dcmi_ip_addr *mask){
-        CALL_FUNC(dcmiv2_get_device_ip,dev_id,input_type,port_id,ip,mask)
-    }
-
     static int (*dcmiv2_get_device_network_health_func)(int dev_id, enum dcmi_rdfx_detect_result *result);
     static int dcmiv2_get_device_network_health(int dev_id, enum dcmi_rdfx_detect_result *result){
         CALL_FUNC(dcmiv2_get_device_network_health,dev_id,result)
@@ -293,7 +286,6 @@ package dcmi
         dcmiv2_get_device_chip_info_func = dlsym(dcmiHandle,"dcmiv2_get_device_chip_info");
         dcmiv2_get_chip_phy_id_by_dev_id_func = dlsym(dcmiHandle,"dcmiv2_get_chip_phy_id_by_dev_id");
         dcmiv2_get_dev_id_by_chip_phy_id_func = dlsym(dcmiHandle,"dcmiv2_get_dev_id_by_chip_phy_id");
-        dcmiv2_get_device_ip_func = dlsym(dcmiHandle,"dcmiv2_get_device_ip");
         dcmiv2_get_device_network_health_func = dlsym(dcmiHandle,"dcmiv2_get_device_network_health");
         dcmiv2_get_device_list_func = dlsym(dcmiHandle,"dcmiv2_get_device_list");
         dcmiv2_get_device_elabel_info_func = dlsym(dcmiHandle,"dcmiv2_get_device_elabel_info");
@@ -332,7 +324,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -724,52 +715,7 @@ func (d *DcV2Manager) DcGetLogicIDFromPhysicID(physicID int32) (int32, error) {
 
 // DcGetDeviceIPAddress get device ip addresses
 func (d *DcV2Manager) DcGetDeviceIPAddress(logicID int32, ipType int32) (string, error) {
-	if !common.IsValidLogicIDOrPhyID(logicID) {
-		return "", fmt.Errorf("logicID(%d) is invalid", logicID)
-	}
-	var portType C.enum_dcmi_port_type = 1
-	var portID C.int
-	var ipAddress C.struct_dcmi_ip_addr
-	var maskAddress C.struct_dcmi_ip_addr
-	if ipType == IpAddrTypeV6 {
-		ipAddress.ip_type = IpAddrTypeV6
-	}
-	rCode := C.dcmiv2_get_device_ip(C.int(logicID), portType, portID, &ipAddress, &maskAddress)
-	if int32(rCode) != common.Success {
-		return "", fmt.Errorf("get device IP address failed, logicID(%d), error code: %d", logicID, int32(rCode))
-	}
-	if ipType == IpAddrTypeV6 {
-		return d.buildIPv6Addr(ipAddress)
-	}
-	return d.buildIPv4Addr(ipAddress)
-}
-
-func (d *DcV2Manager) buildIPv4Addr(ipAddress C.struct_dcmi_ip_addr) (string, error) {
-	deviceIP := make([]string, 0, net.IPv4len)
-	for key, val := range ipAddress.u_addr {
-		if key >= net.IPv4len {
-			break
-		}
-		deviceIP = append(deviceIP, fmt.Sprintf("%v", val))
-	}
-	if netIP := net.ParseIP(strings.Join(deviceIP, ".")); netIP != nil {
-		return netIP.String(), nil
-	}
-	return "", fmt.Errorf("the device IPv4 address is invalid, value: %v", deviceIP)
-}
-
-func (d *DcV2Manager) buildIPv6Addr(ipAddress C.struct_dcmi_ip_addr) (string, error) {
-	deviceIP := make([]byte, 0, net.IPv6len)
-	for key, val := range ipAddress.u_addr {
-		if key >= net.IPv6len {
-			break
-		}
-		deviceIP = append(deviceIP, byte(val))
-	}
-	if netIP := net.IP(deviceIP); netIP != nil {
-		return netIP.String(), nil
-	}
-	return "", fmt.Errorf("the device IPv6 address is invalid, value: %v", deviceIP)
+	return "", fmt.Errorf("dcmiv2_get_device_ip is no longer supported, logicID(%d)", logicID)
 }
 
 // DcGetDieID get die id

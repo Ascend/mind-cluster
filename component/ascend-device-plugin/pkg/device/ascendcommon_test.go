@@ -2296,3 +2296,32 @@ func countFaultCode(faultCodes []int64, code int64) int {
 	}
 	return cnt
 }
+
+// TestGetDeviceIP for test GetDeviceIP
+func TestGetDeviceIP(t *testing.T) {
+	convey.Convey("test GetDeviceIP", t, func() {
+		convey.Convey("A5 returns empty ip", func() {
+			tool := AscendTools{dmgr: &devmanager.DeviceManagerMock{DevType: api.Ascend910A5}}
+			ip, err := tool.GetDeviceIP(api.Ascend910, 0)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(ip, convey.ShouldEqual, "")
+		})
+		convey.Convey("virtual device returns default ip", func() {
+			tool := AscendTools{dmgr: &devmanager.DeviceManagerMock{}}
+			ip, err := tool.GetDeviceIP("Ascend910-2c", 0)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(ip, convey.ShouldEqual, api.DeviceIPDefaultCodeStr)
+		})
+		convey.Convey("GetLogicIDFromPhysicID failed", func() {
+			tool := AscendTools{dmgr: &devmanager.DeviceManagerMock{}}
+			patches := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
+				"GetLogicIDFromPhysicID", func(_ *devmanager.DeviceManagerMock, phyID int32) (int32, error) {
+					return 0, fmt.Errorf("mock error")
+				})
+			defer patches.Reset()
+			ip, err := tool.GetDeviceIP(api.Ascend910, 0)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(ip, convey.ShouldEqual, "")
+		})
+	})
+}
