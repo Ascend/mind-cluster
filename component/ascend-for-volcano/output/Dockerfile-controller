@@ -1,8 +1,9 @@
 FROM alpine:latest
 
 COPY vc-controller-manager /vc-controller-manager
-RUN mkdir -p /lib64 && \
-    if [ "$(uname -m)" = "x86_64" ]; then \
+RUN if [ "$(uname -m)" = "x86_64" ]; then \
+        mkdir -p /lib64 && \
+        chmod 755 /lib64 && \
         ln -s /lib/ld-musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2; \
     elif [ "$(uname -m)" = "aarch64" ]; then \
         ln -s /lib/ld-musl-aarch64.so.1 /lib/ld-linux-aarch64.so.1; \
