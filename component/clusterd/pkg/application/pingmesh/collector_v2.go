@@ -26,12 +26,19 @@ import (
 
 func isValidDeviceType(nodeDevice *api.NodeDevice) bool {
 	if nodeDevice.ServerType == api.VersionA3 {
-		hwlog.RunLog.Infof("device type is %v", api.VersionA3)
+		if nodeDevice.AcceleratorType != "" {
+			hwlog.RunLog.Infof("device type is %v, acceleratorType is %s", api.VersionA3, nodeDevice.AcceleratorType)
+		} else {
+			hwlog.RunLog.Infof("device type is %v", api.VersionA3)
+		}
 		return true
 	}
 	if nodeDevice.ServerType == api.NPULowerCase {
-		hwlog.RunLog.Infof("device type is %v, acceleratorType is %s", nodeDevice.ServerType,
-			nodeDevice.AcceleratorType)
+	    if nodeDevice.AcceleratorType != "" {
+			hwlog.RunLog.Infof("device type is %v, acceleratorType is %s", nodeDevice.ServerType, nodeDevice.AcceleratorType)
+		} else {
+			hwlog.RunLog.Infof("device type is %v", nodeDevice.ServerType)
+		}
 		return nodeDevice.AcceleratorType == api.A5PodType || nodeDevice.AcceleratorType == api.Ascend800ia5SuperPod
 	}
 	hwlog.RunLog.Infof("current device type is invalid")
