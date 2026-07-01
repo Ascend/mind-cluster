@@ -1,19 +1,19 @@
- #!/bin/bash
- # Perform build volcano-huawei-npu-scheduler plugin
- # Copyright @ Huawei Technologies CO., Ltd. 2020-2026. All rights reserved
- #
- # Licensed under the Apache License, Version 2.0 (the "License");
- # you may not use this file except in compliance with the License.
- # You may obtain a copy of the License at
- #
- # http://www.apache.org/licenses/LICENSE-2.0
- #
- # Unless required by applicable law or agreed to in writing, software
- # distributed under the License is distributed on an "AS IS" BASIS,
- # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- # See the License for the specific language governing permissions and
- # limitations under the License.
- # ============================================================================
+#!/bin/bash
+# Perform build volcano-huawei-npu-scheduler plugin
+# Copyright @ Huawei Technologies CO., Ltd. 2020-2026. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ============================================================================
 
 set -e
 
@@ -24,7 +24,10 @@ else
     BASE_VER=$1
 fi
 
+echo "===== Start Dual Build Mode ====="
 echo "Build Version is ${BASE_VER}"
+echo "Will generate both output(Alpine musl) and output-oe(openEuler glibc)"
+echo ""
 
 DEFAULT_VER='v26.1.0'
 TOP_DIR=${GOPATH}/src/volcano.sh/volcano/
@@ -57,23 +60,25 @@ REL_VERSION=$(parse_version)
 REL_ARCH=$(parse_arch)
 REL_NPU_PLUGIN=volcano-npu_${REL_VERSION}
 
-function clean() {
-    rm -f "${BASE_PATH}"/output/vc-controller-manager
-    rm -f "${BASE_PATH}"/output/vc-scheduler
-    rm -f "${BASE_PATH}"/output/*.so
+function clean_dir() {
+    local OUTPUT_DIR=$1
+    rm -f "${OUTPUT_DIR}"/vc-controller-manager
+    rm -f "${OUTPUT_DIR}"/vc-scheduler
+    rm -f "${OUTPUT_DIR}"/*.so
 }
 
-function copy_yaml() {
-    cp "${BASE_PATH}"/build/volcano-"${BASE_VER}".yaml "${BASE_PATH}"/output/
+function copy_resources() {
+    local OUTPUT_DIR=$1
+    cp "${BASE_PATH}"/build/volcano-"${BASE_VER}".yaml "${OUTPUT_DIR}/"
+    # Copy the license agreement and replace version information
+    cp "${BASE_PATH}"/build/agreement.txt "${OUTPUT_DIR}/agreement.txt"
+    sed -i "s/Volcano Version .*/Volcano Version ${BASE_VER}/" "${OUTPUT_DIR}/agreement.txt"
 }
 
-function copy_agreement() {
-    cp "${BASE_PATH}"/build/agreement.txt "${BASE_PATH}"/output/agreement.txt
-    sed -i "s/Volcano Version .*/Volcano Version ${build_version}/" "${BASE_PATH}"/output/agreement.txt
-}
-
+# Automatically inject agreement file and ENTRYPOINT into Dockerfile
 function df_print_agreement() {
-    DOCKERFILES=("${BASE_PATH}"/output/Dockerfile*)
+    local OUTPUT_DIR=$1
+    DOCKERFILES=("${OUTPUT_DIR}/Dockerfile*")
     for dockerfile in "${DOCKERFILES[@]}"; do
         if [ -f "$dockerfile" ]; then
             if ! grep -q "^COPY agreement.txt /usr/local/" "$dockerfile"; then
@@ -89,51 +94,45 @@ function df_print_agreement() {
     done
 }
 
-function replace_code() {
+# Source code patch, executed only once globally to avoid repeated execution
+function patch_all_source() {
+    echo "===== Apply source patch once ====="
+    # Unified patch
     REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/controllers/job/state/running.go"
     SEARCH_STRING="Ignore"
     if ! grep -q "$SEARCH_STRING" "$REPLACE_FILE";then
       sed -i "s/switch action {/switch action { case \"Ignore\" : return nil/g" "$REPLACE_FILE"
     fi
-}
 
-function replace_klog_version() {
-    cd $BASE_PATH
-    find . -type f ! -path './.git*/*' ! -path './doc/*' -exec sed -i 's/k8s.io\/klog\"/k8s.io\/klog\/v2\"/g' {} +
-}
+    if is_1.9_plus; then
+        # Replace klog with v2 version
+        cd $BASE_PATH
+        find . -type f ! -path './.git*/*' ! -path './doc/*' -exec sed -i 's/k8s.io\/klog\"/k8s.io\/klog\/v2\"/g' {} +
+        # Pipeline task patch
+        REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
+        sed -i "s/ji.WaitingTaskNum()+ji.ReadyTaskNum() < job.MinAvailable/ji.WaitingTaskNum()+ji.ReadyTaskNum()+ji.PendingBestEffortTaskNum() < job.MinAvailable/g" "$REPLACE_FILE"
+    fi
 
-function replace_node_predicate() {
-    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
+    # Version-differentiated predicate patch
+    if [[ "$BASE_VER" == "v1.9.0" ]]; then
+        REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
+        # 1. Change closure signature: error -> ([]*api.Status, error)
+        sed -i "s/api.NodeInfo) error {/api.NodeInfo) (\[\]\*api.Status, error) {/g" "$REPLACE_FILE"
+        # 2. Change convertToNPUFitError signature: error -> ([]*api.Status, error)
+        sed -i "s/predicateErr error) error {/predicateErr error) (\[\]\*api.Status, error) {/g" "$REPLACE_FILE"
+        # 3. Replace return api.NewFitErrWithStatus(...) with return []*api.Status{}, predicateErr
+        #    Assumes the return statements are on a single line (as in your example).
+        #    Matches up to the semicolon.
+        sed -i '/return api\.NewFitErrWithStatus/,/})/c\       return []*api.Status{}, predicateErr' "$REPLACE_FILE"
+        # 4. Change return nil to return nil, nil inside the addPredicateFn closure
+        #    Uses range from the line containing "passed" to the line containing "return nil"
+        sed -i '/predicateFn.*passed/,/return nil/s/return nil/return nil, nil/' "$REPLACE_FILE"
+    elif [[ "$BASE_VER" == "v1.7.0" ]]; then
+        REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
+        sed -i '/return api\.NewFitErrWithStatus/,/})/c\       return predicateErr' "$REPLACE_FILE"
+    fi
 
-    # 1. Change closure signature: error -> ([]*api.Status, error)
-    sed -i "s/api.NodeInfo) error {/api.NodeInfo) (\[\]\*api.Status, error) {/g" "$REPLACE_FILE"
-
-    # 2. Change convertToNPUFitError signature: error -> ([]*api.Status, error)
-    sed -i "s/predicateErr error) error {/predicateErr error) (\[\]\*api.Status, error) {/g" "$REPLACE_FILE"
-
-    # 3. Replace return api.NewFitErrWithStatus(...) with return []*api.Status{}, predicateErr
-    #    Assumes the return statements are on a single line (as in your example).
-    #    Matches up to the semicolon.
-    sed -i '/return api\.NewFitErrWithStatus/,/})/c\       return []*api.Status{}, predicateErr' "$REPLACE_FILE"
-
-    # 4. Change return nil to return nil, nil inside the addPredicateFn closure
-    #    Uses range from the line containing "passed" to the line containing "return nil"
-    sed -i '/predicateFn.*passed/,/return nil/s/return nil/return nil, nil/' "$REPLACE_FILE"
-}
-
-function replace_node_predicate_v17() {
-    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
-
-    sed -i '/return api\.NewFitErrWithStatus/,/})/c\       return predicateErr' "$REPLACE_FILE"
-    sed -i '/predicateFn.*passed/,/return nil/s/return nil/return nil/' "$REPLACE_FILE"
-}
-
-function replace_job_pipelined() {
-    REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/npu.go"
-    sed -i "s/ji.WaitingTaskNum()+ji.ReadyTaskNum() < job.MinAvailable/ji.WaitingTaskNum()+ji.ReadyTaskNum()+ji.PendingBestEffortTaskNum() < job.MinAvailable/g" "$REPLACE_FILE"
-}
-
-function replace_node_score() {
+    # Node scoring logic patch
     REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/pkg/scheduler/actions/allocate/allocate.go"
     if [[ "$BASE_VER" == "v1.7.0" ]];then
           sed -i '
@@ -142,39 +141,63 @@ function replace_node_score() {
               N
               s/case len(candidateNodes) == 1:.*\n.*\n.*/            default:/
           }' "$REPLACE_FILE"
-      return
+    else
+        sed -i '
+        /case len(nodes) == 1:/ {
+            N
+            N
+            s/case len(nodes) == 1:.*\n.*\n.*/            default:/
+        }' "$REPLACE_FILE"
     fi
-    sed -i '
-    /case len(nodes) == 1:/ {
-        N
-        N
-        s/case len(nodes) == 1:.*\n.*\n.*/            default:/
-    }' "$REPLACE_FILE"
-}
 
-function replace_k8s_version() {
+    # K8s version modification exclusive to v1.7
     REPLACE_FILE="${GOPATH}/src/volcano.sh/volcano/go.mod"
     if [[ "$BASE_VER" == "v1.7.0" ]];then
       sed -i "s/1.25.0/1.25.14/g" "$REPLACE_FILE"
-      return
     fi
-    echo "volcano version is $BASE_VER, will not change go.mod codes"
+    echo "===== Source patch finished ====="
+    echo ""
 }
 
-function build() {
-    echo "Build Architecture is" "${REL_ARCH}"
+# Single build workflow, parameters:
+# Param 1: Output directory
+# Param 2: Whether to enable musl (true = Alpine, false = openEuler)
+function build_workflow() {
+    local OUTPUT_DIR=$1
+    local USE_MUSL=$2
 
+    echo "====================================="
+    if [ "${USE_MUSL}" = "true" ]; then
+        echo "Start build Alpine(musl) -> ${OUTPUT_DIR}"
+    else
+        echo "Start build openEuler(glibc) -> ${OUTPUT_DIR}"
+    fi
+    echo "====================================="
+
+    clean_dir "${OUTPUT_DIR}"
+
+    copy_resources "${OUTPUT_DIR}"
+
+    df_print_agreement "${OUTPUT_DIR}"
+
+    echo "Build Architecture is ${REL_ARCH}"
     export GO111MODULE=on
     export PATH=$GOPATH/bin:$PATH
 
     cd "${TOP_DIR}"
     go mod tidy
 
-    cd "${BASE_PATH}"/output/
+    cd "${OUTPUT_DIR}"
 
     export CGO_CFLAGS="-fstack-protector-all -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
     export CGO_CPPFLAGS="-fstack-protector-all -D_FORTIFY_SOURCE=2 -O2 -fPIC -ftrapv"
-    export CC=/usr/local/musl/bin/musl-gcc
+
+    # Musl compiler switch
+    if [ "${USE_MUSL}" = "true" ]; then
+        export CC=/usr/local/musl/bin/musl-gcc
+    else
+        unset CC
+    fi
 
     export CGO_ENABLED=0
     go build -mod=mod -buildmode=pie -ldflags "-s -bindnow
@@ -190,43 +213,49 @@ function build() {
       -X volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin.PluginName=${REL_NPU_PLUGIN}" \
       -o "${REL_NPU_PLUGIN}".so "${GOPATH}"/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/
 
-    if [ ! -f "${BASE_PATH}/output/${REL_NPU_PLUGIN}.so" ]
+    if [ ! -f "${OUTPUT_DIR}/${REL_NPU_PLUGIN}.so" ]
     then
-      echo "Failed to find volcano-npu_${REL_VERSION}.so"
+      echo "ERROR: Failed to find ${REL_NPU_PLUGIN}.so in ${OUTPUT_DIR}"
       exit 1
     fi
 
-    sed -i "s/name: volcano-npu_.*/name: ${REL_NPU_PLUGIN}/" "${BASE_PATH}"/output/volcano-*.yaml
-    sed -i "s/:${BASE_VER}/:${BASE_VER}-${REL_VERSION}/g" "${BASE_PATH}"/output/volcano-${BASE_VER}.yaml
+    # Modify the plugin name and image tag in YAML files
+    sed -i "s/name: volcano-npu_.*/name: ${REL_NPU_PLUGIN}/" "${OUTPUT_DIR}"/volcano-*.yaml
+    sed -i "s/:${BASE_VER}/:${BASE_VER}-${REL_VERSION}/g" "${OUTPUT_DIR}"/volcano-${BASE_VER}.yaml
 
-    chmod 400 "${BASE_PATH}"/output/*.so
+    # New logic: Replace /bin/ash with /bin/sh for openEuler builds
+    if [ "${USE_MUSL}" = "false" ]; then
+      echo ">> openEuler yaml replace /bin/ash to /bin/sh"
+      sed -i 's#/bin/ash#/bin/sh#g' "${OUTPUT_DIR}"/volcano-*.yaml
+    fi
+
+    chmod 400 "${OUTPUT_DIR}"/*.so
     chmod 500 vc-controller-manager vc-scheduler
-    chmod 400 "${BASE_PATH}"/output/Dockerfile*
-    chmod 400 "${BASE_PATH}"/output/volcano-*.yaml
+    chmod 400 "${OUTPUT_DIR}"/Dockerfile*
+    chmod 400 "${OUTPUT_DIR}"/volcano-*.yaml
+
+    echo "Finish build -> ${OUTPUT_DIR}"
+    echo ""
 }
 
 function main() {
-  clean
-  copy_yaml
-  copy_agreement
-  df_print_agreement
-  replace_code
-  if is_1.9_plus; then
-    replace_klog_version
-    replace_job_pipelined
-  fi
-  if [[ "$BASE_VER" == "v1.9.0" ]]; then
-    replace_node_predicate
-  elif [[ "$BASE_VER" == "v1.7.0" ]]; then
-    replace_node_predicate_v17
-  fi
-  replace_node_score
-  replace_k8s_version
-  build
+  # Step 1: Apply source code patches only once to prevent repeated source code modifications via sed
+  patch_all_source
+
+  ALPINE_DIR="${BASE_PATH}/output/alpine"
+  OE_DIR="${BASE_PATH}/output/openeuler"
+
+  # Step 2: Build Alpine musl artifacts to output directory
+  build_workflow "${ALPINE_DIR}" "true"
+
+  # Step 3: Build openEuler glibc artifacts to output-oe directory
+  build_workflow "${OE_DIR}" "false"
 }
 
-main "${1}"
+main "$1"
 
-echo ""
-echo "Finished!"
+echo "==================== All Build Completed ===================="
+echo "Alpine(musl) output dir: ${BASE_PATH}/output"
+echo "openEuler(glibc) output dir: ${BASE_PATH}/output-oe"
+echo "============================================================="
 echo ""

@@ -2,6 +2,7 @@ FROM alpine:latest
 
 COPY vc-scheduler /vc-scheduler
 COPY volcano-npu_*.so plugins/
+COPY agreement.txt /usr/local/
 
 RUN adduser -h /home/hwMindX -u 9000 -D -s /sbin/nologin hwMindX && \
     sed '1c root:x:0:0:root:/root:/sbin/nologin' /etc/passwd && \
@@ -11,3 +12,4 @@ RUN adduser -h /home/hwMindX -u 9000 -D -s /sbin/nologin hwMindX && \
     chmod 400 plugins/*.so
 
 USER hwMindX
+ENTRYPOINT ["/bin/sh", "-c", "cat /usr/local/agreement.txt; exec /bin/sh"]
