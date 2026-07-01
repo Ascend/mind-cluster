@@ -150,7 +150,7 @@ var (
 	// FaultDurationTypeSet is a set that contains all the fault Duration level
 	FaultDurationTypeSet = sets.NewString(NotHandleFault, RestartRequest, RestartBusiness, FreeRestartNPU,
 		RestartNPU, PreSeparateNPU, SeparateNPU, SubHealthFault)
-	// NetworkFaultCodes is a set that contains all the network fault codes
+	// NetworkFaultCodes is a set that contains roce and uboe network fault codes
 	NetworkFaultCodes = sets.NewInt64(LinkDownFaultCode, UBOEPortDownCode, UBOESubHealFaultCode, UBOEPreSeparateFaultCode)
 	// HyperPlaneFaultCodes is a set that contains all the hyper plane fault codes
 	HyperPlaneFaultCodes = sets.NewInt64(UBPortDownCode, UBSeparateFaultCode, UBSubHealFaultCode)

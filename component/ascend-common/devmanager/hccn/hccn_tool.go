@@ -63,6 +63,11 @@ const (
 	notSupport = "not supported"
 	unknownStr = "Unknown!"
 
+	// portEnableKey is the key of port enable status in hccn_tool -port_info output
+	portEnableKey = "port_enable"
+	// portEnableOn means the port is enabled (wired)
+	portEnableOn = "on"
+
 	limitSize = 1024 * 1024
 )
 
@@ -786,4 +791,36 @@ func checkPortStatus(trimmedLine string) (common.UBPort, error) {
 		PortType:   columns[threePart],
 		LinkStatus: columns[fourthIndex],
 	}, nil
+}
+
+// GetUBPortInfo exec "hccn_tool -g -port_info -i <logicID> -u <udieID> -p <portID>" to get UB port info
+func GetUBPortInfo(logicID, udieID, portID int32) (map[string]string, error) {
+	args := []string{"-g", "-port_info", "-i", strconv.Itoa(int(logicID)), "-u", strconv.Itoa(int(udieID)),
+		"-p", strconv.Itoa(int(portID))}
+	// command example: hccn_tool -g -port_info -i 0 -u 0 -p 4
+	outStr, err := getInfoFromHccnTool(args...)
+	if err != nil {
+		return nil, buildHccnErrA5("port info", err)
+	}
+	lines := strings.Split(outStr, newLine)
+	portInfoMap := make(map[string]string)
+	for _, line := range lines {
+		infoParts := strings.Split(line, colon)
+		if len(infoParts) != opticalPartLen {
+			continue
+		}
+		portInfoMap[strings.TrimSpace(infoParts[0])] = strings.TrimSpace(infoParts[1])
+	}
+	return portInfoMap, nil
+}
+
+// IsUBPortEnabled checks whether the UB port is enabled (wired) via port_info.
+// A port is enabled when port_enable is on, which means the port is wired. dev_info reports
+// unwired ports as DOWN as well, so port_enable is used to exclude them from the real linkdown count.
+func IsUBPortEnabled(logicID, udieID, portID int32) (bool, error) {
+	portInfo, err := GetUBPortInfo(logicID, udieID, portID)
+	if err != nil {
+		return false, err
+	}
+	return portInfo[portEnableKey] == portEnableOn, nil
 }

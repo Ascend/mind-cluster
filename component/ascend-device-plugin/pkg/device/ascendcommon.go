@@ -47,7 +47,9 @@ import (
 	"ascend-common/devmanager/hccn"
 )
 
-type parameterPlaneStatus struct {
+// networkPlaneStatus indicates the link status and down ports count of a network plane
+// (parameter plane or hyper plane)
+type networkPlaneStatus struct {
 	status       string
 	downPortsNum int
 }
@@ -64,7 +66,10 @@ var (
 	faultEventLimiter      = rate.NewLimiter(
 		rate.Every(time.Minute/common.WriteEventRateLimit), common.WriteEventRateLimit)
 	parameterPlaneLimiterMap   = make(map[int32]*rate.Limiter, common.GeneralMapSize)
-	parameterPlaneStatusCache  = make(map[int32]parameterPlaneStatus, common.GeneralMapSize)
+	parameterPlaneStatusCache  = make(map[int32]networkPlaneStatus, common.GeneralMapSize)
+	hyperPlaneLimiterMap       = make(map[int32]*rate.Limiter, common.GeneralMapSize)
+	hyperPlaneStatusCache      = make(map[int32]networkPlaneStatus, common.GeneralMapSize)
+	ubPortEnabledCache         = make(map[int32]map[string]bool, common.GeneralMapSize)
 	withUBOEDevicesMainBoardID = sets.NewInt(api.Atlas850MainBoardID, api.Atlas850MainBoardID2, api.Atlas850MainBoardID3)
 )
 
@@ -156,6 +161,7 @@ type DevManager interface {
 	HandleHangCardFaultEvents([]*common.NpuDevice)
 	HandleLostChipFaultEvents(*common.NpuDevice, []int32)
 	HandleLostNetworkFaultEvents(*common.NpuDevice, []int32)
+	HandleLostHyperPlaneFaultEvents(*common.NpuDevice, []int32)
 	LogFaultModeChange(*common.NpuDevice, []int32, string)
 	GetDeviceIP(deviceType string, phyID int) (string, error)
 	WriteFaultToEvent(ctx context.Context)
@@ -1716,7 +1722,7 @@ func (tool *AscendTools) generateChipFaultEventsBasedOnFaultCacheChange(device *
 	}
 	chipFaultCodes := make([]int64, 0, npuCommon.MaxErrorCodeCount)
 	for _, faultCode := range errCodes {
-		if common.NetworkFaultCodes.Has(faultCode) {
+		if common.NetworkFaultCodes.Has(faultCode) || common.HyperPlaneFaultCodes.Has(faultCode) {
 			continue
 		}
 		chipFaultCodes = append(chipFaultCodes, faultCode)
@@ -1730,16 +1736,18 @@ func (tool *AscendTools) generateChipFaultEventsBasedOnFaultCacheChange(device *
 }
 
 func getOriginalFaultCodes(faultCodes []int64) []int64 {
-	OriginalFaultCodes := make([]int64, 0, len(faultCodes))
+	originalFaultCodes := make([]int64, 0, len(faultCodes))
 	for _, faultCode := range faultCodes {
-		if !npuCommon.DetailCustomFaultCodesSet.Has(faultCode) {
-			OriginalFaultCodes = append(OriginalFaultCodes, faultCode)
+		if common.NetworkFaultCodes.Has(faultCode) || common.HyperPlaneFaultCodes.Has(faultCode) {
+			continue
 		}
+		originalFaultCodes = append(originalFaultCodes, faultCode)
 	}
-	return OriginalFaultCodes
+	return originalFaultCodes
 }
 
-// HandleLostNetworkFaultEvents handle network fault events that may be lost by the fault subscription interface
+// HandleLostNetworkFaultEvents handle parameter plane (network) fault events that may be lost by the fault
+// subscription interface
 func (tool *AscendTools) HandleLostNetworkFaultEvents(device *common.NpuDevice, initLogicIDs []int32) {
 	if device == nil {
 		return
@@ -1753,6 +1761,8 @@ func (tool *AscendTools) HandleLostNetworkFaultEvents(device *common.NpuDevice, 
 	tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
 }
 
+// generateNetworkFaultEventsBasedOnFaultCacheChange only handles the parameter plane (RoCE/UBoE) fault,
+// the hyper plane (UB ports) fault is handled independently by generateHyperPlaneFaultEventsBasedOnFaultCacheChange
 func (tool *AscendTools) generateNetworkFaultEventsBasedOnFaultCacheChange(device *common.NpuDevice) {
 	_, errCodes, err := tool.dmgr.GetDeviceAllErrorCode(device.LogicID)
 	if err != nil {
@@ -1777,20 +1787,80 @@ func (tool *AscendTools) generateNetworkFaultEventsBasedOnFaultCacheChange(devic
 	}
 }
 
+// HandleLostHyperPlaneFaultEvents handle hyper plane (UB ports) fault events that may be lost by the fault
+// subscription interface. It actively queries the UB network port status and reports the hyper plane fault codes.
+func (tool *AscendTools) HandleLostHyperPlaneFaultEvents(device *common.NpuDevice, initLogicIDs []int32) {
+	if device == nil || tool.WithoutHyperPlane() {
+		return
+	}
+	needHandleLostHyperPlaneFaultCondition := isFirstFlushFault || (common.Int32Tool.Contains(initLogicIDs,
+		device.LogicID)) || common.SubscribeFailed || (device.Health == v1beta1.Unhealthy &&
+		moreThanFiveMin(device))
+	if !needHandleLostHyperPlaneFaultCondition {
+		return
+	}
+	tool.generateHyperPlaneFaultEventsBasedOnFaultCacheChange(device)
+}
+
+// generateHyperPlaneFaultEventsBasedOnFaultCacheChange queries the UB (hyper plane) network port status and
+// generates hyper plane fault events based on the fault cache change, which is independent of the parameter plane
+func (tool *AscendTools) generateHyperPlaneFaultEventsBasedOnFaultCacheChange(device *common.NpuDevice) {
+	_, errCodes, err := tool.dmgr.GetDeviceAllErrorCode(device.LogicID)
+	if err != nil {
+		hwlog.RunLog.Errorf("get device fault failed logic: %d, err: %v", device.LogicID, err)
+		return
+	}
+	hyperPlaneFaultCodes := make([]int64, 0, npuCommon.MaxErrorCodeCount)
+	for _, faultCode := range errCodes {
+		if !common.HyperPlaneFaultCodes.Has(faultCode) {
+			continue
+		}
+		hyperPlaneFaultCodes = append(hyperPlaneFaultCodes, faultCode)
+	}
+
+	hyperPlaneFaultCodes = tool.queryHyperPlaneStatusWithoutFaultCode(hyperPlaneFaultCodes, device)
+	originalHyperPlaneFaultCodes := getOriginalHyperPlaneFaultCodes(device.FaultCodes)
+	hyperPlaneFaultEvents := common.GetChangedDevFaultInfo(device, originalHyperPlaneFaultCodes, hyperPlaneFaultCodes)
+	for _, hyperPlaneFaultEvent := range hyperPlaneFaultEvents {
+		hwlog.RunLog.Infof("device %d generate hyper plane fault event %v based"+
+			" on hyper plane fault cache change", device.PhyID, hyperPlaneFaultEvent)
+		common.DoSaveDevFaultInfo(hyperPlaneFaultEvent, false)
+	}
+}
+
+// getOriginalNetworkFaultCodes builds the baseline of original parameter plane (network) fault codes for diffing,
+// which is extracted from device.NetworkFaultCodes and excludes detail custom parameter plane codes.
 func getOriginalNetworkFaultCodes(networkFaultCodes []int64) []int64 {
 	originalNetworkFaultCodes := make([]int64, 0, len(networkFaultCodes))
 	for _, faultCode := range networkFaultCodes {
-		if !npuCommon.DetailCustomParameterPlaneFaultCodesSet.Has(faultCode) {
-			originalNetworkFaultCodes = append(originalNetworkFaultCodes, faultCode)
+		if npuCommon.DetailCustomParameterPlaneFaultCodesSet.Has(faultCode) {
+			continue
 		}
+		originalNetworkFaultCodes = append(originalNetworkFaultCodes, faultCode)
 	}
 	return originalNetworkFaultCodes
 }
 
+// getOriginalHyperPlaneFaultCodes builds the baseline of original hyper plane fault codes for diffing,
+// which is extracted from device.FaultCodes and excludes non-hyper-plane and detail custom hyper plane codes.
+func getOriginalHyperPlaneFaultCodes(faultCodes []int64) []int64 {
+	originalHyperPlaneFaultCodes := make([]int64, 0, len(faultCodes))
+	for _, faultCode := range faultCodes {
+		if !common.HyperPlaneFaultCodes.Has(faultCode) {
+			continue
+		}
+		if npuCommon.DetailCustomFaultCodesSet.Has(faultCode) {
+			continue
+		}
+		originalHyperPlaneFaultCodes = append(originalHyperPlaneFaultCodes, faultCode)
+	}
+	return originalHyperPlaneFaultCodes
+}
+
 func (tool *AscendTools) queryParameterPlaneStatusWithoutFaultCode(faultCodes []int64, device *common.NpuDevice) []int64 {
 	newFaultCodes := faultCodes
-	// Some scene which is not necessary to query the network status:
-	// 1. A fault code that is not empty means that a fault event can be obtained.
+	// Some scene which is not necessary to query the parameter plane status:
+	// 1. A parameter plane fault code already exists, which means a fault event can be obtained.
 	// 2. 310 series equipment without parameter plane
 	// 3. A5 series equipment without UBOE Device
 	if len(faultCodes) != 0 || tool.WithoutParameterPlane() {
@@ -1810,7 +1880,7 @@ func (tool *AscendTools) queryParameterPlaneStatusWithoutFaultCode(faultCodes []
 	return newFaultCodes
 }
 
-func (tool *AscendTools) generateOriginalFaultCodeFromParameterPlaneStatus(networkStatus parameterPlaneStatus) (int64, bool) {
+func (tool *AscendTools) generateOriginalFaultCodeFromParameterPlaneStatus(networkStatus networkPlaneStatus) (int64, bool) {
 	if networkStatus.downPortsNum == 0 {
 		return 0, false
 	}
@@ -1821,7 +1891,7 @@ func (tool *AscendTools) generateOriginalFaultCodeFromParameterPlaneStatus(netwo
 	return common.LinkDownFaultCode, true
 }
 
-func (tool *AscendTools) getParameterPlaneStatusCache(phyID int32) parameterPlaneStatus {
+func (tool *AscendTools) getParameterPlaneStatusCache(phyID int32) networkPlaneStatus {
 	networkLimiter, ok := parameterPlaneLimiterMap[phyID]
 	if !ok {
 		hwlog.RunLog.Infof("init device %d network limiter", phyID)
@@ -1840,11 +1910,11 @@ func (tool *AscendTools) getParameterPlaneStatusCache(phyID int32) parameterPlan
 	return getRoceParameterPlaneStatus(phyID)
 }
 
-func getRoceParameterPlaneStatus(phyID int32) parameterPlaneStatus {
+func getRoceParameterPlaneStatus(phyID int32) networkPlaneStatus {
 	linkStatus, err := hccn.GetNPULinkStatus(phyID)
 	if err != nil {
 		hwlog.RunLog.Errorf("get device %d link status failed, err: %v", phyID, err)
-		parameterPlaneStatusCache[phyID] = parameterPlaneStatus{
+		parameterPlaneStatusCache[phyID] = networkPlaneStatus{
 			status:       npuCommon.NPUNetworkLinkDownStatus,
 			downPortsNum: npuCommon.RoceParameterPlanePortAllDownCount,
 		}
@@ -1854,38 +1924,91 @@ func getRoceParameterPlaneStatus(phyID int32) parameterPlaneStatus {
 	if linkStatus == npuCommon.NPUNetworkLinkDownStatus {
 		currentDownPortsNum = npuCommon.RoceParameterPlanePortAllDownCount
 	}
-	parameterPlaneStatusCache[phyID] = parameterPlaneStatus{
+	parameterPlaneStatusCache[phyID] = networkPlaneStatus{
 		status:       linkStatus,
 		downPortsNum: currentDownPortsNum,
 	}
 	return parameterPlaneStatusCache[phyID]
 }
 
-func getUboeParameterPlaneStatus(phyID int32) parameterPlaneStatus {
-	UBports, err := hccn.GetAllUBports(phyID)
+// ubPortsDownSnapshot indicates the down ports count of each PortType from one GetAllUBports call,
+// shared by parameter plane (UBOE/BondingPortName) and hyper plane (UB/UBPortName)
+type ubPortsDownSnapshot struct {
+	bondingDownCnt int
+	ubDownCnt      int
+}
+
+// isUBPortEnabled reports whether the UB port is enabled (wired). Port enablement never changes
+// during the device lifecycle, so the result is cached to avoid repeated hccn_tool -port_info
+// calls on every polling cycle. On query failure, it defaults to enabled and skips caching so
+// the next cycle can retry.
+func isUBPortEnabled(phyID, udieID, portID int32) bool {
+	portKey := strconv.Itoa(int(udieID)) + ":" + strconv.Itoa(int(portID))
+	if cached, ok := ubPortEnabledCache[phyID]; ok {
+		if enabled, exist := cached[portKey]; exist {
+			return enabled
+		}
+	}
+	enabled, err := hccn.IsUBPortEnabled(phyID, udieID, portID)
+	if err != nil {
+		hwlog.RunLog.Errorf("get device %d port(u:%d,p:%d) enable status failed, err: %v, "+
+			"treat it as enabled by default", phyID, udieID, portID, err)
+		return true
+	}
+	if ubPortEnabledCache[phyID] == nil {
+		ubPortEnabledCache[phyID] = make(map[string]bool, common.GeneralMapSize)
+	}
+	ubPortEnabledCache[phyID][portKey] = enabled
+	if !enabled {
+		hwlog.RunLog.Debugf("device %d port(u:%d,p:%d) is not enabled (unwired), "+
+			"exclude it from UB port down count", phyID, udieID, portID)
+	}
+	return enabled
+}
+
+// getUBPortsDownSnapshot gets all UB ports and counts down ports by PortType
+func getUBPortsDownSnapshot(phyID int32) (ubPortsDownSnapshot, error) {
+	ports, err := hccn.GetAllUBports(phyID)
 	if err != nil {
 		hwlog.RunLog.Errorf("get device %d UB ports failed, err: %v", phyID, err)
-		parameterPlaneStatusCache[phyID] = parameterPlaneStatus{
-			status:       npuCommon.NPUNetworkLinkDownStatus,
-			downPortsNum: npuCommon.UBOEParameterPlanePortAllDownCount,
+		return ubPortsDownSnapshot{}, err
+	}
+	snapshot := ubPortsDownSnapshot{}
+	for _, port := range ports {
+		if port.LinkStatus != hccn.LinkDown {
+			continue
 		}
-		return parameterPlaneStatusCache[phyID]
-	}
-	downCnt := 0
-	for _, ubPort := range UBports {
-		if ubPort.PortType == hccn.BondingPortName && ubPort.LinkStatus == hccn.LinkDown {
-			downCnt++
+		switch port.PortType {
+		case hccn.BondingPortName:
+			snapshot.bondingDownCnt++
+		case hccn.UBPortName:
+			if !isUBPortEnabled(phyID, int32(port.UDieId), int32(port.PortID)) {
+				continue
+			}
+			snapshot.ubDownCnt++
 		}
 	}
-	linkStatus := npuCommon.NPUNetworkLinkDownStatus
-	if downCnt == npuCommon.PortNoDownCount {
-		linkStatus = npuCommon.NPUNetworkLinkUpStatus
+	return snapshot, nil
+}
+
+// buildNetworkPlaneStatus builds network plane status from down ports count,
+// link is down if any port is down, up otherwise
+func buildNetworkPlaneStatus(downPortsNum int) networkPlaneStatus {
+	status := npuCommon.NPUNetworkLinkDownStatus
+	if downPortsNum <= npuCommon.PortNoDownCount {
+		status = npuCommon.NPUNetworkLinkUpStatus
 	}
-	parameterPlaneStatusCache[phyID] = parameterPlaneStatus{
-		status:       linkStatus,
-		downPortsNum: downCnt,
+	return networkPlaneStatus{status: status, downPortsNum: downPortsNum}
+}
+
+func getUboeParameterPlaneStatus(phyID int32) networkPlaneStatus {
+	snapshot, err := getUBPortsDownSnapshot(phyID)
+	if err != nil {
+		snapshot.bondingDownCnt = npuCommon.UBOEParameterPlanePortAllDownCount
 	}
-	return parameterPlaneStatusCache[phyID]
+	status := buildNetworkPlaneStatus(snapshot.bondingDownCnt)
+	parameterPlaneStatusCache[phyID] = status
+	return status
 }
 
 func (tool *AscendTools) withUBOEDevice() bool {
@@ -1899,4 +2022,69 @@ func (tool *AscendTools) WithoutParameterPlane() bool {
 		devType == api.Ascend310P ||
 		devType == api.Ascend310 ||
 		tool.dmgr.GetDevType() == api.Ascend910A5 && !tool.withUBOEDevice()
+}
+
+func (tool *AscendTools) queryHyperPlaneStatusWithoutFaultCode(faultCodes []int64,
+	device *common.NpuDevice) []int64 {
+	newFaultCodes := faultCodes
+	// Some scene which is not necessary to query the hyper plane status:
+	// 1. A hyper plane fault code already exists, which means a fault event can be obtained.
+	// 2. Non-A5 series equipment without hyper plane (UB ports).
+	if len(faultCodes) != 0 || tool.WithoutHyperPlane() {
+		return newFaultCodes
+	}
+	linkStatus := tool.getHyperPlaneStatusCache(device.PhyID)
+	if linkStatus.downPortsNum < 0 {
+		hwlog.RunLog.Warnf("device %d ub port status query failed, down ports num is %d, "+
+			"skip generating hyper plane fault code", device.PhyID, linkStatus.downPortsNum)
+		return newFaultCodes
+	}
+	if linkStatus.status == npuCommon.NPUNetworkLinkDownStatus {
+		faultCode, hasFault := tool.generateOriginalFaultCodeFromHyperPlaneStatus(linkStatus)
+		if hasFault {
+			newFaultCodes = append(newFaultCodes, faultCode)
+			hwlog.RunLog.Debugf("device %d generate fault code %d based on ub link down fault,"+
+				" device health: %s", device.PhyID, faultCode, device.Health)
+		}
+	}
+	return newFaultCodes
+}
+
+func (tool *AscendTools) generateOriginalFaultCodeFromHyperPlaneStatus(hyperStatus networkPlaneStatus) (int64, bool) {
+	if hyperStatus.downPortsNum <= npuCommon.PortNoDownCount {
+		return 0, false
+	}
+	return common.UBPortDownCode, true
+}
+
+func (tool *AscendTools) getHyperPlaneStatusCache(phyID int32) networkPlaneStatus {
+	hyperPlaneLimiter, ok := hyperPlaneLimiterMap[phyID]
+	if !ok {
+		hwlog.RunLog.Infof("init device %d ub limiter", phyID)
+		hyperPlaneLimiter = rate.NewLimiter(
+			rate.Every(common.EveryNetworkQueryDuration*time.Minute/common.NetworkQueryRateLimit),
+			common.NetworkQueryRateLimit)
+		hyperPlaneLimiterMap[phyID] = hyperPlaneLimiter
+	}
+	linkStatusCache, ok := hyperPlaneStatusCache[phyID]
+	if !hyperPlaneLimiter.Allow() && ok {
+		return linkStatusCache
+	}
+	return getUBHyperPlaneStatus(phyID)
+}
+
+func getUBHyperPlaneStatus(phyID int32) networkPlaneStatus {
+	snapshot, err := getUBPortsDownSnapshot(phyID)
+	if err != nil {
+		invalidUBHyperPlanePortDownCount := -1
+		snapshot.ubDownCnt = invalidUBHyperPlanePortDownCount
+	}
+	status := buildNetworkPlaneStatus(snapshot.ubDownCnt)
+	hyperPlaneStatusCache[phyID] = status
+	return status
+}
+
+// WithoutHyperPlane indicate device has no hyper plane (UB ports)
+func (tool *AscendTools) WithoutHyperPlane() bool {
+	return tool.dmgr.GetDevType() != api.Ascend910A5
 }

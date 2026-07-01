@@ -43,6 +43,7 @@ import (
 	"ascend-common/api"
 	"ascend-common/devmanager"
 	npuCommon "ascend-common/devmanager/common"
+	"ascend-common/devmanager/hccn"
 )
 
 const (
@@ -579,6 +580,258 @@ func TestHandleLostNetworkFaultEvents(t *testing.T) {
 			convey.So(ok, convey.ShouldBeTrue)
 			convey.So(len(faultInfo) == 1, convey.ShouldBeTrue)
 			convey.So(faultInfo[0].EventID == common.LinkDownFaultCode, convey.ShouldBeTrue)
+		})
+	})
+}
+
+// TestHandleLostHyperPlaneFaultEvents for test HandleLostHyperPlaneFaultEvents
+func TestHandleLostHyperPlaneFaultEvents(t *testing.T) {
+	tool := mockAscendTools()
+	convey.Convey("test HandleLostHyperPlaneFaultEvents", t, func() {
+		device := &common.NpuDevice{
+			FaultCodes: []int64{},
+			LogicID:    1,
+			PhyID:      0,
+		}
+		mockGlobalVar := gomonkey.ApplyGlobalVar(&isFirstFlushFault, true)
+		defer mockGlobalVar.Reset()
+
+		convey.Convey("01-get device all error code fail, devFaultInfoMap should not be updated", func() {
+			mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
+				"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, []int64, error) {
+					return 1, nil, errors.New("mock failure message")
+				})
+			defer mockGetDeviceAllErrorCode.Reset()
+			tool.HandleLostHyperPlaneFaultEvents(device, nil)
+			faultInfo := common.GetAndCleanFaultInfo()
+			convey.So(len(faultInfo) == 0, convey.ShouldBeTrue)
+		})
+		convey.Convey("02-handle lost hyper plane fault event, devFaultInfoMap should be updated", func() {
+			tool := AscendTools{dmgr: &devmanager.DeviceManagerMock{DevType: api.Ascend910A5}}
+			mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
+				"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, []int64, error) {
+					return 1, []int64{common.UBPortDownCode, common.CardDropFaultCode}, nil
+				})
+			defer mockGetDeviceAllErrorCode.Reset()
+			tool.HandleLostHyperPlaneFaultEvents(device, nil)
+			faultInfoMap := common.GetAndCleanFaultInfo()
+			convey.So(len(faultInfoMap) == 1, convey.ShouldBeTrue)
+			faultInfo, ok := faultInfoMap[1]
+			convey.So(ok, convey.ShouldBeTrue)
+			convey.So(len(faultInfo) == 1, convey.ShouldBeTrue)
+			convey.So(faultInfo[0].EventID == common.UBPortDownCode, convey.ShouldBeTrue)
+		})
+		convey.Convey("03-no hyper plane fault code and device is not A5, should not query ub port status",
+			func() {
+				mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
+					"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, logicID int32) (int32, []int64, error) {
+						return 0, []int64{}, nil
+					})
+				defer mockGetDeviceAllErrorCode.Reset()
+				tool.HandleLostHyperPlaneFaultEvents(device, nil)
+				faultInfo := common.GetAndCleanFaultInfo()
+				convey.So(len(faultInfo) == 0, convey.ShouldBeTrue)
+			})
+	})
+}
+
+// TestGenerateHyperPlaneFaultEventsBasedOnFaultCacheChange for test
+// generateHyperPlaneFaultEventsBasedOnFaultCacheChange
+func TestGenerateHyperPlaneFaultEventsBasedOnFaultCacheChange(t *testing.T) {
+	convey.Convey("test generateHyperPlaneFaultEventsBasedOnFaultCacheChange", t, func() {
+		tool := AscendTools{dmgr: &devmanager.DeviceManagerMock{DevType: api.Ascend910A5}}
+		device := &common.NpuDevice{LogicID: 0, DeviceID: 0, PhyID: 0, FaultCodes: []int64{}}
+
+		convey.Convey("01-get device fault failed, should return directly", func() {
+			mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
+				"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, _ int32) (int32, []int64, error) {
+					return -1, nil, errors.New("get device fault failed")
+				})
+			defer mockGetDeviceAllErrorCode.Reset()
+			tool.generateHyperPlaneFaultEventsBasedOnFaultCacheChange(device)
+			faultInfo := common.GetAndCleanFaultInfo()
+			convey.So(len(faultInfo) == 0, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("02-hyper plane fault codes is not empty, should save fault event", func() {
+			mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
+				"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, _ int32) (int32, []int64, error) {
+					return 1, []int64{common.UBPortDownCode}, nil
+				})
+			defer mockGetDeviceAllErrorCode.Reset()
+			saveCalled := false
+			mockSave := gomonkey.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {
+				saveCalled = true
+			})
+			defer mockSave.Reset()
+			tool.generateHyperPlaneFaultEventsBasedOnFaultCacheChange(device)
+			convey.So(saveCalled, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("03-no hyper plane fault code, ub link down, should generate fault code and save",
+			func() {
+				mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
+					"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, _ int32) (int32, []int64, error) {
+						return 0, []int64{}, nil
+					})
+				defer mockGetDeviceAllErrorCode.Reset()
+				mockGetHyperPlaneStatus := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
+					"getHyperPlaneStatusCache", func(_ *AscendTools, _ int32) networkPlaneStatus {
+						return networkPlaneStatus{status: npuCommon.NPUNetworkLinkDownStatus,
+							downPortsNum: 8}
+					})
+				defer mockGetHyperPlaneStatus.Reset()
+				saveCalled := false
+				mockSave := gomonkey.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {
+					saveCalled = true
+				})
+				defer mockSave.Reset()
+				tool.generateHyperPlaneFaultEventsBasedOnFaultCacheChange(device)
+				convey.So(saveCalled, convey.ShouldBeTrue)
+			})
+
+		convey.Convey("04-no hyper plane fault code, ub link up, should not save fault event", func() {
+			mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
+				"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, _ int32) (int32, []int64, error) {
+					return 0, []int64{}, nil
+				})
+			defer mockGetDeviceAllErrorCode.Reset()
+			mockGetHyperPlaneStatus := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
+				"getHyperPlaneStatusCache", func(_ *AscendTools, _ int32) networkPlaneStatus {
+					return networkPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
+						downPortsNum: npuCommon.PortNoDownCount}
+				})
+			defer mockGetHyperPlaneStatus.Reset()
+			saveCalled := false
+			mockSave := gomonkey.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {
+				saveCalled = true
+			})
+			defer mockSave.Reset()
+			tool.generateHyperPlaneFaultEventsBasedOnFaultCacheChange(device)
+			convey.So(saveCalled, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("05-device is not A5, should skip ub port status query", func() {
+			notA5Tool := AscendTools{dmgr: &devmanager.DeviceManagerMock{DevType: api.Ascend910B}}
+			mockGetDeviceAllErrorCode := gomonkey.ApplyMethod(reflect.TypeOf(new(devmanager.DeviceManagerMock)),
+				"GetDeviceAllErrorCode", func(_ *devmanager.DeviceManagerMock, _ int32) (int32, []int64, error) {
+					return 0, []int64{}, nil
+				})
+			defer mockGetDeviceAllErrorCode.Reset()
+			queryCalled := false
+			mockGetHyperPlaneStatus := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
+				"getHyperPlaneStatusCache", func(_ *AscendTools, _ int32) networkPlaneStatus {
+					queryCalled = true
+					return networkPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
+						downPortsNum: npuCommon.PortNoDownCount}
+				})
+			defer mockGetHyperPlaneStatus.Reset()
+			notA5Tool.generateHyperPlaneFaultEventsBasedOnFaultCacheChange(device)
+			convey.So(queryCalled, convey.ShouldBeFalse)
+		})
+	})
+}
+
+// TestGetUBPortsDownSnapshot for test getUBPortsDownSnapshot
+func TestGetUBPortsDownSnapshot(t *testing.T) {
+	convey.Convey("test getUBPortsDownSnapshot", t, func() {
+		convey.Convey("01-mix bonding down, ub down and up ports, snapshot should aggregate down count by type",
+			func() {
+				ubPortEnabledCache = make(map[int32]map[string]bool, common.GeneralMapSize)
+				mockGetAllUBports := gomonkey.ApplyFuncReturn(hccn.GetAllUBports, []npuCommon.UBPort{
+					{UDieId: 0, PortID: 4, PortType: hccn.BondingPortName, LinkStatus: hccn.LinkDown},
+					{UDieId: 0, PortID: 5, PortType: hccn.BondingPortName, LinkStatus: hccn.LinkUp},
+					{UDieId: 1, PortID: 8, PortType: hccn.UBPortName, LinkStatus: hccn.LinkDown},
+					{UDieId: 1, PortID: 9, PortType: hccn.UBPortName, LinkStatus: hccn.LinkDown},
+					{UDieId: 1, PortID: 10, PortType: hccn.UBPortName, LinkStatus: hccn.LinkUp},
+				}, nil)
+				defer mockGetAllUBports.Reset()
+				mockIsEnabled := gomonkey.ApplyFuncReturn(hccn.IsUBPortEnabled, true, nil)
+				defer mockIsEnabled.Reset()
+				snapshot, err := getUBPortsDownSnapshot(0)
+				convey.So(err, convey.ShouldBeNil)
+				convey.So(snapshot.bondingDownCnt, convey.ShouldEqual, 1)
+				convey.So(snapshot.ubDownCnt, convey.ShouldEqual, 2)
+			})
+		convey.Convey("02-all ports up, snapshot down count should be zero", func() {
+			ubPortEnabledCache = make(map[int32]map[string]bool, common.GeneralMapSize)
+			mockGetAllUBports := gomonkey.ApplyFuncReturn(hccn.GetAllUBports, []npuCommon.UBPort{
+				{UDieId: 0, PortID: 4, PortType: hccn.BondingPortName, LinkStatus: hccn.LinkUp},
+				{UDieId: 1, PortID: 8, PortType: hccn.UBPortName, LinkStatus: hccn.LinkUp},
+			}, nil)
+			defer mockGetAllUBports.Reset()
+			snapshot, err := getUBPortsDownSnapshot(0)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(snapshot.bondingDownCnt, convey.ShouldEqual, 0)
+			convey.So(snapshot.ubDownCnt, convey.ShouldEqual, 0)
+		})
+		convey.Convey("03-get all ub ports failed, should return error", func() {
+			ubPortEnabledCache = make(map[int32]map[string]bool, common.GeneralMapSize)
+			mockGetAllUBports := gomonkey.ApplyFuncReturn(hccn.GetAllUBports, nil,
+				errors.New("hccn_tool exec failed"))
+			defer mockGetAllUBports.Reset()
+			snapshot, err := getUBPortsDownSnapshot(0)
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(snapshot.bondingDownCnt, convey.ShouldEqual, 0)
+			convey.So(snapshot.ubDownCnt, convey.ShouldEqual, 0)
+		})
+		convey.Convey("04-empty ports list, snapshot down count should be zero", func() {
+			ubPortEnabledCache = make(map[int32]map[string]bool, common.GeneralMapSize)
+			mockGetAllUBports := gomonkey.ApplyFuncReturn(hccn.GetAllUBports,
+				[]npuCommon.UBPort{}, nil)
+			defer mockGetAllUBports.Reset()
+			snapshot, err := getUBPortsDownSnapshot(0)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(snapshot.bondingDownCnt, convey.ShouldEqual, 0)
+			convey.So(snapshot.ubDownCnt, convey.ShouldEqual, 0)
+		})
+		convey.Convey("05-unenabled down ports are excluded from the down count", func() {
+			ubPortEnabledCache = make(map[int32]map[string]bool, common.GeneralMapSize)
+			mockGetAllUBports := gomonkey.ApplyFuncReturn(hccn.GetAllUBports, []npuCommon.UBPort{
+				{UDieId: 1, PortID: 8, PortType: hccn.UBPortName, LinkStatus: hccn.LinkDown},
+				{UDieId: 1, PortID: 9, PortType: hccn.UBPortName, LinkStatus: hccn.LinkDown},
+				{UDieId: 0, PortID: 4, PortType: hccn.BondingPortName, LinkStatus: hccn.LinkDown},
+			}, nil)
+			defer mockGetAllUBports.Reset()
+			mockIsEnabled := gomonkey.ApplyFunc(hccn.IsUBPortEnabled,
+				func(_, udieID, portID int32) (bool, error) {
+					return udieID == 1 && portID == 8, nil
+				})
+			defer mockIsEnabled.Reset()
+			snapshot, err := getUBPortsDownSnapshot(0)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(snapshot.ubDownCnt, convey.ShouldEqual, 1)
+			convey.So(snapshot.bondingDownCnt, convey.ShouldEqual, 1)
+		})
+		convey.Convey("06-port_info query failed, down ports are still counted as enabled", func() {
+			ubPortEnabledCache = make(map[int32]map[string]bool, common.GeneralMapSize)
+			mockGetAllUBports := gomonkey.ApplyFuncReturn(hccn.GetAllUBports, []npuCommon.UBPort{
+				{UDieId: 1, PortID: 8, PortType: hccn.UBPortName, LinkStatus: hccn.LinkDown},
+			}, nil)
+			defer mockGetAllUBports.Reset()
+			mockIsEnabled := gomonkey.ApplyFuncReturn(hccn.IsUBPortEnabled, false,
+				errors.New("port_info exec failed"))
+			defer mockIsEnabled.Reset()
+			snapshot, err := getUBPortsDownSnapshot(0)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(snapshot.ubDownCnt, convey.ShouldEqual, 1)
+		})
+		convey.Convey("07-port enablement is cached across polling cycles", func() {
+			ubPortEnabledCache = make(map[int32]map[string]bool, common.GeneralMapSize)
+			mockGetAllUBports := gomonkey.ApplyFuncReturn(hccn.GetAllUBports, []npuCommon.UBPort{
+				{UDieId: 1, PortID: 8, PortType: hccn.UBPortName, LinkStatus: hccn.LinkDown},
+			}, nil)
+			defer mockGetAllUBports.Reset()
+			var queryCount int32
+			mockIsEnabled := gomonkey.ApplyFunc(hccn.IsUBPortEnabled,
+				func(_, _, _ int32) (bool, error) {
+					atomic.AddInt32(&queryCount, 1)
+					return false, nil
+				})
+			defer mockIsEnabled.Reset()
+			_, _ = getUBPortsDownSnapshot(0)
+			_, _ = getUBPortsDownSnapshot(0)
+			convey.So(atomic.LoadInt32(&queryCount), convey.ShouldEqual, 1)
 		})
 	})
 }
@@ -1151,7 +1404,7 @@ func initTestObjects() (*AscendTools, *common.NpuDevice) {
 
 func resetNetWorkLimiter() {
 	parameterPlaneLimiterMap = make(map[int32]*rate.Limiter, common.GeneralMapSize)
-	parameterPlaneStatusCache = make(map[int32]parameterPlaneStatus, common.GeneralMapSize)
+	parameterPlaneStatusCache = make(map[int32]networkPlaneStatus, common.GeneralMapSize)
 }
 
 // testGetDeviceFaultFailed returns closure for get device fault failed scenario
@@ -1203,8 +1456,8 @@ func testNetworkFaultCodesEmptyLinkStatusFailed(tool *AscendTools, device *commo
 				return 0, []int64{}, nil
 			})
 		patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
-				return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkDownStatus,
+			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkPlaneStatus {
+				return networkPlaneStatus{status: npuCommon.NPUNetworkLinkDownStatus,
 					downPortsNum: npuCommon.PortNoDownCount}
 			})
 		tool.generateNetworkFaultEventsBasedOnFaultCacheChange(device)
@@ -1222,8 +1475,8 @@ func testNetworkFaultCodesEmptyHealthyLinkDown(tool *AscendTools, device *common
 				return 0, []int64{}, nil
 			})
 		patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
-				return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkDownStatus,
+			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkPlaneStatus {
+				return networkPlaneStatus{status: npuCommon.NPUNetworkLinkDownStatus,
 					downPortsNum: npuCommon.RoceParameterPlanePortAllDownCount}
 			})
 		saveCalled := false
@@ -1246,8 +1499,8 @@ func testNetworkFaultCodesEmptyHealthMatchLink(tool *AscendTools, device *common
 				return 0, []int64{}, nil
 			})
 		patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
-				return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
+			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkPlaneStatus {
+				return networkPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
 					downPortsNum: npuCommon.PortNoDownCount}
 			})
 		saveCalled := false
@@ -1299,8 +1552,8 @@ func testNetworkLimiterInitialization(tool *AscendTools, device *common.NpuDevic
 				return 0, []int64{}, nil
 			})
 		patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
-				return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
+			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkPlaneStatus {
+				return networkPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
 					downPortsNum: npuCommon.PortNoDownCount}
 			})
 		patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {})
@@ -1320,8 +1573,8 @@ func testNetworkLimiterRateLimiting(tool *AscendTools, device *common.NpuDevice)
 				return 0, []int64{}, nil
 			})
 		patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
-				return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
+			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkPlaneStatus {
+				return networkPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
 					downPortsNum: npuCommon.PortNoDownCount}
 			})
 		patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {})
@@ -1342,8 +1595,8 @@ func testNetworkLimiterMultipleDevices(tool *AscendTools, device1, device2 *comm
 				return 0, []int64{}, nil
 			})
 		patches.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
-				return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
+			"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkPlaneStatus {
+				return networkPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
 					downPortsNum: npuCommon.PortNoDownCount}
 			})
 		patches.ApplyFunc(common.DoSaveDevFaultInfo, func(_ npuCommon.DevFaultInfo, _ bool) {})
@@ -1616,8 +1869,8 @@ func TestQueryNetworkStatusWithoutRoCEDev(t *testing.T) {
 				func(_ *AscendTools) bool { return false })
 			defer patchWithoutRoCE.Reset()
 			patchGetNetworkStatus := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-				"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
-					return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
+				"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkPlaneStatus {
+					return networkPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
 						downPortsNum: npuCommon.RoceParameterPlanePortAllDownCount}
 				})
 			defer patchGetNetworkStatus.Reset()
@@ -1634,8 +1887,8 @@ func TestQueryNetworkStatusWithoutRoCEDev(t *testing.T) {
 				func(_ *AscendTools) bool { return false })
 			defer patchWithoutRoCE.Reset()
 			patchGetNetworkStatus := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-				"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
-					return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkDownStatus,
+				"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkPlaneStatus {
+					return networkPlaneStatus{status: npuCommon.NPUNetworkLinkDownStatus,
 						downPortsNum: npuCommon.PortNoDownCount}
 				})
 			defer patchGetNetworkStatus.Reset()
@@ -1652,8 +1905,8 @@ func TestQueryNetworkStatusWithoutRoCEDev(t *testing.T) {
 				func(_ *AscendTools) bool { return false })
 			defer patchWithoutRoCE.Reset()
 			patchGetNetworkStatus := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(AscendTools)),
-				"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) parameterPlaneStatus {
-					return parameterPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
+				"getParameterPlaneStatusCache", func(_ *AscendTools, _ int32) networkPlaneStatus {
+					return networkPlaneStatus{status: npuCommon.NPUNetworkLinkUpStatus,
 						downPortsNum: npuCommon.UBOEParameterPlanePortAllDownCount}
 				})
 			defer patchGetNetworkStatus.Reset()
