@@ -1,0 +1,21 @@
+FROM openeuler/openeuler:24.03-lts
+
+RUN yum update -y && \
+    yum install -y shadow-utils && \
+    yum clean all && \
+    rm -rf /var/cache/yum && \
+    rm -rf /tmp/*
+
+COPY vc-scheduler /vc-scheduler
+COPY volcano-npu_*.so plugins/
+COPY agreement.txt /usr/local/
+
+RUN groupadd -g 9000 hwMindX && \
+    useradd -m -d /home/hwMindX -u 9000 -g hwMindX -s /sbin/nologin hwMindX && \
+    chown -R hwMindX:hwMindX /plugins /vc-scheduler /usr/local/agreement.txt && \
+    chmod 750 /home/hwMindX && \
+    chmod 500 /vc-scheduler /plugins && \
+    chmod 400 /plugins/*.so
+
+USER hwMindX
+ENTRYPOINT ["/bin/sh", "-c", "cat /usr/local/agreement.txt; exec /bin/sh"]

@@ -1,6 +1,8 @@
 FROM alpine:latest
 
 COPY vc-controller-manager /vc-controller-manager
+COPY agreement.txt /usr/local/
+
 RUN if [ "$(uname -m)" = "x86_64" ]; then \
         mkdir -p /lib64 && \
         chmod 755 /lib64 && \
@@ -14,4 +16,6 @@ RUN adduser -h /home/hwMindX -u 9000 -D -s /sbin/nologin hwMindX && \
     chown -R hwMindX:hwMindX vc-controller-manager && \
     chmod 750 /home/hwMindX && \
     chmod 500 vc-controller-manager
+
 USER hwMindX
+ENTRYPOINT ["/bin/sh", "-c", "cat /usr/local/agreement.txt; exec /bin/sh"]
