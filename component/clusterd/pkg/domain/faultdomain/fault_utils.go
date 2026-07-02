@@ -463,11 +463,6 @@ func IsUceAccompanyFault(faultCode string) bool {
 		strings.Contains(faultCode, constant.AivFaultCode)
 }
 
-// IsHcclAccompanyFault check faultCode is hccl accompany
-func IsHcclAccompanyFault(faultCode string) bool {
-	return strings.Contains(faultCode, constant.CcuFaultCode)
-}
-
 // IsL2L3Fault check faultLevel is L2 or L3
 func IsL2L3Fault(faultLevel string) bool {
 	return faultLevel == constant.RestartRequest || faultLevel == constant.RestartBusiness

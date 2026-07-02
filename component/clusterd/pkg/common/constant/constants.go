@@ -66,7 +66,6 @@ const (
 	UceFaultCode      = "80E01801"
 	AicFaultCode      = "80C98009"
 	AivFaultCode      = "80CB8009"
-	CcuFaultCode      = "81B38002"
 	LinkDownFaultCode = "81078603"
 	// UBOEPreSeparateFaultCode UBOE pre separate fault code
 	UBOEPreSeparateFaultCode = "110001024"
