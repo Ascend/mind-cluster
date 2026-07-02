@@ -1,0 +1,41 @@
+FROM openeuler/openeuler:24.03-lts AS build
+
+ARG VERSION=26.1.0
+ARG TARGETPLATFORM
+
+RUN yum update -y &&\
+    yum install -y wget unzip &&\
+    yum clean all &&\
+    rm -rf /var/cache/yum &&\
+    rm -rf /tmp/* &&\
+    ARCH=$(case "${TARGETPLATFORM}" in \
+        "linux/amd64") echo "x86_64" ;; \
+        "linux/arm64") echo "aarch64" ;; \
+        *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
+    esac) &&\
+    wget https://gitcode.com/ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-volcano_${VERSION}_linux-${ARCH}.zip &&\
+    unzip Ascend-mindxdl-volcano_${VERSION}_linux-${ARCH}.zip -d /build
+
+FROM openeuler/openeuler:24.03-lts
+
+RUN yum update -y && \
+    yum install -y shadow-utils && \
+    yum clean all && \
+    rm -rf /var/cache/yum && \
+    rm -rf /tmp/* &&\
+    groupadd -g 9000 hwMindX && \
+    useradd -m -d /home/hwMindX -u 9000 -g hwMindX -s /sbin/nologin hwMindX
+
+COPY --from=build /build/volcano-v1.12.0/openeuler/vc-scheduler /vc-scheduler
+COPY --from=build /build/volcano-v1.12.0/openeuler/agreement.txt /usr/local/
+COPY --from=build /build/volcano-v1.12.0/openeuler/volcano-npu_*.so /plugins/
+
+RUN chown -R hwMindX:hwMindX /plugins /vc-scheduler /usr/local/agreement.txt && \
+    chmod 750 /home/hwMindX && \
+    chmod 500 /vc-scheduler /plugins && \
+    chmod 400 /plugins/*.so && \
+    chmod 440 /usr/local/agreement.txt
+
+USER hwMindX
+
+ENTRYPOINT ["/bin/sh", "-c", "cat /usr/local/agreement.txt; exec /bin/sh"]

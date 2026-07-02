@@ -19,8 +19,16 @@ RUN ARCH=$(case "${TARGETPLATFORM}" in \
 
 FROM alpine:latest
 
-COPY --from=build /build/volcano-v1.9.0/vc-controller-manager /vc-controller-manager
-COPY --from=build /build/volcano-v1.9.0/agreement.txt /usr/local/
+COPY --from=build /build/volcano-v1.9.0/alpine/vc-controller-manager /vc-controller-manager
+COPY --from=build /build/volcano-v1.9.0/alpine/agreement.txt /usr/local/
+
+RUN if [ "$(uname -m)" = "x86_64" ]; then \
+        mkdir -p /lib64 && \
+        chmod 755 /lib64 && \
+        ln -s /lib/ld-musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2; \
+    elif [ "$(uname -m)" = "aarch64" ]; then \
+        ln -s /lib/ld-musl-aarch64.so.1 /lib/ld-linux-aarch64.so.1; \
+    fi
 
 RUN adduser -h /home/hwMindX -u 9000 -D -s /sbin/nologin hwMindX &&\
     sed '1c root:x:0:0:root:/root:/sbin/nologin' /etc/passwd &&\

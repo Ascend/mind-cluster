@@ -13,7 +13,8 @@ RUN groupadd -g 9000 hwMindX && \
     useradd -m -d /home/hwMindX -u 9000 -g hwMindX -s /sbin/nologin hwMindX && \
     chown -R hwMindX:hwMindX /vc-controller-manager && \
     chmod 750 /home/hwMindX && \
-    chmod 500 /vc-controller-manager
+    chmod 500 /vc-controller-manager && \
+    chmod 440 /usr/local/agreement.txt
 
 USER hwMindX
 ENTRYPOINT ["/bin/sh", "-c", "cat /usr/local/agreement.txt; exec /bin/sh"]
