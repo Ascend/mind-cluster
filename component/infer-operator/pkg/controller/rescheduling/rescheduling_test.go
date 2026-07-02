@@ -409,6 +409,63 @@ func TestRescheduler_handlePodUpdate(t *testing.T) {
 	})
 }
 
+func TestRescheduler_handlePodDelete(t *testing.T) {
+	convey.Convey("Test handlePodDelete", t, func() {
+		convey.Convey("Should skip when object is not a pod", func() {
+			fakeClient := newFakeClient()
+			rescheduler := NewRescheduler(fakeClient, common.FaultRetryTimesCleanupInterval)
+			// should not panic and should do nothing
+			rescheduler.handlePodDelete("not-a-pod")
+		})
+
+		convey.Convey("Should skip when pod is not a valid infer pod", func() {
+			fakeClient := newFakeClient()
+			rescheduler := NewRescheduler(fakeClient, common.FaultRetryTimesCleanupInterval)
+			pod := createTestPod("test-pod", "default", nil, map[string]string{})
+			rescheduler.handlePodDelete(pod)
+			// nothing should be recorded
+			rescheduler.Lock()
+			recorded := len(rescheduler.faultWorkLoadMap)
+			rescheduler.Unlock()
+			convey.So(recorded, convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("Should record fault and not panic when pod has no "+
+			"PodStatusAnnotation (healthy pod force-deleted)", func() {
+			instanceSet := createTestInstanceSet("test-service-test-role", "default", nil)
+			fakeClient := newFakeClient(instanceSet)
+			rescheduler := NewRescheduler(fakeClient, common.FaultRetryTimesCleanupInterval)
+			factory := &workload.WorkLoadHandlerFactory{}
+			rescheduler.SetWorkLoadHandlerFactory(factory)
+			patches := gomonkey.ApplyMethodReturn(factory, "GetWorkLoadHandler",
+				createMockWorkLoadHandler(), nil)
+			defer patches.Reset()
+
+			// pod has no PodStatusAnnotationKey at all (nil annotations)
+			pod := createTestPod("test-pod", "default", nil, map[string]string{
+				common.OperatorNameKey:          common.TrueBool,
+				common.InferServiceNameLabelKey: "test-service",
+				common.InstanceSetNameLabelKey:  "test-role",
+				common.InstanceIndexLabelKey:    "0",
+			})
+
+			rescheduler.handlePodDelete(pod)
+
+			// should be recorded with empty fault reason
+			expected := faultWorkLoad{
+				NamespacedName: types.NamespacedName{
+					Namespace: "default", Name: "test-service-test-role-0"},
+				instanceSetName: "test-service-test-role",
+			}
+			rescheduler.Lock()
+			reason, exists := rescheduler.faultWorkLoadMap[expected]
+			rescheduler.Unlock()
+			convey.So(exists, convey.ShouldBeTrue)
+			convey.So(reason, convey.ShouldEqual, "")
+		})
+	})
+}
+
 func TestRescheduler_processFaultEvent(t *testing.T) {
 	convey.Convey("Test processFaultEvent", t, func() {
 		convey.Convey("Should return error when instanceSet not found", func() {

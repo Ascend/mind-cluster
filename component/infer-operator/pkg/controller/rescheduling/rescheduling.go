@@ -82,6 +82,7 @@ func (r *Rescheduler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) er
 	}
 	podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: r.handlePodUpdate,
+		DeleteFunc: r.handlePodDelete,
 	})
 	return nil
 }
@@ -114,6 +115,29 @@ func (r *Rescheduler) handlePodUpdate(oldObj, newObj interface{}) {
 	err := r.processFaultEvent(pod)
 	if err != nil {
 		hwlog.RunLog.Errorf("failed to record fault for pod %s/%s: %v", pod.Namespace, pod.Name, err)
+	}
+}
+
+// handlePodDelete handles pod delete event (both grace and force delete).
+// DeleteFunc is the only reliable signal: for force-delete the update event
+// (DeletionTimestamp) may be lost, and for grace-delete isValidFaultPod skips
+// pods with DeletionTimestamp set. A single STS/Deployment's replicas together
+// form one inference instance (a communication domain), so losing any pod
+// requires rebuilding that pod's workload. Other workloads under the same
+// instanceSet are unaffected.
+func (r *Rescheduler) handlePodDelete(obj interface{}) {
+	pod, ok := obj.(*corev1.Pod)
+	if !ok {
+		return
+	}
+	if !r.isValidInferPod(pod) {
+		return
+	}
+	hwlog.RunLog.Infof("pod %s/%s deleted, trigger its workload rebuild",
+		pod.Namespace, pod.Name)
+	if err := r.processFaultEvent(pod); err != nil {
+		hwlog.RunLog.Errorf("failed to process delete for pod %s/%s: %v",
+			pod.Namespace, pod.Name, err)
 	}
 }
 
@@ -222,15 +246,17 @@ func (r *Rescheduler) recordWorkLoadFault(pod *corev1.Pod, workLoadName string, 
 			pod.Namespace, pod.Name, workLoadNamespacedName.Namespace, workLoadName)
 		return true
 	}
-	r.faultWorkLoadMap[currentFaultWorkLoad] = pod.Annotations[common.PodStatusAnnotationKey]
-	if strings.HasSuffix(pod.Annotations[common.PodStatusAnnotationKey], common.PodFailed) {
+	// read once; safe even if pod.Annotations is nil or key absent (returns "")
+	faultReason := pod.Annotations[common.PodStatusAnnotationKey]
+	r.faultWorkLoadMap[currentFaultWorkLoad] = faultReason
+	if strings.HasSuffix(faultReason, common.PodFailed) {
 		if _, exists := r.faultRetryTimesMap[currentFaultWorkLoad]; !exists {
 			retryTimes, _ := strconv.Atoi(pod.Labels[common.FaultRetryTimesLabelKey])
 			r.faultRetryTimesMap[currentFaultWorkLoad] = retryTimes
 		}
 	}
 	hwlog.RunLog.Infof("record fault: %s for workload %s/%s",
-		pod.Annotations[common.PodStatusAnnotationKey], pod.Namespace, workLoadName)
+		faultReason, pod.Namespace, workLoadName)
 	return false
 }
 
