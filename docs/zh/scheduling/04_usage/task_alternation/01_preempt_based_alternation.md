@@ -34,7 +34,7 @@ sequenceDiagram
 
 ## 操作步骤<a name="section_steps_preempt"></a>
 
-1. 创建PriorityClass。
+1. 创建PriorityClass。关于PriorityClass相关字段的详细说明，请参见[k8s官方网站](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/)。
 
    ```yaml
    # 推理任务：高优先级，可抢占低优先级资源
@@ -43,6 +43,7 @@ sequenceDiagram
    metadata:
      name: inference-high
    value: 1000
+   preemptionPolicy: PreemptLowerPriority
    globalDefault: false
    description: "推理任务高优先级"
 
@@ -54,6 +55,7 @@ sequenceDiagram
      name: training-low
    value: 100
    globalDefault: false
+   preemptionPolicy: Never
    description: "训练任务低优先级，可被抢占"
    ```
 
