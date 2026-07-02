@@ -70,8 +70,7 @@ func (processor *uceAccompanyFaultProcessor) uceAccompanyFaultInQueForNode(
 			if found, info := processor.isBusinessUceFault(nodeName, fault.NPUName); found {
 				processor.uceFaultTime[nodeName][deviceName] = info.RecoverTime
 			}
-			if !faultdomain.IsUceAccompanyFault(fault.FaultCode) &&
-				!faultdomain.IsHcclAccompanyFault(fault.FaultCode) {
+			if !faultdomain.IsUceAccompanyFault(fault.FaultCode) {
 				continue
 			}
 			processor.inQue(nodeName, deviceName, fault)
