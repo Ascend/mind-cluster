@@ -598,8 +598,8 @@ func TestGetFinalAlarm(t *testing.T) {
 			input := []map[string]any{
 				{
 					avgLoseRateConstant: float64(100), minLoseRateConstant: float64(100),
-					maxLoseRateConstant: float64(100), avgDelayConstant: float64(500), minDelayConstant: float64(100),
-					maxDelayConstant: float64(1000), srcAddrConstant: "192.168.0.1", dstAddrConstant: "192.168.0.2",
+					maxLoseRateConstant: float64(100), avgDelayConstant: float64(500000), minDelayConstant: float64(100000),
+					maxDelayConstant: float64(1000000), srcAddrConstant: "192.168.0.1", dstAddrConstant: "192.168.0.2",
 					timestampConstant: int64(1000), pingTaskIDConstant: "aa",
 				},
 			}
@@ -613,8 +613,8 @@ func TestGetFinalAlarm(t *testing.T) {
 			input := []map[string]any{
 				{
 					avgLoseRateConstant: float64(100), minLoseRateConstant: float64(100),
-					maxLoseRateConstant: float64(100), avgDelayConstant: float64(500), minDelayConstant: float64(100),
-					maxDelayConstant: float64(1000), srcAddrConstant: "192.168.0.3", dstAddrConstant: "192.168.0.4",
+					maxLoseRateConstant: float64(100), avgDelayConstant: float64(500000), minDelayConstant: float64(100000),
+					maxDelayConstant: float64(1000000), srcAddrConstant: "192.168.0.3", dstAddrConstant: "192.168.0.4",
 					timestampConstant: int64(1000),
 				},
 			}

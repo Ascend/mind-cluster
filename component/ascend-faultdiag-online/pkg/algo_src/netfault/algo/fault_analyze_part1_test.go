@@ -447,9 +447,9 @@ func TestFindSamePathFast(t *testing.T) {
 func TestGetDynamicThresholds(t *testing.T) {
 	convey.Convey("Given a set of samePaths", t, func() {
 		samePaths := []map[string]any{
-			{avgLoseRateConstant: 1.0, avgDelayConstant: 2.0},
-			{avgLoseRateConstant: 1.5, avgDelayConstant: 2.5},
-			{avgLoseRateConstant: 2.0, avgDelayConstant: 3.0},
+			{avgLoseRateConstant: 1.0, avgDelayConstant: 2000.0}, // 单位: 微秒, Round(v/1000) 后得到 2ms
+			{avgLoseRateConstant: 1.5, avgDelayConstant: 2500.0}, // 2.5ms after conversion
+			{avgLoseRateConstant: 2.0, avgDelayConstant: 3000.0}, // 3ms after conversion
 		}
 
 		convey.Convey("When calling getDynamicThresholds", func() {
@@ -460,7 +460,9 @@ func TestGetDynamicThresholds(t *testing.T) {
 			})
 
 			convey.Convey("Then the delayDynamicThreshold should be calculated correctly", func() {
-				convey.So(delayThreshold, convey.ShouldEqual, 5.5) // 预期时延阈值
+				// avgDelayConstant after Round(v/1000): 2, 3, 3 (math.Round rounds 2.5 to 3)
+				// avg = (2+3+3)/3 = 2.666..., threshold = 2.666... + 3*1 = 5.666...
+				convey.So(delayThreshold, convey.ShouldEqual, 5.666666666666666) // 预期时延阈值
 			})
 		})
 	})
@@ -470,15 +472,15 @@ func TestGetIndicators(t *testing.T) {
 	convey.Convey("Given a set of input data and a path", t, func() {
 		input := []map[string]any{
 			{pingTaskIDConstant: "value1", srcTypeConstant: "value2", srcAddrConstant: "value3",
-				dstTypeConstant: "value4", dstAddrConstant: "value5", avgLoseRateConstant: 1.0, avgDelayConstant: 1.0},
+				dstTypeConstant: "value4", dstAddrConstant: "value5", avgLoseRateConstant: 1.0, avgDelayConstant: 1000.0},
 			{pingTaskIDConstant: "value6", srcTypeConstant: "value7", srcAddrConstant: "value8",
-				dstTypeConstant: "value9", dstAddrConstant: "value10", avgLoseRateConstant: 2.0, avgDelayConstant: 2.0},
+				dstTypeConstant: "value9", dstAddrConstant: "value10", avgLoseRateConstant: 2.0, avgDelayConstant: 2000.0},
 			{pingTaskIDConstant: "value1", srcTypeConstant: "value2", srcAddrConstant: "value3",
-				dstTypeConstant: "value4", dstAddrConstant: "value5", avgLoseRateConstant: 3.0, avgDelayConstant: 3.0},
+				dstTypeConstant: "value4", dstAddrConstant: "value5", avgLoseRateConstant: 3.0, avgDelayConstant: 3000.0},
 		}
 
 		path := map[string]any{pingTaskIDConstant: "value1", srcTypeConstant: "value2", srcAddrConstant: "value3",
-			dstTypeConstant: "value4", dstAddrConstant: "value5", avgLoseRateConstant: 1.0, avgDelayConstant: 1.0}
+			dstTypeConstant: "value4", dstAddrConstant: "value5", avgLoseRateConstant: 1.0, avgDelayConstant: 1000.0}
 
 		convey.Convey("When calling getIndicators", func() {
 			lossIndicator, delayIndicator := getIndicators(input, path)
