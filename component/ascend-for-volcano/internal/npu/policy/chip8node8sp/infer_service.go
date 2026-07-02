@@ -137,19 +137,23 @@ func (tp *chip8node8sp) selectNodesForInferService(
 	spBlockCount := tp.ReqNPUNum / tp.SpBlockNPUNum
 	selectedNodes := make(map[string][]plugin.SuperNode)
 
+	pq := tp.buildInferServicePriorityQueue(superPodTop, sameSPs)
 	for i := 0; i < spBlockCount; i++ {
-		pq := tp.buildInferServicePriorityQueue(superPodTop, sameSPs)
-		if pq.Len() == 0 {
+		var item *inferServicePQItem
+		for pq.Len() > 0 {
+			item = heap.Pop(pq).(*inferServicePQItem)
+			sp, ok := superPodTop[item.superPodID]
+			if !ok || len(sp) < tp.spBlock {
+				item = nil
+				continue
+			}
 			break
 		}
-		item := heap.Pop(pq).(*inferServicePQItem)
-
-		sp, ok := superPodTop[item.superPodID]
-		if !ok || len(sp) < tp.spBlock {
-			i--
-			continue
+		if item == nil {
+			break
 		}
 
+		sp := superPodTop[item.superPodID]
 		spIndex := strconv.Itoa(i)
 		selectedNodes[spIndex] = make([]plugin.SuperNode, 0, tp.spBlock)
 		nodeCount := 0
@@ -169,6 +173,7 @@ func (tp *chip8node8sp) selectNodesForInferService(
 			superPodID: item.superPodID,
 		}
 		tp.enrichInferServiceSPInfo(superPodTop, sameSPs)
+		pq = tp.buildInferServicePriorityQueue(superPodTop, sameSPs)
 	}
 
 	if len(selectedNodes) < spBlockCount {

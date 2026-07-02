@@ -468,3 +468,166 @@ func buildTestNodeInfos(start, end int) []*api.NodeInfo {
 	}
 	return nodeInfos
 }
+
+func TestSelectNodesForInferService_NormalCase(t *testing.T) {
+	tp := &chip8node8sp{}
+	tp.spBlock = 2
+	tp.NPUJob = &util.NPUJob{
+		SpBlockNPUNum: 16,
+		ReqNPUNum:     16,
+	}
+
+	superPodTop := map[int32]superPod{
+		0: {"node0": {}, "node1": {}, "node2": {}, "node3": {}},
+	}
+
+	sameSPs := map[int32]*inferServiceSPInfo{}
+
+	pq := tp.buildInferServicePriorityQueue(superPodTop, sameSPs)
+	if pq.Len() == 0 {
+		t.Fatal("expected non-empty priority queue")
+	}
+
+	var item *inferServicePQItem
+	for pq.Len() > 0 {
+		item = heap.Pop(pq).(*inferServicePQItem)
+		sp, ok := superPodTop[item.superPodID]
+		if !ok || len(sp) < tp.spBlock {
+			item = nil
+			continue
+		}
+		break
+	}
+
+	if item == nil {
+		t.Errorf("expected item not nil")
+	} else {
+		t.Logf("Selected item: superPodID=%d", item.superPodID)
+	}
+}
+
+func TestSelectNodesForInferService_SkipSuperPod(t *testing.T) {
+	tp := &chip8node8sp{}
+	tp.spBlock = 4
+	tp.NPUJob = &util.NPUJob{
+		SpBlockNPUNum: 32,
+		ReqNPUNum:     32,
+	}
+
+	superPodTop := map[int32]superPod{
+		0: {"node0": {}, "node1": {}},
+	}
+
+	sameSPs := map[int32]*inferServiceSPInfo{}
+
+	pq := tp.buildInferServicePriorityQueue(superPodTop, sameSPs)
+
+	var item *inferServicePQItem
+	for pq.Len() > 0 {
+		item = heap.Pop(pq).(*inferServicePQItem)
+		sp, ok := superPodTop[item.superPodID]
+		if !ok || len(sp) < tp.spBlock {
+			item = nil
+			continue
+		}
+		break
+	}
+
+	if item != nil {
+		t.Errorf("expected item to be nil when no valid superPod found")
+	}
+}
+
+func TestSelectNodesForInferService_EnoughNodes(t *testing.T) {
+	tp := &chip8node8sp{}
+	tp.spBlock = 2
+	tp.NPUJob = &util.NPUJob{
+		SpBlockNPUNum: 16,
+		ReqNPUNum:     16,
+	}
+
+	superPodTop := map[int32]superPod{
+		0: {"node0": {}, "node1": {}},
+	}
+
+	sameSPs := map[int32]*inferServiceSPInfo{}
+
+	pq := tp.buildInferServicePriorityQueue(superPodTop, sameSPs)
+
+	var item *inferServicePQItem
+	for pq.Len() > 0 {
+		item = heap.Pop(pq).(*inferServicePQItem)
+		sp, ok := superPodTop[item.superPodID]
+		if !ok || len(sp) < tp.spBlock {
+			item = nil
+			continue
+		}
+		break
+	}
+
+	if item == nil {
+		t.Errorf("expected item not nil when superPod has enough nodes")
+	} else if item.superPodID != 0 {
+		t.Errorf("expected superPodID=0, got %d", item.superPodID)
+	}
+}
+
+func TestSelectNodesForInferService_EmptyPQ(t *testing.T) {
+	tp := &chip8node8sp{}
+	tp.spBlock = 2
+
+	superPodTop := map[int32]superPod{}
+	sameSPs := map[int32]*inferServiceSPInfo{}
+
+	pq := tp.buildInferServicePriorityQueue(superPodTop, sameSPs)
+
+	var item *inferServicePQItem
+	for pq.Len() > 0 {
+		item = heap.Pop(pq).(*inferServicePQItem)
+		sp, ok := superPodTop[item.superPodID]
+		if !ok || len(sp) < tp.spBlock {
+			item = nil
+			continue
+		}
+		break
+	}
+
+	if item != nil {
+		t.Errorf("expected item to be nil when priority queue is empty")
+	}
+}
+
+func TestSelectNodesForInferService_MultipleSuperPods(t *testing.T) {
+	tp := &chip8node8sp{}
+	tp.spBlock = 4
+	tp.NPUJob = &util.NPUJob{
+		SpBlockNPUNum: 32,
+		ReqNPUNum:     32,
+	}
+
+	superPodTop := map[int32]superPod{
+		0: {"node0": {}, "node1": {}},
+		1: {"node2": {}, "node3": {}, "node4": {}, "node5": {}, "node6": {}},
+	}
+
+	sameSPs := map[int32]*inferServiceSPInfo{}
+
+	pq := tp.buildInferServicePriorityQueue(superPodTop, sameSPs)
+
+	var item *inferServicePQItem
+	for pq.Len() > 0 {
+		item = heap.Pop(pq).(*inferServicePQItem)
+		sp, ok := superPodTop[item.superPodID]
+		if !ok || len(sp) < tp.spBlock {
+			item = nil
+			continue
+		}
+		break
+	}
+
+	if item == nil {
+		t.Errorf("expected item not nil")
+	} else if item.superPodID != 1 {
+		t.Errorf("expected to select superPodID=1, got %d", item.superPodID)
+	}
+}
