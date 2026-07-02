@@ -497,12 +497,9 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     </tr>
     <tr id="row1498819461243"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p7417181910258"><a name="p7417181910258"></a><a name="p7417181910258"></a><span id="ph1841103815159"><a name="ph1841103815159"></a><a name="ph1841103815159"></a>Volcano</span></p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p7611881466"><a name="p7611881466"></a><a name="p7611881466"></a>进入<span id="ph11611128154615"><a name="ph11611128154615"></a><a name="ph11611128154615"></a>Volcano</span>组件解压目录，选择以下版本路径并进入。</p>
-    <a name="ul1193395714453"></a><a name="ul1193395714453"></a><ul id="ul1193395714453"><li>v1.7.0版本执行以下命令。<pre class="screen" id="screen73221362140"><a name="screen73221362140"></a><a name="screen73221362140"></a>docker build --no-cache -t volcanosh/vc-scheduler:v1.7.0-{tag} ./ -f ./Dockerfile-scheduler
-   docker build --no-cache -t volcanosh/vc-controller-manager:v1.7.0-{tag} ./ -f ./Dockerfile-controller</pre>
-    </li><li>v1.9.0版本执行以下命令。<pre class="screen" id="screen20630163032915"><a name="screen20630163032915"></a><a name="screen20630163032915"></a>docker build --no-cache -t volcanosh/vc-scheduler:v1.9.0-{tag} ./ -f ./Dockerfile-scheduler
-   docker build --no-cache -t volcanosh/vc-controller-manager:v1.9.0-{tag} ./ -f ./Dockerfile-controller</pre>
-    </li></ul>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p7611881466"><a name="p7611881466"></a><a name="p7611881466"></a>进入<span id="ph11611128154615"><a name="ph11611128154615"></a><a name="ph11611128154615"></a>Volcano</span>组件解压目录，选择以下版本路径并进入对应基础镜像目录（Alpine镜像进入<em id="i76118814661"><a name="i76118814661"></a><a name="i76118814661"></a>alpine</em>目录，openEuler镜像进入<em id="i76118814662"><a name="i76118814662"></a><a name="i76118814662"></a>openeuler</em>目录），执行以下命令。</p>
+    <a name="ul1193395714453"></a><a name="ul1193395714453"></a><pre class="screen" id="screen73221362140"><a name="screen73221362140"></a><a name="screen73221362140"></a>docker build --no-cache -t volcanosh/vc-scheduler:<em id="i73221362140"><a name="i73221362140"></a><a name="i73221362140"></a>{version}</em>-<em id="i73221362140"><a name="i73221362140"></a><a name="i73221362140"></a>{tag}</em> ./ -f ./Dockerfile-scheduler
+   docker build --no-cache -t volcanosh/vc-controller-manager:<em id="i73221362140"><a name="i73221362140"></a><a name="i73221362140"></a>{version}</em>-<em id="i73221362141"><a name="i73221362141"></a><a name="i73221362141"></a>{tag}</em> ./ -f ./Dockerfile-controller</pre>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p966311264620"><a name="p966311264620"></a><a name="p966311264620"></a>-</p>
     </td>
