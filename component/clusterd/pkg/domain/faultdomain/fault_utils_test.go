@@ -57,7 +57,7 @@ var (
 	"fault_code": "80E01801      ,  80C98009    ",
     "fault_time_and_level_map":
       {
-        "80E01801": {"fault_time":100000, "fault_level": "RestartBusiness"}, 
+        "80E01801": {"fault_time":100000, "fault_level": "RestartBusiness"},
         "80C98009": {"fault_time":120000, "fault_level": "NotHandleFault"}
       },"npu_name": "Ascend910-0"
   }
@@ -437,6 +437,39 @@ func TestFaultCodeJudge(t *testing.T) {
 	t.Run("TestFaultCodeJudgeIsStressTestFault", func(t *testing.T) {
 		if got := IsStressTestFault(constant.StressTestHighLevelCode); got == false {
 			t.Error("TestFaultCodeJudgeIsStressTestFault fail")
+		}
+	})
+}
+
+// TestIsHcclAccompanyFault check fault code is hccl accompany fault
+func TestIsHcclAccompanyFault(t *testing.T) {
+	t.Run("exact_match_ccu_fault_code", func(t *testing.T) {
+		// happy path: fault code equals CcuFaultCode exactly
+		if got := IsHcclAccompanyFault(constant.CcuFaultCode); !got {
+			t.Errorf("IsHcclAccompanyFault(%s) = false, want true", constant.CcuFaultCode)
+		}
+	})
+	t.Run("unrelated_fault_code", func(t *testing.T) {
+		// abnormal: unrelated fault code
+		if got := IsHcclAccompanyFault("99999999"); got {
+			t.Error("IsHcclAccompanyFault(\"99999999\") = true, want false")
+		}
+	})
+	t.Run("other_known_fault_codes", func(t *testing.T) {
+		// abnormal: other known fault codes should not be identified as hccl accompany fault
+		otherCodes := []string{
+			constant.UceFaultCode,
+			constant.AicFaultCode,
+			constant.AivFaultCode,
+			constant.LinkDownFaultCode,
+			constant.SwitchLinkDownFaultCode,
+			constant.DevCqeFaultCode,
+			constant.HostCqeFaultCode,
+		}
+		for _, code := range otherCodes {
+			if got := IsHcclAccompanyFault(code); got {
+				t.Errorf("IsHcclAccompanyFault(%s) = true, want false", code)
+			}
 		}
 	})
 }
