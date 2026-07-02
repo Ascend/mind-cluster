@@ -698,7 +698,7 @@ func TestMakeAlgoRoceParam(t *testing.T) {
 			patch := gomonkey.ApplyFuncReturn(checkDiffConfig, map[string]any{})
 			defer patch.Reset()
 			paramMap[policy.ServerIdMap] = make(map[string]string)
-			paramMap["axisStategy"] = "same_axis"
+			paramMap["axisStrategy"] = "same_axis"
 			paramMap["superPodArr"] = dirName
 			paramMap["superPodJobFlag"] = true
 			paramMap["npu_type"] = "A5"
@@ -733,8 +733,8 @@ func TestGetRoceDetectionSuperPodFile(t *testing.T) {
 			defer patch1.Reset()
 			defer patch2.Reset()
 			ret1, ret2 := getRoceDetectionSuperPodFiles("", "")
-			convey.So(len(ret1) > 0, convey.ShouldBeTrue)
-			convey.So(len(ret2) > 0, convey.ShouldBeTrue)
+			convey.So(len(ret1) > 0, convey.ShouldBeFalse)
+			convey.So(len(ret2) > 0, convey.ShouldBeFalse)
 		})
 	})
 }

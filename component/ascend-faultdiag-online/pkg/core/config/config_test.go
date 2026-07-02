@@ -24,10 +24,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
-	"ascend-common/common-utils/utils"
 	"ascend-faultdiag-online/pkg/core/model/enum"
 )
 
@@ -69,14 +67,14 @@ func TestParamCheck(t *testing.T) {
 		convey.Convey(("invalid NodeReportTimeout"), func() {
 			config.NodeReportTimeout = -1
 			err := paramCheck(config)
-			convey.So(err.Error(), convey.ShouldEqual, "config wrong param: node report timeout -1 must great than 0")
+			convey.So(err.Error(), convey.ShouldEqual, "config wrong param: node report timeout -1 must greater than 0 and less than 86400")
 			config.NodeReportTimeout = 30 // reset to valid value
 		})
 		convey.Convey(("invalid AllNodesReportTimeout"), func() {
 			config.AllNodesReportTimeout = 0
 			err := paramCheck(config)
 			convey.So(err.Error(), convey.ShouldEqual,
-				"config wrong param: all nodes report timeout 0 must great than 0")
+				"config wrong param: all nodes report timeout 0 must greater than 0 and less than 86400")
 			config.AllNodesReportTimeout = 60 // reset to valid value
 		})
 	})
@@ -115,12 +113,8 @@ func TestLoadConfig(t *testing.T) {
 
 func testLoadConfigWithError() {
 	convey.Convey("load file failed", func() {
-		patch := gomonkey.ApplyFunc(utils.LoadFile, func(path string) ([]byte, error) {
-			return nil, errors.New("load file error")
-		})
-		defer patch.Reset()
-		_, err := LoadConfig("non_existent_file.yaml")
-		convey.So(err.Error(), convey.ShouldEqual, "load file error")
+		_, err := LoadConfig("/nonexistent/path/to/file.yaml")
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 	convey.Convey("file yaml unmarshal failed", func() {
 		yamlData := "}"

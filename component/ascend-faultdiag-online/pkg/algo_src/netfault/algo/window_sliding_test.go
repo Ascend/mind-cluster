@@ -207,7 +207,7 @@ var specialWindows = []map[string]any{
 		srcAddrConstant:    "192.168.1.1",
 		dstTypeConstant:    0,
 		dstAddrConstant:    "192.168.1.2",
-		avgDelayConstant:   float64(10),
+		avgDelayConstant:   float64(10000), // 单位: 微秒，经过 Round(v/1000) 后得到 10ms
 	},
 	{
 		pingTaskIDConstant: "task1",
@@ -215,7 +215,7 @@ var specialWindows = []map[string]any{
 		srcAddrConstant:    "192.168.1.3",
 		dstTypeConstant:    0,
 		dstAddrConstant:    "192.168.1.4",
-		avgDelayConstant:   float64(20),
+		avgDelayConstant:   float64(20000), // 20ms after conversion
 	},
 	{
 		pingTaskIDConstant: "task1",
@@ -223,7 +223,7 @@ var specialWindows = []map[string]any{
 		srcAddrConstant:    "192.168.1.1",
 		dstTypeConstant:    0,
 		dstAddrConstant:    "192.168.1.2",
-		avgDelayConstant:   float64(15),
+		avgDelayConstant:   float64(15000), // 15ms after conversion
 	},
 	{
 		pingTaskIDConstant: "task1",
@@ -231,7 +231,7 @@ var specialWindows = []map[string]any{
 		srcAddrConstant:    "192.168.1.1",
 		dstTypeConstant:    0,
 		dstAddrConstant:    "192.168.1.2",
-		avgDelayConstant:   float64(25),
+		avgDelayConstant:   float64(25000), // 25ms after conversion
 	},
 	{
 		pingTaskIDConstant: "task1",
@@ -247,7 +247,7 @@ var specialWindows = []map[string]any{
 func findSamePath(windows []map[string]any,
 	path map[string]any, curPingPeriod int) []map[string]any {
 	// 预分配结果切片（最多nd.curPingPeriod个相同路径）
-	res := make([]map[string]any, curPingPeriod)
+	res := make([]map[string]any, 0, curPingPeriod)
 
 	for _, item := range windows {
 		if isSamePath(item, path) {

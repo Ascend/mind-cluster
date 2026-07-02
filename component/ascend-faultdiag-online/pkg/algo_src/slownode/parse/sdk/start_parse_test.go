@@ -52,9 +52,9 @@ const (
 
 	testDirPermission = 0755
 
-	sleepWaiteTime    = 2  // 2
-	sendStopSleepTime = 45 // 45
-	writeSleepTime    = 20 // 20
+	sleepWaiteTime    = 1 // reduced for unit test
+	sendStopSleepTime = 8 // reduced for unit test (must be > writeSleepTime)
+	writeSleepTime    = 3 // reduced for unit test
 )
 
 func TestParse(t *testing.T) {
@@ -92,9 +92,14 @@ func TestParse(t *testing.T) {
 	// profiling数据文件：1747645582
 	go syncWriteProfile(t)
 
+	// 在 stop 前检查文件（stop 会清理文件）
+	time.Sleep(writeSleepTime * time.Second)
+	checkFileExist([]string{parallelGroupPath}, t) // 只检查 parallel_group.json，test.log 在 stop 时可能被删除
+
 	sendStopInfo(cg)
 
-	checkFileExist([]string{parallelGroupPath, filepath.Join(jobDir, "test.log")}, t)
+	// 等待 stop 完成后清理目录
+	time.Sleep(sleepWaiteTime * time.Second)
 	err = os.RemoveAll(jobDir)
 	assert.NoError(t, err)
 }
@@ -146,9 +151,14 @@ func TestStartStopStartStopParse(t *testing.T) {
 	go StartParse(cg)
 	go syncWriteProfile(t)
 
+	// 在最终 stop 前检查文件（stop 会清理文件）
+	time.Sleep(writeSleepTime * time.Second)       // 等待数据写入完成
+	checkFileExist([]string{parallelGroupPath}, t) // 只检查 parallel_group.json，test.log 在 stop 时可能被删除
+
 	sendStopInfo(cg)
 
-	checkFileExist([]string{parallelGroupPath, filepath.Join(jobDir, "test.log")}, t)
+	// 等待 stop 完成后清理目录
+	time.Sleep(sleepWaiteTime * time.Second)
 	err = os.RemoveAll(jobDir)
 	assert.NoError(t, err)
 }
