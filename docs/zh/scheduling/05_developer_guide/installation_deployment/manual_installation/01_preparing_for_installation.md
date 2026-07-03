@@ -666,9 +666,9 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
 
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.0.0 ascend-k8sdeviceplugin:v26.0.0
 
-        # 使用1.9.0版本的Volcano，需要将镜像tag修改为v1.9.0-v26.0.0。从MindCluster v26.1.0开始，镜像tag需改为v1.7.0-v26.1.0
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:v1.7.0-v26.0.0 volcanosh/vc-controller-manager:v1.7.0
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:v1.7.0-v26.0.0 volcanosh/vc-scheduler:v1.7.0
+        # 根据实际使用的Volcano版本，将{version}替换为对应版本号（如v1.7.0、v1.9.0、v1.12.0）
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{version}-v26.0.0 volcanosh/vc-controller-manager:{version}-v26.0.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{version}-v26.0.0 volcanosh/vc-scheduler:{version}-v26.0.0
 
         docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:v26.0.0 noded:v26.0.0
 
@@ -682,9 +682,10 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
         docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:v26.0.0
         docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:v26.0.0
         docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.0.0
-        # 使用1.9.0版本的Volcano，需要将镜像tag修改为v1.9.0-v26.0.0
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:v1.7.0-v26.0.0
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:v1.7.0-v26.0.0
+        # 根据实际使用的Volcano版本，将{version}替换为对应版本号（如v1.7.0、v1.9.0、v1.12.0）
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{version}-v26.0.0
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{version}-v26.0.0
+
         docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:v26.0.0
         docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:v26.0.0
         ```
