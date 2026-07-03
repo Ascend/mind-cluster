@@ -11,10 +11,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * Description: dpcpfs_stat
- * Author: k00617263
- * Create: 2024-08-21
  */
 
 #ifndef OCK_DFS_NDS_API_H_
