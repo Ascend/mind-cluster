@@ -32,6 +32,7 @@
 **支持的产品形态<a name="section169961844182917"></a>**
 
 支持以下产品使用**整卡调度**。
+
 - Ascend 950代际产品
 - Atlas A3 系列产品
 - Atlas A2 系列产品
@@ -80,7 +81,6 @@ acjob任务原理图如[图1](#fig5188536014)所示。
 7. kubelet创建容器时，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin或volcano-scheduler在Pod的annotation上写入芯片信息。Ascend Docker Runtime协助挂载相应资源。
 8. Ascend Operator读取Pod的annotation信息，将相关信息写入hccl.json。
 9. 容器读取环境变量或者hccl.json信息，建立通信通道，开始执行任务。
-
 
 **vcjob任务<a name="section13884164615313"></a>**
 
@@ -153,6 +153,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 下载或者制作的基础镜像可以进行安全加固，提升镜像安全性，可参见[容器安全加固](../../07_references/security_hardening.md#容器安全加固)章节进行操作。
 
 ### 脚本适配<a name="ZH-CN_TOPIC_0000002511347097"></a>
+
 用户可根据[任务类型](./00_feature_description.md#section14151030191813)选择不同的适配方式，包括通过环境变量配置资源信息、通过文件配置资源信息。
 
 #### 通过环境变量配置资源信息<a name="ZH-CN_TOPIC_0000002479387142"></a>

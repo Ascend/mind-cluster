@@ -96,7 +96,7 @@
   - [任务交替运行最佳实践](./04_usage/task_alternation/menu_task_alternation.md)
     - [使用前必读](./04_usage/task_alternation/00_before_you_start.md)
     - [基于Preempt的推理/训练任务交替运行](./04_usage/task_alternation/01_preempt_based_alternation.md)
-    - [基于Reclaim的推理/训练任务交替运行](./04_usage/task_alternation/01_preempt_based_alternation.md)
+    - [基于Reclaim的推理/训练任务交替运行](./04_usage/task_alternation/02_reclaim_based_alternation.md)
 - [开发者指南](./05_developer_guide/menu_developer_guide.md)
   - [手动安装部署](./05_developer_guide/installation_deployment/menu_installation_deployment.md)
     - [安装部署](./05_developer_guide/installation_deployment/manual_installation/menu_manual_installation.md)

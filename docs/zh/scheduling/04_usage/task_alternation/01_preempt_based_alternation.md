@@ -140,8 +140,8 @@ sequenceDiagram
    kubectl describe pod -l volcano.sh/job-name=train-job | grep hccl/rankIndex
    ```
 
-   > [!NOTE]
-   > Preempt方案下，`minAvailable`等于`replicas`（gang调度要求）。`gang.enablePreemptable: false`绕过gang保护后，训练Pod仍可被抢占。被抢占后训练任务Pod数低于`minAvailable`，通常无法继续训练，对于vcjob场景可以在yaml中增加policies(event: PodEvicted, action: RestartJob)触发级联清理剩余Pod并重启Job。对于acjob场景，可以增加fault-retry-times和fault-scheduling标签触发重调度模块自动级联清理剩余Pod。重建的Pod通过回原节点特性优先回到原节点。
+   >[!NOTE]
+   >Preempt方案下，`minAvailable`等于`replicas`（gang调度要求）。`gang.enablePreemptable: false`绕过gang保护后，训练Pod仍可被抢占。被抢占后训练任务Pod数低于`minAvailable`，通常无法继续训练，对于vcjob场景可以在YAML中增加policies(event: PodEvicted, action: RestartJob)触发级联清理剩余Pod并重启Job。对于acjob场景，可以增加fault-retry-times和fault-scheduling标签触发重调度模块自动级联清理剩余Pod。重建的Pod通过回原节点特性优先回到原节点。
 
 4. 部署推理任务。
 
@@ -190,7 +190,7 @@ sequenceDiagram
 
 5. 触发任务交替。
 
-   **推理高峰期扩容（触发Preempt抢占训练资源），如果当前集群没有额外节点，那么会直接触发驱逐，不需要扩容：**
+   **推理高峰期扩容（触发Preempt抢占训练资源），如果当前集群没有额外节点，则会直接触发驱逐，不需要扩容：**
 
    ```bash
    kubectl scale deployment inference-deploy --replicas=2
@@ -216,14 +216,14 @@ sequenceDiagram
 
 6. 验证回原节点。
 
-   a. 查看训练Pod重新调度后的节点：
+   1. 查看训练Pod重新调度后的节点：
 
       ```bash
       kubectl get pods -l volcano.sh/job-name=train-job -o wide
       kubectl describe pod -l volcano.sh/job-name=train-job | grep hccl/rankIndex
       ```
 
-   b. 查看调度器日志确认加分生效：
+   2. 查看调度器日志确认加分生效：
 
       ```bash
       kubectl logs -n volcano-system <volcano-scheduler-pod> | grep "addPreferPreviousNodeScore"

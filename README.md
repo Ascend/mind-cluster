@@ -10,7 +10,7 @@
 - [简介](#简介)
 - [版本说明](#版本说明)
 - [兼容性信息](#兼容性信息)
-- [用户指南](#用户指南)
+- [使用指南](#使用指南)
 - [特性介绍](#特性介绍)
 - [FAQ](#faq)
 - [安全声明](#安全声明)
@@ -34,11 +34,9 @@
 - [2026.04.15]: 🚀 支持A2\A3设备的硬切分
 - [2026.04.15]: 🚀 npu-exporter支持根据文件上报自定义指标
 
-
 # 简介
 
 MindCluster（AI集群系统软件）是支持NPU（昇腾AI处理器）训练和推理硬件的深度学习组件，使能构建集群全流程运行，提供NPU集群作业调度、运维监测、故障恢复等功能。深度学习平台开发厂商可以减少底层资源调度相关软件开发工作量，快速使能合作伙伴基于MindCluster开发深度学习平台。
-
 
 # 版本说明
 
@@ -47,7 +45,6 @@ MindCluster版本配套详情请参考：[版本配套详情](/docs/zh/release_n
 # 兼容性信息
 
 MindCluster基础调度特性与断点续训特性支持的框架：Pytorch、MindSpore。
-
 
 # 使用指南
 
@@ -67,15 +64,15 @@ MindCluster具体特性介绍如下：
 
 | 特性名称       | 介绍                                                                                                            | Released |
 |------------|---------------------------------------------------------------------------------------------------------------|----------|
-| 容器化支持特性    | [link](./docs/zh/scheduling/usage/containerization/00_before_you_start.md) | ✅ |
-| 资源监测特性     | [link](./docs/zh/scheduling/usage/resource_monitoring/00_before_you_start.md)                                                                                                 | ✅ |
-| 虚拟化实例特性    | [link](./docs/zh/scheduling/usage/virtual_instance/virtual_instance_with_hdk/01_description.md)                                                                                                  | ✅ |
-| 基础调度特性     | [link](./docs/zh/scheduling/usage/basic_scheduling/00_feature_description.md)                                                                                                    | ✅ |
-| 断点续训特性     |[link](./docs/zh/scheduling/usage/resumable_training/00_feature_description.md)                                                                                                  | ✅ |
-| 一体机特性     |[link](./docs/zh/scheduling/usage/appliance/01_npu_hardware_fault_detection_and_rectification.md)                                                                                                  | ✅ |
-| MindIE Motor推理任务最佳实践 |[link](./docs/zh/scheduling/usage/mindie_motor_best_practice/00_before_you_start.md)   | ✅ |
-| SGLang推理任务最佳实践 |[link](./docs/zh/scheduling/usage/sglang_best_practice/00_before_you_start.md)   | ✅ |
-| vLLM推理任务最佳实践 |[link](./docs/zh/scheduling/usage/vllm_best_practice/00_before_you_start.md)   | ✅ |
+| 容器化支持特性    | [link](./docs/zh/scheduling/04_usage/containerization/00_before_you_start.md) | ✅ |
+| 资源监测特性     | [link](./docs/zh/scheduling/04_usage/resource_monitoring/00_before_you_start.md)                                                                                                 | ✅ |
+| 虚拟化实例特性    | [link](./docs/zh/scheduling/04_usage/virtual_instance/virtual_instance_with_hdk/01_description.md)                                                                                                  | ✅ |
+| 基础调度特性     | [link](./docs/zh/scheduling/04_usage/basic_scheduling/00_feature_description.md)                                                                                                    | ✅ |
+| 断点续训特性     |[link](./docs/zh/scheduling/04_usage/resumable_training/00_feature_description.md)                                                                                                  | ✅ |
+| 一体机特性     |[link](./docs/zh/scheduling/04_usage/appliance/01_npu_hardware_fault_detection_and_rectification.md)                                                                                                  | ✅ |
+| MindIE Motor推理任务最佳实践 |[link](./docs/zh/scheduling/04_usage/mindie_motor_best_practice/00_before_you_start.md)   | ✅ |
+| SGLang推理任务最佳实践 |[link](./docs/zh/scheduling/04_usage/sglang_best_practice/00_before_you_start.md)   | ✅ |
+| vLLM推理任务最佳实践 |[link](./docs/zh/scheduling/04_usage/vllm_best_practice/00_before_you_start.md)   | ✅ |
 
 ## MindCluster Ascend FaultDiag
 
@@ -90,10 +87,9 @@ MindCluster具体特性介绍如下：
 | 故障事件清洗及诊断 | [link](./docs/zh/faultdiag/user_guide/12_cleaning_and_diagnosing_fault_events.md) | ✅        |
 | 自定义配置文件   | [link](./docs/zh/faultdiag/user_guide/13_customizing_a_configuration_file.md) | ✅        |
 
-
 # FAQ
 
-MindCluster集群调度相关FAQ请参见：[FAQ](./docs/zh/scheduling/faq.md)。
+MindCluster集群调度相关FAQ请参见：[FAQ](./docs/zh/scheduling/07_references/faq.md)。
 
 MindCluster Ascend FaultDiag相关FAQ请参见：[FAQ](./docs/zh/faultdiag/faq.md)。
 
@@ -103,7 +99,7 @@ MindCluster Ascend FaultDiag相关FAQ请参见：[FAQ](./docs/zh/faultdiag/faq.m
 
 - 当前容器方式部署本组件，本组件的认证鉴权方式为ServiceAccount，该认证鉴权方式为ServiceAccount的token明文显示，建议用户自行进行安全加强。
 - 当前特权容器方式部署，该容器权限具有一定风险，建议用户自行进行安全加强。
-- 其他安全声明详见：[安全声明](./docs/zh/scheduling/security_hardening.md)
+- 其他安全声明详见：[安全声明](./docs/zh/scheduling/07_references/security_hardening.md)
 - 通信矩阵详见：[通信矩阵](https://gitcode.com/Ascend/mind-cluster/wiki/Home.md)
 - 公网地址详见：[公网地址](./docs/zh/resource/MindCluster%2026.0.0%20公网地址.xlsx)
 
