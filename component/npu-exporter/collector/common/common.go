@@ -17,14 +17,16 @@ package common
 
 import (
 	"fmt"
+	"sort"
 
 	"ascend-common/api"
+	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
 	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
 // Init init npu total ports num
-func (e *NpuDevPortInfo) Init() {
+func (e *NpuDevPortsInfo) Init() {
 	totalPorts := 0
 	for _, v := range e.devPortMap {
 		totalPorts += len(v)
@@ -33,17 +35,23 @@ func (e *NpuDevPortInfo) Init() {
 }
 
 // GetCount get npu total ports
-func (e *NpuDevPortInfo) GetCount() int {
+func (e *NpuDevPortsInfo) GetCount() int {
 	return e.totalPort
 }
 
 // GetPortMap get npu ports info
-func (e *NpuDevPortInfo) GetPortMap() map[int][]int {
+func (e *NpuDevPortsInfo) GetPortMap() map[int][]common.NpuDevPortInfo {
 	return e.devPortMap
 }
 
 // SetPortMap init set npu ports info
-func (e *NpuDevPortInfo) SetPortMap(devMap map[int][]int) {
+func (e *NpuDevPortsInfo) SetPortMap(devMap map[int][]common.NpuDevPortInfo) {
+	// Sort port list for each die to ensure consistent order
+	for _, ports := range devMap {
+		sort.Slice(ports, func(i, j int) bool {
+			return ports[i].PortID < ports[j].PortID
+		})
+	}
 	e.devPortMap = devMap
 }
 

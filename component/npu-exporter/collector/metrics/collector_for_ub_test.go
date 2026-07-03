@@ -33,18 +33,13 @@ import (
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 )
 
-var ubTestMockPorts = map[int][]int{
-	0: {1, 2, 3},
-	1: {1, 2, 3},
-}
-
 func init() {
 	hwLogConfig := hwlog.LogConfig{
 		OnlyToStdout: true,
 	}
 	hwlog.InitRunLogger(&hwLogConfig, context.Background())
 
-	colcommon.NpuDevPortInfos.SetPortMap(ubTestMockPorts)
+	colcommon.NpuDevPortInfos.SetPortMap(mockPorts)
 	colcommon.NpuDevPortInfos.Init()
 }
 

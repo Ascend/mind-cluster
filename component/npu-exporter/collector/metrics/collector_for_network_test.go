@@ -33,12 +33,18 @@ import (
 
 const ascend950NetworkMetricNum = 4
 
-var (
-	mockPorts = map[int][]int{
-		0: {1, 2, 3},
-		1: {1, 2, 3},
-	}
-)
+var mockPorts = map[int][]common.NpuDevPortInfo{
+	0: {
+		{PortID: 1, PortType: "ETH", LinkStatus: "UP"},
+		{PortID: 2, PortType: "ETH", LinkStatus: "UP"},
+		{PortID: 3, PortType: "ETH", LinkStatus: "UP"},
+	},
+	1: {
+		{PortID: 1, PortType: "ETH", LinkStatus: "UP"},
+		{PortID: 2, PortType: "ETH", LinkStatus: "UP"},
+		{PortID: 3, PortType: "ETH", LinkStatus: "UP"},
+	},
+}
 
 func init() {
 	hwLogConfig := hwlog.LogConfig{
@@ -160,36 +166,36 @@ func TestPromUpdateNetInfo(t *testing.T) {
 }
 
 type getLinkStatusCodeTestCase struct {
-	name        string
-	status      string
+	name       string
+	status     string
 	expectCode int
 }
 
 func buildGetLinkStatusCodeTestCases() []getLinkStatusCodeTestCase {
 	return []getLinkStatusCodeTestCase{
 		{
-			name:        "should return UnRetError when status is NotReport",
-			status:      colcommon.NotReport,
+			name:       "should return UnRetError when status is NotReport",
+			status:     colcommon.NotReport,
 			expectCode: common.UnRetError,
 		},
 		{
-			name:        "should return FailedValue when status is Unknown",
-			status:      colcommon.Unknown,
+			name:       "should return FailedValue when status is Unknown",
+			status:     colcommon.Unknown,
 			expectCode: common.FailedValue,
 		},
 		{
-			name:        "should return HealthyCode when status is LinkUp",
-			status:      colcommon.LinkUp,
+			name:       "should return HealthyCode when status is LinkUp",
+			status:     colcommon.LinkUp,
 			expectCode: colcommon.HealthyCode,
 		},
 		{
-			name:        "should return UnhealthyCode when status is LinkDown",
-			status:      colcommon.LinkDown,
+			name:       "should return UnhealthyCode when status is LinkDown",
+			status:     colcommon.LinkDown,
 			expectCode: colcommon.UnhealthyCode,
 		},
 		{
-			name:        "should return UnhealthyCode when status is other value",
-			status:      "other",
+			name:       "should return UnhealthyCode when status is other value",
+			status:     "other",
 			expectCode: colcommon.UnhealthyCode,
 		},
 	}

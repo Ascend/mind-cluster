@@ -17,7 +17,6 @@ package metrics
 
 import (
 	"fmt"
-	"sort"
 	"strconv"
 	"time"
 
@@ -124,37 +123,37 @@ func initNpuOpticalDesc() {
 		if !ok || len(portIDs) == 0 {
 			continue
 		}
-		sort.Ints(portIDs)
-		for _, portID := range portIDs {
+		for _, port := range portIDs {
+			portID := port.PortID
 			colcommon.BuildDescSlice(&opticalIndexDesc, fmt.Sprint(api.MetricsPrefix, "optical_index_num_",
 				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("the npu link optical index num ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
 
 			colcommon.BuildDescSlice(&opticalTxPower0Desc, fmt.Sprint(api.MetricsPrefix, "optical_tx_power_0_",
 				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("npu interface receive optical_tx_power_0_ ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
 			colcommon.BuildDescSlice(&opticalTxPower1Desc, fmt.Sprint(api.MetricsPrefix, "optical_tx_power_1_",
 				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("npu interface receive optical_tx_power_1 ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
 			colcommon.BuildDescSlice(&opticalTxPower2Desc, fmt.Sprint(api.MetricsPrefix, "optical_tx_power_2_",
 				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("npu interface receive optical_tx_power_2 ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
 			colcommon.BuildDescSlice(&opticalTxPower3Desc, fmt.Sprint(api.MetricsPrefix, "optical_tx_power_3_",
 				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("npu interface receive optical_tx_power_3 ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
 
 			colcommon.BuildDescSlice(&opticalRxPower0Desc, fmt.Sprint(api.MetricsPrefix, "optical_rx_power_0_",
 				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("npu interface receive optical_rx_power_0 ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
 			colcommon.BuildDescSlice(&opticalRxPower1Desc, fmt.Sprint(api.MetricsPrefix, "optical_rx_power_1_",
 				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("npu interface receive optical_rx_power_1 ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
 			colcommon.BuildDescSlice(&opticalRxPower2Desc, fmt.Sprint(api.MetricsPrefix, "optical_rx_power_2_",
 				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("npu interface receive optical_rx_power_2 ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
 			colcommon.BuildDescSlice(&opticalRxPower3Desc, fmt.Sprint(api.MetricsPrefix, "optical_rx_power_3_",
 				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("npu interface receive optical_rx_power_3 ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
 		}
 	}
 }
@@ -368,8 +367,8 @@ func collectOpticalNpuInfo(logicID int32) []*common.OpticalNpuInfo {
 		if !ok || len(portIDs) == 0 {
 			continue
 		}
-		sort.Ints(portIDs)
-		for _, portID := range portIDs {
+		for _, port := range portIDs {
+			portID := port.PortID
 			opticalInfo := &common.OpticalNpuInfo{}
 			if info, err := hccn.GetNpuOpticalInfoNpu(logicID, int32(dieID), int32(portID)); err == nil {
 				opticalInfo = storeOpticalNpuInfos(info, logicID, dieID, portID)

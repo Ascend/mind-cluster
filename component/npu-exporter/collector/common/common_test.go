@@ -21,6 +21,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 
+	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
 )
 
@@ -37,7 +38,9 @@ func TestGetNpuDevNetPortInfos(t *testing.T) {
 		// Mock device list with one device
 		patches.ApplyMethodReturn(n.Dmgr, "GetDeviceList", int32(0), []int32{0}, nil)
 		// Mock port info
-		patches.ApplyFuncReturn(hccn.GetNpuDevNetPortInfo, map[int][]int{0: {0}}, nil)
+		patches.ApplyFuncReturn(hccn.GetNpuDevNetPortInfo, map[int][]common.NpuDevPortInfo{
+			0: {{PortID: 0, PortType: "UB", LinkStatus: "UP"}},
+		}, nil)
 
 		// Test function
 		err := getNpuDevNetPortInfos(n)
