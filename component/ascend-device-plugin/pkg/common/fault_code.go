@@ -172,11 +172,11 @@ var (
 	// faultDurationMap is the cache saving to occur duration of a fault, key is event id
 	faultDurationMap = make(map[string]*FaultDurationCache, common.MaxErrorCodeCount)
 	// faultDurationMapLock is the lock of faultDurationMap
-	faultDurationMapLock           sync.RWMutex
-	faultSeverityMap               = make(map[int64]int8, common.MaxErrorCodeCount)
+	faultDurationMapLock sync.RWMutex
+	faultSeverityMap     = make(map[int64]int8, common.MaxErrorCodeCount)
 	// faultCodeFormatMap caches the correct hex string format for each fault code, loaded from config
-	faultCodeFormatMap     = make(map[int64]string, common.MaxErrorCodeCount)
-	faultCodeFormatMapLock sync.RWMutex
+	faultCodeFormatMap             = make(map[int64]string, common.MaxErrorCodeCount)
+	faultCodeFormatMapLock         sync.RWMutex
 	parseHexFailedMsg              = "parse hex int failed and skip it, string: %s"
 	networkFaultConfigureFailedMsg = "%x is a network fault and cannot be configured to %s now, " +
 		"fault handling policy is set to NotHandleFault"
@@ -478,7 +478,7 @@ func getA950HyperPlaneFaultSteps(logicID int32, hyperPlaneFaultInfos []common.De
 			a950HyperPlaneFaultRecover(logicID, hyperPlaneFaultInfos, device)
 		}},
 		{Name: "a950HyperPlaneFaultOccur", Do: func() {
-			a950HyperPlaneFaultOccur(logicID, hyperPlaneFaultInfos, device)
+			a950HyperPlaneFaultOccur(hyperPlaneFaultInfos, device)
 		}},
 	}
 }
@@ -1677,7 +1677,7 @@ func a950HyperPlaneFaultRecover(logicID int32, hyperPlaneFaultInfos []common.Dev
 			if snapshot.UBDownCnt != common.PortNoDownCount {
 				tmpFaultInfo := faultInfo
 				tmpFaultInfo.Assertion = common.FaultOccur
-				a950HyperPlaneFaultOccur(logicID, []common.DevFaultInfo{tmpFaultInfo}, device)
+				a950HyperPlaneFaultOccur([]common.DevFaultInfo{tmpFaultInfo}, device)
 			}
 		}
 		if faultInfo.Assertion == common.FaultOnce {
@@ -1707,25 +1707,16 @@ func handleA950HyperPlaneFaultRecover(logicID int32, device *NpuDevice, faultInf
 	}
 }
 
-func a950HyperPlaneFaultOccur(logicID int32, hyperPlaneFaultInfos []common.DevFaultInfo, device *NpuDevice) {
+func a950HyperPlaneFaultOccur(hyperPlaneFaultInfos []common.DevFaultInfo, device *NpuDevice) {
 	for _, faultInfo := range hyperPlaneFaultInfos {
 		if faultInfo.Assertion == common.FaultOccur || faultInfo.Assertion == common.FaultOnce {
-			snapshot, err := hccn.GetUBPortsDownSnapshot(logicID)
-			if err != nil {
-				hwlog.RunLog.Errorf("logicID(%d) GetUBPortsDownSnapshot failed, err: %v", logicID, err)
-				continue
-			}
-			if snapshot.UBDownCnt == common.PortNoDownCount {
-				return
-			}
-			// if device has UB down port, it has separate fault code
 			preciseFaultCode := UBSeparateFaultCode
 			tmpFaultInfo := faultInfo
-			tmpFaultInfo.EventID = int64(preciseFaultCode)
+			tmpFaultInfo.EventID = preciseFaultCode
 			updateDeviceFaultTimeMap(device, tmpFaultInfo, true)
 			hwlog.RunLog.Infof("generate UB separate fault, devFaultInfo: %#v, hex code: %v",
 				tmpFaultInfo, FormatFaultCodeHex(tmpFaultInfo.EventID))
-			device.FaultCodes = append(device.FaultCodes, (int64)(preciseFaultCode))
+			device.FaultCodes = append(device.FaultCodes, preciseFaultCode)
 			updateDeviceFaultTimeMap(device, faultInfo, true)
 			device.FaultCodes = append(device.FaultCodes, faultInfo.EventID)
 		}

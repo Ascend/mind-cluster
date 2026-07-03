@@ -429,9 +429,6 @@ func TestSetHyperPlaneNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 			}
 			device := &NpuDevice{LogicID: logicID}
 			classified := ClassifyFaultInfos(faultInfos)
-			patchSnapshot := gomonkey.ApplyFuncReturn(hccn.GetUBPortsDownSnapshot,
-				common.UBPortsDownSnapshot{UBDownCnt: 1}, nil)
-			defer patchSnapshot.Reset()
 			SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID, classified[HyperPlaneFaultKey], device)
 			convey.So(device.FaultCodes, convey.ShouldContain, UBSeparateFaultCode)
 			convey.So(device.FaultCodes, convey.ShouldContain, UBPortDownCode)
@@ -455,25 +452,6 @@ func TestSetHyperPlaneNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 			SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID, classified[HyperPlaneFaultKey], device)
 			convey.So(device.FaultCodes, convey.ShouldBeEmpty)
 			convey.So(len(recoverFaultMap[logicID]), convey.ShouldEqual, 0)
-		})
-		convey.Convey("A950 card type recover, event not in FaultCodes should be cached", func() {
-			ParamOption.RealCardType = Ascend910A5
-			defer func() { ParamOption = Option{} }()
-			recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
-			logicID := int32(0)
-			faultInfos := []common.DevFaultInfo{
-				{Assertion: common.FaultRecover, EventID: UBPortDownCode},
-				{Assertion: common.FaultOnce, EventID: UBPortDownCode},
-			}
-			device := &NpuDevice{LogicID: logicID}
-			classified := ClassifyFaultInfos(faultInfos)
-			patchSnapshot := gomonkey.ApplyFuncReturn(hccn.GetUBPortsDownSnapshot,
-				common.UBPortsDownSnapshot{UBDownCnt: common.PortNoDownCount}, nil)
-			defer patchSnapshot.Reset()
-			SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID, classified[HyperPlaneFaultKey], device)
-			convey.So(recoverFaultMap[logicID], convey.ShouldResemble,
-				[]int64{UBPortDownCode, UBPortDownCode})
-			convey.So(device.FaultCodes, convey.ShouldBeEmpty)
 		})
 		convey.Convey("A950 card type recover with port still down, should re-occur precise fault", func() {
 			ParamOption.RealCardType = Ascend910A5
