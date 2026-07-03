@@ -14,7 +14,7 @@
 |--|--|--|
 |rank_id|int|当前训练进程的global rank号。|
 |upper_limit_of_disk_in_mb|int|所有训练进程能使用的profiling文件夹存储空间上限，实际大小在此阈值上下波动，单位为MB，非负值，默认5000。|
-|framework|str|表示任务所使用的AI框架。|
+|framework|str|表示任务所使用的AI框架，可选值为"pt"（PyTorch）和"ms"（MindSpore），默认值为"pt"。|
 
 **返回值说明<a name="section134891539193315"></a>**
 
