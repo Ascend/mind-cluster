@@ -1582,14 +1582,13 @@ func handleNetworkFaultRecover(device *NpuDevice, faultInfo common.DevFaultInfo)
 func a950ParameterPlaneFaultRecover(logicID int32, faultInfos []common.DevFaultInfo, device *NpuDevice) {
 	for _, faultInfo := range faultInfos {
 		if faultInfo.Assertion == common.FaultRecover {
-			err := cacheUBports(logicID, device)
+			snapshot, err := hccn.GetUBPortsDownSnapshot(logicID)
 			if err != nil {
-				hwlog.RunLog.Errorf("logicID(%d) cacheUBports failed, err: %v", logicID, err)
+				hwlog.RunLog.Errorf("logicID(%d) GetUBPortsDownSnapshot failed, err: %v", logicID, err)
 				continue
 			}
 			handleA950NetworkFaultRecover(logicID, device, faultInfo)
-			downCnt := getUBOEDownCnt(device)
-			if downCnt != common.PortNoDownCount {
+			if snapshot.BondingDownCnt != common.PortNoDownCount {
 				tmpFaultInfo := faultInfo
 				tmpFaultInfo.Assertion = common.FaultOccur
 				a950ParameterPlaneFaultOccur(logicID, []common.DevFaultInfo{tmpFaultInfo}, device)
@@ -1638,13 +1637,12 @@ func baseParameterPlaneFaultOccur(faultInfos []common.DevFaultInfo, device *NpuD
 func a950ParameterPlaneFaultOccur(logicID int32, faultInfos []common.DevFaultInfo, device *NpuDevice) {
 	for _, faultInfo := range faultInfos {
 		if faultInfo.Assertion == common.FaultOccur || faultInfo.Assertion == common.FaultOnce {
-			err := cacheUBports(logicID, device)
+			snapshot, err := hccn.GetUBPortsDownSnapshot(logicID)
 			if err != nil {
-				hwlog.RunLog.Errorf("logicID(%d) cacheUBports failed, err: %v", logicID, err)
+				hwlog.RunLog.Errorf("logicID(%d) GetUBPortsDownSnapshot failed, err: %v", logicID, err)
 				continue
 			}
-			downCnt := getUBOEDownCnt(device)
-			if downCnt == common.PortNoDownCount {
+			if snapshot.BondingDownCnt == common.PortNoDownCount {
 				return
 			}
 			preciseFaultMap, ok := common.ParameterPlaneDownProtsNumToPreciseFaultCodeMap[ParamOption.RealCardType]
@@ -1652,9 +1650,9 @@ func a950ParameterPlaneFaultOccur(logicID int32, faultInfos []common.DevFaultInf
 				hwlog.RunLog.Errorf("not found preciseFaultMap for device type: %s", ParamOption.RealCardType)
 				continue
 			}
-			preciseFaultCode, ok := preciseFaultMap[downCnt]
+			preciseFaultCode, ok := preciseFaultMap[snapshot.BondingDownCnt]
 			if !ok {
-				hwlog.RunLog.Errorf("not found preciseFaultCode for downCnt: %d", downCnt)
+				hwlog.RunLog.Errorf("not found preciseFaultCode for bondingDownCnt: %d", snapshot.BondingDownCnt)
 				continue
 			}
 			tmpFaultInfo := faultInfo
@@ -1670,14 +1668,13 @@ func a950ParameterPlaneFaultOccur(logicID int32, faultInfos []common.DevFaultInf
 func a950HyperPlaneFaultRecover(logicID int32, hyperPlaneFaultInfos []common.DevFaultInfo, device *NpuDevice) {
 	for _, faultInfo := range hyperPlaneFaultInfos {
 		if faultInfo.Assertion == common.FaultRecover {
-			err := cacheUBports(logicID, device)
+			snapshot, err := hccn.GetUBPortsDownSnapshot(logicID)
 			if err != nil {
-				hwlog.RunLog.Errorf("logicID(%d) cacheUBports failed, err: %v", logicID, err)
+				hwlog.RunLog.Errorf("logicID(%d) GetUBPortsDownSnapshot failed, err: %v", logicID, err)
 				continue
 			}
 			handleA950HyperPlaneFaultRecover(logicID, device, faultInfo)
-			downCnt := getUBDownCnt(device)
-			if downCnt != common.PortNoDownCount {
+			if snapshot.UBDownCnt != common.PortNoDownCount {
 				tmpFaultInfo := faultInfo
 				tmpFaultInfo.Assertion = common.FaultOccur
 				a950HyperPlaneFaultOccur(logicID, []common.DevFaultInfo{tmpFaultInfo}, device)
@@ -1687,37 +1684,6 @@ func a950HyperPlaneFaultRecover(logicID int32, hyperPlaneFaultInfos []common.Dev
 			recoverFaultMap[logicID] = append(recoverFaultMap[logicID], faultInfo.EventID)
 		}
 	}
-}
-
-func cacheUBports(logicID int32, device *NpuDevice) error {
-	if device.UBports == nil {
-		UBports, err := hccn.GetAllUBports(logicID)
-		if err != nil {
-			return fmt.Errorf("logicID(%d) GetAllUBports failed, err: %v", logicID, err)
-		}
-		device.UBports = UBports
-	}
-	return nil
-}
-
-func getUBOEDownCnt(device *NpuDevice) int {
-	downCnt := 0
-	for _, ubPort := range device.UBports {
-		if ubPort.PortType == hccn.BondingPortName && ubPort.LinkStatus == hccn.LinkDown {
-			downCnt++
-		}
-	}
-	return downCnt
-}
-
-func getUBDownCnt(device *NpuDevice) int {
-	downCnt := 0
-	for _, ubPort := range device.UBports {
-		if ubPort.PortType == hccn.UBPortName && ubPort.LinkStatus == hccn.LinkDown {
-			downCnt++
-		}
-	}
-	return downCnt
 }
 
 func handleA950HyperPlaneFaultRecover(logicID int32, device *NpuDevice, faultInfo common.DevFaultInfo) {
@@ -1744,13 +1710,12 @@ func handleA950HyperPlaneFaultRecover(logicID int32, device *NpuDevice, faultInf
 func a950HyperPlaneFaultOccur(logicID int32, hyperPlaneFaultInfos []common.DevFaultInfo, device *NpuDevice) {
 	for _, faultInfo := range hyperPlaneFaultInfos {
 		if faultInfo.Assertion == common.FaultOccur || faultInfo.Assertion == common.FaultOnce {
-			err := cacheUBports(logicID, device)
+			snapshot, err := hccn.GetUBPortsDownSnapshot(logicID)
 			if err != nil {
-				hwlog.RunLog.Errorf("logicID(%d) cacheUBports failed, err: %v", logicID, err)
+				hwlog.RunLog.Errorf("logicID(%d) GetUBPortsDownSnapshot failed, err: %v", logicID, err)
 				continue
 			}
-			downCnt := getUBDownCnt(device)
-			if downCnt == common.PortNoDownCount {
+			if snapshot.UBDownCnt == common.PortNoDownCount {
 				return
 			}
 			// if device has UB down port, it has separate fault code
@@ -1821,15 +1786,6 @@ func DelOnceRecoverFault(groupDevice map[string][]*NpuDevice) {
 	}
 	recoverFaultMap = make(map[int32][]int64, GeneralMapSize)
 	recoverNetworkFaultMap = make(map[int32][]int64, GeneralMapSize)
-}
-
-// ClearUBportsInfo clear UBports info in device
-func ClearUBportsInfo(groupDevice map[string][]*NpuDevice) {
-	for _, devices := range groupDevice {
-		for _, device := range devices {
-			device.UBports = nil
-		}
-	}
 }
 
 func delOnceRecoverFaultTime(device *NpuDevice, eventId int64) {

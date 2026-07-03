@@ -21,6 +21,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"sync"
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/limiter"
@@ -69,6 +70,11 @@ const (
 	portEnableOn = "on"
 
 	limitSize = 1024 * 1024
+)
+
+var (
+	runHccnCmdMu       sync.Mutex
+	ubPortEnabledCache = make(map[int32]map[string]bool)
 )
 
 func getInfoFromHccnTool(args ...string) (string, error) {
@@ -595,6 +601,9 @@ func GetIntDataFromStr(str, dataType string) int {
 
 // GetNpuDevNetPortInfo retrieves NPU device information and returns UdieID-PortID mapping
 func GetNpuDevNetPortInfo(logicID int32) (map[int][]int, error) {
+	runHccnCmdMu.Lock()
+	defer runHccnCmdMu.Unlock()
+	hwlog.RunLog.Warnf("hang detection lock get hccn info")
 	args := []string{"-g", "-dev_info", "-i", strconv.Itoa(int(logicID))}
 	// command example: hccn_tool -g -dev_info -i 0
 	outStr, err := getInfoFromHccnTool(args...)
@@ -602,6 +611,7 @@ func GetNpuDevNetPortInfo(logicID int32) (map[int][]int, error) {
 		return nil, buildHccnErrA5("npu dev info", err)
 	}
 
+	hwlog.RunLog.Warnf("hang detection get all ub ports succ")
 	// First, log the full output for debugging
 	hwlog.RunLog.Debugf("Full hccn_tool output: %s", outStr)
 
@@ -690,6 +700,9 @@ func parseDeviceRow(trimmedLine string) (int, int, error) {
 
 // GetAllUBports get all UB ports info
 func GetAllUBports(logicID int32) ([]common.UBPort, error) {
+	runHccnCmdMu.Lock()
+	defer runHccnCmdMu.Unlock()
+	hwlog.RunLog.Warnf("lock get hccn info")
 	args := []string{"-g", "-dev_info", "-i", strconv.Itoa(int(logicID))}
 	// command example: hccn_tool -g -dev_info -i 0
 	// output example:
@@ -703,6 +716,7 @@ func GetAllUBports(logicID int32) ([]common.UBPort, error) {
 		return nil, buildHccnErrA5("npu dev info", err)
 	}
 
+	hwlog.RunLog.Warnf("get all ub ports succ")
 	// First, log the full output for debugging
 	hwlog.RunLog.Debugf("Full hccn_tool output: %s", outStr)
 
@@ -819,4 +833,55 @@ func IsUBPortEnabled(logicID, udieID, portID int32) (bool, error) {
 		return false, err
 	}
 	return portInfo[portEnableKey] == portEnableOn, nil
+}
+
+func isUBPortEnabled(phyID, udieID, portID int32) bool {
+	portKey := strconv.Itoa(int(udieID)) + ":" + strconv.Itoa(int(portID))
+	if cached, ok := ubPortEnabledCache[phyID]; ok {
+		if enabled, exist := cached[portKey]; exist {
+			return enabled
+		}
+	}
+	enabled, err := IsUBPortEnabled(phyID, udieID, portID)
+	if err != nil {
+		hwlog.RunLog.Errorf("get device %d port(u:%d,p:%d) enable status failed, err: %v, "+
+			"treat it as enabled by default", phyID, udieID, portID, err)
+		return true
+	}
+	if ubPortEnabledCache[phyID] == nil {
+		ubPortEnabledCache[phyID] = make(map[string]bool)
+	}
+	ubPortEnabledCache[phyID][portKey] = enabled
+	if !enabled {
+		hwlog.RunLog.Debugf("device %d port(u:%d,p:%d) is not enabled (unwired), "+
+			"exclude it from UB port down count", phyID, udieID, portID)
+	}
+	return enabled
+}
+
+// GetUBPortsDownSnapshot gets all UB ports and counts down ports by PortType.
+// It returns a UBPortsDownSnapshot with BoundingDownCnt for UBoE ports
+// and UBDownCnt for UB ports (excluding disabled/unwired ports)
+func GetUBPortsDownSnapshot(phyID int32) (common.UBPortsDownSnapshot, error) {
+	ports, err := GetAllUBports(phyID)
+	if err != nil {
+		hwlog.RunLog.Errorf("get device %d UB ports failed, err: %v", phyID, err)
+		return common.UBPortsDownSnapshot{}, err
+	}
+	snapshot := common.UBPortsDownSnapshot{}
+	for _, port := range ports {
+		if port.LinkStatus != LinkDown {
+			continue
+		}
+		switch port.PortType {
+		case BondingPortName:
+			snapshot.BondingDownCnt++
+		case UBPortName:
+			if !isUBPortEnabled(phyID, int32(port.UDieId), int32(port.PortID)) {
+				continue
+			}
+			snapshot.UBDownCnt++
+		}
+	}
+	return snapshot, nil
 }

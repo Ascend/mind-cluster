@@ -29,6 +29,7 @@ import (
 
 	"ascend-common/common-utils/utils"
 	"ascend-common/devmanager/common"
+	"ascend-common/devmanager/hccn"
 )
 
 // TestLoadFaultCodeFromFile for test LoadFaultCodeFromFile
@@ -330,10 +331,9 @@ func TestSetNetworkNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 			}
 			device := &NpuDevice{LogicID: logicID}
 			classified := ClassifyFaultInfos(faultInfos)
-			patchCache := gomonkey.ApplyFuncReturn(cacheUBports, nil)
-			defer patchCache.Reset()
-			patchDownCnt := gomonkey.ApplyFuncReturn(getUBOEDownCnt, 1)
-			defer patchDownCnt.Reset()
+			patchSnapshot := gomonkey.ApplyFuncReturn(hccn.GetUBPortsDownSnapshot,
+				common.UBPortsDownSnapshot{BondingDownCnt: 1}, nil)
+			defer patchSnapshot.Reset()
 			SetNetworkNewFaultAndCacheOnceRecoverFault(logicID, classified[ParameterPlaneFaultKey], device)
 			convey.So(device.NetworkFaultCodes, convey.ShouldContain, UBOESubHealFaultCode)
 			convey.So(device.NetworkFaultCodes, convey.ShouldContain, UBOEPortDownCode)
@@ -352,10 +352,9 @@ func TestSetNetworkNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 				NetworkFaultCodes: []int64{UBOEPortDownCode, UBOEPreSeparateFaultCode, UBOESubHealFaultCode},
 			}
 			classified := ClassifyFaultInfos(faultInfos)
-			patchCache := gomonkey.ApplyFuncReturn(cacheUBports, nil)
-			defer patchCache.Reset()
-			patchDownCnt := gomonkey.ApplyFuncReturn(getUBOEDownCnt, common.PortNoDownCount)
-			defer patchDownCnt.Reset()
+			patchSnapshot := gomonkey.ApplyFuncReturn(hccn.GetUBPortsDownSnapshot,
+				common.UBPortsDownSnapshot{BondingDownCnt: common.PortNoDownCount}, nil)
+			defer patchSnapshot.Reset()
 			SetNetworkNewFaultAndCacheOnceRecoverFault(logicID, classified[ParameterPlaneFaultKey], device)
 			convey.So(device.NetworkFaultCodes, convey.ShouldBeEmpty)
 			convey.So(len(recoverNetworkFaultMap[logicID]), convey.ShouldEqual, 0)
@@ -371,10 +370,9 @@ func TestSetNetworkNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 			}
 			device := &NpuDevice{LogicID: logicID}
 			classified := ClassifyFaultInfos(faultInfos)
-			patchCache := gomonkey.ApplyFuncReturn(cacheUBports, nil)
-			defer patchCache.Reset()
-			patchDownCnt := gomonkey.ApplyFuncReturn(getUBOEDownCnt, common.PortNoDownCount)
-			defer patchDownCnt.Reset()
+			patchSnapshot := gomonkey.ApplyFuncReturn(hccn.GetUBPortsDownSnapshot,
+				common.UBPortsDownSnapshot{BondingDownCnt: common.PortNoDownCount}, nil)
+			defer patchSnapshot.Reset()
 			SetNetworkNewFaultAndCacheOnceRecoverFault(logicID, classified[ParameterPlaneFaultKey], device)
 			convey.So(recoverNetworkFaultMap[logicID], convey.ShouldResemble,
 				[]int64{UBOEPortDownCode, UBOEPortDownCode})
@@ -393,10 +391,9 @@ func TestSetNetworkNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 				NetworkFaultCodes: []int64{UBOEPortDownCode, UBOEPreSeparateFaultCode, UBOESubHealFaultCode},
 			}
 			classified := ClassifyFaultInfos(faultInfos)
-			patchCache := gomonkey.ApplyFuncReturn(cacheUBports, nil)
-			defer patchCache.Reset()
-			patchDownCnt := gomonkey.ApplyFuncReturn(getUBOEDownCnt, 1)
-			defer patchDownCnt.Reset()
+			patchSnapshot := gomonkey.ApplyFuncReturn(hccn.GetUBPortsDownSnapshot,
+				common.UBPortsDownSnapshot{BondingDownCnt: 1}, nil)
+			defer patchSnapshot.Reset()
 			SetNetworkNewFaultAndCacheOnceRecoverFault(logicID, classified[ParameterPlaneFaultKey], device)
 			convey.So(device.NetworkFaultCodes, convey.ShouldContain, UBOESubHealFaultCode)
 			convey.So(device.NetworkFaultCodes, convey.ShouldContain, UBOEPortDownCode)
@@ -432,10 +429,9 @@ func TestSetHyperPlaneNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 			}
 			device := &NpuDevice{LogicID: logicID}
 			classified := ClassifyFaultInfos(faultInfos)
-			patchCache := gomonkey.ApplyFuncReturn(cacheUBports, nil)
-			defer patchCache.Reset()
-			patchDownCnt := gomonkey.ApplyFuncReturn(getUBDownCnt, 1)
-			defer patchDownCnt.Reset()
+			patchSnapshot := gomonkey.ApplyFuncReturn(hccn.GetUBPortsDownSnapshot,
+				common.UBPortsDownSnapshot{UBDownCnt: 1}, nil)
+			defer patchSnapshot.Reset()
 			SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID, classified[HyperPlaneFaultKey], device)
 			convey.So(device.FaultCodes, convey.ShouldContain, UBSeparateFaultCode)
 			convey.So(device.FaultCodes, convey.ShouldContain, UBPortDownCode)
@@ -453,10 +449,9 @@ func TestSetHyperPlaneNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 				FaultCodes: []int64{UBPortDownCode, UBSeparateFaultCode, UBSubHealFaultCode},
 			}
 			classified := ClassifyFaultInfos(faultInfos)
-			patchCache := gomonkey.ApplyFuncReturn(cacheUBports, nil)
-			defer patchCache.Reset()
-			patchDownCnt := gomonkey.ApplyFuncReturn(getUBDownCnt, common.PortNoDownCount)
-			defer patchDownCnt.Reset()
+			patchSnapshot := gomonkey.ApplyFuncReturn(hccn.GetUBPortsDownSnapshot,
+				common.UBPortsDownSnapshot{UBDownCnt: common.PortNoDownCount}, nil)
+			defer patchSnapshot.Reset()
 			SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID, classified[HyperPlaneFaultKey], device)
 			convey.So(device.FaultCodes, convey.ShouldBeEmpty)
 			convey.So(len(recoverFaultMap[logicID]), convey.ShouldEqual, 0)
@@ -472,10 +467,9 @@ func TestSetHyperPlaneNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 			}
 			device := &NpuDevice{LogicID: logicID}
 			classified := ClassifyFaultInfos(faultInfos)
-			patchCache := gomonkey.ApplyFuncReturn(cacheUBports, nil)
-			defer patchCache.Reset()
-			patchDownCnt := gomonkey.ApplyFuncReturn(getUBDownCnt, common.PortNoDownCount)
-			defer patchDownCnt.Reset()
+			patchSnapshot := gomonkey.ApplyFuncReturn(hccn.GetUBPortsDownSnapshot,
+				common.UBPortsDownSnapshot{UBDownCnt: common.PortNoDownCount}, nil)
+			defer patchSnapshot.Reset()
 			SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID, classified[HyperPlaneFaultKey], device)
 			convey.So(recoverFaultMap[logicID], convey.ShouldResemble,
 				[]int64{UBPortDownCode, UBPortDownCode})
@@ -494,10 +488,9 @@ func TestSetHyperPlaneNewFaultAndCacheOnceRecoverFault(t *testing.T) {
 				FaultCodes: []int64{UBPortDownCode, UBSeparateFaultCode, UBSubHealFaultCode},
 			}
 			classified := ClassifyFaultInfos(faultInfos)
-			patchCache := gomonkey.ApplyFuncReturn(cacheUBports, nil)
-			defer patchCache.Reset()
-			patchDownCnt := gomonkey.ApplyFuncReturn(getUBDownCnt, 1)
-			defer patchDownCnt.Reset()
+			patchSnapshot := gomonkey.ApplyFuncReturn(hccn.GetUBPortsDownSnapshot,
+				common.UBPortsDownSnapshot{UBDownCnt: 1}, nil)
+			defer patchSnapshot.Reset()
 			SetHyperPlaneNewFaultAndCacheOnceRecoverFault(logicID, classified[HyperPlaneFaultKey], device)
 			convey.So(device.FaultCodes, convey.ShouldContain, UBSeparateFaultCode)
 			convey.So(device.FaultCodes, convey.ShouldContain, UBPortDownCode)

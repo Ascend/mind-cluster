@@ -16,7 +16,6 @@
 package common
 
 import (
-	"ascend-common/devmanager/common"
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
@@ -102,7 +101,6 @@ type NpuDevice struct {
 	FaultCodes             []int64
 	AlarmRaisedTime        int64
 	NetworkFaultCodes      []int64
-	UBports                []common.UBPort
 	NetworkAlarmRaisedTime int64
 	FaultTimeMap           map[int64]int64
 	DevType                string

@@ -69,7 +69,6 @@ var (
 	parameterPlaneStatusCache  = make(map[int32]networkPlaneStatus, common.GeneralMapSize)
 	hyperPlaneLimiterMap       = make(map[int32]*rate.Limiter, common.GeneralMapSize)
 	hyperPlaneStatusCache      = make(map[int32]networkPlaneStatus, common.GeneralMapSize)
-	ubPortEnabledCache         = make(map[int32]map[string]bool, common.GeneralMapSize)
 	withUBOEDevicesMainBoardID = sets.NewInt(api.Atlas850MainBoardID, api.Atlas850MainBoardID2, api.Atlas850MainBoardID3)
 )
 
@@ -1934,66 +1933,6 @@ func getRoceParameterPlaneStatus(phyID int32) networkPlaneStatus {
 	return parameterPlaneStatusCache[phyID]
 }
 
-// ubPortsDownSnapshot indicates the down ports count of each PortType from one GetAllUBports call,
-// shared by parameter plane (UBOE/BondingPortName) and hyper plane (UB/UBPortName)
-type ubPortsDownSnapshot struct {
-	bondingDownCnt int
-	ubDownCnt      int
-}
-
-// isUBPortEnabled reports whether the UB port is enabled (wired). Port enablement never changes
-// during the device lifecycle, so the result is cached to avoid repeated hccn_tool -port_info
-// calls on every polling cycle. On query failure, it defaults to enabled and skips caching so
-// the next cycle can retry.
-func isUBPortEnabled(phyID, udieID, portID int32) bool {
-	portKey := strconv.Itoa(int(udieID)) + ":" + strconv.Itoa(int(portID))
-	if cached, ok := ubPortEnabledCache[phyID]; ok {
-		if enabled, exist := cached[portKey]; exist {
-			return enabled
-		}
-	}
-	enabled, err := hccn.IsUBPortEnabled(phyID, udieID, portID)
-	if err != nil {
-		hwlog.RunLog.Errorf("get device %d port(u:%d,p:%d) enable status failed, err: %v, "+
-			"treat it as enabled by default", phyID, udieID, portID, err)
-		return true
-	}
-	if ubPortEnabledCache[phyID] == nil {
-		ubPortEnabledCache[phyID] = make(map[string]bool, common.GeneralMapSize)
-	}
-	ubPortEnabledCache[phyID][portKey] = enabled
-	if !enabled {
-		hwlog.RunLog.Debugf("device %d port(u:%d,p:%d) is not enabled (unwired), "+
-			"exclude it from UB port down count", phyID, udieID, portID)
-	}
-	return enabled
-}
-
-// getUBPortsDownSnapshot gets all UB ports and counts down ports by PortType
-func getUBPortsDownSnapshot(phyID int32) (ubPortsDownSnapshot, error) {
-	ports, err := hccn.GetAllUBports(phyID)
-	if err != nil {
-		hwlog.RunLog.Errorf("get device %d UB ports failed, err: %v", phyID, err)
-		return ubPortsDownSnapshot{}, err
-	}
-	snapshot := ubPortsDownSnapshot{}
-	for _, port := range ports {
-		if port.LinkStatus != hccn.LinkDown {
-			continue
-		}
-		switch port.PortType {
-		case hccn.BondingPortName:
-			snapshot.bondingDownCnt++
-		case hccn.UBPortName:
-			if !isUBPortEnabled(phyID, int32(port.UDieId), int32(port.PortID)) {
-				continue
-			}
-			snapshot.ubDownCnt++
-		}
-	}
-	return snapshot, nil
-}
-
 // buildNetworkPlaneStatus builds network plane status from down ports count,
 // link is down if any port is down, up otherwise
 func buildNetworkPlaneStatus(downPortsNum int) networkPlaneStatus {
@@ -2005,11 +1944,12 @@ func buildNetworkPlaneStatus(downPortsNum int) networkPlaneStatus {
 }
 
 func getUboeParameterPlaneStatus(phyID int32) networkPlaneStatus {
-	snapshot, err := getUBPortsDownSnapshot(phyID)
+	snapshot, err := hccn.GetUBPortsDownSnapshot(phyID)
 	if err != nil {
-		snapshot.bondingDownCnt = npuCommon.UBOEParameterPlanePortAllDownCount
+		hwlog.RunLog.Errorf("device %d uboe port status query failed", phyID)
+		snapshot.BondingDownCnt = npuCommon.UBOEParameterPlanePortAllDownCount
 	}
-	status := buildNetworkPlaneStatus(snapshot.bondingDownCnt)
+	status := buildNetworkPlaneStatus(snapshot.BondingDownCnt)
 	parameterPlaneStatusCache[phyID] = status
 	return status
 }
@@ -2077,12 +2017,12 @@ func (tool *AscendTools) getHyperPlaneStatusCache(phyID int32) networkPlaneStatu
 }
 
 func getUBHyperPlaneStatus(phyID int32) networkPlaneStatus {
-	snapshot, err := getUBPortsDownSnapshot(phyID)
+	snapshot, err := hccn.GetUBPortsDownSnapshot(phyID)
 	if err != nil {
 		invalidUBHyperPlanePortDownCount := -1
-		snapshot.ubDownCnt = invalidUBHyperPlanePortDownCount
+		snapshot.UBDownCnt = invalidUBHyperPlanePortDownCount
 	}
-	status := buildNetworkPlaneStatus(snapshot.ubDownCnt)
+	status := buildNetworkPlaneStatus(snapshot.UBDownCnt)
 	hyperPlaneStatusCache[phyID] = status
 	return status
 }
