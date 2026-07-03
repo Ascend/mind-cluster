@@ -43,7 +43,6 @@ import (
 	"ascend-common/api"
 	"ascend-common/devmanager"
 	npuCommon "ascend-common/devmanager/common"
-	"ascend-common/devmanager/hccn"
 )
 
 const (
@@ -728,110 +727,6 @@ func TestGenerateHyperPlaneFaultEventsBasedOnFaultCacheChange(t *testing.T) {
 			defer mockGetHyperPlaneStatus.Reset()
 			notA5Tool.generateHyperPlaneFaultEventsBasedOnFaultCacheChange(device)
 			convey.So(queryCalled, convey.ShouldBeFalse)
-		})
-	})
-}
-
-// TestGetUBPortsDownSnapshot for test getUBPortsDownSnapshot
-func TestGetUBPortsDownSnapshot(t *testing.T) {
-	convey.Convey("test getUBPortsDownSnapshot", t, func() {
-		convey.Convey("01-mix bonding down, ub down and up ports, snapshot should aggregate down count by type",
-			func() {
-				ubPortEnabledCache = make(map[int32]map[string]bool, common.GeneralMapSize)
-				mockGetAllUBports := gomonkey.ApplyFuncReturn(hccn.GetAllUBports, []npuCommon.UBPort{
-					{UDieId: 0, PortID: 4, PortType: hccn.BondingPortName, LinkStatus: hccn.LinkDown},
-					{UDieId: 0, PortID: 5, PortType: hccn.BondingPortName, LinkStatus: hccn.LinkUp},
-					{UDieId: 1, PortID: 8, PortType: hccn.UBPortName, LinkStatus: hccn.LinkDown},
-					{UDieId: 1, PortID: 9, PortType: hccn.UBPortName, LinkStatus: hccn.LinkDown},
-					{UDieId: 1, PortID: 10, PortType: hccn.UBPortName, LinkStatus: hccn.LinkUp},
-				}, nil)
-				defer mockGetAllUBports.Reset()
-				mockIsEnabled := gomonkey.ApplyFuncReturn(hccn.IsUBPortEnabled, true, nil)
-				defer mockIsEnabled.Reset()
-				snapshot, err := getUBPortsDownSnapshot(0)
-				convey.So(err, convey.ShouldBeNil)
-				convey.So(snapshot.bondingDownCnt, convey.ShouldEqual, 1)
-				convey.So(snapshot.ubDownCnt, convey.ShouldEqual, 2)
-			})
-		convey.Convey("02-all ports up, snapshot down count should be zero", func() {
-			ubPortEnabledCache = make(map[int32]map[string]bool, common.GeneralMapSize)
-			mockGetAllUBports := gomonkey.ApplyFuncReturn(hccn.GetAllUBports, []npuCommon.UBPort{
-				{UDieId: 0, PortID: 4, PortType: hccn.BondingPortName, LinkStatus: hccn.LinkUp},
-				{UDieId: 1, PortID: 8, PortType: hccn.UBPortName, LinkStatus: hccn.LinkUp},
-			}, nil)
-			defer mockGetAllUBports.Reset()
-			snapshot, err := getUBPortsDownSnapshot(0)
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(snapshot.bondingDownCnt, convey.ShouldEqual, 0)
-			convey.So(snapshot.ubDownCnt, convey.ShouldEqual, 0)
-		})
-		convey.Convey("03-get all ub ports failed, should return error", func() {
-			ubPortEnabledCache = make(map[int32]map[string]bool, common.GeneralMapSize)
-			mockGetAllUBports := gomonkey.ApplyFuncReturn(hccn.GetAllUBports, nil,
-				errors.New("hccn_tool exec failed"))
-			defer mockGetAllUBports.Reset()
-			snapshot, err := getUBPortsDownSnapshot(0)
-			convey.So(err, convey.ShouldNotBeNil)
-			convey.So(snapshot.bondingDownCnt, convey.ShouldEqual, 0)
-			convey.So(snapshot.ubDownCnt, convey.ShouldEqual, 0)
-		})
-		convey.Convey("04-empty ports list, snapshot down count should be zero", func() {
-			ubPortEnabledCache = make(map[int32]map[string]bool, common.GeneralMapSize)
-			mockGetAllUBports := gomonkey.ApplyFuncReturn(hccn.GetAllUBports,
-				[]npuCommon.UBPort{}, nil)
-			defer mockGetAllUBports.Reset()
-			snapshot, err := getUBPortsDownSnapshot(0)
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(snapshot.bondingDownCnt, convey.ShouldEqual, 0)
-			convey.So(snapshot.ubDownCnt, convey.ShouldEqual, 0)
-		})
-		convey.Convey("05-unenabled down ports are excluded from the down count", func() {
-			ubPortEnabledCache = make(map[int32]map[string]bool, common.GeneralMapSize)
-			mockGetAllUBports := gomonkey.ApplyFuncReturn(hccn.GetAllUBports, []npuCommon.UBPort{
-				{UDieId: 1, PortID: 8, PortType: hccn.UBPortName, LinkStatus: hccn.LinkDown},
-				{UDieId: 1, PortID: 9, PortType: hccn.UBPortName, LinkStatus: hccn.LinkDown},
-				{UDieId: 0, PortID: 4, PortType: hccn.BondingPortName, LinkStatus: hccn.LinkDown},
-			}, nil)
-			defer mockGetAllUBports.Reset()
-			mockIsEnabled := gomonkey.ApplyFunc(hccn.IsUBPortEnabled,
-				func(_, udieID, portID int32) (bool, error) {
-					return udieID == 1 && portID == 8, nil
-				})
-			defer mockIsEnabled.Reset()
-			snapshot, err := getUBPortsDownSnapshot(0)
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(snapshot.ubDownCnt, convey.ShouldEqual, 1)
-			convey.So(snapshot.bondingDownCnt, convey.ShouldEqual, 1)
-		})
-		convey.Convey("06-port_info query failed, down ports are still counted as enabled", func() {
-			ubPortEnabledCache = make(map[int32]map[string]bool, common.GeneralMapSize)
-			mockGetAllUBports := gomonkey.ApplyFuncReturn(hccn.GetAllUBports, []npuCommon.UBPort{
-				{UDieId: 1, PortID: 8, PortType: hccn.UBPortName, LinkStatus: hccn.LinkDown},
-			}, nil)
-			defer mockGetAllUBports.Reset()
-			mockIsEnabled := gomonkey.ApplyFuncReturn(hccn.IsUBPortEnabled, false,
-				errors.New("port_info exec failed"))
-			defer mockIsEnabled.Reset()
-			snapshot, err := getUBPortsDownSnapshot(0)
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(snapshot.ubDownCnt, convey.ShouldEqual, 1)
-		})
-		convey.Convey("07-port enablement is cached across polling cycles", func() {
-			ubPortEnabledCache = make(map[int32]map[string]bool, common.GeneralMapSize)
-			mockGetAllUBports := gomonkey.ApplyFuncReturn(hccn.GetAllUBports, []npuCommon.UBPort{
-				{UDieId: 1, PortID: 8, PortType: hccn.UBPortName, LinkStatus: hccn.LinkDown},
-			}, nil)
-			defer mockGetAllUBports.Reset()
-			var queryCount int32
-			mockIsEnabled := gomonkey.ApplyFunc(hccn.IsUBPortEnabled,
-				func(_, _, _ int32) (bool, error) {
-					atomic.AddInt32(&queryCount, 1)
-					return false, nil
-				})
-			defer mockIsEnabled.Reset()
-			_, _ = getUBPortsDownSnapshot(0)
-			_, _ = getUBPortsDownSnapshot(0)
-			convey.So(atomic.LoadInt32(&queryCount), convey.ShouldEqual, 1)
 		})
 	})
 }

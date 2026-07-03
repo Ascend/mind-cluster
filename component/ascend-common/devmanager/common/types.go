@@ -23,6 +23,12 @@ type UBPort struct {
 	LinkStatus string
 }
 
+// UBPortsDownSnapshot indicates the down ports count of each PortType from one GetAllUBports call,
+type UBPortsDownSnapshot struct {
+	BondingDownCnt int
+	UBDownCnt      int
+}
+
 // MemoryInfo memory information struct
 type MemoryInfo struct {
 	MemorySize      uint64 `json:"memory_size"`
