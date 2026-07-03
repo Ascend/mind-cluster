@@ -15,20 +15,20 @@
 
 |组件名称|软件包名称|说明|获取链接|
 |--|--|--|--|
-|Ascend Docker Runtime|Ascend-docker-runtime\_<i>{version}</i>\_linux-<i>{arch}</i>.run|Ascend Docker Runtime软件包。软件包中包含默认的挂载列表、安装脚本、卸载脚本等文件。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
-|NPU Exporter|Ascend-mindxdl-npu-exporter\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|NPU Exporter软件包。软件包中包含NPU Exporter二进制文件、镜像构建文本文件、启动配置文件等。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
-|Ascend Device Plugin|Ascend-mindxdl-device-plugin\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Ascend Device Plugin软件包。软件包中包含Ascend Device Plugin二进制文件、镜像构建文本文件、相关功能配置文件等。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
-|Volcano|Ascend-mindxdl-volcano\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Volcano软件包。软件包中包含Volcano二进制文件、镜像构建文本文件、启动配置文件等。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p>请根据K8s和开源Volcano的兼容性选择合适的版本进行安装，具体版本请参见[Volcano官网中对应的Kubernetes版本](https://github.com/volcano-sh/volcano/blob/master/README.md#kubernetes-compatibility)。</p><ul><li>Volcano v1.7.0兼容的K8s版本范围为1.19.x~1.28.x。</li><li>Volcano v1.9.0兼容的K8s版本范围为1.21.x~1.29.x。</li><li>Volcano v1.12.0兼容的K8s版本范围为1.21.x~1.34.x。</li></ul></div></div>|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
-|Infer Operator|Ascend-mindxdl-infer-operator\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Infer Operator软件包。软件包中包含Infer Operator二进制文件、镜像构建文本文件、启动配置文件等。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
-|Ascend Operator|Ascend-mindxdl-ascend-operator\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Ascend Operator软件包。软件包中包含Ascend Operator二进制文件、镜像构建文本文件、启动配置文件等。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
-|NodeD|Ascend-mindxdl-noded\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|NodeD软件包。软件包中包含NodeD二进制文件、镜像构建文本文件、启动配置文件等。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
-|ClusterD|Ascend-mindxdl-clusterd\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|ClusterD软件包。软件包中包含ClusterD二进制文件、镜像构建文本文件、启动配置文件等。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
-|TaskD|Ascend-mindxdl-taskd\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|TaskD软件包。软件包中包含断点续训特性二进制文件等。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
-|Container Manager|Ascend-mindxdl-container-manager\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Container Manager软件包。软件包中包含Container Manager二进制文件、系统服务部署脚本等。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
-|MindIO|Ascend-mindxdl-mindio\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|MindIO软件包。软件包中包含MindIO二进制文件等。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
-|K8s RDMA Shared Dev Plugin|Ascend-mindxdl-k8s-rdma-shared-dev-plugin\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|K8s RDMA Shared Dev Plugin软件包。软件包中包含K8s RDMA Shared Dev Plugin二进制文件、镜像构建文本文件、启动配置文件等。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
-|Resilience Controller|Ascend-mindxdl-resilience-controller\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Resilience Controller软件包。软件包中包含Resilience Controller二进制文件、镜像构建文本文件、启动配置文件等。|[获取链接](https://www.hiascend.com/zh/developer/download/community/result?module=dl%2Bcann)|
-|Elastic Agent|Ascend-mindxdl-elastic\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Elastic Agent软件包。软件包中包含断点续训特性二进制文件等。|[获取链接](https://www.hiascend.com/zh/developer/download/community/result?module=dl%2Bcann)|
+|Ascend Docker Runtime|Ascend-docker-runtime\_<i>{version}</i>\_linux-<i>{arch}</i>.run|Ascend Docker Runtime软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
+|NPU Exporter|Ascend-mindxdl-npu-exporter\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|NPU Exporter软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
+|Ascend Device Plugin|Ascend-mindxdl-device-plugin\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Ascend Device Plugin软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
+|Volcano|Ascend-mindxdl-volcano\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Volcano软件包。Volcano包含volcano-controller和volcano-scheduler两个容器。<p>请根据K8s和开源Volcano的兼容性选择合适的版本进行安装，具体版本请参见[Volcano官网中对应的Kubernetes版本](https://github.com/volcano-sh/volcano/blob/master/README.md#kubernetes-compatibility)。</p><ul><li>Volcano v1.7.0兼容的K8s版本范围为1.19.x~1.28.x。</li><li>Volcano v1.9.0兼容的K8s版本范围为1.21.x~1.29.x。</li><li>Volcano v1.12.0兼容的K8s版本范围为1.21.x~1.34.x。</li></ul>|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
+|Infer Operator|Ascend-mindxdl-infer-operator\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Infer Operator软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
+|Ascend Operator|Ascend-mindxdl-ascend-operator\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Ascend Operator软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
+|NodeD|Ascend-mindxdl-noded\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|NodeD软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
+|ClusterD|Ascend-mindxdl-clusterd\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|ClusterD软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
+|TaskD|Ascend-mindxdl-taskd\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|TaskD软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
+|Container Manager|Ascend-mindxdl-container-manager\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Container Manager软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
+|MindIO|Ascend-mindxdl-mindio\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|MindIO软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
+|K8s RDMA Shared Dev Plugin|Ascend-mindxdl-k8s-rdma-shared-dev-plugin\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|K8s RDMA Shared Dev Plugin软件包。|[获取链接](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)|
+|Resilience Controller|Ascend-mindxdl-resilience-controller\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Resilience Controller软件包。|[获取链接](https://www.hiascend.com/zh/developer/download/community/result?module=dl%2Bcann)|
+|Elastic Agent|Ascend-mindxdl-elastic\_<i>{version}</i>\_linux-<i>{arch}</i>.zip|Elastic Agent软件包。|[获取链接](https://www.hiascend.com/zh/developer/download/community/result?module=dl%2Bcann)|
 
 >[!NOTE]
 >Resilience Controller和Elastic Agent组件已经在7.3.0版本日落，请获取7.3.0之前版本的软件包。
