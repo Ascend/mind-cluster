@@ -200,11 +200,13 @@ func (tp *chip8node8ra64sp) selectNodesForInferService(
 			item = heap.Pop(pq).(*inferServicePQItem)
 			sp, ok := superPodMap[item.superPodID]
 			if !ok || len(sp) < tp.spBlock {
+				item = nil
 				continue
 			}
 			rackGroup := transferSuperPodToRackIdMap(sp)
 			nodesInRack, rackOk := rackGroup[item.rackID]
 			if !rackOk || len(nodesInRack) < tp.spBlock {
+				item = nil
 				continue
 			}
 			break

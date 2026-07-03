@@ -530,3 +530,49 @@ func TestSelectNodesForInferService_EmptyPQ(t *testing.T) {
 		t.Errorf("expected item to be nil when priority queue is empty")
 	}
 }
+
+func TestSelectNodesForInferService_AllItemsSkipped(t *testing.T) {
+	tp := &chip8node8ra64sp{}
+	tp.spBlock = 4
+	tp.uBMemRackNum = 8
+	tp.NPUJob = &util.NPUJob{
+		SpBlockNPUNum: 32,
+		ReqNPUNum:     32,
+	}
+
+	superPodMap := buildSuperPodsByParams(map[int32]int32{0: 16})
+
+	sameRacks := map[int32]*inferServiceRackInfo{}
+	sameSPs := map[int32]*inferServiceSPInfo{}
+
+	pq := tp.buildInferServicePriorityQueue(superPodMap, sameRacks, sameSPs)
+
+	if pq.Len() == 0 {
+		t.Fatal("expected non-empty priority queue")
+	}
+
+	for k := range superPodMap {
+		delete(superPodMap, k)
+	}
+
+	var item *inferServicePQItem
+	for pq.Len() > 0 {
+		item = heap.Pop(pq).(*inferServicePQItem)
+		sp, ok := superPodMap[item.superPodID]
+		if !ok || len(sp) < tp.spBlock {
+			item = nil
+			continue
+		}
+		rackGroup := transferSuperPodToRackIdMap(sp)
+		nodesInRack, rackOk := rackGroup[item.rackID]
+		if !rackOk || len(nodesInRack) < tp.spBlock {
+			item = nil
+			continue
+		}
+		break
+	}
+
+	if item != nil {
+		t.Errorf("expected item to be nil when all items are skipped")
+	}
+}
