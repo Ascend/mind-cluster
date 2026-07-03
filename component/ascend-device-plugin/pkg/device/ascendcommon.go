@@ -1986,7 +1986,7 @@ func (tool *AscendTools) queryHyperPlaneStatusWithoutFaultCode(faultCodes []int6
 		faultCode, hasFault := tool.generateOriginalFaultCodeFromHyperPlaneStatus(linkStatus)
 		if hasFault {
 			newFaultCodes = append(newFaultCodes, faultCode)
-			hwlog.RunLog.Debugf("device %d generate fault code %d based on ub link down fault,"+
+			hwlog.RunLog.Infof("device %d generate fault code %v based on ub link down fault,"+
 				" device health: %s", device.PhyID, faultCode, device.Health)
 		}
 	}

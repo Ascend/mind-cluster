@@ -603,7 +603,6 @@ func GetIntDataFromStr(str, dataType string) int {
 func GetNpuDevNetPortInfo(logicID int32) (map[int][]int, error) {
 	runHccnCmdMu.Lock()
 	defer runHccnCmdMu.Unlock()
-	hwlog.RunLog.Warnf("hang detection lock get hccn info")
 	args := []string{"-g", "-dev_info", "-i", strconv.Itoa(int(logicID))}
 	// command example: hccn_tool -g -dev_info -i 0
 	outStr, err := getInfoFromHccnTool(args...)
@@ -611,7 +610,6 @@ func GetNpuDevNetPortInfo(logicID int32) (map[int][]int, error) {
 		return nil, buildHccnErrA5("npu dev info", err)
 	}
 
-	hwlog.RunLog.Warnf("hang detection get all ub ports succ")
 	// First, log the full output for debugging
 	hwlog.RunLog.Debugf("Full hccn_tool output: %s", outStr)
 
@@ -702,7 +700,6 @@ func parseDeviceRow(trimmedLine string) (int, int, error) {
 func GetAllUBports(logicID int32) ([]common.UBPort, error) {
 	runHccnCmdMu.Lock()
 	defer runHccnCmdMu.Unlock()
-	hwlog.RunLog.Warnf("lock get hccn info")
 	args := []string{"-g", "-dev_info", "-i", strconv.Itoa(int(logicID))}
 	// command example: hccn_tool -g -dev_info -i 0
 	// output example:
@@ -716,7 +713,6 @@ func GetAllUBports(logicID int32) ([]common.UBPort, error) {
 		return nil, buildHccnErrA5("npu dev info", err)
 	}
 
-	hwlog.RunLog.Warnf("get all ub ports succ")
 	// First, log the full output for debugging
 	hwlog.RunLog.Debugf("Full hccn_tool output: %s", outStr)
 
