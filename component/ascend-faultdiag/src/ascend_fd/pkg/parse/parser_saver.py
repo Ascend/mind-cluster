@@ -1369,7 +1369,7 @@ class SuperpodInfoSaver:
             insinstance_worker_name = log_dir_split[1] if len(log_dir_split) > 1 else None
             if insinstance_worker_name == lcne_worker_name:
                 return self._find_from_lcne(lcne_sn_info_instance)
-        return None, None
+        return None
 
     def save_to_json(self, save_path, file_name):
         topo_infos = []
@@ -1599,7 +1599,11 @@ class ParsedDataSaver:
         # 解析server-info.json，保存container_ip和device实例
         ip_device_dict = {}  # {container_ip: [device_instance...]}
         for worker_name, worker_dir_path in self.worker_path_dict.items():
-            container_info = safe_read_json(os.path.join(worker_dir_path, regular_table.CONTAINER_FILE))
+            server_info_path = os.path.join(worker_dir_path, regular_table.CONTAINER_FILE)
+            if not os.path.exists(server_info_path):
+                logger.warning("The file does not exist: %s", server_info_path)
+                continue
+            container_info = safe_read_json(server_info_path)
             container_ip = container_info.get("container_ip", "")
             self.container_worker_map.update({container_ip: worker_name})
             for pid, device_info in container_info.get("device_info", {}).items():
@@ -1625,7 +1629,11 @@ class ParsedDataSaver:
                 self.ip_infer_group.update({ip: infer_group_instance})
         # 获取采集到日志的推理组
         for worker_dir_path in self.worker_path_dict.values():
-            container_info = safe_read_json(os.path.join(worker_dir_path, regular_table.CONTAINER_FILE))
+            server_info_path = os.path.join(worker_dir_path, regular_table.CONTAINER_FILE)
+            if not os.path.exists(server_info_path):
+                logger.warning("The file does not exist: %s", server_info_path)
+                continue
+            container_info = safe_read_json(server_info_path)
             container_ip = container_info.get("container_ip", "")
             infer_group_instance = self.ip_infer_group.get(container_ip)
             if not infer_group_instance:
@@ -1643,6 +1651,9 @@ class ParsedDataSaver:
         for worker_name, worker_dir_path in self.worker_path_dict.items():
             path_list = collect_parse_results(worker_dir_path, "rc-parser.json")
             rc_parser_file = path_list[0] if path_list else ""
+            if not os.path.exists(rc_parser_file):
+                logger.warning("The file does not exist: %s", rc_parser_file)
+                continue
             rc_parser_dict = safe_read_json(rc_parser_file)
             for pid_info in rc_parser_dict.values():
                 base_info = pid_info.get("base", dict())
