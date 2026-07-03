@@ -753,11 +753,11 @@ func (tool *AscendTools) getFaultTimeAndLevelMap(
 			FaultTime:  faultTime,
 			FaultLevel: faultLevel,
 		}
-		hexFaultCode := strings.ToUpper(strconv.FormatInt(eventId, common.Hex))
+		hexFaultCode := strings.ToUpper(common.FormatFaultCodeHex(eventId))
 		result[hexFaultCode] = faultTimeAndLevel
 	}
 	for eventId, timeAndLevel := range allFaults {
-		hexFaultCode := strings.ToUpper(strconv.FormatInt(eventId, common.Hex))
+		hexFaultCode := strings.ToUpper(common.FormatFaultCodeHex(eventId))
 		result[hexFaultCode] = timeAndLevel
 	}
 	return result
@@ -1597,7 +1597,7 @@ func (tool *AscendTools) doWriteFaultToEvent(faultInfo npuCommon.DevFaultInfo) e
 		Type: v1.EventTypeWarning,
 		Message: fmt.Sprintf("device fault, nodeName:%s, assertion:%s, %s, "+
 			"faultCodes:%s, faultLevelName:%s, alarmRaisedTime:%s", nodeName, assertionName, devInfo,
-			strings.ToUpper(strconv.FormatInt(faultInfo.EventID, common.Hex)), faultLevelName,
+			strings.ToUpper(common.FormatFaultCodeHex(faultInfo.EventID)), faultLevelName,
 			time.UnixMilli(faultInfo.AlarmRaisedTime).Format(common.TimeFormat)),
 		EventTime: metav1.MicroTime{Time: time.UnixMilli(faultInfo.AlarmRaisedTime)},
 		Reason:    assertionName, Action: faultLevelName,
