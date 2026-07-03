@@ -97,10 +97,10 @@ func (i int64Tool) ToHexString(sources []int64) string {
 	var target string
 	for i, source := range sources {
 		if i == 0 {
-			target = strconv.FormatInt(source, Hex)
+			target = FormatFaultCodeHex(source)
 			continue
 		}
-		target = target + "," + strconv.FormatInt(source, Hex)
+		target = target + "," + FormatFaultCodeHex(source)
 	}
 	return target
 }

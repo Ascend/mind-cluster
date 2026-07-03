@@ -174,6 +174,9 @@ var (
 	// faultDurationMapLock is the lock of faultDurationMap
 	faultDurationMapLock           sync.RWMutex
 	faultSeverityMap               = make(map[int64]int8, common.MaxErrorCodeCount)
+	// faultCodeFormatMap caches the correct hex string format for each fault code, loaded from config
+	faultCodeFormatMap     = make(map[int64]string, common.MaxErrorCodeCount)
+	faultCodeFormatMapLock sync.RWMutex
 	parseHexFailedMsg              = "parse hex int failed and skip it, string: %s"
 	networkFaultConfigureFailedMsg = "%x is a network fault and cannot be configured to %s now, " +
 		"fault handling policy is set to NotHandleFault"
@@ -189,6 +192,17 @@ var (
 		UBPortDownCode: sets.NewInt64(UBPortDownCode, UBSeparateFaultCode, UBSubHealFaultCode),
 	}
 )
+
+// FormatFaultCodeHex formats fault code as hex string with correct leading zeros based on config
+func FormatFaultCodeHex(eventId int64) string {
+	faultCodeFormatMapLock.RLock()
+	if format, ok := faultCodeFormatMap[eventId]; ok {
+		faultCodeFormatMapLock.RUnlock()
+		return format
+	}
+	faultCodeFormatMapLock.RUnlock()
+	return fmt.Sprintf("%x", eventId)
+}
 
 // copyFaultFrequencyConfig creates a copy of fault frequency configuration
 // to avoid concurrent map access issues
@@ -619,6 +633,20 @@ func LoadFaultCode(faultCodeBytes []byte) error {
 	if err := json.Unmarshal(faultCodeBytes, &fileInfo); err != nil {
 		return fmt.Errorf("unmarshal fault code byte failed: %v", err)
 	}
+
+	// register all fault code hex string formats from faultCode.json to preserve leading zeros
+	registerFaultCodeFormats(fileInfo.NotHandleFaultCodes)
+	registerFaultCodeFormats(fileInfo.RestartRequestCodes)
+	registerFaultCodeFormats(fileInfo.RestartBusinessCodes)
+	registerFaultCodeFormats(fileInfo.RestartNPUCodes)
+	registerFaultCodeFormats(fileInfo.FreeRestartNPUCodes)
+	registerFaultCodeFormats(fileInfo.PreSeparateNPUCodes)
+	registerFaultCodeFormats(fileInfo.SeparateNPUCodes)
+	registerFaultCodeFormats(fileInfo.NotHandleFaultNetworkCodes)
+	registerFaultCodeFormats(fileInfo.PreSeparateNPUNetworkCodes)
+	registerFaultCodeFormats(fileInfo.SeparateNPUNetworkCodes)
+	registerFaultCodeFormats(fileInfo.SubHealthFaultCodes)
+
 	faultTypeCode = FaultTypeCode{
 		NotHandleFaultCodes:        StringTool.HexStringToInt(fileInfo.NotHandleFaultCodes),
 		RestartRequestCodes:        StringTool.HexStringToInt(fileInfo.RestartRequestCodes),
@@ -764,6 +792,27 @@ func isValidSwitchFaultCode(code string) bool {
 	return len(parts) == PartNumOfFaultCode
 }
 
+// registerFaultCodeFormat parses the config EventId string and caches its format for later use
+func registerFaultCodeFormat(eventIdStr string) {
+	eventId, err := strconv.ParseInt(eventIdStr, Hex, 0)
+	if err != nil {
+		hwlog.RunLog.Warnf("failed to parse event id %s to int64, skip format cache: %v", eventIdStr, err)
+		return
+	}
+	faultCodeFormatMapLock.Lock()
+	if _, exists := faultCodeFormatMap[eventId]; !exists {
+		faultCodeFormatMap[eventId] = strings.ToLower(eventIdStr)
+	}
+	faultCodeFormatMapLock.Unlock()
+}
+
+// registerFaultCodeFormats registers hex string formats for a batch of fault codes
+func registerFaultCodeFormats(eventIdStrs []string) {
+	for _, eventIdStr := range eventIdStrs {
+		registerFaultCodeFormat(eventIdStr)
+	}
+}
+
 func loadFaultDurationCustomization(customization []FaultDurationCustomization) {
 	handledEventId := make(sets.String, common.MaxErrorCodeCount)
 	for _, cus := range customization {
@@ -778,6 +827,7 @@ func loadFaultDurationCustomization(customization []FaultDurationCustomization) 
 				continue
 			}
 			handledEventId.Insert(id)
+			registerFaultCodeFormat(id)
 			if cache, ok := faultDurationMap[id]; ok {
 				cache.FaultTimeout = cus.FaultTimeout
 				cache.RecoverTimeout = cus.RecoverTimeout
@@ -893,6 +943,7 @@ func loadFaultFrequencyCustomization(customizations []FaultFrequencyCustomizatio
 				continue
 			}
 			handledEventId.Insert(id)
+			registerFaultCodeFormat(id)
 			if cache, ok := faultFrequencyMap[id]; ok {
 				cache.TimeWindow = cus.TimeWindow
 				cache.Times = cus.Times
@@ -932,7 +983,7 @@ func loadFaultFrequencyCustomization(customizations []FaultFrequencyCustomizatio
 func insertFrequencyFaultOccur(logicId int32, eventId int64, faultTime int64) {
 	faultFrequencyMapLock.Lock()
 	defer faultFrequencyMapLock.Unlock()
-	eventIdStr := strings.ToLower(strconv.FormatInt(eventId, Hex))
+	eventIdStr := FormatFaultCodeHex(eventId)
 	frequencyCache, ok := faultFrequencyMap[eventIdStr]
 	if !ok {
 		hwlog.RunLog.Debugf("skip inserting event id %s to fault frequency cache, no config found", eventIdStr)
@@ -954,7 +1005,7 @@ func insertFrequencyFaultOccur(logicId int32, eventId int64, faultTime int64) {
 func insertFrequencyFaultRecover(logicId int32, eventId int64, faultRecoverTime int64) {
 	faultFrequencyMapLock.Lock()
 	defer faultFrequencyMapLock.Unlock()
-	eventIdStr := strings.ToLower(strconv.FormatInt(eventId, Hex))
+	eventIdStr := FormatFaultCodeHex(eventId)
 	frequencyCache, ok := faultFrequencyMap[eventIdStr]
 	if !ok {
 		hwlog.RunLog.Debugf("skip inserting event id %s to fault frequency cache, no config found", eventIdStr)
@@ -1411,7 +1462,7 @@ func baseChipFaultOccur(newFaultInfos []common.DevFaultInfo, device *NpuDevice) 
 		if faultInfo.Assertion == common.FaultOccur || faultInfo.Assertion == common.FaultOnce {
 			device.FaultCodes = append(device.FaultCodes, faultInfo.EventID)
 			updateDeviceFaultTimeMap(device, faultInfo, true)
-			eventIdStr := strings.ToLower(strconv.FormatInt(faultInfo.EventID, Hex))
+			eventIdStr := FormatFaultCodeHex(faultInfo.EventID)
 			if _, ok := faultDurationMap[eventIdStr]; !ok {
 				insertFrequencyFaultOccur(device.LogicID, faultInfo.EventID, faultInfo.AlarmRaisedTime)
 			}
@@ -1459,7 +1510,7 @@ func handleNpuFaultRecover(logicID int32, device *NpuDevice, faultInfo common.De
 	} else {
 		device.FaultCodes = Int64Tool.Remove(device.FaultCodes, faultInfo.EventID)
 		updateDeviceFaultTimeMap(device, faultInfo, false)
-		eventIdStr := strings.ToLower(strconv.FormatInt(faultInfo.EventID, Hex))
+		eventIdStr := FormatFaultCodeHex(faultInfo.EventID)
 		if _, ok := faultDurationMap[eventIdStr]; !ok {
 			insertFrequencyFaultRecover(device.LogicID, faultInfo.EventID, faultInfo.AlarmRaisedTime)
 		}
@@ -1522,7 +1573,7 @@ func baseParameterPlaneFaultRecover(logicID int32, faultInfos []common.DevFaultI
 func handleNetworkFaultRecover(device *NpuDevice, faultInfo common.DevFaultInfo) {
 	device.NetworkFaultCodes = Int64Tool.Remove(device.NetworkFaultCodes, faultInfo.EventID)
 	updateDeviceFaultTimeMap(device, faultInfo, false)
-	eventIdStr := strings.ToLower(strconv.FormatInt(faultInfo.EventID, Hex))
+	eventIdStr := FormatFaultCodeHex(faultInfo.EventID)
 	if _, ok := faultDurationMap[eventIdStr]; !ok {
 		insertFrequencyFaultRecover(device.LogicID, faultInfo.EventID, faultInfo.AlarmRaisedTime)
 	}
@@ -1576,7 +1627,7 @@ func baseParameterPlaneFaultOccur(faultInfos []common.DevFaultInfo, device *NpuD
 		if faultInfo.Assertion == common.FaultOccur || faultInfo.Assertion == common.FaultOnce {
 			device.NetworkFaultCodes = append(device.NetworkFaultCodes, faultInfo.EventID)
 			updateDeviceFaultTimeMap(device, faultInfo, true)
-			eventIdStr := strings.ToLower(strconv.FormatInt(faultInfo.EventID, Hex))
+			eventIdStr := FormatFaultCodeHex(faultInfo.EventID)
 			if _, ok := faultDurationMap[eventIdStr]; !ok {
 				insertFrequencyFaultOccur(device.LogicID, faultInfo.EventID, faultInfo.AlarmRaisedTime)
 			}
@@ -1707,6 +1758,8 @@ func a950HyperPlaneFaultOccur(logicID int32, hyperPlaneFaultInfos []common.DevFa
 			tmpFaultInfo := faultInfo
 			tmpFaultInfo.EventID = int64(preciseFaultCode)
 			updateDeviceFaultTimeMap(device, tmpFaultInfo, true)
+			hwlog.RunLog.Infof("generate UB separate fault, devFaultInfo: %#v, hex code: %v",
+				tmpFaultInfo, FormatFaultCodeHex(tmpFaultInfo.EventID))
 			device.FaultCodes = append(device.FaultCodes, (int64)(preciseFaultCode))
 			updateDeviceFaultTimeMap(device, faultInfo, true)
 			device.FaultCodes = append(device.FaultCodes, faultInfo.EventID)
@@ -1739,6 +1792,8 @@ func a950HyperPlaneNewOverallFaultModify(devices []*NpuDevice) {
 					AlarmRaisedTime: curTime,
 				}
 				updateDeviceFaultTimeMap(device, tmpFaultInfo, true)
+				hwlog.RunLog.Infof("generate UB sub heal fault, devFaultInfo: %#v, hex code: %v",
+					tmpFaultInfo, FormatFaultCodeHex(tmpFaultInfo.EventID))
 				device.FaultCodes = append(device.FaultCodes, UBSubHealFaultCode)
 			}
 		}
@@ -1778,7 +1833,7 @@ func ClearUBportsInfo(groupDevice map[string][]*NpuDevice) {
 }
 
 func delOnceRecoverFaultTime(device *NpuDevice, eventId int64) {
-	hexFaultCode := strings.ToUpper(strconv.FormatInt(eventId, Hex))
+	hexFaultCode := strings.ToUpper(FormatFaultCodeHex(eventId))
 	hwlog.RunLog.Debugf("delete fault %s with time: %d", hexFaultCode, device.FaultTimeMap[eventId])
 	delete(device.FaultTimeMap, eventId)
 }
@@ -1810,7 +1865,7 @@ func DoSaveDevFaultInfo(devFaultInfo common.DevFaultInfo, enableDelay bool) {
 		TriggerUpdate("A fault has occurred")
 	}()
 	hwlog.RunLog.Infof("receive devFaultInfo: %#v, hex code: %v", devFaultInfo,
-		strconv.FormatInt(devFaultInfo.EventID, Hex))
+		FormatFaultCodeHex(devFaultInfo.EventID))
 	if devFaultInfo.EventID == 0 {
 		return
 	}
@@ -1971,7 +2026,7 @@ func CountFaultDuration(device *NpuDevice, devFaultInfoMap map[int32][]common.De
 
 func collectEachFaultEvent(logicId int32, faultInfos []common.DevFaultInfo) {
 	for _, faultInfo := range faultInfos {
-		eventIdStr := strings.ToLower(strconv.FormatInt(faultInfo.EventID, Hex))
+		eventIdStr := FormatFaultCodeHex(faultInfo.EventID)
 		if _, ok := faultDurationMap[eventIdStr]; !ok {
 			continue
 		}

@@ -698,7 +698,7 @@ func TestCollectEachFaultEvent(t *testing.T) {
 		logicID := int32(0)
 		linkDownFaultTimeout := int64(30)
 		linkDownRecoverTimeout := int64(60)
-		linkDownFaultCodeStr := strings.ToLower(strconv.FormatInt(LinkDownFaultCode, Hex))
+		linkDownFaultCodeStr := FormatFaultCodeHex(LinkDownFaultCode)
 		faultDurationMap = map[string]*FaultDurationCache{
 			linkDownFaultCodeStr: {
 				FaultDuration: FaultDuration{
@@ -726,8 +726,8 @@ func TestCollectEachFaultEvent(t *testing.T) {
 func TestSortFaultEventsInAscendingOrder(t *testing.T) {
 	convey.Convey("test sortFaultEventsInAscendingOrder success", t, func() {
 		logicID := int32(0)
-		linkDownFaultCodeStr := strings.ToLower(strconv.FormatInt(LinkDownFaultCode, Hex))
-		CardDropFaultCodeStr := strings.ToLower(strconv.FormatInt(CardDropFaultCode, Hex))
+		linkDownFaultCodeStr := FormatFaultCodeHex(LinkDownFaultCode)
+		CardDropFaultCodeStr := FormatFaultCodeHex(CardDropFaultCode)
 		faultDurationMap = map[string]*FaultDurationCache{
 			linkDownFaultCodeStr: {
 				FaultDuration: FaultDuration{
@@ -846,8 +846,8 @@ func TestClearFirstEventBasedOnFaultStatus(t *testing.T) {
 func TestCleanFaultQueueWhenFaultTimeStatusFalse(t *testing.T) {
 	convey.Convey("test CleanFaultQueue when fault time status is false", t, func() {
 		logicID := int32(0)
-		linkDownFaultCodeStr := strings.ToLower(strconv.FormatInt(LinkDownFaultCode, Hex))
-		CardDropFaultCodeStr := strings.ToLower(strconv.FormatInt(CardDropFaultCode, Hex))
+		linkDownFaultCodeStr := FormatFaultCodeHex(LinkDownFaultCode)
+		CardDropFaultCodeStr := FormatFaultCodeHex(CardDropFaultCode)
 		faultDurationMap = map[string]*FaultDurationCache{
 			linkDownFaultCodeStr: {
 				Duration: map[int32]FaultDurationData{logicID: {TimeoutStatus: false}},
@@ -889,7 +889,7 @@ func TestCleanFaultQueueWhenFaultTimeStatusFalse(t *testing.T) {
 func TestCleanFaultQueueWhenFaultTimeStatusTrue(t *testing.T) {
 	convey.Convey("test CleanFaultQueue when fault time status is true", t, func() {
 		logicID := int32(0)
-		linkDownFaultCodeStr := strings.ToLower(strconv.FormatInt(LinkDownFaultCode, Hex))
+		linkDownFaultCodeStr := FormatFaultCodeHex(LinkDownFaultCode)
 		faultDurationMap = map[string]*FaultDurationCache{
 			linkDownFaultCodeStr: {
 				Duration: map[int32]FaultDurationData{logicID: {TimeoutStatus: true,
@@ -929,7 +929,7 @@ func TestHandleFaultQueueCase01(t *testing.T) {
 	convey.Convey("test handleFaultQueue case 01", t, func() {
 		logicID := int32(0)
 		alarmRaisedTime50, alarmRaisedTime81, alarmRaisedTime82 := int64(50), int64(81), int64(82)
-		linkDownFaultCodeStr := strings.ToLower(strconv.FormatInt(LinkDownFaultCode, Hex))
+		linkDownFaultCodeStr := FormatFaultCodeHex(LinkDownFaultCode)
 		faultDurationMap = map[string]*FaultDurationCache{
 			linkDownFaultCodeStr: {
 				FaultDuration: FaultDuration{
@@ -976,7 +976,7 @@ func TestHandleFaultQueueCase02(t *testing.T) {
 	convey.Convey("test handleFaultQueue case 02", t, func() {
 		logicID := int32(0)
 		alarmRaisedTime30, alarmRaisedTime50, alarmRaisedTime80 := int64(30), int64(50), int64(80)
-		linkDownFaultCodeStr := strings.ToLower(strconv.FormatInt(LinkDownFaultCode, Hex))
+		linkDownFaultCodeStr := FormatFaultCodeHex(LinkDownFaultCode)
 		faultDurationMap = map[string]*FaultDurationCache{
 			linkDownFaultCodeStr: {
 				Duration: map[int32]FaultDurationData{logicID: {FaultEventQueue: []common.DevFaultInfo{}}},
@@ -1015,7 +1015,7 @@ func TestHandleFaultQueueCase03(t *testing.T) {
 		logicID := int32(0)
 		alarmRaisedTime50, alarmRaisedTime80, alarmRaisedTime82, alarmRaisedTime112 :=
 			int64(50), int64(80), int64(82), int64(112)
-		linkDownFaultCodeStr := strings.ToLower(strconv.FormatInt(LinkDownFaultCode, Hex))
+		linkDownFaultCodeStr := FormatFaultCodeHex(LinkDownFaultCode)
 		faultDurationMap = map[string]*FaultDurationCache{
 			linkDownFaultCodeStr: {
 				FaultDuration: FaultDuration{
@@ -1057,7 +1057,7 @@ func TestHandleFaultQueueCase04(t *testing.T) {
 	convey.Convey("test handleFaultQueue case 04", t, func() {
 		logicID := int32(0)
 		alarmRaisedTime50, AlarmRaisedTime110 := int64(50), int64(110)
-		linkDownFaultCodeStr := strings.ToLower(strconv.FormatInt(LinkDownFaultCode, Hex))
+		linkDownFaultCodeStr := FormatFaultCodeHex(LinkDownFaultCode)
 		faultDurationMap = map[string]*FaultDurationCache{
 			linkDownFaultCodeStr: {
 				Duration: map[int32]FaultDurationData{logicID: {TimeoutStatus: true}},
@@ -1095,7 +1095,7 @@ func TestHandleFaultQueueCase04(t *testing.T) {
 func TestHandleFaultQueueCase05(t *testing.T) {
 	convey.Convey("test handleFaultQueue case 05", t, func() {
 		logicID := int32(0)
-		linkDownFaultCodeStr := strings.ToLower(strconv.FormatInt(LinkDownFaultCode, Hex))
+		linkDownFaultCodeStr := FormatFaultCodeHex(LinkDownFaultCode)
 		AlarmRaisedTime50, AlarmRaisedTime111, AlarmRaisedTime112 := int64(50), int64(111), int64(112)
 		faultDurationMap = map[string]*FaultDurationCache{
 			linkDownFaultCodeStr: {
@@ -1138,7 +1138,7 @@ func TestHandleFaultQueueCase05(t *testing.T) {
 func TestHandleFaultQueueCase06(t *testing.T) {
 	convey.Convey("test handleFaultQueue case 06", t, func() {
 		logicID := int32(0)
-		linkDownFaultCodeStr := strings.ToLower(strconv.FormatInt(LinkDownFaultCode, Hex))
+		linkDownFaultCodeStr := FormatFaultCodeHex(LinkDownFaultCode)
 		faultDurationMap = map[string]*FaultDurationCache{
 			linkDownFaultCodeStr: {
 				Duration: map[int32]FaultDurationData{logicID: {TimeoutStatus: true,
@@ -1941,9 +1941,9 @@ func TestGetChangedDevFaultInfo(t *testing.T) {
 func TestGetTimeoutFaultCodes(t *testing.T) {
 	convey.Convey("test GetTimeoutFaultCodes success", t, func() {
 		logicID := int32(0)
-		linkDownFaultCodeStr := strings.ToLower(strconv.FormatInt(LinkDownFaultCode, Hex))
-		CardDropFaultCodeStr := strings.ToLower(strconv.FormatInt(CardDropFaultCode, Hex))
-		ResetFinishFaultCodeStr := strings.ToLower(strconv.FormatInt(ResetFinishFaultCode, Hex))
+		linkDownFaultCodeStr := FormatFaultCodeHex(LinkDownFaultCode)
+		CardDropFaultCodeStr := FormatFaultCodeHex(CardDropFaultCode)
+		ResetFinishFaultCodeStr := FormatFaultCodeHex(ResetFinishFaultCode)
 		NetworkFaultCodes = sets.NewInt64(LinkDownFaultCode)
 		faultDurationMap = map[string]*FaultDurationCache{
 			CardDropFaultCodeStr: {
@@ -2275,5 +2275,124 @@ func TestGetUpgradeFaultLevelAndTime(t *testing.T) {
 		convey.So(err, convey.ShouldEqual, err)
 		convey.So(faultLevelAndTime[num].FaultLevel, convey.ShouldEqual, ManuallySeparateNPU)
 		RemoveTimeoutReasonCache(LogicId(0))
+	})
+}
+
+// TestRegisterFaultCodeFormat for test registerFaultCodeFormat
+func TestRegisterFaultCodeFormat(t *testing.T) {
+	convey.Convey("test registerFaultCodeFormat", t, func() {
+		convey.Convey("register 9-digit code with leading zero", func() {
+			mockFormatMap := gomonkey.ApplyGlobalVar(&faultCodeFormatMap, make(map[int64]string))
+			defer mockFormatMap.Reset()
+			registerFaultCodeFormat("020001002")
+			convey.So(faultCodeFormatMap[0x020001002], convey.ShouldEqual, "020001002")
+		})
+		convey.Convey("register 8-digit code without leading zero", func() {
+			mockFormatMap := gomonkey.ApplyGlobalVar(&faultCodeFormatMap, make(map[int64]string))
+			defer mockFormatMap.Reset()
+			registerFaultCodeFormat("81078603")
+			convey.So(faultCodeFormatMap[0x81078603], convey.ShouldEqual, "81078603")
+		})
+		convey.Convey("register invalid hex string should not panic", func() {
+			mockFormatMap := gomonkey.ApplyGlobalVar(&faultCodeFormatMap, make(map[int64]string))
+			defer mockFormatMap.Reset()
+			registerFaultCodeFormat("invalid")
+			convey.So(len(faultCodeFormatMap), convey.ShouldEqual, 0)
+		})
+		convey.Convey("duplicate registration should keep first format", func() {
+			mockFormatMap := gomonkey.ApplyGlobalVar(&faultCodeFormatMap, make(map[int64]string))
+			defer mockFormatMap.Reset()
+			registerFaultCodeFormat("020001002")
+			registerFaultCodeFormat("20001002")
+			convey.So(faultCodeFormatMap[0x020001002], convey.ShouldEqual, "020001002")
+		})
+	})
+}
+
+// TestRegisterFaultCodeFormats for test registerFaultCodeFormats
+func TestRegisterFaultCodeFormats(t *testing.T) {
+	convey.Convey("test registerFaultCodeFormats", t, func() {
+		convey.Convey("batch register multiple codes", func() {
+			mockFormatMap := gomonkey.ApplyGlobalVar(&faultCodeFormatMap, make(map[int64]string))
+			defer mockFormatMap.Reset()
+			codes := []string{"020001002", "020000002", "81078603"}
+			registerFaultCodeFormats(codes)
+			convey.So(faultCodeFormatMap[0x020001002], convey.ShouldEqual, "020001002")
+			convey.So(faultCodeFormatMap[0x020000002], convey.ShouldEqual, "020000002")
+			convey.So(faultCodeFormatMap[0x81078603], convey.ShouldEqual, "81078603")
+			convey.So(len(faultCodeFormatMap), convey.ShouldEqual, 3)
+		})
+		convey.Convey("batch register empty slice", func() {
+			mockFormatMap := gomonkey.ApplyGlobalVar(&faultCodeFormatMap, make(map[int64]string))
+			defer mockFormatMap.Reset()
+			registerFaultCodeFormats([]string{})
+			convey.So(len(faultCodeFormatMap), convey.ShouldEqual, 0)
+		})
+	})
+}
+
+// TestFormatFaultCodeHex for test FormatFaultCodeHex
+func TestFormatFaultCodeHex(t *testing.T) {
+	convey.Convey("test FormatFaultCodeHex", t, func() {
+		convey.Convey("code with leading zero in format map should return 9-digit string", func() {
+			mockFormatMap := gomonkey.ApplyGlobalVar(&faultCodeFormatMap, map[int64]string{
+				0x020001002: "020001002",
+			})
+			defer mockFormatMap.Reset()
+			convey.So(FormatFaultCodeHex(0x020001002), convey.ShouldEqual, "020001002")
+		})
+		convey.Convey("code without leading zero in format map should return 8-digit string", func() {
+			mockFormatMap := gomonkey.ApplyGlobalVar(&faultCodeFormatMap, map[int64]string{
+				0x81078603: "81078603",
+			})
+			defer mockFormatMap.Reset()
+			convey.So(FormatFaultCodeHex(0x81078603), convey.ShouldEqual, "81078603")
+		})
+		convey.Convey("code not in format map should fall back to simple hex", func() {
+			mockFormatMap := gomonkey.ApplyGlobalVar(&faultCodeFormatMap, make(map[int64]string))
+			defer mockFormatMap.Reset()
+			convey.So(FormatFaultCodeHex(0x81078603), convey.ShouldEqual, "81078603")
+		})
+		convey.Convey("code with leading zero not in format map should drop leading zero", func() {
+			mockFormatMap := gomonkey.ApplyGlobalVar(&faultCodeFormatMap, make(map[int64]string))
+			defer mockFormatMap.Reset()
+			convey.So(FormatFaultCodeHex(0x020001002), convey.ShouldEqual, "20001002")
+		})
+	})
+}
+
+// TestLoadFaultCodeRegistersFormat for test that LoadFaultCode registers hex formats
+func TestLoadFaultCodeRegistersFormat(t *testing.T) {
+	convey.Convey("test LoadFaultCode registers format cache", t, func() {
+		convey.Convey("codes from faultCode.json should be in format map after loading", func() {
+			mockFormatMap := gomonkey.ApplyGlobalVar(&faultCodeFormatMap, make(map[int64]string))
+			defer mockFormatMap.Reset()
+			mockFaultTypeCode := gomonkey.ApplyGlobalVar(&faultTypeCode, FaultTypeCode{})
+			defer mockFaultTypeCode.Reset()
+
+			fileInfo := faultFileInfo{
+				NotHandleFaultCodes:  []string{"81078603", "020001002"},
+				RestartRequestCodes:  []string{"80C98008"},
+				RestartBusinessCodes: []string{"80E01801"},
+				RestartNPUCodes:      []string{"8C03A000"},
+				FreeRestartNPUCodes:  []string{"8C0E4E00"},
+				SeparateNPUCodes:     []string{"80E3A201"},
+				PreSeparateNPUCodes:  []string{"110001024"},
+				SubHealthFaultCodes:  []string{"020000002", "110000002"},
+			}
+			codeBytes, err := json.Marshal(fileInfo)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(LoadFaultCode(codeBytes), convey.ShouldBeNil)
+
+			// 9-digit codes with leading zero should preserve format
+			convey.So(faultCodeFormatMap[0x020001002], convey.ShouldEqual, "020001002")
+			convey.So(faultCodeFormatMap[0x020000002], convey.ShouldEqual, "020000002")
+			// 9-digit codes without leading zero should keep original format
+			convey.So(faultCodeFormatMap[0x110001024], convey.ShouldEqual, "110001024")
+			convey.So(faultCodeFormatMap[0x110000002], convey.ShouldEqual, "110000002")
+			// 8-digit codes should keep 8-digit format
+			convey.So(faultCodeFormatMap[0x81078603], convey.ShouldEqual, "81078603")
+			convey.So(faultCodeFormatMap[0x80C98008], convey.ShouldEqual, "80c98008")
+		})
 	})
 }

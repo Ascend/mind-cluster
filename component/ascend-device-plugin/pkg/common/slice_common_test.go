@@ -91,11 +91,11 @@ func TestToHexString(t *testing.T) {
 		convey.Convey("ToHexString success", func() {
 			tool := int64Tool{}
 			convey.So(tool.ToHexString(testInt64Source), convey.ShouldEqual, "1")
-		})
-		convey.Convey("ToHexString multiple numbers success", func() {
-			tool := int64Tool{}
-			int64Slice := []int64{1, 3, 5}
-			convey.So(tool.ToHexString(int64Slice), convey.ShouldEqual, "1,3,5")
+	})
+	convey.Convey("ToHexString multiple numbers success", func() {
+		tool := int64Tool{}
+		int64Slice := []int64{1, 3, 5}
+		convey.So(tool.ToHexString(int64Slice), convey.ShouldEqual, "1,3,5")
 		})
 	})
 }
