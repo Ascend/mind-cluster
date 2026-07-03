@@ -54,6 +54,7 @@ const (
 	sixthIndex             = 6
 	linkStatusPart         = 3
 	base64                 = 64
+	trafficPartLen         = 4
 
 	cardHealthy = 0
 
@@ -71,6 +72,11 @@ const (
 
 	limitSize = 1024 * 1024
 )
+
+type uboeBondBandwidth struct {
+	TX *float64
+	RX *float64
+}
 
 var (
 	runHccnCmdMu       sync.Mutex
@@ -242,10 +248,9 @@ func GetNPUOpticalInfo(phyID int32) (map[string]string, error) {
 // GetNPUInterfaceTraffic exec "hccn_tool -i * -bandwidth -g" to get bandwidth info
 func GetNPUInterfaceTraffic(phyID int32) (float64, float64, error) {
 	const (
-		noTraffic      = common.RetError
-		trafficPartLen = 4
-		txStr          = "TX:"
-		rxStr          = "RX:"
+		noTraffic = common.RetError
+		txStr     = "TX:"
+		rxStr     = "RX:"
 	)
 
 	args := []string{"-i", strconv.Itoa(int(phyID)), "-bandwidth", "-g"}
@@ -379,15 +384,18 @@ func GetNPULinkStatusNpu(logicID, udieID, portID int32) (string, error) {
 }
 
 // GetNPUInterfaceTrafficNpu exec "hccn_tool -g -bandwidth -i device_id -u udie_id -p port_id -time [1-226]" to get bandwidth info
-func GetNPUInterfaceTrafficNpu(logicID, udieID, portID, durationTime int32) (float64, float64, error) {
+func GetNPUInterfaceTrafficNpu(logicID, udieID int32, port common.NpuDevPortInfo) (float64, float64, error) {
+	if port.PortType == BondingPortName {
+		return getUboeBandwidth(logicID, int32(port.PortID))
+	}
 	const (
-		noTraffic      = common.RetError
-		trafficPartLen = 4
-		txStr          = "TX:"
-		rxStr          = "RX:"
+		noTraffic    = common.RetError
+		txStr        = "TX:"
+		rxStr        = "RX:"
+		durationTime = int32(100)
 	)
 	args := []string{"-g", "-bandwidth", "-i", strconv.Itoa(int(logicID)), "-u", strconv.Itoa(int(udieID)), "-p",
-		strconv.Itoa(int(portID)), "-time", strconv.Itoa(int(durationTime))}
+		strconv.Itoa(port.PortID), "-time", strconv.Itoa(int(durationTime))}
 	// success result has two lines:
 	// Bandwidth TX: 0.00 MB/sec
 	// Bandwidth RX: 0.00 MB/sec
@@ -428,6 +436,70 @@ func GetNPUInterfaceTrafficNpu(logicID, udieID, portID, durationTime int32) (flo
 		}
 	}
 	return tx, rx, nil
+}
+
+func getUboeBandwidth(logicID, portID int32) (float64, float64, error) {
+	const noTraffic = common.RetError
+	args := []string{"-g", "-bandwidth", "-i", strconv.Itoa(int(logicID)), "-d", fmt.Sprintf("bond%d", logicID)}
+	// success result has two groups:
+	// [dev_name: ethcxxx] get bandwidth result
+	// Bandwidth TX: 0.00 MB/sec
+	// Bandwidth RX: 0.00 MB/sec
+	// [dev_name: ethcxxx] get bandwidth result
+	// Bandwidth TX: 0.00 MB/sec
+	// Bandwidth RX: 0.00 MB/sec
+	outStr, err := getInfoFromHccnTool(args...)
+	hwlog.RunLog.Debugf("hccn_tool command exec result: %v", outStr)
+	if err != nil {
+		return noTraffic, noTraffic, buildHccnErrA5("uboe bond interface traffic", err)
+	}
+	ethInfo0, ethInfo1 := parseUboeBandwidthOutput(outStr)
+	var info uboeBondBandwidth
+	if portID%2 == 0 {
+		info = ethInfo0
+	} else {
+		info = ethInfo1
+	}
+	if info.TX == nil || info.RX == nil {
+		return noTraffic, noTraffic, nil
+	}
+	return *info.TX, *info.RX, nil
+}
+
+func parseUboeBandwidthOutput(outStr string) (uboeBondBandwidth, uboeBondBandwidth) {
+	var group1, group2 uboeBondBandwidth
+	currentGroup := &group1
+	groupCount := 0
+	for _, line := range strings.Split(outStr, newLine) {
+		if line == "" {
+			continue
+		}
+		if strings.Contains(line, "[dev_name:") {
+			groupCount++
+			if groupCount >= 2 {
+				currentGroup = &group2
+			}
+			hwlog.RunLog.Debugf("uboe_bandwidth group count: %v", groupCount)
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) != trafficPartLen {
+			continue
+		}
+		hwlog.RunLog.Debugf("npu uboe bandwidth split as: %v", fields)
+		if strings.Contains(line, "TX:") {
+			if val, err := strconv.ParseFloat(fields[secondIndex], base64); err == nil {
+				currentGroup.TX = &val
+			}
+		}
+		if strings.Contains(line, "RX:") {
+			if val, err := strconv.ParseFloat(fields[secondIndex], base64); err == nil {
+				currentGroup.RX = &val
+			}
+		}
+		hwlog.RunLog.Debugf("uboe bandwidth Tx: %v, Rx:%v", currentGroup.TX, currentGroup.RX)
+	}
+	return group1, group2
 }
 
 // GetNPULinkSpeedNpu exec "hccn_tool -g -speed -i phy_id -u udie_id -p port_id" to get link speed
@@ -600,7 +672,7 @@ func GetIntDataFromStr(str, dataType string) int {
 }
 
 // GetNpuDevNetPortInfo retrieves NPU device information and returns UdieID-PortID mapping
-func GetNpuDevNetPortInfo(logicID int32) (map[int][]int, error) {
+func GetNpuDevNetPortInfo(logicID int32) (map[int][]common.NpuDevPortInfo, error) {
 	runHccnCmdMu.Lock()
 	defer runHccnCmdMu.Unlock()
 	args := []string{"-g", "-dev_info", "-i", strconv.Itoa(int(logicID))}
@@ -624,8 +696,8 @@ func GetNpuDevNetPortInfo(logicID int32) (map[int][]int, error) {
 }
 
 // parseDeviceTable processes device information table and returns UdieID-PortID mapping
-func parseDeviceTable(lines []string) (map[int][]int, error) {
-	result := make(map[int][]int)
+func parseDeviceTable(lines []string) (map[int][]common.NpuDevPortInfo, error) {
+	result := make(map[int][]common.NpuDevPortInfo)
 	isInTable := false
 	separatorCount := 0
 
@@ -654,12 +726,16 @@ func parseDeviceTable(lines []string) (map[int][]int, error) {
 		}
 
 		// Parse device row data
-		uDieID, portID, err := parseDeviceRow(trimmedLine)
+		udiePort, err := checkPortStatus(trimmedLine)
 		if err != nil {
 			hwlog.RunLog.Warnf("Skipping invalid row: %s", trimmedLine)
 			continue
 		}
-		result[uDieID] = append(result[uDieID], portID)
+		result[udiePort.UDieId] = append(result[udiePort.UDieId], common.NpuDevPortInfo{
+			PortID:     udiePort.PortID,
+			PortType:   udiePort.PortType,
+			LinkStatus: udiePort.LinkStatus,
+		})
 	}
 
 	if len(result) == 0 {

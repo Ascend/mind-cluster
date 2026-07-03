@@ -17,7 +17,6 @@ package metrics
 
 import (
 	"fmt"
-	"sort"
 	"strconv"
 	"time"
 
@@ -151,25 +150,24 @@ func initBuildDesc() {
 		if !ok || len(portIDs) == 0 {
 			continue
 		}
-		sort.Ints(portIDs)
-		for _, portID := range portIDs {
+		for _, port := range portIDs {
 			// rx
-			initBuildDescRx(dieID, portID)
+			initBuildDescRx(dieID, port)
 			// tx
-			initBuildDescTx(dieID, portID)
+			initBuildDescTx(dieID, port)
 			// sum
-			buildDesc(dieID, portID, &retryReqSumDesc, retryReqSum, "number of retransmission attempts initiated on ")
-			buildDesc(dieID, portID, &retryAckSumDesc, retryAckSum, "number of response retransmissions on ")
-			buildDesc(dieID, portID, &crcErrorSumDesc, crcErrorSum, "number of crc check errors ")
+			buildDesc(dieID, port, &retryReqSumDesc, retryReqSum, "number of retransmission attempts initiated on ")
+			buildDesc(dieID, port, &retryAckSumDesc, retryAckSum, "number of response retransmissions on ")
+			buildDesc(dieID, port, &crcErrorSumDesc, crcErrorSum, "number of crc check errors ")
 			// uboe
-			buildDesc(dieID, portID, &coreMibRxpausepktsDesc, coreMibRxpausepkts, "uboe total number of rx pause frames on ")
-			buildDesc(dieID, portID, &coreMibTxpausepktsDesc, coreMibTxpausepkts, "uboe total number of tx pause frames on ")
-			buildDesc(dieID, portID, &coreMibRxpfcpktsDesc, coreMibRxpfcpkts, "uboe total number of rx pfc frames on ")
-			buildDesc(dieID, portID, &coreMibTxpfcpktsDesc, coreMibTxpfcpkts, "uboe total number of tx pfc frames on ")
-			buildDesc(dieID, portID, &coreMibRxbadpktsDesc, coreMibRxbadpkts, "uboe total number of rx bad packets on ")
-			buildDesc(dieID, portID, &coreMibTxbadpktsDesc, coreMibTxbadpkts, "uboe total number of tx bad packets on ")
-			buildDesc(dieID, portID, &coreMibRxbadoctetsDesc, coreMibRxbadoctets, "uboe total number of bytes in rx bad packets on ")
-			buildDesc(dieID, portID, &coreMibTxbadoctetsDesc, coreMibTxbadoctets, "uboe total number of bytes in tx bad packets on ")
+			buildDesc(dieID, port, &coreMibRxpausepktsDesc, coreMibRxpausepkts, "uboe total number of rx pause frames on ")
+			buildDesc(dieID, port, &coreMibTxpausepktsDesc, coreMibTxpausepkts, "uboe total number of tx pause frames on ")
+			buildDesc(dieID, port, &coreMibRxpfcpktsDesc, coreMibRxpfcpkts, "uboe total number of rx pfc frames on ")
+			buildDesc(dieID, port, &coreMibTxpfcpktsDesc, coreMibTxpfcpkts, "uboe total number of tx pfc frames on ")
+			buildDesc(dieID, port, &coreMibRxbadpktsDesc, coreMibRxbadpkts, "uboe total number of rx bad packets on ")
+			buildDesc(dieID, port, &coreMibTxbadpktsDesc, coreMibTxbadpkts, "uboe total number of tx bad packets on ")
+			buildDesc(dieID, port, &coreMibRxbadoctetsDesc, coreMibRxbadoctets, "uboe total number of bytes in rx bad packets on ")
+			buildDesc(dieID, port, &coreMibTxbadoctetsDesc, coreMibTxbadoctets, "uboe total number of bytes in tx bad packets on ")
 		}
 	}
 }
@@ -475,47 +473,47 @@ func initUbTxDesc(ch chan<- *prometheus.Desc) {
 	initDesc(ch, txRecvAckFlitDesc)
 }
 
-func initBuildDescRx(dieID, portID int) {
-	buildDesc(dieID, portID, &ubIpv4PktCntRxDesc, ubIpv4PktCntRx, "number of ipv4 ub packets received by rx on ")
-	buildDesc(dieID, portID, &ubIpv6PktCntRxDesc, ubIpv6PktCntRx, "number of ipv6 ub packets received by rx on ")
-	buildDesc(dieID, portID, &unicIpv4PktCntRxDesc, unicIpv4PktCntRx, "number of ipv4 unic packets received by rx on ")
-	buildDesc(dieID, portID, &unicIpv6PktCntRxDesc, unicIpv6PktCntRx, "number of ipv6 unic packets received by rx on ")
-	buildDesc(dieID, portID, &ubCompactPktCntRxDesc, ubCompactPktCntRx, "number of cfg6 packets received by rx on ")
-	buildDesc(dieID, portID, &ubUmocCtphCntRxDesc, ubUmocCtphCntRx, "number of cfg7 clan packets received by rx on ")
-	buildDesc(dieID, portID, &ubUmocNtphCntRxDesc, ubUmocNtphCntRx, "number of cfg7 not clan packets received by rx on ")
-	buildDesc(dieID, portID, &ubMemPktCntRxDesc, ubMemPktCntRx, "number of ub mem packets received by rx on ")
-	buildDesc(dieID, portID, &unknownPktCntRxDesc, unknownPktCntRx, "number of unknown packets received by rx on ")
-	buildDesc(dieID, portID, &dropIndCntRxDesc, dropIndCntRx, "number of packet with drop_ind received by rx on ")
-	buildDesc(dieID, portID, &errIndCntRxDesc, errIndCntRx, "number of err packets received by rx on ")
-	buildDesc(dieID, portID, &toHostPktCntRxDesc, toHostPktCntRx, "number of landed packets after routing on the rx ")
-	buildDesc(dieID, portID, &toImpPktCntRxDesc, toImpPktCntRx, "number of landed enumeration configuration and management packets after routing on the rx ")
-	buildDesc(dieID, portID, &toMarPktCntRxDesc, toMarPktCntRx, "number of landed ub memory packets after routing on the rx ")
-	buildDesc(dieID, portID, &toLinkPktCntRxDesc, toLinkPktCntRx, "number of packets forward from the rx to the tx of the same port after routing ")
-	buildDesc(dieID, portID, &toNocPktCntRxDesc, toNocPktCntRx, "number of p2p packets received on the rx after routing ")
-	buildDesc(dieID, portID, &routeErrCntRxDesc, routeErrCntRx, "number of packets with routing lookup errors after processing received on the rx ")
-	buildDesc(dieID, portID, &outErrCntRxDesc, outErrCntRx, "total number of erroneous packets after validation of packets received on the rx ")
-	buildDesc(dieID, portID, &lengthErrCntRxDesc, lengthErrCntRx, "number of packets with length errors after validation of packets received on the rx ")
-	buildDesc(dieID, portID, &rxBusiFlitNumDesc, rxBusiFlitNum, "number of flits of service packets received from the mac on the rx ")
-	buildDesc(dieID, portID, &rxSendAckFlitNumDesc, rxSendAckFlit, "cumulative number of acks released to the peer on the rx ")
+func initBuildDescRx(dieID int, port common.NpuDevPortInfo) {
+	buildDesc(dieID, port, &ubIpv4PktCntRxDesc, ubIpv4PktCntRx, "number of ipv4 ub packets received by rx on ")
+	buildDesc(dieID, port, &ubIpv6PktCntRxDesc, ubIpv6PktCntRx, "number of ipv6 ub packets received by rx on ")
+	buildDesc(dieID, port, &unicIpv4PktCntRxDesc, unicIpv4PktCntRx, "number of ipv4 unic packets received by rx on ")
+	buildDesc(dieID, port, &unicIpv6PktCntRxDesc, unicIpv6PktCntRx, "number of ipv6 unic packets received by rx on ")
+	buildDesc(dieID, port, &ubCompactPktCntRxDesc, ubCompactPktCntRx, "number of cfg6 packets received by rx on ")
+	buildDesc(dieID, port, &ubUmocCtphCntRxDesc, ubUmocCtphCntRx, "number of cfg7 clan packets received by rx on ")
+	buildDesc(dieID, port, &ubUmocNtphCntRxDesc, ubUmocNtphCntRx, "number of cfg7 not clan packets received by rx on ")
+	buildDesc(dieID, port, &ubMemPktCntRxDesc, ubMemPktCntRx, "number of ub mem packets received by rx on ")
+	buildDesc(dieID, port, &unknownPktCntRxDesc, unknownPktCntRx, "number of unknown packets received by rx on ")
+	buildDesc(dieID, port, &dropIndCntRxDesc, dropIndCntRx, "number of packet with drop_ind received by rx on ")
+	buildDesc(dieID, port, &errIndCntRxDesc, errIndCntRx, "number of err packets received by rx on ")
+	buildDesc(dieID, port, &toHostPktCntRxDesc, toHostPktCntRx, "number of landed packets after routing on the rx ")
+	buildDesc(dieID, port, &toImpPktCntRxDesc, toImpPktCntRx, "number of landed enumeration configuration and management packets after routing on the rx ")
+	buildDesc(dieID, port, &toMarPktCntRxDesc, toMarPktCntRx, "number of landed ub memory packets after routing on the rx ")
+	buildDesc(dieID, port, &toLinkPktCntRxDesc, toLinkPktCntRx, "number of packets forward from the rx to the tx of the same port after routing ")
+	buildDesc(dieID, port, &toNocPktCntRxDesc, toNocPktCntRx, "number of p2p packets received on the rx after routing ")
+	buildDesc(dieID, port, &routeErrCntRxDesc, routeErrCntRx, "number of packets with routing lookup errors after processing received on the rx ")
+	buildDesc(dieID, port, &outErrCntRxDesc, outErrCntRx, "total number of erroneous packets after validation of packets received on the rx ")
+	buildDesc(dieID, port, &lengthErrCntRxDesc, lengthErrCntRx, "number of packets with length errors after validation of packets received on the rx ")
+	buildDesc(dieID, port, &rxBusiFlitNumDesc, rxBusiFlitNum, "number of flits of service packets received from the mac on the rx ")
+	buildDesc(dieID, port, &rxSendAckFlitNumDesc, rxSendAckFlit, "cumulative number of acks released to the peer on the rx ")
 }
 
-func initBuildDescTx(dieID, portID int) {
-	buildDesc(dieID, portID, &ubIpv4PktCntTxDesc, ubIpv4PktCntTx, "number of ipv4 ub packets sent by tx on ")
-	buildDesc(dieID, portID, &ubIpv6PktCntTxDesc, ubIpv6PktCntTx, "number of ipv6 ub packets sent by tx on ")
-	buildDesc(dieID, portID, &unicIpv4PktCntTxDesc, unicIpv4PktCntTx, "number of ipv4 unic packets sent by tx on ")
-	buildDesc(dieID, portID, &unicIpv6PktCntTxDesc, unicIpv6PktCntTx, "number of ipv6 unic packets sent by tx on ")
-	buildDesc(dieID, portID, &ubCompactPktCntTxDesc, ubCompactPktCntTx, "number of cfg6 packets sent by tx on ")
-	buildDesc(dieID, portID, &ubUmocCtphCntTxDesc, ubUmocCtphCntTx, "number of cfg7 clan packets sent by tx on ")
-	buildDesc(dieID, portID, &ubUmocNtphCntTxDesc, ubUmocNtphCntTx, "number of cfg7 not clan packets sent by tx on ")
-	buildDesc(dieID, portID, &ubMemPktCntTxDesc, ubMemPktCntTx, "number of ub mem packets sent by tx on ")
-	buildDesc(dieID, portID, &unknownPktCntTxDesc, unknownPktCntTx, "number of unknown packets sent by tx on ")
-	buildDesc(dieID, portID, &dropIndCntTxDesc, dropIndCntTx, "number of packet with drop_ind sent by tx on ")
-	buildDesc(dieID, portID, &errIndCntTxDesc, errIndCntTx, "number of err packets sent by tx on ")
-	buildDesc(dieID, portID, &lpbkIndCntTxDesc, lpbkIndCntTx, "number of packets looped back at nl by tx on ")
-	buildDesc(dieID, portID, &outErrCntTxDesc, outErrCntTx, "total number of erroneous packets after validation of packets sent on the tx ")
-	buildDesc(dieID, portID, &lengthErrCntTxDesc, lengthErrCntTx, "number of packets with length errors after validation of packets sent on the tx ")
-	buildDesc(dieID, portID, &txBusiFlitNumDesc, txBusiFlitNum, "number of flits of service packets sent from the mac on the tx ")
-	buildDesc(dieID, portID, &txRecvAckFlitDesc, txRecvAckFlit, "cumulative number of acks released to the peer on the tx ")
+func initBuildDescTx(dieID int, port common.NpuDevPortInfo) {
+	buildDesc(dieID, port, &ubIpv4PktCntTxDesc, ubIpv4PktCntTx, "number of ipv4 ub packets sent by tx on ")
+	buildDesc(dieID, port, &ubIpv6PktCntTxDesc, ubIpv6PktCntTx, "number of ipv6 ub packets sent by tx on ")
+	buildDesc(dieID, port, &unicIpv4PktCntTxDesc, unicIpv4PktCntTx, "number of ipv4 unic packets sent by tx on ")
+	buildDesc(dieID, port, &unicIpv6PktCntTxDesc, unicIpv6PktCntTx, "number of ipv6 unic packets sent by tx on ")
+	buildDesc(dieID, port, &ubCompactPktCntTxDesc, ubCompactPktCntTx, "number of cfg6 packets sent by tx on ")
+	buildDesc(dieID, port, &ubUmocCtphCntTxDesc, ubUmocCtphCntTx, "number of cfg7 clan packets sent by tx on ")
+	buildDesc(dieID, port, &ubUmocNtphCntTxDesc, ubUmocNtphCntTx, "number of cfg7 not clan packets sent by tx on ")
+	buildDesc(dieID, port, &ubMemPktCntTxDesc, ubMemPktCntTx, "number of ub mem packets sent by tx on ")
+	buildDesc(dieID, port, &unknownPktCntTxDesc, unknownPktCntTx, "number of unknown packets sent by tx on ")
+	buildDesc(dieID, port, &dropIndCntTxDesc, dropIndCntTx, "number of packet with drop_ind sent by tx on ")
+	buildDesc(dieID, port, &errIndCntTxDesc, errIndCntTx, "number of err packets sent by tx on ")
+	buildDesc(dieID, port, &lpbkIndCntTxDesc, lpbkIndCntTx, "number of packets looped back at nl by tx on ")
+	buildDesc(dieID, port, &outErrCntTxDesc, outErrCntTx, "total number of erroneous packets after validation of packets sent on the tx ")
+	buildDesc(dieID, port, &lengthErrCntTxDesc, lengthErrCntTx, "number of packets with length errors after validation of packets sent on the tx ")
+	buildDesc(dieID, port, &txBusiFlitNumDesc, txBusiFlitNum, "number of flits of service packets sent from the mac on the tx ")
+	buildDesc(dieID, port, &txRecvAckFlitDesc, txRecvAckFlit, "cumulative number of acks released to the peer on the tx ")
 }
 
 func collectUbInfo(logicID int32) []*common.UBInfo {
@@ -527,9 +525,8 @@ func collectUbInfo(logicID int32) []*common.UBInfo {
 		if !ok || len(portIDs) == 0 {
 			continue
 		}
-		sort.Ints(portIDs)
-		for _, portID := range portIDs {
-			newUbInfos = append(newUbInfos, getUBStatInfo(logicID, dieID, portID))
+		for _, port := range portIDs {
+			newUbInfos = append(newUbInfos, getUBStatInfo(logicID, dieID, port.PortID))
 		}
 	}
 	return newUbInfos
@@ -618,8 +615,8 @@ func initDesc(ch chan<- *prometheus.Desc, descs []*prometheus.Desc) {
 	}
 }
 
-func buildDesc(dieID, portID int, desc *[]*prometheus.Desc, metricName, help string) {
+func buildDesc(dieID int, port common.NpuDevPortInfo, desc *[]*prometheus.Desc, metricName, help string) {
 	colcommon.BuildDescSlice(desc, fmt.Sprint(api.MetricsPrefix, metricName, "_",
-		strconv.Itoa(dieID), "_", strconv.Itoa(portID)),
-		fmt.Sprint(help, "dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+		strconv.Itoa(dieID), "_", strconv.Itoa(port.PortID)),
+		fmt.Sprint(help, "dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(port.PortID), " type:", port.PortType))
 }

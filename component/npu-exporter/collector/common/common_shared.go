@@ -19,5 +19,5 @@ var (
 	// DevType npu device type
 	DevType string
 	// NpuDevPortInfos npu dev port infos
-	NpuDevPortInfos NpuDevPortInfo
+	NpuDevPortInfos NpuDevPortsInfo
 )

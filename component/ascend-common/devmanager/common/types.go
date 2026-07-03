@@ -23,6 +23,13 @@ type UBPort struct {
 	LinkStatus string
 }
 
+// NpuDevPortInfo ub port info without udie
+type NpuDevPortInfo struct {
+	PortID     int
+	PortType   string
+	LinkStatus string
+}
+
 // UBPortsDownSnapshot indicates the down ports count of each PortType from one GetAllUBports call,
 type UBPortsDownSnapshot struct {
 	BondingDownCnt int

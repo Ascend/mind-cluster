@@ -17,7 +17,6 @@ package metrics
 
 import (
 	"fmt"
-	"sort"
 	"strconv"
 	"time"
 
@@ -57,11 +56,6 @@ var (
 	notSupportedNetworkNpuDevices = map[uint32]bool{
 		api.Atlas3501PMainBoardID: true,
 	}
-)
-
-const (
-	// bandwidthTime bandwidth's time param
-	bandwidthTime = 100
 )
 
 type netInfoCache struct {
@@ -281,8 +275,8 @@ func collectNetworkNpuInfo(logicID int32) []*common.NpuNetInfo {
 		if !ok || len(portIDs) == 0 {
 			continue
 		}
-		sort.Ints(portIDs)
-		for _, portID := range portIDs {
+		for _, port := range portIDs {
+			portID := port.PortID
 			netInfo := common.NpuNetInfo{
 				LinkStatusInfo: &common.LinkStatusInfo{},
 				BandwidthInfo:  &common.BandwidthInfo{},
@@ -296,7 +290,7 @@ func collectNetworkNpuInfo(logicID int32) []*common.NpuNetInfo {
 				logWarnMetricsWithLimit(fmt.Sprint(colcommon.DomainForLinkState, dieID, portID), logicID, dieID, portID, err)
 				netInfo.LinkStatusInfo.LinkState = colcommon.Unknown
 			}
-			if tx, rx, err := hccn.GetNPUInterfaceTrafficNpu(logicID, int32(dieID), int32(portID), int32(bandwidthTime)); err == nil {
+			if tx, rx, err := hccn.GetNPUInterfaceTrafficNpu(logicID, int32(dieID), port); err == nil {
 				netInfo.BandwidthInfo.RxValue = rx
 				netInfo.BandwidthInfo.TxValue = tx
 				hwlog.ResetErrCnt(fmt.Sprint(colcommon.DomainForBandwidth, dieID, portID), logicID)
@@ -366,20 +360,20 @@ func initNpuNetWorkDesc() {
 		if !ok || len(portIDs) == 0 {
 			continue
 		}
-		sort.Ints(portIDs)
-		for _, portID := range portIDs {
+		for _, port := range portIDs {
+			portID := port.PortID
 			colcommon.BuildDescSlice(&linkStatusDesc, fmt.Sprint(api.MetricsPrefix, "link_status_", strconv.Itoa(dieID),
 				"_", strconv.Itoa(portID)), fmt.Sprint("the npu link status ", "dieId:", strconv.Itoa(dieID),
-				" portId:", strconv.Itoa(portID)))
+				" portId:", strconv.Itoa(portID), " type:", port.PortType))
 			colcommon.BuildDescSlice(&bandwidthTxDesc, fmt.Sprint(api.MetricsPrefix, "bandwidth_tx_", strconv.Itoa(dieID),
 				"_", strconv.Itoa(portID)), fmt.Sprint("the npu port transport speed, unit is 'MB/s' ", "dieId:",
-				strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+				strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
 			colcommon.BuildDescSlice(&bandwidthRxDesc, fmt.Sprint(api.MetricsPrefix, "bandwidth_rx_", strconv.Itoa(dieID),
 				"_", strconv.Itoa(portID)), fmt.Sprint("the npu port receive speed, unit is 'MB/s' ", "dieId:",
-				strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+				strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
 			colcommon.BuildDescSlice(&npuChipPortLinkSpeedDesc, fmt.Sprint(api.MetricsPrefix, "link_speed_",
 				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("the npu port link speed, unit is 'G' ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID)))
+				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
 		}
 	}
 }
