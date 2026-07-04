@@ -483,7 +483,18 @@
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002003180012_p3390131316172"><a name="zh-cn_topic_0000002003180012_p3390131316172"></a><a name="zh-cn_topic_0000002003180012_p3390131316172"></a>git clone https://gitcode.com/mindspore/mindformers.git</p>
 <p id="zh-cn_topic_0000002003180012_p5390101317175"><a name="zh-cn_topic_0000002003180012_p5390101317175"></a><a name="zh-cn_topic_0000002003180012_p5390101317175"></a>cd mindformers</p>
-<p id="zh-cn_topic_0000002003180012_p9390151318171"><a name="zh-cn_topic_0000002003180012_p9390151318171"></a><a name="zh-cn_topic_0000002003180012_p9390151318171"></a>git checkout 15ff59dd55b84b4dfc7de03f7f20f6e2be3669ec</p>
+<p id="zh-cn_topic_0000002003180012_p9390151318171"><a name="zh-cn_topic_0000002003180012_p9390151318171"></a><a name="zh-cn_topic_0000002003180012_p9390151318171"></a>git checkout 14bc761a09b272657e28a5340efdf91737dfdf82</p>
+</td>
+</tr>
+<tr id="zh-cn_topic_0000002003180012_row_hyperparallel"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002003180012_p_hyperparallel_name"><a name="zh-cn_topic_0000002003180012_p_hyperparallel_name"></a><a name="zh-cn_topic_0000002003180012_p_hyperparallel_name"></a>HyperParallel</p>
+</td>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.2 "><p id="zh-cn_topic_0000002003180012_p_hyperparallel_required"><a name="zh-cn_topic_0000002003180012_p_hyperparallel_required"></a><a name="zh-cn_topic_0000002003180012_p_hyperparallel_required"></a>是</p>
+</td>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.3 "><p id="zh-cn_topic_0000002003180012_p_hyperparallel_desc"><a name="zh-cn_topic_0000002003180012_p_hyperparallel_desc"></a><a name="zh-cn_topic_0000002003180012_p_hyperparallel_desc"></a>昇腾超节点亲和的分布式并行加速库。</p>
+</td>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002003180012_p_hyperparallel_clone"><a name="zh-cn_topic_0000002003180012_p_hyperparallel_clone"></a><a name="zh-cn_topic_0000002003180012_p_hyperparallel_clone"></a>git clone https://gitcode.com/mindspore/hyper-parallel.git</p>
+<p id="zh-cn_topic_0000002003180012_p_hyperparallel_cd"><a name="zh-cn_topic_0000002003180012_p_hyperparallel_cd"></a><a name="zh-cn_topic_0000002003180012_p_hyperparallel_cd"></a>cd hyper-parallel</p>
+<p id="zh-cn_topic_0000002003180012_p_hyperparallel_checkout"><a name="zh-cn_topic_0000002003180012_p_hyperparallel_checkout"></a><a name="zh-cn_topic_0000002003180012_p_hyperparallel_checkout"></a>git checkout 18a395befc6f9a60019c63a3e3878654ae2849d7</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002003180012_row14237113817167"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002003180012_p133901013201717"><a name="zh-cn_topic_0000002003180012_p133901013201717"></a><a name="zh-cn_topic_0000002003180012_p133901013201717"></a>requirements.txt文件</p>
@@ -990,9 +1001,14 @@
     cd /data/atlas_dls/public/code
     git clone https://gitcode.com/mindspore/mindformers.git
     cd mindformers
-    git checkout 15ff59dd55b84b4dfc7de03f7f20f6e2be3669ec
-    # 将mindformers重命名为QWEN3_for_MS_code
+    git checkout 14bc761a09b272657e28a5340efdf91737dfdf82
     cd ..
+    git clone https://gitcode.com/mindspore/hyper-parallel.git
+    cd hyper-parallel
+    git checkout 18a395befc6f9a60019c63a3e3878654ae2849d7
+    cp -r hyper_parallel ../mindformers
+    cd ..
+    # 将mindformers重命名为QWEN3_for_MS_code
     mv mindformers QWEN3_for_MS_code
     ```
 
