@@ -258,7 +258,7 @@ func (sc *SnapshotChecker) setAndCleanSnapshot(trackerKey string, allFinished bo
 					"snapshot timeout"); err != nil {
 					hwlog.RunLog.Errorf("Failed to write snapshot status for %s: %v", snapshotPath, err)
 				}
-				if err := sc.cleanupSnapshotPath(snapshotPath); err != nil {
+				if err := cleanupSnapshotPath(snapshotPath); err != nil {
 					hwlog.RunLog.Errorf("Failed to cleanup snapshot path %s: %v", snapshotPath, err)
 				}
 			}
@@ -342,7 +342,7 @@ func (sc *SnapshotChecker) checkPodSnapshotStatus(pod *corev1.Pod) bool {
 	return annoValue == common.TrueBool
 }
 
-func (sc *SnapshotChecker) cleanupSnapshotPath(snapshotPath string) error {
+func cleanupSnapshotPath(snapshotPath string) error {
 	if snapshotPath == "" {
 		return fmt.Errorf("snapshot path is empty")
 	}
