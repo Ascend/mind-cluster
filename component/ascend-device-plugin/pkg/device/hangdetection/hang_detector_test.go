@@ -68,7 +68,7 @@ func resetHangState() {
 func newTestHangDetector() *HangDetector {
 	return &HangDetector{
 		dmgr:            &devmanager.DeviceManager{},
-		npuDevPortInfos: make(map[int][]int),
+		npuDevPortInfos: make(map[int][]npuCommon.NpuDevPortInfo),
 	}
 }
 
@@ -235,7 +235,7 @@ func TestCollectUBTraffic(t *testing.T) {
 	convey.Convey("test collectUBTraffic", t, func() {
 		convey.Convey("when port info is empty, UB metrics should remain 0", func() {
 			hd := newTestHangDetector()
-			hd.npuDevPortInfos = map[int][]int{}
+			hd.npuDevPortInfos = map[int][]npuCommon.NpuDevPortInfo{}
 
 			metrics := &HangMetrics{}
 			hd.collectUBTraffic(mockLogicID, metrics)
@@ -245,7 +245,7 @@ func TestCollectUBTraffic(t *testing.T) {
 
 		convey.Convey("when get UB stat success, should accumulate tx and rx", func() {
 			hd := newTestHangDetector()
-			hd.npuDevPortInfos = map[int][]int{0: {1}}
+			hd.npuDevPortInfos = map[int][]npuCommon.NpuDevPortInfo{0: {{PortID: 1}}}
 			patches := gomonkey.ApplyFuncReturn(hccn.GetNPUUbStatInfo, map[string]string{
 				txBusiFlitNum: fmt.Sprintf("%d", pktNum),
 				rxBusiFlitNum: fmt.Sprintf("%d", pktNum),
@@ -502,7 +502,7 @@ func TestGetNpuDevNetPortInfos(t *testing.T) {
 			patches := gomonkey.ApplyMethod(&devmanager.DeviceManager{}, "GetDeviceList",
 				func(_ *devmanager.DeviceManager) (int32, []int32, error) {
 					return 1, []int32{0}, nil
-				}).ApplyFuncReturn(hccn.GetNpuDevNetPortInfo, map[int][]int{0: {4, 5}}, nil)
+				}).ApplyFuncReturn(hccn.GetNpuDevNetPortInfo, map[int][]npuCommon.NpuDevPortInfo{0: {{PortID: 4}, {PortID: 5}}}, nil)
 			defer patches.Reset()
 
 			result, err := hd.getNpuDevNetPortInfos()
@@ -647,10 +647,10 @@ func TestStartHangDetectionProducer(t *testing.T) {
 		})
 
 		convey.Convey("when dmgr is not nil, should start producer", func() {
-			hangDetector = &HangDetector{npuDevPortInfos: make(map[int][]int)}
+			hangDetector = &HangDetector{npuDevPortInfos: make(map[int][]npuCommon.NpuDevPortInfo)}
 			called := false
 			patches := gomonkey.ApplyPrivateMethod(hangDetector, "getNpuDevNetPortInfos",
-				func(*HangDetector) (map[int][]int, error) { return nil, fmt.Errorf("mock error") }).
+				func(*HangDetector) (map[int][]npuCommon.NpuDevPortInfo, error) { return nil, fmt.Errorf("mock error") }).
 				ApplyFuncReturn(common.LoadHangDetectionConfigFromFile).
 				ApplyFunc(runHangDetectionProducer, func(ctx context.Context) {
 					called = true

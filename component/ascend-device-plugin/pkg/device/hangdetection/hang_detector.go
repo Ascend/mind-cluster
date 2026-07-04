@@ -60,11 +60,11 @@ const (
 // HangDetector implements NPU hang detection
 type HangDetector struct {
 	dmgr            devmanager.DeviceInterface
-	npuDevPortInfos map[int][]int
+	npuDevPortInfos map[int][]npuCommon.NpuDevPortInfo
 }
 
 var (
-	hangDetector   = &HangDetector{npuDevPortInfos: make(map[int][]int)}
+	hangDetector   = &HangDetector{npuDevPortInfos: make(map[int][]npuCommon.NpuDevPortInfo)}
 	hangStateMap   = make(map[int32]*HangState)
 	hangStateMapMu sync.Mutex
 	clkTck         = int64(100)
@@ -115,7 +115,7 @@ func runHangDetectionProducer(ctx context.Context) {
 	}
 }
 
-func (hd *HangDetector) getNpuDevNetPortInfos() (map[int][]int, error) {
+func (hd *HangDetector) getNpuDevNetPortInfos() (map[int][]npuCommon.NpuDevPortInfo, error) {
 	if common.ParamOption.RealCardType != api.Ascend910A5 {
 		return nil, nil
 	}
@@ -124,7 +124,7 @@ func (hd *HangDetector) getNpuDevNetPortInfos() (map[int][]int, error) {
 		return nil, err
 	}
 	var err1 error = nil
-	var netPortInfos map[int][]int = nil
+	var netPortInfos map[int][]npuCommon.NpuDevPortInfo = nil
 	for _, logicID := range npuList {
 		netPortInfos, err1 = hccn.GetNpuDevNetPortInfo(logicID)
 		if err1 != nil {
@@ -255,12 +255,12 @@ func (hd *HangDetector) collectUBTraffic(logicID int32, metrics *HangMetrics) {
 	}
 	var currentTotalTx uint64
 	var currentTotalRx uint64
-	for udieID, portIDs := range hd.npuDevPortInfos {
-		for _, portID := range portIDs {
-			ubStat, err := hccn.GetNPUUbStatInfo(logicID, int32(udieID), int32(portID))
+	for udieID, portInfos := range hd.npuDevPortInfos {
+		for _, portInfo := range portInfos {
+			ubStat, err := hccn.GetNPUUbStatInfo(logicID, int32(udieID), int32(portInfo.PortID))
 			if err != nil {
 				hwlog.RunLog.Debugf("hang detection get UB stat failed, logicID=%d, udieID=%d, portID=%d: %v",
-					logicID, udieID, portID, err)
+					logicID, udieID, portInfo.PortID, err)
 				continue
 			}
 			if txVal := hccn.GetIntDataFromStr(ubStat[txBusiFlitNum], txBusiFlitNum); txVal > 0 {
