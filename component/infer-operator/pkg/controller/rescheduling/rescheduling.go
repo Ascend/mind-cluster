@@ -133,12 +133,39 @@ func (r *Rescheduler) handlePodDelete(obj interface{}) {
 	if !r.isValidInferPod(pod) {
 		return
 	}
+	// only trigger workload rebuild when gang scheduling is configured on the
+	// instanceSet. A single STS/Deployment's replicas together form one
+	// inference instance (a communication domain); without gang scheduling,
+	// losing one pod does not require rebuilding the whole workload.
+	if !r.isGangScheduled(pod) {
+		hwlog.RunLog.Infof("pod %s/%s deleted, but gang scheduling is not configured, skip workload rebuild",
+			pod.Namespace, pod.Name)
+		return
+	}
 	hwlog.RunLog.Infof("pod %s/%s deleted, trigger its workload rebuild",
 		pod.Namespace, pod.Name)
 	if err := r.processFaultEvent(pod); err != nil {
 		hwlog.RunLog.Errorf("failed to process delete for pod %s/%s: %v",
 			pod.Namespace, pod.Name, err)
 	}
+}
+
+// isGangScheduled checks whether gang scheduling is enabled on the instanceSet
+// that the pod belongs to. The check follows the same convention as
+// statefulset_handler/deployment_handler: instanceSet.Labels[GangScheduleLabelKey] == "true".
+func (r *Rescheduler) isGangScheduled(pod *corev1.Pod) bool {
+	_, instanceSetName := r.getWorkLoadNameAndInstanceSetName(pod)
+	instanceSetNamespacedName := types.NamespacedName{
+		Namespace: pod.Namespace,
+		Name:      instanceSetName,
+	}
+	var instanceSet apiv1.InstanceSet
+	if err := r.client.Get(context.Background(), instanceSetNamespacedName, &instanceSet); err != nil {
+		hwlog.RunLog.Errorf("failed to get instanceSet %s/%s when checking gang schedule: %v",
+			instanceSetNamespacedName.Namespace, instanceSetNamespacedName.Name, err)
+		return false
+	}
+	return instanceSet.Labels[common.GangScheduleLabelKey] == common.TrueBool
 }
 
 func (r *Rescheduler) isValidFaultPod(pod *corev1.Pod) bool {
