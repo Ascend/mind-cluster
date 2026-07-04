@@ -336,7 +336,7 @@ func TestGetWorkMapping(t *testing.T) {
 			err2 := getWorKMapping(map[string]interface{}{}, &SuperPodInfo{NodeDeviceMap: nil})
 			convey.So(err2, convey.ShouldNotBeNil)
 		})
-		convey.Convey("should return err when get work INFo err", func() {
+		convey.Convey("should return err when get work INFO err", func() {
 			superPodInfos := map[string]*SuperPodInfo{
 				"test1": {Version: DiagVersionA3, NodeDeviceMap: nil},
 				"test2": {Version: DiagVersionA3, NodeDeviceMap: map[string]*NodeDevice{
@@ -631,8 +631,6 @@ func TestStoreA51D2DNpuFmLinkAndNpuEidMapInfo2(t *testing.T) {
 			defer patch1.Reset()
 			patch2 := gomonkey.ApplyFuncReturn(findEid, "1")
 			defer patch2.Reset()
-			patch3 := gomonkey.ApplyFuncReturn(getNpuMapValueInfoUnit, algo.NpuInfo{})
-			defer patch3.Reset()
 			ret1, ret2 := storeA51D2DNpuFmLinkAndNpuEidMapInfo(0, ids, &param)
 			convey.So(ret1, convey.ShouldResemble, map[string]algo.NpuInfo{
 				"1": algo.NpuInfo{
