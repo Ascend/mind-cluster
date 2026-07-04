@@ -430,9 +430,45 @@ func TestRescheduler_handlePodDelete(t *testing.T) {
 			convey.So(recorded, convey.ShouldEqual, 0)
 		})
 
+		convey.Convey("Should skip when instanceSet is not found (cannot determine gang schedule)", func() {
+			// no instanceSet in fakeClient, isGangScheduled returns false
+			fakeClient := newFakeClient()
+			rescheduler := NewRescheduler(fakeClient, common.FaultRetryTimesCleanupInterval)
+			pod := createTestPod("test-pod", "default", nil, map[string]string{
+				common.OperatorNameKey:          common.TrueBool,
+				common.InferServiceNameLabelKey: "test-service",
+				common.InstanceSetNameLabelKey:  "test-role",
+				common.InstanceIndexLabelKey:    "0",
+			})
+			rescheduler.handlePodDelete(pod)
+			rescheduler.Lock()
+			recorded := len(rescheduler.faultWorkLoadMap)
+			rescheduler.Unlock()
+			convey.So(recorded, convey.ShouldEqual, 0)
+		})
+
+		convey.Convey("Should skip when gang scheduling is not configured on instanceSet", func() {
+			instanceSet := createTestInstanceSet("test-service-test-role", "default", nil)
+			// no GangScheduleLabelKey=true on instanceSet
+			fakeClient := newFakeClient(instanceSet)
+			rescheduler := NewRescheduler(fakeClient, common.FaultRetryTimesCleanupInterval)
+			pod := createTestPod("test-pod", "default", nil, map[string]string{
+				common.OperatorNameKey:          common.TrueBool,
+				common.InferServiceNameLabelKey: "test-service",
+				common.InstanceSetNameLabelKey:  "test-role",
+				common.InstanceIndexLabelKey:    "0",
+			})
+			rescheduler.handlePodDelete(pod)
+			rescheduler.Lock()
+			recorded := len(rescheduler.faultWorkLoadMap)
+			rescheduler.Unlock()
+			convey.So(recorded, convey.ShouldEqual, 0)
+		})
+
 		convey.Convey("Should record fault and not panic when pod has no "+
 			"PodStatusAnnotation (healthy pod force-deleted)", func() {
 			instanceSet := createTestInstanceSet("test-service-test-role", "default", nil)
+			instanceSet.Labels[common.GangScheduleLabelKey] = common.TrueBool
 			fakeClient := newFakeClient(instanceSet)
 			rescheduler := NewRescheduler(fakeClient, common.FaultRetryTimesCleanupInterval)
 			factory := &workload.WorkLoadHandlerFactory{}
