@@ -31,7 +31,13 @@ const (
 	inferServiceGroupSameRack = 1
 	inferServiceGroupSameSP   = 2
 	inferServiceGroupOtherSP  = 3
+
+	superPodIDShift = 32
 )
+
+func rackKey(superPodID, rackID int32) int64 {
+	return (int64(superPodID) << superPodIDShift) | int64(uint32(rackID))
+}
 
 func (tp *chip8node8ra64sp) isInferServiceJobCheck() bool {
 	if tp.Label == nil {
@@ -46,15 +52,18 @@ func (tp *chip8node8ra64sp) isInferServiceJobCheck() bool {
 }
 
 func (tp *chip8node8ra64sp) getInferServiceScheduledInfo() (
-	map[int32]*inferServiceRackInfo,
+	map[int64]*inferServiceRackInfo,
 	map[int32]*inferServiceSPInfo,
 ) {
-	sameRacks := make(map[int32]*inferServiceRackInfo)
+	sameRacks := make(map[int64]*inferServiceRackInfo)
 	sameSPs := make(map[int32]*inferServiceSPInfo)
 
 	if tp.inferServiceID == "" || tp.ScheduleEnv.Jobs == nil {
 		return sameRacks, sameSPs
 	}
+
+	klog.V(util.LogDebugLev).Infof("infer service job %s: start collecting scheduled rack/SP info, inferServiceID=%s",
+		tp.Name, tp.inferServiceID)
 
 	for jobID, job := range tp.ScheduleEnv.Jobs {
 		if job.Label == nil {
@@ -73,13 +82,17 @@ func (tp *chip8node8ra64sp) getInferServiceScheduledInfo() (
 
 		for _, spNodes := range job.SuperPods {
 			for _, sn := range spNodes {
-				if _, exist := sameRacks[sn.RackID]; !exist {
-					sameRacks[sn.RackID] = &inferServiceRackInfo{
+				if _, exist := sameRacks[rackKey(sn.SuperPodID, sn.RackID)]; !exist {
+					klog.V(util.LogDebugLev).Infof("infer service job %s: collect rack from job %s, superPodID=%d, rackID=%d",
+						tp.Name, jobID, sn.SuperPodID, sn.RackID)
+					sameRacks[rackKey(sn.SuperPodID, sn.RackID)] = &inferServiceRackInfo{
 						rackID:     sn.RackID,
 						superPodID: sn.SuperPodID,
 					}
 				}
 				if _, exist := sameSPs[sn.SuperPodID]; !exist {
+					klog.V(util.LogDebugLev).Infof("infer service job %s: collect SP from job %s, superPodID=%d",
+						tp.Name, jobID, sn.SuperPodID)
 					sameSPs[sn.SuperPodID] = &inferServiceSPInfo{
 						superPodID: sn.SuperPodID,
 					}
@@ -93,7 +106,7 @@ func (tp *chip8node8ra64sp) getInferServiceScheduledInfo() (
 
 func (tp *chip8node8ra64sp) enrichRackAndSPInfo(
 	superPodMap map[int32]superPod,
-	sameRacks map[int32]*inferServiceRackInfo,
+	sameRacks map[int64]*inferServiceRackInfo,
 	sameSPs map[int32]*inferServiceSPInfo,
 ) {
 	for spID, sp := range superPodMap {
@@ -107,7 +120,9 @@ func (tp *chip8node8ra64sp) enrichRackAndSPInfo(
 			if freeNodes == rackNodeNum {
 				spIdleRacks++
 			}
-			if info, ok := sameRacks[rackID]; ok {
+			if info, ok := sameRacks[rackKey(spID, rackID)]; ok {
+				klog.V(util.LogDebugLev).Infof("infer service: enrich rack, superPodID=%d, rackID=%d, freeNodes=%d",
+					spID, rackID, freeNodes)
 				info.freeNodes = freeNodes
 			}
 		}
@@ -193,6 +208,9 @@ func (tp *chip8node8ra64sp) selectNodesForInferService(
 	spBlockCount := tp.ReqNPUNum / tp.SpBlockNPUNum
 	selectedNodes := make(map[string][]plugin.SuperNode)
 
+	klog.V(util.LogInfoLev).Infof("infer service job %s: start selecting nodes, spBlock=%d, spBlockCount=%d, superPodMap size=%d, sameRacks=%d, sameSPs=%d",
+		tp.Name, tp.spBlock, spBlockCount, len(superPodMap), len(sameRacks), len(sameSPs))
+
 	pq := tp.buildInferServicePriorityQueue(superPodMap, sameRacks, sameSPs)
 	for i := 0; i < spBlockCount; i++ {
 		var item *inferServicePQItem
@@ -200,18 +218,24 @@ func (tp *chip8node8ra64sp) selectNodesForInferService(
 			item = heap.Pop(pq).(*inferServicePQItem)
 			sp, ok := superPodMap[item.superPodID]
 			if !ok || len(sp) < tp.spBlock {
+				klog.V(util.LogDebugLev).Infof("infer service: skip PQ item superPodID=%d, rackID=%d, sp not found or insufficient, spLen=%d",
+					item.superPodID, item.rackID, len(sp))
 				item = nil
 				continue
 			}
 			rackGroup := transferSuperPodToRackIdMap(sp)
 			nodesInRack, rackOk := rackGroup[item.rackID]
 			if !rackOk || len(nodesInRack) < tp.spBlock {
+				klog.V(util.LogDebugLev).Infof("infer service: skip PQ item superPodID=%d, rackID=%d, rack not found or insufficient, nodesInRack=%d",
+					item.superPodID, item.rackID, len(nodesInRack))
 				item = nil
 				continue
 			}
 			break
 		}
 		if item == nil {
+			klog.V(util.LogDebugLev).Infof("infer service job %s: PQ exhausted, no valid item found for spBlock[%d/%d]",
+				tp.Name, i+1, spBlockCount)
 			break
 		}
 
@@ -220,6 +244,8 @@ func (tp *chip8node8ra64sp) selectNodesForInferService(
 		nodesInRack := rackGroup[item.rackID]
 
 		spIndex := strconv.Itoa(i)
+		klog.V(util.LogInfoLev).Infof("infer service job %s: select spBlock[%d/%d], superPodID=%d, rackID=%d, group=%d, freeNodes=%d",
+			tp.Name, i+1, spBlockCount, item.superPodID, item.rackID, item.group, item.freeNodes)
 		selectedNodes[spIndex] = make([]plugin.SuperNode, 0, tp.spBlock)
 		for j := 0; j < tp.spBlock; j++ {
 			selectedNodes[spIndex] = append(selectedNodes[spIndex], plugin.SuperNode{
@@ -230,7 +256,7 @@ func (tp *chip8node8ra64sp) selectNodesForInferService(
 			delete(sp, nodesInRack[j].name)
 		}
 
-		sameRacks[item.rackID] = &inferServiceRackInfo{
+		sameRacks[rackKey(item.superPodID, item.rackID)] = &inferServiceRackInfo{
 			rackID:     item.rackID,
 			superPodID: item.superPodID,
 		}
@@ -242,6 +268,8 @@ func (tp *chip8node8ra64sp) selectNodesForInferService(
 	}
 
 	if len(selectedNodes) < spBlockCount {
+		klog.V(util.LogInfoLev).Infof("infer service job %s: schedule failed, required %d sp-block, got %d, superPodMap=%d",
+			tp.Name, spBlockCount, len(selectedNodes), len(superPodMap))
 		return nil, fmt.Errorf("infer service schedule failed, required %d sp-block, got %d",
 			spBlockCount, len(selectedNodes))
 	}
@@ -254,27 +282,31 @@ func (tp *chip8node8ra64sp) selectNodesForInferService(
 
 func (tp *chip8node8ra64sp) buildInferServicePriorityQueue(
 	superPodMap map[int32]superPod,
-	sameRacks map[int32]*inferServiceRackInfo,
+	sameRacks map[int64]*inferServiceRackInfo,
 	sameSPs map[int32]*inferServiceSPInfo,
 ) *inferServicePQ {
 	pq := make(inferServicePQ, 0)
 	heap.Init(&pq)
 
-	for rackID, rackInfo := range sameRacks {
+	for _, rackInfo := range sameRacks {
 		sp, ok := superPodMap[rackInfo.superPodID]
 		if !ok {
 			continue
 		}
 		rackGroup := transferSuperPodToRackIdMap(sp)
-		if _, rackOk := rackGroup[rackID]; !rackOk {
+		if _, rackOk := rackGroup[rackInfo.rackID]; !rackOk {
 			continue
 		}
 		if rackInfo.freeNodes < tp.spBlock {
+			klog.V(util.LogDebugLev).Infof("infer service: skip sameRack PQ, superPodID=%d, rackID=%d, freeNodes=%d < spBlock=%d",
+				rackInfo.superPodID, rackInfo.rackID, rackInfo.freeNodes, tp.spBlock)
 			continue
 		}
+		klog.V(util.LogDebugLev).Infof("infer service: add sameRack to PQ, superPodID=%d, rackID=%d, freeNodes=%d, spBlock=%d",
+			rackInfo.superPodID, rackInfo.rackID, rackInfo.freeNodes, tp.spBlock)
 		heap.Push(&pq, &inferServicePQItem{
 			superPodID: rackInfo.superPodID,
-			rackID:     rackID,
+			rackID:     rackInfo.rackID,
 			freeNodes:  rackInfo.freeNodes,
 			group:      inferServiceGroupSameRack,
 		})
@@ -288,12 +320,14 @@ func (tp *chip8node8ra64sp) buildInferServicePriorityQueue(
 		rackGroup := transferSuperPodToRackIdMap(sp)
 		idleRackNum, totalFree := countSPMetrics(rackGroup)
 		for rackID, nodes := range rackGroup {
-			if _, excluded := sameRacks[rackID]; excluded {
+			if _, excluded := sameRacks[rackKey(spID, rackID)]; excluded {
 				continue
 			}
 			if len(nodes) < tp.spBlock {
 				continue
 			}
+			klog.V(util.LogDebugLev).Infof("infer service: add sameSP to PQ, superPodID=%d, rackID=%d, freeNodes=%d, idleRackNum=%d, totalFree=%d",
+				spID, rackID, len(nodes), idleRackNum, totalFree)
 			heap.Push(&pq, &inferServicePQItem{
 				superPodID:  spID,
 				rackID:      rackID,
@@ -315,6 +349,8 @@ func (tp *chip8node8ra64sp) buildInferServicePriorityQueue(
 			if len(nodes) < tp.spBlock {
 				continue
 			}
+			klog.V(util.LogDebugLev).Infof("infer service: add otherSP to PQ, superPodID=%d, rackID=%d, freeNodes=%d, idleRackNum=%d, totalFree=%d",
+				spID, rackID, len(nodes), idleRackNum, totalFree)
 			heap.Push(&pq, &inferServicePQItem{
 				superPodID:  spID,
 				rackID:      rackID,

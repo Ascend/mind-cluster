@@ -111,12 +111,78 @@ func TestGetInferServiceScheduledInfo(t *testing.T) {
 			t.Errorf("expected empty maps when only current job exists")
 		}
 	})
+
+	t.Run("multi-SuperPod with same RackID should not collide", func(t *testing.T) {
+		tp := &chip8node8ra64sp{}
+		tp.inferServiceID = "test-id"
+		tp.Name = "current-job"
+		tp.ScheduleEnv = plugin.ScheduleEnv{
+			ClusterCache: plugin.ClusterCache{
+				Jobs: map[api.JobID]plugin.SchedulerJob{
+					"job-a": {
+						SchedulerJobAttr: util.SchedulerJobAttr{
+							ComJob: util.ComJob{
+								Label: map[string]string{inferServiceIDLabelKey: "test-id"},
+							},
+						},
+						SuperPods: map[string][]plugin.SuperNode{
+							"sp-a": {
+								{Name: "node-a-0", SuperPodID: 0, RackID: 0},
+							},
+						},
+					},
+					"job-b": {
+						SchedulerJobAttr: util.SchedulerJobAttr{
+							ComJob: util.ComJob{
+								Label: map[string]string{inferServiceIDLabelKey: "test-id"},
+							},
+						},
+						SuperPods: map[string][]plugin.SuperNode{
+							"sp-b": {
+								{Name: "node-b-0", SuperPodID: 1, RackID: 0},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		racks, sps := tp.getInferServiceScheduledInfo()
+
+		if len(racks) != 2 {
+			t.Errorf("expected 2 racks (one per SuperPod), got %d — possible key collision", len(racks))
+		}
+
+		infoA, okA := racks[rackKey(0, 0)]
+		if !okA {
+			t.Errorf("expected rackKey(0,0) from job-a to exist")
+		} else {
+			if infoA.superPodID != 0 || infoA.rackID != 0 {
+				t.Errorf("rackKey(0,0): expected superPodID=0, rackID=0, got superPodID=%d, rackID=%d",
+					infoA.superPodID, infoA.rackID)
+			}
+		}
+
+		infoB, okB := racks[rackKey(1, 0)]
+		if !okB {
+			t.Errorf("expected rackKey(1,0) from job-b to exist — SuperPodID=1, RackID=0")
+		} else {
+			if infoB.superPodID != 1 || infoB.rackID != 0 {
+				t.Errorf("rackKey(1,0): expected superPodID=1, rackID=0, got superPodID=%d, rackID=%d",
+					infoB.superPodID, infoB.rackID)
+			}
+		}
+
+		if len(sps) != 2 {
+			t.Errorf("expected 2 SPs, got %d", len(sps))
+		}
+	})
 }
 
 func TestEnrichRackAndSPInfo(t *testing.T) {
 	t.Run("empty superPodMap should not panic", func(t *testing.T) {
 		superPodMap := map[int32]superPod{}
-		sameRacks := map[int32]*inferServiceRackInfo{}
+		sameRacks := map[int64]*inferServiceRackInfo{}
 		sameSPs := map[int32]*inferServiceSPInfo{}
 
 		tp := &chip8node8ra64sp{}
@@ -264,7 +330,7 @@ func TestBuildInferServicePriorityQueue1(t *testing.T) {
 		tp := &chip8node8ra64sp{}
 		tp.spBlock = 4
 		superPodMap := map[int32]superPod{}
-		sameRacks := map[int32]*inferServiceRackInfo{}
+		sameRacks := map[int64]*inferServiceRackInfo{}
 		sameSPs := map[int32]*inferServiceSPInfo{}
 		pq := tp.buildInferServicePriorityQueue(superPodMap, sameRacks, sameSPs)
 		if pq.Len() != 0 {
@@ -276,8 +342,8 @@ func TestBuildInferServicePriorityQueue1(t *testing.T) {
 		tp := &chip8node8ra64sp{}
 		tp.spBlock = 4
 		superPodMap := buildSuperPodsByParams(map[int32]int32{0: 16})
-		sameRacks := map[int32]*inferServiceRackInfo{
-			0: {rackID: 0, superPodID: 0, freeNodes: 8},
+		sameRacks := map[int64]*inferServiceRackInfo{
+			rackKey(0, 0): {rackID: 0, superPodID: 0, freeNodes: 8},
 		}
 		sameSPs := map[int32]*inferServiceSPInfo{}
 		pq := tp.buildInferServicePriorityQueue(superPodMap, sameRacks, sameSPs)
@@ -296,7 +362,7 @@ func TestBuildInferServicePriorityQueue2(t *testing.T) {
 		tp := &chip8node8ra64sp{}
 		tp.spBlock = 4
 		superPodMap := buildSuperPodsByParams(map[int32]int32{0: 16})
-		sameRacks := map[int32]*inferServiceRackInfo{}
+		sameRacks := map[int64]*inferServiceRackInfo{}
 		sameSPs := map[int32]*inferServiceSPInfo{}
 		pq := tp.buildInferServicePriorityQueue(superPodMap, sameRacks, sameSPs)
 		if pq.Len() == 0 {
@@ -312,8 +378,8 @@ func TestBuildInferServicePriorityQueue2(t *testing.T) {
 		tp := &chip8node8ra64sp{}
 		tp.spBlock = 4
 		superPodMap := buildSuperPodsByParams(map[int32]int32{0: 24})
-		sameRacks := map[int32]*inferServiceRackInfo{
-			0: {rackID: 0, superPodID: 0, freeNodes: 8},
+		sameRacks := map[int64]*inferServiceRackInfo{
+			rackKey(0, 0): {rackID: 0, superPodID: 0, freeNodes: 8},
 		}
 		sameSPs := map[int32]*inferServiceSPInfo{
 			0: {superPodID: 0},
@@ -377,8 +443,8 @@ func BenchmarkBuildInferServicePriorityQueue(b *testing.B) {
 	tp := &chip8node8ra64sp{}
 	tp.spBlock = 4
 	superPodMap := buildSuperPodsByParams(map[int32]int32{0: 64, 1: 64, 2: 64})
-	sameRacks := map[int32]*inferServiceRackInfo{
-		0: {rackID: 0, superPodID: 0, freeNodes: 8},
+	sameRacks := map[int64]*inferServiceRackInfo{
+		rackKey(0, 0): {rackID: 0, superPodID: 0, freeNodes: 8},
 	}
 	sameSPs := map[int32]*inferServiceSPInfo{
 		0: {superPodID: 0},
@@ -399,7 +465,7 @@ func TestSelectNodesForInferService_NormalCase(t *testing.T) {
 
 	superPodMap := buildSuperPodsByParams(map[int32]int32{0: 16})
 
-	sameRacks := map[int32]*inferServiceRackInfo{}
+	sameRacks := map[int64]*inferServiceRackInfo{}
 	sameSPs := map[int32]*inferServiceSPInfo{}
 
 	pq := tp.buildInferServicePriorityQueue(superPodMap, sameRacks, sameSPs)
@@ -440,7 +506,7 @@ func TestSelectNodesForInferService_SkipSuperPod(t *testing.T) {
 
 	superPodMap := buildSuperPodsByParams(map[int32]int32{0: 4})
 
-	sameRacks := map[int32]*inferServiceRackInfo{}
+	sameRacks := map[int64]*inferServiceRackInfo{}
 	sameSPs := map[int32]*inferServiceSPInfo{}
 
 	pq := tp.buildInferServicePriorityQueue(superPodMap, sameRacks, sameSPs)
@@ -476,7 +542,7 @@ func TestSelectNodesForInferService_SkipRack(t *testing.T) {
 
 	superPodMap := buildSuperPodsByParams(map[int32]int32{0: 10})
 
-	sameRacks := map[int32]*inferServiceRackInfo{}
+	sameRacks := map[int64]*inferServiceRackInfo{}
 	sameSPs := map[int32]*inferServiceSPInfo{}
 
 	pq := tp.buildInferServicePriorityQueue(superPodMap, sameRacks, sameSPs)
@@ -506,7 +572,7 @@ func TestSelectNodesForInferService_EmptyPQ(t *testing.T) {
 	tp.spBlock = 4
 
 	superPodMap := map[int32]superPod{}
-	sameRacks := map[int32]*inferServiceRackInfo{}
+	sameRacks := map[int64]*inferServiceRackInfo{}
 	sameSPs := map[int32]*inferServiceSPInfo{}
 
 	pq := tp.buildInferServicePriorityQueue(superPodMap, sameRacks, sameSPs)
@@ -542,7 +608,7 @@ func TestSelectNodesForInferService_AllItemsSkipped(t *testing.T) {
 
 	superPodMap := buildSuperPodsByParams(map[int32]int32{0: 16})
 
-	sameRacks := map[int32]*inferServiceRackInfo{}
+	sameRacks := map[int64]*inferServiceRackInfo{}
 	sameSPs := map[int32]*inferServiceSPInfo{}
 
 	pq := tp.buildInferServicePriorityQueue(superPodMap, sameRacks, sameSPs)
