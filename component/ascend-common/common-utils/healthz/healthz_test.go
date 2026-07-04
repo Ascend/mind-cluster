@@ -21,7 +21,15 @@ import (
 	"net/http"
 	"testing"
 	"time"
+
+	"ascend-common/common-utils/hwlog"
 )
+
+func init() {
+	if err := hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background()); err != nil {
+		fmt.Printf("init run logger failed: %v\n", err)
+	}
+}
 
 type validateConfigTestCase struct {
 	name    string
@@ -53,7 +61,7 @@ func newValidateConfigTestCases() []validateConfigTestCase {
 		},
 		{
 			name:    "address with colon prefix should return error",
-			cfg:     &Config{EnableHealthz: true, HealthzAddress: "11251"},
+			cfg:     &Config{EnableHealthz: true, HealthzAddress: ":11251"},
 			wantErr: true,
 		},
 		{
@@ -142,6 +150,7 @@ func TestStartServeDisabled(t *testing.T) {
 }
 
 func TestStartServeAndRequest(t *testing.T) {
+	ResetLimiter()
 	cfg := NewConfig()
 	cfg.HealthzAddress = "11252"
 	ctx, cancel := context.WithCancel(context.Background())
@@ -161,6 +170,7 @@ func TestStartServeAndRequest(t *testing.T) {
 }
 
 func TestHealthzHandlerMethodNotAllowed(t *testing.T) {
+	ResetLimiter()
 	cfg := NewConfig()
 	cfg.HealthzAddress = "11253"
 	ctx, cancel := context.WithCancel(context.Background())
@@ -189,6 +199,7 @@ func (m *mockHealthChecker) Check(_ context.Context) error {
 }
 
 func TestStartServeWithHealthyChecker(t *testing.T) {
+	ResetLimiter()
 	RegisterHealthChecker(&mockHealthChecker{err: nil})
 	defer ClearHealthCheckers()
 
@@ -211,6 +222,7 @@ func TestStartServeWithHealthyChecker(t *testing.T) {
 }
 
 func TestStartServeWithUnhealthyChecker(t *testing.T) {
+	ResetLimiter()
 	RegisterHealthChecker(&mockHealthChecker{err: fmt.Errorf("db connection lost")})
 	defer ClearHealthCheckers()
 
@@ -233,6 +245,7 @@ func TestStartServeWithUnhealthyChecker(t *testing.T) {
 }
 
 func TestStartServeGracefulShutdown(t *testing.T) {
+	ResetLimiter()
 	cfg := NewConfig()
 	cfg.HealthzAddress = "11256"
 	ctx, cancel := context.WithCancel(context.Background())
@@ -282,6 +295,7 @@ func TestRegisterHealthCheckerConcurrent(t *testing.T) {
 }
 
 func TestMultipleCheckersAllHealthy(t *testing.T) {
+	ResetLimiter()
 	RegisterHealthChecker(&mockHealthChecker{err: nil})
 	RegisterHealthChecker(&mockHealthChecker{err: nil})
 	defer ClearHealthCheckers()
@@ -305,6 +319,7 @@ func TestMultipleCheckersAllHealthy(t *testing.T) {
 }
 
 func TestMultipleCheckersFirstFails(t *testing.T) {
+	ResetLimiter()
 	RegisterHealthChecker(&mockHealthChecker{err: fmt.Errorf("first failed")})
 	RegisterHealthChecker(&mockHealthChecker{err: nil})
 	defer ClearHealthCheckers()
@@ -328,6 +343,7 @@ func TestMultipleCheckersFirstFails(t *testing.T) {
 }
 
 func TestMultipleCheckersLastFails(t *testing.T) {
+	ResetLimiter()
 	RegisterHealthChecker(&mockHealthChecker{err: nil})
 	RegisterHealthChecker(&mockHealthChecker{err: fmt.Errorf("last failed")})
 	defer ClearHealthCheckers()
@@ -358,6 +374,7 @@ func (s *slowHealthChecker) Check(_ context.Context) error {
 }
 
 func TestStartServeCheckerTimeout(t *testing.T) {
+	ResetLimiter()
 	RegisterHealthChecker(&slowHealthChecker{})
 	defer ClearHealthCheckers()
 
@@ -380,7 +397,7 @@ func TestStartServeCheckerTimeout(t *testing.T) {
 }
 
 func TestStartServePortConflict(t *testing.T) {
-	ln, err := net.Listen("tcp", "11260")
+	ln, err := net.Listen("tcp", ":11260")
 	if err != nil {
 		t.Fatalf("failed to set up listener: %v", err)
 	}

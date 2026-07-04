@@ -9,7 +9,7 @@
 
 昇腾910 AI处理器是华为研发的一款高性能AI处理器。其内部的处理器之间采用HCCS方式连接。每台物理设备具备8颗处理器，两个HCCS。每个HCCS存在4颗处理器，同一HCCS内处理器可做数据交换，不同HCCS内处理器不能通信，即同一Pod分配的昇腾910 AI处理器（若小于等于4）必须在同一个HCCS环内，否则任务运行失败。昇腾910 AI处理器的互联拓扑图如[图1](#fig997414281914)所示。
 
-**图 1** Ascend 910 AI Processor  interconnection topology<a name="fig997414281914"></a>  
+**图 1** Ascend 910 AI Processor  interconnection topology<a name="fig997414281914"></a>
 ![](doc/figures/Ascend-910-AI-Processor-interconnection-topology.png "Ascend-910-AI-Processor-interconnection-topology")
 
 >![](doc/figures/icon-note.gif) **说明：**
@@ -170,7 +170,7 @@
 
 ## 算法设计说明<a name="section95222037117"></a>
 
-**图 1**  Affinity algorithm design process<a name="fig23092914208"></a>  
+**图 1**  Affinity algorithm design process<a name="fig23092914208"></a>
 ![](doc/figures/Affinity-algorithm-design-process-ch.png "Affinity-algorithm-design-process")
 
 图中关键步骤说明如下：
@@ -216,7 +216,7 @@
 
 ## 程序流程设计说明<a name="section7199282319"></a>
 
-**图 1**  Affinity program process \(Volcano part\)<a name="fig11310145516212"></a>  
+**图 1**  Affinity program process \(Volcano part\)<a name="fig11310145516212"></a>
 ![](doc/figures/Affinity-program-process-(Volcano-part)-ch.png "Affinity-program-process-(Volcano-part)")
 
 华为昇腾处理器的亲和性调度基于Volcano开源部分提供的的插件机制，实现了插件简化开发。过程中主要实现了volcano-schedule框架中的几个插件函数。当Volcano每次session运行时，实现的函数就会按照编写的规则运行，从而实现处理器的亲和性调度。亲和性调度插件主要实现的函数如下：
@@ -237,57 +237,6 @@
 
     该函数主要是将节点拥有的可用的昇腾910 AI处理器进行统一管理。防止并发情况下的分发错误。
 
-
-<h2 id="目录结构文档">目录结构</h2>
-
-```
-├── build                        # CI编译脚本
-│  ├── build.sh
-│  ├── testBuild.sh
-│  ├── volcano-v1.7.0.yaml
-│  └── volcano-v1.9.0.yaml
-├── common                       # 公共代码目录             
-│  ├── k8s                       # k8s相关接口代码目录
-│  └── util                      # 调度基础公共代码目录
-├── config
-├── doc
-│  └── figures
-├── internal
-│  ├── controller
-│  ├── npu
-│  │  ├── ascend310              # 310推理芯片代码目录         
-│  │  │  ├── card310x4
-│  │  │  └── chip310x4
-│  │  ├── ascend310p             # 推理芯片动态虚拟化代码目录
-│  │  │  ├── card310px2          # 300i duo卡 卡模式调度策略代码目录
-│  │  │  ├── chip310px2          # 300i duo卡 芯片模式调度策略代码目录
-│  │  │  └── vnpu                # 推理芯片动态虚拟化代码目录
-│  │  ├── ascend910
-│  │  │  ├── ascend910a3         # A3硬件亲和性调度代码目录
-│  │  │  │  ├── module910a3x16   # 800T A3硬件亲和性调度代码目录
-│  │  │  │  ├── superpod         # A3 超节点亲和性调度代码目录
-│  │  │  ├── ascend910b          # A2硬件亲和性调度代码目录 
-│  │  │  │  ├── module910bx16    # 200T box A2硬件亲和性调度策略代码目录
-│  │  │  │  └── vnpu             # A2动态虚拟化调度策略代码目录
-│  │  │  └── asend910old         # A1硬件亲和性调度策略代码目录
-│  │  │      └── module910x8
-│  │  ├── base                   # 基础调度策略代码目录
-│  │  └── vnpu                   # VNPU调度公共代码目录
-│  ├── nslb                      # 交换机亲和性调度策略代码目录
-│  ├── rescheduling              # 重调度策略代码目录
-│  └── test                      # internal包LLT公共代码目录
-├── LICENSE
-├── output                # CI编译结果目录
-│  ├── Dockerfile-controller
-│  └── Dockerfile-scheduler
-├── plugin                # 插件数据初始化代码目录
-├── README.md
-├── test                  # llt公共基础代码目录
-├── testdata              # llt测试数据代码目录
-│  └── tor
-│      └── tor-node.json
-└── huawei_npu.go		  # ascend-volcano-plugin组件入口代码
-```
 
 <h2 id="编译说明文档">编译说明</h2>
 

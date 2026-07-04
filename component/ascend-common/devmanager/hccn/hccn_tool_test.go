@@ -16,12 +16,21 @@
 package hccn
 
 import (
+	"context"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
 
+	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 )
+
+func init() {
+	if err := hwlog.InitRunLogger(&hwlog.LogConfig{OnlyToStdout: true}, context.Background()); err != nil {
+		fmt.Printf("init run logger failed: %v\n", err)
+	}
+}
 
 // hccnToolSeparator is the table separator line of `hccn_tool -g -dev_info` output.
 const hccnToolSeparator = "+--------+--------+--------+----------+-------------+------------+"
@@ -82,7 +91,7 @@ func TestGetAllUBPortsFromHccnLines(t *testing.T) {
 		{
 			name: "03-data row with too few columns should return error",
 			output: hccnToolTable(
-				"| 0      | 4      | 200    | ETH      | DOWN        |"),
+				"| 0      | 4      | ETH      | DOWN        |"),
 			want:    nil,
 			wantErr: true,
 		},
@@ -103,8 +112,8 @@ func TestGetAllUBPortsFromHccnLines(t *testing.T) {
 			name: "06-stop parsing at the third separator and ignore trailing data",
 			output: hccnToolTable(
 				"| 0      | 4      | 200    | ETH      | DOWN        | Electrical |",
+			) + "\n" +
 				"| 1      | 8      | 200    | UB       | DOWN        | Optical    |",
-			),
 			want: []common.UBPort{
 				{UDieId: 0, PortID: 4, PortType: BondingPortName, LinkStatus: LinkDown},
 			},
