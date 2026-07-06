@@ -76,10 +76,16 @@ func (r *InstanceSetSnapshotReconciler) Reconcile(ctx context.Context, req ctrl.
 			instanceSet.Namespace, instanceSet.Name)
 		return ctrl.Result{}, nil
 	}
-	if common.IsSnapshotStatusExists(hostSnapshotPath) &&
-		common.IsSnapshotValid(hostSnapshotPath) {
-		hwlog.RunLog.Infof("Host snapshot path %s for InstanceSet %s/%s is valid, will load snapshot",
+	if common.IsSnapshotStatusExists(hostSnapshotPath) {
+		hwlog.RunLog.Infof("Host snapshot path %s for InstanceSet %s/%s exists, will load snapshot",
 			hostSnapshotPath, instanceSet.Namespace, instanceSet.Name)
+		go func() {
+			if !common.IsSnapshotValid(hostSnapshotPath) {
+				if err := cleanupSnapshotPath(hostSnapshotPath); err != nil {
+					hwlog.RunLog.Errorf("Failed to cleanup snapshot path %s: %v", hostSnapshotPath, err)
+				}
+			}
+		}()
 		return ctrl.Result{}, nil
 	}
 

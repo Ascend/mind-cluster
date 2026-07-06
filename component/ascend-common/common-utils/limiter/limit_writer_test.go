@@ -16,7 +16,6 @@
 package limiter
 
 import (
-	"io"
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
@@ -31,7 +30,7 @@ func TestLimitWriterWrite(t *testing.T) {
 		convey.So(err, convey.ShouldBeNil)
 		convey.So(n, convey.ShouldEqual, len(data))
 		n, err = limitBuffer.Write(data)
-		convey.So(err, convey.ShouldEqual, io.EOF)
+		convey.So(err, convey.ShouldEqual, ErrBufferLimitExceeded)
 		convey.So(n, convey.ShouldEqual, 0)
 	})
 }
