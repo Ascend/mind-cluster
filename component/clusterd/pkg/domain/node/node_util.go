@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
@@ -16,7 +16,10 @@ import (
 	"clusterd/pkg/common/util"
 )
 
-const safeNodeSize = 2000
+const (
+	// maxCmDataSize is the max data size for a single ConfigMap (~1MB limit, using 800KB for safety margin)
+	maxCmDataSize = 800 * 1024
+)
 
 // ParseNodeInfoCM get node info from configmap obj
 func ParseNodeInfoCM(obj interface{}) (*constant.NodeInfo, error) {
@@ -76,27 +79,13 @@ func DeepCopy(info *constant.NodeInfo) *constant.NodeInfo {
 	return newNodeInfo
 }
 
-// GetSafeData get data every 2000 NodeInfo
+// GetSafeData splits nodeInfos into chunks that fit within K8s ConfigMap size limit (~1MB).
+// Each chunk is as close to maxCmDataSize (800KB) as possible.
 func GetSafeData(nodeInfos map[string]*constant.NodeInfo) []string {
-	if len(nodeInfos) == 0 {
-		return []string{}
-	}
-	if len(nodeInfos) <= safeNodeSize {
-		return []string{util.ObjToString(nodeInfos)}
-	}
-	nodeSlice := make([]string, 0, len(nodeInfos)/safeNodeSize+1)
-	childNodeInfos := make(map[string]*constant.NodeInfo, safeNodeSize)
-	for cmName, nodeInfo := range nodeInfos {
-		childNodeInfos[cmName] = nodeInfo
-		if len(childNodeInfos)%safeNodeSize == 0 {
-			nodeSlice = append(nodeSlice, util.ObjToString(childNodeInfos))
-			childNodeInfos = make(map[string]*constant.NodeInfo, safeNodeSize)
-		}
-	}
-	if len(childNodeInfos) != 0 {
-		nodeSlice = append(nodeSlice, util.ObjToString(childNodeInfos))
-	}
-	return nodeSlice
+	return util.SplitMapToSafeChunks(nodeInfos, maxCmDataSize,
+		func(m map[string]*constant.NodeInfo) string {
+			return util.ObjToString(m)
+		})
 }
 
 // GetData get data from NodeInfo

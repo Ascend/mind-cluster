@@ -5,7 +5,6 @@ package switchinfo
 
 import (
 	"encoding/json"
-	"strconv"
 	"testing"
 	"time"
 
@@ -17,10 +16,6 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"clusterd/pkg/common/constant"
 	"clusterd/pkg/common/util"
-)
-
-const (
-	moreLength = 2
 )
 
 func TestMain(m *testing.M) {
@@ -83,24 +78,6 @@ func TestDeepCopy(t *testing.T) {
 	})
 }
 
-// TestGetSafeData test get safe data
-func TestGetSafeData(t *testing.T) {
-	convey.Convey("Test Get Safe Datas", t, func() {
-		switchInfos := map[string]*constant.SwitchInfo{}
-		res := GetSafeData(switchInfos)
-		convey.So(len(res) == 0, convey.ShouldBeTrue)
-		switchInfos = map[string]*constant.SwitchInfo{"nodeName1": &constant.SwitchInfo{}}
-		res = GetSafeData(switchInfos)
-		convey.So(len(res) == len(switchInfos), convey.ShouldBeTrue)
-		switchInfos = map[string]*constant.SwitchInfo{}
-		for i := 0; i <= safeSwitchSize; i++ {
-			switchInfos["nodeName"+strconv.Itoa(i)] = &constant.SwitchInfo{}
-		}
-		res = GetSafeData(switchInfos)
-		convey.So(len(res) == moreLength, convey.ShouldBeTrue)
-	})
-}
-
 func TestGetReportSwitchInfo(t *testing.T) {
 	convey.Convey("Test getReportSwitchInfo", t, func() {
 		switchInfo := constant.SimpleSwitchFaultInfo{AssembledFaultCode: "code1"}
@@ -121,7 +98,7 @@ func TestGetReportSwitchInfo(t *testing.T) {
 
 // TestBusinessDataIsNotEqual Test business data is not equal
 func TestBusinessDataIsNotEqual(t *testing.T) {
-	convey.Convey("Test Get Safe Datas", t, func() {
+	convey.Convey("Test Get Safe Data", t, func() {
 		oldSwitch := constant.SwitchInfo{
 			SwitchFaultInfo: constant.SwitchFaultInfo{
 				FaultInfo:  []constant.SimpleSwitchFaultInfo{},

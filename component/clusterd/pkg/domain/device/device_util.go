@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
@@ -15,7 +15,10 @@ import (
 	"clusterd/pkg/common/util"
 )
 
-const safeDeviceSize = 1000
+const (
+	// maxCmDataSize is the max data size for a single ConfigMap (~1MB limit, using 800KB for safety margin)
+	maxCmDataSize = 800 * 1024
+)
 
 // ParseDeviceInfoCM get device info from configmap obj
 func ParseDeviceInfoCM(deviceCm *v1.ConfigMap) (*constant.DeviceInfo, error) {
@@ -60,25 +63,11 @@ func DeepCopy(info *constant.DeviceInfo) *constant.DeviceInfo {
 	return newDeviceInfo
 }
 
-// GetSafeData get data every 1000 DeviceInfo
+// GetSafeData splits deviceInfos into chunks that fit within K8s ConfigMap size limit (~1MB).
+// Each chunk is as close to maxCmDataSize (800KB) as possible.
 func GetSafeData(deviceInfos map[string]*constant.DeviceInfo) []string {
-	if len(deviceInfos) == 0 {
-		return []string{}
-	}
-	if len(deviceInfos) <= safeDeviceSize {
-		return []string{util.ObjToString(deviceInfos)}
-	}
-	deviceSlice := make([]string, 0, len(deviceInfos)/safeDeviceSize+1)
-	childDeviceInfos := make(map[string]*constant.DeviceInfo, safeDeviceSize)
-	for cmName, deviceInfo := range deviceInfos {
-		childDeviceInfos[cmName] = deviceInfo
-		if len(childDeviceInfos)%safeDeviceSize == 0 {
-			deviceSlice = append(deviceSlice, util.ObjToString(childDeviceInfos))
-			childDeviceInfos = make(map[string]*constant.DeviceInfo, safeDeviceSize)
-		}
-	}
-	if len(childDeviceInfos) != 0 {
-		deviceSlice = append(deviceSlice, util.ObjToString(childDeviceInfos))
-	}
-	return deviceSlice
+	return util.SplitMapToSafeChunks(deviceInfos, maxCmDataSize,
+		func(m map[string]*constant.DeviceInfo) string {
+			return util.ObjToString(m)
+		})
 }

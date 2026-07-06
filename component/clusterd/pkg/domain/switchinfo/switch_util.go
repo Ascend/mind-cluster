@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
@@ -16,7 +16,10 @@ import (
 	"clusterd/pkg/common/util"
 )
 
-const safeSwitchSize = 2000
+const (
+	// maxCmDataSize is the max data size for a single ConfigMap (~1MB limit, using 800KB for safety margin)
+	maxCmDataSize = 800 * 1024
+)
 
 // ParseSwitchInfoCM get node info from configmap obj
 func ParseSwitchInfoCM(switchCm *v1.ConfigMap) (*constant.SwitchInfo, error) {
@@ -79,27 +82,13 @@ func DeepCopy(info *constant.SwitchInfo) (*constant.SwitchInfo, error) {
 	return newSwitchInfo, nil
 }
 
-// GetSafeData get data every 2000 SwitchInfo
+// GetSafeData splits switchInfos into chunks that fit within K8s ConfigMap size limit (~1MB).
+// Each chunk is as close to maxCmDataSize (800KB) as possible.
 func GetSafeData(switchInfos map[string]*constant.SwitchInfo) []string {
-	if len(switchInfos) == 0 {
-		return []string{}
-	}
-	if len(switchInfos) <= safeSwitchSize {
-		return []string{util.ObjToString(getReportSwitchInfo(switchInfos))}
-	}
-	SwitchSlice := make([]string, 0, len(switchInfos)/safeSwitchSize+1)
-	childSwitchInfos := make(map[string]*constant.SwitchInfo, safeSwitchSize)
-	for cmName, switchInfo := range switchInfos {
-		childSwitchInfos[cmName] = switchInfo
-		if len(childSwitchInfos)%safeSwitchSize == 0 {
-			SwitchSlice = append(SwitchSlice, util.ObjToString(getReportSwitchInfo(childSwitchInfos)))
-			childSwitchInfos = make(map[string]*constant.SwitchInfo, safeSwitchSize)
-		}
-	}
-	if len(childSwitchInfos) != 0 {
-		SwitchSlice = append(SwitchSlice, util.ObjToString(getReportSwitchInfo(childSwitchInfos)))
-	}
-	return SwitchSlice
+	return util.SplitMapToSafeChunks(switchInfos, maxCmDataSize,
+		func(m map[string]*constant.SwitchInfo) string {
+			return util.ObjToString(getReportSwitchInfo(m))
+		})
 }
 
 func getReportSwitchInfo(switchInfoMap map[string]*constant.SwitchInfo) map[string]*constant.SwitchInfoFromCM {
