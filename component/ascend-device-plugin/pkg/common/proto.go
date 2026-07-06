@@ -177,6 +177,7 @@ type Option struct {
 	DeviceResetTimeout    int      // device reset timeout
 	SoftShareDevConfigDir string   // soft share device config dir
 	UseSingleDieMode      bool     // use single die mode
+	GetPodFromKubelet     bool     // get pod information from kubelet instead of apiserver
 }
 
 // GetAllDeviceInfoTypeList Get All Device Info Type List

@@ -38,6 +38,7 @@ import (
 )
 
 func newTestClientK8s() (*ClientK8s, error) {
+	common.ParamOption.GetPodFromKubelet = false
 	return &ClientK8s{
 		Clientset:      &kubernetes.Clientset{},
 		NodeName:       "node",

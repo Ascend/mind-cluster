@@ -27,7 +27,7 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
@@ -62,6 +62,8 @@ type ClientK8s struct {
 	PodInformer    cache.SharedIndexInformer
 	Queue          workqueue.RateLimitingInterface
 	KltClient      *http.Client
+	apiserver      *Apiserver
+	kubelet        *Kubelet
 }
 
 // NewClientK8s create k8s client
@@ -91,14 +93,16 @@ func NewClientK8s() (*ClientK8s, error) {
 	}
 	kltClient := &http.Client{Transport: transport}
 
-	return &ClientK8s{
+	clientK8s := &ClientK8s{
 		Clientset:      client,
 		NodeName:       nodeName,
 		DeviceInfoName: common.DeviceInfoCMNamePrefix + nodeName,
 		Queue:          workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		IsApiErr:       false,
 		KltClient:      kltClient,
-	}, nil
+	}
+	clientK8s.initPodManagers()
+	return clientK8s, nil
 }
 
 // GetNode get node
@@ -144,12 +148,16 @@ func (ki *ClientK8s) AddAnnotation(key, value string) error {
 }
 
 // GetPod get pod by namespace and name
-func (ki *ClientK8s) GetPod(pod *v1.Pod) (*v1.Pod, error) {
+func (ki *ClientK8s) GetPod(ctx context.Context, pod *v1.Pod) (*v1.Pod, error) {
+	return ki.getChannel().GetPod(ctx, pod)
+}
+
+func (ki *ClientK8s) getPodFromApiserver(ctx context.Context, pod *v1.Pod) (*v1.Pod, error) {
 	if pod == nil {
 		return nil, fmt.Errorf("param pod is nil")
 	}
 
-	v1Pod, err := ki.Clientset.CoreV1().Pods(pod.Namespace).Get(context.Background(), pod.Name, metav1.GetOptions{
+	v1Pod, err := ki.Clientset.CoreV1().Pods(pod.Namespace).Get(ctx, pod.Name, metav1.GetOptions{
 		ResourceVersion: "0",
 	})
 	if err != nil && strings.Contains(err.Error(), common.ApiServerPort) {
@@ -161,12 +169,20 @@ func (ki *ClientK8s) GetPod(pod *v1.Pod) (*v1.Pod, error) {
 
 // PatchPod patch pod information
 func (ki *ClientK8s) PatchPod(pod *v1.Pod, data []byte) (*v1.Pod, error) {
+	return ki.getChannel().PatchPod(pod, data)
+}
+
+func (ki *ClientK8s) patchPodToApiserver(pod *v1.Pod, data []byte) (*v1.Pod, error) {
 	return ki.Clientset.CoreV1().Pods(pod.Namespace).Patch(context.Background(),
 		pod.Name, types.StrategicMergePatchType, data, metav1.PatchOptions{})
 }
 
 // GetActivePodList is to get active pod list
 func (ki *ClientK8s) GetActivePodList() ([]v1.Pod, error) {
+	return ki.getChannel().GetActivePodList()
+}
+
+func (ki *ClientK8s) getActivePodListFromApiserver() ([]v1.Pod, error) {
 	fieldSelector, err := fields.ParseSelector("spec.nodeName=" + ki.NodeName + "," +
 		"status.phase!=" + string(v1.PodSucceeded) + ",status.phase!=" + string(v1.PodFailed))
 	if err != nil {
@@ -181,6 +197,10 @@ func (ki *ClientK8s) GetActivePodList() ([]v1.Pod, error) {
 
 // GetAllPodList get pod list by field selector
 func (ki *ClientK8s) GetAllPodList() (*v1.PodList, error) {
+	return ki.getChannel().GetAllPodList()
+}
+
+func (ki *ClientK8s) getAllPodListFromApiserver() (*v1.PodList, error) {
 	selector := fields.SelectorFromSet(fields.Set{"spec.nodeName": ki.NodeName})
 	v1PodList, err := ki.getPodListByCondition(selector)
 	if err != nil {
@@ -403,7 +423,7 @@ func (ki *ClientK8s) ResourceEventHandler(res ResourceType, filter func(obj inte
 
 // FlushPodCacheNextQuerying next time querying pod, flush cache
 func (ki *ClientK8s) FlushPodCacheNextQuerying() {
-	ki.IsApiErr = true
+	ki.getChannel().FlushPodCacheNextQuerying()
 }
 
 // RemoveOldResource remove old resource which is not used after device type changed

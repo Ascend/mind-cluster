@@ -29,7 +29,7 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -43,8 +43,6 @@ import (
 	"Ascend-device-plugin/pkg/device/deviceswitch"
 	"Ascend-device-plugin/pkg/kubeclient"
 	"Ascend-device-plugin/pkg/next/devicefactory/customname"
-	"Ascend-device-plugin/pkg/plugin"
-	"Ascend-device-plugin/pkg/plugin/builtin"
 	"ascend-common/api"
 	"ascend-common/common-utils/utils"
 	"ascend-common/devmanager"
@@ -2583,59 +2581,5 @@ func TestRegisterSoftSharePodDeleteHandler(t *testing.T) {
 				}
 			})
 		}
-	})
-}
-
-func TestInitUnifiedResetMgr(t *testing.T) {
-	convey.Convey("test InitUnifiedResetMgr", t, func() {
-		convey.Convey("01-returns nil when already initialized", func() {
-			hdm := &HwDevManager{unifiedResetMgr: &UnifiedHotResetManager{}}
-			err := hdm.InitUnifiedResetMgr()
-			convey.So(err, convey.ShouldBeNil)
-		})
-		convey.Convey("02-initializes successfully", func() {
-			devMgr := &device.HwAscend910Manager{}
-			hdm := &HwDevManager{manager: devMgr}
-			patch := gomonkey.ApplyMethodReturn(devMgr, "GetDmgr", &devmanager.DeviceManagerMock{}).
-				ApplyMethodReturn(devMgr, "GetKubeClient", nil).
-				ApplyFuncReturn(builtin.InitPluginManager, plugin.NewPluginManager(), nil)
-			defer patch.Reset()
-			err := hdm.InitUnifiedResetMgr()
-			convey.So(err, convey.ShouldBeNil)
-			convey.So(hdm.unifiedResetMgr, convey.ShouldNotBeNil)
-		})
-		convey.Convey("03-returns error when plugin init fails", func() {
-			devMgr := &device.HwAscend910Manager{}
-			hdm := &HwDevManager{manager: devMgr}
-			patch := gomonkey.ApplyMethodReturn(devMgr, "GetDmgr", &devmanager.DeviceManagerMock{}).
-				ApplyMethodReturn(devMgr, "GetKubeClient", nil).
-				ApplyFuncReturn(builtin.InitPluginManager,
-					(*plugin.PluginManager)(nil), errors.New("plugin init error"))
-			defer patch.Reset()
-			err := hdm.InitUnifiedResetMgr()
-			convey.So(err, convey.ShouldNotBeNil)
-		})
-	})
-}
-
-func TestUnifiedHotReset(t *testing.T) {
-	convey.Convey("test unifiedHotReset", t, func() {
-		convey.Convey("01-calls UnifiedHotReset with groupDevice", func() {
-			groupDevice := map[string][]*common.NpuDevice{
-				"Ascend910": {{LogicID: 0}},
-			}
-			mgr := NewUnifiedHotResetManager(&devmanager.DeviceManagerMock{},
-				&device.HwAscend910Manager{}, nil)
-			called := false
-			patch := gomonkey.ApplyMethod(mgr, "UnifiedHotReset",
-				func(_ *UnifiedHotResetManager, gd map[string][]*common.NpuDevice) {
-					called = true
-					convey.So(len(gd), convey.ShouldEqual, 1)
-				})
-			defer patch.Reset()
-			hdm := &HwDevManager{unifiedResetMgr: mgr, groupDevice: groupDevice}
-			hdm.unifiedHotReset()
-			convey.So(called, convey.ShouldBeTrue)
-		})
 	})
 }

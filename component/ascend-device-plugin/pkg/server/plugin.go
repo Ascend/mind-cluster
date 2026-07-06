@@ -29,7 +29,7 @@ import (
 	"syscall"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 
@@ -865,10 +865,10 @@ func (ps *PluginServer) doWithVolcanoSchedule(requestDevices []string) ([]string
 	var allPods = make([]v1.Pod, 0)
 	for i := 0; i < common.GetPodFromInformerTime; i++ {
 		if i == common.GetPodFromInformerTime-1 {
-			// in the last time of retry, get the pod from api server instead of cache
+			// in the last retry, refresh pods through the configured pod channel instead of cache
 			noneCachedPod, err := ps.manager.GetKubeClient().GetActivePodList()
 			if err != nil {
-				hwlog.RunLog.Errorf("get active pod from api server failed")
+				hwlog.RunLog.Error("get active pod failed")
 				ps.podLock.Unlock()
 				return nil, "", err
 			}

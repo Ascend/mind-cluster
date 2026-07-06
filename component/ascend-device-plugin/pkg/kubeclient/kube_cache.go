@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -54,6 +54,10 @@ const (
 
 // PodInformerInspector check pod in cache
 func (ki *ClientK8s) PodInformerInspector(ctx context.Context) {
+	ki.getChannel().PodInformerInspector(ctx)
+}
+
+func (ki *ClientK8s) podInformerInspector(ctx context.Context) {
 	hashVal := fnv.New32()
 	if _, err := hashVal.Write([]byte(ki.NodeName)); err != nil {
 		hwlog.RunLog.Errorf("failed to write nodeName to hash, err: %v", err)
@@ -103,11 +107,15 @@ func (ki *ClientK8s) checkPodInCache(ctx context.Context) {
 }
 
 func (ki *ClientK8s) getPod(ctx context.Context, namespace, name string) (*v1.Pod, error) {
-	return ki.Clientset.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
+	return ki.GetPod(ctx, &v1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}})
 }
 
 // UpdatePodList update pod list by informer
 func (ki *ClientK8s) UpdatePodList(newObj interface{}, operator EventType) {
+	ki.getChannel().UpdatePodList(newObj, operator)
+}
+
+func (ki *ClientK8s) updatePodList(newObj interface{}, operator EventType) {
 	newPod, ok := newObj.(*v1.Pod)
 	if !ok {
 		return
@@ -179,28 +187,20 @@ func (ki *ClientK8s) updatePodPredicateTime(newPod *v1.Pod) {
 func (ki *ClientK8s) refreshPodList() {
 	newV1PodList, err := ki.GetAllPodList()
 	if err != nil {
-		hwlog.RunLog.Errorf("get pod list from api-server failed: %v", err)
+		hwlog.RunLog.Errorf("get pod list failed: %v", err)
 		return
 	}
-	newPodCache := map[types.UID]*podInfo{}
-	for _, pod := range newV1PodList.Items {
-		// attention: using 'for range' for value slice, the pointer addr of the slice element is the same
-		func(pod v1.Pod) {
-			newPodCache[pod.UID] = &podInfo{
-				Pod:        &pod,
-				updateTime: time.Now(),
-			}
-		}(pod)
-	}
-	lock.Lock()
-	podCache = newPodCache
-	lock.Unlock()
+	refreshPodCacheFromList(newV1PodList)
 	ki.IsApiErr = false
 	hwlog.RunLog.Info("get new pod list success")
 }
 
 // GetAllPodListCache get pod list by field selector with cache,
 func (ki *ClientK8s) GetAllPodListCache() []v1.Pod {
+	return ki.getChannel().GetAllPodListCache()
+}
+
+func (ki *ClientK8s) getAllPodListCache() []v1.Pod {
 	if ki.IsApiErr {
 		ki.refreshPodList()
 	}
@@ -216,6 +216,10 @@ func (ki *ClientK8s) GetAllPodListCache() []v1.Pod {
 
 // GetActivePodListCache is to get active pod list with cache
 func (ki *ClientK8s) GetActivePodListCache() []v1.Pod {
+	return ki.getChannel().GetActivePodListCache()
+}
+
+func (ki *ClientK8s) getActivePodListCache() []v1.Pod {
 	if ki.IsApiErr {
 		ki.refreshPodList()
 	}

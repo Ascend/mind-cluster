@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"testing"
 
@@ -34,6 +35,20 @@ import (
 const (
 	mockHostIP = "127.0.0.1"
 )
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (fn roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return fn(req)
+}
+
+func setKltHTTPResponse(utKubeClient *ClientK8s, response *http.Response, err error) {
+	utKubeClient.KltClient = &http.Client{
+		Transport: roundTripFunc(func(_ *http.Request) (*http.Response, error) {
+			return response, err
+		}),
+	}
+}
 
 func TestGetKltPodsURL(t *testing.T) {
 	convey.Convey("test getKltPodsURL", t, func() {
@@ -117,9 +132,10 @@ func TestGetPodsByKltPort(t *testing.T) {
 	convey.Convey("should return nil and error when send request failed", t, sendReqFailedCase(utKubeClient))
 	convey.Convey("should return nil and error when response status code is not 200", t,
 		reqStatusCase(utKubeClient))
-	commonPatch = gomonkey.ApplyFuncReturn(createKltPodsReqWithToken, &http.Request{}, nil).
-		ApplyMethodReturn(&http.Client{}, "Do",
-			&http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(nil)}, nil)
+	commonPatch = gomonkey.ApplyFuncReturn(createKltPodsReqWithToken,
+		&http.Request{URL: &url.URL{Scheme: "https", Host: mockHostIP}}, nil)
+	setKltHTTPResponse(utKubeClient,
+		&http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(nil)}, nil)
 	convey.Convey("should return nil and error when read response body failed", t,
 		readAllFailedCase(utKubeClient))
 	convey.Convey("should return nil and error when read response body return EOF", t,
@@ -143,9 +159,7 @@ func createReqTokenFailedCase(utKubeClient *ClientK8s) func() {
 
 func sendReqFailedCase(utKubeClient *ClientK8s) func() {
 	return func() {
-		patch := gomonkey.ApplyMethodReturn(&http.Client{}, "Do",
-			nil, errors.New("send request failed"))
-		defer patch.Reset()
+		setKltHTTPResponse(utKubeClient, nil, errors.New("send request failed"))
 		pods, err := utKubeClient.getPodsByKltPort()
 		convey.So(pods, convey.ShouldBeNil)
 		convey.So(err, convey.ShouldNotBeNil)
@@ -154,9 +168,8 @@ func sendReqFailedCase(utKubeClient *ClientK8s) func() {
 
 func reqStatusCase(utKubeClient *ClientK8s) func() {
 	return func() {
-		patch := gomonkey.ApplyMethodReturn(&http.Client{}, "Do",
+		setKltHTTPResponse(utKubeClient,
 			&http.Response{StatusCode: http.StatusInternalServerError, Body: io.NopCloser(nil)}, nil)
-		defer patch.Reset()
 		pods, err := utKubeClient.getPodsByKltPort()
 		convey.So(pods, convey.ShouldBeNil)
 		convey.So(err, convey.ShouldNotBeNil)
