@@ -96,6 +96,8 @@ var (
 	softShareDevConfigDir = flag.String("softShareDevConfigDir", "", "soft share device config dir")
 	useSingleDieMode      = flag.Bool("useSingleDieMode", false,
 		"A3 card whether to use single die mode")
+	getPodFromKubelet = flag.Bool("getPodFromKubelet", true,
+		"Whether to get pod information from kubelet instead of apiserver")
 	hzFlags = healthz.RegisterFlags()
 )
 
@@ -326,6 +328,7 @@ func setParameters() {
 		DeviceResetTimeout:    *deviceResetTimeout,
 		SoftShareDevConfigDir: *softShareDevConfigDir,
 		UseSingleDieMode:      *useSingleDieMode,
+		GetPodFromKubelet:     *getPodFromKubelet,
 	}
 }
 

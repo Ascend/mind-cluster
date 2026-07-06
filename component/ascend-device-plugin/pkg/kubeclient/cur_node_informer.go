@@ -30,6 +30,10 @@ import (
 
 // InitPodInformer init pod informer
 func (ki *ClientK8s) InitPodInformer() {
+	ki.getChannel().InitPodInformer()
+}
+
+func (ki *ClientK8s) initPodInformer() {
 	factory := informers.NewSharedInformerFactoryWithOptions(ki.Clientset, 0,
 		informers.WithTweakListOptions(func(options *v1.ListOptions) {
 			options.FieldSelector = "spec.nodeName=" + ki.NodeName

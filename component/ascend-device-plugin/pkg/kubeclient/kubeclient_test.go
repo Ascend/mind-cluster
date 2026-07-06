@@ -16,6 +16,7 @@ Copyright(C) 2024. Huawei Technologies Co.,Ltd. All rights reserved.
 package kubeclient
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
@@ -84,6 +85,8 @@ func TestNewClientK8s(t *testing.T) {
 			Queue:          client.Queue,
 			IsApiErr:       false,
 			KltClient:      mockKltClient(),
+			apiserver:      client.apiserver,
+			kubelet:        client.kubelet,
 		}
 		convey.So(client, convey.ShouldResemble, expectclient)
 		convey.So(err, convey.ShouldBeNil)
@@ -140,7 +143,7 @@ func TestGetPod(t *testing.T) {
 		t.Fatal("TestGetPod init kubernetes failed")
 	}
 	convey.Convey("test get pod failed when param pod is nil", t, func() {
-		pod, err := client.GetPod(nil)
+		pod, err := client.GetPod(context.Background(), nil)
 		convey.So(pod, convey.ShouldBeNil)
 		convey.So(err.Error(), convey.ShouldEqual, "param pod is nil")
 	})
@@ -149,7 +152,7 @@ func TestGetPod(t *testing.T) {
 		mockGetPod := gomonkey.ApplyMethodReturn((&kubernetes.Clientset{}).CoreV1().Pods(v1.NamespaceAll), "Get",
 			&v1.Pod{}, fmt.Errorf(common.ApiServerPort))
 		defer mockGetPod.Reset()
-		pod, err := client.GetPod(testPod)
+		pod, err := client.GetPod(context.Background(), testPod)
 		convey.So(pod, convey.ShouldResemble, &v1.Pod{})
 		convey.So(err.Error(), convey.ShouldEqual, common.ApiServerPort)
 	})
