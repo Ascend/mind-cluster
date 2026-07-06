@@ -278,25 +278,19 @@ func TestSnapshotCheckerCheckPodSnapshotStatus(t *testing.T) {
 func TestSnapshotCheckerCleanupSnapshotPath(t *testing.T) {
 	convey.Convey("Test SnapshotChecker cleanupSnapshotPath method", t, func() {
 		convey.Convey("Should return error when snapshot path is empty", func() {
-			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient, 0)
 
-			err := checker.cleanupSnapshotPath("")
+			err := cleanupSnapshotPath("")
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(err.Error(), convey.ShouldEqual, "snapshot path is empty")
 		})
 
 		convey.Convey("Should return nil when path does not exist", func() {
-			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient, 0)
 
-			err := checker.cleanupSnapshotPath("/non/existent/path")
+			err := cleanupSnapshotPath("/non/existent/path")
 			convey.So(err, convey.ShouldBeNil)
 		})
 
 		convey.Convey("Should clean up directory but preserve status file", func() {
-			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient, 0)
 
 			tmpDir, err := os.MkdirTemp("", "snapshot-test-*")
 			convey.So(err, convey.ShouldBeNil)
@@ -314,7 +308,7 @@ func TestSnapshotCheckerCleanupSnapshotPath(t *testing.T) {
 			err = os.WriteFile(statusFile, []byte(`{"status":"success"}`), 0644)
 			convey.So(err, convey.ShouldBeNil)
 
-			err = checker.cleanupSnapshotPath(tmpDir)
+			err = cleanupSnapshotPath(tmpDir)
 			convey.So(err, convey.ShouldBeNil)
 
 			_, err = os.Stat(tmpDir)
@@ -331,14 +325,12 @@ func TestSnapshotCheckerCleanupSnapshotPath(t *testing.T) {
 		})
 
 		convey.Convey("Should handle empty directory", func() {
-			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient, 0)
 
 			tmpDir, err := os.MkdirTemp("", "snapshot-test-*")
 			convey.So(err, convey.ShouldBeNil)
 			defer os.RemoveAll(tmpDir)
 
-			err = checker.cleanupSnapshotPath(tmpDir)
+			err = cleanupSnapshotPath(tmpDir)
 			convey.So(err, convey.ShouldBeNil)
 
 			_, err = os.Stat(tmpDir)
@@ -346,8 +338,6 @@ func TestSnapshotCheckerCleanupSnapshotPath(t *testing.T) {
 		})
 
 		convey.Convey("Should preserve only status file when it exists", func() {
-			fakeClient := newFakeClientBuilder().Build()
-			checker := NewSnapshotChecker(fakeClient, 0)
 
 			tmpDir, err := os.MkdirTemp("", "snapshot-test-*")
 			convey.So(err, convey.ShouldBeNil)
@@ -357,7 +347,7 @@ func TestSnapshotCheckerCleanupSnapshotPath(t *testing.T) {
 			err = os.WriteFile(statusFile, []byte(`{"status":"success"}`), 0644)
 			convey.So(err, convey.ShouldBeNil)
 
-			err = checker.cleanupSnapshotPath(tmpDir)
+			err = cleanupSnapshotPath(tmpDir)
 			convey.So(err, convey.ShouldBeNil)
 
 			_, err = os.Stat(statusFile)

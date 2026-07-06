@@ -16,6 +16,7 @@
 #define OCK_DFS_BACKUP_FILE_TRACER_H
 
 #include <cstdint>
+#include <pthread.h>
 #include <string>
 #include <unordered_map>
 

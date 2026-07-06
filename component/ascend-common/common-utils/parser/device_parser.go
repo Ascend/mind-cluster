@@ -56,6 +56,10 @@ func ParseAscendDeviceInfo(env, containerID string) []int {
 		hwlog.RunLog.Warnf("Invalid %s format in container %s", api.AscendDeviceInfo, containerID)
 		return nil
 	}
+	if parts[0] != api.AscendDeviceInfo {
+		hwlog.RunLog.Warnf("Invalid %s key %s in container %s", api.AscendDeviceInfo, parts[0], containerID)
+		return nil
+	}
 
 	devicesStr := parts[1]
 	if len(devicesStr) > maxEnvLength {

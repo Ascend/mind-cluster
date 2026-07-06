@@ -66,8 +66,6 @@ func (r *PodSnapshotReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 				pod.Namespace, pod.Name, err)
 			return ctrl.Result{}, nil
 		}
-		// change metadata configmap GrusSnapshotRestoredFlag key to true
-		r.updateSnapshotConfigMap(ctx, pod)
 	}
 
 	return ctrl.Result{}, nil
@@ -81,9 +79,10 @@ func (r *PodSnapshotReconciler) setPodSnapshotModeAnnotation(ctx context.Context
 	}
 
 	snapshotMode := common.SnapshotSaveMode
-	if common.IsSnapshotStatusExists(hostSnapshotPath) &&
-		common.IsSnapshotValid(hostSnapshotPath) {
+	if common.IsSnapshotStatusExists(hostSnapshotPath) {
 		snapshotMode = common.SnapshotLoadMode
+		// change metadata configmap GrusSnapshotRestoredFlag key to true
+		r.updateSnapshotConfigMap(ctx, pod)
 	} else if instanceIndex := pod.Labels[common.InstanceIndexLabelKey]; "0" != instanceIndex {
 		// save mode only apply to the first instance of P/D instanceset
 		return nil

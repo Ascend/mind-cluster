@@ -26,7 +26,16 @@ import (
 	_ "ascend-operator/pkg/testtool"
 )
 
-const fakePath = "test-path"
+const (
+	fakePath      = "test-path"
+	emptyPath     = ""
+	testNamespace = "default"
+	testJobName   = "test-job"
+	fakeSpecName  = "fake-spec"
+	otherVolume   = "fake-volume"
+)
+
+var errFake = errors.New("fake error")
 
 func TestHasRankTableVolume(t *testing.T) {
 	convey.Convey("TestReadRankTableDir", t, func() {
@@ -94,91 +103,89 @@ func TestPodHasAllocated(t *testing.T) {
 	})
 }
 
-func TestGenRankTableDir(t *testing.T) {
-	convey.Convey("TestGenRankTableDir", t, func() {
-		job := &mindxdlv1.AscendJob{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-job",
-				Namespace: "default",
-			},
-		}
-		spec := &commonv1.ReplicaSpec{}
-		volume := newVolume(rankTableName, v1.VolumeSource{HostPath: &v1.HostPathVolumeSource{Path: fakePath}})
-		spec.Template.Spec.Volumes = make([]v1.Volume, 1)
-		job.Spec.ReplicaSpecs = map[commonv1.ReplicaType]*commonv1.ReplicaSpec{"fake-spec": spec}
-		convey.Convey("01-job without valid ranktable volume should return empty path", func() {
-			path := GenRankTableDir(job)
-			convey.So(path, convey.ShouldEqual, "")
-		})
-		spec.Template.Spec.Volumes[0] = volume
-		convey.Convey("02-invalid ranktable path should return empty path", func() {
-			patch := gomonkey.ApplyFunc(utils.PathStringChecker, func(string2 string) (string, error) {
-				return "", errors.New("fake error")
-			})
-			defer patch.Reset()
-			path := GenRankTableDir(job)
-			convey.So(path, convey.ShouldEqual, "")
-		})
-		patch := gomonkey.ApplyFunc(utils.PathStringChecker, func(string2 string) (string, error) {
-			return fakePath, nil
-		})
-		defer patch.Reset()
-		convey.Convey("03-make dir failed should return empty path", func() {
-			patch1 := gomonkey.ApplyFunc(os.MkdirAll, func(string, os.FileMode) error {
-				return errors.New("make dir error")
-			})
-			defer patch1.Reset()
-			path := GenRankTableDir(job)
-			convey.So(path, convey.ShouldEqual, "")
-		})
-		convey.Convey("04-make dir success should return path", func() {
-			patch1 := gomonkey.ApplyFunc(os.MkdirAll, func(string, os.FileMode) error {
-				return nil
-			})
-			defer patch1.Reset()
-			path := GenRankTableDir(job)
-			convey.So(path, convey.ShouldEqual, fakePath)
-		})
-	})
+func newRankTableJob(volumeName string) *mindxdlv1.AscendJob {
+	job := &mindxdlv1.AscendJob{
+		ObjectMeta: metav1.ObjectMeta{Name: testJobName, Namespace: testNamespace},
+	}
+	spec := &commonv1.ReplicaSpec{}
+	source := v1.VolumeSource{HostPath: &v1.HostPathVolumeSource{Path: fakePath}}
+	spec.Template.Spec.Volumes = []v1.Volume{newVolume(volumeName, source)}
+	job.Spec.ReplicaSpecs = map[commonv1.ReplicaType]*commonv1.ReplicaSpec{fakeSpecName: spec}
+	return job
 }
 
-func TestGenRankTableDir01(t *testing.T) {
-	convey.Convey("TestGenRankTableDir", t, func() {
-		job := &mindxdlv1.AscendJob{}
-		spec := &commonv1.ReplicaSpec{}
-		volume := newVolume(rankTableName, v1.VolumeSource{HostPath: &v1.HostPathVolumeSource{Path: fakePath}})
-		spec.Template.Spec.Volumes = []v1.Volume{volume}
-		job.Spec.ReplicaSpecs = map[commonv1.ReplicaType]*commonv1.ReplicaSpec{"fake-spec": spec}
-		patch := gomonkey.ApplyFunc(utils.PathStringChecker, func(string2 string) (string, error) {
-			return fakePath, nil
+func noPatch() *gomonkey.Patches {
+	return gomonkey.NewPatches()
+}
+
+func patchValidChecker() *gomonkey.Patches {
+	return gomonkey.ApplyFuncReturn(utils.PathStringChecker, fakePath, nil)
+}
+
+func patchCheckerErr() *gomonkey.Patches {
+	return gomonkey.ApplyFuncReturn(utils.PathStringChecker, emptyPath, errFake)
+}
+
+func patchSoftlinkErr() *gomonkey.Patches {
+	return patchValidChecker().ApplyFuncReturn(utils.IsExist, true).
+		ApplyFuncReturn(utils.IsSoftlink, false, errFake)
+}
+
+func patchIsSoftlink() *gomonkey.Patches {
+	return patchValidChecker().ApplyFuncReturn(utils.IsExist, true).
+		ApplyFuncReturn(utils.IsSoftlink, true, nil)
+}
+
+func patchNotSoftlink() *gomonkey.Patches {
+	return patchValidChecker().ApplyFuncReturn(utils.IsExist, true).
+		ApplyFuncReturn(utils.IsSoftlink, false, nil)
+}
+
+func patchMkdirErr() *gomonkey.Patches {
+	return patchValidChecker().ApplyFuncReturn(utils.IsExist, false).
+		ApplyFuncReturn(os.MkdirAll, errFake)
+}
+
+func patchMkdirOK() *gomonkey.Patches {
+	return patchValidChecker().ApplyFuncReturn(utils.IsExist, false).
+		ApplyFuncReturn(os.MkdirAll, nil)
+}
+
+type genRankTableDirCase struct {
+	name    string
+	job     *mindxdlv1.AscendJob
+	prepare func() *gomonkey.Patches
+	want    string
+}
+
+func genRankTableDirCases() []genRankTableDirCase {
+	return []genRankTableDirCase{
+		{name: "should return empty path when job is nil",
+			job: nil, prepare: noPatch, want: emptyPath},
+		{name: "should return empty path when job has no ranktable volume",
+			job: newRankTableJob(otherVolume), prepare: noPatch, want: emptyPath},
+		{name: "should return empty path when path checker returns error",
+			job: newRankTableJob(rankTableName), prepare: patchCheckerErr, want: emptyPath},
+		{name: "should return empty path when softlink check returns error",
+			job: newRankTableJob(rankTableName), prepare: patchSoftlinkErr, want: emptyPath},
+		{name: "should return empty path when ranktable dir is softlink",
+			job: newRankTableJob(rankTableName), prepare: patchIsSoftlink, want: emptyPath},
+		{name: "should return checked path when dir exists and is not softlink",
+			job: newRankTableJob(rankTableName), prepare: patchNotSoftlink, want: fakePath},
+		{name: "should return empty path when make dir fails",
+			job: newRankTableJob(rankTableName), prepare: patchMkdirErr, want: emptyPath},
+		{name: "should return checked path when make dir succeeds",
+			job: newRankTableJob(rankTableName), prepare: patchMkdirOK, want: fakePath},
+	}
+}
+
+func TestGenRankTableDir(t *testing.T) {
+	for _, tc := range genRankTableDirCases() {
+		convey.Convey(tc.name, t, func() {
+			patches := tc.prepare()
+			defer patches.Reset()
+			got := GenRankTableDir(tc.job)
+			convey.So(got, convey.ShouldEqual, tc.want)
 		})
-		defer patch.Reset()
-		err := os.MkdirAll(fakePath, defaultDirPerm)
-		convey.So(err, convey.ShouldBeNil)
-		defer os.RemoveAll(fakePath)
-		convey.Convey("05-check soft link path failed should return empty path", func() {
-			patch1 := gomonkey.ApplyFunc(utils.IsSoftlink, func(string) (bool, error) {
-				return true, errors.New("fake error")
-			})
-			defer patch1.Reset()
-			path := GenRankTableDir(job)
-			convey.So(path, convey.ShouldEqual, "")
-		})
-		convey.Convey("06-soft link path should return empty path", func() {
-			patch1 := gomonkey.ApplyFunc(utils.IsSoftlink, func(string) (bool, error) {
-				return true, nil
-			})
-			defer patch1.Reset()
-			path := GenRankTableDir(job)
-			convey.So(path, convey.ShouldEqual, "")
-		})
-		convey.Convey("07-not soft link path should return empty path", func() {
-			patch1 := gomonkey.ApplyFunc(utils.IsSoftlink, func(string) (bool, error) {
-				return false, nil
-			})
-			defer patch1.Reset()
-			path := GenRankTableDir(job)
-			convey.So(path, convey.ShouldEqual, fakePath)
-		})
-	})
+	}
 }

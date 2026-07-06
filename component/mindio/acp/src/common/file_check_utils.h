@@ -24,6 +24,7 @@
 #include <chrono>
 #include <thread>
 #include <string>
+#include <cstring>
 #include <regex>
 #include <vector>
 namespace {

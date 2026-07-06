@@ -24,6 +24,9 @@ import (
 
 const defaultLimit = 1024
 
+// ErrBufferLimitExceeded is returned by Write when the written data would exceed the limit.
+var ErrBufferLimitExceeded = errors.New("buffer limit exceeded")
+
 // LimitedWriter limit the size of written data
 type LimitedWriter struct {
 	buffer *bytes.Buffer
@@ -46,7 +49,7 @@ func NewLimitedWriter(limit int) *LimitedWriter {
 // Write write bytes to buffer
 func (lw *LimitedWriter) Write(p []byte) (int, error) {
 	if lw.size+len(p) > lw.limit {
-		return 0, errors.New("buffer limit exceeded")
+		return 0, ErrBufferLimitExceeded
 	}
 	n, err := lw.buffer.Write(p)
 	if err == nil {
