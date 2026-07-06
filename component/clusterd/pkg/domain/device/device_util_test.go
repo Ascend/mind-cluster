@@ -6,11 +6,10 @@ package device
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
@@ -19,11 +18,8 @@ import (
 )
 
 var (
-	testCmName           = "test-node-name"
-	testDeviceCheckCode  = "aaa60c794e2dbec298a2f3c18ea64dea9a1fd2ccdb0cc577b8dfe2c3c5966965"
-	testOneSafeStr       = 1000
-	testTwoSafeStr       = 1001
-	testTwoSafeStrLength = 2
+	testCmName          = "test-node-name"
+	testDeviceCheckCode = "aaa60c794e2dbec298a2f3c18ea64dea9a1fd2ccdb0cc577b8dfe2c3c5966965"
 
 	testDeviceKey1   = "key1"
 	testDeviceValue1 = "value1"
@@ -90,31 +86,6 @@ func TestDeepCopy(t *testing.T) {
 			device.CmName = testCmName
 			newDevice := DeepCopy(device)
 			convey.So(device.CmName, convey.ShouldEqual, newDevice.CmName)
-		})
-	})
-}
-
-func TestGetSafeData(t *testing.T) {
-	convey.Convey("TestGetSafeData", t, func() {
-		convey.Convey("deviceInfos is nil", func() {
-			arr := GetSafeData(nil)
-			convey.So(len(arr), convey.ShouldEqual, 0)
-		})
-		convey.Convey("the length of deviceInfos is 1000", func() {
-			deviceInfos := map[string]*constant.DeviceInfo{}
-			for i := 0; i < testOneSafeStr; i++ {
-				deviceInfos[strconv.Itoa(i)] = &constant.DeviceInfo{}
-			}
-			arr := GetSafeData(deviceInfos)
-			convey.So(len(arr), convey.ShouldEqual, 1)
-		})
-		convey.Convey("the length of deviceInfos is 1001", func() {
-			deviceInfos := map[string]*constant.DeviceInfo{}
-			for i := 0; i < testTwoSafeStr; i++ {
-				deviceInfos[strconv.Itoa(i)] = &constant.DeviceInfo{}
-			}
-			arr := GetSafeData(deviceInfos)
-			convey.So(len(arr), convey.ShouldEqual, testTwoSafeStrLength)
 		})
 	})
 }

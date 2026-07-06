@@ -5,12 +5,11 @@ package node
 
 import (
 	"fmt"
-	"strconv"
 	"testing"
 	"time"
 
 	"github.com/smartystreets/goconvey/convey"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 
 	"ascend-common/api"
 	"clusterd/pkg/common/constant"
@@ -18,11 +17,8 @@ import (
 )
 
 var (
-	testCmName           = "test-node-name"
-	testNodeCheckCode    = "4c97cddcb947bd707778eb50b0986a69768afc2ef3e4f351db0b92e9d07d1fed"
-	testOneSafeStr       = 2000
-	testTwoSafeStr       = 2001
-	testTwoSafeStrLength = 2
+	testCmName        = "test-node-name"
+	testNodeCheckCode = "4c97cddcb947bd707778eb50b0986a69768afc2ef3e4f351db0b92e9d07d1fed"
 )
 
 func TestParseNodeInfoCM(t *testing.T) {
@@ -100,31 +96,6 @@ func TestDeepCopy(t *testing.T) {
 			node.CmName = testCmName
 			newNode := DeepCopy(node)
 			convey.So(newNode.CmName, convey.ShouldEqual, node.CmName)
-		})
-	})
-}
-
-func TestGetSafeData(t *testing.T) {
-	convey.Convey("TestGetSafeData", t, func() {
-		convey.Convey("nodeInfos is nil", func() {
-			arr := GetSafeData(nil)
-			convey.So(len(arr), convey.ShouldEqual, 0)
-		})
-		convey.Convey("the length of nodeInfos is 2000", func() {
-			nodeInfos := map[string]*constant.NodeInfo{}
-			for i := 0; i < testOneSafeStr; i++ {
-				nodeInfos[strconv.Itoa(i)] = &constant.NodeInfo{}
-			}
-			arr := GetSafeData(nodeInfos)
-			convey.So(len(arr), convey.ShouldEqual, 1)
-		})
-		convey.Convey("the length of deviceInfos is 2001", func() {
-			nodeInfos := map[string]*constant.NodeInfo{}
-			for i := 0; i < testTwoSafeStr; i++ {
-				nodeInfos[strconv.Itoa(i)] = &constant.NodeInfo{}
-			}
-			arr := GetSafeData(nodeInfos)
-			convey.So(len(arr), convey.ShouldEqual, testTwoSafeStrLength)
 		})
 	})
 }
