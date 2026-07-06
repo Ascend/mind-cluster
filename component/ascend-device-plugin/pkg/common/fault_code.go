@@ -250,6 +250,7 @@ type FaultTypeCode struct {
 	PreSeparateNPUNetworkCodes []int64
 	SeparateNPUNetworkCodes    []int64
 	SubHealthFaultCodes        []int64
+	SubHealthFaultNetworkCodes []int64
 }
 
 // faultFileInfo fault code file data
@@ -265,6 +266,7 @@ type faultFileInfo struct {
 	PreSeparateNPUNetworkCodes []string
 	SeparateNPUNetworkCodes    []string
 	SubHealthFaultCodes        []string
+	SubHealthFaultNetworkCodes []string
 }
 
 // SwitchFaultFileInfo contains all fault code loading from faultconfig configmap or switchfaultconfig.json
@@ -646,6 +648,7 @@ func LoadFaultCode(faultCodeBytes []byte) error {
 	registerFaultCodeFormats(fileInfo.PreSeparateNPUNetworkCodes)
 	registerFaultCodeFormats(fileInfo.SeparateNPUNetworkCodes)
 	registerFaultCodeFormats(fileInfo.SubHealthFaultCodes)
+	registerFaultCodeFormats(fileInfo.SubHealthFaultNetworkCodes)
 
 	faultTypeCode = FaultTypeCode{
 		NotHandleFaultCodes:        StringTool.HexStringToInt(fileInfo.NotHandleFaultCodes),
@@ -659,6 +662,7 @@ func LoadFaultCode(faultCodeBytes []byte) error {
 		PreSeparateNPUNetworkCodes: StringTool.HexStringToInt(fileInfo.PreSeparateNPUNetworkCodes),
 		SeparateNPUNetworkCodes:    StringTool.HexStringToInt(fileInfo.SeparateNPUNetworkCodes),
 		SubHealthFaultCodes:        StringTool.HexStringToInt(fileInfo.SubHealthFaultCodes),
+		SubHealthFaultNetworkCodes: StringTool.HexStringToInt(fileInfo.SubHealthFaultNetworkCodes),
 	}
 
 	// It is not clear whether the current network fault is separated from the chip fault. The network fault configured
@@ -685,6 +689,12 @@ func mappingChipFaultToNetworkFaultCodesSupport() {
 	for _, faultCode := range faultTypeCode.SeparateNPUCodes {
 		if NetworkFaultCodes.Has(faultCode) {
 			faultTypeCode.SeparateNPUNetworkCodes = append(faultTypeCode.SeparateNPUNetworkCodes, faultCode)
+		}
+	}
+
+	for _, faultCode := range faultTypeCode.SubHealthFaultCodes {
+		if NetworkFaultCodes.Has(faultCode) {
+			faultTypeCode.SubHealthFaultNetworkCodes = append(faultTypeCode.SubHealthFaultNetworkCodes, faultCode)
 		}
 	}
 }
@@ -1105,10 +1115,12 @@ func GetNetworkFaultTypeByCode(faultCodes []int64) string {
 		return SeparateNPU
 	case Int64Tool.SameElement(faultTypeCode.PreSeparateNPUNetworkCodes, faultCodes):
 		return PreSeparateNPU
+	case Int64Tool.SameElement(faultTypeCode.SubHealthFaultNetworkCodes, faultCodes):
+		return SubHealthFault
 	case Int64Tool.SameElement(faultTypeCode.NotHandleFaultNetworkCodes, faultCodes):
 		return NotHandleFault
 	default:
-		hwlog.RunLog.Debugf("not record fault code : %v, use default type PreSeparateNPU", faultCodes)
+		hwlog.RunLog.Debugf("not record fault code : %x, use default type PreSeparateNPU", faultCodes)
 		return PreSeparateNPU
 	}
 }
@@ -1616,6 +1628,9 @@ func handleA950NetworkFaultRecover(logicID int32, device *NpuDevice, faultInfo c
 			updateDeviceFaultTimeMap(device, tmpFaultInfo, false)
 			if Int64Tool.Contains(device.NetworkFaultCodes, preciseFaultCode) {
 				device.NetworkFaultCodes = Int64Tool.Remove(device.NetworkFaultCodes, preciseFaultCode)
+				hwlog.RunLog.Infof("parameter plane fault code recover, logicID: %d, hex code: %v, "+
+					"assertion: %d, alarmRaisedTime: %d", logicID, FormatFaultCodeHex(preciseFaultCode),
+					faultInfo.Assertion, faultInfo.AlarmRaisedTime)
 			}
 		}
 	}
@@ -1659,6 +1674,9 @@ func a950ParameterPlaneFaultOccur(logicID int32, faultInfos []common.DevFaultInf
 			tmpFaultInfo.EventID = preciseFaultCode
 			updateDeviceFaultTimeMap(device, tmpFaultInfo, true)
 			device.NetworkFaultCodes = append(device.NetworkFaultCodes, preciseFaultCode)
+			hwlog.RunLog.Infof("parameter plane fault code occur, logicID: %d, hex code: %v, "+
+				"assertion: %d, alarmRaisedTime: %d", logicID, FormatFaultCodeHex(preciseFaultCode),
+				faultInfo.Assertion, faultInfo.AlarmRaisedTime)
 			updateDeviceFaultTimeMap(device, faultInfo, true)
 			device.NetworkFaultCodes = append(device.NetworkFaultCodes, faultInfo.EventID)
 		}

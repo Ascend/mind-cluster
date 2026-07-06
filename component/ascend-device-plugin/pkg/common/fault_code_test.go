@@ -596,6 +596,15 @@ func TestGetNetworkFaultTypeByCode(t *testing.T) {
 			defer mockFaultTypeCode.Reset()
 			convey.So(GetNetworkFaultTypeByCode(faultCodes), convey.ShouldEqual, PreSeparateNPU)
 		})
+		convey.Convey("fault type SubHealthFault", func() {
+			subHealthFaultCodes := []int64{UBOESubHealFaultCode}
+			mockFaultTypeCode := gomonkey.ApplyGlobalVar(&faultTypeCode, FaultTypeCode{
+				SubHealthFaultNetworkCodes: subHealthFaultCodes,
+				NotHandleFaultCodes:        []int64{testFaultCode},
+			})
+			defer mockFaultTypeCode.Reset()
+			convey.So(GetNetworkFaultTypeByCode(subHealthFaultCodes), convey.ShouldEqual, SubHealthFault)
+		})
 		convey.Convey("read json failed", func() {
 			mockFaultTypeCode := gomonkey.ApplyGlobalVar(&faultTypeCode, FaultTypeCode{})
 			defer mockFaultTypeCode.Reset()
