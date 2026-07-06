@@ -348,7 +348,7 @@ func (hdm *HwDevManager) getROCEAddrList(dev *common.NpuDevice, maxNpuNum int) [
 		{
 			AddrType: addrType,
 			Addr:     ip,
-			Ports:    []string{},
+			Ports:    []string{"d2h"},
 			PlaneId:  api.DefaultRandAddrPlaneID,
 		},
 	}
