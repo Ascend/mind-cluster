@@ -1796,8 +1796,7 @@ func (tool *AscendTools) HandleLostHyperPlaneFaultEvents(device *common.NpuDevic
 		return
 	}
 	needHandleLostHyperPlaneFaultCondition := isFirstFlushFault || (common.Int32Tool.Contains(initLogicIDs,
-		device.LogicID)) || common.SubscribeFailed || (device.Health == v1beta1.Unhealthy &&
-		moreThanFiveMin(device))
+		device.LogicID)) || common.SubscribeFailed
 	if !needHandleLostHyperPlaneFaultCondition {
 		return
 	}
@@ -1986,7 +1985,7 @@ func (tool *AscendTools) queryHyperPlaneStatusWithoutFaultCode(faultCodes []int6
 		faultCode, hasFault := tool.generateOriginalFaultCodeFromHyperPlaneStatus(linkStatus)
 		if hasFault {
 			newFaultCodes = append(newFaultCodes, faultCode)
-			hwlog.RunLog.Infof("device %d generate fault code %v based on ub link down fault,"+
+			hwlog.RunLog.Infof("device %d generate fault code %#x based on ub link down fault,"+
 				" device health: %s", device.PhyID, faultCode, device.Health)
 		}
 	}
