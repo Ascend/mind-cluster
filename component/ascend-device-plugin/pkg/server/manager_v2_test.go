@@ -459,5 +459,26 @@ func TestGetROCEAddrList_ShouldReturnAddr_WhenConfigAndInterfaceValid(t *testing
 		convey.So(len(result), convey.ShouldEqual, 1)
 		convey.So(result[0].AddrType, convey.ShouldEqual, addrTypeIPV6)
 		convey.So(result[0].Addr, convey.ShouldEqual, testIPv6Address)
+		convey.So(result[0].Ports, convey.ShouldResemble, []string{"d2h"})
+		convey.So(result[0].PlaneId, convey.ShouldEqual, api.DefaultRandAddrPlaneID)
+	})
+}
+
+func TestGetROCEAddrList_ShouldReturnD2hPorts_WhenIPv4Address(t *testing.T) {
+	convey.Convey("TestGetROCEAddrList should return d2h ports when config valid", t, func() {
+		dev := &common.NpuDevice{PhyID: 0}
+		nicNames := []string{testNicName}
+
+		patches := gomonkey.NewPatches()
+		patches.ApplyFuncReturn(getNpuToNicNames, nicNames, nil)
+		patches.ApplyFuncReturn(getInterfaceIPsByPriority, testIPv4Address, nil)
+		defer patches.Reset()
+
+		result := (&HwDevManager{}).getROCEAddrList(dev, 8)
+		convey.So(len(result), convey.ShouldEqual, 1)
+		convey.So(result[0].AddrType, convey.ShouldEqual, addrTypeIPV4)
+		convey.So(result[0].Addr, convey.ShouldEqual, testIPv4Address)
+		convey.So(result[0].Ports, convey.ShouldResemble, []string{"d2h"})
+		convey.So(result[0].PlaneId, convey.ShouldEqual, api.DefaultRandAddrPlaneID)
 	})
 }
