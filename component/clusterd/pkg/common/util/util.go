@@ -221,3 +221,68 @@ func GetStringMapValueList[T any](o map[string]T) []T {
 	}
 	return ret
 }
+
+// SplitMapToSafeChunks splits a string-keyed map into chunks, each serialized size < maxSize.
+// serialize is called on each subset to produce the string; it may apply transforms (e.g. SwitchInfo).
+func SplitMapToSafeChunks[T any](data map[string]T, maxSize int, serialize func(map[string]T) string) []string {
+	if len(data) == 0 {
+		return []string{}
+	}
+	return splitToCmChunks(data, maxSize, serialize)
+}
+
+func splitToCmChunks[T any](data map[string]T, maxSize int, serialize func(map[string]T) string) []string {
+	serialized := serialize(data)
+	if len(serialized) <= maxSize {
+		return []string{serialized}
+	}
+	keys := make([]string, 0, len(data))
+	for k := range data {
+		keys = append(keys, k)
+	}
+	n := binarySearchMaxFit(data, keys, maxSize, serialize)
+	if n < 1 {
+		first := map[string]T{keys[0]: data[keys[0]]}
+		firstSize := len(serialize(first))
+		hwlog.RunLog.Warnf("entry exceeds configmap size limit, size: %d", firstSize)
+		if len(keys) == 1 {
+			return []string{serialize(first)}
+		}
+		rest := make(map[string]T, len(data)-1)
+		for i := 1; i < len(keys); i++ {
+			rest[keys[i]] = data[keys[i]]
+		}
+		result := []string{serialize(first)}
+		result = append(result, splitToCmChunks(rest, maxSize, serialize)...)
+		return result
+	}
+	left := make(map[string]T, n)
+	right := make(map[string]T, len(data)-n)
+	for i, k := range keys {
+		if i < n {
+			left[k] = data[k]
+		} else {
+			right[k] = data[k]
+		}
+	}
+	result := []string{serialize(left)}
+	result = append(result, splitToCmChunks(right, maxSize, serialize)...)
+	return result
+}
+
+func binarySearchMaxFit[T any](data map[string]T, keys []string, maxSize int, serialize func(map[string]T) string) int {
+	low, high := 1, len(keys)
+	for low <= high {
+		mid := (low + high) / 2
+		subset := make(map[string]T, mid)
+		for i := 0; i < mid; i++ {
+			subset[keys[i]] = data[keys[i]]
+		}
+		if len(serialize(subset)) <= maxSize {
+			low = mid + 1
+		} else {
+			high = mid - 1
+		}
+	}
+	return high
+}
