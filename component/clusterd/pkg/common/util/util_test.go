@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"strings"
 	"syscall"
 	"testing"
 
@@ -369,6 +370,129 @@ func TestMergeStringMapListOnlyNewKeys(t *testing.T) {
 			expectedMap := map[string]string{"key1": "value1", "key3": "value3"}
 			MergeStringMapListOnlyNewKeys(oldMap, newMap)
 			convey.So(oldMap, convey.ShouldResemble, expectedMap)
+		})
+	})
+}
+
+func TestSplitMapToSafeChunks(t *testing.T) {
+	const kB = 1024
+	// Use a simple serialize function for generic tests
+	serialize := func(m map[string]string) string {
+		return ObjToString(m)
+	}
+
+	convey.Convey("TestSplitMapToSafeChunks", t, func() {
+		convey.Convey("nil map returns empty", func() {
+			result := SplitMapToSafeChunks[string](nil, 1*kB, serialize)
+			convey.So(len(result), convey.ShouldEqual, 0)
+		})
+		convey.Convey("empty map returns empty", func() {
+			result := SplitMapToSafeChunks(map[string]string{}, 1*kB, serialize)
+			convey.So(len(result), convey.ShouldEqual, 0)
+		})
+		convey.Convey("data under limit fits in one chunk", func() {
+			data := map[string]string{"k1": "v1", "k2": "v2"}
+			result := SplitMapToSafeChunks(data, 1*kB, serialize)
+			convey.So(len(result), convey.ShouldEqual, 1)
+			convey.So(result[0], convey.ShouldNotBeEmpty)
+		})
+		convey.Convey("data exactly at limit fits in one chunk", func() {
+			data := map[string]string{"k1": "v1"}
+			serialized := serialize(data)
+			result := SplitMapToSafeChunks(data, len(serialized), serialize)
+			convey.So(len(result), convey.ShouldEqual, 1)
+		})
+		convey.Convey("data exceeding limit splits into chunks, each under limit", func() {
+			maxSize := 100
+			payload := strings.Repeat("x", 50)
+			data := map[string]string{}
+			for i := 0; i < 100; i++ {
+				data[fmt.Sprintf("key%d", i)] = payload
+			}
+			result := SplitMapToSafeChunks(data, maxSize, serialize)
+			convey.So(len(result), convey.ShouldBeGreaterThan, 1)
+			for i := range result {
+				convey.So(len(result[i]), convey.ShouldBeLessThan, maxSize)
+			}
+		})
+		convey.Convey("non-last chunks are filled close to limit", func() {
+			maxSize := 100 * kB
+			payload := strings.Repeat("a", 200)
+			data := map[string]string{}
+			for i := 0; i < 600; i++ {
+				data[fmt.Sprintf("key%d", i)] = payload
+			}
+			result := SplitMapToSafeChunks(data, maxSize, serialize)
+			convey.So(len(result), convey.ShouldBeGreaterThan, 1)
+			for i := range result {
+				convey.So(len(result[i]), convey.ShouldBeLessThan, maxSize)
+				if i < len(result)-1 {
+					convey.So(len(result[i]),
+						convey.ShouldBeGreaterThan, maxSize*4/5)
+				}
+			}
+		})
+		convey.Convey("single entry exceeding limit returns as-is", func() {
+			payload := strings.Repeat("z", 2000)
+			data := map[string]string{"huge": payload}
+			result := SplitMapToSafeChunks(data, 100, serialize)
+			convey.So(len(result), convey.ShouldEqual, 1)
+		})
+		convey.Convey("large number of entries splits without overflow", func() {
+			maxSize := 100 * kB
+			data := map[string]string{}
+			for i := 0; i < 10000; i++ {
+				data[fmt.Sprintf("k%d", i)] = "v"
+			}
+			result := SplitMapToSafeChunks(data, maxSize, serialize)
+			convey.So(len(result), convey.ShouldBeGreaterThanOrEqualTo, 1)
+			for i := range result {
+				convey.So(len(result[i]), convey.ShouldBeLessThan, maxSize)
+			}
+		})
+	})
+}
+
+func TestBinarySearch(t *testing.T) {
+	convey.Convey("TestBinarySearchFloat", t, func() {
+		convey.Convey("float binary search should return how many item meet the capacity", func() {
+			items := []float64{1.2, 1.3, 1.4, 1.5, 1.6, 1.7}
+			capa := 3.9
+			low, high := 1, len(items)
+			for low <= high {
+				mid := (low + high) / 2
+				subset := 0.0
+				for i := 0; i < mid; i++ {
+					subset += items[i]
+				}
+				if subset <= capa {
+					low = mid + 1
+				} else {
+					high = mid - 1
+				}
+			}
+			convey.So(high, convey.ShouldEqual, 3)
+		})
+	})
+
+	convey.Convey("TestBinarySearchInteger", t, func() {
+		convey.Convey("integer binary search should return how many item meet the capacity", func() {
+			items := []int{1, 1, 1}
+			capa := 2
+			low, high := 1, len(items)
+			for low <= high {
+				mid := (low + high) / 2
+				subset := 0
+				for i := 0; i < mid; i++ {
+					subset += items[i]
+				}
+				if subset <= capa {
+					low = mid + 1
+				} else {
+					high = mid - 1
+				}
+			}
+			convey.So(high, convey.ShouldEqual, 2)
 		})
 	})
 }
