@@ -17,6 +17,7 @@ package hccn
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -24,6 +25,7 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
+	"github.com/agiledragon/gomonkey/v2"
 )
 
 func init() {
@@ -181,4 +183,128 @@ func TestParseDeviceTable(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetUBPortsDownSnapshot(t *testing.T) {
+	t.Run("01-mix bonding down, ub down and up ports, snapshot should aggregate down count by type",
+		func(t *testing.T) {
+			ubPortEnabledCache = make(map[int32]map[string]bool)
+			mockGetAllUBPorts := gomonkey.ApplyFuncReturn(GetAllUBports, []common.UBPort{
+				{UDieId: 0, PortID: 4, PortType: BondingPortName, LinkStatus: LinkDown},
+				{UDieId: 0, PortID: 5, PortType: BondingPortName, LinkStatus: LinkUp},
+				{UDieId: 1, PortID: 8, PortType: UBPortName, LinkStatus: LinkDown},
+				{UDieId: 1, PortID: 9, PortType: UBPortName, LinkStatus: LinkDown},
+				{UDieId: 1, PortID: 10, PortType: UBPortName, LinkStatus: LinkUp},
+			}, nil)
+			defer mockGetAllUBPorts.Reset()
+			mockIsEnabled := gomonkey.ApplyFuncReturn(IsUBPortEnabled, true, nil)
+			defer mockIsEnabled.Reset()
+			snapshot, err := GetUBPortsDownSnapshot(0)
+			if err != nil {
+				t.Errorf("GetUBPortsDownSnapshot() error = %v", err)
+			}
+			if snapshot.BondingDownCnt != 1 {
+				t.Errorf("BondingDownCount = %d, want 1", snapshot.BondingDownCnt)
+			}
+			if snapshot.UBDownCnt != 2 {
+				t.Errorf("UBDownCnt = %d, want 2", snapshot.UBDownCnt)
+			}
+		})
+
+	t.Run("02-all ports up, snapshot should be zero",
+		func(t *testing.T) {
+			ubPortEnabledCache = make(map[int32]map[string]bool)
+			mockGetAllUBPorts := gomonkey.ApplyFuncReturn(GetAllUBports, []common.UBPort{
+				{UDieId: 0, PortID: 4, PortType: BondingPortName, LinkStatus: LinkUp},
+				{UDieId: 1, PortID: 8, PortType: UBPortName, LinkStatus: LinkUp},
+			}, nil)
+			defer mockGetAllUBPorts.Reset()
+			snapshot, err := GetUBPortsDownSnapshot(0)
+			if err != nil {
+				t.Errorf("GetUBPortsDownSnapshot() error = %v", err)
+			}
+			if snapshot.BondingDownCnt != 0 {
+				t.Errorf("BondingDownCount = %d, want 0", snapshot.BondingDownCnt)
+			}
+			if snapshot.UBDownCnt != 0 {
+				t.Errorf("UBDownCnt = %d, want 0", snapshot.UBDownCnt)
+			}
+		})
+	t.Run("03-get all ub ports failed. should return error",
+		func(t *testing.T) {
+			ubPortEnabledCache = make(map[int32]map[string]bool)
+			mockGetAllUBPorts := gomonkey.ApplyFuncReturn(GetAllUBports, []common.UBPort{},
+				errors.New("hccn_tool exec failed"))
+			defer mockGetAllUBPorts.Reset()
+			snapshot, err := GetUBPortsDownSnapshot(0)
+			if err == nil {
+				t.Errorf("expected error, got nil")
+			}
+			if snapshot.BondingDownCnt != 0 {
+				t.Errorf("BondingDownCount = %d, want 0", snapshot.BondingDownCnt)
+			}
+			if snapshot.UBDownCnt != 0 {
+				t.Errorf("UBDownCnt = %d, want 0", snapshot.UBDownCnt)
+			}
+		})
+
+	t.Run("04-empty ports list, snapshot down count should be zero",
+		func(t *testing.T) {
+			ubPortEnabledCache = make(map[int32]map[string]bool)
+			mockGetAllUBPorts := gomonkey.ApplyFuncReturn(GetAllUBports, []common.UBPort{}, nil)
+			defer mockGetAllUBPorts.Reset()
+			snapshot, err := GetUBPortsDownSnapshot(0)
+			if err != nil {
+				t.Errorf("GetUBPortsDownSnapshot() error = %v", err)
+			}
+			if snapshot.BondingDownCnt != 0 {
+				t.Errorf("BondingDownCount = %d, want 0", snapshot.BondingDownCnt)
+			}
+			if snapshot.UBDownCnt != 0 {
+				t.Errorf("UBDownCnt = %d, want 0", snapshot.UBDownCnt)
+			}
+		})
+
+	t.Run("05-unenabled down ports are excluded from the down count",
+		func(t *testing.T) {
+			ubPortEnabledCache = make(map[int32]map[string]bool)
+			mockGetAllUBPorts := gomonkey.ApplyFuncReturn(GetAllUBports, []common.UBPort{
+				{UDieId: 0, PortID: 4, PortType: BondingPortName, LinkStatus: LinkDown},
+				{UDieId: 1, PortID: 8, PortType: UBPortName, LinkStatus: LinkDown},
+				{UDieId: 1, PortID: 9, PortType: UBPortName, LinkStatus: LinkDown},
+			}, nil)
+			defer mockGetAllUBPorts.Reset()
+			mockIsEnabled := gomonkey.ApplyFunc(IsUBPortEnabled,
+				func(_, udieId, portId int32) (bool, error) { return udieId == 1 && portId == 8, nil })
+			defer mockIsEnabled.Reset()
+			snapshot, err := GetUBPortsDownSnapshot(0)
+			if err != nil {
+				t.Errorf("GetUBPortsDownSnapshot() error = %v", err)
+			}
+			if snapshot.BondingDownCnt != 1 {
+				t.Errorf("BondingDownCount = %d, want 1", snapshot.BondingDownCnt)
+			}
+			if snapshot.UBDownCnt != 1 {
+				t.Errorf("UBDownCnt = %d, want 1", snapshot.UBDownCnt)
+			}
+		})
+
+	t.Run("06-port_info query failed, down ports are still counted as enabled",
+		func(t *testing.T) {
+			ubPortEnabledCache = make(map[int32]map[string]bool)
+			mockGetAllUBPorts := gomonkey.ApplyFuncReturn(GetAllUBports, []common.UBPort{
+				{UDieId: 1, PortID: 8, PortType: UBPortName, LinkStatus: LinkDown},
+			}, nil)
+			defer mockGetAllUBPorts.Reset()
+			mockIsEnabled := gomonkey.ApplyFuncReturn(IsUBPortEnabled, false,
+				errors.New("port_info exec failed"))
+			defer mockIsEnabled.Reset()
+			snapshot, err := GetUBPortsDownSnapshot(0)
+			if err != nil {
+				t.Errorf("GetUBPortsDownSnapshot() error = %v", err)
+			}
+			if snapshot.UBDownCnt != 1 {
+				t.Errorf("UBDownCnt = %d, want 1", snapshot.UBDownCnt)
+			}
+		})
 }
