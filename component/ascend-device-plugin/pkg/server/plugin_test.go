@@ -969,9 +969,12 @@ func mockSetSlowNodeNoticeEnv() *gomonkey.Patches {
 }
 
 func mockGetNPUs() *gomonkey.Patches {
+	mockNpuAllInfo := common.NpuAllInfo{
+		AllDevs: make([]common.NpuDevice, len(devices)),
+	}
 	return gomonkey.ApplyMethod(reflect.TypeOf(new(device.HwAscend910Manager)), "GetNPUs",
 		func(_ *device.HwAscend910Manager) (common.NpuAllInfo, error) {
-			return common.NpuAllInfo{}, nil
+			return mockNpuAllInfo, nil
 		})
 }
 
@@ -2126,6 +2129,116 @@ func TestIsJobNameStillInUse(t *testing.T) {
 			ps.softShareJobs.Store("default/pod3", "default.job1")
 			result := ps.isJobNameStillInUse("default.job1")
 			convey.So(result, convey.ShouldBeTrue)
+		})
+	})
+}
+
+// TestAllocateWithSoftShareDevice for test Allocate when IsSupportSoftShareDevice is true
+func TestAllocateWithSoftShareDevice(t *testing.T) {
+	ps := NewPluginServer(api.Ascend910, devices, []string{common.HiAIManagerDevice},
+		device.NewHwAscend910Manager())
+	convey.Convey("test Allocate with soft share device", t, func() {
+		mockGetNPUsFunc := mockGetNPUs()
+		defer mockGetNPUsFunc.Reset()
+		mockSlowNodeFunc := mockSetSlowNodeNoticeEnv()
+		defer mockSlowNodeFunc.Reset()
+		mockGetDeviceListID := gomonkey.ApplyFunc(common.GetDeviceListID,
+			func(_ []string, _ string) (map[int]int, []int, error) {
+				return map[int]int{}, []int{0}, nil
+			})
+		defer mockGetDeviceListID.Reset()
+		mockMountShareDeviceConfig := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(PluginServer)),
+			"mountShareDeviceConfig", func(_ *PluginServer, _ *v1beta1.ContainerAllocateResponse,
+				_ []int, _ string) {
+			})
+		defer mockMountShareDeviceConfig.Reset()
+		mockSetNPUDeviceMount := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(PluginServer)),
+			"setNPUDeviceMount", func(_ *PluginServer, _ *v1beta1.ContainerAllocateResponse,
+				_ []int) {
+			})
+		defer mockSetNPUDeviceMount.Reset()
+		mockSetHcclTopoFilePathEnv := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(PluginServer)),
+			"setHcclTopoFilePathEnv", func(_ *PluginServer, _ *v1beta1.ContainerAllocateResponse,
+				_ common.NpuAllInfo) {
+			})
+		defer mockSetHcclTopoFilePathEnv.Reset()
+
+		var requests v1beta1.AllocateRequest
+		requests.ContainerRequests = []*v1beta1.ContainerAllocateRequest{
+			{DevicesIDs: []string{api.Ascend910 + "-0"}},
+		}
+
+		convey.Convey("when IsSupportSoftShareDevice is true and UseVolcanoType is true, should call useVolcano", func() {
+			mockParam := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{
+				UseVolcanoType:        true,
+				PresetVDevice:         true,
+				ShareCount:            api.SoftShareDeviceCount,
+				SoftShareDevConfigDir: "/tmp/softshare",
+			})
+			defer mockParam.Reset()
+
+			useVolcanoCalled := false
+			mockUseVolcano := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(PluginServer)), "useVolcano",
+				func(_ *PluginServer, _ []string) ([]string, string, error) {
+					useVolcanoCalled = true
+					return []string{api.Ascend910 + "-0"}, "", nil
+				})
+			defer mockUseVolcano.Reset()
+
+			_, err := ps.Allocate(context.Background(), &requests)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(useVolcanoCalled, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("when IsSupportSoftShareDevice is true but UseVolcanoType is false, should not call useVolcano", func() {
+			mockParam := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{
+				UseVolcanoType:        false,
+				PresetVDevice:         true,
+				ShareCount:            api.SoftShareDeviceCount,
+				SoftShareDevConfigDir: "/tmp/softshare",
+			})
+			defer mockParam.Reset()
+
+			useVolcanoCalled := false
+			mockUseVolcano := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(PluginServer)), "useVolcano",
+				func(_ *PluginServer, _ []string) ([]string, string, error) {
+					useVolcanoCalled = true
+					return []string{api.Ascend910 + "-0"}, "", nil
+				})
+			defer mockUseVolcano.Reset()
+
+			_, err := ps.Allocate(context.Background(), &requests)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(useVolcanoCalled, convey.ShouldBeFalse)
+		})
+
+		convey.Convey("when IsSupportSoftShareDevice is false and PresetVDevice is true and all devices allocated, should not call useVolcano", func() {
+			mockParam := gomonkey.ApplyGlobalVar(&common.ParamOption, common.Option{
+				UseVolcanoType:        true,
+				PresetVDevice:         true,
+				ShareCount:            1,
+				SoftShareDevConfigDir: "",
+			})
+			defer mockParam.Reset()
+
+			useVolcanoCalled := false
+			mockUseVolcano := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(PluginServer)), "useVolcano",
+				func(_ *PluginServer, _ []string) ([]string, string, error) {
+					useVolcanoCalled = true
+					return []string{api.Ascend910 + "-0"}, "", nil
+				})
+			defer mockUseVolcano.Reset()
+
+			allDevicesRequest := v1beta1.AllocateRequest{
+				ContainerRequests: []*v1beta1.ContainerAllocateRequest{
+					{DevicesIDs: []string{api.Ascend910 + "-0", api.Ascend910 + "-1",
+						api.Ascend910 + "-2", api.Ascend910 + "-3", api.Ascend910 + "-4",
+						api.Ascend910 + "-5", api.Ascend910 + "-6", api.Ascend910 + "-7"}},
+				},
+			}
+			_, err := ps.Allocate(context.Background(), &allDevicesRequest)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(useVolcanoCalled, convey.ShouldBeFalse)
 		})
 	})
 }

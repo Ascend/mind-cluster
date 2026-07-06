@@ -143,8 +143,7 @@ func checkParam() bool {
 		checkLinkdownTimeout,
 		checkThirdPartyScanDelay,
 		checkDeviceResetTimeout,
-		checkShareDevCount,
-		checkSoftShareDevConfigDir,
+		checkSoftShareDevParam,
 	}
 	for _, check := range checks {
 		if !check() {
@@ -261,6 +260,17 @@ func checkDeviceResetTimeout() bool {
 func checkShareDevCount() bool {
 	if *shareDevCount < 1 || *shareDevCount > common.MaxShareDevCount {
 		hwlog.RunLog.Error("share device function params invalid")
+		return false
+	}
+	return true
+}
+
+func checkSoftShareDevParam() bool {
+	if !checkShareDevCount() || !checkSoftShareDevConfigDir() {
+		return false
+	}
+	if *shareDevCount == common.MaxShareDevCount && *softShareDevConfigDir != "" && *volcanoType == false {
+		hwlog.RunLog.Error("soft share device is enabled, but volcanoType must be true")
 		return false
 	}
 	return true
