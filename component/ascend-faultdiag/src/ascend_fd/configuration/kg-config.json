@@ -25459,7 +25459,7 @@
                 "component": "VLLM-ASCEND",
                 "module": "Ascend Store",
                 "cause_zh": "Mooncake配置文件内容错误导致Worker初始化失败",
-                "description_zh": "MOONCAKE_CONFIG_PATH指定的配置文件存在，但内容格式或字段值错误。如master_server_address端口配置为50061，但实际环境变量MOONCAKE_MASTER使用的是10.10.10.1:50061，两者不一致导致Mooncake初始化失败。其他可能原因：JSON格式语法错误、必填字段缺失、字段值类型错误、device_name指定的设备不存在、protocol值不支持等。",
+                "description_zh": "可能原因如下：\n1、KV池化Mooncake服务端的环境变量MOONCAKE_CONFIG_PATH指定的配置文件存在，但内容格式或字段值错误。例如：JSON格式语法错误、必填字段缺失、字段值类型错误、device_name指定的设备不存在、protocol值不支持等。\n2、启动mooncake_master服务的命令中的端口号和MOONCAKE_CONFIG_PATH指定的配置文件的\"master_server_address\"的端口号不一致导致的。",
                 "suggestion_zh": [
                     "1. 查看完整错误堆栈，定位具体配置错误字段；",
                     "2. 使用python -m json.tool验证JSON格式正确性；",
@@ -25468,7 +25468,7 @@
                     "5. 修正配置文件后重新启动服务;"
                 ],
                 "cause_en": "Worker initialization fails due to incorrect Mooncake configuration file content",
-                "description_en": "The configuration file specified by MOONCAKE_CONFIG_PATH exists, but its content format or field values are incorrect. For example, the master_server_address port is set to 50061, while the MOONCAKE_MASTER environment variable uses 10.10.10.1:50061. The inconsistency causes Mooncake initialization to fail. Other possible causes: JSON syntax errors, missing required fields, incorrect field value types, non-existent device specified by device_name, or unsupported protocol values.",
+                "description_en": "Possible causes:\n1. The configuration file specified by the KV pooling Mooncake server's environment variable MOONCAKE_CONFIG_PATH exists, but its content format or field values are incorrect. For example: JSON format syntax errors, missing required fields, incorrect field value types, non-existent device specified by device_name, or unsupported protocol values.\n2. The port number in the command used to start the mooncake_master service is inconsistent with the port number in the \"master_server_address\" field of the configuration file specified by MOONCAKE_CONFIG_PATH.",
                 "suggestion_en": [
                     "1. Check the complete error stack to locate the specific incorrect configuration field.",
                     "2. Use python -m json.tool to verify the JSON format.",
