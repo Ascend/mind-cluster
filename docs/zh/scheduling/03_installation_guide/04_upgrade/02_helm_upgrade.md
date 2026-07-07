@@ -16,7 +16,7 @@
     - NPU Exporter
     - Infer Operator
     - K8s RDMA Shared Dev Plugin
-- 升级Ascend Docker Runtime、Container Manager、TaskD和MindIO组件请参考[手动升级](../../05_developer_guide/installation_deployment/01_upgrade.md#ZH-CN_TOPIC_0000002479226452)章节操作。
+- 升级Ascend Docker Runtime、Container Manager、TaskD和MindIO组件请参考[手动升级](../../05_developer_guide/installation_deployment/02_upgrade.md#ZH-CN_TOPIC_0000002479226452)章节操作。
 
 ## 升级前准备<a name="section_helm_upgrade_prepare"></a>
 

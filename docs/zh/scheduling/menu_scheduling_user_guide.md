@@ -113,7 +113,7 @@
       - [Resilience Controller](./05_developer_guide/installation_deployment/manual_installation/10_resilience_controller.md)
       - [Container Manager](./05_developer_guide/installation_deployment/manual_installation/11_container-manager.md)
       - [K8s RDMA Shared Dev Plugin](./05_developer_guide/installation_deployment/manual_installation/12_k8s_rdma_shared_dev_plugin.md)
-    - [手动升级](./05_developer_guide/installation_deployment/01_upgrade.md)
+    - [手动升级](./05_developer_guide/installation_deployment/02_upgrade.md)
     - [手动卸载](./05_developer_guide/installation_deployment/01_uninstallation.md)
   - [自定义指标开发](./05_developer_guide/custom_metrics_development.md)
   - [DP热复位插件开发](./05_developer_guide/dp_hot_reset_plugin_development.md)

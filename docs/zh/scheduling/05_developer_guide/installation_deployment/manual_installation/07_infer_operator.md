@@ -83,7 +83,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p>false</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p>查询<span>ClusterD</span>版本号。</p><ul><li>true：查询。</li><li>false：不查询。</li></ul>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p>查询<span>Infer Operator</span>版本号。</p><ul><li>true：查询。</li><li>false：不查询。</li></ul>
 </td>
 </tr>
 <tr id="row56148488467"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="p661410488460"><a name="p661410488460"></a><a name="p661410488460"></a>-logLevel</p>

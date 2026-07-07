@@ -72,7 +72,7 @@
 
 ### 26.1.0兼容性说明
 
-- 配置文件路径变更：`metricConfiguration.json`和`pluginConfiguration.json`路径由`/usr/local/`变更为`/user/mind-cluster/npu-exporter-config`。
+- 配置文件路径变更：`metricConfiguration.json`和`pluginConfiguration.json`路径由`/usr/local/`变更为`/user/mind-cluster/npu-exporter-config`，旧版本（26.0及其以前版本）用户迁移需要把配置文件拷贝到`/user/mind-cluster/npu-exporter-config`。
 
 - 如下指标增加`-1`状态，表示DCMI接口/hccn_tool工具调用失败，具体指标信息请参见[NPU数据信息](../../../06_api/npu_exporter/01_prometheus_metrics_api.md#section1379685784314)：
     - `npu_chip_info_health_status`
