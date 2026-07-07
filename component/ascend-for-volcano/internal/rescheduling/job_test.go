@@ -1463,6 +1463,33 @@ func TestReBuildMultiLevelSchedulingCache_HotSwitchOriginPodIncluded(t *testing.
 	}
 }
 
+func TestIsDealFaultByExternal(t *testing.T) {
+	t.Run("01-return true when ProcessRecoverExternalModeKey exists", func(t *testing.T) {
+		fJob := &FaultJob{
+			Annotations: map[string]string{util.ProcessRecoverExternalModeKey: "true"},
+		}
+		if !fJob.isDealFaultByExternal() {
+			t.Errorf("isDealFaultByExternal() should return true when ProcessRecoverExternalModeKey exists")
+		}
+	})
+
+	t.Run("02-return false when ProcessRecoverExternalModeKey does not exist", func(t *testing.T) {
+		fJob := &FaultJob{
+			Annotations: map[string]string{"other-key": "value"},
+		}
+		if fJob.isDealFaultByExternal() {
+			t.Errorf("isDealFaultByExternal() should return false when ProcessRecoverExternalModeKey does not exist")
+		}
+	})
+
+	t.Run("03-return false when Annotations is nil", func(t *testing.T) {
+		fJob := &FaultJob{}
+		if fJob.isDealFaultByExternal() {
+			t.Errorf("isDealFaultByExternal() should return false when Annotations is nil")
+		}
+	})
+}
+
 func TestReBuildMultiLevelSchedulingCache_BackupPodPendingSkipped(t *testing.T) {
 	sJob := plugin.SchedulerJob{
 		SchedulerJobAttr: util.SchedulerJobAttr{
