@@ -602,8 +602,12 @@ func isFailedTask(task *api.TaskInfo) bool {
 // isPodFailedCanRestarted if the pod status is failed, judge whether job can be restarted
 func (fJob *FaultJob) isFaultJobCanRestarted(reScheduler *ReScheduler) bool {
 	if !fJob.IsFaultJob {
+		klog.V(util.LogWarningLev).Infof("fJob %s is not fault job, can not be restarted", fJob.JobName)
+		return false
+	}
+	if fJob.isDealFaultByExternal() {
 		klog.V(util.LogWarningLev).Infof("fJob %s has software fault or PreSeparateNPU fault, "+
-			"need restarted by platform skip delete pod", fJob.JobName)
+			"need restarted by external skip delete pod", fJob.JobName)
 		return false
 	}
 	if fJob.faultReason == PodFailed {
@@ -622,6 +626,17 @@ func (fJob *FaultJob) isFaultJobCanRestarted(reScheduler *ReScheduler) bool {
 		}
 	}
 	return true
+}
+
+// isDealFaultByExternal indicate the fault which should be deal
+func (fJob *FaultJob) isDealFaultByExternal() bool {
+	if _, ok := fJob.Annotations[util.ProcessRecoverExternalModeKey]; ok {
+		klog.V(util.LogDebugLev).Infof(
+			"rescheduling: skip deal faut job <%s/%s> has process recover external model key",
+			fJob.JobNamespace, fJob.JobName)
+		return true
+	}
+	return false
 }
 
 // GraceDeleteJob grace delete jobs labelled to be deleted gracefully

@@ -246,3 +246,8 @@ const (
 	// SpPendingTimes max pending sessions before upgrading rescheduling level to logic super-pod
 	SpPendingTimes = 6
 )
+
+const (
+	// ProcessRecoverExternalModeKey indicate the pod which is deleted by external platform in the process recover
+	ProcessRecoverExternalModeKey = "ProcessRecoverStrategy"
+)
