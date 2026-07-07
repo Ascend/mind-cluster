@@ -14,5 +14,5 @@
   - [Resilience Controller](./manual_installation/10_resilience_controller.md)
   - [Container Manager](./manual_installation/11_container-manager.md)
   - [K8s RDMA Shared Dev Plugin](./manual_installation/12_k8s_rdma_shared_dev_plugin.md)
-- [升级](01_upgrade.md)
+- [升级](02_upgrade.md)
 - [卸载](01_uninstallation.md)
