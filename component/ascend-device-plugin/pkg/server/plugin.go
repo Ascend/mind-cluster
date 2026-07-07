@@ -159,6 +159,11 @@ func (ps *PluginServer) generateAllDeviceMap() map[string]string {
 	ps.cachedLock.RLock()
 	vol2KlDevMap := make(map[string]string, len(ps.klt2RealDevMap))
 	for k, r := range ps.klt2RealDevMap {
+		// Soft share: real → real, avoiding the introduction of virtual device ID mapping
+		if common.IsSupportSoftShareDevice() {
+			vol2KlDevMap[r] = r
+			continue
+		}
 		vol2KlDevMap[r] = k
 	}
 	for _, dev := range ps.cachedDevices {
