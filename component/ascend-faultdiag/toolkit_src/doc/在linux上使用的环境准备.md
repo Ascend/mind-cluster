@@ -6,7 +6,7 @@
 
 打开终端（Terminal），执行以下命令检查是否已安装 Python 3.8+（项目推荐最低版本，可根据实际需求调整）：
 
-```
+```shell
 python3 --version
 ```
 
@@ -17,7 +17,8 @@ python3 --version
 ### 2. 安装 / 升级 Python
 
 #### 2.1 适用于 Debian/Ubuntu 系列
-```
+
+```shell
 \# 更新软件包列表
 
 sudo apt update
@@ -34,7 +35,8 @@ sudo update-alternatives --config python3  # 按提示选择 Python 3.9
 ```
 
 ### 2.2 适用于CentOS/RHEL/OpenEuler 系列
-```
+
+```shell
 \# 1. 安装 EPEL 仓库（提供额外 Python 版本）
 
 sudo yum install -y epel-release
@@ -56,7 +58,7 @@ ls -l /usr/bin/python3 /usr/bin/pip3
 
 ### 3. 验证 Python 安装成功
 
-```
+```shell
 python3 --version  # 应输出安装的版本号
 
 pip3 --version     # 应输出对应 pip 版本
@@ -68,12 +70,11 @@ pip3 --version     # 应输出对应 pip 版本
 
 打开终端，通过 `cd` 命令切换到项目源码所在文件夹：
 
-
 ### 2. 安装依赖包
 
 项目根目录下需存在[requirements.txt](../requirements.txt)文件，执行以下命令安装所有依赖：
 
-```
+```shell
 pip3 install -r requirements.txt -i https://mirrors.huaweicloud.com/repository/pypi/simple/ --trusted-host mirrors.huaweicloud.com
 ```
 
@@ -81,6 +82,6 @@ pip3 install -r requirements.txt -i https://mirrors.huaweicloud.com/repository/p
 
 无报错提示即安装完成，可通过以下命令查看已安装依赖：
 
-```
+```shell
 pip3 list
 ```
