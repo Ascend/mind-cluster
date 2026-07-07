@@ -28,7 +28,7 @@
   - NodeD
      - 需要使用如下的dockerfile制作NodeD镜像，其中http_proxy、https_proxy配置为能够访问公网的代理
 
-        ```ColdFusion
+        ```Dockerfile
         FROM openeuler-24.03-lts-sp2:latest
 
         RUN sed -i 's/root:x:0:0:root:\/root:.*$/root:x:0:0:root:\/root:\/sbin\/nologin/' /etc/passwd
@@ -149,7 +149,14 @@ default          my-test-hb-0-hybrid-1-1                      1/1     Running   
 container.id image rootfs-diff.digest rootfs-diff.tar rootfs-external-diff.tar
 ```
 
-### 构造pod error并发生重调度，pod重启成功
+如果没有生成快照文件，在对应计算节点上Ascend Docker Runtime日志查看故障：
+
+```ColdFusion
+[root@worker]# cd /var/log/ascend-docker-runtime
+[root@worker]# tail -f runtime-run.log
+```
+
+### 构造pod故障并发生重调度
 
 进入容器杀死推理服务进程：
 
@@ -166,6 +173,14 @@ default          my-test-hb-0-hybrid-0-1                      1/1     Running   
 default          my-test-hb-0-hybrid-1-0                      1/1     Running   0          3m20s
 default          my-test-hb-0-hybrid-1-1                      1/1     Running   0          3m20s
 ...
+```
+
+如果pod 重启失败，在对应计算节点上Ascend Docker Runtime的restore日志查看故障：
+
+```ColdFusion
+[root@worker]# cd /var/log/ascend-docker-runtime/restore
+[root@worker]# cd k8s.io_{容器id}/work
+[root@worker]# tail -f restore.log
 ```
 
 ### Ascend Docker Runtime日志显示恢复容器成功
