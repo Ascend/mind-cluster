@@ -1314,8 +1314,8 @@ func (ps *PluginServer) Allocate(ctx context.Context, requests *v1beta1.Allocate
 			len(allocateDevices), len(allNPUInfo.AllDevs))
 		var npuInfoConfigDir string
 		usePodAnnotation := false
-		if (len(allocateDevices) != len(allNPUInfo.AllDevs) || !common.ParamOption.PresetVDevice) &&
-			common.ParamOption.UseVolcanoType {
+		if (len(allocateDevices) != len(allNPUInfo.AllDevs) || !common.ParamOption.PresetVDevice ||
+			common.IsSupportSoftShareDevice()) && common.ParamOption.UseVolcanoType {
 			usePodAnnotation = true
 			allocateDevices, npuInfoConfigDir, err = ps.useVolcano(rqt.DevicesIDs)
 			if err != nil {
