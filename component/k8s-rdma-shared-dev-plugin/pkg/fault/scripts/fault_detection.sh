@@ -137,30 +137,40 @@ function check_dpu_card_drop() {
 		return
 	fi
 
-	if ! command -v hinicadmdfx5 &>/dev/null; then
-		echo "false:hinicadmdfx5 not found, cannot check card drop for hca $hca"
-		return
-	fi
-
-	card_type_path="/sys/class/net/$eth_name/device/card_type"
-	if [[ ! -f "$card_type_path" ]]; then
-		echo "false:card_type file not found at $card_type_path"
-		return
-	fi
-
-	card_type=$(cat "$card_type_path" 2>/dev/null)
 	phy_num=-1
-	case "$card_type" in
-		A5Server|A5Pod400G2david)
+	card_type=""
+
+	# A5Server: card_type is under device/ directory
+	device_card_type_path="/sys/class/net/$eth_name/device/card_type"
+	if [[ -f "$device_card_type_path" ]]; then
+		card_type=$(cat "$device_card_type_path" 2>/dev/null)
+		if [[ "$card_type" == "A5Server" ]]; then
 			phy_num=4
-			;;
-		A5Pod200G2david|A5Pod200G4david)
-			phy_num=2
-			;;
-	esac
+		fi
+	fi
+
+	# A5Pod series: card_type is directly under net/$eth_name/
+	if [[ $phy_num -lt 0 ]]; then
+		card_type_path="/sys/class/net/$eth_name/card_type"
+		if [[ -f "$card_type_path" ]]; then
+			card_type=$(cat "$card_type_path" 2>/dev/null)
+			case "$card_type" in
+				A5Pod400G*)
+					phy_num=4
+					;;
+				A5Pod200G*)
+					phy_num=2
+					;;
+			esac
+		fi
+	fi
 
 	if [[ $phy_num -lt 0 ]]; then
-		echo "false:unknown card_type '$card_type'"
+		if [[ -z "$card_type" ]]; then
+			echo "false:card_type file not found for $eth_name"
+		else
+			echo "false:unknown card_type '$card_type'"
+		fi
 		return
 	fi
 
