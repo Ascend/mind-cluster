@@ -1,4 +1,4 @@
-# 快速入门<a name="ZH-CN_TOPIC_0000002511346939"></a>
+﻿# 快速入门<a name="ZH-CN_TOPIC_0000002511346939"></a>
 
 本文档提供两种快速入门场景，帮助您快速上手Ascend NPU集群调度：
 
@@ -16,10 +16,10 @@
 - 所有节点已经安装配套的固件与驱动。Atlas 800T A2 训练服务器固件和驱动安装步骤请参见《[Atlas A2 中心推理和训练硬件 NPU驱动和固件安装指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100568434/426cffd9)》。
 - 检查主机上[npu-smi](https://support.huawei.com/enterprise/zh/doc/EDOC1100568421/426cffd9)以及[hccn_tool工具](https://support.huawei.com/enterprise/zh/doc/EDOC1100568362/426cffd9)是否可正常运行。
 
-    >[!NOTE]
-    >
-    >- 参见[《Ascend Training Solution 版本配套表》](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-training-solution-pid-258915853/software)，确认固件与驱动的版本与集群调度组件是否配套。
-    >- NPU驱动和固件版本可通过**npu-smi info -t board -i** <i>NPU ID</i>命令查询。回显信息中的“Software Version”字段值表示NPU驱动版本，“Firmware Version”字段值表示NPU固件版本。
+  >[!NOTE]
+  >
+  >- 参见[《Ascend Training Solution 版本配套表》](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-training-solution-pid-258915853/software)，确认固件与驱动的版本与集群调度组件是否配套。
+  >- NPU驱动和固件版本可通过**npu-smi info -t board -i** <i>NPU ID</i>命令查询。回显信息中的“Software Version”字段值表示NPU驱动版本，“Firmware Version”字段值表示NPU固件版本。
 
 ## 10分钟快速入门
 
@@ -40,13 +40,17 @@
     npu-smi info
     ```
 
-    若显示芯片信息，说明NPU驱动已正确安装。
+   若显示芯片信息，说明NPU驱动已正确安装。
 
 2. 为NPU节点添加标签。
 
     ```shell
     kubectl label nodes -A workerselector=dls-worker-node
     ```
+
+   >[!NOTE]
+   >
+   > `workerselector=dls-worker-node`标签用于标识计算节点，供集群调度组件（如NodeD、Ascend Device Plugin）识别并管理NPU资源。
 
 3. 部署Ascend Docker Runtime和Ascend Device Plugin组件。
 
@@ -62,9 +66,9 @@
         systemctl daemon-reload && systemctl restart docker
         ```
 
-        回显示例如下，表示安装成功。
+       回显示例如下，表示安装成功。
 
-        ```CodeFusion
+        ```output
         Uncompressing ascend-docker-runtime  100%
         Please read the End User License Agreement carefully. Your use of the Huawei Software
         will be deemed as your acceptance of the constraints mentioned in the Agreement.
@@ -101,15 +105,15 @@
         kubectl apply -f device-plugin-v${VERSION}.yaml
         ```
 
-        查看Ascend Device Plugin Pod的状态。
+       查看Ascend Device Plugin Pod的状态。
 
         ```shell
         kubectl get pod -n kube-system
         ```
 
-        回显示例如下，表示状态正常。
+       回显示例如下，表示状态正常。
 
-        ```CodeFusion
+        ```output
         NAME                                  READY   STATUS    RESTARTS   AGE
         ...
         ascend-device-plugin-daemonset-d5ctz  1/1     Running   0          11s
@@ -122,9 +126,9 @@
         kubectl describe node -A | grep "huawei.com/Ascend910"
         ```
 
-        回显示例如下，正常显示可用的NPU数量。
+       回显示例如下，正常显示可用的NPU数量。
 
-        ```CodeFusion
+        ```output
         huawei.com/Ascend910:     8
         huawei.com/Ascend910:     8
         ```
@@ -221,9 +225,9 @@
         ```
 
 2. 安装组件。以AArch64架构为例，用户需根据实际情况下载对应架构的软件包。
-    >[!NOTE]
-    >
-    >快速入门以helm快捷部署为例，要求MindCluster版本为26.1.0及以上，可以参考安装部署章节的[使用helm安装](../03_installation_guide/02_installation/helm_installation.md)。
+   >[!NOTE]
+   >
+   >快速入门以helm快捷部署为例，要求MindCluster版本为26.1.0及以上，可以参考安装部署章节的[使用helm安装](../03_installation_guide/02_installation/helm_installation.md)。
 
     1. 安装Ascend Docker Runtime。
 
@@ -250,7 +254,7 @@
     3. 验证安装结果。
         1. helm安装回显如下，则安装成功。
 
-            ```ColdFusion
+            ```output
             Release "mindcluster-crds" does not exist. Installing it now.
             NAME: mindcluster-crds
             LAST DEPLOYED: ...
@@ -260,7 +264,7 @@
             TEST SUITE: None
             ```
 
-            ```ColdFusion
+            ```output
             Release "mindcluster" does not exist. Installing it now.
             NAME: mindcluster
             LAST DEPLOYED: ...
@@ -287,7 +291,11 @@
 
 1. 准备镜像。
 
-    从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)下载24.0.X版本的ascend-pytorch训练镜像。镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
+   从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)下载24.0.X版本的ascend-pytorch训练镜像。镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
+
+   >[!NOTE]
+   >
+   > 本示例使用的镜像版本为24.0.0-A2-2.1.0。如需获取最新版本镜像，请访问[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)查看可用版本列表，或联系华为技术支持获取版本配套信息。
 
     ```shell
     docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-pytorch:24.0.0-A2-2.1.0-ubuntu20.04
@@ -306,7 +314,7 @@
         mv ModelZoo-PyTorch-master-PyTorch-built-in-cv-classification-ResNet50_ID4149_for_PyTorch ResNet50_ID4149_for_PyTorch
         ```
 
-    2. 自行准备ResNet-50对应的数据集，使用时请遵守对应规范，将数据集上传到“/data/atlas_dls/public/dataset/resnet50/imagenet”。
+    2. 自行准备ResNet-50对应的数据集，使用时请遵守对应规范，将数据集上传到”/data/atlas_dls/public/dataset/resnet50/imagenet“。
 
         ```shell
         mkdir /data/atlas_dls/public/dataset/resnet50/imagenet
@@ -340,16 +348,20 @@
     kubectl get pod -A -o wide
     ```
 
-    回显示例如下，出现Running表示任务正常运行。
+   回显示例如下，出现Running表示任务正常运行。
 
-    ```ColdFusion
+   >[!NOTE]
+   >
+   > 回显中`192.168.244.xxx`为Pod分配的实际IP地址，`worker01`为实际节点名称，请以实际回显为准。
+
+    ```output
     NAMESPACE        NAME                                       READY   STATUS    RESTARTS   AGE     IP                NODE      NOMINATED NODE   READINESS GATES
     default          default-test-pytorch-master-0              1/1     Running   0          6s      192.168.244.xxx   worker01   <none>           <none>
     ```
 
-    >[!NOTE]
-    >
-    >若下发训练任务后，任务一直处于Pending状态，可以参见[训练任务处于Pending状态，原因：nodes are unavailable](https://gitcode.com/Ascend/mind-cluster/issues/352)或者[资源不足时，任务处于Pending状态](https://gitcode.com/Ascend/mind-cluster/issues/355)章节进行处理。
+   >[!NOTE]
+   >
+   >若下发训练任务后，任务一直处于Pending状态，可以参见[训练任务处于Pending状态，原因：nodes are unavailable](https://gitcode.com/Ascend/mind-cluster/issues/352)或者[资源不足时，任务处于Pending状态](https://gitcode.com/Ascend/mind-cluster/issues/355)章节进行处理。
 
 5. 查看训练结果。
 
@@ -361,7 +373,11 @@
 
     2. 查看训练日志，如果出现如下内容表示训练成功。
 
-        ```ColdFusion
+       >[!NOTE]
+       >
+       > 回显中`10.106.227.104`为集群分配的实际IP地址，请以实际回显为准。
+
+        ```output
         [20251218-20:31:57] [MindXDL Service Log]server id is: 0
         /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=7 --multiprocessing-distributed --addr=10.106.227.104 --world-size=1 --rank=0
         /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=6 --multiprocessing-distributed --addr=10.106.227.104 --world-size=1 --rank=0
