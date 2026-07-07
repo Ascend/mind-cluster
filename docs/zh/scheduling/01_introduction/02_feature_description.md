@@ -111,13 +111,13 @@ NPU Exporter
 2. 特性使用指导请参见[整卡调度](../04_usage/basic_scheduling/03_full_npu_scheduling.md)章节进行操作。
 3. Preempt和Reclaim Action的使用样例请参见[任务交替运行最佳实践](../04_usage/task_alternation/00_before_you_start.md)章节进行操作。
 
-### 多级调度
+### 多级调度<a name="ZH-CN_TOPIC_0000002511346873"></a>
 
-**功能特点**
+**功能特点<a name="section1788818281655"></a>**
 
 多级调度是ascend-for-volcano插件中的一种高级调度策略，专为具有复杂网络拓扑的NPU集群设计。多级调度是整卡调度的一种特殊场景，它根据NPU的网络拓扑层级关系将集群资源抽象为多层级结构，为NPU集群提供高效、灵活、可靠的调度能力。用户运行训练任务时，根据网络拓扑选择合适的NPU设备，最大化发挥NPU性能，实现训练任务的NPU卡调度的最佳分配。
 
-**所需组件**
+**所需组件<a name="section15655185785119"></a>**
 
 - Volcano
 - Ascend Device Plugin
@@ -126,7 +126,7 @@ NPU Exporter
 - ClusterD
 - NodeD
 
-**使用说明**
+**使用说明<a name="section1245612501584"></a>**
 
 1. 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[多级调度](../04_usage/basic_scheduling/05_multi_level_scheduling.md)章节进行操作。
@@ -223,13 +223,13 @@ Container Manager
 1. 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[一体机特性指南](../04_usage/appliance/01_npu_hardware_fault_detection_and_rectification.md)章节进行操作。
 
-## 容器快照
+## 容器快照<a name="ZH-CN_TOPIC_0000002511346881"></a>
 
-**功能特点**
+**功能特点<a name="section1788818281655"></a>**
 
 本特性实现推理服务的容器快照能力，支持大模型推理服务快速启动和故障场景下的快速恢复。通过MindCluster的Infer Operator、NodeD和Ascend Docker Runtime组件协作，在推理任务完成warm up后生成Host和Device侧快照，在异常删除Pod后通过快照快速恢复服务，将推理服务启动时间从30分钟以上缩短至分钟级。
 
-**所需组件**
+**所需组件<a name="section15655185785119"></a>**
 
 - Volcano
 - Ascend Device Plugin
@@ -238,7 +238,34 @@ Container Manager
 - NodeD
 - Infer Operator
 
-**使用说明**
+**使用说明<a name="section1245612501584"></a>**
 
 1. 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. 特性使用指导请参见[容器快照部署及使用](../05_developer_guide/container_snapshot_usage.md)章节进行操作。
+
+## 推理高可用<a name="ZH-CN_TOPIC_0000002511346885"></a>
+
+**功能特点<a name="section2288818281659"></a>**
+
+推理高可用模块提供推理任务的最佳实践指导，涵盖多种推理引擎的部署、重调度、弹性扩缩容等场景，支持用户在生产环境中实现推理服务的高可用部署。主要功能包括：
+
+- **推理引擎支持**：支持vLLM、MindIE Motor、SGLang等多种推理引擎的最佳实践
+- **调度能力**：支持推理任务的优先级调度配置和交换机亲和性配置
+- **故障处理**：支持推理任务的故障重调度、弹性扩缩容和故障隔离
+
+**所需组件<a name="section33655185785111"></a>**
+
+- Infer Operator
+- Volcano
+- Ascend Device Plugin
+- Ascend Docker Runtime
+- ClusterD
+- NodeD
+
+**使用说明<a name="section3245612501586"></a>**
+
+1. 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
+2. Infer Operator推理任务最佳实践请参见[Infer Operator推理任务最佳实践](../04_usage/infer_operator_best_practice/00_before_you_start.md)章节进行操作。
+3. MindIE Motor推理任务最佳实践请参见[MindIE Motor推理任务最佳实践](../04_usage/mindie_motor_best_practice/00_before_you_start.md)章节进行操作。
+4. SGLang推理任务最佳实践请参见[SGLANG推理任务最佳实践](../04_usage/sglang_best_practice/00_before_you_start.md)章节进行操作。
+5. vLLM推理任务最佳实践请参见[vLLM推理任务最佳实践](../04_usage/vllm_best_practice/00_before_you_start.md)章节进行操作。
