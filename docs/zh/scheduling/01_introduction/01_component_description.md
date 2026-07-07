@@ -318,19 +318,19 @@ MindIO TFT包括临终Checkpoint保存、进程级在线恢复和优雅容错等
 3. 从容器运行时Docker或者Containerd中获取当前运行中的容器和芯片挂载信息。
 4. 向容器运行时下发容器停止、启动命令。
 
-## Infer Operator
+## Infer Operator<a name="ZH-CN_TOPIC_0000002511426821"></a>
 
-**应用场景**
+**应用场景<a name="section15761025111720"></a>**
 
 MindCluster提供Infer Operator组件，根据推理服务的实例配置，批量拉起推理实例。
 
-**组件功能**
+**组件功能<a name="section1112014512117"></a>**
 
 - 一次请求，创建一个任务组，包含多个推理服务Service，每个服务包含多个不同角色的实例Workload。
 - 支持推理实例的扩缩容。
 - 支持基于负载的弹性扩缩容。
 
-**组件上下游依赖**
+**组件上下游依赖<a name="section4941922192110"></a>**
 
 **图 15**  组件上下游依赖<a name="fig107831859288"></a>
 ![](../../figures/scheduling/introduction_infer-operator.PNG "introduction_infer-operator")
