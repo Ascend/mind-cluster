@@ -40,6 +40,7 @@ const (
 	// DefaultPathSize default string max length
 	DefaultPathSize               = 4096
 	runLogDir                     = api.RunTimeLogDir
+	snapshotRestore               = "restore"
 	backupLogFileMode os.FileMode = 0400
 	runLogFileMode    os.FileMode = 0750
 	maxFileNum                    = 32
@@ -316,13 +317,16 @@ func ChangeRuntimeLogMode(runLog string) error {
 	runLogDirLen := len(runLogDir)
 	counter := 0
 	err := filepath.Walk(runLogDir, func(fileOrPath string, fileInfo os.FileInfo, err error) error {
-		counter += 1
-		if counter > maxFileNum {
-			return fmt.Errorf("the counter file is over maxFileNum")
-		}
 		if err != nil {
 			hwlog.RunLog.Errorf("prevent panic by handling failure accessing a path %q: %v", fileOrPath, err)
 			return err
+		}
+		if fileInfo.IsDir() && fileInfo.Name() == snapshotRestore {
+			return filepath.SkipDir
+		}
+		counter += 1
+		if counter > maxFileNum {
+			return fmt.Errorf("the counter file is over maxFileNum")
 		}
 		hasLogPrefix := strings.HasPrefix(fileOrPath[runLogDirLen:], runLog)
 		if !hasLogPrefix {
