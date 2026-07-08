@@ -17,4 +17,3 @@ mindio_ttp.framework_ttp.tft_is_reboot_node()
 ## 返回值<a name="zh-cn_topic_0000001976021318_section16811972329"></a>
 
 bool值，表示是否为故障后重新拉起的节点。
-

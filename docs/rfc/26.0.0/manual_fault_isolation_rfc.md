@@ -31,7 +31,7 @@
 
 ### 3.1 整体架构
 
-```
+```text
 ┌───────────────────────┐       ┌───────────────────────┐       ┌───────────────────────┐
 │     故障收集模块       │       │   人工隔离管理模块      │       │  Kubernetes ConfigMap  │
 └──────────┬────────────┘       └──────────┬────────────┘       └──────────┬────────────┘
@@ -59,6 +59,7 @@
 
 - **功能**：记录设备的故障次数和时间
 - **数据结构**：
+
   ```go
   type FaultCounter struct {
       // key: node, value: dev fault info
@@ -71,6 +72,7 @@
       fault map[string][]int64
   }
   ```
+
 - **核心逻辑**：
     - 为每个设备的每个故障代码维护故障时间列表
     - 定期清理过期的故障记录
@@ -87,6 +89,7 @@
 - **适用场景**：专门处理故障卡上有任务的情况，避免软件问题导致的批量误隔离
 
 **关键实现细节**：
+
 ```go
 // AddFault 方法处理任务级故障
 func (m *JobFaultManager) AddFault(newFault *Fault) {
@@ -120,8 +123,8 @@ func firstItemIsSfwFault(faults []*Fault) bool {
             continue
         }
         // 同一任务下，30秒内，不同设备出现相同故障 → 软件故障
-        if fault.Code == fault0.Code && 
-           fault.ReceiveTime <= fault0.ReceiveTime+m.slidingWindow && 
+        if fault.Code == fault0.Code &&
+           fault.ReceiveTime <= fault0.ReceiveTime+m.slidingWindow &&
            (fault.NodeName != fault0.NodeName || fault.DevName != fault0.DevName) {
             hwlog.RunLog.Infof("fault: %+v, is software fault", fault0)
             return true
@@ -161,6 +164,7 @@ func (m *JobFaultManager) deleteSameWithFirstFault(faults []*Fault, isSftFault b
 ```
 
 **工作流程**：
+
 1. 收集同一任务下的所有故障记录
 2. 对故障记录按时间顺序排序
 3. 以第一个故障为基准，检查30秒内是否有其他设备出现相同故障
@@ -172,6 +176,7 @@ func (m *JobFaultManager) deleteSameWithFirstFault(faults []*Fault, isSftFault b
 
 - **功能**：管理人工隔离状态，持久化到ConfigMap
 - **核心数据结构**：
+
   ```go
   type Cache struct {
       manualInfo map[string]NodeCmInfo
@@ -190,6 +195,7 @@ func (m *JobFaultManager) deleteSameWithFirstFault(faults []*Fault, isSftFault b
       LastSeparateTime int64 // unit: millisecond
   }
   ```
+
 - **核心功能**：
     - 添加/删除人工隔离设备
     - 维护隔离设备的详细信息
@@ -199,6 +205,7 @@ func (m *JobFaultManager) deleteSameWithFirstFault(faults []*Fault, isSftFault b
 
 - **功能**：管理人工隔离策略的配置参数
 - **核心配置项**：
+
   ```go
   type ManuallySeparatePolicy struct {
       Enabled  bool `yaml:"enabled"`
@@ -228,7 +235,7 @@ func firstItemIsSfwFault(faults []*Fault) bool {
             continue
         }
         // 同一任务下，30秒内，不同设备出现相同故障
-        if fault.Code == fault0.Code && 
+        if fault.Code == fault0.Code &&
            (fault.NodeName != fault0.NodeName || fault.DevName != fault0.DevName) {
             return true
         }
@@ -246,7 +253,7 @@ func (c *FaultCounter) isReachFrequency(faultTimes []int64) bool {
     if len(faultTimes) < conf.GetSeparateThreshold() {
         return false
     }
-    
+
     // 阈值为1时直接返回
     if conf.GetSeparateThreshold() == conf.MinFaultThreshold {
         return true
@@ -257,7 +264,7 @@ func (c *FaultCounter) isReachFrequency(faultTimes []int64) bool {
     if len(recentTimes) < conf.GetSeparateThreshold() {
         return false
     }
-    
+
     // 判断最近N次故障是否在指定时间窗口内
     if recentTimes[conf.GetSeparateThreshold()-1]-recentTimes[0] < conf.GetSeparateWindow() {
         return true
@@ -274,10 +281,10 @@ func (c *FaultCounter) dealFrequencyFault(fault FaultInfo) {
     // 记录日志
     hwlog.RunLog.Infof("node: %s, dev: %s, code: %s, reach frequency threshold, set to manually separate",
         fault.NodeName, fault.DevName, fault.FaultCode)
-    
+
     // 清理该设备的故障计数
     c.clearDevFault(fault.NodeName, fault.DevName, fault.FaultCode)
-    
+
     // 添加到人工隔离缓存
     FaultCmInfo.AddSeparateDev(fault)
 }
@@ -290,21 +297,21 @@ func (c *FaultCounter) dealFrequencyFault(fault FaultInfo) {
 ```go
 func main() {
     // ... 其他初始化代码 ...
-    
+
     // 加载全局配置
     conf.TryLoadGlobalConfig()
     // 监控全局配置变化
     go conf.WatchGlobalConfig(ctx)
-    
+
     // 处理人工隔离NPU故障必须在故障处理器中心之前执行
     // 因为需要先加载和初始化人工隔离状态，故障处理器才能正确处理故障
     dealManuallySeparateNPUFault(ctx)
-    
+
     // ... 其他初始化代码 ...
-    
+
     // 启动故障处理器中心
     faultmanager.GlobalFaultProcessCenter.Work(ctx)
-    
+
     // ... 其他初始化代码 ...
 }
 
@@ -321,6 +328,7 @@ func dealManuallySeparateNPUFault(ctx context.Context) {
 ```
 
 **初始化顺序说明**：
+
 1. **配置加载与监控**：
     - `conf.TryLoadGlobalConfig()`：加载初始配置，包括人工隔离策略的各项参数
     - `conf.WatchGlobalConfig(ctx)`：启动配置监控，支持运行时动态更新配置
@@ -332,7 +340,6 @@ func dealManuallySeparateNPUFault(ctx context.Context) {
 
 3. **故障处理器启动**：
     - `faultmanager.GlobalFaultProcessCenter.Work(ctx)`：启动故障处理器中心
-
 
 ## 5. 配置说明
 
@@ -378,11 +385,13 @@ flowchart TD
 ```
 
 **流程说明：**
+
 1. 当设备故障达到设定的频率阈值时，系统执行人工隔离操作
 2. 隔离操作完成后，系统会将隔离状态更新到名为`clusterd-manual-info-cm`的ConfigMap中
 3. 该ConfigMap位于`cluster-system`命名空间，用于持久化存储集群中所有人工隔离的芯片信息
 
 **clusterd-manual-info-cm ConfigMap示例：**
+
 ```yaml
 Name:         clusterd-manual-info-cm
 Namespace:    cluster-system

@@ -4,7 +4,7 @@
 
 提供给MindSpore调用，根据L2 Cache触发的UCE故障时间和优化器更新前后时间，判断优化器数据在时间维度是否有被污染可能，进而返回是否能修复的判断结果。
 
->**说明：** 
+>**说明：**
 >该接口仅从时间区间交集上判断优化器数据是否有被污染可能，无法根据内存地址判断。
 
 ## 接口格式<a name="zh-cn_topic_0000001975861586_section1272104915439"></a>
@@ -59,4 +59,3 @@ mindio_ttp.framework_ttp.tft_can_do_uce_repair(hbm_error_time: int, start_time: 
 ## 返回值<a name="zh-cn_topic_0000001975861586_section1777516402588"></a>
 
 bool值，根据时间交集判断是否可以进行UCE快恢的判断结果。
-

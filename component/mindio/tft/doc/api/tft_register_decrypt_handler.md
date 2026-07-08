@@ -65,4 +65,3 @@ mindio_ttp.framework_ttp.tft_register_decrypt_handler(decryptor: Callable)
 ## 返回值<a name="zh-cn_topic_0000001976021318_section16811972329"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-

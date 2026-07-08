@@ -52,8 +52,6 @@ Tag 遵循以下格式：
 |------|------------|--------------------------|
 | `版本`   |  `v26.0.0`   | ClusterD 版本号   |
 
-
-
 ### ClusterD 26.0.0
 
 | Tag | Dockerfile                                      | 镜像内容                  |
@@ -85,20 +83,19 @@ Tag 遵循以下格式：
 
 1. 拉取官方镜像
 
-拉取昇腾镜像仓库提供的 ClusterD 镜像，替换 {tag} 为实际版本号（推荐 v26.0.0）。
+   拉取昇腾镜像仓库提供的 ClusterD 镜像，替换 {tag} 为实际版本号（推荐 v26.0.0）。
 
-```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:{tag}
-```
+   ```bash
+   docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:{tag}
+   ```
 
 2. 修改镜像标签
 
-为拉取的官方镜像重新打本地标签，统一本地镜像命名规范，方便后续运维管理。
+   为拉取的官方镜像重新打本地标签，统一本地镜像命名规范，方便后续运维管理。
 
-```bash
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:{tag} clusterd:{tag}
-```
-
+   ```bash
+   docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:{tag} clusterd:{tag}
+   ```
 
 ### 本地构建（可选）
 
@@ -106,27 +103,27 @@ docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:{tag} clusterd:{t
 
 1. 下载官方发布的组件安装包
 
-```shell
-wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-clusterd_26.0.0_linux-aarch64.zip
-```
+   ```shell
+   wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-clusterd_26.0.0_linux-aarch64.zip
+   ```
 
 2. 解压安装包至自定义目录
 
-```shell
-unzip Ascend-mindxdl-clusterd_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-clusterd_26.0.0_linux-aarch64
-```
+   ```shell
+   unzip Ascend-mindxdl-clusterd_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-clusterd_26.0.0_linux-aarch64
+   ```
 
 3. 进入解压后的工作目录
 
-```shell
-cd Ascend-mindxdl-clusterd_26.0.0_linux-aarch64
-```
+   ```shell
+   cd Ascend-mindxdl-clusterd_26.0.0_linux-aarch64
+   ```
 
 4. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
 
-```bash
-docker build --no-cache -t clusterd:v26.0.0 ./ -f Dockerfile
-```
+   ```bash
+   docker build --no-cache -t clusterd:v26.0.0 ./ -f Dockerfile
+   ```
 
 ### 部署 ClusterD
 
@@ -138,7 +135,7 @@ docker build --no-cache -t clusterd:v26.0.0 ./ -f Dockerfile
 kubectl apply -f clusterd-{version}.yaml
 ```
 
-2. 验证部署
+1. 验证部署
 
 ```bash
 kubectl get pods -A | grep clusterd

@@ -38,4 +38,3 @@ mindio_ttp.framework_ttp.tft_report_load_ckpt_step(step: int)
 ## 返回值<a name="zh-cn_topic_0000002296089152_zh-cn_topic_0000001975861586_section1777516402588"></a>
 
 无
-

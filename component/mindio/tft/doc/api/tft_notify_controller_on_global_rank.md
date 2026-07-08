@@ -50,4 +50,3 @@ mindio_ttp.controller_ttp.tft_notify_controller_on_global_rank(fault_ranks: dict
 
 -   0：调用成功
 -   1：调用失败
-

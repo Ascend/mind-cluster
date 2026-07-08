@@ -96,6 +96,5 @@ mindio_acp.open_file(path: str)
 
 \_ReadableFileWrapper实例。
 
->**说明：** 
+>**说明：**
 >接口详情请参见[MindSpore文档](https://www.mindspore.cn/docs/zh-CN/master/api_python/mindspore/mindspore.load_checkpoint.html#mindspore.load_checkpoint)。
-

@@ -39,4 +39,3 @@ mindio_ttp.framework_ttp.tft_report_error(error_type: ReportState)
 ## 返回值<a name="zh-cn_topic_0000001975861586_section1777516402588"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-

@@ -101,6 +101,5 @@ mindio_acp.create_file(path: str, mode: int = 0o600)
 
 \_WriteableFileWrapper实例。
 
->**说明：** 
+>**说明：**
 >接口详情请参见[MindSpore文档](https://www.mindspore.cn/docs/zh-CN/master/api_python/mindspore/mindspore.save_checkpoint.html#mindspore.save_checkpoint)。
-

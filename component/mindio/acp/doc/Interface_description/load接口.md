@@ -66,6 +66,5 @@ mindio_acp.load(path, open_way='memfs', map_location=None)
 
 Any
 
->**须知：** 
+>**须知：**
 >如同PyTorch的load接口，本接口内部也使用pickle模块，存在被恶意构造的数据在unpickle期间攻击的风险。需要保证被加载的数据来源是安全存储的，仅可以load可信的数据。
-

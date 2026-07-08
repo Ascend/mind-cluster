@@ -60,7 +60,7 @@ Atlas for Volcano contains two images:
 
 Tags follow this format:
 
-```
+```text
 <component-version>-<ascend-scheduling-plugin-version>
 ```
 
@@ -114,21 +114,21 @@ Using linux-aarch64 architecture as an example: Atlas for Volcano package downlo
 
 1. Pull images
 
-Pull the Atlas for Volcano images from AscendHub, replacing {tag} with the actual version tag (v1.9.0-v26.0.0 recommended).
+   Pull the Atlas for Volcano images from AscendHub, replacing {tag} with the actual version tag (v1.9.0-v26.0.0 recommended).
 
-```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{tag}
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{tag}
-```
+   ```bash
+   docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{tag}
+   docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{tag}
+   ```
 
 2. Retag images
 
-Retag the official images with local tags for consistent naming and easier operations management.
+   Retag the official images with local tags for consistent naming and easier operations management.
 
-```bash
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{tag} volcanosh/vc-scheduler:{tag}
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{tag} volcanosh/vc-controller-manager:{tag}
-```
+   ```bash
+   docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{tag} volcanosh/vc-scheduler:{tag}
+   docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{tag} volcanosh/vc-controller-manager:{tag}
+   ```
 
 ### Build Locally (Optional)
 
@@ -136,49 +136,49 @@ The following example uses linux-aarch64 architecture, Volcano v1.9.0 with Atlas
 
 1. Download the officially released component package
 
-```shell
-wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip
-```
+   ```shell
+   wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip
+   ```
 
 2. Extract the package to a custom directory
 
-```shell
-unzip Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-volcano_26.0.0_linux-aarch64
-```
+   ```shell
+   unzip Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-volcano_26.0.0_linux-aarch64
+   ```
 
 3. Enter the extracted working directory
 
-```shell
-cd Ascend-mindxdl-volcano_26.0.0_linux-aarch64/volcano-v1.9.0
-```
+   ```shell
+   cd Ascend-mindxdl-volcano_26.0.0_linux-aarch64/volcano-v1.9.0
+   ```
 
 4. Build Docker images locally (disable cache to ensure a clean build)
 
-```bash
-# Build scheduler image
-docker build --no-cache -t volcanosh/vc-scheduler:v1.9.0 ./ -f Dockerfile-scheduler
+   ```bash
+   # Build scheduler image
+   docker build --no-cache -t volcanosh/vc-scheduler:v1.9.0 ./ -f Dockerfile-scheduler
 
-# Build controller image
-docker build --no-cache -t volcanosh/vc-controller-manager:v1.9.0 ./ -f Dockerfile-controller
-```
+   # Build controller image
+   docker build --no-cache -t volcanosh/vc-controller-manager:v1.9.0 ./ -f Dockerfile-controller
+   ```
 
 ### Deploy Atlas for Volcano
 
 1. Start Volcano
 
-Replace `{version}` in the YAML filename with the actual version (currently volcano v1.9.0). Before deployment, replace the image `{tag}` in the YAML file with the actual image version.
+   Replace `{version}` in the YAML filename with the actual version (currently volcano v1.9.0). Before deployment, replace the image `{tag}` in the YAML file with the actual image version.
 
-```bash
-kubectl apply -f volcano-{version}.yaml
-```
+   ```bash
+   kubectl apply -f volcano-{version}.yaml
+   ```
 
 2. Verify deployment
 
-```bash
-kubectl get pods -A | grep volcano
-```
+   ```bash
+   kubectl get pods -A | grep volcano
+   ```
 
-Expected result: The volcano-related Pods in the corresponding namespace should be in Running state.
+   Expected result: The volcano-related Pods in the corresponding namespace should be in Running state.
 
 ---
 

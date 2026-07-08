@@ -22,4 +22,3 @@ str类型。
 -   recover：执行ARF修复。
 -   dump：执行临终遗言。
 -   unknow：未找到修复类型。
-

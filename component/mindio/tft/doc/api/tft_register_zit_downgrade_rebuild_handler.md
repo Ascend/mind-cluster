@@ -4,7 +4,7 @@
 
 训练框架向Processor注册降级流程重建修复的回调函数。
 
->**说明：** 
+>**说明：**
 >对于MindSpeed-LLM训练框架，回调函数已经完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
 
 ## 接口格式<a name="zh-cn_topic_0000001976021318_section14612105214308"></a>
@@ -51,4 +51,3 @@ mindio_ttp.framework_ttp.tft_register_zit_downgrade_rebuild_handler(func: Callab
 ## 返回值<a name="zh-cn_topic_0000002330163997_zh-cn_topic_0000001976021318_section16811972329"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-
