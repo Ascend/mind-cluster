@@ -308,7 +308,8 @@ const (
 
 // All env variables
 const (
-	MindxServerIp = "MINDX_SERVER_IP"
+	MindxServerIp     = "MINDX_SERVER_IP"
+	MindxServerDomain = "MINDX_SERVER_DOMAIN"
 )
 
 // StreamName and PluginName
