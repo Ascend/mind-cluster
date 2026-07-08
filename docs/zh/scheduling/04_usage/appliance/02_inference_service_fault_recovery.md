@@ -228,7 +228,21 @@
     - 请用户自行增删“--device”参数，以挂载不同数量芯片和设备。芯片ID需要与config.json中npuDeviceIds字段包含的芯片ID保持一致。
 
    >[!NOTE]
-   >启动容器后，若报错"OpenBLAS blas_thread_int: pthread_create failed for thread 1 of 128: Operation not permitted"，即OpenBLAS尝试创建多线程失败，可能原因是seccomp阻止了pthread相关系统的调用，此时可以在Docker启动命令中增加“--security-opt seccomp=unconfined --security-opt no-new-privileges”参数解决。
+   >1.  **命令参数说明**：下表简要说明启动命令中用到的主要参数含义，更多Docker原生参数请参考Docker官方文档。
+   >
+   >    |参数|说明|
+   >    |--|--|
+   >    |-it|以交互模式运行容器，并为容器分配一个伪输入终端。|
+   >    |-d|后台运行容器，并返回容器ID。|
+   >    |--net=host|使用宿主机网络，容器与宿主机共享网络命名空间。|
+   >    |--shm-size=1g|设置容器共享内存大小为1GB，用于满足多进程通信需求。|
+   >    |--name|指定容器名称。|
+   >    |-e ASCEND_VISIBLE_DEVICES|指定挂载到容器中的NPU设备ID，由Ascend Docker Runtime识别并挂载对应NPU设备及驱动。|
+   >    |--device|将宿主机设备挂载到容器中，rwm表示可读可写可创建设备节点。|
+   >    |-v|将宿主机目录或文件挂载到容器中，ro表示只读挂载。|
+   >    |--entrypoint|指定容器启动时的入口程序，此处为推理服务启动脚本。|
+   >
+   >2.  **常见问题**：启动容器后，若报错"OpenBLAS blas_thread_int: pthread_create failed for thread 1 of 128: Operation not permitted"，即OpenBLAS尝试创建多线程失败，可能原因是seccomp阻止了pthread相关系统的调用，此时可以在Docker启动命令中增加"--security-opt seccomp=unconfined --security-opt no-new-privileges"参数解决。
 
 8. 查看容器日志。
 
