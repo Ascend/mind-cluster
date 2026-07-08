@@ -13,7 +13,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.79.3
 	google.golang.org/protobuf v1.36.10
-	k8s.io/cri-api v0.28.15
+	k8s.io/cri-api v0.25.13
 	k8s.io/utils v0.0.0-20250321185631-1f6e0b77f77e
 )
 
@@ -44,7 +44,6 @@ require (
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/pgzip v1.2.6 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
