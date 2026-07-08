@@ -264,12 +264,6 @@ func GetClusterdAddr() (string, error) {
 		hwlog.RunLog.Infof("use proxy connect clusterd")
 		return constant.LocalProxyIP + constant.ClusterdPort, nil
 	}
-	domainAddr := os.Getenv(constant.MindxServerDomain)
-	if err := utils.CheckDomain(domainAddr, false); err != nil {
-		hwlog.RunLog.Warnf("check domain %s failed, err: %v", domainAddr, err)
-	} else {
-		return domainAddr + constant.ClusterdPort, nil
-	}
 	ipFromEnv := os.Getenv(constant.MindxServerIp)
 	ipFromEnv, err := utils.IsHostValid(ipFromEnv)
 	if err != nil {

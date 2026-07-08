@@ -159,37 +159,6 @@ func TestGetClusterdAddr(t *testing.T) {
 	convey.ShouldBeNil(err)
 }
 
-func TestGetClusterdAddrDomainSuccess(t *testing.T) {
-	patches := gomonkey.NewPatches()
-	defer patches.Reset()
-	patches.ApplyFunc(os.Getenv, func(key string) string {
-		if key == constant.MindxServerDomain {
-			return "example.com"
-		}
-		return ""
-	})
-	patches.ApplyFunc(utils.CheckDomain, func(domain string, forLocalUsage bool) error {
-		return nil
-	})
-	addr, err := GetClusterdAddr()
-	convey.ShouldBeNil(err)
-	convey.ShouldEqual(addr, "example.com"+constant.ClusterdPort)
-}
-
-func TestGetClusterdAddrDomainEmpty(t *testing.T) {
-	patches := gomonkey.NewPatches()
-	defer patches.Reset()
-	patches.ApplyFunc(os.Getenv, func(key string) string {
-		return ""
-	})
-	patches.ApplyFunc(utils.IsHostValid, func(ip string) (string, error) {
-		return anyCorrectIp, nil
-	})
-	addr, err := GetClusterdAddr()
-	convey.ShouldBeNil(err)
-	convey.ShouldEqual(addr, anyCorrectIp+constant.ClusterdPort)
-}
-
 func TestGetFaultRanksMapByList(t *testing.T) {
 	type args struct {
 		faultRanks []*pb.FaultRank
