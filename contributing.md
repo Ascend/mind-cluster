@@ -46,7 +46,60 @@ ci: CI/CD 相关变更
 - 说明与之前行为的对比
 - 可以多行，每行不超过 72 个字符
 
+# 分支与Tag命名规范
+
+## 版本号说明
+
+版本号格式为 `v<年度>.<季度>.<补丁>`，以 `v26.0.0` 为例：
+
+| 段位   | 含义         | 示例值 | 说明                              |
+|--------|-------------|--------|-----------------------------------|
+| 年度   | 年度版本     | `26`   | 对应 2026 年度主版本                |
+| 季度   | 季度版本     | `0`    | 年度内的迭代版本，从 `0` 开始递增     |
+| 补丁   | 补丁版本     | `0`    | 季度版本上的修复补丁，从 `0` 开始递增 |
+| beta   | 预发布版本   | `1`    | 正式发布前的测试版本，从 `1` 开始递增 |
+
+> **约定：** 首个季度版本为 `v26.0`（而非 `v26.1`），首个补丁版本为 `v26.0.0`（而非 `v26.0.1`）。
+>
+> **beta 说明：** 季度版本在正式发布前，会先发布 beta 预发布版本用于测试验证。beta 版本号拼接在补丁版本之后，格式为 `v<年度>.<季度>.<补丁>.beta.<N>`，例如 `v26.0.0.beta.1`、`v26.0.0.beta.2`。beta 阶段发现的 bug 修复后递增 beta 序号，达到质量要求后发布正式版本。
+
+## 分支命名
+
+基于 upstream 仓库的实际分支，命名规则如下：
+
+| 分支类型     | 命名格式                              | 说明                       | 示例                             |
+|-------------|---------------------------------------|----------------------------|--------------------------------|
+| 主分支       | `master`                              | 稳定分支，只接受合入          | `master`                       |
+| 版本分支     | `branch_v<年度>.<季度>.<补丁>`         | 版本开发与发布准备            | `branch_v26.0.0`               |
+| POC 分支     | `branch_v<年度>.<季度>.<补丁>POC`      | 版本概念验证/预研             | `branch_v7.3.0POC`             |
+| 特性分支     | `<特性关键词>`（连字符分隔）            | 新功能或特性开发               | `slownode`、`fault-diag-online` |
+
+**规则：**
+- 版本分支以 `branch_v` 为前缀，后接三段式版本号（如 `branch_v26.0.0`）
+- POC 分支在版本号后追加 `POC` 后缀（如 `branch_v7.3.0POC`）
+- 特性分支使用小写字母，单词间用连字符 `-` 分隔
+
+## Tag 命名
+
+基于仓库已有的 tag（以 v26 系列为例），命名规则如下：
+
+| Tag 类型     | 命名格式                                | 示例                    |
+|-------------|----------------------------------------|-------------------------|
+| 正式发布     | `v<年度>.<季度>.<补丁>`                  | `v26.0.0`               |
+| 补丁版本     | `v<年度>.<季度>.<补丁>`（补丁递增）       | `v26.0.1`               |
+| Beta 预发布  | `v<年度>.<季度>.<补丁>.beta.<N>`         | `v26.0.0.beta.1`        |
+
+**规则：**
+- 所有 tag 以 `v` 开头，格式为 `v<年度>.<季度>.<补丁>`
+- 后缀说明：
+  - `beta.<N>`：Beta 预发布版本（小写）
+- 每个正式版本发布时打一个对应的 tag
+- Tag 一旦创建不可更改，如需修正请发布新版本
+
 # PullRequest
+
+> 请同时参考 [Ascend社区开发贡献规范](https://gitcode.com/Ascend/community/blob/master/docs/contributor/pr-guide.md)
+
 ## PR 创建流程
 1. **创建特性分支**
    ```bash
@@ -60,14 +113,14 @@ ci: CI/CD 相关变更
       - **Go测试**：建议使用convey框架编写测试用例
         ```go
         package utils
-        
+
         import (
             "testing"
-            
+
             "github.com/smartystreets/goconvey/convey"
             "k8s.io/apimachinery/pkg/apis/meta/v1"
         )
-        
+
         func TestIsMindIEEPJob(t *testing.T) {
             convey.Convey("isMindIEEPJob", t, func() {
                 job := &v1.AscendJob{}
@@ -85,10 +138,10 @@ ci: CI/CD 相关变更
       - **Python测试**：建议使用unittest框架编写测试用例
         ```python
         #!/usr/bin/env python3
-        
+
         import unittest
         from unittest.mock import patch, MagicMock
-        
+
         class TestTaskdManagerAPI(unittest.TestCase):
             @patch('taskd.api.taskd_manager_api.Manager')
             def test_init_taskd_manager_success(self, mock_manager):
@@ -96,10 +149,10 @@ ci: CI/CD 相关变更
                 mock_manager_instance = MagicMock()
                 mock_manager_instance.init_taskd_manager.return_value = True
                 mock_manager.return_value = mock_manager_instance
-                
+
                 config = {}
                 result = init_taskd_manager(config)
-                
+
                 # verify method calls
                 mock_manager.assert_called_once()
                 mock_manager_instance.init_taskd_manager.assert_called_once_with(config)
@@ -108,12 +161,12 @@ ci: CI/CD 相关变更
         ```
       - **C/C++测试**：建议使用Google Test框架编写测试用例
         ```cpp
-        
+
         #include <gtest/gtest.h>
         #include "file_utils.h"
-        
+
         using namespace ock::ttp;
-        
+
         class FileUtilsTest : public ::testing::Test {
         protected:
             void SetUp() override
@@ -124,21 +177,21 @@ ci: CI/CD 相关变更
                 file << "Test content";
                 file.close();
             }
-            
+
             void TearDown() override
             {
                 // 清理测试环境
                 remove(testFile.c_str());
             }
-            
+
             std::string testFile;
         };
-        
+
         TEST_F(FileUtilsTest, CheckFileExists_WhenFileExists_ReturnsTrue)
         {
             ASSERT_TRUE(FileUtils::CheckFileExists(testFile));
         }
-        
+
         TEST_F(FileUtilsTest, CheckFileExists_WhenFileNotExists_ReturnsFalse)
         {
             std::string nonExistentFile = "/tmp/non_existent.txt";
