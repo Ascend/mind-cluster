@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000002012461173_zh-cn_topic_0000001671257765_section4717142204511"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_init_controller(rank: int, world_size: int, enable_local_copy: bool, enable_arf=False, enable_zit=False)
 ```
 
@@ -76,4 +76,3 @@ mindio_ttp.framework_ttp.tft_init_controller(rank: int, world_size: int, enable_
 ## 返回值<a name="zh-cn_topic_0000002012461173_zh-cn_topic_0000001671257765_section3787164144816"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-

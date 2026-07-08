@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001976021318_section14612105214308"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_get_repair_step()
 ```
 
@@ -17,4 +17,3 @@ mindio_ttp.framework_ttp.tft_get_repair_step()
 ## 返回值<a name="zh-cn_topic_0000001976021318_section16811972329"></a>
 
 修复使用的step，返回0表示无效值。
-

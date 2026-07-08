@@ -4,12 +4,12 @@
 
 修复期间，训练主线程在装饰器中调用该接口等待从线程完成业务数据修复。
 
->**说明：** 
+>**说明：**
 >该接口为阻塞接口，在未获取到下一次action前，会一直阻塞。
 
 ## 接口格式<a name="zh-cn_topic_0000001975861586_section1272104915439"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_wait_next_action()
 ```
 
@@ -19,6 +19,5 @@ mindio_ttp.framework_ttp.tft_wait_next_action()
 
 ## 返回值<a name="zh-cn_topic_0000001975861586_section1777516402588"></a>
 
--   0：成功
--   1：失败
-
+- 0：成功
+- 1：失败

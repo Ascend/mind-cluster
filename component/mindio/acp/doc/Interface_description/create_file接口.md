@@ -6,9 +6,9 @@
 
 使用with调用create\_file接口，用于创建文件，并返回对应的\_WriteableFileWrapper实例。该实例提供write\(\)、drop\(\)和close\(\)方法。
 
--   write：向文件中写入数据。
+- write：向文件中写入数据。
 
-    ```
+    ```python
     write(self, data: bytes)
     ```
 
@@ -35,23 +35,23 @@
     </tbody>
     </table>
 
--   drop：删除文件。
+- drop：删除文件。
 
-    ```
+    ```python
     drop(self)
     ```
 
--   close：关闭文件。
+- close：关闭文件。
 
     该方法在with退出上下文的时候自动调用。
 
-    ```
+    ```python
     close(self)
     ```
 
 ## 接口格式<a name="zh-cn_topic_0000002112429502_section13362162011417"></a>
 
-```
+```python
 mindio_acp.create_file(path: str, mode: int = 0o600)
 ```
 
@@ -91,7 +91,7 @@ mindio_acp.create_file(path: str, mode: int = 0o600)
 
 ## 使用样例<a name="zh-cn_topic_0000002112429502_section81115380412"></a>
 
-```
+```python
 >>> x = b'\x00\x01\x02\x03\x04'
 >>> with mindio_acp.create_file('/mnt/dpc01/checkpoint/rank-0.pt') as f:
 ...     write_result = f.write(x)
@@ -101,6 +101,5 @@ mindio_acp.create_file(path: str, mode: int = 0o600)
 
 \_WriteableFileWrapper实例。
 
->**说明：** 
+>**说明：**
 >接口详情请参见[MindSpore文档](https://www.mindspore.cn/docs/zh-CN/master/api_python/mindspore/mindspore.save_checkpoint.html#mindspore.save_checkpoint)。
-

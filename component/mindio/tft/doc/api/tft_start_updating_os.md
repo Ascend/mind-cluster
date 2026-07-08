@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001976021342_section1219942751312"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_start_updating_os(backup_step: int)
 ```
 
@@ -39,4 +39,3 @@ mindio_ttp.framework_ttp.tft_start_updating_os(backup_step: int)
 ## 返回值<a name="zh-cn_topic_0000001976021342_section1777516402588"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-

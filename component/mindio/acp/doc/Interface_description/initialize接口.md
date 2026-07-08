@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001671257765_section4717142204511"></a>
 
-```
+```python
 mindio_acp.initialize(server_info: Dict[str, str] = None) -> int
 ```
 
@@ -119,19 +119,19 @@ mindio_acp.initialize(server_info: Dict[str, str] = None) -> int
 </tbody>
 </table>
 
->**说明：** 
+>**说明：**
 >mindio\_acp.initialize如果不传入server\_info参数，则按照表中默认参数启动Server。
 
 ## 使用样例1<a name="zh-cn_topic_0000001671257765_section5115161344717"></a>
 
-```
+```python
 >>> # Initialize with default param
 >>> mindio_acp.initialize()
 ```
 
 ## 使用样例2<a name="section1280112065715"></a>
 
-```
+```python
 >>> # Initialize with server_info
 >>> server_info = {
         'memfs.data_block_pool_capacity_in_gb': '200',
@@ -141,6 +141,5 @@ mindio_acp.initialize(server_info: Dict[str, str] = None) -> int
 
 ## 返回值<a name="section88014005720"></a>
 
--   0：成功
--   -1：失败
-
+- 0：成功
+- -1：失败

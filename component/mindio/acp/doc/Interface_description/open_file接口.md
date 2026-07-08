@@ -6,9 +6,9 @@
 
 使用with调用open\_file接口，以只读的方式打开文件，并返回对应的\_ReadableFileWrapper实例。该实例提供read\(\)和close\(\)方法。
 
--   read：读取文件内容。
+- read：读取文件内容。
 
-    ```
+    ```python
     read(self, offset=0, count=-1)
     ```
 
@@ -46,17 +46,17 @@
     </tbody>
     </table>
 
--   close：关闭文件。
+- close：关闭文件。
 
     该方法在with退出上下文的时候自动调用。
 
-    ```
+    ```python
     close(self)
     ```
 
 ## 接口格式<a name="zh-cn_topic_0000002112429502_section13362162011417"></a>
 
-```
+```python
 mindio_acp.open_file(path: str)
 ```
 
@@ -87,7 +87,7 @@ mindio_acp.open_file(path: str)
 
 ## 使用样例<a name="zh-cn_topic_0000002112429502_section81115380412"></a>
 
-```
+```python
 >>> with mindio_acp.open_file('/mnt/dpc01/checkpoint/rank-0.pt') as f:
 ...     read_data = f.read()
 ```
@@ -96,6 +96,5 @@ mindio_acp.open_file(path: str)
 
 \_ReadableFileWrapper实例。
 
->**说明：** 
+>**说明：**
 >接口详情请参见[MindSpore文档](https://www.mindspore.cn/docs/zh-CN/master/api_python/mindspore/mindspore.load_checkpoint.html#mindspore.load_checkpoint)。
-

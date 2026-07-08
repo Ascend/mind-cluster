@@ -4,12 +4,12 @@
 
 向MindIO TFT注册用户自定义退出方法。
 
->**说明：** 
+>**说明：**
 >目前仅针对MindSpore框架提供了注册退出回调的功能，用户需要自行确保回调函数的安全性；其他框架的退出则由MindIO TFT负责。
 
 ## 接口格式<a name="zh-cn_topic_0000001975861586_section1272104915439"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_register_exit_handler(func: Callable, ctx = None)
 ```
 
@@ -75,4 +75,3 @@ mindio_ttp.framework_ttp.tft_register_exit_handler(func: Callable, ctx = None)
 ## 返回值<a name="zh-cn_topic_0000001975861586_section1777516402588"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-

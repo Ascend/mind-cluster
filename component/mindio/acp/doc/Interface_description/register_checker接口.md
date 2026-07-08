@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="section1585114371516"></a>
 
-```
+```python
 mindio_acp.register_checker(callback, check_dict, user_context, timeout_sec)
 ```
 
@@ -67,7 +67,7 @@ mindio_acp.register_checker(callback, check_dict, user_context, timeout_sec)
 
 ## 使用样例<a name="section1550852911320"></a>
 
-```
+```python
 >>> def callback(result, user_context):
 >>>    if result == 0:
 >>>        print("success")
@@ -80,6 +80,5 @@ mindio_acp.register_checker(callback, check_dict, user_context, timeout_sec)
 
 ## 返回值<a name="section8785165291317"></a>
 
--   None：失败。
--   1：成功。
-
+- None：失败。
+- 1：成功。

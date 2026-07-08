@@ -16,13 +16,13 @@ in [Effective Go](https://golang.org/doc/effective_go.html) and in the
 In order to get a clear contribution chain of trust we use the [signed-off-by language](https://01.org/community/signed-process)
 used by the Linux kernel project.
 
-DCO can be found [here](https://developercertificate.org/)
+The DCO can be found in the [Developer Certificate of Origin](https://developercertificate.org/)
 
 ## Format of the patch
 
 Beside the signed-off-by footer, we expect each patch to comply with the following format:
 
-```
+```text
 Change summary
 
 More detailed explanation of your changes: Why and how.

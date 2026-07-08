@@ -4,12 +4,12 @@
 
 提供给MindCluster调用，通知MindIO TFT要执行的修复策略。
 
->**说明：** 
+>**说明：**
 >该修复策略必须在MindCluster和MindIO TFT协商的可选修复策略范围内。
 
 ## 接口格式<a name="zh-cn_topic_0000001975861586_section1272104915439"></a>
 
-```
+```python
 mindio_ttp.controller_ttp.tft_notify_controller_prepare_action(action: str, fault_ranks: dict = None)
 ```
 
@@ -50,6 +50,5 @@ mindio_ttp.controller_ttp.tft_notify_controller_prepare_action(action: str, faul
 
 ## 返回值<a name="zh-cn_topic_0000001975861586_section1777516402588"></a>
 
--   0：调用成功
--   1：调用失败
-
+- 0：调用成功
+- 1：调用失败

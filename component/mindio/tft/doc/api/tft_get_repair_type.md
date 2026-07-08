@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001976021318_section14612105214308"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_get_repair_type()
 ```
 
@@ -18,8 +18,7 @@ mindio_ttp.framework_ttp.tft_get_repair_type()
 
 str类型。
 
--   retry：执行UCE修复。
--   recover：执行ARF修复。
--   dump：执行临终遗言。
--   unknow：未找到修复类型。
-
+- retry：执行UCE修复。
+- recover：执行ARF修复。
+- dump：执行临终遗言。
+- unknow：未找到修复类型。

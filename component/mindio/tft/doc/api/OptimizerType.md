@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001975861594_section5166205542118"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.OptimizerType
 ```
 
@@ -39,4 +39,3 @@ mindio_ttp.framework_ttp.OptimizerType
 ## 返回值<a name="zh-cn_topic_0000001975861586_section1777516402588"></a>
 
 无
-

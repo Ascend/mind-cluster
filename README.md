@@ -49,7 +49,6 @@ MindCluster版本配套详情请参考：[版本配套详情](/docs/zh/release_n
 
 MindCluster基础调度特性与断点续训特性支持的框架：Pytorch、MindSpore。
 
-
 # 用户指南
 
 ## MindCluster集群调度
@@ -72,28 +71,28 @@ MindCluster具体特性介绍如下：
 
 | 特性名称       | 介绍                                                                                                            | Released |
 |------------|---------------------------------------------------------------------------------------------------------------|----------|
-| 容器化支持特性    | [link](./docs/zh/scheduling/04_usage/containerization/00_before_you_start.md) | ✅ |
-| 资源监测特性     | [link](./docs/zh/scheduling/04_usage/resource_monitoring/00_before_you_start.md)                                                                                                 | ✅ |
-| 虚拟化实例特性    | [link](./docs/zh/scheduling/04_usage/virtual_instance/virtual_instance_with_hdk/01_description.md)                                                                                                  | ✅ |
-| 基础调度特性     | [link](./docs/zh/scheduling/04_usage/basic_scheduling/00_feature_description.md)                                                                                                    | ✅ |
-| 断点续训特性     |[link](./docs/zh/scheduling/04_usage/resumable_training/00_feature_description.md)                                                                                                  | ✅ |
-| 一体机特性     |[link](./docs/zh/scheduling/04_usage/appliance/01_npu_hardware_fault_detection_and_rectification.md)                                                                                                  | ✅ |
-| MindIE Motor推理任务最佳实践 |[link](./docs/zh/scheduling/04_usage/mindie_motor_best_practice/00_before_you_start.md)   | ✅ |
-| SGLang推理任务最佳实践 |[link](./docs/zh/scheduling/04_usage/sglang_best_practice/00_before_you_start.md)   | ✅ |
-| vLLM推理任务最佳实践 |[link](./docs/zh/scheduling/04_usage/vllm_best_practice/00_before_you_start.md)   | ✅ |
+| 容器化支持特性    | [容器化支持特性](./docs/zh/scheduling/04_usage/containerization/00_before_you_start.md) | ✅ |
+| 资源监测特性     | [资源监测特性](./docs/zh/scheduling/04_usage/resource_monitoring/00_before_you_start.md)                                                                                                 | ✅ |
+| 虚拟化实例特性    | [虚拟化实例特性](./docs/zh/scheduling/04_usage/virtual_instance/virtual_instance_with_hdk/01_description.md)                                                                                                  | ✅ |
+| 基础调度特性     | [基础调度特性](./docs/zh/scheduling/04_usage/basic_scheduling/00_feature_description.md)                                                                                                    | ✅ |
+| 断点续训特性     |[断点续训特性](./docs/zh/scheduling/04_usage/resumable_training/00_feature_description.md)                                                                                                  | ✅ |
+| 一体机特性     |[一体机特性](./docs/zh/scheduling/04_usage/appliance/01_npu_hardware_fault_detection_and_rectification.md)                                                                                                  | ✅ |
+| MindIE Motor推理任务最佳实践 |[MindIE Motor推理任务最佳实践](./docs/zh/scheduling/04_usage/mindie_motor_best_practice/00_before_you_start.md)   | ✅ |
+| SGLang推理任务最佳实践 |[SGLang推理任务最佳实践](./docs/zh/scheduling/04_usage/sglang_best_practice/00_before_you_start.md)   | ✅ |
+| vLLM推理任务最佳实践 |[vLLM推理任务最佳实践](./docs/zh/scheduling/04_usage/vllm_best_practice/00_before_you_start.md)   | ✅ |
 
 ## MindCluster Ascend FaultDiag
 
 | 特性名称      | 介绍                                                                                                              | Released |
 |-----------|-----------------------------------------------------------------------------------------------------------------|----------|
-| 日志清洗与转储   | [link](./docs/zh/faultdiag/user_guide/06_cleaning_and_dumping_logs.md) | ✅        |
-| 故障诊断      | [link](./docs/zh/faultdiag/user_guide/07_diagnosing_faults.md) | ✅        |
-| 单机故障诊断    | [link](./docs/zh/faultdiag/user_guide/08_diagnosing_faults_on_a_single_server.md) | ✅        |
-| 超节点故障诊断   | [link](./docs/zh/faultdiag/user_guide/09_diagnosing_superpod_faults.md) | ✅        |
-| 清洗业务流日志   | [link](./docs/zh/faultdiag/user_guide/10_cleaning_service_flow_logs.md) | ✅        |
-| 根因节点清洗及诊断 | [link](./docs/zh/faultdiag/user_guide/11_cleaning_and_diagnosing_the_root_cause_node.md) | ✅        |
-| 故障事件清洗及诊断 | [link](./docs/zh/faultdiag/user_guide/12_cleaning_and_diagnosing_fault_events.md) | ✅        |
-| 自定义配置文件   | [link](./docs/zh/faultdiag/user_guide/13_customizing_a_configuration_file.md) | ✅        |
+| 日志清洗与转储   | [日志清洗与转储](./docs/zh/faultdiag/user_guide/06_cleaning_and_dumping_logs.md) | ✅        |
+| 故障诊断      | [故障诊断](./docs/zh/faultdiag/user_guide/07_diagnosing_faults.md) | ✅        |
+| 单机故障诊断    | [单机故障诊断](./docs/zh/faultdiag/user_guide/08_diagnosing_faults_on_a_single_server.md) | ✅        |
+| 超节点故障诊断   | [超节点故障诊断](./docs/zh/faultdiag/user_guide/09_diagnosing_superpod_faults.md) | ✅        |
+| 清洗业务流日志   | [清洗业务流日志](./docs/zh/faultdiag/user_guide/10_cleaning_service_flow_logs.md) | ✅        |
+| 根因节点清洗及诊断 | [根因节点清洗及诊断](./docs/zh/faultdiag/user_guide/11_cleaning_and_diagnosing_the_root_cause_node.md) | ✅        |
+| 故障事件清洗及诊断 | [故障事件清洗及诊断](./docs/zh/faultdiag/user_guide/12_cleaning_and_diagnosing_fault_events.md) | ✅        |
+| 自定义配置文件   | [自定义配置文件](./docs/zh/faultdiag/user_guide/13_customizing_a_configuration_file.md) | ✅        |
 
 # FAQ
 

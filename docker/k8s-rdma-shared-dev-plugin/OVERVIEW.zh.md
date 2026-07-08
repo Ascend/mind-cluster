@@ -90,31 +90,31 @@ docker build --no-cache -t k8s-rdma-shared-dev-plugin:{tag} ./ -f Dockerfile.{os
 
 1. 拉取镜像
 
-```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/k8s-rdma-shared-dev-plugin:{tag}
-```
+   ```bash
+   docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/k8s-rdma-shared-dev-plugin:{tag}
+   ```
 
 2. 重新打标签
 
-```bash
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/k8s-rdma-shared-dev-plugin:{tag} k8s-rdma-shared-dev-plugin:{version}
-```
+   ```bash
+   docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/k8s-rdma-shared-dev-plugin:{tag} k8s-rdma-shared-dev-plugin:{version}
+   ```
 
 3. 创建配置文件
 
-创建包含设备插件配置的 ConfigMap。
+   创建包含设备插件配置的 ConfigMap。
 
 4. 使用 DaemonSet 部署
 
-```bash
-kubectl apply -f k8s-rdma-shared-dev-plugin-{version}.yaml
-```
+   ```bash
+   kubectl apply -f k8s-rdma-shared-dev-plugin-{version}.yaml
+   ```
 
 5. 验证部署
 
-```bash
-kubectl get pods -A | grep k8s-rdma-shared-dev-plugin
-```
+   ```bash
+   kubectl get pods -A | grep k8s-rdma-shared-dev-plugin
+   ```
 
 ---
 

@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001975861558_section259611294404"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_reset_limit_step()
 ```
 
@@ -17,4 +17,3 @@ mindio_ttp.framework_ttp.tft_reset_limit_step()
 ## 返回值<a name="zh-cn_topic_0000001975861558_section1777516402588"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-

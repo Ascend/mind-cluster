@@ -44,7 +44,7 @@ A single node may experience multiple faults. If each node handles faults indepe
 
 Tags follow this format:
 
-```
+```text
 <version>
 ```
 
@@ -83,19 +83,19 @@ Tags follow this format:
 
 1. Pull the official image
 
-Pull the ClusterD image from AscendHub, replacing {tag} with the actual version (v26.0.0 recommended).
+   Pull the ClusterD image from AscendHub, replacing {tag} with the actual version (v26.0.0 recommended).
 
-```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:{tag}
-```
+   ```bash
+   docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:{tag}
+   ```
 
 2. Retag the image
 
-Retag the official image with a local tag for consistent naming and easier operations management.
+   Retag the official image with a local tag for consistent naming and easier operations management.
 
-```bash
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:{tag} clusterd:{tag}
-```
+   ```bash
+   docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:{tag} clusterd:{tag}
+   ```
 
 ### Build Locally (Optional)
 
@@ -103,45 +103,45 @@ The following example uses linux-aarch64 architecture and v26.0.0 version:
 
 1. Download the officially released component package
 
-```shell
-wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-clusterd_26.0.0_linux-aarch64.zip
-```
+   ```shell
+   wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-clusterd_26.0.0_linux-aarch64.zip
+   ```
 
 2. Extract the package to a custom directory
 
-```shell
-unzip Ascend-mindxdl-clusterd_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-clusterd_26.0.0_linux-aarch64
-```
+   ```shell
+   unzip Ascend-mindxdl-clusterd_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-clusterd_26.0.0_linux-aarch64
+   ```
 
 3. Enter the extracted working directory
 
-```shell
-cd Ascend-mindxdl-clusterd_26.0.0_linux-aarch64
-```
+   ```shell
+   cd Ascend-mindxdl-clusterd_26.0.0_linux-aarch64
+   ```
 
 4. Build the Docker image locally (disable cache to ensure a clean build)
 
-```bash
-docker build --no-cache -t clusterd:v26.0.0 ./ -f Dockerfile
-```
+   ```bash
+   docker build --no-cache -t clusterd:v26.0.0 ./ -f Dockerfile
+   ```
 
 ### Deploy ClusterD
 
 1. Start ClusterD
 
-Before deployment, replace the image `{tag}` in the YAML file with the actual image version.
+   Before deployment, replace the image `{tag}` in the YAML file with the actual image version.
 
-```bash
-kubectl apply -f clusterd-{version}.yaml
-```
+   ```bash
+   kubectl apply -f clusterd-{version}.yaml
+   ```
 
 2. Verify deployment
 
-```bash
-kubectl get pods -A | grep clusterd
-```
+   ```bash
+   kubectl get pods -A | grep clusterd
+   ```
 
-Expected result: The clusterd related Pods in the corresponding namespace should be in Running state.
+   Expected result: The clusterd related Pods in the corresponding namespace should be in Running state.
 
 ---
 

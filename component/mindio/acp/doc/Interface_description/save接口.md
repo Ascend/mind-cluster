@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001671257765_section4717142204511"></a>
 
-```
+```python
 mindio_acp.save(obj, path, open_way='memfs')
 ```
 
@@ -57,7 +57,7 @@ mindio_acp.save(obj, path, open_way='memfs')
 
 ## 使用样例<a name="zh-cn_topic_0000001671257765_section5115161344717"></a>
 
-```
+```python
 >>> # Save to file
 >>> x = torch.tensor([0, 1, 2, 3, 4])
 >>> mindio_acp.save(x, '/mnt/dpc01/tensor.pt')
@@ -65,8 +65,7 @@ mindio_acp.save(obj, path, open_way='memfs')
 
 ## 返回值<a name="zh-cn_topic_0000001671257765_section3787164144816"></a>
 
--   -1：保存失败。
--   0：通过原生torch.save方式实现保存。
--   1：通过memfs方式实现保存。
--   2：通过fopen方式实现保存。
-
+- -1：保存失败。
+- 0：通过原生torch.save方式实现保存。
+- 1：通过memfs方式实现保存。
+- 2：通过fopen方式实现保存。

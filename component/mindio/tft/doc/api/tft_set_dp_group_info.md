@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001975861586_section1272104915439"></a>
 
-```
+```python
 mindio_ttp.controller_ttp.tft_set_dp_group_info(rank: int, dp_rank_list: list)
 ```
 
@@ -47,4 +47,3 @@ mindio_ttp.controller_ttp.tft_set_dp_group_info(rank: int, dp_rank_list: list)
 ## 返回值<a name="zh-cn_topic_0000002330163997_zh-cn_topic_0000001976021318_section16811972329"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-

@@ -38,7 +38,7 @@ When certain faults occur in a node's CPU, memory, or disk, training jobs will f
 
 Tags follow this format:
 
-```
+```text
 <version>
 ```
 
@@ -77,19 +77,19 @@ Tags follow this format:
 
 1. Pull the official image
 
-Pull the NodeD image from AscendHub, replacing {tag} with the actual version (v26.0.0 recommended).
+   Pull the NodeD image from AscendHub, replacing {tag} with the actual version (v26.0.0 recommended).
 
-```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:{tag}
-```
+   ```bash
+   docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:{tag}
+   ```
 
 2. Retag the image
 
-Retag the official image with a local tag for consistent naming and easier operations management.
+   Retag the official image with a local tag for consistent naming and easier operations management.
 
-```bash
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:{tag} noded:{tag}
-```
+   ```bash
+   docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:{tag} noded:{tag}
+   ```
 
 ### Build Locally (Optional)
 
@@ -97,53 +97,53 @@ The following example uses linux-aarch64 architecture and v26.0.0 version:
 
 1. Download the officially released component package
 
-```shell
-wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-noded_26.0.0_linux-aarch64.zip
-```
+   ```shell
+   wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-noded_26.0.0_linux-aarch64.zip
+   ```
 
 2. Extract the package to a custom directory
 
-```shell
-unzip Ascend-mindxdl-noded_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-noded_26.0.0_linux-aarch64
-```
+   ```shell
+   unzip Ascend-mindxdl-noded_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-noded_26.0.0_linux-aarch64
+   ```
 
 3. Enter the extracted working directory
 
-```shell
-cd Ascend-mindxdl-noded_26.0.0_linux-aarch64
-```
+   ```shell
+   cd Ascend-mindxdl-noded_26.0.0_linux-aarch64
+   ```
 
 4. Build the Docker image locally (disable cache to ensure a clean build)
 
-```bash
-docker build --no-cache -t noded:v26.0.0 ./ -f Dockerfile
-```
+   ```bash
+   docker build --no-cache -t noded:v26.0.0 ./ -f Dockerfile
+   ```
 
 ### Deploy NodeD
 
 1. Label Kubernetes nodes
 
-Add labels to the corresponding nodes for cluster scheduling matching. Replace <node-name> with the actual node name.
+   Add labels to the corresponding nodes for cluster scheduling matching. Replace `<node-name>` with the actual node name.
 
-```bash
-kubectl label nodes <node-name> workerselector=dls-worker-node
-```
+   ```bash
+   kubectl label nodes <node-name> workerselector=dls-worker-node
+   ```
 
 2. Start NodeD
 
-Before deployment, replace the image `{tag}` in the YAML file with the actual image version.
+   Before deployment, replace the image `{tag}` in the YAML file with the actual image version.
 
-```bash
-kubectl apply -f noded-{version}.yaml
-```
+   ```bash
+   kubectl apply -f noded-{version}.yaml
+   ```
 
 3. Verify deployment
 
-```bash
-kubectl get pods -A | grep noded
-```
+   ```bash
+   kubectl get pods -A | grep noded
+   ```
 
-Expected result: The noded related Pods in the corresponding namespace should be in Running state.
+   Expected result: The noded related Pods in the corresponding namespace should be in Running state.
 
 ---
 

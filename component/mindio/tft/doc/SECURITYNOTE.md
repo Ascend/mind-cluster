@@ -1,4 +1,6 @@
-### 通信矩阵
+# 安全声明
+
+## 通信矩阵
 
 |组件|Tcp Store|
 |----------------|--------|
@@ -23,7 +25,8 @@
 支持通过环境变量 `TTP_ACCLINK_CHECK_PERIOD_HOURS`和`TTP_ACCLINK_CERT_CHECK_AHEAD_DAYS` 配置证书检查周期与证书过期预警时间
 
 配置TLS调用接口示例：
-```
+
+```python
 from mindio_ttp.framework_ttp import tft_start_controller, tft_init_processor, tft_register_decrypt_handler
 
 # 在tls_info中 以;分隔不同字段,以,分隔各个文件
@@ -60,14 +63,14 @@ export TTP_ACCLINK_CERT_CHECK_AHEAD_DAYS=14
 
 | 环境变量 | 说明                                         |
 |------|-----------------------------------------------------------|
-| TTP_ACCLINK_CHECK_PERIOD_HOURS  | 指定证书检查周期（单位：小时），超出范围 [ 24, 24 * 30 ] 或不是整数，则设置默认值7 * 24   |
+| TTP_ACCLINK_CHECK_PERIOD_HOURS  | 指定证书检查周期（单位：小时），超出范围 [ 24, 24 *30 ] 或不是整数，则设置默认值7* 24   |
 | TTP_ACCLINK_CERT_CHECK_AHEAD_DAYS  | 指定证书预警时间（单位：天），超出范围 [ 7, 180 ] 或不是整数或换算成小时小于检查周期，则设置默认值30 |
 
-### 运行用户建议
+## 运行用户建议
 
 - 基于安全性考虑，建议您在执行任何命令时，不建议使用root等管理员类型账户执行，遵循权限最小化原则。
 
-### 文件权限最大值建议
+## 文件权限最大值建议
 
 - 建议用户在主机（包括宿主机）及容器中设置运行系统umask值为0027及以上，保障新增文件夹默认最高权限为750，新增文件默认最高权限为640。
 - 建议对使用当前项目已有和产生的文件、数据、目录，设置如下建议权限。
@@ -92,9 +95,9 @@ export TTP_ACCLINK_CERT_CHECK_AHEAD_DAYS=14
 | 密钥组件、私钥、证书、加密密文        | 600（rw-------）      |
 | 加解密接口、加解密脚本            |   500（r-x------）        |
 
-### 调用acc_links接口列表
+## 调用acc_links接口列表
 
-#### TCP服务端模块
+### TCP服务端模块
 
 | 接口功能描述                | 接口声明                                      |
 |-----------------------------|--------------------------------------------|
@@ -109,14 +112,14 @@ export TTP_ACCLINK_CERT_CHECK_AHEAD_DAYS=14
 | 注册密码解密的函数 | `void RegisterDecryptHandler(const AccDecryptHandler &h);` |
 | 加载安全认证所需动态库          | `int32_t LoadDynamicLib(const std::string &dynLibPath);` |
 
-### 依赖软件声明
+## 依赖软件声明
 
 当前项目运行依赖 cann 和 Ascend HDK，安装使用及注意事项参考[CANN](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/81RC1beta1/index/index.html)和[Ascend HDK](https://support.huawei.com/enterprise/zh/undefined/ascend-hdk-pid-252764743)并选择对应版本。
 
-### 源码内公网地址
+## 源码内公网地址
 
 | 类型   | 开源代码地址      | 文件名      | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明            |
 |------  |-----------------|-------------|---------------------               |-------------------|
-| 代码仓地址  | https://atomgit.com/openeuler/libboundscheck.git | .gitmodules | https://atomgit.com/openeuler/libboundscheck.git | 依赖三方库 |
-| 代码仓地址  | https://github.com/gabime/spdlog.git | .gitmodules | https://github.com/gabime/spdlog.git | 依赖三方库 |
-| license 地址 | 不涉及 | LICENSE | http://www.apache.org/licenses/LICENSE-2.0 | license文件 |
+| 代码仓地址  | <https://atomgit.com/openeuler/libboundscheck.git> | .gitmodules | <https://atomgit.com/openeuler/libboundscheck.git> | 依赖三方库 |
+| 代码仓地址  | <https://github.com/gabime/spdlog.git> | .gitmodules | <https://github.com/gabime/spdlog.git> | 依赖三方库 |
+| license 地址 | 不涉及 | LICENSE | <http://www.apache.org/licenses/LICENSE-2.0> | license文件 |

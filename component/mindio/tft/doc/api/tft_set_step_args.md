@@ -4,12 +4,12 @@
 
 训练框架设置的参数集合。
 
->**说明：** 
+>**说明：**
 >对于MindSpeed-LLM训练框架，设置功能已经由MindIO TFT完成适配，不需要调用。
 
 ## 接口格式<a name="zh-cn_topic_0000001975861586_section1272104915439"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_set_step_args(args)
 ```
 
@@ -41,4 +41,3 @@ mindio_ttp.framework_ttp.tft_set_step_args(args)
 ## 返回值<a name="zh-cn_topic_0000001975861586_section1777516402588"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-
