@@ -74,13 +74,16 @@
     -r-------- 1 root root  2026 Mar 24 15:25 mindcluster-deploy-tool-{chart_version}.tgz
     -rw-r--r-- 1 root root  2026 Mar 24 15:25 helm_tool.sh
     ```
+
 2. 执行以下命令，为已有资源添加helm元数据。
+
     ```bash
     sed -i 's/\r$//' helm_tool.sh && chmod +x helm_tool.sh
     #（可选）查看脚本命令参数
     bash helm_tool.sh --help
     bash helm_tool.sh --all # 给资源添加helm元数据，并且删除ascend-device-plugin组件v26.1.0版本前的daemonset。用户可使用--help查看脚本命令参数，然后根据需求设置参数。
     ```
+
     回显示例如下，表示添加helm元数据成功：
 
     ```ColdFusion

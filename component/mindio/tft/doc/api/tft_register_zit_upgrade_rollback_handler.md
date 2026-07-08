@@ -4,12 +4,12 @@
 
 训练框架向Processor注册升级流程回滚的回调函数。
 
->**说明：** 
+>**说明：**
 >对于MindSpeed-LLM训练框架，回调函数已经完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
 
 ## 接口格式<a name="zh-cn_topic_0000001976021318_section14612105214308"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_register_zit_upgrade_rollback_handler(func: Callable, ctx = None)
 ```
 
@@ -51,4 +51,3 @@ mindio_ttp.framework_ttp.tft_register_zit_upgrade_rollback_handler(func: Callabl
 ## 返回值<a name="zh-cn_topic_0000002330163997_zh-cn_topic_0000001976021318_section16811972329"></a>
 
 无返回值，出错会打印ERROR日志、抛出异常。
-

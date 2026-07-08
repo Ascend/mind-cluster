@@ -1,3 +1,5 @@
+# RFC: 支持重建的Pod优先调度回原节点
+
 **状态 (Status):** Accepted
 **作者 (Authors):** @shepherd-cheung
 **创建日期 (Created):** 2026-05-01
@@ -49,7 +51,7 @@
 
 ## 2.1 核心流程
 
-```
+```text
 NPUAllocateFunc (Pod分配到节点)
   │
   └─ 写入内存缓存: {ownerUID → rankIndex → RankNodeEntry{Node, Previous}}
@@ -88,7 +90,7 @@ NPUAllocateFunc (Pod分配到节点)
 
 超节点/多级调度策略在 `ScoreBestNPUNodes` 中内置了回原节点逻辑：
 
-```
+```text
 ScoreBestNPUNodes (superpod/frame.go)
   │
   ├─ VerifyCachedSuperPods(nodes, PreferPreviousNode)
@@ -115,7 +117,7 @@ ScoreBestNPUNodes (superpod/frame.go)
 
 ### 得分规则
 
-```
+```text
 非故障Pod:
   1. selfNode 在scoreMap中 → 设为 maxScore + 100 ✓ 回原节点
   2. selfNode 不在scoreMap中 → 选otherNodes中最高分节点 → 设为 maxScore + 100
@@ -137,7 +139,7 @@ ScoreBestNPUNodes (superpod/frame.go)
 
 ### Key设计
 
-```
+```text
 Owner UID: "abc-123-def" (PodGroup对应Controller的UID)
   ├─ rankIndex "0" → RankNodeEntry{Node: "node-gpu-05", Previous: "node-gpu-02"}
   ├─ rankIndex "1" → RankNodeEntry{Node: "node-gpu-06", Previous: ""}
@@ -218,7 +220,7 @@ data:
 
 FaultHandle在加分之后执行减分（亚健康-1，故障-64）。配合节点三分类中故障Pod优先选otherNodes的策略：
 
-```
+```text
 场景1：Pod健康，原节点非故障
   非故障Pod → 优先回selfNode → maxScore + 100 ✓
 

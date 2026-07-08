@@ -6,11 +6,11 @@
 
 # 编译NodeD
 
-1.  通过git拉取源码，获得noded。
+1. 通过git拉取源码，获得noded。
 
     示例：源码放在/home/mind-cluster/component/noded目录下
 
-2.  执行以下命令，进入NodeD构建目录，执行构建脚本，在“output“目录下生成二进制noded、yaml文件和Dockerfile文件等。
+2. 执行以下命令，进入NodeD构建目录，执行构建脚本，在“output“目录下生成二进制noded、yaml文件和Dockerfile文件等。
 
     **cd** _/home/mind-cluster/component/_**noded/build/**
 
@@ -18,11 +18,11 @@
 
     **./build.sh**
 
-3.  执行以下命令，查看**output**生成的软件列表。
+3. 执行以下命令，查看**output**生成的软件列表。
 
     **ll** _/home/mind-cluster/component/_**noded/output**
 
-    ```
+    ```text
     -r--------  1 root root      480 Nov 14 07:10 Dockerfile
     -r-x------  1 root root 36550304 Nov 14 07:10 noded
     -r--------  1 root root      434 Nov 14 07:10 NodeDConfiguration.json

@@ -90,6 +90,7 @@
 **使用说明**
 
 - 容器快照只支持workload为StatefulSet类型任务，且需在该类任务中增加容器快照开启的标签“infer.huawei.com/container-snapshot”，并将其设置为“true”，此外还需在容器环境变量中配置与NodeD相同的快照路径，如下所示：
+
    ```Yaml
       - name: prefill
         replicas: 1
@@ -107,7 +108,8 @@
             - name: host_snapshot_dir_path
               value: "/user/snapshot"
    ```
-- 推理任务部署使用说明详见 https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/api_reference/engine_server_snapshot_interfaces.md ，下面使用演示仅展示使用流程
+
+- 推理任务部署使用说明详见 <https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/api_reference/engine_server_snapshot_interfaces.md> ，下面使用演示仅展示使用流程
 
 **支持的产品形态**
 
@@ -163,6 +165,7 @@ container.id image rootfs-diff.digest rootfs-diff.tar rootfs-external-diff.tar
 ```shell
 kill -9 xxx
 ```
+
 pod 重启成功：
 
 ```ColdFusion

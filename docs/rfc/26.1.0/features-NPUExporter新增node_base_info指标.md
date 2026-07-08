@@ -145,7 +145,7 @@ func (c *NodeBaseCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *com
     cache, ok := nodeBaseInfo.(nodeBaseInfoCache)
     if !ok {
         logger.Error("cache type mismatch")
-		return
+  return
     }
     doUpdateMetric(ch, cache.timestamp, 1, []string{cache.exporterVersion, cache.driverVersion}, nodeInfoDesc)
 }
@@ -191,6 +191,7 @@ func (c *NodeBaseCollector) UpdateTelegraf(fieldsMap map[string]map[string]inter
 ```
 
 Telegraf场景下：
+
 - 从`LocalCache`中读取缓存数据，若缓存不存在则记录日志并返回原始fieldsMap
 - 初始化`KeyForTextMetrics`字段（若不存在），用于存放文本类指标数据
 - 构建`TelegrafData`结构体，包含：
@@ -209,7 +210,7 @@ Telegraf场景下：
 
 #### Prometheus格式
 
-```
+```text
 # HELP node_base_info the common information of this node
 # TYPE node_base_info gauge
 node_base_info{exporterVersion="v26.1.0",driverVersion="26.0.3"} 1 1694772754612
@@ -218,6 +219,7 @@ node_base_info{exporterVersion="v26.1.0",driverVersion="26.0.3"} 1 1694772754612
 #### Telegraf格式
 
 Telegraf场景下，数据通过`TelegrafData`结构体上报，最终由`handleTextMetrics`函数处理，调用`acc.AddFields`输出：
+
 - measurement名称：`ascend`
 - tags：`exporterVersion="v26.1.0"`, `driverVersion="26.0.1"`
 - fields：`node_base_info=1i`
@@ -271,7 +273,6 @@ Telegraf场景下，数据通过`TelegrafData`结构体上报，最终由`handle
     - 配置Telegraf采集NPU Exporter数据
     - 验证采集数据中包含`node_base_info`字段
     - 验证采集数据中包含正确的`exporterVersion`和`driverVersion`标签信息
-
 
 ## 9. 总结
 

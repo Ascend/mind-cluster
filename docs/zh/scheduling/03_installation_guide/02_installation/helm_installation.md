@@ -78,6 +78,7 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
       -r-------- 1 root root  2026 Mar 24 15:25 mindcluster-deploy-tool-{chart_version}.tgz
       -rw-r--r-- 1 root root  2026 Mar 24 15:25 helm_tool.sh
       ```
+
       > [!NOTE]
       > {version}表示MindCluster组件版本，如26.1.0。
       > {chart_version}表示helm chart版本，与MindCluster组件版本保持一致。

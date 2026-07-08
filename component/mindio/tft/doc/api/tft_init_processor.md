@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001976021294_section1642012205289"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_init_processor(rank: int, world_size: int, enable_local_copy: bool, enable_tls=True, tls_info='', enable_uce=True, enable_arf=False, enable_zit=False)
 ```
 
@@ -66,7 +66,7 @@ mindio_ttp.framework_ttp.tft_init_processor(rank: int, world_size: int, enable_l
 </td>
 <td class="cellrowborder" valign="top" width="30%" headers="mcps1.1.5.1.3 "><p id="p1252901172"><a name="p1252901172"></a><a name="p1252901172"></a>TLS的证书配置。</p>
 </td>
-<td class="cellrowborder" valign="top" width="30%" headers="mcps1.1.5.1.4 "><p id="p05216091710"><a name="p05216091710"></a><a name="p05216091710"></a>默认为空，当开启TLS认证时，需要配置证书信息，具体字段应以键值对形式组织。具体配置指导见<a href="导入TLS证书.md">导入TLS证书</a>。</p>
+<td class="cellrowborder" valign="top" width="30%" headers="mcps1.1.5.1.4 "><p id="p05216091710"><a name="p05216091710"></a><a name="p05216091710"></a>默认为空，当开启TLS认证时，需要配置证书信息，具体字段应以键值对形式组织。具体配置指导见<a href="../SECURITYNOTE.md">导入TLS证书</a>。</p>
 </td>
 </tr>
 <tr id="row735874715915"><td class="cellrowborder" valign="top" width="20%" headers="mcps1.1.5.1.1 "><p id="p193582471495"><a name="p193582471495"></a><a name="p193582471495"></a>enable_uce</p>
@@ -105,4 +105,3 @@ mindio_ttp.framework_ttp.tft_init_processor(rank: int, world_size: int, enable_l
 ## 返回值<a name="zh-cn_topic_0000001976021294_section8785165291317"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-

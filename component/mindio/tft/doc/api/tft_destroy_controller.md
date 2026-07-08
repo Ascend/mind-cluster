@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000002012581709_section1585114371516"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_destroy_controller()
 ```
 
@@ -17,4 +17,3 @@ mindio_ttp.framework_ttp.tft_destroy_controller()
 ## 返回值<a name="zh-cn_topic_0000002012581709_section8785165291317"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-

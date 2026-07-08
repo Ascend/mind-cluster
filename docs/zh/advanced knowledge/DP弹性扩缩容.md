@@ -152,6 +152,7 @@ deactivate clusterd
 ## 流程说明
 
 ### 1. 训练拉起与故障检测阶段
+
 - **device_plugin**：负责芯片故障上报
 - **noded**：负责节点故障上报
 - **clusterd**：接收并汇总所有故障信息，进行内部故障聚合与决策
@@ -159,18 +160,22 @@ deactivate clusterd
 - **mindio_controller**：管理训练进程，注册故障回调
 
 ### 2. 停止训练阶段
+
 - **clusterd**：下发停止训练命令
 - **mindio_controller**：通知处理器进入prelock状态
 
 ### 3. 停止完成及策略上报阶段
+
 - **taskd_agent**：执行故障节点退出
 - **volcano**：删除故障Pod
 - **ascend_operator**：检测Pod副本数，若没有足够资源则新pod不会被调度
 
 ### 4. 策略下发阶段
+
 - **clusterd**：决策恢复策略并下发
 
 ### 5. 恢复流程阶段
+
 - **设备停止**：通过`AclRtDeviceTaskAbort`中止设备任务
 - **设备清理**：清理设备状态
 - **通信重建**：通过`HcclCommDestroy`和`reinit_process_group`重建分布式通信组

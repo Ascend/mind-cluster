@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="section1642012205289"></a>
 
-```
+```python
 mindio_acp.convert(src, dst)
 ```
 
@@ -46,12 +46,11 @@ mindio_acp.convert(src, dst)
 
 ## 使用样例<a name="section1550852911320"></a>
 
-```
+```python
 >>> mindio_acp.convert('/mnt/dpc01/iter_0000050/mp_rank_00/distrib_optim.pt', '/mnt/dpc02/iter_0000050/mp_rank_00/distrib_optim.pt')
 ```
 
 ## 返回值<a name="section8785165291317"></a>
 
--   0：转换成功。
--   -1：转换失败。
-
+- 0：转换成功。
+- -1：转换失败。

@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="section1884425917718"></a>
 
-```
+```python
 mindio_acp.multi_save(obj, path_list)
 ```
 
@@ -46,7 +46,7 @@ mindio_acp.multi_save(obj, path_list)
 
 ## 使用样例<a name="section1550852911320"></a>
 
-```
+```python
 >>> # Save to file
 >>> x = torch.tensor([0, 1, 2, 3, 4])
 >>> path_list = ["/mnt/dpc01/dir1/rank_1.pt","/mnt/dpc01/dir2/rank_1.pt"]
@@ -55,8 +55,7 @@ mindio_acp.multi_save(obj, path_list)
 
 ## 返回值<a name="section8785165291317"></a>
 
--   None：失败。
--   0：通过原生torch.save方式实现保存。
--   1：通过memfs方式实现保存。
--   2：通过fopen方式实现保存。
-
+- None：失败。
+- 0：通过原生torch.save方式实现保存。
+- 1：通过memfs方式实现保存。
+- 2：通过fopen方式实现保存。

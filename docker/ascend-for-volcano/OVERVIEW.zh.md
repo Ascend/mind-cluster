@@ -114,22 +114,21 @@ Tag 遵循以下格式：
 
 1. 拉取镜像
 
-拉取昇腾镜像仓库提供的 Ascend for Volcano 相关镜像，替换 {tag} 为实际版本对应的Tag（推荐 v1.9.0-v26.0.0）。
+   拉取昇腾镜像仓库提供的 Ascend for Volcano 相关镜像，替换 {tag} 为实际版本对应的Tag（推荐 v1.9.0-v26.0.0）。
 
-```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{tag}
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{tag}
-```
+   ```bash
+   docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{tag}
+   docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{tag}
+   ```
 
 2. 修改镜像标签
 
-为拉取的官方镜像重新打本地标签，统一本地镜像命名规范，方便后续运维管理。
+   为拉取的官方镜像重新打本地标签，统一本地镜像命名规范，方便后续运维管理。
 
-```bash
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{tag} volcanosh/vc-scheduler:{tag}
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{tag} volcanosh/vc-controller-manager:{tag}
-```
-
+   ```bash
+   docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{tag} volcanosh/vc-scheduler:{tag}
+   docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{tag} volcanosh/vc-controller-manager:{tag}
+   ```
 
 ### 本地构建(可选)
 
@@ -137,49 +136,49 @@ docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{tag
 
 1. 下载官方发布的组件安装包
 
-```shell
-wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip
-```
+   ```shell
+   wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip
+   ```
 
 2. 解压安装包至自定义目录
 
-```shell
-unzip Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-volcano_26.0.0_linux-aarch64
-```
+   ```shell
+   unzip Ascend-mindxdl-volcano_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-volcano_26.0.0_linux-aarch64
+   ```
 
 3. 进入解压后的工作目录
 
-```shell
-cd Ascend-mindxdl-volcano_26.0.0_linux-aarch64/volcano-v1.9.0
-```
+   ```shell
+   cd Ascend-mindxdl-volcano_26.0.0_linux-aarch64/volcano-v1.9.0
+   ```
 
 4. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
 
-```bash
-# 构建调度器镜像
-docker build --no-cache -t  volcanosh/vc-scheduler:v1.9.0 ./  -f Dockerfile-scheduler
+   ```bash
+   # 构建调度器镜像
+   docker build --no-cache -t  volcanosh/vc-scheduler:v1.9.0 ./  -f Dockerfile-scheduler
 
-# 构建控制器镜像
-docker build --no-cache -t volcanosh/vc-controller-manager:v1.9.0 ./  -f Dockerfile-controller
-```
+   # 构建控制器镜像
+   docker build --no-cache -t volcanosh/vc-controller-manager:v1.9.0 ./  -f Dockerfile-controller
+   ```
 
 ### 部署 Ascend for Volcano
 
 1. 启动 Volcano
 
-YAML文件名中 `{version}` 替换为实际版本（当前使用的volcano版本为 v1.9.0），部署前需将 YAML 文件内的镜像 `{tag}` 替换为实际使用的镜像版本。
+   YAML文件名中 `{version}` 替换为实际版本（当前使用的volcano版本为 v1.9.0），部署前需将 YAML 文件内的镜像 `{tag}` 替换为实际使用的镜像版本。
 
-```bash
-kubectl apply -f volcano-{version}.yaml
-```
+   ```bash
+   kubectl apply -f volcano-{version}.yaml
+   ```
 
 2. 验证部署
 
-```bash
-kubectl get pods -A | grep volcano
-```
+   ```bash
+   kubectl get pods -A | grep volcano
+   ```
 
-预期结果：对应命名空间下的 volcano 相关 Pod 状态为 Running。
+   预期结果：对应命名空间下的 volcano 相关 Pod 状态为 Running。
 
 ---
 

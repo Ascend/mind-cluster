@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000002012581705_section1642012205289"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_start_processor(master_ip: str, port: int, local_ip='')
 ```
 

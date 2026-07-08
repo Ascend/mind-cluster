@@ -4,12 +4,12 @@
 
 注册框架侧dump回调函数。
 
->**说明：** 
+>**说明：**
 >对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
 
 ## 接口格式<a name="zh-cn_topic_0000001975861574_section425913537262"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_register_save_ckpt_handler(func: Callable, ctx = None)
 ```
 
@@ -107,4 +107,3 @@ mindio_ttp.framework_ttp.tft_register_save_ckpt_handler(func: Callable, ctx = No
 ## 返回值<a name="zh-cn_topic_0000001975861574_section24422154297"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-

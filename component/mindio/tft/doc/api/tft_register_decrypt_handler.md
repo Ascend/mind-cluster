@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001976021318_section14612105214308"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_register_decrypt_handler(decryptor: Callable)
 ```
 
@@ -29,7 +29,7 @@ mindio_ttp.framework_ttp.tft_register_decrypt_handler(decryptor: Callable)
 </td>
 <td class="cellrowborder" valign="top" width="30%" headers="mcps1.1.5.1.3 "><p id="zh-cn_topic_0000001976021318_p1690185632717"><a name="zh-cn_topic_0000001976021318_p1690185632717"></a><a name="zh-cn_topic_0000001976021318_p1690185632717"></a>用户自定义的私钥口令解密函数。</p>
 </td>
-<td class="cellrowborder" valign="top" width="30%" headers="mcps1.1.5.1.4 "><p id="p517102125317"><a name="p517102125317"></a><a name="p517102125317"></a>通过tft_start_controller和tft_init_processor配置TLS加密，并且如果口令为密文，则需注册解密函数。具体配置指导见<a href="导入TLS证书.md">导入TLS证书</a>。</p>
+<td class="cellrowborder" valign="top" width="30%" headers="mcps1.1.5.1.4 "><p id="p517102125317"><a name="p517102125317"></a><a name="p517102125317"></a>通过tft_start_controller和tft_init_processor配置TLS加密，并且如果口令为密文，则需注册解密函数。具体配置指导见<a href="../SECURITYNOTE.md">导入TLS证书</a>。</p>
 </td>
 </tr>
 </tbody>
@@ -65,4 +65,3 @@ mindio_ttp.framework_ttp.tft_register_decrypt_handler(decryptor: Callable)
 ## 返回值<a name="zh-cn_topic_0000001976021318_section16811972329"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-

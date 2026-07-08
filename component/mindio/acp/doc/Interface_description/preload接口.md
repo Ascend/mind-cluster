@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000002112429502_section13362162011417"></a>
 
-```
+```python
 mindio_acp.preload(*path)
 ```
 
@@ -37,13 +37,12 @@ mindio_acp.preload(*path)
 
 ## 使用样例<a name="zh-cn_topic_0000002112429502_section81115380412"></a>
 
-```
+```python
 >>> # preload from file
 >>> mindio_acp.preload('/mnt/dpc01/checkpoint/rank-0.pt')
 ```
 
 ## 返回值<a name="zh-cn_topic_0000002112429502_section17538071458"></a>
 
--   0：预加载成功。
--   1：预加载失败。
-
+- 0：预加载成功。
+- 1：预加载失败。

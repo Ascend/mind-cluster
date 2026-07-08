@@ -33,7 +33,7 @@
 
 ### 3.1 三组件协作架构
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        用户提交 AscendJob                            │
 │  Labels: scheduler.softShareDev.aicoreQuota/hbmQuota/policy        │
@@ -100,6 +100,7 @@
 ```
 
 ### 3.2 ascend-operator
+
 - **设计要点**：软切分场景下每个 Pod 只使用 1 个虚拟 NPU 分区，因此 `LOCAL_WORKER/SIZE` 固定为 1，`WORKER_NUM/SIZE` 等于 Pod 副本数。
 - **任务识别**：检查 Job 的三个 Labels 是否齐全（aicoreQuota、hbmQuota、schedulingPolicy）
 - **Pod 信息构造**：标记 isSoftShareDevJob=true
@@ -145,19 +146,22 @@ func IsSupportSoftShareDevice() bool {
 ```
 
 需要同时满足两个条件：
+
 1. `--shareDevCount=100`（每卡扩展为 100 个虚拟设备）
 2. `--softShareDevConfigDir` 指定配置目录（非空绝对路径）
 
 #### 3.4.2 设备扩展与映射
 
 **ListAndWatch 阶段**：每张物理 NPU 上报 100 个虚拟设备：
-```
+
+```text
 npu0 → npu0-0, npu0-1, ..., npu0-99
 npu1 → npu1-0, npu1-1, ..., npu1-99
 ```
 
 **Allocate 阶段**：反向映射，所有虚拟设备归一化到物理设备：
-```
+
+```text
 npu0-3, npu0-7, npu0-15 → 全部映射到物理设备 npu0
 ```
 
@@ -166,6 +170,7 @@ npu0-3, npu0-7, npu0-15 → 全部映射到物理设备 npu0
 路径格式：`/etc/enpu/<namespace>.<jobName>/<physicalID>_<vNPUId>/npu_info.config`
 
 配置文件内容示例：
+
 ```ini
 physical-npu-id=0
 virtual-npu-id=1
@@ -184,7 +189,7 @@ scheduling-policy=2
 
 #### 3.4.5 配额追踪闭环
 
-```
+```text
 Pod Annotations → calculateCardUsedResourceQuota() → NpuDevice.UsedAicoreQuota/UsedHbmQuota
                                                               │
                                                               ▼
@@ -196,7 +201,7 @@ Pod Annotations → calculateCardUsedResourceQuota() → NpuDevice.UsedAicoreQuo
 
 ### 3.5 端到端数据流
 
-```
+```text
 1. 用户创建 AscendJob (Labels: aicoreQuota=10, hbmQuota=8192, policy=elastic)
        │
 2. ascend-operator: 识别为软切分 Job → 注入环境变量 → 创建 Pod
@@ -231,11 +236,12 @@ Pod Annotations → calculateCardUsedResourceQuota() → NpuDevice.UsedAicoreQuo
 ```
 
 ## 4 A5场景兼容开发
+
 ### 4.1 dieID接口兼容处理
+
 **问题**：A2、A3场景从dcmi获取dieID逻辑在A5场景不适用。
 
 **解决方案**：A5场景dcmiv2_get_device_die_id接口仅支持查询DDIE相关信息，接口调用需要针对A5设备进行兼容处理。
-
 
 ### 4.2 软切分清理重构
 
@@ -296,7 +302,6 @@ type PluginServer struct {
 
 在 `getNPUInfoConfigDirFromPod` 成功返回后（即配置文件已写入），将 podKey → jobName 的映射存入 `softShareJobs`：
 
-
 #### 5.2.3 新增 `handleSoftSharePodDelete` 方法
 
 1. 先检查是否支持软切分，不支持则直接返回
@@ -309,6 +314,7 @@ type PluginServer struct {
 
 新增 `registerSoftSharePodDeleteHandler` 方法，
 在 `HwDevManager` 初始化流程中，`initPluginServer()` 之后调用
+
 - Kubernetes informer 支持多个 event handler，在 informer 运行后仍可追加注册
 - 只注册一个 `PluginServer` 的处理器即可（所有实例共享同一逻辑）
 - 先检查 `IsSupportSoftShareDevice()`，非软切分场景不注册处理器
@@ -327,6 +333,7 @@ if rmErr := common.RemoveSoftShareDeviceFileAndDir(namespace, jobName); rmErr !=
 ```
 
 ## 6. 测试用例
+
 | 用例ID | 测试项                | 前置条件                                                           | 测试步骤                                                                                                                                                                                                                                                | 预期结果                                                                                                                            |
 |------|--------------------|----------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
 | 1    | 下发aicore足够hbm不足的任务 | 1. 环境部署完成， 如单芯片HBM为112G A5环境。  <br/>2. DP软切分配置完成。                | 1. 下发1x20 aicoreQuota，112000hbmQuota任务。  <br/>2. 再下发1x80 aicoreQuota，112000hbmQuota任务。                                                                                                                                                                | 1. 任务1下发成功，调度到卡1上。  <br/>2. 任务2调度到卡2上。                                                                                          |
@@ -340,4 +347,5 @@ if rmErr := common.RemoveSoftShareDeviceFileAndDir(namespace, jobName); rmErr !=
 | 9    | 软切分任务配置清理          | 1. 环境部署完成， 如单芯片HBM为112G A5环境。  <br/>2. DP软切分配置完成。                | 1. 下发1x20 aicoreQuota，10000hbmQuota任务1。  <br/>2. 删除任务1。                                                                                                                                                                                                  | 1. 任务1下发成功，调度到卡1，/etc/enpu/目录中生成相关配置目录及文件。  <br/>2. 任务1删除成功，/etc/enpu/目录中删除相关配置目录及文件。                                           |
 
 ## 7. 资料
+
 在软切分特性相关章节补充对A5标卡的支持说明。

@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001976021290_section206122116417"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_start_copy_os()
 ```
 
@@ -17,4 +17,3 @@ mindio_ttp.framework_ttp.tft_start_copy_os()
 ## 返回值<a name="zh-cn_topic_0000001976021290_section14986205512513"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-

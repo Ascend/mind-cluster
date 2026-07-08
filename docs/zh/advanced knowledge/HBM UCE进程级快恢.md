@@ -1,6 +1,6 @@
 # HBM UCE进程级快恢流程（PlantUML 时序图）
 
-## 以下为Pytorch进程级快恢时序图，使用PlantUML语法编写：
+## 以下为Pytorch进程级快恢时序图，使用PlantUML语法编写
 
 ```plantuml
 @startuml
@@ -155,7 +155,7 @@ deactivate taskd_manager
 @enduml
 ```
 
-## 以下为mindspore进程级快恢时序图，使用PlantUML语法编写：
+## 以下为mindspore进程级快恢时序图，使用PlantUML语法编写
 
 ```plantuml
 @startuml
@@ -290,4 +290,3 @@ deactivate taskd_manager
 
 @enduml
 ```
-

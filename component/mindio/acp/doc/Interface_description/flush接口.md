@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000002112429502_section13362162011417"></a>
 
-```
+```python
 mindio_acp.flush()
 ```
 
@@ -16,13 +16,12 @@ mindio_acp.flush()
 
 ## 使用样例<a name="zh-cn_topic_0000002112429502_section81115380412"></a>
 
-```
+```python
 >>> # flush all data to disk
 >>> mindio_acp.flush()
 ```
 
 ## 返回值<a name="zh-cn_topic_0000002112429502_section17538071458"></a>
 
--   0：刷盘成功。
--   1：刷盘失败。
-
+- 0：刷盘成功。
+- 1：刷盘失败。
