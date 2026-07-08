@@ -105,4 +105,3 @@ mindio_ttp.framework_ttp.tft_init_processor(rank: int, world_size: int, enable_l
 ## 返回值<a name="zh-cn_topic_0000001976021294_section8785165291317"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-

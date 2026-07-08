@@ -212,4 +212,3 @@ mindio_ttp.controller_ttp.tft_register_mindx_callback(action: str, func: Callabl
 
 -   0：调用成功
 -   1：调用失败
-

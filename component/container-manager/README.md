@@ -37,9 +37,9 @@
     回显示例如下：
     ```
     Container Manager, supports fault management and automatic recovery.
-    
+
     Usage: [OPTIONS...] COMMAND
-    
+
     Options:
 	    -h,-help	Print help information
 	    -v,-version	Print version information

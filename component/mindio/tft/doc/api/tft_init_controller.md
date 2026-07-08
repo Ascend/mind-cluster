@@ -76,4 +76,3 @@ mindio_ttp.framework_ttp.tft_init_controller(rank: int, world_size: int, enable_
 ## 返回值<a name="zh-cn_topic_0000002012461173_zh-cn_topic_0000001671257765_section3787164144816"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-

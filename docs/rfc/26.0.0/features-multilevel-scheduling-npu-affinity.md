@@ -316,7 +316,7 @@ spec:
 
 **示例配置说明（8 pod任务）**：
 
-```
+```text
 总任务数 minMembers = 8
 affinity-config: "level1=2,level2=4"
 
@@ -536,7 +536,7 @@ metadata:
 
 碎片得分用于评估资源分配后产生的资源碎片化程度：
 
-```
+```text
 fragmentScore = 碎片大小加权和
 
 得分越低表示：
@@ -698,4 +698,3 @@ spec:
 
 - Volcano 网络拓扑感知调度文档：<https://volcano.sh/zh/docs/network_topology_aware_scheduling/>
 - 主要代码位置：`component/ascend-for-volcano/internal/npu/policy/multilevelscheduling/`
-

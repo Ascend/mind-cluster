@@ -53,4 +53,3 @@ mindio_ttp.framework_ttp.tft_set_optimizer_replica(rank: int, replica_info: list
 ## 返回值<a name="zh-cn_topic_0000002012461173_zh-cn_topic_0000001671257765_section3787164144816"></a>
 
 无返回值。出错时会打印ERROR日志并抛出异常。
-

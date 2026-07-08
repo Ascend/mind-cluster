@@ -14,7 +14,7 @@
     **cd** _/home/mind-cluster/component/_**clusterd/build/**
 
         chmod +x build.sh
-        
+
         ./build.sh
 
 3.  执行以下命令，查看**output**生成的软件列表。
@@ -37,4 +37,3 @@
 # 说明
 
 - 当前容器方式部署本组件，本组件的认证鉴权方式为ServiceAccount， 该认证鉴权方式为ServiceAccount的token明文显示，建议用户自行进行安全加强。
-

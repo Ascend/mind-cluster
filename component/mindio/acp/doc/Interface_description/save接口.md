@@ -69,4 +69,3 @@ mindio_acp.save(obj, path, open_way='memfs')
 -   0：通过原生torch.save方式实现保存。
 -   1：通过memfs方式实现保存。
 -   2：通过fopen方式实现保存。
-

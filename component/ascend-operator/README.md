@@ -3,7 +3,7 @@
 # 组件介绍
 - Ascend Operator 支持mindspore、pytorch两个AI框架在Kubernetes上进行分布式训练的插件。CRD（Custom Resource Definition）中定义了AscendJob任务，用户只需配置yaml文件，
   即可轻松实现分布式训练。
-  
+
 # 编译Ascend Operator
 1.  通过git拉取源码，获得ascend-operator。
 

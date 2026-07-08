@@ -373,28 +373,28 @@ This part describes the specific features of MindCluster.
 
 | Feature        | Introduction                                                                                                            | Released |
 |------------|---------------------------------------------------------------------------------------------------------------|----------|
-| Containerization    | [link](./docs/en/scheduling/usage/containerization/00_before_you_start.md) | ✅ |
-| Resource Monitoring     | [link](./docs/en/scheduling/usage/resource_monitoring/00_before_you_start.md)                                                                                                 | ✅ |
-| Virtual Instance    | [link](./docs/en/scheduling/usage/virtual_instance/virtual_instance_with_hdk/01_description.md)                                                                                                  | ✅ |
-| Basic Scheduling     | [link](./docs/en/scheduling/usage/basic_scheduling/00_feature_description.md)                                                                                                    | ✅ |
-| Resumable Training     |[link](./docs/en/scheduling/usage/resumable_training/00_feature_description.md)                                                                                                  | ✅ |
-| Appliance     |[link](./docs/en/scheduling/usage/appliance/01_npu_hardware_fault_detection_and_rectification.md)                                                                                                  | ✅ |
-| Best Practices of MindIE Motor Inference Tasks |[link](./docs/en/scheduling/usage/mindie_motor_best_practice/00_before_you_start.md)   | ✅ |
-| Best Practices of SGLang Inference Tasks |[link](./docs/en/scheduling/usage/sglang_best_practice/00_before_you_start.md)   | ✅ |
-| Best Practices of vLLM Inference Tasks |[link](./docs/en/scheduling/usage/vllm_best_practice/00_before_you_start.md)   | ✅ |
+| Containerization    | [Containerization](./docs/en/scheduling/usage/containerization/00_before_you_start.md) | ✅ |
+| Resource Monitoring     | [Resource Monitoring](./docs/en/scheduling/usage/resource_monitoring/00_before_you_start.md)                                                                                                 | ✅ |
+| Virtual Instance    | [Virtual Instance](./docs/en/scheduling/usage/virtual_instance/virtual_instance_with_hdk/01_description.md)                                                                                                  | ✅ |
+| Basic Scheduling     | [Basic Scheduling](./docs/en/scheduling/usage/basic_scheduling/00_feature_description.md)                                                                                                    | ✅ |
+| Resumable Training     |[Resumable Training](./docs/en/scheduling/usage/resumable_training/00_feature_description.md)                                                                                                  | ✅ |
+| Appliance     |[Appliance](./docs/en/scheduling/usage/appliance/01_npu_hardware_fault_detection_and_rectification.md)                                                                                                  | ✅ |
+| Best Practices of MindIE Motor Inference Tasks |[Best Practices of MindIE Motor Inference Tasks](./docs/en/scheduling/usage/mindie_motor_best_practice/00_before_you_start.md)   | ✅ |
+| Best Practices of SGLang Inference Tasks |[Best Practices of SGLang Inference Tasks](./docs/en/scheduling/usage/sglang_best_practice/00_before_you_start.md)   | ✅ |
+| Best Practices of vLLM Inference Tasks |[Best Practices of vLLM Inference Tasks](./docs/en/scheduling/usage/vllm_best_practice/00_before_you_start.md)   | ✅ |
 
 ## MindCluster Ascend FaultDiag
 
 | Feature       | Introduction                                                                                                              | Released |
 |-----------|-----------------------------------------------------------------------------------------------------------------|----------|
-| Log Cleaning and Dumping   | [link](./docs/en/faultdiag/user_guide/06_cleaning_and_dumping_logs.md) | ✅        |
-| Fault Diagnosis      | [link](./docs/en/faultdiag/user_guide/07_diagnosing_faults.md) | ✅        |
-| Single-Server Fault Diagnosis    | [link](./docs/en/faultdiag/user_guide/08_diagnosing_faults_on_a_single_server.md) | ✅        |
-| SuperPoD Fault Diagnosis   | [link](./docs/en/faultdiag/user_guide/09_diagnosing_superpod_faults.md) | ✅        |
-| Service Flow Log Cleaning   | [link](./docs/en/faultdiag/user_guide/10_cleaning_service_flow_logs.md) | ✅        |
-| Root Cause Node Cleaning and Diagnosis | [link](./docs/en/faultdiag/user_guide/11_cleaning_and_diagnosing_the_root_cause_node.md) | ✅        |
-| Fault Event Cleaning and Diagnosis | [link](./docs/en/faultdiag/user_guide/12_cleaning_and_diagnosing_fault_events.md) | ✅        |
-| Custom Configuration File   | [link](./docs/en/faultdiag/user_guide/13_customizing_a_configuration_file.md) | ✅        |
+| Log Cleaning and Dumping   | [Log Cleaning and Dumping](./docs/en/faultdiag/user_guide/06_cleaning_and_dumping_logs.md) | ✅        |
+| Fault Diagnosis      | [Fault Diagnosis](./docs/en/faultdiag/user_guide/07_diagnosing_faults.md) | ✅        |
+| Single-Server Fault Diagnosis    | [Single-Server Fault Diagnosis](./docs/en/faultdiag/user_guide/08_diagnosing_faults_on_a_single_server.md) | ✅        |
+| SuperPoD Fault Diagnosis   | [SuperPoD Fault Diagnosis](./docs/en/faultdiag/user_guide/09_diagnosing_superpod_faults.md) | ✅        |
+| Service Flow Log Cleaning   | [Service Flow Log Cleaning](./docs/en/faultdiag/user_guide/10_cleaning_service_flow_logs.md) | ✅        |
+| Root Cause Node Cleaning and Diagnosis | [Root Cause Node Cleaning and Diagnosis](./docs/en/faultdiag/user_guide/11_cleaning_and_diagnosing_the_root_cause_node.md) | ✅        |
+| Fault Event Cleaning and Diagnosis | [Fault Event Cleaning and Diagnosis](./docs/en/faultdiag/user_guide/12_cleaning_and_diagnosing_fault_events.md) | ✅        |
+| Custom Configuration File   | [Custom Configuration File](./docs/en/faultdiag/user_guide/13_customizing_a_configuration_file.md) | ✅        |
 
 # API Reference
 

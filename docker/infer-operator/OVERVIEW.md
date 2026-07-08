@@ -39,7 +39,7 @@ MindCluster provides the Infer Operator component to launch inference services b
 
 Tags follow this format:
 
-```
+```text
 <version>
 ```
 
@@ -78,19 +78,19 @@ Tags follow this format:
 
 1. Pull the official image
 
-Pull the Infer Operator image from the Atlas image repository, replacing {tag} with the actual version (v26.0.0 recommended).
+   Pull the Infer Operator image from the Atlas image repository, replacing {tag} with the actual version (v26.0.0 recommended).
 
-```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:{tag}
-```
+   ```bash
+   docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:{tag}
+   ```
 
 2. Retag the image
 
-Retag the official image with a local tag for consistent naming and easier operations management.
+   Retag the official image with a local tag for consistent naming and easier operations management.
 
-```bash
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:{tag} infer-operator:{tag}
-```
+   ```bash
+   docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:{tag} infer-operator:{tag}
+   ```
 
 ### How to Build Locally (Optional)
 
@@ -98,45 +98,45 @@ The following example uses linux-aarch64 architecture and v26.0.0 version:
 
 1. Download the officially released component package
 
-```shell
-wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-infer-operator_26.0.0_linux-aarch64.zip
-```
+   ```shell
+   wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-infer-operator_26.0.0_linux-aarch64.zip
+   ```
 
 2. Extract the package to a custom directory
 
-```shell
-unzip Ascend-mindxdl-infer-operator_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-infer-operator_26.0.0_linux-aarch64
-```
+   ```shell
+   unzip Ascend-mindxdl-infer-operator_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-infer-operator_26.0.0_linux-aarch64
+   ```
 
 3. Enter the extracted working directory
 
-```shell
-cd Ascend-mindxdl-infer-operator_26.0.0_linux-aarch64
-```
+   ```shell
+   cd Ascend-mindxdl-infer-operator_26.0.0_linux-aarch64
+   ```
 
 4. Build the Docker image locally (disable cache to ensure a clean build)
 
-```bash
-docker build --no-cache -t infer-operator:v26.0.0 ./ -f Dockerfile
-```
+   ```bash
+   docker build --no-cache -t infer-operator:v26.0.0 ./ -f Dockerfile
+   ```
 
 ### Deploy Infer Operator
 
 1. Start Infer Operator
 
-Replace the image `{tag}` in the infer-operator-{version}.yaml file with the actual tag.
+   Replace the image `{tag}` in the infer-operator-{version}.yaml file with the actual tag.
 
-```bash
-kubectl apply -f infer-operator-{version}.yaml
-```
+   ```bash
+   kubectl apply -f infer-operator-{version}.yaml
+   ```
 
 2. Verify deployment
 
-```bash
-kubectl get pods -A | grep infer-operator
-```
+   ```bash
+   kubectl get pods -A | grep infer-operator
+   ```
 
-Expected result: The infer-operator related Pods in the corresponding namespace should be in Running state.
+   Expected result: The infer-operator related Pods in the corresponding namespace should be in Running state.
 
 ---
 

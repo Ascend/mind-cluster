@@ -112,7 +112,7 @@ default ${INSTALL_PATH} is /path/to/python3/site-packages/mindio_ttp
 
 ### 环境变量说明
 `MindIO TFT`涉及如下环境变量：
- 	 
+
 [《环境变量》](doc/环境变量.md)
 
 

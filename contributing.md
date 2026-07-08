@@ -1,7 +1,9 @@
+# 开发MindCluster
+
 [TOC]
 
-# 开发MindCluster
 请先按组件分类阅读文档：
+
 * [ascend-common](https://gitcode.com/Ascend/mind-cluster/blob/master/component/ascend-common/README.md)
 * [ascend-device-plugin](https://gitcode.com/Ascend/mind-cluster/blob/master/component/ascend-device-plugin/README.md)
 * [ascend-docker-runtime](https://gitcode.com/Ascend/mind-cluster/blob/master/component/ascend-docker-runtime/README.md)
@@ -9,20 +11,24 @@
 * [ascend-operator](https://gitcode.com/Ascend/mind-cluster/blob/master/component/ascend-operator/README.md)
 * [clusterd](https://gitcode.com/Ascend/mind-cluster/blob/master/component/clusterd/README.md)
 * [container-manager](https://gitcode.com/Ascend/mind-cluster/blob/master/component/container-manager/README.md)
-* [mindcluster-tools](https://gitcode.com/Ascend/mind-cluster/blob/master/component/mindcluster-tools/README.MD)
 * [noded](https://gitcode.com/Ascend/mind-cluster/blob/master/component/noded/README.md)
 * [npu-exporter](https://gitcode.com/Ascend/mind-cluster/blob/master/component/npu-exporter/README.md)
 * [taskd](https://gitcode.com/Ascend/mind-cluster/blob/master/component/taskd/README.md)
 
 # 代码提交规范
+
 ## Commit 消息格式
+
 所有提交必须遵循以下格式：
-```
+
+```text
 <type>【component】: <subject>
 
 <body>
 ```
+
 ## Type（类型）
+
 feat: 新功能
 fix: Bug修复
 docs: 文档更新
@@ -32,16 +38,23 @@ perf: 性能优化
 test: 测试相关
 chore: 构建/工具变更（如依赖更新、构建配置等）
 ci: CI/CD 相关变更
+
 ## Component（组件）
+
 指定提交涉及的组件范围，例如：
+
 - `clusterD`
 - `device-plugin`
+
 ## Subject（主题）
+
 - 使用祈使句，首字母小写
 - 不超过50个字符
 - 不以句号结尾
 - 描述"做了什么"而不是"做了什么改动"
+
 ## Body（正文，可选）
+
 - 详细描述变更的原因和方式
 - 说明与之前行为的对比
 - 可以多行，每行不超过 72 个字符
@@ -75,6 +88,7 @@ ci: CI/CD 相关变更
 | 特性分支     | `<特性关键词>`（连字符分隔）            | 新功能或特性开发               | `slownode`、`fault-diag-online` |
 
 **规则：**
+
 - 版本分支以 `branch_v` 为前缀，后接三段式版本号（如 `branch_v26.0.0`）
 - POC 分支在版本号后追加 `POC` 后缀（如 `branch_v7.3.0POC`）
 - 特性分支使用小写字母，单词间用连字符 `-` 分隔
@@ -90,6 +104,7 @@ ci: CI/CD 相关变更
 | Beta 预发布  | `v<年度>.<季度>.<补丁>.beta.<N>`         | `v26.0.0.beta.1`        |
 
 **规则：**
+
 - 所有 tag 以 `v` 开头，格式为 `v<年度>.<季度>.<补丁>`
 - 后缀说明：
   - `beta.<N>`：Beta 预发布版本（小写）
@@ -101,16 +116,20 @@ ci: CI/CD 相关变更
 > 请同时参考 [Ascend社区开发贡献规范](https://gitcode.com/Ascend/community/blob/master/docs/contributor/pr-guide.md)
 
 ## PR 创建流程
+
 1. **创建特性分支**
+
    ```bash
    git checkout -b feature/your-feature-name
    # 或
    git checkout -b fix/issue-number
    ```
+
 2. **进行开发**
     - 编写代码
     - 添加测试
       - **Go测试**：建议使用convey框架编写测试用例
+
         ```go
         package utils
 
@@ -135,7 +154,9 @@ ci: CI/CD 相关变更
             })
         }
         ```
+
       - **Python测试**：建议使用unittest框架编写测试用例
+
         ```python
         #!/usr/bin/env python3
 
@@ -159,7 +180,9 @@ ci: CI/CD 相关变更
                 # verify return value
                 self.assertEqual(result, True)
         ```
+
       - **C/C++测试**：建议使用Google Test框架编写测试用例
+
         ```cpp
 
         #include <gtest/gtest.h>
@@ -198,23 +221,29 @@ ci: CI/CD 相关变更
             ASSERT_FALSE(FileUtils::CheckFileExists(nonExistentFile));
         }
         ```
+
     - 更新文档
     - 确保代码通过本地测试
 3. **提交代码**
+
    ```bash
    git add .
    git commit -m "[feat] add new feature"
    ```
+
 4. **推送到 Fork 仓库**
+
    ```bash
    git push origin feature/your-feature-name
    ```
+
 5. **创建 Pull Request**
     - 访问gitcode仓库页面
     - 点击"Pull Request"或"合并请求"
     - 填写PR描述（见PR创建页面模板）
 
 ## PR最佳实践
+
 1. **保持PR小规模**
     - 一次PR只解决一个问题
     - 便于评审和理解
@@ -230,7 +259,9 @@ ci: CI/CD 相关变更
     - 添加截图或示例（如适用）
 
 ## PR评审与合入规则
+
 ### 评审要求
+
 1. **评审人员要求**
     - 评审人员必须熟悉相关代码领域
     - 评审人员不能是PR作者本人
@@ -246,7 +277,9 @@ ci: CI/CD 相关变更
     - ✅ 所有 CI 检查必须通过
 4. **无 Block 评论**
     - PR不能有任何未解决问题
+
 ### 合入规则
+
 1. **Squash and Merge**
     - 将 PR 的所有提交合并为一个提交
     - 保持主分支历史清晰
@@ -256,13 +289,17 @@ ci: CI/CD 相关变更
 3. **禁止的操作**
     - ❌ 禁止 Force Push 到主分支
     - ❌ 禁止合并自己的 PR（必须有他人评审）
+
 ### 合并权限
+
 - **Maintainer**：可以合并任何PR
 - **Committer**：可以合并任何PR
 - **Contributor**：无合并权限，需要等待Maintainer或Committer合并
 
 # CI说明
+
 CI检查项目有：
+
 * 执行Shell：CI内部调用。
 * 执行Shell：CI内部调用。
 * Build_arm：构建集群管理组件二进制包
@@ -279,7 +316,9 @@ CI检查项目有：
 任意一项失败可以通过详情链接查看具体问题。如果是CI自身故障，请[联系committer](https://gitcode.com/Ascend/community/blob/master/MindCluster/sigs/MindCluster/sig-info.yaml)，或通过评论“rebuild”尝试重新构建。
 
 # Special Interest Group
+
 ## 工作目标和范围
+
 1. 技术聚焦
    围绕基于NPU的集群全流程运行，提供集群作业调度、运维监测、故障恢复等功能进行深入研究，推动技术发展，解决实际问题。
 2. 促进协作
@@ -290,6 +329,7 @@ CI检查项目有：
    通过代码贡献、技术分享等方式，培养技术人才，推动社区生态建设。
 
 ## 例会
+
 * 周期：每1个月举行一次例会，可通过[Ascend开源社区](https://meeting.ascend.osinfra.cn/)搜索、查看sig-MindCluster的会议链接。
 * 申报议题：通过[sig-MindCluster Etherpad链接](https://etherpad.ascend.osinfra.cn/p/sig-MindCluster)进入共享文档，编辑申报议题。
 * 参会人员：maintainer、committer、contributor等核心成员，其他对本SIG感兴趣的人员。
@@ -297,4 +337,5 @@ CI检查项目有：
 * 会议归档：会议纪要位于[sig-MindCluster Etherpad链接](https://etherpad.ascend.osinfra.cn/p/sig-MindCluster)。
 
 ## 成员列表
+
 [SIG成员列表](https://gitcode.com/Ascend/community/blob/master/MindCluster/sigs/MindCluster/sig-info.yaml)。

@@ -82,4 +82,3 @@ mindio_acp.register_checker(callback, check_dict, user_context, timeout_sec)
 
 -   None：失败。
 -   1：成功。
-

@@ -41,7 +41,7 @@ MindCluster 提供 Ascend Operator 组件，输入集合通信所需的主进程
 
 Tag 遵循以下格式：
 
-```
+```text
 <版本>
 ```
 
@@ -81,63 +81,63 @@ Tag 遵循以下格式：
 
 1. 下载官方发布的组件安装包
 
-```shell
-wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-ascend-operator_26.0.0_linux-aarch64.zip
-```
+   ```shell
+   wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-ascend-operator_26.0.0_linux-aarch64.zip
+   ```
 
 2. 解压安装包至自定义目录
 
-```shell
-unzip Ascend-mindxdl-ascend-operator_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-ascend-operator_26.0.0_linux-aarch64
-```
+   ```shell
+   unzip Ascend-mindxdl-ascend-operator_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-ascend-operator_26.0.0_linux-aarch64
+   ```
 
 3. 进入解压后的工作目录
 
-```shell
-cd Ascend-mindxdl-ascend-operator_26.0.0_linux-aarch64
-```
+   ```shell
+   cd Ascend-mindxdl-ascend-operator_26.0.0_linux-aarch64
+   ```
 
 4. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
 
-```bash
-docker build --no-cache -t ascend-operator:v26.0.0 ./ -f Dockerfile
-```
+   ```bash
+   docker build --no-cache -t ascend-operator:v26.0.0 ./ -f Dockerfile
+   ```
 
 ### 在线获取 Ascend Operator 镜像
 
 1. 拉取官方镜像
 
-拉取昇腾镜像仓库提供的 Ascend Operator 镜像，替换 {tag} 为实际版本号（推荐 v26.0.0）。
+   拉取昇腾镜像仓库提供的 Ascend Operator 镜像，替换 {tag} 为实际版本号（推荐 v26.0.0）。
 
-```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:{tag}
-```
+   ```bash
+   docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:{tag}
+   ```
 
 2. 修改镜像标签
 
-为拉取的官方镜像重新打本地标签，统一本地镜像命名规范，方便后续运维管理。
+   为拉取的官方镜像重新打本地标签，统一本地镜像命名规范，方便后续运维管理。
 
-```bash
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:{tag} ascend-operator:{tag}
-```
+   ```bash
+   docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:{tag} ascend-operator:{tag}
+   ```
 
 ### 部署 Ascend Operator
 
 1. 启动 Ascend Operator
 
-部署前需将 YAML 文件内的镜像 `{tag}` 替换为实际使用的镜像版本。
+   部署前需将 YAML 文件内的镜像 `{tag}` 替换为实际使用的镜像版本。
 
-```bash
-kubectl apply -f ascend-operator-{version}.yaml
-```
+   ```bash
+   kubectl apply -f ascend-operator-{version}.yaml
+   ```
 
 2. 验证部署
 
-```bash
-kubectl get pods -A | grep ascend-operator
-```
+   ```bash
+   kubectl get pods -A | grep ascend-operator
+   ```
 
-预期结果：对应命名空间下的 ascend-operator 相关 Pod 状态为 Running。
+   预期结果：对应命名空间下的 ascend-operator 相关 Pod 状态为 Running。
 
 ---
 

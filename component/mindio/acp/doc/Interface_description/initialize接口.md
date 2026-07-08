@@ -119,7 +119,7 @@ mindio_acp.initialize(server_info: Dict[str, str] = None) -> int
 </tbody>
 </table>
 
->**说明：** 
+>**说明：**
 >mindio\_acp.initialize如果不传入server\_info参数，则按照表中默认参数启动Server。
 
 ## 使用样例1<a name="zh-cn_topic_0000001671257765_section5115161344717"></a>
@@ -143,4 +143,3 @@ mindio_acp.initialize(server_info: Dict[str, str] = None) -> int
 
 -   0：成功
 -   -1：失败
-

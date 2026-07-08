@@ -60,4 +60,3 @@ mindio_ttp.controller_ttp.tft_notify_controller_stop_train(fault_ranks: dict, st
 
 -   0：调用成功
 -   1：调用失败
-

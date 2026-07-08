@@ -4,7 +4,7 @@
 
 提供给MindCluster调用，通知MindIO TFT要执行的修复策略。
 
->**说明：** 
+>**说明：**
 >该修复策略必须在MindCluster和MindIO TFT协商的可选修复策略范围内。
 
 ## 接口格式<a name="zh-cn_topic_0000001975861586_section1272104915439"></a>
@@ -52,4 +52,3 @@ mindio_ttp.controller_ttp.tft_notify_controller_change_strategy(strategy: str, p
 
 -   0：调用成功
 -   1：调用失败
-

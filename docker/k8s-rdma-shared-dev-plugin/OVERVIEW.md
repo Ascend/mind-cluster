@@ -90,31 +90,31 @@ docker build --no-cache -t k8s-rdma-shared-dev-plugin:{tag} ./ -f Dockerfile.{os
 
 1. Pull the image
 
-```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/k8s-rdma-shared-dev-plugin:{tag}
-```
+   ```bash
+   docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/k8s-rdma-shared-dev-plugin:{tag}
+   ```
 
 2. Retag the image
 
-```bash
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/k8s-rdma-shared-dev-plugin:{tag} k8s-rdma-shared-dev-plugin:{version}
-```
+   ```bash
+   docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/k8s-rdma-shared-dev-plugin:{tag} k8s-rdma-shared-dev-plugin:{version}
+   ```
 
 3. Create configuration file
 
-Create a ConfigMap with the device plugin configuration.
+   Create a ConfigMap with the device plugin configuration.
 
 4. Deploy using DaemonSet
 
-```bash
-kubectl apply -f k8s-rdma-shared-dev-plugin-{version}.yaml
-```
+   ```bash
+   kubectl apply -f k8s-rdma-shared-dev-plugin-{version}.yaml
+   ```
 
 5. Verify deployment
 
-```bash
-kubectl get pods -A | grep k8s-rdma-shared-dev-plugin
-```
+   ```bash
+   kubectl get pods -A | grep k8s-rdma-shared-dev-plugin
+   ```
 
 ---
 
