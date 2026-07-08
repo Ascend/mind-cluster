@@ -1,6 +1,15 @@
 # 验证故障处理
 
-## 验证Job级别重调度
+本文档提供多种故障处理策略的验证方法，用户可根据实际配置的故障处理策略，快速跳转到对应验证章节。
+
+**快速导航**
+
+- [验证Job级别重调度](#验证job级别重调度)
+- [验证Pod级别重调度](#验证pod级别重调度)
+- [验证进程级别重调度](#验证进程级别重调度)
+- [验证进程级别在线恢复](#验证进程级别在线恢复)
+
+## 验证Job级别重调度<a name="验证job级别重调度"></a>
 
 **前提条件**
 
@@ -136,7 +145,7 @@
       074f9f9c-35f1-4b9e-9298-5b2bcf3759e7
       ```
 
-## 验证Pod级别重调度
+## 验证Pod级别重调度<a name="验证pod级别重调度"></a>
 
 **前提条件**
 
@@ -260,7 +269,7 @@
       6eb3c217-3b63-457a-9010-9d236d281634
       ```
 
-## 验证进程级别重调度
+## 验证进程级别重调度<a name="验证进程级别重调度"></a>
 
 **前提条件**
 
@@ -363,7 +372,7 @@
    {"trjob/process-reschedule-function-ebfbc149-5312-4232-a021-453db0d4ce07":{"JobID":"trjob/process-reschedule-function-ebfbc149-5312-4232-a021-453db0d4ce07","TotalRescheduleTimes":1,"RescheduleRecords":[{"LogFileFormatTime":"I0603 05:16:52","RescheduleTimeStamp":1780435012,"ReasonOfTask":[{"RescheduleReason":"pod-failed","PodName":"process-reschedule-function-worker-0","NodeName":"work-69-115","NodeRankIndex":"1"}]}]}}
    ```
 
-## 验证进程级别在线恢复
+## 验证进程级别在线恢复<a name="验证进程级别在线恢复"></a>
 
 本章节通过在训练代码中打桩构造片上内存的UCE故障，指导用户完成进程级在线恢复验证的适配步骤。
 

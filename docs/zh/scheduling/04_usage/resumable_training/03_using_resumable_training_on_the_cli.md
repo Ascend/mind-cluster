@@ -38,11 +38,14 @@
                   readOnlyRootFilesystem: true
         ...</pre>
 
-    2. （可选）优雅容错模式：在重调度配置的基础上，新增“-hotReset”字段。
+    2. （可选）<span style="color:#D80000;">【DEPRECATED】</span> 优雅容错模式：在重调度配置的基础上，新增“-hotReset”字段。
 
-        >[!NOTE]
+        >[!CAUTION]
+        > **【DEPRECATED】本功能已日落，请勿使用！**
+        >
         >- 优雅容错功能已经日落。PyTorch框架在7.2.RC1之后的版本不再支持；MindSpore框架在7.1.RC1之后的版本不再支持。
-        >- “-hotReset”字段取值为1对应的功能已经日落。
+        >- “-hotReset”字段取值为1对应的在线热复位功能已经日落。
+        >- 以下配置示例仅用于历史参考，不建议在生产环境中使用。
 
         <pre codetype="yaml">
         ...
@@ -60,7 +63,7 @@
                 args: [ "device-plugin
                          -volcanoType=true                    # 重调度场景下必须使用Volcano
                          -autoStowing=true                    # 该字段已日落。是否开启自动纳管开关，默认为true；设置为false代表关闭自动纳管，当芯片健康状态由unhealthy变为healthy后，不会自动加入到可调度资源池中；关闭自动纳管，当芯片参数面网络故障恢复后，不会自动加入到可调度资源池中。该特性仅适用于Atlas 训练系列产品
-                         <strong>-hotReset=1 # 开启优雅容错模式，系统会尝试自动复位故障芯片</strong>
+                         <span style="color:#D80000;"><strong>-hotReset=1 # 【DEPRECATED】开启优雅容错模式，系统会尝试自动复位故障芯片（取值为1的在线热复位功能已日落）</strong></span>
                          -listWatchPeriod=5                   # 健康状态检查周期，范围[3,1800]；单位为秒
                          -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log
                          -logLevel=0" ]
