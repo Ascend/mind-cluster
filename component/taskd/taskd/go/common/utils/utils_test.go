@@ -39,7 +39,7 @@ const (
 	tryTime      = 10
 	anyPath      = "/a/b/c"
 	anyCorrectIp = "127.0.0.1"
-	anfWrongIp   = "abc.aaa.333.1111.44"
+	anyWrongIp   = "abc.aaa.333.1111.44"
 )
 
 func init() {
@@ -153,10 +153,41 @@ func TestGetClusterdAddr(t *testing.T) {
 	convey.ShouldBeNil(err)
 	convey.ShouldEqual(addr, anyCorrectIp+constant.ClusterdPort)
 	patches.ApplyFunc(os.Getenv, func(string) string {
-		return anfWrongIp
+		return anyWrongIp
 	})
 	addr, err = GetClusterdAddr()
 	convey.ShouldBeNil(err)
+}
+
+func TestGetClusterdAddrDomainSuccess(t *testing.T) {
+	patches := gomonkey.NewPatches()
+	defer patches.Reset()
+	patches.ApplyFunc(os.Getenv, func(key string) string {
+		if key == constant.MindxServerDomain {
+			return "example.com"
+		}
+		return ""
+	})
+	patches.ApplyFunc(utils.CheckDomain, func(domain string, forLocalUsage bool) error {
+		return nil
+	})
+	addr, err := GetClusterdAddr()
+	convey.ShouldBeNil(err)
+	convey.ShouldEqual(addr, "example.com"+constant.ClusterdPort)
+}
+
+func TestGetClusterdAddrDomainEmpty(t *testing.T) {
+	patches := gomonkey.NewPatches()
+	defer patches.Reset()
+	patches.ApplyFunc(os.Getenv, func(key string) string {
+		return ""
+	})
+	patches.ApplyFunc(utils.IsHostValid, func(ip string) (string, error) {
+		return anyCorrectIp, nil
+	})
+	addr, err := GetClusterdAddr()
+	convey.ShouldBeNil(err)
+	convey.ShouldEqual(addr, anyCorrectIp+constant.ClusterdPort)
 }
 
 func TestGetFaultRanksMapByList(t *testing.T) {
