@@ -18,12 +18,16 @@ package container
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	criv1 "k8s.io/cri-api/pkg/apis/runtime/v1"
+	"k8s.io/cri-api/pkg/apis/runtime/v1alpha2"
 
 	"ascend-common/common-utils/utils"
 	"huawei.com/npu-exporter/v6/collector/container/isula"
@@ -43,6 +47,8 @@ const (
 	testUnexpectedClientError           = "unexpected client type"
 	testUnexpectedContainerdClientError = "unexpected containerd client"
 	testUnexpectedIsulaClientError      = "unexpected isula client"
+	testCriV1alpha2                     = "runtime.v1alpha2.RuntimeService"
+	testCriV1                           = "runtime.v1.RuntimeService"
 )
 
 func TestRuntimeOperatorToolInit(t *testing.T) {
@@ -289,6 +295,89 @@ func TestRuntimeOperatorToolClose(t *testing.T) {
 	})
 }
 
+// mockV1alpha2Client implements v1alpha2.RuntimeServiceClient for testing.
+// Only ListContainers is configurable; other methods return nil.
+type mockV1alpha2Client struct {
+	listContainersFunc func(ctx context.Context, in *v1alpha2.ListContainersRequest,
+		opts ...grpc.CallOption) (*v1alpha2.ListContainersResponse, error)
+}
+
+func (m *mockV1alpha2Client) ListContainers(ctx context.Context, in *v1alpha2.ListContainersRequest,
+	opts ...grpc.CallOption) (*v1alpha2.ListContainersResponse, error) {
+	return m.listContainersFunc(ctx, in, opts...)
+}
+
+// Stub methods to satisfy v1alpha2.RuntimeServiceClient interface.
+func (m *mockV1alpha2Client) Version(context.Context, *v1alpha2.VersionRequest, ...grpc.CallOption) (*v1alpha2.VersionResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) RunPodSandbox(context.Context, *v1alpha2.RunPodSandboxRequest, ...grpc.CallOption) (*v1alpha2.RunPodSandboxResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) StopPodSandbox(context.Context, *v1alpha2.StopPodSandboxRequest, ...grpc.CallOption) (*v1alpha2.StopPodSandboxResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) RemovePodSandbox(context.Context, *v1alpha2.RemovePodSandboxRequest, ...grpc.CallOption) (*v1alpha2.RemovePodSandboxResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) PodSandboxStatus(context.Context, *v1alpha2.PodSandboxStatusRequest, ...grpc.CallOption) (*v1alpha2.PodSandboxStatusResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) ListPodSandbox(context.Context, *v1alpha2.ListPodSandboxRequest, ...grpc.CallOption) (*v1alpha2.ListPodSandboxResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) CreateContainer(context.Context, *v1alpha2.CreateContainerRequest, ...grpc.CallOption) (*v1alpha2.CreateContainerResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) StartContainer(context.Context, *v1alpha2.StartContainerRequest, ...grpc.CallOption) (*v1alpha2.StartContainerResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) StopContainer(context.Context, *v1alpha2.StopContainerRequest, ...grpc.CallOption) (*v1alpha2.StopContainerResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) RemoveContainer(context.Context, *v1alpha2.RemoveContainerRequest, ...grpc.CallOption) (*v1alpha2.RemoveContainerResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) ContainerStatus(context.Context, *v1alpha2.ContainerStatusRequest, ...grpc.CallOption) (*v1alpha2.ContainerStatusResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) UpdateContainerResources(context.Context, *v1alpha2.UpdateContainerResourcesRequest, ...grpc.CallOption) (*v1alpha2.UpdateContainerResourcesResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) ReopenContainerLog(context.Context, *v1alpha2.ReopenContainerLogRequest, ...grpc.CallOption) (*v1alpha2.ReopenContainerLogResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) ExecSync(context.Context, *v1alpha2.ExecSyncRequest, ...grpc.CallOption) (*v1alpha2.ExecSyncResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) Exec(context.Context, *v1alpha2.ExecRequest, ...grpc.CallOption) (*v1alpha2.ExecResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) Attach(context.Context, *v1alpha2.AttachRequest, ...grpc.CallOption) (*v1alpha2.AttachResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) PortForward(context.Context, *v1alpha2.PortForwardRequest, ...grpc.CallOption) (*v1alpha2.PortForwardResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) ContainerStats(context.Context, *v1alpha2.ContainerStatsRequest, ...grpc.CallOption) (*v1alpha2.ContainerStatsResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) ListContainerStats(context.Context, *v1alpha2.ListContainerStatsRequest, ...grpc.CallOption) (*v1alpha2.ListContainerStatsResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) PodSandboxStats(context.Context, *v1alpha2.PodSandboxStatsRequest, ...grpc.CallOption) (*v1alpha2.PodSandboxStatsResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) ListPodSandboxStats(context.Context, *v1alpha2.ListPodSandboxStatsRequest, ...grpc.CallOption) (*v1alpha2.ListPodSandboxStatsResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) UpdateRuntimeConfig(context.Context, *v1alpha2.UpdateRuntimeConfigRequest, ...grpc.CallOption) (*v1alpha2.UpdateRuntimeConfigResponse, error) {
+	return nil, nil
+}
+func (m *mockV1alpha2Client) Status(context.Context, *v1alpha2.StatusRequest, ...grpc.CallOption) (*v1alpha2.StatusResponse, error) {
+	return nil, nil
+}
+
 func TestRuntimeOperatorToolGetContainers(t *testing.T) {
 	convey.Convey("TestRuntimeOperatorToolGetContainers", t, func() {
 		convey.Convey("should return error when CRI client is empty", func() {
@@ -331,7 +420,158 @@ func TestRuntimeOperatorToolGetContainers(t *testing.T) {
 			convey.So(err.Error(), convey.ShouldEqual, testUnexpectedClientError)
 			convey.So(containers, convey.ShouldBeNil)
 		})
+
+		convey.Convey("should return containers via v1alpha2 client on success", func() {
+			mockClient := &mockV1alpha2Client{
+				listContainersFunc: func(ctx context.Context, in *v1alpha2.ListContainersRequest,
+					opts ...grpc.CallOption) (*v1alpha2.ListContainersResponse, error) {
+					return &v1alpha2.ListContainersResponse{
+						Containers: []*v1alpha2.Container{
+							{Id: "v1alpha2-container-1", Labels: map[string]string{"app": "test"}},
+							{Id: "v1alpha2-container-2", Labels: map[string]string{"app": "prod"}},
+						},
+					}, nil
+				},
+			}
+			operator := &RuntimeOperatorTool{
+				criClient: mockClient,
+				criConn:   &grpc.ClientConn{},
+			}
+
+			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
+			defer patches.Reset()
+
+			containers, err := operator.GetContainers(context.Background())
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(containers, convey.ShouldHaveLength, 2)
+			convey.So(containers[0].Id, convey.ShouldEqual, "v1alpha2-container-1")
+			convey.So(containers[1].Id, convey.ShouldEqual, "v1alpha2-container-2")
+		})
+
+		convey.Convey("should return empty list when v1alpha2 has no containers", func() {
+			mockClient := &mockV1alpha2Client{
+				listContainersFunc: func(ctx context.Context, in *v1alpha2.ListContainersRequest,
+					opts ...grpc.CallOption) (*v1alpha2.ListContainersResponse, error) {
+					return &v1alpha2.ListContainersResponse{}, nil
+				},
+			}
+			operator := &RuntimeOperatorTool{
+				criClient: mockClient,
+				criConn:   &grpc.ClientConn{},
+			}
+
+			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
+			defer patches.Reset()
+
+			containers, err := operator.GetContainers(context.Background())
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(containers, convey.ShouldBeNil)
+		})
+
+		convey.Convey("should fallback to v1 when v1alpha2 returns unimplemented error", func() {
+			unimplementedErr := status.Error(codes.Unimplemented, "unknown service "+testCriV1alpha2)
+			mockClient := &mockV1alpha2Client{
+				listContainersFunc: func(ctx context.Context, in *v1alpha2.ListContainersRequest,
+					opts ...grpc.CallOption) (*v1alpha2.ListContainersResponse, error) {
+					return nil, unimplementedErr
+				},
+			}
+			operator := &RuntimeOperatorTool{
+				criClient: mockClient,
+				criConn:   &grpc.ClientConn{},
+			}
+
+			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
+			defer patches.Reset()
+			patches.ApplyFunc(getContainersByContainerdV1, func(ctx context.Context,
+				client criv1.RuntimeServiceClient) ([]*CommonContainer, error) {
+				return []*CommonContainer{
+					{Id: "v1-fallback-container", Labels: map[string]string{"app": "fallback"}},
+				}, nil
+			})
+
+			containers, err := operator.GetContainers(context.Background())
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(containers, convey.ShouldHaveLength, 1)
+			convey.So(containers[0].Id, convey.ShouldEqual, "v1-fallback-container")
+		})
+
+		convey.Convey("should return error when v1alpha2 returns non-unimplemented error", func() {
+			otherErr := status.Error(codes.Internal, "internal error")
+			mockClient := &mockV1alpha2Client{
+				listContainersFunc: func(ctx context.Context, in *v1alpha2.ListContainersRequest,
+					opts ...grpc.CallOption) (*v1alpha2.ListContainersResponse, error) {
+					return nil, otherErr
+				},
+			}
+			operator := &RuntimeOperatorTool{
+				criClient: mockClient,
+				criConn:   &grpc.ClientConn{},
+			}
+
+			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
+			defer patches.Reset()
+
+			containers, err := operator.GetContainers(context.Background())
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(containers, convey.ShouldBeNil)
+		})
+
 	})
+}
+
+func TestIsUnimplementedError(t *testing.T) {
+	tests := []struct {
+		name        string
+		err         error
+		serviceName string
+		want        bool
+	}{
+		{
+			name:        "nil error returns false",
+			err:         nil,
+			serviceName: testCriV1alpha2,
+			want:        false,
+		},
+		{
+			name:        "non-grpc error returns false",
+			err:         errors.New("unknown service " + testCriV1alpha2),
+			serviceName: testCriV1alpha2,
+			want:        false,
+		},
+		{
+			name:        "mismatched code returns false",
+			err:         status.Error(codes.NotFound, "unknown service "+testCriV1alpha2),
+			serviceName: testCriV1alpha2,
+			want:        false,
+		},
+		{
+			name:        "mismatched message returns false",
+			err:         status.Error(codes.Unimplemented, "unknown service "+testCriV1),
+			serviceName: testCriV1alpha2,
+			want:        false,
+		},
+		{
+			name:        "matched unimplemented error returns true",
+			err:         status.Error(codes.Unimplemented, "unknown service "+testCriV1alpha2),
+			serviceName: testCriV1alpha2,
+			want:        true,
+		},
+		{
+			name:        "real grpc error format returns true",
+			err:         fmt.Errorf("rpc error: code = Unimplemented desc = unknown service " + testCriV1alpha2),
+			serviceName: testCriV1alpha2,
+			want:        true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isUnimplementedError(tt.err, tt.serviceName); got != tt.want {
+				t.Errorf("isUnimplementedError() = %v, want %v (err: %v)", got, tt.want, tt.err)
+			}
+		})
+	}
 }
 
 func TestRuntimeOperatorToolGetContainerInfoByID(t *testing.T) {
@@ -467,6 +707,18 @@ func TestSetGrpcNamespaceHeader(t *testing.T) {
 			ctx = context.WithValue(ctx, "test", "value")
 			result := setGrpcNamespaceHeader(ctx, testNamespace)
 			convey.So(result, convey.ShouldNotBeNil)
+		})
+	})
+}
+
+func TestGenContainerRequestV1alpha2(t *testing.T) {
+	convey.Convey("TestGenContainerRequestV1alpha2", t, func() {
+		convey.Convey("should generate valid container request", func() {
+			request := genContainerRequestV1alpha2()
+			convey.So(request, convey.ShouldNotBeNil)
+			convey.So(request.Filter, convey.ShouldNotBeNil)
+			convey.So(request.Filter.State, convey.ShouldNotBeNil)
+			convey.So(request.Filter.State.State, convey.ShouldEqual, v1alpha2.ContainerState_CONTAINER_RUNNING)
 		})
 	})
 }
