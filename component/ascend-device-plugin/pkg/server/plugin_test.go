@@ -203,24 +203,137 @@ func TestUpdateAllocMap(t *testing.T) {
 	})
 }
 
+type generateAllDeviceMapTestCase struct {
+	name             string
+	supportSoftShare bool
+	cachedDevices    []common.NpuDevice
+	klt2RealDevMap   map[string]string
+	expectedMap      map[string]string
+}
+
+func buildGenerateAllDeviceMapTestCases() []generateAllDeviceMapTestCase {
+	npu := api.Ascend910
+	return []generateAllDeviceMapTestCase{
+		{
+			name:             "non-soft-share: all devices allocated, one-to-one mapping",
+			supportSoftShare: false,
+			cachedDevices: []common.NpuDevice{
+				{DeviceName: npu + "-0"}, {DeviceName: npu + "-1"},
+				{DeviceName: npu + "-2"}, {DeviceName: npu + "-3"},
+			},
+			klt2RealDevMap: map[string]string{
+				npu + "-3": npu + "-0", npu + "-2": npu + "-1",
+				npu + "-1": npu + "-2", npu + "-0": npu + "-3",
+			},
+			expectedMap: map[string]string{
+				npu + "-0": npu + "-3", npu + "-1": npu + "-2",
+				npu + "-2": npu + "-1", npu + "-3": npu + "-0",
+			},
+		},
+		{
+			name:             "non-soft-share: partial devices allocated, unallocated devices paired by index",
+			supportSoftShare: false,
+			cachedDevices: []common.NpuDevice{
+				{DeviceName: npu + "-0"}, {DeviceName: npu + "-1"},
+				{DeviceName: npu + "-2"}, {DeviceName: npu + "-3"},
+			},
+			klt2RealDevMap: map[string]string{
+				npu + "-3": npu + "-0", npu + "-2": npu + "-1",
+			},
+			expectedMap: map[string]string{
+				npu + "-0": npu + "-3", npu + "-1": npu + "-2",
+				npu + "-2": npu + "-0", npu + "-3": npu + "-1",
+			},
+		},
+		{
+			name:             "non-soft-share: no devices allocated, all paired by index",
+			supportSoftShare: false,
+			cachedDevices: []common.NpuDevice{
+				{DeviceName: npu + "-0"}, {DeviceName: npu + "-1"},
+			},
+			klt2RealDevMap: map[string]string{},
+			expectedMap: map[string]string{
+				npu + "-0": npu + "-0", npu + "-1": npu + "-1",
+			},
+		},
+		{
+			name:             "soft-share: many-to-one mapping, vol2kltMap uses real device name as value",
+			supportSoftShare: true,
+			cachedDevices: []common.NpuDevice{
+				{DeviceName: npu + "-0"}, {DeviceName: npu + "-1"},
+			},
+			klt2RealDevMap: map[string]string{
+				npu + "-0-0": npu + "-0", npu + "-0-1": npu + "-0", npu + "-0-2": npu + "-0",
+				npu + "-1-0": npu + "-1", npu + "-1-1": npu + "-1",
+			},
+			expectedMap: map[string]string{
+				npu + "-0": npu + "-0",
+				npu + "-1": npu + "-1",
+			},
+		},
+		{
+			name:             "soft-share: partial physical devices have virtual device mappings",
+			supportSoftShare: true,
+			cachedDevices: []common.NpuDevice{
+				{DeviceName: npu + "-0"}, {DeviceName: npu + "-1"}, {DeviceName: npu + "-2"},
+			},
+			klt2RealDevMap: map[string]string{
+				npu + "-0-0": npu + "-0", npu + "-0-5": npu + "-0",
+				npu + "-1-3": npu + "-1",
+			},
+			expectedMap: map[string]string{
+				npu + "-0": npu + "-0",
+				npu + "-1": npu + "-1",
+				npu + "-2": npu + "-2",
+			},
+		},
+		{
+			name:             "soft-share: no devices allocated, all paired by index",
+			supportSoftShare: true,
+			cachedDevices: []common.NpuDevice{
+				{DeviceName: npu + "-0"}, {DeviceName: npu + "-1"},
+			},
+			klt2RealDevMap: map[string]string{},
+			expectedMap: map[string]string{
+				npu + "-0": npu + "-0", npu + "-1": npu + "-1",
+			},
+		},
+	}
+}
+
 // TestGenerateAllDeviceMap for test the generateAllDeviceMap
 func TestGenerateAllDeviceMap(t *testing.T) {
-	ps := NewPluginServer(api.Ascend910, devices, nil, nil)
-	convey.Convey("length no equal", t, func() {
-		ps.deepCopyDevice(devices)
-		realAlloc := []string{api.Ascend910 + "-0", api.Ascend910 + "-2", api.Ascend910 + "-1", api.Ascend910 + "-3"}
-		kltAlloc := []string{api.Ascend910 + "-2", api.Ascend910 + "-7", api.Ascend910 + "-0", api.Ascend910 + "-1"}
-		ps.updateAllocMap(realAlloc, kltAlloc)
-		expectMap := map[string]string{
-			api.Ascend910 + "-4": api.Ascend910 + "-3", api.Ascend910 + "-5": api.Ascend910 + "-4",
-			api.Ascend910 + "-6": api.Ascend910 + "-5", api.Ascend910 + "-7": api.Ascend910 + "-6",
+	convey.Convey("Test generateAllDeviceMap", t, func() {
+		ps := &PluginServer{
+			klt2RealDevMap: make(map[string]string),
+			allocMapLock:   sync.RWMutex{},
+			cachedLock:     sync.RWMutex{},
 		}
-		actualMap := ps.generateAllDeviceMap()
-		convey.So(len(ps.klt2RealDevMap), convey.ShouldEqual, len(expectMap))
-		for k, v := range expectMap {
-			id, exist := actualMap[k]
-			convey.So(exist, convey.ShouldBeTrue)
-			convey.So(id, convey.ShouldEqual, v)
+		tests := buildGenerateAllDeviceMapTestCases()
+		for _, tt := range tests {
+			convey.Convey(tt.name, func() {
+				patchSoftShare := gomonkey.ApplyFuncReturn(common.IsSupportSoftShareDevice, tt.supportSoftShare)
+				defer patchSoftShare.Reset()
+
+				ps.cachedLock.Lock()
+				ps.cachedDevices = tt.cachedDevices
+				ps.cachedLock.Unlock()
+
+				ps.allocMapLock.Lock()
+				ps.klt2RealDevMap = make(map[string]string, len(tt.klt2RealDevMap))
+				for k, v := range tt.klt2RealDevMap {
+					ps.klt2RealDevMap[k] = v
+				}
+				ps.allocMapLock.Unlock()
+
+				actualMap := ps.generateAllDeviceMap()
+				convey.So(len(actualMap), convey.ShouldEqual, len(tt.expectedMap))
+				for k, expectedV := range tt.expectedMap {
+					actualV, exist := actualMap[k]
+					convey.So(exist, convey.ShouldBeTrue)
+					convey.So(actualV, convey.ShouldEqual, expectedV)
+				}
+			})
 		}
 	})
 }
