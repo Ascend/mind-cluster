@@ -138,61 +138,62 @@ flowchart TD
 
 1. 创建 AscendJob，Pod 容器中 request `huawei.com/Ascend910: 8`，在 Job 的 metadata.annotations 中设置 `volcano.sh/schedule.plugin: Ascend910`（ascend-operator 会将 Job 的 annotations 复制到 PodGroup 上），同时通过 `runPolicy.schedulingPolicy.minResources` 显式指定不含 NPU 资源的 MinResources 以触发 annotation 识别路径：
 
-```yaml
-apiVersion: mindxdl.gitee.com/v1
-kind: AscendJob
-metadata:
-  name: test-anno-npu-910
-  labels: 
-    framework: pytorch
-  annotations:
-    volcano.sh/schedule.plugin: Ascend910
-    huawei.com/schedule_policy: chip4-node8
-spec:
-  schedulerName: volcano
-  runPolicy:
-    schedulingPolicy:
-      minAvailable: 1
-      queue: default
-      minResources:
-        cpu: "1"
-        memory: "1Gi"
-  replicaSpecs:
-    Master:
-      replicas: 1
-      template:
-        spec:
-          containers:
-          - name: ascend
-            image: ubuntu:20.04
-            command: ["sleep", "3600"]
-            resources:
-              requests:
-                cpu: "1"
-                memory: "1Gi"
-                huawei.com/Ascend910: 4
-              limits:
-                cpu: "1"
-                memory: "1Gi"
-                huawei.com/Ascend910: 4
-```
+   ```yaml
+   apiVersion: mindxdl.gitee.com/v1
+   kind: AscendJob
+   metadata:
+     name: test-anno-npu-910
+     labels:
+       framework: pytorch
+     annotations:
+       volcano.sh/schedule.plugin: Ascend910
+       huawei.com/schedule_policy: chip4-node8
+   spec:
+     schedulerName: volcano
+     runPolicy:
+       schedulingPolicy:
+         minAvailable: 1
+         queue: default
+         minResources:
+           cpu: "1"
+           memory: "1Gi"
+     replicaSpecs:
+       Master:
+         replicas: 1
+         template:
+           spec:
+             containers:
+             - name: ascend
+               image: ubuntu:20.04
+               command: ["sleep", "3600"]
+               resources:
+                 requests:
+                   cpu: "1"
+                   memory: "1Gi"
+                   huawei.com/Ascend910: 4
+                 limits:
+                   cpu: "1"
+                   memory: "1Gi"
+                   huawei.com/Ascend910: 4
+   ```
 
-> **说明**：ascend-operator 创建 PodGroup 时将 Job `metadata.annotations` 复制到 PodGroup annotations（参见 `createPodGroup`）。`volcano.sh/schedule.plugin` 必须放在 Job annotations 中。
->
-> 同时，默认 MinResources 由 `CalcPGMinResources` 根据 container requests 自动计算。若不显式指定 `minResources`，Pod 中 request 的 NPU 资源将进入 MinResources，导致 `GetVCJobReqNPUTypeFromJobInfo` 走 MinResources 路径而不触发 annotation 回退。通过 `runPolicy.schedulingPolicy.minResources` 显式指定不含 NPU 的 MinResources 可绕过自动计算，确保 annotation 路径被命中。
+   > **说明**：ascend-operator 创建 PodGroup 时将 Job `metadata.annotations` 复制到 PodGroup annotations（参见 `createPodGroup`）。`volcano.sh/schedule.plugin` 必须放在 Job annotations 中。
+   >
+   > 同时，默认 MinResources 由 `CalcPGMinResources` 根据 container requests 自动计算。若不显式指定 `minResources`，Pod 中 request 的 NPU 资源将进入 MinResources，导致 `GetVCJobReqNPUTypeFromJobInfo` 走 MinResources 路径而不触发 annotation 回退。通过 `runPolicy.schedulingPolicy.minResources` 显式指定不含 NPU 的 MinResources 可绕过自动计算，确保 annotation 路径被命中。
 
 2. 提交 Job 并观察：
-```bash
-kubectl get podgroup test-anno-npu-910 -o yaml
-kubectl get pod -o yaml | grep huawei.com
-```
 
-**预期结果**：
-- scheduler 识别该 Job 为 Ascend910 NPU 作业（通过 annotation 路径，`ReqNPUNum=0`）
-- PodGroup 状态由 Pending → Running
-- Pod 被调度到具备 Ascend910 NPU 的节点上
-- Pod annotation 中包含 NPU 设备分配信息（如 `huawei.com/Ascend910：Ascend910-0` 等）
-- scheduler 日志中无 "plugin not regist" 错误
+   ```bash
+   kubectl get podgroup test-anno-npu-910 -o yaml
+   kubectl get pod -o yaml | grep huawei.com
+   ```
+
+   **预期结果**：
+   - scheduler 识别该 Job 为 Ascend910 NPU 作业（通过 annotation 路径，`ReqNPUNum=0`）
+   - PodGroup 状态由 Pending → Running
+   - Pod 被调度到具备 Ascend910 NPU 的节点上
+   - Pod annotation 中包含 NPU 设备分配信息（如 `huawei.com/Ascend910：Ascend910-0` 等）
+   - scheduler 日志中无 "plugin not regist" 错误
 
 ---
 
@@ -204,42 +205,42 @@ kubectl get pod -o yaml | grep huawei.com
 
 1. 创建 AscendJob，在 Job metadata.annotations 中设置 `volcano.sh/schedule.plugin: Ascend310P`，Pod request `huawei.com/Ascend310P: 4`，显式指定不含 NPU 的 MinResources：
 
-```yaml
-apiVersion: mindxdl.gitee.com/v1
-kind: AscendJob
-metadata:
-  name: test-anno-npu-310p
-  labels: 
-    framework: pytorch
-  annotations:
-    volcano.sh/schedule.plugin: Ascend310P
-spec:
-  schedulerName: volcano
-  runPolicy:
-    schedulingPolicy:
-      minAvailable: 1
-      minResources:
-        cpu: "1"
-        memory: "1Gi"
-  replicaSpecs:
-    Master:
-      replicas: 1
-      template:
-        spec:
-          containers:
-          - name: ascend
-            image: ubuntu:20.04
-            command: ["sleep", "3600"]
-            resources:
-              requests:
-                huawei.com/Ascend310P: 4
-```
+   ```yaml
+   apiVersion: mindxdl.gitee.com/v1
+   kind: AscendJob
+   metadata:
+     name: test-anno-npu-310p
+     labels:
+       framework: pytorch
+     annotations:
+       volcano.sh/schedule.plugin: Ascend310P
+   spec:
+     schedulerName: volcano
+     runPolicy:
+       schedulingPolicy:
+         minAvailable: 1
+         minResources:
+           cpu: "1"
+           memory: "1Gi"
+     replicaSpecs:
+       Master:
+         replicas: 1
+         template:
+           spec:
+             containers:
+             - name: ascend
+               image: ubuntu:20.04
+               command: ["sleep", "3600"]
+               resources:
+                 requests:
+                   huawei.com/Ascend310P: 4
+   ```
 
 2. 提交并观察调度结果。
 
-**预期结果**：
-- scheduler 识别为 Ascend310P 类型，应用 Ascend310P 调度策略
-- Pod 调度到 Ascend310P 节点，不会误分配到 Ascend910 节点
+   **预期结果**：
+   - scheduler 识别为 Ascend310P 类型，应用 Ascend310P 调度策略
+   - Pod 调度到 Ascend310P 节点，不会误分配到 Ascend910 节点
 
 ---
 
@@ -251,44 +252,44 @@ spec:
 
 1. 创建 AscendJob，Pod 容器 request `huawei.com/Ascend910: 4`，在 `runPolicy.schedulingPolicy.minResources` 中显式设置 `huawei.com/Ascend910: 4`（MinResources 路径优先）或不设置（默认就是所有pod的requests），Job annotation 设为 `volcano.sh/schedule.plugin: Ascend310P`：
 
-```yaml
-apiVersion: mindxdl.gitee.com/v1
-kind: AscendJob
-metadata:
-  name: test-minres-priority
-  labels: 
-    framework: pytorch
-  annotations:
-    volcano.sh/schedule.plugin: Ascend310P
-    huawei.com/schedule_policy: chip4-node8
-spec:
-  schedulerName: volcano
-  runPolicy:
-    schedulingPolicy:
-      minAvailable: 1
-      queue: default
-  replicaSpecs:
-    Master:
-      replicas: 1
-      template:
-        spec:
-          containers:
-          - name: ascend
-            image: ubuntu:20.04
-            command: ["sleep", "3600"]
-            resources:
-              requests:
-                huawei.com/Ascend910: 4
-              limits:
-                huawei.com/Ascend910: 4
-```
+   ```yaml
+   apiVersion: mindxdl.gitee.com/v1
+   kind: AscendJob
+   metadata:
+     name: test-minres-priority
+     labels:
+       framework: pytorch
+     annotations:
+       volcano.sh/schedule.plugin: Ascend310P
+       huawei.com/schedule_policy: chip4-node8
+   spec:
+     schedulerName: volcano
+     runPolicy:
+       schedulingPolicy:
+         minAvailable: 1
+         queue: default
+     replicaSpecs:
+       Master:
+         replicas: 1
+         template:
+           spec:
+             containers:
+             - name: ascend
+               image: ubuntu:20.04
+               command: ["sleep", "3600"]
+               resources:
+                 requests:
+                   huawei.com/Ascend910: 4
+                 limits:
+                   huawei.com/Ascend910: 4
+   ```
 
 2. 提交并观察。
 
-**预期结果**：
-- `GetVCJobReqNPUTypeFromJobInfo` 在 MinResources 中匹配到 `huawei.com/Ascend910` 后直接返回，不读取 annotation
-- Job 按 MinResources 中的 `Ascend910` 处理（annotation `Ascend310P` 被忽略）
-- 分配 4 个 Ascend910 NPU
+   **预期结果**：
+   - `GetVCJobReqNPUTypeFromJobInfo` 在 MinResources 中匹配到 `huawei.com/Ascend910` 后直接返回，不读取 annotation
+   - Job 按 MinResources 中的 `Ascend910` 处理（annotation `Ascend310P` 被忽略）
+   - 分配 4 个 Ascend910 NPU
 
 ---
 
@@ -299,40 +300,41 @@ spec:
 **步骤**：
 
 1. 创建普通 AscendJob，不设 NPU 资源请求，不设 annotation：
-```yaml
-apiVersion: mindxdl.gitee.com/v1
-kind: AscendJob
-metadata:
-  name: test-no-npu
-  labels: 
-    framework: pytorch
-spec:
-  schedulerName: volcano
-  runPolicy:
-    schedulingPolicy:
-      queue: default
-      minAvailable: 1
-  replicaSpecs:
-    Master:
-      replicas: 1
-      template:
-        spec:
-          containers:
-          - name: ascend
-            image: ubuntu:20.04
-            command: ["sleep", "3600"]
-            resources:
-              requests:
-                cpu: "1"
-                memory: "1Gi"
-```
+
+   ```yaml
+   apiVersion: mindxdl.gitee.com/v1
+   kind: AscendJob
+   metadata:
+     name: test-no-npu
+     labels:
+       framework: pytorch
+   spec:
+     schedulerName: volcano
+     runPolicy:
+       schedulingPolicy:
+         queue: default
+         minAvailable: 1
+     replicaSpecs:
+       Master:
+         replicas: 1
+         template:
+           spec:
+             containers:
+             - name: ascend
+               image: ubuntu:20.04
+               command: ["sleep", "3600"]
+               resources:
+                 requests:
+                   cpu: "1"
+                   memory: "1Gi"
+   ```
 
 2. 提交并观察。
 
-**预期结果**：
-- Job 正常调度，不受 ascend-volcano-plugin 影响
-- Pod 调度到任意满足 CPU/Memory 的节点
-- scheduler 日志中无该 Job 的 plugin 相关日志
+   **预期结果**：
+   - Job 正常调度，不受 ascend-volcano-plugin 影响
+   - Pod 调度到任意满足 CPU/Memory 的节点
+   - scheduler 日志中无该 Job 的 plugin 相关日志
 
 ---
 
@@ -344,51 +346,51 @@ spec:
 
 1. 创建 AscendJob，Job annotation 设为不存在的类型（如 `Ascend999`），显式指定不含 NPU 的 MinResources：
 
-```yaml
-apiVersion: mindxdl.gitee.com/v1
-kind: AscendJob
-metadata:
-  name: test-invalid-npu-type
-  labels: 
-    framework: pytorch
-  annotations:
-    volcano.sh/schedule.plugin: Ascend999
-    huawei.com/schedule_policy: chip4-node8
-spec:
-  schedulerName: volcano
-  runPolicy:
-    schedulingPolicy:
-      minAvailable: 1
-      queue: default
-      minResources:
-        cpu: "1"
-        memory: "1Gi"
-  replicaSpecs:
-    Master:
-      replicas: 1
-      template:
-        spec:
-          containers:
-          - name: ascend
-            image: ubuntu:20.04
-            command: ["sleep", "3600"]
-            resources:
-              requests:
-                huawei.com/Ascend910: 8
-              limits:
-                huawei.com/Ascend910: 8
-```
+   ```yaml
+   apiVersion: mindxdl.gitee.com/v1
+   kind: AscendJob
+   metadata:
+     name: test-invalid-npu-type
+     labels:
+       framework: pytorch
+     annotations:
+       volcano.sh/schedule.plugin: Ascend999
+       huawei.com/schedule_policy: chip4-node8
+   spec:
+     schedulerName: volcano
+     runPolicy:
+       schedulingPolicy:
+         minAvailable: 1
+         queue: default
+         minResources:
+           cpu: "1"
+           memory: "1Gi"
+     replicaSpecs:
+       Master:
+         replicas: 1
+         template:
+           spec:
+             containers:
+             - name: ascend
+               image: ubuntu:20.04
+               command: ["sleep", "3600"]
+               resources:
+                 requests:
+                   huawei.com/Ascend910: 8
+                 limits:
+                   huawei.com/Ascend910: 8
+   ```
 
 2. 提交并观察 PodGroup 状态。
 
-**预期结果**：
-- `GetVCJobReqNPUTypeFromJobInfo` 通过 annotation 返回 `("huawei.com/Ascend999", 0, nil)`
-- `npu.InitPolicyHandler` 的 switch 不匹配任何已知 NPU 类型，返回 `(nil, false)`，Controller 的 PolicyHandler 列表为空
-- `Controller.ValidNPUJob()` 检测到空 handler 列表，返回 `NotSupportPolicy`
-- PodGroup 保持 Pending 状态
-- PodGroup condition 显示 `NotSupportPolicy` 原因
-- scheduler 日志有相关告警
-- 不 panic 或 crash
+   **预期结果**：
+   - `GetVCJobReqNPUTypeFromJobInfo` 通过 annotation 返回 `("huawei.com/Ascend999", 0, nil)`
+   - `npu.InitPolicyHandler` 的 switch 不匹配任何已知 NPU 类型，返回 `(nil, false)`，Controller 的 PolicyHandler 列表为空
+   - `Controller.ValidNPUJob()` 检测到空 handler 列表，返回 `NotSupportPolicy`
+   - PodGroup 保持 Pending 状态
+   - PodGroup condition 显示 `NotSupportPolicy` 原因
+   - scheduler 日志有相关告警
+   - 不 panic 或 crash
 
 ---
 
@@ -404,10 +406,10 @@ spec:
 
 3. 等待重调度触发，观察 Pod 驱逐与重建。
 
-**预期结果**：
-- 重调度模块识别该 Job（不会因 `ReqNPUNum=0` 跳过）
-- Pod 被驱逐并在健康节点重建
-- 新 Pod 分配的健康 NPU 不包含故障 NPU
+   **预期结果**：
+   - 重调度模块识别该 Job（不会因 `ReqNPUNum=0` 跳过）
+   - Pod 被驱逐并在健康节点重建
+   - 新 Pod 分配的健康 NPU 不包含故障 NPU
 
 ---
 
@@ -419,74 +421,68 @@ spec:
 
 1. 创建 AscendJob，Job annotation 设为 `Ascend910`，包含两个 ReplicaType——一个 request NPU，一个不 request，显式指定不含 NPU 的 MinResources：
 
-```yaml
-apiVersion: mindxdl.gitee.com/v1
-kind: AscendJob
-metadata:
-  name: test-mixed-npu
-  labels: 
-    framework: mindspore
-  annotations:
-    volcano.sh/schedule.plugin: Ascend910
-spec:
-  schedulerName: volcano
-  runPolicy:
-    schedulingPolicy:
-      minAvailable: 2
-      queue: default
-      minResources:
-        cpu: "1"
-        memory: "1Gi"
-  replicaSpecs:
-    Worker:
-      replicas: 1
-      template:
-        spec:
-          containers:
-          - name: ascend
-            image: ubuntu:20.04
-            command: ["sleep", "3600"]
-            resources:
-              requests:
-                huawei.com/Ascend910: 4
-              limits:
-                huawei.com/Ascend910: 4
-    Scheduler:
-      replicas: 1
-      template:
-        spec:
-          containers:
-          - name: ascend
-            image: ubuntu:20.04
-            command: ["sleep", "3600"]
-            resources:
-              requests:
-                cpu: "1"
-                memory: "1Gi"
-              limits:
-                cpu: "1"
-                memory: "1Gi"
-```
+   ```yaml
+   apiVersion: mindxdl.gitee.com/v1
+   kind: AscendJob
+   metadata:
+     name: test-mixed-npu
+     labels:
+       framework: mindspore
+     annotations:
+       volcano.sh/schedule.plugin: Ascend910
+   spec:
+     schedulerName: volcano
+     runPolicy:
+       schedulingPolicy:
+         minAvailable: 2
+         queue: default
+         minResources:
+           cpu: "1"
+           memory: "1Gi"
+     replicaSpecs:
+       Worker:
+         replicas: 1
+         template:
+           spec:
+             containers:
+             - name: ascend
+               image: ubuntu:20.04
+               command: ["sleep", "3600"]
+               resources:
+                 requests:
+                   huawei.com/Ascend910: 4
+                 limits:
+                   huawei.com/Ascend910: 4
+       Scheduler:
+         replicas: 1
+         template:
+           spec:
+             containers:
+             - name: ascend
+               image: ubuntu:20.04
+               command: ["sleep", "3600"]
+               resources:
+                 requests:
+                   cpu: "1"
+                   memory: "1Gi"
+                 limits:
+                   cpu: "1"
+                   memory: "1Gi"
+   ```
 
 2. 提交并观察。
 
-**预期结果**：
-- `GetVCJobReqNPUTypeFromJobInfo` 在 MinResources 中匹配到 `huawei.com/Ascend910` 后直接返回，不读取 annotation
+   **预期结果**：
 
-```
-
-2. 提交并观察。
-
-**预期结果**：
-- Job 正常通过验证（annotation 路径生效，`ReqNPUNum=0`）
-- `npu-worker` 分配到 Ascend910 节点，`cpu-worker` 正常调度到任意节点
-- `cpu-worker` 在 `ValidNPUJob` 中走 `!task.IsNPUTask()` 分支跳过校验
+   - Job 正常通过验证（annotation 路径生效，`ReqNPUNum=0`）
+   - `npu-worker` 分配到 Ascend910 节点，`cpu-worker` 正常调度到任意节点
+   - `cpu-worker` 在 `ValidNPUJob` 中走 `!task.IsNPUTask()` 分支跳过校验
 
 ---
 
 ### 测试覆盖矩阵
 
-```
+```text
 ┌──────────────────────┬──────────────────┬──────────────────────┬──────────────────┐
 │ 测试场景             │  MinResource NPU  │  Annotation NPU      │  非 NPU 作业     │
 ├──────────────────────┼──────────────────┼──────────────────────┼──────────────────┤
