@@ -68,6 +68,17 @@ func TestParseAscendDeviceInfo_AscendStyle(t *testing.T) {
 	}
 }
 
+func TestParseAscendDeviceInfo_AscendStyle01(t *testing.T) {
+	env := api.AscendDeviceInfo + "=npu-0,npu-1"
+	devices := ParseAscendDeviceInfo(env, "test-container")
+	if len(devices) != deviceSliceLen2 {
+		t.Errorf("expected 2 devices, got %d", len(devices))
+	}
+	if devices[0] != 0 || devices[1] != 1 {
+		t.Error("incorrect device IDs")
+	}
+}
+
 func TestParseAscendDeviceInfo_CommaMinusStyle(t *testing.T) {
 	env := api.AscendDeviceInfo + "=0-2,4,5-7"
 	devices := ParseAscendDeviceInfo(env, "test-container")
@@ -247,6 +258,13 @@ func TestParseCommaMinusStyle_SingleValue(t *testing.T) {
 
 func TestParseAscendStyle_Simple(t *testing.T) {
 	devices := parseAscendStyle("Ascend910-0,Ascend910-1", "test-container")
+	if len(devices) != deviceSliceLen2 {
+		t.Errorf("expected 2 devices, got %d", len(devices))
+	}
+}
+
+func TestParseAscendStyle_SimpleNPU(t *testing.T) {
+	devices := parseAscendStyle("npu-0,npu-1", "test-container")
 	if len(devices) != deviceSliceLen2 {
 		t.Errorf("expected 2 devices, got %d", len(devices))
 	}
