@@ -1184,10 +1184,10 @@ func GetFaultTypeByCode(faultCodes []int64) string {
 		return RestartBusiness
 	case Int64Tool.SameElement(faultTypeCode.RestartRequestCodes, faultCodes):
 		return RestartRequest
-	case Int64Tool.SameElement(faultTypeCode.NotHandleFaultCodes, faultCodes):
-		return NotHandleFault
 	case Int64Tool.SameElement(faultTypeCode.SubHealthFaultCodes, faultCodes):
 		return SubHealthFault
+	case Int64Tool.SameElement(faultTypeCode.NotHandleFaultCodes, faultCodes):
+		return NotHandleFault
 	default:
 		faultType := getFaultTypeBySeverity(faultCodes)
 		hwlog.RunLog.Debugf("not record fault code: %v, get fault type by severity: %s", faultCodes, faultType)
@@ -1756,6 +1756,8 @@ func a950HyperPlaneNewOverallFaultModify(devices []*NpuDevice) {
 				device.FaultCodes = Int64Tool.Remove(device.FaultCodes, UBSeparateFaultCode)
 				tmpFaultInfo := common.DevFaultInfo{
 					EventID:         UBSeparateFaultCode,
+					LogicID:         device.LogicID,
+					Assertion:       common.FaultRecover,
 					AlarmRaisedTime: curTime,
 				}
 				updateDeviceFaultTimeMap(device, tmpFaultInfo, false)
@@ -1763,6 +1765,8 @@ func a950HyperPlaneNewOverallFaultModify(devices []*NpuDevice) {
 			if !Int64Tool.Contains(device.FaultCodes, UBSubHealFaultCode) {
 				tmpFaultInfo := common.DevFaultInfo{
 					EventID:         UBSubHealFaultCode,
+					LogicID:         device.LogicID,
+					Assertion:       common.FaultOccur,
 					AlarmRaisedTime: curTime,
 				}
 				updateDeviceFaultTimeMap(device, tmpFaultInfo, true)
