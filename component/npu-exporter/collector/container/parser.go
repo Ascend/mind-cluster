@@ -31,6 +31,7 @@ import (
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
+
 	"huawei.com/npu-exporter/v6/collector/container/isula"
 	"huawei.com/npu-exporter/v6/collector/container/v1"
 	"huawei.com/npu-exporter/v6/utils/logger"
@@ -79,7 +80,7 @@ var (
 		return strings.Contains(s, minus) && strings.Contains(s, comma)
 	}
 	ascendStyle = func(s string) bool {
-		return strings.Contains(s, ascend)
+		return strings.Contains(s, ascend) || strings.Contains(s, api.NPULowerCase)
 	}
 )
 
