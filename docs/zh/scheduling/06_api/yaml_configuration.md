@@ -42,7 +42,7 @@
 |spec.replicaSpecs.[ReplicaType].template.spec.containers.name|字符串 (string)|-|容器名称，当前必须为ascend。|
 |spec.replicaSpecs.[ReplicaType].template.spec.containers.image|字符串 (string)|-|训练镜像名称，请根据实际修改（用户在制作镜像章节制作的镜像名称）。|
 |spec.replicaSpecs.[ReplicaType].template.spec.containers.ports|对象 (object)|-|分布式训练集合通信端口。“name”取值只能为“ascendjob-port”，“containerPort”用户可根据实际情况设置，若未进行设置则采用默认端口2222。|
-|<ul><li>spec.replicaSpecs.[ReplicaType].template.spec.containers.resources.requests</li><li>spec.replicaSpecs.[ReplicaType].template.spec.containers.resources.limits</li></ul>|对象 (object)|-|<p>限制请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。limits需要和requests的芯片名称和数量需保持一致。</p><p><strong>整卡调度：</strong></p><ul><li>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD ：配置为huawei.com/npu: <em>x</em></li><li>推理服务器（插Atlas 300I 推理卡）：配置为huawei.com/Ascend310: <em>x</em></li><li>Atlas 推理系列产品非混插模式：配置为huawei.com/Ascend310P: <em>x</em></li><li>Atlas 推理系列产品混插模式：<ul><li>配置为huawei.com/Ascend310P-V: <em>x</em></li><li>配置为huawei.com/Ascend310P-VPro: <em>x</em></li><li>配置为huawei.com/Ascend310P-IPro: <em>x</em></li></ul></li><li>其他产品配置为huawei.com/Ascend910: <em>x</em></li></ul><p>根据所使用芯片类型不同，x取值如下：</p><ul><li>Atlas 800 训练服务器（NPU满配）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4、8</li><li>分布式任务：1、2、4、8</li></ul></li><li>Atlas 800 训练服务器（NPU半配）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4</li><li>分布式任务：1、2、4</li></ul></li><li>服务器（插Atlas 300T 训练卡）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2</li><li>分布式任务：2</li></ul></li><li>Atlas 800T A2 训练服务器和Atlas 900 A2 PoD 集群基础单元：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、3、4、5、6、7、8</li><li>分布式任务：1、2、3、4、5、6、7、8</li></ul></li><li>Atlas 200T A2 Box16 异构子框：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、3、4、5、6、7、8、10、12、14、16</li><li>分布式任务：1、2、3、4、5、6、7、8、10、12、14、16</li></ul></li><li>Atlas 900 A3 SuperPoD 超节点、A200T A3 Box8 超节点服务器、Atlas 800T A3 超节点服务器：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4、6、8、10、12、14、16</li><li>分布式任务：2、4、6、8、10、12、14、16</li><li>针对Atlas 900 A3 SuperPoD 超节点的逻辑超节点亲和任务：16</li></ul></li><li>Atlas 350 标卡（无互联节点内8卡）：<ul><li>单机：1、2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul></li><li>Atlas 350 标卡（无互联节点内16卡）：<ul><li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li><li>分布式：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li></ul></li><li>Atlas 350 标卡（4P mesh 8卡）：<ul><li>单机（满足亲和性）：1、2、3、4、8</li><li>单机（不保证亲和性）：5、6、7</li><li>分布式（满足亲和性）：1、2、3、4、8</li><li>分布式（不保证亲和性）：5、6、7</li></ul></li><li>Atlas 350 标卡（4P mesh 16卡）：<ul><li>单机（满足亲和性）：1、2、3、4、8、12、16</li><li>单机（不保证亲和性）：5、6、7、9、10、11、13、14、15</li><li>分布式（满足亲和性）：1、2、3、4、8、12、16</li><li>分布式（不保证亲和性）：5、6、7、9、10、11、13、14、15</li></ul></li><li>Atlas 850 系列硬件产品（普通集群）：<ul><li>单机：1、2、4、8</li><li>分布式：1、2、4、8</li></ul></li><li>Atlas 850 系列硬件产品（超节点集群）：<ul><li>单机：1、2、4、8（sp-block参数取值与其保持一致）</li><li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul></li><li>Atlas 950 SuperPoD 集群：<ul><li>单机：1、2、3、4、5、6、7、8（sp-block参数取值与其保持一致）</li><li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul></li></ul><p><strong>静态vNPU调度：</strong></p><p>huawei.com/Ascend910-Y: 1</p><p>取值为1。只能使用一个NPU下的vNPU。</p><p>如huawei.com/Ascend910-6c.1cpu.16g: 1</p>|
+|<ul><li>spec.replicaSpecs.[ReplicaType].template.spec.containers.resources.requests</li><li>spec.replicaSpecs.[ReplicaType].template.spec.containers.resources.limits</li></ul>|对象 (object)|-|<p>限制请求的NPU或vNPU类型（只能请求一种类型）、数量，请根据实际修改。limits需要和requests的芯片名称和数量需保持一致。</p><p><strong>整卡调度：</strong></p><ul><li>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD ：配置为huawei.com/npu: <em>x</em></li><li>推理服务器（插Atlas 300I 推理卡）：配置为huawei.com/Ascend310: <em>x</em></li><li>Atlas 推理系列产品非混插模式：配置为huawei.com/Ascend310P: <em>x</em></li><li>Atlas 推理系列产品混插模式：<ul><li>配置为huawei.com/Ascend310P-V: <em>x</em></li><li>配置为huawei.com/Ascend310P-VPro: <em>x</em></li><li>配置为huawei.com/Ascend310P-IPro: <em>x</em></li></ul></li><li>其他产品配置为huawei.com/Ascend910: <em>x</em></li></ul><p>根据所使用芯片类型不同，x取值如下：</p><ul><li>Atlas 800 训练服务器（NPU满配）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4、8</li><li>分布式任务：1、2、4、8</li></ul></li><li>Atlas 800 训练服务器（NPU半配）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4</li><li>分布式任务：1、2、4</li></ul></li><li>服务器（插Atlas 300T 训练卡）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2</li><li>分布式任务：2</li></ul></li><li>Atlas 800T A2 训练服务器和Atlas 900 A2 PoD 集群基础单元：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、3、4、5、6、7、8</li><li>分布式任务：1、2、3、4、5、6、7、8</li></ul></li><li>Atlas 200T A2 Box16 异构子框：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、3、4、5、6、7、8、10、12、14、16</li><li>分布式任务：1、2、3、4、5、6、7、8、10、12、14、16</li></ul></li><li>Atlas 900 A3 SuperPoD 超节点、A200T A3 Box8 超节点服务器、Atlas 800T A3 超节点服务器：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4、6、8、10、12、14、16</li><li>分布式任务：2、4、6、8、10、12、14、16</li><li>针对Atlas 900 A3 SuperPoD 超节点的逻辑超节点亲和任务：16</li></ul></li><li>Atlas 350 标卡服务器（无互联节点内8卡）：<ul><li>单机：1、2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul></li><li>Atlas 350 标卡服务器（无互联节点内16卡）：<ul><li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li><li>分布式：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li></ul></li><li>Atlas 350 标卡（4P mesh 8卡）：<ul><li>单机（满足亲和性）：1、2、3、4、8</li><li>单机（不保证亲和性）：5、6、7</li><li>分布式（满足亲和性）：1、2、3、4、8</li><li>分布式（不保证亲和性）：5、6、7</li></ul></li><li>Atlas 350 标卡（4P mesh 16卡）：<ul><li>单机（满足亲和性）：1、2、3、4、8、12、16</li><li>单机（不保证亲和性）：5、6、7、9、10、11、13、14、15</li><li>分布式（满足亲和性）：1、2、3、4、8、12、16</li><li>分布式（不保证亲和性）：5、6、7、9、10、11、13、14、15</li></ul></li><li>Atlas 850 系列硬件产品（普通集群）：<ul><li>单机：1、2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul></li><li>Atlas 850 系列硬件产品（超节点集群）：<ul><li>单机：1、2、4、8（sp-block参数取值与其保持一致）</li><li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul></li><li>Atlas 950 SuperPoD 集群：<ul><li>单机：1、2、3、4、5、6、7、8（sp-block参数取值与其保持一致）</li><li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul></li></ul><p><strong>静态vNPU调度：</strong></p><p>huawei.com/Ascend910-Y: 1</p><p>取值为1。只能使用一个NPU下的vNPU。</p><p>如huawei.com/Ascend910-6c.1cpu.16g: 1</p>|
 |spec.replicaSpecs.{Master\|Scheduler\|Worker}.template.spec.containers[0].env[name==ASCEND_VISIBLE_DEVICES].valueFrom.fieldRef.fieldPath|字符串 (string)|-|<p>取值为metadata.annotations['huawei.com/AscendXXX']，其中XXX表示芯片的型号，支持的取值为910，310和310P。取值需要和环境上实际的芯片类型保持一致。</p><p>Ascend Docker Runtime会获取该参数值，用于给容器挂载相应类型的NPU。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>该参数只支持使用Volcano调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</li><li>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD需配置为metadata.annotations['huawei.com/npu']。</li></ul></div></div>|
 |spec.replicaSpecs.{Master\|Scheduler\|Worker}.template.spec.terminationGracePeriodSeconds|整数 (integer)|<p>0 &lt; terminationGracePeriodSeconds &lt; <strong>grace-over-time</strong>参数取值</p>|<p>容器收到SIGTERM到被K8s强制停止经历的时间，该时间需要大于0且小于volcano-v<em>{version}</em>.yaml文件中"<strong>grace-over-time</strong>"参数取值，同时还需要保证能够保存CKPT文件，请根据实际情况修改。具体说明请参见K8s官网[容器生命周期回调](https://kubernetes.io/zh/docs/concepts/containers/container-lifecycle-hooks/)。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">只有当fault-scheduling配置为grace时，该字段才生效；fault-scheduling配置为force时，该字段无效。</div></div>|
 |spec.runPolicy|对象 (object)|-|封装分布式训练作业的运行时策略（如资源清理、活动时间）。|
@@ -76,7 +76,7 @@
 |status.replicaStatuses.[ReplicaType].labelSelector.matchLabels|对象 (object)|-|标签匹配的键值对（等价于matchExpressions条件）。|
 |status.startTime|字符串 (string)|date-time|作业开始时间（RFC3339格式，UTC）。|
 |metadata.annotations['huawei.com/AscendXXX']|字符串 (string)|-|XXX表示芯片的型号，支持的取值为910，310和310P。取值需要和环境上实际的芯片类型保持一致。Ascend Docker Runtime会获取该参数值，用于给容器挂载相应类型的NPU。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>该参数只支持使用Volcano调度器的整卡调度特性，使用静态vNPU调度和其他调度器的用户需要删除示例YAML中该参数的相关字段。</li><li>Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD需配置为metadata.annotations['huawei.com/npu']。</li></ul></div></div>|
-|huawei.com/Ascend910|数字|-|请求的NPU数量，请根据实际修改。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD需配置为metadata.annotations['huawei.com/npu']。</div></div>Atlas 800 训练服务器（NPU满配）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4、8</li><li>分布式任务：1、2、4、8</li></ul>Atlas 800训练服务器（NPU半配）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4</li><li>分布式任务：1、2、4</li></ul>服务器（插Atlas 300T训练卡）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2</li><li>分布式任务：2</li></ul>Atlas 800T A2训练服务器和Atlas 900 A2 PoD集群基础单元：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、3、4、5、6、7、8</li><li>分布式任务：1、2、3、4、5、6、7、8</li></ul>Atlas 200T A2 Box16 异构子框和Atlas 200I A2 Box16 异构子框：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、3、4、5、6、7、8、10、12、14、16</li><li>分布式任务：1、2、3、4、5、6、7、8、10、12、14、16</li></ul>Atlas 900 A3 SuperPoD 超节点、A200T A3 Box8 超节点服务器、Atlas 800T A3 超节点服务器：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4、6、8、10、12、14、16</li><li>分布式任务：2、4、6、8、10、12、14、16</li><li>针对Atlas 900 A3 SuperPoD 超节点的逻辑超节点亲和任务：16</li></ul>Atlas 350 标卡（无互联节点内8卡）：<ul><li>单机：1、2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul>Atlas 350 标卡（无互联节点内16卡）：<ul><li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li><li>分布式：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li></ul>Atlas 350 标卡（4P mesh 8卡）：<ul><li>单机（满足亲和性）：1、2、3、4、8</li><li>单机（不保证亲和性）：5、6、7</li><li>分布式（满足亲和性）：1、2、3、4、8</li><li>分布式（不保证亲和性）：5、6、7</li></ul>Atlas 350 标卡（4P mesh 16卡）：<ul><li>单机（满足亲和性）：1、2、3、4、8、12、16</li><li>单机（不保证亲和性）：5、6、7、9、10、11、13、14、15</li><li>分布式（满足亲和性）：1、2、3、4、8、12、16</li><li>分布式（不保证亲和性）：5、6、7、9、10、11、13、14、15</li></ul>Atlas 850 系列硬件产品（普通集群）：<ul><li>单机：1、2、4、8</li><li>分布式：1、2、4、8</li></ul>Atlas 850 系列硬件产品（超节点集群）：<ul><li>单机：1、2、4、8（sp-block参数取值与其保持一致）</li><li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul>Atlas 950 SuperPoD：<ul><li>单机：1、2、3、4、5、6、7、8（sp-block参数取值与其保持一致）</li><li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul>|
+|huawei.com/Ascend910|数字|-|请求的NPU数量，请根据实际修改。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD需配置为metadata.annotations['huawei.com/npu']。</div></div>Atlas 800 训练服务器（NPU满配）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4、8</li><li>分布式任务：1、2、4、8</li></ul>Atlas 800训练服务器（NPU半配）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4</li><li>分布式任务：1、2、4</li></ul>服务器（插Atlas 300T训练卡）：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2</li><li>分布式任务：2</li></ul>Atlas 800T A2训练服务器和Atlas 900 A2 PoD集群基础单元：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、3、4、5、6、7、8</li><li>分布式任务：1、2、3、4、5、6、7、8</li></ul>Atlas 200T A2 Box16 异构子框和Atlas 200I A2 Box16 异构子框：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、3、4、5、6、7、8、10、12、14、16</li><li>分布式任务：1、2、3、4、5、6、7、8、10、12、14、16</li></ul>Atlas 900 A3 SuperPoD 超节点、A200T A3 Box8 超节点服务器、Atlas 800T A3 超节点服务器：<ul><li>单机单芯片任务：1</li><li>单机多芯片任务：2、4、6、8、10、12、14、16</li><li>分布式任务：2、4、6、8、10、12、14、16</li><li>针对Atlas 900 A3 SuperPoD 超节点的逻辑超节点亲和任务：16</li></ul>Atlas 350 标卡服务器（无互联节点内8卡）：<ul><li>单机：1、2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul>Atlas 350 标卡服务器（无互联节点内16卡）：<ul><li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li><li>分布式：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li></ul>Atlas 350 标卡（4P mesh 8卡）：<ul><li>单机（满足亲和性）：1、2、3、4、8</li><li>单机（不保证亲和性）：5、6、7</li><li>分布式（满足亲和性）：1、2、3、4、8</li><li>分布式（不保证亲和性）：5、6、7</li></ul>Atlas 350 标卡（4P mesh 16卡）：<ul><li>单机（满足亲和性）：1、2、3、4、8、12、16</li><li>单机（不保证亲和性）：5、6、7、9、10、11、13、14、15</li><li>分布式（满足亲和性）：1、2、3、4、8、12、16</li><li>分布式（不保证亲和性）：5、6、7、9、10、11、13、14、15</li></ul>Atlas 850 系列硬件产品（普通集群）：<ul><li>单机：1、2、3、4、5、6、7、8</li><li>分布式：1、2、3、4、5、6、7、8</li></ul>Atlas 850 系列硬件产品（超节点集群）：<ul><li>单机：1、2、4、8（sp-block参数取值与其保持一致）</li><li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul>Atlas 950 SuperPoD：<ul><li>单机：1、2、3、4、5、6、7、8（sp-block参数取值与其保持一致）</li><li>分布式：8（sp-block参数取值需为8或8的倍数，且能被任务所需总卡数整除，且不能大于物理超节点大小）</li></ul>|
 |super-pod-affinity|字符串 (string)|-|<p>仅支持在Atlas 900 A3 SuperPoD 超节点中使用本参数。超节点任务使用的亲和性调度策略，需要用户在YAML的label中声明。</p><ul><li>soft：集群资源不满足超节点亲和性时，任务使用集群中碎片资源继续调度。</li><li>hard：集群资源不满足超节点亲和性时，任务Pending，等待资源。</li><li>其他值或不传入此参数：强制超节点亲和性调度</li></ul>|
 |<ul><li>customJobKey</li><li>custom-job-id</li></ul>|字符串 (string)|-|<p>支持通过customJobKey或custom-job-id设置作业唯一标识符，方便用户根据该标识符过滤作业相关的告警、ISSUE等关键信息。在资源AscendJob的metadata.labels标签中设置。</p><ul><li>customJobKey：用户自定义标签，以二级跳转的方式设置作业唯一标识符，如：<p>customJobKey: tid</p><p>tid: "123456"</p></li><li>custom-job-id：用户自定义标签，直接设置作业唯一标识符，如：<p>custom-job-id："123456"</p></li></ul>|
 |huawei.com/scheduler.softShareDev.aicoreQuota|字符串 (string)|-|请求的AICore百分比，取值范围为[1, 100]。|
@@ -229,14 +229,14 @@
 </li><li><span id="ph133001904447"><a name="ph133001904447"></a><a name="ph133001904447"></a>Atlas 900 A3 SuperPoD 超节点</span>、<span id="ph830011074420"><a name="ph830011074420"></a><a name="ph830011074420"></a>A200T A3 Box8 超节点服务器</span>、<span id="ph83001907446"><a name="ph83001907446"></a><a name="ph83001907446"></a>Atlas 800T A3 超节点服务器</span>：<a name="ul130020074415"></a><a name="ul130020074415"></a><ul id="ul130020074415"><li>单机多芯片：2、4、6、8、10、12、14、16</li><li>分布式：16</li></ul>
 </li>
 <li>
-    <span>Atlas 350 标卡（无互联节点内8卡）</span>：
+    <span>Atlas 350 标卡服务器（无互联节点内8卡）</span>：
     <ul>
         <li>单机：1、2、3、4、5、6、7、8</li>
         <li>分布式：1、2、3、4、5、6、7、8</li>
     </ul>
 </li>
 <li>
-    <span>Atlas 350 标卡（无互联节点内16卡）</span>：
+    <span>Atlas 350 标卡服务器（无互联节点内16卡）</span>：
     <ul>
         <li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li>
         <li>分布式：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li>
@@ -263,8 +263,8 @@
 <li>
     <span>Atlas 850 系列硬件产品（普通集群）</span>：
     <ul>
-        <li>单机：1、2、4、8</li>
-        <li>分布式：1、2、4、8</li>
+        <li>单机：1、2、3、4、5、6、7、8</li>
+        <li>分布式：1、2、3、4、5、6、7、8</li>
     </ul>
 </li>
 <li>
@@ -326,14 +326,14 @@
 </li><li><span id="zh-cn_topic_0000001951418201_ph419517625020"><a name="zh-cn_topic_0000001951418201_ph419517625020"></a><a name="zh-cn_topic_0000001951418201_ph419517625020"></a>Atlas 200T A2 Box16 异构子框</span><span id="ph1891953184717"><a name="ph1891953184717"></a><a name="ph1891953184717"></a>和</span><span id="ph1149713543472"><a name="ph1149713543472"></a><a name="ph1149713543472"></a>Atlas 200I A2 Box16 异构子框</span>：<a name="zh-cn_topic_0000001951418201_ul191955617509"></a><a name="zh-cn_topic_0000001951418201_ul191955617509"></a><ul id="zh-cn_topic_0000001951418201_ul191955617509"><li>单机单芯片：1</li><li>单机多芯片：2、3、4、5、6、7、8、10、12、14、16</li><li>分布式：1、2、3、4、5、6、7、8、10、12、14、16</li></ul>
 </li>
 <li>
-    <span>Atlas 350 标卡（无互联节点内8卡）</span>：
+    <span>Atlas 350 标卡服务器（无互联节点内8卡）</span>：
     <ul>
         <li>单机：1、2、3、4、5、6、7、8</li>
         <li>分布式：1、2、3、4、5、6、7、8</li>
     </ul>
 </li>
 <li>
-    <span>Atlas 350 标卡（无互联节点内16卡）</span>：
+    <span>Atlas 350 标卡服务器（无互联节点内16卡）</span>：
     <ul>
         <li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li>
         <li>分布式：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li>
@@ -360,8 +360,8 @@
 <li>
     <span>Atlas 850 系列硬件产品（普通集群）</span>：
     <ul>
-        <li>单机：1、2、4、8</li>
-        <li>分布式：1、2、4、8</li>
+        <li>单机：1、2、3、4、5、6、7、8</li>
+        <li>分布式：1、2、3、4、5、6、7、8</li>
     </ul>
 </li>
 <li>
@@ -714,14 +714,14 @@
 </li><li><span id="ph133001904447"><a name="ph133001904447"></a><a name="ph133001904447"></a>Atlas 900 A3 SuperPoD 超节点</span>、<span id="ph830011074420"><a name="ph830011074420"></a><a name="ph830011074420"></a>A200T A3 Box8 超节点服务器</span>、<span id="ph83001907446"><a name="ph83001907446"></a><a name="ph83001907446"></a>Atlas 800T A3 超节点服务器</span>：<a name="ul130020074415"></a><a name="ul130020074415"></a><ul id="ul130020074415"><li>单机多芯片：2、4、6、8、10、12、14、16</li><li>分布式：16</li></ul>
 </li>
 <li>
-    <span>Atlas 350 标卡（无互联节点内8卡）</span>：
+    <span>Atlas 350 标卡服务器（无互联节点内8卡）</span>：
     <ul>
         <li>单机：1、2、3、4、5、6、7、8</li>
         <li>分布式：1、2、3、4、5、6、7、8</li>
     </ul>
 </li>
 <li>
-    <span>Atlas 350 标卡（无互联节点内16卡）</span>：
+    <span>Atlas 350 标卡服务器（无互联节点内16卡）</span>：
     <ul>
         <li>单机：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li>
         <li>分布式：1、2、3、4、5、6、7、8、9、10、11、12、13、14、15、16</li>
@@ -748,8 +748,8 @@
 <li>
     <span>Atlas 850 系列硬件产品（普通集群）</span>：
     <ul>
-        <li>单机：1、2、4、8</li>
-        <li>分布式：1、2、4、8</li>
+        <li>单机：1、2、3、4、5、6、7、8</li>
+        <li>分布式：1、2、3、4、5、6、7、8</li>
     </ul>
 </li>
 <li>
@@ -883,8 +883,8 @@
 |chip2-node8-sp|1个节点8张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，Atlas 9000 A3 SuperPoD 集群算力系统。|
 |chip2-node16-sp|1个节点16张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，Atlas 900 A3 SuperPoD 超节点。|
 |chip4-node16|1个节点16张卡，每4张卡都在1个互联环上。例如，Atlas 350 标卡共16张卡，每4张卡通过UB扣板连接。|
-|chip1-node8|1个节点8张卡，每张卡之间无互联。例如，Atlas 350 标卡共8张卡，每张卡之间无互联。|
-|chip1-node16|1个节点16张卡，每张卡之间无互联。例如，Atlas 350 标卡共16张卡，每张卡之间无互联。|
+|chip1-node8|1个节点8张卡，每张卡之间无互联。例如，Atlas 350 标卡服务器共8张卡，每张卡之间无互联。|
+|chip1-node16|1个节点16张卡，每张卡之间无互联。例如，Atlas 350 标卡服务器共16张卡，每张卡之间无互联。|
 |chip8-node8-sp|1个节点8张卡，8张卡都在1个互联环上，多个服务器形成超节点。例如，Atlas 850 系列硬件产品（超节点服务器）。|
 |chip8-node8-ra64-sp|1个节点8张卡，8张卡都在1个互联环上，64个节点组成一个计算框，多个框形成超节点。例如，Atlas 950 SuperPoD。|
 |chip1-softShareDev|软切分虚拟化专用调度策略。|

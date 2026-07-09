@@ -93,6 +93,7 @@
     - [基于MindIE PyMotor部署Infer Operator推理任务](./04_usage/infer_operator_best_practice/02_deploying_infer_operator_inference_job_with_mindie_pymotor.md)
     - [配置推理任务优先级调度](./04_usage/infer_operator_best_practice/03_configuring_priority_scheduling.md)
     - [配置推理任务实例级重调度](./04_usage/infer_operator_best_practice/04_configuring_rescheduling_inference_job.md)
+    - [配置基于负载的弹性扩缩容](./04_usage/infer_operator_best_practice/05_configuring_elastic_scaling.md)
   - [任务交替运行最佳实践](./04_usage/task_alternation/menu_task_alternation.md)
     - [使用前必读](./04_usage/task_alternation/00_before_you_start.md)
     - [基于Preempt的推理/训练任务交替运行](./04_usage/task_alternation/01_preempt_based_alternation.md)
