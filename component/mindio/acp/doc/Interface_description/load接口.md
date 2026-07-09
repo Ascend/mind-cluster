@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="section1642012205289"></a>
 
-```
+```python
 mindio_acp.load(path, open_way='memfs', map_location=None)
 ```
 
@@ -57,7 +57,7 @@ mindio_acp.load(path, open_way='memfs', map_location=None)
 
 ## 使用样例<a name="section1550852911320"></a>
 
-```
+```python
 >>> # load from file
 >>> mindio_acp.load('/mnt/dpc01/checkpoint/rank-0.pt')
 ```

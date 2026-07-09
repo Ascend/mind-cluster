@@ -1,10 +1,10 @@
+# k8s-rdma-shared-dev-plugin
+
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Mellanox/k8s-rdma-shared-dev-plugin)](https://goreportcard.com/report/github.com/Mellanox/rdma-cni)
 [![Coverage Status](https://coveralls.io/repos/github/Mellanox/k8s-rdma-shared-dev-plugin/badge.svg)](https://coveralls.io/github/Mellanox/k8s-rdma-shared-dev-plugin)
 
-# k8s-rdma-shared-dev-plugin
-
-(https://hub.docker.com/r/mellanox/k8s-rdma-shared-dev-plugin)
+(<https://hub.docker.com/r/mellanox/k8s-rdma-shared-dev-plugin>)
 
 This is simple rdma device plugin that support IB and RoCE HCA. This plugin runs as daemonset. Its container image is
 available at mellanox/k8s-rdma-shared-dev-plugin.
@@ -20,7 +20,7 @@ netdevices.
 
 Deploy device plugin and create config map to describe mode as "hca" mode. This is per node configuration.
 
-```
+```bash
 cd deployment/k8s/base
 kubectl apply -k .
 ```
@@ -29,23 +29,26 @@ kubectl apply -k .
 
 Create test pod which requests 1 vhca resource.
 
-```
+```bash
 kubectl create -f example/test-hca-pod.yaml
 ```
 
-### Deploy the device plugin with CDI support
+## Deploy the device plugin with CDI support
+
 To use the device plugin with [CDI](https://github.com/cncf-tags/container-device-interface) support, do the following:
-```
+
+```bash
 cd deployment/k8s/base/overlay
 kubectl apply -k .
 ```
+
 # How to use device plugin for RDMA
 
 The device plugin can be used with macvlan for RDMA, to do the following steps:
 
 **1.** use macvlan cni
 
-```
+```bash
 # cat > /etc/cni/net.d/00-macvlan.conf <<EOF
 {
     "cniVersion": "0.3.1",
@@ -71,7 +74,7 @@ EOF
 
 **3.** Deploy RDMA pod application
 
-```
+```bash
 kubectl create -f <rdma-app.yaml>
 ```
 
@@ -146,32 +149,32 @@ RDMA shared device plugin should be deployed on nodes that:
 1. Have RDMA capable hardware
 2. RDMA kernel stack is loaded
 
-To allow proper node selection [Node Feature Discovery (NFD)](https://github.com/kubernetes-sigs/node-feature-discovery)
-can be used to discover the node capabilities, and expose them as node labels.
+   To allow proper node selection [Node Feature Discovery (NFD)](https://github.com/kubernetes-sigs/node-feature-discovery)
+   can be used to discover the node capabilities, and expose them as node labels.
 
-1. Deploy NFD, release `v0.6.0` or new newer
+3. Deploy NFD, release `v0.6.0` or new newer
 
-```
-# export NFD_VERSION=v0.6.0
-# kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/node-feature-discovery/$NFD_VERSION/nfd-master.yaml.template
-# kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/node-feature-discovery/$NFD_VERSION/nfd-worker-daemonset.yaml.template
-```
+      ```bash
+      # export NFD_VERSION=v0.6.0
+      # kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/node-feature-discovery/$NFD_VERSION/nfd-master.yaml.template
+      # kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/node-feature-discovery/$NFD_VERSION/nfd-worker-daemonset.yaml.template
+      ```
 
-2. Check the new labels added to the node
+4. Check the new labels added to the node
 
-```
-# kubectl get nodes --show-labels
-```
+      ```bash
+      # kubectl get nodes --show-labels
+      ```
 
-RDMA device plugin can then be deployed on nodes with `feature.node.kubernetes.io/custom-rdma.available=true`, which
-indicates that the node is RDMA capable and RDMA modules are loaded.
+   RDMA device plugin can then be deployed on nodes with `feature.node.kubernetes.io/custom-rdma.available=true`, which
+   indicates that the node is RDMA capable and RDMA modules are loaded.
 
 # Docker image
 
 RDMA shared device plugin uses `alpine` base image by default. To build RDMA shared device plugin with another base
 image you need to pass `BASE_IMAGE` argument:
 
-```
+```bash
 docker build -t k8s-rdma-shared-dev-plugin \
 --build-arg BASE_IMAGE=registry.access.redhat.com/ubi8/ubi-minimal:latest \
 .

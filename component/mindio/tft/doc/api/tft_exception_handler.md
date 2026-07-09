@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001975861558_section259611294404"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_exception_handler(func: Callable)
 ```
 

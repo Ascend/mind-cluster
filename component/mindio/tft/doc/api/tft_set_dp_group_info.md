@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001975861586_section1272104915439"></a>
 
-```
+```python
 mindio_ttp.controller_ttp.tft_set_dp_group_info(rank: int, dp_rank_list: list)
 ```
 

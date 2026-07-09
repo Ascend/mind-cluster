@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000002012581709_section1585114371516"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_destroy_controller()
 ```
 

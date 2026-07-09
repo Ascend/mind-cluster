@@ -9,7 +9,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001975861574_section425913537262"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_register_save_ckpt_handler(func: Callable, ctx = None)
 ```
 

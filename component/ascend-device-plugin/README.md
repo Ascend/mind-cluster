@@ -10,21 +10,21 @@
     - Atlas 推理系列产品
     - Atlas 800I A2 推理服务器
 
-
 # 组件介绍
+
 设备管理插件拥有以下功能：
 
--   设备发现：支持从昇腾设备驱动中发现设备个数，将其发现的设备个数上报到Kubernetes系统中。支持发现拆分物理设备得到的虚拟设备并上报kubernetes系统。
--   健康检查：支持检测昇腾设备的健康状态，当设备处于不健康状态时，上报到Kubernetes系统中，Kubernetes系统会自动将不健康设备从可用列表中剔除。虚拟设备健康状态由拆分这些虚拟设备的物理设备决定。
--   设备分配：支持在Kubernetes系统中分配昇腾设备；支持NPU设备重调度功能，设备故障后会自动拉起新容器，挂载健康设备，并重建训练任务。
+- 设备发现：支持从昇腾设备驱动中发现设备个数，将其发现的设备个数上报到Kubernetes系统中。支持发现拆分物理设备得到的虚拟设备并上报kubernetes系统。
+- 健康检查：支持检测昇腾设备的健康状态，当设备处于不健康状态时，上报到Kubernetes系统中，Kubernetes系统会自动将不健康设备从可用列表中剔除。虚拟设备健康状态由拆分这些虚拟设备的物理设备决定。
+- 设备分配：支持在Kubernetes系统中分配昇腾设备；支持NPU设备重调度功能，设备故障后会自动拉起新容器，挂载健康设备，并重建训练任务。
 
 # 编译
 
-1.  通过git拉取源码，并切换master分支，获得ascend-device-plugin。
+1. 通过git拉取源码，并切换master分支，获得ascend-device-plugin。
 
     示例：源码放在/home/mind-cluster/component/ascend-device-plugin目录下
 
-2.  执行以下命令，进入构建目录，根据设备插件应用场景，选择其中一个构建脚本执行，在“output“目录下生成二进制device-plugin、yaml文件和Dockerfile等文件。
+2. 执行以下命令，进入构建目录，根据设备插件应用场景，选择其中一个构建脚本执行，在“output“目录下生成二进制device-plugin、yaml文件和Dockerfile等文件。
 
     **cd** _/home/mind-cluster/component/_**ascend-device-plugin/build/**
 
@@ -40,7 +40,7 @@
 
         ./build_edge.sh
 
-   3.  执行以下命令，查看**output**生成的软件列表。
+3. 执行以下命令，查看**output**生成的软件列表。
 
        **ll** _/home/mind-cluster/component/_**ascend-device-plugin/output**
 
@@ -60,10 +60,9 @@
        -r-------- 1 root root     1017  4月 29 09:28 SwitchFaultCode.json
        ```
 
-    >   ![](doc/figures/icon-note.gif) **说明：**
+    > ![](doc/figures/icon-note.gif) **说明：**
        1、“ascend-device-plugin/build“目录下的**ascendplugin.yaml**文件在“ascend-device-plugin/output/“下生成的对应文件为**device-plugin-v6.0.0.yaml**，作用是更新版本号。
        2、边侧场景编译仅生成device-plugin二进制文件
-
 
 # 说明
 

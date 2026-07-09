@@ -9,7 +9,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001975861586_section1272104915439"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_can_do_uce_repair(hbm_error_time: int, start_time: int = None, end_time: int = None)
 ```
 

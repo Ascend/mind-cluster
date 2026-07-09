@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001976021314_section1884425917718"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_start_controller(bind_ip: str, port: int, enable_tls=True, tls_info='')
 ```
 
@@ -57,7 +57,7 @@ mindio_ttp.framework_ttp.tft_start_controller(bind_ip: str, port: int, enable_tl
 </td>
 <td class="cellrowborder" valign="top" width="29.959999999999997%" headers="mcps1.1.5.1.3 "><p id="p1252901172"><a name="p1252901172"></a><a name="p1252901172"></a>TLS的证书配置。</p>
 </td>
-<td class="cellrowborder" valign="top" width="30.04%" headers="mcps1.1.5.1.4 "><p id="p05216091710"><a name="p05216091710"></a><a name="p05216091710"></a>默认为空，当开启TLS认证时，需要配置证书信息，具体字段应以键值对形式组织。具体配置指导见<a href="导入TLS证书.md">导入TLS证书</a>。</p>
+<td class="cellrowborder" valign="top" width="30.04%" headers="mcps1.1.5.1.4 "><p id="p05216091710"><a name="p05216091710"></a><a name="p05216091710"></a>默认为空，当开启TLS认证时，需要配置证书信息，具体字段应以键值对形式组织。具体配置指导见<a href="../SECURITYNOTE.md">导入TLS证书</a>。</p>
 </td>
 </tr>
 </tbody>
