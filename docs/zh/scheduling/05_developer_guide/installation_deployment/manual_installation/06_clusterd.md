@@ -167,41 +167,41 @@
 </div></div>
 </td>
 </tr>
-<tr id="rowhz001"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz001"><a name="phz001"></a><a name="phz001"></a>--enable-healthz</p>
+<tr id="rowhz001-clusterd"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz001-clusterd"><a name="phz001-clusterd"></a><a name="phz001-clusterd"></a>--enable-healthz</p>
 </td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz001b"><a name="phz001b"></a><a name="phz001b"></a>bool</p>
+<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz001b-clusterd"><a name="phz001b-clusterd"></a><a name="phz001b-clusterd"></a>bool</p>
 </td>
-<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz001c"><a name="phz001c"></a><a name="phz001c"></a>false</p>
+<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz001c-clusterd"><a name="phz001c-clusterd"></a><a name="phz001c-clusterd"></a>false</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz001d"><a name="phz001d"></a><a name="phz001d"></a>是否启用健康检查服务。K8s部署时由组件YAML配置启用（true）</p>
-<a name="ulhz001"></a><a name="ulhz001"></a><ul id="ulhz001"><li>true：启用。</li><li>false：禁用。</li></ul>
-</td>
-</tr>
-<tr id="rowhz002"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz002"><a name="phz002"></a><a name="phz002"></a>--healthz-address</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz002b"><a name="phz002b"></a><a name="phz002b"></a>string</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz002c"><a name="phz002c"></a><a name="phz002c"></a>11251</p>
-</td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz002d"><a name="phz002d"></a><a name="phz002d"></a>健康检查服务侦听端口号，取值范围为1025~65535。K8s部署时由组件YAML配置为11253。若指定端口被占用，组件启动失败。</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz001d-clusterd"><a name="phz001d-clusterd"></a><a name="phz001d-clusterd"></a>是否启用健康检查服务。K8s部署时由组件YAML配置启用（true）</p>
+<a name="ulhz001-clusterd"></a><a name="ulhz001-clusterd"></a><ul id="ulhz001-clusterd"><li>true：启用。</li><li>false：禁用。</li></ul>
 </td>
 </tr>
-<tr id="rowhz003"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz003"><a name="phz003"></a><a name="phz003"></a>--tls-cert-file</p>
+<tr id="rowhz002-clusterd"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz002-clusterd"><a name="phz002-clusterd"></a><a name="phz002-clusterd"></a>--healthz-address</p>
 </td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz003b"><a name="phz003b"></a><a name="phz003b"></a>string</p>
+<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz002b-clusterd"><a name="phz002b-clusterd"></a><a name="phz002b-clusterd"></a>string</p>
 </td>
-<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz003c"><a name="phz003c"></a><a name="phz003c"></a>""</p>
+<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz002c-clusterd"><a name="phz002c-clusterd"></a><a name="phz002c-clusterd"></a>11251</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz003d"><a name="phz003d"></a><a name="phz003d"></a>HTTPS证书文件路径。为空则使用HTTP协议。与--tls-private-key-file必须同时配置或同时为空。配置方法及安全注意事项请参见<a href="../../../07_references/security_hardening.md#健康探针安全加固">健康探针安全加固</a>。</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz002d-clusterd"><a name="phz002d-clusterd"></a><a name="phz002d-clusterd"></a>健康检查服务侦听端口号，取值范围为1025~65535。K8s部署时由组件YAML配置为11253。若指定端口被占用，组件启动失败。</p>
 </td>
 </tr>
-<tr id="rowhz004"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz004"><a name="phz004"></a><a name="phz004"></a>--tls-private-key-file</p>
+<tr id="rowhz003-clusterd"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz003-clusterd"><a name="phz003-clusterd"></a><a name="phz003-clusterd"></a>--tls-cert-file</p>
 </td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz004b"><a name="phz004b"></a><a name="phz004b"></a>string</p>
+<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz003b-clusterd"><a name="phz003b-clusterd"></a><a name="phz003b-clusterd"></a>string</p>
 </td>
-<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz004c"><a name="phz004c"></a><a name="phz004c"></a>""</p>
+<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz003c-clusterd"><a name="phz003c-clusterd"></a><a name="phz003c-clusterd"></a>""</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz004d"><a name="phz004d"></a><a name="phz004d"></a>HTTPS私钥文件路径。为空则使用HTTP协议。与--tls-cert-file必须同时配置或同时为空。</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz003d-clusterd"><a name="phz003d-clusterd"></a><a name="phz003d-clusterd"></a>HTTPS证书文件路径。为空则使用HTTP协议。与--tls-private-key-file必须同时配置或同时为空。配置方法及安全注意事项请参见<a href="../../../07_references/security_hardening.md#健康探针安全加固">健康探针安全加固</a>。</p>
+</td>
+</tr>
+<tr id="rowhz004-clusterd"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz004-clusterd"><a name="phz004-clusterd"></a><a name="phz004-clusterd"></a>--tls-private-key-file</p>
+</td>
+<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz004b-clusterd"><a name="phz004b-clusterd"></a><a name="phz004b-clusterd"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz004c-clusterd"><a name="phz004c-clusterd"></a><a name="phz004c-clusterd"></a>""</p>
+</td>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz004d-clusterd"><a name="phz004d-clusterd"></a><a name="phz004d-clusterd"></a>HTTPS私钥文件路径。为空则使用HTTP协议。与--tls-cert-file必须同时配置或同时为空。</p>
 </td>
 </tr>
 <tr id="row2615144813463"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="p1061594884617"><a name="p1061594884617"></a><a name="p1061594884617"></a>-h或者-help</p>
