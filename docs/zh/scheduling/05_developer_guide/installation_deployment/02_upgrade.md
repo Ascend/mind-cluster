@@ -510,7 +510,10 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
     mindx-dl   noded- m4j4r  1/1  Running 0     1m
     ```
 
-## Elastic Agent升级TaskD<a name="ZH-CN_TOPIC_0000002515202401"></a>
+## Elastic Agent（已日落）升级TaskD<a name="ZH-CN_TOPIC_0000002515202401"></a>
+
+>[!NOTE]
+>Elastic Agent 组件已在 7.3.0 版本日落，本章节仅作为历史迁移参考保留。如当前环境已不再使用 Elastic Agent，可跳过本章节。
 
 Elastic Agent组件已经日落，本章节提供将Elastic Agent组件升级为TaskD组件的操作指导。
 

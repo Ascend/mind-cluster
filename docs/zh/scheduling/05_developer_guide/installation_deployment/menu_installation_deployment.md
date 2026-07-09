@@ -11,7 +11,7 @@
   - [Infer Operator](./manual_installation/07_infer_operator.md)
   - [Ascend Operator](./manual_installation/08_ascend_operator.md)
   - [NodeD](./manual_installation/09_noded.md)
-  - [Resilience Controller](./manual_installation/10_resilience_controller.md)
+  - [Resilience Controller（已日落）](./manual_installation/10_resilience_controller.md)
   - [Container Manager](./manual_installation/11_container-manager.md)
   - [K8s RDMA Shared Dev Plugin](./manual_installation/12_k8s_rdma_shared_dev_plugin.md)
 - [升级](02_upgrade.md)

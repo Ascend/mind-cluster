@@ -1,4 +1,4 @@
-﻿# 手动安装
+# 手动安装
 
 - [获取软件包](./00_obtaining_software_packages.md)
 - [安装前准备](./01_preparing_for_installation.md)
@@ -10,6 +10,6 @@
 - [Infer Operator](./07_infer_operator.md)
 - [Ascend Operator](./08_ascend_operator.md)
 - [NodeD](./09_noded.md)
-- [Resilience Controller](./10_resilience_controller.md)
+- [Resilience Controller（已日落）](./10_resilience_controller.md)
 - [Container Manager](./11_container-manager.md)
 - [K8s RDMA Shared Dev Plugin](./12_k8s_rdma_shared_dev_plugin.md)

@@ -1,4 +1,7 @@
-﻿# Resilience Controller<a name="ZH-CN_TOPIC_0000002511426375"></a>
+# Resilience Controller<a name="ZH-CN_TOPIC_0000002511426375"></a>
+
+>[!NOTE]
+>Resilience Controller 组件已在 7.3.0 版本日落，本章节内容仅供参考。如需使用，请获取 7.3.0 之前版本的软件包。
 
 ## （可选）导入证书和KubeConfig<a name="ZH-CN_TOPIC_0000002479226468"></a>
 
@@ -143,10 +146,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="19.24807519248075%" headers="mcps1.2.5.1.2 "><p id="p7528357125019"><a name="p7528357125019"></a><a name="p7528357125019"></a>/etc/mindx-dl/</p>
 </td>
-<td class="cellrowborder" rowspan="2" valign="top" width="11.08889111088891%" headers="mcps1.2.5.1.3 "><p id="p1528457195011"><a name="p1528457195011"></a><a name="p1528457195011"></a>hwMindX:hwMindX</p>
-<p id="p17618514195"><a name="p17618514195"></a><a name="p17618514195"></a></p>
-<p id="p27716513196"><a name="p27716513196"></a><a name="p27716513196"></a></p>
-<p id="p1532775483511"><a name="p1532775483511"></a><a name="p1532775483511"></a></p>
+<td class="cellrowborder" valign="top" width="11.08889111088891%" headers="mcps1.2.5.1.3 "><p id="p1528457195011"><a name="p1528457195011"></a><a name="p1528457195011"></a>hwMindX:hwMindX</p>
 </td>
 <td class="cellrowborder" valign="top" width="52.064793520647946%" headers="mcps1.2.5.1.4 "><p id="p9528857175013"><a name="p9528857175013"></a><a name="p9528857175013"></a>kmc_primary_store/master.ks：自动生成的主密钥，请勿删除。</p>
 <p id="p1152811579509"><a name="p1152811579509"></a><a name="p1152811579509"></a>.config/backup.ks：自动生成的备份密钥，请勿删除。</p>
@@ -156,7 +156,9 @@
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1977073944518"><a name="p1977073944518"></a><a name="p1977073944518"></a>/etc/mindx-dl/resilience-controller/</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p176150132191"><a name="p176150132191"></a><a name="p176150132191"></a>.config/config6：导入的加密<span id="ph10615131313194"><a name="ph10615131313194"></a><a name="ph10615131313194"></a>K8s</span> KubeConfig文件，连接<span id="ph761518136190"><a name="ph761518136190"></a><a name="ph761518136190"></a>K8s</span>使用。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1528457195011-resilience"><a name="p1528457195011-resilience"></a><a name="p1528457195011-resilience"></a>hwMindX:hwMindX</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.4 "><p id="p176150132191"><a name="p176150132191"></a><a name="p176150132191"></a>.config/config6：导入的加密<span id="ph10615131313194"><a name="ph10615131313194"></a><a name="ph10615131313194"></a>K8s</span> KubeConfig文件，连接<span id="ph761518136190"><a name="ph761518136190"></a><a name="ph761518136190"></a>K8s</span>使用。</p>
 <p id="p16156132195"><a name="p16156132195"></a><a name="p16156132195"></a>.config6：导入的加密<span id="ph761517138198"><a name="ph761517138198"></a><a name="ph761517138198"></a>K8s</span> KubeConfig文件备份。</p>
 </td>
 </tr>
