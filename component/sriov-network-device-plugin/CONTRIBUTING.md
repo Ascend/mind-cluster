@@ -5,15 +5,15 @@
 * [Coding Style](#coding-style)
 * [Format of the patch](#format-of-the-patch)
 * [Contributing Code](#contributing-code)
-* [Tools](#Tools)
+* [Tools](#tools)
 
 ## Meetings
+
 Join us for project discussions at _K8s Network & Resource management_ meetings.
 The meetings take place on a weekly basis on Monday and Tuesday in alternating weeks:
 
 * Time: 15:00 - 16:00 GMT / 10:00-11:00 ET /  07:00-08:00 PST  every other Monday
 * Time: 14:00 - 15:00 GMT / 09:00-10:00 ET /  06:00-07:00 PST on every other Tuesday
-
 
 * [Meeting notes and agenda](https://docs.google.com/document/d/1sJQMHbxZdeYJPgAWK1aSt6yzZ4K_8es7woVIrwinVwI/edit?usp=sharing)
 * [Zoom channel](https://zoom.us/j/2392609689?pwd=K1R4ZEQyWWJVSGV3V1pmVThLMlhqQT09)
@@ -32,7 +32,7 @@ Please follows the standard formatting recommendations and language idioms set o
 
 Each patch is expected to comply with the following format:
 
-```
+```text
 Change summary
 
 More detailed explanation of your changes: Why and how.
@@ -45,7 +45,7 @@ for some more good advices.
 
 For example:
 
-```
+```text
 Fix poorly named identifiers
 
 One identifier, fnname, in func.go was poorly named.  It has been renamed
@@ -67,18 +67,20 @@ Issues are discussed on a regular basis at _K8s Network & Resource management_ m
   * In order to ensure your PR can be reviewed in a timely manner, please keep PRs small
 
 Once you're ready to contribute code back to this repo, start with these steps:
+
 * Fork the appropriate sub-projects that are affected by your change.
 * Clone the fork to your machine:
 
-```
+```bash
 $ git clone https://github.com/k8snetworkplumbingwg/sriov-network-device-plugin.git
 ```
 
 * Create a topic branch with prefix `dev/` for your change and checkout that branch:
 
-```
+```bash
 $ git checkout -b dev/some-topic-branch
 ```
+
 * Make your changes to the code and add tests to cover contributed code.
 * Run `./build.sh` to validate it builds and will not break current functionality.
 * Commit your changes and push them to your fork.
@@ -86,8 +88,13 @@ $ git checkout -b dev/some-topic-branch
 * Contributors will review your pull request, suggest changes, run tests and eventually merge or close the request.
 
 > We encourage contributor to test SRIOV Network Device plugin with various NICs to check the compatibility.
->
+
+## Tools
+
+The project uses the Slack chat for communication.
+
 ## Contact Us
-- General channel on [NPWG](https://npwg-team.slack.com/) Slack. Request an invite to NPWG slack [here](https://intel-corp.herokuapp.com/).
+
+- General channel on [NPWG](https://npwg-team.slack.com/) Slack. Request an invite to NPWG slack [here](https://intel.enterprise.slack.com/).
 - Feel free to post GitHub issues and PRs for review
 - Attend either K8s Network & Resource mangement or Additional K8s Network & Resource management meetings

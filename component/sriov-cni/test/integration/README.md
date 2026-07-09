@@ -52,4 +52,4 @@ graph TD
     linkStyle 1,4,5,6 stroke:green,stroke-width:4px
 ```
 
-Test cases in this directory are based on the https://github.com/pgrange/bash_unit framework.
+Test cases in this directory are based on the [bash_unit](https://github.com/pgrange/bash_unit) framework.
