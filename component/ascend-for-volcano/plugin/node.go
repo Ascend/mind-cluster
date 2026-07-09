@@ -536,7 +536,16 @@ func (sHandle *ScheduleHandler) getNeedInitNodeList(ssn *framework.Session) []*a
 		}
 		nodeList = append(nodeList, api.NewNodeInfo(vNode))
 	}
-	return append(nodeList, ssn.NodeList...)
+
+	for _, node := range ssn.NodeList {
+		if !util.IsNodeReady(node.Node) {
+			klog.V(util.LogWarningLev).Infof("node <%s> is real notready", node.Name)
+			continue
+		}
+		nodeList = append(nodeList, node)
+	}
+
+	return nodeList
 }
 
 func (sHandle *ScheduleHandler) initNodesFromSsn(nodeList []*api.NodeInfo) {
