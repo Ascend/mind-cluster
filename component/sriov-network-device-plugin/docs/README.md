@@ -1,4 +1,5 @@
 # Additional documentation
+
 This page contains supplimentary documention that users may find useful for various use-cases with SR-IOV Network Device Plugin.
 
 * [Running DPDK application in Kubernetes](dpdk/)
@@ -8,4 +9,4 @@ This page contains supplimentary documention that users may find useful for vari
 * [SR-IOV Network Device Plugin with DDP](ddp/)
 * [Using node specific config file for running device plugin DaemonSet](config-file)
 * [Using vDPA devices in Kubernetes](vdpa/)
-* [SR-IOV Network Device Plugin with Scalable Functions](scalable-functions)
+* [SR-IOV Network Device Plugin with Scalable Functions](subfunctions/)

@@ -5,11 +5,13 @@ The below shows a method to create a pod with 2 SR-IOV interfaces bonded into a 
 This style of configuration can be used to create workloads with high availability - i.e. with two VFs from different PFs connected to the pod. Note that Bond CNI will only work with interfaces utilising the kernel driver. Workloads that leverage userspace drivers on VFs - such as DPDK workloads - are not covered by this guide or by the Bond CNI.
 
 ## Prerequisites
+
 This guide assumes the quick set up of the repo has been followed. That is that Multus, SRIOV CNI and SRIOV Network Device Plugin have been installed.
 
 Additionally at least two SRIOV Virtual Functions of the type 'intel_sriov_netdevice' should be available on a target node.
 
 ## Installing Bond CNI
+
 In order to get Bond CNI working in your cluster first clone the repo:
 
 `git clone https://github.com/intel/bond-cni`
@@ -27,6 +29,7 @@ For each additional host in the cluster run:
 ``scp bin/bond <USER>@<HOST_IP>:/opt/cni/bin``
 
 ## Network Attachment Definitions
+
 Next create the network attachment definitions. The SRIOV CRD is similar to the one in the main repo - but it omits the IP address management as that will be handled by the bond interface. Note that this isn't obligatory but is standard when bonding interfaces.
 
 ``kubectl apply -f sriov-net.yaml``
@@ -36,8 +39,10 @@ Next create the bonded network attachment definition:
 ``kubectl apply -f bond-crd.yaml``
 
 ### Pod deployment
+
 With the above network definitions in place the following pod should deploy to a node with 2 SRIOV interfaces available and set up the SRIOV and Bond interfaces correctly.
-```
+
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -78,7 +83,7 @@ In the above example both VFs used in the bond come from the same VF pool. This 
 
 Once the pod is up and running the command `kubectl exec -it test-pod -- ip a` should result in output like:
 
-```
+```text
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
     inet 127.0.0.1/8 scope host lo

@@ -1,4 +1,5 @@
 # Using vDPA devices in Kubernetes
+
 ## Introduction to vDPA
 vDPA (Virtio DataPath Acceleration) is a technology that enables the acceleration
 of virtIO devices while allowing the implementations of such devices
@@ -42,29 +43,40 @@ Note that vDPA and RDMA are mutually exclusive modes.
 * iproute >= 5.14
 
 ## vDPA device creation
+
 Insert the vDPA kernel modules if not present:
 
-    $ modprobe vdpa
-    $ modprobe virtio-vdpa
-    $ modprobe vhost-vdpa
+```bash
+$ modprobe vdpa
+$ modprobe virtio-vdpa
+$ modprobe vhost-vdpa
+```
 
 Create a vDPA device using the `vdpa` management tool integrated into iproute2, e.g:
 
-    $ vdpa mgmtdev show
-    pci/0000:65:00.2:
-      supported_classes net
-    $ vdpa dev add name vdpa2 mgmtdev pci/0000:65:00.2
-    $ vdpa dev list
-    vdpa2: type network mgmtdev pci/0000:65:00.2 vendor_id 5555 max_vqs 16 max_vq_size 256
+```bash
+$ vdpa mgmtdev show
+pci/0000:65:00.2:
+  supported_classes net
+$ vdpa dev add name vdpa2 mgmtdev pci/0000:65:00.2
+$ vdpa dev list
+vdpa2: type network mgmtdev pci/0000:65:00.2 vendor_id 5555 max_vqs 16 max_vq_size 256
+```
 
 ## Bind the desired vDPA driver
+
 The vDPA bus works similar to the pci bus. To unbind a driver from a device, run:
 
-    echo ${DEV_NAME} > /sys/bus/vdpa/devices/${DEV_NAME}/driver/unbind
+```bash
+echo ${DEV_NAME} > /sys/bus/vdpa/devices/${DEV_NAME}/driver/unbind
+```
 
 To bind a driver to a device, run:
 
-    echo ${DEV_NAME} > /sys/bus/vdpa/drivers/${DRIVER_NAME}/bind
+```bash
+echo ${DEV_NAME} > /sys/bus/vdpa/drivers/${DRIVER_NAME}/bind
+```
 
 ## Configure the SR-IOV Device Plugin
+
 See the sample [configMap](configMap.yaml) for an example of how to configure a vDPA device.

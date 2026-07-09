@@ -8,12 +8,12 @@
 * [Tools](#Tools)
 
 ## Meetings
+
 Join us for project discussios at _K8s Network & Resource management_ meetings.
 The meetings take place on a weekly basis on Monday and Tuesday in alternating weeks:
 
 * Time: 15:00 - 16:00 GMT / 10:00-11:00 ET /  07:00-08:00 PST  every other Monday
 * Time: 14:00 - 15:00 GMT / 09:00-10:00 ET / 06:00-07:00 PST on every other Tuesday
-
 
 * [Meeting notes and agenda](https://docs.google.com/document/d/1sJQMHbxZdeYJPgAWK1aSt6yzZ4K_8es7woVIrwinVwI/edit?usp=sharing)
 * [Zoom channel](https://zoom.us/j/2392609689?pwd=K1R4ZEQyWWJVSGV3V1pmVThLMlhqQT09)
@@ -32,7 +32,7 @@ Please follows the standard formatting recommendations and language idioms set o
 
 Each patch is expected to comply with the following format:
 
-```
+```text
 Change summary
 
 More detailed explanation of your changes: Why and how.
@@ -45,7 +45,7 @@ for some more good advices.
 
 For example:
 
-```
+```text
 Fix poorly named identifiers
 
 One identifier, fnname, in func.go was poorly named.  It has been renamed
@@ -67,18 +67,20 @@ Issues are discussed on a regular basis at _K8s Network & Resource management_ m
   * In order to ensure your PR can be reviewed in a timely manner, please keep PRs small
 
 Once you're ready to contribute code back to this repo, start with these steps:
+
 * Fork the appropriate sub-projects that are affected by your change.
 * Clone the fork to your machine:
 
-```
+```bash
 $ git clone https://github.com/k8snetworkplumbingwg/sriov-cni.git
 ```
 
 * Create a topic branch with prefix `dev/` for your change and checkout that branch:
 
-```
+```bash
 $ git checkout -b dev/some-topic-branch
 ```
+
 * Make your changes to the code and add tests to cover contributed code.
 * Run `make build` to build the project.
 * Run `make test` to ensure unit tests are passing and current functionality is not broken.
@@ -88,9 +90,11 @@ $ git checkout -b dev/some-topic-branch
 
 > We encourage contributor to test SRIOV CNI with various NICs to check the compatibility.
 > `cnitool` is a great way to test changes to sriov CNI in isolation.
-> More information on cnitool can be found [here](https://github.com/containernetworking/cni/tree/master/cnitool)
+> More information on cnitool can be found in the [CNITool documentation](https://github.com/containernetworking/cni/tree/master/cnitool)
 
 ## Tools
+
 The project uses the Slack chat:
-- Slack: #[Intel-SDSG-slack](https://intel-corp.herokuapp.com/) channel on slack
+
+- Slack: #[Intel-SDSG-slack](https://intel.enterprise.slack.com/) channel on slack
 - Please contact contributors for issues and PR reviews.

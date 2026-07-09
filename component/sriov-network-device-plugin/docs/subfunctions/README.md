@@ -13,14 +13,16 @@ To use a subfunction, 3 steps setup sequence is followed:
 Subfunction management is done using devlink port user interface. User performs setup on the subfunction management device.
 
 ### 1. Create
+
 A subfunction is created using a devlink port interface. A user adds the subfunction by adding a devlink port of subfunction flavour. The devlink kernel code calls down to subfunction management driver (devlink ops) and asks it to create a subfunction devlink port. Driver then instantiates the subfunction port and any associated objects such as health reporters and representor netdevice.
 
 ### 2. Configure
+
 A subfunction devlink port is created but it is not active yet. That means the entities are created on devlink side, the e-switch port representor is created, but the subfunction device itself is not created. A user might use e-switch port representor to do settings, putting it into bridge, adding TC rules, etc. A user might as well configure the hardware address (such as MAC address) of the subfunction while subfunction is inactive.
 
 ### 3. Deploy
-Once a subfunction is configured, user must activate it to use it. Upon activation, subfunction management driver asks the subfunction management device to instantiate the subfunction device on particular PCI function. A subfunction device is created on [Auxiliary Bus](https://www.kernel.org/doc/html/latest/driver-api/auxiliary_bus.html). At this point a matching subfunction driver binds to the subfunction’s auxiliary device.
 
+Once a subfunction is configured, user must activate it to use it. Upon activation, subfunction management driver asks the subfunction management device to instantiate the subfunction device on particular PCI function. A subfunction device is created on [Auxiliary Bus](https://www.kernel.org/doc/html/latest/driver-api/auxiliary_bus.html). At this point a matching subfunction driver binds to the subfunction's auxiliary device.
 
 ## Nvidia-Mellanox Scalable Functions
 

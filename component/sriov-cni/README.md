@@ -7,12 +7,13 @@
          * [Basic configuration parameters](#basic-configuration-parameters)
          * [Example configurations](#example-configurations)
             * [Kernel driver config](#kernel-driver-config)
-            * [Advanced kernel driver config](#advanced-kernel-driver-config)
+            * [Extended kernel driver config](#extended-kernel-driver-config)
             * [DPDK userspace driver config](#dpdk-userspace-driver-config)
          * [Advanced configuration](#advanced-configuration)
       * [Contributing](#contributing)
 
 # SR-IOV CNI plugin
+
 This plugin enables the configuration and usage of SR-IOV VF networks in containers and orchestrators like Kubernetes.
 
 Network Interface Cards (NICs) with [SR-IOV](http://blog.scottlowe.org/2009/12/02/what-is-sr-iov/) capabilities are managed through physical functions (PFs) and virtual functions (VFs). A PF is used by the host and usually represents a single NIC port. VF configurations are applied through the PF. With SR-IOV CNI each VF can be treated as a separate network interface, assigned to a container, and configured with it's own MAC, VLAN, IP and more.
@@ -25,13 +26,14 @@ This plugin uses Go modules for dependency management and requires Go 1.17+ to b
 
 To build the plugin binary:
 
-``
+```bash
 make
-``
+```
 
 Upon successful build the plugin binary will be available in `build/sriov`.
 
 ## Kubernetes Quick Start
+
 A full guide on orchestrating SR-IOV virtual functions in Kubernetes can be found at the [SR-IOV Device Plugin project.](https://github.com/k8snetworkplumbingwg/sriov-network-device-plugin#quick-start)
 
 Creating VFs is outside the scope of the SR-IOV CNI plugin. [More information about allocating VFs on different NICs can be found here](https://github.com/k8snetworkplumbingwg/sriov-network-device-plugin/blob/master/docs/vf-setup.md)
@@ -42,8 +44,8 @@ To deploy SR-IOV CNI by itself on a Kubernetes 1.16+ cluster:
 
 **Note** The above deployment is not sufficient to manage and configure SR-IOV virtual functions. [See the full orchestration guide for more information.](https://github.com/k8snetworkplumbingwg/sriov-network-device-plugin#sr-iov-network-device-plugin)
 
-
 ## Usage
+
 SR-IOV CNI networks are commonly configured using Multus and SR-IOV Device Plugin using Network Attachment Definitions. More information about configuring Kubernetes networks using this pattern can be found in the [Multus configuration reference document.](https://github.com/k8snetworkplumbingwg/multus-cni/blob/master/docs/configuration.md)
 
 A Network Attachment Definition for SR-IOV CNI takes the form:
@@ -83,9 +85,11 @@ The following parameters are generic parameters which are not specific to the SR
 * `ipam` (optional) : the configuration of the IP Address Management plugin. Required to designate an IP for a kernel interface.
 
 ### Example configurations
+
 The following examples show the config needed to set up basic SR-IOV networking in a container. Each of the json config objects below can be placed in the `.spec.config` field of a Network Attachment Definition to integrate with Multus.
 
 #### Kernel driver config
+
 This is the minimum configuration for a working kernel driver interface using an SR-IOV Virtual Function. It applies an IP address using the host-local IPAM plugin in the range of the subnet provided.
 
 ```json
@@ -105,6 +109,7 @@ This is the minimum configuration for a working kernel driver interface using an
 ```
 
 #### Extended kernel driver config
+
 This configuration sets a number of extra parameters that may be key for SR-IOV networks including a vlan tag, disabled spoof checking and enabled trust mode. These parameters are commonly set in more advanced SR-IOV VF based networks.
 
 ```json
@@ -144,10 +149,10 @@ The below config will configure a VF using a userspace driver (uio/vfio) for use
 **Note** When VLAN is not specified in the Network-Attachment-Definition, or when it is given a value of 0,
 VFs connected to this network will have no vlan tag.
 
-
 ### Advanced Configuration
 
 SR-IOV CNI allows the setting of other SR-IOV options such as link-state and quality of service parameters. To learn more about how these parameters are set consult the [SR-IOV CNI configuration reference guide](docs/configuration-reference.md)
 
 ## Contributing
+
 To report a bug or request a feature, open an issue on this repo using one of the available templates.

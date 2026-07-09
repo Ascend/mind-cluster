@@ -5,26 +5,27 @@
 In virtual deployments of Kubernetes where the underlying virtualization platform does not support a virtualized iommu, the VFIO driver needs to be loaded with a special
 flag.  The file **/etc/modprobe.d/vfio-noiommu.conf** must be created with the contents:
 
-````
+```bash
 # cat /etc/modprobe.d/vfio-noiommu.conf
 options vfio enable_unsafe_noiommu_mode=1
-````
+```
 
 With the above option, vfio devices will be created with the form on the virtual host (VM):
 
-````
+```text
 /dev/vfio/noiommu-0
 /dev/vfio/noiommu-1
 ...
-````
+```
 
 The presence of noiommu-* devices will automatically be detected by the sriov-device-plugin.  The noiommu-N devices will be mounted **inside** the pod in their expected/normal location;
 
-````
+```text
 /dev/vfio/0
 /dev/vfio/1
 ...
-````
+```
+
 It should be noted that with no IOMMU, there is no way to ensure safe use of DMA.  When *enable_unsafe_noiommu_mode* is used, CAP_SYS_RAWIO privileges are necessary to work with groups and
 containers using this mode.
 

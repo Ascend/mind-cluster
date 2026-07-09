@@ -7,7 +7,7 @@ achieved by running the following steps:
 
 1. Generate configMap with node specific sections:
 
-```
+```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -21,7 +21,7 @@ data:
 
 2. Launch device plugin DaemonSet:
 
-```
+```yaml
 ---
 apiVersion: v1
 kind: ServiceAccount

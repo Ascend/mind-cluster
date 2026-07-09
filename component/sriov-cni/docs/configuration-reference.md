@@ -1,9 +1,9 @@
-## Configuration reference - SR-IOV CNI
+# Configuration reference - SR-IOV CNI
 
 The SR-IOV CNI configures networks through a CNI spec configuration object. In a Kubernetes cluster set up with Multus this object is most often delivered as a Network Attachment Definition.
 
-
 ### Parameters
+
 * `name` (string, required): the name of the network
 * `type` (string, required): "sriov"
 * `ipam` (dictionary, optional): IPAM configuration to be used for this network.
@@ -21,7 +21,6 @@ Setting this to 0 disables rate limiting.
 * `logLevel` (string, optional): either of panic, error, warning, info, debug with a default of info.
 * `logFile` (string, optional): path to file for log output. By default, this will log to stderr. Logging to stderr
 means that the logs will show up in crio logs (in the journal in most configurations) and in multus pod logs.
-
 
 An SR-IOV CNI config with each field filled out looks like:
 
@@ -49,7 +48,7 @@ An SR-IOV CNI config with each field filled out looks like:
 
 The SR-IOV CNI accepts a MAC address when passed as a runtime configuration - that is as part of a Kubernetes Pod spec. An example pod with a runtime configuration is:
 
-```
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:

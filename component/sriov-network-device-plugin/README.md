@@ -2,6 +2,7 @@
 # SR-IOV Network Device Plugin for Kubernetes
 
 [![Travis CI](https://travis-ci.org/k8snetworkplumbingwg/sriov-network-device-plugin.svg?branch=master)](https://travis-ci.org/k8snetworkplumbingwg/sriov-network-device-plugin/builds) [![Go Report Card](https://goreportcard.com/badge/github.com/k8snetworkplumbingwg/sriov-network-device-plugin)](https://goreportcard.com/report/github.com/k8snetworkplumbingwg/sriov-network-device-plugin) [![Weekly minutes](https://img.shields.io/badge/Weekly%20Meeting%20Minutes-Mon%203pm%20GMT-blue.svg?style=plastic)](https://docs.google.com/document/d/1sJQMHbxZdeYJPgAWK1aSt6yzZ4K_8es7woVIrwinVwI)
+
 [![Coverage Status](https://coveralls.io/repos/github/k8snetworkplumbingwg/sriov-network-device-plugin/badge.svg?branch=master)](https://coveralls.io/github/k8snetworkplumbingwg/sriov-network-device-plugin?branch=master)
 
 ## Table of Contents
@@ -12,7 +13,7 @@
   - [Features](#features)
     - [Supported SR-IOV NICs](#supported-sr-iov-nics)
   - [Quick Start](#quick-start)
-    - [Creating SR-IOV Virtual Functions](#creating-sr-iov-virtual-functions)
+    - [Creating SR-IOV Virtual Functions](docs/vf-setup.md)
     - [Install SR-IOV CNI](#install-sr-iov-cni)
     - [Get SR-IOV Network Device Plugin container image](#get-sr-iov-network-device-plugin-container-image)
     - [Install SR-IOV Network Device Plugin](#install-sr-iov-network-device-plugin)
@@ -39,6 +40,7 @@
 
 The SR-IOV Network Device Plugin is Kubernetes device plugin for discovering and advertising networking resources in the
 form of:
+
 - SR-IOV virtual functions (VFs)
 - PCI physical functions (PFs)
 - Auxiliary network devices, in particular Subfunctions (SFs)
@@ -60,9 +62,7 @@ which are available on a Kubernetes host
 To deploy workloads with SR-IOV VF, Auxiliary network devices or PCI PF, this plugin needs to work together with the following two CNI components:
 
 - Any CNI meta plugin supporting Device Plugin based network provisioning (Multus CNI, or DANM)
-
-  - Retrieves allocated network device information of a Pod
-
+- Retrieves allocated network device information of a Pod
 - A CNI capable of consuming the network device allocated to the Pod
   - SR-IOV CNI (for SR-IOV VFs)
     - During Pod creation, plumbs allocated SR-IOV VF to a Pods network namespace using VF information given by the meta plugin
@@ -273,7 +273,7 @@ This plugin creates device plugin endpoints based on the configurations given in
             "devices": ["154c", "10ed", "1889"],
             "drivers": ["i40evf", "ixgbevf", "iavf"]
           }
-	}
+        }
     ]
 }
 ```
@@ -294,23 +294,29 @@ Note: "resourceName" must be unique only in the scope of a given prefix, includi
 #### Device selectors
 
 The "selectors" field accepts both a single object and a list of selector objects. While both formats are supported, the list syntax is preferred. When using the list syntax, each selector object is evaluated in the order present in the list. For example, a single object would look like:
+
 ```json
 "selectors": {"vendors": ["8086"],"devices": ["154c"]}
 ```
+
 and the list syntax would look like:
+
 ```json
 "selectors": [{"vendors": ["8086"],"devices": ["154c"]}, {"vendors": ["8086"], "needVhostNet": true}]
 ```
 
 The list syntax example specifies two selector objects in the list. In this example, all devices specified by the first selector object have vendor ID 8086 and device ID 154c. The second selector object specifies all devices with vendor ID 8086. Since the selector objects are processed in the specified order, devices with vendor ID 8086 and device ID 154c would not have the `needVhostNet: true` applied to them. Contrast this with another similar looking example:
+
 ```json
 "selectors": [{"vendors": ["8086"], "needVhostNet": true}, {"vendors": ["8086"],"devices": ["154c"]}]
 ```
+
 In this latter example, the order of the selector objects has been switched. Since all devices that are specified by the second object are also specified by the first object, this makes the second selector object ineffective.
 
 A given selector object comprises of "selectors".  The "deviceType" value determines which selectors are supported for that device. Each selector is evaluated in order as listed in selector tables below.
 
 #### Accelerator devices selectors
+
 These selectors are applicable when "deviceType" is "accelerator".
 
 |     Field      | Required |                Description                |         Type/Defaults         |       Example/Accepted values       |
@@ -321,8 +327,8 @@ These selectors are applicable when "deviceType" is "accelerator".
 | "pciAddresses" | N        | Target device's pci address as string     | `string` list Default: `null` | "pciAddresses": ["0000:03:02.0"]    |
 | "acpiIndexes"  | N        | Target device's acpi index as string      | `string` list Default: `null` | "acpiIndexes": ["101"]              |
 
-
 #### Network devices selectors
+
 These selectors are applicable when "deviceType" is "netDevice" (note: this is default)
 
 
@@ -342,8 +348,8 @@ These selectors are applicable when "deviceType" is "netDevice" (note: this is d
 | "needVhostNet" | N        | Share /dev/vhost-net and /dev/net/tun                                    | `bool` values `true` or `false` Default: `false`    | "needVhostNet": `true`                                                                           |
 | "vdpaType"     | N        | The type of vDPA device (virtio, vhost). Incompatible with isRdma = true | `string` values `vhost` or `virtio` Default: `null` | "vdpaType": "vhost"                                                                              |
 
-
 #### Auxiliary network devices selectors
+
 These selectors are applicable when "deviceType" is "auxNetDevice".
 
 |     Field     | Required |                                                              Description                                                               |                  Type/Defaults                   |                                     Example/Accepted values                                      |
@@ -365,17 +371,19 @@ These selectors are applicable when "deviceType" is "auxNetDevice".
 This field defines a method to add information as part of the environment variable the sriov-network-device-plugin injects to the container.
 
 Examples:
-```
+
+```json
 "additionalInfo": {
    "*": {
      "token": "3e49019f-412f-4f02-824e-4cd195944205"
    }
 }
 ```
+
 The '*' is a special key telling the device plugin to inject this info to all the devices matching the selector.
 you can also specify a specific pci address if you want to override or add more information to a specific device
 
-```
+```json
 "additionalInfo": {
    "*": {
      "token": "3e49019f-412f-4f02-824e-4cd195944205"
@@ -385,17 +393,23 @@ you can also specify a specific pci address if you want to override or add more 
     }
 
 }
+```
 
-output for pod allocating a different deviceID:
-{"0000:3b:02.6":{"extraInfo":{"token":"3e49019f-412f-4f02-824e-4cd195944205"}
+Output for pod allocating a different deviceID:
 
-output for pod allocating the specific deviceID:
-{"0000:86:00.0":{"extraInfo":{"token":"3e49019f-412f-4f02-824e-4cd195944205","additional-token": "6e7dc135-7a1c-456f-a008-c2cfb37997be"}
+```json
+{"0000:3b:02.6":{"extraInfo":{"token":"3e49019f-412f-4f02-824e-4cd195944205"}}
+```
+
+Output for pod allocating the specific deviceID:
+
+```json
+{"0000:86:00.0":{"extraInfo":{"token":"3e49019f-412f-4f02-824e-4cd195944205","additional-token": "6e7dc135-7a1c-456f-a008-c2cfb37997be"}}
 ```
 
 When having the same key for both the "*" and spefic deviceID variable the specific one will be taken
 
-```
+```json
 "additionalInfo": {
    "*": {
      "token": "original"
@@ -405,12 +419,18 @@ When having the same key for both the "*" and spefic deviceID variable the speci
     }
 
 }
+```
 
-output for pod allocating a different deviceID:
-{"0000:3b:02.6":{"extraInfo":{"token":"original"}
+Output for pod allocating a different deviceID:
 
-output for pod allocating the specific deviceID:
-{"0000:86:00.0":{"extraInfo":{"token":"specific"}
+```json
+{"0000:3b:02.6":{"extraInfo":{"token":"original"}}
+```
+
+Output for pod allocating the specific deviceID:
+
+```json
+{"0000:86:00.0":{"extraInfo":{"token":"specific"}}
 ```
 
 ### Command line arguments
@@ -464,15 +484,16 @@ The device plugin will initially discover all PCI network resources in the host 
 If a single device matches multiple selector objects, it will only be allocated to the first one.
 
 The "pfNames" and "rootDevices" selectors can be used to specify a list and/or range of VFs/SFs for a pool in the below format
-````
+
+```text
 "<PFName>#<SingleFunc>,<FirstFunc>-<LastFunc>,<SingleFunc>,<SingleFunc>,<FirstFunc>-<LastFunc>"
-````
+```
 
 Or
 
-````json
+```text
 "<RootDevice>#<SingleFunc>,<FirstFunc>-<LastFunc>,<SingleFunc>,<SingleFunc>,<FirstFunc>-<LastFunc>"
-````
+```
 
 Where:
 
@@ -687,7 +708,8 @@ There is also another environment variable that expose in json format more infor
 The variable name is `PCIDEVICE_<RESOUCE_NAME>_INFO` appended with full extended resource name (e.g. intel.com/sriov etc.) which is capitailzed and any special characters (".", "/") are replaced with underscore ("_")
 
 vfio device example:
-```
+
+```bash
 PCIDEVICE_INTEL_COM_DPDK_NIC_1_INFO={"0000:3b:02.6":{"vfio":{"vfio-dev-mount":"/dev/vfio/169","vfio-mount":"/dev/vfio/vfio"},"vhost":{"net-mount":"/dev/vhost-net","tun-mount":"/dev/net/tun"}}}
 
 # Adding additionalInfo field to the resource definition will add additional information for every device allocated. e.g:
@@ -730,6 +752,7 @@ $ DOCKERFILE=Dockerfile make image
 ```
 
 ## Container Device Interface
+
 To enable Container Device Interface (CDI) deployment please the see [CDI](deployments/cdi/README.md).
 
 ## Issues and Contributing

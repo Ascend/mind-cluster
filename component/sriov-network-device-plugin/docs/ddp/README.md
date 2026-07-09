@@ -1,4 +1,5 @@
 # SR-IOV Network Device Plugin with DDP
+
 Dynamic Device Personalizationi aka DDP allows dynamic reconfiguration of the packet processing pipeline of Intel® Ethernet 800/700 series to meet specific use-case needs for on-demand, adding new packet processing pipeline configuration *packages* to a network adapter at run time, without resetting or rebooting the server.
 
 The SR-IOV Network Device Plugin can be used to identify currently running DDP *packages*, allowing it to filter Virtual Functions (VFs) by their DDP package name.
@@ -6,52 +7,68 @@ The SR-IOV Network Device Plugin can be used to identify currently running DDP *
 In this documentation we will cover the kernel driver use-case only. DPDK configuration of DDP is out of scope.
 
 ## Dynamic Device Personalization for Intel® Ethernet Controller E810
+
 For Intel® Ethernet Controller E810, a DDP package can be loaded into the NIC using the ice kernel driver. Current device DDP state can be determined with DDPTool or devlink.
 
 ### Recommended pre-requisites for SR-IOV Network Device Plugin
+
  * Firmware: v2.22 or newer
  * Driver: ice v1.2.1 or newer
 
 ### Additional tools for debug
+
  * DDP NIC state detection tool(s): devlink mainline kernel 5.10 or newer, DDPTool 1.0.1.4 or newer
 
 ## Dynamic Device Personalization for Intel® Ethernet Controller X710
+
 For Intel® Ethernet Controller X710, a DDP package can be loaded into the NIC using i40e kernel driver and ethtool. Current device DDP state can be determined with DDPTool.
 
 ### Recommended pre-requisites for SR-IOV Network Device Plugin
+
  * Firmware: v8.30 or newer
  * Driver: i40e v2.7.26 or newer
 
 ### Additional tools for config/debug
+
  * Ethtool: RHEL* 7.5 or newer or Linux* kernel 4.0.1 or newer
  * DDP NIC state detection tool(s): DDPTool 1.0.0.0 or newer
 
 ## Short step by step configuration for E810 & X710 series NICs
+
 ### Install DDP packages
+
 #### Intel® Ethernet Controller E810
+
 Minimum verson of SRIOV Network Device Plugin needed is 3.3.2 to support DDP Profiles on E800 series NIC's.
 
 By default, ice driver will automatically load the default DDP package. If you require additional protocals beyond the default set available, download and extract the DDP package into your device firmware folder, typically `/lib/firmware/intel/ice/ddp`.
 Additional packages to suit your use-case can be found at [Intel® download center](https://downloadcenter.intel.com/search?keyword=Dynamic+Device+Personalization)
 
 #### Intel® Ethernet Controller X710
+
 Download and extract the desired DDP packages into your device firmware folder, typically `/lib/firmware/intel/i40e/ddp/`.
 Packages to suit your use-case can be found [Intel® download center](https://downloadcenter.intel.com/search?keyword=Dynamic+Device+Personalization)
 
 ### Load a DDP package
+
 #### Intel® Ethernet Controller E810
+
 ##### DDP package applied to a single physical card
+
 With E810, it is possible to load a different DDP package per physical card. Please see the ice driver readme for full details.
 You must place the DDP package in your NIC firmware folder (typically ```/lib/firmware/updates/intel/ice/ddp/```), append physical card serial number to DDP package name and reload all the physical function drivers on that physical card.
 
 ##### DDP package applied to all physical cards on a host
+
 Symbolically link your DDP package to the ```ice.pkg``` package in your NIC firmware folder (typically ```/lib/firmware/updates/intel/ice/ddp```/) and reload the ice driver.
 
 #### Intel® Ethernet Controller X710
+
 Please see the i40e driver readme for full details.
 Use Linux `ethtool` utility to load a DDP package into the controller. No reload of the i40e driver required.
 > Note: You can only load DDP package into a controller using only first Physical Function(PF0).
-```
+
+```bash
 $ ethtool -f enp2s0f0 gtp.pkgo 100
 ```
 
@@ -59,24 +76,27 @@ $ ethtool -f enp2s0f0 gtp.pkgo 100
 
 Create desired number of VFs using PF interfaces of the controllers.
 
-```
+```bash
 $ echo 2 > /sys/class/net/${PF_NAME}/device/sriov_numvfs
 
 ```
 
 ### Verify that correct package is loaded
+
 #### Intel® Ethernet Controller E810
+
 Display the active DDP package with devlink starting with kernel ver. 5.10 or newer. See kernel documentation for more details [here](https://www.kernel.org/doc/html/latest/networking/devlink/ice.html).
 You can also use another Linux utility for Intel® 800 Series called `ddptool` to query current DDP package information. This tool can be downloaded from sourceforge [here](https://sourceforge.net/projects/e1000/files/ddptool%20stable/) or GitHub [here](https://github.com/intel/ddp-tool).
 
 #### Intel® Ethernet Controller X710
+
 You can use Linux utility for Intel® 700 Series called `ddptool` to query current DDP package information. This tool can be downloaded from sourceforge [here](https://sourceforge.net/projects/e1000/files/ddptool%20stable/) or GitHub [here](https://github.com/intel/ddp-tool).
 
 ### Create resource config with DDP package selector
 
 Create ConfigMap for SR-IOV Network Device Plugin:
 
-```
+```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -120,10 +140,9 @@ data:
             }
         ]
     }
-
 ```
 
-```
+```bash
 $ kubectl create -f configMap.yaml
 ```
 
