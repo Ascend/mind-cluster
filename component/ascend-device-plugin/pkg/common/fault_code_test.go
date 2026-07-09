@@ -209,6 +209,13 @@ func TestGetFaultTypeByCode(t *testing.T) {
 			faultTypeCode = FaultTypeCode{SubHealthFaultCodes: faultCodes}
 			convey.So(GetFaultTypeByCode(faultCodes), convey.ShouldEqual, SubHealthFault)
 		})
+		convey.Convey("SubHealthFault priority higher than NotHandleFault", func() {
+			subHealthCode := int64(1)
+			notHandleCode := int64(2)
+			faultTypeCode = FaultTypeCode{SubHealthFaultCodes: []int64{subHealthCode},
+				NotHandleFaultCodes: []int64{notHandleCode}}
+			convey.So(GetFaultTypeByCode([]int64{notHandleCode, subHealthCode}), convey.ShouldEqual, SubHealthFault)
+		})
 	})
 }
 
