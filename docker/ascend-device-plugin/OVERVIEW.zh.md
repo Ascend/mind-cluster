@@ -40,7 +40,7 @@ Kubernetes 需要感知资源信息来实现对资源信息的调度。除基础
 
 Tag 遵循以下格式：
 
-```
+```text
 <版本>
 ```
 
@@ -85,17 +85,19 @@ Tag 遵循以下格式：
 
 1. 拉取官方镜像
 
-拉取昇腾镜像仓库提供的 Ascend Device Plugin 镜像，替换 {tag} 为实际版本号（推荐 v26.0.0）。
-```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:{tag}
-```
+   拉取昇腾镜像仓库提供的 Ascend Device Plugin 镜像，替换 {tag} 为实际版本号（推荐 v26.0.0）。
+
+   ```bash
+   docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:{tag}
+   ```
 
 2. 修改镜像标签
 
-为拉取的官方镜像重新打本地标签，统一本地镜像命名规范，方便后续运维管理。
-```bash
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:{tag} ascend-k8sdeviceplugin:{tag}
-```
+   为拉取的官方镜像重新打本地标签，统一本地镜像命名规范，方便后续运维管理。
+
+   ```bash
+   docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:{tag} ascend-k8sdeviceplugin:{tag}
+   ```
 
 ### 本地构建（可选）
 
@@ -103,64 +105,66 @@ docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:{ta
 
 1. 下载官方发布的组件安装包
 
-```shell
-wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip
-```
+   ```shell
+   wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip
+   ```
 
 2. 解压安装包至自定义目录
 
-```shell
-unzip Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64
-```
+   ```shell
+   unzip Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64
+   ```
 
 3. 进入解压后的工作目录
 
-```shell
-cd Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64
-```
+   ```shell
+   cd Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64
+   ```
 
 4. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
-```bash
-docker build --no-cache -t ascend-k8sdeviceplugin:v26.0.0 ./ -f Dockerfile
-```
+
+   ```bash
+   docker build --no-cache -t ascend-k8sdeviceplugin:v26.0.0 ./ -f Dockerfile
+   ```
 
 ### 部署 Ascend Device Plugin
 
 1. 给 Kubernetes 节点打标签
 
-根据节点搭载的昇腾处理器型号，为对应节点添加标签，用于集群调度匹配，替换 <node-name> 为实际节点名称。
-```bash
-# 示例：为 Ascend 910 节点打标签
-kubectl label nodes <node-name> accelerator=huawei-Ascend910
-```
+   根据节点搭载的昇腾处理器型号，为对应节点添加标签，用于集群调度匹配，替换 `<node-name>` 为实际节点名称。
+
+   ```bash
+   # 示例：为 Ascend 910 节点打标签
+   kubectl label nodes <node-name> accelerator=huawei-Ascend910
+   ```
 
 2. 启动 Ascend Device Plugin
 
-根据设备型号及调度需求选择对应的 YAML 资源文件，部署前需将 YAML 文件内的镜像 `{tag}` 替换为实际使用的镜像版本
+   根据设备型号及调度需求选择对应的 YAML 资源文件，部署前需将 YAML 文件内的镜像 `{tag}` 替换为实际使用的镜像版本
 
-```bash
-# 除了Atlas 200I SoC A1 核心板之外的产品上不使用Volcano的配置文件。
-kubectl apply -f device-plugin-{version}.yaml
+   ```bash
+   # 除了Atlas 200I SoC A1 核心板之外的产品上不使用Volcano的配置文件。
+   kubectl apply -f device-plugin-{version}.yaml
 
-# 除了Atlas 200I SoC A1 核心板之外的产品上使用Volcano的配置文件。
-kubectl apply -f device-plugin-volcano-{version}.yaml
-```
+   # 除了Atlas 200I SoC A1 核心板之外的产品上使用Volcano的配置文件。
+   kubectl apply -f device-plugin-volcano-{version}.yaml
+   ```
 
 3. 验证部署
 
-```bash
-kubectl get pods -A | grep device-plugin
-```
+   ```bash
+   kubectl get pods -A | grep device-plugin
+   ```
 
-预期结果：对应命名空间下的 device-plugin 相关 Pod 状态为 Running。
+   预期结果：对应命名空间下的 device-plugin 相关 Pod 状态为 Running。
 
 4. 检查节点资源
 
-```bash
-kubectl describe node <npu-node-name> | grep "huawei.com/Ascend"
-```
+   ```bash
+   kubectl describe node <npu-node-name> | grep "huawei.com/Ascend"
+   ```
 
-预期结果：可正常展示节点的 huawei.com/Ascend 资源容量与可分配资源数值。
+   预期结果：可正常展示节点的 huawei.com/Ascend 资源容量与可分配资源数值。
 
 ---
 

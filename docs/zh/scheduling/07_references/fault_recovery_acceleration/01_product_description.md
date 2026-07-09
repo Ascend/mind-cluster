@@ -38,7 +38,7 @@ MindIO TFT的关键点如下：
 
 - Controller模块：负责分布式任务的协同，内部维护状态机，状态机支持不同场景的流程控制；实时收集各个训练进程的训练状态，当训练发生异常后，结合异常类型，触发状态机运作，将状态机对应的Action发送到Processor模块执行。
 - Processor模块：负责与训练框架交互，获取训练进程的训练状态，向Controller汇报，同时负责执行Controller模块下发的对应Action动作。
-- Adaptor模块：负责完成训练框架对MindIO TTP、MindIO UCE、MindIO ARF特性的适配。目前MindIO TFT已完成对[MindSpeed-LLM](./03_usage_guidance.md#对接MindSpeed-LLM框架)训练框架的适配。对于其他训练框架，需用户参考并自行适配。
+- Adaptor模块：负责完成训练框架对MindIO TTP、MindIO UCE、MindIO ARF特性的适配。目前MindIO TFT已完成对[MindSpeed-LLM](./03_usage_guidance.md#对接mindspeed-llm框架)训练框架的适配。对于其他训练框架，需用户参考并自行适配。
 
 ## **部署形态**
 
