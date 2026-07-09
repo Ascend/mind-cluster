@@ -1,12 +1,12 @@
 # Ascend Docker Runtime
+
 # 组件介绍
+
 容器引擎插件（Ascend Docker，又叫昇腾容器）是CANN的基础组件，为所有的AI训练/推理作业提供Ascend NPU（昇腾处理器）容器化支持，使用户AI作业能够以Docker容器的方式平滑运行在昇腾设备之上，如图1-1所示。
 
 图1-1 Ascend Docker
 
 ![image](assets/20210329102949456.png)
-
-
 
 ## 设计简介
 
@@ -24,30 +24,37 @@ Ascend Docker在prestart-hook这个钩子函数中，对容器做了以下配置
 3.将Host上的CANN Runtime Library挂载到容器的namespace。
 
 # 编译Ascend-Docker-Runtime
+
 执行以下步骤进行编译
 
  1、下载master分支下的源码包，获得ascend-docker-runtime
- 
+
 示例：源码放在/home/mind-cluster/component/ascend-docker-runtime目录下
 
  2、下载tag为v1.1.10的安全函数库
+
 ````shell
 cd /home/mind-cluster/component/ascend-docker-runtime/platform
 git clone -b v1.1.10 https://gitee.com/openeuler/libboundscheck.git
 ````
 
 3、下载makeself
+
 ```shell
 cd ../opensource
 git clone -b openEuler-22.03-LTS https://gitee.com/src-openeuler/makeself.git
 tar -zxvf makeself/makeself-2.4.2.tar.gz
 ```
+
  4、编译
+
 ```shell
 cd ../build
 bash build.sh
 ```
+
 编译完成后，会在output文件夹看到相应的二进制run包
+
 ```shell
 root@#:/home/mind-cluster/component/ascend-docker-runtime/output# ll
 ...

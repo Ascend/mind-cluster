@@ -13,7 +13,7 @@
 
 **前提条件**
 
-在基础调度的任务YAML中，添加Job级别重调度的配置，配置说明可参考[配置Job级别重调度](../configuration/02_configuring_fault_handling_policies.md#zh-cn_topic_0000002098814658_section463203519254)，原理可参考[Job级别重调度](../01_solutions_principles.md#ZH-CN_TOPIC_0000002479226586)。
+在基础调度的任务YAML中，添加Job级别重调度的配置，配置说明可参考[配置Job级别重调度](configuration/02_configuring_fault_handling_policies.md#zh-cn_topic_0000002098814658_section463203519254)，原理可参考[Job级别重调度](01_solutions_principles.md#ZH-CN_TOPIC_0000002479226586)。
 
 **操作步骤**
 
@@ -24,6 +24,7 @@
    ```bash
    kubectl apply -f trjob.yaml
    ```
+
    >[!NOTE]
    > - 请将`trjob.yaml`替换为实际的任务YAML文件。
    > - 任务Pod的名称、命名空间会根据任务YAML中的配置而变化，以下出现的`taskmgr-npu-020-default-test-`和`trjob`都是示例值，实际值会根据任务YAML中的配置而变化。
@@ -41,18 +42,19 @@
       <pre codetype="bash">
       NAMESPACE        NAME                                            READY   STATUS    RESTARTS   AGE     IP                NODE                    NOMINATED NODE   READINESS GATES
       ...              ...                                             ...     ...       ...        ...     ...               ...                     ...              ...
-      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>    0          2s     xx.xx.xx.xx      node173                 <none>           <none>
-      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>    0          3s     xx.xx.xx.xx      localhost.localdomain   <none>           <none>
+      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>    0          2s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>    0          3s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
       </pre>
 
-
    2. 执行以下命令查看2个Pod的UID：
+
       ```bash
       kubectl get pod taskmgr-npu-020-default-test-0  -n trjob -o jsonpath='{.metadata.uid}'
       kubectl get pod taskmgr-npu-020-default-test-1  -n trjob -o jsonpath='{.metadata.uid}'
       ```
 
       回显示例如下：
+
       ```bash
       7286faf8-f029-450a-b302-5e6e94d4346c
       997add9e-6115-456c-9e8e-e05e4b70bb12
@@ -91,28 +93,28 @@
    该Job的2个Pod历史状态如下，观察加粗字段的变化可以发现该Job的2个Pod会经历Terminating→Pending→ContainerCreating→Running阶段，然后正常运行，表示Job重调度成功：
 
    <pre codetype="bash">
-   trjob            taskmgr-npu-020-default-test-0                  1/1     Running             0          2s      xx.xx.xx.xx       node173                 <none>           <none>
-   trjob            taskmgr-npu-020-default-test-1                  1/1     Running             0          3s      xx.xx.xx.xx       localhost.localdomain   <none>           <none>
+   trjob            taskmgr-npu-020-default-test-0                  1/1     Running             0          2s      xx.xx.xx.xx       node173                 &lt;none&gt;           &lt;none&gt;
+   trjob            taskmgr-npu-020-default-test-1                  1/1     Running             0          3s      xx.xx.xx.xx       localhost.localdomain   &lt;none&gt;           &lt;none&gt;
    // ===================== 注入故障 ======================
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      node173                 <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      node173                 <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      localhost.localdomain   <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          0s      <none>            <none>                  <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          1s      <none>            <none>                  <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          73s     xx.xx.xx.xx      localhost.localdomain   <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          85s     xx.xx.xx.xx      localhost.localdomain   <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          85s     xx.xx.xx.xx      localhost.localdomain   <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0          0s      <none>            <none>                  <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0          1s      <none>                 localhost.localdomain   <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          43s     <none>                 node173                 <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          43s     <none>                 node173                 <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0          1s      <none>                 localhost.localdomain   <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>ContainerCreating</strong>   0          43s     xx.xx.xx.xx      node173                 <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0          1s      xx.xx.xx.xx      localhost.localdomain   <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0          1s      xx.xx.xx.xx      localhost.localdomain   <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>ContainerCreating</strong>   0          43s     xx.xx.xx.xx      node173                 <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Running</strong>             0          43s     xx.xx.xx.xx      node173                 <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Running</strong>             0          2s      xx.xx.xx.xx      localhost.localdomain   <none>           <none>
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Terminating</strong>         0          43s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          0s      &lt;none&gt;            &lt;none&gt;                  &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          1s      &lt;none&gt;            &lt;none&gt;                  &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          73s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          85s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          85s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0          0s      &lt;none&gt;            &lt;none&gt;                  &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0          1s      &lt;none&gt;                 localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          43s     &lt;none&gt;                 node173                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>Pending</strong>             0          43s     &lt;none&gt;                 node173                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0          1s      &lt;none&gt;                 localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>ContainerCreating</strong>   0          43s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0          1s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0          1s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 0/1     <strong>ContainerCreating</strong>   0          43s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-0</strong>                 1/1     <strong>Running</strong>             0          43s     xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Running</strong>             0          2s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
    </pre>
 
 5. 查看任务状态和UID
@@ -128,11 +130,12 @@
       <pre codetype="bash">
       NAMESPACE        NAME                                            READY   STATUS    RESTARTS   AGE     IP                NODE                    NOMINATED NODE   READINESS GATES
       ...              ...                                             ...     ...       ...        ...     ...               ...                     ...              ...
-      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>   0          2s      xx.xx.xx.xx      node173   <none>           <none>
-      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>   0          33s     xx.xx.xx.xx      node173   <none>           <none>
+      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>   0          2s      xx.xx.xx.xx      node173   &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>   0          33s     xx.xx.xx.xx      node173   &lt;none&gt;           &lt;none&gt;
       </pre>
 
    2. 执行以下命令查看2个Pod的UID：
+
       ```bash
       kubectl get pod taskmgr-npu-020-default-test-0  -n trjob -o jsonpath='{.metadata.uid}'
       kubectl get pod taskmgr-npu-020-default-test-1  -n trjob -o jsonpath='{.metadata.uid}'
@@ -149,7 +152,7 @@
 
 **前提条件**
 
-在基础调度的任务YAML中，添加Pod级别重调度的配置，配置说明可参考[配置Pod级别重调度](../configuration/02_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002479226508)，原理可参考[Pod级别重调度](../01_solutions_principles.md#ZH-CN_TOPIC_0000002511346429)。
+在基础调度的任务YAML中，添加Pod级别重调度的配置，配置说明可参考[配置Pod级别重调度](configuration/02_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002479226508)，原理可参考[Pod级别重调度](01_solutions_principles.md#ZH-CN_TOPIC_0000002511346429)。
 
 **操作步骤**
 
@@ -160,6 +163,7 @@
    ```bash
    kubectl apply -f trjob.yaml
    ```
+
    >[!NOTE]
    > - 请将`trjob.yaml`替换为实际的任务YAML文件。
    > - 任务Pod的名称、命名空间会根据任务YAML中的配置而变化，以下出现的`taskmgr-npu-020-default-test-`和`trjob`都是示例值，实际值会根据任务YAML中的配置而变化。
@@ -175,8 +179,8 @@
       回显示例如下，出现Running表示任务正常运行：
 
       <pre codetype="bash">
-      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>             0          6s      xx.xx.xx.xx      node173                 <none>           <none>
-      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>             0          6s      xx.xx.xx.xx      localhost.localdomain   <none>           <none>
+      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>             0          6s      xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>             0          6s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
       </pre>
 
    2. 执行以下命令查看2个Pod的UID：
@@ -226,18 +230,18 @@
    该Job的2个Pod历史状态如下，观察加粗字段的变化可以发现故障Pod（taskmgr-npu-020-default-test-1）会经历Error→Terminating→Pending→ContainerCreating→Running阶段，然后正常运行，表示Pod重调度成功：
 
    <pre codetype="bash">
-   trjob            taskmgr-npu-020-default-test-0                  1/1     Running              0          6s      xx.xx.xx.xx      node173                 <none>           <none>
-   trjob            taskmgr-npu-020-default-test-1                  1/1     Running              0          6s      xx.xx.xx.xx      localhost.localdomain   <none>           <none>
+   trjob            taskmgr-npu-020-default-test-0                  1/1     Running              0          6s      xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
+   trjob            taskmgr-npu-020-default-test-1                  1/1     Running              0          6s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
    // ===================== 注入故障 ======================
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Error</strong>               0          34s     xx.xx.xx.xx      localhost.localdomain   <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          35s     xx.xx.xx.xx      localhost.localdomain   <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          35s     xx.xx.xx.xx      localhost.localdomain   <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0           0s      <none>            <none>                  <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0           1s      <none>                localhost.localdomain   <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0           1s      <none>                localhost.localdomain   <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0           1s      xx.xx.xx.xx     localhost.localdomain   <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0           1s      xx.xx.xx.xx     localhost.localdomain   <none>           <none>
-   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Running</strong>             0           2s      xx.xx.xx.xx     localhost.localdomain   <none>           <none>
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Error</strong>               0          34s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          35s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Terminating</strong>         0          35s     xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0           0s      &lt;none&gt;            &lt;none&gt;                  &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0           1s      &lt;none&gt;                localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>Pending</strong>             0           1s      &lt;none&gt;                localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0           1s      xx.xx.xx.xx     localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 0/1     <strong>ContainerCreating</strong>   0           1s      xx.xx.xx.xx     localhost.localdomain   &lt;none&gt;           &lt;none&gt;
+   trjob            <strong>taskmgr-npu-020-default-test-1</strong>                 1/1     <strong>Running</strong>             0           2s      xx.xx.xx.xx     localhost.localdomain   &lt;none&gt;           &lt;none&gt;
    </pre>
 
 5. 查看任务状态和UID
@@ -251,8 +255,8 @@
       回显示例如下，出现Running表示任务正常运行：
 
       <pre codetype="bash">
-      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>   0          66s      xx.xx.xx.xx      node173                 <none>           <none>
-      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>   0          31s      xx.xx.xx.xx      localhost.localdomain   <none>           <none>
+      trjob            taskmgr-npu-020-default-test-0                  1/1     <strong>Running</strong>   0          66s      xx.xx.xx.xx      node173                 &lt;none&gt;           &lt;none&gt;
+      trjob            taskmgr-npu-020-default-test-1                  1/1     <strong>Running</strong>   0          31s      xx.xx.xx.xx      localhost.localdomain   &lt;none&gt;           &lt;none&gt;
       </pre>
 
    2. 执行以下命令再次查看2个Pod的UID：
@@ -273,7 +277,7 @@
 
 **前提条件**
 
-在基础调度的任务YAML中，添加进程级别重调度的配置，配置说明可参考[配置进程级别重调度](../configuration/02_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002511426407)，原理可参考[进程级别重调度](../01_solutions_principles.md#ZH-CN_TOPIC_0000002511346457)。
+在基础调度的任务YAML中，添加进程级别重调度的配置，配置说明可参考[配置进程级别重调度](configuration/02_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002511426407)，原理可参考[进程级别重调度](01_solutions_principles.md#ZH-CN_TOPIC_0000002511346457)。
 
 **操作步骤**
 
@@ -284,6 +288,7 @@
    ```bash
    kubectl apply -f trjob.yaml
    ```
+
    >[!NOTE]
    > - 请将`trjob.yaml`替换为实际的任务YAML文件。
    > - 任务Pod的名称、命名空间会根据任务YAML中的配置而变化，以下出现的`process-reschedule-function-`和`trjob`都是示例值，实际值会根据任务YAML中的配置而变化。
@@ -298,12 +303,11 @@
 
    回显示例如下，出现Running表示任务正常运行：
    <pre codetype="bash">
-   trjob            process-reschedule-function-master-0   1/1     Running   0               14s   xx.xx.xx.xx     master-69-117   <none>           <none>
-   trjob            process-reschedule-function-worker-0   1/1     Running   0               14s   xx.xx.xx.xx     work-69-115     <none>           <none>
+   trjob            process-reschedule-function-master-0   1/1     Running   0               14s   xx.xx.xx.xx     master-69-117   &lt;none&gt;           &lt;none&gt;
+   trjob            process-reschedule-function-worker-0   1/1     Running   0               14s   xx.xx.xx.xx     work-69-115     &lt;none&gt;           &lt;none&gt;
    </pre>
 
-
-4. 查看训练日志迭代步数
+3. 查看训练日志迭代步数
 
    执行以下命令查看迭代步数，确认训练已正常迭代：
 
@@ -312,13 +316,15 @@
    ```
 
    回显示例如下：
+
    ```bash
    50
    ```
 
-5. 查看进程ID，并构造故障
+4. 查看进程ID，并构造故障
 
    执行以下命令查看进程ID：
+
    ```bash
    npu-smi info|grep python|awk '{print $5}'
    ```
@@ -342,7 +348,7 @@
    kill -9 635777
    ```
 
-6. 观察训练日志
+5. 观察训练日志
 
    执行以下命令监控训练日志：
 
@@ -360,14 +366,16 @@
    ... Mindio do repair operation ok ...
    ```
 
-7. 观察job-reschedule-reason内容是否准确
+6. 观察job-reschedule-reason内容是否准确
 
    执行以下命令查看ConfigMap job-reschedule-reason中是否有任务信息：
+
    ```bash
    kubectl describe cm -n mindx-dl job-reschedule-reason |grep process-reschedule-function
    ```
 
    回显示例如下，其中包含重调度的时间，触发重调度的pod、node、rank，本任务当前重调度次数等信息：
+
    ```bash
    {"trjob/process-reschedule-function-ebfbc149-5312-4232-a021-453db0d4ce07":{"JobID":"trjob/process-reschedule-function-ebfbc149-5312-4232-a021-453db0d4ce07","TotalRescheduleTimes":1,"RescheduleRecords":[{"LogFileFormatTime":"I0603 05:16:52","RescheduleTimeStamp":1780435012,"ReasonOfTask":[{"RescheduleReason":"pod-failed","PodName":"process-reschedule-function-worker-0","NodeName":"work-69-115","NodeRankIndex":"1"}]}]}}
    ```
@@ -482,8 +490,8 @@
 
 #### PyTorch场景适配示例（基于MindSpeed-LLM）<a name="ZH-CN_TOPIC_0000002511426361"></a>
 
-1. 搭建训练环境，拉起训练，详细请参见[PyTorch场景适配示例（基于MindSpeed-LLM）](../03_using_resumable_training_on_the_cli.md#适配示例)。
-2. 开启进程级在线恢复，详细请参见[配置进程级在线恢复](../configuration/02_configuring_fault_handling_policies.md#配置进程级在线恢复)。
+1. 搭建训练环境，拉起训练，详细请参见[PyTorch场景适配示例（基于MindSpeed-LLM）](03_using_resumable_training_on_the_cli.md#适配示例)。
+2. 开启进程级在线恢复，详细请参见[配置进程级在线恢复](configuration/02_configuring_fault_handling_policies.md#配置进程级在线恢复)。
 3. 在“QWEN3\_for\_PyTorch\_2.7\_code/mindspeed\_llm/training/training.py”代码中增加如下加粗内容，打桩注入故障，新增代码根据环境变量“RAISE\_UCE\_ERROR\_STEP\_AND\_RANK”获取注入故障迭代位置和故障rank信息。
 
    <pre codetype="Python">
@@ -525,8 +533,8 @@
 
 #### MindSpore场景适配示例（基于MindFormers）<a name="ZH-CN_TOPIC_0000002511346369"></a>
 
-1. 搭建训练环境，拉起训练，详细请参见[MindSpore场景适配示例（基于MindFormers）](../03_using_resumable_training_on_the_cli.md#适配示例)。
-2. 开启进程级在线恢复，详细请参见[配置进程级在线恢复](../configuration/02_configuring_fault_handling_policies.md#配置进程级在线恢复)。
+1. 搭建训练环境，拉起训练，详细请参见[MindSpore场景适配示例（基于MindFormers）](03_using_resumable_training_on_the_cli.md#适配示例)。
+2. 开启进程级在线恢复，详细请参见[配置进程级在线恢复](configuration/02_configuring_fault_handling_policies.md#配置进程级在线恢复)。
 3. 在“QWEN3\_for\_MS\_code/mindformers/core/callback/callback.py”代码中增加如下加粗内容，打桩注入故障。
 
    <pre codetype="Python">
@@ -574,7 +582,7 @@
 
 **前提条件**
 
-- 在基础调度的任务 YAML 中，添加进程级在线恢复的配置，配置说明可参考[配置进程级在线恢复](../configuration/02_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002479386492)，原理可参考[进程级在线恢复](../01_solutions_principles.md#ZH-CN_TOPIC_0000002479386460)。
+- 在基础调度的任务 YAML 中，添加进程级在线恢复的配置，配置说明可参考[配置进程级在线恢复](configuration/02_configuring_fault_handling_policies.md#ZH-CN_TOPIC_0000002479386492)，原理可参考[进程级在线恢复](01_solutions_principles.md#ZH-CN_TOPIC_0000002479386460)。
 - 已完成 MindCluster 适配和脚本适配；启动脚本中的 `RAISE_UCE_ERROR_STEP_AND_RANK` 与下文验证命令中的 rank、迭代步保持一致。
 
 **操作步骤**
@@ -586,6 +594,7 @@
    ```bash
    kubectl apply -f trjob.yaml
    ```
+
    >[!NOTE]
    > - 请将 `trjob.yaml` 替换为实际的任务 YAML 文件；若按上文 QWEN3 脚本适配，请使用对应的任务 YAML 与 Pod 名称。
    > - 任务 Pod 的名称、命名空间会根据任务 YAML 中的配置而变化，以下出现的 `process-online-recovery-` 和 `trjob` 均为示例值。
@@ -601,8 +610,8 @@
    2. 回显示例如下，出现Running表示任务正常运行：
 
       <pre codetype="bash">
-      trjob            process-online-recovery-master-0                   1/1     Running   0                 14s     192.168.75.202   master-69-117   <none>           <none>
-      trjob            process-online-recovery-worker-0                   1/1     Running   0                 14s     192.168.6.13     work-69-115     <none>           <none>
+      trjob            process-online-recovery-master-0                   1/1     Running   0                 14s     192.168.75.202   master-69-117   &lt;none&gt;           &lt;none&gt;
+      trjob            process-online-recovery-worker-0                   1/1     Running   0                 14s     192.168.6.13     work-69-115     &lt;none&gt;           &lt;none&gt;
       </pre>
 
 3. 监控训练日志
@@ -627,6 +636,7 @@
       > 日志中的 `step: 3` 表示故障在第 3 个训练迭代步触发。`npu_status: 2` 表示 MindIO/TTP 侧已进入 UCE 处理状态；在本打桩场景下由软件模拟路径触发，不代表真实硬件片上内存故障。
 
    2. 执行以下命令，检查第 3 步故障的恢复结果。在 master 或 worker 任一 Pod 上输出大于等于 1，即说明修复成功：
+
       ```bash
       kubectl logs -n trjob process-online-recovery-master-0 --all-containers=true | grep -Fa "(0, 'Mindio do repair operation ok', {}, 'retry')"|wc -l
       ```
@@ -634,11 +644,13 @@
 4. 检查迭代是否正常
 
    1. 执行以下命令查看任务状态：
+
       ```bash
       kubectl get pod -A -o wide
       ```
 
       回显示例如下：
+
       ```bash
       trjob            process-online-recovery-master-0                   1/1     Running   0                 110s    192.168.75.202   master-69-117   <none>           <none>
       trjob            process-online-recovery-worker-0                   1/1     Running   0                 110s    192.168.6.13     work-69-115     <none>           <none>

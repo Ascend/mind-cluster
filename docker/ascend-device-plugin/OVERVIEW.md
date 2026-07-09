@@ -40,7 +40,7 @@ Kubernetes needs to be aware of resource information for scheduling. Beyond basi
 
 Tags follow this format:
 
-```
+```text
 <version>
 ```
 
@@ -79,25 +79,25 @@ Tags follow this format:
 
 #### Install Driver
 
-The host machine must have the driver and firmware installed. For details, see "Installing NPU Driver and Firmware" in the [CANN Software Installation Guide (Commercial Edition)](https://www.hiascend.com/document/detail/en/canncommercial/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian) or [CANN Software Installation Guide (Community Edition)](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=openEuler).
+The host machine must have the driver and firmware installed. For details, see "Installing NPU Driver and Firmware" in the [CANN Software Installation Guide (Commercial Edition)](https://www.hiascend.com/document/detail/en/canncommercial/850/softwareinst/instg/instg_0005.html?Mode=PmIns&InstallType=local&OS=Debian).
 
 ### Obtain Atlas Device Plugin Image Online
 
 1. Pull the official image
 
-Pull the Atlas Device Plugin image from AscendHub, replacing {tag} with the actual version (v26.0.0 recommended).
+   Pull the Atlas Device Plugin image from AscendHub, replacing {tag} with the actual version (v26.0.0 recommended).
 
-```bash
-docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:{tag}
-```
+   ```bash
+   docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:{tag}
+   ```
 
 2. Retag the image
 
-Retag the official image with a local tag for consistent naming and easier operations management.
+   Retag the official image with a local tag for consistent naming and easier operations management.
 
-```bash
-docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:{tag} ascend-k8sdeviceplugin:{tag}
-```
+   ```bash
+   docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:{tag} ascend-k8sdeviceplugin:{tag}
+   ```
 
 ### Build Locally (Optional)
 
@@ -105,66 +105,66 @@ The following example uses the linux-aarch64 architecture and v26.0.0 version to
 
 1. Download the officially released component package
 
-```shell
-wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip
-```
+   ```shell
+   wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.0.0/Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip
+   ```
 
 2. Extract the package to a custom directory
 
-```shell
-unzip Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64
-```
+   ```shell
+   unzip Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64.zip -d Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64
+   ```
 
 3. Enter the extracted working directory
 
-```shell
-cd Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64
-```
+   ```shell
+   cd Ascend-mindxdl-device-plugin_26.0.0_linux-aarch64
+   ```
 
 4. Build the Docker image locally (disable cache to ensure a clean build)
 
-```bash
-docker build --no-cache -t ascend-k8sdeviceplugin:v26.0.0 ./ -f Dockerfile
-```
+   ```bash
+   docker build --no-cache -t ascend-k8sdeviceplugin:v26.0.0 ./ -f Dockerfile
+   ```
 
 ### Deploy Atlas Device Plugin
 
 1. Label Kubernetes nodes
 
-Label nodes according to the Atlas processor model for cluster scheduling. Replace <node-name> with the actual node name.
+   Label nodes according to the Atlas processor model for cluster scheduling. Replace `<node-name>` with the actual node name.
 
-```bash
-# Example: Label an Atlas 910 node
-kubectl label nodes <node-name> accelerator=huawei-Ascend910
-```
+   ```bash
+   # Example: Label an Atlas 910 node
+   kubectl label nodes <node-name> accelerator=huawei-Ascend910
+   ```
 
 2. Start Atlas Device Plugin
 
-Select the appropriate YAML resource file based on the device model and scheduling requirements. Replace `{tag}` in the YAML file with the actual image version.
+   Select the appropriate YAML resource file based on the device model and scheduling requirements. Replace `{tag}` in the YAML file with the actual image version.
 
-```bash
-# Configuration file for products excluding Atlas 200I SoC A1 core board without Volcano.
-kubectl apply -f device-plugin-{version}.yaml
+   ```bash
+   # Configuration file for products excluding Atlas 200I SoC A1 core board without Volcano.
+   kubectl apply -f device-plugin-{version}.yaml
 
-# Configuration file for products excluding Atlas 200I SoC A1 core board with Volcano.
-kubectl apply -f device-plugin-volcano-{version}.yaml
-```
+   # Configuration file for products excluding Atlas 200I SoC A1 core board with Volcano.
+   kubectl apply -f device-plugin-volcano-{version}.yaml
+   ```
 
 3. Verify deployment
 
-```bash
-kubectl get pods -A | grep device-plugin
-```
+   ```bash
+   kubectl get pods -A | grep device-plugin
+   ```
 
-Expected result: The device-plugin related Pods in the corresponding namespace should be in Running state.
+   Expected result: The device-plugin related Pods in the corresponding namespace should be in Running state.
 
 4. Check node resources
 
-```bash
-kubectl describe node <npu-node-name> | grep "huawei.com/Ascend"
-```
+   ```bash
+   kubectl describe node <npu-node-name> | grep "huawei.com/Ascend"
+   ```
 
-Expected result: The huawei.com/Ascend resource capacity and allocatable resources should be displayed correctly.
+   Expected result: The huawei.com/Ascend resource capacity and allocatable resources should be displayed correctly.
 
 ---
 
