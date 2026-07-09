@@ -242,7 +242,7 @@
 
 - 确保PC机连接至互联网，并已完成Git和Docker的安装。参见[Git安装](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)，[Docker-ce安装](https://docs.docker.com/engine/install/ubuntu/)。
 
-- 已完成Go语言环境的安装（版本\>=1.21，建议使用最新的bugfix版本）。参见[https://golang.org/](https://golang.org/)。
+- 已完成Go语言环境的安装（版本\>=1.23，建议使用最新的bugfix版本）。参见[https://golang.org/](https://golang.org/)。
 - 完成musl的安装（版本\>=1.2.0）。参见[http://musl.libc.org/](http://musl.libc.org/)。
 - 根据所在网络环境配置Go代理地址，国内可使用**Goproxy China**，例如：
 
@@ -252,19 +252,19 @@
 
 ## 编译Volcano<a name="section1922947135013"></a>
 
-1. 执行以下命令，在“$GOPATH/src/volcano.sh/“目录下拉取Volcano v1.9.0（或v1.7.0）版本官方开源代码。
+1. 执行以下命令，在“$GOPATH/src/volcano.sh/“目录下拉取Volcano v1.12.0（或v1.9.0/v1.7.0）版本官方开源代码。
 
    **cd** **$GOPATH/src/volcano.sh/**\
-   **git clone -b release-1.9 <https://github.com/volcano-sh/volcano.git>**
+   **git clone -b release-1.12 <https://github.com/volcano-sh/volcano.git>**
 
 2. 将代码目录“ascend-for-volcano“重命名为“ascend-volcano-plugin”拷贝至Volcano官方开源代码的插件路径下（“$GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/“）。
-3. 执行以下命令，编译Volcano二进制文件和so文件。根据开源代码版本，为build.sh脚本选择对应的参数，如v1.9.0.
+3. 执行以下命令，编译Volcano二进制文件和so文件。根据开源代码版本，为build.sh脚本选择对应的参数，如v1.12.0.
 
    **cd** **$GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/build**
 
    **chmod +x build.sh**
 
-   **./build.sh v1.9.0**
+   **./build.sh v1.12.0**
 
    编译出的二进制文件和动态链接库文件在“ascend-volcano-plugin/output“目录下，文件[表1](#table922124765019)所示。
 
@@ -276,7 +276,7 @@
     </th>
     </tr>
     </thead>
-    <tbody><tr id="row10210471506"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p5211747145012"><a name="p5211747145012"></a><a name="p5211747145012"></a>volcano-npu_v6.0.0_linux-<em id="i58081714114017"><a name="i58081714114017"></a><a name="i58081714114017"></a>{arch}</em>.so</p>
+    <tbody><tr id="row10210471506"><td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.1 "><p id="p5211747145012"><a name="p5211747145012"></a><a name="p5211747145012"></a>volcano-npu_v${version}_linux-<em id="i58081714114017"><a name="i58081714114017"></a><a name="i58081714114017"></a>{arch}</em>.so</p>
     </td>
     <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p121447195011"><a name="p121447195011"></a><a name="p121447195011"></a>Volcano华为NPU调度插件动态链接库</p>
     </td>
@@ -310,8 +310,9 @@
     </table>
 
    >![](doc/figures/icon-note.gif) **说明：**\
-   >_\{__version__\}_：表示volcano框架版本号。取值为：v1.7.0、v1.9.0。\
-   > _\{__arch__\}_：表示Volcano二进制文件架构。取值为：x86_64、aarch64。
+   >_\{__version__\}_：表示volcano框架版本号。取值为：v1.7.0、v1.9.0、v1.12.0。\
+   > _\{__arch__\}_：表示Volcano二进制文件架构。取值为：x86_64、aarch64。\
+   > `${version}`：表示当前代码仓分支中的数字版本号。
    >
    >![](doc/figures/icon-note.gif) **说明：**\
    > 执行build.sh脚本时会修改以下volcano开源代码，具体修改详见ascend-for-volcano/build/build.sh文件。\

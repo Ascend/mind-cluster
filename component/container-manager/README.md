@@ -6,7 +6,7 @@
 
 # 编译
 
-1. 通过git拉取源码，并切换master分支。
+1.  通过git拉取源码，获得container-manager组件代码。
 
     示例：源码放在/home/mind-cluster/component/container-manager目录下
 
@@ -65,8 +65,10 @@
    回显示例如下：
 
     ```text
-    container-manager version: v7.3.0_linux-x86-64
+    container-manager version: v${version}_linux-x86-64
     ```
+
+    > **说明：** 上述回显中的 `${version}` 表示当前代码仓分支中的数字版本号。
 
 3. 可通过以下命令启动故障管理和故障芯片及故障容器的自动恢复功能。
 

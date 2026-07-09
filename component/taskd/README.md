@@ -9,17 +9,17 @@
 
 # 编译
 
-1. 通过git拉取源码，并切换master分支，获得taskd。
+1. 通过git拉取源码，获得taskd。
 
     示例：源码放在/home/mind-cluster/component/taskd目录下
 
-2. 执行以下命令，进入构建目录，执行构建脚本build.sh，并传入版本号version，在“output“目录下生成taskd-{version}-py3-none-linux_{arch}.whl的二进制文件。
+2. 执行以下命令，进入构建目录，执行构建脚本build.sh，在“output“目录下生成taskd-{version}-py3-none-linux_{arch}.whl的二进制文件。
 
     **cd** _/home/mind-cluster/component/_**taskd/build/**
 
     **chmod +x build.sh**
 
-    **./build.sh 6.0.0**
+    **./build.sh**
 
 3. 执行以下命令，查看**output**生成的软件列表。
 
@@ -28,14 +28,16 @@
     ```text
     drwxr-xr-x  2 root root     4096 Jan 18 17:04 ./
     drwxr-xr-x 12 root root     4096 Jan 18 17:04 ../
-    -r-x------  1 root root  1270175 Jan 18 17:04 taskd-6.0.0-py3-none-linux_aarch64.whl
+    -r-x------  1 root root  1270175 Jan 18 17:04 taskd-${version}-py3-none-linux_aarch64.whl
     ```
 
 4. 执行以下命令，完成taskd组件的安装
 
     ```bash
-    pip install taskd-6.0.0-py3-none-linux_aarch64.whl
+    pip install taskd-${version}-py3-none-linux_aarch64.whl
     ```
+
+    > **说明：** 上述回显中的 `${version}` 表示当前代码仓分支中的数字版本号。
 
 # 说明
 

@@ -18,7 +18,7 @@ CUR_DIR=$(dirname "$(readlink -f "$0")")
 TOP_DIR=$(realpath "${CUR_DIR}"/..)
 export GO111MODULE="on"
 VER_FILE="${TOP_DIR}"/service_config.ini
-build_version="v6.0.0"
+build_version="v26.1.0"
 if [ -f "$VER_FILE" ]; then
   line=$(sed -n '1p' "$VER_FILE" 2>&1)
   build_version="v"${line#*=}
