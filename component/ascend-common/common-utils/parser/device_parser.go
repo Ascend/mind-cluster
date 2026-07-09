@@ -72,8 +72,8 @@ func ParseAscendDeviceInfo(env, containerID string) []int {
 
 // parseDeviceIDs parses device IDs from various formats
 func parseDeviceIDs(devices, containerID string) []int {
-	// Handle Ascend style: Ascend910-0,Ascend910-1
-	if strings.Contains(devices, ascend) {
+	// Handle Ascend style: Ascend910-0,Ascend910-1 or npu-0,npu-1
+	if strings.Contains(devices, ascend) || strings.Contains(devices, api.NPULowerCase) {
 		return parseAscendStyle(devices, containerID)
 	}
 	// Handle comma-minus style: 0-1,3
