@@ -21,7 +21,7 @@ set -e
 CUR_DIR=$(dirname "$(readlink -f "$0")")
 TOP_DIR=$(realpath "${CUR_DIR}"/..)
 
-build_version="v6.0.0"
+build_version="v26.1.0"
 version_file="${TOP_DIR}"/service_config.ini
 if  [ -f "$version_file" ]; then
   line=$(sed -n '1p' "$version_file" 2>&1)

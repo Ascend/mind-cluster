@@ -27,10 +27,41 @@ fi
 CUR_DIR=$(dirname "$(readlink -f "$0")")
 TOP_DIR=$(realpath "${CUR_DIR}"/..)
 
+# Read version number
+VER_FILE="${CUR_DIR}"/service_config.ini
+version="v26.1.0"
+if [ -f "$VER_FILE" ]; then
+    line=$(sed -n '1p' "$VER_FILE" 2>&1)
+    version="v"${line#*=}
+fi
+ostype=$(arch 2>&1)
+
+# Packaging function: Generates zip/run packages
+package_component() {
+    local serviceName=$1
+    local component_dir=$2
+    local servicepackName=$3
+    local is_run=$4  # if .run type
+
+    cd "${component_dir}"/output/
+
+    local package_name
+    if [ "${is_run}" == "true" ]; then
+        # ascend-docker-runtime package to .run
+        package_name=Ascend-docker-runtime_${version}_linux-${ostype}.run
+    else
+        package_name=Ascend-mindxdl-${servicepackName}_${version}_linux-${ostype}.zip
+        zip -r "${package_name}" ./*
+    fi
+
+    echo "Package created: ${package_name}"
+}
+
 cp -rf "$TOP_DIR"/component/* ${GOPATH}/
 if [[ ! -d /opt/buildtools/volcano_opensource ]]; then
-    mkdir -p /opt/buildtools/volcano_opensource/volcano_1.9/
     mkdir -p /opt/buildtools/volcano_opensource/volcano_1.7/
+    mkdir -p /opt/buildtools/volcano_opensource/volcano_1.9/
+    mkdir -p /opt/buildtools/volcano_opensource/volcano_1.12/
 fi
 
 if [[ ! -d /opt/buildtools/volcano_opensource/volcano_1.7/volcano ]]; then
@@ -41,6 +72,11 @@ fi
 if [[ ! -d /opt/buildtools/volcano_opensource/volcano_1.9/volcano ]]; then
     cd /opt/buildtools/volcano_opensource/volcano_1.9
     git clone -b release-1.9 https://github.com/volcano-sh/volcano.git
+fi
+
+if [[ ! -d /opt/buildtools/volcano_opensource/volcano_1.12/volcano ]]; then
+    cd /opt/buildtools/volcano_opensource/volcano_1.12
+    git clone -b release-1.12 https://github.com/volcano-sh/volcano.git
 fi
 
 if [[ ! -d ${GOPATH}/ascend-docker-runtime/platform/libboundscheck ]]; then
@@ -67,6 +103,7 @@ mind_cluster=(
     "clusterd"
     "container-manager"
     "infer-operator"
+    "k8s-rdma-shared-dev-plugin"
     "mindio"
     "noded"
     "npu-exporter"
@@ -94,17 +131,41 @@ do
     if [[ $component = "ascend-common" ]]; then
       continue
     fi
-    if [[ $component = "ascend-for-volcano" ]]; then
-      cd "$TOP_DIR"/component/"$component"
-      rm -rf ./output
-      mv "$GOPATH"/output/ ./
-      zip -r ./output/Ascend-mindxdl-volcano_linux.zip ./output/*
-      continue
-    fi
+
     cd "$TOP_DIR"/component/"$component"
     rm -rf ./output
-    mv "$GOPATH"/"$component"/output/ ./
-    zip -r ./output/Ascend-mindxdl-"$component"_linux.zip ./output/*
+
+    # The output of ascend-for-volcano is in GOPATH/output/, and the others are in GOPATH/component/output/.
+    if [[ $component = "ascend-for-volcano" ]]; then
+      mv "$GOPATH"/output/ ./
+    else
+      mv "$GOPATH"/"$component"/output/ ./
+    fi
+
+    # Select the packaging method based on the component type.
+    case "$component" in
+      ascend-for-volcano)
+        package_component "$component" "$TOP_DIR/component/$component" "volcano" "false"
+        ;;
+      ascend-device-plugin)
+        package_component "$component" "$TOP_DIR/component/$component" "device-plugin" "false"
+        ;;
+      ascend-docker-runtime)
+        package_component "$component" "$TOP_DIR/component/$component" "docker-runtime" "true"
+        ;;
+      ascend-faultdiag)
+        package_component "$component" "$TOP_DIR/component/$component" "faultdiag" "false"
+        ;;
+      npu-exporter)
+        package_component "$component" "$TOP_DIR/component/$component" "npu-exporter" "false"
+        ;;
+      noded)
+        package_component "$component" "$TOP_DIR/component/$component" "noded" "false"
+        ;;
+      *)
+        package_component "$component" "$TOP_DIR/component/$component" "$component" "false"
+        ;;
+    esac
   }
 done
 
@@ -113,3 +174,8 @@ cd "$TOP_DIR"/helm-deploy-tool/build/
 dos2unix *.sh && chmod +x *
 ./build.sh
 echo "helm deploy tool has built"
+
+# package helm-deploy-tool
+cd "$TOP_DIR"/helm-deploy-tool/output/
+zip -r Ascend-helm-deploy-tool_${version}_linux.zip ./*
+echo "Package created: Ascend-helm-deploy-tool_${version}_linux.zip"

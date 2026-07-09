@@ -20,7 +20,7 @@
 
 # 编译
 
-1. 通过git拉取源码，并切换master分支，获得ascend-device-plugin。
+1. 通过git拉取源码，获得ascend-device-plugin。
 
     示例：源码放在/home/mind-cluster/component/ascend-device-plugin目录下
 
@@ -42,16 +42,16 @@
 
 3. 执行以下命令，查看**output**生成的软件列表。
 
-       **ll** _/home/mind-cluster/component/_**ascend-device-plugin/output**
+    **ll** _/home/mind-cluster/component/_**ascend-device-plugin/output**
 
        ```
        drwxr-xr-x 2 root root     4096  4月 29 09:28 ./
        drwxr-xr-x 6 root root     4096  4月 29 09:28 ../
        -r-x------ 1 root root 59349656  4月 29 09:28 device-plugin*
-       -r-------- 1 root root     5555  4月 29 09:28 device-plugin-310P-1usoc-v6.0.0.yaml
-       -r-------- 1 root root     5555  4月 29 09:28 device-plugin-310P-1usoc-volcano-v6.0.0.yaml
-       -r-------- 1 root root     5024  4月 29 09:28 device-plugin-v6.0.0.yaml
-       -r-------- 1 root root     5644  4月 29 09:28 device-plugin-volcano-v6.0.0.yaml
+       -r-------- 1 root root     5555  4月 29 09:28 device-plugin-310P-1usoc-v${version}.yaml
+       -r-------- 1 root root     5555  4月 29 09:28 device-plugin-310P-1usoc-volcano-v${version}.yaml
+       -r-------- 1 root root     5024  4月 29 09:28 device-plugin-v${version}.yaml
+       -r-------- 1 root root     5644  4月 29 09:28 device-plugin-volcano-v${version}.yaml
        -r-------- 1 root root      786  4月 29 09:28 Dockerfile
        -r-------- 1 root root     1074  4月 29 09:28 Dockerfile-310P-1usoc
        -r-------- 1 root root     4158  4月 29 09:28 faultCode.json
@@ -61,8 +61,9 @@
        ```
 
     > ![](doc/figures/icon-note.gif) **说明：**
-       1、“ascend-device-plugin/build“目录下的**ascendplugin.yaml**文件在“ascend-device-plugin/output/“下生成的对应文件为**device-plugin-v6.0.0.yaml**，作用是更新版本号。
+       1、“ascend-device-plugin/build“目录下的**ascendplugin.yaml**文件在“ascend-device-plugin/output/“下生成的对应文件为**device-plugin-v${version}.yaml**，作用是更新版本号。
        2、边侧场景编译仅生成device-plugin二进制文件
+       3、上述回显中的 `${version}` 表示当前代码仓分支中的数字版本号。
 
 # 说明
 

@@ -20,7 +20,7 @@ CUR_DIR=$(dirname "$(readlink -f "$0")")
 TOP_DIR=$(realpath "${CUR_DIR}"/..)
 export GO111MODULE=on
 version_file="${TOP_DIR}"/service_config.ini
-build_version="v6.0.0"
+build_version="v26.1.0"
 if  [ -f "$version_file" ]; then
   line=$(sed -n '1p' "$version_file" 2>&1)
   #cut the chars after ':' and add char 'v', the final example is v3.0.0

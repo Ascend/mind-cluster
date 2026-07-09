@@ -26,9 +26,11 @@
     -r--------  1 root root      480 Nov 14 07:10 Dockerfile
     -r-x------  1 root root 36550304 Nov 14 07:10 noded
     -r--------  1 root root      434 Nov 14 07:10 NodeDConfiguration.json
-    -r--------  1 root root     2883 Nov 14 07:10 noded-v6.0.0.yaml
+    -r--------  1 root root     2883 Nov 14 07:10 noded-v${version}.yaml
     -r--------  1 root root      273 Nov 14 07:10 pingmesh-config.yaml
     ```
+
+    > **说明：** 上述回显中的 `${version}` 表示当前代码仓分支中的数字版本号。
 
 # 说明
 

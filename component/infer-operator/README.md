@@ -25,9 +25,11 @@
     drwxr-xr-x 2 root root     4096 Jan 29 19:12 ./
     drwxr-xr-x 9 root root     4096 Jan 29 19:09 ../
     -r-x------ 1 root root 43524664 Jan 29 19:09 infer-operator
-    -r-------- 1 root root   372080 Jan 29 19:09 infer-operator-v6.0.0.yaml
+    -r-------- 1 root root   372080 Jan 29 19:09 infer-operator-v${version}.yaml
     -r-------- 1 root root      482 Jan 29 19:12 Dockerfile
     ```
+
+    > **说明：** 上述回显中的 `${version}` 表示当前代码仓分支中的数字版本号。
 
 # 说明
 

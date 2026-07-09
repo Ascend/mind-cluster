@@ -119,7 +119,7 @@ fi
 cd ${PROJ_DIR}
 
 VER_FILE="${PROJ_DIR}"/service_config.ini
-build_version="7.3.0"
+build_version="26.1.0"
 if [ -f "$VER_FILE" ]; then
   line=$(sed -n '1p' "$VER_FILE" 2>&1)
   temp=${line#*=}

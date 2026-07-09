@@ -56,7 +56,7 @@ function helm_package() {
 
 function mv_file() {
   cp "${TOP_DIR}"/build/helm_tool.sh "${TOP_DIR}"/output
-  cp "${TOP_DIR}"/build/*.tgz "${TOP_DIR}"/output
+  mv "${TOP_DIR}"/build/*.tgz "${TOP_DIR}"/output
 }
 
 function change_mod() {

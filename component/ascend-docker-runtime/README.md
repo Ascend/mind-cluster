@@ -27,7 +27,7 @@ Ascend Docker在prestart-hook这个钩子函数中，对容器做了以下配置
 
 执行以下步骤进行编译
 
- 1、下载master分支下的源码包，获得ascend-docker-runtime
+ 1、通过git拉取源码，获得ascend-docker-runtime
 
 示例：源码放在/home/mind-cluster/component/ascend-docker-runtime目录下
 
@@ -58,5 +58,7 @@ bash build.sh
 ```shell
 root@#:/home/mind-cluster/component/ascend-docker-runtime/output# ll
 ...
--rwxr-xr-x  ... Ascend-docker-runtime_x.x.x_linux-x86_64.run*
+-rwxr-xr-x  ... Ascend-docker-runtime_${version}_linux-x86_64.run*
 ```
+
+> **说明：** 上述回显中的 `${version}` 表示当前代码仓分支中的数字版本号。

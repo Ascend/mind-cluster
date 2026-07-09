@@ -6,7 +6,7 @@
 
 # 编译
 
-1. 通过git拉取源码，并切换master分支，获得ClusterD。
+1.  通过git拉取源码，获得ClusterD。
 
     示例：源码放在/home/mind-cluster/component/clusterd目录下
 
@@ -23,9 +23,8 @@
     **ls** _/home/mind-cluster/component/_**clusterd/output**
 
     ```text
-    Ascend-mindxdl-clusterd_xx_linux-xx.zip
     clusterd
-    clusterd-v6.0.0.yaml
+    clusterd-v${version}.yaml
     Dockerfile
     faultDuration.json
     publicFaultConfiguration.json
@@ -34,6 +33,7 @@
 
     **说明：**
     “clusterd/build“目录下的**xx.zip**文件包含二进制，yaml及Dockerfile文件。
+    上述回显中的 `${version}` 表示当前代码仓分支中的数字版本号。
 
 # 说明
 
