@@ -24,8 +24,9 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes/fake"
 	"volcano.sh/volcano/pkg/scheduler/api"
 	"volcano.sh/volcano/pkg/scheduler/framework"
@@ -331,22 +332,221 @@ type getNeedInitNodeListTest struct {
 }
 
 func buildGetNeedInitNodeListTest() []getNeedInitNodeListTest {
-	sHandler := &ScheduleHandler{}
-	sHandler.FrameAttr.KubeClient = fake.NewSimpleClientset()
-	sHandler.FrameAttr.informerFactory = fakeInformerFactory()
-	sHandler.Nodes = map[string]NPUNode{"node01": {}}
+	// Prepare v1.Node objects for testing
+	readyNode := &v1.Node{
+		ObjectMeta: metav1.ObjectMeta{Name: "node-ready"},
+		Status: v1.NodeStatus{
+			Conditions: []v1.NodeCondition{
+				{Type: v1.NodeReady, Status: v1.ConditionTrue},
+			},
+		},
+	}
+	notReadyNode := &v1.Node{
+		ObjectMeta: metav1.ObjectMeta{Name: "node-notready"},
+		Status: v1.NodeStatus{
+			Conditions: []v1.NodeCondition{
+				{Type: v1.NodeReady, Status: v1.ConditionFalse},
+			},
+		},
+	}
+	readyNode2 := &v1.Node{
+		ObjectMeta: metav1.ObjectMeta{Name: "node-ready2"},
+		Status: v1.NodeStatus{
+			Conditions: []v1.NodeCondition{
+				{Type: v1.NodeReady, Status: v1.ConditionTrue},
+			},
+		},
+	}
+
+	// Build informer with pre-populated indexer for tests that need kubeClient
+	fakeClient := fake.NewSimpleClientset()
+	informerFactory := informers.NewSharedInformerFactory(fakeClient, 0)
+	indexer := informerFactory.Core().V1().Nodes().Informer().GetIndexer()
+	indexer.Add(readyNode)
+	indexer.Add(notReadyNode)
+	// node-ready2 is deliberately NOT added to the indexer (simulates deleted node)
+
+	readyNodeForSsn := &v1.Node{
+		ObjectMeta: metav1.ObjectMeta{Name: "node-both"},
+		Status: v1.NodeStatus{
+			Conditions: []v1.NodeCondition{
+				{Type: v1.NodeReady, Status: v1.ConditionTrue},
+			},
+		},
+	}
+	notReadyNodeForSsn := &v1.Node{
+		ObjectMeta: metav1.ObjectMeta{Name: "node-ssn-notready"},
+		Status: v1.NodeStatus{
+			Conditions: []v1.NodeCondition{
+				{Type: v1.NodeReady, Status: v1.ConditionFalse},
+			},
+		},
+	}
+
+	// Session with mixed nodes (for mixed scenario test)
+	ssnWithMixed := &framework.Session{
+		NodeList: []*api.NodeInfo{
+			api.NewNodeInfo(readyNodeForSsn),    // ready → included
+			api.NewNodeInfo(notReadyNodeForSsn), // not ready → skipped
+		},
+		Nodes: map[string]*api.NodeInfo{
+			"node-both":         api.NewNodeInfo(readyNodeForSsn),
+			"node-ssn-notready": api.NewNodeInfo(notReadyNodeForSsn),
+		},
+	}
+
 	return []getNeedInitNodeListTest{
 		{
-			name:    "01 will return nil when node list is nil and kubeClient is nil",
+			name:    "01-sHandle is nil, return ssn.NodeList(nil)",
 			ssn:     &framework.Session{},
-			sHandle: &ScheduleHandler{},
+			sHandle: nil,
 			want:    nil,
 		},
 		{
-			name:    "02 will return empty when node list is nil ",
-			ssn:     &framework.Session{},
-			sHandle: sHandler,
-			want:    []*api.NodeInfo{},
+			name: "02-KubeClient is nil, return ssn.NodeList directly",
+			ssn: &framework.Session{
+				NodeList: []*api.NodeInfo{api.NewNodeInfo(readyNode)},
+			},
+			sHandle: &ScheduleHandler{},
+			want:    []*api.NodeInfo{api.NewNodeInfo(readyNode)},
+		},
+		{
+			name: "03-KubeClient set, empty Nodes and empty NodeList, return empty",
+			ssn:  &framework.Session{},
+			sHandle: func() *ScheduleHandler {
+				sh := &ScheduleHandler{}
+				sh.FrameAttr.KubeClient = fakeClient
+				sh.FrameAttr.informerFactory = informerFactory
+				sh.Nodes = map[string]NPUNode{}
+				return sh
+			}(),
+			want: []*api.NodeInfo{},
+		},
+		{
+			name: "04-node deleted from cluster, not in informer indexer, skipped",
+			ssn:  &framework.Session{},
+			sHandle: func() *ScheduleHandler {
+				sh := &ScheduleHandler{}
+				sh.FrameAttr.KubeClient = fakeClient
+				sh.FrameAttr.informerFactory = informerFactory
+				sh.Nodes = map[string]NPUNode{"node-deleted": {}}
+				return sh
+			}(),
+			want: []*api.NodeInfo{},
+		},
+		{
+			name: "05-node not in ssn, found in informer and ready, recovered from informer",
+			ssn:  &framework.Session{},
+			sHandle: func() *ScheduleHandler {
+				sh := &ScheduleHandler{}
+				sh.FrameAttr.KubeClient = fakeClient
+				sh.FrameAttr.informerFactory = informerFactory
+				sh.Nodes = map[string]NPUNode{"node-ready": {}}
+				return sh
+			}(),
+			want: []*api.NodeInfo{api.NewNodeInfo(readyNode)},
+		},
+		{
+			name: "06-node not in ssn, found in informer but NotReady, skipped",
+			ssn:  &framework.Session{},
+			sHandle: func() *ScheduleHandler {
+				sh := &ScheduleHandler{}
+				sh.FrameAttr.KubeClient = fakeClient
+				sh.FrameAttr.informerFactory = informerFactory
+				sh.Nodes = map[string]NPUNode{"node-notready": {}}
+				return sh
+			}(),
+			want: []*api.NodeInfo{},
+		},
+		{
+			name: "07-node not in ssn and not in informer, skipped as deleted",
+			ssn:  &framework.Session{},
+			sHandle: func() *ScheduleHandler {
+				sh := &ScheduleHandler{}
+				sh.FrameAttr.KubeClient = fakeClient
+				sh.FrameAttr.informerFactory = informerFactory
+				sh.Nodes = map[string]NPUNode{"node-deleted": {}}
+				return sh
+			}(),
+			want: []*api.NodeInfo{},
+		},
+		{
+			name: "08-node in ssn.NodeList and ready, included",
+			ssn: &framework.Session{
+				NodeList: []*api.NodeInfo{api.NewNodeInfo(readyNode2)},
+			},
+			sHandle: func() *ScheduleHandler {
+				sh := &ScheduleHandler{}
+				sh.FrameAttr.KubeClient = fakeClient
+				sh.FrameAttr.informerFactory = informerFactory
+				sh.Nodes = map[string]NPUNode{}
+				return sh
+			}(),
+			want: []*api.NodeInfo{api.NewNodeInfo(readyNode2)},
+		},
+		{
+			name: "09-node in ssn.NodeList but NotReady, skipped",
+			ssn: &framework.Session{
+				NodeList: []*api.NodeInfo{api.NewNodeInfo(notReadyNodeForSsn)},
+			},
+			sHandle: func() *ScheduleHandler {
+				sh := &ScheduleHandler{}
+				sh.FrameAttr.KubeClient = fakeClient
+				sh.FrameAttr.informerFactory = informerFactory
+				sh.Nodes = map[string]NPUNode{}
+				return sh
+			}(),
+			want: []*api.NodeInfo{},
+		},
+		{
+			name: "10-node in both sHandle.Nodes and ssn, present in ssn.NodeList and ready, included by second loop",
+			ssn: &framework.Session{
+				NodeList: []*api.NodeInfo{api.NewNodeInfo(readyNodeForSsn)},
+				Nodes:    map[string]*api.NodeInfo{"node-both": api.NewNodeInfo(readyNodeForSsn)},
+			},
+			sHandle: func() *ScheduleHandler {
+				sh := &ScheduleHandler{}
+				sh.FrameAttr.KubeClient = fakeClient
+				sh.FrameAttr.informerFactory = informerFactory
+				sh.Nodes = map[string]NPUNode{"node-both": {}}
+				return sh
+			}(),
+			want: []*api.NodeInfo{api.NewNodeInfo(readyNodeForSsn)},
+		},
+		{
+			name: "11-mixed: nodes recovered from informer + ready nodes from ssn.NodeList",
+			ssn:  ssnWithMixed,
+			sHandle: func() *ScheduleHandler {
+				sh := &ScheduleHandler{}
+				sh.FrameAttr.KubeClient = fakeClient
+				sh.FrameAttr.informerFactory = informerFactory
+				sh.Nodes = map[string]NPUNode{
+					"node-ready":    {}, // ready, in informer, NOT in ssn → recovered
+					"node-notready": {}, // not ready → skipped
+					"node-deleted":  {}, // not in informer → skipped
+					"node-both":     {}, // in ssn → handled by second loop
+				}
+				return sh
+			}(),
+			want: []*api.NodeInfo{
+				api.NewNodeInfo(readyNode),       // node-ready from informer
+				api.NewNodeInfo(readyNodeForSsn), // node-both from ssn.NodeList
+			},
+		},
+		{
+			name: "12-node in ssn.Nodes but NOT in ssn.NodeList, skipped by both loops",
+			ssn: &framework.Session{
+				NodeList: nil,
+				Nodes:    map[string]*api.NodeInfo{"node-both": api.NewNodeInfo(readyNodeForSsn)},
+			},
+			sHandle: func() *ScheduleHandler {
+				sh := &ScheduleHandler{}
+				sh.FrameAttr.KubeClient = fakeClient
+				sh.FrameAttr.informerFactory = informerFactory
+				sh.Nodes = map[string]NPUNode{"node-both": {}}
+				return sh
+			}(),
+			want: []*api.NodeInfo{},
 		},
 	}
 }
