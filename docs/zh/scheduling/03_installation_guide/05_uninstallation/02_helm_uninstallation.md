@@ -48,8 +48,8 @@
 
        ```ColdFusion
        NAME               NAMESPACE   REVISION  UPDATED                                  STATUS       CHART                                        APP VERSION
-       mindcluster        default    1         2026-03-24 15:30:00.000000000 +0800 CST  deployed  mindcluster-deploy-tool-1.1.   0                26.1.0
-       mindcluster-crds   default    1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-1.1.0           26.1.0
+       mindcluster        default    1         2026-03-24 15:30:00.000000000 +0800 CST  deployed     mindcluster-deploy-tool-26.1.0                26.1.0
+       mindcluster-crds   default    1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-26.1.0           26.1.0
        ```
 
    2. 根据回显结果判断组件是否通过helm管理。
@@ -63,7 +63,7 @@
 >- 卸载操作需要在K8s管理节点执行。
 >- 卸载前请确认集群中无正在使用MindCluster组件管理的工作负载，避免业务中断。
 
-1. （可选）关闭pingmesh灵衢网络检测。
+1. （可选）关闭pingmesh灵衢网络检测。pingmesh灵衢网络检测是针对超节点内部（包括节点内和节点间）的HCCS网络提供的NPU网络故障检测，用于监控超节点间网络连通性。卸载前关闭pingmesh可避免卸载后残留的网络检测配置干扰集群网络。
     1. 执行以下命令编辑pingmesh-config ConfigMap。
 
         ```bash

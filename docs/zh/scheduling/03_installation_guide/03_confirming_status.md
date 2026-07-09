@@ -490,7 +490,7 @@
     ...
     ```
 
-## Infer Operator<a name="ZH-CN_TOPIC_0000002479386462"></a>
+## Infer Operator<a name="ZH-CN_TOPIC_0000002511346370"></a>
 
 请在任意节点执行以下步骤验证Infer Operator的安装状态。
 
@@ -566,6 +566,9 @@
     ```
 
 ## Resilience Controller<a name="ZH-CN_TOPIC_0000002511426295"></a>
+
+>[!WARNING]
+>Resilience Controller 组件已经日落，相关内容将于2026年9月30日的版本删除。以下内容仅适用于仍在使用该组件的旧版本用户。
 
 请在任意节点执行以下步骤验证Resilience Controller的安装状态。
 
