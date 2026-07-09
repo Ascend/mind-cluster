@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000002012461173_zh-cn_topic_0000001671257765_section4717142204511"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_set_optimizer_replica(rank: int, replica_info: list)
 ```
 

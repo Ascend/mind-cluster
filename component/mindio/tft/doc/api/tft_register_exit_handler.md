@@ -9,7 +9,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001975861586_section1272104915439"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_register_exit_handler(func: Callable, ctx = None)
 ```
 

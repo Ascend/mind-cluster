@@ -4,14 +4,14 @@ use mindio speed up torch.save() torch.load()
 
 you need to work it with memfs sevrer.
 
-## Pytorch How to use:
+## Pytorch How to use
 
 1. pip install mindio_acp*.whl
 2. import mindio_acp
 3. mindio_acp.save(obj, PATH) same as torch.save(obj, PATH)
 4. mindio_acp.load(PATH) same as torch.load(PATH)
 
-## Pytorch example:
+## Pytorch example
 
 ```python
 import time
@@ -44,7 +44,7 @@ print('new load time by mindio:',t_end_torch_load - t_start_torch_load)
 
 ```
 
-## MindSpore How to use:
+## MindSpore How to use
 
 1. pip install mindio_acp*.whl
 2. import mindio_acp
@@ -53,7 +53,7 @@ print('new load time by mindio:',t_end_torch_load - t_start_torch_load)
 4. with mindio_acp.open_file(PATH) as fd:
         fd.read()
 
-## MindSpore example:
+## MindSpore example
 
 ```python
 import time

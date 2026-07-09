@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001976021318_section14612105214308"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_get_reboot_type()
 ```
 
@@ -18,5 +18,5 @@ mindio_ttp.framework_ttp.tft_get_reboot_type()
 
 str类型。
 
--   arf：代表进程重调度。
--   hot switch：代表亚健康热切。
+- arf：代表进程重调度。
+- hot switch：代表亚健康热切。

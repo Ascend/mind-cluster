@@ -9,7 +9,7 @@ ascend-aperator-apis旨在为用户提供AscendJob API，及其Clientsets, Liste
 1. 创建clientsets
 
    ```go
-   NewForConfig(c *rest.Config)(*Clientset, error) 
+   NewForConfig(c *rest.Config)(*Clientset, error)
    ```
 
    | Parameters | Input/Output | Parameter Type | Description                                                  |
@@ -75,7 +75,7 @@ ascend-aperator-apis旨在为用户提供AscendJob API，及其Clientsets, Liste
 6. 更新AscendJob
 
    ```go
-   Update(ctx context.Context, job *v1.AscendJob, opts metav1.UpdateOptions)(*v1.AscendJob, error) 
+   Update(ctx context.Context, job *v1.AscendJob, opts metav1.UpdateOptions)(*v1.AscendJob, error)
    ```
 
    | Parameters | Input/Output | Parameter Type       | Description       |
@@ -159,6 +159,3 @@ ascend-aperator-apis旨在为用户提供AscendJob API，及其Clientsets, Liste
     ```go
     sharedInformerFactory.Batch().V1().Jobs().Informer()
     ```
-
-    
-

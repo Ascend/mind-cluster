@@ -1,6 +1,5 @@
 # NPU亲和性调度算法设计说明与开发指导
 
-
 <h2 id="Ascend-volcano-plugin介绍文档">Ascend-volcano-plugin介绍</h2>
 
 基于开源Volcano调度的插件机制，增加昇腾处理器的亲和性调度，虚拟设备调度等特性，最大化发挥昇腾处理器计算性能。
@@ -59,10 +58,10 @@
 
 根据业务模型，对训练任务的要求如下：
 
-1.  当训练任务申请昇腾910 AI处理器数量不大于4个时，需要将所需的昇腾910 AI处理器调度到同一个HCCS内。
-2.  当训练任务申请的昇腾910 AI处理器数量为8个时，需要将节点的昇腾910 AI处理器分配给该任务。
-3.  当训练任务申请虚拟设备vNPU时，申请数量只能为1。
-4.  遵循Volcano开源部分的其他约束。
+1. 当训练任务申请昇腾910 AI处理器数量不大于4个时，需要将所需的昇腾910 AI处理器调度到同一个HCCS内。
+2. 当训练任务申请的昇腾910 AI处理器数量为8个时，需要将节点的昇腾910 AI处理器分配给该任务。
+3. 当训练任务申请虚拟设备vNPU时，申请数量只能为1。
+4. 遵循Volcano开源部分的其他约束。
 
 <h2 id="调度算法设计说明文档">调度算法设计说明</h2>
 
@@ -71,9 +70,10 @@
 根据亲和性策略和业务模型设计梳理出场景如[表1](#table34241172175)所示。
 
 >![](doc/figures/icon-note.gif) **说明：**
->-   A\~D列4个分组，表示处理器选取时，满足处理器选取的四种HCCS情况。优先级逐次递减，即当A中不满足时，才会选择B，C，D。
->-   当组内满足HCCS时节点的情况。‘\~’左边为满足要求的HCCS，右边为另一个HCCS的处理器剩余情况。如对于1个处理器申请的A组情况：另一个HCCS可能为0、1、2、3、4五种处理器剩余情况。其代表的节点优先级也依次减小。
->-   8颗及其以上处理器适用于4颗及其以下的情况。且均放在A组，且需要全部占用。
+>
+>- A\~D列4个分组，表示处理器选取时，满足处理器选取的四种HCCS情况。优先级逐次递减，即当A中不满足时，才会选择B，C，D。
+>- 当组内满足HCCS时节点的情况。‘\~’左边为满足要求的HCCS，右边为另一个HCCS的处理器剩余情况。如对于1个处理器申请的A组情况：另一个HCCS可能为0、1、2、3、4五种处理器剩余情况。其代表的节点优先级也依次减小。
+>- 8颗及其以上处理器适用于4颗及其以下的情况。且均放在A组，且需要全部占用。
 
 **表 1**  亲和性策略场景列表
 
@@ -175,21 +175,21 @@
 
 图中关键步骤说明如下：
 
-1.  <a name="li2081354582012"></a>获取task的昇腾910 AI处理器申请数量。
-2.  根据请求的昇腾910 AI处理器数量，按照[资源申请约束](#"亲和性策略说明")选出最优的节点。
-3.  从选出的节点中，选择符合要求的昇腾910 AI处理器。
-4.  对选出的结果进行保存。
-5.  <a name="li205713218818"></a>对选出的节点进行加权操作。
+1. <a name="li2081354582012"></a>获取task的昇腾910 AI处理器申请数量。
+2. 根据请求的昇腾910 AI处理器数量，按照[资源申请约束](#亲和性策略说明)选出最优的节点。
+3. 从选出的节点中，选择符合要求的昇腾910 AI处理器。
+4. 对选出的结果进行保存。
+5. <a name="li205713218818"></a>对选出的节点进行加权操作。
 
     >![](doc/figures/icon-note.gif) **说明：**
     >[1](#li2081354582012)\~[5](#li205713218818)都是在Volcano提供的注册函数batchNodeOrderFn中实现。
 
-6.  对选出的节点进行资源分配管理。
+6. 对选出的节点进行资源分配管理。
 
     >![](doc/figures/icon-note.gif) **说明：**
     >该步骤是在Volcano的AddEventHandler函数中实现。该函数包含了节点资源的预分配allocate函数。
 
-7.  完成以上的分配操作后，Volcano框架会将本轮分配结果提交给K8s的kubelet进行确认执行，本次分配结束。
+7. 完成以上的分配操作后，Volcano框架会将本轮分配结果提交给K8s的kubelet进行确认执行，本次分配结束。
 
 ## 多节点处理原则<a name="section2038111412211"></a>
 
@@ -203,14 +203,13 @@
 
 以下两种场景可能涉及重复分配：
 
--   本session的不同任务间。当多个任务同时需要分配，且同一节点可以分给多个任务时。由于原生Volcano只是对数量进行分配，未对处理器编号进行分配。会造成处理器总数分配完成，出现某一处理器被分配多次的情况。
+- 本session的不同任务间。当多个任务同时需要分配，且同一节点可以分给多个任务时。由于原生Volcano只是对数量进行分配，未对处理器编号进行分配。会造成处理器总数分配完成，出现某一处理器被分配多次的情况。
 
     本程序使用Volcano框架提供的AddEventHandler函数来解决。在函数的allocate方法中，实现对节点处理器分配情况的管理。从而避免了重复分配的情况。
 
--   不同session之间。在本次session分配处理器时，由于在加权阶段就进行了分配，若此时资源处于等待释放状态，即暂时不能分配，就会出现本次分配失败。但Volcano在本次session不会感知。下次session时，该处理器变为可分配状态，会分配给其他任务。导致两个任务分配到同一个处理器，其中一个任务失败。
+- 不同session之间。在本次session分配处理器时，由于在加权阶段就进行了分配，若此时资源处于等待释放状态，即暂时不能分配，就会出现本次分配失败。但Volcano在本次session不会感知。下次session时，该处理器变为可分配状态，会分配给其他任务。导致两个任务分配到同一个处理器，其中一个任务失败。
 
     解决该问题的方法之一：在加权阶段进行处理器分配时，判断资源是否处于待释放状态。若是，则本次不分配。
-
 
 <h2 id="调度算法实现说明文档">调度算法实现说明</h2>
 
@@ -223,42 +222,40 @@
 
 - validJobFn：
 
-  该函数主要是拦截申请NPU资源的任务，但申请的数量需要满足亲和性策略。具体要求请参见[亲和性策略说明](#"亲和性策略说明")。
+  该函数主要是拦截申请NPU资源的任务，但申请的数量需要满足亲和性策略。具体要求请参见[亲和性策略说明](#亲和性策略说明)。
 
--   AddPredicateFn：
+- AddPredicateFn：
 
     该函数主要是过滤掉不满足亲和性要求的节点。比如task请求数量为2时，但节点的两个HCCS却各自拥有1个处理器。该节点满足数量要求，却不满足亲和性要求，需要排除。
 
--   AddBatchNodeOrderFn：
+- AddBatchNodeOrderFn：
 
     该函数主要是选出满足亲和性条件的节点和节点内的处理器，并将结果放入Pod中。
 
--   AddEventHandler：
+- AddEventHandler：
 
     该函数主要是将节点拥有的可用的昇腾910 AI处理器进行统一管理。防止并发情况下的分发错误。
-
 
 <h2 id="编译说明文档">编译说明</h2>
 
 ## 编译前准备<a name="section2078393613277"></a>
 
--   确保PC机连接至互联网，并已完成Git和Docker的安装。参见[Git安装](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)，[Docker-ce安装](https://docs.docker.com/engine/install/ubuntu/)。
+- 确保PC机连接至互联网，并已完成Git和Docker的安装。参见[Git安装](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)，[Docker-ce安装](https://docs.docker.com/engine/install/ubuntu/)。
 
--   已完成Go语言环境的安装（版本\>=1.21，建议使用最新的bugfix版本）。参见[https://golang.org/](https://golang.org/)。
--   完成musl的安装（版本\>=1.2.0）。参见[http://musl.libc.org/](http://musl.libc.org/)。
--   根据所在网络环境配置Go代理地址，国内可使用**Goproxy China**，例如：
+- 已完成Go语言环境的安装（版本\>=1.21，建议使用最新的bugfix版本）。参见[https://golang.org/](https://golang.org/)。
+- 完成musl的安装（版本\>=1.2.0）。参见[http://musl.libc.org/](http://musl.libc.org/)。
+- 根据所在网络环境配置Go代理地址，国内可使用**Goproxy China**，例如：
 
-    ```
+    ```bash
     go env -w GOPROXY=https://goproxy.cn,direct
     ```
-
 
 ## 编译Volcano<a name="section1922947135013"></a>
 
 1. 执行以下命令，在“$GOPATH/src/volcano.sh/“目录下拉取Volcano v1.9.0（或v1.7.0）版本官方开源代码。
 
    **cd** **$GOPATH/src/volcano.sh/**\
-   **git clone -b release-1.9 https://github.com/volcano-sh/volcano.git**
+   **git clone -b release-1.9 <https://github.com/volcano-sh/volcano.git>**
 
 2. 将代码目录“ascend-for-volcano“重命名为“ascend-volcano-plugin”拷贝至Volcano官方开源代码的插件路径下（“$GOPATH/src/volcano.sh/volcano/pkg/scheduler/plugins/“）。
 3. 执行以下命令，编译Volcano二进制文件和so文件。根据开源代码版本，为build.sh脚本选择对应的参数，如v1.9.0.
@@ -315,7 +312,7 @@
    >![](doc/figures/icon-note.gif) **说明：**\
    >_\{__version__\}_：表示volcano框架版本号。取值为：v1.7.0、v1.9.0。\
    > _\{__arch__\}_：表示Volcano二进制文件架构。取值为：x86_64、aarch64。
-
+   >
    >![](doc/figures/icon-note.gif) **说明：**\
    > 执行build.sh脚本时会修改以下volcano开源代码，具体修改详见ascend-for-volcano/build/build.sh文件。\
    > volcano.sh/volcano/pkg/controllers/job/state/running.go \

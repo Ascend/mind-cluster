@@ -6,7 +6,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000002012581733_section17562123821418"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_end_updating_os(step: int)
 ```
 

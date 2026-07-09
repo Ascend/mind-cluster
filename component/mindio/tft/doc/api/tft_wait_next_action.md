@@ -9,7 +9,7 @@
 
 ## 接口格式<a name="zh-cn_topic_0000001975861586_section1272104915439"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_wait_next_action()
 ```
 
@@ -19,5 +19,5 @@ mindio_ttp.framework_ttp.tft_wait_next_action()
 
 ## 返回值<a name="zh-cn_topic_0000001975861586_section1777516402588"></a>
 
--   0：成功
--   1：失败
+- 0：成功
+- 1：失败

@@ -5,12 +5,13 @@
 注册repair回调函数。
 
 >**说明：**
->-   对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
->-   MindIO TFT已在回调函数中对模型优化器中的变量进行重建与覆写，用户在框架中自定义的其他参与计算的变量，需在repair中自行实现对其的重建与覆写。
+>
+>- 对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
+>- MindIO TFT已在回调函数中对模型优化器中的变量进行重建与覆写，用户在框架中自定义的其他参与计算的变量，需在repair中自行实现对其的重建与覆写。
 
 ## 接口格式<a name="zh-cn_topic_0000001976021318_section14612105214308"></a>
 
-```
+```python
 mindio_ttp.framework_ttp.tft_register_repair_handler(func: Callable, ctx = None)
 ```
 
