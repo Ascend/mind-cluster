@@ -133,50 +133,50 @@
 <a name="ul1529912275516"></a><a name="ul1529912275516"></a><ul id="ul1529912275516"><li>true：压缩转储。</li><li>false：不压缩转储。</li></ul>
 </td>
 </tr>
-<tr id="rowhz001"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz001"><a name="phz001"></a><a name="phz001"></a>--enable-healthz</p>
+<tr id="rowhz001-infer-operator"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz001-infer-operator"><a name="phz001-infer-operator"></a><a name="phz001-infer-operator"></a>--enable-healthz</p>
 </td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz001b"><a name="phz001b"></a><a name="phz001b"></a>bool</p>
+<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz001b-infer-operator"><a name="phz001b-infer-operator"></a><a name="phz001b-infer-operator"></a>bool</p>
 </td>
-<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz001c"><a name="phz001c"></a><a name="phz001c"></a>false</p>
+<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz001c-infer-operator"><a name="phz001c-infer-operator"></a><a name="phz001c-infer-operator"></a>false</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz001d"><a name="phz001d"></a><a name="phz001d"></a>是否启用健康检查服务。K8s部署时由组件YAML配置启用（true）</p>
-<a name="ulhz001"></a><a name="ulhz001"></a><ul id="ulhz001"><li>true：启用。</li><li>false：禁用。</li></ul>
-</td>
-</tr>
-<tr id="rowhz002"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz002"><a name="phz002"></a><a name="phz002"></a>--healthz-address</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz002b"><a name="phz002b"></a><a name="phz002b"></a>string</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz002c"><a name="phz002c"></a><a name="phz002c"></a>11251</p>
-</td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz002d"><a name="phz002d"></a><a name="phz002d"></a>健康检查服务侦听端口号，取值范围为1025~65535。K8s部署时由组件YAML配置为11254。若指定端口被占用，组件启动失败。</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz001d-infer-operator"><a name="phz001d-infer-operator"></a><a name="phz001d-infer-operator"></a>是否启用健康检查服务。K8s部署时由组件YAML配置启用（true）</p>
+<a name="ulhz001-infer-operator"></a><a name="ulhz001-infer-operator"></a><ul id="ulhz001-infer-operator"><li>true：启用。</li><li>false：禁用。</li></ul>
 </td>
 </tr>
-<tr id="rowhz003"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz003"><a name="phz003"></a><a name="phz003"></a>--tls-cert-file</p>
+<tr id="rowhz002-infer-operator"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz002-infer-operator"><a name="phz002-infer-operator"></a><a name="phz002-infer-operator"></a>--healthz-address</p>
 </td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz003b"><a name="phz003b"></a><a name="phz003b"></a>string</p>
+<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz002b-infer-operator"><a name="phz002b-infer-operator"></a><a name="phz002b-infer-operator"></a>string</p>
 </td>
-<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz003c"><a name="phz003c"></a><a name="phz003c"></a>""</p>
+<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz002c-infer-operator"><a name="phz002c-infer-operator"></a><a name="phz002c-infer-operator"></a>11251</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz003d"><a name="phz003d"></a><a name="phz003d"></a>HTTPS证书文件路径。为空则使用HTTP协议。与--tls-private-key-file必须同时配置或同时为空。配置方法及安全注意事项请参见<a href="../../../07_references/security_hardening.md#健康探针安全加固">健康探针安全加固</a>。</p>
-</td>
-</tr>
-<tr id="rowhz004"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz004"><a name="phz004"></a><a name="phz004"></a>--tls-private-key-file</p>
-</td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz004b"><a name="phz004b"></a><a name="phz004b"></a>string</p>
-</td>
-<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz004c"><a name="phz004c"></a><a name="phz004c"></a>""</p>
-</td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz004d"><a name="phz004d"></a><a name="phz004d"></a>HTTPS私钥文件路径。为空则使用HTTP协议。与--tls-cert-file必须同时配置或同时为空。</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz002d-infer-operator"><a name="phz002d-infer-operator"></a><a name="phz002d-infer-operator"></a>健康检查服务侦听端口号，取值范围为1025~65535。K8s部署时由组件YAML配置为11254。若指定端口被占用，组件启动失败。</p>
 </td>
 </tr>
-<tr id="rowhz004"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz004"><a name="phz004"></a><a name="phz004"></a>--snapshotTimeout</p>
+<tr id="rowhz003-infer-operator"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz003-infer-operator"><a name="phz003-infer-operator"></a><a name="phz003-infer-operator"></a>--tls-cert-file</p>
 </td>
-<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz004b"><a name="phz004b"></a><a name="phz004b"></a>int</p>
+<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz003b-infer-operator"><a name="phz003b-infer-operator"></a><a name="phz003b-infer-operator"></a>string</p>
 </td>
-<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz004c"><a name="phz004c"></a><a name="phz004c"></a>60</p>
+<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz003c-infer-operator"><a name="phz003c-infer-operator"></a><a name="phz003c-infer-operator"></a>""</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz004d"><a name="phz004d"></a><a name="phz004d"></a>容器快照超时时间，取值范围1-600，单位分钟。</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz003d-infer-operator"><a name="phz003d-infer-operator"></a><a name="phz003d-infer-operator"></a>HTTPS证书文件路径。为空则使用HTTP协议。与--tls-private-key-file必须同时配置或同时为空。配置方法及安全注意事项请参见<a href="../../../07_references/security_hardening.md#健康探针安全加固">健康探针安全加固</a>。</p>
+</td>
+</tr>
+<tr id="rowhz004-infer-operator"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz004-infer-operator"><a name="phz004-infer-operator"></a><a name="phz004-infer-operator"></a>--tls-private-key-file</p>
+</td>
+<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz004b-infer-operator"><a name="phz004b-infer-operator"></a><a name="phz004b-infer-operator"></a>string</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz004c-infer-operator"><a name="phz004c-infer-operator"></a><a name="phz004c-infer-operator"></a>""</p>
+</td>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz004d-infer-operator"><a name="phz004d-infer-operator"></a><a name="phz004d-infer-operator"></a>HTTPS私钥文件路径。为空则使用HTTP协议。与--tls-cert-file必须同时配置或同时为空。</p>
+</td>
+</tr>
+<tr id="rowhz005-infer-operator"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz005-infer-operator"><a name="phz005-infer-operator"></a><a name="phz005-infer-operator"></a>--snapshotTimeout</p>
+</td>
+<td class="cellrowborder" valign="top" width="14.979999999999999%" headers="mcps1.2.5.1.2 "><p id="phz005b-infer-operator"><a name="phz005b-infer-operator"></a><a name="phz005b-infer-operator"></a>int</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz005c-infer-operator"><a name="phz005c-infer-operator"></a><a name="phz005c-infer-operator"></a>60</p>
+</td>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz005d-infer-operator"><a name="phz005d-infer-operator"></a><a name="phz005d-infer-operator"></a>容器快照超时时间，取值范围1-600，单位分钟。</p>
 </td>
 </tr>
 <tr id="row2615144813463"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="p1061594884617"><a name="p1061594884617"></a><a name="p1061594884617"></a>-h或者-help</p>

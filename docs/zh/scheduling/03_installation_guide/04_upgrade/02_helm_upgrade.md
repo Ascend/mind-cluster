@@ -4,6 +4,8 @@
 
 本文档介绍如何通过helm升级MindCluster组件。
 
+**版本兼容性说明**：可跨大版本升级，如从 7.x.x 升级到 26.x.x。
+
 **使用约束**
 
 - 仅支持使用helm 3.x版本。
@@ -204,7 +206,7 @@
        ```
 
    - **自定义配置升级**：若[crd默认配置](../02_installation/helm_installation.md#default_crds_yaml_install_config)不符合用户需求，请创建crds-values.yaml文件，将[crd默认配置](../02_installation/helm_installation.md#default_crds_yaml_install_config)的YAML文件内容复制到crds-values.yaml文件中，修改相关配置后执行如下命令。
-      >[!NOTICE]
+      >[!WARNING]
       >若只升级单个组件，crds-values.yaml中其他已安装组件的配置请保持与安装时的配置一致，不能将其他已安装组件的Enabled参数设置为false，否则对应组件的资源会被删除。
 
       ```bash
@@ -240,7 +242,7 @@
        ```
 
    - **自定义配置升级**：若[应用组件默认配置](../02_installation/helm_installation.md#default_app_yaml_install_config)不符合用户需求，请创建values.yaml文件，将[应用组件默认配置](../02_installation/helm_installation.md#default_app_yaml_install_config)的YAML文件内容复制到values.yaml文件中，修改相关配置后执行如下命令。
-       >[!NOTICE]
+       >[!WARNING]
        >若只升级单个组件，values.yaml中其他已安装组件的配置请保持与安装时的配置一致，不能将其他已安装组件的Enabled参数设置为false，否则对应组件的资源会被删除。
 
        ```bash
@@ -325,7 +327,7 @@
     回显示例如下：
 
     ```ColdFusion
-    Rollback was a sucess! Happy Helming!
+    Rollback was a success! Happy Helming!
     ```
 
 4. 确认组件运行状态，详细请参见[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)章节。
