@@ -209,12 +209,12 @@
 
 |操作步骤|操作说明|更多参考|
 |--|--|--|
-|[安装组件](#section1837511531098)|以Atlas 800T A2 训练服务器为例，手把手带您在昇腾设备上快速安装集群调度组件。|更多安装集群调度组件的参数说明和操作步骤，请参考[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节。|
-|[下发训练任务](#section106493419399)|以一个简单的PyTorch训练任务为例，让您快速了解训练任务下发的操作流程。|更多下发训练任务的参数说明和操作步骤，请参考[基础调度](../04_usage/basic_scheduling/00_feature_description.md)章节。|
+|[安装组件](#section1837511531098)|以Atlas 800T A2 训练服务器为例，手把手带您在昇腾设备上快速安装集群调度组件。|更多安装集群调度组件的参数说明和操作步骤，请参考[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节。|
+|[下发训练任务](#section106493419399)|以一个简单的PyTorch训练任务为例，让您快速了解训练任务下发的操作流程。|更多下发训练任务的参数说明和操作步骤，请参考[基础调度](../04_usage/03_basic_scheduling/00_feature_description.md)章节。|
 
 ### 安装组件<a name="section1837511531098"></a>
 
-以下步骤命令均以一台Atlas 800T A2 训练服务器为例，如需了解所有组件的详细安装步骤和参数说明请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)。
+以下步骤命令均以一台Atlas 800T A2 训练服务器为例，如需了解所有组件的详细安装步骤和参数说明请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)。
 
 1. 创建节点标签。
 
@@ -225,9 +225,9 @@
         ```
 
 2. 安装组件。以AArch64架构为例，用户需根据实际情况下载对应架构的软件包。
-   >[!NOTE]
-   >
-   >快速入门以helm快捷部署为例，要求MindCluster版本为26.1.0及以上，可以参考安装部署章节的[使用helm安装](../03_installation_guide/02_installation/helm_installation.md)。
+    >[!NOTE]
+    >
+    >快速入门以helm快捷部署为例，要求MindCluster版本为26.1.0及以上，可以参考安装部署章节的[使用helm安装](../03_installation_guide/02_installation/00_helm_installation.md)。
 
     1. 安装Ascend Docker Runtime。
 

@@ -197,7 +197,7 @@ metadata:
      fault-scheduling: "force"
      fault-retry-times: "100000000"    # To handle service plane faults, you must configure the number of unconditional retries on the service plane.
      jobID: mindie-xxx      # Defined by the user.
-     app: mindeie-ms-server
+     app: mindie-ms-server
      mind-cluster/scaling-rule: scaling-rule   # Must be consistent with the name of the scaling rule ConfigMap.
      mind-cluster/group-name: group0           # Must be consistent with the group_name value in the scaling rule ConfigMap
 spec:
