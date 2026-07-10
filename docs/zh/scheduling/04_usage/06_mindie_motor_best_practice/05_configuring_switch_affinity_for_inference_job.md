@@ -1,0 +1,83 @@
+# 配置推理任务交换机亲和性
+
+当前仅支持Atlas 800I A2 推理服务器配置交换机亲和性功能。开启此功能，可规避Spine交换机下行流量冲突问题。如需了解该功能的原理，请参见[交换机亲和性调度1.0](../03_basic_scheduling/01_affinity_scheduling/04_node_based_affinity.md#交换机亲和性调度10)章节。
+
+## 前提条件
+
+已完成[（可选）使用Volcano交换机亲和性调度](../../05_developer_guide/00_installation_deployment/00_manual_installation/05_volcano.md#可选使用volcano交换机亲和性调度)。
+
+## 操作步骤
+
+将交换机亲和性tor-affinity配置为normal-schema，YAML示例如下：
+
+```Yaml
+apiVersion: mindxdl.gitee.com/v1
+kind: AscendJob
+metadata:
+  name: mindie-server-0
+  namespace: mindie
+  labels:
+    framework: pytorch
+    app: mindie-ms-server        # 表示MindIE Motor在Ascend Job任务中的角色,不可修改
+    jobID: mindie-ms-test        # 当前MindIE Motor推理任务在集群中的唯一识别ID，用户可根据实际情况进行配置
+    tor-affinity: normal-schema    # 开启交换机亲和性
+    ring-controller.atlas: ascend-910b
+```
+
+## 查看交换机亲和性调度结果
+
+1.执行以下命令，检查ConfigMap内容
+
+```shell
+kubectl describe cm -n kube-system basic-tor-node-cm
+```
+
+回显示例如下：
+
+```json
+====
+tor_info:
+----
+{
+  "version": "1.0",
+  "tor_count": 4,
+  "server_list":[
+    {
+      "tor_id": 0,
+      "tor_ip": "192.168.0.1",
+      "server": [
+        {
+          "server_ip": "192.168.1.0",
+          "npu_count": 8,
+          "slice_id": 0
+        },
+        {
+          "server_ip": "192.168.1.1",
+          "npu_count": 8,
+          "slice_id": 2
+        },
+        ...
+      ]
+    },
+        ...
+  ]
+}
+```
+
+2.执行以下命令，查看Pod调度情况
+
+```shell
+kubectl get pod --all-namespaces -owide
+```
+
+回显示例如下：
+
+```ColdFusion
+NAMESPACE        NAME                                READY   STATUS    RESTARTS   AGE     IP            Node
+...
+default          mindie-server-0-master-0            1/1     Running   0          10S     192.168.1.0   worker0
+default          mindie-server-0-worker-0            1/1     Running   0          10S     192.168.1.1   worker1
+...
+```
+
+根据步骤1获取到的Pod ip对比步骤2获取到的basic-tor-node-cm，确认多个实例分布在同一个tor下，表示交换机亲和性特性运行成功。

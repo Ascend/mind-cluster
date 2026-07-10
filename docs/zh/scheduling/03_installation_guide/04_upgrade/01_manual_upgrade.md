@@ -7,4 +7,4 @@
 
 升级前请检查是否有正在运行的任务，并视情况关闭 pingmesh 灵衢网络检测。升级步骤包括环境检查、卸载旧版本、安装新版本、恢复配置等。
 
-详细升级步骤，请查看[开发者指南-手动升级](../../05_developer_guide/installation_deployment/02_upgrade.md)。
+详细升级步骤，请查看[开发者指南-手动升级](../../05_developer_guide/00_installation_deployment/01_upgrade.md)。

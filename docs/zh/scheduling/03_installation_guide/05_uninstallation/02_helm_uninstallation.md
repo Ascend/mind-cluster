@@ -16,7 +16,7 @@
   - NPU Exporter
   - Infer Operator
   - K8s RDMA Shared Dev Plugin
-- 卸载Ascend Docker Runtime和Container Manager组件请参照[手动卸载](../../05_developer_guide/installation_deployment/01_uninstallation.md#ZH-CN_TOPIC_0000002511426389)章节操作。
+- 卸载Ascend Docker Runtime和Container Manager组件请参照[手动卸载](../../05_developer_guide/00_installation_deployment/02_uninstallation.md#ZH-CN_TOPIC_0000002511426389)章节操作。
 - TaskD和MindIO安装在业务容器中，不在本章节涉及的组件范围内。
 
 ## 卸载前准备<a name="section_helm_upgrade_prepare"></a>
@@ -54,7 +54,7 @@
 
    2. 根据回显结果判断组件是否通过helm管理。
        - 若回显中存在名称为**mindcluster**和**mindcluster-crds**的Release，且STATUS为**deployed**，表示组件已通过helm管理，可继续执行   helm卸载操作。
-       - 若回显中不存在上述Release，表示组件未通过helm管理，请参照[手动卸载](../../05_developer_guide/installation_deployment/01_uninstallation.md#ZH-CN_TOPIC_0000002511426389)进行卸载。
+       - 若回显中不存在上述Release，表示组件未通过helm管理，请参照[手动卸载](../../05_developer_guide/00_installation_deployment/02_uninstallation.md#ZH-CN_TOPIC_0000002511426389)进行卸载。
 
 ## 执行卸载<a name="section_exec_uninstall"></a>
 
@@ -115,7 +115,7 @@
     namespace "cluster-system" deleted
     ```
 
-5. （可选）删除日志文件。参考[（可选）创建日志目录](../../05_developer_guide/installation_deployment/manual_installation/01_preparing_for_installation.md#可选创建日志目录)章节，在对应节点上删除集群调度组件的日志目录。以ClusterD为例，请确认后再删除。
+5. （可选）删除日志文件。参考[（可选）创建日志目录](../../05_developer_guide/00_installation_deployment/00_manual_installation/01_preparing_for_installation.md#可选创建日志目录)章节，在对应节点上删除集群调度组件的日志目录。以ClusterD为例，请确认后再删除。
 
     ```bash
     rm -rf /var/log/mindx-dl/clusterd
