@@ -9,4 +9,4 @@
 
 卸载完成后建议检查相关配置文件和日志目录，确保清理完整。
 
-详细卸载步骤，请查看[开发者指南-手动卸载](../../05_developer_guide/installation_deployment/01_uninstallation.md)。
+详细卸载步骤，请查看[开发者指南-手动卸载](../../05_developer_guide/00_installation_deployment/02_uninstallation.md)。

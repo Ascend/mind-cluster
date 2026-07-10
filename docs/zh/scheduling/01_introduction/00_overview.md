@@ -2,7 +2,7 @@
 
 集群调度组件基于业界流行的集群调度系统Kubernetes，增加了昇腾AI处理器（NPU）的支持，提供NPU资源管理、亲和性调度、故障恢复和指标监控等功能。用户可以直接使用K8s命令拉起昇腾任务，或者基于MindCluster快速开发昇腾深度学习平台。
 
-本文档是用户使用集群调度组件的指导文档，在安装和使用集群调度组件前，用户需要提前了解[集群调度组件的特性](./02_feature_description.md)，并根据具体特性的特点和功能，选择需要使用的特性并[安装相应的组件](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)。
+本文档是用户使用集群调度组件的指导文档，在安装和使用集群调度组件前，用户需要提前了解[集群调度组件的特性](./02_feature_description.md)，并根据具体特性的特点和功能，选择需要使用的特性并[安装相应的组件](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)。
 
 ## 使用流程<a name="section10118105218514"></a>
 
