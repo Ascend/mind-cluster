@@ -22,7 +22,7 @@
 
 1、原始ms troubleshooter经验文件（.py文件）复制到exp_lib_dir中，并在`convertor.py`里导入所有py经验模块，并把这些模块组合为一个list`exp_lib_list`；
 
-```
+```python
 from exp_lib_dir import common_exp_lib, compiler_exp_lib, dataset_exp_lib, front_exp_lib, operators_exp_lib, vm_exp_lib
 exp_lib_list = [common_exp_lib, compiler_exp_lib, dataset_exp_lib, front_exp_lib, operators_exp_lib, vm_exp_lib]
 ```
