@@ -120,8 +120,8 @@ class SwitchAnalyzer(Analyzer):
             _DIAG_LOGGER.warning("未收集到对端交换机[%s]信息", remove_device.device_name)
             return None, domain
         interface_full_info = remote_switch.interface_full_infos.get(remove_device.interface)
-        remote_optical_module_info = interface_full_info.get_optical_module_info()
-        if not remote_optical_module_info:
+        remote_optical_module_info = interface_full_info.get_optical_module_info() if interface_full_info else None
+        if not interface_full_info or not remote_optical_module_info:
             _DIAG_LOGGER.warning(
                 "未收集到对端交换机[%s]端口[%s]的光模块信息", remove_device.device_name, remove_device.interface
             )
