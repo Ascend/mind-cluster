@@ -16,7 +16,7 @@
 - [License](#License)
 - [建议与交流](#建议与交流)
 
-# 📢 变更通知
+## 📢 变更通知
 
 - **2025-11-07**: ✨ 补充A3 AI服务器故障模式
 - **2025-09-04**: ✨ 适配训练打屏日志变化
@@ -27,11 +27,11 @@
 - **2025-06-05**: ✨ 根因节点定位能力适配Socket并行建链
 - **2025-05-23**: 🚀 提供 **模型级/POD级** 故障诊断分析
 
-# 简介
+## 简介
 
 MindCluster Ascend FaultDiag（故障诊断工具）主要功能如下：提供日志清洗和故障诊断功能，提取训练及推理过程相关日志的关键信息，并根据集群所有节点清洗后的关键信息，分析故障根因节点以及故障事件。
 
-# 目录结构
+## 目录结构
 
 ```txt
 ascend-faultdiag
@@ -85,17 +85,17 @@ ascend-faultdiag
 └─toolkit_src
 ```
 
-# 版本说明
+## 版本说明
 
 MindCluster Ascend FaultDiag版本配套详情请参考：[版本配套详情](https://www.hiascend.com/developer/download/community)
 
-# 环境部署
+## 环境部署
 
 MindCluster Ascend FaultDiag支持的Python版本需≥3.7。在安装MindCluster Ascend FaultDiag前，请检查依赖的Python版本是否满足要求。
 
-## 编译与构建
+### 编译与构建
 
-### 环境要求
+#### 环境要求
 
 - Python版本≥3.7.5
 - scikit-learn>=1.3.0
@@ -103,7 +103,7 @@ MindCluster Ascend FaultDiag支持的Python版本需≥3.7。在安装MindCluste
 - numpy
 - ply>=3.11
 
-### 构建
+#### 构建
 
 请先克隆仓库，然后在项目根目录执行构建脚本：
 
@@ -113,19 +113,19 @@ cd mind-cluster/component/ascend-faultdiag
 bash build/build.sh
 ```
 
-## [获取软件包](https://www.hiascend.com/zh/developer/download/community/result?module=dl%2Bcann)
+### [获取软件包](https://www.hiascend.com/zh/developer/download/community/result?module=dl%2Bcann)
 
 获取MindCluster Ascend FaultDiag软件包。
 
-## [命令行方式安装](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG010.html)
+### [命令行方式安装](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG010.html)
 
 介绍如何以命令行方式安装MindCluster Ascend FaultDiag。
 
-## [使用MindCluster Ascend Deployer安装](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG011.html)
+### [使用MindCluster Ascend Deployer安装](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG011.html)
 
 介绍如何使用MindCluster Ascend Deployer安装MindCluster Ascend FaultDiag。
 
-# 快速入门
+## 快速入门
 
 **（可选）为普通用户配置环境变量。**
 
@@ -161,7 +161,7 @@ bash build/build.sh
     ascend-fd ${版本号}
     ```
 
-**日志清洗**
+### 日志清洗
 
 - 步骤1：上传日志至服务器。
     上传至服务器任意目录（例如/home），以使用-i参数为例，将所有日志汇总至同一采集目录下进行清洗，目录结构示例如下。
@@ -243,7 +243,7 @@ bash build/build.sh
         |--清洗输出目录n
     ```
 
-**故障诊断**
+### 故障诊断
 
 - 步骤1：创建诊断结果输出目录。
 
@@ -259,66 +259,66 @@ bash build/build.sh
 
     诊断回显样例以及关键参数说明请见：[故障诊断](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG038.html)
 
-# 特性介绍
+## 特性介绍
 
 MindCluster组件提供资源调度功能，支持NPU集群作业调度、运维监测、故障恢复等功能。具体特性介绍如下：
 
-| 特性名称      | 介绍                                                                                                              | Released |
-|-----------|-----------------------------------------------------------------------------------------------------------------|----------|
-| 日志清洗与转储   | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG037.html) | ✅        |
-| 故障诊断      | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG038.html) | ✅        |
-| 单机故障诊断    | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG039.html) | ✅        |
-| 超节点故障诊断   | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG126.html) | ✅        |
-| 清洗业务流日志   | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG127.html) | ✅        |
+| 特性名称           | 介绍                                                                                                            | Released |
+|--------------------|-----------------------------------------------------------------------------------------------------------------|----------|
+| 日志清洗与转储     | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG037.html) | ✅        |
+| 故障诊断           | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG038.html) | ✅        |
+| 单机故障诊断       | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG039.html) | ✅        |
+| 超节点故障诊断     | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG126.html) | ✅        |
+| 清洗业务流日志     | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG127.html) | ✅        |
 | 根因节点清洗及诊断 | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG128.html) | ✅        |
 | 故障事件清洗及诊断 | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG129.html) | ✅        |
-| 自定义配置文件   | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG142.html) | ✅        |
+| 自定义配置文件     | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG142.html) | ✅        |
 
-# API参考
+## API参考
 
 API参考详见：[API参考](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG041.html)。
 
-# FAQ
+## FAQ
 
 相关FAQ请参考：[FAQ](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG059.html)。
 
-# 安全声明
+## 安全声明
 
 - 安全声明详见：[安全加固](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG052.html)
 - 公网地址详见：[公网地址](https://www.hiascend.com/doc_center/source/zh/mindcluster/72rc1/faultdiag/faultdiagug/resource/MindCluster%207.2.RC1%20Ascend%20FaultDiag%E5%85%AC%E7%BD%91%E5%9C%B0%E5%9D%80.xlsx)
 
-# 分支维护策略
+## 分支维护策略
 
 版本分支的维护阶段如下：
 
-| 状态          | 时间     | 说明                                                      |
-|-------------|--------|---------------------------------------------------------|
-| 计划          | 1-3个月  | 计划特性                                                    |
-| 开发          | 3个月    | 开发新特性并修复问题，定期发布新版本                                      |
-| 维护          | 3-12个月 | 常规分支维护3个月，长期支持分支维护12个月。对重大BUG进行修复，不合入新特性，并视BUG的影响发布补丁版本 |
-| 生命周期终止（EOL） | N/A    | 分支不再接受任何修改                                              |
+| 状态                | 时间     | 说明                                                                                                  |
+|---------------------|----------|-------------------------------------------------------------------------------------------------------|
+| 计划                | 1-3个月  | 计划特性                                                                                              |
+| 开发                | 3个月    | 开发新特性并修复问题，定期发布新版本                                                                  |
+| 维护                | 3-12个月 | 常规分支维护3个月，长期支持分支维护12个月。对重大BUG进行修复，不合入新特性，并视BUG的影响发布补丁版本 |
+| 生命周期终止（EOL） | N/A      | 分支不再接受任何修改                                                                                  |
 
-# 版本维护策略
+## 版本维护策略
 
-| 版本       | 维护策略 | 当前状态 | 发布日期       | 后续状态                 | EOL日期      |
-|----------|------|------|------------|----------------------|------------|
-| master   | 长期支持 | 开发   | 在研分支，不发布   | 2025-10-27           | -          |
-| v7.3.0   | 长期支持 | 开发   | 在研分支，未发布   | 2025-10-27           | -          |
+| 版本   | 维护策略 | 当前状态 | 发布日期         | 后续状态   | EOL日期 |
+|--------|----------|----------|------------------|------------|---------|
+| master | 长期支持 | 开发     | 在研分支，不发布 | 2025-10-27 | -       |
+| v7.3.0 | 长期支持 | 开发     | 在研分支，未发布 | 2025-10-27 | -       |
 
-# 免责声明
+## 免责声明
 
 - 本仓库代码中包含多个开发分支，这些分支可能包含未完成、实验性或未测试的功能。在正式发布前，这些分支不应被应用于任何生产环境或者依赖关键业务的项目中。请务必使用我们的正式发行版本，以确保代码的稳定性和安全性。
   使用开发分支所导致的任何问题、损失或数据损坏，本项目及其贡献者概不负责。
 - 正式版本请参考release版本 <https://gitcode.com/ascend/mind-cluster/releases>
 
-# License
+## License
 
 MindCluster以Apache 2.0许可证许可，对应许可证文本可查阅[MindCluster根目录](https://gitcode.com/Ascend/mind-cluster/blob/master/LICENSE)。
 
-# 建议与交流
+## 建议与交流
 
 欢迎大家为社区做贡献。如果有任何疑问或建议，请提交[issue](https://gitcode.com/Ascend/mind-cluster/issues)，我们会尽快回复。感谢您的支持。
 
-# 致谢
+## 致谢
 
 感谢来自社区的每一个PR，欢迎贡献MindCluster Ascend FaultDiag！

@@ -5,7 +5,7 @@
 ## 前提条件
 
 - Linux 系统，已安装 unzip 工具
-- 已安装 Python 3.8 及以上版本
+- 已安装 Python 3.7 及以上版本
 - 已安装 pip3
 
 ## 步骤1：安装 ascend-fd
