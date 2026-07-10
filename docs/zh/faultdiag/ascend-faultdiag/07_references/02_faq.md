@@ -4,7 +4,7 @@
 
 ### Q1：安装时提示 Python 版本不满足要求
 
-**A**：ascend-fd 要求 Python 3.8 及以上版本。请检查您的 Python 版本：
+**A**：ascend-fd 要求 Python 3.7 及以上版本，如需使用性能劣化功能，必须要求 Python 3.8 以上版本。请检查您的 Python 版本：
 
 ```shell
 python3 --version
@@ -24,10 +24,10 @@ python3 --version
 which ascend-fd
 ```
 
-以普通用户添加 PATH 环境变量（假设 ascend-fd 安装在 `/usr/local/python3.8/bin`）：
+以普通用户添加 PATH 环境变量（假设 ascend-fd 安装在 `/usr/local/python3.7.5/bin`）：
 
 ```shell
-export PATH=$PATH:/usr/local/python3.8/bin
+export PATH=$PATH:/usr/local/python3.7.5/bin
 ```
 
 ### Q4：集群规模较大时诊断失败
