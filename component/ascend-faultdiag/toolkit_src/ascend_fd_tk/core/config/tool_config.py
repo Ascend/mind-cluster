@@ -15,7 +15,23 @@
 # limitations under the License.
 # ==============================================================================
 
-class ToolConfig:
+from importlib.metadata import version, PackageNotFoundError
 
-    def __init__(self, version="v0.10"):
-        self.version = version
+from ascend_fd_tk.core.common.constants import PACKAGE_NAME
+from ascend_fd_tk.utils.logger import DIAG_LOGGER
+
+
+class ToolConfig:
+    def __init__(self, version_info: str = "v0.10"):
+        self.version = self.get_version() or version_info
+
+    @staticmethod
+    def get_version():
+        try:
+            return version(PACKAGE_NAME)
+        except PackageNotFoundError:
+            DIAG_LOGGER.warning("包 %s 未安装", PACKAGE_NAME)
+            return ""
+        except Exception as e:
+            DIAG_LOGGER.warning("获取版本号时发生未知错误: %s", str(e))
+            return ""

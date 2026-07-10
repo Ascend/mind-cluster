@@ -16,9 +16,13 @@
 # ==============================================================================
 
 import argparse
+import os
 import sys
 
 from setuptools import setup, find_packages
+
+from ascend_fd_tk.core.common.constants import PACKAGE_NAME
+from ascend_fd_tk.utils.file_tool import safe_read_open
 
 
 def parse_args():
@@ -29,10 +33,19 @@ def parse_args():
     return args.version
 
 
+def read_requirements():
+    requirements_path = os.path.join(os.path.dirname(__file__), "requirements.txt")
+    try:
+        with safe_read_open(requirements_path, "r", encoding="utf-8") as f:
+            return [line.strip() for line in f if line.strip() and not line.startswith("#")]
+    except Exception:
+        return []
+
+
 version = parse_args()
 
 setup(
-    name="ascend-faultdiag-toolkit",
+    name=PACKAGE_NAME,
     version=version,
     description="MindCluster ascend faultdiag diagnostic toolkit",
     author="Huawei Technologies Co., Ltd",
@@ -42,7 +55,7 @@ setup(
     package_data={
         '': ['*.ini', '*.json'],
     },
-    install_requires=[],
+    install_requires=read_requirements(),
     entry_points={
         'console_scripts': [
             'ascend-fd-tk=ascend_fd_tk.cli:main',

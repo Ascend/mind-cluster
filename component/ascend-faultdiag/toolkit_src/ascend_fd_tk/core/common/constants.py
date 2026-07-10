@@ -19,6 +19,8 @@ import sys
 
 DEFAULT_LOGGER_NAME = "ascend_fd_tk"
 DEFAULT_CONSOLE_LOGGER_NAME = "toolkit_console"
+PACKAGE_NAME = "ascend-faultdiag-toolkit"
+
 # 闪断关键字
 NPU_LINK_DOWN = "LINK DOWN"
 NPU_LINK_UP = "LINK UP"
