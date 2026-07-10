@@ -2783,4 +2783,4 @@ Ascend 950代际LCNE组件运行时，会产生相关日志文件。
 
 **采集方式说明**
 
-MindIE-PyMotor部署完成后，会自动启动MindIE-PyMotor、vLLM和vLLM-Ascend日志的收集，MindIE-PyMotor部署详细请参见[MindIE-PyMotor部署](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/service_deployment/pd_disaggregation_deployment.md#%E6%89%A7%E8%A1%8C%E9%83%A8%E7%BD%B2%EF%BC%88deploypy%EF%BC%89)。
+MindIE-PyMotor部署完成后，会自动启动MindIE-PyMotor、vLLM和vLLM-Ascend日志的收集，MindIE-PyMotor部署详细请参见[MindIE-PyMotor部署](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/deployment/README.md)。
