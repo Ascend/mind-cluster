@@ -18,7 +18,7 @@
     - NPU Exporter
     - Infer Operator
     - K8s RDMA Shared Dev Plugin
-- 升级Ascend Docker Runtime、Container Manager、TaskD和MindIO组件请参考[手动升级](../../05_developer_guide/installation_deployment/02_upgrade.md#ZH-CN_TOPIC_0000002479226452)章节操作。
+- 升级Ascend Docker Runtime、Container Manager、TaskD和MindIO组件请参考[手动升级](../../05_developer_guide/00_installation_deployment/01_upgrade.md#ZH-CN_TOPIC_0000002479226452)章节操作。
 
 ## 升级前准备<a name="section_helm_upgrade_prepare"></a>
 
@@ -69,7 +69,7 @@
     unzip Ascend-helm-deploy-tool_{version}_linux.zip
     ```
 
-    解压后的各文件用途请参考[表4](../02_installation/helm_installation.md#table15274931175244)，文件列表回显示例如下：
+    解压后的各文件用途请参考[表4](../02_installation/00_helm_installation.md#table15274931175244)，文件列表回显示例如下：
 
     ```ColdFusion
     -r-------- 1 root root  2026 Mar 24 15:25 mindcluster-crds-deploy-tool-{chart_version}.tgz
@@ -100,7 +100,7 @@
     >   1. 需先升级crd，再升级应用组件;
     >   2. 可能会导致工作负载中断，请用户在升级前确认。
     >- 请用户按需选择**默认配置安装**或**自定义配置安装**其中一种方式进行操作即可。
-   - **默认配置安装**：若[crd默认配置](../02_installation/helm_installation.md#default_crds_yaml_install_config)符合用户需求，可执行如下命令。
+   - **默认配置安装**：若[crd默认配置](../02_installation/00_helm_installation.md#default_crds_yaml_install_config)符合用户需求，可执行如下命令。
 
        ```bash
        #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
@@ -109,7 +109,7 @@
        helm install mindcluster-crds mindcluster-crds-deploy-tool-{chart_version}.tgz
        ```
 
-   - **自定义配置安装**：若[crd默认配置](../02_installation/helm_installation.md#default_crds_yaml_install_config)不符合用户需求，请创建crds-values.yaml文件，将[crd默认配置](../02_installation/helm_installation.md#default_crds_yaml_install_config)的YAML文件内容复制到crds-values.yaml文件中，修改相关配置后执行如下命令。
+   - **自定义配置安装**：若[crd默认配置](../02_installation/00_helm_installation.md#default_crds_yaml_install_config)不符合用户需求，请创建crds-values.yaml文件，将[crd默认配置](../02_installation/00_helm_installation.md#default_crds_yaml_install_config)的YAML文件内容复制到crds-values.yaml文件中，修改相关配置后执行如下命令。
 
        ```bash
        #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
@@ -134,7 +134,7 @@
     > [!NOTE]
     >- **默认配置安装**方式会从昇腾镜像仓库下载应用组件的镜像。若用户节点无法连接互联网且本地未缓存镜像，可能会升级失败。
     >- 请用户按需选择**默认配置安装**或**自定义配置安装**其中一种方式进行操作即可。
-   - **默认配置安装**：若[应用组件默认配置](../02_installation/helm_installation.md#default_app_yaml_install_config)符合用户需求，可执行如下命令。
+   - **默认配置安装**：若[应用组件默认配置](../02_installation/00_helm_installation.md#default_app_yaml_install_config)符合用户需求，可执行如下命令。
 
        ```bash
        #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
@@ -143,7 +143,7 @@
        helm install mindcluster mindcluster-deploy-tool-{chart_version}.tgz
        ```
 
-   - **自定义配置安装**：若[应用组件默认配置](../02_installation/helm_installation.md#default_app_yaml_install_config)不符合用户需求，请创建values.yaml文件，将[应用组件默认配置](../02_installation/helm_installation.md#default_app_yaml_install_config)的YAML文件内容复制到values.yaml文件中，修改相关配置后执行如下命令。
+   - **自定义配置安装**：若[应用组件默认配置](../02_installation/00_helm_installation.md#default_app_yaml_install_config)不符合用户需求，请创建values.yaml文件，将[应用组件默认配置](../02_installation/00_helm_installation.md#default_app_yaml_install_config)的YAML文件内容复制到values.yaml文件中，修改相关配置后执行如下命令。
 
        ```bash
        #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
@@ -167,7 +167,7 @@
 5. 确认组件升级状态，详细请参见[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)章节。
 6. 若升级后，组件状态异常，可排查异常原因，然后按照如下方法处理：
     - 修改配置后参考[helm upgrade升级组件](#section_helm_upgrade)重新升级。
-    - [使用helm卸载](../05_uninstallation/02_helm_uninstallation.md#ZH-CN_TOPIC_0000002511426390)组件后，重新[使用helm安装](../02_installation/helm_installation.md#ZH-CN_centerIC_0000002479226452)组件。此方法可能会导致工作负载中断，请用户在升级前确认。
+    - [使用helm卸载](../05_uninstallation/02_helm_uninstallation.md#ZH-CN_TOPIC_0000002511426390)组件后，重新[使用helm安装](../02_installation/00_helm_installation.md#ZH-CN_centerIC_0000002479226452)组件。此方法可能会导致工作负载中断，请用户在升级前确认。
 
 ## helm upgrade升级组件<a name="section_helm_upgrade"></a>
 
@@ -181,7 +181,7 @@
     unzip Ascend-helm-deploy-tool_{version}_linux.zip
     ```
 
-    解压后的各文件用途请参考[表4](../02_installation/helm_installation.md#table15274931175244)，文件列表回显示例如下：
+    解压后的各文件用途请参考[表4](../02_installation/00_helm_installation.md#table15274931175244)，文件列表回显示例如下：
 
     ```ColdFusion
     -r-------- 1 root root  2026 Mar 24 15:25 mindcluster-crds-deploy-tool-{chart_version}.tgz
@@ -196,7 +196,7 @@
     >   - 需先升级crd，再升级应用组件。
     >   - 可能会导致工作负载中断，请用户在升级前确认。
     >- 请用户按需选择**默认配置升级**或**自定义配置升级**其中一种方式进行操作即可。
-   - **默认配置升级**：若[crd默认配置](../02_installation/helm_installation.md#default_crds_yaml_install_config)符合用户需求，可执行如下命令。
+   - **默认配置升级**：若[crd默认配置](../02_installation/00_helm_installation.md#default_crds_yaml_install_config)符合用户需求，可执行如下命令。
 
        ```bash
        #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
@@ -205,7 +205,7 @@
        helm upgrade mindcluster-crds mindcluster-crds-deploy-tool-{chart_version}.tgz
        ```
 
-   - **自定义配置升级**：若[crd默认配置](../02_installation/helm_installation.md#default_crds_yaml_install_config)不符合用户需求，请创建crds-values.yaml文件，将[crd默认配置](../02_installation/helm_installation.md#default_crds_yaml_install_config)的YAML文件内容复制到crds-values.yaml文件中，修改相关配置后执行如下命令。
+   - **自定义配置升级**：若[crd默认配置](../02_installation/00_helm_installation.md#default_crds_yaml_install_config)不符合用户需求，请创建crds-values.yaml文件，将[crd默认配置](../02_installation/00_helm_installation.md#default_crds_yaml_install_config)的YAML文件内容复制到crds-values.yaml文件中，修改相关配置后执行如下命令。
       >[!WARNING]
       >若只升级单个组件，crds-values.yaml中其他已安装组件的配置请保持与安装时的配置一致，不能将其他已安装组件的Enabled参数设置为false，否则对应组件的资源会被删除。
 
@@ -232,7 +232,7 @@
    >[!NOTE]
    >- **默认配置升级**会从昇腾镜像仓库下载应用组件的镜像。若用户节点无法连接互联网且本地未缓存镜像，可能会升级失败。
    >- 请用户按需选择**默认配置升级**或**自定义配置升级**其中一种方式进行操作即可。
-   - **默认配置升级**：若[应用组件默认配置](../02_installation/helm_installation.md#default_app_yaml_install_config)符合用户需求，可执行如下命令。
+   - **默认配置升级**：若[应用组件默认配置](../02_installation/00_helm_installation.md#default_app_yaml_install_config)符合用户需求，可执行如下命令。
 
        ```bash
        #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
@@ -241,7 +241,7 @@
        helm upgrade mindcluster mindcluster-deploy-tool-{chart_version}.tgz
        ```
 
-   - **自定义配置升级**：若[应用组件默认配置](../02_installation/helm_installation.md#default_app_yaml_install_config)不符合用户需求，请创建values.yaml文件，将[应用组件默认配置](../02_installation/helm_installation.md#default_app_yaml_install_config)的YAML文件内容复制到values.yaml文件中，修改相关配置后执行如下命令。
+   - **自定义配置升级**：若[应用组件默认配置](../02_installation/00_helm_installation.md#default_app_yaml_install_config)不符合用户需求，请创建values.yaml文件，将[应用组件默认配置](../02_installation/00_helm_installation.md#default_app_yaml_install_config)的YAML文件内容复制到values.yaml文件中，修改相关配置后执行如下命令。
        >[!WARNING]
        >若只升级单个组件，values.yaml中其他已安装组件的配置请保持与安装时的配置一致，不能将其他已安装组件的Enabled参数设置为false，否则对应组件的资源会被删除。
 
@@ -268,7 +268,7 @@
 5. 若升级后，组件状态异常，可排查异常原因，然后按照如下方法处理：
    - 参考[版本回退](#section_helm_rollback)回退到升级前的版本。
    - 修改配置后重新[使用helm upgrade升级](#section_helm_upgrade)。
-   - [使用helm卸载](../05_uninstallation/02_helm_uninstallation.md#ZH-CN_TOPIC_0000002511426390)组件后，重新[使用helm安装](../02_installation/helm_installation.md#ZH-CN_centerIC_0000002479226452)组件。此方法可能会导致工作负载中断，请用户在升级前确认。
+   - [使用helm卸载](../05_uninstallation/02_helm_uninstallation.md#ZH-CN_TOPIC_0000002511426390)组件后，重新[使用helm安装](../02_installation/00_helm_installation.md#ZH-CN_centerIC_0000002479226452)组件。此方法可能会导致工作负载中断，请用户在升级前确认。
 
 ## 版本回退<a name="section_helm_rollback"></a>
 

@@ -14,8 +14,8 @@ Ascend Docker Runtime
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[容器化支持特性指南](../04_usage/containerization/00_before_you_start.md)章节进行操作。
+1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+2. 特性使用指导请参见[容器化支持特性指南](../04_usage/00_containerization/00_before_you_start.md)章节进行操作。
 
 ## 资源监测<a name="ZH-CN_TOPIC_0000002479386910"></a>
 
@@ -30,8 +30,8 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[资源监测](../04_usage/resource_monitoring/00_before_you_start.md)章节进行操作。
+1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+2. 特性使用指导请参见[资源监测](../04_usage/01_resource_monitoring/00_before_you_start.md)章节进行操作。
 
 ## 虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855"></a>
 
@@ -61,8 +61,8 @@ NPU Exporter
 
 **使用说明<a name="section1350915844811"></a>**
 
-- 安装请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-- 特性使用指导请参见[基于HDK的虚拟化实例](../04_usage/virtual_instance/virtual_instance_with_hdk/01_description.md)章节进行操作。
+- 安装请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+- 特性使用指导请参见[基于HDK的虚拟化实例](../04_usage/02_virtual_instance/00_virtual_instance_with_hdk/01_description.md)章节进行操作。
 
 ### 基于vCANN-RT的虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855vcann"></a>
 
@@ -80,8 +80,8 @@ NPU Exporter
 
 **使用说明<a name="section1350915844811vcann"></a>**
 
-1. 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[基于vCANN-RT的虚拟化实例](../04_usage/virtual_instance/virtual_instance_with_vcann_rt/00_description.md)章节进行操作。
+1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+2. 特性使用指导请参见[基于vCANN-RT的虚拟化实例](../04_usage/02_virtual_instance/01_virtual_instance_with_vcann_rt/00_description.md)章节进行操作。
 
 ## 基础调度<a name="ZH-CN_TOPIC_0000002511346871"></a>
 
@@ -91,7 +91,7 @@ NPU Exporter
 
 支持用户运行训练或者推理任务时，将训练或推理任务调度到节点的整张NPU卡上，独占整张卡执行训练或者推理任务。整卡调度特性借助Kubernetes（以下简称K8s）支持的基础调度功能，配合Volcano或者其他调度器，根据NPU设备物理拓扑，选择合适的NPU设备，最大化发挥NPU性能，实现训练或者推理任务的NPU卡的调度和其他资源的最佳分配。
 
-芯片间的网络拓扑越复杂，调度逻辑越复杂，详细可以参见[亲和性调度](../04_usage/basic_scheduling/01_affinity_scheduling/00_solution_description.md)。
+芯片间的网络拓扑越复杂，调度逻辑越复杂，详细可以参见[亲和性调度](../04_usage/03_basic_scheduling/01_affinity_scheduling/00_solution_description.md)。
 
 支持Preempt（抢占）和Reclaim Action（回收）操作。Preempt用于同一个队列中任务之间的资源抢占，当高优先级任务需要资源时，可以抢占低优先级任务的资源；Reclaim用于不同队列之间的资源回收，当某个队列中的任务需要资源且该队列资源未超用时，可以从其他可回收队列中回收资源。两者均可实现资源的动态调整和优化分配。关于Preempt和Reclaim Action的详细说明，请参见[Volcano官方网站相关信息](https://volcano.sh/zh/docs/Scheduler/Actions)。
 
@@ -107,9 +107,9 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[整卡调度](../04_usage/basic_scheduling/03_full_npu_scheduling.md)章节进行操作。
-3. Preempt和Reclaim Action的使用样例请参见[任务交替运行最佳实践](../04_usage/task_alternation/00_before_you_start.md)章节进行操作。
+1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+2. 特性使用指导请参见[整卡调度](../04_usage/03_basic_scheduling/03_full_npu_scheduling.md)章节进行操作。
+3. Preempt和Reclaim Action的使用样例请参见[任务交替运行最佳实践](../04_usage/10_task_alternation/00_before_you_start.md)章节进行操作。
 
 ### 多级调度<a name="ZH-CN_TOPIC_0000002511346873"></a>
 
@@ -128,8 +128,8 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[多级调度](../04_usage/basic_scheduling/05_multi_level_scheduling.md)章节进行操作。
+1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+2. 特性使用指导请参见[多级调度](../04_usage/03_basic_scheduling/04_multi_level_scheduling.md)章节进行操作。
 
 ### 推理卡故障恢复<a name="ZH-CN_TOPIC_0000002479226952"></a>
 
@@ -147,8 +147,8 @@ NPU Exporter
 
 **使用说明<a name="section74221327111220"></a>**
 
-- 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-- 特性使用指导请参见[推理卡故障恢复](../04_usage/basic_scheduling/08_recovery_of_inference_card_faults.md)章节进行操作。
+- 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+- 特性使用指导请参见[推理卡故障恢复](../04_usage/03_basic_scheduling/06_recovery_of_inference_card_faults.md)章节进行操作。
 
 ### 推理卡故障重调度<a name="ZH-CN_TOPIC_0000002511346875"></a>
 
@@ -168,8 +168,8 @@ NPU Exporter
 
 **使用说明<a name="section18894171918127"></a>**
 
-- 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-- 特性使用指导请参见[推理卡故障重调度](../04_usage/basic_scheduling/07_rescheduling_upon_inference_card_faults.md)章节进行操作。
+- 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+- 特性使用指导请参见[推理卡故障重调度](../04_usage/03_basic_scheduling/05_rescheduling_upon_inference_card_faults.md)章节进行操作。
 
 ## 断点续训<a name="ZH-CN_TOPIC_0000002511346867"></a>
 
@@ -198,11 +198,11 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[断点续训](../04_usage/resumable_training/00_feature_description.md)章节进行操作。
-3. TaskD需安装在容器内，详细请参见[制作镜像](../04_usage/resumable_training/03_using_resumable_training_on_the_cli.md#制作镜像)章节。
-4. MindIO ACP的详细介绍及安装步骤请参见[Checkpoint保存与加载优化](../07_references/optimizing_saving_and_loading_checkpoints/01_product_description.md)章节。
-5. MindIO TFT的详细介绍及安装步骤请参见[故障恢复加速](../07_references/fault_recovery_acceleration/01_product_description.md)。
+1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+2. 特性使用指导请参见[断点续训](../04_usage/04_resumable_training/00_feature_description.md)章节进行操作。
+3. TaskD需安装在容器内，详细请参见[制作镜像](../04_usage/04_resumable_training/04_using_resumable_training_on_the_cli.md#制作镜像)章节。
+4. MindIO ACP的详细介绍及安装步骤请参见[Checkpoint保存与加载优化](../07_references/01_optimizing_saving_and_loading_checkpoints/01_product_description.md)章节。
+5. MindIO TFT的详细介绍及安装步骤请参见[故障恢复加速](../07_references/00_fault_recovery_acceleration/01_product_description.md)。
 
 ## 容器恢复<a name="ZH-CN_TOPIC_0000002492192948"></a>
 
@@ -220,8 +220,8 @@ Container Manager
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[一体机特性指南](../04_usage/appliance/01_npu_hardware_fault_detection_and_rectification.md)章节进行操作。
+1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+2. 特性使用指导请参见[一体机特性指南](../04_usage/05_appliance/01_npu_hardware_fault_detection_and_rectification.md)章节进行操作。
 
 ## 容器快照<a name="ZH-CN_TOPIC_0000002511346881"></a>
 
@@ -240,8 +240,8 @@ Container Manager
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[容器快照部署及使用](../05_developer_guide/container_snapshot_usage.md)章节进行操作。
+1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+2. 特性使用指导请参见[容器快照部署及使用](../05_developer_guide/04_container_snapshot_usage.md)章节进行操作。
 
 ## 推理高可用<a name="ZH-CN_TOPIC_0000002511346885"></a>
 
@@ -264,8 +264,8 @@ Container Manager
 
 **使用说明<a name="section3245612501586"></a>**
 
-1. 安装组件请参见[安装部署](../05_developer_guide/installation_deployment/manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. Infer Operator推理任务最佳实践请参见[Infer Operator推理任务最佳实践](../04_usage/infer_operator_best_practice/00_before_you_start.md)章节进行操作。
-3. MindIE Motor推理任务最佳实践请参见[MindIE Motor推理任务最佳实践](../04_usage/mindie_motor_best_practice/00_before_you_start.md)章节进行操作。
-4. SGLang推理任务最佳实践请参见[SGLANG推理任务最佳实践](../04_usage/sglang_best_practice/00_before_you_start.md)章节进行操作。
-5. vLLM推理任务最佳实践请参见[vLLM推理任务最佳实践](../04_usage/vllm_best_practice/00_before_you_start.md)章节进行操作。
+1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+2. Infer Operator推理任务最佳实践请参见[Infer Operator推理任务最佳实践](../04_usage/09_infer_operator_best_practice/00_before_you_start.md)章节进行操作。
+3. MindIE Motor推理任务最佳实践请参见[MindIE Motor推理任务最佳实践](../04_usage/06_mindie_motor_best_practice/00_before_you_start.md)章节进行操作。
+4. SGLang推理任务最佳实践请参见[SGLANG推理任务最佳实践](../04_usage/07_sglang_best_practice/00_before_you_start.md)章节进行操作。
+5. vLLM推理任务最佳实践请参见[vLLM推理任务最佳实践](../04_usage/08_vllm_best_practice/00_before_you_start.md)章节进行操作。

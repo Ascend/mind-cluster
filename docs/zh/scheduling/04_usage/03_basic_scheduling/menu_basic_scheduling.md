@@ -1,0 +1,15 @@
+# 调度特性指南
+
+- [特性说明](./00_feature_description.md)
+- [亲和性调度](./01_affinity_scheduling/menu_affinity_scheduling.md)
+  - [方案介绍](./01_affinity_scheduling/00_solution_description.md)
+  - [亲和性调度对接说明](./01_affinity_scheduling/01_affinity_scheduling_interconnection.md)
+  - [亲和性调度说明](./01_affinity_scheduling/02_affinity_scheduling_description.md)
+  - [基于昇腾AI处理器的亲和性](./01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md)
+  - [基于节点的亲和性](./01_affinity_scheduling/04_node_based_affinity.md)
+  - [昇腾AI处理器的调度算法说明](./01_affinity_scheduling/05_scheduling_algorithm_of_ascend_ai_processor.md)
+- [昇腾AI处理器的调度流程](./02_schedulling_process_of_the_ascend_ai_processor.md)
+- [整卡调度](./03_full_npu_scheduling.md)
+- [多级调度](./04_multi_level_scheduling.md)
+- [推理卡故障重调度](./05_rescheduling_upon_inference_card_faults.md)
+- [推理卡故障恢复](./06_recovery_of_inference_card_faults.md)
