@@ -421,14 +421,57 @@ func TestRuntimeOperatorToolGetContainers(t *testing.T) {
 			convey.So(containers, convey.ShouldBeNil)
 		})
 
-		convey.Convey("should return containers via v1alpha2 client on success", func() {
+		convey.Convey("should return containers via v1 client on success", func() {
+			mockClient := &mockV1alpha2Client{}
+			operator := &RuntimeOperatorTool{
+				criClient: mockClient,
+				criConn:   &grpc.ClientConn{},
+			}
+
+			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
+			defer patches.Reset()
+			patches.ApplyFunc(getContainersByContainerdV1, func(ctx context.Context,
+				client criv1.RuntimeServiceClient) ([]*CommonContainer, error) {
+				return []*CommonContainer{
+					{Id: "v1-container-1", Labels: map[string]string{"app": "test"}},
+					{Id: "v1-container-2", Labels: map[string]string{"app": "prod"}},
+				}, nil
+			})
+
+			containers, err := operator.GetContainers(context.Background())
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(containers, convey.ShouldHaveLength, 2)
+			convey.So(containers[0].Id, convey.ShouldEqual, "v1-container-1")
+			convey.So(containers[1].Id, convey.ShouldEqual, "v1-container-2")
+		})
+
+		convey.Convey("should return empty list when v1 has no containers", func() {
+			mockClient := &mockV1alpha2Client{}
+			operator := &RuntimeOperatorTool{
+				criClient: mockClient,
+				criConn:   &grpc.ClientConn{},
+			}
+
+			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
+			defer patches.Reset()
+			patches.ApplyFunc(getContainersByContainerdV1, func(ctx context.Context,
+				client criv1.RuntimeServiceClient) ([]*CommonContainer, error) {
+				return nil, nil
+			})
+
+			containers, err := operator.GetContainers(context.Background())
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(containers, convey.ShouldBeNil)
+		})
+
+		convey.Convey("should fallback to v1alpha2 when v1 returns unimplemented error", func() {
+			unimplementedErr := status.Error(codes.Unimplemented, "unknown service "+testCriV1)
 			mockClient := &mockV1alpha2Client{
 				listContainersFunc: func(ctx context.Context, in *v1alpha2.ListContainersRequest,
 					opts ...grpc.CallOption) (*v1alpha2.ListContainersResponse, error) {
 					return &v1alpha2.ListContainersResponse{
 						Containers: []*v1alpha2.Container{
-							{Id: "v1alpha2-container-1", Labels: map[string]string{"app": "test"}},
-							{Id: "v1alpha2-container-2", Labels: map[string]string{"app": "prod"}},
+							{Id: "v1alpha2-fallback-container", Labels: map[string]string{"app": "fallback"}},
 						},
 					}, nil
 				},
@@ -440,15 +483,64 @@ func TestRuntimeOperatorToolGetContainers(t *testing.T) {
 
 			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
 			defer patches.Reset()
+			patches.ApplyFunc(getContainersByContainerdV1, func(ctx context.Context,
+				client criv1.RuntimeServiceClient) ([]*CommonContainer, error) {
+				return nil, unimplementedErr
+			})
 
 			containers, err := operator.GetContainers(context.Background())
 			convey.So(err, convey.ShouldBeNil)
-			convey.So(containers, convey.ShouldHaveLength, 2)
-			convey.So(containers[0].Id, convey.ShouldEqual, "v1alpha2-container-1")
-			convey.So(containers[1].Id, convey.ShouldEqual, "v1alpha2-container-2")
+			convey.So(containers, convey.ShouldHaveLength, 1)
+			convey.So(containers[0].Id, convey.ShouldEqual, "v1alpha2-fallback-container")
 		})
 
-		convey.Convey("should return empty list when v1alpha2 has no containers", func() {
+		convey.Convey("should return error when v1 returns non-unimplemented error", func() {
+			otherErr := status.Error(codes.Internal, "internal error")
+			mockClient := &mockV1alpha2Client{}
+			operator := &RuntimeOperatorTool{
+				criClient: mockClient,
+				criConn:   &grpc.ClientConn{},
+			}
+
+			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
+			defer patches.Reset()
+			patches.ApplyFunc(getContainersByContainerdV1, func(ctx context.Context,
+				client criv1.RuntimeServiceClient) ([]*CommonContainer, error) {
+				return nil, otherErr
+			})
+
+			containers, err := operator.GetContainers(context.Background())
+			convey.So(err, convey.ShouldNotBeNil)
+			convey.So(containers, convey.ShouldBeNil)
+		})
+
+		convey.Convey("should use cached v1alpha2 version directly", func() {
+			mockClient := &mockV1alpha2Client{
+				listContainersFunc: func(ctx context.Context, in *v1alpha2.ListContainersRequest,
+					opts ...grpc.CallOption) (*v1alpha2.ListContainersResponse, error) {
+					return &v1alpha2.ListContainersResponse{
+						Containers: []*v1alpha2.Container{
+							{Id: "v1alpha2-cached-container", Labels: map[string]string{"app": "cached"}},
+						},
+					}, nil
+				},
+			}
+			operator := &RuntimeOperatorTool{
+				criClient:  mockClient,
+				criConn:    &grpc.ClientConn{},
+				criVersion: criVersionV1alpha2,
+			}
+
+			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
+			defer patches.Reset()
+
+			containers, err := operator.GetContainers(context.Background())
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(containers, convey.ShouldHaveLength, 1)
+			convey.So(containers[0].Id, convey.ShouldEqual, "v1alpha2-cached-container")
+		})
+
+		convey.Convey("should cache v1 version on success", func() {
 			mockClient := &mockV1alpha2Client{
 				listContainersFunc: func(ctx context.Context, in *v1alpha2.ListContainersRequest,
 					opts ...grpc.CallOption) (*v1alpha2.ListContainersResponse, error) {
@@ -462,18 +554,29 @@ func TestRuntimeOperatorToolGetContainers(t *testing.T) {
 
 			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
 			defer patches.Reset()
+			patches.ApplyFunc(getContainersByContainerdV1, func(ctx context.Context,
+				client criv1.RuntimeServiceClient) ([]*CommonContainer, error) {
+				return []*CommonContainer{
+					{Id: "v1-container", Labels: map[string]string{"app": "test"}},
+				}, nil
+			})
 
 			containers, err := operator.GetContainers(context.Background())
 			convey.So(err, convey.ShouldBeNil)
-			convey.So(containers, convey.ShouldBeNil)
+			convey.So(containers, convey.ShouldHaveLength, 1)
+			convey.So(operator.criVersion, convey.ShouldEqual, criVersionV1)
 		})
 
-		convey.Convey("should fallback to v1 when v1alpha2 returns unimplemented error", func() {
-			unimplementedErr := status.Error(codes.Unimplemented, "unknown service "+testCriV1alpha2)
+		convey.Convey("should cache v1alpha2 version after fallback", func() {
+			unimplementedErr := status.Error(codes.Unimplemented, "unknown service "+testCriV1)
 			mockClient := &mockV1alpha2Client{
 				listContainersFunc: func(ctx context.Context, in *v1alpha2.ListContainersRequest,
 					opts ...grpc.CallOption) (*v1alpha2.ListContainersResponse, error) {
-					return nil, unimplementedErr
+					return &v1alpha2.ListContainersResponse{
+						Containers: []*v1alpha2.Container{
+							{Id: "v1alpha2-fallback-container", Labels: map[string]string{"app": "fallback"}},
+						},
+					}, nil
 				},
 			}
 			operator := &RuntimeOperatorTool{
@@ -485,36 +588,13 @@ func TestRuntimeOperatorToolGetContainers(t *testing.T) {
 			defer patches.Reset()
 			patches.ApplyFunc(getContainersByContainerdV1, func(ctx context.Context,
 				client criv1.RuntimeServiceClient) ([]*CommonContainer, error) {
-				return []*CommonContainer{
-					{Id: "v1-fallback-container", Labels: map[string]string{"app": "fallback"}},
-				}, nil
+				return nil, unimplementedErr
 			})
 
 			containers, err := operator.GetContainers(context.Background())
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(containers, convey.ShouldHaveLength, 1)
-			convey.So(containers[0].Id, convey.ShouldEqual, "v1-fallback-container")
-		})
-
-		convey.Convey("should return error when v1alpha2 returns non-unimplemented error", func() {
-			otherErr := status.Error(codes.Internal, "internal error")
-			mockClient := &mockV1alpha2Client{
-				listContainersFunc: func(ctx context.Context, in *v1alpha2.ListContainersRequest,
-					opts ...grpc.CallOption) (*v1alpha2.ListContainersResponse, error) {
-					return nil, otherErr
-				},
-			}
-			operator := &RuntimeOperatorTool{
-				criClient: mockClient,
-				criConn:   &grpc.ClientConn{},
-			}
-
-			patches := gomonkey.ApplyFuncReturn(utils.IsNil, false)
-			defer patches.Reset()
-
-			containers, err := operator.GetContainers(context.Background())
-			convey.So(err, convey.ShouldNotBeNil)
-			convey.So(containers, convey.ShouldBeNil)
+			convey.So(operator.criVersion, convey.ShouldEqual, criVersionV1alpha2)
 		})
 
 	})
