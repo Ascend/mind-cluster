@@ -17,22 +17,22 @@
 
 2. 解压并安装：
 
-```bash
-unzip Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip
-pip3 install ascend_faultdiag_toolkit-{version}-py3-none-any.whl
-```
+    ```bash
+    unzip Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip
+    pip3 install ascend_faultdiag_toolkit-{version}-py3-none-any.whl
+    ```
 
 3. 验证安装是否成功：
 
-```bash
-ascend-fd-tk about
-```
+    ```bash
+    ascend-fd-tk about
+    ```
 
-**成功输出示例**：
+    **成功输出示例**：
 
-```text
-MindCluster ascend-faultdiag-toolkit诊断工具版本：{version}
-```
+    ```text
+    MindCluster ascend-faultdiag-toolkit诊断工具版本：{version}
+    ```
 
 ## 步骤 2：清理缓存
 

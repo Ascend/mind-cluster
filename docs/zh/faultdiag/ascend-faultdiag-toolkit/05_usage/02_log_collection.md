@@ -43,7 +43,7 @@
 
 ### 2. 离线日志采集
 
-工具支持 3 个版本的离线日志结构，版本识别由工具自动完成，无需手动指定。通过以下任意一种脚本收集日志，收集后获得 `{file_name}.tar.gz`，直接将压缩包放入日志采集目录即可。
+工具支持 3 个版本的离线日志结构，版本识别由工具自动完成，无需手动指定。通过以下任意一种[host日志采集脚本](https://gitcode.com/Ascend/mindcluster-deploy/ascend-fd-tk/host_collector)收集日志，收集后获得 `{file_name}.tar.gz`，直接将压缩包放入日志采集目录即可。
 
 - 版本 1：通过 `tool_log_collection_out_version_all_<version>.sh` 收集日志。
 - 版本 2：通过 `A3device日志一键采集脚本<version>.sh` 收集日志。
@@ -188,7 +188,7 @@ bmc日志采集目录/
 
 - **CLI 命令输出日志（diag 文本日志）**：包含各种交换机命令的执行结果。收集方式如下：
   - 方式 1：登录交换机后执行 `display diagnostic-information {filename}.txt`。
-  - 方式 2：登录交换机后手动执行关键命令（必须包含 `display current-configuration`），将回显的文本保存到 `.txt` 文件并导出。
+  - 方式 2：登录交换机后手动执行关键命令（必须包含 `display current-configuration`），将回显的文本保存到 `.txt` 文件并导出。执行的命令可参考[switch命令](https://gitcode.com/Ascend/mindcluster-deploy/ascend-fd-tk/switch_collector)。
 - **诊断日志**：由交换机诊断工具生成的结构化日志（`diagnostic_information.zip`）。登录交换机后执行 `collect diagnostic information`，并导出 zip 包。
 
 Switch 日志目录结构如下：

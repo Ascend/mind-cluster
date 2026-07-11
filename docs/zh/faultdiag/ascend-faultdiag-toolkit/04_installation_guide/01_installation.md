@@ -6,6 +6,7 @@
 - 安装前请检查磁盘剩余空间是否充足（建议 5GB 以上）。
 - 安装前请确认网络连接正常，安装过程需联网下载三方依赖库。
 - 安装过程已声明相关三方库依赖，并验证了最低兼容版本。
+- Windows 上安装步骤与 Linux 类似，请参考以下步骤。
 
 ## 安装步骤
 
@@ -13,11 +14,16 @@
 
 #### 方式 1：从发行版本下载
 
-访问 [MindCluster 发行版本](https://gitcode.com/Ascend/mind-cluster/releases)，下载对应版本的链路故障诊断组件安装包。
+| 软件包                                                | 子文件                                                          | 说明          | 链接                                                         |
+|-------------------------------------------------------|-----------------------------------------------------------------|-------------|--------------------------------------------------------------|
+| `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` | `ascend_faultdiag_toolkit-{version}-py3-none-any.whl`          | 链路故障诊断组件安装包 | [下载链接](https://gitcode.com/Ascend/mind-cluster/releases) |
 
-| 软件包 | 子文件 | 说明 |
-|--------|--------|------|
-| `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` | `ascend_faultdiag_toolkit-{version}-py3-none-any.whl` | `{version}` 为软件包版本号，默认为最新版本。<br/>`{arch}` 为软件包架构，分为 x86_64 和 aarch64，ascend-fd-tk 不区分架构 |
+> - `{version}` 为软件包版本号，默认为最新版本。
+> - `{arch}` 为软件包架构，分为 x86_64 和 aarch64，请根据实际需要修改，可通过 `arch` 命令查看。
+> - ascend-fd-tk WHL 包不区分架构。
+> - 为防止软件包在传递过程中或存储期间被恶意篡改，建议校验软件包的 SUM 值。如需对软件包进行 SUM 值校验，请参考[软件包 SUM 值校验](#参考)
+
+解压获取 WHL 包
 
 ```bash
 # 解压
@@ -76,3 +82,24 @@ pip3 install ascend_faultdiag_toolkit-{version}-py3-none-any.whl
 ```bash
 ascend-fd-tk about
 ```
+
+## 参考
+
+**软件包 SUM 值校验步骤**：
+
+1. 下载与工具软件包对应版本的 [MindCluster_sha256sum.zip](https://gitcode.com/Ascend/mind-cluster/releases)
+
+2. 将 `MindCluster_sha256sum.zip` 和 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` 放置到同一目录，执行以下命令进行校验：
+
+    ```bash
+    unzip MindCluster_sha256sum.zip
+    sha256sum -c Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum
+    ```
+
+3. 校验验证
+
+    回显结果如下所示，即代表软件包校验通过。
+
+    ```bash
+    Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip: OK
+    ```
