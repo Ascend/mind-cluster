@@ -167,7 +167,7 @@
         ```
 
 4. <a name="li15822115020428"></a>NPU Exporter通过Prometheus Operator对接Prometheus。
-    1. 获取[npu-exporter-svc.yaml](https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.0.0/samples/utils/prometheus/prometheus_operator/npu-exporter-svc.yaml)和[servicemonitor.yaml](https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.0.0/samples/utils/prometheus/prometheus_operator/servicemonitor.yaml)。
+    1. 获取[npu-exporter-svc.yaml](https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/utils/prometheus/prometheus_operator/npu-exporter-svc.yaml)和[servicemonitor.yaml](https://gitcode.com/Ascend/mindxdl-deploy/blob/branch_v26.1.0/samples/utils/prometheus/prometheus_operator/servicemonitor.yaml)。
 
         >[!NOTE]
         >若已经提前安装Prometheus，需要确保servicemonitor.yaml的以下字段，和已经部署的Prometheus中serviceMonitorSelector配置的matchLabels标签一致。
