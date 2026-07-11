@@ -17,8 +17,9 @@ set -e
 CUR_DIR=$(dirname $(readlink -f $0))
 TOP_DIR=$(realpath "${CUR_DIR}"/..)
 export GO111MODULE="on"
+export GOTOOLCHAIN="go1.21.13"
 VER_FILE="${TOP_DIR}"/service_config.ini
-build_version="v6.0.0"
+build_version="v26.1.0"
 output_name="clusterd"
 if [ -f "$VER_FILE" ]; then
   line=$(sed -n '1p' "$VER_FILE" 2>&1)
@@ -48,7 +49,7 @@ function build() {
               -X main.BuildVersion=${build_version}_linux-${os_type} \
               -buildid none \
               -s \
-              -bindnow" \
+              -extldflags=-Wl,-z,relro,-z,now,-z,noexecstack" \
               -o "${output_name}"  \
               -trimpath
   ls "${output_name}"
