@@ -81,6 +81,15 @@ type RuntimeOperator interface {
 	GetContainerType() string
 }
 
+const (
+	// criVersionV1alpha2 represents CRI v1alpha2 version
+	criVersionV1alpha2 = "v1alpha2"
+	// criVersionV1 represents CRI v1 version
+	criVersionV1 = "v1"
+	// criV1 represents CRI v1 service name
+	criV1 = "runtime.v1.RuntimeService"
+)
+
 // RuntimeOperatorTool implements RuntimeOperator interface
 type RuntimeOperatorTool struct {
 	criConn   *grpc.ClientConn
@@ -97,6 +106,8 @@ type RuntimeOperatorTool struct {
 	UseCriBackup bool
 	// UseOciBackup use oci back up address or not
 	UseOciBackup bool
+	// criVersion caches the actual CRI version detected at runtime
+	criVersion string
 }
 
 // Init initializes container runtime operator
@@ -223,12 +234,7 @@ func (operator *RuntimeOperatorTool) GetContainers(ctx context.Context) ([]*Comm
 		return nil, errors.New("criClient is empty")
 	}
 	if client, ok := operator.criClient.(v1alpha2.RuntimeServiceClient); ok {
-		containers, err := getContainersByContainerdV1alpha2(ctx, client)
-		if isUnimplementedError(err, criV1alpha2) {
-			v1Client := criv1.NewRuntimeServiceClient(operator.criConn)
-			return getContainersByContainerdV1(ctx, v1Client)
-		}
-		return containers, err
+		return operator.getContainerdContainers(ctx, client)
 	}
 	if client, ok := operator.criClient.(isula.RuntimeServiceClient); ok {
 		return getContainersByIsulad(ctx, client)
@@ -236,6 +242,25 @@ func (operator *RuntimeOperatorTool) GetContainers(ctx context.Context) ([]*Comm
 
 	logger.Errorf("client %v is unexpected", operator.criClient)
 	return nil, errors.New("unexpected client type")
+}
+
+func (operator *RuntimeOperatorTool) getContainerdContainers(ctx context.Context,
+	client v1alpha2.RuntimeServiceClient) ([]*CommonContainer, error) {
+	if operator.criVersion == criVersionV1alpha2 {
+		return getContainersByContainerdV1alpha2(ctx, client)
+	}
+
+	v1Client := criv1.NewRuntimeServiceClient(operator.criConn)
+	containers, err := getContainersByContainerdV1(ctx, v1Client)
+	if isUnimplementedError(err, criV1) {
+		logger.Infof("CRI v1 not supported, falling back to v1alpha2")
+		operator.criVersion = criVersionV1alpha2
+		return getContainersByContainerdV1alpha2(ctx, client)
+	}
+	if err == nil && operator.criVersion == "" {
+		operator.criVersion = criVersionV1
+	}
+	return containers, err
 }
 
 func isUnimplementedError(err error, serviceName string) bool {
@@ -350,7 +375,7 @@ func getContainersByContainerdV1(ctx context.Context, client criv1.RuntimeServic
 	request := genContainerRequestV1()
 	r, err := client.ListContainers(ctx, request)
 	if err != nil {
-		hwlog.RunLog.Error(err)
+		hwlog.RunLog.Warn(err)
 		return nil, err
 	}
 	for _, container := range r.Containers {
