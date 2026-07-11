@@ -3,7 +3,7 @@
 ## Prototype<a name="zh-cn_topic_0000001511538701_section124882040143613"></a>
 
 ```shell
-ascend-fd diag -i <Diagnosis_input_directory> -o <Diagnosis_result_output_directory>
+ascend-fd diag -i ${Diagnosis_input_directory} -o ${Diagnosis_result_output_directory}
 ```
 
 ## Function<a name="zh-cn_topic_0000001511538701_section12230185113815"></a>
@@ -28,6 +28,6 @@ Execution status of the fault diagnosis task:
 
 ```ColdFusion
 The diag job starts. Please wait. Job id: [****], run log file is [****].
-Diagnostic information
+...
 The diag job is complete.
 ```

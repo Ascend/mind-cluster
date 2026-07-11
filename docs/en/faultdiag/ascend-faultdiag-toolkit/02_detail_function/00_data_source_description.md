@@ -73,7 +73,7 @@ log_directory/
 | CDR_SNR | `"cdr5 snr 1 times"`| `hccn_tool.log` | CDR SNR information |
 | SPOD_INFO | `"Collect spod-info info for all NPUs"` | `npu_card_info.log` | SPOD information |
 | HCCS | `"Collect hccs info for all NPUs"` | `npu_card_info.log` | HCCS protocol information |
-| NPU_TYPE | `"lspci"` | `pcie_info.log | NPU type information |`
+| NPU_TYPE | `"lspci"` | `pcie_info.log` | NPU type information |`
 | SN | `"timeout 30s dmidecode -t1"` | `version_info.log` | Serial number information |
 
 #### Version 2 Configuration (ParseConfigCollectionV2)

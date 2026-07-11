@@ -177,7 +177,7 @@
     # 进入容器验证NPU可用性
     kubectl exec -it npu-test  -- /bin/bash
 
-    # 在容器内执行npu-smi info正确回显卡信息
+    # 在容器内执行npu-smi info命令正确显示芯片信息
     export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/driver/lib64/driver:${LD_LIBRARY_PATH}
     npu-smi info
     ```

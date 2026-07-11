@@ -198,7 +198,7 @@ Ascend Device Plugin组件会通过昇腾硬件驱动自动获取有效的节点
     ...
     ```
 
-    Atlas 9000 A3 SuperPoD 集群算力系统可以通过脚本配合xlxs格式的LLD文档生成网络配置csv文件，命令如下：
+    Atlas 9000 A3 SuperPoD 集群算力系统可以通过脚本配合xlsx格式的LLD文档生成网络配置csv文件，命令如下：
 
     ```shell
     python3 lld_parser.py --input {LLD文档路径}  --output {生成的csv配置文件路径} --topotree-name default

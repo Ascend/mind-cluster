@@ -413,7 +413,7 @@
 
 9. （可选）调度时间性能调优。支持Volcano将单任务（训练的vcjob或acjob任务）的4000或5000个Pod调度到4000或5000个节点上的调度时间优化到5分钟左右，若用户想要使用该调度性能，需要在“volcano-v<i>\{version\}</i>.yaml”上做如下修改。
 
-    - 若要达到5分钟左右的参考时间，需要保证CPU的频率至少为2.60GHz，APIServer时延不超过80毫秒。
+    - 若要达到5分钟左右的参考时间，需要保证CPU的频率至少为2.60GHz，APIServer时延不超过80ms。
     - 如果不使用K8s原生的nodeAffinity和podAntiAffinity进行调度，可以关闭nodeorder插件，进一步减少调度时间。
 
     <pre codetype="yaml">

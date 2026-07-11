@@ -215,7 +215,7 @@ In the following example, the server is named `worker-0`. You need to create a d
 Run the `ascend-fd diag` command to diagnose faults on all training servers in the cluster.
 
 ```shell
-ascend-fd diag -i /*Cleaning_result_output_directory* -o /*Diagnosis_result_output_directory*
+ascend-fd diag -i /${Cleaning_result_output_directory} -o /${Diagnosis_result_output_directory}
 ```
 
 For example:
