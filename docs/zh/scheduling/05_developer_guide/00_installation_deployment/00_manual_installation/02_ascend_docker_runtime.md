@@ -63,22 +63,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
     chmod u+x Ascend-docker-runtime_{version}_linux-{arch}.run
     ```
 
-3. 执行如下命令，校验软件包安装文件的一致性和完整性。
-
-    ```shell
-    ./Ascend-docker-runtime_{version}_linux-{arch}.run --check
-    ```
-
-    回显示例如下：
-
-    ```ColdFusion
-    [WARNING]: --check is meaningless for ascend-docker-runtime and will be discarded in the future
-    Verifying archive integrity...  100%   SHA256 checksums are OK.
-    ...
-     All good.
-    ```
-
-4. 可通过以下命令安装Ascend Docker Runtime。
+3. 可通过以下命令安装Ascend Docker Runtime。
 
     - 安装到默认路径下，执行以下命令。
 
@@ -105,7 +90,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
     [INFO] ascend-docker-runtime install success
     ```
 
-5. 执行以下命令，使Ascend Docker Runtime生效。
+4. 执行以下命令，使Ascend Docker Runtime生效。
 
     ```shell
     systemctl daemon-reload && systemctl restart docker
@@ -127,22 +112,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
     chmod u+x Ascend-docker-runtime_{version}_linux-{arch}.run
     ```
 
-3. 执行如下命令，校验软件包安装文件的一致性和完整性。
-
-    ```shell
-    ./Ascend-docker-runtime_{version}_linux-{arch}.run --check
-    ```
-
-    回显示例如下：
-
-    ```ColdFusion
-    [WARNING]: --check is meaningless for ascend-docker-runtime and will be discarded in the future
-    Verifying archive integrity...  100%   SHA256 checksums are OK.
-    ...
-     All good.
-    ```
-
-4. 可通过以下命令安装Ascend Docker Runtime。
+3. 可通过以下命令安装Ascend Docker Runtime。
 
     - 安装到默认路径下。
 
@@ -169,7 +139,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
     [INFO] ascend-docker-runtime install success
     ```
 
-5. <a name="zh-cn_topic_0000001930317932_section19659112313311605"></a>（可选）如果安装失败，可参照以下步骤修改Containerd配置文件。
+4. <a name="zh-cn_topic_0000001930317932_section19659112313311605"></a>（可选）如果安装失败，可参照以下步骤修改Containerd配置文件。
     1. 打开配置文件。
         - **Containerd无默认配置文件场景**：依次执行以下命令，创建并修改配置文件。
 
@@ -264,7 +234,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
               ignore_rdt_not_enabled_errors = false
             ...</pre>
 
-6. 执行以下命令，重启Containerd。
+5. 执行以下命令，重启Containerd。
 
     ```shell
     systemctl daemon-reload && systemctl restart containerd
@@ -284,22 +254,7 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
     chmod u+x Ascend-docker-runtime_{version}_linux-{arch}.run
     ```
 
-3. 执行如下命令，校验软件包安装文件的一致性和完整性。
-
-    ```shell
-    ./Ascend-docker-runtime_{version}_linux-{arch}.run --check
-    ```
-
-    回显示例如下：
-
-    ```ColdFusion
-    [WARNING]: --check is meaningless for ascend-docker-runtime and will be discarded in the future
-    Verifying archive integrity...  100%   SHA256 checksums are OK.
-    ...
-     All good.
-    ```
-
-4. 可通过以下命令安装Ascend Docker Runtime。
+3. 可通过以下命令安装Ascend Docker Runtime。
 
     - 安装到默认路径下。
 
@@ -325,17 +280,17 @@ K8s集成Docker场景安装Ascend Docker Runtime，与Docker场景下安装Ascen
     [INFO] ascend-docker-runtime install success
     ```
 
-5. （可选）如果安装失败，可参考[Containerd场景下安装Ascend Docker Runtime](#zh-cn_topic_0000001930317932_section196591123133116)中的[步骤5](#zh-cn_topic_0000001930317932_section19659112313311605)。
+4. （可选）如果安装失败，可参考[Containerd场景下安装Ascend Docker Runtime](#zh-cn_topic_0000001930317932_section196591123133116)中的[步骤5](#zh-cn_topic_0000001930317932_section19659112313311605)。
 
-6. 如需将节点上的容器运行时从Docker更改为Containerd，需要修改节点上kubelet的配置文件kubeadm-flags.env。详情请参见[K8s官方文档](https://kubernetes.io/docs/tasks/administer-cluster/migrating-from-dockershim/change-runtime-containerd/)。
+5. 如需将节点上的容器运行时从Docker更改为Containerd，需要修改节点上kubelet的配置文件kubeadm-flags.env。详情请参见[K8s官方文档](https://kubernetes.io/docs/tasks/administer-cluster/migrating-from-dockershim/change-runtime-containerd/)。
 
-7. 如果存在Docker服务，请执行以下命令停止对应服务。
+6. 如果存在Docker服务，请执行以下命令停止对应服务。
 
     ```shell
     systemctl stop docker
     ```
 
-8. 执行命令，重启Containerd和kubelet，示例如下。
+7. 执行命令，重启Containerd和kubelet，示例如下。
 
     ```shell
     systemctl daemon-reload && systemctl restart containerd kubelet
