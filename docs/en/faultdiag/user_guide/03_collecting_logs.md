@@ -65,20 +65,20 @@ This section describes the structure of the directory to be cleaned. You can col
     - BMC log directory structure
 
         ```text
-        Collection_directory/dump_info/AppDump/*/*.log
-        Collection_directory/dump_info/DeviceDump/*/*.log
-        Collection_directory/dump_info/LogDump/*/*.log
-        Collection_directory/dump_info/AppDump/frudata/fruinfo.txt # BMC extension board SNs
-        Collection_directory/dump_info/AppDump/chassis/mdb_info.log # BMC SuperPoD information
+        ${Collection_directory}/dump_info/AppDump/*/*.log
+        ${Collection_directory}/dump_info/DeviceDump/*/*.log
+        ${Collection_directory}/dump_info/LogDump/*/*.log
+        ${Collection_directory}/dump_info/AppDump/frudata/fruinfo.txt # BMC extension board SNs
+        ${Collection_directory}/dump_info/AppDump/chassis/mdb_info.log # BMC SuperPoD information
         ```
 
     - LCNE log directory structure
 
         ```text
-        Collection_directory/*/diagnostic_information/slot_1/tempdir/devm_bddrvadp.log # LCNE extension board SNs
-        Collection_directory/*/diag_display_info.txt # LCNE SuperPoD information
-        Collection_directory/*/log.log
-        Collection_directory/*/log_1_*.log
+        ${Collection_directory}/*/diagnostic_information/slot_1/tempdir/devm_bddrvadp.log # LCNE extension board SNs
+        ${Collection_directory}/*/diag_display_info.txt # LCNE SuperPoD information
+        ${Collection_directory}/*/log.log
+        ${Collection_directory}/*/log_1_*.log
         ```
 
         The table below describes the log files stored in each directory.
@@ -90,7 +90,7 @@ This section describes the structure of the directory to be cleaned. You can col
         </th>
         <th class="cellrowborder" valign="top" width="21.26%" id="mcps1.2.5.1.2"><p id="p493392214536"><a name="p493392214536"></a><a name="p493392214536"></a><strong id="b493316221533"><a name="b493316221533"></a><a name="b493316221533"></a>Log File</strong></p>
         </th>
-        <th class="cellrowborder" valign="top" width="20.39%" id="mcps1.2.5.1.3"><p id="p13933142265319"><a name="p13933142265319"></a><a name="p13933142265319"></a><strong id="b17933102265312"><a name="b17933102265312"></a><a name="b17933102265312"></a>ile Description</strong></p>
+        <th class="cellrowborder" valign="top" width="20.39%" id="mcps1.2.5.1.3"><p id="p13933142265319"><a name="p13933142265319"></a><a name="p13933142265319"></a><strong id="b17933102265312"><a name="b17933102265312"></a><a name="b17933102265312"></a>File Description</strong></p>
         </th>
         <th class="cellrowborder" valign="top" width="42.199999999999996%" id="mcps1.2.5.1.4"><p id="p993372275310"><a name="p993372275310"></a><a name="p993372275310"></a><strong id="b189334229535"><a name="b189334229535"></a><a name="b189334229535"></a>Storage Directory</strong></p>
         </th>
@@ -102,14 +102,14 @@ This section describes the structure of the directory to be cleaned. You can col
         </td>
         <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p id="p1093313229534"><a name="p1093313229534"></a><a name="p1093313229534"></a>Host-side App log</p>
         </td>
-        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p1493312235317"><a name="p1493312235317"></a><a name="p1493312235317"></a>Collection_directory/process_log/debug or run/plog/plog-<em id="i2933622125316"><a name="i2933622125316"></a><a name="i2933622125316"></a>{pid}</em>_<em id="i6933222145320"><a name="i6933222145320"></a><a name="i6933222145320"></a>{time}</em>.log</p>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p1493312235317"><a name="p1493312235317"></a><a name="p1493312235317"></a>${Collection_directory}/process_log/debug or run/plog/plog-<em id="i2933622125316"><a name="i2933622125316"></a><a name="i2933622125316"></a>{pid}</em>_<em id="i6933222145320"><a name="i6933222145320"></a><a name="i6933222145320"></a>{time}</em>.log</p>
         </td>
         </tr>
         <tr id="row159331225539"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p10933192214532"><a name="p10933192214532"></a><a name="p10933192214532"></a>device-<em id="i19933162225310"><a name="i19933162225310"></a><a name="i19933162225310"></a>{pid}</em>_<em id="i129331223539"><a name="i129331223539"></a><a name="i129331223539"></a>{time}</em>.log</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p7933722165312"><a name="p7933722165312"></a><a name="p7933722165312"></a>Device-side App log</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p4933722175314"><a name="p4933722175314"></a><a name="p4933722175314"></a>Collection_directory/process_log/debug or run/device-<em id="i139331122135318"><a name="i139331122135318"></a><a name="i139331122135318"></a>{id}</em>/device-<em id="i293313226535"><a name="i293313226535"></a><a name="i293313226535"></a>{pid}</em>_<em id="i17933222185310"><a name="i17933222185310"></a><a name="i17933222185310"></a>{time}</em>.log</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p4933722175314"><a name="p4933722175314"></a><a name="p4933722175314"></a>${Collection_directory}/process_log/debug or run/device-<em id="i139331122135318"><a name="i139331122135318"></a><a name="i139331122135318"></a>{id}</em>/device-<em id="i293313226535"><a name="i293313226535"></a><a name="i293313226535"></a>{pid}</em>_<em id="i17933222185310"><a name="i17933222185310"></a><a name="i17933222185310"></a>{time}</em>.log</p>
         </td>
         </tr>
         <tr id="row1993482285313"><td class="cellrowborder" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p1493317220533"><a name="p1493317220533"></a><a name="p1493317220533"></a>User training and inference logs</p>
@@ -121,7 +121,7 @@ This section describes the structure of the directory to be cleaned. You can col
         </td>
         <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p id="p693432219531"><a name="p693432219531"></a><a name="p693432219531"></a>Training and inference console logs</p>
         </td>
-        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><a name="ul493492215531"></a><a name="ul493492215531"></a><ul id="ul493492215531"><li>Collection_directory/rank-<em id="i993414221535"><a name="i993414221535"></a><a name="i993414221535"></a>{id</em><em id="i1893410222530"><a name="i1893410222530"></a><a name="i1893410222530"></a>}</em>.*?.txt</li><li>Collection_directory/rank-<em id="i1934112220532"><a name="i1934112220532"></a><a name="i1934112220532"></a>{id</em><em id="i993472245319"><a name="i993472245319"></a><a name="i993472245319"></a>}</em>.*?.log</li><li>Collection_directory/worker-<em id="i1693413224532"><a name="i1693413224532"></a><a name="i1693413224532"></a>{id}</em>.*?.log</li><li>Collection_directory/worker-<em id="i129341322145314"><a name="i129341322145314"></a><a name="i129341322145314"></a>{id}</em>.*?.txt</li></ul>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><a name="ul493492215531"></a><a name="ul493492215531"></a><ul id="ul493492215531"><li>${Collection_directory}/rank-<em id="i993414221535"><a name="i993414221535"></a><a name="i993414221535"></a>{id</em><em id="i1893410222530"><a name="i1893410222530"></a><a name="i1893410222530"></a>}</em>.*?.txt</li><li>${Collection_directory}/rank-<em id="i1934112220532"><a name="i1934112220532"></a><a name="i1934112220532"></a>{id</em><em id="i993472245319"><a name="i993472245319"></a><a name="i993472245319"></a>}</em>.*?.log</li><li>${Collection_directory}/worker-<em id="i1693413224532"><a name="i1693413224532"></a><a name="i1693413224532"></a>{id}</em>.*?.log</li><li>${Collection_directory}/worker-<em id="i129341322145314"><a name="i129341322145314"></a><a name="i129341322145314"></a>{id}</em>.*?.txt</li></ul>
         </td>
         </tr>
         <tr id="row6934122265317"><td class="cellrowborder" rowspan="4" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p119341722135319"><a name="p119341722135319"></a><a name="p119341722135319"></a>NPU network port resource information</p>
@@ -130,28 +130,28 @@ This section describes the structure of the directory to be cleaned. You can col
         </td>
         <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p id="p29340221534"><a name="p29340221534"></a><a name="p29340221534"></a>NPU network port check before training and inference</p>
         </td>
-        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p15934192245318"><a name="p15934192245318"></a><a name="p15934192245318"></a>Collection_directory/environment_check/npu_info_before.txt</p>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p15934192245318"><a name="p15934192245318"></a><a name="p15934192245318"></a>${Collection_directory}/environment_check/npu_info_before.txt</p>
         </td>
         </tr>
         <tr id="row189341222165320"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p13934102295314"><a name="p13934102295314"></a><a name="p13934102295314"></a>npu_info_after.txt</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1493411228532"><a name="p1493411228532"></a><a name="p1493411228532"></a>NPU network port check after training and inference</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1993452218536"><a name="p1993452218536"></a><a name="p1993452218536"></a>Collection_directory/environment_check/npu_info_after.txt</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1993452218536"><a name="p1993452218536"></a><a name="p1993452218536"></a>${Collection_directory}/environment_check/npu_info_after.txt</p>
         </td>
         </tr>
         <tr id="row12934182295318"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p493442275316"><a name="p493442275316"></a><a name="p493442275316"></a>npu_smi_<em id="i493482205317"><a name="i493482205317"></a><a name="i493482205317"></a>{npu_id}</em>_details.csv</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1193462265313"><a name="p1193462265313"></a><a name="p1193462265313"></a>NPU status monitoring metric file</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p3934022125312"><a name="p3934022125312"></a><a name="p3934022125312"></a>Collection_directory/environment_check/npu_smi_<em id="i129341722135313"><a name="i129341722135313"></a><a name="i129341722135313"></a>{npu_id}</em>_details.csv</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p3934022125312"><a name="p3934022125312"></a><a name="p3934022125312"></a>${Collection_directory}/environment_check/npu_smi_<em id="i129341722135313"><a name="i129341722135313"></a><a name="i129341722135313"></a>{npu_id}</em>_details.csv</p>
         </td>
         </tr>
         <tr id="row1593418221533"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p12934192255315"><a name="p12934192255315"></a><a name="p12934192255315"></a>npu_<em id="i199341122115317"><a name="i199341122115317"></a><a name="i199341122115317"></a>{npu_id}</em>_details.csv</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1793482214532"><a name="p1793482214532"></a><a name="p1793482214532"></a>NPU network port monitoring metric file</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p18934122265316"><a name="p18934122265316"></a><a name="p18934122265316"></a>Collection_directory/environment_check/npu_<em id="i14934622125317"><a name="i14934622125317"></a><a name="i14934622125317"></a>{npu_id}</em>_details.csv</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p18934122265316"><a name="p18934122265316"></a><a name="p18934122265316"></a>${Collection_directory}/environment_check/npu_<em id="i14934622125317"><a name="i14934622125317"></a><a name="i14934622125317"></a>{npu_id}</em>_details.csv</p>
         </td>
         </tr>
         <tr id="row89341122195315"><td class="cellrowborder" rowspan="2" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p693462215320"><a name="p693462215320"></a><a name="p693462215320"></a>Host resource information</p>
@@ -161,14 +161,14 @@ This section describes the structure of the directory to be cleaned. You can col
         </td>
         <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p id="p4934192215538"><a name="p4934192215538"></a><a name="p4934192215538"></a>Host resource monitoring metric file</p>
         </td>
-        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p4934192216538"><a name="p4934192216538"></a><a name="p4934192216538"></a>Collection_directory/environment_check/host_metrics_<em id="i17934622105318"><a name="i17934622105318"></a><a name="i17934622105318"></a>{core_num}</em>.json</p>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p4934192216538"><a name="p4934192216538"></a><a name="p4934192216538"></a>${Collection_directory}/environment_check/host_metrics_<em id="i17934622105318"><a name="i17934622105318"></a><a name="i17934622105318"></a>{core_num}</em>.json</p>
         </td>
         </tr>
         <tr id="row118418271603"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1518513276018"><a name="p1518513276018"></a><a name="p1518513276018"></a>dmidecode.txt</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1518502716012"><a name="p1518502716012"></a><a name="p1518502716012"></a>DMI log file on the host</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1418515272016"><a name="p1418515272016"></a><a name="p1418515272016"></a>Collection_directory/dmidecode.txt</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1418515272016"><a name="p1418515272016"></a><a name="p1418515272016"></a>${Collection_directory}/dmidecode.txt</p>
         </td>
         </tr>
         <tr id="row1993412255313"><td class="cellrowborder" rowspan="4" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p793413223536"><a name="p793413223536"></a><a name="p793413223536"></a>Host-side logs</p>
@@ -178,28 +178,28 @@ This section describes the structure of the directory to be cleaned. You can col
         </td>
         <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p id="p3934142215531"><a name="p3934142215531"></a><a name="p3934142215531"></a>Host kernel message file</p>
         </td>
-        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p2934122214533"><a name="p2934122214533"></a><a name="p2934122214533"></a>Collection_directory/dmesg</p>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p2934122214533"><a name="p2934122214533"></a><a name="p2934122214533"></a>${Collection_directory}/dmesg</p>
         </td>
         </tr>
         <tr id="row19935152245315"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p8934162214536"><a name="p8934162214536"></a><a name="p8934162214536"></a>sysmonitor.log</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p993412245316"><a name="p993412245316"></a><a name="p993412245316"></a>Host system monitoring file</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p179347221530"><a name="p179347221530"></a><a name="p179347221530"></a>Collection_directory/sysmonitor.log</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p179347221530"><a name="p179347221530"></a><a name="p179347221530"></a>${Collection_directory}/sysmonitor.log</p>
         </td>
         </tr>
         <tr id="row0935422155317"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p2093582265313"><a name="p2093582265313"></a><a name="p2093582265313"></a>messages-*?</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p493516222539"><a name="p493516222539"></a><a name="p493516222539"></a>Host OS log file</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1193532265318"><a name="p1193532265318"></a><a name="p1193532265318"></a>Collection_directory/messages-*?</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1193532265318"><a name="p1193532265318"></a><a name="p1193532265318"></a>${Collection_directory}/messages-*?</p>
         </td>
         </tr>
         <tr id="row293522265317"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p69351922185310"><a name="p69351922185310"></a><a name="p69351922185310"></a>vmcore_dmesg.txt</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1893512218538"><a name="p1893512218538"></a><a name="p1893512218538"></a>Host kernel message file saved during a system crash</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p9935132235315"><a name="p9935132235315"></a><a name="p9935132235315"></a>Collection_directory/crash/Host + Fault timestamp (eg: 127.xx.xx.1-2024-09-23-11:25:29)/vmcore_dmesg.txt</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p9935132235315"><a name="p9935132235315"></a><a name="p9935132235315"></a>${Collection_directory}/crash/Host + Fault timestamp (eg: 127.xx.xx.1-2024-09-23-11:25:29)/vmcore_dmesg.txt</p>
         </td>
         </tr>
         <tr id="row1193562265314"><td class="cellrowborder" rowspan="7" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p149350225535"><a name="p149350225535"></a><a name="p149350225535"></a>Device-side logs</p>
@@ -212,7 +212,7 @@ This section describes the structure of the directory to be cleaned. You can col
         </td>
         <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p id="p1393510222534"><a name="p1393510222534"></a><a name="p1393510222534"></a>Device-side Ctrl CPU system log</p>
         </td>
-        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p99351722105318"><a name="p99351722105318"></a><a name="p99351722105318"></a>Collection_directory/device_log/slog/dev-os-<em id="i7935182215316"><a name="i7935182215316"></a><a name="i7935182215316"></a>{id}</em>/debug或run/device-os/device-os_<em id="i1093510226536"><a name="i1093510226536"></a><a name="i1093510226536"></a>{time}</em>.log</p>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p99351722105318"><a name="p99351722105318"></a><a name="p99351722105318"></a>${Collection_directory}/device_log/slog/dev-os-<em id="i7935182215316"><a name="i7935182215316"></a><a name="i7935182215316"></a>{id}</em>/debug or run/device-os/device-os_<em id="i1093510226536"><a name="i1093510226536"></a><a name="i1093510226536"></a>{time}</em>.log</p>
         </td>
         </tr>
         <tr id="row159351022125320"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p2935122218532"><a name="p2935122218532"></a><a name="p2935122218532"></a>event_<em id="i10935162295311"><a name="i10935162295311"></a><a name="i10935162295311"></a>{time}</em>.log</p>
@@ -220,7 +220,7 @@ This section describes the structure of the directory to be cleaned. You can col
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p12935132215316"><a name="p12935132215316"></a><a name="p12935132215316"></a>EVENT-level Ctrl CPU system log on the device</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p11935142219539"><a name="p11935142219539"></a><a name="p11935142219539"></a>Ascend HDK 23.0.3 and later:</p>
-        <p id="p293572212532"><a name="p293572212532"></a><a name="p293572212532"></a>Collection_directory/device_log/slog/dev-os-<em id="i1293517221539"><a name="i1293517221539"></a><a name="i1293517221539"></a>{id}</em>/run/event/event_<em id="i1935182215539"><a name="i1935182215539"></a><a name="i1935182215539"></a>{time}</em>.log</p>
+        <p id="p293572212532"><a name="p293572212532"></a><a name="p293572212532"></a>${Collection_directory}/device_log/slog/dev-os-<em id="i1293517221539"><a name="i1293517221539"></a><a name="i1293517221539"></a>{id}</em>/run/event/event_<em id="i1935182215539"><a name="i1935182215539"></a><a name="i1935182215539"></a>{time}</em>.log</p>
         </td>
         </tr>
         <tr id="row493642295315"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p19351222125310"><a name="p19351222125310"></a><a name="p19351222125310"></a>device-<em id="i99351722195317"><a name="i99351722195317"></a><a name="i99351722195317"></a>{id}</em>_<em id="i16935422175310"><a name="i16935422175310"></a><a name="i16935422175310"></a>{time}</em>.log</p>
@@ -228,37 +228,37 @@ This section describes the structure of the directory to be cleaned. You can col
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p119351522125319"><a name="p119351522125319"></a><a name="p119351522125319"></a>Device-side non-Ctrl CPU system log</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p4935722185312"><a name="p4935722185312"></a><a name="p4935722185312"></a>Ascend HDK 23.0.RC3:</p>
-        <p id="p109351225536"><a name="p109351225536"></a><a name="p109351225536"></a>Collection_directory/device_log/slog/dev-os-<em id="i99354227530"><a name="i99354227530"></a><a name="i99354227530"></a>{id}</em>/device-<em id="i793592216534"><a name="i793592216534"></a><a name="i793592216534"></a>{id}</em>/device-<em id="i89354225538"><a name="i89354225538"></a><a name="i89354225538"></a>{id}</em>_<em id="i129356224537"><a name="i129356224537"></a><a name="i129356224537"></a>{time}</em>.log</p>
+        <p id="p109351225536"><a name="p109351225536"></a><a name="p109351225536"></a>${Collection_directory}/device_log/slog/dev-os-<em id="i99354227530"><a name="i99354227530"></a><a name="i99354227530"></a>{id}</em>/device-<em id="i793592216534"><a name="i793592216534"></a><a name="i793592216534"></a>{id}</em>/device-<em id="i89354225538"><a name="i89354225538"></a><a name="i89354225538"></a>{id}</em>_<em id="i129356224537"><a name="i129356224537"></a><a name="i129356224537"></a>{time}</em>.log</p>
         <p id="p129353225539"><a name="p129353225539"></a><a name="p129353225539"></a>Ascend HDK 23.0.3 and later:</p>
-        <p id="p1793662255315"><a name="p1793662255315"></a><a name="p1793662255315"></a>Collection_directory/device_log/slog/dev-os-<em id="i19935152295311"><a name="i19935152295311"></a><a name="i19935152295311"></a>{id}</em>/debug/device-<em id="i16935102219531"><a name="i16935102219531"></a><a name="i16935102219531"></a>{id}</em>/device-<em id="i18936182211536"><a name="i18936182211536"></a><a name="i18936182211536"></a>{id}</em>_<em id="i14936422105318"><a name="i14936422105318"></a><a name="i14936422105318"></a>{time}</em>.log</p>
+        <p id="p1793662255315"><a name="p1793662255315"></a><a name="p1793662255315"></a>${Collection_directory}/device_log/slog/dev-os-<em id="i19935152295311"><a name="i19935152295311"></a><a name="i19935152295311"></a>{id}</em>/debug/device-<em id="i16935102219531"><a name="i16935102219531"></a><a name="i16935102219531"></a>{id}</em>/device-<em id="i18936182211536"><a name="i18936182211536"></a><a name="i18936182211536"></a>{id}</em>_<em id="i14936422105318"><a name="i14936422105318"></a><a name="i14936422105318"></a>{time}</em>.log</p>
         </td>
         </tr>
         <tr id="row169363227534"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p49363229530"><a name="p49363229530"></a><a name="p49363229530"></a>history.log</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p7936132215531"><a name="p7936132215531"></a><a name="p7936132215531"></a>Black Box log</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p18936322155316"><a name="p18936322155316"></a><a name="p18936322155316"></a>Collection_directory/device_log/hisi_logs/device-<em id="i59369226534"><a name="i59369226534"></a><a name="i59369226534"></a>{id}</em>/history.log</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p18936322155316"><a name="p18936322155316"></a><a name="p18936322155316"></a>${Collection_directory}/device_log/hisi_logs/device-<em id="i59369226534"><a name="i59369226534"></a><a name="i59369226534"></a>{id}</em>/history.log</p>
         </td>
         </tr>
         <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>kernel.log</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>NPU kernel log</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Collection_directory/device_log/hisi_logs/device-<em>{id}/{time}</em>/log/kernel.log</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>${Collection_directory}/device_log/hisi_logs/device-<em>{id}/{time}</em>/log/kernel.log</p>
         </td>
         </tr>
         <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>os_info.txt</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Device OS information</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Collection_directory/device_log/hisi_logs/device-<em>{id}/{time}</em>/bbox/os/os_info.txt</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>${Collection_directory}/device_log/hisi_logs/device-<em>{id}/{time}</em>/bbox/os/os_info.txt</p>
         </td>
         </tr>
         <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>hbm.txt</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p>Device-side on-chip memory log</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>Collection_directory/device_log/hisi_logs/device-<em>{id}/{time}</em>/mntn/hbm.txt</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>${Collection_directory}/device_log/hisi_logs/device-<em>{id}/{time}</em>/mntn/hbm.txt</p>
         </td>
         </tr>
         <tr id="row119369226534"><td class="cellrowborder" rowspan="7" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p139367226537"><a name="p139367226537"></a><a name="p139367226537"></a><span id="ph19936162211535"><a name="ph19936162211535"></a><a name="ph19936162211535"></a>MindCluster</span> logs</p>
@@ -267,28 +267,28 @@ This section describes the structure of the directory to be cleaned. You can col
         </td>
         <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p id="p1936222165316"><a name="p1936222165316"></a><a name="p1936222165316"></a>SuperPoD device log and <span id="ph59365226535"><a name="ph59365226535"></a><a name="ph59365226535"></a>Ascend Device Plugin</span> log</p>
         </td>
-        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p993616221532"><a name="p993616221532"></a><a name="p993616221532"></a>Collection_directory/dl_log/devicePlugin/devicePlugin*.log</p>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p993616221532"><a name="p993616221532"></a><a name="p993616221532"></a>${Collection_directory}/dl_log/devicePlugin/devicePlugin*.log</p>
         </td>
         </tr>
         <tr id="row2093672255310"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1493642215320"><a name="p1493642215320"></a><a name="p1493642215320"></a>noded*.log</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p109361822165314"><a name="p109361822165314"></a><a name="p109361822165314"></a>AI server log</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p793602225317"><a name="p793602225317"></a><a name="p793602225317"></a>Collection_directory/dl_log/noded/noded*.log</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p793602225317"><a name="p793602225317"></a><a name="p793602225317"></a>${Collection_directory}/dl_log/noded/noded*.log</p>
         </td>
         </tr>
         <tr id="row1793652265316"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p9936102213539"><a name="p9936102213539"></a><a name="p9936102213539"></a>runtime-run*.log</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p12936132210532"><a name="p12936132210532"></a><a name="p12936132210532"></a><span id="ph193622217536"><a name="ph193622217536"></a><a name="ph193622217536"></a></span>Log generated when ascend-docker-runtime is executed</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p2936172225314"><a name="p2936172225314"></a><a name="p2936172225314"></a>Collection_directory/dl_log/ascend-docker-runtime/runtime-run*.log</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p2936172225314"><a name="p2936172225314"></a><a name="p2936172225314"></a>${Collection_directory}/dl_log/ascend-docker-runtime/runtime-run*.log</p>
         </td>
         </tr>
         <tr id="row13936172212537"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p199365220535"><a name="p199365220535"></a><a name="p199365220535"></a>hook-run*.log</p>
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p393682217536"><a name="p393682217536"></a><a name="p393682217536"></a><span id="ph7936222145311"><a name="ph7936222145311"></a><a name="ph7936222145311"></a></span>Log generated when ascend-docker-hook is executed</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p393672255310"><a name="p393672255310"></a><a name="p393672255310"></a>Collection_directory/dl_log/ascend-docker-runtime/</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p393672255310"><a name="p393672255310"></a><a name="p393672255310"></a>${Collection_directory}/dl_log/ascend-docker-runtime/</p>
         <p id="p19936202213537"><a name="p19936202213537"></a><a name="p19936202213537"></a>hook-run*.log</p>
         </td>
         </tr>
@@ -296,7 +296,7 @@ This section describes the structure of the directory to be cleaned. You can col
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p09364226530"><a name="p09364226530"></a><a name="p09364226530"></a><span id="ph109361622135319"><a name="ph109361622135319"></a><a name="ph109361622135319"></a></span>volcano-scheduler log</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p6936172255314"><a name="p6936172255314"></a><a name="p6936172255314"></a>Collection_directory/dl_log/volcano-scheduler/</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p6936172255314"><a name="p6936172255314"></a><a name="p6936172255314"></a>${Collection_directory}/dl_log/volcano-scheduler/</p>
         <p id="p119364226534"><a name="p119364226534"></a><a name="p119364226534"></a>volcano-scheduler*.log</p>
         </td>
         </tr>
@@ -304,7 +304,7 @@ This section describes the structure of the directory to be cleaned. You can col
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p2093632212539"><a name="p2093632212539"></a><a name="p2093632212539"></a><span id="ph79361122165314"><a name="ph79361122165314"></a><a name="ph79361122165314"></a></span>volcano-controller log</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p159362022175316"><a name="p159362022175316"></a><a name="p159362022175316"></a>Collection_directory/dl_log/volcano-controller/</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p159362022175316"><a name="p159362022175316"></a><a name="p159362022175316"></a>${Collection_directory}/dl_log/volcano-controller/</p>
         <p id="p8936922185317"><a name="p8936922185317"></a><a name="p8936922185317"></a>volcano-controller*.log</p>
         </td>
         </tr>
@@ -312,7 +312,7 @@ This section describes the structure of the directory to be cleaned. You can col
         </td>
         <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p15936122219532"><a name="p15936122219532"></a><a name="p15936122219532"></a><span id="ph89361220535"><a name="ph89361220535"></a><a name="ph89361220535"></a>NPU Exporter</span> log</p>
         </td>
-        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p19936122175317"><a name="p19936122175317"></a><a name="p19936122175317"></a>Collection_directory/dl_log/npu-exporter/</p>
+        <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p19936122175317"><a name="p19936122175317"></a><a name="p19936122175317"></a>${Collection_directory}/dl_log/npu-exporter/</p>
         <p id="p493610224532"><a name="p493610224532"></a><a name="p493610224532"></a>npu-exporter*.log</p>
         </td>
         </tr>
@@ -322,7 +322,7 @@ This section describes the structure of the directory to be cleaned. You can col
         </td>
         <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p id="p15937422205315"><a name="p15937422205315"></a><a name="p15937422205315"></a><span id="ph149361922175311"><a name="ph149361922175311"></a><a name="ph149361922175311"></a>MindIE Server</span>, <span id="ph1493672212536"><a name="ph1493672212536"></a><a name="ph1493672212536"></a>MindIE LLM</span>, <span id="ph2093712210533"><a name="ph2093712210533"></a><a name="ph2093712210533"></a>MindIE SD</span>, <span id="ph49372223533"><a name="ph49372223533"></a><a name="ph49372223533"></a>MindIE RT</span>, <span id="ph109374224535"><a name="ph109374224535"></a><a name="ph109374224535"></a>MindIE Torch</span>, span id="ph5937162285320"><a name="ph5937162285320"></a><a name="ph5937162285320"></a>MindIE MS, <span id="ph2093712205312"><a name="ph2093712205312"></a><a name="ph2093712205312"></a>MindIE Benchmark</span>, and <span id="ph1093752225310"><a name="ph1093752225310"></a><a name="ph1093752225310"></a>MindIE Client</span> logs</p>
         </td>
-        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p1393742217531"><a name="p1393742217531"></a><a name="p1393742217531"></a>Collection_directory/mindie/log/debug/mindie-<em id="i19937152285320"><a name="i19937152285320"></a><a name="i19937152285320"></a>{module}</em>_<em id="i4937192219539"><a name="i4937192219539"></a><a name="i4937192219539"></a>{pid}</em>_<em id="i0937152219532"><a name="i0937152219532"></a><a name="i0937152219532"></a>{datetime}</em>.log</p>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p1393742217531"><a name="p1393742217531"></a><a name="p1393742217531"></a>${Collection_directory}/mindie/log/debug/mindie-<em id="i19937152285320"><a name="i19937152285320"></a><a name="i19937152285320"></a>{module}</em>_<em id="i4937192219539"><a name="i4937192219539"></a><a name="i4937192219539"></a>{pid}</em>_<em id="i0937152219532"><a name="i0937152219532"></a><a name="i0937152219532"></a>{datetime}</em>.log</p>
         </td>
         </tr>
         <tr id="row39371522175316"><td class="cellrowborder" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p4937122225319"><a name="p4937122225319"></a><a name="p4937122225319"></a>AMCT log</p>
@@ -331,7 +331,7 @@ This section describes the structure of the directory to be cleaned. You can col
         </td>
         <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p id="p109371922175319"><a name="p109371922175319"></a><a name="p109371922175319"></a>AMCT log</p>
         </td>
-        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p1693732217532"><a name="p1693732217532"></a><a name="p1693732217532"></a>Collection_directory/amct_log/amct_<em id="i1393742212536"><a name="i1393742212536"></a><a name="i1393742212536"></a>{framework}</em>.log</p>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p1693732217532"><a name="p1693732217532"></a><a name="p1693732217532"></a>${Collection_directory}/amct_log/amct_<em id="i1393742212536"><a name="i1393742212536"></a><a name="i1393742212536"></a>{framework}</em>.log</p>
         </td>
         </tr>
         <tr id="row29371022185312"><td class="cellrowborder" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p9937182225310"><a name="p9937182225310"></a><a name="p9937182225310"></a>BMC logs</p>
@@ -340,11 +340,11 @@ This section describes the structure of the directory to be cleaned. You can col
         </td>
         <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p id="p5937132215311"><a name="p5937132215311"></a><a name="p5937132215311"></a>All out-of-band logs collected in one-click mode</p>
         </td>
-        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p46581757586"><a name="p46581757586"></a><a name="p46581757586"></a>Collection_directory/dump_info/AppDump/*/*.log</p>
-        <p id="p56581657582"><a name="p56581657582"></a><a name="p56581657582"></a>Collection_directory/dump_info/DeviceDump/*/*.log</p>
-        <p id="p66589505817"><a name="p66589505817"></a><a name="p66589505817"></a>Collection_directory/dump_info/LogDump/*/*.log</p>
-        <p id="p16581511586"><a name="p16581511586"></a><a name="p16581511586"></a>Collection_directory/dump_info/AppDump/frudata/fruinfo.txt</p>
-        <p id="p14658205185813"><a name="p14658205185813"></a><a name="p14658205185813"></a>Collection_directory/dump_info/AppDump/chassis/mdb_info.log</p>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p46581757586"><a name="p46581757586"></a><a name="p46581757586"></a>${Collection_directory}/dump_info/AppDump/*/*.log</p>
+        <p id="p56581657582"><a name="p56581657582"></a><a name="p56581657582"></a>${Collection_directory}/dump_info/DeviceDump/*/*.log</p>
+        <p id="p66589505817"><a name="p66589505817"></a><a name="p66589505817"></a>${Collection_directory}/dump_info/LogDump/*/*.log</p>
+        <p id="p16581511586"><a name="p16581511586"></a><a name="p16581511586"></a>${Collection_directory}/dump_info/AppDump/frudata/fruinfo.txt</p>
+        <p id="p14658205185813"><a name="p14658205185813"></a><a name="p14658205185813"></a>${Collection_directory}/dump_info/AppDump/chassis/mdb_info.log</p>
         </td>
         </tr>
         <tr id="row793719229533"><td class="cellrowborder" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p19937922125320"><a name="p19937922125320"></a><a name="p19937922125320"></a>LCNE logs</p>
@@ -353,10 +353,10 @@ This section describes the structure of the directory to be cleaned. You can col
         </td>
         <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p id="p1193714226532"><a name="p1193714226532"></a><a name="p1193714226532"></a>Logs collected by LCNE</p>
         </td>
-        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p4306192985912"><a name="p4306192985912"></a><a name="p4306192985912"></a>Collection_directory/*/diagnostic_information/slot_1/tempdir/devm_bddrvadp.log</p>
-        <p id="p3306132910599"><a name="p3306132910599"></a><a name="p3306132910599"></a>Collection_directory/*/diag_display_info.txt</p>
-        <p id="p2072813615546"><a name="p2072813615546"></a><a name="p2072813615546"></a>Collection_directory/*/log.log</p>
-        <p id="p1972918610542"><a name="p1972918610542"></a><a name="p1972918610542"></a>Collection_directory/*/log_1_*.log</p>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p4306192985912"><a name="p4306192985912"></a><a name="p4306192985912"></a>${Collection_directory}/*/diagnostic_information/slot_1/tempdir/devm_bddrvadp.log</p>
+        <p id="p3306132910599"><a name="p3306132910599"></a><a name="p3306132910599"></a>${Collection_directory}/*/diag_display_info.txt</p>
+        <p id="p2072813615546"><a name="p2072813615546"></a><a name="p2072813615546"></a>${Collection_directory}/*/log.log</p>
+        <p id="p1972918610542"><a name="p1972918610542"></a><a name="p1972918610542"></a>${Collection_directory}/*/log_1_*.log</p>
         </td>
         </tr>
         <tr id="row1393710222537"><td class="cellrowborder" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p id="p7937112275315"><a name="p7937112275315"></a><a name="p7937112275315"></a>MindIE Pod console log</p>
@@ -365,7 +365,7 @@ This section describes the structure of the directory to be cleaned. You can col
         </td>
         <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p id="p10937192213539"><a name="p10937192213539"></a><a name="p10937192213539"></a>MindIE Pod console log</p>
         </td>
-        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p119371222125315"><a name="p119371222125315"></a><a name="p119371222125315"></a>Collection_directory/mindie/log/mindie_cluster_log/<em id="i793712229536"><a name="i793712229536"></a><a name="i793712229536"></a>{podname}</em>.log</p>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p id="p119371222125315"><a name="p119371222125315"></a><a name="p119371222125315"></a>${Collection_directory}/mindie/log/mindie_cluster_log/<em id="i793712229536"><a name="i793712229536"></a><a name="i793712229536"></a>{podname}</em>.log</p>
         </td>
         </tr>
         <tr><td class="cellrowborder" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p>MindIO log</p>
@@ -374,7 +374,7 @@ This section describes the structure of the directory to be cleaned. You can col
         </td>
         <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p>MindIO log</p>
         </td>
-        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>Collection_directory/dl_log/ttp_log/ttp_log.log.*</p>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>${Collection_directory}/dl_log/ttp_log/ttp_log.log.*</p>
         </td>
         </tr>
         <td class="cellrowborder" valign="top" width="16.150000000000002%" headers="mcps1.2.5.1.1 "><p>Bus log</p>
@@ -383,7 +383,7 @@ This section describes the structure of the directory to be cleaned. You can col
         </td>
         <td class="cellrowborder" valign="top" width="20.39%" headers="mcps1.2.5.1.3 "><p>LCNE log (Ascend 950)</p>
         </td>
-        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>Collection_directory/lcne/*/log.log</p>
+        <td class="cellrowborder" valign="top" width="42.199999999999996%" headers="mcps1.2.5.1.4 "><p>${Collection_directory}/lcne/*/log.log</p>
         </td>
         </tbody>
         </table>
@@ -489,7 +489,7 @@ This section describes the structure of the directory to be cleaned. You can col
     </td>
     <td class="cellrowborder" valign="top" width="20.34%" headers="mcps1.1.5.1.3 "><p id="p128748101219"><a name="p128748101219"></a><a name="p128748101219"></a>Training and inference console logs</p>
     </td>
-    <td class="cellrowborder" valign="top" width="42.230000000000004%" headers="mcps1.1.5.1.4 "><a name="ul11356426182714"></a><a name="ul11356426182714"></a><ul id="ul11356426182714"><li>${--train_log}/rank-<em id="i10284481126"><a name="i10284481126"></a><a name="i10284481126"></a>id</em>.*?.txt</li><li>${--train_log}/rank-<em id="i4109203271013"><a name="i4109203271013"></a><a name="i4109203271013"></a>id</em>.*?.log</li><li>${--train_log}/worker-<em id="i3736195518112"><a name="i3736195518112"></a><a name="i3736195518112"></a>id</em>.*?.log</li><li>${--train_log}/worker-<em id="i51091325104"><a name="i51091325104"></a><a name="i51091325104"></a>id</em>.*?.txt</li></ul>
+    <td class="cellrowborder" valign="top" width="42.230000000000004%" headers="mcps1.1.5.1.4 "><a name="ul11356426182714"></a><a name="ul11356426182714"></a><ul id="ul11356426182714"><li>${--train_log}/rank-<em id="i10284481126"><a name="i10284481126"></a><a name="i10284481126"></a>{id}</em>.*?.txt</li><li>${--train_log}/rank-<em id="i4109203271013"><a name="i4109203271013"></a><a name="i4109203271013"></a>{id}</em>.*?.log</li><li>${--train_log}/worker-<em id="i3736195518112"><a name="i3736195518112"></a><a name="i3736195518112"></a>{id}</em>.*?.log</li><li>${--train_log}/worker-<em id="i51091325104"><a name="i51091325104"></a><a name="i51091325104"></a>{id}</em>.*?.txt</li></ul>
     </td>
     </tr>
     <tr id="row928104818125"><td class="cellrowborder" rowspan="4" valign="top" width="15.64%" headers="mcps1.1.5.1.1 "><p id="p18281448111210"><a name="p18281448111210"></a><a name="p18281448111210"></a>NPU network port resource information</p>
@@ -542,14 +542,14 @@ This section describes the structure of the directory to be cleaned. You can col
     </tr>
     <tr id="row104971028144016"><td class="cellrowborder" valign="top" headers="mcps1.1.5.1.1 "><p id="p68411848154012"><a name="p68411848154012"></a><a name="p68411848154012"></a>dmesg</p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.2 "><p id="p68411648134014"><a name="p68411648134014"></a><a name="p68411648134014"></a>Host kernal message file</p>
+    <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.2 "><p id="p68411648134014"><a name="p68411648134014"></a><a name="p68411648134014"></a>Host kernel message file</p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.3 "><p id="p1841174854011"><a name="p1841174854011"></a><a name="p1841174854011"></a>${--host_log}/dmesg</p>
     </td>
     </tr>
     <tr id="row981943679"><td class="cellrowborder" valign="top" headers="mcps1.1.5.1.1 "><p id="p1482204315716"><a name="p1482204315716"></a><a name="p1482204315716"></a>vmcore-dmesg.txt</p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.2 "><p id="p58274315720"><a name="p58274315720"></a><a name="p58274315720"></a>Host kernal message file saved during a system crash</p>
+    <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.2 "><p id="p58274315720"><a name="p58274315720"></a><a name="p58274315720"></a>Host kernel message file saved during a system crash</p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.3 "><p id="p17824439712"><a name="p17824439712"></a><a name="p17824439712"></a>${--host_log}/crash/Host + fault timestamp (eg: 127.xx.xx.1-2024-09-23-11:25:29)/vmcore_dmesg.txt</p>
     </td>
@@ -619,7 +619,7 @@ This section describes the structure of the directory to be cleaned. You can col
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>${--device_log}/hisi_logs/device-{id}/{time}/mntn/hbm.txt</p>
     </td>
     </tr>
-    <tr id="row1096711207261"><td class="cellrowborder" rowspan="7" valign="top" width="15.64%" headers="mcps1.1.5.1.1 "><p id="p8338102742611"><a name="p8338102742611"></a><a name="p8338102742611"></a><span id="ph686313599221"><a name="ph686313599221"></a><a name="ph686313599221"></a>MindCluster</span> componengt logs</p>
+    <tr id="row1096711207261"><td class="cellrowborder" rowspan="7" valign="top" width="15.64%" headers="mcps1.1.5.1.1 "><p id="p8338102742611"><a name="p8338102742611"></a><a name="p8338102742611"></a><span id="ph686313599221"><a name="ph686313599221"></a><a name="ph686313599221"></a>MindCluster</span> component logs</p>
     </td>
     <td class="cellrowborder" valign="top" width="21.790000000000003%" headers="mcps1.1.5.1.2 "><p id="p14338192792619"><a name="p14338192792619"></a><a name="p14338192792619"></a>devicePlugin*.log</p>
     </td>
@@ -644,7 +644,7 @@ This section describes the structure of the directory to be cleaned. You can col
     </tr>
     <tr id="row8933819164810"><td class="cellrowborder" valign="top" headers="mcps1.1.5.1.1 "><p id="p1360345715489"><a name="p1360345715489"></a><a name="p1360345715489"></a>hook-run*.log</p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.2 "><p id="p771894714509"><a name="p771894714509"></a><a name="p771894714509"></a><span id="ph0161474547"><a name="ph0161474547"></a><a name="ph0161474547"></a></span>Log generarted when ascend-docker-hook is executed</p>
+    <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.2 "><p id="p771894714509"><a name="p771894714509"></a><a name="p771894714509"></a><span id="ph0161474547"><a name="ph0161474547"></a><a name="ph0161474547"></a></span>Log generated when ascend-docker-hook is executed</p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.1.5.1.3 "><p id="p76041557104812"><a name="p76041557104812"></a><a name="p76041557104812"></a>${--dl_log}/ascend-docker-runtime/</p>
     <p id="p12604165718481"><a name="p12604165718481"></a><a name="p12604165718481"></a>hook-run*.log</p>
@@ -674,7 +674,7 @@ This section describes the structure of the directory to be cleaned. You can col
     <p id="p20608657144818"><a name="p20608657144818"></a><a name="p20608657144818"></a>npu-exporter*.log</p>
     </td>
     </tr>
-    <tr id="row19745101722112"><td class="cellrowborder" valign="top" width="15.64%" headers="mcps1.1.5.1.1 "><p id="p1178823162110"><a name="p1178823162110"></a><a name="p1178823162110"></a>MindIE componeng logs</p>
+    <tr id="row19745101722112"><td class="cellrowborder" valign="top" width="15.64%" headers="mcps1.1.5.1.1 "><p id="p1178823162110"><a name="p1178823162110"></a><a name="p1178823162110"></a>MindIE component logs</p>
     </td>
     <td class="cellrowborder" valign="top" width="21.790000000000003%" headers="mcps1.1.5.1.2 "><p id="p41781123132114"><a name="p41781123132114"></a><a name="p41781123132114"></a>mindie-<em id="i917915234212"><a name="i917915234212"></a><a name="i917915234212"></a>{module}</em>_<em id="i6179152313219"><a name="i6179152313219"></a><a name="i6179152313219"></a>{pid}</em>_<em id="i1417932362118"><a name="i1417932362118"></a><a name="i1417932362118"></a>{datetime}</em>.log</p>
     </td>
@@ -731,7 +731,7 @@ This section describes the structure of the directory to be cleaned. You can col
 - Before training and inference jobs are started, use `hccn_tool` or a script to query and record the IP address, mask, received and sent packets, and historical link statistics of each NPU network port. Before training is started, use `npu-smi` or a script to query the chip health information.
 - Naming rule: `npu_info_before.txt`
 - Constraints on the storage path:
-    - `Collection_directory/environment_check/`
+    - `${Collection_directory}/environment_check/`
     - `${--env_check parameter-specified path}/`
     - For details, see [Log Collection Directory Structure](#log-collection-directory-structure).
 
@@ -1353,7 +1353,7 @@ The involved commands and examples are as follows:
 - Use `hccn_tool` or a script to collect statistics on the number of packets received and sent by the NPU network port.
 - Naming rule: `npu_(\d+)_details.csv`, for example, `npu_0_details.csv`, where `0` indicates the NPU device ID.
 - Constraints on the storage path:
-    - `Collection directory/environment_check/`
+    - `${Collection_directory}/environment_check/`
     - `${--env_check parameter-specified path}/`
     - For details, see [Log Collection Directory Structure](#log-collection-directory-structure).
 
@@ -1410,7 +1410,7 @@ Save parameter metrics in each command output to a CSV file.
 - This file is collected using `npu-smi` or script to monitor the rated frequency, current power, and temperature of NPUs.
 - Naming rule: `npu_smi_(\d+)_details.csv`, for example, `npu_smi_0_details.csv`, where `0` indicates the NPU device ID.
 - Constraints on the storage path:
-    - `Collection directory/environment_check/`
+    - `${Collection_directory}/environment_check/`
     - `${--env\_check parameter-specified path}/`
     - For details, see [Log Collection Directory Structure](#log-collection-directory-structure).
 
@@ -1477,7 +1477,7 @@ Save the parameter metrics in each command output to a CSV file.
 - The `top` command or script is used to collect information about the total physical memory used by the host, the percentage of CPU usage (`%CPU`) and physical memory (`RES`) used by the main training and inference processes of each NPU. The data is stored in a JSON file in the format of `host_metrics_${core_num}.json`.
 - Naming rule: `host_metrics_${core_num}.json`, for example, `host_metrics_64.json`, where `64` indicates the number of CPU cores.
 - Constraints on the storage path:
-    - `Collection directory/environment_check/`
+    - `${Collection_directory}/environment_check/`
     - `${--env_check parameter-specified path}/`
     - For details, see [Log Collection Directory Structure](#log-collection-directory-structure).
 
@@ -1590,7 +1590,7 @@ MindCluster Ascend FaultDiag can collect the host resource information in either
 
     The format of the saved file is as follows:
 
-    The total physical memory used by the host and the `PID`, `RES`, and `%CPU` information of the training and inference processes are recorded in the format of `[Unix timestamp, Metric value]`. All information is stored in a JSON file named `host_metrics_$ {core_num}.json` in the following format:
+    The total physical memory used by the host and the `PID`, `RES`, and `%CPU` information of the training and inference processes are recorded in the format of `[Unix timestamp, Metric value]`. All information is stored in a JSON file named `host_metrics_${core_num}.json` in the following format:
 
     ```json
     host_metrics_${core_num}.json:
@@ -1631,19 +1631,19 @@ MindCluster Ascend FaultDiag can collect the host resource information in either
 - The MindIE Pod console logs are collected using Kubernetes commands or collection scripts. The logs contain instance node information and are stored in JSON files.
 - Naming rule: `${pod_name}.json`
 - Constraints on the storage path:
-    - `Collection_directory/mindie/log/mindie_cluster_log/`
+    - `${Collection_directory}/mindie/log/mindie_cluster_log/`
     - `${--mindie_log parameter-specified path}/`
     - For details, see [Log Collection Directory Structure](#log-collection-directory-structure).
 
 **Example <a name="section2640626141918"></a>**
 
 1. Compile a script for collection by referring to [pod_log_collect.sh](https://gitcode.com/Ascend/mindxdl-deploy/blob/master/mindie/pod_log_collect.sh).
-2. Ensure that the output path of the script is `Collection_directory/mindie/log/mindie_cluster_log/`. You can run the command in any directory.
+2. Ensure that the output path of the script is `${Collection_directory}/mindie/log/mindie_cluster_log/`. You can run the command in any directory.
 
     Output path example:
 
     ```shell
-    log_dir="Collection_directory/mindie/log/mindie_cluster_log/"
+    log_dir="${Collection_directory}/mindie/log/mindie_cluster_log/"
     ```
 
     Example command:
@@ -1698,7 +1698,7 @@ MindCluster Ascend FaultDiag can collect MindIE Pod console logs in either of th
 - After the training and inference jobs are complete, use `hccn_tool` or script to query the IP address, mask, statistics on received and sent packets, and historical link statistics of each NPU network port. After the training is complete, use `npu-smi` or script to query the chip health information.
 - Naming restriction: `npu_info_after.txt`.
 - Constraints on the storage path:
-    - `Collection directory/environment_check/`
+    - `${Collection_directory}/environment_check/`
     - `${--env_check-specified path}/`
     - For details, see [Log Collection Directory Structure](#log-collection-directory-structure).
 
@@ -2310,16 +2310,16 @@ MindCluster Ascend FaultDiag can collect NPU environment check files after train
 
 If the AI framework is used for training and inference, the Python logs printed on the screen are stored on the local PC in redirection mode. In the PyTorch framework, there is only one copy of console logs.
 
-This feature requires that the training or inference logs of each user be dumped to the collection directory, and the training and inference logs of each card be named in the format of `/rank-(rank_id).log`, `/rank-(rank_id).txt`, `/worker-(worker_id).log`, or `/worker-(worker_id).txt`, for example, `Collection_directory/rank-0.txt`.
+This feature requires that the training or inference logs of each user be dumped to the collection directory, and the training and inference logs of each card be named in the format of `/rank-(rank_id).log`, `/rank-(rank_id).txt`, `/worker-(worker_id).log`, or `/worker-(worker_id).txt`, for example, `${Collection_directory}/rank-0.txt`.
 
 ### CANN App Logs <a name="ZH-CN_TOPIC_0000001579557866"></a>
 
 **File Description <a name="section56641436194180007"></a>**
 
-- Include host-side App log `plog-{pid}-{time}.log` and device-side App log `device-{pid}-{time}.log`. For details, see [Viewing Logs (Ascend EP)](https://www.hiascend.com/document/detail/en/canncommercial/900/maintenref/logreference/logreference_0002.html) in the *CANN Log Reference*.
+- Include host-side App log `plog-{pid}-{time}.log` and device-side App log `device-{pid}-{time}.log`. For details, see [Viewing Logs (Ascend EP)](https://www.hiascend.com/document/detail/en/canncommercial/850/maintenref/logreference/logreference_0002.html) in the *CANN Log Reference*.
 - Naming rule: `plog-{pid}-{time}.log`, `device-{pid}-{time}.log`
 - Constraints on the storage path:
-    - `Collection directory/`
+    - `${Collection_directory}/`
     - `${--process_log}/`
 
 - Directory structure
@@ -2347,7 +2347,7 @@ By default, CANN App logs are stored in the `${HOME}/ascend/log` directory. You 
 export ASCEND_PROCESS_LOG_PATH=${Custom_directory_path}
 ```
 
-This feature requires that CANN App logs be dumped to `Collection_directory/process_log`. For details about the format restrictions, see [File Description](#section56641436194180007).
+This feature requires that CANN App logs be dumped to `${Collection_directory}/process_log`. For details about the format restrictions, see [File Description](#section56641436194180007).
 
 ### Host-side Logs<a name="ZH-CN_TOPIC_0000002069726921"></a>
 
@@ -2366,7 +2366,7 @@ This feature requires that CANN App logs be dumped to `Collection_directory/proc
 </td>
 <td class="cellrowborder" valign="top" width="27.779999999999998%" headers="mcps1.1.4.1.2 "><p id="p11672035144216"><a name="p11672035144216"></a><a name="p11672035144216"></a>messages-*?</p>
 </td>
-<td class="cellrowborder" rowspan="4" valign="top" width="46.54%" headers="mcps1.1.4.1.3 "><p id="p63517444293"><a name="p63517444293"></a><a name="p63517444293"></a><em id="i44547719306"><a name="i44547719306"></a><a name="i44547719306"></a>Collection_directory</em></p>
+<td class="cellrowborder" rowspan="4" valign="top" width="46.54%" headers="mcps1.1.4.1.3 "><p id="p63517444293"><a name="p63517444293"></a><a name="p63517444293"></a><em id="i44547719306"><a name="i44547719306"></a><a name="i44547719306"></a>${Collection_directory}</em></p>
 </td>
 </tr>
 <tr id="row12351124412296"><td class="cellrowborder" valign="top" headers="mcps1.1.4.1.1 "><p id="p1624610033412"><a name="p1624610033412"></a><a name="p1624610033412"></a>Host kernel message log</p>
@@ -2398,7 +2398,7 @@ This feature requires that CANN App logs be dumped to `Collection_directory/proc
 2. Obtain the corresponding log information based on the training and inference start and end time, create a `messages` file in the collection directory, and dump the log content.
 
     ```shell
-    cd Collection directory / && vi messages
+    cd ${Collection_directory} / && vi messages
     ```
 
     Dump log information. A log example is as follows:
@@ -2416,7 +2416,7 @@ This feature requires that CANN App logs be dumped to `Collection_directory/proc
 Run the following command to collect the latest `dmesg` log and place it in the collection directory. A maximum of 100,000 lines can be collected.
 
 ```shell
-dmesg -T | tail -n 100000 > *Collection directory*/dmesg
+dmesg -T | tail -n 100000 > ${Collection_directory}/dmesg
 ```
 
 A log example is as follows:
@@ -2432,7 +2432,7 @@ A log example is as follows:
 Copy the `sysmonitor.log` file to the collection directory.
 
 ```shell
-cp -r /var/log/sysmonitor.log Collection directory/
+cp -r /var/log/sysmonitor.log ${Collection_directory}/
 ```
 
 A log example is as follows:
@@ -2450,7 +2450,7 @@ These logs are saved when the system breaks down. Perform the following steps to
 Copy the `vmcore-dmesg.txt` file to the collection directory.
 
 ```shell
-cp -r /var/crash/Collection_directory/
+cp -r /var/crash/ ${Collection_directory}/
 ```
 
 A log example is as follows:
@@ -2478,7 +2478,7 @@ dmidecode > dmidecode.txt
 - Include logs on the device.
 - Naming rule: `device-os_{time}.log`, `event_{time}.log`, d`evice-{id}_{time}.log`, and `history.log`.
 - Constraints on the storage path:
-    - `Collection directory/device_log`
+    - `${Collection_directory}/device_log`
     - `${--device_log}/`
 
 - Directory structure
@@ -2555,8 +2555,8 @@ Run the following command to collect device-side logs:
 msnpureport
 ```
 
-- After the command is executed, a folder with the timestamp is generated in the current directory. You need to dump the `slog` and `hisi_logs` folders in the timestamp directory to `Collection directory/device_log`.
-- If collection fails, refer to [FAQs > Logs Not Flushed](https://www.hiascend.com/document/detail/en/canncommercial/900/maintenref/logreference/logreference_0024.html) in the *CANN Log Reference*.
+- After the command is executed, a folder with the timestamp is generated in the current directory. You need to dump the `slog` and `hisi_logs` folders in the timestamp directory to `${Collection_directory}/device_log`.
+- If collection fails, refer to [FAQs > What Do I Do If Log Flush Fails](https://www.hiascend.com/document/detail/en/canncommercial/850/maintenref/logreference/logreference_0024.html) in the *CANN Log Reference*.
 
 ### MindCluster Logs <a name="ZH-CN_TOPIC_0000002045702997"></a>
 
@@ -2564,19 +2564,19 @@ msnpureport
 
 - File content: MindCluster logs.
 - Naming rule: `devicePlugin*.log`, `noded*.log`, `runtime-run*.log`, `hook-run*.log`, `volcano-scheduler*.log`, `volcano-controller*.log`, and `npu-exporter*.log`
-- Constraints on the storage path: The logs are stored in the `Collection directory/dl_log`.
+- Constraints on the storage path: The logs are stored in the `${Collection_directory}/dl_log`.
 
 **Collection Methods <a name="section2835619103019"></a>**
 
 Go to the log storage directory and copy related component logs.
 
 ```shell
-cp -r /var/log/mindx-dl/devicePlugin Collection_directory/dl_log
-cp -r /var/log/mindx-dl/noded Collection_directory/dl_log
-cp -r /var/log/ascend-docker-runtime Collection_directory/dl_log
-cp -r /var/log/mindx-dl/volcano-scheduler Collection_directory/dl_log
-cp -r /var/log/mindx-dl/volcano-controller Collection_directory/dl_log
-cp -r /var/log/mindx-dl/npu-exporter Collection_directory/dl_log
+cp -r /var/log/mindx-dl/devicePlugin ${Collection_directory}/dl_log
+cp -r /var/log/mindx-dl/noded ${Collection_directory}/dl_log
+cp -r /var/log/ascend-docker-runtime ${Collection_directory}/dl_log
+cp -r /var/log/mindx-dl/volcano-scheduler ${Collection_directory}/dl_log
+cp -r /var/log/mindx-dl/volcano-controller ${Collection_directory}/dl_log
+cp -r /var/log/mindx-dl/npu-exporter ${Collection_directory}/dl_log
 ```
 
 ### MindIE Logs <a name="ZH-CN_TOPIC_0000002071852084"></a>
@@ -2585,7 +2585,7 @@ cp -r /var/log/mindx-dl/npu-exporter Collection_directory/dl_log
 
 - File content: MindIE logs
 - Naming rule: `mindie-{module}_{pid}_{datetime}.log`
-- Constraints on the storage path: The logs are stored in `Collection_directory/mindie/log/debug`.
+- Constraints on the storage path: The logs are stored in `${Collection_directory}/mindie/log/debug`.
 
 **Collection Methods <a name="section1429254183012"></a>**
 
@@ -2604,7 +2604,7 @@ env | grep "MINDIE_LOG_PATH"
     The logs are stored in the default path. Run the following command to go to the default log storage directory and copy the logs of related components:
 
     ```shell
-    cp -r ~/mindie Collection directory
+    cp -r ~/mindie ${Collection_directory}
     ```
 
 - If the command output is displayed and contains an absolute path, for example, the following information is displayed:
@@ -2616,7 +2616,7 @@ env | grep "MINDIE_LOG_PATH"
     You need to go to the log storage directory in the command output and copy the logs of related components.
 
     ```shell
-    cp -r /home/working collection directory
+    cp -r /home/working ${Collection_directory}
     ```
 
 ### AMCT Logs <a name="ZH-CN_TOPIC_0000002107731865"></a>
@@ -2625,16 +2625,16 @@ env | grep "MINDIE_LOG_PATH"
 
 - File content: logs generated during model compression by using AMCT.
 - Naming rule: `amct_{framework}.log`
-- Constraints on the storage path: The file is stored in `Collection_directory/amct_log/`.
+- Constraints on the storage path: The file is stored in `${Collection_directory}/amct_log/`.
 
 **Collection Methods<a name="section125257584397"></a>**
 
-During model compression, the number of logs generated corresponds to the number of quantization processes. Typically, only one quantization process is initiated, resulting in a single log. This feature requires that the AMCT logs be dumped to the `Collection_directory/amct_log` directory.
+During model compression, the number of logs generated corresponds to the number of quantization processes. Typically, only one quantization process is initiated, resulting in a single log. This feature requires that the AMCT logs be dumped to the `${Collection_directory}/amct_log` directory.
 
 Go to the log storage directory (process execution directory) and copy related log.
 
 ```shell
-cp -r ~/amct_log collection directory/amct_log
+cp -r ~/amct_log ${Collection_directory}/amct_log
 ```
 
 ### MindIO Logs <a name="ZH-CN_TOPIC_0000002107731865_01"></a>
@@ -2643,16 +2643,16 @@ cp -r ~/amct_log collection directory/amct_log
 
 - File content: logs generated during the running of MindIO components.
 - Naming rule: `ttp_log.log.*`
-- Constraints on the storage path: The file is stored in the `Collection directory/dl_log/ttp_log/` directory.
+- Constraints on the storage path: The file is stored in the `${Collection_directory}/dl_log/ttp_log/` directory.
 
 **Collection Methods**
 
-When MindIO is running, each process generates a `ttp_log.log.* log` file. This feature requires that the MindIO logs be dumped to the `Collection_directory/dl_log/ttp_log/` directory.
+When MindIO is running, each process generates a `ttp_log.log.* log` file. This feature requires that the MindIO logs be dumped to the `${Collection_directory}/dl_log/ttp_log/` directory.
 
 Go to the directory where the console logs are stored and copy the logs of related components.
 
 ```shell
-cp -r ~/ttp_log collection directory/dl_log/ttp_log
+cp -r ~/ttp_log ${Collection_directory}/dl_log/ttp_log
 ```
 
 ### Bus Logs <a name="ZH-CN_TOPIC_00000021077318650023"></a>
@@ -2661,11 +2661,11 @@ cp -r ~/ttp_log collection directory/dl_log/ttp_log
 
 - File content: This log file is generated when the LCNE component (Ascend 950) is running.
 - Naming restrictions: `log.log`
-- Constraints on the storage path: The log file is stored in the `Collection_directory/lcne/` directory.
+- Constraints on the storage path: The log file is stored in the `${Collection_directory}/lcne/` directory.
 
 **Collection Methods**
 
 When the the LCNE component (Ascend 950) is running, log files are generated.
 
 - Method 1: Log in to the Ascend 950 1213 background and obtain the `log.log` file from the `/opt/vrpv8/home/logfile` directory.
-- Method 2: Log in to the Ascend 950 1213 foreground, run the `collect diagnostic information` command to collect logs, and obtain the `diagnostic_information_*.zi`p compressed log file from the `/opt/vrpv8/home/logfile` directory on the Ascend 950 1213 background. You need to manually decompress all compressed logs.
+- Method 2: Log in to the Ascend 950 1213 foreground, run the `collect diagnostic information` command to collect logs, and obtain the `diagnostic_information_*.zip` compressed log file from the `/opt/vrpv8/home/logfile` directory on the Ascend 950 1213 background. You need to manually decompress all compressed logs.

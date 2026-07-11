@@ -52,7 +52,7 @@
       - [Ascend AI Processor-Based Affinity](./usage/basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md)
       - [Node-Based Affinity](./usage/basic_scheduling/01_affinity_scheduling/04_node_based_affinity.md)
       - [Scheduling Algorithm Description of Ascend AI Processor](./usage/basic_scheduling/01_affinity_scheduling/05_scheduling_algorithm_of_ascend_ai_processor.md)
-    - [Scheduling Process of Ascend AI Processor](./usage/basic_scheduling/02_schedulling_process_of_the_ascend_ai_processor.md)
+    - [Scheduling Process of Ascend AI Processor](./usage/basic_scheduling/02_scheduling_process_of_the_ascend_ai_processor.md)
     - [Full-NPU Scheduling (Training)](./usage/basic_scheduling/03_full_npu_scheduling_and_static_vnpu_scheduling_training.md)
     - [Full-NPU Scheduling (Inference)](./usage/basic_scheduling/04_full_npu_scheduling_and_static_vnpu_scheduling_inference.md)
     - [Multi-Level Scheduling](./usage/basic_scheduling/05_multi_level_scheduling.md)

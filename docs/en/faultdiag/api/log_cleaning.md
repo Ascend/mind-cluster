@@ -5,19 +5,19 @@
 - Integrate all logs for cleaning.
 
     ```shell
-    ascend-fd parse -i collection_directory -o cleaning_result_output_directory
+    ascend-fd parse -i ${Collection_directory} -o ${Cleaning_result_output_directory}
     ```
 
 - Classify input log directories for cleaning.
 
     ```shell
-    ascend-fd parse --host_log host_os_log_directory --device_log device-side_log_directory --train_log user_training_and_inference_log_directory --process_log cann_app_log_directory --env_check npu_port_status_resource_info_directory --dl_log mindcluster_log_directory --mindie_log mindie_log_directory --amct_log amct_log_directory --bus_log lcne_(ascend_950)_log_directory --custom_log custom_parser_directory -o cleaning_result_output_directory
+    ascend-fd parse --host_log ${host_os_log_directory} --device_log ${device-side_log_directory} --train_log ${user_training_and_inference_log_directory} --process_log ${cann_app_log_directory} --env_check ${npu_port_status_resource_info_directory} --dl_log ${mindcluster_log_directory} --mindie_log ${mindie_log_directory} --amct_log ${amct_log_directory} --bus_log ${lcne_(ascend_950)_log_directory} --custom_log ${custom_parser_directory} -o ${Cleaning_result_output_directory}
     ```
 
 - (Optional) If there are BMC logs, execute the following command.
 
     ```shell
-    ascend-fd parse --bmc_log bmc_log_directory -o directory_for_saving_cleaning_results
+    ascend-fd parse --bmc_log ${bmc_log_directory} -o ${directory_for_saving_cleaning_results}
     ```
 
     For example:
@@ -29,7 +29,7 @@
 - (Optional) If there are LCNE logs, execute the following command.
 
     ```shell
-    ascend-fd parse --lcne_log lcne_log_directory -o directory_for_saving_cleaning_results
+    ascend-fd parse --lcne_log ${lcne_log_directory} -o ${directory_for_saving_cleaning_results}
     ```
 
     For example:
@@ -67,7 +67,7 @@ Starts a log cleaning task to clean raw logs such as run logs and NPU environmen
 |`--bus_log`|None|No|String| LCNE (Ascend 950) log directory. It only supports digits, letters, and spaces and characters `~`, `-`, `+`, `_`, `.`, `/`.|
 |`--custom_log`|None|No|String|Custom parser directory. It only supports digits, letters, and spaces and characters `~`, `-`, `+`, `_`, `.`, `/`.|
 |`--input_path`|`-i`|No|String|Preprocessing data input path. It only supports digits, letters, and spaces and characters `~`, `-`, `+`, `_`, `.`, `/`.|
-|`--output_path`|`-`o|Yes|String|Cleaned data output path. It only supports digits, letters, and spaces and characters `~`, `-`, `+`, `_`, `.`, `/`.|
+|`--output_path`|`-o`|Yes|String|Cleaned data output path. It only supports digits, letters, and spaces and characters `~`, `-`, `+`, `_`, `.`, `/`.|
 |`--performance`|`-p`|No|Bool|When this parameter is specified, all cleaning modules are executed. If not specified, only the root cause node and fault event modules perform log cleaning.|
 |`--help`|`-h`|No|-|Queries the meanings of level-2 commands and parameters and usage instructions.|
 

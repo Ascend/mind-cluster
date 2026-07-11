@@ -3,7 +3,7 @@
 ## Prototype<a name="zh-cn_topic_0000001511538701_section124882040143613"></a>
 
 ```shell
-ascend-fd entity Subcommand
+ascend-fd entity <Subcommand>
 ```
 
 ## Function<a name="zh-cn_topic_0000001511538701_section12230185113815"></a>

@@ -5,19 +5,19 @@
 - Cleans all logs on a single server, processes the log cleaning results to diagnose fault events, and outputs an analysis report.
 
     ```shell
-    ascend-fd single-diag -i collection_directory -o single_server_fault_diagnosis_output_directory
+    ascend-fd single-diag -i ${Collection_directory} -o ${single_server_fault_diagnosis_output_directory}
     ```
 
 - Performs single-server diagnosis by categorizing the input log directory.
 
     ```shell
-    ascend-fd single-diag --host_log host_os_log_directory --device_log device-side_log_directory --train_log user_training_and_inference_log_directory --process_log cann_app_log_directory --env_check npu_port_status_resource_info_directory --dl_log mindcluster_log_directory --mindie_log mindie_log_directory --amct_log amct_log_directory -o cleaning_result_output_directory
+    ascend-fd single-diag --host_log ${host_os_log_directory} --device_log ${device-side_log_directory} --train_log ${user_training_and_inference_log_directory} --process_log ${cann_app_log_directory} --env_check ${npu_port_status_resource_info_directory} --dl_log ${mindcluster_log_directory} --mindie_log ${mindie_log_directory} --amct_log ${amct_log_directory} -o ${Cleaning_result_output_directory}
     ```
 
 >[!NOTE]
 >
 - When both `-i` and detailed log collection directory parameters are used together, the input values of the detailed log collection directory parameters will be read first, and then the remaining log collection directories will be read based on the `-i` parameter.
-- At least one of the following parameters must be specified: `--input_path`, `--host_log`, `--device_log`, `--train_log`, `--process_log`, `--env_check`, `--dl_log`, `--mindie_log`, `--amct_log`, `--custom_log`, and `--bus_log`. Otherwise, the cleaning command will fail.
+- At least one of the following parameters must be specified: `--input_path`, `--host_log`, `--device_log`, `--train_log`, `--process_log`, `--env_check`, `--dl_log`, `--mindie_log`, `--amct_log`, and `--bus_log`. Otherwise, the cleaning command will fail.
 - The disk space of the output directory specified by the cleaning command must be greater than 5 GB. Insufficient space may cause partial loss of cleaning results, leading to abnormal or inaccurate diagnostic results.
 
 ## Function<a name="section67721623124010"></a>
@@ -41,9 +41,8 @@ Starts a single-server diagnosis task to diagnoses raw logs such as single-serve
 |`--bmc_log`|None|No|String|BMC log directory. It only supports digits, letters, and spaces and characters `~`, `-`, `+`, `_`, `.`, `/`.|
 |`--lcne_log`|None|No|String|LCNE log directory. It only supports digits, letters, and spaces and characters `~`, `-`, `+`, `_`, `.`, `/`.|
 |`--bus_log`|None|No|String| LCNE (Ascend 950) log directory. It only supports digits, letters, and spaces and characters `~`, `-`, `+`, `_`, `.`, `/`.|
-|`--custom_log`|None|No|String|Custom parser directory. It only supports digits, letters, and spaces and characters `~`, `-`, `+`, `_`, `.`, `/`.|
 |`--input_path`|`-i`|No|String|Preprocessing data input path. It only supports digits, letters, and spaces and characters `~`, `-`, `+`, `_`, `.`, `/`.|
-|`--output_path`|`-`o|Yes|String|Cleaned data output path. It only supports digits, letters, and spaces and characters `~`, `-`, `+`, `_`, `.`, `/`.|
+|`--output_path`|`-o`|Yes|String|Cleaned data output path. It only supports digits, letters, and spaces and characters `~`, `-`, `+`, `_`, `.`, `/`.|
 |`--help`|`-h`|No|-|Queries the meanings of level-2 commands and parameters and usage instructions.|
 
 ## Returns<a name="section115671821144111"></a>
@@ -52,6 +51,6 @@ Example: Return single-server fault diagnosis task execution status.
 
 ```ColdFusion
 The single-diag job starts. Please wait. Job id: [****], run log file is [****].
-Diagnostic content
+...
 The single-diag job is complete.
 ```

@@ -479,7 +479,7 @@ helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.1 "><p>helm_tool.sh</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>作用包括：<ul><li><p>给各组件资源添加helm chart元数据的脚本。</p></li><li>删除Ascend Device Plugin组件26.1.0版本前的DaemonSet资源</li></ul></p><p>仅在升级时使用。</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 ">脚本会为以下资源打上helm 元数据，包括：<ul><li>Ascend Operator组件相关资源</li><li>Ascend Device Plugin组件相关资源</li><li>Volcano组件相关资源</li><li>ClusterD组件相关资源</li><li>NodeD组件相关资源</li><li>NPU Exporter组件相关资源</li><li>Infer Operator组件相关资源</li><li>K8s RDMA Shared Dev Plugin组件相关资源</li><li>命令空间，包括"mindx-dl"和"cluster-system"</li></ul></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 ">脚本会为以下资源打上helm 元数据，包括：<ul><li>Ascend Operator组件相关资源</li><li>Ascend Device Plugin组件相关资源</li><li>Volcano组件相关资源</li><li>ClusterD组件相关资源</li><li>NodeD组件相关资源</li><li>NPU Exporter组件相关资源</li><li>Infer Operator组件相关资源</li><li>K8s RDMA Shared Dev Plugin组件相关资源</li><li>命名空间，包括"mindx-dl"和"cluster-system"</li></ul></td>
   </tr>
 </tbody>
 </table>

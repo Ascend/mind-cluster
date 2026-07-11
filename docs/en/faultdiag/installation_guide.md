@@ -17,8 +17,6 @@
 
 **Downloading the Software Package<a name="zh-cn_topic_0000001511594161_section4499122813189"></a>**
 
-Download the required software package and the corresponding digital signature file. Once you download the software, you agree to the terms and conditions of the [Huawei Enterprise End User License Agreement (EULA)](https://e.huawei.com/en/about/eula).
-
 **Table 1** Required software package
 
 <a name="table24961081552"></a>
@@ -32,24 +30,19 @@ Download the required software package and the corresponding digital signature f
 </th>
 </tr>
 </thead>
-<tbody><tr id="row19497118450"><td class="cellrowborder" rowspan="3" valign="top" width="22.32%" headers="mcps1.2.5.1.1 "><p id="p19497688516"><a name="p19497688516"></a><a name="p19497688516"></a>Ascend-mindxdl-faultdiag_<em id="i194971681054"><a name="i194971681054"></a><a name="i194971681054"></a>{version}</em>_linux-<em id="i132516204280"><a name="i132516204280"></a><a name="i132516204280"></a>{arch}</em>.zip</p>
+<tbody><tr id="row19497118450"><td class="cellrowborder" rowspan="2" valign="top" width="22.32%" headers="mcps1.2.5.1.1 "><p id="p19497688516"><a name="p19497688516"></a><a name="p19497688516"></a>Ascend-mindxdl-faultdiag_<em id="i194971681054"><a name="i194971681054"></a><a name="i194971681054"></a>{version}</em>_linux-<em id="i132516204280"><a name="i132516204280"></a><a name="i132516204280"></a>{arch}</em>.zip</p>
 </td>
 <td class="cellrowborder" valign="top" width="47.8%" headers="mcps1.2.5.1.2 "><p id="p2417175492214"><a name="p2417175492214"></a><a name="p2417175492214"></a>ascend_faultdiag-<em id="i24971581355"><a name="i24971581355"></a><a name="i24971581355"></a>{version}</em>-py3-none-linux_<em id="i11344642192415"><a name="i11344642192415"></a><a name="i11344642192415"></a>{</em><em id="i9272113613244"><a name="i9272113613244"></a><a name="i9272113613244"></a>arch</em><em id="i12344184215241"><a name="i12344184215241"></a><a name="i12344184215241"></a>}</em>.whl</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.77%" headers="mcps1.2.5.1.3 "><p id="p9497981514"><a name="p9497981514"></a><a name="p9497981514"></a>Installation package of the intelligent fault diagnosis component.</p>
 <p id="p203401758145516"><a name="p203401758145516"></a><a name="p203401758145516"></a>Applicable to <span id="ph42741425610"><a name="ph42741425610"></a><a name="ph42741425610"></a>python</span> 3.7 and later versions.</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="8.110000000000001%" headers="mcps1.2.5.1.4 "><p id="p11497481255"><a name="p11497481255"></a><a name="p11497481255"></a><a href="https://www.hiascend.com/zh/developer/download/community/result?module=dl+cann" target="_blank" rel="noopener noreferrer">Download address</a></p>
+<td class="cellrowborder" rowspan="2" valign="top" width="8.110000000000001%" headers="mcps1.2.5.1.4 "><p id="p11497481255"><a name="p11497481255"></a><a name="p11497481255"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases" target="_blank" rel="noopener noreferrer">Download address</a></p>
 </td>
 </tr>
-<tr id="row84971381059"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p204971087511"><a name="p204971087511"></a><a name="p204971087511"></a>ascend_faultdiag-<em id="i114971580510"><a name="i114971580510"></a><a name="i114971580510"></a>{version}</em>-py3-none-linux_<em id="i04108535249"><a name="i04108535249"></a><a name="i04108535249"></a>{</em><em id="i13410185372418"><a name="i13410185372418"></a><a name="i13410185372418"></a>arch</em><em id="i24101353102415"><a name="i24101353102415"></a><a name="i24101353102415"></a>}</em>.whl.cms</p>
+<tr id="row84971381059"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p204971087511"><a name="p204971087511"></a><a name="p204971087511"></a>ascend_faultdiag_toolkit-<em id="i114971580510"><a name="i114971580510"></a><a name="i114971580510"></a>{version}</em>-py3-none-any.whl</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p13425727595"><a name="p13425727595"></a><a name="p13425727595"></a>CMS certificate verification file.</p>
-</td>
-</tr>
-<tr id="row13497081357"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p449720811520"><a name="p449720811520"></a><a name="p449720811520"></a>crldata.crl</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p94971986516"><a name="p94971986516"></a><a name="p94971986516"></a>CRL file list.</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p13425727595"><a name="p13425727595"></a><a name="p13425727595"></a>Installation package of the Ascend-faultdiag-toolkit.</p><p>Applicable to python 3.8 and later versions.</p>
 </td>
 </tr>
 </tbody>
@@ -58,18 +51,6 @@ Download the required software package and the corresponding digital signature f
 > **NOTE**
 >
 > <i>{version}</i> is the version number of the software package. Download the target software package based on actual requirements.
-
-**Verifying the Software Digital Signature<a name="zh-cn_topic_0000001511594161_section199643813528"></a>**
-
-To prevent the software package from being maliciously tampered with during transmission or storage, you need to download the corresponding digital signature file for integrity verification when downloading the software package.
-
-After downloading the software package, refer to the *OpenPGP Signature Verification Guide* to verify the PGP digital signature of the software package downloaded from the Support website. If the verification fails, do not use the software package and contact Huawei technical support engineers for resolution.
-
-Before installing or upgrading the software package, you must also verify the digital signature of the software package using the preceding process to ensure that it has not been tampered with.
-
-For carrier customers, please visit: [https://support.huawei.com/carrier/digitalSignatureAction](https://support.huawei.com/carrier/digitalSignatureAction)
-
-For enterprise customers, please visit: [https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/en/tool/pgp-verify-TL1000000054)
 
 ### Installation via Command Line<a name="ZH-CN_TOPIC_0000001541629190"></a>
 
@@ -112,7 +93,7 @@ This section only guides on installing MindCluster Ascend FaultDiag via command 
     The following is an example of the output:
 
     ```ColdFusion
-    ascend-fd ${Version number}
+    ascend-fd ${Version_number}
     ```
 
 >[!NOTE]
@@ -162,7 +143,7 @@ The detailed installation process is shown in [Figure 1](#fig56301358747):
     The following is an example of the output:
 
     ```ColdFusion
-    ascend-fd ${Version number}
+    ascend-fd ${Version_number}
     ```
 
 ## Uninstalling the Component<a name="ZH-CN_TOPIC_0000001592628957"></a>
