@@ -340,7 +340,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     <td class="cellrowborder" rowspan="2" align="center" valign="center" width="22%"><p>Ascend Job</p></td>
     <td class="cellrowborder" valign="top" width="47%"><p><term>Atlas A2 训练系列产品</term></p><p><term>Atlas A2 推理系列产品</term></p><p><term>Atlas A3 训练系列产品</term></p><p><term>Atlas A3 推理系列产品</term></p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>pytorch_acjob_infer_910b_softsharedev.yaml</p></td>
-    <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.0.0/samples/inference/volcano/pytorch_acjob_infer_910b_softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
+    <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/pytorch_acjob_infer_910b_softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
     <tr>
     <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 标卡</p></td>
