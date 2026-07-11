@@ -115,7 +115,7 @@ Ascend Device Plugin获取到芯片故障信息后，通过ConfigMap的形式上
 对于不同故障处理模式，上报的路径会有一定差别。
 
 - 重调度模式：Ascend Device Plugin获取到芯片故障后，将芯片故障信息写入该节点所属的device-info-cm中，其中字段说明见[DeviceInfoCfg](../../06_api/02_ascend_device_plugin.md#芯片资源)表。ClusterD读取每个节点的device-info-cm感知芯片故障并上报给调度器。
-- 优雅容错模式：Ascend Device Plugin获取到可恢复的芯片故障后，将芯片故障信息写入该任务所属的reset-info-cm中，业务容器通过将reset-info-cm挂载为文件的形式，读取文件感知芯片故障。
+- 优雅容错模式（本功能已日落）：Ascend Device Plugin获取到可恢复的芯片故障后，将芯片故障信息写入该任务所属的reset-info-cm中，业务容器通过将reset-info-cm挂载为文件的形式，读取文件感知芯片故障。
 
     >[!NOTE]
     >若优雅容错模式处理故障失败，回退至重调度模式后，故障上报的路径则按照重调度模式进行上报。
@@ -130,7 +130,7 @@ Ascend Device Plugin获取到芯片故障信息后，通过ConfigMap的形式上
 
 **支持的故障处理类型<a name="section099935818571"></a>**
 
-Job级别重调度、Pod级别重调度、进程级别重调度、进程级在线恢复、优雅容错
+Job级别重调度、Pod级别重调度、进程级别重调度、进程级在线恢复、优雅容错（本功能已日落）
 
 >[!NOTE]
 >仅片上内存出现的不可纠正错误支持进程级在线恢复，其他类型的芯片故障不支持进程级在线恢复。
@@ -155,7 +155,7 @@ NPU的参数面网络故障包括芯片网络相关故障和灵衢总线设备�
 
 **芯片网络故障**：
 
-1. NPU定时检测和网关地址的通信是否正常，探测周期为2.5秒，通过故障管理框架上报结果。
+1. NPU定时检测和网关地址的通信是否正常，通过故障管理框架上报结果。
 2. RoCE驱动实时监测NPU网口Link状态，通过故障管理框架上报Linkdown或Linkup事件。
 3. Ascend Device Plugin通过DCMI接口从故障管理框架获取信息，通过轮询的方式查询网关探测结果，并实时订阅网口Linkdown或Linkup事件并进行上报。Ascend Device Plugin统计网关检测异常持续时间、Linkdown持续时间。如果小于或等于RoCE网络超时时间（默认为20秒）则标记为NPU网络故障（默认不处理，可能会引起参数面网络故障）；如果大于20秒，则升级成配置的故障等级。
 
@@ -234,7 +234,7 @@ NPU上Task执行异常（业务面故障）可能导致任务中正常NPU无法�
 
 **支持的故障处理类型<a name="section099935818571"></a>**
 
-Job级别重调度、Pod级别重调度、进程级别重调度、优雅容错
+Job级别重调度、Pod级别重调度、进程级别重调度、优雅容错（本功能已日落）
 
 ### 公共故障<a name="ZH-CN_TOPIC_0000002511426387"></a>
 
@@ -823,38 +823,39 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
           以下示例为MindSpore-MindFormers场景，需修改./mindformers/trainer/base\_trainer.py文件，在代码中增加如下加粗字段。
 
           <pre codetype="Python">
-              def training_process(
-                      self,
-                      config: Optional[Union[dict, MindFormerConfig, ConfigArguments, TrainingArguments]] = None,
-                      network: Optional[Union[Cell, PreTrainedModel]] = None,
-                      dataset: Optional[Union[BaseDataset, GeneratorDataset]] = None,
-                      optimizer: Optional[Optimizer] = None,
-                      callbacks: Optional[Union[Callback, List[Callback]]] = None,
-                      compute_metrics: Optional[Union[dict, set]] = None,
-                      **kwargs):
-                  ……
-                  ……
+          def training_process(
+                  self,
+                  config: Optional[Union[dict, MindFormerConfig, ConfigArguments, TrainingArguments]] = None,
+                  network: Optional[Union[Cell, PreTrainedModel]] = None,
+                  dataset: Optional[Union[BaseDataset, GeneratorDataset]] = None,
+                  optimizer: Optional[Optimizer] = None,
+                  callbacks: Optional[Union[Callback, List[Callback]]] = None,
+                  compute_metrics: Optional[Union[dict, set]] = None,
+                  **kwargs):
+              ……
+              ……
+              logger.info(".........Starting Training Model..........")
+              if get_real_rank() % 8 == 0:
+                  pprint(config)
+              logger.info(".........Model Compiling, Please Wait a Moment...........")
+              ......
+              <strong>try:</strong>
+                  <strong>rank = get_rank()</strong>
+                  <strong>from taskd.api.taskd_worker_api import init_taskd_worker</strong>
+                  <strong>from taskd.api.taskd_worker_api import start_taskd_worker</strong>
+                  <strong>init_taskd_worker(rank,5000,"ms")</strong>
+                  <strong>start_taskd_worker()</strong>
+              <strong>except Exception as e:</strong>
+                  <strong>print("failed to call mindcluster taskd")</strong>
+              model.train(config.runner_config.epochs, dataset,
+                          callbacks=callbacks,
+                          dataset_sink_mode=config.runner_config.sink_mode,
+                          sink_size=config.runner_config.sink_size,
+                          initial_epoch=config.runner_config.initial_epoch)</pre>
 
-                  logger.info(".........Starting Training Model..........")
-                  if get_real_rank() % 8 == 0:
-                      pprint(config)
-                  logger.info(".........Model Compiling, Please Wait a Moment...........")
-                  <strong>try:</strong>
-                      <strong>rank = get_rank()</strong>
-                      <strong>from taskd.api.taskd_worker_api import init_taskd_worker</strong>
-                      <strong>from taskd.api.taskd_worker_api import start_taskd_worker</strong>
-                      <strong>init_taskd_worker(rank,5000,'ms')</strong>
-                      <strong>start_taskd_worker()</strong>
-                  <strong>except Exception as e:</strong>
-                      <strong>print("failed to call mindcluster taskd")</strong>
-                  model.train(config.runner_config.epochs, dataset,
-                              callbacks=callbacks,
-                              dataset_sink_mode=config.runner_config.sink_mode,
-                              sink_size=config.runner_config.sink_size,
-                              initial_epoch=config.runner_config.initial_epoch)</pre>
 
-          >[!NOTE]
-          >以上代码init_taskd_worker(rank,5000,'ms')中的入参5000为/user/cluster-info/profiling的上限大小，详细说明请参见[def init\_taskd\_worker\(rank\_id: int, upper\_limit\_of\_disk\_in\_mb: int = 5000, framework: str = "pt"\) -\> bool](../../06_api/07_taskd/01_taskd_worker_apis.md#def-init_taskd_workerrank_id-int-upper_limit_of_disk_in_mb-int--5000-framework-str--pt---bool)中“upper\_limit\_of\_disk\_in\_mb”参数。
+      >[!NOTE]
+      >以上代码init_taskd_worker(rank,5000,'ms')中的入参5000为/user/cluster-info/profiling的上限大小，详细说明请参见[def init\_taskd\_worker\(rank\_id: int, upper\_limit\_of\_disk\_in\_mb: int = 5000, framework: str = "pt"\) -\> bool](../../06_api/07_taskd/01_taskd_worker_apis.md#def-init_taskd_workerrank_id-int-upper_limit_of_disk_in_mb-int--5000-framework-str--pt---bool)中“upper\_limit\_of\_disk\_in\_mb”参数。
 
   4. 修改任务YAML。详细请参见[PyTorch场景的步骤5](#li5236yaml)。
   5. 开启轻量profiling获取落盘数据。详细请参见[PyTorch场景的步骤6](#li52986profiling)。
@@ -1130,39 +1131,40 @@ MindCluster集群调度组件结合MindStudio提供的profiling能力，对集�
 
       以下示例为MindSpore-MindFormers场景，需修改./mindformers/trainer/base\_trainer.py文件，在代码中增加如下加粗字段。
 
-        <pre codetype="Python">
-            def training_process(
-                    self,
-                    config: Optional[Union[dict, MindFormerConfig, ConfigArguments, TrainingArguments]] = None,
-                    network: Optional[Union[Cell, PreTrainedModel]] = None,
-                    dataset: Optional[Union[BaseDataset, GeneratorDataset]] = None,
-                    optimizer: Optional[Optimizer] = None,
-                    callbacks: Optional[Union[Callback, List[Callback]]] = None,
-                    compute_metrics: Optional[Union[dict, set]] = None,
-                    **kwargs):
-                ……
-                ……
+       <pre codetype="Python">
+       def training_process(
+               self,
+               config: Optional[Union[dict, MindFormerConfig, ConfigArguments, TrainingArguments]] = None,
+               network: Optional[Union[Cell, PreTrainedModel]] = None,
+               dataset: Optional[Union[BaseDataset, GeneratorDataset]] = None,
+               optimizer: Optional[Optimizer] = None,
+               callbacks: Optional[Union[Callback, List[Callback]]] = None,
+               compute_metrics: Optional[Union[dict, set]] = None,
+               **kwargs):
+           ……
+           ……
+           logger.info(".........Starting Training Model..........")
+           if get_real_rank() % 8 == 0:
+               pprint(config)
+           logger.info(".........Model Compiling, Please Wait a Moment...........")
+           ......
+           <strong>try:</strong>
+               <strong>rank = get_rank()</strong>
+               <strong>from taskd.api.taskd_worker_api import init_taskd_worker</strong>
+               <strong>from taskd.api.taskd_worker_api import start_taskd_worker</strong>
+               <strong>init_taskd_worker(rank,5000,"ms")</strong>
+               <strong>start_taskd_worker()</strong>
+           <strong>except Exception as e:</strong>
+               <strong>print("failed to call mindcluster taskd")</strong>
+           model.train(config.runner_config.epochs, dataset,
+                       callbacks=callbacks,
+                       dataset_sink_mode=config.runner_config.sink_mode,
+                       sink_size=config.runner_config.sink_size,
+                       initial_epoch=config.runner_config.initial_epoch)</pre>
 
-                logger.info(".........Starting Training Model..........")
-                if get_real_rank() % 8 == 0:
-                    pprint(config)
-                logger.info(".........Model Compiling, Please Wait a Moment...........")
-                <strong>try:</strong>
-                    <strong>rank = get_rank()</strong>
-                    <strong>from taskd.api.taskd_worker_api import init_taskd_worker</strong>
-                    <strong>from taskd.api.taskd_worker_api import start_taskd_worker</strong>
-                    <strong>init_taskd_worker(rank,5000)</strong>
-                    <strong>start_taskd_worker()</strong>
-                <strong>except Exception as e:</strong>
-                    <strong>print("failed to call mindcluster taskd")</strong>
-                model.train(config.runner_config.epochs, dataset,
-                            callbacks=callbacks,
-                            dataset_sink_mode=config.runner_config.sink_mode,
-                            sink_size=config.runner_config.sink_size,
-                            initial_epoch=config.runner_config.initial_epoch)</pre>
 
-        >[!NOTE]
-        >以上代码init_taskd_worker(rank,5000)中的入参5000为/user/cluster-info/profiling的上限大小，详细说明请参见[def init\_taskd\_worker\(rank\_id: int, upper\_limit\_of\_disk\_in\_mb: int = 5000, framework: str = "pt"\) -\> bool](../../06_api/07_taskd/01_taskd_worker_apis.md#def-init_taskd_workerrank_id-int-upper_limit_of_disk_in_mb-int--5000-framework-str--pt---bool)中“upper\_limit\_of\_disk\_in\_mb”参数。
+      >[!NOTE]
+      >以上代码init_taskd_worker(rank,5000)中的入参5000为/user/cluster-info/profiling的上限大小，详细说明请参见[def init\_taskd\_worker\(rank\_id: int, upper\_limit\_of\_disk\_in\_mb: int = 5000, framework: str = "pt"\) -\> bool](../../06_api/07_taskd/01_taskd_worker_apis.md#def-init_taskd_workerrank_id-int-upper_limit_of_disk_in_mb-int--5000-framework-str--pt---bool)中"upper\_limit\_of\_disk\_in\_mb"参数。
 
   4. 修改任务YAML。详细请参见[PyTorch场景的步骤6](#li5236890yaml)。
   5. 开启轻量profiling获取落盘数据。详细请参见[PyTorch场景的步骤7](#li52986890profiling)。
@@ -1808,14 +1810,14 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 </td>
 <td class="cellrowborder" rowspan="2" valign="top" width="18.13181318131813%" headers="mcps1.2.5.1.3 "><p id="p488619172591"><a name="p488619172591"></a><a name="p488619172591"></a>AI平台</p>
 </td>
-<td class="cellrowborder" valign="top" width="21.862186218621858%" headers="mcps1.2.5.1.4 "><p id="p1211652412545"><a name="p1211652412545"></a><a name="p1211652412545"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/branch_v26.0.0/component/clusterd/pkg/application/recover" target="_blank" rel="noopener noreferrer">链接</a></p>
+<td class="cellrowborder" valign="top" width="21.862186218621858%" headers="mcps1.2.5.1.4 "><p id="p1211652412545"><a name="p1211652412545"></a><a name="p1211652412545"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/branch_v26.1.0/component/clusterd/pkg/application/recover" target="_blank" rel="noopener noreferrer">链接</a></p>
 </td>
 </tr>
 <tr id="row18952145365"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p72274605415"><a name="p72274605415"></a><a name="p72274605415"></a>故障Pod调度</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p522104615410"><a name="p522104615410"></a><a name="p522104615410"></a>调度故障Pod，支持调度恢复策略回退。</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p11417425315"><a name="p11417425315"></a><a name="p11417425315"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/branch_v26.0.0/component/ascend-for-volcano/internal/rescheduling" target="_blank" rel="noopener noreferrer">链接</a></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p11417425315"><a name="p11417425315"></a><a name="p11417425315"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/branch_v26.1.0/component/ascend-for-volcano/internal/rescheduling" target="_blank" rel="noopener noreferrer">链接</a></p>
 </td>
 </tr>
 </tbody>
@@ -1984,14 +1986,14 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 </td>
 <td class="cellrowborder" rowspan="2" valign="top" width="17.981798179817982%" headers="mcps1.2.5.1.3 "><p id="p16303135517718"><a name="p16303135517718"></a><a name="p16303135517718"></a>AI平台</p>
 </td>
-<td class="cellrowborder" valign="top" width="26.68266826682668%" headers="mcps1.2.5.1.4 "><p id="p19472244965"><a name="p19472244965"></a><a name="p19472244965"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/branch_v26.0.0/component/clusterd/pkg/application/recover" target="_blank" rel="noopener noreferrer">链接</a></p>
+<td class="cellrowborder" valign="top" width="26.68266826682668%" headers="mcps1.2.5.1.4 "><p id="p19472244965"><a name="p19472244965"></a><a name="p19472244965"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/branch_v26.1.0/component/clusterd/pkg/application/recover" target="_blank" rel="noopener noreferrer">链接</a></p>
 </td>
 </tr>
 <tr id="row7396029145419"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p9480632573"><a name="p9480632573"></a><a name="p9480632573"></a>故障Pod调度</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p84806321578"><a name="p84806321578"></a><a name="p84806321578"></a>调度故障Pod，支持调度恢复策略回退。</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p12472134412615"><a name="p12472134412615"></a><a name="p12472134412615"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/branch_v26.0.0/component/ascend-for-volcano/internal/rescheduling" target="_blank" rel="noopener noreferrer">链接</a></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p12472134412615"><a name="p12472134412615"></a><a name="p12472134412615"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/branch_v26.1.0/component/ascend-for-volcano/internal/rescheduling" target="_blank" rel="noopener noreferrer">链接</a></p>
 </td>
 </tr>
 </tbody>
@@ -2065,14 +2067,14 @@ Job级别重调度、Pod级别重调度、进程级别重调度可支持当前�
 </td>
 <td class="cellrowborder" rowspan="2" valign="top" width="17.43%" headers="mcps1.2.5.1.3 "><p id="p65272572124"><a name="p65272572124"></a><a name="p65272572124"></a>AI平台</p>
 </td>
-<td class="cellrowborder" valign="top" width="26.68%" headers="mcps1.2.5.1.4 "><p id="p14571125414116"><a name="p14571125414116"></a><a name="p14571125414116"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/branch_v26.0.0/component/clusterd/pkg/application/recover" target="_blank" rel="noopener noreferrer">链接</a></p>
+<td class="cellrowborder" valign="top" width="26.68%" headers="mcps1.2.5.1.4 "><p id="p14571125414116"><a name="p14571125414116"></a><a name="p14571125414116"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/branch_v26.1.0/component/clusterd/pkg/application/recover" target="_blank" rel="noopener noreferrer">链接</a></p>
 </td>
 </tr>
 <tr id="row16621936105516"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p17407378128"><a name="p17407378128"></a><a name="p17407378128"></a>故障Pod调度</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p140173701218"><a name="p140173701218"></a><a name="p140173701218"></a>调度故障Pod，支持调度恢复策略回退。</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p957195451114"><a name="p957195451114"></a><a name="p957195451114"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/branch_v26.0.0/component/ascend-for-volcano/internal/rescheduling" target="_blank" rel="noopener noreferrer">链接</a></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p957195451114"><a name="p957195451114"></a><a name="p957195451114"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/branch_v26.1.0/component/ascend-for-volcano/internal/rescheduling" target="_blank" rel="noopener noreferrer">链接</a></p>
 </td>
 </tr>
 </tbody>
@@ -2249,7 +2251,7 @@ Atlas A3 训练系列产品场景下，MindCluster集群调度组件提供训练
 </td>
 <td class="cellrowborder" valign="top" width="14.719999999999999%" headers="mcps1.2.5.1.3 "><p id="p10461144315257"><a name="p10461144315257"></a><a name="p10461144315257"></a>AI平台</p>
 </td>
-<td class="cellrowborder" valign="top" width="22.99%" headers="mcps1.2.5.1.4 "><p id="p10979110172511"><a name="p10979110172511"></a><a name="p10979110172511"></a><a href="https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.0.0/component/clusterd/pkg/application/recover/om_controller.go" target="_blank" rel="noopener noreferrer">链接</a></p>
+<td class="cellrowborder" valign="top" width="22.99%" headers="mcps1.2.5.1.4 "><p id="p10979110172511"><a name="p10979110172511"></a><a name="p10979110172511"></a><a href="https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.1.0/component/clusterd/pkg/application/recover/om_controller.go" target="_blank" rel="noopener noreferrer">链接</a></p>
 </td>
 </tr>
 </tbody>
@@ -2433,7 +2435,7 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 </td>
 <td class="cellrowborder" valign="top" width="18.01%" headers="mcps1.2.5.1.3 "><p id="p6553121803118"><a name="p6553121803118"></a><a name="p6553121803118"></a>AI平台</p>
 </td>
-<td class="cellrowborder" valign="top" width="23.75%" headers="mcps1.2.5.1.4 "><p id="p1660265933015"><a name="p1660265933015"></a><a name="p1660265933015"></a><a href="https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.0.0/component/clusterd/pkg/application/recover/om_controller.go" target="_blank" rel="noopener noreferrer">链接</a></p>
+<td class="cellrowborder" valign="top" width="23.75%" headers="mcps1.2.5.1.4 "><p id="p1660265933015"><a name="p1660265933015"></a><a name="p1660265933015"></a><a href="https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.1.0/component/clusterd/pkg/application/recover/om_controller.go" target="_blank" rel="noopener noreferrer">链接</a></p>
 </td>
 </tr>
 </tbody>
@@ -2585,14 +2587,14 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 </td>
 <td class="cellrowborder" rowspan="2" valign="top" width="19.670000000000005%" headers="mcps1.2.5.1.3 "><p id="p1045122693710"><a name="p1045122693710"></a><a name="p1045122693710"></a>AI平台</p>
 </td>
-<td class="cellrowborder" valign="top" width="22.800000000000004%" headers="mcps1.2.5.1.4 "><p id="p64451744113612"><a name="p64451744113612"></a><a name="p64451744113612"></a><a href="https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.0.0/component/clusterd/pkg/application/recover/hot_switch_controller.go" target="_blank" rel="noopener noreferrer">链接</a></p>
+<td class="cellrowborder" valign="top" width="22.800000000000004%" headers="mcps1.2.5.1.4 "><p id="p64451744113612"><a name="p64451744113612"></a><a name="p64451744113612"></a><a href="https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.1.0/component/clusterd/pkg/application/recover/hot_switch_controller.go" target="_blank" rel="noopener noreferrer">链接</a></p>
 </td>
 </tr>
 <tr id="row14716101112393"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1371681114396"><a name="p1371681114396"></a><a name="p1371681114396"></a>Pod创建删除</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p071681117390"><a name="p071681117390"></a><a name="p071681117390"></a>通过识别特定注解删除和创建Pod。</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p071621117393"><a name="p071621117393"></a><a name="p071621117393"></a><a href="https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.0.0/component/ascend-operator/pkg/controllers/v1/ascendjob_controller.go" target="_blank" rel="noopener noreferrer">链接</a></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p071621117393"><a name="p071621117393"></a><a name="p071621117393"></a><a href="https://gitcode.com/Ascend/mind-cluster/blob/branch_v26.1.0/component/ascend-operator/pkg/controllers/v1/ascendjob_controller.go" target="_blank" rel="noopener noreferrer">链接</a></p>
 </td>
 </tr>
 </tbody>
@@ -2840,7 +2842,7 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 </td>
 <td class="cellrowborder" rowspan="2" valign="top" width="18.190000000000005%" headers="mcps1.2.6.1.4 "><p id="p1504404816"><a name="p1504404816"></a><a name="p1504404816"></a>AI平台</p>
 </td>
-<td class="cellrowborder" valign="top" width="21.090000000000003%" headers="mcps1.2.6.1.5 "><p id="p20447192572312"><a name="p20447192572312"></a><a name="p20447192572312"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/branch_v26.0.0/component/clusterd/pkg/application/recover" target="_blank" rel="noopener noreferrer">链接</a></p>
+<td class="cellrowborder" valign="top" width="21.090000000000003%" headers="mcps1.2.6.1.5 "><p id="p20447192572312"><a name="p20447192572312"></a><a name="p20447192572312"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/branch_v26.1.0/component/clusterd/pkg/application/recover" target="_blank" rel="noopener noreferrer">链接</a></p>
 </td>
 </tr>
 <tr id="row155014017818"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p063755903111"><a name="p063755903111"></a><a name="p063755903111"></a>18</p>
@@ -2849,7 +2851,7 @@ MindCluster支持训练在线压测特性，即在训练过程中可以调用在
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p18282181818913"><a name="p18282181818913"></a><a name="p18282181818913"></a>调度故障Pod。</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p10446112592310"><a name="p10446112592310"></a><a name="p10446112592310"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/branch_v26.0.0/component/ascend-for-volcano/internal/rescheduling" target="_blank" rel="noopener noreferrer">链接</a></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p10446112592310"><a name="p10446112592310"></a><a name="p10446112592310"></a><a href="https://gitcode.com/Ascend/mind-cluster/tree/branch_v26.1.0/component/ascend-for-volcano/internal/rescheduling" target="_blank" rel="noopener noreferrer">链接</a></p>
 </td>
 </tr>
 </tbody>
