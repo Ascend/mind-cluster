@@ -46,7 +46,7 @@
 工具支持 3 个版本的离线日志结构，版本识别由工具自动完成，无需手动指定。通过以下任意一种[host日志采集脚本](https://gitcode.com/Ascend/mindcluster-deploy/ascend-fd-tk/host_collector)收集日志，收集后获得 `{file_name}.tar.gz`，直接将压缩包放入日志采集目录即可。
 
 - 版本 1：通过 `tool_log_collection_out_version_all_<version>.sh` 收集日志。
-- 版本 2：通过 `A3device日志一键采集脚本<version>.sh` 收集日志。
+- 版本 2：通过 `device_log_collect_<version>.sh` 收集日志。
 - 版本 3：通过 `link_down_collect_<version>.sh` 收集日志。
 
 #### 版本 1

@@ -19,9 +19,9 @@
 
 ## 支持的日志类型
 
-- `A3device日志一键采集脚本<version>.sh` 收集的日志。
-- `link_down_collect_<version>.sh` 收集的日志。
 - `tool_log_collection_out_version_all_<version>.sh` 收集的日志。
+- `device_log_collect_<version>.sh` 收集的日志。
+- `link_down_collect_<version>.sh` 收集的日志。
 
 > **注**：日志详情请参考[日志收集与数据源](../../05_usage/02_log_collection.md)。
 

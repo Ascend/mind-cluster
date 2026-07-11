@@ -12,42 +12,6 @@
 
 完整使用文档请查看：[docs/zh/faultdiag/ascend-faultdiag-toolkit](../../../docs/zh/faultdiag/ascend-faultdiag-toolkit/menu_ascend-faultdiag-toolkit.md)
 
-## 目录结构
-
-```text
-toolkit_src/
-├── ascend_fd_tk/                  # 工具主程序包
-│   ├── cli.py                     # 工具入口（ascend-fd-tk 命令）
-│   ├── conn.ini                   # 连接配置示例文件
-│   ├── core/                      # 核心模块
-│   │   ├── cli_module/            # CLI 模型与命令注册
-│   │   ├── collect/               # 数据采集（SSH / 离线日志 / 解析器）
-│   │   ├── common/                # 公共常量、枚举、路径、异常
-│   │   ├── config/                # 阈值/位置/连接等配置文件
-│   │   ├── context/               # 诊断上下文与采集注册
-│   │   ├── crypto/                # 连接配置加密
-│   │   ├── fault_analyzer/        # 故障分析器（主机/BMC/交换机/HCCS）
-│   │   ├── inspection/            # 巡检规则与配置
-│   │   ├── log_parser/            # 离线日志解析配置
-│   │   ├── model/                 # 领域模型（Host/BMC/Switch/Optical）
-│   │   ├── report/                # 报告生成（多 Sheet Excel）
-│   │   ├── root_cause/            # 根因分析（滤波器、SNR 检查）
-│   │   └── service/               # 业务服务（auto_diag/auto_collect 等）
-│   ├── examples/                  # 常用脚本与示例
-│   │   ├── auto_diag/             # linux/windows 一键式采集/诊断脚本
-│   │   ├── cmd/                   # 采集命令示例
-│   │   ├── inspection/            # 巡检示例
-│   │   ├── loopback_diag/         # 光模块环回诊断示例
-│   │   └── scripts/               # clear_cache / 辅助脚本
-│   ├── utils/                     # 工具目录
-│   └── test/                      # 单元测试
-├── setup.py                       # Python 包打包入口
-├── requirements.txt               # Python 依赖清单
-├── build_cli_exe.bat              # 打包脚本
-├── ascend_faultdiag_toolkit.spec  # 打包脚本
-└── README.md                      # 工具说明
-```
-
 ## 分支维护策略
 
 | 状态 | 时间 | 说明 |
