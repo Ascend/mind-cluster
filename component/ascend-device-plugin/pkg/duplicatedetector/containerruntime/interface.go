@@ -92,7 +92,7 @@ func (c *ociClient) ParseSingleContainer(ctx context.Context, containerID string
 		return info, nil
 	}
 
-	info.Devices = parser.FilterNPUDevices(spec)
+	info.Devices = filterNPUDevices(spec)
 	return info, nil
 }
 
