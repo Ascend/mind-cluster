@@ -30,7 +30,7 @@
 |metadata.annotations.huawei.com/schedule_policy|字符串 (string)|-|配置任务需要调度的AI芯片布局形态。Volcano会根据该字段选择合适的调度策略。目前支持[huawei.com/schedule_policy配置说明](#huaweicomschedule_policy配置说明)中的配置。|
 |huawei.com/affinity-config|字符串 (string)|-|<p>配置任务的多级调度的亲和性层级。</p><p>取值为：level1=x,level2=y,...</p><p>其中x,y...为对应的网络层级子任务大小。</p><p>要求满足格式为leveli=ni样式的字符串的拼接，中间使用英文逗号分隔。其中，i为网络层级序号，ni为该网络层级子任务的副本数量。例如，对于总副本数量为8的任务“level1=2,level2=4”，表示任务Pod中每2个Pod分配到有相同level1标签的节点上，每4个Pod分配到有相同level2标签的节点上。</p><p>网络层级配置需要满足以下要求：<ul><li>任务层级大于1层时，层级n的值必须是n-1的整数倍。</li><li>任务总副本数量必须是所有层级的整数倍。</li><li>任务层级配置必须从level1开始，从小到大连续的。</li></ul></p>|
 |spec|对象 (object)|-|AscendJob期望状态的规格描述。必填字段：replicaSpecs。|
-|spec.template.metadata.annotations.huawei.com/recover_policy_path|字符串 (string)|-|任务重调度策略。当取值为pod，则只支持Pod级重调度，不升级为Job级别。当使用vcjob时，需要配置该策略：policies: -event:PodFailed -action:RestartTask|
+|spec.template.metadata.annotations.huawei.com/recover_policy_path|字符串 (string)|-|任务重调度策略。当取值为pod，则只支持Pod级重调度，不升级为Job级别。|
 |spec.template.metadata.annotations.huawei.com/schedule_minAvailable|整数|-|默认值为任务总副本数。Ascend Operator启用“gang”调度生效，且调度器为Volcano时，任务运行总副本数。|
 |metadata.annotations.wait-reschedule-timeout|整数 (integer)|int32|进程级别重调度处理时等待故障节点重调度的超时时间，单位为秒，默认值为270。取值范围为30~270。|
 |spec.replicaSpecs|对象 (object)|-|ReplicaType到ReplicaSpec的映射，指定MS集群配置。示例：{ "Scheduler": ReplicaSpec, "Worker": ReplicaSpec }。|
@@ -871,21 +871,21 @@
 
 **表 4**  huawei.com/schedule\_policy配置说明
 
-|配置|说明|
-|--|--|
-|chip4-node8|1个节点8张芯片，每4个芯片形成1个互联环。例如，Atlas 800 训练服务器（型号 9000）/Atlas 800 训练服务器（型号 9010）芯片的整模块场景/Atlas 350 标卡共8张卡，每4张卡通过UB扣板连接。|
-|chip1-node2|1个节点2张芯片。例如，Atlas 300T 训练卡的插卡场景，1张卡最多插1个芯片，1个节点最多插2张卡。|
-|chip4-node4|1个节点4张芯片，形成1个互联环。例如，Atlas 800 训练服务器（型号 9000）/Atlas 800 训练服务器（型号 9010）芯片的半配场景。|
-|chip8-node8|1个节点8张卡，8张卡都在1个互联环上。例如，Atlas 800T A2 训练服务器 /Atlas 850 系列硬件产品。|
-|chip8-node16|1个节点16张卡，每8张卡在1个互联环上。例如，Atlas 200T A2 Box16 异构子框。|
-|chip2-node8|1个节点8张卡，每2张卡在1个互联环上。|
-|chip2-node16|1个节点16张卡，每2张卡在1个互联环上。例如，Atlas 800T A3 超节点服务器。|
-|chip2-node8-sp|1个节点8张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，Atlas 9000 A3 SuperPoD 集群算力系统。|
-|chip2-node16-sp|1个节点16张卡，每2张卡在1个互联环上，多个服务器形成超节点。例如，Atlas 900 A3 SuperPoD 超节点。|
-|chip4-node16|1个节点16张卡，每4张卡都在1个互联环上。例如，Atlas 350 标卡共16张卡，每4张卡通过UB扣板连接。|
-|chip1-node8|1个节点8张卡，每张卡之间无互联。例如，Atlas 350 标卡服务器共8张卡，每张卡之间无互联。|
-|chip1-node16|1个节点16张卡，每张卡之间无互联。例如，Atlas 350 标卡服务器共16张卡，每张卡之间无互联。|
-|chip8-node8-sp|1个节点8张卡，8张卡都在1个互联环上，多个服务器形成超节点。例如，Atlas 850 系列硬件产品（超节点服务器）。|
-|chip8-node8-ra64-sp|1个节点8张卡，8张卡都在1个互联环上，64个节点组成一个计算框，多个框形成超节点。例如，Atlas 950 SuperPoD。|
-|chip1-softShareDev|软切分虚拟化专用调度策略。|
-|multilevel|多级调度场景使用，多级调度的详细使用方法请参见[多级调度](../04_usage/03_basic_scheduling/04_multi_level_scheduling.md)。|
+|配置|说明|形态举例|
+|--|--|--|
+|chip4-node8|1个节点8张芯片，每4个芯片形成1个互联环。|Atlas 800 训练服务器（型号 9000）/Atlas 800 训练服务器（型号 9010）芯片的整模块场景/Atlas 350 标卡共8张卡，每4张卡通过UB扣板连接|
+|chip1-node2|1个节点2张芯片。|Atlas 300T 训练卡的插卡场景，1张卡最多插1个芯片，1个节点最多插2张卡|
+|chip4-node4|1个节点4张芯片，形成1个互联环。|Atlas 800 训练服务器（型号 9000）/Atlas 800 训练服务器（型号 9010）芯片的半配场景|
+|chip8-node8|1个节点8张卡，8张卡都在1个互联环上。|Atlas 800T A2 训练服务器/Atlas 850 系列硬件产品|
+|chip8-node16|1个节点16张卡，每8张卡在1个互联环上。|Atlas 200T A2 Box16 异构子框|
+|chip2-node8|1个节点8张卡，每2张卡在1个互联环上。|Atlas 9000 A3 SuperPoD|
+|chip2-node16|1个节点16张卡，每2张卡在1个互联环上。|Atlas 800T A3 超节点服务器|
+|chip2-node8-sp|1个节点8张卡，每2张卡在1个互联环上，多个服务器形成超节点。|Atlas 9000 A3 SuperPoD 集群算力系统|
+|chip2-node16-sp|1个节点16张卡，每2张卡在1个互联环上，多个服务器形成超节点。|Atlas 900 A3 SuperPoD 超节点|
+|chip4-node16|1个节点16张卡，每4张卡都在1个互联环上。|Atlas 350 标卡共16张卡，每4张卡通过UB扣板连接|
+|chip1-node8|1个节点8张卡，每张卡之间无互联。|Atlas 350 标卡共8张卡，每张卡之间无互联|
+|chip1-node16|1个节点16张卡，每张卡之间无互联。|Atlas 350 标卡共16张卡，每张卡之间无互联|
+|chip8-node8-sp|1个节点8张卡，8张卡都在1个互联环上，多个服务器形成超节点。|Atlas 850 系列硬件产品（超节点服务器）|
+|chip8-node8-ra64-sp|1个节点8张卡，8张卡都在1个互联环上，64个节点组成一个计算框，多个框形成超节点。|Atlas 950 SuperPoD|
+|chip1-softShareDev|软切分虚拟化专用调度策略。|Atlas 800I A2，Atlas 800I A3，Atlas 350 标卡|
+|multilevel|多级调度场景使用，多级调度的详细使用方法请参见[多级调度](../04_usage/03_basic_scheduling/04_multi_level_scheduling.md)。|Atlas 900 A3 SuperPoD，Atlas 950 SuperPoD|
