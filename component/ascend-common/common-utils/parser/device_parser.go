@@ -17,20 +17,12 @@
 package parser
 
 import (
-	"bufio"
 	"math"
-	"os"
-	"regexp"
 	"strconv"
 	"strings"
-	"sync"
-
-	"github.com/containerd/containerd/oci"
-	"k8s.io/apimachinery/pkg/util/sets"
 
 	"ascend-common/api"
 	"ascend-common/common-utils/hwlog"
-	"ascend-common/common-utils/utils"
 )
 
 const (
@@ -41,12 +33,6 @@ const (
 	ascend         = "Ascend"
 	envSliceLen    = 2
 	deviceSliceLen = 2
-	formatIntBase  = 10
-)
-
-var (
-	npuMajorFetchCtrl sync.Once
-	npuMajorID        sets.String
 )
 
 // ParseAscendDeviceInfo parses the AscendDeviceInfo environment variable
@@ -180,82 +166,4 @@ func parseAscendStyle(devices, containerID string) []int {
 		deviceIDs = append(deviceIDs, deviceID)
 	}
 	return deviceIDs
-}
-
-func npuMajor() sets.String {
-	npuMajorFetchCtrl.Do(func() {
-		var err error
-		npuMajorID, err = getNPUMajorID()
-		if err != nil {
-			return
-		}
-	})
-	return npuMajorID
-}
-
-// query the MajorID of NPU devices
-func getNPUMajorID() (sets.String, error) {
-	const (
-		deviceCount   = 2
-		maxSearchLine = 512
-	)
-
-	path, err := utils.CheckPath("/proc/devices")
-	if err != nil {
-		return nil, err
-	}
-	majorID := sets.NewString()
-	f, err := os.Open(path)
-	if err != nil {
-		return majorID, err
-	}
-	defer func() {
-		err = f.Close()
-		if err != nil {
-			hwlog.RunLog.Error(err)
-		}
-	}()
-	s := bufio.NewScanner(f)
-	count := 0
-	for s.Scan() {
-		// prevent from searching too many lines
-		if count > maxSearchLine {
-			break
-		}
-		count++
-		text := s.Text()
-		matched, err := regexp.MatchString("^[0-9]{1,3}\\s[v]?devdrv-cdev$", text)
-		if err != nil {
-			return majorID, err
-		}
-		if !matched {
-			continue
-		}
-		fields := strings.Fields(text)
-		majorID.Insert(fields[0])
-	}
-	return majorID, nil
-}
-
-// FilterNPUDevices filters NPU devices from container detail
-func FilterNPUDevices(spec *oci.Spec) []int {
-	if spec == nil || spec.Linux == nil || spec.Linux.Resources == nil {
-		return nil
-	}
-	devIDs := make([]int, 0)
-	majorIDs := npuMajor()
-	for _, dev := range spec.Linux.Resources.Devices {
-		if dev.Minor == nil || dev.Major == nil {
-			// do not monitor privileged container
-			continue
-		}
-		if *dev.Minor > math.MaxInt32 {
-			return nil
-		}
-		major := strconv.FormatInt(*dev.Major, formatIntBase)
-		if dev.Type == "c" && majorIDs.Has(major) {
-			devIDs = append(devIDs, int(*dev.Minor))
-		}
-	}
-	return devIDs
 }
