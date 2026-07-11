@@ -299,7 +299,7 @@
 1. 参照[表1](#zh-cn_topic_0000002039339945_table1172542119019)，在宿主机上完成软件包的准备工作。
 2. 编写如下Dockerfile。
 
-    <pre>
+    ```text
     FROM ubuntu:20.04
     WORKDIR /root
     COPY . .
@@ -440,7 +440,8 @@
         rm -f $MINDIO_TTP_WHL && \
         rm -rf $DLLOGGER && \
         rm -rf Dockerfile
-    ## 最后打包成镜像mindspeed-dl:v1</pre>
+    ## 最后打包成镜像mindspeed-dl:v1
+    ```
 
     >[!NOTE]
     >Python 3.10若无法通过PPA直接安装成功，或者deadsnakes PPA不提供Python 3.10版本的镜像源，则可下载源码手动编译安装。
@@ -621,7 +622,7 @@
 1. 在宿主机上完成软件包的准备工作。
 2. 构建如下的Dockerfile。
 
-    <pre>
+    ```text
     FROM ubuntu:20.04
 
     WORKDIR /root
@@ -760,7 +761,8 @@
         rm -f $MINDIO_TTP_WHL && \
         rm -f $MINDSPORE_REQUIREMENTS && \
         rm -f $MINDSPORE_WHL
-    ## 最后打包成镜像mindformers-dl:v1</pre>
+    ## 最后打包成镜像mindformers-dl:v1
+    ```
 
 3. 构建镜像。执行以下命令生成镜像。为了使Dockerfile更加安全，用户可以根据业务在其中定义HEALTHCHECK检查。通过在容器内部运行**HEALTHCHECK** _\[OPTIONS\]_ **CMD**命令来检查容器的运行状况。**注意不要遗漏命令结尾的**“.”。
 

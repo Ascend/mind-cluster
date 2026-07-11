@@ -50,14 +50,14 @@ You can customize a configuration file to clean key ModelArts logs or not, confi
     |enable_model_asrt|Bool|Whether to clean key ModelArts logs|Optional|The default value is `false`. <ul><li>`true`</li><li>`false`</li></ul>|
     |train_log_size|Int|Size of the console log to be read|Optional|The value is a positive integer. The default value is `1048576` (1 MB = 1024 × 1024 bytes = 1048576 bytes).|
     |custom_parse_file|List|Custom parser file|Optional|A maximum of 10 files can be configured.|
-    |file_path_glob|String|Custom parser file (Unix wildcard pattern)|Required when `custom_parse_file` exists and is not `[]`.|Letters, digits, English punctuation marks, spaces, and backslashes (\) and asterisks (*) are supported,for example, `test_custom/*.log`.|
+    |file_path_glob|String|Custom parser file (Unix wildcard pattern)|Required when `custom_parse_file` exists and is not `[]`.|Letters, digits, English punctuation marks, spaces, and asterisks (*) are supported, for example, `test_custom/*.log`.|
     |log_time_format|String|Time format string for printing logs in the custom parser file|Optional|The value can contain 1 to 50 characters, including letters (YmdHMSf) and special characters (percent sign, hyphen, space, colon, comma, and period), for example, `%Y-%m-%d %H:%M:%S.%f`. <ul><li>%Y: 4-digit year (for example, 2023 or 2024) </li><li>%m: 2-digit month (01–12, for example, 03 indicates March) </li><li>%d: 2-digit date (01–31, for example, 05 indicates the fifth day of a month) </li><li>%H: number of hours in the 24-hour format (00–23). </li><li>%M: 2-digit minute (00–59). </li><li>%S: 2-digit second (00–59). </li><li>%f: microseconds.</li></ul>|
     |source_file|List|Log file type|Required when `custom_parse_file` exists and is not `[]`.|A maximum of 10 character strings can be configured. Each string contains 1 to 50 characters, including letters, digits, English symbols, and spaces.|
     |timezone_config|Dictionary|Log timezone conversion|Optional|-|
     |lcne|Bool|Specifies whether to support LCNE log timezone conversion.|Optional|The default value is `false`. <ul><li>`true`</li><li>`false`</li></ul>|
     |mindie|Bool|Specifies whether to support MindIE log timezone conversion. The function is not supported currently.|Optional|The default value is `false`. <ul><li>`true`</li><li>`false`</li></ul>|
 
-2. Views the custom configurations.
+2. View the custom configurations.
 
     ```shell
     ascend-fd config --show
@@ -81,7 +81,7 @@ You can customize a configuration file to clean key ModelArts logs or not, confi
 4. (Optional) If a custom parser file (for example, the JSON file example in [Step 1](#li180165713467)) is added to the configuration file, run the following command to clean the custom parser file. The files matched by the wildcard pattern (`worker-0/test_custom/*.log`) will be cleaned.
 
     ```shell
-    ascend-fd parse --custom_log worker-0/ -o *Cleaning output directory*
+    ascend-fd parse --custom_log worker-0/ -o ${Cleaning_output_directory}
     ```
 
     >[!NOTE]

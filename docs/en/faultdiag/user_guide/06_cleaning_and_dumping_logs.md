@@ -80,7 +80,7 @@
             |-- ttp_log                   # MindIO component logs
         |-- mindie               # MindIE component logs
             |-- log
-                -- debug        # MindIE run logs
+                |-- debug        # MindIE run logs
                 |-- security     # MindIE audit logs
                 |-- mindie_cluster_log     # MindIE Pod console logs
         |-- amct_log             # AMCT logs
@@ -101,8 +101,8 @@
         Decompress the BMC and LCNE logs exported from Computing ToolKit or CCAE recursively, and then place and clean the logs on a single node.
 
         ```shell
-        ascend-fd parse --lcne_log *Decompressed LCNE log directory of a single node* -o *Cleaning result directory*
-        ascend-fd parse --bmc_log *Decompressed BMC log directory of a single node* -o *Cleaning result directory*
+        ascend-fd parse --lcne_log ${Decompressed_LCNE_log_directory_of_a_single_node} -o ${Cleaning_result_directory}
+        ascend-fd parse --bmc_log ${Decompressed_BMC_log_directory_of_a_single_node} -o ${Cleaning_result_directory}
         ```
 
         >[!NOTE]
@@ -112,13 +112,13 @@
 3. Create an output directory for storing log cleaning results.
 
     ```shell
-    mkdir *Cleaning result output directory*
+    mkdir ${Cleaning_result_output_directory}
     ```
 
 4. Run the command to start cleaning logs.
 
     ```shell
-    ascend-fd parse -i *Collection directory* -o *Cleaning result output directory* --performance
+    ascend-fd parse -i ${Collection_directory} -o ${Cleaning_result_output_directory} --performance
     ```
 
     Command output:
@@ -155,7 +155,7 @@
     Diagnosis input directory
         |-- Cleaning result output directory 1
            |--plog-parser-{pid}-{0/1}.log     # Logs of the cleaned root cause nodes, including key information such as error and trace logs. The logs are saved by PID.
-           --nic_clean.csv                      # Result of network congestion cleaning
+           |--nic_clean.csv                      # Result of network congestion cleaning
            |--nad_clean.csv                      # Result of computing throttling cleaning
            |--mem_used.csv                     # Result of memory resource preemption cleaning. This file is reserved and is not used currently.
            |--process_{core_num}.csv           # Result of CPU resource preemption cleaning

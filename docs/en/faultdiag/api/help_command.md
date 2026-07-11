@@ -29,10 +29,10 @@ Queries the meanings and usage instructions of commands and parameters.
 Example: Return parameters and usage instructions.
 
 ```ColdFusion
-usage: ascend-fd [-h] {version,parse,diag,blacklist,entity,single-diag} ...
+usage: ascend-fd [-h] {version,parse,diag,blacklist,config,entity,single-diag} ...
 Ascend Fault Diag
 positional arguments:
-  {version,parse,diag,blacklist,entity,single-diag}
+  {version,parse,diag,blacklist,config,entity,single-diag}
     version             show ascend-fd version
     parse               parse origin log files
     diag                diag parsed log files

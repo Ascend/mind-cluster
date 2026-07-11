@@ -21,13 +21,13 @@
 
 |Log|Software|Software Version|Description|
 |--|--|--|--|
-|CANN App logs|CANN|7.0.RC1 or later|Host App logs and device App logs printed by CANN. For more information, see [Viewing Logs (Ascend EP)](<https://www.hiascend.com/document/detail/en/canncommercial/900/maintenref/logreference/logreference_0002.html>) in the *CANN Log Reference*.|
+|CANN App logs|CANN|7.0.RC1 or later|Host App logs and device App logs printed by CANN. For more information, see [Viewing Logs (Ascend EP)](<https://www.hiascend.com/document/detail/en/canncommercial/850/maintenref/logreference/logreference_0002.html>) in the *CANN Log Reference*.|
 |Training and inference logs of the PyTorch framework|PyTorch adaptation plugin 1.11.0|5.0.RC3 or later|-|
 |Training logs of the MindSpore framework|MindSpore|2.1.0 or later|Certain fault type descriptions may contain relevant MindSpore version notes. The actual fault diagnosis description shall prevail.|
 |Host OS logs|-|-|<ul><li>The supported host OS logs include but are not limited to CentOS 7.6, Debian 10.0, EulerOS 2.10, EulerOS 2.12, and CTyunOS 22.06. The keywords in logs may vary according to the OS. </li><li>It is recommended that the host OS log size be less than 512 MB.</li></ul>|
 |Device logs|Ascend HDK|23.0.RC3 or later|-|
 |MindCluster component logs|Ascend Device Plugin, NodeD, Ascend Docker Runtime, NPU Exporter, and Volcano|6.0.RC3 or later|-|
 |MindIE component logs|MindIE Server, MindIE LLM, MindIE SD, MindIE RT, MindIE Torch, MindIE MS, MindIE Benchmark, and MindIE Client|6.0.0 or later|-|
-|AMCT logs|Model compression toolkit|7.0.RC1 or later|AMCT is integrated into the CANN package for release. For more information, see [AMCT User Guide](<https://www.hiascend.com/document/detail/en/canncommercial/900/devaids/amct/atlasamct_16_0001.html>).|
+|AMCT logs|Model compression toolkit|7.0.RC1 or later|AMCT is integrated into the CANN package for release. For more information, see [AMCT User Guide](<https://www.hiascend.com/document/detail/en/canncommercial/850/devaids/amct/atlasamct_16_0001.html>).|
 |MindIE Pod console logs|MindIE Pod console logs|-|-|
 |MindIO logs|MindIO logs|-|-|
