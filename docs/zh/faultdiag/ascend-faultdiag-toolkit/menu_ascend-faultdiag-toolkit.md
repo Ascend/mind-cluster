@@ -41,7 +41,7 @@
     - [auto_collect_diag](06_api/04_parse_diagnosis/03_auto_collect_diag.md)
   - [巡检命令](06_api/05_inspection/auto_inspection.md)
   - [维护命令](06_api/06_maintenance/clear_cache.md)
-- [参考文档](07_references/01_faq.md)
+- [参考文档](07_references/menu_references.md)
   - [FAQ](07_references/01_faq.md)
   - [诊断项参考](07_references/02_diagnosis_items.md)
   - [术语表](07_references/03_list_of_terms.md)
