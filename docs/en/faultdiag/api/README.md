@@ -1,6 +1,4 @@
-# API Description<a name="ZH-CN_TOPIC_0000001683212357"></a>
-
-## Overview<a name="ZH-CN_TOPIC_0000001574561160"></a>
+# Overview
 
 The functional interfaces provided by MindCluster Ascend FaultDiag include command interfaces and SDK interfaces. You can implement related functions by calling these interfaces.
 
@@ -23,7 +21,7 @@ SDK interfaces: Code-level interfaces that directly call functions and methods, 
 
 **Table 2** SDK interfaces
 
-|Command|Function Description|
+|SDK|Function Description|
 |--|--|
 |`parse_fault_type`|Service flow parsing interface.|
 |`parse_root_cluster`|Root cause node parsing interface.|

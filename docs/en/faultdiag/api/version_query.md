@@ -15,5 +15,5 @@ Queries the component version number.
 Version number information:
 
 ```ColdFusion
-ascend-fd ${component version number}
+ascend-fd ${component_version_number}
 ```
