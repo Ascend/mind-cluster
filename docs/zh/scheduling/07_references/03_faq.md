@@ -69,3 +69,4 @@
 - [进程级恢复时重建通信域失败](https://gitcode.com/Ascend/mind-cluster/issues/388)
 - [npu-exporter自动重启、卡死、无法获取指标信息](https://gitcode.com/Ascend/mind-cluster/issues/395)
 - [npu-exporter指标label中的id和npu-smi info 看到的id不一致](https://gitcode.com/Ascend/mind-cluster/issues/584)
+- [训练容器内进程通过Service IP连接ClusterD GRPC服务超时](https://gitcode.com/Ascend/mind-cluster/issues/795)

@@ -14,7 +14,7 @@
 
 |功能名称|说明|配置步骤|
 |--|--|--|
-|故障检测|<p>断点续训具有故障检测功能，支持实时监测训练场景下的20+软件类故障及90+硬件类故障的故障检测。</p><p>详细功能及原理介绍请参见[故障检测](./01_solutions_principles.md#故障检测)。</p>|[（可选）配置故障检测级别](./03_configuration/01_configuring_fault_detection_levels.md)|
+|故障检测|<p>断点续训具有故障检测功能，支持实时监测训练场景下的软件类故障及硬件类故障。</p><p>详细功能及原理介绍请参见[故障检测](./01_solutions_principles.md#故障检测)。</p>|[（可选）配置故障检测级别](./03_configuration/01_configuring_fault_detection_levels.md)|
 |故障处理|<p>断点续训具有故障处理功能，出现故障后不需要人工介入就可自动隔离故障设备。</p><p>详细功能及原理介绍请参见[故障处理](./01_solutions_principles.md#故障处理)。</p>|[配置故障处理](./03_configuration/02_configuring_fault_handling_policies.md)|
 |恢复加速|<p>断点续训具有加速训练恢复的功能，用户可自定义加速的策略，降低训练拉起时间。</p><p>详细功能及原理介绍请参见[恢复加速](./01_solutions_principles.md#恢复加速)。</p>|[配置恢复加速](./03_configuration/03_configuring_training_recovery.md)|
 

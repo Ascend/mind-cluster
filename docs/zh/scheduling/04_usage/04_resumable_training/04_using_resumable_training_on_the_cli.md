@@ -636,6 +636,7 @@
     ARG OPS=Ascend-cann-910b-ops_8.5.0_linux-aarch64.run
     ARG MINDIO_TTP_WHL=mindio_ttp-1.0.0-py3-none-linux_aarch64.whl
     ARG MINDFORMERS=mindformers
+    ARG HYPERPARALLEL=hyper-parallel
     ARG MINDSPORE_REQUIREMENTS=requirements.txt
     ARG MINDSPORE_WHL=mindspore-2.5.0-cp310-cp310-linux_aarch64.whl
     ARG TASKD_WHL=taskd-7.0.RC1-py3-none-linux_aarch64.whl
@@ -735,6 +736,9 @@
 
     # 安装mindformers
     RUN umask 0022 && cd $MINDFORMERS && \
+        pip install -r requirements.txt
+    # 安装Hyper-parallel
+    RUN umask 0022 && cd $HYPERPARALLEL && \
         pip install -r requirements.txt
 
     # MindCluster无损失断点续训适配脚本
@@ -1374,7 +1378,7 @@ Verl的训练任务被Ray集群所管理，为适配MindCluster的Ascend Job任�
 </td>
 <td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.5 "><p id="p893610293406"><a name="p893610293406"></a><a name="p893610293406"></a>pytorch_multinodes_acjob_910b.yaml</p>
 </td>
-<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1987716427402"><a name="p1987716427402"></a><a name="p1987716427402"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.0.0/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3/yamls/pytorch_multinodes_acjob_910b.yaml" target="_blank" rel="noopener noreferrer">pytorch_multinodes_acjob_910b.yaml</a></p>
+<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1987716427402"><a name="p1987716427402"></a><a name="p1987716427402"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/train/resumable-training/fault-tolerance/without-ranktable/pytorch/Qwen3/yamls/pytorch_multinodes_acjob_910b.yaml" target="_blank" rel="noopener noreferrer">pytorch_multinodes_acjob_910b.yaml</a></p>
 </td>
 <td class="cellrowborder" valign="top" width="15.413082616523303%" headers="mcps1.2.8.1.7 "><p id="p8936152964011"><a name="p8936152964011"></a><a name="p8936152964011"></a>示例默认使用2*8卡任务</p>
 </td>
@@ -1389,7 +1393,7 @@ Verl的训练任务被Ray集群所管理，为适配MindCluster的Ascend Job任�
 </td>
 <td class="cellrowborder" valign="top" width="15.393078615723146%" headers="mcps1.2.8.1.5 "><p id="p1493742904013"><a name="p1493742904013"></a><a name="p1493742904013"></a><span id="ph153229411739"><a name="ph153229411739"></a><a name="ph153229411739"></a>ms_multinodes_acjob_superpod.yaml</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1637217494110"><a name="p1637217494110"></a><a name="p1637217494110"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.0.0/samples/train/resumable-training/fault-tolerance/ranktable/mindspore/Qwen3/yamls/ms_multinodes_acjob_superpod.yaml" target="_blank" rel="noopener noreferrer">ms_multinodes_acjob_superpod.yaml</a></p>
+<td class="cellrowborder" valign="top" width="15.433086617323463%" headers="mcps1.2.8.1.6 "><p id="p1637217494110"><a name="p1637217494110"></a><a name="p1637217494110"></a><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/train/resumable-training/fault-tolerance/ranktable/mindspore/Qwen3/yamls/ms_multinodes_acjob_superpod.yaml" target="_blank" rel="noopener noreferrer">ms_multinodes_acjob_superpod.yaml</a></p>
 </td>
 <td class="cellrowborder" valign="top" width="15.413082616523303%" headers="mcps1.2.8.1.7 "><p id="p79373296408"><a name="p79373296408"></a><a name="p79373296408"></a>示例默认使用2*16卡任务</p>
 </td>
@@ -1756,7 +1760,7 @@ recent-reschedule-records:
 Events:  <none>
 ```
 
-### 优雅容错模式<a name="ZH-CN_TOPIC_0000002511346479"></a>
+### 优雅容错模式（本功能已日落）<a name="ZH-CN_TOPIC_0000002511346479"></a>
 
 本章节指导用户查看使用故障处理的优雅容错模式的训练信息。当芯片发生故障时，进程退出后进行优雅容错处理，恢复后重新拉起进程。
 
