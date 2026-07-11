@@ -16,6 +16,7 @@
 set -e
 
 export GO111MODULE="on"
+export GOTOOLCHAIN="go1.21.13"
 export GONOSUMDB="*"
 export PATH=$GOPATH/bin:$PATH
 

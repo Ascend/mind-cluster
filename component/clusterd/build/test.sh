@@ -18,6 +18,7 @@ set -e
 CUR_DIR=$(dirname "$(readlink -f $0)")
 TOP_DIR=$(realpath "${CUR_DIR}"/..)
 export GO111MODULE="on"
+export GOTOOLCHAIN="go1.21.13"
 export GONOSUMDB="*"
 export PATH=$GOPATH/bin:$PATH
 
