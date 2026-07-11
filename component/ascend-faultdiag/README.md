@@ -2,7 +2,6 @@
 
 - [变更通知](#-变更通知)
 - [简介](#简介)
-- [目录结构](#目录结构)
 - [版本说明](#版本说明)
 - [环境部署](#环境部署)
 - [快速入门](#快速入门)
@@ -30,60 +29,6 @@
 ## 简介
 
 MindCluster Ascend FaultDiag（故障诊断工具）主要功能如下：提供日志清洗和故障诊断功能，提取训练及推理过程相关日志的关键信息，并根据集群所有节点清洗后的关键信息，分析故障根因节点以及故障事件。
-
-## 目录结构
-
-```txt
-ascend-faultdiag
-├─build
-├─platform
-├─src
-│  ├─ascend_fd
-│  │  ├─configuration
-│  │  ├─controller
-│  │  ├─lib
-│  │  ├─model
-│  │  ├─module
-│  │  │  └─mindie_trace_parser
-│  │  ├─pkg
-│  │  │  ├─customize
-│  │  │  │  ├─custom_config
-│  │  │  │  └─custom_entity
-│  │  │  ├─diag
-│  │  │  │  ├─knowledge_graph
-│  │  │  │  │  ├─kg_engine
-│  │  │  │  │  │  ├─graph
-│  │  │  │  │  │  └─model
-│  │  │  │  ├─network_congestion
-│  │  │  │  ├─node_anomaly
-│  │  │  │  │  ├─npu_anomaly
-│  │  │  │  │  └─resource_preemption
-│  │  │  │  │      └─utils
-│  │  │  │  └─root_cluster
-│  │  │  ├─parse
-│  │  │  │  ├─blacklist
-│  │  │  │  ├─knowledge_graph
-│  │  │  │  │  ├─parser
-│  │  │  │  │  └─utils
-│  │  │  │  ├─network_congestion
-│  │  │  │  ├─node_anomaly
-│  │  │  │  └─root_cluster
-│  │  ├─sdk
-│  │  ├─utils
-│  │  │  ├─constant
-│  │  │  ├─fast_parser
-│  │  │  └─timehub
-│  │  └─wrapper
-├─test
-│  ├─custom_operation
-│  ├─dt
-│  └─st
-├─scripts
-│   ├─exp_covert
-│   │  └─exp_lib_dir
-│   └─local_diag
-└─toolkit_src
-```
 
 ## 版本说明
 
@@ -113,15 +58,15 @@ cd mind-cluster/component/ascend-faultdiag
 bash build/build.sh
 ```
 
-### [获取软件包](https://www.hiascend.com/zh/developer/download/community/result?module=dl%2Bcann)
+### [获取软件包](https://gitcode.com/Ascend/mind-cluster/releases)
 
 获取MindCluster Ascend FaultDiag软件包。
 
-### [命令行方式安装](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG010.html)
+### [命令行方式安装](../../docs/zh/faultdiag/ascend-faultdiag/04_installation_guide/01_installation.md#whl-包安装推荐)
 
 介绍如何以命令行方式安装MindCluster Ascend FaultDiag。
 
-### [使用MindCluster Ascend Deployer安装](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG011.html)
+### [使用MindCluster Ascend Deployer安装](https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/zh/05_installation_and_upgrade/02_install_softwares.md)
 
 介绍如何使用MindCluster Ascend Deployer安装MindCluster Ascend FaultDiag。
 
@@ -261,31 +206,33 @@ bash build/build.sh
 
 ## 特性介绍
 
-MindCluster组件提供资源调度功能，支持NPU集群作业调度、运维监测、故障恢复等功能。具体特性介绍如下：
+MindCluster Ascend FaultDiag 具体特性介绍如下：
 
-| 特性名称           | 介绍                                                                                                            | Released |
-|--------------------|-----------------------------------------------------------------------------------------------------------------|----------|
-| 日志清洗与转储     | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG037.html) | ✅        |
-| 故障诊断           | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG038.html) | ✅        |
-| 单机故障诊断       | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG039.html) | ✅        |
-| 超节点故障诊断     | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG126.html) | ✅        |
-| 清洗业务流日志     | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG127.html) | ✅        |
-| 根因节点清洗及诊断 | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG128.html) | ✅        |
-| 故障事件清洗及诊断 | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG129.html) | ✅        |
-| 自定义配置文件     | [链接](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG142.html) | ✅        |
+| 特性名称                  | 介绍                                                                                          |
+|---------------------------|-----------------------------------------------------------------------------------------------|
+| 日志清洗                  | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/03_log_parsing.md)                   |
+| 故障诊断                  | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/04_fault_diagnosis.md)               |
+| 单机故障诊断              | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/05_single_server_diagnosis.md)       |
+| 超节点故障诊断            | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/06_superpod_diagnosis.md)            |
+| 自定义故障实体            | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/07_custom_fault_entities.md)         |
+| 屏蔽故障日志              | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/08_fault_log_masking.md)             |
+| 自定义配置文件            | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/09_custom_configuration.md)          |
+| 业务日志清洗（SDK）       | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/10_service_flow_parsing.md)          |
+| 根因节点清洗及诊断（SDK） | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/11_root_cause_parsing_diagnosis.md)  |
+| 故障事件清洗及诊断（SDK） | [链接](../../docs/zh/faultdiag/ascend-faultdiag/05_usage/12_fault_event_parsing_diagnosis.md) |
 
 ## API参考
 
-API参考详见：[API参考](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG041.html)。
+API参考详见：[API参考](../../docs/zh/faultdiag/ascend-faultdiag/06_api/menu_api.md)。
 
 ## FAQ
 
-相关FAQ请参考：[FAQ](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG059.html)。
+相关FAQ请参考：[FAQ](../../docs/zh/faultdiag/ascend-faultdiag/07_references/02_faq.md)。
 
 ## 安全声明
 
-- 安全声明详见：[安全加固](https://www.hiascend.com/document/detail/zh/mindcluster/72rc1/faultdiag/faultdiagug/mindxdlFDUG052.html)
-- 公网地址详见：[公网地址](https://www.hiascend.com/doc_center/source/zh/mindcluster/72rc1/faultdiag/faultdiagug/resource/MindCluster%207.2.RC1%20Ascend%20FaultDiag%E5%85%AC%E7%BD%91%E5%9C%B0%E5%9D%80.xlsx)
+- 安全声明详见：[安全加固](../../docs/zh/faultdiag/ascend-faultdiag/07_references/03_security.md)
+- 公网地址详见：[公网地址](../../docs/zh/resource/MindCluster%2026.0.0%20Ascend%20FaultDiag公网地址.xlsx)
 
 ## 分支维护策略
 
