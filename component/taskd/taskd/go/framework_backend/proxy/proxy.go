@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"ascend-common/common-utils/hwlog"
 	"taskd/common/constant"
@@ -28,7 +29,9 @@ import (
 )
 
 const (
-	localHost = "127.0.0.1"
+	localHost        = "127.0.0.1"
+	retryTimeOutTime = 3 * time.Second
+	retryMaxTimes    = 10
 )
 
 type proxyClient struct {
@@ -61,9 +64,13 @@ func (p *proxyClient) initNetwork(proxyConfig *common.TaskNetConfig) error {
 	var err error
 	p.proxyInfo.proxyConfig = proxyConfig
 	p.networkInstence, err = net.InitNetwork(proxyConfig, p.proxyLogger)
-	if err == nil {
-		p.proxyLogger.Info("proxyClient InitNetwork succeed.")
-		return nil
+	for i := 0; i < retryMaxTimes; i++ {
+		p.networkInstence, err = net.InitNetwork(proxyConfig, p.proxyLogger)
+		if err == nil {
+			p.proxyLogger.Info("proxyClient InitNetwork succeed.")
+			return nil
+		}
+		time.Sleep(retryTimeOutTime)
 	}
 	p.proxyLogger.Errorf("proxyClient InitNetwork failed:%v.", err)
 	return err

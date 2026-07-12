@@ -801,6 +801,7 @@ func (ctl *EventController) normalFaultAssociateSameNodeRank() ([]*pb.FaultRank,
 	}
 	allFaultRankIds := common.GetFaultRankIdsInSameNode(faultRankIds, pod.GetPodDeviceNumByJobId(ctl.jobInfo.JobId))
 	allFaultRankIds = append(allFaultRankIds, restartRanks...)
+	allFaultRankIds = append(allFaultRankIds, ctl.getReschedulingPodFaultRanks()...)
 	removeSameRankIds := util.RemoveSliceDuplicateElement(allFaultRankIds)
 	var res []*pb.FaultRank
 	for _, rank := range removeSameRankIds {
@@ -810,6 +811,33 @@ func (ctl *EventController) normalFaultAssociateSameNodeRank() ([]*pb.FaultRank,
 		})
 	}
 	return res, removeSameRankIds
+}
+
+func (ctl *EventController) getReschedulingPodFaultRanks() []string {
+	if !ctl.isA5Job() {
+		return nil
+	}
+	var reschedulingPodFaultRanks []string
+	var faultRankIds []string
+	allPodsInTheJob := pod.GetPodByJobId(ctl.jobInfo.JobId)
+	for _, currentPod := range allPodsInTheJob {
+		podRankIndex, ok := currentPod.Annotations[constant.PodRankIndexAnno]
+		if !ok {
+			hwlog.RunLog.Warnf("pod %v has no pod rank index", currentPod.UID)
+			continue
+		}
+		prePodUID, exists := ctl.originPod[podRankIndex]
+		if exists && string(currentPod.UID) == prePodUID {
+			continue
+		}
+		hwlog.RunLog.Infof("jobId=%s, pod for rank %s has rescheduled, original UID: %s, current UID: %s",
+			ctl.jobInfo.JobId, podRankIndex, prePodUID, currentPod.UID)
+		faultRankIds = append(faultRankIds, podRankIndex)
+	}
+	reschedulingPodFaultRanks = append(reschedulingPodFaultRanks,
+		common.GetFaultRankIdsByPodRank(faultRankIds, pod.GetPodDeviceNumByJobId(ctl.jobInfo.JobId))...)
+	hwlog.RunLog.Infof("jobId=%s, get rescheduling pod fault ranks %v", ctl.jobInfo.JobId, reschedulingPodFaultRanks)
+	return reschedulingPodFaultRanks
 }
 
 func (ctl *EventController) writeConfirmFaultAndWaitPlatResultFault(faults []*pb.FaultRank) ([]*pb.FaultRank, error) {
@@ -1040,6 +1068,8 @@ func (ctl *EventController) dealWithRackScheduling() {
 	if _, ok := pgInfo.Annotations[constant.RackBlockSchedulingKey]; !ok {
 		return
 	}
+	// sleep for rack scheduling
+	time.Sleep(time.Duration(constant.RackReschedulingDelayTimeOut) * time.Second)
 	rackReschedulingRetryTimes := 0
 	for !podgroup.JudgeIsRunningByJobKey(ctl.jobInfo.JobId) {
 		if rackReschedulingRetryTimes > constant.MaxRackReschedulingRetryTimes {
