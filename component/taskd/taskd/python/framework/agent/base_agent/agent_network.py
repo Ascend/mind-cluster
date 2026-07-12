@@ -26,7 +26,7 @@ from dataclasses import asdict
 from taskd.python.utils.log import run_log
 from taskd.python.cython_api import cython_api
 from taskd.python.framework.common.type import MsgBody, MessageInfo, Position, DEFAULT_BIZTYPE
-from taskd.python.toolkit.constants.constants import SEND_RETRY_TIMES
+from taskd.python.toolkit.constants.constants import SEND_RETRY_TIMES, SEND_RETRY_TIMEOUT
 from taskd.python.toolkit.constants import constants
 
 
@@ -103,7 +103,7 @@ class AgentMessageManager():
                 break
             run_log.warning(f"agent send message failed, result: {result}")
             send_times += 1
-            time.sleep(1)
+            time.sleep(SEND_RETRY_TIMEOUT)
 
     def receive_message(self):
         """

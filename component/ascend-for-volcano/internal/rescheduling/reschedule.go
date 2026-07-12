@@ -67,7 +67,7 @@ func (reScheduler *ReScheduler) createFaultTaskHandler(job *api.JobInfo, cardNam
 		if err != nil {
 			klog.V(util.LogDebugLev).Infof("setTaskCardHealthCode task %s err %s", task.Name, util.SafePrint(err))
 		}
-		isFaultTask, healthState := reScheduler.getTaskHealthState(&faultTask, task, faultJob.SubHealthyStrategy)
+		isFaultTask, healthState := reScheduler.getTaskHealthState(faultJob, &faultTask, task, faultJob.SubHealthyStrategy)
 		klog.V(util.LogDebugLev).Infof("task %s is fault task: %v, health state: %s", task.Name, isFaultTask,
 			healthState)
 		faultTask.setIsFaultTask(isFaultTask)
@@ -982,7 +982,7 @@ func (reScheduler ReScheduler) updateJobHealthCode(fJob *FaultJob) {
 }
 
 // getTaskHealthState return true when unhealthy
-func (reScheduler ReScheduler) getTaskHealthState(fTask *FaultTask, task *api.TaskInfo,
+func (reScheduler ReScheduler) getTaskHealthState(faultJob *FaultJob, fTask *FaultTask, task *api.TaskInfo,
 	subHealthyStrategy string) (bool, string) {
 	klog.V(util.LogDebugLev).Infof("task %s getTaskHealthState", fTask.TaskName)
 
@@ -996,6 +996,10 @@ func (reScheduler ReScheduler) getTaskHealthState(fTask *FaultTask, task *api.Ta
 
 	if isFault, state := reScheduler.getTaskHealthStateByPod(task); isFault && fTask.IsFaultRetryEnable {
 		return isFault, state
+	}
+	// for a5 super pod rack scheduling
+	if _, ok := faultJob.Annotations[util.RackAnnoKey]; ok && fTask.IsSoftwareFault {
+		return true, ProcessException
 	}
 
 	if fTask.RelationFault == util.SeparateFaultStrategy {
