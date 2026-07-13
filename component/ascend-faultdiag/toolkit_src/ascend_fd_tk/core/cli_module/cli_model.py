@@ -118,11 +118,11 @@ class GuideCliModel(CliModel):
         2.2 设置BMC日志目录地址
         请使用 " {SetBmcDumpLogDirCliModel.get_key()} " 命令设置设备信息，具体配置可使用" {SetBmcDumpLogDirCliModel.get_key()} ? "查看详情
 
-        2.2 设置交换机回显文本目录地址
+        2.3 设置交换机回显文本目录地址
         请使用 " {SetSwiDumpLogDirCliModel.get_key()} " 命令设置设备信息，具体配置可使用"{SetSwiDumpLogDirCliModel.get_key()} ? "查看详情
 
         3. 默认读取路径
-        当未手动设置以上文件或目录时,工具会自动读取执行路径下的以下默认文件或目录
+        当未手动设置以上文件或目录时，工具会自动读取执行路径下的以下默认文件或目录，相关文件或目录需用户提前手动创建：
         连接配置: conn.ini
         BMC日志目录: bmc_dump_log
         Host日志目录: host_dump_log
@@ -223,7 +223,7 @@ class SetConnConfigCliModel(DetailedCliModel):
 
         [host]
         # port指定端口，不写默认为22，username指定用户名，password指定密码，private_key指定私钥文件
-        1.1.1.1 port="22" username="root" private_key="~/.shh/your_private_key"
+        1.1.1.1 port="22" username="root" private_key="~/.ssh/your_private_key"
         1.1.2.1 port="22" username="root" password="321"
 
         [bmc]
@@ -235,7 +235,7 @@ class SetConnConfigCliModel(DetailedCliModel):
 
         [config]
         # 支持设置全局的私钥文件
-        private_key="~/.shh/your_private_key"
+        private_key="~/.ssh/your_private_key"
 
         ============== 样例结束 ==============
 
@@ -285,7 +285,7 @@ class SetHostDumpLogDirCliModel(DetailedCliModel):
         设置服务器导出日志目录，支持以下几类脚本采集的日志:
         1. A3device日志一键采集脚本<version>.sh
         2. link_down_collect_<version>.sh
-        3. tool_log_collection_out_version_all_<version>.sh (以上脚本获取请联系昇腾维护，或@wang-ruiju)
+        3. tool_log_collection_out_version_all_<version>.sh
 
         通过以上方式采集的日志压缩包，统一放到一个目录中，通过此命令 " {self.get_key()} <目录> " 设置目录，工具会在 " {AutoCollectDiagCliModel.get_key()} " 命令下自动解压分析日志信息
         """
@@ -312,7 +312,7 @@ class SetBmcDumpLogDirCliModel(DetailedCliModel):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "action", nargs='?', metavar='actions', help=f"?(？)=查看{self.get_key()}详细信息；文件路径=设置MBC日志目录"
+            "action", nargs='?', metavar='actions', help=f"?(？)=查看{self.get_key()}详细信息；文件路径=设置BMC日志目录"
         )
 
     def get_detail(self) -> str:
@@ -359,7 +359,7 @@ class SetSwiDumpLogDirCliModel(DetailedCliModel):
         设置交换机命令回显/日志导出目录，支持以下方式导出的信息(当前仅支持华为交换机)
         1. 使用交换机 ' display diagnostic-information <filename> ' 命令导出命令回显结果集(推荐，信息较全)
         2. 查询关键命令后直接复制shell回显页面，导出文本文件(必须执行display current-configuration获取交换机信息，否则工具无法匹配)
-        3. 使用交换机 ' collect diagnostic-information ' 命令导出的日志zip包
+        3. 使用交换机 ' collect diagnostic information ' 命令导出的日志zip包
         将以上方式采集的文本文件统一放到一个目录中，通过此命令 " {self.get_key()} <目录> " 设置目录，工具会在 " {AutoCollectDiagCliModel.get_key()} " 命令下自动分析文本信息
         """
 
@@ -458,7 +458,7 @@ class AutoDiagCliModel(DetailedCliModel):
             return "诊断完成"
         except GenerateCsvPermissionErr as e:
             _CONSOLE_LOGGER.info(e)
-            return "生成csv失败，解除占用后，可使用 ' auto_diag ' 重新生成报告。"
+            return "生成报告失败，解除占用后，可使用 ' auto_diag ' 重新生成报告。"
 
 
 class AutoCollectDiagCliModel(CliModel):
@@ -476,7 +476,7 @@ class AutoCollectDiagCliModel(CliModel):
             return "诊断完成"
         except GenerateCsvPermissionErr as e:
             _CONSOLE_LOGGER.info(e)
-            return "生成csv失败，解除占用后，可使用 ' auto_diag ' 重新生成报告。"
+            return "生成报告失败，解除占用后，可使用 ' auto_diag ' 重新生成报告。"
 
 
 class ClearCacheCliModel(CliModel):

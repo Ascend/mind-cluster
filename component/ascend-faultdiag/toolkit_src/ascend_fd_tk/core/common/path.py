@@ -70,8 +70,6 @@ class CommonPath:
     # 报告
     REPORT_DIR = os.path.join(TOOL_HOME, "report")
 
-    REPORT_FILE = os.path.join(REPORT_DIR, "diag_report.csv")
-
     INSPECTION_ERRORS_REPORT_FILE = os.path.join(REPORT_DIR, "inspection_errors.csv")
 
     # 连接配置
@@ -85,7 +83,7 @@ class CommonPath:
 
     # 交换机
     CUR_PATH_SWITCH_DUMP_LOG_DIR = os.path.join(CUR_PATH, "switch_dump_log")
-    
+
     # 加密配置文件路径
     ENCRYPTED_CONN_CONFIG_PATH = os.path.join(TOOL_HOME, "encrypted_conn_config")
 

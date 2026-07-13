@@ -161,7 +161,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 </tbody>
 </table>
 
-**表 5**  MindCluster与TorchNPU版本兼容
+**表 5**  MindCluster与FrameworkPTAdapter版本兼容
 
 <table style="table-layout: fixed; width: 433px"><colgroup>
 <col style="width: 156px">
@@ -172,7 +172,7 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 <thead>
   <tr>
     <th rowspan="2">MindCluster</th>
-    <th colspan="3">TorchNPU版本</th>
+    <th colspan="3">FrameworkPTAdapter版本</th>
   </tr>
   <tr>
     <th>7.3.X</th>
@@ -300,7 +300,7 @@ Infer Operator组件从26.1.0之前版本升级到26.1.0及之后版本时，需
 |文档名称|内容简介|更新说明|
 |--|--|--|
 |《[MindCluster 集群调度用户指南](./scheduling/01_introduction/00_overview.md)》|提供集群调度组件说明、特性原理和使用参考，包括各组件的安装部署、集成适配示例和API参考，以及部分调度方案的原理介绍参考。|新增使用helm安装组件、开发者指南、容器快照部署及使用等，其他变更详见《[MindCluster 集群调度用户指南](./scheduling/01_introduction/00_overview.md)》。|
-|《[MindCluster 故障诊断用户指南](./faultdiag/introduction.md)》|提供日志采集、日志清洗与转储、故障诊断等功能的使用指导。|新增Ascend 950 系列产品、基于pyMotor+vLLM的故障模式等，其他变更详见《[MindCluster 故障诊断用户指南](./faultdiag/introduction.md)》。|
+|《[MindCluster 故障诊断用户指南](./faultdiag/README.md)》|提供日志采集、日志清洗与转储、故障诊断等功能的使用指导。|新增Ascend 950 系列产品、基于pyMotor+vLLM的故障模式等，其他变更详见《[MindCluster 故障诊断用户指南](./faultdiag/README.md)》。|
 
 ## 漏洞修补列表
 
