@@ -19,4 +19,4 @@
 
 ## Faults Supported by MindCluster Ascend FaultDiag<a name="ZH-CN_TOPIC_0000001724088177"></a>
 
-For the fault types diagnosed by MindCluster Ascend FaultDiag and related information, see [MindCluster Fault Types](../../zh/resource/故障诊断类型.xlsx). 
+For the fault types diagnosed by MindCluster Ascend FaultDiag and related information, see [MindCluster Fault Types](../../zh/resource/故障诊断类型.xlsx).

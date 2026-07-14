@@ -13,7 +13,7 @@ When performing diagnosis with `-s super_pod`, ensure that BMC, host, and LCNE l
 1. Create a directory for storing the SuperPoD fault diagnosis result.
 
     ```shell
-    mkdir *Directory for storing the SuperPoD fault diagnosis result*
+    mkdir ${Directory_for_storing_the_SuperPoD_fault_diagnosis_result}
     ```
 
 2. Place the SuperPoD fault diagnosis cleaning result as follows.
@@ -61,7 +61,7 @@ When performing diagnosis with `-s super_pod`, ensure that BMC, host, and LCNE l
     By default, the data of the fault event module is returned for SuperPoD fault diagnosis.
 
     ```shell
-    ascend-fd diag -i *Diagnosis_input_directory* -o *Diagnosis_result_output_directory* -s super_pod
+    ascend-fd diag -i ${Diagnosis_input_directory} -o ${Diagnosis_result_output_directory} -s super_pod
     ```
 
     Command output:
@@ -117,7 +117,7 @@ When performing diagnosis with `-s super_pod`, ensure that BMC, host, and LCNE l
 >[!NOTE]
 >
 >- For more details about the example provided in this section, refer to [SuperPoD Log Cleaning and Diagnosis Script](https://gitcode.com/Ascend/mindxdl-deploy/tree/master/super_pod_diag) to decompress, clean, and diagnose superPoD logs in batches.
->- When the log level is low, key logs may be refreshed and cannot be diagnosed. The involved environment variables include `ASCEND_GLOBAL_EVENT_ENABLE`, `HCCL_ENTRY_LOG_ENABLE`, `ASCEND_GLOBAL_LOG_LEVEL`, and `ASCEND_MODULE_LOG_LEVEL`. For more information, see [Environment Variable List](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/envvar/envref_07_0001.html) in the *CANN Environment Variable Reference*.
+>- When the log level is low, key logs may be refreshed and cannot be diagnosed. The involved environment variables include `ASCEND_GLOBAL_EVENT_ENABLE`, `HCCL_ENTRY_LOG_ENABLE`, `ASCEND_GLOBAL_LOG_LEVEL`, and `ASCEND_MODULE_LOG_LEVEL`. For more information, see [Environment Variable List](https://www.hiascend.com/document/detail/zh/canncommercial/850/maintenref/envvar/envref_07_0001.html) in the *CANN Environment Variable Reference*.
 
 ## Manually Configured SuperPoD Topology<a name="section117571749184019"></a>
 
@@ -180,7 +180,7 @@ ascend-fd parse --host_log parse_input/host/xxx.xx.xx.128/host_log/   --mindie_l
     By default, the data of the fault event module is returned for SuperPoD fault diagnosis.
 
     ```shell
-    ascend-fd diag -i *Diagnosis_input_directory* -o *Diagnosis_result_output_directory*
+    ascend-fd diag -i ${Diagnosis_input_directory} -o ${Diagnosis_result_output_directory}
     ```
 
     Command output:
@@ -285,7 +285,7 @@ If the host logs are missing, store the BMC and LCNE cleaning results in the sam
 1. Create a directory for storing the SuperPoD fault diagnosis result.
 
     ```shell
-    mkdir *Directory for storing the SuperPoD fault diagnosis result*
+    mkdir ${Directory_for_storing_the_SuperPoD_fault_diagnosis_result}
     ```
 
 2. Place the SuperPoD fault diagnosis cleaning result as follows.
@@ -319,7 +319,7 @@ If the host logs are missing, store the BMC and LCNE cleaning results in the sam
     By default, the data of the fault event module is returned for SuperPoD fault diagnosis.
 
     ```shell
-    ascend-fd diag -i *Diagnosis input directory*/lcne -o *Diagnosis result output directory*
+    ascend-fd diag -i ${Diagnosis_input_directory}/lcne -o ${Diagnosis_result_output_directory}
     ```
 
     Command output:

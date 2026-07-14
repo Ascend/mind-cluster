@@ -28,6 +28,6 @@ ascend-fd diag -i 诊断输入目录 -o 诊断结果输出目录
 
 ```ColdFusion
 The diag job starts. Please wait. Job id: [****], run log file is [****].
-诊断内容
+...
 The diag job is complete.
 ```

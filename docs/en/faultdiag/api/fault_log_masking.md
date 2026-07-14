@@ -3,7 +3,7 @@
 ## Prototype<a name="zh-cn_topic_0000001511538701_section124882040143613"></a>
 
 ```shell
-ascend-fd blacklist Subcommand
+ascend-fd blacklist <Subcommand>
 ```
 
 ## Function<a name="zh-cn_topic_0000001511538701_section12230185113815"></a>
@@ -12,7 +12,7 @@ Adds a masking rule containing fault keywords, so that information containing fa
 
 >[!NOTE]
 >
->- Currently, only ERROR logs of CANN App logs are can be masked.
+>- Currently, only ERROR logs of CANN App logs can be masked.
 >- If you need to customize the save path of the fault keyword masking file, see [Customizing the MindCluster Ascend FaultDiag Home Directory](../common_operations.md#customizing-the-mindcluster-ascend-faultdiag-home-directory).
 
 ## Parameters<a name="zh-cn_topic_0000001511538701_section122149111390"></a>
@@ -25,7 +25,7 @@ Adds a masking rule containing fault keywords, so that information containing fa
 |`--file`|`-f`|Required. The `--add`, `--file`, `--delete`, and `--show` parameters are mutually exclusive, meaning only one can and must be specified.|String|Imports a masking rule using a JSON file. The imported JSON file overwrites the content of the original JSON file in the system.|
 |`--delete`|`-d`|Required. The `--add`, `--file`, `--delete`, and `--show` parameters are mutually exclusive, meaning only one can and must be specified.|Int|Deletes masking rules. Multiple rules can be deleted simultaneously by separating them with spaces.|
 |`--show`|`-s`|Required. The `--add`, `--file`, `--delete`, and `--show` parameters are mutually exclusive, meaning only one can and must be specified.|String|Displays the currently existing masking rules.|
-|`--force`|None|Optional|Bool|When this parameter is specified for deleting rules or replacing files, no confirmation prompt will appear on the interface.<p>Must be used together with -`-delete` or `--file`.</p>|
+|`--force`|None|Optional|Bool|When this parameter is specified for deleting rules or replacing files, no confirmation prompt will appear on the interface.<p>Must be used together with `--delete` or `--file`.</p>|
 |`--help`|`-h`|Optional|-|Queries the usage instructions.|
 
 ## Returns<a name="zh-cn_topic_0000001511538701_section1714345618323"></a>
