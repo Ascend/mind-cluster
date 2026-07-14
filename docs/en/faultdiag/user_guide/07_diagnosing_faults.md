@@ -3,7 +3,7 @@
 1. Create a diagnosis result output directory.
 
     ```shell
-    mkdir *Diagnosis result output directory*
+    mkdir ${Diagnosis_result_output_directory}
     ```
 
 2. Start diagnosis.
@@ -11,7 +11,7 @@
     - If the `--performance(-p)` parameter is not specified, the program cleans only the data of the root cause node and fault event modules by default.
 
         ```shell
-        ascend-fd diag -i *Diagnosis input directory* -o *Diagnosis result output directory*
+        ascend-fd diag -i ${Diagnosis_input_directory} -o ${Diagnosis_result_output_directory}
         ```
 
         The following information is displayed when a training job exits abnormally during diagnosis:
@@ -125,7 +125,7 @@
     - If the `--performance (-p)` parameter is specified, all modules are diagnosed.
 
         ```shell
-        ascend-fd diag -i *Diagnosis input directory* -o *Diagnosis result output directory* --performance
+        ascend-fd diag -i ${Diagnosis_input_directory} -o ${Diagnosis_result_output_directory} --performance
         ```
 
         The following is a command output example of diagnosing performance issues during training:
@@ -230,4 +230,4 @@
     >- If an error occurs during fault diagnosis, the `description` (or analysis failure) field in the fault event analysis command output will display the failure information. To view all exception information, check the `diag_report.json` file.
     >- If the `--performance(-p)` parameter is not specified when the diagnosis command is executed, only the root cause node analysis and fault event analysis modules are executed. The corresponding JSON file contains only the results of the two modules.
     >- Currently, fault diagnosis is not supported for multi-instance inference clusters that have undergone recovery (with/without redundant resources). Due to this recovery feature, MindIE pods are restarted and instance information is updated. The logs of MindIE components generated before and after the restart are stored in the same directory, preventing components from correctly separating instances and logs.
-    >- When the log level is low, key logs may be refreshed and cannot be diagnosed. The involved environment variables include `ASCEND_GLOBAL_EVENT_ENABLE`, `HCCL_ENTRY_LOG_ENABLE`, `ASCEND_GLOBAL_LOG_LEVEL`, and `ASCEND_MODULE_LOG_LEVEL`. For more information, see [Environment Variable List](<https://www.hiascend.com/document/detail/en/canncommercial/900/maintenref/envvar/envref_07_0001.html>) in the *CANN Environment Variable Reference*.
+    >- When the log level is low, key logs may be refreshed and cannot be diagnosed. The involved environment variables include `ASCEND_GLOBAL_EVENT_ENABLE`, `HCCL_ENTRY_LOG_ENABLE`, `ASCEND_GLOBAL_LOG_LEVEL`, and `ASCEND_MODULE_LOG_LEVEL`. For more information, see [Environment Variable List](<https://www.hiascend.com/document/detail/en/canncommercial/850/maintenref/envvar/envref_07_0001.html>) in the *CANN Environment Variable Reference*.

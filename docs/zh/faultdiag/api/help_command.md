@@ -29,10 +29,10 @@ ascend-fd --help
 返回参数与使用说明。
 
 ```ColdFusion
-usage: ascend-fd [-h] {version,parse,diag,blacklist,entity,single-diag} ...
+usage: ascend-fd [-h] {version,parse,diag,blacklist,config,entity,single-diag} ...
 Ascend Fault Diag
 positional arguments:
-  {version,parse,diag,blacklist,entity,single-diag}
+  {version,parse,diag,blacklist,config,entity,single-diag}
     version             show ascend-fd version
     parse               parse origin log files
     diag                diag parsed log files

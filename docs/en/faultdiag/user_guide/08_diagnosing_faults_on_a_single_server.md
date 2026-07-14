@@ -3,7 +3,7 @@
 1. Create a directory for storing the single-server diagnosis result.
 
     ```shell
-    mkdir *Directory for storing the single-server diagnosis result*
+    mkdir ${Directory_for_storing_the_single-server_diagnosis_result}
     ```
 
 2. Start diagnosis.
@@ -11,7 +11,7 @@
     By default, the data of the fault event module is returned for single-server diagnosis.
 
     ```shell
-    ascend-fd single-diag -i Collection directory -o Directory for storing the single-server diagnosis result
+    ascend-fd single-diag -i ${Collection_directory} -o ${Directory_for_storing_the_single-server_diagnosis_result}
     ```
 
     The following information is displayed when a training job exits abnormally during diagnosis:

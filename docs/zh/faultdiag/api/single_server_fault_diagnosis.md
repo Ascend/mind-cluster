@@ -49,6 +49,6 @@
 
 ```ColdFusion
 The single-diag job starts. Please wait. Job id: [****], run log file is [****].
-诊断内容
+...
 The single-diag job is complete.
 ```

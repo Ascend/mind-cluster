@@ -17,8 +17,6 @@
 
 **下载软件包<a name="zh-cn_topic_0000001511594161_section4499122813189"></a>**
 
-请参考本章获取所需软件包和对应的数字签名文件，下载本软件即表示您同意[华为企业业务最终用户许可协议（EULA）](https://e.huawei.com/cn/about/eula)的条款和条件。
-
 **表 1**  软件下载
 
 <a name="table24961081552"></a>
@@ -32,43 +30,46 @@
 </th>
 </tr>
 </thead>
-<tbody><tr id="row19497118450"><td class="cellrowborder" rowspan="3" valign="top" width="22.32%" headers="mcps1.2.5.1.1 "><p id="p19497688516"><a name="p19497688516"></a><a name="p19497688516"></a>Ascend-mindxdl-faultdiag_<em id="i194971681054"><a name="i194971681054"></a><a name="i194971681054"></a>{version}</em>_linux-<em id="i132516204280"><a name="i132516204280"></a><a name="i132516204280"></a>{arch}</em>.zip</p>
+<tbody><tr id="row19497118450"><td class="cellrowborder" rowspan="2" valign="top" width="22.32%" headers="mcps1.2.5.1.1 "><p id="p19497688516"><a name="p19497688516"></a><a name="p19497688516"></a>Ascend-mindxdl-faultdiag_<em id="i194971681054"><a name="i194971681054"></a><a name="i194971681054"></a>{version}</em>_linux-<em id="i132516204280"><a name="i132516204280"></a><a name="i132516204280"></a>{arch}</em>.zip</p>
 </td>
 <td class="cellrowborder" valign="top" width="47.8%" headers="mcps1.2.5.1.2 "><p id="p2417175492214"><a name="p2417175492214"></a><a name="p2417175492214"></a>ascend_faultdiag-<em id="i24971581355"><a name="i24971581355"></a><a name="i24971581355"></a>{version}</em>-py3-none-linux_<em id="i11344642192415"><a name="i11344642192415"></a><a name="i11344642192415"></a>{</em><em id="i9272113613244"><a name="i9272113613244"></a><a name="i9272113613244"></a>arch</em><em id="i12344184215241"><a name="i12344184215241"></a><a name="i12344184215241"></a>}</em>.whl</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.77%" headers="mcps1.2.5.1.3 "><p id="p9497981514"><a name="p9497981514"></a><a name="p9497981514"></a>智能故障诊断组件安装包。</p>
 <p id="p203401758145516"><a name="p203401758145516"></a><a name="p203401758145516"></a>适用于<span id="ph42741425610"><a name="ph42741425610"></a><a name="ph42741425610"></a>Python</span>3.7及以上版本。</p>
 </td>
-<td class="cellrowborder" rowspan="3" valign="top" width="8.110000000000001%" headers="mcps1.2.5.1.4 "><p id="p11497481255"><a name="p11497481255"></a><a name="p11497481255"></a><a href="https://www.hiascend.com/zh/developer/download/community/result?module=dl+cann" target="_blank" rel="noopener noreferrer">获取链接</a></p>
+<td class="cellrowborder" rowspan="2" valign="top" width="8.110000000000001%" headers="mcps1.2.5.1.4 "><p id="p11497481255"><a name="p11497481255"></a><a name="p11497481255"></a><a href="https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0" target="_blank" rel="noopener noreferrer">获取链接</a></p>
 </td>
 </tr>
-<tr id="row84971381059"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p204971087511"><a name="p204971087511"></a><a name="p204971087511"></a>ascend_faultdiag-<em id="i114971580510"><a name="i114971580510"></a><a name="i114971580510"></a>{version}</em>-py3-none-linux_<em id="i04108535249"><a name="i04108535249"></a><a name="i04108535249"></a>{</em><em id="i13410185372418"><a name="i13410185372418"></a><a name="i13410185372418"></a>arch</em><em id="i24101353102415"><a name="i24101353102415"></a><a name="i24101353102415"></a>}</em>.whl.cms</p>
+<tr id="row84971381059"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p204971087511"><a name="p204971087511"></a><a name="p204971087511"></a>ascend_faultdiag_toolkit-<em id="i114971580510"><a name="i114971580510"></a><a name="i114971580510"></a>{version}</em>-py3-none-any.whl</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p13425727595"><a name="p13425727595"></a><a name="p13425727595"></a>CMS证书校验文件。</p>
-</td>
-</tr>
-<tr id="row13497081357"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p449720811520"><a name="p449720811520"></a><a name="p449720811520"></a>crldata.crl</p>
-</td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p94971986516"><a name="p94971986516"></a><a name="p94971986516"></a>CRL证书吊销列表文件。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p13425727595"><a name="p13425727595"></a><a name="p13425727595"></a>链路诊断工具（Ascend-faultdiag-toolkit）安装包。</p><p>适用于Python3.8及以上版本。</p>
 </td>
 </tr>
 </tbody>
 </table>
 
->[!NOTE] 
-><i>\{version\}</i>为软件包的版本号，请用户根据实际情况需要获取对应的软件包。
-
-**软件数字签名验证<a name="zh-cn_topic_0000001511594161_section199643813528"></a>**
-
-为了防止软件包在传递过程中或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
-
-在软件包下载之后，请参考《[OpenPGP签名验证指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100209376)》，对从Support网站下载的软件包进行PGP数字签名校验。如果校验失败，请不要使用该软件包，先联系华为技术支持工程师解决。
-
-使用软件包安装/升级之前，也需要按上述过程先验证软件包的数字签名，确保软件包未被篡改。
-
-运营商客户请访问：[https://support.huawei.com/carrier/digitalSignatureAction](https://support.huawei.com/carrier/digitalSignatureAction)
-
-企业客户请访问：[https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054)
+>[!NOTE]
+>
+>- <i>\{version\}</i>为软件包的版本号，请用户根据实际情况需要获取对应的软件包。
+>- <i>\{arch}</i>为软件包架构，分为x86_64和aarch64，请根据实际需要修改，可通过arch命令查看。
+>- 为了防止软件包在传递过程中或存储期间被恶意篡改，建议校验软件包的SUM值，操作步骤如下。
+>
+>   1. 下载与工具软件包对应版本的[MindCluster_sha256sum.zip](https://gitcode.com/Ascend/mind-cluster/releases/v26.0.0)。
+>
+>   2. 将 `MindCluster_sha256sum.zip` 和 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip` 放置到同一目录，执行以下命令进行校验。
+>
+>      ```bash
+>      unzip MindCluster_sha256sum.zip
+>      sha256sum -c Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip.sha256sum
+>      ```
+>
+>   3. 验证校验结果。
+>
+>      显示如下信息，表示软件包校验通过。
+>
+>      ```bash
+>      Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip: OK
+>      ```
 
 ### 命令行方式安装<a name="ZH-CN_TOPIC_0000001541629190"></a>
 
