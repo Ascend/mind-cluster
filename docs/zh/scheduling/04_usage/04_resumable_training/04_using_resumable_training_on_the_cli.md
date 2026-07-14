@@ -75,7 +75,7 @@
 2. 在K8s管理节点执行以下命令，启动Ascend Device Plugin。
 
     ```shell
-   # {version}请替换为实际版本号，如：26.0.0
+   # {version}请替换为实际版本号，如：26.1.0
     kubectl apply -f device-plugin-volcano-v{version}.yaml
     ```
 
@@ -86,7 +86,7 @@
 1. 进入组件解压目录，执行以下命令，打开NodeD组件的启动YAML文件。
 
     ```shell
-   # {version}请替换为实际版本号，如：26.0.0
+   # {version}请替换为实际版本号，如：26.1.0
     vi noded-v{version}.yaml
     ```
 

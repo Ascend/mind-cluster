@@ -1,6 +1,53 @@
 # 挂载vNPU（静态虚拟化）<a name="ZH-CN_TOPIC_0000002479386388"></a>
 
-## 使用vNPU说明<a name="ZH-CN_TOPIC_0000002511426303"></a>
+## 方式一：基于原生Docker挂载vNPU
+
+原生Docker场景下（未部署MindCluster集群调度组件），需要使用npu-smi工具创建vNPU后，将vNPU挂载到容器。具体操作请参见《Atlas 中心训练服务器 NPU驱动和固件安装指南》的“昇腾虚拟化实例（AVI）容器场景下的安装与卸载>[多容器场景下安装](https://support.huawei.com/enterprise/zh/doc/EDOC1100568429/5b32515a)”章节，该章节指导用户安装Docker和将vNPU挂载进容器。
+
+## 方式二：Ascend Docker Runtime挂载vNPU
+
+单独结合Ascend Docker Runtime（容器引擎插件）使用，将vNPU挂载到容器。
+
+### 前提条件
+
+需要先安装容器引擎插件Ascend Docker Runtime，方法可参见[安装Ascend Docker Runtime](../../../../05_developer_guide/00_installation_deployment/00_manual_installation/02_ascend_docker_runtime.md)。
+
+### 使用方法
+
+用户已通过npu-smi工具创建vNPU，在拉起容器时执行以下命令将vNPU挂载至容器中。以下命令表示用户在拉起容器时，挂载虚拟芯片ID为100的芯片。
+
+```shell
+docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {image-name:tag} /bin/bash
+```
+
+>[!NOTE]
+>
+>- 可用的芯片ID可通过如下方式查询确认：
+>   - 物理芯片ID：
+>
+>      ```shell
+>      ls /dev/davinci*
+>      ```
+>
+>   - 虚拟芯片ID：
+>
+>     ```shell
+>     ls /dev/vdavinci*
+>     ```
+>
+>- image-name:tag：镜像名称与标签，请根据实际情况修改。
+>- 用户在使用过程中，请勿重复定义和在容器镜像中固定ASCEND_VISIBLE_DEVICES和ASCEND_RUNTIME_OPTIONS环境变量。
+
+**表 1**  参数解释
+
+|参数|说明|举例|
+|--|--|--|
+|ASCEND_VISIBLE_DEVICES|必须使用ASCEND_VISIBLE_DEVICES环境变量指定被挂载至容器中的NPU设备，否则挂载NPU设备失败；使用NPU设备序号指定设备，支持单个和范围指定且支持混用；使用芯片名称指定设备时，支持同时指定多个同类型的芯片名称。|<ul><li>ASCEND_VISIBLE_DEVICES=100表示将100号vNPU挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=101,103表示将101、103号vNPU挂载入容器中。</li><li>ASCEND_VISIBLE_DEVICES=100-102表示将100号至102号vNPU（包含100号和102号）挂载入容器中，效果同ASCEND_VISIBLE_DEVICES=100,101,102。</li><li>ASCEND_VISIBLE_DEVICES=100-102,104表示将100号至102号以及104号vNPU挂载入容器，效果同ASCEND_VISIBLE_DEVICES=100,101,102,104。</li><li>ASCEND_VISIBLE_DEVICES=XXX-Y，其中XXX表示NPU设备，支持的取值为npu、Ascend910、Ascend310、Ascend310B和Ascend310P；Y表示物理NPU设备ID。<ul><li>ASCEND_VISIBLE_DEVICES=npu-101，表示把101号vNPU挂载进容器。</li><li>ASCEND_VISIBLE_DEVICES=npu-101,npu-103，表示把101号NPU和103号vNPU挂载进容器。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>使用芯片名称指定设备时，建议统一取值npu。</li><li>不支持在一个参数里既指定设备序号又指定NPU名称，即不支持ASCEND_VISIBLE_DEVICES=101，npu-103。</li><li>必须搭配ASCEND_RUNTIME_OPTIONS，取值必须包含VIRTUAL，表示挂载的是vNPU。</li></ul></div></div></li></ul>|
+|ASCEND_RUNTIME_OPTIONS|<p>对参数ASCEND_VISIBLE_DEVICES中指定的芯片ID作出限制：</p><ul><li>NODRV：表示不挂载驱动相关目录。</li><li>VIRTUAL：表示挂载的是虚拟芯片。</li><li>NODRV,VIRTUAL：表示挂载的是虚拟芯片，并且不挂载驱动相关目录。</li></ul>|<ul><li>ASCEND_RUNTIME_OPTIONS=NODRV</li><li>ASCEND_RUNTIME_OPTIONS=VIRTUAL</li><li>ASCEND_RUNTIME_OPTIONS=NODRV,VIRTUAL</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>静态虚拟化场景下，ASCEND_RUNTIME_OPTIONS为必选参数，且取值必须包含VIRTUAL。</li></ul></div></div>|
+
+## 方式三：Kubernetes挂载vNPU
+
+### 使用说明<a name="ZH-CN_TOPIC_0000002511426303"></a>
 
 在Kubernetes场景，当用户需要使用vNPU资源时，需要通过结合集群调度组件Ascend Device Plugin的使用，使Kubernetes可以管理昇腾处理器资源。静态虚拟化场景使用时，不能与动态虚拟化混合使用。昇腾虚拟化实例特性需要的集群调度组件如下表所示，支持的产品型号情况请参见[特性说明](../01_description.md)中的“表1 产品支持情况说明”。
 
@@ -39,9 +86,7 @@
 >- Ascend Operator：当使用训练系列产品时才需要选择该组件；使用推理系列产品时可不选择。
 >- ClusterD：当使用Volcano时才需要选择该组件，详细请参见[安装Volcano](../../../../05_developer_guide/00_installation_deployment/00_manual_installation/05_volcano.md#安装volcano)。
 
-## 静态虚拟化<a name="ZH-CN_TOPIC_0000002479226392"></a>
-
-**使用限制<a name="section785220396317"></a>**
+### 使用限制<a name="ZH-CN_TOPIC_0000002479226392"></a>
 
 - 任务运行过程中，不支持卸载Volcano。
 - 目前任务的每个Pod请求的NPU设备数量规则如下：
@@ -252,7 +297,7 @@
 </tbody>
 </table>
 
-**前提条件<a name="section18128140645"></a>**
+### 前提条件
 
 1. 需要先获取"Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run"，安装容器引擎插件。
 2. 参见[安装部署](../../../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节，完成各组件的安装。
@@ -305,7 +350,7 @@
               - name: priority
               - name: gang
               - name: conformance
-              - name: volcano-npu-v26.0.0_linux-aarch64    # 其中26.0.0为MindCluster的版本号，根据不同版本，该处取值不同
+              - name: volcano-npu-v26.1.0_linux-aarch64    # 其中26.1.0为MindCluster的版本号，根据不同版本，该处取值不同
             - plugins:
               - name: drf
               - name: predicates
@@ -319,7 +364,7 @@
         ...
         ```
 
-**使用方法<a name="section514441719341"></a>**
+### 使用方法
 
 - 创建训练任务时，需要在创建YAML文件时，修改如下配置。以Atlas 训练系列产品使用为例。
 
