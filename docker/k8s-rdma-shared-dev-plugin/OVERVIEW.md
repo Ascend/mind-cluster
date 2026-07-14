@@ -7,7 +7,7 @@
 - K8s RDMA Shared Device Plugin is maintained by [MindCluster Code Repository](https://gitcode.com/Ascend/mind-cluster)
 - Where to get help
     - [MindCluster Code Repository](https://gitcode.com/Ascend/mind-cluster)
-    - [MindCluster Ascend Community](https://www.hiascend.com/document/detail/zh/mindcluster/2600/clustersched/dlug/docs/zh/scheduling/introduction.md)
+  - [MindCluster Atlas Community](https://www.hiascend.com/document/detail/zh/mindcluster/2600/clustersched/dlug/docs/zh/scheduling/introduction.md)
     - [Issue Tracker](https://gitcode.com/Ascend/mind-cluster/issues)
 
 ---
@@ -48,17 +48,17 @@ Tags follow this format:
 <version>-<os>
 ```
 
-| Field | Example | Description |
-| -- | -- | -- |
-| `version` | `v26.1.0` | K8s RDMA Shared Device Plugin component version |
-| `os` | `ubuntu22.04` | Image operating system |
+| Field     | Example       | Description                                                         |
+|-----------|---------------|---------------------------------------------------------------------|
+| `version` | `v26.1.0`     | Version Number of K8s RDMA Shared Device Plugin Component           |
+| `os`      | `ubuntu22.04` | Operating System for K8s RDMA Shared Device Plugin Component Images |
 
 ### K8s RDMA Shared Device Plugin 26.1.0
 
-| Tag | Dockerfile | Image Content |
-| --- | ----------- | -------- |
-| `v26.1.0-ubuntu22.04` | [Dockerfile.ubuntu](v26.1.0/Dockerfile.ubuntu) | K8s RDMA Shared Device Plugin v26.1.0 image for Ubuntu 22.04 |
-| `v26.1.0-openeuler24.03` | [Dockerfile.openeuler](v26.1.0/Dockerfile.openeuler) | K8s RDMA Shared Device Plugin v26.1.0 image for openEuler 24.03 |
+| Tag                      | Dockerfile                                                                                                                                 | Image Content                                                       |
+|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| `v26.1.0-ubuntu22.04`    | [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/k8s-rdma-shared-dev-plugin/v26.1.0/Dockerfile.ubuntu)       | K8s RDMA Shared Device Plugin v26.1.0 (Base Image: Ubuntu 22.04)    |
+| `v26.1.0-openeuler24.03` | [Dockerfile.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/k8s-rdma-shared-dev-plugin/v26.1.0/Dockerfile.openeuler) | K8s RDMA Shared Device Plugin v26.1.0 (Base Image: openEuler 24.03) |
 
 ---
 
@@ -80,11 +80,34 @@ Tags follow this format:
 | CPU | 0.1 cores |
 | Memory | 0.1 GB |
 
-### How to Build Locally
+### Build Locally (Optional)
 
-```bash
-docker build --no-cache -t k8s-rdma-shared-dev-plugin:{tag} ./ -f Dockerfile.{os}
-```
+Example: build an K8s RDMA Shared Device Plugin image of architecture linux-aarch64, version v26.1.0, based on Ubuntu
+22.04.
+
+1. Obtain the target Dockerfile
+
+   Navigate to the chapter [Supported Tags and Dockerfile Links](#Supported-Tags-and-Dockerfile-Links), open the
+   Dockerfile.ubuntu link corresponding to your target version, and save the file to a local directory on your aarch64
+   environment.
+
+2. Build the Docker image locally (disable cache to ensure a clean build)
+
+   ```bash
+   docker build --no-cache -t k8s-rdma-shared-dev-plugin:v26.1.0 ./ -f Dockerfile.ubuntu
+   ```
+
+> **Important Notes**
+> If your Docker version is earlier than 18.09 or BuildKit is not manually enabled, the TARGETPLATFORM variable cannot
+> be read during image building, which will cause the image build to fail.
+> 1. TARGETPLATFORM is a built-in global variable of Docker BuildKit for identifying the target build platform, e.g.
+     linux/amd64, linux/arm64.
+> 2. This variable is automatically injected only after BuildKit is enabled. It cannot be used in legacy Docker
+     environments or environments where BuildKit is disabled by default.
+> 3. Run the following command before building to enable BuildKit temporarily:
+> ```bash
+> export DOCKER_BUILDKIT=1
+> ```
 
 ### Deploy K8s RDMA Shared Device Plugin
 

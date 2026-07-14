@@ -39,7 +39,27 @@ MindCluster 提供 Ascend Operator 组件，输入集合通信所需的主进程
 
 ### Tag 规范
 
-Tag 遵循以下格式：
+自v26.1.0版本开始 Tag 遵循以下格式：
+
+```text
+<版本>-<操作系统>
+```
+
+| 字段     | 示例值           | 说明                     |
+|--------|---------------|------------------------|
+| `版本`   | `v26.1.0`     | Ascend Operator 版本号    |
+| `操作系统` | `ubuntu22.04` | Ascend Operator 镜像操作系统 |
+
+### Ascend Operator 26.1.0
+
+| Tag                      | Dockerfile                                                                                                                      | 镜像内容                                           |
+|--------------------------|---------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------|
+| `v26.1.0-ubuntu22.04`    | [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-operator/v26.1.0/Dockerfile.ubuntu)       | Ascend Operator v26.1.0 (基础镜像 Ubuntu 22.04)    |
+| `v26.1.0-openeuler24.03` | [Dockerfile.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/ascend-operator/v26.1.0/Dockerfile.openeuler) | Ascend Operator v26.1.0 (基础镜像 openEuler 24.03) |
+
+---
+
+v26.0.0及以前版本的 Tag 遵循以下格式：
 
 ```text
 <版本>
@@ -51,9 +71,9 @@ Tag 遵循以下格式：
 
 ### Ascend Operator 26.0.0
 
-| Tag | Dockerfile | 镜像内容 |
-|-----|------------|----------|
-| `v26.0.0` | [Dockerfile](https://gitcode.com/Ascend/mind-cluster/blob/v26.0.0/component/ascend-operator/build/Dockerfile) | Ascend Operator v26.0.0 (Ubuntu 22.04) |
+| Tag       | Dockerfile                                                                                                    | 镜像内容                                        |
+|-----------|---------------------------------------------------------------------------------------------------------------|---------------------------------------------|
+| `v26.0.0` | [Dockerfile](https://gitcode.com/Ascend/mind-cluster/blob/v26.0.0/component/ascend-operator/build/Dockerfile) | Ascend Operator v26.0.0 (基础镜像 Ubuntu 22.04) |
 
 ---
 
@@ -77,7 +97,33 @@ Tag 遵循以下格式：
 
 ### 如何本地构建
 
-以下以 linux-aarch64 架构、v26.0.0 版本为例，提供完整的本地镜像构建步骤:
+#### v26.1.0 及更高版本本地镜像构建流程
+
+示例场景：构建 linux-aarch64 架构、v26.1.0 版本、基于 Ubuntu 22.04 的 Ascend Operator 组件镜像。
+
+1. 获取对应架构的 Dockerfile
+
+   前往[支持的 Tags 及 Dockerfile 链接](#支持的-Tags-及-Dockerfile-链接)章节，打开目标版本对应的 Dockerfile.ubuntu
+   链接，保存文件至 aarch64 架构环境的本地目录。
+
+2. 本地构建 Docker 镜像（禁用缓存，保证构建纯净度）
+
+   ```bash
+   docker build --no-cache -t ascend-operator:v26.1.0 ./ -f Dockerfile.ubuntu
+   ```
+
+> **重要注意事项**
+> 若 Docker 版本低于 18.09，或未手动开启 BuildKit，构建镜像时将无法读取 TARGETPLATFORM 变量，会造成镜像构建失败。
+> 1. TARGETPLATFORM 为 Docker BuildKit 内置全局变量，用于识别当前构建目标平台，示例：linux/amd64、linux/arm64。
+> 2. 该变量仅在 BuildKit 启用后自动注入；老旧 Docker 环境、默认关闭 BuildKit 的环境无法使用此参数。
+> 3. 构建前可执行以下命令临时开启 BuildKit：
+> ```bash
+> export DOCKER_BUILDKIT=1
+> ```
+
+#### v26.0.0 及更早版本本地镜像构建流程
+
+示例场景：构建 linux-aarch64 架构、v26.0.0 版本、基于 Ubuntu 22.04 的 Ascend Operator 组件镜像。
 
 1. 下载官方发布的组件安装包
 
