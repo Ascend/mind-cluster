@@ -1,0 +1,12 @@
+# Virtual Instance Feature Guide
+
+- [HDK-Based Virtual Instances](./virtual_instance_with_hdk/menu_virtual_instance_with_hdk.md)
+  - [Feature Description](./virtual_instance_with_hdk/01_description.md)
+  - [Application Scenarios and Solutions](./virtual_instance_with_hdk/02_application_scenarios_solutions.md)
+  - [Virtualization Templates](./virtual_instance_with_hdk/03_virtualization_templates.md)
+  - [Creating vNPUs](./virtual_instance_with_hdk/04_creating_vnpu.md)
+  - [Destroying a vNPU](./virtual_instance_with_hdk/05_destroying_vnpu.md)
+  - [Mounting vNPUs](./virtual_instance_with_hdk/06_mounting_vnpu.md)
+- [vCANN-RT-based Virtual Instance](./virtual_instance_with_vcann_rt/menu_virtual_instance_with_vcann_rt.md)
+  - [Feature Description](./virtual_instance_with_vcann_rt/00_description.md)
+  - [Soft Partitioning-based Scheduling (Inference)](./virtual_instance_with_vcann_rt/01_soft_allocation_virtualization.md)
