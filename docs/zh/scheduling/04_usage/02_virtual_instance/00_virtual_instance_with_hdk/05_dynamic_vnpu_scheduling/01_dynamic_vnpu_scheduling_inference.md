@@ -1,8 +1,48 @@
-# 动态vNPU调度（推理）<a name="ZH-CN_TOPIC_0000002511427045"></a>
+# 动态vNPU调度<a name="ZH-CN_TOPIC_0000002511427045"></a>
 
-## 使用前必读<a name="ZH-CN_TOPIC_0000002511347087"></a>
+## 方式一：Ascend Docker Runtime挂载vNPU
 
-### 前提条件<a name="section121807404519"></a>
+单独结合Ascend Docker Runtime（容器引擎插件）使用，将vNPU挂载到容器。
+
+**使用前提**
+
+需要先安装容器引擎插件Ascend Docker Runtime，方法可参见[安装Ascend Docker Runtime](../../../../05_developer_guide/00_installation_deployment/00_manual_installation/02_ascend_docker_runtime.md)。
+
+**Ascend Docker Runtime使用vNPU方法**
+
+用户在拉起容器时，执行以下命令虚拟化资源，以下命令表示从物理芯片ID为0的芯片上，切分出4个AICore作为vNPU并挂载至容器。以此方式拉起的容器，在结束容器进程时，虚拟设备会自动销毁。
+
+```shell
+docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {image-name:tag} /bin/bash
+```
+
+>[!NOTE]
+>
+>- 使用动态虚拟化时，需要关闭vNPU的恢复功能，该功能的详细说明和操作指导请参考《Atlas 中心推理卡 npu-smi 命令参考》中的“昇腾虚拟化实例（AVI）相关命令\>[设置vNPU的配置恢复使能状态](https://support.huawei.com/enterprise/zh/doc/EDOC1100568418/d1e009e6)”章节。
+>- 可用的芯片ID可通过如下方式查询确认：
+>   - 物理芯片ID：
+>
+>      ```shell
+>      ls /dev/davinci*
+>      ```
+>
+>- image-name:tag：镜像名称与标签，请根据实际情况修改。
+>- 用户在使用过程中，请勿重复定义和在容器镜像中固定ASCEND_VISIBLE_DEVICES、ASCEND_RUNTIME_OPTIONS和ASCEND_VNPU_SPECS环境变量。
+>- 使用动态虚拟化时，若发生服务器重启，则此场景下可能无法自动销毁vnpu，需用户自己手动销毁。
+
+**表 1**  参数解释
+
+|参数|说明|举例|
+|--|--|--|
+|ASCEND_VISIBLE_DEVICES|必须使用ASCEND_VISIBLE_DEVICES环境变量指定被挂载至容器中的NPU设备，否则挂载NPU设备失败。动态虚拟化时，ASCEND_VISIBLE_DEVICES=0表示从0号NPU设备中划分出一定数量的AICore。|<ul><li>一条动态虚拟化的命令只能指定一个物理NPU的ID进行动态虚拟化。</li><li>必须搭配ASCEND_VNPU_SPECS，表示在指定的NPU上划分出的AICore数量。</li><li>可以搭配ASCEND_RUNTIME_OPTIONS，但是只能取值为NODRV，表示不挂载驱动相关目录。</li></ul>|
+|ASCEND_RUNTIME_OPTIONS|<p>对参数ASCEND_VISIBLE_DEVICES中指定的芯片ID作出限制：</p><ul><li>NODRV：表示不挂载驱动相关目录。</li></ul>|ASCEND_RUNTIME_OPTIONS=NODRV<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>动态虚拟化场景下，若使用ASCEND_RUNTIME_OPTIONS参数，则其取值不能包含VIRTUAL。</li></ul></div></div>|
+|ASCEND_VNPU_SPECS|从物理NPU设备中划分出一定数量的AICore，指定为虚拟设备。支持的取值请参见[虚拟化模板](../03_virtualization_templates.md)中表1的“虚拟化实例模板”列。<ul><li>只有支持动态虚拟化的产品形态，才能使用该参数。</li><li>需配合参数“ASCEND_VISIBLE_DEVICES”一起使用，参数“ASCEND_VISIBLE_DEVICES”指定用于虚拟化的物理NPU设备。</li></ul>|ASCEND_VNPU_SPECS=vir04表示划分4个AICore作为vNPU，挂载至容器。|
+
+## 方式二：Kubernetes挂载vNPU
+
+### 使用前必读<a name="ZH-CN_TOPIC_0000002511347087"></a>
+
+#### 前提条件<a name="section121807404519"></a>
 
 在命令行场景下使用动态vNPU调度特性，需要确保已经安装如下组件；若没有安装，可以参考[安装部署](../../../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。动态vNPU调度特性只支持使用Volcano作为调度器，不支持使用其他调度器。
 
@@ -92,12 +132,12 @@
        ...
        ```
 
-### 使用方式<a name="zh-cn_topic_0000001559979444_section91871616135119"></a>
+#### 使用方式<a name="zh-cn_topic_0000001559979444_section91871616135119"></a>
 
 - 通过命令行使用：安装集群调度组件，通过命令行使用动态vNPU调度特性。
 - 集成后使用：将集群调度组件集成到已有的第三方AI平台或者基于集群调度组件开发的AI平台。
 
-### 使用说明<a name="section10769161412815"></a>
+#### 使用说明<a name="section10769161412815"></a>
 
 **表 3**  场景说明
 
@@ -268,18 +308,18 @@
 - 集群中同时运行多个推理任务，每个任务使用的特性可以不同，但不能同时存在使用静态vNPU的任务和使用动态vNPU的任务。
 - 动态vNPU调度仅支持下发单副本数或者多副本数的单机任务，每个副本独立工作，不支持分布式任务。
 
-### 支持的产品形态<a name="section169961844182917"></a>
+#### 支持的产品形态<a name="section169961844182917"></a>
 
 Atlas 推理系列产品、Atlas A2 训练/推理系列产品、Atlas A3 训练/推理系列产品
 
-### 使用流程<a name="zh-cn_topic_0000001559979444_section246711128536"></a>
+#### 使用流程<a name="zh-cn_topic_0000001559979444_section246711128536"></a>
 
 通过命令行使用动态vNPU调度特性流程可以参见[图1](#zh-cn_topic_0000001559979444_fig242524985412)。
 
 **图 1**  使用流程<a name="zh-cn_topic_0000001559979444_fig242524985412"></a>
 ![](../../../../../figures/scheduling/使用流程-3.png "使用流程-3")
 
-## 实现原理<a name="ZH-CN_TOPIC_0000002511427057"></a>
+### 实现原理<a name="ZH-CN_TOPIC_0000002511427057"></a>
 
 根据推理任务类型的不同，特性的原理图略有差异。
 
@@ -323,9 +363,9 @@ deploy任务原理图如[图3](#fig349112913199)所示。
 6. volcano-scheduler根据节点和芯片拓扑信息为任务选择合适节点，并在Pod的annotation上写入动态虚拟化的模板信息。
 7. kubelet创建容器时，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin根据Pod的annotation模板信息动态虚拟化NPU。Ascend Docker Runtime协助挂载相应资源。
 
-## 通过命令行使用（Volcano）<a name="ZH-CN_TOPIC_0000002479227144"></a>
+### 通过命令行使用（Volcano）<a name="ZH-CN_TOPIC_0000002479227144"></a>
 
-### 制作镜像<a name="ZH-CN_TOPIC_0000002511427049"></a>
+#### 制作镜像<a name="ZH-CN_TOPIC_0000002511427049"></a>
 
 **获取推理镜像<a name="zh-cn_topic_0000001609173557_zh-cn_topic_0000001558675566_section971616541059"></a>**
 
@@ -344,7 +384,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
 
 下载或者制作的推理基础镜像可以进行安全加固，提升镜像安全性，可参见[容器安全加固](../../../../07_references/04_security_hardening.md#容器安全加固)章节进行操作。
 
-### 脚本适配<a name="ZH-CN_TOPIC_0000002511347067"></a>
+#### 脚本适配<a name="ZH-CN_TOPIC_0000002511347067"></a>
 
 本章节以昇腾镜像仓库中推理镜像为例为用户介绍操作流程，该镜像已经包含了推理示例脚本，实际推理场景需要用户自行准备推理脚本。在拉取镜像前，需要确保当前环境的网络代理已经配置完成，确保该环境可以正常访问昇腾镜像仓库。
 
@@ -356,7 +396,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
     >[!NOTE]
     >若无下载权限，请根据页面提示申请权限。提交申请后等待管理员审核，审核通过后即可下载镜像。
 
-### 准备任务YAML<a name="ZH-CN_TOPIC_0000002479387122"></a>
+#### 准备任务YAML<a name="ZH-CN_TOPIC_0000002479387122"></a>
 
 >[!NOTE]
 >如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载“/dev”目录下的设备。其他目录（如“/usr”）用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
@@ -697,7 +737,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
     ...
     ```
 
-### 下发任务<a name="ZH-CN_TOPIC_0000002479227134"></a>
+#### 下发任务<a name="ZH-CN_TOPIC_0000002479227134"></a>
 
 在管理节点示例YAML所在路径，执行以下命令，使用YAML下发推理任务。
 
@@ -720,7 +760,7 @@ job.batch/resnetinfer1-2 created
 >[!NOTE]
 >如果下发任务成功后，又修改了任务YAML，需要先执行kubectl delete -f _XXX_.yaml命令删除原任务，再重新下发任务。
 
-### 查看任务进程<a name="ZH-CN_TOPIC_0000002511347071"></a>
+#### 查看任务进程<a name="ZH-CN_TOPIC_0000002511347071"></a>
 
 **操作步骤**
 
@@ -773,7 +813,7 @@ job.batch/resnetinfer1-2 created
 
         在显示的信息中，找到“Allocated resources”下的**huawei.com/npu-core**，该参数取值在执行推理任务之后会增加，增加数量为推理任务使用的NPU芯片个数。
 
-### 查看动态vNPU调度结果<a name="ZH-CN_TOPIC_0000002479387120"></a>
+#### 查看动态vNPU调度结果<a name="ZH-CN_TOPIC_0000002479387120"></a>
 
 **操作步骤<a name="zh-cn_topic_0000001559013282_zh-cn_topic_0000001558675486_section96791230183711"></a>**
 
@@ -793,7 +833,7 @@ kubectl logs -f resnetinfer1-2-scpr5
 >[!NOTE]
 >_resnetinfer1-2-scpr5_：查看任务进程章节[步骤1](#zh-cn_topic_0000001609093161_zh-cn_topic_0000001609474293_section96791230183711011)中运行的任务名称。
 
-### 删除任务<a name="ZH-CN_TOPIC_0000002511347065"></a>
+#### 删除任务<a name="ZH-CN_TOPIC_0000002511347065"></a>
 
 在示例YAML所在路径下，执行以下命令，删除对应的推理任务。
 
@@ -814,7 +854,7 @@ root@ubuntu:/home/test/yaml# kubectl delete -f infer-310p-1usoc.yaml
 job "resnetinfer1-1" deleted
 ```
 
-## 集成后使用<a name="ZH-CN_TOPIC_0000002511347073"></a>
+### 集成后使用<a name="ZH-CN_TOPIC_0000002511347073"></a>
 
 本章节需要用户熟悉编程开发，以及对K8s有一定了解。如果用户已有AI平台或者想基于集群调度组件开发AI平台，需要完成以下内容：
 

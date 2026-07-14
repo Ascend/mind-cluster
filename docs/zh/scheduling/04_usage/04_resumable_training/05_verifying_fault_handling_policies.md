@@ -400,7 +400,7 @@
     cd /data/atlas_dls/public/code
     git clone https://gitcode.com/Ascend/mind-cluster.git
     cd ./mind-cluster/component/clusterd
-    git checkout v26.0.0   # v26.0.0是代码仓版本tag，请自行切换到目标版本
+    git checkout branch_v26.1.0   # branch_v26.1.0是代码仓版本分支，请自行切换到目标分支
     ```
 
 2. 修改ClusterD代码。
@@ -442,9 +442,9 @@
    ```shell
    cd ./build/
    chmod +x build.sh && dos2unix build.sh
-   sed -i 's|build_version="v[^"]\+"|build_version="xxx"|g' build.sh  # xxx替换为版本号，如v26.0.0
+   sed -i 's|build_version="v[^"]\+"|build_version="xxx"|g' build.sh  # xxx替换为版本号，如v26.1.0
    sed -i 's|export CGO_ENABLED=0|export CGO_ENABLED=1|g' build.sh  # 开启CGO功能
-   ./build.sh # 编译ClusterD，需要go 1.26及以上版本，建议使用1.26版本
+   ./build.sh # 编译ClusterD，需要提前安装好Go sdk，具体版本以ClusterD组件代码的go.mod文件内容为准
    ```
 
    编译成功后，会在“../output/”目录下生成相关文件，可执行如下命令进行查看：
@@ -457,7 +457,7 @@
 
    ```bash
    -r-x------. 1 root root 45891128 Aug 13 10:52 clusterd
-   -r--------. 1 root root     4021 Aug 13 10:52 clusterd-v26.0.0.yaml
+   -r--------. 1 root root     4021 Aug 13 10:52 clusterd-v26.1.0.yaml
    -r--------. 1 root root      946 Aug 13 10:52 Dockerfile
    -r--------. 1 root root      209 Aug 13 10:52 faultDuration.json
    -r--------. 1 root root      207 Aug 13 10:52 fdConfig.yaml
