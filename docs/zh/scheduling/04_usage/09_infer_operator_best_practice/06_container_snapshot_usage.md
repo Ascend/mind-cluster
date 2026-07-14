@@ -23,7 +23,7 @@
     - NodeD
     - Infer Operator
 
-- 若没有安装，可以参考[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作，其中NodeD、Infer Operator需要修改部分安装步骤。
+- 若没有安装，可以参考[安装部署](../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作，其中NodeD、Infer Operator需要修改部分安装步骤。
 
   - NodeD
      - 需要使用如下的dockerfile制作NodeD镜像，其中http_proxy、https_proxy配置为能够访问公网的代理
@@ -109,7 +109,7 @@
               value: "/user/snapshot"
    ```
 
-推理任务部署使用说明详见[使用说明](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/api/engine_server_interfaces.md)，下面使用演示仅展示使用流程。
+推理任务部署使用说明详见[使用说明](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/features/container_snapshot.md)，下面使用演示仅展示使用流程。
 
 **支持的产品形态**
 

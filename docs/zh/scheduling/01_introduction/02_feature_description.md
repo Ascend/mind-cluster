@@ -241,7 +241,7 @@ Container Manager
 **使用说明<a name="section1245612501584"></a>**
 
 1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
-2. 特性使用指导请参见[容器快照部署及使用](../05_developer_guide/04_container_snapshot_usage.md)章节进行操作。
+2. 特性使用指导请参见[容器快照部署及使用](../04_usage/09_infer_operator_best_practice/06_container_snapshot_usage.md)章节进行操作。
 
 ## 推理高可用<a name="ZH-CN_TOPIC_0000002511346885"></a>
 
