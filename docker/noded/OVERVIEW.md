@@ -36,21 +36,41 @@ When certain faults occur in a node's CPU, memory, or disk, training jobs will f
 
 ### Tag Convention
 
-Tags follow this format:
+Starting from version v26.1.0, tags follow the format below:
+
+```text
+<version>-<os>
+```
+
+| Field     | Example       | Description                       |
+|-----------|---------------|-----------------------------------|
+| `version` | `v26.1.0`     | Version Number of NodeD           |
+| `os`      | `ubuntu22.04` | Operating System for NodeD Images |
+
+### NodeD 26.1.0
+
+| Tag                      | Dockerfile                                                                                                            | Image Content                               |
+|--------------------------|-----------------------------------------------------------------------------------------------------------------------|---------------------------------------------|
+| `v26.1.0-ubuntu22.04`    | [Dockerfile.ubuntu](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/noded/v26.1.0/Dockerfile.ubuntu)       | NodeD v26.1.0 (Base Image: Ubuntu 22.04)    |
+| `v26.1.0-openeuler24.03` | [Dockerfile.openeuler](https://gitcode.com/Ascend/mind-cluster/blob/master/docker/noded/v26.1.0/Dockerfile.openeuler) | NodeD v26.1.0 (Base Image: openEuler 24.03) |
+
+---
+
+Tags for v26.0.0 and earlier versions follow the format below:
 
 ```text
 <version>
 ```
 
-| Field | Example | Description |
-|---|---|---|
-| `version` | `v26.0.0` | NodeD version |
+| Field     | Example   | Description             |
+|-----------|-----------|-------------------------|
+| `version` | `v26.0.0` | Version Number of NodeD |
 
 ### NodeD 26.0.0
 
-| Tag | Dockerfile | Image Content |
-|-----|------------|---------------|
-| `v26.0.0` | [Dockerfile](https://gitcode.com/Ascend/mind-cluster/blob/v26.0.0/component/noded/build/Dockerfile) | NodeD v26.0.0 (Ubuntu 22.04) |
+| Tag       | Dockerfile                                                                                          | Image Content                            |
+|-----------|-----------------------------------------------------------------------------------------------------|------------------------------------------|
+| `v26.0.0` | [Dockerfile](https://gitcode.com/Ascend/mind-cluster/blob/v26.0.0/component/noded/build/Dockerfile) | NodeD v26.0.0 (Base Image: Ubuntu 22.04) |
 
 ---
 
@@ -93,7 +113,37 @@ Tags follow this format:
 
 ### Build Locally (Optional)
 
-The following example uses linux-aarch64 architecture and v26.0.0 version:
+#### Local Build Steps for v26.1.0 and Later Versions
+
+Example: build an NodeD image of architecture linux-aarch64, version v26.1.0, based on Ubuntu 22.04.
+
+1. Obtain the target Dockerfile
+
+   Navigate to the chapter [Supported Tags and Dockerfile Links](#Supported-Tags-and-Dockerfile-Links), open the
+   Dockerfile.ubuntu link corresponding to your target version, and save the file to a local directory on your aarch64
+   environment.
+
+2. Build the Docker image locally (disable cache to ensure a clean build)
+
+   ```bash
+   docker build --no-cache -t noded:v26.1.0 ./ -f Dockerfile.ubuntu
+   ```
+
+> **Important Notes**
+> If your Docker version is earlier than 18.09 or BuildKit is not manually enabled, the TARGETPLATFORM variable cannot
+> be read during image building, which will cause the image build to fail.
+> 1. TARGETPLATFORM is a built-in global variable of Docker BuildKit for identifying the target build platform, e.g.
+     linux/amd64, linux/arm64.
+> 2. This variable is automatically injected only after BuildKit is enabled. It cannot be used in legacy Docker
+     environments or environments where BuildKit is disabled by default.
+> 3. Run the following command before building to enable BuildKit temporarily:
+> ```bash
+> export DOCKER_BUILDKIT=1
+> ```
+
+#### Local Build Steps for v26.0.0 and Earlier Versions
+
+Example: Build an NodeD image of architecture linux-aarch64, version v26.0.0, based on Ubuntu 22.04.
 
 1. Download the officially released component package
 
