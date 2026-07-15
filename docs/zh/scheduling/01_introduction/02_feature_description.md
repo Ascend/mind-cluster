@@ -267,5 +267,5 @@ Container Manager
 1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
 2. Infer Operator推理任务最佳实践请参见[Infer Operator推理任务最佳实践](../04_usage/09_infer_operator_best_practice/00_before_you_start.md)章节进行操作。
 3. MindIE Motor推理任务最佳实践请参见[MindIE Motor推理任务最佳实践](../04_usage/06_mindie_motor_best_practice/00_before_you_start.md)章节进行操作。
-4. SGLang推理任务最佳实践请参见[SGLANG推理任务最佳实践](../04_usage/07_sglang_best_practice/00_before_you_start.md)章节进行操作。
+4. SGLang推理任务最佳实践请参见[SGLang推理任务最佳实践](../04_usage/07_sglang_best_practice/00_before_you_start.md)章节进行操作。
 5. vLLM推理任务最佳实践请参见[vLLM推理任务最佳实践](../04_usage/08_vllm_best_practice/00_before_you_start.md)章节进行操作。
