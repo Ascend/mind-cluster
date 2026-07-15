@@ -2,8 +2,8 @@
 
 本文档提供两种快速入门场景，帮助您快速上手Ascend NPU集群调度：
 
-- **10分钟极简入门**：仅部署Ascend Device Plugin和Ascend Docker Runtime，使用Kubernetes原生调度器调度普通Pod，快速验证NPU资源调度能力，适合初学者快速体验。
-- **完整训练业务入门**：部署完整的集群调度组件（NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator），以PyTorch训练任务为例，体验端到端的训练流程。
+- **10分钟快速入门**：仅部署Ascend Device Plugin和Ascend Docker Runtime，使用Kubernetes原生调度器调度普通Pod，快速验证NPU资源调度能力，适合初学者快速体验。
+- **训练业务快速入门**：部署完整的集群调度组件（NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator），以PyTorch训练任务为例，体验端到端的训练流程。
 
 您可以根据实际需求选择合适的入门路径。
 
@@ -32,7 +32,7 @@
 
 ### 安装组件
 
-下面以计算节点为Atlas 800T A2 训练服务器、CPU架构为aarch64为例。
+下面以计算节点为Atlas 800T A2 训练服务器、CPU架构为AArch64为例。
 
 1. 检查NPU状态，确保与服务器配套的NPU驱动已正确安装。
 
@@ -233,6 +233,7 @@
 
         ```shell
         VERSION=26.1.0
+        mkdir -p /tmp/Ascend-docker-runtime
         cd /tmp/Ascend-docker-runtime
         wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-docker-runtime_${VERSION}_linux-aarch64.run
         chmod +x Ascend-docker-runtime_${VERSION}_linux-aarch64.run
@@ -321,7 +322,7 @@
         cd /data/atlas_dls/public/dataset/resnet50/imagenet
         ```
 
-    3. 通过如下命令获取[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库的“samples/train/basic-training/without-ranktable/pytorch”目录中的train_start.sh，放在“/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts”路径下。
+    3. 通过如下命令获取[mindcluster-samples](https://gitcode.com/Ascend/mindcluster-deploy)仓库的“samples/train/basic-training/without-ranktable/pytorch”目录中的train_start.sh，放在“/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts”路径下。
 
         ```shell
         mkdir /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
@@ -329,7 +330,7 @@
         wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/train_start.sh
         ```
 
-    4. 通过如下命令获取[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库“samples/train/basic-training/without-ranktable/pytorch”目录下的“pytorch_standalone_acjob_quickstart.yaml”文件。示例默认为单机单卡任务。
+    4. 通过如下命令获取[mindcluster-samples](https://gitcode.com/Ascend/mindcluster-deploy)仓库“samples/train/basic-training/without-ranktable/pytorch”目录下的“pytorch_standalone_acjob_quickstart.yaml”文件。示例默认为单机单卡任务。
 
         ```shell
         cd /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts

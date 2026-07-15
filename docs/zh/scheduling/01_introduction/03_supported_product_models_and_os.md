@@ -42,7 +42,7 @@
 </tr>
 <tr id="row1631417235426"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1331442313425"><a name="p1331442313425"></a><a name="p1331442313425"></a><span id="ph631452384213"><a name="ph631452384213"></a><a name="ph631452384213"></a>Atlas 800 训练服务器（型号 9010）</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1083283212561"></a><a name="ul1083283212561"></a><ul id="ul1083283212561"><li>CentOS 7.6 for x86_64</li><li>Kylin V10 (OpenEuler) SP1 for x86_64 (4.19.90-17.ky10.x86_64 kernel)</li><li>openEuler 20.03 for x86_64</li><li>Ubuntu 18.04.1 for x86_64</li><li>Ubuntu 18.04.5 for x86_64</li><li>Ubuntu 20.04 for x86_64</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1083283212561"></a><a name="ul1083283212561"></a><ul id="ul1083283212561"><li>CentOS 7.6 for x86_64</li><li>Kylin V10 (openEuler) SP1 for x86_64 (4.19.90-17.ky10.x86_64 kernel)</li><li>openEuler 20.03 for x86_64</li><li>Ubuntu 18.04.1 for x86_64</li><li>Ubuntu 18.04.5 for x86_64</li><li>Ubuntu 20.04 for x86_64</li></ul>
 </td>
 </tr>
 <tr id="row1731412319425"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1931492374219"><a name="p1931492374219"></a><a name="p1931492374219"></a><span id="ph12314923104215"><a name="ph12314923104215"></a><a name="ph12314923104215"></a>Atlas 900 PoD（型号 9000）</span></p>
