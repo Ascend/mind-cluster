@@ -1,4 +1,4 @@
-# version命令（显示版本信息）
+# version 命令（显示版本信息）
 
 ## 功能说明
 
@@ -24,6 +24,6 @@ ascend-fd version
 
 回显示例：
 
-```Text
-ascend-fd v26.0.0
+```text
+ascend-fd v26.1.0
 ```

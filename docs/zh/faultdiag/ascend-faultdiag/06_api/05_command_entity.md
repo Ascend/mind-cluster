@@ -1,4 +1,4 @@
-# entity命令（自定义故障实体）
+# entity 命令（自定义故障实体）
 
 ## 功能说明
 
@@ -7,20 +7,20 @@
 ## 命令格式
 
 ```shell
-ascend-fd entity [-h] (-u UPDATE | -d DELETE [DELETE ...] | -s [SHOW ...] | -c CHECK)
+ascend-fd entity [-h] (-u JSON_PATH | -d CODE [CODE...] | -s CODE [CODE...] | -c JSON_PATH) [--item ITEM] [-f]
 ```
 
 ## 参数说明
 
-| 参数         | 类型   | 必选                       | 说明                                         |
-|--------------|--------|----------------------------|----------------------------------------------|
-| -h, --help   | -      | 否                         | 显示帮助信息                                 |
-| -u, --update | string | 必选（与 -d, -s, -c 互斥） | 新增或修改自定义故障实体的 JSON 文件路径     |
-| -d, --delete | string | 必选（与 -u, -s, -c 互斥） | 删除指定故障码的自定义故障实体               |
-| -s, --show   | string | 必选（与 -u, -d, -c 互斥） | 查看自定义故障实体信息                       |
-| -c, --check  | string | 必选（与 -u, -d, -s 互斥） | 校验 custom-ascend-kg-config.json 文件路径   |
-| --item       | string | 可选                       | 查看部分信息，可选值：attribute, rule, regex |
-| -f, --force  | -      | 可选                       | 删除时跳过确认提示                           |
+| 参数         | 类型   | 必选                       | 说明                                               |
+|--------------|--------|----------------------------|----------------------------------------------------|
+| -h, --help   | -      | 否                         | 显示帮助信息                                       |
+| -u, --update | string | 必选（与 -d, -s, -c 互斥） | 新增或修改自定义故障实体的 JSON 文件               |
+| -d, --delete | string | 必选（与 -u, -s, -c 互斥） | 删除指定故障码的自定义故障实体，支持删除多个故障码 |
+| -s, --show   | string | 必选（与 -u, -d, -c 互斥） | 查看自定义故障实体信息，支持查看多个故障码         |
+| -c, --check  | string | 必选（与 -u, -d, -s 互斥） | 校验自定义故障实体 JSON 文件                       |
+| --item       | string | 可选（只与 -s 共用）       | 查看部分信息，可选值：attribute, rule, regex       |
+| -f, --force  | -      | 可选（只与 -d 共用）       | 删除时跳过确认提示                                 |
 
 ## 使用示例
 
@@ -34,21 +34,9 @@ ascend-fd entity [-h] (-u UPDATE | -d DELETE [DELETE ...] | -s [SHOW ...] | -c C
 
     回显 `Updated entity successfully.` 表示操作成功。
 
-    json 文件示例和参数说明请参考 [JSON文件字段说明](#json文件字段说明)。
+    JSON 文件示例和参数说明请参考 [JSON 文件字段说明](#JSON-文件字段说明)。
 
 ### 查看自定义故障实体
-
-```shell
-ascend-fd entity --show
-```
-
-### 删除指定故障码的自定义实体
-
-```shell
-ascend-fd entity --delete 故障码1 故障码2
-```
-
-### 查看所有自定义故障实体
 
 ```shell
 ascend-fd entity -s
@@ -66,25 +54,31 @@ ascend-fd entity -s 故障码1 故障码2
 ascend-fd entity -s --item attribute rule regex
 ```
 
-### 跳过确认提示
+### 校验故障实体文件
+
+```shell
+ascend-fd entity -c custom_entity.json
+```
+
+### 删除指定故障码的自定义实体
+
+```shell
+ascend-fd entity -d 故障码1 故障码2
+```
+
+### 删除时跳过确认提示
 
 ```shell
 ascend-fd entity -d 故障码1 --force
 ```
 
-### 校验故障实体文件
+## JSON 文件字段说明
 
-```shell
-ascend-fd entity -c 自定义故障实体JSON文件
-```
+### JSON 文件示例
 
-## JSON文件字段说明
-
-### JSON文件示例
-
-```json
+```jsonc
 {
-    "41001": {      // 故障码，用户需根据实际情况自定义故障码，不能与MindCluster Ascend FaultDiag已支持的故障码相同
+    "41001": {      // 故障码，用户需根据实际情况自定义故障码，不能与 MindCluster Ascend FaultDiag 已支持的故障码相同
         "attribute.class": "Software",
         "attribute.component": "AI Framework",
         "attribute.module": "Compiler",
@@ -125,7 +119,7 @@ ascend-fd entity -c 自定义故障实体JSON文件
 }
 ```
 
-### JSON参数说明
+### JSON 参数说明
 
 <!-- markdownlint-disable MD033 -->
 <table><thead><tr><th><p>参数名称</p>
@@ -148,7 +142,7 @@ ascend-fd entity -c 自定义故障实体JSON文件
 </td>
 <td><p>必选</p>
 </td>
-<td rowspan="3"><p>取值长度为1~50个字符，支持英文字母、数字、英文符号与空格。</p>
+<td rowspan="3"><p>取值长度为 1~50 个字符，支持英文字母、数字、英文符号与空格。</p>
 
 </td>
 </tr>
@@ -178,7 +172,7 @@ ascend-fd entity -c 自定义故障实体JSON文件
 </td>
 <td><p>必选</p>
 </td>
-<td><p>取值长度为1~200个字符，支持英文字母、数字、英文符号、中文汉字、中文符号与空格。</p>
+<td><p>取值长度为 1~200 个字符，支持英文字母、数字、英文符号、中文汉字、中文符号与空格。</p>
 </td>
 </tr>
 <tr><td><p>attribute.cause_en</p>
@@ -189,7 +183,7 @@ ascend-fd entity -c 自定义故障实体JSON文件
 </td>
 <td><p>可选</p>
 </td>
-<td><p>取值长度为1~200个字符，支持英文字母、数字、英文符号与空格。</p>
+<td><p>取值长度为 1~200 个字符，支持英文字母、数字、英文符号与空格。</p>
 </td>
 </tr>
 <tr><td><p>attribute.description_zh</p>
@@ -200,7 +194,7 @@ ascend-fd entity -c 自定义故障实体JSON文件
 </td>
 <td><p>必选</p>
 </td>
-<td rowspan="6"><div>支持字符串或列表。字符串为整段信息，可换行；列表则每一个元素为一行信息，组合起来为整段信息。<ul><li>字符串：取值长度为1~2000个字符，支持英文字母、数字、英文符号、中文汉字、中文符号、空格与“\n”。</li><li>列表：列表下每个字符串的取值长度为1~200，支持英文字母、数字、英文符号、中文汉字、中文符号与空格。</li></ul>
+<td rowspan="6"><div>支持字符串或列表。字符串为整段信息，可换行；列表则每一个元素为一行信息，组合起来为整段信息。<ul><li>字符串：取值长度为 1~2000 个字符，支持英文字母、数字、英文符号、中文汉字、中文符号、空格与“\n”。</li><li>列表：列表下每个字符串的取值长度为 1~200，支持英文字母、数字、英文符号、中文汉字、中文符号与空格。</li></ul>
 </div>
 </td>
 </tr>
@@ -258,7 +252,7 @@ ascend-fd entity -c 自定义故障实体JSON文件
 <td><p>可选</p>
 </td>
 <td><p>列表内包含以下字段。</p>
-<ul><li>dst_code：必选，表示本次故障触发的下一级故障实体故障码，该故障码必须为 ascend-fd 已支持的故障码或用户自定义故障码。</li><li>expression：可选，表示故障触发约束，当前为预留字段。取值长度为1~200个字符，支持英文字母、数字、英文符号与空格。</li></ul>
+<ul><li>dst_code：必选，表示本次故障触发的下一级故障实体故障码，该故障码必须为 ascend-fd 已支持的故障码或用户自定义故障码。</li><li>expression：可选，表示故障触发约束，当前为预留字段。取值长度为 1~200 个字符，支持英文字母、数字、英文符号与空格。</li></ul>
 </td>
 </tr>
 <tr><td><p>source_file</p>
@@ -275,19 +269,19 @@ ascend-fd entity -c 自定义故障实体JSON文件
 </tr>
 <tr><td><p>regex.in</p>
 </td>
-<td><p>String</p>
+<td><p>列表</p>
 </td>
 <td><p>故障关键词</p>
 </td>
 <td><p>必选</p>
 </td>
-<td><div>支持一级列表与二级列表。<ul><li>一级列表<ul><li>每个元素为字符串。取值长度为1~200个字符，支持英文字母、数字、英文符号、中文汉字、中文符号与空格。</li><li>列表中每个关键词都需要满足存在性判断，且符合前后关系</li></ul>
+<td><div>支持一级列表与二级列表。<ul><li>一级列表<ul><li>每个元素为字符串。取值长度为 1~200 个字符，支持英文字母、数字、英文符号、中文汉字、中文符号与空格。</li><li>列表中每个关键词都需要满足存在性判断，且符合前后关系</li></ul>
 </li><li>二级列表<ul><li>每个子列表满足一级列表的取值约束。</li><li>每个子列表内的判断规则同一级列表，每个子列表间为或关系，仅需满足一个子列表的关键词即可。</li></ul>
 </li></ul>
 </div>
 </td>
 </tr>
-<tr><td colspan="5"><ul><li>新增自定义故障实体时，所有必选字段都需要存在JSON文件中，且符合相关取值要求。</li><li>修改自定义故障实体时，只需要符合相关取值要求即可。</li></ul>
+<tr><td colspan="5"><ul><li>新增自定义故障实体时，所有必选字段都需要存在 JSON 文件中，且符合相关取值要求。</li><li>修改自定义故障实体时，只需要符合相关取值要求即可。</li></ul>
 </td>
 </tr>
 </tbody>
@@ -299,6 +293,6 @@ ascend-fd entity -c 自定义故障实体JSON文件
 - JSON 文件最多支持 1000 条自定义故障信息
 - 故障码取值长度需为 1~50 个字符
 - 故障码不能与 ascend-fd 已支持的故障码重复
-- 用户新增故障实体时，数据保存在`$HOME/.ascend_faultdiag/custom-ascend-kg-config.json`文件中
-- 用户可通过修改`ASCEND_FD_HOME_PATH`环境变量来指定自定义故障实体文件路径，请查阅[参考 -> 常用操作 -> 环境变量](../07_references/01_common_operations.md#环境变量)
-- ascend-fd 运行错误码请查阅[参考 -> 常用操作 -> 组件错误码](../07_references/04_appendix.md#组件错误码)
+- 用户新增故障实体时，数据保存在 `$HOME/.ascend_faultdiag/custom-ascend-kg-config.json` 文件中
+- 用户可通过修改 `ASCEND_FD_HOME_PATH` 环境变量来指定自定义故障实体文件路径，请查阅[环境变量](../07_references/01_common_operations.md#环境变量)
+- ascend-fd 运行错误码请查阅[组件错误码](../07_references/04_appendix.md#组件错误码)
