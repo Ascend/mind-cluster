@@ -52,13 +52,17 @@
 
 ## 使用说明<a name="section1296713336303vcann"></a>
 
-- 软切分虚拟化基于[vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md)实现，直接将NPU重复挂载到多个容器，容器内的CANN按照配置好的比例使用NPU资源。
+- 软切分虚拟化基于[vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md)
+  实现，直接将NPU重复挂载到多个容器，容器内的CANN按照配置好的比例使用NPU资源。
 - 如果使用软切分虚拟化功能，请参见[软切分调度（推理）](./01_soft_allocation_scheduling_inference.md)章节进行操作。
+
+> [!NOTICE]
+> 若未按照 [vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md)
+> 说明文档完成编译与部署，软切分虚拟化功能将无法正常运行。
 
 ## 使用约束<a name="section911013420264vcann"></a>
 
 - 软切分虚拟化功能仅支持推理任务。
-- 软切分虚拟化功能仅支持acjob任务类型。
 - 在软切分虚拟化场景下，一个容器只能挂载一个NPU。
 - 任务YAML中requests对应的数据表示请求的NPU的AICore百分比，不是真实NPU卡数。
 - **Atlas A3 训练或推理系列产品**使用软切分虚拟化功能时，必须开启单die直通模式，即在Ascend Device Plugin的YAML中，增加启动参数-useSingleDieMode=true。

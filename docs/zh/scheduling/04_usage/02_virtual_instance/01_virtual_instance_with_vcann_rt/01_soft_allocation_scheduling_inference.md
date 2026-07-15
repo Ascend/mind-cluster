@@ -41,7 +41,7 @@
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>目前任务的每个Pod请求的NPU数量为1个。物理上使用的NPU数量为1，但任务YAML中请求的NPU数量需要与huawei.com/scheduler.softShareDev.aicoreQuota配置保持一致。</p>
 </td>
 </tr>
-<tr><td class="cellrowborder" rowspan="5" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p>特性支持的场景</p>
+<tr><td class="cellrowborder" rowspan="4" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p>特性支持的场景</p>
 </td>
 <td class="cellrowborder" valign="top" width="80.02%" headers="mcps1.2.3.1.2 "><p>支持多副本，但多副本中的每个Pod所使用的NPU软切分策略必须一致。</p>
 </td>
@@ -53,9 +53,6 @@
 </td>
 </tr>
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>支持集群中软切分虚拟化功能和非软切分虚拟化功能混合部署的场景。</p>
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p>当前软切分特性仅支持acjob任务类型。</p>
 </td>
 </tr>
 <tr><td class="cellrowborder" rowspan="3" valign="top" width="19.98%" headers="mcps1.2.3.1.1 "><p>特性不支持的场景</p>
@@ -212,8 +209,7 @@
 ![](../../../../figures/scheduling/basic_scheduling_001.png "basic_scheduling_001")
 
 ## 实现原理
-
-目前仅支持acjob任务类型，其原理图如[图1](#fig23698010123)所示。
+以Ascend Job为例，其原理图如[图1](#fig23698010123)所示。
 
 **图 1**  acjob任务调度原理图<a name="fig23698010123"></a>
 ![](../../../../figures/scheduling/basic_scheduling_002.PNG "basic_scheduling_002")
@@ -345,7 +341,29 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     <tr>
     <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 标卡</p></td>
     <td class="cellrowborder" align="center" valign="center"  width="21%"><p>pytorch_acjob_infer_950_softsharedev.yaml</p></td>
-    <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/master/samples/inference/volcano/pytorch_acjob_infer_950_softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
+    <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/pytorch_acjob_infer_950_softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
+    </tr>
+    <tr>
+    <td class="cellrowborder" rowspan="2" align="center" valign="center" width="22%"><p>Volcano Job</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p><term>Atlas A2 训练系列产品</term></p><p><term>Atlas A2 推理系列产品</term></p><p><term>Atlas A3 训练系列产品</term></p><p><term>Atlas A3 推理系列产品</term></p></td>
+    <td class="cellrowborder" align="center" valign="center"  width="21%"><p>infer-vcjob-910-softsharedev.yaml</p></td>
+    <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-vcjob-910-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
+    </tr>
+    <tr>
+    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 标卡</p></td>
+    <td class="cellrowborder" align="center" valign="center"  width="21%"><p>infer-vcjob-950-softsharedev.yaml</p></td>
+    <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-vcjob-950-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
+    </tr>
+    <tr>
+    <td class="cellrowborder" rowspan="2" align="center" valign="center" width="22%"><p>Deployment</p></td>
+    <td class="cellrowborder" valign="top" width="47%"><p><term>Atlas A2 训练系列产品</term></p><p><term>Atlas A2 推理系列产品</term></p><p><term>Atlas A3 训练系列产品</term></p><p><term>Atlas A3 推理系列产品</term></p></td>
+    <td class="cellrowborder" align="center" valign="center"  width="21%"><p>infer-deploy-softsharedev.yaml</p></td>
+    <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-deploy-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
+    </tr>
+    <tr>
+    <td class="cellrowborder" valign="top" width="47%"><p>Atlas 350 标卡</p></td>
+    <td class="cellrowborder" align="center" valign="center"  width="21%"><p>infer-deploy-950-softsharedev.yaml</p></td>
+    <td class="cellrowborder" align="center" valign="center"  width="10%"><p><a href="https://gitcode.com/Ascend/mindcluster-deploy/blob/branch_v26.1.0/samples/inference/volcano/infer-deploy-950-softsharedev.yaml" target="_blank" rel="noopener noreferrer">获取链接</a></p></td>
     </tr>
     </tbody>
     </table>
