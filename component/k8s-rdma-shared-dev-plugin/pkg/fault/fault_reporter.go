@@ -29,7 +29,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"ascend-common/common-utils/hwlog"
-
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/utils"
 )
 
@@ -57,7 +56,7 @@ func ReportToConfigMap(dpuCfg DpuInfoCfg) error {
 	}
 	lastReportedDataMu.RLock()
 	needUpdate := lastReportedData == nil ||
-		time.Since(lastReportedData.UpdateTime) >= forceUpdateInterval ||
+		time.Since(time.UnixMilli(lastReportedData.UpdateTime)) >= forceUpdateInterval ||
 		!isDpuInfoCfgEqual(lastReportedData, &dpuCfg)
 	lastReportedDataMu.RUnlock()
 

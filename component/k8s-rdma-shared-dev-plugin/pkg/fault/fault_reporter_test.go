@@ -186,7 +186,7 @@ func TestUpdateLastReportedDataSuccess(t *testing.T) {
 
 	dpuCfg := DpuInfoCfg{}
 	dpuCfg.DPUInfo.DPUList = []DPUItem{{HcaName: "mlx5_0"}}
-	dpuCfg.UpdateTime = time.Now()
+	dpuCfg.UpdateTime = time.Now().UnixMilli()
 
 	convey.Convey("When updating with valid data", t, func() {
 		updateLastReportedData(&dpuCfg)
@@ -242,7 +242,7 @@ func TestReportToConfigMapNoChanges(t *testing.T) {
 
 	dpuCfg := DpuInfoCfg{}
 	dpuCfg.DPUInfo.DPUList = []DPUItem{{HcaName: "mlx5_0"}}
-	dpuCfg.UpdateTime = time.Now()
+	dpuCfg.UpdateTime = time.Now().UnixMilli()
 
 	lastReportedDataMu.Lock()
 	lastReportedData = &dpuCfg
@@ -277,12 +277,12 @@ func TestReportToConfigMapForceUpdate(t *testing.T) {
 	oldTime := time.Now().Add(-10 * time.Minute)
 	dpuCfg := DpuInfoCfg{}
 	dpuCfg.DPUInfo.DPUList = []DPUItem{{HcaName: "mlx5_0"}}
-	dpuCfg.UpdateTime = time.Now()
+	dpuCfg.UpdateTime = time.Now().UnixMilli()
 
 	lastReportedDataMu.Lock()
 	lastReportedData = &DpuInfoCfg{}
 	lastReportedData.DPUInfo.DPUList = []DPUItem{{HcaName: "mlx5_0"}}
-	lastReportedData.UpdateTime = oldTime
+	lastReportedData.UpdateTime = oldTime.UnixMilli()
 	lastReportedDataMu.Unlock()
 
 	convey.Convey("When force update interval has passed", t, func() {
@@ -313,12 +313,12 @@ func TestReportToConfigMapDataChanged(t *testing.T) {
 
 	dpuCfg := DpuInfoCfg{}
 	dpuCfg.DPUInfo.DPUList = []DPUItem{{HcaName: "mlx5_1"}}
-	dpuCfg.UpdateTime = time.Now()
+	dpuCfg.UpdateTime = time.Now().UnixMilli()
 
 	lastReportedDataMu.Lock()
 	lastReportedData = &DpuInfoCfg{}
 	lastReportedData.DPUInfo.DPUList = []DPUItem{{HcaName: "mlx5_0"}}
-	lastReportedData.UpdateTime = time.Now()
+	lastReportedData.UpdateTime = time.Now().UnixMilli()
 	lastReportedDataMu.Unlock()
 
 	convey.Convey("When data has changed", t, func() {
@@ -384,7 +384,7 @@ func TestReportToConfigMapFirstReport(t *testing.T) {
 
 	dpuCfg := DpuInfoCfg{}
 	dpuCfg.DPUInfo.DPUList = []DPUItem{{HcaName: "mlx5_0"}}
-	dpuCfg.UpdateTime = time.Now()
+	dpuCfg.UpdateTime = time.Now().UnixMilli()
 
 	convey.Convey("When first report (lastReportedData is nil)", t, func() {
 		err := ReportToConfigMap(dpuCfg)
