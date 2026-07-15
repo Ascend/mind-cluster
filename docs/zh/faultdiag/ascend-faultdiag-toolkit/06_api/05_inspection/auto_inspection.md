@@ -4,19 +4,21 @@
 
 启动巡检诊断，使用 `auto_collect` 收集后产生的中间数据进行批量规则检查。适用于客户定制化巡检场景，按预定义规则对清洗后的设备数据进行健康检查。
 
+巡检特性是 beta 特性，不建议在正式环境中使用。
+
 ## 命令格式
 
 | 命令格式 | 描述 |
 |---------|------|
-| `auto_inspection` | 使用默认客户类型启动巡检。 |
-| `auto_inspection <客户类型>` | 使用指定客户类型启动巡检。 |
-| `auto_inspection ?` | 查看支持的客户类型。 |
+| `auto_inspection` | 启动巡检结果诊断，适用于分批收集后统一诊断 |
+| `auto_inspection <客户类型>` | 使用指定客户类型启动巡检 |
+| `auto_inspection ?` | 查看详情 |
 
 ## 参数说明
 
-| 参数 | 说明 |
-|------|------|
-| `<客户类型>` | 客户类型枚举值。目前仅支持 `default`。 |
+| 参数 | 类型 | 是否必填 | 说明                               |
+|------|-----|------|----------------------------------|
+| `<客户类型>` | string | 否    | 客户类型枚举值。目前仅支持 `default`，不输入时默认 `default`。 |
 
 ## 输出说明
 
@@ -25,7 +27,7 @@
 
 ## 示例
 
-非交互式方式：
+非交互式方式（展示命令与回显）：
 
 ```bash
 ascend-fd-tk set_conn_config /home/user/conn.ini auto_collect auto_inspection default
@@ -33,7 +35,7 @@ ascend-fd-tk set_conn_config /home/user/conn.ini auto_collect auto_inspection de
 诊断完成
 ```
 
-交互式方式：
+交互式方式（展示命令与回显）：
 
 ```bash
 ascend-fd-tk

@@ -165,18 +165,19 @@ T = TypeVar('T', bound=Enum)
 
 def get_enum(enum_cls: Type[T], name: str = "", value: str = "", case_sensitive: bool = True) -> Optional[T]:
     """
-    通过枚举成员的名称（name）获取对应的枚举成员
+    通过枚举成员的名称（name）或值（value）获取对应的枚举成员。
+    当 name 非空时优先按 name 查找；name 为空但 value 非空时按 value 查找。
 
     参数:
         enum_cls: 枚举类（必须是Enum的子类）
-        name: 要查找的枚举成员名称（字符串）
+        name: 要查找的枚举成员名称（字符串），为空时忽略
+        value: 要查找的枚举成员值（字符串），为空时忽略
         case_sensitive: 是否区分大小写（默认True，严格匹配大小写）
 
     返回:
-        对应的枚举成员
+        对应的枚举成员；未找到或入参非法时返回 None
 
     异常:
-        ValueError: 当枚举类中不存在指定名称的成员时
         TypeError: 当传入的enum_cls不是Enum的子类时
     """
     # 校验输入的枚举类是否合法
@@ -185,17 +186,24 @@ def get_enum(enum_cls: Type[T], name: str = "", value: str = "", case_sensitive:
 
     # 处理不区分大小写的情况
     if not case_sensitive:
-        # 遍历枚举成员，匹配名称（忽略大小写）
+        # 遍历枚举成员，按 name 或 value 匹配（忽略大小写）
         for member in enum_cls:
             if name and member.name.lower() == name.lower():
                 return member
-            if value and member.value.lower() == value.lower():
+            if value and str(member.value).lower() == value.lower():
                 return member
-        # 未找到时抛出异常
+        # 未找到时返回 None
         return None
-    else:
-        # 区分大小写：直接使用枚举的__getitem__方法（或EnumMeta.__getitem__）
+
+    # 区分大小写：name 非空时优先按 name 查找
+    if name:
         try:
             return enum_cls[name]
         except KeyError:
             return None
+    # name 为空但 value 非空时按 value 查找
+    if value:
+        for member in enum_cls:
+            if str(member.value) == value:
+                return member
+    return None

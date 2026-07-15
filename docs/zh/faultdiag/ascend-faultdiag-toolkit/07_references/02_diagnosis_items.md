@@ -1,4 +1,4 @@
-﻿# 诊断项
+﻿# 诊断项参考
 
 诊断项按设备类型分类，每个诊断项均明确了其在线命令来源和离线日志路径。同一设备可能涉及多个诊断项，每个诊断项对应一个或多个在线命令与离线日志。工具共内置 **40 项** 诊断项，覆盖主机、BMC、交换机、HCCS 及通用维度。
 
@@ -77,14 +77,14 @@
 <tr>
 <td>光模块初始化开光状态检测</td>
 <td><code>hccn_tool -i {chip_phy_id} -dfx_cfg -g</code></td>
-<td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: 不支持</td>
+<td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: 暂不支持</td>
 <td>检查 TX Disable 状态是否为禁用</td>
 <td>光模块处于关光状态，tx disable status：1</td>
 </tr>
 <tr>
 <td>光模块CDR SNR检测</td>
 <td><code>hccn_tool -i {chip_phy_id} -cdr_snr -g</code></td>
-<td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: 不支持</td>
+<td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: 暂不支持</td>
 <td>检查 CDR 的 Host SNR / Media SNR 值是否低于阈值</td>
 <td>CDR SNR异常，Host SNR值为6.8dB低于阈值8.0dB</td>
 </tr>
@@ -100,7 +100,7 @@
 <td><code>hccn_tool -i {chip_phy_id} -speed -g</code>、<code>hccn_tool -i {chip_phy_id} -duplex -g</code>、<code>hccn_tool -i {chip_phy_id} -lldp -g</code></td>
 <td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/net_conf.log</code><br>V3: <code>optical.log</code>/<code>lldp.log</code>（duplex不支持）</td>
 <td>通过 LLDP 信息定位对端交换机端口，对比两端速率与双工模式是否一致（任一端为 auto 时不告警）</td>
-<td>NPU端口与对端交换机：SWITCH-01，ip：10.0.0.1，端口10GE1/0/1连接信息不相同，本端Speed：100G，Duplex：full。对端Speed：50G，Duplex：full</td>
+<td>NPU端口与对端交换机：SWITCH-01，ip：0.0.0.1，端口10GE1/0/1连接信息不相同，本端Speed：100G，Duplex：full。对端Speed：50G，Duplex：full</td>
 </tr>
 <tr>
 <td>NPU对端lldp信息缺失检测</td>
@@ -110,9 +110,9 @@
 <td>未采集到NPU光模块对端lldp信息</td>
 </tr>
 <tr>
-<td>回环检测</td>
+<td>环回检测</td>
 <td><code>hccn_tool -i {npu_id} -optical -t {model}</code></td>
-<td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: 不支持</td>
+<td>V1: <code>hccn_tool.log</code><br>V2: <code>hccn_log/optical.log</code><br>V3: 暂不支持</td>
 <td>根据环回测试状态码判定故障位置：环回类型 1 后端口 down 判定为本端故障；环回类型 1 后端口 up 但环回类型 2 后端口 down 判定为本端端口光模块故障/脏污</td>
 <td>本端环回类型1后端口down，诊断为本端故障</td>
 </tr>
@@ -136,7 +136,7 @@
 </tbody>
 </table>
 
-> 当未采集到对端交换机或对端光模块信息时，自动退化为单端检测，仅基于本端数据进行光功率、SNR、电流异常判断。
+> Host 日志 V1/V2/V3 版本详情请参考 [host 离线日志采集](../05_usage/02_log_collection.md#host-offline-log)。
 
 ## BMC 相关诊断
 
@@ -386,8 +386,6 @@
 </tbody>
 </table>
 
-> 当对端为主机 NPU 端口（MAC 地址特征）或对端光模块信息缺失时，自动退化为单端检测。
-
 ## HCCS 相关诊断
 
 <table>
@@ -456,10 +454,6 @@
 </tbody>
 </table>
 
-> 当 RP TX 超时发生时，工具会输出基础告警「HCCS RP TX超时，超时次数：{n}」（n 为 `rp_tx` 字段值），并基于本端/对端端口状态附加具体故障描述。
->
-> 当 RX 超时发生时，工具会输出基础告警「HCCS RX超时，超时次数：{n}」（n 为 `rp_rx + lp_tx` 之和），并基于端口状态附加具体故障描述。
-
 ## 通用诊断
 
 <table>
@@ -478,7 +472,7 @@
 <td><code>hccn_tool -i {chip_phy_id} -optical -g</code>（主机）、<code>dis optical-module interface {interface}</code>（交换机）、<code>ipmcget -t sensor -d list</code>（BMC）</td>
 <td>主机 <code>hccn_log/optical.log</code>、交换机 <code>switch_cli_output.txt</code>、BMC <code>dump_info/AppDump/sensor/sensor_info.txt</code></td>
 <td>计算同一端口不同 lane 间 TX/RX 功率的最大值与最小值差值，判断是否超过阈值（3dB）。支持主机、交换机和 BMC 三个维度的检测</td>
-<td>TX端口Lane最大值和最小值差值大于3db，实际最大值lane0：-12.0dBm，最小值lane3：-16.0dBm</td>
+<td>TX端口Lane最大值和最小值差值大于3dB，实际最大值lane0：-12.0dBm，最小值lane3：-16.0dBm</td>
 </tr>
 </tbody>
 </table>
