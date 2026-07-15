@@ -9,6 +9,6 @@
 - [自定义故障实体](./07_custom_fault_entities.md)
 - [屏蔽故障日志](./08_fault_log_masking.md)
 - [自定义配置文件](./09_custom_configuration.md)
-- [业务流日志清洗（SDK）](./10_service_flow_parsing.md)
+- [业务日志清洗（SDK）](./10_service_flow_parsing.md)
 - [根因节点清洗及诊断（SDK）](./11_root_cause_parsing_diagnosis.md)
 - [故障事件清洗及诊断（SDK）](./12_fault_event_parsing_diagnosis.md)

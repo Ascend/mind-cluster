@@ -23,4 +23,4 @@
 
 ## 入参和返回值说明
 
-业务日志清洗入参和返回值，请阅读 `API参考 -> SDK接口 -> parse_fault_type` 中的 [parse_fault_type](../06_api/09_sdk_api.md#parse_fault_type) 接口定义。
+业务日志清洗入参和返回值，请阅读 `SDK 接口参考` 中的 [parse_fault_type](../06_api/09_sdk_api.md#parse_fault_type) 接口定义。

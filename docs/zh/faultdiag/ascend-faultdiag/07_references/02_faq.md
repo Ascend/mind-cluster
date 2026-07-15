@@ -4,7 +4,7 @@
 
 ### Q1：安装时提示 Python 版本不满足要求
 
-**A**：ascend-fd 要求 Python 3.7 及以上版本，如需使用性能劣化功能，必须要求 Python 3.8 以上版本。请检查您的 Python 版本：
+**A**：ascend-fd 要求 Python 3.7 及以上版本，如需使用性能劣化功能，要求 Python 3.8 及以上版本。请检查您的 Python 版本：
 
 ```shell
 python3 --version

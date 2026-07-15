@@ -11,8 +11,10 @@
 2. 创建清洗输出目录：
 
     ```shell
-    mkdir 清洗输出目录
+    mkdir <output_dir>
     ```
+
+    > - `output_dir` 清洗输出目录
 
 ### 全量清洗（推荐）
 
@@ -21,14 +23,20 @@
 执行清洗命令：
 
 ```shell
-ascend-fd parse -i 采集目录 -o 清洗输出目录
+ascend-fd parse -i <input_dir> -o <output_dir>
 ```
+
+> - `input_dir` 采集目录
+> - `output_dir` 清洗输出目录
 
 如果需要同时清洗性能劣化（设备资源和网络拥塞）数据，添加 `-p` 参数：
 
 ```shell
-ascend-fd parse -i 采集目录 -o 清洗输出目录 -p
+ascend-fd parse -i <input_dir> -o <output_dir> -p
 ```
+
+> - `input_dir` 采集目录
+> - `output_dir` 清洗输出目录
 
 回显如下表示清洗成功：
 
@@ -61,16 +69,16 @@ ascend-fd parse \
 
 > [!NOTE]
 >
-> - --bus_log 命令时，传递的组件日志需为 LCNE 组件日志目录。
+> - 参数包含 --bus_log 命令时，传递的组件日志需为 LCNE 组件日志目录。
 > - 说明：同时使用 `-i` 与详细日志目录参数时，会优先读取详细日志目录参数的值，再根据 `-i` 参数读取剩余日志目录。
 
 ### 清洗参数详细说明
 
-清洗的详细参数说明，阅读[API参考 -> parse命令（日志清洗）](../06_api/02_command_parse.md#参数说明)
+清洗的详细参数说明，请阅读 [parse 详细参数说明](../06_api/02_command_parse.md#参数说明)
 
 ### 清洗输出结果
 
-清洗输出结果请阅读[API参考 -> parse命令（日志清洗）](../06_api/02_command_parse.md#清洗输出结果)
+清洗输出结果请阅读 [parse 清洗输出结果说明](../06_api/02_command_parse.md#清洗输出结果)
 
 ## 多节点故障诊断
 
@@ -80,9 +88,9 @@ ascend-fd parse \
 
 ```text
 诊断输入目录
-    |-- 清洗输出目录1（建议命名为节点标识，如host1-192.168.1.1）
-    |-- 清洗输出目录2
-    |-- 清洗输出目录N
+    |-- 清洗输出目录 1（建议命名为节点标识，如 host1-192.168.1.1）
+    |-- 清洗输出目录 2
+    └── 清洗输出目录 N
 ```
 
 ## 注意事项
