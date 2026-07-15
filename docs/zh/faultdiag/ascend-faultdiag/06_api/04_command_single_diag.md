@@ -1,13 +1,13 @@
-# single-diag命令（单机故障诊断）
+# single-diag 命令（单机故障诊断）
 
 ## 功能说明
 
-用于在单台设备上快速完成日志清洗和故障诊断，无需进行多节点日志转储。
+用于在单台设备上直接完成日志清洗和故障诊断，无需进行多节点日志转储。
 
 ## 命令格式
 
 ```shell
-ascend-fd single-diag [-h] [-i INPUT_PATH] [-o OUTPUT_PATH] \
+ascend-fd single-diag [-h] [-i INPUT_PATH] -o OUTPUT_PATH \
     [--host_log HOST_LOG] [--device_log DEVICE_LOG] \
     [--train_log TRAIN_LOG [TRAIN_LOG ...]] [--process_log PROCESS_LOG] \
     [--env_check ENV_CHECK] [--dl_log DL_LOG] [--mindie_log MINDIE_LOG] \
@@ -52,5 +52,5 @@ ascend-fd single-diag --process_log {采集目录}/process_log -o /tmp/diag_out
 - 单机诊断默认返回故障事件分析结果
 - 如果诊断出故障，状态码为具体故障码；未诊断出故障时，状态码为 `NORMAL_OR_UNSUPPORTED`
 - 单机诊断会扫描节点中所有有效日志的故障事件
-- ascend-fd 运行错误码请查阅[参考 -> 常用操作 -> 组件错误码](../07_references/04_appendix.md#组件错误码)
+- ascend-fd 运行错误码请查阅[组件错误码](../07_references/04_appendix.md#组件错误码)
 - 单机诊断结果可参考 [基础诊断](03_command_diag.md#基础诊断)

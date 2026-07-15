@@ -7,30 +7,49 @@
 - Linux 系统，已安装 unzip 工具
 - 已安装 Python 3.7 及以上版本
 - 已安装 pip3
+- 确保网络连接正常，安装过程需联网下载三方依赖库
 
 ## 步骤1：安装 ascend-fd
 
-1. 从开源社区获取软件包 `Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip`，[下载链接](https://gitcode.com/Ascend/mind-cluster/releases)。
+1. 获取软件包
 
-    > - `{version}` 为软件包版本号。
-    > - `{arch}` 为软件包架构，分为 x86_64 和 aarch64，请根据实际需要修改，可通过 `arch` 命令查看。
+    通过 `arch` 命令得到当前环境架构，使用以下命令自动从开源社区下载软件包：
 
-2. 将软件包上传到 linux 机器。
-
-3. 在 linux 机器上解压并安装：
+    - aarch64
 
     ```shell
-    unzip Ascend-mindxdl-faultdiag_{version}_linux-{arch}.zip
-    pip3 install ascend_faultdiag-{version}-py3-none-linux_{arch}.whl
+    wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.1.0/Ascend-mindxdl-faultdiag_26.1.0_linux-aarch64.zip
     ```
 
-4. 验证安装是否成功：
+    - x86_64
+
+    ```shell
+    wget https://gitcode.com/Ascend/mind-cluster/releases/download/v26.1.0/Ascend-mindxdl-faultdiag_26.1.0_linux-x86_64.zip
+    ```
+
+2. 解压并安装
+
+    - aarch64
+
+    ```shell
+    unzip Ascend-mindxdl-faultdiag_26.1.0_linux-aarch64.zip
+    pip3 install ascend_faultdiag-26.1.0-py3-none-linux_aarch64.whl
+    ```
+
+    - x86_64
+
+    ```shell
+    unzip Ascend-mindxdl-faultdiag_26.1.0_linux-x86_64.zip
+    pip3 install ascend_faultdiag-26.1.0-py3-none-linux_x86_64.whl
+    ```
+
+3. 验证安装是否成功
 
     ```shell
     ascend-fd version
     ```
 
-    如果回显版本号，说明安装成功，如:
+    如果回显版本号，说明安装成功，如：
 
     ```shell
     ascend-fd v26.1.0
@@ -38,17 +57,22 @@
 
 ## 步骤2：准备日志
 
-本示例使用**基础应用场景**，只需要准备环境检查日志。
+本示例只需要准备环境检查日志。
 
-1. 创建采集目录：
+1. 创建采集目录
 
     ```shell
     mkdir -p /tmp/faultdiag_demo/log_dir
     ```
 
-2. 将日志文件放入采集目录：
+2. 将日志文件放入采集目录
 
-    - 获取示例日志文件（[点击下载](../../../resource/environment_check.zip)），该日志为训练前后收集的对应环境检查日志，具体请参考[日志采集](../05_usage/02_log_collection.md)。
+    - 通过以下命令获取示例日志，该日志为训练前后收集的对应环境检查日志，具体请参考[日志采集](../05_usage/02_log_collection.md)。
+
+    ```shell
+    wget https://raw.gitcode.com/Ascend/mind-cluster/blobs/d58f9ef2e4c1930ba720353d452ebdcdb3ee2aad/environment_check.zip
+    ```
+
     - 解压到 `/tmp/faultdiag_demo/log_dir` 目录
 
     ```shell
@@ -57,13 +81,13 @@
 
 ## 步骤3：日志清洗
 
-1. 创建清洗输出目录：
+1. 创建清洗输出目录
 
     ```shell
     mkdir -p /tmp/faultdiag_demo/parse_out
     ```
 
-2. 执行清洗命令：
+2. 执行清洗命令
 
     ```shell
     ascend-fd parse -i /tmp/faultdiag_demo/log_dir -o /tmp/faultdiag_demo/parse_out
@@ -80,18 +104,18 @@
 
     > [!NOTE]
     >
-    > - 具体的命令可以查询[API参考 -> parse命令（日志清洗）](../06_api/02_command_parse.md)。
-    > - `ROOT_CLUSTER failed` 由于无 Plog（CANN 应用类日志） 文件，根因数据不能清洗，该告警可以忽略。
+    > - 具体的命令请查询 [parse 命令（日志清洗）](../06_api/02_command_parse.md)。
+    > - `ROOT_CLUSTER failed` 由于无 plog（CANN 应用类日志）文件，根因数据不能清洗，该告警可以忽略。
 
 ## 步骤4：故障诊断
 
-1. 创建诊断输出目录：
+1. 创建诊断输出目录
 
     ```shell
     mkdir -p /tmp/faultdiag_demo/diag_out
     ```
 
-2. 执行诊断命令：
+2. 执行诊断命令
 
     ```shell
     ascend-fd diag -i /tmp/faultdiag_demo -o /tmp/faultdiag_demo/diag_out
@@ -99,7 +123,7 @@
 
     > [!NOTE]
     >
-    > - 具体的命令可以查询[API参考 -> diag命令（集群故障诊断）](../06_api/03_command_diag.md)。
+    > - 具体的命令请查询 [diag 命令（集群故障诊断）](../06_api/03_command_diag.md)。
 
     诊断完成后，终端会输出诊断报告：
 
@@ -147,8 +171,8 @@
 ## 结果解读
 
 - 从日志读取到相关软件的版本，并在诊断报告中展示。
-- 日志中没有 CANN 日志，诊断结果中提示没有 Plog 文件。
-- 诊断结果显示 `Unknown Device`，是由于日志采集不完整，此处是正常情况。
+- 清洗输入中没有 CANN 日志，诊断结果中提示没有 plog 文件。
+- 根因节点显示 `Unknown Device`，是由于日志采集不完整，此处是正常情况。
 - 根据环境检查日志，检测出 device-0 和 device-4 上的 NPU 光模块不在位。
 - 相关状态码可以参考[已支持故障](../07_references/04_appendix.md#已支持故障)。
 - 详细报告可以查看 `/tmp/faultdiag_demo/diag_out/fault_diag_result/diag_report.json`。
@@ -156,4 +180,4 @@
 ## 下一步
 
 - 参考[特性指南](../05_usage/menu_usage.md)了解更多功能。
-- 参考[API参考](../06_api/menu_api.md)了解更多命令。
+- 参考 [API 参考](../06_api/menu_api.md)了解更多命令。

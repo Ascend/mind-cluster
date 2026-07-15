@@ -1,4 +1,4 @@
-# API参考
+# API 参考
 
 ascend-fd 提供两种接口方式：
 
@@ -22,7 +22,7 @@ ascend-fd <子命令> [参数]
 | [single-diag](./04_command_single_diag.md) | 单机故障诊断   | 在单台设备上快速诊断         |
 | [entity](./05_command_entity.md)           | 自定义故障实体 | 管理自定义故障检测规则       |
 | [blacklist](./06_command_blacklist.md)     | 屏蔽故障日志   | 管理日志屏蔽规则             |
-| [config](./07_command_config.md)           | 查看配置文件   | 显示当前使用的配置文件路径   |
+| [config](./07_command_config.md)           | 查看配置文件   | 管理当前使用的配置文件路径   |
 | [version](./08_command_version.md)         | 查看版本       | 显示当前 ascend-fd 版本      |
 
 > [!NOTE]

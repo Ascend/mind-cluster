@@ -8,32 +8,31 @@
 
 1. 先根据[日志采集指南](./02_log_collection.md)进行日志采集。
 
-2. 根据[日志清洗指南](./03_log_parsing.md)进行日志清洗。
-
-3. 创建单机诊断结果输出目录：
+2. 创建单机诊断结果输出目录：
 
     ```shell
-    mkdir 单机诊断结果输出目录
+    mkdir <output_dir>
     ```
 
-4. 执行诊断命令：
+    > `output_dir` 单机诊断结果输出目录
+
+3. 执行诊断命令：
 
     ```shell
-    ascend-fd single-diag -i 采集目录 -o 单机诊断结果输出目录
+    ascend-fd single-diag -i <input_dir> -o <output_dir>
     ```
 
     > [!NOTE]
     >
-    > - 单机诊断默认返回故障事件分析结果。
-    > - 诊断结果回显请见[诊断报告解读](04_fault_diagnosis.md#诊断报告解读)
+    > - `input_dir` 采集目录
+    > - `output_dir` 单机诊断结果输出目录
+    > - 单机诊断默认返回故障事件分析结果
 
-## 诊断报告解读
+## 诊断报告与诊断结果
 
-诊断报告请见[诊断报告解读](04_fault_diagnosis.md#诊断报告解读)
+诊断报告解读请见[诊断报告解读](./04_fault_diagnosis.md#诊断报告解读)
 
-## 诊断结果文件
-
-诊断报告请见[诊断结果文件](04_fault_diagnosis.md#诊断结果文件)
+诊断结果文件请见[诊断结果文件](./04_fault_diagnosis.md#诊断结果文件)
 
 > [!NOTE]
 >
