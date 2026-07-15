@@ -2,27 +2,24 @@
 
 ## 命令功能
 
-设置交换机命令回显文本目录。
+设置交换机命令回显 / 日志导出目录，用于离线分析场景。
 
 ## 命令格式
 
-| 命令格式 | 描述 |
-|---------|------|
-| `set_switch_dump_log <目录>` | 设置交换机命令回显目录。 |
-| `set_switch_dump_log ?` | 查看详细说明。 |
+| 命令格式 | 描述               |
+|---------|------------------|
+| `set_switch_dump_log <目录>` | 设置交换机命令回显/日志导出目录 |
+| `set_switch_dump_log ?` | 查看详情             |
 
 ## 参数说明
 
-| 参数 | 说明 |
-|------|------|
-| `<目录>` | 交换机日志目录路径。 |
+| 参数 | 类型 | 是否必填 | 说明 |
+|------|-----|------|------|
+| `<目录>` | string | 是 | 交换机命令回显/日志导出目录路径。 |
 
 ## 支持的日志类型
 
-- 使用交换机 `display diagnostic-information <filename>` 命令导出的结果或者查询关键命令后复制的回显文本。
-- 使用交换机 `collect diagnostic information` 命令导出的日志 zip 包。
-
-> **注**：日志详情请参考[日志收集与数据源](../../05_usage/02_log_collection.md)。
+日志详情请参考[交换机离线日志采集](../../05_usage/02_log_collection.md#switch-offline-log)。
 
 ## 输出说明
 
@@ -31,7 +28,7 @@
 
 ## 示例
 
-非交互式方式：
+非交互式方式（展示命令与回显）：
 
 ```bash
 ascend-fd-tk set_switch_dump_log /data/switch_logs auto_collect_diag
@@ -39,7 +36,7 @@ ascend-fd-tk set_switch_dump_log /data/switch_logs auto_collect_diag
 # 其他日志输出...
 ```
 
-交互式方式：
+交互式方式（展示命令与回显）：
 
 ```bash
 ascend-fd-tk

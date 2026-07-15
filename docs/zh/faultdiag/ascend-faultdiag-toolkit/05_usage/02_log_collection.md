@@ -1,23 +1,25 @@
-# 日志收集与数据源
+# 日志采集
 
-本文档从用户视角介绍日志采集流程，说明 ascend-fd-tk 工具如何获取服务器、BMC、交换机链路故障诊断所需的日志数据。
+本文档从用户视角介绍日志采集流程，说明 ascend-fd-tk 工具如何获取服务器（Host）、BMC、交换机链路故障诊断所需的日志数据。
 
 ## 采集模式概览
 
-工具支持两种日志采集模式：
+工具支持两种数据采集模式：
 
 | 模式 | 适用场景 | 前置条件 |
 |------|----------|----------|
-| **在线 SSH 采集** | 设备可网络访问（IP / 账号密码 / 密钥 / 免密），实时采集 | 工具所在节点到目标设备 22 端口可达 |
+| **在线 SSH 采集** | 设备可网络访问（IP / 账号密码 / 密钥 / 免密），实时采集 | 工具所在节点到目标设备端口可达 |
 | **离线日志收集** | 已获取到日志文件，仅需归档分析 | 提前收集日志到工具所在节点的目录 |
 
-> **快速导航**：[服务器（Host）日志](#服务器host日志) | [BMC 日志](#BMC-log) | [交换机日志](#交换机日志)
+> - **快速导航**：[服务器（Host）日志](#服务器host日志) | [BMC 日志](#BMC-log) | [交换机日志](#交换机日志)
+> - 在线采集命令请根据产品型号选对应的参考资料，如：[Atlas A3 中心推理和训练硬件HCCN Tool 接口参考](https://support.huawei.com/enterprise/zh/doc/EDOC1100568348/426cffd9?idPath=23710424|251366513|22892968|252309113|261716443)、[Atlas 800T A3 超节点 iBMC 命令](https://support.huawei.com/enterprise/zh/doc/EDOC1100461433/2cd78eac?idPath=23710424|251366513|22892968|252309113|261716443)、[交换机命令参考](https://support.huawei.com/enterprise/zh/switches/s3700-s5700-s6700-pid-259602657?category=reference-guides&subcategory=command-reference)
+> - 离线日志目录结构说明：工具支持压缩包自动解析，使用时无需手动解压。下文离线日志目录结构展示了压缩包内部层级，用于说明包内的重要文件。
 
 <a id="服务器host日志"></a>
 
 ## 服务器（Host）日志
 
-### 1. 在线采集
+### 1. 在线数据采集
 
 工具会自动通过 SSH 在服务器上执行以下命令进行采集：
 
@@ -41,13 +43,15 @@
 | RoCE 速率 | `hccn_tool -i {chip_phy_id} -speed -g` | RoCE 速率 |
 | RoCE 双工 | `hccn_tool -i {chip_phy_id} -duplex -g` | RoCE 双工模式 |
 
+<a id="host-offline-log"></a>
+
 ### 2. 离线日志采集
 
-工具支持 3 个版本的离线日志结构，版本识别由工具自动完成，无需手动指定。通过以下任意一种[host日志采集脚本](https://gitcode.com/Ascend/mindcluster-deploy/ascend-fd-tk/host_collector)收集日志，收集后获得 `{file_name}.tar.gz`，直接将压缩包放入日志采集目录即可。
+工具支持 3 个版本的离线日志结构，版本识别由工具自动完成，无需手动指定。通过以下任意一种 [host 日志采集脚本](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/ascend-fd-tk/host_collector)收集日志，收集后获得 `{file_name}.tar.gz`，直接将压缩包放入日志采集目录即可。
 
-- 版本 1：通过 `tool_log_collection_out_version_all_<version>.sh` 收集日志。
-- 版本 2：通过 `device_log_collect_<version>.sh` 收集日志。
-- 版本 3：通过 `link_down_collect_<version>.sh` 收集日志。
+- 版本 1：通过执行 `tool_log_collection_out_version_all_<version>.sh` 脚本收集日志。
+- 版本 2：通过执行 `device_log_collect_<version>.sh` 脚本收集日志。
+- 版本 3：通过执行 `link_down_collect_<version>.sh` 脚本收集日志。
 
 #### 版本 1
 
@@ -59,8 +63,6 @@ host日志采集目录/
     ├── npu_card_info.log                   # NPU 卡信息
     ├── pcie_info.log                       # PCIe 信息
     └── version_info.log                    # 版本信息
-
-# 注：工具支持压缩包自动解析，使用时无需手动解压。上述目录结构展示了压缩包内部层级，用于说明包内的重要文件。
 ```
 
 #### 版本 2
@@ -77,8 +79,6 @@ host日志采集目录/
     │   └── npu_smi.log
     └── pcie_log/
         └── pcie.log
-
-# 注：工具支持压缩包自动解析，使用时无需手动解压。上述目录结构展示了压缩包内部层级，用于说明包内的重要文件。
 ```
 
 #### 版本 3
@@ -89,8 +89,6 @@ host日志采集目录/
     ├── 时间戳目录（如 2023-10-01_14-30-00）    # 使用 msnpureport 导出的 device 侧日志
     ├── lldp.log
     └── optical.log
-
-# 注：工具支持压缩包自动解析，使用时无需手动解压。上述目录结构展示了压缩包内部层级，用于说明包内的重要文件。
 ```
 
 ---
@@ -99,7 +97,7 @@ host日志采集目录/
 
 ## BMC 日志
 
-### 1. 在线采集
+### 1. 在线数据采集
 
 工具通过 BMC IPMI 协议自动采集以下数据项：
 
@@ -111,7 +109,9 @@ host日志采集目录/
 | 传感器信息 | `ipmcget -t sensor -d list` | 温度 / 电压 / 风扇等传感器 |
 | 健康事件 | `ipmcget -d healthevents` | 当前健康告警 |
 
-此外，工具也提供内置命令 `collect_bmc_dump_info` 用于在线收集 BMC dump info 日志。该命令通过 `ipmcget -d diaginfo` 触发 BMC 一键收集，将 `dump_info.tar.gz` 下载到 `家目录/cache/bmc_dump_cache/`。下载的压缩包解压后包含上表所示数据项，可直接放入 BMC 日志采集目录用于离线诊断。
+此外，工具也提供内置命令 [collect_bmc_dump_info](../06_api/03_collect/collect_bmc_dump_info.md) 用于在线收集 BMC dump info 日志。该命令通过 `ipmcget -d diaginfo` 触发 BMC 一键收集，将 `dump_info.tar.gz` 下载到 `家目录/cache/bmc_dump_cache/`。下载的压缩包解压后包含上表所示数据项，可直接放入 BMC 日志采集目录用于离线诊断。
+
+非交互式方式示例 BMC 日志采集（展示命令与回显）：
 
 ```bash
 # 配置 BMC 信息（IP / 账号密码 / 密钥 / 免密）与 BMC 日志采集
@@ -119,14 +119,14 @@ ascend-fd-tk set_conn_config /home/user/conn.ini collect_bmc_dump_info
 收集完成，请查看日志路径{...}
 ```
 
+<a id="BMC-offline-log"></a>
+
 ### 2. 离线日志采集
 
-支持通过以下方式收集 BMC 日志：
+支持通过以下任意一种方式收集 BMC 日志：
 
-- **方式 1**：通过 BMC 网页，使用"一键收集"按钮下载日志。
-- **方式 2**：登录 BMC 平台，使用 `ipmcget -d diaginfo` 命令收集日志。
-
-将以上方式采集的日志压缩包统一放到一个目录中，在清洗日志时会自动解压分析日志信息。
+- **方式 1**：通过 BMC 网页（[登录步骤参考](https://support.huawei.com/enterprise/zh/doc/EDOC1100461433/897d7845?idPath=23710424|251366513|22892968|252309113|261716443)），使用"一键收集"按钮下载日志。
+- **方式 2**：登录 BMC 平台（[登录步骤参考](https://support.huawei.com/enterprise/zh/doc/EDOC1100461433/81918f5e?idPath=23710424|251366513|22892968|252309113|261716443)），使用 `ipmcget -d diaginfo` 命令收集日志。
 
 BMC 日志采集目录结构如下：
 
@@ -142,8 +142,6 @@ bmc日志采集目录/
             ├── sensor/sensor_info.txt                 # 传感器信息
             ├── network_adapter/optical_module/optical_module_history_info_log.csv  # 光模块历史1
             └── CpuMem/NpuIO/optical_module_history_info_log.csv                    # 光模块历史2
-
-# 注：工具支持压缩包自动解析，使用时无需手动解压。上述目录结构展示了压缩包内部层级，用于说明包内的重要文件。
 ```
 
 ---
@@ -151,9 +149,9 @@ bmc日志采集目录/
 
 ## 交换机日志
 
-### 1. 在线采集
+### 1. 在线数据采集
 
-通过 SSH 登录交换机后，工具自动执行以下命令：
+工具通过 SSH 登录交换机后，自动执行以下命令：
 
 | 数据 | 命令 |
 |------|------|
@@ -182,16 +180,20 @@ bmc日志采集目录/
 | 接口通道信息 | `display interface information \| no-more` |
 | Serdes 转储信息 | `display for info enp s 1 c {chip_id} "get port serdes dump-info macro-id {port_id} lane-id {lane_id} hilink {type}" \| no-more` |
 
+<a id="switch-offline-log"></a>
+
 ### 2. 离线日志采集
 
 交换机离线日志主要需要以下两种日志：
 
-- **CLI 命令输出日志（diag 文本日志）**：包含各种交换机命令的执行结果。收集方式如下：
+- **CLI 命令输出日志（diag 文本日志）**：包含各种交换机命令的执行结果。使用以下任意一种方式收集：
   - 方式 1：登录交换机后执行 `display diagnostic-information {filename}.txt`。
-  - 方式 2：登录交换机后手动执行关键命令（必须包含 `display current-configuration`），将回显的文本保存到 `.txt` 文件并导出。执行的命令可参考[switch命令](https://gitcode.com/Ascend/mindcluster-deploy/ascend-fd-tk/switch_collector)。
+  - 方式 2：登录交换机后手动执行关键命令（必须包含 `display current-configuration`），将回显的文本保存到 `.txt` 文件并导出。执行的命令可参考 [switch 命令](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/ascend-fd-tk/switch_collector)。
 - **诊断日志**：由交换机诊断工具生成的结构化日志（`diagnostic_information.zip`）。登录交换机后执行 `collect diagnostic information`，并导出 zip 包。
 
-Switch 日志目录结构如下：
+将以上方式采集的日志统一压缩到一个压缩包中，直接放入到switch日志采集目录，在清洗日志时会自动解压分析日志信息。
+
+交换机日志目录结构如下：
 
 ```text
 switch日志采集目录/
@@ -205,6 +207,4 @@ switch日志采集目录/
             └── tempdir/
                 └── diag.log.zip/
                     └── diag.log                # 诊断日志（含交换机名称、SNR 等信息）
-
-# 注：工具支持压缩包自动解析（含嵌套压缩包），使用时无需手动解压。上述目录结构展示了压缩包内部层级，用于说明包内的重要文件。
 ```
