@@ -8,11 +8,55 @@
 - 计算节点：支持的产品形态和单机场景支持的产品一致，请参见下表。
 - 存储节点：存储服务器。
 
+## 单机场景
+
+单机场景下，训练推理都支持的产品形态和OS如下表所示。
+
+**表 1**  支持的产品形态和OS
+
+<a name="tableAtlasGeneral"></a>
+<table><thead align="left"><tr id="rowAtlasGeneralH"><th class="cellrowborder" valign="top" width="15.93%" id="mcpsGen1.2.4.1.1"><p id="pGenSeries"><a name="pGenSeries"></a><a name="pGenSeries"></a>产品系列</p>
+</th>
+<th class="cellrowborder" valign="top" width="33.67%" id="mcpsGen1.2.4.1.2"><p id="pGenName"><a name="pGenName"></a><a name="pGenName"></a>产品名称</p>
+</th>
+<th class="cellrowborder" valign="top" width="50.4%" id="mcpsGen1.2.4.1.3"><p id="pGenOS"><a name="pGenOS"></a><a name="pGenOS"></a>操作系统</p>
+</th>
+</tr>
+</thead>
+<tbody><tr id="rowAtlas950"><td class="cellrowborder" valign="top" width="15.93%" headers="mcpsGen1.2.4.1.1 "><p id="pAtlas950"><a name="pAtlas950"></a><a name="pAtlas950"></a><span id="phAtlas950"><a name="phAtlas950"></a><a name="phAtlas950"></a>Atlas 950</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas950SuperPoD"><a name="pAtlas950SuperPoD"></a><a name="pAtlas950SuperPoD"></a><span id="phAtlas950SuperPoD"><a name="phAtlas950SuperPoD"></a><a name="phAtlas950SuperPoD"></a>Atlas 950 SuperPoD</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas950OS"><a name="pAtlas950OS"></a><a name="pAtlas950OS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
+</td>
+</tr>
+<tr id="rowAtlas850"><td class="cellrowborder" rowspan="2" valign="top" width="15.93%" headers="mcpsGen1.2.4.1.1 "><p id="pAtlas850"><a name="pAtlas850"></a><a name="pAtlas850"></a><span id="phAtlas850"><a name="phAtlas850"></a><a name="phAtlas850"></a>Atlas 850</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850Server"><a name="pAtlas850Server"></a><a name="pAtlas850Server"></a><span id="phAtlas850Server"><a name="phAtlas850Server"></a><a name="phAtlas850Server"></a>Atlas 850 Server</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas850ServerOS"><a name="pAtlas850ServerOS"></a><a name="pAtlas850ServerOS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
+</td>
+</tr>
+<tr id="rowAtlas850E"><td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas850EServer"><a name="pAtlas850EServer"></a><a name="pAtlas850EServer"></a><span id="phAtlas850EServer"><a name="phAtlas850EServer"></a><a name="phAtlas850EServer"></a>Atlas 850E Server</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas850EServerOS"><a name="pAtlas850EServerOS"></a><a name="pAtlas850EServerOS"></a>openEuler 24.03 LTS SP4 for aarch64</p>
+</td>
+</tr>
+<tr id="rowAtlas350"><td class="cellrowborder" valign="top" width="15.93%" headers="mcpsGen1.2.4.1.1 "><p id="pAtlas350"><a name="pAtlas350"></a><a name="pAtlas350"></a><span id="phAtlas350"><a name="phAtlas350"></a><a name="phAtlas350"></a>Atlas 350</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="33.67%" headers="mcpsGen1.2.4.1.2 "><p id="pAtlas350Card"><a name="pAtlas350Card"></a><a name="pAtlas350Card"></a><span id="phAtlas350Card"><a name="phAtlas350Card"></a><a name="phAtlas350Card"></a>Atlas 350 标卡</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="50.4%" headers="mcpsGen1.2.4.1.3 "><p id="pAtlas350OS"><a name="pAtlas350OS"></a><a name="pAtlas350OS"></a>由机头决定</p>
+</td>
+</tr>
+</tbody>
+</table>
+
 ## 单机场景（训练）
 
 单机训练场景下，支持的产品形态和OS如下表所示。
 
-**表 1**  支持的产品形态和OS
+**表 2**  支持的产品形态和OS
 
 <a name="table7314423114217"></a>
 <table><thead align="left"><tr id="row83141238425"><th class="cellrowborder" valign="top" width="15.93%" id="mcps1.2.4.1.1"><p id="p1731452318420"><a name="p1731452318420"></a><a name="p1731452318420"></a>产品系列</p>
@@ -107,7 +151,7 @@
 
 单机推理场景下，支持的产品形态和OS如下表所示。
 
-**表 2**  支持的产品形态和OS
+**表 3**  支持的产品形态和OS
 
 <a name="table107471445138"></a>
 <table><thead align="left"><tr id="row207471745039"><th class="cellrowborder" valign="top" width="15.93%" id="mcps1.2.4.1.1"><p id="p074714451932"><a name="p074714451932"></a><a name="p074714451932"></a>产品系列</p>
@@ -194,13 +238,6 @@
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p id="p143871017213"><a name="p143871017213"></a><a name="p143871017213"></a><span id="ph18760103420211"><a name="ph18760103420211"></a><a name="ph18760103420211"></a>Atlas 800I A3 超节点服务器</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul877545583412"></a><a name="ul877545583412"></a><ul id="ul877545583412"><li>openEuler 22.03 LTS SP4 for aarch64</li><li>Euler 2.13 for aarch64</li><li>CUlinux 3.0 for aarch64</li><li>CUlinux 4.0 for aarch64</li><li>CTYunOS 4.0 for aarch64</li><li>HCE 2.0.2506 for aarch64</li><li>Velinux 2.0 for aarch64</li><li>Kylin V10 SP3 2403 for aarch64</li><li>Kylin V11 for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li></ul>
-</td>
-</tr>
-<tr><td class="cellrowborder" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p>Ascend 950代际产品</p>
-</td>
-<td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p><span>Atlas 350 标卡</span></p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas 350 标卡设备在当前版本不支持DPU硬件设备通信功能。</div></div>
-</td>
-<td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><ul><li>Velinux 2.0</li><li>Alinux 3 for x86_64</li></ul>
 </td>
 </tr>
 <tr id="row64419316256"><td class="cellrowborder" colspan="3" valign="top" headers="mcps1.2.4.1.1 mcps1.2.4.1.2 mcps1.2.4.1.3 "><a name="ul17949191917256"></a><a name="ul17949191917256"></a><ul id="ul17949191917256"><li><strong id="b189491819122517"><a name="b189491819122517"></a><a name="b189491819122517"></a>单机场景下：以下硬件产品，仅支持安装<span id="ph10949131918259"><a name="ph10949131918259"></a><a name="ph10949131918259"></a>Ascend Docker Runtime</span>组件。</strong></li><li><strong id="b094919197251"><a name="b094919197251"></a><a name="b094919197251"></a>集群场景下：以下硬件产品，仅支持安装<span id="ph1294912191256"><a name="ph1294912191256"></a><a name="ph1294912191256"></a>Ascend Docker Runtime</span>、<span id="ph1794971919254"><a name="ph1794971919254"></a><a name="ph1794971919254"></a>Ascend Device Plugin</span>组件。</strong></li></ul>
