@@ -1,25 +1,29 @@
 # 升级
 
-## 升级步骤
-
-1. 执行以下命令安装新的软件包：
+1. 执行以下命令安装新的软件包
 
     ```shell
-    pip3 install --upgrade ascend_faultdiag-{version}-py3-none-linux_{arch}.whl
+    pip3 install --upgrade ascend_faultdiag-{version}-py3-none-linux_{arch}.whl --log ~/.ascend_faultdiag/install.log
     ```
 
     > [!NOTE]
     >
+    > - version 为 ascend-fd 版本。
+    > - arch 为软件包架构，分为 x86_64 和 aarch64，请根据实际需要修改，可通过 `arch` 命令查看。
     > - 如果版本号相同，可以使用 `--force-reinstall` 参数强制重新安装。
     > - 请确保没有未完成的清洗或诊断任务。
 
-2. 执行以下命令验证升级是否成功：
+2. 执行以下命令验证升级是否成功
 
     ```shell
     ascend-fd version
     ```
 
-    回显新的版本号即表示升级成功。
+    回显新的版本号即表示升级成功：
+
+    ```shell
+    ascend-fd v26.1.0
+    ```
 
 3. 升级失败处理
 

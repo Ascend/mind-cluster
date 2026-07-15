@@ -1,4 +1,4 @@
-# parse命令（日志清洗）
+# parse 命令（日志清洗）
 
 ## 功能说明
 
@@ -7,7 +7,7 @@
 ## 命令格式
 
 ```shell
-ascend-fd parse [-h] [-i INPUT_PATH] [-o OUTPUT_PATH] \
+ascend-fd parse [-h] [-i INPUT_PATH] -o OUTPUT_PATH \
     [--host_log HOST_LOG] [--device_log DEVICE_LOG] \
     [--train_log TRAIN_LOG [TRAIN_LOG ...]] [--process_log PROCESS_LOG] \
     [--env_check ENV_CHECK] [--dl_log DL_LOG] [--mindie_log MINDIE_LOG] \
@@ -55,8 +55,7 @@ ascend-fd parse -i /tmp/log_dir -o /tmp/parse_out -p
 ### 特定组件日志清洗
 
 ```shell
-ascend-fd parse --process_log /tmp/cann_log --train_log /tmp/train_log \
-    -o /tmp/parse_out
+ascend-fd parse --process_log /tmp/cann_log --train_log /tmp/train_log -o /tmp/parse_out
 ```
 
 ## 清洗输出结果
@@ -81,21 +80,20 @@ ascend-fd parse --process_log /tmp/cann_log --train_log /tmp/train_log \
 
 ### 清洗结果说明
 
-| 文件                          | 说明                                                            |
-|-------------------------------|-----------------------------------------------------------------|
-| `ascend-kg-parser.json`       | 故障事件分析清洗结果。（旧版本文件，兼容 ascend-fd 6.0.0 版本） |
-| `ascend-kg-analyzer.json`     | 故障事件分析清洗结果。（新版本文件，ascend-fd 6.0.0 之后版本）  |
-| `ascend-rc-parser.json`       | 根因节点分析清洗结果                                            |
-| `device_ip_info.json`         | 设备 IP 信息                                                    |
-| `plog-parser-{pid}-{0/1}.log` | 根因节点分析清洗后日志，按 PID 分类保存                         |
-| `mindie-cluster-info.json`    | MindIE Pod日志清洗结果                                          |
-| `server-info.json`            | MindIE 组件服务器信息                                           |
-| `nad_clean.csv`               | 计算降频清洗结果（需 `-p` 参数）                                |
-| `nic_clean.csv`               | 网络拥塞清洗结果（需 `-p` 参数）                                |
-| `process_{core_num}.csv`      | CPU 资源抢占清洗结果（需 `-p` 参数）                            |
+| 文件                          | 说明                                                                  |
+|-------------------------------|-----------------------------------------------------------------------|
+| `ascend-kg-parser.json`       | 故障事件分析清洗结果。（旧版本文件，兼容 ascend-fd 6.0.0 及之前版本） |
+| `ascend-kg-analyzer.json`     | 故障事件分析清洗结果。（新版本文件，ascend-fd 6.0.0 之后版本）        |
+| `ascend-rc-parser.json`       | 根因节点分析清洗结果                                                  |
+| `device_ip_info.json`         | 设备 IP 信息                                                          |
+| `plog-parser-{pid}-{0/1}.log` | 根因节点分析清洗后日志，按 PID 分类保存                               |
+| `mindie-cluster-info.json`    | MindIE Pod 日志清洗结果                                               |
+| `server-info.json`            | MindIE 组件服务器信息                                                 |
+| `nad_clean.csv`               | 计算降频清洗结果（需 `-p` 参数）                                      |
+| `nic_clean.csv`               | 网络拥塞清洗结果（需 `-p` 参数）                                      |
+| `process_{core_num}.csv`      | CPU 资源抢占清洗结果（需 `-p` 参数）                                  |
 
 ## 注意事项
 
 - 清洗前，请确保输出目录有 5GB 以上的可用磁盘空间
-- 不指定 `-p` 时，默认仅清洗根因节点和故障事件两个模块
-- ascend-fd 运行错误码请查阅[参考 -> 常用操作 -> 组件错误码](../07_references/04_appendix.md#组件错误码)
+- ascend-fd 运行错误码请查阅[组件错误码](../07_references/04_appendix.md#组件错误码)
