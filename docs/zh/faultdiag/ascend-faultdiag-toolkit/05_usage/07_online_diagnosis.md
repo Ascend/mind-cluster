@@ -1,6 +1,30 @@
 # 在线诊断
 
-## 交互式命令执行
+在线诊断适用于可访问集群设备，配置设备连接信息，自动进行数据采集与故障诊断。
+
+## 非交互式命令执行（展示命令与回显）
+
+非交互式模式将多个命令串联在一行中执行，适用于自动化运维场景。
+
+### 1. 清理缓存
+
+执行任务前，建议清理缓存，避免上次诊断结果影响本次诊断：
+
+```bash
+ascend-fd-tk clear_cache
+清理完成
+```
+
+### 2. 配置在线数据源并一键诊断
+
+```bash
+ascend-fd-tk set_config_dir /path/to/your_config_path set_conn_config /path/to/conn.ini auto_collect_diag
+诊断完成
+```
+
+> 设置配置文件路径命令 `set_config_dir` 为可选命令。
+
+## 交互式命令执行（展示命令与回显）
 
 ### 1. 启动工具
 
@@ -44,30 +68,6 @@ ascend-fd-tk
 诊断完成
 ```
 
-### 6. 查看诊断报告
+## 查看诊断报告
 
-诊断完成后报告自动生成至工具家目录，详见[诊断 / 巡检报告说明](06_fault_analysis_report.md)。
-
-## 非交互式命令执行
-
-非交互式模式将多个命令串联在一行中执行，适用于自动化运维场景。
-
-### 1. 清理缓存
-
-执行任务前，建议清理缓存，避免上次诊断结果影响本次诊断：
-
-```bash
-ascend-fd-tk clear_cache
-清理完成
-```
-
-### 2. 配置在线数据源并一键诊断
-
-```bash
-ascend-fd-tk set_config_dir /path/to/your_config_path set_conn_config /path/to/conn.ini auto_collect_diag
-诊断完成
-```
-
-### 3. 查看诊断报告
-
-诊断完成后报告自动生成至工具家目录，详见[诊断 / 巡检报告说明](06_fault_analysis_report.md)。
+诊断完成后报告自动生成至工具家目录下的 report 子目录，详见[诊断 / 巡检报告说明](06_fault_analysis_report.md)。

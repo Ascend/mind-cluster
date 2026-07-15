@@ -10,12 +10,12 @@
 
 | 命令格式 | 描述 |
 |---------|------|
-| `auto_collect_diag` | 启动一键式自动收集和诊断。 |
-| `auto_collect_diag ?` | 查看详情。 |
+| `auto_collect_diag` | 启动一键式自动收集(在线设备采集或离线日志收集)诊断 |
+| `auto_collect_diag ?` | 查看详情 |
 
 ## 参数说明
 
-无参数。
+无业务参数，`?` 为内置帮助标识，用于查看命令用法。
 
 ## 执行流程
 
@@ -33,7 +33,7 @@
 
 ## 示例
 
-非交互式方式：
+非交互式方式（展示命令与回显）：
 
 ```bash
 ascend-fd-tk set_conn_config /home/user/conn.ini auto_collect_diag
@@ -41,7 +41,7 @@ ascend-fd-tk set_conn_config /home/user/conn.ini auto_collect_diag
 诊断完成
 ```
 
-交互式方式：
+交互式方式（展示命令与回显）：
 
 ```bash
 ascend-fd-tk
