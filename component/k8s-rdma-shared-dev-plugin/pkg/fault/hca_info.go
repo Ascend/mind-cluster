@@ -27,7 +27,6 @@ import (
 
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/common-utils/utils"
-
 	"github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/resources/common"
 	util "github.com/Mellanox/k8s-rdma-shared-dev-plugin/pkg/utils"
 )
@@ -81,7 +80,7 @@ type DpuInfoCfg struct {
 		DPUList   []DPUItem  `json:"DPUList"`
 		NodeEvent *NodeEvent `json:"NodeEvent"`
 	} `json:"DPUInfo"`
-	UpdateTime time.Time `json:"UpdateTime"`
+	UpdateTime int64 `json:"UpdateTime"`
 }
 
 // GetHcaDeviceID retrieves the device ID of the specified HCA device
@@ -213,7 +212,7 @@ func BuildDPUInfoCfg(results []FaultResult) DpuInfoCfg {
 	}
 
 	cfg.DPUInfo.NodeEvent = buildNodeEvent(results)
-	cfg.UpdateTime = time.Now()
+	cfg.UpdateTime = time.Now().UnixMilli()
 	return cfg
 }
 
