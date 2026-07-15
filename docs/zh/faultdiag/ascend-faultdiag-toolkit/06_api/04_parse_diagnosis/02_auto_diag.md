@@ -4,7 +4,7 @@
 
 启动自动诊断，适用于分批收集后统一诊断。
 
-- 工具读取缓存目录中的结构化数据，运行全部诊断项（共 40 项），识别链路故障并定位根因。
+- 工具读取缓存目录中的结构化数据，运行全部[诊断项](../../07_references/02_diagnosis_items.md)，识别链路故障并定位根因。
 - 需先通过 `auto_collect` 完成数据采集（可多次分批执行），再执行 `auto_diag` 启动统一诊断。
 - 也可用于 `auto_collect_diag` 诊断失败后（如报告文件被占用），单独重新生成诊断报告。
 
@@ -12,12 +12,12 @@
 
 | 命令格式 | 描述 |
 |---------|------|
-| `auto_diag` | 启动自动诊断。 |
-| `auto_diag ?` | 查看详细说明。 |
+| `auto_diag` | 启动自动诊断，适用于分批收集后统一诊断 |
+| `auto_diag ?` | 查看详情 |
 
 ## 参数说明
 
-无参数。
+无业务参数，`?` 为内置帮助标识，用于查看命令用法。
 
 ## 执行前提
 
@@ -30,7 +30,7 @@
 
 ## 示例
 
-非交互式方式：
+非交互式方式（展示命令与回显）：
 
 ```bash
 ascend-fd-tk set_conn_config /home/user/conn.ini auto_collect auto_diag
@@ -38,7 +38,7 @@ ascend-fd-tk set_conn_config /home/user/conn.ini auto_collect auto_diag
 诊断完成
 ```
 
-交互式方式：
+交互式方式（展示命令与回显）：
 
 ```bash
 ascend-fd-tk

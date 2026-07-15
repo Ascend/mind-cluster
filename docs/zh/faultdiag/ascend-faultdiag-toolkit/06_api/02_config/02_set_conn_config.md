@@ -2,20 +2,20 @@
 
 ## 命令功能
 
-设置设备连接配置信息。
+设置设备连接配置文件地址，用于在线分析场景。工具会读取该文件中配置的主机、BMC、交换机连接信息，并加密存储，设置成功后建议尽快删除包含明文密码的源文件。
 
 ## 命令格式
 
-| 命令格式 | 描述 |
-|---------|------|
-| `set_conn_config <文件地址>` | 设置设备连接配置文件。 |
-| `set_conn_config ?` | 查看详细配置说明。 |
+| 命令格式 | 描述        |
+|---------|-----------|
+| `set_conn_config <文件地址>` | 设置连接文件地址  |
+| `set_conn_config ?` | 查看详情      |
 
 ## 参数说明
 
-| 参数 | 说明 |
-|------|------|
-| `<文件地址>` | 连接配置文件的路径。 |
+| 参数 | 类型 | 是否必填 | 说明 |
+|------|-----|------|------|
+| `<文件地址>` | string | 是 | 连接配置文件的路径。 |
 
 ## 配置文件结构
 
@@ -30,7 +30,7 @@
 
 [switch]
 # 支持ip1-ip2 ip段方式填写(需保证账号密码相同), 通过step设置步长
-1.1.1.4-1.1.1.10 step=1 username="root" password="<your_password>"
+1.1.1.4-1.1.1.10 step=2 username="root" password="<your_password>"
 
 [config]
 # 支持设置全局的私钥文件
@@ -58,7 +58,7 @@ private_key="~/.ssh/your_private_key"
 
 ## 示例
 
-非交互式方式：
+非交互式方式（展示命令与回显）：
 
 ```bash
 ascend-fd-tk set_conn_config /home/user/conn.ini auto_collect_diag
@@ -66,7 +66,7 @@ ascend-fd-tk set_conn_config /home/user/conn.ini auto_collect_diag
 # 其他日志输出...
 ```
 
-交互式方式：
+交互式方式（展示命令与回显）：
 
 ```bash
 ascend-fd-tk

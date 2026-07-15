@@ -1,7 +1,7 @@
 # 特性指南
 
 - [特性概览](./01_usage_overview.md)
-- [日志收集与数据源](./02_log_collection.md)
+- [日志采集](./02_log_collection.md)
 - [日志清洗](./03_log_parse.md)
 - [故障诊断](./04_fault_diagnosis.md)
 - [故障巡检](./05_fault_inspection.md)

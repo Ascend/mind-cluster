@@ -105,7 +105,7 @@ class GuideCliModel(CliModel):
 
     def run_task(self, *args) -> str:
         return f"""
-        一. 采集内容准备
+        一、采集内容准备
         请根据故障设备自行按需选择要采集的设备信息或需要导入的日志，可以不导入全量设备信息或日志。按需设置以下在线或离线采集分析的任意地址。
 
         1. 在线采集准备
@@ -113,13 +113,13 @@ class GuideCliModel(CliModel):
 
         2. 离线日志解析准备
         2.1 设置服务器日志目录地址
-        请使用 " {SetHostDumpLogDirCliModel.get_key()} " 命令设置设备信息，具体配置可使用" {SetHostDumpLogDirCliModel.get_key()} ? "查看详情
+        请使用 " {SetHostDumpLogDirCliModel.get_key()} " 命令设置离线日志目录，具体配置可使用" {SetHostDumpLogDirCliModel.get_key()} ? "查看详情
 
         2.2 设置BMC日志目录地址
-        请使用 " {SetBmcDumpLogDirCliModel.get_key()} " 命令设置设备信息，具体配置可使用" {SetBmcDumpLogDirCliModel.get_key()} ? "查看详情
+        请使用 " {SetBmcDumpLogDirCliModel.get_key()} " 命令设置离线日志目录，具体配置可使用" {SetBmcDumpLogDirCliModel.get_key()} ? "查看详情
 
         2.3 设置交换机回显文本目录地址
-        请使用 " {SetSwiDumpLogDirCliModel.get_key()} " 命令设置设备信息，具体配置可使用"{SetSwiDumpLogDirCliModel.get_key()} ? "查看详情
+        请使用 " {SetSwiDumpLogDirCliModel.get_key()} " 命令设置离线日志目录，具体配置可使用"{SetSwiDumpLogDirCliModel.get_key()} ? "查看详情
 
         3. 默认读取路径
         当未手动设置以上文件或目录时，工具会自动读取执行路径下的以下默认文件或目录，相关文件或目录需用户提前手动创建：
@@ -128,11 +128,11 @@ class GuideCliModel(CliModel):
         Host日志目录: host_dump_log
         交换机日志目录: switch_dump_log
 
-        二. 启动采集/分析 & 诊断
+        二、启动采集/分析 & 诊断
         执行 " {AutoCollectDiagCliModel.get_key()} " 启动在线采集/离线分析并诊断
 
-        三. 清理缓存
-        本工具支持分批采集统一诊断，所以会单次诊断完后会留有缓存，若已完成诊断任务，请使用 " {ClearCacheCliModel.get_key()} " 清理缓存(若无法有效清理，请使用管理员模式打开工具)，避免影响下次诊断结果
+        三、清理缓存
+        本工具支持分批采集统一诊断，所以单次诊断完后会留有缓存，若已完成诊断任务，请使用 " {ClearCacheCliModel.get_key()} " 清理缓存(若无法有效清理，请使用管理员模式打开工具)，避免影响下次诊断结果
 
         总结:
         1. 先用 " {SetConnConfigCliModel.get_key()} " 设置要访问的设备ip配置文件或用 " {SetBmcDumpLogDirCliModel.get_key()} "，" {SetHostDumpLogDirCliModel.get_key()} "，" {SetSwiDumpLogDirCliModel.get_key()} "设置离线日志目录，或直接将日志放到默认目录下
@@ -283,9 +283,9 @@ class SetHostDumpLogDirCliModel(DetailedCliModel):
     def get_detail(self) -> str:
         return f"""
         设置服务器导出日志目录，支持以下几类脚本采集的日志:
-        1. A3device日志一键采集脚本<version>.sh
-        2. link_down_collect_<version>.sh
-        3. tool_log_collection_out_version_all_<version>.sh
+        1. tool_log_collection_out_version_all_<version>.sh
+        2. device_log_collect_<version>.sh
+        3. link_down_collect_<version>.sh
 
         通过以上方式采集的日志压缩包，统一放到一个目录中，通过此命令 " {self.get_key()} <目录> " 设置目录，工具会在 " {AutoCollectDiagCliModel.get_key()} " 命令下自动解压分析日志信息
         """
@@ -342,9 +342,7 @@ class SetSwiDumpLogDirCliModel(DetailedCliModel):
         return "set_switch_dump_log"
 
     def get_help(self) -> str:
-        return (
-            f'设置交换机命令回显导出目录，支持 " {self.get_key()} <目录> " 设置目录，或 " {self.get_key()} ? " 查看详情'
-        )
+        return f'设置交换机命令回显/日志导出目录，支持 " {self.get_key()} <目录> " 设置目录，或 " {self.get_key()} ? " 查看详情'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -398,13 +396,17 @@ class AutoCollectCliModel(DetailedCliModel):
 
     def run_task(self, *args) -> str:
         asyncio.run(AutoCollect(self.diag_ctx).main())
-        return f'收集完成，若完成全部收集请使用 " {AutoDiagCliModel.get_key()} " 进行诊断'
+        return '收集完成，若完成全部收集请进行诊断/巡检'
 
 
 class AutoInspection(DetailedCliModel):
     @classmethod
     def get_key(cls) -> str:
         return "auto_inspection"
+
+    @staticmethod
+    def is_support_param():
+        return True
 
     def get_help(self) -> str:
         return "启动巡检结果诊断，适用于分批收集后统一诊断"
@@ -416,7 +418,7 @@ class AutoInspection(DetailedCliModel):
         使用 " auto_collect " 完成后，启动该命令进行巡检结果诊断。
         支持以下客户类型：
         {all_customer_types}
-        使用 " {self.get_key()} <客户类型> " 启动诊断
+        使用 " {self.get_key()} <客户类型> " 启动巡检
         """
 
     def add_arguments(self, parser):
@@ -437,7 +439,7 @@ class AutoInspection(DetailedCliModel):
             if not customer:
                 return f"{args[0]}为不支持的客户类型，请使用 ' {self.get_key()} ? ' 查看支持的客户类型"
         asyncio.run(Inspection(self.diag_ctx, customer).main())
-        return "诊断完成"
+        return "巡检完成"
 
 
 class AutoDiagCliModel(DetailedCliModel):
@@ -458,7 +460,7 @@ class AutoDiagCliModel(DetailedCliModel):
             return "诊断完成"
         except GenerateCsvPermissionErr as e:
             _CONSOLE_LOGGER.info(e)
-            return "生成报告失败，解除占用后，可使用 ' auto_diag ' 重新生成报告。"
+            return f"生成报告失败，解除占用后，可使用 ' {self.get_key()} ' 重新生成报告。"
 
 
 class AutoCollectDiagCliModel(CliModel):
@@ -476,7 +478,7 @@ class AutoCollectDiagCliModel(CliModel):
             return "诊断完成"
         except GenerateCsvPermissionErr as e:
             _CONSOLE_LOGGER.info(e)
-            return "生成报告失败，解除占用后，可使用 ' auto_diag ' 重新生成报告。"
+            return f"生成报告失败，解除占用后，可使用 ' {self.get_key()} ' 重新生成报告。"
 
 
 class ClearCacheCliModel(CliModel):

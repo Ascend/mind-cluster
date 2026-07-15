@@ -2,20 +2,20 @@
 
 ## 命令功能
 
-设置配置文件目录，自动扫描目录中的配置文件，如 `LLD.xlsx`（机房位置配置文件）。
+设置配置文件目录路径，工具会自动扫描该目录下的配置文件并加载。当前支持加载机房位置配置文件 `LLD.xlsx`（包含灵衢 L1/L2 网络对应关系），用于在诊断报告中关联机柜、机房等位置维度信息。
 
 ## 命令格式
 
 | 命令格式 | 描述 |
 |---------|------|
-| `set_config_dir <文件目录>` | 设置配置文件的目录。 |
-| `set_config_dir ?` | 查看详细信息。 |
+| `set_config_dir <目录路径>` | 设置配置文件目录路径 |
+| `set_config_dir ?` | 查看详情 |
 
 ## 参数说明
 
-| 参数 | 说明 |
-|------|------|
-| `<文件目录>` | 配置文件所在目录路径。目录内需包含 `LLD.xlsx`。 |
+| 参数 | 类型 | 是否必填 | 说明 |
+|------|-----|------|------|
+| `<文件目录>` | string | 是 | 配置文件所在目录路径。目录内需包含 `LLD.xlsx`。 |
 
 ## LLD.xlsx 文件结构
 
@@ -35,7 +35,7 @@
 
 ## 示例
 
-非交互式方式：
+非交互式方式（展示命令与回显）：
 
 ```bash
 ascend-fd-tk set_config_dir /home/user/config set_conn_config /home/user/conn.ini auto_collect_diag
@@ -43,7 +43,7 @@ ascend-fd-tk set_config_dir /home/user/config set_conn_config /home/user/conn.in
 # 其他日志输出...
 ```
 
-交互式方式：
+交互式方式（展示命令与回显）：
 
 ```bash
 ascend-fd-tk
