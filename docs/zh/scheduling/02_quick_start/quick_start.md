@@ -2,8 +2,8 @@
 
 本文档提供两种快速入门场景，帮助您快速上手Ascend NPU集群调度：
 
-- **10分钟极简入门**：仅部署Ascend Device Plugin和Ascend Docker Runtime，使用Kubernetes原生调度器调度普通Pod，快速验证NPU资源调度能力，适合初学者快速体验。
-- **完整训练业务入门**：部署完整的集群调度组件（NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator），以PyTorch训练任务为例，体验端到端的训练流程。
+- **10分钟快速入门**：仅部署Ascend Device Plugin和Ascend Docker Runtime，使用Kubernetes原生调度器调度普通Pod，快速验证NPU资源调度能力，适合初学者快速体验。
+- **训练业务快速入门**：部署完整的集群调度组件（NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator），以PyTorch训练任务为例，体验端到端的训练流程。
 
 您可以根据实际需求选择合适的入门路径。
 
@@ -16,10 +16,10 @@
 - 所有节点已经安装配套的固件与驱动。Atlas 800T A2 训练服务器固件和驱动安装步骤请参见《[Atlas A2 中心推理和训练硬件 NPU驱动和固件安装指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100568434/426cffd9)》。
 - 检查主机上[npu-smi](https://support.huawei.com/enterprise/zh/doc/EDOC1100568421/426cffd9)以及[hccn_tool工具](https://support.huawei.com/enterprise/zh/doc/EDOC1100568362/426cffd9)是否可正常运行。
 
-  >[!NOTE]
-  >
-  >- 参见[《Ascend Training Solution 版本配套表》](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-training-solution-pid-258915853/software)，确认固件与驱动的版本与集群调度组件是否配套。
-  >- NPU驱动和固件版本可通过**npu-smi info -t board -i** <i>NPU ID</i>命令查询。回显信息中的“Software Version”字段值表示NPU驱动版本，“Firmware Version”字段值表示NPU固件版本。
+    >[!NOTE]
+    >
+    >- 参见[《Ascend Training Solution 版本配套表》](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-training-solution-pid-258915853/software)，确认固件与驱动的版本与集群调度组件是否配套。
+    >- NPU驱动和固件版本可通过**npu-smi info -t board -i** <i>NPU ID</i>命令查询。回显信息中的“Software Version”字段值表示NPU驱动版本，“Firmware Version”字段值表示NPU固件版本。
 
 ## 10分钟快速入门
 
@@ -32,7 +32,7 @@
 
 ### 安装组件
 
-下面以计算节点为Atlas 800T A2 训练服务器、CPU架构为aarch64为例。
+下面以计算节点为Atlas 800T A2 训练服务器、CPU架构为AArch64为例。
 
 1. 检查NPU状态，确保与服务器配套的NPU驱动已正确安装。
 
@@ -40,7 +40,7 @@
     npu-smi info
     ```
 
-   若显示芯片信息，说明NPU驱动已正确安装。
+    若显示芯片信息，说明NPU驱动已正确安装。
 
 2. 为NPU节点添加标签。
 
@@ -48,9 +48,9 @@
     kubectl label nodes -A workerselector=dls-worker-node
     ```
 
-   >[!NOTE]
-   >
-   > `workerselector=dls-worker-node`标签用于标识计算节点，供集群调度组件（如NodeD、Ascend Device Plugin）识别并管理NPU资源。
+    >[!NOTE]
+    >
+    > `workerselector=dls-worker-node`标签用于标识计算节点，供集群调度组件（如NodeD、Ascend Device Plugin）识别并管理NPU资源。
 
 3. 部署Ascend Docker Runtime和Ascend Device Plugin组件。
 
@@ -66,7 +66,7 @@
         systemctl daemon-reload && systemctl restart docker
         ```
 
-       回显示例如下，表示安装成功。
+        回显示例如下，表示安装成功。
 
         ```output
         Uncompressing ascend-docker-runtime  100%
@@ -105,13 +105,13 @@
         kubectl apply -f device-plugin-v${VERSION}.yaml
         ```
 
-       查看Ascend Device Plugin Pod的状态。
+        查看Ascend Device Plugin Pod的状态。
 
         ```shell
         kubectl get pod -n kube-system
         ```
 
-       回显示例如下，表示状态正常。
+        回显示例如下，表示状态正常。
 
         ```output
         NAME                                  READY   STATUS    RESTARTS   AGE
@@ -126,7 +126,7 @@
         kubectl describe node -A | grep "huawei.com/Ascend910"
         ```
 
-       回显示例如下，正常显示可用的NPU数量。
+        回显示例如下，正常显示可用的NPU数量。
 
         ```output
         huawei.com/Ascend910:     8
@@ -233,6 +233,7 @@
 
         ```shell
         VERSION=26.1.0
+        mkdir -p /tmp/Ascend-docker-runtime
         cd /tmp/Ascend-docker-runtime
         wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-docker-runtime_${VERSION}_linux-aarch64.run
         chmod +x Ascend-docker-runtime_${VERSION}_linux-aarch64.run
@@ -291,11 +292,11 @@
 
 1. 准备镜像。
 
-   从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)下载24.0.X版本的ascend-pytorch训练镜像。镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
+    从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)下载24.0.X版本的ascend-pytorch训练镜像。镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
 
-   >[!NOTE]
-   >
-   > 本示例使用的镜像版本为24.0.0-A2-2.1.0。如需获取最新版本镜像，请访问[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)查看可用版本列表，或联系华为技术支持获取版本配套信息。
+    >[!NOTE]
+    >
+    > 本示例使用的镜像版本为24.0.0-A2-2.1.0。如需获取最新版本镜像，请访问[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)查看可用版本列表，或联系华为技术支持获取版本配套信息。
 
     ```shell
     docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-pytorch:24.0.0-A2-2.1.0-ubuntu20.04
@@ -321,7 +322,7 @@
         cd /data/atlas_dls/public/dataset/resnet50/imagenet
         ```
 
-    3. 通过如下命令获取[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库的“samples/train/basic-training/without-ranktable/pytorch”目录中的train_start.sh，放在“/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts”路径下。
+    3. 通过如下命令获取[mindcluster-samples](https://gitcode.com/Ascend/mindcluster-deploy)仓库的“samples/train/basic-training/without-ranktable/pytorch”目录中的train_start.sh，放在“/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts”路径下。
 
         ```shell
         mkdir /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
@@ -329,7 +330,7 @@
         wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/train_start.sh
         ```
 
-    4. 通过如下命令获取[mindcluster-deploy](https://gitcode.com/Ascend/mindxdl-deploy)仓库“samples/train/basic-training/without-ranktable/pytorch”目录下的“pytorch_standalone_acjob_quickstart.yaml”文件。示例默认为单机单卡任务。
+    4. 通过如下命令获取[mindcluster-samples](https://gitcode.com/Ascend/mindcluster-deploy)仓库“samples/train/basic-training/without-ranktable/pytorch”目录下的“pytorch_standalone_acjob_quickstart.yaml”文件。示例默认为单机单卡任务。
 
         ```shell
         cd /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
@@ -348,20 +349,20 @@
     kubectl get pod -A -o wide
     ```
 
-   回显示例如下，出现Running表示任务正常运行。
+    回显示例如下，出现Running表示任务正常运行。
 
-   >[!NOTE]
-   >
-   > 回显中`192.168.244.xxx`为Pod分配的实际IP地址，`worker01`为实际节点名称，请以实际回显为准。
+    >[!NOTE]
+    >
+    > 回显中`192.168.244.xxx`为Pod分配的实际IP地址，`worker01`为实际节点名称，请以实际回显为准。
 
     ```output
     NAMESPACE        NAME                                       READY   STATUS    RESTARTS   AGE     IP                NODE      NOMINATED NODE   READINESS GATES
     default          default-test-pytorch-master-0              1/1     Running   0          6s      192.168.244.xxx   worker01   <none>           <none>
     ```
 
-   >[!NOTE]
-   >
-   >若下发训练任务后，任务一直处于Pending状态，可以参见[训练任务处于Pending状态，原因：nodes are unavailable](https://gitcode.com/Ascend/mind-cluster/issues/352)或者[资源不足时，任务处于Pending状态](https://gitcode.com/Ascend/mind-cluster/issues/355)章节进行处理。
+    >[!NOTE]
+    >
+    >若下发训练任务后，任务一直处于Pending状态，可以参见[训练任务处于Pending状态，原因：nodes are unavailable](https://gitcode.com/Ascend/mind-cluster/issues/352)或者[资源不足时，任务处于Pending状态](https://gitcode.com/Ascend/mind-cluster/issues/355)章节进行处理。
 
 5. 查看训练结果。
 
@@ -373,9 +374,9 @@
 
     2. 查看训练日志，如果出现如下内容表示训练成功。
 
-       >[!NOTE]
-       >
-       > 回显中`10.106.227.104`为集群分配的实际IP地址，请以实际回显为准。
+        >[!NOTE]
+        >
+        > 回显中`10.106.227.104`为集群分配的实际IP地址，请以实际回显为准。
 
         ```output
         [20251218-20:31:57] [MindXDL Service Log]server id is: 0

@@ -42,7 +42,7 @@
 </tr>
 <tr id="row1631417235426"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1331442313425"><a name="p1331442313425"></a><a name="p1331442313425"></a><span id="ph631452384213"><a name="ph631452384213"></a><a name="ph631452384213"></a>Atlas 800 训练服务器（型号 9010）</span></p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1083283212561"></a><a name="ul1083283212561"></a><ul id="ul1083283212561"><li>CentOS 7.6 for x86_64</li><li>Kylin V10 (OpenEuler) SP1 for x86_64 (4.19.90-17.ky10.x86_64 kernel)</li><li>openEuler 20.03 for x86_64</li><li>Ubuntu 18.04.1 for x86_64</li><li>Ubuntu 18.04.5 for x86_64</li><li>Ubuntu 20.04 for x86_64</li></ul>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><a name="ul1083283212561"></a><a name="ul1083283212561"></a><ul id="ul1083283212561"><li>CentOS 7.6 for x86_64</li><li>Kylin V10 (openEuler) SP1 for x86_64 (4.19.90-17.ky10.x86_64 kernel)</li><li>openEuler 20.03 for x86_64</li><li>Ubuntu 18.04.1 for x86_64</li><li>Ubuntu 18.04.5 for x86_64</li><li>Ubuntu 20.04 for x86_64</li></ul>
 </td>
 </tr>
 <tr id="row1731412319425"><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p id="p1931492374219"><a name="p1931492374219"></a><a name="p1931492374219"></a><span id="ph12314923104215"><a name="ph12314923104215"></a><a name="ph12314923104215"></a>Atlas 900 PoD（型号 9000）</span></p>
@@ -196,7 +196,7 @@
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul877545583412"></a><a name="ul877545583412"></a><ul id="ul877545583412"><li>openEuler 22.03 LTS SP4 for aarch64</li><li>Euler 2.13 for aarch64</li><li>CUlinux 3.0 for aarch64</li><li>CUlinux 4.0 for aarch64</li><li>CTYunOS 4.0 for aarch64</li><li>HCE 2.0.2506 for aarch64</li><li>Velinux 2.0 for aarch64</li><li>Kylin V10 SP3 2403 for aarch64</li><li>Kylin V11 for aarch64</li><li>UOS V25 for aarch64 (6.6 kernel)</li></ul>
 </td>
 </tr>
-<tr><td class="cellrowborder" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p>Ascend 950 系列产品</p>
+<tr><td class="cellrowborder" valign="top" width="15.93%" headers="mcps1.2.4.1.1 "><p>Ascend 950代际产品</p>
 </td>
 <td class="cellrowborder" valign="top" width="33.67%" headers="mcps1.2.4.1.2 "><p><span>Atlas 350 标卡</span></p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas 350 标卡设备在当前版本不支持DPU硬件设备通信功能。</div></div>
 </td>
