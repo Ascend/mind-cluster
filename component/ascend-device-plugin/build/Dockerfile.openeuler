@@ -5,7 +5,7 @@ ARG UMDK_PKG=""
 COPY ./${UMDK_PKG} /tmp
 
 RUN yum update -y && \
-    yum install -y wget unzip shadow libnl3-devel && \
+    yum install -y shadow libnl3-devel && \
     if [ -n "${UMDK_PKG}" ] && [ -f "/tmp/${UMDK_PKG}" ]; then \
         echo "installing umdk from /tmp/${UMDK_PKG}"; \
         mkdir /tmp/umdk_pkgs; \

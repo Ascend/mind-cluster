@@ -1,7 +1,7 @@
 FROM openeuler/openeuler:24.03-lts
 
 RUN yum update -y && \
-    yum install -y wget unzip shadow && \
+    yum install -y shadow && \
     yum clean all && \
     rm -rf /var/cache/yum && \
     rm -rf /tmp/*
@@ -31,4 +31,3 @@ RUN chown -R hwMindX:hwMindX /home/hwMindX /usr/local/agreement.txt &&\
 USER hwMindX
 
 ENTRYPOINT ["/bin/bash", "-c", "cat /usr/local/agreement.txt; exec /bin/bash"]
-
