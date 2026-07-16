@@ -17,33 +17,46 @@
 import logging
 import time
 
+from tests.st import envs
 from tests.st.envs import WAIT_TIME
 
 logger = logging.getLogger(__name__)
 
 
-class ClusterSimulator(object):
+class ClusterSimulator:
+    @staticmethod
+    def _get_spec_dir(case):
+        spec_dir = envs.SPEC_DIR
+        if not spec_dir:
+            raise RuntimeError("SPEC_DIR environment varibale is not set")
+        return spec_dir
+
     @staticmethod
     def create_kwok_cluster(case, container_name, node_name, node_num):
+        spec_dir = ClusterSimulator._get_spec_dir(case)
         case.k8s_manager.exec_command(
             f"docker run -d --name {container_name} -v /root/.kube/config:/root/.kube/config "
-            f"-v /workspace/mind-cluster/tests/st/specs/:/cluster_simulator/specs "
-            f"--rm cluster_simulator:base simulate {node_name} --node_num {node_num}")
+            f"-v {spec_dir}:/cluster_simulator/specs "
+            f"--rm cluster_simulator:base simulate {node_name} --node_num {node_num}"
+        )
         time.sleep(WAIT_TIME)
 
     @staticmethod
     def create_kwok_cluster_a3(case, container_name, node_name, super_pod_num, super_pod_size):
+        spec_dir = ClusterSimulator._get_spec_dir(case)
         case.k8s_manager.exec_command(
             f"docker run -d --name {container_name} -v /root/.kube/config:/root/.kube/config "
-            f"-v /workspace/mind-cluster/tests/st/specs/:/cluster_simulator/specs --rm cluster_simulator:base "
-            f"simulate {node_name} --super_pod_num {super_pod_num} --super_pod_size {super_pod_size}")
+            f"-v {spec_dir}:/cluster_simulator/specs --rm cluster_simulator:base "
+            f"simulate {node_name} --super_pod_num {super_pod_num} --super_pod_size {super_pod_size}"
+        )
         time.sleep(WAIT_TIME)
 
     @staticmethod
     def stop_kwok_cluster(case, container_name):
         case.k8s_manager.master.exec_command(f"docker rm -f {container_name}")
         case.k8s_manager.exec_command(
-            f"docker run -d -v /root/.kube/config:/root/.kube/config --rm cluster_simulator:base cleanup")
+            "docker run -d -v /root/.kube/config:/root/.kube/config --rm cluster_simulator:base cleanup"
+        )
         time.sleep(WAIT_TIME)
 
     @staticmethod
