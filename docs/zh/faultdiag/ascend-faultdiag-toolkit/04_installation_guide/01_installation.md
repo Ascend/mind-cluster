@@ -25,7 +25,7 @@
 > - ascend-fd-tk WHL 包不区分架构。
 > - 为防止软件包在传递过程中或存储期间被恶意篡改，建议校验软件包的 SUM 值。如需对软件包进行 SUM 值校验，请参考[软件包 SUM 值校验](#参考)
 
-解压获取 WHL 包
+解压获取 WHL 包：
 
 ```bash
 # 解压
@@ -50,7 +50,7 @@ cd mind-cluster/component/ascend-faultdiag/toolkit_src
 python3 setup.py --version {version} bdist_wheel
 ```
 
-> - `{version}` 为版本号，需替换为实际版本，例 `v1.0.0`。
+> - `{version}` 为版本号，需替换为实际版本，例：`v1.0.0`。
 > - 根据 Wheel 标准生成 WHL 包名称：`ascend_faultdiag_toolkit-{去掉 version 的前缀 ‘v’ }-py3-none-any.whl`，例：`ascend_faultdiag_toolkit-1.0.0-py3-none-any.whl`
 
 生成的 WHL 包位于 `dist/` 目录下：
