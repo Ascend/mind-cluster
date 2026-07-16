@@ -68,6 +68,14 @@ func shouldScheduleWithPriority(ctx context.Context, k8sClient client.Client, in
 		return false, nil
 	}
 
+	// roles without explicit priority do not participate in priority comparison,
+	// they are always allowed to schedule regardless of other roles' status
+	if currentRoleSpec.Priority == nil {
+		hwlog.RunLog.Infof("InstanceSet %s/%s has no priority configured, schedule directly",
+			instanceSet.Namespace, instanceSet.Name)
+		return true, nil
+	}
+
 	siblingInstanceSets, err := listSiblingInstanceSets(ctx, k8sClient, instanceSet)
 	if err != nil {
 		return false, err
@@ -113,6 +121,10 @@ func findHighestPriorityOfNotReadyRole(inferService *v1.InferService, instanceSe
 
 	for i := range inferService.Spec.Roles {
 		role := &inferService.Spec.Roles[i]
+		// only roles with explicit priority participate in priority comparison
+		if role.Priority == nil {
+			continue
+		}
 		instanceSet, exists := instanceSetMap[role.Name]
 
 		if !exists || !common.IsInstanceSetReady(instanceSet) {

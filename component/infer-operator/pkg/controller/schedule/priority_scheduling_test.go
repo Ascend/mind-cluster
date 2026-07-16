@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"ascend-common/common-utils/hwlog"
-	"infer-operator/pkg/api/v1"
+	v1 "infer-operator/pkg/api/v1"
 	"infer-operator/pkg/common"
 )
 
@@ -177,6 +177,48 @@ func TestShouldScheduleWhenSchedulingStrategyIsParallel(t *testing.T) {
 	convey.Convey("Should return true when scheduling strategy is parallel", t, func() {
 		instanceSet := createPriorityInstanceSet("test-role", common.SchedulingStrategyParallel, false)
 		fakeClient := createFakeClient(instanceSet)
+
+		ctx := context.Background()
+		shouldSchedule, err := ShouldSchedule(ctx, fakeClient, instanceSet)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(shouldSchedule, convey.ShouldBeTrue)
+	})
+}
+
+// TestShouldScheduleWhenCurrentRoleHasNoPriority tests that roles without explicit priority
+// are always allowed to schedule regardless of other roles' status.
+func TestShouldScheduleWhenCurrentRoleHasNoPriority(t *testing.T) {
+	convey.Convey("Should return true when current role has no priority even if higher priority role is not ready", t, func() {
+		roles := []v1.InstanceSetSpec{
+			{Name: "test-role", Replicas: func() *int32 { r := int32(1); return &r }(), Priority: nil},
+			{Name: "sibling-role", Replicas: func() *int32 { r := int32(1); return &r }(), Priority: func() *int32 { p := int32(1); return &p }()},
+		}
+		inferService := createPriorityInferServiceWithRoles(roles)
+		instanceSet := createPriorityInstanceSet("test-role", common.SchedulingStrategyPriority, false)
+		siblingInstanceSet := createPriorityInstanceSet("sibling-role", common.SchedulingStrategyPriority, false)
+		siblingInstanceSet.UID = "sibling-uid"
+		fakeClient := createFakeClient(instanceSet, siblingInstanceSet, inferService)
+
+		ctx := context.Background()
+		shouldSchedule, err := ShouldSchedule(ctx, fakeClient, instanceSet)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(shouldSchedule, convey.ShouldBeTrue)
+	})
+}
+
+// TestShouldScheduleWhenCurrentRoleHasPriorityAndSiblingHasNoPriority tests that a role
+// with priority is not blocked by a sibling role without priority that is not ready.
+func TestShouldScheduleWhenCurrentRoleHasPriorityAndSiblingHasNoPriority(t *testing.T) {
+	convey.Convey("Should return true when current role has highest priority and sibling without priority is not ready", t, func() {
+		roles := []v1.InstanceSetSpec{
+			{Name: "test-role", Replicas: func() *int32 { r := int32(1); return &r }(), Priority: func() *int32 { p := int32(1); return &p }()},
+			{Name: "sibling-role", Replicas: func() *int32 { r := int32(1); return &r }(), Priority: nil},
+		}
+		inferService := createPriorityInferServiceWithRoles(roles)
+		instanceSet := createPriorityInstanceSet("test-role", common.SchedulingStrategyPriority, false)
+		siblingInstanceSet := createPriorityInstanceSet("sibling-role", common.SchedulingStrategyPriority, false)
+		siblingInstanceSet.UID = "sibling-uid"
+		fakeClient := createFakeClient(instanceSet, siblingInstanceSet, inferService)
 
 		ctx := context.Background()
 		shouldSchedule, err := ShouldSchedule(ctx, fakeClient, instanceSet)
@@ -392,7 +434,7 @@ func TestFindHighestPriorityOfNotReadyRoleEdgeCases(t *testing.T) {
 			convey.So(priority, convey.ShouldEqual, AllReadyPriority)
 		})
 
-		convey.Convey("Should handle role with nil priority", func() {
+		convey.Convey("Should skip role with nil priority and return AllReadyPriority", func() {
 			inferService := createTestInferService("test-service", "default")
 			inferService.Spec.Roles = []v1.InstanceSetSpec{
 				{Name: "role1", Replicas: func() *int32 { r := int32(1); return &r }(), Priority: nil},
@@ -400,7 +442,23 @@ func TestFindHighestPriorityOfNotReadyRoleEdgeCases(t *testing.T) {
 			instanceSetMap := map[string]*v1.InstanceSet{}
 
 			priority := findHighestPriorityOfNotReadyRole(inferService, instanceSetMap)
-			convey.So(priority, convey.ShouldEqual, common.DefaultPriority)
+			convey.So(priority, convey.ShouldEqual, AllReadyPriority)
+		})
+
+		convey.Convey("Should only compare roles with explicit priority when mixed", func() {
+			inferService := createTestInferService("test-service", "default")
+			inferService.Spec.Roles = []v1.InstanceSetSpec{
+				{Name: "role-no-priority", Replicas: func() *int32 { r := int32(1); return &r }(), Priority: nil},
+				{Name: "role-priority-2", Replicas: func() *int32 { r := int32(1); return &r }(), Priority: func() *int32 { p := int32(2); return &p }()},
+			}
+			// role-no-priority is not ready but should be skipped;
+			// role-priority-2 is not ready and has priority, should be the result
+			instanceSetMap := map[string]*v1.InstanceSet{
+				"role-no-priority": createPriorityInstanceSet("role-no-priority", common.SchedulingStrategyPriority, false),
+			}
+
+			priority := findHighestPriorityOfNotReadyRole(inferService, instanceSetMap)
+			convey.So(priority, convey.ShouldEqual, int32(2))
 		})
 	})
 }

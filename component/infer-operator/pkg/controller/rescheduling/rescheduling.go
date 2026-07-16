@@ -422,7 +422,7 @@ func (r *Rescheduler) deleteOtherWorkLoad(
 	for _, instanceSet := range instanceSetList.Items {
 		otherPriority := instanceSet.Spec.Priority
 		if otherPriority == nil {
-			hwlog.RunLog.Warnf("instanceSet %s/%s has no priority label", instanceSet.Namespace, instanceSet.Name)
+			hwlog.RunLog.Infof("instanceSet %s/%s has no priority label", instanceSet.Namespace, instanceSet.Name)
 			continue
 		}
 		if int(*otherPriority) > priority && instanceSet.Status.ReadyReplicas < instanceSet.Status.Replicas {
