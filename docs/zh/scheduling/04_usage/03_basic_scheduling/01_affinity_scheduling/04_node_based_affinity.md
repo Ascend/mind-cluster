@@ -176,7 +176,7 @@
 
 **MindIE Service推理任务调度<a name="section243084619505"></a>**
 
-MindIE Service推理任务中，新增如下亲和性调度策略。如需了解该亲和性调度策略的详细配置说明，请参见[配置实例级亲和性调度](../../06_mindie_motor_best_practice/01_deploying_mindie_motor.md#可选配置实例级亲和调度)章节。
+MindIE Service推理任务中，新增如下亲和性调度策略。如需了解该亲和性调度策略的详细配置说明，请参见[配置实例级亲和性调度](../../06_mindie_motor_best_practice/01_deploying_mindie_motor.md#ZH-CN_TOPIC_0000002511346349)章节。
 
 - 用户可在任务YAML中指定sp-block字段，sp-block的值必须和job芯片数量一致，保证整个job调度到一个物理超节点中。
 
@@ -186,19 +186,19 @@ MindIE Service推理任务中，新增如下亲和性调度策略。如需了解
 - 用户设置sp-fit为idlest时，逻辑超节点会往更空闲的物理超节点调度。
 - 用户设置podAffinity时，逻辑超节点会往具有更多亲和性Pod的物理超节点调度。
 
-## 逻辑框亲和性调度<a name="ZH-CN_TOPIC_0000002479386896"></a>
+## 逻辑框亲和性调度<a name="ZH-CN_TOPIC_0000002479386897"></a>
 
-**使用说明<a name="section773381911315"></a>**
+**使用说明<a name="section_logic_frame_usage"></a>**
 
 - 逻辑框的数量必须小于物理框数量。
 - 逻辑框内的节点必须在物理框内。
 - 逻辑框内的NPU卡的rank ID是连续的。
 
-**普通任务调度<a name="section082914315117"></a>**
+**普通任务调度<a name="section_logic_frame_normal"></a>**
 
 - 用户可在任务YAML中指定ra-block字段，用于指定逻辑框芯片数量，单机时需要和任务请求的芯片数量一致，分布式时需要是节点芯片数量的整数倍，且任务总芯片数量是其整数倍。若用户未指定该字段，Volcano调度时会将此任务的逻辑框大小指定为节点的NPU总数。
 
-**故障任务重调度<a name="section84520611516"></a>**
+**故障任务重调度<a name="section_logic_frame_fault"></a>**
 
 - 如果逻辑框中的所有节点都没有故障，重调度时需继续使用该逻辑框下的节点。
 - 若逻辑框中的某些节点发生故障不可用，则从所在物理框选取节点，其他节点保持不变。

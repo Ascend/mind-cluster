@@ -26,7 +26,7 @@
 
 ## 通过命令行使用<a name="ZH-CN_TOPIC_0000002511426327"></a>
 
->[!NOTICE]
+>[!WARNING]
 >如果用户未配置RoCE网络：
 >
 >- 在非超节点调度场景下，单机推理实例可以正常调度，但是推理实例间的KV传输可能异常，导致推理任务无法正常运行。
@@ -75,7 +75,7 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
 与普通Ascend Job任务相比，MindIE Motor推理任务需要额外增加以下两个label：app和jobID。MindIE Server使用NPU卡，用户需根据Prefill实例和Decode实例数，下发等量的AscendJob。
 
 >[!NOTE]
->关于等量acjob的说明如下：例如一个MindIE Motor推理任务包含1个controller、1个coordinator，x个P实例，y个D实例，则需要部署以下数量的acjob：1+1+x+y。
+>关于等量AscendJob的说明如下：例如一个MindIE Motor推理任务包含1个controller、1个coordinator，x个P实例，y个D实例，则需要部署以下数量的AscendJob：1+1+x+y。
 
 - **MS Controller、MS Coordinator**不使用NPU卡，分别以一个AscendJob进行部署，支持多副本。MS Controller、MS Coordinator的YAML示例如下。
 
@@ -192,7 +192,7 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
               nodeSelector:
                 accelerator: huawei-Ascend910</pre>
 
-### （可选）配置实例级亲和调度<a name="ZH-CN_TOPIC_0000002511346349"></a>
+### （可选）配置实例级亲和性调度<a name="ZH-CN_TOPIC_0000002511346349"></a>
 
 Atlas 800I A3 超节点服务器场景下，MindCluster集群调度组件支持MindIE Motor推理任务配置任务级别亲和性调度策略，可实现将MindIE Server实例尽量调度到同一个物理超节点中，充分利用HCCS网络，加速实例间的网络通信。
 
@@ -294,8 +294,8 @@ acjob任务下，任务YAML中各参数的说明如下表所示。
 |restartPolicy|<ul><li>Never：从不重启</li><li>Always：总是重启</li><li>OnFailure：失败时重启</li><li>ExitCode：根据进程退出码决定是否重启Pod，错误码是1~127时不重启，128~255时重启Pod。<div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">vcjob类型的训练任务不支持ExitCode。</div></div></li></ul>|容器重启策略。当配置业务面故障无条件重试时，容器重启策略取值必须为“Never”。|
 |terminationGracePeriodSeconds|0 \< terminationGracePeriodSeconds \< **grace-over-time**参数取值|容器收到SIGTERM到被K8s强制停止经历的时间，该时间需要大于0且小于volcano-v<i>{version}</i>.yaml文件中“**grace-over-time**”参数取值，同时还需要保证能够保存CKPT文件，请根据实际情况修改。具体说明请参考K8s官网[容器生命周期回调](https://kubernetes.io/zh/docs/concepts/containers/container-lifecycle-hooks/)。<p>只有当fault-scheduling配置为grace时，该字段才生效；fault-scheduling配置为force时，该字段无效。</p>|
 |hostNetwork|<ul><li>true：使用HostIP创建Pod。</li><li>false：不使用HostIP创建Pod。</li></ul>|<ul><li>当集群规模较大（节点数量\>1000时），推荐使用HostIP创建Pod。</li><li>不传入此参数时，默认不使用HostIP创建Pod。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">当HostNetwork取值为true时，若当前任务YAML挂载了RankTable文件路径，则可以通过在训练脚本中解析RankTable文件获取Pod的hostIP来实现建链。若任务YAML未挂载RankTable文件路径，则与原始保持一致，使用serviceIP来实现建链。</div></div>|
-|huawei.com/schedule.filter.faultCode|取值示例："8C1F8608:30, 80E01801"，表示在30秒时间窗内，静默8C1F8608故障；在60秒时间窗内，静默80E01801故障。<p>若未配置时间窗，则默认为60，取值范围为0~86400，单位为秒。</p>|配置任务需要静默的故障码和时间窗。<ul><li>故障码仅支持配置芯片故障和灵衢总线设备故障的故障码。支持的故障码详细请参见faultCode.json和SwitchFaultCode.json文件。</li><li>支持配置多个故障码和时间窗，多个配置使用英文逗号分隔。</li><li>对于MindIE Service，若YAML文件中无此配置项，则默认静默以下故障码：<ul><li>8C1F8608静默60秒</li><li>4C1F8608静默60秒</li><li>80E01801静默60秒</li></ul></li></ul>|
-|huawei.com/schedule.filter.faultLevel|取值示例："RestartRequest:30, RestartBusiness"，表示在30秒时间窗内，静默所有RestartRequest级别的故障；在60秒时间窗内，静默所有RestartBusiness级别的故障。<p>若未配置时间窗，则默认为60，取值范围为0~86400，单位为秒。</p>|配置任务需要静默的故障级别和时间窗。<ul><li>故障级别仅支持配置芯片故障和灵衢总线设备故障的级别。支持的故障级别详细请参见[配置说明](../04_resumable_training/03_configuration/01_configuring_fault_detection_levels.md#配置说明)。</li><li>支持配置多个故障级别和时间窗，多个配置使用英文逗号分隔。</li><li>对于MindIE Service，若YAML文件中无此配置项，则默认所有RestartRequest级别的故障静默60秒。</li><li>huawei.com/schedule.filter.faultCode的优先级高于huawei.com/schedule.filter.faultLevel。</li><li>对于通知类故障，ClusterD静默此类故障后，可能导致Volcano不主动重调度故障Pod。任务可以通过订阅ClusterD的故障订阅接口，对接收到的故障进行相应处理，若处理失败需主动Error退出Pod。</li></ul>|
+|huawei.com/schedule.filter.faultCode|取值示例："8C1F8608:30, 80E01801"，表示在30秒时间窗内，静默8C1F8608故障；在60秒时间窗内，静默80E01801故障。<p>若未配置时间窗，则默认为60，取值范围为0~86400，单位为秒。</p>|配置任务需要静默的故障码和时间窗。<ul><li>故障码仅支持配置芯片故障和灵衢总线设备故障的故障码。支持的故障码详细请参见faultCode.json和SwitchFaultCode.json文件。</li><li>支持配置多个故障码和时间窗，多个配置使用英文逗号分隔。</li></ul>|
+|huawei.com/schedule.filter.faultLevel|取值示例："RestartRequest:30, RestartBusiness"，表示在30秒时间窗内，静默所有RestartRequest级别的故障；在60秒时间窗内，静默所有RestartBusiness级别的故障。<p>若未配置时间窗，则默认为60，取值范围为0~86400，单位为秒。</p>|配置任务需要静默的故障级别和时间窗。<ul><li>故障级别仅支持配置芯片故障和灵衢总线设备故障的级别。支持的故障级别详细请参见[配置说明](../04_resumable_training/03_configuration/01_configuring_fault_detection_levels.md#配置说明)。</li><li>支持配置多个故障级别和时间窗，多个配置使用英文逗号分隔。</li><li>对于MindIE Server，若YAML文件中无此配置项，则默认所有RestartRequest级别的故障静默60秒。</li><li>huawei.com/schedule.filter.faultCode的优先级高于huawei.com/schedule.filter.faultLevel。</li><li>对于通知类故障，ClusterD静默此类故障后，可能导致Volcano不主动重调度故障Pod。任务可以通过订阅ClusterD的故障订阅接口，对接收到的故障进行相应处理，若处理失败需主动Error退出Pod。</li></ul>|
 
 ### 推理任务的下发、查看与删除<a name="ZH-CN_TOPIC_0000002479386412"></a>
 
@@ -314,7 +314,7 @@ ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json
 
 - <term>Atlas A2 训练系列产品</term>global-ranktable示例如下。
 
-    ```ColdFusion
+    ```json
     {
         "version": "1.0",
         "status": "completed",
@@ -344,7 +344,7 @@ ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json
 
 - <term>Atlas A3 训练系列产品</term>global-ranktable示例如下。
 
-    ```ColdFusion
+    ```json
     {
         "version": "1.2",
         "status": "completed",

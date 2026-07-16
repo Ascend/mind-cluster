@@ -132,6 +132,6 @@ spec:
 > [!NOTE]
 >
 >- 推理服务亲和性调度策略仅支持Atlas 950 SuperPoD产品与Atlas 850 Server超节点。
->- 使用其他类型的k8s资源部署推理服务示例请参见[推理任务类型与硬件型号对应YAML文件](../03_full_npu_scheduling.md#准备任务yaml)，添加对应的Label与Annotation即可开启推理服务亲和性调度策略。
+>- 使用其他类型的K8s资源部署推理服务示例请参见[推理任务类型与硬件型号对应YAML文件](../03_full_npu_scheduling.md#准备任务yaml)，添加对应的Label与Annotation即可开启推理服务亲和性调度策略。
 >- 对于可以生成PodGroup的资源，在PodGroup上添加相应字段也可以实现推理服务亲和性调度。
 >- 常用的Label与Annotation对照表请参见[PodGroup](../../../06_api/01_volcano.md#podgroup)/[Pod](../../../06_api/01_volcano.md#pod)。

@@ -20,7 +20,7 @@ Infer Operator在部署不同角色的实例时，会创建Deployment/StatefulSe
 
 ## 配置实例级重调度
 
-Infer operator任务配置实例级重调度示例如下，需修改以下加粗部分配置。相关配置项说明请参见[YAML参数说明](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md#YAML参数说明)。
+Infer Operator任务配置实例级重调度示例如下，需修改以下加粗部分配置。相关配置项说明请参见[YAML参数说明](./01_deploying_infer_operator_inference_job_with_vllm_proxy.md#YAML参数说明)。
 <pre codetype="yaml">
 apiVersion: mindcluster.huawei.com/v1
 kind: InferServiceSet

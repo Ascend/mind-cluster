@@ -11,7 +11,7 @@
     - 当节点上存在故障时，NodeD定期上报节点健康状态、节点硬件故障信息到node-info-cm中，将共享存储故障上报到ClusterD的公共故障中。
 
 2. ClusterD读取device-info-cm和node-info-cm中的信息，以及公共故障信息后，将信息整合到cluster-info-cm中。
-3. 用户通过kubectl或者其他深度学习平台下发Infer Operator组件的InferServiceSet推理任务，Infer Operator根据推理任务的配置生成Deployment、Statefulset等子工作负载，再由对应的子工作负载生成多个推理服务的任务Pod。
+3. 用户通过kubectl或者其他深度学习平台下发Infer Operator组件的InferServiceSet推理任务，Infer Operator根据推理任务的配置生成Deployment、StatefulSet等子工作负载，再由对应的子工作负载生成多个推理服务的任务Pod。
 4. Infer Operator根据推理任务的配置为任务创建相应的PodGroup。关于PodGroup的详细说明，可以参见[开源Volcano官方文档](https://volcano.sh/docs/v1.9.0/Concepts/podgroup)。
 5. volcano-scheduler根据节点内存、CPU及标签、亲和性为Pod选择合适的节点，并在Pod的annotation上写入选择的芯片信息以及节点硬件信息。
 6. kubelet创建容器时，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin或volcano-scheduler在Pod的annotation上写入芯片和节点硬件信息。Ascend Docker Runtime协助挂载相应资源。
@@ -27,7 +27,7 @@
 通过命令行使用MindCluster集群调度组件部署基于vLLM Proxy的Infer Operator推理任务时，使用流程如[图1](#fig38991911205816)所示。
 
 **图 1**  使用流程<a name="fig38991911205816"></a>
-![](../../../figures/scheduling/infer-operator-use-process.png)
+![使用流程图：展示从准备YAML到下发任务、查看结果、删除任务的命令行使用流程](../../../figures/scheduling/infer-operator-use-process.png)
 
 ### 准备任务YAML
 
@@ -189,9 +189,9 @@ spec:
 <tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >schedulingStrategy.type</p>
 </td>
 <td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 ">
-<ul ><li><span >Parallel</span>：并发调度，默认调度方式，并发创建所有实例。</li><li><span >Priority</span>: 优先级调度，按照优先级顺序依次创建不同角色实例。</li></ul>
+<ul ><li><span >Parallel</span>：并发调度，默认调度方式，并发创建所有实例。</li><li><span >Priority</span>：优先级调度，按照优先级顺序依次创建不同角色实例。</li></ul>
 </td>
-<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >当需要适配其他服务化平台使用缩P保D特性时，必须开启优先级调度，并配置decode实例优先级高于prefill实例，以确保高优先级实例先与低优先级实例被调度。</p>
+<td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >当需要适配其他服务化平台使用缩P保D特性时，必须开启优先级调度，并配置decode实例优先级高于prefill实例，以确保高优先级实例先于低优先级实例被调度。</p>
 <p>优先级的配置见priority字段说明。</p>
 </td>
 </tr>
@@ -220,7 +220,7 @@ spec:
 </tr>
 <tr ><td class="cellrowborder" valign="top" width="27.16%" headers="mcps1.2.4.1.1 "><p >huawei.com/Ascend910</p>
 </td>
-<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><ul ><li><span >Atlas 800I A2 推理服务器</span>：1-8</li><li><span >Atlas 800I A3 超节点服务器</span>: 1-16</li><li><span >Atlas 350 标卡（节点内8卡）</span>: 1-8</li><li><span >Atlas 350 标卡（节点内16卡）</span>: 1-16</li><li><span >Atlas 850 系列硬件产品</span>: 1-8</li><li><span >Atlas 950 SuperPoD</span>: 1-8</li></ul>
+<td class="cellrowborder" valign="top" width="36.28%" headers="mcps1.2.4.1.2 "><ul ><li><span >Atlas 800I A2 推理服务器</span>：1-8</li><li><span >Atlas 800I A3 超节点服务器</span>：1-16</li><li><span >Atlas 350 标卡（节点内8卡）</span>：1-8</li><li><span >Atlas 350 标卡（节点内16卡）</span>：1-16</li><li><span >Atlas 850 系列硬件产品</span>：1-8</li><li><span >Atlas 950 SuperPoD</span>：1-8</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="36.559999999999995%" headers="mcps1.2.4.1.3 "><p >请求的NPU数量。当前仅支持整机调度，请根据实际硬件卡数与需求卡数进行修改。</p>
 <div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas 350 标卡、Atlas 850 系列硬件产品、Atlas 950 SuperPoD需将参数名称修改为huawei.com/npu。</div></div>

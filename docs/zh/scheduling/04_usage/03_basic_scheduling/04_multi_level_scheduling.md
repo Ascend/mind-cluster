@@ -32,7 +32,7 @@
 通过命令行使用多级调度特性流程可以参见[图1](#fig2425249866601duoji)。
 
 **图 1**  使用流程<a name="fig2425249866601duoji"></a>
-![](../../../figures/scheduling/多级调度使用流程.png "多级调度使用流程")
+![多级调度使用流程](../../../figures/scheduling/多级调度使用流程.png "多级调度使用流程")
 
 ## 实现原理<a name="ZH-CN_TOPIC_0000002479387150duoji"></a>
 
@@ -49,7 +49,7 @@
   资源树中的网络层级可以参考Volcano的[网络拓扑感知调度](https://volcano.sh/docs/keyfeatures/networktopologyaware/)特性中的HyperNode定义。
 
   **图 1**  资源树样例<a name="fig69396965487duoji"></a>
-  ![](../../../figures/scheduling/资源树.PNG "资源树")
+  ![资源树样例](../../../figures/scheduling/资源树.PNG "资源树")
 
   - 第一层交换机S0-S3直接连接到工作节点。
   - 第二层交换机S4连接到S0和S1交换机，S5连接到S2和S3交换机。
@@ -116,7 +116,7 @@
 
 在“volcano-v<i>\{version\}</i>.yaml”中，根据网络集群的实际拓扑结构配置Volcano启动参数。
 
-```Yaml
+```yaml
 ...
 data:
   volcano-scheduler.conf: |
@@ -154,7 +154,7 @@ Ascend Device Plugin组件会通过昇腾硬件驱动自动获取有效的节点
 
 #### 通过脚本添加节点标签
 
-手动通过kubectl命令的方式添加节点标签效率较低，且容易出现错误。为此，MindCluser提供了自动化部署脚本方式添加节点标签，替代繁琐的手动操作。用户只需提供基本的标签配置信息，脚本即可自动通过kubectl命令完成添加或者删除节点标签的操作。
+手动通过kubectl命令的方式添加节点标签效率较低，且容易出现错误。为此，MindCluster提供了自动化部署脚本方式添加节点标签，替代繁琐的手动操作。用户只需提供基本的标签配置信息，脚本即可自动通过kubectl命令完成添加或者删除节点标签的操作。
 
 **前提条件**
 
@@ -285,7 +285,7 @@ Ascend Device Plugin组件会通过昇腾硬件驱动自动获取有效的节点
 
 本章节指导用户配置多级调度特性的任务YAML。以pytorch_multinodes_acjob_super_pod.yaml为例，在Atlas 9000 A3 SuperPoD 集群算力系统上创建多级调度训练任务，修改示例如下。
 
-```Yaml
+```yaml
 apiVersion: mindxdl.gitee.com/v1
 kind: AscendJob
 metadata:
@@ -378,7 +378,7 @@ spec:
 
 ### 查看任务调度结果
 
-详细请参见整卡调度中的[查看任务调度结果](./03_full_npu_scheduling.md#查看整卡调度结果)。
+详细请参见整卡调度中的[查看整卡调度结果](./03_full_npu_scheduling.md#查看整卡调度结果)。
 
 ### 删除任务
 

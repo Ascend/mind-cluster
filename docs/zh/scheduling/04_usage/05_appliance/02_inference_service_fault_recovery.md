@@ -265,7 +265,7 @@
     -H "Content-Type: application/json" \
     -X POST -d '{
         "model": "<model_name>",
-    "messages": [
+        "messages": [
             {"role": "system", "content": "you are a helpful assistant."},
             { "role": "user", "content": "How many r are in the word \"strawberry\"" }
         ],
@@ -275,8 +275,8 @@
         "ignore_eos": true,
         "temperature": 0.6,
         "top_p": 0.95,
-        "top_k": 20,
-        "stream": false }' \
+        "top_k": 20
+    }' \
     http://<ipAddress>:<port>/v1/chat/completions
     ```
 
