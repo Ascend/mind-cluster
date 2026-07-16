@@ -14,7 +14,7 @@
     mkdir <output_dir>
     ```
 
-    > - `output_dir` 为诊断结果输出目录
+    > - `output_dir` 为诊断结果输出目录。
 
 4. 执行诊断命令
 
@@ -28,8 +28,8 @@
     ascend-fd diag -i <input_dir> -o <output_dir> -p
     ```
 
-    > - `input_dir` 为诊断输入目录
-    > - `output_dir` 为诊断结果输出目录
+    > - `input_dir` 为诊断输入目录。
+    > - `output_dir` 为诊断结果输出目录。
 
 ## 诊断报告解读
 
@@ -105,8 +105,8 @@ The diag job is complete.
 
 > [!NOTE]
 >
-> - 更多诊断回显示例请阅读 [diag 使用示例](../06_api/03_command_diag.md#使用示例)
-> - 更多字段解释请阅读 [diag 诊断结果回显参数说明](../06_api/03_command_diag.md#诊断结果回显参数说明)
+> - 更多诊断回显示例请阅读 [diag 使用示例](../06_api/03_command_diag.md#使用示例)。
+> - 更多字段解释请阅读 [diag 诊断结果回显参数说明](../06_api/03_command_diag.md#诊断结果回显参数说明)。
 
 ### 诊断结果文件
 
@@ -117,7 +117,7 @@ fault_diag_result/
 └── diag_report.json    # 完整的诊断结果（JSON 格式）
 ```
 
-> - 说明：诊断结果文件 `diag_report.json` 结构请参考[诊断结果输出](../06_api/03_command_diag.md#诊断结果输出)
+> - 说明：诊断结果文件 `diag_report.json` 结构请参考[诊断结果输出](../06_api/03_command_diag.md#诊断结果输出)。
 
 ## 诊断性能劣化问题
 
@@ -126,7 +126,7 @@ fault_diag_result/
 - **设备资源分析**：检查 NPU 计算降频和 CPU 资源抢占问题
 - **网络拥塞分析**：检查节点间的网络拥塞情况
 
-> - 用例可参考[含性能劣化诊断](../06_api/03_command_diag.md#含性能劣化诊断)
+> - 用例可参考[含性能劣化诊断](../06_api/03_command_diag.md#含性能劣化诊断)。
 
 ## 注意事项
 
