@@ -28,7 +28,7 @@
 
 ### 流程说明<a name="ZH-CN_TOPIC_0000002516292977"></a>
 
-基于AIBrix的vLLM推理任务包含Routing  Pod和推理实例Pod，推理实例Pod可以分为Prefill实例Pod和Decode实例Pod，其中Routing  Pod不需要使用NPU资源，AIBrix根据不同的推理服务配置方式生成不同的工作负载，用于创建不同的推理实例，并由Router统一对外提供推理服务。
+基于AIBrix的vLLM推理任务包含Routing Pod和推理实例Pod，推理实例Pod可以分为Prefill实例Pod和Decode实例Pod，其中Routing Pod不需要使用NPU资源，AIBrix根据不同的推理服务配置方式生成不同的工作负载，用于创建不同的推理实例，并由Router统一对外提供推理服务。
 
 关于AIBrix任务部署的详细说明可参见[AIBrix文档](https://aibrix.readthedocs.io/latest/designs/aibrix-stormservice.html)。
 
@@ -84,7 +84,7 @@ spec:
                 model.aibrix.ai/port: "8000"
                 model.aibrix.ai/engine: "vllm"
                 fault-scheduling: "force"          # 开启重调度
-                <strong>pod-rescheduling："on"         # 如果podGroupSize为1，pod-rescheduling需要配置为"on"；如果podGroupSize大于1，则不需要配置，删除该参数</strong>
+                <strong>pod-rescheduling: "on"         # 如果podGroupSize为1，pod-rescheduling需要配置为"on"；如果podGroupSize大于1，则不需要配置，删除该参数</strong>
               annotations:
                 <strong>huawei.com/schedule_policy: "chip2-node16-sp"</strong>
                 <strong>huawei.com/schedule_minAvailable: "1" # Gang调度策略下最小调度的副本数，在StormService中所有podGroupSize为1的实例会组成一个podGroup进行调度，其最小调度的副本数范围为[1, 实例replicas之和]，建议配置为实例replicas之和；podGroupSize大于1的实例各自组成一个podGroup，其最小调度的副本数范围为[1, podGroupSize]，建议配置为podGroupSize。例如，prefill实例的podGroupSize为1，decode实例的podGroupSize为2，则prefill实例的最小调度副本数设置为prefill实例的replicas，decode实例的最小调度副本数设置为decode实例的podGroupSize</strong>
@@ -237,20 +237,20 @@ spec:
 
     2. 按“i”进入编辑模式，修改容器中模型存放目录。
 
-        ```Yaml
+        ```yaml
         volumeMounts:
         - name: model
-        mountPath: /mnt/models
+          mountPath: /mnt/models
         volumes:                  #修改挂载的volume
         - name: model             #设置为模型实际存放目录
-        hostPath:
-        path: /mnt/models
+          hostPath:
+            path: /mnt/models
         - name: scripts           #设置为启动脚本实际存放目录
-        hostPath:
-        path: /scripts
+          hostPath:
+            path: /scripts
         ```
 
-    3. 按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
+    3. 按“Esc”键，输入`:wq!`，按“Enter”保存并退出编辑。
 
 7. 编辑用户配置文件“config/stormservice-config.yaml”。
 

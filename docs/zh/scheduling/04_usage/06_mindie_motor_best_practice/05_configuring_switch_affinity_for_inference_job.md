@@ -34,7 +34,7 @@ kubectl describe cm -n kube-system basic-tor-node-cm
 
 回显示例如下：
 
-```json
+```text
 ====
 tor_info:
 ----
@@ -44,15 +44,15 @@ tor_info:
   "server_list":[
     {
       "tor_id": 0,
-      "tor_ip": "192.168.0.1",
+      "tor_ip": "192.168.0.x",
       "server": [
         {
-          "server_ip": "192.168.1.0",
+          "server_ip": "192.168.1.x",
           "npu_count": 8,
           "slice_id": 0
         },
         {
-          "server_ip": "192.168.1.1",
+          "server_ip": "192.168.1.x",
           "npu_count": 8,
           "slice_id": 2
         },
@@ -75,9 +75,9 @@ kubectl get pod --all-namespaces -owide
 ```ColdFusion
 NAMESPACE        NAME                                READY   STATUS    RESTARTS   AGE     IP            Node
 ...
-default          mindie-server-0-master-0            1/1     Running   0          10S     192.168.1.0   worker0
-default          mindie-server-0-worker-0            1/1     Running   0          10S     192.168.1.1   worker1
+default          mindie-server-0-master-0            1/1     Running   0          10s     192.168.1.x   worker0
+default          mindie-server-0-worker-0            1/1     Running   0          10s     192.168.1.x   worker1
 ...
 ```
 
-根据步骤1获取到的Pod ip对比步骤2获取到的basic-tor-node-cm，确认多个实例分布在同一个tor下，表示交换机亲和性特性运行成功。
+根据步骤1获取到的Pod IP对比步骤2获取到的basic-tor-node-cm，确认多个实例分布在同一个tor下，表示交换机亲和性特性运行成功。

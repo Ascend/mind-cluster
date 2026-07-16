@@ -480,7 +480,7 @@
 
 #### PyTorch场景适配示例（基于MindSpeed-LLM）<a name="ZH-CN_TOPIC_0000002511426361"></a>
 
-1. 搭建训练环境，拉起训练，详细请参见[PyTorch场景适配示例（基于MindSpeed-LLM）](04_using_resumable_training_on_the_cli.md#适配示例)。
+1. 搭建训练环境，拉起训练，详细请参见[PyTorch场景适配示例（基于MindSpeed-LLM）](04_using_resumable_training_on_the_cli.md#zh-cn_topic_0000002003180016_section412442472511)。
 2. 开启进程级在线恢复，详细请参见[配置进程级在线恢复](03_configuration/02_configuring_fault_handling_policies.md#配置进程级在线恢复)。
 3. 在“QWEN3\_for\_PyTorch\_2.7\_code/mindspeed\_llm/training/training.py”代码中增加如下加粗内容，打桩注入故障，新增代码根据环境变量“RAISE\_UCE\_ERROR\_STEP\_AND\_RANK”获取注入故障迭代位置和故障rank信息。
 
@@ -523,7 +523,7 @@
 
 #### MindSpore场景适配示例（基于MindFormers）<a name="ZH-CN_TOPIC_0000002511346369"></a>
 
-1. 搭建训练环境，拉起训练，详细请参见[MindSpore场景适配示例（基于MindFormers）](04_using_resumable_training_on_the_cli.md#适配示例)。
+1. 搭建训练环境，拉起训练，详细请参见[MindSpore场景适配示例（基于MindFormers）](04_using_resumable_training_on_the_cli.md#zh-cn_topic_0000002003180016_section718243883518)。
 2. 开启进程级在线恢复，详细请参见[配置进程级在线恢复](03_configuration/02_configuring_fault_handling_policies.md#配置进程级在线恢复)。
 3. 在“QWEN3\_for\_MS\_code/mindformers/core/callback/callback.py”代码中增加如下加粗内容，打桩注入故障。
 
@@ -596,8 +596,8 @@
    回显示例如下，出现Running表示任务正常运行。
 
    ```ColdFusion
-   trjob            process-online-recovery-master-0                   1/1     Running   0                 14s     192.168.75.202   master-69-117   <none>           <none>
-   trjob            process-online-recovery-worker-0                   1/1     Running   0                 14s     192.168.6.13     work-69-115     <none>           <none>
+   trjob            process-online-recovery-master-0                   1/1     Running   0                 14s     xx.xx.xx.xx     master-x   <none>           <none>
+   trjob            process-online-recovery-worker-0                   1/1     Running   0                 14s     xx.xx.xx.xx     worker-x   <none>           <none>
    ```
 
 3. 监控训练日志
@@ -637,8 +637,8 @@
       回显示例如下：
 
       ```bash
-      trjob            process-online-recovery-master-0                   1/1     Running   0                 110s    192.168.75.202   master-69-117   <none>           <none>
-      trjob            process-online-recovery-worker-0                   1/1     Running   0                 110s    192.168.6.13     work-69-115     <none>           <none>
+      trjob            process-online-recovery-master-0                   1/1     Running   0                 110s    xx.xx.xx.xx     master-x   <none>           <none>
+      trjob            process-online-recovery-worker-0                   1/1     Running   0                 110s    xx.xx.xx.xx     worker-x   <none>           <none>
       ```
 
       >[!NOTE]

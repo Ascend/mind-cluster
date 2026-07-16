@@ -95,7 +95,7 @@
     1. 在device-plugin-volcano-v\{version\}.yaml中添加-shareDevCount=100 -softShareDevConfigDir=/share_device/，其中/share_device/由用户手动创建。当<b>Atlas A3 训练或推理系列产品</b>使用软切分虚拟化功能时，需额外增加启动参数-useSingleDieMode=true。
     2. 在device-plugin-volcano-v\{version\}.yaml中volumeMounts和volumes增加名为enpu-config-dir和share-device-config-dir的挂载项，其中enpu-config-dir的路径固定为/etc/enpu/，用于存放生成的软切分虚拟化任务的配置文件npu_info.config，share-device-config-dir的路径需与-softShareDevConfigDir参数值保持一致，用于存放软切分虚拟化任务的共享内存配置文件。
 
-       ```Yaml
+       ```yaml
        ...
                # 只有Atlas A3 训练或推理系列产品使用软切分虚拟化功能时，才需增加-useSingleDieMode=true
                args: [ "device-plugin -volcanoType=true -presetVirtualDevice=true
@@ -135,7 +135,7 @@
 
        - 在支持软切分虚拟化功能的节点上安装支持软切分功能的Ascend Device Plugin，将device-plugin-volcano-v\{version\}.yaml拷贝为softsharedev-device-plugin-volcano-v\{version\}.yaml。softsharedev-device-plugin-volcano-v\{version\}.yaml修改如下：
 
-         ```Yaml
+         ```yaml
          apiVersion: apps/v1
          kind: DaemonSet
          metadata:
@@ -176,7 +176,7 @@
 
        - 在不支持软切分虚拟化功能的节点上安装原始的Ascend Device Plugin，device-plugin-volcano-v\{version\}.yaml修改如下：
 
-         ```Yaml
+         ```yaml
          apiVersion: apps/v1
          kind: DaemonSet
          metadata:
@@ -209,6 +209,7 @@
 ![](../../../../figures/scheduling/basic_scheduling_001.png "basic_scheduling_001")
 
 ## 实现原理
+
 以Ascend Job为例，其原理图如[图1](#fig23698010123)所示。
 
 **图 1**  acjob任务调度原理图<a name="fig23698010123"></a>
@@ -314,7 +315,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
 
 >[!NOTE]
 >
->- 如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载NPU芯片设备备。用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
+>- 如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载NPU芯片设备。用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
 >- 因为Atlas 200I SoC A1 核心板场景不支持Ascend Docker Runtime，用户也无需修改YAML文件。
 
 **操作步骤<a name="zh-cn_topic_0000001558853680_zh-cn_topic_0000001609074213_section14665181617334"></a>**
@@ -369,7 +370,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
     </table>
 2. 将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
 
-    在Atlas 800I A2 推理服务器上，以pytorch_acjob_infer_910b_softsharedev.yaml为例，申请芯片AICore百分比为50%，芯片高带宽内存量为2048MB，软切分策略为fixed-share的参数配置示例如下。YAML配置参考请参考[YAML配置说明](../../../06_api/15_yaml_configuration.md#yaml_configuration)。
+    在Atlas 800I A2 推理服务器上，以pytorch_acjob_infer_910b_softsharedev.yaml为例，申请芯片AICore百分比为50%，芯片高带宽内存量为2048MB，软切分策略为fixed-share的参数配置示例如下。YAML配置请参考[YAML配置说明](../../../06_api/15_yaml_configuration.md#yaml_configuration)。
 
     <pre codetype="yaml">
     apiVersion: mindxdl.gitee.com/v1

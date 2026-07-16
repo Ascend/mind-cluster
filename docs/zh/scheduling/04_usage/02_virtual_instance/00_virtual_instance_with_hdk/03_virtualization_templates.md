@@ -19,7 +19,7 @@
     <tr>
         <td>Atlas 推理系列产品（8个AICore）</td>
         <td>虚拟化实例模板包括：vir01、vir02、vir04、vir02_1c、vir04_3c、vir04_3c_ndvpp、vir04_4c_dvpp。</td>
-        <td><ul><li>vir后面的数字表示AICore数量。</li><li>c前面的数字表示AICPU数量。</li><li>dvpp表示虚拟化时包含所有数字视觉预处理模块（即VPC，VDEC，JPEGD，PNGD，VENC，JPEGE）。</li><li>ndvpp表示虚拟化时没有数字视觉预处理硬件资源。</li></ul></td>
+        <td><ul><li>vir后面的数字表示AICore数量。</li><li>c前面的数字表示AICPU数量。</li><li>dvpp表示虚拟化时包含所有数字视觉预处理模块（即VPC、VDEC、JPEGD、PNGD、VENC、JPEGE）。</li><li>ndvpp表示虚拟化时没有数字视觉预处理硬件资源。</li></ul></td>
     </tr>
     <tr>
         <td>Atlas A2 训练系列产品（24个AICore）</td>
@@ -29,7 +29,7 @@
     <tr>
         <td>Atlas A2 推理系列产品（20个AICore）</td>
         <td>虚拟化实例模板包括：vir05_1c_8g、vir10_3c_16g_nm、vir10_4c_16g_m、vir10_3c_16g、vir10_3c_32g、vir05_1c_16g。</td>
-        <td><ul><li>vir后面的数字表示AICore数量。</li><li>c前面的数字表示AICPU数量。</li><li>m同dvpp表示虚拟化时包含所有数字视觉预处理模块（即VPC，VDEC，JPEGD，PNGD，VENC，JPEGE）。</li><li>nm同ndvpp表示虚拟化时没有数字视觉预处理硬件资源。</li><li>g前面的数字表示内存数量。</li></ul></td>
+        <td><ul><li>vir后面的数字表示AICore数量。</li><li>c前面的数字表示AICPU数量。</li><li>m同dvpp表示虚拟化时包含所有数字视觉预处理模块（即VPC、VDEC、JPEGD、PNGD、VENC、JPEGE）。</li><li>nm同ndvpp表示虚拟化时没有数字视觉预处理硬件资源。</li><li>g前面的数字表示内存数量。</li></ul></td>
     </tr>
     <tr>
         <td>Atlas A3 训练系列产品（48个AICore）</td>
