@@ -250,8 +250,8 @@ func promUpdateHccsStatisticInfo(ch chan<- prometheus.Metric, cache hccsCache, c
 }
 
 // UpdateTelegraf update telegraf
-func (c *HccsCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
+func (c *HccsCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	caches := colcommon.GetInfoFromCache[hccsCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
@@ -259,14 +259,12 @@ func (c *HccsCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface
 		if !ok {
 			continue
 		}
-		fieldMap := getFieldMap(fieldsMap, cache.chip.LogicID)
+		metric := colcommon.NewDeviceMetric(cache.chip.LogicID)
 
-		telegrafUpdateHccsStatisticInfo(cache, c, fieldMap)
-		telegrafUpdateHccsBwInfo(cache, c, fieldMap)
+		telegrafUpdateHccsStatisticInfo(cache, c, metric.Fields)
+		telegrafUpdateHccsBwInfo(cache, c, metric.Fields)
+		ch <- metric
 	}
-
-	return fieldsMap
-
 }
 
 func telegrafUpdateHccsBwInfo(cache hccsCache, c *HccsCollector, fieldMap map[string]interface{}) {

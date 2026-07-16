@@ -68,9 +68,8 @@ func (f *fakeCollector) PostCollect(_ *NpuCollector)                      {}
 func (f *fakeCollector) UpdatePrometheus(_ chan<- prometheus.Metric, _ *NpuCollector,
 	_ map[int32]container.DevicesInfo, _ []HuaWeiAIChip) {
 }
-func (f *fakeCollector) UpdateTelegraf(_ map[string]map[string]interface{}, _ *NpuCollector,
-	_ map[int32]container.DevicesInfo, _ []HuaWeiAIChip) map[string]map[string]interface{} {
-	return nil
+func (f *fakeCollector) UpdateTelegraf(_ chan<- TelegrafMetric, _ *NpuCollector,
+	_ map[int32]container.DevicesInfo, _ []HuaWeiAIChip) {
 }
 
 func TestScheduleUpdateNext(t *testing.T) {

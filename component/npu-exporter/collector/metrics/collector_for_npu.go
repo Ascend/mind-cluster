@@ -352,46 +352,45 @@ func updateProcessInfoForPrometheus(ch chan<- prometheus.Metric, chip *chipCache
 }
 
 // UpdateTelegraf updates the base info of the chip
-func (c *BaseInfoCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
+func (c *BaseInfoCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 	caches := colcommon.GetInfoFromCache[chipCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
 		cache, ok := caches[chip.PhyId]
 		if !ok {
 			continue
 		}
-		fieldMap := getFieldMap(fieldsMap, cache.chip.LogicID)
+		metric := colcommon.NewDeviceMetric(cache.chip.LogicID)
 
-		doUpdateTelegrafWithValidateNum(fieldMap, descTemp, float64(cache.Temperature), "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descPower, float64(cache.Power), "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descVoltage, float64(cache.Voltage), "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descAICoreFreq, float64(cache.AICoreCurrentFreq), "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descHealthStatus, float64(getHealthCode(cache.HealthStatus)), "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descTemp, float64(cache.Temperature), "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descPower, float64(cache.Power), "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descVoltage, float64(cache.Voltage), "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descAICoreFreq, float64(cache.AICoreCurrentFreq), "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descHealthStatus, float64(getHealthCode(cache.HealthStatus)), "")
 		if isSupportNetworkHealthDevices(n.Dmgr.GetDevType(), chip.MainBoardId) {
-			doUpdateTelegrafWithValidateNum(fieldMap, descNetworkStatus, float64(getHealthCode(cache.NetHealthStatus)), "")
+			doUpdateTelegrafWithValidateNum(metric.Fields, descNetworkStatus, float64(getHealthCode(cache.NetHealthStatus)), "")
 		}
-		doUpdateTelegraf(fieldMap, descNpuName, chip.ChipInfo.Name, "")
+		doUpdateTelegraf(metric.Fields, descNpuName, chip.ChipInfo.Name, "")
 
-		updateProcessInfoForTelegraf(&cache, fieldMap)
-		updateErrorCode(&cache, fieldMap)
+		updateProcessInfoForTelegraf(&cache, metric.Fields)
+		updateErrorCode(&cache, metric.Fields)
 		// Update NPU serial number info
 		if cache.chip.ElabelInfo != nil {
-			doUpdateTelegraf(fieldMap, descNPUSerialNumber, cache.chip.ElabelInfo.SerialNumber, "")
+			doUpdateTelegraf(metric.Fields, descNPUSerialNumber, cache.chip.ElabelInfo.SerialNumber, "")
 		}
 		if cache.chip.ProductType != "" {
-			doUpdateTelegraf(fieldMap, descNPUProduct, cache.chip.ProductType, "")
+			doUpdateTelegraf(metric.Fields, descNPUProduct, cache.chip.ProductType, "")
 		}
+		ch <- metric
 	}
 
-	if fieldsMap[colcommon.GeneralDevTagKey] == nil {
-		fieldsMap[colcommon.GeneralDevTagKey] = make(map[string]interface{})
-	}
+	metric := colcommon.NewGeneralMetric()
 	machineInfoCardCache, ok := c.LocalCache.Load(colcommon.MachineInfoCardDescKey)
 	if ok {
-		doUpdateTelegraf(fieldsMap[colcommon.GeneralDevTagKey], machineInfoCardDesc, machineInfoCardCache, "")
+		doUpdateTelegraf(metric.Fields, machineInfoCardDesc, machineInfoCardCache, "")
 	}
-	doUpdateTelegraf(fieldsMap[colcommon.GeneralDevTagKey], machineInfoNPUDesc, len(chips), "")
-	return fieldsMap
+	doUpdateTelegraf(metric.Fields, machineInfoNPUDesc, len(chips), "")
+	ch <- metric
 }
 
 func updateErrorCode(chip *chipCache, fieldMap map[string]interface{}) {

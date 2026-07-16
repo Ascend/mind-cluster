@@ -45,12 +45,10 @@ func (c *VersionCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *comm
 }
 
 // UpdateTelegraf update telegraf metric
-func (c *VersionCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *common.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) map[string]map[string]interface{} {
+func (c *VersionCollector) UpdateTelegraf(ch chan<- common.TelegrafMetric, n *common.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
 
-	if fieldsMap[common.GeneralDevTagKey] == nil {
-		fieldsMap[common.GeneralDevTagKey] = make(map[string]interface{})
-	}
-	doUpdateTelegraf(fieldsMap[common.GeneralDevTagKey], versionInfoDesc, versions.BuildVersion, "")
-	return fieldsMap
+	metric := common.NewGeneralMetric()
+	doUpdateTelegraf(metric.Fields, versionInfoDesc, versions.BuildVersion, "")
+	ch <- metric
 }

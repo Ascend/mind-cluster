@@ -128,45 +128,43 @@ func (c *HbmCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommo
 }
 
 // UpdateTelegraf updates the telegraf metrics.
-func (c *HbmCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
+func (c *HbmCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 	caches := colcommon.GetInfoFromCache[hbmCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
 		cache, ok := caches[chip.PhyId]
 		if !ok {
 			continue
 		}
-		fieldMap := getFieldMap(fieldsMap, cache.chip.LogicID)
 
 		extInfo := cache.extInfo
 		if extInfo == nil {
 			continue
 		}
+		metric := colcommon.NewDeviceMetric(cache.chip.LogicID)
 
-		doUpdateTelegrafWithValidateNum(fieldMap, descHbmUtilization, float64(cache.hbmUtilization), "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descHbmUtilization, float64(cache.hbmUtilization), "")
 
 		hbmInfo := extInfo.HbmInfo
 		if hbmInfo != nil {
-			doUpdateTelegraf(fieldMap, descHbmUsedMemory, hbmInfo.Usage, "")
-			doUpdateTelegraf(fieldMap, descHbmTotalMemory, hbmInfo.MemorySize, "")
-			doUpdateTelegraf(fieldMap, descHbmTemperature, hbmInfo.Temp, "")
-			doUpdateTelegraf(fieldMap, descHbmBWUtil, hbmInfo.BandWidthUtilRate, "")
+			doUpdateTelegraf(metric.Fields, descHbmUsedMemory, hbmInfo.Usage, "")
+			doUpdateTelegraf(metric.Fields, descHbmTotalMemory, hbmInfo.MemorySize, "")
+			doUpdateTelegraf(metric.Fields, descHbmTemperature, hbmInfo.Temp, "")
+			doUpdateTelegraf(metric.Fields, descHbmBWUtil, hbmInfo.BandWidthUtilRate, "")
 		}
 
 		eccInfo := extInfo.ECCInfo
 		if eccInfo != nil {
-			doUpdateTelegraf(fieldMap, descEccEnableFlag, eccInfo.EnableFlag, "")
-			doUpdateTelegraf(fieldMap, descEccSingleBitErrorCnt, eccInfo.SingleBitErrorCnt, "")
-			doUpdateTelegraf(fieldMap, descEccDoubleBitErrorCnt, eccInfo.DoubleBitErrorCnt, "")
-			doUpdateTelegraf(fieldMap, descEccTotalSingleBitErrorCnt, eccInfo.TotalSingleBitErrorCnt, "")
-			doUpdateTelegraf(fieldMap, descEccTotalDoubleBitErrorCnt, eccInfo.TotalDoubleBitErrorCnt, "")
-			doUpdateTelegraf(fieldMap, descEccSingleBitIoslatedPagesCnt, eccInfo.SingleBitIsolatedPagesCnt, "")
-			doUpdateTelegraf(fieldMap, descEccDoubleBitIoslatedPagesCnt, eccInfo.DoubleBitIsolatedPagesCnt, "")
-
+			doUpdateTelegraf(metric.Fields, descEccEnableFlag, eccInfo.EnableFlag, "")
+			doUpdateTelegraf(metric.Fields, descEccSingleBitErrorCnt, eccInfo.SingleBitErrorCnt, "")
+			doUpdateTelegraf(metric.Fields, descEccDoubleBitErrorCnt, eccInfo.DoubleBitErrorCnt, "")
+			doUpdateTelegraf(metric.Fields, descEccTotalSingleBitErrorCnt, eccInfo.TotalSingleBitErrorCnt, "")
+			doUpdateTelegraf(metric.Fields, descEccTotalDoubleBitErrorCnt, eccInfo.TotalDoubleBitErrorCnt, "")
+			doUpdateTelegraf(metric.Fields, descEccSingleBitIoslatedPagesCnt, eccInfo.SingleBitIsolatedPagesCnt, "")
+			doUpdateTelegraf(metric.Fields, descEccDoubleBitIoslatedPagesCnt, eccInfo.DoubleBitIsolatedPagesCnt, "")
 		}
+		ch <- metric
 	}
-	return fieldsMap
-
 }
 
 func getAllHBMEccInfo(c *HbmCollector, logicID int32, dmgr devmanager.DeviceInterface, chip *colcommon.HuaWeiAIChip) {

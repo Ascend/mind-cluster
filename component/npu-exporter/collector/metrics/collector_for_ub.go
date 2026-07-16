@@ -26,6 +26,7 @@ import (
 	"ascend-common/common-utils/hwlog"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
+
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 )
@@ -257,18 +258,18 @@ func promUpdateUbInfo(ch chan<- prometheus.Metric, cache ubCache,
 }
 
 // UpdateTelegraf update telegraf
-func (c *UbCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
+func (c *UbCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 	caches := colcommon.GetInfoFromCache[ubCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
 		cache, ok := caches[chip.PhyId]
 		if !ok {
 			continue
 		}
-		fieldMap := getFieldMap(fieldsMap, cache.chip.PhyId)
-		telegrafUpdateUbInfo(cache, fieldMap)
+		metric := colcommon.NewDeviceMetric(cache.chip.PhyId)
+		telegrafUpdateUbInfo(cache, metric.Fields)
+		ch <- metric
 	}
-	return fieldsMap
 }
 
 func promUpdateUbRx(ch chan<- prometheus.Metric, timestamp time.Time, ubInfo []*common.UBInfo,

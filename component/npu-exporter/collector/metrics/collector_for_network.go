@@ -179,8 +179,8 @@ func (c *NetworkCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colc
 }
 
 // UpdateTelegraf update telegraf metrics
-func (c *NetworkCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
+func (c *NetworkCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 	if colcommon.DevType == api.Ascend910A5 {
 		// Update Npu specific metrics
 		caches := colcommon.GetInfoFromCache[netInfoNPUCache](n, colcommon.GetCacheKey(c))
@@ -189,10 +189,11 @@ func (c *NetworkCollector) UpdateTelegraf(fieldsMap map[string]map[string]interf
 			if !ok {
 				continue
 			}
-			fieldMap := getFieldMap(fieldsMap, cache.chip.LogicID)
-			telegrafUpdateNetInfo(cache, fieldMap)
+			metric := colcommon.NewDeviceMetric(cache.chip.LogicID)
+			telegrafUpdateNetInfo(cache, metric.Fields)
+			ch <- metric
 		}
-		return fieldsMap
+		return
 	}
 	// Update regular metrics
 	caches := colcommon.GetInfoFromCache[netInfoCache](n, colcommon.GetCacheKey(c))
@@ -201,27 +202,27 @@ func (c *NetworkCollector) UpdateTelegraf(fieldsMap map[string]map[string]interf
 		if !ok {
 			continue
 		}
-		fieldMap := getFieldMap(fieldsMap, cache.chip.LogicID)
 		extInfo := cache.extInfo
 		if extInfo == nil {
 			continue
 		}
+		metric := colcommon.NewDeviceMetric(cache.chip.LogicID)
 		if validateNotNilForEveryElement(extInfo.BandwidthInfo) {
-			doUpdateTelegrafWithValidateNum(fieldMap, descBandwidthTx, extInfo.BandwidthInfo.TxValue, "")
-			doUpdateTelegrafWithValidateNum(fieldMap, descBandwidthRx, extInfo.BandwidthInfo.RxValue, "")
+			doUpdateTelegrafWithValidateNum(metric.Fields, descBandwidthTx, extInfo.BandwidthInfo.TxValue, "")
+			doUpdateTelegrafWithValidateNum(metric.Fields, descBandwidthRx, extInfo.BandwidthInfo.RxValue, "")
 		}
 		if validateNotNilForEveryElement(extInfo.LinkSpeedInfo) {
-			doUpdateTelegrafWithValidateNum(fieldMap, npuChipLinkSpeed, extInfo.LinkSpeedInfo.Speed, "")
+			doUpdateTelegrafWithValidateNum(metric.Fields, npuChipLinkSpeed, extInfo.LinkSpeedInfo.Speed, "")
 		}
 		if validateNotNilForEveryElement(extInfo.LinkStatInfo) {
-			doUpdateTelegrafWithValidateNum(fieldMap, npuChipLinkUpNum, extInfo.LinkStatInfo.LinkUPNum, "")
+			doUpdateTelegrafWithValidateNum(metric.Fields, npuChipLinkUpNum, extInfo.LinkStatInfo.LinkUPNum, "")
 		}
 		if validateNotNilForEveryElement(extInfo.LinkStatusInfo) {
-			doUpdateTelegrafWithValidateNum(fieldMap, descLinkStatus,
+			doUpdateTelegrafWithValidateNum(metric.Fields, descLinkStatus,
 				float64(getLinkStatusCode(extInfo.LinkStatusInfo.LinkState)), "")
 		}
+		ch <- metric
 	}
-	return fieldsMap
 }
 
 func collectNetworkInfo(phyID int32) common.NpuNetInfo {

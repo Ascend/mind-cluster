@@ -148,21 +148,18 @@ func TestVnpuCollectorUpdateTelegraf(t *testing.T) {
 	testChips := []colcommon.HuaWeiAIChip{{PhyId: 0}}
 	collector.CollectToCache(n, testChips)
 	chip := createValidVnpuChip()
-	convey.Convey("TestVnpuCollectorUpdateTelegraf", t, func() {
-		convey.Convey("effective virtual device scenarios", func() {
-			chipsWithVnpu := []colcommon.HuaWeiAIChip{chip}
-			newFieldMaps := collector.UpdateTelegraf(make(map[string]map[string]interface{}), n, containerMap, chipsWithVnpu)
-			convey.So(len(newFieldMaps), convey.ShouldEqual, 1)
-			convey.So(len(newFieldMaps["0_100"]), convey.ShouldEqual, vnpuMetricNum)
-		})
-		convey.Convey("there is no container info", func() {
-			chip.VDevActivityInfo = nil
-			chipsWithVnpu := []colcommon.HuaWeiAIChip{chip}
-			containerMap = map[int32]container.DevicesInfo{}
-			newFieldMaps := collector.UpdateTelegraf(make(map[string]map[string]interface{}), n, containerMap, chipsWithVnpu)
-			convey.So(len(newFieldMaps), convey.ShouldEqual, 0)
-		})
-
+	convey.Convey("effective virtual device scenarios", t, func() {
+		chipsWithVnpu := []colcommon.HuaWeiAIChip{chip}
+		received := drainUpdateTelegraf(collector, n, containerMap, chipsWithVnpu)
+		convey.So(len(received), convey.ShouldEqual, 1)
+		convey.So(len(received[0].Fields), convey.ShouldEqual, vnpuMetricNum)
+		convey.So(received[0].VDevID, convey.ShouldEqual, 100)
+	})
+	convey.Convey("there is no container info", t, func() {
+		chip.VDevActivityInfo = nil
+		chipsWithVnpu := []colcommon.HuaWeiAIChip{chip}
+		received := drainUpdateTelegraf(collector, n, map[int32]container.DevicesInfo{}, chipsWithVnpu)
+		convey.So(len(received), convey.ShouldEqual, 0)
 	})
 }
 

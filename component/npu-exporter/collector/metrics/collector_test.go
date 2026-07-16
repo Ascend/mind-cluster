@@ -30,19 +30,21 @@ import (
 	"ascend-common/devmanager"
 	"ascend-common/devmanager/common"
 	"ascend-common/devmanager/hccn"
+
 	colcommon "huawei.com/npu-exporter/v6/collector/common"
 	"huawei.com/npu-exporter/v6/collector/container"
 	"huawei.com/npu-exporter/v6/utils/logger"
 )
 
 const (
-	maxMetricsCount         = 2000
-	num5                    = 5
-	mockContainerName       = "mockContainerName"
-	maxChipNum        int32 = 8
-	daYuMainBoardId         = 0x44
-	yinHeMainBoardId        = 0x46
-	ubxMainBoardId          = 0x48
+	maxMetricsCount            = 2000
+	num5                       = 5
+	mockContainerName          = "mockContainerName"
+	maxChipNum           int32 = 8
+	daYuMainBoardId            = 0x44
+	yinHeMainBoardId           = 0x46
+	ubxMainBoardId             = 0x48
+	chanCacheSizeForTest       = 128
 )
 
 var (
@@ -256,17 +258,25 @@ func TestUpdateTelegraf(t *testing.T) {
 		mockPcieCache(n, chips, colcommon.GetCacheKey(&PcieCollector{}))
 		mockRoceCache(n, chips, colcommon.GetCacheKey(&RoceCollector{}))
 		mockSioCache(n, chips, colcommon.GetCacheKey(&SioCollector{}))
-		fieldsMap := make(map[string]map[string]interface{})
-		fieldsMap[colcommon.GeneralDevTagKey] = make(map[string]interface{})
-		fieldsMap[colcommon.KeyForMetricsWithCustomLabels] = make(map[string]interface{})
-		fieldsMap[colcommon.KeyForTextMetrics] = make(map[string]interface{})
+
+		ch := make(chan colcommon.TelegrafMetric, chanCacheSizeForTest)
+		received := make([]colcommon.TelegrafMetric, 0)
+		done := make(chan struct{})
+		go func() {
+			for data := range ch {
+				received = append(received, data)
+			}
+			close(done)
+		}()
 
 		for _, c := range collectorChain {
-			c.UpdateTelegraf(fieldsMap, n, containerInfos, chips)
+			c.UpdateTelegraf(ch, n, containerInfos, chips)
 		}
+		close(ch)
+		<-done
 
-		t.Logf("fieldsMap len(ch):%v", len(fieldsMap))
-		convey.So(fieldsMap, convey.ShouldNotBeEmpty)
+		t.Logf("TestUpdateTelegraf received len(ch):%v", len(received))
+		convey.So(received, convey.ShouldNotBeEmpty)
 	})
 }
 
@@ -578,4 +588,21 @@ func createChip() colcommon.HuaWeiAIChip {
 			Version: "V1",
 		},
 	}
+}
+
+func drainUpdateTelegraf(collector colcommon.MetricsCollector, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) []colcommon.TelegrafMetric {
+	ch := make(chan colcommon.TelegrafMetric, chanCacheSizeForTest)
+	received := make([]colcommon.TelegrafMetric, 0)
+	done := make(chan struct{})
+	go func() {
+		for data := range ch {
+			received = append(received, data)
+		}
+		close(done)
+	}()
+	collector.UpdateTelegraf(ch, n, containerMap, chips)
+	close(ch)
+	<-done
+	return received
 }

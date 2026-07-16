@@ -26,7 +26,7 @@
 `dcmi.go`
 
 ```go
-/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2026. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -187,7 +187,7 @@ DCMIDLLEXPORT int dcmi_get_device_health(int card_id, int device_id, unsigned in
 `custom_metrics.go`
 
 ```go
-/* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+/* Copyright(C) 2026. Huawei Technologies Co.,Ltd. All rights reserved.
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -205,15 +205,15 @@ DCMIDLLEXPORT int dcmi_get_device_health(int card_id, int device_id, unsigned in
 package plugins
 
 import (
- "sync"
- "time"
+    "sync"
+    "time"
 
- "github.com/prometheus/client_golang/prometheus"
+    "github.com/prometheus/client_golang/prometheus"
 
- "huawei.com/npu-exporter/v6/collector/common"
- "huawei.com/npu-exporter/v6/collector/container"
- "huawei.com/npu-exporter/v6/utils"
- "huawei.com/npu-exporter/v6/utils/logger"
+    "huawei.com/npu-exporter/v6/collector/common"
+    "huawei.com/npu-exporter/v6/collector/container"
+    "huawei.com/npu-exporter/v6/utils"
+    "huawei.com/npu-exporter/v6/utils/logger"
 )
 
 var (
@@ -225,94 +225,96 @@ var (
 )
 
 const (
- pluginInfoKey    = "pluginInfoKey"
- pluginInfoValue  = 1.11111
- pluginLabel      = "pluginLabel"
- npuPluginLabel   = "npuPluginInfoKey"
- npuPluginInfoKey = "npuPluginInfoKey"
- pluginName       = "myPlugin"
+    pluginInfoKey    = "pluginInfoKey"
+    pluginInfoValue  = 1.11111
+    pluginLabel      = "pluginLabel"
+    npuPluginLabel   = "npuPluginInfoKey"
+    npuPluginInfoKey = "npuPluginInfoKey"
+    pluginName       = "myPlugin"
 )
 
 // PluginInfoCollector collect custom plugin info
 type PluginInfoCollector struct {
- common.MetricsCollectorAdapter
- Cache sync.Map
+    common.MetricsCollectorAdapter
+    Cache sync.Map
 }
 
 // Describe description of the metric
 func (c *PluginInfoCollector) Describe(ch chan<- *prometheus.Desc) {
- // add desc
- logger.Debug("PluginInfoCollector Describe")
- ch <- PluginInfoDesc
- ch <- PluginNpuInfoDesc
+    // add desc
+    logger.Debug("PluginInfoCollector Describe")
+    ch <- PluginInfoDesc
+    ch <- PluginNpuInfoDesc
 }
 
 // CollectToCache collect the metric to cache
 func (c *PluginInfoCollector) CollectToCache(n *common.NpuCollector, chipList []common.HuaWeiAIChip) {
- // collect metric to cache
- logger.Debug("PluginInfoCollector CollectToCache")
- c.Cache.Store(pluginInfoKey, pluginInfoValue)
- health, err := DcGetDeviceHealth(0, 0)
- if err != nil {
-  logger.Error(err)
-  return
- }
- c.Cache.Store(npuPluginInfoKey, health)
+    // collect metric to cache
+    logger.Debug("PluginInfoCollector CollectToCache")
+    c.Cache.Store(pluginInfoKey, pluginInfoValue)
+    health, err := DcGetDeviceHealth(0, 0)
+    if err != nil {
+        logger.Error(err)
+        return
+    }
+    c.Cache.Store(npuPluginInfoKey, health)
 }
 
 // UpdatePrometheus update prometheus metric
 func (c *PluginInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *common.NpuCollector,
  containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
- logger.Debug("PluginInfoCollector UpdatePrometheus")
- // get metric from cache
- pluginCache, _ := c.Cache.Load(pluginInfoKey)
- npuPluginCache, _ := c.Cache.Load(npuPluginInfoKey)
- // update plugin info
- ch <- prometheus.NewMetricWithTimestamp(time.Now(),
-  prometheus.MustNewConstMetric(PluginInfoDesc, prometheus.GaugeValue, pluginCache.(float64), pluginLabel))
- // update npu plugin info
- value := float64(npuPluginCache.(int32))
- ch <- prometheus.NewMetricWithTimestamp(time.Now(),
-  prometheus.MustNewConstMetric(PluginNpuInfoDesc, prometheus.GaugeValue, value, npuPluginLabel))
+    logger.Debug("PluginInfoCollector UpdatePrometheus")
+    // get metric from cache
+    pluginCache, _ := c.Cache.Load(pluginInfoKey)
+    npuPluginCache, _ := c.Cache.Load(npuPluginInfoKey)
+    // update plugin info
+    ch <- prometheus.NewMetricWithTimestamp(time.Now(),
+     prometheus.MustNewConstMetric(PluginInfoDesc, prometheus.GaugeValue, pluginCache.(float64), pluginLabel))
+    // update npu plugin info
+    value := float64(npuPluginCache.(int32))
+    ch <- prometheus.NewMetricWithTimestamp(time.Now(),
+     prometheus.MustNewConstMetric(PluginNpuInfoDesc, prometheus.GaugeValue, value, npuPluginLabel))
 
 }
 
 // UpdateTelegraf update telegraf metric
-func (c *PluginInfoCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *common.NpuCollector,
- containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) map[string]map[string]interface{} {
- logger.Debug("PluginInfoCollector UpdateTelegraf")
- // get metric from cache
- pluginCache, _ := c.Cache.Load(pluginInfoKey)
- npuPluginCache, _ := c.Cache.Load(npuPluginInfoKey)
- // update plugin info
- if fieldsMap[common.GeneralDevTagKey] == nil {
-  fieldsMap[common.GeneralDevTagKey] = make(map[string]interface{})
- }
- utils.DoUpdateTelegraf(fieldsMap[common.GeneralDevTagKey], PluginInfoDesc, pluginCache.(float64), "")
- // update npu plugin info
- const NpuLogicID = "1"
- value := float64(npuPluginCache.(int32))
- if fieldsMap[NpuLogicID] == nil {
-  fieldsMap[NpuLogicID] = make(map[string]interface{})
- }
- utils.DoUpdateTelegraf(fieldsMap[NpuLogicID], PluginNpuInfoDesc, value, "")
- return fieldsMap
+func (c *PluginInfoCollector) UpdateTelegraf(ch chan<- common.TelegrafMetric, n *common.NpuCollector,
+    containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
+    logger.Debug("PluginInfoCollector UpdateTelegraf")
+    // get metric from cache
+    pluginCache, pluginOk := c.Cache.Load(pluginInfoKey)
+    npuPluginCache, npuPluginOk := c.Cache.Load(npuPluginInfoKey)
+    // update plugin info (node-level metric)
+    if pluginOk {
+        metric := common.NewGeneralMetric()
+        utils.DoUpdateTelegraf(metric.Fields, PluginInfoDesc, pluginCache.(float64), "")
+        ch <- metric
+    }
+
+    // update npu plugin info (device-level metric, logic id is 1 here for demo)
+    if npuPluginOk {
+        const NpuLogicID = 1
+        value := float64(npuPluginCache.(int32))
+        metric := common.NewDeviceMetric(NpuLogicID)
+        utils.DoUpdateTelegraf(metric.Fields, PluginNpuInfoDesc, value, "")
+        ch <- metric
+    }
 }
 
 // PreCollect pre handle before collect
 func (c *PluginInfoCollector) PreCollect(n *common.NpuCollector, chipList []common.HuaWeiAIChip) {
- logger.Debug("PluginInfoCollector PreCollect")
+    logger.Debug("PluginInfoCollector PreCollect")
 }
 
 // PostCollect post handle after collect
 func (c *PluginInfoCollector) PostCollect(n *common.NpuCollector) {
- logger.Debug("PluginInfoCollector PostCollect")
+    logger.Debug("PluginInfoCollector PostCollect")
 }
 
 // IsSupported Check whether the current hardware supports this metric
 func (c *PluginInfoCollector) IsSupported(n *common.NpuCollector) bool {
- logger.Debug("PluginInfoCollector IsSupported")
- return true
+    logger.Debug("PluginInfoCollector IsSupported")
+    return true
 }
 
 ```

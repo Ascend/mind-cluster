@@ -53,12 +53,46 @@ type HuaWeiAIChip struct {
 	ElabelInfo *common.ElabelInfo `json:"elabel_info"`
 }
 
-// TelegrafData represents the data structure for metrics collection and export, compatible with Telegraf format.'
-type TelegrafData struct {
+// NoDeviceID is the sentinel value for node-level metric or non-vnpu metric
+const NoDeviceID int32 = -1
+
+// TelegrafMetric represents the data structure for metrics collection and export, compatible with Telegraf format.'
+type TelegrafMetric struct {
 	Measurement string
 	Labels      map[string]string
-	Metrics     map[string]interface{}
+	Fields      map[string]interface{}
 	Timestamp   time.Time
+	// DeviceID device logic id used to build the default device tag; less than 0 means a node-level metric
+	DeviceID int32
+	// VDevID virtual device id; less than 0 means not a virtual device
+	VDevID int32
+}
+
+// NewDeviceMetric build a TelegrafMetric for a physical device metric
+func NewDeviceMetric(logicID int32) TelegrafMetric {
+	return TelegrafMetric{
+		Fields:   make(map[string]interface{}),
+		DeviceID: logicID,
+		VDevID:   NoDeviceID,
+	}
+}
+
+// NewVDevMetric build a TelegrafMetric for a virtual device metric
+func NewVDevMetric(logicID, vDevID int32) TelegrafMetric {
+	return TelegrafMetric{
+		Fields:   make(map[string]interface{}),
+		DeviceID: logicID,
+		VDevID:   vDevID,
+	}
+}
+
+// NewGeneralMetric build a TelegrafMetric for a node-level metric
+func NewGeneralMetric() TelegrafMetric {
+	return TelegrafMetric{
+		Fields:   make(map[string]interface{}),
+		DeviceID: NoDeviceID,
+		VDevID:   NoDeviceID,
+	}
 }
 
 // NpuDevPortsInfo npu ports info data structure

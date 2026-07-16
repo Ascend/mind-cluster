@@ -136,14 +136,6 @@ func getContainerNameArray(devInfo container.DevicesInfo) []string {
 	return strings.Split(devInfo.Name, "_")
 }
 
-func getFieldMap(fieldsMap map[string]map[string]interface{}, devTagKey int32) map[string]interface{} {
-	devTagKeyStr := strconv.Itoa(int(devTagKey))
-	if fieldsMap[devTagKeyStr] == nil {
-		fieldsMap[devTagKeyStr] = make(map[string]interface{})
-	}
-	return fieldsMap[devTagKeyStr]
-}
-
 func handleErr(err error, domain string, logicID int32) {
 	if err != nil {
 		logErrMetricsWithLimit(domain, logicID, err)

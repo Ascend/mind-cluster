@@ -72,8 +72,8 @@ type MetricsCollector interface {
 		chips []HuaWeiAIChip)
 
 	// UpdateTelegraf update telegraf
-	UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *NpuCollector,
-		containerMap map[int32]container.DevicesInfo, chips []HuaWeiAIChip) map[string]map[string]interface{}
+	UpdateTelegraf(ch chan<- TelegrafMetric, n *NpuCollector,
+		containerMap map[int32]container.DevicesInfo, chips []HuaWeiAIChip)
 
 	// PreCollect pre handle before collect
 	PreCollect(*NpuCollector, []HuaWeiAIChip)
@@ -107,9 +107,8 @@ func (c *MetricsCollectorAdapter) UpdatePrometheus(ch chan<- prometheus.Metric, 
 }
 
 // UpdateTelegraf update telegraf
-func (c *MetricsCollectorAdapter) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []HuaWeiAIChip) map[string]map[string]interface{} {
-	return fieldsMap
+func (c *MetricsCollectorAdapter) UpdateTelegraf(ch chan<- TelegrafMetric, n *NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []HuaWeiAIChip) {
 }
 
 // PreCollect pre handle before collect

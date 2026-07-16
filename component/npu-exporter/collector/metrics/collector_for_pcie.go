@@ -137,8 +137,8 @@ func (c *PcieCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcomm
 }
 
 // UpdateTelegraf update telegraf metrics
-func (c *PcieCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
+func (c *PcieCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	caches := colcommon.GetInfoFromCache[pcieCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
@@ -146,35 +146,34 @@ func (c *PcieCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface
 		if !ok {
 			continue
 		}
-		fieldMap := getFieldMap(fieldsMap, cache.chip.LogicID)
 
 		extInfo := cache.extInfo
 		if extInfo == nil {
 			continue
 		}
-		doUpdateTelegraf(fieldMap, descTxPBW, extInfo.PcieTxPBw.PcieAvgBw, avgPostfix)
-		doUpdateTelegraf(fieldMap, descTxNpBW, extInfo.PcieTxNPBw.PcieAvgBw, avgPostfix)
-		doUpdateTelegraf(fieldMap, descTxCplBW, extInfo.PcieTxCPLBw.PcieAvgBw, avgPostfix)
-		doUpdateTelegraf(fieldMap, descRxPBW, extInfo.PcieRxPBw.PcieAvgBw, avgPostfix)
-		doUpdateTelegraf(fieldMap, descRxNpBW, extInfo.PcieRxNPBw.PcieAvgBw, avgPostfix)
-		doUpdateTelegraf(fieldMap, descRxCplBW, extInfo.PcieRxCPLBw.PcieAvgBw, avgPostfix)
+		metric := colcommon.NewDeviceMetric(cache.chip.LogicID)
+		doUpdateTelegraf(metric.Fields, descTxPBW, extInfo.PcieTxPBw.PcieAvgBw, avgPostfix)
+		doUpdateTelegraf(metric.Fields, descTxNpBW, extInfo.PcieTxNPBw.PcieAvgBw, avgPostfix)
+		doUpdateTelegraf(metric.Fields, descTxCplBW, extInfo.PcieTxCPLBw.PcieAvgBw, avgPostfix)
+		doUpdateTelegraf(metric.Fields, descRxPBW, extInfo.PcieRxPBw.PcieAvgBw, avgPostfix)
+		doUpdateTelegraf(metric.Fields, descRxNpBW, extInfo.PcieRxNPBw.PcieAvgBw, avgPostfix)
+		doUpdateTelegraf(metric.Fields, descRxCplBW, extInfo.PcieRxCPLBw.PcieAvgBw, avgPostfix)
 
-		doUpdateTelegraf(fieldMap, descTxPBW, extInfo.PcieTxPBw.PcieMinBw, minPostfix)
-		doUpdateTelegraf(fieldMap, descTxNpBW, extInfo.PcieTxNPBw.PcieMinBw, minPostfix)
-		doUpdateTelegraf(fieldMap, descTxCplBW, extInfo.PcieTxCPLBw.PcieMinBw, minPostfix)
-		doUpdateTelegraf(fieldMap, descRxPBW, extInfo.PcieRxPBw.PcieMinBw, minPostfix)
-		doUpdateTelegraf(fieldMap, descRxNpBW, extInfo.PcieRxNPBw.PcieMinBw, minPostfix)
-		doUpdateTelegraf(fieldMap, descRxCplBW, extInfo.PcieRxCPLBw.PcieMinBw, minPostfix)
+		doUpdateTelegraf(metric.Fields, descTxPBW, extInfo.PcieTxPBw.PcieMinBw, minPostfix)
+		doUpdateTelegraf(metric.Fields, descTxNpBW, extInfo.PcieTxNPBw.PcieMinBw, minPostfix)
+		doUpdateTelegraf(metric.Fields, descTxCplBW, extInfo.PcieTxCPLBw.PcieMinBw, minPostfix)
+		doUpdateTelegraf(metric.Fields, descRxPBW, extInfo.PcieRxPBw.PcieMinBw, minPostfix)
+		doUpdateTelegraf(metric.Fields, descRxNpBW, extInfo.PcieRxNPBw.PcieMinBw, minPostfix)
+		doUpdateTelegraf(metric.Fields, descRxCplBW, extInfo.PcieRxCPLBw.PcieMinBw, minPostfix)
 
-		doUpdateTelegraf(fieldMap, descTxPBW, extInfo.PcieTxPBw.PcieMaxBw, maxPostfix)
-		doUpdateTelegraf(fieldMap, descTxNpBW, extInfo.PcieTxNPBw.PcieMaxBw, maxPostfix)
-		doUpdateTelegraf(fieldMap, descTxCplBW, extInfo.PcieTxCPLBw.PcieMaxBw, maxPostfix)
-		doUpdateTelegraf(fieldMap, descRxPBW, extInfo.PcieRxPBw.PcieMaxBw, maxPostfix)
-		doUpdateTelegraf(fieldMap, descRxNpBW, extInfo.PcieRxNPBw.PcieMaxBw, maxPostfix)
-		doUpdateTelegraf(fieldMap, descRxCplBW, extInfo.PcieRxCPLBw.PcieMaxBw, maxPostfix)
-
+		doUpdateTelegraf(metric.Fields, descTxPBW, extInfo.PcieTxPBw.PcieMaxBw, maxPostfix)
+		doUpdateTelegraf(metric.Fields, descTxNpBW, extInfo.PcieTxNPBw.PcieMaxBw, maxPostfix)
+		doUpdateTelegraf(metric.Fields, descTxCplBW, extInfo.PcieTxCPLBw.PcieMaxBw, maxPostfix)
+		doUpdateTelegraf(metric.Fields, descRxPBW, extInfo.PcieRxPBw.PcieMaxBw, maxPostfix)
+		doUpdateTelegraf(metric.Fields, descRxNpBW, extInfo.PcieRxNPBw.PcieMaxBw, maxPostfix)
+		doUpdateTelegraf(metric.Fields, descRxCplBW, extInfo.PcieRxCPLBw.PcieMaxBw, maxPostfix)
+		ch <- metric
 	}
-	return fieldsMap
 }
 
 func pcieBwLabelVal(cardLabels []string, pcieBwType string) []string {

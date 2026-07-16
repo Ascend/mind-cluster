@@ -33,9 +33,8 @@ var (
 )
 
 const (
-	measurementForNodeBaseInfo = "ascend-nodeBaseInfo"
-	exporterVersionLabel       = "exporterVersion"
-	driverVersionLabel         = "driverVersion"
+	exporterVersionLabel = "exporterVersion"
+	driverVersionLabel   = "driverVersion"
 )
 
 // NodeBaseCollector collect node base info
@@ -80,29 +79,25 @@ func (c *NodeBaseCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *com
 }
 
 // UpdateTelegraf update telegraf metric
-func (c *NodeBaseCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *common.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) map[string]map[string]interface{} {
+func (c *NodeBaseCollector) UpdateTelegraf(ch chan<- common.TelegrafMetric, n *common.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
 	nodeBaseInfo, ok := c.LocalCache.Load(common.GetCacheKey(c))
 	if !ok {
 		logger.Debugf("cacheKey(%v) not found", common.GetCacheKey(c))
-		return fieldsMap
+		return
 	}
 	cache, ok := nodeBaseInfo.(nodeBaseInfoCache)
 	if !ok {
 		logger.Error("cache type mismatch")
-		return fieldsMap
+		return
 	}
 
-	labelsMap := make(map[string]string)
-	labelsMap[exporterVersionLabel] = cache.exporterVersion
-	labelsMap[driverVersionLabel] = cache.driverVersion
-
-	tetegrafData := common.TelegrafData{
-		Measurement: measurementForNodeBaseInfo,
-		Labels:      labelsMap,
-		Metrics:     map[string]interface{}{utils.GetDescName(nodeInfoDesc): 1},
-		Timestamp:   cache.timestamp,
+	metric := common.NewGeneralMetric()
+	metric.Labels = map[string]string{
+		exporterVersionLabel: cache.exporterVersion,
+		driverVersionLabel:   cache.driverVersion,
 	}
-	fieldsMap[common.KeyForMetricsWithCustomLabels][tetegrafData.Measurement] = tetegrafData
-	return fieldsMap
+	metric.Fields[utils.GetDescName(nodeInfoDesc)] = 1
+	metric.Timestamp = cache.timestamp
+	ch <- metric
 }

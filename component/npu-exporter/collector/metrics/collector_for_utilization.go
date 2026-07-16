@@ -144,22 +144,22 @@ func updateContainerUtilization(ch chan<- prometheus.Metric, containerInfo conta
 }
 
 // UpdateTelegraf updates the base info of the chip
-func (c *UtilizationCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
+func (c *UtilizationCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 	caches := colcommon.GetInfoFromCache[chipUtilizationCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
 		cache, ok := caches[chip.PhyId]
 		if !ok {
 			continue
 		}
-		fieldMap := getFieldMap(fieldsMap, cache.chip.LogicID)
+		metric := colcommon.NewDeviceMetric(cache.chip.LogicID)
 
-		doUpdateTelegrafWithValidateNum(fieldMap, descUtil, float64(cache.Utilization), "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descVectorUtil, float64(cache.VectorUtilization), "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descCubeUtil, float64(cache.CubeUtilization), "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descOverUtil, float64(cache.OverallUtilization), "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descUtil, float64(cache.Utilization), "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descVectorUtil, float64(cache.VectorUtilization), "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descCubeUtil, float64(cache.CubeUtilization), "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descOverUtil, float64(cache.OverallUtilization), "")
+		ch <- metric
 	}
-	return fieldsMap
 }
 
 func collectUtil(c *UtilizationCollector, logicID int32, dmgr devmanager.DeviceInterface, chip *chipUtilizationCache) {

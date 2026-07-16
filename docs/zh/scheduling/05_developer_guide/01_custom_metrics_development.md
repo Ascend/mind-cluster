@@ -32,7 +32,7 @@
     **dcmi.go示例：**
 
     ```go
-    /* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+    /* Copyright(C) 2026. Huawei Technologies Co.,Ltd. All rights reserved.
        Licensed under the Apache License, Version 2.0 (the "License");
        you may not use this file except in compliance with the License.
        You may obtain a copy of the License at
@@ -192,7 +192,7 @@
     **custom_metrics.go示例：**
 
     ```go
-    /* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
+    /* Copyright(C) 2026. Huawei Technologies Co.,Ltd. All rights reserved.
        Licensed under the Apache License, Version 2.0 (the "License");
        you may not use this file except in compliance with the License.
        You may obtain a copy of the License at
@@ -287,29 +287,27 @@
     }
 
     // UpdateTelegraf update telegraf metric
-    func (c *PluginInfoCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *common.NpuCollector,
-        containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) map[string]map[string]interface{} {
+    func (c *PluginInfoCollector) UpdateTelegraf(ch chan<- common.TelegrafMetric, n *common.NpuCollector,
+    containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip)  {
         logger.Debug("PluginInfoCollector UpdateTelegraf")
         // get metric from cache
         pluginCache, pluginOk := c.Cache.Load(pluginInfoKey)
         npuPluginCache, npuPluginOk := c.Cache.Load(npuPluginInfoKey)
-        // update plugin info
+        // update plugin info (node-level metric)
         if pluginOk {
-         if fieldsMap[common.GeneralDevTagKey] == nil {
-          fieldsMap[common.GeneralDevTagKey] = make(map[string]interface{})
-         }
-         utils.DoUpdateTelegraf(fieldsMap[common.GeneralDevTagKey], PluginInfoDesc, pluginCache.(float64), "")
+            metric := common.NewGeneralMetric()
+            utils.DoUpdateTelegraf(metric.Fields, PluginInfoDesc, pluginCache.(float64), "")
+            ch <- metric
         }
-        // update npu plugin info
+
+        // update npu plugin info (device-level metric, logic id is 1 here for demo)
         if npuPluginOk {
-         const NpuLogicID = "1"
-         value := float64(npuPluginCache.(int32))
-         if fieldsMap[NpuLogicID] == nil {
-          fieldsMap[NpuLogicID] = make(map[string]interface{})
-         }
-         utils.DoUpdateTelegraf(fieldsMap[NpuLogicID], PluginNpuInfoDesc, value, "")
+            const NpuLogicID = 1
+            value := float64(npuPluginCache.(int32))
+            metric := common.NewDeviceMetric(NpuLogicID)
+            utils.DoUpdateTelegraf(metric.Fields, PluginNpuInfoDesc, value, "")
+            ch <- metric
         }
-        return fieldsMap
     }
 
     // PreCollect pre handle before collect

@@ -119,8 +119,8 @@ func (c *VnpuCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcomm
 }
 
 // UpdateTelegraf update telegraf metrics
-func (c *VnpuCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
+func (c *VnpuCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	caches := colcommon.GetInfoFromCache[chipCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
@@ -134,17 +134,12 @@ func (c *VnpuCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface
 			continue
 		}
 
-		devTagKey := strconv.Itoa(int(cache.chip.LogicID)) + "_" + strconv.Itoa(int(vDevActivityInfo.VDevID))
-
-		if fieldsMap[devTagKey] == nil {
-			fieldsMap[devTagKey] = make(map[string]interface{})
-		}
-
-		doUpdateTelegraf(fieldsMap[devTagKey], podAiCoreUtilizationRate, vDevActivityInfo.VDevAiCoreRate, "")
-		doUpdateTelegraf(fieldsMap[devTagKey], podTotalMemory, vDevActivityInfo.VDevTotalMem, "")
-		doUpdateTelegraf(fieldsMap[devTagKey], podUsedMemory, vDevActivityInfo.VDevUsedMem, "")
+		metric := colcommon.NewVDevMetric(cache.chip.LogicID, int32(vDevActivityInfo.VDevID))
+		doUpdateTelegraf(metric.Fields, podAiCoreUtilizationRate, vDevActivityInfo.VDevAiCoreRate, "")
+		doUpdateTelegraf(metric.Fields, podTotalMemory, vDevActivityInfo.VDevTotalMem, "")
+		doUpdateTelegraf(metric.Fields, podUsedMemory, vDevActivityInfo.VDevUsedMem, "")
+		ch <- metric
 	}
-	return fieldsMap
 }
 
 func getPodDisplayInfo(chip *colcommon.HuaWeiAIChip, containerName []string) []string {
