@@ -71,7 +71,13 @@ var (
 	hccsBWProfilingTime int
 	pollInterval        time.Duration
 	deviceResetTimeout  int
+	enableLegacyMetrics bool
 	hzFlags             = healthz.RegisterFlags()
+	isAtlas350Devices   = map[uint32]bool{
+		api.Atlas3504PMainBoardID: true,
+		api.Atlas3502PMainBoardID: true,
+		api.Atlas3501PMainBoardID: true,
+	}
 )
 
 const (
@@ -114,6 +120,7 @@ const (
 	maxBackupsStr              = "maxBackups"
 	defaultProfilingTime       = 200
 	defaultHccsBwProfilingTime = 200
+	enableLegacyMetricStr      = "enableLegacyMetrics"
 )
 
 func main() {
@@ -144,6 +151,7 @@ func main() {
 		logger.Errorf("new npu collector failed, error is %v", err)
 		return
 	}
+	checkEnableLegacyMetrics(dmgr)
 	logger.Infof("npu exporter starting and the version is %s", versions.BuildVersion)
 	deviceParser := container.MakeDevicesParser(readCntMonitoringFlags())
 	defer deviceParser.Close()
@@ -387,6 +395,20 @@ func checkDeviceResetTimeout() error {
 	return nil
 }
 
+func checkEnableLegacyMetrics(dmgr devmanager.DeviceInterface) {
+	if !enableLegacyMetrics {
+		return
+	}
+	devType := dmgr.GetDevType()
+	if devType != api.Ascend910A5 || !isAtlas350Devices[dmgr.GetMainBoardId()] {
+		logger.Warnf("--enableLegacyMetrics is only supported on Atlas 350, "+
+			"current device mainBoardID is %v, this flag will be ignored", dmgr.GetMainBoardId())
+		colcommon.EnableLegacyMetrics = false
+		return
+	}
+	colcommon.EnableLegacyMetrics = true
+}
+
 func checkPollIntervalInCmdLine() error {
 	cmdLine := strings.Join(os.Args[1:], "")
 	if strings.Contains(cmdLine, pollIntervalStr) {
@@ -461,6 +483,8 @@ func init() {
 	flag.IntVar(&deviceResetTimeout, api.DeviceResetTimeout, api.DefaultDeviceResetTimeout,
 		"when npu-exporter starts, if the number of chips is insufficient, the maximum duration to wait for "+
 			"the driver to report all chips, unit second, range [10, 600]")
+	flag.BoolVar(&enableLegacyMetrics, "enableLegacyMetrics", false,
+		"enable legacy metrics with _X_Y suffix for Atlas 350 backward compatibility")
 }
 
 func indexHandler(w http.ResponseWriter, _ *http.Request) {
@@ -526,6 +550,7 @@ func paramValidInTelegraf() error {
 		maxBackupsStr:              true,
 		profilingTimeStr:           true,
 		api.DeviceResetTimeout:     true,
+		enableLegacyMetricStr:      true,
 	}
 
 	if len(cmdLine) > len(presetParamsMap) {

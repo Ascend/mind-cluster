@@ -18,6 +18,7 @@ package metrics
 import (
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -48,10 +49,12 @@ var (
 	descLinkStatus = colcommon.BuildDesc("npu_chip_info_link_status", "the npu link status")
 
 	// npu specific metrics
-	linkStatusDesc           []*prometheus.Desc
-	bandwidthTxDesc          []*prometheus.Desc
-	bandwidthRxDesc          []*prometheus.Desc
-	npuChipPortLinkSpeedDesc []*prometheus.Desc
+	linkStatusDesc           *prometheus.Desc
+	bandwidthTxDesc          *prometheus.Desc
+	bandwidthRxDesc          *prometheus.Desc
+	npuChipPortLinkSpeedDesc *prometheus.Desc
+
+	networkDescOnce sync.Once
 
 	notSupportedNetworkNpuDevices = map[uint32]bool{
 		api.Atlas3501PMainBoardID: true,
@@ -100,18 +103,11 @@ func (c *NetworkCollector) IsSupported(n *colcommon.NpuCollector) bool {
 func (c *NetworkCollector) Describe(ch chan<- *prometheus.Desc) {
 	if colcommon.DevType == api.Ascend910A5 {
 		// Npu specific metrics
-		for _, desc := range linkStatusDesc {
-			ch <- desc
-		}
-		for _, desc := range bandwidthTxDesc {
-			ch <- desc
-		}
-		for _, desc := range bandwidthRxDesc {
-			ch <- desc
-		}
-		for _, desc := range npuChipPortLinkSpeedDesc {
-			ch <- desc
-		}
+		initDesc(ch, linkStatusDesc)
+		initDesc(ch, bandwidthTxDesc)
+		initDesc(ch, bandwidthRxDesc)
+		initDesc(ch, npuChipPortLinkSpeedDesc)
+		addNetWorkLegacyMetricsDesc(ch)
 		return
 	}
 	// Non-Npu metrics
@@ -281,6 +277,8 @@ func collectNetworkNpuInfo(logicID int32) []*common.NpuNetInfo {
 				LinkStatusInfo: &common.LinkStatusInfo{},
 				BandwidthInfo:  &common.BandwidthInfo{},
 				LinkSpeedInfo:  &common.LinkSpeedInfo{},
+				Udie:           dieID,
+				Port:           portID,
 			}
 			if linkState, err := hccn.GetNPULinkStatusNpu(logicID, int32(dieID), int32(portID)); err == nil {
 				hwlog.RunLog.Debugf("hccn_tool get npu link status: %s", linkState)
@@ -318,17 +316,24 @@ func promUpdateNetInfo(ch chan<- prometheus.Metric, cache netInfoNPUCache, times
 		return
 	}
 	for i := 0; i < len(netInfo); i++ {
-		if validateNotNilForEveryElement(netInfo[i].LinkStatusInfo) {
-			doUpdateMetricWithValidateNum(ch, timestamp, float64(getLinkStatusCode(netInfo[i].LinkStatusInfo.LinkState)),
-				cardLabel, linkStatusDesc[i])
-		}
-		if validateNotNilForEveryElement(netInfo[i].BandwidthInfo) {
-			doUpdateMetricWithValidateNum(ch, timestamp, netInfo[i].BandwidthInfo.TxValue, cardLabel, bandwidthTxDesc[i])
-			doUpdateMetricWithValidateNum(ch, timestamp, netInfo[i].BandwidthInfo.RxValue, cardLabel, bandwidthRxDesc[i])
-		}
-		if validateNotNilForEveryElement(netInfo[i].LinkSpeedInfo) {
-			doUpdateMetricWithValidateNum(ch, timestamp, netInfo[i].LinkSpeedInfo.Speed, cardLabel, npuChipPortLinkSpeedDesc[i])
-		}
+		extendedLabel := append(cardLabel, strconv.Itoa(netInfo[i].Udie), strconv.Itoa(netInfo[i].Port))
+		promUpdateNetInfoNew(ch, timestamp, netInfo[i], extendedLabel)
+		promUpdateNetInfoLegacy(ch, timestamp, netInfo[i], extendedLabel, i)
+	}
+}
+
+func promUpdateNetInfoNew(ch chan<- prometheus.Metric, timestamp time.Time,
+	netInfo *common.NpuNetInfo, extendedLabel []string) {
+	if validateNotNilForEveryElement(netInfo.LinkStatusInfo) {
+		doUpdateMetricWithValidateNum(ch, timestamp, float64(getLinkStatusCode(netInfo.LinkStatusInfo.LinkState)),
+			extendedLabel, linkStatusDesc)
+	}
+	if validateNotNilForEveryElement(netInfo.BandwidthInfo) {
+		doUpdateMetricWithValidateNum(ch, timestamp, netInfo.BandwidthInfo.TxValue, extendedLabel, bandwidthTxDesc)
+		doUpdateMetricWithValidateNum(ch, timestamp, netInfo.BandwidthInfo.RxValue, extendedLabel, bandwidthRxDesc)
+	}
+	if validateNotNilForEveryElement(netInfo.LinkSpeedInfo) {
+		doUpdateMetricWithValidateNum(ch, timestamp, netInfo.LinkSpeedInfo.Speed, extendedLabel, npuChipPortLinkSpeedDesc)
 	}
 }
 
@@ -338,44 +343,30 @@ func telegrafUpdateNetInfo(cache netInfoNPUCache, fieldMap map[string]interface{
 		return
 	}
 	for i := 0; i < len(netInfo); i++ {
+		extInfo := fmt.Sprint("_", netInfo[i].Udie, "_", netInfo[i].Port)
 		if validateNotNilForEveryElement(netInfo[i].LinkStatusInfo) {
-			doUpdateTelegrafWithValidateNum(fieldMap, linkStatusDesc[i],
-				float64(getLinkStatusCode(netInfo[i].LinkStatusInfo.LinkState)), "")
+			doUpdateTelegrafWithValidateNum(fieldMap, linkStatusDesc,
+				float64(getLinkStatusCode(netInfo[i].LinkStatusInfo.LinkState)), extInfo)
 		}
 		if validateNotNilForEveryElement(netInfo[i].BandwidthInfo) {
-			doUpdateTelegrafWithValidateNum(fieldMap, bandwidthTxDesc[i], netInfo[i].BandwidthInfo.TxValue, "")
-			doUpdateTelegrafWithValidateNum(fieldMap, bandwidthRxDesc[i], netInfo[i].BandwidthInfo.RxValue, "")
+			doUpdateTelegrafWithValidateNum(fieldMap, bandwidthTxDesc, netInfo[i].BandwidthInfo.TxValue, extInfo)
+			doUpdateTelegrafWithValidateNum(fieldMap, bandwidthRxDesc, netInfo[i].BandwidthInfo.RxValue, extInfo)
 		}
 		if validateNotNilForEveryElement(netInfo[i].LinkSpeedInfo) {
-			doUpdateTelegrafWithValidateNum(fieldMap, npuChipPortLinkSpeedDesc[i], netInfo[i].LinkSpeedInfo.Speed, "")
+			doUpdateTelegrafWithValidateNum(fieldMap, npuChipPortLinkSpeedDesc, netInfo[i].LinkSpeedInfo.Speed, extInfo)
 		}
 	}
 }
 
 func initNpuNetWorkDesc() {
-	// udie only has 0 and 1, fixed order
-	dieIDs := []int{0, 1}
-	for _, dieID := range dieIDs {
-		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap()[dieID]
-		if !ok || len(portIDs) == 0 {
-			continue
-		}
-		for _, port := range portIDs {
-			portID := port.PortID
-			colcommon.BuildDescSlice(&linkStatusDesc, fmt.Sprint(api.MetricsPrefix, "link_status_", strconv.Itoa(dieID),
-				"_", strconv.Itoa(portID)), fmt.Sprint("the npu link status ", "dieId:", strconv.Itoa(dieID),
-				" portId:", strconv.Itoa(portID), " type:", port.PortType))
-			colcommon.BuildDescSlice(&bandwidthTxDesc, fmt.Sprint(api.MetricsPrefix, "bandwidth_tx_", strconv.Itoa(dieID),
-				"_", strconv.Itoa(portID)), fmt.Sprint("the npu port transport speed, unit is 'MB/s' ", "dieId:",
-				strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
-			colcommon.BuildDescSlice(&bandwidthRxDesc, fmt.Sprint(api.MetricsPrefix, "bandwidth_rx_", strconv.Itoa(dieID),
-				"_", strconv.Itoa(portID)), fmt.Sprint("the npu port receive speed, unit is 'MB/s' ", "dieId:",
-				strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
-			colcommon.BuildDescSlice(&npuChipPortLinkSpeedDesc, fmt.Sprint(api.MetricsPrefix, "link_speed_",
-				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("the npu port link speed, unit is 'G' ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
-		}
-	}
+	networkDescOnce.Do(func() {
+		initUBCardLabel()
+		buildUbDesc(&linkStatusDesc, "link_status", "the npu link status on ub port")
+		buildUbDesc(&bandwidthTxDesc, "bandwidth_tx", "the npu port transport speed, unit is 'MB/s'")
+		buildUbDesc(&bandwidthRxDesc, "bandwidth_rx", "the npu port receive speed, unit is 'MB/s'")
+		buildUbDesc(&npuChipPortLinkSpeedDesc, "link_speed", "the npu port link speed, unit is 'G'")
+		initNetworkLegacyDesc()
+	})
 }
 
 // getLinkStatusCode return union link status code
