@@ -1,0 +1,47 @@
+{
+    "name": "MindCluster Build Env",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "golang.Go",
+                "ms-python.python",
+                "ms-python.pylint",
+                "ms-vscode.cpptools",
+                "ms-vscode.cmake-tools",
+                "redhat.vscode-yaml",
+                "ms-azuretools.vscode-docker"
+            ],
+            "settings": {
+                "go.gopath": "/go",
+                "go.goroot": "/usr/local/go",
+                "go.toolsManagement.autoUpdate": false,
+                "go.useLanguageServer": true,
+                "python.defaultInterpreterPath": "/usr/bin/python3",
+                "python.linting.enabled": true,
+                "files.eol": "\n",
+                "editor.formatOnSave": false,
+                "terminal.integrated.defaultProfile.linux": "bash"
+            }
+        }
+    },
+    "remoteEnv": {
+        "GOPATH": "/go",
+        "GOROOT": "/usr/local/go",
+        "GOPROXY": "https://goproxy.cn,direct",
+        "GOSUMDB": "sum.golang.google.cn",
+        "GOTOOLCHAIN": "local",
+        "GO111MODULE": "on",
+        "TZ": "Asia/Shanghai",
+        "MIND_CLUSTER_ROOT": "/workspace"
+    },
+    "remoteUser": "root",
+    "mounts": [
+        "source=mc-go-mod-cache,target=/go/pkg/mod,type=volume",
+        "source=mc-go-build-cache,target=/root/.cache/go-build,type=volume"
+    ],
+    "postCreateCommand": "dos2unix build/*.sh component/*/build/*.sh 2>/dev/null; echo 'MindCluster dev container ready.'"
+}
