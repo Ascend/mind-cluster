@@ -15,7 +15,7 @@ ascend-fd config [-h] (-u UPDATE | -s | -c)
 | 参数         | 类型   | 必选                   | 说明                                 |
 |--------------|--------|------------------------|--------------------------------------|
 | -h, --help   | -      | 否                     | 显示帮助信息                         |
-| -u, --update | string | 必选（与 -s, -c 互斥） | 新增或修改自定义配置的 JSON 文件路径 |
+| -u, --update | String | 必选（与 -s, -c 互斥） | 新增或修改自定义配置的 JSON 文件路径 |
 | -s, --show   | -      | 必选（与 -u, -c 互斥） | 查看当前自定义配置信息               |
 | -c, --check  | -      | 必选（与 -u, -s 互斥） | 校验 custom-fd-config.json 文件      |
 
@@ -90,11 +90,11 @@ ascend-fd config -c
 
 > [!NOTE]
 >
-> - 若用户配置了自定义文件解析规则，即 JSON 文件中的 custom_parse_file 字段，可执行命令（`ascend-fd parse --custom_log worker0/ -o <output_dir>`）对自定义的解析文件进行清洗，将会清洗通配符模式（按照示例则为 worker-0/test_custom/*.log）匹配到的文件。
-> - 清洗自定义日志文件时，只支持 --custom_log 命令，不支持 -i 命令
+> - 若用户配置了自定义文件解析规则，即 JSON 文件中的 custom_parse_file 字段，可执行命令（`ascend-fd parse --custom_log worker0/ -o <output_dir>`）对自定义的解析文件进行清洗，将会清洗通配符模式（按照示例则为 worker0/test_custom/*.log）匹配到的文件。
+> - 清洗自定义日志文件时，只支持 --custom_log 命令，不支持 -i 命令。
 
 ## 注意事项
 
-- 自定义配置数据存储在 `$HOME/.ascend_faultdiag/custom-fd-config.json` 文件中
-- 用户可通过修改 `ASCEND_FD_HOME_PATH` 环境变量来指定配置文件路径，请查阅[环境变量](../07_references/01_common_operations.md#环境变量)
-- ascend-fd 运行错误码请查阅[组件错误码](../07_references/04_appendix.md#组件错误码)
+- 自定义配置数据存储在 `$HOME/.ascend_faultdiag/custom-fd-config.json` 文件中。
+- 用户可通过修改 `ASCEND_FD_HOME_PATH` 环境变量来指定配置文件路径，请查阅[环境变量](../07_references/01_common_operations.md#环境变量)。
+- ascend-fd 运行错误码请查阅[组件错误码](../07_references/04_appendix.md#组件错误码)。
