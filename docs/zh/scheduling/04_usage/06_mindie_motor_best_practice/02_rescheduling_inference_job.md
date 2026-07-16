@@ -51,7 +51,7 @@ spec:
 
 ### 下发任务<a name="ZH-CN_TOPIC_0000002511427027"></a>
 
-在管理节点示例YAML所在路径，执行以下命令，使用YAML下发推理任务。
+在管理节点示例YAML所在路径下，执行以下命令，使用YAML下发推理任务。
 
 ```shell
 kubectl apply -f XXX.yaml
@@ -157,7 +157,7 @@ spec:
 
 ### 下发任务<a name="ZH-CN_TOPIC_0000002511427027"></a>
 
-在管理节点示例YAML所在路径，执行以下命令，使用YAML下发多Pod的推理任务（只有在多Pod任务的场景下才能在k8s中看到与Job级重调度的区别）。
+在管理节点示例YAML所在路径下，执行以下命令，使用YAML下发多Pod的推理任务（只有在多Pod任务的场景下才能在k8s中看到与Job级重调度的区别）。
 
 ```shell
 kubectl apply -f XXX.yaml

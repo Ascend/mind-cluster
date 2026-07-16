@@ -10,7 +10,7 @@
 
 在任务YAML中，新增--load /data/ckpt/XXX \参数，开启存储CKPT加载。其中“--load”是训练进程恢复的统一开关，打开后训练进程恢复才生效。
 
-```Yaml
+```yaml
 ...
 spec:
   replicaSpecs:
@@ -122,7 +122,7 @@ spec:
 1. 在分布式环境初始化完成，能够获取到全局rank之后，修改训练脚本，在训练脚本中拉起TaskD  Manager。
     1. 创建manager.py文件，放在调用训练脚本时的当前目录下，manager.py文件内容如下所示。
 
-        ```Python
+        ```python
         from taskd.api import init_taskd_manager, start_taskd_manager
         import os
 
@@ -238,7 +238,7 @@ spec:
 
 **故障检测时间优化<a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_section195202179141"></a>**
 
-由于集群中出现的参数面网络故障不一定会影响训练任务，因此集群调度组件不会强制中断任务；当参数面网络故障影响训练任务时，会触发集合通信的网络超时等待机制，在等待时间（默认为30分钟）后，集群调度组件才能感知到该故障，从而触发断点续训。针对该问题，PyTorch  Adapter插件（torch\_npu）提供**watchdog故障检测**功能，可用于检测训练任务是否受到影响，缩短故障检测时间，该功能的详细说明请参见[表1](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table4822175901415)。
+由于集群中出现的参数面网络故障不一定会影响训练任务，因此集群调度组件不会强制中断任务；当参数面网络故障影响训练任务时，会触发集合通信的网络超时等待机制，在等待时间（默认为30分钟）后，集群调度组件才能感知到该故障，从而触发断点续训。针对该问题，PyTorch Adapter插件（torch\_npu）提供**watchdog故障检测**功能，可用于检测训练任务是否受到影响，缩短故障检测时间，该功能的详细说明请参见[表1](#zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_table4822175901415)。
 
 **表 1** watchdog故障检测功能说明
 
@@ -369,15 +369,14 @@ Parallel Store多线程建链优化：PyTorch框架创建通信组时，使用TC
     chown 9000:9000 /user/mindx-dl/ranktable/default.pytorch-test</pre>
     </div>
     </li><li>修改训练脚本，添加如下环境变量。<pre class="screen" id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_screen1782170124216"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_screen1782170124216"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_screen1782170124216"></a>export RANK_TABLE_FILE=/user/mindx-dl/ranktable/hccl.json</pre>
-    </li><li>修改训练YAML，添加如下设置。<pre class="screen" id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_screen19101124310423"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_screen19101124310423"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_screen19101124310423"></a>yaml
+    </li><li>修改训练YAML，添加如下设置。<pre class="screen" id="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_screen19101124310423"><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_screen19101124310423"></a><a name="zh-cn_topic_0000002163883997_zh-cn_topic_0000002017918296_screen19101124310423"></a>
           volumeMounts:
           - name: ranktable
             mountPath: /user/mindx-dl/ranktable
-
-           volumes:
-           - name: ranktable
-             hostPath:
-               path: /user/mindx-dl/ranktable/任务运行的命名空间.任务名称  # 宿主机目录下hccl.json文件的实际路径
+          volumes:
+          - name: ranktable
+            hostPath:
+              path: /user/mindx-dl/ranktable/任务运行的命名空间.任务名称  # 宿主机目录下hccl.json文件的实际路径
     </pre>
     </li></ol>
     </td>
@@ -643,9 +642,9 @@ export MS_COMPILER_CACHE_PATH=xxx  # 设置图编译缓存路径</pre>
 
 PyTorch单算子场景HCCL建链为懒加载模式，当建立Torch通信组后，该通信组下发的第一个算子将触发HCCL通信域的创建，创建后完成卡间建链。因此，如果需要在训练初始化阶段完成所有通信域的建链，只需要在初始化阶段给每个通信组下发一个通信算子。
 
-以下为创建通信组主动创建的示例：
+以下为主动创建通信组的示例：
 
-```Python
+```python
 rank = 0 # 设置本进程rank
 sub_ranks = [0, 1, 2]  # 假设为一个包含0、1、2的通信组
 groupX = torch.distributed.new_group(ranks=sub_ranks,...) # 创建通信组X
@@ -657,7 +656,7 @@ torch.distributed.all_reduce(test_tensor, op=dist.ReduceOp.SUM, group=groupX)  #
 
 如果希望任务发生亚健康故障时保存临终遗言，需修改任务YAML，配置亚健康策略为“graceExit”，故障恢复策略为“dump”，其余启动脚本、任务YAML配置可参见[配置临终CKPT保存](#ZH-CN_TOPIC_0000002479226544)修改。此功能需确保TaskD和ClusterD可以正常使用。
 
-```Yaml
+```yaml
 ...
   labels:
      ...

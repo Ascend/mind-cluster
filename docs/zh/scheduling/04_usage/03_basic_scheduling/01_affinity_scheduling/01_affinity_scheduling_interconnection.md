@@ -30,7 +30,7 @@ metadata:
 spec:
   replicas: 16                        # The value of replicas is 1 in a single-node scenario and N in an N-node scenario. The number of NPUs in the requests field is 8 in an N-node scenario.
   <strong>podManagementPolicy: Parallel   # 支持OrderedReady和Parallel两种模式。“OrderedReady”仅支持节点内亲和调度并且huawei.com/schedule_minAvailable只能为1。“Parallel”支持节点内和节点间亲和调度</strong>
-  serviceName: service-headliness
+  serviceName: service-headless
   selector:
     matchLabels:
       app: mindspore

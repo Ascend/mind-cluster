@@ -106,7 +106,7 @@ vcjob任务的原理图如[图2](#fig8717151315416)所示。
 
 7. kubelet创建容器时，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin在Pod的annotation上写入芯片信息。Ascend Docker Runtime协助挂载相应资源，将hccl.json挂载进入容器。
 8. Ascend Operator获取每个Pod的annotation信息，写入hccl.json。
-9. 容器读取hccl.json信息，建立通信渠道，开始执行任务。
+9. 容器读取hccl.json信息，建立通信通道，开始执行任务。
 
 **deploy任务<a name="section32752223579"></a>**
 
@@ -132,7 +132,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 7. kubelet创建容器时，调用Ascend Device Plugin挂载芯片，Ascend Device Plugin在Pod的annotation上写入芯片信息。Ascend Docker Runtime协助挂载相应资源，将hccl.json挂载进入容器。
 8. Ascend Operator获取每个Pod的annotation信息，写入hccl.json。
-9. 容器读取hccl.json信息，建立通信渠道，开始执行任务。
+9. 容器读取hccl.json信息，建立通信通道，开始执行任务。
 
 ## 通过命令行使用（Volcano）<a name="ZH-CN_TOPIC_0000002479227158"></a>
 
@@ -649,12 +649,12 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 **通过文件配置资源信息场景<a name="section158807920347"></a>**
 
-- 若当前环境使用的是<term>Atlas A2 训练系列产品</term>，选择[表5](#table62591594016)获取相应的YAML示例。
+- 若当前环境使用的是<term>Atlas A2 训练系列产品</term>，选择[表6](#table62591594016)获取相应的YAML示例。
 
-    根据[表5](#table62591594016)获取示例YAML后，Atlas 800T A2 训练服务器、Atlas 200T A2 Box16 异构子框和A200T A3 Box8 超节点服务器可基于[YAML配置说明](../../06_api/15_yaml_configuration.md#yaml_configuration)给出的参数说明进行修改适配。
+    根据[表6](#table62591594016)获取示例YAML后，Atlas 800T A2 训练服务器、Atlas 200T A2 Box16 异构子框和A200T A3 Box8 超节点服务器可基于[YAML配置说明](../../06_api/15_yaml_configuration.md#yaml_configuration)给出的参数说明进行修改适配。
 
-- 若当前环境使用的是Atlas 训练系列产品，选择[表6](#table21811158146)获取相应的YAML示例。
-- 若当前环境使用的是Atlas 950 训练系列产品，选择[表7](#table950yaml)获取相应的YAML示例。
+- 若当前环境使用的是Atlas 训练系列产品，选择[表7](#table21811158146)获取相应的YAML示例。
+- 若当前环境使用的是Atlas 950 训练系列产品，选择[表8](#table950yaml)获取相应的YAML示例。
 
 **表 6** <term>Atlas A2 训练系列产品</term>支持的YAML
 
@@ -922,7 +922,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
     - <a name="li1086213163289"></a>使用**整卡调度**特性，参考本配置。以pytorch\_standalone\_acjob\_super\_pod.yaml为例，在一台Atlas 900 A3 SuperPoD 超节点上创建**单机训练**任务，修改示例如下。
 
-        ```Yaml
+        ```yaml
         apiVersion: mindxdl.gitee.com/v1
         kind: AscendJob
         metadata:
@@ -979,7 +979,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
     - <a name="li1134113548015"></a>使用**整卡调度**特性，参考本配置。以infer-vcjob-910.yaml为例，在Atlas 800I A2 推理服务器上创建一个单卡推理任务，示例如下。
 
-        ```Yaml
+        ```yaml
         apiVersion: batch.volcano.sh/v1alpha1
         kind: Job
         metadata:
@@ -1006,27 +1006,28 @@ deploy任务原理图如[图3](#fig06571541566)所示。
                 valueFrom:
                   fieldRef:
                     fieldPath: metadata.annotations['huawei.com/Ascend910']               # 需要和下面resources.requests保持一致
-                      requests:
-                        huawei.com/Ascend910: 1          # 所需的芯片数量
-                      limits:
-                        huawei.com/Ascend910: 1          # 必须与requests的值一致.
-                    volumeMounts:
-                      - name: localtime                  # 容器时间必须与主机时间一致
-                        mountPath: /etc/localtime
-                nodeSelector:
-                  example-key: example-value    # 示例值，用户可根据调度意图自行配置nodeSelector
-                volumes:
-                - name: localtime
-                  hostPath:
-                    path: /etc/localtime
-                restartPolicy: OnFailure
+              resources:
+                requests:
+                  huawei.com/Ascend910: 1          # 所需的芯片数量
+                limits:
+                  huawei.com/Ascend910: 1          # 必须与requests的值一致
+              volumeMounts:
+                - name: localtime                  # 容器时间必须与主机时间一致
+                  mountPath: /etc/localtime
+              nodeSelector:
+                example-key: example-value    # 示例值，用户可根据调度意图自行配置nodeSelector
+              volumes:
+              - name: localtime
+                hostPath:
+                  path: /etc/localtime
+              restartPolicy: OnFailure
         ```
 
         修改完成后执行[步骤2](#li118885168281)，配置YAML的其他字段。
 
 2. <a name="li118885168281"></a>若需要配置CPU、Memory资源，请参见如下示例手动添加“cpu”和“memory”参数和对应的参数值，具体数值请根据实际情况配置。
 
-    ```Yaml
+    ```yaml
     ...
               resources:
                 requests:
@@ -1044,7 +1045,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
     从昇腾镜像仓库拉取的基础镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
 
-    ```Yaml
+    ```yaml
               volumeMounts:
               - name: ascend-server-config
                 mountPath: /user/serverid/devindex/config
@@ -1072,7 +1073,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 4. 修改示例YAML中容器启动命令，即"command"字段内容，如果没有则需添加。请根据实际业务场景修改启动命令。
 
-    ```Yaml
+    ```yaml
     ...
           containers:
           - image: your_image:v1
@@ -1134,7 +1135,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     kubectl create namespace vcjob
     ```
 
-2. 在管理节点示例YAML所在路径，执行以下命令，使用YAML下发任务。
+2. 在管理节点示例YAML所在路径下，执行以下命令，使用YAML下发任务。
 
     ```shell
     kubectl apply -f XXX.yaml
@@ -1251,7 +1252,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 
 ### 查看整卡调度结果<a name="ZH-CN_TOPIC_0000002479387140"></a>
 
-1. 在执行如下命令，查看结果。
+1. 执行如下命令，查看结果。
 
     ```shell
     kubectl logs -n  <namespace> <pod-name>
