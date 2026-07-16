@@ -1,4 +1,4 @@
-# 清洗&诊断命令
+# 清洗和诊断命令
 
 - [auto_collect](01_auto_collect.md)
 - [auto_diag](02_auto_diag.md)

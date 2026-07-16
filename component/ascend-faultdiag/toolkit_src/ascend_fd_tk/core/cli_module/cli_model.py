@@ -375,7 +375,7 @@ class CollectBmcDumpInfoLog(CliModel):
         return "collect_bmc_dump_info"
 
     def get_help(self) -> str:
-        return "在线收集BMC dump info日志"
+        return "在线收集BMC dump info 日志"
 
     def run_task(self, *args) -> str:
         asyncio.run(CollectBmcLog(self.diag_ctx).main())
@@ -469,7 +469,7 @@ class AutoCollectDiagCliModel(CliModel):
         return "auto_collect_diag"
 
     def get_help(self) -> str:
-        return "启动一键式自动收集(在线设备采集或离线日志收集)诊断"
+        return "启动一键式自动收集（在线设备采集或离线日志收集）诊断"
 
     def run_task(self, *args) -> str:
         try:
@@ -487,7 +487,7 @@ class ClearCacheCliModel(CliModel):
         return "clear_cache"
 
     def get_help(self) -> str:
-        return "清理缓存，请在执行新诊断任务前务必执行！避免干扰诊断结果(若清理未生效请用管理员模式打开工具)"
+        return "清理缓存，请在执行新诊断任务前务必执行！避免干扰诊断结果（若清理未生效请用管理员模式打开工具）"
 
     def run_task(self, *args) -> str:
         try:
