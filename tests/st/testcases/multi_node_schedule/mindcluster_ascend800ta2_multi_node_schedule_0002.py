@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 # Copyright 2026 Huawei Technologies Co., Ltd
-import random
-import time
+# pylint: disable=duplicate-code
 import unittest
 
 from tests.st.st_dev.ClusterSimulatorTool import ClusterSimulator
@@ -24,11 +23,10 @@ class MindclusterAscend800ta2MutliNodeSchedule0002(unittest.TestCase):
     k8s_manager = K8sDistributedManage()
     logger = k8s_manager.logger
     ranktable_path = "/user/mindx-dl/ranktable/default.default-test-pytorch-8pod-8npu/hccl.json"
-    node_names = ["localhost.localdomain", "master"]
 
     @classmethod
-    def setUpClass(self):
-        self.k8s_manager.exec_command("kubectl delete -f %s" % self.job_yaml_path1)
+    def setUpClass(cls):
+        cls.k8s_manager.exec_command("kubectl delete -f %s" % cls.job_yaml_path1)
 
     def setUp(self) -> None:
         self.test_method_name = self._testMethodName
@@ -38,7 +36,9 @@ class MindclusterAscend800ta2MutliNodeSchedule0002(unittest.TestCase):
         K8sTool.apply_mindcluster(self)
 
     def test_multinode_schedule_deployment_001(self):
-        ClusterSimulator.create_kwok_cluster(self, container_name="a2_container", node_name=NODE_NAME, node_num=NODE_NUM + 2)
+        ClusterSimulator.create_kwok_cluster(
+            self, container_name="a2_container", node_name=NODE_NAME, node_num=NODE_NUM + 2
+        )
 
     def test_multinode_schedule_deployment_002(self):
         self.assertIs(ClusterSimulator.get_ready_kwok_node_count(self), NODE_NUM + 2)
@@ -48,7 +48,7 @@ class MindclusterAscend800ta2MutliNodeSchedule0002(unittest.TestCase):
         self.assertIs(ClusterSimulator.get_kwok_nodes_with_accelerator_type(self), NODE_NUM + 2)
 
     def test_multinode_schedule_deployment_004(self):
-        K8sTool.cordon_node(self, self.node_names)
+        K8sTool.cordon_all_nodes(self)
         self.k8s_manager.exec_command("kubectl delete -f %s" % self.job_yaml_path1)
         self.k8s_manager.exec_command("kubectl apply -f %s" % self.job_yaml_path1)
         self.assertTrue(K8sTool.check_pod_status(self, self.job_name1), "pod is not running")
@@ -67,7 +67,7 @@ class MindclusterAscend800ta2MutliNodeSchedule0002(unittest.TestCase):
         self.assertIs(ClusterSimulator.get_ready_kwok_node_count(self), 0)
 
     @classmethod
-    def tearDownClass(self):
-        self.k8s_manager.exec_command("kubectl delete -f %s" % self.job_yaml_path1)
-        ClusterSimulator.stop_kwok_cluster(self, "a2_container")
-        K8sTool.uncordon_node(self, self.node_names)
+    def tearDownClass(cls):
+        cls.k8s_manager.exec_command("kubectl delete -f %s" % cls.job_yaml_path1)
+        ClusterSimulator.stop_kwok_cluster(cls, "a2_container")
+        K8sTool.uncordon_all_nodes(cls)

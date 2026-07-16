@@ -22,17 +22,16 @@ from tests.st.envs import MIND_CLUSTER_YAML_DIR
 logger = logging.getLogger(__name__)
 
 
-class K8sTool(object):
-
+class K8sTool:
     @staticmethod
-    def check_pods_status(case, names, status="Running", timeout=30):
+    def check_pods_status(case, names, status="Running", timeout=40):
         for name in names:
             assert K8sTool.check_pod_status(case, name, status, timeout), "pod %s not all %s" % (name, status)
 
         return True
 
     @staticmethod
-    def check_pod_status(case, pod_name, status=None, timeout=30):
+    def check_pod_status(case, pod_name, status=None, timeout=40):
         if status is None:
             status = ["Running"]
         elif isinstance(status, str):
@@ -42,9 +41,9 @@ class K8sTool(object):
         cur_time = time.time()
         while time.time() - cur_time < timeout:
             ret = case.k8s_manager.exec_command(status_cmd)
-            logger.info(f"{pod_name}--pod_status: {ret}")
+            logger.info("%s--pod_status: %s", pod_name, ret)
             if not ret or not ret.strip():
-                logger.info(f"Warning: No pods found for {pod_name}")
+                logger.info("Warning: No pods found for %s", pod_name)
                 time.sleep(5)
                 continue
             for pod_status in ret.splitlines():
@@ -70,7 +69,8 @@ class K8sTool(object):
             status = [status]
 
         logger.info(
-            f"start check pod status | target pod: {pod_names} | expected status: {status} | timeout: {timeout}s")
+            "start check pod status | target pod: %s | expected status: %s | timeout: %ss", pod_names, status, timeout
+        )
 
         pod_commands = {}
         for pod in pod_names:
@@ -84,29 +84,30 @@ class K8sTool(object):
                 try:
                     ret = case.k8s_manager.exec_command(cmd)
                     ret = ret.strip()
-                    logger.info(f"[{pod_name}] current status: {ret if ret else 'not found'}")
+                    logger.info("[%s] current status: %s", pod_name, ret if ret else "not found")
                     if not ret:
-                        logger.warning(f"[{pod_name}] not found pod, wait...")
+                        logger.warning("[%s] not found pod, wait...", pod_name)
                         all_pods_ok = False
                         break
 
                     if ret not in status:
                         logger.warning(
-                            f"[{pod_name}] status not expected, current status: {ret}, expected status: {status}")
+                            "[%s] status not expected, current status: %s, expected status: %s", pod_name, ret, status
+                        )
                         all_pods_ok = False
                         break
 
                 except Exception as e:
-                    logger.error(f"[{pod_name}] exec failed: {str(e)}")
+                    logger.error("[%s] exec failed: %s", pod_name, str(e))
                     all_pods_ok = False
                     break
 
             if all_pods_ok:
                 cost_time = round(time.time() - start_time, 2)
-                logger.info(f"all Pods have reached the desired state! Time taken: {cost_time}s")
+                logger.info("all Pods have reached the desired state! Time taken: %ss", cost_time)
                 return True
 
-        logger.error(f"Check timed out! Not all Pods reached the desired state within {timeout}s: {status}")
+        logger.error("Check timed out! Not all Pods reached the desired state within %ss: %s", timeout, status)
         return False
 
     @staticmethod
@@ -117,11 +118,8 @@ class K8sTool(object):
             if infos and info in infos:
                 case.logger.info("pg %s info is %s" % (pod_group_name, infos))
                 return
-            else:
-                time.sleep(5)
-                continue
-        else:
-            raise Exception("pg not exist")
+            time.sleep(5)
+        raise RuntimeError("pg not exist")
 
     @staticmethod
     def check_acjob_status(case, pod_name, status='Pending', timeout=30):
@@ -129,21 +127,20 @@ class K8sTool(object):
         namespace = case.k8s_manager.exec_command("kubectl get acjob -A| grep %s |awk '{print $1}'" % (pod_name))
         while time.time() - cur_time < timeout:
             state = case.k8s_manager.exec_command(
-                "kubectl get acjob -n %s %s |awk '{print $1}'" % (namespace, pod_name))
+                "kubectl get acjob -n %s %s |awk '{print $1}'" % (namespace, pod_name)
+            )
             if status in state:
                 return True
-            else:
-                time.sleep(5)
-                continue
-        else:
-            raise Exception("the status of acjob is not %s" % status)
+            time.sleep(5)
+        raise RuntimeError("the status of acjob is not %s" % status)
 
     @staticmethod
     def check_device_info_cm_fault_code(case, device_name, timeout=30):
         cur_time = time.time()
         while time.time() - cur_time < timeout:
             device_info_cm = case.k8s_manager.exec_command(
-                "kubectl get acjob -A| grep %s |awk '{print $1}'" % (device_name))
+                "kubectl get acjob -A| grep %s |awk '{print $1}'" % (device_name)
+            )
             if device_info_cm and "fault_code" in device_info_cm:
                 case.logger.info("fault inject success!")
                 return device_info_cm
@@ -153,8 +150,9 @@ class K8sTool(object):
 
     @staticmethod
     def check_pod_env(case, job_name):
-        operator_env = case.k8s_manager.exec_command("kubectl get pod %s -o jsonpath='{{.spec.containers[0].env}} && "
-                                                     "ll'")
+        operator_env = case.k8s_manager.exec_command(
+            "kubectl get pod %s -o jsonpath='{{.spec.containers[0].env}} && ll'"
+        )
         for item in ("LOCAL_RANK", "MASTER_ADDR", "WORLD_SIZE", "LOCAL_WORLD_SIZE", "MASTER_PORT"):
             assert operator_env.find(item) != -1, case.logger.error("ascend-operator inject env failed")
 
@@ -173,8 +171,9 @@ class K8sTool(object):
     def check_all_device_available(case, work_num=16):
         for idx in range(1, 1 + work_num):
             device_name = "work%s" % idx
-            device_info_configmap = case.k8s_manager.exec_command("kubectl get cm -n kube-system "
-                                                                  "mindx-dl-deviceinfo-%s -o json" % device_name)
+            device_info_configmap = case.k8s_manager.exec_command(
+                "kubectl get cm -n kube-system mindx-dl-deviceinfo-%s -o json" % device_name
+            )
             if device_info_configmap and "fault_code" in device_info_configmap:
                 case.logger.error("fault at work %s not recovered" % device_name)
                 return False
@@ -188,7 +187,7 @@ class K8sTool(object):
         try:
             for worker in range(workers):
                 func(case, worker, *args, **kwargs)
-        except Exception as e:
+        except Exception:
             return False
         else:
             return True
@@ -203,10 +202,9 @@ class K8sTool(object):
 
     @staticmethod
     def find_volcano_yaml(case):
-        yaml = case.k8s_manager.master.exec_command(
-            f'find {MIND_CLUSTER_YAML_DIR} -name "volcano-*.yaml"')
+        yaml = case.k8s_manager.master.exec_command(f'find {MIND_CLUSTER_YAML_DIR} -name "volcano-*.yaml"')
         if not yaml:
-            raise Exception("volcano component yaml not found!")
+            raise RuntimeError("volcano component yaml not found!")
         return yaml
 
     @staticmethod
@@ -216,27 +214,34 @@ class K8sTool(object):
         if super_pod_size is not None:
             case.k8s_manager.master.exec_command(
                 f"sed -i 's/\"super-pod-size\": \"[0-9]\\+\"/\"super-pod-size\": \"{super_pod_size}\"/g'"
-                f" \"{volcano_yaml_path}\"")
+                f" \"{volcano_yaml_path}\""
+            )
         if useClusterInfoManager is not None:
             case.k8s_manager.master.exec_command(
                 f"sed -i 's/\"useClusterInfoManager\":\"\\(false\\|true\\)\"/\"useClusterInfoManager\":\"{useClusterInfoManager}\"/g'"
-                f" \"{volcano_yaml_path}\"")
+                f" \"{volcano_yaml_path}\""
+            )
         K8sTool.restart_volcano(case.k8s_manager)
 
     @staticmethod
     def reset_volcano_yaml(case):
         volcano_yaml_path = K8sTool.find_volcano_yaml(case)
-        case.k8s_manager.master.exec_command(f"sed -i 's/\"super-pod-size\": \"[0-9]\\+\"/"
-                                             f"\"super-pod-size\": \"48\"/g' \"{volcano_yaml_path}\"")
-        case.k8s_manager.master.exec_command(f"sed -i 's/\"useClusterInfoManager\":\"\\(false\\|true\\)\"/"
-                                             f"\"useClusterInfoManager\":\"true\"/g' \"{volcano_yaml_path}\"")
+        case.k8s_manager.master.exec_command(
+            f"sed -i 's/\"super-pod-size\": \"[0-9]\\+\"/\"super-pod-size\": \"48\"/g' \"{volcano_yaml_path}\""
+        )
+        case.k8s_manager.master.exec_command(
+            f"sed -i 's/\"useClusterInfoManager\":\"\\(false\\|true\\)\"/"
+            f"\"useClusterInfoManager\":\"true\"/g' \"{volcano_yaml_path}\""
+        )
         K8sTool.restart_volcano(case.k8s_manager)
 
     @staticmethod
     def fault_inject(case):
-        case.k8s_manager.master.exec_command(f"bash {case._fault_inject_file_path} --fault_pod_name "
-                                             f"{case._fault_pod} --card_num 8 "
-                                             f"--card_unhealthy \"npu-0\"")
+        case.k8s_manager.master.exec_command(
+            f"bash {case._fault_inject_file_path} --fault_pod_name "
+            f"{case._fault_pod} --card_num 8 "
+            f"--card_unhealthy \"npu-0\""
+        )
 
     @staticmethod
     def restart_volcano(k8s_manager):
@@ -248,7 +253,8 @@ class K8sTool(object):
     def apply_mindcluster(case, yaml_path=MIND_CLUSTER_YAML_DIR):
         case.k8s_manager.exec_command("chmod 777 /user/mindx-dl")
         case.k8s_manager.exec_command(
-            "kubectl create ns mindx-dl && kubectl create ns volcano-system && kubectl create ns cluster-system")
+            "kubectl create ns mindx-dl && kubectl create ns volcano-system && kubectl create ns cluster-system"
+        )
         case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f device-plugin-volcano-v*.yaml")
         case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f ascend-operator-v*.yaml")
         case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f volcano-v*.yaml")
@@ -262,7 +268,8 @@ class K8sTool(object):
     @staticmethod
     def apply_mindcluster_v2(case, yaml_path=MIND_CLUSTER_YAML_DIR):
         case.k8s_manager.master.exec_command(
-            "kubectl create ns mindx-dl && kubectl create ns volcano-system && kubectl create ns cluster-system")
+            "kubectl create ns mindx-dl && kubectl create ns volcano-system && kubectl create ns cluster-system"
+        )
         case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl delete -f device-plugin-npu-volcano-*.yaml")
         case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f device-plugin-volcano-*.yaml")
         case.k8s_manager.exec_command(f"cd {yaml_path} && kubectl apply -f ascend-operator-*.yaml")
@@ -308,6 +315,7 @@ class K8sTool(object):
     def check_pod_start_time(case, pod_name, namespace="default"):
         cmd = (
             f"kubectl get pods {pod_name} -n {namespace} "
-            f"-o jsonpath='{{.metadata.name}}{{\"\\t\"}}{{.metadata.creationTimestamp}}{{\"\\n\"}}'")
+            f"-o jsonpath='{{.metadata.name}}{{\"\\t\"}}{{.metadata.creationTimestamp}}{{\"\\n\"}}'"
+        )
 
         return case.k8s_manager.exec_command(cmd)

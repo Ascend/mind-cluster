@@ -15,42 +15,25 @@
 # limitations under the License.
 # ==============================================================================
 import os
-from typing import Dict, Callable, Any
 
-DEFAULT_WAIT_TIME = 3
+DEFAULT_WAIT_TIME = "3"
 
-env_variables: Dict[str, Callable[[], Any]] = {
-    # the place where the testcases are located, usually the testcases directory of the project, e.g.,
-    # tests/st/testcases.
-    "BASE_DIR":
-        lambda: os.getenv("BASE_DIR", None),
-    # the directory where the valid mindcluster yaml files are located, its usually tested already
-    "MIND_CLUSTER_YAML_DIR":
-        lambda: os.getenv("MIND_CLUSTER_YAML_DIR", None),
-    # the directory where the pull request output files are located.
-    "PR_OUTPUT_DIR":
-        lambda: os.getenv("PR_OUTPUT_DIR", None),
-    # the ipv4 address of the node
-    "ipv4_address":
-        lambda: os.getenv("ipv4_address", None),
-    # the username of the node
-    "username":
-        lambda: os.getenv("username", None),
-    # the password of the node
-    "password":
-        lambda: os.getenv("password", None),
-    # the logging level of the ssh connection
-    "SSH_LOG_LEVEL":
-        lambda: os.getenv("SSH_LOG_LEVEL", "INFO"),
-    "BACKUP_YAML_DIR":
-        lambda: os.getenv("BACKUP_YAML_DIR", None),
-    "WAIT_TIME":
-        lambda: os.getenv("WAIT_TIME", DEFAULT_WAIT_TIME),
-}
-
-
-def __getattr__(name: str):
-    # lazy evaluation of environment variables
-    if name in env_variables:
-        return env_variables[name]()
-    raise AttributeError(f"environment dont have attribute {name!r}")
+# the place where the testcases are located, usually the testcases directory of the project, e.g.,
+# tests/st/testcases.
+BASE_DIR = os.getenv("BASE_DIR", None)
+# the directory where the kwok node spec templates are located, e.g., tests/st/spec.
+SPEC_DIR = os.getenv("SPEC_DIR", None)
+# the directory where the valid mindcluster yaml files are located, its usually tested already.
+MIND_CLUSTER_YAML_DIR = os.getenv("MIND_CLUSTER_YAML_DIR", None)
+# the directory where the pull request output files are located.
+PR_OUTPUT_DIR = os.getenv("PR_OUTPUT_DIR", None)
+# the ipv4 address of the node
+ipv4_address = os.getenv("ipv4_address", None)
+# the username of the node
+username = os.getenv("username", None)
+# the password of the node
+password = os.getenv("password", None)
+# the logging level of the ssh connection
+SSH_LOG_LEVEL = os.getenv("SSH_LOG_LEVEL", "INFO")
+BACKUP_YAML_DIR = os.getenv("BACKUP_YAML_DIR", None)
+WAIT_TIME = int(os.getenv("WAIT_TIME", DEFAULT_WAIT_TIME))

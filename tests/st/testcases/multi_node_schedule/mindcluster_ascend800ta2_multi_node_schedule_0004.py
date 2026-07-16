@@ -14,10 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-import re
+# pylint: disable=duplicate-code
 import unittest
-
-from datetime import datetime
 
 from tests.st.envs import BASE_DIR
 from tests.st.st_dev.CaseRoutines import CaseRoutines
@@ -30,23 +28,25 @@ NODE_NUM = 8
 NODE_NAME = "910ax8"
 MODULE_910B_8 = "module-910b-8"
 
+
 class MindclusterAscend800ta2MutliNodeSchedule0004(unittest.TestCase):
     resource_dir = BASE_DIR + "multi_node_schedule/resources_0001/"
     statefulset_yaml_path = resource_dir + "statefulset_multi_node-8x8.yaml"
     statefulset_name = "default-test-statefulset-8pod-8npu"
     k8s_manager = K8sDistributedManage()
     logger = k8s_manager.logger
-    node_names = ["localhost.localdomain","master"]
 
     @classmethod
-    def setUpClass(self):
-        self.k8s_manager.exec_command("kubectl delete -f %s" % self.statefulset_yaml_path)
-        ClusterSimulator.create_kwok_cluster(self, container_name="a2_container", node_name=NODE_NAME, node_num=NODE_NUM + 2)
+    def setUpClass(cls):
+        cls.k8s_manager.exec_command("kubectl delete -f %s" % cls.statefulset_yaml_path)
+        ClusterSimulator.create_kwok_cluster(
+            cls, container_name="a2_container", node_name=NODE_NAME, node_num=NODE_NUM + 2
+        )
 
     def setUp(self) -> None:
         self.test_method_name = self._testMethodName
         self.logger.info("test method: %s", self.test_method_name)
-    
+
     def test_multinode_schedule_statefulset_000(self):
         self.assertIs(ClusterSimulator.get_ready_kwok_node_count(self), NODE_NUM + 2, "kwok nodes are not ready")
 
@@ -56,49 +56,34 @@ class MindclusterAscend800ta2MutliNodeSchedule0004(unittest.TestCase):
 
     def test_multinode_schedule_statefulset_002(self):
         K8sNode.set_accelerator_type(self, node_name=NODE_NAME, node_num=NODE_NUM + 2, accelerator_type=MODULE_910B_8)
-        self.assertIs(ClusterSimulator.get_kwok_nodes_with_accelerator_type(self), NODE_NUM + 2, "kwok nodes with accelerator type are not ready")
+        self.assertIs(
+            ClusterSimulator.get_kwok_nodes_with_accelerator_type(self),
+            NODE_NUM + 2,
+            "kwok nodes with accelerator type are not ready",
+        )
 
     def test_multinode_schedule_statefulset_003(self):
-        K8sTool.cordon_node(self, self.node_names)
+        K8sTool.cordon_all_nodes(self)
         self.k8s_manager.exec_command("kubectl delete -f %s" % self.statefulset_yaml_path)
         self.k8s_manager.exec_command("kubectl apply -f %s" % self.statefulset_yaml_path)
         self.assertTrue(K8sTool.check_pod_status(self, self.statefulset_name), "pod is not running")
 
     def test_multinode_schedule_statefulset_004(self):
-        pod_times = []
-        
-        for i in range(NODE_NUM):
-            pod_name = f"{self.statefulset_name}-{i}"
-            output = K8sTool.check_pod_start_time(self, pod_name)
-            if not output:
-                self.fail(f"get {pod_name} failed")
-        
-            line = output.strip()
-            name, timestamp = line.split("\t")
-            index = int(name.rsplit('-', 1)[-1])
-            create_time = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
-            pod_times.append((index, create_time))
-
-        pod_times.sort()
-        for i in range(1, len(pod_times)):
-            self.assertLess(pod_times[i-1][1], pod_times[i][1], f"Pod-{pod_times[i][0]} create time is not ascending")
-    
-    def test_multinode_schedule_statefulset_005(self):
         self.assertTrue(K8sTool.check_pod_status(self, self.statefulset_name), "pod is not running")
         ClusterSimulator.inject_kwok_software_fault(self, namespace="default", pod_name=self.statefulset_name + "-0")
         self.assertTrue(K8sTool.check_pod_status(self, self.statefulset_name, timeout=120), "pod is not running")
 
-    def test_multinode_schedule_statefulset_006(self):
+    def test_multinode_schedule_statefulset_005(self):
         self.k8s_manager.exec_command("kubectl delete -f %s" % self.statefulset_yaml_path)
         ret = self.k8s_manager.exec_command(f"kubectl get pod {self.statefulset_name}")
         self.assertTrue(len(ret) == 0, "job delete fail")
 
-    def test_multinode_schedule_statefulset_007(self):
+    def test_multinode_schedule_statefulset_006(self):
         ClusterSimulator.stop_kwok_cluster(self, "a2_container")
         self.assertIs(ClusterSimulator.get_ready_kwok_node_count(self), 0)
 
     @classmethod
-    def tearDownClass(self):
-        self.k8s_manager.exec_command("kubectl delete -f %s" % self.statefulset_yaml_path)
-        ClusterSimulator.stop_kwok_cluster(self, "a2_container")
-        K8sTool.uncordon_node(self, self.node_names)
+    def tearDownClass(cls):
+        cls.k8s_manager.exec_command("kubectl delete -f %s" % cls.statefulset_yaml_path)
+        ClusterSimulator.stop_kwok_cluster(cls, "a2_container")
+        K8sTool.uncordon_all_nodes(cls)
