@@ -20,4 +20,6 @@ var (
 	DevType string
 	// NpuDevPortInfos npu dev port infos
 	NpuDevPortInfos NpuDevPortsInfo
+	// EnableLegacyMetrics enable legacy metrics with _X_Y suffix for Atlas 350 backward compatibility
+	EnableLegacyMetrics bool
 )

@@ -18,6 +18,7 @@ package metrics
 import (
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -85,91 +86,100 @@ const (
 	coreMibTxbadpkts   = "core_mib_txbadpkts"
 	coreMibRxbadoctets = "core_mib_rxbadoctets"
 	coreMibTxbadoctets = "core_mib_txbadoctets"
+
+	ubDieIDLabel  = "udie"
+	ubPortIDLabel = "port"
 )
 
 var (
+	ubCardLabel     []string
+	ubCardLabelOnce sync.Once
+	ubDescOnce      sync.Once
+
 	// rx
-	ubIpv4PktCntRxDesc    []*prometheus.Desc
-	ubIpv6PktCntRxDesc    []*prometheus.Desc
-	unicIpv4PktCntRxDesc  []*prometheus.Desc
-	unicIpv6PktCntRxDesc  []*prometheus.Desc
-	ubCompactPktCntRxDesc []*prometheus.Desc
-	ubUmocCtphCntRxDesc   []*prometheus.Desc
-	ubUmocNtphCntRxDesc   []*prometheus.Desc
-	ubMemPktCntRxDesc     []*prometheus.Desc
-	unknownPktCntRxDesc   []*prometheus.Desc
-	dropIndCntRxDesc      []*prometheus.Desc
-	errIndCntRxDesc       []*prometheus.Desc
-	toHostPktCntRxDesc    []*prometheus.Desc
-	toImpPktCntRxDesc     []*prometheus.Desc
-	toMarPktCntRxDesc     []*prometheus.Desc
-	toLinkPktCntRxDesc    []*prometheus.Desc
-	toNocPktCntRxDesc     []*prometheus.Desc
-	routeErrCntRxDesc     []*prometheus.Desc
-	outErrCntRxDesc       []*prometheus.Desc
-	lengthErrCntRxDesc    []*prometheus.Desc
-	rxBusiFlitNumDesc     []*prometheus.Desc
-	rxSendAckFlitNumDesc  []*prometheus.Desc
+	ubIpv4PktCntRxDesc    *prometheus.Desc
+	ubIpv6PktCntRxDesc    *prometheus.Desc
+	unicIpv4PktCntRxDesc  *prometheus.Desc
+	unicIpv6PktCntRxDesc  *prometheus.Desc
+	ubCompactPktCntRxDesc *prometheus.Desc
+	ubUmocCtphCntRxDesc   *prometheus.Desc
+	ubUmocNtphCntRxDesc   *prometheus.Desc
+	ubMemPktCntRxDesc     *prometheus.Desc
+	unknownPktCntRxDesc   *prometheus.Desc
+	dropIndCntRxDesc      *prometheus.Desc
+	errIndCntRxDesc       *prometheus.Desc
+	toHostPktCntRxDesc    *prometheus.Desc
+	toImpPktCntRxDesc     *prometheus.Desc
+	toMarPktCntRxDesc     *prometheus.Desc
+	toLinkPktCntRxDesc    *prometheus.Desc
+	toNocPktCntRxDesc     *prometheus.Desc
+	routeErrCntRxDesc     *prometheus.Desc
+	outErrCntRxDesc       *prometheus.Desc
+	lengthErrCntRxDesc    *prometheus.Desc
+	rxBusiFlitNumDesc     *prometheus.Desc
+	rxSendAckFlitNumDesc  *prometheus.Desc
 	// tx
-	ubIpv4PktCntTxDesc    []*prometheus.Desc
-	ubIpv6PktCntTxDesc    []*prometheus.Desc
-	unicIpv4PktCntTxDesc  []*prometheus.Desc
-	unicIpv6PktCntTxDesc  []*prometheus.Desc
-	ubCompactPktCntTxDesc []*prometheus.Desc
-	ubUmocCtphCntTxDesc   []*prometheus.Desc
-	ubUmocNtphCntTxDesc   []*prometheus.Desc
-	ubMemPktCntTxDesc     []*prometheus.Desc
-	unknownPktCntTxDesc   []*prometheus.Desc
-	dropIndCntTxDesc      []*prometheus.Desc
-	errIndCntTxDesc       []*prometheus.Desc
-	lpbkIndCntTxDesc      []*prometheus.Desc
-	outErrCntTxDesc       []*prometheus.Desc
-	lengthErrCntTxDesc    []*prometheus.Desc
-	txBusiFlitNumDesc     []*prometheus.Desc
-	txRecvAckFlitDesc     []*prometheus.Desc
+	ubIpv4PktCntTxDesc    *prometheus.Desc
+	ubIpv6PktCntTxDesc    *prometheus.Desc
+	unicIpv4PktCntTxDesc  *prometheus.Desc
+	unicIpv6PktCntTxDesc  *prometheus.Desc
+	ubCompactPktCntTxDesc *prometheus.Desc
+	ubUmocCtphCntTxDesc   *prometheus.Desc
+	ubUmocNtphCntTxDesc   *prometheus.Desc
+	ubMemPktCntTxDesc     *prometheus.Desc
+	unknownPktCntTxDesc   *prometheus.Desc
+	dropIndCntTxDesc      *prometheus.Desc
+	errIndCntTxDesc       *prometheus.Desc
+	lpbkIndCntTxDesc      *prometheus.Desc
+	outErrCntTxDesc       *prometheus.Desc
+	lengthErrCntTxDesc    *prometheus.Desc
+	txBusiFlitNumDesc     *prometheus.Desc
+	txRecvAckFlitDesc     *prometheus.Desc
 	// sum
-	retryReqSumDesc []*prometheus.Desc
-	retryAckSumDesc []*prometheus.Desc
-	crcErrorSumDesc []*prometheus.Desc
+	retryReqSumDesc *prometheus.Desc
+	retryAckSumDesc *prometheus.Desc
+	crcErrorSumDesc *prometheus.Desc
 	// uboe
-	coreMibRxpausepktsDesc []*prometheus.Desc
-	coreMibTxpausepktsDesc []*prometheus.Desc
-	coreMibRxpfcpktsDesc   []*prometheus.Desc
-	coreMibTxpfcpktsDesc   []*prometheus.Desc
-	coreMibRxbadpktsDesc   []*prometheus.Desc
-	coreMibTxbadpktsDesc   []*prometheus.Desc
-	coreMibRxbadoctetsDesc []*prometheus.Desc
-	coreMibTxbadoctetsDesc []*prometheus.Desc
+	coreMibRxpausepktsDesc *prometheus.Desc
+	coreMibTxpausepktsDesc *prometheus.Desc
+	coreMibRxpfcpktsDesc   *prometheus.Desc
+	coreMibTxpfcpktsDesc   *prometheus.Desc
+	coreMibRxbadpktsDesc   *prometheus.Desc
+	coreMibTxbadpktsDesc   *prometheus.Desc
+	coreMibRxbadoctetsDesc *prometheus.Desc
+	coreMibTxbadoctetsDesc *prometheus.Desc
 )
 
+func initUBCardLabel() {
+	ubCardLabelOnce.Do(func() {
+		ubCardLabel = append(ubCardLabel, colcommon.CardLabel...)
+		ubCardLabel = append(ubCardLabel, ubDieIDLabel, ubPortIDLabel)
+	})
+}
+
 func initBuildDesc() {
-	// udie only has 0 and 1, fixed order
-	dieIDs := []int{0, 1}
-	for _, dieID := range dieIDs {
-		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap()[dieID]
-		if !ok || len(portIDs) == 0 {
-			continue
-		}
-		for _, port := range portIDs {
-			// rx
-			initBuildDescRx(dieID, port)
-			// tx
-			initBuildDescTx(dieID, port)
-			// sum
-			buildDesc(dieID, port, &retryReqSumDesc, retryReqSum, "number of retransmission attempts initiated on ")
-			buildDesc(dieID, port, &retryAckSumDesc, retryAckSum, "number of response retransmissions on ")
-			buildDesc(dieID, port, &crcErrorSumDesc, crcErrorSum, "number of crc check errors ")
-			// uboe
-			buildDesc(dieID, port, &coreMibRxpausepktsDesc, coreMibRxpausepkts, "uboe total number of rx pause frames on ")
-			buildDesc(dieID, port, &coreMibTxpausepktsDesc, coreMibTxpausepkts, "uboe total number of tx pause frames on ")
-			buildDesc(dieID, port, &coreMibRxpfcpktsDesc, coreMibRxpfcpkts, "uboe total number of rx pfc frames on ")
-			buildDesc(dieID, port, &coreMibTxpfcpktsDesc, coreMibTxpfcpkts, "uboe total number of tx pfc frames on ")
-			buildDesc(dieID, port, &coreMibRxbadpktsDesc, coreMibRxbadpkts, "uboe total number of rx bad packets on ")
-			buildDesc(dieID, port, &coreMibTxbadpktsDesc, coreMibTxbadpkts, "uboe total number of tx bad packets on ")
-			buildDesc(dieID, port, &coreMibRxbadoctetsDesc, coreMibRxbadoctets, "uboe total number of bytes in rx bad packets on ")
-			buildDesc(dieID, port, &coreMibTxbadoctetsDesc, coreMibTxbadoctets, "uboe total number of bytes in tx bad packets on ")
-		}
-	}
+	ubDescOnce.Do(func() {
+		initUBCardLabel()
+
+		// rx
+		initBuildDescRx()
+		// tx
+		initBuildDescTx()
+		// sum
+		buildUbDesc(&retryReqSumDesc, retryReqSum, "number of retransmission attempts initiated on ub port")
+		buildUbDesc(&retryAckSumDesc, retryAckSum, "number of response retransmissions on ub port")
+		buildUbDesc(&crcErrorSumDesc, crcErrorSum, "number of crc check errors on ub port")
+		// uboe
+		buildUbDesc(&coreMibRxpausepktsDesc, coreMibRxpausepkts, "uboe total number of rx pause frames on ub port")
+		buildUbDesc(&coreMibTxpausepktsDesc, coreMibTxpausepkts, "uboe total number of tx pause frames on ub port")
+		buildUbDesc(&coreMibRxpfcpktsDesc, coreMibRxpfcpkts, "uboe total number of rx pfc frames on ub port")
+		buildUbDesc(&coreMibTxpfcpktsDesc, coreMibTxpfcpkts, "uboe total number of tx pfc frames on ub port")
+		buildUbDesc(&coreMibRxbadpktsDesc, coreMibRxbadpkts, "uboe total number of rx bad packets on ub port")
+		buildUbDesc(&coreMibTxbadpktsDesc, coreMibTxbadpkts, "uboe total number of tx bad packets on ub port")
+		buildUbDesc(&coreMibRxbadoctetsDesc, coreMibRxbadoctets, "uboe total number of bytes in rx bad packets on ub port")
+		buildUbDesc(&coreMibTxbadoctetsDesc, coreMibTxbadoctets, "uboe total number of bytes in tx bad packets on ub port")
+		initUbLegacyDesc()
+	})
 }
 
 type ubCache struct {
@@ -206,6 +216,7 @@ func (c *UbCollector) Describe(ch chan<- *prometheus.Desc) {
 	initDesc(ch, crcErrorSumDesc)
 	// uboe
 	initUboeDesc(ch)
+	addUbLegacyMetricsDesc(ch)
 }
 
 // CollectToCache collect the metric to cache
@@ -215,8 +226,8 @@ func (c *UbCollector) CollectToCache(n *colcommon.NpuCollector, chipList []colco
 		c.LocalCache.Store(chip.PhyId, ubCache{
 			chip:      chip,
 			timestamp: time.Now(),
-			ubInfo:    ubInfo},
-		)
+			ubInfo:    ubInfo,
+		})
 	}
 	colcommon.UpdateCache[ubCache](n, colcommon.GetCacheKey(c), &c.LocalCache)
 }
@@ -241,17 +252,22 @@ func promUpdateUbInfo(ch chan<- prometheus.Metric, cache ubCache,
 		if ubInfo[i] == nil {
 			continue
 		}
+		extendedLabel := append(cardLabel, strconv.Itoa(ubInfo[i].Udie), strconv.Itoa(ubInfo[i].Port))
 		if ubInfo[i].UBCommonStats != nil {
 			// rx
-			promUpdateUbRx(ch, timestamp, ubInfo, cardLabel, i)
+			promUpdateUbRx(ch, timestamp, ubInfo, extendedLabel, i)
+			promUpdateUbRxLegacy(ch, timestamp, ubInfo[i], extendedLabel)
 			// tx
-			promUpdateUbTx(ch, timestamp, ubInfo, cardLabel, i)
+			promUpdateUbTx(ch, timestamp, ubInfo, extendedLabel, i)
+			promUpdateUbTxLegacy(ch, timestamp, ubInfo[i], extendedLabel)
 			// sum
-			promUpdateUbSum(ch, timestamp, ubInfo, cardLabel, i)
+			promUpdateUbSum(ch, timestamp, ubInfo, extendedLabel, i)
+			promUpdateUbSumLegacy(ch, timestamp, ubInfo[i], extendedLabel)
 		}
 		if ubInfo[i].UboeExtensions != nil {
 			//uboe
-			promUpdateUbUboe(ch, timestamp, ubInfo, cardLabel, i)
+			promUpdateUbUboe(ch, timestamp, ubInfo, extendedLabel, i)
+			promUpdateUbUboeLegacy(ch, timestamp, ubInfo[i], extendedLabel)
 		}
 	}
 }
@@ -273,66 +289,66 @@ func (c *UbCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}
 
 func promUpdateUbRx(ch chan<- prometheus.Metric, timestamp time.Time, ubInfo []*common.UBInfo,
 	cardLabel []string, i int) {
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbIpv4PktCntRx, cardLabel, ubIpv4PktCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbIpv6PktCntRx, cardLabel, ubIpv6PktCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UnicIpv4PktCntRx, cardLabel, unicIpv4PktCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UnicIpv6PktCntRx, cardLabel, unicIpv6PktCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbCompactPktCntRx, cardLabel, ubCompactPktCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbUmocCtphCntRx, cardLabel, ubUmocCtphCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbUmocNtphCntRx, cardLabel, ubUmocNtphCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbMemPktCntRx, cardLabel, ubMemPktCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UnknownPktCntRx, cardLabel, unknownPktCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.DropIndCntRx, cardLabel, dropIndCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.ErrIndCntRx, cardLabel, errIndCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.ToHostPktCntRx, cardLabel, toHostPktCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.ToImpPktCntRx, cardLabel, toImpPktCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.ToMarPktCntRx, cardLabel, toMarPktCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.ToLinkPktCntRx, cardLabel, toLinkPktCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.ToNocPktCntRx, cardLabel, toNocPktCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.RouteErrCntRx, cardLabel, routeErrCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.OutErrCntRx, cardLabel, outErrCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.LengthErrCntRx, cardLabel, lengthErrCntRxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.RxBusiFlitNum, cardLabel, rxBusiFlitNumDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.RxSendAckFlit, cardLabel, rxSendAckFlitNumDesc[i])
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbIpv4PktCntRx, cardLabel, ubIpv4PktCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbIpv6PktCntRx, cardLabel, ubIpv6PktCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UnicIpv4PktCntRx, cardLabel, unicIpv4PktCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UnicIpv6PktCntRx, cardLabel, unicIpv6PktCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbCompactPktCntRx, cardLabel, ubCompactPktCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbUmocCtphCntRx, cardLabel, ubUmocCtphCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbUmocNtphCntRx, cardLabel, ubUmocNtphCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbMemPktCntRx, cardLabel, ubMemPktCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UnknownPktCntRx, cardLabel, unknownPktCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.DropIndCntRx, cardLabel, dropIndCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.ErrIndCntRx, cardLabel, errIndCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.ToHostPktCntRx, cardLabel, toHostPktCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.ToImpPktCntRx, cardLabel, toImpPktCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.ToMarPktCntRx, cardLabel, toMarPktCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.ToLinkPktCntRx, cardLabel, toLinkPktCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.ToNocPktCntRx, cardLabel, toNocPktCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.RouteErrCntRx, cardLabel, routeErrCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.OutErrCntRx, cardLabel, outErrCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.LengthErrCntRx, cardLabel, lengthErrCntRxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.RxBusiFlitNum, cardLabel, rxBusiFlitNumDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.RxSendAckFlit, cardLabel, rxSendAckFlitNumDesc)
 }
 
 func promUpdateUbTx(ch chan<- prometheus.Metric, timestamp time.Time, ubInfo []*common.UBInfo,
 	cardLabel []string, i int) {
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbIpv4PktCntTx, cardLabel, ubIpv4PktCntTxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbIpv6PktCntTx, cardLabel, ubIpv6PktCntTxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UnicIpv4PktCntTx, cardLabel, unicIpv4PktCntTxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UnicIpv6PktCntTx, cardLabel, unicIpv6PktCntTxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbCompactPktCntTx, cardLabel, ubCompactPktCntTxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbUmocCtphCntTx, cardLabel, ubUmocCtphCntTxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbUmocNtphCntTx, cardLabel, ubUmocNtphCntTxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbMemPktCntTx, cardLabel, ubMemPktCntTxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UnknownPktCntTx, cardLabel, unknownPktCntTxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.DropIndCntTx, cardLabel, dropIndCntTxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.ErrIndCntTx, cardLabel, errIndCntTxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.LpbkIndCntTx, cardLabel, lpbkIndCntTxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.OutErrCntTx, cardLabel, outErrCntTxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.LengthErrCntTx, cardLabel, lengthErrCntTxDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.TxBusiFlitNum, cardLabel, txBusiFlitNumDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.TxRecvAckFlit, cardLabel, txRecvAckFlitDesc[i])
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbIpv4PktCntTx, cardLabel, ubIpv4PktCntTxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbIpv6PktCntTx, cardLabel, ubIpv6PktCntTxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UnicIpv4PktCntTx, cardLabel, unicIpv4PktCntTxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UnicIpv6PktCntTx, cardLabel, unicIpv6PktCntTxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbCompactPktCntTx, cardLabel, ubCompactPktCntTxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbUmocCtphCntTx, cardLabel, ubUmocCtphCntTxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbUmocNtphCntTx, cardLabel, ubUmocNtphCntTxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UbMemPktCntTx, cardLabel, ubMemPktCntTxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.UnknownPktCntTx, cardLabel, unknownPktCntTxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.DropIndCntTx, cardLabel, dropIndCntTxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.ErrIndCntTx, cardLabel, errIndCntTxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.LpbkIndCntTx, cardLabel, lpbkIndCntTxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.OutErrCntTx, cardLabel, outErrCntTxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.LengthErrCntTx, cardLabel, lengthErrCntTxDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.TxBusiFlitNum, cardLabel, txBusiFlitNumDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.TxRecvAckFlit, cardLabel, txRecvAckFlitDesc)
 }
 
 func promUpdateUbSum(ch chan<- prometheus.Metric, timestamp time.Time, ubInfo []*common.UBInfo,
 	cardLabel []string, i int) {
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.RetryReqSum, cardLabel, retryReqSumDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.RetryAckSum, cardLabel, retryAckSumDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.CrcErrorSum, cardLabel, crcErrorSumDesc[i])
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.RetryReqSum, cardLabel, retryReqSumDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.RetryAckSum, cardLabel, retryAckSumDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UBCommonStats.CrcErrorSum, cardLabel, crcErrorSumDesc)
 }
 
 func promUpdateUbUboe(ch chan<- prometheus.Metric, timestamp time.Time, ubInfo []*common.UBInfo,
 	cardLabel []string, i int) {
-	doUpdateMetric(ch, timestamp, ubInfo[i].UboeExtensions.CoreMibRxPausePkts, cardLabel, coreMibRxpausepktsDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UboeExtensions.CoreMibTxPausePkts, cardLabel, coreMibTxpausepktsDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UboeExtensions.CoreMibRxPfcPkts, cardLabel, coreMibRxpfcpktsDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UboeExtensions.CoreMibTxPfcPkts, cardLabel, coreMibTxpfcpktsDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UboeExtensions.CoreMibRxBadPkts, cardLabel, coreMibRxbadpktsDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UboeExtensions.CoreMibTxBadPkts, cardLabel, coreMibTxbadpktsDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UboeExtensions.CoreMibRxBadOctets, cardLabel, coreMibRxbadoctetsDesc[i])
-	doUpdateMetric(ch, timestamp, ubInfo[i].UboeExtensions.CoreMibTxBadOctets, cardLabel, coreMibTxbadoctetsDesc[i])
+	doUpdateMetric(ch, timestamp, ubInfo[i].UboeExtensions.CoreMibRxPausePkts, cardLabel, coreMibRxpausepktsDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UboeExtensions.CoreMibTxPausePkts, cardLabel, coreMibTxpausepktsDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UboeExtensions.CoreMibRxPfcPkts, cardLabel, coreMibRxpfcpktsDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UboeExtensions.CoreMibTxPfcPkts, cardLabel, coreMibTxpfcpktsDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UboeExtensions.CoreMibRxBadPkts, cardLabel, coreMibRxbadpktsDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UboeExtensions.CoreMibTxBadPkts, cardLabel, coreMibTxbadpktsDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UboeExtensions.CoreMibRxBadOctets, cardLabel, coreMibRxbadoctetsDesc)
+	doUpdateMetric(ch, timestamp, ubInfo[i].UboeExtensions.CoreMibTxBadOctets, cardLabel, coreMibTxbadoctetsDesc)
 }
 
 func telegrafUpdateUbInfo(cache ubCache, fieldMap map[string]interface{}) {
@@ -344,79 +360,80 @@ func telegrafUpdateUbInfo(cache ubCache, fieldMap map[string]interface{}) {
 		if ubInfo[i] == nil {
 			continue
 		}
+		extInfo := fmt.Sprint("_", ubInfo[i].Udie, "_", ubInfo[i].Port)
 		if ubInfo[i].UBCommonStats != nil {
 			// rx
-			telegrafUpdateUbRx(fieldMap, ubInfo, i)
+			telegrafUpdateUbRx(fieldMap, ubInfo, i, extInfo)
 			// tx
-			telegrafUpdateUbTx(fieldMap, ubInfo, i)
+			telegrafUpdateUbTx(fieldMap, ubInfo, i, extInfo)
 			// sum
-			telegrafUpdateUbSum(fieldMap, ubInfo, i)
+			telegrafUpdateUbSum(fieldMap, ubInfo, i, extInfo)
 		}
 		if ubInfo[i].UboeExtensions != nil {
 			//uboe
-			telegrafUpdateUbUboe(fieldMap, ubInfo, i)
+			telegrafUpdateUbUboe(fieldMap, ubInfo, i, extInfo)
 		}
 	}
 }
 
-func telegrafUpdateUbRx(fieldMap map[string]interface{}, ubInfo []*common.UBInfo, i int) {
-	doUpdateTelegraf(fieldMap, ubIpv4PktCntRxDesc[i], ubInfo[i].UBCommonStats.UbIpv4PktCntRx, "")
-	doUpdateTelegraf(fieldMap, ubIpv6PktCntRxDesc[i], ubInfo[i].UBCommonStats.UbIpv6PktCntRx, "")
-	doUpdateTelegraf(fieldMap, unicIpv4PktCntRxDesc[i], ubInfo[i].UBCommonStats.UnicIpv4PktCntRx, "")
-	doUpdateTelegraf(fieldMap, unicIpv6PktCntRxDesc[i], ubInfo[i].UBCommonStats.UnicIpv6PktCntRx, "")
-	doUpdateTelegraf(fieldMap, ubCompactPktCntRxDesc[i], ubInfo[i].UBCommonStats.UbCompactPktCntRx, "")
-	doUpdateTelegraf(fieldMap, ubUmocCtphCntRxDesc[i], ubInfo[i].UBCommonStats.UbUmocCtphCntRx, "")
-	doUpdateTelegraf(fieldMap, ubUmocNtphCntRxDesc[i], ubInfo[i].UBCommonStats.UbUmocNtphCntRx, "")
-	doUpdateTelegraf(fieldMap, ubMemPktCntRxDesc[i], ubInfo[i].UBCommonStats.UbMemPktCntRx, "")
-	doUpdateTelegraf(fieldMap, unknownPktCntRxDesc[i], ubInfo[i].UBCommonStats.UnknownPktCntRx, "")
-	doUpdateTelegraf(fieldMap, dropIndCntRxDesc[i], ubInfo[i].UBCommonStats.DropIndCntRx, "")
-	doUpdateTelegraf(fieldMap, errIndCntRxDesc[i], ubInfo[i].UBCommonStats.ErrIndCntRx, "")
-	doUpdateTelegraf(fieldMap, toHostPktCntRxDesc[i], ubInfo[i].UBCommonStats.ToHostPktCntRx, "")
-	doUpdateTelegraf(fieldMap, toImpPktCntRxDesc[i], ubInfo[i].UBCommonStats.ToImpPktCntRx, "")
-	doUpdateTelegraf(fieldMap, toMarPktCntRxDesc[i], ubInfo[i].UBCommonStats.ToMarPktCntRx, "")
-	doUpdateTelegraf(fieldMap, toLinkPktCntRxDesc[i], ubInfo[i].UBCommonStats.ToLinkPktCntRx, "")
-	doUpdateTelegraf(fieldMap, toNocPktCntRxDesc[i], ubInfo[i].UBCommonStats.ToNocPktCntRx, "")
-	doUpdateTelegraf(fieldMap, routeErrCntRxDesc[i], ubInfo[i].UBCommonStats.RouteErrCntRx, "")
-	doUpdateTelegraf(fieldMap, outErrCntRxDesc[i], ubInfo[i].UBCommonStats.OutErrCntRx, "")
-	doUpdateTelegraf(fieldMap, lengthErrCntRxDesc[i], ubInfo[i].UBCommonStats.LengthErrCntRx, "")
-	doUpdateTelegraf(fieldMap, rxBusiFlitNumDesc[i], ubInfo[i].UBCommonStats.RxBusiFlitNum, "")
-	doUpdateTelegraf(fieldMap, rxSendAckFlitNumDesc[i], ubInfo[i].UBCommonStats.RxSendAckFlit, "")
+func telegrafUpdateUbRx(fieldMap map[string]interface{}, ubInfo []*common.UBInfo, i int, extInfo string) {
+	doUpdateTelegraf(fieldMap, ubIpv4PktCntRxDesc, ubInfo[i].UBCommonStats.UbIpv4PktCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, ubIpv6PktCntRxDesc, ubInfo[i].UBCommonStats.UbIpv6PktCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, unicIpv4PktCntRxDesc, ubInfo[i].UBCommonStats.UnicIpv4PktCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, unicIpv6PktCntRxDesc, ubInfo[i].UBCommonStats.UnicIpv6PktCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, ubCompactPktCntRxDesc, ubInfo[i].UBCommonStats.UbCompactPktCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, ubUmocCtphCntRxDesc, ubInfo[i].UBCommonStats.UbUmocCtphCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, ubUmocNtphCntRxDesc, ubInfo[i].UBCommonStats.UbUmocNtphCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, ubMemPktCntRxDesc, ubInfo[i].UBCommonStats.UbMemPktCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, unknownPktCntRxDesc, ubInfo[i].UBCommonStats.UnknownPktCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, dropIndCntRxDesc, ubInfo[i].UBCommonStats.DropIndCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, errIndCntRxDesc, ubInfo[i].UBCommonStats.ErrIndCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, toHostPktCntRxDesc, ubInfo[i].UBCommonStats.ToHostPktCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, toImpPktCntRxDesc, ubInfo[i].UBCommonStats.ToImpPktCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, toMarPktCntRxDesc, ubInfo[i].UBCommonStats.ToMarPktCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, toLinkPktCntRxDesc, ubInfo[i].UBCommonStats.ToLinkPktCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, toNocPktCntRxDesc, ubInfo[i].UBCommonStats.ToNocPktCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, routeErrCntRxDesc, ubInfo[i].UBCommonStats.RouteErrCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, outErrCntRxDesc, ubInfo[i].UBCommonStats.OutErrCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, lengthErrCntRxDesc, ubInfo[i].UBCommonStats.LengthErrCntRx, extInfo)
+	doUpdateTelegraf(fieldMap, rxBusiFlitNumDesc, ubInfo[i].UBCommonStats.RxBusiFlitNum, extInfo)
+	doUpdateTelegraf(fieldMap, rxSendAckFlitNumDesc, ubInfo[i].UBCommonStats.RxSendAckFlit, extInfo)
 }
 
-func telegrafUpdateUbTx(fieldMap map[string]interface{}, ubInfo []*common.UBInfo, i int) {
-	doUpdateTelegraf(fieldMap, ubIpv4PktCntTxDesc[i], ubInfo[i].UBCommonStats.UbIpv4PktCntTx, "")
-	doUpdateTelegraf(fieldMap, ubIpv6PktCntTxDesc[i], ubInfo[i].UBCommonStats.UbIpv6PktCntTx, "")
-	doUpdateTelegraf(fieldMap, unicIpv4PktCntTxDesc[i], ubInfo[i].UBCommonStats.UnicIpv4PktCntTx, "")
-	doUpdateTelegraf(fieldMap, unicIpv6PktCntTxDesc[i], ubInfo[i].UBCommonStats.UnicIpv6PktCntTx, "")
-	doUpdateTelegraf(fieldMap, ubCompactPktCntTxDesc[i], ubInfo[i].UBCommonStats.UbCompactPktCntTx, "")
-	doUpdateTelegraf(fieldMap, ubUmocCtphCntTxDesc[i], ubInfo[i].UBCommonStats.UbUmocCtphCntTx, "")
-	doUpdateTelegraf(fieldMap, ubUmocNtphCntTxDesc[i], ubInfo[i].UBCommonStats.UbUmocNtphCntTx, "")
-	doUpdateTelegraf(fieldMap, ubMemPktCntTxDesc[i], ubInfo[i].UBCommonStats.UbMemPktCntTx, "")
-	doUpdateTelegraf(fieldMap, unknownPktCntTxDesc[i], ubInfo[i].UBCommonStats.UnknownPktCntTx, "")
-	doUpdateTelegraf(fieldMap, dropIndCntTxDesc[i], ubInfo[i].UBCommonStats.DropIndCntTx, "")
-	doUpdateTelegraf(fieldMap, errIndCntTxDesc[i], ubInfo[i].UBCommonStats.ErrIndCntTx, "")
-	doUpdateTelegraf(fieldMap, lpbkIndCntTxDesc[i], ubInfo[i].UBCommonStats.LpbkIndCntTx, "")
-	doUpdateTelegraf(fieldMap, outErrCntTxDesc[i], ubInfo[i].UBCommonStats.OutErrCntTx, "")
-	doUpdateTelegraf(fieldMap, lengthErrCntTxDesc[i], ubInfo[i].UBCommonStats.LengthErrCntTx, "")
-	doUpdateTelegraf(fieldMap, txBusiFlitNumDesc[i], ubInfo[i].UBCommonStats.TxBusiFlitNum, "")
-	doUpdateTelegraf(fieldMap, txRecvAckFlitDesc[i], ubInfo[i].UBCommonStats.TxRecvAckFlit, "")
+func telegrafUpdateUbTx(fieldMap map[string]interface{}, ubInfo []*common.UBInfo, i int, extInfo string) {
+	doUpdateTelegraf(fieldMap, ubIpv4PktCntTxDesc, ubInfo[i].UBCommonStats.UbIpv4PktCntTx, extInfo)
+	doUpdateTelegraf(fieldMap, ubIpv6PktCntTxDesc, ubInfo[i].UBCommonStats.UbIpv6PktCntTx, extInfo)
+	doUpdateTelegraf(fieldMap, unicIpv4PktCntTxDesc, ubInfo[i].UBCommonStats.UnicIpv4PktCntTx, extInfo)
+	doUpdateTelegraf(fieldMap, unicIpv6PktCntTxDesc, ubInfo[i].UBCommonStats.UnicIpv6PktCntTx, extInfo)
+	doUpdateTelegraf(fieldMap, ubCompactPktCntTxDesc, ubInfo[i].UBCommonStats.UbCompactPktCntTx, extInfo)
+	doUpdateTelegraf(fieldMap, ubUmocCtphCntTxDesc, ubInfo[i].UBCommonStats.UbUmocCtphCntTx, extInfo)
+	doUpdateTelegraf(fieldMap, ubUmocNtphCntTxDesc, ubInfo[i].UBCommonStats.UbUmocNtphCntTx, extInfo)
+	doUpdateTelegraf(fieldMap, ubMemPktCntTxDesc, ubInfo[i].UBCommonStats.UbMemPktCntTx, extInfo)
+	doUpdateTelegraf(fieldMap, unknownPktCntTxDesc, ubInfo[i].UBCommonStats.UnknownPktCntTx, extInfo)
+	doUpdateTelegraf(fieldMap, dropIndCntTxDesc, ubInfo[i].UBCommonStats.DropIndCntTx, extInfo)
+	doUpdateTelegraf(fieldMap, errIndCntTxDesc, ubInfo[i].UBCommonStats.ErrIndCntTx, extInfo)
+	doUpdateTelegraf(fieldMap, lpbkIndCntTxDesc, ubInfo[i].UBCommonStats.LpbkIndCntTx, extInfo)
+	doUpdateTelegraf(fieldMap, outErrCntTxDesc, ubInfo[i].UBCommonStats.OutErrCntTx, extInfo)
+	doUpdateTelegraf(fieldMap, lengthErrCntTxDesc, ubInfo[i].UBCommonStats.LengthErrCntTx, extInfo)
+	doUpdateTelegraf(fieldMap, txBusiFlitNumDesc, ubInfo[i].UBCommonStats.TxBusiFlitNum, extInfo)
+	doUpdateTelegraf(fieldMap, txRecvAckFlitDesc, ubInfo[i].UBCommonStats.TxRecvAckFlit, extInfo)
 }
 
-func telegrafUpdateUbSum(fieldMap map[string]interface{}, ubInfo []*common.UBInfo, i int) {
-	doUpdateTelegraf(fieldMap, retryReqSumDesc[i], ubInfo[i].UBCommonStats.RetryReqSum, "")
-	doUpdateTelegraf(fieldMap, retryAckSumDesc[i], ubInfo[i].UBCommonStats.RetryAckSum, "")
-	doUpdateTelegraf(fieldMap, crcErrorSumDesc[i], ubInfo[i].UBCommonStats.CrcErrorSum, "")
+func telegrafUpdateUbSum(fieldMap map[string]interface{}, ubInfo []*common.UBInfo, i int, extInfo string) {
+	doUpdateTelegraf(fieldMap, retryReqSumDesc, ubInfo[i].UBCommonStats.RetryReqSum, extInfo)
+	doUpdateTelegraf(fieldMap, retryAckSumDesc, ubInfo[i].UBCommonStats.RetryAckSum, extInfo)
+	doUpdateTelegraf(fieldMap, crcErrorSumDesc, ubInfo[i].UBCommonStats.CrcErrorSum, extInfo)
 }
 
-func telegrafUpdateUbUboe(fieldMap map[string]interface{}, ubInfo []*common.UBInfo, i int) {
-	doUpdateTelegraf(fieldMap, coreMibRxpausepktsDesc[i], ubInfo[i].UboeExtensions.CoreMibRxPausePkts, "")
-	doUpdateTelegraf(fieldMap, coreMibTxpausepktsDesc[i], ubInfo[i].UboeExtensions.CoreMibTxPausePkts, "")
-	doUpdateTelegraf(fieldMap, coreMibRxpfcpktsDesc[i], ubInfo[i].UboeExtensions.CoreMibRxPfcPkts, "")
-	doUpdateTelegraf(fieldMap, coreMibTxpfcpktsDesc[i], ubInfo[i].UboeExtensions.CoreMibTxPfcPkts, "")
-	doUpdateTelegraf(fieldMap, coreMibRxbadpktsDesc[i], ubInfo[i].UboeExtensions.CoreMibRxBadPkts, "")
-	doUpdateTelegraf(fieldMap, coreMibTxbadpktsDesc[i], ubInfo[i].UboeExtensions.CoreMibTxBadPkts, "")
-	doUpdateTelegraf(fieldMap, coreMibRxbadoctetsDesc[i], ubInfo[i].UboeExtensions.CoreMibRxBadOctets, "")
-	doUpdateTelegraf(fieldMap, coreMibTxbadoctetsDesc[i], ubInfo[i].UboeExtensions.CoreMibTxBadOctets, "")
+func telegrafUpdateUbUboe(fieldMap map[string]interface{}, ubInfo []*common.UBInfo, i int, extInfo string) {
+	doUpdateTelegraf(fieldMap, coreMibRxpausepktsDesc, ubInfo[i].UboeExtensions.CoreMibRxPausePkts, extInfo)
+	doUpdateTelegraf(fieldMap, coreMibTxpausepktsDesc, ubInfo[i].UboeExtensions.CoreMibTxPausePkts, extInfo)
+	doUpdateTelegraf(fieldMap, coreMibRxpfcpktsDesc, ubInfo[i].UboeExtensions.CoreMibRxPfcPkts, extInfo)
+	doUpdateTelegraf(fieldMap, coreMibTxpfcpktsDesc, ubInfo[i].UboeExtensions.CoreMibTxPfcPkts, extInfo)
+	doUpdateTelegraf(fieldMap, coreMibRxbadpktsDesc, ubInfo[i].UboeExtensions.CoreMibRxBadPkts, extInfo)
+	doUpdateTelegraf(fieldMap, coreMibTxbadpktsDesc, ubInfo[i].UboeExtensions.CoreMibTxBadPkts, extInfo)
+	doUpdateTelegraf(fieldMap, coreMibRxbadoctetsDesc, ubInfo[i].UboeExtensions.CoreMibRxBadOctets, extInfo)
+	doUpdateTelegraf(fieldMap, coreMibTxbadoctetsDesc, ubInfo[i].UboeExtensions.CoreMibTxBadOctets, extInfo)
 }
 
 func initUboeDesc(ch chan<- *prometheus.Desc) {
@@ -473,47 +490,47 @@ func initUbTxDesc(ch chan<- *prometheus.Desc) {
 	initDesc(ch, txRecvAckFlitDesc)
 }
 
-func initBuildDescRx(dieID int, port common.NpuDevPortInfo) {
-	buildDesc(dieID, port, &ubIpv4PktCntRxDesc, ubIpv4PktCntRx, "number of ipv4 ub packets received by rx on ")
-	buildDesc(dieID, port, &ubIpv6PktCntRxDesc, ubIpv6PktCntRx, "number of ipv6 ub packets received by rx on ")
-	buildDesc(dieID, port, &unicIpv4PktCntRxDesc, unicIpv4PktCntRx, "number of ipv4 unic packets received by rx on ")
-	buildDesc(dieID, port, &unicIpv6PktCntRxDesc, unicIpv6PktCntRx, "number of ipv6 unic packets received by rx on ")
-	buildDesc(dieID, port, &ubCompactPktCntRxDesc, ubCompactPktCntRx, "number of cfg6 packets received by rx on ")
-	buildDesc(dieID, port, &ubUmocCtphCntRxDesc, ubUmocCtphCntRx, "number of cfg7 clan packets received by rx on ")
-	buildDesc(dieID, port, &ubUmocNtphCntRxDesc, ubUmocNtphCntRx, "number of cfg7 not clan packets received by rx on ")
-	buildDesc(dieID, port, &ubMemPktCntRxDesc, ubMemPktCntRx, "number of ub mem packets received by rx on ")
-	buildDesc(dieID, port, &unknownPktCntRxDesc, unknownPktCntRx, "number of unknown packets received by rx on ")
-	buildDesc(dieID, port, &dropIndCntRxDesc, dropIndCntRx, "number of packet with drop_ind received by rx on ")
-	buildDesc(dieID, port, &errIndCntRxDesc, errIndCntRx, "number of err packets received by rx on ")
-	buildDesc(dieID, port, &toHostPktCntRxDesc, toHostPktCntRx, "number of landed packets after routing on the rx ")
-	buildDesc(dieID, port, &toImpPktCntRxDesc, toImpPktCntRx, "number of landed enumeration configuration and management packets after routing on the rx ")
-	buildDesc(dieID, port, &toMarPktCntRxDesc, toMarPktCntRx, "number of landed ub memory packets after routing on the rx ")
-	buildDesc(dieID, port, &toLinkPktCntRxDesc, toLinkPktCntRx, "number of packets forward from the rx to the tx of the same port after routing ")
-	buildDesc(dieID, port, &toNocPktCntRxDesc, toNocPktCntRx, "number of p2p packets received on the rx after routing ")
-	buildDesc(dieID, port, &routeErrCntRxDesc, routeErrCntRx, "number of packets with routing lookup errors after processing received on the rx ")
-	buildDesc(dieID, port, &outErrCntRxDesc, outErrCntRx, "total number of erroneous packets after validation of packets received on the rx ")
-	buildDesc(dieID, port, &lengthErrCntRxDesc, lengthErrCntRx, "number of packets with length errors after validation of packets received on the rx ")
-	buildDesc(dieID, port, &rxBusiFlitNumDesc, rxBusiFlitNum, "number of flits of service packets received from the mac on the rx ")
-	buildDesc(dieID, port, &rxSendAckFlitNumDesc, rxSendAckFlit, "cumulative number of acks released to the peer on the rx ")
+func initBuildDescRx() {
+	buildUbDesc(&ubIpv4PktCntRxDesc, ubIpv4PktCntRx, "number of ipv4 ub packets received by rx on ub port")
+	buildUbDesc(&ubIpv6PktCntRxDesc, ubIpv6PktCntRx, "number of ipv6 ub packets received by rx on ub port")
+	buildUbDesc(&unicIpv4PktCntRxDesc, unicIpv4PktCntRx, "number of ipv4 unic packets received by rx on ub port")
+	buildUbDesc(&unicIpv6PktCntRxDesc, unicIpv6PktCntRx, "number of ipv6 unic packets received by rx on ub port")
+	buildUbDesc(&ubCompactPktCntRxDesc, ubCompactPktCntRx, "number of cfg6 packets received by rx on ub port")
+	buildUbDesc(&ubUmocCtphCntRxDesc, ubUmocCtphCntRx, "number of cfg7 clan packets received by rx on ub port")
+	buildUbDesc(&ubUmocNtphCntRxDesc, ubUmocNtphCntRx, "number of cfg7 not clan packets received by rx on ub port")
+	buildUbDesc(&ubMemPktCntRxDesc, ubMemPktCntRx, "number of ub mem packets received by rx on ub port")
+	buildUbDesc(&unknownPktCntRxDesc, unknownPktCntRx, "number of unknown packets received by rx on ub port")
+	buildUbDesc(&dropIndCntRxDesc, dropIndCntRx, "number of packet with drop_ind received by rx on ub port")
+	buildUbDesc(&errIndCntRxDesc, errIndCntRx, "number of err packets received by rx on ub port")
+	buildUbDesc(&toHostPktCntRxDesc, toHostPktCntRx, "number of landed packets after routing on the rx ub port")
+	buildUbDesc(&toImpPktCntRxDesc, toImpPktCntRx, "number of landed enumeration configuration and management packets after routing on the rx ub port")
+	buildUbDesc(&toMarPktCntRxDesc, toMarPktCntRx, "number of landed ub memory packets after routing on the rx ub port")
+	buildUbDesc(&toLinkPktCntRxDesc, toLinkPktCntRx, "number of packets forward from the rx to the tx of the same port after routing on ub port")
+	buildUbDesc(&toNocPktCntRxDesc, toNocPktCntRx, "number of p2p packets received on the rx after routing on ub port")
+	buildUbDesc(&routeErrCntRxDesc, routeErrCntRx, "number of packets with routing lookup errors after processing received on the rx ub port")
+	buildUbDesc(&outErrCntRxDesc, outErrCntRx, "total number of erroneous packets after validation of packets received on the rx ub port")
+	buildUbDesc(&lengthErrCntRxDesc, lengthErrCntRx, "number of packets with length errors after validation of packets received on the rx ub port")
+	buildUbDesc(&rxBusiFlitNumDesc, rxBusiFlitNum, "number of flits of service packets received from the mac on the rx ub port")
+	buildUbDesc(&rxSendAckFlitNumDesc, rxSendAckFlit, "cumulative number of acks released to the peer on the rx ub port")
 }
 
-func initBuildDescTx(dieID int, port common.NpuDevPortInfo) {
-	buildDesc(dieID, port, &ubIpv4PktCntTxDesc, ubIpv4PktCntTx, "number of ipv4 ub packets sent by tx on ")
-	buildDesc(dieID, port, &ubIpv6PktCntTxDesc, ubIpv6PktCntTx, "number of ipv6 ub packets sent by tx on ")
-	buildDesc(dieID, port, &unicIpv4PktCntTxDesc, unicIpv4PktCntTx, "number of ipv4 unic packets sent by tx on ")
-	buildDesc(dieID, port, &unicIpv6PktCntTxDesc, unicIpv6PktCntTx, "number of ipv6 unic packets sent by tx on ")
-	buildDesc(dieID, port, &ubCompactPktCntTxDesc, ubCompactPktCntTx, "number of cfg6 packets sent by tx on ")
-	buildDesc(dieID, port, &ubUmocCtphCntTxDesc, ubUmocCtphCntTx, "number of cfg7 clan packets sent by tx on ")
-	buildDesc(dieID, port, &ubUmocNtphCntTxDesc, ubUmocNtphCntTx, "number of cfg7 not clan packets sent by tx on ")
-	buildDesc(dieID, port, &ubMemPktCntTxDesc, ubMemPktCntTx, "number of ub mem packets sent by tx on ")
-	buildDesc(dieID, port, &unknownPktCntTxDesc, unknownPktCntTx, "number of unknown packets sent by tx on ")
-	buildDesc(dieID, port, &dropIndCntTxDesc, dropIndCntTx, "number of packet with drop_ind sent by tx on ")
-	buildDesc(dieID, port, &errIndCntTxDesc, errIndCntTx, "number of err packets sent by tx on ")
-	buildDesc(dieID, port, &lpbkIndCntTxDesc, lpbkIndCntTx, "number of packets looped back at nl by tx on ")
-	buildDesc(dieID, port, &outErrCntTxDesc, outErrCntTx, "total number of erroneous packets after validation of packets sent on the tx ")
-	buildDesc(dieID, port, &lengthErrCntTxDesc, lengthErrCntTx, "number of packets with length errors after validation of packets sent on the tx ")
-	buildDesc(dieID, port, &txBusiFlitNumDesc, txBusiFlitNum, "number of flits of service packets sent from the mac on the tx ")
-	buildDesc(dieID, port, &txRecvAckFlitDesc, txRecvAckFlit, "cumulative number of acks released to the peer on the tx ")
+func initBuildDescTx() {
+	buildUbDesc(&ubIpv4PktCntTxDesc, ubIpv4PktCntTx, "number of ipv4 ub packets sent by tx on ub port")
+	buildUbDesc(&ubIpv6PktCntTxDesc, ubIpv6PktCntTx, "number of ipv6 ub packets sent by tx on ub port")
+	buildUbDesc(&unicIpv4PktCntTxDesc, unicIpv4PktCntTx, "number of ipv4 unic packets sent by tx on ub port")
+	buildUbDesc(&unicIpv6PktCntTxDesc, unicIpv6PktCntTx, "number of ipv6 unic packets sent by tx on ub port")
+	buildUbDesc(&ubCompactPktCntTxDesc, ubCompactPktCntTx, "number of cfg6 packets sent by tx on ub port")
+	buildUbDesc(&ubUmocCtphCntTxDesc, ubUmocCtphCntTx, "number of cfg7 clan packets sent by tx on ub port")
+	buildUbDesc(&ubUmocNtphCntTxDesc, ubUmocNtphCntTx, "number of cfg7 not clan packets sent by tx on ub port")
+	buildUbDesc(&ubMemPktCntTxDesc, ubMemPktCntTx, "number of ub mem packets sent by tx on ub port")
+	buildUbDesc(&unknownPktCntTxDesc, unknownPktCntTx, "number of unknown packets sent by tx on ub port")
+	buildUbDesc(&dropIndCntTxDesc, dropIndCntTx, "number of packet with drop_ind sent by tx on ub port")
+	buildUbDesc(&errIndCntTxDesc, errIndCntTx, "number of err packets sent by tx on ub port")
+	buildUbDesc(&lpbkIndCntTxDesc, lpbkIndCntTx, "number of packets looped back at nl by tx on ub port")
+	buildUbDesc(&outErrCntTxDesc, outErrCntTx, "total number of erroneous packets after validation of packets sent on the tx ub port")
+	buildUbDesc(&lengthErrCntTxDesc, lengthErrCntTx, "number of packets with length errors after validation of packets sent on the tx ub port")
+	buildUbDesc(&txBusiFlitNumDesc, txBusiFlitNum, "number of flits of service packets sent from the mac on the tx ub port")
+	buildUbDesc(&txRecvAckFlitDesc, txRecvAckFlit, "cumulative number of acks released to the peer on the tx ub port")
 }
 
 func collectUbInfo(logicID int32) []*common.UBInfo {
@@ -536,6 +553,8 @@ func getUBStatInfo(logicID int32, uDieID, portID int) *common.UBInfo {
 	ubInfos := common.UBInfo{
 		UBCommonStats:  &common.UBCommonStats{},
 		UboeExtensions: &common.UBOEExtensions{},
+		Udie:           uDieID,
+		Port:           portID,
 	}
 	ubInfo, err := hccn.GetNPUUbStatInfo(logicID, int32(uDieID), int32(portID))
 	if err != nil {
@@ -609,14 +628,12 @@ func convertUBCommonStats(ubInfos *common.UBInfo, ubInfo map[string]string) {
 	ubInfos.UBCommonStats.CrcErrorSum = hccn.GetIntDataFromStr(ubInfo[crcErrorSum], crcErrorSum)
 }
 
-func initDesc(ch chan<- *prometheus.Desc, descs []*prometheus.Desc) {
-	for _, desc := range descs {
+func initDesc(ch chan<- *prometheus.Desc, desc *prometheus.Desc) {
+	if desc != nil {
 		ch <- desc
 	}
 }
 
-func buildDesc(dieID int, port common.NpuDevPortInfo, desc *[]*prometheus.Desc, metricName, help string) {
-	colcommon.BuildDescSlice(desc, fmt.Sprint(api.MetricsPrefix, metricName, "_",
-		strconv.Itoa(dieID), "_", strconv.Itoa(port.PortID)),
-		fmt.Sprint(help, "dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(port.PortID), " type:", port.PortType))
+func buildUbDesc(desc **prometheus.Desc, metricName, help string) {
+	*desc = colcommon.BuildDescWithLabel(fmt.Sprint(api.MetricsPrefix, metricName), help, ubCardLabel)
 }
