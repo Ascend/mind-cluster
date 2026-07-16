@@ -60,7 +60,7 @@
     - [分批诊断](./ascend-faultdiag-toolkit/05_usage/09_batch_diagnosis.md)
     - [客户定制化巡检](./ascend-faultdiag-toolkit/05_usage/10_customized_inspection.md)
   - [命令参考](./ascend-faultdiag-toolkit/06_api/menu_api.md)
-    - [API概述](./ascend-faultdiag-toolkit/06_api/01_api_overview.md)
+    - [API 概述](./ascend-faultdiag-toolkit/06_api/01_api_overview.md)
     - [基础命令](./ascend-faultdiag-toolkit/06_api/01_basic/menu_basic.md)
       - [help](./ascend-faultdiag-toolkit/06_api/01_basic/01_help.md)
       - [exit](./ascend-faultdiag-toolkit/06_api/01_basic/02_exit.md)

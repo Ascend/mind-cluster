@@ -9,7 +9,7 @@
 
 ## 操作步骤
 
-建议使用流程：根因节点清洗 -> 根因节点诊断
+建议使用流程：根因节点清洗 → 根因节点诊断
 
 1. SDK 导入
 
@@ -37,11 +37,11 @@
 
 ## 入参和返回值说明
 
-根因节点清洗入参和返回值，请阅读 `SDK 接口参考` 中的 [parse_root_cluster](../06_api/09_sdk_api.md#parse_root_cluster) 接口定义。
+根因节点清洗入参和返回值，请阅读 [SDK 接口参考](../06_api/09_sdk_api.md)中的 [parse_root_cluster](../06_api/09_sdk_api.md#parse_root_cluster) 接口定义。
 
-根因节点诊断入参和返回值，请阅读 `SDK 接口参考` 中的 [diag_root_cluster](../06_api/09_sdk_api.md#diag_root_cluster) 接口定义。
+根因节点诊断入参和返回值，请阅读 [SDK 接口参考](../06_api/09_sdk_api.md)中的 [diag_root_cluster](../06_api/09_sdk_api.md#diag_root_cluster) 接口定义。
 
 ## 参考
 
-- 完整 SDK 接口说明请参考 [SDK 接口参考](../06_api/09_sdk_api.md)
-- 命令行方式请参考 [故障诊断](./04_fault_diagnosis.md)
+- 完整 SDK 接口说明请参考 [SDK 接口参考](../06_api/09_sdk_api.md)。
+- 命令行方式请参考 [故障诊断](./04_fault_diagnosis.md)。

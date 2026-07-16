@@ -70,6 +70,7 @@
 
 **图 2** 基础应用场景方案
 
+<!-- markdownlint-disable-next-line MD033 -->
 <img src="../../figures/ascend-faultdiag/基础应用场景方案.png" title="基础应用场景方案" width="50%" />
 
 ## 使用流程

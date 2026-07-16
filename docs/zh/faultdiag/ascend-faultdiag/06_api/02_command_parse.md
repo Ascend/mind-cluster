@@ -21,21 +21,21 @@ ascend-fd parse [-h] [-i INPUT_PATH] -o OUTPUT_PATH \
 | 参数               | 类型   | 必选 | 说明                                             |
 |--------------------|--------|------|--------------------------------------------------|
 | -h, --help         | -      | 否   | 显示帮助信息                                     |
-| -i, --input_path   | string | 否   | 预处理数据输入路径                               |
-| -o, --output_path  | string | 是   | 清洗结果输出路径                                 |
-| --host_log         | string | 否   | 主机侧操作系统日志目录                           |
-| --device_log       | string | 否   | Device 侧日志目录                                |
-| --train_log        | string | 否   | 用户训练及推理日志目录，最多 20 个               |
-| --process_log      | string | 否   | CANN 应用类日志目录                              |
-| --env_check        | string | 否   | NPU 网口、状态信息、资源信息目录                 |
-| --dl_log           | string | 否   | MindCluster 组件日志目录                         |
-| --mindie_log       | string | 否   | MindIE 组件日志目录                              |
-| --amct_log         | string | 否   | AMCT 组件日志目录                                |
-| --bmc_log          | string | 否   | BMC 组件日志目录                                 |
-| --lcne_log         | string | 否   | LCNE 组件日志目录                                |
-| --bus_log          | string | 否   | Ascend 950 系列 LCNE 组件日志目录                |
-| --pymotor_vllm_log | string | 否   | PyMotor/vLLM 日志目录                            |
-| --custom_log       | string | 否   | 自定义解析文件目录                               |
+| -i, --input_path   | String | 否   | 预处理数据输入路径                               |
+| -o, --output_path  | String | 是   | 清洗结果输出路径                                 |
+| --host_log         | String | 否   | 主机侧操作系统日志目录                           |
+| --device_log       | String | 否   | Device 侧日志目录                                |
+| --train_log        | String | 否   | 用户训练及推理日志目录，最多 20 个               |
+| --process_log      | String | 否   | CANN 应用类日志目录                              |
+| --env_check        | String | 否   | NPU 网口、状态信息、资源信息目录                 |
+| --dl_log           | String | 否   | MindCluster 组件日志目录                         |
+| --mindie_log       | String | 否   | MindIE 组件日志目录                              |
+| --amct_log         | String | 否   | AMCT 组件日志目录                                |
+| --bmc_log          | String | 否   | BMC 组件日志目录                                 |
+| --lcne_log         | String | 否   | LCNE 组件日志目录                                |
+| --bus_log          | String | 否   | Ascend 950 系列 LCNE 组件日志目录                |
+| --pymotor_vllm_log | String | 否   | PyMotor/vLLM 日志目录                            |
+| --custom_log       | String | 否   | 自定义解析文件目录                               |
 | -p, --performance  | -      | 否   | 清洗设备资源、网络拥塞两个性能劣化检测模块的数据 |
 
 ## 使用示例
@@ -73,7 +73,6 @@ ascend-fd parse --process_log /tmp/cann_log --train_log /tmp/train_log -o /tmp/p
     ├── nad_clean.csv
     ├── nic_clean.csv
     ├── process_{core_num}.csv
-    ├── plog-parser-{pid}-{0/1}.log
     ...
     └── plog-parser-{pid}-{0/1}.log
 ```
@@ -95,5 +94,5 @@ ascend-fd parse --process_log /tmp/cann_log --train_log /tmp/train_log -o /tmp/p
 
 ## 注意事项
 
-- 清洗前，请确保输出目录有 5GB 以上的可用磁盘空间
-- ascend-fd 运行错误码请查阅[组件错误码](../07_references/04_appendix.md#组件错误码)
+- 清洗前，请确保输出目录有 5GB 以上的可用磁盘空间。
+- ascend-fd 运行错误码请查阅[组件错误码](../07_references/04_appendix.md#组件错误码)。

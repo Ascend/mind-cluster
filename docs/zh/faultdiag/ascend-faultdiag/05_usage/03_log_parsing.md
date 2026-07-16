@@ -14,7 +14,7 @@
     mkdir <output_dir>
     ```
 
-    > - `output_dir` 清洗输出目录
+    > - `output_dir` 清洗输出目录。
 
 ### 全量清洗（推荐）
 
@@ -26,8 +26,8 @@
 ascend-fd parse -i <input_dir> -o <output_dir>
 ```
 
-> - `input_dir` 采集目录
-> - `output_dir` 清洗输出目录
+> - `input_dir` 采集目录。
+> - `output_dir` 清洗输出目录。
 
 如果需要同时清洗性能劣化（设备资源和网络拥塞）数据，添加 `-p` 参数：
 
@@ -35,8 +35,8 @@ ascend-fd parse -i <input_dir> -o <output_dir>
 ascend-fd parse -i <input_dir> -o <output_dir> -p
 ```
 
-> - `input_dir` 采集目录
-> - `output_dir` 清洗输出目录
+> - `input_dir` 采集目录。
+> - `output_dir` 清洗输出目录。
 
 回显如下表示清洗成功：
 

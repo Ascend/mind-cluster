@@ -20,18 +20,18 @@ ascend-fd single-diag [-h] [-i INPUT_PATH] -o OUTPUT_PATH \
 | 参数               | 类型   | 必选 | 说明                              |
 |--------------------|--------|------|-----------------------------------|
 | -h, --help         | -      | 否   | 显示帮助信息                      |
-| -i, --input_path   | string | 否   | 预处理数据输入路径                |
-| -o, --output_path  | string | 是   | 诊断结果输出路径                  |
-| --host_log         | string | 否   | 主机侧操作系统日志目录            |
-| --device_log       | string | 否   | Device 侧日志目录                 |
-| --train_log        | string | 否   | 用户训练及推理日志目录            |
-| --process_log      | string | 否   | CANN 应用类日志目录               |
-| --env_check        | string | 否   | NPU 网口、状态信息、资源信息目录  |
-| --dl_log           | string | 否   | MindCluster 组件日志目录          |
-| --mindie_log       | string | 否   | MindIE 组件日志目录               |
-| --amct_log         | string | 否   | AMCT 组件日志目录                 |
-| --bus_log          | string | 否   | Ascend 950 系列 LCNE 组件日志目录 |
-| --pymotor_vllm_log | string | 否   | PyMotor/vLLM 日志目录             |
+| -i, --input_path   | String | 否   | 预处理数据输入路径                |
+| -o, --output_path  | String | 是   | 诊断结果输出路径                  |
+| --host_log         | String | 否   | 主机侧操作系统日志目录            |
+| --device_log       | String | 否   | Device 侧日志目录                 |
+| --train_log        | String | 否   | 用户训练及推理日志目录            |
+| --process_log      | String | 否   | CANN 应用类日志目录               |
+| --env_check        | String | 否   | NPU 网口、状态信息、资源信息目录  |
+| --dl_log           | String | 否   | MindCluster 组件日志目录          |
+| --mindie_log       | String | 否   | MindIE 组件日志目录               |
+| --amct_log         | String | 否   | AMCT 组件日志目录                 |
+| --bus_log          | String | 否   | Ascend 950 系列 LCNE 组件日志目录 |
+| --pymotor_vllm_log | String | 否   | PyMotor/vLLM 日志目录             |
 
 ## 使用示例
 
@@ -49,8 +49,8 @@ ascend-fd single-diag --process_log {采集目录}/process_log -o /tmp/diag_out
 
 ## 注意事项
 
-- 单机诊断默认返回故障事件分析结果
-- 如果诊断出故障，状态码为具体故障码；未诊断出故障时，状态码为 `NORMAL_OR_UNSUPPORTED`
-- 单机诊断会扫描节点中所有有效日志的故障事件
-- ascend-fd 运行错误码请查阅[组件错误码](../07_references/04_appendix.md#组件错误码)
-- 单机诊断结果可参考 [基础诊断](03_command_diag.md#基础诊断)
+- 单机诊断默认返回故障事件分析结果。
+- 如果诊断出故障，状态码为具体故障码；未诊断出故障时，状态码为 `NORMAL_OR_UNSUPPORTED`。
+- 单机诊断会扫描节点中所有有效日志的故障事件。
+- ascend-fd 运行错误码请查阅[组件错误码](../07_references/04_appendix.md#组件错误码)。
+- 单机诊断结果可参考 [基础诊断](03_command_diag.md#基础诊断)。
