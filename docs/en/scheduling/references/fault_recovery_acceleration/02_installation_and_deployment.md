@@ -12,6 +12,7 @@ If you require third-party licenses, obtain them through legal means, unless oth
 
 ### Constraints
 
+- Currently, the high availability feature based on MindIO and MindSpeed-llm provides high availability examples to help users quickly experience this feature. Currently, only the adaptation of basic models and basic training features is completed. The compatibility of all training features is not implemented. If you have any compatibility requirements for a training feature, please submit an issue in the community, and we will quickly complete the adaptation.
 - MindIO provides three features: TTP, UCE, and ARF. MindIO TTP supports the Atlas 800 training server (model: 9000), while MindIO UCE and MindIO ARF do not support this server type.
 - Many large model frameworks support ZeRO (Zero Redundancy Optimizer) to reduce memory usage. Currently, MindIO TFT only supports ZeRO-1 and requires the DP (Data Parallelism) Size to be an even number. Different features also impose different restrictions on the DP Size:
     - MindIO TTP
