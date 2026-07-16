@@ -300,9 +300,8 @@ func TestUpdateTelegrafUB(t *testing.T) {
 		chips := mockGetNPUChipList()
 		c := UbCollector{}
 		mockUBCache(n, chips, colcommon.GetCacheKey(&c))
-		fieldsMap := make(map[string]map[string]interface{})
-		result := c.UpdateTelegraf(fieldsMap, n, containerInfos, chips)
-		convey.So(result, convey.ShouldNotBeEmpty)
+		received := drainUpdateTelegraf(&c, n, containerInfos, chips)
+		convey.So(received, convey.ShouldNotBeEmpty)
 	})
 }
 

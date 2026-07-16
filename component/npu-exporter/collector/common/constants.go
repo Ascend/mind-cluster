@@ -74,12 +74,6 @@ const (
 	DecimalPlaces = 2
 	// BitSize is the bit size of float64
 	BitSize = 64
-	// GeneralDevTagKey is the default value of devTagKey in telegraf, it means the metric is not related to any device
-	GeneralDevTagKey = "GeneralDevTagKey"
-	// KeyForTextMetrics is the key for text metrics
-	KeyForTextMetrics = "KeyForTextMetrics"
-	// KeyForMetricsWithCustomLabels is the key for metrics with custom labels
-	KeyForMetricsWithCustomLabels = "KeyForMetricsWithCustomLabels"
 	// MachineInfoCardDescKey is the key for machine info card desc
 	MachineInfoCardDescKey = "MachineCardNum"
 )

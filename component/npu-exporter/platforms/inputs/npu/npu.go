@@ -17,7 +17,10 @@ package npu
 
 import (
 	_ "embed"
+	"sort"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/influxdata/telegraf"
 	"github.com/influxdata/telegraf/plugins/inputs"
@@ -32,7 +35,10 @@ import (
 var sampleConfig string
 
 const (
-	num2 = 2
+	devName       = "ascend"
+	deviceTagKey  = "device"
+	vDevTagKey    = "vdev_id"
+	chanCacheSize = 128
 )
 
 // WatchNPU npu watch struct
@@ -47,106 +53,138 @@ func (*WatchNPU) SampleConfig() string {
 
 // Gather used to gather information from dcmi info and hccn tool info
 func (npu *WatchNPU) Gather(acc telegraf.Accumulator) error {
-
-	fieldsMap := make(map[string]map[string]interface{})
-	fieldsMap[common.GeneralDevTagKey] = make(map[string]interface{})
-	fieldsMap[common.KeyForMetricsWithCustomLabels] = make(map[string]interface{})
-	fieldsMap[common.KeyForTextMetrics] = make(map[string]interface{})
-	const devName = "ascend"
-
-	devTagValue := ""
-	if cardType := npu.collector.Dmgr.GetDevType(); cardType == api.Ascend910A3 || cardType == api.Ascend910B ||
-		cardType == api.Ascend910A {
-		devTagValue = strings.ToLower(api.Ascend910)
-	} else if cardType == api.Ascend910A5 {
-		devTagValue = api.NPULowerCase
-	} else {
-		devTagValue = strings.ToLower(cardType)
-	}
+	devTagValue := getDevTagValue(npu.collector.Dmgr.GetDevType())
 	logger.DynamicConfigure(logger.Config{Acc: acc})
 
 	containerMap := common.GetContainerNPUInfo(npu.collector)
 	chips := common.GetChipListWithVNPU(npu.collector)
 	single, multi, plugin := common.GetChainsSnapshot()
 
-	fieldsMap = npu.gatherChain(fieldsMap, single, containerMap, chips)
-	fieldsMap = npu.gatherChain(fieldsMap, multi, containerMap, chips)
-	fieldsMap = npu.gatherChain(fieldsMap, plugin, containerMap, chips)
+	ch := make(chan common.TelegrafMetric, chanCacheSize)
+	done := make(chan struct{})
+	go func() {
+		consumeAndReport(acc, ch, devTagValue)
+		close(done)
+	}()
 
-	handleGeneralMetrics(acc, fieldsMap, devName, devTagValue)
-	handleMetricsWithCustomLabels(acc, fieldsMap)
-	handleTextMetrics(acc, fieldsMap)
-
-	for key, fields := range fieldsMap {
-		ids := strings.Split(key, "_")
-		devTag := map[string]string{"device": devTagValue + "-" + ids[0]}
-		if len(ids) >= num2 {
-			devTag["vdev_id"] = ids[1]
-		}
-		if len(fields) == 0 {
-			continue
-		}
-		acc.AddFields(devName, fields, devTag)
+	for _, chain := range [][]common.MetricsCollector{single, multi, plugin} {
+		npu.collectChain(ch, chain, containerMap, chips)
 	}
+	close(ch)
+	<-done
 
 	return nil
 }
 
-func handleTextMetrics(acc telegraf.Accumulator, fieldsMap map[string]map[string]interface{}) {
-	textMetrics := fieldsMap[common.KeyForTextMetrics]
-	for key, metric := range textMetrics {
-		data, ok := metric.(common.TelegrafData)
-		if !ok {
-			continue
-		}
-		if len(data.Metrics) == 0 {
-			continue
-		}
-		acc.AddFields(removeLastDashAndSuffix(key), data.Metrics, data.Labels, data.Timestamp)
+func getDevTagValue(cardType string) string {
+	if cardType == api.Ascend910A3 || cardType == api.Ascend910B || cardType == api.Ascend910A {
+		return strings.ToLower(api.Ascend910)
 	}
-	delete(fieldsMap, common.KeyForTextMetrics)
+	if cardType == api.Ascend910A5 {
+		return api.NPULowerCase
+	}
+	return strings.ToLower(cardType)
 }
 
-func handleMetricsWithCustomLabels(acc telegraf.Accumulator, fieldsMap map[string]map[string]interface{}) {
-	metrics := fieldsMap[common.KeyForMetricsWithCustomLabels]
-	for _, metric := range metrics {
-		data, ok := metric.(common.TelegrafData)
-		if !ok {
-			continue
-		}
-		if len(data.Metrics) == 0 {
-			continue
-		}
-		acc.AddFields(removeLastDashAndSuffix(data.Measurement), data.Metrics, data.Labels, data.Timestamp)
-	}
-	delete(fieldsMap, common.KeyForMetricsWithCustomLabels)
-}
-
-func removeLastDashAndSuffix(s string) string {
-	idx := strings.LastIndex(s, "-")
-	if idx == -1 {
-		return s
-	}
-	return s[:idx]
-}
-
-func handleGeneralMetrics(acc telegraf.Accumulator, fieldsMap map[string]map[string]interface{}, devName string, devTagValue string) {
-	generalMetrics := fieldsMap[common.GeneralDevTagKey]
-	// after the report is completed, deleted to avoid repeated reporting in the for loop
-	delete(fieldsMap, common.GeneralDevTagKey)
-	if len(generalMetrics) == 0 {
-		return
-	}
-	acc.AddFields(devName, generalMetrics, map[string]string{"device": devTagValue})
-}
-
-func (npu *WatchNPU) gatherChain(fieldsMap map[string]map[string]interface{}, chain []common.MetricsCollector,
-	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) map[string]map[string]interface{} {
-
+func (npu *WatchNPU) collectChain(ch chan<- common.TelegrafMetric, chain []common.MetricsCollector,
+	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
 	for _, collector := range chain {
-		fieldsMap = collector.UpdateTelegraf(fieldsMap, npu.collector, containerMap, chips)
+		if collector == nil {
+			continue
+		}
+		collector.UpdateTelegraf(ch, npu.collector, containerMap, chips)
 	}
-	return fieldsMap
+}
+
+type metricGroup struct {
+	measurement string
+	tags        map[string]string
+	fields      map[string]interface{}
+	timestamp   time.Time
+}
+
+// consumeAndReport drains the channel, applies the default device tag, aggregates data by
+// measurement + labels, dedups duplicated fields (keeping the first declaration) and reports.
+func consumeAndReport(acc telegraf.Accumulator, ch <-chan common.TelegrafMetric, devTagValue string) {
+	groups := make(map[string]*metricGroup)
+	order := make([]string, 0)
+	for metric := range ch {
+		if len(metric.Fields) == 0 {
+			continue
+		}
+		measurement := metric.Measurement
+		if measurement == "" {
+			measurement = devName
+		}
+		tags := buildTags(metric, devTagValue)
+		key := groupKey(measurement, tags)
+		group, ok := groups[key]
+		if !ok {
+			group = &metricGroup{
+				measurement: measurement,
+				tags:        tags,
+				fields:      make(map[string]interface{}),
+				timestamp:   metric.Timestamp,
+			}
+			groups[key] = group
+			order = append(order, key)
+		}
+		mergeFields(group.fields, metric.Fields)
+	}
+
+	for _, key := range order {
+		group := groups[key]
+		if len(group.fields) == 0 {
+			continue
+		}
+		if group.timestamp.IsZero() {
+			acc.AddFields(group.measurement, group.fields, group.tags)
+			continue
+		}
+		acc.AddFields(group.measurement, group.fields, group.tags, group.timestamp)
+	}
+}
+
+func buildTags(data common.TelegrafMetric, devTagValue string) map[string]string {
+	if data.Labels != nil {
+		return data.Labels
+	}
+	if data.DeviceID < 0 {
+		return map[string]string{deviceTagKey: devTagValue}
+	}
+	tags := map[string]string{deviceTagKey: devTagValue + "-" + strconv.Itoa(int(data.DeviceID))}
+	if data.VDevID >= 0 {
+		tags[vDevTagKey] = strconv.Itoa(int(data.VDevID))
+	}
+	return tags
+}
+
+func groupKey(measurement string, tags map[string]string) string {
+	keys := make([]string, 0, len(tags))
+	for k := range tags {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	var builder strings.Builder
+	builder.WriteString(measurement)
+	for _, k := range keys {
+		builder.WriteString("|")
+		builder.WriteString(k)
+		builder.WriteString("=")
+		builder.WriteString(tags[k])
+	}
+	return builder.String()
+}
+
+func mergeFields(dst, src map[string]interface{}) {
+	for name, value := range src {
+		if _, exists := dst[name]; exists {
+			logger.Warnf("duplicate metric field detected, keeping first declaration, ignoring duplicate: %s", name)
+			continue
+		}
+		dst[name] = value
+	}
 }
 
 func init() {

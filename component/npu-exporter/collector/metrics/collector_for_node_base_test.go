@@ -137,9 +137,9 @@ func TestNodeBaseCollectorCollectToCache(t *testing.T) {
 }
 
 type updatePromTestCase struct {
-	name         string
-	setupCache   func(*NodeBaseCollector)
-	expectCall   bool
+	name       string
+	setupCache func(*NodeBaseCollector)
+	expectCall bool
 }
 
 func buildUpdatePromTestCases() []updatePromTestCase {
@@ -153,7 +153,7 @@ func buildUpdatePromTestCases() []updatePromTestCase {
 					driverVersion:   mockDriverVersion,
 				})
 			},
-			expectCall:   true,
+			expectCall: true,
 		},
 		{
 			name: "should skip update when cache not found",
@@ -191,17 +191,16 @@ func TestNodeBaseCollectorUpdatePrometheus(t *testing.T) {
 }
 
 type updateTelegrafTestCase struct {
-	name           string
-	setupCache     func(*NodeBaseCollector)
-	setupFieldsMap func() map[string]map[string]interface{}
-	expectResult   bool
-	expectLabels   map[string]string
+	name         string
+	setupCache   func(*NodeBaseCollector)
+	expectData   bool
+	expectLabels map[string]string
 }
 
 func buildUpdateTelegrafTestCases() []updateTelegrafTestCase {
 	return []updateTelegrafTestCase{
 		{
-			name: "should write TelegrafData when cache exists",
+			name: "should write TelegrafMetric when cache exists",
 			setupCache: func(c *NodeBaseCollector) {
 				c.LocalCache.Store(common.GetCacheKey(c), nodeBaseInfoCache{
 					timestamp:       time.Now(),
@@ -209,39 +208,24 @@ func buildUpdateTelegrafTestCases() []updateTelegrafTestCase {
 					driverVersion:   mockDriverVersion,
 				})
 			},
-			setupFieldsMap: func() map[string]map[string]interface{} {
-				return map[string]map[string]interface{}{
-					common.KeyForMetricsWithCustomLabels: {},
-				}
-			},
-			expectResult: true,
+			expectData: true,
 			expectLabels: map[string]string{
 				exporterVersionLabel: mockExporterVersion,
 				driverVersionLabel:   mockDriverVersion,
 			},
 		},
 		{
-			name: "should return original fieldsMap when cache not found",
+			name: "should write nothing when cache not found",
 			setupCache: func(c *NodeBaseCollector) {
 			},
-			setupFieldsMap: func() map[string]map[string]interface{} {
-				return map[string]map[string]interface{}{
-					common.KeyForMetricsWithCustomLabels: {},
-				}
-			},
-			expectResult: false,
+			expectData: false,
 		},
 		{
-			name: "should return original fieldsMap when cache type mismatch",
+			name: "should write nothing when cache type mismatch",
 			setupCache: func(c *NodeBaseCollector) {
 				c.LocalCache.Store(common.GetCacheKey(c), "invalid_type")
 			},
-			setupFieldsMap: func() map[string]map[string]interface{} {
-				return map[string]map[string]interface{}{
-					common.KeyForMetricsWithCustomLabels: {},
-				}
-			},
-			expectResult: false,
+			expectData: false,
 		},
 	}
 }
@@ -251,54 +235,14 @@ func TestNodeBaseCollectorUpdateTelegraf(t *testing.T) {
 		convey.Convey(tt.name, t, func() {
 			collector := &NodeBaseCollector{}
 			tt.setupCache(collector)
-			fieldsMap := tt.setupFieldsMap()
 
-			result := collector.UpdateTelegraf(fieldsMap, nil, nil, nil)
-			convey.So(result, convey.ShouldNotBeNil)
-
-			if tt.expectResult {
-				customLabelsMap := result[common.KeyForMetricsWithCustomLabels]
-				data, ok := customLabelsMap[measurementForNodeBaseInfo].(common.TelegrafData)
-				convey.So(ok, convey.ShouldBeTrue)
-				convey.So(data.Measurement, convey.ShouldEqual, measurementForNodeBaseInfo)
-				convey.So(data.Labels, convey.ShouldResemble, tt.expectLabels)
-				convey.So(data.Metrics, convey.ShouldContainKey, "node_base_info")
-			}
-		})
-	}
-}
-
-type updateTelegrafInitFieldsTestCase struct {
-	name       string
-	expectInit bool
-}
-
-func buildUpdateTelegrafInitFieldsTestCases() []updateTelegrafInitFieldsTestCase {
-	return []updateTelegrafInitFieldsTestCase{
-		{
-			name:       "should initialize KeyForMetricsWithCustomLabels when it is nil",
-			expectInit: true,
-		},
-	}
-}
-
-func TestNodeBaseCollectorUpdateTelegrafInitFields(t *testing.T) {
-	for _, tt := range buildUpdateTelegrafInitFieldsTestCases() {
-		convey.Convey(tt.name, t, func() {
-			collector := &NodeBaseCollector{}
-			collector.LocalCache.Store(common.GetCacheKey(collector), nodeBaseInfoCache{
-				timestamp:       time.Now(),
-				exporterVersion: mockExporterVersion,
-				driverVersion:   mockDriverVersion,
-			})
-			fieldsMap := map[string]map[string]interface{}{
-				common.KeyForMetricsWithCustomLabels: {},
-			}
-
-			result := collector.UpdateTelegraf(fieldsMap, nil, nil, nil)
-
-			if tt.expectInit {
-				convey.So(result[common.KeyForMetricsWithCustomLabels], convey.ShouldNotBeNil)
+			received := drainUpdateTelegraf(collector, nil, nil, nil)
+			if tt.expectData {
+				convey.So(received, convey.ShouldHaveLength, 1)
+				convey.So(received[0].Labels, convey.ShouldResemble, tt.expectLabels)
+				convey.So(received[0].Fields, convey.ShouldContainKey, "node_base_info")
+			} else {
+				convey.So(received, convey.ShouldBeEmpty)
 			}
 		})
 	}

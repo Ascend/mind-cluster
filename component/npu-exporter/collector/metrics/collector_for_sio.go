@@ -99,8 +99,8 @@ func (c *SioCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommo
 }
 
 // UpdateTelegraf update telegraf metrics
-func (c *SioCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
+func (c *SioCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	caches := colcommon.GetInfoFromCache[sioCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
@@ -108,15 +108,15 @@ func (c *SioCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{
 		if !ok {
 			continue
 		}
-		fieldMap := getFieldMap(fieldsMap, cache.chip.LogicID)
 
 		extInfo := cache.extInfo
 		if extInfo == nil {
 			continue
 		}
 
-		doUpdateTelegraf(fieldMap, descSioCrcTxErrCnt, extInfo.TxErrCnt, "")
-		doUpdateTelegraf(fieldMap, descSioCrcRxErrCnt, extInfo.RxErrCnt, "")
+		metric := colcommon.NewDeviceMetric(cache.chip.LogicID)
+		doUpdateTelegraf(metric.Fields, descSioCrcTxErrCnt, extInfo.TxErrCnt, "")
+		doUpdateTelegraf(metric.Fields, descSioCrcRxErrCnt, extInfo.RxErrCnt, "")
+		ch <- metric
 	}
-	return fieldsMap
 }

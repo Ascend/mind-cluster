@@ -115,8 +115,8 @@ func (c *DdrCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcommo
 }
 
 // UpdateTelegraf update telegraf metrics
-func (c *DdrCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
+func (c *DdrCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	caches := colcommon.GetInfoFromCache[ddrCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
@@ -125,7 +125,6 @@ func (c *DdrCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{
 			logger.Debugf("cacheKey(%v) not found", chip.PhyId)
 			continue
 		}
-		fieldMap := getFieldMap(fieldsMap, cache.chip.LogicID)
 
 		memoryInfo := cache.extInfo
 		if memoryInfo == nil {
@@ -135,9 +134,9 @@ func (c *DdrCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{
 		memorySize := memoryInfo.MemorySize
 		memoryAvailable := memoryInfo.MemoryAvailable
 
-		doUpdateTelegraf(fieldMap, descTotalMemory, memorySize, "")
-		doUpdateTelegraf(fieldMap, descUsedMemory, memorySize-memoryAvailable, "")
-
+		metric := colcommon.NewDeviceMetric(cache.chip.LogicID)
+		doUpdateTelegraf(metric.Fields, descTotalMemory, memorySize, "")
+		doUpdateTelegraf(metric.Fields, descUsedMemory, memorySize-memoryAvailable, "")
+		ch <- metric
 	}
-	return fieldsMap
 }

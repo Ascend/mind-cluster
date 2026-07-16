@@ -172,8 +172,8 @@ func (c *RoceCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colcomm
 }
 
 // UpdateTelegraf update telegraf metrics
-func (c *RoceCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
+func (c *RoceCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 
 	caches := colcommon.GetInfoFromCache[roceCache](n, colcommon.GetCacheKey(c))
 	for _, chip := range chips {
@@ -181,36 +181,36 @@ func (c *RoceCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface
 		if !ok {
 			continue
 		}
-		fieldMap := getFieldMap(fieldsMap, cache.chip.LogicID)
 
 		extInfo := cache.extInfo
 		if extInfo == nil {
 			continue
 		}
-		doUpdateTelegraf(fieldMap, descMacRxPauseNum, extInfo.MacRxPauseNum, "")
-		doUpdateTelegraf(fieldMap, descMacTxPauseNum, extInfo.MacTxPauseNum, "")
-		doUpdateTelegraf(fieldMap, descMacRxPfcPktNum, extInfo.MacRxPfcPktNum, "")
-		doUpdateTelegraf(fieldMap, descMacTxPfcPktNum, extInfo.MacTxPfcPktNum, "")
-		doUpdateTelegraf(fieldMap, descMacRxBadPktNum, extInfo.MacRxBadPktNum, "")
-		doUpdateTelegraf(fieldMap, descMacTxBadPktNum, extInfo.MacTxBadPktNum, "")
-		doUpdateTelegraf(fieldMap, descMacTxBadOctNum, extInfo.MacTxBadOctNum, "")
-		doUpdateTelegraf(fieldMap, descMacRxBadOctNum, extInfo.MacRxBadOctNum, "")
-		doUpdateTelegraf(fieldMap, descRxFCSNum, extInfo.MacRXFcsErrPktNum, "")
+		metric := colcommon.NewDeviceMetric(cache.chip.LogicID)
+		doUpdateTelegraf(metric.Fields, descMacRxPauseNum, extInfo.MacRxPauseNum, "")
+		doUpdateTelegraf(metric.Fields, descMacTxPauseNum, extInfo.MacTxPauseNum, "")
+		doUpdateTelegraf(metric.Fields, descMacRxPfcPktNum, extInfo.MacRxPfcPktNum, "")
+		doUpdateTelegraf(metric.Fields, descMacTxPfcPktNum, extInfo.MacTxPfcPktNum, "")
+		doUpdateTelegraf(metric.Fields, descMacRxBadPktNum, extInfo.MacRxBadPktNum, "")
+		doUpdateTelegraf(metric.Fields, descMacTxBadPktNum, extInfo.MacTxBadPktNum, "")
+		doUpdateTelegraf(metric.Fields, descMacTxBadOctNum, extInfo.MacTxBadOctNum, "")
+		doUpdateTelegraf(metric.Fields, descMacRxBadOctNum, extInfo.MacRxBadOctNum, "")
+		doUpdateTelegraf(metric.Fields, descRxFCSNum, extInfo.MacRXFcsErrPktNum, "")
 
-		doUpdateTelegraf(fieldMap, descRoceRxAllPktNum, extInfo.RoceRxAllPktNum, "")
-		doUpdateTelegraf(fieldMap, descRoceTxAllPktNum, extInfo.RoceTxAllPktNum, "")
-		doUpdateTelegraf(fieldMap, descRoceRxErrPktNum, extInfo.RoceRxErrPktNum, "")
-		doUpdateTelegraf(fieldMap, descRoceTxErrPktNum, extInfo.RoceTxErrPktNum, "")
-		doUpdateTelegraf(fieldMap, descRoceRxCnpPktNum, extInfo.RoceRxCnpPktNum, "")
-		doUpdateTelegraf(fieldMap, descRoceTxCnpPktNum, extInfo.RoceTxCnpPktNum, "")
-		doUpdateTelegraf(fieldMap, descRoceNewPktRtyNum, extInfo.RoceNewPktRtyNum, "")
-		doUpdateTelegraf(fieldMap, descRoceUnexpectedAcktNum, extInfo.RoceUnexpectedAckNum, "")
-		doUpdateTelegraf(fieldMap, descRoceOutOfOrderNum, extInfo.RoceOutOfOrderNum, "")
-		doUpdateTelegraf(fieldMap, descRoceVerificationErrNum, extInfo.RoceVerificationErrNum, "")
-		doUpdateTelegraf(fieldMap, descRoceQpStatusErrNum, extInfo.RoceQpStatusErrNum, "")
-		doUpdateTelegraf(fieldMap, descRxECNNum, extInfo.RoceEcnDBNum, "")
+		doUpdateTelegraf(metric.Fields, descRoceRxAllPktNum, extInfo.RoceRxAllPktNum, "")
+		doUpdateTelegraf(metric.Fields, descRoceTxAllPktNum, extInfo.RoceTxAllPktNum, "")
+		doUpdateTelegraf(metric.Fields, descRoceRxErrPktNum, extInfo.RoceRxErrPktNum, "")
+		doUpdateTelegraf(metric.Fields, descRoceTxErrPktNum, extInfo.RoceTxErrPktNum, "")
+		doUpdateTelegraf(metric.Fields, descRoceRxCnpPktNum, extInfo.RoceRxCnpPktNum, "")
+		doUpdateTelegraf(metric.Fields, descRoceTxCnpPktNum, extInfo.RoceTxCnpPktNum, "")
+		doUpdateTelegraf(metric.Fields, descRoceNewPktRtyNum, extInfo.RoceNewPktRtyNum, "")
+		doUpdateTelegraf(metric.Fields, descRoceUnexpectedAcktNum, extInfo.RoceUnexpectedAckNum, "")
+		doUpdateTelegraf(metric.Fields, descRoceOutOfOrderNum, extInfo.RoceOutOfOrderNum, "")
+		doUpdateTelegraf(metric.Fields, descRoceVerificationErrNum, extInfo.RoceVerificationErrNum, "")
+		doUpdateTelegraf(metric.Fields, descRoceQpStatusErrNum, extInfo.RoceQpStatusErrNum, "")
+		doUpdateTelegraf(metric.Fields, descRxECNNum, extInfo.RoceEcnDBNum, "")
+		ch <- metric
 	}
-	return fieldsMap
 }
 func getMainStatInfo(statInfo map[string]int) *common.StatInfo {
 	mainStatInfo := common.StatInfo{}

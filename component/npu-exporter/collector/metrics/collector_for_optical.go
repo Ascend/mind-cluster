@@ -287,8 +287,8 @@ func (c *OpticalCollector) UpdatePrometheus(ch chan<- prometheus.Metric, n *colc
 }
 
 // UpdateTelegraf update telegraf metrics
-func (c *OpticalCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *colcommon.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) map[string]map[string]interface{} {
+func (c *OpticalCollector) UpdateTelegraf(ch chan<- colcommon.TelegrafMetric, n *colcommon.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []colcommon.HuaWeiAIChip) {
 	if colcommon.DevType == api.Ascend910A5 {
 		// Update Npu specific optical metrics
 		caches := colcommon.GetInfoFromCache[opticalNpuCache](n, colcommon.GetCacheKey(c))
@@ -297,10 +297,11 @@ func (c *OpticalCollector) UpdateTelegraf(fieldsMap map[string]map[string]interf
 			if !ok {
 				continue
 			}
-			fieldMap := getFieldMap(fieldsMap, cache.chip.LogicID)
-			telegrafUpdateOpticalInfo(cache, fieldMap)
+			metric := colcommon.NewDeviceMetric(cache.chip.LogicID)
+			telegrafUpdateOpticalInfo(cache, metric.Fields)
+			ch <- metric
 		}
-		return fieldsMap
+		return
 	}
 	// Update regular optical metrics
 	caches := colcommon.GetInfoFromCache[opticalCache](n, colcommon.GetCacheKey(c))
@@ -309,27 +310,27 @@ func (c *OpticalCollector) UpdateTelegraf(fieldsMap map[string]map[string]interf
 		if !ok {
 			continue
 		}
-		fieldMap := getFieldMap(fieldsMap, cache.chip.LogicID)
 
 		extInfo := cache.extInfo
 		if extInfo == nil {
 			continue
 		}
-		doUpdateTelegrafWithValidateNum(fieldMap, descOpticalState, extInfo.OpticalState, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descOpticalVcc, extInfo.OpticalVcc, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descOpticalTemp, extInfo.OpticalTemp, "")
+		metric := colcommon.NewDeviceMetric(cache.chip.LogicID)
+		doUpdateTelegrafWithValidateNum(metric.Fields, descOpticalState, extInfo.OpticalState, "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descOpticalVcc, extInfo.OpticalVcc, "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descOpticalTemp, extInfo.OpticalTemp, "")
 
-		doUpdateTelegrafWithValidateNum(fieldMap, descOpticalTxPower0, extInfo.OpticalTxPower0, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descOpticalTxPower1, extInfo.OpticalTxPower1, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descOpticalTxPower2, extInfo.OpticalTxPower2, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descOpticalTxPower3, extInfo.OpticalTxPower3, "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descOpticalTxPower0, extInfo.OpticalTxPower0, "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descOpticalTxPower1, extInfo.OpticalTxPower1, "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descOpticalTxPower2, extInfo.OpticalTxPower2, "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descOpticalTxPower3, extInfo.OpticalTxPower3, "")
 
-		doUpdateTelegrafWithValidateNum(fieldMap, descOpticalRxPower0, extInfo.OpticalRxPower0, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descOpticalRxPower1, extInfo.OpticalRxPower1, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descOpticalRxPower2, extInfo.OpticalRxPower2, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, descOpticalRxPower3, extInfo.OpticalRxPower3, "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descOpticalRxPower0, extInfo.OpticalRxPower0, "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descOpticalRxPower1, extInfo.OpticalRxPower1, "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descOpticalRxPower2, extInfo.OpticalRxPower2, "")
+		doUpdateTelegrafWithValidateNum(metric.Fields, descOpticalRxPower3, extInfo.OpticalRxPower3, "")
+		ch <- metric
 	}
-	return fieldsMap
 }
 
 func getMainOptInfo(opticalInfo map[string]string) *common.OpticalInfo {

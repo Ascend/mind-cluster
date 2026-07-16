@@ -17,6 +17,7 @@ package npu
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -35,14 +36,9 @@ import (
 )
 
 const (
-	num5                 = 5
-	testDevName          = "ascend"
-	testDevTagValue      = "ascend910"
-	testMetricKey        = "npu_test_metric"
-	testMetricValue      = "1"
-	testMeasurement      = "test-measurement"
-	testVdevID           = "vdev_id"
-	testInvalidValueType = 123
+	num5              = 5
+	testVersionMetric = "npu_exporter_version_info"
+	testVersionValue  = "7.0.0"
 )
 
 func init() {
@@ -99,11 +95,14 @@ func TestGather(t *testing.T) {
 			patches.ApplyMethodReturn(npu.collector.Dmgr, "GetDevType", tt.deviceType)
 			patches.ApplyFuncReturn(common.GetContainerNPUInfo, nil)
 			patches.ApplyFuncReturn(common.GetChipListWithVNPU, nil)
-			patches.ApplyMethodReturn(common.ChainForSingleGoroutine[0], "UpdateTelegraf",
-				map[string]map[string]interface{}{
-					common.GeneralDevTagKey: {"npu_exporter_version_info": "7.0.0"},
-					"0":                     {"npu_chip_info_power": "1"},
-					"1_100":                 {"npu_chip_info_voltage": "1"},
+			patches.ApplyMethodFunc(common.ChainForSingleGoroutine[0], "UpdateTelegraf",
+				func(ch chan<- common.TelegrafMetric, n *common.NpuCollector,
+					containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
+					ch <- common.TelegrafMetric{
+						DeviceID: common.NoDeviceID,
+						VDevID:   common.NoDeviceID,
+						Fields:   map[string]interface{}{testVersionMetric: testVersionValue},
+					}
 				})
 
 			err := npu.Gather(acc)
@@ -111,19 +110,6 @@ func TestGather(t *testing.T) {
 			convey.So(acc.fields["ascend,device="+strings.ToLower(tt.expectedTag)], convey.ShouldNotBeEmpty)
 		})
 	}
-}
-
-// TestGatherChain tests the gatherChain method of WatchNPU
-func TestGatherChain(t *testing.T) {
-	npu := &WatchNPU{}
-	fieldsMap := make(map[string]map[string]interface{})
-	chain := []common.MetricsCollector{&metrics.VersionCollector{}}
-
-	convey.Convey("TestGatherChain", t, func() {
-		result := npu.gatherChain(fieldsMap, chain, nil, nil)
-		logger.Infof("result:%v", result)
-		convey.So(len(result), convey.ShouldEqual, 1)
-	})
 }
 
 type newNpuCollectorTestCase struct {
@@ -147,6 +133,7 @@ func (m *MockAccumulator) AddFields(measurement string, fields map[string]interf
 	for k, v := range tags {
 		pairs = append(pairs, fmt.Sprintf("%s=%v", k, v))
 	}
+	sort.Strings(pairs)
 	metricKey := measurement + "," + strings.Join(pairs, ",")
 	m.fields[metricKey] = fields
 }
@@ -180,169 +167,177 @@ func (m *MockAccumulator) WithTracking(maxTracked int) telegraf.TrackingAccumula
 	return nil
 }
 
-func TestHandleGeneralMetrics(t *testing.T) {
-	tests := []struct {
-		name      string
-		metrics   map[string]interface{}
-		expectLen int
-	}{
-		{name: "should skip AddFields and delete key when generalMetrics is empty",
-			metrics: map[string]interface{}{}, expectLen: 0},
-		{name: "should call AddFields and delete key when generalMetrics is not empty",
-			metrics: map[string]interface{}{testMetricKey: testMetricValue}, expectLen: 1},
-	}
-	for _, tt := range tests {
-		convey.Convey(tt.name, t, func() {
-			acc := &MockAccumulator{}
-			fieldsMap := map[string]map[string]interface{}{common.GeneralDevTagKey: tt.metrics}
-			handleGeneralMetrics(acc, fieldsMap, testDevName, testDevTagValue)
-			convey.So(acc.fields, convey.ShouldHaveLength, tt.expectLen)
-			_, exists := fieldsMap[common.GeneralDevTagKey]
-			convey.So(exists, convey.ShouldBeFalse)
-		})
-	}
-}
+const (
+	testDevTagValue = "ascend910"
+	testDeviceID0   = 0
+	testDeviceID1   = 1
+	testVDevID100   = 100
+	mockValue50     = 50
+	testFieldTemp   = "temperature"
+	testFieldPower  = "power"
+	testMeasCustom  = "custom_meas"
+	testTagJob      = "job"
+	testTagValTrain = "train"
+)
 
-func TestHandleTextMetrics(t *testing.T) {
-	now := time.Now()
-	tests := []struct {
-		name      string
-		metric    interface{}
-		expectLen int
-	}{
-		{
-			name: "should skip when data.Metrics is empty",
-			metric: common.TelegrafData{Measurement: testMeasurement,
-				Labels:  map[string]string{"device": "test"},
-				Metrics: map[string]interface{}{}, Timestamp: now},
-			expectLen: 0,
-		},
-		{
-			name:      "should skip when metric is not TelegrafData type",
-			metric:    "invalid-type",
-			expectLen: 0,
-		},
-		{
-			name: "should call AddFields when data.Metrics is not empty",
-			metric: common.TelegrafData{Measurement: testMeasurement,
-				Labels:  map[string]string{"device": "test"},
-				Metrics: map[string]interface{}{testMetricKey: testMetricValue}, Timestamp: now},
-			expectLen: 1,
-		},
-		{
-			name:      "should delete KeyForTextMetrics when inner map is empty",
-			metric:    nil,
-			expectLen: 0,
-		},
-	}
-	for _, tt := range tests {
-		convey.Convey(tt.name, t, func() {
-			acc := &MockAccumulator{}
-			fieldsMap := map[string]map[string]interface{}{common.KeyForTextMetrics: {}}
-			if tt.metric != nil {
-				fieldsMap[common.KeyForTextMetrics]["test-key"] = tt.metric
-			}
-			handleTextMetrics(acc, fieldsMap)
-			convey.So(acc.fields, convey.ShouldHaveLength, tt.expectLen)
-			_, exists := fieldsMap[common.KeyForTextMetrics]
-			convey.So(exists, convey.ShouldBeFalse)
-		})
-	}
-}
-
-func TestHandleMetricsWithCustomLabels(t *testing.T) {
-	now := time.Now()
-	tests := []struct {
-		name      string
-		metric    interface{}
-		expectLen int
-	}{
-		{
-			name: "should skip when data.Metrics is empty",
-			metric: common.TelegrafData{Measurement: testMeasurement,
-				Labels:  map[string]string{"device": "test"},
-				Metrics: map[string]interface{}{}, Timestamp: now},
-			expectLen: 0,
-		},
-		{
-			name:      "should skip when metric is not TelegrafData type",
-			metric:    testInvalidValueType,
-			expectLen: 0,
-		},
-		{
-			name: "should call AddFields when data.Metrics is not empty",
-			metric: common.TelegrafData{Measurement: testMeasurement,
-				Labels:  map[string]string{"device": "test"},
-				Metrics: map[string]interface{}{testMetricKey: testMetricValue}, Timestamp: now},
-			expectLen: 1,
-		},
-		{
-			name:      "should delete KeyForMetricsWithCustomLabels when inner map is empty",
-			metric:    nil,
-			expectLen: 0,
-		},
-	}
-	for _, tt := range tests {
-		convey.Convey(tt.name, t, func() {
-			acc := &MockAccumulator{}
-			fieldsMap := map[string]map[string]interface{}{common.KeyForMetricsWithCustomLabels: {}}
-			if tt.metric != nil {
-				fieldsMap[common.KeyForMetricsWithCustomLabels]["test-key"] = tt.metric
-			}
-			handleMetricsWithCustomLabels(acc, fieldsMap)
-			convey.So(acc.fields, convey.ShouldHaveLength, tt.expectLen)
-			_, exists := fieldsMap[common.KeyForMetricsWithCustomLabels]
-			convey.So(exists, convey.ShouldBeFalse)
-		})
-	}
-}
-
-func TestGatherSkipsEmptyFields(t *testing.T) {
-	convey.Convey("should skip AddFields when fields map entry is empty", t, func() {
-		acc := &MockAccumulator{}
-		acc.AddFields(testDevName, map[string]interface{}{testMetricKey: testMetricValue},
-			map[string]string{"device": "test"})
-		devTagValue := "ascend910"
-		fieldsMap := map[string]map[string]interface{}{
-			"0":   {},
-			"1":   {testMetricKey: testMetricValue},
-			"2_3": {},
-		}
-		for key, fields := range fieldsMap {
-			ids := strings.Split(key, "_")
-			devTag := map[string]string{"device": devTagValue + "-" + ids[0]}
-			if len(ids) >= num2 {
-				devTag[testVdevID] = ids[1]
-			}
-			if len(fields) == 0 {
-				continue
-			}
-			acc.AddFields(testDevName, fields, devTag)
-		}
-		convey.So(acc.fields, convey.ShouldHaveLength, 2)
-	})
-}
-
-func TestRemoveLastDashAndSuffix(t *testing.T) {
+// TestBuildTags should return custom labels when Labels is set
+func TestBuildTags(t *testing.T) {
 	tests := []struct {
 		name     string
-		input    string
-		expected string
+		data     common.TelegrafMetric
+		devTag   string
+		expected map[string]string
 	}{
-		{"should return original string when no dash", "ascend", "ascend"},
-		{"should remove last dash and suffix when single dash exists", "ascend-0", "ascend"},
-		{"should remove last dash and suffix when multiple dashes exist", "ascend-0-1", "ascend-0"},
-		{"should return empty string when input is empty", "", ""},
-		{"should return empty string when input is single dash", "-", ""},
-		{"should remove last dash and numeric suffix", "device-123", "device"},
-		{"should remove last dash and alpha suffix", "device-test", "device"},
-		{"should remove last dash and alphanumeric suffix", "device-test123", "device"},
+		{name: "should return custom labels when Labels is set",
+			data:     common.TelegrafMetric{Labels: map[string]string{testTagJob: testTagValTrain}},
+			devTag:   testDevTagValue,
+			expected: map[string]string{testTagJob: testTagValTrain}},
+		{name: "should return node level tag when DeviceID < 0 and Labels nil",
+			data:     common.TelegrafMetric{DeviceID: common.NoDeviceID, VDevID: common.NoDeviceID},
+			devTag:   testDevTagValue,
+			expected: map[string]string{deviceTagKey: testDevTagValue}},
+		{name: "should return device tag when DeviceID >= 0 and VDevID < 0",
+			data:     common.TelegrafMetric{DeviceID: testDeviceID0, VDevID: common.NoDeviceID},
+			devTag:   testDevTagValue,
+			expected: map[string]string{deviceTagKey: testDevTagValue + "-0"}},
+		{name: "should return device and vdev tags when VDevID >= 0",
+			data:     common.TelegrafMetric{DeviceID: testDeviceID1, VDevID: testVDevID100},
+			devTag:   testDevTagValue,
+			expected: map[string]string{deviceTagKey: testDevTagValue + "-1", vDevTagKey: "100"}},
 	}
-
 	for _, tt := range tests {
 		convey.Convey(tt.name, t, func() {
-			result := removeLastDashAndSuffix(tt.input)
+			result := buildTags(tt.data, tt.devTag)
+			convey.So(result, convey.ShouldResemble, tt.expected)
+		})
+	}
+}
+
+// TestGroupKey should produce deterministic key for same measurement and tags
+func TestGroupKey(t *testing.T) {
+	tests := []struct {
+		name        string
+		measurement string
+		tags        map[string]string
+		expected    string
+	}{
+		{name: "should return measurement only when tags empty",
+			measurement: devName,
+			tags:        map[string]string{},
+			expected:    devName},
+		{name: "should produce sorted key when tags given",
+			measurement: devName,
+			tags:        map[string]string{vDevTagKey: "100", deviceTagKey: "npu-0"},
+			expected:    devName + "|" + deviceTagKey + "=npu-0|" + vDevTagKey + "=100"},
+	}
+	for _, tt := range tests {
+		convey.Convey(tt.name, t, func() {
+			result := groupKey(tt.measurement, tt.tags)
 			convey.So(result, convey.ShouldEqual, tt.expected)
+		})
+	}
+}
+
+// TestMergeFields should keep first when duplicate field name
+func TestMergeFields(t *testing.T) {
+	tests := []struct {
+		name     string
+		dst      map[string]interface{}
+		src      map[string]interface{}
+		expected map[string]interface{}
+	}{
+		{name: "should merge all fields when no duplicate",
+			dst:      map[string]interface{}{testFieldTemp: mockValue50},
+			src:      map[string]interface{}{testFieldPower: mockValue50},
+			expected: map[string]interface{}{testFieldTemp: mockValue50, testFieldPower: mockValue50}},
+		{name: "should keep first when duplicate field name",
+			dst:      map[string]interface{}{testFieldTemp: mockValue50},
+			src:      map[string]interface{}{testFieldTemp: mockValue50},
+			expected: map[string]interface{}{testFieldTemp: mockValue50}},
+	}
+	for _, tt := range tests {
+		convey.Convey(tt.name, t, func() {
+			mergeFields(tt.dst, tt.src)
+			convey.So(tt.dst, convey.ShouldResemble, tt.expected)
+		})
+	}
+}
+
+func newDeviceMetric(deviceID int32, fields map[string]interface{}) common.TelegrafMetric {
+	return common.TelegrafMetric{
+		DeviceID: deviceID, VDevID: common.NoDeviceID, Fields: fields}
+}
+
+func newVnpuMetric(deviceID, vdevID int32, fields map[string]interface{}) common.TelegrafMetric {
+	return common.TelegrafMetric{DeviceID: deviceID, VDevID: vdevID, Fields: fields}
+}
+
+func newLabeledMetric(measurement string, labels map[string]string,
+	fields map[string]interface{}) common.TelegrafMetric {
+	return common.TelegrafMetric{
+		Measurement: measurement, Labels: labels,
+		DeviceID: common.NoDeviceID, VDevID: common.NoDeviceID, Fields: fields}
+}
+
+func metricKey(measurement string, tagPairs ...string) string {
+	return measurement + "," + strings.Join(tagPairs, ",")
+}
+
+func consumeAndVerify(t *testing.T, metrics []common.TelegrafMetric, devTagValue string, expectedKeys []string) {
+	t.Helper()
+	ch := make(chan common.TelegrafMetric, chanCacheSize)
+	acc := &MockAccumulator{}
+	for _, m := range metrics {
+		ch <- m
+	}
+	close(ch)
+	consumeAndReport(acc, ch, devTagValue)
+	for _, key := range expectedKeys {
+		convey.So(acc.fields[key], convey.ShouldNotBeEmpty)
+	}
+}
+
+// TestConsumeAndReport should aggregate and report metrics correctly
+func TestConsumeAndReport(t *testing.T) {
+	devTag := deviceTagKey + "=" + testDevTagValue
+	device0Tag := deviceTagKey + "=" + testDevTagValue + "-0"
+	singleField := map[string]interface{}{testFieldTemp: mockValue50}
+	tests := []struct {
+		name         string
+		metrics      []common.TelegrafMetric
+		expectedKeys []string
+	}{
+		{name: "should skip metric when Fields empty",
+			metrics:      []common.TelegrafMetric{newDeviceMetric(testDeviceID0, map[string]interface{}{})},
+			expectedKeys: nil},
+		{name: "should aggregate device metrics into one series",
+			metrics: []common.TelegrafMetric{
+				newDeviceMetric(testDeviceID0, singleField),
+				newDeviceMetric(testDeviceID0, map[string]interface{}{testFieldPower: mockValue50}),
+			},
+			expectedKeys: []string{metricKey(devName, device0Tag)}},
+		{name: "should use custom measurement and labels",
+			metrics: []common.TelegrafMetric{newLabeledMetric(
+				testMeasCustom,
+				map[string]string{testTagJob: testTagValTrain},
+				map[string]interface{}{"loss": mockValue50})},
+			expectedKeys: []string{metricKey(testMeasCustom, testTagJob+"="+testTagValTrain)}},
+		{name: "should use default measurement when empty",
+			metrics:      []common.TelegrafMetric{newDeviceMetric(common.NoDeviceID, singleField)},
+			expectedKeys: []string{metricKey(devName, devTag)}},
+		{name: "should separate vnpu from device by vdev_id tag",
+			metrics: []common.TelegrafMetric{
+				newDeviceMetric(testDeviceID0, singleField),
+				newVnpuMetric(testDeviceID0, testVDevID100,
+					map[string]interface{}{testFieldPower: mockValue50}),
+			},
+			expectedKeys: []string{
+				metricKey(devName, device0Tag),
+				metricKey(devName, device0Tag, vDevTagKey+"=100")}},
+	}
+	for _, tt := range tests {
+		convey.Convey(tt.name, t, func() {
+			consumeAndVerify(t, tt.metrics, testDevTagValue, tt.expectedKeys)
 		})
 	}
 }

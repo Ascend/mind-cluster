@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"os"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -243,12 +242,9 @@ func (c *TextMetricsInfoCollector) UpdatePrometheus(ch chan<- prometheus.Metric,
 }
 
 // UpdateTelegraf update telegraf metric
-func (c *TextMetricsInfoCollector) UpdateTelegraf(fieldsMap map[string]map[string]interface{}, n *common.NpuCollector,
-	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) map[string]map[string]interface{} {
+func (c *TextMetricsInfoCollector) UpdateTelegraf(ch chan<- common.TelegrafMetric, n *common.NpuCollector,
+	containerMap map[int32]container.DevicesInfo, chips []common.HuaWeiAIChip) {
 	logger.Debug("TextMetricsInfoCollector UpdateTelegraf")
-	if fieldsMap[common.KeyForTextMetrics] == nil {
-		fieldsMap[common.KeyForTextMetrics] = make(map[string]interface{})
-	}
 	c.update(func(jsonFilePath string, structInfo metricStructInfo, timestamp time.Time, item DataItem, index int) {
 		labelsMap := make(map[string]string)
 		for _, key := range structInfo.labels {
@@ -258,15 +254,13 @@ func (c *TextMetricsInfoCollector) UpdateTelegraf(fieldsMap map[string]map[strin
 				labelsMap[key] = ""
 			}
 		}
-		tetegrafData := common.TelegrafData{
-			Labels:    labelsMap,
-			Metrics:   map[string]interface{}{structInfo.name: item.Value},
-			Timestamp: timestamp,
-		}
-		fieldsMap[common.KeyForTextMetrics][jsonFilePath+"-"+strconv.Itoa(index)] = tetegrafData
+		metric := common.NewGeneralMetric()
+		metric.Measurement = jsonFilePath
+		metric.Labels = labelsMap
+		metric.Fields = map[string]interface{}{structInfo.name: item.Value}
+		metric.Timestamp = timestamp
+		ch <- metric
 	})
-
-	return fieldsMap
 }
 
 // processFileData processes file data and initializes its metrics
