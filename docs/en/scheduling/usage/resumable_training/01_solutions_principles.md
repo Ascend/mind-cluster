@@ -1496,6 +1496,8 @@ For key configuration procedures of Job-level rescheduling, see [Configuring Job
 |Atlas A2 training series products|<ul><li>Atlas 800T A2 training server</li><li>Atlas 200T A2 Box16 heterogeneous subrack</li><li>Atlas 900 A2 PoD cluster basic unit</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 |Atlas A3 training series products|<ul><li>Atlas 900 A3 SuperPoD</li><li>Atlas 800T A3 SuperPoD server</li></ul>|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
 |A200T A3 Box8 superPoD server|A200T A3 Box8 SuperPoD server|<ul><li>MindSpore</li><li>PyTorch</li></ul>|
+|Atlas 950 training series products|<ul><li>Atlas 950 SuperPoD</li></ul>|<ul><li>PyTorch</li></ul>|
+|Atlas 850 training series products|<ul><li>Atlas 850 Server</li><li>Atlas 850E Server</li></ul>|<ul><li>PyTorch</li></ul>|
 
 **Rescheduling Principles<a name="zh-cn_topic_0000002039194017_section57901137171110"></a>**
 
@@ -1566,6 +1568,20 @@ For key configuration procedures of Pod-level rescheduling, see [Configuring Pod
 <td class="cellrowborder" valign="top" width="63.10631063106311%" headers="mcps1.2.4.1.2 "><p id="p49961172020"><a name="p49961172020"></a><a name="p49961172020"></a><span id="ph6124114710214"><a name="ph6124114710214"></a><a name="ph6124114710214"></a>A200T A3 Box8 SuperPoD server</span></p>
 </td>
 <td class="cellrowborder" valign="top" width="16.43164316431643%" headers="mcps1.2.4.1.3 "><a name="ul5581185452113"></a><a name="ul5581185452113"></a><ul id="ul5581185452113"><li><span id="ph19581195472117"><a name="ph19581195472117"></a><a name="ph19581195472117"></a>MindSpore</span></li><li><span id="ph8581154132114"><a name="ph8581154132114"></a><a name="ph8581154132114"></a>PyTorch</span></li></ul>
+</td>
+</tr>
+<tr id="row_ascend950_pod"><td class="cellrowborder" valign="top" width="20.462046204620464%" headers="mcps1.2.4.1.1 "><p id="p_ascend950_pod"><a name="p_ascend950_pod"></a><a name="p_ascend950_pod"></a><span id="ph_ascend950_pod"><a name="ph_ascend950_pod"></a><a name="ph_ascend950_pod"></a>Atlas 950 training series products</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="63.10631063106311%" headers="mcps1.2.4.1.2 "><ul id="ul_ascend950_pod"><li><span id="ph_ascend950_superpod_pod"><a name="ph_ascend950_superpod_pod"></a><a name="ph_ascend950_superpod_pod"></a>Atlas 950 SuperPoD</span></li></ul>
+</td>
+<td class="cellrowborder" valign="top" width="16.43164316431643%" headers="mcps1.2.4.1.3 "><ul id="ul_ascend950_fw_pod"><li><span id="ph_ascend950_pt_pod"><a name="ph_ascend950_pt_pod"></a><a name="ph_ascend950_pt_pod"></a>PyTorch</span></li></ul>
+</td>
+</tr>
+<tr id="row_ascend850_pod"><td class="cellrowborder" valign="top" width="20.462046204620464%" headers="mcps1.2.4.1.1 "><p id="p_ascend850_pod"><a name="p_ascend850_pod"></a><a name="p_ascend850_pod"></a><span id="ph_ascend850_pod"><a name="ph_ascend850_pod"></a><a name="ph_ascend850_pod"></a>Atlas 850 training series products</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="63.10631063106311%" headers="mcps1.2.4.1.2 "><ul id="ul_ascend850_pod"><li><span id="ph_ascend850_hardware_pod"><a name="ph_ascend850_hardware_pod"></a><a name="ph_ascend850_hardware_pod"></a>Atlas 850 Server</span></li><li><span id="ph_ascend850e_hardware_pod"><a name="ph_ascend850e_hardware_pod"></a><a name="ph_ascend850e_hardware_pod"></a>Atlas 850E Server</span></li></ul>
+</td>
+<td class="cellrowborder" valign="top" width="16.43164316431643%" headers="mcps1.2.4.1.3 "><ul id="ul_ascend850_fw_pod"><li><span id="ph_ascend850_pt_pod"><a name="ph_ascend850_pt_pod"></a><a name="ph_ascend850_pt_pod"></a>PyTorch</span></li></ul>
 </td>
 </tr>
 </tbody>
@@ -1645,6 +1661,13 @@ For the key configuration procedure of process-level rescheduling, see [Configur
 </td>
 <td class="cellrowborder" valign="top" width="13.24132413241324%" headers="mcps1.2.4.1.3 "><a name="ul18946810161311"></a><a name="ul18946810161311"></a><ul id="ul18946810161311"><li><span id="ph99461100137"><a name="ph99461100137"></a><a name="ph99461100137"></a>MindSpore</span><p id="p664545214"><a name="p664545214"></a><a name="p664545214"></a><span id="ph294661010130"><a name="ph294661010130"></a><a name="ph294661010130"></a></span></p>
 </li><li><span id="ph99469109139"><a name="ph99469109139"></a><a name="ph99469109139"></a>PyTorch</span></li></ul>
+</td>
+</tr>
+<tr id="row_ascend950_process"><td class="cellrowborder" valign="top" width="20.462046204620464%" headers="mcps1.2.4.1.1 "><p id="p_ascend950_process"><a name="p_ascend950_process"></a><a name="p_ascend950_process"></a><span id="ph_ascend950_process"><a name="ph_ascend950_process"></a><a name="ph_ascend950_process"></a>Atlas 950 training series products</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="66.2966296629663%" headers="mcps1.2.4.1.2 "><ul id="ul_ascend950_process"><li><span id="ph_ascend950_superpod_process"><a name="ph_ascend950_superpod_process"></a><a name="ph_ascend950_superpod_process"></a>Atlas 950 SuperPoD</span></li></ul>
+</td>
+<td class="cellrowborder" valign="top" width="13.24132413241324%" headers="mcps1.2.4.1.3 "><ul id="ul_ascend950_process_fw"><li><span id="ph_ascend950_pt_process"><a name="ph_ascend950_pt_process"></a><a name="ph_ascend950_pt_process"></a>PyTorch</span></li></ul>
 </td>
 </tr>
 </tbody>
@@ -1844,6 +1867,13 @@ For key configuration procedures of process-level online recovery, see [Configur
 </td>
 <td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.3 "><a name="ul96311517144415"></a><a name="ul96311517144415"></a><ul id="ul96311517144415"><li><span id="ph96310177449"><a name="ph96310177449"></a><a name="ph96310177449"></a>MindSpore</span></li></ul>
 <a name="ul7631141712447"></a><a name="ul7631141712447"></a><ul id="ul7631141712447"><li><span id="ph1563101734413"><a name="ph1563101734413"></a><a name="ph1563101734413"></a>PyTorch</span></li></ul>
+</td>
+</tr>
+<tr id="row_ascend950_hbm"><td class="cellrowborder" valign="top" width="33.333333333333336%" headers="mcps1.2.4.1.1 "><p id="p_ascend950_hbm"><a name="p_ascend950_hbm"></a><a name="p_ascend950_hbm"></a><span id="ph_ascend950_hbm"><a name="ph_ascend950_hbm"></a><a name="ph_ascend950_hbm"></a>Atlas 950 training series products</span></p>
+</td>
+<td class="cellrowborder" valign="top" width="33.29332933293329%" headers="mcps1.2.4.1.2 "><ul id="ul_ascend950_hbm"><li><span id="ph_ascend950_superpod_hbm"><a name="ph_ascend950_superpod_hbm"></a><a name="ph_ascend950_superpod_hbm"></a>Atlas 950 SuperPoD</span></li></ul>
+</td>
+<td class="cellrowborder" valign="top" width="33.373337333733375%" headers="mcps1.2.4.1.3 "><ul id="ul_ascend950_hbm_fw2"><li><span id="ph_ascend950_pt_hbm"><a name="ph_ascend950_pt_hbm"></a><a name="ph_ascend950_pt_hbm"></a>PyTorch</span></li></ul>
 </td>
 </tr>
 </tbody>
