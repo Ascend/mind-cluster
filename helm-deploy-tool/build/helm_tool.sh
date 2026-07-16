@@ -235,7 +235,7 @@ usage() {
     echo "Usage: $0 [OPTIONS]"
     echo ""
     echo "Options:"
-    echo "  --all                       Execute all operations (delete ascend-device-plugin daemonsets before version 26.1.0 + add helm meta to all)"
+    echo "  --all                       Execute all operations (delete ascend-device-plugin daemonsets before version 26.1.0 and add helm meta to all)"
     echo "  --delete-old-demonset       Delete ascend-device-plugin daemonsets before version 26.1.0"
     echo "  --add-helm-meta-all         Only add helm meta to all resources"
     echo "  --namespace                 Only add helm meta to namespaces (mindx-dl, cluster-system)"
