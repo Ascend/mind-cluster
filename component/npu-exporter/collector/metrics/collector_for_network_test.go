@@ -134,6 +134,7 @@ func TestPromUpdateNetInfo(t *testing.T) {
 		})
 
 		convey.Convey("When cache has valid data", func() {
+			colcommon.EnableLegacyMetrics = false
 			mockExtInfo := make([]*common.NpuNetInfo, colcommon.NpuDevPortInfos.GetCount())
 			initNpuNetWorkDesc()
 			for i := 0; i < colcommon.NpuDevPortInfos.GetCount(); i++ {
@@ -161,6 +162,61 @@ func TestPromUpdateNetInfo(t *testing.T) {
 			expectedCalls := colcommon.NpuDevPortInfos.GetCount() * ascend950NetworkMetricNum
 			convey.So(callCount, convey.ShouldEqual, expectedCalls)
 			convey.So(callTelCount, convey.ShouldEqual, expectedCalls)
+		})
+	})
+}
+
+// TestPromUpdateNetInfoNew tests new format emission for network metrics (always emits)
+func TestPromUpdateNetInfoNew(t *testing.T) {
+	convey.Convey("TestPromUpdateNetInfoNew", t, func() {
+		ch := make(chan prometheus.Metric, 100)
+		timestamp := time.Now()
+		extendedLabel := []string{"card0", "0", "1"}
+
+		netInfo := &common.NpuNetInfo{
+			LinkStatusInfo: &common.LinkStatusInfo{LinkState: "UP"},
+			BandwidthInfo:  &common.BandwidthInfo{TxValue: 100, RxValue: 200},
+			LinkSpeedInfo:  &common.LinkSpeedInfo{Speed: 400},
+		}
+
+		initNpuNetWorkDesc()
+
+		convey.Convey("Always emits new format metrics regardless of EnableLegacyMetrics", func() {
+			for _, enableLegacy := range []bool{false, true} {
+				colcommon.EnableLegacyMetrics = enableLegacy
+				func() {
+					callCount := 0
+					lastLabels := []string{}
+					patches := gomonkey.ApplyFunc(doUpdateMetricWithValidateNum, func(ch chan<- prometheus.Metric,
+						ts time.Time, val float64, labels []string, desc *prometheus.Desc) {
+						callCount++
+						lastLabels = labels
+					})
+					defer patches.Reset()
+
+					promUpdateNetInfoNew(ch, timestamp, netInfo, extendedLabel)
+					convey.So(callCount, convey.ShouldEqual, ascend950NetworkMetricNum)
+					// new format should include udie/port labels
+					convey.So(len(lastLabels), convey.ShouldEqual, len(extendedLabel))
+				}()
+			}
+		})
+
+		convey.Convey("Skips gracefully when fields are nil", func() {
+			nilNetInfo := &common.NpuNetInfo{
+				LinkStatusInfo: nil,
+				BandwidthInfo:  nil,
+				LinkSpeedInfo:  nil,
+			}
+			callCount := 0
+			patches := gomonkey.ApplyFunc(doUpdateMetricWithValidateNum, func(ch chan<- prometheus.Metric,
+				ts time.Time, val float64, labels []string, desc *prometheus.Desc) {
+				callCount++
+			})
+			defer patches.Reset()
+
+			promUpdateNetInfoNew(ch, timestamp, nilNetInfo, extendedLabel)
+			convey.So(callCount, convey.ShouldEqual, 0)
 		})
 	})
 }

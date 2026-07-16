@@ -18,6 +18,7 @@ package metrics
 import (
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -76,15 +77,17 @@ var (
 	descOpticalRxPower3 = colcommon.BuildDesc("npu_chip_optical_rx_power_3", "npu interface receive optical-rx-power-3")
 
 	// Npu specific metrics
-	opticalIndexDesc    []*prometheus.Desc
-	opticalTxPower0Desc []*prometheus.Desc
-	opticalTxPower1Desc []*prometheus.Desc
-	opticalTxPower2Desc []*prometheus.Desc
-	opticalTxPower3Desc []*prometheus.Desc
-	opticalRxPower0Desc []*prometheus.Desc
-	opticalRxPower1Desc []*prometheus.Desc
-	opticalRxPower2Desc []*prometheus.Desc
-	opticalRxPower3Desc []*prometheus.Desc
+	opticalIndexDesc    *prometheus.Desc
+	opticalTxPower0Desc *prometheus.Desc
+	opticalTxPower1Desc *prometheus.Desc
+	opticalTxPower2Desc *prometheus.Desc
+	opticalTxPower3Desc *prometheus.Desc
+	opticalRxPower0Desc *prometheus.Desc
+	opticalRxPower1Desc *prometheus.Desc
+	opticalRxPower2Desc *prometheus.Desc
+	opticalRxPower3Desc *prometheus.Desc
+
+	opticalDescOnce sync.Once
 
 	notSupportedOpticalNpuDevices = map[uint32]bool{
 		api.Atlas3501PMainBoardID: true,
@@ -115,47 +118,19 @@ type OpticalCollector struct {
 }
 
 func initNpuOpticalDesc() {
-	// Initialize Npu specific metrics descriptions
-	// udie only has 0 and 1, fixed order
-	dieIDs := []int{0, 1}
-	for _, dieID := range dieIDs {
-		portIDs, ok := colcommon.NpuDevPortInfos.GetPortMap()[dieID]
-		if !ok || len(portIDs) == 0 {
-			continue
-		}
-		for _, port := range portIDs {
-			portID := port.PortID
-			colcommon.BuildDescSlice(&opticalIndexDesc, fmt.Sprint(api.MetricsPrefix, "optical_index_num_",
-				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("the npu link optical index num ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
-
-			colcommon.BuildDescSlice(&opticalTxPower0Desc, fmt.Sprint(api.MetricsPrefix, "optical_tx_power_0_",
-				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("npu interface receive optical_tx_power_0_ ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
-			colcommon.BuildDescSlice(&opticalTxPower1Desc, fmt.Sprint(api.MetricsPrefix, "optical_tx_power_1_",
-				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("npu interface receive optical_tx_power_1 ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
-			colcommon.BuildDescSlice(&opticalTxPower2Desc, fmt.Sprint(api.MetricsPrefix, "optical_tx_power_2_",
-				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("npu interface receive optical_tx_power_2 ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
-			colcommon.BuildDescSlice(&opticalTxPower3Desc, fmt.Sprint(api.MetricsPrefix, "optical_tx_power_3_",
-				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("npu interface receive optical_tx_power_3 ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
-
-			colcommon.BuildDescSlice(&opticalRxPower0Desc, fmt.Sprint(api.MetricsPrefix, "optical_rx_power_0_",
-				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("npu interface receive optical_rx_power_0 ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
-			colcommon.BuildDescSlice(&opticalRxPower1Desc, fmt.Sprint(api.MetricsPrefix, "optical_rx_power_1_",
-				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("npu interface receive optical_rx_power_1 ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
-			colcommon.BuildDescSlice(&opticalRxPower2Desc, fmt.Sprint(api.MetricsPrefix, "optical_rx_power_2_",
-				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("npu interface receive optical_rx_power_2 ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
-			colcommon.BuildDescSlice(&opticalRxPower3Desc, fmt.Sprint(api.MetricsPrefix, "optical_rx_power_3_",
-				strconv.Itoa(dieID), "_", strconv.Itoa(portID)), fmt.Sprint("npu interface receive optical_rx_power_3 ",
-				"dieId:", strconv.Itoa(dieID), " portId:", strconv.Itoa(portID), " type:", port.PortType))
-		}
-	}
+	opticalDescOnce.Do(func() {
+		initUBCardLabel()
+		buildUbDesc(&opticalIndexDesc, "optical_index_num", "the npu link optical index num on ub port")
+		buildUbDesc(&opticalTxPower0Desc, "optical_tx_power_0", "npu interface receive optical_tx_power_0 on ub port")
+		buildUbDesc(&opticalTxPower1Desc, "optical_tx_power_1", "npu interface receive optical_tx_power_1 on ub port")
+		buildUbDesc(&opticalTxPower2Desc, "optical_tx_power_2", "npu interface receive optical_tx_power_2 on ub port")
+		buildUbDesc(&opticalTxPower3Desc, "optical_tx_power_3", "npu interface receive optical_tx_power_3 on ub port")
+		buildUbDesc(&opticalRxPower0Desc, "optical_rx_power_0", "npu interface receive optical_rx_power_0 on ub port")
+		buildUbDesc(&opticalRxPower1Desc, "optical_rx_power_1", "npu interface receive optical_rx_power_1 on ub port")
+		buildUbDesc(&opticalRxPower2Desc, "optical_rx_power_2", "npu interface receive optical_rx_power_2 on ub port")
+		buildUbDesc(&opticalRxPower3Desc, "optical_rx_power_3", "npu interface receive optical_rx_power_3 on ub port")
+		initOpticalLegacyDesc()
+	})
 }
 
 // IsSupported judge whether the collector is supported
@@ -182,33 +157,16 @@ func (c *OpticalCollector) IsSupported(n *colcommon.NpuCollector) bool {
 func (c *OpticalCollector) Describe(ch chan<- *prometheus.Desc) {
 	if colcommon.DevType == api.Ascend910A5 {
 		// Npu specific optical metrics
-		for _, desc := range opticalIndexDesc {
-			ch <- desc
-		}
-		for _, desc := range opticalTxPower0Desc {
-			ch <- desc
-		}
-		for _, desc := range opticalTxPower1Desc {
-			ch <- desc
-		}
-		for _, desc := range opticalTxPower2Desc {
-			ch <- desc
-		}
-		for _, desc := range opticalTxPower3Desc {
-			ch <- desc
-		}
-		for _, desc := range opticalRxPower0Desc {
-			ch <- desc
-		}
-		for _, desc := range opticalRxPower1Desc {
-			ch <- desc
-		}
-		for _, desc := range opticalRxPower2Desc {
-			ch <- desc
-		}
-		for _, desc := range opticalRxPower3Desc {
-			ch <- desc
-		}
+		initDesc(ch, opticalIndexDesc)
+		initDesc(ch, opticalTxPower0Desc)
+		initDesc(ch, opticalTxPower1Desc)
+		initDesc(ch, opticalTxPower2Desc)
+		initDesc(ch, opticalTxPower3Desc)
+		initDesc(ch, opticalRxPower0Desc)
+		initDesc(ch, opticalRxPower1Desc)
+		initDesc(ch, opticalRxPower2Desc)
+		initDesc(ch, opticalRxPower3Desc)
+		addOpticalLegacyMetricsDesc(ch)
 		return
 	}
 	// Regular optical metrics
@@ -393,18 +351,23 @@ func promUpdateOpticalInfo(ch chan<- prometheus.Metric, cache opticalNpuCache, t
 		if opticalInfo[i] == nil {
 			continue
 		}
-		doUpdateMetric(ch, timestamp, opticalInfo[i].OpticalIndex, cardLabel, opticalIndexDesc[i])
-
-		doUpdateMetricWithValidateNum(ch, timestamp, opticalInfo[i].OpticalTxPower0, cardLabel, opticalTxPower0Desc[i])
-		doUpdateMetricWithValidateNum(ch, timestamp, opticalInfo[i].OpticalTxPower1, cardLabel, opticalTxPower1Desc[i])
-		doUpdateMetricWithValidateNum(ch, timestamp, opticalInfo[i].OpticalTxPower2, cardLabel, opticalTxPower2Desc[i])
-		doUpdateMetricWithValidateNum(ch, timestamp, opticalInfo[i].OpticalTxPower3, cardLabel, opticalTxPower3Desc[i])
-
-		doUpdateMetricWithValidateNum(ch, timestamp, opticalInfo[i].OpticalRxPower0, cardLabel, opticalRxPower0Desc[i])
-		doUpdateMetricWithValidateNum(ch, timestamp, opticalInfo[i].OpticalRxPower1, cardLabel, opticalRxPower1Desc[i])
-		doUpdateMetricWithValidateNum(ch, timestamp, opticalInfo[i].OpticalRxPower2, cardLabel, opticalRxPower2Desc[i])
-		doUpdateMetricWithValidateNum(ch, timestamp, opticalInfo[i].OpticalRxPower3, cardLabel, opticalRxPower3Desc[i])
+		extendedLabel := append(cardLabel, strconv.Itoa(opticalInfo[i].Udie), strconv.Itoa(opticalInfo[i].Port))
+		promUpdateOpticalInfoNew(ch, timestamp, opticalInfo[i], extendedLabel)
+		promUpdateOpticalInfoLegacy(ch, timestamp, opticalInfo[i], extendedLabel, i)
 	}
+}
+
+func promUpdateOpticalInfoNew(ch chan<- prometheus.Metric, timestamp time.Time,
+	info *common.OpticalNpuInfo, extendedLabel []string) {
+	doUpdateMetric(ch, timestamp, info.OpticalIndex, extendedLabel, opticalIndexDesc)
+	doUpdateMetricWithValidateNum(ch, timestamp, info.OpticalTxPower0, extendedLabel, opticalTxPower0Desc)
+	doUpdateMetricWithValidateNum(ch, timestamp, info.OpticalTxPower1, extendedLabel, opticalTxPower1Desc)
+	doUpdateMetricWithValidateNum(ch, timestamp, info.OpticalTxPower2, extendedLabel, opticalTxPower2Desc)
+	doUpdateMetricWithValidateNum(ch, timestamp, info.OpticalTxPower3, extendedLabel, opticalTxPower3Desc)
+	doUpdateMetricWithValidateNum(ch, timestamp, info.OpticalRxPower0, extendedLabel, opticalRxPower0Desc)
+	doUpdateMetricWithValidateNum(ch, timestamp, info.OpticalRxPower1, extendedLabel, opticalRxPower1Desc)
+	doUpdateMetricWithValidateNum(ch, timestamp, info.OpticalRxPower2, extendedLabel, opticalRxPower2Desc)
+	doUpdateMetricWithValidateNum(ch, timestamp, info.OpticalRxPower3, extendedLabel, opticalRxPower3Desc)
 }
 
 func telegrafUpdateOpticalInfo(cache opticalNpuCache, fieldMap map[string]interface{}) {
@@ -416,17 +379,18 @@ func telegrafUpdateOpticalInfo(cache opticalNpuCache, fieldMap map[string]interf
 		if opticalInfo[i] == nil {
 			continue
 		}
-		doUpdateTelegraf(fieldMap, opticalIndexDesc[i], opticalInfo[i].OpticalIndex, "")
+		extInfo := fmt.Sprint("_", opticalInfo[i].Udie, "_", opticalInfo[i].Port)
+		doUpdateTelegraf(fieldMap, opticalIndexDesc, opticalInfo[i].OpticalIndex, extInfo)
 
-		doUpdateTelegrafWithValidateNum(fieldMap, opticalTxPower0Desc[i], opticalInfo[i].OpticalTxPower0, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, opticalTxPower1Desc[i], opticalInfo[i].OpticalTxPower1, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, opticalTxPower2Desc[i], opticalInfo[i].OpticalTxPower2, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, opticalTxPower3Desc[i], opticalInfo[i].OpticalTxPower3, "")
+		doUpdateTelegrafWithValidateNum(fieldMap, opticalTxPower0Desc, opticalInfo[i].OpticalTxPower0, extInfo)
+		doUpdateTelegrafWithValidateNum(fieldMap, opticalTxPower1Desc, opticalInfo[i].OpticalTxPower1, extInfo)
+		doUpdateTelegrafWithValidateNum(fieldMap, opticalTxPower2Desc, opticalInfo[i].OpticalTxPower2, extInfo)
+		doUpdateTelegrafWithValidateNum(fieldMap, opticalTxPower3Desc, opticalInfo[i].OpticalTxPower3, extInfo)
 
-		doUpdateTelegrafWithValidateNum(fieldMap, opticalRxPower0Desc[i], opticalInfo[i].OpticalRxPower0, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, opticalRxPower1Desc[i], opticalInfo[i].OpticalRxPower1, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, opticalRxPower2Desc[i], opticalInfo[i].OpticalRxPower2, "")
-		doUpdateTelegrafWithValidateNum(fieldMap, opticalRxPower3Desc[i], opticalInfo[i].OpticalRxPower3, "")
+		doUpdateTelegrafWithValidateNum(fieldMap, opticalRxPower0Desc, opticalInfo[i].OpticalRxPower0, extInfo)
+		doUpdateTelegrafWithValidateNum(fieldMap, opticalRxPower1Desc, opticalInfo[i].OpticalRxPower1, extInfo)
+		doUpdateTelegrafWithValidateNum(fieldMap, opticalRxPower2Desc, opticalInfo[i].OpticalRxPower2, extInfo)
+		doUpdateTelegrafWithValidateNum(fieldMap, opticalRxPower3Desc, opticalInfo[i].OpticalRxPower3, extInfo)
 	}
 }
 
@@ -459,6 +423,8 @@ func storeOpticalNpuInfos(info map[string]string, logicID int32, dieID, portID i
 	if val, ok := storeSingleOpticalNpuInfo(info[opticalIndex], logicID, dieID, portID, "int").(int); ok {
 		opticalInfo.OpticalIndex = val
 	}
+	opticalInfo.Udie = dieID
+	opticalInfo.Port = portID
 	return &opticalInfo
 }
 

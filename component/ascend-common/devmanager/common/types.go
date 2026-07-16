@@ -300,6 +300,10 @@ type NpuNetInfo struct {
 	BandwidthInfo *BandwidthInfo
 	// LinkStatusInfo refers to the link state
 	LinkStatusInfo *LinkStatusInfo
+	// Udie npu chip udie
+	Udie int
+	// Port npu chip port
+	Port int
 }
 
 // BandwidthInfo contains network port real-time bandwidth
@@ -477,6 +481,10 @@ type DcmiMultiUtilizationInfo struct {
 type UBInfo struct {
 	UBCommonStats  *UBCommonStats
 	UboeExtensions *UBOEExtensions
+	// Udie npu chip udie
+	Udie int
+	// Port npu chip port
+	Port int
 }
 
 // UBOEExtensions represents the UBOE-specific extension statistics for UB
@@ -555,4 +563,8 @@ type OpticalNpuInfo struct {
 	OpticalRxPower2 float64
 	// Reception power of No.3 optical module
 	OpticalRxPower3 float64
+	// Udie npu chip udie
+	Udie int
+	// Port npu chip port
+	Port int
 }

@@ -190,6 +190,7 @@ func TestPromUpdateOpticalInfo(t *testing.T) {
 			cache := opticalNpuCache{extInfo: mockOpticalInfoNpu()}
 			callCount := 0
 			callTelCount := 0
+			colcommon.EnableLegacyMetrics = false
 			mockFiledMap := make(map[string]interface{})
 			patches.ApplyFunc(doUpdateMetric, func(ch chan<- prometheus.Metric, timestamp time.Time, value interface{}, cardLabel []string, desc *prometheus.Desc) {
 				callCount++
@@ -209,6 +210,56 @@ func TestPromUpdateOpticalInfo(t *testing.T) {
 			expectedCalls := colcommon.NpuDevPortInfos.GetCount() * opticalMetricsNum
 			convey.So(callCount, convey.ShouldEqual, expectedCalls)
 			convey.So(callTelCount, convey.ShouldEqual, expectedCalls)
+		})
+	})
+}
+
+// TestPromUpdateOpticalInfoNew tests new format emission for optical metrics (always emits)
+func TestPromUpdateOpticalInfoNew(t *testing.T) {
+	convey.Convey("TestPromUpdateOpticalInfoNew", t, func() {
+		ch := make(chan prometheus.Metric, 100)
+		timestamp := time.Now()
+		extendedLabel := []string{"card0", "0", "1"}
+
+		info := &common.OpticalNpuInfo{
+			OpticalIndex:    2,
+			OpticalTxPower0: 1.0,
+			OpticalTxPower1: 1.0,
+			OpticalTxPower2: 1.0,
+			OpticalTxPower3: 1.0,
+			OpticalRxPower0: 1.0,
+			OpticalRxPower1: 1.0,
+			OpticalRxPower2: 1.0,
+			OpticalRxPower3: 1.0,
+		}
+
+		initNpuOpticalDesc()
+
+		convey.Convey("Always emits new format metrics regardless of EnableLegacyMetrics", func() {
+			for _, enableLegacy := range []bool{false, true} {
+				colcommon.EnableLegacyMetrics = enableLegacy
+				func() {
+					callCount := 0
+					lastLabels := []string{}
+					patches := gomonkey.NewPatches()
+					patches.ApplyFunc(doUpdateMetric, func(ch chan<- prometheus.Metric,
+						ts time.Time, val interface{}, labels []string, desc *prometheus.Desc) {
+						callCount++
+						lastLabels = labels
+					})
+					patches.ApplyFunc(doUpdateMetricWithValidateNum, func(ch chan<- prometheus.Metric,
+						ts time.Time, val float64, labels []string, desc *prometheus.Desc) {
+						callCount++
+						lastLabels = labels
+					})
+					defer patches.Reset()
+
+					promUpdateOpticalInfoNew(ch, timestamp, info, extendedLabel)
+					convey.So(callCount, convey.ShouldEqual, opticalMetricsNum)
+					// new format should include udie/port labels
+					convey.So(len(lastLabels), convey.ShouldEqual, len(extendedLabel))
+				}()
+			}
 		})
 	})
 }

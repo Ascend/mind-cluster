@@ -46,47 +46,28 @@ func init() {
 // TestInitDesc tests the initDesc function
 func TestInitDesc(t *testing.T) {
 	convey.Convey("Test initDesc function", t, func() {
-		// Create a channel with sufficient buffer
 		ch := make(chan *prometheus.Desc, 10)
 
-		// Create test descriptors
 		desc1 := prometheus.NewDesc("test_metric1", "Test metric 1", nil, nil)
-		desc2 := prometheus.NewDesc("test_metric2", "Test metric 2", nil, nil)
-		desc3 := prometheus.NewDesc("test_metric3", "Test metric 3", nil, nil)
-		descs := []*prometheus.Desc{desc1, desc2, desc3}
 
-		// Call the function to test
-		initDesc(ch, descs)
-
-		// Close the channel to signal no more data
+		initDesc(ch, desc1)
 		close(ch)
 
-		// Collect all descriptors from the channel
 		var receivedDescs []*prometheus.Desc
 		for desc := range ch {
 			receivedDescs = append(receivedDescs, desc)
 		}
 
-		// Verify all descriptors were sent
-		convey.So(len(receivedDescs), convey.ShouldEqual, len(descs))
-
-		// Verify the descriptors are correct
+		convey.So(len(receivedDescs), convey.ShouldEqual, 1)
 		convey.So(receivedDescs[0], convey.ShouldEqual, desc1)
-		convey.So(receivedDescs[1], convey.ShouldEqual, desc2)
-		convey.So(receivedDescs[2], convey.ShouldEqual, desc3)
 	})
 
-	convey.Convey("Test initDesc with empty descriptors", t, func() {
-		// Create a channel
+	convey.Convey("Test initDesc with nil descriptor", t, func() {
 		ch := make(chan *prometheus.Desc, 10)
 
-		// Call the function with empty descriptors
-		initDesc(ch, []*prometheus.Desc{})
-
-		// Close the channel
+		initDesc(ch, nil)
 		close(ch)
 
-		// Verify no descriptors were sent
 		var receivedDescs []*prometheus.Desc
 		for desc := range ch {
 			receivedDescs = append(receivedDescs, desc)
