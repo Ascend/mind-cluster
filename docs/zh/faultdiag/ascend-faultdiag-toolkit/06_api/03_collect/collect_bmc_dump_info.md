@@ -6,10 +6,10 @@
 
 ## 命令格式
 
-| 命令格式 | 描述                   |
-|---------|----------------------|
-| `collect_bmc_dump_info` | 在线收集 BMC dump info日志 |
-| `collect_bmc_dump_info ?` | 查看详情                 |
+| 命令格式 | 描述                    |
+|---------|-----------------------|
+| `collect_bmc_dump_info` | 在线收集 BMC dump info 日志 |
+| `collect_bmc_dump_info ?` | 查看详情                  |
 
 ## 参数说明
 

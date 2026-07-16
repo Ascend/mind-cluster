@@ -116,7 +116,7 @@ host日志采集目录/
 ```bash
 # 配置 BMC 信息（IP / 账号密码 / 密钥 / 免密）与 BMC 日志采集
 ascend-fd-tk set_conn_config /home/user/conn.ini collect_bmc_dump_info
-收集完成，请查看日志路径{...}
+收集完成，请查看日志路径{path}
 ```
 
 <a id="BMC-offline-log"></a>
