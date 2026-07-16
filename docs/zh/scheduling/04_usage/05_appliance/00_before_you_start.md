@@ -7,7 +7,7 @@
 在使用本特性前，需要确保如下组件已经安装，若没有安装，可以参考[安装部署](../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
 
 - Container Manager
-- Ascend Docker Runtime(可选)
+- Ascend Docker Runtime（可选）
 
 ## 使用说明<a name="section44381612353"></a>
 

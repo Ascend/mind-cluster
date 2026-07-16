@@ -18,9 +18,9 @@
     >- 获取镜像前，请确保能够正常访问互联网。
     >- 若不使用集群调度提供的prometheus.yaml，需要参考该YAML在相应位置加上app: prometheus字段，否则可能出现NPU Exporter连接超时。
 
-3. prometheus.yaml已经默认包含获取NPU-Exporter metrics的相关的配置文件，用户可以根据需求自行修改相应的配置。以下从job_name开始之后的内容为获取的NPU-Exporter metrics的相关配置。
+3. prometheus.yaml已经默认包含获取NPU-Exporter metrics的相关配置文件，用户可以根据需求自行修改相应的配置。以下从job_name开始之后的内容为获取的NPU-Exporter metrics的相关配置。
 
-    ```Yaml
+    ```yaml
     ...
     apiVersion: v1
     kind: ConfigMap
@@ -172,7 +172,7 @@
         >[!NOTE]
         >若已经提前安装Prometheus，需要确保servicemonitor.yaml的以下字段，和已经部署的Prometheus中serviceMonitorSelector配置的matchLabels标签一致。
         >
-        >```Yaml
+        >```yaml
         >...
         >  labels:
         >    serviceMonitorSelector: prometheus
@@ -188,7 +188,7 @@
     2. （可选）可根据实际情况修改NPU Exporter的标签，不修改则直接跳过该步骤。
         1. 在npu-exporter-svc.yaml中，根据实际情况修改标签。
 
-            ```Yaml
+            ```yaml
             apiVersion: v1
             kind: Service
             metadata:
@@ -206,7 +206,7 @@
 
         2. 在servicemonitor.yaml中，根据实际情况修改NPU Exporter的标签，并确保修改内容与npu-exporter-svc.yaml中一致。
 
-            ```Yaml
+            ```yaml
             ...
             spec:
               endpoints:

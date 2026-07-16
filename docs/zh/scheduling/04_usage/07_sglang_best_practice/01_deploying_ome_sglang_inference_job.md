@@ -24,16 +24,16 @@
 
 ### 流程说明<a name="ZH-CN_TOPIC_0000002480995454"></a>
 
-基于OME的SGLang推理任务包含Router  Pod和推理实例Pod，推理实例Pod可以分为Prefill实例Pod和Decode实例Pod，其中Router  Pod不需要使用NPU资源，OME根据不同的推理服务配置方式生成不同的工作负载，用于创建不同的推理实例，并由Router统一对外提供推理服务。MindCluster集群调度组件支持对Deployment和LeaderWorkerSet两种OME推理任务的工作负载进行调度。LeaderWorkerSet任务场景下需要开启LWS的组调度功能。
+基于OME的SGLang推理任务包含Router Pod和推理实例Pod，推理实例Pod可以分为Prefill实例Pod和Decode实例Pod，其中Router Pod不需要使用NPU资源，OME根据不同的推理服务配置方式生成不同的工作负载，用于创建不同的推理实例，并由Router统一对外提供推理服务。MindCluster集群调度组件支持对Deployment和LeaderWorkerSet两种OME推理任务的工作负载进行调度。LeaderWorkerSet任务场景下需要开启LWS的组调度功能。
 
 关于OME任务部署的详细说明可参见[OME文档](https://ome-projects.github.io/ome/docs/)。LWS的组调度功能开启可以参考[LWS文档](https://github.com/kubernetes-sigs/lws/tree/main/docs/examples/sample/gang-scheduling)。
 
 **使用流程<a name="section19644656124210"></a>**
 
-通过命令行使用MindCluster集群调度组件部署基于OME的SGLang推理任务时，使用流程如[图1](#fig38991911205815)所示。
+通过命令行使用MindCluster集群调度组件部署基于OME的SGLang推理任务时，使用流程如[图 1](#fig38991911205815)所示。
 
 **图 1**  使用流程<a name="fig38991911205815"></a>
-![](../../../figures/scheduling/使用流程-15.png "使用流程-15")
+![使用流程](../../../figures/scheduling/使用流程-15.png "使用流程-15")
 
 ### 准备任务YAML<a name="ZH-CN_TOPIC_0000002480835892"></a>
 
@@ -188,7 +188,7 @@ spec:
         ```
 
     2. 按“i”进入编辑模式，按实际情况修改文件中的字段。
-    3. 按“Esc”键，输入:wq!，按“Enter”保存并退出编辑。
+    3. 按“Esc”键，输入`:wq!`，按“Enter”保存并退出编辑。
 
 6. （可选）创建任务命名空间。"xxx"为“config/isvc-config.yaml”设置的“app\_namespace”。如果“app\_namespace”为“default”或未设置，可以不创建命名空间。
 
@@ -242,13 +242,13 @@ spec:
     }'
     ```
 
-    - <router-podip\>为Router Pod的IP地址，可以通过以下命令查看。
+    - `<router-podip>`为Router Pod的IP地址，可以通过以下命令查看。
 
         ```shell
         kubectl get pod -A -o wide
         ```
 
-    - <router-port\>为Serving Runtime中Router设置的服务端口。
+    - `<router-port>`为Serving Runtime中Router设置的服务端口。
 
 11. （可选）删除推理任务。若用户需要删除任务，可以执行该步骤。
 

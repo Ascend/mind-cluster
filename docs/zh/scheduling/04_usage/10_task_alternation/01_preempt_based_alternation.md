@@ -28,7 +28,7 @@ sequenceDiagram
     Inf->>Inf: 缩容释放NPU
     Train->>Sched: 训练Pod重新进入调度
     Sched->>Cache: 查询缓存命中
-    Sched->>Train: 回原节点（原节点统治性得分）✓
+    Sched->>Train: 回原节点（原节点亲和性得分）✓
     Note over Train: 复用镜像缓存，秒级启动
 ```
 

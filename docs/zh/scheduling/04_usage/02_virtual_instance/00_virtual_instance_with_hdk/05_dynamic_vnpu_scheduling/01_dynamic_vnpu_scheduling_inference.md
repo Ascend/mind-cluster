@@ -97,7 +97,7 @@ docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {imag
 
       需要在device-plugin-volcano-v\{version\}.yaml中将“presetVirtualDevice”字段修改为“false”（协同Volcano使用，支持NPU虚拟化，YAML默认关闭动态虚拟化）。
 
-       ```Yaml
+       ```yaml
        ...
        args: [ "device-plugin -volcanoType=true -presetVirtualDevice=false
                   -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log -logLevel=0" ]
@@ -108,7 +108,7 @@ docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {imag
 
       在Volcano部署文件“volcano-v<i>\{version\}</i>.yaml”中，需要配置“presetVirtualDevice”的值为“false”。
 
-       ```Yaml
+       ```yaml
        ...
        data:
          volcano-scheduler.conf: |
@@ -442,7 +442,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
 
     在Atlas 推理系列产品上，以infer-deploy-dynamic.yaml为例，申请1个AICore的参数配置示例如下。
 
-    ```Yaml
+    ```yaml
     apiVersion: apps/v1
     kind: Deployment
     metadata:
@@ -473,7 +473,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
 
               resources:
                 requests:
-                  huawei.com/npu-core: 1        # 使用静态虚拟化的vir01模板动态虚拟化NPU
+                  huawei.com/npu-core: 1        # 使用vir01模板进行动态虚拟化
                 limits:
                   huawei.com/npu-core: 1        # 数值与requests保持一致
     ```
@@ -540,8 +540,8 @@ deploy任务原理图如[图3](#fig349112913199)所示。
     </tbody>
     </table>
 
-   >[!NOTE]
-   >vnpu-level和vnpu-dvpp的选择结果，具体请参见[表5](#table83781115185619)。
+   > [!NOTE]
+   > vnpu-level和vnpu-dvpp的选择结果，具体请参见[表5](#table83781115185619)。
    >
    >- 表中“降级”表示AICore满足的情况下，其他资源不够（如AICPU）时，模板会选择同AICore下的其他满足资源要求的模板。如在只剩一颗芯片上只有2个AICore，1个AICPU时，vir02模板会降级为vir02\_1c。
    >- 表中“选择模板”中的值来源于[虚拟化模板](./../03_virtualization_templates.md)中表1的Atlas 推理系列产品、“虚拟化实例模板”列的取值。
@@ -628,7 +628,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
     <td class="cellrowborder" rowspan="3" valign="top" headers="mcps1.2.7.1.3 "><p id="p3248184024610"><a name="p3248184024610"></a><a name="p3248184024610"></a>low/其他值</p>
     </td>
     <td class="cellrowborder" rowspan="3" valign="top" headers="mcps1.2.7.1.4 "><p id="p4249114074618"><a name="p4249114074618"></a><a name="p4249114074618"></a>-</p>
-    ia<p id="p1631211451596"><a name="p1631211451596"></a><a name="p1631211451596"></a></p>
+    <p id="p1631211451596"><a name="p1631211451596"></a><a name="p1631211451596"></a></p>
     <p id="p189347217116"><a name="p189347217116"></a><a name="p189347217116"></a></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p id="p8249540164619"><a name="p8249540164619"></a><a name="p8249540164619"></a>vir04_4c_dvpp</p>
@@ -695,16 +695,13 @@ deploy任务原理图如[图3](#fig349112913199)所示。
 
 3. 挂载权重文件。
 
-    ```Yaml
+    ```yaml
     ...
-                  ports:     # 分布式训练集合通信端口
-                    - containerPort: 2222
-                      name: ascendjob-port
                   resources:
                     limits:
-                      huawei.com/Ascend310P: 1   # 申请的芯片数
+                      huawei.com/npu-core: 1   # 申请的AICore数
                     requests:
-                      huawei.com/Ascend310P: 1   #与limits取值一致
+                      huawei.com/npu-core: 1   #与limits取值一致
                   volumeMounts:
     ...
                       # 权重文件挂载路径
@@ -726,7 +723,7 @@ deploy任务原理图如[图3](#fig349112913199)所示。
 
 4. 修改所选YAML中的容器启动命令，即“command”字段内容，如果没有则需添加。
 
-    ```Yaml
+    ```yaml
     ...
           containers:
           - image: ubuntu-infer:v1
@@ -754,7 +751,7 @@ kubectl apply -f infer-deploy-dynamic.yaml
 回显示例如下：
 
 ```ColdFusion
-job.batch/resnetinfer1-2 created
+deployment.apps/resnetinfer1-1-deploy created
 ```
 
 >[!NOTE]
@@ -850,8 +847,8 @@ kubectl delete -f infer-deploy-dynamic.yaml
 回显示例如下：
 
 ```ColdFusion
-root@ubuntu:/home/test/yaml# kubectl delete -f infer-310p-1usoc.yaml
-job "resnetinfer1-1" deleted
+root@ubuntu:/home/test/yaml# kubectl delete -f infer-deploy-dynamic.yaml
+deployment.apps "resnetinfer1-1-deploy" deleted
 ```
 
 ### 集成后使用<a name="ZH-CN_TOPIC_0000002511347073"></a>

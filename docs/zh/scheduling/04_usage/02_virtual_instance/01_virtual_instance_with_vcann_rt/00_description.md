@@ -9,7 +9,7 @@
 
 ## 原理介绍<a name="section154002962818vcann"></a>
 
-昇腾NPU硬件资源主要包括AICore（用于AI模型计算）、AICPU和内存等。基于vCANN-RT的虚拟化实例功能的核心原理是：根据用户指定的资源需求，以软切分配置文件的方式，通过vCANN-RT实现按需分配。例如，用户只需50% AICore的算力和2048MB高带宽内存时，系统会创建一个npu_info配置文件，通过vCANN-RT从NPU芯片获取上述资源提供给容器使用。基于vCANN-RT的虚拟化实例方案如[图1 基于vCANN-RT的虚拟化实例方案](#fig987114711574vcann)所示。
+昇腾NPU硬件资源主要包括AICore（用于AI模型计算）、AICPU和内存等。基于vCANN-RT的虚拟化实例功能的核心原理是：根据用户指定的资源需求，以软切分配置文件的方式，通过vCANN-RT实现按需分配。例如，用户只需50% AICore的算力和2048MB高带宽内存时，系统会创建一个npu_info配置文件，通过vCANN-RT从NPU芯片获取上述资源提供给容器使用。基于vCANN-RT的虚拟化实例方案如[图 1 基于vCANN-RT的虚拟化实例方案](#fig987114711574vcann)所示。
 
 **图 1**  基于vCANN-RT的虚拟化实例方案<a name="fig987114711574vcann"></a>
 ![](../../../../figures/scheduling/virtual_instance_vcann.PNG "virtual_instance_vcann")
@@ -31,7 +31,7 @@
 <tbody align="left">
 <tr>
 <td class="cellrowborder" valign="top" width="30%"><term>Atlas A2 训练系列产品</term></td>
-<td class="cellrowborder" rowspan="5" valign="center" width="40%"><p>在物理机生成软切分配置文件，挂载NPU和位置文件到容器</p></td>
+<td class="cellrowborder" rowspan="5" valign="center" width="40%"><p>在物理机生成软切分配置文件，挂载NPU和配置文件到容器</p></td>
 <td class="cellrowborder" rowspan="5" align="center" valign="center" width="15%"><p>软切分虚拟化</p></td>
 <td class="cellrowborder" rowspan="5" align="center" valign="center" width="10%"><p>是</p></td>
 </tr>
@@ -45,7 +45,7 @@
 <td class="cellrowborder" valign="top" width="30%"><term>Atlas A3 推理系列产品</term></td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" width="30%">Atlas 350 标卡</td>
+<td class="cellrowborder" valign="top" width="30%"><term>Atlas 350 标卡</term></td>
 </tr>
 </tbody>
 </table>

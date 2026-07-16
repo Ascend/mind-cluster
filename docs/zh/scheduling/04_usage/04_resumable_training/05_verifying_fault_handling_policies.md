@@ -490,7 +490,7 @@
 
 #### PyTorch场景适配示例（基于MindSpeed-LLM）<a name="ZH-CN_TOPIC_0000002511426361"></a>
 
-1. 搭建训练环境，拉起训练，详细请参见[PyTorch场景适配示例（基于MindSpeed-LLM）](04_using_resumable_training_on_the_cli.md#适配示例)。
+1. 搭建训练环境，拉起训练，详细请参见[PyTorch场景适配示例（基于MindSpeed-LLM）](04_using_resumable_training_on_the_cli.md#zh-cn_topic_0000002003180016_section412442472511)。
 2. 开启进程级在线恢复，详细请参见[配置进程级在线恢复](03_configuration/02_configuring_fault_handling_policies.md#配置进程级在线恢复)。
 3. 在“QWEN3\_for\_PyTorch\_2.7\_code/mindspeed\_llm/training/training.py”代码中增加如下加粗内容，打桩注入故障，新增代码根据环境变量“RAISE\_UCE\_ERROR\_STEP\_AND\_RANK”获取注入故障迭代位置和故障rank信息。
 
@@ -533,7 +533,7 @@
 
 #### MindSpore场景适配示例（基于MindFormers）<a name="ZH-CN_TOPIC_0000002511346369"></a>
 
-1. 搭建训练环境，拉起训练，详细请参见[MindSpore场景适配示例（基于MindFormers）](04_using_resumable_training_on_the_cli.md#适配示例)。
+1. 搭建训练环境，拉起训练，详细请参见[MindSpore场景适配示例（基于MindFormers）](04_using_resumable_training_on_the_cli.md#zh-cn_topic_0000002003180016_section718243883518)。
 2. 开启进程级在线恢复，详细请参见[配置进程级在线恢复](03_configuration/02_configuring_fault_handling_policies.md#配置进程级在线恢复)。
 3. 在“QWEN3\_for\_MS\_code/mindformers/core/callback/callback.py”代码中增加如下加粗内容，打桩注入故障。
 
@@ -610,8 +610,8 @@
    2. 回显示例如下，出现Running表示任务正常运行：
 
       <pre codetype="bash">
-      trjob            process-online-recovery-master-0                   1/1     Running   0                 14s     192.168.75.202   master-69-117   &lt;none&gt;           &lt;none&gt;
-      trjob            process-online-recovery-worker-0                   1/1     Running   0                 14s     192.168.6.13     work-69-115     &lt;none&gt;           &lt;none&gt;
+      trjob            process-online-recovery-master-0                   1/1     Running   0                 14s     xx.xx.xx.xx   master-x   &lt;none&gt;           &lt;none&gt;
+      trjob            process-online-recovery-worker-0                   1/1     Running   0                 14s     xx.xx.xx.xx     work-x     &lt;none&gt;           &lt;none&gt;
       </pre>
 
 3. 监控训练日志
@@ -652,12 +652,12 @@
       回显示例如下：
 
       ```bash
-      trjob            process-online-recovery-master-0                   1/1     Running   0                 110s    192.168.75.202   master-69-117   <none>           <none>
-      trjob            process-online-recovery-worker-0                   1/1     Running   0                 110s    192.168.6.13     work-69-115     <none>           <none>
+      trjob            process-online-recovery-master-0                   1/1     Running   0                 110s    xx.xx.xx.xx     master-x   <none>           <none>
+      trjob            process-online-recovery-worker-0                   1/1     Running   0                 110s    xx.xx.xx.xx     worker-x   <none>           <none>
       ```
 
       >[!NOTE]
-      > 此时请检查 RESTARTS 列，该数值必须保持为 0。证明在整个 UCE 故障及修复过程中，Pod 容器从未发生过重启。
+      > 此时请检查RESTARTS列，该数值必须保持为0。证明在整个UCE故障及修复过程中，Pod容器从未发生过重启。
 
    2. 执行以下命令查看训练迭代步数：
 
@@ -669,6 +669,6 @@
       ```
 
       >[!NOTE]
-      > - 以上命令中 `grep` 的迭代步数（如 `iteration 4`）需根据实际注入故障的步数调整。若故障注入在第 `N` 步，恢复后应从第 `N+1` 步继续训练，因此应 `grep iteration [[:space:]]*{N+1}`。本示例中第 3 步故障对应 `iteration 4`，第 10 步故障对应 `iteration 11`。
-      > - 在分布式多机训练中，受训练框架的日志重定向机制影响，各 Rank 的迭代日志可能仅输出在部分节点的 stdout 中，或被重定向至本地物理日志文件。
-      > - 本示例中 Master 节点返回 0、Worker 节点返回 11，只要任一节点能搜出大于 0 的计数，即证明热修复后训练已跨越对应故障步数并继续。
+      > - 以上命令中 `grep` 的迭代步数（如 `iteration 4`）需根据实际注入故障的步数调整。若故障注入在第 `N` 步，恢复后应从第 `N+1` 步继续训练，因此应 `grep iteration [[:space:]]*{N+1}`。本示例中第3步故障对应 `iteration 4`，第10步故障对应 `iteration 11`。
+      > - 在分布式多机训练中，受训练框架的日志重定向机制影响，各Rank的迭代日志可能仅输出在部分节点的stdout中，或被重定向至本地物理日志文件。
+      > - 本示例中Master节点返回0、Worker节点返回11，只要任一节点能搜出大于0的计数，即证明热修复后训练已跨越对应故障步数并继续。
