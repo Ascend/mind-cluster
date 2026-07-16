@@ -31,7 +31,7 @@
 
     > [!NOTE]
     >
-    > - Host 侧日志必须包含 dmidecode.txt 信息
+    > - Host 侧日志必须包含 dmidecode.txt 信息。
     > - 如有多个设备，相应清洗到 worker-1、worker-2 等目录，也可用设备 ip 命名。
 
 2. 清洗后的目录结构
@@ -62,8 +62,8 @@
     ascend-fd diag -i <input_dir> -o <output_dir> -s super_pod
     ```
 
-    > - `input_dir` 为诊断输入目录
-    > - `output_dir` 为诊断结果输出目录
+    > - `input_dir` 为诊断输入目录。
+    > - `output_dir` 为诊断结果输出目录。
 
     诊断回显如下：
 
@@ -130,15 +130,15 @@
 
     > [!NOTE]
     >
-    > - 示例为假设缺少 lcne 日志
-    > - Host 侧日志以 --process_log 为例，可以直接使用 -i 把其他收集的日志包括进来（如 device_log, dl_log 等）
-    > - 不同设备的清洗结果，应归属于不同的 worker 下
-    > - 不同的设备，应该对应不同的 worker 目录（如五台设备，分别对应 worker-0 至 worker-4）
-    > - 示例仅展示三台设备的清洗结果，实际场景中，需要根据设备数量，对应不同的 worker 目录
+    > - 示例为假设缺少 lcne 日志。
+    > - Host 侧日志以 --process_log 为例，可以直接使用 -i 把其他收集的日志包括进来（如 device_log, dl_log 等）。
+    > - 不同设备的清洗结果，应归属于不同的 worker 下。
+    > - 不同的设备，应该对应不同的 worker 目录（如五台设备，分别对应 worker-0 至 worker-4）。
+    > - 示例仅展示三台设备的清洗结果，实际场景中，需要根据设备数量，对应不同的 worker 目录。
 
 2. 清洗完成后的目录结构
 
-    ```Text
+    ```text
         超节点清洗结果输出目录/
         ├── worker-0
         │   ├── ascend-kg-analyzer.json
@@ -170,8 +170,8 @@
     ascend-fd diag -i <input_dir> -o <output_dir>
     ```
 
-    > - `input_dir` 为诊断输入目录
-    > - `output_dir` 为诊断结果输出目录
+    > - `input_dir` 为诊断输入目录。
+    > - `output_dir` 为诊断结果输出目录。
 
     以 pd 分离超节点场景为例，诊断回显如下：
 
@@ -262,7 +262,7 @@
 
 4. 诊断结果
 
-    ```Text
+    ```text
     fault_diag_result/
     ├── diag_report_xxx.xxx.xx8.201-xxx.xxx.xx2.204-xxx.xxx.8.183-xxx.xxx.x7.203.json #诊断结果1
     └── diag_report_xxx.xxx.xx7.11.json #诊断结果2

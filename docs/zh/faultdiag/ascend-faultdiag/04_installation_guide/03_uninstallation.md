@@ -12,7 +12,7 @@ pip3 uninstall ascend-faultdiag -y
 
 ## 使用 MindCluster Ascend Deployer 方式安装后进行工具的卸载
 
-以组件的安装用户执行删除二进制文件命令
+以组件的安装用户执行删除二进制文件命令：
 
 ```shell
 rm /usr/local/bin/ascend-fd

@@ -16,7 +16,7 @@ ascend-fd 版本号格式为 `X.Y.Z`，例如 `26.1.0`。
 | `~/.ascend_faultdiag/custom-ascend-kg-config.json`   | 自定义故障实体文件   |
 | `~/.ascend_faultdiag/blacklist-config.json`          | 屏蔽规则配置文件     |
 
-> 日志文件大小不超过 10MB，超过后自动转储
+> - 日志文件大小不超过 10MB，超过后自动转储。
 
 ## 组件错误码
 
@@ -35,4 +35,4 @@ ascend-fd 版本号格式为 `X.Y.Z`，例如 `26.1.0`。
 
 ## 已支持故障
 
-请参考 [MindCluster 26.1.0 故障诊断类型](../../../resource/故障诊断类型.xlsx)
+请参考 [MindCluster 26.1.0 故障诊断类型](../../../resource/故障诊断类型.xlsx)。

@@ -196,10 +196,10 @@ parse_root_cluster(input_log_list: list) -> Tuple[List, List]
 
 ##### 返回值表
 
-| 返回值       | 类型 | 说明                             |
-|--------------|------|----------------------------------|
-| results      | List | 清洗整合后的日志信息             |
-| err_msg_list | List | 接口执行过程中产生的错误信息列表 |
+| 返回值       | 类型         | 说明                             |
+|--------------|--------------|----------------------------------|
+| results      | List         | 清洗整合后的日志信息             |
+| err_msg_list | List[String] | 接口执行过程中产生的错误信息列表 |
 
 ### diag_root_cluster
 
@@ -227,7 +227,7 @@ diag_root_cluster(input_log_list: list) -> Tuple[Dict, List]
 
 | 返回值       | 类型         | 说明                             |
 |--------------|--------------|----------------------------------|
-| results      | Dictionary   | 发生错误的根因节点信息           |
+| results      | Dict         | 发生错误的根因节点信息           |
 | err_msg_list | List[String] | 接口执行过程中产生的错误信息列表 |
 
 - **results 示例**
@@ -285,10 +285,10 @@ parse_knowledge_graph(input_log_list: list, custom_entity: dict = None) -> Tuple
 
 ##### 请求参数表
 
-| 参数           | 类型         | 说明                                     |
-|----------------|--------------|------------------------------------------|
-| input_log_list | List         | 用户输入的故障日志列表                   |
-| custom_entity  | Dict（可选） | 自定义故障实体，仅本次调用有效，不会落盘 |
+| 参数           | 类型 | 是否必选 | 说明                                     |
+|----------------|------|----------|------------------------------------------|
+| input_log_list | List | 是       | 用户输入的故障日志列表                   |
+| custom_entity  | Dict | 否       | 自定义故障实体，仅本次调用有效，不会落盘 |
 
 - **input_log_list 示例**
 
