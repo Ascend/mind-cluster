@@ -54,6 +54,10 @@
 
 3. 部署Ascend Docker Runtime和Ascend Device Plugin组件。
 
+    >[!NOTE]
+    >
+    > `VERSION` 环境变量用于指定Ascend组件版本，本文档以`26.1.0`为例。每个独立的代码块中均需设置此变量。
+
     1. 部署Ascend Docker Runtime。
 
         ```shell
@@ -85,6 +89,7 @@
     2. 拉取Ascend Device Plugin镜像。
 
         ```shell
+        VERSION=26.1.0
         # 从华为云镜像仓拉取Ascend Device Plugin镜像
         docker pull swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v${VERSION}
 
@@ -95,6 +100,7 @@
     3. 部署Ascend Device Plugin。
 
         ```shell
+        VERSION=26.1.0
         # 拉取配置文件
         mkdir -p /tmp/devicePlugin
         cd /tmp/devicePlugin
@@ -185,6 +191,7 @@
 5. 清理测试资源。
 
     ```shell
+    VERSION=26.1.0
     # 删除测试Pod
     kubectl delete pod npu-test
 
@@ -244,6 +251,7 @@
     2. 通过helm安装NodeD、Ascend Device Plugin、Volcano、ClusterD、Ascend Operator组件。
 
         ```shell
+        VERSION=26.1.0
         mkdir /tmp/helm
         cd /tmp/helm
         wget https://gitcode.com/Ascend/mind-cluster/releases/download/v${VERSION}/Ascend-helm-deploy-tool_${VERSION}_linux.zip
@@ -322,7 +330,7 @@
         cd /data/atlas_dls/public/dataset/resnet50/imagenet
         ```
 
-    3. 通过如下命令获取[mindcluster-samples](https://gitcode.com/Ascend/mindcluster-deploy)仓库的“samples/train/basic-training/without-ranktable/pytorch”目录中的train_start.sh，放在“/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts”路径下。
+    3. 通过如下命令获取[MindCluster-Samples](https://gitcode.com/Ascend/mindcluster-deploy)仓库的“samples/train/basic-training/without-ranktable/pytorch”目录中的train_start.sh，放在“/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts”路径下。
 
         ```shell
         mkdir /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
@@ -330,7 +338,7 @@
         wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/train_start.sh
         ```
 
-    4. 通过如下命令获取[mindcluster-samples](https://gitcode.com/Ascend/mindcluster-deploy)仓库“samples/train/basic-training/without-ranktable/pytorch”目录下的“pytorch_standalone_acjob_quickstart.yaml”文件。示例默认为单机单卡任务。
+    4. 通过如下命令获取[MindCluster-Samples](https://gitcode.com/Ascend/mindcluster-deploy)仓库“samples/train/basic-training/without-ranktable/pytorch”目录下的“pytorch_standalone_acjob_quickstart.yaml”文件。示例默认为单机单卡任务。
 
         ```shell
         cd /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
@@ -376,17 +384,17 @@
 
         >[!NOTE]
         >
-        > 回显中`10.106.227.104`为集群分配的实际IP地址，请以实际回显为准。
+        > 回显中`10.106.227.xxx`为集群分配的实际IP地址，请以实际回显为准。
 
         ```output
         [20251218-20:31:57] [MindXDL Service Log]server id is: 0
-        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=7 --multiprocessing-distributed --addr=10.106.227.104 --world-size=1 --rank=0
-        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=6 --multiprocessing-distributed --addr=10.106.227.104 --world-size=1 --rank=0
-        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=5 --multiprocessing-distributed --addr=10.106.227.104 --world-size=1 --rank=0
-        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=4 --multiprocessing-distributed --addr=10.106.227.104 --world-size=1 --rank=0
-        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=3 --multiprocessing-distributed --addr=10.106.227.104 --world-size=1 --rank=0
-        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=2 --multiprocessing-distributed --addr=10.106.227.104 --world-size=1 --rank=0
-        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=1 --multiprocessing-distributed --addr=10.106.227.104 --world-size=1 --rank=0
+        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=7 --multiprocessing-distributed --addr=10.106.227.xxx --world-size=1 --rank=0
+        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=6 --multiprocessing-distributed --addr=10.106.227.xxx --world-size=1 --rank=0
+        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=5 --multiprocessing-distributed --addr=10.106.227.xxx --world-size=1 --rank=0
+        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=4 --multiprocessing-distributed --addr=10.106.227.xxx --world-size=1 --rank=0
+        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=3 --multiprocessing-distributed --addr=10.106.227.xxx --world-size=1 --rank=0
+        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=2 --multiprocessing-distributed --addr=10.106.227.xxx --world-size=1 --rank=0
+        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=1 --multiprocessing-distributed --addr=10.106.227.xxx --world-size=1 --rank=0
         /usr/local/python3.10.5/lib/python3.10/site-packages/torchvision/io/image.py:13: UserWarning: Failed to load image Python extension: ''If you don't plan on using image functionality from `torchvision.io`, you can ignore this warning. Otherwise, there might be something wrong with your environment. Did you have `libjpeg` or `libpng` installed before building `torchvision` from source?
           warn(
         [2025-12-18 20:32:02] [WARNING] [470] profiler.py: Invalid parameter export_type: None, reset it to text.
@@ -397,3 +405,14 @@
         Use GPU: 0 for training
         => creating model 'resnet50'
         ```
+
+6. 清理测试资源.
+
+    ```shell
+    # 删除训练任务Pod
+    kubectl delete -f /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts/pytorch_standalone_acjob_quickstart.yaml
+
+    # 卸载Helm部署的组件(可选）
+    helm uninstall mindcluster
+    helm uninstall mindcluster-crds
+    ```
