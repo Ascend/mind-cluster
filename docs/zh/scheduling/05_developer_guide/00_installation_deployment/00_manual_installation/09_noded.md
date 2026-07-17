@@ -230,7 +230,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="phz003c-noded"><a name="phz003c-noded"></a><a name="phz003c-noded"></a>""</p>
 </td>
-<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="phz003d-noded"><a name="phz003d-noded"></a><a name="phz003d-noded"></a>HTTPS证书文件路径。为空则使用HTTP协议。与--tls-private-key-file必须同时配置或同时为空。配置方法及安全注意事项请参见<a href="../../../07_references/04_security_hardening.md#健康探针安全加固">健康探针安全加固</a>。</p>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="phz003d-noded"><a name="phz003d-noded"></a><a name="phz003d-noded"></a>HTTPS证书文件路径。为空则使用HTTP协议。与--tls-private-key-file必须同时配置或同时为空。配置方法及安全注意事项请参见<a href="../../../07_references/04_security_hardening.md#ZH-CN_TOPIC_0000002511346467">健康探针安全加固</a>。</p>
 </td>
 </tr>
 <tr id="rowhz004-noded"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="phz004-noded"><a name="phz004-noded"></a><a name="phz004-noded"></a>--tls-private-key-file</p>

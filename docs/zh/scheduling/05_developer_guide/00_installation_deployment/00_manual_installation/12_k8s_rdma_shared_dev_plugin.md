@@ -163,7 +163,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15%" headers="mcps1.2.5.1.3 "><p id="p828341482321"><a name="p828341482321"></a><a name="p828341482321"></a>""</p>
 </td>
-<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p828311432321"><a name="p828311432321"></a><a name="p828311432321"></a>HTTPS证书文件路径。为空则使用HTTP协议。与--tls-private-key-file必须同时配置或同时为空。配置方法及安全注意事项请参见<a href="../../../07_references/04_security_hardening.md#健康探针安全加固">健康探针安全加固</a>。</p>
+<td class="cellrowborder" valign="top" width="45%" headers="mcps1.2.5.1.4 "><p id="p828311432321"><a name="p828311432321"></a><a name="p828311432321"></a>HTTPS证书文件路径。为空则使用HTTP协议。与--tls-private-key-file必须同时配置或同时为空。配置方法及安全注意事项请参见<a href="../../../07_references/04_security_hardening.md#ZH-CN_TOPIC_0000002511346467">健康探针安全加固</a>。</p>
 </td>
 </tr>
 <tr id="row10282191492322"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p8283714172322"><a name="p8283714172322"></a><a name="p8283714172322"></a>--tls-private-key-file</p>

@@ -13,7 +13,7 @@
    - 检查安装结果
    - 配置环境变量
 
-Ascend Deployer工具现支持的硬件产品、OS清单、安装场景请参见《MindCluster Ascend Deployer 用户指南》中的"[支持的产品和OS清单](https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/zh/01_introduction/02_supported_product_and_os.md)"章节，请根据"支持部署"列的支持情况，选择是否使用Ascend Deployer工具。
+Ascend Deployer工具现支持的硬件产品、OS清单、安装场景请参见《MindCluster Ascend Deployer 用户指南》中的“[支持的产品和OS清单](https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/zh/01_introduction/02_supported_product_and_os.md)“章节，请根据"支持部署"列的支持情况，选择是否使用Ascend Deployer工具。
 
 如需使用Ascend Deployer工具安装，请参考《MindCluster Ascend Deployer 用户指南》中的“[安装昇腾软件](https://gitcode.com/Ascend/ascend-deployer/blob/dev/docs/zh/05_installation_and_upgrade/02_install_softwares.md)”章节。
 
