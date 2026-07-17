@@ -140,10 +140,6 @@
 <td class="cellrowborder" valign="top" width="50.4%" headers="mcps1.2.4.1.3 "><a name="ul164242719228"></a><a name="ul164242719228"></a><ul id="ul164242719228"><li>Tlinux 3.1 for x86_64</li><li>Tlinux 4.0 for x86_64 (6.6.80-29.tl4.x86_64 kernel) </li><li>Velinux 1.4 for x86_64</li></ul>
 </td>
 </tr>
-<tr id="row7316192354212"><td class="cellrowborder" colspan="3" valign="top" headers="mcps1.2.4.1.1 mcps1.2.4.1.2 mcps1.2.4.1.3 "><p id="p331612304218"><a name="p331612304218"></a><a name="p331612304218"></a>注：</p>
-<p id="p1431613237421"><a name="p1431613237421"></a><a name="p1431613237421"></a>6.0.RC2及以上版本支持在<span id="ph831682314426"><a name="ph831682314426"></a><a name="ph831682314426"></a>Atlas 900 A3 SuperPoD 超节点</span>上使用<span id="ph183161923104214"><a name="ph183161923104214"></a><a name="ph183161923104214"></a>Ascend Operator</span>组件的资源监测、整卡调度和断点续训特性。</p>
-</td>
-</tr>
 </tbody>
 </table>
 
