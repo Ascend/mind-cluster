@@ -30,7 +30,7 @@
   - [entity 命令（自定义故障实体）](./06_api/05_command_entity.md)
   - [blacklist 命令（屏蔽故障日志）](./06_api/06_command_blacklist.md)
   - [config 命令（自定义配置）](./06_api/07_command_config.md)
-  - [version 命令（版本查询）](./06_api/08_command_version.md)
+  - [version 命令（显示版本信息）](./06_api/08_command_version.md)
   - [SDK 接口参考](./06_api/09_sdk_api.md)
 - [参考](./07_references/menu_references.md)
   - [常用操作](./07_references/01_common_operations.md)
