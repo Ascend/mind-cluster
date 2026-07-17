@@ -8,7 +8,7 @@
 pip3 uninstall ascend-faultdiag -y
 ```
 
-卸载完成后，可以通过 `pip3 list | grep ascend-faultdiag` 查看，无回显则表示成功卸载。
+卸载完成后，可以通过 `pip3 list | grep ascend-faultdiag` 查看，无 `ascend-faultdiag` 表示成功卸载。
 
 ## 使用 MindCluster Ascend Deployer 方式安装后进行工具的卸载
 
