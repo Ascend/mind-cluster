@@ -353,7 +353,7 @@ env | grep "MINDIE_LOG_PATH"
     则需要进入回显中对应的日志存储目录，拷贝相关组件日志。
 
     ```shell
-    cp -r /home/working {采集目录}
+    cp -r /home/working {采集目录}/mindie
     ```
 
 ### MindIE Pod 日志
@@ -362,9 +362,11 @@ env | grep "MINDIE_LOG_PATH"
 
 参考[Pod 日志采集脚本](https://gitcode.com/Ascend/mindxdl-deploy/blob/master/mindie/pod_log_collect.sh)中的 `pod_log_collect.sh` 编写采集脚本。
 
-确认脚本采集输出路径为`采集目录/mindie/log/mindie_cluster_log/`，可在任意目录执行命令采集，执行步骤如下：
+可在任意目录执行命令采集，执行步骤如下：
 
-- 添加日志输出路径
+- 修改日志输出路径
+
+将脚本中的日志采集地址按如下修改：
 
 ```shell
 log_dir="{采集目录}/mindie/log/mindie_cluster_log/"
@@ -457,5 +459,5 @@ MindIE-PyMotor 部署完成后，会自动启动 MindIE-PyMotor、vLLM 和 vLLM-
 
 > [!NOTE]
 >
-> MindIE-PyMotor 部署详情请参见[MindIE-PyMotor 部署](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/deployment/k8s/pd_aggregation_deployment.md#%E6%9F%A5%E7%9C%8B%E9%9B%86%E7%BE%A4%E7%8A%B6%E6%80%81%E4%B8%8E%E6%97%A5%E5%BF%97)。
-> 日志名格式为 `mindie-motor-controller-*.log`、`mindie-motor-coordinator-*.log`、`vllm-d0-*.log`、`vllm-p0-*.log`。
+> - MindIE-PyMotor 部署详情请参见[MindIE-PyMotor 部署](https://gitcode.com/Ascend/MindIE-PyMotor/blob/master/docs/zh/user_guide/deployment/k8s/pd_aggregation_deployment.md#%E6%9F%A5%E7%9C%8B%E9%9B%86%E7%BE%A4%E7%8A%B6%E6%80%81%E4%B8%8E%E6%97%A5%E5%BF%97)。
+> - 日志名格式为 `mindie-motor-controller-*.log`、`mindie-motor-coordinator-*.log`、`vllm-d0-*.log`、`vllm-p0-*.log`。

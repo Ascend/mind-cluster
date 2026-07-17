@@ -201,6 +201,120 @@ parse_root_cluster(input_log_list: list) -> Tuple[List, List]
 | results      | List         | 清洗整合后的日志信息             |
 | err_msg_list | List[String] | 接口执行过程中产生的错误信息列表 |
 
+- **results 示例**
+
+> 列表每个元素对应一个 server 的解析结果，key 为 pid 字符串；若输入包含 MindIE 日志，列表末尾会追加一个 MindIE 解析结果对象。
+
+```json
+[
+    {
+        "3199": {
+            "pid": "3199",
+            "base": {
+                "device_ip": "",
+                "vNic_ip": "",
+                "logic_device_id": "0",
+                "phy_device_id": "0",
+                "server_id": "10.1.1.1",
+                "root_list": ["instance_name"],
+                "timeout_param": {},
+                "rank_info_list": [],
+                "rank_map": {
+                    "instance_name": {
+                        "rank_id": "0",
+                        "rank_num": 1,
+                        "identifier": "",
+                        "eid_plane_list": []
+                    }
+                },
+                "server_name": "",
+                "generation_info": ""
+            },
+            "error": {
+                "first_error_module": "Notify",
+                "first_error_time": "2026-05-29 15:35:10.674067",
+                "cqe_links": [],
+                "timeout_error_events_list": [],
+                "cluster_exception": {},
+                "transport_error_remote": null,
+                "transport_init_error_happened": false
+            },
+            "tls_status": "",
+            "start_train_time": "2026-05-29 15:30:00.000000",
+            "end_train_time": "2026-05-29 15:40:00.000000",
+            "lagging_time": "2026-05-29 00:00:00.000000",
+            "recovery_success_time": "",
+            "start_resumable_training_time": "",
+            "plog_parsed_name": "plog-parser-3199-1.log",
+            "show_logs": {
+                "error": ["[ERROR] xxx"],
+                "normal": []
+            },
+            "aicpu_notify_wait_remote": ""
+        }
+    },
+    {
+        "mindie": true,
+        "link_error_info_map": {
+            "10.1.1.1": ["10.1.1.2"]
+        },
+        "pull_kv_error_map": {
+            "10.1.1.1": ["10.1.1.2"]
+        }
+    }
+]
+```
+
+- **results 字段说明**
+
+| 字段                                               | 类型         | 必返回 | 说明                                                 |
+|----------------------------------------------------|--------------|--------|------------------------------------------------------|
+| `<pid>`                                            | Object       | 是     | 以 pid 为 key 的解析结果对象                         |
+| `<pid>.pid`                                        | String       | 是     | 进程 ID                                              |
+| `<pid>.base`                                       | Object       | 是     | plog 解析出的设备基本信息                            |
+| `<pid>.base.device_ip`                             | String       | 是     | 设备 IP                                              |
+| `<pid>.base.vNic_ip`                               | String       | 是     | 虚拟网卡 IP                                          |
+| `<pid>.base.logic_device_id`                       | String       | 是     | 逻辑设备 ID                                          |
+| `<pid>.base.phy_device_id`                         | String       | 是     | 物理设备 ID                                          |
+| `<pid>.base.server_id`                             | String       | 是     | 服务器 IP                                            |
+| `<pid>.base.root_list`                             | List[String] | 是     | root 节点 identifier 列表                            |
+| `<pid>.base.timeout_param`                         | Object       | 是     | 超时参数                                             |
+| `<pid>.base.rank_map`                              | Object       | 是     | 通信域信息，key 为 instance_id                       |
+| `<pid>.base.rank_map.<instance_id>.rank_id`        | String       | 是     | 通信域内的 rank ID                                   |
+| `<pid>.base.rank_map.<instance_id>.rank_num`       | Integer      | 是     | 通信域内的 rank 总数                                 |
+| `<pid>.base.rank_map.<instance_id>.identifier`     | String       | 是     | 通信域 identifier                                    |
+| `<pid>.base.rank_map.<instance_id>.eid_plane_list` | List         | 是     | EID 平面信息列表                                     |
+| `<pid>.base.server_name`                           | String       | 是     | 服务器名称                                           |
+| `<pid>.base.generation_info`                       | String       | 是     | 产品代际信息                                         |
+| `<pid>.error`                                      | Object       | 是     | 错误信息                                             |
+| `<pid>.error.first_error_module`                   | String       | 是     | 首个错误模块                                         |
+| `<pid>.error.first_error_time`                     | String       | 是     | 首个错误发生时间                                     |
+| `<pid>.error.cqe_links`                            | List[String] | 是     | CQE 链路信息                                         |
+| `<pid>.error.timeout_error_events_list`            | List         | 是     | 超时错误事件列表                                     |
+| `<pid>.error.cluster_exception`                    | Object       | 是     | 集群异常信息                                         |
+| `<pid>.error.transport_error_remote`               | Object       | 是     | 传输错误对端信息                                     |
+| `<pid>.error.transport_init_error_happened`        | Boolean      | 是     | 是否发生过传输初始化错误                             |
+| `<pid>.tls_status`                                 | String       | 是     | TLS 状态                                             |
+| `<pid>.start_train_time`                           | String       | 是     | 训练开始时间                                         |
+| `<pid>.end_train_time`                             | String       | 是     | 训练结束时间                                         |
+| `<pid>.lagging_time`                               | String       | 是     | 落后时间                                             |
+| `<pid>.recovery_success_time`                      | String       | 是     | 恢复成功时间                                         |
+| `<pid>.start_resumable_training_time`              | String       | 是     | 断点续训开始时间                                     |
+| `<pid>.plog_parsed_name`                           | String       | 是     | 生成的 plog 解析文件名                               |
+| `<pid>.show_logs`                                  | Object       | 是     | 展示日志                                             |
+| `<pid>.show_logs.error`                            | List[String] | 是     | 错误日志（最多展示若干行）                           |
+| `<pid>.show_logs.normal`                           | List[String] | 是     | 常规日志（最多展示若干行）                           |
+| `<pid>.aicpu_notify_wait_remote`                   | String       | 是     | AICPU notify 等待对端信息                            |
+| `mindie`                                           | Boolean      | 否     | 是否为 MindIE 解析结果（仅含 MindIE 日志时存在）     |
+| `link_error_info_map`                              | Object       | 否     | 链路错误信息，key 为本端 IP，value 为对端 IP 列表    |
+| `pull_kv_error_map`                                | Object       | 否     | KV 拉取错误信息，key 为本端 IP，value 为对端 IP 列表 |
+
+- **err_msg_list 示例**
+
+```json
+["Input validation failed, the reason is: [Invalid parameter type for 'input_log_list', it should be 'list'.]"]
+```
+
 ### diag_root_cluster
 
 根因节点诊断接口。
@@ -369,22 +483,24 @@ parse_knowledge_graph(input_log_list: list, custom_entity: dict = None) -> Tuple
 
 - **custom_entity 字段说明**
 
-> 故障码（顶层 key）为用户自定义的故障码，不能与 MindCluster Ascend FaultDiag 已支持的故障码相同。
-> 详细字段定义请参考 [自定义故障实体](../06_api/05_command_entity.md#JSON-参数说明)。
+| 字段                       | 类型                | 说明               |
+|----------------------------|---------------------|--------------------|
+| `attribute.class`          | String              | 故障类别           |
+| `attribute.component`      | String              | 故障组件           |
+| `attribute.module`         | String              | 故障模块           |
+| `attribute.cause_zh`       | String              | 故障原因（中文）   |
+| `attribute.description_zh` | String/List[String] | 故障描述（中文）   |
+| `attribute.suggestion_zh`  | String/List[String] | 建议方案（中文）   |
+| `attribute.error_case`     | String/List[String] | 错误示例           |
+| `attribute.fixed_case`     | String/List[String] | 修复示例           |
+| `rule`                     | List[Object]        | 诊断规则列表       |
+| `source_file`              | String              | 来源文件           |
+| `regex.in`                 | List[String]        | 匹配的正则模式列表 |
 
-| 字段                       | 类型         | 说明               |
-|----------------------------|--------------|--------------------|
-| `attribute.class`          | String       | 故障类别           |
-| `attribute.component`      | String       | 故障组件           |
-| `attribute.module`         | String       | 故障模块           |
-| `attribute.cause_zh`       | String       | 故障原因（中文）   |
-| `attribute.description_zh` | String       | 故障描述（中文）   |
-| `attribute.suggestion_zh`  | List[String] | 建议方案（中文）   |
-| `attribute.error_case`     | List[String] | 错误示例           |
-| `attribute.fixed_case`     | List[String] | 修复示例           |
-| `rule`                     | List[Object] | 诊断规则列表       |
-| `source_file`              | String       | 来源文件           |
-| `regex.in`                 | List[String] | 匹配的正则模式列表 |
+> [!NOTE]
+>
+> - 故障码（顶层 key）为用户自定义的故障码，不能与当前已支持的故障码相同，已支持故障码可参考[已支持故障](../07_references/04_appendix.md#已支持故障)。
+> - 详细字段定义请参考 [自定义故障实体](../06_api/05_command_entity.md#JSON-参数说明)。
 
 ##### 返回值表
 
@@ -392,6 +508,89 @@ parse_knowledge_graph(input_log_list: list, custom_entity: dict = None) -> Tuple
 |--------------|--------------|----------------------------------|
 | results      | List         | 清洗整合后相关性较高的故障事件   |
 | err_msg_list | List[String] | 接口执行过程中产生的错误信息列表 |
+
+- **results 示例**
+
+> 列表每个元素对应一个 server 的清洗结果，包含该 server 各设备的故障事件分析（root_causes）。
+
+```json
+[
+    {
+        "server": "10.1.1.1",
+        "fault": [
+            {
+                "parse_version": "26.1.0",
+                "response": {
+                    "0": {
+                        "analyze_success": true,
+                        "error": "None",
+                        "root_causes": {
+                            "AISW_MindIE_MS_HttpServer_01": {
+                                "code": "AISW_MindIE_MS_HttpServer_01",
+                                "entities_attribute": {
+                                    "component": "MindIE",
+                                    "module": "MS",
+                                    "cause_zh": "Httpserver通信超时",
+                                    "description_zh": "等待时间超过设定的时延。",
+                                    "suggestion_zh": [
+                                        "1. 请联系华为工程师处理；"
+                                    ],
+                                    "class": "Software"
+                                },
+                                "events_attribute": [
+                                    {
+                                        "event_code": "AISW_MindIE_MS_HttpServer_01",
+                                        "key_info": "[ERROR] [MIE03E400008] [HttpServer] Http server on timeout.",
+                                        "type": "MindIE_Controller",
+                                        "source_device": "0",
+                                        "occur_time": "2024-11-05 12:00:00.123456",
+                                        "event_id": "key1"
+                                    }
+                                ],
+                                "chains": {}
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    }
+]
+```
+
+- **results 字段说明**
+
+| 字段                                                   | 类型         | 必返回 | 说明                                       |
+|--------------------------------------------------------|--------------|--------|--------------------------------------------|
+| `server`                                               | String       | 是     | 服务器 IP                                  |
+| `fault`                                                | List[Object] | 是     | 故障分析结果列表（每个元素对应一次解析）   |
+| `fault[].parse_version`                                | String       | 是     | 解析器版本号                               |
+| `fault[].response`                                     | Object       | 是     | 各设备的故障事件分析，key 为 source_device |
+| `fault[].response.<source_device>.analyze_success`     | Boolean      | 是     | 是否分析成功，true 成功，false 失败        |
+| `fault[].response.<source_device>.error`               | String       | 是     | 错误信息（无错误时为 "None"）              |
+| `fault[].response.<source_device>.root_causes`         | Object       | 是     | 根因事件字典，key 为故障码 code            |
+| `root_causes.<code>.code`                              | String       | 是     | 故障码                                     |
+| `root_causes.<code>.entities_attribute`                | Object       | 是     | 故障实体属性                               |
+| `root_causes.<code>.entities_attribute.component`      | String       | 是     | 故障组件                                   |
+| `root_causes.<code>.entities_attribute.module`         | String       | 是     | 故障模块                                   |
+| `root_causes.<code>.entities_attribute.cause_zh`       | String       | 是     | 故障原因（中文）                           |
+| `root_causes.<code>.entities_attribute.description_zh` | String       | 是     | 故障描述（中文）                           |
+| `root_causes.<code>.entities_attribute.suggestion_zh`  | List[String] | 是     | 建议方案（中文）                           |
+| `root_causes.<code>.entities_attribute.class`          | String       | 是     | 故障类别                                   |
+| `root_causes.<code>.events_attribute`                  | List[Object] | 是     | 触发该根因的事件列表                       |
+| `root_causes.<code>.events_attribute[].event_code`     | String       | 是     | 事件故障码                                 |
+| `root_causes.<code>.events_attribute[].key_info`       | String       | 是     | 事件关键日志信息                           |
+| `root_causes.<code>.events_attribute[].type`           | String       | 是     | 事件类型                                   |
+| `root_causes.<code>.events_attribute[].source_device`  | String       | 是     | 事件来源设备                               |
+| `root_causes.<code>.events_attribute[].occur_time`     | String       | 是     | 事件发生时间                               |
+| `root_causes.<code>.events_attribute[].event_id`       | String       | 是     | 事件唯一标识                               |
+| `root_causes.<code>.chains`                            | Object       | 是     | 故障传播链                                 |
+
+- **err_msg_list 示例**
+
+```json
+["Validation for the input list[0] failed, the reason is: ParamError: input_log_list[0].server is missing"]
+```
 
 ### diag_knowledge_graph
 

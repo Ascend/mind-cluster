@@ -17,21 +17,21 @@ ascend-fd single-diag [-h] [-i INPUT_PATH] -o OUTPUT_PATH \
 
 ## 参数说明
 
-| 参数               | 类型   | 必选 | 说明                              |
-|--------------------|--------|------|-----------------------------------|
-| -h, --help         | -      | 否   | 显示帮助信息                      |
-| -i, --input_path   | String | 否   | 预处理数据输入路径                |
-| -o, --output_path  | String | 是   | 诊断结果输出路径                  |
-| --host_log         | String | 否   | 主机侧操作系统日志目录            |
-| --device_log       | String | 否   | Device 侧日志目录                 |
-| --train_log        | String | 否   | 用户训练及推理日志目录            |
-| --process_log      | String | 否   | CANN 应用类日志目录               |
-| --env_check        | String | 否   | NPU 网口、状态信息、资源信息目录  |
-| --dl_log           | String | 否   | MindCluster 组件日志目录          |
-| --mindie_log       | String | 否   | MindIE 组件日志目录               |
-| --amct_log         | String | 否   | AMCT 组件日志目录                 |
-| --bus_log          | String | 否   | Ascend 950 系列 LCNE 组件日志目录 |
-| --pymotor_vllm_log | String | 否   | PyMotor/vLLM 日志目录             |
+| 参数               | 类型                | 必选 | 说明                                     |
+|--------------------|---------------------|------|------------------------------------------|
+| -h, --help         | -                   | 否   | 显示帮助信息                             |
+| -i, --input_path   | String              | 否   | 预处理数据输入路径                       |
+| -o, --output_path  | String              | 是   | 诊断结果输出路径                         |
+| --host_log         | String              | 否   | 主机侧操作系统日志目录                   |
+| --device_log       | String              | 否   | Device 侧日志目录                        |
+| --train_log        | String/List[String] | 否   | 用户训练及推理日志目录，支持传递多个目录 |
+| --process_log      | String              | 否   | CANN 应用类日志目录                      |
+| --env_check        | String              | 否   | NPU 网口、状态信息、资源信息目录         |
+| --dl_log           | String              | 否   | MindCluster 组件日志目录                 |
+| --mindie_log       | String              | 否   | MindIE 组件日志目录                      |
+| --amct_log         | String              | 否   | AMCT 组件日志目录                        |
+| --bus_log          | String              | 否   | Ascend 950 系列 LCNE 组件日志目录        |
+| --pymotor_vllm_log | String              | 否   | PyMotor/vLLM 日志目录                    |
 
 ## 使用示例
 

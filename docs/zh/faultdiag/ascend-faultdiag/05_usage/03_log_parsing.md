@@ -52,19 +52,19 @@ The parse job is complete.
 
 ```shell
 ascend-fd parse \
-    --host_log 主机侧操作系统日志目录 \
-    --device_log Device 侧日志目录 \
-    --train_log 用户训练及推理日志目录 \
-    --process_log CANN 应用类日志目录 \
-    --env_check NPU 网口/状态信息/资源信息目录 \
-    --dl_log MindCluster 组件日志目录 \
-    --mindie_log MindIE 组件日志目录 \
-    --amct_log AMCT 组件日志目录 \
-    --bus_log Ascend 950 系列产品 LCNE 组件日志目录 \
-    --pymotor_vllm_log PyMotor/vLLM 日志目录 \
-    --bmc_log BMC 侧日志目录 \
-    --lcne_log LCNE 侧日志目录 \
-    -o 清洗输出目录
+    --host_log <主机侧操作系统日志目录> \
+    --device_log <Device 侧日志目录> \
+    --train_log <用户训练及推理日志目录> \
+    --process_log <CANN 应用类日志目录> \
+    --env_check <NPU 网口/状态信息/资源信息目录> \
+    --dl_log <MindCluster 组件日志目录> \
+    --mindie_log <MindIE 组件日志目录> \
+    --amct_log <AMCT 组件日志目录> \
+    --bus_log <LCNE 组件日志目录> \
+    --pymotor_vllm_log <PyMotor/vLLM 日志目录> \
+    --bmc_log <BMC 侧日志目录> \
+    --lcne_log <LCNE 侧日志目录> \
+    -o <清洗输出目录>
 ```
 
 > [!NOTE]
