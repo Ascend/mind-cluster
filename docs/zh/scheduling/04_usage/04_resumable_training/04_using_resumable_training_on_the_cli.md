@@ -113,14 +113,14 @@
 
 ### 制作MindSpeed-LLM训练镜像（PyTorch框架）<a name="ZH-CN_TOPIC_0000002479386504"></a>
 
-[MindSpeed-LLM](https://gitcode.com/Ascend/MindSpeed-LLM/tree/2.3.0)作为昇腾大模型训练框架，旨在为昇腾芯片提供端到端的大语言模型训练方案，包含分布式预训练、分布式指令微调、分布式偏好对齐以及对应的开发工具链。[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/1.0.0/docs/USER_GUIDE.md)包括了仓库拉取、环境搭建与大模型训练等章节，制作MindSpeed-LLM训练框架镜像可以结合本章节和[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/1.0.0/docs/USER_GUIDE.md)。
+[MindSpeed-LLM](https://gitcode.com/Ascend/MindSpeed-LLM/tree/26.1.0)作为昇腾大模型训练框架，旨在为昇腾芯片提供端到端的大语言模型训练方案，包含分布式预训练、分布式指令微调、分布式偏好对齐以及对应的开发工具链。[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/1.0.0/docs/USER_GUIDE.md)包括了仓库拉取、环境搭建与大模型训练等章节，制作MindSpeed-LLM训练框架镜像可以结合本章节和[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/1.0.0/docs/USER_GUIDE.md)。
 
 断点续训可以基于基础训练镜像制作，基础训练镜像的制作可参考[使用Dockerfile构建容器镜像（PyTorch）](../../07_references/02_common_operations.md#使用dockerfile构建容器镜像pytorch)章节进行操作。
 
 本章节结合基础训练镜像的制作步骤，展示基于Ubuntu 20.04来构建训练镜像。
 
-> [!NOTE]
-> 以下示例使用MindSpeed-LLM 2.3.0版本。
+>[!NOTE]
+>以下示例使用MindSpeed-LLM  26.1.0版本。
 
 **准备软件包<a name="zh-cn_topic_0000002039339945_section18254161612586"></a>**
 
@@ -228,7 +228,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><p id="zh-cn_topic_0000002039339945_p7482193913619"><a name="zh-cn_topic_0000002039339945_p7482193913619"></a><a name="zh-cn_topic_0000002039339945_p7482193913619"></a>git clone https://gitcode.com/Ascend/MindSpeed.git</p>
 <p id="zh-cn_topic_0000002039339945_p9482139663"><a name="zh-cn_topic_0000002039339945_p9482139663"></a><a name="zh-cn_topic_0000002039339945_p9482139663"></a>cd MindSpeed</p>
-<p id="zh-cn_topic_0000002039339945_p1948213912618"><a name="zh-cn_topic_0000002039339945_p1948213912618"></a><a name="zh-cn_topic_0000002039339945_p1948213912618"></a>git checkout 2.3.0_core_r0.12.1</p>
+<p id="zh-cn_topic_0000002039339945_p1948213912618"><a name="zh-cn_topic_0000002039339945_p1948213912618"></a><a name="zh-cn_topic_0000002039339945_p1948213912618"></a>git checkout e4d5855250f0074670f41c423021286502410bf1</p>
 </td>
 </tr>
 <tr id="zh-cn_topic_0000002039339945_row144125121466"><td class="cellrowborder" valign="top" width="24.55%" headers="mcps1.2.5.1.1 "><p id="zh-cn_topic_0000002039339945_p848215391768"><a name="zh-cn_topic_0000002039339945_p848215391768"></a><a name="zh-cn_topic_0000002039339945_p848215391768"></a>version.info</p>
@@ -843,7 +843,7 @@
 
 **PyTorch场景适配示例（基于MindSpeed-LLM）<a name="zh-cn_topic_0000002003180016_section412442472511"></a>**
 
-训练代码与数据集准备，可以参考[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/2.3.0/docs/pytorch/solutions/pretrain/pretrain.md)。下面以两台Atlas 800T A2 训练服务器为例，说明具体操作步骤。
+训练代码与数据集准备，可以参考[MindSpeed-LLM使用指南](https://gitcode.com/Ascend/MindSpeed-LLM/blob/26.1.0/docs/zh/pytorch/training/pretrain/mcore/pretrain.md)。下面以两台Atlas 800T A2 训练服务器为例，说明具体操作步骤。
 
 1. 拉取训练代码。
 
@@ -853,7 +853,7 @@
     git clone https://gitcode.com/Ascend/MindSpeed-LLM.git
     git clone https://github.com/NVIDIA/Megatron-LM.git
     cd MindSpeed-LLM
-    git checkout 2.3.0
+    git checkout 2af5bab9785ce64af3b7d1fe12972a27152cd7af
     cd ..
     cd Megatron-LM
     git checkout core_v0.12.1
@@ -887,7 +887,7 @@
         # 可选，如下为安装MindSpeed加速库操作，可在任意目录下执行。若制作镜像时已安装，则跳过该操作
         git clone https://gitcode.com/ascend/MindSpeed.git
         cd MindSpeed
-        git checkout 2.3.0_core_r0.12.1
+        git checkout e4d5855250f0074670f41c423021286502410bf1
         pip install -r requirements.txt
         pip install -e .
         export PYTHONPATH=/data/atlas_dls/public/code/QWEN3_for_PyTorch_2.7_code/MindSpeed:$PYTHONPATH
