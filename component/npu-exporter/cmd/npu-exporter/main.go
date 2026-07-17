@@ -120,7 +120,6 @@ const (
 	maxBackupsStr              = "maxBackups"
 	defaultProfilingTime       = 200
 	defaultHccsBwProfilingTime = 200
-	enableLegacyMetricStr      = "enableLegacyMetrics"
 )
 
 func main() {
@@ -484,7 +483,7 @@ func init() {
 		"when npu-exporter starts, if the number of chips is insufficient, the maximum duration to wait for "+
 			"the driver to report all chips, unit second, range [10, 600]")
 	flag.BoolVar(&enableLegacyMetrics, "enableLegacyMetrics", false,
-		"enable legacy metrics with _X_Y suffix for Atlas 350 backward compatibility")
+		"enable legacy metrics with _X_Y suffix for Atlas 350 backward compatibility, only support prometheus")
 }
 
 func indexHandler(w http.ResponseWriter, _ *http.Request) {
@@ -550,7 +549,6 @@ func paramValidInTelegraf() error {
 		maxBackupsStr:              true,
 		profilingTimeStr:           true,
 		api.DeviceResetTimeout:     true,
-		enableLegacyMetricStr:      true,
 	}
 
 	if len(cmdLine) > len(presetParamsMap) {
