@@ -158,7 +158,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="15.02%" headers="mcps1.2.5.1.3 "><p id="phz003c-infer-operator"><a name="phz003c-infer-operator"></a><a name="phz003c-infer-operator"></a>""</p>
 </td>
-<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz003d-infer-operator"><a name="phz003d-infer-operator"></a><a name="phz003d-infer-operator"></a>HTTPS证书文件路径。为空则使用HTTP协议。与--tls-private-key-file必须同时配置或同时为空。配置方法及安全注意事项请参见<a href="../../../07_references/04_security_hardening.md#健康探针安全加固">健康探针安全加固</a>。</p>
+<td class="cellrowborder" valign="top" width="40%" headers="mcps1.2.5.1.4 "><p id="phz003d-infer-operator"><a name="phz003d-infer-operator"></a><a name="phz003d-infer-operator"></a>HTTPS证书文件路径。为空则使用HTTP协议。与--tls-private-key-file必须同时配置或同时为空。配置方法及安全注意事项请参见<a href="../../../07_references/04_security_hardening.md#ZH-CN_TOPIC_0000002511346467">健康探针安全加固</a>。</p>
 </td>
 </tr>
 <tr id="rowhz004-infer-operator"><td class="cellrowborder" valign="top" width="30%" headers="mcps1.2.5.1.1 "><p id="phz004-infer-operator"><a name="phz004-infer-operator"></a><a name="phz004-infer-operator"></a>--tls-private-key-file</p>

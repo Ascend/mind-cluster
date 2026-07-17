@@ -377,6 +377,6 @@
 |-useSingleDieMode|bool|false|<term>Atlas A3 推理系列产品</term>是否开启单die直通模式。<ul><li>true：开启单die直通模式。</li><li>false：关闭单die直通模式。</li></ul>使用软切分虚拟化功能时，该参数必须配置为true。|
 |--enable-healthz|bool|false|是否启用健康检查服务。K8s部署时由组件YAML配置启用（true）。<ul><li>true：启用。</li><li>false：禁用。</li></ul>|
 |--healthz-address|string|11251|健康检查服务侦听端口号，取值范围为1025~65535。K8s部署时由组件YAML配置为11251。若指定端口被占用，组件启动失败。|
-|--tls-cert-file|string|""|HTTPS证书文件路径。为空则使用HTTP协议。与--tls-private-key-file必须同时配置或同时为空。配置方法及安全注意事项请参见[健康探针安全加固](../../../07_references/04_security_hardening.md#健康探针安全加固)。|
+|--tls-cert-file|string|""|HTTPS证书文件路径。为空则使用HTTP协议。与--tls-private-key-file必须同时配置或同时为空。配置方法及安全注意事项请参见[健康探针安全加固](../../../07_references/04_security_hardening.md#ZH-CN_TOPIC_0000002511346467)。|
 |--tls-private-key-file|string|""|HTTPS私钥文件路径。为空则使用HTTP协议。与--tls-cert-file必须同时配置或同时为空。|
 |-h或者-help|无|无|显示帮助信息。|

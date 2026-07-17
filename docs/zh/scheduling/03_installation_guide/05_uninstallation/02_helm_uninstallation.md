@@ -1,13 +1,13 @@
-# 使用helm卸载<a name="ZH-CN_TOPIC_0000002511426390"></a>
+# 使用Helm卸载<a name="ZH-CN_TOPIC_0000002511426390"></a>
 
 ## 卸载说明<a name="section_uninstall_desc"></a>
 
-本文档介绍如何通过helm卸载MindCluster组件。
+本文档介绍如何通过Helm卸载MindCluster组件。
 
 **使用约束**
 
-- 仅支持使用helm 3.x版本。
-- 支持使用helm卸载的组件包括：
+- 仅支持使用Helm 3.x版本。
+- 支持使用Helm卸载的组件包括：
   - Ascend Device Plugin
   - Ascend Operator
   - Volcano
@@ -21,11 +21,11 @@
 
 ## 卸载前准备<a name="section_helm_upgrade_prepare"></a>
 
-1. 在管理节点安装helm命令<a name="zh-cn_centerIC_0000002511346381_install_prepare_helm"></a>。若环境中已经存在helm 3.x版本，可以跳过此步骤。
-   - 安装helm前请参考[Helm版本支持策略](https://v3.helm.sh/zh/docs/v3/topics/version_skew/)查询helm与K8s间的版本兼容性，根据实际情况选择helm版本。
-   - 请参考[Helm安装文档](https://helm.sh/zh/docs/v3/intro/install)，在管理节点安装helm命令。
+1. 在管理节点安装Helm命令<a name="zh-cn_centerIC_0000002511346381_install_prepare_helm"></a>。若环境中已经存在Helm 3.x版本，可以跳过此步骤。
+   - 安装Helm前请参考[Helm版本支持策略](https://v3.helm.sh/zh/docs/v3/topics/version_skew/)查询Helm与K8s间的版本兼容性，根据实际情况选择Helm版本。
+   - 请参考[Helm安装文档](https://helm.sh/zh/docs/v3/intro/install)，在管理节点安装Helm命令。
 
-   安装成功后，执行如下命令检查helm版本：
+   安装成功后，执行如下命令检查Helm版本：
 
    ```bash
    helm version
@@ -37,8 +37,8 @@
    version.BuildInfo{Version:"v3.17.0", GitCommit:"065003584b62a79f329070a946936374936021d6", GitTreeState:"clean",    GoVersion:"go1.19.5"}
    ```
 
-2. 确认组件是否通过helm管理<a name="section_check_helm"></a>。
-   1. 登录K8s管理节点，执行以下命令，查看当前集群中通过helm管理的Release列表。
+2. 确认组件是否通过Helm管理<a name="section_check_helm"></a>。
+   1. 登录K8s管理节点，执行以下命令，查看当前集群中通过Helm管理的Release列表。
 
        ```bash
        helm list -A
@@ -52,9 +52,9 @@
        mindcluster-crds   default    1         2026-03-24 15:25:00.000000000 +0800 CST  deployed     mindcluster-crds-deploy-tool-26.1.0           26.1.0
        ```
 
-   2. 根据回显结果判断组件是否通过helm管理。
-       - 若回显中存在名称为**mindcluster**和**mindcluster-crds**的Release，且STATUS为**deployed**，表示组件已通过helm管理，可继续执行   helm卸载操作。
-       - 若回显中不存在上述Release，表示组件未通过helm管理，请参照[手动卸载](../../05_developer_guide/00_installation_deployment/02_uninstallation.md#ZH-CN_TOPIC_0000002511426389)进行卸载。
+   2. 根据回显结果判断组件是否通过Helm管理。
+       - 若回显中存在名称为**mindcluster**和**mindcluster-crds**的Release，且STATUS为**deployed**，表示组件已通过Helm管理，可继续执行Helm卸载操作。
+       - 若回显中不存在上述Release，表示组件未通过Helm管理，请参照[手动卸载](../../05_developer_guide/00_installation_deployment/02_uninstallation.md#ZH-CN_TOPIC_0000002511426389)进行卸载。
 
 ## 执行卸载<a name="section_exec_uninstall"></a>
 
@@ -84,13 +84,13 @@
 
     回显示例如下，表示卸载成功。
 
-    ```bash
+    ```ColdFusion
     release "mindcluster" uninstalled
     ```
 
-3. 卸载MindCluster crd资源。
+3. 卸载MindCluster CRD资源。
 
-    执行以下命令，卸载mindcluster crd资源。
+    执行以下命令，卸载mindcluster CRD资源。
 
     ```bash
     helm uninstall mindcluster-crds
@@ -110,7 +110,7 @@
 
     回显示例如下：
 
-    ```bash
+    ```ColdFusion
     namespace "mindx-dl" deleted
     namespace "cluster-system" deleted
     ```
