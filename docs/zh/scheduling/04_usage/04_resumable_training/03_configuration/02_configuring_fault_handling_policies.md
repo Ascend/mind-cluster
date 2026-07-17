@@ -212,32 +212,6 @@ metadata:
         fi
         ```
 
-3. PyTorch（基于MindSpeed-LLM）场景下，需修改megatron代码。修改`megatron/core/transformer/multi_token_prediction.py`文件的`track_mtp_metrics`函数，在`MTPLossLoggingHelper.clean_loss_in_tracker()`前增加`torch.distributed.barrier()`，用于在清理MTP指标追踪器前同步所有rank，避免故障恢复时部分rank提前清理导致指标丢失，示例如下。
-
-    ```shell
-    # 文件路径：megatron/core/transformer/multi_token_prediction.py
-
-    def track_mtp_metrics(loss_scale, iteration, writer, wandb_writer=None, total_loss_dict=None):
-        """Track the Multi-Token Prediction (MTP) metrics for logging."""
-        MTPLossLoggingHelper.reduce_loss_in_tracker()
-        tracker = MTPLossLoggingHelper.tracker
-        if "values" not in tracker:
-            return
-        mtp_losses = tracker["values"] * loss_scale
-        mtp_num_layers = mtp_losses.shape[0]
-        for i in range(mtp_num_layers):
-            name = f"mtp_{i+1} loss"
-            loss = mtp_losses[i]
-            if total_loss_dict is not None:
-                total_loss_dict[name] = loss
-            if writer is not None:
-                writer.add_scalar(name, loss, iteration)
-            if wandb_writer is not None:
-                wandb_writer.log({f"{name}": loss}, iteration)
-        torch.distributed.barrier() #添加该行代码
-        MTPLossLoggingHelper.clean_loss_in_tracker()
-    ```
-
 ## 配置进程级在线恢复<a name="ZH-CN_TOPIC_0000002479386492"></a>
 
 本章节将指导用户了解配置进程级在线恢复的关键步骤。进程级在线恢复的特性介绍、使用约束、支持的产品型号及原理请参见[进程级在线恢复](../01_solutions_principles.md#进程级在线恢复)。
@@ -397,32 +371,6 @@ context:
         ```shell
         export HCCL_OP_RETRY_ENABLE="L0:0, L1:1, L2:1"  # 此环境变量用于配置是否开启HCCL算子的重执行特性。重执行是指当执行通信算子时报SDMA或者RDMA CQE类型的错误，HCCL会尝试重新执行此通信算子。
         ```
-
-3. PyTorch（基于MindSpeed-LLM）场景下，需修改megatron代码。修改`megatron/core/transformer/multi_token_prediction.py`文件的`trace_mtp_metrics`函数，在`MTPLOSSLoggingHelper.clean_in_tracker()`前增加`torch.distributed.barrier()`，用于在清理MTP指标追踪器前同步所有rank，避免故障恢复时部分rank提前清理导致指标丢失，示例如下。
-
-    ```python
-    # 文件路径：megatron/core/transformer/multi_token_prediction.py
-
-    def track_mtp_metrics(loss_scale, iteration, writer, wandb_writer=None, total_loss_dict=None):
-        """Track the Multi-Token Prediction (MTP) metrics for logging."""
-        MTPLossLoggingHelper.reduce_loss_in_tracker()
-        tracker = MTPLossLoggingHelper.tracker
-        if "values" not in tracker:
-            return
-        mtp_losses = tracker["values"] * loss_scale
-        mtp_num_layers = mtp_losses.shape[0]
-        for i in range(mtp_num_layers):
-            name = f"mtp_{i+1} loss"
-            loss = mtp_losses[i]
-            if total_loss_dict is not None:
-                total_loss_dict[name] = loss
-            if writer is not None:
-                writer.add_scalar(name, loss, iteration)
-            if wandb_writer is not None:
-                wandb_writer.log({f"{name}": loss}, iteration)
-        torch.distributed.barrier() #添加该行代码
-        MTPLossLoggingHelper.clean_loss_in_tracker()
-    ```
 
 >[!NOTE]
 >用户若要测试进程级在线恢复功能，可参考[验证进程级别在线恢复](../05_verifying_fault_handling_policies.md#验证进程级别在线恢复)进行配置。
