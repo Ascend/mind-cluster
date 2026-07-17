@@ -7,7 +7,7 @@
 ## 命令格式
 
 ```shell
-ascend-fd entity [-h] (-u JSON_PATH | -d CODE [CODE...] | -s CODE [CODE...] | -c JSON_PATH) [--item ITEM [ITEM...]] [-f]
+ascend-fd entity [-h] (-u JSON_PATH | -d CODE [CODE...] | -s [CODE [CODE...]] | -c JSON_PATH) [--item ITEM [ITEM...]] [-f]
 ```
 
 ## 参数说明
@@ -17,7 +17,7 @@ ascend-fd entity [-h] (-u JSON_PATH | -d CODE [CODE...] | -s CODE [CODE...] | -c
 | -h, --help   | -                   | 否                         | 显示帮助信息                                       |
 | -u, --update | String              | 必选（与 -d, -s, -c 互斥） | 新增或修改自定义故障实体的 JSON 文件               |
 | -d, --delete | String/List[String] | 必选（与 -u, -s, -c 互斥） | 删除指定故障码的自定义故障实体，支持删除多个故障码 |
-| -s, --show   | String/List[String] | 必选（与 -u, -d, -c 互斥） | 查看自定义故障实体信息，支持查看多个故障码         |
+| -s, --show   | String/List[String] | 必选（与 -u, -d, -c 互斥） | 查看自定义故障实体信息，支持按照故障码进行查看     |
 | -c, --check  | String              | 必选（与 -u, -d, -s 互斥） | 校验自定义故障实体 JSON 文件                       |
 | --item       | String/List[String] | 可选（只与 -s 共用）       | 查看部分信息，可选值：attribute, rule, regex       |
 | -f, --force  | -                   | 可选（只与 -d 共用）       | 删除时跳过确认提示                                 |
@@ -26,15 +26,15 @@ ascend-fd entity [-h] (-u JSON_PATH | -d CODE [CODE...] | -s CODE [CODE...] | -c
 
 ### 新增或修改自定义故障实体
 
-1. 通过 JSON 文件新增或修改自定义故障实体。JSON 文件最多支持 1000 条自定义故障信息。
+通过 JSON 文件新增或修改自定义故障实体。JSON 文件最多支持 1000 条自定义故障信息。
 
-    ```shell
-    ascend-fd entity --update updated_entity.json
-    ```
+```shell
+ascend-fd entity --update updated_entity.json
+```
 
-    回显 `Updated entity successfully.` 表示操作成功。
+回显 `Updated entity successfully.` 表示操作成功。
 
-    JSON 文件示例和参数说明请参考 [JSON 文件字段说明](#json-文件字段说明)。
+JSON 文件示例和参数说明请参考 [JSON 文件字段说明](#json-文件字段说明)。
 
 ### 查看自定义故障实体
 
@@ -200,7 +200,7 @@ ascend-fd entity -d 故障码1 --force
 </tr>
 <tr><td><p>attribute.description_en</p>
 </td>
-<td><p>String</p>
+<td><p>String/List[String]</p>
 </td>
 <td><p>故障描述（英文）</p>
 </td>
@@ -209,7 +209,7 @@ ascend-fd entity -d 故障码1 --force
 </tr>
 <tr><td><p>attribute.suggestion_zh</p>
 </td>
-<td><p>String</p>
+<td><p>String/List[String]</p>
 </td>
 <td><p>建议方案（中文）</p>
 </td>
@@ -218,7 +218,7 @@ ascend-fd entity -d 故障码1 --force
 </tr>
 <tr><td><p>attribute.suggestion_en</p>
 </td>
-<td><p>String</p>
+<td><p>String/List[String]</p>
 </td>
 <td><p>建议方案（英文）</p>
 </td>
@@ -227,7 +227,7 @@ ascend-fd entity -d 故障码1 --force
 </tr>
 <tr><td><p>attribute.error_case</p>
 </td>
-<td><p>String</p>
+<td><p>String/List[String]</p>
 </td>
 <td><p>错误示例</p>
 </td>
@@ -236,7 +236,7 @@ ascend-fd entity -d 故障码1 --force
 </tr>
 <tr><td><p>attribute.fixed_case</p>
 </td>
-<td><p>String</p>
+<td><p>String/List[String]</p>
 </td>
 <td><p>修正示例</p>
 </td>

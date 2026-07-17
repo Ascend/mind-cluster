@@ -24,9 +24,9 @@
     示例：
 
     ```shell
-    ascend-fd parse -i 设备 0 host 日志目录 -o 超节点清洗结果输出目录/host/worker-0
-    ascend-fd parse --lcne_log 设备 0 lcne 日志目录 -o 超节点清洗结果输出目录/lcne/worker-0
-    ascend-fd parse --bmc_log 设备 0 BMC 日志目录 -o 超节点清洗结果输出目录/bmc/worker-0
+    ascend-fd parse -i <设备 0上Host日志目录> -o <超节点清洗结果输出目录/host/worker-0>
+    ascend-fd parse --lcne_log <设备0上LCNE日志目录> -o <超节点清洗结果输出目录/lcne/worker-0>
+    ascend-fd parse --bmc_log <设备0上BMC日志目录> -o <超节点清洗结果输出目录/bmc/worker-0>
     ```
 
     > [!NOTE]
@@ -122,15 +122,15 @@
 1. 执行清洗操作
 
     ```shell
-    # 清洗时同时指定 host、bmc 日志
-    ascend-fd parse --process_log 设备 0 plog 日志目录 --bmc_log 设备 0 BMC 日志目录 -o 超节点清洗结果输出目录/worker-0
-    ascend-fd parse --process_log 设备 1 plog 日志目录 --bmc_log 设备 1 BMC 日志目录 -o 超节点清洗结果输出目录/worker-1
-    ascend-fd parse --process_log 设备 2 plog 日志目录 --bmc_log 设备 2 BMC 日志目录 -o 超节点清洗结果输出目录/worker-2
+    # 清洗时同时指定 Host、BMC 日志
+    ascend-fd parse --process_log <设备0上plog日志目录> --bmc_log <设备0上BMC日志目录> -o <超节点清洗结果输出目录/worker-0>
+    ascend-fd parse --process_log <设备1上plog日志目录> --bmc_log <设备1上BMC日志目录> -o <超节点清洗结果输出目录/worker-1>
+    ascend-fd parse --process_log <设备2上plog日志目录> --bmc_log <设备2上BMC日志目录> -o <超节点清洗结果输出目录/worker-2>
     ```
 
     > [!NOTE]
     >
-    > - 示例为假设缺少 lcne 日志。
+    > - 示例为假设缺少 LCNE 日志。
     > - Host 侧日志以 --process_log 为例，可以直接使用 -i 把其他收集的日志包括进来（如 device_log, dl_log 等）。
     > - 不同设备的清洗结果，应归属于不同的 worker 下。
     > - 不同的设备，应该对应不同的 worker 目录（如五台设备，分别对应 worker-0 至 worker-4）。
