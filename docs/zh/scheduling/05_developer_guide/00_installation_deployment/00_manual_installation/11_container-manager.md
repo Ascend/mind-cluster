@@ -345,7 +345,7 @@ Container Manager组件直接在物理机上通过二进制方式运行，提供
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p9414134153113"><a name="p9414134153113"></a><a name="p9414134153113"></a>故障容器启停策略：</p>
 <a name="ul17352545173818"></a><a name="ul17352545173818"></a><ul id="ul17352545173818"><li>never：不进行容器启停。</li><li>singleRecover：仅启停单个挂载故障芯片的容器。故障产生时，停止容器；故障恢复后，将容器重新拉起。</li><li>ringRecover：启停挂载故障芯片所关联的所有芯片的容器。故障产生时，停止容器；故障恢复后，将容器重新拉起。</li></ul>
-<div class="note" id="note16897891164"><a name="note16897891164"></a><a name="note16897891164"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="ul370062752110"></a><a name="ul370062752110"></a><ul id="ul370062752110"><li><span id="ph646865823518"><a name="ph646865823518"></a><a name="ph646865823518"></a>Container Manager</span>在感知到芯片处于RestartRequest、RestartBusiness、FreeRestartNPU和RestartNPU类型故障时，才会进行容器启停操作。故障类型说明请参见<a href="../../../04_usage/05_appliance/01_npu_hardware_fault_detection_and_rectification.md#故障配置说明">故障配置说明</a>中"故障码级别说明"。</li><li>当故障容器启停策略配置为singleRecover或者ringRecover时，不支持用户启动容器时指定容器重启策略，使容器自动重启，二者选其一即可。</li><li>若用户手动干预导致容器停止，可能会造成<span id="ph93985387580"><a name="ph93985387580"></a><a name="ph93985387580"></a>Container Manager</span>内存数据混乱，导致容器状态异常。</li></ul>
+<div class="note" id="note16897891164"><a name="note16897891164"></a><a name="note16897891164"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="ul370062752110"></a><a name="ul370062752110"></a><ul id="ul370062752110"><li><span id="ph646865823518"><a name="ph646865823518"></a><a name="ph646865823518"></a>Container Manager</span>在感知到芯片处于RestartRequest、RestartBusiness、FreeRestartNPU和RestartNPU类型故障时，才会进行容器启停操作。故障类型说明请参见<a href="../../../04_usage/05_appliance/01_npu_hardware_fault_detection_and_rectification.md#ZH-CN_TOPIC_0000002486577908">故障配置说明</a>中"故障码级别说明"。</li><li>当故障容器启停策略配置为singleRecover或者ringRecover时，不支持用户启动容器时指定容器重启策略，使容器自动重启，二者选其一即可。</li><li>若用户手动干预导致容器停止，可能会造成<span id="ph93985387580"><a name="ph93985387580"></a><a name="ph93985387580"></a>Container Manager</span>内存数据混乱，导致容器状态异常。</li></ul>
 </div></div>
 </td>
 </tr>
@@ -376,7 +376,7 @@ Container Manager组件直接在物理机上通过二进制方式运行，提供
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p3949155543819"><a name="p3949155543819"></a><a name="p3949155543819"></a>""</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p16458189133819"><a name="p16458189133819"></a><a name="p16458189133819"></a>自定义故障配置文件路径。若不配置，则使用默认的故障码配置。自定义故障配置文件详情请参见<a href="../../../04_usage/05_appliance/01_npu_hardware_fault_detection_and_rectification.md#故障级别配置">故障级别配置</a>。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p16458189133819"><a name="p16458189133819"></a><a name="p16458189133819"></a>自定义故障配置文件路径。若不配置，则使用默认的故障码配置。自定义故障配置文件详情请参见<a href="../../../04_usage/05_appliance/01_npu_hardware_fault_detection_and_rectification.md#ZH-CN_TOPIC_0000002518737701">故障级别配置</a>。</p>
 <div class="note" id="note116910214413"><a name="note116910214413"></a><a name="note116910214413"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><a name="ul1246612216016"></a><a name="ul1246612216016"></a><ul id="ul1246612216016"><li>该路径不允许为软链接。</li><li>该文件权限需不高于640。</li></ul>
 </div></div>
 </td>
@@ -389,7 +389,7 @@ Container Manager组件直接在物理机上通过二进制方式运行，提供
 </td>
 <td class="cellrowborder" valign="top" width="23.342334233423344%" headers="mcps1.2.6.1.4 "><p id="p541719308323"><a name="p541719308323"></a><a name="p541719308323"></a>-</p>
 </td>
-<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p541718306324"><a name="p541718306324"></a><a name="p541718306324"></a>查询容器恢复进度，包括容器ID、状态、状态开始时间及描述信息。容器的状态定义及变化规则详细请参见<a href="../../../04_usage/05_appliance/01_npu_hardware_fault_detection_and_rectification.md#容器恢复">容器恢复</a>。</p>
+<td class="cellrowborder" valign="top" width="38.00380038003801%" headers="mcps1.2.6.1.5 "><p id="p541718306324"><a name="p541718306324"></a><a name="p541718306324"></a>查询容器恢复进度，包括容器ID、状态、状态开始时间及描述信息。容器的状态定义及变化规则详细请参见<a href="../../../04_usage/05_appliance/01_npu_hardware_fault_detection_and_rectification.md#ZH-CN_TOPIC_0000002486578214">容器恢复</a>。</p>
 <div class="note" id="note18966355162717"><a name="note18966355162717"></a><a name="note18966355162717"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p179661455192711"><a name="p179661455192711"></a><a name="p179661455192711"></a>如果status查询到的容器信息有误，需确认run服务是否已经终止，或者环境上启动了一个以上的<span id="ph47887203387"><a name="ph47887203387"></a><a name="ph47887203387"></a>Container Manager</span>。</p>
 </div></div>
 </td>

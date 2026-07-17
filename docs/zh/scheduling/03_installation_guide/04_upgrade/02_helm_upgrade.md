@@ -1,32 +1,32 @@
-# 使用helm升级<a name="ZH-CN_TOPIC_0000002479226453"></a>
+# 使用Helm升级<a name="ZH-CN_TOPIC_0000002479226453"></a>
 
 ## 升级说明<a name="section_helm_upgrade_desc"></a>
 
-本文档介绍如何通过helm升级MindCluster组件。
+本文档介绍如何通过Helm升级MindCluster组件。
 
 **版本兼容性说明**：可跨大版本升级，如从 7.x.x 升级到 26.x.x。
 
 **使用约束**
 
-- 仅支持使用helm 3.x版本。
-- 支持使用helm升级的组件包括：
-    - Ascend Device Plugin
-    - Ascend Operator
-    - Volcano
-    - ClusterD
-    - NodeD
-    - NPU Exporter
-    - Infer Operator
-    - K8s RDMA Shared Dev Plugin
-- 升级Ascend Docker Runtime、Container Manager、TaskD和MindIO组件请参考[手动升级](../../05_developer_guide/00_installation_deployment/01_upgrade.md#ZH-CN_TOPIC_0000002479226452)章节操作。
+- 仅支持使用Helm 3.x版本。
+- 支持使用Helm升级的组件包括：
+    - [Ascend Device Plugin](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226928)
+    - [Ascend Operator](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511426817)
+    - [Volcano](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479386902)
+    - [ClusterD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511346859)
+    - [NodeD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479386924)
+    - [NPU Exporter](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226948)
+    - [Infer Operator](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511426821)
+    - [K8s RDMA Shared Dev Plugin](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312660)
+- 升级[Ascend Docker Runtime](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002511426843)、[Container Manager](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002524312655)、[TaskD](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479386914)和[MindIO](../../01_introduction/01_component_description.md#ZH-CN_TOPIC_0000002479226942)组件请参考[手动升级](../../05_developer_guide/00_installation_deployment/01_upgrade.md#ZH-CN_TOPIC_0000002479226452)章节操作。
 
 ## 升级前准备<a name="section_helm_upgrade_prepare"></a>
 
-1. 在管理节点安装helm命令<a name="zh-cn_centerIC_0000002511346381_install_prepare_helm"></a>。若环境中已经存在helm 3.x版本，可以跳过此步骤。
-   - 安装helm前请参考[Helm版本支持策略](https://v3.helm.sh/zh/docs/v3/topics/version_skew/)查询helm与K8s间的版本兼容性，根据实际情况选择helm版本。
-   - 请参考[Helm安装文档](https://helm.sh/zh/docs/v3/intro/install)，在管理节点安装helm命令。
+1. 在管理节点安装Helm 命令<a name="zh-cn_centerIC_0000002511346381_install_prepare_helm"></a>。若环境中已经存在Helm 3.x版本，可以跳过此步骤。
+   - 安装Helm前请参考[Helm版本支持策略](https://v3.helm.sh/zh/docs/v3/topics/version_skew/)查询Helm与K8s间的版本兼容性，根据实际情况选择Helm版本。
+   - 请参考[Helm安装文档](https://helm.sh/zh/docs/v3/intro/install)，在管理节点安装Helm命令。
 
-   安装成功后，执行如下命令检查helm版本：
+   安装成功后，执行如下命令检查Helm版本：
 
    ```bash
    helm version
@@ -38,8 +38,8 @@
    version.BuildInfo{Version:"v3.17.0", GitCommit:"065003584b62a79f329070a946936374936021d6", GitTreeState:"clean",    GoVersion:"go1.19.5"}
    ```
 
-2. 确认组件是否通过helm管理<a name="section_check_helm_upgrade"></a>。在执行升级前，需先确认待升级的组件是否已通过helm管理，以选择对应的升级方式。
-   1. 登录K8s管理节点，执行以下命令，查看当前集群中通过helm管理的Release列表。
+2. 确认组件是否通过Helm管理<a name="section_check_helm_upgrade"></a>。在执行升级前，需先确认待升级的组件是否已通过Helm管理，以选择对应的升级方式。
+   1. 登录K8s管理节点，执行以下命令，查看当前集群中通过Helm管理的Release列表。
 
        ```bash
        helm list -A
@@ -54,14 +54,17 @@
        ```
 
    2. 根据回显结果判断组件的升级方式。
-       - 若回显中存在名称为**mindcluster**和**mindcluster-crds**的Release，且STATUS为**deployed**，表示组件已通过helm管理，请参见[helm upgrade升级组件](#section_helm_upgrade)进行升级。
-       - 若回显中不存在上述Release信息，表示组件未通过helm管理，请参见[helm install升级组件](#section_kubectl_to_helm)进行升级。
+       - 若回显中存在名称为**mindcluster**和**mindcluster-crds**的Release，且STATUS为**deployed**，表示组件已通过Helm管理，请参见[Helm升级Release实例](#section_helm_upgrade)进行升级。
+       - 若回显中不存在上述Release信息，表示组件未通过Helm管理，请参见[Helm部署Release实例](#section_kubectl_to_helm)进行升级。
 
-## helm install升级组件<a name="section_kubectl_to_helm"></a>
+       >[!NOTE]
+       >若组件通过Helm安装后，使用`kubectl delete`和`kubectl apply`重新拉起，会导致重新创建的资源上缺少Helm的元数据，此时仍然能够查询到上述Release信息。此场景请先参见[步骤1](#li1471945063444_helm_download)和[步骤2](#li1471945063445_add_meta)为资源重新添加Helm元数据后，再参见[Helm升级Release实例](#section_helm_upgrade)进行升级。
 
-若组件是通过kubectl手动安装的，尚未纳入helm管理，需要先为组件资源添加helm元数据，再使用helm install安装Release实例，从而将组件升级到新版本。
+## Helm部署Release实例<a name="section_kubectl_to_helm"></a>
 
-1. 下载并解压部署工具：
+若组件是通过kubectl手动安装的，尚未纳入Helm管理，可参照如下步骤将组件升级到新版本。
+
+1. <a name="li1471945063444_helm_download"></a>下载并解压部署工具：
 
     ```bash
     # 请用户自行将命令中的{version}替换为对应版本号，如26.1.0
@@ -77,27 +80,32 @@
     -rw-r--r-- 1 root root  2026 Mar 24 15:25 helm_tool.sh
     ```
 
-2. 执行以下命令，为已有资源添加helm元数据。
+2. <a name="li1471945063445_add_meta"></a>执行以下命令，为已有资源添加Helm元数据。
 
     ```bash
     sed -i 's/\r$//' helm_tool.sh && chmod +x helm_tool.sh
-    #（可选）查看脚本命令参数
-    bash helm_tool.sh --help
-    bash helm_tool.sh --all # 给资源添加helm元数据，并且删除ascend-device-plugin组件v26.1.0版本前的daemonset。用户可使用--help查看脚本命令参数，然后根据需求设置参数。
+
+    #（可选）
+    bash helm_tool.sh --help # 查看脚本命令参数。
+
+    bash helm_tool.sh --add-helm-meta-all # 给资源添加helm元数据。
+
+    #（可选）若当前集群中存在 v26.1.0 之前版本的 Ascend Device Plugin DaemonSet，请执行此命令清理旧资源；若不存在则可跳过
+    bash helm_tool.sh --delete-old-demonset
     ```
 
-    回显示例如下，表示添加helm元数据成功：
+    回显示例如下，表示添加Helm元数据成功：
 
     ```ColdFusion
     ...
     ============ Done ==============
     ```
 
-3. 安装MindCluster crd的Release实例。
+3. 安装MindCluster CRD的Release实例。
       > [!NOTE]
-    >- 以下三个组件包含crd：Ascend Operator、Volcano和Infer Operator。若用户不需要升级这三个组件，可跳过此步骤。
-    >- 若组件升级前后两个版本的crd定义有变更：
-    >   1. 需先升级crd，再升级应用组件;
+    >- 以下三个组件包含CRD：Ascend Operator、Volcano和Infer Operator。若用户不需要升级这三个组件，可跳过此步骤。
+    >- 若组件升级前后两个版本的CRD定义有变更：
+    >   1. 需先升级CRD，再升级应用组件;
     >   2. 可能会导致工作负载中断，请用户在升级前确认。
     >- 请用户按需选择**默认配置安装**或**自定义配置安装**其中一种方式进行操作即可。
    - **默认配置安装**：若[crd默认配置](../02_installation/00_helm_installation.md#default_crds_yaml_install_config)符合用户需求，可执行如下命令。
@@ -166,12 +174,12 @@
 
 5. 确认组件升级状态，详细请参见[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)章节。
 6. 若升级后，组件状态异常，可排查异常原因，然后按照如下方法处理：
-    - 修改配置后参考[helm upgrade升级组件](#section_helm_upgrade)重新升级。
-    - [使用helm卸载](../05_uninstallation/02_helm_uninstallation.md#ZH-CN_TOPIC_0000002511426390)组件后，重新[使用helm安装](../02_installation/00_helm_installation.md#ZH-CN_centerIC_0000002479226452)组件。此方法可能会导致工作负载中断，请用户在升级前确认。
+    - 修改配置后参考[Helm升级Release实例](#section_helm_upgrade)重新升级。
+    - [使用Helm卸载](../05_uninstallation/02_helm_uninstallation.md#ZH-CN_TOPIC_0000002511426390)组件后，重新[使用Helm安装](../02_installation/00_helm_installation.md#ZH-CN_centerIC_0000002479226452)组件。此方法可能会导致工作负载中断，请用户在升级前确认。
 
-## helm upgrade升级组件<a name="section_helm_upgrade"></a>
+## Helm升级Release实例<a name="section_helm_upgrade"></a>
 
-若组件已通过helm安装并纳入helm管理，可直接使用helm upgrade升级到新版本。
+若组件已通过Helm安装并纳入Helm管理，可参照如下步骤升级到新版本。
 
 1. 下载并解压部署工具。
 
@@ -189,11 +197,11 @@
     -rw-r--r-- 1 root root  2026 Mar 24 15:25 helm_tool.sh
     ```
 
-2. 升级MindCluster crd的Release实例。
+2. 升级MindCluster CRD的Release实例。
     >[!NOTE]
-    >- 以下三个组件包含crd：Ascend Operator、Volcano和Infer Operator。若用户不需要升级这三个组件，可跳过此步骤。
-    >- 若组件升级前后两个版本的crd定义有变更：
-    >   - 需先升级crd，再升级应用组件。
+    >- 以下三个组件包含CRD：Ascend Operator、Volcano和Infer Operator。若用户不需要升级这三个组件，可跳过此步骤。
+    >- 若组件升级前后两个版本的CRD定义有变更：
+    >   - 需先升级CRD，再升级应用组件。
     >   - 可能会导致工作负载中断，请用户在升级前确认。
     >- 请用户按需选择**默认配置升级**或**自定义配置升级**其中一种方式进行操作即可。
    - **默认配置升级**：若[crd默认配置](../02_installation/00_helm_installation.md#default_crds_yaml_install_config)符合用户需求，可执行如下命令。
@@ -267,14 +275,14 @@
 4. 确认组件升级状态，详细请参见[组件状态确认](../03_confirming_status.md#ZH-CN_TOPIC_0000002479386390)章节。
 5. 若升级后，组件状态异常，可排查异常原因，然后按照如下方法处理：
    - 参考[版本回退](#section_helm_rollback)回退到升级前的版本。
-   - 修改配置后重新[使用helm upgrade升级](#section_helm_upgrade)。
-   - [使用helm卸载](../05_uninstallation/02_helm_uninstallation.md#ZH-CN_TOPIC_0000002511426390)组件后，重新[使用helm安装](../02_installation/00_helm_installation.md#ZH-CN_centerIC_0000002479226452)组件。此方法可能会导致工作负载中断，请用户在升级前确认。
+   - 修改配置后重新使用[Helm升级Release实例](#section_helm_upgrade)。
+   - [使用Helm卸载](../05_uninstallation/02_helm_uninstallation.md#ZH-CN_TOPIC_0000002511426390)组件后，重新[使用Helm安装](../02_installation/00_helm_installation.md#ZH-CN_centerIC_0000002479226452)组件。此方法可能会导致工作负载中断，请用户在升级前确认。
 
 ## 版本回退<a name="section_helm_rollback"></a>
 
 若升级后组件运行异常，可通过helm的回退功能恢复到升级前的版本。版本回退仅适用于通过helm upgrade升级过的Release实例，helm会记录每次升级的Revision历史。
 
-1. 执行以下命令，查看Release的升级历史。
+1. 执行以下命令，查看Release实例的升级历史。
     - 查看应用组件Release实例的升级历史：
 
       ```bash

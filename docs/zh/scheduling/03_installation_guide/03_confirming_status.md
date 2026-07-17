@@ -57,7 +57,7 @@
     - Containerd（或K8s集成Containerd场景）。
 
         ```shell
-        ctr i ls|grep ubuntu
+        ctr i ls | grep ubuntu
         ```
 
         回显示例如下，表示存在基础镜像ubuntu:22.04。若不存在基础镜像，可以执行**ctr images pull docker.io/library/ubuntu:22.04**命令，拉取基础镜像。
@@ -111,7 +111,7 @@
     回显示例：
 
     ```ColdFusion
-    npu-exporter-4ln8w   1/1     Running   0          36m   192.168.102.109   ubuntu       <none>           <none>
+    npu-exporter-4ln8w   1/1     Running   0          36m   192.0.2.x   ubuntu       <none>           <none>
     ```
 
 2. 通过如下命令查看K8s集群中NPU Exporter的日志。
@@ -630,7 +630,7 @@
     ```
 
     >[!NOTE]
-    >若回显中出现类似如下信息，可忽略，不影响实际功能，可能原因是未配置RoCE网卡IP地址和子网掩码。若不想打印该信息，可参见《Atlas A2 中心推理和训练硬件 HCCN Tool 接口参考》的“[配置功能\>配置RoCE网卡IP地址和子网掩码](https://support.huawei.com/enterprise/zh/doc/EDOC1100568362/83923a94)”章节配置。
+    >若回显中出现类似如下信息，可忽略，不影响实际功能，可能原因是未配置RoCE网卡IP地址和子网掩码。若不想打印该信息，可参见《Atlas A2 中心推理和训练硬件 HCCN Tool 接口参考》的“[配置功能\>配置RoCE网卡IP地址和子网掩码](https://support.huawei.com/enterprise/zh/doc/EDOC1100568362/83923a94)”章节。
     >
     >```ColdFusion
     >[dsmi_common_interface.c:1017][ascend][curpid:244135,244135][drv][dmp][dsmi_get_device_ip_address]devid 0 dsmi_cmd_get_device_ip_address return 1 error!
