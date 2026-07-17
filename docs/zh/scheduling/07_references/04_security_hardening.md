@@ -748,7 +748,7 @@ TaskD运行后，会启动gRPC客户端与ClusterD进行gRPC通信，同时TaskD
 
 Elastic Agent的安全加固请参见[TaskD安全加固](#taskd安全加固)章节。
 
-## 健康探针安全加固<a name="ZH-CN_TOPIC_0000002511346405"></a>
+## 健康探针安全加固<a name="ZH-CN_TOPIC_0000002511346467"></a>
 
 各组件（Ascend Device Plugin、Ascend Operator、ClusterD、Infer Operator、NodeD、NPU Exporter）均内置HTTP健康探针服务，用于K8s livenessProbe机制探测组件存活状态。默认使用HTTP协议。
 
