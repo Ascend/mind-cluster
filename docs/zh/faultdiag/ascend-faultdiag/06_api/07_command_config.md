@@ -26,7 +26,7 @@ ascend-fd config [-h] (-u UPDATE | -s | -c)
 通过 JSON 文件新增或修改自定义配置：
 
 ```shell
-ascend-fd config -u custom-config.json
+ascend-fd config -u <custom-config.json>
 ```
 
 > - `custom-config.json` 为用户自定义输入文件

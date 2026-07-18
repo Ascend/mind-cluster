@@ -29,7 +29,7 @@ ascend-fd entity [-h] (-u JSON_PATH | -d CODE [CODE...] | -s [CODE [CODE...]] | 
 通过 JSON 文件新增或修改自定义故障实体。JSON 文件最多支持 1000 条自定义故障信息。
 
 ```shell
-ascend-fd entity --update updated_entity.json
+ascend-fd entity --update <updated_entity.json>
 ```
 
 回显 `Updated entity successfully.` 表示操作成功。
@@ -45,7 +45,7 @@ ascend-fd entity -s
 ### 按故障码查询
 
 ```shell
-ascend-fd entity -s 故障码1 故障码2
+ascend-fd entity -s <故障码1> <故障码2>
 ```
 
 ### 查看指定属性信息
@@ -57,19 +57,19 @@ ascend-fd entity -s --item attribute rule regex
 ### 校验故障实体文件
 
 ```shell
-ascend-fd entity -c custom_entity.json
+ascend-fd entity -c <custom_entity.json>
 ```
 
 ### 删除指定故障码的自定义实体
 
 ```shell
-ascend-fd entity -d 故障码1 故障码2
+ascend-fd entity -d <故障码1> <故障码2>
 ```
 
 ### 删除时跳过确认提示
 
 ```shell
-ascend-fd entity -d 故障码1 --force
+ascend-fd entity -d <故障码1> --force
 ```
 
 ## JSON 文件字段说明
@@ -275,7 +275,7 @@ ascend-fd entity -d 故障码1 --force
 </td>
 <td><p>必选</p>
 </td>
-<td><div>支持一级列表与二级列表。<ul><li>一级列表<ul><li>每个元素为字符串。取值长度为 1～200 个字符，支持英文字母、数字、英文符号、中文汉字、中文符号与空格。</li><li>列表中每个关键词都需要满足存在性判断，且符合前后关系</li></ul>
+<td><div>支持一级列表与二级列表。<ul><li>一级列表<ul><li>每个元素为字符串。取值长度为 1～200 个字符，支持英文字母、数字、英文符号、中文汉字、中文符号与空格。</li><li>列表中每个关键词都需要满足存在性判断，且符合前后关系。</li></ul>
 </li><li>二级列表<ul><li>每个子列表满足一级列表的取值约束。</li><li>每个子列表内的判断规则同一级列表，每个子列表间为或关系，仅需满足一个子列表的关键词即可。</li></ul>
 </li></ul>
 </div>

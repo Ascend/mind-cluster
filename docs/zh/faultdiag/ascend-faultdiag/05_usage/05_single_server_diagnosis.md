@@ -6,26 +6,22 @@
 
 ## 操作步骤
 
-1. 先根据[日志采集指南](./02_log_collection.md)进行日志采集。
+1. 根据[日志采集指南](./02_log_collection.md)进行日志采集
 
-2. 创建单机诊断结果输出目录：
+2. 创建单机诊断结果输出目录
 
     ```shell
-    mkdir <output_dir>
+    mkdir <单机诊断结果输出目录>
     ```
 
-    > - `output_dir` 单机诊断结果输出目录。
-
-3. 执行诊断命令：
+3. 执行诊断命令
 
     ```shell
-    ascend-fd single-diag -i <input_dir> -o <output_dir>
+    ascend-fd single-diag -i <采集目录> -o <单机诊断结果输出目录>
     ```
 
     > [!NOTE]
     >
-    > - `input_dir` 采集目录。
-    > - `output_dir` 单机诊断结果输出目录。
     > - 单机诊断默认返回故障事件分析结果。
 
 ## 诊断报告与诊断结果

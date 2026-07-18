@@ -4,32 +4,27 @@
 
 ## 操作步骤
 
-1. 先根据[日志采集指南](./02_log_collection.md)进行日志采集。
+1. 根据[日志采集指南](./02_log_collection.md)进行日志采集
 
-2. 根据[日志清洗指南](./03_log_parsing.md)进行日志清洗。
+2. 根据[日志清洗指南](./03_log_parsing.md)进行日志清洗
 
 3. 创建诊断结果输出目录
 
     ```shell
-    mkdir <output_dir>
+    mkdir <诊断结果输出目录>
     ```
-
-    > - `output_dir` 为诊断结果输出目录。
 
 4. 执行诊断命令
 
     ```shell
-    ascend-fd diag -i <input_dir> -o <output_dir>
+    ascend-fd diag -i <诊断输入目录> -o <诊断结果输出目录>
     ```
 
     如果需要同时诊断性能劣化问题，添加 `-p` 参数：
 
     ```shell
-    ascend-fd diag -i <input_dir> -o <output_dir> -p
+    ascend-fd diag -i <诊断输入目录> -o <诊断结果输出目录> -p
     ```
-
-    > - `input_dir` 为诊断输入目录。
-    > - `output_dir` 为诊断结果输出目录。
 
 ## 诊断报告解读
 
@@ -117,19 +112,23 @@ fault_diag_result/
 └── diag_report.json    # 完整的诊断结果（JSON 格式）
 ```
 
+> [!NOTE]
+>
 > - 说明：诊断结果文件 `diag_report.json` 结构请参考[诊断结果输出](../06_api/03_command_diag.md#诊断结果输出)。
 
 ## 诊断性能劣化问题
 
 当任务未异常退出但运行缓慢时，使用 `-p` 参数可以诊断性能劣化问题：
 
-- **设备资源分析**：检查 NPU 计算降频和 CPU 资源抢占问题
-- **网络拥塞分析**：检查节点间的网络拥塞情况
+- **设备资源分析**：检查 NPU 计算降频和 CPU 资源抢占问题。
+- **网络拥塞分析**：检查节点间的网络拥塞情况。
 
+> [!NOTE]
+>
 > - 用例可参考[含性能劣化诊断](../06_api/03_command_diag.md#含性能劣化诊断)。
 
 ## 注意事项
 
-- 诊断出多个故障时，会按照发生时间排序，建议优先排查靠前的故障
-- 部分故障设备过多时，终端仅展示 16 条，完整信息可在 `diag_report.json` 中查看
-- ascend-fd 运行错误码请查阅[组件错误码](../07_references/04_appendix.md#组件错误码)
+- 诊断出多个故障时，会按照发生时间排序，建议优先排查靠前的故障。
+- 部分故障设备过多时，终端仅展示 16 条，完整信息可在 `diag_report.json` 中查看。
+- ascend-fd 运行错误码请查阅[组件错误码](../07_references/04_appendix.md#组件错误码)。
