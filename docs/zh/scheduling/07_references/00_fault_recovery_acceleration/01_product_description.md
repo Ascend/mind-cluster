@@ -16,7 +16,7 @@ LLM（Large Language Model）是全球当前科技界竞争的焦点，LLM的训
 
 ## MindIO TFT架构
 
-![](../../../figures/scheduling/mindio_ttp架构.png)
+![MindIO TFT 架构图](../../../figures/scheduling/mindio_ttp架构.png)
 
 MindIO TFT的各个功能集成在一个whl包中对外提供，需要通过import模块的方式，修改MindSpeed-LLM等大模型框架适配并使用对应功能。
 
@@ -28,7 +28,7 @@ MindIO TFT的关键点如下：
 
 - MindIO UCE
     - 一旦检测到UCE故障，就开始在线修复。
-    - 在大模型训练中，无论是定期保存Checkpoint，还是MindIO TFT的临终Checkpoint保存，重新训练的消耗都是巨大的。UCE提供了训练框架Step级重计算能力，不需要重启进程，同时能保证续训迭代损失，UCE失败后进入TTP流程。
+    - 在大模型训练中，无论是定期保存Checkpoint，还是MindIO TFT的临终Checkpoint保存，重新训练的消耗都是巨大的。UCE提供了训练框架Step级重计算能力，不需要重启进程，同时能减少续训迭代损失，UCE失败后进入TTP流程。
 
 - MindIO ARF
     - 针对更多的故障，不需要模型停止训练，只需通过节点重启或替换，完成修复和模型续训。

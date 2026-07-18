@@ -35,7 +35,7 @@ hccl.json:
         "host_ip": "xx.xx.xx.xx",      // AI Server的Host IP地址
         "container_ip": "192.168.149.xx",   // Pod IP
     "hardware_type":"800I-A2-32G"       // 产品型号
-    }]
+    }],
     "server_count": "1",   // 任务总服务器数量
     "version": "1.0"
 }

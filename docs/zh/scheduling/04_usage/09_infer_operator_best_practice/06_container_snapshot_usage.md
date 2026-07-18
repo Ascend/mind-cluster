@@ -26,7 +26,7 @@
 - 若没有安装，可以参考[安装部署](../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作，其中NodeD、Infer Operator需要修改部分安装步骤。
 
   - NodeD
-     - 需要使用如下的dockerfile制作NodeD镜像，其中http_proxy、https_proxy配置为能够访问公网的代理
+     - 需要使用如下的Dockerfile制作NodeD镜像，其中http_proxy、https_proxy配置为能够访问公网的代理
 
         ```Dockerfile
         FROM openeuler-24.03-lts-sp2:latest
@@ -68,7 +68,7 @@
        ```
 
   - Infer Operator
-     - Infer Operator的启动yaml中添加快照路径挂载项，其中mountPath与hostPath根据实际情况配置并与NodeD的快照路径相同, 此外还可配置快照超时参数（>= 1，单位为分钟）snapshotTimeout，默认60分钟
+     - Infer Operator的启动yaml中添加快照路径挂载项，其中mountPath与hostPath根据实际情况配置并与NodeD的快照路径相同，此外还可配置快照超时参数（>= 1，单位为分钟）snapshotTimeout，默认60分钟
 
         ```Yaml
            - name: image-path

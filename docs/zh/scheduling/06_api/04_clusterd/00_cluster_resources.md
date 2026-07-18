@@ -19,7 +19,7 @@ ClusterD启动后，会创建如下ConfigMap：
 |FaultDevList|节点故障设备列表。|
 |- DeviceType|故障设备类型。|
 |- DeviceId|故障设备ID。|
-|- FaultCode|故障码，由英文和数组拼接而成的字符串，字符串表示故障码的十六进制。|
+|- FaultCode|故障码，由英文和数字拼接而成的字符串，字符串表示故障码的十六进制。|
 |- FaultLevel|故障处理等级。<ul><li>NotHandleFault：无需处理。</li><li>PreSeparateFault：该节点上有任务则不处理，后续调度时不调度任务到该节点。</li><li>SeparateFault：任务重调度。</li></ul>|
 |NodeStatus|节点健康状态，由本节点故障处理等级最严重的设备决定。<ul><li>Healthy：该节点故障处理等级存在且不超过NotHandleFault，该节点为健康节点，可以正常训练。若该节点故障处理等级为PreSeparateFault，且节点有NPU卡正在使用，则该节点为健康节点。任务执行完成后，该节点将变为故障节点。</li><li>UnHealthy：该节点故障处理等级存在SeparateFault，该节点为故障节点，将影响训练任务，立即将任务调离该节点。若该节点故障处理等级为PreSeparateFault，且节点无NPU卡正在使用，则该节点为故障节点，不可将任务调度到该节点。</li></ul>|
 

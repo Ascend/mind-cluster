@@ -52,7 +52,7 @@ spec:
             example-key: example-value    # 示例值，用户可根据调度意图自行配置nodeSelector
           containers:
           - name: ascend # do not modify
-            image: pytorch-test:latest         # training framework image， which can be modified
+            image: pytorch-test:latest         # training framework image, which can be modified
             imagePullPolicy: IfNotPresent
             env:
               - name: XDL_IP                                       # IP address of the physical node, which is used to identify the node where the pod is running
@@ -139,7 +139,7 @@ spec:
             example-key: example-value    # 示例值，用户可根据调度意图自行配置nodeSelector
           containers:
           - name: ascend # do not modify
-            image: pytorch-test:latest                # training framework image， which can be modified
+            image: pytorch-test:latest                # training framework image, which can be modified
             imagePullPolicy: IfNotPresent
             env:
               - name: XDL_IP                                       # IP address of the physical node, which is used to identify the node where the pod is running

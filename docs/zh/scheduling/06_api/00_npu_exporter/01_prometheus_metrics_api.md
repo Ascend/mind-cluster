@@ -679,7 +679,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p id="p1489711132488"><a name="p1489711132488"></a><a name="p1489711132488"></a>npu_chip_info_hbm_ecc_enable_flag</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p168978133484"><a name="p168978133484"></a><a name="p168978133484"></a><span id="ph168971313174819"><a name="ph168971313174819"></a><a name="ph168971313174819"></a>昇腾AI处理器</span>片上内存的ECC启动状态</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p id="p168978133484"><a name="p168978133484"></a><a name="p168978133484"></a><span id="ph168971313174819"><a name="ph168971313174819"></a><a name="ph168971313174819"></a>昇腾AI处理器</span>片上内存的ECC启用状态</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p id="p41235553716"><a name="p41235553716"></a><a name="p41235553716"></a><a href="#table191895615241">标签1</a></p>
 </td>
