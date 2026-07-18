@@ -18,25 +18,25 @@ ascend-fd parse [-h] [-i INPUT_PATH] -o OUTPUT_PATH \
 
 ## 参数说明
 
-| 参数               | 类型   | 必选 | 说明                                             |
-|--------------------|--------|------|--------------------------------------------------|
-| -h, --help         | -      | 否   | 显示帮助信息                                     |
-| -i, --input_path   | String | 否   | 预处理数据输入路径                               |
-| -o, --output_path  | String | 是   | 清洗结果输出路径                                 |
-| --host_log         | String | 否   | 主机侧操作系统日志目录                           |
-| --device_log       | String | 否   | Device 侧日志目录                                |
-| --train_log        | String | 否   | 用户训练及推理日志目录，最多 20 个               |
-| --process_log      | String | 否   | CANN 应用类日志目录                              |
-| --env_check        | String | 否   | NPU 网口、状态信息、资源信息目录                 |
-| --dl_log           | String | 否   | MindCluster 组件日志目录                         |
-| --mindie_log       | String | 否   | MindIE 组件日志目录                              |
-| --amct_log         | String | 否   | AMCT 组件日志目录                                |
-| --bmc_log          | String | 否   | BMC 组件日志目录                                 |
-| --lcne_log         | String | 否   | LCNE 组件日志目录                                |
-| --bus_log          | String | 否   | Ascend 950 系列 LCNE 组件日志目录                |
-| --pymotor_vllm_log | String | 否   | PyMotor/vLLM 日志目录                            |
-| --custom_log       | String | 否   | 自定义解析文件目录                               |
-| -p, --performance  | -      | 否   | 清洗设备资源、网络拥塞两个性能劣化检测模块的数据 |
+| 参数               | 类型   | 必选                   | 说明                                             |
+|--------------------|--------|------------------------|--------------------------------------------------|
+| -h, --help         | -      | 否                     | 显示帮助信息                                     |
+| -i, --input_path   | String | 否                     | 预处理数据输入路径                               |
+| -o, --output_path  | String | 是                     | 清洗结果输出路径                                 |
+| --host_log         | String | 否                     | 主机侧操作系统日志目录                           |
+| --device_log       | String | 否                     | Device 侧日志目录                                |
+| --train_log        | String | 否                     | 用户训练及推理日志目录，最多 20 个               |
+| --process_log      | String | 否                     | CANN 应用类日志目录                              |
+| --env_check        | String | 否                     | NPU 网口、状态信息、资源信息目录                 |
+| --dl_log           | String | 否                     | MindCluster 组件日志目录                         |
+| --mindie_log       | String | 否                     | MindIE 组件日志目录                              |
+| --amct_log         | String | 否                     | AMCT 组件日志目录                                |
+| --bmc_log          | String | 否                     | BMC 侧日志目录                                   |
+| --lcne_log         | String | 否，和 --bus_log 互斥  | LCNE 组件日志目录，和 --bus_log 效果一致         |
+| --bus_log          | String | 否，和 --lcne_log 互斥 | LCNE 组件日志目录，和 --lcne_log 效果一致        |
+| --pymotor_vllm_log | String | 否                     | PyMotor/vLLM 日志目录                            |
+| --custom_log       | String | 否                     | 自定义解析文件目录                               |
+| -p, --performance  | -      | 否                     | 清洗设备资源、网络拥塞两个性能劣化检测模块的数据 |
 
 ## 使用示例
 

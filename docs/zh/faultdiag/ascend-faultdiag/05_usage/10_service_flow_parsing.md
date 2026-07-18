@@ -4,18 +4,18 @@
 
 ## 适用场景
 
-- 用户自己的 Python 程序中集成日志清洗功能
-- 需要对业务日志进行程序化处理
+- 用户在自己的 Python 程序中集成日志清洗功能。
+- 需要对业务日志进行程序化处理。
 
 ## 操作步骤
 
-1. 导入 SDK：
+1. 导入 SDK
 
     ```python
     from ascend_fd import parse_fault_type
     ```
 
-2. 调用清洗接口：
+2. 调用清洗接口
 
     ```python
     result, err_msg_list = parse_fault_type(input_log_list)
