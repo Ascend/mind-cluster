@@ -11,8 +11,8 @@
 ### 约束限制
 
 - 训练[故障快速恢复](../00_fault_recovery_acceleration/01_product_description.md)框架正在向MindIO ACP保存Checkpoint时，如果遇到Checkpoint保存失败，当前正在保存的Checkpoint不能作为训练恢复点，训练框架需要从上一次完整的Checkpoint点进行恢复。
-- 在训练过程中发生MindIO ACP故障，已经下发的业务，MindIO ACP SDK会重试3次连接，3次都失败则对接原生存储方式，重试最长等待60s；在训练开始前发生MindIO ACP故障，MindIO ACP SDK则会跳过对接MindIO ACP，Checkpoint的数据直接对接原生数据存储方式。
-- 本特性不配套MindSpore 2.7.0之前的版本，功能无法使用。
+- 在训练过程中发生MindIO ACP故障，已经下发的业务，MindIO ACP SDK会重试3次连接，3次都失败则对接原生存储方式，重试最长等待60s；在训练开始前发生MindIO ACP故障，MindIO ACP SDK则会跳过对接MindIO ACP，Checkpoint的数据直接对接原生存储方式。
+- 本特性不支持MindSpore 2.7.0之前的版本，功能无法使用。
 
 ## 安装前准备
 
@@ -34,7 +34,7 @@
 
 > [!NOTE]说明
 >
-> - 逻辑部署示意图展示深度学习平台的完整示意图，MindIO ACP作为计算节点上部署的一个组件，不涉及管理节点和存储节点的安装部署。
+> - 逻辑部署示意图展示了深度学习平台的完整架构，MindIO ACP作为计算节点上部署的一个组件，不涉及管理节点和存储节点的安装部署。
 > - MindIO ACP是单节点内存缓存系统，训练Checkpoint数据通过共享内存方式访问MindIO ACP，不涉及网络平面划分。
 
 ### 环境要求
@@ -92,15 +92,15 @@
 
 **软件数字签名验证**
 
-为了防止软件包在传递过程或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
+为了防止软件包在传输过程或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
 
 在软件包下载之后，请参见《[OpenPGP签名验证指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100209376)》，对从Support网站下载的软件包进行PGP数字签名校验。如果校验失败，请勿使用该软件包，先联系华为技术支持工程师解决。
 
 使用软件包安装/升级之前，也需要按上述过程先验证软件包的数字签名，确保软件包未被篡改。
 
-运营商客户请访问：[http://support.huawei.com/carrier/digitalSignatureAction](http://support.huawei.com/carrier/digitalSignatureAction)
+运营商客户请访问：[运营商数字签名验证页面](https://support.huawei.com/carrier/digitalSignatureAction)
 
-企业客户请访问：[https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054)
+企业客户请访问：[企业PGP签名验证工具](https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054)
 
 ## 在计算节点安装MindIO ACP SDK
 
@@ -111,7 +111,7 @@
 1. 以安装用户 *{MindIO-install-user}* 登录安装节点。
 
     >[!NOTE]说明
-    >安装用户设置的口令需符合口令复杂度要求（请参见[口令复杂度要求](./07_appendixes.md#口令复杂度要求)）。密码有效期为90天，您可以在“/etc/login.defs“文件中修改有效期的天数，或者通过 **chage** 命令来设置用户的有效期，详情请参见[设置用户有效期](./07_appendixes.md#设置用户有效期)。
+    >安装用户设置的口令需符合口令复杂度要求（请参见[口令复杂度要求](./07_appendixes.md#口令复杂度要求)）。密码有效期为90天，您可以在 `/etc/login.defs` 文件中修改有效期的天数，或者通过 **chage** 命令来设置用户的有效期，详情请参见[设置用户有效期](./07_appendixes.md#设置用户有效期)。
 
 2. 将内存缓存系统软件包上传至设备中安装用户有读写权限的路径下。
 
@@ -161,7 +161,7 @@
 5. 将软件安装目录内的可执行文件和代码脚本权限更改为550，避免出现非法篡改。
 
     ```bash
-    chmod -R 550 {MindIO ACP SDK安装目录}
+    chmod -R 550 "{MindIO ACP SDK安装目录}"
     ```
 
 ## 卸载MindIO ACP SDK
@@ -171,7 +171,7 @@
 1. 将软件安装目录内的可执行文件和代码脚本权限更改为750。
 
     ```bash
-    chmod -R 750 {MindIO ACP SDK安装目录}
+    chmod -R 750 "{MindIO ACP SDK安装目录}"
     ```
 
 2. 卸载MindIO ACP SDK。

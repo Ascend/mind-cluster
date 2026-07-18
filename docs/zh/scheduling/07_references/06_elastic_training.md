@@ -197,7 +197,7 @@
 
 |软件包|是否必选|说明|获取方法|
 |--|--|--|--|
-|mindformers-<em>{version}</em>-py3-none-any.whl|是|MindSpore Transformers套件，构建大模型训练、微调、评估、推理、部署的全流程开发套件。MindSpore的master版本请使用r0.3分支代码版本。|[获取链接](https://gitcode.com/mindspore/mindformers/tree/master)|
+|mindformers-<em>{version}</em>-py3-none-any.whl|是|MindSpore Transformers套件，构建大模型训练、微调、评估、推理、部署的全流程开发套件。MindSpore的master版本请使用r0.3分支代码版本。|[MindFormers 代码仓（master 分支）](https://gitcode.com/mindspore/mindformers/tree/master)|
 |Dockerfile|是|制作镜像需要。|用户根据业务自行准备。|
 
 为了防止软件包在传递过程中或存储期间被恶意篡改，下载软件包时需下载对应的数字签名文件用于完整性验证。
@@ -697,10 +697,10 @@
             if args_opt.run_type == "train":
                 args_opt.start_lr = 6e-5
                 args_opt.end_lr = 6e-6
-               args_opt.stage_num = 8               # 流水线阶段的数量
-               args_opt.micro_size = 16             # 流水线并行模式下的微批次大小，其取值应大于args_opt.stage_num
+                args_opt.stage_num = 8               # 流水线阶段的数量
+                args_opt.micro_size = 16             # 流水线并行模式下的微批次大小，其取值应大于args_opt.stage_num
                 args_opt.op_level_model_parallel_num = 16
-                if args_opt.optimizer_shard = 1:
+                if args_opt.optimizer_shard == 1:
                     args_opt.op_level_model_parallel_num = 8
             elif args_opt.run_type == "predict":
                 args_opt.stage_num = 4
@@ -766,9 +766,9 @@
                 args_opt.strategy_load_ckpt_path = ""
 
             # 弹性训练中增加内容，strategy_ckpt_save_file_path参数可以根据容器内路径指定
-            strategy_ckpt_save_file_path = '/job/data/code/fault_torlence/pangu_alpha/strategy.ckpt'
+            strategy_ckpt_save_file_path = '/job/data/code/fault_tolerance/pangu_alpha/strategy.ckpt'
             if args_opt.strategy_load_ckpt_path == strategy_ckpt_save_file_path:
-                 strategy_ckpt_save_file_path = '/job/data/code/fault_torlence/pangu_alpha/strategy_new.ckpt'
+                 strategy_ckpt_save_file_path = '/job/data/code/fault_tolerance/pangu_alpha/strategy_new.ckpt'
 
             # 将strategy_ckpt_save_file='strategy.ckpt'修改成strategy_ckpt_save_file=strategy_ckpt_save_file_path，如果set_auto_parallel_context里没有指定strategy_ckpt_save_file参数，则需要手动添加strategy_ckpt_save_file=strategy_ckpt_save_file_path，如下粗体所示
             mindspore.set_auto_parallel_context(
@@ -846,8 +846,8 @@
     ...
         parser.add_argument("--strategy_load_ckpt_path",
                             type=str,
-                            default="/job/data/code/fault_torlence/pangu_alpha/strategy/strategy.ckpt", # 弹性训练中，根据用户习惯指定容器内路径，且路径不会被训练覆盖。
-                            help="The training prallel strategy for the model.")
+                            default="/job/data/code/fault_tolerance/pangu_alpha/strategy/strategy.ckpt", # 弹性训练中，根据用户习惯指定容器内路径，且路径不会被训练覆盖。
+                            help="The training parallel strategy for the model.")
         parser.add_argument("--tokenizer_path",
                             type=str,
                             default="./tokenizer_path",
@@ -859,11 +859,11 @@
         """
         opt.add_argument("--pre_trained",
                          type=str,
-                         default="/job/data/code/fault_torlence/pangu_alpha/8p", # 指定预训练模型路径，
+                         default="/job/data/code/fault_tolerance/pangu_alpha/8p", # 指定预训练模型路径，
                          help="Pretrained checkpoint path.")
         opt.add_argument("--save_checkpoint_path",
                          type=str,
-                         default="/job/data/code/fault_torlence/pangu_alpha/8p",   # 指定模型保存路径
+                         default="/job/data/code/fault_tolerance/pangu_alpha/8p",   # 指定模型保存路径
                          help="Save checkpoint path.")
         opt.add_argument("--keep_checkpoint_max", # 指定模型保存策略：最大数量
                          type=int,
@@ -1035,7 +1035,7 @@
     ...
               volumeMounts:                             #弹性训练扩容
               - name: shm
-               mountPath: /dev/shm
+                mountPath: /dev/shm
             volumes:
             - name: shm
               emptyDir:
@@ -1169,8 +1169,8 @@
     ```ColdFusion
     NAMESPACE        NAME                                       READY   STATUS    RESTARTS   AGE     IP                NODE         NOMINATED NODE   READINESS GATES
     ……
-    vcjob            mindx-dls-test-default-test-0              1/1     Running   0          92s     192.168.70.118    ubuntu-155   <none>           <none>
-    vcjob            mindx-dls-test-default-test-1              1/1     Running   0          92s     192.168.185.213   ubuntu-177   <none>           <none>
+    vcjob            mindx-dls-test-default-test-0              1/1     Running   0          92s     192.168.xx.xx        node-1       <none>           <none>
+    vcjob            mindx-dls-test-default-test-1              1/1     Running   0          92s     192.168.xx.xx    node-2       <none>           <none>
     ```
 
 ### 查看结果<a name="ZH-CN_TOPIC_0000002479387114"></a>

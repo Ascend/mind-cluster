@@ -6,7 +6,7 @@
 
 |参数|说明|取值|
 |--|--|--|
-|hccl.json|任务使用的芯片通信信息。可转义为JSON格式，字段说明如下：<ul><li>status：任务RankTable是否已经生成。</li><ul><li>initializing：还在为任务分配设备，RankTable未生成。</li><li>complete：当RankTable生成后，状态会立即变为complete，同步出现server_list等其他字段。</li></ul><li>server_list：任务设备分配情况。</li><ul><li>device：记录NPU分配，NPU IP和rank_id信息。</li><ul><li>device_id：NPU的设备ID。</li><li>device_ip：NPU的设备IP。</li><li>rank_id：NPU对应的训练Rank ID。</li><li>super_device_id：超节点内NPU的唯一标识。</li></ul><li>server_id：AI Server标识，全局唯一。</li><li>server_name：节点名称。</li><li>server_sn：节点的SN号。需要保证设备的SN存在。若不存在，请联系华为技术支持。</li><li>host_ip：主机IP。</li><li>super_pod_id：超节点ID。</li><li>pod_name：Pod名称。</li><li>container_ids：Pod所有容器的ID映射表。</li></ul><li>server_count：任务使用的节点数量。</li><li>version：版本信息。</li><li>total：ConfigMap个数。</li></ul>|字符串|
+|hccl.json|任务使用的芯片通信信息。可解析为JSON格式，字段说明如下：<ul><li>status：任务RankTable是否已经生成。</li><ul><li>initializing：还在为任务分配设备，RankTable未生成。</li><li>complete：当RankTable生成后，状态会立即变为complete，同步出现server_list等其他字段。</li></ul><li>server_list：任务设备分配情况。</li><ul><li>device：记录NPU分配，NPU IP和rank_id信息。</li><ul><li>device_id：NPU的设备ID。</li><li>device_ip：NPU的设备IP。</li><li>rank_id：NPU对应的训练Rank ID。</li><li>super_device_id：超节点内NPU的唯一标识。</li></ul><li>server_id：AI Server标识，全局唯一。</li><li>server_name：节点名称。</li><li>server_sn：节点的SN号。需要保证设备的SN存在。若不存在，请联系华为技术支持。</li><li>host_ip：主机IP。</li><li>super_pod_id：超节点ID。</li><li>pod_name：Pod名称。</li><li>container_ids：Pod所有容器的ID映射表。</li></ul><li>server_count：任务使用的节点数量。</li><li>version：版本信息。</li><li>total：ConfigMap个数。</li></ul>|字符串|
 |job_id|任务的K8s ID信息。|字符串|
 |operator|<ul><li>add：接收到添加任务命令后状态更新为add。</li><li>delete：接收到删除任务命令后状态更新为delete。</li></ul>|字符串|
 |deleteTime|任务被删除的时间。|字符串|
@@ -22,7 +22,7 @@
 
 ## current-job-statistic<a name="section39901331194218"></a>
 
-用于展示集群中当前任务的统计信息，详细信息记录在/var/log/mindx-dl/clusterd/event\_job.log日志文件中。由于K8s的ConfigMap容量大小限制，最大支持统计集群任务数量约为1w条。当日志文件达到20M时，触发自动转储，最多保存5份转储日志，转储日志最长保留时间为40天。
+用于展示集群中当前任务的统计信息，详细信息记录在/var/log/mindx-dl/clusterd/event\_job.log日志文件中。由于K8s的ConfigMap容量大小限制，最大支持统计集群任务数量约为1万条。当日志文件达到20MB时，触发自动转储，最多保存5份转储日志，转储日志最长保留时间为40天。
 
 |参数|说明|
 |--|--|
