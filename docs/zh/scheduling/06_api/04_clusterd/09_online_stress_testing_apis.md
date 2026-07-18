@@ -79,7 +79,7 @@ rpc SubscribeNotifyExecStressTest(ClientInfo) returns (stream StressTestRankPara
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|stream|grpc stream|<ul><li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li></ul>|
+|stream|gRPC stream|<ul><li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li></ul>|
 
 ## ReplyStressTestResult<a name="ZH-CN_TOPIC_0000002511346775"></a>
 
@@ -97,7 +97,7 @@ rpc ReplyStressTestResult(StressTestResult) returns (Status) {}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|StressTestResult|<p>message StressTestResult {</p><p>string jobId = 1;</p><p>map<string, StressTestRankResult> stressResult = 2;</p>}<p>message StressTestRankResult {<p>map<string, StressTestOpResult> rankResult= 1;</p>}</p><p>message StressTestOpResult {<p>string code = 1;</p><p>string result = 2;</p>}</p>|<p>**StressTestResult.jobId**：任务ID。</p><p>**StressTestResult.stressResult**：指令执行的结果。key为执行压测的global rankID；value为执行压测的结果。</p><p>**StressTestRankResult.rankResult**：某张卡执行压测的结果。key为压测的操作，0表示“aic”压测；1表示“p2p”压测。value为对应的结果。</p><p>**StressTestOpResult.code**：压测结果的错误码。<ul><li>0表示执行成功，无故障</li><li>1表示压测失败，可正常恢复训练</li><li>2表示发现压测故障，需要隔离对应节点</li><li>3表示压测超时，该节点任务退出重启</li><li>4表示压测电压未恢复，该节点任务退出重启</li></ul></p><p>**StressTestOpResult.result**：压测结果的描述信息。</p>|
+|StressTestResult|<p>message StressTestResult {</p><p>string jobId = 1;</p><p>map<string, StressTestRankResult> stressResult = 2;</p>}<p>message StressTestRankResult {<p>map<string, StressTestOpResult> rankResult = 1;</p>}</p><p>message StressTestOpResult {<p>string code = 1;</p><p>string result = 2;</p>}</p>|<p>**StressTestResult.jobId**：任务ID。</p><p>**StressTestResult.stressResult**：指令执行的结果。key为执行压测的global rankID；value为执行压测的结果。</p><p>**StressTestRankResult.rankResult**：某张卡执行压测的结果。key为压测的操作，0表示“aic”压测；1表示“p2p”压测。value为对应的结果。</p><p>**StressTestOpResult.code**：压测结果的错误码。<ul><li>0表示执行成功，无故障</li><li>1表示压测失败，可正常恢复训练</li><li>2表示发现压测故障，需要隔离对应节点</li><li>3表示压测超时，该节点任务退出重启</li><li>4表示压测电压未恢复，该节点任务退出重启</li></ul></p><p>**StressTestOpResult.result**：压测结果的描述信息。</p>|
 
 **返回值说明<a name="section69806312314"></a>**
 

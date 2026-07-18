@@ -87,7 +87,7 @@ chage -M 90 test
 |*{MindIO-install-user}*|MindIO ACP安装用户。|用户自定义。|使用 **passwd** 命令修改。|
 
 > [!CAUTION]注意
-> 为了保护密码安全性建议用户定期修改密码。
+> 为了保护密码安全性，建议用户定期修改密码。
 
 ## 公网网址说明
 

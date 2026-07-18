@@ -1,4 +1,4 @@
-﻿# 附录
+# 附录
 
 ## 边缘容器日志输出指导<a name="ZH-CN_TOPIC_0000002479226424"></a>
 
@@ -1102,7 +1102,7 @@ MindCluster集群调度组件是基于K8s生态的功能组件，因此训练任
 </td>
 <td class="cellrowborder" valign="top" width="41.675832416758325%" headers="mcps1.2.5.1.2 "><p id="p7820140192711"><a name="p7820140192711"></a><a name="p7820140192711"></a>etcd配置的CPU和内存资源将影响etcd的处理能力。</p>
 </td>
-<td class="cellrowborder" valign="top" width="25.51744825517448%" headers="mcps1.2.5.1.3 "><p id="p196391628173210"><a name="p196391628173210"></a><a name="p196391628173210"></a>etcd request的CPU资源上限调整为20核，memory资源上限调整为10G。</p>
+<td class="cellrowborder" valign="top" width="25.51744825517448%" headers="mcps1.2.5.1.3 "><p id="p196391628173210"><a name="p196391628173210"></a><a name="p196391628173210"></a>etcd request的CPU资源上限调整为20核，memory资源上限调整为10GB。</p>
 <pre class="screen" id="screen4260163245215"><a name="screen4260163245215"></a><a name="screen4260163245215"></a>resources:
   requests:
     cpu: 20000m

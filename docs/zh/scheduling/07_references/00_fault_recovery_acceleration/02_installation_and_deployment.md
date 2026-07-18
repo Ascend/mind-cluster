@@ -26,7 +26,7 @@
 
         增加副本对应增加的片上内存大小计算公式：增加片上内存总量（GB） = 模型参数量N（B） \* 12 \* 副本数。其中，模型参数量的单位为B（十亿），通过以上公式，计算出需要增加的片上内存，扩容后，再使用MindIO TFT。
 
-- 训练容错框架中有一个Active Controller与两个Backup Controller，为了包括Active Controller在内多张卡发生故障时，能够顺利切换到Backup Controller完成临终保存，需要状态正常的卡的数量大于world\_size的一半。
+- 训练容错框架中有一个Active Controller与两个Backup Controller，为了保证Active Controller在内多张卡发生故障时，能够顺利切换到Backup Controller完成临终保存，需要状态正常的卡的数量大于world\_size的一半。
 - MindIO TFT会对优化器状态数据做副本。MindIO UCE或MindIO ARF修复时，寻找有效副本修复故障卡。当训练集群故障较多且通过副本仍无法拼凑出一个完整副本时，系统将从Step在线修复退化为在线加载周期Checkpoint修复。
 - MindIO TFT在生成临终Checkpoint数据时，除了考虑一个完整的数据副本，还要校验数据是否一致。如果发生故障后，存在一个OS（Optimizer State，优化器状态）数据Shard长期处于修改状态，或者OS数据不同Shard间训练迭代不一致，都认为是全局数据不一致，无法生成临终Checkpoint数据。
 - MindIO TTP不使用MindIO ACP（Async Checkpoint Persistence，异步Checkpoint保存）功能。MindIO TTP完成临终Checkpoint保存后会结束训练进程。为确保在进程退出前，临终Checkpoint已经保存到持久化存储，约束MindIO TTP写数据不使用异步Checkpoint保存方式，而是直接写入到持久化存储。
@@ -41,7 +41,7 @@
 ### 组网规划
 
 **图 1**  部署逻辑示意图
-![](../../../figures/scheduling/部署逻辑示意图ttp.png "部署逻辑示意图")
+![部署逻辑示意图](../../../figures/scheduling/部署逻辑示意图ttp.png "部署逻辑示意图")
 
 深度学习平台与训练任务相关的节点有计算节点和存储节点。各类节点主要功能如下：
 
@@ -107,7 +107,7 @@
 
 使用软件包安装/升级之前，也需要按上述过程先验证软件包的数字签名，确保软件包未被篡改。
 
-运营商客户请访问：[http://support.huawei.com/carrier/digitalSignatureAction](http://support.huawei.com/carrier/digitalSignatureAction)
+运营商客户请访问：[运营商数字签名验证页面](https://support.huawei.com/carrier/digitalSignatureAction)
 
 企业客户请访问：[https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054](https://support.huawei.com/enterprise/zh/tool/pgp-verify-TL1000000054)
 

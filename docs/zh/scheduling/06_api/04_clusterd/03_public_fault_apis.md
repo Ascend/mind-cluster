@@ -9,9 +9,9 @@
 >[!NOTE]
 >
 >- 实际的ConfigMap中的参数如果与定义的取值范围不相符，ClusterD会将故障信息丢弃，不作处理。
->- 通过ConfigMap或者gRPC接口注入的公共故障，所有节点的故障数量之和上限为5w。当故障数量超过5w时，再次注入故障，ClusterD会将故障信息丢弃，不作处理。
+>- 通过ConfigMap或者gRPC接口注入的公共故障，所有节点的故障数量之和上限为5万。当故障数量超过5万时，再次注入故障，ClusterD会将故障信息丢弃，不作处理。
 >- ConfigMap的Label需要为mc-consumer-publicfault=true，Data的key需要为PublicFault。
->- 通过ConfigMap方式发送公共故障时，单次数据量不能超过1M大小，否则ConfigMap会更新失败。
+>- 通过ConfigMap方式发送公共故障时，单次数据量不能超过1MB大小，否则ConfigMap会更新失败。
 
 **参数说明<a name="section4809204015614"></a>**
 
@@ -38,9 +38,9 @@
 |faultCode|故障码|用户可以自定义，9位唯一即可。<ul><li>接入断点续训的故障码，必须存在于故障配置文件的publicFaultCode中。</li><li>对于新增的故障码，需要在故障配置文件配置其故障级别。详细说明请参见[（可选）配置公共故障的级别和发送方](../../04_usage/04_resumable_training/03_configuration/01_configuring_fault_detection_levels.md#可选配置公共故障的级别和发送方)。</li><li>故障码建议遵循故障码说明表中的规则定义，方便后续维护。</li><li>若一张NPU先后出现两个相同的故障码，在cluster-info-cm中fault_code字段将同时记录2个相同的故障码。</li></ul>|string|是|
 |faultTime|故障产生时间|时间戳（单位：ms），13位数字，必须在2025-01-01T00:00:00Z之后。<ul><li>无论是故障产生还是故障消除，该字段均为故障产生时间。</li><li>该字段在cluster-info-cm中以秒为单位展示。</li></ul>|int64|是|
 |assertion|故障状态|取值为occur、recover或once。<ul><li>occur：故障产生。</li><li>recover：故障恢复。</li><li>once：一次性事件。</li></ul><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><ul><li>公共故障消除需要将相应故障的recover事件写入ConfigMap中，不能通过删除ConfigMap的形式实现。</li><li>对于一次性事件，几秒钟之后故障会自动清除。</li></ul></div></div>|string|是|
-|faultLocation|故障定位信息|故障源信息，长度≤10，map的key长度≤16，value长度≤128。eg. key: npuIp, value: ip|map[string]string|否|
+|faultLocation|故障定位信息|故障源信息，长度≤10，map的key长度≤16，value长度≤128。e.g. key: npuIp, value: ip|map[string]string|否|
 |influence|故障影响的范围|切片，长度>0且≤1000。|[]object, [faultInfo](#faultinfo0023698)|是|
-|description|故障描述|0~512个字符。包含非空白字符和空格。|string|否|
+|description|故障描述|0～512个字符。包含非空白字符和空格。|string|否|
 
 **表 3**  faultInfo字段说明
 
@@ -61,7 +61,7 @@
 >[!NOTE]
 >
 >- 实际的gRPC请求参数如果与定义的取值范围不相符，ClusterD会将故障信息丢弃，不作处理。
->- 通过ConfigMap或者gRPC接口注入的公共故障，所有节点的故障数量之和上限为5w。当故障数量超过5w时，再次注入故障，ClusterD会将故障信息丢弃，不作处理。
+>- 通过ConfigMap或者gRPC接口注入的公共故障，所有节点的故障数量之和上限为5万。当故障数量超过5万时，再次注入故障，ClusterD会将故障信息丢弃，不作处理。
 >- 公共故障消除需要将相应故障的recover事件通过gRPC接口发送给ClusterD。
 
 **函数原型<a name="section1698941035919"></a>**

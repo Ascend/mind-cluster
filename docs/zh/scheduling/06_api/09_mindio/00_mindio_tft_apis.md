@@ -517,7 +517,7 @@ mindio_ttp.framework_ttp.tft_register_repair_handler(func: Callable, ctx = None)
 |参数|说明|取值要求|
 |--|--|--|
 |step|修复时对应的step。|正整数。|
-|need_rebuild|-|修复是否需要重建模型和优化器。|<ul><li>False：无需重建。</li><li>True：需要重建。</li></ul>|
+|need_rebuild|修复是否需要重建模型和优化器。|<ul><li>False：无需重建。</li><li>True：需要重建。</li></ul>|
 |error_ranks|需要修复的故障卡list。|list。|
 |repair_info|修复策略dict，其中优化器类型按照ATTENTION（0）、MOE（1）的关系对应。|{<br>"type": int,   # 优化器类型 <br>"repair_type": Enum,   # 枚举类型取值参见[RepairType](#repairtype) <br>"src": list,    # 优化器修复数据的来源卡列表 <br>"dst": list,   # 优化器修复数据的目的卡列表<br>"rank_list": list, # 修复通信组建立所需要的卡列表<br>}|
 |args|tft_set_step_args设置的参数。|由注册方决定。|
@@ -679,7 +679,7 @@ mindio_ttp.framework_ttp.tft_register_zit_upgrade_rebuild_handler(func: Callable
 mindio_ttp.framework_ttp.tft_register_zit_downgrade_rebuild_handler(func: Callable, ctx = None)
 ```
 
-**接口参数=**
+**接口参数**
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|
@@ -702,7 +702,7 @@ mindio_ttp.framework_ttp.tft_register_zit_downgrade_rebuild_handler(func: Callab
 mindio_ttp.framework_ttp.tft_register_exception_handler(fault_pattern: str, fault_type: str, fault_handle: Callable)
 ```
 
-**接口参数=**
+**接口参数**
 
 |参数|是否必选|说明|取值要求|
 |--|--|--|--|

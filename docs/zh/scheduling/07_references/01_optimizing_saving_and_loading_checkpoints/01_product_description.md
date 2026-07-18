@@ -12,7 +12,7 @@ LLM（Large Language Model，大语言模型）是全球当前科技界竞争的
 
 ## MindIO ACP架构
 
-![](../../../figures/scheduling/mindio_acp架构.png)
+![MindIO ACP 异步持久化架构示意：训练框架→MemFS→分布式存储](../../../figures/scheduling/mindio_acp架构.png)
 
 MindIO ACP加速LLM Checkpoint保存和加载的4个关键点如下：
 

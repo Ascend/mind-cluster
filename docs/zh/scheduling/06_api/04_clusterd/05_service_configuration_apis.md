@@ -22,7 +22,7 @@ rpc Register(ClientInfo) returns (Status) {}
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|<p>message Status{</p><p>int32 code = 1;</p><p>string info =2;</p>}|<p>**Status.code**：返回码。<ul><li>取值为0：表示注册成功。</li><li>其他值：表示注册失败。</li></ul></p><p>**Status.info**：返回信息描述。</p>|
+|Status|<p>message Status{</p><p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<ul><li>取值为0：表示注册成功。</li><li>其他值：表示注册失败。</li></ul></p><p>**Status.info**：返回信息描述。</p>|
 
 ## SubscribeRankTable<a name="ZH-CN_TOPIC_0000002511346779"></a>
 
@@ -56,7 +56,7 @@ rpc SubscribeRankTable(ClientInfo) returns (stream RankTableStream) {}
 
 **global-ranktable文件说明<a name="section268935611912"></a>**
 
-ClusterD会生成global-ranktable在RankTable字段作为返回消息。global-ranktable中部分字段来自于hccl.json文件，关于hccl.json文件的详细说明请参见[hccl.json文件说明](../14_hccl.json_file_description.md)。
+ClusterD会生成global-ranktable，在RankTable字段中作为返回消息。global-ranktable中部分字段来自于hccl.json文件，关于hccl.json文件的详细说明请参见[hccl.json文件说明](../14_hccl.json_file_description.md)。
 
 - 示例如下。
 
