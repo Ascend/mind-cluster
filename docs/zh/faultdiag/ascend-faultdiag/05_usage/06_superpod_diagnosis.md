@@ -24,7 +24,7 @@
     示例：
 
     ```shell
-    ascend-fd parse -i <设备 0上Host日志目录> -o <超节点清洗结果输出目录/host/worker-0>
+    ascend-fd parse -i <设备0上Host日志目录> -o <超节点清洗结果输出目录/host/worker-0>
     ascend-fd parse --lcne_log <设备0上LCNE日志目录> -o <超节点清洗结果输出目录/lcne/worker-0>
     ascend-fd parse --bmc_log <设备0上BMC日志目录> -o <超节点清洗结果输出目录/bmc/worker-0>
     ```
@@ -59,11 +59,8 @@
 3. 执行诊断（需添加 `-s super_pod` 参数）
 
     ```shell
-    ascend-fd diag -i <input_dir> -o <output_dir> -s super_pod
+    ascend-fd diag -i <诊断输入目录> -o <诊断结果输出目录> -s super_pod
     ```
-
-    > - `input_dir` 为诊断输入目录。
-    > - `output_dir` 为诊断结果输出目录。
 
     诊断回显如下：
 
@@ -131,7 +128,7 @@
     > [!NOTE]
     >
     > - 示例为假设缺少 LCNE 日志。
-    > - Host 侧日志以 --process_log 为例，可以直接使用 -i 把其他收集的日志包括进来（如 device_log, dl_log 等）。
+    > - Host 侧日志以 --process_log 为例，可以直接使用 -i 把其他收集的日志包括进来（如 device_log、dl_log 等）。
     > - 不同设备的清洗结果，应归属于不同的 worker 下。
     > - 不同的设备，应该对应不同的 worker 目录（如五台设备，分别对应 worker-0 至 worker-4）。
     > - 示例仅展示三台设备的清洗结果，实际场景中，需要根据设备数量，对应不同的 worker 目录。
@@ -167,11 +164,8 @@
 3. 执行诊断（不需要`-s super_pod` 参数）
 
     ```shell
-    ascend-fd diag -i <input_dir> -o <output_dir>
+    ascend-fd diag -i <诊断输入目录> -o <诊断结果输出目录>
     ```
-
-    > - `input_dir` 为诊断输入目录。
-    > - `output_dir` 为诊断结果输出目录。
 
     以 pd 分离超节点场景为例，诊断回显如下：
 

@@ -41,3 +41,39 @@ ulimit -n 65535
 ### Q5：诊断报告中的故障设备过多
 
 **A**：终端默认仅展示 16 条故障设备信息。完整信息可以在诊断结果文件 `diag_report.json` 中查看。
+
+### Q6：安装完 ascend-fd 提示 command not found
+
+**A**：
+
+- ascend-fd 安装失败，重新安装 ascend-fd 即可。
+
+- 当前机器可能有多个 Python 版本，ascend-fd 安装在非默认 Python 下， `find / -name ascend-fd` 查找对应的安装目录，将该目录添加到 PATH 里面。
+
+安装在非默认 Python 下时，会有类似如下提示：
+
+```bash
+WARNING: The script ascend-fd is installed in '/usr/local/python3.8/bin' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+Successfully installed ascend-faultdiag-26.1.0
+```
+
+可按以下方式查找 ascend-fd：
+
+```bash
+find / -name ascend-fd
+```
+
+得到：
+
+```bash
+/usr/local/python3.8/bin/ascend-fd
+```
+
+将该目录添加到 PATH 中：
+
+```bash
+export PATH=$PATH:/usr/local/python3.8/bin/
+```
+
+再次尝试 ascend-fd 命令即可。

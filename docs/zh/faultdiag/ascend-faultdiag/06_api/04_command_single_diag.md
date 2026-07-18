@@ -30,7 +30,7 @@ ascend-fd single-diag [-h] [-i INPUT_PATH] -o OUTPUT_PATH \
 | --dl_log           | String              | 否   | MindCluster 组件日志目录                 |
 | --mindie_log       | String              | 否   | MindIE 组件日志目录                      |
 | --amct_log         | String              | 否   | AMCT 组件日志目录                        |
-| --bus_log          | String              | 否   | Ascend 950 系列 LCNE 组件日志目录        |
+| --bus_log          | String              | 否   | LCNE 组件日志目录                        |
 | --pymotor_vllm_log | String              | 否   | PyMotor/vLLM 日志目录                    |
 
 ## 使用示例

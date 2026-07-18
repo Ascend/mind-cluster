@@ -20,7 +20,7 @@ ascend-fd diag [-h] -i INPUT_PATH -o OUTPUT_PATH [-p] [-s {host,super_pod}]
 | -o, --output_path | String | 是   | 诊断结果输出路径                                                             |
 | -s, --scene       | String | 否   | 诊断场景，可选值：`host`（主机场景）、`super_pod`（超节点场景）；默认 `host` |
 
-诊断输入目录结构
+诊断输入目录结构：
 
 ```text
 诊断输入目录
@@ -48,7 +48,7 @@ ascend-fd diag [-h] -i INPUT_PATH -o OUTPUT_PATH [-p] [-s {host,super_pod}]
 ascend-fd diag -i /tmp/parse_out -o /tmp/diag_out
 ```
 
-1. 诊断训练任务异常退出问题，回显示例:
+1. 诊断训练任务异常退出问题，回显示例
 
     <!-- markdownlint-disable-next-line MD033 -->
     <pre>
@@ -98,7 +98,7 @@ ascend-fd diag -i /tmp/parse_out -o /tmp/diag_out
     > - Ascend 950 系列产品：展示对端设备 EID。
     > - 回显结果字段说明，请参考[诊断结果回显参数说明](#诊断结果回显参数说明)。
 
-2. 诊断多实例推理任务异常，回显示例:
+2. 诊断多实例推理任务异常，回显示例
 
     <!-- markdownlint-disable-next-line MD033 -->
     <pre>
@@ -159,7 +159,9 @@ ascend-fd diag -i /tmp/parse_out -o /tmp/diag_out
     +--------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     </pre>
 
-    > 回显结果字段说明，请参考[诊断结果回显参数说明](#诊断结果回显参数说明)。
+    > [!NOTE]
+    >
+    > - 回显结果字段说明，请参考[诊断结果回显参数说明](#诊断结果回显参数说明)。
 
 ### 含性能劣化诊断
 
@@ -167,7 +169,7 @@ ascend-fd diag -i /tmp/parse_out -o /tmp/diag_out
 ascend-fd diag -i /tmp/parse_out -o /tmp/diag_out -p
 ```
 
-诊断训练过程中性能劣化问题，回显示例:
+诊断训练过程中性能劣化问题，回显示例：
 
 <!-- markdownlint-disable-next-line MD033 -->
 <pre>
@@ -219,13 +221,13 @@ ascend-fd diag -i /tmp/parse_out -o /tmp/diag_out -p
 
 ### 超节点诊断
 
-以拓扑信息自动关联为例
+以拓扑信息自动关联为例：
 
 ```shell
 ascend-fd diag -i /tmp/super_pod_parse_out -o /tmp/diag_out -s super_pod
 ```
 
-诊断回显示例:
+诊断回显示例：
 
 <!-- markdownlint-disable -->
 <pre>
@@ -412,7 +414,7 @@ diag_report.json 示例：
 
 ### diag_report.json 字段说明
 
-- **顶层字段**
+- 顶层字段
 
 <!-- markdownlint-disable -->
 | 字段              | 类型   | 说明                                       |
@@ -424,7 +426,7 @@ diag_report.json 示例：
 | `Knowledge_Graph` | Object | 故障事件分析结果。                         |
 <!-- markdownlint-enable -->
 
-- **Root_Cluster 字段**
+- Root_Cluster 字段
 
 <!-- markdownlint-disable -->
 | 字段                       | 类型                       | 说明                                                           |
@@ -445,7 +447,7 @@ diag_report.json 示例：
 | `detect_workers_devices`   | Dict[String, List[String]] | 各 worker 下检测到的设备 ID 列表。                             |
 <!-- markdownlint-enable -->
 
-- **show_device_info 字段**
+- show_device_info 字段
 
 <!-- markdownlint-disable -->
 | 字段             | 类型   | 说明                                                                                |
@@ -460,7 +462,7 @@ diag_report.json 示例：
 >
 > `show_device_info` 仅在根因节点为非 Unknown Device 或存在首错节点时输出，且仅在首个根因节点或首错节点存在 error 日志时包含具体字段。
 
-- **Knowledge_Graph 字段**
+- Knowledge_Graph 字段
 
 <!-- markdownlint-disable -->
 | 字段              | 类型         | 说明                                          |
@@ -471,7 +473,7 @@ diag_report.json 示例：
 | `fault`           | List[Object] | 故障事件列表，字段见下表。                    |
 <!-- markdownlint-enable -->
 
-- **fault[] 字段**
+- fault 字段
 
 <!-- markdownlint-disable -->
 | 字段             | 类型         | 说明                                                         |
@@ -488,7 +490,7 @@ diag_report.json 示例：
 | `fault_chains`   | List         | 故障传播链。                                                 |
 <!-- markdownlint-enable -->
 
-- **event_attr 事件属性字段**
+- event_attr 事件属性字段
 
 `event_attr` 的 value 为事件属性对象列表，每个对象包含以下字段：
 
@@ -508,5 +510,5 @@ diag_report.json 示例：
 
 ## 注意事项
 
-- 诊断前需要确保各节点的系统时间已同步
-- ascend-fd 运行错误码请查阅[组件错误码](../07_references/04_appendix.md#组件错误码)
+- 诊断前需要确保各节点的系统时间已同步。
+- ascend-fd 运行错误码请查阅[组件错误码](../07_references/04_appendix.md#组件错误码)。
