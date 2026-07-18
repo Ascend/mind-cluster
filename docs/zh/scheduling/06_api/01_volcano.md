@@ -597,7 +597,7 @@
 </td>
 <td class="cellrowborder" valign="top" width="23.25%" headers="mcps1.2.5.1.3 "><p id="p057261817110"><a name="p057261817110"></a><a name="p057261817110"></a><span id="ph171041450384"><a name="ph171041450384"></a><a name="ph171041450384"></a>字符串</span></p>
 </td>
-<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><a name="ul057261815113"></a><a name="ul057261815113"></a><ul id="ul057261815113"><li><span id="ph41041545133816"><a name="ph41041545133816"></a><a name="ph41041545133816"></a>Disconnected：芯片网络不连通故障。</span></li><li><span id="ph31051045203810"><a name="ph31051045203810"></a><a name="ph31051045203810"></a>heartbeatTimeOut：节点状态丢失故障</span></li></ul>
+<td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.4 "><a name="ul057261815113"></a><a name="ul057261815113"></a><ul id="ul057261815113"><li><span id="ph41041545133816"><a name="ph41041545133816"></a><a name="ph41041545133816"></a>Disconnected：芯片网络不连通故障。</span></li><li><span id="ph31051045203810"><a name="ph31051045203810"></a><a name="ph31051045203810"></a>heartbeatTimeOut：节点状态丢失故障。</span></li></ul>
 </td>
 </tr>
 <tr id="row1757216185116"><td class="cellrowborder" valign="top" width="25%" headers="mcps1.2.5.1.1 "><p id="p1357251820116"><a name="p1357251820116"></a><a name="p1357251820116"></a><span id="ph181051445163811"><a name="ph181051445163811"></a><a name="ph181051445163811"></a>remain-retry-times</span></p>
@@ -769,7 +769,7 @@ MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写
 
 **mindx-dl/job-reschedule-reason<a name="section20866121155814"></a>**
 
-该ConfigMap用于记录任务重调度历史信息，默认情况下会保存任务最近的十次重调度记录，当ConfigMap内容超过950Kb时会依次删除每个任务中发生时间最早的记录。
+该ConfigMap用于记录任务重调度历史信息，默认情况下会保存任务最近的十次重调度记录，当ConfigMap内容超过950KB时会依次删除每个任务中发生时间最早的记录。
 
 **表 4**  任务字段说明
 

@@ -34,9 +34,9 @@
 
 **返回值说明<a name="section1871411618361"></a>**
 
-|参数|说明|
+|返回值类型|说明|
 |--|--|
-|bool|表明初始化是否成功。<ul><li>True：初始化成功。</li><li>False：初始化失败。</li></ul>|
+|bool|表明启动是否成功。<ul><li>True：启动成功。</li><li>False：启动失败。</li></ul>|
 
 ## def destroy\_taskd\_worker\(\) -\> bool:<a name="ZH-CN_TOPIC_0000002511426721"></a>
 

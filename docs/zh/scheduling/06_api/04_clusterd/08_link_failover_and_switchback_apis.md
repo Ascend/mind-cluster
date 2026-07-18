@@ -4,7 +4,7 @@
 
 **功能说明<a name="section143314311911"></a>**
 
-接收运维平台的借轨请求，将训练任务的指定节点的Device下发借轨/回切操作，该接口需要等待训练任务已经成功运行，出迭代以后再调用，保证任务已经注册到ClusterD。借轨/回切接口属于人工运维操作，对于反复切换场景，若每次切换都失败，会导致频繁保存CKPT，存在磁盘爆盘的风险。
+接收运维平台的借轨请求，向训练任务的指定节点的Device下发借轨/回切操作，该接口需要等待训练任务已经成功运行，出迭代以后再调用，保证任务已经注册到ClusterD。借轨/回切接口属于人工运维操作，对于反复切换场景，若每次切换都失败，会导致频繁保存CKPT，存在磁盘爆盘的风险。
 
 >[!NOTE]
 >请在训练正常迭代后，再进行借轨或回切指令的下发。
@@ -79,7 +79,7 @@ rpc SubscribeNotifySwitch(ClientInfo) returns (stream SwitchRankList) {}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|stream|grpc stream|<ul><li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li></ul>|
+|stream|gRPC stream|<ul><li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li></ul>|
 
 ## ReplySwitchNicResult<a name="ZH-CN_TOPIC_0000002479386790"></a>
 
@@ -103,4 +103,4 @@ rpc ReplySwitchNicResult(SwitchResult) returns (Status) {}
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|<p>message Status{</p><p>int32 code = 1;</p><p>string info =2;</p>}|**Status.code**：返回码。<ul><li>取值为0：表示流程正常</li><li>其他值：表示流程异常</li></ul>**Status.info**：返回信息描述。|
+|Status|<p>message Status{</p><p>int32 code = 1;</p><p>string info = 2;</p>}|**Status.code**：返回码。<ul><li>取值为0：表示流程正常</li><li>其他值：表示流程异常</li></ul>**Status.info**：返回信息描述。|

@@ -27,7 +27,7 @@
 一般情况下，故障处理均需经历“收集信息 \> 定位故障 \> 排除故障”三个阶段。在收到告警信息后，通过收集故障现象信息、分析故障原因、定位故障、排除故障后，才可使业务恢复正常。常见的故障处理流程请参见[图1](#fig16356123319514)。
 
 **图 1**  故障处理<a name="fig16356123319514"></a>
-![](../../figures/scheduling/故障处理.png "故障处理")
+![故障处理流程图](../../figures/scheduling/故障处理.png "故障处理")
 
 - [kubelet重启后，NPU Exporter无法获取当前容器信息](https://gitcode.com/Ascend/mind-cluster/issues/321)
 - [hccl.json文件没有生成](https://gitcode.com/Ascend/mind-cluster/issues/323)

@@ -48,7 +48,7 @@ rpc Init(ClientInfo) returns (Status) {}
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<ul><li>取值为0：表示注册成功。</li><li>其他值：表示注册失败。</li></ul></p><p>**Status.info**：返回信息描述。</p>|
+|Status|message Status{<p>int32 code = 1;</p><p>string info = 2;</p>}|<p>**Status.code**：返回码。<ul><li>取值为0：表示初始化成功。</li><li>其他值：表示初始化失败。</li></ul></p><p>**Status.info**：返回信息描述。</p>|
 
 ### SubscribeProcessManageSignal<a name="ZH-CN_TOPIC_0000002511426713"></a>
 
@@ -68,19 +68,17 @@ rpc SubscribeProcessManageSignal(ClientInfo) returns (stream ProcessManageSignal
 |--|--|--|
 |ClientInfo|message ClientInfo{<p>string jobId = 1;</p><p>string role = 2;</p>}|<p>**ClientInfo.jobId**：任务ID。</p><p>**ClientInfo.role**：客户端角色。</p>|
 
-**发送数据说明<a name="section10140143475520"></a>**
+**返回数据说明<a name="section10140143475520"></a>**
 
 |参数|类型（Protobuf定义）|说明|
 |--|--|--|
-|ProcessManageSignal|<p>message FaultRank{<p>string rankId = 1;</p><p>string faultType = 2;</p>}</p><p>message ProcessManageSignal{<p>string uuid=1;</p><p>string jobId = 2;</p><p>string signalType = 3;</p><p>repeated string actions = 4;</p><p>repeated FaultRank faultRanks = 5;</p><p>string changeStrategy = 6;</p><p>int64 timeout = 7;</p>}</p>|<p>**rankId**：string类型，故障卡ID</p><p>**faultType**：string类型，故障类型</p><p>**uuid**：string类型，本次signal的uuid</p><p>**jobId**：string类型，训练的任务ID</p><p>**signalType**：string类型，signal类型</p><p>**actions**：repeated string，要执行的动作</p><p>**faultRanks**：repeated FaultRank，故障卡信息</p><p>**changeStrategy**：string类型，要执行的恢复策略</p><p>**timeout**：int64类型，超时时间</p>|
+|ProcessManageSignal|<p>message FaultRank{<p>string rankId = 1;</p><p>string faultType = 2;</p>}</p><p>message ProcessManageSignal{<p>string uuid=1;</p><p>string jobId = 2;</p><p>string signalType = 3;</p><p>repeated string actions = 4;</p><p>repeated FaultRank faultRanks = 5;</p><p>string changeStrategy = 6;</p><p>int64 timeout = 7;</p><p>repeated string nodeRankIds = 8;</p><p>string extraParams = 9;</p>}</p>|<p>**rankId**：string类型，故障卡ID</p><p>**faultType**：string类型，故障类型</p><p>**uuid**：string类型，本次signal的uuid</p><p>**jobId**：string类型，训练的任务ID</p><p>**signalType**：string类型，signal类型</p><p>**actions**：repeated string，要执行的动作</p><p>**faultRanks**：repeated FaultRank，故障卡信息</p><p>**changeStrategy**：string类型，要执行的恢复策略</p><p>**timeout**：int64类型，超时时间</p><p>**nodeRankIds**：repeated string，故障节点Node Rank ID。</p><p>**extraParams**：string类型，以JSON字符串形式传递扩缩容具体策略信息，通过TaskD透传给MindIO，最终传递给callback回调函数进行解析。</p>|
 
 **返回值说明<a name="section206103328174"></a>**
 
 |返回值|类型（Protobuf定义）|说明|
 |--|--|--|
-|stream|grpc stream|<ul><li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li></ul>|
-|nodeRankIds|string数组|故障节点Node Rank ID。|
-|extraParams|string|以JSON字符串形式传递扩缩容具体策略信息，通过TaskD透传给MindIO，最终传递给callback回调函数进行解析。|
+|stream|gRPC stream|<ul><li>该接口返回gRPC stream（返回值的具体数据结构基于客户端选择的编程语言）。</li><li>客户端可以调用stream的Receive方法（具体方法名基于客户端选择的编程语言）接收服务端推送的数据。</li></ul>|
 
 ### ReportStopComplete<a name="ZH-CN_TOPIC_0000002511426707"></a>
 
@@ -182,7 +180,7 @@ rpc ReportProcessFault(ProcessFaultRequest) returns (Status){}
 
 **功能说明<a name="section16150748174520"></a>**
 
-检查gRPC链接状态。
+检查gRPC连接状态。
 
 **函数原型<a name="section3958124212115"></a>**
 

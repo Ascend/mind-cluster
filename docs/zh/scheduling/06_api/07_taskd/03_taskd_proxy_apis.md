@@ -1,6 +1,6 @@
 # TaskD Proxy接口<a name="ZH-CN_TOPIC_0000002479386846"></a>
 
-## def init\_taskd\_proxy\(config : dict\) -\> bool:<a name="ZH-CN_TOPIC_0000002479226870"></a>
+## def init\_taskd\_proxy\(config: dict\) -\> bool:<a name="ZH-CN_TOPIC_0000002479226870"></a>
 
 **功能说明<a name="section3468140175411"></a>**
 

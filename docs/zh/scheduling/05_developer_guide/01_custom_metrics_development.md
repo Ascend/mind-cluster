@@ -8,7 +8,7 @@
 
     开发示例如下：
 
-    使用NPU Exporter集成并采集Devkit工具生成的hccs\_bandwidth指标，详情请参见[NPU Exporter集成Devkit部署指南](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/utils/npu-exporter)。关于hccs\_bandwidth指标信息的说明请参见[HCCS带宽监控](https://www.hikunpeng.com/document/detail/zh/kunpengdevps/profiler/profiler/KunpengDevKitCli_0251.html)。
+    使用NPU Exporter集成并采集DevKit工具生成的hccs\_bandwidth指标，详情请参见[NPU Exporter集成DevKit部署指南](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/samples/utils/npu-exporter)。关于hccs\_bandwidth指标信息的说明请参见[HCCS带宽监控](https://www.hikunpeng.com/document/detail/zh/kunpengdevps/profiler/profiler/KunpengDevKitCli_0251.html)。
 
 - 通过插件方式开发自定义指标
 
@@ -16,11 +16,11 @@
 
     - `dcmi.go`、`dcmi_interface_api.h`：用户自定义NPU指标的接口声明与cgo实现，用于对接驱动dcmi接口，具体可参考demo实现，全部dcmi接口需参考驱动的dcmi接口文档。
     - `custom_metrics.go`：实现`MetricCollector`的接口，用于指标采集与上报，需要实现下面的接口，具体可参考demo实现：
-        - Describe：prometheus上报指标前，需要先定义指标的，该接口用于prometheus的指标定义
+        - Describe：Prometheus上报指标前，需要先定义指标，该接口用于Prometheus的指标定义
         - CollectToCache：指标采集方法，每个采集周期都会执行，从外部获取数据，并传入到内部缓存中
-        - UpdatePrometheus：按照prometheus的格式，将缓存中的数据返回
-        - UpdateTelegraf：按照telegraf的格式，将缓存中的数据返回
-        - IsSupported：检测当前环境，判断是否支持当前设备的检测
+        - UpdatePrometheus：按照Prometheus的格式，将缓存中的数据返回
+        - UpdateTelegraf：按照Telegraf的格式，将缓存中的数据返回
+        - IsSupported：检测当前环境，判断当前设备是否支持
         - PreCollect：正式开始采集前执行一次，可用于设备初始化。可以为空
         - PostCollect：采集结束后执行一次，可用于数据的回收。可以为空
     - `register.go`：提供插件注册函数，在npu-exporter启动时完成插件注册并完成dcmi接口初始化，**RegisterPlugin函数签名不要修改**，在RegisterPlugin函数中通过`registerPlugin(插件名称, &插件类{})`完成注册，指标名称需要与`pluginConfiguration.json`中的指标组名称保持一致。
@@ -29,7 +29,7 @@
 
     自定义插件采集时间超过10s后，npu-exporter会打印日志，提示插件采集时间过长，执行下一个插件采集。
 
-    **dcmi.go示例：**
+    **dcmi.go示例**
 
     ```go
     /* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
@@ -150,7 +150,7 @@
     }
     ```
 
-    **dcmi_interface_api.h示例：**
+    **dcmi_interface_api.h示例**
 
     ```c++
     /* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
@@ -189,7 +189,7 @@
     #endif /* __DCMI_INTERFACE_API_H__ */
     ```
 
-    **custom_metrics.go示例：**
+    **custom_metrics.go示例**
 
     ```go
     /* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
@@ -329,7 +329,7 @@
     }
     ```
 
-    **register.go示例：**
+    **register.go示例**
 
     ```go
     /* Copyright(C) 2025. Huawei Technologies Co.,Ltd. All rights reserved.
