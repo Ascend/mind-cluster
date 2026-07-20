@@ -527,20 +527,20 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_status_X_Y</p>
 </td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口Link状态。</p><p>其中，X为Udie ID，Y为Port ID。</p>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口Link状态。其中，X为Udie ID，Y为Port ID。</p>
 </td>
 <td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签1</a></p>
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>取值为0、1或-1</p><ul><li>1：UP</li><li>0：DOWN</li><li>-1：未知(hccn_tool工具调用失败)</li></ul>
 </td>
-<td class="cellrowborder" rowspan="4" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><ul><li>Atlas 350 标卡（4Pmesh互联）</li><li>Atlas 850 系列硬件产品</li><li>Atlas 950 SuperPoD</li></ul>
+<td class="cellrowborder" rowspan="4" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">旧版本指标，仅支持Atlas 350 标卡（4Pmesh互联）。</div></div>
 </td>
 </tr>
 <tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_rx_X_Y</p>
 </td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时接收速率。</p><p>其中，X为Udie ID，Y为Port ID。使用的-time参数为100。</p>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时接收速率。该指标使用的hccn_tool采集命令中,-time参数为100，测量带宽时间段为100毫秒。其中，X为Udie ID，Y为Port ID。</p>
 </td>
 <td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签1</a></p>
 </td>
@@ -551,7 +551,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx_X_Y</p>
 </td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时发送速率。</p><p>其中，X为Udie ID，Y为Port ID。使用的-time参数为100。</p>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时发送速率。该指标使用的hccn_tool采集命令中,-time参数为100，测量带宽时间段为100毫秒。其中，X为Udie ID，Y为Port ID。</p>
 </td>
 <td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签1</a></p>
 </td>
@@ -562,9 +562,55 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_speed_X_Y</p>
 </td>
-<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>物理端口的速率。</p><p>其中，X为Udie ID，Y为Port ID。</p>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>物理端口的速率。其中，X为Udie ID，Y为Port ID。</p>
 </td>
 <td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签1</a></p>
+</td>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：G</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_status</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口Link状态。</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>取值为0、1或-1</p><ul><li>1：UP</li><li>0：DOWN</li><li>-1：未知(hccn_tool工具调用失败)</li></ul>
+</td>
+<td class="cellrowborder" rowspan="4" valign="top" width="19.91%" headers="mcps1.1.7.1.6 "><ul><li>Atlas 350 标卡（4Pmesh互联）</li><li>Atlas 850 系列硬件产品</li><li>Atlas 950 SuperPoD</li></ul>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_rx</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时接收速率。该指标使用的hccn_tool采集命令中,-time参数为100，测量带宽时间段为100毫秒。</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：MB/s</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_bandwidth_tx</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>昇腾AI处理器端口实时发送速率。该指标使用的hccn_tool采集命令中,-time参数为100，测量带宽时间段为100毫秒。</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：MB/s</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" width="11.21%" headers="mcps1.1.7.1.1 "><p>Network</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.73%" headers="mcps1.1.7.1.2 "><p>npu_chip_info_link_speed</p>
+</td>
+<td class="cellrowborder" valign="top" width="21.61%" headers="mcps1.1.7.1.3 "><p>物理端口的速率。</p>
+</td>
+<td class="cellrowborder" valign="top" width="15.540000000000001%" headers="mcps1.1.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
 </td>
 <td class="cellrowborder" valign="top" width="10%" headers="mcps1.1.7.1.5 "><p>单位：G</p>
 </td>
@@ -1403,11 +1449,11 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </tr>
 <tr><td class="cellrowborder" valign="top" width="8.150815081508151%" headers="mcps1.2.7.1.1 "><p>光模块</p>
 </td>
-<td class="cellrowborder" valign="top" width="22.852285228522852%" headers="mcps1.2.7.1.2 "><p>npu_chip_info_optical_index_num_X_Y</p>
+<td class="cellrowborder" valign="top" width="22.852285228522852%" headers="mcps1.2.7.1.2 "><p>npu_chip_info_optical_index_num</p>
 </td>
-<td class="cellrowborder" valign="top" width="19.401940194019403%" headers="mcps1.2.7.1.3 "><p>芯片Udie Port连接的光模块Lane数量。X为Udie ID，Y为Port ID</p>
+<td class="cellrowborder" valign="top" width="19.401940194019403%" headers="mcps1.2.7.1.3 "><p>芯片Udie Port连接的光模块Lane数量</p>
 </td>
-<td class="cellrowborder" valign="top" width="14.761476147614763%" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签1</a></p>
+<td class="cellrowborder" valign="top" width="14.761476147614763%" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
 </td>
 <td class="cellrowborder" valign="top" width="11.96119611961196%" headers="mcps1.2.7.1.5 "><p>-</p>
 </td>
@@ -1416,22 +1462,22 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </tr>
 <tr id="row184616483311"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>光模块</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_optical_tx_power_Z_X_Y</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_optical_tx_power_Z</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>光模块发送功率。Z为Lane的index，取值为[0:3]，X为Udie ID，Y为Port ID</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>光模块发送功率。Z为Lane的index，取值为[0:3]</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签1</a></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>单位：mW</p>
 </td>
 </tr>
 <tr id="row1846416482311"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>光模块</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_optical_rx_power_Z_X_Y</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_optical_rx_power_Z</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>光模块接收功率。Z为Lane的index，取值为[0:3]，X为Udie ID，Y为Port ID</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>光模块接收功率。Z为Lane的index，取值为[0:3]</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签1</a></p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>单位：mW</p>
 </td>
@@ -1468,7 +1514,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" width="11.96119611961196%" headers="mcps1.2.7.1.5 "><p>-</p>
 </td>
-<td class="cellrowborder" rowspan="48" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><ul><li>Atlas 350 标卡（4Pmesh互联）</li><li>Atlas 850 系列硬件产品</li><li>Atlas 950 SuperPoD</li></ul>
+<td class="cellrowborder" rowspan="48" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">旧版本指标，仅支持Atlas 350 标卡（4Pmesh互联）。</div></div>
 </td>
 </tr>
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
@@ -1640,7 +1686,7 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_route_err_cnt_rx_X_Y</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的报文经过路由后出现路由查表错误的报文数量。X为Udie ID，Y为Port ID</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的报文经过路由后出现路由查表错误的报文数量</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签1</a></p>
 </td>
@@ -1988,6 +2034,536 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 <td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
 </td>
 </tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_ub_ipv4_pkt_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的IPv4 UB报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+<td class="cellrowborder" rowspan="48" valign="top" width="22.872287228722872%" headers="mcps1.2.7.1.6 "><ul><li>Atlas 350 标卡（4Pmesh互联）</li><li>Atlas 850 系列硬件产品</li><li>Atlas 950 SuperPoD</li></ul>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_ub_ipv6_pkt_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的IPv6 UB报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_unic_ipv4_pkt_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的IPv4 UNIC报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_unic_ipv6_pkt_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的IPv6 UNIC报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_ub_compact_pkt_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的CFG6报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_ub_umoc_ctph_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的CFG7 CLAN报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_ub_umoc_ntph_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的CFG7 非CLAN报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_ub_mem_pkt_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的UB mem报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_unknown_pkt_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的未知报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_drop_ind_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的带drop_ind的报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_err_ind_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的ERR报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_to_host_pkt_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的报文经过路由后的落地报文数量（不包含枚举配置和管理报文）</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_to_imp_pkt_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的报文经过路由后落地的枚举配置和管理报文数量</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_to_mar_pkt_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的报文经过路由后落地的UB memory报文数量</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_to_link_pkt_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的报文经过路由后转发到同Port的TX侧的报文数量</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_to_noc_pkt_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的报文经过路由后的P2P报文数量</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_route_err_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的报文经过路由后出现路由查表错误的报文数量</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_out_err_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的报文经过校验后的错误报文总数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_length_err_cnt_rx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX侧接收到的报文经过校验后的长度错误报文数量</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_rx_busi_flit_num</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX报文字节数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_rx_send_ack_flit</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX向对端返回响应的报文字节数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_ub_ipv4_pkt_cnt_tx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX侧发送的IPv4 UB报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_ub_ipv6_pkt_cnt_tx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX侧发送的IPv6 UB报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_unic_ipv4_pkt_cnt_tx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX侧发送的IPv4 UNIC报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_unic_ipv6_pkt_cnt_tx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX侧发送的IPv6 UNIC报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_ub_compact_pkt_cnt_tx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX侧发送的CFG6报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_ub_umoc_ctph_cnt_tx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX侧发送的CFG7 CLAN报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_ub_umoc_ntph_cnt_tx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX侧发送的CFG7 非CLAN报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_ub_mem_pkt_cnt_tx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX侧发送的UB mem报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_unknown_pkt_cnt_tx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX侧发送的未知报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_drop_ind_cnt_tx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX侧发送的带drop_ind的报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_err_ind_cnt_tx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX侧发送的ERR报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_lpbk_ind_cnt_tx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX侧发送报文在NL环回的报文个数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_out_err_cnt_tx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX侧发送的报文经过校验后的错误报文总数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_length_err_cnt_tx</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX侧发送的报文经过校验后的长度错误报文数量</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_tx_busi_flit_num</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX报文字节数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_tx_recv_ack_flit</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX收到对端响应的报文字节数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_retry_req_sum</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>发起重传次数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_retry_ack_sum</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>响应重传次数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_crc_error_sum</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>CRC校验错误次数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_core_mib_rxpausepkts</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX pause帧总报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_core_mib_txpausepkts</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX pause帧总报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_core_mib_rxpfcpkts</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX PFC帧总报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_core_mib_txpfcpkts</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX PFC帧总报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_core_mib_rxbadpkts</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX坏包总报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_core_mib_txbadpkts</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX坏包总报文数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_core_mib_rxbadoctets</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>RX坏包总报文字节数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
+<tr id="row11470648143118"><td class="cellrowborder" valign="top" headers="mcps1.2.7.1.1 "><p>UB</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.2 "><p>npu_chip_info_core_mib_txbadoctets</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.3 "><p>TX坏包总报文字节数</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.4 "><p><a href="#table191895615241">标签8</a></p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.7.1.5 "><p>-</p>
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -2298,6 +2874,53 @@ npu_chip_info_bandwidth_rx{container_name="",id="0",model_name="910A-Ascend-V1",
 </td>
 </tr>
 <tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>product_type：昇腾AI处理器产品形态</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>vdie_id：昇腾AI处理器唯一标识，可作为NPU的UUID</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" rowspan="9" valign="top" width="9.43%" headers="mcps1.2.4.1.1 "><p>标签8</p>
+</td>
+<td class="cellrowborder" valign="top" width="45.45%" headers="mcps1.2.4.1.2 "><p>container_name：容器名</p>
+</td>
+<td class="cellrowborder" valign="top" width="45.12%" headers="mcps1.2.4.1.3 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>id：NPU的ID</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>model_name：昇腾AI处理器名称。该字段由芯片名称、芯片类型和芯片版本三部分组成。这三部分可通过<b>npu-smi info -t board -i</b> <i>NPU ID</i> <b>-c</b> <i>Chip ID</i>命令查询，分别对应返回信息中的Chip Name、Chip Type和Chip Version。</p><div class="note"><span class="notetitle">[!NOTE] 说明</span><div class="notebody">Atlas A3 系列产品的返回信息中无Chip Type字段。</div></div>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>namespace：命名空间名</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>pcie_bus_info：昇腾AI处理器的PCIe信息</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>pod_name：Pod名</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>port：Udie端口ID</p>
+</td>
+<td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
+</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" headers="mcps1.2.4.1.1 "><p>udie：Ascend 950处理器Udie ID</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.4.1.2 "><p>string</p>
 </td>
