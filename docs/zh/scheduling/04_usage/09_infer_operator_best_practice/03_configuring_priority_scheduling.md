@@ -24,8 +24,8 @@ metadata:
 spec:
   replicas: 1 # 推理服务副本数
   template:
-    <strong>schedulingStrategy: # 将type配置为Priority开启优先级调度
-      type: Priority</strong>
+    <strong>schedulingStrategy: # 将type配置为Priority开启优先级调度</strong>
+      <strong>type: Priority</strong>
     roles:
     - name: prefill # prefill定义
       replicas: 1   # prefill副本数

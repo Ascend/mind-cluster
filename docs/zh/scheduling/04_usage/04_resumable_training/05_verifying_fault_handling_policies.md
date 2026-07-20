@@ -517,7 +517,7 @@
    ```shell
    …
    export RAISE_UCE_ERROR_STEP_AND_RANK="{3:8,10:9}"  # 配置故障注入的迭代和卡号，在第3个迭代的rank 8卡和第10个迭代的rank 9卡上注入UCE故障
-   sed -i 's/check_memory_result = torch_npu.npu.check_uce_in_memory(device)/check_memory_result = ha_constant.UCE_HIGH_LEVEL/g' /job/code/mindspeed_llm/core/high_availability/tft_stop_clean.py #修改PTA接口返回值，将训练代码抛出的异常识别为UCE故障
+   sed -i 's/check_memory_result = torch_npu.npu.check_uce_in_memory(device)/check_memory_result = ha_constant.UCE_HIGH_LEVEL/g' /job/code/mindspeed_llm/core/high_availability/tft_stop_clean.py #修改TorchNPU接口返回值，将训练代码抛出的异常识别为UCE故障
    …
    ```
 

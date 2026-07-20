@@ -45,6 +45,7 @@ MindCluster集群调度组件支持MS Controller、MS Coordinator和MindIE Serve
 通过命令行使用MindCluster集群调度组件部署MindIE Motor推理任务时，使用流程如下图所示。
 
 **图 1**  使用流程<a name="fig38991911205815"></a>
+
 ![](../../../figures/scheduling/使用流程-14.png "使用流程-14")
 
 ### 准备任务YAML<a name="ZH-CN_TOPIC_0000002479386386"></a>
@@ -198,7 +199,8 @@ Atlas 800I A3 超节点服务器场景下，MindCluster集群调度组件支持M
 
 关于逻辑超节点的亲和性调度规则的详细说明，请参见[灵衢总线设备节点网络说明](../03_basic_scheduling/01_affinity_scheduling/03_ascend_ai_processor_based_affinity.md#atlas-900-a3-superpod-超节点)章节。
 
-**图 1**  灵衢总线设备节点网络<a name="zh-cn_topic_0000002362872425_fig1054553210321"></a>
+**图 2**  灵衢总线设备节点网络<a name="zh-cn_topic_0000002362872425_fig1054553210321"></a>
+
 ![](../../../figures/scheduling/灵衢总线设备节点网络.png "灵衢总线设备节点网络")
 
 **配置实例级亲和性调度<a name="zh-cn_topic_0000002362872425_section18872194156"></a>**

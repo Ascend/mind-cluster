@@ -4,8 +4,8 @@ Infer Operator支持给推理实例配置弹性扩缩容策略，从而实现基
 
 ## 前置准备
 
-1. 已完成Infer Operator的[安装部署](../../05_developer_guide/00_installation_deployment/00_manual_installation/07_infer_operator.md)。
-2. 如需配置扩缩容指标类型为External，需先实现并部署相应的External Metrics Adaptor，该Adaptor需要提供推理实例的负载指标（例如请求队列长度、请求处理时间等），可参考[示例](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/infer-operator-metrics-adaptor)进行实现。若为[基于MindIE PyMotor部署Infer Operator推理任务](./02_deploying_infer_operator_inference_job_with_mindie_pymotor.md)场景，可直接部署使用该示例提供的Metrics Adaptor。
+- 已完成Infer Operator的[安装部署](../../05_developer_guide/00_installation_deployment/00_manual_installation/07_infer_operator.md)。
+- 如需配置扩缩容指标类型为External，需先实现并部署相应的External Metrics Adaptor，该Adaptor需要提供推理实例的负载指标（例如请求队列长度、请求处理时间等），可参考[示例](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/infer-operator-metrics-adaptor)进行实现。若为[基于MindIE PyMotor部署Infer Operator推理任务](./02_deploying_infer_operator_inference_job_with_mindie_pymotor.md)场景，可直接部署使用该示例提供的Metrics Adaptor。
 
 ## 弹性扩缩容原理
 
@@ -30,20 +30,20 @@ spec:
       workload:     # prefill中实例的CRD类型信息
         apiVersion: apps/v1
         kind: StatefulSet # workload类型，当前支持StatefulSet/Deployment
-      <strong>scalingPolicy:
-        type: HPA # 弹性扩缩容策略类型，当前支持HPA
-        spec: # HPA配置
-          minReplicas: 1 # 缩容下限
-          maxReplicas: 4 # 扩容上限
-          metrics: # HPA扩缩容指标配置列表
-          - type: External # 指标类型：外部自定义指标（由External Metrics Adapter提供）
-            external:
-              metric:
-                name: num_requests_waiting # 外部指标名称
-              target: # 目标值配置
-                type: AverageValue
-                averageValue: "5"
-          ... # 其他HPA配置项，根据需要添加，需符合HPA配置规范</strong>
+      <strong>scalingPolicy:</strong>
+        <strong>type: HPA # 弹性扩缩容策略类型，当前支持HPA</strong>
+        <strong>spec: # HPA配置</strong>
+          <strong>minReplicas: 1 # 缩容下限</strong>
+          <strong>maxReplicas: 4 # 扩容上限</strong>
+          <strong>metrics: # HPA扩缩容指标配置列表</strong>
+          <strong>- type: External # 指标类型：外部自定义指标（由External Metrics Adapter提供）</strong>
+            <strong>external:</strong>
+              <strong>metric:</strong>
+                <strong>name: num_requests_waiting # 外部指标名称</strong>
+              <strong>target: # 目标值配置</strong>
+                <strong>type: AverageValue</strong>
+                <strong>averageValue: "5"</strong>
+          <strong>... # 其他HPA配置项，根据需要添加，需符合HPA配置规范</strong>
       metadata:
         labels:
           infer.huawei.com/gang-schedule: 'false' # 关闭gang调度，开启时会为每一个workload实例创建PodGroup
@@ -81,20 +81,20 @@ spec:
       workload:     # decode中实例的CRD类型信息
         apiVersion: apps/v1
         kind: StatefulSet # workload类型，当前支持StatefulSet/Deployment
-      <strong>scalingPolicy:
-        type: HPA # 弹性扩缩容策略类型，当前支持HPA
-        spec: # HPA配置
-          minReplicas: 1 # 缩容下限
-          maxReplicas: 4 # 扩容上限
-          metrics: # HPA扩缩容指标配置列表
-          - type: External # 指标类型：外部自定义指标（由External Metrics Adapter提供）
-            external:
-              metric:
-                name: generation_tokens_per_second # 外部指标名称
-              target: # 目标值配置
-                type: AverageValue
-                averageValue: "10"
-          ... # 其他HPA配置项，根据需要添加，需符合HPA配置规范</strong>
+      <strong>scalingPolicy:</strong>
+        <strong>type: HPA # 弹性扩缩容策略类型，当前支持HPA</strong>
+        <strong>spec: # HPA配置</strong>
+          <strong>minReplicas: 1 # 缩容下限</strong>
+          <strong>maxReplicas: 4 # 扩容上限</strong>
+          <strong>metrics: # HPA扩缩容指标配置列表</strong>
+          <strong>- type: External # 指标类型：外部自定义指标（由External Metrics Adapter提供）</strong>
+            <strong>external:</strong>
+              <strong>metric:</strong>
+                <strong>name: generation_tokens_per_second # 外部指标名称</strong>
+              <strong>target: # 目标值配置</strong>
+                <strong>type: AverageValue</strong>
+                <strong>averageValue: "10"</strong>
+          <strong>... # 其他HPA配置项，根据需要添加，需符合HPA配置规范</strong>
       metadata:
         labels:
           infer.huawei.com/gang-schedule: 'false' # 关闭gang调度，开启时会为每一个workload实例创建PodGroup

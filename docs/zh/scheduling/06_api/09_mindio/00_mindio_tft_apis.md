@@ -429,7 +429,7 @@ mindio_ttp.framework_ttp.tft_register_stop_handler(func: Callable, ctx = None)
 > [!NOTE]说明
 > 对于MindSpeed-LLM训练框架，回调函数已经由MindIO TFT完成适配；而对于其他框架，用户需要自行确保回调函数的安全性。
 
-**接口格式<**
+**接口格式**
 
 ```python
 mindio_ttp.framework_ttp.tft_register_clean_handler(func: Callable, ctx = None)

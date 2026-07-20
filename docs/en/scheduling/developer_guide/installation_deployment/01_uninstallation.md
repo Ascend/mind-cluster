@@ -83,13 +83,13 @@
             - Docker scenario (or K8s integration with Docker scenario)
 
                 ```shell
-                uninstall.sh docker docker <daemon.json file path>
+                ./uninstall.sh docker docker <daemon.json file path>
                 ```
 
             - Containerd scenario (or K8s integrated with Containerd scenario)
 
                 ```shell
-                uninstall.sh containerd containerd <config.toml file path>
+                ./uninstall.sh containerd containerd <config.toml file path>
                 ```
 
             >[!NOTE]
