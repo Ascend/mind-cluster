@@ -483,7 +483,7 @@ func init() {
 		"when npu-exporter starts, if the number of chips is insufficient, the maximum duration to wait for "+
 			"the driver to report all chips, unit second, range [10, 600]")
 	flag.BoolVar(&enableLegacyMetrics, "enableLegacyMetrics", false,
-		"enable legacy metrics with _X_Y suffix for Atlas 350 backward compatibility, only support prometheus")
+		"enable legacy metrics with _X_Y suffix for Atlas 350 backward compatibility, only support Prometheus")
 }
 
 func indexHandler(w http.ResponseWriter, _ *http.Request) {
