@@ -20,19 +20,12 @@ import re
 import shutil
 import zipfile
 
-from tests.st.lib.common.CLI import ClassCLI
+from tests.st.envs import MIND_CLUSTER_YAML_DIR
 
-name_list = [
-    'device-plugin',
-    'ascend-operator',
-    'noded',
-    'npu-exporter',
-    'volcano',
-    'clusterd'
-]
+name_list = ['device-plugin', 'ascend-operator', 'noded', 'npu-exporter', 'volcano', 'clusterd']
 
 
-class Installer(object):
+class Installer:
     component_name = ''
     user = 'hwMindX'
     user_id = 9000
@@ -63,22 +56,22 @@ class Installer(object):
     def is_new_k8s_version(self):
         ret = self.module.execute_command('kubelet --version')
         if 'Kubernetes' not in ret['stdout']:
-            raise Exception('failed to get kubelet version, ret:{}'.format(ret['stdout']))
+            raise Exception('failed to get kubelet version, ret:{}'.format(ret['stdout']))  # pylint: disable=W0719
         version = re.search(r'(?<=v)\d+\.\d+(\.\d+)?', ret['stdout']).group()
         version_tuple = tuple(map(int, version.split('.')))
         return version_tuple > (1, 19, 16)
 
     def get_yaml_path(self):
-        """ pick the right yaml file and return file path """
+        """pick the right yaml file and return file path"""
         for root, _, files in os.walk(self.extract_dir):
             for filename in files:
                 if filename.endswith('.yaml') and 'without' not in filename and '1usoc' not in filename:
                     return os.path.join(root, filename)
-        raise Exception('failed to find yaml in {}'.format(self.extract_dir))
+        raise Exception('failed to find yaml in {}'.format(self.extract_dir))  # pylint: disable=W0719
 
     def check_and_prepare(self):
         if self.component_name not in name_list:
-            raise Exception('invalid component name, choice from {}'.format(name_list))
+            raise Exception('invalid component name, choice from {}'.format(name_list))  # pylint: disable=W0719
         self.use_new_k8s = self.is_new_k8s_version()
         src = ''
         if os.path.exists(self.package_dir):
@@ -94,13 +87,13 @@ class Installer(object):
             zf.extractall(self.extract_dir)
         yaml_file = self.get_yaml_path()
         if not os.path.exists(yaml_file):
-            raise Exception('failed to find yaml file: {}'.format(yaml_file))
+            raise Exception('failed to find yaml file: {}'.format(yaml_file))  # pylint: disable=W0719
         self.yaml_file_path = yaml_file
 
     def get_image_tags(self):
         keyword = 'image:'
         image_tags = []
-        with open(self.yaml_file_path) as f:
+        with open(self.yaml_file_path, "r", encoding="utf-8") as f:
             for line in f:
                 if keyword in line and line.strip() != keyword:
                     # like"      - image: ascend-k8sdeviceplugin:v5.0.0"
@@ -108,7 +101,7 @@ class Installer(object):
                     if ':' in image_tag:
                         image_tags.append(image_tag)
         if not image_tags:
-            raise Exception('failed to find image name in file: {}'.format(self.yaml_file_path))
+            raise Exception('failed to find image name in file: {}'.format(self.yaml_file_path))  # pylint: disable=W0719
         return image_tags
 
     def build_images(self):
@@ -151,7 +144,7 @@ class Installer(object):
         self.module.execute_command(cmd)
 
     def create_log_dir(self):
-        """ do jobs such as creating log dir and logrotate file """
+        """do jobs such as creating log dir and logrotate file"""
         log_dir_names = (self.component_name,)
         for log_dir in log_dir_names:
             log_path = os.path.join(self.dl_log, log_dir)
@@ -169,8 +162,7 @@ class Installer(object):
         lines = self._get_yaml_contents()
         for index, line in enumerate(lines):
             if "image: " in line:
-                replace_line = line.replace("image: ",
-                                            "image: {}:{}/".format(self.module.ip, self.registry_port))
+                replace_line = line.replace("image: ", "image: {}:{}/".format(self.module.ip, self.registry_port))
                 lines[index] = replace_line
             if "imagePullPolicy:" in line:
                 lines[index] = line.replace("imagePullPolicy: Never", "imagePullPolicy: IfNotPresent")
@@ -191,27 +183,27 @@ class Installer(object):
         if not os.path.exists(self.yaml_dir):
             os.makedirs(self.yaml_dir, 0o755)
         yaml_path = os.path.join(self.yaml_dir, os.path.basename(self.yaml_file_path))
-        with open(yaml_path, 'w') as f:
+        with open(yaml_path, 'w', encoding="utf-8") as f:
             f.writelines(self.get_modified_yaml_contents())
         self.clear_previous_pod(yaml_path)
         cmd = 'kubectl apply -f {}'.format(yaml_path)
         self.module.execute_command(cmd)
         self.module.logger.info('apply yaml: {} for component: {}'.format(yaml_path, self.component_name))
+        update_yaml_cmd = 'cp -f {} {}'.format(yaml_path, MIND_CLUSTER_YAML_DIR)
+        self.module.execute_command(update_yaml_cmd)
+        self.module.logger.info(
+            'update yaml: {} to {} for component: {}'.format(yaml_path, MIND_CLUSTER_YAML_DIR, self.component_name)
+        )
 
     def apply(self):
         self.create_namespace()
         self.apply_yaml()
 
     def run(self):
-        steps = {
-            'build': self.build,
-            'push': self.push,
-            'install': self.install,
-            'apply': self.apply
-        }
+        steps = {'build': self.build, 'push': self.push, 'install': self.install, 'apply': self.apply}
 
-        steps.get(self.step)()
+        steps.get(self.step)()  # pylint: disable=E1101
 
     def _get_yaml_contents(self):
-        with open(self.yaml_file_path) as f:
+        with open(self.yaml_file_path, "r", encoding="utf-8") as f:
             return f.readlines()
