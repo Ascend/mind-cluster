@@ -63,7 +63,6 @@ func newProxyInstance(proxyConfig *common.TaskNetConfig, logger *hwlog.CustomLog
 func (p *proxyClient) initNetwork(proxyConfig *common.TaskNetConfig) error {
 	var err error
 	p.proxyInfo.proxyConfig = proxyConfig
-	p.networkInstence, err = net.InitNetwork(proxyConfig, p.proxyLogger)
 	for i := 0; i < retryMaxTimes; i++ {
 		p.networkInstence, err = net.InitNetwork(proxyConfig, p.proxyLogger)
 		if err == nil {
