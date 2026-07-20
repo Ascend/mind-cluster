@@ -569,7 +569,7 @@ This section uses the inference image from the Ascend Image Repository as an exa
 
     >[!NOTE]
     >- `/path-to-weights` denotes the path to your model weights. You are responsible for preparing the weights yourself. For downloading the mindie image, please follow the instructions provided in `$ATB\_SPEED\_HOME\_PATH/examples/models/llama3/README.md`.
-    >- `ATB_SPEED_HOME_PATH` defaults to `/usr/local/Ascend/atb-models` and is automatically set when you source the `setenv.sh` script from the model repository—no manual setting is needed.
+    >- `ATB_SPEED_HOME_PATH` defaults to `/usr/local/Ascend/atb-models` and is automatically set when you source the `set_env.sh` script from the model repository—no manual setting is needed.
 
 5. In the example YAML file, edit the container startup command (the `command` field). If it is not present, you must add it.
 

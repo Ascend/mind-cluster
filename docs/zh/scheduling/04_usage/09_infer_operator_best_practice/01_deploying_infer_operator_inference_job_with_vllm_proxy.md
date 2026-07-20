@@ -27,7 +27,8 @@
 通过命令行使用MindCluster集群调度组件部署基于vLLM Proxy的Infer Operator推理任务时，使用流程如[图1](#fig38991911205816)所示。
 
 **图 1**  使用流程<a name="fig38991911205816"></a>
-![使用流程图：展示从准备YAML到下发任务、查看结果、删除任务的命令行使用流程](../../../figures/scheduling/infer-operator-use-process.png)
+
+![](../../../figures/scheduling/infer-operator-use-process.png)
 
 ### 准备任务YAML
 
