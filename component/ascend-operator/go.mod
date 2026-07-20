@@ -9,7 +9,7 @@ require (
 	github.com/kubeflow/common v0.4.3
 	github.com/kubeflow/training-operator v1.5.0
 	github.com/smartystreets/goconvey v1.6.4
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.4
 	golang.org/x/time v0.12.0
 	k8s.io/api v0.28.15
 	k8s.io/apimachinery v0.28.15
