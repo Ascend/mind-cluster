@@ -378,7 +378,7 @@
         pip install tokenizers==0.20.1 && \
         pip install pyOpenSSL
     RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser
-    # 安装torch、torch_npu、apex包
+    # 安装torch、TorchNPU、apex包
     RUN umask 0022 && pip install $PYTORCH_WHL && \
         pip install $PYTORCH_NPU_WHL && \
         pip install $APEX_WHL

@@ -540,15 +540,15 @@ deploy任务原理图如[图3](#fig349112913199)所示。
     </tbody>
     </table>
 
-   > [!NOTE]
-   > vnpu-level和vnpu-dvpp的选择结果，具体请参见[表5](#table83781115185619)。
+   >[!NOTE]
+   >vnpu-level和vnpu-dvpp的选择结果，具体请参见[表7](#table83781115185619)。
    >
    >- 表中“降级”表示AICore满足的情况下，其他资源不够（如AICPU）时，模板会选择同AICore下的其他满足资源要求的模板。如在只剩一颗芯片上只有2个AICore，1个AICPU时，vir02模板会降级为vir02\_1c。
    >- 表中“选择模板”中的值来源于[虚拟化模板](./../03_virtualization_templates.md)中表1的Atlas 推理系列产品、“虚拟化实例模板”列的取值。
    >- 表中“vnpu-level”列的“其他值”表示除去“low”和“high”后的任意取值。
    >- 整卡场景下vnpu-dvpp与vnpu-level可以取任意值。
 
-    **表 5**  Atlas 推理系列产品dvpp和level作用结果表
+    **表 7**  Atlas 推理系列产品dvpp和level作用结果表
 
     <a name="table83781115185619"></a>
     <table><thead align="left"><tr id="row1837817157565"><th class="cellrowborder" valign="top" width="17.2982701729827%" id="mcps1.2.7.1.1"><p id="p11560216112"><a name="p11560216112"></a><a name="p11560216112"></a>产品型号</p>

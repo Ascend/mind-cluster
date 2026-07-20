@@ -30,9 +30,9 @@
 
 **表 1**  MindCluster软件版本配套表
 
-|MindCluster|CANN|HDK|MindSpeed-LLM|FrameworkPTAdapter|MindSpore|
-|--|--|--|--|--|--|
-|26.1.0|9.1.0|26.1.0|26.1.0|26.1.0|2.10.0|
+|MindCluster|CANN| HDK                                                                   |MindSpeed-LLM|TorchNPU|MindSpore|
+|--|--|-----------------------------------------------------------------------|--|--|--|
+|26.1.0|9.1.0| <ul><li>Atlas A2/A3 系列产品：26.1.0</li><li>Ascend 950 系列产品：25.1.RC1</li></ul> |26.1.0|26.1.0|2.10.0|
 
 ### 版本兼容性说明
 
@@ -253,45 +253,36 @@ MindCluster各组件需要配套使用，请勿跨版本混用各组件。
 
 ### 新增特性
 
-|特性名称|特性描述|
-|--|--|
-|MindIO ACP|支持ACP\&TFT能力兼容。|
-|MindIO TFT|<ul><li>支持ACP\&TFT能力兼容。</li><li>支持精度异常后按照指定Checkpoint步数在线恢复。</li><li>支持讯飞Hulk框架的优化器差异化副本场景。</li></ul>|
-|MindCluster Ascend FaultDiag|<ul><li>故障诊断支持Atlas 350 标卡故障模式。</li><li>新增Ascend-faultdiag-toolkit工具，支持掉卡故障诊断和基础设施链路诊断。</li><li>不再支持故障模式库构建成二进制，直接开源故障模式库。</li></ul>|
-|MindCluster基础组件|<ul><li>业务面网络新增支持IPv6。</li><li>支持基于任务维度配置可自愈的故障级别或具体故障码。</li><li>支持Atlas A2 系列产品/Atlas A3 系列产品的软切分调度。</li><li>支持Atlas A2 系列产品/Atlas A3 系列产品的硬切分调度。</li><li>基于MindIE的大EP任务支持交换机亲和性调度。</li><li>ClusterD的gRPC心跳检测周期从默认的5分钟调整为5秒。</li><li>后训练支持自愈型故障后处理与非自愈故障重调度。</li><li>基于集群维度识别故障是否为硬件故障，反复发生的硬件故障自动强制隔离，避免反复造成任务中断。</li><li>集群维度的自动强制隔离，以及节点维度的自动强制隔离，都支持配置自动释放时间。</li><li>新增任意层级网络亲和性调度算法，适配Atlas 9000 A3 SuperPoD 集群算力系统。</li><li>新增任务信息订阅接口SubscribeJobSummarySignalList，支持首次订阅返回历史任务信息。</li><li>新增ConfigMap展示任务调度失败原因，方便快速定位。</li><li>NPU Exporter支持通过配置文件监听上报自定义指标。</li><li>NPU Exporter的多个NPU利用率获取方式从多个接口改为1个接口，避免数据不对应的情况。</li><li>ClusterD故障通知服务支持通过域名注册。</li><li>ClusterD作业信息订阅接口新增作业唯一标识符字段。</li><li>NPU Exporter支持Atlas 350 标卡的指标上报。</li><li>Ascend Docker Runtime支持Atlas 350 标卡。</li><li>Atlas 350 标卡支持亲和性调度、设备发现、Ranktable生成、故障重调度。</li><li>支持Infer Operator通过自定义CRD管理推理任务。</li></ul>|
+|特性名称| 特性描述                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+|--|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|MindIO| MindIO支持IPv6场景。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+|MindCluster Ascend FaultDiag| <ul><li>新增Ascend 950 系列产品的故障模式库。</li><li>新增基于pyMotor+vLLM的故障模式库。</li><li>优化链路诊断工具输出报告的内容。</li><li>故障诊断支持IPv6场景。</li></ul>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|MindCluster基础组件| <ul><li>支持存储DTFS故障。</li><li>Volcano支持Pod优先调度回原运行节点。</li><li>Ascend Device Plugin故障处理插件化。</li><li>支持带内检测1825故障上报。</li><li>提供1825网卡的RDMA设备插件。</li><li>发布镜像新增openEuler。</li><li>社区资料、组件的安装与部署易用性提升。</li><li>NPU Exporter支持分组配置采集周期。</li><li>Atlas 9000 A3 SuperPoD 集群算力系统能力补齐。</li><li>支持配置存活探针。</li><li>新增卡死检测与恢复功能。</li><li>支持Atlas 850 系列硬件产品和Atlas 950 SuperPoD的设备管理、亲和性调度、指标监控、故障检测，RankTable生成等基础能力。</li><li>支持Atlas 850 系列硬件产品的基础断点续训能力；支持Atlas 950 SuperPoD的全量断点续训能力。</li><li>支持Atlas 850 系列硬件产品和Atlas 950 SuperPoD的容器化能力。</li><li>支持推理故障恢复能力，包括优先级调度、缩P保D和实例级重调度。</li><li>支持推理场景基于负载的弹性扩缩容能力和容器快照能力。</li></ul> |
 
 ### 关键特性变更
 
 MindCluster基础组件：
 
-- ClusterD的gRPC心跳检测周期从默认的5分钟调整为5秒。
-- 支持集群维度下的反复故障芯片的自动强制隔离和自动释放。
-- Atlas 350 标卡场景下：
-  - 任务申请资源“huawei.com/Ascend910”变更为“huawei.com/npu”。
-  - 底层dcmi接口调用变更为dcmiV2接口调用。
+- Ascend Docker Runtime支持默认配置LD_LIBRARY_PATH环境变量，以便npu-smi工具能够正常使用。
+- 启动Ascend Device Plugin、NPU Exporter、NodeD等组件时，若芯片数量不足，则等待驱动上报完整芯片的最大时长参数“-deviceResetTimeout”的默认值由60s修改为600s。
 
 ### 业务接口变更
 
 |特性名称|接口变更|
 |--|--|
-|MindIO ACP|无|
-|MindIO TFT|新增tft_register_exception_handler：注册异常处理程序。|
-|MindCluster Ascend FaultDiag|新增Ascend-faultdiag-toolkit工具相关接口，详细请参见[接口描述](./faultdiag/ascend-faultdiag-toolkit/01_api_description.md)。|
-|MindCluster基础组件|<ul><li>任务创建接口新增可自愈故障级别、故障码、自愈时长配置字段。</li><li>任务创建接口新增软切分模式、AICore百分比、高带宽内存量配置字段。</li><li>ClusterD支持配置故障自动强制隔离的启动开关、触发频率、隔离时长。</li><li>Ascend Device Plugin新增自动强制隔离的隔离时长配置字段。</li><li>支持多级网络拓扑配置，以及任务的多级网络亲和配置。</li><li>新增任务信息订阅接口SubscribeJobSummarySignalList。</li><li>新增任务调度异常原因查询接口。</li><li>新增文件形式的自定义指标接口。</li><li>优化NPU Exporter的NPU利用率接口的计算方式。</li><li>新增Atlas 350 标卡的设备基础信息、故障码和芯片名称。</li></ul>|
+|MindCluster Ascend FaultDiag|<ul><li>链路诊断工具新增配置命令set_config_dir，当前仅支持设置组网配置文件LLD.xlsx所在路径。</li><li>性能劣化功能（资源抢占和网络拥塞）采集指标数据时对训练、推理业务性能有一定影响，该特性将在后续版本日落。</li></ul>|
+|MindCluster基础组件|所有K8s组件新增存活探针。|
 
 ### 已解决的问题
 
-- mindio processor等资源已释放且程序崩溃时，taskd agent无法退出，需增加退出兜底措施
-- 训练结束后，taskd worker调用mspti\_activity\_flush\_all方法时，报double free错误
-- taskd manager并发读写map导致进程崩溃
-- clusterd的pg cache更新不及时
-- 强制要求mindie实例间的roce网络健康导致mindie任务调度失败
-- 用户定义torch日志文件场景训练完成后Pod不退出
-- 安装noded的前提下，集群规模\>1024时会超过clusterd的grpc连接上限，导致其他连接无法接入
+- 修复Atlas 350 标卡驱动部署后的软链接校验报错问题。
+- 修复Ascend 950 系列产品huawei.com/AscendReal注解赋值phyID和logicID存在不同含义时，导致Ascend Device Plugin判断卡是否被占用出现异常的问题。
+- 修复Ascend 950 系列产品device-cm的ManuallySeparateNPU中芯片名称未适配为NPU的问题。
+- 修复NPU Exporter采集光模块指标失效时，optical_index存在内容但未上报的问题。
 
 ### 遗留问题
 
-无
+进程级别重调度特性在多次重调度恢复后，可能存在PyTorch原生组件gloo的段错误问题，概率约0.00125，详细请参见[issue 188266](https://github.com/pytorch/pytorch/issues/188266)。可以通过配置Job/Pod重调度作为兜底措施。
 
 ## 升级影响
 
@@ -301,14 +292,14 @@ MindCluster基础组件：
 
 ### 升级后对现行系统的影响
 
-无
+Infer Operator组件从26.1.0之前版本升级到26.1.0及之后版本时，需删除日志目录重新创建为root权限或修改日志目录及日志文件的权限为root。
 
 ## 26.1.0版本配套文档
 
-| 文档名称                                                                  |内容简介|更新说明|
-|-----------------------------------------------------------------------|--|--|
-| 《[MindCluster 集群调度用户指南](./scheduling/01_introduction/00_overview.md)》 |提供集群调度组件说明、特性原理和使用参考，包括各组件的安装部署、集成适配示例和API参考，以及部分调度方案的原理介绍参考。|新增软切分调度、多级调度等，其他变更详见《[MindCluster 集群调度用户指南](./scheduling/01_introduction/00_overview.md)》。|
-| 《[MindCluster 故障诊断用户指南](./faultdiag/README.md)》                         |提供日志采集、日志清洗与转储、故障诊断等功能的使用指导。|新增Atlas 350 标卡故障模式、Ascend-faultdiag-toolkit工具等，其他变更详见《[MindCluster 故障诊断用户指南](./faultdiag/README.md)》。|
+|文档名称|内容简介|更新说明|
+|--|--|--|
+|《[MindCluster 集群调度用户指南](./scheduling/01_introduction/00_overview.md)》|提供集群调度组件说明、特性原理和使用参考，包括各组件的安装部署、集成适配示例和API参考，以及部分调度方案的原理介绍参考。|新增使用helm安装组件、开发者指南、容器快照部署及使用等，其他变更详见《[MindCluster 集群调度用户指南](./scheduling/01_introduction/00_overview.md)》。|
+|《[MindCluster 故障诊断用户指南](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md)》|提供日志采集、日志清洗与转储、故障诊断等功能的使用指导。|新增Ascend 950 系列产品、基于pyMotor+vLLM的故障模式等，其他变更详见《[MindCluster 故障诊断用户指南](./faultdiag/ascend-faultdiag/01_introduction/01_overview.md)》。|
 
 ## 漏洞修补列表
 
