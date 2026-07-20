@@ -300,7 +300,7 @@ mindio_acp.flush()
     ```
 
   |参数|是否必选|说明|取值要求|
-      |--|--|--|--|
+  |--|--|--|--|
   |offset|可选|读取文件的偏移位置。需满足count + offset <= file_size|[0, file_size)|
   |count|可选|读取文件的大小。需满足count + offset <= file_size|<ul><li>-1：读取整个文件。</li><li>(0, file_size]</li></ul>|
 
@@ -353,7 +353,7 @@ mindio_acp.open_file(path: str)
     ```
 
   |参数|是否必选|说明|取值要求|
-      |--|--|--|--|
+  |--|--|--|--|
   |data|必选|需要写入的对象。|bytes对象。|
 
 - drop：删除文件。

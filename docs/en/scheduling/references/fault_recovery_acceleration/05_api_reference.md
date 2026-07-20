@@ -517,7 +517,7 @@ mindio_ttp.framework_ttp.tft_register_repair_handler(func: Callable, ctx = None)
 |Parameter|Description|Value|
 |--|--|--|
 |step|Step corresponding to the repair.|Positive integer.|
-|need_rebuild|-|Whether the model and optimizer need to be rebuilt.|<ul><li>False: No rebuilding is required. </li><li>True: Rebuilding is required.</li></ul>|
+|need_rebuild|Whether the model and optimizer need to be rebuilt.|<ul><li>False: No rebuilding is required. </li><li>True: Rebuilding is required.</li></ul>|
 |error_ranks|List of faulty NPUs to be repaired.|list.|
 |repair_info|Repair policy dictionary. The optimizer type follows the relationship of ATTENTION (0) and MOE (1).|{<br>"type": int,   # Optimizer type<br>"repair_type": Enum,   # See [RepairType](#repairtype).<br>"src": list,   # List of source ranks for optimizer repair data<br>"dst": list, # List of destination ranks for optimizer repair data<br>"rank_list": list, # List of ranks required for communication group repair<br>}|
 |args|Parameter set by **tft_set_step_args**.|Determined by the registration party.|
