@@ -19,13 +19,13 @@ import os
 from tests.st.lib.dl_deployer.dl import Installer
 
 
-class NpuExporterInstaller(Installer):
-    component_name = 'npu-exporter'
+class ClusterdInstaller(Installer):
+    component_name = 'clusterd'
 
     def get_yaml_path(self):
-        """pick npu-exporter deployment yaml, exclude fdConfig.yaml and other config files"""
+        """pick clusterd deployment yaml, exclude fdConfig.yaml and other config files"""
         for root, _, files in os.walk(self.extract_dir):
             for filename in files:
-                if filename.startswith('npu-exporter-v') and "1usoc" not in filename and filename.endswith('.yaml'):
+                if filename.startswith('clusterd-v') and filename.endswith('.yaml'):
                     return os.path.join(root, filename)
-        raise RuntimeError("Failed to find npu-exporter yaml in {}".format(self.extract_dir))
+        raise RuntimeError("Failed to find clusterd yaml in {}".format(self.extract_dir))

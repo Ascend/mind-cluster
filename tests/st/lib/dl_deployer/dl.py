@@ -50,13 +50,14 @@ class Installer:
         self.use_new_k8s = True
         self.import_cmd = ''
         self.yaml_file_path = ''
+        self.step = ''
         self.images = dict()
         self.facts = dict()
 
     def is_new_k8s_version(self):
         ret = self.module.execute_command('kubelet --version')
         if 'Kubernetes' not in ret['stdout']:
-            raise Exception('failed to get kubelet version, ret:{}'.format(ret['stdout']))  # pylint: disable=W0719
+            raise RuntimeError('failed to get kubelet version, ret:{}'.format(ret['stdout']))
         version = re.search(r'(?<=v)\d+\.\d+(\.\d+)?', ret['stdout']).group()
         version_tuple = tuple(map(int, version.split('.')))
         return version_tuple > (1, 19, 16)
@@ -67,16 +68,12 @@ class Installer:
             for filename in files:
                 if filename.endswith('.yaml') and 'without' not in filename and '1usoc' not in filename:
                     return os.path.join(root, filename)
-        raise Exception('failed to find yaml in {}'.format(self.extract_dir))  # pylint: disable=W0719
+        raise RuntimeError('failed to find yaml in {}'.format(self.extract_dir))
 
     def check_and_prepare(self):
         if self.component_name not in name_list:
-            raise Exception('invalid component name, choice from {}'.format(name_list))  # pylint: disable=W0719
+            raise RuntimeError('invalid component name, choice from {}'.format(name_list))
         self.use_new_k8s = self.is_new_k8s_version()
-        src = ''
-        if os.path.exists(self.package_dir):
-            shutil.rmtree(self.package_dir)
-        os.makedirs(self.package_dir, 0o755)
         if os.path.exists(self.package_dir):
             shutil.rmtree(self.package_dir)
         shutil.copytree(self.resources_dir, self.package_dir)
@@ -87,7 +84,7 @@ class Installer:
             zf.extractall(self.extract_dir)
         yaml_file = self.get_yaml_path()
         if not os.path.exists(yaml_file):
-            raise Exception('failed to find yaml file: {}'.format(yaml_file))  # pylint: disable=W0719
+            raise RuntimeError('failed to find yaml file: {}'.format(yaml_file))
         self.yaml_file_path = yaml_file
 
     def get_image_tags(self):
@@ -101,7 +98,7 @@ class Installer:
                     if ':' in image_tag:
                         image_tags.append(image_tag)
         if not image_tags:
-            raise Exception('failed to find image name in file: {}'.format(self.yaml_file_path))  # pylint: disable=W0719
+            raise RuntimeError('failed to find image name in file: {}'.format(self.yaml_file_path))
         return image_tags
 
     def build_images(self):
@@ -135,9 +132,9 @@ class Installer:
         self.build_images()
 
     def push(self):
-        self.module.logger.info("push the image to %s" % self.module.ip)
+        self.module.logger.info("push the image to %s", self.module.ip)
         for image_tag in self.image_tags:
-            self.module.execute_command("docker push %s" % image_tag, path=self.extract_dir)
+            self.module.execute_command("docker push {}".format(image_tag), path=self.extract_dir)
 
     def ensure_group_exist(self):
         cmd = 'groupmod -g {} {}'.format(self.group_id, self.group)
@@ -205,5 +202,5 @@ class Installer:
         steps.get(self.step)()  # pylint: disable=E1101
 
     def _get_yaml_contents(self):
-        with open(self.yaml_file_path, "r", encoding="utf-8") as f:
+        with open(self.yaml_file_path, "r", encoding='utf-8') as f:
             return f.readlines()

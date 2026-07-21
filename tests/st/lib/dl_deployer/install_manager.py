@@ -16,8 +16,11 @@
 # ==============================================================================
 import os
 
-from tests.st.lib.dl_deployer.dl import Installer
+from tests.st.lib.dl_deployer.install_ascend_operator import AscendOperatorInstaller
+from tests.st.lib.dl_deployer.install_clusterd import ClusterdInstaller
 from tests.st.lib.dl_deployer.install_device_plugin import DevicePluginInstaller
+from tests.st.lib.dl_deployer.install_noded import NodedInstaller
+from tests.st.lib.dl_deployer.install_npu_exporter import NpuExporterInstaller
 from tests.st.lib.dl_deployer.install_volcano import VolcanoInstaller
 from tests.st.lib.common.CLI import ClassCLI
 
@@ -32,11 +35,11 @@ class InstallManager:
         cli = ClassCLI(ip, username, password)
         self.installer_dict = {
             'device-plugin': DevicePluginInstaller(cli, resource_dir),
-            'ascend-operator': Installer(cli, resource_dir),
-            'noded': Installer(cli, resource_dir),
-            'npu-exporter': Installer(cli, resource_dir),
+            'ascend-operator': AscendOperatorInstaller(cli, resource_dir),
+            'noded': NodedInstaller(cli, resource_dir),
+            'npu-exporter': NpuExporterInstaller(cli, resource_dir),
             'volcano': VolcanoInstaller(cli, resource_dir),
-            'clusterd': Installer(cli, resource_dir),
+            'clusterd': ClusterdInstaller(cli, resource_dir),
         }
 
     def execute(self):

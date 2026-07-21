@@ -280,6 +280,7 @@ class K8sTool:
     @staticmethod
     def cordon_node(case, node_name):
         node_names = [node_name] if isinstance(node_name, str) else node_name
+        node_names = [n for n in node_names if n]
         if node_names:
             nodes_str = ' '.join(node_names)
             case.k8s_manager.exec_command(f"kubectl cordon {nodes_str}")
@@ -287,6 +288,7 @@ class K8sTool:
     @staticmethod
     def uncordon_node(case, node_name):
         node_names = [node_name] if isinstance(node_name, str) else node_name
+        node_names = [n for n in node_names if n]
         if node_names:
             nodes_str = ' '.join(node_names)
             case.k8s_manager.exec_command(f"kubectl uncordon {nodes_str}")
@@ -299,6 +301,7 @@ class K8sTool:
             all_node_names.append(node.node_name)
         for node in case.k8s_manager.worker_nodes:
             all_node_names.append(node.node_name)
+        all_node_names = list(dict.fromkeys(all_node_names))
         K8sTool.cordon_node(case, all_node_names)
 
     @staticmethod
@@ -309,6 +312,7 @@ class K8sTool:
             all_node_names.append(node.node_name)
         for node in case.k8s_manager.worker_nodes:
             all_node_names.append(node.node_name)
+        all_node_names = list(dict.fromkeys(all_node_names))
         K8sTool.uncordon_node(case, all_node_names)
 
     @staticmethod

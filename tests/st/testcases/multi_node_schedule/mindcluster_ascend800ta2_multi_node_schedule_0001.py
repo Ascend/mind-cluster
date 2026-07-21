@@ -86,7 +86,7 @@ class MindclusterAscend800ta2MutliNodeSchedule0001(unittest.TestCase):
 
     def test_multinode_schedule_acjob_008(self):
         self.k8s_manager.exec_command("kubectl delete -f %s" % self.job_yaml_path1)
-        ret = self.k8s_manager.exec_command(f"kubectl get pod {self.job_name1}'")
+        ret = self.k8s_manager.exec_command(f"kubectl get pod {self.job_name1}")
         self.assertTrue(len(ret) == 0, "job delete fail")
 
     def test_multinode_schedule_acjob_009(self):
