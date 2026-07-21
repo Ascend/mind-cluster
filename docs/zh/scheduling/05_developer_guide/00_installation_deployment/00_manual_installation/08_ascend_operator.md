@@ -17,7 +17,7 @@
     回显示例如下：
 
     ```ColdFusion
-    ascend-operator                      v26.0.0              c532e9d0889c        About an hour ago         137MB
+    ascend-operator                      v26.1.0              c532e9d0889c        About an hour ago         137MB
     ```
 
     - 是，执行[步骤2](#li19793191914420)。
