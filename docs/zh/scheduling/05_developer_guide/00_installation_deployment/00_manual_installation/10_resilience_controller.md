@@ -284,7 +284,7 @@
     回显示例如下：
 
     ```ColdFusion
-    resilience-controller                      v26.0.0             c532e9d0889c        About an hour ago         142MB
+    resilience-controller                      v26.1.0             c532e9d0889c        About an hour ago         142MB
     ```
 
     - 是，执行[步骤2](#li10743192474541)。

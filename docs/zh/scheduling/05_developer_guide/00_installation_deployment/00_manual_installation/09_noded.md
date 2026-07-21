@@ -15,7 +15,7 @@
     回显示例如下：
 
     ```ColdFusion
-    noded                               v26.0.0              ef801847acd2        29 minutes ago      133MB
+    noded                               v26.1.0              ef801847acd2        29 minutes ago      133MB
     ```
 
     - 是，执行[步骤2](#li26221447455)。

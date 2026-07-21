@@ -423,7 +423,7 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     </td>
     <td class="cellrowborder" valign="top" width="54.76547654765477%" headers="mcps1.2.5.1.3 "><ul><li>基础镜像为Ubuntu的Ascend Device Plugin镜像制作命令。<pre class="screen" id="screen3237730141519"><a name="screen3237730141519"></a><a name="screen3237730141519"></a>docker build --no-cache -t ascend-k8sdeviceplugin:<em id="i02419301157"><a name="i02419301157"></a><a name="i02419301157"></a>{</em><em id="i133991029173612"><a name="i133991029173612"></a><a name="i133991029173612"></a>tag}</em> ./</pre></li><li>基础镜像为openEuler的Ascend Device Plugin镜像制作命令。<pre class="screen">docker build --no-cache -t ascend-k8sdeviceplugin:<em>{</em><em>tag}</em> -f Dockerfile.openeuler ./</pre></li></ul>
     </td>
-    <td class="cellrowborder" rowspan="13" valign="top" width="19.21192119211921%" headers="mcps1.2.5.1.4 "><p id="p10280193431010"><a name="p10280193431010"></a><a name="p10280193431010"></a><em id="i472612293915"><a name="i472612293915"></a><a name="i472612293915"></a>{tag}</em>需要参考软件包上的版本。如：软件包上版本为<span id="ph18653133316811"><a name="ph18653133316811"></a><a name="ph18653133316811"></a>26.0.0</span>，则<em id="i1572610273910"><a name="i1572610273910"></a><a name="i1572610273910"></a>{tag}</em>为v<span id="ph205239348813"><a name="ph205239348813"></a><a name="ph205239348813"></a>26.0.0</span>。</p>
+    <td class="cellrowborder" rowspan="13" valign="top" width="19.21192119211921%" headers="mcps1.2.5.1.4 "><p id="p10280193431010"><a name="p10280193431010"></a><a name="p10280193431010"></a><em id="i472612293915"><a name="i472612293915"></a><a name="i472612293915"></a>{tag}</em>需要参考软件包上的版本。如：软件包上版本为<span id="ph18653133316811"><a name="ph18653133316811"></a><a name="ph18653133316811"></a>26.1.0</span>，则<em id="i1572610273910"><a name="i1572610273910"></a><a name="i1572610273910"></a>{tag}</em>为v<span id="ph205239348813"><a name="ph205239348813"></a><a name="ph205239348813"></a>26.1.0</span>。</p>
     <div class="note" id="note1217913258443"><a name="note1217913258443"></a><a name="note1217913258443"></a><span class="notetitle">[!NOTE] 说明</span><div class="notebody"><p id="p11793259444"><a name="p11793259444"></a><a name="p11793259444"></a>请确保Dockerfile-310P-1usoc中HwDmUser和HwBaseUser的<span id="ph18833164913291"><a name="ph18833164913291"></a><a name="ph18833164913291"></a>GID</span>和<span id="ph5530185193011"><a name="ph5530185193011"></a><a name="ph5530185193011"></a>UID</span>与物理机上的保持一致。</p>
     </div></div>
     <p id="p7733142881719"><a name="p7733142881719"></a><a name="p7733142881719"></a></p>
@@ -591,8 +591,8 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><a name="ul158133245418"></a><a name="ul158133245418"></a><ul id="ul158133245418"><li><a href="https://www.hiascend.com/developer/ascendhub/detail/54545fa4ff9f446e914bf44b85efdb61" target="_blank" rel="noopener noreferrer">volcanosh/vc-scheduler</a></li><li><a href="https://www.hiascend.com/developer/ascendhub/detail/16f17a3c95d54f9da710a9c51bfceaa3" target="_blank" rel="noopener noreferrer">volcanosh/vc-controller-manager</a></li></ul>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p38142241846"><a name="p38142241846"></a><a name="p38142241846"></a>根据需要选择镜像：</p>
-    <p id="p1814102416419"><a name="p1814102416419"></a><a name="p1814102416419"></a>v1.7.0-v<span id="ph616117387810"><a name="ph616117387810"></a><a name="ph616117387810"></a>26.0.0</span></p>
-    <p id="p9814824342"><a name="p9814824342"></a><a name="p9814824342"></a>v1.9.0-v<span id="ph57147381283"><a name="ph57147381283"></a><a name="ph57147381283"></a>26.0.0</span></p>
+    <p id="p1814102416419"><a name="p1814102416419"></a><a name="p1814102416419"></a>v1.7.0-v<span id="ph616117387810"><a name="ph616117387810"></a><a name="ph616117387810"></a>26.1.0</span></p>
+    <p id="p9814824342"><a name="p9814824342"></a><a name="p9814824342"></a>v1.9.0-v<span id="ph57147381283"><a name="ph57147381283"></a><a name="ph57147381283"></a>26.1.0</span></p>
     </td>
     <td class="cellrowborder" rowspan="4" valign="top" width="19.67%" headers="mcps1.2.5.1.4 "><p id="p18131924748"><a name="p18131924748"></a><a name="p18131924748"></a>管理节点</p>
     <p id="p1081314241741"><a name="p1081314241741"></a><a name="p1081314241741"></a></p>
@@ -602,28 +602,28 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1381415241342"><a name="p1381415241342"></a><a name="p1381415241342"></a><a href="https://www.hiascend.com/developer/ascendhub/detail/a066319600634cf6a1e522856a63a1c5" target="_blank" rel="noopener noreferrer">ascend-operator</a></p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1881412416419"><a name="p1881412416419"></a><a name="p1881412416419"></a>v<span id="ph19259839285"><a name="ph19259839285"></a><a name="ph19259839285"></a>26.0.0</span></p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1881412416419"><a name="p1881412416419"></a><a name="p1881412416419"></a>v<span id="ph19259839285"><a name="ph19259839285"></a><a name="ph19259839285"></a>26.1.0</span></p>
     </td>
     </tr>
     <tr><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p>Infer Operator</p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p><a href="https://www.hiascend.com/developer/ascendhub/detail/13f3dee71712420d8b583b9275c04899" target="_blank" rel="noopener noreferrer">infer-operator</a></p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.0.0</p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p>v26.1.0</p>
     </td>
     </tr>
     <tr id="row1381419241342"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1814324740"><a name="p1814324740"></a><a name="p1814324740"></a><span id="ph88147247419"><a name="ph88147247419"></a><a name="ph88147247419"></a>ClusterD</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p98151024149"><a name="p98151024149"></a><a name="p98151024149"></a><a href="https://www.hiascend.com/developer/ascendhub/detail/b554929b470747448924bc786b5ab95d" target="_blank" rel="noopener noreferrer">clusterd</a></p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1481592418419"><a name="p1481592418419"></a><a name="p1481592418419"></a>v<span id="ph9804039087"><a name="ph9804039087"></a><a name="ph9804039087"></a>26.0.0</span></p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p1481592418419"><a name="p1481592418419"></a><a name="p1481592418419"></a>v<span id="ph9804039087"><a name="ph9804039087"></a><a name="ph9804039087"></a>26.1.0</span></p>
     </td>
     </tr>
     <tr id="row138151249410"><td class="cellrowborder" valign="top" width="28.689999999999998%" headers="mcps1.2.5.1.1 "><p id="p1881520248414"><a name="p1881520248414"></a><a name="p1881520248414"></a><span id="ph081511241449"><a name="ph081511241449"></a><a name="ph081511241449"></a>NodeD</span></p>
     </td>
     <td class="cellrowborder" valign="top" width="34.43%" headers="mcps1.2.5.1.2 "><p id="p1681572413418"><a name="p1681572413418"></a><a name="p1681572413418"></a><a href="https://www.hiascend.com/developer/ascendhub/detail/cc7e6c0a10834f1888d790174fba4bc5" target="_blank" rel="noopener noreferrer">noded</a></p>
     </td>
-    <td class="cellrowborder" valign="top" width="17.21%" headers="mcps1.2.5.1.3 "><p id="p108159249411"><a name="p108159249411"></a><a name="p108159249411"></a>v<span id="ph19289104014814"><a name="ph19289104014814"></a><a name="ph19289104014814"></a>26.0.0</span></p>
+    <td class="cellrowborder" valign="top" width="17.21%" headers="mcps1.2.5.1.3 "><p id="p108159249411"><a name="p108159249411"></a><a name="p108159249411"></a>v<span id="ph19289104014814"><a name="ph19289104014814"></a><a name="ph19289104014814"></a>26.1.0</span></p>
     </td>
     <td class="cellrowborder" rowspan="4" valign="top" width="19.67%" headers="mcps1.2.5.1.4 "><p id="p128156248413"><a name="p128156248413"></a><a name="p128156248413"></a>计算节点</p>
     </td>
@@ -632,21 +632,21 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p481512243413"><a name="p481512243413"></a><a name="p481512243413"></a><a href="https://www.hiascend.com/developer/ascendhub/detail/1b1a8c3cc1ff4710bdb0222514a8a7a3" target="_blank" rel="noopener noreferrer">npu-exporter</a></p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p081515241546"><a name="p081515241546"></a><a name="p081515241546"></a>v<span id="ph1878517407813"><a name="ph1878517407813"></a><a name="ph1878517407813"></a>26.0.0</span></p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p081515241546"><a name="p081515241546"></a><a name="p081515241546"></a>v<span id="ph1878517407813"><a name="ph1878517407813"></a><a name="ph1878517407813"></a>26.1.0</span></p>
     </td>
     </tr>
     <tr id="row1781532410415"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p78163241644"><a name="p78163241644"></a><a name="p78163241644"></a><span id="ph148168241849"><a name="ph148168241849"></a><a name="ph148168241849"></a>Ascend Device Plugin</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p1081612418413"><a name="p1081612418413"></a><a name="p1081612418413"></a><a href="https://www.hiascend.com/developer/ascendhub/detail/a592da7bd2ab4dffa8864abd4eac5068" target="_blank" rel="noopener noreferrer">ascend-k8sdeviceplugin</a></p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p19816132417413"><a name="p19816132417413"></a><a name="p19816132417413"></a>v<span id="ph210911425819"><a name="ph210911425819"></a><a name="ph210911425819"></a>26.0.0</span></p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p19816132417413"><a name="p19816132417413"></a><a name="p19816132417413"></a>v<span id="ph210911425819"><a name="ph210911425819"></a><a name="ph210911425819"></a>26.1.0</span></p>
     </td>
     </tr>
     <tr id="row2597060117204"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p1597060117204"><a name="p1597060117204"></a><a name="p1597060117204"></a><span id="ph2597060117204"><a name="ph2597060117204"></a><a name="ph2597060117204"></a>K8s RDMA Shared Dev Plugin</span></p>
     </td>
     <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.2 "><p id="p2597060117204"><a name="p2597060117204"></a><a name="p2597060117204"></a><a href="https://www.hiascend.com/developer/ascendhub/detail/k8s-rdma-shared-dp" target="_blank" rel="noopener noreferrer">k8s-rdma-shared-dp</a></p>
     </td>
-    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p2597060117205"><a name="p2597060117205"></a><a name="p2597060117205"></a>v<span id="ph2597060117205"><a name="ph2597060117205"></a><a name="ph2597060117205"></a>26.0.0</span></p>
+    <td class="cellrowborder" valign="top" headers="mcps1.2.5.1.3 "><p id="p2597060117205"><a name="p2597060117205"></a><a name="p2597060117205"></a>v<span id="ph2597060117205"><a name="ph2597060117205"></a><a name="ph2597060117205"></a>26.1.0</span></p>
     </td>
     </tr>
     </tbody>
@@ -659,36 +659,36 @@ K8s集群中，如果将包含昇腾AI处理器的节点作为K8s的管理节点
     1. 执行以下命令，重命名镜像（用户需根据所使用的组件，选取对应命令执行）。
 
         ```shell
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:v26.0.0 ascend-operator:v26.0.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:v26.1.0 ascend-operator:v26.1.0
 
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:v26.0.0 infer-operator:v26.0.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:v26.1.0 infer-operator:v26.1.0
 
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:v26.0.0 npu-exporter:v26.0.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:v26.1.0 npu-exporter:v26.1.0
 
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.0.0 ascend-k8sdeviceplugin:v26.0.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.1.0 ascend-k8sdeviceplugin:v26.1.0
 
         # 根据实际使用的Volcano版本，将{version}替换为对应版本号（如v1.7.0、v1.9.0、v1.12.0）
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{version}-v26.0.0 volcanosh/vc-controller-manager:{version}-v26.0.0
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{version}-v26.0.0 volcanosh/vc-scheduler:{version}-v26.0.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{version}-v26.1.0 volcanosh/vc-controller-manager:{version}-v26.1.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{version}-v26.1.0 volcanosh/vc-scheduler:{version}-v26.1.0
 
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:v26.0.0 noded:v26.0.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:v26.1.0 noded:v26.1.0
 
-        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:v26.0.0 clusterd:v26.0.0
+        docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:v26.1.0 clusterd:v26.1.0
         ```
 
     2. （可选）执行以下命令，删除原始名字镜像（用户需根据所使用的组件，选取对应命令执行）。
 
         ```shell
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:v26.0.0
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:v26.0.0
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:v26.0.0
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.0.0
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-operator:v26.1.0
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/infer-operator:v26.1.0
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/npu-exporter:v26.1.0
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-k8sdeviceplugin:v26.1.0
         # 根据实际使用的Volcano版本，将{version}替换为对应版本号（如v1.7.0、v1.9.0、v1.12.0）
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{version}-v26.0.0
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{version}-v26.0.0
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-controller-manager:{version}-v26.1.0
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/vc-scheduler:{version}-v26.1.0
 
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:v26.0.0
-        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:v26.0.0
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/noded:v26.1.0
+        docker rmi swr.cn-south-1.myhuaweicloud.com/ascendhub/clusterd:v26.1.0
         ```
 
 4. （可选）导入离线镜像到Containerd中。本步骤适用于容器运行时为Containerd场景，其他场景下可跳过。
