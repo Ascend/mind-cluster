@@ -299,7 +299,7 @@ func (tp *chip8node8ra64sp) scoreNodesForJob(job *plugin.SchedulerJob, task *api
 func (tp *chip8node8ra64sp) Preemptable(preemptor *api.TaskInfo, preemptees []*api.TaskInfo,
 	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
 	klog.V(util.LogInfoLev).Infof("%s Preemptable: SuperPod policy does not support preemption, "+
-		"preemptor<%s> preemptees<%d> node<%s>, Abstain",
+		"preemptor<%s> preemptees<%d> node<%s>, Reject",
 		tp.GetPluginName(), preemptor.Name, len(preemptees), vcNode.Name)
 	return nil, false
 }
@@ -307,7 +307,7 @@ func (tp *chip8node8ra64sp) Preemptable(preemptor *api.TaskInfo, preemptees []*a
 func (tp *chip8node8ra64sp) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.TaskInfo,
 	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
 	klog.V(util.LogInfoLev).Infof("%s Reclaimable: SuperPod policy does not support reclaim, "+
-		"reclaimer<%s> reclaimees<%d> node<%s>, Abstain",
+		"reclaimer<%s> reclaimees<%d> node<%s>, Reject",
 		tp.GetPluginName(), reclaimer.Name, len(reclaimees), vcNode.Name)
 	return nil, false
 }

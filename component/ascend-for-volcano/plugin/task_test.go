@@ -297,6 +297,110 @@ func buildNPUDeallocateFuncTest() []npuDeallocateFuncTest {
 	return tests
 }
 
+// TestGetAllocatedChipIDsFromPod covers nil pod, nil annotations and
+// multiple card-name annotations (910 / 310P / npu).
+func TestGetAllocatedChipIDsFromPod(t *testing.T) {
+	node := &NPUNode{}
+	tests := []struct {
+		name      string
+		podName   string
+		npuName   string
+		annoVal   string
+		wantLen   int
+		wantFirst int
+	}{
+		{"01-nil pod handled by caller", "", "", "", 0, 0},
+		{"02-910 single", "p1", util.NPU910CardName, "Ascend910-3", 1, 3},
+		{"03-910 multi", "p2", util.NPU910CardName, "Ascend910-0,Ascend910-3", 2, 0},
+		{"04-310P", "p3", util.NPU310PCardName, "Ascend310P-1,Ascend310P-2", 2, 1},
+		{"05-npu", "p4", util.NPUCardName, "npu-1,npu-2", 2, 1},
+		{"06-empty annotation", "p5", util.NPU910CardName, "", 0, 0},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.podName == "" {
+				if got := getAllocatedChipIDsFromPod(nil, node); len(got) != 0 {
+					t.Errorf("got=%v want empty", got)
+				}
+				return
+			}
+			task := test.BuildTestTaskWithAnnotation(tt.npuName, "1", tt.annoVal)
+			got := getAllocatedChipIDsFromPod(task.Pod, node)
+			if len(got) != tt.wantLen {
+				t.Errorf("got=%v wantLen=%d", got, tt.wantLen)
+				return
+			}
+			if tt.wantLen > 0 && got[0] != tt.wantFirst {
+				t.Errorf("got[0]=%d want=%d", got[0], tt.wantFirst)
+			}
+		})
+	}
+}
+
+// TestCalcCardFreeCount covers invalid args and whole-card scenarios:
+// Chips map empty, preemptee chip counted, unhealthy excluded,
+// non-preemptee occupied excluded, multi-card bucketing,
+// and non-contiguous available chip IDs (only chips in availableChipIDs counted).
+func TestCalcCardFreeCount(t *testing.T) {
+	pe := test.BuildTestTaskWithAnnotation(util.NPU910CardName, "1", "Ascend910-0")
+	pe.Pod.UID = "pe-uid" // override default UID "-" to distinguish from other pods
+	other := test.BuildTestTaskWithAnnotation(util.NPU910CardName, "1", "Ascend910-2")
+	other.Pod.UID = "other-uid"
+	tests := []struct {
+		name     string
+		node     *NPUNode
+		maxNum   int
+		availIDs []int
+		wantCard int
+		wantCnt  int
+		wantFull map[int]int // full map expectation, optional; if nil only wantCard/wantCnt checked
+	}{
+		{"01-nil node", nil, 0, nil, 0, 0, nil},
+		{"02-preemptee+unhealthy+idle", &NPUNode{
+			CommonNode: CommonNode{Name: "n1"},
+			VNode:      VNode{UnhealthyChipIds: map[int]struct{}{1: {}}}}, 4, []int{0, 1, 2, 3}, 0, 3, nil},
+		{"03-with non-preemptee occupied", &NPUNode{
+			CommonNode: CommonNode{Name: "n2", Tasks: map[api.TaskID]*api.TaskInfo{api.TaskID("other-uid"): other}},
+			VNode:      VNode{}}, 4, []int{0, 1, 2, 3}, 0, 3, nil},
+		{"04-multi-card bucketing", &NPUNode{
+			CommonNode: CommonNode{Name: "n3"},
+			VNode:      VNode{UnhealthyChipIds: map[int]struct{}{5: {}}}}, 4, []int{0, 1, 2, 3, 4, 5, 6, 7}, 1, 3, nil},
+		// Simulates real-world scenario: 8 cards in 2 meshes, but only chips 1,2,3,7 are
+		// reported as available (0,4,5,6 are unschedulable and absent from node annotation).
+		// preemptee pe holds chip 0, which is NOT in availableChipIDs, so it is ignored.
+		// Result: mesh 0 has 3 free chips (1,2,3), mesh 1 has 1 free chip (7).
+		{"05-non-contiguous available IDs", &NPUNode{
+			CommonNode: CommonNode{Name: "n4"},
+			VNode:      VNode{}}, 4, []int{1, 2, 3, 7}, 0, 3, map[int]int{0: 3, 1: 1}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := CalcCardFreeCount(tt.node, []*api.TaskInfo{pe}, tt.maxNum, tt.availIDs)
+			if tt.node == nil {
+				if got != nil {
+					t.Errorf("nil node got=%v want nil", got)
+				}
+				return
+			}
+			if tt.wantFull != nil {
+				if len(got) != len(tt.wantFull) {
+					t.Errorf("got=%v want=%v", got, tt.wantFull)
+					return
+				}
+				for k, v := range tt.wantFull {
+					if got[k] != v {
+						t.Errorf("card[%d]=%d want=%d, full=%v", k, got[k], v, got)
+					}
+				}
+				return
+			}
+			if got[tt.wantCard] != tt.wantCnt {
+				t.Errorf("card[%d]=%d want=%d, full=%v", tt.wantCard, got[tt.wantCard], tt.wantCnt, got)
+			}
+		})
+	}
+}
+
 func TestNPUDeallocateFunc(t *testing.T) {
 	tests := buildNPUDeallocateFuncTest()
 	temp := func(task *api.TaskInfo) string {

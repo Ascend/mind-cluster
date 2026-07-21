@@ -228,9 +228,12 @@ func isNPUSchedulableByPreemption(tp *huaweiNPUPlugin, taskInfo *api.TaskInfo,
 	return result
 }
 
+// isResourceShortageError reports whether the predicate error indicates that the node
+// does not have enough resources to schedule the task.
 func isResourceShortageError(err error) bool {
 	msg := err.Error()
-	return strings.Contains(msg, util.NPUResourceShortageError)
+	return strings.Contains(msg, util.NPUResourceShortageError) ||
+		strings.Contains(msg, util.NodeNotMeetTopologyWarning)
 }
 
 // subtractNetUnhealthyNPU subtracts network unhealthy npu count from total chip count.
@@ -315,33 +318,34 @@ func addPreemptableFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 		}
 		maxCardNPUNum := vcJob.GetPolicyHandler().GetMaxCardNPUNum()
 		if maxCardNPUNum <= 0 {
-			klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> maxCardNPUNum=0, Abstain", preemptor.Name)
-			return nil, util.Abstain
+			klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> maxCardNPUNum=0, Reject", preemptor.Name)
+			return nil, util.Reject
 		}
 
 		if len(preemptees) == 0 {
-			klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> no preemptees, Abstain", preemptor.Name)
-			return nil, util.Abstain
+			klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> no preemptees, Reject", preemptor.Name)
+			return nil, util.Reject
 		}
 		nodeName := preemptees[0].NodeName
 		if nodeName == "" {
-			klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> preemptee has no node, Abstain",
+			klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> preemptee has no node, Reject",
 				preemptor.Name)
-			return nil, util.Abstain
+			return nil, util.Reject
 		}
 		vcNode, ok := tp.Scheduler.Nodes[nodeName]
 		if !ok {
-			klog.V(util.LogInfoLev).Infof("preemptableFn: node<%s> not found in cache, Abstain", nodeName)
-			return nil, util.Abstain
+			klog.V(util.LogInfoLev).Infof("preemptableFn: node<%s> not found in cache, Reject", nodeName)
+			return nil, util.Reject
 		}
 
 		klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
 			"preemptees<%d>", preemptor.Name, vcTask.ReqNPUNum, maxCardNPUNum, nodeName, len(preemptees))
 		filtered, ok := vcJob.GetPolicyHandler().Preemptable(preemptor, preemptees, &vcNode)
+		klog.V(util.LogInfoLev).Infof("preemptableFn: filtered=%v", filtered)
 		if !ok || len(filtered) == 0 {
-			klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> on node<%s> no feasible victims, Abstain",
+			klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> on node<%s> no feasible victims, Reject",
 				preemptor.Name, nodeName)
-			return nil, util.Abstain
+			return nil, util.Reject
 		}
 		klog.V(util.LogInfoLev).Infof("preemptableFn: task<%s> on node<%s>, filtered %d/%d preemptees, Permit",
 			preemptor.Name, nodeName, len(filtered), len(preemptees))
@@ -366,33 +370,34 @@ func addReclaimableFn(ssn *framework.Session, tp *huaweiNPUPlugin) {
 		}
 		maxCardNPUNum := vcJob.GetPolicyHandler().GetMaxCardNPUNum()
 		if maxCardNPUNum <= 0 {
-			klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> maxCardNPUNum=0, Abstain", reclaimer.Name)
-			return nil, util.Abstain
+			klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> maxCardNPUNum=0, Reject", reclaimer.Name)
+			return nil, util.Reject
 		}
 
 		if len(reclaimees) == 0 {
-			klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> no reclaimees, Abstain", reclaimer.Name)
-			return nil, util.Abstain
+			klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> no reclaimees, Reject", reclaimer.Name)
+			return nil, util.Reject
 		}
 		nodeName := reclaimees[0].NodeName
 		if nodeName == "" {
-			klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> reclaimee has no node, Abstain",
+			klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> reclaimee has no node, Reject",
 				reclaimer.Name)
-			return nil, util.Abstain
+			return nil, util.Reject
 		}
 		vcNode, ok := tp.Scheduler.Nodes[nodeName]
 		if !ok {
-			klog.V(util.LogInfoLev).Infof("reclaimableFn: node<%s> not found in cache, Abstain", nodeName)
-			return nil, util.Abstain
+			klog.V(util.LogInfoLev).Infof("reclaimableFn: node<%s> not found in cache, Reject", nodeName)
+			return nil, util.Reject
 		}
 
 		klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
 			"reclaimees<%d>", reclaimer.Name, vcTask.ReqNPUNum, maxCardNPUNum, nodeName, len(reclaimees))
 		filtered, ok := vcJob.GetPolicyHandler().Reclaimable(reclaimer, reclaimees, &vcNode)
+		klog.V(util.LogInfoLev).Infof("reclaimableFn: filtered=%v", filtered)
 		if !ok || len(filtered) == 0 {
-			klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> on node<%s> no feasible victims, Abstain",
+			klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> on node<%s> no feasible victims, Reject",
 				reclaimer.Name, nodeName)
-			return nil, util.Abstain
+			return nil, util.Reject
 		}
 		klog.V(util.LogInfoLev).Infof("reclaimableFn: task<%s> on node<%s>, filtered %d/%d reclaimees, Permit",
 			reclaimer.Name, nodeName, len(filtered), len(reclaimees))
