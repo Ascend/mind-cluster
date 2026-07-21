@@ -55,9 +55,19 @@ MindCluster基础调度特性与断点续训特性支持的框架：Pytorch、Mi
 
 MindCluster将以单台Atlas 800T A2 训练服务器（同时作为管理节点和计算节点）为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。具体操作请参考：[集群调度用户指南](./docs/zh/scheduling/menu_scheduling_user_guide.md)。
 
-## MindCluster Ascend FaultDiag
+## MindCluster Ascend FaultDiag 故障诊断工具
 
-MindCluster Ascend FaultDiag（故障诊断工具）主要功能如下：提供日志清洗和故障诊断功能，提取训练及推理过程相关日志的关键信息，并根据集群所有节点清洗后的关键信息，分析故障根因节点以及故障事件。具体操作请参考：[使用指导](./docs/zh/faultdiag/)。
+- 日志故障诊断工具
+
+Ascend FaultDiag（日志故障诊断工具，简称 ascend-fd）是一款面向昇腾（Ascend）AI 集群的日志诊断工具，提供日志清洗、故障诊断两大核心功能。
+
+当训练或推理任务发生异常退出或性能劣化时，ascend-fd 可自动提取集群日志中的关键信息，分析故障根因节点和故障事件，帮助用户快速定位问题。具体操作请参考：[日志故障诊断工具用户指南](./docs/zh/faultdiag/ascend-faultdiag/menu_ascend_faultdiag_user_guide.md)。
+
+- 链路故障诊断工具
+
+Ascend FaultDiag Toolkit（链路故障诊断工具）是面向昇腾 AI 集群的链路故障诊断工具。
+
+工具提供交互式与非交互式两种操作模式，具备在线数据自动采集与离线日志清洗两种数据处理能力，可完成集群设备信息采集与自动化巡检诊断，通过服务器、L1/L2 灵衢交换机、RoCE 交换机及 BMC 信息定位集群的链路故障。具体操作请参考：[链路故障诊断工具用户指南](./docs/zh/faultdiag/ascend-faultdiag-toolkit/menu_ascend-faultdiag-toolkit.md)。
 
 # 编译指南
 
@@ -80,27 +90,47 @@ MindCluster具体特性介绍如下：
 | MindIE Motor推理任务最佳实践 |[MindIE Motor推理任务最佳实践](./docs/zh/scheduling/04_usage/06_mindie_motor_best_practice/00_before_you_start.md)   | ✅ |
 | SGLang推理任务最佳实践 |[SGLang推理任务最佳实践](./docs/zh/scheduling/04_usage/07_sglang_best_practice/00_before_you_start.md)   | ✅ |
 | vLLM推理任务最佳实践 |[vLLM推理任务最佳实践](./docs/zh/scheduling/04_usage/08_vllm_best_practice/00_before_you_start.md)   | ✅ |
-| Infer Operator推理任务最佳实践 |[Infer Operator推理任务最佳实践](./docs/zh/scheduling/04_usage/09_infer_operator_best_practice/00_before_you_start.md)   |
+| Infer Operator推理任务最佳实践 |[Infer Operator推理任务最佳实践](./docs/zh/scheduling/04_usage/09_infer_operator_best_practice/00_before_you_start.md)   | |
 | 任务交替运行最佳实践 |[任务交替运行最佳实践](./docs/zh/scheduling/04_usage/10_task_alternation/00_before_you_start.md)   | ✅ |
 
-## MindCluster Ascend FaultDiag
+## MindCluster Ascend FaultDiag 故障诊断工具
 
-| 特性名称      | 介绍                                                                                                              | Released |
-|-----------|-----------------------------------------------------------------------------------------------------------------|----------|
-| 日志清洗与转储   | [日志清洗与转储](./docs/zh/faultdiag/user_guide/06_cleaning_and_dumping_logs.md) | ✅        |
-| 故障诊断      | [故障诊断](./docs/zh/faultdiag/user_guide/07_diagnosing_faults.md) | ✅        |
-| 单机故障诊断    | [单机故障诊断](./docs/zh/faultdiag/user_guide/08_diagnosing_faults_on_a_single_server.md) | ✅        |
-| 超节点故障诊断   | [超节点故障诊断](./docs/zh/faultdiag/user_guide/09_diagnosing_superpod_faults.md) | ✅        |
-| 清洗业务流日志   | [清洗业务流日志](./docs/zh/faultdiag/user_guide/10_cleaning_service_flow_logs.md) | ✅        |
-| 根因节点清洗及诊断 | [根因节点清洗及诊断](./docs/zh/faultdiag/user_guide/11_cleaning_and_diagnosing_the_root_cause_node.md) | ✅        |
-| 故障事件清洗及诊断 | [故障事件清洗及诊断](./docs/zh/faultdiag/user_guide/12_cleaning_and_diagnosing_fault_events.md) | ✅        |
-| 自定义配置文件   | [自定义配置文件](./docs/zh/faultdiag/user_guide/13_customizing_a_configuration_file.md) | ✅        |
+- 日志故障诊断工具
+
+| 特性名称                  | 介绍                                                                                                           | Released |
+|---------------------------|----------------------------------------------------------------------------------------------------------------|----------|
+| 日志清洗                  | [日志清洗](./docs/zh/faultdiag/ascend-faultdiag/05_usage/03_log_parsing.md)                                    | ✅        |
+| 故障诊断                  | [故障诊断](./docs/zh/faultdiag/ascend-faultdiag/05_usage/04_fault_diagnosis.md)                                | ✅        |
+| 单机故障诊断              | [单机故障诊断](./docs/zh/faultdiag/ascend-faultdiag/05_usage/05_single_server_diagnosis.md)                    | ✅        |
+| 超节点故障诊断            | [超节点故障诊断](./docs/zh/faultdiag/ascend-faultdiag/05_usage/06_superpod_diagnosis.md)                       | ✅        |
+| 自定义故障实体            | [自定义故障实体](./docs/zh/faultdiag/ascend-faultdiag/05_usage/07_custom_fault_entities.md)                    | ✅        |
+| 屏蔽故障日志              | [屏蔽故障日志](./docs/zh/faultdiag/ascend-faultdiag/05_usage/08_fault_log_masking.md)                          | ✅        |
+| 自定义配置文件            | [自定义配置文件](./docs/zh/faultdiag/ascend-faultdiag/05_usage/09_custom_configuration.md)                     | ✅        |
+| 业务日志清洗（SDK）       | [业务日志清洗（SDK）](./docs/zh/faultdiag/ascend-faultdiag/05_usage/10_service_flow_parsing.md)                | ✅        |
+| 根因节点清洗及诊断（SDK） | [根因节点清洗及诊断（SDK）](./docs/zh/faultdiag/ascend-faultdiag/05_usage/11_root_cause_parsing_diagnosis.md)  | ✅        |
+| 故障事件清洗及诊断（SDK） | [故障事件清洗及诊断（SDK）](./docs/zh/faultdiag/ascend-faultdiag/05_usage/12_fault_event_parsing_diagnosis.md) | ✅        |
+
+- 链路故障诊断工具
+
+| 特性名称            | 介绍                                                                                                     | Released |
+|---------------------|----------------------------------------------------------------------------------------------------------|----------|
+| 日志采集            | [日志采集](./docs/zh/faultdiag/ascend-faultdiag-toolkit/05_usage/02_log_collection.md)                   | ✅        |
+| 日志清洗            | [日志清洗](./docs/zh/faultdiag/ascend-faultdiag-toolkit/05_usage/03_log_parse.md)                        | ✅        |
+| 故障诊断            | [故障诊断](./docs/zh/faultdiag/ascend-faultdiag-toolkit/05_usage/04_fault_diagnosis.md)                  | ✅        |
+| 故障巡检            | [故障巡检](./docs/zh/faultdiag/ascend-faultdiag-toolkit/05_usage/05_fault_inspection.md)                 | ✅        |
+| 诊断 / 巡检报告说明 | [诊断 / 巡检报告说明](./docs/zh/faultdiag/ascend-faultdiag-toolkit/05_usage/06_fault_analysis_report.md) | ✅        |
+| 在线诊断            | [在线诊断](./docs/zh/faultdiag/ascend-faultdiag-toolkit/05_usage/07_online_diagnosis.md)                 | ✅        |
+| 离线诊断            | [离线诊断](./docs/zh/faultdiag/ascend-faultdiag-toolkit/05_usage/08_offline_diagnosis.md)                | ✅        |
+| 分批诊断            | [分批诊断](./docs/zh/faultdiag/ascend-faultdiag-toolkit/05_usage/09_batch_diagnosis.md)                  | ✅        |
+| 客户定制化巡检      | [客户定制化巡检](./docs/zh/faultdiag/ascend-faultdiag-toolkit/05_usage/10_customized_inspection.md)      | ✅        |
 
 # FAQ
 
 MindCluster集群调度相关FAQ请参见：[FAQ](./docs/zh/scheduling/07_references/03_faq.md)。
 
-MindCluster Ascend FaultDiag相关FAQ请参见：[FAQ](./docs/zh/faultdiag/faq.md)。
+MindCluster Ascend FaultDiag 日志故障诊断工具相关FAQ请参见：[FAQ](./docs/zh/faultdiag/ascend-faultdiag/07_references/02_faq.md)。
+
+MindCluster Ascend FaultDiag Toolkit 链路故障诊断工具相关FAQ请参见：[FAQ](./docs/zh/faultdiag/ascend-faultdiag-toolkit/07_references/01_faq.md)。
 
 # 安全声明
 
@@ -112,9 +142,9 @@ MindCluster Ascend FaultDiag相关FAQ请参见：[FAQ](./docs/zh/faultdiag/faq.m
 - 通信矩阵详见：[通信矩阵](https://gitcode.com/Ascend/mind-cluster/wiki/Home.md)
 - 公网地址详见：[公网地址](./docs/zh/resource/MindCluster%2026.0.0%20公网地址.xlsx)
 
-## MindCluster Ascend FaultDiag
+## MindCluster Ascend FaultDiag 故障诊断工具
 
-- 安全声明详见：[安全声明](./docs/zh/faultdiag/security_hardening.md)
+- 安全声明详见：[安全声明](./docs/zh/faultdiag/ascend-faultdiag/07_references/03_security.md)
 - 公网地址详见：[公网地址](./docs/zh/resource/MindCluster%2026.0.0%20Ascend%20FaultDiag公网地址.xlsx)
 
 # 分支维护策略
