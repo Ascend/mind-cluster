@@ -142,21 +142,31 @@ func TestGetAllUBPortsFromHccnLines(t *testing.T) {
 
 // TestParseDeviceTable tests the parseDeviceTable function.
 func TestParseDeviceTable(t *testing.T) {
+	const num1 = 1
+	const num4 = 4
+	const num5 = 5
+	const num8 = 8
+	const num9 = 9
 	tests := []struct {
 		name    string
 		lines   []string
-		want    map[int][]int
+		want    map[int][]common.NpuDevPortInfo
 		wantErr bool
 	}{
 		{
 			name:  "parse mixed ETH and UB ports",
 			lines: strings.Split(sampleDevInfoOutput, "\n"),
-			want:  map[int][]int{0: {4, 5}, 1: {8, 9}},
+			want: map[int][]common.NpuDevPortInfo{
+				0:    {{PortID: num4, PortType: "ETH", LinkStatus: "DOWN"}, {PortID: num5, PortType: "ETH", LinkStatus: "UP"}},
+				num1: {{PortID: num8, PortType: "UB", LinkStatus: "DOWN"}, {PortID: num9, PortType: "UB", LinkStatus: "UP"}},
+			},
 		},
 		{
-			name:    "stop at third separator",
-			lines:   strings.Split(hccnToolTable("| 0 | 4 | 200 | ETH | DOWN | Electrical |"), "\n"),
-			want:    map[int][]int{0: {4}},
+			name:  "stop at third separator",
+			lines: strings.Split(hccnToolTable("| 0 | 4 | 200 | ETH | DOWN | Electrical |"), "\n"),
+			want: map[int][]common.NpuDevPortInfo{
+				0: {{PortID: num4, PortType: "ETH", LinkStatus: "DOWN"}},
+			},
 			wantErr: false,
 		},
 		{
