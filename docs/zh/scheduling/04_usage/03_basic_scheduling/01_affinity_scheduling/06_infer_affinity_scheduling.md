@@ -10,9 +10,9 @@
 
 ## 配置推理服务亲和性调度策略
 
-通过给K8s资源添加特定Label与Annotation，即可配置推理服务亲和性调度策略。
+通过给K8s资源添加特定label，即可配置推理服务亲和性调度策略。
 
-对于Atlas 950 SuperPoD产品，以Deployment资源为例，需要在其Pod模板的labels与annotations中添加如下示例中加粗部分的内容：
+对于Atlas 950 SuperPoD产品，以Deployment资源为例，需要在其Pod模板的labels中添加如下示例中加粗部分的内容：
 
 <pre codetype="yaml">
 apiVersion: apps/v1
@@ -34,8 +34,8 @@ spec:
         host-arch: huawei-arm
         ring-controller.atlas: ascend-npu
       annotations:
-        sp-block: "8" # 指定逻辑超节点芯片数量，设置成请求的NPU数量
-        ra-block: "8" # 指定逻辑框大小，设置成请求的NPU数量
+        sp-block: "8" # 指定逻辑超节点芯片数量，设置成该实例请求的NPU总数
+        ra-block: "8" # 指定逻辑框大小，设置成该实例请求的NPU总数
         huawei.com/schedule_policy: "chip8-node8-ra64-sp" # Atlas 950 SuperPoD产品对应的调度策略
     spec:
       schedulerName: volcano
@@ -54,7 +54,7 @@ spec:
               fieldPath: metadata.annotations['huawei.com/npu']
         resources:
           requests:
-            huawei.com/npu: 8 # 请求的NPU数量
+            huawei.com/npu: 8 # 单个Pod请求的NPU数量
           limits:
             huawei.com/npu: 8 # 需要和requests保持一致
         volumeMounts:
@@ -93,7 +93,7 @@ spec:
         host-arch: huawei-arm
         ring-controller.atlas: ascend-npu
       annotations:
-        sp-block: "8" # 指定逻辑超节点芯片数量，设置成请求的NPU数量
+        sp-block: "8" # 指定逻辑超节点芯片数量，设置成该实例请求的NPU总数
         huawei.com/schedule_policy: "chip8-node8-sp" # Atlas 850 Server超节点对应的调度策略
     spec:
       schedulerName: volcano
@@ -112,7 +112,7 @@ spec:
               fieldPath: metadata.annotations['huawei.com/npu']
         resources:
           requests:
-            huawei.com/npu: 8 # 请求的NPU数量
+            huawei.com/npu: 8 # 单个Pod请求的NPU数量
           limits:
             huawei.com/npu: 8 # 需要和requests保持一致
         volumeMounts:
@@ -132,6 +132,7 @@ spec:
 > [!NOTE]
 >
 >- 推理服务亲和性调度策略仅支持Atlas 950 SuperPoD产品与Atlas 850 Server超节点。
->- 使用其他类型的K8s资源部署推理服务示例请参见[推理任务类型与硬件型号对应YAML文件](../03_full_npu_scheduling.md#准备任务yaml)，添加对应的Label与Annotation即可开启推理服务亲和性调度策略。
+>- 针对Atlas 950 SuperPoD产品，若开启推理服务亲和性调度特性，当前版本下该特性强制要求单个实例不得跨框调度。因此可能出现如下情况：多个框的空闲节点资源总和虽能满足某实例的需求，但这些空闲节点分属不同框，导致实例因无法跨框而处于Pending状态。若希望该实例能够成功调度，可删除labels中的inferserviceid标签以关闭推理亲和性，并将huawei.com/schedule_policy修改为chip8-node8-sp，从而确保单实例不跨超节点调度。
+>- 使用其他类型的K8s资源部署推理服务示例请参见[推理任务类型与硬件型号对应YAML文件](../03_full_npu_scheduling.md#准备任务yaml)，添加对应的label即可开启推理服务亲和性调度策略。
 >- 对于可以生成PodGroup的资源，在PodGroup上添加相应字段也可以实现推理服务亲和性调度。
->- 常用的Label与Annotation对照表请参见[PodGroup](../../../06_api/01_volcano.md#podgroup)/[Pod](../../../06_api/01_volcano.md#pod)。
+>- 常用的label与annotation对照表请参见[PodGroup](../../../06_api/01_volcano.md#podgroup)/[Pod](../../../06_api/01_volcano.md#pod)。
