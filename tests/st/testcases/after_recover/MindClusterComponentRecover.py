@@ -32,13 +32,13 @@ class MindClusterComponentRecoverCases(unittest.TestCase):
     ascend_operator_yaml = "ascend-operator-v*.yaml"
     noded_yaml = "noded-v*.yaml"
     npu_exporter_yaml = "npu-exporter-v*.yaml"
-    
+
     def setUp(self) -> None:
         self.test_method_name = self._testMethodName
         self.logger.info("test method: %s", self.test_method_name)
-        
+
     def test_recover_node(self):
-        self.k8s_manager.exec_command("kubectl uncordon master")
+        K8sTool.uncordon_all_nodes(self)
 
     def test_mindcluster_recover_dp(self):
         dp_path = os.path.join(self.base_dir, self.dp_yaml)

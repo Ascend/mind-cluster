@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-import os.path
+import os
 
 from tests.st.lib.dl_deployer.dl import Installer
 
@@ -24,5 +24,14 @@ class NodedInstaller(Installer):
 
     @staticmethod
     def get_labels():
-        return ["nodeDEnable=on", ]
+        return [
+            "nodeDEnable=on",
+        ]
 
+    def get_yaml_path(self):
+        """pick noded deployment yaml, exclude fdConfig.yaml and other config files"""
+        for root, _, files in os.walk(self.extract_dir):
+            for filename in files:
+                if filename.startswith('noded-v') and filename.endswith('.yaml'):
+                    return os.path.join(root, filename)
+        raise RuntimeError("Failed to find noded yaml in {}".format(self.extract_dir))

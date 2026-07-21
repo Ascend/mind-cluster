@@ -27,6 +27,7 @@ NODE_NUM = 8
 NODE_NAME = "910ax8"
 MODULE_910B_8 = "module-910b-8"
 
+
 class MindclusterAscend800ta2MutliNodeSchedule0003(unittest.TestCase):
     resource_dir = BASE_DIR + "multi_node_schedule/resources_0001/"
     vcjob_yaml_path = resource_dir + "vcjob_kwok_simulator-8x8.yaml"
@@ -35,14 +36,14 @@ class MindclusterAscend800ta2MutliNodeSchedule0003(unittest.TestCase):
     logger = k8s_manager.logger
 
     @classmethod
-    def setUpClass(self):
-        self.k8s_manager.exec_command("kubectl delete -f %s" % self.vcjob_yaml_path)
-        ClusterSimulator.create_kwok_cluster(self, container_name="a2_container", node_name=NODE_NAME, node_num=NODE_NUM)
+    def setUpClass(cls):
+        cls.k8s_manager.exec_command("kubectl delete -f %s" % cls.vcjob_yaml_path)
+        ClusterSimulator.create_kwok_cluster(cls, container_name="a2_container", node_name=NODE_NAME, node_num=NODE_NUM)
 
     def setUp(self) -> None:
         self.test_method_name = self._testMethodName
         self.logger.info("test method: %s", self.test_method_name)
-    
+
     def test_multinode_schedule_vcjob_000(self):
         self.assertIs(ClusterSimulator.get_ready_kwok_node_count(self), NODE_NUM, "kwok nodes are not ready")
 
@@ -52,7 +53,11 @@ class MindclusterAscend800ta2MutliNodeSchedule0003(unittest.TestCase):
 
     def test_multinode_schedule_vcjob_002(self):
         K8sNode.set_accelerator_type(self, node_name=NODE_NAME, node_num=NODE_NUM, accelerator_type=MODULE_910B_8)
-        self.assertIs(ClusterSimulator.get_kwok_nodes_with_accelerator_type(self), NODE_NUM, "kwok nodes with accelerator type are not ready")
+        self.assertIs(
+            ClusterSimulator.get_kwok_nodes_with_accelerator_type(self),
+            NODE_NUM,
+            "kwok nodes with accelerator type are not ready",
+        )
 
     def test_multinode_schedule_vcjob_003(self):
         self.k8s_manager.exec_command("kubectl delete stage pod-complete")
@@ -62,7 +67,7 @@ class MindclusterAscend800ta2MutliNodeSchedule0003(unittest.TestCase):
 
     def test_multinode_schedule_vcjob_004(self):
         self.k8s_manager.exec_command("kubectl delete -f %s" % self.vcjob_yaml_path)
-        ret = self.k8s_manager.exec_command(f"kubectl get pod {self.vcjob_name}'")
+        ret = self.k8s_manager.exec_command(f"kubectl get pod {self.vcjob_name}")
         self.assertTrue(len(ret) == 0, "job delete fail")
 
     def test_multinode_schedule_vcjob_005(self):
@@ -70,6 +75,6 @@ class MindclusterAscend800ta2MutliNodeSchedule0003(unittest.TestCase):
         self.assertIs(ClusterSimulator.get_ready_kwok_node_count(self), 0)
 
     @classmethod
-    def tearDownClass(self):
-        self.k8s_manager.exec_command("kubectl delete -f %s" % self.vcjob_yaml_path)
-        ClusterSimulator.stop_kwok_cluster(self, "a2_container")
+    def tearDownClass(cls):
+        cls.k8s_manager.exec_command("kubectl delete -f %s" % cls.vcjob_yaml_path)
+        ClusterSimulator.stop_kwok_cluster(cls, "a2_container")
