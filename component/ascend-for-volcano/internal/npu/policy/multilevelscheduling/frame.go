@@ -999,7 +999,7 @@ func (mh *MultilevelHandler) checkNodeForHotSwitch(task *api.TaskInfo, node plug
 func (mh *MultilevelHandler) Preemptable(preemptor *api.TaskInfo, preemptees []*api.TaskInfo,
 	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
 	klog.V(util.LogInfoLev).Infof("%s Preemptable: multilevel scheduling policy does not support preemption, "+
-		"preemptor<%s> preemptees<%d> node<%s>, Abstain",
+		"preemptor<%s> preemptees<%d> node<%s>, Reject",
 		mh.GetPluginName(), preemptor.Name, len(preemptees), vcNode.Name)
 	return nil, false
 }
@@ -1007,7 +1007,7 @@ func (mh *MultilevelHandler) Preemptable(preemptor *api.TaskInfo, preemptees []*
 func (mh *MultilevelHandler) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.TaskInfo,
 	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
 	klog.V(util.LogInfoLev).Infof("%s Reclaimable: multilevel scheduling policy does not support reclaim, "+
-		"reclaimer<%s> reclaimees<%d> node<%s>, Abstain",
+		"reclaimer<%s> reclaimees<%d> node<%s>, Reject",
 		mh.GetPluginName(), reclaimer.Name, len(reclaimees), vcNode.Name)
 	return nil, false
 }
