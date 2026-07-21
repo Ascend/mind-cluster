@@ -20,11 +20,13 @@ package kubeclient
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/cache"
 
 	"Ascend-device-plugin/pkg/common"
 	"ascend-common/common-utils/hwlog"
@@ -177,7 +179,24 @@ func (k *Kubelet) GetActivePodListCache() []v1.Pod {
 }
 
 func (k *Kubelet) InitPodInformer() {
-	hwlog.RunLog.Info("get pod from kubelet, skip pod informer")
+	podInformer := newKubeletPodInformer(k.client)
+	podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			k.client.UpdatePodList(obj, EventTypeAdd)
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			if !reflect.DeepEqual(oldObj, newObj) {
+				k.client.UpdatePodList(newObj, EventTypeUpdate)
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+			k.client.UpdatePodList(obj, EventTypeDelete)
+		},
+	})
+	podInformer.AddEventHandler(k.client.ResourceEventHandler(PodResource, checkPod))
+	k.client.PodInformer = podInformer
+	go podInformer.Run(make(chan struct{}))
+	hwlog.RunLog.Info("kubelet pod informer initialized")
 }
 
 func (k *Kubelet) PodInformerInspector(ctx context.Context) {

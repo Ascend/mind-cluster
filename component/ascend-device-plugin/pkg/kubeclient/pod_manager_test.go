@@ -19,6 +19,7 @@ package kubeclient
 
 import (
 	"context"
+	"net/http"
 	"reflect"
 	"testing"
 
@@ -114,12 +115,26 @@ func TestKubeletGetPodList(t *testing.T) {
 	})
 }
 
-func TestKubeletInitPodInformerNoop(t *testing.T) {
-	client := &ClientK8s{}
+func TestKubeletInitPodInformer(t *testing.T) {
+	// InitPodInformer starts a background poll goroutine whose stopCh is an
+	// inline make(chan struct{}) with no retained reference, so the loop cannot
+	// be stopped from the test. After this test returns, defer patch.Reset()
+	// restores the real getPodsByKltPort and a leaked poll could reach it and
+	// call ki.KltClient.Do(req). A non-nil KltClient turns that into a benign
+	// connection error (logged) instead of a nil-pointer panic that crashes the
+	// whole test binary.
+	client := &ClientK8s{KltClient: &http.Client{}}
 	kubelet := &Kubelet{client: client}
 
-	convey.Convey("kubelet channel should not create apiserver pod informer", t, func() {
+	patch := gomonkey.ApplyPrivateMethod(reflect.TypeOf(new(ClientK8s)), "getPodsByKltPort",
+		func(_ *ClientK8s) (*v1.PodList, error) { return &v1.PodList{}, nil })
+	defer patch.Reset()
+
+	convey.Convey("kubelet channel should create a kubelet-backed pod informer", t, func() {
 		kubelet.InitPodInformer()
-		convey.So(client.PodInformer, convey.ShouldBeNil)
+		convey.So(client.PodInformer, convey.ShouldNotBeNil)
+		// it should be a kubeletPodInformer, not an apiserver informer
+		_, ok := client.PodInformer.(*kubeletPodInformer)
+		convey.So(ok, convey.ShouldBeTrue)
 	})
 }
