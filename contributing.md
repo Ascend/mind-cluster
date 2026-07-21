@@ -8,6 +8,7 @@
 * [ascend-device-plugin](https://gitcode.com/Ascend/mind-cluster/blob/master/component/ascend-device-plugin/README.md)
 * [ascend-docker-runtime](https://gitcode.com/Ascend/mind-cluster/blob/master/component/ascend-docker-runtime/README.md)
 * [ascend-for-volcano](https://gitcode.com/Ascend/mind-cluster/blob/master/component/ascend-for-volcano/README.md)
+* [ascend-faultdiag](https://gitcode.com/Ascend/mind-cluster/blob/master/component/ascend-faultdiag/README.md)
 * [ascend-operator](https://gitcode.com/Ascend/mind-cluster/blob/master/component/ascend-operator/README.md)
 * [clusterd](https://gitcode.com/Ascend/mind-cluster/blob/master/component/clusterd/README.md)
 * [container-manager](https://gitcode.com/Ascend/mind-cluster/blob/master/component/container-manager/README.md)
