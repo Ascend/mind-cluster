@@ -42,7 +42,7 @@ class GenerateDiagReport(DiagService):
         # 收集诊断结果
         diag_results = self.diag_ctx.diag_result
         if not diag_results:
-            DIAG_LOGGER.warning("诊断数据为空，请确认是否使用auto_collect进行信息采集")
+            DIAG_LOGGER.warning("诊断数据为空，可能未执行采集与清洗流程，或诊断未识别出故障。")
             return
 
         # 创建Excel生成器实例
