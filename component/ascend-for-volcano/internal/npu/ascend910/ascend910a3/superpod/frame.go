@@ -1239,7 +1239,7 @@ func printNodeTree(totalNodes map[int32]superPod) string {
 func (tp *module910SuperPod) Preemptable(preemptor *api.TaskInfo, preemptees []*api.TaskInfo,
 	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
 	klog.V(util.LogInfoLev).Infof("%s Preemptable: SuperPod cannot be a preemptor, "+
-		"preemptor<%s> preemptees<%d> node<%s>, Abstain",
+		"preemptor<%s> preemptees<%d> node<%s>, Reject",
 		tp.GetPluginName(), preemptor.Name, len(preemptees), vcNode.Name)
 	return nil, false
 }
@@ -1247,7 +1247,7 @@ func (tp *module910SuperPod) Preemptable(preemptor *api.TaskInfo, preemptees []*
 func (tp *module910SuperPod) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.TaskInfo,
 	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
 	klog.V(util.LogInfoLev).Infof("%s Reclaimable: SuperPod does not support reclaim, "+
-		"reclaimer<%s> reclaimees<%d> node<%s>, Abstain",
+		"reclaimer<%s> reclaimees<%d> node<%s>, Reject",
 		tp.GetPluginName(), reclaimer.Name, len(reclaimees), vcNode.Name)
 	return nil, false
 }

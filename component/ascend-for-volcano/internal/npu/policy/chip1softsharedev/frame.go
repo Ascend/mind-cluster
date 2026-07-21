@@ -199,7 +199,7 @@ func (tp *chip1softsharedev) selectNPUFromNode(task *api.TaskInfo, node plugin.N
 func (tp *chip1softsharedev) Preemptable(preemptor *api.TaskInfo, preemptees []*api.TaskInfo,
 	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
 	klog.V(util.LogInfoLev).Infof("%s Preemptable: soft share dev policy does not support preemption, "+
-		"preemptor<%s> preemptees<%d> node<%s>, Abstain",
+		"preemptor<%s> preemptees<%d> node<%s>, Reject",
 		tp.GetPluginName(), preemptor.Name, len(preemptees), vcNode.Name)
 	return nil, false
 }
@@ -207,7 +207,7 @@ func (tp *chip1softsharedev) Preemptable(preemptor *api.TaskInfo, preemptees []*
 func (tp *chip1softsharedev) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.TaskInfo,
 	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
 	klog.V(util.LogInfoLev).Infof("%s Reclaimable: soft share dev policy does not support reclaim, "+
-		"reclaimer<%s> reclaimees<%d> node<%s>, Abstain",
+		"reclaimer<%s> reclaimees<%d> node<%s>, Reject",
 		tp.GetPluginName(), reclaimer.Name, len(reclaimees), vcNode.Name)
 	return nil, false
 }

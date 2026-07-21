@@ -325,7 +325,9 @@ func (tp *NPUHandler) Preemptable(preemptor *api.TaskInfo, preemptees []*api.Tas
 	klog.V(util.LogInfoLev).Infof("Preemptable: task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
 		"preemptees<%d>", preemptor.Name, reqNPUNum, maxCardNPUNum, vcNode.Name, len(preemptees))
 
-	cardFreeCount := plugin.CalcCardFreeCount(vcNode, preemptees, maxCardNPUNum)
+	availableChipIDs := util.ChangeTopToIntArray(vcNode.Annotation[tp.GetAnnoName(tp.ReqNPUName)],
+		tp.GetAnnoPreVal(tp.ReqNPUName))
+	cardFreeCount := plugin.CalcCardFreeCount(vcNode, preemptees, maxCardNPUNum, availableChipIDs)
 	if len(cardFreeCount) == 0 {
 		klog.V(util.LogInfoLev).Infof("Preemptable: no free cards after preemptees removed on node<%s>",
 			vcNode.Name)
@@ -400,7 +402,9 @@ func (tp *NPUHandler) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.Tas
 	klog.V(util.LogInfoLev).Infof("Reclaimable: task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
 		"reclaimees<%d>", reclaimer.Name, reqNPUNum, maxCardNPUNum, vcNode.Name, len(reclaimees))
 
-	cardFreeCount := plugin.CalcCardFreeCount(vcNode, reclaimees, maxCardNPUNum)
+	availableChipIDs := util.ChangeTopToIntArray(vcNode.Annotation[tp.GetAnnoName(tp.ReqNPUName)],
+		tp.GetAnnoPreVal(tp.ReqNPUName))
+	cardFreeCount := plugin.CalcCardFreeCount(vcNode, reclaimees, maxCardNPUNum, availableChipIDs)
 	if len(cardFreeCount) == 0 {
 		klog.V(util.LogInfoLev).Infof("Reclaimable: no free cards after reclaimees removed on node<%s>",
 			vcNode.Name)

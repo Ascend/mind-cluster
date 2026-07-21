@@ -235,7 +235,9 @@ func (tp *chip4nodex) Preemptable(preemptor *api.TaskInfo, preemptees []*api.Tas
 	klog.V(util.LogInfoLev).Infof("Preemptable(chip4nodex): task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
 		"preemptees<%d>", preemptor.Name, reqNPUNum, maxCardNPUNum, vcNode.Name, len(preemptees))
 
-	cardFreeCount := plugin.CalcCardFreeCount(vcNode, preemptees, maxCardNPUNum)
+	availableChipIDs := util.ChangeTopToIntArray(vcNode.Annotation[tp.GetAnnoName(tp.ReqNPUName)],
+		tp.GetAnnoPreVal(tp.ReqNPUName))
+	cardFreeCount := plugin.CalcCardFreeCount(vcNode, preemptees, maxCardNPUNum, availableChipIDs)
 	if len(cardFreeCount) == 0 {
 		klog.V(util.LogInfoLev).Infof("Preemptable(chip4nodex): no free cards on node<%s>", vcNode.Name)
 		return nil, false
@@ -248,7 +250,12 @@ func (tp *chip4nodex) Preemptable(preemptor *api.TaskInfo, preemptees []*api.Tas
 		return plugin.FilterPreempteesByFeasibleCards(vcNode, preemptees, feasibleCards, maxCardNPUNum), true
 	}
 
-	// Non-affinity path (5/6/7 etc): use default cross-card aggregation
+	if is4PmeshAffinity(reqNPUNum) {
+		klog.V(util.LogInfoLev).Infof("Preemptable(chip4nodex): task<%s> mesh affinity required but not feasible on node<%s>",
+			preemptor.Name, vcNode.Name)
+		return nil, false
+	}
+
 	klog.V(util.LogInfoLev).Infof("Preemptable(chip4nodex): task<%s> non-affinity path, fallback to default",
 		preemptor.Name)
 	return tp.NPUHandler.Preemptable(preemptor, preemptees, vcNode)
@@ -276,7 +283,9 @@ func (tp *chip4nodex) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.Tas
 	klog.V(util.LogInfoLev).Infof("Reclaimable(chip4nodex): task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
 		"reclaimees<%d>", reclaimer.Name, reqNPUNum, maxCardNPUNum, vcNode.Name, len(reclaimees))
 
-	cardFreeCount := plugin.CalcCardFreeCount(vcNode, reclaimees, maxCardNPUNum)
+	availableChipIDs := util.ChangeTopToIntArray(vcNode.Annotation[tp.GetAnnoName(tp.ReqNPUName)],
+		tp.GetAnnoPreVal(tp.ReqNPUName))
+	cardFreeCount := plugin.CalcCardFreeCount(vcNode, reclaimees, maxCardNPUNum, availableChipIDs)
 	if len(cardFreeCount) == 0 {
 		klog.V(util.LogInfoLev).Infof("Reclaimable(chip4nodex): no free cards on node<%s>", vcNode.Name)
 		return nil, false
@@ -289,7 +298,12 @@ func (tp *chip4nodex) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.Tas
 		return plugin.FilterPreempteesByFeasibleCards(vcNode, reclaimees, feasibleCards, maxCardNPUNum), true
 	}
 
-	// Non-affinity path: fallback to base Reclaimable
+	if is4PmeshAffinity(reqNPUNum) {
+		klog.V(util.LogInfoLev).Infof("Reclaimable(chip4nodex): task<%s> mesh affinity required but not feasible on node<%s>",
+			reclaimer.Name, vcNode.Name)
+		return nil, false
+	}
+
 	klog.V(util.LogInfoLev).Infof("Reclaimable(chip4nodex): task<%s> non-affinity path, fallback to default",
 		reclaimer.Name)
 	return tp.NPUHandler.Reclaimable(reclaimer, reclaimees, vcNode)

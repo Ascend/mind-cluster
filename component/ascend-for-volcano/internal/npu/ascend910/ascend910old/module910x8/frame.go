@@ -218,7 +218,9 @@ func (tp *module910x8) Preemptable(preemptor *api.TaskInfo, preemptees []*api.Ta
 	klog.V(util.LogInfoLev).Infof("Preemptable(910A): task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
 		"preemptees<%d>", preemptor.Name, reqNPUNum, maxCardNPUNum, vcNode.Name, len(preemptees))
 
-	cardFreeCount := plugin.CalcCardFreeCount(vcNode, preemptees, maxCardNPUNum)
+	availableChipIDs := util.ChangeTopToIntArray(vcNode.Annotation[tp.GetAnnoName(tp.ReqNPUName)],
+		tp.GetAnnoPreVal(tp.ReqNPUName))
+	cardFreeCount := plugin.CalcCardFreeCount(vcNode, preemptees, maxCardNPUNum, availableChipIDs)
 	if len(cardFreeCount) == 0 {
 		klog.V(util.LogInfoLev).Infof("Preemptable(910A): no free cards on node<%s>", vcNode.Name)
 		return nil, false
@@ -271,7 +273,6 @@ func (tp *module910x8) Preemptable(preemptor *api.TaskInfo, preemptees []*api.Ta
 	return nil, false
 }
 
-
 // Reclaimable override: same strategy as preempt for 910A.
 func (tp *module910x8) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.TaskInfo,
 	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
@@ -294,7 +295,9 @@ func (tp *module910x8) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.Ta
 	klog.V(util.LogInfoLev).Infof("Reclaimable(910A): task<%s> req<%d> maxCardNPUNum<%d> on node<%s>, "+
 		"reclaimees<%d>", reclaimer.Name, reqNPUNum, maxCardNPUNum, vcNode.Name, len(reclaimees))
 
-	cardFreeCount := plugin.CalcCardFreeCount(vcNode, reclaimees, maxCardNPUNum)
+	availableChipIDs := util.ChangeTopToIntArray(vcNode.Annotation[tp.GetAnnoName(tp.ReqNPUName)],
+		tp.GetAnnoPreVal(tp.ReqNPUName))
+	cardFreeCount := plugin.CalcCardFreeCount(vcNode, reclaimees, maxCardNPUNum, availableChipIDs)
 	if len(cardFreeCount) == 0 {
 		klog.V(util.LogInfoLev).Infof("Reclaimable(910A): no free cards on node<%s>", vcNode.Name)
 		return nil, false
