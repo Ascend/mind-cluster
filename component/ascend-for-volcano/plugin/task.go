@@ -21,7 +21,6 @@ package plugin
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	v1 "k8s.io/api/core/v1"
@@ -262,69 +261,81 @@ func (sHandle *ScheduleHandler) updateChipCountAfterDeallocate(task *api.TaskInf
 
 func getAllocatedChipIDsFromPod(pod *v1.Pod, vcNode *NPUNode) []int {
 	chipIDs := make([]int, 0)
-	if pod == nil || vcNode == nil {
+	if pod == nil || vcNode == nil || pod.Annotations == nil {
 		return chipIDs
 	}
-	coreNameStr, ok := pod.Annotations[util.AscendNPUCore]
-	if !ok {
-		return chipIDs
+	annoPrefixToNpuPre := map[string]string{
+		util.NPU910CardName:  util.NPU910CardNamePre,
+		util.NPU310PCardName: util.NPU310PCardNamePre,
+		util.NPU310CardName:  util.NPU310CardNamePre,
+		util.Ascend910bName:  util.NPU910CardNamePre,
+		util.NPUCardName:     util.NPUCardNamePre,
 	}
-	if isPodWholeCardFromAscendCore(coreNameStr) {
-		physicsIDs, err := getCardPhysicsIDFromAscendCore(pod, true)
-		if err != nil {
-			return chipIDs
+	for annoKey, npuPre := range annoPrefixToNpuPre {
+		if topStr, ok := pod.Annotations[annoKey]; ok && topStr != "" {
+			chipIDs = util.ChangeTopToIntArray(topStr, npuPre)
+			if len(chipIDs) > 0 {
+				return chipIDs
+			}
 		}
-		return physicsIDs
 	}
-	physicsIDs, err := getCardPhysicsIDFromAscendCore(pod, false)
-	if err != nil {
-		vnpuIDStr := coreNameStr
-		if split := strings.Split(coreNameStr, "-"); len(split) > 0 {
-			vnpuIDStr = split[0]
-		}
-		id, atoiErr := strconv.Atoi(vnpuIDStr)
-		if atoiErr != nil {
-			return chipIDs
-		}
-		return []int{id}
-	}
-	return physicsIDs
+	return chipIDs
 }
 
-func canFreeChip(chip *VChip, preempteeSet map[string]struct{}) bool {
-	if len(chip.PodMap) == 0 {
-		return true
-	}
-	for podUID := range chip.PodMap {
-		if _, found := preempteeSet[podUID]; !found {
-			return false
-		}
-	}
-	return true
-}
-
-func CalcCardFreeCount(vcNode *NPUNode, preemptees []*api.TaskInfo, maxCardNPUNum int) map[int]int {
+// CalcCardFreeCount calculates free chip count per card after preempting the given preemptees.
+func CalcCardFreeCount(vcNode *NPUNode, preemptees []*api.TaskInfo, maxCardNPUNum int,
+	availableChipIDs []int) map[int]int {
+	klog.V(util.LogInfoLev).Infof("CalcCardFreeCount: preemptees=%v", preemptees)
 	if vcNode == nil || maxCardNPUNum <= 0 {
 		klog.V(util.LogInfoLev).Infof("CalcCardFreeCount: invalid args, vcNode nil=%v maxCardNPUNum=%d",
 			vcNode == nil, maxCardNPUNum)
 		return nil
 	}
-	preempteeSet := make(map[string]struct{}, len(preemptees))
-	for _, pe := range preemptees {
-		preempteeSet[string(pe.Pod.UID)] = struct{}{}
-	}
 	cardFreeCount := make(map[int]int)
-	for chipID, chip := range vcNode.Chips {
-		if _, unhealthy := vcNode.UnhealthyChipIds[chipID]; unhealthy {
+
+	// preemptee pod UID set
+	preempteeSet := make(map[string]struct{})
+	for _, pe := range preemptees {
+		if pe != nil && pe.Pod != nil {
+			preempteeSet[string(pe.Pod.UID)] = struct{}{}
+		}
+	}
+
+	// allSchedulableChips = idle chips (from annotation) + chips occupied by any task.
+	allSchedulableChips := make(map[int]struct{})
+	for _, cid := range availableChipIDs {
+		allSchedulableChips[cid] = struct{}{}
+	}
+
+	// collect chips occupied by non-preemptee pods (cannot be freed)
+	nonPreempteeChips := make(map[int]struct{})
+	for _, t := range vcNode.Tasks {
+		if t == nil || t.Pod == nil {
 			continue
 		}
-		if canFreeChip(chip, preempteeSet) {
-			cardID := chipID / maxCardNPUNum
-			cardFreeCount[cardID]++
+		_, isPE := preempteeSet[string(t.Pod.UID)]
+		for _, cid := range getAllocatedChipIDsFromPod(t.Pod, vcNode) {
+			allSchedulableChips[cid] = struct{}{}
+			if !isPE {
+				nonPreempteeChips[cid] = struct{}{}
+			}
 		}
 	}
+
+	// iterate the full schedulable chip set, exclude unhealthy and non-preemptee occupied
+	for cid := range allSchedulableChips {
+		if _, unhealthy := vcNode.UnhealthyChipIds[cid]; unhealthy {
+			continue
+		}
+		if _, occupied := nonPreempteeChips[cid]; occupied {
+			continue
+		}
+		cardID := cid / maxCardNPUNum
+		cardFreeCount[cardID]++
+	}
 	klog.V(util.LogInfoLev).Infof("CalcCardFreeCount: node<%s> maxCardNPUNum<%d> preemptees<%d> "+
-		"cardFreeCount=%v", vcNode.Name, maxCardNPUNum, len(preemptees), cardFreeCount)
+		"availableChipIDs=%v cardFreeCount=%v", vcNode.Name, maxCardNPUNum, len(preemptees),
+		availableChipIDs, cardFreeCount)
 	return cardFreeCount
 }
 

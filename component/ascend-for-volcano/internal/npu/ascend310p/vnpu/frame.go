@@ -50,6 +50,24 @@ func New(npuName string) base.AscendHandler {
 	return npuPlugin
 }
 
+// Preemptable vnpu does not support preemption.
+func (tp *virtual310NPU) Preemptable(preemptor *api.TaskInfo, preemptees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	klog.V(util.LogInfoLev).Infof("Preemptable(vnpu): vnpu policy does not support preemption, "+
+		"preemptor<%s> preemptees<%d> node<%s>, Reject",
+		preemptor.Name, len(preemptees), vcNode.Name)
+	return nil, false
+}
+
+// Reclaimable vnpu does not support reclaim.
+func (tp *virtual310NPU) Reclaimable(reclaimer *api.TaskInfo, reclaimees []*api.TaskInfo,
+	vcNode *plugin.NPUNode) ([]*api.TaskInfo, bool) {
+	klog.V(util.LogInfoLev).Infof("Reclaimable(vnpu): vnpu policy does not support reclaim, "+
+		"reclaimer<%s> reclaimees<%d> node<%s>, Reject",
+		reclaimer.Name, len(reclaimees), vcNode.Name)
+	return nil, false
+}
+
 // PreStartAction pre-processing actions for rescheduling
 func (tp *virtual310NPU) PreStartAction(ssn *framework.Session) error {
 	klog.V(util.LogDebugLev).Infof("Entering PreStartAction of %s", util.NPU310PCardName)
