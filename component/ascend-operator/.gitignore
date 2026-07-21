@@ -1,7 +1,6 @@
 # Binareis for programs and plugins
 bin
 testbin/*
-vendor/
 # Other temporary files
 .DS_Store
 
