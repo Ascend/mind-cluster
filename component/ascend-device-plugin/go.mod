@@ -10,6 +10,7 @@ require (
 	github.com/containerd/typeurl/v2 v2.2.0
 	github.com/docker/docker v25.0.16+incompatible
 	github.com/fsnotify/fsnotify v1.9.0
+	github.com/opencontainers/runtime-spec v1.1.0
 	github.com/smartystreets/goconvey v1.7.2
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/time v0.12.0
@@ -76,7 +77,6 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
-	github.com/opencontainers/runtime-spec v1.1.0 // indirect
 	github.com/opencontainers/selinux v1.13.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

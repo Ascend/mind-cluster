@@ -7,7 +7,7 @@ require (
 	clusterd v0.0.0-00010101000000-000000000000
 	github.com/agiledragon/gomonkey/v2 v2.12.0
 	github.com/golang/protobuf v1.5.4
-	github.com/google/uuid v1.3.1
+	github.com/google/uuid v1.4.0
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/time v0.3.0
