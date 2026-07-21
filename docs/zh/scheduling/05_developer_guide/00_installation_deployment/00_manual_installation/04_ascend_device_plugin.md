@@ -85,7 +85,7 @@
     回显示例如下：
 
     ```ColdFusion
-    ascend-k8sdeviceplugin               v26.0.0              29eec79eb693        About an hour ago   105MB
+    ascend-k8sdeviceplugin               v26.1.0              29eec79eb693        About an hour ago   105MB
     ```
 
     - 是，执行[步骤2](#zh-cn_topic_0000001497364849_li922154411117)。
@@ -173,7 +173,7 @@
     <pre codetype="yaml">
     ...
           containers:
-          - image: ascend-k8sdeviceplugin:v26.0.0
+          - image: ascend-k8sdeviceplugin:v26.1.0
             name: device-plugin-01
             resources:
               requests:
@@ -199,7 +199,7 @@
 
     <pre codetype="yaml">
           containers:
-          - image: ascend-k8sdeviceplugin:v26.0.0
+          - image: ascend-k8sdeviceplugin:v26.1.0
             name: device-plugin-01
             resources:
               requests:
