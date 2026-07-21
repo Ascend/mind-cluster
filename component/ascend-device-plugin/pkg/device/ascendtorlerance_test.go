@@ -21,11 +21,13 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"context"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/smartystreets/goconvey/convey"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
@@ -1069,5 +1071,23 @@ func TestGetGlobalDevFaultInfo(t *testing.T) {
 			convey.So(result.LogicId, convey.ShouldEqual, int32(0))
 			convey.So(err, convey.ShouldBeNil)
 		})
+	})
+}
+
+// TestSyncResetCMNilPodInformer verifies that SyncResetCM does not panic when
+// client.PodInformer is nil (e.g. InitPodInformer has not run yet). The
+// cm-based reset flow must still be set up.
+func TestSyncResetCMNilPodInformer(t *testing.T) {
+	convey.Convey("PodInformer is nil, SyncResetCM should not panic", t, func() {
+		hrt := newHotResetTools()
+		client := &kubeclient.ClientK8s{
+			Clientset: fake.NewSimpleClientset(),
+			Queue:     workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		}
+		// PodInformer intentionally left nil to simulate pre-init state.
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		convey.So(func() { hrt.SyncResetCM(ctx, client) }, convey.ShouldNotPanic)
+		convey.So(hrt.cmIndexer, convey.ShouldNotBeNil)
 	})
 }

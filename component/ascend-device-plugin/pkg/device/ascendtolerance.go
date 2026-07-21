@@ -134,10 +134,19 @@ func (hrt *HotResetTools) SyncResetCM(ctx context.Context, client *kubeclient.Cl
 	go cmInformer.Run(ctx.Done())
 
 	hrt.queue = client.Queue
-	hrt.podIndexer = client.PodInformer.GetIndexer()
 	hrt.cmIndexer = cmInformer.GetIndexer()
 
-	cache.WaitForCacheSync(ctx.Done(), cmInformer.HasSynced, client.PodInformer.HasSynced)
+	// client.Queue is shared with the pod informer's event handler (see initPodInformer).
+	// In both apiserver and kubelet modes PodInformer is non-nil and pod events are
+	// enqueued, so podIndexer must be set for handlePodEvent/getPodFromCache to work.
+	// The nil-guard exists only for safety in environments where InitPodInformer has
+	// not yet run.
+	syncs := []cache.InformerSynced{cmInformer.HasSynced}
+	if client.PodInformer != nil {
+		hrt.podIndexer = client.PodInformer.GetIndexer()
+		syncs = append(syncs, client.PodInformer.HasSynced)
+	}
+	cache.WaitForCacheSync(ctx.Done(), syncs...)
 
 	go hrt.run()
 
