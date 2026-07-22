@@ -366,6 +366,90 @@
         ...
         ```
 
+## K8s RDMA Shared Dev Plugin<a name="ZH-CN_TOPIC_0000002524312662"></a>
+
+请在任意节点执行以下步骤验证K8s RDMA Shared Dev Plugin的安装状态。
+
+**操作步骤<a name="section-k8s-rdma-check"></a>**
+
+1. 通过如下命令查看K8s集群中K8s RDMA Shared Dev Plugin的Pod，需要满足Pod的STATUS为Running，READY为1/1。如果集群中有多个计算节点安装了K8s RDMA Shared Dev Plugin，每一个节点都需要确认。
+
+    ```shell
+    kubectl get pods -n kube-system -o wide | grep rdma-shared-dp
+    ```
+
+   回显示例：
+
+    ```ColdFusion
+    rdma-shared-dp-ds-fd6t8                           1/1     Running   0          74s   192.0.2.x   ubuntu       <none>           <none>
+    ```
+
+   > [!NOTE]
+   > 如果Pod状态不为Running，可参考[组件Pod状态不为Running](https://gitcode.com/Ascend/mind-cluster/issues/342)章节进行处理。如果Pod状态为ContainerCreating，可参考[集群调度组件Pod处于ContainerCreating状态](https://gitcode.com/Ascend/mind-cluster/issues/343)章节进行处理。
+
+2. 通过如下命令查看K8s集群中K8s RDMA Shared Dev Plugin的日志。
+
+    ```shell
+    kubectl logs -n kube-system {K8s RDMA Shared Dev Plugin组件的Pod名字}
+    ```
+
+   回显示例如下，表示组件正常。
+
+    ```ColdFusion
+    root@ubuntu:~# kubectl logs -n kube-system rdma-shared-dp-ds-fd6t8
+    [INFO]     2026/07/15 10:30:25.123456 1       hwlog/api.go:108    k8s-rdma-shared-dp.log's logger init success
+    [INFO]     2026/07/15 10:30:25.456789 7       ub_device/server.go:157    huawei.com/ub_rdma device plugin endpoint started serving
+    [INFO]     2026/07/15 10:30:25.567890 7       ub_device/server.go:280    ListAndWatch called by kubelet for: huawei.com/ub_rdma
+    [INFO]     2026/07/15 10:30:25.567890 7       ub_device/server.go:284    Updating "huawei.com/ub_rdma" devices
+    [INFO]     2026/07/15 10:30:25.567890 7       ub_device/server.go:289    exposing "8" devices
+    ```
+
+3. 通过如下命令查看K8s中节点的RDMA资源信息。如果节点详情中的"Capacity"字段和"Allocatable"字段出现了RDMA共享设备的相关信息，表示K8s RDMA Shared Dev Plugin给K8s上报资源正常，组件运行正常。
+
+    ```shell
+    kubectl describe node {K8s中的节点名}
+    ```
+
+    > [!NOTE]
+    > 在K8s管理节点执行以下命令，可查询K8s中的节点名。
+    >
+    > ```shell
+    > kubectl get node
+    > ```
+    >
+    > 回显示例如下：
+    >
+    > ```ColdFusion
+    > NAME             STATUS   ROLES           AGE   VERSION
+    > compute-node-1   Ready    worker          23h   v1.28.0
+    > ```
+
+    回显示例如下，节点上RDMA设备个数请以实际为准：
+
+    ```ColdFusion
+    root@ubuntu:~# kubectl describe node compute-node-1
+    Name:               compute-node-1
+    Roles:              worker
+    Labels:             kubernetes.io/arch=amd64
+                        ...
+    CreationTimestamp:  Wed, 15 Jul 2026 10:30:00 +0800
+    Taints:             <none>
+    Unschedulable:      false
+    ...
+    Capacity:
+      cpu:                      64
+      ephemeral-storage:        479567536Ki
+      memory:                   256Gi
+      huawei.com/ub_rdma:           8  # K8s已感知到该节点总共有8个RDMA共享设备
+    ...
+    Allocatable:
+      cpu:                      64
+      ephemeral-storage:        441969440446
+      memory:                   256Gi
+      huawei.com/ub_rdma:           8  # K8s已感知到该节点可供分配的RDMA共享设备总个数为8
+    ...
+    ```
+
 ## Volcano<a name="ZH-CN_TOPIC_0000002511346325"></a>
 
 1. 通过如下命令查看K8s集群中Volcano的两个Pod，需要满足Pod的STATUS都为Running，READY都为1/1。
