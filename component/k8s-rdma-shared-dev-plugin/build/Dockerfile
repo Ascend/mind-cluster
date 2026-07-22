@@ -1,5 +1,7 @@
 FROM ubuntu:22.04
 
+RUN apt-get update && apt-get install -y libmnl-dev
+
 RUN usermod root -s /usr/sbin/nologin
 
 COPY k8s-rdma-shared-dp /usr/local/bin/
