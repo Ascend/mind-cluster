@@ -8,83 +8,83 @@
 
 1. 执行以下命令，查看配置文件是否修改成功。
 
-    - Docker（或K8s集成Docker场景）。
+   - Docker（或K8s集成Docker场景）。
 
-        ```shell
-        cat /etc/docker/daemon.json | grep ascend
-        ```
+       ```shell
+       cat /etc/docker/daemon.json | grep ascend
+       ```
 
-        回显示例如下，表示修改成功。
+     回显示例如下，表示修改成功。
 
-        ```ColdFusion
-        "default-runtime": "ascend",
-            "ascend": {
-                "path": "/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime",
-        ```
+       ```ColdFusion
+       "default-runtime": "ascend",
+           "ascend": {
+               "path": "/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime",
+       ```
 
-    - Containerd（或K8s集成Containerd场景）。
+   - Containerd（或K8s集成Containerd场景）。
 
-        ```shell
-        cat /etc/containerd/config.toml | grep ascend
-        ```
+       ```shell
+       cat /etc/containerd/config.toml | grep ascend
+       ```
 
-        回显示例如下，表示修改成功。
+     回显示例如下，表示修改成功。
 
-        ```ColdFusion
-        default_runtime_name = "ascend"
-            [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.ascend]
-                [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.ascend.options]
-                    BinaryName = "/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime"
-        ```
+       ```ColdFusion
+       default_runtime_name = "ascend"
+           [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.ascend]
+               [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.ascend.options]
+                   BinaryName = "/usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime"
+       ```
 
-    >[!NOTE]
-    >Docker或Containerd的配置文件路径如果与用户实际路径不符，请自行修改。
+   >[!NOTE]
+   >Docker或Containerd的配置文件路径如果与用户实际路径不符，请自行修改。
 
 2. 执行以下命令，查看是否存在基础镜像。
 
-    - Docker（或K8s集成Docker场景）。
+   - Docker（或K8s集成Docker场景）。
 
-        ```shell
-        docker images | grep ubuntu
-        ```
+       ```shell
+       docker images | grep ubuntu
+       ```
 
-        回显示例如下，表示存在基础镜像ubuntu:22.04。若不存在基础镜像，可以执行**docker pull ubuntu:22.04**命令，拉取基础镜像。
+     回显示例如下，表示存在基础镜像ubuntu:22.04。若不存在基础镜像，可以执行**docker pull ubuntu:22.04**命令，拉取基础镜像。
 
-        ```ColdFusion
-        ubuntu              22.04               6526a1858e5d        2 years ago         64.2MB
-        ```
+       ```ColdFusion
+       ubuntu              22.04               6526a1858e5d        2 years ago         64.2MB
+       ```
 
-    - Containerd（或K8s集成Containerd场景）。
+   - Containerd（或K8s集成Containerd场景）。
 
-        ```shell
-        ctr i ls | grep ubuntu
-        ```
+       ```shell
+       ctr i ls | grep ubuntu
+       ```
 
-        回显示例如下，表示存在基础镜像ubuntu:22.04。若不存在基础镜像，可以执行**ctr images pull docker.io/library/ubuntu:22.04**命令，拉取基础镜像。
+     回显示例如下，表示存在基础镜像ubuntu:22.04。若不存在基础镜像，可以执行**ctr images pull docker.io/library/ubuntu:22.04**命令，拉取基础镜像。
 
-        ```ColdFusion
-        docker.io/library/ubuntu:22.04    application/vnd.docker.distribution.manifest.v2+json sha256:555f8bd7441bb97303961a52ec7dec94d755f9f39077801de3e11c706c9ee7dc 68.5 MiB  linux/arm64 io.cri-containerd.image=managed
-        ```
+       ```ColdFusion
+       docker.io/library/ubuntu:22.04    application/vnd.docker.distribution.manifest.v2+json sha256:555f8bd7441bb97303961a52ec7dec94d755f9f39077801de3e11c706c9ee7dc 68.5 MiB  linux/arm64 io.cri-containerd.image=managed
+       ```
 
 3. 执行以下命令，使用Ascend Docker Runtime挂载物理芯片ID为0的芯片。
 
-    - Docker（或K8s集成Docker场景）。
+   - Docker（或K8s集成Docker场景）。
 
-        ```shell
-        docker run -it -e ASCEND_VISIBLE_DEVICES=0 ubuntu:22.04 /bin/bash
-        ```
+       ```shell
+       docker run -it -e ASCEND_VISIBLE_DEVICES=0 ubuntu:22.04 /bin/bash
+       ```
 
-    - Containerd（或K8s集成Containerd场景）。
+   - Containerd（或K8s集成Containerd场景）。
 
-        执行以下命令，挂载物理芯片。
+     执行以下命令，挂载物理芯片。
 
-        ```shell
-        ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 docker.io/library/ubuntu:22.04 containerID
-        ```
+       ```shell
+       ctr run --runc-binary /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime -t --env ASCEND_VISIBLE_DEVICES=0 docker.io/library/ubuntu:22.04 containerID
+       ```
 
-    >[!NOTE]
-    >- ASCEND\_VISIBLE\_DEVICES参数表示挂载的芯片ID。
-    >- containerID为用户自定义的容器ID。
+   >[!NOTE]
+   >- ASCEND\_VISIBLE\_DEVICES参数表示挂载的芯片ID。
+   >- containerID为用户自定义的容器ID。
 
 4. 执行以下命令，查询芯片是否挂载成功。
 
@@ -92,7 +92,7 @@
     ls /dev
     ```
 
-    若回显中存在**davinci0**字段，表示芯片挂载成功，安装Ascend Docker Runtime成功且组件功能正常。
+   若回显中存在**davinci0**字段，表示芯片挂载成功，安装Ascend Docker Runtime成功且组件功能正常。
 
 ## NPU Exporter<a name="ZH-CN_TOPIC_0000002511346363"></a>
 
@@ -108,7 +108,7 @@
     kubectl get pods -n npu-exporter -o wide | grep npu-exporter
     ```
 
-    回显示例：
+   回显示例：
 
     ```ColdFusion
     npu-exporter-4ln8w   1/1     Running   0          36m   192.0.2.x   ubuntu       <none>           <none>
@@ -120,7 +120,7 @@
     kubectl logs -n npu-exporter {npu-exporter组件的Pod名字}
     ```
 
-    回显示例：
+   回显示例：
 
     ```ColdFusion
     [INFO]     2023/12/08 07:38:56.551173 1       hwlog/api.go:108    npu-exporter.log's logger init success
@@ -153,7 +153,7 @@
     systemctl status npu-exporter
     ```
 
-    回显示例：
+   回显示例：
 
     ```ColdFusion
     root@ubuntu:~# systemctl status npu-exporter
@@ -173,7 +173,7 @@
     cat /var/log/mindx-dl/npu-exporter/npu-exporter.log
     ```
 
-    回显示例：
+   回显示例：
 
     ```ColdFusion
     [INFO]     2023/12/08 07:38:56.551173 1       hwlog/api.go:108    npu-exporter.log's logger init success
@@ -208,7 +208,7 @@
     kubectl get pods -n kube-system -o wide | grep device-plugin
     ```
 
-    回显示例：
+   回显示例：
 
     ```ColdFusion
     ascend-device-plugin-daemonset-910-85p9v   1/1     Running   0          19h     192.168.185.251   ubuntu       <none>           <none>
@@ -220,7 +220,7 @@
     kubectl logs -n kube-system {Ascend Device Plugin组件的Pod名字}
     ```
 
-    回显示例如下，表示组件正常。
+   回显示例如下，表示组件正常。
 
     ```ColdFusion
     root@ubuntu:~# kubectl logs -n kube-system ascend-device-plugin-daemonset-910-85p9v
@@ -247,124 +247,208 @@
     kubectl describe node {K8s中的节点名}
     ```
 
-    >[!NOTE]
-    >
-    >在K8s管理节点执行以下命令，可查询K8s中的节点名。
-    >
-    >```shell
+   >[!NOTE]
+   >
+   >在K8s管理节点执行以下命令，可查询K8s中的节点名。
+   >
+   >```shell
     >kubectl get node
     >```
-    >
-    >回显示例如下：
-    >
-    >```ColdFusion
+   >
+   >回显示例如下：
+   >
+   >```ColdFusion
     >NAME       STATUS   ROLES           AGE   VERSION
     >ubuntu     Ready    worker          23h   v1.17.3
     >```
 
-    - 以Atlas 800 训练服务器为例，回显示例如下：
+   - 以Atlas 800 训练服务器为例，回显示例如下：
 
-        ```ColdFusion
-        root@ubuntu:~# kubectl describe node ubuntu
-        Name:               ubuntu
-        Roles:              worker
-        Labels:             accelerator=huawei-Ascend910
-                            beta.kubernetes.io/arch=amd64
-        ...
-        CreationTimestamp:  Wed, 22 Dec 2021 20:10:04 +0800
-        Taints:             <none>
-        Unschedulable:      false
-        ...
-        Capacity:
-          cpu:                      72
-          ephemeral-storage:        479567536Ki
-          huawei.com/Ascend910:     8# K8s已感知到该节点总共有8个NPU
-        ...
-        Allocatable:
-          cpu:                      72
-          ephemeral-storage:        441969440446
-          huawei.com/Ascend910:     8  # K8s已感知到该节点可供分配的NPU总个数为8
-        ...
-        ```
+       ```ColdFusion
+       root@ubuntu:~# kubectl describe node ubuntu
+       Name:               ubuntu
+       Roles:              worker
+       Labels:             accelerator=huawei-Ascend910
+                           beta.kubernetes.io/arch=amd64
+       ...
+       CreationTimestamp:  Wed, 22 Dec 2021 20:10:04 +0800
+       Taints:             <none>
+       Unschedulable:      false
+       ...
+       Capacity:
+         cpu:                      72
+         ephemeral-storage:        479567536Ki
+         huawei.com/Ascend910:     8# K8s已感知到该节点总共有8个NPU
+       ...
+       Allocatable:
+         cpu:                      72
+         ephemeral-storage:        441969440446
+         huawei.com/Ascend910:     8  # K8s已感知到该节点可供分配的NPU总个数为8
+       ...
+       ```
 
-    - 以服务器（插Atlas 300I 推理卡）为例，回显示例如下，节点上芯片个数请以实际为准。
+   - 以服务器（插Atlas 300I 推理卡）为例，回显示例如下，节点上芯片个数请以实际为准。
 
-        ```ColdFusion
-        root@ubuntu:~# kubectl describe node ubuntu
-        Name:               ubuntu
-        Roles:              worker
-        Labels:             accelerator=huawei-Ascend310
-                            beta.kubernetes.io/arch=amd64
-        ...
-        CreationTimestamp:  Wed, 22 Dec 2021 20:10:04 +0800
-        Taints:             <none>
-        Unschedulable:      false
-        ...
-        Capacity:
-          cpu:                       72
-          ephemeral-storage:         163760Mi
-          huawei.com/Ascend310:      4
-        ...
-        Allocatable:
-          cpu:                       72
-          ephemeral-storage:         154543324929
-          huawei.com/Ascend310:      4
-        ...
-        ```
+       ```ColdFusion
+       root@ubuntu:~# kubectl describe node ubuntu
+       Name:               ubuntu
+       Roles:              worker
+       Labels:             accelerator=huawei-Ascend310
+                           beta.kubernetes.io/arch=amd64
+       ...
+       CreationTimestamp:  Wed, 22 Dec 2021 20:10:04 +0800
+       Taints:             <none>
+       Unschedulable:      false
+       ...
+       Capacity:
+         cpu:                       72
+         ephemeral-storage:         163760Mi
+         huawei.com/Ascend310:      4
+       ...
+       Allocatable:
+         cpu:                       72
+         ephemeral-storage:         154543324929
+         huawei.com/Ascend310:      4
+       ...
+       ```
 
-    - 以服务器（插Atlas 300I Pro 推理卡）为例。非混插模式，节点包含Atlas 推理系列产品，回显示例如下，节点上芯片个数请以实际为准。
+   - 以服务器（插Atlas 300I Pro 推理卡）为例。非混插模式，节点包含Atlas 推理系列产品，回显示例如下，节点上芯片个数请以实际为准。
 
-        ```ColdFusion
-        root@ubuntu:~# kubectl describe node ubuntu
-        Name:               ubuntu
-        Roles:              worker
-        Labels:             accelerator=huawei-Ascend310
-                            beta.kubernetes.io/arch=amd64
-        ...
-        CreationTimestamp:  Wed, 22 Dec 2021 20:10:04 +0800
-        Taints:             <none>
-        Unschedulable:      false
-        ...
-        Capacity:
-          cpu:                      96
-          ephemeral-storage:        95596964Ki
-          huawei.com/Ascend310P:    3
-        ...
-        Allocatable:
-          cpu:                      96
-          ephemeral-storage:        88102161877
-          huawei.com/Ascend310P:    3
-        ...
-        ```
+       ```ColdFusion
+       root@ubuntu:~# kubectl describe node ubuntu
+       Name:               ubuntu
+       Roles:              worker
+       Labels:             accelerator=huawei-Ascend310
+                           beta.kubernetes.io/arch=amd64
+       ...
+       CreationTimestamp:  Wed, 22 Dec 2021 20:10:04 +0800
+       Taints:             <none>
+       Unschedulable:      false
+       ...
+       Capacity:
+         cpu:                      96
+         ephemeral-storage:        95596964Ki
+         huawei.com/Ascend310P:    3
+       ...
+       Allocatable:
+         cpu:                      96
+         ephemeral-storage:        88102161877
+         huawei.com/Ascend310P:    3
+       ...
+       ```
 
-    - 以服务器（插Atlas 300I Pro 推理卡）为例。混插模式，节点包含Atlas 推理系列产品，回显示例如下，节点上芯片个数请以实际为准。
+   - 以服务器（插Atlas 300I Pro 推理卡）为例。混插模式，节点包含Atlas 推理系列产品，回显示例如下，节点上芯片个数请以实际为准。
 
-        ```ColdFusion
-        root@ubuntu:~# kubectl describe node ubuntu
-        Name:               ubuntu
-        Roles:              worker
-        Labels:             accelerator=huawei-Ascend310
-                            beta.kubernetes.io/arch=amd64
-        ...
-        CreationTimestamp:  Wed, 22 Dec 2021 20:10:04 +0800
-        Taints:             <none>
-        Unschedulable:      false
-        ...
-        Capacity:
-          cpu:                      96
-          ephemeral-storage:        95596964Ki
-          huawei.com/Ascend310P-IPro:    1
-          huawei.com/Ascend310P-V:       1
-          huawei.com/Ascend310P-VPro:    1
-        ...
-        Allocatable:
-          cpu:                      96
-          ephemeral-storage:        88102161877
-          huawei.com/Ascend310P-IPro:    1
-          huawei.com/Ascend310P-V:       1
-          huawei.com/Ascend310P-VPro:    1
-        ...
-        ```
+       ```ColdFusion
+       root@ubuntu:~# kubectl describe node ubuntu
+       Name:               ubuntu
+       Roles:              worker
+       Labels:             accelerator=huawei-Ascend310
+                           beta.kubernetes.io/arch=amd64
+       ...
+       CreationTimestamp:  Wed, 22 Dec 2021 20:10:04 +0800
+       Taints:             <none>
+       Unschedulable:      false
+       ...
+       Capacity:
+         cpu:                      96
+         ephemeral-storage:        95596964Ki
+         huawei.com/Ascend310P-IPro:    1
+         huawei.com/Ascend310P-V:       1
+         huawei.com/Ascend310P-VPro:    1
+       ...
+       Allocatable:
+         cpu:                      96
+         ephemeral-storage:        88102161877
+         huawei.com/Ascend310P-IPro:    1
+         huawei.com/Ascend310P-V:       1
+         huawei.com/Ascend310P-VPro:    1
+       ...
+       ```
+
+## K8s RDMA Shared Dev Plugin<a name="ZH-CN_TOPIC_0000002524312662"></a>
+
+请在任意节点执行以下步骤验证K8s RDMA Shared Dev Plugin的安装状态。
+
+**操作步骤<a name="section-k8s-rdma-check"></a>**
+
+1. 通过如下命令查看K8s集群中K8s RDMA Shared Dev Plugin的Pod，需要满足Pod的STATUS为Running，READY为1/1。如果集群中有多个计算节点安装了K8s RDMA Shared Dev Plugin，每一个节点都需要确认。
+
+    ```shell
+    kubectl get pods -n kube-system -o wide | grep rdma-shared-dp
+    ```
+
+   回显示例：
+
+    ```ColdFusion
+    rdma-shared-dp-ds-fd6t8                           1/1     Running   0          74s   192.0.2.x   ubuntu       <none>           <none>
+    ```
+
+   > [!NOTE]
+   > 如果Pod状态不为Running，可参考[组件Pod状态不为Running](https://gitcode.com/Ascend/mind-cluster/issues/342)章节进行处理。如果Pod状态为ContainerCreating，可参考[集群调度组件Pod处于ContainerCreating状态](https://gitcode.com/Ascend/mind-cluster/issues/343)章节进行处理。
+
+2. 通过如下命令查看K8s集群中K8s RDMA Shared Dev Plugin的日志。
+
+    ```shell
+    kubectl logs -n kube-system {K8s RDMA Shared Dev Plugin组件的Pod名字}
+    ```
+
+   回显示例如下，表示组件正常。
+
+    ```ColdFusion
+    root@ubuntu:~# kubectl logs -n kube-system rdma-shared-dp-ds-fd6t8
+    [INFO]     2026/07/15 10:30:25.123456 1       hwlog/api.go:108    k8s-rdma-shared-dp.log's logger init success
+    [INFO]     2026/07/15 10:30:25.456789 7       ub_device/server.go:157    huawei.com/ub_rdma device plugin endpoint started serving
+    [INFO]     2026/07/15 10:30:25.567890 7       ub_device/server.go:280    ListAndWatch called by kubelet for: huawei.com/ub_rdma
+    [INFO]     2026/07/15 10:30:25.567890 7       ub_device/server.go:284    Updating "huawei.com/ub_rdma" devices
+    [INFO]     2026/07/15 10:30:25.567890 7       ub_device/server.go:289    exposing "8" devices
+    ```
+
+3. 通过如下命令查看K8s中节点的RDMA资源信息。如果节点详情中的"Capacity"字段和"Allocatable"字段出现了RDMA共享设备的相关信息，表示K8s RDMA Shared Dev Plugin给K8s上报资源正常，组件运行正常。
+
+    ```shell
+    kubectl describe node {K8s中的节点名}
+    ```
+
+   > [!NOTE]
+   > 在K8s管理节点执行以下命令，可查询K8s中的节点名。
+   >
+   > ```shell
+    > kubectl get node
+    > ```
+   >
+   > 回显示例如下：
+   >
+   > ```ColdFusion
+    > NAME             STATUS   ROLES           AGE   VERSION
+    > compute-node-1   Ready    worker          23h   v1.28.0
+    > ```
+
+   回显示例如下，节点上RDMA设备个数请以实际为准：
+
+    ```ColdFusion
+    root@ubuntu:~# kubectl describe node compute-node-1
+    Name:               compute-node-1
+    Roles:              worker
+    Labels:             kubernetes.io/arch=amd64
+                        ...
+    CreationTimestamp:  Wed, 15 Jul 2026 10:30:00 +0800
+    Taints:             <none>
+    Unschedulable:      false
+    ...
+    Capacity:
+      cpu:                      64
+      ephemeral-storage:        479567536Ki
+      memory:                   256Gi
+      huawei.com/ub_rdma:           8  # K8s已感知到该节点总共有8个RDMA共享设备
+    ...
+    Allocatable:
+      cpu:                      64
+      ephemeral-storage:        441969440446
+      memory:                   256Gi
+      huawei.com/ub_rdma:           8  # K8s已感知到该节点可供分配的RDMA共享设备总个数为8
+    ...
+    ```
 
 ## Volcano<a name="ZH-CN_TOPIC_0000002511346325"></a>
 
@@ -374,7 +458,7 @@
     kubectl get pods -n volcano-system -o wide | grep volcano
     ```
 
-    回显示例：
+   回显示例：
 
     ```ColdFusion
     volcano-controllers-758b6d8bdd-b7g89   1/1     Running   2          166m   192.168.102.69   ubuntu       <none>           <none>
@@ -382,48 +466,48 @@
     ```
 
 2. 登录Volcano Pod运行的节点，使用如下命令查看Volcano组件日志。
-    - 查看volcano-controllers的日志。
+   - 查看volcano-controllers的日志。
 
-        ```shell
-        cat /var/log/mindx-dl/volcano-controller/volcano-controller.log
-        ```
+       ```shell
+       cat /var/log/mindx-dl/volcano-controller/volcano-controller.log
+       ```
 
-        回显示例如下，表示组件正常运行。
+     回显示例如下，表示组件正常运行。
 
-        ```ColdFusion
-        Log file created at: 2022/10/14 11:22:32
-        Running on machine: volcano-controllers-758b6d8bdd-wc49r
-        Binary: Built with gc go1.17.8-htrunk4 for linux/arm64
-        Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
-        I1014 11:22:32.070656       1 garbagecollector.go:91] Starting garbage collector
-        I1014 11:22:32.072772       1 queue_controller.go:171] Starting queue controller.
-        I1014 11:22:32.652887       1 queue_controller.go:238] Begin execute SyncQueue action for queue default, current status
-        I1014 11:22:32.653026       1 queue_controller_action.go:36] Begin to sync queue default.
-        I1014 11:22:32.756216       1 queue_controller_action.go:82] End sync queue default.
-        I1014 11:22:32.756254       1 queue_controller.go:220] Finished syncing queue default (103.399375ms).
-        I1014 11:22:32.972001       1 pg_controller.go:109] PodgroupController is running ......
-        I1014 11:22:32.972396       1 job_controller.go:252] JobController is running ......
-        I1014 11:22:32.972423       1 job_controller.go:256] worker 1 start ......
-        I1014 11:22:32.972426       1 job_controller.go:256] worker 0 start ......
-        I1014 11:22:32.972426       1 job_controller.go:256] worker 2 start ......
-        ...
-        ```
+       ```ColdFusion
+       Log file created at: 2022/10/14 11:22:32
+       Running on machine: volcano-controllers-758b6d8bdd-wc49r
+       Binary: Built with gc go1.17.8-htrunk4 for linux/arm64
+       Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+       I1014 11:22:32.070656       1 garbagecollector.go:91] Starting garbage collector
+       I1014 11:22:32.072772       1 queue_controller.go:171] Starting queue controller.
+       I1014 11:22:32.652887       1 queue_controller.go:238] Begin execute SyncQueue action for queue default, current status
+       I1014 11:22:32.653026       1 queue_controller_action.go:36] Begin to sync queue default.
+       I1014 11:22:32.756216       1 queue_controller_action.go:82] End sync queue default.
+       I1014 11:22:32.756254       1 queue_controller.go:220] Finished syncing queue default (103.399375ms).
+       I1014 11:22:32.972001       1 pg_controller.go:109] PodgroupController is running ......
+       I1014 11:22:32.972396       1 job_controller.go:252] JobController is running ......
+       I1014 11:22:32.972423       1 job_controller.go:256] worker 1 start ......
+       I1014 11:22:32.972426       1 job_controller.go:256] worker 0 start ......
+       I1014 11:22:32.972426       1 job_controller.go:256] worker 2 start ......
+       ...
+       ```
 
-    - 查看volcano-scheduler的日志。
+   - 查看volcano-scheduler的日志。
 
-        ```shell
-        cat /var/log/mindx-dl/volcano-scheduler/volcano-scheduler.log
-        ```
+       ```shell
+       cat /var/log/mindx-dl/volcano-scheduler/volcano-scheduler.log
+       ```
 
-        回显示例如下，表示组件运行正常。
+     回显示例如下，表示组件运行正常。
 
-        ```ColdFusion
-        Log file created at: 2022/10/14 11:22:32
-        Running on machine: volcano-scheduler-86775f88f-6dtqf
-        Binary: Built with gc go1.17.8-htrunk4 for linux/arm64
-        Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
-        ...
-        ```
+       ```ColdFusion
+       Log file created at: 2022/10/14 11:22:32
+       Running on machine: volcano-scheduler-86775f88f-6dtqf
+       Binary: Built with gc go1.17.8-htrunk4 for linux/arm64
+       Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+       ...
+       ```
 
 ## ClusterD<a name="ZH-CN_TOPIC_0000002479386380"></a>
 
@@ -435,7 +519,7 @@
     kubectl get pods -n mindx-dl -o wide | grep clusterd
     ```
 
-    回显示例：
+   回显示例：
 
     ```ColdFusion
     clusterd-7844cb867d-fwcj7   1/1     Running   0          2m14s   <none>   node133   <none>           <none>
@@ -447,7 +531,7 @@
     kubectl logs -f -n mindx-dl {ClusterD组件的Pod名字}
     ```
 
-    回显示例如下，表示组件正常运行。
+   回显示例如下，表示组件正常运行。
 
     ```ColdFusion
     [INFO]     2024/07/24 13:58:30.602051 CST 1       hwlog@v0.10.12/api.go:105    cluster-info.log's logger init success
@@ -468,7 +552,7 @@
     kubectl get pods -n mindx-dl -o wide | grep ascend-operator
     ```
 
-    回显示例：
+   回显示例：
 
     ```ColdFusion
     ascend-operator-manager-b59774f7-8l5gn         1/1     Running   0          6m52s   192.168.102.67   ubuntu       <none>           <none>
@@ -480,7 +564,7 @@
     kubectl logs -n mindx-dl {Ascend Operator组件的Pod名字}
     ```
 
-    回显示例如下，表示组件正常运行。
+   回显示例如下，表示组件正常运行。
 
     ```ColdFusion
     root@ubuntu:~# kubectl logs -n mindx-dl ascend-operator-manager-b59774f7-8l5gn
@@ -500,7 +584,7 @@
     kubectl get pods -n mindx-dl -o wide | grep infer-operator
     ```
 
-    回显示例：
+   回显示例：
 
     ```ColdFusion
     infer-operator-manager-6bf95f6956-sdkbd         1/1     Running   0          6m52s   192.168.2.166   ubuntu       <none>           <none>
@@ -512,7 +596,7 @@
     kubectl logs -n mindx-dl {Infer Operator组件的Pod名字}
     ```
 
-    回显示例如下，表示组件正常运行。
+   回显示例如下，表示组件正常运行。
 
     ```ColdFusion
     root@ubuntu:~# kubectl logs -n mindx-dl infer-operator-manager-6bf95f6956-sdkbd
@@ -530,7 +614,7 @@
     kubectl get pods -n mindx-dl -o wide | grep noded
     ```
 
-    回显示例：
+   回显示例：
 
     ```ColdFusion
     noded-bnmwt                        1/1     Running   10         40d    192.168.41.28     ubuntu       <none>           <none>
@@ -542,7 +626,7 @@
     kubectl logs -n mindx-dl {NodeD组件的Pod名字}
     ```
 
-    回显示例如下，表示组件正常运行。
+   回显示例如下，表示组件正常运行。
 
     ```ColdFusion
     [INFO] 2025/05/25 15:24:19.897280 1 hwlog/api.go:108 noded.log's logger init success
@@ -578,7 +662,7 @@
     kubectl get pods -n mindx-dl -o wide | grep resilience-controller
     ```
 
-    回显示例：
+   回显示例：
 
     ```ColdFusion
     resilience-controller-76f4476bb5-fs986         1/1     Running   0          6m52s   192.168.102.67   ubuntu       <none>           <none>
@@ -590,7 +674,7 @@
     kubectl logs -n mindx-dl {Resilience组件的Pod名字}
     ```
 
-    回显示例如下，表示组件正常运行。
+   回显示例如下，表示组件正常运行。
 
     ```ColdFusion
     root@ubuntu:~# kubectl logs -n mindx-dl resilience-controller-76f4476bb5-fs986
@@ -614,7 +698,7 @@
     systemctl status container-manager.service
     ```
 
-    回显示例：
+   回显示例：
 
     ```ColdFusion
     ● container-manager.service - Ascend container manager
@@ -629,10 +713,10 @@
     ...
     ```
 
-    >[!NOTE]
-    >若回显中出现类似如下信息，可忽略，不影响实际功能，可能原因是未配置RoCE网卡IP地址和子网掩码。若不想打印该信息，可参见《Atlas A2 中心推理和训练硬件 HCCN Tool 接口参考》的“[配置功能\>配置RoCE网卡IP地址和子网掩码](https://support.huawei.com/enterprise/zh/doc/EDOC1100568362/83923a94)”章节。
-    >
-    >```ColdFusion
+   >[!NOTE]
+   >若回显中出现类似如下信息，可忽略，不影响实际功能，可能原因是未配置RoCE网卡IP地址和子网掩码。若不想打印该信息，可参见《Atlas A2 中心推理和训练硬件 HCCN Tool 接口参考》的“[配置功能\>配置RoCE网卡IP地址和子网掩码](https://support.huawei.com/enterprise/zh/doc/EDOC1100568362/83923a94)”章节。
+   >
+   >```ColdFusion
     >[dsmi_common_interface.c:1017][ascend][curpid:244135,244135][drv][dmp][dsmi_get_device_ip_address]devid 0 dsmi_cmd_get_device_ip_address return 1 error!
     >```
 
@@ -642,7 +726,7 @@
     cat /var/log/mindx-dl/container-manager/container-manager.log
     ```
 
-    回显以Atlas 800I A3 超节点服务器为例：
+   回显以Atlas 800I A3 超节点服务器为例：
 
     ```ColdFusion
     [INFO]     2025/11/25 22:46:59.007163 1       hwlog/api.go:108    container-manager.log's logger init success
@@ -654,7 +738,7 @@
     ...
     ```
 
-    如果出现如下打印信息，表示组件运行正常。
+   如果出现如下打印信息，表示组件运行正常。
 
     ```ColdFusion
     ...
