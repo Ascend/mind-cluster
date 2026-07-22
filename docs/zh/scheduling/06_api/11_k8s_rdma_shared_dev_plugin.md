@@ -36,7 +36,7 @@ livenessProbe:
    failureThreshold: 3
 ```
 
-> 探针启动参数说明详见[K8s RDMA Shared Dev Plugin 启动参数](../05_developer_guide/00_installation_deployment/00_manual_installation/12_k8s_rdma_shared_dev_plugin.md#参数说明)。
+探针启动参数说明详见[K8s RDMA Shared Dev Plugin 启动参数](../05_developer_guide/00_installation_deployment/00_manual_installation/12_k8s_rdma_shared_dev_plugin.md#参数说明)。
 
 ## 配置文件说明<a name="ZH-CN_TOPIC_config_k8s_rdma_shared_dev_plugin"></a>
 

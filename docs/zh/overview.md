@@ -3,6 +3,7 @@
 MindCluster（AI集群系统软件）是支持NPU（昇腾AI处理器）构建的深度学习系统组件，专为训练和推理任务提供集群级解决方案。深度学习平台开发厂商可以减少底层资源调度相关软件开发工作量，快速帮助合作伙伴基于MindCluster开发深度学习平台。
 
 **图 1** MindCluster堆栈图<a name="fig163081328205916"></a>
+
 ![](figures/scheduling/MindCluster堆栈图.png "MindCluster堆栈图")
 
 >[!NOTE]

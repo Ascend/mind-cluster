@@ -30,7 +30,7 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[资源监测](../04_usage/01_resource_monitoring/00_before_you_start.md)章节进行操作。
 
 ## 虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855"></a>
@@ -61,7 +61,7 @@ NPU Exporter
 
 **使用说明<a name="section1350915844811"></a>**
 
-- 安装请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+- 安装请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 - 特性使用指导请参见[基于HDK的虚拟化实例](../04_usage/02_virtual_instance/00_virtual_instance_with_hdk/01_description.md)章节进行操作。
 
 ### 基于vCANN-RT的虚拟化实例<a name="ZH-CN_TOPIC_0000002511346855vcann"></a>
@@ -80,7 +80,7 @@ NPU Exporter
 
 **使用说明<a name="section1350915844811vcann"></a>**
 
-1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[基于vCANN-RT的虚拟化实例](../04_usage/02_virtual_instance/01_virtual_instance_with_vcann_rt/00_description.md)章节进行操作。
 
 ## 基础调度<a name="ZH-CN_TOPIC_0000002511346871"></a>
@@ -107,9 +107,9 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[整卡调度](../04_usage/03_basic_scheduling/03_full_npu_scheduling.md)章节进行操作。
-3. Preempt和Reclaim Action的使用样例请参见[任务交替运行最佳实践](../04_usage/10_task_alternation/00_before_you_start.md)章节进行操作。
+3. Preempt和Reclaim Action的使用样例请参见[潮汐调度最佳实践](../04_usage/10_tidal_scheduling/00_before_you_start.md)章节进行操作。
 
 ### 多级调度<a name="ZH-CN_TOPIC_0000002511346873"></a>
 
@@ -128,7 +128,7 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[多级调度](../04_usage/03_basic_scheduling/04_multi_level_scheduling.md)章节进行操作。
 
 ### 推理卡故障恢复<a name="ZH-CN_TOPIC_0000002479226952"></a>
@@ -147,7 +147,7 @@ NPU Exporter
 
 **使用说明<a name="section74221327111220"></a>**
 
-- 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+- 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 - 特性使用指导请参见[推理卡故障恢复](../04_usage/03_basic_scheduling/06_recovery_of_inference_card_faults.md)章节进行操作。
 
 ### 推理卡故障重调度<a name="ZH-CN_TOPIC_0000002511346875"></a>
@@ -168,7 +168,7 @@ NPU Exporter
 
 **使用说明<a name="section18894171918127"></a>**
 
-- 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+- 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 - 特性使用指导请参见[推理卡故障重调度](../04_usage/03_basic_scheduling/05_rescheduling_upon_inference_card_faults.md)章节进行操作。
 
 ## 断点续训<a name="ZH-CN_TOPIC_0000002511346867"></a>
@@ -198,7 +198,7 @@ NPU Exporter
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[断点续训](../04_usage/04_resumable_training/00_feature_description.md)章节进行操作。
 3. TaskD需安装在容器内，详细请参见[制作镜像](../04_usage/04_resumable_training/04_using_resumable_training_on_the_cli.md#制作镜像)章节。
 4. MindIO ACP的详细介绍及安装步骤请参见[Checkpoint保存与加载优化](../07_references/01_optimizing_saving_and_loading_checkpoints/01_product_description.md)章节。
@@ -240,7 +240,7 @@ Container Manager
 
 **使用说明<a name="section1245612501584"></a>**
 
-1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. 特性使用指导请参见[容器快照部署及使用](../04_usage/09_infer_operator_best_practice/06_container_snapshot_usage.md)章节进行操作。
 
 ## 推理高可用<a name="ZH-CN_TOPIC_0000002511346885"></a>
@@ -249,9 +249,9 @@ Container Manager
 
 推理高可用模块提供推理任务的最佳实践指导，涵盖多种推理引擎的部署、重调度、弹性扩缩容等场景，支持用户在生产环境中实现推理服务的高可用部署。主要功能包括：
 
-- **推理引擎支持**：支持vLLM、MindIE Motor、SGLang等多种推理引擎的最佳实践
-- **调度能力**：支持推理任务的优先级调度配置和交换机亲和性配置
-- **故障处理**：支持推理任务的故障重调度、弹性扩缩容和故障隔离
+- **推理引擎支持**：支持vLLM、MindIE Motor、SGLang等多种推理引擎的最佳实践。
+- **调度能力**：支持推理任务的优先级调度配置和交换机亲和性配置。
+- **故障处理**：支持推理任务的故障重调度、弹性扩缩容和故障隔离。
 
 **所需组件<a name="section33655185785111"></a>**
 
@@ -264,7 +264,7 @@ Container Manager
 
 **使用说明<a name="section3245612501586"></a>**
 
-1. 安装组件请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+1. 安装组件请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 2. Infer Operator推理任务最佳实践请参见[Infer Operator推理任务最佳实践](../04_usage/09_infer_operator_best_practice/00_before_you_start.md)章节进行操作。
 3. MindIE Motor推理任务最佳实践请参见[MindIE Motor推理任务最佳实践](../04_usage/06_mindie_motor_best_practice/00_before_you_start.md)章节进行操作。
 4. SGLang推理任务最佳实践请参见[SGLang推理任务最佳实践](../04_usage/07_sglang_best_practice/00_before_you_start.md)章节进行操作。

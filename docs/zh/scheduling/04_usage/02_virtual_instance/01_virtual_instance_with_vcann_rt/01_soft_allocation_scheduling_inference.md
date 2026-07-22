@@ -2,7 +2,7 @@
 
 ## 使用前必读<a name="ZH-CN_TOPIC_0000002511347125"></a>
 
-### 使用软切分NPU说明<a name="ZH-CN_TOPIC_00000025113463450356vcann"></a>
+### 使用说明<a name="ZH-CN_TOPIC_00000025113463450356vcann"></a>
 
 在Kubernetes场景下，当用户需要使用NPU资源时，需要结合集群调度组件Ascend Device Plugin和Volcano的使用，使Kubernetes可以管理并调度昇腾处理器资源。昇腾软切分虚拟化实例特性需要的集群调度组件包括Ascend Device Plugin、Volcano、Ascend Docker Runtime、Ascend Operator和ClusterD。支持的产品型号请参见[特性说明](./00_description.md)中的“表1 产品支持情况说明”。
 
@@ -71,13 +71,15 @@
 
 ### 前提条件
 
-使用软切分调度特性，需要确保已经安装如下组件；若没有安装，可以参考[安装部署](../../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+使用软切分调度特性，需要确保已经安装如下组件；若没有安装，可以参考[安装部署](../../../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 
 - Volcano
 - Ascend Device Plugin
 - Ascend Docker Runtime
 - Ascend Operator
 - ClusterD
+
+关键操作如下：
 
 1. 需要在节点上增加标签huawei.com/scheduler.chip1softsharedev.enable=true，表示该节点支持软切分功能。
 
@@ -88,7 +90,7 @@
     在软切分虚拟化功能和非软切分虚拟化功能混合部署场景下，若节点不支持软切分虚拟化功能，则需要为节点增加标签huawei.com/scheduler.chip1softsharedev.enable=false。
 
 2. 获取"Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run"，安装容器引擎插件。
-3. 参见[安装部署](../../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节，完成各组件的安装。
+3. 参见[安装部署](../../../03_installation_guide/02_installation/00_helm_installation.md)章节，完成各组件的安装。
 
     虚拟化实例涉及修改相关参数的集群调度组件为Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
 
@@ -206,13 +208,15 @@
 通过命令行使用软切分调度特性流程可以参见[图1](#fig24252498666vcann)。
 
 **图 1**  使用流程<a name="fig24252498666vcann"></a>
+
 ![](../../../../figures/scheduling/basic_scheduling_001.png "basic_scheduling_001")
 
 ## 实现原理
 
-以Ascend Job为例，其原理图如[图1](#fig23698010123)所示。
+以Ascend Job为例，其原理图如[图2](#fig23698010123)所示。
 
-**图 1**  acjob任务调度原理图<a name="fig23698010123"></a>
+**图 2**  acjob任务调度原理图<a name="fig23698010123"></a>
+
 ![](../../../../figures/scheduling/basic_scheduling_002.PNG "basic_scheduling_002")
 
 各步骤说明如下：
@@ -248,7 +252,7 @@ npu-smi set -t device-share -i ${id} -d ${value}
 npu-smi info -t device-share -i ${id}
 ```
 
-**表 4 参数说明**
+**表 3 参数说明**
 
 |参数|说明|
 |---|---|
@@ -270,7 +274,7 @@ npu-smi info -t device-share -i ${id}
 npu-smi set -t device-share-cfg-recover -d ${value}
 ```
 
-**表 5 参数说明**
+**表 4 参数说明**
 
 |参数|说明|
 |---|---|
@@ -322,7 +326,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
 
 1. 获取相应的YAML文件。
 
-    **表 3**  YAML说明
+    **表 5**  YAML说明
     <table>
     <thead align="left">
     <tr>
@@ -452,7 +456,7 @@ npu-smi set -t device-share-cfg-recover -d ${value}
                     <strong>path: /opt/enpu/vcann-rt/lib/libvruntime.so</strong>
                 <strong>- name: preload # preload配置文件地址</strong>
                   <strong>hostPath:</strong>
-                    <strong>path: ${preload_path}/ld.so.preload</strong> # 主机侧ld.so.preload文件的路径用户可自定义，文档后续内容中使用${preload_path}表示，容器内为固定路径/etc/ld.so.preload。不建议将ld.so.preload文件放置在主机的/etc目录，否则将在主机侧预加载软切分动态库，可能影响主机侧业务。
+                    <strong>path: ${preload_path}/ld.so.preload # 主机侧ld.so.preload文件的路径用户可自定义，文档后续内容中使用${preload_path}表示，容器内为固定路径/etc/ld.so.preload。不建议将ld.so.preload文件放置在主机的/etc目录，否则将在主机侧预加载软切分动态库，可能影响主机侧业务。</strong>
     </pre>
 
 >[!NOTE]
@@ -501,7 +505,9 @@ ascendjob.mindxdl.gitee.com/default-infer-test-pytorch-910b created
 >[!NOTE]
 >如果下发任务成功后，又修改了任务YAML，需要先执行kubectl delete -f <i>XXX</i>.yaml命令删除原任务，再重新下发任务。
 
-### 查看任务进程（以A2系列产品为例）<a name="ZH-CN_TOPIC_00000025113470710203"></a>
+### 查看任务进程<a name="ZH-CN_TOPIC_00000025113470710203"></a>
+
+下面以Atlas A2系列产品为例，说明查看任务进程的操作步骤。
 
 **操作步骤**
 

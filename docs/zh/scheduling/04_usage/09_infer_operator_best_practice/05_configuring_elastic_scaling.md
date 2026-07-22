@@ -4,7 +4,7 @@ Infer Operator支持给推理实例配置弹性扩缩容策略，从而实现基
 
 ## 前置准备
 
-- 已完成Infer Operator的[安装部署](../../05_developer_guide/00_installation_deployment/00_manual_installation/07_infer_operator.md)。
+- 已完成Infer Operator的[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)。
 - 如需配置扩缩容指标类型为External，需先实现并部署相应的External Metrics Adaptor，该Adaptor需要提供推理实例的负载指标（例如请求队列长度、请求处理时间等），可参考[示例](https://gitcode.com/Ascend/mindcluster-deploy/tree/master/infer-operator-metrics-adaptor)进行实现。若为[基于MindIE PyMotor部署Infer Operator推理任务](./02_deploying_infer_operator_inference_job_with_mindie_pymotor.md)场景，可直接部署使用该示例提供的Metrics Adaptor。
 
 ## 弹性扩缩容原理

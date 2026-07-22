@@ -96,49 +96,53 @@ spec:
                   securityContext:
 ...</pre>
 
-## 重调度功能验证<a name="section96726516020"></a>
+## 验证重调度功能<a name="section96726516020"></a>
 
-以示例yaml中的配置为例：
+以示例YAML中的配置为例：
 
-- prefill实例：`replicas=1`，`podGroupSize=2`
-- decode实例：`replicas=1`，`podGroupSize=2`
+- Prefill实例：`replicas=1`，`podGroupSize=2`
+- Decode实例：`replicas=1`，`podGroupSize=2`
 
-成功下发任务后，通过如下命令查看对应pod的运行状态：
+成功下发任务后，执行如下操作：
 
-```shell
-kubectl get pods -A
-```
+1. 查看对应Pod的运行状态。
 
-可以看到类似下面的prefill和decode实例的信息：
+    ```shell
+    kubectl get pods -A
+    ```
 
-```ColdFusion
-NAMESPACE   NAME                                                  READY   STATUS    RESTARTS   AGE
-default     vllm-1p1d-roleset-<id>-prefill-<prefill-ins>-0-0      1/1     Running   0          <time>
-default     vllm-1p1d-roleset-<id>-prefill-<prefill-ins>-0-1      1/1     Running   0          <time>
-default     vllm-1p1d-roleset-<id>-decode-<decode-ins>-0-0        1/1     Running   0          <time>
-default     vllm-1p1d-roleset-<id>-decode-<decode-ins>-0-1        1/1     Running   0          <time>
-```
+    可以看到类似如下的Prefill和Decode实例信息：
 
-- 其中`<id>`为roleset标识，`<prefill-ins>`为prefill实例索引，`<decode-ins>`为decode实例索引，`<time>`为Pod运行时长。
+    ```ColdFusion
+    NAMESPACE   NAME                                                  READY   STATUS    RESTARTS   AGE
+    default     vllm-1p1d-roleset-<id>-prefill-<prefill-ins>-0-0      1/1     Running   0          <time>
+    default     vllm-1p1d-roleset-<id>-prefill-<prefill-ins>-0-1      1/1     Running   0          <time>
+    default     vllm-1p1d-roleset-<id>-decode-<decode-ins>-0-0        1/1     Running   0          <time>
+    default     vllm-1p1d-roleset-<id>-decode-<decode-ins>-0-1        1/1     Running   0          <time>
+    ```
 
-此时若手动构造故障：
+    其中`<id>`为Roleset标识；`<prefill-ins>`为Prefill实例索引；`<decode-ins>`为Decode实例索引；`<time>`为Pod运行时长。
+2. 手动构造故障。
 
-```shell
-kubectl exec -it vllm-1p1d-roleset-<id>-prefill-<prefill-ins>-0-1 -- kill -9 <pid>
-```
+    ```shell
+    kubectl exec -it vllm-1p1d-roleset-<id>-prefill-<prefill-ins>-0-1 -- kill -9 <pid>
+    ```
 
-- 其中`<pid>`为容器内vllm进程ID
+    其中`<pid>`为容器内vLLM进程ID。
+3. 立即查看Prefill和Decode实例的信息。
 
-立即查看prefill和decode实例的信息，会发现vllm-1p1d-roleset-\<id>-prefill-\<prefill-ins>-0-1的状态变为Error：
+    ```shell
+    kubectl get pods -A
+    ```
 
-```ColdFusion
-NAMESPACE   NAME                                                  READY   STATUS    RESTARTS   AGE
-default     vllm-1p1d-roleset-<id>-prefill-<prefill-ins>-0-0      1/1     Running   0          <time>
-default     vllm-1p1d-roleset-<id>-prefill-<prefill-ins>-0-1      1/1     Error     0          <time>
-default     vllm-1p1d-roleset-<id>-decode-<decode-ins>-0-0        1/1     Running   0          <time>
-default     vllm-1p1d-roleset-<id>-decode-<decode-ins>-0-1        1/1     Running   0          <time>
-```
+    可以看到vllm-1p1d-roleset-\<id>-prefill-\<prefill-ins>-0-1的状态变为Error：
 
-若实例级重调度配置正确，vllm-1p1d-roleset-\<id>-prefill-\<prefill-ins>-0-1 与 vllm-1p1d-roleset-\<id>-prefill-\<prefill-ins>
--0-0 会自动被重调度为Running状态，对应的\<time>值会更新。
-待vllm推理服务拉起后，可正常处理推理请求。
+    ```ColdFusion
+    NAMESPACE   NAME                                                  READY   STATUS    RESTARTS   AGE
+    default     vllm-1p1d-roleset-<id>-prefill-<prefill-ins>-0-0      1/1     Running   0          <time>
+    default     vllm-1p1d-roleset-<id>-prefill-<prefill-ins>-0-1      1/1     Error     0          <time>
+    default     vllm-1p1d-roleset-<id>-decode-<decode-ins>-0-0        1/1     Running   0          <time>
+    default     vllm-1p1d-roleset-<id>-decode-<decode-ins>-0-1        1/1     Running   0          <time>
+    ```
+
+若实例级重调度配置正确，vllm-1p1d-roleset-\<id>-prefill-\<prefill-ins>-0-1与vllm-1p1d-roleset-\<id>-prefill-\<prefill-ins>-0-0会自动被重调度为Running状态，对应的`<time>`值会更新。待vLLM推理服务拉起后，可正常处理推理请求。
