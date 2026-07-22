@@ -4,7 +4,7 @@
 
 **前提条件<a name="section52051339787"></a>**
 
-- 在使用整卡调度特性前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+- 在使用整卡调度特性前，需要确保相关组件已经安装，若没有安装，可以参考[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
     - 调度器（Volcano或其他调度器）
     - Ascend Device Plugin
     - Ascend Docker Runtime
@@ -12,11 +12,10 @@
     - ClusterD
     - NodeD
 - 针对故障恢复场景，需要确保每个节点都有任务运行所需的模型脚本信息，建议使用共享存储方案，比如NFS（Network File System），用户可以参见[安装NFS](../../07_references/02_common_operations.md#安装nfs)。
-- 针对训练场景：
-  - 针对超大规模集群调度场景，支持批量创建Pod和批量调度功能。
-      - 若要使用批量创建Pod功能，安装Ascend Operator组件时需使用openFuyao定制Kubernetes组件。
-      - 若要使用批量调度功能，安装Volcano组件时需使用openFuyao定制Kubernetes和volcano-ext组件，并开启批量调度功能。
-      - 批量调度功能适用于超大规模集群场景，在此场景下请根据实际需要扩展MindCluster组件分配的CPU和内存资源，防止MindCluster组件出现性能不足或者超出分配内存使用，导致组件被Kubernetes驱逐。
+- 针对训练场景：对于超大规模集群调度场景，支持批量创建Pod和批量调度功能。
+   - 若要使用批量创建Pod功能，安装Ascend Operator组件时需使用openFuyao定制Kubernetes组件。
+   - 若要使用批量调度功能，安装Volcano组件时需使用openFuyao定制Kubernetes和volcano-ext组件，并开启批量调度功能。
+   - 批量调度功能适用于超大规模集群场景，在此场景下请根据实际需要扩展MindCluster组件分配的CPU和内存资源，防止MindCluster组件出现性能不足或者超出分配内存使用，导致组件被Kubernetes驱逐。
 
 **使用方式<a name="section179431435174811"></a>**
 
@@ -36,8 +35,8 @@
 - Ascend 950 系列产品
 - Atlas A3 系列产品
 - Atlas A2 系列产品
-- Atlas 训练系列产品
-- Atlas 推理系列产品
+- <term>Atlas 训练系列产品</term>
+- <term>Atlas 推理系列产品</term>
 - Atlas 200I推理产品
 
 **使用流程<a name="section5640184231810"></a>**
@@ -47,6 +46,7 @@
 通过命令行使用Volcano和其他调度器的使用流程一致。使用其他调度器准备任务YAML需要参考[通过命令行使用（其他调度器）](#通过命令行使用其他调度器)章节创建任务YAML。使用其他调度器的其余操作和使用Volcano一致，可以参考[通过命令行使用（Volcano）](#通过命令行使用volcano)进行操作。
 
 **图 1**  整卡调度使用流程<a name="fig107864120214"></a>
+
 ![](../../../figures/scheduling/整卡调度使用流程.PNG "整卡调度使用流程")
 
 1. 脚本适配时，用户可根据实际情况选择通过环境变量或文件配置资源信息。
@@ -58,9 +58,10 @@
 
 **acjob任务<a name="section9971431567"></a>**
 
-acjob任务原理图如[图1](#fig5188536014)所示。
+acjob任务原理图如[图2](#fig5188536014)所示。
 
-**图 1**  acjob任务调度原理图<a name="fig5188536014"></a>
+**图 2**  acjob任务调度原理图<a name="fig5188536014"></a>
+
 ![](../../../figures/scheduling/acjob任务调度原理图.png "acjob任务调度原理图")
 
 各步骤说明如下：
@@ -84,9 +85,10 @@ acjob任务原理图如[图1](#fig5188536014)所示。
 
 **vcjob任务<a name="section13884164615313"></a>**
 
-vcjob任务的原理图如[图2](#fig8717151315416)所示。
+vcjob任务的原理图如[图3](#fig8717151315416)所示。
 
-**图 2**  vcjob任务调度原理图<a name="fig8717151315416"></a>
+**图 3**  vcjob任务调度原理图<a name="fig8717151315416"></a>
+
 ![](../../../figures/scheduling/vcjob任务调度原理图.png "vcjob任务调度原理图")
 
 各步骤说明如下：
@@ -110,9 +112,10 @@ vcjob任务的原理图如[图2](#fig8717151315416)所示。
 
 **deploy任务<a name="section32752223579"></a>**
 
-deploy任务原理图如[图3](#fig06571541566)所示。
+deploy任务原理图如[图4](#fig06571541566)所示。
 
-**图 3**  deploy任务调度原理图<a name="fig06571541566"></a>
+**图 4**  deploy任务调度原理图<a name="fig06571541566"></a>
+
 ![](../../../figures/scheduling/deploy任务调度原理图.png "deploy任务调度原理图")
 
 各步骤说明如下：
@@ -464,7 +467,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </tbody>
 </table>
 
-**表 2** Atlas 训练系列产品支持的YAML
+**表 2** <term>Atlas 训练系列产品</term>支持的YAML
 
 <a name="table18698184918261"></a>
 <table><thead align="left"><tr id="row6698849162611"><th class="cellrowborder" valign="top" width="10.000000000000002%" id="mcps1.2.7.1.1"><p id="p15698549192614"><a name="p15698549192614"></a><a name="p15698549192614"></a>任务类型</p>
@@ -720,7 +723,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 </tbody>
 </table>
 
-**表 7** Atlas 训练系列产品支持的YAML
+**表 7** <term>Atlas 训练系列产品</term>支持的YAML
 
 <a name="table21811158146"></a>
 <table><thead align="left"><tr id="row10181111518146"><th class="cellrowborder" valign="top" width="9.35%" id="mcps1.2.7.1.1"><p id="p51941552181410"><a name="p51941552181410"></a><a name="p51941552181410"></a>任务类型</p>
@@ -899,26 +902,6 @@ deploy任务原理图如[图3](#fig06571541566)所示。
 本章节指导用户配置整卡调度特性的任务YAML。
 
 1. 将YAML文件上传至管理节点任意目录，并根据实际情况修改文件内容。
-
-    **表 1**  操作参考
-
-    <a name="table9830101615287"></a>
-    <table><thead align="left"><tr id="row1183115167289">
-    <th class="cellrowborder" valign="top" width="50%" id="mcps1.2.3.1.2"><p id="p118311416122815"><a name="p118311416122815"></a><a name="p118311416122815"></a>操作示例</p>
-    </th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr id="row108334168282">
-    <td class="cellrowborder" valign="top" width="50%" headers="mcps1.2.3.1.2 "><p id="p18339161282"><a name="p18339161282"></a><a name="p18339161282"></a><a href="#li1086213163289">Atlas 900 A3 SuperPoD 超节点上创建单机训练任务</a></p>
-    </td>
-    </tr>
-     <tr id="row1843115298483"><td class="cellrowborder" valign="top" headers="mcps1.2.3.1.1 "><p id="p4432729124818"><a name="p4432729124818"></a><a name="p4432729124818"></a><a href="#li1134113548015">在Atlas 800I A2 推理服务器上创建单卡任务</a></p>
-    </td>
-    </tr>
-
-    </tbody>
-    </table>
 
     - <a name="li1086213163289"></a>使用**整卡调度**特性，参考本配置。以pytorch\_standalone\_acjob\_super\_pod.yaml为例，在一台Atlas 900 A3 SuperPoD 超节点上创建**单机训练**任务，修改示例如下。
 
@@ -1147,8 +1130,7 @@ deploy任务原理图如[图3](#fig06571541566)所示。
     xx/xxx created
     ```
 
-    >[!NOTE]
-    >回显格式为`资源类型/资源名称 created`，具体内容取决于YAML中定义的资源类型和名称。若YAML中包含多个资源定义，则每个资源各回显一行。
+    回显格式为`资源类型/资源名称 created`，具体内容取决于YAML中定义的资源类型和名称。若YAML中包含多个资源定义，则每个资源各回显一行。
 
 >[!NOTE]
 >
@@ -1341,7 +1323,7 @@ xx "xxx" deleted
                  <strong>fieldPath: metadata.annotations['huawei.com/Ascend910']</strong>
    </pre>
 
-2. 后续步骤可参考[通过命令行使用（Volcano）—步骤2](#li118885168281)开始的后续步骤
+2. 后续步骤可参考“通过命令行使用（Volcano）”中的[步骤2](#li118885168281)。
 
 ## 集成后使用<a name="ZH-CN_TOPIC_0000002511347081"></a>
 

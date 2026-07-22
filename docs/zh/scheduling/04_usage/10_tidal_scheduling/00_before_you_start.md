@@ -4,7 +4,7 @@
 
 在大模型推理与训练共享NPU集群的场景中，推理任务根据业务流量动态扩缩容，训练任务长期占用NPU资源。当推理高峰期需要更多NPU时，可通过Volcano的Preempt（抢占）或Reclaim（回收）机制从训练任务回收资源；推理低峰期释放资源后，训练任务恢复运行。
 
-本最佳实践描述如何配置推理与训练任务的交替运行，并利用**重建Pod优先调度回原节点**特性，当两种任务的Pod重建时都优先回到此前运行的节点，复用节点上已缓存的容器镜像，将启动时间从5～20分钟降至秒级。
+本最佳实践描述如何配置推理与训练任务的潮汐调度，并利用**重建Pod优先调度回原节点**特性，当两种任务的Pod重建时都优先回到此前运行的节点，复用节点上已缓存的容器镜像，将启动时间从5～20分钟降至秒级。
 
 **核心收益：**
 
@@ -17,7 +17,7 @@
 
 ## 前提条件<a name="section_prerequisites_alternation"></a>
 
-- 已完成Volcano、Ascend Device Plugin、Ascend Docker Runtime、Ascend Operator、ClusterD、NodeD的安装部署，详细请参见[安装部署](../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)。
+- 已完成Volcano、Ascend Device Plugin、Ascend Docker Runtime、Ascend Operator、ClusterD、NodeD的安装部署，详细请参见[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)。
 - ascend-volcano-plugin版本 ≥ 26.1.0（包含回原节点偏好功能）。
 - NPU集群节点已配置镜像缓存。
 

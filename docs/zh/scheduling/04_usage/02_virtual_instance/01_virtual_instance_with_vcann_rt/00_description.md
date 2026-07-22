@@ -12,6 +12,7 @@
 昇腾NPU硬件资源主要包括AICore（用于AI模型计算）、AICPU和内存等。基于vCANN-RT的虚拟化实例功能的核心原理是：根据用户指定的资源需求，以软切分配置文件的方式，通过vCANN-RT实现按需分配。例如，用户只需50% AICore的算力和2048MB高带宽内存时，系统会创建一个npu_info配置文件，通过vCANN-RT从NPU芯片获取上述资源提供给容器使用。基于vCANN-RT的虚拟化实例方案如[图 1 基于vCANN-RT的虚拟化实例方案](#fig987114711574vcann)所示。
 
 **图 1**  基于vCANN-RT的虚拟化实例方案<a name="fig987114711574vcann"></a>
+
 ![](../../../../figures/scheduling/virtual_instance_vcann.PNG "virtual_instance_vcann")
 
 ## 产品支持说明<a name="section17326115542216vcann"></a>
@@ -45,7 +46,7 @@
 <td class="cellrowborder" valign="top" width="30%"><term>Atlas A3 推理系列产品</term></td>
 </tr>
 <tr>
-<td class="cellrowborder" valign="top" width="30%"><term>Atlas 350 标卡</term></td>
+<td class="cellrowborder" valign="top" width="30%">Atlas 350 标卡</td>
 </tr>
 </tbody>
 </table>
@@ -56,9 +57,8 @@
   实现，直接将NPU重复挂载到多个容器，容器内的CANN按照配置好的比例使用NPU资源。
 - 如果使用软切分虚拟化功能，请参见[软切分调度（推理）](./01_soft_allocation_scheduling_inference.md)章节进行操作。
 
-> [!NOTICE]
-> 若未按照 [vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md)
-> 说明文档完成编译与部署，软切分虚拟化功能将无法正常运行。
+>[!NOTICE]
+>若未按照[vCANN-RT](https://gitcode.com/openeuler/ubs-virt/blob/master/ubs-virt-enpu/vcann-rt/README.md)完成编译与部署，软切分虚拟化功能将无法正常运行。
 
 ## 使用约束<a name="section911013420264vcann"></a>
 

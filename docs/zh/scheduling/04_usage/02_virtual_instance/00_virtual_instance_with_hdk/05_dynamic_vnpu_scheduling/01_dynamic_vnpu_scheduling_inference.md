@@ -44,39 +44,18 @@ docker run -it --rm -e ASCEND_VISIBLE_DEVICES=0 -e ASCEND_VNPU_SPECS=vir04 {imag
 
 #### 前提条件<a name="section121807404519"></a>
 
-在命令行场景下使用动态vNPU调度特性，需要确保已经安装如下组件；若没有安装，可以参考[安装部署](../../../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。动态vNPU调度特性只支持使用Volcano作为调度器，不支持使用其他调度器。
+在命令行场景下使用动态vNPU调度特性，需要确保已经安装如下组件；若没有安装，可以参考[安装部署](../../../../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。动态vNPU调度特性只支持使用Volcano作为调度器，不支持使用其他调度器。
 
-**表 1**  虚拟化需要的集群调度组件
+- Ascend Docker Runtime
+- Ascend Device Plugin
+- Volcano
+- （可选）Ascend Operator
+- （可选）ClusterD
 
-<a name="table19103194217329"></a>
-<table><thead align="left"><th class="cellrowborder" valign="top" width="11.677219849801206%" id="mcps1.2.5.1.1"><p id="p2103642143218"><a name="p2103642143218"></a><a name="p2103642143218"></a>特性</p>
-</th>
-<th class="cellrowborder" valign="top" width="24.82697688116625%" id="mcps1.2.5.1.2"><p id="p619110456115"><a name="p619110456115"></a><a name="p619110456115"></a>需要的集群调度组件</p>
-</th>
-</thead>
-<tbody>
-<tr id="row610314214324"><td class="cellrowborder" rowspan="5" valign="top" width="11.677219849801206%" headers="mcps1.2.5.1.1 "><p id="p11036426328"><a name="p11036426328"></a><a name="p11036426328"></a>动态虚拟化</p>
-</td>
-<td class="cellrowborder" valign="top" width="24.82697688116625%" headers="mcps1.2.5.1.2 "><p id="p1219211451715"><a name="p1219211451715"></a><a name="p1219211451715"></a><span id="ph12922181924413"><a name="ph12922181924413"></a><a name="ph12922181924413"></a>Ascend Docker Runtime</span></p>
-</td>
-</tr>
-<tr><td><p><span>Ascend Device Plugin</span></p>
-</td>
-</tr>
-<tr><td><p><span>Volcano</span></p>
-</td>
-</tr>
-<tr><td><p>（可选）<span>Ascend Operator</span></p>
-</td>
-</tr>
-<tr><td><p>（可选）<span>ClusterD</span></p>
-</td>
-</tr>
-</tbody>
-</table>
+关键操作如下：
 
 1. 需要先获取“Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run”，安装容器引擎插件。
-2. 参见[安装部署](../../../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节，完成各组件的安装。
+2. 参见[安装部署](../../../../03_installation_guide/02_installation/00_helm_installation.md)章节，完成各组件的安装。
 
    虚拟化实例涉及到需要修改相关参数的集群调度组件为Volcano和Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
 
@@ -317,6 +296,7 @@ Atlas 推理系列产品、Atlas A2 训练/推理系列产品、Atlas A3 训练/
 通过命令行使用动态vNPU调度特性流程可以参见[图1](#zh-cn_topic_0000001559979444_fig242524985412)。
 
 **图 1**  使用流程<a name="zh-cn_topic_0000001559979444_fig242524985412"></a>
+
 ![](../../../../../figures/scheduling/使用流程-3.png "使用流程-3")
 
 ### 实现原理<a name="ZH-CN_TOPIC_0000002511427057"></a>
@@ -328,6 +308,7 @@ Atlas 推理系列产品、Atlas A2 训练/推理系列产品、Atlas A3 训练/
 vcjob任务原理图如[图2](#fig1918122131712)所示。
 
 **图 2**  vcjob任务调度原理图<a name="fig1918122131712"></a>
+
 ![](../../../../../figures/scheduling/vcjob任务调度原理图-4.png "vcjob任务调度原理图-4")
 
 各步骤说明如下：
@@ -349,6 +330,7 @@ vcjob任务原理图如[图2](#fig1918122131712)所示。
 deploy任务原理图如[图3](#fig349112913199)所示。
 
 **图 3**  deploy任务调度原理图<a name="fig349112913199"></a>
+
 ![](../../../../../figures/scheduling/deploy任务调度原理图-5.png "deploy任务调度原理图-5")
 
 各步骤说明如下：
@@ -399,8 +381,9 @@ deploy任务原理图如[图3](#fig349112913199)所示。
 #### 准备任务YAML<a name="ZH-CN_TOPIC_0000002479387122"></a>
 
 >[!NOTE]
->如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载“/dev”目录下的设备。其他目录（如“/usr”）用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
->因为Atlas 200I SoC A1 核心板场景不支持Ascend Docker Runtime，用户也无需修改YAML文件。
+>
+>- 如果用户不使用Ascend Docker Runtime组件，Ascend Device Plugin只会帮助用户挂载“/dev”目录下的设备。其他目录（如“/usr”）用户需要自行修改YAML文件，挂载对应的驱动目录和文件。容器内挂载路径和宿主机路径保持一致。
+>- 因为Atlas 200I SoC A1 核心板场景不支持Ascend Docker Runtime，用户也无需修改YAML文件。
 
 **操作步骤<a name="zh-cn_topic_0000001558853680_zh-cn_topic_0000001609074213_section14665181617334"></a>**
 

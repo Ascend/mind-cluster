@@ -28,7 +28,7 @@
 
 **图 1**  使用流程<a name="fig38991911205816"></a>
 
-![](../../../figures/scheduling/infer-operator-use-process.png)
+![使用流程图：展示从准备YAML到下发任务、查看结果、删除任务的命令行使用流程](../../../figures/scheduling/infer-operator-use-process.png)
 
 ### 准备任务YAML
 
@@ -40,7 +40,7 @@
 
 **选择YAML示例**
 
-当前，基于vLLM Proxy的Infer Operator推理任务由InferServiceSet自定义CRD部署，Infer Operator的部署请参见[安装部署](../../05_developer_guide/00_installation_deployment/00_manual_installation/07_infer_operator.md)。
+当前，基于vLLM Proxy的Infer Operator推理任务由InferServiceSet自定义CRD部署，Infer Operator的部署请参见[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)。
 
 以下是一个适配示例，用户可根据需求进行修改。
 

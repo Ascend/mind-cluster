@@ -26,58 +26,58 @@ metadata:
 
 ## 查看交换机亲和性调度结果
 
-1.执行以下命令，检查ConfigMap内容
+1. 执行以下命令，检查ConfigMap内容。
 
-```shell
-kubectl describe cm -n kube-system basic-tor-node-cm
-```
+    ```shell
+    kubectl describe cm -n kube-system basic-tor-node-cm
+    ```
 
-回显示例如下：
+    回显示例如下：
 
-```text
-====
-tor_info:
-----
-{
-  "version": "1.0",
-  "tor_count": 4,
-  "server_list":[
+    ```text
+    ====
+    tor_info:
+    ----
     {
-      "tor_id": 0,
-      "tor_ip": "192.168.0.x",
-      "server": [
+      "version": "1.0",
+      "tor_count": 4,
+      "server_list":[
         {
-          "server_ip": "192.168.1.x",
-          "npu_count": 8,
-          "slice_id": 0
+          "tor_id": 0,
+          "tor_ip": "192.168.0.x",
+          "server": [
+            {
+              "server_ip": "192.168.1.x",
+              "npu_count": 8,
+              "slice_id": 0
+            },
+            {
+              "server_ip": "192.168.1.x",
+              "npu_count": 8,
+              "slice_id": 2
+            },
+            ...
+          ]
         },
-        {
-          "server_ip": "192.168.1.x",
-          "npu_count": 8,
-          "slice_id": 2
-        },
-        ...
+            ...
       ]
-    },
-        ...
-  ]
-}
-```
+    }
+    ```
 
-2.执行以下命令，查看Pod调度情况
+2. 执行以下命令，查看Pod调度情况。
 
-```shell
-kubectl get pod --all-namespaces -owide
-```
+    ```shell
+    kubectl get pod --all-namespaces -owide
+    ```
 
-回显示例如下：
+    回显示例如下：
 
-```ColdFusion
-NAMESPACE        NAME                                READY   STATUS    RESTARTS   AGE     IP            Node
-...
-default          mindie-server-0-master-0            1/1     Running   0          10s     192.168.1.x   worker0
-default          mindie-server-0-worker-0            1/1     Running   0          10s     192.168.1.x   worker1
-...
-```
+    ```ColdFusion
+    NAMESPACE        NAME                                READY   STATUS    RESTARTS   AGE     IP            Node
+    ...
+    default          mindie-server-0-master-0            1/1     Running   0          10s     192.168.1.x   worker0
+    default          mindie-server-0-worker-0            1/1     Running   0          10s     192.168.1.x   worker1
+    ...
+    ```
 
-根据步骤1获取到的Pod IP对比步骤2获取到的basic-tor-node-cm，确认多个实例分布在同一个tor下，表示交换机亲和性特性运行成功。
+对比步骤1获取的Pod IP与步骤2获取的basic-tor-node-cm，确认多个实例分布在同一个tor下，表示交换机亲和性功能运行成功。

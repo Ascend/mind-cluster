@@ -4,7 +4,7 @@
 
 **前提条件<a name="section52051339787duoji"></a>**
 
-在命令行场景下使用多级调度特性前，需要确保已经安装如下组件，若没有安装，可以参考[安装部署](../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。多级调度特性仅支持使用Volcano作为调度器，不支持使用其他调度器。
+在命令行场景下使用多级调度特性前，需要确保已经安装如下组件，若没有安装，可以参考[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。多级调度特性仅支持使用Volcano作为调度器，不支持使用其他调度器。
 
 - Volcano
 - Ascend Device Plugin
@@ -32,6 +32,7 @@
 通过命令行使用多级调度特性流程可以参见[图1](#fig2425249866601duoji)。
 
 **图 1**  使用流程<a name="fig2425249866601duoji"></a>
+
 ![多级调度使用流程](../../../figures/scheduling/多级调度使用流程.png "多级调度使用流程")
 
 ## 实现原理<a name="ZH-CN_TOPIC_0000002479387150duoji"></a>
@@ -48,7 +49,8 @@
 
   资源树中的网络层级可以参考Volcano的[网络拓扑感知调度](https://volcano.sh/docs/keyfeatures/networktopologyaware/)特性中的HyperNode定义。
 
-  **图 1**  资源树样例<a name="fig69396965487duoji"></a>
+  **图 2**  资源树样例<a name="fig69396965487duoji"></a>
+
   ![资源树样例](../../../figures/scheduling/资源树.PNG "资源树")
 
   - 第一层交换机S0-S3直接连接到工作节点。
@@ -272,7 +274,7 @@ Ascend Device Plugin组件会通过昇腾硬件驱动自动获取有效的节点
 
 本章节仅提供多级调度需要使用的YAML参数，详细的任务YAML参数说明请参见[acjob任务yaml参数说明](../../06_api/15_yaml_configuration.md#acjob)。
 
-**表 1**  YAML参数说明
+**表 2**  YAML参数说明
 
 <a name="table159746356276duoji"></a>
 

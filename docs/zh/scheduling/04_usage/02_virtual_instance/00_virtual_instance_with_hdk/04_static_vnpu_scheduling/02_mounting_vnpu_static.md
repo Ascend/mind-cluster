@@ -49,35 +49,13 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
 
 ### 使用说明<a name="ZH-CN_TOPIC_0000002511426303"></a>
 
-在Kubernetes场景，当用户需要使用vNPU资源时，需要通过结合集群调度组件Ascend Device Plugin的使用，使Kubernetes可以管理昇腾处理器资源。静态虚拟化场景使用时，不能与动态虚拟化混合使用。昇腾虚拟化实例特性需要的集群调度组件如下表所示，支持的产品型号情况请参见[特性说明](../01_description.md)中的“表1 产品支持情况说明”。
+在Kubernetes场景，当用户需要使用vNPU资源时，需要通过结合集群调度组件Ascend Device Plugin的使用，使Kubernetes可以管理昇腾处理器资源。静态虚拟化场景使用时，不能与动态虚拟化混合使用。昇腾虚拟化实例特性需要的集群调度组件如下所示，支持的产品型号情况请参见[特性说明](../01_description.md)中的“表1 产品支持情况说明”。
 
-**表 1**  虚拟化需要的集群调度组件
-
-<a name="table19103194217329"></a>
-<table><thead align="left"><th class="cellrowborder" valign="top" width="11.677219849801206%" id="mcps1.2.5.1.1"><p id="p2103642143218"><a name="p2103642143218"></a><a name="p2103642143218"></a>特性</p>
-</th>
-<th class="cellrowborder" valign="top" width="24.82697688116625%" id="mcps1.2.5.1.2"><p id="p619110456115"><a name="p619110456115"></a><a name="p619110456115"></a>需要的集群调度组件</p>
-</th>
-</thead>
-<tbody><tr id="row61035425322"><td class="cellrowborder" rowspan="5" valign="top" width="11.677219849801206%" headers="mcps1.2.5.1.1 "><p id="p310384263219"><a name="p310384263219"></a><a name="p310384263219"></a>静态虚拟化</p>
-</td>
-<td class="cellrowborder" valign="top" width="24.82697688116625%" headers="mcps1.2.5.1.2 "><p id="p4191645116"><a name="p4191645116"></a><a name="p4191645116"></a><span id="ph1795411794410"><a name="ph1795411794410"></a><a name="ph1795411794410"></a>Ascend Docker Runtime</span></p>
-</td>
-</tr>
-<tr id="row1844495022714"><td class="cellrowborder" valign="top" width="24.82697688116625%" headers="mcps1.2.5.1.2 "><p id="p4191645116"><a name="p4191645116"></a><a name="p4191645116"></a><span id="ph1795411794410"><a name="ph1795411794410"></a><a name="ph1795411794410"></a>Ascend Device Plugin</span></p>
-</td>
-</tr>
-<tr id="row1844495022714"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p574771602812"><a name="p574771602812"></a><a name="p574771602812"></a>（可选）<span id="ph1610211588167">Volcano</span></p>
-</td>
-</tr>
-<tr id="row18230132874912"><td class="cellrowborder" valign="top" headers="mcps1.2.5.1.1 "><p id="p11381824102511"><a name="p11381824102511"></a><a name="p11381824102511"></a>（可选）<span id="ph1566531814589">Ascend Operator</span></p>
-</td>
-</tr>
-<tr><td><p>（可选）<span>ClusterD</span></p>
-</td>
-</tr>
-</tbody>
-</table>
+- Ascend Docker Runtime
+- Ascend Device Plugin
+- （可选）Volcano
+- （可选）Ascend Operator
+- （可选）ClusterD
 
 >[!NOTE]
 >在静态虚拟化场景下，组件的可选性说明如下。
@@ -98,15 +76,15 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
 - 不支持静态vNPU进行交换机亲和性调度。
 - 静态vNPU调度暂不支持ASCEND_VISIBLE_DEVICES相关字段，如存在以下字段，需要删除：
 
-```yaml
-...
-                env:
-                - name: ASCEND_VISIBLE_DEVICES
-                  valueFrom:
-                    fieldRef:
-                      fieldPath: metadata.annotations['huawei.com/Ascend310P']
-...
-```
+  ```yaml
+  ...
+                  env:
+                  - name: ASCEND_VISIBLE_DEVICES
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.annotations['huawei.com/Ascend310P']
+  ...
+  ```
 
 **表 2**  虚拟化实例模板与vNPU类型关系表
 
@@ -300,7 +278,7 @@ docker run -it -e ASCEND_VISIBLE_DEVICES=100 -e ASCEND_RUNTIME_OPTIONS=VIRTUAL {
 ### 前提条件
 
 1. 需要先获取"Ascend-docker-runtime\_\{version\}\_linux-\{arch\}.run"，安装容器引擎插件。
-2. 参见[安装部署](../../../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节，完成各组件的安装。
+2. 参见[安装部署](../../../../03_installation_guide/02_installation/00_helm_installation.md)章节，完成各组件的安装。
 
     虚拟化实例涉及到需要修改相关参数的集群调度组件为Volcano和Ascend Device Plugin，请按如下要求修改并使用对应的YAML安装部署：
 
