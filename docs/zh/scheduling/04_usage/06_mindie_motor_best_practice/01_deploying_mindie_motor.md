@@ -385,7 +385,7 @@ ClusterD侦听MS Controller、MS Coordinator任务Pod信息以及各个hccl.json
     }
     ```
 
-**表 1**  global-ranktable字段说明
+**表 2**  global-ranktable字段说明
 
 <a name="zh-cn_topic_0000002324328268_table5843145110294"></a>
 

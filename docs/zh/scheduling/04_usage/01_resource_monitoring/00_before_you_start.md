@@ -9,7 +9,7 @@
 
 ## 前提条件<a name="section1632062465010"></a>
 
-- 在使用资源监测特性前，需要确保NPU Exporter组件已经安装，若没有安装，可以参考[安装部署](../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+- 在使用资源监测特性前，需要确保NPU Exporter组件已经安装，若没有安装，可以参考[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 - NPU Exporter启动前，请确保NPU卡在位。
 
 ## 使用说明<a name="section44381612353"></a>
@@ -20,11 +20,11 @@
 
 支持以下产品使用资源监测。
 
-- Atlas 训练系列产品
+- <term>Atlas 训练系列产品</term>
 - <term>Atlas A2 训练系列产品</term>
 - <term>Atlas A3 训练系列产品</term>
 - 推理服务器（插Atlas 300I 推理卡）
-- Atlas 推理系列产品
+- <term>Atlas 推理系列产品</term>
 - Atlas 800I A2 推理服务器
 - A200I A2 Box 异构组件
 - Atlas 800I A3 超节点服务器

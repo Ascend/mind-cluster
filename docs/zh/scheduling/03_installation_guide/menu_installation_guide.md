@@ -1,4 +1,4 @@
-# 安装部署指南
+# 安装指南
 
 - [安装前必读](./00_before_you_start.md)
 - [环境依赖](./01_environment_dependencies.md)

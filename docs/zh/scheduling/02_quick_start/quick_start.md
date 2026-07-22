@@ -195,7 +195,7 @@
     # 删除测试Pod
     kubectl delete pod npu-test
 
-    # 删除Device Plugin，若VERSION低于26.1.0版本，yaml文件为device-plugin-910-v${VERSION}.yaml
+    # 删除Ascend Device Plugin，若VERSION低于26.1.0版本，yaml文件为device-plugin-910-v${VERSION}.yaml
     kubectl delete -f device-plugin-v${VERSION}.yaml
     ```
 
@@ -204,11 +204,11 @@
 | 问题 | 原因 | 解决方法 |
 |------|------|---------|
 | Pod一直Pending | NPU资源不足或节点标签不匹配 | 检查`kubectl describe pod`和节点标签 |
-| Device Plugin启动失败 | 驱动路径不正确 | 检查`/usr/local/Ascend/driver`是否存在 |
+| Ascend Device Plugin启动失败 | 驱动路径不正确 | 检查`/usr/local/Ascend/driver`是否存在 |
 
 ## 训练业务快速入门
 
-本章节依然以一台Atlas 800T A2 AArch64训练服务器为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。
+本章节依然以一台Atlas 800T A2 训练服务器、CPU架构为AArch64为例，指导开发者快速完成NodeD、Ascend Device Plugin、Ascend Docker Runtime、Volcano、ClusterD、Ascend Operator组件的安装及使用整卡调度特性快速下发训练任务。
 
 ### 操作说明<a name="section17940333114314"></a>
 
@@ -216,25 +216,25 @@
 
 |操作步骤|操作说明|更多参考|
 |--|--|--|
-|[安装组件](#section1837511531098)|以Atlas 800T A2 训练服务器为例，手把手带您在昇腾设备上快速安装集群调度组件。|更多安装集群调度组件的参数说明和操作步骤，请参考[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节。|
+|[安装组件](#section1837511531098)|以Atlas 800T A2 训练服务器为例，手把手带您在昇腾设备上快速安装集群调度组件。|更多安装集群调度组件的参数说明和操作步骤，请参考[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)章节。|
 |[下发训练任务](#section106493419399)|以一个简单的PyTorch训练任务为例，让您快速了解训练任务下发的操作流程。|更多下发训练任务的参数说明和操作步骤，请参考[基础调度](../04_usage/03_basic_scheduling/00_feature_description.md)章节。|
 
 ### 安装组件<a name="section1837511531098"></a>
 
-以下步骤命令均以一台Atlas 800T A2 训练服务器为例，如需了解所有组件的详细安装步骤和参数说明请参见[安装部署](../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)。
+以下步骤命令均以一台Atlas 800T A2 训练服务器为例，如需了解所有组件的详细安装步骤和参数说明请参见[安装部署](../03_installation_guide/02_installation/00_helm_installation.md)。
 
 1. 创建节点标签。
 
-    1. 依次执行以下命令，为**计算节点**创建节点标签（如节点名称为“worker01”）。
+    执行以下命令，为**计算节点**创建节点标签（如节点名称为“worker01”）。
 
-        ```shell
-        kubectl label nodes -A node-role.kubernetes.io/worker=worker workerselector=dls-worker-node masterselector=dls-master-node --overwrite
-        ```
+    ```shell
+    kubectl label nodes worker01 node-role.kubernetes.io/worker=worker workerselector=dls-worker-node masterselector=dls-master-node --overwrite
+    ```
 
 2. 安装组件。以AArch64架构为例，用户需根据实际情况下载对应架构的软件包。
-   >[!NOTE]
-   >
-   >快速入门以helm快捷部署为例，要求MindCluster版本为26.1.0及以上，可以参考安装部署章节的[使用helm安装](../03_installation_guide/02_installation/00_helm_installation.md)。
+    >[!NOTE]
+    >
+    >快速入门以Helm快捷部署为例，要求MindCluster版本为26.1.0及以上，可以参考安装部署章节的[使用Helm安装](../03_installation_guide/02_installation/00_helm_installation.md)。
 
     1. 安装Ascend Docker Runtime。
 
@@ -248,7 +248,7 @@
         systemctl daemon-reload && systemctl restart docker
         ```
 
-    2. 通过helm安装NodeD、Ascend Device Plugin、Volcano、ClusterD、Ascend Operator组件。
+    2. 通过Helm安装NodeD、Ascend Device Plugin、Volcano、ClusterD、Ascend Operator组件。
 
         ```shell
         VERSION=26.1.0
@@ -260,41 +260,42 @@
         helm install mindcluster mindcluster-deploy-tool-*.tgz
         ```
 
-    3. 验证安装结果。
-        1. helm安装回显如下，则安装成功。
+        回显示例如下，表示安装成功。
 
-            ```output
-            Release "mindcluster-crds" does not exist. Installing it now.
-            NAME: mindcluster-crds
-            LAST DEPLOYED: ...
-            NAMESPACE: mindx-dl
-            STATUS: deployed
-            REVISION: 1
-            TEST SUITE: None
-            ```
+        ```output
+        Release "mindcluster-crds" does not exist. Installing it now.
+        NAME: mindcluster-crds
+        LAST DEPLOYED: ...
+        NAMESPACE: mindx-dl
+        STATUS: deployed
+        REVISION: 1
+        TEST SUITE: None
+        ```
 
-            ```output
-            Release "mindcluster" does not exist. Installing it now.
-            NAME: mindcluster
-            LAST DEPLOYED: ...
-            NAMESPACE: mindx-dl
-            STATUS: deployed
-            REVISION: 1
-            TEST SUITE: None
-            ```
+        ```output
+        Release "mindcluster" does not exist. Installing it now.
+        NAME: mindcluster
+        LAST DEPLOYED: ...
+        NAMESPACE: mindx-dl
+        STATUS: deployed
+        REVISION: 1
+        TEST SUITE: None
+        ```
 
-        2. 验证组件是否正常运行，以NodeD组件为例。
+    3. 验证组件是否正常运行，以NodeD组件为例。
 
-            ```shell
-            # 查看NodeD Pod状态
-            kubectl get pod -n mindx-dl
+        ```shell
+        kubectl get pod -n mindx-dl
+        ```
 
-            # 预期输出
-            NAME                                  READY   STATUS    RESTARTS   AGE
-            ...
-            noded-694474f599-54w6b                1/1     Running   0          11s
-            ...
-            ```
+        回显示例如下，表示NodeD组件运行正常。
+
+        ```shell
+        NAME                                  READY   STATUS    RESTARTS   AGE
+        ...
+        noded-694474f599-54w6b                1/1     Running   0          11s
+        ...
+        ```
 
 ### 下发训练任务<a name="section106493419399"></a>
 
@@ -311,9 +312,9 @@
     docker tag swr.cn-south-1.myhuaweicloud.com/ascendhub/ascend-pytorch:24.0.0-A2-2.1.0-ubuntu20.04 ascend-pytorch:24.0.0-A2-2.1.0-ubuntu20.04
     ```
 
-2. 训练任务准备。
+2. 准备训练任务。
 
-    1. 通过如下命令下载[PyTorch代码仓](https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/cv/classification/ResNet50_ID4149_for_PyTorch)中master分支的“ResNet50_ID4149_for_PyTorch”作为训练代码，并解压到“/data/atlas_dls/public/code/”路径下。
+    1. 执行以下命令，下载[PyTorch代码仓](https://gitcode.com/Ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/cv/classification/ResNet50_ID4149_for_PyTorch)中master分支的“ResNet50_ID4149_for_PyTorch”作为训练代码，并解压到“/data/atlas_dls/public/code/”路径下。
 
         ```shell
         mkdir -p /data/atlas_dls/public/code/
@@ -330,7 +331,7 @@
         cd /data/atlas_dls/public/dataset/resnet50/imagenet
         ```
 
-    3. 通过如下命令获取[MindCluster-Samples](https://gitcode.com/Ascend/mindcluster-deploy)仓库的“samples/train/basic-training/without-ranktable/pytorch”目录中的train_start.sh，放在“/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts”路径下。
+    3. 执行以下命令，获取[MindCluster-Samples](https://gitcode.com/Ascend/mindcluster-deploy)仓库的“samples/train/basic-training/without-ranktable/pytorch”目录中的train_start.sh，放在“/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts”路径下。
 
         ```shell
         mkdir /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
@@ -338,20 +339,20 @@
         wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/train_start.sh
         ```
 
-    4. 通过如下命令获取[MindCluster-Samples](https://gitcode.com/Ascend/mindcluster-deploy)仓库“samples/train/basic-training/without-ranktable/pytorch”目录下的“pytorch_standalone_acjob_quickstart.yaml”文件。示例默认为单机单卡任务。
+    4. 执行以下命令，获取[MindCluster-Samples](https://gitcode.com/Ascend/mindcluster-deploy)仓库“samples/train/basic-training/without-ranktable/pytorch”目录下的“pytorch_standalone_acjob_quickstart.yaml”文件。示例默认为单机单卡任务。
 
         ```shell
         cd /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
         wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/pytorch_standalone_acjob_quickstart.yaml
         ```
 
-3. 执行以下命令，下发单机单卡任务。
+3. 下发单机单卡任务。
 
     ```shell
     kubectl apply -f /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts/pytorch_standalone_acjob_quickstart.yaml
     ```
 
-4. 执行以下命令，查看Pod运行情况。
+4. 查看Pod运行情况。
 
     ```shell
     kubectl get pod -A -o wide
@@ -406,13 +407,13 @@
         => creating model 'resnet50'
         ```
 
-6. 清理测试资源.
+6. 清理测试资源。
 
     ```shell
     # 删除训练任务Pod
     kubectl delete -f /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts/pytorch_standalone_acjob_quickstart.yaml
 
-    # 卸载Helm部署的组件(可选）
+    # 卸载Helm部署的组件（可选）
     helm uninstall mindcluster
     helm uninstall mindcluster-crds
     ```

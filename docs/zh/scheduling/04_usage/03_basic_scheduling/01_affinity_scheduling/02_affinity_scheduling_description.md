@@ -18,6 +18,7 @@
 >HCCS（Huawei Cache Coherence System）是HCCL（Huawei Collective Communication Library）的硬件形态，HCCL提供了深度学习训练场景中服务器间高性能集合通信的功能。
 
 **图 1** 昇腾AI处理器互联方式<a name="fig19751440101616"></a>
+
 ![](../../../../figures/scheduling/昇腾AI处理器互联方式.png "昇腾AI处理器互联方式")
 
 不同的硬件产品内部，可能包含这三种互联方式的一种或多种，具体的调度策略如下所示：
@@ -43,6 +44,7 @@
 - 采用灵衢+RoCE连接的产品：Atlas 900 A3 SuperPoD 超节点、Atlas 850 系列硬件产品（超节点）、Atlas 950 SuperPoD
 
 **图 2**  节点间网络<a name="fig1728811518184"></a>
+
 ![](../../../../figures/scheduling/节点间网络.png "节点间网络")
 
 **表 2** **节点间亲和性调度**
