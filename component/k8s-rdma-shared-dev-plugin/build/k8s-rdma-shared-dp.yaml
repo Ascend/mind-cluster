@@ -112,8 +112,6 @@ spec:
               mountPath: /var/lib/kubelet/device-plugins
             - name: config
               mountPath: /k8s-rdma-shared-dev-plugin
-            - name: devs
-              mountPath: /dev/
             - name: sys
               mountPath: /sys
             - name: infiniband
@@ -121,8 +119,8 @@ spec:
             - name: log-k8s-rdma-shared-dp
               mountPath: /var/log/mindx-dl/k8s-rdma-shared-dp
               subPath: mindx-dl/k8s-rdma-shared-dp
-            - name: hinicadmdfx5
-              mountPath: /usr/bin/hinicadmdfx5
+            - name: hinicadm5
+              mountPath: /usr/sbin/hinicadm5
               readOnly: true
             - name: hinic-log
               mountPath: /var/log/hinic5
@@ -141,10 +139,6 @@ spec:
             items:
               - key: config.json
                 path: config.json
-        - name: devs
-          hostPath:
-            path: /dev/
-            type: Directory
         - name: sys
           hostPath:
             path: /sys/
@@ -155,9 +149,9 @@ spec:
           hostPath:
             path: /var/log
             type: Directory
-        - name: hinicadmdfx5
+        - name: hinicadm5
           hostPath:
-            path: /usr/bin/hinicadmdfx5
+            path: /usr/sbin/hinicadm5
             type: File
         - name: hinic-log
           hostPath:

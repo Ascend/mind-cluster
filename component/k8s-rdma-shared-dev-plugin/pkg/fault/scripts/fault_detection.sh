@@ -13,16 +13,16 @@ function get_hic_name() {
 		echo ""
 		return
 	fi
-	hinicadmdfx5 info 2>/dev/null | grep -B4 $eth_name | grep "|----.*CAL_" | grep -oP "(?<=\-\-\-\-)(.*)(?=\()" || echo ""
+	hinicadm5 info 2>/dev/null | grep -B4 $eth_name | grep "|----.*CAL_" | grep -oP "(?<=\-\-\-\-)(.*)(?=\()" || echo ""
 }
 
-function get_pcie_topo_output() {
+function get_host_topo_output() {
 	hic_name=$1
 	if [[ -z "$hic_name" ]]; then
 		echo ""
 		return
 	fi
-	hinicadmdfx5 pcie_topo -i $hic_name -a 2>/dev/null
+	hinicadm5 host_topo -i $hic_name -a 2>/dev/null
 }
 
 function get_port_width_info() {
@@ -52,9 +52,9 @@ function check_ub_port() {
 		return
 	fi
 
-	output=$(get_pcie_topo_output $hic_name)
+	output=$(get_host_topo_output $hic_name)
 	if [[ -z "$output" ]]; then
-		echo "false:failed to get pcie_topo info for $hic_name"
+		echo "false:failed to get host_topo info for $hic_name"
 		return
 	fi
 
@@ -95,9 +95,9 @@ function check_ub_lane() {
 		return
 	fi
 
-	output=$(get_pcie_topo_output $hic_name)
+	output=$(get_host_topo_output $hic_name)
 	if [[ -z "$output" ]]; then
-		echo "false:failed to get pcie_topo info for $hic_name"
+		echo "false:failed to get host_topo info for $hic_name"
 		return
 	fi
 
@@ -126,8 +126,8 @@ function check_ub_lane() {
 function check_dpu_card_drop() {
 	hca=$1
 
-	if ! command -v hinicadmdfx5 &>/dev/null; then
-		echo "false:hinicadmdfx5 not found, cannot check card drop for hca $hca"
+	if ! command -v hinicadm5 &>/dev/null; then
+		echo "false:hinicadm5 not found, cannot check card drop for hca $hca"
 		return
 	fi
 
@@ -140,29 +140,33 @@ function check_dpu_card_drop() {
 	phy_num=-1
 	card_type=""
 
-	# A5Server: card_type is under device/ directory
+	# Query card_type from device/ directory first (for backward compatibility)
 	device_card_type_path="/sys/class/net/$eth_name/device/card_type"
 	if [[ -f "$device_card_type_path" ]]; then
 		card_type=$(cat "$device_card_type_path" 2>/dev/null)
-		if [[ "$card_type" == "A5Server" ]]; then
-			phy_num=4
-		fi
 	fi
 
-	# A5Pod series: card_type is directly under net/$eth_name/
-	if [[ $phy_num -lt 0 ]]; then
+	# Query card_type directly under net/$eth_name/
+	if [[ -z "$card_type" ]]; then
 		card_type_path="/sys/class/net/$eth_name/card_type"
 		if [[ -f "$card_type_path" ]]; then
 			card_type=$(cat "$card_type_path" 2>/dev/null)
-			case "$card_type" in
-				A5Pod400G*)
-					phy_num=4
-					;;
-				A5Pod200G*)
-					phy_num=2
-					;;
-			esac
 		fi
+	fi
+
+	# Determine phy_num based on card_type
+	if [[ -n "$card_type" ]]; then
+		case "$card_type" in
+			A5Server)
+				phy_num=4
+				;;
+			A5Pod400G*)
+				phy_num=4
+				;;
+			A5Pod200G*)
+				phy_num=2
+				;;
+		esac
 	fi
 
 	if [[ $phy_num -lt 0 ]]; then
@@ -174,7 +178,7 @@ function check_dpu_card_drop() {
 		return
 	fi
 
-	card_num=$(hinicadmdfx5 info 2>/dev/null | grep -oP "Card num[^0-9]*\K[0-9]+")
+	card_num=$(hinicadm5 info 2>/dev/null | grep -oP "Card num[^0-9]*\K[0-9]+")
 	if [[ -z "$card_num" ]]; then
 		echo "false:failed to get card num"
 		return
