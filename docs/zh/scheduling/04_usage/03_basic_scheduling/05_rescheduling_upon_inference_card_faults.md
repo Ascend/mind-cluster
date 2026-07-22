@@ -14,7 +14,7 @@
     - ClusterD
     - NodeD
 
-- 若没有安装，可以参考[安装部署](../../05_developer_guide/00_installation_deployment/00_manual_installation/00_obtaining_software_packages.md)章节进行操作。
+- 若没有安装，可以参考[安装部署](../../03_installation_guide/02_installation/00_helm_installation.md)章节进行操作。
 
 **使用方式<a name="zh-cn_topic_0000001559979444_section91871616135119"></a>**
 
@@ -37,7 +37,7 @@
 支持以下产品使用推理卡故障重调度。
 
 - 推理服务器（插Atlas 300I 推理卡）
-- Atlas 推理系列产品
+- <term>Atlas 推理系列产品</term>
 - Atlas 800I A2 推理服务器
 - A200I A2 Box 异构组件
 - Atlas 800I A3 超节点服务器
@@ -48,6 +48,7 @@
 通过命令行使用推理卡故障重调度特性流程可以参见[图1](#zh-cn_topic_0000001559979444_fig242524985412)。
 
 **图 1**  使用流程<a name="zh-cn_topic_0000001559979444_fig242524985412"></a>
+
 ![](../../../figures/scheduling/使用流程-7.png "使用流程-7")
 
 ## 通过命令行使用（Volcano）<a name="ZH-CN_TOPIC_0000002511427039"></a>

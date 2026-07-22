@@ -1,7 +1,6 @@
 # 配置推理任务实例重调度<a name="ZH-CN_TOPIC_0000002480738948"></a>
 
-当推理任务中出现节点、芯片或其他故障时，MindCluster集群调度组件可以对故障资源进行隔离并自动进行重调度。如需了解故障的检测原理，请参见[故障检测](../04_resumable_training/01_solutions_principles.md#故障检测)
-章节。
+当推理任务中出现节点、芯片或其他故障时，MindCluster集群调度组件可以对故障资源进行隔离并自动进行重调度。如需了解故障的检测原理，请参见[故障检测](../04_resumable_training/01_solutions_principles.md#故障检测)章节。
 
 ## 前提条件<a name="zh-cn_topic_0000002356060805_section19119249163119"></a>
 
@@ -48,44 +47,49 @@ metadata:
 spec:
 ...</pre>
 
-## 重调度功能验证<a name="section10786547021"></a>
+## 验证重调度功能<a name="section10786547021"></a>
 
-以[通过脚本一键式部署使用](./01_deploying_ome_sglang_inference_job.md#通过脚本一键式部署使用)
-方式下发PD分离推理任务（1P1D，PD实例不跨机）为例，成功下发任务后，通过如下命令查看对应pod的运行状态：
+以[通过脚本一键式部署使用](./01_deploying_ome_sglang_inference_job.md#通过脚本一键式部署使用)方式下发PD分离推理任务（1P1D，PD实例不跨机）为例，成功下发任务后，执行如下操作：
 
-```shell
-kubectl get pods -A
-```
+1. 查看对应Pod的运行状态。
 
-可以看到类似下面的Pod信息：
+    ```shell
+    kubectl get pods -A
+    ```
 
-```ColdFusion
-NAMESPACE   NAME                                READY   STATUS    RESTARTS   AGE
-default     my-test-decoder-xxx-xxx             1/1     Running   0          <time>
-default     my-test-engine-xxx-xxx              1/1     Running   0          <time>
-default     my-test-mf-store-xxx-xxx            1/1     Running   0          <time>
-default     my-test-router-xxx-xxx              1/1     Running   0          <time>
-```
+    可以看到类似如下的Pod信息：
 
-- 其中`<time>`为Pod运行时长。
+    ```ColdFusion
+    NAMESPACE   NAME                                READY   STATUS    RESTARTS   AGE
+    default     my-test-decoder-xxx-xxx             1/1     Running   0          <time>
+    default     my-test-engine-xxx-xxx              1/1     Running   0          <time>
+    default     my-test-mf-store-xxx-xxx            1/1     Running   0          <time>
+    default     my-test-router-xxx-xxx              1/1     Running   0          <time>
+    ```
 
-此时若手动构造故障：
+    其中`<time>`为Pod运行时长。
+2. 手动构造故障。
 
-```shell
-kubectl exec -it my-test-engine-xxx-xxx -- kill -9 <pid>
-```
+    ```shell
+    kubectl exec -it my-test-engine-xxx-xxx -- kill -9 <pid>
+    ```
 
-- 其中`<pid>`为容器内sglang进程ID
+    其中`<pid>`为容器内SGLang进程ID。
 
-立即查看相关实例的信息，会发现my-test-engine-xxx-xxx的状态变为Error：
+3. 立即查看相关实例的信息。
 
-```ColdFusion
-NAMESPACE   NAME                                READY   STATUS    RESTARTS   AGE
-default     my-test-decoder-xxx-xxx             1/1     Running   0          <time>
-default     my-test-engine-xxx-xxx              1/1     Error     0          <time>
-default     my-test-mf-store-xxx-xxx            1/1     Running   0          <time>
-default     my-test-router-xxx-xxx              1/1     Running   0          <time>
-```
+    ```shell
+    kubectl get pods -A
+    ```
 
-若实例级重调度配置正确，my-test-engine-xxx-xxx会自动被重调度回Running状态，对应的\<time>值会更新。
-待sglang推理服务拉起后，可正常处理推理请求。
+   可以看到my-test-engine-xxx-xxx的状态变为Error：
+
+    ```ColdFusion
+    NAMESPACE   NAME                                READY   STATUS    RESTARTS   AGE
+    default     my-test-decoder-xxx-xxx             1/1     Running   0          <time>
+    default     my-test-engine-xxx-xxx              1/1     Error     0          <time>
+    default     my-test-mf-store-xxx-xxx            1/1     Running   0          <time>
+    default     my-test-router-xxx-xxx              1/1     Running   0          <time>
+    ```
+
+若实例级重调度配置正确，my-test-engine-xxx-xxx会自动被重调度回Running状态，对应的`<time>`值会更新。待SGLang推理服务拉起后，可正常处理推理请求。

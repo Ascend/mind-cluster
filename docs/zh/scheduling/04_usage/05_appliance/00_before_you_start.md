@@ -17,10 +17,10 @@
 
 ## 支持的产品形态<a name="section169961844182917"></a>
 
-- 支持以下产品使用故障管理和故障容器的自动恢复功能：
-    - Atlas 训练系列产品
-    - Atlas A2 训练系列产品
-    - Atlas A3 训练系列产品
-    - Atlas 推理系列产品
-    - Atlas A2 推理系列产品
-    - Atlas A3 推理系列产品
+支持以下产品使用故障管理和故障容器的自动恢复功能：
+    - <term>Atlas 训练系列产品</term>
+    - <term>Atlas A2 训练系列产品</term>
+    - <term>Atlas A3 训练系列产品</term>
+    - <term>Atlas 推理系列产品</term>
+    - <term>Atlas A2 推理系列产品</term>
+    - <term>Atlas A3 推理系列产品</term>
