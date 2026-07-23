@@ -302,6 +302,7 @@ func newTestReconcilerForScaling(fakeClient client.Client) *InstanceSetReconcile
 		Client:             fakeClient,
 		WorkLoadReconciler: workload.NewWorkLoadReconciler(fakeClient),
 		ScalingManager:     scaling.NewScalingManager(fakeClient, GetScheme()),
+		SupportHPAScaling:  true,
 	}
 }
 
@@ -1592,6 +1593,7 @@ func TestReconcileScalingResourcesError(t *testing.T) {
 				WorkLoadReconciler: workLoadReconciler,
 				ScalingManager:     sm,
 				Recorder:           record.NewFakeRecorder(10),
+				SupportHPAScaling:  true,
 			}
 
 			patches := gomonkey.ApplyPrivateMethod(reflect.TypeOf(reconciler), "validate",

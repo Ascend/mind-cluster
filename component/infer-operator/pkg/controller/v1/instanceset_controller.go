@@ -62,6 +62,7 @@ type InstanceSetReconciler struct {
 	ScalingManager     *scaling.ScalingManager
 	Recorder           record.EventRecorder
 	SupportPodGroup    bool
+	SupportHPAScaling  bool
 	rescheduler        *rescheduling.Rescheduler
 }
 
@@ -98,15 +99,19 @@ func (r *InstanceSetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			instanceSet.Namespace, instanceSet.Name, err)
 	}
 	// 4. reconcile scaling resources, anyway it will continue to reconcile workloads
-	scalingStatus, scalingErr := r.reconcileScalingResources(ctx, instanceSet)
-	if scalingErr == nil {
-		if err := r.updateStatusForScaling(ctx, instanceSet, scalingStatus); err != nil {
-			hwlog.RunLog.Errorf("unable to update scaling status for InstanceSet %s/%s, error: %v",
-				req.Namespace, req.Name, err)
+	var scalingErr error
+	var scalingStatus *apiv1.ScalingResourceStatus
+	if r.SupportHPAScaling {
+		scalingStatus, scalingErr = r.reconcileScalingResources(ctx, instanceSet)
+		if scalingErr == nil {
+			if err := r.updateStatusForScaling(ctx, instanceSet, scalingStatus); err != nil {
+				hwlog.RunLog.Errorf("unable to update scaling status for InstanceSet %s/%s, error: %v",
+					req.Namespace, req.Name, err)
+			}
+		} else {
+			hwlog.RunLog.Errorf("unable to reconcile scaling resources for InstanceSet %s/%s, error: %v",
+				req.Namespace, req.Name, scalingErr)
 		}
-	} else {
-		hwlog.RunLog.Errorf("unable to reconcile scaling resources for InstanceSet %s/%s, error: %v",
-			req.Namespace, req.Name, scalingErr)
 	}
 
 	// 5. reconcile workloads
@@ -436,6 +441,7 @@ func handleConflictNodePort(serviceSpec *apiv1.ServiceSpec, indexer common.Insta
 // NewInstanceSetReconciler creates a new InstanceSetReconciler.
 func NewInstanceSetReconciler(
 	mgr manager.Manager,
+	supportHPAScaling bool,
 	workloadRegister WorkloadRegister) *InstanceSetReconciler {
 	workLoadHandlerFactory := workload.NewWorkLoadHandlerFactory()
 	workloadRegister(mgr, workLoadHandlerFactory)
@@ -452,6 +458,7 @@ func NewInstanceSetReconciler(
 		ScalingManager:     scaling.NewScalingManager(mgr.GetClient(), mgr.GetScheme()),
 		Recorder:           recorder,
 		SupportPodGroup:    false,
+		SupportHPAScaling:  supportHPAScaling,
 		rescheduler:        rescheduler,
 	}
 }
@@ -463,8 +470,11 @@ func (r *InstanceSetReconciler) SetupWithManager(ctx context.Context, mgr ctrl.M
 		Owns(&appsv1.Deployment{}, builder.WithPredicates(WorkLoadPredicate())).
 		Owns(&appsv1.StatefulSet{}, builder.WithPredicates(WorkLoadPredicate())).
 		Owns(&corev1.Service{}, builder.WithPredicates(WorkLoadPredicate())).
-		Owns(&autoscalingv2.HorizontalPodAutoscaler{}, builder.WithPredicates(scalingResourcePredicate())).
 		Named(common.InstanceSetControllerName)
+	// if HPA autoscaling/v2 is supported, watch HPA resources
+	if r.SupportHPAScaling {
+		controller.Owns(&autoscalingv2.HorizontalPodAutoscaler{}, builder.WithPredicates(scalingResourcePredicate()))
+	}
 	// if PodGroup exists, support PodGroup
 	if err := util.CRDExists(ctx, mgr.GetAPIReader(), common.VolcanoPodGroupCrdName); err == nil {
 		hwlog.RunLog.Info("Volcano PodGroup CRD exists, support PodGroup")
