@@ -336,7 +336,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
   </tr>
   <tr>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>noded.enabledStorageCheck</p></td>
-    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>bool</p><p>默认值为空</p></td>
+    <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.2 "><p>string</p><p>默认值为空</p></td>
     <td class="cellrowborder" valign="center" headers="mcps1.2.5.1.3 "><p>开启的共享存储故障检测类型，值域包括""、"dpc"、"dtfs"、"dpc,dtfs"、"container-snapshot"。</p></td>
   </tr>
   <tr>
