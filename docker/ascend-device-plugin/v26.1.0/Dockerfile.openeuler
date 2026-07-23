@@ -42,7 +42,7 @@ RUN yum install -y shadow &&\
     usermod -a -G HwDmUser HwHiAiUser &&\
     usermod -a -G HwBaseUser HwDmUser &&\
     usermod -a -G HwHiAiUser HwDmUser &&\
-    usermod root -s /usr/sbin/nologin
+    usermod root -s /bin/false
 
 ENV LD_LIBRARY_PATH /usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common
 
