@@ -901,14 +901,14 @@ MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写
 </td>
 <td class="cellrowborder" valign="top" width="24.740000000000002%" headers="mcps1.2.6.1.3 "><p id="p1968114193584"><a name="p1968114193584"></a><a name="p1968114193584"></a>重调度原因</p>
 </td>
-<td class="cellrowborder" valign="top" width="21.5%" headers="mcps1.2.6.1.4 "><p id="p58011850228"><a name="p58011850228"></a><a name="p58011850228"></a>字符串</p>
+<td class="cellrowborder" valign="top" width="21.5%" headers="mcps1.2.6.1.4 "><p id="p58011850228"><a name="p58011850228"></a><a name="p58011850228"></a>字符串</p><a name="ul1968191912589"></a><a name="ul1968191912589"></a><ul id="ul1968191912589"><li>pod-failed：pod运行失败</li><li>NodeUnhealthy：节点不健康</li><li>CardUnhealthy：计算卡不健康</li><li>SubHealthFault：亚健康故障</li><li>RelationFaultSeparate：关联故障隔离</li></ul>
 </td>
 <td class="cellrowborder" valign="top" width="23.119999999999997%" headers="mcps1.2.6.1.5 "><p id="p1968191912589"><a name="p1968191912589"></a><a name="p1968191912589"></a>-</p>
 </td>
 </tr>
 <tr id="row9681171915810"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p1681191915581"><a name="p1681191915581"></a><a name="p1681191915581"></a>PodName</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p668219192585"><a name="p668219192585"></a><a name="p668219192585"></a>本次重调度首先触发的pod</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p668219192585"><a name="p668219192585"></a><a name="p668219192585"></a>触发重调度的pod</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p186822019105812"><a name="p186822019105812"></a><a name="p186822019105812"></a>字符串</p>
 </td>
@@ -917,16 +917,16 @@ MindCluster集群调度组件通过K8s将设备和训练任务状态等信息写
 </tr>
 <tr id="row76821198589"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p17682171915812"><a name="p17682171915812"></a><a name="p17682171915812"></a>NodeName</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p26821819125817"><a name="p26821819125817"></a><a name="p26821819125817"></a>节点名称</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p26821819125817"><a name="p26821819125817"></a><a name="p26821819125817"></a>触发重调度的节点名称</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p19682201917586"><a name="p19682201917586"></a><a name="p19682201917586"></a>字符串</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p186825190582"><a name="p186825190582"></a><a name="p186825190582"></a>本次重调度首先触发的node。</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.4 "><p id="p186825190582"><a name="p186825190582"></a><a name="p186825190582"></a>-</p>
 </td>
 </tr>
 <tr id="row10682151985811"><td class="cellrowborder" valign="top" headers="mcps1.2.6.1.1 "><p id="p8682919115816"><a name="p8682919115816"></a><a name="p8682919115816"></a>NodeRankIndex</p>
 </td>
-<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p19682191985813"><a name="p19682191985813"></a><a name="p19682191985813"></a>本次重调度首先触发的node在训练中所属rank</p>
+<td class="cellrowborder" valign="top" headers="mcps1.2.6.1.2 "><p id="p19682191985813"><a name="p19682191985813"></a><a name="p19682191985813"></a>触发重调度的节点rank</p>
 </td>
 <td class="cellrowborder" valign="top" headers="mcps1.2.6.1.3 "><p id="p11682191995818"><a name="p11682191995818"></a><a name="p11682191995818"></a>字符串</p>
 </td>
