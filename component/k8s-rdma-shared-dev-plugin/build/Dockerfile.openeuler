@@ -6,7 +6,7 @@ RUN yum update -y && \
     rm -rf /var/cache/yum && \
     rm -rf /tmp/*
 
-RUN usermod root -s /usr/sbin/nologin
+RUN usermod root -s /bin/false
 
 COPY ./k8s-rdma-shared-dp /usr/local/bin
 COPY ./agreement.txt /usr/local/

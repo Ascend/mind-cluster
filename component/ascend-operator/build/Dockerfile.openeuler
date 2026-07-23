@@ -6,8 +6,8 @@ RUN yum update -y && \
     rm -rf /var/cache/yum && \
     rm -rf /tmp/*
 
-RUN useradd -d /home/hwMindX -u 9000 -m -s  /usr/sbin/nologin hwMindX && \
-    usermod root -s /usr/sbin/nologin
+RUN useradd -d /home/hwMindX -u 9000 -m -s  /bin/false hwMindX && \
+    usermod root -s /bin/false
 
 COPY ./ascend-operator  /usr/local/bin/
 COPY ./agreement.txt /usr/local/
