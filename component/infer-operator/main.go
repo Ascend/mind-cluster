@@ -169,12 +169,19 @@ func main() {
 	if err := util.InitInformers(ctx, mgr); err != nil {
 		hwlog.RunLog.Errorf("unable to init informers: %v", err)
 	}
+
+	supportHPAScaling := false
+	if err := util.APIGroupVersionExists(ctrl.GetConfigOrDie(), "autoscaling/v2"); err == nil {
+		supportHPAScaling = true
+	} else {
+		hwlog.RunLog.Warnf("autoscaling/v2 API not available, HPA scaling will be disabled: %v", err)
+	}
 	inferServiceSetReconciler := clusterctrlv1.NewInferServiceSetReconciler(mgr)
 	if err := inferServiceSetReconciler.SetupWithManager(mgr); err != nil {
 		hwlog.RunLog.Errorf("unable to setup infer service set reconciler: %v", err)
 		os.Exit(1)
 	}
-	instanceSetReconciler := clusterctrlv1.NewInstanceSetReconciler(mgr, registerWorkLoadHandlersFunc())
+	instanceSetReconciler := clusterctrlv1.NewInstanceSetReconciler(mgr, supportHPAScaling, registerWorkLoadHandlersFunc())
 	if err := instanceSetReconciler.SetupWithManager(ctx, mgr); err != nil {
 		hwlog.RunLog.Errorf("unable to setup instance set reconciler: %v", err)
 		os.Exit(1)

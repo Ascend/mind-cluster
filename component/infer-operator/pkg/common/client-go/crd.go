@@ -22,6 +22,8 @@ import (
 
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	apiv1 "infer-operator/pkg/api/v1"
@@ -65,4 +67,17 @@ func OwnedByGVK(obj client.Object, targetGVK schema.GroupVersionKind) bool {
 // GetInferServiceGVK returns the GVK for InferService
 func GetInferServiceGVK() schema.GroupVersionKind {
 	return schema.FromAPIVersionAndKind(apiv1.GroupVersion.String(), "InferService")
+}
+
+// APIGroupVersionExists checks if the API server supports the specified group version
+func APIGroupVersionExists(cfg *rest.Config, groupVersion string) error {
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to create discovery client: %v", err)
+	}
+	_, err = discoveryClient.ServerResourcesForGroupVersion(groupVersion)
+	if err != nil {
+		return fmt.Errorf("API group version %s not found: %v", groupVersion, err)
+	}
+	return nil
 }
