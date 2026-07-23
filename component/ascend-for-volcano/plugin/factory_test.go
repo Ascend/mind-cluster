@@ -20,6 +20,7 @@ Package plugin is using for HuaWei Ascend pin affinity schedule.
 package plugin
 
 import (
+	"errors"
 	"reflect"
 	"strconv"
 	"strings"
@@ -27,7 +28,7 @@ import (
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -1736,4 +1737,158 @@ func (m *mockFaultHandler) PreStopAction(*ScheduleEnv) error                    
 func (m *mockFaultHandler) IsNodeFault(nodeName string) bool                    { return false }
 func (m *mockFaultHandler) IsFaultTaskByRank(jobID api.JobID, rankIndex string) bool {
 	return m.faultByRank
+}
+
+// mockPolicyHandler implements SchedulerPluginNeed for testing initJobsPlugin.
+// It tracks whether InitMyJobPlugin was called and can optionally return an error.
+type mockPolicyHandler struct {
+	initCalled bool
+	initErr    error
+}
+
+func (m *mockPolicyHandler) ValidNPUJob() *api.ValidateResult { return nil }
+func (m *mockPolicyHandler) CheckNodeNPUByTask(*api.TaskInfo, NPUNode) error {
+	return nil
+}
+func (m *mockPolicyHandler) ScoreBestNPUNodes(*api.TaskInfo, []*api.NodeInfo, map[string]float64) error {
+	return nil
+}
+func (m *mockPolicyHandler) UseAnnotation(*api.TaskInfo, NPUNode) *NPUNode     { return nil }
+func (m *mockPolicyHandler) ReleaseAnnotation(*api.TaskInfo, NPUNode) *NPUNode { return nil }
+func (m *mockPolicyHandler) PreStartAction(*framework.Session) error           { return nil }
+func (m *mockPolicyHandler) GetMaxCardNPUNum() int                             { return 0 }
+func (m *mockPolicyHandler) Preemptable(_ *api.TaskInfo, _ []*api.TaskInfo, _ *NPUNode) ([]*api.TaskInfo, bool) {
+	return nil, false
+}
+func (m *mockPolicyHandler) Reclaimable(_ *api.TaskInfo, _ []*api.TaskInfo, _ *NPUNode) ([]*api.TaskInfo, bool) {
+	return nil, false
+}
+func (m *mockPolicyHandler) InitMyJobPlugin(_ util.SchedulerJobAttr, _ ScheduleEnv) error {
+	m.initCalled = true
+	return m.initErr
+}
+
+func TestInitJobsPlugin(t *testing.T) {
+	tests := []struct {
+		name           string
+		jobs           map[api.JobID]SchedulerJob
+		wantInitCalled map[api.JobID]bool // expected InitMyJobPlugin call status per job
+	}{
+		{
+			name:           "01-empty jobs map does nothing",
+			jobs:           map[api.JobID]SchedulerJob{},
+			wantInitCalled: map[api.JobID]bool{},
+		},
+		{
+			name:           "02-nil jobs map does nothing",
+			jobs:           nil,
+			wantInitCalled: map[api.JobID]bool{},
+		},
+		{
+			name: "03-nil policyHandler with ReqNPUNum>0 skips init",
+			jobs: map[api.JobID]SchedulerJob{
+				"job1": {
+					SchedulerJobAttr: util.SchedulerJobAttr{
+						NPUJob: &util.NPUJob{ReqNPUNum: 8},
+					},
+				},
+			},
+			wantInitCalled: map[api.JobID]bool{"job1": false},
+		},
+		{
+			name: "04-nil policyHandler with ReqNPUNum==0 skips init",
+			jobs: map[api.JobID]SchedulerJob{
+				"job2": {
+					SchedulerJobAttr: util.SchedulerJobAttr{
+						NPUJob: &util.NPUJob{ReqNPUNum: 0},
+					},
+				},
+			},
+			wantInitCalled: map[api.JobID]bool{"job2": false},
+		},
+		{
+			name: "05-policyHandler init success",
+			jobs: map[api.JobID]SchedulerJob{
+				"job3": {
+					SchedulerJobAttr: util.SchedulerJobAttr{
+						NPUJob: &util.NPUJob{ReqNPUNum: 4},
+					},
+					policyHandler: &mockPolicyHandler{},
+				},
+			},
+			wantInitCalled: map[api.JobID]bool{"job3": true},
+		},
+		{
+			name: "06-policyHandler init error skips and continues",
+			jobs: map[api.JobID]SchedulerJob{
+				"job4": {
+					SchedulerJobAttr: util.SchedulerJobAttr{
+						NPUJob: &util.NPUJob{ReqNPUNum: 4},
+					},
+					policyHandler: &mockPolicyHandler{initErr: errors.New("init failed")},
+				},
+			},
+			wantInitCalled: map[api.JobID]bool{"job4": true},
+		},
+		{
+			name: "07-multiple jobs with mixed scenarios",
+			jobs: map[api.JobID]SchedulerJob{
+				"job-nil-0": {
+					SchedulerJobAttr: util.SchedulerJobAttr{
+						NPUJob: &util.NPUJob{ReqNPUNum: 0},
+					},
+				},
+				"job-nil-8": {
+					SchedulerJobAttr: util.SchedulerJobAttr{
+						NPUJob: &util.NPUJob{ReqNPUNum: 8},
+					},
+				},
+				"job-ok": {
+					SchedulerJobAttr: util.SchedulerJobAttr{
+						NPUJob: &util.NPUJob{ReqNPUNum: 4},
+					},
+					policyHandler: &mockPolicyHandler{},
+				},
+				"job-err": {
+					SchedulerJobAttr: util.SchedulerJobAttr{
+						NPUJob: &util.NPUJob{ReqNPUNum: 2},
+					},
+					policyHandler: &mockPolicyHandler{initErr: errors.New("init failed")},
+				},
+			},
+			wantInitCalled: map[api.JobID]bool{
+				"job-nil-0": false,
+				"job-nil-8": false,
+				"job-ok":    true,
+				"job-err":   true,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sHandle := &ScheduleHandler{
+				ScheduleEnv: ScheduleEnv{
+					ClusterCache: ClusterCache{
+						Jobs: tt.jobs,
+					},
+				},
+			}
+			sHandle.initJobsPlugin()
+
+			for jobID, wantCalled := range tt.wantInitCalled {
+				job, exists := sHandle.Jobs[jobID]
+				if !exists {
+					t.Errorf("job %s not found in handler", jobID)
+					continue
+				}
+				if handler, ok := job.policyHandler.(*mockPolicyHandler); ok {
+					if handler.initCalled != wantCalled {
+						t.Errorf("job %s: InitMyJobPlugin called = %v, want %v",
+							jobID, handler.initCalled, wantCalled)
+					}
+				}
+			}
+		})
+	}
 }

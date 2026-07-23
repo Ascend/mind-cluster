@@ -372,7 +372,8 @@ func (sHandle *ScheduleHandler) initJobsPlugin() {
 			continue
 		}
 		if err := vcJob.policyHandler.InitMyJobPlugin(vcJob.SchedulerJobAttr, sHandle.ScheduleEnv); err != nil {
-			return
+			klog.V(util.LogErrorLev).Infof("initJobsPlugin %s init myJobPlugin err %v.", vcJob.Name, err)
+			continue
 		}
 	}
 }
