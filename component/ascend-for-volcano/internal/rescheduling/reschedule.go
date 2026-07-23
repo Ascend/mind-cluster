@@ -927,6 +927,8 @@ func (reScheduler ReScheduler) setTaskCardHealthCode(fTask *FaultTask) error {
 			reason.LargeModelFaultLevel = PreSeparateNPU
 			reasonList = append(reasonList, reason)
 		}
+		switchNodeReason := setSwitchAndNodeFaultReason(fNode)
+		reasonList = append(reasonList, switchNodeReason...)
 		fTask.HasSubHealthFault = fNode.HasSwitchSubHealthFault || fTask.RelationFault == util.SubHealthFaultStrategy
 		tmpReason := setTaskFaultReasonByFaultNode(fTask, fNode)
 		reasonList = append(reasonList, tmpReason...)
@@ -937,6 +939,25 @@ func (reScheduler ReScheduler) setTaskCardHealthCode(fTask *FaultTask) error {
 	}
 	fTask.Reason = reasonList
 	return nil
+}
+
+func setSwitchAndNodeFaultReason(fNode *FaultNode) []FaultReasonList {
+	reasonList := make([]FaultReasonList, 0)
+	if fNode.SwitchFault.FaultLevel != "" {
+		var reason FaultReasonList
+		reason.NodeName = fNode.NodeName
+		reason.FaultCode = strings.Join(fNode.SwitchFault.FaultCode, ",")
+		reason.FaultLevel = fNode.SwitchFault.FaultLevel
+		reasonList = append(reasonList, reason)
+	}
+	for _, nodeFault := range fNode.NodeFault {
+		var reason FaultReasonList
+		reason.NodeName = fNode.NodeName
+		reason.FaultCode = strings.Join(nodeFault.FaultCode, ",")
+		reason.FaultLevel = nodeFault.FaultLevel
+		reasonList = append(reasonList, reason)
+	}
+	return reasonList
 }
 
 func getTaskSoftwareFaultReason(fTask *FaultTask) FaultReasonList {

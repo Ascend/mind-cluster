@@ -306,13 +306,28 @@ func TestSyncAnnotation(t *testing.T) {
 				},
 			},
 		}
-		nodeInfo := k8s.NodeDNodeInfo{}
-		switchInfo := k8s.SwitchFaultInfo{}
+		nodeInfo := k8s.NodeDNodeInfo{
+			FaultDevList: []k8s.FaultDevList{
+				{
+					FaultCode:  []string{"test_code"},
+					FaultLevel: "test_level",
+				},
+			},
+		}
+		switchInfo := k8s.SwitchFaultInfo{
+			FaultCode:  []string{"test_code"},
+			FaultLevel: "test_level",
+		}
 		cNode.syncAnnotation(nodeNew, nodeInfo, switchInfo)
 		if len(nodeNew.Node.Annotations)+1 != len(cNode.Annotation) {
 			t.Errorf("syncAnnotation is not equal")
 		}
-
+		if len(cNode.SwitchFaultCode) != len(switchInfo.FaultCode) || cNode.SwitchFaultLevel != switchInfo.FaultLevel {
+			t.Errorf("syncswitchInfo is not equal")
+		}
+		if len(cNode.NodeFaultList) != len(nodeInfo.FaultDevList) {
+			t.Errorf("syncnodeInfo is not equal")
+		}
 	})
 }
 

@@ -59,7 +59,13 @@ type CommonNode struct {
 	// convert phy id to device id at ascend950
 	PhyIDToDeviceIDMap map[int32]int32
 	// node annotation and device info + switch info + node info
-	Annotation        map[string]string
+	Annotation map[string]string
+	// node fault device list
+	NodeFaultList []k8s.FaultDevList
+	// switch fault code
+	SwitchFaultCode []string
+	// switch fault level
+	SwitchFaultLevel  string
 	Label             map[string]string
 	Address           string
 	SuperPodID        int32
@@ -482,6 +488,7 @@ func (n *NPUNode) getRealHealthyDeviceList(deviceKey, oldList, newList, oldUnhea
 // syncAnnotation 4 parts, 1 v1.node annotations, 2 last session device infos, 3 switch info, 4 noded info
 func (n *NPUNode) syncAnnotation(npuNode *api.NodeInfo, nodeInfoOfNodeD k8s.NodeDNodeInfo,
 	switchInfo k8s.SwitchFaultInfo) {
+	klog.V(util.LogDebugLev).Infof("nodeInfoOfNodeD: %v, switchInfo: %v", nodeInfoOfNodeD, switchInfo)
 	existAnno := make(map[string]string)
 	// 1. sync v1.node annotations
 	for k, v := range npuNode.Node.Annotations {
@@ -496,8 +503,19 @@ func (n *NPUNode) syncAnnotation(npuNode *api.NodeInfo, nodeInfoOfNodeD k8s.Node
 	}
 	// 3. switch info
 	existAnno[util.SwitchNodeHealtyStatuskey] = switchInfo.NodeStatus
+	n.SwitchFaultCode = switchInfo.FaultCode
+	n.SwitchFaultLevel = switchInfo.FaultLevel
 	// 4. noded info. adding noded reported info into NPUNode.Annotation including node healthy status
 	// when there are no faults on the node, node info cm does not exist
+	n.NodeFaultList = make([]k8s.FaultDevList, 0, len(nodeInfoOfNodeD.FaultDevList))
+	for _, faultDev := range nodeInfoOfNodeD.FaultDevList {
+		var tmpList k8s.FaultDevList
+		tmpList.FaultLevel = faultDev.FaultLevel
+		tmpList.FaultCode = faultDev.FaultCode
+		tmpList.DeviceType = faultDev.DeviceType
+		tmpList.DeviceId = faultDev.DeviceId
+		n.NodeFaultList = append(n.NodeFaultList, tmpList)
+	}
 	if existAnno[util.NodeHealthyStatusKey] == util.NodeUnHealthy {
 		n.Annotation = existAnno
 		return
