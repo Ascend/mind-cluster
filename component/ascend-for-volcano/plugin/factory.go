@@ -24,7 +24,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -743,7 +742,6 @@ func (sHandle *ScheduleHandler) BatchNodeOrderFn(task *api.TaskInfo,
 	for nodeName := range scoreMap {
 		scoreMap[nodeName] *= scoreWeight
 	}
-	sHandle.scoreByChipCount(vcJob, task, scoreMap)
 	if errGet != nil {
 		// get suitable node failed
 		klog.V(util.LogErrorLev).Infof("batchNodeOrderFn task[%s] failed by err:[%s].", task.Name, util.SafePrint(errGet))
@@ -1110,60 +1108,4 @@ func getNslbVersion(conf map[string]string) string {
 		return defaultNSLBVersion
 	}
 	return nslbVersion
-}
-
-type chipCountNodeRank struct {
-	name      string
-	freeChip  int
-	evictCost int
-}
-
-func (sHandle *ScheduleHandler) scoreByChipCount(vcJob SchedulerJob, task *api.TaskInfo,
-	scoreMap map[string]float64) {
-	if sHandle == nil || vcJob.NPUJob == nil {
-		return
-	}
-	vcTask, ok := vcJob.NPUJob.Tasks[task.UID]
-	if !ok || vcTask.ReqNPUNum <= 0 {
-		return
-	}
-	taskNPU := vcTask.ReqNPUNum
-
-	ranked := make([]chipCountNodeRank, 0, len(scoreMap))
-	npuResourceName := corev1.ResourceName(vcTask.ReqNPUName)
-	for nodeName := range scoreMap {
-		vcNode, nodeOK := sHandle.Nodes[nodeName]
-		if !nodeOK {
-			continue
-		}
-		free, _, _ := vcNode.GetChipCount(npuResourceName)
-		evict := 0
-		if free < taskNPU {
-			evict = taskNPU - free
-		}
-		ranked = append(ranked, chipCountNodeRank{
-			name: nodeName, freeChip: free, evictCost: evict,
-		})
-	}
-
-	sort.Slice(ranked, func(i, j int) bool {
-		hasEnoughI := ranked[i].freeChip >= taskNPU
-		hasEnoughJ := ranked[j].freeChip >= taskNPU
-
-		if hasEnoughI != hasEnoughJ {
-			return hasEnoughI
-		}
-		if hasEnoughI && hasEnoughJ {
-			return ranked[i].freeChip < ranked[j].freeChip
-		}
-		if ranked[i].evictCost != ranked[j].evictCost {
-			return ranked[i].evictCost < ranked[j].evictCost
-		}
-		return ranked[i].freeChip < ranked[j].freeChip
-	})
-
-	totalNodes := len(ranked)
-	for rank, ns := range ranked {
-		scoreMap[ns.name] += float64(totalNodes - rank)
-	}
 }
