@@ -19,8 +19,8 @@ RUN yum update -y && \
     rm -rf /var/cache/yum && \
     rm -rf /tmp/*
 
-RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /usr/sbin/nologin HwHiAiUser &&\
-    usermod root -s /usr/sbin/nologin
+RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/false HwHiAiUser &&\
+    usermod root -s /bin/false
 
 COPY ./npu-exporter  /usr/local/bin/
 COPY ./metricConfiguration.json  /user/mind-cluster/npu-exporter-config/metricConfiguration.json
