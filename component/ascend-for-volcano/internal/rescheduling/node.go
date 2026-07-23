@@ -190,6 +190,12 @@ func (fNode *FaultNode) updateFaultNodesAttr(node *plugin.NPUNode) {
 }
 
 func (fNode *FaultNode) setNodeHealthyByNodeD(node *plugin.NPUNode) {
+	for _, fault := range node.NodeFaultList {
+		var tmpFault FaultDetail
+		tmpFault.FaultLevel = fault.FaultLevel
+		tmpFault.FaultCode = fault.FaultCode
+		fNode.NodeFault = append(fNode.NodeFault, tmpFault)
+	}
 	// 2. to judge if noded has reported node unhealthy
 	healthyStatus, ok := node.Annotation[util.NodeHealthyStatusKey]
 	if !ok {
@@ -207,6 +213,10 @@ func (fNode *FaultNode) setNodeHealthyByNodeD(node *plugin.NPUNode) {
 }
 
 func (fNode *FaultNode) setNodeHealthyBySwitch(node *plugin.NPUNode) {
+	var tmpFault FaultDetail
+	tmpFault.FaultLevel = node.SwitchFaultLevel
+	tmpFault.FaultCode = node.SwitchFaultCode
+	fNode.SwitchFault = tmpFault
 	// 1. to judge if switch has reported node unhealthy
 	healthyStatus, ok := node.Annotation[util.SwitchNodeHealtyStatuskey]
 	if !ok || healthyStatus != util.NodeUnHealthy {
@@ -305,6 +315,8 @@ func newFaultNodeDefault(nodeName string, updateTime int64) *FaultNode {
 		NodeHealthState:     NodeHealthy,
 		FaultCards:          nil,
 		FaultDeviceList:     []FaultDeviceList{},
+		NodeFault:           []FaultDetail{},
+		SwitchFault:         FaultDetail{},
 	}
 	return faultNode
 }

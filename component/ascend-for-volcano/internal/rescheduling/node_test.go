@@ -23,6 +23,7 @@ import (
 	"reflect"
 	"testing"
 
+	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/k8s"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/common/util"
 	"volcano.sh/volcano/pkg/scheduler/plugins/ascend-volcano-plugin/plugin"
 )
@@ -90,9 +91,18 @@ func TestSetNodeHealthyByNodeD(t *testing.T) {
 		fNode := *fakeTestFaultNodeNodeHealthy("node0")
 		node := fakeNPUNodeNilDeviceInfo("node0")
 		node.Annotation[util.NodeHealthyStatusKey] = util.NodeUnHealthy
+		node.NodeFaultList = []k8s.FaultDevList{
+			{
+				FaultCode:  []string{"test_code"},
+				FaultLevel: "test_level",
+			},
+		}
 		fNode.setNodeHealthyByNodeD(node)
 		if fNode.NodeHealthState != NodeUnhealthy {
 			t.Errorf("setNodeHealthyByNodeD() NodeHealthState %v, want %v", fNode.NodeHealthState, NodeUnhealthy)
+		}
+		if len(fNode.NodeFault) != len(node.NodeFaultList) {
+			t.Errorf("setNodeHealthyByNodeD() NodeFault %v, want %v", fNode.NodeFault, node.NodeFaultList)
 		}
 	})
 	t.Run("02-setNodeHealthyByNodeD() annotation not exist, do nothing", func(t *testing.T) {

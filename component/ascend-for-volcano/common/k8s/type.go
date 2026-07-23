@@ -62,13 +62,16 @@ type NodeDeviceInfoWithID struct {
 
 // NodeDNodeInfo is node the information reported by noded
 type NodeDNodeInfo struct {
-	FaultDevList []struct {
-		DeviceType string
-		DeviceId   int
-		FaultCode  []string
-		FaultLevel string
-	}
-	NodeStatus string
+	FaultDevList []FaultDevList
+	NodeStatus   string
+}
+
+// FaultDevList is node fault device list information
+type FaultDevList struct {
+	DeviceType string
+	DeviceId   int
+	FaultCode  []string
+	FaultLevel string
 }
 
 // SwitchFaultInfo Switch Fault Info

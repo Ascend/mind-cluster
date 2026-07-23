@@ -267,6 +267,13 @@ type FaultNode struct {
 	HasCardSubHealthFault   bool
 	LinkDownTime            int64
 	IsNpuNode               bool
+	NodeFault               []FaultDetail
+	SwitchFault             FaultDetail
+}
+
+type FaultDetail struct {
+	FaultCode  []string
+	FaultLevel string
 }
 
 // SimpleFNodeInfo simple fault node info

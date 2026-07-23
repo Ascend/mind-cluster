@@ -1717,6 +1717,75 @@ func TestUpdateFaultJobInfo_HotSwitchBackupPodPending(t *testing.T) {
 	}
 }
 
+func TestSetSwitchAndNodeFaultReason(t *testing.T) {
+	testCases := []struct {
+		name      string
+		fNode     *FaultNode
+		wantLen   int
+		wantCodes []string
+	}{
+		{
+			name: "01-setSwitchAndNodeFaultReason return empty slice when switch fault level is empty " +
+				"and node fault list is empty",
+			fNode: &FaultNode{
+				NodeName:    "node0",
+				SwitchFault: FaultDetail{},
+				NodeFault:   nil,
+			},
+			wantLen:   0,
+			wantCodes: nil,
+		},
+		{
+			name: "02-setSwitchAndNodeFaultReason return one reason when only switch fault is set",
+			fNode: &FaultNode{
+				NodeName: "node1",
+				SwitchFault: FaultDetail{
+					FaultCode:  []string{"codeA", "codeB"},
+					FaultLevel: PreSeparateNPU,
+				},
+			},
+			wantLen:   1,
+			wantCodes: []string{"codeA,codeB"},
+		},
+		{
+			name: "03-setSwitchAndNodeFaultReason return reasons for both switch and node faults",
+			fNode: &FaultNode{
+				NodeName: "node2",
+				SwitchFault: FaultDetail{
+					FaultCode:  []string{"swCode"},
+					FaultLevel: PreSeparateNPU,
+				},
+				NodeFault: []FaultDetail{
+					{FaultCode: []string{"nodeCode1"}, FaultLevel: PreSeparateNPU},
+					{FaultCode: []string{"nodeCode2"}, FaultLevel: PreSeparateNPU},
+				},
+			},
+			wantLen:   3,
+			wantCodes: []string{"swCode", "nodeCode1", "nodeCode2"},
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			result := setSwitchAndNodeFaultReason(testCase.fNode)
+			if len(result) != testCase.wantLen {
+				t.Errorf("setSwitchAndNodeFaultReason() len = %d, want %d", len(result), testCase.wantLen)
+			}
+			for i, reason := range result {
+				if reason.NodeName != testCase.fNode.NodeName {
+					t.Errorf("setSwitchAndNodeFaultReason() reason[%d].NodeName = %s, want %s",
+						i, reason.NodeName, testCase.fNode.NodeName)
+				}
+				if testCase.wantCodes != nil && i < len(testCase.wantCodes) {
+					if reason.FaultCode != testCase.wantCodes[i] {
+						t.Errorf("setSwitchAndNodeFaultReason() reason[%d].FaultCode = %s, want %s",
+							i, reason.FaultCode, testCase.wantCodes[i])
+					}
+				}
+			}
+		})
+	}
+}
+
 func TestUpdateFaultJobInfo_HotSwitchNonFaultTaskSkip(t *testing.T) {
 	npuJob := plugin.SchedulerJob{
 		SuperPods: map[string][]plugin.SuperNode{
