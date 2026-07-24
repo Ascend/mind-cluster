@@ -1516,7 +1516,7 @@ Events:  <none>
         useradd -g xxx（自定义用户,需要与驱动安装指定的一致） -s /usr/sbin/nologin（禁止用户登录，示例为Ubuntu系统） -m -d /home/xxx xxx（自定义用户,需要与驱动安装指定的一致） && \
         chmod +x ${TOOLKIT_PKG} &&\
         ./${TOOLKIT_PKG} --quiet --install --install-for-all --whitelist=nnrt --force &&\
-        rm ${TOOLKIT_PKG}
+        rm ${TOOLKIT_PKG} &&\
         chmod +x ${OPS_PKG} &&\
         ./${OPS_PKG} --install --install-for-all --quiet --force &&\
         rm ${OPS_PKG}

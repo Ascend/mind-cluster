@@ -19,7 +19,7 @@ metadata:
   labels:
     framework: pytorch
     ring-controller.atlas: ascend-910b
-    tor-affinity: "null" #该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不适用。large-model-schema表示大模型任务，normal-schema 普通任务
+    tor-affinity: "null" #该标签为任务是否使用交换机亲和性调度标签，null或者不写该标签则不使用。large-model-schema表示大模型任务，normal-schema 普通任务
   annotations:
       huawei.com/schedule_policy: "chip8-node8"
 spec:
