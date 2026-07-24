@@ -314,7 +314,7 @@
     >[!NOTE]
     >Helm的REVISION是一个简单的递增整数，它的核心作用是记录和回滚：每次应用变更都会生成一个新的REVISION，需要时可以通过REVISION号快速恢复到过去的任意稳定版本，从而实现应用发布的可追溯和故障快速恢复。
 
-2. 执行以下命令，回退crd到指定Revision版本。以回退到REVISION 1为例：
+2. 执行以下命令，回退CRD到指定Revision版本。以回退到REVISION 1为例：
 
     ```bash
     helm rollback mindcluster-crds 1
