@@ -2,41 +2,43 @@ FROM openeuler/openeuler:24.03-lts AS build
 
 ARG VERSION=26.1.0
 ARG TARGETPLATFORM
-ARG UMDK_PKG=""
 
-COPY ./${UMDK_PKG} /tmp
-
-RUN yum update -y &&\
-    yum install -y wget unzip libnl3-devel &&\
-    yum clean all &&\
-    rm -rf /var/cache/yum &&\
-    rm -rf /tmp/* &&\
+RUN yum update -y && \
+    yum install -y wget unzip && \
+    yum clean all && rm -rf /var/cache/yum /tmp/* && \
+    mkdir -p /build && rm -rf /build/* && \
     ARCH=$(case "${TARGETPLATFORM}" in \
         "linux/amd64") echo "x86_64" ;; \
         "linux/arm64") echo "aarch64" ;; \
         *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" && exit 1 ;; \
-    esac) &&\
-    if [ "${TARGETPLATFORM}" == "aarch64" ] && [ -n "${UMDK_PKG}" ] && [ -f "/tmp/${UMDK_PKG}" ]; then \
-        echo "installing umdk from /tmp/${UMDK_PKG}"; \
-        mkdir /tmp/umdk_pkgs; \
-        tar -mzxf "/tmp/${UMDK_PKG}" -C /tmp/umdk_pkgs; \
-        rpm -ivh /tmp/umdk_pkgs/*.rpm; \
-    elif [ "${TARGETPLATFORM}" == "aarch64" ]; then \
-        echo "warning: umdk package not provided, install from yum"; \
-        yum install -y umdk-urma-bin umdk-urma-devel umdk-urma-lib umdk-urma-tools; \
-    else \
-        echo "warning: umdk package not supported in platform ${TARGETPLATFORM}"; \
-    fi && \
-    wget https://gitcode.com/ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-npu-exporter_${VERSION}_linux-${ARCH}.zip &&\
-    unzip Ascend-mindxdl-npu-exporter_${VERSION}_linux-${ARCH}.zip -d /build
+    esac) && \
+    wget https://gitcode.com/ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-npu-exporter_${VERSION}_linux-${ARCH}.zip && \
+    unzip Ascend-mindxdl-npu-exporter_${VERSION}_linux-${ARCH}.zip -d /build && \
+    wget https://mirrors.huaweicloud.com/ascend/archive/rpm/unifiedbus/common/umdk-urma-26.06.0-B016.glibc217.aarch64.rpm.tar.gz  --no-check-certificate  && \
+    cp umdk-urma-26.06.0-B016.glibc217.aarch64.rpm.tar.gz /build
 
 FROM openeuler/openeuler:24.03-lts
 
-RUN yum install -y shadow &&\
-    yum clean all &&\
-    rm -rf /var/cache/yum &&\
-    useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/false HwHiAiUser &&\
-    usermod root -s /bin/false
+ARG TARGETPLATFORM
+ARG UMDK_PKG=umdk-urma-26.06.0-B016.glibc217.aarch64.rpm.tar.gz
+
+COPY --from=build /build/${UMDK_PKG} /tmp/${UMDK_PKG}
+
+RUN yum install -y shadow-utils libnl3 libnl3-devel && \
+    yum clean all && rm -rf /var/cache/yum && \
+    if [ "${TARGETPLATFORM}" = "linux/arm64" ] && [ -n "${UMDK_PKG}" ] && [ -f "/tmp/${UMDK_PKG}" ]; then \
+        echo "INFO: Install umdk from /tmp/${UMDK_PKG}"; \
+        mkdir -p /tmp/umdk_pkgs; \
+        tar -mzxf "/tmp/${UMDK_PKG}" -C /tmp/umdk_pkgs; \
+        rpm -ivh /tmp/umdk_pkgs/*.rpm; \
+    elif [ "${TARGETPLATFORM}" = "linux/amd64" ]; then \
+        echo "INFO: amd64 platform skip local umdk rpm install"; \
+    else \
+        echo "WARN: umdk package not supported in platform ${TARGETPLATFORM}"; \
+    fi && \
+    rm -rf /tmp/* && \
+    useradd -d /home/HwHiAiUser -u 1000 -m -s /usr/sbin/nologin HwHiAiUser &&\
+    usermod root -s /usr/sbin/nologin
 
 COPY --from=build /build/npu-exporter /usr/local/bin/npu-exporter
 COPY --from=build /build/run_for_310P_1usoc.sh /
