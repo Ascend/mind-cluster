@@ -15,6 +15,7 @@
 - 所有节点已安装Docker，支持的版本为18.09.x\~28.5.1。如需获取软件包，请参见[Docker社区或官网](https://docs.docker.com/engine/install/)。
 - 所有节点已经安装配套的固件与驱动。Atlas 800T A2 训练服务器固件和驱动安装步骤请参见《[Atlas A2 中心推理和训练硬件 NPU驱动和固件安装指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100568434/426cffd9)》。
 - 检查主机上[npu-smi](https://support.huawei.com/enterprise/zh/doc/EDOC1100568421/426cffd9)以及[hccn_tool工具](https://support.huawei.com/enterprise/zh/doc/EDOC1100568362/426cffd9)是否可正常运行。
+- 拉取镜像，下载组件安装包等可能需要网络环境，请自行确保网络正常或自行准备相关离线镜像包、组件安装包等。
 
   >[!NOTE]
   >
@@ -44,8 +45,10 @@
 
 2. 为NPU节点添加标签。
 
+    执行以下命令，为**计算节点**创建节点标签（如节点名称为“worker01”）。
+
     ```shell
-    kubectl label nodes -A workerselector=dls-worker-node
+    kubectl label nodes worker01 workerselector=dls-worker-node
     ```
 
    >[!NOTE]

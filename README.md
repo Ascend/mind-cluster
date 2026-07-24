@@ -90,8 +90,8 @@ MindCluster具体特性介绍如下：
 | MindIE Motor推理任务最佳实践 |[MindIE Motor推理任务最佳实践](./docs/zh/scheduling/04_usage/06_mindie_motor_best_practice/00_before_you_start.md)   | ✅ |
 | SGLang推理任务最佳实践 |[SGLang推理任务最佳实践](./docs/zh/scheduling/04_usage/07_sglang_best_practice/00_before_you_start.md)   | ✅ |
 | vLLM推理任务最佳实践 |[vLLM推理任务最佳实践](./docs/zh/scheduling/04_usage/08_vllm_best_practice/00_before_you_start.md)   | ✅ |
-| Infer Operator推理任务最佳实践 |[Infer Operator推理任务最佳实践](./docs/zh/scheduling/04_usage/09_infer_operator_best_practice/00_before_you_start.md)   | |
-| 任务交替运行最佳实践 |[任务交替运行最佳实践](./docs/zh/scheduling/04_usage/10_task_alternation/00_before_you_start.md)   | ✅ |
+| Infer Operator推理任务最佳实践 |[Infer Operator推理任务最佳实践](./docs/zh/scheduling/04_usage/09_infer_operator_best_practice/00_before_you_start.md)   | ✅ |
+| 潮汐调度最佳实践 |[潮汐调度最佳实践](./docs/zh/scheduling/04_usage/10_tidal_scheduling/00_before_you_start.md)   | ✅ |
 
 ## MindCluster Ascend FaultDiag 故障诊断工具
 
