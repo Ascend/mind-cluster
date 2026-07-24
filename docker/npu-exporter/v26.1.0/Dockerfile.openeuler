@@ -14,7 +14,7 @@ RUN yum update -y && \
     esac) && \
     wget https://gitcode.com/ascend/mind-cluster/releases/download/v${VERSION}/Ascend-mindxdl-npu-exporter_${VERSION}_linux-${ARCH}.zip && \
     unzip Ascend-mindxdl-npu-exporter_${VERSION}_linux-${ARCH}.zip -d /build && \
-    wget https://mirrors.huaweicloud.com/ascend/archive/rpm/unifiedbus/common/umdk-urma-26.06.0-B016.glibc217.aarch64.rpm.tar.gz  --no-check-certificate  && \
+    wget https://mirrors.huaweicloud.com/ascend/archive/rpm/unifiedbus/common/umdk-urma-26.06.0-B016.glibc217.aarch64.rpm.tar.gz && \
     cp umdk-urma-26.06.0-B016.glibc217.aarch64.rpm.tar.gz /build
 
 FROM openeuler/openeuler:24.03-lts
