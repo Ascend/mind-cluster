@@ -324,17 +324,10 @@
         cd /data/atlas_dls/public/code/
         wget https://raw.gitcode.com/Ascend/ModelZoo-PyTorch/archive/refs/heads/master.zip?path=PyTorch/built-in/cv/classification/ResNet50_ID4149_for_PyTorch -O ResNet50_ID4149_for_PyTorch.zip
         unzip ResNet50_ID4149_for_PyTorch.zip
-        mv ModelZoo-PyTorch-master-PyTorch-built-in-cv-classification-ResNet50_ID4149_for_PyTorch ResNet50_ID4149_for_PyTorch
+        mv ModelZoo-PyTorch-master-PyTorch-built-in-cv-classification-ResNet50_ID4149_for_PyTorch/PyTorch/built-in/cv/classification/ResNet50_ID4149_for_PyTorch ResNet50_ID4149_for_PyTorch
         ```
 
-    2. 自行准备ResNet-50对应的数据集，使用时请遵守对应规范，将数据集上传到”/data/atlas_dls/public/dataset/resnet50/imagenet“。
-
-        ```shell
-        mkdir /data/atlas_dls/public/dataset/resnet50/imagenet
-        cd /data/atlas_dls/public/dataset/resnet50/imagenet
-        ```
-
-    3. 执行以下命令，获取[MindCluster-Samples](https://gitcode.com/Ascend/mindcluster-deploy)仓库的“samples/train/basic-training/without-ranktable/pytorch”目录中的train_start.sh，放在“/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts”路径下。
+    2. 执行以下命令，获取[MindCluster-Samples](https://gitcode.com/Ascend/mindcluster-deploy)仓库的“samples/train/basic-training/without-ranktable/pytorch”目录中的train_start.sh，放在“/data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts”路径下。
 
         ```shell
         mkdir /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
@@ -342,11 +335,18 @@
         wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/train_start.sh
         ```
 
-    4. 执行以下命令，获取[MindCluster-Samples](https://gitcode.com/Ascend/mindcluster-deploy)仓库“samples/train/basic-training/without-ranktable/pytorch”目录下的“pytorch_standalone_acjob_quickstart.yaml”文件。示例默认为单机单卡任务。
+    3. 执行以下命令，获取[MindCluster-Samples](https://gitcode.com/Ascend/mindcluster-deploy)仓库“samples/train/basic-training/without-ranktable/pytorch”目录下的“pytorch_standalone_acjob_quickstart.yaml”文件。示例默认为单机单卡任务。
 
         ```shell
         cd /data/atlas_dls/public/code/ResNet50_ID4149_for_PyTorch/scripts
         wget https://raw.gitcode.com/Ascend/mindcluster-deploy/raw/master/samples/train/basic-training/without-ranktable/pytorch/pytorch_standalone_acjob_quickstart.yaml
+        ```
+
+    4. （可选）准备数据集。pytorch_standalone_acjob_quickstart.yaml中默认设置了`--dummy`参数，能自动为训练任务生成随机数据集，无需真实数据集即可启动训练任务。若用户需要使用真实数据集，请删掉此yaml文件中的`--dummy`参数，然后自行准备ResNet-50对应的数据集，使用时请遵守对应规范，将数据集上传到”/data/atlas_dls/public/dataset/resnet50/imagenet“。
+
+        ```shell
+        mkdir /data/atlas_dls/public/dataset/resnet50/imagenet
+        cd /data/atlas_dls/public/dataset/resnet50/imagenet
         ```
 
 3. 下发单机单卡任务。
@@ -391,21 +391,13 @@
        > 回显中`10.106.227.xxx`为集群分配的实际IP地址，请以实际回显为准。
 
         ```output
-        [20251218-20:31:57] [MindXDL Service Log]server id is: 0
-        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=7 --multiprocessing-distributed --addr=10.106.227.xxx --world-size=1 --rank=0
-        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=6 --multiprocessing-distributed --addr=10.106.227.xxx --world-size=1 --rank=0
-        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=5 --multiprocessing-distributed --addr=10.106.227.xxx --world-size=1 --rank=0
-        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=4 --multiprocessing-distributed --addr=10.106.227.xxx --world-size=1 --rank=0
-        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=3 --multiprocessing-distributed --addr=10.106.227.xxx --world-size=1 --rank=0
-        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=2 --multiprocessing-distributed --addr=10.106.227.xxx --world-size=1 --rank=0
-        /usr/local/python3.10.5/bin/python /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py --data=/job/data/resnet50/imagenet --amp --arch=resnet50 --seed=49 -j=128 --world-size=1 --lr=1.6 --dist-backend=hccl --multiprocessing-distributed --epochs=1 --batch-size=512 --gpu=1 --multiprocessing-distributed --addr=10.106.227.xxx --world-size=1 --rank=0
-        /usr/local/python3.10.5/lib/python3.10/site-packages/torchvision/io/image.py:13: UserWarning: Failed to load image Python extension: ''If you don't plan on using image functionality from `torchvision.io`, you can ignore this warning. Otherwise, there might be something wrong with your environment. Did you have `libjpeg` or `libpng` installed before building `torchvision` from source?
+        [20260724-11:16:23] [MindXDL Service Log]Training start at 2026-07-24-11:16:23
+        /usr/local/python3.9.2/lib/python3.9/site-packages/torchvision/io/image.py:13: UserWarning: Failed to load image Python extension: 'libc10_cuda.so: cannot open shared object file: No such file or directory'If you don't plan on using image functionality from `torchvision.io`, you can ignore this warning. Otherwise, there might be something wrong with your environment. Did you have `libjpeg` or `libpng` installed before building `torchvision` from source?
           warn(
-        [2025-12-18 20:32:02] [WARNING] [470] profiler.py: Invalid parameter export_type: None, reset it to text.
-        /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py:201: UserWarning: You have chosen to seed training. This will turn on the CUDNN deterministic setting, which can slow down your training considerably! You may see unexpected behavior when restarting from checkpoints.
-        warnings.warn('You have chosen to seed training. '
-        /job/code/No_Rank_ResNet50_ID4149_for_PyTorch/main.py:208: UserWarning: You have chosen a specific GPU. This will completely disable data parallelism.
-        warnings.warn('You have chosen a specific GPU. This will completely '
+        /job/code/main.py:215: UserWarning: You have chosen to seed training. This will turn on the CUDNN deterministic setting, which can slow down your training considerably! You may see unexpected behavior when restarting from checkpoints.
+          warnings.warn('You have chosen to seed training. '
+        /job/code/main.py:222: UserWarning: You have chosen a specific GPU. This will completely disable data parallelism.
+          warnings.warn('You have chosen a specific GPU. This will completely '
         Use GPU: 0 for training
         => creating model 'resnet50'
         ```
