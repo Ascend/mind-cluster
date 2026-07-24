@@ -507,7 +507,7 @@ TaskD组件安装在训练镜像内部，在训练镜像内部重新安装该whl
     以NodeD为例，回显示例如下，表示Pod已拉起。
 
     ```ColdFusion
-    mindx-dl   noded- m4j4r  1/1  Running 0     1m
+    mindx-dl   noded-m4j4r  1/1  Running 0     1m
     ```
 
 ## Elastic Agent（已日落）升级TaskD<a name="ZH-CN_TOPIC_0000002515202401"></a>
