@@ -47,7 +47,7 @@
 
 ## 开源组件源码<a name="section149534517468"></a>
 
-集群调度提供Ascend Docker Runtime、NPU Exporter、Ascend Device Plugin、K8s Rdma Shared Dev Plugin、Volcano、Ascend Operator、NodeD和ClusterD等开源组件。如果用户需要了解源码或定制开发组件，则可根据[表2](#table978944123012)获取相应组件源码。
+集群调度提供Ascend Docker Runtime、NPU Exporter、Ascend Device Plugin、K8s RDMA Shared Dev Plugin、Volcano、Ascend Operator、NodeD和ClusterD等开源组件。如果用户需要了解源码或定制开发组件，则可根据[表2](#table978944123012)获取相应组件源码。
 
 **表 2**  获取组件源码
 

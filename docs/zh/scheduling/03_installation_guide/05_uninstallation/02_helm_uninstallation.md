@@ -90,7 +90,7 @@
 
 3. 卸载MindCluster CRD资源。
 
-    执行以下命令，卸载mindcluster CRD资源。
+    执行以下命令，卸载MindCluster CRD资源。
 
     ```bash
     helm uninstall mindcluster-crds
