@@ -97,7 +97,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
       helm install mindcluster-crds mindcluster-crds-deploy-tool-{chart_version}.tgz
       ```
 
-    - **自定义配置安装<a name="update_crd_values_before_install_crds"></a>**：若[crd默认配置](#default_crds_yaml_install_config)不符合用户需求，请创建crds-values.yaml文件，将[crd默认配置](#default_crds_yaml_install_config)的YAML文件内容复制到crds-values.yaml文件中，修改相关配置后执行如下命令：
+    - **自定义配置安装<a name="update_crd_values_before_install_crds"></a>**：若[CRD默认配置](#default_crds_yaml_install_config)不符合用户需求，请创建crds-values.yaml文件，将[CRD默认配置](#default_crds_yaml_install_config)的YAML文件内容复制到crds-values.yaml文件中，修改相关配置后执行如下命令：
 
       ```bash
       #（可选）--dry-run不实际创建任何资源，可以用来验证模板语法、检查生成的配置是否符合预期
@@ -118,7 +118,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
       TEST SUITE: None
       ```
 
-4. 使用Helm安装mindcluster应用组件的Release实例。
+4. 使用Helm安装MindCluster应用组件的Release实例。
     > [!NOTE]
     >- **默认配置安装方式**会从昇腾镜像仓库下载应用组件的镜像。若用户节点无法连接互联网且本地未缓存镜像，可能会导致安装失败。
     >- 请用户按需选择**默认配置安装**或**自定义配置安装**其中一种方式进行操作即可。
@@ -272,7 +272,7 @@ Helm是一个用于管理Kubernetes应用程序的工具，它可以帮助用户
 
 ## 参数说明
 
-**表 1**  crd资源的可配置参数说明
+**表 1**  CRD资源的可配置参数说明
 <a name="table15274931175241"></a>
 <table>
 <thead align="left">

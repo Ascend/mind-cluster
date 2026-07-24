@@ -2,7 +2,7 @@
 
 - 卸载Ascend Docker Runtime组件，请参见[卸载Ascend Docker Runtime](#section6134163311244)进行操作。
 - 卸载Container Manager组件，请参见[卸载Container Manager组件](#section1461059103619)进行操作。
-- 卸载NPU Exporter、Ascend Device Plugin、K8s Rdma Shared Dev Plugin、Volcano、ClusterD、Ascend Operator、Infer Operator、NodeD和Resilience Controller，请参见[卸载其他组件](#section6361146202520)。
+- 卸载NPU Exporter、Ascend Device Plugin、K8s RDMA Shared Dev Plugin、Volcano、ClusterD、Ascend Operator、Infer Operator、NodeD和Resilience Controller，请参见[卸载其他组件](#section6361146202520)。
 
 ## 卸载Ascend Docker Runtime<a name="section6134163311244"></a>
 
@@ -23,13 +23,13 @@
     1. 执行以下命令编辑pingmesh-config ConfigMap。
 
         ```shell
-        kubectl edit cm -n cluster-system   pingmesh-config
+        kubectl edit cm -n cluster-system pingmesh-config
         ```
 
     2. 修改activate字段的取值。
         - 如果超节点ID在pingmesh-config ConfigMap中，修改该超节点ID字段下的activate为off。
         - 如果超节点ID不在pingmesh-config ConfigMap中，可通过以下2种方式进行设置。
-            - 在pingmesh-config ConfigMap中新增该超节点信息，并将activate为off。
+            - 在pingmesh-config ConfigMap中新增该超节点信息，并将activate设置为off。
             - 删除pingmesh-config ConfigMap中所有超节点的信息，并将global配置中activate字段的值设置为off。
 
 2. <a name="li345320287225"></a>可以选择以下方式中的一种卸载Ascend Docker Runtime软件。
@@ -119,7 +119,7 @@
     > 重启后节点上部分Pod可能会报错，报错信息示例如下：
     >
     > ```ColdFusion
-    >  Error: failed to create containerd task: failed to create shim task: OCI runtime create failed: unable to retrieve OCI runtime error (open /run/containerd/io.containerd.runtime. v2.task/k8s.io/device-plugin-01/log.json: no such file or directory): fork/exec /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime: no such file or directory
+    >  Error: failed to create containerd task: failed to create shim task: OCI runtime create failed: unable to retrieve OCI runtime error (open /run/containerd/io.containerd.runtime.v2.task/k8s.io/device-plugin-01/log.json: no such file or directory): fork/exec /usr/local/Ascend/Ascend-Docker-Runtime/ascend-docker-runtime: no such file or directory
     >  ```
     >
     > 解决方法：通过kubectl delete pod --force -n <i>{pod_namespace} {pod_name}</i>命令删除报错的Pod，等待Pod重新拉起即可解决。
@@ -167,7 +167,7 @@
     1. 执行以下命令编辑pingmesh-config ConfigMap。
 
         ```shell
-        kubectl edit cm -n cluster-system   pingmesh-config
+        kubectl edit cm -n cluster-system pingmesh-config
         ```
 
     2. 修改activate字段的取值。
