@@ -45,10 +45,10 @@
 
 2. 为NPU节点添加标签。
 
-    执行以下命令，为**计算节点**创建节点标签（如节点名称为“worker01”）。
+    执行以下命令，为**计算节点**创建节点标签。
 
     ```shell
-    kubectl label nodes worker01 workerselector=dls-worker-node
+    kubectl label nodes --all workerselector=dls-worker-node
     ```
 
     >[!NOTE]
@@ -304,7 +304,7 @@
 
 1. 准备镜像。
 
-    从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)下载24.0.X版本的ascend-pytorch训练镜像。镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
+    从[昇腾镜像仓库](https://www.hiascend.com/developer/ascendhub)下载24.0.x版本的ascend-pytorch训练镜像。镜像中不包含训练脚本、代码等文件，训练时通常使用挂载的方式将训练脚本、代码等文件映射到容器内。
 
     >[!NOTE]
     >
