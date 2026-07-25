@@ -36,14 +36,22 @@ RUN yum install -y shadow-utils libnl3 libnl3-devel && \
     else \
         echo "WARN: umdk package not supported in platform ${TARGETPLATFORM}"; \
     fi && \
-    rm -rf /tmp/* && \
-    useradd -d /home/HwHiAiUser -u 1000 -m -s /usr/sbin/nologin HwHiAiUser &&\
-    usermod root -s /usr/sbin/nologin
+    rm -rf /tmp/*
 
-COPY --from=build /build/npu-exporter /usr/local/bin/npu-exporter
+RUN groupadd -g 1000 HwHiAiUser && useradd -u 1000 -g HwHiAiUser -d /home/HwHiAiUser -m HwHiAiUser &&\
+    groupadd -g 1101 HwDmUser && useradd -u 1101 -g HwDmUser -d /home/HwDmUser -m HwDmUser &&\
+    groupadd -g 1102 HwBaseUser && useradd -u 1102 -g HwBaseUser -d /home/HwBaseUser -m HwBaseUser &&\
+    usermod -a -G HwBaseUser HwHiAiUser &&\
+    usermod -a -G HwDmUser HwHiAiUser &&\
+    usermod -a -G HwBaseUser HwDmUser &&\
+    usermod -a -G HwHiAiUser HwDmUser &&\
+    usermod root -s /bin/false
+
+COPY --from=build /build/npu-exporter  /usr/local/bin/
 COPY --from=build /build/run_for_310P_1usoc.sh /
+COPY --from=build /build/metricConfiguration.json  /user/mind-cluster/npu-exporter-config/metricConfiguration.json
+COPY --from=build /build/pluginConfiguration.json  /user/mind-cluster/npu-exporter-config/pluginConfiguration.json
 COPY --from=build /build/agreement.txt /usr/local/
-COPY --from=build /build/metricConfiguration.json /build/pluginConfiguration.json /user/mind-cluster/npu-exporter-config/
 
 RUN chown root:root /usr/local/bin/npu-exporter &&\
     chmod 750 -R /home/HwHiAiUser &&\
@@ -55,6 +63,13 @@ RUN chown root:root /usr/local/bin/npu-exporter &&\
     chmod 440 /usr/local/agreement.txt &&\
     echo 'umask 027' >> /etc/profile && \
     echo 'source /etc/profile' >> ~/.bashrc
+
+RUN ln -s /lib /lib64 2>&1 >> /dev/null &&\
+    mkdir -m 750 /var/driver -m 750 /var/dmp -m 750 /usr/slog -p -m 750 /home/drv/hdc_ppc &&\
+    chown HwDmUser:HwDmUser /var/dmp &&\
+    chown HwHiAiUser:HwHiAiUser /var/driver &&\
+    chown HwHiAiUser:HwHiAiUser /home/drv/hdc_ppc &&\
+    chown HwHiAiUser:HwHiAiUser /usr/slog
 
 ENV LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/add-ons:/usr/local/Ascend/driver/lib64:/usr/local/dcmi
 
