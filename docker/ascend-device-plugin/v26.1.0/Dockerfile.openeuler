@@ -48,9 +48,16 @@ RUN yum install -y shadow-utils libnl3 libnl3-devel && \
 
 ENV LD_LIBRARY_PATH /usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/driver:/usr/local/Ascend/driver/lib64/common
 
-COPY --from=build /build/device-plugin /usr/local/bin/device-plugin
+COPY --from=build /build/device-plugin /usr/local/bin/
 COPY --from=build /build/run_for_310P_1usoc.sh /
-COPY --from=build /build/faultCode.json /build/faultCustomization.json /build/SwitchFaultCode.json /build/deviceNameCustomization.json /build/agreement.txt /build/hangDetectionConfig.json /build/hotResetPluginConfiguration.json /usr/local/
+COPY --from=build /build/faultCode.json /usr/local/
+COPY --from=build /build/faultCustomization.json /usr/local/
+COPY --from=build /build/SwitchFaultCode.json /usr/local/
+COPY --from=build /build/deviceNameCustomization.json /usr/local/
+COPY --from=build /build/hangDetectionConfig.json /usr/local/
+COPY --from=build /build/hotResetPluginConfiguration.json /usr/local/
+COPY --from=build /build/agreement.txt /usr/local/
+COPY --from=build /build/npu-nic-mapping.json /user/mindx-dl/npu/
 
 RUN chmod 550 /usr/local/bin/device-plugin && \
     chmod 550 /usr/local/bin && \
@@ -60,6 +67,7 @@ RUN chmod 550 /usr/local/bin/device-plugin && \
     chmod 440 /usr/local/deviceNameCustomization.json && \
     chmod 440 /usr/local/hangDetectionConfig.json && \
     chmod 440 /usr/local/hotResetPluginConfiguration.json && \
+    chmod 440 /user/mindx-dl/npu/npu-nic-mapping.json &&\
     chmod 440 /usr/local/agreement.txt && \
     chmod 750 /home/HwHiAiUser && \
     chmod 500 /run_for_310P_1usoc.sh && \
