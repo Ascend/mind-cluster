@@ -17,6 +17,7 @@
 import os.path
 
 from tests.st.lib.dl_deployer.dl import Installer
+from tests.st.envs import MIND_CLUSTER_YAML_DIR
 
 
 class DevicePluginInstaller(Installer):
@@ -24,7 +25,7 @@ class DevicePluginInstaller(Installer):
     accelerator_labels = ["910"]
 
     def __init__(self, cli, resource_dir):
-        super(DevicePluginInstaller, self).__init__(cli, resource_dir)
+        super().__init__(cli, resource_dir)
         self.all_yaml_files = []
 
     def get_yaml_path(self):
@@ -34,7 +35,7 @@ class DevicePluginInstaller(Installer):
                 if filename.endswith('.yaml') and "1usoc" not in filename and "volcano" in filename:
                     yaml_files.append(os.path.join(root, filename))
         if not yaml_files:
-            raise Exception('failed to find the yaml about volcano in {}'.format(self.extract_dir))
+            raise RuntimeError('failed to find the yaml about volcano in {}'.format(self.extract_dir))
         self.all_yaml_files.extend(sorted(yaml_files, reverse=self.use_new_k8s))
         substring = 'device-plugin-volcano-'
         matching_yaml_files = [file for file in yaml_files if substring in file]
@@ -56,10 +57,19 @@ class DevicePluginInstaller(Installer):
                 continue
             basename = os.path.basename(yaml_file)
             blank_yaml_path = os.path.join(self.yaml_dir, basename)
-            with open(blank_yaml_path, 'w') as f:
+            with open(blank_yaml_path, 'w', encoding="utf-8") as f:
                 f.writelines(self.get_modified_yaml_contents())
             self.clear_previous_pod(blank_yaml_path)
             cmd = 'kubectl apply -f {}'.format(blank_yaml_path)
             self.module.execute_command(cmd)
             self.module.logger.info('apply yaml: {} for component: {}'.format(blank_yaml_path, self.component_name))
-
+            clear_old_yaml_cmd = 'rm -f {}/{}-volcano-v[0-9]*.yaml'.format(MIND_CLUSTER_YAML_DIR, self.component_name)
+            self.module.execute_command(clear_old_yaml_cmd)
+            update_yaml_cmd = 'cp -f {} {}'.format(blank_yaml_path, MIND_CLUSTER_YAML_DIR)
+            self.module.execute_command(update_yaml_cmd)
+            self.module.logger.info(
+                'update yaml: {} to {} for component: {}'.format(
+                    blank_yaml_path, MIND_CLUSTER_YAML_DIR, self.component_name
+                )
+            )
+            break
