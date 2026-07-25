@@ -186,6 +186,8 @@ class Installer:
         cmd = 'kubectl apply -f {}'.format(yaml_path)
         self.module.execute_command(cmd)
         self.module.logger.info('apply yaml: {} for component: {}'.format(yaml_path, self.component_name))
+        clear_old_yaml_cmd = 'rm -f {}/{}-v[0-9]*.yaml'.format(MIND_CLUSTER_YAML_DIR, self.component_name)
+        self.module.execute_command(clear_old_yaml_cmd)
         update_yaml_cmd = 'cp -f {} {}'.format(yaml_path, MIND_CLUSTER_YAML_DIR)
         self.module.execute_command(update_yaml_cmd)
         self.module.logger.info(
