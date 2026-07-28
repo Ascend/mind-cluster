@@ -195,7 +195,7 @@
               readOnlyRootFilesystem: true
     ...</pre>
 
-6. （可选）使用推理卡故障恢复时，需要配置热复位功能。
+6. <a name="li_config_hotreset" id="li_config_hotreset"></a>（可选）使用推理卡故障恢复时，需要配置热复位功能。
 
     <pre codetype="yaml">
           containers:
@@ -211,7 +211,7 @@
             command: [ "/bin/bash", "-c", "--"]
             args: [ "device-plugin
     ...
-                     <strong>-hotReset=0 # 使用推理卡故障恢复时，开启热复位功能</strong>
+                     <strong>-hotReset=0 # 使用硬件故障恢复时，开启热复位功能</strong>
                      -logFile=/var/log/mindx-dl/devicePlugin/devicePlugin.log
                      -logLevel=0" ]
     ...</pre>
