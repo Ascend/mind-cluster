@@ -11,5 +11,5 @@
 - [昇腾AI处理器的调度流程](./02_scheduling_process_of_the_ascend_ai_processor.md)
 - [整卡调度](./03_full_npu_scheduling.md)
 - [多级调度](./04_multi_level_scheduling.md)
-- [推理卡故障重调度](./05_rescheduling_upon_inference_card_faults.md)
-- [推理卡故障恢复](./06_recovery_of_inference_card_faults.md)
+- [硬件故障重调度](./05_rescheduling_upon_inference_card_faults.md)
+- [硬件故障恢复](./06_recovery_of_inference_card_faults.md)
