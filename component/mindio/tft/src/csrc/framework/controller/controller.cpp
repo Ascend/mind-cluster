@@ -954,6 +954,14 @@ TResult Controller::MindXInnerInteraction()
         TTP_LOG_WARN("mindx calling action unexpected! prepare to exit");
         return TTP_STOP_SERVICE;
     }
+
+    // 在mindx notify all fault ranks 之后再新增一次异常上报，将等待期间产生的异常rank信息上报
+    SelectErrorRanks();
+    auto reportRet = mindXEngine_->ReportFaultRanks(errorRankMsg_, errorRankCode_, errorRankLock_);
+    if (reportRet != TTP_OK) {
+        TTP_LOG_WARN("report new fault ranks to mindx failed, ret:" << reportRet);
+    }
+
     return TTP_OK;
 }
 
