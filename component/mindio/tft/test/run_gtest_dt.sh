@@ -129,31 +129,34 @@ build() {
     fi
 
     print_info "Building with CMake..."
-    
+
     # 创建构建目录
     mkdir -p "${BUILD_DIR}"
-    
+
     # 配置 CMake
     cd "${BUILD_DIR}"
     CMAKE_CMD="cmake ${PROJECT_HOME}/test \
         -DCMAKE_BUILD_TYPE=Debug \
         -DENABLE_UT=ON"
-    
+
     echo "Running CMake command: ${CMAKE_CMD}"
     eval ${CMAKE_CMD}
-    
+
     if [ 0 != $? ]; then
         echo "Failed to configure test project with CMake!"
         exit 1
     fi
-    
+
     # 编译
     N_CPUS=$(nproc)
     JOBS=$((N_CPUS > 2 ? N_CPUS-2 : 1))
     make -j${JOBS}
-    
+
     # 安装/复制可执行文件
     print_info "Installing test executable..."
+    if [ -e "${BIN_DIR}" ] || [ -L "${BIN_DIR}" ]; then
+        rm -rf "${BIN_DIR}"
+    fi
     mkdir -p "${BIN_DIR}"
     find "${BUILD_DIR}" -name "${TEST_EXECUTABLE}" -type f -executable | while read -r exe; do
         cp "${exe}" "${BIN_DIR}/"
@@ -164,23 +167,23 @@ build() {
 # 运行测试
 run_tests() {
     print_info "Running tests..."
-    
+
     # 创建报告目录
     mkdir -p "${REPORT_DIR}"
-    
+
     # 检查测试可执行文件
     if [ ! -f "${BIN_DIR}/${TEST_EXECUTABLE}" ]; then
         print_error "Test executable not found: ${BIN_DIR}/${TEST_EXECUTABLE}"
         exit 1
     fi
-    
+
     # 设置库路径
     export LD_LIBRARY_PATH="${PROJECT_HOME}/output/lib:${LD_LIBRARY_PATH}"
-    
+
     # 运行测试
     cd "${BIN_DIR}"
     print_info "Running: ./${TEST_EXECUTABLE} --gtest_output=xml:${REPORT_DIR}/report.xml --gtest_filter=${UT_FILTER}"
-    
+
     if ! ./${TEST_EXECUTABLE} --gtest_output=xml:"${REPORT_DIR}/report.xml" --gtest_filter="${UT_FILTER}"; then
         print_warn "Some tests failed. Check the report for details."
     else
@@ -196,18 +199,18 @@ generate_coverage_report() {
     fi
 
     print_info "Generating coverage report..."
-    
+
     # 检查是否安装了 lcov
     if ! command -v lcov &> /dev/null; then
         print_error "lcov not found. Please install it: sudo dnf install lcov"
         exit 1
     fi
-    
+
     cd "${BUILD_DIR}"
-    
+
     # 创建覆盖率报告目录
     mkdir -p gcover_report
-    
+
     # 收集覆盖率数据
     print_info "Collecting coverage data..."
     lcov --directory "${PROJECT_HOME}" \
@@ -215,7 +218,7 @@ generate_coverage_report() {
          --output-file test.info \
          --rc lcov_branch_coverage=1 \
          --rc lcov_excl_br_line="LCOV_EXCL_BR_LINE|TTP_.*|LOG_.*|ASSERT_.*|std::to_string\(.*|std::string\(.*|std::cout.*|std::cerr.*|static.*=.*\{|.*[Ss]slHelper.*|.*SslCtx.*|fclose.*|spdlog::.*|map\..*|errMsg\s=.*|permMsg\s=.*|.*\?.*:.*|.*&&.*\s*\|\|.*|.*&&.*\s*&&.*|if\s*\(.*(Obj|tmp|this).*!=.*\)"
-    
+
     # 过滤不需要的文件
     print_info "Filtering coverage data..."
     lcov --remove test.info \
@@ -230,7 +233,7 @@ generate_coverage_report() {
          --output-file coverage.info \
          --rc lcov_branch_coverage=1 \
          --rc lcov_excl_br_line="LCOV_EXCL_BR_LINE|TTP_.*|LOG_.*|ASSERT_.*|std::to_string\(.*|std::string\(.*|std::cout.*|std::cerr.*|static.*=.*\{|.*[Ss]slHelper.*|.*SslCtx.*|fclose.*|spdlog::.*|map\..*|errMsg\s=.*|permMsg\s=.*|.*\?.*:.*|.*&&.*\s*\|\|.*|.*&&.*\s*&&.*|if\s*\(.*(Obj|tmp|this).*!=.*\)"
-    
+
     # 生成 HTML 报告
     print_info "Generating HTML report..."
     genhtml coverage.info \
@@ -238,7 +241,7 @@ generate_coverage_report() {
             --show-details \
             --legend \
             --rc lcov_branch_coverage=1
-    
+
     print_info "Coverage report generated at: ${BUILD_DIR}/gcover_report/index.html"
 }
 
@@ -249,13 +252,13 @@ cd "${CURRENT_PATH:?}"
 main() {
     print_info "Starting GTest UT for test_ttp"
     print_info "Project home: ${PROJECT_HOME}"
-    
+
     # 执行步骤
     clean
     build
     run_tests
     generate_coverage_report
-    
+
     print_info "All tasks completed successfully!"
 }
 

@@ -165,7 +165,8 @@ if command -v ccache >/dev/null 2>&1; then
     CMAKE_CMD="${CMAKE_CMD} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
 fi
 
-BUILD_CMD="$BUILD_TOOL -j $((N_CPUS-2))"
+JOBS=$((N_CPUS > 2 ? N_CPUS-2 : 1))
+BUILD_CMD="$BUILD_TOOL -j ${JOBS}"
 
 cd $BUILD_DIR
 rm -rf *
