@@ -36,7 +36,7 @@ import (
 
 var (
 	podCache            = map[types.UID]*podInfo{}
-	lock                = sync.Mutex{}
+	lock = sync.RWMutex{}
 	nodeServerIp        string
 	nodeDeviceInfoCache *common.NodeDeviceInfoCache
 )
