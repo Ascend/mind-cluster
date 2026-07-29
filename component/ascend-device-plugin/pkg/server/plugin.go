@@ -1030,16 +1030,16 @@ func (ps *PluginServer) getNPUInfoConfigDirFromPod(pod *v1.Pod, devices []string
 		return ""
 	}
 	annotations.physicalId = strconv.Itoa(physicalID)
-	maxVirtualID, err := common.GetMaxVirtualIDByPhysicalID(physicalID)
+	mextVirtualID, err := common.GetNextVirtualIDByPhysicalID(physicalID)
 	if err != nil {
 		hwlog.RunLog.Errorf("get max virtual id by physical id %d failed: %v", physicalID, err)
 		return ""
 	}
-	if maxVirtualID >= math.MaxInt {
-		hwlog.RunLog.Errorf("maxVirtualID reaches int type upper limit %v, cannot increment", math.MaxInt)
+	if mextVirtualID >= math.MaxInt {
+		hwlog.RunLog.Errorf("mextVirtualID reaches int type upper limit %v, cannot increment", math.MaxInt)
 		return ""
 	}
-	annotations.vNPUId = strconv.Itoa(maxVirtualID + 1)
+	annotations.vNPUId = strconv.Itoa(mextVirtualID)
 	jobName := common.GetJobNameOfPod(pod)
 	npuInfoConfigDir := ps.buildConfigDirPath(pod, jobName, physicalID, annotations.vNPUId)
 	if npuInfoConfigDir == "" {

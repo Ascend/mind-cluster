@@ -57,6 +57,10 @@ var (
 	updateTriggerChan = make(chan struct{}, 1)
 )
 
+const (
+	maxVnpuID = 99
+)
+
 // ServerInfo used for pass parameters
 type ServerInfo struct {
 	ServerID    string
@@ -776,8 +780,8 @@ func ConvertSchedulingPolicyToIntStr(schedulingPolicy string) string {
 	return ""
 }
 
-// GetMaxVirtualIDByPhysicalID get max virtual id by physical id
-func GetMaxVirtualIDByPhysicalID(physicalID int) (int, error) {
+// GetNextVirtualIDByPhysicalID get max virtual id by physical id
+func GetNextVirtualIDByPhysicalID(physicalID int) (int, error) {
 	baseDir, err := getNPUInfoConfigBaseDir()
 	if err != nil {
 		return MinVirtualID, err
@@ -786,8 +790,8 @@ func GetMaxVirtualIDByPhysicalID(physicalID int) (int, error) {
 	if err != nil {
 		return MinVirtualID, err
 	}
-	maxVID := calculateMaxVirtualID(virtualIDs)
-	return maxVID, nil
+	nextVID := calculateNextVirtualID(virtualIDs)
+	return nextVID, nil
 }
 
 func getNPUInfoConfigBaseDir() (string, error) {
@@ -848,14 +852,21 @@ func parseVirtualIDFromDirName(dirName, physicalIDStr string) (int, error) {
 	return vid, nil
 }
 
-func calculateMaxVirtualID(virtualIDs []int) int {
-	maxVID := -1
+func calculateNextVirtualID(virtualIDs []int) int {
+	seen := make(map[int]struct{}, len(virtualIDs))
+	nextVID := 0
 	for _, vid := range virtualIDs {
-		if vid > maxVID {
-			maxVID = vid
+		seen[vid] = struct{}{}
+		if vid > nextVID {
+			nextVID = vid
 		}
 	}
-	return maxVID
+	for i := 0; i <= maxVnpuID; i++ {
+		if _, ok := seen[i]; !ok {
+			return i
+		}
+	}
+	return nextVID + 1
 }
 
 // SliceEqual check if two slice are equal
