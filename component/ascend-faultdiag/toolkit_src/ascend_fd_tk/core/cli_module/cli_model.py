@@ -355,7 +355,7 @@ class SetSwiDumpLogDirCliModel(DetailedCliModel):
     def get_detail(self) -> str:
         return f"""
         设置交换机命令回显/日志导出目录，支持以下方式导出的信息(当前仅支持华为交换机)
-        1. 使用交换机 ' display diagnostic-information <filename> ' 命令导出命令回显结果集(推荐，信息较全)
+        1. 使用交换机 ' display diagnostic-information <filename>.txt ' 命令导出命令回显结果集(推荐，信息较全)
         2. 查询关键命令后直接复制shell回显页面，导出文本文件(必须执行display current-configuration获取交换机信息，否则工具无法匹配)
         3. 使用交换机 ' collect diagnostic information ' 命令导出的日志zip包
         将以上方式采集的文本文件统一放到一个目录中，通过此命令 " {self.get_key()} <目录> " 设置目录，工具会在 " {AutoCollectDiagCliModel.get_key()} " 命令下自动分析文本信息
