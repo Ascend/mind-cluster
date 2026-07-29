@@ -1236,13 +1236,13 @@ func TestGetDavinciManagerPath(t *testing.T) {
 	})
 }
 
-func TestGetMaxVirtualIDByPhysicalID(t *testing.T) {
-	convey.Convey("Test GetMaxVirtualIDByPhysicalID", t, func() {
+func TestGetNextVirtualIDByPhysicalID(t *testing.T) {
+	convey.Convey("Test GetNextVirtualIDByPhysicalID", t, func() {
 		convey.Convey("When getNPUInfoConfigBaseDir returns error", func() {
 			patches := gomonkey.ApplyFuncReturn(getNPUInfoConfigBaseDir, "", errors.New("dir not exist"))
 			defer patches.Reset()
 
-			maxVID, err := GetMaxVirtualIDByPhysicalID(0)
+			maxVID, err := GetNextVirtualIDByPhysicalID(0)
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(maxVID, convey.ShouldEqual, MinVirtualID)
 		})
@@ -1251,28 +1251,28 @@ func TestGetMaxVirtualIDByPhysicalID(t *testing.T) {
 			patches.ApplyFuncReturn(collectMatchedVirtualIDs, nil, errors.New("read dir failed"))
 			defer patches.Reset()
 
-			maxVID, err := GetMaxVirtualIDByPhysicalID(0)
+			maxVID, err := GetNextVirtualIDByPhysicalID(0)
 			convey.So(err, convey.ShouldNotBeNil)
 			convey.So(maxVID, convey.ShouldEqual, MinVirtualID)
 		})
-		convey.Convey("When all steps success, return max VirtualID", func() {
+		convey.Convey("When all steps success, return next VirtualID", func() {
 			patches := gomonkey.ApplyFuncReturn(getNPUInfoConfigBaseDir, SoftShareDevNPUInfoConfigParentDirPath, nil)
 			patches.ApplyFuncReturn(collectMatchedVirtualIDs, []int{1, num5, num3}, nil)
-			patches.ApplyFuncReturn(calculateMaxVirtualID, num5)
+			patches.ApplyFuncReturn(calculateNextVirtualID, 0)
 			defer patches.Reset()
 
-			maxVID, err := GetMaxVirtualIDByPhysicalID(0)
+			maxVID, err := GetNextVirtualIDByPhysicalID(0)
 			convey.So(err, convey.ShouldBeNil)
-			convey.So(maxVID, convey.ShouldEqual, num5)
+			convey.So(maxVID, convey.ShouldEqual, 0)
 		})
 		convey.Convey("When no matched VirtualID, return -1", func() {
 			patches := gomonkey.ApplyFuncReturn(getNPUInfoConfigBaseDir, SoftShareDevNPUInfoConfigParentDirPath, nil)
 			patches.ApplyFuncReturn(collectMatchedVirtualIDs, []int{}, nil)
 			defer patches.Reset()
 
-			maxVID, err := GetMaxVirtualIDByPhysicalID(0)
+			maxVID, err := GetNextVirtualIDByPhysicalID(0)
 			convey.So(err, convey.ShouldBeNil)
-			convey.So(maxVID, convey.ShouldEqual, -1)
+			convey.So(maxVID, convey.ShouldEqual, MinVirtualID)
 		})
 	})
 }
@@ -1342,15 +1342,15 @@ func TestParseVirtualIDFromDirName(t *testing.T) {
 	})
 }
 
-func TestCalculateMaxVirtualID(t *testing.T) {
-	convey.Convey("Test calculateMaxVirtualID", t, func() {
+func TestCalculateNextVirtualID(t *testing.T) {
+	convey.Convey("Test calculateNextVirtualID", t, func() {
 		convey.Convey("When virtualIDs is empty", func() {
-			maxVID := calculateMaxVirtualID([]int{})
-			convey.So(maxVID, convey.ShouldEqual, -1)
+			maxVID := calculateNextVirtualID([]int{})
+			convey.So(maxVID, convey.ShouldEqual, 0)
 		})
 		convey.Convey("When virtualIDs has multiple elements", func() {
-			maxVID := calculateMaxVirtualID([]int{1, num5, num3})
-			convey.So(maxVID, convey.ShouldEqual, num5)
+			maxVID := calculateNextVirtualID([]int{1, num5, num3})
+			convey.So(maxVID, convey.ShouldEqual, 0)
 		})
 	})
 }

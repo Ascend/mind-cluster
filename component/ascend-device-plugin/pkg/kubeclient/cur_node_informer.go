@@ -69,6 +69,8 @@ func checkPod(obj interface{}) bool {
 	if !ok {
 		return false
 	}
+	lock.RLock()
+	defer lock.RUnlock()
 	_, exist := pod.Annotations[api.HuaweiAscend910]
 	return exist
 }
